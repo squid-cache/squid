@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLReplyHeaderStrategy.h,v 1.4 2003/08/10 09:53:49 robertc Exp $
+ * $Id: ACLReplyHeaderStrategy.h,v 1.5 2004/10/20 22:37:56 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -65,7 +65,7 @@ template <http_hdr_type header>
 int
 ACLReplyHeaderStrategy<header>::match (ACLData<char const *> * &data, ACLChecklist *checklist)
 {
-    char const *theHeader = httpHeaderGetStr(&checklist->request->header, header);
+    char const *theHeader = httpHeaderGetStr(&checklist->reply->header, header);
 
     if (NULL == theHeader)
         return 0;
