@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.465 1999/12/30 17:36:26 wessels Exp $
+ * $Id: client_side.cc,v 1.466 2000/01/05 06:22:19 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -850,9 +850,11 @@ clientSetKeepaliveFlag(clientHttpRequest * http)
 	request->http_ver);
     debug(33, 3) ("clientSetKeepaliveFlag: method = %s\n",
 	RequestMethodStr[request->method]);
-    if (memInUse(MEM_CONNSTATEDATA) > 300)
-	(void) 0;
-    else if (httpMsgIsPersistent(request->http_ver, req_hdr))
+    /*
+     * If we wanted to limit the number of client-side idle persistent
+     * connections, this is a good place to do it.
+     */
+    if (httpMsgIsPersistent(request->http_ver, req_hdr))
 	request->flags.proxy_keepalive = 1;
 }
 
