@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.245 1998/02/06 00:49:01 wessels Exp $
+ * $Id: cache_cf.cc,v 1.246 1998/02/06 00:56:01 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1079,8 +1079,7 @@ parse_string(char **var)
 static void
 free_string(char **var)
 {
-    xfree(*var);
-    *var = NULL;
+    safe_free(*var);
 }
 
 static void
