@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.38 1996/07/11 17:42:54 wessels Exp $
+ * $Id: stat.cc,v 1.39 1996/07/12 17:40:47 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -578,6 +578,30 @@ static void statFiledescriptors(sentry)
     storeAppendPrintf(sentry, close_bracket);
 }
 
+int memoryAccounted()
+{
+	return (int)
+	    meta_data.store_entries * sizeof(StoreEntry) +
+	    meta_data.ipcache_count * sizeof(ipcache_entry) +
+	    meta_data.hash_links * sizeof(hash_link) +
+	    sm_stats.total_pages_allocated * sm_stats.page_size +
+	    disk_stats.total_pages_allocated * disk_stats.page_size +
+	    request_pool.total_pages_allocated * request_pool.page_size +
+	    mem_obj_pool.total_pages_allocated * mem_obj_pool.page_size +
+	    meta_data.url_strings +
+	    meta_data.misc;
+}
+
+int mallinfoTotal()
+{
+    int total = 0;
+#if HAVE_MALLINFO
+    struct mallinfo mp;
+    mp = mallinfo();
+    total = mp.arena;
+#endif
+    return total;
+}
 
 void info_get(obj, sentry)
      cacheinfo *obj;
@@ -776,15 +800,7 @@ void info_get(obj, sentry)
 
     storeAppendPrintf(sentry, "{\t%-25.25s                      = %6d KB}\n",
 	"Total Accounted",
-	(int) (meta_data.store_entries * sizeof(StoreEntry) +
-	    meta_data.ipcache_count * sizeof(ipcache_entry) +
-	    meta_data.hash_links * sizeof(hash_link) +
-	    sm_stats.total_pages_allocated * sm_stats.page_size +
-	    disk_stats.total_pages_allocated * disk_stats.page_size +
-	    request_pool.total_pages_allocated * request_pool.page_size +
-	    mem_obj_pool.total_pages_allocated * mem_obj_pool.page_size +
-	    meta_data.url_strings +
-	    meta_data.misc) >> 10);
+	memoryAccounted() >> 10);
 
 #if XMALLOC_STATISTICS
     storeAppendPrintf(sentry, "{Memory allocation statistics}\n");
