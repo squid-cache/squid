@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<TITLE>EROARE: URL-ul cerut nu a putut fi citit</TITLE>
+<META CONTENT-TYPE=text/html; charset=iso-8859-2>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>URL-ul cerut nu a putut fi citit</H2>
+<HR>
+<P>
+În timp ce citeam URL-ul:
+<A HREF="%U">%U</A>
+<P>
+Am întâlnit următoarea eroare:
+<UL>
+<LI>
+<STRONG>
+Un document cu cale corectă de altfel nu a fost găsit în cache şi
+directiva <code>only-if-cached</code> (numai dacă este deja în cache)
+a fost specificată.
+</STRONG>
+</UL>
+
+<P>
+Aţi cerut un document cu directiva <code>only-if-cached</code>
+(numai dacă există deja în cache). Documentul nu a fost găsit în
+cache, <em>sau</em> a necesitat o revalidare, revalidare interzisă
+de directiva<code>only-if-cached</code>.
+</P>

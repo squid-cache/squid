@@ -1,0 +1,24 @@
+<HTML><HEAD>
+<TITLE>EROARE: URL-ul cerut nu a putut fi citit</TITLE>
+<META CONTENT-TYPE=text/html; charset=iso-8859-2>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>URL-ul cerut nu a putut fi citit</H2>
+<HR>
+<P>
+În timp ce citeam URL-ul:
+<A HREF="%U">%U</A>
+<P>
+Am întâlnit următoarea eroare:
+<UL>
+<LI>
+<STRONG>
+Înaintarea cererii este interzisă.
+</STRONG>
+</UL>
+
+<P>
+Acest cache nu va înainta cererea dumneavoastră din cauză că încearcă
+să stabilească o relaţie de echivalenţă. Poate că clientul %i este un
+cache care a fost configurat greşit.
+</P>

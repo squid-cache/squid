@@ -1,0 +1,28 @@
+<HTML><HEAD>
+<TITLE>EROARE: URL-ul cerut nu a putut fi citit</TITLE>
+<META CONTENT-TYPE=text/html; charset=iso-8859-2>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>URL-ul cerut nu a putut fi citit</H2>
+<HR>
+<P>
+În timp ce citeam URL-ul:
+<A HREF="%U">%U</A>
+<P>
+Am întâlnit următoarea eroare:
+<UL>
+<LI>
+<STRONG>
+Nu pot să forwardez această cerere la acest moment.
+</STRONG>
+</UL>
+
+<P>
+Această cerere nu a putut fi înaintată către serverul de origine
+sau un cache părinte. Cea mai probabilă cauză de eroare este:
+<UL>
+<LI>Administratorul cache-ului nu permite acestui cache să facă
+    conexiuni directe către serverele de origine, şi
+<LI>Toate cache-urile părinte nu pot fi contactate îm acest moment.
+</UL>
+</P>

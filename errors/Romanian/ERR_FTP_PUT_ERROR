@@ -1,0 +1,26 @@
+<HTML><HEAD>
+<TITLE>EROARE: Trimiterea de fişier prin FTP a eşuat</TITLE>
+<META CONTENT-TYPE=text/html; charset=iso-8859-2>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>Comanda FTP PUT/trimiterea a eşuat</H2>
+<HR>
+<P>
+În timp ce făceam PUT la următorul URL:
+<A HREF="%U">%U</A>
+<P>
+Squid a trimis următoarea comandă FTP:
+<PRE><STRONG>
+        %f
+</STRONG></PRE>
+şi a primit următoarea replică
+<PRE><STRONG>
+        %F
+</STRONG></PRE>
+<P>
+Aceasta înseamnă că:
+<PRE>
+Verificaţi calea, drepturile, spaţiul liber şi
+încercaţi din nou.
+</PRE>
+</P>

@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<TITLE>EROARE: URL-ul cerut nu a putut fi citit</TITLE>
+<META CONTENT-TYPE=text/html; charset=iso-8859-2>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>URL-ul cerut nu a putut fi citit</H2>
+<HR>
+<P>
+În timp ce citeam URL-ul:
+<A HREF="%U">%U</A>
+<P>
+Am întâlnit următoarea eroare:
+<UL>
+<LI>
+<STRONG>
+Eroare la citire
+</STRONG>
+</UL>
+
+<P>
+Sistemul de operare a returnat:
+<PRE><I>    %E</I></PRE>
+
+<P>
+O condiţie de eroare în timp ce citeam date din reţea. Vă rog 
+retrimiteţi cererea.
+</P>

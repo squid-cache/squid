@@ -1,0 +1,22 @@
+<HTML><HEAD>
+<TITLE>EROARE: URL-ul cerut nu a putut fi citit</TITLE>
+<META CONTENT-TYPE=text/html; charset=iso-8859-2>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>URL-ul cerut nu a putut fi citit</H2>
+<HR>
+<P>
+În timp ce citeam URL-ul:
+<A HREF="%U">%U</A>
+<P>
+Am întâlnit următoarea eroare:
+<UL>
+<LI>
+<STRONG>
+Nu pot înţelege sau rezolva URN-ul
+</STRONG>
+</UL>
+
+<P>
+Hei, nu te aştepta la prea multe de la URN-uri pe %T :)
+</P>
