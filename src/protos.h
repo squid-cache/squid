@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.461 2003/01/28 01:29:35 robertc Exp $
+ * $Id: protos.h,v 1.462 2003/01/28 06:18:13 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -135,7 +135,6 @@ SQUIDCEXTERN int clientdbCutoffDenied(struct in_addr);
 SQUIDCEXTERN void clientdbDump(StoreEntry *);
 SQUIDCEXTERN void clientdbFreeMemory(void);
 SQUIDCEXTERN int clientdbEstablished(struct in_addr, int);
-SQUIDCEXTERN void clientAccessCheck(void *);
 SQUIDCEXTERN void clientOpenListenSockets(void);
 SQUIDCEXTERN void clientHttpConnectionsClose(void);
 SQUIDCEXTERN void clientReadBody(request_t * req, char *buf, size_t size, CBCB * callback, void *data);

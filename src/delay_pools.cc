@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.31 2003/01/28 01:29:34 robertc Exp $
+ * $Id: delay_pools.cc,v 1.32 2003/01/28 06:18:13 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: David Luyer <david@luyer.net>
@@ -41,6 +41,7 @@
 #include "Store.h"
 #include "MemObject.h"
 #include "client_side_request.h"
+#include "ACLChecklist.h"
 
 struct _class1DelayPool {
     int delay_class;

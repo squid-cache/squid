@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.10 2003/01/28 01:29:34 robertc Exp $
+ * $Id: client_side_request.cc,v 1.11 2003/01/28 06:18:13 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -53,18 +53,57 @@
 
 static const char *const crlf = "\r\n";
 
-typedef struct _clientRequestContext {
+class ClientRequestContext {
+  public:
+    void *operator new(size_t);
+    void operator delete(void *);
+    void deleteSelf() const;
+
+    ClientRequestContext();
+    ClientRequestContext(ClientHttpRequest *);
+    ~ClientRequestContext();
+    
+    void checkNoCache();
+
     ACLChecklist *acl_checklist;	/* need ptr back so we can unreg if needed */
     int redirect_state;
     clientHttpRequest *http;
-} clientRequestContext;
+  private:
+    CBDATA_CLASS(ClientRequestContext);
+    static void CheckNoCacheDone(int answer, void *data);
+    void checkNoCacheDone(int answer);
+};
 
-CBDATA_TYPE(clientRequestContext);
+CBDATA_CLASS_INIT(ClientRequestContext);
+
+void *
+ClientRequestContext::operator new (size_t size)
+{
+    assert (size == sizeof(ClientRequestContext));
+    CBDATA_INIT_TYPE(ClientRequestContext);
+    ClientRequestContext *result = cbdataAlloc(ClientRequestContext);
+    /* Mark result as being owned - we want the refcounter to do the delete
+     * call */
+    cbdataReference(result);
+    return result;
+}
+ 
+void
+ClientRequestContext::operator delete (void *address)
+{
+    ClientRequestContext *t = static_cast<ClientRequestContext *>(address);
+    cbdataFree(address);
+    /* And allow the memory to be freed */
+    cbdataReferenceDone (t);
+}
+
+void
+ClientRequestContext::deleteSelf() const
+{
+    delete this;
+}
 
 /* Local functions */
-/* clientRequestContext */
-clientRequestContext *clientRequestContextNew(clientHttpRequest *);
-FREE clientRequestContextFree;
 /* other */
 static int checkAccelOnly(clientHttpRequest *);
 static void clientAccessCheckDone(int, void *);
@@ -72,35 +111,30 @@ static int clientCachable(clientHttpRequest * http);
 static int clientHierarchical(clientHttpRequest * http);
 static void clientInterpretRequestHeaders(clientHttpRequest * http);
 static RH clientRedirectDone;
-static void clientCheckNoCache(clientRequestContext * context);
-static void clientCheckNoCacheDone(int answer, void *data);
-void clientProcessRequest(clientHttpRequest *);
 extern "C" CSR clientGetMoreData;
 extern "C" CSS clientReplyStatus;
 extern "C" CSD clientReplyDetach;
 static void checkFailureRatio(err_type, hier_code);
 
-void
-clientRequestContextFree(void *data)
+ClientRequestContext::~ClientRequestContext()
 {
-    clientRequestContext *context = (clientRequestContext *)data;
-    cbdataReferenceDone(context->http);
-    if (context->acl_checklist)
-	aclChecklistFree(context->acl_checklist);
+    if (http)
+	cbdataReferenceDone(http);
+    if (acl_checklist)
+	aclChecklistFree(acl_checklist);
 }
 
-clientRequestContext *
-clientRequestContextNew(clientHttpRequest * http)
+ClientRequestContext::ClientRequestContext() : acl_checklist (NULL), redirect_state (REDIRECT_NONE), http(NULL)
 {
-    clientRequestContext *rv;
-    assert(http != NULL);
-    CBDATA_INIT_TYPE_FREECB(clientRequestContext, clientRequestContextFree);
-    rv = cbdataAlloc(clientRequestContext);
-    rv->http = cbdataReference(http);
-    return rv;
+}
+
+ClientRequestContext::ClientRequestContext(ClientHttpRequest *newHttp) : acl_checklist (NULL), redirect_state (REDIRECT_NONE), http(cbdataReference(newHttp))
+{
+    assert (newHttp != NULL);
 }
 
 CBDATA_CLASS_INIT(ClientHttpRequest);
+
 void *
 ClientHttpRequest::operator new (size_t size)
 {
@@ -298,10 +332,9 @@ checkAccelOnly(clientHttpRequest * http)
 
 /* This is the entry point for external users of the client_side routines */
 void
-clientAccessCheck(void *data)
+clientAccessCheck(ClientHttpRequest *http)
 {
-    clientHttpRequest *http = (clientHttpRequest *)data;
-    clientRequestContext *context = clientRequestContextNew(http);
+    ClientRequestContext *context = new ClientRequestContext(http);
     if (checkAccelOnly(http)) {
 	/* deny proxy requests in accel_only mode */
 	debug(85,
@@ -317,7 +350,7 @@ clientAccessCheck(void *data)
 void
 clientAccessCheckDone(int answer, void *data)
 {
-    clientRequestContext *context = (clientRequestContext *)data;
+    ClientRequestContext *context = (ClientRequestContext *)data;
     clientHttpRequest *http = context->http;
     err_type page_id;
     http_status status;
@@ -339,7 +372,7 @@ clientAccessCheckDone(int answer, void *data)
     } else {
 	/* Send an error */
 	clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
-	cbdataFree(context);
+	context->deleteSelf();
 	debug(85, 5) ("Access Denied: %s\n", http->uri);
 	debug(85, 5) ("AclMatchedName = %s\n",
 	    AclMatchedName ? AclMatchedName : "<null>");
@@ -584,7 +617,7 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
 void
 clientRedirectDone(void *data, char *result)
 {
-    clientRequestContext *context = (clientRequestContext *)data;
+    ClientRequestContext *context = (ClientRequestContext *)data;
     clientHttpRequest *http = context->http;
     request_t *new_request = NULL;
     request_t *old_request = http->request;
@@ -639,39 +672,44 @@ clientRedirectDone(void *data, char *result)
     if (http->conn)
 	fd_note(http->conn->fd, http->uri);
     assert(http->uri);
-    clientCheckNoCache(context);
+    context->checkNoCache();
 }
 
 void
-clientCheckNoCache(clientRequestContext * context)
+ClientRequestContext::checkNoCache()
 {
-    clientHttpRequest *http = context->http;
     if (Config.accessList.noCache && http->request->flags.cachable) {
-	context->acl_checklist =
+	acl_checklist =
 	    clientAclChecklistCreate(Config.accessList.noCache, http);
-	aclNBCheck(context->acl_checklist, clientCheckNoCacheDone, cbdataReference(context));
+	aclNBCheck(acl_checklist, CheckNoCacheDone, cbdataReference(this));
     } else {
-	clientCheckNoCacheDone(http->request->flags.cachable, cbdataReference(context));
+	CheckNoCacheDone(http->request->flags.cachable, cbdataReference(this));
     }
 }
 
 void
-clientCheckNoCacheDone(int answer, void *data)
+ClientRequestContext::CheckNoCacheDone(int answer, void *data)
 {
     void *temp;
     bool valid = cbdataReferenceValidDone(data, &temp);
+    /* acl NB calls cannot invalidate cbdata in the normal course of things */
     assert (valid);
-    clientRequestContext *context = (clientRequestContext *)temp;
-    
-    context->acl_checklist = NULL;
-    clientHttpRequest *http = context->http;
-    cbdataFree(context);
+    ClientRequestContext *context = (ClientRequestContext *)temp;
+    context->checkNoCacheDone(answer);
+}
 
-    if (!cbdataReferenceValid (http))
+void
+ClientRequestContext::checkNoCacheDone(int answer)
+{    
+    acl_checklist = NULL;
+    clientHttpRequest *http_ = http;
+    deleteSelf();
+
+    if (!cbdataReferenceValid (http_))
 	return;
     
-    http->request->flags.cachable = answer;
-    clientProcessRequest(http);
+    http_->request->flags.cachable = answer;
+    http_->processRequest();
 }
 
 /*
@@ -680,23 +718,27 @@ clientCheckNoCacheDone(int answer, void *data)
  * them.
  */
 void
-clientProcessRequest(clientHttpRequest * http)
+ClientHttpRequest::processRequest()
 {
-    request_t *r = http->request;
     debug(85, 4) ("clientProcessRequest: %s '%s'\n",
-	RequestMethodStr[r->method], http->uri);
-    if (r->method == METHOD_CONNECT) {
-	http->logType = LOG_TCP_MISS;
-	sslStart(http, &http->out.size, &http->al.http.code);
+	RequestMethodStr[request->method], uri);
+    if (request->method == METHOD_CONNECT) {
+	logType = LOG_TCP_MISS;
+	sslStart(this, &out.size, &al.http.code);
 	return;
-    } else {
-	http->logType = LOG_TAG_NONE;
     }
-    debug(85, 4) ("clientProcessRequest: %s for '%s'\n",
-	log_tags[http->logType], http->uri);
+    httpStart();
+}
+
+void
+ClientHttpRequest::httpStart()
+{
+    logType = LOG_TAG_NONE;
+    debug(85, 4) ("ClientHttpRequest::httpStart: %s for '%s'\n",
+	log_tags[logType], uri);
     /* no one should have touched this */
-    assert(http->out.offset == 0);
+    assert(out.offset == 0);
     /* Use the Stream Luke */
-    clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->data;
-    clientStreamRead(node, http, node->readBuffer);
+    clientStreamNode *node = (clientStreamNode *)client_stream.tail->data;
+    clientStreamRead(node, this, node->readBuffer);
 }

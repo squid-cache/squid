@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.4 2003/01/28 01:29:34 robertc Exp $
+ * $Id: client_side_request.h,v 1.5 2003/01/28 06:18:13 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -61,6 +61,8 @@ public:
     void logRequest();
     MemObject * memObject() const;
     bool multipartRangeRequest() const;
+    void processRequest();
+    void httpStart();
     ConnStateData *conn;
     request_t *request;		/* Parsed URL ... */
     char *uri;
@@ -100,6 +102,7 @@ SQUIDCEXTERN char *clientConstructTraceEcho(clientHttpRequest *);
 SQUIDCEXTERN ACLChecklist *clientAclChecklistCreate(const acl_access * acl, const clientHttpRequest * http);
 SQUIDCEXTERN void *clientReplyNewContext(clientHttpRequest *);
 SQUIDCEXTERN int clientHttpRequestStatus(int fd, clientHttpRequest const *http);
+SQUIDCEXTERN void clientAccessCheck(ClientHttpRequest *);
 
 /* ones that should be elsewhere */
 SQUIDCEXTERN void redirectStart(clientHttpRequest *, RH *, void *);
