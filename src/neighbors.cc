@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.109 1997/01/31 22:30:32 wessels Exp $
+ * $Id: neighbors.cc,v 1.110 1997/02/06 18:44:25 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -154,6 +154,8 @@ neighborTypeStr(peer * e)
 {
     if (e->type == PEER_SIBLING)
 	return "Sibling";
+    if (e->type == PEER_MULTICAST)
+	return "Multicast Group";
     return "Parent";
 }
 
@@ -198,6 +200,14 @@ neighborType(const peer * e, const request_t * request)
     return e->type;
 }
 
+/*
+ * peerWouldBePinged
+ *
+ * NOTE, this is a bit of a misnomer, really this function figures
+ * out if it is appropriate to fetch REQUEST from PEER.
+ * Whether or not we send the peer an ICP_OP_QUERY is determined
+ * in neighborsUdpPing.
+ */
 static int
 peerWouldBePinged(const peer * e, request_t * request)
 {
@@ -388,6 +398,8 @@ neighbors_open(int fd)
 	next = e->next;
 	debug(15, 1, "Configuring %s %s/%d/%d\n", neighborTypeStr(e),
 	    e->host, e->http_port, e->icp_port);
+	if (e->type == PEER_MULTICAST)
+	    debug(15, 1, "    Multicast TTL = %d\n", e->mcast_ttl);
 	if ((ia = ipcache_gethostbyname(e->host, IP_BLOCKING_LOOKUP)) == NULL) {
 	    debug(0, 0, "WARNING!!: DNS lookup for '%s' failed!\n", e->host);
 	    debug(0, 0, "THIS NEIGHBOR WILL BE IGNORED.\n");
@@ -451,12 +463,6 @@ neighborsUdpPing(protodispatch_data * proto)
     int flags;
     icp_common_t *query;
 
-    mem->e_pings_n_pings = 0;
-    mem->e_pings_n_acks = 0;
-    mem->e_pings_first_miss = NULL;
-    mem->w_rtt = 0;
-    mem->start_ping = current_time;
-
     if (Peers.peers_head == NULL)
 	return 0;
     if (theOutIcpConnection < 0) {
@@ -467,6 +473,13 @@ neighborsUdpPing(protodispatch_data * proto)
     }
     if (entry->swap_status != NO_SWAP)
 	fatal_dump("neighborsUdpPing: bad swap_status");
+
+    mem->e_pings_n_pings = 0;
+    mem->e_pings_n_acks = 0;
+    mem->e_pings_first_miss = NULL;
+    mem->w_rtt = 0;
+    mem->start_ping = current_time;
+
     for (i = 0, e = Peers.first_ping; i++ < Peers.n; e = e->next) {
 	if (e == NULL)
 	    e = Peers.peers_head;
@@ -480,14 +493,18 @@ neighborsUdpPing(protodispatch_data * proto)
 	    continue;		/* next peer */
 	if (e->options & NEIGHBOR_NO_QUERY)
 	    continue;
+	if (e->options & NEIGHBOR_MCAST_RESPONDER)
+	    continue;
 	/* the case below seems strange, but can happen if the
 	 * URL host is on the other side of a firewall */
 	if (e->type == PEER_SIBLING)
 	    if (!BIT_TEST(request->flags, REQ_HIERARCHICAL))
 		continue;
 
-	debug(15, 4, "neighborsUdpPing: pinging cache %s for '%s'\n",
+	debug(15, 4, "neighborsUdpPing: pinging peer %s for '%s'\n",
 	    e->host, url);
+        if (e->type == PEER_MULTICAST)
+	    comm_set_mcast_ttl(theOutIcpConnection, e->mcast_ttl);
 	reqnum = storeReqnum(entry, request->method);
 	debug(15, 3, "neighborsUdpPing: key = '%s'\n", entry->key);
 	debug(15, 3, "neighborsUdpPing: reqnum = %d\n", reqnum);
@@ -516,20 +533,15 @@ neighborsUdpPing(protodispatch_data * proto)
 		PROTO_NONE);
 	}
 
-	if (e->mcast_ttl > 0) {
-	    /* XXX kill us off, so Squid won't expect a reply */
-	    e->stats.ack_deficit = HIER_MAX_DEFICIT;
-	} else {
-	    e->stats.ack_deficit++;
-	}
+	e->stats.ack_deficit++;
 	e->stats.pings_sent++;
-
 	debug(15, 3, "neighborsUdpPing: %s: ack_deficit = %d\n",
 	    e->host, e->stats.ack_deficit);
-
-	if (neighborUp(e)) {
+	if (e->type == PEER_MULTICAST) {
+		e->stats.ack_deficit = 0;
+	} else if (neighborUp(e)) {
 	    /* its alive, expect a reply from it */
-	    mem->e_pings_n_pings++;
+	        mem->e_pings_n_pings++;
 	} else {
 	    /* Neighbor is dead; ping it anyway, but don't expect a reply */
 	    /* log it once at the threshold */
