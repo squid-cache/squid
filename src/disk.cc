@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.30 1996/09/26 19:19:42 wessels Exp $
+ * $Id: disk.cc,v 1.31 1996/10/08 14:43:30 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -154,7 +154,11 @@ file_open(char *path, int (*handler) _PARAMS((void)), int mode)
 	fatal_dump("file_open: O_RDWR not allowed");
     if (mode & O_WRONLY)
 	mode |= O_APPEND;
-    mode |= O_NDELAY;
+#if defined(O_NONBLOCK) && !defined(_SQUID_SUNOS_) && !defined(_SQUID_SOLARIS_)
+    mode |= O_NONBLOCK;
+#else
+     mode |= O_NDELAY;
+#endif
 
     /* Open file */
     if ((fd = open(path, mode, 0644)) < 0) {
@@ -179,9 +183,10 @@ file_open(char *path, int (*handler) _PARAMS((void)), int mode)
 
     conn = &fd_table[fd];
     memset(conn, '\0', sizeof(FD_ENTRY));
-    if (commSetNonBlocking(fd) == COMM_ERROR)
-	return DISK_ERROR;
-    conn->comm_type = COMM_NONBLOCKING;
+#ifdef DONT_DO_THIS
+    if (commSetNonBlocking(fd) != COMM_ERROR)
+    	conn->comm_type = COMM_NONBLOCKING;
+#endif
     return fd;
 }
 
