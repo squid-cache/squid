@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.35 2003/07/08 23:15:55 hno Exp $
+#  $Id: Makefile.in,v 1.36 2003/07/11 00:13:05 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -218,6 +218,7 @@ INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$
 EXTRA_PROGRAMS = mem_node_test membanger splay tcp-banger2 rfc1738
 
 TESTS = debug \
+	syntheticoperators \
 	rfc1738 \
 	refcount\
 	splay\
@@ -234,13 +235,13 @@ check_PROGRAMS = debug \
 		mem_hdr_test \
 		refcount\
 		rfc1738\
-		splay
+		splay \
+		syntheticoperators
 
 
 LDADD = -L$(top_builddir)/lib -lmiscutil
 debug_SOURCES = debug.cc test_tools.cc
-debug_LDADD = $(top_builddir)/lib/Array.o \
-		$(top_builddir)/src/globals.o \
+debug_LDADD = $(top_builddir)/src/globals.o \
 		$(LDADD)
 
 mem_node_test_SOURCES = mem_node_test.cc
@@ -266,6 +267,8 @@ http_range_test_LDADD = $(top_builddir)/src/HttpHdrRange.o \
 
 splay_SOURCES = splay.cc
 
+syntheticoperators_SOURCES = syntheticoperators.cc test_tools.cc
+
 rfc1738_SOURCES = rfc1738.cc
 subdir = test-suite
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -277,7 +280,7 @@ EXTRA_PROGRAMS = mem_node_test$(EXEEXT) membanger$(EXEEXT) \
 check_PROGRAMS = debug$(EXEEXT) http_range_test$(EXEEXT) \
 	MemPoolTest$(EXEEXT) mem_node_test$(EXEEXT) \
 	mem_hdr_test$(EXEEXT) refcount$(EXEEXT) rfc1738$(EXEEXT) \
-	splay$(EXEEXT)
+	splay$(EXEEXT) syntheticoperators$(EXEEXT)
 am_MemPoolTest_OBJECTS = MemPoolTest.$(OBJEXT)
 MemPoolTest_OBJECTS = $(am_MemPoolTest_OBJECTS)
 MemPoolTest_LDADD = $(LDADD)
@@ -285,8 +288,7 @@ MemPoolTest_DEPENDENCIES =
 MemPoolTest_LDFLAGS =
 am_debug_OBJECTS = debug.$(OBJEXT) test_tools.$(OBJEXT)
 debug_OBJECTS = $(am_debug_OBJECTS)
-debug_DEPENDENCIES = $(top_builddir)/lib/Array.o \
-	$(top_builddir)/src/globals.o
+debug_DEPENDENCIES = $(top_builddir)/src/globals.o
 debug_LDFLAGS =
 am_http_range_test_OBJECTS = http_range_test.$(OBJEXT) \
 	test_tools.$(OBJEXT)
@@ -326,6 +328,12 @@ splay_OBJECTS = $(am_splay_OBJECTS)
 splay_LDADD = $(LDADD)
 splay_DEPENDENCIES =
 splay_LDFLAGS =
+am_syntheticoperators_OBJECTS = syntheticoperators.$(OBJEXT) \
+	test_tools.$(OBJEXT)
+syntheticoperators_OBJECTS = $(am_syntheticoperators_OBJECTS)
+syntheticoperators_LDADD = $(LDADD)
+syntheticoperators_DEPENDENCIES =
+syntheticoperators_LDFLAGS =
 tcp_banger2_SOURCES = tcp-banger2.c
 tcp_banger2_OBJECTS = tcp-banger2.$(OBJEXT)
 tcp_banger2_LDADD = $(LDADD)
@@ -341,6 +349,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/mem_node_test.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/membanger.Po ./$(DEPDIR)/refcount.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/rfc1738.Po ./$(DEPDIR)/splay.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/syntheticoperators.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/tcp-banger2.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/test_tools.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
@@ -355,9 +364,10 @@ CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 DIST_SOURCES = $(MemPoolTest_SOURCES) $(debug_SOURCES) \
 	$(http_range_test_SOURCES) $(mem_hdr_test_SOURCES) \
 	$(mem_node_test_SOURCES) membanger.c $(refcount_SOURCES) \
-	$(rfc1738_SOURCES) $(splay_SOURCES) tcp-banger2.c
+	$(rfc1738_SOURCES) $(splay_SOURCES) \
+	$(syntheticoperators_SOURCES) tcp-banger2.c
 DIST_COMMON = Makefile.am Makefile.in
-SOURCES = $(MemPoolTest_SOURCES) $(debug_SOURCES) $(http_range_test_SOURCES) $(mem_hdr_test_SOURCES) $(mem_node_test_SOURCES) membanger.c $(refcount_SOURCES) $(rfc1738_SOURCES) $(splay_SOURCES) tcp-banger2.c
+SOURCES = $(MemPoolTest_SOURCES) $(debug_SOURCES) $(http_range_test_SOURCES) $(mem_hdr_test_SOURCES) $(mem_node_test_SOURCES) membanger.c $(refcount_SOURCES) $(rfc1738_SOURCES) $(splay_SOURCES) $(syntheticoperators_SOURCES) tcp-banger2.c
 
 all: all-am
 
@@ -398,6 +408,9 @@ rfc1738$(EXEEXT): $(rfc1738_OBJECTS) $(rfc1738_DEPENDENCIES)
 splay$(EXEEXT): $(splay_OBJECTS) $(splay_DEPENDENCIES) 
 	@rm -f splay$(EXEEXT)
 	$(CXXLINK) $(splay_LDFLAGS) $(splay_OBJECTS) $(splay_LDADD) $(LIBS)
+syntheticoperators$(EXEEXT): $(syntheticoperators_OBJECTS) $(syntheticoperators_DEPENDENCIES) 
+	@rm -f syntheticoperators$(EXEEXT)
+	$(CXXLINK) $(syntheticoperators_LDFLAGS) $(syntheticoperators_OBJECTS) $(syntheticoperators_LDADD) $(LIBS)
 tcp-banger2$(EXEEXT): $(tcp_banger2_OBJECTS) $(tcp_banger2_DEPENDENCIES) 
 	@rm -f tcp-banger2$(EXEEXT)
 	$(LINK) $(tcp_banger2_LDFLAGS) $(tcp_banger2_OBJECTS) $(tcp_banger2_LDADD) $(LIBS)
@@ -417,6 +430,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/refcount.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rfc1738.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/splay.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/syntheticoperators.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp-banger2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_tools.Po@am__quote@
 
