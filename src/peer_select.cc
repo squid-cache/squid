@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.78 1998/08/26 05:36:45 wessels Exp $
+ * $Id: peer_select.cc,v 1.79 1998/08/27 06:28:28 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -79,6 +79,10 @@ static void peerSelectCallbackFail(ps_state * psstate);
 static IRCB peerHandlePingReply;
 static void peerSelectStateFree(ps_state * psstate);
 static void peerIcpParentMiss(peer *, icp_common_t *, ps_state *);
+#if USE_HTCP
+static void peerHtcpParentMiss(peer *, htcpReplyData *, ps_state *);
+static void peerHandleHtcpReply(peer *, peer_t, htcpReplyData *, void *);
+#endif
 static int peerCheckNetdbDirect(ps_state * psstate);
 
 static void
@@ -198,7 +202,7 @@ peerSelectCallback(ps_state * psstate, peer * p)
 	    eventDelete(peerPingTimeout, psstate);
 	entry->ping_status = PING_DONE;
     }
-    psstate->icp.stop = current_time;
+    psstate->ping.stop = current_time;
     if (cbdataValid(data))
 	psstate->callback(p, data);
     cbdataUnlock(data);
@@ -214,7 +218,7 @@ peerSelectCallbackFail(ps_state * psstate)
     debug(44, 1) ("Failed to select source for '%s'\n", url);
     debug(44, 1) ("  always_direct = %d\n", psstate->always_direct);
     debug(44, 1) ("   never_direct = %d\n", psstate->never_direct);
-    debug(44, 1) ("       timedout = %d\n", psstate->icp.timedout);
+    debug(44, 1) ("       timedout = %d\n", psstate->ping.timedout);
     if (cbdataValid(data))
 	psstate->fail_callback(NULL, data);
     cbdataUnlock(data);
@@ -233,8 +237,8 @@ peerCheckNetdbDirect(ps_state * psstate)
     myrtt = netdbHostRtt(psstate->request->host);
     debug(44, 3) ("peerCheckNetdbDirect: MY RTT = %d msec\n", myrtt);
     debug(44, 3) ("peerCheckNetdbDirect: closest_parent_miss RTT = %d msec\n",
-	psstate->icp.p_rtt);
-    if (myrtt && myrtt < psstate->icp.p_rtt)
+	psstate->ping.p_rtt);
+    if (myrtt && myrtt < psstate->ping.p_rtt)
 	return 1;
     myhops = netdbHostHops(psstate->request->host);
     debug(44, 3) ("peerCheckNetdbDirect: MY hops = %d\n", myhops);
@@ -290,7 +294,7 @@ peerSelectFoo(ps_state * psstate)
     debug(44, 3) ("peerSelectFoo: direct = %s\n", DirectStr[direct]);
     if (direct == DIRECT_YES) {
 	debug(44, 3) ("peerSelectFoo: DIRECT\n");
-	hierarchyNote(&request->hier, DIRECT, &psstate->icp, request->host);
+	hierarchyNote(&request->hier, DIRECT, &psstate->ping, request->host);
 	peerSelectCallback(psstate, NULL);
 	return;
     }
@@ -304,14 +308,14 @@ peerSelectFoo(ps_state * psstate)
 	request->hier.alg = PEER_SA_DIGEST;
 	code = CACHE_DIGEST_HIT;
 	debug(44, 2) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
-	hierarchyNote(&request->hier, code, &psstate->icp, p->host);
+	hierarchyNote(&request->hier, code, &psstate->ping, p->host);
 	peerSelectCallback(psstate, p);
 	return;
     }
 #endif
 #if USE_CARP
     else if ((p = carpSelectParent(request))) {
-	hierarchyNote(&request->hier, CARP, &psstate->icp, p->host);
+	hierarchyNote(&request->hier, CARP, &psstate->ping, p->host);
 	peerSelectCallback(psstate, p);
 	return;
     }
@@ -320,30 +324,30 @@ peerSelectFoo(ps_state * psstate)
 	request->hier.alg = PEER_SA_NETDB;
 	code = CLOSEST_PARENT;
 	debug(44, 2) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
-	hierarchyNote(&request->hier, code, &psstate->icp, p->host);
+	hierarchyNote(&request->hier, code, &psstate->ping, p->host);
 	peerSelectCallback(psstate, p);
 	return;
     } else if (peerSelectIcpPing(request, direct, entry)) {
 	assert(entry->ping_status == PING_NONE);
 	request->hier.alg = PEER_SA_ICP;
 	debug(44, 3) ("peerSelect: Doing ICP pings\n");
-	psstate->icp.start = current_time;
-	psstate->icp.n_sent = neighborsUdpPing(request,
+	psstate->ping.start = current_time;
+	psstate->ping.n_sent = neighborsUdpPing(request,
 	    entry,
 	    peerHandlePingReply,
 	    psstate,
-	    &psstate->icp.n_replies_expected,
-	    &psstate->icp.timeout);
-	if (psstate->icp.n_sent == 0)
+	    &psstate->ping.n_replies_expected,
+	    &psstate->ping.timeout);
+	if (psstate->ping.n_sent == 0)
 	    debug(44, 0) ("WARNING: neighborsUdpPing returned 0\n");
 	debug(44, 3) ("peerSelectFoo: %d ICP replies expected, RTT %d msec\n",
-	    psstate->icp.n_replies_expected, psstate->icp.timeout);
-	if (psstate->icp.n_replies_expected > 0) {
+	    psstate->ping.n_replies_expected, psstate->ping.timeout);
+	if (psstate->ping.n_replies_expected > 0) {
 	    entry->ping_status = PING_WAITING;
 	    eventAdd("peerPingTimeout",
 		peerPingTimeout,
 		psstate,
-		0.001 * psstate->icp.timeout,
+		0.001 * psstate->ping.timeout,
 		0);
 	    return;
 	}
@@ -352,35 +356,35 @@ peerSelectFoo(ps_state * psstate)
     if (peerCheckNetdbDirect(psstate)) {
 	code = CLOSEST_DIRECT;
 	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], request->host);
-	hierarchyNote(&request->hier, code, &psstate->icp, request->host);
+	hierarchyNote(&request->hier, code, &psstate->ping, request->host);
 	peerSelectCallback(psstate, NULL);
     } else if ((p = whichPeer(&psstate->closest_parent_miss))) {
 	code = CLOSEST_PARENT_MISS;
 	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
-	hierarchyNote(&request->hier, code, &psstate->icp, p->host);
+	hierarchyNote(&request->hier, code, &psstate->ping, p->host);
 	peerSelectCallback(psstate, p);
     } else if ((p = whichPeer(&psstate->first_parent_miss))) {
 	code = FIRST_PARENT_MISS;
 	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
-	hierarchyNote(&request->hier, code, &psstate->icp, p->host);
+	hierarchyNote(&request->hier, code, &psstate->ping, p->host);
 	peerSelectCallback(psstate, p);
     } else if ((p = whichPeer(&psstate->single_parent))) {
 	code = SINGLE_PARENT;
 	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
-	hierarchyNote(&request->hier, code, &psstate->icp, p->host);
+	hierarchyNote(&request->hier, code, &psstate->ping, p->host);
 	peerSelectCallback(psstate, p);
     } else if (direct != DIRECT_NO) {
 	code = DIRECT;
 	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], request->host);
-	hierarchyNote(&request->hier, code, &psstate->icp, request->host);
+	hierarchyNote(&request->hier, code, &psstate->ping, request->host);
 	peerSelectCallback(psstate, NULL);
     } else if ((p = peerGetSomeParent(request, &code))) {
 	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
-	hierarchyNote(&request->hier, code, &psstate->icp, p->host);
+	hierarchyNote(&request->hier, code, &psstate->ping, p->host);
 	peerSelectCallback(psstate, p);
     } else {
 	code = NO_DIRECT_FAIL;
-	hierarchyNote(&request->hier, code, &psstate->icp, NULL);
+	hierarchyNote(&request->hier, code, &psstate->ping, NULL);
 	peerSelectCallbackFail(psstate);
     }
 }
@@ -400,7 +404,7 @@ peerPingTimeout(void *data)
 	debug(44, 3) ("peerPingTimeout: '%s'\n", storeUrl(entry));
     entry->ping_status = PING_TIMEOUT;
     PeerStats.timeouts++;
-    psstate->icp.timedout = 1;
+    psstate->ping.timedout = 1;
     peerSelectFoo(psstate);
 }
 
@@ -422,9 +426,9 @@ peerIcpParentMiss(peer * p, icp_common_t * header, ps_state * ps)
 	    hops = (header->pad >> 16) & 0xFFFF;
 	    if (rtt > 0 && rtt < 0xFFFF)
 		netdbUpdatePeer(ps->request, p, rtt, hops);
-	    if (rtt && (ps->icp.p_rtt == 0 || rtt < ps->icp.p_rtt)) {
+	    if (rtt && (ps->ping.p_rtt == 0 || rtt < ps->ping.p_rtt)) {
 		ps->closest_parent_miss = p->in_addr;
-		ps->icp.p_rtt = rtt;
+		ps->ping.p_rtt = rtt;
 	    }
 	}
     }
@@ -434,10 +438,10 @@ peerIcpParentMiss(peer * p, icp_common_t * header, ps_state * ps)
     /* set FIRST_MISS if there is no CLOSEST parent */
     if (ps->closest_parent_miss.sin_addr.s_addr != any_addr.s_addr)
 	return;
-    rtt = tvSubMsec(ps->icp.start, current_time) / p->weight;
-    if (ps->icp.w_rtt == 0 || rtt < ps->icp.w_rtt) {
+    rtt = tvSubMsec(ps->ping.start, current_time) / p->weight;
+    if (ps->ping.w_rtt == 0 || rtt < ps->ping.w_rtt) {
 	ps->first_parent_miss = p->in_addr;
-	ps->icp.w_rtt = rtt;
+	ps->ping.w_rtt = rtt;
     }
 }
 
@@ -456,36 +460,82 @@ peerHandleIcpReply(peer * p, peer_t type, icp_common_t * header, void *data)
 	peerNoteDigestLookup(request, p,
 	    peerDigestLookup(p, request, psstate->entry));
 #endif
-    psstate->icp.n_recv++;
+    psstate->ping.n_recv++;
     if (op == ICP_MISS || op == ICP_DECHO) {
 	if (type == PEER_PARENT)
 	    peerIcpParentMiss(p, header, psstate);
     } else if (op == ICP_HIT) {
 	hierarchyNote(&request->hier,
 	    type == PEER_PARENT ? PARENT_HIT : SIBLING_HIT,
-	    &psstate->icp,
+	    &psstate->ping,
 	    p->host);
 	peerSelectCallback(psstate, p);
 	return;
     } else if (op == ICP_SECHO) {
 	hierarchyNote(&request->hier,
 	    SOURCE_FASTEST,
-	    &psstate->icp,
+	    &psstate->ping,
 	    request->host);
 	peerSelectCallback(psstate, NULL);
 	return;
     }
-    if (psstate->icp.n_recv < psstate->icp.n_replies_expected)
+    if (psstate->ping.n_recv < psstate->ping.n_replies_expected)
 	return;
     peerSelectFoo(psstate);
 }
 
 #if USE_HTCP
 static void
-peerHandleHtcpReply(peer * p, peer_t type, icp_common_t * header, void *data)
+peerHandleHtcpReply(peer * p, peer_t type, htcpReplyData * htcp, void *data)
 {
     ps_state *psstate = data;
-    debug(44,1)("peerHandleHtcpReply: write me\n");
+    request_t *request = psstate->request;
+    debug(44, 3) ("peerHandleIcpReply: %s %s\n",
+	htcp->hit ? "HIT" : "MISS",
+	storeUrl(psstate->entry));
+    psstate->ping.n_recv++;
+    if (htcp->hit) {
+	hierarchyNote(&request->hier,
+	    type == PEER_PARENT ? PARENT_HIT : SIBLING_HIT,
+	    &psstate->ping,
+	    p->host);
+	peerSelectCallback(psstate, p);
+	return;
+    }
+    if (type == PEER_PARENT)
+	peerHtcpParentMiss(p, htcp, psstate);
+    if (psstate->ping.n_recv < psstate->ping.n_replies_expected)
+	return;
+    peerSelectFoo(psstate);
+}
+
+static void
+peerHtcpParentMiss(peer * p, htcpReplyData * htcp, ps_state * ps)
+{
+    int rtt;
+    int hops;
+    if (Config.onoff.query_icmp) {
+	if (htcp->cto.rtt > 0) {
+	    rtt = (int) htcp->cto.rtt * 1000;
+	    hops = (int) htcp->cto.hops * 1000;
+	    netdbUpdatePeer(ps->request, p, rtt, hops);
+	    if (rtt && (ps->ping.p_rtt == 0 || rtt < ps->ping.p_rtt)) {
+		ps->closest_parent_miss = p->in_addr;
+		ps->ping.p_rtt = rtt;
+	    }
+	}
+    }
+    /* if closest-only is set, then don't allow FIRST_PARENT_MISS */
+    if (EBIT_TEST(p->options, NEIGHBOR_CLOSEST_ONLY))
+	return;
+    /* set FIRST_MISS if there is no CLOSEST parent */
+    if (ps->closest_parent_miss.sin_addr.s_addr != any_addr.s_addr)
+	return;
+    rtt = tvSubMsec(ps->ping.start, current_time) / p->weight;
+    if (ps->ping.w_rtt == 0 || rtt < ps->ping.w_rtt) {
+	ps->first_parent_miss = p->in_addr;
+	ps->ping.w_rtt = rtt;
+    }
 }
 #endif
 
