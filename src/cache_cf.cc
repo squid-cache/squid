@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.168 1997/01/31 21:03:09 wessels Exp $
+ * $Id: cache_cf.cc,v 1.169 1997/01/31 22:30:29 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -257,7 +257,7 @@ static void parseMinutesLine _PARAMS((int *));
 static void ip_acl_destroy _PARAMS((ip_acl **));
 static void parseCachemgrPasswd _PARAMS((void));
 static void parsePathname _PARAMS((char **));
-static void parseProxyLine _PARAMS((edge **));
+static void parseProxyLine _PARAMS((peer **));
 
 static void
 self_destruct(void)
@@ -964,19 +964,19 @@ parseVizHackLine(void)
 }
 
 static void
-parseProxyLine(edge ** E)
+parseProxyLine(peer ** E)
 {
     char *token;
     char *t;
-    edge *e;
+    peer *e;
     token = strtok(NULL, w_space);
     if (token == NULL)
 	self_destruct();
     if (*E) {
-	edgeDestroy(*E);
+	peerDestroy(*E);
 	*E = NULL;
     }
-    e = xcalloc(1, sizeof(edge));
+    e = xcalloc(1, sizeof(peer));
     if ((t = strchr(token, ':'))) {
 	*t++ = '\0';
 	e->http_port = atoi(t);
@@ -1463,8 +1463,8 @@ configFreeMemory(void)
     safe_free(Config.Announce.host);
     safe_free(Config.Announce.file);
     safe_free(Config.errHtmlText);
-    edgeDestroy(Config.sslProxy);
-    edgeDestroy(Config.passProxy);
+    peerDestroy(Config.sslProxy);
+    peerDestroy(Config.passProxy);
     wordlistDestroy(&Config.cache_dirs);
     wordlistDestroy(&Config.hierarchy_stoplist);
     wordlistDestroy(&Config.local_domain_list);

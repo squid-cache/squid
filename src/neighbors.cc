@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.108 1997/01/31 22:06:30 wessels Exp $
+ * $Id: neighbors.cc,v 1.109 1997/01/31 22:30:32 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -105,23 +105,23 @@
 
 #include "squid.h"
 
-static int edgeWouldBePinged _PARAMS((const edge *, request_t *));
-static void neighborRemove _PARAMS((edge *));
-static edge *whichEdge _PARAMS((const struct sockaddr_in * from));
-static void neighborAlive _PARAMS((edge *, const MemObject *, const icp_common_t *));
-static void neighborCountIgnored _PARAMS((edge * e, icp_opcode op_unused));
+static int peerWouldBePinged _PARAMS((const peer *, request_t *));
+static void neighborRemove _PARAMS((peer *));
+static peer *whichPeer _PARAMS((const struct sockaddr_in * from));
+static void neighborAlive _PARAMS((peer *, const MemObject *, const icp_common_t *));
+static void neighborCountIgnored _PARAMS((peer * e, icp_opcode op_unused));
 static neighbor_t parseNeighborType _PARAMS((const char *s));
-static char *neighborTypeStr _PARAMS((edge * e));
+static char *neighborTypeStr _PARAMS((peer * e));
 
 static icp_common_t echo_hdr;
 static u_short echo_port;
 
 static struct {
     int n;
-    edge *edges_head;
-    edge *edges_tail;
-    edge *first_ping;
-} friends = {
+    peer *peers_head;
+    peer *peers_tail;
+    peer *first_ping;
+} Peers = {
 
     0, NULL, NULL, NULL
 };
@@ -150,23 +150,23 @@ const char *hier_strings[] =
 };
 
 static char *
-neighborTypeStr(edge * e)
+neighborTypeStr(peer * e)
 {
-    if (e->type == EDGE_SIBLING)
+    if (e->type == PEER_SIBLING)
 	return "Sibling";
     return "Parent";
 }
 
 
-static edge *
-whichEdge(const struct sockaddr_in *from)
+static peer *
+whichPeer(const struct sockaddr_in *from)
 {
     int j;
     u_short port = ntohs(from->sin_port);
     struct in_addr ip = from->sin_addr;
-    edge *e = NULL;
-    debug(15, 3, "whichEdge: from %s port %d\n", inet_ntoa(ip), port);
-    for (e = friends.edges_head; e; e = e->next) {
+    peer *e = NULL;
+    debug(15, 3, "whichPeer: from %s port %d\n", inet_ntoa(ip), port);
+    for (e = Peers.peers_head; e; e = e->next) {
 	for (j = 0; j < e->n_addresses; j++) {
 	    if (ip.s_addr == e->addresses[j].s_addr && port == e->icp_port) {
 		return e;
@@ -187,19 +187,19 @@ hierarchyNote(request_t * request, hier_code code, int timeout, const char *cach
 }
 
 static neighbor_t
-neighborType(const edge * e, const request_t * request)
+neighborType(const peer * e, const request_t * request)
 {
     const struct _domain_type *d = NULL;
     for (d = e->typelist; d; d = d->next) {
 	if (matchDomainName(d->domain, request->host))
-	    if (d->type != EDGE_NONE)
+	    if (d->type != PEER_NONE)
 		return d->type;
     }
     return e->type;
 }
 
 static int
-edgeWouldBePinged(const edge * e, request_t * request)
+peerWouldBePinged(const peer * e, request_t * request)
 {
     const struct _domain_ping *d = NULL;
     int do_ping = 1;
@@ -207,10 +207,10 @@ edgeWouldBePinged(const edge * e, request_t * request)
     aclCheck_t checklist;
 
     if (BIT_TEST(request->flags, REQ_NOCACHE))
-	if (neighborType(e, request) == EDGE_SIBLING)
+	if (neighborType(e, request) == PEER_SIBLING)
 	    return 0;
     if (BIT_TEST(request->flags, REQ_REFRESH))
-	if (neighborType(e, request) == EDGE_SIBLING)
+	if (neighborType(e, request) == PEER_SIBLING)
 	    return 0;
     if (e->pinglist == NULL && e->acls == NULL)
 	return do_ping;
@@ -233,23 +233,23 @@ edgeWouldBePinged(const edge * e, request_t * request)
 int
 neighborsCount(request_t * request)
 {
-    edge *e = NULL;
+    peer *e = NULL;
     int count = 0;
-    for (e = friends.edges_head; e; e = e->next)
-	if (edgeWouldBePinged(e, request))
+    for (e = Peers.peers_head; e; e = e->next)
+	if (peerWouldBePinged(e, request))
 	    count++;
     return count;
 }
 
-edge *
+peer *
 getSingleParent(request_t * request)
 {
-    edge *p = NULL;
-    edge *e = NULL;
-    for (e = friends.edges_head; e; e = e->next) {
-	if (!edgeWouldBePinged(e, request))
+    peer *p = NULL;
+    peer *e = NULL;
+    for (e = Peers.peers_head; e; e = e->next) {
+	if (!peerWouldBePinged(e, request))
 	    continue;
-	if (neighborType(e, request) != EDGE_PARENT)
+	if (neighborType(e, request) != PEER_PARENT)
 	    return NULL;	/* oops, found SIBLING */
 	if (p)
 	    return NULL;	/* oops, found second parent */
@@ -258,34 +258,34 @@ getSingleParent(request_t * request)
     return p;
 }
 
-edge *
+peer *
 getFirstUpParent(request_t * request)
 {
-    edge *e = NULL;
-    for (e = friends.edges_head; e; e = e->next) {
+    peer *e = NULL;
+    for (e = Peers.peers_head; e; e = e->next) {
 	if (!neighborUp(e))
 	    continue;
-	if (neighborType(e, request) != EDGE_PARENT)
+	if (neighborType(e, request) != PEER_PARENT)
 	    continue;
-	if (edgeWouldBePinged(e, request))
+	if (peerWouldBePinged(e, request))
 	    return e;
     }
     return NULL;
 }
 
-edge *
+peer *
 getRoundRobinParent(request_t * request)
 {
-    edge *e;
-    edge *f = NULL;
-    for (e = friends.edges_head; e; e = e->next) {
+    peer *e;
+    peer *f = NULL;
+    for (e = Peers.peers_head; e; e = e->next) {
 	if (!BIT_TEST(e->options, NEIGHBOR_ROUNDROBIN))
 	    continue;
-	if (neighborType(e, request) != EDGE_PARENT)
+	if (neighborType(e, request) != PEER_PARENT)
 	    continue;
 	if (!neighborUp(e))
 	    continue;
-	if (!edgeWouldBePinged(e, request))
+	if (!peerWouldBePinged(e, request))
 	    continue;
 	if (f && f->rr_count < e->rr_count)
 	    continue;
@@ -296,43 +296,43 @@ getRoundRobinParent(request_t * request)
     return f;
 }
 
-edge *
+peer *
 getDefaultParent(request_t * request)
 {
-    edge *e = NULL;
-    for (e = friends.edges_head; e; e = e->next) {
+    peer *e = NULL;
+    for (e = Peers.peers_head; e; e = e->next) {
 	if (!neighborUp(e))
 	    continue;
-	if (neighborType(e, request) != EDGE_PARENT)
+	if (neighborType(e, request) != PEER_PARENT)
 	    continue;
 	if (!BIT_TEST(e->options, NEIGHBOR_DEFAULT_PARENT))
 	    continue;
-	if (!edgeWouldBePinged(e, request))
+	if (!peerWouldBePinged(e, request))
 	    continue;
 	return e;
     }
     return NULL;
 }
 
-edge *
-getNextEdge(edge * e)
+peer *
+getNextPeer(peer * e)
 {
     return e->next;
 }
 
-edge *
-getFirstEdge(void)
+peer *
+getFirstPeer(void)
 {
-    return friends.edges_head;
+    return Peers.peers_head;
 }
 
 static void
-neighborRemove(edge * target)
+neighborRemove(peer * target)
 {
-    edge *e = NULL;
-    edge **E = NULL;
-    e = friends.edges_head;
-    E = &friends.edges_head;
+    peer *e = NULL;
+    peer **E = NULL;
+    e = Peers.peers_head;
+    E = &Peers.peers_head;
     while (e) {
 	if (target == e)
 	    break;
@@ -341,26 +341,26 @@ neighborRemove(edge * target)
     }
     if (e) {
 	*E = e->next;
-	edgeDestroy(e);
-	friends.n--;
+	peerDestroy(e);
+	Peers.n--;
     }
-    friends.first_ping = friends.edges_head;
+    Peers.first_ping = Peers.peers_head;
 }
 
 void
 neighborsDestroy(void)
 {
-    edge *e = NULL;
-    edge *next = NULL;
+    peer *e = NULL;
+    peer *next = NULL;
 
     debug(15, 3, "neighborsDestroy: called\n");
 
-    for (e = friends.edges_head; e; e = next) {
+    for (e = Peers.peers_head; e; e = next) {
 	next = e->next;
-	edgeDestroy(e);
-	friends.n--;
+	peerDestroy(e);
+	Peers.n--;
     }
-    memset(&friends, '\0', sizeof(friends));
+    memset(&Peers, '\0', sizeof(Peers));
 }
 
 void
@@ -371,9 +371,9 @@ neighbors_open(int fd)
     struct sockaddr_in *ap;
     int len = sizeof(struct sockaddr_in);
     const ipcache_addrs *ia = NULL;
-    edge *e = NULL;
-    edge *next = NULL;
-    edge **E = NULL;
+    peer *e = NULL;
+    peer *next = NULL;
+    peer **E = NULL;
     struct servent *sep = NULL;
 
     memset(&name, '\0', sizeof(struct sockaddr_in));
@@ -381,8 +381,8 @@ neighbors_open(int fd)
 	debug(15, 1, "getsockname(%d,%p,%p) failed.\n", fd, &name, &len);
 
     /* Prepare neighbor connections, one at a time */
-    E = &friends.edges_head;
-    next = friends.edges_head;
+    E = &Peers.peers_head;
+    next = Peers.peers_head;
     while ((e = next)) {
 	getCurrentTime();
 	next = e->next;
@@ -396,7 +396,7 @@ neighbors_open(int fd)
 	    continue;
 	}
 	e->n_addresses = 0;
-	for (j = 0; j < (int) ia->count && j < EDGE_MAX_ADDRESSES; j++) {
+	for (j = 0; j < (int) ia->count && j < PEER_MAX_ADDRESSES; j++) {
 	    e->addresses[j] = ia->in_addrs[j];
 	    e->n_addresses++;
 	}
@@ -444,7 +444,7 @@ neighborsUdpPing(protodispatch_data * proto)
     StoreEntry *entry = proto->entry;
     const ipcache_addrs *ia = NULL;
     struct sockaddr_in to_addr;
-    edge *e = NULL;
+    peer *e = NULL;
     int i;
     MemObject *mem = entry->mem_obj;
     int reqnum = 0;
@@ -457,7 +457,7 @@ neighborsUdpPing(protodispatch_data * proto)
     mem->w_rtt = 0;
     mem->start_ping = current_time;
 
-    if (friends.edges_head == NULL)
+    if (Peers.peers_head == NULL)
 	return 0;
     if (theOutIcpConnection < 0) {
 	debug(15, 0, "neighborsUdpPing: There is no ICP socket!\n");
@@ -467,22 +467,22 @@ neighborsUdpPing(protodispatch_data * proto)
     }
     if (entry->swap_status != NO_SWAP)
 	fatal_dump("neighborsUdpPing: bad swap_status");
-    for (i = 0, e = friends.first_ping; i++ < friends.n; e = e->next) {
+    for (i = 0, e = Peers.first_ping; i++ < Peers.n; e = e->next) {
 	if (e == NULL)
-	    e = friends.edges_head;
-	debug(15, 5, "neighborsUdpPing: Edge %s\n", e->host);
+	    e = Peers.peers_head;
+	debug(15, 5, "neighborsUdpPing: Peer %s\n", e->host);
 
 	/* skip any cache where we failed to connect() w/in the last 60s */
 	if (squid_curtime - e->last_fail_time < 60)
 	    continue;
 
-	if (!edgeWouldBePinged(e, request))
-	    continue;		/* next edge */
+	if (!peerWouldBePinged(e, request))
+	    continue;		/* next peer */
 	if (e->options & NEIGHBOR_NO_QUERY)
 	    continue;
 	/* the case below seems strange, but can happen if the
 	 * URL host is on the other side of a firewall */
-	if (e->type == EDGE_SIBLING)
+	if (e->type == PEER_SIBLING)
 	    if (!BIT_TEST(request->flags, REQ_HIERARCHICAL))
 		continue;
 
@@ -540,11 +540,11 @@ neighborsUdpPing(protodispatch_data * proto)
 	    }
 	}
     }
-    if ((friends.first_ping = friends.first_ping->next) == NULL)
-	friends.first_ping = friends.edges_head;
+    if ((Peers.first_ping = Peers.first_ping->next) == NULL)
+	Peers.first_ping = Peers.peers_head;
 
     /* only do source_ping if we have neighbors */
-    if (friends.n) {
+    if (Peers.n) {
 	if (!proto->source_ping) {
 	    debug(15, 6, "neighborsUdpPing: Source Ping is disabled.\n");
 	} else if ((ia = ipcache_gethostbyname(host, IP_BLOCKING_LOOKUP))) {
@@ -573,7 +573,7 @@ neighborsUdpPing(protodispatch_data * proto)
 }
 
 static void
-neighborAlive(edge * e, const MemObject * mem, const icp_common_t * header)
+neighborAlive(peer * e, const MemObject * mem, const icp_common_t * header)
 {
     int rtt;
     int n;
@@ -597,7 +597,7 @@ neighborAlive(edge * e, const MemObject * mem, const icp_common_t * header)
 }
 
 static void
-neighborCountIgnored(edge * e, icp_opcode op_unused)
+neighborCountIgnored(peer * e, icp_opcode op_unused)
 {
     if (e == NULL)
 	return;
@@ -613,16 +613,16 @@ neighborCountIgnored(edge * e, icp_opcode op_unused)
 void
 neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct sockaddr_in *from, StoreEntry * entry, char *data, int data_sz)
 {
-    edge *e = NULL;
+    peer *e = NULL;
     MemObject *mem = entry->mem_obj;
     int w_rtt;
     HttpStateData *httpState = NULL;
-    neighbor_t ntype = EDGE_NONE;
+    neighbor_t ntype = PEER_NONE;
     char *opcode_d;
     icp_opcode opcode = (icp_opcode) header->opcode;
 
     debug(15, 6, "neighborsUdpAck: opcode %d '%s'\n", (int) opcode, url);
-    if ((e = whichEdge(from)))
+    if ((e = whichPeer(from)))
 	neighborAlive(e, mem, header);
     if (opcode > ICP_OP_END)
 	return;
@@ -691,7 +691,7 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 	    httpProcessReplyHeader(httpState, data, data_sz);
 	    storeAppend(entry, data, data_sz);
 	    hierarchyNote(entry->mem_obj->request,
-		ntype == EDGE_PARENT ? HIER_PARENT_UDP_HIT_OBJ : HIER_SIBLING_UDP_HIT_OBJ,
+		ntype == PEER_PARENT ? HIER_PARENT_UDP_HIT_OBJ : HIER_SIBLING_UDP_HIT_OBJ,
 		0,
 		e->host);
 	    storeComplete(entry);	/* This might release entry! */
@@ -706,7 +706,7 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 		inet_ntoa(from->sin_addr));
 	} else {
 	    hierarchyNote(entry->mem_obj->request,
-		ntype == EDGE_PARENT ? HIER_PARENT_HIT : HIER_SIBLING_HIT,
+		ntype == PEER_PARENT ? HIER_PARENT_HIT : HIER_SIBLING_HIT,
 		0,
 		e->host);
 	    entry->ping_status = PING_DONE;
@@ -717,7 +717,7 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 	if (e == NULL) {
 	    debug(15, 1, "Ignoring DECHO from non-neighbor %s\n",
 		inet_ntoa(from->sin_addr));
-	} else if (ntype == EDGE_SIBLING) {
+	} else if (ntype == PEER_SIBLING) {
 	    debug_trap("neighborsUdpAck: Found non-ICP cache as SIBLING\n");
 	    debug_trap("neighborsUdpAck: non-ICP neighbors must be a PARENT\n");
 	} else {
@@ -731,7 +731,7 @@ neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct soc
 	if (e == NULL) {
 	    debug(15, 1, "Ignoring MISS from non-neighbor %s\n",
 		inet_ntoa(from->sin_addr));
-	} else if (ntype == EDGE_PARENT) {
+	} else if (ntype == PEER_PARENT) {
 	    w_rtt = tvSubMsec(mem->start_ping, current_time) / e->weight;
 	    if (mem->w_rtt == 0 || w_rtt < mem->w_rtt) {
 		mem->e_pings_first_miss = e;
@@ -777,14 +777,14 @@ neighborAdd(const char *host,
     int weight,
     int mcast_ttl)
 {
-    edge *e = NULL;
+    peer *e = NULL;
     const char *me = getMyHostname();
     if (!strcmp(host, me) && http_port == Config.Port.http) {
 	debug(15, 0, "neighborAdd: skipping cache_host %s %s/%d/%d\n",
 	    type, host, http_port, icp_port);
 	return;
     }
-    e = xcalloc(1, sizeof(edge));
+    e = xcalloc(1, sizeof(peer));
     e->http_port = http_port;
     e->icp_port = icp_port;
     e->mcast_ttl = mcast_ttl;
@@ -797,15 +797,15 @@ neighborAdd(const char *host,
     e->icp_version = ICP_VERSION_CURRENT;
     e->type = parseNeighborType(type);
 
-    /* Append edge */
-    if (!friends.edges_head)
-	friends.edges_head = e;
-    if (friends.edges_tail)
-	friends.edges_tail->next = e;
-    friends.edges_tail = e;
-    friends.n++;
-    if (!friends.first_ping)
-	friends.first_ping = e;
+    /* Append peer */
+    if (!Peers.peers_head)
+	Peers.peers_head = e;
+    if (Peers.peers_tail)
+	Peers.peers_tail->next = e;
+    Peers.peers_tail = e;
+    Peers.n++;
+    if (!Peers.first_ping)
+	Peers.first_ping = e;
 }
 
 void
@@ -813,7 +813,7 @@ neighborAddDomainPing(const char *host, const char *domain)
 {
     struct _domain_ping *l = NULL;
     struct _domain_ping **L = NULL;
-    edge *e;
+    peer *e;
     if ((e = neighborFindByName(host)) == NULL) {
 	debug(15, 0, "%s, line %d: No cache_host '%s'\n",
 	    cfg_filename, config_lineno, host);
@@ -836,7 +836,7 @@ neighborAddDomainType(const char *host, const char *domain, const char *type)
 {
     struct _domain_type *l = NULL;
     struct _domain_type **L = NULL;
-    edge *e;
+    peer *e;
     if ((e = neighborFindByName(host)) == NULL) {
 	debug(15, 0, "%s, line %d: No cache_host '%s'\n",
 	    cfg_filename, config_lineno, host);
@@ -853,7 +853,7 @@ neighborAddDomainType(const char *host, const char *domain, const char *type)
 void
 neighborAddAcl(const char *host, const char *aclname)
 {
-    edge *e;
+    peer *e;
     struct _acl_list *L = NULL;
     struct _acl_list **Tail = NULL;
     struct _acl *a = NULL;
@@ -890,11 +890,11 @@ neighborAddAcl(const char *host, const char *aclname)
     *Tail = L;
 }
 
-edge *
+peer *
 neighborFindByName(const char *name)
 {
-    edge *e = NULL;
-    for (e = friends.edges_head; e; e = e->next) {
+    peer *e = NULL;
+    for (e = Peers.peers_head; e; e = e->next) {
 	if (!strcasecmp(name, e->host))
 	    break;
     }
@@ -905,19 +905,19 @@ static neighbor_t
 parseNeighborType(const char *s)
 {
     if (!strcasecmp(s, "parent"))
-	return EDGE_PARENT;
+	return PEER_PARENT;
     if (!strcasecmp(s, "neighbor"))
-	return EDGE_SIBLING;
+	return PEER_SIBLING;
     if (!strcasecmp(s, "neighbour"))
-	return EDGE_SIBLING;
+	return PEER_SIBLING;
     if (!strcasecmp(s, "sibling"))
-	return EDGE_SIBLING;
+	return PEER_SIBLING;
     debug(15, 0, "WARNING: Unknown neighbor type: %s\n", s);
-    return EDGE_SIBLING;
+    return PEER_SIBLING;
 }
 
 int
-neighborUp(edge * e)
+neighborUp(peer * e)
 {
     if (e->last_fail_time)
 	if (squid_curtime - e->last_fail_time < (time_t) 60)
@@ -928,7 +928,7 @@ neighborUp(edge * e)
 }
 
 void
-edgeDestroy(edge * e)
+peerDestroy(peer * e)
 {
     struct _domain_ping *l = NULL;
     struct _domain_ping *nl = NULL;

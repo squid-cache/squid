@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.34 1997/01/31 22:06:31 wessels Exp $
+ * $Id: ssl.cc,v 1.35 1997/01/31 22:30:36 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -487,8 +487,8 @@ sslSelectNeighbor(int fd, const ipcache_addrs * ia, void *data)
 {
     SslStateData *sslState = data;
     request_t *request = sslState->request;
-    edge *e = NULL;
-    edge *g = NULL;
+    peer *e = NULL;
+    peer *g = NULL;
     int fw_ip_match = IP_ALLOW;
     if (ia && Config.firewall_ip_list)
 	fw_ip_match = ip_access_check(ia->in_addrs[ia->cur], Config.firewall_ip_list);
