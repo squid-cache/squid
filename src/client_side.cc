@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.578 2002/04/21 21:54:03 hno Exp $
+ * $Id: client_side.cc,v 1.579 2002/06/04 14:42:32 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -3175,6 +3175,11 @@ clientHttpsConnectionsOpen(void)
     https_port_data *https_port;
     int fd;
     for (s = Config.Sockaddr.https; s; s = s->next) {
+	if (MAXHTTPPORTS == NHttpSockets) {
+	    debug(1, 1) ("WARNING: You have too many 'https_port' lines.\n");
+	    debug(1, 1) ("         The limit is %d\n", MAXHTTPPORTS);
+	    continue;
+	}
 	enter_suid();
 	fd = comm_open(SOCK_STREAM,
 	    0,
