@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.337 2002/10/14 08:16:58 robertc Exp $
+ * $Id: comm.cc,v 1.338 2002/10/15 00:49:10 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1145,7 +1145,8 @@ _comm_close(int fd, char *file, int line)
 	assert(fd == cio->fd); /* just paranoid */
 	dlinkDelete(&cio->h_node, &CommCallbackList);
 	dlinkDelete(&cio->fd_node, &(fdc_table[cio->fd].CommCallbackList));
-
+	/* We're closing! */
+	cio->errcode = COMM_ERR_CLOSING;
 	comm_call_io_callback(cio);
 	memPoolFree(comm_callback_pool, cio);
     }
