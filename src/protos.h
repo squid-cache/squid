@@ -73,6 +73,7 @@ extern void icpProcessExpired _PARAMS((int fd, void *));
 extern int modifiedSince _PARAMS((StoreEntry *, request_t *));
 extern char *clientConstructTraceEcho _PARAMS((clientHttpRequest *));
 extern void clientPurgeRequest _PARAMS((clientHttpRequest *));
+extern int checkNegativeHit(StoreEntry *);
 
 #if USE_PROXY_AUTH
 extern const char *proxyAuthenticate(const char *headers);
