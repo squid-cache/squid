@@ -1,5 +1,5 @@
 /*
- * $Id: squid_endian.h,v 1.2 2003/08/07 13:31:34 robertc Exp $
+ * $Id: squid_endian.h,v 1.3 2003/08/16 23:32:29 robertc Exp $
  *
  * AUTHOR: Alan Barrett
  *
@@ -84,7 +84,7 @@
 #    define bswap16(x) bswap_16(x)
 #  else
 #    define bswap16(x) \
-       ((((u_int16_t)x) >> 8) & 0xff) | ((((u_int16_t)x) & 0xff) << 8))
+       (((((u_int16_t)(x)) >> 8) & 0xff) | ((((u_int16_t)(x)) & 0xff) << 8))
 #  endif
 #endif /* ! HAVE_BSWAP16 && ! defined(bswap16) */
 #if ! HAVE_BSWAP32 && ! defined(bswap32)
@@ -92,10 +92,10 @@
 #    define bswap32(x) bswap_32(x)
 #  else
 #    define bswap32(x) \
-       (((((u_int32_t)x) & 0xff000000) >> 24) | \
-        ((((u_int32_t)x) & 0x00ff0000) >>  8) | \
-        ((((u_int32_t)x) & 0x0000ff00) <<  8) | \
-        ((((u_int32_t)x) & 0x000000ff) << 24))
+       (((((u_int32_t)(x)) & 0xff000000) >> 24) | \
+        ((((u_int32_t)(x)) & 0x00ff0000) >>  8) | \
+        ((((u_int32_t)(x)) & 0x0000ff00) <<  8) | \
+        ((((u_int32_t)(x)) & 0x000000ff) << 24))
 #  endif
 #endif /* ! HAVE_BSWAP32 && ! defined(bswap32) */
 
