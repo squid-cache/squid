@@ -1,3 +1,5 @@
+
+none
 section 0     Announcement Server
 section 0     CGI Cache Manager
 section 0     Client Database
@@ -16,7 +18,7 @@ section 9     File Transfer Protocol (FTP)
 section 10    Gopher
 section 11    Hypertext Transfer Protocol (HTTP)
 section 12    Unlink Daemon
-section 13    Memory Pool Management
+section 13    High Level Memory Pool Management
 section 14    IP Cache
 section 15    Neighbor Routines
 section 16    Cache Manager Objects
@@ -62,3 +64,8 @@ section 57    HTTP Status-line
 section 58    HTTP Reply (Response)
 section 59    auto-growing Memory Buffer with printf
 section 60    Packer: A uniform interface to store-like modules
+section 62    Generic Histogram
+section 63    Low Level Memory Pool Management
+section 64    HTTP Content-Range Header
+section 65    HTTP Cache Control Header
+section 66    HTTP Header Tools
