@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.86 1996/11/22 08:38:52 wessels Exp $
+ * $Id: tools.cc,v 1.87 1996/11/24 04:19:14 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -584,7 +584,7 @@ setMaxFD(void)
     if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
 	debug(50, 0, "setrlimit: RLIMIT_NOFILE: %s\n", xstrerror());
     } else {
-	rl.rlim_cur = SQUID_MAXFD;
+	rl.rlim_cur = FD_SETSIZE;
 	if (rl.rlim_cur > rl.rlim_max)
 	    rl.rlim_cur = rl.rlim_max;
 	if (setrlimit(RLIMIT_NOFILE, &rl) < 0) {
@@ -596,7 +596,7 @@ setMaxFD(void)
     if (getrlimit(RLIMIT_OFILE, &rl) < 0) {
 	debug(50, 0, "setrlimit: RLIMIT_NOFILE: %s\n", xstrerror());
     } else {
-	rl.rlim_cur = SQUID_MAXFD;
+	rl.rlim_cur = FD_SETSIZE;
 	if (rl.rlim_cur > rl.rlim_max)
 	    rl.rlim_cur = rl.rlim_max;
 	if (setrlimit(RLIMIT_OFILE, &rl) < 0) {
