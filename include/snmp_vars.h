@@ -1,4 +1,3 @@
-/* -*- c++ -*- */
 #ifndef _SNMP_VARS_H_
 #define _SNMP_VARS_H_
 
@@ -26,7 +25,7 @@
  * 
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
  * 
- * $Id: snmp_vars.h,v 1.9 2001/01/07 09:55:22 hno Exp $
+ * $Id: snmp_vars.h,v 1.10 2001/01/07 10:57:14 hno Exp $
  * 
  **********************************************************************/
 
@@ -43,25 +42,20 @@ struct variable_list {
     int val_len;
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+struct variable_list *snmp_var_new(oid *, int);
+struct variable_list *snmp_var_new_integer(oid *, int, int, unsigned char);
+struct variable_list *snmp_var_clone(struct variable_list *);
+void snmp_var_free(struct variable_list *);
 
-    struct variable_list *snmp_var_new(oid *, int);
-    struct variable_list *snmp_var_new_integer(oid *, int, int, unsigned char);
-    struct variable_list *snmp_var_clone(struct variable_list *);
-    void snmp_var_free(struct variable_list *);
+u_char *snmp_var_EncodeVarBind(u_char *, int *, struct variable_list *, int);
+u_char *snmp_var_DecodeVarBind(u_char *, int *, struct variable_list **, int);
 
-    u_char *snmp_var_EncodeVarBind(u_char *, int *, struct variable_list *, int);
-    u_char *snmp_var_DecodeVarBind(u_char *, int *, struct variable_list **, int);
+#define MAX_NAME_LEN	64	/* number of subid's in a objid */
 
-#ifdef __cplusplus
-}
-
-#endif
-#define MAX_NAME_LEN	64	/* number of subid's in a objid *//*      *RFC 1902:Structure of Management Information for SNMPv2      *      *Defined Types
-*
-      */
+/* RFC 1902: Structure of Management Information for SNMPv2
+ *
+ * Defined Types
+ */
 #define SMI_INTEGER     ASN_INTEGER
 #define SMI_STRING      ASN_OCTET_STR
 #define SMI_OBJID       ASN_OBJECT_ID

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.313 2001/01/05 09:51:37 adrian Exp $
+ * $Id: comm.cc,v 1.314 2001/01/07 10:57:14 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -856,7 +856,7 @@ commHandleWrite(int fd, void *data)
 
 
 /* Select for Writing on FD, until SIZE bytes are sent.  Call
- * * HANDLER when complete. */
+ * *HANDLER when complete. */
 void
 comm_write(int fd, char *buf, int size, CWCB * handler, void *handler_data, FREE * free_func)
 {

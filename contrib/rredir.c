@@ -1,4 +1,4 @@
-/* $Id: rredir.c,v 1.3 1996/09/14 16:54:47 wessels Exp $ */
+/* $Id: rredir.c,v 1.4 2001/01/07 10:57:13 hno Exp $ */
 
 /*
  * From:    richard@hekkihek.hacom.nl (Richard Huveneers)
@@ -80,7 +80,7 @@ main()
 	s++;
 
 	/* security: do not redirect to hidden files, the current
-	 * ** directory or the parent directory */
+	 * directory or the parent directory */
 	if (*s == '.' || *s == '\0')
 	    goto dont_redirect;
 

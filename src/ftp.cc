@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.303 2001/01/06 11:46:43 hno Exp $
+ * $Id: ftp.cc,v 1.304 2001/01/07 10:57:15 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1784,8 +1784,8 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
     int on = 1;
     u_short port = 0;
     /*
-     * * Tear down any old data connection if any. We are about to
-     * * establish a new one.
+     * Tear down any old data connection if any. We are about to
+     * establish a new one.
      */
     if (ftpState->data.fd > 0) {
 	comm_close(ftpState->data.fd);
