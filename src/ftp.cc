@@ -1,4 +1,4 @@
-/* $Id: ftp.cc,v 1.33 1996/04/10 20:53:45 wessels Exp $ */
+/* $Id: ftp.cc,v 1.34 1996/04/12 21:41:37 wessels Exp $ */
 
 /*
  * DEBUG: Section 9           ftp: FTP
@@ -41,11 +41,11 @@ static void ftpCloseAndFree(fd, data)
 	comm_close(fd);
     if (data) {
 	if (data->reply_hdr) {
-	    put_free_8k_page(data->reply_hdr, __FILE__, __LINE__);
+	    put_free_8k_page(data->reply_hdr);
 	    data->reply_hdr = NULL;
 	}
 	if (data->icp_page_ptr) {
-	    put_free_8k_page(data->icp_page_ptr, __FILE__, __LINE__);
+	    put_free_8k_page(data->icp_page_ptr);
 	    data->icp_page_ptr = NULL;
 	}
 	if (data->icp_rwd_ptr)
@@ -167,7 +167,7 @@ static void ftpProcessReplyHeader(data, buf, size)
     debug(11, 3, "ftpProcessReplyHeader: key '%s'\n", entry->key);
 
     if (data->reply_hdr == NULL) {
-	data->reply_hdr = get_free_8k_page(__FILE__, __LINE__);
+	data->reply_hdr = get_free_8k_page();
 	memset(data->reply_hdr, '\0', 8192);
     }
     if (data->reply_hdr_state == 0) {
@@ -262,7 +262,7 @@ static void ftpProcessReplyHeader(data, buf, size)
 		storeSetPrivateKey(entry);
 	    storeExpireNow(entry);
 	    BIT_RESET(entry->flag, CACHABLE);
-	    storeReleaseRequest(entry, __FILE__, __LINE__);
+	    storeReleaseRequest(entry);
 	    break;
 	default:
 	    /* These can be negative cached, make key public */
@@ -329,7 +329,7 @@ int ftpReadReply(fd, data)
 	     * by `ftpget'. */
 	} else {
 	    BIT_RESET(entry->flag, CACHABLE);
-	    storeReleaseRequest(entry, __FILE__, __LINE__);
+	    storeReleaseRequest(entry);
 	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
 	    ftpCloseAndFree(fd, data);
 	}
@@ -347,7 +347,7 @@ int ftpReadReply(fd, data)
 	    debug(9, 1, "ftpReadReply: Didn't see magic marker, purging <URL:%s>.\n", entry->url);
 	    entry->expires = cached_curtime + getNegativeTTL();
 	    BIT_RESET(entry->flag, CACHABLE);
-	    storeReleaseRequest(entry, __FILE__, __LINE__);
+	    storeReleaseRequest(entry);
 	} else if (!(entry->flag & DELETE_BEHIND)) {
 	    entry->expires = cached_curtime + ttlSet(entry);
 	}
@@ -407,7 +407,7 @@ void ftpSendComplete(fd, buf, size, errflag, data)
 	fd, size, errflag);
 
     if (buf) {
-	put_free_8k_page(buf, __FILE__, __LINE__);	/* Allocated by ftpSendRequest. */
+	put_free_8k_page(buf);	/* Allocated by ftpSendRequest. */
 	buf = NULL;
     }
     data->icp_page_ptr = NULL;	/* So lifetime expire doesn't re-free */
@@ -450,7 +450,7 @@ void ftpSendRequest(fd, data)
     debug(9, 5, "ftpSendRequest: FD %d\n", fd);
 
     buflen = strlen(data->request) + 256;
-    buf = (char *) get_free_8k_page(__FILE__, __LINE__);
+    buf = (char *) get_free_8k_page();
     data->icp_page_ptr = buf;
     memset(buf, '\0', buflen);
 

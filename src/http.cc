@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.43 1996/04/12 21:22:55 wessels Exp $ */
+/* $Id: http.cc,v 1.44 1996/04/12 21:41:38 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -34,11 +34,11 @@ static void httpCloseAndFree(fd, data)
 	comm_close(fd);
     if (data) {
 	if (data->reply_hdr) {
-	    put_free_8k_page(data->reply_hdr, __FILE__, __LINE__);
+	    put_free_8k_page(data->reply_hdr);
 	    data->reply_hdr = NULL;
 	}
 	if (data->icp_page_ptr) {
-	    put_free_8k_page(data->icp_page_ptr, __FILE__, __LINE__);
+	    put_free_8k_page(data->icp_page_ptr);
 	    data->icp_page_ptr = NULL;
 	}
 	if (data->icp_rwd_ptr)
@@ -141,7 +141,7 @@ static void httpProcessReplyHeader(data, buf, size)
     debug(11, 3, "httpProcessReplyHeader: key '%s'\n", entry->key);
 
     if (data->reply_hdr == NULL) {
-	data->reply_hdr = get_free_8k_page(__FILE__, __LINE__);
+	data->reply_hdr = get_free_8k_page();
 	memset(data->reply_hdr, '\0', 8192);
     }
     if (data->reply_hdr_state == 0) {
@@ -236,7 +236,7 @@ static void httpProcessReplyHeader(data, buf, size)
 		storeSetPrivateKey(entry);
 	    storeExpireNow(entry);
 	    BIT_RESET(entry->flag, CACHABLE);
-	    storeReleaseRequest(entry, __FILE__, __LINE__);
+	    storeReleaseRequest(entry);
 	    break;
 	default:
 	    /* These can be negative cached, make key public */
@@ -311,7 +311,7 @@ static void httpReadReply(fd, data)
 		(PF) httpReadReplyTimeout, (void *) data, getReadTimeout());
 	} else {
 	    BIT_RESET(entry->flag, CACHABLE);
-	    storeReleaseRequest(entry, __FILE__, __LINE__);
+	    storeReleaseRequest(entry);
 	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
 	    httpCloseAndFree(fd, data);
 	}
@@ -375,7 +375,7 @@ static void httpSendComplete(fd, buf, size, errflag, data)
 	fd, size, errflag);
 
     if (buf) {
-	put_free_8k_page(buf, __FILE__, __LINE__);	/* Allocated by httpSendRequest. */
+	put_free_8k_page(buf);	/* Allocated by httpSendRequest. */
 	buf = NULL;
     }
     data->icp_page_ptr = NULL;	/* So lifetime expire doesn't re-free */
@@ -431,7 +431,7 @@ static void httpSendRequest(fd, data)
     }
     /* Since we limit the URL read to a 4K page, I doubt that the
      * mime header could be longer than an 8K page */
-    buf = (char *) get_free_8k_page(__FILE__, __LINE__);
+    buf = (char *) get_free_8k_page();
     data->icp_page_ptr = buf;
     if (buflen > DISK_PAGE_SIZE) {
 	debug(11, 0, "Mime header length %d is breaking ICP code\n", buflen);
@@ -444,7 +444,7 @@ static void httpSendRequest(fd, data)
 	xbuf = xstrdup(data->req_hdr);
 	for (t = strtok(xbuf, crlf); t; t = strtok(NULL, crlf)) {
 	    if (strncasecmp(t, "User-Agent:", 11) == 0) {
-		ybuf = (char *) get_free_4k_page(__FILE__, __LINE__);
+		ybuf = (char *) get_free_4k_page();
 		memset(ybuf, '\0', SM_PAGE_SIZE);
 		sprintf(ybuf, "%s %s %s", t, HARVEST_PROXY_TEXT, version_string);
 		t = ybuf;
@@ -457,12 +457,12 @@ static void httpSendRequest(fd, data)
 	}
 	xfree(xbuf);
 	if (ybuf) {
-	    put_free_4k_page(ybuf, __FILE__, __LINE__);
+	    put_free_4k_page(ybuf);
 	    ybuf = NULL;
 	}
     }
     /* Add Forwarded: header */
-    ybuf = get_free_4k_page(__FILE__, __LINE__);
+    ybuf = get_free_4k_page();
     if (data->entry->mem_obj)
 	cfd = data->entry->mem_obj->fd_of_first_client;
     if (cfd < 0) {
@@ -474,7 +474,7 @@ static void httpSendRequest(fd, data)
     }
     strcat(buf, ybuf);
     len += strlen(ybuf);
-    put_free_4k_page(ybuf, __FILE__, __LINE__);
+    put_free_4k_page(ybuf);
     ybuf = NULL;
 
     strcat(buf, crlf);
