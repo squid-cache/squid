@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.89 2002/11/29 22:02:32 hno Exp $
+ * $Id: forward.cc,v 1.90 2002/12/06 23:19:15 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -178,6 +178,99 @@ fwdServerClosed(int fd, void *data)
     }
 }
 
+#if USE_SSL
+static void
+fwdNegotiateSSL(int fd, void *data)
+{
+    FwdState *fwdState = (FwdState *)data;
+    FwdServer *fs = fwdState->servers;
+    SSL *ssl = fd_table[fd].ssl;
+    int ret;
+    ErrorState *err;
+    request_t *request = fwdState->request;
+    if ((ret = SSL_connect(ssl)) <= 0) {
+	int ssl_error = SSL_get_error(ssl, ret);
+	switch (ssl_error) {
+	case SSL_ERROR_WANT_READ:
+	    commSetSelect(fd, COMM_SELECT_READ, fwdNegotiateSSL, fwdState, 0);
+	    return;
+	case SSL_ERROR_WANT_WRITE:
+	    commSetSelect(fd, COMM_SELECT_WRITE, fwdNegotiateSSL, fwdState, 0);
+	    return;
+	default:
+	    debug(81, 1) ("fwdNegotiateSSL: Error negotiating SSL connection on FD %d: %s (%d/%d)\n", fd, ERR_error_string(ERR_get_error(), NULL), ssl_error, ret);
+	    err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
+#ifdef EPROTO
+	    err->xerrno = EPROTO;
+#else
+	    err->xerrno = EACCES;
+#endif
+	    if (fs->_peer) {
+		err->host = xstrdup(fs->_peer->host);
+		err->port = fs->_peer->http_port;
+	    } else {
+		err->host = xstrdup(request->host);
+		err->port = request->port;
+	    }
+	    err->request = requestLink(request);
+	    fwdFail(fwdState, err);
+	    if (fs->_peer) {
+		peerConnectFailed(fs->_peer);
+		fs->_peer->stats.conn_open--;
+	    }
+	    comm_close(fd);
+	    return;
+	}
+    }
+    fwdDispatch(fwdState);
+}
+
+static void
+fwdInitiateSSL(FwdState * fwdState)
+{
+    FwdServer *fs = fwdState->servers;
+    int fd = fwdState->server_fd;
+    SSL *ssl;
+    SSL_CTX *sslContext = NULL;
+    peer *peer = fs->_peer;
+    if (peer) {
+	assert(peer->use_ssl);
+	sslContext = peer->sslContext;
+    } else {
+	sslContext = Config.ssl_client.sslContext;
+    }
+    assert(sslContext);
+    if ((ssl = SSL_new(sslContext)) == NULL) {
+	ErrorState *err;
+	debug(83, 1) ("fwdInitiateSSL: Error allocating handle: %s\n",
+	    ERR_error_string(ERR_get_error(), NULL));
+	err = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
+	err->xerrno = errno;
+	err->request = requestLink(fwdState->request);
+	fwdFail(fwdState, err);
+	fwdStateFree(fwdState);
+	return;
+    }
+    SSL_set_fd(ssl, fd);
+    if (peer) {
+	if (peer->ssldomain)
+	    SSL_set_ex_data(ssl, ssl_ex_index_server, peer->ssldomain);
+#if NOT_YET
+	else if (peer->name)
+	    SSL_set_ex_data(ssl, ssl_ex_index_server, peer->name);
+#endif
+	else
+	    SSL_set_ex_data(ssl, ssl_ex_index_server, peer->host);
+    } else {
+	SSL_set_ex_data(ssl, ssl_ex_index_server, fwdState->request->host);
+    }
+    fd_table[fd].ssl = ssl;
+    fd_table[fd].read_method = &ssl_read_method;
+    fd_table[fd].write_method = &ssl_write_method;
+    fwdNegotiateSSL(fd, fwdState);
+}
+#endif
+
 static void
 fwdConnectDone(int server_fd, comm_err_t status, void *data)
 {
@@ -224,15 +317,14 @@ fwdConnectDone(int server_fd, comm_err_t status, void *data)
     } else {
 	debug(17, 3) ("fwdConnectDone: FD %d: '%s'\n", server_fd, storeUrl(fwdState->entry));
 	if (fs->_peer)
-	    hierarchyNote(&fwdState->request->hier, fs->code, fs->_peer->host);
-	else if (Config.onoff.log_ip_on_direct)
-	    hierarchyNote(&fwdState->request->hier, fs->code, fd_table[server_fd].ipaddr);
-	else
-	    hierarchyNote(&fwdState->request->hier, fs->code, request->host);
-	fd_note(server_fd, storeUrl(fwdState->entry));
-	fd_table[server_fd].uses++;
-	if (fs->_peer)
 	    peerConnectSucceded(fs->_peer);
+#if USE_SSL
+	if ((fs->_peer && fs->_peer->use_ssl) ||
+		(!fs->_peer && request->protocol == PROTO_HTTPS)) {
+	    fwdInitiateSSL(fwdState);
+	    return;
+	}
+#endif
 	fwdDispatch(fwdState);
     }
 }
@@ -351,7 +443,7 @@ fwdConnectStart(void *data)
 	fwdState->server_fd = fd;
 	fwdState->n_tries++;
 	comm_add_close_handler(fd, fwdServerClosed, fwdState);
-	fwdConnectDone(fd, COMM_OK, fwdState);
+	fwdDispatch(fwdState);
 	return;
     }
 #if URL_CHECKSUM_DEBUG
@@ -428,21 +520,31 @@ fwdDispatch(FwdState * fwdState)
     request_t *request = fwdState->request;
     StoreEntry *entry = fwdState->entry;
     ErrorState *err;
+    FwdServer *fs = fwdState->servers;
+    int server_fd = fwdState->server_fd;
     debug(17, 3) ("fwdDispatch: FD %d: Fetching '%s %s'\n",
 	fwdState->client_fd,
 	RequestMethodStr[request->method],
 	storeUrl(entry));
-    /*assert(!EBIT_TEST(entry->flags, ENTRY_DISPATCHED)); */
-    assert(entry->ping_status != PING_WAITING);
-    assert(entry->lock_count);
-    EBIT_SET(entry->flags, ENTRY_DISPATCHED);
-    netdbPingSite(request->host);
     /*
      * Assert that server_fd is set.  This is to guarantee that fwdState
      * is attached to something and will be deallocated when server_fd
      * is closed.
      */
-    assert(fwdState->server_fd > -1);
+    assert(server_fd > -1);
+    if (fs->_peer)
+	hierarchyNote(&fwdState->request->hier, fs->code, fs->_peer->host);
+    else if (Config.onoff.log_ip_on_direct)
+	hierarchyNote(&fwdState->request->hier, fs->code, fd_table[server_fd].ipaddr);
+    else
+	hierarchyNote(&fwdState->request->hier, fs->code, request->host);
+    fd_note(server_fd, storeUrl(fwdState->entry));
+    fd_table[server_fd].uses++;
+    /*assert(!EBIT_TEST(entry->flags, ENTRY_DISPATCHED)); */
+    assert(entry->ping_status != PING_WAITING);
+    assert(entry->lock_count);
+    EBIT_SET(entry->flags, ENTRY_DISPATCHED);
+    netdbPingSite(request->host);
     if (fwdState->servers && (p = fwdState->servers->_peer)) {
 	p->stats.fetches++;
 	fwdState->request->peer_login = p->login;
@@ -450,6 +552,11 @@ fwdDispatch(FwdState * fwdState)
     } else {
 	fwdState->request->peer_login = NULL;
 	switch (request->protocol) {
+#if USE_SSL
+	case PROTO_HTTPS:
+	    httpStart(fwdState);
+	    break;
+#endif
 	case PROTO_HTTP:
 	    httpStart(fwdState);
 	    break;

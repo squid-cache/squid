@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.359 2002/10/28 11:27:47 robertc Exp $
+ * $Id: comm.cc,v 1.360 2002/12/06 23:19:15 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1387,13 +1387,13 @@ _comm_close(int fd, char *file, int line)
     commCallCloseHandlers(fd);
     if (F->uses)		/* assume persistent connect count */
 	pconnHistCount(1, F->uses);
+    comm_empty_os_read_buffers(fd);
 #if USE_SSL
     if (F->ssl) {
 	SSL_free(F->ssl);
 	F->ssl = NULL;
     }
 #endif
-    comm_empty_os_read_buffers(fd);
     fd_close(fd);		/* update fdstat */
     close(fd);
     fdc_table[fd].active = 0;

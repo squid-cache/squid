@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.142 2002/10/25 07:36:32 robertc Exp $
+ * $Id: typedefs.h,v 1.143 2002/12/06 23:19:16 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -61,6 +61,9 @@ typedef struct AuthUserIP auth_user_ip_t;
 typedef struct _acl_proxy_auth_match_cache acl_proxy_auth_match_cache;
 typedef struct _authscheme_entry authscheme_entry_t;
 typedef struct _authScheme authScheme;
+#if USE_SSL
+typedef struct _acl_cert_data acl_cert_data;
+#endif
 typedef struct _acl_user_data acl_user_data;
 typedef struct _acl_user_ip_data acl_user_ip_data;
 typedef struct _acl_arp_data acl_arp_data;

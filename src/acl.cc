@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.292 2002/11/10 04:19:39 hno Exp $
+ * $Id: acl.cc,v 1.293 2002/12/06 23:19:13 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -102,6 +102,13 @@ static SPLAYCMP aclArpCompare;
 static SPLAYWALKEE aclDumpArpListWalkee;
 #endif
 static int aclCacheMatchAcl(dlink_list * cache, squid_acl acltype, void *data, char const *MatchParam);
+#if USE_SSL
+static void aclParseCertList(void *curlist);
+static int aclMatchUserCert(void *data, aclCheck_t *);
+static int aclMatchCACert(void *data, aclCheck_t *);
+static wordlist *aclDumpCertList(void *data);
+static void aclDestroyCertList(void *data);
+#endif
 
 static squid_acl
 aclStrToType(const char *s)
@@ -178,6 +185,12 @@ aclStrToType(const char *s)
 	return ACL_MAX_USER_IP;
     if (!strcmp(s, "external"))
 	return ACL_EXTERNAL;
+#if USE_SSL
+    if (!strcmp(s, "user_cert"))
+	return ACL_USER_CERT;
+    if (!strcmp(s, "ca_cert"))
+	return ACL_CA_CERT;
+#endif
     return ACL_NONE;
 }
 
@@ -252,6 +265,12 @@ aclTypeToStr(squid_acl type)
 	return "max_user_ip";
     if (type == ACL_EXTERNAL)
 	return "external";
+#if USE_SSL
+    if (type == ACL_USER_CERT)
+	return "user_cert";
+    if (type == ACL_CA_CERT)
+	return "ca_cert";
+#endif
     return "ERROR";
 }
 
@@ -672,6 +691,91 @@ aclParseDomainList(void *curlist)
     }
 }
 
+#if USE_SSL
+static void
+aclParseCertList(void *curlist)
+{
+    acl_cert_data **datap = (acl_cert_data **)curlist;
+    splayNode **Top;
+    char *t;
+    char *attribute = strtokFile();
+    if (!attribute)
+	self_destruct();
+    if (*datap) {
+	if (strcasecmp((*datap)->attribute, attribute) != 0)
+	    self_destruct();
+    } else {
+	*datap = (acl_cert_data *)memAllocate(MEM_ACL_CERT_DATA);
+	(*datap)->attribute = xstrdup(attribute);
+    }
+    Top = &(*datap)->values;
+    while ((t = strtokFile())) {
+	*Top = splay_insert(xstrdup(t), *Top, aclDomainCompare);
+    }
+}
+
+static int
+aclMatchUserCert(void *data, aclCheck_t * checklist)
+{
+    acl_cert_data *cert_data = (acl_cert_data *)data;
+    const char *value;
+    SSL *ssl = fd_table[checklist->conn->fd].ssl;
+
+    if (!ssl)
+	return 0;
+    value = sslGetUserAttribute(ssl, cert_data->attribute);
+    if (!value)
+	return 0;
+    cert_data->values = splay_splay(value, cert_data->values, (SPLAYCMP *) strcmp);
+    return !splayLastResult;
+}
+
+static int
+aclMatchCACert(void *data, aclCheck_t * checklist)
+{
+    acl_cert_data *cert_data = (acl_cert_data *)data;
+    const char *value;
+    SSL *ssl = fd_table[checklist->conn->fd].ssl;
+
+    if (!ssl)
+	return 0;
+    value = sslGetCAAttribute(ssl, cert_data->attribute);
+    if (!value)
+	return 0;
+    cert_data->values = splay_splay(value, cert_data->values, (SPLAYCMP *) strcmp);
+    return !splayLastResult;
+}
+
+static void
+aclDestroyCertList(void *curlist)
+{
+    acl_cert_data **datap = (acl_cert_data **)curlist;
+    if (!*datap)
+	return;
+    splay_destroy((*datap)->values, xfree);
+    memFree(*datap, MEM_ACL_CERT_DATA);
+    *datap = NULL;
+}
+
+static void
+aclDumpCertListWalkee(void *node_data, void *outlist)
+{
+    wordlist **wl = (wordlist **)outlist;
+    wordlistAdd(wl, (const char *)node_data);
+}
+
+static wordlist *
+aclDumpCertList(void *curlist)
+{
+    acl_cert_data *data = (acl_cert_data *)curlist;
+    wordlist *wl = NULL;
+    wordlistAdd(&wl, data->attribute);
+    if (data->values)
+	splay_walk(data->values, aclDumpCertListWalkee, &wl);
+    return wl;
+}
+#endif
+
 void
 aclParseAclLine(acl ** head)
 {
@@ -812,6 +916,12 @@ because no authentication schemes are fully configured.\n", A->cfgline);
     case ACL_EXTERNAL:
 	aclParseExternal(&A->data);
 	break;
+#if USE_SSL
+    case ACL_USER_CERT:
+    case ACL_CA_CERT:
+	aclParseCertList(&A->data);
+	break;
+#endif
     case ACL_NONE:
     case ACL_ENUM_MAX:
 	fatal("Bad ACL type");
@@ -1676,6 +1786,14 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
     case ACL_EXTERNAL:
 	return aclMatchExternal(ae->data, checklist);
 	/* NOTREACHED */
+#if USE_SSL
+    case ACL_USER_CERT:
+	return aclMatchUserCert(ae->data, checklist);
+	/* NOTREACHED */
+    case ACL_CA_CERT:
+	return aclMatchCACert(ae->data, checklist);
+	/* NOTREACHED */
+#endif
     case ACL_NONE:
     case ACL_ENUM_MAX:
 	break;
@@ -2105,6 +2223,12 @@ aclDestroyAcls(acl ** head)
 	case ACL_EXTERNAL:
 	    aclDestroyExternal(&a->data);
 	    break;
+#if USE_SSL
+	case ACL_USER_CERT:
+	case ACL_CA_CERT:
+	    aclDestroyCertList(&a->data);
+	    break;
+#endif
 	case ACL_NONE:
 	case ACL_ENUM_MAX:
 	    debug(28, 1) ("aclDestroyAcls: no case for ACL type %d\n", a->type);
@@ -2518,6 +2642,11 @@ aclDumpGeneric(const acl * a)
 #endif
     case ACL_EXTERNAL:
 	return aclDumpExternal(a->data);
+#if USE_SSL
+    case ACL_USER_CERT:
+    case ACL_CA_CERT:
+	return aclDumpCertList(a->data);
+#endif
     case ACL_NONE:
     case ACL_ENUM_MAX:
 	break;

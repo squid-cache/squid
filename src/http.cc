@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.402 2002/10/21 14:00:02 adrian Exp $
+ * $Id: http.cc,v 1.403 2002/12/06 23:19:15 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -866,6 +866,10 @@ httpBuildRequestHeader(request_t * request,
 	case HDR_CACHE_CONTROL:
 	    /* append these after the loop if needed */
 	    break;
+	case HDR_FRONT_END_HTTPS:
+	    if (!flags.front_end_https)
+		httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
+	    break;
 	default:
 	    /* pass on all other header fields */
 	    httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
@@ -950,6 +954,12 @@ httpBuildRequestHeader(request_t * request,
 	    httpHeaderPutStr(hdr_out, HDR_CONNECTION, "keep-alive");
 	}
     }
+    /* append Front-End-Https */
+    if (flags.front_end_https) {
+	if (flags.front_end_https == 1 || request->protocol == PROTO_HTTPS)
+	    httpHeaderPutStr(hdr_out, HDR_FRONT_END_HTTPS, "On");
+    }
+
     /* Now mangle the headers. */
     httpHdrMangleList(hdr_out, request);
     stringClean(&strConnection);
@@ -1014,10 +1024,12 @@ httpSendRequest(HttpStateData * httpState)
 	httpState->flags.keepalive = 1;
     else if ((double) p->stats.n_keepalives_recv / (double) p->stats.n_keepalives_sent > 0.50)
 	httpState->flags.keepalive = 1;
-    if (httpState->_peer)
+    if (httpState->_peer) {
 	if (neighborType(httpState->_peer, httpState->request) == PEER_SIBLING &&
 	    !httpState->_peer->options.allow_miss)
 	    httpState->flags.only_if_cached = 1;
+	httpState->flags.front_end_https = httpState->_peer->front_end_https;
+    }
     memBufDefInit(&mb);
     httpBuildRequestPrefix(req,
 	httpState->orig_request,
@@ -1048,7 +1060,7 @@ httpStart(FwdState * fwd)
 	httpState->_peer = fwd->servers->_peer;		/* might be NULL */
     if (httpState->_peer) {
 	proxy_req = requestCreate(orig_req->method,
-	    PROTO_NONE, storeUrl(httpState->entry));
+	    orig_req->protocol, storeUrl(httpState->entry));
 	xstrncpy(proxy_req->host, httpState->_peer->host, SQUIDHOSTNAMELEN);
 	proxy_req->port = httpState->_peer->http_port;
 	proxy_req->flags = orig_req->flags;
