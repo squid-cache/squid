@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.48 1998/02/27 07:13:53 kostas Exp $
+ * $Id: util.c,v 1.49 1998/02/27 07:24:55 kostas Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -141,7 +141,7 @@ extern int sys_nerr;
 
 #if MEM_GEN_TRACE
 
-static FILE *tracefp;
+static FILE *tracefp=NULL;
 
 void
 log_trace_init(char *fn)
@@ -157,6 +157,7 @@ void
 log_trace_done()
 {
         fclose(tracefp);
+	tracefp=NULL;
 }
 
 #endif
@@ -492,6 +493,7 @@ xmalloc(size_t sz)
     xmalloc_show_trace(p, 1);
 #endif
 #if MEM_GEN_TRACE
+	if (tracefp)
 	fprintf(tracefp, "m:%d:%p\n",sz,p);
 #endif
     return (p);
@@ -513,6 +515,7 @@ xfree(void *s)
     if (s != NULL)
 	free(s);
 #if MEM_GEN_TRACE
+	if (tracefp)
     fprintf(tracefp,"f:%p\n",s);
 #endif
 }
@@ -529,6 +532,7 @@ xxfree(void *s)
 #endif
     free(s);
 #if MEM_GEN_TRACE
+	if (tracefp)
     fprintf(tracefp,"f:%p\n",s);
 #endif
 }
@@ -603,6 +607,7 @@ xcalloc(int n, size_t sz)
     xmalloc_show_trace(p, 1);
 #endif
 #if MEM_GEN_TRACE
+	if (tracefp)
 	fprintf(tracefp,"c:%d:%d:%p\n", n, sz,p);
 #endif
     return (p);
