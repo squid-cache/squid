@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.370 2000/06/08 18:05:35 hno Exp $
+ * $Id: protos.h,v 1.371 2000/06/25 21:27:57 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -516,7 +516,11 @@ extern variable_list *snmp_prfProtoFn(variable_list *, snint *);
 extern variable_list *snmp_prfPeerFn(variable_list *, snint *);
 extern variable_list *snmp_netIpFn(variable_list *, snint *);
 extern variable_list *snmp_netFqdnFn(variable_list *, snint *);
+#if USE_DNSSERVERS
 extern variable_list *snmp_netDnsFn(variable_list *, snint *);
+#else
+extern variable_list *snmp_netIdnsFn(variable_list *, snint *);
+#endif
 extern variable_list *snmp_meshPtblFn(variable_list *, snint *);
 extern variable_list *snmp_meshCtblFn(variable_list *, snint *);
 #endif /* SQUID_SNMP */
