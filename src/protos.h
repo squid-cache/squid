@@ -770,7 +770,7 @@ extern void PrintRusage(void);
 extern void dumpMallocStats(void);
 
 extern void pumpInit(int fd, request_t * r, char *uri);
-extern void pumpStart(int fd, StoreEntry * reply_entry, request_t * r, void *callback, void *cbdata);
+extern void pumpStart(int, StoreEntry *, request_t *, CWCB *callback, void *);
 
 extern void unlinkdInit(void);
 extern void unlinkdClose(void);
