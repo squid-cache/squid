@@ -15,7 +15,7 @@ $(DOC).dvi: $(DOC).sgml
 #
 
 $(DOC).txt: $(DOC).sgml
-	sgml2txt $(DOC)
+	sgml2txt --filter $(DOC)
 
 $(DOC).html: $(DOC).sgml
 	sgml2html $(DOC)
