@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.59 1998/03/31 05:34:48 wessels Exp $
+ * $Id: redirect.cc,v 1.60 1998/05/08 22:00:23 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -297,6 +297,8 @@ void
 redirectOpenServers(void)
 {
     char *prg = Config.Program.redirect;
+    char *short_prg;
+    char *short_prg2;
     int k;
     int redirectsocket;
     LOCAL_ARRAY(char, fd_note_buf, FD_DESC_SZ);
@@ -312,9 +314,15 @@ redirectOpenServers(void)
     redirect_child_table = xcalloc(NRedirectors, sizeof(redirector_t *));
     debug(29, 1) ("redirectOpenServers: Starting %d '%s' processes\n",
 	NRedirectors, prg);
+    if ((s = strrchr(prg, '/')))
+	short_prg = xstrdup(s + 1);
+    else
+	short_prg = xstrdup(prg);
+    short_prg2 = xmalloc(strlen(s) + 3);
+    snprintf(short_prg2, strlen(s) + 3, "(%s)", short_prg);
     for (k = 0; k < NRedirectors; k++) {
 	redirect_child_table[k] = xcalloc(1, sizeof(redirector_t));
-	args[0] = "(redirector)";
+	args[0] = short_prg2;
 	args[1] = NULL;
 	x = ipcCreate(IPC_TCP_SOCKET,
 	    prg,
@@ -332,12 +340,8 @@ redirectOpenServers(void)
 	    redirect_child_table[k]->inbuf = memAllocate(MEM_8K_BUF);
 	    redirect_child_table[k]->size = 8192;
 	    redirect_child_table[k]->offset = 0;
-	    if ((s = strrchr(prg, '/')))
-		s++;
-	    else
-		s = prg;
 	    snprintf(fd_note_buf, FD_DESC_SZ, "%s #%d",
-		s,
+		short_prg,
 		redirect_child_table[k]->index + 1);
 	    fd_note(redirect_child_table[k]->fd, fd_note_buf);
 	    commSetNonBlocking(redirect_child_table[k]->fd);
@@ -357,6 +361,8 @@ redirectOpenServers(void)
 	    "URL Redirector Stats",
 	    redirectStats, 0);
     }
+    safe_free(short_prg);
+    safe_free(short_prg2);
 }
 
 void
