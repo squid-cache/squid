@@ -1,3 +1,14 @@
+	- Combined various interprocess communication setup functions
+	  into ipcCreate().
+	- Removed some leftover ICP_HIT_OBJ things.
+	- Removed cacheinfo and proto_count() and friends; these are to
+	  be replaced in functionality by StatCounters and 5/60 minute
+	  average views via cachemgr.
+	- Fixed --enable-acltree configure message (Masashi Fujita).
+	- Fixed no reference to @LIB_MALLOC@ in src/Makefile.in
+	  (Masashi Fujita).
+	- Fixed building outside of source tree (Masashi Fujita).
+
 Changes to squid-1.2.beta12 (Jan 30, 1998):
 
 	- -D_REENTRANT when linking with -lpthreads (Henrik Nordstrom)
