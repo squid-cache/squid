@@ -27,8 +27,6 @@
 #define SYSCONFDIR "/usr/local/squid/etc"
 #endif
 #define CONFIGFILE   SYSCONFDIR "/msntauth.conf"
-#define DENYUSERSDEFAULT   SYSCONFDIR "/denyusers"
-#define ALLOWUSERSDEFAULT  SYSCONFDIR "/allowusers"
 
 /* Maximum number of servers to query. This number can be increased. */
 #define MAXSERVERS 5
@@ -69,8 +67,6 @@ OpenConfigFile(void)
     memset(ServerArray, '\0', sizeof(ServerArray));
     memset(Denyuserpath, '\0', MAXPATHLEN);
     memset(Allowuserpath, '\0', MAXPATHLEN);
-    strncpy(Denyuserpath, DENYUSERSDEFAULT, MAXPATHLEN - 1);
-    strncpy(Allowuserpath, ALLOWUSERSDEFAULT, MAXPATHLEN - 1);
 
     /* Open file */
     if ((ConfigFile = fopen(CONFIGFILE, "r")) == NULL) {

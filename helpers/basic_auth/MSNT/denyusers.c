@@ -31,7 +31,10 @@ Read_denyusers(void)
 	memset(&DenyUsers, '\0', sizeof(DenyUsers));
 	init = 1;
     }
-    return Read_usersfile(Denyuserpath, &DenyUsers);
+    if (*Denyuserpath)
+	return Read_usersfile(Denyuserpath, &DenyUsers);
+    else
+	return 0;
 }
 
 static void
