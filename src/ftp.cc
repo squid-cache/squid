@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.48 1996/07/25 07:10:34 wessels Exp $
+ * $Id: ftp.cc,v 1.49 1996/07/26 17:18:21 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -181,21 +181,6 @@ static void ftp_login_parser(login, data)
 	strcpy(user, "anonymous");
 	strcpy(password, Config.ftpUser);
     }
-}
-
-int ftpCachable(url)
-     char *url;
-{
-    wordlist *p = NULL;
-
-    /* scan stop list */
-    for (p = Config.ftp_stoplist; p; p = p->next) {
-	if (strstr(url, p->key))
-	    return 0;
-    }
-
-    /* else cachable */
-    return 1;
 }
 
 /* This will be called when socket lifetime is expired. */
