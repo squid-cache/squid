@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.182 1997/12/31 19:28:08 wessels Exp $
+ * $Id: ftp.cc,v 1.183 1997/12/31 20:32:32 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -684,22 +684,16 @@ ftpReadData(int fd, void *data)
 {
     FtpStateData *ftpState = data;
     int len;
-    int clen;
+    int j;
     int bin;
     StoreEntry *entry = ftpState->entry;
     MemObject *mem = entry->mem_obj;
-    ErrorState *err;
     assert(fd == ftpState->data.fd);
     if (protoAbortFetch(entry)) {
 	storeAbort(entry, 0);
 	ftpDataTransferDone(ftpState);
 	return;
     }
-    /* check if we want to defer reading */
-    clen = mem->inmem_hi;
-    if (EBIT_TEST(ftpState->flags, FTP_ISDIR))
-	if (!EBIT_TEST(ftpState->flags, FTP_HTML_HEADER_SENT))
-	    ftpListingStart(ftpState);
     errno = 0;
     memset(ftpState->data.buf + ftpState->data.offset, '\0',
 	ftpState->data.size - ftpState->data.offset);
@@ -710,35 +704,29 @@ ftpReadData(int fd, void *data)
     debug(9, 5) ("ftpReadData: FD %d, Read %d bytes\n", fd, len);
     if (len > 0) {
 	IOStats.Ftp.reads++;
-	for (clen = len - 1, bin = 0; clen; bin++)
-	    clen >>= 1;
+	for (j = len - 1, bin = 0; j; bin++)
+	    j >>= 1;
 	IOStats.Ftp.read_hist[bin]++;
     }
     if (len < 0) {
 	debug(50, 1) ("ftpReadData: read error: %s\n", xstrerror());
 	if (ignoreErrno(errno)) {
-	    commSetSelect(fd, COMM_SELECT_READ, ftpReadData, data, Config.Timeout.read);
+	    commSetSelect(fd,
+		COMM_SELECT_READ,
+		ftpReadData,
+		data,
+		Config.Timeout.read);
 	} else {
-	    if (mem->inmem_hi == 0) {
-		err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
-		err->xerrno = errno;
-		err->request = requestLink(ftpState->request);
-		errorAppendEntry(entry, err);
-	    } else {
-		storeAbort(entry, 0);
-	    }
+	    assert(mem->inmem_hi > 0);
+	    storeAbort(entry, 0);
 	    ftpDataTransferDone(ftpState);
 	}
-    } else if (len == 0 && mem->inmem_hi == 0) {
-	err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE);
-	err->xerrno = errno;
-	err->request = requestLink(ftpState->request);
-	errorAppendEntry(entry, err);
-	ftpDataTransferDone(ftpState);
     } else if (len == 0) {
 	ftpReadComplete(ftpState);
     } else {
 	if (EBIT_TEST(ftpState->flags, FTP_ISDIR)) {
+	    if (!EBIT_TEST(ftpState->flags, FTP_HTML_HEADER_SENT))
+		ftpListingStart(ftpState);
 	    ftpParseListing(ftpState, len);
 	} else {
 	    assert(ftpState->data.offset == 0);
@@ -1363,6 +1351,11 @@ static void
 ftpSendPasv(FtpStateData * ftpState)
 {
     int fd;
+    if (ftpState->data.fd >= 0) {
+	/* We are already connected, reuse this connection. */
+	ftpRestOrList(ftpState);
+	return;
+    }
     assert(ftpState->data.fd < 0);
     if (!EBIT_TEST(ftpState->flags, FTP_PASV_SUPPORTED)) {
 	ftpSendPort(ftpState);
@@ -1574,7 +1567,7 @@ ftpReadRetr(FtpStateData * ftpState)
     int code = ftpState->ctrl.replycode;
     debug(9, 3) ("This is ftpReadRetr\n");
     if (code >= 100 && code < 200) {
-	debug(9, 3) ("reading data channel\n");
+	debug(9, 3) ("ftpReadRetr: reading data channel\n");
 	ftpAppendSuccessHeader(ftpState);
 	commSetSelect(ftpState->data.fd,
 	    COMM_SELECT_READ,
@@ -1656,12 +1649,7 @@ ftpTrySlashHack(FtpStateData * ftpState)
 static void
 ftpHackShortcut(FtpStateData * ftpState, FTPSM * nextState)
 {
-    /* Close any open data channel */
-    /* XXX: Should we instead reuse this channel? */
-    if (ftpState->data.fd > -1) {
-	comm_close(ftpState->data.fd);
-	ftpState->data.fd = -1;
-    }
+    /* Leave the data connection open for future use */
     /* Save old error message */
     ftpState->old_request = ftpState->ctrl.last_command;
     ftpState->ctrl.last_command = NULL;
