@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.5 1996/04/10 04:21:48 wessels Exp $
+ * $Id: util.h,v 1.6 1996/04/14 03:34:28 wessels Exp $
  */
 
 #ifndef _UTIL_H_
@@ -37,6 +37,7 @@ void *xmalloc _PARAMS((size_t));		/* Wrapper for malloc(3) */
 void *xrealloc _PARAMS((void *, size_t));	/* Wrapper for realloc(3) */
 void *xcalloc _PARAMS((int, size_t));		/* Wrapper for calloc(3) */
 void xfree _PARAMS((void *));			/* Wrapper for free(3) */
+void xxfree _PARAMS((void *));			/* Wrapper for free(3) */
 char *xstrdup _PARAMS ((char *));
 char *xstrerror _PARAMS(());
 
