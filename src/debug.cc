@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.52 1997/10/13 22:09:06 kostas Exp $
+ * $Id: debug.cc,v 1.53 1997/10/25 17:22:38 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -106,7 +106,7 @@
 #include "squid.h"
 
 static char *debug_log_file = NULL;
-static char *accessLogTime _PARAMS((time_t));
+static char *accessLogTime(time_t);
 
 #ifdef __STDC__
 void

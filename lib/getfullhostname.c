@@ -1,6 +1,6 @@
 
 /*
- * $Id: getfullhostname.c,v 1.14 1997/07/16 20:31:53 wessels Exp $
+ * $Id: getfullhostname.c,v 1.15 1997/10/25 17:22:28 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -142,7 +142,6 @@
 #include <unistd.h>
 #endif
 
-#include "ansiproto.h"
 #include "util.h"
 
 /*

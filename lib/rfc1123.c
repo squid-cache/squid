@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1123.c,v 1.7 1997/02/18 23:53:48 wessels Exp $
+ * $Id: rfc1123.c,v 1.8 1997/10/25 17:22:29 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -129,14 +129,13 @@
 #include <sys/time.h>
 #endif
 
-#include "ansiproto.h"
 #include "util.h"
 
 #define RFC850_STRFTIME "%A, %d-%b-%y %H:%M:%S GMT"
 #define RFC1123_STRFTIME "%a, %d %b %Y %H:%M:%S GMT"
 
-static int make_month _PARAMS((const char *s));
-static int make_num _PARAMS((const char *s));
+static int make_month(const char *s);
+static int make_num(const char *s);
 
 static char *month_names[12] =
 {

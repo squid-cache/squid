@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.85 1997/10/25 16:41:22 wessels Exp $
+ * $Id: errorpage.cc,v 1.86 1997/10/25 17:22:40 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -55,9 +55,9 @@ const char *err_string[] =
 
 static char *error_text[ERR_MAX];
 
-static void errorStateFree _PARAMS((ErrorState * err));
-static char *errorConvert _PARAMS((char token, ErrorState * err));
-static char *errorBuildBuf _PARAMS((ErrorState * err, int *len));
+static void errorStateFree(ErrorState * err);
+static char *errorConvert(char token, ErrorState * err);
+static char *errorBuildBuf(ErrorState * err, int *len);
 static CWCB errorSendComplete;
 
 void

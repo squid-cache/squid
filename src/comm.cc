@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.193 1997/10/25 16:47:06 wessels Exp $
+ * $Id: comm.cc,v 1.194 1997/10/25 17:22:37 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -132,29 +132,29 @@ typedef struct {
 
 /* STATIC */
 static int polledinc = 0;
-static int commBind _PARAMS((int s, struct in_addr, u_short port));
+static int commBind(int s, struct in_addr, u_short port);
 #if !HAVE_POLL
-static int examine_select _PARAMS((fd_set *, fd_set *));
+static int examine_select(fd_set *, fd_set *);
 #endif
-static void checkTimeouts _PARAMS((void));
-static void commSetReuseAddr _PARAMS((int));
-static void commSetNoLinger _PARAMS((int));
+static void checkTimeouts(void);
+static void commSetReuseAddr(int);
+static void commSetNoLinger(int);
 #if HAVE_POLL
-static void comm_poll_incoming _PARAMS((void));
+static void comm_poll_incoming(void);
 #else
-static void comm_select_incoming _PARAMS((void));
+static void comm_select_incoming(void);
 #endif
-static void CommWriteStateCallbackAndFree _PARAMS((int fd, int code));
+static void CommWriteStateCallbackAndFree(int fd, int code);
 #ifdef TCP_NODELAY
-static void commSetTcpNoDelay _PARAMS((int));
+static void commSetTcpNoDelay(int);
 #endif
-static void commSetTcpRcvbuf _PARAMS((int, int));
+static void commSetTcpRcvbuf(int, int);
 static PF commConnectFree;
 static PF commConnectHandle;
 static PF commHandleWrite;
-static int fdIsHttpOrIcp _PARAMS((int fd));
+static int fdIsHttpOrIcp(int fd);
 static IPH commConnectDnsHandle;
-static void commConnectCallback _PARAMS((ConnectStateData * cs, int status));
+static void commConnectCallback(ConnectStateData * cs, int status);
 static int commDeferRead(int fd);
 static int ignoreErrno(int errno);
 

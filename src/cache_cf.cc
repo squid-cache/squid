@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.225 1997/10/17 00:00:29 wessels Exp $
+ * $Id: cache_cf.cc,v 1.226 1997/10/25 17:22:34 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -48,24 +48,24 @@ static const char *const B_GBYTES_STR = "GB";
 static const char *const list_sep = ", \t\n\r";
 
 static char fatal_str[BUFSIZ];
-static void self_destruct _PARAMS((void));
-static void wordlistAdd _PARAMS((wordlist **, const char *));
+static void self_destruct(void);
+static void wordlistAdd(wordlist **, const char *);
 
-static void configDoConfigure _PARAMS((void));
-static void parse_refreshpattern _PARAMS((refresh_t **));
-static int parseTimeUnits _PARAMS((const char *unit));
-static void parseTimeLine _PARAMS((time_t * tptr, const char *units));
-static void parse_string _PARAMS((char **));
-static void parse_wordlist _PARAMS((wordlist **));
-static void default_all _PARAMS((void));
-static void defaults_if_none _PARAMS((void));
-static int parse_line _PARAMS((char *));
-static void parseBytesLine _PARAMS((size_t * bptr, const char *units));
-static size_t parseBytesUnits _PARAMS((const char *unit));
+static void configDoConfigure(void);
+static void parse_refreshpattern(refresh_t **);
+static int parseTimeUnits(const char *unit);
+static void parseTimeLine(time_t * tptr, const char *units);
+static void parse_string(char **);
+static void parse_wordlist(wordlist **);
+static void default_all(void);
+static void defaults_if_none(void);
+static int parse_line(char *);
+static void parseBytesLine(size_t * bptr, const char *units);
+static size_t parseBytesUnits(const char *unit);
 
 /* These come from cf_gen.c */
-static void default_all _PARAMS((void));
-static void free_all _PARAMS((void));
+static void default_all(void);
+static void free_all(void);
 
 static void
 self_destruct(void)

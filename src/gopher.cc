@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.103 1997/10/24 18:10:38 wessels Exp $
+ * $Id: gopher.cc,v 1.104 1997/10/25 17:22:43 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -160,15 +160,15 @@ typedef struct gopher_ds {
 } GopherStateData;
 
 static PF gopherStateFree;
-static void gopher_mime_content _PARAMS((char *buf, const char *name, const char *def));
-static void gopherMimeCreate _PARAMS((GopherStateData *));
+static void gopher_mime_content(char *buf, const char *name, const char *def);
+static void gopherMimeCreate(GopherStateData *);
 static int gopher_url_parser(const char *url,
     char *host,
     int *port,
     char *type_id,
     char *request);
-static void gopherEndHTML _PARAMS((GopherStateData *));
-static void gopherToHTML _PARAMS((GopherStateData *, char *inbuf, int len));
+static void gopherEndHTML(GopherStateData *);
+static void gopherToHTML(GopherStateData *, char *inbuf, int len);
 static PF gopherTimeout;
 static PF gopherReadReply;
 static void gopherSendComplete(int fd,
@@ -177,7 +177,7 @@ static void gopherSendComplete(int fd,
     int errflag,
     void *data);
 static PF gopherSendRequest;
-static GopherStateData *CreateGopherStateData _PARAMS((void));
+static GopherStateData *CreateGopherStateData(void);
 static CNCB gopherConnectDone;
 static STABH gopherAbort;
 

@@ -1,5 +1,5 @@
 /*
- * $Id: recv-announce.cc,v 1.13 1997/10/24 04:55:35 wessels Exp $
+ * $Id: recv-announce.cc,v 1.14 1997/10/25 17:22:56 wessels Exp $
  *
  * DEBUG: section 0     Announcement Server
  * AUTHOR: Harvest Derived
@@ -115,11 +115,9 @@
 #include <unistd.h>
 #include <signal.h>
 
-#include "ansiproto.h"
-
 #define RECV_BUF_SIZE 8192
 
-extern void xmemcpy _PARAMS((void *from, void *to, int len));
+extern void xmemcpy(void *from, void *to, int len);
 
 /*
  * This program must be run from inetd.  First add something like this

@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.49 1997/10/13 22:09:17 kostas Exp $
+ * $Id: net_db.cc,v 1.50 1997/10/25 17:22:51 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -36,18 +36,18 @@
 static hash_table *addr_table = NULL;
 static hash_table *host_table = NULL;
 
-static struct in_addr networkFromInaddr _PARAMS((struct in_addr a));
-static void netdbRelease _PARAMS((netdbEntry * n));
-static netdbEntry *netdbGetFirst _PARAMS((hash_table * table));
-static netdbEntry *netdbGetNext _PARAMS((hash_table * table));
-static void netdbHashInsert _PARAMS((netdbEntry * n, struct in_addr addr));
-static void netdbHashDelete _PARAMS((const char *key));
-static void netdbHashLink _PARAMS((netdbEntry * n, const char *hostname));
-static void netdbHashUnlink _PARAMS((const char *key));
-static void netdbPurgeLRU _PARAMS((void));
-static net_db_peer *netdbPeerByName _PARAMS((const netdbEntry * n, const char *));
-static net_db_peer *netdbPeerAdd _PARAMS((netdbEntry * n, peer * e));
-static char *netdbPeerName _PARAMS((const char *name));
+static struct in_addr networkFromInaddr(struct in_addr a);
+static void netdbRelease(netdbEntry * n);
+static netdbEntry *netdbGetFirst(hash_table * table);
+static netdbEntry *netdbGetNext(hash_table * table);
+static void netdbHashInsert(netdbEntry * n, struct in_addr addr);
+static void netdbHashDelete(const char *key);
+static void netdbHashLink(netdbEntry * n, const char *hostname);
+static void netdbHashUnlink(const char *key);
+static void netdbPurgeLRU(void);
+static net_db_peer *netdbPeerByName(const netdbEntry * n, const char *);
+static net_db_peer *netdbPeerAdd(netdbEntry * n, peer * e);
+static char *netdbPeerName(const char *name);
 static IPH netdbSendPing;
 
 /* We have to keep a local list of peer names.  The Peers structure

@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.131 1997/10/24 04:55:56 wessels Exp $
+ * $Id: squid.h,v 1.132 1997/10/25 17:22:57 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -255,8 +255,6 @@ typedef unsigned long u_num32;
 #else
 #define LOCAL_ARRAY(type,name,size) static type name[size]
 #endif
-
-#include "ansiproto.h"
 
 #ifdef USE_GNUREGEX
 #include "GNUregex.h"

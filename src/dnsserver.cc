@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.37 1997/10/17 00:00:34 wessels Exp $
+ * $Id: dnsserver.cc,v 1.38 1997/10/25 17:22:40 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -210,7 +210,6 @@
 #include <resolv.h>
 #endif
 
-#include "ansiproto.h"
 #include "util.h"
 #include "snprintf.h"
 

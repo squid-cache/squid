@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.149 1997/10/24 18:10:37 wessels Exp $
+ * $Id: ftp.cc,v 1.150 1997/10/25 17:22:42 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -119,7 +119,7 @@ typedef struct {
     char *link;
 } ftpListParts;
 
-typedef void (FTPSM) _PARAMS((FtpStateData *));
+typedef void (FTPSM)(FtpStateData *);
 
 /* Local functions */
 static CNCB ftpConnectDone;
@@ -129,18 +129,18 @@ static PF ftpStateFree;
 static PF ftpTimeout;
 static PF ftpReadControlReply;
 static CWCB ftpWriteCommandCallback;
-static char *ftpGetBasicAuth _PARAMS((const char *));
-static void ftpLoginParser _PARAMS((const char *, FtpStateData *));
-static void ftpFail _PARAMS((FtpStateData * ftpState));
-static wordlist *ftpParseControlReply _PARAMS((char *buf, size_t len, int *code));
-static void ftpSendPasv _PARAMS((FtpStateData * ftpState));
-static void ftpSendCwd _PARAMS((FtpStateData * ftpState));
-static void ftpSendPort _PARAMS((FtpStateData * ftpState));
-static void ftpRestOrList _PARAMS((FtpStateData * ftpState));
-static void ftpReadQuit _PARAMS((FtpStateData * ftpState));
-static void ftpDataTransferDone _PARAMS((FtpStateData * ftpState));
-static void ftpAppendSuccessHeader _PARAMS((FtpStateData * ftpState));
-static char *ftpAuthRequired _PARAMS((const request_t *, const char *));
+static char *ftpGetBasicAuth(const char *);
+static void ftpLoginParser(const char *, FtpStateData *);
+static void ftpFail(FtpStateData * ftpState);
+static wordlist *ftpParseControlReply(char *buf, size_t len, int *code);
+static void ftpSendPasv(FtpStateData * ftpState);
+static void ftpSendCwd(FtpStateData * ftpState);
+static void ftpSendPort(FtpStateData * ftpState);
+static void ftpRestOrList(FtpStateData * ftpState);
+static void ftpReadQuit(FtpStateData * ftpState);
+static void ftpDataTransferDone(FtpStateData * ftpState);
+static void ftpAppendSuccessHeader(FtpStateData * ftpState);
+static char *ftpAuthRequired(const request_t *, const char *);
 static STABH ftpAbort;
 
 static FTPSM ftpReadWelcome;

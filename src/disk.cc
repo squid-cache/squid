@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.86 1997/10/24 02:55:11 wessels Exp $
+ * $Id: disk.cc,v 1.87 1997/10/25 17:22:38 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -137,7 +137,7 @@ static AIOCB diskHandleWriteComplete;
 static AIOCB diskHandleReadComplete;
 static PF diskHandleRead;
 static PF diskHandleWrite;
-static void file_open_complete _PARAMS((void *, int, int));
+static void file_open_complete(void *, int, int);
 
 #if UNUSED_CODE
 static AIOCB diskHandleWalkComplete;

@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1738.c,v 1.11 1997/06/04 07:12:24 wessels Exp $
+ * $Id: rfc1738.c,v 1.12 1997/10/25 17:22:30 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -112,7 +112,6 @@
 #include <string.h>
 #endif
 
-#include "ansiproto.h"
 #include "util.h"
 
 /*  

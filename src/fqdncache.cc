@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.60 1997/10/13 22:09:08 kostas Exp $
+ * $Id: fqdncache.cc,v 1.61 1997/10/25 17:22:41 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -135,28 +135,28 @@ static struct {
     int ghba_calls;		/* # calls to blocking gethostbyaddr() */
 } FqdncacheStats;
 
-static int fqdncache_compareLastRef _PARAMS((fqdncache_entry **, fqdncache_entry **));
-static void fqdncache_dnsHandleRead _PARAMS((int, void *));
-static fqdncache_entry *fqdncache_parsebuffer _PARAMS((const char *buf, dnsserver_t *));
-static int fqdncache_purgelru _PARAMS((void));
-static void fqdncache_release _PARAMS((fqdncache_entry *));
-static fqdncache_entry *fqdncache_GetFirst _PARAMS((void));
-static fqdncache_entry *fqdncache_GetNext _PARAMS((void));
-static fqdncache_entry *fqdncache_create _PARAMS((const char *name));
-static void fqdncache_add_to_hash _PARAMS((fqdncache_entry *));
-static void fqdncache_call_pending _PARAMS((fqdncache_entry *));
-static void fqdncacheAddHostent _PARAMS((fqdncache_entry *, const struct hostent *));
-static int fqdncacheHasPending _PARAMS((const fqdncache_entry *));
-static fqdncache_entry *fqdncache_get _PARAMS((const char *));
+static int fqdncache_compareLastRef(fqdncache_entry **, fqdncache_entry **);
+static void fqdncache_dnsHandleRead(int, void *);
+static fqdncache_entry *fqdncache_parsebuffer(const char *buf, dnsserver_t *);
+static int fqdncache_purgelru(void);
+static void fqdncache_release(fqdncache_entry *);
+static fqdncache_entry *fqdncache_GetFirst(void);
+static fqdncache_entry *fqdncache_GetNext(void);
+static fqdncache_entry *fqdncache_create(const char *name);
+static void fqdncache_add_to_hash(fqdncache_entry *);
+static void fqdncache_call_pending(fqdncache_entry *);
+static void fqdncacheAddHostent(fqdncache_entry *, const struct hostent *);
+static int fqdncacheHasPending(const fqdncache_entry *);
+static fqdncache_entry *fqdncache_get(const char *);
 static FQDNH dummy_handler;
-static int fqdncacheExpiredEntry _PARAMS((const fqdncache_entry *));
-static void fqdncacheAddPending _PARAMS((fqdncache_entry *, FQDNH *, void *));
-static void fqdncacheEnqueue _PARAMS((fqdncache_entry *));
-static void *fqdncacheDequeue _PARAMS((void));
-static void fqdncache_dnsDispatch _PARAMS((dnsserver_t *, fqdncache_entry *));
-static void fqdncacheChangeKey _PARAMS((fqdncache_entry * i));
-static void fqdncacheLockEntry _PARAMS((fqdncache_entry * f));
-static void fqdncacheUnlockEntry _PARAMS((fqdncache_entry * f));
+static int fqdncacheExpiredEntry(const fqdncache_entry *);
+static void fqdncacheAddPending(fqdncache_entry *, FQDNH *, void *);
+static void fqdncacheEnqueue(fqdncache_entry *);
+static void *fqdncacheDequeue(void);
+static void fqdncache_dnsDispatch(dnsserver_t *, fqdncache_entry *);
+static void fqdncacheChangeKey(fqdncache_entry * i);
+static void fqdncacheLockEntry(fqdncache_entry * f);
+static void fqdncacheUnlockEntry(fqdncache_entry * f);
 
 static hash_table *fqdn_table = NULL;
 static struct fqdncacheQueueData *fqdncacheQueueHead = NULL;

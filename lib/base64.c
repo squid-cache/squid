@@ -7,9 +7,7 @@
 #include <stdlib.h>
 #endif
 
-#include "ansiproto.h"
-
-static void base64_init _PARAMS((void));
+static void base64_init(void);
 
 static int base64_initialized = 0;
 int base64_value[256];

@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.161 1997/10/16 23:59:59 wessels Exp $
+ * $Id: neighbors.cc,v 1.162 1997/10/25 17:22:50 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -108,23 +108,23 @@
 /* count mcast group peers every 15 minutes */
 #define MCAST_COUNT_RATE 900
 
-static int peerAllowedToUse _PARAMS((const peer *, request_t *));
-static int peerHTTPOkay _PARAMS((const peer *, request_t *));
-static int peerWouldBePinged _PARAMS((const peer *, request_t *));
-static void neighborRemove _PARAMS((peer *));
-static peer *whichPeer _PARAMS((const struct sockaddr_in * from));
-static void neighborAlive _PARAMS((peer *, const MemObject *, const icp_common_t *));
-static void neighborCountIgnored _PARAMS((peer *, icp_opcode op_unused));
-static void peerRefreshDNS _PARAMS((void *));
+static int peerAllowedToUse(const peer *, request_t *);
+static int peerHTTPOkay(const peer *, request_t *);
+static int peerWouldBePinged(const peer *, request_t *);
+static void neighborRemove(peer *);
+static peer *whichPeer(const struct sockaddr_in * from);
+static void neighborAlive(peer *, const MemObject *, const icp_common_t *);
+static void neighborCountIgnored(peer *, icp_opcode op_unused);
+static void peerRefreshDNS(void *);
 static IPH peerDNSConfigure;
-static void peerCheckConnect _PARAMS((void *));
+static void peerCheckConnect(void *);
 static IPH peerCheckConnect2;
 static CNCB peerCheckConnectDone;
-static void peerCountMcastPeersDone _PARAMS((void *data));
-static void peerCountMcastPeersStart _PARAMS((void *data));
-static void peerCountMcastPeersSchedule _PARAMS((peer * p, time_t when));
+static void peerCountMcastPeersDone(void *data);
+static void peerCountMcastPeersStart(void *data);
+static void peerCountMcastPeersSchedule(peer * p, time_t when);
 static IRCB peerCountHandleIcpReply;
-static void neighborIgnoreNonPeer _PARAMS((const struct sockaddr_in *, icp_opcode));
+static void neighborIgnoreNonPeer(const struct sockaddr_in *, icp_opcode);
 
 static icp_common_t echo_hdr;
 static u_short echo_port;

@@ -1,5 +1,4 @@
 #include "config.h"
-#include "ansiproto.h"
 #include "util.h"
 
 extern char **environ;

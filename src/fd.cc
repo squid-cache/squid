@@ -1,5 +1,5 @@
 /*
- * $Id: fd.cc,v 1.13 1997/10/18 00:01:06 wessels Exp $
+ * $Id: fd.cc,v 1.14 1997/10/25 17:22:41 wessels Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -30,7 +30,7 @@
 
 #include "squid.h"
 
-static void fdUpdateBiggest _PARAMS((int fd, unsigned int status));
+static void fdUpdateBiggest(int fd, unsigned int status);
 
 static void
 fdUpdateBiggest(int fd, unsigned int status)

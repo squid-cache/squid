@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.43 1997/10/17 00:00:38 wessels Exp $
+ * $Id: icmp.cc,v 1.44 1997/10/25 17:22:45 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -42,17 +42,15 @@ typedef struct _icmpQueueData {
     char *msg;
     int len;
     struct _icmpQueueData *next;
-    void (*free_func) _PARAMS((void *));
+    void (*free_func)(void *);
 } icmpQueueData;
 
 static icmpQueueData *IcmpQueueHead = NULL;
 
 static PF icmpRecv;
-static void icmpQueueSend _PARAMS((pingerEchoData * pkt,
-	int len,
-	void          (*free_func) _PARAMS((void *))));
+static void icmpQueueSend (pingerEchoData * pkt, int len, FREE *free_func);
 static PF icmpSend;
-static void icmpHandleSourcePing _PARAMS((const struct sockaddr_in * from, const char *buf));
+static void icmpHandleSourcePing(const struct sockaddr_in * from, const char *buf);
 
 static void
 icmpSendEcho(struct in_addr to, int opcode, const char *payload, int len)
@@ -110,7 +108,7 @@ icmpRecv(int unused1, void *unused2)
 static void
 icmpQueueSend(pingerEchoData * pkt,
     int len,
-    void (*free_func) _PARAMS((void *)))
+    FREE *free_func;
 {
     icmpQueueData *q = NULL;
     icmpQueueData **H = NULL;
