@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.22 2003/08/04 22:14:53 robertc Exp $
+ * $Id: store_io_ufs.cc,v 1.23 2003/08/31 12:44:31 robertc Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -471,9 +471,6 @@ void
 UFSStoreState::doCallback(int errflag)
 {
     debug(79, 3) ("storeUfsIOCallback: errflag=%d\n", errflag);
-    /* We are finished with the file as this is on close or error only.*/
-    theFile = NULL;
-
     STIOCB *theCallback = callback;
     callback = NULL;
 
@@ -481,6 +478,12 @@ UFSStoreState::doCallback(int errflag)
 
     if (cbdataReferenceValidDone(callback_data, &cbdata) && theCallback)
         theCallback(cbdata, errflag, this);
+
+    /* We are finished with the file as this is on close or error only.*/
+    /* This must be the last line, as theFile may be the only object holding
+     * us in memory 
+     */
+    theFile = NULL;
 }
 
 /* ============= THE REAL UFS CODE ================ */
