@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.171 2000/09/11 22:10:02 hno Exp $
+ * $Id: enums.h,v 1.172 2000/10/03 22:38:13 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -146,14 +146,6 @@ enum {
     FD_READ,
     FD_WRITE
 };
-
-enum {
-    FQDN_CACHED,
-    FQDN_NEGATIVE_CACHED,
-    FQDN_PENDING,		/* waiting to be dispatched */
-    FQDN_DISPATCHED		/* waiting for reply from dnsserver */
-};
-typedef unsigned int fqdncache_status_t;
 
 enum {
     IP_CACHED,
@@ -557,7 +549,6 @@ typedef enum {
     MEM_ERRORSTATE,
     MEM_FILEMAP,
     MEM_FQDNCACHE_ENTRY,
-    MEM_FQDNCACHE_PENDING,
     MEM_FWD_SERVER,
     MEM_FWD_STATE,
     MEM_HASH_LINK,

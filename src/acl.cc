@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.222 2000/08/17 09:15:06 adrian Exp $
+ * $Id: acl.cc,v 1.223 2000/10/03 22:38:13 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -937,7 +937,7 @@ aclParseAccessLine(acl_access ** head)
 	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
 	debug(28, 0) ("aclParseAccessLine: Access line contains no ACL's, skipping\n");
-        memFree(A, MEM_ACL_ACCESS);
+	memFree(A, MEM_ACL_ACCESS);
 	return;
     }
     A->cfgline = xstrdup(config_input_line);
@@ -1686,10 +1686,6 @@ aclCheck(aclCheck_t * checklist)
 void
 aclChecklistFree(aclCheck_t * checklist)
 {
-    if (checklist->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_PENDING)
-	fqdncacheUnregister(checklist->src_addr, checklist);
-    if (checklist->state[ACL_DST_DOMAIN] == ACL_LOOKUP_PENDING)
-	fqdncacheUnregister(checklist->dst_addr, checklist);
     if (checklist->state[ACL_DST_IP] == ACL_LOOKUP_PENDING)
 	ipcacheUnregister(checklist->request->host, checklist);
     if (checklist->request)
@@ -1978,7 +1974,7 @@ aclDestroyDenyInfoList(acl_deny_info_list ** list)
 	}
 	a_next = a->next;
 	xfree(a->err_page_name);
-        memFree(a, MEM_ACL_DENY_INFO_LIST);
+	memFree(a, MEM_ACL_DENY_INFO_LIST);
     }
     *list = NULL;
 }

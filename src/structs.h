@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.350 2000/08/15 07:14:04 adrian Exp $
+ * $Id: structs.h,v 1.351 2000/10/03 22:38:15 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -945,28 +945,6 @@ struct _ipcache_entry {
     ipcache_status_t status:3;
 };
 
-struct _fqdn_pending {
-    FQDNH *handler;
-    void *handlerData;
-    fqdn_pending *next;
-};
-
-struct _fqdncache_entry {
-    /* first two items must be equivalent to hash_link */
-    char *name;
-    fqdncache_entry *next;
-    time_t lastref;
-    time_t expires;
-    unsigned char name_count;
-    char *names[FQDN_MAX_NAMES + 1];
-    fqdn_pending *pending_head;
-    char *error_message;
-    struct timeval request_time;
-    dlink_node lru;
-    unsigned char locks;
-    fqdncache_status_t status:3;
-};
-
 struct _domain_ping {
     char *domain;
     int do_ping;		/* boolean */
@@ -1419,7 +1397,7 @@ struct _SwapDir {
 	    STLOGCLEANDONE *done;
 	    void *state;
 	} clean;
-        int writes_since_clean;
+	int writes_since_clean;
     } log;
     void *fsdata;
 };

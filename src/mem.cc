@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.46 2000/05/12 00:29:07 wessels Exp $
+ * $Id: mem.cc,v 1.47 2000/10/03 22:38:14 wessels Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -227,10 +227,6 @@ memInit(void)
     memDataInit(MEM_DWRITE_Q, "dwrite_q", sizeof(dwrite_q), 0);
     memDataInit(MEM_ERRORSTATE, "ErrorState", sizeof(ErrorState), 0);
     memDataInit(MEM_FILEMAP, "fileMap", sizeof(fileMap), 0);
-    memDataInit(MEM_FQDNCACHE_ENTRY, "fqdncache_entry",
-	sizeof(fqdncache_entry), 0);
-    memDataInit(MEM_FQDNCACHE_PENDING, "fqdn_pending",
-	sizeof(fqdn_pending), 0);
     memDataInit(MEM_FWD_STATE, "FwdState", sizeof(FwdState), 0);
     memDataInit(MEM_FWD_SERVER, "FwdServer", sizeof(FwdServer), 0);
     memDataInit(MEM_HASH_LINK, "hash_link", sizeof(hash_link), 0);

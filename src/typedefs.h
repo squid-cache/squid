@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.107 2000/06/27 08:41:31 hno Exp $
+ * $Id: typedefs.h,v 1.108 2000/10/03 22:38:15 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -85,8 +85,6 @@ typedef struct _dwrite_q dwrite_q;
 typedef struct _ETag ETag;
 typedef struct _fde fde;
 typedef struct _fileMap fileMap;
-typedef struct _fqdncache_entry fqdncache_entry;
-typedef struct _fqdn_pending fqdn_pending;
 typedef struct _HttpReply http_reply;
 typedef struct _HttpStatusLine HttpStatusLine;
 typedef struct _HttpHeaderFieldAttrs HttpHeaderFieldAttrs;

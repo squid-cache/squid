@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.376 2000/07/13 06:13:42 wessels Exp $
+ * $Id: protos.h,v 1.377 2000/10/03 22:38:14 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -250,7 +250,6 @@ extern void filemapFreeMemory(fileMap *);
 
 
 extern void fqdncache_nbgethostbyaddr(struct in_addr, FQDNH *, void *);
-extern int fqdncacheUnregister(struct in_addr, void *);
 extern const char *fqdncache_gethostbyaddr(struct in_addr, int flags);
 extern void fqdncache_init(void);
 extern void fqdnStats(StoreEntry *);
