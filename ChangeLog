@@ -38,6 +38,8 @@ Changes to Squid-2.4.DEVEL3 ():
 	- Fixed a StoreEntry memory leak during "dirty" rebuild
 	- Helper processes no longer hold unrelated filedescriptors open
 	- Helpers are now restarted when the logs are rotated
+	- Negatively cached DNS entries are now purged on "reload".
+	- PURGE now also purges the DNS cache
 
 Changes to Squid-2.4.DEVEL2 ():
 
