@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.39 1997/07/14 03:33:38 wessels Exp $
+ * $Id: icmp.cc,v 1.40 1997/07/15 05:34:10 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -266,6 +266,8 @@ icmpOpen(void)
     getsockname(child_sock, (struct sockaddr *) &S, &namelen);
     if (comm_connect_addr(icmp_sock, &S) != COMM_OK)
 	fatal_dump(xstrerror());
+    /* flush or else we get dup data if unbuffered_logs is set */
+    logsFlush();
     if ((pid = fork()) < 0) {
 	debug(50, 0) ("icmpOpen: fork: %s\n", xstrerror());
 	comm_close(icmp_sock);

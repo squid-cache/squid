@@ -1,6 +1,6 @@
 
 /*
- * $Id: useragent.cc,v 1.7 1997/06/04 06:16:16 wessels Exp $
+ * $Id: useragent.cc,v 1.8 1997/07/15 05:34:14 wessels Exp $
  *
  * DEBUG: section 40    User-Agent logging
  * AUTHOR: Joe Ramey <ramey@csc.ti.com>
@@ -30,8 +30,6 @@
  */
 
 #include "squid.h"
-
-FILE *cache_useragent_log = NULL;
 
 void
 useragentOpenLog(void)

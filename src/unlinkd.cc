@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.7 1997/07/07 05:29:58 wessels Exp $
+ * $Id: unlinkd.cc,v 1.8 1997/07/15 05:34:14 wessels Exp $
  *
  * DEBUG: section 43    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -102,6 +102,8 @@ unlinkdCreate(void)
     wfd1 = squid_to_unlinkd[1];
     rfd2 = unlinkd_to_squid[0];
     wfd2 = unlinkd_to_squid[1];
+    /* flush or else we get dup data if unbuffered_logs is set */
+    logsFlush();
     if ((pid = fork()) < 0) {
 	debug(50, 0) ("unlinkdCreate: fork: %s\n", xstrerror());
 	close(rfd1);

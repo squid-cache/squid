@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.131 1997/07/14 23:44:59 wessels Exp $
+ * $Id: ftp.cc,v 1.132 1997/07/15 05:34:09 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1446,7 +1446,6 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
     char *t = NULL;
     StoreEntry *e = ftpState->entry;
     http_reply *reply = e->mem_obj->reply;
-    debug(0,0)("ftpAppendSuccessHeader: %s\n", ftpState->entry->url);
     if (EBIT_TEST(ftpState->flags, FTP_HTTP_HEADER_SENT))
 	return;
     EBIT_SET(ftpState->flags, FTP_HTTP_HEADER_SENT);
