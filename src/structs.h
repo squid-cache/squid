@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.491 2004/10/10 02:49:05 hno Exp $
+ * $Id: structs.h,v 1.492 2004/10/14 23:31:30 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1814,6 +1814,7 @@ struct _ClientInfo
 
     cutoff;
     int n_established;		/* number of current established connections */
+    time_t last_seen;
 };
 
 struct _CacheDigest
