@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.272 1999/01/24 03:25:23 wessels Exp $
+ * $Id: structs.h,v 1.273 1999/01/24 04:03:54 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -141,9 +141,11 @@ struct _aclCheck_t {
     const acl_access *access_list;
     struct in_addr src_addr;
     struct in_addr dst_addr;
-    ConnStateData *conn;	/* hack for ident */
     request_t *request;
+#if USE_IDENT
+    ConnStateData *conn;	/* hack for ident */
     char ident[USER_IDENT_SZ];
+#endif
     char browser[BROWSERNAMELEN];
     acl_proxy_auth_user *auth_user;
     acl_lookup_state state[ACL_ENUM_MAX];
@@ -226,7 +228,9 @@ struct _SquidConfig {
 	time_t deadPeer;
 	int icp_query;		/* msec */
 	int mcast_icp_query;	/* msec */
+#if USE_IDENT
 	time_t ident;
+#endif
     } Timeout;
     size_t maxRequestSize;
     struct {
@@ -368,7 +372,9 @@ struct _SquidConfig {
 	acl_access *snmp;
 #endif
 	acl_access *brokenPosts;
+#if USE_IDENT
 	acl_access *identLookup;
+#endif
     } accessList;
     acl_deny_info_list *denyInfoList;
     char *proxyAuthRealm;

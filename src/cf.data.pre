@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.137 1999/01/24 03:25:22 wessels Exp $
+# $Id: cf.data.pre,v 1.138 1999/01/24 04:03:49 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -759,6 +759,7 @@ DOC_END
 
 NAME: ident_lookup_access
 TYPE: acl_access
+IFDEF: USE_IDENT
 DEFAULT: none
 LOC: Config.accessList.identLookup
 DOC_START
@@ -1361,6 +1362,7 @@ DOC_END
 
 NAME: ident_timeout
 TYPE: time_t
+IFDEF: USE_IDENT
 LOC: Config.Timeout.ident
 DEFAULT: 10 seconds
 DOC_START

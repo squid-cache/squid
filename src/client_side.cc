@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.436 1999/01/24 02:44:11 wessels Exp $
+ * $Id: client_side.cc,v 1.437 1999/01/24 04:03:50 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -74,7 +74,9 @@ static RH clientRedirectDone;
 static STCB clientHandleIMSReply;
 static int clientGetsOldEntry(StoreEntry * new, StoreEntry * old, request_t * request);
 static int checkAccelOnly(clientHttpRequest *);
+#if USE_IDENT
 static IDCB clientIdentDone;
+#endif
 static int clientOnlyIfCached(clientHttpRequest * http);
 static STCB clientSendMoreData;
 static STCB clientCacheHit;
@@ -105,6 +107,7 @@ checkAccelOnly(clientHttpRequest * http)
     return 1;
 }
 
+#if USE_IDENT
 void
 clientIdentDone(const char *ident, void *data)
 {
@@ -114,6 +117,7 @@ clientIdentDone(const char *ident, void *data)
     else
 	xstrncpy(conn->ident, "-", sizeof(conn->ident));
 }
+#endif
 
 void
 clientAccessCheck(void *data)
@@ -131,11 +135,14 @@ clientAccessCheck(void *data)
 	conn->peer.sin_addr,
 	browser,
 	conn->ident);
-    /* hack for ident ACL. It needs to get full addresses, and a
+#if USE_IDENT
+    /*
+     * hack for ident ACL. It needs to get full addresses, and a
      * place to store the ident result on persistent connections...
      */
     http->acl_checklist->conn = conn;
     cbdataLock(http->acl_checklist->conn);
+#endif
     aclNBCheck(http->acl_checklist, clientAccessCheckDone, http);
 }
 
@@ -2404,7 +2411,9 @@ httpAccept(int sock, void *data)
     struct sockaddr_in peer;
     struct sockaddr_in me;
     int max = INCOMING_HTTP_MAX;
+#if USE_IDENT
     static aclCheck_t identChecklist;
+#endif
     commSetSelect(sock, COMM_SELECT_READ, httpAccept, NULL, 0);
     while (max-- && !httpAcceptDefer()) {
 	memset(&peer, '\0', sizeof(struct sockaddr_in));
@@ -2430,9 +2439,11 @@ httpAccept(int sock, void *data)
 	if (Config.onoff.log_fqdn)
 	    fqdncache_gethostbyaddr(peer.sin_addr, FQDN_LOOKUP_IF_MISS);
 	commSetTimeout(fd, Config.Timeout.request, requestTimeout, connState);
+#if USE_IDENT
 	identChecklist.src_addr = peer.sin_addr;
 	if (aclCheckFast(Config.accessList.identLookup, &identChecklist))
 	    identStart(&me, &peer, clientIdentDone, connState);
+#endif
 	commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, connState, 0);
 	commSetDefer(fd, clientReadDefer, connState);
 	(*N)++;
