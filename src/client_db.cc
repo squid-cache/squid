@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.17 1997/08/10 04:42:34 wessels Exp $
+ * $Id: client_db.cc,v 1.18 1997/10/24 02:49:35 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -101,7 +101,7 @@ clientdbDeniedPercent(struct in_addr addr)
 	return 0;
     if (c->Icp.n_requests > 100)
 	n = c->Icp.n_requests;
-    return 100 * c->Icp.result_hist[ICP_OP_DENIED] / n;
+    return 100 * c->Icp.result_hist[LOG_UDP_DENIED] / n;
 }
 
 void
