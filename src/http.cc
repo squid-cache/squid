@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.60 1996/07/12 17:39:00 wessels Exp $
+ * $Id: http.cc,v 1.61 1996/07/15 23:15:16 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -732,9 +732,9 @@ int proxyhttpStart(e, url, entry)
 }
 
 static int httpConnect(fd, hp, data)
-	int fd;
-	struct hostent *hp;
-	void *data;
+     int fd;
+     struct hostent *hp;
+     void *data;
 {
     HttpStateData *httpState = data;
     request_t *request = httpState->request;
@@ -753,8 +753,8 @@ static int httpConnect(fd, hp, data)
 	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	    comm_close(fd);
 	    if ((e = httpState->neighbor)) {
-	    	e->last_fail_time = squid_curtime;
-	    	e->neighbor_up = 0;
+		e->last_fail_time = squid_curtime;
+		e->neighbor_up = 0;
 	    }
 	    return COMM_ERROR;
 	} else {

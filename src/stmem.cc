@@ -1,5 +1,5 @@
 /*
- * $Id: stmem.cc,v 1.11 1996/07/12 17:41:51 wessels Exp $
+ * $Id: stmem.cc,v 1.12 1996/07/15 23:16:41 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -116,8 +116,8 @@ stmem_stats mem_obj_pool;
 #define USE_MEMALIGN 0
 #endif
 
-static void *get_free_thing _PARAMS((stmem_stats *thing));
-static void put_free_thing _PARAMS((stmem_stats *thing, void *p));
+static void *get_free_thing _PARAMS((stmem_stats * thing));
+static void put_free_thing _PARAMS((stmem_stats * thing, void *p));
 
 
 void memFree(mem)
@@ -380,15 +380,15 @@ mem_ptr memInit()
 }
 
 static void *get_free_thing(thing)
-	stmem_stats *thing;
+     stmem_stats *thing;
 {
     void *p = NULL;
     if (!empty_stack(&thing->free_page_stack)) {
-        p = pop(&thing->free_page_stack);
-        if (p == NULL)
+	p = pop(&thing->free_page_stack);
+	if (p == NULL)
 	    fatal_dump("get_free_thing: NULL pointer?");
     } else {
-        p = xmalloc(thing->page_size);
+	p = xmalloc(thing->page_size);
 	thing->total_pages_allocated++;
     }
     thing->n_pages_in_use++;
@@ -417,8 +417,8 @@ char *get_free_8k_page()
 }
 
 static void put_free_thing(thing, p)
-	stmem_stats *thing;
-	void *p;
+     stmem_stats *thing;
+     void *p;
 {
     thing->n_pages_in_use--;
     if (thing->total_pages_allocated > thing->max_pages) {
@@ -428,7 +428,7 @@ static void put_free_thing(thing, p)
 	xfree(p);
 	thing->total_pages_allocated--;
     } else {
-        push(&thing->free_page_stack, p);
+	push(&thing->free_page_stack, p);
     }
 }
 
