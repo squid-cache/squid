@@ -1,5 +1,5 @@
 
-/* $Id: tools.cc,v 1.39 1996/04/17 17:14:17 wessels Exp $ */
+/* $Id: tools.cc,v 1.40 1996/04/17 23:47:19 wessels Exp $ */
 
 /*
  * DEBUG: Section 21          tools
@@ -166,6 +166,7 @@ void shut_down(sig)
      int sig;
 {
     int i;
+    int lft = getShutdownLifetime();
     FD_ENTRY *f;
     debug(21, 1, "Preparing for shutdown after %d connections\n", nconn);
     serverConnectionsClose();
@@ -174,7 +175,7 @@ void shut_down(sig)
 	f = &fd_table[i];
 	if (f->read_handler || f->write_handler || f->except_handler)
 	    if (fdstatGetType(i) == Socket)
-		comm_set_fd_lifetime(i, 30);
+		comm_set_fd_lifetime(i, lft);
     }
     shutdown_pending = 1;
     /* reinstall signal handler? */
@@ -411,6 +412,7 @@ void reconfigure(sig)
      int sig;
 {
     int i;
+    int lft = getShutdownLifetime();
     FD_ENTRY *f;
     debug(21, 1, "reconfigure: SIGHUP received.\n");
     serverConnectionsClose();
@@ -420,7 +422,7 @@ void reconfigure(sig)
 	f = &fd_table[i];
 	if (f->read_handler || f->write_handler || f->except_handler)
 	    if (fdstatGetType(i) == Socket)
-		comm_set_fd_lifetime(i, 30);
+		comm_set_fd_lifetime(i, lft);
     }
 #if defined(_SQUID_SYSV_SIGNALS_)
     signal(sig, reconfigure);
