@@ -556,15 +556,16 @@ extern void statInit(void);
 extern double median_svc_get(int, int);
 extern void pconnHistCount(int, int);
 
-void statHistClean(StatHist * H);
-void statHistCount(StatHist * H, double val);
-void statHistCopy(StatHist * Dest, const StatHist * Orig);
-double statHistDeltaMedian(const StatHist * A, const StatHist * B);
-void statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper bd);
-void statHistLogInit(StatHist * H, int capacity, double min, double max);
-void statHistEnumInit(StatHist * H, int last_enum);
-void statHistIntDumper(StoreEntry * sentry, int idx, double val, double size, int count);
-
+/* StatHist */
+extern void statHistClean(StatHist * H);
+extern void statHistCount(StatHist * H, double val);
+extern void statHistCopy(StatHist * Dest, const StatHist * Orig);
+extern void statHistSafeCopy(StatHist * Dest, const StatHist * Orig);
+extern double statHistDeltaMedian(const StatHist * A, const StatHist * B);
+extern void statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper bd);
+extern void statHistLogInit(StatHist * H, int capacity, double min, double max);
+extern void statHistEnumInit(StatHist * H, int last_enum);
+extern void statHistIntDumper(StoreEntry * sentry, int idx, double val, double size, int count);
 
 /* MemMeter */
 extern void memMeterSyncHWater(MemMeter * m);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: StatHist.cc,v 1.7 1998/04/24 07:09:28 wessels Exp $
+ * $Id: StatHist.cc,v 1.8 1998/04/27 17:25:03 rousskov Exp $
  *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels
@@ -96,6 +96,20 @@ statHistCopy(StatHist * Dest, const StatHist * Orig)
     assert(Dest->val_in == Orig->val_in && Dest->val_out == Orig->val_out);
     /* actual copy */
     xmemcpy(Dest->bins, Orig->bins, Dest->capacity * sizeof(*Dest->bins));
+}
+
+/*
+ * same as statHistCopy but will do nothing if capacities do not match; the
+ * latter happens, for example, when #peers changes during reconfiguration;
+ * if it happens too often we should think about more general solution..
+ */
+void
+statHistSafeCopy(StatHist * Dest, const StatHist * Orig)
+{
+    assert(Dest && Orig);
+    assert(Dest->bins);
+    if (Dest->capacity == Orig->capacity)
+	statHistCopy(Dest, Orig);
 }
 
 void
