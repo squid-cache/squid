@@ -1,5 +1,5 @@
 /*
- * $Id: Array.h,v 1.11 2003/01/23 11:51:33 robertc Exp $
+ * $Id: Array.h,v 1.12 2003/02/05 10:36:31 robertc Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -93,6 +93,7 @@ public:
     iterator end();
     const_iterator end () const;
     
+    /* Do not change these, until the entry C struct is removed */
     size_t capacity;
     size_t count;
     E *items;

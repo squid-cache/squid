@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.339 2003/02/01 13:38:44 hno Exp $
+ * $Id: ftp.cc,v 1.340 2003/02/05 10:36:51 robertc Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -42,6 +42,9 @@
 #include "HttpHeaderRange.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeader.h"
+#if DELAY_POOLS
+#include "DelayPools.h"
+#endif
 
 static const char *const crlf = "\r\n";
 static char cbuf[1024];
@@ -893,7 +896,7 @@ ftpDataRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *da
     StoreEntry *entry = ftpState->entry;
     size_t read_sz;
 #if DELAY_POOLS
-    delay_id delayId = delayMostBytesAllowed(entry->mem_obj);
+    DelayId delayId = entry->mem_obj->mostBytesAllowed();
 #endif
     assert(fd == ftpState->data.fd);
     /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us
@@ -909,7 +912,7 @@ ftpDataRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *da
 
     if (flag == COMM_OK && len > 0) {
 #if DELAY_POOLS
-	delayBytesIn(delayId, len);
+	delayId.bytesIn(len);
 #endif
 	kb_incr(&statCounter.server.all.kbytes_in, len);
 	kb_incr(&statCounter.server.ftp.kbytes_in, len);
@@ -931,7 +934,7 @@ ftpDataRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *da
 	    /* XXX what about Config.Timeout.read? */
 	    read_sz = ftpState->data.size - ftpState->data.offset;
 #if DELAY_POOLS
-	    read_sz = delayBytesWanted(delayId, 1, read_sz);
+	    read_sz = delayId.bytesWanted(1, read_sz);
 #endif
 	    comm_read(fd, ftpState->data.buf + ftpState->data.offset, read_sz, ftpDataRead, data);
 	} else {
@@ -951,7 +954,7 @@ ftpDataRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *da
     /* XXX what about Config.Timeout.read? */
 	read_sz = ftpState->data.size - ftpState->data.offset;
 #if DELAY_POOLS
-	read_sz = delayBytesWanted(delayId, 1, read_sz);
+	read_sz = delayId.bytesWanted(1, read_sz);
 #endif
 	comm_read(fd, ftpState->data.buf + ftpState->data.offset, read_sz, ftpDataRead, data);}
 }
@@ -2157,7 +2160,7 @@ ftpReadRetr(FtpStateData * ftpState)
 	/* XXX what about Config.Timeout.read? */
 	size_t read_sz = ftpState->data.size - ftpState->data.offset;
 #if DELAY_POOLS
-	read_sz = delayBytesWanted(delayMostBytesAllowed(ftpState->entry->mem_obj), 1, read_sz);
+	read_sz = ftpState->entry->mem_obj->mostBytesAllowed().bytesWanted(1, read_sz);
 #endif
 	comm_read(ftpState->data.fd, ftpState->data.buf + ftpState->data.offset,
 		  read_sz, ftpDataRead, ftpState);

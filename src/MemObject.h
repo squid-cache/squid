@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.h,v 1.1 2003/01/23 00:37:14 robertc Exp $
+ * $Id: MemObject.h,v 1.2 2003/02/05 10:36:48 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -40,6 +40,9 @@
 typedef void STMCB (void *data, StoreIOBuffer wroteBuffer);
 
 class store_client;
+#if DELAY_POOLS
+#include "DelayId.h"
+#endif
 
 class MemObject {
 public:
@@ -69,6 +72,10 @@ public:
     void trimSwappable();
     void trimUnSwappable();
     bool isContiguous() const;
+    int mostBytesWanted(int max) const;
+#if DELAY_POOLS
+    DelayId mostBytesAllowed() const;
+#endif
 
 
 #if URL_CHECKSUM_DEBUG

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.445 2003/02/02 13:12:36 robertc Exp $
+ * $Id: structs.h,v 1.446 2003/02/05 10:36:55 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -158,7 +158,8 @@ struct _acl_list {
     acl_list *next;
 };
 
-struct _acl_access {
+class acl_access {
+  public:
     allow_t allow;
     acl_list *aclList;
     char *cfgline;
@@ -227,28 +228,7 @@ struct _https_port_list {
 #endif
 
 #if DELAY_POOLS
-struct _delaySpec {
-    int restore_bps;
-    int max_bytes;
-};
-
-/* malloc()'d only as far as used (class * sizeof(delaySpec)!
- * order of elements very important!
- */
-struct _delaySpecSet {
-    delaySpec aggregate;
-    delaySpec individual;
-    delaySpec network;
-};
-
-struct _delayConfig {
-    unsigned short pools;
-    unsigned short initial;
-    unsigned char *delay_class;
-    delaySpecSet **rates;
-    acl_access **access;
-};
-
+#include "DelayConfig.h"
 #endif
 
 struct _authConfig {
@@ -535,7 +515,7 @@ struct _SquidConfig {
 	size_t limit;
     } MemPools;
 #if DELAY_POOLS
-    delayConfig Delay;
+    DelayConfig Delay;
 #endif
     struct {
 	int icp_average;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.555 2003/02/01 13:36:47 hno Exp $
+ * $Id: store.cc,v 1.556 2003/02/05 10:36:55 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -43,6 +43,9 @@
 #include "mem_node.h"
 #include "StoreMeta.h"
 #include "SwapDir.h"
+#if DELAY_POOLS
+#include "DelayPools.h"
+#endif
 
 static STMCB storeWriteComplete;
 
@@ -157,8 +160,8 @@ StoreEntry::checkDeferRead(int fd) const
 #if DELAY_POOLS
     if (fd < 0)
 	(void) 0;
-    else if (! delayIsNoDelay(fd)) {
-	int i = delayMostBytesWanted(mem_obj, INT_MAX);
+    else if (! DelayPools::IsNoDelay(fd)) {
+	int i = mem_obj->mostBytesWanted(INT_MAX);
 	if (0 == i)
 	    return 1;
 	/* was: rc = -(rc != INT_MAX); */

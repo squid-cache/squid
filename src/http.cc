@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.405 2003/01/28 01:29:34 robertc Exp $
+ * $Id: http.cc,v 1.406 2003/02/05 10:36:53 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -47,6 +47,9 @@
 #include "MemObject.h"
 #include "HttpHdrContRange.h"
 #include "ACLChecklist.h"
+#if DELAY_POOLS
+#include "DelayPools.h"
+#endif
 
 CBDATA_TYPE(HttpStateData);
 
@@ -76,7 +79,7 @@ httpStateFree(int fd, void *data)
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
 #if DELAY_POOLS
     if (fd >= 0)
-	delayClearNoDelay(fd);
+	DelayPools::ClearNoDelay(fd);
 #endif
     if (httpState == NULL)
 	return;
@@ -618,13 +621,13 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
     read_sz = SQUID_TCP_SO_RCVBUF;
     do_next_read = 0;
 #if DELAY_POOLS
-    delay_id delayId;
+    DelayId delayId;
 
     /* special "if" only for http (for nodelay proxy conns) */
-    if (delayIsNoDelay(fd))
-	delayId = 0;
+    if (DelayPools::IsNoDelay(fd))
+	delayId = DelayId();
     else
-	delayId = delayMostBytesAllowed(entry->mem_obj);
+	delayId = entry->mem_obj->mostBytesAllowed();
 #endif
 
 
@@ -645,12 +648,12 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
     errno = 0;
     /* prepare the read size for the next read (if any) */
 #if DELAY_POOLS
-    read_sz = delayBytesWanted(delayId, 1, read_sz);
+    read_sz = delayId.bytesWanted(1, read_sz);
 #endif
     debug(11, 5) ("httpReadReply: FD %d: len %d.\n", fd, (int)len);
     if (flag == COMM_OK && len > 0) {
 #if DELAY_POOLS
-	delayBytesIn(delayId, len);
+	delayId.bytesIn(len);
 #endif
 	kb_incr(&statCounter.server.all.kbytes_in, len);
 	kb_incr(&statCounter.server.http.kbytes_in, len);
@@ -788,7 +791,7 @@ HttpStateData::processReplyData(const char *buf, size_t len)
 	commSetTimeout(fd, -1, NULL, NULL);
 	do_next_read = 0;
 #if DELAY_POOLS
-	delayClearNoDelay(fd);
+	DelayPools::ClearNoDelay(fd);
 #endif
 	comm_remove_close_handler(fd, httpStateFree, this);
 	fwdUnregister(fd, fwd);
@@ -804,7 +807,7 @@ HttpStateData::processReplyData(const char *buf, size_t len)
 	commSetTimeout(fd, -1, NULL, NULL);
 	commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
 #if DELAY_POOLS
-	delayClearNoDelay(fd);
+	DelayPools::ClearNoDelay(fd);
 #endif
 	comm_remove_close_handler(fd, httpStateFree, this);
 	fwdUnregister(fd, fwd);
@@ -1228,9 +1231,9 @@ httpStart(FwdState * fwd)
 	if (httpState->_peer->options.proxy_only)
 	    storeReleaseRequest(httpState->entry);
 #if DELAY_POOLS
-	assert(delayIsNoDelay(fd) == 0);
+	assert(DelayPools::IsNoDelay(fd) == 0);
 	if (httpState->_peer->options.no_delay)
-	    delaySetNoDelay(fd);
+	    DelayPools::SetNoDelay(fd);
 #endif
     } else {
 	httpState->request = requestLink(orig_req);

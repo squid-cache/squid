@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.147 2003/01/28 01:29:35 robertc Exp $
+ * $Id: typedefs.h,v 1.148 2003/02/05 10:36:56 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -57,7 +57,8 @@ typedef struct _acl_time_data acl_time_data;
 typedef struct _acl_name_list acl_name_list;
 typedef struct _acl_deny_info_list acl_deny_info_list;
 typedef struct AuthUser auth_user_t;
-typedef struct AuthUserRequest auth_user_request_t;
+class AuthUserRequest;
+typedef AuthUserRequest auth_user_request_t;
 typedef struct AuthUserHashPointer auth_user_hash_pointer;
 typedef struct AuthUserIP auth_user_ip_t;
 typedef struct _acl_proxy_auth_match_cache acl_proxy_auth_match_cache;
@@ -71,7 +72,7 @@ typedef struct _acl_user_ip_data acl_user_ip_data;
 typedef struct _acl_arp_data acl_arp_data;
 typedef struct _acl_snmp_comm acl_snmp_comm;
 typedef struct _acl_list acl_list;
-typedef struct _acl_access acl_access;
+class acl_access;
 typedef struct _acl_address acl_address;
 typedef struct _acl_tos acl_tos;
 typedef struct _acl acl;
@@ -181,12 +182,6 @@ typedef variable_list *(oid_ParseFn) (variable_list *, snint *);
 typedef struct _snmp_request_t snmp_request_t;
 #endif
 
-#if DELAY_POOLS
-typedef struct _delayConfig delayConfig;
-typedef struct _delaySpecSet delaySpecSet;
-typedef struct _delaySpec delaySpec;
-#endif
-
 typedef void CWCB(int fd, char *, size_t size, comm_err_t flag, void *data);
 typedef void CNCB(int fd, comm_err_t status, void *);
 typedef void IOCB(int fd, char *, size_t size, comm_err_t flag, int xerrno, void *data);
@@ -269,10 +264,6 @@ typedef char HttpHeaderMask[8];
 
 /* a common objPackInto interface; used by debugObj */
 typedef void (*ObjPackMethod) (void *obj, Packer * p);
-
-#if DELAY_POOLS
-typedef unsigned int delay_id;
-#endif
 
 #if USE_HTCP
 typedef struct _htcpReplyData htcpReplyData;

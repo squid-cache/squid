@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.h,v 1.4 2003/01/23 00:37:16 robertc Exp $
+ * $Id: authenticate.h,v 1.5 2003/02/05 10:36:48 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,18 +34,10 @@
 #ifndef SQUID_AUTHENTICATE_H
 #define SQUID_AUTHENTICATE_H
 
-/* A note on the C bindings:
- * Direct use of the structs is prohibited - only (structfoo *) may be
- * used from C code.
- */
-
-#ifdef __cplusplus
 class AuthUser;
-#endif
 
 struct AuthUserHashPointer : public hash_link {
     /* first two items must be same as hash_link */
-#ifdef __cplusplus
 public:
     static void removeFromCache (void *anAuthUserHashPointer);
     
@@ -58,7 +50,6 @@ private:
     static MemPool *pool;
 
     AuthUser *auth_user;
-#endif
 };
 
 struct AuthUserIP {
@@ -90,7 +81,6 @@ struct AuthUser {
     /* the auth_user_request structures that link to this. Yes it could be a splaytree
      * but how many requests will a single username have in parallel? */
     dlink_list requests;
-#ifdef __cplusplus
 public:
     static void cacheInit ();
     
@@ -103,17 +93,16 @@ public:
 private:
     static void cacheCleanup (void *unused);
     static MemPool *pool;
-#endif
 };
 
-struct AuthUserRequest {
+class AuthUserRequest {
+  public:
     /* this is the object passed around by client_side and acl functions */
     /* it has request specific data, and links to user specific data */
     /* the user */
     auth_user_t *auth_user;
     /* any scheme specific request related data */
     void *scheme_data;
-#ifdef __cplusplus
 public:
     static auth_acl_t tryToAuthenticateAndSetAuthUser(auth_user_request_t **, http_hdr_type, request_t *, ConnStateData *, struct in_addr);
     static void addReplyAuthHeader(HttpReply * rep, auth_user_request_t * auth_user_request, request_t * request, int accelerated, int internal);
@@ -147,7 +136,6 @@ private:
      * when using connection based authentication
      */
     auth_acl_t lastReply;
-#endif
 };
 
 /* authenticate.c authenticate scheme routines typedefs */
@@ -174,9 +162,7 @@ typedef void AUTHSSTART(auth_user_request_t *, RH *, void *);
 typedef void AUTHSSTATS(StoreEntry *);
 typedef const char *AUTHSCONNLASTHEADER(auth_user_request_t *);
 
-#ifdef __cplusplus
 extern "C" {
-#endif
 /* subsumed by the C++ interface */
 extern void authenticateAuthUserMerge(auth_user_t *, auth_user_t *);
 extern auth_user_t *authenticateAuthUserNew(const char *);
@@ -218,9 +204,7 @@ extern void authSchemeAdd(const char *type, AUTHSSETUP * setup);
 /* AuthUserHashPointer */
 extern auth_user_t* authUserHashPointerUser(auth_user_hash_pointer *);
 
-#ifdef __cplusplus
 }
-#endif
 
 /* auth_modules.c */
 SQUIDCEXTERN void authSchemeSetup(void);

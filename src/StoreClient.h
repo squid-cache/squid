@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreClient.h,v 1.6 2003/01/23 00:37:14 robertc Exp $
+ * $Id: StoreClient.h,v 1.7 2003/02/05 10:36:48 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -46,6 +46,10 @@ public:
   virtual void created (StoreEntry *newEntry) = 0;
 };
 
+#if DELAY_POOLS
+#include "DelayId.h"
+#endif
+
 /* keep track each client receiving data from that particular StoreEntry */
 class store_client {
 public:
@@ -74,7 +78,8 @@ public:
 	unsigned int copy_event_pending:1;
     } flags;
 #if DELAY_POOLS
-    delay_id delayId;
+    DelayId delayId;
+    void setDelayId(DelayId delay_id);
 #endif
     dlink_node node;
     /* Below here is private - do no alter outside storeClient calls */
