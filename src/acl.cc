@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.65 1996/11/24 04:17:05 wessels Exp $
+ * $Id: acl.cc,v 1.66 1996/11/26 19:04:23 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -279,6 +279,8 @@ aclParseIpList(void)
 	    memset(addr2, 0, 256);
 	    memset(mask, 0, 256);
 
+#ifdef OLD_CODE
+	    /* This breaks on "www-cache.uninett.no" because of the dash */
 	    /* Split the adress in addr1-addr2/mask */
 	    strncpy(addr1, p, strcspn(p, "-/"));
 	    p += strcspn(p, "-/");
@@ -291,6 +293,37 @@ aclParseIpList(void)
 		p++;
 		strcpy(mask, p);
 	    }
+#endif
+#ifndef NEW_CODE
+        for (;;) {
+            if (sscanf(t, "%[0-9.]-%[0-9.]/%[0-9.]", addr1, addr2, mask) == 3)
+                break;
+            if (sscanf(t, "%[0-9.]-%[0-9.]", addr1, addr2) == 2) {
+                mask[0] = '\0';
+                break;
+            }
+            if (sscanf(t, "%[0-9.]/%[0-9.]", addr1, mask) == 2) {
+                addr2[0] = '\0';
+                break;
+            }
+            if (sscanf(t, "%[0-9.]", addr1) == 1) {
+                addr2[0] = '\0';
+                mask[0] = '\0';
+                break;
+            }
+            if (sscanf(t, "%[^/]/%s", addr1, mask) == 2) {
+                addr2[0] = '\0';
+                break;
+            }
+            if (sscanf(t, "%s", addr1) == 1) {
+                addr2[0] = '\0';
+                mask[0] = '\0';
+                break;
+            }
+            debug(28,0,"aclParseIpList: Bad host/IP: '%s'\n", t);
+            break;
+        }
+#endif
 	    /* Decode addr1 */
 	    if (!decode_addr(addr1, &q->addr1, &q->mask)) {
 		debug(28, 0, "%s line %d: %s\n",
