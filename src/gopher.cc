@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: gopher.cc,v 1.149 1999/01/24 02:26:24 wessels Exp $
+ * $Id: gopher.cc,v 1.150 1999/01/31 15:58:54 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -802,7 +802,7 @@ gopherStart(FwdState * fwdState)
 	    }
 	}
 	gopherToHTML(gopherState, (char *) NULL, 0);
-	fwdComplete(gopherState->fwdState);
+	fwdComplete(fwdState);
 	comm_close(fd);
 	return;
     }
