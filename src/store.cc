@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.350 1997/11/28 23:48:26 wessels Exp $
+ * $Id: store.cc,v 1.351 1997/11/29 08:03:21 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -291,6 +291,7 @@ new_MemObject(const char *url, const char *log_url)
     mem->reply->date = -2;
     mem->reply->expires = -2;
     mem->reply->last_modified = -2;
+    mem->reply->content_length = -1;
     mem->url = xstrdup(url);
     mem->log_url = xstrdup(log_url);
     mem->swapout.fd = -1;
@@ -1824,13 +1825,13 @@ storeEntryValidLength(const StoreEntry * e)
     debug(20, 5) ("storeEntryValidLength:         hdr_sz = %d\n", hdr_sz);
     debug(20, 5) ("storeEntryValidLength: content_length = %d\n", content_length);
 
-    if (content_length == 0) {
-	debug(20, 5) ("storeEntryValidLength: Zero content length; assume valid; '%s'\n",
+    if (content_length < 0) {
+	debug(20, 5) ("storeEntryValidLength: Unspecified content length: %s\n",
 	    storeKeyText(e->key));
 	return 1;
     }
     if (hdr_sz == 0) {
-	debug(20, 5) ("storeEntryValidLength: Zero header size; assume valid; '%s'\n",
+	debug(20, 5) ("storeEntryValidLength: Zero header size: %s\n",
 	    storeKeyText(e->key));
 	return 1;
     }

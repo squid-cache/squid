@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.208 1997/11/28 23:48:07 wessels Exp $
+ * $Id: comm.cc,v 1.209 1997/11/29 08:03:18 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -353,7 +353,7 @@ commConnectCallback(ConnectStateData * cs, int status)
     commConnectFree(fd, cs);
     if (cbdataValid(data))
 	callback(fd, status, data);
-    cbdataUnlock(cs->data);
+    cbdataUnlock(data);
 }
 
 static void

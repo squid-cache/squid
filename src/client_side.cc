@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.159 1997/11/28 08:04:39 wessels Exp $
+ * $Id: client_side.cc,v 1.160 1997/11/29 08:03:17 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -393,7 +393,7 @@ modifiedSince(StoreEntry * entry, request_t * request)
     if (entry->lastmod < 0)
 	return 1;
     /* Find size of the object */
-    if (mem->reply->content_length)
+    if (mem->reply->content_length >= 0)
 	object_length = mem->reply->content_length;
     else
 	object_length = entry->object_len - mem->reply->hdr_sz;
@@ -974,7 +974,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	HTTPCacheInfo->proto_touchobject(HTTPCacheInfo,
 	    http->request->protocol,
 	    http->out.size);
-	if (http->entry->mem_obj->reply->content_length <= 0) {
+	if (http->entry->mem_obj->reply->content_length < 0) {
 	    comm_close(fd);
 	} else if (EBIT_TEST(http->request->flags, REQ_PROXY_KEEPALIVE)) {
 	    debug(12, 5) ("clientWriteComplete: FD %d Keeping Alive\n", fd);
@@ -1777,7 +1777,7 @@ icpCheckTransferDone(clientHttpRequest * http)
 	    return 1;
     if ((mem = entry->mem_obj) == NULL)
 	return 0;
-    if (mem->reply->content_length == 0)
+    if (mem->reply->content_length < 0)
 	return 0;
     if (http->out.offset >= mem->reply->content_length + mem->reply->hdr_sz)
 	return 1;
