@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.14 1998/04/18 06:54:08 rousskov Exp $
+ * $Id: CacheDigest.cc,v 1.15 1998/04/22 16:20:55 rousskov Exp $
  *
  * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -41,42 +41,48 @@ typedef struct {
 
 /* local functions */
 static void cacheDigestHashKey(const CacheDigest *cd, const cache_key *key);
-static size_t cacheDigestCalcMaskSize(int cap);
-
-/* configuration params */
-static const int BitsPerEntry = 4;
 
 /* static array used by cacheDigestHashKey for optimization purposes */
 static u_num32 hashed_keys[4];
 
+static void
+cacheDigestInit(CacheDigest *cd, int capacity, int bpe)
+{
+    const size_t mask_size = cacheDigestCalcMaskSize(capacity, bpe);
+    assert(cd);
+    assert(capacity > 0 && bpe > 0);
+    assert(mask_size > 0);
+    cd->capacity = capacity;
+    cd->bits_per_entry = bpe;
+    cd->mask_size = mask_size;
+    cd->mask = xcalloc(cd->mask_size, 1);
+    debug(70,2) ("cacheDigestInit: capacity: %d entries, pbe: %d; size: %d bytes\n",
+	cd->capacity, cd->bits_per_entry, cd->mask_size);
+}
 
 CacheDigest *
-cacheDigestCreate(int capacity)
+cacheDigestCreate(int capacity, int bpe)
 {
-    const size_t mask_size = cacheDigestCalcMaskSize(capacity);
-    CacheDigest *cd = cacheDigestSizedCreate(mask_size, capacity);
+    CacheDigest *cd = memAllocate(MEM_CACHE_DIGEST);
+    assert(MD5_DIGEST_CHARS == 16);  /* our hash functions rely on 16 byte keys */
+    cacheDigestInit(cd, capacity, bpe);
     return cd;
 }
 
-/* use this method only if mask size is known a priory */
-CacheDigest *
-cacheDigestSizedCreate(size_t size, int capacity)
+static void
+cacheDigestClean(CacheDigest * cd)
 {
-    CacheDigest *cd = memAllocate(MEM_CACHE_DIGEST);
-    assert(MD5_DIGEST_CHARS == 16);	/* our hash functions rely on 16 byte keys */
-    assert(capacity > 0);
-    cd->capacity = capacity;
-    cd->mask_size = size;
-    cd->mask = xcalloc(cd->mask_size, 1);
-    return cd;
+    assert(cd);
+    xfree(cd->mask);
+    cd->mask = NULL;
 }
 
 void
 cacheDigestDestroy(CacheDigest * cd)
 {
     assert(cd);
-    xfree(cd->mask);
-    xfree(cd);
+    cacheDigestClean(cd);
+    memFree(MEM_CACHE_DIGEST, cd);
 }
 
 CacheDigest *
@@ -84,8 +90,10 @@ cacheDigestClone(const CacheDigest * cd)
 {
     CacheDigest *clone;
     assert(cd);
-    clone = cacheDigestCreate(cd->capacity);
+    clone = cacheDigestCreate(cd->capacity, cd->bits_per_entry);
     clone->count = cd->count;
+    clone->del_count = cd->del_count;
+    assert(cd->mask_size == clone->mask_size);
     xmemcpy(clone->mask, cd->mask, cd->mask_size);
     return clone;
 }
@@ -98,15 +106,13 @@ cacheDigestClear(CacheDigest * cd)
     memset(cd->mask, 0, cd->mask_size);
 }
 
+/* changes mask size, resets bits to 0, preserves "cd" pointer */
 void
 cacheDigestChangeCap(CacheDigest * cd, int new_cap)
 {
     assert(cd);
-    /* have to clear because capacity changes hash functions */
-    cacheDigestClear(cd);
-    cd->capacity = new_cap;
-    cd->mask_size = cacheDigestCalcMaskSize(new_cap);
-    cd->mask = xrealloc(cd->mask, cd->mask_size);
+    cacheDigestClean(cd);
+    cacheDigestInit(cd, new_cap, cd->bits_per_entry);
 }
 
 /* returns true if the key belongs to the digest */
@@ -201,6 +207,15 @@ cacheDigestStats(const CacheDigest * cd, CacheDigestStats * stats)
     stats->bseq_count = seq_count;
 }
 
+int
+cacheDigestBitUtil(const CacheDigest * cd)
+{
+    CacheDigestStats stats;
+    assert(cd);
+    cacheDigestStats(cd, &stats);
+    return xpercentInt(stats.bit_on_count, stats.bit_count);
+}
+
 void
 cacheDigestGuessStatsUpdate(cd_guess_stats *stats, int real_hit, int guess_hit)
 {
@@ -246,6 +261,8 @@ cacheDigestGuessStatsReport(const cd_guess_stats *stats, StoreEntry * sentry, co
 	hit_count, xpercent(hit_count, tot_count),
 	miss_count, xpercent(miss_count, tot_count),
 	tot_count, xpercent(tot_count, tot_count));
+    storeAppendPrintf(sentry, "\tclose_hits: %d ( %d%%) /* cd said hit, doc was in the peer cache, but we got a miss */\n",
+	stats->close_hits, xpercentInt(stats->close_hits, stats->false_hits));
 }
 
 void
@@ -265,7 +282,8 @@ cacheDigestReport(CacheDigest *cd, const char *label, StoreEntry * e)
     storeAppendPrintf(e, "\t deletion attempts: %d\n",
 	cd->del_count
 	);
-    storeAppendPrintf(e, "\t bits: on: %d capacity: %d util: %d%%\n",
+    storeAppendPrintf(e, "\t bits: per entry: %d on: %d capacity: %d util: %d%%\n",
+	cd->bits_per_entry,
 	stats.bit_on_count, stats.bit_count,
 	xpercentInt(stats.bit_on_count, stats.bit_count)
 	);
@@ -275,10 +293,10 @@ cacheDigestReport(CacheDigest *cd, const char *label, StoreEntry * e)
 	);
 }
 
-static size_t
-cacheDigestCalcMaskSize(int cap)
+size_t
+cacheDigestCalcMaskSize(int cap, int bpe)
 {
-    return (size_t) (cap * BitsPerEntry + 7) / 8;
+    return (size_t) (cap * bpe + 7) / 8;
 }
 
 static void
