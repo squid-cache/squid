@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.14 2005/01/03 16:08:25 robertc Exp $
+ * $Id: Store.h,v 1.15 2005/01/06 03:22:22 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -179,7 +179,7 @@ class Store : public RefCountable
 
 public:
     /* The root store */
-    static Store &Root();
+    static _SQUID_INLINE_ Store &Root();
     static void Root(Store *);
     static void Root(RefCount<Store>);
     static void Stats(StoreEntry * output);
