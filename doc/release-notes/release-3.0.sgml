@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.0 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.0.sgml,v 1.4 2003/05/17 19:02:14 hno Exp $</date>
+<date>$Id: release-3.0.sgml,v 1.5 2003/05/28 22:45:12 hno Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.0 of Squid.
@@ -19,15 +19,15 @@ for Applied Network Research and members of the Web Caching community.
 	<item>New option ftp_sanitycheck (Henrik Nordstrom).
 	<item>Gopher improvements (Henrik Nordstrom).
 	<item>CARP enabled by default (Henrik Nordstrom).
-	<item>Documented no_cache change (not new, but rather important) (Henrik)
-	<item>Make http_port optional, allowing for SSL-only operation. Squid will refuse to start unless at least one port is defined. (Henrik).
-	<item>Ability to read the configuration file from an external program pipe (Henrik).
-	<item>Major cleanup or CARP. Now plays well with the other peering algorithms as just another non-ICP peering method. (Henrik)
+	<item>Documented no_cache change (not new, but rather important) (Henrik Nordstrom).
+	<item>Make http_port optional, allowing for SSL-only operation. Squid will refuse to start unless at least one port is defined. (Henrik Nordstrom).
+	<item>Ability to read the configuration file from an external program pipe (Henrik Nordstrom).
+	<item>Major cleanup or CARP. Now plays well with the other peering algorithms as just another non-ICP peering method. (Henrik Nordstrom)
 	<item>Spelling corrections by Reuben Farrelly.
 	<item>SASL auth helper by Ian Castle.
-	<item>SNMP leak fix (Henrik).
+	<item>SNMP leak fix (Henrik Nordstrom).
 	<item>Object reference counting supported to ease some programming tasks (Robert Collins).
-	<item>EXEEXT cleanups, to hopefully allow pinger to install cleanly on cygwin etc.. (Henrik)
+	<item>EXEEXT cleanups, to hopefully allow pinger to install cleanly on cygwin etc.. (Henrik Nordstrom)
 	<item>epoll support (David Nicklay)
 	<item>Deferred reads removed from comms layer, implemented a layer above, allowing more efficent comms layers (such as epoll). (Robert Collins).
 	<item>ACL Source code extracted into multiple separate classes, allowing great flexability in future development, and also for custom squid builds today. (Robert Collins)
@@ -110,8 +110,9 @@ This fixes two issues:<itemize><item>Transparently intercepted requests is no lo
   <item>Peering enhancement options for satellite or other high latency links by Robert Cohen.
   <item>Cleanup of authentication forwarding, and added gatewaying proxy->reverseproxy when the same Squid is acting as both proxy and reverseproxy with authentication. (Henrik Nordstrom)
  <item>The mailto links on Squid's ERR pages now contain data about the cccurred error by default, so that the email will contain this data in its body. This feature can be disabled via the email_err_data directive. (Clemens Löser)
- <item>Disable pipeline_prefetch in HEAD as it is known to be broken due to the store_client_copy() api change (Henrik)
- <item>Fixup some SNMP variable types for more useful reporting. (Henrik).
+ <item>Disable pipeline_prefetch in HEAD as it is known to be broken due to the store_client_copy() api change (Henrik Nordstrom)
+ <item>Fixup some SNMP variable types for more useful reporting. (Henrik Nordstrom)
+ <item>ncsa_auth extened with support for MD5 hashes. (Henrik Nordstrom)
 </itemize>
 
 <sect>Changes to squid.conf
@@ -125,7 +126,7 @@ This fixes two issues:<itemize><item>Transparently intercepted requests is no lo
 <tag>https_port</tag>New option : dhparams=/path/to/file.pem https_port option to specify DH parameters for forward-secrecy in encryption (practically denies decryption even if the private key is known from what I understand). (Henrik Nordstrom)
 <tag>header_replace</tag>This is now dependent on --disable-http-violations (Henrik Nordstrom) 
 <tag>email_err_data</tag>Allow disabling the data now embedded in the mailto links on Squid's ERR pages.
-<tag>refresh_pattern</tag>Make the default refresh_pattern merely a suggested default. This is consistent with older Squid versions due to a bug in the "DEFAULT-IF-NONE" processing of refresh_pattern.  (Henrik)
+<tag>refresh_pattern</tag>Make the default refresh_pattern merely a suggested default. This is consistent with older Squid versions due to a bug in the "DEFAULT-IF-NONE" processing of refresh_pattern.  (Henrik Nordstrom)
 <tag>reply_body_max_size</tag>No longer uses allow/deny. Instead it is specified as a size followed by acl elements. The size "none" can be used for no limit (the default)
 <tag>external_acl_type</tag>The argument which was named concurrenty= in Squid-2.5 is now named children=. concurrency= has a different meaing in Squid-3.0 and your external acls will not work until updated.
 </descrip>
