@@ -42,10 +42,7 @@ uudecode(const char *bufcoded)
     nbytesdecoded = ((nprbytes + 3) / 4) * 3;
 
     bufplain = xmalloc(nbytesdecoded + 1);
-    if (bufplain == NULL)
-	return (NULL);
     bufout = (unsigned char *) bufplain;
-
     bufin = (const unsigned char *) bufcoded;
 
     while (nprbytes > 0) {
