@@ -4,11 +4,41 @@
 # configure has not been run, or if a Makefile.am in a non-configured directory
 # has been updated
 
-# Autotool versions required. To override either edit the script
+# Autotool versions preferred. To override either edit the script
 # to match the versions you want to use, or set the variables on
 # the command line like "env acver=.. amver=... ./bootstrap.sh"
-acver="${acver:-2.53}"
-amver="${amver:-1.5}"
+acversions="${acver:-2.53}"
+amversions="${amver:-1.6 1.5}"
+
+check_version()
+{
+  eval $2 --version 2>/dev/null | grep -i "$1.*$3" >/dev/null
+}
+
+find_version()
+{
+  tool=$1
+  found="NOT_FOUND"
+  shift
+  versions="$*"
+  for version in $versions; do
+    for variant in "" "-${version}" "`echo $version | sed -e 's/.//g'`"; do
+      if check_version $tool ${tool}${variant} $version; then
+	found="${variant}"
+	break
+      fi
+    done
+    if [ "x$found" != "xNOT_FOUND" ]; then
+      break
+    fi
+  done
+  if [ "x$found" = "xNOT_FOUND" ]; then
+    echo "WARNING: Cannot find $tool version $versions" >&2
+    echo "Trying `$tool --version | head -1`" >&2
+    found=""
+  fi
+  echo $found
+}
 
 bootstrap() {
   if "$@"; then
@@ -25,14 +55,8 @@ bootstrap() {
 mkdir -p cfgaux
 
 # Adjust paths of required autool packages
-if autoconf --version | grep -q "$acver"; then
-  acver=""
-fi
-if automake --version | grep -q "$amver"; then
-  amver=""
-fi
-acver=`echo $acver | sed -e 's/\.//'`
-amver=`echo $amver | sed -e 's/\.//'`
+amver=`find_version automake ${amversions}`
+acver=`find_version autoconf ${acversions}`
 
 # Bootstrap the autotool subsystems
 bootstrap aclocal$amver
