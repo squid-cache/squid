@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.68 1996/10/24 23:31:13 wessels Exp $
+ * $Id: ftp.cc,v 1.69 1996/10/24 23:36:51 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -171,7 +171,7 @@ ftp_login_parser(char *login, FtpStateData * data)
 	*s = 0;
 	strcpy(password, s + 1);
     } else {
-	strcpy(password, null_string
+	strcpy(password, null_string);
     }
 
     if (!*user && !*password) {
