@@ -60,7 +60,7 @@ storeAufsOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     ((squidaiostate_t *) (sio->fsstate))->flags.opening = 1;
     sio->swap_filen = f;
     sio->swap_dirn = SD->index;
-    sio->mode = O_RDONLY;
+    sio->mode = O_RDONLY | O_BINARY;
     sio->callback = callback;
     sio->callback_data = cbdataReference(callback_data);
     sio->e = e;
@@ -283,9 +283,9 @@ storeAufsOpenDone(int unused, void *my_data, int fd, int errflag)
     aiostate->fd = fd;
     commSetCloseOnExec(fd);
     fd_open(fd, FD_FILE, storeAufsDirFullPath(INDEXSD(sio->swap_dirn), sio->swap_filen, NULL));
-    if (sio->mode & O_WRONLY)
+    if (FILE_MODE(sio->mode) == O_WRONLY)
 	storeAufsKickWriteQueue(sio);
-    else if (sio->mode & O_RDONLY)
+    else if (FILE_MODE(sio->mode) == O_RDONLY)
 	storeAufsKickReadQueue(sio);
     if (aiostate->flags.close_request)
 	storeAufsIOCallback(sio, errflag);

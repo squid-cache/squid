@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_coss.cc,v 1.17 2002/07/28 21:36:31 hno Exp $
+ * $Id: store_io_coss.cc,v 1.18 2002/08/08 20:12:45 hno Exp $
  *
  * DEBUG: section 79    Storage Manager COSS Interface
  * AUTHOR: Eric Stern
@@ -144,7 +144,7 @@ storeCossCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback, STIOCB * c
     cstate = memPoolAlloc(coss_state_pool);
     sio->fsstate = cstate;
     sio->offset = 0;
-    sio->mode = O_WRONLY;
+    sio->mode = O_WRONLY | O_BINARY;
 
     /*
      * If we get handed an object with a size of -1,
@@ -198,7 +198,7 @@ storeCossOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
     sio->swap_filen = f;
     sio->swap_dirn = SD->index;
     sio->offset = 0;
-    sio->mode = O_RDONLY;
+    sio->mode = O_RDONLY | O_BINARY;
     sio->callback = callback;
     sio->file_callback = file_callback;
     sio->callback_data = cbdataReference(callback_data);
@@ -264,7 +264,7 @@ void
 storeCossClose(SwapDir * SD, storeIOState * sio)
 {
     debug(79, 3) ("storeCossClose: offset %d\n", sio->swap_filen);
-    if (sio->mode & O_WRONLY)
+    if (FILE_MODE(sio->mode) == O_WRONLY)
 	storeCossMemBufUnlock(SD, sio);
     storeCossIOCallback(sio, 0);
 }

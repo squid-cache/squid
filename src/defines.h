@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.106 2002/07/15 09:14:29 hno Exp $
+ * $Id: defines.h,v 1.107 2002/08/08 20:12:45 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -311,6 +311,15 @@
 #endif
 #ifndef O_BINARY
 #define O_BINARY 0
+#endif
+
+/*
+ * Macro to find file access mode
+ */
+#ifdef O_ACCMODE
+#define FILE_MODE(x) ((x)&O_ACCMODE)
+#else
+#define FILE_MODE(x) ((x)&(O_RDONLY|O_WRONLY|O_RDWR))
 #endif
 
 #define	HTTP_REQBUF_SZ	4096
