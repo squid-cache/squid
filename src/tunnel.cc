@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.36 1997/02/05 04:54:14 wessels Exp $
+ * $Id: tunnel.cc,v 1.37 1997/02/19 00:03:59 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -108,10 +108,12 @@ sslStateFree(int fd, void *data)
 	return;
     if (fd != sslState->server.fd)
 	fatal_dump("sslStateFree: FD mismatch!\n");
-    commSetSelect(sslState->client.fd,
-	COMM_SELECT_READ,
-	NULL,
-	NULL, 0);
+    if (sslState->client.fd > -1) {
+	commSetSelect(sslState->client.fd,
+	    COMM_SELECT_READ,
+	    NULL,
+	    NULL, 0);
+    }
     safe_free(sslState->server.buf);
     safe_free(sslState->client.buf);
     xfree(sslState->url);
