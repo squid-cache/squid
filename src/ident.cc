@@ -1,5 +1,5 @@
 /*
- * $Id: ident.cc,v 1.13 1996/09/16 21:11:09 wessels Exp $
+ * $Id: ident.cc,v 1.14 1996/09/16 21:20:47 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -56,11 +56,11 @@ identStart(int sock, icpStateData * icpState)
 
     if (sock < 0) {
 	sock = comm_open(SOCK_STREAM,
-		0,
-		Config.Addrs.tcp_outgoing,
-		0,
-		COMM_NONBLOCKING,
-		"ident");
+	    0,
+	    Config.Addrs.tcp_outgoing,
+	    0,
+	    COMM_NONBLOCKING,
+	    "ident");
 	if (sock == COMM_ERROR)
 	    return;
     }

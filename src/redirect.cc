@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.16 1996/09/16 21:11:13 wessels Exp $
+ * $Id: redirect.cc,v 1.17 1996/09/16 21:20:49 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -124,11 +124,11 @@ redirectCreateRedirector(char *command)
 	comm_close(cfd);	/* close shared socket with child */
 	/* open new socket for parent process */
 	sfd = comm_open(SOCK_STREAM,
-		0,
-		local_addr,
-		0,
-		0,
-		NULL);	/* blocking! */
+	    0,
+	    local_addr,
+	    0,
+	    0,
+	    NULL);		/* blocking! */
 	if (sfd == COMM_ERROR)
 	    return -1;
 	if (comm_connect(sfd, localhost, port) == COMM_ERROR) {
