@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.102 1996/12/20 23:20:56 wessels Exp $
+ * $Id: neighbors.cc,v 1.103 1996/12/20 23:46:15 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -443,7 +443,7 @@ neighborsUdpPing(protodispatch_data * proto)
 	fatal_dump(NULL);
     }
     if (entry->swap_status != NO_SWAP)
-        fatal_dump("neighborsUdpPing: bad swap_status");
+	fatal_dump("neighborsUdpPing: bad swap_status");
     for (i = 0, e = friends.first_ping; i++ < friends.n; e = e->next) {
 	if (e == NULL)
 	    e = friends.edges_head;
