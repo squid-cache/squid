@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.321 2003/10/17 00:28:56 hno Exp $
+#  $Id: Makefile.in,v 1.322 2003/10/21 00:13:59 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -696,6 +696,7 @@ ufsdump_SOURCES = debug.cc \
 	int.cc \
 	ufsdump.cc \
 	store.cc \
+	StoreFileSystem.cc \
 	StoreMeta.cc \
 	StoreMeta.h \
 	StoreMetaMD5.cc \
@@ -733,7 +734,6 @@ ufsdump_SOURCES = debug.cc \
 	comm_select.cc \
 	comm_poll.cc \
 	comm_kqueue.cc \
-	comm_epoll.cc \
 	defines.h \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
@@ -1173,14 +1173,14 @@ squidclient_LDADD = $(LDADD)
 squidclient_DEPENDENCIES =
 squidclient_LDFLAGS =
 am__ufsdump_SOURCES_DIST = debug.cc int.cc ufsdump.cc store.cc \
-	StoreMeta.cc StoreMeta.h StoreMetaMD5.cc StoreMetaMD5.h \
-	StoreMetaSTD.cc StoreMetaSTD.h StoreMetaUnpacker.cc \
-	StoreMetaUnpacker.h StoreMetaURL.cc StoreMetaURL.h \
-	StoreMetaVary.cc StoreMetaVary.h StoreSwapLogData.cc \
-	StoreSwapLogData.h access_log.cc acl.cc ACLChecklist.cc \
-	ACLARP.cc ACLARP.h ACLASN.cc ACLASN.h ACLDestinationASN.h \
-	ACLSourceASN.h ACLBrowser.cc ACLBrowser.h ACLData.h \
-	ACLDestinationDomain.cc ACLDestinationDomain.h \
+	StoreFileSystem.cc StoreMeta.cc StoreMeta.h StoreMetaMD5.cc \
+	StoreMetaMD5.h StoreMetaSTD.cc StoreMetaSTD.h \
+	StoreMetaUnpacker.cc StoreMetaUnpacker.h StoreMetaURL.cc \
+	StoreMetaURL.h StoreMetaVary.cc StoreMetaVary.h \
+	StoreSwapLogData.cc StoreSwapLogData.h access_log.cc acl.cc \
+	ACLChecklist.cc ACLARP.cc ACLARP.h ACLASN.cc ACLASN.h \
+	ACLDestinationASN.h ACLSourceASN.h ACLBrowser.cc ACLBrowser.h \
+	ACLData.h ACLDestinationDomain.cc ACLDestinationDomain.h \
 	ACLDestinationIP.cc ACLDestinationIP.h ACLDomainData.h \
 	ACLDomainData.cc ACLExtUser.h ACLExtUser.cc ACLIntRange.cc \
 	ACLIntRange.h ACLIP.cc ACLIP.h ACLMaxConnection.cc \
@@ -1201,29 +1201,28 @@ am__ufsdump_SOURCES_DIST = debug.cc int.cc ufsdump.cc store.cc \
 	cache_manager.cc carp.cc cbdata.cc client_db.cc client_side.cc \
 	client_side_reply.cc client_side_request.cc \
 	client_side_request.h clientStream.cc clientStream.h comm.cc \
-	comm.h comm_select.cc comm_poll.cc comm_kqueue.cc comm_epoll.cc \
-	defines.h CommonPool.h CompositePoolNode.h delay_pools.cc \
-	DelayId.cc DelayId.h DelayIdComposite.h DelayBucket.cc \
-	DelayBucket.h DelayConfig.cc DelayConfig.h DelayPool.cc \
-	DelayPool.h DelayPools.h DelaySpec.cc DelaySpec.h \
-	DelayTagged.cc DelayTagged.h DelayUser.cc DelayUser.h \
-	DelayVector.cc DelayVector.h NullDelayId.cc NullDelayId.h \
-	disk.cc dns_internal.cc dns.cc enums.h errorpage.cc \
-	ElementList.h ESI.cc ESI.h ESIAssign.cc ESIAssign.h \
-	ESIAttempt.h ESIContext.cc ESIContext.h ESICustomParser.cc \
-	ESICustomParser.h ESIElement.h ESIExcept.h ESIExpatParser.cc \
-	ESIExpatParser.h ESIExpression.cc ESIExpression.h ESIInclude.cc \
-	ESIInclude.h ESILiteral.h ESIParser.cc ESIParser.h \
-	ESISegment.cc ESISegment.h ESISequence.cc ESISequence.h \
-	ESIVar.h ESIVarState.cc ESIVarState.h ETag.cc event.cc \
-	external_acl.cc ExternalACLEntry.cc fd.cc fde.cc fde.h \
-	filemap.cc forward.cc fqdncache.cc ftp.cc gopher.cc helper.cc \
-	htcp.cc htcp.h http.cc HttpStatusLine.cc HttpHdrCc.cc \
-	HttpHdrRange.cc HttpHdrSc.cc HttpHdrScTarget.cc \
-	HttpHdrContRange.cc HttpHeader.cc HttpHeaderTools.cc \
-	HttpBody.cc HttpMsg.cc HttpReply.cc HttpRequest.cc \
-	HttpRequest.h icmp.cc icp_v2.cc icp_v3.cc ACLIdent.cc \
-	ACLIdent.h ident.cc internal.cc ipc.cc ipcache.cc \
+	comm.h comm_select.cc comm_poll.cc comm_kqueue.cc defines.h \
+	CommonPool.h CompositePoolNode.h delay_pools.cc DelayId.cc \
+	DelayId.h DelayIdComposite.h DelayBucket.cc DelayBucket.h \
+	DelayConfig.cc DelayConfig.h DelayPool.cc DelayPool.h \
+	DelayPools.h DelaySpec.cc DelaySpec.h DelayTagged.cc \
+	DelayTagged.h DelayUser.cc DelayUser.h DelayVector.cc \
+	DelayVector.h NullDelayId.cc NullDelayId.h disk.cc \
+	dns_internal.cc dns.cc enums.h errorpage.cc ElementList.h \
+	ESI.cc ESI.h ESIAssign.cc ESIAssign.h ESIAttempt.h \
+	ESIContext.cc ESIContext.h ESICustomParser.cc ESICustomParser.h \
+	ESIElement.h ESIExcept.h ESIExpatParser.cc ESIExpatParser.h \
+	ESIExpression.cc ESIExpression.h ESIInclude.cc ESIInclude.h \
+	ESILiteral.h ESIParser.cc ESIParser.h ESISegment.cc \
+	ESISegment.h ESISequence.cc ESISequence.h ESIVar.h \
+	ESIVarState.cc ESIVarState.h ETag.cc event.cc external_acl.cc \
+	ExternalACLEntry.cc fd.cc fde.cc fde.h filemap.cc forward.cc \
+	fqdncache.cc ftp.cc gopher.cc helper.cc htcp.cc htcp.h http.cc \
+	HttpStatusLine.cc HttpHdrCc.cc HttpHdrRange.cc HttpHdrSc.cc \
+	HttpHdrScTarget.cc HttpHdrContRange.cc HttpHeader.cc \
+	HttpHeaderTools.cc HttpBody.cc HttpMsg.cc HttpReply.cc \
+	HttpRequest.cc HttpRequest.h icmp.cc icp_v2.cc icp_v3.cc \
+	ACLIdent.cc ACLIdent.h ident.cc internal.cc ipc.cc ipcache.cc \
 	IPInterception.cc IPInterception.h leakfinder.cc logfile.cc \
 	mem.cc mem_node.cc mem_node.h Mem.h MemBuf.cc MemObject.cc \
 	MemObject.h mime.cc multicast.cc neighbors.cc net_db.cc \
@@ -1240,25 +1239,26 @@ am__ufsdump_SOURCES_DIST = debug.cc int.cc ufsdump.cc store.cc \
 	unlinkd.cc url.cc urn.cc useragent.cc wais.cc wccp.cc whois.cc \
 	win32.cc
 am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) ufsdump.$(OBJEXT) \
-	store.$(OBJEXT) StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
-	StoreMetaSTD.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
-	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
-	StoreSwapLogData.$(OBJEXT) access_log.$(OBJEXT) acl.$(OBJEXT) \
-	ACLChecklist.$(OBJEXT) $(am__objects_3) asn.$(OBJEXT) \
-	authenticate.$(OBJEXT) cache_cf.$(OBJEXT) CacheDigest.$(OBJEXT) \
+	store.$(OBJEXT) StoreFileSystem.$(OBJEXT) StoreMeta.$(OBJEXT) \
+	StoreMetaMD5.$(OBJEXT) StoreMetaSTD.$(OBJEXT) \
+	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
+	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
+	access_log.$(OBJEXT) acl.$(OBJEXT) ACLChecklist.$(OBJEXT) \
+	$(am__objects_3) asn.$(OBJEXT) authenticate.$(OBJEXT) \
+	cache_cf.$(OBJEXT) CacheDigest.$(OBJEXT) \
 	cache_manager.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
 	client_db.$(OBJEXT) client_side.$(OBJEXT) \
 	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
 	clientStream.$(OBJEXT) comm.$(OBJEXT) comm_select.$(OBJEXT) \
-	comm_poll.$(OBJEXT) comm_kqueue.$(OBJEXT) comm_epoll.$(OBJEXT) \
-	$(am__objects_5) disk.$(OBJEXT) $(am__objects_6) \
-	errorpage.$(OBJEXT) $(am__objects_10) ETag.$(OBJEXT) \
-	event.$(OBJEXT) external_acl.$(OBJEXT) \
-	ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) fde.$(OBJEXT) \
-	filemap.$(OBJEXT) forward.$(OBJEXT) fqdncache.$(OBJEXT) \
-	ftp.$(OBJEXT) gopher.$(OBJEXT) helper.$(OBJEXT) \
-	$(am__objects_11) http.$(OBJEXT) HttpStatusLine.$(OBJEXT) \
-	HttpHdrCc.$(OBJEXT) HttpHdrRange.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
+	comm_poll.$(OBJEXT) comm_kqueue.$(OBJEXT) $(am__objects_5) \
+	disk.$(OBJEXT) $(am__objects_6) errorpage.$(OBJEXT) \
+	$(am__objects_10) ETag.$(OBJEXT) event.$(OBJEXT) \
+	external_acl.$(OBJEXT) ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) \
+	fde.$(OBJEXT) filemap.$(OBJEXT) forward.$(OBJEXT) \
+	fqdncache.$(OBJEXT) ftp.$(OBJEXT) gopher.$(OBJEXT) \
+	helper.$(OBJEXT) $(am__objects_11) http.$(OBJEXT) \
+	HttpStatusLine.$(OBJEXT) HttpHdrCc.$(OBJEXT) \
+	HttpHdrRange.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
 	HttpHdrScTarget.$(OBJEXT) HttpHdrContRange.$(OBJEXT) \
 	HttpHeader.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
 	HttpBody.$(OBJEXT) HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) \
