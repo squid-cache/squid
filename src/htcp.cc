@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.41 2002/08/09 10:57:43 robertc Exp $
+ * $Id: htcp.cc,v 1.42 2002/10/04 14:00:22 hno Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -917,7 +917,7 @@ htcpQuery(StoreEntry * e, request_t * req, peer * p)
     stuff.S.method = (char *) RequestMethodStr[req->method];
     stuff.S.uri = (char *) storeUrl(e);
     stuff.S.version = vbuf;
-    httpBuildRequestHeader(req, req, e, &hdr, -1, flags);
+    httpBuildRequestHeader(req, req, e, &hdr, flags);
     memBufDefInit(&mb);
     packerToMemInit(&pa, &mb);
     httpHeaderPackInto(&hdr, &pa);
