@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.34 2001/10/24 07:45:34 hno Exp $
+ * $Id: authenticate.cc,v 1.35 2001/10/25 18:08:47 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -281,7 +281,7 @@ authenticateAuthUserRequestSetIp(auth_user_request_t * auth_user_request, struct
 	ipdata = tempnode;
     }
 
-    if (!found)
+    if (found)
 	return;
 
     /* This ip is not in the seen list */
