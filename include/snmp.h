@@ -27,7 +27,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  * 
- * $Id: snmp.h,v 1.14 2001/10/08 16:18:31 hno Exp $
+ * $Id: snmp.h,v 1.15 2002/02/13 02:01:10 hno Exp $
  * 
  **********************************************************************/
 
@@ -69,7 +69,6 @@
 #endif
 #include "snmp-internal.h"
 #include "parse.h"
-#include "snmp_compat.h"
 #include "snmp_debug.h"
 
 #endif /* SQUID_SNMP_H */
