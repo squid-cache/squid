@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.239 1997/12/27 18:15:07 kostas Exp $
+ * $Id: cache_cf.cc,v 1.240 1998/01/02 19:55:28 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -659,6 +659,7 @@ free_peer(peer ** P)
 	*P = p->next;
 	peerDestroy(p);
     }
+    Config.npeers = 0;
 }
 
 static void
