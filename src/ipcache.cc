@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.158 1998/02/22 11:58:35 kostas Exp $
+ * $Id: ipcache.cc,v 1.159 1998/02/23 21:07:13 kostas Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -1059,38 +1059,41 @@ ipcache_restart(void)
 
 #ifdef SQUID_SNMP
 
-int ipcache_getMax()
+int 
+ipcache_getMax()
 {
-	int i=0;
-	dlink_node *m = NULL;
-	for (m=lru_list.head; m &&m->data ; m=m->next) i++;
-	return i;
+    int i = 0;
+    dlink_node *m = NULL;
+    for (m = lru_list.head; m && m->data; m = m->next)
+	i++;
+    return i;
 }
 
-variable_list *snmp_ipcacheFn(variable_list *Var, long *ErrP)
+variable_list *
+snmp_ipcacheFn(variable_list * Var, long *ErrP)
 {
-  variable_list *Answer;
-  ipcache_entry *IPc= NULL;
-  dlink_node *m = NULL;
-  int cnt = 1;
-  debug(49,5)("snmp_ipcacheFn: Processing request with %d.%d!\n",Var->name[11],Var->name[12]);
+    variable_list *Answer;
+    ipcache_entry *IPc = NULL;
+    dlink_node *m = NULL;
+    int cnt = 1;
+    debug(49, 5) ("snmp_ipcacheFn: Processing request with %d.%d!\n", Var->name[11], Var->name[12]);
 
-  cnt=Var->name[12];
+    cnt = Var->name[12];
 
-  for (m = lru_list.head; --cnt && m; m = m->next);
-  debug(49,5)("snmp_ipcacheFn: cnt now=%d m=%x, data=%x\n",cnt,m->data);
-  if (!m || !(IPc = m->data)) {
-        *ErrP = SNMP_ERR_NOSUCHNAME;
+    for (m = lru_list.head; --cnt && m; m = m->next);
+    debug(49, 5) ("snmp_ipcacheFn: cnt now=%d m=%x, data=%x\n", cnt, m->data);
+    if (!m || !(IPc = m->data)) {
+	*ErrP = SNMP_ERR_NOSUCHNAME;
 	return NULL;
-  }
-  Answer = snmp_var_new(Var->name, Var->name_length);
-  *ErrP = SNMP_ERR_NOERROR;
-  Answer->val.integer = xmalloc(Answer->val_len);
-  Answer->val_len = sizeof(long);
-  switch(Var->name[11]) {
+    }
+    Answer = snmp_var_new(Var->name, Var->name_length);
+    *ErrP = SNMP_ERR_NOERROR;
+    Answer->val.integer = xmalloc(Answer->val_len);
+    Answer->val_len = sizeof(long);
+    switch (Var->name[11]) {
     case NET_IPC_ID:
-        Answer->type = SMI_INTEGER;
-        *(Answer->val.integer)= Var->name[12];
+	Answer->type = SMI_INTEGER;
+	*(Answer->val.integer) = Var->name[12];
 	break;
     case NET_IPC_NAME:
 	xfree(Answer->val.integer);
@@ -1100,19 +1103,18 @@ variable_list *snmp_ipcacheFn(variable_list *Var, long *ErrP)
 	break;
     case NET_IPC_IP:
 	Answer->type = SMI_IPADDRESS;
-        *(Answer->val.integer)=IPc->addrs.in_addrs[0].s_addr;    /* first one only */
+	*(Answer->val.integer) = IPc->addrs.in_addrs[0].s_addr;		/* first one only */
 	break;
     case NET_IPC_STATE:
-        Answer->type = SMI_INTEGER;
-        *(Answer->val.integer)= IPc->status;
+	Answer->type = SMI_INTEGER;
+	*(Answer->val.integer) = IPc->status;
 	break;
     default:
-        *ErrP = SNMP_ERR_NOSUCHNAME;
-        snmp_var_free(Answer);
-        xfree(Answer->val.integer);
-        return(NULL);
-  }
-  return Answer;
+	*ErrP = SNMP_ERR_NOSUCHNAME;
+	snmp_var_free(Answer);
+	xfree(Answer->val.integer);
+	return (NULL);
+    }
+    return Answer;
 }
 #endif
-
