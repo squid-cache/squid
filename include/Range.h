@@ -1,6 +1,6 @@
 
 /*
- * $Id: Range.h,v 1.2 2003/01/23 00:36:47 robertc Exp $
+ * $Id: Range.h,v 1.3 2003/02/25 12:07:41 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -42,12 +42,16 @@ class Range
 {
 
 public:
+    Range ();
     Range (C start_, C end_);
     C start;
     C end;
     Range intersection (Range const &);
     size_t size() const;
 };
+
+template<class C>
+Range<C>::Range () : start(), end() {}
 
 template<class C>
 Range<C>::Range (C start_, C end_) : start(start_), end(end_){}
