@@ -1,4 +1,4 @@
-/* $Id: stat.cc,v 1.32 1996/05/01 22:37:13 wessels Exp $ */
+/* $Id: stat.cc,v 1.33 1996/05/01 22:38:57 wessels Exp $ */
 
 /*
  * DEBUG: Section 18          stat
@@ -655,7 +655,7 @@ void parameter_get(obj, sentry)
 }
 
 
-void log_append(obj, url, id, size, action, method, http_code, msec)
+void log_append(obj, url, id, size, action, method, http_code, msec, ident)
      cacheinfo *obj;
      char *url;
      char *id;
@@ -664,6 +664,7 @@ void log_append(obj, url, id, size, action, method, http_code, msec)
      char *method;
      int http_code;
      int msec;
+     char *ident;
 {
     static char tmp[6000];	/* MAX_URL is 4096 */
     char *buf = NULL;
@@ -690,13 +691,15 @@ void log_append(obj, url, id, size, action, method, http_code, msec)
 	method = "-";
     if (!url)
 	url = "-";
+    if (!ident || ident[0] == '\0')
+	ident = "-";
 
     if (obj->logfile_status == LOG_ENABLE) {
 	if (emulate_httpd_log)
 	    sprintf(tmp, "%s - - [%s] \"%s %s\" %s %d\n",
 		id, mkhttpdlogtime(&squid_curtime), method, url, action, size);
 	else
-	    sprintf(tmp, "%9d.%03d %6d %s %s/%03d %d %s %s\n",
+	    sprintf(tmp, "%9d.%03d %6d %s %s/%03d %d %s %s %s\n",
 		(int) current_time.tv_sec,
 		(int) current_time.tv_usec / 1000,
 		msec,
@@ -705,7 +708,8 @@ void log_append(obj, url, id, size, action, method, http_code, msec)
 		http_code,
 		size,
 		method,
-		url);
+		url,
+		ident);
 
 
 	if (file_write(obj->logfile_fd, buf = xstrdup(tmp), strlen(tmp),
