@@ -1,7 +1,8 @@
 /*
+ * $Id: asn.cc,v 1.11 1998/01/02 22:04:36 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
- * AUTHOR: Duane Wessels
+ * AUTHOR: Duane Wessels, Kostas Anagnostakis
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * --------------------------------------------------------
