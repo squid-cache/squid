@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.78 1998/01/12 04:30:37 wessels Exp $
+ * $Id: fqdncache.cc,v 1.79 1998/02/03 04:21:13 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -928,7 +928,7 @@ var_fqdn_entry(struct variable *vp, oid * name, int *length, int exact, int
     i = 0;
     while (fq != NULL) {
 	newname[vp->namelen] = i + 1;
-	result = compare(name, *length, newname, (int) vp->namelen + 1);
+	result = snmpCompare(name, *length, newname, (int) vp->namelen + 1);
 	if ((exact && (result == 0)) || (!exact && (result < 0))) {
 	    debug(49, 5) ("snmp var_fqdn_entry: yup, a match.\n");
 	    break;

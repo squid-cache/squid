@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.16 1998/02/02 21:16:17 wessels Exp $
+ * $Id: asn.cc,v 1.17 1998/02/03 04:21:11 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -344,10 +344,8 @@ destroyRadixNode(struct radix_node *rn, void *w)
 static void
 destroyRadixNodeInfo(as_info * e_info)
 {
-    intlist *first, *prev;
+    intlist *prev = NULL;
     intlist *data = e_info->as_number;
-    first = data;
-    prev = NULL;
     while (data) {
 	prev = data;
 	data = data->next;

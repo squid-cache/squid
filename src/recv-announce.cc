@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: recv-announce.cc,v 1.16 1998/02/02 21:16:28 wessels Exp $
+ * $Id: recv-announce.cc,v 1.17 1998/02/03 04:21:20 wessels Exp $
  *
  * DEBUG: section 0     Announcement Server
  * AUTHOR: Harvest Derived
@@ -182,7 +182,7 @@ main(int argc, char *argv[])
     dup(1);
 
 
-    while (1) {
+    for(;;) {
 	memset(buf, '\0', RECV_BUF_SIZE);
 	memset(&R, '\0', len = sizeof(R));
 

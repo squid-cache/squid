@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.54 1998/01/31 05:31:58 wessels Exp $
+ * $Id: icmp.cc,v 1.55 1998/02/03 04:21:16 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -130,7 +130,7 @@ icmpSend(int fd, void *data)
 {
     icmpQueueData *queue = data;
     int x;
-    while ((queue = IcmpQueueHead)) {
+    while ((queue = IcmpQueueHead) != NULL) {
 	x = send(icmp_sock,
 	    queue->msg,
 	    queue->len,
@@ -258,7 +258,7 @@ icmpClose(void)
     debug(29, 0) ("Closing Pinger socket on FD %d\n", icmp_sock);
     comm_close(icmp_sock);
     icmp_sock = -1;
-    while ((queue = IcmpQueueHead)) {
+    while ((queue = IcmpQueueHead) != NULL) {
 	IcmpQueueHead = queue->next;
 	if (queue->free_func)
 	    queue->free_func(queue->msg);

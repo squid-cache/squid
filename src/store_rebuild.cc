@@ -2,14 +2,16 @@
 
 #define STORE_META_BUFSZ 4096
 
+struct _rebuild_dir {
+    int dirn;
+    FILE *log;
+    int speed;
+    int clean;
+    struct _rebuild_dir *next;
+};
+
 struct storeRebuildState {
-    struct _rebuild_dir {
-        int dirn;
-        FILE *log;
-        int speed;
-        int clean;
-        struct _rebuild_dir *next;
-    }           *rebuild_dir;
+    struct _rebuild_dir *rebuild_dir;
     int objcount;               /* # objects successfully reloaded */
     int expcount;               /* # objects expired */
     int linecount;              /* # lines parsed from cache logfile */
@@ -192,8 +194,8 @@ storeConvertFile(const cache_key * key,
     time_t timestamp,
     time_t lastref,
     time_t lastmod,
-    u_num32 refcount,
-    u_num32 flags,
+    u_short refcount,
+    u_short flags,
     int clean)
 {
     int fd_r, fd_w;
@@ -287,11 +289,11 @@ storeGetNextFile(int *sfileno, int *size)
 	    debug(20, 3) ("storeGetNextFile: empty dir.\n");
 #endif
 	in_dir = 0;
-	if ((curlvl2 = (curlvl2 + 1) % Config.cacheSwap.swapDirs[dirn].l2))
+	if ((curlvl2 = (curlvl2 + 1) % Config.cacheSwap.swapDirs[dirn].l2) != 0)
 	    continue;
-	if ((curlvl1 = (curlvl1 + 1) % Config.cacheSwap.swapDirs[dirn].l1))
+	if ((curlvl1 = (curlvl1 + 1) % Config.cacheSwap.swapDirs[dirn].l1) != 0)
 	    continue;
-	if ((dirn = (dirn + 1) % Config.cacheSwap.n_configured))
+	if ((dirn = (dirn + 1) % Config.cacheSwap.n_configured) != 0)
 	    continue;
 	else
 	    done = 1;
@@ -510,8 +512,8 @@ storeDoConvertFromLog(void *data)
 	    timestamp,
 	    lastref,
 	    lastmod,
-	    (u_num32) scan6,	/* refcount */
-	    (u_num32) scan7,	/* flags */
+	    (u_short) scan6,	/* refcount */
+	    (u_short) scan7,	/* flags */
 	    d->clean);
 #if 0
 	storeDirSwapLog(e);

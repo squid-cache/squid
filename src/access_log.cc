@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.19 1998/02/02 21:14:54 wessels Exp $
+ * $Id: access_log.cc,v 1.20 1998/02/03 04:21:10 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -198,7 +198,6 @@ accessLogOpen(const char *fname)
     LogfileStatus = LOG_ENABLE;
 }
 
-#define SKIP_BASIC_SZ 6
 void
 accessLogLog(AccessLogEntry * al)
 {

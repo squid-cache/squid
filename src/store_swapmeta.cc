@@ -7,7 +7,6 @@ int
 storeBuildMetaData(StoreEntry * e, char *swap_buf_c)
 {
     MemObject *mem;
-    int keylength;
     int a = STORE_META_TLD_START;
     char *meta_buf;
     mem = e->mem_obj;
@@ -18,14 +17,10 @@ storeBuildMetaData(StoreEntry * e, char *swap_buf_c)
 	meta_buf = mem->swapout.meta_buf = xmalloc(1024);
     /* construct header */
     /* add Length(int)-Type(char)-Data encoded info  */
-    if (squid_key_size < 0)
-	keylength = strlen(e->key);
-    else
-	keylength = squid_key_size;
     meta_buf[0] = META_OK;
     xmemcpy(&meta_buf[1], &a, sizeof(int));
     mem->swapout.meta_len = STORE_META_TLD_START;
-    addSwapHdr(STORE_META_KEY, keylength, (void *) e->key,
+    addSwapHdr(STORE_META_KEY, squid_key_size, (void *) e->key,
 	mem->swapout.meta_buf, &mem->swapout.meta_len);
     addSwapHdr(STORE_META_STD, STORE_HDR_METASIZE, (void *) &e->timestamp,
 	mem->swapout.meta_buf, &mem->swapout.meta_len);
