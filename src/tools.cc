@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.174 1999/04/07 19:59:21 wessels Exp $
+ * $Id: tools.cc,v 1.175 1999/04/15 06:03:09 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -790,6 +790,7 @@ dlinkDelete(dlink_node * m, dlink_list * list)
 	list->head = m->next;
     if (m == list->tail)
 	list->tail = m->prev;
+    m->next = m->prev = NULL;
 }
 
 void
