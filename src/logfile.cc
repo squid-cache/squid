@@ -1,5 +1,5 @@
 /*
- * $Id: logfile.cc,v 1.13 2003/01/23 00:37:23 robertc Exp $
+ * $Id: logfile.cc,v 1.14 2003/01/27 08:08:04 hno Exp $
  *
  * DEBUG: section 50    Log file handling
  * AUTHOR: Duane Wessels
@@ -162,6 +162,11 @@ logfilePrintf(va_alist)
     fmt = va_arg(args, char *);
 #endif
     s = vsnprintf(buf, 8192, fmt, args);
+    if (s > 8192) {
+	s = 8192;
+	if (fmt[strlen(fmt) - 1] == '\n')
+	    buf[8191] = '\n';
+    }
     logfileWrite(lf, buf, (size_t) s);
     va_end(args);
 }
