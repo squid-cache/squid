@@ -49,6 +49,7 @@ Changes to Squid-2.4.DEVEL3 ():
 	- "round-robin" cache_peer counters are reset every 5 minutes to
 	  compensate previously dead peers
 	- DNS retransmit parameters
+	- Show all FTP server messages
 
 Changes to Squid-2.4.DEVEL2 ():
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.291 2000/05/02 20:25:33 hno Exp $
+ * $Id: ftp.cc,v 1.292 2000/05/02 20:41:22 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1303,11 +1303,15 @@ ftpHandleControlReply(FtpStateData * ftpState)
 	xmemmove(ftpState->ctrl.buf, ftpState->ctrl.buf + bytes_used,
 	    ftpState->ctrl.offset);
     }
-    /* Find the last line of the reply message */
+    /* Move the last line of the reply message to ctrl.last_reply */
     for (W = &ftpState->ctrl.message; (*W)->next; W = &(*W)->next);
     safe_free(ftpState->ctrl.last_reply);
-    ftpState->ctrl.last_reply = (*W)->key;
-    safe_free(*W);
+    ftpState->ctrl.last_reply = xstrdup((*W)->key);
+    wordlistDestroy(W);
+    /* Copy the rest of the message to cwd_message to be printed in
+     * error messages
+     */
+    wordlistAddWl(&ftpState->cwd_message, ftpState->ctrl.message);
     debug(9, 8) ("ftpHandleControlReply: state=%d, code=%d\n", ftpState->state,
 	ftpState->ctrl.replycode);
     FTP_SM_FUNCS[ftpState->state] (ftpState);
@@ -1328,10 +1332,6 @@ ftpReadWelcome(FtpStateData * ftpState)
 	if (ftpState->ctrl.message) {
 	    if (strstr(ftpState->ctrl.message->key, "NetWare"))
 		ftpState->flags.skip_whitespace = 1;
-	    if (ftpState->cwd_message)
-		wordlistDestroy(&ftpState->cwd_message);
-	    ftpState->cwd_message = ftpState->ctrl.message;
-	    ftpState->ctrl.message = NULL;
 	}
 	ftpSendUser(ftpState);
     } else if (code == 120) {
@@ -1385,12 +1385,6 @@ ftpReadPass(FtpStateData * ftpState)
     int code = ftpState->ctrl.replycode;
     debug(9, 3) ("ftpReadPass\n");
     if (code == 230) {
-	if (ftpState->ctrl.message) {
-	    if (ftpState->cwd_message)
-		wordlistDestroy(&ftpState->cwd_message);
-	    ftpState->cwd_message = ftpState->ctrl.message;
-	    ftpState->ctrl.message = NULL;
-	}
 	ftpSendType(ftpState);
     } else {
 	ftpFail(ftpState);
@@ -1516,6 +1510,7 @@ ftpReadCwd(FtpStateData * ftpState)
     if (code >= 200 && code < 300) {
 	/* CWD OK */
 	ftpUnhack(ftpState);
+	/* Reset cwd_message to only include the last message */
 	if (ftpState->cwd_message)
 	    wordlistDestroy(&ftpState->cwd_message);
 	ftpState->cwd_message = ftpState->ctrl.message;
@@ -2346,8 +2341,8 @@ ftpFailedErrorMessage(FtpStateData * ftpState, err_type error)
 	err = errorCon(ERR_FTP_FAILURE, HTTP_BAD_GATEWAY);
     err->xerrno = errno;
     err->request = requestLink(ftpState->request);
-    err->ftp.server_msg = ftpState->ctrl.message;
-    ftpState->ctrl.message = NULL;
+    err->ftp.server_msg = ftpState->cwd_message;
+    ftpState->cwd_message = NULL;
     if (ftpState->old_request)
 	command = ftpState->old_request;
     else
