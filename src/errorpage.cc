@@ -1,4 +1,4 @@
-/* $Id: errorpage.cc,v 1.8 1996/04/01 18:21:29 wessels Exp $ */
+/* $Id: errorpage.cc,v 1.9 1996/04/02 00:51:52 wessels Exp $ */
 
 /* DEBUG: Section 4             cached_error: Error printing routines */
 
@@ -86,6 +86,9 @@ error_data ErrorData[] =
     {"ERR_URL_BLOCKED",
 	"Access Denied",
 	"You are not allowed to access this URL."},
+    {"ERR_ZERO_SIZE_OBJECT",
+	"No Object Data",
+	"The remote server closed the connection before sending any data."},
     {"ERR_MAX"
 	"",
 	""}

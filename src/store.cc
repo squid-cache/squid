@@ -1,5 +1,5 @@
 
-/* $Id: store.cc,v 1.20 1996/04/01 23:34:45 wessels Exp $ */
+/* $Id: store.cc,v 1.21 1996/04/02 00:51:55 wessels Exp $ */
 
 /*
  * DEBUG: Section 20          store
@@ -2038,7 +2038,6 @@ void storeChangeKey(e)
 	debug(25, 0, "storeChangeKey: NULL key for %s\n", e->url);
 	return;
     }
-
     if ((table_entry = hash_lookup(table, e->key)))
 	result = (StoreEntry *) table_entry;
     if (result != e) {
@@ -2073,7 +2072,6 @@ void storeUnChangeKey(e)
 	debug(25, 0, "storeUnChangeKey: NULL key for %s\n", e->url);
 	return;
     }
-
     if ((table_entry = hash_lookup(table, e->key)))
 	E1 = (StoreEntry *) table_entry;
     if (E1 != e) {

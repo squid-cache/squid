@@ -1,4 +1,4 @@
-/* $Id: wais.cc,v 1.15 1996/04/01 23:34:47 wessels Exp $ */
+/* $Id: wais.cc,v 1.16 1996/04/02 00:51:56 wessels Exp $ */
 
 /*
  * DEBUG: Section 24          wais
@@ -20,7 +20,17 @@ typedef struct _waisdata {
 
 extern char *dns_error_message;
 
-int wais_url_parser(url, host, port, request)
+static void waisCloseAndFree(fd, data)
+     int fd;
+     WAISData *data;
+{
+    if (fd > 0)
+	comm_close(fd);
+    xfree(data);
+}
+
+
+static int wais_url_parser(url, host, port, request)
      char *url;
      char *host;
      int *port;
@@ -34,7 +44,7 @@ int wais_url_parser(url, host, port, request)
 }
 
 /* This will be called when timeout on read. */
-void waisReadReplyTimeout(fd, data)
+static void waisReadReplyTimeout(fd, data)
      int fd;
      WAISData *data;
 {
@@ -44,8 +54,7 @@ void waisReadReplyTimeout(fd, data)
     debug(24, 4, "waisReadReplyTimeout: Timeout on %d\n url: %s\n", fd, entry->url);
     cached_error_entry(entry, ERR_READ_TIMEOUT, NULL);
     comm_set_select_handler(fd, COMM_SELECT_READ, 0, 0);
-    comm_close(fd);
-    safe_free(data);
+    waisCloseAndFree(fd, data);
 }
 
 /* This will be called when socket lifetime is expired. */
@@ -59,8 +68,7 @@ void waisLifetimeExpire(fd, data)
     debug(24, 4, "waisLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
     cached_error_entry(entry, ERR_LIFETIME_EXP, NULL);
     comm_set_select_handler(fd, COMM_SELECT_READ | COMM_SELECT_WRITE, 0, 0);
-    comm_close(fd);
-    safe_free(data);
+    waisCloseAndFree(fd, data);
 }
 
 
@@ -82,12 +90,13 @@ void waisReadReply(fd, data)
 	    /* check if we want to defer reading */
 	    if ((entry->mem_obj->e_current_len -
 		    entry->mem_obj->e_lowest_offset) > WAIS_DELETE_GAP) {
-		debug(24, 3, "waisReadReply: Read deferred for Object: %s\n", entry->key);
+		debug(24, 3, "waisReadReply: Read deferred for Object: %s\n",
+		    entry->url);
 		debug(24, 3, "                Current Gap: %d bytes\n",
 		    entry->mem_obj->e_current_len -
 		    entry->mem_obj->e_lowest_offset);
-
-		/* reschedule, so it will automatically reactivated when Gap is big enough. */
+		/* reschedule, so it will automatically reactivated
+		 * when Gap is big enough. */
 		comm_set_select_handler(fd,
 		    COMM_SELECT_READ,
 		    (PF) waisReadReply,
@@ -105,34 +114,23 @@ void waisReadReply(fd, data)
 		    (caddr_t) NULL,
 		    (time_t) 0);
 #endif
-		comm_set_stall(fd, getStallDelay());	/* dont try reading again for a while */
+		/* dont try reading again for a while */
+		comm_set_stall(fd, getStallDelay());
 		return;
 	    }
 	} else {
 	    /* we can terminate connection right now */
 	    cached_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ, NULL);
-	    comm_close(fd);
-	    safe_free(data);
+	    waisCloseAndFree(fd, data);
 	    return;
 	}
     }
     len = read(fd, buf, 4096);
     debug(24, 5, "waisReadReply - fd: %d read len:%d\n", fd, len);
 
-    if (len < 0 || ((len == 0) && (entry->mem_obj->e_current_len == 0))) {
-	debug(24, 1, "waisReadReply - error reading errno %d: %s\n",
-	    errno, xstrerror());
-	if (errno == ECONNRESET) {
-	    /* Connection reset by peer */
-	    /* consider it as a EOF */
-	    if (!(entry->flag & DELETE_BEHIND))
-		entry->expires = cached_curtime + ttlSet(entry);
-	    sprintf(tmp_error_buf, "\nWarning: The Remote Server sent RESET at the end of transmission.\n");
-	    storeAppend(entry, tmp_error_buf, strlen(tmp_error_buf));
-	    storeComplete(entry);
-	    comm_close(fd);
-	    safe_free(data);
-	} else if (errno == EAGAIN || errno == EWOULDBLOCK) {
+    if (len < 0) {
+	debug(24, 1, "waisReadReply: FD %d: read failure: %s.\n", xstrerror());
+	if (errno == EAGAIN || errno == EWOULDBLOCK) {
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
 	    comm_set_select_handler(fd, COMM_SELECT_READ,
@@ -140,21 +138,25 @@ void waisReadReply(fd, data)
 	    comm_set_select_handler_plus_timeout(fd, COMM_SELECT_TIMEOUT,
 		(PF) waisReadReplyTimeout, (caddr_t) data, getReadTimeout());
 	} else {
+	    BIT_RESET(entry->flag, CACHABLE);
+	    BIT_SET(entry->flag, RELEASE_REQUEST);
 	    cached_error_entry(entry, ERR_READ_ERROR, xstrerror());
-	    comm_close(fd);
-	    safe_free(data);
+	    waisCloseAndFree(fd, data);
 	}
+    } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
+	cached_error_entry(entry,
+	    ERR_ZERO_SIZE_OBJECT,
+	    errno ? xstrerror() : NULL);
+	waisCloseAndFree(fd, data);
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
 	entry->expires = cached_curtime;
 	storeComplete(entry);
-	comm_close(fd);
-	safe_free(data);
+	waisCloseAndFree(fd, data);
     } else if (((entry->mem_obj->e_current_len + len) > getWAISMax()) &&
 	!(entry->flag & DELETE_BEHIND)) {
 	/*  accept data, but start to delete behind it */
 	storeStartDeleteBehind(entry);
-
 	storeAppend(entry, buf, len);
 	comm_set_select_handler(fd,
 	    COMM_SELECT_READ,
@@ -194,8 +196,7 @@ void waisSendComplete(fd, buf, size, errflag, data)
 	fd, size, errflag);
     if (errflag) {
 	cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	comm_close(fd);
-	safe_free(data);
+	waisCloseAndFree(fd, data);
     } else {
 	/* Schedule read reply. */
 	comm_set_select_handler(fd,
@@ -280,17 +281,15 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
      * Otherwise, we cannot check return code for connect. */
     if (!ipcache_gethostbyname(data->host)) {
 	debug(24, 4, "waisstart: Called without IP entry in ipcache. OR lookup failed.\n");
-	comm_close(sock);
 	cached_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
-	safe_free(data);
+	waisCloseAndFree(sock, data);
 	return COMM_ERROR;
     }
     /* Open connection. */
     if ((status = comm_connect(sock, data->host, data->port))) {
 	if (status != EINPROGRESS) {
-	    comm_close(sock);
 	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	    safe_free(data);
+	    waisCloseAndFree(sock, data);
 	    return COMM_ERROR;
 	} else {
 	    debug(24, 5, "waisStart - conn %d EINPROGRESS\n", sock);
