@@ -1,6 +1,6 @@
 
 /*
- * $Id: SwapDir.h,v 1.3 2003/02/21 22:50:06 robertc Exp $
+ * $Id: SwapDir.h,v 1.4 2003/03/06 06:21:37 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -47,7 +47,7 @@ struct SwapDir
 
 public:
     static SwapDir *Factory (_storefs_entry const &fs);
-    SwapDir() : max_objsize (-1)
+    SwapDir() : cur_size (0), low_size(0), max_size(0), max_objsize (-1)
     {
         fs.blksize = 1024;
     }
@@ -65,8 +65,9 @@ public:
     int removals;
     int scanned;
 
-    struct
+    struct Flags
     {
+        Flags() : selected(0), read_only(0){}
 
 unsigned int selected:
         1;

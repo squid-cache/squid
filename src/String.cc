@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cc,v 1.13 2003/02/21 22:50:06 robertc Exp $
+ * $Id: String.cc,v 1.14 2003/03/06 06:21:37 robertc Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -34,8 +34,6 @@
  */
 
 #include "squid.h"
-
-String const String::Null;
 
 void
 String::initBuf(size_t sz)
@@ -171,6 +169,13 @@ String::absorb(String &old)
     old.size_ = 0;
     old.buf_ = NULL;
     old.len_ = 0;
+}
+
+void
+String::buf(char *newBuf)
+{
+    assert (buf_ == NULL);
+    buf_ = newBuf;
 }
 
 #ifndef _USE_INLINE_

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.31 2003/02/21 22:50:05 robertc Exp $
+ * $Id: HttpHdrRange.cc,v 1.32 2003/03/06 06:21:36 robertc Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -304,7 +304,7 @@ HttpHdrRange::parseInit(const String * range_spec)
     debug(64, 8) ("parsing range field: '%s'\n", range_spec->buf());
     /* check range type */
 
-    if (range_spec->nCaseCmp("bytes=", 6))
+    if (range_spec->caseCmp("bytes=", 6))
         return 0;
 
     /* skip "bytes="; hack! */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.54 2003/02/21 22:50:05 robertc Exp $
+ * $Id: HttpReply.cc,v 1.55 2003/03/06 06:21:37 robertc Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -286,7 +286,7 @@ httpReplySetHeaders(HttpReply * reply, http_version_t ver, http_status status, c
         httpHeaderPutStr(hdr, HDR_CONTENT_TYPE, ctype);
         reply->content_type = ctype;
     } else
-        reply->content_type = StringNull;
+        reply->content_type = String();
 
     if (clen >= 0)
         httpHeaderPutInt(hdr, HDR_CONTENT_LENGTH, clen);
@@ -457,7 +457,7 @@ httpReplyHdrCacheInit(HttpReply * rep)
     if (str)
         rep->content_type.limitInit(str, strcspn(str, ";\t "));
     else
-        rep->content_type = StringNull;
+        rep->content_type = String();
 
     rep->cache_control = httpHeaderGetCc(hdr);
 

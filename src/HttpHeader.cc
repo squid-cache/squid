@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.85 2003/02/21 22:50:05 robertc Exp $
+ * $Id: HttpHeader.cc,v 1.86 2003/03/06 06:21:36 robertc Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -578,7 +578,7 @@ httpHeaderDelByName(HttpHeader * hdr, const char *name)
     debug(55, 7) ("deleting '%s' fields in hdr %p\n", name, hdr);
 
     while ((e = httpHeaderGetEntry(hdr, &pos))) {
-        if (!strCaseCmp(e->name, name)) {
+        if (!e->name.caseCmp(name)) {
             httpHeaderDelAt(hdr, pos);
             count++;
         } else
@@ -660,7 +660,6 @@ httpHeaderAddEntry(HttpHeader * hdr, HttpHeaderEntry * e)
 String
 httpHeaderGetList(const HttpHeader * hdr, http_hdr_type id)
 {
-    String s = StringNull;
     HttpHeaderEntry *e;
     HttpHeaderPos pos = HttpHeaderInitPos;
     debug(55, 6) ("%p: joining for id %d\n", hdr, id);
@@ -668,7 +667,9 @@ httpHeaderGetList(const HttpHeader * hdr, http_hdr_type id)
     assert(CBIT_TEST(ListHeadersMask, id));
 
     if (!CBIT_TEST(hdr->mask, id))
-        return s;
+        return String();
+
+    String s;
 
     while ((e = httpHeaderGetEntry(hdr, &pos))) {
         if (e->id == id)
@@ -702,7 +703,7 @@ httpHeaderGetStrOrList(const HttpHeader * hdr, http_hdr_type id)
     if ((e = httpHeaderFindEntry(hdr, id)))
         return e->value;
 
-    return String::Null;
+    return String();
 }
 
 /*
@@ -714,7 +715,6 @@ httpHeaderGetByName(const HttpHeader * hdr, const char *name)
     http_hdr_type id;
     HttpHeaderPos pos = HttpHeaderInitPos;
     HttpHeaderEntry *e;
-    String result = StringNull;
 
     assert(hdr);
     assert(name);
@@ -725,9 +725,11 @@ httpHeaderGetByName(const HttpHeader * hdr, const char *name)
     if (id != -1)
         return httpHeaderGetStrOrList(hdr, id);
 
+    String result;
+
     /* Sorry, an unknown header name. Do linear search */
     while ((e = httpHeaderGetEntry(hdr, &pos))) {
-        if (e->id == HDR_OTHER && strCaseCmp(e->name, name) == 0) {
+        if (e->id == HDR_OTHER && e->name.caseCmp(name) == 0) {
             strListAdd(&result, e->value.buf(), ',');
         }
     }
@@ -741,7 +743,6 @@ httpHeaderGetByName(const HttpHeader * hdr, const char *name)
 String
 httpHeaderGetByNameListMember(const HttpHeader * hdr, const char *name, const char *member, const char separator)
 {
-    String result = StringNull;
     String header;
     const char *pos = NULL;
     const char *item;
@@ -752,6 +753,8 @@ httpHeaderGetByNameListMember(const HttpHeader * hdr, const char *name, const ch
     assert(name);
 
     header = httpHeaderGetByName(hdr, name);
+
+    String result;
 
     while (strListGetItem(&header, separator, &item, &ilen, &pos)) {
         if (strncmp(item, member, mlen) == 0 && item[mlen] == '=') {
@@ -769,7 +772,6 @@ httpHeaderGetByNameListMember(const HttpHeader * hdr, const char *name, const ch
 String
 httpHeaderGetListMember(const HttpHeader * hdr, http_hdr_type id, const char *member, const char separator)
 {
-    String result = StringNull;
     String header;
     const char *pos = NULL;
     const char *item;
@@ -780,6 +782,7 @@ httpHeaderGetListMember(const HttpHeader * hdr, http_hdr_type id, const char *me
     assert(id >= 0);
 
     header = httpHeaderGetStrOrList(hdr, id);
+    String result;
 
     while (strListGetItem(&header, separator, &item, &ilen, &pos)) {
         if (strncmp(item, member, mlen) == 0 && item[mlen] == '=') {

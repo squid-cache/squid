@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.411 2003/03/04 01:40:28 robertc Exp $
+ * $Id: http.cc,v 1.412 2003/03/06 06:21:38 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1051,7 +1051,6 @@ httpBuildRequestHeader(request_t * request,
     /* building buffer for complex strings */
 #define BBUF_SZ (MAX_URL+32)
     LOCAL_ARRAY(char, bbuf, BBUF_SZ);
-    String strConnection = StringNull;
     const HttpHeader *hdr_in = &orig_request->header;
     const HttpHeaderEntry *e;
     String strFwd;
@@ -1064,7 +1063,7 @@ httpBuildRequestHeader(request_t * request,
 
     bool we_do_ranges = decideIfWeDoRanges (orig_request);
 
-    strConnection = httpHeaderGetList(hdr_in, HDR_CONNECTION);
+    String strConnection (httpHeaderGetList(hdr_in, HDR_CONNECTION));
 
     while ((e = httpHeaderGetEntry(hdr_in, &pos)))
         copyOneHeaderFromClientsideRequestToUpstreamRequest(e, strConnection, request, orig_request, hdr_out, we_do_ranges, flags);
