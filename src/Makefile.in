@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.224 2001/11/30 15:35:47 hno Exp $
+#  $Id: Makefile.in,v 1.225 2001/11/30 16:30:44 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -171,7 +171,7 @@ noinst_PROGRAMS = \
 
 bin_PROGRAMS = \
 	squid \
-	client
+	squidclient
 
 
 libexec_PROGRAMS = \
@@ -183,6 +183,7 @@ libexec_PROGRAMS = \
 
 cf_gen_SOURCES = cf_gen.c defines.h
 nodist_cf_gen_HEADER = cf_gen_defines.h
+squidclient_SOURCES = client.c
 
 EXTRA_squid_SOURCES = \
 	delay_pools.c \
@@ -394,7 +395,7 @@ mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/include/autoconf.h
 CONFIG_CLEAN_FILES =
 EXTRA_PROGRAMS = unlinkd$(EXEEXT) pinger$(EXEEXT) dnsserver$(EXEEXT)
-bin_PROGRAMS = squid$(EXEEXT) client$(EXEEXT)
+bin_PROGRAMS = squid$(EXEEXT) squidclient$(EXEEXT)
 @ENABLE_UNLINKD_FALSE@@USE_DNSSERVER_TRUE@libexec_PROGRAMS = \
 @ENABLE_UNLINKD_FALSE@@USE_DNSSERVER_TRUE@	@OPT_PINGER@ \
 @ENABLE_UNLINKD_FALSE@@USE_DNSSERVER_TRUE@	dnsserver$(EXEEXT) \
@@ -423,11 +424,6 @@ cf_gen_OBJECTS = $(am_cf_gen_OBJECTS)
 cf_gen_LDADD = $(LDADD)
 cf_gen_DEPENDENCIES =
 cf_gen_LDFLAGS =
-client_SOURCES = client.c
-client_OBJECTS = client.$(OBJEXT)
-client_LDADD = $(LDADD)
-client_DEPENDENCIES =
-client_LDFLAGS =
 dnsserver_SOURCES = dnsserver.c
 dnsserver_OBJECTS = dnsserver.$(OBJEXT)
 dnsserver_LDADD = $(LDADD)
@@ -491,6 +487,11 @@ nodist_squid_OBJECTS = repl_modules.$(OBJEXT) auth_modules.$(OBJEXT) \
 squid_OBJECTS = $(am_squid_OBJECTS) $(nodist_squid_OBJECTS)
 squid_DEPENDENCIES =
 squid_LDFLAGS =
+am_squidclient_OBJECTS = client.$(OBJEXT)
+squidclient_OBJECTS = $(am_squidclient_OBJECTS)
+squidclient_LDADD = $(LDADD)
+squidclient_DEPENDENCIES =
+squidclient_LDFLAGS =
 am_unlinkd_OBJECTS =
 unlinkd_OBJECTS = $(am_unlinkd_OBJECTS)
 unlinkd_DEPENDENCIES = unlinkd-daemon.o
@@ -560,9 +561,9 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 CFLAGS = @CFLAGS@
-DIST_SOURCES = cachemgr.c $(cf_gen_SOURCES) client.c dnsserver.c \
+DIST_SOURCES = cachemgr.c $(cf_gen_SOURCES) dnsserver.c \
 	$(pinger_SOURCES) $(squid_SOURCES) $(EXTRA_squid_SOURCES) \
-	$(unlinkd_SOURCES)
+	$(squidclient_SOURCES) $(unlinkd_SOURCES)
 DATA = $(data_DATA) $(sysconf_DATA)
 
 
@@ -572,7 +573,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive install-info-recursive \
 	uninstall-recursive check-recursive installcheck-recursive
 DIST_COMMON = Makefile.am Makefile.in
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = cachemgr.c $(cf_gen_SOURCES) client.c dnsserver.c $(pinger_SOURCES) $(squid_SOURCES) $(EXTRA_squid_SOURCES) $(nodist_squid_SOURCES) $(unlinkd_SOURCES)
+SOURCES = cachemgr.c $(cf_gen_SOURCES) dnsserver.c $(pinger_SOURCES) $(squid_SOURCES) $(EXTRA_squid_SOURCES) $(nodist_squid_SOURCES) $(squidclient_SOURCES) $(unlinkd_SOURCES)
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -641,9 +642,6 @@ cachemgr$(EXEEXT): $(cachemgr_OBJECTS) $(cachemgr_DEPENDENCIES)
 cf_gen$(EXEEXT): $(cf_gen_OBJECTS) $(cf_gen_DEPENDENCIES) 
 	@rm -f cf_gen$(EXEEXT)
 	$(LINK) $(cf_gen_LDFLAGS) $(cf_gen_OBJECTS) $(cf_gen_LDADD) $(LIBS)
-client$(EXEEXT): $(client_OBJECTS) $(client_DEPENDENCIES) 
-	@rm -f client$(EXEEXT)
-	$(LINK) $(client_LDFLAGS) $(client_OBJECTS) $(client_LDADD) $(LIBS)
 dnsserver$(EXEEXT): $(dnsserver_OBJECTS) $(dnsserver_DEPENDENCIES) 
 	@rm -f dnsserver$(EXEEXT)
 	$(LINK) $(dnsserver_LDFLAGS) $(dnsserver_OBJECTS) $(dnsserver_LDADD) $(LIBS)
@@ -653,6 +651,9 @@ pinger$(EXEEXT): $(pinger_OBJECTS) $(pinger_DEPENDENCIES)
 squid$(EXEEXT): $(squid_OBJECTS) $(squid_DEPENDENCIES) 
 	@rm -f squid$(EXEEXT)
 	$(LINK) $(squid_LDFLAGS) $(squid_OBJECTS) $(squid_LDADD) $(LIBS)
+squidclient$(EXEEXT): $(squidclient_OBJECTS) $(squidclient_DEPENDENCIES) 
+	@rm -f squidclient$(EXEEXT)
+	$(LINK) $(squidclient_LDFLAGS) $(squidclient_OBJECTS) $(squidclient_LDADD) $(LIBS)
 unlinkd$(EXEEXT): $(unlinkd_OBJECTS) $(unlinkd_DEPENDENCIES) 
 	@rm -f unlinkd$(EXEEXT)
 	$(LINK) $(unlinkd_LDFLAGS) $(unlinkd_OBJECTS) $(unlinkd_LDADD) $(LIBS)
