@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.352 2002/07/14 17:19:06 hno Exp $
+ * $Id: main.cc,v 1.353 2002/07/28 21:55:33 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -54,9 +54,6 @@ static void mainRotate(void);
 static void mainReconfigure(void);
 static SIGHDLR rotate_logs;
 static SIGHDLR reconfigure;
-#if ALARM_UPDATES_TIME
-static SIGHDLR time_tick;
-#endif
 static void mainInitialize(void);
 static void usage(void);
 static void mainParseOptions(int, char **);
@@ -241,19 +238,6 @@ rotate_logs(int sig)
     signal(sig, rotate_logs);
 #endif
 }
-
-#if ALARM_UPDATES_TIME
-static void
-time_tick(int sig)
-{
-    getCurrentTime();
-    alarm(1);
-#if !HAVE_SIGACTION
-    signal(sig, time_tick);
-#endif
-}
-
-#endif
 
 /* ARGSUSED */
 static void
@@ -554,10 +538,6 @@ mainInitialize(void)
     squid_signal(SIGHUP, reconfigure, SA_RESTART);
     squid_signal(SIGTERM, shut_down, SA_NODEFER | SA_RESETHAND | SA_RESTART);
     squid_signal(SIGINT, shut_down, SA_NODEFER | SA_RESETHAND | SA_RESTART);
-#if ALARM_UPDATES_TIME
-    squid_signal(SIGALRM, time_tick, SA_RESTART);
-    alarm(1);
-#endif
     memCheckInit();
     debug(1, 1) ("Ready to serve requests.\n");
     if (!configured_once) {

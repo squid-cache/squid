@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.56 2002/04/27 08:47:43 hno Exp $
+ * $Id: comm_select.cc,v 1.57 2002/07/28 21:55:33 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -231,9 +231,7 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
     }
     if (maxfd++ == 0)
 	return -1;
-#if !ALARM_UPDATES_TIME
     getCurrentTime();
-#endif
     statCounter.syscalls.selects++;
     if (select(maxfd, &read_mask, &write_mask, NULL, &zero_tv) < 1)
 	return incoming_sockets_accepted;
@@ -346,9 +344,7 @@ comm_select(int msec)
     double timeout = current_dtime + (msec / 1000.0);
     fde *F;
     do {
-#if !ALARM_UPDATES_TIME
 	getCurrentTime();
-#endif
 #if DELAY_POOLS
 	FD_ZERO(&slowfds);
 #endif
