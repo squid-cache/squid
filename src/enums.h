@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.205 2002/02/26 15:48:14 adrian Exp $
+ * $Id: enums.h,v 1.206 2002/04/02 11:38:03 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -92,6 +92,7 @@ typedef enum {
     ERR_FTP_UNAVAILABLE,
     ERR_ONLY_IF_CACHED_MISS,	/* failure to satisfy only-if-cached request */
     ERR_TOO_BIG,
+    TCP_RESET,
     ERR_MAX
 } err_type;
 
@@ -724,12 +725,12 @@ enum {
  * Store digest state enum
  */
 typedef enum {
-	DIGEST_READ_NONE,
-	DIGEST_READ_REPLY,
-	DIGEST_READ_HEADERS,
-	DIGEST_READ_CBLOCK,
-	DIGEST_READ_MASK,
-	DIGEST_READ_DONE
+    DIGEST_READ_NONE,
+    DIGEST_READ_REPLY,
+    DIGEST_READ_HEADERS,
+    DIGEST_READ_CBLOCK,
+    DIGEST_READ_MASK,
+    DIGEST_READ_DONE
 } digest_read_state_t;
 
 /* CygWin & Windows NT Port */
