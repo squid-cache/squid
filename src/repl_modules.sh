@@ -11,7 +11,7 @@ echo "/* automatically generated `date` by"
 echo " *   $0 $*"
 echo ' * do not edit'
 echo ' */'
-echo '#include "squid.h'
+echo '#include "squid.h"'
 echo ''
 for module in "$@"; do
    echo "REMOVALPOLICYCREATE createRemovalPolicy_${module};"
