@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.40 1996/10/09 22:49:29 wessels Exp $
+ * $Id: client_side.cc,v 1.41 1996/10/11 23:11:06 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -218,10 +218,11 @@ clientRedirectDone(void *data, char *result)
     }
     icpParseRequestHeaders(icpState);
     fd_note(fd, icpState->url);
-    comm_set_select_handler(fd,
+    commSetSelect(fd,
 	COMM_SELECT_READ,
 	(PF) icpDetectClientClose,
-	(void *) icpState);
+	(void *) icpState,
+	0);
     icpProcessRequest(fd, icpState);
 }
 

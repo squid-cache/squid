@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.18 1996/10/11 19:35:28 wessels Exp $
+ * $Id: icmp.cc,v 1.19 1996/10/11 23:11:12 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -111,10 +111,10 @@ icmpOpen(void)
 	_exit(1);
     }
     comm_close(child_sock);
-    comm_set_select_handler(icmp_sock,
+    commSetSelect(icmp_sock,
 	COMM_SELECT_READ,
 	(PF) icmpRecv,
-	(void *) -1);
+	(void *) -1, 0);
     comm_set_fd_lifetime(icmp_sock, -1);
     debug(29,0,"Pinger socket opened on FD %d\n", icmp_sock);
 }
@@ -125,10 +125,10 @@ icmpClose(void)
     icmpQueueData *queue;
     debug(29, 0, "Closing ICMP socket on FD %d\n", icmp_sock);
     comm_close(icmp_sock);
-    comm_set_select_handler(icmp_sock,
+    commSetSelect(icmp_sock,
 	COMM_SELECT_READ,
 	NULL,
-	NULL);
+	NULL, 0);
     icmp_sock = -1;
     while ((queue = IcmpQueueHead)) {
 	IcmpQueueHead = queue->next;
@@ -158,10 +158,10 @@ icmpRecv(int unused1, void *unused2)
     pingerReplyData preply;
     static struct sockaddr_in F;
 
-    comm_set_select_handler(icmp_sock,
+    commSetSelect(icmp_sock,
 	COMM_SELECT_READ,
 	(PF) icmpRecv,
-	(void *) -1);
+	(void *) -1, 0);
     memset((char *) &preply, '\0', sizeof(pingerReplyData));
     n = recv(icmp_sock,
 	(char *) &preply,
@@ -211,10 +211,10 @@ icmpQueueSend(pingerEchoData * pkt,
     q->free_func = free_func;
     for (H = &IcmpQueueHead; *H; H = &(*H)->next);
     *H = q;
-    comm_set_select_handler(icmp_sock,
+    commSetSelect(icmp_sock,
 	COMM_SELECT_WRITE,
 	(PF) icmpSend,
-	(void *) IcmpQueueHead);
+	(void *) IcmpQueueHead, 0);
 }
 
 static void
@@ -241,15 +241,15 @@ icmpSend(int fd, icmpQueueData * queue)
     }
     /* Reinstate handler if needed */
     if (IcmpQueueHead) {
-	comm_set_select_handler(fd,
+	commSetSelect(fd,
 	    COMM_SELECT_WRITE,
 	    (PF) icmpSend,
-	    (void *) IcmpQueueHead);
+	    (void *) IcmpQueueHead, 0);
     } else {
-	comm_set_select_handler(fd,
+	commSetSelect(fd,
 	    COMM_SELECT_WRITE,
 	    NULL,
-	    NULL);
+	    NULL, 0);
     }
 }
 

@@ -1,5 +1,5 @@
 /*
- * $Id: ident.cc,v 1.18 1996/10/10 23:21:28 wessels Exp $
+ * $Id: ident.cc,v 1.19 1996/10/11 23:11:14 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -88,10 +88,10 @@ identConnectDone(int fd, int status, void *data)
 	identRequestComplete,
 	(void *) icpState,
 	NULL);
-    comm_set_select_handler(fd,
+    commSetSelect(fd,
 	COMM_SELECT_READ,
 	(PF) identReadReply,
-	(void *) icpState);
+	(void *) icpState, 0);
 }
 
 static void

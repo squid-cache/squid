@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.70 1996/10/10 22:20:57 wessels Exp $
+ * $Id: ipcache.cc,v 1.71 1996/10/11 23:11:15 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -557,10 +557,10 @@ ipcache_dnsHandleRead(int fd, dnsserver_t * dnsData)
 	    "FD %d: Connection from DNSSERVER #%d is closed, disabling\n",
 	    fd, dnsData->id);
 	dnsData->flags = 0;
-	comm_set_select_handler(fd,
+	commSetSelect(fd,
 	    COMM_SELECT_WRITE,
 	    NULL,
-	    NULL);
+	    NULL, 0);
 	comm_close(fd);
 	return 0;
     }
@@ -596,10 +596,10 @@ ipcache_dnsHandleRead(int fd, dnsserver_t * dnsData)
 	dnsData->flags &= ~DNS_FLAG_BUSY;
     }
     /* reschedule */
-    comm_set_select_handler(dnsData->inpipe,
+    commSetSelect(dnsData->inpipe,
 	COMM_SELECT_READ,
 	(PF) ipcache_dnsHandleRead,
-	dnsData);
+	dnsData, 0);
     while ((dnsData = dnsGetFirstAvailable()) && (i = ipcacheDequeue()))
 	ipcache_dnsDispatch(dnsData, i);
     return 0;
@@ -705,10 +705,10 @@ ipcache_dnsDispatch(dnsserver_t * dns, ipcache_entry * i)
 	NULL,			/* Handler */
 	NULL,			/* Handler-data */
 	xfree);
-    comm_set_select_handler(dns->outpipe,
+    commSetSelect(dns->outpipe,
 	COMM_SELECT_READ,
 	(PF) ipcache_dnsHandleRead,
-	dns);
+	dns, 0);
     debug(14, 5, "ipcache_dnsDispatch: Request sent to DNS server #%d.\n",
 	dns->id);
     dns->dispatch_time = current_time;

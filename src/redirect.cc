@@ -1,5 +1,5 @@
 /*
- * $Id: redirect.cc,v 1.24 1996/10/10 22:20:30 wessels Exp $
+ * $Id: redirect.cc,v 1.25 1996/10/11 23:11:17 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -190,10 +190,10 @@ redirectHandleRead(int fd, redirector_t * redirector)
     redirector->offset += len;
     redirector->inbuf[redirector->offset] = '\0';
     /* reschedule */
-    comm_set_select_handler(redirector->fd,
+    commSetSelect(redirector->fd,
 	COMM_SELECT_READ,
 	(PF) redirectHandleRead,
-	redirector);
+	redirector, 0);
     if ((t = strchr(redirector->inbuf, '\n'))) {
 	/* end of record found */
 	*t = '\0';
@@ -383,10 +383,10 @@ redirectOpenServers(void)
 	    fd_note(redirect_child_table[k]->fd, fd_note_buf);
 	    commSetNonBlocking(redirect_child_table[k]->fd);
 	    /* set handler for incoming result */
-	    comm_set_select_handler(redirect_child_table[k]->fd,
+	    commSetSelect(redirect_child_table[k]->fd,
 		COMM_SELECT_READ,
 		(PF) redirectHandleRead,
-		(void *) redirect_child_table[k]);
+		(void *) redirect_child_table[k], 0);
 	    debug(29, 3, "redirectOpenServers: 'redirect_server' %d started\n",
 		k);
 	}

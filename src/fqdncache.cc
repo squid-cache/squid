@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.25 1996/10/10 22:20:55 wessels Exp $
+ * $Id: fqdncache.cc,v 1.26 1996/10/11 23:11:10 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -528,10 +528,11 @@ fqdncache_dnsHandleRead(int fd, dnsserver_t * dnsData)
 	    "FD %d: Connection from DNSSERVER #%d is closed, disabling\n",
 	    fd, dnsData->id);
 	dnsData->flags = 0;
-	comm_set_select_handler(fd,
+	commSetSelect(fd,
 	    COMM_SELECT_WRITE,
 	    NULL,
-	    NULL);
+	    NULL,
+	0);
 	comm_close(fd);
 	return 0;
     }
@@ -669,10 +670,11 @@ fqdncache_dnsDispatch(dnsserver_t * dns, fqdncache_entry * f)
 	NULL,			/* Handler */
 	NULL,			/* Handler-data */
 	xfree);
-    comm_set_select_handler(dns->outpipe,
+    commSetSelect(dns->outpipe,
 	COMM_SELECT_READ,
 	(PF) fqdncache_dnsHandleRead,
-	dns);
+	dns,
+	0);
     debug(35, 5, "fqdncache_dnsDispatch: Request sent to DNS server #%d.\n",
 	dns->id);
     dns->dispatch_time = current_time;

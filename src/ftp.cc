@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.63 1996/10/09 22:49:31 wessels Exp $
+ * $Id: ftp.cc,v 1.64 1996/10/11 23:11:10 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -312,10 +312,10 @@ ftpReadReply(int fd, FtpStateData * data)
 	debug(11, 3, "                Current Gap: %d bytes\n", clen - off);
 	/* reschedule, so it will be automatically reactivated
 	 * when Gap is big enough. */
-	comm_set_select_handler(fd,
+	commSetSelect(fd,
 	    COMM_SELECT_READ,
 	    (PF) ftpReadReply,
-	    (void *) data);
+	    (void *) data, 0);
 	if (!BIT_TEST(entry->flag, READ_DEFERRED)) {
 	    /* NOTE there is no read timeout handler to disable */
 	    BIT_SET(entry->flag, READ_DEFERRED);
@@ -340,8 +340,8 @@ ftpReadReply(int fd, FtpStateData * data)
 	if (errno == EAGAIN || errno == EWOULDBLOCK) {
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
-	    comm_set_select_handler(fd, COMM_SELECT_READ,
-		(PF) ftpReadReply, (void *) data);
+	    commSetSelect(fd, COMM_SELECT_READ,
+		(PF) ftpReadReply, (void *) data, 0);
 	    /* note there is no ftpReadReplyTimeout.  Timeouts are handled
 	     * by `ftpget'. */
 	} else {
@@ -376,10 +376,10 @@ ftpReadReply(int fd, FtpStateData * data)
 	/*  accept data, but start to delete behind it */
 	storeStartDeleteBehind(entry);
 	storeAppend(entry, buf, len);
-	comm_set_select_handler(fd,
+	commSetSelect(fd,
 	    COMM_SELECT_READ,
 	    (PF) ftpReadReply,
-	    (void *) data);
+	    (void *) data, 0);
     } else if (entry->flag & CLIENT_ABORT_REQUEST) {
 	/* append the last bit of info we get */
 	storeAppend(entry, buf, len);
@@ -397,11 +397,11 @@ ftpReadReply(int fd, FtpStateData * data)
 	storeAppend(entry, buf, len);
 	if (data->reply_hdr_state < 2 && len > 0)
 	    ftpProcessReplyHeader(data, buf, len);
-	comm_set_select_handler(fd,
+	commSetSelect(fd,
 	    COMM_SELECT_READ,
 	    (PF) ftpReadReply,
-	    (void *) data);
-	comm_set_select_handler_plus_timeout(fd,
+	    (void *) data, 0);
+	commSetSelect(fd,
 	    COMM_SELECT_TIMEOUT,
 	    (PF) ftpLifetimeExpire,
 	    (void *) data,
@@ -429,11 +429,11 @@ ftpSendComplete(int fd, char *buf, int size, int errflag, void *data)
 	comm_close(fd);
 	return;
     } else {
-	comm_set_select_handler(ftpState->ftp_fd,
+	commSetSelect(ftpState->ftp_fd,
 	    COMM_SELECT_READ,
 	    (PF) ftpReadReply,
-	    (void *) ftpState);
-	comm_set_select_handler_plus_timeout(ftpState->ftp_fd,
+	    (void *) ftpState, 0);
+	commSetSelect(ftpState->ftp_fd,
 	    COMM_SELECT_TIMEOUT,
 	    (PF) ftpLifetimeExpire,
 	    (void *) ftpState, Config.readTimeout);
@@ -644,16 +644,16 @@ ftpConnectDone(int fd, int status, void *data)
     (void) fd_note(fd, ftpData->entry->url);
     /* Install connection complete handler. */
     fd_note(fd, ftpData->entry->url);
-    comm_set_select_handler(fd,
+    commSetSelect(fd,
 	COMM_SELECT_WRITE,
 	(PF) ftpSendRequest,
-	(void *) data);
+	(void *) data, 0);
     comm_set_fd_lifetime(fd,
 	Config.lifetimeDefault);
-    comm_set_select_handler(fd,
+    commSetSelect(fd,
 	COMM_SELECT_LIFETIME,
 	(PF) ftpLifetimeExpire,
-	(void *) ftpData);
+	(void *) ftpData, 0);
     if (opt_no_ipcache)
 	ipcacheInvalidate(ftpData->request->host);
 }
@@ -680,10 +680,10 @@ ftpServerClose(void)
      * pending */
     if (ftpget_server_read < 0)
 	return;
-    comm_set_select_handler(ftpget_server_read,
+    commSetSelect(ftpget_server_read,
 	COMM_SELECT_READ,
 	(PF) NULL,
-	(void *) NULL);
+	(void *) NULL, 0);
     fdstat_close(ftpget_server_read);
     close(ftpget_server_read);
     fdstat_close(ftpget_server_write);
@@ -751,10 +751,10 @@ ftpInitialize(void)
 	commSetCloseOnExec(squid_to_ftpget[1]);
 	commSetCloseOnExec(ftpget_to_squid[0]);
 	/* if ftpget -S goes away, this handler should get called */
-	comm_set_select_handler(ftpget_to_squid[0],
+	commSetSelect(ftpget_to_squid[0],
 	    COMM_SELECT_READ,
 	    (PF) ftpServerClosed,
-	    (void *) NULL);
+	    (void *) NULL, 0);
 	ftpget_server_write = squid_to_ftpget[1];
 	ftpget_server_read = ftpget_to_squid[0];
 	slp.tv_sec = 0;

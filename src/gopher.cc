@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.52 1996/10/09 22:49:32 wessels Exp $
+ * $Id: gopher.cc,v 1.53 1996/10/11 23:11:11 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -696,14 +696,12 @@ gopherLifetimeExpire(int fd, GopherStateData * data)
     entry = data->entry;
     debug(10, 4, "gopherLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
     squid_error_entry(entry, ERR_LIFETIME_EXP, NULL);
-    comm_set_select_handler(fd,
+    commSetSelect(fd,
 	COMM_SELECT_READ | COMM_SELECT_WRITE,
-	0,
-	0);
+	NULL,
+	NULL, 0);
     comm_close(fd);
 }
-
-
 
 
 /* This will be called when data is ready to be read from fd.  Read until
@@ -740,16 +738,16 @@ gopherReadReply(int fd, GopherStateData * data)
 	debug(10, 3, "                Current Gap: %d bytes\n", clen - off);
 	/* reschedule, so it will automatically reactivated when
 	 * Gap is big enough.  */
-	comm_set_select_handler(fd,
+	commSetSelect(fd,
 	    COMM_SELECT_READ,
 	    (PF) gopherReadReply,
-	    (void *) data);
+	    (void *) data, 0);
 	/* don't install read timeout until we are below the GAP */
-	comm_set_select_handler_plus_timeout(fd,
+	commSetSelect(fd,
 	    COMM_SELECT_TIMEOUT,
-	    (PF) NULL,
-	    (void *) NULL,
-	    (time_t) 0);
+	    NULL,
+	     NULL,
+	    0);
 	if (!BIT_TEST(entry->flag, READ_DEFERRED)) {
 	    comm_set_fd_lifetime(fd, 3600);	/* limit during deferring */
 	    BIT_SET(entry->flag, READ_DEFERRED);
@@ -776,11 +774,11 @@ gopherReadReply(int fd, GopherStateData * data)
 	if (errno == EAGAIN || errno == EWOULDBLOCK) {
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
-	    comm_set_select_handler(fd,
+	    commSetSelect(fd,
 		COMM_SELECT_READ,
 		(PF) gopherReadReply,
-		(void *) data);
-	    comm_set_select_handler_plus_timeout(fd,
+		(void *) data, 0);
+	    commSetSelect(fd,
 		COMM_SELECT_TIMEOUT,
 		(PF) gopherReadReplyTimeout,
 		(void *) data,
@@ -815,11 +813,11 @@ gopherReadReply(int fd, GopherStateData * data)
 	} else {
 	    storeAppend(entry, buf, len);
 	}
-	comm_set_select_handler(fd,
+	commSetSelect(fd,
 	    COMM_SELECT_READ,
 	    (PF) gopherReadReply,
-	    (void *) data);
-	comm_set_select_handler_plus_timeout(fd,
+	    (void *) data, 0);
+	commSetSelect(fd,
 	    COMM_SELECT_TIMEOUT,
 	    (PF) gopherReadReplyTimeout,
 	    (void *) data,
@@ -842,11 +840,11 @@ gopherReadReply(int fd, GopherStateData * data)
 	} else {
 	    storeAppend(entry, buf, len);
 	}
-	comm_set_select_handler(fd,
+	commSetSelect(fd,
 	    COMM_SELECT_READ,
 	    (PF) gopherReadReply,
-	    (void *) data);
-	comm_set_select_handler_plus_timeout(fd,
+	    (void *) data, 0);
+	commSetSelect(fd,
 	    COMM_SELECT_TIMEOUT,
 	    (PF) gopherReadReplyTimeout,
 	    (void *) data,
@@ -911,11 +909,11 @@ gopherSendComplete(int fd, char *buf, int size, int errflag, void *data)
 
 	}
     /* Schedule read reply. */
-    comm_set_select_handler(fd,
+    commSetSelect(fd,
 	COMM_SELECT_READ,
 	(PF) gopherReadReply,
-	(void *) gopherState);
-    comm_set_select_handler_plus_timeout(fd,
+	(void *) gopherState, 0);
+    commSetSelect(fd,
 	COMM_SELECT_TIMEOUT,
 	(PF) gopherReadReplyTimeout,
 	(void *) gopherState,
@@ -1041,14 +1039,14 @@ gopherConnectDone(int fd, int status, void *data)
     /* Install connection complete handler. */
     if (opt_no_ipcache)
 	ipcacheInvalidate(gopherState->host);
-    comm_set_select_handler(fd,
+    commSetSelect(fd,
 	COMM_SELECT_LIFETIME,
 	(PF) gopherLifetimeExpire,
-	(void *) gopherState);
-    comm_set_select_handler(fd,
+	(void *) gopherState, 0);
+    commSetSelect(fd,
 	COMM_SELECT_WRITE,
 	(PF) gopherSendRequest,
-	(void *) gopherState);
+	(void *) gopherState, 0);
 }
 
 
