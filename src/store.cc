@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.330 1997/10/30 22:40:39 wessels Exp $
+ * $Id: store.cc,v 1.331 1997/10/31 17:06:13 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1300,6 +1300,7 @@ storeCleanup(void *data)
 	if (++bucketnum >= store_buckets) {
 	    debug(20, 1) ("  Completed Validation Procedure\n");
 	    debug(20, 1) ("  Validated %d Entries\n", validnum);
+	    debug(20, 1) ("  store_swap_size = %dk\n", store_swap_size);
 	    store_rebuilding = 0;
 	    return;
 	}
@@ -1420,11 +1421,11 @@ storeRebuiltFromDisk(struct storeRebuildState *data)
     debug(20, 1) ("  %7d Swapfile clashes avoided.\n", data->clashcount);
     debug(20, 1) ("  Took %d seconds (%6.1lf objects/sec).\n",
 	r > 0 ? r : 0, (double) data->objcount / (r > 0 ? r : 1));
-    debug(20, 1) ("  store_swap_size = %dk\n", store_swap_size);
     if (data->need_to_validate && data->linecount) {
 	debug(20, 1) ("Beginning Validation Procedure\n");
 	eventAdd("storeCleanup", storeCleanup, NULL, 0);
     } else {
+	debug(20, 1) ("  store_swap_size = %dk\n", store_swap_size);
 	store_rebuilding = 0;
     }
     safe_free(data->line_in);
