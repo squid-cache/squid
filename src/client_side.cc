@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.335 1998/06/10 05:48:48 wessels Exp $
+ * $Id: client_side.cc,v 1.336 1998/06/10 06:00:22 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2460,8 +2460,7 @@ clientReadRequest(int fd, void *data)
 	    if (request->method != METHOD_GET) {
 		int cont_len = httpHeaderGetInt(&request->header, HDR_CONTENT_LENGTH);
 		int copy_len = XMIN(cont_len, conn->in.offset);
-		assert(cont_len > -1);
-		if (conn->in.offset && copy_len > 0) {
+		if (copy_len > 0) {
 		    assert(conn->in.offset >= copy_len);
 		    request->body_sz = copy_len;
 		    request->body = xmalloc(request->body_sz);
