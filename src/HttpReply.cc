@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.25 1998/05/27 22:51:44 rousskov Exp $
+ * $Id: HttpReply.cc,v 1.26 1998/05/28 05:14:01 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -72,7 +72,7 @@ httpReplyCreate()
     return rep;
 }
 
-void
+static void
 httpReplyInit(HttpReply * rep)
 {
     assert(rep);
@@ -84,7 +84,7 @@ httpReplyInit(HttpReply * rep)
     httpStatusLineInit(&rep->sline);
 }
 
-void
+static void
 httpReplyClean(HttpReply * rep)
 {
     assert(rep);
