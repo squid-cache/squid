@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_rebuild.cc,v 1.62 1999/05/25 06:53:51 wessels Exp $
+ * $Id: store_rebuild.cc,v 1.63 1999/05/25 07:02:00 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -52,6 +52,8 @@ storeCleanup(void *datanotused)
 	debug(20, 1) ("  Completed Validation Procedure\n");
 	debug(20, 1) ("  Validated %d Entries\n", validnum);
 	debug(20, 1) ("  store_swap_size = %dk\n", store_swap_size);
+	store_dirs_rebuilding--;
+	assert(0 == store_dirs_rebuilding);
 	if (opt_store_doublecheck)
 	    assert(store_errors == 0);
 	if (store_digest)
@@ -129,7 +131,7 @@ storeRebuildComplete(struct _store_rebuild_data *dc)
     /*
      * When store_dirs_rebuilding == 1, it means we are done reading
      * or scanning all cache_dirs.  Now report the stats and start
-     * the validation thread.
+     * the validation (storeCleanup()) thread.
      */
     if (store_dirs_rebuilding > 1)
 	return;
@@ -163,7 +165,7 @@ storeRebuildStart(void)
      * Normally store_dirs_rebuilding is incremented once for each
      * cache_dir.  We increment it here as well for the disk storage
      * system as a whole.  The corresponding decrement occurs in
-     * storeClean(), when it is finished.
+     * storeCleanup(), when it is finished.
      */
     store_dirs_rebuilding++;
 }
