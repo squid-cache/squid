@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.300 2003/02/15 00:15:51 hno Exp $
+# $Id: cf.data.pre,v 1.301 2003/02/15 18:13:35 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2701,10 +2701,6 @@ DOC_START
 	where it accepted the request as hostname in the URL.
 
 	If you want virtual port support then specify the port as "0".
-
-	NOTE: enabling httpd_accel_host disables proxy-caching and
-	ICP.  If you want these features enabled also, then set
-	the 'httpd_accel_with_proxy' option.
 DOC_END
 
 NAME: httpd_accel_single_host

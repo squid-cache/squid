@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.465 2003/02/14 13:59:50 robertc Exp $
+ * $Id: protos.h,v 1.466 2003/02/15 18:13:36 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -511,7 +511,7 @@ SQUIDCEXTERN int neighborsUdpPing(request_t *,
 SQUIDCEXTERN void neighborAddAcl(const char *, const char *);
 SQUIDCEXTERN void neighborsUdpAck(const cache_key *, icp_common_t *, const struct sockaddr_in *);
 SQUIDCEXTERN void neighborAdd(const char *, const char *, int, int, int, int, int);
-SQUIDCEXTERN void neighbors_open(int);
+SQUIDCEXTERN void neighbors_init(void);
 SQUIDCEXTERN peer *peerFindByName(const char *);
 SQUIDCEXTERN peer *peerFindByNameAndPort(const char *, unsigned short);
 SQUIDCEXTERN peer *getDefaultParent(request_t * request);
