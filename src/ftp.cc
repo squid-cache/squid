@@ -1,4 +1,4 @@
-/* $Id: ftp.cc,v 1.19 1996/04/04 04:33:11 wessels Exp $ */
+/* $Id: ftp.cc,v 1.20 1996/04/04 05:19:48 wessels Exp $ */
 
 /*
  * DEBUG: Section 9           ftp: FTP
@@ -495,8 +495,8 @@ int ftpInitialize()
 	return 0;
     }
     /* child */
-    close(0);
-    dup(p[0]);
+    dup2(p[0], 0);
+    dup2(fileno(debug_log), 2);
     close(p[0]);
     close(p[1]);
     /* inherit stdin,stdout,stderr */
