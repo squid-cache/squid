@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.96 1996/11/05 20:43:52 wessels Exp $
+ * $Id: http.cc,v 1.97 1996/11/06 08:15:21 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -568,6 +568,7 @@ httpSendRequest(int fd, void *data)
     int buftype = 0;
     StoreEntry *entry = httpState->entry;
     int saw_host = 0;
+    int did_ims = 0;
 
     debug(11, 5, "httpSendRequest: FD %d: httpState %p.\n", fd, httpState);
     buflen = strlen(Method) + strlen(req->urlpath);
@@ -597,6 +598,17 @@ httpSendRequest(int fd, void *data)
 	Method,
 	*req->urlpath ? req->urlpath : "/");
     len = strlen(buf);
+    /* Add IMS header */
+    if (entry->lastmod && req->method == METHOD_GET) {
+	debug(11, 3, "httpSendRequest: Adding IMS: %s\r\n",
+	    mkrfc1123(entry->lastmod));
+	ybuf = get_free_4k_page();
+	sprintf(ybuf, "If-Modified-Since: %s\r\n", mkrfc1123(entry->lastmod));
+	strcat(buf, ybuf);
+	len += strlen(ybuf);
+	put_free_4k_page(ybuf);
+	did_ims = 1;
+    }
     if (httpState->req_hdr) {	/* we have to parse the request header */
 	xbuf = xstrdup(httpState->req_hdr);
 	for (t = strtok(xbuf, crlf); t; t = strtok(NULL, crlf)) {
@@ -604,6 +616,8 @@ httpSendRequest(int fd, void *data)
 		continue;
 	    if (strncasecmp(t, "Host:", 5) == 0)
 		saw_host = 1;
+	    if (did_ims && !strncasecmp(t, "If-Modified-Since:", 18))
+		continue;
 	    if (len + (int) strlen(t) > buflen - 10)
 		continue;
 	    strcat(buf, t);
@@ -626,16 +640,6 @@ httpSendRequest(int fd, void *data)
     put_free_4k_page(ybuf);
     ybuf = NULL;
 
-    /* Add IMS header */
-    if (entry->lastmod && req->method == METHOD_GET) {
-	debug(11, 3, "httpSendRequest: Adding IMS: %s\r\n",
-	    mkrfc1123(entry->lastmod));
-	ybuf = get_free_4k_page();
-	sprintf(ybuf, "If-Modified-Since: %s\r\n", mkrfc1123(entry->lastmod));
-	strcat(buf, ybuf);
-	len += strlen(ybuf);
-	put_free_4k_page(ybuf);
-    }
     /* Add Host: header */
     if (!saw_host) {
 	ybuf = get_free_4k_page();
