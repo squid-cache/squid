@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.136 1997/02/19 00:06:14 wessels Exp $
+ * $Id: comm.cc,v 1.137 1997/02/19 17:06:51 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1162,6 +1162,10 @@ comm_join_mcast_groups(int fd)
 	debug(5, 10, "comm_join_mcast_groups: joining group %s on FD %d\n",
 	    s->key, fd);
 	ia = ipcache_gethostbyname(s->key, IP_BLOCKING_LOOKUP);
+	if (ia == NULL) {
+	    debug(5, 0, "Unknown host: %s\n", s->key);
+	    continue;
+	}
 	for (i = 0; i < ia->count; i++) {
 	    mr.imr_multiaddr.s_addr = (ia->in_addrs + i)->s_addr;
 	    mr.imr_interface.s_addr = INADDR_ANY;
@@ -1507,7 +1511,7 @@ comm_write(int fd, char *buf, int size, int timeout, rw_complete_handler * handl
 	fd, size, timeout, handler, handler_data);
 
     if (fd_table[fd].rwstate) {
-	debug(5, 1, "WARNING! FD %d: A comm_write is already active.\n", fd);
+	debug(5, 1, "WARNING: FD %d: A comm_write is already active.\n", fd);
 	RWStateCallbackAndFree(fd, COMM_ERROR);
     }
     state = xcalloc(1, sizeof(RWStateData));
