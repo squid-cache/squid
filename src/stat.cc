@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.330 2000/06/26 03:36:05 wessels Exp $
+ * $Id: stat.cc,v 1.331 2000/06/26 06:37:08 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -929,7 +929,7 @@ statAvgTick(void *notused)
 	struct mallinfo mp = mallinfo();
 	i = mp.arena;
 #endif
-	if (Config.warnings.high_pf < i)
+	if (Config.warnings.high_memory < i)
 	    debug(18, 0) ("WARNING: Memory usage at %d MB\n", i >> 20);
     }
 }
