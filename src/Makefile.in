@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.194 2000/09/01 12:30:24 hno Exp $
+#  $Id: Makefile.in,v 1.195 2000/10/20 23:50:59 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -391,7 +391,7 @@ install: all install-mkdirs
 	fi
 
 install-pinger:
-	@f=pinger; \
+	@f=$(PINGER_EXE); \
 	if test -f $(libexecdir)/$$f; then \
 		echo $(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
 		$(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \

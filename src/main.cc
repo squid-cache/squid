@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.318 2000/10/17 08:06:03 adrian Exp $
+ * $Id: main.cc,v 1.319 2000/10/20 23:51:00 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -846,6 +846,10 @@ watch_child(char *argv[])
 	close(i);
     }
 #endif
+
+
+/* RBCOLLINS - if cygwin stackdumps when squid is run without -N, check the cygwin1.dll version, it needs to be AT LEAST 1.1.3. execvp had a bit overflow error in a loop.. 
+*/
     /* Connect stdio to /dev/null in daemon mode */
     nullfd = open("/dev/null", O_RDWR);
     dup2(nullfd, 0);
