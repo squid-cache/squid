@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.319 1997/10/27 21:34:52 wessels Exp $
+ * $Id: store.cc,v 1.320 1997/10/28 06:47:41 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -272,6 +272,7 @@ static void storeEntryListDelete(dlink_node *, dlink_list *);
 static void storeSetMemStatus(StoreEntry * e, int);
 static void storeClientCopy2(StoreEntry *, store_client *);
 static void storeHashInsert(StoreEntry * e);
+static void storeSwapOutFileClose(StoreEntry * e);
 
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */
@@ -871,18 +872,17 @@ storeSwapOutHandle(int fd, int flag, size_t len, void *data)
 	debug(20, 1) ("storeSwapOutHandle: SwapOut failure (err code = %d).\n",
 	    flag);
 	e->swap_status = SWAPOUT_NONE;
-	file_close(mem->swapout.fd);
-	mem->swapout.fd = -1;
 	if (e->swap_file_number != -1) {
 	    storePutUnusedFileno(e->swap_file_number);
 	    e->swap_file_number = -1;
 	}
-	storeRelease(e);
 	if (flag == DISK_NO_SPACE_LEFT) {
 	    /* reduce the swap_size limit to the current size. */
 	    Config.Swap.maxSize = store_swap_size;
 	    storeConfigure();
 	}
+	storeReleaseRequest(e);
+	storeSwapOutFileClose(e);
 	return;
     }
     mem->swapout.done_offset += len;
@@ -891,8 +891,6 @@ storeSwapOutHandle(int fd, int flag, size_t len, void *data)
 	return;
     }
     /* swapping complete */
-    file_close(mem->swapout.fd);
-    mem->swapout.fd = -1;
     debug(20, 5) ("storeSwapOutHandle: SwapOut complete: '%s' to %s.\n",
 	e->url, storeSwapFullPath(e->swap_file_number, NULL));
     if (!storeCheckCachable(e)) {
@@ -907,7 +905,7 @@ storeSwapOutHandle(int fd, int flag, size_t len, void *data)
 	mem->request->protocol,
 	e->object_len,
 	FALSE);
-    storeUnlockObject(e);
+    storeSwapOutFileClose(e);
 }
 
 static void
@@ -925,9 +923,11 @@ storeCheckSwapOut(StoreEntry * e)
     debug(20, 3) ("storeCheckSwapOut: %s\n", e->url);
     debug(20, 3) ("storeCheckSwapOut: store_status = %s\n",
 	storeStatusStr[e->store_status]);
-    if (e->store_status == STORE_ABORTED)
+    if (e->store_status == STORE_ABORTED) {
+	assert(BIT_TEST(e->flag, RELEASE_REQUEST));
+	storeSwapOutFileClose(e);
 	return;
-
+    }
     debug(20, 3) ("storeCheckSwapOut: mem->inmem_lo = %d\n",
 	(int) mem->inmem_lo);
     debug(20, 3) ("storeCheckSwapOut: mem->inmem_hi = %d\n",
@@ -1535,7 +1535,6 @@ storeAbort(StoreEntry * e, int cbflag)
 	mem->inmem_hi);
     /* We assign an object length here--The only other place we assign the
      * object length is in storeComplete() */
-    storeLockObject(e);
     e->object_len = mem->inmem_hi;
     /* Notify the server side */
     if (cbflag && mem->abort.callback) {
@@ -1544,7 +1543,15 @@ storeAbort(StoreEntry * e, int cbflag)
     }
     /* Notify the client side */
     InvokeHandlers(e);
-    storeUnlockObject(e);
+    /* Do we need to close the swapout file? */
+    /* Not if we never started swapping out */
+    if (e->swap_file_number == -1)
+	return;
+    /* not if a disk write is queued, the handler will close up */
+    if (mem->swapout.queue_offset > mem->swapout.done_offset)
+	return;
+    /* we do */
+    storeSwapOutFileClose(e);
 }
 
 /* get the first entry in the storage */
@@ -1844,6 +1851,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     STCB *callback = sc->callback;
     MemObject *mem = e->mem_obj;
     size_t sz;
+    debug(20, 3) ("storeClientCopy2: %s\n", e->key);
     assert(callback != NULL);
     if (e->store_status == STORE_ABORTED) {
 	sc->callback = NULL;
@@ -2146,6 +2154,8 @@ storeWriteCleanLogs(int reopen)
     if (store_rebuilding) {
 	debug(20, 1) ("Not currently OK to rewrite swap log.\n");
 	debug(20, 1) ("storeWriteCleanLogs: Operation aborted.\n");
+	for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++)
+	    file_close(fd[dirn]);
 	return 0;
     }
     debug(20, 1) ("storeWriteCleanLogs: Starting...\n");
@@ -2552,4 +2562,12 @@ storeSetMemStatus(StoreEntry * e, int new_status)
 	meta_data.hot_vm--;
     }
     e->mem_status = new_status;
+}
+
+static void
+storeSwapOutFileClose(StoreEntry * e)
+{
+    file_close(e->mem_obj->swapout.fd);
+    e->mem_obj->swapout.fd = -1;
+    storeUnlockObject(e);
 }
