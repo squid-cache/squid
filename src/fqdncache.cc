@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.2 1996/07/23 04:11:52 wessels Exp $
+ * $Id: fqdncache.cc,v 1.3 1996/07/25 05:49:15 wessels Exp $
  *
  * DEBUG: section 34    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -929,7 +929,7 @@ char *fqdncache_gethostbyaddr(addr, flags)
     if (flags & FQDN_BLOCKING_LOOKUP) {
 	FqdncacheStats.ghba_calls++;
 	ip = inet_addr(name);
-	hp = gethostbyaddr(&ip, 4, AF_INET);
+	hp = gethostbyaddr((char *) &ip, 4, AF_INET);
 	if (hp && hp->h_name && (hp->h_name[0] != '\0') && fqdn_table) {
 	    /* good address, cached */
 	    fqdncache_add(name, fqdncache_create(), hp, 1);

@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.36 1996/07/22 16:40:26 wessels Exp $
+ * $Id: ipcache.cc,v 1.37 1996/07/25 05:49:16 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -222,7 +222,6 @@ static int ipcache_testname()
 static void ipcache_release(i)
      ipcache_entry *i;
 {
-    ipcache_entry *result = 0;
     hash_link *table_entry = NULL;
     int k;
 
@@ -230,9 +229,8 @@ static void ipcache_release(i)
 	debug(14, 0, "ipcache_release: Could not find key '%s'\n", i->name);
 	return;
     }
-    result = (ipcache_entry *) table_entry;
-    if (i != result)
-	fatal_dump("ipcache_release: expected i == result!");
+    if (i != (ipcache_entry *) table_entry)
+	fatal_dump("ipcache_release: i != table_entry!");
     if (i->status == IP_PENDING) {
 	debug(14, 1, "ipcache_release: Someone called on a PENDING entry\n");
 	return;
@@ -243,25 +241,24 @@ static void ipcache_release(i)
     }
     if (hash_remove_link(ip_table, table_entry)) {
 	debug(14, 0, "ipcache_release: hash_remove_link() failed for '%s'\n",
-	    result->name);
+	    i->name);
 	return;
     }
-    if (result->status == IP_CACHED) {
-	for (k = 0; k < (int) result->addr_count; k++)
-	    safe_free(*(result->entry.h_addr_list + k));
-	safe_free(result->entry.h_addr_list);
-	for (k = 0; k < (int) result->alias_count; k++)
-	    safe_free(result->entry.h_aliases[k]);
-	if (result->entry.h_aliases)
-	    safe_free(result->entry.h_aliases);
-	safe_free(result->entry.h_name);
+    if (i->status == IP_CACHED) {
+	for (k = 0; k < (int) i->addr_count; k++)
+	    safe_free(*(i->entry.h_addr_list + k));
+	safe_free(i->entry.h_addr_list);
+	for (k = 0; k < (int) i->alias_count; k++)
+	    safe_free(i->entry.h_aliases[k]);
+	safe_free(i->entry.h_aliases);
+	safe_free(i->entry.h_name);
 	debug(14, 5, "ipcache_release: Released IP cached record for '%s'.\n",
-	    result->name);
+	    i->name);
     }
-    safe_free(result->name);
-    safe_free(result->error_message);
-    memset(result, '\0', sizeof(ipcache_entry));
-    safe_free(result);
+    safe_free(i->name);
+    safe_free(i->error_message);
+    memset(i, '\0', sizeof(ipcache_entry));
+    safe_free(i);
     --meta_data.ipcache_count;
     return;
 }

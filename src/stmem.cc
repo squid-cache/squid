@@ -1,5 +1,5 @@
 /*
- * $Id: stmem.cc,v 1.14 1996/07/20 03:16:56 wessels Exp $
+ * $Id: stmem.cc,v 1.15 1996/07/25 05:49:17 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -408,12 +408,12 @@ void *get_free_mem_obj()
 
 char *get_free_4k_page()
 {
-    return get_free_thing(&sm_stats);
+    return (char *) get_free_thing(&sm_stats);
 }
 
 char *get_free_8k_page()
 {
-    return get_free_thing(&disk_stats);
+    return (char *) get_free_thing(&disk_stats);
 }
 
 static void put_free_thing(thing, p)

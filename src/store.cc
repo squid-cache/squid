@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.73 1996/07/20 03:16:57 wessels Exp $
+ * $Id: store.cc,v 1.74 1996/07/25 05:49:18 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -183,6 +183,7 @@ static mem_ptr new_MemObjectData _PARAMS((void));
 static StoreEntry *new_StoreEntry _PARAMS((int mem_obj_flag));
 static int storeCheckPurgeMem _PARAMS((StoreEntry * e));
 static void storeSwapLog _PARAMS((StoreEntry *));
+static int storeHashDelete _PARAMS((StoreEntry *));
 
 
 /* Now, this table is inaccessible to outsider. They have to use a method
@@ -347,18 +348,15 @@ static int storeHashInsert(e)
  * if object in memory, also remove from in_mem_table
  */
 
-int storeHashDelete(hash_ptr)
-     hash_link *hash_ptr;
+static int storeHashDelete(e)
+    StoreEntry *e;
 {
     hash_link *hptr = NULL;
-    StoreEntry *e = NULL;
-
-    e = (StoreEntry *) hash_ptr;
     if (e->mem_status == IN_MEMORY && e->key) {
 	if ((hptr = hash_lookup(in_mem_table, e->key)))
 	    hash_delete_link(in_mem_table, hptr);
     }
-    return (hash_remove_link(store_table, hash_ptr));
+    return (hash_remove_link(store_table, (hash_link *) e));
 }
 
 /*
@@ -825,7 +823,6 @@ int storeRegister(e, fd, handler, data)
     PendingEntry *pe = NULL;
     int old_size;
     int i;
-    int j;
 
     debug(20, 3, "storeRegister: FD %d '%s'\n", fd, e->key);
 
@@ -856,10 +853,8 @@ int storeRegister(e, fd, handler, data)
 	e->mem_obj->pending_list_size += MIN_PENDING;
 
 	/* allocate, and copy old pending list over to the new one */
-	tmp = xcalloc(e->mem_obj->pending_list_size,
-	    sizeof(struct pentry *));
-	for (j = 0; j < old_size; j++)
-	    tmp[j] = e->mem_obj->pending[j];
+	tmp = xcalloc(e->mem_obj->pending_list_size, sizeof(struct pentry *));
+	xmemcpy(e->mem_obj->pending, tmp, old_size * sizeof(struct pentry *));
 
 	/* free the old list and set the new one */
 	safe_free(e->mem_obj->pending);
@@ -1065,7 +1060,7 @@ int storeAddSwapDisk(path)
 char *swappath(n)
      int n;
 {
-    return cache_dirs->collection[n % ncache_dirs];
+    return (char *) cache_dirs->collection[n % ncache_dirs];
 }
 
 
@@ -2307,8 +2302,7 @@ int storeRelease(e)
 	    urlParseProtocol(e->url),
 	    e->object_len);
     }
-    if (hptr)
-	storeHashDelete(hptr);
+    storeHashDelete(e);
     storeLog(STORE_LOG_RELEASE, e);
     destroy_StoreEntry(e);
     return 0;
