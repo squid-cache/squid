@@ -2,6 +2,7 @@
 	  with USE_ASYNC_IO (Arjan de Vet).
 	- Fixed errState->errno causing problems with some macros
 	  (Michael O'Reilly).
+	- Fixed memory leaks in pconn.c (Max Okumoto).
 	
 Changes to squid-1.2.beta1 ():
 
