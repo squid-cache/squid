@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.268 1998/04/27 20:03:55 wessels Exp $
+ * $Id: http.cc,v 1.269 1998/05/09 04:49:10 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -781,6 +781,7 @@ httpSendRequest(int fd, void *data)
 	cfd = -1;
     else
 	cfd = entry->mem_obj->fd;
+    assert(-1 == cfd || FD_SOCKET == fd_table[cfd].type);
     if (p != NULL)
 	EBIT_SET(httpState->flags, HTTP_PROXYING);
     /*
