@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.631 2003/03/10 04:56:37 robertc Exp $
+ * $Id: client_side.cc,v 1.632 2003/03/11 23:27:37 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1853,6 +1853,11 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p,
         prepareTransparentURL(conn, http, url, req_hdr);
     } else if (conn->port->accel) {
         prepareAcceleratedURL(conn, http, url, req_hdr);
+    } else if (internalCheck(url)) {
+        /* prepend our name & port */
+        http->uri = xstrdup(internalLocalUri(NULL, url));
+        http->flags.internal = 1;
+        http->flags.accel = 1;
     }
 
     if (!http->uri) {
