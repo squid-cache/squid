@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.164 2002/10/13 20:35:02 robertc Exp $
+ * $Id: net_db.cc,v 1.165 2002/10/25 04:06:39 robertc Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -438,8 +438,6 @@ static void
 netdbReloadState(void)
 {
     LOCAL_ARRAY(char, path, SQUID_MAXPATHLEN);
-    char *buf;
-    char *t;
     char *s;
     int fd;
     int l;
@@ -462,11 +460,15 @@ netdbReloadState(void)
 	file_close(fd);
 	return;
     }
-    t = buf = (char *)xcalloc(1, sb.st_size + 1);
+    char *t;
+    char *buf = (char *)xcalloc(1, sb.st_size + 1);
+    t = buf;
     l = FD_READ_METHOD(fd, buf, sb.st_size);
     file_close(fd);
-    if (l <= 0)
+    if (l <= 0) {
+	safe_free (buf);
 	return;
+    };
     while ((s = strchr(t, '\n'))) {
 	char *q;
 	assert(s - buf < l);
