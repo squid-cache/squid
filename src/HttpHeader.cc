@@ -1,5 +1,6 @@
+
 /*
- * $Id: HttpHeader.cc,v 1.18 1998/03/07 23:42:58 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.19 1998/03/08 07:28:51 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -58,8 +59,8 @@
 
 /* HTTP/1.1 extension-header */
 struct _HttpHeaderExtField {
-    char *name;			/* field-name  from HTTP/1.1 (no column after name!) */
-    char *value;		/* field-value from HTTP/1.1 */
+    String name;  /* field-name  from HTTP/1.1 (no column after name!) */
+    String value; /* field-value from HTTP/1.1 */
 };
 
 /*
@@ -68,7 +69,7 @@ struct _HttpHeaderExtField {
  */
 struct _HttpHeaderEntry {
     field_store field;
-    http_hdr_type id;
+    short int id;
 };
 
 
@@ -98,31 +99,31 @@ typedef ssize_t HttpHeaderPos;
  */
 static field_attrs_t Headers[] =
 {
-    {"Accept", HDR_ACCEPT, ftPChar},
+    {"Accept", HDR_ACCEPT, ftStr},
     {"Age", HDR_AGE, ftInt},
     {"Cache-Control", HDR_CACHE_CONTROL, ftPCc},
-    {"Connection", HDR_CONNECTION, ftPChar},	/* for now */
-    {"Content-Encoding", HDR_CONTENT_ENCODING, ftPChar},
+    {"Connection", HDR_CONNECTION, ftStr},	/* for now */
+    {"Content-Encoding", HDR_CONTENT_ENCODING, ftStr},
     {"Content-Length", HDR_CONTENT_LENGTH, ftInt},
-    {"Content-MD5", HDR_CONTENT_MD5, ftPChar},	/* for now */
-    {"Content-Type", HDR_CONTENT_TYPE, ftPChar},
+    {"Content-MD5", HDR_CONTENT_MD5, ftStr},	/* for now */
+    {"Content-Type", HDR_CONTENT_TYPE, ftStr},
     {"Date", HDR_DATE, ftDate_1123},
-    {"Etag", HDR_ETAG, ftPChar},	/* for now */
+    {"Etag", HDR_ETAG, ftStr},	/* for now */
     {"Expires", HDR_EXPIRES, ftDate_1123},
-    {"Host", HDR_HOST, ftPChar},
+    {"Host", HDR_HOST, ftStr},
     {"If-Modified-Since", HDR_IMS, ftDate_1123},
     {"Last-Modified", HDR_LAST_MODIFIED, ftDate_1123},
-    {"Location", HDR_LOCATION, ftPChar},
+    {"Location", HDR_LOCATION, ftStr},
     {"Max-Forwards", HDR_MAX_FORWARDS, ftInt},
-    {"Proxy-Authenticate", HDR_PROXY_AUTHENTICATE, ftPChar},
+    {"Proxy-Authenticate", HDR_PROXY_AUTHENTICATE, ftStr},
     {"Proxy-Connection", HDR_PROXY_KEEPALIVE, ftInt},	/* true/false */
-    {"Public", HDR_PUBLIC, ftPChar},
+    {"Public", HDR_PUBLIC, ftStr},
     {"Range", HDR_RANGE, ftPRange},
-    {"Retry-After", HDR_RETRY_AFTER, ftPChar},	/* for now */
-    {"Set-Cookie", HDR_SET_COOKIE, ftPChar},
-    {"Upgrade", HDR_UPGRADE, ftPChar},	/* for now */
-    {"Warning", HDR_WARNING, ftPChar},	/* for now */
-    {"WWW-Authenticate", HDR_WWW_AUTHENTICATE, ftPChar},
+    {"Retry-After", HDR_RETRY_AFTER, ftStr},	/* for now */
+    {"Set-Cookie", HDR_SET_COOKIE, ftStr},
+    {"Upgrade", HDR_UPGRADE, ftStr},	/* for now */
+    {"Warning", HDR_WARNING, ftStr},	/* for now */
+    {"WWW-Authenticate", HDR_WWW_AUTHENTICATE, ftStr},
     {"Other:", HDR_OTHER, ftPExtField}	/* ':' will not allow matches */
 };
 
@@ -168,11 +169,6 @@ static http_hdr_type RequestHeaders[] =
 /* when first field is added, this is how much entries we allocate */
 #define INIT_FIELDS_PER_HEADER 8
 
-/* recycle bin for short strings (32KB total only) */
-static const size_t shortStrSize = 32;	/* max size of a recyclable string */
-static const size_t shortStrPoolCount = (32 * 1024) / 32;	/* sync this with shortStrSize */
-static MemPool *shortStrings = NULL;
-
 /* header accounting */
 static HttpHeaderStat HttpHeaderStats[] =
 {
@@ -185,13 +181,7 @@ static int HttpHeaderStatCount = sizeof(HttpHeaderStats) / sizeof(*HttpHeaderSta
 /* global counters */
 static int HeaderParsedCount = 0;
 static int HeaderEntryParsedCount = 0;
-
-/* long strings accounting */
-static int longStrAliveCount = 0;
-static int longStrHighWaterCount = 0;
-static size_t longStrAliveSize = 0;
-static size_t longStrHighWaterSize = 0;
-
+static int HeaderEntrySurvivedCount = 0; /* survived until header destruction */
 
 /*
  * local routines
@@ -224,17 +214,6 @@ static void httpHeaderFieldInit(field_store * field);
 static field_store httpHeaderFieldDup(field_type type, field_store value);
 static field_store httpHeaderFieldBadValue(field_type type);
 
-#if 0
-static HttpScc *httpSccCreate();
-static HttpScc *httpSccParseCreate(const char *str);
-static void httpSccParseInit(HttpScc * scc, const char *str);
-static void httpSccDestroy(HttpScc * scc);
-static HttpScc *httpSccDup(HttpScc * scc);
-static void httpSccUpdateStats(const HttpScc * scc, StatHist * hist);
-static void httpSccPackValueInto(HttpScc * scc, Packer * p);
-static void httpSccJoinWith(HttpScc * scc, HttpScc * new_scc);
-#endif
-
 static HttpHeaderExtField *httpHeaderExtFieldCreate(const char *name, const char *value);
 static HttpHeaderExtField *httpHeaderExtFieldParseCreate(const char *field_start, const char *field_end);
 static void httpHeaderExtFieldDestroy(HttpHeaderExtField * f);
@@ -242,19 +221,6 @@ static HttpHeaderExtField *httpHeaderExtFieldDup(HttpHeaderExtField * f);
 
 static void httpHeaderStatInit(HttpHeaderStat * hs, const char *label);
 static void httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e);
-static void shortStringStatDump(StoreEntry * e);
-
-static char *dupShortStr(const char *str);
-static char *dupShortBuf(const char *str, size_t len);
-static char *appShortStr(char *str, const char *app_str);
-static char *allocShortBuf(size_t size);
-static void freeShortString(char *str);
-
-#if 0
-static int strListGetItem(const char *str, char del, const char **item, int *ilen, const char **pos);
-static const char *getStringPrefix(const char *str);
-#endif
-
 
 /* handy to determine the #elements in a static array */
 #define countof(arr) (sizeof(arr)/sizeof(*arr))
@@ -263,27 +229,35 @@ static const char *getStringPrefix(const char *str);
  * some compilers do not want to convert a type into a union which that type
  * belongs to
  */
-field_store 
+static field_store 
 intField(int n)
 {
     field_store f;
     f.v_int = n;
     return f;
 }
-field_store 
+static field_store 
 timeField(time_t t)
 {
     field_store f;
     f.v_time = t;
     return f;
 }
-field_store 
+static field_store 
+strField(String s)
+{
+    field_store f;
+    f.v_str = s;
+    return f;
+}
+static field_store 
 ptrField(void *p)
 {
     field_store f;
-    f.v_pchar = (char *) p;
+    f.v_pefield = (HttpHeaderExtField *) p;
     return f;
 }
+
 
 /*
  * Module initialization routines
@@ -294,15 +268,13 @@ httpHeaderInitModule()
 {
     int i;
     /* paranoid check if smbd put a big object into field_store */
-    assert(sizeof(field_store) == sizeof(char *));
+    assert(sizeof(field_store) == sizeof(String));
     /* have to force removal of const here */
     httpHeaderInitAttrTable((field_attrs_t *) Headers, countof(Headers));
     /* create masks */
     ListHeadersMask = httpHeaderCalcMask((const int *) ListHeaders, countof(ListHeaders));
     ReplyHeadersMask = httpHeaderCalcMask((const int *) ReplyHeaders, countof(ReplyHeaders));
     RequestHeadersMask = httpHeaderCalcMask((const int *) RequestHeaders, countof(RequestHeaders));
-    /* create a pool of short strings @?@ we never destroy it! */
-    shortStrings = memPoolCreate("'short http hdr strs'", shortStrSize);
     /* init header stats */
     for (i = 0; i < HttpHeaderStatCount; i++)
 	httpHeaderStatInit(HttpHeaderStats + i, HttpHeaderStats[i].label);
@@ -314,10 +286,6 @@ httpHeaderInitModule()
 void
 httpHeaderCleanModule()
 {
-    if (shortStrings) {
-	memPoolDestroy(shortStrings);
-	shortStrings = NULL;
-    }
 }
 
 static void
@@ -363,6 +331,7 @@ httpHeaderClean(HttpHeader * hdr)
     assert(hdr);
 
     statHistCount(&HttpHeaderStats[0].hdrUCountDistr, hdr->ucount);
+    HeaderEntrySurvivedCount += hdr->ucount;
     while ((e = httpHeaderGetEntry(hdr, &pos))) {
 	/* fix this (for scc too) for req headers @?@ */
 	statHistCount(&HttpHeaderStats[0].fieldTypeDistr, e->id);
@@ -625,35 +594,6 @@ httpHeaderAddNewEntry(HttpHeader * hdr, const HttpHeaderEntry * e)
     httpHeaderSyncMasks(hdr, e, 1);
 }
 
-#if 0				/* save for parts */
-/*
- * Splits list field and appends all entries separately; 
- * Warning: This is internal function, never call this directly, 
- *          only for httpHeaderAddField use.
- */
-static void
-httpHeaderAddListField(HttpHeader * hdr, HttpHeaderField * fld)
-{
-    const char *v;
-    assert(hdr);
-    assert(fld);
-    /*
-     * Note: assume that somebody already checked that we can split. The danger
-     * is in splitting something that is not a list field but contains ','s in
-     * its value.
-     */
-    /* we got a fld.value that is a list of values separated by ',' */
-    v = strtok(fld->value, ",");
-    httpHeaderAddSingleField(hdr, fld);		/* first strtok() did its job! */
-    while ((v = strtok(NULL, ","))) {
-	/* ltrim and skip empty fields */
-	while (isspace(*v) || *v == ',')
-	    v++;
-	if (*v)
-	    httpHeaderAddSingleField(hdr, httpHeaderFieldCreate(fld->name, v));
-    }
-}
-#endif
 
 /*
  * Global (user level) routines
@@ -668,10 +608,6 @@ httpHeaderHas(const HttpHeader * hdr, http_hdr_type id)
     assert(id != HDR_OTHER);
     debug(55, 7) ("%p lookup for %d\n", hdr, id);
     return EBIT_TEST(hdr->emask, id);
-
-#ifdef SLOW_BUT_SAFE
-    return httpHeaderFindEntry(hdr, id, NULL) != NULL;
-#endif
 }
 
 /* delete a field if any */
@@ -735,8 +671,8 @@ httpHeaderSetStr(HttpHeader * hdr, http_hdr_type id, const char *str)
 {
     field_store value;
     assert_eid(id);
-    assert(Headers[id].type == ftPChar);	/* must be of a string type */
-    value.v_pcchar = str;
+    assert(Headers[id].type == ftStr);	/* must be of a string type */
+    stringInit(&value.v_str, str);
     httpHeaderSet(hdr, id, value);
 }
 
@@ -790,8 +726,8 @@ const char *
 httpHeaderGetStr(const HttpHeader * hdr, http_hdr_type id)
 {
     assert_eid(id);
-    assert(Headers[id].type == ftPChar);	/* must be of an apropriate type */
-    return httpHeaderGet(hdr, id).v_pchar;
+    assert(Headers[id].type == ftStr);	/* must be of an apropriate type */
+    return strBuf(httpHeaderGet(hdr, id).v_str);
 }
 
 time_t
@@ -876,8 +812,8 @@ httpHeaderEntryClean(HttpHeaderEntry * e)
     case ftDate_1123:
 	/* no special cleaning is necessary */
 	break;
-    case ftPChar:
-	freeShortString(e->field.v_pchar);
+    case ftStr:
+	stringClean(&e->field.v_str);
 	break;
     case ftPCc:
 	if (e->field.v_pcc)
@@ -897,7 +833,7 @@ httpHeaderEntryClean(HttpHeaderEntry * e)
     Headers[e->id].stat.aliveCount--;
     /* we have to do that so entry will be _invlaid_ */
     e->id = -1;
-    e->field.v_pchar = NULL;
+    memset(&e->field, 0, sizeof(e->field));
 }
 
 /* parses and inits header entry, returns true on success */
@@ -911,12 +847,12 @@ httpHeaderEntryParseInit(HttpHeaderEntry * e, const char *field_start, const cha
     HeaderEntryParsedCount++;
     /* paranoid reset */
     e->id = -1;
-    e->field.v_pchar = NULL;
+    memset(&e->field, 0, sizeof(e->field));
     /* first assume it is just an extension field */
     f = httpHeaderExtFieldParseCreate(field_start, field_end);
     if (!f)			/* total parsing failure */
 	return 0;
-    id = httpHeaderIdByName(f->name, -1, Headers, countof(Headers), mask);
+    id = httpHeaderIdByName(strBuf(f->name), -1, Headers, countof(Headers), mask);
     if (id < 0)
 	id = HDR_OTHER;
     Headers[id].stat.parsCount++;
@@ -945,7 +881,7 @@ httpHeaderEntryParseExtFieldInit(HttpHeaderEntry * e, int id, const HttpHeaderEx
     switch (id) {
     case HDR_PROXY_KEEPALIVE:
 	/*  we treat Proxy-Connection as "keep alive" only if it says so */
-	httpHeaderEntryInit(e, id, intField(!strcasecmp(f->value, "Keep-Alive")));
+	httpHeaderEntryInit(e, id, intField(!strcasecmp(strBuf(f->value), "Keep-Alive")));
 	break;
     default:
 	/* if we got here, it is something that can be parsed based on value type */
@@ -954,11 +890,11 @@ httpHeaderEntryParseExtFieldInit(HttpHeaderEntry * e, int id, const HttpHeaderEx
     }
     /* parsing was successful, post-processing maybe required */
     switch (id) {
-    case HDR_CONTENT_TYPE:{
+    case HDR_CONTENT_TYPE: {
 	    /* cut off "; parameter" from Content-Type @?@ why? */
-	    const int l = strcspn(e->field.v_pchar, ";\t ");
+	    const int l = strcspn(strBuf(e->field.v_str), ";\t ");
 	    if (l > 0)
-		e->field.v_pchar[l] = '\0';
+		strCut(e->field.v_str, l);
 	    break;
 	}
     case HDR_EXPIRES:
@@ -990,18 +926,18 @@ httpHeaderEntryParseByTypeInit(HttpHeaderEntry * e, int id, const HttpHeaderExtF
     httpHeaderFieldInit(&field);
     switch (type) {
     case ftInt:
-	if (!httpHeaderParseInt(f->value, &field.v_int)) {
+	if (!httpHeaderParseInt(strBuf(f->value), &field.v_int)) {
 	    Headers[id].stat.errCount++;
 	    return 0;
 	}
 	break;
 
-    case ftPChar:
-	field.v_pchar = dupShortStr(f->value);
+    case ftStr:
+	field.v_str = stringDup(&f->value);
 	break;
 
     case ftDate_1123:
-	field.v_time = parse_rfc1123(f->value);
+	field.v_time = parse_rfc1123(strBuf(f->value));
 	if (field.v_time <= 0)
 	    Headers[id].stat.errCount++;
 	/*
@@ -1011,20 +947,20 @@ httpHeaderEntryParseByTypeInit(HttpHeaderEntry * e, int id, const HttpHeaderExtF
 	break;
 
     case ftPCc:
-	field.v_pcc = httpHdrCcParseCreate(f->value);
+	field.v_pcc = httpHdrCcParseCreate(strBuf(f->value));
 	if (!field.v_pcc) {
 	    debug(55, 2) ("failed to parse cc hdr: id: %d, field: '%s: %s'\n",
-		id, f->name, f->value);
+		id, strBuf(f->name), strBuf(f->value));
 	    Headers[id].stat.errCount++;
 	    return 0;
 	}
 	break;
 
     case ftPRange:
-	field.v_prange = httpHdrRangeParseCreate(f->value);
+	field.v_prange = httpHdrRangeParseCreate(strBuf(f->value));
 	if (!field.v_prange) {
 	    debug(55, 2) ("failed to parse range hdr: id: %d, field: '%s: %s'\n",
-		id, f->name, f->value);
+		id, strBuf(f->name), strBuf(f->value));
 	    Headers[id].stat.errCount++;
 	    return 0;
 	}
@@ -1032,7 +968,7 @@ httpHeaderEntryParseByTypeInit(HttpHeaderEntry * e, int id, const HttpHeaderExtF
 
     default:
 	debug(55, 2) ("something went wrong with hdr field type analysis: id: %d, type: %d, field: '%s: %s'\n",
-	    id, type, f->name, f->value);
+	    id, type, strBuf(f->name), strBuf(f->value));
 	assert(0);
     }
     /* success, do actual init */
@@ -1057,10 +993,10 @@ httpHeaderEntryPackInto(const HttpHeaderEntry * e, Packer * p)
 {
     assert(e && p);
 
-    /* swap the field_name: */
+    /* pack the field_name: */
     packerPrintf(p, "%s: ", httpHeaderEntryName(e));
     /*
-     * swap the value
+     * pack the value
      * check for exceptions (packing is not determined by value type)
      * then swap using value type
      */
@@ -1087,8 +1023,8 @@ httpHeaderEntryPackByType(const HttpHeaderEntry * e, Packer * p)
     case ftInt:
 	packerPrintf(p, "%d", e->field.v_int);
 	break;
-    case ftPChar:
-	packerPrintf(p, "%s", e->field.v_pchar);
+    case ftStr:
+	packerPrintf(p, "%s", strBuf(e->field.v_str));
 	break;
     case ftDate_1123:
 	packerPrintf(p, "%s", mkrfc1123(e->field.v_time));
@@ -1119,8 +1055,9 @@ httpHeaderEntryJoinWith(HttpHeaderEntry * e, const HttpHeaderEntry * newe)
     /* type-based join */
     type = Headers[e->id].type;
     switch (type) {
-    case ftPChar:
-	e->field.v_pchar = appShortStr(e->field.v_pchar, newe->field.v_pchar);
+    case ftStr:
+	stringAppend(&e->field.v_str, ",", 1);
+	stringAppend(&e->field.v_str, strBuf(newe->field.v_str), strLen(newe->field.v_str));
 	break;
     case ftPCc:
 	httpHdrCcJoinWith(e->field.v_pcc, newe->field.v_pcc);
@@ -1148,8 +1085,8 @@ httpHeaderEntryIsValid(const HttpHeaderEntry * e)
 	return 0;
     case ftInt:
 	return e->field.v_int >= 0;
-    case ftPChar:
-	return e->field.v_pchar != NULL;
+    case ftStr:
+	return strBuf(e->field.v_str) != NULL;
     case ftDate_1123:
 	return e->field.v_time >= 0;
     case ftPCc:
@@ -1171,7 +1108,7 @@ httpHeaderEntryName(const HttpHeaderEntry * e)
     assert_eid(e->id);
 
     return (e->id == HDR_OTHER) ?
-	e->field.v_pefield->name : Headers[e->id].name;
+	strBuf(e->field.v_pefield->name) : Headers[e->id].name;
 }
 
 /*
@@ -1193,8 +1130,8 @@ httpHeaderFieldDup(field_type type, field_store value)
     case ftInt:
     case ftDate_1123:
 	return value;
-    case ftPChar:
-	return ptrField(dupShortStr(value.v_pchar));
+    case ftStr:
+	return strField(stringDup(&value.v_str));
     case ftPCc:
 	return ptrField(httpHdrCcDup(value.v_pcc));
     case ftPRange:
@@ -1219,7 +1156,8 @@ httpHeaderFieldBadValue(field_type type)
 	return intField(-1);
     case ftDate_1123:
 	return timeField(-1);
-    case ftPChar:
+    case ftStr:
+	return strField(StringNull);
     case ftPCc:
     case ftPRange:
     case ftPExtField:
@@ -1239,8 +1177,8 @@ static HttpHeaderExtField *
 httpHeaderExtFieldCreate(const char *name, const char *value)
 {
     HttpHeaderExtField *f = xcalloc(1, sizeof(HttpHeaderExtField));
-    f->name = dupShortStr(name);
-    f->value = dupShortStr(value);
+    stringInit(&f->name, name);
+    stringInit(&f->value, value);
     return f;
 }
 
@@ -1269,9 +1207,9 @@ httpHeaderExtFieldParseCreate(const char *field_start, const char *field_end)
 	    field_end = value_start + l;
     }
     f = xcalloc(1, sizeof(HttpHeaderExtField));
-    f->name = dupShortBuf(field_start, name_end - field_start);
-    f->value = dupShortBuf(value_start, field_end - value_start);
-    debug(55, 8) ("got field: '%s: %s' (%p)\n", f->name, f->value, f);
+    stringLimitInit(&f->name, field_start, name_end - field_start);
+    stringLimitInit(&f->value, value_start, field_end - value_start);
+    debug(55, 8) ("got field: '%s: %s' (%p)\n", strBuf(f->name), strBuf(f->value), f);
     return f;
 }
 
@@ -1279,8 +1217,8 @@ static void
 httpHeaderExtFieldDestroy(HttpHeaderExtField * f)
 {
     assert(f);
-    freeShortString(f->name);
-    freeShortString(f->value);
+    stringClean(&f->name);
+    stringClean(&f->value);
     xfree(f);
 }
 
@@ -1288,7 +1226,7 @@ static HttpHeaderExtField *
 httpHeaderExtFieldDup(HttpHeaderExtField * f)
 {
     assert(f);
-    return httpHeaderExtFieldCreate(f->name, f->value);
+    return httpHeaderExtFieldCreate(strBuf(f->name), strBuf(f->value));
 }
 
 /*
@@ -1311,7 +1249,7 @@ httpHeaderFldsPerHdrDumper(StoreEntry * sentry, int idx, double val, double size
 {
     if (count)
 	storeAppendPrintf(sentry, "%2d\t %5d\t %5d\t %6.2f\n",
-	    idx, ((int) (val + size)), count, xpercent(count, HeaderEntryParsedCount));
+	    idx, ((int) (val + size)), count, xpercent(count, HeaderParsedCount));
 }
 
 
@@ -1334,18 +1272,6 @@ httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e)
     storeAppendPrintf(e, "%2s\t %-5s\t %5s\t %6s\n",
 	"id", "#flds", "count", "%total");
     statHistDump(&hs->hdrUCountDistr, e, httpHeaderFldsPerHdrDumper);
-}
-
-static void
-shortStringStatDump(StoreEntry * e)
-{
-    storeAppendPrintf(e, "<h3>Short String Stats</h3>\n<p>");
-    memPoolReport(shortStrings, e);
-    storeAppendPrintf(e, "\n</p>\n");
-    storeAppendPrintf(e, "<br><h3>Long String Stats</h3>\n");
-    storeAppendPrintf(e, "alive: %3d (%5.1f KB) high-water:  %3d (%5.1f KB)\n",
-	longStrAliveCount, (double) longStrAliveSize / 1024.,
-	longStrHighWaterCount, (double) longStrHighWaterSize / 1024.);
 }
 
 void
@@ -1372,79 +1298,7 @@ httpHeaderStoreReport(StoreEntry * e)
 	    xpercent(f->stat.errCount, f->stat.parsCount),
 	    xpercent(f->stat.repCount, f->stat.parsCount));
     }
-    storeAppendPrintf(e, "%s\n", "<hr size=1 noshade>");
-    /* short strings */
-    shortStringStatDump(e);
+    storeAppendPrintf(e, "\nSurvived/Parsed ratio: %d/%d (%.2f%%)\n", 
+	HeaderEntrySurvivedCount, HeaderEntryParsedCount,
+	xpercent(HeaderEntrySurvivedCount, HeaderEntryParsedCount));
 }
-
-
-/*
- * "short string" routines below are trying to recycle memory for short strings
- */
-
-static char *
-dupShortStr(const char *str)
-{
-    return dupShortBuf(str, strlen(str));
-}
-
-static char *
-dupShortBuf(const char *str, size_t len)
-{
-    char *buf;
-    assert(str);
-    buf = allocShortBuf(len + 1);
-    assert(buf);
-    if (len)
-	xmemcpy(buf, str, len);	/* may not have terminating 0 */
-    buf[len] = '\0';		/* terminate */
-    debug(55, 9) ("dupped short buf[%d] (%p): '%s'\n", len + 1, buf, buf);
-    return buf;
-}
-
-static char *
-appShortStr(char *str, const char *app_str)
-{
-    const size_t size = strlen(str) + strlen(app_str) + 1;
-    char *buf = allocShortBuf(size);
-    snprintf(buf, size, "%s, %s", str, app_str);
-    freeShortString(str);
-    return buf;
-}
-
-static char *
-allocShortBuf(size_t sz)
-{
-    char *buf = NULL;
-    assert(shortStrings);
-    if (sz > shortStrSize) {
-	buf = xmalloc(sz);
-	longStrAliveCount++;
-	longStrAliveSize += sz;
-	if (longStrHighWaterCount < longStrAliveCount)
-	    longStrHighWaterCount = longStrAliveCount;
-	if (longStrHighWaterSize < longStrAliveSize)
-	    longStrHighWaterSize = longStrAliveSize;
-    } else
-	buf = memPoolAlloc(shortStrings);
-    return buf;
-}
-
-static void
-freeShortString(char *str)
-{
-    assert(shortStrings);
-    if (str) {
-	const size_t sz = strlen(str) + 1;
-	debug(55, 9) ("freeing short str of size %d (max: %d) '%s' (%p)\n", sz, shortStrSize, str, str);
-	if (sz > shortStrSize) {
-	    debug(55, 9) ("LONG short string[%d>%d]: %s\n", sz, shortStrSize, str);
-	    assert(longStrAliveCount);
-	    xfree(str);
-	    longStrAliveCount--;
-	    longStrAliveSize -= sz;
-	} else
-	    memPoolFree(shortStrings, str);
-    }
-}
-

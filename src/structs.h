@@ -500,8 +500,11 @@ struct _HttpHdrRange {
 union _field_store {
     int v_int;
     time_t v_time;
+#if OLD_CODE
     char *v_pchar;
     const char *v_pcchar;
+#endif
+    String v_str;
     HttpHdrCc *v_pcc;
     HttpHdrRange *v_prange;
     HttpHeaderExtField *v_pefield;
