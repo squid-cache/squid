@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.193 1997/01/18 06:19:57 wessels Exp $
+ * $Id: store.cc,v 1.194 1997/01/19 00:16:02 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1122,36 +1122,37 @@ storeSwapInHandle(int fd_notused, const char *buf, int len, int flag, StoreEntry
 	    mem->swap_offset,
 	    (FILE_READ_HD) storeSwapInHandle,
 	    (void *) e);
-    } else {
-	/* complete swapping in */
-	storeSetMemStatus(e, IN_MEMORY);
-	put_free_8k_page(mem->e_swap_buf);
-	file_close(mem->swapin_fd);
-	storeLog(STORE_LOG_SWAPIN, e);
-	debug(20, 5, "storeSwapInHandle: SwapIn complete: '%s' from %s.\n",
-	    e->url, storeSwapFullPath(e->swap_file_number, NULL));
-	if (mem->e_current_len != e->object_len) {
-	    debug(20, 0, "storeSwapInHandle: WARNING! Object size mismatch.\n");
-	    debug(20, 0, "  --> '%s'\n", e->url);
-	    debug(20, 0, "  --> Expecting %d bytes from file: %s\n", e->object_len,
-		storeSwapFullPath(e->swap_file_number, NULL));
-	    debug(20, 0, "  --> Only read %d bytes\n",
-		mem->e_current_len);
-	}
-	e->lock_count++;	/* lock while calling handler */
-	if ((handler = mem->swapin_complete_handler) != NULL) {
-	    data = mem->swapin_complete_data;
-	    mem->swapin_complete_handler = NULL;
-	    mem->swapin_complete_data = NULL;
-	    handler(0, data);	/* handler might call storeRelease() */
-	}
-	e->lock_count--;
-	if (BIT_TEST(e->flag, RELEASE_REQUEST)) {
-	    storeRelease(e);
-	} else if ((mem = e->mem_obj)) {
-	    requestUnlink(mem->request);
-	    mem->request = NULL;
-	}
+	return 0;
+    }
+    /* complete swapping in */
+    storeSetMemStatus(e, IN_MEMORY);
+    put_free_8k_page(mem->e_swap_buf);
+    file_close(mem->swapin_fd);
+    storeLog(STORE_LOG_SWAPIN, e);
+    debug(20, 5, "storeSwapInHandle: SwapIn complete: '%s' from %s.\n",
+	e->url, storeSwapFullPath(e->swap_file_number, NULL));
+    if (mem->e_current_len != e->object_len) {
+	debug(20, 0, "storeSwapInHandle: WARNING! Object size mismatch.\n");
+	debug(20, 0, "  --> '%s'\n", e->url);
+	debug(20, 0, "  --> Expecting %d bytes from file: %s\n", e->object_len,
+	    storeSwapFullPath(e->swap_file_number, NULL));
+	debug(20, 0, "  --> Only read %d bytes\n",
+	    mem->e_current_len);
+    }
+    e->lock_count++;		/* lock while calling handler */
+    InvokeHandlers(e);		/* once more after mem_status state change */
+    if ((handler = mem->swapin_complete_handler) != NULL) {
+	data = mem->swapin_complete_data;
+	mem->swapin_complete_handler = NULL;
+	mem->swapin_complete_data = NULL;
+	handler(0, data);	/* handler might call storeRelease() */
+    }
+    e->lock_count--;
+    if (BIT_TEST(e->flag, RELEASE_REQUEST)) {
+	storeRelease(e);
+    } else if ((mem = e->mem_obj)) {
+	requestUnlink(mem->request);
+	mem->request = NULL;
     }
     return 0;
 }
@@ -2777,7 +2778,7 @@ storeCheckExpired(const StoreEntry * e)
     return 0;
 }
 
-/* gnuplot> plot 2000**((x)+1)*60  */
+/* gnuplot> plot 724**((x)+1)*60  */
 static time_t
 storeExpiredReferenceAge(void)
 {
