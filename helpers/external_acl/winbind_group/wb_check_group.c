@@ -1,5 +1,5 @@
 /*
- * $Id: wb_check_group.c,v 1.1 2002/07/07 18:18:12 hno Exp $
+ * $Id: wb_check_group.c,v 1.2 2002/07/07 21:36:58 hno Exp $
  *
  * This is a helper for the external ACL interface for Squid Cache
  * Copyright (C) 2002 Guido Serassio <squidnt@serassio.it>
@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "winbind_nss_config.h"
 #include "winbindd_nss.h"
