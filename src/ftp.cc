@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.279 1999/01/29 17:22:42 wessels Exp $
+ * $Id: ftp.cc,v 1.280 1999/02/06 08:44:13 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -535,9 +535,9 @@ ftpListParseParts(const char *buf, struct _ftp_flags flags)
 	    /* Directory.. name begins with first printable after <dir> */
 	    ct = strstr(buf, tokens[2]);
 	    ct += strlen(tokens[2]);
-	    while (isspace(*t))
+	    while (isspace(*ct))
 		ct++;
-	    if (!*t)
+	    if (!*ct)
 		ct = NULL;
 	} else {
 	    /* A file. Name begins after size, with a space in between */
