@@ -1,3 +1,5 @@
+Changes to squid-1.2.beta15 (Feb 13, 1998):
+
 	- Fixed some problems related to disk (and pipe) write error
 	  handling.  file_close() doesn't always close the file
 	  immediately; i.e. when there are pending buffers to write.
