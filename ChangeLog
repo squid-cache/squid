@@ -1,5 +1,9 @@
 Changes to squid-1.2.alpha1 ():
 
+	- Merged squid-1.1.9, squid-1.1.10 changes
+
+Changes to squid-1.2.alpha1 ():
+
 	- Unified peer selection algorithm.
 	- aiops.c and aiops.h are a threaded implementation of
 	  asynchronous file operations (Stewart Forster).
