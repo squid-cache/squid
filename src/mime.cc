@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.76 1998/08/17 19:31:39 wessels Exp $
+ * $Id: mime.cc,v 1.77 1998/08/17 21:51:18 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -184,7 +184,15 @@ mimeGetEntry(const char *fn, int skip_encodings)
 	if (regexec(&m->compiled_pattern, name, 0, 0, 0) == 0)
 	    break;
     }
-    if (skip_encodings && m != NULL && !strcmp(m->content_type, dash_str)) {
+    if (!skip_encodings)
+	(void) 0;
+    else if (m == NULL)
+	(void) 0;
+    else if (strcmp(m->content_type, dash_str))
+	(void) 0;
+    else if (!strcmp(m->content_encoding, dash_str))
+	(void) 0;
+    else {
 	/* Assume we matched /\.\w$/ and cut off the last extension */
 	if ((t = strrchr(name, '.'))) {
 	    *t = '\0';
