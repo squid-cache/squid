@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.153 1997/10/26 07:16:38 wessels Exp $
+ * $Id: ftp.cc,v 1.154 1997/10/27 22:49:48 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1560,7 +1560,7 @@ static void
 ftpAbort(void *data)
 {
     FtpStateData *ftpState = data;
-    debug(9, 1) ("ftpAbort: %s\n", ftpState->entry->url);
+    debug(9, 2) ("ftpAbort: %s\n", ftpState->entry->url);
     if (ftpState->data.fd >= 0) {
 	comm_close(ftpState->data.fd);
 	ftpState->data.fd = -1;
