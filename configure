@@ -587,7 +587,7 @@ fi
 
 
 
-# From configure.in Revision: 1.161 
+# From configure.in Revision: 1.162 
 ac_aux_dir=
 for ac_dir in cfgaux $srcdir/cfgaux; do
   if test -f $ac_dir/install-sh; then
@@ -647,7 +647,7 @@ if test "$libexecdir" = '${exec_prefix}/libexec'; then
 fi
 
 case "$host_os" in
-cygwin32)
+cygwin32|os2)
 	exec_suffix=".exe"
 	cgi_suffix=".exe"
 	;;

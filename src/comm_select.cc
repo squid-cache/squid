@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.27 1999/01/12 23:52:08 wessels Exp $
+ * $Id: comm_select.cc,v 1.28 1999/01/13 23:24:10 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -610,6 +610,10 @@ comm_select(int msec)
 	}
 	if (msec > MAX_POLL_TIME)
 	    msec = MAX_POLL_TIME;
+#ifdef _SQUID_OS2_
+	if (msec < 0)
+	    msec = MAX_POLL_TIME;
+#endif
 	for (;;) {
 	    poll_time.tv_sec = msec / 1000;
 	    poll_time.tv_usec = (msec % 1000) * 1000;
