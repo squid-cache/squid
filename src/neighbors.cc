@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.154 1997/07/26 04:48:33 wessels Exp $
+ * $Id: neighbors.cc,v 1.155 1997/08/09 00:01:32 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -411,6 +411,7 @@ neighbors_open(int fd)
 	sep = getservbyname("echo", "udp");
 	echo_port = sep ? ntohs((u_short) sep->s_port) : 7;
     }
+    first_ping = Config.peers;
 }
 
 int
