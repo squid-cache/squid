@@ -71,6 +71,7 @@ storeSwapInFileOpened(void *data, int fd, int errcode)
     swapin_ctrl_t *ctrlp = (swapin_ctrl_t *) data;
     StoreEntry *e = ctrlp->e;
     MemObject *mem = e->mem_obj;
+    struct stat sb;
     if (fd == -2 && errcode == -2) {
 	xfree(ctrlp->path);
 	xfree(ctrlp);
@@ -88,20 +89,13 @@ storeSwapInFileOpened(void *data, int fd, int errcode)
 	xfree(ctrlp);
 	return;
     }
-    /*
-     * We can't use fstat() to check file size here because of the
-     * metadata header.  We have to parse the header first and find
-     * the header size.
-     */
-#if OLD_CODE
     if (e->swap_status == SWAPOUT_DONE && fstat(fd, &sb) == 0) {
-	if (sb.st_size == 0 || sb.st_size != e->object_len) {
-	    debug(20, 0) ("storeSwapInFileOpened: %s: Size mismatch: %d(fstat) != %d(object)\n", ctrlp->path, sb.st_size, e->object_len);
+	if (sb.st_size == 0 || sb.st_size != e->swap_file_sz) {
+	    debug(20, 0) ("storeSwapInFileOpened: %s: Size mismatch: %d(fstat) != %d(object)\n", ctrlp->path, sb.st_size, e->swap_file_sz);
 	    file_close(fd);
 	    fd = -1;
 	}
     }
-#endif
     debug(20, 5) ("storeSwapInFileOpened: initialized '%s' for '%s'\n",
 	ctrlp->path, storeUrl(e));
     (ctrlp->callback) (fd, ctrlp->callback_data);

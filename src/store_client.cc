@@ -54,7 +54,7 @@ storeClientListAdd(StoreEntry * e, void *data)
     sc->copy_offset = 0;
     sc->swapin_fd = -1;
     sc->disk_op_in_progress = 0;
-    sc->mem = mem;
+    sc->entry = e;
     if (e->store_status == STORE_PENDING && mem->swapout.fd == -1)
 	sc->type = STORE_MEM_CLIENT;
     else
@@ -97,6 +97,29 @@ storeClientCopy(StoreEntry * e,
     recurse_detect--;
 }
 
+/*
+ * This function is used below to decide if we have any more data to
+ * send to the client.  If the store_status is STORE_ABORTED, that case
+ * should be handled before this function gets called.  If the
+ * store_status is STORE_PENDING, then we do have more data to send.
+ * If its STORE_OK, then we continue checking.  If the object length is
+ * negative, then we don't know the real length and must open the swap
+ * file to find out.  If the lenght is >= 0, then we compare it to the
+ * requested copy offset.
+ */
+static int
+storeClientNoMoreToSend(StoreEntry * e, store_client * sc)
+{
+    ssize_t len;
+    if (e->store_status != STORE_OK)
+	return 0;
+    if ((len = objectLen(e)) < 0)
+	return 0;
+    if (sc->copy_offset < len)
+	return 0;
+    return 1;
+}
+
 static void
 storeClientCopy2(StoreEntry * e, store_client * sc)
 {
@@ -119,7 +142,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	sc->disk_op_in_progress = 0;
 	sc->callback = NULL;
 	callback(sc->callback_data, sc->copy_buf, 0);
-    } else if (e->store_status == STORE_OK && sc->copy_offset == e->object_len) {
+    } else if (storeClientNoMoreToSend(e, sc)) {
 	/* There is no more to send! */
 #if USE_ASYNC_IO
 	if (sc->disk_op_in_progress == 1) {
@@ -194,7 +217,7 @@ storeClientFileOpened(int fd, void *data)
 static void
 storeClientFileRead(store_client * sc)
 {
-    MemObject *mem = sc->mem;
+    MemObject *mem = sc->entry->mem_obj;
     assert(sc->callback != NULL);
     if (mem->swap_hdr_sz == 0)
 	file_read(sc->swapin_fd,
@@ -216,7 +239,7 @@ static void
 storeClientReadBody(int fd, const char *buf, int len, int flagnotused, void *data)
 {
     store_client *sc = data;
-    MemObject *mem = sc->mem;
+    MemObject *mem = sc->entry->mem_obj;
     STCB *callback = sc->callback;
     assert(sc->disk_op_in_progress != 0);
     sc->disk_op_in_progress = 0;
@@ -235,7 +258,8 @@ storeClientReadHeader(int fd, const char *buf, int len, int flagnotused, void *d
      * 'buf' should have been allocated by memAllocate(MEM_DISK_BUF)
      */
     store_client *sc = data;
-    MemObject *mem = sc->mem;
+    StoreEntry *e = sc->entry;
+    MemObject *mem = e->mem_obj;
     STCB *callback = sc->callback;
     int swap_hdr_sz = 0;
     size_t body_sz;
@@ -264,7 +288,9 @@ storeClientReadHeader(int fd, const char *buf, int len, int flagnotused, void *d
      * XXX Here we should check the meta data and make sure we got
      * the right object.
      */
+    storeSwapTLVFree(tlv_list);
     mem->swap_hdr_sz = swap_hdr_sz;
+    mem->object_sz = e->swap_file_sz - swap_hdr_sz;
     /*
      * If our last read got some data the client wants, then give
      * it to them, otherwise schedule another read.

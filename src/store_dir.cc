@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.53 1998/02/11 18:48:52 wessels Exp $
+ * $Id: store_dir.cc,v 1.54 1998/02/12 07:03:07 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -301,7 +301,7 @@ storeDirProperFileno(int dirn, int fn)
 void
 storeDirSwapLog(const StoreEntry * e, int op)
 {
-    storeSwapData *s = xcalloc(1, sizeof(storeSwapData));
+    storeSwapLogData *s = xcalloc(1, sizeof(storeSwapLogData));
     int dirn;
     dirn = e->swap_file_number >> SWAP_DIR_SHIFT;
     assert(dirn < Config.cacheSwap.n_configured);
@@ -318,20 +318,24 @@ storeDirSwapLog(const StoreEntry * e, int op)
      */
     if (EBIT_TEST(e->flag, ENTRY_SPECIAL))
 	return;
+    debug(20, 3) ("storeDirSwapLog: %s %s %08X\n",
+	op == SWAP_LOG_DEL ? "SWAP_LOG_DEL" : "SWAP_LOG_ADD",
+	storeKeyText(e->key),
+	e->swap_file_number);
     s->op = (char) op;
     s->swap_file_number = e->swap_file_number;
     s->timestamp = e->timestamp;
     s->lastref = e->lastref;
     s->expires = e->expires;
     s->lastmod = e->lastmod;
-    s->object_len = e->object_len;
+    s->swap_file_sz = e->swap_file_sz;
     s->refcount = e->refcount;
     s->flags = e->flag;
     xmemcpy(s->key, e->key, MD5_DIGEST_CHARS);
     file_write(Config.cacheSwap.swapDirs[dirn].swaplog_fd,
 	-1,
 	s,
-	sizeof(storeSwapData),
+	sizeof(storeSwapLogData),
 	NULL,
 	NULL,
 	xfree);
@@ -521,7 +525,7 @@ storeDirWriteCleanLogs(int reopen)
     dlink_node *m;
     char **outbuf;
     off_t *outbufoffset;
-    storeSwapData *s;
+    storeSwapLogData *s;
     if (store_rebuilding) {
 	debug(20, 1) ("Not currently OK to rewrite swap log.\n");
 	debug(20, 1) ("storeDirWriteCleanLogs: Operation aborted.\n");
@@ -569,7 +573,7 @@ storeDirWriteCleanLogs(int reopen)
 	    continue;
 	if (e->swap_status != SWAPOUT_DONE)
 	    continue;
-	if (e->object_len <= 0)
+	if (e->swap_file_sz <= 0)
 	    continue;
 	if (EBIT_TEST(e->flag, RELEASE_REQUEST))
 	    continue;
@@ -581,21 +585,21 @@ storeDirWriteCleanLogs(int reopen)
 	assert(dirn < Config.cacheSwap.n_configured);
 	if (fd[dirn] < 0)
 	    continue;
-	s = (storeSwapData *) (outbuf[dirn] + outbufoffset[dirn]);
-	outbufoffset[dirn] += sizeof(storeSwapData);
-	memset(s, '\0', sizeof(storeSwapData));
+	s = (storeSwapLogData *) (outbuf[dirn] + outbufoffset[dirn]);
+	outbufoffset[dirn] += sizeof(storeSwapLogData);
+	memset(s, '\0', sizeof(storeSwapLogData));
 	s->op = (char) SWAP_LOG_ADD;
 	s->swap_file_number = e->swap_file_number;
 	s->timestamp = e->timestamp;
 	s->lastref = e->lastref;
 	s->expires = e->expires;
 	s->lastmod = e->lastmod;
-	s->object_len = e->object_len;
+	s->swap_file_sz = e->swap_file_sz;
 	s->refcount = e->refcount;
 	s->flags = e->flag;
 	xmemcpy(s->key, e->key, MD5_DIGEST_CHARS);
 	/* buffered write */
-	if (outbufoffset[dirn] + sizeof(storeSwapData) > CLEAN_BUF_SZ) {
+	if (outbufoffset[dirn] + sizeof(storeSwapLogData) > CLEAN_BUF_SZ) {
 	    if (write(fd[dirn], outbuf[dirn], outbufoffset[dirn]) < 0) {
 		debug(50, 0) ("storeDirWriteCleanLogs: %s: write: %s\n",
 		    new[dirn], xstrerror());
