@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.180 1997/12/06 05:16:56 wessels Exp $
+ * $Id: ftp.cc,v 1.181 1997/12/31 17:52:04 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1378,6 +1378,7 @@ ftpSendPasv(FtpStateData * ftpState)
 	ftpFail(ftpState);
 	return;
     }
+    comm_add_close_handler(fd, ftpStateFree, ftpState);
     ftpState->data.fd = fd;
     snprintf(cbuf, 1024, "PASV\r\n");
     ftpWriteCommand(cbuf, ftpState);
@@ -1403,7 +1404,7 @@ ftpReadPasv(FtpStateData * ftpState)
 	return;
     }
     if (strlen(buf) > 1024) {
-	debug(9, 1) ("Avoiding potential buffer overflow\n");
+	debug(9, 1) ("ftpReadPasv: Avoiding potential buffer overflow\n");
 	ftpSendPort(ftpState);
 	return;
     }
