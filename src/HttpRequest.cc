@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.19 1998/12/05 00:54:12 wessels Exp $
+ * $Id: HttpRequest.cc,v 1.20 1999/01/11 22:23:07 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -43,7 +43,6 @@ requestCreate(method_t method, protocol_t protocol, const char *urlpath)
     req->protocol = protocol;
     if (urlpath)
 	stringReset(&req->urlpath, urlpath);
-    req->max_age = -1;
     req->max_forwards = -1;
 #if DELAY_POOLS
     req->delay_id = 0;
