@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.260 1998/04/07 23:40:34 rousskov Exp $
+ * $Id: client_side.cc,v 1.261 1998/04/07 23:51:36 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1857,8 +1857,8 @@ clientReadRequest(int fd, void *data)
 		break;
 	    }
 	    if (0 == http->internal)
-		if (0 == strncmp(request->urlpath, "/squid-internal/", 16))
-		    if (0 == strcasecmp(request->host, getMyHostname())
+		if (0 == strNCmp(request->urlpath, "/squid-internal/", 16))
+		    if (0 == strcasecmp(request->host, getMyHostname()))
 		        if (request->port == Config.Port.http->i)
 	                    http->internal = 1;
 	    safe_free(http->log_uri);
