@@ -1,6 +1,6 @@
 
 /*
- * $Id: filemap.cc,v 1.26 1998/05/22 23:28:37 wessels Exp $
+ * $Id: filemap.cc,v 1.27 1998/05/22 23:42:12 wessels Exp $
  *
  * DEBUG: section 8     Swap File Bitmap
  * AUTHOR: Harvest Derived
@@ -150,7 +150,7 @@ file_map_bit_set(fileMap * fm, int file_number)
 	    "\tConsider decreasing store_avg_object_size in squid.conf\n",
             percent(fm->n_files_in_map, fm->max_n_files));
     } else if (fm->n_files_in_map > (fm->max_n_files - 100)) {
-	fatal("You've run out of swap file numbers.");
+	fatal_dump("You've run out of swap file numbers.");
     }
     return (file_number);
 }
