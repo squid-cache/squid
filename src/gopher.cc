@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.120 1998/03/03 00:31:06 rousskov Exp $
+ * $Id: gopher.cc,v 1.121 1998/03/04 23:52:41 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -686,7 +686,8 @@ gopherReadReply(int fd, void *data)
     len = read(fd, buf, TEMP_BUF_SIZE - 1);
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);
-	kb_incr(&Counter.server.kbytes_in, len);
+	kb_incr(&Counter.server.all.kbytes_in, len);
+	kb_incr(&Counter.server.other.kbytes_in, len);
     }
     debug(10, 5) ("gopherReadReply: FD %d read len=%d\n", fd, len);
     if (len > 0) {
@@ -753,7 +754,8 @@ gopherSendComplete(int fd, char *buf, size_t size, int errflag, void *data)
 	fd, size, errflag);
     if (size > 0) {
 	fd_bytes(fd, size, FD_WRITE);
-	kb_incr(&Counter.server.kbytes_out, size);
+	kb_incr(&Counter.server.all.kbytes_out, size);
+        kb_incr(&Counter.server.other.kbytes_out, size);
     }
     if (errflag) {
 	ErrorState *err;
@@ -841,6 +843,8 @@ gopherStart(StoreEntry * entry)
     storeLockObject(entry);
     gopherState->entry = entry;
     debug(10, 3) ("gopherStart: %s\n", storeUrl(entry));
+    Counter.server.all.requests++;
+    Counter.server.other.requests++;
     /* Parse url. */
     if (gopher_url_parser(storeUrl(entry), gopherState->host, &gopherState->port,
 	    &gopherState->type_id, gopherState->request)) {
