@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.29 1996/08/19 22:44:52 wessels Exp $
+ * $Id: errorpage.cc,v 1.30 1996/08/23 21:24:19 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -144,6 +144,7 @@ void squid_error_entry(entry, type, msg)
     if (type < ERR_MIN || type > ERR_MAX)
 	fatal_dump("squid_error_entry: type out of range.");
     index = (int) (type - ERR_MIN);
+    debug(4, 1, "%s: '%s'\n", ErrorData[index].tag, entry->url);
     sprintf(tmp_error_buf, SQUID_ERROR_MSG_P1,
 	entry->url,
 	entry->url,
@@ -178,11 +179,11 @@ char *squid_error_url(url, method, type, address, code, msg)
      char *msg;
 {
     int index;
-
     *tmp_error_buf = '\0';
     if (type < ERR_MIN || type > ERR_MAX)
 	fatal_dump("squid_error_url: type out of range.");
     index = (int) (type - ERR_MIN);
+    debug(4, 1, "%s: '%s'\n", ErrorData[index].tag, url);
     sprintf(tmp_error_buf, "HTTP/1.0 %d Cache Detected Error\r\nContent-type: text/html\r\n\r\n", code);
     sprintf(tbuf, SQUID_ERROR_MSG_P1,
 	url,
@@ -225,10 +226,12 @@ char *squid_error_request(request, type, address, code)
      char *address;
      int code;
 {
+    int index;
     *tmp_error_buf = '\0';
     if (type < ERR_MIN || type > ERR_MAX)
 	fatal_dump("squid_error_request: type out of range.");
-
+    index = (int) (type - ERR_MIN);
+    debug(4, 1, "%s: '%s'\n", ErrorData[index].tag, request);
     sprintf(tmp_error_buf, "HTTP/1.0 %d Cache Detected Error\r\nContent-type: text/html\r\n\r\n", code);
     sprintf(tbuf, SQUID_REQUEST_ERROR_MSG,
 	request,
