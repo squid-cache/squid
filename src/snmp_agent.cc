@@ -40,6 +40,7 @@ snmp_agent_parse(snmp_request_t *rq)
     u_char *Community;
 
     /* Now that we have the data, turn it into a PDU */
+    cbdataAdd(rq,MEM_NONE);
     PDU = snmp_pdu_create(0);
     Community = snmp_parse(Session, PDU, buf, len);
     rq->community=Community;
@@ -52,6 +53,7 @@ snmp_agent_parse(snmp_request_t *rq)
 
 	snmp_free_pdu(PDU);
     	snmp_agent_parse_done(0, rq);
+	return;
     }
     snmpAclCheckStart(rq);
 }
@@ -60,7 +62,6 @@ void
 snmpAclCheckStart(snmp_request_t *rq)
 {
 	communityEntry *cp;
-	cbdataAdd(rq,MEM_NONE);
 	for (cp=Config.Snmp.communities;cp!=NULL;cp=cp->next) 
 		if (!strcmp(rq->community, cp->name) && cp->acls) {
         		rq->acl_checklist= aclChecklistCreate(cp->acls,
@@ -85,11 +86,9 @@ snmpAclCheckDone(int answer, void *data)
    
     debug(49,5)("snmpAclCheckDone: called with answer=%d.\n",answer);
     rq->acl_checklist = NULL;
-    cbdataFree(rq);
     PDU=rq->PDU;
     Community=rq->community;
     if (answer==ACCESS_DENIED) {
-		xfree(Community);
 		debug(49,5)("snmpAclCheckDone: failed on acl.\n");
     		snmp_agent_parse_done(0, rq);
 		return;
@@ -104,20 +103,17 @@ snmpAclCheckDone(int answer, void *data)
 	/* access check for each variable */
 
     	if (!community_check(Community, VarPtr->name, VarPtr->name_length)) {
-		xfree(Community);
 		debug(49,5)("snmpAclCheckDone: failed on community_check.\n");
     		snmp_agent_parse_done(0, rq);
 		return;
     	}
     }
-    xfree(Session->community);
     Session->community=xstrdup(Community);
     Session->community_len=strlen(Community);
     RespPDU = snmp_agent_response(PDU);
     snmp_free_pdu(PDU);
     if (RespPDU == NULL) {
 	debug(49, 8) ("snmpAclCheckDone: RespPDU == NULL. Returning code 2.\n");
-	xfree(Community);
 	debug(49,5)("snmpAclCheckDone: failed on RespPDU==NULL.\n");
     	snmp_agent_parse_done(2, rq);
 	return;
@@ -129,7 +125,7 @@ snmpAclCheckDone(int answer, void *data)
     ret = snmp_build(Session, RespPDU, outbuf, &rq->outlen);
     /* XXXXX Handle failure */
     snmp_free_pdu(RespPDU);
-    xfree(Community);
+	/* XXX maybe here */
     debug(49,5)("snmpAclCheckDone: ok!\n");
     snmp_agent_parse_done(1, rq);
 }
