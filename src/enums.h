@@ -506,6 +506,7 @@ enum {
 
 typedef enum {
     MEM_NONE,
+    MEM_DONTFREE,
     MEM_DISK_BUF,
     MEM_STMEM_BUF,
     MEM_4K_BUF,
