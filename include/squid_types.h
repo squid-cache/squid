@@ -1,5 +1,5 @@
 /*
- * $Id: squid_types.h,v 1.7 2003/01/23 00:36:48 robertc Exp $
+ * $Id: squid_types.h,v 1.8 2003/06/01 09:01:41 hno Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -69,6 +69,9 @@
 #endif
 #if HAVE_SYS_BITYPES_H
 #include <sys/bitypes.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 #endif /* SQUID_TYPES_H */
