@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.342 2002/10/21 05:47:25 adrian Exp $
+ * $Id: comm.cc,v 1.343 2002/10/21 05:54:12 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -567,6 +567,11 @@ comm_recv(int fd, void *buf, size_t len, int flags)
 	return comm_recvfrom(fd, buf, len, flags, NULL, 0);
 }
 
+ssize_t
+comm_send(int s, const void *buf, size_t len, int flags)
+{
+	return send(s, buf, len, flags);
+}
 
 
 /* Older stuff */
