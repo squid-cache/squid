@@ -1,7 +1,7 @@
 
 /*
- * $Id: store.cc,v 1.490 1999/04/23 02:57:36 wessels Exp $
- * $Id: store.cc,v 1.490 1999/04/23 02:57:36 wessels Exp $
+ * $Id: store.cc,v 1.491 1999/05/03 20:39:33 wessels Exp $
+ * $Id: store.cc,v 1.491 1999/05/03 20:39:33 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -410,14 +410,8 @@ storeAppend(StoreEntry * e, const char *buf, int len)
     }
     if (EBIT_TEST(e->flags, DELAY_SENDING))
 	return;
-#ifdef OPTIMISTIC_IO
-    storeLockObject(e);
-#endif
     InvokeHandlers(e);
     storeCheckSwapOut(e);
-#ifdef OPTIMISTIC_IO
-    storeUnlockObject(e);
-#endif
 }
 
 void

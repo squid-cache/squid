@@ -1,7 +1,7 @@
 
 /*
- * $Id: store_client.cc,v 1.63 1999/04/23 02:57:37 wessels Exp $
- * $Id: store_client.cc,v 1.63 1999/04/23 02:57:37 wessels Exp $
+ * $Id: store_client.cc,v 1.64 1999/05/03 20:39:35 wessels Exp $
+ * $Id: store_client.cc,v 1.64 1999/05/03 20:39:35 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -315,9 +315,6 @@ storeClientFileRead(store_client * sc)
 {
     MemObject *mem = sc->entry->mem_obj;
     assert(sc->callback != NULL);
-#ifdef OPTIMISTIC_IO
-    sc->flags.disk_io_pending = 1;
-#endif
     if (mem->swap_hdr_sz == 0) {
 	file_read(sc->swapin_fd,
 	    sc->copy_buf,
@@ -335,9 +332,6 @@ storeClientFileRead(store_client * sc)
 	    storeClientReadBody,
 	    sc);
     }
-#ifndef OPTIMISTIC_IO
-    sc->flags.disk_io_pending = 1;
-#endif
 }
 
 static void
