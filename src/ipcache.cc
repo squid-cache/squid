@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.212 1999/04/14 06:35:46 wessels Exp $
+ * $Id: ipcache.cc,v 1.213 1999/04/15 06:03:49 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -334,41 +334,58 @@ ipcacheParse(const char *inbuf)
 }
 #else
 static ipcache_entry *
-ipcacheParse(rfc1035_rr * answers, int na)
+ipcacheParse(rfc1035_rr * answers, int nr)
 {
     static ipcache_entry i;
+    int k;
+    int j;
+    int na = 0;
     memset(&i, '\0', sizeof(i));
     i.expires = squid_curtime;
     i.status = IP_NEGATIVE_CACHED;
-    if (na < 0) {
-	debug(14, 1) ("ipcacheParse: Lookup failed\n");
-	debug(14, 1) ("\trfc1035_errno = %d\n", rfc1035_errno);
+    if (nr < 0) {
+	debug(14, 1) ("ipcacheParse: Lookup failed (error %d)\n",
+	    rfc1035_errno);
 	assert(rfc1035_error_message);
 	i.error_message = xstrdup(rfc1035_error_message);
-    } else if (na == 0) {
+	return &i;
+    }
+    if (nr == 0) {
+	debug(14, 1) ("ipcacheParse: No DNS records\n");
+	i.error_message = xstrdup("No DNS records");
+	return &i;
+    }
+    assert(answers);
+    for (j = 0, k = 0; k < nr; k++) {
+	if (answers[k].type != RFC1035_TYPE_A)
+	    continue;
+	if (answers[k].class != RFC1035_CLASS_IN)
+	    continue;
+	na++;
+    }
+    if (na == 0) {
 	debug(14, 1) ("ipcacheParse: No Address records\n");
 	i.error_message = xstrdup("No Address records");
-    } else {
-	int k;
-	int j;
-	assert(answers);
-	i.status = IP_CACHED;
-	i.expires = squid_curtime + answers->ttl;
-	i.addrs.in_addrs = xcalloc(na, sizeof(struct in_addr));
-	i.addrs.bad_mask = xcalloc(na, sizeof(unsigned char));
-	for (j = 0, k = 0; k < na; k++) {
-	    if (answers[k].type != RFC1035_TYPE_A)
-		continue;
-	    if (answers[k].class != RFC1035_CLASS_IN)
-		continue;
-	    assert(answers[k].rdlength == 4);
-	    xmemcpy(&i.addrs.in_addrs[j++], answers[k].rdata, 4);
-	    debug(14, 3) ("ipcacheParse: #%d %s\n",
-		j - 1,
-		inet_ntoa(i.addrs.in_addrs[j - 1]));
-	}
-	i.addrs.count = (unsigned char) j;
+	return &i;
     }
+    i.status = IP_CACHED;
+    i.addrs.in_addrs = xcalloc(na, sizeof(struct in_addr));
+    i.addrs.bad_mask = xcalloc(na, sizeof(unsigned char));
+    i.addrs.count = (unsigned char) na;
+    for (j = 0, k = 0; k < nr; k++) {
+	if (answers[k].type != RFC1035_TYPE_A)
+	    continue;
+	if (answers[k].class != RFC1035_CLASS_IN)
+	    continue;
+	if (j == 0)
+	    i.expires = squid_curtime + answers[k].ttl;
+	assert(answers[k].rdlength == 4);
+	xmemcpy(&i.addrs.in_addrs[j++], answers[k].rdata, 4);
+	debug(14, 3) ("ipcacheParse: #%d %s\n",
+	    j - 1,
+	    inet_ntoa(i.addrs.in_addrs[j - 1]));
+    }
+    assert(j == na);
     return &i;
 }
 #endif

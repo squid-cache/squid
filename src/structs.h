@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.278 1999/04/14 05:16:20 wessels Exp $
+ * $Id: structs.h,v 1.279 1999/04/15 06:03:50 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1678,7 +1678,8 @@ struct _idns_query {
     size_t sz;
     unsigned short id;
     int nsends;
-    struct timeval start;
+    struct timeval start_t;
+    struct timeval sent_t;
     dlink_node lru;
     IDNSCB *callback;
     void *callback_data;
