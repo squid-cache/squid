@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.34 1996/09/14 08:45:32 wessels Exp $
+ * $Id: acl.cc,v 1.35 1996/09/14 16:05:39 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -51,9 +51,6 @@ static int aclMatchInteger(intlist * data, int i);
 static int aclMatchIp(struct _acl_ip_data *data, struct in_addr c);
 static int aclMatchRegex(relist * data, char *word);
 static int aclMatchTime(struct _acl_time_data *data, time_t when);
-#ifdef UNUSED_CODE
-static int aclMatchEndOfWord(wordlist * data, char *word);
-#endif
 static intlist *aclParseIntlist(void);
 static struct _acl_ip_data *aclParseIpList(void);
 static intlist *aclParseMethodList(void);
@@ -656,40 +653,6 @@ aclMatchIp(struct _acl_ip_data *data, struct in_addr c)
     debug(28, 3, "aclMatchIp: returning 0\n");
     return 0;
 }
-
-#ifdef UNUSED_CODE
-static int
-aclMatchWord(wordlist * data, char *word)
-{
-    if (word == NULL)
-	return 0;
-    debug(28, 3, "aclMatchWord: checking '%s'\n", word);
-    while (data) {
-	debug(28, 3, "aclMatchWord: looking for '%s'\n", data->key);
-	if (strstr(word, data->key))
-	    return 1;
-	data = data->next;
-    }
-    return 0;
-}
-
-static int
-aclMatchEndOfWord(wordlist * data, char *word)
-{
-    int offset;
-    if (word == NULL)
-	return 0;
-    debug(28, 3, "aclMatchEndOfWord: checking '%s'\n", word);
-    for (; data; data = data->next) {
-	debug(28, 3, "aclMatchEndOfWord: looking for '%s'\n", data->key);
-	if ((offset = strlen(word) - strlen(data->key)) < 0)
-	    continue;
-	if (strcasecmp(word + offset, data->key) == 0)
-	    return 1;
-    }
-    return 0;
-}
-#endif
 
 static int
 aclMatchDomainList(wordlist * data, char *host)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.23 1996/09/14 08:45:41 wessels Exp $
+ * $Id: client_side.cc,v 1.24 1996/09/14 16:05:41 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -103,7 +103,9 @@ clientProxyAuthCheck(icpStateData * icpState)
 #endif /* USE_PROXY_AUTH */
 
 void
-clientAccessCheck(icpStateData * icpState, void (*handler) _PARAMS((icpStateData *, int)))
+clientAccessCheck(icpStateData * icpState,
+	void (*handler) (icpStateData *,
+	int))
 {
     int answer = 1;
     request_t *r = icpState->request;

@@ -1,5 +1,5 @@
 /*
- * $Id: stmem.cc,v 1.20 1996/09/14 08:46:28 wessels Exp $
+ * $Id: stmem.cc,v 1.21 1996/09/14 16:05:49 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -247,57 +247,6 @@ memAppend(mem_ptr mem, char *data, int len)
     return len;
 }
 
-#ifdef UNUSED_CODE
-int
-memGrep(mem_ptr mem, char *string, int nbytes)
-{
-    mem_node p = mem->head;
-    char *str_i, *mem_i;
-    int i = 0, blk_idx = 0, state, goal;
-
-    debug(19, 6, "memGrep: looking for %s in less than %d bytes.\n",
-	string, nbytes);
-
-    if (!p)
-	return 0;
-
-    if (mem->origin_offset != 0) {
-	debug(19, 1, "memGrep: Some lower chunk of data has been erased. Can't do memGrep!\n");
-	return 0;
-    }
-    str_i = string;
-    mem_i = p->data;
-    state = 1;
-    goal = strlen(string);
-
-    while (i < nbytes) {
-	if (tolower(*mem_i++) == tolower(*str_i++))
-	    state++;
-	else {
-	    state = 1;
-	    str_i = string;
-	}
-
-	i++;
-	blk_idx++;
-
-	/* Return offset of byte beyond the matching string */
-	if (state == goal)
-	    return (i + 1);
-
-	if (blk_idx >= p->len) {
-	    if (p->next) {
-		p = p->next;
-		mem_i = p->data;
-		blk_idx = 0;
-	    } else
-		break;
-	}
-    }
-    return 0;
-}
-#endif
-
 int
 memCopy(mem_ptr mem, int offset, char *buf, int size)
 {
@@ -366,9 +315,6 @@ memInit()
     new->mem_free_data_upto = memFreeDataUpto;
     new->mem_append = memAppend;
     new->mem_copy = memCopy;
-#ifdef UNUSED_CODE
-    new->mem_grep = memGrep;
-#endif
     return new;
 }
 

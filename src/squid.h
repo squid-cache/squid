@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.45 1996/09/14 08:46:23 wessels Exp $
+ * $Id: squid.h,v 1.46 1996/09/14 16:05:48 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -216,7 +216,7 @@ typedef unsigned long u_num32;
 #include "GNUregex.h"
 #include "ansihelp.h"
 
-typedef void (*SIH) _PARAMS((int, void *));	/* swap in */
+typedef void (*SIH) (int, void *);	/* swap in */
 typedef int (*QS) (const void *, const void *);
 
 #include "cache_cf.h"

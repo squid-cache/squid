@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.23 1996/09/14 08:45:47 wessels Exp $
+ * $Id: disk.cc,v 1.24 1996/09/14 16:05:42 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -185,32 +185,6 @@ file_open(char *path, int (*handler) (), int mode)
     return fd;
 }
 
-#ifdef UNUSED_CODE
-int file_update_open(int fd, char *path;	/* path to file */
-) {
-    FD_ENTRY *conn;
-
-    /* update fdstat */
-    fdstat_open(fd, FD_FILE);
-
-    /* init table */
-    strncpy(file_table[fd].filename, path, MAX_FILE_NAME_LEN);
-    file_table[fd].at_eof = NO;
-    file_table[fd].open_stat = FILE_OPEN;
-    file_table[fd].close_request = NOT_REQUEST;
-    file_table[fd].write_lock = UNLOCK;
-    file_table[fd].write_pending = NO_WRT_PENDING;
-    file_table[fd].write_daemon = NOT_PRESENT;
-    file_table[fd].access_code = 0;
-    file_table[fd].write_q = NULL;
-
-    conn = &fd_table[fd];
-    memset(conn, '\0', sizeof(FD_ENTRY));
-    conn->comm_type = COMM_NONBLOCKING;
-    return fd;
-}
-#endif
-
 
 /* close a disk file. */
 int 
@@ -358,7 +332,13 @@ diskHandleWrite(int fd, FileEntry * entry)
 /* write back queue. Only one writer at a time. */
 /* call a handle when writing is complete. */
 int
-file_write(int fd, char *ptr_to_buf, int len, int access_code, void (*handle) (), void *handle_data, void (*free) _PARAMS((void *)))
+file_write(int fd,
+	char *ptr_to_buf,
+	int len,
+	int access_code,
+	void (*handle) (),
+	void *handle_data,
+	void (*free) (void *))
 {
     dwrite_q *wq = NULL;
 
