@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.64 1998/02/07 07:55:32 wessels Exp $
+ * $Id: net_db.cc,v 1.65 1998/02/07 08:13:40 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -595,8 +595,8 @@ netdbDump(StoreEntry * sentry)
     int i;
     int j;
     net_db_peer *p;
-    storeAppendPrintf(sentry, "{Network DB Statistics:\n");	/* } */
-    storeAppendPrintf(sentry, "{%-16.16s %9s %7s %5s %s}\n",
+    storeAppendPrintf(sentry, "Network DB Statistics:\n");
+    storeAppendPrintf(sentry, "%-16.16s %9s %7s %5s %s\n",
 	"Network",
 	"recv/sent",
 	"RTT",
@@ -618,7 +618,7 @@ netdbDump(StoreEntry * sentry)
 	sortByRtt);
     for (k = 0; k < i; k++) {
 	n = *(list + k);
-	storeAppendPrintf(sentry, "{%-16.16s %4d/%4d %7.1f %5.1f",	/* } */
+	storeAppendPrintf(sentry, "%-16.16s %4d/%4d %7.1f %5.1f",
 	    n->network,
 	    n->pings_recv,
 	    n->pings_sent,
@@ -626,16 +626,14 @@ netdbDump(StoreEntry * sentry)
 	    n->hops);
 	for (x = n->hosts; x; x = x->next)
 	    storeAppendPrintf(sentry, " %s", x->name);
-	storeAppendPrintf(sentry, close_bracket);
 	p = n->peers;
 	for (j = 0; j < n->n_peers; j++, p++) {
-	    storeAppendPrintf(sentry, "{    %-22.22s %7.1f %5.1f}\n",
+	    storeAppendPrintf(sentry, "    %-22.22s %7.1f %5.1f\n",
 		p->peername,
 		p->rtt,
 		p->hops);
 	}
     }
-    storeAppendPrintf(sentry, close_bracket);
     xfree(list);
 #else
     storeAppendPrintf(sentry,
