@@ -99,18 +99,18 @@ urnStart(request_t *r, StoreEntry *e)
     urnState->request = requestLink(r);
     cbdataAdd(urnState);
     storeLockObject(urnState->entry);
+    if (strncasecmp(r->urlpath, "menu.", 5) == 0) {
+	EBIT_SET(urnState->flags, URN_FORCE_MENU);
+	t = xstrdup(r->urlpath + 5);
+	xstrncpy(r->urlpath, t, MAX_URL);
+	xfree(t);
+    }
     if ((t = strchr(r->urlpath, ':')) != NULL) {
     	*t = '\0';
     	host = xstrdup(r->urlpath);
     	*t = ':';
     } else {
 	host = xstrdup(r->urlpath);
-    }
-    if (strncasecmp(host, "menu.", 5) == 0) {
-	EBIT_SET(urnState->flags, URN_FORCE_MENU);
-	t = xstrdup(host + 5);
-	xfree(host);
-	host = t;
     }
     snprintf(urlres, 4096, "http://%s/uri-res/N2L?urn:%s", host, r->urlpath);
     safe_free(host);
