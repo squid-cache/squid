@@ -1,6 +1,6 @@
 
-/* $Id: store.cc,v 1.59 1996/04/17 20:59:32 wessels Exp $ */
-#ident "$Id: store.cc,v 1.59 1996/04/17 20:59:32 wessels Exp $"
+/* $Id: store.cc,v 1.60 1996/04/17 21:03:15 wessels Exp $ */
+#ident "$Id: store.cc,v 1.60 1996/04/17 21:03:15 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
@@ -1399,7 +1399,7 @@ static void storeRebuiltFromDisk(data)
     sprintf(tmp_filename, "%s.new", swaplog_file);
     if (rename(tmp_filename, swaplog_file) < 0) {
 	debug(20, 0, "storeRebuiltFromDisk: %s,%s: %s\n",
-		tmp_filename, swaplog_file, xstrerror());
+	    tmp_filename, swaplog_file, xstrerror());
 	fatal_dump("storeRebuiltFromDisk: rename failed");
     }
     if (file_write_unlock(swaplog_fd, swaplog_lock) != DISK_OK)

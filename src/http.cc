@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.55 1996/04/17 20:58:48 wessels Exp $ */
+/* $Id: http.cc,v 1.56 1996/04/17 21:03:14 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -526,7 +526,6 @@ int proxyhttpStart(e, url, entry)
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
 	return COMM_ERROR;
     }
-
     data = (HttpData *) xcalloc(1, sizeof(HttpData));
     data->entry = entry;
     data->req_hdr = entry->mem_obj->mime_hdr;
@@ -601,7 +600,6 @@ int httpStart(unusedfd, url, request, req_hdr, entry)
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
 	return COMM_ERROR;
     }
-
     data = (HttpData *) xcalloc(1, sizeof(HttpData));
     data->entry = entry;
     data->req_hdr = req_hdr;
