@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.462 1999/10/04 05:05:04 wessels Exp $
+ * $Id: client_side.cc,v 1.463 1999/12/11 15:55:08 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1729,7 +1729,7 @@ clientKeepaliveNextRequest(clientHttpRequest * http)
 	/*
 	 * Set the timeout BEFORE calling clientReadRequest().
 	 */
-	commSetTimeout(conn->fd, 15, requestTimeout, conn);
+	commSetTimeout(conn->fd, Config.Timeout.pconn, requestTimeout, conn);
 	clientReadRequest(conn->fd, conn);	/* Read next request */
 	/*
 	 * Note, the FD may be closed at this point.
