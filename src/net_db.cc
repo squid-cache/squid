@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.122 1998/08/13 21:14:40 wessels Exp $
+ * $Id: net_db.cc,v 1.123 1998/08/20 15:30:23 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -969,7 +969,7 @@ netdbDeleteAddrNetwork(struct in_addr addr)
     netdbEntry *n = netdbLookupAddr(addr);
     if (n == NULL)
 	return;
-    debug(38, 1) ("netdbDeleteAddrNetwork: %s\n", n->network);
+    debug(38, 3) ("netdbDeleteAddrNetwork: %s\n", n->network);
     netdbRelease(n);
 #endif
 }
@@ -1047,7 +1047,7 @@ netdbExchangeStart(void *data)
     cbdataLock(p);
     ex->p = p;
     uri = internalRemoteUri(p->host, p->http_port, "/squid-internal-dynamic/", "netdb");
-    debug(38, 1) ("netdbExchangeStart: Requesting '%s'\n", uri);
+    debug(38, 3) ("netdbExchangeStart: Requesting '%s'\n", uri);
     assert(NULL != uri);
     ex->r = urlParse(METHOD_GET, uri);
     if (NULL == ex->r) {
