@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.48 1997/08/25 02:25:45 wessels Exp $
+ * $Id: stmem.cc,v 1.49 1997/10/17 00:00:02 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -141,35 +141,12 @@ memFree(mem_hdr * mem)
     safe_free(mem);
 }
 
-#ifdef UNUSED_CODE
-void
-memFreeData(mem_hdr * mem)
-{
-    mem_node *lastp;
-    mem_node *p = mem->head;
-    while (p != mem->tail) {
-	lastp = p;
-	p = p->next;
-	put_free_4k_page(lastp->data);
-	safe_free(lastp);
-    }
-    if (p != NULL) {
-	put_free_4k_page(p->data);
-	safe_free(p);
-	p = NULL;
-    }
-    mem->head = mem->tail = NULL;	/* detach in case ref'd */
-    mem->origin_offset = 0;
-}
-#endif
-
 int
 memFreeDataUpto(mem_hdr * mem, int target_offset)
 {
     int current_offset = mem->origin_offset;
     mem_node *lastp;
     mem_node *p = mem->head;
-
     while (p && ((current_offset + p->len) <= target_offset)) {
 	if (p == mem->tail) {
 	    /* keep the last one to avoid change to other part of code */
@@ -184,21 +161,15 @@ memFreeDataUpto(mem_hdr * mem, int target_offset)
 	    safe_free(lastp);
 	}
     }
-
     mem->head = p;
     mem->origin_offset = current_offset;
     if (current_offset < target_offset) {
 	/* there are still some data left. */
 	return current_offset;
     }
-    if (current_offset != target_offset) {
-	debug(19, 1) ("memFreeDataUpto: This shouldn't happen. Some odd condition.\n");
-	debug(19, 1) ("   Current offset: %d  Target offset: %d  p: %p\n",
-	    current_offset, target_offset, p);
-    }
+    assert(current_offset == target_offset);
     return current_offset;
 }
-
 
 /* Append incoming data. */
 void
@@ -207,13 +178,10 @@ memAppend(mem_hdr * mem, const char *data, int len)
     mem_node *p;
     int avail_len;
     int len_to_copy;
-
     debug(19, 6) ("memAppend: len %d\n", len);
-
     /* Does the last block still contain empty space? 
      * If so, fill out the block before dropping into the
      * allocation loop */
-
     if (mem->head && mem->tail && (mem->tail->len < SM_PAGE_SIZE)) {
 	avail_len = SM_PAGE_SIZE - (mem->tail->len);
 	len_to_copy = min(avail_len, len);
@@ -230,7 +198,6 @@ memAppend(mem_hdr * mem, const char *data, int len)
 	p->len = len_to_copy;
 	p->data = get_free_4k_page();
 	xmemcpy(p->data, data, len_to_copy);
-
 	if (!mem->head) {
 	    /* The chain is empty */
 	    mem->head = mem->tail = p;

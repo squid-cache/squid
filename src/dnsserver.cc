@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.35 1997/10/13 22:09:07 kostas Exp $
+ * $Id: dnsserver.cc,v 1.36 1997/10/16 23:59:53 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -212,6 +212,7 @@
 
 #include "ansiproto.h"
 #include "util.h"
+#include "snprintf.h"
 
 extern int h_errno;
 

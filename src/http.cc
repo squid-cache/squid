@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.189 1997/10/14 18:31:24 wessels Exp $
+ * $Id: http.cc,v 1.190 1997/10/16 23:59:57 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -109,8 +109,6 @@
  */
 
 #include "squid.h"
-
-#define HTTP_DELETE_GAP   (1<<18)
 
 static const char *const crlf = "\r\n";
 
@@ -588,9 +586,9 @@ httpPconnTransferDone(HttpStateData * httpState)
      * then we can recycle this connection.
      */
     debug(11, 5) ("httpPconnTransferDone: hdr_sz=%d\n", reply->hdr_sz);
-    debug(11, 5) ("httpPconnTransferDone: e_current_len=%d\n",
-	mem->e_current_len);
-    if (mem->e_current_len < reply->content_length + reply->hdr_sz)
+    debug(11, 5) ("httpPconnTransferDone: inmem_hi=%d\n",
+	mem->inmem_hi);
+    if (mem->inmem_hi < reply->content_length + reply->hdr_sz)
 	return 0;
     return 1;
 }
@@ -616,9 +614,9 @@ httpReadReply(int fd, void *data)
 	return;
     }
     /* check if we want to defer reading */
-    clen = entry->mem_obj->e_current_len;
-    off = storeGetLowestReaderOffset(entry);
-    if ((clen - off) > HTTP_DELETE_GAP) {
+    clen = entry->mem_obj->inmem_hi;
+    off = storeLowestMemReaderOffset(entry);
+    if ((clen - off) > READ_AHEAD_GAP) {
 	IOStats.Http.reads_deferred++;
 	debug(11, 3) ("httpReadReply: Read deferred for Object: %s\n",
 	    entry->url);
@@ -668,7 +666,7 @@ httpReadReply(int fd, void *data)
 	}
 	debug(50, 2) ("httpReadReply: FD %d: read failure: %s.\n",
 	    fd, xstrerror());
-    } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
+    } else if (len == 0 && entry->mem_obj->inmem_hi == 0) {
 	if (fd_table[fd].uses > 1) {
 	    httpRestart(httpState);
 	} else {

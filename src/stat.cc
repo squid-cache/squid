@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.157 1997/10/13 22:09:20 kostas Exp $
+ * $Id: stat.cc,v 1.158 1997/10/17 00:00:01 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -291,8 +291,6 @@ describeFlags(const StoreEntry * entry)
     int flags = (int) entry->flag;
     char *t;
     buf[0] = '\0';
-    if (BIT_TEST(flags, DELETE_BEHIND))
-	strcat(buf, "DB,");
     if (BIT_TEST(flags, DELAY_SENDING))
 	strcat(buf, "DS,");
     if (BIT_TEST(flags, RELEASE_REQUEST))
@@ -354,7 +352,7 @@ statObjects(StoreEntry * sentry, int vm_or_not)
 	    describeTimestamps(entry),
 	    (int) entry->refcount,
 	    storePendingNClients(entry),
-	    mem ? mem->e_current_len : entry->object_len,
+	    mem ? mem->inmem_hi : entry->object_len,
 	    entry->url);
     }
     storeAppendPrintf(sentry, close_bracket);

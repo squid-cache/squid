@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.73 1997/10/16 20:42:24 kostas Exp $
+ * $Id: errorpage.cc,v 1.74 1997/10/16 23:59:54 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -132,7 +132,7 @@ errorConvert(char token, ErrorState * err)
 	p=buf;
 	break;
     case 'E':
-	snprintf(buf, CVT_BUF_SZ, "(%d) %s", err->errno,xbstrerror(err->errno));
+	snprintf(buf, CVT_BUF_SZ, "(%d) %s", err->errno, strerror(err->errno));
 	break;
     case 'w':
 	snprintf(buf, CVT_BUF_SZ, "%s",Config.adminEmail);

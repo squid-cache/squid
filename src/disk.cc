@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.77 1997/07/14 19:24:36 wessels Exp $
+ * $Id: disk.cc,v 1.78 1997/10/16 23:59:53 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -265,6 +265,8 @@ diskHandleWrite(int fd, void *unused)
     }
     ctrlp = xcalloc(1, sizeof(disk_ctrl_t));
     ctrlp->fd = fd;
+    assert(fdd->write_q != NULL);
+    assert(fdd->write_q->len > fdd->write_q->cur_offset);
 #if USE_ASYNC_IO
     aioWrite(fd,
 	fdd->write_q->buf + fdd->write_q->cur_offset,
@@ -312,14 +314,17 @@ diskHandleWriteComplete(void *data, int len, int errcode)
 	}
 	len = 0;
     }
-    q->cur_offset += len;
-    assert(q->cur_offset <= q->len);
-    if (q->cur_offset == q->len) {
-	/* complete write */
-	fdd->write_q = q->next;
-	if (q->free)
-	    (q->free) (q->buf);
-	safe_free(q);
+    if (q != NULL) {
+	/* q might become NULL from write failure above */
+    	q->cur_offset += len;
+    	assert(q->cur_offset <= q->len);
+    	if (q->cur_offset == q->len) {
+		/* complete write */
+		fdd->write_q = q->next;
+		if (q->free)
+	    	(q->free) (q->buf);
+		safe_free(q);
+    	}
     }
     if (fdd->write_q == NULL) {
 	/* no more data */

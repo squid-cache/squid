@@ -431,7 +431,6 @@ extern int storeUnlockObject _PARAMS((StoreEntry *));
 extern int storeUnregister _PARAMS((StoreEntry *, void *));
 extern const char *storeGeneratePublicKey _PARAMS((const char *, method_t));
 extern const char *storeGeneratePrivateKey _PARAMS((const char *, method_t, int));
-extern void storeStartDeleteBehind _PARAMS((StoreEntry *));
 extern void storeClientCopy _PARAMS((StoreEntry * e,
 	off_t seen_offset,
 	off_t copy_offset,
@@ -446,7 +445,7 @@ extern EVH storeMaintainSwapSpace;
 extern void storeExpireNow _PARAMS((StoreEntry *));
 extern void storeReleaseRequest _PARAMS((StoreEntry *));
 extern void storeRotateLog _PARAMS((void));
-extern int storeGetLowestReaderOffset _PARAMS((const StoreEntry *));
+extern off_t storeLowestMemReaderOffset _PARAMS((const StoreEntry *));
 extern void storeCloseLog _PARAMS((void));
 extern void storeConfigure _PARAMS((void));
 extern void storeNegativeCache _PARAMS((StoreEntry *));
