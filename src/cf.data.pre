@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.99 1998/08/20 22:45:45 wessels Exp $
+# $Id: cf.data.pre,v 1.100 1998/08/21 04:03:45 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -2041,6 +2041,7 @@ buffered_logs off
 DOC_END
 
 NAME: reload_into_ims
+IFDEF: HTTP_VIOLATIONS
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: off

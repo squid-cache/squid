@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: refresh.cc,v 1.33 1998/08/21 03:15:23 wessels Exp $
+ * $Id: refresh.cc,v 1.34 1998/08/21 04:03:48 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -101,10 +101,12 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta)
     time_t min = REFRESH_DEFAULT_MIN;
     double pct = REFRESH_DEFAULT_PCT;
     time_t max = REFRESH_DEFAULT_MAX;
+#if HTTP_VIOLATIONS
     int override_expire = 0;
     int override_lastmod = 0;
     int reload_into_ims = 0;
     int ignore_reload = 0;
+#endif
     const char *pattern = ".";
     time_t age;
     double factor;
@@ -125,19 +127,24 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta)
 	pct = R->pct;
 	max = R->max;
 	pattern = R->pattern;
+#if HTTP_VIOLATIONS
 	override_expire = R->flags.override_expire;
 	override_lastmod = R->flags.override_lastmod;
 	reload_into_ims = R->flags.reload_into_ims;
 	ignore_reload = R->flags.ignore_reload;
+#endif
     }
+#if HTTP_VIOLATIONS
     if (!reload_into_ims)
 	reload_into_ims = Config.onoff.reload_into_ims;
+#endif
     debug(22, 3) ("refreshCheck: Matched '%s %d %d%% %d'\n",
 	pattern, (int) min, (int) (100.0 * pct), (int) max);
     age = check_time - entry->timestamp;
     debug(22, 3) ("refreshCheck: age = %d\n", (int) age);
     debug(22, 3) ("\tcheck_time:\t%s\n", mkrfc1123(check_time));
     debug(22, 3) ("\tentry->timestamp:\t%s\n", mkrfc1123(entry->timestamp));
+#if HTTP_VIOLATIONS
     if (request->flags.nocache_hack) {
 	if (ignore_reload) {
 	    /* The clients no-cache header is ignored */
@@ -153,6 +160,7 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta)
 	    return 1;
 	}
     }
+#endif
     if (request->max_age > -1) {
 	if (age > request->max_age) {
 	    debug(22, 3) ("refreshCheck: YES: age > client-max-age\n");
@@ -160,10 +168,12 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta)
 	    return 1;
 	}
     }
+#if HTTP_VIOLATIONS
     if (override_expire && age <= min) {
 	debug(22, 3) ("refreshCheck: NO: age < min && override_expire\n");
 	return 0;
     }
+#endif
     if (entry->expires > -1) {
 	if (entry->expires <= check_time) {
 	    debug(22, 3) ("refreshCheck: YES: expires <= curtime\n");
@@ -180,10 +190,12 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta)
 	refreshCounts.conf_max_age_stale++;
 	return 1;
     }
+#if HTTP_VIOLATIONS
     if (override_lastmod && age <= min) {
 	debug(22, 3) ("refreshCheck: NO: age < min && override_lastmod\n");
 	return 0;
     }
+#endif
     if (entry->lastmod > -1 && entry->timestamp > entry->lastmod) {
 	factor = (double) age / (double) (entry->timestamp - entry->lastmod);
 	debug(22, 3) ("refreshCheck: factor = %f\n", factor);

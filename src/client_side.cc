@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.385 1998/08/21 03:15:15 wessels Exp $
+ * $Id: client_side.cc,v 1.386 1998/08/21 04:03:46 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -680,11 +680,13 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
     if (httpHeaderHas(req_hdr, HDR_PRAGMA)) {
 	String s = httpHeaderGetList(req_hdr, HDR_PRAGMA);
 	if (strListIsMember(&s, "no-cache", ',')) {
+#if HTTP_VIOLATIONS
 	    if (Config.onoff.reload_into_ims)
 		request->flags.nocache_hack = 1;
 	    else if (refresh_nocache_hack)
 		request->flags.nocache_hack = 1;
 	    else
+#endif
 		request->flags.nocache = 1;
 	}
 	stringClean(&s);
@@ -1600,10 +1602,12 @@ clientProcessRequest2(clientHttpRequest * http)
 	/* Special entries are always hits, no matter what the client says */
 	http->entry = e;
 	return LOG_TCP_HIT;
+#if HTTP_VIOLATIONS
     } else if (r->flags.nocache_hack) {
 	http->entry = NULL;
 	ipcacheReleaseInvalid(r->host);
 	return LOG_TCP_CLIENT_REFRESH_MISS;
+#endif
     } else if (r->flags.nocache) {
 	http->entry = NULL;
 	ipcacheReleaseInvalid(r->host);
