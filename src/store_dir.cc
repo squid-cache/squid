@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.54 1998/02/12 07:03:07 wessels Exp $
+ * $Id: store_dir.cc,v 1.55 1998/02/12 23:36:02 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -100,18 +100,19 @@ storeSwapSubSubDir(int fn, char *fullpath)
  *
  * This is called by storeDirClean(), but placed here because
  * the algorithm needs to match storeSwapSubSubDir().
+ *
+ * Don't check that (fn >> SWAP_DIR_SHIFT) == F0 because
+ * 'fn' may not have the directory bits set.
  */
 int
 storeFilenoBelongsHere(int fn, int F0, int F1, int F2)
 {
-    int D0, D1, D2;
+    int D1, D2;
     int L1, L2;
     int filn = fn & SWAP_FILE_MASK;
-    D0 = (fn >> SWAP_DIR_SHIFT) % Config.cacheSwap.n_configured;
-    if (F0 != D0)
-	return 0;
-    L1 = Config.cacheSwap.swapDirs[D0].l1;
-    L2 = Config.cacheSwap.swapDirs[D0].l2;
+    assert(F0 < Config.cacheSwap.n_configured);
+    L1 = Config.cacheSwap.swapDirs[F0].l1;
+    L2 = Config.cacheSwap.swapDirs[F0].l2;
     D1 = ((filn / L2) / L2) % L1;
     if (F1 != D1)
 	return 0;
@@ -298,6 +299,15 @@ storeDirProperFileno(int dirn, int fn)
     return (dirn << SWAP_DIR_SHIFT) | (fn & SWAP_FILE_MASK);
 }
 
+/*
+ * An entry written to the swap log MUST have the following
+ * properties.
+ *   1.  It MUST be a public key.  It does no good to log
+ *       a public ADD, change the key, then log a private
+ *       DEL.  So we need to log a DEL before we change a
+ *       key from public to private.
+ *   2.  It MUST have a valid (> -1) swap_file_number.
+ */
 void
 storeDirSwapLog(const StoreEntry * e, int op)
 {
@@ -305,21 +315,16 @@ storeDirSwapLog(const StoreEntry * e, int op)
     int dirn;
     dirn = e->swap_file_number >> SWAP_DIR_SHIFT;
     assert(dirn < Config.cacheSwap.n_configured);
-    if (op == SWAP_LOG_ADD) {
-	assert(!EBIT_TEST(e->flag, KEY_PRIVATE));
-	assert(e->swap_file_number >= 0);
-    }
-    if (op == SWAP_LOG_DEL) {
-	if (e->swap_file_number < 0)	/* was never swapped out */
-	    return;
-    }
+    assert(!EBIT_TEST(e->flag, KEY_PRIVATE));
+    assert(e->swap_file_number >= 0);
     /*
      * icons and such; don't write them to the swap log
      */
     if (EBIT_TEST(e->flag, ENTRY_SPECIAL))
 	return;
+    assert(op > SWAP_LOG_NOP && op < SWAP_LOG_MAX);
     debug(20, 3) ("storeDirSwapLog: %s %s %08X\n",
-	op == SWAP_LOG_DEL ? "SWAP_LOG_DEL" : "SWAP_LOG_ADD",
+	swap_log_op_str[op],
 	storeKeyText(e->key),
 	e->swap_file_number);
     s->op = (char) op;
