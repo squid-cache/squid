@@ -7,13 +7,13 @@ Squid-3.0:
 
   Other?
 
-  - epoll linkage.
   - Windows port (Merging in process, won't delay 3.0).
   - Generalize socket binding to allow for multipe ICP/HTCP/SNMP sockets
     (get rid of udp_incoming_address) (???)
 
   Done items:
 
+  - epoll linkage.
   - reply_body_max_size syntax cleanups. (done)
   - Other sponsored work that needs to get into mainline sooner rather
     than later (None known of - RC).
