@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.191 1998/02/04 23:36:19 wessels Exp $
+ * $Id: stat.cc,v 1.192 1998/02/05 21:10:23 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -453,8 +453,6 @@ statMemoryAccounted(void)
 	meta_data.ipcache_count * sizeof(ipcache_entry) +
 	meta_data.fqdncache_count * sizeof(fqdncache_entry) +
 	hash_links_allocated * sizeof(hash_link) +
-	meta_data.netdb_addrs * sizeof(netdbEntry) +
-	meta_data.netdb_hosts * sizeof(struct _net_db_name) +
                  meta_data.netdb_peers * sizeof(struct _net_db_peer) +
                  meta_data.client_info * client_info_sz +
                  meta_data.misc;
@@ -611,18 +609,6 @@ info_get(StoreEntry * sentry)
 	hash_links_allocated,
 	(int) sizeof(hash_link),
 	(int) (hash_links_allocated * sizeof(hash_link) >> 10));
-
-    storeAppendPrintf(sentry, "{\t%-25.25s %7d x %4d bytes = %6d KB}\n",
-	"NetDB Address Entries",
-	meta_data.netdb_addrs,
-	(int) sizeof(netdbEntry),
-	(int) (meta_data.netdb_addrs * sizeof(netdbEntry) >> 10));
-
-    storeAppendPrintf(sentry, "{\t%-25.25s %7d x %4d bytes = %6d KB}\n",
-	"NetDB Host Entries",
-	meta_data.netdb_hosts,
-	(int) sizeof(struct _net_db_name),
-	             (int) (meta_data.netdb_hosts * sizeof(struct _net_db_name) >> 10));
 
     storeAppendPrintf(sentry, "{\t%-25.25s %7d x %4d bytes = %6d KB}\n",
 	"NetDB Peer Entries",
