@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.25 1999/04/19 03:37:29 wessels Exp $
+ * $Id: event.cc,v 1.26 1999/04/19 03:53:36 wessels Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -165,13 +165,15 @@ static void
 eventDump(StoreEntry * sentry)
 {
     struct ev_entry *e = tasks;
-    storeAppendPrintf(sentry, "%s\t%s\t%s\n",
+    storeAppendPrintf(sentry, "%s\t%s\t%s\t%s\n",
 	"Operation",
 	"Next Execution",
-	"Weight");
+	"Weight",
+	"Callback Valid?");
     while (e != NULL) {
-	storeAppendPrintf(sentry, "%s\t%f seconds\t%d\n",
-	    e->name, e->when - current_dtime, e->weight);
+	storeAppendPrintf(sentry, "%s\t%f seconds\t%d\t%s\n",
+	    e->name, e->when - current_dtime, e->weight,
+	    e->arg ? cbdataValid(e->arg) ? "yes" : "no" : "N/A");
 	e = e->next;
     }
 }
