@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.17 2003/08/10 11:00:42 robertc Exp $
+ * $Id: client_side_request.h,v 1.18 2003/08/13 00:17:26 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -72,6 +72,8 @@ public:
     bool gotEnough() const;
     _SQUID_INLINE_ StoreEntry *storeEntry() const;
     void storeEntry(StoreEntry *);
+    _SQUID_INLINE_ StoreEntry *loggingEntry() const;
+    void loggingEntry(StoreEntry *);
 
     _SQUID_INLINE_ ConnStateData::Pointer getConn();
     _SQUID_INLINE_ ConnStateData::Pointer const getConn() const;
@@ -136,6 +138,7 @@ private:
     CBDATA_CLASS(ClientHttpRequest);
     ssize_t maxReplyBodySize_;
     StoreEntry *entry_;
+    StoreEntry *loggingEntry_;
     ConnStateData::Pointer conn_;
 };
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.92 2003/08/10 11:00:40 robertc Exp $
+ * $Id: access_log.cc,v 1.93 2003/08/13 00:17:24 robertc Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -369,6 +369,8 @@ typedef enum {
     /*LFT_REQUEST_SIZE_BODY_NO_TE, */
 
     LFT_REPLY_SIZE_TOTAL,
+    LFT_REPLY_HIGHOFFSET,
+    LFT_REPLY_OBJECTSIZE,
     /*LFT_REPLY_SIZE_LINE, */
     /*LFT_REPLY_SIZE_HEADERS, */
     /*LFT_REPLY_SIZE_BODY, */
@@ -480,6 +482,8 @@ struct logformat_token_table_entry logformat_token_table[] =
         /*{ ">sB", LFT_REQUEST_SIZE_BODY_NO_TE }, */
 
         {"<st", LFT_REPLY_SIZE_TOTAL},
+        {"<sH", LFT_REPLY_HIGHOFFSET},
+        {"<sS", LFT_REPLY_OBJECTSIZE},
         /*{ "<sl", LFT_REPLY_SIZE_LINE }, * /   / * the reply line (protocol, code, text) */
         /*{ "<sh", LFT_REPLY_SIZE_HEADERS }, */
         /*{ "<sb", LFT_REPLY_SIZE_BODY }, */
@@ -758,6 +762,20 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
         case LFT_REPLY_SIZE_TOTAL:
             outint = al->cache.size;
+
+            doint = 1;
+
+            break;
+
+        case LFT_REPLY_HIGHOFFSET:
+            outint = static_cast<int>(al->cache.highOffset);
+
+            doint = 1;
+
+            break;
+
+        case LFT_REPLY_OBJECTSIZE:
+            outint = static_cast<int>(al->cache.objectSize);
 
             doint = 1;
 

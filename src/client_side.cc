@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.655 2003/08/11 21:55:47 robertc Exp $
+ * $Id: client_side.cc,v 1.656 2003/08/13 00:17:26 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -499,13 +499,15 @@ ClientHttpRequest::logRequest()
         al.url = log_uri;
         debug(33, 9) ("clientLogRequest: al.url='%s'\n", al.url);
 
-        if (memObject()) {
-            al.http.code = memObject()->getReply()->sline.status;
-            al.http.content_type = memObject()->getReply()->content_type.buf();
+        if (loggingEntry() && loggingEntry()->mem_obj) {
+            al.http.code = loggingEntry()->mem_obj->getReply()->sline.status;
+            al.http.content_type = loggingEntry()->mem_obj->getReply()->content_type.buf();
+            al.cache.objectSize = contentLen(loggingEntry());
         }
 
         al.cache.caddr = getConn().getRaw() != NULL ? getConn()->log_addr : no_addr;
         al.cache.size = out.size;
+        al.cache.highOffset = out.offset;
         al.cache.code = logType;
         al.cache.msec = tvSubMsec(start, current_time);
 
