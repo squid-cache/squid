@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.56 1997/07/14 23:45:04 wessels Exp $
+ * $Id: ssl.cc,v 1.57 1997/07/16 04:48:31 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -445,7 +445,7 @@ sslPeerSelectComplete(peer * p, void *data)
 	sslState->port = request->port;
     } else if (p->http_port != 0) {
 	sslState->port = p->http_port;
-    } else if ((g = neighborFindByName(p->host))) {
+    } else if ((g = peerFindByName(p->host))) {
 	sslState->port = g->http_port;
     } else {
 	sslState->port = CACHE_HTTP_PORT;

@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.207 1997/07/15 23:23:15 wessels Exp $
+ * $Id: cache_cf.cc,v 1.208 1997/07/16 04:48:27 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -60,7 +60,6 @@ static void parse_string _PARAMS((char **));
 static void parse_wordlist _PARAMS((wordlist **));
 static void default_all _PARAMS((void));
 static int parse_line _PARAMS((char *));
-static cache_peer *configFindPeer _PARAMS((const char *name));
 static void parseBytesLine _PARAMS((size_t * bptr, const char *units));
 static size_t parseBytesUnits _PARAMS((const char *unit));
 
@@ -213,7 +212,6 @@ static void
 configDoConfigure(void)
 {
     LOCAL_ARRAY(char, buf, BUFSIZ);
-    cache_peer *p;
     memset(&Config2, '\0', sizeof(SquidConfig2));
     if (Config.Accel.host) {
 	snprintf(buf, BUFSIZ, "http://%s:%d", Config.Accel.host, Config.Accel.port);
@@ -242,16 +240,6 @@ configDoConfigure(void)
 	Config.appendDomainLen = 0;
     safe_free(debug_options)
 	debug_options = xstrdup(Config.debugOptions);
-    /* ICK */
-    for (p = Config.peers; p; p = p->next) {
-	neighborAdd(p->host,
-	    p->type,
-	    p->http,
-	    p->icp,
-	    p->options,
-	    p->weight,
-	    p->mcast_ttl);
-    }
 }
 
 /* Parse a time specification from the config file.  Store the
@@ -486,74 +474,88 @@ free_cachedir(struct _cacheSwap *swap)
 }
 
 static void
-dump_cache_peer(cache_peer * p)
+dump_peer(peer * p)
 {
     assert(0);
 }
 
 static void
-parse_cache_peer(cache_peer ** head)
+parse_peer(peer ** head)
 {
     char *token = NULL;
-    cache_peer peer;
-    cache_peer *p;
+    peer *p;
     int i;
-    memset(&peer, '\0', sizeof(cache_peer));
-    peer.http = CACHE_HTTP_PORT;
-    peer.icp = CACHE_ICP_PORT;
-    peer.weight = 1;
-    if (!(peer.host = strtok(NULL, w_space)))
+    ushortlist *u;
+    const char *me = getMyHostname();
+    p = xcalloc(1, sizeof(peer));
+    p->http_port = CACHE_HTTP_PORT;
+    p->icp_port = CACHE_ICP_PORT;
+    p->weight = 1;
+    if ((token = strtok(NULL, w_space)) == NULL) {
+	debug(0,0)("bad hostname\n");
 	self_destruct();
-    if (!(peer.type = strtok(NULL, w_space)))
+    }
+    p->host = xstrdup(token);
+    if ((token = strtok(NULL, w_space)) == NULL) {
+	debug(0,0)("bad type\n");
 	self_destruct();
+    }
+    p->type = parseNeighborType(token);
     GetInteger(i);
-    peer.http = (u_short) i;
+    p->http_port = (u_short) i;
     GetInteger(i);
-    peer.icp = (u_short) i;
-    while ((token = strtok(NULL, w_space))) {
-	if (!strcasecmp(token, "proxy-only")) {
-	    peer.options |= NEIGHBOR_PROXY_ONLY;
-	} else if (!strcasecmp(token, "no-query")) {
-	    peer.options |= NEIGHBOR_NO_QUERY;
-	} else if (!strcasecmp(token, "multicast-responder")) {
-	    peer.options |= NEIGHBOR_MCAST_RESPONDER;
-	} else if (!strncasecmp(token, "weight=", 7)) {
-	    peer.weight = atoi(token + 7);
-	} else if (!strncasecmp(token, "ttl=", 4)) {
-	    peer.mcast_ttl = atoi(token + 4);
-	    if (peer.mcast_ttl < 0)
-		peer.mcast_ttl = 0;
-	    if (peer.mcast_ttl > 128)
-		peer.mcast_ttl = 128;
-	} else if (!strncasecmp(token, "default", 7)) {
-	    peer.options |= NEIGHBOR_DEFAULT_PARENT;
-	} else if (!strncasecmp(token, "round-robin", 11)) {
-	    peer.options |= NEIGHBOR_ROUNDROBIN;
-	} else {
-	    debug(3, 0) ("parse_cache_peer: token='%s'\n", token);
+    p->icp_port = (u_short) i;
+    if (strcmp(p->host, me) == 0) {
+	for (u = Config.Port.http; u; u = u->next) {
+	    if (p->http_port != u->i)
+		continue;
+	    debug(15, 0) ("parse_peer: Peer looks like myself: %s %s/%d/%d\n",
+		p->type, p->host, p->http_port, p->icp_port);
 	    self_destruct();
 	}
     }
-    if (peer.weight < 1)
-	peer.weight = 1;
-    p = xcalloc(1, sizeof(cache_peer));
-    *p = peer;
-    p->host = xstrdup(peer.host);
-    p->type = xstrdup(peer.type);
+    while ((token = strtok(NULL, w_space))) {
+	if (!strcasecmp(token, "proxy-only")) {
+	    p->options |= NEIGHBOR_PROXY_ONLY;
+	} else if (!strcasecmp(token, "no-query")) {
+	    p->options |= NEIGHBOR_NO_QUERY;
+	} else if (!strcasecmp(token, "multicast-responder")) {
+	    p->options |= NEIGHBOR_MCAST_RESPONDER;
+	} else if (!strncasecmp(token, "weight=", 7)) {
+	    p->weight = atoi(token + 7);
+	} else if (!strncasecmp(token, "ttl=", 4)) {
+	    p->mcast.ttl = atoi(token + 4);
+	    if (p->mcast.ttl < 0)
+		p->mcast.ttl = 0;
+	    if (p->mcast.ttl > 128)
+		p->mcast.ttl = 128;
+	} else if (!strncasecmp(token, "default", 7)) {
+	    p->options |= NEIGHBOR_DEFAULT_PARENT;
+	} else if (!strncasecmp(token, "round-robin", 11)) {
+	    p->options |= NEIGHBOR_ROUNDROBIN;
+	} else {
+	    debug(3, 0) ("parse_peer: token='%s'\n", token);
+	    self_destruct();
+	}
+    }
+    if (p->weight < 1)
+	p->weight = 1;
+    p->icp_version = ICP_VERSION_CURRENT;
+    p->tcp_up = 1;
+    cbdataAdd(p);
     while (*head != NULL)
 	head = &(*head)->next;
     *head = p;
+    Config.npeers++;
 }
 
 static void
-free_cache_peer(cache_peer ** P)
+free_peer(peer ** P)
 {
-    cache_peer *p;
+    peer *p;
     while ((p = *P)) {
 	*P = p->next;
-	xfree(p->host);
-	xfree(p->type);
-	xfree(p);
+	peerDestroy(p);
     }
 }
 
@@ -624,11 +626,11 @@ parse_peeracl(void)
     if (!(host = strtok(NULL, w_space)))
 	self_destruct();
     while ((aclname = strtok(NULL, list_sep))) {
-	cache_peer *p;
+	peer *p;
 	acl_list *L = NULL;
 	acl_list **Tail = NULL;
 	acl *a = NULL;
-	if ((p = configFindPeer(host)) == NULL) {
+	if ((p = peerFindByName(host)) == NULL) {
 	    debug(15, 0) ("%s, line %d: No cache_host '%s'\n",
 		cfg_filename, config_lineno, host);
 	    return;
@@ -654,17 +656,6 @@ parse_peeracl(void)
     }
 }
 
-static cache_peer *
-configFindPeer(const char *name)
-{
-    cache_peer *p = NULL;
-    for (p = Config.peers; p; p = p->next) {
-	if (!strcasecmp(name, p->host))
-	    break;
-    }
-    return p;
-}
-
 static void
 parse_hostdomain(void)
 {
@@ -675,8 +666,8 @@ parse_hostdomain(void)
     while ((domain = strtok(NULL, list_sep))) {
 	domain_ping *l = NULL;
 	domain_ping **L = NULL;
-	cache_peer *p;
-	if ((p = configFindPeer(host)) == NULL) {
+	peer *p;
+	if ((p = peerFindByName(host)) == NULL) {
 	    debug(15, 0) ("%s, line %d: No cache_host '%s'\n",
 		cfg_filename, config_lineno, host);
 	    continue;
@@ -706,8 +697,8 @@ parse_hostdomaintype(void)
     while ((domain = strtok(NULL, list_sep))) {
 	domain_type *l = NULL;
 	domain_type **L = NULL;
-	cache_peer *p;
-	if ((p = configFindPeer(host)) == NULL) {
+	peer *p;
+	if ((p = peerFindByName(host)) == NULL) {
 	    debug(15, 0) ("%s, line %d: No cache_host '%s'\n",
 		cfg_filename, config_lineno, host);
 	    return;

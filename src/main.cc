@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.163 1997/07/15 23:23:28 wessels Exp $
+ * $Id: main.cc,v 1.164 1997/07/16 04:48:29 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -434,7 +434,6 @@ mainReconfigure(void)
 {
     debug(1, 0) ("Restarting Squid Cache (version %s)...\n", version_string);
     /* Already called serverConnectionsClose and ipcacheShutdownServers() */
-    neighborsDestroy();
     parseConfigFile(ConfigFile);
     _db_init(Config.Log.log, Config.debugOptions);
     ipcache_restart();		/* clear stuck entries */
