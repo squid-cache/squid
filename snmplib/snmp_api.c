@@ -116,6 +116,7 @@ extern int snmp_errno;
 
 struct session_list *Sessions = NULL;
 
+#if 0
 /*
  * Get initial request ID for all transactions.
  */
@@ -129,7 +130,6 @@ static void init_snmp(void)
   squid_srandom(tv.tv_sec ^ tv.tv_usec);
   Reqid = squid_random();
 }
-
 
 
 /*
@@ -148,6 +148,7 @@ static void free_request_list(rp)
 	xfree((char *)orp);
     }
 }
+#endif
 
 /**********************************************************************/
 
@@ -158,6 +159,7 @@ static void free_request_list(rp)
  * the pointer passed to snmp_open()).  On any error, NULL is returned
  * and snmp_errno is set to the appropriate error code.
  */
+#if 0
 struct snmp_session *snmp_open(struct snmp_session *session)
 {
   struct session_list *slp;
@@ -334,7 +336,6 @@ struct snmp_session *snmp_open(struct snmp_session *session)
 }
 
 
-
 /*
  * Close the input session.  Frees all data allocated for the session,
  * dequeues any pending requests, and closes any sockets allocated for
@@ -376,6 +377,7 @@ int snmp_close(struct snmp_session *session)
   }
   return(1);
 }
+#endif
 
 /*
  * Takes a session and a pdu and serializes the ASN PDU into the area
@@ -443,6 +445,7 @@ u_char *snmp_parse(struct snmp_session *session,
  * On any error, 0 is returned.
  * The pdu is freed by snmp_send() unless a failure occured.
  */
+#if 0
 int snmp_send(struct snmp_session *session, struct snmp_pdu *pdu)
 {
     struct session_list *slp;
@@ -887,3 +890,4 @@ void snmp_api_stats(void *outP)
   fprintf(out, "LIBSNMP: Session List: %d active, %d have requests pending.\n",
 	  active, requests);
 }
+#endif

@@ -27,7 +27,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  * 
- * $Id: snmp.h,v 1.11 1998/02/23 21:05:17 kostas Exp $
+ * $Id: snmp.h,v 1.12 1998/02/24 22:46:14 kostas Exp $
  * 
  **********************************************************************/
 
@@ -49,26 +49,23 @@
 #include "snmp_session.h"
 
 /* The various modules */
-#include <snmp_vars.h>
-#include <snmp_pdu.h>
-#include <snmp_msg.h>
+#include "snmp_vars.h"
+#include "snmp_pdu.h"
+#include "snmp_msg.h"
 
 /* Other functions */
-#include <snmp_coexist.h>
-#include <version.h>
-#include <snmp_error.h>
-#include <snmp_api_error.h>
-#if 0
-#include <mini-client.h>
-#endif
+#include "snmp_coexist.h"
+#include "version.h"
+#include "snmp_error.h"
+#include "snmp_api_error.h"
 /* Other stuff I didn't touch */
-#include <snmp_impl.h>
-#include <snmp_api.h>
-#include <snmp_client.h>
-#include <snmp-internal.h>
-#include <mib.h>
-#include <parse.h>
-#include <snmp_compat.h>
-#include <snmp_debug.h>
+#include "snmp_impl.h"
+#include "snmp_api.h"
+#include "snmp_client.h"
+#include "snmp-internal.h"
+#include "mib.h"
+#include "parse.h"
+#include "snmp_compat.h"
+#include "snmp_debug.h"
 
 #endif /* _SNMP_H_ */
