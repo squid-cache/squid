@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_diskd.cc,v 1.24 2002/07/20 23:51:06 hno Exp $
+ * $Id: store_io_diskd.cc,v 1.25 2002/07/21 00:25:46 hno Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -96,7 +96,7 @@ storeDiskdOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
 	O_RDONLY,
 	shm_offset);
     if (x < 0) {
-	debug(50, 1) ("storeDiskdSend OPEN: %s\n", xstrerror());
+	debug(79, 1) ("storeDiskdSend OPEN: %s\n", xstrerror());
 	storeDiskdShmPut(SD, shm_offset);
 	cbdataReferenceDone(sio->callback_data);
 	cbdataFree(sio);
@@ -154,7 +154,7 @@ storeDiskdCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
 	sio->mode,
 	shm_offset);
     if (x < 0) {
-	debug(50, 1) ("storeDiskdSend OPEN: %s\n", xstrerror());
+	debug(79, 1) ("storeDiskdSend OPEN: %s\n", xstrerror());
 	storeDiskdShmPut(SD, shm_offset);
 	cbdataReferenceDone(sio->callback_data);
 	cbdataFree(sio);
@@ -181,7 +181,7 @@ storeDiskdClose(SwapDir * SD, storeIOState * sio)
 	0,
 	-1);
     if (x < 0) {
-	debug(50, 1) ("storeDiskdSend CLOSE: %s\n", xstrerror());
+	debug(79, 1) ("storeDiskdSend CLOSE: %s\n", xstrerror());
 	storeDiskdIOCallback(sio, DISK_ERROR);
     }
     diskdstate->flags.close_request = 1;
@@ -220,7 +220,7 @@ storeDiskdRead(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t o
 	(int) offset,
 	shm_offset);
     if (x < 0) {
-	debug(50, 1) ("storeDiskdSend READ: %s\n", xstrerror());
+	debug(79, 1) ("storeDiskdSend READ: %s\n", xstrerror());
 	storeDiskdShmPut(SD, shm_offset);
 	storeDiskdIOCallback(sio, DISK_ERROR);
     }
@@ -253,7 +253,7 @@ storeDiskdWrite(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t 
 	(int) offset,
 	shm_offset);
     if (x < 0) {
-	debug(50, 1) ("storeDiskdSend WRITE: %s\n", xstrerror());
+	debug(79, 1) ("storeDiskdSend WRITE: %s\n", xstrerror());
 	storeDiskdShmPut(SD, shm_offset);
 	storeDiskdIOCallback(sio, DISK_ERROR);
     }
@@ -274,7 +274,7 @@ storeDiskdUnlink(SwapDir * SD, StoreEntry * e)
     storeDiskdDirMapBitReset(SD, e->swap_filen);
     if (diskdinfo->away >= diskdinfo->magic1) {
 	/* Damn, we need to issue a sync unlink here :( */
-	debug(50, 2) ("storeDiskUnlink: Out of queue space, sync unlink\n");
+	debug(79, 2) ("storeDiskUnlink: Out of queue space, sync unlink\n");
 	storeDiskdDirUnlinkFile(SD, e->swap_filen);
 	return;
     }
@@ -289,7 +289,7 @@ storeDiskdUnlink(SwapDir * SD, StoreEntry * e)
 	0,
 	shm_offset);
     if (x < 0) {
-	debug(50, 1) ("storeDiskdSend UNLINK: %s\n", xstrerror());
+	debug(79, 1) ("storeDiskdSend UNLINK: %s\n", xstrerror());
 	unlink(buf);		/* XXX EWW! */
 	storeDiskdShmPut(SD, shm_offset);
     }
@@ -481,7 +481,7 @@ storeDiskdSend(int mtype, SwapDir * sd, int id, storeIOState * sio, int size, in
 	diskd_stats.sent_count++;
 	diskdinfo->away++;
     } else {
-	debug(50, 1) ("storeDiskdSend: msgsnd: %s\n", xstrerror());
+	debug(79, 1) ("storeDiskdSend: msgsnd: %s\n", xstrerror());
 	cbdataReferenceDone(M.callback_data);
 	assert(++send_errors < 100);
     }

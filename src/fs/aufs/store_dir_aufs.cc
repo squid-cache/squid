@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.46 2002/06/26 09:55:57 hno Exp $
+ * $Id: store_dir_aufs.cc,v 1.47 2002/07/21 00:25:45 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1369,7 +1369,7 @@ storeAufsDirCheckObj(SwapDir * SD, const StoreEntry * e)
     if (ql == 0)
 	loadav = 0;
     loadav = ql * 1000 / MAGIC1;
-    debug(41, 9) ("storeAufsDirCheckObj: load=%d\n", loadav);
+    debug(47, 9) ("storeAufsDirCheckObj: load=%d\n", loadav);
     return loadav;
 }
 
@@ -1382,7 +1382,7 @@ storeAufsDirCheckObj(SwapDir * SD, const StoreEntry * e)
 void
 storeAufsDirRefObj(SwapDir * SD, StoreEntry * e)
 {
-    debug(1, 3) ("storeAufsDirRefObj: referencing %p %d/%d\n", e, e->swap_dirn,
+    debug(47, 3) ("storeAufsDirRefObj: referencing %p %d/%d\n", e, e->swap_dirn,
 	e->swap_filen);
     if (SD->repl->Referenced)
 	SD->repl->Referenced(SD->repl, e, &e->repl);
@@ -1396,7 +1396,7 @@ storeAufsDirRefObj(SwapDir * SD, StoreEntry * e)
 void
 storeAufsDirUnrefObj(SwapDir * SD, StoreEntry * e)
 {
-    debug(1, 3) ("storeAufsDirUnrefObj: referencing %p %d/%d\n", e, e->swap_dirn,
+    debug(47, 3) ("storeAufsDirUnrefObj: referencing %p %d/%d\n", e, e->swap_dirn,
 	e->swap_filen);
     if (SD->repl->Dereferenced)
 	SD->repl->Dereferenced(SD->repl, e, &e->repl);
