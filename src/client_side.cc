@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.76 1996/12/17 21:16:54 wessels Exp $
+ * $Id: client_side.cc,v 1.77 1996/12/18 00:03:00 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@ static void clientRedirectDone _PARAMS((void *data, char *result));
 static void icpHandleIMSReply _PARAMS((int fd, StoreEntry * entry, void *data));
 static void clientLookupDstIPDone _PARAMS((int fd, const ipcache_addrs *, void *data));
 static void clientLookupSrcFQDNDone _PARAMS((int fd, const char *fqdn, void *data));
+static void clientLookupDstFQDNDone _PARAMS((int fd, const char *fqdn, void *data));
 static int clientGetsOldEntry _PARAMS((StoreEntry * new, StoreEntry * old, request_t * request));
 static int checkAccelOnly _PARAMS((icpStateData * icpState));
 
@@ -61,6 +62,18 @@ clientLookupSrcFQDNDone(int fd, const char *fqdn, void *data)
 {
     icpStateData *icpState = data;
     debug(33, 5, "clientLookupSrcFQDNDone: FD %d, '%s', FQDN %s\n",
+	fd,
+	icpState->url,
+	fqdn ? fqdn : "NULL");
+    icpState->aclChecklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_DONE;
+    clientAccessCheck(icpState, icpState->aclHandler);
+}
+
+static void
+clientLookupDstFQDNDone(int fd, const char *fqdn, void *data)
+{
+    icpStateData *icpState = data;
+    debug(33, 0, "clientLookupDstFQDNDone: FD %d, '%s', FQDN %s\n",
 	fd,
 	icpState->url,
 	fqdn ? fqdn : "NULL");
@@ -125,6 +138,7 @@ clientAccessCheck(icpStateData * icpState, void (*handler) (icpStateData *, int)
     int answer = 1;
     aclCheck_t *ch = NULL;
     char *browser = NULL;
+    const ipcache_addrs *ia = NULL;
 
     if (Config.identLookup && icpState->ident.state == IDENT_NONE) {
 	icpState->aclHandler = handler;
@@ -180,6 +194,15 @@ clientAccessCheck(icpStateData * icpState, void (*handler) (icpStateData *, int)
 	    fqdncache_nbgethostbyaddr(icpState->peer.sin_addr,
 		icpState->fd,
 		clientLookupSrcFQDNDone,
+		icpState);
+	    return;
+	} else if (ch->state[ACL_DST_DOMAIN] == ACL_LOOKUP_NEED) {
+	    ch->state[ACL_DST_DOMAIN] = ACL_LOOKUP_PENDING;	/* first */
+	    ia = ipcacheCheckNumeric(icpState->request->host);
+	    if (ia != NULL)
+	    fqdncache_nbgethostbyaddr(ia->in_addrs[0],
+		icpState->fd,
+		clientLookupDstFQDNDone,
 		icpState);
 	    return;
 	}
