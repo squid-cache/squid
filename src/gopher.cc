@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: gopher.cc,v 1.133 1998/07/22 20:37:24 wessels Exp $
+ * $Id: gopher.cc,v 1.134 1998/07/30 22:29:35 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -602,7 +602,6 @@ gopherReadReply(int fd, void *data)
 	return;
     }
     /* check if we want to defer reading */
-    clen = entry->mem_obj->inmem_hi;
     buf = memAllocate(MEM_4K_BUF);
     errno = 0;
     /* leave one space for \0 in gopherToHTML */
