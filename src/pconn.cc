@@ -1,5 +1,5 @@
 /*
- * $Id: pconn.cc,v 1.4 1997/10/23 20:42:53 wessels Exp $
+ * $Id: pconn.cc,v 1.5 1997/10/25 16:58:25 wessels Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -41,14 +41,14 @@ struct _pconn {
 
 static PF pconnRead;
 static PF pconnTimeout;
-static char *pconnKey _PARAMS((const char *host, u_short port));
+static const char *pconnKey _PARAMS((const char *host, u_short port));
 static hash_table *table = NULL;
 static struct _pconn *pconnNew _PARAMS((const char *key));
 static void pconnDelete _PARAMS((struct _pconn * p));
 static void pconnRemoveFD _PARAMS((struct _pconn * p, int fd));
 
 
-static char *
+static const char *
 pconnKey(const char *host, u_short port)
 {
     LOCAL_ARRAY(char, buf, SQUIDHOSTNAMELEN + 10);
@@ -69,10 +69,10 @@ pconnNew(const char *key)
 static void
 pconnDelete(struct _pconn *p)
 {
-    hash_link *hptr = hash_lookup(table, p->key);
-    assert(hptr != NULL);
     debug(48, 3) ("pconnDelete: deleting %s\n", p->key);
-    hash_remove_link(table, hptr);
+    hash_remove_link(table, (hash_link *) p);
+    xfree(p->key);
+    xfree(p);
 }
 
 static void
@@ -130,8 +130,9 @@ void
 pconnPush(int fd, const char *host, u_short port)
 {
     struct _pconn *p;
-    char *key = xstrdup(pconnKey(host, port));
+    LOCAL_ARRAY(char, key, SQUIDHOSTNAMELEN + 10);
     assert(table != NULL);
+    strcpy(key, pconnKey(host, port));
     p = (struct _pconn *) hash_lookup(table, key);
     if (p == NULL)
 	p = pconnNew(key);
@@ -139,7 +140,6 @@ pconnPush(int fd, const char *host, u_short port)
 	debug(48, 3) ("pconnPush: %s already has %d unused connections\n",
 	    key, p->nfds);
 	close(fd);
-	xfree(key);
 	commSetTimeout(fd, -1, NULL, NULL);
 	return;
     }
@@ -155,8 +155,9 @@ pconnPop(const char *host, u_short port)
     struct _pconn *p;
     hash_link *hptr;
     int fd = -1;
-    char *key = xstrdup(pconnKey(host, port));
+    LOCAL_ARRAY(char, key, SQUIDHOSTNAMELEN + 10);
     assert(table != NULL);
+    strcpy(key, pconnKey(host, port));
     hptr = hash_lookup(table, key);
     if (hptr != NULL) {
 	p = (struct _pconn *) hptr;
@@ -166,6 +167,5 @@ pconnPop(const char *host, u_short port)
 	commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
 	commSetTimeout(fd, -1, NULL, NULL);
     }
-    xfree(key);
     return fd;
 }
