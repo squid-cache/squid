@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.69 1999/06/11 22:40:34 wessels Exp $
+ * $Id: snmp_agent.cc,v 1.70 1999/06/17 20:23:14 wessels Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -59,19 +59,19 @@ snmp_sysFn(variable_list * Var, snint * ErrP)
     switch (Var->name[LEN_SQ_SYS]) {
     case SYSVMSIZ:
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	Answer->type = ASN_INTEGER;
 	*(Answer->val.integer) = store_mem_size >> 10;
 	break;
     case SYSSTOR:
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	Answer->type = ASN_INTEGER;
 	*(Answer->val.integer) = store_swap_size;
 	break;
     case SYS_UPTIME:
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	Answer->type = SMI_TIMETICKS;
 	*(Answer->val.integer) = tvSubDsec(squid_start, current_time) * 100;
 	break;
@@ -115,25 +115,25 @@ snmp_confFn(variable_list * Var, snint * ErrP)
 	switch (Var->name[LEN_SQ_CONF + 1]) {
 	case CONF_ST_MMAXSZ:
 	    Answer->val_len = sizeof(snint);
-	    Answer->val.integer = xmalloc(Answer->val_len);
+	    Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	    Answer->type = ASN_INTEGER;
 	    *(Answer->val.integer) = (snint) Config.memMaxSize >> 20;
 	    break;
 	case CONF_ST_SWMAXSZ:
 	    Answer->val_len = sizeof(snint);
-	    Answer->val.integer = xmalloc(Answer->val_len);
+	    Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	    Answer->type = ASN_INTEGER;
 	    *(Answer->val.integer) = (snint) Config.Swap.maxSize >> 10;
 	    break;
 	case CONF_ST_SWHIWM:
 	    Answer->val_len = sizeof(snint);
-	    Answer->val.integer = xmalloc(Answer->val_len);
+	    Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	    Answer->type = ASN_INTEGER;
 	    *(Answer->val.integer) = (snint) Config.Swap.highWaterMark;
 	    break;
 	case CONF_ST_SWLOWM:
 	    Answer->val_len = sizeof(snint);
-	    Answer->val.integer = xmalloc(Answer->val_len);
+	    Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	    Answer->type = ASN_INTEGER;
 	    *(Answer->val.integer) = (snint) Config.Swap.lowWaterMark;
 	    break;
@@ -192,72 +192,72 @@ snmp_meshPtblFn(variable_list * Var, snint * ErrP)
     case MESH_PTBL_IP:
 	Answer->type = SMI_IPADDRESS;
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	*(Answer->val.integer) = (snint) (p->in_addr.sin_addr.s_addr);
 	break;
     case MESH_PTBL_HTTP:
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	Answer->type = ASN_INTEGER;
 	*(Answer->val.integer) = (snint) p->http_port;
 	break;
     case MESH_PTBL_ICP:
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	Answer->type = ASN_INTEGER;
 	*(Answer->val.integer) = (snint) p->icp.port;
 	break;
     case MESH_PTBL_TYPE:
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	Answer->type = ASN_INTEGER;
 	*(Answer->val.integer) = (snint) p->type;
 	break;
     case MESH_PTBL_STATE:
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	Answer->type = ASN_INTEGER;
 	*(Answer->val.integer) = (snint) neighborUp(p);
 	break;
     case MESH_PTBL_SENT:
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	Answer->type = SMI_COUNTER32;
 	*(Answer->val.integer) = p->stats.pings_sent;
 	break;
     case MESH_PTBL_PACKED:
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	Answer->type = SMI_COUNTER32;
 	*(Answer->val.integer) = p->stats.pings_acked;
 	break;
     case MESH_PTBL_FETCHES:
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	Answer->type = SMI_COUNTER32;
 	*(Answer->val.integer) = p->stats.fetches;
 	break;
     case MESH_PTBL_RTT:
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	Answer->type = ASN_INTEGER;
 	*(Answer->val.integer) = p->stats.rtt;
 	break;
     case MESH_PTBL_IGN:
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	Answer->type = SMI_COUNTER32;
 	*(Answer->val.integer) = p->stats.ignored_replies;
 	break;
     case MESH_PTBL_KEEPAL_S:
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	Answer->type = SMI_COUNTER32;
 	*(Answer->val.integer) = p->stats.n_keepalives_sent;
 	break;
     case MESH_PTBL_KEEPAL_R:
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	Answer->type = SMI_COUNTER32;
 	*(Answer->val.integer) = p->stats.n_keepalives_recv;
 	break;
@@ -281,7 +281,7 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
     Answer = snmp_var_new(Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
     Answer->val_len = sizeof(snint);
-    Answer->val.integer = xmalloc(Answer->val_len);
+    Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
     Answer->type = ASN_INTEGER;
 
     switch (Var->name[LEN_SQ_PRF + 1]) {
@@ -356,7 +356,7 @@ snmp_prfProtoFn(variable_list * Var, snint * ErrP)
     case PERF_PROTOSTAT_AGGR:	/* cacheProtoAggregateStats */
 	Answer->type = SMI_COUNTER32;
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 	switch (Var->name[LEN_SQ_PRF + 2]) {
 	case PERF_PROTOSTAT_AGGR_HTTP_REQ:
 	    *(Answer->val.integer) = (snint) Counter.client_http.requests;
@@ -427,7 +427,7 @@ snmp_prfProtoFn(variable_list * Var, snint * ErrP)
 	    Var->name[LEN_SQ_PRF + 3], l, f);
 	Answer->type = SMI_INTEGER;
 	Answer->val_len = sizeof(snint);
-	Answer->val.integer = xmalloc(Answer->val_len);
+	Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
 
 	debug(49, 8) ("median: l= %x , f = %x\n", l, f);
 	switch (Var->name[LEN_SQ_PRF + 3]) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.215 1999/04/19 05:15:54 wessels Exp $
+ * $Id: ipcache.cc,v 1.216 1999/06/17 20:23:13 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -873,7 +873,7 @@ snmp_netIpFn(variable_list * Var, snint * ErrP)
     Answer = snmp_var_new(Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
     Answer->val_len = sizeof(snint);
-    Answer->val.integer = xmalloc(Answer->val_len);
+    Answer->val.integer = memAllocate(MEM_SNMP_SNINT);
     Answer->type = SMI_COUNTER32;
 
     switch (Var->name[LEN_SQ_NET + 1]) {
