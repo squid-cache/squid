@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.282 1998/09/03 03:37:35 wessels Exp $
+ * $Id: stat.cc,v 1.283 1998/09/03 03:48:36 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -748,6 +748,9 @@ statAvgDump(StoreEntry * sentry, int minutes, int hours)
         f->select_fds > l->select_fds ?
 	(f->select_time - l->select_time) / (f->select_fds - l->select_fds)
 	: 0.0);
+    x = statHistDeltaMedian(&l->select_fds_hist, &f->select_fds_hist);
+    storeAppendPrintf(sentry, "median_select_fds = %f\n", x);
+	
     storeAppendPrintf(sentry, "cpu_time = %f seconds\n", ct);
     storeAppendPrintf(sentry, "wall_time = %f seconds\n", dt);
     storeAppendPrintf(sentry, "cpu_usage = %f%%\n", dpercent(ct, dt));
@@ -879,6 +882,7 @@ statCountersInitSpecial(StatCounters * C)
     statHistEnumInit(&C->cd.on_xition_count, CacheDigestHashFuncCount);
     statHistEnumInit(&C->comm_icp_incoming, INCOMING_ICP_MAX);
     statHistEnumInit(&C->comm_http_incoming, INCOMING_HTTP_MAX);
+    statHistIntInit(&C->select_fds_hist, SQUID_MAXFD);
 }
 
 /* add special cases here as they arrive */
@@ -897,6 +901,7 @@ statCountersClean(StatCounters * C)
     statHistClean(&C->cd.on_xition_count);
     statHistClean(&C->comm_icp_incoming);
     statHistClean(&C->comm_http_incoming);
+    statHistClean(&C->select_fds_hist);
 }
 
 /* add special cases here as they arrive */
@@ -921,6 +926,7 @@ statCountersCopy(StatCounters * dest, const StatCounters * orig)
     statHistCopy(&dest->cd.on_xition_count, &orig->cd.on_xition_count);
     statHistCopy(&dest->comm_icp_incoming, &orig->comm_icp_incoming);
     statHistCopy(&dest->comm_http_incoming, &orig->comm_http_incoming);
+    statHistCopy(&dest->select_fds_hist, &orig->select_fds_hist);
 }
 
 static void

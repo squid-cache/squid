@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.259 1998/09/03 03:37:34 wessels Exp $
+ * $Id: protos.h,v 1.260 1998/09/03 03:48:38 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -677,6 +677,7 @@ extern double statHistDeltaMedian(const StatHist * A, const StatHist * B);
 extern void statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper bd);
 extern void statHistLogInit(StatHist * H, int capacity, double min, double max);
 extern void statHistEnumInit(StatHist * H, int last_enum);
+extern void statHistIntInit(StatHist * H, int n);
 extern StatHistBinDumper statHistEnumDumper;
 extern StatHistBinDumper statHistIntDumper;
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.215 1998/09/03 03:37:36 wessels Exp $
+ * $Id: structs.h,v 1.216 1998/09/03 03:48:37 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1392,6 +1392,7 @@ struct _StatCounters {
     struct timeval timestamp;
     StatHist comm_icp_incoming;
     StatHist comm_http_incoming;
+    StatHist select_fds_hist;
 };
 
 /* per header statistics */
