@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.27 1998/04/06 22:32:10 wessels Exp $
+ * $Id: access_log.cc,v 1.28 1998/04/09 21:32:08 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -58,6 +58,7 @@ const char *log_tags[] =
     "UDP_DENIED",
     "UDP_INVALID",
     "UDP_MISS_NOFETCH",
+    "ICP_QUERY",
     "LOG_TYPE_MAX"
 };
 

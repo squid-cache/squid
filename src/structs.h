@@ -438,7 +438,6 @@ struct _fde {
     DEFER *defer_check;		/* check if we should defer read */
     void *defer_data;
     CommWriteStateData *rwstate;	/* State data for comm_write */
-    time_t connect_timeout;
 };
 
 struct _fileMap {
@@ -1182,15 +1181,24 @@ struct _StatCounters {
     } server;
     struct {
 	int pkts_sent;
+	int queries_sent;
+	int replies_sent;
 	int pkts_recv;
+	int queries_recv;
+	int replies_recv;
 	int hits_sent;
 	int hits_recv;
 	int replies_queued;
 	int replies_dropped;
 	kb_t kbytes_sent;
+	kb_t q_kbytes_sent;
+	kb_t r_kbytes_sent;
 	kb_t kbytes_recv;
+	kb_t q_kbytes_recv;
+	kb_t r_kbytes_recv;
 	StatHist query_svc_time;
 	StatHist reply_svc_time;
+        int query_timeouts;
 #if SQUID_PEER_DIGEST
 	StatHist client_svc_time;
 	StatHist server_svc_time;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.271 1998/04/09 21:15:01 rousskov Exp $
+ * $Id: client_side.cc,v 1.272 1998/04/09 21:32:09 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -558,7 +558,8 @@ clientUpdateCounters(clientHttpRequest * http)
     i = &http->request->hier.icp;
     if (0 != i->stop.tv_sec && 0 != i->start.tv_sec)
 	statHistCount(&Counter.icp.query_svc_time, tvSubUsec(i->start, i->stop));
-
+    if (i->timeout)
+	Counter.icp.query_timeouts++;
 #if SQUID_PEER_DIGEST
     H = &http->request->hier;
     if (H->peer_select_start.tv_sec && H->store_complete_stop.tv_sec)
