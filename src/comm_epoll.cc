@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_epoll.cc,v 1.6 2004/12/21 18:06:33 hno Exp $
+ * $Id: comm_epoll.cc,v 1.7 2005/02/07 22:17:55 serassio Exp $
  *
  * DEBUG: section 5    Socket functions
  *
@@ -55,6 +55,8 @@
 #include "squid.h"
 #include "Store.h"
 #include "fde.h"
+
+#ifdef USE_EPOLL
 
 #define DEBUG_EPOLL 0
 
@@ -303,3 +305,4 @@ comm_quick_poll_required(void)
     max_poll_time = 100;
 }
 
+#endif /* USE_EPOLL */

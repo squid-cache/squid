@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.104 2005/02/06 13:19:39 serassio Exp $
+#  $Id: Makefile.am,v 1.105 2005/02/07 22:17:55 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -155,13 +155,6 @@ else
 ARP_ACL_SOURCE =
 endif
 
-EPOLL_ALL_SOURCE = comm_epoll.cc
-if USE_EPOLL
-EPOLL_SOURCE = $(EPOLL_ALL_SOURCE)
-else
-EPOLL_SOURCE = 
-endif
-
 AM_CFLAGS = @SQUID_CFLAGS@
 AM_CXXFLAGS = @SQUID_CXXFLAGS@
 
@@ -247,7 +240,6 @@ EXTRA_squid_SOURCES = \
 	dns.cc \
 	dnsserver.cc \
 	dns_internal.cc \
-	$(EPOLL_ALL_SOURCE) \
 	htcp.cc \
 	htcp.h \
 	$(IDENT_ALL_SOURCE) \
@@ -366,6 +358,7 @@ squid_SOURCES = \
 	comm.h \
 	comm_select.cc \
 	comm_poll.cc \
+        comm_epoll.cc \
 	comm_kqueue.cc \
 	CommRead.h \
 	ConfigOption.cc \
@@ -378,7 +371,6 @@ squid_SOURCES = \
 	disk.cc \
 	$(DISKIO_SOURCE) \
 	$(DNSSOURCE) \
-	$(EPOLL_SOURCE) \
 	enums.h \
 	errorpage.cc \
 	$(ESI_SOURCE) \
@@ -636,6 +628,7 @@ ufsdump_SOURCES = debug.cc \
 	comm.h \
 	comm_select.cc \
 	comm_poll.cc \
+        comm_epoll.cc \
 	comm_kqueue.cc \
 	ConfigOption.cc \
 	defines.h \
