@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.76 1998/02/13 20:37:17 wessels Exp $
+ * $Id: url.cc,v 1.77 1998/02/20 18:47:06 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -57,9 +57,21 @@ const char *ProtocolStr[] =
     "TOTAL"
 };
 
-static int url_acceptable[256];
+static int url_ok[256];
 static const char *const hex = "0123456789abcdef";
 static request_t *urnParse(method_t method, char *urn);
+static const char *const valid_hostname_chars = 
+#if ALLOW_HOSTNAME_UNDERSCORES
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz"
+        "0123456789-._";
+#else
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz"
+        "0123456789-.";
+#endif
+static const char *const valid_url_chars = 
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./-_$";
 
 /* convert %xx in url string to a character 
  * Allocate a new string and return a pointer to converted string */
@@ -71,12 +83,9 @@ url_convert_hex(char *org_url, int allocate)
     char *url = NULL;
     char *s = NULL;
     char *t = NULL;
-
     url = allocate ? (char *) xstrdup(org_url) : org_url;
-
     if ((int) strlen(url) < 3 || !strchr(url, '%'))
 	return url;
-
     for (s = t = url; *(s + 2); s++) {
 	if (*s == '%') {
 	    code[0] = *(++s);
@@ -92,23 +101,16 @@ url_convert_hex(char *org_url, int allocate)
     return url;
 }
 
-
-/* INIT Acceptable table. 
- * Borrow from libwww2 with Mosaic2.4 Distribution   */
 void
 urlInitialize(void)
 {
-    unsigned int i;
-    char *good =
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./-_$";
+    int i;
     debug(23, 5) ("urlInitialize: Initializing...\n");
-    for (i = 0; i < 256; i++)
-	url_acceptable[i] = 0;
-    for (; *good; good++)
-	url_acceptable[(unsigned int) *good] = 1;
     assert(sizeof(ProtocolStr) == (PROTO_MAX + 1) * sizeof(char *));
+    for (i=0; i<256; i++)
+	url_ok[i] = strchr(valid_url_chars, (char) i) ? 1 : 0;
+	
 }
-
 
 /* Encode prohibited char in string */
 /* return the pointer to new (allocated) string */
@@ -118,10 +120,9 @@ url_escape(const char *url)
     const char *p;
     char *q;
     char *tmpline = xcalloc(1, MAX_URL);
-
     q = tmpline;
     for (p = url; *p; p++) {
-	if (url_acceptable[(int) (*p)])
+	if (url_ok[(int) (*p)])
 	    *q++ = *p;
 	else {
 	    *q++ = '%';		/* Means hex coming */
@@ -162,10 +163,8 @@ urlParseProtocol(const char *s)
 	return PROTO_HTTP;
     if (strncasecmp(s, "ftp", 3) == 0)
 	return PROTO_FTP;
-#ifndef NO_FTP_FOR_FILE
     if (strncasecmp(s, "file", 4) == 0)
 	return PROTO_FTP;
-#endif
     if (strncasecmp(s, "gopher", 6) == 0)
 	return PROTO_GOPHER;
     if (strncasecmp(s, "wais", 4) == 0)
@@ -247,6 +246,18 @@ urlParse(method_t method, char *url)
     }
     for (t = host; *t; t++)
 	*t = tolower(*t);
+    if (strspn(host, valid_hostname_chars) != strlen(host)) {
+        debug(23, 1)("urlParse: Illegal character in hostname '%s'\n", host);
+        return NULL;
+    }
+    /*
+     * Remove hex escapes
+     */
+    rfc1738_unescape(urlpath);
+    if (strchr(urlpath, '%') != NULL) {
+        debug(23, 1)("urlParse: Illegal escape in URL-Path '%s'\n", urlpath);
+        return NULL;
+    }
     /* remove trailing dots from hostnames */
     while ((l = strlen(host)) > 0 && host[--l] == '.')
 	host[l] = '\0';
@@ -262,14 +273,6 @@ urlParse(method_t method, char *url)
     if (port == 7 || port == 9 || port = 19) {
 	debug(23, 0) ("urlParse: Deny access to port %d\n", port);
 	return NULL;
-    }
-#endif
-#ifdef REMOVE_FTP_TRAILING_SLASHES
-    /* remove trailing slashes from FTP URLs */
-    if (protocol == PROTO_FTP) {
-	t = urlpath + strlen(urlpath);
-	while (t > urlpath && *(--t) == '/')
-	    *t = '\0';
     }
 #endif
     request = memAllocate(MEM_REQUEST_T, 1);
