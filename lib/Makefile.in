@@ -1,5 +1,5 @@
 #
-#  $Id: Makefile.in,v 1.42 1999/04/13 21:17:11 wessels Exp $
+#  $Id: Makefile.in,v 1.43 1999/05/04 21:01:04 wessels Exp $
 #
 prefix		= @prefix@
 top_srcdir	= @top_srcdir@
@@ -75,7 +75,7 @@ clean:
 
 distclean: clean
 	-rm -f libregex.a
-	-rm -f Makefile
+	-rm -f Makefile Makefile.bak
 
 install: all
 
