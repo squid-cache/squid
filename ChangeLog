@@ -1,3 +1,17 @@
+Changes to squid-1.1.beta2 (:
+
+	- Added setting cachemgr.cgi fields from query string
+	  (Neil Murray).
+	- Split log type TCP_IFMODSINCE into TCP_IMS_HIT and
+	  TCP_IMS_MISS
+	- Replaced proto_hit() and proto_miss() with proto_count()
+	  which looks at log_type argument to calcultate hits
+	  and misses.
+	- Split CacheInfo into HTTPCacheInfo and ICPCacheInfo.
+	- Placed call to proto_count() just after log_append()
+	  so we only need it in one place.
+	- Made a lot of proto.c functions static and added prototypes.
+
 Changes to squid-1.1.beta1 (September 12, 1996):
 
 	- Fixed stupid coredump bug in storeGetSwapSpace().
