@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.263 1998/03/25 09:21:43 kostas Exp $
+ * $Id: cache_cf.cc,v 1.264 1998/03/27 18:41:13 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -272,7 +272,6 @@ configDoConfigure(void)
     requirePathnameExists("unlinkd_program", Config.Program.unlinkd);
     if (Config.Program.redirect)
 	requirePathnameExists("redirect_program", Config.Program.redirect);
-    requirePathnameExists("announce_file", Config.Announce.file);
     requirePathnameExists("Icon Directory", Config.icons.directory);
     requirePathnameExists("Error Directory", Config.errorDirectory);
 }

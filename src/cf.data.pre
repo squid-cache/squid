@@ -1404,13 +1404,13 @@ DOC_END
 
 NAME: announce_host
 TYPE: string
-DEFAULT: sd.cache.nlanr.net
+DEFAULT: tracker.ircache.net
 LOC: Config.Announce.host
 DOC_NONE
 
 NAME: announce_file
 TYPE: string
-DEFAULT: /dev/null
+DEFAULT: none
 LOC: Config.Announce.file
 DOC_NONE
 
@@ -1422,13 +1422,12 @@ DOC_START
 	announce_host and announce_port set the hostname and portnumber where
 	the registration message will be sent.
 
-	Hostname will default to 'sd.cache.nlanr.net' and port will default
+	Hostname will default to 'tracker.ircache.net' and port will default
 	to 3131.  If the 'filename' argument is given, the contents of that
 	file will be included in the announce message.
 
-announce_host sd.cache.nlanr.net
+announce_host tracker.ircache.net
 announce_port 3131
-announce_file /dev/null
 DOC_END
 
 COMMENT_START
