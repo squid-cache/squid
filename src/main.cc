@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.43 1996/04/17 19:26:40 wessels Exp $ */
+/* $Id: main.cc,v 1.44 1996/04/17 21:39:55 wessels Exp $ */
 
 /* DEBUG: Section 1             main: startup and main loop */
 
@@ -306,7 +306,7 @@ int main(argc, argv)
 
     /* main loop */
     if (getCleanRate() > 0)
-	next_cleaning = time(0L) + getCleanRate();
+	next_cleaning = time(NULL) + getCleanRate();
     while (1) {
 	loop_delay = (time_t) 60;
 	/* maintain cache storage */
