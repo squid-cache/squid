@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.192 1997/10/23 20:41:13 wessels Exp $
+ * $Id: comm.cc,v 1.193 1997/10/25 16:47:06 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1160,7 +1160,8 @@ commSetCloseOnExec(int fd)
 {
 #ifdef FD_CLOEXEC
     int flags;
-    if ((flags = fcntl(fd, F_GETFL)) < 0) {
+    int dummy;
+    if ((flags = fcntl(fd, F_GETFL, dummy)) < 0) {
 	debug(50, 0) ("FD %d: fcntl F_GETFL: %s\n", fd, xstrerror());
 	return;
     }
