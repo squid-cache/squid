@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.151 1997/12/30 02:47:42 wessels Exp $
+ * $Id: ipcache.cc,v 1.152 1998/01/02 22:03:40 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -873,6 +873,7 @@ ipcacheCheckNumeric(const char *name)
     return &static_addrs;
 }
 
+#if OLD_CODE
 int
 ipcacheQueueDrain(void)
 {
@@ -881,6 +882,7 @@ ipcacheQueueDrain(void)
     ipcacheNudgeQueue();
     return 1;
 }
+#endif
 
 static void
 ipcacheLockEntry(ipcache_entry * i)
