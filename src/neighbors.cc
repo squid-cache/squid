@@ -1,4 +1,4 @@
-/* $Id: neighbors.cc,v 1.6 1996/03/27 20:20:06 wessels Exp $ */
+/* $Id: neighbors.cc,v 1.7 1996/03/28 05:39:36 wessels Exp $ */
 
 #include "squid.h"
 
@@ -341,7 +341,7 @@ void neighbors_open(fd)
 	    echo_hdr.shostid = our_socket_name.sin_addr.s_addr;
 
 	    sep = getservbyname("echo", "udp");
-	    echo_port = ntohs((u_short) (sep ? sep->s_port : 7));
+	    echo_port = sep ? ntohs((u_short) sep->s_port) : 7;
 	}
     }
 }
