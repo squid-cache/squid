@@ -68,6 +68,7 @@ for dir in \
 	lib/cppunit-1.10.0
 do
     if [ -z "$dir" ] || [ -d $dir ] && [ ! -f $dir/configure ]; then
+	if (
 	echo "Bootstrapping $dir"
 	cd ./$dir
 	# Bootstrap the autotool subsystems
@@ -84,6 +85,7 @@ do
 	else
 	    exit 1
 	fi
+    fi
 done
 
 echo "Autotool bootstrapping complete."
