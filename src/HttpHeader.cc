@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeader.cc,v 1.7 1998/02/25 09:53:53 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.8 1998/02/25 16:35:08 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -1471,7 +1471,7 @@ httpHeaderFieldStatDumper(StoreEntry * sentry, int idx, double val, double size,
     const int valid_id = id >= 0 && id < HDR_ENUM_END;
     const char *name = valid_id ? Headers[id].name : "INVALID";
     if (count || valid_id)
-	storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
+	storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2lf\n",
 	    id, name, count, xdiv(count, HeaderParsedCount));
 }
 
@@ -1482,7 +1482,7 @@ httpHeaderCCStatDumper(StoreEntry * sentry, int idx, double val, double size, in
     const int valid_id = id >= 0 && id < SCC_ENUM_END;
     const char *name = valid_id ? SccAttrs[id].name : "INVALID";
     if (count || valid_id)
-	storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
+	storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2lf\n",
 	    id, name, count, xdiv(count, CcPasredCount));
 }
 
@@ -1491,7 +1491,7 @@ static void
 httpHeaderFldsPerHdrDumper(StoreEntry * sentry, int idx, double val, double size, int count)
 {
     if (count)
-	storeAppendPrintf(sentry, "%2d\t %5d\t %5d\t %6.2f\n",
+	storeAppendPrintf(sentry, "%2d\t %5d\t %5d\t %6.2lf\n",
 	    idx, ((int)(val+size)), count, xpercent(count, HeaderEntryParsedCount));
 }
 
@@ -1523,9 +1523,9 @@ shortStringStatDump(StoreEntry *e)
     storeAppendPrintf(e, "<h3>Short String Stats</h3>\n<p>%s\n</p>\n",
 	memPoolReport(shortStrings));
     storeAppendPrintf(e, "<br><h3>Long String Stats</h3>\n");
-    storeAppendPrintf(e, "\talive: %3d (%5.1f KB) high-water:  %3d (%5.1f KB)\n",
-	longStrAliveCount, longStrAliveSize/1024.,
-	longStrHighWaterCount, longStrHighWaterSize/1024.);
+    storeAppendPrintf(e, "\talive: %3d (%5.1lf KB) high-water:  %3d (%5.1lf KB)\n",
+	longStrAliveCount, (double)longStrAliveSize/1024.,
+	longStrHighWaterCount, (double)longStrHighWaterSize/1024.);
 }
 
 void
@@ -1547,7 +1547,7 @@ httpHeaderStoreReport(StoreEntry *e)
 	"id", "name", "#alive", "%err", "%repeat");
     for (ht = 0; ht < HDR_ENUM_END; ht++) {
 	field_attrs_t *f = Headers+ht;
-	storeAppendPrintf(e, "%2d\t %-20s\t %5d\t %6.3f\t %6.3f\n",
+	storeAppendPrintf(e, "%2d\t %-20s\t %5d\t %6.3lf\t %6.3lf\n",
 	    f->id, f->name, f->stat.aliveCount,
 	    xpercent(f->stat.errCount, f->stat.parsCount), 
 	    xpercent(f->stat.repCount, f->stat.parsCount));
