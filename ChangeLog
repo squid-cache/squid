@@ -28,6 +28,7 @@
 	  when it returns 0.
 	- Fixed cbdata memory counting leak.  cbdataUnlock() always
 	  called free(), never memFree().
+	- Fixed storeDirWriteCleanLogs() malloc bug on Alphas.
 
 Changes to squid-1.2.beta18 (Mar 23, 1998):
 
