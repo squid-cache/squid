@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.10 1998/03/05 00:01:08 rousskov Exp $
+ * $Id: HttpReply.cc,v 1.11 1998/03/05 00:42:43 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -49,7 +49,7 @@ HttpReply *
 httpReplyCreate()
 {
     HttpReply *rep = memAllocate(MEM_HTTPREPLY);
-    debug(58,7) ("creating rep: %p\n", rep);
+    debug(58, 7) ("creating rep: %p\n", rep);
     httpReplyInit(rep);
     return rep;
 }
@@ -78,7 +78,7 @@ void
 httpReplyDestroy(HttpReply * rep)
 {
     assert(rep);
-    debug(58,7) ("destroying rep: %p\n", rep);
+    debug(58, 7) ("destroying rep: %p\n", rep);
     httpReplyClean(rep);
     httpReplyDoDestroy(rep);
 }

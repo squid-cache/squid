@@ -1,5 +1,5 @@
 /*
- * $Id: HttpStatusLine.cc,v 1.6 1998/03/03 22:17:51 rousskov Exp $
+ * $Id: HttpStatusLine.cc,v 1.7 1998/03/05 00:42:44 wessels Exp $
  *
  * DEBUG: section 57    HTTP Status-line
  * AUTHOR: Alex Rousskov
@@ -67,8 +67,8 @@ void
 httpStatusLinePackInto(const HttpStatusLine * sline, Packer * p)
 {
     assert(sline && p);
-    debug(57,9) ("packing sline %p using %p:\n", sline, p);
-    debug(57,9) (HttpStatusLineFormat, sline->version, sline->status,
+    debug(57, 9) ("packing sline %p using %p:\n", sline, p);
+    debug(57, 9) (HttpStatusLineFormat, sline->version, sline->status,
 	sline->reason ? sline->reason : httpStatusString(sline->status));
     packerPrintf(p, HttpStatusLineFormat,
 	sline->version, sline->status,

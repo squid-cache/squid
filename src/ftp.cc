@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.200 1998/03/04 23:52:39 wessels Exp $
+ * $Id: ftp.cc,v 1.201 1998/03/05 00:42:52 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1032,7 +1032,7 @@ ftpWriteCommandCallback(int fd, char *bufnotused, size_t size, int errflag, void
     if (size > 0) {
 	fd_bytes(fd, size, FD_WRITE);
 	kb_incr(&Counter.server.all.kbytes_out, size);
-        kb_incr(&Counter.server.ftp.kbytes_out, size);
+	kb_incr(&Counter.server.ftp.kbytes_out, size);
     }
     if (errflag == COMM_ERR_CLOSING)
 	return;
@@ -1105,7 +1105,7 @@ ftpReadControlReply(int fd, void *data)
     if (len > 0) {
 	fd_bytes(fd, len, FD_READ);
 	kb_incr(&Counter.server.all.kbytes_in, len);
-        kb_incr(&Counter.server.ftp.kbytes_in,len);
+	kb_incr(&Counter.server.ftp.kbytes_in, len);
     }
     debug(9, 5) ("ftpReadControlReply: FD %d, Read %d bytes\n", fd, len);
     if (len < 0) {

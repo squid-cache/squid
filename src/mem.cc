@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.10 1998/03/05 00:01:11 rousskov Exp $
+ * $Id: mem.cc,v 1.11 1998/03/05 00:42:59 wessels Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -193,7 +193,7 @@ memClean()
     if (dirty_count)
 	debug(13, 2) ("memClean: %d pools are left dirty\n", dirty_count);
     else
-	memCleanModule(); /* will free chunks and stuff */
+	memCleanModule();	/* will free chunks and stuff */
 }
 
 

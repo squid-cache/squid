@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.74 1998/03/03 21:58:49 rousskov Exp $
+ * $Id: cachemgr.cc,v 1.75 1998/03/05 00:42:47 wessels Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -301,7 +301,7 @@ munge_menu_line(const char *buf, cachemgr_request * req)
     const char *p;
     char *a_url;
     char *buf_copy;
-    static char html[2*1024];
+    static char html[2 * 1024];
     if (strlen(buf) < 1)
 	return buf;
     if (*buf != ' ')
@@ -339,7 +339,8 @@ munge_menu_line(const char *buf, cachemgr_request * req)
 static const char *
 munge_other_line(const char *buf, cachemgr_request * req)
 {
-    static const char* ttags[] = { "td", "th" };
+    static const char *ttags[] =
+    {"td", "th"};
     static char html[4096];
     static table_line_num = 0;
     static next_is_header = 0;
@@ -358,29 +359,33 @@ munge_other_line(const char *buf, cachemgr_request * req)
     }
     /* start html table */
     if (!table_line_num) {
-	l += snprintf(html+l, sizeof(html)-l, "</pre><table border=1 cellpadding=2 cellspacing=1>\n");
+	l += snprintf(html + l, sizeof(html) - l, "</pre><table border=1 cellpadding=2 cellspacing=1>\n");
 	next_is_header = 0;
     }
     /* remove '\n' */
     is_header = (!table_line_num || next_is_header) && !strchr(buf, ':') && !is_number(buf);
     ttag = ttags[is_header];
     /* record starts */
-    l += snprintf(html+l, sizeof(html)-l, "<tr>");
+    l += snprintf(html + l, sizeof(html) - l, "<tr>");
     /* substitute '\t' */
     buf_copy = x = xstrdup(buf);
-    if ((p = strchr(x, '\n'))) *p = '\0';
+    if ((p = strchr(x, '\n')))
+	*p = '\0';
     while (x && strlen(x)) {
 	int column_span = 1;
 	const char *cell = xstrtok(&x, '\t');
-	while (x && *x == '\t') { column_span++; x++; }
-	l += snprintf(html+l, sizeof(html)-l, "<%s colspan=%d align=\"%s\">%s</%s>",
+	while (x && *x == '\t') {
+	    column_span++;
+	    x++;
+	}
+	l += snprintf(html + l, sizeof(html) - l, "<%s colspan=%d align=\"%s\">%s</%s>",
 	    ttag, column_span,
 	    is_header ? "center" : is_number(cell) ? "right" : "left",
 	    cell, ttag);
     }
     xfree(buf_copy);
     /* record ends */
-    l += snprintf(html+l, sizeof(html)-l, "</tr>\n");
+    l += snprintf(html + l, sizeof(html) - l, "</tr>\n");
     next_is_header = is_header && strstr(buf, "\t\t");
     table_line_num++;
     return html;

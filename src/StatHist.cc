@@ -1,6 +1,6 @@
 
 /*
- * $Id: StatHist.cc,v 1.4 1998/03/04 06:23:28 rousskov Exp $
+ * $Id: StatHist.cc,v 1.5 1998/03/05 00:42:45 wessels Exp $
  *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels
@@ -73,7 +73,7 @@ statHistInit(StatHist * H, int capacity, hbase_f val_in, hbase_f val_out, double
     /* a max value should go into the last bin */
     assert(statHistBin(H, max) == H->capacity - 1);
     /* it is hard to test val_out, here is a crude test */
-    assert(((int)(0.99+statHistVal(H, 0)-min)) == 0);
+    assert(((int) (0.99 + statHistVal(H, 0) - min)) == 0);
 }
 
 void

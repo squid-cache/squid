@@ -56,7 +56,7 @@ typedef struct _HttpHdrCc HttpHdrCc;
 typedef struct _HttpHeaderExtField HttpHeaderExtField;
 typedef struct _HttpHeaderEntry HttpHeaderEntry;
 typedef struct _HttpHeaderFieldStat HttpHeaderFieldStat;
-typedef union  _field_store field_store;
+typedef union _field_store field_store;
 typedef struct _HttpBody HttpBody;
 typedef struct _HttpReply HttpReply;
 typedef struct _HttpStateData HttpStateData;
