@@ -1,0 +1,49 @@
+This program authenticates users using SASL (specifically the
+cyrus-sasl authentication method).
+
+SASL is configurable (somewhat like PAM). Each service authenticating
+against SASL identifies itself with an application name. Each 
+"application" can be configured independently by the SASL administrator.
+
+For this authenticator, the SASL application name is, by default,
+
+	squid_sasl_auth
+
+To configure the authentication method used the file "squid_sasl_auth.conf" 
+can be placed in the appropriate location, usually "/usr/lib/sasl".
+
+The authentication database is defined by the "pwcheck_method" parameter.
+Only the "PLAIN" authentication mechanism is used.
+
+Examples:
+
+pwcheck_method:sasldb
+	use sasldb - the default if no conf file is installed.
+pwcheck_method:pam
+	use PAM
+pwcheck_method:passwd
+     use traditional /etc/passwd
+pwcheck_method:shadow
+     use slightly less traditional /etc/shadow
+
+Others methods may be supported by your cyrus-sasl implementation - 
+consult your cyrus-sasl documentation for information.
+
+Typically the authentication database (/etc/sasldb, /etc/shadow, pam)
+can not be accessed by a "normal" user. You should use setuid/setgid
+and an appropriate user/group on the executable to allow the
+authenticator to access the appropriate password database. If the
+access to the database is not permitted then the authenticator
+will typically fail with "-1, generic error".
+
+	chown root.mail sasl_auth
+	chmod ug+s sasl_auth
+
+If the application name ("squid_sasl_auth") will also be used for the
+pam service name if pwcheck_method:pam is chosen. And example pam
+configuration file  "squid_sasl_auth" is also included.
+
+
+Ian Castle
+ian.castle@coldcomfortfarm.net
+March 2002
