@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.214 2000/05/02 19:58:13 hno Exp $
+ * $Id: acl.cc,v 1.215 2000/05/02 20:22:54 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1979,37 +1979,23 @@ aclDestroyIntRange(intrange * list)
 static int
 aclDomainCompare(const void *a, const void *b)
 {
-    const char *d1 = a;
-    const char *d2 = b;
-    int l1;
-    int l2;
-    while ('.' == *d1)
-	d1++;
-    while ('.' == *d2)
-	d2++;
-    l1 = strlen(d1);
-    l2 = strlen(d2);
-    while (d1[--l1] == d2[--l2]) {
-	if ((l1 == 0) && (l2 == 0))
-	    return 0;		/* d1 == d2 */
-	if (0 == l1) {
-	    if ('.' == d2[l2 - 1]) {
-		debug(28, 0) ("WARNING: %s is a subdomain of %s\n", d2, d1);
-		debug(28, 0) ("WARNING: This may break Splay tree searching\n");
-		debug(28, 0) ("WARNING: You should remove '%s' from the ACL named '%s'\n", d2, AclMatchedName);
-	    }
-	    return -1;		/* d1 < d2 */
-	}
-	if (0 == l2) {
-	    if ('.' == d1[l1 - 1]) {
-		debug(28, 0) ("WARNING: %s is a subdomain of %s\n", d1, d2);
-		debug(28, 0) ("WARNING: This may break Splay tree searching\n");
-		debug(28, 0) ("WARNING: You should remove '%s' from the ACL named '%s'\n", d1, AclMatchedName);
-	    }
-	    return 1;		/* d1 > d2 */
-	}
+    const char *d1;
+    const char *d2;
+    int ret;
+    d1=b;
+    d2=a;
+    ret = aclHostDomainCompare(d1, d2);
+    if (ret != 0) {
+	d1=a;
+	d2=b;
+	ret = aclHostDomainCompare(d1, d2);
     }
-    return (d1[l1] - d2[l2]);
+    if (ret == 0) {
+	debug(28,0 ) ("WARNING: '%s' is a subdomain of '%s'\n", d1, d2);
+	debug(28, 0) ("WARNING: because of this '%s' is ignored to keep splay tree searching predictable\n", a);
+	debug(28, 0) ("WARNING: You should probably remove '%s' from the ACL named '%s'\n", d1, AclMatchedName);
+    }
+    return ret;
 }
 
 /* compare a host and a domain */
