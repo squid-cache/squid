@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.242 2003/02/21 22:50:09 robertc Exp $
+ * $Id: ipcache.cc,v 1.243 2004/04/03 14:35:48 hno Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -320,7 +320,7 @@ ipcacheParse(const char *inbuf)
     i.flags.negcached = 0;
     ttl = atoi(token);
 
-    if (ttl > 0)
+    if (ttl > 0 && ttl < Config.positiveDnsTtl)
         i.expires = squid_curtime + ttl;
     else
         i.expires = squid_curtime + Config.positiveDnsTtl;
@@ -408,8 +408,12 @@ ipcacheParse(rfc1035_rr * answers, int nr)
         if (answers[k]._class != RFC1035_CLASS_IN)
             continue;
 
-        if (j == 0)
-            i.expires = squid_curtime + answers[k].ttl;
+        if (j == 0) {
+            if ((int) answers[k].ttl < Config.positiveDnsTtl)
+                i.expires = squid_curtime + answers[k].ttl;
+            else
+                i.expires = squid_curtime + Config.positiveDnsTtl;
+        }
 
         assert(answers[k].rdlength == 4);
 
