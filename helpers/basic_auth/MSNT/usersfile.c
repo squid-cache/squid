@@ -28,9 +28,9 @@
 static int
 name_cmp(const void *a, const void *b)
 {
-    const char *A = a;
-    const char *B = b;
-    return strcasecmp(A, B);
+    const char * const *A = a;
+    const char * const *B = b;
+    return strcasecmp(*A, *B);
 }
 
 static void
@@ -148,7 +148,7 @@ Check_userlist(usersfile * uf, char *User)
      * If so, allow. If not, deny. Reconstruct the username
      * to have whitespace, to avoid finding wrong string subsets. */
 
-    p = bsearch(User,
+    p = bsearch(&User,
 	uf->names,
 	uf->Inuse,
 	sizeof(*uf->names),
