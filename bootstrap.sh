@@ -76,7 +76,7 @@ do
 	    perl -i.bak -p -e 's/m4_patsubst/m4_bpatsubst/g; s/m4_regexp/m4_bregexp/g;' aclocal.m4
 	fi
 	bootstrap autoheader$acver
-	bootstrap libtoolize --automake
+	#bootstrap libtoolize --automake
 	bootstrap automake$amver --foreign --add-missing
 	bootstrap autoconf$acver); then
 	    : # OK
@@ -86,6 +86,8 @@ do
 done
 
 echo "Autotool bootstrapping complete."
-#echo "bootstrapping sub projects."
-#cd lib/libTrie && ./bootstrap.sh
+echo "bootstrapping sub projects."
+if [ -d lib/libTrie ]; then
+	cd lib/libTrie && ./bootstrap.sh
+fi
 
