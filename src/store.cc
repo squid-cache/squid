@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.511 2000/01/11 05:32:56 wessels Exp $
+ * $Id: store.cc,v 1.512 2000/01/14 17:34:49 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -314,7 +314,7 @@ storeUnlockObject(StoreEntry * e)
     } else {
 	storePurgeMem(e);
 	if (EBIT_TEST(e->flags, KEY_PRIVATE))
-	    debug(0, 0) ("WARNING: %s:%d: found KEY_PRIVATE\n", __FILE__, __LINE__);
+	    debug(20, 1) ("WARNING: %s:%d: found KEY_PRIVATE\n", __FILE__, __LINE__);
     }
     return 0;
 }
