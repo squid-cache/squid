@@ -215,6 +215,8 @@
 /* Define if you have struct rusage */
 #undef HAVE_STRUCT_RUSAGE
 
+#undef socklen_t
+
 /* The number of bytes in a int.  */
 #undef SIZEOF_INT
 
