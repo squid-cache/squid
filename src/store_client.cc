@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.84 2000/03/06 16:23:35 wessels Exp $
+ * $Id: store_client.cc,v 1.85 2000/03/25 05:14:04 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -312,10 +312,7 @@ storeClientCopy3(StoreEntry * e, store_client * sc)
 	return;
     }
     assert(STORE_DISK_CLIENT == sc->type);
-    if (sc->flags.disk_io_pending) {
-	debug(20, 1) ("WARNING: Averted multiple fd operation (2)\n");
-	return;
-    }
+    assert(!sc->flags.disk_io_pending);
     debug(20, 3) ("storeClientCopy3: reading from STORE\n");
     storeClientFileRead(sc);
 }
@@ -511,7 +508,7 @@ storeUnregister(StoreEntry * e, void *data)
     delayUnregisterDelayIdPtr(&sc->delay_id);
 #endif
     cbdataUnlock(sc->callback_data);	/* we're done with it now */
-    /*assert(!sc->flags.disk_io_pending);*/
+    /*assert(!sc->flags.disk_io_pending); */
     cbdataFree(sc);
     assert(e->lock_count > 0);
     if (mem->nclients == 0)
@@ -556,6 +553,8 @@ InvokeHandlers(StoreEntry * e)
 	if (sc->callback_data == NULL)
 	    continue;
 	if (sc->callback == NULL)
+	    continue;
+	if (sc->flags.disk_io_pending)
 	    continue;
 	storeClientCopy2(e, sc);
     }
