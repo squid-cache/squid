@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.251 1998/04/09 21:31:36 wessels Exp $
+ * $Id: comm.cc,v 1.252 1998/04/24 07:09:31 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1480,4 +1480,5 @@ commSetConnectTimeout(int fd, time_t timeout)
     fde *F = &fd_table[fd];
     F->connect_timeout = timeout;
 }
+
 #endif

@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.53 1998/04/22 16:21:24 rousskov Exp $
+ * $Id: globals.h,v 1.54 1998/04/24 07:09:33 wessels Exp $
  */
 
 extern FILE *debug_log;		/* NULL */
@@ -98,9 +98,8 @@ extern dlink_list store_list;
 extern const String StringNull;	/* { 0, 0, NULL } */
 extern int hot_obj_count;	/* 0 */
 extern int _db_level;
-extern const int CacheDigestHashFuncCount; /* 4 */
-extern CacheDigest *store_digest; /* NULL */
-extern const char *StoreDigestUrlPath; /* "store_digest" */
-extern const char *StoreDigestMimeStr; /* "application/cache-digest" */
-extern const Version CacheDigestVer; /* { 2, 2 } */
-
+extern const int CacheDigestHashFuncCount;	/* 4 */
+extern CacheDigest *store_digest;	/* NULL */
+extern const char *StoreDigestUrlPath;	/* "store_digest" */
+extern const char *StoreDigestMimeStr;	/* "application/cache-digest" */
+extern const Version CacheDigestVer;	/* { 2, 2 } */

@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeaderTools.cc,v 1.8 1998/04/06 22:32:08 wessels Exp $
+ * $Id: HttpHeaderTools.cc,v 1.9 1998/04/24 07:09:28 wessels Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -185,7 +185,7 @@ httpHeaderParseSize(const char *start, size_t * value)
  * parses a given string then packs compiled headers and compares the result
  * with the original, reports discrepancies
  */
-void 
+void
 httpHeaderTestParser(const char *hstr)
 {
     static int bug_count = 0;

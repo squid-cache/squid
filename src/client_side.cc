@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.290 1998/04/24 06:08:16 wessels Exp $
+ * $Id: client_side.cc,v 1.291 1998/04/24 07:09:30 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -44,7 +44,7 @@ static CWCB clientWriteComplete;
 static PF clientReadRequest;
 static PF connStateFree;
 static PF requestTimeout;
-static void clientFinishIMS(clientHttpRequest *http);
+static void clientFinishIMS(clientHttpRequest * http);
 static STCB clientGetHeadersForIMS;
 static STCB clientGetHeadersForSpecialIMS;
 static int CheckQuickAbort2(const clientHttpRequest *);
@@ -585,8 +585,7 @@ clientUpdateCounters(clientHttpRequest * http)
 	if (sst)
 	    statHistCount(&Counter.icp.server_svc_time, sst);
 	Counter.icp.times_used++;
-    } else
-    if (H->alg == PEER_SA_DIGEST) {
+    } else if (H->alg == PEER_SA_DIGEST) {
 	statHistCount(&Counter.cd.client_svc_time, svc_time);
 	if (sst)
 	    statHistCount(&Counter.cd.server_svc_time, sst);
@@ -601,20 +600,20 @@ clientUpdateCounters(clientHttpRequest * http)
     if (http->flags.internal && strStr(http->request->urlpath, StoreDigestUrlPath)) {
 	kb_incr(&Counter.cd.kbytes_sent, http->out.size);
 	Counter.cd.msgs_sent++;
-	debug(33, 1) ("Client %s requested local cache digest (%d bytes)\n", 
+	debug(33, 1) ("Client %s requested local cache digest (%d bytes)\n",
 	    inet_ntoa(http->request->client_addr), http->out.size);
     }
     /* @?@ split this ugly if-monster */
-    if (/* we used ICP or CD for peer selecton */
+    if (			/* we used ICP or CD for peer selecton */
 	H->alg != PEER_SA_NONE &&
-	/* a successful CD lookup was made */
+    /* a successful CD lookup was made */
 	H->cd_lookup != LOOKUP_NONE &&
-	/* it was not a CD miss (we go direct on CD MISSes) */
+    /* it was not a CD miss (we go direct on CD MISSes) */
 	!(H->alg == PEER_SA_DIGEST && H->cd_lookup == LOOKUP_MISS) &&
-	/* request was cachable */
+    /* request was cachable */
 	!EBIT_TEST(http->request->flags, REQ_NOCACHE) &&
 	EBIT_TEST(http->request->flags, REQ_CACHABLE) &&
-	/* paranoid: we have a reply pointer */
+    /* paranoid: we have a reply pointer */
 	(reply = storeEntryReply(http->entry))) {
 
 	/* tmp, remove this later */
@@ -626,7 +625,7 @@ clientUpdateCounters(clientHttpRequest * http)
 	const int guess_hit = LOOKUP_HIT == H->cd_lookup;
 	peer *peer = peerFindByName(H->cd_host);
 
-	debug(33,3) ("clientUpdateCounters: peer %s real/guess: %d/%d (%d) for %s!\n",
+	debug(33, 3) ("clientUpdateCounters: peer %s real/guess: %d/%d (%d) for %s!\n",
 	    H->cd_host, real_hit, guess_hit, lookup_hit, http->request->host);
 	cacheDigestGuessStatsUpdate(&Counter.cd.guess, real_hit, guess_hit);
 	/* tmp hack */
@@ -642,7 +641,7 @@ clientUpdateCounters(clientHttpRequest * http)
 	    /* temporary paranoid debug @?@ */
 	    static int max_count = 200;
 	    if (max_count > 0) {
-		debug(33,1) ("clientUpdateCounters: lost peer %s for %s! (%d)\n", 
+		debug(33, 1) ("clientUpdateCounters: lost peer %s for %s! (%d)\n",
 		    H->cd_host, http->request->host, max_count);
 		max_count--;
 	    }
@@ -875,7 +874,7 @@ clientCachable(clientHttpRequest * http)
      * to indicate uncachable objects.
      */
     if (!aclCheckFast(Config.accessList.noCache, &ch))
-	    return 0;
+	return 0;
     if (Config.cache_stop_relist)
 	if (aclMatchRegex(Config.cache_stop_relist, url))
 	    return 0;
@@ -1277,7 +1276,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 
 /* called when clientGetHeadersFor*IMS completes */
 static void
-clientFinishIMS(clientHttpRequest *http)
+clientFinishIMS(clientHttpRequest * http)
 {
     StoreEntry *entry = http->entry;
     MemBuf mb;
@@ -1597,8 +1596,8 @@ clientProcessRequest(clientHttpRequest * http)
 	    http->out.offset,
 	    SM_PAGE_SIZE,
 	    memAllocate(MEM_4K_BUF),
-	    (http->log_type == LOG_TCP_IMS_MISS) ? 
-		clientGetHeadersForIMS : clientGetHeadersForSpecialIMS,
+	    (http->log_type == LOG_TCP_IMS_MISS) ?
+	    clientGetHeadersForIMS : clientGetHeadersForSpecialIMS,
 	    http);
 	break;
     case LOG_TCP_REFRESH_MISS:
@@ -2012,8 +2011,8 @@ clientReadRequest(int fd, void *data)
 	    if (!http->flags.internal)
 		if (0 == strNCmp(request->urlpath, "/squid-internal/", 16))
 		    if (0 == strcasecmp(request->host, getMyHostname()))
-		        if (request->port == Config.Port.http->i)
-	                    http->flags.internal = 1;
+			if (request->port == Config.Port.http->i)
+			    http->flags.internal = 1;
 	    safe_free(http->log_uri);
 	    http->log_uri = xstrdup(urlCanonicalClean(request));
 	    request->client_addr = conn->peer.sin_addr;

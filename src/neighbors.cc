@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.200 1998/04/24 06:08:18 wessels Exp $
+ * $Id: neighbors.cc,v 1.201 1998/04/24 07:09:39 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -549,24 +549,21 @@ neighborsUdpPing(request_t * request,
 
 /* lookup the digest of a given peer */
 lookup_t
-peerDigestLookup(peer *p, request_t * request, StoreEntry * entry)
+peerDigestLookup(peer * p, request_t * request, StoreEntry * entry)
 {
 #if USE_CACHE_DIGESTS
     const cache_key *key = request ? storeKeyPublic(storeUrl(entry), request->method) : NULL;
     assert(p);
     assert(request);
     debug(15, 5) ("neighborsDigestPeerLookup: peer %s\n", p->host);
- 	/* does the peeer have a valid digest? */
+    /* does the peeer have a valid digest? */
     if (EBIT_TEST(p->digest.flags, PD_DISABLED)) {
 	return LOOKUP_NONE;
-    } else
-    if (!peerAllowedToUse(p, request)) {
+    } else if (!peerAllowedToUse(p, request)) {
 	return LOOKUP_NONE;
-    } else
-    if (EBIT_TEST(p->digest.flags, PD_USABLE)) {
-	/* fall through; put here to have common case on top */;
-    } else
-    if (!EBIT_TEST(p->digest.flags, PD_INITED)) {
+    } else if (EBIT_TEST(p->digest.flags, PD_USABLE)) {
+	/* fall through; put here to have common case on top */ ;
+    } else if (!EBIT_TEST(p->digest.flags, PD_INITED)) {
 	peerDigestInit(p);
 	return LOOKUP_NONE;
     } else {
@@ -618,7 +615,7 @@ neighborsDigestSelect(request_t * request, StoreEntry * entry)
 	if (!best_p || (p_rtt && p_rtt < best_rtt)) {
 	    best_p = p;
 	    best_rtt = p_rtt;
-	    if (p_rtt) /* informative choice (aka educated guess) */
+	    if (p_rtt)		/* informative choice (aka educated guess) */
 		ichoice_count++;
 	    debug(15, 4) ("neighborsDigestSelect: peer %s leads with rtt %d\n",
 		p->host, best_rtt);
@@ -635,7 +632,7 @@ neighborsDigestSelect(request_t * request, StoreEntry * entry)
 }
 
 void
-peerNoteDigestLookup(request_t * request, peer *p, lookup_t lookup)
+peerNoteDigestLookup(request_t * request, peer * p, lookup_t lookup)
 {
 #if USE_CACHE_DIGESTS
     if (p)

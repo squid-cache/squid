@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.21 1998/04/07 23:43:04 rousskov Exp $
+ * $Id: mem.cc,v 1.22 1998/04/24 07:09:37 wessels Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -41,6 +41,7 @@ static const struct {
     const char *name;
     size_t obj_size;
 } StrPoolsAttrs[mem_str_pool_count] = {
+
     {
 	"Short Strings", 36,
     },				/* to fit rfc1123 and similar */

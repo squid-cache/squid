@@ -1,4 +1,5 @@
 
+
 struct _acl_ip_data {
     struct in_addr addr1;	/* if addr2 non-zero then its a range */
     struct in_addr addr2;
@@ -614,11 +615,11 @@ struct _HierarchyLogEntry {
     char host[SQUIDHOSTNAMELEN];
     icp_ping_data icp;
 #if USE_CACHE_DIGESTS
-    char cd_host[SQUIDHOSTNAMELEN]; /* the host of selected by cd peer */
-    peer_select_alg_t alg; /* peer selection algorithm */
-    lookup_t cd_lookup;    /* cd prediction: none, miss, hit */
-    int n_choices;         /* #peers we selected from (cd only) */
-    int n_ichoices;        /* #peers with known rtt we selected from (cd only) */
+    char cd_host[SQUIDHOSTNAMELEN];	/* the host of selected by cd peer */
+    peer_select_alg_t alg;	/* peer selection algorithm */
+    lookup_t cd_lookup;		/* cd prediction: none, miss, hit */
+    int n_choices;		/* #peers we selected from (cd only) */
+    int n_ichoices;		/* #peers with known rtt we selected from (cd only) */
     struct timeval peer_select_start;
     struct timeval store_complete_stop;
 #endif
@@ -782,8 +783,8 @@ struct _domain_type {
 };
 
 struct _Version {
-    short int current;   /* current version */
-    short int required;  /* minimal version that can safely handle current version */
+    short int current;		/* current version */
+    short int required;		/* minimal version that can safely handle current version */
 };
 
 /* digest control block; used for transmission and storage */
@@ -796,7 +797,7 @@ struct _StoreDigestCBlock {
     unsigned char bits_per_entry;
     unsigned char hash_func_count;
     short int reserved_short;
-    int reserved[32-6];
+    int reserved[32 - 6];
 };
 
 struct _DigestFetchState {
@@ -815,15 +816,15 @@ struct _cd_guess_stats {
     int false_hits;
     int true_misses;
     int false_misses;
-    int close_hits; /* tmp, remove it later */
+    int close_hits;		/* tmp, remove it later */
 };
 
 struct _PeerDigest {
     CacheDigest *cd;
-    int flags;        /* PD_ */
+    int flags;			/* PD_ */
     time_t last_fetch_resp_time;
     time_t last_req_timestamp;
-    time_t last_dis_delay;    /* last disability delay */
+    time_t last_dis_delay;	/* last disability delay */
     struct {
 	cd_guess_stats guess;
 	int used_count;
@@ -1205,7 +1206,7 @@ struct _StatCounters {
 	kb_t r_kbytes_recv;
 	StatHist query_svc_time;
 	StatHist reply_svc_time;
-        int query_timeouts;
+	int query_timeouts;
 #if USE_CACHE_DIGESTS
 	StatHist client_svc_time;
 	StatHist server_svc_time;
@@ -1226,12 +1227,12 @@ struct _StatCounters {
 	kb_t memory;
 	int msgs_sent;
 	int msgs_recv;
-        cd_guess_stats guess;
+	cd_guess_stats guess;
 	StatHist client_svc_time;
 	StatHist server_svc_time;
-	StatHist peer_choice_count;  /* #peer select choices in peerSelectFoo */
-	StatHist peer_ichoice_count; /* #peer select choices with rtt > 0 */
-	StatHist on_xition_count;    /* #(0->1) transitions during cacheDigestAdd */
+	StatHist peer_choice_count;	/* #peer select choices in peerSelectFoo */
+	StatHist peer_ichoice_count;	/* #peer select choices with rtt > 0 */
+	StatHist on_xition_count;	/* #(0->1) transitions during cacheDigestAdd */
     } cd;
 #endif
     int page_faults;

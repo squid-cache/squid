@@ -270,7 +270,7 @@ storeSwapOutFileOpened(void *data, int fd, int errcode)
  * does not include the meta header.
  */
 int
-storeSwapOutWriteQueued(MemObject *mem)
+storeSwapOutWriteQueued(MemObject * mem)
 {
     /*
      * this function doesn't get called much, so I'm using

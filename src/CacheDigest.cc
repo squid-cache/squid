@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.16 1998/04/24 06:08:15 wessels Exp $
+ * $Id: CacheDigest.cc,v 1.17 1998/04/24 07:09:26 wessels Exp $
  *
  * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -40,13 +40,13 @@ typedef struct {
 } CacheDigestStats;
 
 /* local functions */
-static void cacheDigestHashKey(const CacheDigest *cd, const cache_key *key);
+static void cacheDigestHashKey(const CacheDigest * cd, const cache_key * key);
 
 /* static array used by cacheDigestHashKey for optimization purposes */
 static u_num32 hashed_keys[4];
 
 static void
-cacheDigestInit(CacheDigest *cd, int capacity, int bpe)
+cacheDigestInit(CacheDigest * cd, int capacity, int bpe)
 {
     const size_t mask_size = cacheDigestCalcMaskSize(capacity, bpe);
     assert(cd);
@@ -56,7 +56,7 @@ cacheDigestInit(CacheDigest *cd, int capacity, int bpe)
     cd->bits_per_entry = bpe;
     cd->mask_size = mask_size;
     cd->mask = xcalloc(cd->mask_size, 1);
-    debug(70,2) ("cacheDigestInit: capacity: %d entries, pbe: %d; size: %d bytes\n",
+    debug(70, 2) ("cacheDigestInit: capacity: %d entries, pbe: %d; size: %d bytes\n",
 	cd->capacity, cd->bits_per_entry, cd->mask_size);
 }
 
@@ -64,7 +64,7 @@ CacheDigest *
 cacheDigestCreate(int capacity, int bpe)
 {
     CacheDigest *cd = memAllocate(MEM_CACHE_DIGEST);
-    assert(MD5_DIGEST_CHARS == 16);  /* our hash functions rely on 16 byte keys */
+    assert(MD5_DIGEST_CHARS == 16);	/* our hash functions rely on 16 byte keys */
     cacheDigestInit(cd, capacity, bpe);
     return cd;
 }
@@ -217,7 +217,7 @@ cacheDigestBitUtil(const CacheDigest * cd)
 }
 
 void
-cacheDigestGuessStatsUpdate(cd_guess_stats *stats, int real_hit, int guess_hit)
+cacheDigestGuessStatsUpdate(cd_guess_stats * stats, int real_hit, int guess_hit)
 {
     assert(stats);
     if (real_hit) {
@@ -234,16 +234,16 @@ cacheDigestGuessStatsUpdate(cd_guess_stats *stats, int real_hit, int guess_hit)
 }
 
 void
-cacheDigestGuessStatsReport(const cd_guess_stats *stats, StoreEntry * sentry, const char *label)
+cacheDigestGuessStatsReport(const cd_guess_stats * stats, StoreEntry * sentry, const char *label)
 {
     const int true_count = stats->true_hits + stats->true_misses;
     const int false_count = stats->false_hits + stats->false_misses;
     const int hit_count = stats->true_hits + stats->false_hits;
     const int miss_count = stats->true_misses + stats->false_misses;
     const int tot_count = true_count + false_count;
-    
+
     assert(label);
-    assert(tot_count == hit_count + miss_count); /* paranoid */
+    assert(tot_count == hit_count + miss_count);	/* paranoid */
 
     storeAppendPrintf(sentry, "Digest guesses stats for %s:\n", label);
     storeAppendPrintf(sentry, "guess\t hit\t\t miss\t\t total\t\t\n");
@@ -266,7 +266,7 @@ cacheDigestGuessStatsReport(const cd_guess_stats *stats, StoreEntry * sentry, co
 }
 
 void
-cacheDigestReport(CacheDigest *cd, const char *label, StoreEntry * e)
+cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e)
 {
     CacheDigestStats stats;
     assert(cd && e);
@@ -300,7 +300,7 @@ cacheDigestCalcMaskSize(int cap, int bpe)
 }
 
 static void
-cacheDigestHashKey(const CacheDigest *cd, const cache_key *key)
+cacheDigestHashKey(const CacheDigest * cd, const cache_key * key)
 {
     const int bit_count = cd->mask_size * 8;
     /* get four hashed values */
@@ -311,6 +311,6 @@ cacheDigestHashKey(const CacheDigest *cd, const cache_key *key)
     hashed_keys[2] %= bit_count;
     hashed_keys[3] %= bit_count;
 
-    debug(70,9) ("cacheDigestHashKey: %s -(%d)-> %d %d %d %d\n",
+    debug(70, 9) ("cacheDigestHashKey: %s -(%d)-> %d %d %d %d\n",
 	storeKeyText(key), bit_count, hashed_keys[0], hashed_keys[1], hashed_keys[2], hashed_keys[3]);
 }

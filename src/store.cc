@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.409 1998/04/24 06:08:22 wessels Exp $
+ * $Id: store.cc,v 1.410 1998/04/24 07:09:46 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -676,8 +676,8 @@ storeMaintainSwapSpace(void *datanotused)
 	     * LRU age will go to zero.
 	     */
 	    if (memInUse(MEM_STOREENTRY) > max_scan) {
-	        dlinkDelete(&e->lru, &store_list);
-	        dlinkAdd(e, &e->lru, &store_list);
+		dlinkDelete(&e->lru, &store_list);
+		dlinkAdd(e, &e->lru, &store_list);
 	    }
 	    locked++;
 	} else if (storeCheckExpired(e, 1)) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.18 1998/04/22 16:22:15 rousskov Exp $
+ * $Id: refresh.cc,v 1.19 1998/04/24 07:09:44 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -115,7 +115,7 @@ refreshCheck(const StoreEntry * entry, const request_t * request, time_t delta)
 	    return 0;
 	}
 	debug(22, 3) ("refreshCheck: YES: lastvalid <= lastmod (%d <= %d)\n",
-	    (int)entry->timestamp, (int)entry->lastmod);
+	    (int) entry->timestamp, (int) entry->lastmod);
 	return 1;
     }
     factor = 100 * age / (entry->timestamp - entry->lastmod);
@@ -161,12 +161,11 @@ refreshWhen(const StoreEntry * entry)
     if (-1 < entry->expires) {
 	debug(22, 3) ("refreshWhen: expires set\n");
 	refresh_time = entry->expires;
-    } else
-    if (entry->timestamp <= entry->lastmod) {
+    } else if (entry->timestamp <= entry->lastmod) {
 	debug(22, 3) ("refreshWhen: lastvalid <= lastmod\n");
 	refresh_time = squid_curtime;
     } else {
-	refresh_time = pct * (entry->timestamp - entry->lastmod)/100 + entry->timestamp;
+	refresh_time = pct * (entry->timestamp - entry->lastmod) / 100 + entry->timestamp;
 	debug(22, 3) ("refreshWhen: using refresh pct\n");
     }
     /* take min/max into account, max takes priority over min */
@@ -175,7 +174,7 @@ refreshWhen(const StoreEntry * entry)
     if (refresh_time > max)
 	refresh_time = max;
     debug(22, 3) ("refreshWhen: answer: %d (in %d secs)\n",
-	refresh_time, (int)(refresh_time - squid_curtime));
+	refresh_time, (int) (refresh_time - squid_curtime));
     return refresh_time;
 }
 
