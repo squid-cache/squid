@@ -1,9 +1,10 @@
 
 /*
- * $Id: carp.cc,v 1.15 2001/01/12 00:37:15 wessels Exp $
+ * $Id: carp.cc,v 1.16 2002/04/04 21:03:46 hno Exp $
  *
  * DEBUG: section 39    Cache Array Routing Protocol
- * AUTHOR: Eric Stern
+ * AUTHOR: Henrik Nordstrom
+ * BASED ON: carp.c by Eric Stern and draft-vinod-carp-v1-03.txt
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -37,50 +38,88 @@
 
 #if USE_CARP
 
+#define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (32-(n))))
+
+static int n_carp_peers = 0;
+static peer **carp_peers = NULL;
 static OBJH carpCachemgr;
+
+static int
+peerSortWeight(const void *a, const void *b)
+{
+    const peer *const *p1 = a, *const *p2 = b;
+    return (*p1)->weight - (*p2)->weight;
+}
 
 void
 carpInit(void)
 {
-    /* calculate load factors */
-    int K = 0;
-    double a = 0.0;
-    double dJ;
-    double Xn;
-    double P_last;
-    double X_last;
+    int W = 0;
+    int K;
     int k;
+    double P_last, X_last, Xn;
     peer *p;
+    peer **P;
+    char *t;
+    /* Clean up */
+    for (k = 0; k < n_carp_peers; k++) {
+	cbdataUnlock(carp_peers[k]);
+    }
+    safe_free(carp_peers);
+    n_carp_peers = 0;
+    /* find out which peers we have */
     for (p = Config.peers; p; p = p->next) {
-	a += p->carp.load_factor;
-	K++;
+	if (!p->options.carp)
+	    continue;
+	assert(p->type == PEER_PARENT);
+	if (p->weight == 0)
+	    continue;
+	n_carp_peers++;
+	W += p->weight;
     }
-    if (a == 0.0) {
-	for (p = Config.peers; p; p = p->next)
-	    p->carp.load_multiplier = 1.0;
+    if (n_carp_peers == 0)
 	return;
+    carp_peers = xcalloc(n_carp_peers, sizeof(*carp_peers));
+    /* Build a list of the found peers and calculate hashes and load factors */
+    for (P = carp_peers, p = Config.peers; p; p = p->next) {
+	if (!p->options.carp)
+	    continue;
+	if (p->weight == 0)
+	    continue;
+	/* calculate this peers hash */
+	p->carp.hash = 0;
+	for (t = p->host; *t != 0; t++)
+	    p->carp.hash += ROTATE_LEFT(p->carp.hash, 19) + (unsigned int) *t;
+	p->carp.hash += p->carp.hash * 0x62531965;
+	p->carp.hash = ROTATE_LEFT(p->carp.hash, 21);
+	/* and load factor */
+	p->carp.load_factor = ((double) p->weight) / (double) W;
+	if (floor(p->carp.load_factor * 1000.0) == 0.0)
+	    p->carp.load_factor = 0.0;
+	/* add it to our list of peers */
+	*P++ = p;
+	cbdataLock(p);
     }
-    /*
-     * sum of carp-load-factor's for all cache_peer's in squid.conf
-     * must equal 1.0.  If this doesn't work, see
-     * http://www.eskimo.com/~scs/C-faq/q14.4.html
+    /* Sort our list on weight */
+    qsort(carp_peers, n_carp_peers, sizeof(*carp_peers), peerSortWeight);
+    /* Calculate the load factor multipliers X_k
+     *
+     * X_1 = pow ((K*p_1), (1/K))
+     * X_k = ([K-k+1] * [P_k - P_{k-1}])/(X_1 * X_2 * ... * X_{k-1})
+     * X_k += pow ((X_{k-1}, {K-k+1})
+     * X_k = pow (X_k, {1/(K-k+1)})
+     * simplified to have X_1 part of the loop
      */
-    assert(1000 == (int) (1000.0 * a));
-    k = 1;
-    P_last = 0;
-    p = Config.peers;
-    p->carp.load_multiplier = pow(p->carp.load_factor * K, 1.0 / K);
-    Xn = p->carp.load_multiplier;
-    P_last = p->carp.load_factor;
-    X_last = p->carp.load_multiplier;
-    if (!p->next)
-	return;
-    for (p = p->next; p; p = p->next) {
-	k++;
-	dJ = (double) (K - k + 1);
-	p->carp.load_multiplier = (dJ * (p->carp.load_factor - P_last)) / Xn;
-	p->carp.load_multiplier += pow(X_last, dJ);
-	p->carp.load_multiplier = pow(p->carp.load_multiplier, 1 / dJ);
+    K = n_carp_peers;
+    P_last = 0.0;		/* Empty P_0 */
+    Xn = 1.0;			/* Empty starting point of X_1 * X_2 * ... * X_{x-1} */
+    X_last = 0.0;		/* Empty X_0, nullifies the first pow statement */
+    for (k = 1; k <= K; k++) {
+	double Kk1 = (double) (K - k + 1);
+	p = carp_peers[k - 1];
+	p->carp.load_multiplier = (Kk1 * (p->carp.load_factor - P_last)) / Xn;
+	p->carp.load_multiplier += pow(X_last, Kk1);
+	p->carp.load_multiplier = pow(p->carp.load_multiplier, 1.0 / Kk1);
 	Xn *= p->carp.load_multiplier;
 	X_last = p->carp.load_multiplier;
 	P_last = p->carp.load_factor;
@@ -91,38 +130,41 @@ carpInit(void)
 peer *
 carpSelectParent(request_t * request)
 {
-#define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (((sizeof(unsigned long)*8)-(n)))))
+    int k;
     const char *c;
     peer *p = NULL;
     peer *tp;
-    unsigned long url_hash = 0;
-    unsigned long combined_hash;
-    unsigned long high_score = 0;
-    const char *url = urlCanonical(request);
-    /* calculate url hash */
-    debug(39, 2) ("carpSelectParent: CARP Calculating hash for %s\n", url);
-    for (c = url; *c != 0; c++)
-	url_hash += ROTATE_LEFT(url_hash, 19) + *c;
+    unsigned int user_hash = 0;
+    unsigned int combined_hash;
+    double score;
+    double high_score = 0;
+    char *key = NULL;
+
+    if (n_carp_peers == 0)
+	return NULL;
+
+    key = urlCanonical(url);
+
+    /* calculate hash key */
+    debug(39, 2) ("carpSelectParent: Calculating hash for %s\n", key);
+    for (c = key; *c != 0; c++)
+	user_hash += ROTATE_LEFT(user_hash, 19) + *c;
     /* select peer */
-    for (tp = Config.peers; tp; tp = tp->next) {
-	if (0.0 == tp->carp.load_factor)
-	    continue;
-	if (tp->tcp_up != PEER_TCP_MAGIC_COUNT)
-	    continue;
-	assert(tp->type == PEER_PARENT);
-	combined_hash = (url_hash ^ tp->carp.hash);
+    for (k = 0; k < n_carp_peers; k++) {
+	tp = carp_peers[k];
+	combined_hash = (user_hash ^ tp->carp.hash);
 	combined_hash += combined_hash * 0x62531965;
 	combined_hash = ROTATE_LEFT(combined_hash, 21);
-	combined_hash = combined_hash * tp->carp.load_multiplier;
-	debug(39, 3) ("carpSelectParent: %s combined_hash %d\n",
-	    tp->host, combined_hash);
-	if ((combined_hash > high_score) && neighborUp(tp)) {
+	score = combined_hash * tp->carp.load_multiplier;
+	debug(39, 3) ("carpSelectParent: %s combined_hash %u score %.0f\n",
+	    tp->host, combined_hash, score);
+	if ((score > high_score) && peerHTTPOkay(tp, request)) {
 	    p = tp;
-	    high_score = combined_hash;
+	    high_score = score;
 	}
     }
     if (p)
-	debug(39, 3) ("carpSelectParent: selected CARP %s\n", p->host);
+	debug(39, 2) ("carpSelectParent: selected %s\n", p->host);
     return p;
 }
 
@@ -146,7 +188,6 @@ carpCachemgr(StoreEntry * sentry)
 	    p->carp.load_factor,
 	    sumfetches ? (double) p->stats.fetches / sumfetches : -1.0);
     }
-
 }
 
 #endif
