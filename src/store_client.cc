@@ -243,13 +243,16 @@ storeClientFileRead(store_client * sc)
 	    0,
 	    storeClientReadHeader,
 	    sc);
-    else
+    else {
+	if (sc->entry->swap_status == SWAPOUT_WRITING)
+            assert(mem->swapout.done_offset > sc->copy_offset + mem->swap_hdr_sz);
 	file_read(sc->swapin_fd,
 	    sc->copy_buf,
 	    sc->copy_size,
 	    sc->copy_offset + mem->swap_hdr_sz,
 	    storeClientReadBody,
 	    sc);
+    }
     sc->flags.disk_io_pending = 1;
 }
 
