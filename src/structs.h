@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.442 2003/01/23 00:37:27 robertc Exp $
+ * $Id: structs.h,v 1.443 2003/01/27 08:08:51 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -823,7 +823,6 @@ struct _HierarchyLogEntry {
     char host[SQUIDHOSTNAMELEN];
     ping_data ping;
     char cd_host[SQUIDHOSTNAMELEN];	/* the host of selected by cd peer */
-    peer_select_alg_t alg;	/* peer selection algorithm */
     lookup_t cd_lookup;		/* cd prediction: none, miss, hit */
     int n_choices;		/* #peers we selected from (cd only) */
     int n_ichoices;		/* #peers with known rtt we selected from (cd only) */
