@@ -1,9 +1,9 @@
 
 /*
- * $Id: client_side_request.cc,v 1.7 2002/10/13 20:35:00 robertc Exp $
+ * $Id: client_side_request.cc,v 1.8 2002/10/22 21:16:11 hno Exp $
  * 
- * DEBUG: section 85    Client-side Request Routines AUTHOR: Robert Collins
- * (Originally Duane Wessels in client_side.c)
+ * DEBUG: section 85    Client-side Request Routines
+ * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
  * 
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
