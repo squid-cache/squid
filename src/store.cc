@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.371 1998/02/03 01:17:08 wessels Exp $
+ * $Id: store.cc,v 1.372 1998/02/03 03:08:51 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -753,7 +753,7 @@ storeMaintainSwapSpace(void *datanotused)
 
 /* release an object from a cache */
 /* return number of objects released. */
-int
+void
 storeRelease(StoreEntry * e)
 {
     debug(20, 3) ("storeRelease: Releasing: '%s'\n", storeKeyText(e->key));
@@ -763,7 +763,7 @@ storeRelease(StoreEntry * e)
 	storeExpireNow(e);
 	debug(20, 3) ("storeRelease: Only setting RELEASE_REQUEST bit\n");
 	storeReleaseRequest(e);
-	return 0;
+	return;
     }
 #if USE_ASYNC_IO
     aioCancel(-1, e);		/* Make sure all forgotten async ops are cancelled */
@@ -777,7 +777,7 @@ storeRelease(StoreEntry * e)
 	e->object_len = -(e->object_len);
 	storeDirSwapLog(e);
 	e->object_len = -(e->object_len);
-	return 0;
+	return;
     }
 #endif
     storeLog(STORE_LOG_RELEASE, e);
@@ -799,7 +799,6 @@ storeRelease(StoreEntry * e)
     }
     storeSetMemStatus(e, NOT_IN_MEMORY);
     destroy_StoreEntry(e);
-    return 1;
 }
 
 /* return 1 if a store entry is locked */
