@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.55 1998/05/15 15:16:22 wessels Exp $
+ * $Id: globals.h,v 1.56 1998/05/22 02:52:21 rousskov Exp $
  */
 
 extern FILE *debug_log;		/* NULL */
@@ -103,4 +103,4 @@ extern const int CacheDigestHashFuncCount;	/* 4 */
 extern CacheDigest *store_digest;	/* NULL */
 extern const char *StoreDigestUrlPath;	/* "store_digest" */
 extern const char *StoreDigestMimeStr;	/* "application/cache-digest" */
-extern const Version CacheDigestVer;	/* { 2, 2 } */
+extern const Version CacheDigestVer;	/* { 3, 3 } */
