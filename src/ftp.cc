@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.111 1997/05/27 02:48:52 wessels Exp $
+ * $Id: ftp.cc,v 1.112 1997/05/27 03:13:19 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -131,7 +131,6 @@ static PF ftpTimeout;
 static PF ftpReadControlReply;
 static CWCB ftpWriteCommandCallback;
 static char *ftpGetBasicAuth _PARAMS((const char *));
-static void ftpProcessReplyHeader _PARAMS((FtpStateData *, const char *, int));
 static void ftpLoginParser _PARAMS((const char *, FtpStateData *));
 static void ftpFail _PARAMS((FtpStateData * ftpState));
 static wordlist *ftpParseControlReply _PARAMS((char *buf, size_t len, int *code));
@@ -231,77 +230,6 @@ ftpTimeout(int fd, void *data)
     if (ftpState->data.fd >= 0)
 	comm_close(ftpState->data.fd);
     comm_close(ftpState->ctrl.fd);
-}
-
-/* This is too much duplicated code from httpProcessReplyHeader.  Only
- * difference is FtpStateData vs HttpData. */
-static void
-ftpProcessReplyHeader(FtpStateData * ftpState, const char *buf, int size)
-{
-    char *t = NULL;
-    StoreEntry *entry = ftpState->entry;
-    int room;
-    int hdr_len;
-    struct _http_reply *reply = entry->mem_obj->reply;
-
-    debug(9, 3, "ftpProcessReplyHeader: key '%s'\n", entry->key);
-
-    if (ftpState->reply_hdr == NULL)
-	ftpState->reply_hdr = get_free_8k_page();
-    if (ftpState->reply_hdr_state == 0) {
-	hdr_len = strlen(ftpState->reply_hdr);
-	room = 8191 - hdr_len;
-	strncat(ftpState->reply_hdr, buf, room < size ? room : size);
-	hdr_len += room < size ? room : size;
-	if (hdr_len > 4 && strncmp(ftpState->reply_hdr, "HTTP/", 5)) {
-	    debug(9, 3, "ftpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", entry->key);
-	    ftpState->reply_hdr_state += 2;
-	    return;
-	}
-	/* Find the end of the headers */
-	if ((t = mime_headers_end(ftpState->reply_hdr)) == NULL)
-	    return;		/* headers not complete */
-	/* Cut after end of headers */
-	*t = '\0';
-	ftpState->reply_hdr_state++;
-    }
-    if (ftpState->reply_hdr_state == 1) {
-	ftpState->reply_hdr_state++;
-	debug(9, 9, "GOT HTTP REPLY HDR:\n---------\n%s\n----------\n",
-	    ftpState->reply_hdr);
-	/* Parse headers into reply structure */
-	httpParseReplyHeaders(ftpState->reply_hdr, reply);
-	storeTimestampsSet(entry);
-	/* Check if object is cacheable or not based on reply code */
-	if (reply->code)
-	    debug(9, 3, "ftpProcessReplyHeader: HTTP CODE: %d\n", reply->code);
-	switch (reply->code) {
-	case 200:		/* OK */
-	case 203:		/* Non-Authoritative Information */
-	case 300:		/* Multiple Choices */
-	case 301:		/* Moved Permanently */
-	case 410:		/* Gone */
-	    /* These can be cached for a long time, make the key public */
-	    if (BIT_TEST(entry->flag, ENTRY_CACHABLE))
-		storeSetPublicKey(entry);
-	    break;
-	case 302:		/* Moved Temporarily */
-	case 304:		/* Not Modified */
-	case 401:		/* Unauthorized */
-	case 407:		/* Proxy Authentication Required */
-	    /* These should never be cached at all */
-	    storeExpireNow(entry);
-	    BIT_RESET(entry->flag, ENTRY_CACHABLE);
-	    storeReleaseRequest(entry);
-	    break;
-	default:
-	    /* These can be negative cached, make key public */
-	    storeNegativeCache(entry);
-	    if (BIT_TEST(entry->flag, ENTRY_CACHABLE))
-		storeSetPublicKey(entry);
-	    break;
-	}
-    }
 }
 
 static void
@@ -667,7 +595,6 @@ static void
 ftpReadData(int fd, void *data)
 {
     FtpStateData *ftpState = data;
-    LOCAL_ARRAY(char, buf, SQUID_TCP_SO_RCVBUF);
     int len;
     int clen;
     int off;
@@ -1144,7 +1071,6 @@ static void
 ftpReadWelcome(FtpStateData * ftpState)
 {
     int code = ftpState->ctrl.replycode;
-    char *p = NULL;
     debug(0, 0, "ftpReadWelcome\n");
     if (EBIT_TEST(ftpState->flags, FTP_PASV_ONLY))
 	ftpState->login_att++;
@@ -1410,7 +1336,6 @@ ftpSendPort(FtpStateData * ftpState)
 static void
 ftpReadPort(FtpStateData * ftpState)
 {
-    int code = ftpState->ctrl.replycode;
     debug(38, 1, "This is ftpReadPort\n");
 }
 
@@ -1542,6 +1467,7 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
     char *filename = NULL;
     char *t = NULL;
     StoreEntry *e = ftpState->entry;
+    struct _http_reply *reply = e->mem_obj->reply;
     if (EBIT_TEST(ftpState->flags, FTP_HTTP_HEADER_SENT))
 	return;
     assert(e->mem_obj->e_current_len == 0);
@@ -1553,16 +1479,28 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
 	mime_enc = mimeGetContentEncoding(filename);
     }
     storeAppendPrintf(e, "HTTP/1.0 200 Gatewaying\r\n");
+    reply->code = 200;
+    reply->version = 1.0;
     storeAppendPrintf(e, "Date: %s\r\n", mkrfc1123(squid_curtime));
+    reply->date = squid_curtime;
     storeAppendPrintf(e, "MIME-Version: 1.0\r\n");
     storeAppendPrintf(e, "Server: Squid %s\r\n", version_string);
-    if (ftpState->size > 0)
+    if (ftpState->size > 0) {
 	storeAppendPrintf(e, "Content-Length: %d\r\n", ftpState->size);
-    if (mime_type)
+        reply->content_length = ftpState->size;
+    }
+    if (mime_type) {
 	storeAppendPrintf(e, "Content-Type: %s\r\n", mime_type);
+    	xstrncpy(reply->content_type, mime_type, HTTP_REPLY_FIELD_SZ);
+    }
     if (mime_enc)
 	storeAppendPrintf(e, "Content-Encoding: %s\r\n", mime_enc);
-    if (ftpState->mdtm > 0)
+    if (ftpState->mdtm > 0) {
 	storeAppendPrintf(e, "Last-Modified: %s\r\n", mkrfc1123(ftpState->mdtm));
+	reply->last_modified = ftpState->mdtm;
+    }
     storeAppendPrintf(e, "\r\n");
+    storeTimestampsSet(e);
+    assert(e->flag & KEY_PRIVATE);
+    storeSetPublicKey(e);
 }
