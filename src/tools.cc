@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.119 1997/08/25 15:55:25 wessels Exp $
+ * $Id: tools.cc,v 1.120 1997/08/25 22:36:03 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -286,7 +286,7 @@ death(int sig)
     signal(sig, SIG_DFL);
 #endif
     releaseServerSockets();
-    storeWriteCleanLogs();
+    storeWriteCleanLogs(0);
     PrintRusage();
     dumpMallocStats();
     if (squid_curtime - SQUID_RELEASE_TIME < 864000) {
@@ -355,7 +355,7 @@ normal_shutdown(void)
     }
     releaseServerSockets();
     unlinkdClose();
-    storeWriteCleanLogs();
+    storeWriteCleanLogs(0);
     PrintRusage();
     dumpMallocStats();
     storeCloseLog();
@@ -408,7 +408,7 @@ fatal(const char *message)
      * used in early initialization phases, long before we ever
      * get to the store log. */
     if (!store_rebuilding)
-	storeWriteCleanLogs();
+	storeWriteCleanLogs(0);
     fatal_common(message);
     exit(1);
 }
@@ -421,7 +421,7 @@ fatal_dump(const char *message)
     if (message)
 	fatal_common(message);
     if (opt_catch_signals)
-	storeWriteCleanLogs();
+	storeWriteCleanLogs(0);
     abort();
 }
 

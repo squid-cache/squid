@@ -291,7 +291,6 @@ struct _dwrite_q {
     void (*free) (void *);
 };
 
-
 struct _fde {
     unsigned int type;
     unsigned int open;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.155 1997/08/25 03:51:53 wessels Exp $
+ * $Id: stat.cc,v 1.156 1997/08/25 22:36:00 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -375,17 +375,20 @@ stat_vmobjects_get(StoreEntry * e)
 void
 server_list(StoreEntry * sentry)
 {
+    dump_peers(sentry, Config.peers);
+}
+
+void
+dump_peers(StoreEntry * sentry, peer * peers)
+{
     peer *e = NULL;
     struct _domain_ping *d = NULL;
     icp_opcode op;
-
     storeAppendPrintf(sentry, open_bracket);
-
-    if (getFirstPeer() == NULL)
+    if (peers == NULL)
 	storeAppendPrintf(sentry, "{There are no neighbors installed.}\n");
-    for (e = getFirstPeer(); e; e = getNextPeer(e)) {
-	if (e->host == NULL)
-	    fatal_dump("Found an peer without a hostname!");
+    for (e = peers; e; e = e->next) {
+	assert(e->host != NULL);
 	storeAppendPrintf(sentry, "\n{%-11.11s: %s/%d/%d}\n",
 	    neighborTypeStr(e),
 	    e->host,

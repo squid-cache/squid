@@ -107,7 +107,6 @@ extern void comm_write _PARAMS((int fd,
 	void *handler_data,
 	FREE *));
 extern void commCallCloseHandlers _PARAMS((int fd));
-extern void commCancelWriteHandler _PARAMS((int fd));
 extern int commSetTimeout _PARAMS((int fd, int, PF *, void *));
 
 extern void _db_init _PARAMS((const char *logfile, const char *options));
@@ -441,7 +440,7 @@ extern void storeClientCopy _PARAMS((StoreEntry * e,
 	STCB * callback,
 	void *data));
 extern int storePendingNClients _PARAMS((const StoreEntry *));
-extern int storeWriteCleanLogs _PARAMS((void));
+extern int storeWriteCleanLogs _PARAMS((int reopen));
 extern HASHCMP urlcmp;
 extern EVH storeMaintainSwapSpace;
 extern void storeExpireNow _PARAMS((StoreEntry *));
@@ -552,9 +551,11 @@ extern OBJH statFiledescriptors;
 extern OBJH log_enable;
 extern OBJH info_get;
 extern OBJH server_list;
+extern OBJH neighborDumpNonPeers;
 extern OBJH dump_config;
 extern OBJH storeDirStats;
 extern OBJH pconnHistDump;
+extern void dump_peers _PARAMS((StoreEntry * sentry, peer * peers));
 
 extern void pconnPush _PARAMS((int, const char *host, u_short port));
 extern int pconnPop _PARAMS((const char *host, u_short port));

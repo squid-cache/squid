@@ -1,7 +1,6 @@
 
-
 /*
- * $Id: cachemgr.cc,v 1.58 1997/08/25 15:55:22 wessels Exp $
+ * $Id: cachemgr.cc,v 1.59 1997/08/25 22:35:51 wessels Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
