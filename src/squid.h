@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.124 1997/06/21 02:38:15 wessels Exp $
+ * $Id: squid.h,v 1.125 1997/06/26 22:41:46 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -350,7 +350,8 @@ extern const char *const appname;	/* main.c */
 extern struct in_addr local_addr;	/* main.c */
 extern struct in_addr theOutICPAddr;	/* main.c */
 extern const char *const localhost;
-extern struct in_addr no_addr;	/* comm.c */
+extern struct in_addr no_addr;	/* main.c */
+extern struct in_addr any_addr;	/* main.c */
 extern int opt_udp_hit_obj;	/* main.c */
 extern int opt_mem_pools;	/* main.c */
 extern int opt_forwarded_for;	/* main.c */

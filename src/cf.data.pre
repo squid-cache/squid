@@ -60,31 +60,28 @@ DOC_END
 NAME: tcp_incoming_address bind_address
 TYPE: address
 LOC: Config.Addrs.tcp_incoming
-DEFAULT: INADDR_ANY
+DEFAULT: 0.0.0.0
 DOC_NONE
 
 NAME: tcp_outgoing_address outbound_address
 TYPE: address
 LOC: Config.Addrs.tcp_outgoing
-DEFAULT: no_addr.s_addr
+DEFAULT: 255.255.255.255
 DOC_NONE
 
 NAME: udp_incoming_address
 TYPE: address
 LOC:Config.Addrs.udp_incoming
-DEFAULT: INADDR_ANY
+DEFAULT: 0.0.0.0
 DOC_NONE
 
 NAME: udp_outgoing_address
 TYPE: address
 LOC: Config.Addrs.udp_outgoing
-DEFAULT: no_addr.s_addr
+DEFAULT: 255.255.255.255
 DOC_START
 	Usage: tcp_incoming_address 10.20.30.40
 	       udp_outgoing_address fully.qualified.domain.name
-
-	These tags have replaced 'bind_address' and 'outbound_address'
-	to provide more control for multihomed hosts.
 
 	tcp_incoming_address	is used for the HTTP socket which accepts
 				connections from clients and other caches.

@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.156 1997/06/21 02:38:09 wessels Exp $
+ * $Id: main.cc,v 1.157 1997/06/26 22:41:43 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -138,6 +138,7 @@ const char *const appname = "squid";
 const char *const localhost = "127.0.0.1";
 struct in_addr local_addr;
 struct in_addr no_addr;
+struct in_addr any_addr;
 struct in_addr theOutICPAddr;
 const char *const dash_str = "-";
 const char *const null_string = "";
@@ -150,7 +151,6 @@ extern void (*failure_notify) _PARAMS((const char *));
 static volatile int rotate_pending = 0;		/* set by SIGUSR1 handler */
 static int httpPortNumOverride = 1;
 static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
-static struct in_addr any_addr;
 #if MALLOC_DBG
 static int malloc_debug_level = 0;
 #endif
@@ -349,16 +349,17 @@ serverConnectionsOpen(void)
     struct in_addr addr;
     struct sockaddr_in xaddr;
     u_short port;
+    ushortlist *u;
     int len;
     int x;
     int fd;
     wordlist *s;
-    for (x = 0; x < Config.Port.n_http; x++) {
+    for (u = Config.Port.http; u; u=u->next) {
 	enter_suid();
 	fd = comm_open(SOCK_STREAM,
 	    0,
 	    Config.Addrs.tcp_incoming,
-	    Config.Port.http[x],
+	    u->i,
 	    COMM_NONBLOCKING,
 	    "HTTP Socket");
 	leave_suid();
@@ -367,7 +368,7 @@ serverConnectionsOpen(void)
 	comm_listen(fd);
 	commSetSelect(fd, COMM_SELECT_READ, httpAccept, NULL, 0);
 	debug(1, 1) ("Accepting HTTP connections on port %d, FD %d.\n",
-	    (int) Config.Port.http[x], fd);
+	    (int) u->i, fd);
 	HttpSockets[NHttpSockets++] = fd;
     }
     if (NHttpSockets < 1)
@@ -527,8 +528,9 @@ mainInitialize(void)
 	debug(0, 0) ("'cache_effective_user' option in the config file.\n");
 	fatal("Don't run Squid as root, set 'cache_effective_user'!");
     }
+    assert(Config.Port.http);
     if (httpPortNumOverride != 1)
-	Config.Port.http[0] = (u_short) httpPortNumOverride;
+	Config.Port.http->i = (u_short) httpPortNumOverride;
     if (icpPortNumOverride != 1)
 	Config.Port.icp = (u_short) icpPortNumOverride;
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.128 1997/06/20 05:26:09 wessels Exp $
+ * $Id: ftp.cc,v 1.129 1997/06/26 22:41:41 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -180,6 +180,7 @@ ftpStateFree(int fd, void *data)
     FtpStateData *ftpState = data;
     if (ftpState == NULL)
 	return;
+    debug(9, 3) ("ftpStateFree: %s\n", ftpState->entry->url);
     storeUnregisterAbort(ftpState->entry);
     storeUnlockObject(ftpState->entry);
     if (ftpState->reply_hdr) {
@@ -662,11 +663,11 @@ ftpReadData(int fd, void *data)
 	storeTimestampsSet(entry);
 	storeComplete(entry);
 	/* expect the "transfer complete" message on the control socket */
-    	commSetSelect(ftpState->ctrl.fd,
-		COMM_SELECT_READ,
-		ftpReadControlReply,
-		ftpState,
-		0);
+	commSetSelect(ftpState->ctrl.fd,
+	    COMM_SELECT_READ,
+	    ftpReadControlReply,
+	    ftpState,
+	    0);
     } else {
 	if (EBIT_TEST(ftpState->flags, FTP_ISDIR)) {
 	    ftpParseListing(ftpState, len);
@@ -918,7 +919,7 @@ ftpWriteCommandCallback(int fd, char *buf, int size, int errflag, void *data)
     StoreEntry *entry = ftpState->entry;
     debug(9, 7) ("ftpWriteCommandCallback: wrote %d bytes\n", size);
     if (errflag) {
-	debug(50,1)("ftpWriteCommandCallback: FD %d: %s\n", fd, xstrerror());
+	debug(50, 1) ("ftpWriteCommandCallback: FD %d: %s\n", fd, xstrerror());
 	BIT_RESET(entry->flag, ENTRY_CACHABLE);
 	storeReleaseRequest(entry);
 	storeAbort(entry, ERR_WRITE_ERROR, xstrerror(), 0);
@@ -1482,6 +1483,6 @@ ftpAbort(void *data)
     FtpStateData *ftpState = data;
     debug(9, 1) ("ftpAbort: %s\n", ftpState->entry->url);
     if (ftpState->data.fd >= 0)
-        comm_close(ftpState->data.fd);
+	comm_close(ftpState->data.fd);
     comm_close(ftpState->ctrl.fd);
 }
