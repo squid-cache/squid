@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.4 1997/01/07 21:49:51 wessels Exp $
+ * $Id: event.cc,v 1.5 1997/02/27 06:29:11 wessels Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -59,6 +59,23 @@ eventAdd(const char *name, EVH func, void *arg, time_t when)
     }
     event->next = *E;
     *E = event;
+}
+
+void
+eventDelete(EVH func, void *arg)
+{
+    struct ev_entry **E;
+    struct ev_entry *event;
+    for (E = &tasks; (event = *E); E = &(*E)->next) {
+	if (event->func != func)
+	    continue;
+	if (event->arg != arg)
+	    continue;
+	*E = event->next;
+	xfree(event);
+	return;
+    }
+    debug_trap("eventDelete: event not found");
 }
 
 void

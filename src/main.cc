@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.136 1997/02/26 20:49:10 wessels Exp $
+ * $Id: main.cc,v 1.137 1997/02/27 06:29:14 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -182,7 +182,7 @@ usage(void)
 	"       -R        Do not set REUSEADDR on port.\n"
 	"       -U        Unlink expired objects on reload.\n"
 	"       -V        Virtual host httpd-accelerator.\n"
-	"       -Y        Only return UDP_HIT or UDP_RELOADING during fast reload.\n",
+	"       -Y        Only return UDP_HIT or UDP_MISSNOFETCH during fast reload.\n",
 	appname, CACHE_HTTP_PORT, DefaultConfigFile, CACHE_ICP_PORT);
     exit(1);
 }
