@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.443 1998/08/17 21:10:47 wessels Exp $
+ * $Id: store.cc,v 1.444 1998/08/18 18:36:10 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -97,6 +97,7 @@ static int store_pages_high = 0;
 static int store_pages_low = 0;
 static int store_swap_high = 0;
 static int store_swap_low = 0;
+static int store_swap_mid = 0;
 static int store_maintain_rate;
 
 static MemObject *
@@ -594,6 +595,10 @@ storeMaintainSwapSpace(void *datanotused)
     if (store_rebuilding) {
 	eventAdd("MaintainSwapSpace", storeMaintainSwapSpace, NULL, 1.0, 1);
 	return;
+    } else if (store_swap_size < store_swap_mid) {
+	max_scan = 100;
+	max_remove = 8;
+	eventAdd("MaintainSwapSpace", storeMaintainSwapSpace, NULL, 1.0, 1);
     } else if (store_swap_size < store_swap_high) {
 	max_scan = 200;
 	max_remove = 8;
@@ -811,6 +816,7 @@ storeConfigure(void)
 	    (float) Config.Swap.highWaterMark) / (float) 100);
     store_swap_low = (long) (((float) Config.Swap.maxSize *
 	    (float) Config.Swap.lowWaterMark) / (float) 100);
+    store_swap_mid = (store_swap_high >> 1) + (store_swap_low >> 1);
 
     store_pages_high = store_mem_high / SM_PAGE_SIZE;
     store_pages_low = store_mem_low / SM_PAGE_SIZE;
