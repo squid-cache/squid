@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.257 1998/03/07 23:43:01 rousskov Exp $
+ * $Id: cache_cf.cc,v 1.258 1998/03/16 21:45:00 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -677,21 +677,7 @@ dump_peer(StoreEntry * entry, const char *name, peer * p)
 	    neighborTypeStr(p),
 	    p->http_port,
 	    p->icp_port);
-	if (EBIT_TEST(p->options, NEIGHBOR_PROXY_ONLY))
-	    storeAppendPrintf(entry, " proxy-only");
-	if (EBIT_TEST(p->options, NEIGHBOR_NO_QUERY))
-	    storeAppendPrintf(entry, " no-query");
-	if (EBIT_TEST(p->options, NEIGHBOR_DEFAULT_PARENT))
-	    storeAppendPrintf(entry, " default");
-	if (EBIT_TEST(p->options, NEIGHBOR_ROUNDROBIN))
-	    storeAppendPrintf(entry, " round-robin");
-	if (EBIT_TEST(p->options, NEIGHBOR_MCAST_RESPONDER))
-	    storeAppendPrintf(entry, " multicast-responder");
-	if (EBIT_TEST(p->options, NEIGHBOR_CLOSEST_ONLY))
-	    storeAppendPrintf(entry, " closest-only");
-	if (p->mcast.ttl > 0)
-	    storeAppendPrintf(entry, " ttl=%d", p->mcast.ttl);
-	storeAppendPrintf(entry, "\n");
+	dump_peer_options(entry, p);
 	p = p->next;
     }
 }
@@ -730,15 +716,15 @@ parse_peer(peer ** head)
     }
     while ((token = strtok(NULL, w_space))) {
 	if (!strcasecmp(token, "proxy-only")) {
-	    p->options |= NEIGHBOR_PROXY_ONLY;
+	    EBIT_SET(p->options, NEIGHBOR_PROXY_ONLY);
 	} else if (!strcasecmp(token, "no-query")) {
-	    p->options |= NEIGHBOR_NO_QUERY;
+	    EBIT_SET(p->options, NEIGHBOR_NO_QUERY);
 	} else if (!strcasecmp(token, "multicast-responder")) {
-	    p->options |= NEIGHBOR_MCAST_RESPONDER;
+	    EBIT_SET(p->options, NEIGHBOR_MCAST_RESPONDER);
 	} else if (!strncasecmp(token, "weight=", 7)) {
 	    p->weight = atoi(token + 7);
 	} else if (!strncasecmp(token, "closest-only", 12)) {
-	    p->options |= NEIGHBOR_CLOSEST_ONLY;
+	    EBIT_SET(p->options, NEIGHBOR_CLOSEST_ONLY);
 	} else if (!strncasecmp(token, "ttl=", 4)) {
 	    p->mcast.ttl = atoi(token + 4);
 	    if (p->mcast.ttl < 0)
@@ -746,9 +732,9 @@ parse_peer(peer ** head)
 	    if (p->mcast.ttl > 128)
 		p->mcast.ttl = 128;
 	} else if (!strncasecmp(token, "default", 7)) {
-	    p->options |= NEIGHBOR_DEFAULT_PARENT;
+	    EBIT_SET(p->options, NEIGHBOR_DEFAULT_PARENT);
 	} else if (!strncasecmp(token, "round-robin", 11)) {
-	    p->options |= NEIGHBOR_ROUNDROBIN;
+	    EBIT_SET(p->options, NEIGHBOR_ROUNDROBIN);
 	} else {
 	    debug(3, 0) ("parse_peer: token='%s'\n", token);
 	    self_destruct();

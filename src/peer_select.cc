@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.40 1998/03/06 22:53:06 wessels Exp $
+ * $Id: peer_select.cc,v 1.41 1998/03/16 21:45:03 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -95,12 +95,6 @@ peerSelectIcpPing(request_t * request, int direct, StoreEntry * entry)
     assert(direct != DIRECT_YES);
     if (!EBIT_TEST(entry->flag, HIERARCHICAL) && direct != DIRECT_NO)
 	return 0;
-    if (Config.onoff.single_parent_bypass)
-#if ALLOW_SOURCE_PING
-	if (!Config.onoff.source_ping)
-#endif
-	    if (getSingleParent(request))
-	        return 0;
     if (EBIT_TEST(entry->flag, KEY_PRIVATE) && !neighbors_do_private_keys)
 	if (direct != DIRECT_NO)
 	    return 0;
@@ -117,10 +111,6 @@ peerGetSomeParent(request_t * request, hier_code * code)
     debug(44, 3) ("peerGetSomeParent: called.\n");
     if ((p = getDefaultParent(request))) {
 	*code = DEFAULT_PARENT;
-	return p;
-    }
-    if ((p = getSingleParent(request))) {
-	*code = SINGLE_PARENT;
 	return p;
     }
     if ((p = getRoundRobinParent(request))) {
@@ -306,7 +296,11 @@ peerSelectFoo(ps_state * psstate)
 	peerSelectCallback(psstate, NULL);
 	return;
     }
-    if (peerSelectIcpPing(request, direct, entry)) {
+    psstate->single_parent = getSingleParent(request);
+    debug(0, 0) ("psstate->single_parent = %p\n", psstate->single_parent);
+    if (psstate->single_parent != NULL) {
+	debug(44, 3) ("peerSelect: found single parent, skipping ICP query\n");
+    } else if (peerSelectIcpPing(request, direct, entry)) {
 	assert(entry->ping_status == PING_NONE);
 	debug(44, 3) ("peerSelect: Doing ICP pings\n");
 	psstate->icp.n_sent = neighborsUdpPing(request,
@@ -338,6 +332,11 @@ peerSelectFoo(ps_state * psstate)
 	peerSelectCallback(psstate, p);
     } else if ((p = psstate->first_parent_miss) != NULL) {
 	code = FIRST_PARENT_MISS;
+	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
+	hierarchyNote(&request->hier, code, &psstate->icp, p->host);
+	peerSelectCallback(psstate, p);
+    } else if ((p = psstate->single_parent)) {
+	code = SINGLE_PARENT;
 	debug(44, 3) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
 	hierarchyNote(&request->hier, code, &psstate->icp, p->host);
 	peerSelectCallback(psstate, p);

@@ -283,25 +283,25 @@ extern void httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double
 /* Http Range Header Field */
 extern HttpHdrRange *httpHdrRangeParseCreate(const char *range_spec);
 /* returns true if ranges are valid; inits HttpHdrRange */
-extern int httpHdrRangeParseInit(HttpHdrRange *range, const char *range_spec);
-extern void httpHdrRangeDestroy(HttpHdrRange *range);
+extern int httpHdrRangeParseInit(HttpHdrRange * range, const char *range_spec);
+extern void httpHdrRangeDestroy(HttpHdrRange * range);
 extern HttpHdrRange *httpHdrRangeDup(const HttpHdrRange * range);
 extern void httpHdrRangePackInto(const HttpHdrRange * range, Packer * p);
 /* iterate through specs */
-extern int httpHdrRangeGetSpec(const HttpHdrRange *range, HttpHdrRangeSpec *spec, int *pos);
+extern int httpHdrRangeGetSpec(const HttpHdrRange * range, HttpHdrRangeSpec * spec, int *pos);
 
 /* Http Content Range Header Field */
 extern HttpHdrContRange *httpHdrContRangeParseCreate(const char *crange_spec);
 /* returns true if range is valid; inits HttpHdrContRange */
-extern int httpHdrContRangeParseInit(HttpHdrContRange *crange, const char *crange_spec);
-extern void httpHdrContRangeDestroy(HttpHdrContRange *crange);
+extern int httpHdrContRangeParseInit(HttpHdrContRange * crange, const char *crange_spec);
+extern void httpHdrContRangeDestroy(HttpHdrContRange * crange);
 extern HttpHdrContRange *httpHdrContRangeDup(const HttpHdrContRange * crange);
 extern void httpHdrContRangePackInto(const HttpHdrContRange * crange, Packer * p);
 
 /* Http Header Tools */
 extern HttpHeaderFieldInfo *httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count);
-extern void httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo *info, int count);
-extern int httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo* attrs, int end, int mask);
+extern void httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo * info, int count);
+extern int httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo * attrs, int end, int mask);
 extern int httpHeaderCalcMask(const int *enums, int count);
 extern int strListGetItem(const char *str, char del, const char **item, int *ilen, const char **pos);
 extern const char *getStringPrefix(const char *str);
@@ -317,7 +317,7 @@ extern void httpHeaderInit(HttpHeader * hdr);
 extern void httpHeaderClean(HttpHeader * hdr);
 extern void httpHeaderDestroy(HttpHeader * hdr);
 /* clone */
-void httpHeaderCopy(HttpHeader *dest, const HttpHeader *src);
+void httpHeaderCopy(HttpHeader * dest, const HttpHeader * src);
 /* parse/pack */
 extern int httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_end);
 extern void httpHeaderPackInto(const HttpHeader * hdr, Packer * p);
@@ -495,6 +495,7 @@ extern int neighborUp(const peer * e);
 extern void peerDestroy(peer * e);
 extern char *neighborTypeStr(const peer * e);
 extern void peerCheckConnectStart(peer *);
+extern void dump_peer_options(StoreEntry *, peer *);
 
 extern void netdbInit(void);
 
@@ -572,7 +573,7 @@ extern void memInitModule();
 extern void memCleanModule();
 extern void memConfigure();
 extern void *memAllocate(mem_type);
-extern void *memAllocBuf(size_t net_size, size_t *gross_size);
+extern void *memAllocBuf(size_t net_size, size_t * gross_size);
 extern void memFree(mem_type, void *);
 extern void memFreeBuf(size_t size, void *);
 extern void memFree4K(void *);
@@ -802,7 +803,7 @@ extern void PrintRusage(void);
 extern void dumpMallocStats(void);
 
 extern void pumpInit(int fd, request_t * r, char *uri);
-extern void pumpStart(int, StoreEntry *, request_t *, CWCB *callback, void *);
+extern void pumpStart(int, StoreEntry *, request_t *, CWCB * callback, void *);
 extern int pumpMethod(method_t method);
 extern int pumpRestart(request_t *);
 
@@ -863,12 +864,12 @@ extern void gb_flush(gb_t *);	/* internal, do not use this */
 #define strSet(s,ptr,ch) (s).buf[ptr-(s).buf] = (ch)
 #define strCut(s,pos) (s).buf[pos] = '\0'
 /* #define strCat(s,str)  stringAppend(&(s), (str), strlen(str)+1) */
-extern void stringInit(String *s, const char *str);
-extern void stringLimitInit(String *s, const char *str, int len);
-extern String stringDup(const String *s);
-extern void stringClean(String *s);
-extern void stringReset(String *s, const char *str);
-extern void stringAppend(String *s, const char *buf, int len);
+extern void stringInit(String * s, const char *str);
+extern void stringLimitInit(String * s, const char *str, int len);
+extern String stringDup(const String * s);
+extern void stringClean(String * s);
+extern void stringReset(String * s, const char *str);
+extern void stringAppend(String * s, const char *buf, int len);
 /* extern void stringAppendf(String *s, const char *fmt, ...); */
 
 /*

@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.179 1998/03/06 22:53:07 wessels Exp $
+ * $Id: neighbors.cc,v 1.180 1998/03/16 21:45:02 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -223,9 +223,9 @@ peerWouldBePinged(const peer * p, request_t * request)
 {
     if (!peerAllowedToUse(p, request))
 	return 0;
-    if (p->options & NEIGHBOR_NO_QUERY)
+    if (EBIT_TEST(p->options, NEIGHBOR_NO_QUERY))
 	return 0;
-    if (p->options & NEIGHBOR_MCAST_RESPONDER)
+    if (EBIT_TEST(p->options, NEIGHBOR_MCAST_RESPONDER))
 	return 0;
     /* the case below seems strange, but can happen if the
      * URL host is on the other side of a firewall */
@@ -277,6 +277,8 @@ getSingleParent(request_t * request)
 	    return NULL;	/* oops, found second parent */
 	p = q;
     }
+    if (p != NULL && !EBIT_TEST(p->options, NEIGHBOR_NO_QUERY))
+	return NULL;
     debug(15, 3) ("getSingleParent: returning %s\n", p ? p->host : "NULL");
     return p;
 }
@@ -492,9 +494,9 @@ neighborsUdpPing(request_t * request,
 #if ALLOW_SOURCE_PING
     /* only do source_ping if we have neighbors */
     if (Config.npeers) {
-        const ipcache_addrs *ia = NULL;
-        struct sockaddr_in to_addr;
-        char *host = request->host;
+	const ipcache_addrs *ia = NULL;
+	struct sockaddr_in to_addr;
+	char *host = request->host;
 	if (!Config.onoff.source_ping) {
 	    debug(15, 6) ("neighborsUdpPing: Source Ping is disabled.\n");
 	} else if ((ia = ipcache_gethostbyname(host, 0))) {
@@ -976,6 +978,26 @@ neighborDumpNonPeers(StoreEntry * sentry)
     dump_peers(sentry, non_peers);
 }
 
+void
+dump_peer_options(StoreEntry * sentry, peer * p)
+{
+    if (EBIT_TEST(p->options, NEIGHBOR_PROXY_ONLY))
+	storeAppendPrintf(sentry, " proxy-only");
+    if (EBIT_TEST(p->options, NEIGHBOR_NO_QUERY))
+	storeAppendPrintf(sentry, " no-query");
+    if (EBIT_TEST(p->options, NEIGHBOR_DEFAULT_PARENT))
+	storeAppendPrintf(sentry, " default");
+    if (EBIT_TEST(p->options, NEIGHBOR_ROUNDROBIN))
+	storeAppendPrintf(sentry, " round-robin");
+    if (EBIT_TEST(p->options, NEIGHBOR_MCAST_RESPONDER))
+	storeAppendPrintf(sentry, " multicast-responder");
+    if (EBIT_TEST(p->options, NEIGHBOR_CLOSEST_ONLY))
+	storeAppendPrintf(sentry, " closest-only");
+    if (p->mcast.ttl > 0)
+	storeAppendPrintf(sentry, " ttl=%d", p->mcast.ttl);
+    storeAppendPrintf(sentry, "\n");
+}
+
 static void
 dump_peers(StoreEntry * sentry, peer * peers)
 {
@@ -992,6 +1014,8 @@ dump_peers(StoreEntry * sentry, peer * peers)
 	    e->host,
 	    e->http_port,
 	    e->icp_port);
+	storeAppendPrintf(sentry, "Flags      :");
+	dump_peer_options(sentry, e);
 	for (i = 0; i < e->n_addresses; i++) {
 	    storeAppendPrintf(sentry, "Address[%d] : %s\n", i,
 		inet_ntoa(e->addresses[i]));
