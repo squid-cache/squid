@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.64 1997/08/11 16:52:41 wessels Exp $
+ * $Id: errorpage.cc,v 1.65 1997/08/24 01:46:44 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -100,23 +100,58 @@ errorStateFree(ErrorState * err)
     cbdataFree(err);
 }
 
+#define CVT_BUF_SZ 512
 static char *
 errorConvert(char token, ErrorState * err)
 {
     char *p = NULL;
+    request_t *r = err->request;
+    static char buf[CVT_BUF_SZ];
     switch (token) {
     case 'U':
-	if (err->request)
-	    p = urlCanonicalClean(err->request);
-	else
-	    p = err->url;
+	p = r ? urlCanonicalClean(r) : err->url;
 	break;
+    case 'H':
+	p = r ? r->host : "[unknown host]";
+	break;
+    case 'p':
+	if (r) {
+		snprintf(buf, CVT_BUF_SZ, "%d", (int) r->port);
+		p = buf;
+	} else {
+		p = "[unknown port]";
+	}
+	break;
+    case 'P':
+	p = r ? (char *) ProtocolStr[r->protocol] : "[unkown protocol]";
+	break;
+    case 'M':
+	p = r ? (char *) RequestMethodStr[r->method] : "[unkown method]";
+	break;
+    case 'z':
+	p = err->dnsserver_msg;
+	break;
+/*
+	e - errno
+	E - strerror()
+	t - local time
+	T - UTC
+	c - Squid error code
+	I - server IP address
+	i - client IP address
+	L - HREF link for more info/contact
+	w - cachemgr email address
+	h - cache hostname
+	d - seconds elapsed since request received
+	p - URL port #
+*/
     default:
 	p = "%UNKNOWN%";
 	break;
     }
     if (p == NULL)
 	p = "<NULL>";
+    debug(4, 1)("errorConvert: %%%c --> '%s'\n", token, p);
     return p;
 }
 
@@ -135,7 +170,7 @@ errorBuildBuf(ErrorState * err, int *len)
     char *t;
     assert(err != NULL);
     assert(err->type > ERR_NONE && err->type < ERR_MAX);
-    m = error_text[err->type];
+    m = xstrdup(error_text[err->type]);
     clen = 0;
     while ((p = strchr(m, '%'))) {
 	*p = '\0';		/* terminate */
@@ -169,6 +204,7 @@ errorBuildBuf(ErrorState * err, int *len)
     tlen = snprintf(buf, ERROR_BUF_SZ, "%s\r\n%s", hdr, content);
     if (len)
 	*len = tlen;
+    xfree(m);
     return buf;
 }
 
