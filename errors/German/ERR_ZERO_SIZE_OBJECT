@@ -1,0 +1,20 @@
+<HTML><HEAD>
+<TITLE>FEHLER: Der angeforderte URL konnte nicht geholt werden</TITLE>
+</HEAD><BODY>
+<H1>FEHLER</H1>
+<H2>Der angeforderte URL konnte nicht geholt werden</H2>
+<HR>
+<P>
+W&auml;hrend des Versuches, den URL
+<A HREF="%U">%U</A>
+zu laden,
+<P>
+trat der folgende Fehler auf:
+<UL>
+<LI>
+<STRONG> Leeres Dokument </STRONG>
+</UL>
+
+<P>
+Squid hat keinerlei Daten f&uuml;r diese Anfrage empfangen.
+</P>

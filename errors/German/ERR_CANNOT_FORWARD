@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<TITLE>FEHLER: Der angeforderte URL konnte nicht geholt werden</TITLE>
+</HEAD><BODY>
+<H1>FEHLER</H1>
+<H2>Der angeforderte URL konnte nicht geholt werden</H2>
+<HR>
+<P>
+W&auml;hrend des Versuches, den URL
+<A HREF="%U">%U</A>
+zu laden,
+<P>
+trat der folgende Fehler auf:
+<UL>
+<LI>
+<STRONG> Die Anfrage kann zur Zeit nicht weitergeleitet werden </STRONG>
+</UL>
+
+<P>
+Diese Anfrage konnte nicht zum WWW-Server oder einem
+Parent-Cache weitergeleitet werden. Der wahrscheinlichste Grund für
+diesen Fehler ist:
+<UL>
+<LI>Der Cache-Administrator erlaubt nicht, da&szlig; dieser Server
+    direkte Verbindungen zu WWW-Servern aufbaut, und
+<LI>alle konfigurierten Parent-Caches sind zur Zeit nicht erreichbar.
+</UL>
+</P>

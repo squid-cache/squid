@@ -1,0 +1,31 @@
+<HTML><HEAD>
+<TITLE>FEHLER: Der angeforderte URL konnte nicht geholt werden</TITLE>
+</HEAD><BODY>
+<H1>FEHLER</H1>
+<H2>Der angeforderte URL konnte nicht geholt werden</H2>
+<HR>
+<P>
+W&auml;hrend des Versuches, die Anfrage
+<PRE>
+%R
+</PRE>
+zu verarbeiten,
+<P>
+trat der folgende Fehler auf:
+<UL>
+<LI>
+<STRONG> Ung&uuml;ltige Anfrage </STRONG>
+</UL>
+
+<P>
+Ein Teil der HTTP-Anfrage ist ung&uuml;ltig. M&ouml;gliche Gr&uuml;nde:
+<UL>
+<LI>Fehlende oder unbekannte Anfrage-Methode (GET, POST)
+<LI>Fehlender URL
+<LI>Fehlender HTTP Identifier (HTTP/1.0)
+<LI>Anfrage ist zu gro&szlig;
+<LI>Content-Length fehlt f&uuml;r POST- oder PUT-Anfragen
+<LI>Ung&uuml;ltige Zeichen im Hostnamen - z.B. Unterstriche ('_'),
+     Umlaute und Kommata sind nicht erlaubt.
+</UL>
+</P>

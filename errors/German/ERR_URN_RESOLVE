@@ -1,0 +1,20 @@
+<HTML><HEAD>
+<TITLE>FEHLER: Die angeforderete URN konnte nicht geholt werden</TITLE>
+</HEAD><BODY>
+<H1>FEHLER</H1>
+<H2>Ein URL f&uuml;r den angeforderten URN konnte nicht geholt werden</H2>
+<HR>
+<P>
+W&auml;hrend des Versuches, den URN
+<A HREF="%U">%U</A>
+zu laden,
+<P>
+trat der folgende Fehler auf:
+<UL>
+<LI>
+<STRONG> Kann URN nicht aufl&ouml;sen </STRONG>
+</UL>
+
+<P>
+Hey, erwarte nicht zu viel von URNs am %T  :)
+</P>

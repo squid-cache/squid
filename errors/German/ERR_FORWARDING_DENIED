@@ -1,0 +1,24 @@
+<HTML><HEAD>
+<TITLE>FEHLER: Der angeforderte URL konnte nicht geholt werden</TITLE>
+</HEAD><BODY>
+<H1>FEHLER</H1>
+<H2>Der angeforderte URL konnte nicht geholt werden</H2>
+<HR>
+<P>
+W&auml;hrend des Versuches, den URL
+<A HREF="%U">%U</A>
+zu laden,
+<P>
+trat der folgende Fehler auf:
+<UL>
+<LI>
+<STRONG> Weiterleiten verweigert </STRONG>
+</UL>
+
+<P>
+Dieser Cache wird Ihre Anfrage nicht weiterleiten, da er versucht, eine
+Sibling-Beziehung zu erzwingen.
+Wahrscheinlich ist der Client bei %i ein Cache, der falsch
+konfiguriert wurde. Informieren Sie dessen Administrator und/oder &uuml;berprüfen
+Sie Ihre Proxy-Einstellungen.
+</P>
