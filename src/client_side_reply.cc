@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.10 2002/09/29 09:52:36 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.11 2002/09/29 11:29:41 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -72,7 +72,7 @@ static int clientGetsOldEntry(StoreEntry * new, StoreEntry * old,
     request_t * request);
 static STCB clientHandleIMSReply;
 static int modifiedSince(StoreEntry *, request_t *);
-static log_type clientIdentifyStoreObject(clientHttpRequest * http);
+static log_type clientIdentifyStoreObject(clientReplyContext *);
 static void clientPurgeRequest(clientReplyContext *);
 static void clientTraceReply(clientStreamNode *, clientReplyContext *);
 static StoreEntry *clientCreateStoreEntry(clientReplyContext *, method_t,
@@ -1090,8 +1090,9 @@ clientAlwaysAllowResponse(http_status sline)
  * adds Squid specific entries
  */
 static void
-clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
+clientBuildReplyHeader(clientReplyContext *context, HttpReply * rep)
 {
+    clientHttpRequest * http = context->http;
     HttpHeader *hdr = &rep->header;
     int is_hit = logTypeIsATcpHit(http->logType);
     request_t *request = http->request;
@@ -1166,7 +1167,7 @@ clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
 #if USE_CACHE_DIGESTS
     /* Append X-Cache-Lookup: -- temporary hack, to be removed @?@ @?@ */
     httpHeaderPutStrf(hdr, HDR_X_CACHE_LOOKUP, "%s from %s:%d",
-	http->lookup_type ? http->lookup_type : "NONE",
+	context->lookup_type ? context->lookup_type : "NONE",
 	getMyHostname(), getMyPort());
 #endif
     if (httpReplyBodySize(request->method, rep) < 0) {
@@ -1207,7 +1208,7 @@ clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
 
 
 static HttpReply *
-clientBuildReply(clientHttpRequest * http, const char *buf, size_t size)
+clientBuildReply(clientReplyContext *context, const char *buf, size_t size)
 {
     HttpReply *rep = httpReplyCreate();
     size_t k = headersEnd(buf, size);
@@ -1215,7 +1216,7 @@ clientBuildReply(clientHttpRequest * http, const char *buf, size_t size)
 	/* enforce 1.0 reply version */
 	httpBuildVersion(&rep->sline.version, 1, 0);
 	/* do header conversions */
-	clientBuildReplyHeader(http, rep);
+	clientBuildReplyHeader(context, rep);
     } else {
 	/* parsing failure, get rid of the invalid reply */
 	httpReplyDestroy(rep);
@@ -1225,8 +1226,9 @@ clientBuildReply(clientHttpRequest * http, const char *buf, size_t size)
 }
 
 static log_type
-clientIdentifyStoreObject(clientHttpRequest * http)
+clientIdentifyStoreObject(clientReplyContext *context)
 {
+    clientHttpRequest * http = context->http;
     request_t *r = http->request;
     StoreEntry *e;
     if (r->flags.cachable || r->flags.internal)
@@ -1241,7 +1243,7 @@ clientIdentifyStoreObject(clientHttpRequest * http)
 	ipcacheInvalidate(r->host);
 #endif
 #if USE_CACHE_DIGESTS
-    http->lookup_type = e ? "HIT" : "MISS";
+    context->lookup_type = e ? "HIT" : "MISS";
 #endif
     if (NULL == e) {
 	/* this object isn't in the cache */
@@ -1341,7 +1343,7 @@ clientGetMoreData(clientStreamNode * this, clientHttpRequest * http)
 	/* continue forwarding, not finished yet. */
 	http->logType = LOG_TCP_MISS;
     } else
-	http->logType = clientIdentifyStoreObject(http);
+	http->logType = clientIdentifyStoreObject(context);
     /* We still have to do store logic processing - vary, cache hit etc */
     if (context->http->entry != NULL) {
 	/* someone found the object in the cache for us */
@@ -1479,7 +1481,7 @@ clientSendMoreData(void *data, StoreIOBuffer result)
 	    xstrncpy(http->al.headers.reply, buf, k);
 	}
     }
-    rep = clientBuildReply(http, buf, size);
+    rep = clientBuildReply(context, buf, size);
     if (rep) {
 	aclCheck_t *ch;
 	int rv;
