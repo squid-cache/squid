@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.454 2004/08/30 03:28:58 robertc Exp $
+ * $Id: cache_cf.cc,v 1.455 2004/10/15 21:10:44 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -677,7 +677,7 @@ parseBytesLine(size_t * bptr, const char *units)
     if ((token = strtok(NULL, w_space)) == NULL)
         self_destruct();
 
-    if (strcmp(token, "none") == 0) {
+    if (strcmp(token, "none") == 0 || strcmp(token, "-1") == 0) {
         *bptr = static_cast<size_t>(-1);
         return;
     }
