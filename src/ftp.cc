@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.92 1996/12/20 23:45:40 wessels Exp $
+ * $Id: ftp.cc,v 1.93 1997/01/07 20:31:21 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -724,7 +724,7 @@ ftpInitialize(void)
 	return -1;
     }
     ftpget_port = ntohs(S.sin_port);
-    listen(cfd, SQUID_MAXFD >> 2);
+    listen(cfd, Squid_MaxFD >> 2);
     if ((pid = fork()) < 0) {
 	debug(50, 0, "ftpInitialize: fork: %s\n", xstrerror());
 	comm_close(cfd);

@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.130 1997/01/02 07:20:30 wessels Exp $
+ * $Id: main.cc,v 1.131 1997/01/07 20:31:22 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -125,6 +125,7 @@ int opt_mem_pools = 1;
 int opt_forwarded_for = 1;
 int opt_accel_uses_host = 0;
 int vhost_mode = 0;
+int Squid_MaxFD = SQUID_MAXFD;
 volatile int unbuffered_logs = 1;	/* debug and hierarchy unbuffered by default */
 volatile int shutdown_pending = 0;	/* set by SIGTERM handler (shut_down()) */
 volatile int reread_pending = 0;	/* set by SIGHUP handler */
@@ -539,7 +540,7 @@ mainInitialize(void)
     debug(1, 0, "Starting Squid Cache version %s for %s...\n",
 	version_string,
 	CONFIG_HOST_TYPE);
-    debug(1, 1, "With %d file descriptors available\n", SQUID_MAXFD);
+    debug(1, 1, "With %d file descriptors available\n", Squid_MaxFD);
 
     if (first_time) {
 	stmemInit();		/* stmem must go before at least redirect */
@@ -606,6 +607,9 @@ main(int argc, char **argv)
     int n;			/* # of GC'd objects */
     time_t loop_delay;
 
+    if (FD_SETSIZE < Squid_MaxFD)
+	Squid_MaxFD = FD_SETSIZE;
+
     /* call mallopt() before anything else */
 #if HAVE_MALLOPT
 #ifdef M_GRAIN
@@ -645,7 +649,7 @@ main(int argc, char **argv)
     setMaxFD();
 
     if (opt_catch_signals)
-	for (n = SQUID_MAXFD; n > 2; n--)
+	for (n = Squid_MaxFD; n > 2; n--)
 	    close(n);
 
     /*init comm module */
