@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.249 1998/09/15 19:37:52 wessels Exp $
+ * $Id: neighbors.cc,v 1.250 1998/09/18 15:25:41 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -609,9 +609,10 @@ neighborUpdateRtt(peer * p, MemObject * mem)
     if (!mem->start_ping.tv_sec)
 	return;
     rtt = tvSubMsec(mem->start_ping, current_time);
-    if (rtt)
-	p->stats.rtt = intAverage(p->stats.rtt, rtt,
-	    p->stats.pings_acked, RTT_AV_FACTOR);
+    if (rtt < 1 || rtt > 10000)
+	return;
+    p->stats.rtt = intAverage(p->stats.rtt, rtt,
+        p->stats.pings_acked, RTT_AV_FACTOR);
 }
 
 #if USE_HTCP
@@ -716,6 +717,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const struct socka
     if (opcode > ICP_END)
 	return;
     opcode_d = icp_opcode_str[opcode];
+    neighborUpdateRtt(p, mem);
     /* Does the entry exist? */
     if (NULL == entry) {
 	debug(12, 3) ("neighborsUdpAck: Cache key '%s' not found\n",
@@ -752,7 +754,6 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const struct socka
 	opcode_d, storeKeyText(key), p ? p->host : "source");
     if (p) {
 	ntype = neighborType(p, mem->request);
-	neighborUpdateRtt(p, mem);
     }
     if (ignoreMulticastReply(p, mem)) {
 	neighborCountIgnored(p);
