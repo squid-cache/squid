@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.94 1997/01/03 22:45:49 wessels Exp $
+ * $Id: ipcache.cc,v 1.95 1997/01/13 20:44:45 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -159,6 +159,7 @@ static void ipcacheStatPrint _PARAMS((ipcache_entry *, StoreEntry *));
 static void ipcacheUnlockEntry _PARAMS((ipcache_entry *));
 static void ipcacheLockEntry _PARAMS((ipcache_entry *));
 static void ipcacheNudgeQueue _PARAMS((void));
+static void ipcacheChangeKey _PARAMS((ipcache_entry * i));
 
 static ipcache_addrs static_addrs;
 static HashID ip_table = 0;
@@ -608,6 +609,7 @@ ipcache_dnsHandleRead(int fd, dnsserver_t * dnsData)
 	    ipcache_call_pending(i);
 	}
     }
+    ipcacheUnlockEntry(i);	/* unlock from IP_DISPATCHED */
     if (dnsData->offset == 0) {
 	dnsData->data = NULL;
 	dnsData->flags &= ~DNS_FLAG_BUSY;
@@ -685,8 +687,9 @@ ipcache_nbgethostbyname(const char *name, int fd, IPH handler, void *handlerData
 	IpcacheStats.pending_hits++;
 	ipcacheAddPending(i, fd, handler, handlerData);
 	if (squid_curtime - i->expires > 60) {
+	    ipcacheChangeKey(i);
 	    i->status = IP_NEGATIVE_CACHED;
-	    ipcache_call_pending(i);	/* will also release it */
+	    ipcache_call_pending(i);
 	}
 	return;
     } else {
@@ -737,6 +740,7 @@ ipcache_dnsDispatch(dnsserver_t * dns, ipcache_entry * i)
     dns->dispatch_time = current_time;
     DnsStats.requests++;
     DnsStats.hist[dns->id - 1]++;
+    ipcacheLockEntry(i);	/* lock while IP_DISPATCHED */
 }
 
 
@@ -1062,4 +1066,28 @@ ipcacheFreeMemory(void)
     }
     xfree(list);
     hashFreeMemory(ip_table);
+}
+
+static void
+ipcacheChangeKey(ipcache_entry * i)
+{
+    static int index = 0;
+    LOCAL_ARRAY(char, new_key, 256);
+    hash_link *table_entry = hash_lookup(ip_table, i->name);
+    if (table_entry == NULL) {
+	debug(14, 0, "ipcacheChangeKey: Could not find key '%s'\n", i->name);
+	return;
+    }
+    if (i != (ipcache_entry *) table_entry) {
+	debug_trap("ipcacheChangeKey: i != table_entry!");
+	return;
+    }
+    if (hash_remove_link(ip_table, table_entry)) {
+	debug_trap("ipcacheChangeKey: hash_remove_link() failed\n");
+	return;
+    }
+    sprintf(new_key, "%d/%128.128s", ++index, i->name);
+    safe_free(i->name);
+    i->name = xstrdup(new_key);
+    ipcache_add_to_hash(i);
 }
