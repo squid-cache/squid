@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.77 1997/10/17 21:22:46 kostas Exp $
+ * $Id: errorpage.cc,v 1.78 1997/10/20 19:06:25 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -226,6 +226,7 @@ errorSend(int fd, ErrorState * err)
 {
     char *buf;
     int len;
+    debug(4,3)("errorSend: FD %d, err=%p\n", fd, err);
     assert(fd >= 0);
     buf = errorBuildBuf(err, &len);
     cbdataAdd(err);
@@ -250,8 +251,10 @@ static void
 errorSendComplete(int fd, char *buf, int size, int errflag, void *data)
 {
     ErrorState *err = data;
+    debug(4,3)("errorSendComplete: FD %d, size=%d\n", fd, size);
     if (err->callback)
 	err->callback(fd, err->callback_data, size);
     cbdataUnlock(err);
     errorStateFree(err);
+    comm_close(fd);
 }
