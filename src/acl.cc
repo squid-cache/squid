@@ -1,4 +1,4 @@
-#ident "$Id: acl.cc,v 1.2 1996/04/11 03:09:13 wessels Exp $"
+#ident "$Id: acl.cc,v 1.3 1996/04/11 03:22:13 wessels Exp $"
 
 #include "squid.h"
 
@@ -270,10 +270,58 @@ void aclParseAccessLine()
     AccessListTail = &A->next;
 }
 
+int aclMatchIp(data, c)
+     struct _acl_ip_data *data;
+     struct in_addr c;
+{
+    struct in_addr h;
+    while (data) {
+	h.s_addr = c.s_addr & data->mask1.s_addr;
+	if (h.s_addr == data->addr1.s_addr)
+	    return 1;
+	data = data->next;
+    }
+    return 0;
+}
+
+int aclMatchWord(data, word)
+     wordlist *data;
+     char *word;
+{
+    while (data) {
+	if (!strcasecmp(data->key, word))
+	    return 1;
+	data = data->next;
+    }
+    return 0;
+}
+int aclMatchRegex(data, word)
+     relist *data;
+     char *word;
+{
+    while (data) {
+	if (regexec(&data->regex, word, 0, 0, 0) == 0)
+	    return 1;
+	data = data->next;
+    }
+    return 0;
+}
+int aclMatchInteger(data, i)
+     intlist *data;
+     int i;
+{
+    while (data) {
+	if (data->i == i)
+	    return 1;
+	data = data->next;
+    }
+    return 0;
+}
+
 int aclMatchAcl(acl, c, pr, h, po, r)
      struct _acl *acl;
-     in_addr c;
-     prototype_t pr;
+     struct in_addr c;
+     protocol_t pr;
      char *h;
      int po;
      char *r;
@@ -316,23 +364,23 @@ int aclMatchAcl(acl, c, pr, h, po, r)
 
 int aclMatchAclList(list, c, pr, h, po, r)
      struct _acl_list *list;
-     in_addr c;
-     prototype_t pr;
+     struct in_addr c;
+     protocol_t pr;
      char *h;
      int po;
      char *r;
 {
-    struct _acl *a = NULL;
     while (list) {
 	if (aclMatchAcl(list->acl, c, pr, h, po, r) != list->op)
-		return 0;
+	    return 0;
+	list = list->next;
     }
     return 1;
 }
 
 int aclCheck(cli_addr, proto, host, port, request)
-     in_addr cli_addr;
-     prototype_t proto;
+     struct in_addr cli_addr;
+     protocol_t proto;
      char *host;
      int port;
      char *request;
