@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.10 1998/04/06 22:32:05 wessels Exp $
+ * $Id: CacheDigest.cc,v 1.11 1998/04/07 23:23:36 rousskov Exp $
  *
  * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -40,7 +40,7 @@ typedef struct {
 } CacheDigestStats;
 
 /* local functions */
-static void cacheDigestHashKey(int bit_count, const cache_key * key);
+static void cacheDigestHashKey(const CacheDigest *cd, const cache_key *key);
 
 /* configuration params */
 static const int BitsPerEntry = 4;
@@ -52,11 +52,20 @@ static u_num32 hashed_keys[4];
 CacheDigest *
 cacheDigestCreate(int capacity)
 {
-    CacheDigest *cd = xcalloc(1, sizeof(CacheDigest));
+    const size_t mask_size = (size_t) (capacity * BitsPerEntry + 7) / 8;
+    CacheDigest *cd = cacheDigestSizedCreate(mask_size, capacity);
+    return cd;
+}
+
+/* use this method only if mask size is known a priory */
+CacheDigest *
+cacheDigestSizedCreate(size_t size, int capacity)
+{
+    CacheDigest *cd = memAllocate(MEM_CACHE_DIGEST);
     assert(MD5_DIGEST_CHARS == 16);	/* our hash functions rely on 16 byte keys */
     assert(capacity > 0);
     cd->capacity = capacity;
-    cd->mask_size = (size_t) (capacity * BitsPerEntry + 7) / 8;
+    cd->mask_size = size;
     cd->mask = xcalloc(cd->mask_size, 1);
     return cd;
 }
@@ -94,7 +103,7 @@ cacheDigestTest(const CacheDigest * cd, const cache_key * key)
 {
     assert(cd && key);
     /* hash */
-    cacheDigestHashKey(cd->capacity * BitsPerEntry, key);
+    cacheDigestHashKey(cd, key);
     /* test corresponding bits */
     return
 	CBIT_TEST(cd->mask, hashed_keys[0]) &&
@@ -108,7 +117,7 @@ cacheDigestAdd(CacheDigest * cd, const cache_key * key)
 {
     assert(cd && key);
     /* hash */
-    cacheDigestHashKey(cd->capacity * BitsPerEntry, key);
+    cacheDigestHashKey(cd, key);
     /* turn on corresponding bits */
     CBIT_SET(cd->mask, hashed_keys[0]);
     CBIT_SET(cd->mask, hashed_keys[1]);
@@ -129,9 +138,8 @@ cacheDigestDel(CacheDigest * cd, const cache_key * key)
 static void
 cacheDigestStats(const CacheDigest * cd, CacheDigestStats * stats)
 {
-    const int bit_count = cd->capacity * BitsPerEntry;
     int on_count = 0;
-    int pos = bit_count;
+    int pos = cd->mask_size * 8;
     int seq_len_sum = 0;
     int seq_count = 0;
     int cur_seq_len = 0;
@@ -150,14 +158,61 @@ cacheDigestStats(const CacheDigest * cd, CacheDigestStats * stats)
 	}
 	cur_seq_len++;
     }
-    stats->bit_count = bit_count;
+    stats->bit_count = cd->mask_size * 8;
     stats->bit_on_count = on_count;
     stats->bseq_len_sum = seq_len_sum;
     stats->bseq_count = seq_count;
 }
 
 void
-cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e)
+cacheDigestGuessStatsUpdate(cd_guess_stats *stats, int real_hit, int guess_hit)
+{
+    assert(stats);
+    if (real_hit) {
+	if (guess_hit)
+	    stats->true_hits++;
+	else
+	    stats->false_misses++;
+    } else {
+	if (guess_hit)
+	    stats->false_hits++;
+	else
+	    stats->true_misses++;
+    }
+}
+
+void
+cacheDigestGuessStatsReport(const cd_guess_stats *stats, StoreEntry * sentry, const char *label)
+{
+    const int true_count = stats->true_hits + stats->true_misses;
+    const int false_count = stats->false_hits + stats->false_misses;
+    const int hit_count = stats->true_hits + stats->false_hits;
+    const int miss_count = stats->true_misses + stats->false_misses;
+    const int tot_count = true_count + false_count;
+    
+    assert(label);
+    assert(tot_count == hit_count + miss_count); /* paranoid */
+
+    storeAppendPrintf(sentry, "Digest guesses stats for %s:\n", label);
+    storeAppendPrintf(sentry, "guess\t hit\t\t miss\t\t total\t\t\n");
+    storeAppendPrintf(sentry, " \t #\t %%\t #\t %%\t #\t %%\t\n");
+
+    storeAppendPrintf(sentry, "true\t %d\t %.2f\t %d\t %.2f\t %d\t %.2f\n",
+	stats->true_hits, xpercent(stats->true_hits, tot_count),
+	stats->true_misses, xpercent(stats->true_misses, tot_count),
+	true_count, xpercent(true_count, tot_count));
+    storeAppendPrintf(sentry, "false\t %d\t %.2f\t %d\t %.2f\t %d\t %.2f\n",
+	stats->false_hits, xpercent(stats->false_hits, tot_count),
+	stats->false_misses, xpercent(stats->false_misses, tot_count),
+	false_count, xpercent(false_count, tot_count));
+    storeAppendPrintf(sentry, "all\t %d\t %.2f\t %d\t %.2f\t %d\t %.2f\n",
+	hit_count, xpercent(hit_count, tot_count),
+	miss_count, xpercent(miss_count, tot_count),
+	tot_count, xpercent(tot_count, tot_count));
+}
+
+void
+cacheDigestReport(CacheDigest *cd, const char *label, StoreEntry * e)
 {
     CacheDigestStats stats;
     assert(cd && e);
@@ -184,8 +239,9 @@ cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e)
 }
 
 static void
-cacheDigestHashKey(int bit_count, const cache_key * key)
+cacheDigestHashKey(const CacheDigest *cd, const cache_key *key)
 {
+    const int bit_count = cd->mask_size * 8;
     /* get four hashed values */
     memcpy(hashed_keys, key, sizeof(hashed_keys));
     /* wrap */
@@ -193,4 +249,7 @@ cacheDigestHashKey(int bit_count, const cache_key * key)
     hashed_keys[1] %= bit_count;
     hashed_keys[2] %= bit_count;
     hashed_keys[3] %= bit_count;
+
+    debug(70,9) ("cacheDigestHashKey: %s -(%d)-> %d %d %d %d\n",
+	storeKeyText(key), bit_count, hashed_keys[0], hashed_keys[1], hashed_keys[2], hashed_keys[3]);
 }
