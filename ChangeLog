@@ -1,6 +1,9 @@
 	- Added NAT/Transparent hijacking code from Quinton Dolan.
 	- Added actual filesystem usage to cachemgr 'storedir' page.
 	  Only works for some operating systems.
+	- Fixed HTCP compile-time bugs.
+	- Fixed quick_abort bugs.  Configured values are stored as
+	  Kbytes, not bytes.
 
 Changes to squid-1.2.beta25 (September 21, 1998):
 
