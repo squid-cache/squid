@@ -70,5 +70,5 @@ bootstrap autoconf$acver
 
 echo "Autotool bootstrapping complete."
 echo "bootstrapping sub projects."
-cd lib/libTrie && $SHELL ./bootstrap.sh
+cd lib/libTrie && ./bootstrap.sh
 
