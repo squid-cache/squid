@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.408 1998/10/08 20:10:17 wessels Exp $
+ * $Id: client_side.cc,v 1.409 1998/10/09 17:52:56 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1526,6 +1526,7 @@ clientKeepaliveNextRequest(clientHttpRequest * http)
 	debug(33, 1) ("clientKeepaliveNextRequest: FD %d Sending next\n",
 	    conn->fd);
 	entry = http->entry;
+	assert(entry);
 	if (0 == storeClientCopyPending(entry, http)) {
 	    if (entry->store_status == STORE_ABORTED)
 		debug(33, 0) ("clientKeepaliveNextRequest: entry->swap_status == STORE_ABORTED\n");
@@ -1634,13 +1635,10 @@ static log_type
 clientProcessRequest2(clientHttpRequest * http)
 {
     const request_t *r = http->request;
-    const cache_key *key;
     StoreEntry *e;
-    key = storeKeyPublic(http->uri, r->method);
     e = http->entry = storeGetPublic(http->uri, r->method);
     if (r->method == METHOD_HEAD && e == NULL) {
 	/* We can generate a HEAD reply from a cached GET object */
-	key = storeKeyPublic(http->uri, METHOD_GET);
 	e = http->entry = storeGetPublic(http->uri, METHOD_GET);
     }
 #if USE_CACHE_DIGESTS
@@ -1648,18 +1646,22 @@ clientProcessRequest2(clientHttpRequest * http)
 #endif
     if (NULL == e) {
 	/* this object isn't in the cache */
+	debug(33,3)("clientProcessRequest2: storeGet() MISS\n");
 	return LOG_TCP_MISS;
     }
     if (Config.onoff.offline) {
+	debug(33,3)("clientProcessRequest2: offline HIT\n");
 	http->entry = e;
 	return LOG_TCP_HIT;
     }
     if (!storeEntryValidToSend(e)) {
+	debug(33,3)("clientProcessRequest2: !storeEntryValidToSend MISS\n");
 	http->entry = NULL;
 	return LOG_TCP_MISS;
     }
     if (EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
 	/* Special entries are always hits, no matter what the client says */
+	debug(33,3)("clientProcessRequest2: ENTRY_SPECIAL HIT\n");
 	http->entry = e;
 	return LOG_TCP_HIT;
     }
@@ -1672,16 +1674,23 @@ clientProcessRequest2(clientHttpRequest * http)
     }
 #endif
     if (r->flags.nocache) {
+	debug(33,3)("clientProcessRequest2: no-cache REFRESH MISS\n");
 	http->entry = NULL;
 	ipcacheReleaseInvalid(r->host);
 	return LOG_TCP_CLIENT_REFRESH_MISS;
-    } else if (r->range && httpHdrRangeWillBeComplex(r->range)) {
-	/* Some clients break if we return "200 OK" for a Range request.
-	 * We would have to return "200 OK" for a _complex_ Range request
-	 * that is also a HIT. Thus, let's prevent HITs on complex Range requests */
+    }
+    if (r->range && httpHdrRangeWillBeComplex(r->range)) {
+	/*
+	 * Some clients break if we return "200 OK" for a Range
+	 * request.  We would have to return "200 OK" for a _complex_
+	 * Range request that is also a HIT. Thus, let's prevent HITs
+	 * on complex Range requests
+	 */
+	debug(33,3)("clientProcessRequest2: complex range MISS\n");
 	http->entry = NULL;
 	return LOG_TCP_MISS;
     }
+    debug(33,3)("clientProcessRequest2: default HIT\n");
     http->entry = e;
     return LOG_TCP_HIT;
 }
