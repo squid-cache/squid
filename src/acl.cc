@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.32 1996/09/12 03:24:00 wessels Exp $
+ * $Id: acl.cc,v 1.33 1996/09/13 19:11:13 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -969,8 +969,7 @@ void aclDestroyAccessList(list)
 }
 
 /* maex@space.net (06.09.1996)
- *    destroy an _acl_deny_info_list
- */
+ *    destroy an _acl_deny_info_list */
 void aclDestroyDenyInfoList(list)
      struct _acl_deny_info_list **list;
 {
@@ -987,4 +986,5 @@ void aclDestroyDenyInfoList(list)
 	a_next = a->next;
 	safe_free(a);
     }
+    *list = NULL;
 }
