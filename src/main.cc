@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.13 1996/03/27 20:21:43 wessels Exp $ */
+/* $Id: main.cc,v 1.14 1996/03/28 02:34:04 wessels Exp $ */
 
 #include "squid.h"
 
@@ -68,7 +68,7 @@ int main(argc, argv)
 
     setMaxFD();
 
-#if USE_MALLOPT
+#if HAVE_MALLOPT
     /* set malloc option */
     /* use small block algorithm for faster allocation */
     /* grain of small block */

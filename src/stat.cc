@@ -1,4 +1,4 @@
-/* $Id: stat.cc,v 1.8 1996/03/27 18:15:53 wessels Exp $ */
+/* $Id: stat.cc,v 1.9 1996/03/28 02:34:04 wessels Exp $ */
 
 #include "squid.h"
 
@@ -395,7 +395,7 @@ void info_get(obj, sentry)
     struct rusage rusage;
 #endif
 
-#if USE_MALLINFO
+#if HAVE_MALLINFO
     struct mallinfo mp;
 #endif
 
@@ -464,7 +464,7 @@ void info_get(obj, sentry)
 
 #endif
 
-#if USE_MALLINFO
+#if HAVE_MALLINFO
     mp = mallinfo();
 
     sprintf(line, "{Memory usage for cached via mallinfo():}\n");
@@ -520,7 +520,7 @@ void info_get(obj, sentry)
 
 #endif /* LNG_MALLINFO */
 
-#endif /* USE_MALLINFO */
+#endif /* HAVE_MALLINFO */
 
     sprintf(line, "{File descriptor usage for cached:}\n");
     storeAppend(sentry, line, strlen(line));
