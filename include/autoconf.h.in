@@ -157,6 +157,9 @@
 /* Define if you have the syslog function.  */
 #undef HAVE_SYSLOG
 
+/* Define if you have the tempnam function.  */
+#undef HAVE_TEMPNAM
+
 /* Define if you have the timegm function.  */
 #undef HAVE_TIMEGM
 
