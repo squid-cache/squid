@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.14 2002/04/13 23:07:54 hno Exp $
+ * $Id: auth_digest.cc,v 1.15 2002/07/14 23:53:50 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -174,7 +174,7 @@ authenticateDigestNonceNew(void)
     newnonce->flags.valid = 1;
     newnonce->noncedata.self = newnonce;
     newnonce->noncedata.creationtime = current_time.tv_sec;
-    newnonce->noncedata.randomdata = random();
+    newnonce->noncedata.randomdata = squid_random();
 
     authDigestNonceEncode(newnonce);
     /*
@@ -183,7 +183,7 @@ authenticateDigestNonceNew(void)
      */
     while ((temp = authenticateDigestNonceFindNonce(newnonce->hash.key))) {
 	/* create a new nonce */
-	newnonce->noncedata.randomdata = random();
+	newnonce->noncedata.randomdata = squid_random();
 	authDigestNonceEncode(newnonce);
     }
     hash_join(digest_nonce_cache, &newnonce->hash);
