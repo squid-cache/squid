@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.466 2005/03/18 14:38:10 hno Exp $
+ * $Id: cache_cf.cc,v 1.467 2005/03/18 15:36:07 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -649,7 +649,7 @@ configDoConfigure(void)
 
         for (s = Config.Sockaddr.https; s != NULL; s = (https_port_list *) s->http.next) {
             debug(3, 1) ("Initializing https_port %s:%d SSL context\n", inet_ntoa(s->http.s.sin_addr), ntohs(s->http.s.sin_port));
-            s->sslContext = sslCreateServerContext(s->cert, s->key, s->version, s->cipher, s->options, s->sslflags, s->clientca, s->cafile, s->capath, s->dhfile);
+            s->sslContext = sslCreateServerContext(s->cert, s->key, s->version, s->cipher, s->options, s->sslflags, s->clientca, s->cafile, s->capath, s->dhfile, s->sslcontext);
         }
     }
 
@@ -2927,6 +2927,9 @@ parse_https_port_list(https_port_list ** head)
         } else if (strncmp(token, "sslflags=", 9) == 0) {
             safe_free(s->sslflags);
             s->sslflags = xstrdup(token + 9);
+        } else if (strncmp(token, "sslcontext=", 11) == 0) {
+            safe_free(s->sslcontext);
+            s->sslcontext = xstrdup(token + 11);
         } else {
             parse_http_port_option(&s->http, token);
         }
@@ -2970,6 +2973,9 @@ dump_https_port_list(StoreEntry * e, const char *n, const https_port_list * s)
 
         if (s->sslflags)
             storeAppendPrintf(e, " sslflags=%s", s->sslflags);
+
+        if (s->sslcontext)
+            storeAppendPrintf(e, " sslcontext=%s", s->sslcontext);
 
         storeAppendPrintf(e, "\n");
 

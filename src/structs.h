@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.512 2005/03/06 21:08:13 serassio Exp $
+ * $Id: structs.h,v 1.513 2005/03/18 15:36:08 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -199,6 +199,7 @@ struct _https_port_list
     char *capath;
     char *dhfile;
     char *sslflags;
+    char *sslcontext;
     SSL_CTX *sslContext;
 };
 

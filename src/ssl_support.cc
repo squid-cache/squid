@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.23 2005/03/18 15:26:30 hno Exp $
+ * $Id: ssl_support.cc,v 1.24 2005/03/18 15:36:08 hno Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
@@ -486,7 +486,7 @@ ssl_initialize(void)
 }
 
 SSL_CTX *
-sslCreateServerContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *clientCA, const char *CAfile, const char *CApath, const char *dhfile)
+sslCreateServerContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *clientCA, const char *CAfile, const char *CApath, const char *dhfile, const char *context)
 {
     int ssl_error;
     SSL_METHOD *method;
@@ -538,6 +538,10 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
     }
 
     SSL_CTX_set_options(sslContext, ssl_parse_options(options));
+
+    if (context && *context) {
+        SSL_CTX_set_session_id_context(sslContext, context, strlen(context));
+    }
 
     if (Config.SSL.unclean_shutdown) {
         debug(83, 5) ("Enabling quiet SSL shutdowns (RFC violation).\n");
