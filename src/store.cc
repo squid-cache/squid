@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.203 1997/01/31 20:14:53 wessels Exp $
+ * $Id: store.cc,v 1.204 1997/01/31 21:16:50 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2735,9 +2735,11 @@ storeRotateLog(void)
 	return;
     if (strcmp(fname, "none") == 0)
 	return;
+#ifdef S_ISREG
     if (stat(fname, &sb) == 0)
 	if (S_ISREG(sb.st_mode) == 0)
 	    return;
+#endif
 
     debug(20, 1, "storeRotateLog: Rotating.\n");
 

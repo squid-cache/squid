@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.41 1997/01/15 18:41:47 wessels Exp $
+ * $Id: debug.cc,v 1.42 1997/01/31 21:16:48 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -251,9 +251,11 @@ _db_rotate_log(void)
 
     if (debug_log_file == NULL)
 	return;
+#ifdef S_ISREG
     if (stat(debug_log_file, &sb) == 0)
 	if (S_ISREG(sb.st_mode) == 0)
 	    return;
+#endif
 
     /* Rotate numbers 0 through N up one */
     for (i = Config.Log.rotateNumber; i > 1;) {
