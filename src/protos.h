@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.374 2000/06/26 04:57:16 wessels Exp $
+ * $Id: protos.h,v 1.375 2000/06/27 08:41:30 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -852,9 +852,13 @@ extern void storeSwapFileNumberSet(StoreEntry * e, sfileno filn);
 extern void storeFsInit(void);
 extern void storeFsDone(void);
 extern void storeFsAdd(char *, STSETUP *);
+extern void storeReplAdd(char *, REMOVALPOLICYCREATE *);
 
 /* store_modules.c */
 extern void storeFsSetup(void);
+
+/* repl_modules.c */
+extern void storeReplSetup(void);
 
 /* store_io.c */
 extern storeIOState *storeCreate(StoreEntry *, STFNCB *, STIOCB *, void *);

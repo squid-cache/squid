@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.93 2000/06/25 22:28:42 wessels Exp $
+ * $Id: globals.h,v 1.94 2000/06/27 08:41:30 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -146,6 +146,7 @@ extern request_flags null_request_flags;
 extern int store_open_disk_fd;	/* 0 */
 extern const char *SwapDirType[];
 extern storefs_entry_t *storefs_list;	/* NULL */
+extern storerepl_entry_t *storerepl_list;	/* NULL */
 extern int store_swap_low;	/* 0 */
 extern int store_swap_high;	/* 0 */
 extern int store_pages_max;	/* 0 */

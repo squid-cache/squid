@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.345 2000/06/26 05:11:13 wessels Exp $
+ * $Id: structs.h,v 1.346 2000/06/27 08:41:31 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1893,6 +1893,15 @@ struct _storefs_entry {
     STFSPARSE *parsefunc;
     STFSRECONFIGURE *reconfigurefunc;
     STFSSHUTDOWN *donefunc;
+};
+
+/*
+ * This defines an repl type
+ */
+
+struct _storerepl_entry {
+    char *typestr;
+    REMOVALPOLICYCREATE *create;
 };
 
 /*
