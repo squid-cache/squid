@@ -1,5 +1,4 @@
 /*
- * 
  * squid_ldap_auth: authentication via ldap for squid proxy server
  * 
  * Maintainer: Henrik Nordstrom <hno@squid-cache.org>
@@ -23,6 +22,10 @@
  * or (at your option) any later version.
  *
  * Changes:
+ * 2001-10-04: Henrik Nordstrom <hno@squid-cache.org>
+ *             - Be consistent with the other helpers in how
+ *		 spaces are managed. If there is space characters
+ *		 then these are assumed to be part of the password
  * 2001-05-02: Henrik Nordstrom <hno@squid-cache.org>
  *             - Support newer OpenLDAP 2.x libraries using the
  *               revised Internet Draft API which unfortunately
@@ -108,7 +111,7 @@ int
 main(int argc, char **argv)
 {
     char buf[256];
-    char *user, *passwd, *p;
+    char *user, *passwd;
     char *ldapServer;
     LDAP *ld = NULL;
     int tryagain;
@@ -211,17 +214,13 @@ main(int argc, char **argv)
     ldapServer = (char *) argv[1];
 
     while (fgets(buf, 256, stdin) != NULL) {
-	if ((p = strchr(buf, '\n')) != NULL)
-	    *p = '\0';		/* strip \n */
-	if ((p = strchr(buf, '\r')) != NULL)
-	    *p = '\0';		/* strip \r */
+	user = strtok(buf, " \r\n");
+	passwd = strtok(buf, "\r\n");
 
-	user = buf;
-	if ((passwd = strrchr(buf, ' ')) == NULL) {
+	if (!user || !passwd || !passwd[0]) {
 	    printf("ERR\n");
 	    continue;
 	}
-	*passwd++ = '\0';	/* Cut in username,password */
 	tryagain = 1;
       recover:
 	if (ld == NULL) {
