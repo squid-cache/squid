@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.31 2001/10/17 20:25:01 hno Exp $
+ * $Id: authenticate.cc,v 1.32 2001/10/24 05:46:26 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -467,7 +467,7 @@ authenticateAuthenticate(auth_user_request_t ** auth_user_request, http_hdr_type
     if (proxy_auth && conn->auth_user_request &&
 	authenticateUserAuthenticated(conn->auth_user_request) &&
 	strcmp(proxy_auth, authscheme_list[conn->auth_user_request->auth_user->auth_module - 1].authConnLastHeader(conn->auth_user_request))) {
-	debug(28, 2) ("authenticateAuthenticate: DUPLICATE AUTH - authentication header on already authenticated connection!. AU %x, Current user '%s' proxy_auth %s\n", conn->auth_user_request, authenticateUserRequestUsername(conn->auth_user_request), proxy_auth);
+	debug(28, 2) ("authenticateAuthenticate: DUPLICATE AUTH - authentication header on already authenticated connection!. AU %p, Current user '%s' proxy_auth %s\n", conn->auth_user_request, authenticateUserRequestUsername(conn->auth_user_request), proxy_auth);
 	/* remove this request struct - the link is already authed and it can't be to 
 	 * reauth.
 	 */
@@ -519,7 +519,7 @@ authenticateAuthenticate(auth_user_request_t ** auth_user_request, http_hdr_type
 		authenticateAuthUserRequestLock(*auth_user_request);
 	    } else {
 		/* failed connection based authentication */
-		debug(28, 4) ("authenticateAuthenticate: Auth user request %d conn-auth user request %d conn type %d authentication failed.\n",
+		debug(28, 4) ("authenticateAuthenticate: Auth user request %p conn-auth user request %p conn type %d authentication failed.\n",
 		    *auth_user_request, conn->auth_user_request, conn->auth_type);
 		authenticateAuthUserRequestUnlock(*auth_user_request);
 		*auth_user_request = NULL;
@@ -883,7 +883,7 @@ authenticateProxyUserCacheCleanup(void *datanotused)
     auth_user_t *auth_user;
     char *username = NULL;
     debug(29, 3) ("authenticateProxyUserCacheCleanup: Cleaning the user cache now\n");
-    debug(29, 3) ("authenticateProxyUserCacheCleanup: Current time: %d\n", current_time.tv_sec);
+    debug(29, 3) ("authenticateProxyUserCacheCleanup: Current time: %ld\n", (long int)current_time.tv_sec);
     hash_first(proxy_auth_username_cache);
     while ((usernamehash = ((auth_user_hash_pointer *) hash_next(proxy_auth_username_cache)))) {
 	auth_user = usernamehash->auth_user;
@@ -891,7 +891,7 @@ authenticateProxyUserCacheCleanup(void *datanotused)
 
 	/* if we need to have inpedendent expiry clauses, insert a module call
 	 * here */
-	debug(29, 4) ("authenticateProxyUserCacheCleanup: Cache entry:\n\tType: %d\n\tUsername: %s\n\texpires: %d\n\treferences: %d\n", auth_user->auth_type, username, auth_user->expiretime + Config.authenticateTTL, auth_user->references);
+	debug(29, 4) ("authenticateProxyUserCacheCleanup: Cache entry:\n\tType: %d\n\tUsername: %s\n\texpires: %ld\n\treferences: %d\n", auth_user->auth_type, username, (long int)(auth_user->expiretime + Config.authenticateTTL), auth_user->references);
 	if (auth_user->expiretime + Config.authenticateTTL <= current_time.tv_sec) {
 	    debug(29, 5) ("authenticateProxyUserCacheCleanup: Removing user %s from cache due to timeout.\n", username);
 	    /* the minus 1 accounts for the cache lock */

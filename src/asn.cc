@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.74 2001/10/17 19:43:39 hno Exp $
+ * $Id: asn.cc,v 1.75 2001/10/24 05:46:26 hno Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -264,8 +264,8 @@ asHandleReply(void *data, char *buf, ssize_t size)
     }
     asState->seen = asState->offset + size;
     asState->offset += (s - buf);
-    debug(53, 3) ("asState->seen = %d, asState->offset = %d\n",
-	asState->seen, asState->offset);
+    debug(53, 3) ("asState->seen = %ld, asState->offset = %ld\n",
+	(long int)asState->seen, (long int)asState->offset);
     if (e->store_status == STORE_PENDING) {
 	debug(53, 3) ("asHandleReply: store_status == STORE_PENDING: %s\n", storeUrl(e));
 	storeClientCopy(asState->sc,
