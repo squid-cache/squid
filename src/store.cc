@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.392 1998/03/06 23:22:35 wessels Exp $
+ * $Id: store.cc,v 1.393 1998/03/11 18:30:08 rousskov Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -512,7 +512,7 @@ storeCheckCachable(StoreEntry * e)
     } else if (e->store_status == STORE_OK && EBIT_TEST(e->flag, ENTRY_BAD_LENGTH)) {
 	debug(20, 2) ("storeCheckCachable: NO: wrong content-length\n");
     } else if (EBIT_TEST(e->flag, ENTRY_NEGCACHED)) {
-	debug(20, 2) ("storeCheckCachable: NO: negative cached\n");
+	debug(20, 3) ("storeCheckCachable: NO: negative cached\n");
 	return 0;		/* avoid release call below */
     } else if (e->mem_obj->inmem_hi > Config.Store.maxObjectSize) {
 	debug(20, 2) ("storeCheckCachable: NO: too big\n");
