@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.380 2003/08/27 22:45:37 hno Exp $
+ * $Id: stat.cc,v 1.381 2003/09/29 10:24:01 robertc Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -624,23 +624,23 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "Memory usage for %s via mallinfo():\n",
                       appname);
 
-    storeAppendPrintf(sentry, "\tTotal space in arena:  %6d KB\n",
-                      mp.arena >> 10);
+    storeAppendPrintf(sentry, "\tTotal space in arena:  %6ld KB\n",
+                      (long)mp.arena >> 10);
 
-    storeAppendPrintf(sentry, "\tOrdinary blocks:       %6d KB %6d blks\n",
-                      mp.uordblks >> 10, mp.ordblks);
+    storeAppendPrintf(sentry, "\tOrdinary blocks:       %6ld KB %6ld blks\n",
+                      (long)mp.uordblks >> 10, (long)mp.ordblks);
 
-    storeAppendPrintf(sentry, "\tSmall blocks:          %6d KB %6d blks\n",
-                      mp.usmblks >> 10, mp.smblks);
+    storeAppendPrintf(sentry, "\tSmall blocks:          %6ld KB %6ld blks\n",
+                      (long)mp.usmblks >> 10, (long)mp.smblks);
 
-    storeAppendPrintf(sentry, "\tHolding blocks:        %6d KB %6d blks\n",
-                      mp.hblkhd >> 10, mp.hblks);
+    storeAppendPrintf(sentry, "\tHolding blocks:        %6ld KB %6ld blks\n",
+                      (long)mp.hblkhd >> 10, (long)mp.hblks);
 
-    storeAppendPrintf(sentry, "\tFree Small blocks:     %6d KB\n",
-                      mp.fsmblks >> 10);
+    storeAppendPrintf(sentry, "\tFree Small blocks:     %6ld KB\n",
+                      (long)mp.fsmblks >> 10);
 
-    storeAppendPrintf(sentry, "\tFree Ordinary blocks:  %6d KB\n",
-                      mp.fordblks >> 10);
+    storeAppendPrintf(sentry, "\tFree Ordinary blocks:  %6ld KB\n",
+                      (long)mp.fordblks >> 10);
 
     t = mp.uordblks + mp.usmblks + mp.hblkhd;
 
@@ -697,9 +697,11 @@ info_get(StoreEntry * sentry)
 #if !(HAVE_MSTATS && HAVE_GNUMALLOC_H) && HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
 
         storeAppendPrintf(sentry, "\tmemPool accounted:     %6d KB %3d%%\n",
-                          mp_stats.TheMeter->alloc.level >> 10, percent(mp_stats.TheMeter->alloc.level, t));
+                          (int) mp_stats.TheMeter->alloc.level >> 10,
+                          percent(mp_stats.TheMeter->alloc.level, t));
         storeAppendPrintf(sentry, "\tmemPool unaccounted:   %6d KB %3d%%\n",
-                          (t - mp_stats.TheMeter->alloc.level) >> 10, percent((t - mp_stats.TheMeter->alloc.level), t));
+                          (t - (int) mp_stats.TheMeter->alloc.level) >> 10,
+                          percent((t - mp_stats.TheMeter->alloc.level), t));
 #endif
 
         storeAppendPrintf(sentry, "\tmemPoolAlloc calls: %9.0f\n",
@@ -1567,7 +1569,7 @@ extern double
     cd = CountHist[0].cd.kbytes_recv.kb - CountHist[minutes].cd.kbytes_recv.kb;
 
     if (s < cd)
-        debug(18, 1) ("STRANGE: srv_kbytes=%d, cd_kbytes=%d\n", s, cd);
+        debugs(18, 1, "STRANGE: srv_kbytes=" << s << ", cd_kbytes=" << cd);
 
     s -= cd;
 

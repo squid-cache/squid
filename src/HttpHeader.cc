@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.94 2003/07/17 22:08:15 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.95 2003/09/29 10:24:00 robertc Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -680,8 +680,8 @@ httpHeaderAddEntry(HttpHeader * hdr, HttpHeaderEntry * e)
     assert(hdr && e);
     assert_eid(e->id);
 
-    debug(55, 7) ("%p adding entry: %d at %d\n",
-                  hdr, e->id, hdr->entries.count);
+    debugs(55, 7, hdr << " adding entry: " << e->id << " at " <<
+           hdr->entries.count);
 
     if (CBIT_TEST(hdr->mask, e->id))
         Headers[e->id].stat.repCount++;

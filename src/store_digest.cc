@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.57 2003/09/01 03:49:40 robertc Exp $
+ * $Id: store_digest.cc,v 1.58 2003/09/29 10:24:02 robertc Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -482,8 +482,9 @@ storeDigestSwapOutStep(void *data)
 
     storeAppend(e, store_digest->mask + sd_state.rewrite_offset, chunk_size);
 
-    debug(71, 3) ("storeDigestSwapOutStep: size: %d offset: %d chunk: %d bytes\n",
-                  store_digest->mask_size, sd_state.rewrite_offset, chunk_size);
+    debugs(71, 3, "storeDigestSwapOutStep: size: " << store_digest->mask_size <<
+           " offset: " << sd_state.rewrite_offset << " chunk: " <<
+           chunk_size << " bytes");
 
     sd_state.rewrite_offset += chunk_size;
 

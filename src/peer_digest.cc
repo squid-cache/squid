@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.100 2003/09/06 12:47:35 robertc Exp $
+ * $Id: peer_digest.cc,v 1.101 2003/09/29 10:24:01 robertc Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -699,8 +699,8 @@ peerDigestSwapInMask(void *data, char *buf, ssize_t size)
     fetch->mask_offset += size;
 
     if (fetch->mask_offset >= (off_t)pd->cd->mask_size) {
-        debug(72, 2) ("peerDigestSwapInMask: Done! Got %d, expected %d\n",
-                      fetch->mask_offset, pd->cd->mask_size);
+        debugs(72, 2, "peerDigestSwapInMask: Done! Got " <<
+               fetch->mask_offset << ", expected " << pd->cd->mask_size);
         assert(fetch->mask_offset == (off_t)pd->cd->mask_size);
         assert(peerDigestFetchedEnough(fetch, NULL, 0, "peerDigestSwapInMask"));
         return -1;		/* XXX! */
@@ -740,9 +740,8 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
             host = pd->host.buf();
     }
 
-    debug(72, 6) ("%s: peer %s, offset: %d size: %d.\n",
-                  step_name, host,
-                  fetch->offset, size);
+    debugs(72, 6, step_name << ": peer " << host << ", offset: " <<
+           fetch->offset << " size: " << size << ".");
 
     /* continue checking (with pd and host known and valid) */
 
@@ -1003,8 +1002,10 @@ peerDigestSetCBlock(PeerDigest * pd, const char *buf)
 
     /* check consistency further */
     if ((size_t)cblock.mask_size != cacheDigestCalcMaskSize(cblock.capacity, cblock.bits_per_entry)) {
-        debug(72, 0) ("%s digest cblock is corrupted (mask size mismatch: %d ? %d).\n",
-                      host, cblock.mask_size, cacheDigestCalcMaskSize(cblock.capacity, cblock.bits_per_entry));
+        debugs(72, 0, host << " digest cblock is corrupted " <<
+               "(mask size mismatch: " << cblock.mask_size << " ? " <<
+               cacheDigestCalcMaskSize(cblock.capacity, cblock.bits_per_entry)
+               << ").");
         return 0;
     }
 
@@ -1020,8 +1021,8 @@ peerDigestSetCBlock(PeerDigest * pd, const char *buf)
      */
     /* check size changes */
     if (pd->cd && cblock.mask_size != (ssize_t)pd->cd->mask_size) {
-        debug(72, 2) ("%s digest changed size: %d -> %d\n",
-                      host, cblock.mask_size, pd->cd->mask_size);
+        debugs(72, 2, host << " digest changed size: " << cblock.mask_size <<
+               " -> " << pd->cd->mask_size);
         freed_size = pd->cd->mask_size;
         cacheDigestDestroy(pd->cd);
         pd->cd = NULL;

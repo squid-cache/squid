@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.37 2003/08/04 22:14:40 robertc Exp $
+ * $Id: HttpHdrRange.cc,v 1.38 2003/09/29 10:24:00 robertc Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -313,7 +313,8 @@ HttpHdrRange::parseInit(const String * range_spec)
         ++count;
     }
 
-    debug(64, 8) ("parsed range range count: %d, kept %d\n", count, specs.size());
+    debugs(64, 8, "parsed range range count: " << count << ", kept " <<
+           specs.size());
     return specs.count != 0;
 }
 
@@ -394,8 +395,8 @@ HttpHdrRange::merge (Vector<HttpHdrRangeSpec *> &basis)
         ++i;			/* progress */
     }
 
-    debug(64, 3) ("HttpHdrRange::merge: had %d specs, merged %d specs\n",
-                  basis.size(), basis.size() - specs.size());
+    debugs(64, 3, "HttpHdrRange::merge: had " << basis.size() <<
+           " specs, merged " << basis.size() - specs.size() << " specs");
 }
 
 
@@ -411,8 +412,8 @@ HttpHdrRange::getCanonizedSpecs (Vector<HttpHdrRangeSpec *> &copy)
             delete (*pos);
     }
 
-    debug(64, 3) ("HttpHdrRange::getCanonizedSpecs: found %d bad specs\n",
-                  specs.size() - copy.size());
+    debugs(64, 3, "HttpHdrRange::getCanonizedSpecs: found " <<
+           specs.size() - copy.size() << " bad specs");
 }
 
 #include "HttpHdrContRange.h"
@@ -441,12 +442,13 @@ int
 HttpHdrRange::canonize (size_t newClen)
 {
     clen = newClen;
-    debug(64, 3) ("HttpHdrRange::canonize: started with %d specs, clen: %ld\n", specs.count, (long int) clen);
+    debugs(64, 3, "HttpHdrRange::canonize: started with " << specs.count <<
+           " specs, clen: " << clen);
     Vector<HttpHdrRangeSpec*> goods;
     getCanonizedSpecs(goods);
     merge (goods);
-    debug(64, 3) ("HttpHdrRange::canonize: finished with %d specs\n",
-                  specs.count);
+    debugs(64, 3, "HttpHdrRange::canonize: finished with " << specs.count <<
+           " specs");
     return specs.count > 0;
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.82 2003/09/22 08:50:50 robertc Exp $
+ * $Id: stmem.cc,v 1.83 2003/09/29 10:24:01 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Harvest Derived
@@ -219,7 +219,7 @@ ssize_t
 mem_hdr::copy(off_t offset, char *buf, size_t size) const
 {
 
-    debug(19, 6) ("memCopy: offset %ld: size %u\n", (long int) offset, size);
+    debugs(19, 6, "memCopy: offset " << offset << ": size " <<  size);
 
     /* we shouldn't ever ask for absent offsets */
 
@@ -237,7 +237,8 @@ mem_hdr::copy(off_t offset, char *buf, size_t size) const
     mem_node *p = getBlockContainingLocation((size_t)offset);
 
     if (!p) {
-        debug(19, 1) ("memCopy: could not find offset %u in memory.\n", (size_t) offset);
+        debugs(19, 1, "memCopy: could not find offset " << offset <<
+               " in memory.");
         debugDump();
         /* we shouldn't ever ask for absent offsets */
         assert (0);

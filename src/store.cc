@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.575 2003/09/25 00:06:56 wessels Exp $
+ * $Id: store.cc,v 1.576 2003/09/29 10:24:01 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -790,8 +790,8 @@ StoreEntry::write (StoreIOBuffer writeBuffer)
 
     PROF_start(StoreEntry_write);
 
-    debug(20, 5) ("storeWrite: writing %u bytes for '%s'\n",
-                  writeBuffer.length, getMD5Text());
+    debugs(20, 5, "storeWrite: writing " << writeBuffer.length <<
+           " bytes for '" << getMD5Text() << "'");
 
     storeGetMemSpace(writeBuffer.length);
 
@@ -1126,7 +1126,8 @@ storeGetMemSpace(int size)
         return;
     }
 
-    debug(20, 2) ("storeGetMemSpace: Starting, need %d pages\n", pages_needed);
+    debugs(20, 2, "storeGetMemSpace: Starting, need " << pages_needed <<
+           " pages");
 
     /* XXX what to set as max_scan here? */
     walker = mem_policy->PurgeInit(mem_policy, 100000);
@@ -1312,8 +1313,8 @@ StoreEntry::validLength() const
     assert(mem_obj != NULL);
     reply = getReply();
     debug(20, 3) ("storeEntryValidLength: Checking '%s'\n", getMD5Text());
-    debug(20, 5) ("storeEntryValidLength:     object_len = %d\n",
-                  objectLen(this));
+    debugs(20, 5, "storeEntryValidLength:     object_len = " <<
+           objectLen(this));
     debug(20, 5) ("storeEntryValidLength:         hdr_sz = %d\n",
                   reply->hdr_sz);
     debug(20, 5) ("storeEntryValidLength: content_length = %d\n",

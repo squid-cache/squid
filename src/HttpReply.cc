@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.63 2003/09/01 03:49:37 robertc Exp $
+ * $Id: HttpReply.cc,v 1.64 2003/09/29 10:24:00 robertc Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -153,7 +153,7 @@ httpReplyParse(HttpReply * rep, const char *buf, ssize_t end)
      */
     char *headers = (char *)memAllocate(MEM_4K_BUF);
     int success;
-    size_t s = XMIN(end + 1, 4096);
+    size_t s = XMIN(end + 1, (ssize_t)4096);
     /* reset current state, because we are not used in incremental fashion */
     httpReplyReset(rep);
     /* put a string terminator.  s is how many bytes to touch in
