@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.132 1998/02/03 04:21:11 wessels Exp $
+ * $Id: acl.cc,v 1.133 1998/02/04 07:22:13 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1783,7 +1783,7 @@ aclReadProxyAuth(struct _acl_proxy_auth *p)
 		passwd = strtok(NULL, "\n");
 		debug(28, 5) ("aclReadProxyAuth: adding new passwords to hash table\n");
 		while (user != NULL) {
-		    if ((int)strlen(user) > 1 && passwd && (int) strlen(passwd) > 1) {
+		    if ((int) strlen(user) > 1 && passwd && (int) strlen(passwd) > 1) {
 			debug(28, 6) ("aclReadProxyAuth: adding %s, %s to hash table\n", user, passwd);
 			hash_insert(p->hash, xstrdup(user), (void *) xstrdup(passwd));
 		    }
