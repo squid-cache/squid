@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.65 1997/10/17 00:00:49 wessels Exp $
+ * $Id: url.cc,v 1.66 1997/11/05 05:29:40 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -235,7 +235,7 @@ urlParse(method_t method, char *url)
     for (t = host; *t; t++)
 	*t = tolower(*t);
     /* remove trailing dots from hostnames */
-    while ((l = strlen(host)) && host[--l] == '.')
+    while ((l = strlen(host)) > 0 && host[--l] == '.')
 	host[l] = '\0';
     if (Config.appendDomain && !strchr(host, '.'))
 	strncat(host, Config.appendDomain, SQUIDHOSTNAMELEN);

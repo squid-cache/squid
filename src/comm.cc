@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.200 1997/10/28 06:46:51 wessels Exp $
+ * $Id: comm.cc,v 1.201 1997/11/05 05:29:21 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -162,7 +162,7 @@ static int ignoreErrno(int errno);
 static void commSetConnectTimeout(int fd, time_t timeout);
 static int commResetFD(ConnectStateData * cs);
 static int commRetryConnect(ConnectStateData * cs);
-static time_t commBackoffTimeout(unsigned char numaddrs);
+static time_t commBackoffTimeout(int);
 
 static struct timeval zero_tv;
 
@@ -344,7 +344,7 @@ commConnectDnsHandle(const ipcache_addrs * ia, void *data)
     ipcacheCycleAddr(cs->host);
     cs->addrcount = ia->count;
     cs->connstart = squid_curtime;
-    commSetConnectTimeout(cs->fd, commBackoffTimeout(ia->count));
+    commSetConnectTimeout(cs->fd, commBackoffTimeout((int) ia->count));
     commConnectHandle(cs->fd, cs);
 }
 
@@ -362,7 +362,7 @@ commConnectCallback(ConnectStateData * cs, int status)
 }
 
 static void
-commConnectFree(int fdunused, void *data)
+commConnectFree(int fdnotused, void *data)
 {
     ConnectStateData *cs = data;
     if (cs->locks)
@@ -388,7 +388,7 @@ commResetFD(ConnectStateData * cs)
 	return 0;
     }
     close(fd2);
-    commSetConnectTimeout(cs->fd, commBackoffTimeout(cs->addrcount));
+    commSetConnectTimeout(cs->fd, commBackoffTimeout((int) cs->addrcount));
     commSetNonBlocking(cs->fd);
     return 1;
 }
@@ -402,7 +402,7 @@ commRetryConnect(ConnectStateData * cs)
 	    return 0;
 	if (squid_curtime - cs->connstart > Config.Timeout.connect)
 	    return 0;
-	commSetConnectTimeout(cs->fd, commBackoffTimeout((unsigned char) 100));
+	commSetConnectTimeout(cs->fd, commBackoffTimeout(100));
     } else {
 	if (cs->tries > cs->addrcount)
 	    return 0;
@@ -412,7 +412,7 @@ commRetryConnect(ConnectStateData * cs)
 
 /* Back off the socket timeout if there are several addresses available */
 static time_t
-commBackoffTimeout(unsigned char numaddrs)
+commBackoffTimeout(int numaddrs)
 {
     time_t timeout;
     timeout = (time_t) Config.Timeout.connect;
@@ -560,6 +560,7 @@ comm_accept(int fd, struct sockaddr_in *peer, struct sockaddr_in *me)
 		fd, xstrerror());
 	    return COMM_ERROR;
 	}
+	/* NOTREACHED */
     }
 
     if (peer)

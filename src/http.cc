@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.216 1997/11/04 22:14:17 wessels Exp $
+ * $Id: http.cc,v 1.217 1997/11/05 05:29:27 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -216,7 +216,7 @@ static void httpRestart(HttpStateData *);
 static int httpCachableReply(HttpStateData *);
 
 static void
-httpStateFree(int fd, void *data)
+httpStateFree(int fdnotused, void *data)
 {
     HttpStateData *httpState = data;
     if (httpState == NULL)
@@ -453,6 +453,7 @@ httpCachableReply(HttpStateData * httpState)
 	    return 1;
 	else
 	    return 0;
+	/* NOTREACHED */
 	break;
 	/* Responses that only are cacheable if the server says so */
     case 302:			/* Moved temporarily */
@@ -460,6 +461,7 @@ httpCachableReply(HttpStateData * httpState)
 	    return 1;
 	else
 	    return 0;
+	/* NOTREACHED */
 	break;
 	/* Errors can be negatively cached */
     case 204:			/* No Content */
@@ -475,6 +477,7 @@ httpCachableReply(HttpStateData * httpState)
     case 503:			/* Service Unavailable */
     case 504:			/* Gateway Timeout */
 	return -1;
+	/* NOTREACHED */
 	break;
 	/* Some responses can never be cached */
     case 206:			/* Partial Content -- Not yet supported */
@@ -485,9 +488,10 @@ httpCachableReply(HttpStateData * httpState)
     case 600:			/* Squid header parsing error */
     default:			/* Unknown status code */
 	return 0;
+	/* NOTREACHED */
 	break;
     }
-    assert(0);
+    /* NOTREACHED */
 }
 
 void
@@ -600,7 +604,6 @@ httpReadReply(int fd, void *data)
     int len;
     int bin;
     int clen;
-    int off;
     ErrorState *err;
     if (protoAbortFetch(entry)) {
 	storeAbort(entry, 0);
@@ -609,7 +612,6 @@ httpReadReply(int fd, void *data)
     }
     /* check if we want to defer reading */
     clen = entry->mem_obj->inmem_hi;
-    off = storeLowestMemReaderOffset(entry);
     errno = 0;
     len = read(fd, buf, SQUID_TCP_SO_RCVBUF);
     fd_bytes(fd, len, FD_READ);
@@ -678,7 +680,7 @@ httpReadReply(int fd, void *data)
 /* This will be called when request write is complete. Schedule read of
  * reply. */
 static void
-httpSendComplete(int fd, char *buf, int size, int errflag, void *data)
+httpSendComplete(int fd, char *bufnotused, int size, int errflag, void *data)
 {
     HttpStateData *httpState = data;
     StoreEntry *entry = httpState->entry;
@@ -835,9 +837,8 @@ httpBuildRequestHeader(request_t * request,
 	url = entry ? storeUrl(entry) : urlCanonical(orig_request, NULL);
 	snprintf(ybuf, YBUF_SZ, "Cache-control: Max-age=%d", (int) getMaxAge(url));
 	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
-	if (request->urlpath) {
+	if (request->urlpath[0])
 	    assert(strstr(url, request->urlpath));
-	}
     }
     /* maybe append Connection: Keep-Alive */
     if (BIT_TEST(flags, HTTP_KEEPALIVE)) {

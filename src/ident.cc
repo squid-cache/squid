@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.35 1997/10/25 17:22:47 wessels Exp $
+ * $Id: ident.cc,v 1.36 1997/11/05 05:29:29 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -40,7 +40,7 @@ static CNCB identConnectDone;
 static void identCallback(ConnStateData * connState);
 
 static void
-identClose(int fd, void *data)
+identClose(int fdnotused, void *data)
 {
     ConnStateData *connState = data;
     connState->ident.fd = -1;
@@ -101,7 +101,12 @@ identConnectDone(int fd, int status, void *data)
 }
 
 static void
-identRequestComplete(int fd, char *buf, int size, int errflag, void *data)
+identRequestComplete(
+    int fd,
+    char *bufnotused,
+    int size,
+    int flagnotused,
+    void *datanotused)
 {
     debug(30, 5) ("identRequestComplete: FD %d: wrote %d bytes\n", fd, size);
 }

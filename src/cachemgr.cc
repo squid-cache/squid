@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.63 1997/10/25 17:22:34 wessels Exp $
+ * $Id: cachemgr.cc,v 1.64 1997/11/05 05:29:19 wessels Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -646,8 +646,8 @@ main(int argc, char *argv[])
     strcpy(hostname, CACHEMGR_HOSTNAME);
 
     /* a POST request */
-    if ((s = getenv("REQUEST_METHOD")) && !strcasecmp(s, "POST") &&
-	(s = getenv("CONTENT_LENGTH")) && (len = atoi(s)) > 0) {
+    if ((s = getenv("REQUEST_METHOD")) != NULL && !strcasecmp(s, "POST") &&
+	(s = getenv("CONTENT_LENGTH")) != NULL && (len = atoi(s)) > 0) {
 	buffer = xmalloc(len + 1);
 	fread(buffer, len, 1, stdin);
 	buffer[len] = '\0';

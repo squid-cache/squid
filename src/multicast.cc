@@ -1,6 +1,6 @@
 
 /*
- * $Id: multicast.cc,v 1.3 1997/07/07 05:29:49 wessels Exp $
+ * $Id: multicast.cc,v 1.4 1997/11/05 05:29:31 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Martin Hamilton
@@ -44,7 +44,7 @@ mcastSetTtl(int fd, int mcast_ttl)
 }
 
 void
-mcastJoinGroups(const ipcache_addrs * ia, void *data)
+mcastJoinGroups(const ipcache_addrs * ia, void *datanotused)
 {
 #ifdef IP_MULTICAST_TTL
     int fd = theInIcpConnection;

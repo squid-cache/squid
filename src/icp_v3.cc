@@ -108,13 +108,7 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 		IcpOpcodeStr[header.opcode]);
 	} else {
 	    /* call neighborsUdpAck even if ping_status != PING_WAITING */
-	    neighborsUdpAck(fd,
-		url,
-		&header,
-		&from,
-		entry,
-		data,
-		(int) data_sz);
+	    neighborsUdpAck(url, &header, &from, entry);
 	}
 	break;
 

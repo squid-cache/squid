@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.140 1997/10/30 02:41:04 wessels Exp $
+ * $Id: ipcache.cc,v 1.141 1997/11/05 05:29:30 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -131,8 +131,8 @@ static struct {
 } IpcacheStats;
 
 static int ipcache_testname(void);
-static int ipcache_compareLastRef(ipcache_entry **, ipcache_entry **);
-static int ipcache_reverseLastRef(ipcache_entry **, ipcache_entry **);
+static QS ipcache_compareLastRef;
+static QS ipcache_reverseLastRef;
 static PF ipcache_dnsHandleRead;
 static ipcache_entry *ipcache_parsebuffer(const char *buf, dnsserver_t *);
 static void ipcache_release(ipcache_entry *);
@@ -297,10 +297,11 @@ ipcache_GetNext(void)
 }
 
 static int
-ipcache_compareLastRef(ipcache_entry ** e1, ipcache_entry ** e2)
+ipcache_compareLastRef(const void *A, const void *B)
 {
-    if (!e1 || !e2)
-	fatal_dump(NULL);
+    const ipcache_entry *const *e1 = A;
+    const ipcache_entry *const *e2 = B;
+    assert(e1 != NULL && e2 != NULL);
     if ((*e1)->lastref > (*e2)->lastref)
 	return (1);
     if ((*e1)->lastref < (*e2)->lastref)
@@ -309,8 +310,11 @@ ipcache_compareLastRef(ipcache_entry ** e1, ipcache_entry ** e2)
 }
 
 static int
-ipcache_reverseLastRef(ipcache_entry ** e1, ipcache_entry ** e2)
+ipcache_reverseLastRef(const void *A, const void *B)
 {
+    const ipcache_entry *const *e1 = A;
+    const ipcache_entry *const *e2 = B;
+    assert(e1 != NULL && e2 != NULL);
     if ((*e1)->lastref < (*e2)->lastref)
 	return (1);
     if ((*e1)->lastref > (*e2)->lastref)
@@ -336,7 +340,7 @@ ipcacheExpiredEntry(ipcache_entry * i)
 
 /* finds the LRU and deletes */
 void
-ipcache_purgelru(void *unused)
+ipcache_purgelru(void *voidnotused)
 {
     ipcache_entry *i = NULL;
     int local_ip_notpending_count = 0;
@@ -370,7 +374,7 @@ ipcache_purgelru(void *unused)
     qsort((char *) LRU_list,
 	LRU_list_count,
 	sizeof(ipcache_entry *),
-	(QS *) ipcache_compareLastRef);
+	ipcache_compareLastRef);
     for (k = 0; k < LRU_list_count; k++) {
 	if (meta_data.ipcache_count < ipcache_low)
 	    break;
@@ -910,7 +914,7 @@ stat_ipcache_get(StoreEntry * sentry)
     qsort((char *) list,
 	N,
 	sizeof(ipcache_entry *),
-	(QS *) ipcache_reverseLastRef);
+	ipcache_reverseLastRef);
     for (k = 0; k < N; k++)
 	ipcacheStatPrint(*(list + k), sentry);
     storeAppendPrintf(sentry, close_bracket);
@@ -918,7 +922,7 @@ stat_ipcache_get(StoreEntry * sentry)
 }
 
 static void
-dummy_handler(const ipcache_addrs * addrs, void *u3)
+dummy_handler(const ipcache_addrs * addrsnotused, void *datanotused)
 {
     return;
 }
@@ -1145,7 +1149,7 @@ ipcache_restart(void)
     assert(ip_table != NULL);
     while (ipcacheDequeue());
     next = (ipcache_entry *) hash_first(ip_table);
-    while ((this = next)) {
+    while ((this = next) != NULL) {
 	next = (ipcache_entry *) hash_next(ip_table);
 	if (this->status == IP_CACHED)
 	    continue;

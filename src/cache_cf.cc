@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.229 1997/11/04 23:29:35 wessels Exp $
+ * $Id: cache_cf.cc,v 1.230 1997/11/05 05:29:18 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -79,7 +79,7 @@ void
 wordlistDestroy(wordlist ** list)
 {
     wordlist *w = NULL;
-    while ((w = *list)) {
+    while ((w = *list) != NULL) {
 	*list = w->next;
 	safe_free(w->key);
 	safe_free(w);
@@ -586,7 +586,7 @@ static void
 free_peer(peer ** P)
 {
     peer *p;
-    while ((p = *P)) {
+    while ((p = *P) != NULL) {
 	*P = p->next;
 	peerDestroy(p);
     }
@@ -613,7 +613,7 @@ static void
 free_cachemgrpasswd(cachemgr_passwd ** head)
 {
     cachemgr_passwd *p;
-    while ((p = *head)) {
+    while ((p = *head) != NULL) {
 	*head = p->next;
 	xfree(p->passwd);
 	xfree(p);
@@ -814,7 +814,7 @@ static void
 free_ushortlist(ushortlist ** P)
 {
     ushortlist *u;
-    while ((u = *P)) {
+    while ((u = *P) != NULL) {
 	*P = u->next;
 	xfree(u);
     }
@@ -943,7 +943,7 @@ static void
 free_refreshpattern(refresh_t ** head)
 {
     refresh_t *t;
-    while ((t = *head)) {
+    while ((t = *head) != NULL) {
 	*head = t->next;
 	safe_free(t->pattern);
 	regfree(&t->compiled_pattern);

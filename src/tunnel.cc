@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.68 1997/11/04 18:43:29 wessels Exp $
+ * $Id: tunnel.cc,v 1.69 1997/11/05 05:29:36 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -88,7 +88,7 @@ sslClientClosed(int fd, void *data)
     debug(26, 3) ("sslClientClosed: FD %d\n", fd);
     /* we have been called from comm_close for the client side, so
      * just need to clean up the server side */
-    protoUnregister(NULL, sslState->request, no_addr);
+    protoUnregister(NULL, sslState->request);
     comm_close(sslState->server.fd);
 }
 
@@ -306,7 +306,7 @@ sslConnected(int fd, void *data)
 }
 
 static void
-sslErrorComplete(int fd, void *sslState, int size)
+sslErrorComplete(int fdnotused, void *sslState, int sizenotused)
 {
     assert(sslState != NULL);
     sslClose(sslState);
@@ -314,7 +314,7 @@ sslErrorComplete(int fd, void *sslState, int size)
 
 
 static void
-sslConnectDone(int fd, int status, void *data)
+sslConnectDone(int fdnotused, int status, void *data)
 {
     SslStateData *sslState = data;
     request_t *request = sslState->request;
@@ -448,7 +448,7 @@ sslPeerSelectComplete(peer * p, void *data)
 }
 
 static void
-sslPeerSelectFail(peer * p, void *data)
+sslPeerSelectFail(peer * peernotused, void *data)
 {
     SslStateData *sslState = data;
     ErrorState *err;

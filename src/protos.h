@@ -318,7 +318,7 @@ extern int neighborsUdpPing(request_t *,
     void *data,
     int *exprep);
 extern void neighborAddAcl(const char *, const char *);
-extern void neighborsUdpAck(int, const char *, icp_common_t *, const struct sockaddr_in *, StoreEntry *, char *, int);
+extern void neighborsUdpAck(const char *, icp_common_t *, const struct sockaddr_in *, StoreEntry *);
 extern void neighborAdd(const char *, const char *, int, int, int, int, int);
 extern void neighbors_open(int);
 extern peer *peerFindByName(const char *);
@@ -350,7 +350,7 @@ extern void peerSelectInit(void);
 
 extern void protoDispatch(int, StoreEntry *, request_t *);
 
-extern int protoUnregister(StoreEntry *, request_t *, struct in_addr);
+extern int protoUnregister(StoreEntry *, request_t *);
 extern void protoStart(int, StoreEntry *, peer *, request_t *);
 extern int protoAbortFetch(StoreEntry * entry);
 extern DEFER protoCheckDeferRead;
@@ -469,6 +469,7 @@ extern const cache_key *storeKeyScan(const char *);
 extern const char *storeKeyText(const cache_key *);
 extern const cache_key *storeKeyPublic(const char *, method_t);
 extern const cache_key *storeKeyPrivate(const char *, method_t, int);
+extern int storeKeyHashBuckets(int);
 extern HASHHASH storeKeyHashHash;
 extern HASHCMP storeKeyHashCmp;
 

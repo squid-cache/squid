@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.128 1997/10/30 18:37:08 wessels Exp $
+ * $Id: tools.cc,v 1.129 1997/11/05 05:29:40 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -302,7 +302,7 @@ death(int sig)
 
 
 void
-sigusr2_handle(int sig)
+sigusr2_handle(int signotused)
 {
     static int state = 0;
     /* no debug() here; bad things happen if the signal is delivered during _db_print() */
@@ -319,7 +319,7 @@ sigusr2_handle(int sig)
 }
 
 static void
-shutdownTimeoutHandler(int fd, void *data)
+shutdownTimeoutHandler(int fd, void *datanotused)
 {
     debug(21, 1) ("Forcing close of FD %d\n", fd);
     comm_close(fd);
@@ -434,7 +434,7 @@ debug_trap(const char *message)
 }
 
 void
-sig_child(int sig)
+sig_child(int signotused)
 {
 #ifdef _SQUID_NEXT_
     union wait status;
@@ -466,7 +466,7 @@ getMyHostname(void)
     const struct hostent *h = NULL;
     char *t = NULL;
 
-    if ((t = Config.visibleHostname))
+    if ((t = Config.visibleHostname) != NULL)
 	return t;
 
     /* Get the host name and store it in host to return */
