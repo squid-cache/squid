@@ -163,6 +163,8 @@ storeRebuildFromDirectory(rebuild_dir * d)
 	/* check sizes */
 	if (tmpe.swap_file_sz == 0) {
 	    tmpe.swap_file_sz = sb.st_size;
+	} else if (tmpe.swap_file_sz == sb.st_size - swap_hdr_len) {
+	    tmpe.swap_file_sz = sb.st_size;
 	} else if (tmpe.swap_file_sz != sb.st_size) {
 	    debug(20, 1) ("storeRebuildFromDirectory: SIZE MISMATCH %d!=%d\n",
 		tmpe.swap_file_sz, sb.st_size);
