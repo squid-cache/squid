@@ -6,6 +6,22 @@
 SQUID_RC        = squid.rc
 SQUID_OPTIONS   = squid.options
 
+EXTRA_DIST = \
+	squid.options \
+	config.site \
+	squid.rc \
+	rredir.c \
+	rredir.pl \
+	user-agents.pl \
+	url-normalizer.pl \
+	nextstep/Makefile \
+	nextstep/Makefile.real \
+	nextstep/README \
+	nextstep/Squid.pkg.README \
+	nextstep/info.in \
+	nextstep/makepkg \
+	nextstep/post_install \
+	nextstep/pre_install
 
 all: 
 
