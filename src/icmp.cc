@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.29 1996/11/14 18:38:44 wessels Exp $
+ * $Id: icmp.cc,v 1.30 1996/12/04 17:50:59 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -88,15 +88,8 @@ icmpRecv(int unused1, void *unused2)
 	0);
     if (n < 0) {
 	debug(50, 0, "icmpRecv: recv: %s\n", xstrerror());
-	if (++fail_count == 10) {
-	    commSetSelect(icmp_sock,
-		COMM_SELECT_READ,
-		NULL,
-		NULL,
-		0);
-	    comm_close(icmp_sock);
-	    icmp_sock = -1;
-	}
+	if (++fail_count == 10 || errno == ECONNREFUSED)
+	    icmpClose();
 	return;
     }
     fail_count = 0;
@@ -157,8 +150,11 @@ icmpSend(int fd, icmpQueueData * queue)
 	if (x < 0) {
 	    if (errno == EWOULDBLOCK || errno == EAGAIN)
 		break;		/* don't de-queue */
-	    else
-		debug(50, 0, "icmpSend: send: %s\n", xstrerror());
+	    debug(50, 0, "icmpSend: send: %s\n", xstrerror());
+	    if (errno == ECONNREFUSED) {
+		icmpClose();
+		return;
+	    }
 	} else if (x != queue->len) {
 	    debug(37, 0, "icmpSend: Wrote %d of %d bytes\n", x, queue->len);
 	}
@@ -322,10 +318,8 @@ icmpClose(void)
     icmpQueueData *queue;
     debug(29, 0, "Closing ICMP socket on FD %d\n", icmp_sock);
     comm_close(icmp_sock);
-    commSetSelect(icmp_sock,
-	COMM_SELECT_READ,
-	NULL,
-	NULL, 0);
+    commSetSelect(icmp_sock, COMM_SELECT_READ, NULL, NULL, 0);
+    commSetSelect(icmp_sock, COMM_SELECT_WRITE, NULL, NULL, 0);
     icmp_sock = -1;
     while ((queue = IcmpQueueHead)) {
 	IcmpQueueHead = queue->next;
