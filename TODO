@@ -16,6 +16,10 @@ Our Todo List
 	- Allow for 'backup' parents
 	- An orderd list of siblings to try.
 	- Hash function load balancing
+(2) Code cleanup:
+	- Make sure the lib/*.c files do not use printf/fprintf.
+	- Replace bzero with memset
+	- Replace bcopy with xmemcpy
 
 (3) request-range
 (3) hit metering
@@ -34,7 +38,6 @@ Our Todo List
 (3) LDAP support.  See http://miso.wwa.com/~donley/ and
     Clayton Donley <qa1049@ilms04.cig.mot.com>
 
-(4) support ftp://host/pub;type=d
 (4) FTP PUT
 (4) Everywhere that we use 'pattern' or such, use ACL elements instead.
     stoplist_pattern, refresh_pattern, ...
@@ -77,3 +80,4 @@ DONE:
 	- whois -h whois.ra.net '\!gAS194'
 	- Stevens V2 Ch.18
 (3) SIGHUP should reread error text files
+(4) support ftp://host/pub;type=d
