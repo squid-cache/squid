@@ -1,5 +1,5 @@
 /*
- * $Id: cache_diff.cc,v 1.4 1998/03/29 20:39:53 rousskov Exp $
+ * $Id: cache_diff.cc,v 1.5 1998/03/29 20:42:46 rousskov Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -197,7 +197,8 @@ cacheIndexCmpReport(CacheIndex *idx, int shared_count)
     printf("%s:\t %7d = %7d + %7d (%7.2f%% + %7.2f%%)\n",
 	idx->name,
 	idx->count,
-	shared_count, idx->count - shared_count,
+	idx->count - shared_count,
+	shared_count,
 	xpercent(idx->count-shared_count, idx->count),
 	xpercent(shared_count, idx->count));
 }
