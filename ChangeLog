@@ -1,3 +1,5 @@
+	- Added Italian error pages by Alessio Bragadini.
+
 Changes to squid-1.2.beta20 (April 24, 1998):
 
 	- Improved support for only-if-cached cache control directive.
