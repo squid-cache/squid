@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.274 2002/04/17 05:31:46 wessels Exp $
+ * $Id: acl.cc,v 1.275 2002/06/13 17:08:01 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1322,14 +1322,6 @@ aclMatchUserMaxIP(void *data, auth_user_request_t * auth_user_request,
 	authenticateAuthUserRequestClearIp(auth_user_request);
 	debug(28, 4) ("aclMatchUserMaxIP: Denying access in non-strict mode - flushing the user ip cache\n");
     }
-    /* We had reports about the username being lost when denying due to 
-     * IP limits. That should be fixed in the new lazy-proxy code, but
-     * This note note is a reminder!
-     */
-    debug(28, 1) ("XXX aclMatchUserMaxIP returned 0, somebody "
-	"make sure the username gets logged to access.log.\n");
-    debug(28, 1) ("XXX if it works, tell developers to remove this "
-	"message\n");
 
     return 1;
 }
