@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.293 1998/07/18 07:29:56 wessels Exp $
+ * $Id: http.cc,v 1.294 1998/07/18 07:43:04 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -355,7 +355,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	if (reply->cache_control) {
 	    if (EBIT_TEST(reply->cache_control->mask, CC_PROXY_REVALIDATE))
 	        EBIT_SET(entry->flag, ENTRY_REVALIDATE);
-	    else if (EBIT_TEST(reply->cache_control->mask, CC_REVALIDATE))
+	    else if (EBIT_TEST(reply->cache_control->mask, CC_MUST_REVALIDATE))
 	        EBIT_SET(entry->flag, ENTRY_REVALIDATE);
 	}
 	if (EBIT_TEST(httpState->flags, HTTP_KEEPALIVE))
