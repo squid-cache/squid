@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.79 1996/10/27 07:11:57 wessels Exp $
+ * $Id: ipcache.cc,v 1.80 1996/10/30 18:43:22 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -545,7 +545,7 @@ ipcache_parsebuffer(char *inbuf, dnsserver_t * dnsData)
 }
 
 static void
-ipcacheNudgeQueue()
+ipcacheNudgeQueue(void)
 {
     dnsserver_t *dnsData;
     ipcache_entry *i = NULL;
