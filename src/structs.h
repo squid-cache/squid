@@ -1287,7 +1287,8 @@ struct _StatCounters {
     int select_loops;
     double cputime;
     struct timeval timestamp;
-    StatHist comm_incoming;
+    StatHist comm_icp_incoming;
+    StatHist comm_http_incoming;
 };
 
 /* per header statistics */
