@@ -3,7 +3,7 @@
 #
 #  Darren Hardy, hardy@cs.colorado.edu, April 1994
 #
-#  $Id: Makefile.in,v 1.17 1996/10/22 03:38:10 wessels Exp $
+#  $Id: Makefile.in,v 1.18 1996/10/22 03:39:00 wessels Exp $
 #
 prefix		= @prefix@
 srcdir		= @srcdir@
@@ -36,6 +36,8 @@ LIBS		= libmiscutil.a libregex.a
 CFLAGS		= $(AC_CFLAGS) $(INCLUDE)
 
 all: $(LIBS)
+
+$(UTILOBJS): ../include/version.h
 
 libmiscutil.a: $(UTILOBJS)
 	$(RM) -f $@
