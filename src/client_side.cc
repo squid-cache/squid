@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.192 1998/01/06 05:15:39 wessels Exp $
+ * $Id: client_side.cc,v 1.193 1998/01/06 18:12:22 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1992,4 +1992,18 @@ clientHttpConnectionsOpen(void)
     }
     if (NHttpSockets < 1)
 	fatal("Cannot open HTTP Port");
+}
+
+void
+clientHttpConnectionsClose(void)
+{
+    int i;
+    for (i = 0; i < NHttpSockets; i++) {
+	if (HttpSockets[i] >= 0) {
+	    debug(1, 1) ("FD %d Closing HTTP connection\n", HttpSockets[i]);
+	    comm_close(HttpSockets[i]);
+	    HttpSockets[i] = -1;
+	}
+    }
+    NHttpSockets = 0;
 }

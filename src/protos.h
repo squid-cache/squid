@@ -77,6 +77,7 @@ extern char *clientConstructTraceEcho(clientHttpRequest *);
 extern void clientPurgeRequest(clientHttpRequest *);
 extern int checkNegativeHit(StoreEntry *);
 extern void clientHttpConnectionsOpen(void);
+extern void clientHttpConnectionsClose(void);
 extern StoreEntry *clientCreateStoreEntry(clientHttpRequest *, method_t, int);
 
 extern int commSetNonBlocking(int fd);
@@ -267,6 +268,7 @@ extern int icpCheckUdpHitObj(StoreEntry * e, request_t * r, icp_common_t * h, in
 extern void *icpCreateHitObjMessage(icp_opcode, int, const char *, int, int, StoreEntry *);
 #endif
 extern void icpConnectionsOpen(void);
+extern void icpConnectionsClose(void);
 
 extern void ipcache_nbgethostbyname(const char *name,
     IPH * handler,

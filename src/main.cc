@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.203 1998/01/06 07:11:53 wessels Exp $
+ * $Id: main.cc,v 1.204 1998/01/06 18:12:23 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -337,47 +337,9 @@ serverConnectionsClose(void)
      * NOTE, this function will be called repeatedly while shutdown
      * is pending
      */
-    int i;
-    for (i = 0; i < NHttpSockets; i++) {
-	if (HttpSockets[i] >= 0) {
-	    debug(1, 1) ("FD %d Closing HTTP connection\n", HttpSockets[i]);
-	    comm_close(HttpSockets[i]);
-	    HttpSockets[i] = -1;
-	}
-    }
-    NHttpSockets = 0;
-    if (theInIcpConnection > -1) {
-	/*
-	 * NOTE, don't close outgoing ICP connection, we need to write
-	 * to it during shutdown.
-	 */
-	debug(1, 1) ("FD %d Closing ICP connection\n",
-	    theInIcpConnection);
-	if (theInIcpConnection != theOutIcpConnection) {
-	    comm_close(theInIcpConnection);
-	    assert(theOutIcpConnection > -1);
-	    /*
-	     * Normally we only write to the outgoing ICP socket, but
-	     * we also have a read handler there to catch messages sent
-	     * to that specific interface.  During shutdown, we must
-	     * disable reading on the outgoing socket.
-	     */
-	    commSetSelect(theOutIcpConnection,
-		COMM_SELECT_READ,
-		NULL,
-		NULL,
-		0);
-	} else {
-	    commSetSelect(theInIcpConnection,
-		COMM_SELECT_READ,
-		NULL,
-		NULL,
-		0);
-	}
-	theInIcpConnection = -1;
-    }
-    if (icmp_sock > -1)
-	icmpClose();
+    clientHttpConnectionsClose();
+    icpConnectionsClose();
+    icmpClose();
 #ifdef SQUID_SNMP
     snmpConnectionClose();
 #endif
