@@ -55,7 +55,11 @@ extern void wordlistDestroy(wordlist **);
 extern void configFreeMemory(void);
 
 extern void cbdataInit(void);
+#if CBDATA_DEBUG
+extern void cbdataAddDbg(void *p, const char *, int);
+#else
 extern void cbdataAdd(void *p);
+#endif
 extern void cbdataFree(void *p);
 extern void cbdataLock(void *p);
 extern void cbdataUnlock(void *p);
