@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.146 2003/01/23 00:37:27 robertc Exp $
+ * $Id: typedefs.h,v 1.147 2003/01/28 01:29:35 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -75,7 +75,7 @@ typedef struct _acl_access acl_access;
 typedef struct _acl_address acl_address;
 typedef struct _acl_tos acl_tos;
 typedef struct _acl acl;
-typedef struct _aclCheck_t aclCheck_t;
+class ACLChecklist;
 typedef struct _wordlist wordlist;
 typedef struct _intlist intlist;
 typedef struct _intrange intrange;

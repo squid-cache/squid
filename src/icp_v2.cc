@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.74 2003/01/23 00:37:22 robertc Exp $
+ * $Id: icp_v2.cc,v 1.75 2003/01/28 01:29:34 robertc Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -38,6 +38,7 @@
 #include "comm.h"
 #include "ICP.h"
 #include "HttpRequest.h"
+#include "ACLChecklist.h"
 
 static void icpLogIcp(struct in_addr, log_type, int, const char *, int);
 static void icpHandleIcpV2(int, struct sockaddr_in, char *, int);
@@ -329,8 +330,7 @@ icpDenyAccess(struct sockaddr_in *from, char *url, int reqnum, int fd)
 int
 icpAccessAllowed(struct sockaddr_in *from, request_t * icp_request)
 {
-    aclCheck_t checklist;
-    memset(&checklist, '\0', sizeof(checklist));
+    ACLChecklist checklist;
     checklist.src_addr = from->sin_addr;
     checklist.my_addr = no_addr;
     checklist.request = icp_request;

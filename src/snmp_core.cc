@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.60 2003/01/23 00:37:25 robertc Exp $
+ * $Id: snmp_core.cc,v 1.61 2003/01/28 01:29:35 robertc Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -35,6 +35,7 @@
 #include "squid.h"
 #include "comm.h"
 #include "cache_snmp.h"
+#include "ACLChecklist.h"
 
 #define SNMP_REQUEST_SIZE 4096
 #define MAX_PROTOSTAT 5
@@ -496,7 +497,6 @@ snmpDecodePacket(snmp_request_t * rq)
 {
     struct snmp_pdu *PDU;
     struct snmp_session Session;
-    aclCheck_t checklist;
     u_char *Community;
     u_char *buf = rq->buf;
     int len = rq->len;
@@ -507,7 +507,7 @@ snmpDecodePacket(snmp_request_t * rq)
     PDU = snmp_pdu_create(0);
     Session.Version = SNMP_VERSION_1;
     Community = snmp_parse(&Session, PDU, buf, len);
-    memset(&checklist, '\0', sizeof(checklist));
+    ACLChecklist checklist;
     checklist.src_addr = rq->from.sin_addr;
     checklist.snmp_community = (char *) Community;
 

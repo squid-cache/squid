@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.31 2003/01/23 00:37:18 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.32 2003/01/28 01:29:34 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -43,6 +43,7 @@
 #include "authenticate.h"
 #include "MemObject.h"
 #include "client_side_request.h"
+#include "ACLChecklist.h"
 
 static STCB clientHandleIMSReply;
 static STCB clientSendMoreData;
@@ -1852,7 +1853,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 	debug(88,3)
 	    ("clientSendMoreData: Appending %d bytes after %d bytes of headers\n",
 	    (int) body_size, rep->hdr_sz);
-	aclCheck_t *ch = clientAclChecklistCreate(Config.accessList.reply, http);
+	ACLChecklist *ch = clientAclChecklistCreate(Config.accessList.reply, http);
 	ch->reply = rep;
 	rv = aclCheckFast(Config.accessList.reply, ch);
 	aclChecklistFree(ch);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.460 2003/01/23 00:37:24 robertc Exp $
+ * $Id: protos.h,v 1.461 2003/01/28 01:29:35 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -52,13 +52,13 @@ SQUIDCEXTERN char *log_quote(const char *header);
 SQUIDCEXTERN int logTypeIsATcpHit(log_type);
 
 /* acl.c */
-SQUIDCEXTERN aclCheck_t *aclChecklistCreate(const struct _acl_access *,
+SQUIDCEXTERN ACLChecklist *aclChecklistCreate(const struct _acl_access *,
     request_t *,
     const char *ident);
-SQUIDCEXTERN void aclNBCheck(aclCheck_t *, PF *, void *);
-SQUIDCEXTERN int aclCheckFast(const struct _acl_access *A, aclCheck_t *);
-SQUIDCEXTERN void aclChecklistFree(aclCheck_t *);
-SQUIDCEXTERN int aclMatchAclList(const acl_list * list, aclCheck_t * checklist);
+SQUIDCEXTERN void aclNBCheck(ACLChecklist *, PF *, void *);
+SQUIDCEXTERN int aclCheckFast(const struct _acl_access *A, ACLChecklist *);
+SQUIDCEXTERN void aclChecklistFree(ACLChecklist *);
+SQUIDCEXTERN int aclMatchAclList(const acl_list * list, ACLChecklist * checklist);
 SQUIDCEXTERN void aclDestroyAccessList(struct _acl_access **list);
 SQUIDCEXTERN void aclDestroyAcls(acl **);
 SQUIDCEXTERN void aclDestroyAclList(acl_list **);
@@ -76,7 +76,7 @@ SQUIDCEXTERN const char *aclTypeToStr(squid_acl);
 SQUIDCEXTERN wordlist *aclDumpGeneric(const acl *);
 SQUIDCEXTERN int aclPurgeMethodInUse(acl_access *);
 SQUIDCEXTERN void aclCacheMatchFlush(dlink_list * cache);
-SQUIDCEXTERN int aclAuthenticated(aclCheck_t * checklist);
+SQUIDCEXTERN int aclAuthenticated(ACLChecklist * checklist);
 
 /*
  * cache_cf.c
@@ -1081,10 +1081,10 @@ SQUIDCEXTERN void dump_externalAclHelper(StoreEntry * sentry, const char *name, 
 SQUIDCEXTERN void free_externalAclHelper(external_acl **);
 SQUIDCEXTERN void aclParseExternal(void *curlist);
 SQUIDCEXTERN void aclDestroyExternal(void **curlust);
-SQUIDCEXTERN int aclMatchExternal(void *dataptr, aclCheck_t * ch);
+SQUIDCEXTERN int aclMatchExternal(void *dataptr, ACLChecklist * ch);
 SQUIDCEXTERN wordlist *aclDumpExternal(void *dataptr);
 typedef void EAH(void *data, void *result);
-SQUIDCEXTERN void externalAclLookup(aclCheck_t * ch, void *acl_data, EAH * handler, void *data);
+SQUIDCEXTERN void externalAclLookup(ACLChecklist * ch, void *acl_data, EAH * handler, void *data);
 SQUIDCEXTERN void externalAclInit(void);
 SQUIDCEXTERN void externalAclShutdown(void);
 SQUIDCEXTERN char *strtokFile(void);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.132 2003/01/23 00:37:25 robertc Exp $
+ * $Id: ssl.cc,v 1.133 2003/01/28 01:29:35 robertc Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -38,6 +38,7 @@
 #include "fde.h"
 #include "comm.h"
 #include "client_side_request.h"
+#include "ACLChecklist.h"
 
 typedef struct {
     char *url;
@@ -430,7 +431,6 @@ sslStart(clientHttpRequest * http, size_t * size_ptr, int *status_ptr)
     SslStateData *sslState = NULL;
     int sock;
     ErrorState *err = NULL;
-    aclCheck_t ch;
     int answer;
     int fd = http->conn->fd;
     request_t *request = http->request;
@@ -444,7 +444,7 @@ sslStart(clientHttpRequest * http, size_t * size_ptr, int *status_ptr)
 	/*
 	 * Check if this host is allowed to fetch MISSES from us (miss_access)
 	 */
-	memset(&ch, '\0', sizeof(aclCheck_t));
+	ACLChecklist ch;
 	ch.src_addr = request->client_addr;
 	ch.my_addr = request->my_addr;
 	ch.my_port = request->my_port;

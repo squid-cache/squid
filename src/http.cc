@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.404 2003/01/23 00:37:22 robertc Exp $
+ * $Id: http.cc,v 1.405 2003/01/28 01:29:34 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -46,6 +46,7 @@
 #include "HttpRequest.h"
 #include "MemObject.h"
 #include "HttpHdrContRange.h"
+#include "ACLChecklist.h"
 
 CBDATA_TYPE(HttpStateData);
 
@@ -1253,10 +1254,9 @@ static void
 httpSendRequestEntityDone(int fd, void *data)
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
-    aclCheck_t ch;
+    ACLChecklist ch;
     debug(11, 5) ("httpSendRequestEntityDone: FD %d\n",
 	fd);
-    memset(&ch, '\0', sizeof(ch));
     ch.request = httpState->request;
     if (!Config.accessList.brokenPosts) {
 	debug(11, 5) ("httpSendRequestEntityDone: No brokenPosts list\n");

@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.309 2003/01/23 00:37:23 robertc Exp $
+ * $Id: neighbors.cc,v 1.310 2003/01/28 01:29:34 robertc Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -38,6 +38,7 @@
 #include "ICP.h"
 #include "HttpRequest.h"
 #include "MemObject.h"
+#include "ACLChecklist.h"
 
 /* count mcast group peers every 15 minutes */
 #define MCAST_COUNT_RATE 900
@@ -124,7 +125,6 @@ peerAllowedToUse(const peer * p, request_t * request)
 {
     const struct _domain_ping *d = NULL;
     int do_ping = 1;
-    aclCheck_t checklist;
     assert(request != NULL);
     if (neighborType(p, request) == PEER_SIBLING) {
 	if (request->flags.nocache)
@@ -150,7 +150,7 @@ peerAllowedToUse(const peer * p, request_t * request)
 	return do_ping;
     if (p->access == NULL)
 	return do_ping;
-    memset(&checklist, '\0', sizeof(checklist));
+    ACLChecklist checklist;
     checklist.src_addr = request->client_addr;
     checklist.my_addr = request->my_addr;
     checklist.my_port = request->my_port;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.51 2003/01/23 00:37:17 robertc Exp $
+ * $Id: cbdata.cc,v 1.52 2003/01/28 01:29:33 robertc Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -172,7 +172,6 @@ cbdataInit(void)
      * most of these should be moved out to their respective module.
      */
     CREATE_CBDATA(acl_access);
-    CREATE_CBDATA(aclCheck_t);
     CREATE_CBDATA(ConnStateData);
     CREATE_CBDATA(ErrorState);
     CREATE_CBDATA(FwdState);

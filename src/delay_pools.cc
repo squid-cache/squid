@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.30 2003/01/23 00:37:19 robertc Exp $
+ * $Id: delay_pools.cc,v 1.31 2003/01/28 01:29:34 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: David Luyer <david@luyer.net>
@@ -312,7 +312,6 @@ delay_id
 delayClient(clientHttpRequest * http)
 {
     request_t *r;
-    aclCheck_t ch;
     int i;
     int j;
     unsigned int host;
@@ -321,7 +320,7 @@ delayClient(clientHttpRequest * http)
     assert(http);
     r = http->request;
 
-    memset(&ch, '\0', sizeof(ch));
+    ACLChecklist ch;
     ch.src_addr = r->client_addr;
     ch.my_addr = r->my_addr;
     ch.my_port = r->my_port;

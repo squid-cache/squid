@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.443 2003/01/27 08:08:51 hno Exp $
+ * $Id: structs.h,v 1.444 2003/01/28 01:29:35 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -138,7 +138,7 @@ struct _snmp_request_t {
     int outlen;
     struct sockaddr_in from;
     struct snmp_pdu *PDU;
-    aclCheck_t *acl_checklist;
+    ACLChecklist *acl_checklist;
     u_char *community;
 };
 
@@ -175,27 +175,6 @@ struct _acl_tos {
     acl_tos *next;
     acl_list *aclList;
     int tos;
-};
-
-struct _aclCheck_t {
-    const acl_access *accessList;
-    struct in_addr src_addr;
-    struct in_addr dst_addr;
-    struct in_addr my_addr;
-    unsigned short my_port;
-    request_t *request;
-    /* for acls that look at reply data */
-    HttpReply *reply;
-    ConnStateData *conn;	/* hack for ident and NTLM */
-    char rfc931[USER_IDENT_SZ];
-    auth_user_request_t *auth_user_request;
-    acl_lookup_state state[ACL_ENUM_MAX];
-#if SQUID_SNMP
-    char *snmp_community;
-#endif
-    PF *callback;
-    void *callback_data;
-    external_acl_entry *extacl_entry;
 };
 
 struct _wordlist {
@@ -1166,7 +1145,7 @@ struct _ps_state {
     peer *secho;
 #endif
     ping_data ping;
-    aclCheck_t *acl_checklist;
+    ACLChecklist *acl_checklist;
 };
 
 #if USE_ICMP

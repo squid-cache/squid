@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.93 2003/01/23 00:37:25 robertc Exp $
+ * $Id: redirect.cc,v 1.94 2003/01/28 01:29:35 robertc Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -37,6 +37,7 @@
 #include "authenticate.h"
 #include "Store.h"
 #include "client_side_request.h"
+#include "ACLChecklist.h"
 
 typedef struct {
     void *data;
@@ -106,8 +107,7 @@ redirectStart(clientHttpRequest * http, RH * handler, void *data)
 	return;
     }
     if (Config.accessList.redirector) {
-	aclCheck_t ch;
-	memset(&ch, '\0', sizeof(ch));
+	ACLChecklist ch;
 	ch.src_addr = http->conn->peer.sin_addr;
 	ch.my_addr = http->conn->me.sin_addr;
 	ch.my_port = ntohs(http->conn->me.sin_port);
