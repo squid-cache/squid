@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.138 1996/12/16 16:25:44 wessels Exp $
+ * $Id: http.cc,v 1.139 1996/12/17 07:16:54 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -712,6 +712,7 @@ httpBuildRequestHeader(request_t * request,
     size_t l;
     int hdr_flags = 0;
     int cc_flags = 0;
+    int n;
     const char *url = NULL;
 
     debug(11, 3, "httpBuildRequestHeader: INPUT:\n%s\n", hdr_in);
@@ -761,6 +762,12 @@ httpBuildRequestHeader(request_t * request,
 	} else if (strncasecmp(xbuf, "If-Modified-Since:", 18) == 0) {
 	    if (EBIT_TEST(hdr_flags, HDR_IMS))
 		continue;
+	} else if (strncasecmp(xbuf, "Max-Forwards:", 13) == 0) {
+	    if (orig_request->method == METHOD_TRACE) {
+		for (s = xbuf + 13; *s && isspace(*s); s++);
+		n = atoi(s);
+		sprintf(xbuf, "Max-Forwards: %d", n - 1);
+	    }
 	}
 	httpAppendRequestHeader(hdr_out, xbuf, &len, out_sz - 512);
     }

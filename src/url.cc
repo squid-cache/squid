@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.50 1996/12/05 21:23:57 wessels Exp $
+ * $Id: url.cc,v 1.51 1996/12/17 07:16:59 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -38,7 +38,8 @@ const char *RequestMethodStr[] =
     "POST",
     "PUT",
     "HEAD",
-    "CONNECT"
+    "CONNECT",
+    "TRACE"
 };
 
 static char *ProtocolStr[] =
@@ -140,6 +141,8 @@ urlParseMethod(const char *s)
 	return METHOD_HEAD;
     } else if (strcasecmp(s, "CONNECT") == 0) {
 	return METHOD_CONNECT;
+    } else if (strcasecmp(s, "TRACE") == 0) {
+	return METHOD_TRACE;
     }
     return METHOD_NONE;
 }
@@ -252,6 +255,7 @@ urlParse(method_t method, char *url)
     request->port = (u_short) port;
     xstrncpy(request->urlpath, urlpath, MAX_URL);
     request->max_age = -1;
+    request->max_forwards = -1;
     return request;
 }
 
@@ -323,6 +327,8 @@ urlCheckRequest(const request_t * r)
 {
     int rc = 0;
     if (r->method == METHOD_CONNECT)
+	return 1;
+    if (r->method == METHOD_TRACE)
 	return 1;
     switch (r->protocol) {
     case PROTO_HTTP:
