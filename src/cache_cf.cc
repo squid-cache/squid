@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.237 1997/12/02 03:30:21 wessels Exp $
+ * $Id: cache_cf.cc,v 1.238 1997/12/03 01:29:56 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -33,7 +33,6 @@
 
 #if SQUID_SNMP
 #include "snmp.h"
-#include "snmp_config.h"
 #endif
 
 static const char *const T_SECOND_STR = "second";
@@ -73,13 +72,6 @@ static void parseBytesLine(size_t * bptr, const char *units);
 static size_t parseBytesUnits(const char *unit);
 static void free_all(void);
 static void requirePathnameExists(const char *name, const char *path);
-/*
- * extern int create_view ( char **);
- * extern int create_user ( char **);
- * extern int create_community (char **);
- * extern void tokenize ( char *, char **, int );
- */
-extern struct tree *Mib;
 
 static void
 self_destruct(void)
