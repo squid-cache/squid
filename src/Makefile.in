@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.297 2003/03/08 09:43:49 robertc Exp $
+#  $Id: Makefile.in,v 1.298 2003/03/10 05:05:48 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -157,6 +157,31 @@ makesnmplib = @makesnmplib@
 
 @USE_DELAY_POOLS_FALSE@DELAY_POOL_SOURCE = 
 
+ESI_ALL_SOURCE = \
+	ElementList.h \
+	ESI.cc \
+	ESI.h \
+	ESIAttempt.h \
+	ESIContext.cc \
+	ESIContext.h \
+	ESICustomParser.cc \
+	ESICustomParser.h \
+	ESIElement.h \
+	ESIExcept.h \
+	ESIExpatParser.cc \
+	ESIExpatParser.h \
+	ESIExpression.cc \
+	ESILiteral.h \
+	ESIParser.cc \
+	ESIParser.h \
+	ESISegment.cc \
+	ESISegment.h \
+	ESISequence.cc \
+	ESISequence.h
+
+@USE_ESI_TRUE@ESI_SOURCE = $(ESI_ALL_SOURCE)
+@USE_ESI_FALSE@ESI_SOURCE = 
+
 @ENABLE_XPROF_STATS_TRUE@XPROF_STATS_SOURCE = ProfStats.cc
 @ENABLE_XPROF_STATS_FALSE@XPROF_STATS_SOURCE = 
 
@@ -191,12 +216,12 @@ makesnmplib = @makesnmplib@
 @ENABLE_ARP_ACL_TRUE@ARP_ACL_SOURCE = ACLARP.cc ACLARP.h
 @ENABLE_ARP_ACL_FALSE@ARP_ACL_SOURCE = 
 
-AM_CFLAGS = -Werror -Wall
-AM_CXXFLAGS = -Werror -Wall
+AM_CFLAGS = -Werror -Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments
+AM_CXXFLAGS = -Werror -Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments
 
 SUBDIRS = fs repl auth
 
-INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include
+INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/lib/libTrie/include
 
 EXTRA_PROGRAMS = \
 	unlinkd \
@@ -237,6 +262,7 @@ EXTRA_squid_SOURCES = \
 	dnsserver.cc \
 	dns_internal.cc \
 	htcp.cc \
+	$(ESI_ALL_SOURCE) \
 	ProfStats.cc \
 	leakfinder.cc \
 	snmp_core.cc \
@@ -357,6 +383,7 @@ squid_SOURCES = \
 	$(DNSSOURCE) \
 	enums.h \
 	errorpage.cc \
+	$(ESI_SOURCE) \
 	ETag.cc \
 	event.cc \
 	external_acl.cc \
@@ -378,6 +405,8 @@ squid_SOURCES = \
 	HttpStatusLine.cc \
 	HttpHdrCc.cc \
 	HttpHdrRange.cc \
+	HttpHdrSc.cc \
+	HttpHdrScTarget.cc \
 	HttpHdrContRange.cc \
 	HttpHdrContRange.h \
 	HttpHeader.cc \
@@ -542,6 +571,7 @@ ufsdump_SOURCES = debug.cc \
 	StoreMetaVary.h \
 	access_log.cc \
 	acl.cc \
+	ACLChecklist.cc \
 	$(squid_ACLSOURCES) \
 	ACLChecklist.cc \
 	asn.cc \
@@ -570,6 +600,7 @@ ufsdump_SOURCES = debug.cc \
 	$(DNSSOURCE) \
 	enums.h \
 	errorpage.cc \
+	$(ESI_SOURCE) \
 	ETag.cc \
 	event.cc \
 	external_acl.cc \
@@ -587,6 +618,8 @@ ufsdump_SOURCES = debug.cc \
 	HttpStatusLine.cc \
 	HttpHdrCc.cc \
 	HttpHdrRange.cc \
+	HttpHdrSc.cc \
+	HttpHdrScTarget.cc \
 	HttpHdrContRange.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
@@ -629,8 +662,8 @@ ufsdump_SOURCES = debug.cc \
 	send-announce.cc \
 	$(SNMPSOURCE) \
 	squid.h \
-	tunnel.cc \
 	$(SSLSOURCE) \
+	tunnel.cc \
 	stat.cc \
 	StatHist.cc \
 	String.cc \
@@ -844,22 +877,28 @@ am__objects_4 = $(am__objects_5) ACLASN.$(OBJEXT) ACLBrowser.$(OBJEXT) \
 @USE_DELAY_POOLS_TRUE@	NullDelayId.$(OBJEXT)
 @USE_DNSSERVER_FALSE@am__objects_7 = dns_internal.$(OBJEXT)
 @USE_DNSSERVER_TRUE@am__objects_7 = dns.$(OBJEXT)
-@ENABLE_HTCP_TRUE@am__objects_8 = htcp.$(OBJEXT)
-@ENABLE_IDENT_TRUE@am__objects_9 = ACLIdent.$(OBJEXT) ident.$(OBJEXT)
-@ENABLE_IDENT_FALSE@am__objects_9 =
-@MAKE_LEAKFINDER_TRUE@am__objects_10 = leakfinder.$(OBJEXT)
-@MAKE_LEAKFINDER_FALSE@am__objects_10 =
+am__objects_9 = ESI.$(OBJEXT) ESIContext.$(OBJEXT) \
+	ESICustomParser.$(OBJEXT) ESIExpatParser.$(OBJEXT) \
+	ESIExpression.$(OBJEXT) ESIParser.$(OBJEXT) \
+	ESISegment.$(OBJEXT) ESISequence.$(OBJEXT)
+@USE_ESI_TRUE@am__objects_8 = $(am__objects_9)
+@USE_ESI_FALSE@am__objects_8 =
+@ENABLE_HTCP_TRUE@am__objects_10 = htcp.$(OBJEXT)
+@ENABLE_IDENT_TRUE@am__objects_11 = ACLIdent.$(OBJEXT) ident.$(OBJEXT)
+@ENABLE_IDENT_FALSE@am__objects_11 =
+@MAKE_LEAKFINDER_TRUE@am__objects_12 = leakfinder.$(OBJEXT)
+@MAKE_LEAKFINDER_FALSE@am__objects_12 =
 @ENABLE_XPROF_STATS_TRUE@am__objects_3 = ProfStats.$(OBJEXT)
 @ENABLE_XPROF_STATS_FALSE@am__objects_3 =
-@USE_SNMP_TRUE@am__objects_11 = snmp_core.$(OBJEXT) snmp_agent.$(OBJEXT)
-@USE_SNMP_FALSE@am__objects_11 =
-@ENABLE_SSL_FALSE@am__objects_12 =
-@ENABLE_SSL_TRUE@am__objects_12 = ACLCertificateData.$(OBJEXT) \
+@USE_SNMP_TRUE@am__objects_13 = snmp_core.$(OBJEXT) snmp_agent.$(OBJEXT)
+@USE_SNMP_FALSE@am__objects_13 =
+@ENABLE_SSL_FALSE@am__objects_14 =
+@ENABLE_SSL_TRUE@am__objects_14 = ACLCertificateData.$(OBJEXT) \
 @ENABLE_SSL_TRUE@	ACLCertificate.$(OBJEXT) ssl_support.$(OBJEXT)
-@ENABLE_UNLINKD_TRUE@am__objects_13 = unlinkd.$(OBJEXT)
-@ENABLE_UNLINKD_FALSE@am__objects_13 =
-@ENABLE_WIN32SPECIFIC_FALSE@am__objects_14 =
-@ENABLE_WIN32SPECIFIC_TRUE@am__objects_14 = win32.$(OBJEXT)
+@ENABLE_UNLINKD_TRUE@am__objects_15 = unlinkd.$(OBJEXT)
+@ENABLE_UNLINKD_FALSE@am__objects_15 =
+@ENABLE_WIN32SPECIFIC_FALSE@am__objects_16 =
+@ENABLE_WIN32SPECIFIC_TRUE@am__objects_16 = win32.$(OBJEXT)
 am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	ACLChecklist.$(OBJEXT) $(am__objects_4) asn.$(OBJEXT) \
 	authenticate.$(OBJEXT) cache_cf.$(OBJEXT) CacheDigest.$(OBJEXT) \
@@ -869,26 +908,27 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	clientStream.$(OBJEXT) comm.$(OBJEXT) comm_select.$(OBJEXT) \
 	comm_poll.$(OBJEXT) comm_kqueue.$(OBJEXT) comm_epoll.$(OBJEXT) \
 	debug.$(OBJEXT) $(am__objects_6) disk.$(OBJEXT) \
-	$(am__objects_7) errorpage.$(OBJEXT) ETag.$(OBJEXT) \
-	event.$(OBJEXT) external_acl.$(OBJEXT) fd.$(OBJEXT) \
-	fde.$(OBJEXT) filemap.$(OBJEXT) forward.$(OBJEXT) \
+	$(am__objects_7) errorpage.$(OBJEXT) $(am__objects_8) \
+	ETag.$(OBJEXT) event.$(OBJEXT) external_acl.$(OBJEXT) \
+	fd.$(OBJEXT) fde.$(OBJEXT) filemap.$(OBJEXT) forward.$(OBJEXT) \
 	fqdncache.$(OBJEXT) ftp.$(OBJEXT) gopher.$(OBJEXT) \
-	helper.$(OBJEXT) $(am__objects_8) http.$(OBJEXT) \
+	helper.$(OBJEXT) $(am__objects_10) http.$(OBJEXT) \
 	HttpStatusLine.$(OBJEXT) HttpHdrCc.$(OBJEXT) \
-	HttpHdrRange.$(OBJEXT) HttpHdrContRange.$(OBJEXT) \
+	HttpHdrRange.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
+	HttpHdrScTarget.$(OBJEXT) HttpHdrContRange.$(OBJEXT) \
 	HttpHeader.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
 	HttpBody.$(OBJEXT) HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) \
 	HttpRequest.$(OBJEXT) icmp.$(OBJEXT) icp_v2.$(OBJEXT) \
-	icp_v3.$(OBJEXT) $(am__objects_9) int.$(OBJEXT) \
+	icp_v3.$(OBJEXT) $(am__objects_11) int.$(OBJEXT) \
 	internal.$(OBJEXT) ipc.$(OBJEXT) ipcache.$(OBJEXT) \
-	IPInterception.$(OBJEXT) $(am__objects_10) logfile.$(OBJEXT) \
+	IPInterception.$(OBJEXT) $(am__objects_12) logfile.$(OBJEXT) \
 	main.$(OBJEXT) mem.$(OBJEXT) mem_node.$(OBJEXT) \
 	MemBuf.$(OBJEXT) MemObject.$(OBJEXT) mime.$(OBJEXT) \
 	multicast.$(OBJEXT) neighbors.$(OBJEXT) net_db.$(OBJEXT) \
 	Packer.$(OBJEXT) $(am__objects_3) pconn.$(OBJEXT) \
 	peer_digest.$(OBJEXT) peer_select.$(OBJEXT) redirect.$(OBJEXT) \
 	referer.$(OBJEXT) refresh.$(OBJEXT) send-announce.$(OBJEXT) \
-	$(am__objects_11) tunnel.$(OBJEXT) $(am__objects_12) \
+	$(am__objects_13) tunnel.$(OBJEXT) $(am__objects_14) \
 	stat.$(OBJEXT) StatHist.$(OBJEXT) String.$(OBJEXT) \
 	stmem.$(OBJEXT) store.$(OBJEXT) store_io.$(OBJEXT) \
 	StoreIOState.$(OBJEXT) store_client.$(OBJEXT) \
@@ -900,9 +940,9 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	StoreMetaSTD.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
 	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
 	SwapDir.$(OBJEXT) tools.$(OBJEXT) ufscommon.$(OBJEXT) \
-	$(am__objects_13) url.$(OBJEXT) urn.$(OBJEXT) \
+	$(am__objects_15) url.$(OBJEXT) urn.$(OBJEXT) \
 	useragent.$(OBJEXT) wais.$(OBJEXT) wccp.$(OBJEXT) \
-	whois.$(OBJEXT) $(am__objects_14)
+	whois.$(OBJEXT) $(am__objects_16)
 nodist_squid_OBJECTS = repl_modules.$(OBJEXT) auth_modules.$(OBJEXT) \
 	store_modules.$(OBJEXT) globals.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
@@ -917,44 +957,46 @@ am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) ufsdump.$(OBJEXT) \
 	store.$(OBJEXT) StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
 	StoreMetaSTD.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
 	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
-	access_log.$(OBJEXT) acl.$(OBJEXT) $(am__objects_4) \
-	ACLChecklist.$(OBJEXT) asn.$(OBJEXT) authenticate.$(OBJEXT) \
-	cache_cf.$(OBJEXT) CacheDigest.$(OBJEXT) \
+	access_log.$(OBJEXT) acl.$(OBJEXT) ACLChecklist.$(OBJEXT) \
+	$(am__objects_4) ACLChecklist.$(OBJEXT) asn.$(OBJEXT) \
+	authenticate.$(OBJEXT) cache_cf.$(OBJEXT) CacheDigest.$(OBJEXT) \
 	cache_manager.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
 	client_db.$(OBJEXT) client_side.$(OBJEXT) \
 	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
 	clientStream.$(OBJEXT) comm.$(OBJEXT) comm_select.$(OBJEXT) \
 	comm_poll.$(OBJEXT) comm_kqueue.$(OBJEXT) comm_epoll.$(OBJEXT) \
 	$(am__objects_6) disk.$(OBJEXT) $(am__objects_7) \
-	errorpage.$(OBJEXT) ETag.$(OBJEXT) event.$(OBJEXT) \
-	external_acl.$(OBJEXT) fd.$(OBJEXT) fde.$(OBJEXT) \
-	filemap.$(OBJEXT) forward.$(OBJEXT) fqdncache.$(OBJEXT) \
-	ftp.$(OBJEXT) gopher.$(OBJEXT) helper.$(OBJEXT) \
-	$(am__objects_8) http.$(OBJEXT) HttpStatusLine.$(OBJEXT) \
-	HttpHdrCc.$(OBJEXT) HttpHdrRange.$(OBJEXT) \
-	HttpHdrContRange.$(OBJEXT) HttpHeader.$(OBJEXT) \
-	HttpHeaderTools.$(OBJEXT) HttpBody.$(OBJEXT) HttpMsg.$(OBJEXT) \
-	HttpReply.$(OBJEXT) HttpRequest.$(OBJEXT) icmp.$(OBJEXT) \
-	icp_v2.$(OBJEXT) icp_v3.$(OBJEXT) $(am__objects_9) \
-	internal.$(OBJEXT) ipc.$(OBJEXT) ipcache.$(OBJEXT) \
-	IPInterception.$(OBJEXT) $(am__objects_10) logfile.$(OBJEXT) \
-	mem.$(OBJEXT) mem_node.$(OBJEXT) MemBuf.$(OBJEXT) \
-	MemObject.$(OBJEXT) mime.$(OBJEXT) multicast.$(OBJEXT) \
-	neighbors.$(OBJEXT) net_db.$(OBJEXT) Packer.$(OBJEXT) \
-	$(am__objects_3) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
-	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
-	refresh.$(OBJEXT) send-announce.$(OBJEXT) $(am__objects_11) \
-	tunnel.$(OBJEXT) $(am__objects_12) stat.$(OBJEXT) \
-	StatHist.$(OBJEXT) String.$(OBJEXT) stmem.$(OBJEXT) \
-	store_io.$(OBJEXT) StoreIOState.$(OBJEXT) \
-	store_client.$(OBJEXT) store_digest.$(OBJEXT) \
-	store_dir.$(OBJEXT) store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
+	errorpage.$(OBJEXT) $(am__objects_8) ETag.$(OBJEXT) \
+	event.$(OBJEXT) external_acl.$(OBJEXT) fd.$(OBJEXT) \
+	fde.$(OBJEXT) filemap.$(OBJEXT) forward.$(OBJEXT) \
+	fqdncache.$(OBJEXT) ftp.$(OBJEXT) gopher.$(OBJEXT) \
+	helper.$(OBJEXT) $(am__objects_10) http.$(OBJEXT) \
+	HttpStatusLine.$(OBJEXT) HttpHdrCc.$(OBJEXT) \
+	HttpHdrRange.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
+	HttpHdrScTarget.$(OBJEXT) HttpHdrContRange.$(OBJEXT) \
+	HttpHeader.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
+	HttpBody.$(OBJEXT) HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) \
+	HttpRequest.$(OBJEXT) icmp.$(OBJEXT) icp_v2.$(OBJEXT) \
+	icp_v3.$(OBJEXT) $(am__objects_11) internal.$(OBJEXT) \
+	ipc.$(OBJEXT) ipcache.$(OBJEXT) IPInterception.$(OBJEXT) \
+	$(am__objects_12) logfile.$(OBJEXT) mem.$(OBJEXT) \
+	mem_node.$(OBJEXT) MemBuf.$(OBJEXT) MemObject.$(OBJEXT) \
+	mime.$(OBJEXT) multicast.$(OBJEXT) neighbors.$(OBJEXT) \
+	net_db.$(OBJEXT) Packer.$(OBJEXT) $(am__objects_3) \
+	pconn.$(OBJEXT) peer_digest.$(OBJEXT) peer_select.$(OBJEXT) \
+	redirect.$(OBJEXT) referer.$(OBJEXT) refresh.$(OBJEXT) \
+	send-announce.$(OBJEXT) $(am__objects_13) $(am__objects_14) \
+	tunnel.$(OBJEXT) stat.$(OBJEXT) StatHist.$(OBJEXT) \
+	String.$(OBJEXT) stmem.$(OBJEXT) store_io.$(OBJEXT) \
+	StoreIOState.$(OBJEXT) store_client.$(OBJEXT) \
+	store_digest.$(OBJEXT) store_dir.$(OBJEXT) \
+	store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
 	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
 	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
 	SwapDir.$(OBJEXT) tools.$(OBJEXT) ufscommon.$(OBJEXT) \
-	$(am__objects_13) url.$(OBJEXT) urn.$(OBJEXT) \
+	$(am__objects_15) url.$(OBJEXT) urn.$(OBJEXT) \
 	useragent.$(OBJEXT) wais.$(OBJEXT) wccp.$(OBJEXT) \
-	whois.$(OBJEXT) $(am__objects_14)
+	whois.$(OBJEXT) $(am__objects_16)
 nodist_ufsdump_OBJECTS = repl_modules.$(OBJEXT) auth_modules.$(OBJEXT) \
 	store_modules.$(OBJEXT) globals.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
@@ -997,10 +1039,18 @@ depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/DelayBucket.Po $(DEPDIR)/DelayConfig.Po \
 @AMDEP_TRUE@	$(DEPDIR)/DelayId.Po $(DEPDIR)/DelayPool.Po \
 @AMDEP_TRUE@	$(DEPDIR)/DelaySpec.Po $(DEPDIR)/DelayUser.Po \
-@AMDEP_TRUE@	$(DEPDIR)/DelayVector.Po $(DEPDIR)/ETag.Po \
-@AMDEP_TRUE@	$(DEPDIR)/HttpBody.Po $(DEPDIR)/HttpHdrCc.Po \
+@AMDEP_TRUE@	$(DEPDIR)/DelayVector.Po $(DEPDIR)/ESI.Po \
+@AMDEP_TRUE@	$(DEPDIR)/ESIContext.Po \
+@AMDEP_TRUE@	$(DEPDIR)/ESICustomParser.Po \
+@AMDEP_TRUE@	$(DEPDIR)/ESIExpatParser.Po \
+@AMDEP_TRUE@	$(DEPDIR)/ESIExpression.Po $(DEPDIR)/ESIParser.Po \
+@AMDEP_TRUE@	$(DEPDIR)/ESISegment.Po $(DEPDIR)/ESISequence.Po \
+@AMDEP_TRUE@	$(DEPDIR)/ETag.Po $(DEPDIR)/HttpBody.Po \
+@AMDEP_TRUE@	$(DEPDIR)/HttpHdrCc.Po \
 @AMDEP_TRUE@	$(DEPDIR)/HttpHdrContRange.Po \
-@AMDEP_TRUE@	$(DEPDIR)/HttpHdrRange.Po $(DEPDIR)/HttpHeader.Po \
+@AMDEP_TRUE@	$(DEPDIR)/HttpHdrRange.Po $(DEPDIR)/HttpHdrSc.Po \
+@AMDEP_TRUE@	$(DEPDIR)/HttpHdrScTarget.Po \
+@AMDEP_TRUE@	$(DEPDIR)/HttpHeader.Po \
 @AMDEP_TRUE@	$(DEPDIR)/HttpHeaderTools.Po $(DEPDIR)/HttpMsg.Po \
 @AMDEP_TRUE@	$(DEPDIR)/HttpReply.Po $(DEPDIR)/HttpRequest.Po \
 @AMDEP_TRUE@	$(DEPDIR)/HttpStatusLine.Po \
@@ -1255,11 +1305,21 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/DelaySpec.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/DelayUser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/DelayVector.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ESI.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ESIContext.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ESICustomParser.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ESIExpatParser.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ESIExpression.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ESIParser.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ESISegment.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ESISequence.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ETag.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpBody.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpHdrCc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpHdrContRange.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpHdrRange.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpHdrSc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpHdrScTarget.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpHeader.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpHeaderTools.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpMsg.Po@am__quote@
