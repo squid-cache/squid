@@ -686,14 +686,13 @@ Squid consists of the following major components
 	it.  Currently, this structure looks like:
 <verb>
         struct _storeIOState {
-            int fd; 
             sfileno swap_file_number;
-            mode_t mode; 
+            mode_t mode;
             size_t st_size;             /* do stat(2) after read open */
             off_t offset;               /* current offset pointer */
-            STIOCB *callback;  
+            STIOCB *callback;
             void *callback_data;
-            struct { 
+            struct {
                 STRCB *callback;
                 void *callback_data;
             } read;
@@ -702,21 +701,21 @@ Squid consists of the following major components
             } flags;
             union {
                 struct {
-                    struct { 
+                    int fd;
+                    struct {
                         unsigned int close_request:1;
                         unsigned int reading:1;
                         unsigned int writing:1;
                     } flags;
                 } ufs;
             } type;
-        };      
+        };
 </verb>
-
-	<em/fd/ is a filedescriptor, and should be considered ``private''
-	to the underlying implementation.
 
 	<em/swap_file_number/ is the 32-bit swap file number for the
 	object, taken from the <em/StoreEntry/.
+
+	<em/mode/ is either O_RDONLY or O_WRONLY.
 
 	<em/offset/ represents the file (byte) offset after the
 	last operation completed.  For example, after a read operation,
@@ -725,6 +724,11 @@ Squid consists of the following major components
 	filesystem layer needs explicit (callback) notification
 	for writes.  It is wrong to increment <em/offset/ before
 	an I/O operation has been known to succeed.
+
+	<em/st_size/ is filled in with the object's on-disk size
+	after an object is opened for reading.  This allows
+	the upper layers to double-check that the disk object
+	actually belongs to the StoreEntry.
 
 	Note that there are two callback functions.  The first,
 	<em/callback/, of type <em/STIOCB/ (store I/O callback),
@@ -747,7 +751,42 @@ Squid consists of the following major components
 
 <sect2>External Functions
 
-<sect3><tt/storeOpen()/
+<sect3>Object I/O
+
+	<P>
+	These functions all relate to per-object I/O tasks: opening,
+	closing, reading, writing, and unlinking objects on disk.
+
+	<P>
+	Note that the underlying storage system functions are
+	accessed through function pointers, kept in the
+	<em/SwapDir/ structure:
+<verb>
+    struct _SwapDir {
+	....
+        struct {
+            STOBJOPEN *open;
+            STOBJCLOSE *close;
+            STOBJREAD *read;
+            STOBJWRITE *write;
+            STOBJUNLINK *unlink;
+        } obj;
+	....
+    };
+</verb>
+
+	<P>
+	Thus, a storage system must do something like this
+	when initializing its <em/SwapDir/ structure:
+<verb>
+            SwapDir->obj.open = storeFooOpen;
+            SwapDir->obj.close = storeFooClose;
+            SwapDir->obj.read = storeFooRead;
+            SwapDir->obj.write = storeFooWrite;
+            SwapDir->obj.unlink = storeFooUnlink;
+</verb>
+
+<sect4><tt/storeOpen()/
 
 	<P>
 <verb>
@@ -769,7 +808,7 @@ Squid consists of the following major components
 	assume the open request will succeed, and may begin reading
 	or writing immediately.
 
-<sect3><tt/storeClose()/
+<sect4><tt/storeClose()/
 
 	<P>
 <verb>
@@ -785,7 +824,7 @@ Squid consists of the following major components
 	the <em/STIOCB/ callback (registered with <tt/storeOpen()/) will
 	be called.
 
-<sect3><tt/storeRead()/
+<sect4><tt/storeRead()/
 
 	<P>
 <verb>
@@ -806,7 +845,7 @@ Squid consists of the following major components
 	<P>
 	The caller is responsible for allocating and freeing <em/buf/
 
-<sect3><tt/storeWrite()/
+<sect4><tt/storeWrite()/
 
 	<P>
 <verb>
@@ -828,7 +867,7 @@ Squid consists of the following major components
 	calling module by calling the <em/STIOCB/ callback with an
 	error status code.
 
-<sect3><tt/storeUnlink()/
+<sect4><tt/storeUnlink()/
 
 	<P>
 <verb>
@@ -842,7 +881,10 @@ Squid consists of the following major components
 	does not need to be opened first.  The filesystem
 	layer will remove the object if it exists on the disk.
 
-<sect3><tt/storeOffset()/
+	<P>
+	These functions can be found in <tt/store_io.c/.
+
+<sect4><tt/storeOffset()/
 
 	<P>
 <verb>
@@ -854,7 +896,7 @@ Squid consists of the following major components
 	Returns the current byte-offset of the cache object
 	on disk.
 
-<sect3><em/STIOCB/ callback
+<sect4><em/STIOCB/ callback
 
 	<P>
 <verb>
@@ -881,7 +923,7 @@ Squid consists of the following major components
 	Once the The <em/stiocb/ function has been called,
 	the <em/sio/ data should not be accessed further.
 
-<sect3><em/STRCB/ callback
+<sect4><em/STRCB/ callback
 
 	<P>
 <verb>
@@ -898,14 +940,188 @@ Squid consists of the following major components
 	called if the read operation is successful.  If it fails,
 	then the <em/STIOCB/ callback will be called instead.
 
-<sect2>Todo...
+<sect3>Config file parsing
 
 	<P>
-	Note there is much work yet to be done in defining
-	this programming interface.  All of the code for
-	rebuilding the disk store at startup is still very
-	UFS-specific.  The configuration file and <em/SquidConfig/
-	data structures are still sort of specific to UFS.
+	There are three functions relating to the Squid configuration
+	file: parsing, dumping, and freeing.
+
+	<P>
+	The parse function is called at startup, and during a reconfigure,
+	for a <em/cache_dir/ line.  The first keyword after the <em/cache_dir/
+	keyword will be a filesystem type (such as "ufs").  A switch
+	statement in <tt/parse_cachedir/ will call the appropriate
+	filesystem-dependent parsing function.  The parsing function
+	may use <tt/strtok()/ to continue reading keywords after the
+	filesystem type on the <em/cache_dir/ line.
+
+
+	<P>
+	The ``dump'' function is used to output a configuration
+	file from the in-memory configuration structure.  It is
+	called with a <em/SwapDir/ argument, and must append one
+	line to the <em/StoreEntry/ that is holding the configuration
+	file being generated.
+
+	<P>
+	The free function is called during a reconfigure (and at
+	exit) to free up (or un-initialize) any memory or structures
+	associated with the configuration line.  The <em/SwapDir/
+	structure includes common and private sections.  The
+	<tt/free_cachedir()/ function will handle freeing anything
+	in the common section, and relies on a filesystem-dependent
+	function to free, or un-initialize private members.
+
+<sect3>Filesystem Startup, Initialization, and State Logging
+
+	<P>
+	These functions deal with initializing, state
+	logging, and related tasks for a squid storage system.
+	These functions can be found in <tt/store_dir.c/.
+
+	<P>
+	Each storage system must provide the functions
+	described in this section.  Each function is
+	accessed through a function pointer stored in
+	the <em/SwapDir/ structure:
+<verb>
+    struct _SwapDir {
+        ...
+        STINIT *init;
+        STNEWFS *newfs;
+        struct {
+            STLOGOPEN *open;
+            STLOGCLOSE *close;
+            STLOGWRITE *write;
+            struct {
+                STLOGCLEANOPEN *open;
+                STLOGCLEANWRITE *write;
+                void *state;
+            } clean;
+        } log;
+        ....
+    };
+</verb>
+
+<sect4><tt/init/
+
+	<P>
+<verb>
+        void
+        STINIT(SwapDir *);
+</verb>
+
+	<P>
+	The <tt/init/ function, of type <em/STINIT/ is called by
+	<tt/storeDirInit()/ when Squid first starts up.  The
+	<tt/init/ function should probably start the process of
+	reading saved state information from disk (aka the "rebuild"
+	procedure).
+
+<sect4><tt/newfs/
+            STOBJLOG *log;
+            STOBJLOG *log;
+
+	<P>
+<verb>
+	void
+	STNEWFS(SwapDir *);
+</verb>
+
+	<P>
+	The <tt/newfs/ function, of type <em/STNEWFS/, is used to
+	prepare a cache_dir for use by squid.  It is called when
+	the user runs <em/squid -z/.  For the Unix file system,
+	the <tt/newfs/ function makes all the two-layer subdirectories.
+
+<sect4><tt/log.open/
+
+	<P>
+<verb>
+	void
+	STLOGOPEN(SwapDir *);
+</verb>
+
+	<P>
+	The <tt/log.open/ function, of type <em/STLOGOPEN/,
+	is used to open or initialize the state-holding log
+	files (if any) for the storage system.  For UFS this
+	opens the <em/swap.state/ files.
+
+	<P>
+	The <tt/log.open/ function may be called any number of
+	times during Squid's execution.  For example, the
+	process of rotating, or writing clean logfiles closes
+	the state log and then re-opens.  A <em/squid -k reconfigure/
+	does the same.
+
+<sect4><tt/log.close/
+
+	<P>
+<verb>
+	void
+	STLOGCLOSE(SwapDir *);
+</verb>
+
+	<P>
+	The <tt/log.close/ function, of type <em/STLOGCLOSE/, is
+	obviously the counterpart to <tt/log.open/.  It must close
+	the open state-holding log files (if any) for the storage
+	system.
+
+<sect4><tt/log.write/
+
+	<P>
+<verb>
+	void
+	STLOGWRITE(const SwapDir *, const StoreEntry *, int op);
+</verb>
+
+	<P>
+	The <tt/log.write/ function, of type <em/STLOGWRITE/, is
+	used to write an entry to the state-holding log file.  The
+	<em/op/ argument is either <em/SWAP_LOG_ADD/ or <em/SWAP_LOG_DEL/.
+	This feature may not be required by some storage systems
+	and can be implemented as a null-function (no-op).
+
+<sect4><tt/log.clean.open/
+
+	<P>
+<verb>
+	int
+	STLOGCLEANOPEN(SwapDir *);
+</verb>
+
+	<P>
+	The <tt/log.clean.open/ function, of type <em/STLOGCLEANOPEN/,
+	is used for the process of writing "clean" state-holding
+	log files.  This is a special case because we want to
+	optimize the process as much as possible.  This might be
+	a no-op for some storage systems that don't have the
+	same loggins issues as UFS.
+
+	<P>
+	The <em/log.clean.state/ pointer may be used to
+	keep state information for the clean-writing process, but
+	should not be accessed by upper layers.
+
+<sect4><tt/log.clean.write/
+
+	<P>
+<verb>
+	void
+	STLOGCLEANWRITE(const StoreEntry *, SwapDir *);
+</verb>
+
+	<P>
+	The <tt/log.clean.write/ function, of type <em/STLOGCLEANWRITE/,
+	writes an entry to the clean log file (if any).
+
+	<P>
+	A NULL <em/StoreEntry/ argument indicates the end of
+	the clean-writing process and signals the storage
+	system to close the clean log, and rename or move them
+	to become the official state-holding log.
 
 
 <!-- %%%% Chapter : FORWARDING SELECTION %%%% -->
