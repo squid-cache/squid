@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: fqdncache.cc,v 1.112 1998/08/21 08:41:56 wessels Exp $
+ * $Id: fqdncache.cc,v 1.113 1998/08/30 05:21:41 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -36,9 +36,6 @@
 
 #include "squid.h"
 
-#define MAX_LINELEN (4096)
-
-#define MAX_FQDN		 1024	/* Maximum cached FQDN */
 #define FQDN_LOW_WATER       90
 #define FQDN_HIGH_WATER      95
 
@@ -547,9 +544,9 @@ fqdncache_init(void)
     debug(35, 3) ("Initializing FQDN Cache...\n");
     memset(&FqdncacheStats, '\0', sizeof(FqdncacheStats));
     memset(&lru_list, '\0', sizeof(lru_list));
-    fqdncache_high = (long) (((float) MAX_FQDN *
+    fqdncache_high = (long) (((float) Config.fqdncache.size *
 	    (float) FQDN_HIGH_WATER) / (float) 100);
-    fqdncache_low = (long) (((float) MAX_FQDN *
+    fqdncache_low = (long) (((float) Config.fqdncache.size *
 	    (float) FQDN_LOW_WATER) / (float) 100);
     n = hashPrime(fqdncache_high / 4);
     fqdn_table = hash_create((HASHCMP *) strcmp, n, hash4);
@@ -790,9 +787,9 @@ fqdncache_restart(void)
 	if (this->status == FQDN_NEGATIVE_CACHED)
 	    continue;
     }
-    fqdncache_high = (long) (((float) MAX_FQDN *
+    fqdncache_high = (long) (((float) Config.fqdncache.size *
 	    (float) FQDN_HIGH_WATER) / (float) 100);
-    fqdncache_low = (long) (((float) MAX_FQDN *
+    fqdncache_low = (long) (((float) Config.fqdncache.size *
 	    (float) FQDN_LOW_WATER) / (float) 100);
 }
 
