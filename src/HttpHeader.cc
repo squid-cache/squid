@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.26 1998/03/20 18:06:38 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.27 1998/03/31 09:03:45 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -96,7 +96,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] =
     {"Content-Range", HDR_CONTENT_RANGE, ftPContRange},
     {"Content-Type", HDR_CONTENT_TYPE, ftStr},
     {"Date", HDR_DATE, ftDate_1123},
-    {"Etag", HDR_ETAG, ftStr},	/* for now */
+    {"ETag", HDR_ETAG, ftStr},	/* for now */
     {"Expires", HDR_EXPIRES, ftDate_1123},
     {"Host", HDR_HOST, ftStr},
     {"If-Modified-Since", HDR_IMS, ftDate_1123},
@@ -281,6 +281,7 @@ httpHeaderUpdate(HttpHeader *old, const HttpHeader *fresh)
     HttpHeaderEntry *e_clone;
     HttpHeaderPos pos = HttpHeaderInitPos;
     assert(old && fresh);
+    assert(old != fresh);
     debug(55, 7) ("updating hdr: %p <- %p\n", old, fresh);
 
     while ((e = httpHeaderGetEntry(fresh, &pos))) {
@@ -401,7 +402,7 @@ httpHeaderDelByName(HttpHeader * hdr, const char *name)
     httpHeaderMaskInit(&hdr->mask); /* temporal inconsistency */
     debug(55, 7) ("deleting '%s' fields in hdr %p\n", name, hdr);
     while ((e = httpHeaderGetEntry(hdr, &pos))) {
-	if (!strCmp(e->name, name)) {
+	if (!strCaseCmp(e->name, name)) {
 	    httpHeaderDelAt(hdr, pos);
 	    count++;
 	} else
@@ -678,6 +679,7 @@ httpHeaderEntryDestroy(HttpHeaderEntry * e)
     stringClean(&e->value);
     assert(Headers[e->id].stat.aliveCount);
     Headers[e->id].stat.aliveCount--;
+    e->id = -1;
     memFree(MEM_HTTP_HDR_ENTRY, e);
 }
 
