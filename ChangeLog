@@ -1,3 +1,5 @@
+Changes to squid-1.2.beta20 ():
+
 	- Fixed 'quick_abort' percent calculation bug.
 	- Fixed quick_abort FPE bug.
 	- Changed more errno-checking functions to use ignoreErrno().
@@ -27,12 +29,31 @@
 	- Fixed default hierarchy_stoplist to be ``default if none.''
 	- Fixed 'fake a recent reply' hack for detecting DEAD
 	  and ALIVE neighbors (Joe Ramey).
-	- Fixed FTP directory parsing bugs.
+	- Fixed FTP directory parsing bugs (Joe Ramey).
+	- Fixed ftpTraverseDirectory coredump for NULL ftpState->filepath
+	  (Joe Ramey).
 	- Fixed daylight savings time bug (again).
+	- Fixed snprintf() bug.  When len == 1, snprintf() would treat
+	  the buffer as unknown size, emulating sprintf() behaviour.
+	- Made Error page language configurable with configure script
+	  (Henrik Nordstrom).
+	- Fixed squid-internal URLs when http_port == 80.
+	- Remember the client address on redirected requests (Henrik
+	  Nordstrom).
+	- Don't rebuild the request if the redirector returned the same
+	  URL (Henrik Nordstrom).
+	- Rewrite Host: header on redirected requests (Henrik
+	  Nordstrom).
+	- Include port (if non-standard) in generated Host: headers
+	  (Henrik Nordstrom).
+	- Fixed rfc1123 timezone hacks for Windows NT
+	  (Henrik Nordstrom).
+	- Added Russian Error pages by Ilia Zadorozhko.
+	- Added totals for ICP and HTTP hits to cachemgr client_list
+	  output.
 	- Changed error message to 'Generated TIME by HOST (SQUID/VER)'
 	  because any string with an '@' must be an email address.
-
-
+	- Fixed POST for content-length == 0.
 Changes to squid-1.2.beta19 (Apr 8, 1998):
 
 	- Squid-1.2.beta19 compiles and runs on Windows/NT with
