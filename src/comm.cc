@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.48 1996/07/26 19:29:54 wessels Exp $
+ * $Id: comm.cc,v 1.49 1996/07/26 20:34:12 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -329,6 +329,7 @@ int comm_connect(sock, dest_host, dest_port)
     }
     xmemcpy(&to_addr.sin_addr, hp->h_addr, hp->h_length);
     to_addr.sin_port = htons(dest_port);
+    fqdncache_gethostbyaddr(to_addr.sin_addr, FQDN_LOOKUP_IF_MISS);
     return comm_connect_addr(sock, &to_addr);
 }
 
