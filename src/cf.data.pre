@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.302 2003/02/15 18:18:39 hno Exp $
+# $Id: cf.data.pre,v 1.303 2003/02/16 20:53:34 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -254,7 +254,7 @@ DOC_START
 	Default is disabled (0).
 NOCOMMENT_START
 icp_port 3130
-NOCOMMEND_END
+NOCOMMENT_END
 DOC_END
 
 NAME: htcp_port
