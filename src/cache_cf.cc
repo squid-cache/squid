@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.111 1996/10/15 18:06:22 wessels Exp $
+ * $Id: cache_cf.cc,v 1.112 1996/10/17 18:09:47 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1597,8 +1597,8 @@ static void
 configDoConfigure(void)
 {
     httpd_accel_mode = Config.Accel.prefix ? 1 : 0;
-    sprintf(ForwardedBy, "Forwarded: by http://%s:%d/",
-	getMyHostname(), Config.Port.http);
+    sprintf(ForwardedBy, "Forwarded: by http://%s:%d/ (Squid/%s)",
+	getMyHostname(), Config.Port.http, SQUID_VERSION);
     if (Config.errHtmlText == NULL)
 	Config.errHtmlText = xstrdup(null_string);
     storeConfigure();
