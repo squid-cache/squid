@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.223 1998/02/19 23:09:53 wessels Exp $
+ * $Id: main.cc,v 1.224 1998/02/20 21:02:42 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -167,7 +167,7 @@ mainParseOptions(int argc, char *argv[])
     extern char *optarg;
     int c;
 
-    while ((c = getopt(argc, argv, "CDFNRSVYXa:df:hk:m::su:vz?")) != -1) {
+    while ((c = getopt(argc, argv, "CDFNRSVYXa:d:f:hk:m::su:vz?")) != -1) {
 	switch (c) {
 	case 'C':
 	    opt_catch_signals = 0;
@@ -201,7 +201,7 @@ mainParseOptions(int argc, char *argv[])
 	    httpPortNumOverride = atoi(optarg);
 	    break;
 	case 'd':
-	    opt_debug_stderr = 1;
+	    opt_debug_stderr = atoi(optarg);
 	    break;
 	case 'f':
 	    xfree(ConfigFile);
