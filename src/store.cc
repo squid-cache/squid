@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.402 1998/04/08 19:28:51 wessels Exp $
+ * $Id: store.cc,v 1.403 1998/04/09 11:32:10 rousskov Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -542,7 +542,8 @@ storeComplete(StoreEntry * e)
     if (!storeEntryValidLength(e))
 	EBIT_SET(e->flag, ENTRY_BAD_LENGTH);
 #if SQUID_PEER_DIGEST
-    e->mem_obj->request->hier.store_complete_stop = current_time;
+    if (e->mem_obj->request)
+	e->mem_obj->request->hier.store_complete_stop = current_time;
 #endif
     InvokeHandlers(e);
     storeCheckSwapOut(e);
