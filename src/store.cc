@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.415 1998/05/15 15:16:35 wessels Exp $
+ * $Id: store.cc,v 1.416 1998/05/21 22:23:59 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -609,6 +609,7 @@ storeGetMemSpace(int size)
     static time_t last_check = 0;
     int pages_needed;
     dlink_node *m;
+    dlink_node *head;
     dlink_node *prev = NULL;
     if (squid_curtime == last_check)
 	return;
@@ -619,14 +620,20 @@ storeGetMemSpace(int size)
     if (store_rebuilding)
 	return;
     debug(20, 2) ("storeGetMemSpace: Starting, need %d pages\n", pages_needed);
+    head = inmem_list.head;
     for (m = inmem_list.tail; m; m = prev) {
+	if (m == head)
+	    break;
 	prev = m->prev;
 	e = m->data;
-	if (storeEntryLocked(e))
+	if (storeEntryLocked(e)) {
+            dlinkDelete(m, &inmem_list);
+            dlinkAdd(e, m, &inmem_list);
 	    continue;
+	}
 	released++;
 	storePurgeMem(e);
-	if (memInUse(MEM_STMEM_BUF) + pages_needed < store_pages_low)
+	if (memInUse(MEM_STMEM_BUF) + pages_needed < store_pages_high)
 	    break;
     }
     debug(20, 3) ("storeGetMemSpace stats:\n");
