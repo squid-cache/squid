@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.50 2001/05/30 17:40:26 wessels Exp $
+ * $Id: store_dir_diskd.cc,v 1.51 2001/06/28 05:18:25 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1711,11 +1711,12 @@ storeDiskdDirParseQ1(SwapDir * sd, const char *name, const char *value, int reco
     int old_magic1 = diskdinfo->magic1;
     diskdinfo->magic1 = atoi(value);
     if (reconfiguring && old_magic1 != diskdinfo->magic1)
-	debug(3, 1) ("cache_dir '%s' new Q1 value '%d'\n", diskdinfo->magic1);
+	debug(3, 1) ("cache_dir '%s' new Q1 value '%d'\n",
+	    sd->path, diskdinfo->magic1);
 }
 
 static void
-storeDiskdDirDumpQ1(StoreEntry * e, const char *option, SwapDir *sd)
+storeDiskdDirDumpQ1(StoreEntry * e, const char *option, SwapDir * sd)
 {
     diskdinfo_t *diskdinfo = sd->fsdata;
     storeAppendPrintf(e, " Q1=%d", diskdinfo->magic1);
@@ -1728,11 +1729,12 @@ storeDiskdDirParseQ2(SwapDir * sd, const char *name, const char *value, int reco
     int old_magic2 = diskdinfo->magic2;
     diskdinfo->magic2 = atoi(value);
     if (reconfiguring && old_magic2 != diskdinfo->magic2)
-	debug(3, 1) ("cache_dir '%s' new Q2 value '%d'\n", diskdinfo->magic2);
+	debug(3, 1) ("cache_dir '%s' new Q2 value '%d'\n",
+	    sd->path, diskdinfo->magic2);
 }
 
 static void
-storeDiskdDirDumpQ2(StoreEntry * e, const char *option, SwapDir *sd)
+storeDiskdDirDumpQ2(StoreEntry * e, const char *option, SwapDir * sd)
 {
     diskdinfo_t *diskdinfo = sd->fsdata;
     storeAppendPrintf(e, " Q2=%d", diskdinfo->magic2);
