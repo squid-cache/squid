@@ -1,6 +1,7 @@
 
 /*
- * $Id: tunnel.cc,v 1.93 1999/04/15 06:16:09 wessels Exp $
+ * $Id: tunnel.cc,v 1.94 1999/04/23 02:57:33 wessels Exp $
+ * $Id: tunnel.cc,v 1.94 1999/04/23 02:57:33 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels

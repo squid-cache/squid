@@ -1,6 +1,7 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.66 1999/04/15 06:16:07 wessels Exp $
+ * $Id: snmp_agent.cc,v 1.67 1999/04/23 02:57:31 wessels Exp $
+ * $Id: snmp_agent.cc,v 1.67 1999/04/23 02:57:31 wessels Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis

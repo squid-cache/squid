@@ -591,7 +591,7 @@ fi
 
 
 
-# From configure.in Revision: 1.169 
+# From configure.in Revision: 1.170 
 ac_aux_dir=
 for ac_dir in cfgaux $srcdir/cfgaux; do
   if test -f $ac_dir/install-sh; then
@@ -4774,12 +4774,12 @@ else
 fi
 rm -f conftest*
 echo "$ac_t""$ac_cv_func_statvfs" 1>&6
-fi
-if test $ac_cv_func_statvfs = "yes" ; then
+if test "$ac_cv_func_statvfs" = "yes" ; then
   cat >> confdefs.h <<\EOF
 #define HAVE_STATVFS 1
 EOF
 
+fi
 fi
 
 echo $ac_n "checking for _res.nsaddr_list""... $ac_c" 1>&6

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.281 1999/04/15 06:15:56 wessels Exp $
+ * $Id: ftp.cc,v 1.282 1999/04/23 02:57:23 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1019,6 +1019,7 @@ ftpStart(FwdState * fwd)
     ftpState->ctrl.fd = fd;
     ftpState->data.fd = -1;
     ftpState->size = -1;
+    ftpState->mdtm = -1;
     ftpState->flags.pasv_supported = 1;
     ftpState->flags.rest_supported = 1;
     ftpState->fwd = fwd;

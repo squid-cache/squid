@@ -1,6 +1,7 @@
 
 /*
- * $Id: mime.cc,v 1.85 1999/04/15 06:16:01 wessels Exp $
+ * $Id: mime.cc,v 1.86 1999/04/23 02:57:25 wessels Exp $
+ * $Id: mime.cc,v 1.86 1999/04/23 02:57:25 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
