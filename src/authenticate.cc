@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.41 2002/10/08 03:07:00 wessels Exp $
+ * $Id: authenticate.cc,v 1.42 2002/10/08 03:07:46 wessels Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -244,7 +244,7 @@ authenticateAuthUserRequestMessage(auth_user_request_t * auth_user_request)
     return NULL;
 }
 
-void
+static void
 authenticateAuthUserRequestSetIp(auth_user_request_t * auth_user_request, struct in_addr ipaddr)
 {
     auth_user_ip_t *ipdata, *tempnode;
