@@ -340,7 +340,7 @@ DOC_END
 
 NAME: hierarchy_stoplist
 TYPE: wordlist
-DEFAULT: none
+DEFAULT: cgi-bin ?
 LOC: Config.hierarchy_stoplist
 DOC_START
 	A list of words which, if found in a URL, cause the object to
@@ -356,7 +356,7 @@ DOC_END
 
 NAME: cache_stoplist
 TYPE: wordlist
-DEFAULT: none
+DEFAULT: cgi-bin ?
 LOC: Config.cache_stoplist
 DOC_START
 	A list of words which, if found in a URL, cause the object to
