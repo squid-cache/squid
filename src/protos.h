@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.254 1998/08/24 22:06:46 wessels Exp $
+ * $Id: protos.h,v 1.255 1998/08/25 19:10:10 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -354,6 +354,7 @@ extern int strListGetItem(const String * str, char del, const char **item, int *
 extern const char *getStringPrefix(const char *str, const char *end);
 extern int httpHeaderParseInt(const char *start, int *val);
 extern int httpHeaderParseSize(const char *start, size_t * sz);
+extern int httpHeaderReset(HttpHeader * hdr);
 #ifdef __STDC__
 extern void httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt,...);
 #else
@@ -602,6 +603,7 @@ extern void netdbBinaryExchange(StoreEntry *);
 extern EVH netdbExchangeStart;
 extern void netdbExchangeUpdatePeer(struct in_addr, peer *, double, double);
 extern peer *netdbClosestParent(request_t *);
+void netdbHostData(const char *host, int *samp, int *rtt, int *hops);
 
 extern void cachemgrStart(int fd, request_t * request, StoreEntry * entry);
 extern void cachemgrRegister(const char *, const char *, OBJH *, int, int);
