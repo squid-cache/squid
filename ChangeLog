@@ -11,7 +11,7 @@ TODO LIST before official squid-1.1:
 		  do refresh time calculation when object is requested.
 		- lose 'max_expire_age' business?
 
-Changes to squid-1.1.beta10 ():
+Changes to squid-1.1.beta10 (October 24, 1996):
 
 	- Fixed neighborsUdpAck() coredump bug and made debug messages
 	  more consistent.
@@ -27,6 +27,9 @@ Changes to squid-1.1.beta10 ():
 	- Removed extra "\r\n" for abort error messages.
 	- Numerous hash fixes from Mark Treacy.
 	- Renamed rfc850 to rfc1123.
+	- Changed storeRelease to not make recursive call for HEAD
+	  objects.
+	- Changed return value semantics of storeRelease().
 
 Changes to squid-1.1.beta9 (October 21, 1996):
 
