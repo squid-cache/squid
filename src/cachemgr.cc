@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.30 1996/09/24 20:16:39 wessels Exp $
+ * $Id: cachemgr.cc,v 1.31 1996/10/07 14:59:30 wessels Exp $
  *
  * DEBUG: Section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -209,6 +209,10 @@
 
 #define LF 10
 #define CR 13
+
+#ifndef INADDR_NONE
+#define INADDR_NONE -1
+#endif
 
 typedef enum {
     INFO,
