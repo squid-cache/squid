@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.270 1997/07/15 03:29:05 wessels Exp $
+ * $Id: store.cc,v 1.271 1997/07/15 04:03:11 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -196,6 +196,7 @@ struct storeRebuildState {
     int linecount;		/* # lines parsed from cache logfile */
     int clashcount;		/* # swapfile clashes avoided */
     int dupcount;		/* # duplicates purged */
+    int invalid;		/* # bad lines */
     int need_to_validate;
     time_t start;
     time_t stop;
@@ -1329,13 +1330,19 @@ storeDoRebuildFromDisk(void *data)
 	    &scan5,		/* refcount */
 	    &scan6,		/* flags */
 	    url);		/* url */
-	if (x < 1)
+	if (x < 1) {
+	    RB->invalid++;
 	    continue;
+	}
 	storeSwapFullPath(sfileno, swapfile);
-	if (x != 8)
+	if (x != 8) {
+	    RB->invalid++;
 	    continue;
-	if (sfileno < 0)
+	}
+	if (sfileno < 0) {
+	    RB->invalid++;
 	    continue;
+	}
 	sfileno = storeDirProperFileno(d->dirn, sfileno);
 	timestamp = (time_t) scan1;
 	expires = (time_t) scan2;
@@ -1543,6 +1550,7 @@ storeRebuiltFromDisk(struct storeRebuildState *data)
     r = stop - data->start;
     debug(20, 1) ("Finished rebuilding storage from disk image.\n");
     debug(20, 1) ("  %7d Lines read from previous logfile.\n", data->linecount);
+    debug(20, 1) ("  %7d Invalid lines.\n", data->invalid);
     debug(20, 1) ("  %7d Objects loaded.\n", data->objcount);
     debug(20, 1) ("  %7d Objects expired.\n", data->expcount);
     debug(20, 1) ("  %7d Duplicate URLs purged.\n", data->dupcount);
@@ -2435,12 +2443,14 @@ storeWriteCleanLogs(void)
 	assert(dirn < Config.cacheSwap.n_configured);
 	if (fd[dirn] < 0)
 	    continue;
-	sprintf(line, "%08x %08x %08x %08x %9d %s\n",
+	sprintf(line, "%08x %08x %08x %08x %9d %6d %08x %s\n",
 	    (int) e->swap_file_number,
 	    (int) e->timestamp,
 	    (int) e->expires,
 	    (int) e->lastmod,
 	    e->object_len,
+	    e->refcount,
+	    e->flag,
 	    e->url);
 	if (write(fd[dirn], line, strlen(line)) < 0) {
 	    debug(50, 0) ("storeWriteCleanLogs: %s: %s\n", new[dirn], xstrerror());

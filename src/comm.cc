@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.177 1997/07/15 02:30:17 wessels Exp $
+ * $Id: comm.cc,v 1.178 1997/07/15 04:03:09 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -580,7 +580,6 @@ comm_close(int fd)
 	return;
     }
     assert(F->type != FD_FILE);
-    memset(F, '\0', sizeof(fde));
     CommWriteStateCallbackAndFree(fd, COMM_ERROR);
     commCallCloseHandlers(fd);
     fd_close(fd);		/* update fdstat */
@@ -589,6 +588,7 @@ comm_close(int fd)
 #else
     close(fd);
 #endif
+    memset(F, '\0', sizeof(fde));
 }
 
 
