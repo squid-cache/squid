@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.131 1996/10/15 23:32:55 wessels Exp $
+ * $Id: store.cc,v 1.132 1996/10/17 11:14:50 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -788,7 +788,7 @@ storeCreateEntry(char *url,
     mem->data = new_MemObjectData();
     e->refcount = 0;
     e->lastref = squid_curtime;
-    e->timestamp = 0;		/* set in storeSwapOutHandle() */
+    e->timestamp = 0;		/* set in ttlSet() */
     e->ping_status = PING_NONE;
 
     /* allocate pending list */
@@ -1273,7 +1273,6 @@ storeSwapOutHandle(int fd, int flag, StoreEntry * e)
 	debug_trap("Someone is swapping out a bad entry");
 	return;
     }
-    e->timestamp = squid_curtime;
     storeSwapFullPath(e->swap_file_number, filename);
 
     if (flag < 0) {
@@ -1416,7 +1415,6 @@ storeDoRebuildFromDisk(struct storeRebuild_data *data)
     int scan4;
     struct stat sb;
     off_t size;
-    int delta;
     int sfileno = 0;
     int count;
     int x;
@@ -1480,6 +1478,7 @@ storeDoRebuildFromDisk(struct storeRebuild_data *data)
 		    safeunlink(swapfile, 1);
 		continue;
 	    }
+#ifdef DONT_DO_THIS
 	    /* timestamp might be a little bigger than sb.st_mtime */
 	    delta = (int) (timestamp - sb.st_mtime);
 	    if (delta > REBUILD_TIMESTAMP_DELTA_MAX || delta < 0) {
@@ -1487,13 +1486,16 @@ storeDoRebuildFromDisk(struct storeRebuild_data *data)
 		data->clashcount++;
 		continue;
 	    }
+#endif
 	    /* Wrong size? */
 	    if (sb.st_size != size) {
 		/* this log entry doesn't correspond to this file */
 		data->clashcount++;
 		continue;
 	    }
+#ifdef DONT_DO_THIS
 	    timestamp = sb.st_mtime;
+#endif
 	    debug(20, 9, "storeRebuildFromDisk: swap file exists: <URL:%s>: %s\n",
 		url, swapfile);
 	}

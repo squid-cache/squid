@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.88 1996/10/15 18:06:25 wessels Exp $
+ * $Id: stat.cc,v 1.89 1996/10/17 11:14:48 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -130,11 +130,9 @@ char *close_bracket = "}\n";
 extern char *diskFileName _PARAMS((int));
 
 /* LOCALS */
-static char *stat_describe _PARAMS((StoreEntry * entry));
-static char *mem_describe _PARAMS((StoreEntry * entry));
-static char *ttl_describe _PARAMS((StoreEntry * entry));
-static char *flags_describe _PARAMS((StoreEntry * entry));
-static char *elapsed_time _PARAMS((StoreEntry * entry, int since, char *TTL));
+static char *describeStatuses _PARAMS((StoreEntry *));
+static char *describeFlags _PARAMS((StoreEntry *));
+static char *describeTimestamps _PARAMS((StoreEntry *));
 static void dummyhandler _PARAMS((cacheinfo *, StoreEntry *));
 static void info_get _PARAMS((cacheinfo *, StoreEntry *));
 static void logReadEndHandler _PARAMS((int, int, log_read_data_t *));
@@ -309,44 +307,101 @@ cache_size_get(cacheinfo * obj)
     return size;
 }
 
+static char *
+describeStatuses(StoreEntry * entry)
+{
+    LOCAL_ARRAY(char, buf, 256);
+    sprintf(buf, "%-13s %-13s %-12s %-12s",
+	storeStatusStr[entry->store_status],
+	memStatusStr[entry->mem_status],
+	swapStatusStr[entry->swap_status],
+	pingStatusStr[entry->ping_status]);
+    return buf;
+}
+
+static char *
+describeFlags(StoreEntry * entry)
+{
+    LOCAL_ARRAY(char, buf, 256);
+    int flags = (int) entry->flag;
+    char *t;
+    buf[0] = '\0';
+    if (BIT_TEST(flags, IP_LOOKUP_PENDING))
+	strcat(buf, "IP,");
+    if (BIT_TEST(flags, DELETE_BEHIND))
+	strcat(buf, "DB,");
+    if (BIT_TEST(flags, CLIENT_ABORT_REQUEST))
+	strcat(buf, "CA,");
+    if (BIT_TEST(flags, DELAY_SENDING))
+	strcat(buf, "DS,");
+    if (BIT_TEST(flags, ABORT_MSG_PENDING))
+	strcat(buf, "AP,");
+    if (BIT_TEST(flags, RELEASE_REQUEST))
+	strcat(buf, "RL,");
+    if (BIT_TEST(flags, REFRESH_REQUEST))
+	strcat(buf, "RF,");
+    if (BIT_TEST(flags, ENTRY_CACHABLE))
+	strcat(buf, "EC,");
+    if (BIT_TEST(flags, KEY_CHANGE))
+	strcat(buf, "KC,");
+    if (BIT_TEST(flags, KEY_URL))
+	strcat(buf, "KU,");
+    if (BIT_TEST(flags, ENTRY_HTML))
+	strcat(buf, "HT,");
+    if (BIT_TEST(flags, ENTRY_DISPATCHED))
+	strcat(buf, "ED,");
+    if (BIT_TEST(flags, KEY_PRIVATE))
+	strcat(buf, "KP,");
+    if (BIT_TEST(flags, HIERARCHICAL))
+	strcat(buf, "HI,");
+    if (BIT_TEST(flags, ENTRY_NEGCACHED))
+	strcat(buf, "NG,");
+    if (BIT_TEST(flags, READ_DEFERRED))
+	strcat(buf, "RD,");
+    if ((t = strrchr(buf, ',')))
+	*t = '\0';
+    return buf;
+}
+
+static char *
+describeTimestamps(StoreEntry * entry)
+{
+    LOCAL_ARRAY(char, buf, 256);
+    sprintf(buf, "LV:%-9d LU:%-9d LM:%-9d EX:%-9d",
+	(int) entry->timestamp,
+	(int) entry->lastref,
+	(int) entry->lastmod,
+	(int) entry->expires);
+    return buf;
+}
+
 /* process objects list */
 static void
 stat_objects_get(cacheinfo * obj, StoreEntry * sentry, int vm_or_not)
 {
-    LOCAL_ARRAY(char, space, 40);
-    LOCAL_ARRAY(char, space2, 40);
-    int npend = 0;
     StoreEntry *entry = NULL;
+    MemObject *mem;
     int N = 0;
-    int obj_size;
 
     storeAppendPrintf(sentry, open_bracket);
 
-    for (entry = storeGetFirst();
-	entry != NULL;
-	entry = storeGetNext()) {
-	if (vm_or_not && (entry->mem_status == NOT_IN_MEMORY) &&
-	    (entry->swap_status == SWAP_OK))
+    for (entry = storeGetFirst(); entry != NULL; entry = storeGetNext()) {
+	mem = entry->mem_obj;
+	if (vm_or_not && mem == NULL)
 	    continue;
 	if ((++N & 0xFF) == 0) {
 	    getCurrentTime();
 	    debug(18, 3, "stat_objects_get:  Processed %d objects...\n", N);
 	}
-	obj_size = entry->object_len;
-	npend = storePendingNClients(entry);
-	if (entry->mem_obj)
-	    obj_size = entry->mem_obj->e_current_len;
-	storeAppendPrintf(sentry, "{ %s %d %s %s %s %s %d %d %s %s }\n",
-	    entry->url,
-	    obj_size,
-	    elapsed_time(entry, (int) entry->timestamp, space),
-	    flags_describe(entry),
-	    elapsed_time(entry, (int) entry->lastref, space2),
-	    ttl_describe(entry),
-	    npend,
+	storeAppendPrintf(sentry, "{%s %dL %-25s %s %3d %2d %8d %s}\n",
+	    describeStatuses(entry),
+	    (int) entry->lock_count,
+	    describeFlags(entry),
+	    describeTimestamps(entry),
 	    (int) entry->refcount,
-	    mem_describe(entry),
-	    stat_describe(entry));
+	    storePendingNClients(entry),
+	    mem ? mem->e_current_len : entry->object_len,
+	    entry->url);
     }
     storeAppendPrintf(sentry, close_bracket);
 }
@@ -1286,111 +1341,6 @@ stat_init(cacheinfo ** object, char *logfilename)
 	obj->proto_stat_data[i].kb.now = 0;
     }
     *object = obj;
-}
-
-static char *
-stat_describe(StoreEntry * entry)
-{
-    LOCAL_ARRAY(char, state, 256);
-
-    state[0] = '\0';
-    sprintf(state, "%s/%s",
-	storeStatusStr[entry->store_status],
-	pingStatusStr[entry->ping_status]);
-    return (state);
-}
-
-static char *
-mem_describe(StoreEntry * entry)
-{
-    LOCAL_ARRAY(char, where, 100);
-
-    where[0] = '\0';
-    sprintf(where, "D%d/%s/%s",
-	entry->swap_file_number,
-	swapStatusStr[entry->swap_status],
-	memStatusStr[entry->mem_status]);
-    return (where);
-}
-
-
-static char *
-ttl_describe(StoreEntry * entry)
-{
-    int hh, mm, ss;
-    LOCAL_ARRAY(char, TTL, 60);
-    int ttl;
-
-    TTL[0] = '\0';
-    strcpy(TTL, "UNKNOWN");	/* sometimes the TTL isn't set below */
-    ttl = entry->expires - squid_curtime;
-    if (ttl < 0)
-	strcpy(TTL, "EXPIRED");
-    else {
-
-	hh = ttl / 3600;
-	ttl -= hh * 3600;
-	mm = ttl / 60;
-	ttl -= mm * 60;
-	ss = ttl;
-
-	sprintf(TTL, "% 6d:%02d:%02d", hh, mm, ss);
-    }
-    return (TTL);
-}
-
-static char *
-elapsed_time(StoreEntry * entry, int since, char *TTL)
-{
-    int hh, mm, ss, ttl;
-
-    TTL[0] = '\0';
-    strcpy(TTL, "UNKNOWN");	/* sometimes TTL doesn't get set */
-    ttl = squid_curtime - since;
-    if (since == 0) {
-	strcpy(TTL, "NEVER");
-    } else if (ttl < 0) {
-	strcpy(TTL, "EXPIRED");
-    } else {
-	hh = ttl / 3600;
-	ttl -= hh * 3600;
-	mm = ttl / 60;
-	ttl -= mm * 60;
-	ss = ttl;
-	sprintf(TTL, "% 6d:%02d:%02d", hh, mm, ss);
-    }
-    return (TTL);
-}
-
-
-static char *
-flags_describe(StoreEntry * entry)
-{
-    LOCAL_ARRAY(char, FLAGS, 32);
-    char LOCK_CNT[32];
-
-    strcpy(FLAGS, "F:");
-    if (BIT_TEST(entry->flag, KEY_CHANGE))
-	strncat(FLAGS, "K", sizeof(FLAGS) - 1);
-    if (BIT_TEST(entry->flag, ENTRY_CACHABLE))
-	strncat(FLAGS, "C", sizeof(FLAGS) - 1);
-    if (BIT_TEST(entry->flag, REFRESH_REQUEST))
-	strncat(FLAGS, "R", sizeof(FLAGS) - 1);
-    if (BIT_TEST(entry->flag, RELEASE_REQUEST))
-	strncat(FLAGS, "Z", sizeof(FLAGS) - 1);
-    if (BIT_TEST(entry->flag, ABORT_MSG_PENDING))
-	strncat(FLAGS, "A", sizeof(FLAGS) - 1);
-    if (BIT_TEST(entry->flag, DELAY_SENDING))
-	strncat(FLAGS, "D", sizeof(FLAGS) - 1);
-    if (BIT_TEST(entry->flag, IP_LOOKUP_PENDING))
-	strncat(FLAGS, "P", sizeof(FLAGS) - 1);
-    if (entry->lock_count)
-	strncat(FLAGS, "L", sizeof(FLAGS) - 1);
-    if (entry->lock_count) {
-	sprintf(LOCK_CNT, "%d", entry->lock_count);
-	strncat(FLAGS, LOCK_CNT, sizeof(FLAGS) - 1);
-    }
-    return (FLAGS);
 }
 
 void

@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.84 1996/10/15 05:45:36 wessels Exp $
+ * $Id: http.cc,v 1.85 1996/10/17 11:14:45 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -311,8 +311,11 @@ httpProcessReplyHeader(HttpStateData * httpState, char *buf, int size)
 	    entry->mem_obj->reply->code = 555;
 	    return;
 	}
-	if ((t = mime_headers_end(httpState->reply_hdr)) == NULL)
-	    return;		/* headers not complete */
+	t = httpState->reply_hdr + hdr_len;
+	/* headers can be incomplete only if object still arriving */
+	if (entry->store_status == STORE_PENDING)
+	    if ((t = mime_headers_end(httpState->reply_hdr)) == NULL)
+		return;		/* headers not complete */
 	*t = '\0';
 	reply = entry->mem_obj->reply;
 	reply->hdr_sz = t - httpState->reply_hdr;
@@ -484,7 +487,10 @@ httpReadReply(int fd, void *data)
 	comm_close(fd);
     } else if (len == 0) {
 	/* Connection closed; retrieval done. */
-	storeComplete(entry);
+	if (httpState->reply_hdr_state < 2)
+	    httpProcessReplyHeader(httpState, buf, len);
+	storeAppend(entry, buf, len);	/* invoke handlers! */
+	storeComplete(entry);	/* deallocates mem_obj->request */
 	comm_close(fd);
     } else if ((entry->mem_obj->e_current_len + len) > Config.Http.maxObjSize &&
 	!(entry->flag & DELETE_BEHIND)) {
@@ -505,7 +511,7 @@ httpReadReply(int fd, void *data)
 	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
 	comm_close(fd);
     } else {
-	if (httpState->reply_hdr_state < 2 && len > 0)
+	if (httpState->reply_hdr_state < 2)
 	    httpProcessReplyHeader(httpState, buf, len);
 	storeAppend(entry, buf, len);
 	commSetSelect(fd,
