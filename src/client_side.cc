@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.671 2004/08/30 03:28:58 robertc Exp $
+ * $Id: client_side.cc,v 1.672 2004/09/26 21:40:29 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1896,6 +1896,14 @@ parseHttpRequest(ConnStateData::Pointer & conn, method_t * method_p,
 
     if (http_version)
         http_version = inbuf + (http_version - conn->in.buf);
+
+    /* Enforce max_request_size */
+
+    if (req_sz >= Config.maxRequestHeaderSize) {
+        debug(33, 5) ("parseHttpRequest: Too large request\n");
+        xfree(inbuf);
+        return parseHttpRequestAbort(conn, "error:request-too-large");
+    }
 
     /* Barf on NULL characters in the headers */
     if (strlen(inbuf) != req_sz) {
