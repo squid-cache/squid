@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.257 1998/05/20 21:47:44 wessels Exp $
+ * $Id: comm.cc,v 1.258 1998/05/20 22:07:10 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -671,18 +671,17 @@ comm_close(int fd)
     assert(fd >= 0);
     assert(fd < Squid_MaxFD);
     F = &fd_table[fd];
-    if (EBIT_TEST(F->flags, FD_CLOSING))
+    if (F->flags.closing)
 	return;
     if (shutting_down && (!F->open || F->type == FD_FILE))
 	return;
     assert(F->open);
     assert(F->type != FD_FILE);
 #ifdef USE_ASYNC_IO
-    if (EBIT_TEST(F->flags, FD_NOLINGER))
-	if (EBIT_TEST(F->flags, FD_NONBLOCKING))
-	    doaioclose = 0;
+    if (F->flags.nolinger && F->flags.nonblocking)
+	doaioclose = 0;
 #endif
-    EBIT_SET(F->flags, FD_CLOSING);
+    F->flags.closing = 1;
     CommWriteStateCallbackAndFree(fd, COMM_ERR_CLOSING);
     commCallCloseHandlers(fd);
     if (F->uses)		/* assume persistent connect count */
@@ -1237,7 +1236,7 @@ commSetNoLinger(int fd)
     L.l_linger = 0;
     if (setsockopt(fd, SOL_SOCKET, SO_LINGER, (char *) &L, sizeof(L)) < 0)
 	debug(50, 0) ("commSetNoLinger: FD %d: %s\n", fd, xstrerror());
-    EBIT_SET(fd_table[fd].flags, FD_NOLINGER);
+    fd_table[fd].flags.nolinger = 1;
 }
 
 static void
@@ -1269,7 +1268,7 @@ commSetNonBlocking(int fd)
 	debug(50, 0) ("commSetNonBlocking: FD %d: %s\n", fd, xstrerror());
 	return COMM_ERROR;
     }
-    EBIT_SET(fd_table[fd].flags, FD_NONBLOCKING);
+    fd_table[fd].flags.nonblocking = 1;
     return 0;
 }
 
