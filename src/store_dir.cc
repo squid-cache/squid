@@ -1,7 +1,7 @@
 
 /*
- * $Id: store_dir.cc,v 1.88 1999/05/03 22:41:13 wessels Exp $
- * $Id: store_dir.cc,v 1.88 1999/05/03 22:41:13 wessels Exp $
+ * $Id: store_dir.cc,v 1.89 1999/05/03 23:00:00 wessels Exp $
+ * $Id: store_dir.cc,v 1.89 1999/05/03 23:00:00 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -36,21 +36,16 @@
 
 #include "squid.h"
 
+void
+storeDirInit(void)
+{
+    storeUfsDirInit();
+}
+
 char *
 storeSwapFullPath(sfileno f, char *buf)
 {
     return storeUfsFullPath(f, buf);
-}
-
-/*
- * This function is called by storeInit().  If this returns < 0,
- * then Squid exits, complains about swap directories not
- * existing, and instructs the admin to run 'squid -z'
- */
-int
-storeVerifyCacheDirs(void)
-{
-    return storeUfsVerifyCacheDirs();
 }
 
 void
@@ -347,7 +342,7 @@ storeDirDiskFull(int fn)
 void
 storeDirOpenSwapLogs(void)
 {
-    return storeUfsDirCloseSwapLogs();
+    return storeUfsDirOpenSwapLogs();
 }
 
 void
