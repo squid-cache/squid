@@ -164,7 +164,7 @@ storeCheckSwapOut(StoreEntry * e)
     assert(mem->swapout.fd > -1);
     if (swapout_size > STORE_SWAP_BUF)
 	swapout_size = STORE_SWAP_BUF;
-    swap_buf = memAllocate(MEM_DISK_BUF, 1);
+    swap_buf = memAllocate(MEM_DISK_BUF);
     swap_buf_len = stmemCopy(mem->data,
 	mem->swapout.queue_offset,
 	swap_buf,

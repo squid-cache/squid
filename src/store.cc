@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.387 1998/02/26 18:00:55 wessels Exp $
+ * $Id: store.cc,v 1.388 1998/03/03 00:31:14 rousskov Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -175,7 +175,7 @@ static int store_maintain_buckets;
 static MemObject *
 new_MemObject(const char *url, const char *log_url)
 {
-    MemObject *mem = memAllocate(MEM_MEMOBJECT, 1);
+    MemObject *mem = memAllocate(MEM_MEMOBJECT);
     mem->reply = httpReplyCreate();
     mem->url = xstrdup(url);
     mem->log_url = xstrdup(log_url);
@@ -190,7 +190,7 @@ StoreEntry *
 new_StoreEntry(int mem_obj_flag, const char *url, const char *log_url)
 {
     StoreEntry *e = NULL;
-    e = memAllocate(MEM_STOREENTRY, 1);
+    e = memAllocate(MEM_STOREENTRY);
     if (mem_obj_flag)
 	e->mem_obj = new_MemObject(url, log_url);
     debug(20, 3) ("new_StoreEntry: returning %p\n", e);
@@ -428,7 +428,7 @@ storeCreateEntry(const char *url, const char *log_url, int flags, method_t metho
     storeSetMemStatus(e, NOT_IN_MEMORY);
     e->swap_status = SWAPOUT_NONE;
     e->swap_file_number = -1;
-    mem->data = memAllocate(MEM_MEM_HDR, 1);
+    mem->data = memAllocate(MEM_MEM_HDR);
     e->refcount = 0;
     e->lastref = squid_curtime;
     e->timestamp = 0;		/* set in storeTimestampsSet() */

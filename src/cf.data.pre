@@ -1622,9 +1622,42 @@ LOC: Config.onoff.mem_pools
 DOC_START
 	If set, Squid will keep pools of allocated (but unused) memory
 	available for future use.  If memory is a premium on your
-	system, disable this.
+	system and you believe your malloc library outperforms Squid 
+        routines, disable this.
 
 memory_pools on
+DOC_END
+
+NAME: memory_pools_limit
+COMMENT: (bytes)
+TYPE: b_size_t
+DEFAULT: none
+LOC: Config.onoff.mem_pools
+DOC_START
+	Used only with memory_pools on.
+
+	If set to a non-zero value, Squid will allocate at most the specified
+	limit for memory pools. All requests for memory that exceed this limit
+	will be handled by your malloc library. Squid does not allocate all
+	pools at once, but does it on-demand. Thus, it is safe to set
+	memory_pools_limit to a reasonably high value even if your
+	configuration will use less memory. High value of memory_pools_limit
+	allows Squid to start allocation with larger memory chunks which is
+	more efficient.
+
+	If not set or set to zero, Squid will allocate memory for pools by
+	small chunks.  There will be no limit on the amount of memory it can
+	allocate.  No-limit mode is less efficient because Squid has more
+	memory chunks to maintain. However, this mode is useful when it is the
+	first time you run your configuration with mem_pools "on" and do not
+	want to guess the limit value.  Squid logs the actual amount of memory
+	used in cache log. Next time you run Squid, set memory_pools_limit
+	close to the value reported in the log.
+
+	To disable memory allocation optimization, do not set
+	memory_pools_limit to 0. Set memory_pools to "off" instead.
+
+memory_pools_limit 50 MB
 DOC_END
 
 NAME: forwarded_for

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.254 1998/02/26 18:00:37 wessels Exp $
+ * $Id: cache_cf.cc,v 1.255 1998/03/03 00:31:01 rousskov Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -192,6 +192,8 @@ configDoConfigure(void)
 {
     LOCAL_ARRAY(char, buf, BUFSIZ);
     memset(&Config2, '\0', sizeof(SquidConfig2));
+    /* init memory as early as possible */
+    memConfigure();
     /* Sanity checks */
     if (Config.cacheSwap.swapDirs == NULL)
 	fatal("No cache_dir's specified in config file");

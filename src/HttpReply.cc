@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.6 1998/02/26 18:00:31 wessels Exp $
+ * $Id: HttpReply.cc,v 1.7 1998/03/03 00:30:59 rousskov Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -48,7 +48,7 @@ static int httpReplyIsolateHeaders(const char **parse_start, const char **blk_st
 HttpReply *
 httpReplyCreate()
 {
-    HttpReply *rep = memAllocate(MEM_HTTPREPLY, 1);
+    HttpReply *rep = memAllocate(MEM_HTTPREPLY);
     tmp_debug(here) ("creating rep: %p\n", rep);
     httpReplyInit(rep);
     return rep;
@@ -110,7 +110,7 @@ httpReplyParse(HttpReply * rep, const char *buf)
      * in store. Currently we have to xstrncpy the buffer becuase store.c may
      * feed a non 0-terminated buffer to us @?@.
      */
-    char *headers = memAllocate(MEM_4K_BUF, 1);
+    char *headers = memAllocate(MEM_4K_BUF);
     int success;
     /* reset current state, because we are not used in incremental fashion */
     httpReplyReset(rep);

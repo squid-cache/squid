@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.58 1998/02/10 22:17:55 wessels Exp $
+ * $Id: stmem.cc,v 1.59 1998/03/03 00:31:13 rousskov Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Harvest Derived
@@ -188,7 +188,7 @@ stmemAppend(mem_hdr * mem, const char *data, int len)
 	p = xcalloc(1, sizeof(mem_node));
 	p->next = NULL;
 	p->len = len_to_copy;
-	p->data = memAllocate(MEM_STMEM_BUF, 1);
+	p->data = memAllocate(MEM_STMEM_BUF);
 	store_mem_size += SM_PAGE_SIZE;
 	xmemcpy(p->data, data, len_to_copy);
 	if (!mem->head) {

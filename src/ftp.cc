@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.198 1998/02/25 16:57:19 wessels Exp $
+ * $Id: ftp.cc,v 1.199 1998/03/03 00:31:05 rousskov Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -704,7 +704,7 @@ ftpParseListing(FtpStateData * ftpState, int len)
 	debug(9, 3) ("ftpParseListing: didn't find end for %s\n", storeUrl(e));
 	return;
     }
-    line = memAllocate(MEM_4K_BUF, 1);
+    line = memAllocate(MEM_4K_BUF);
     end++;
     /* XXX there is an ABR bug here.   We need to make sure buf is
      * NULL terminated */
@@ -1024,7 +1024,7 @@ ftpConnectDone(int fd, int status, void *data)
 	comm_close(ftpState->ctrl.fd);
     } else {
 	ftpState->state = BEGIN;
-	ftpState->ctrl.buf = memAllocate(MEM_4K_BUF, 1);
+	ftpState->ctrl.buf = memAllocate(MEM_4K_BUF);
 	ftpState->ctrl.freefunc = memFree4K;
 	ftpState->ctrl.size = 4096;
 	ftpState->ctrl.offset = 0;

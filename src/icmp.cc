@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.55 1998/02/03 04:21:16 wessels Exp $
+ * $Id: icmp.cc,v 1.56 1998/03/03 00:31:08 rousskov Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -203,7 +203,7 @@ icmpSourcePing(struct in_addr to, const icp_common_t * header, const char *url)
     debug(37, 3) ("icmpSourcePing: '%s'\n", url);
     if ((ulen = strlen(url)) > MAX_URL)
 	return;
-    payload = memAllocate(MEM_8K_BUF, 1);
+    payload = memAllocate(MEM_8K_BUF);
     len = sizeof(icp_common_t);
     xmemcpy(payload, header, len);
     strcpy(payload + len, url);

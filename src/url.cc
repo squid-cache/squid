@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.81 1998/02/26 18:00:59 wessels Exp $
+ * $Id: url.cc,v 1.82 1998/03/03 00:31:17 rousskov Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -267,7 +267,7 @@ urlParse(method_t method, char *url)
 	return NULL;
     }
 #endif
-    request = memAllocate(MEM_REQUEST_T, 1);
+    request = memAllocate(MEM_REQUEST_T);
     request->method = method;
     request->protocol = protocol;
     xstrncpy(request->host, host, SQUIDHOSTNAMELEN);
@@ -284,7 +284,7 @@ urnParse(method_t method, char *urn)
 {
     request_t *request = NULL;
     debug(50, 5) ("urnParse: %s\n", urn);
-    request = memAllocate(MEM_REQUEST_T, 1);
+    request = memAllocate(MEM_REQUEST_T);
     request->method = method;
     request->protocol = PROTO_URN;
     xstrncpy(request->urlpath, &urn[4], MAX_URL);

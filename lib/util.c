@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.52 1998/02/28 16:17:28 kostas Exp $
+ * $Id: util.c,v 1.53 1998/03/03 00:30:57 rousskov Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -729,4 +729,18 @@ xcountws(const char *str)
 	}
     }
     return count;
+}
+
+/* somewhat safer calculation of %s */
+double
+xpercent(double part, double whole)
+{
+    return xdiv(100 * part, whole);
+}
+
+/* somewhat safer division */
+double
+xdiv(double nom, double denom)
+{
+    return (denom != 0.0) ? nom / denom : -1.0;
 }

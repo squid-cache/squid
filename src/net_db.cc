@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.71 1998/02/26 22:16:29 kostas Exp $
+ * $Id: net_db.cc,v 1.72 1998/03/03 00:31:10 rousskov Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -82,7 +82,7 @@ netdbHashDelete(const char *key)
 static void
 netdbHostInsert(netdbEntry * n, const char *hostname)
 {
-    net_db_name *x = memAllocate(MEM_NET_DB_NAME, 1);
+    net_db_name *x = memAllocate(MEM_NET_DB_NAME);
     x->name = xstrdup(hostname);
     x->next = n->hosts;
     n->hosts = x;
@@ -197,7 +197,7 @@ netdbAdd(struct in_addr addr)
     if (memInUse(MEM_NETDBENTRY) > Config.Netdb.high)
 	netdbPurgeLRU();
     if ((n = netdbLookupAddr(addr)) == NULL) {
-	n = memAllocate(MEM_NETDBENTRY, 1);
+	n = memAllocate(MEM_NETDBENTRY);
 	netdbHashInsert(n, addr);
     }
     return n;
@@ -393,7 +393,7 @@ static void
 netdbReloadState(void)
 {
     LOCAL_ARRAY(char, path, SQUID_MAXPATHLEN);
-    char *buf = memAllocate(MEM_4K_BUF, 1);
+    char *buf = memAllocate(MEM_4K_BUF);
     char *t;
     FILE *fp;
     netdbEntry *n;
@@ -436,7 +436,7 @@ netdbReloadState(void)
 	if ((t = strtok(NULL, w_space)) == NULL)
 	    continue;
 	N.last_use_time = (time_t) atoi(t);
-	n = memAllocate(MEM_NETDBENTRY, 1);
+	n = memAllocate(MEM_NETDBENTRY);
 	xmemcpy(n, &N, sizeof(netdbEntry));
 	netdbHashInsert(n, addr);
 	while ((t = strtok(NULL, w_space)) != NULL) {
@@ -636,6 +636,9 @@ netdbDump(StoreEntry * sentry)
 		p->rtt,
 		p->hops);
 	}
+	/* put a new line if no peers */
+	if (!n->n_peers)
+	    storeAppendPrintf(sentry, "\n");
     }
     xfree(list);
 #else

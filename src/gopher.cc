@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.119 1998/02/24 21:17:04 wessels Exp $
+ * $Id: gopher.cc,v 1.120 1998/03/03 00:31:06 rousskov Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -680,7 +680,7 @@ gopherReadReply(int fd, void *data)
     }
     /* check if we want to defer reading */
     clen = entry->mem_obj->inmem_hi;
-    buf = memAllocate(MEM_4K_BUF, 1);
+    buf = memAllocate(MEM_4K_BUF);
     errno = 0;
     /* leave one space for \0 in gopherToHTML */
     len = read(fd, buf, TEMP_BUF_SIZE - 1);
@@ -809,7 +809,7 @@ gopherSendRequest(int fd, void *data)
 {
     GopherStateData *gopherState = data;
     LOCAL_ARRAY(char, query, MAX_URL);
-    char *buf = memAllocate(MEM_4K_BUF, 1);
+    char *buf = memAllocate(MEM_4K_BUF);
     char *t;
     if (gopherState->type_id == GOPHER_CSO) {
 	sscanf(gopherState->request, "?%s", query);
@@ -931,7 +931,7 @@ CreateGopherStateData(void)
 {
     GopherStateData *gd = xcalloc(1, sizeof(GopherStateData));
     cbdataAdd(gd, MEM_NONE);
-    gd->buf = memAllocate(MEM_4K_BUF, 1);
+    gd->buf = memAllocate(MEM_4K_BUF);
     return (gd);
 }
 
