@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.20 1998/08/27 06:29:30 wessels Exp $
+ * $Id: htcp.cc,v 1.21 1998/09/01 23:32:44 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -407,20 +407,20 @@ htcpSend(const char *buf, int len, struct sockaddr_in *to)
 static void
 htcpFreeSpecifier(htcpSpecifier * s)
 {
-    debug(1,1)("%s:%d\n", __FILE__, __LINE__); safe_free(s->method);
-    debug(1,1)("%s:%d\n", __FILE__, __LINE__); safe_free(s->uri);
-    debug(1,1)("%s:%d\n", __FILE__, __LINE__); safe_free(s->version);
-    debug(1,1)("%s:%d\n", __FILE__, __LINE__); safe_free(s->req_hdrs);
-    debug(1,1)("%s:%d\n", __FILE__, __LINE__); xfree(s);
+    safe_free(s->method);
+    safe_free(s->uri);
+    safe_free(s->version);
+    safe_free(s->req_hdrs);
+    xfree(s);
 }
 
 static void
 htcpFreeDetail(htcpDetail * d)
 {
-    debug(1,1)("%s:%d\n", __FILE__, __LINE__); safe_free(d->resp_hdrs);
-    debug(1,1)("%s:%d\n", __FILE__, __LINE__); safe_free(d->entity_hdrs);
-    debug(1,1)("%s:%d\n", __FILE__, __LINE__); safe_free(d->cache_hdrs);
-    debug(1,1)("%s:%d\n", __FILE__, __LINE__); xfree(d);
+    safe_free(d->resp_hdrs);
+    safe_free(d->entity_hdrs);
+    safe_free(d->cache_hdrs);
+    xfree(d);
 }
 
 static int
@@ -591,7 +591,7 @@ htcpTstReply(htcpDataHeader *dhdr, StoreEntry * e, htcpSpecifier * spec, struct 
 	return;
     }
     htcpSend(pkt, (int) pktlen, from);
-    debug(1,1)("%s:%d\n", __FILE__, __LINE__); xfree(pkt);
+    xfree(pkt);
 }
 
 static void
@@ -875,7 +875,7 @@ htcpQuery(StoreEntry * e, request_t * req, peer * p)
     save_key = queried_keys[stuff.msg_id % N_QUERIED_KEYS];
     storeKeyCopy(save_key, e->key);
     debug(31,1)("htcpQuery: key (%p) %s\n", save_key, storeKeyText(save_key));
-    debug(1,1)("%s:%d\n", __FILE__, __LINE__); xfree(pkt);
+    xfree(pkt);
 }
 
 /*  
