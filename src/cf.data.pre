@@ -307,9 +307,9 @@ DOC_START
 	traffic out on the Internet and may irritate paranoid network
 	administrators.
 
-	Note that source_ping is incompatible with inside_firewall.
-	For hosts beyond the firewall, source_ping packets will never
-	be sent.
+	Note that source_ping is incompatible with 'never_direct'.  For
+	requests matching the 'never_direct' rules, source_ping packets
+	will never be sent.
 
 	By default, source_ping is off.
 
