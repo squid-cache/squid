@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.81 2005/03/06 21:08:13 serassio Exp $
+ * $Id: client_side_reply.cc,v 1.82 2005/03/09 20:43:38 serassio Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -661,7 +661,11 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
         return;
     }
 
-    if (storeCheckNegativeHit(e)) {
+    if (storeCheckNegativeHit(e)
+#if HTTP_VIOLATIONS
+            && !r->flags.nocache_hack
+#endif
+       ) {
         http->logType = LOG_TCP_NEGATIVE_HIT;
         sendMoreData(result);
     } else if (!Config.onoff.offline && refreshCheckHTTP(e, r) && !http->flags.internal) {
