@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.15 2000/11/30 20:07:33 wessels Exp $
+ * $Id: store_dir_ufs.cc,v 1.16 2000/11/30 20:08:51 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -969,6 +969,11 @@ storeUfsDirWriteCleanStart(SwapDir * sd)
     struct stat sb;
     sd->log.clean.write = NULL;
     sd->log.clean.state = NULL;
+    state->fd = file_open(state->new, O_WRONLY | O_CREAT | O_TRUNC);
+    if (state->fd < 0) {
+	xfree(state);
+	return -1;
+    }
     state->cur = xstrdup(storeUfsDirSwapLogFile(sd, NULL));
     state->new = xstrdup(storeUfsDirSwapLogFile(sd, ".clean"));
     state->cln = xstrdup(storeUfsDirSwapLogFile(sd, ".last-clean"));
@@ -977,9 +982,6 @@ storeUfsDirWriteCleanStart(SwapDir * sd)
     state->walker = sd->repl->WalkInit(sd->repl);
     unlink(state->new);
     unlink(state->cln);
-    state->fd = file_open(state->new, O_WRONLY | O_CREAT | O_TRUNC);
-    if (state->fd < 0)
-	return -1;		/* state not free'd - possible leak */
     debug(20, 3) ("storeDirWriteCleanLogs: opened %s, FD %d\n",
 	state->new, state->fd);
 #if HAVE_FCHMOD
