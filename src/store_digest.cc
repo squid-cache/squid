@@ -1,5 +1,5 @@
 /*
- * $Id: store_digest.cc,v 1.36 1999/12/30 17:36:55 wessels Exp $
+ * $Id: store_digest.cc,v 1.37 2000/01/14 07:24:48 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -231,7 +231,7 @@ storeDigestAddable(const StoreEntry * e)
      * update.
      */
 #if !HEAP_REPLACEMENT
-    if ((squid_curtime + StoreDigestRebuildPeriod) - e->lastref > storeExpiredReferenceAge())
+    if ((squid_curtime + Config.digest.rebuild_period) - e->lastref > storeExpiredReferenceAge())
 	return 0;
 #endif
     return 1;
