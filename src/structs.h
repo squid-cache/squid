@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.337 2000/05/31 05:02:12 wessels Exp $
+ * $Id: structs.h,v 1.338 2000/05/31 07:01:42 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -312,7 +312,9 @@ struct _SquidConfig {
 #if USE_ICMP
 	char *pinger;
 #endif
+#if USE_UNLINKD
 	char *unlinkd;
+#endif
     } Program;
 #if USE_DNSSERVERS
     int dnsChildren;
