@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.55 1998/09/24 20:29:13 rousskov Exp $
+ * $Id: peer_digest.cc,v 1.56 1998/09/29 16:33:48 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -64,9 +64,9 @@ static int peerDigestUseful(const peer * peer);
 #define StoreDigestCBlockSize sizeof(StoreDigestCBlock)
 
 /* min interval for requesting digests from the same peer */
-static const time_t PeerDigestRequestMinGap = 5 * 60;   /* seconds */
+static const time_t PeerDigestRequestMinGap = 5 * 60;	/* seconds */
 /* min interval for requesting digests at start */
-static const time_t GlobalDigestRequestMinGap = 1 * 60;	/* seconds */
+static const time_t GlobalDigestRequestMinGap = 1 * 60;		/* seconds */
 
 /* local vars */
 
@@ -78,7 +78,7 @@ peerDigestInit(void *data)
 {
     peer *p = data;
     assert(p);
-    if (!cbdataValid(p)) { /* peer disappeared */
+    if (!cbdataValid(p)) {	/* peer disappeared */
 	cbdataUnlock(p);
 	return;
     }
@@ -487,13 +487,12 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
     if (pcb_valid)
 	debug(72, 6) ("%s: %s offset: %d size: %d.\n",
 	    step_name, fetch->peer->host, fetch->offset, size);
-    
+
 
     /* test exiting conditions */
     if (!fcb_valid)
 	reason = "fetch aborted?";
-    else
-    if (!pcb_valid)
+    else if (!pcb_valid)
 	reason = "peer disappeared";
     else if (size < 0)
 	reason = "swap failure";

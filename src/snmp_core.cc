@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_core.cc,v 1.11 1998/09/23 21:26:06 glenn Exp $
+ * $Id: snmp_core.cc,v 1.12 1998/09/29 16:33:51 wessels Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Kostas Anagnostakis
@@ -847,4 +847,3 @@ gen_getMax()
 #endif
     return &maddr;
 }
-

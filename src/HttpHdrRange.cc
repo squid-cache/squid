@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.14 1998/09/24 20:16:24 rousskov Exp $
+ * $Id: HttpHdrRange.cc,v 1.15 1998/09/29 16:33:39 wessels Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -345,7 +345,7 @@ httpHdrRangeCanonize(HttpHdrRange * range, size_t clen)
 	spec = NULL;
 	i++;			/* progress */
     }
-    if (spec) /* last "merge" may not be pushed yet */
+    if (spec)			/* last "merge" may not be pushed yet */
 	stackPush(&range->specs, spec);
     debug(64, 3) ("httpHdrRangeCanonize: had %d specs, merged %d specs\n",
 	goods.count, goods.count - range->specs.count);
@@ -398,12 +398,12 @@ httpHdrRangeWillBeComplex(const HttpHdrRange * range)
     /* check that all rangers are in "strong" order, */
     /* as far as we can tell without the content length */
     while ((spec = httpHdrRangeGetSpec(range, &pos))) {
-	if (!known_spec(spec->offset)) /* ignore unknowns */
+	if (!known_spec(spec->offset))	/* ignore unknowns */
 	    continue;
 	if (spec->offset < offset)
 	    return 1;
 	offset = spec->offset;
-	if (known_spec(spec->length))  /* avoid  unknowns */
+	if (known_spec(spec->length))	/* avoid  unknowns */
 	    offset += spec->length;
     }
     return 0;

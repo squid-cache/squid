@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.402 1998/09/24 20:41:19 rousskov Exp $
+ * $Id: client_side.cc,v 1.403 1998/09/29 16:33:43 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1920,29 +1920,29 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	    url_sz = strlen(url) + 32 + Config.appendDomainLen;
 	    http->uri = xcalloc(url_sz, 1);
 #if IPF_TRANSPARENT
-            natLookup.nl_inport = http->conn->me.sin_port;
-            natLookup.nl_outport = http->conn->peer.sin_port;
-            natLookup.nl_inip = http->conn->me.sin_addr;
-            natLookup.nl_outip = http->conn->peer.sin_addr;
-            natLookup.nl_flags = IPN_TCP;
-            if (natfd < 0)
-               natfd = open(IPL_NAT, O_RDONLY,0 );
-            if (natfd < 0) {
-               debug(50,1)("parseHttpRequest: NAT open failed: %s\n",
-			xstrerror());
-               return NULL;
+	    natLookup.nl_inport = http->conn->me.sin_port;
+	    natLookup.nl_outport = http->conn->peer.sin_port;
+	    natLookup.nl_inip = http->conn->me.sin_addr;
+	    natLookup.nl_outip = http->conn->peer.sin_addr;
+	    natLookup.nl_flags = IPN_TCP;
+	    if (natfd < 0)
+		natfd = open(IPL_NAT, O_RDONLY, 0);
+	    if (natfd < 0) {
+		debug(50, 1) ("parseHttpRequest: NAT open failed: %s\n",
+		    xstrerror());
+		return NULL;
 	    }
-            if (ioctl(natfd, SIOCGNATL, &natLookup) < 0) {
-               debug(50,1)("parseHttpRequest: NAT lookup failed: %s\n",
-			xstrerror());
-               close(natfd);
-               natfd = -1;
-               return NULL;
-            }
-            snprintf(http->uri, url_sz, "http://%s:%d%s",
-               inet_ntoa(natLookup.nl_realip), 
-               (int)Config.Accel.port,
-               url);
+	    if (ioctl(natfd, SIOCGNATL, &natLookup) < 0) {
+		debug(50, 1) ("parseHttpRequest: NAT lookup failed: %s\n",
+		    xstrerror());
+		close(natfd);
+		natfd = -1;
+		return NULL;
+	    }
+	    snprintf(http->uri, url_sz, "http://%s:%d%s",
+		inet_ntoa(natLookup.nl_realip),
+		(int) Config.Accel.port,
+		url);
 #else
 	    snprintf(http->uri, url_sz, "http://%s:%d%s",
 		inet_ntoa(http->conn->me.sin_addr),

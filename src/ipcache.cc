@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.202 1998/09/23 21:24:37 glenn Exp $
+ * $Id: ipcache.cc,v 1.203 1998/09/29 16:33:47 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -960,8 +960,8 @@ ipcache_restart(void)
 
 #ifdef SQUID_SNMP
 /*
-	The function to return the ip cache statistics to via SNMP
-*/
+ * The function to return the ip cache statistics to via SNMP
+ */
 
 variable_list *
 snmp_netIpFn(variable_list * Var, snint * ErrP)
@@ -977,43 +977,43 @@ snmp_netIpFn(variable_list * Var, snint * ErrP)
     Answer->val.integer = xmalloc(Answer->val_len);
     Answer->type = SMI_COUNTER32;
 
-    switch (Var->name[LEN_SQ_NET+1]) {
+    switch (Var->name[LEN_SQ_NET + 1]) {
     case IP_ENT:
 	*(Answer->val.integer) = memInUse(MEM_IPCACHE_ENTRY);
 	Answer->type = SMI_GAUGE32;
-        break;
+	break;
     case IP_REQ:
 	*(Answer->val.integer) = IpcacheStats.requests;
-        break;
+	break;
     case IP_HITS:
 	*(Answer->val.integer) = IpcacheStats.hits;
-        break;
+	break;
     case IP_PENDHIT:
 	*(Answer->val.integer) = IpcacheStats.pending_hits;
 	Answer->type = SMI_GAUGE32;
-        break;
+	break;
     case IP_NEGHIT:
 	*(Answer->val.integer) = IpcacheStats.negative_hits;
-        break;
+	break;
     case IP_MISS:
 	*(Answer->val.integer) = IpcacheStats.misses;
-        break;
+	break;
     case IP_GHBN:
 	*(Answer->val.integer) = IpcacheStats.ghbn_calls;
-        break;
+	break;
     case IP_LOC:
 	*(Answer->val.integer) = IpcacheStats.release_locked;
-        break;
+	break;
     case IP_LENG:
 	*(Answer->val.integer) = queue_length;
 	Answer->type = SMI_GAUGE32;
-        break;
+	break;
     default:
-        *ErrP = SNMP_ERR_NOSUCHNAME;
-        snmp_var_free(Answer);
-        return (NULL);
+	*ErrP = SNMP_ERR_NOSUCHNAME;
+	snmp_var_free(Answer);
+	return (NULL);
     }
     return Answer;
 }
 
-#endif /*SQUID_SNMP*/
+#endif /*SQUID_SNMP */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.34 1998/09/20 01:14:25 wessels Exp $
+ * $Id: store_swapout.cc,v 1.35 1998/09/29 16:33:54 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -382,7 +382,7 @@ storeSwapOutAble(const StoreEntry * e)
      * If there are DISK clients, we must write to disk
      * even if its not cachable
      */
-    for (sc = e->mem_obj->clients; sc; sc=sc->next)
+    for (sc = e->mem_obj->clients; sc; sc = sc->next)
 	if (sc->type == STORE_DISK_CLIENT)
 	    return 1;
     return EBIT_TEST(e->flags, ENTRY_CACHABLE);
