@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.478 2003/05/18 00:34:50 robertc Exp $
+ * $Id: protos.h,v 1.479 2003/06/19 13:47:25 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -932,8 +932,8 @@ SQUIDCEXTERN void errorStateFree(ErrorState * err);
 SQUIDCEXTERN err_type errorReservePageId(const char *page_name);
 SQUIDCEXTERN ErrorState *errorCon(err_type type, http_status);
 
-SQUIDCEXTERN void pconnPush(int, const char *host, u_short port);
-SQUIDCEXTERN int pconnPop(const char *host, u_short port);
+SQUIDCEXTERN void pconnPush(int, const char *host, u_short port, const char *domain);
+SQUIDCEXTERN int pconnPop(const char *host, u_short port, const char *domain);
 SQUIDCEXTERN void pconnInit(void);
 
 /* tools.c */

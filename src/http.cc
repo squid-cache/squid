@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.414 2003/05/24 11:32:34 robertc Exp $
+ * $Id: http.cc,v 1.415 2003/06/19 13:47:25 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1014,7 +1014,16 @@ HttpStateData::processReplyData(const char *buf, size_t len)
 
             comm_remove_close_handler(fd, httpStateFree, this);
             fwdUnregister(fd, fwd);
-            pconnPush(fd, request->host, request->port);
+
+            if (_peer) {
+                if (_peer->options.originserver)
+                    pconnPush(fd, _peer->name, orig_request->port, orig_request->host);
+                else
+                    pconnPush(fd, _peer->name, _peer->http_port, NULL);
+            } else {
+                pconnPush(fd, request->host, request->port, NULL);
+            }
+
             fwdComplete(fwd);
             fd = -1;
             httpStateFree(fd, this);
