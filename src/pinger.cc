@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.4 1996/09/24 20:17:31 wessels Exp $
+ * $Id: pinger.cc,v 1.5 1996/09/24 20:37:32 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -34,7 +34,7 @@
 
 /* Junk so we can link with debug.o */
 int opt_syslog_enable = 0;
-int unbuffered_logs = 1;
+volatile int unbuffered_logs = 1;
 char w_space[] = " \t\n\r";
 char appname[] = "pinger";
 struct timeval current_time;
@@ -81,9 +81,9 @@ typedef struct {
     char payload[MAX_PAYLOAD];
 } icmpEchoData;
 
-static int icmp_sock = -1;
-static int icmp_ident = -1;
-static int icmp_pkts_sent = 0;
+int icmp_sock = -1;
+int icmp_ident = -1;
+int icmp_pkts_sent = 0;
 
 static char *icmpPktStr[] =
 {
