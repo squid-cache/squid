@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.119 2001/01/04 07:32:08 wessels Exp $
+ * $Id: store_dir.cc,v 1.120 2001/01/04 19:11:49 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -468,16 +468,17 @@ storeDirGetBlkSize(const char *path, int *blksize)
 #if HAVE_STATVFS
     struct statvfs sfs;
     if (statvfs(path, &sfs)) {
-	debug(0, 0) ("%s: %s\n", path, xstrerror());
+	debug(50, 1) ("%s: %s\n", path, xstrerror());
 	return 1;
     }
+    *blksize = (int) sfs.f_frsize;
 #else
     struct statfs sfs;
     if (statfs(path, &sfs)) {
-	debug(0, 0) ("%s: %s\n", path, xstrerror());
+	debug(50, 1) ("%s: %s\n", path, xstrerror());
 	return 1;
     }
-#endif
     *blksize = (int) sfs.f_bsize;
+#endif
     return 0;
 }
