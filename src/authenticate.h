@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.h,v 1.5 2003/02/05 10:36:48 robertc Exp $
+ * $Id: authenticate.h,v 1.6 2003/02/13 10:28:01 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -83,6 +83,7 @@ struct AuthUser {
     dlink_list requests;
 public:
     static void cacheInit ();
+    static void CachedACLsReset();
     
     void absorb(auth_user_t *from);
     AuthUser (const char *);
