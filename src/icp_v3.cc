@@ -39,6 +39,14 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 	    if (clientdbDeniedPercent(from.sin_addr) < 95) {
 		reply = icpCreateMessage(ICP_DENIED, 0, url, header.reqnum, 0);
 		icpUdpSend(fd, &from, reply, LOG_UDP_DENIED, icp_request->protocol);
+	    } else {
+		/*
+		 * count this DENIED query in the clientdb, even though
+		 * we're not sending an ICP reply...
+		 */
+		clientdbUpdate(from.sin_addr,
+		    LOG_UDP_DENIED,
+		    Config.Port.icp);
 	    }
 	    break;
 	}
