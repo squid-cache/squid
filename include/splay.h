@@ -1,5 +1,5 @@
 /*
- * $Id: splay.h,v 1.22 2003/08/04 22:14:37 robertc Exp $
+ * $Id: splay.h,v 1.23 2003/09/02 21:45:48 robertc Exp $
  */
 
 #ifndef SQUID_SPLAY_H
@@ -44,6 +44,7 @@ public:
     typedef void SPLAYWALKEE(Value const & nodedata, void *state);
     static void DefaultFree (Value &aValue) {delete aValue;}
 
+    SplayNode<V> ();
     Value data;
     mutable SplayNode<V> *left;
     mutable SplayNode<V> *right;
@@ -105,6 +106,8 @@ SQUIDCEXTERN void splay_destroy(splayNode *, splayNode::SPLAYFREE *);
 SQUIDCEXTERN void splay_walk(splayNode *, splayNode::SPLAYWALKEE *, void *callerState);
 
 /* inline methods */
+template<class V>
+SplayNode<V>::SplayNode () : data(NULL), left(NULL), right (NULL) {}
 template<class V>
 void
 SplayNode<V>::walk(SPLAYWALKEE * walkee, void *state)
