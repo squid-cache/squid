@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.25 1998/05/11 18:44:44 rousskov Exp $
+ * $Id: peer_digest.cc,v 1.26 1998/05/12 20:29:24 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -41,7 +41,7 @@ static time_t peerDigestNextDisDelay(const peer * p);
 static time_t peerDigestExpiresDelay(const peer * p, const StoreEntry * e);
 static void peerDigestDisable(peer * p);
 static void peerDigestDelay(peer * p, int disable, time_t delay);
-static void peerDigestValidate(peer * p);
+static EVH peerDigestValidate;
 static void peerDigestRequest(peer * p);
 static void peerDigestFetchReply(void *data, char *buf, ssize_t size);
 static void peerDigestRequest(peer * p);
@@ -139,8 +139,7 @@ peerDigestDelay(peer * p, int disable, time_t delay)
 	    disable ? "disabling" : "delaying",
 	    p->host ? p->host : "<null>",
 	    delay, mkrfc1123(squid_curtime + delay));
-	eventAdd("peerDigestValidate", (EVH *) peerDigestValidate,
-	    p, delay);
+	eventAdd("peerDigestValidate", peerDigestValidate, p, delay);
     } else {
 	assert(disable);
 	debug(72, 2) ("peerDigestDisable: disabling peer %s for good\n",
@@ -152,8 +151,9 @@ peerDigestDelay(peer * p, int disable, time_t delay)
 
 /* request new digest if our copy is too old; schedule next validation */
 static void
-peerDigestValidate(peer * p)
+peerDigestValidate(void * data)
 {
+    peer *p = data;
     StoreEntry *e = NULL;
     int do_request;
     time_t req_time = squid_curtime;

@@ -77,8 +77,10 @@ storeSwapInFileOpened(void *data, int fd, int errcode)
     assert(e->mem_status == NOT_IN_MEMORY);
     assert(e->swap_status == SWAPOUT_WRITING || e->swap_status == SWAPOUT_DONE);
     if (fd < 0) {
-	debug(20, 0) ("storeSwapInFileOpened: Failed '%s' for '%s'\n",
+	debug(20, 0) ("storeSwapInFileOpened: Failed\n"
+	    "\tFile:\t'%s'\n\t URL:\t'%s'\n",
 	    ctrlp->path, storeUrl(e));
+	storeEntryDump(e, 0);
 	/* Invoke a store abort that should free the memory object */
 	(ctrlp->callback) (-1, ctrlp->callback_data);
 	xfree(ctrlp->path);

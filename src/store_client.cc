@@ -10,6 +10,7 @@ static DRCB storeClientReadHeader;
 static SIH storeClientFileOpened;
 static void storeClientCopy2(StoreEntry * e, store_client * sc);
 static void storeClientFileRead(store_client * sc);
+static EVH storeClientCopyEvent;
 
 /* check if there is any client waiting for this object at all */
 /* return 1 if there is at least one client */
@@ -67,11 +68,7 @@ static void
 storeClientCopyEvent(void *data)
 {
     store_client *sc = data;
-    int valid = cbdataValid(sc);
     debug(20, 3) ("storeClientCopyEvent: Running\n");
-    cbdataUnlock(sc);
-    if (!valid)
-	return;
     sc->flags.copy_event_pending = 0;
     if (!sc->callback)
 	return;
@@ -142,7 +139,6 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	return;
     if (sc->flags.store_copying) {
 	sc->flags.copy_event_pending = 1;
-	cbdataLock(sc);
 	debug(20, 3) ("storeClientCopy: Queueing storeClientCopyEvent()\n");
 	eventAdd("storeClientCopyEvent", storeClientCopyEvent, sc, 0);
 	return;
