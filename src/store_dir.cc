@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.130 2001/03/28 16:33:56 wessels Exp $
+ * $Id: store_dir.cc,v 1.131 2001/07/04 00:12:05 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -288,6 +288,7 @@ storeDirStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "Current Capacity       : %d%% used, %d%% free\n",
 	percent((int) store_swap_size, (int) Config.Swap.maxSize),
 	percent((int) (Config.Swap.maxSize - store_swap_size), (int) Config.Swap.maxSize));
+    /* FIXME Here we should output memory statistics */
 
     /* Now go through each swapdir, calling its statfs routine */
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
@@ -298,6 +299,11 @@ storeDirStats(StoreEntry * sentry)
 	storeAppendPrintf(sentry, "FS Block Size %d Bytes\n",
 	    SD->fs.blksize);
 	SD->statfs(SD, sentry);
+	if (SD->repl) {
+	    storeAppendPrintf(sentry, "Removal policy: %s\n", SD->repl->_type);
+	    if (SD->repl->Stats)
+		SD->repl->Stats(SD->repl, sentry);
+	}
     }
 }
 

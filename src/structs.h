@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.392 2001/06/29 14:48:06 hno Exp $
+ * $Id: structs.h,v 1.393 2001/07/04 00:12:05 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1406,6 +1406,7 @@ struct _RemovalPolicy {
     void (*Dereferenced) (RemovalPolicy * policy, const StoreEntry * entry, RemovalPolicyNode * node);
     RemovalPolicyWalker *(*WalkInit) (RemovalPolicy * policy);
     RemovalPurgeWalker *(*PurgeInit) (RemovalPolicy * policy, int max_scan);
+    void (*Stats) (RemovalPolicy * policy, StoreEntry * entry);
 };
 
 struct _RemovalPolicyWalker {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_lru.cc,v 1.8 2001/03/03 10:39:39 hno Exp $
+ * $Id: store_repl_lru.cc,v 1.9 2001/07/04 00:12:06 hno Exp $
  *
  * DEBUG: section ?     LRU Removal policy
  * AUTHOR: Henrik Nordstrom
@@ -243,6 +243,23 @@ lru_purgeInit(RemovalPolicy * policy, int max_scan)
 }
 
 static void
+lru_stats(RemovalPolicy * policy, StoreEntry * sentry)
+{
+    LruPolicyData *lru = policy->_data;
+    LruNode *lru_node = (LruNode *)lru->list.head;
+
+again:
+    if (lru_node) {
+	StoreEntry * entry = (StoreEntry *) lru_node->node.data;
+	if (storeEntryLocked(entry)) {
+	    lru_node = (LruNode *)lru_node->node.next;
+	    goto again;
+	}
+	storeAppendPrintf(sentry, "LRU reference age: %.2f days\n", (double) (squid_curtime - entry->lastref) / (double) (24 * 60 * 60));
+    }
+}
+
+static void
 lru_free(RemovalPolicy * policy)
 {
     LruPolicyData *lru = policy->_data;
@@ -281,6 +298,7 @@ createRemovalPolicy_lru(wordlist * args)
     policy->Dereferenced = lru_referenced;
     policy->WalkInit = lru_walkInit;
     policy->PurgeInit = lru_purgeInit;
+    policy->Stats = lru_stats;
     /* Increase policy usage count */
     nr_lru_policies += 0;
     return policy;

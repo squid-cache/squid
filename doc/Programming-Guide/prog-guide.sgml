@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Duane Wessels, Squid Developers
-<date>$Id: prog-guide.sgml,v 1.44 2001/06/18 16:34:15 wessels Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.45 2001/07/04 00:12:05 hno Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -1768,18 +1768,26 @@ coupling between the storage layer and the replacement policy.
 	Finishes a walk of the maintained objects, destroys
 	walker and restores the policy to it's normal state.
 
-<sect2>Future removal policy implementation
+<sect3>policy.Stats()
 
-<sect3>Source layout
+<P>
+<verb>
+	purgewalker-&gt;Stats(RemovalPurgeWalker *purgewalker, StoreEntry *entry)
+</verb>
+
+	<P>
+	Appends statistics about the policy to the given entry.
+
+<sect2>Source layout
 
 <P>
 	Policy implementations resides in src/repl/&lt;name&gt;/, and a make in
 	such a directory must result in a object archive src/repl/&lt;name&gt;.a
 	containing all the objects implementing the policy.
 
-<sect3>Internal structures
+<sect2>Internal structures
 
-<sect4>RemovalPolicy
+<sect3>RemovalPolicy
 
 <P>
 <verb>
@@ -1800,7 +1808,7 @@ coupling between the storage layer and the replacement policy.
 <P>
 	The _data member is for storing policy specific information.
 
-<sect4>RemovalPolicyWalker
+<sect3>RemovalPolicyWalker
 
 <P>
 <verb>
@@ -1813,7 +1821,7 @@ coupling between the storage layer and the replacement policy.
 	};
 </verb>
 
-<sect4>RemovalPolicyNode
+<sect3>RemovalPolicyNode
 
 <P>
 <verb>
@@ -1828,7 +1836,7 @@ coupling between the storage layer and the replacement policy.
 	maybe later provide more space here to allow simple policies
 	to store all their data "inline" to preserve some memory.
 
-<sect3>Policy registration
+<sect2>Policy registration
 
 <P>
 	Policies are automatically registered in the Squid binary from the
@@ -1836,7 +1844,7 @@ coupling between the storage layer and the replacement policy.
 	might get extended to support loadable modules. All registered
 	policies are available to object stores which wishes to use them.
 
-<sect3>Policy instance creation
+<sect2>Policy instance creation
 
 <P>
 	Each policy must implement a "create/new" function "<tt/RemovalPolicy *
@@ -1850,7 +1858,7 @@ coupling between the storage layer and the replacement policy.
 	It should also populate the _data member with a pointer to policy
 	specific data.
 
-<sect3>Walker
+<sect2>Walker
 
 <P>
 	When a walker is created the policy populates it with at least the API
