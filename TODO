@@ -1,3 +1,5 @@
++ s/sprintf/snprintf/g
+
 
 + Write the text for all the error message files
 + we don't properly handle the HTTP/1.1 'Connection' header
@@ -5,7 +7,6 @@
 + make USE_PROXY_AUTH standard
 + Incorporate Pelletier's latest retry patch for 1.1
 + FTP PUT
-+ s/sprintf/snprintf/g
 + be more persistent in forwarding requests; return fewer error pages
 + AS # routing
 + Send full HTTP requests in ICP messages

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.121 1997/10/13 22:09:24 kostas Exp $
+ * $Id: tools.cc,v 1.122 1997/10/16 19:22:41 kostas Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -249,6 +249,7 @@ PrintRusage(void)
 	rusage.ru_majflt);
 #endif /* HAVE_GETRUSAGE */
 }
+
 
 void
 death(int sig)
@@ -658,9 +659,10 @@ setMaxFD(void)
 	if (rl.rlim_cur > rl.rlim_max)
 	    Squid_MaxFD = rl.rlim_cur = rl.rlim_max;
 	if (setrlimit(RLIMIT_NOFILE, &rl) < 0) {
-          /* NOTE: couldn't figure size of tmp_error_buf, thus didn't
-                change to snprintf()  ... yet */
-	    sprintf(tmp_error_buf, "setrlimit: RLIMIT_NOFILE: %s", xstrerror());
+          /* NOTE: couldn't figure size of tmp_error_buf, thus 
+                 assuming ERROR_BUF_SZ */
+	    snprintf(tmp_error_buf, ERROR_BUF_SZ, 
+			"setrlimit: RLIMIT_NOFILE: %s", xstrerror());
 	    fatal_dump(tmp_error_buf);
 	}
     }
@@ -672,9 +674,10 @@ setMaxFD(void)
 	if (rl.rlim_cur > rl.rlim_max)
 	    Squid_MaxFD = rl.rlim_cur = rl.rlim_max;
 	if (setrlimit(RLIMIT_OFILE, &rl) < 0) {
-          /* NOTE: couldn't figure size of tmp_error_buf, thus didn't
-                change to snprintf()  ... yet */
-	    sprintf(tmp_error_buf, "setrlimit: RLIMIT_OFILE: %s", xstrerror());
+          /* NOTE: couldn't figure size of tmp_error_buf, thus
+                assuming ERROR_BUF_SZ  */
+	    snprintf(tmp_error_buf, ERROR_BUF_SZ, 
+			"setrlimit: RLIMIT_OFILE: %s", xstrerror());
 	    fatal_dump(tmp_error_buf);
 	}
     }
@@ -689,9 +692,10 @@ setMaxFD(void)
     } else if (rl.rlim_max > rl.rlim_cur) {
 	rl.rlim_cur = rl.rlim_max;	/* set it to the max */
 	if (setrlimit(RLIMIT_DATA, &rl) < 0) {
-          /* NOTE: couldn't figure size of tmp_error_buf, thus didn't
-                change to snprintf()  ... yet */
-	    sprintf(tmp_error_buf, "setrlimit: RLIMIT_DATA: %s", xstrerror());
+          /* NOTE: couldn't figure size of tmp_error_buf, thus d
+                assuming ERROR_BUF_SZ  */
+	    snprintf(tmp_error_buf, ERROR_BUF_SZ, 
+			"setrlimit: RLIMIT_DATA: %s", xstrerror());
 	    fatal_dump(tmp_error_buf);
 	}
     }
@@ -702,9 +706,10 @@ setMaxFD(void)
     } else if (rl.rlim_max > rl.rlim_cur) {
 	rl.rlim_cur = rl.rlim_max;	/* set it to the max */
 	if (setrlimit(RLIMIT_VMEM, &rl) < 0) {
-          /* NOTE: couldn't figure size of tmp_error_buf, thus didn't
-                change to snprintf()  ... yet */
-	    sprintf(tmp_error_buf, "setrlimit: RLIMIT_VMEM: %s", xstrerror());
+          /* NOTE: couldn't figure size of tmp_error_buf, thus 
+                assuming ERROR_BUF_SZ  */
+	    snprintf(tmp_error_buf, ERROR_BUF_SZ, 
+			"setrlimit: RLIMIT_VMEM: %s", xstrerror());
 	    fatal_dump(tmp_error_buf);
 	}
     }

@@ -23,6 +23,7 @@ The dnsserver returned:
 <P>
 This means that:
 <PRE>
-    @LONG_DESCRIPTION@
+ The cache was not able to resolve the hostname presented in the URL. 
+ Check if the address is correct. 
 </PRE>
 

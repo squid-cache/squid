@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.129 1997/07/16 20:32:16 wessels Exp $
+ * $Id: squid.h,v 1.130 1997/10/16 19:22:40 kostas Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -211,6 +211,7 @@
 #ifndef BUFSIZ
 #define BUFSIZ  4096		/* make reasonable guess */
 #endif
+
 
 #ifndef SA_RESTART
 #define SA_RESTART 0

@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.94 1997/10/14 16:56:04 wessels Exp $
+ * $Id: gopher.cc,v 1.95 1997/10/16 19:22:38 kostas Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -650,8 +650,17 @@ gopherTimeout(int fd, void *data)
 {
     GopherStateData *gopherState = data;
     StoreEntry *entry = gopherState->entry;
+    ErrorState *err;
+
     debug(10, 4) ("gopherTimeout: FD %d: '%s'\n", fd, entry->url);
-    assert(!ERR_READ_TIMEOUT);
+	/* was assert */
+    if (entry->object_len == 0)  {
+	err=xcalloc(1,sizeof(ErrorState));
+	err->type=ERR_READ_TIMEOUT;
+	err->http_status=HTTP_GATEWAY_TIMEOUT;
+	err->url=gopherState->request;
+	errorAppendEntry(entry, err);
+    }
     storeAbort(entry, 0);
     comm_close(fd);
 }
@@ -721,12 +730,26 @@ gopherReadReply(int fd, void *data)
 		gopherReadReply,
 		data, 0);
 	} else {
-	    assert(!ERR_READ_ERROR);
-	    storeAbort(entry, 0);
-	    comm_close(fd);
+			/* was  assert */
+		ErrorState *err;
+		err=xcalloc(1,sizeof(ErrorState));
+		err->type=ERR_READ_ERROR;
+		err->errno=errno;
+		err->http_status=HTTP_INTERNAL_SERVER_ERROR;
+		err->url = entry->url;
+		errorAppendEntry(entry, err);
+	    	storeAbort(entry, 0);
+	    	comm_close(fd);
 	}
     } else if (len == 0 && entry->mem_obj->e_current_len == 0) {
-	assert(!ERR_ZERO_SIZE_OBJECT);
+		/* was assert */	
+        ErrorState *err;
+        err=xcalloc(1,sizeof(ErrorState));
+        err->type=ERR_ZERO_SIZE_OBJECT;
+	err->errno = errno;
+        err->http_status=HTTP_SERVICE_UNAVAILABLE;
+	err->url=gopherState->request;
+        errorAppendEntry(entry, err);
 	storeAbort(entry, 0);
 	comm_close(fd);
     } else if (len == 0) {
@@ -764,7 +787,17 @@ gopherSendComplete(int fd, char *buf, int size, int errflag, void *data)
     debug(10, 5) ("gopherSendComplete: FD %d size: %d errflag: %d\n",
 	fd, size, errflag);
     if (errflag) {
-	assert(!ERR_CONNECT_FAIL);
+		/* was assert */
+        ErrorState *err;
+        err=xcalloc(1,sizeof(ErrorState));
+        err->type=ERR_CONNECT_FAIL;
+	err->errno=errno;
+	err->host = xstrdup(gopherState->host);
+	err->port = gopherState->port;
+        err->http_status=HTTP_SERVICE_UNAVAILABLE;
+        err->url=entry->url;
+        errorAppendEntry(entry, err);
+
 	storeAbort(entry, 0);
 	comm_close(fd);
 	if (buf)
@@ -839,6 +872,7 @@ gopherStart(StoreEntry * entry)
 {
     char *url = entry->url;
     GopherStateData *gopherState = CreateGopherStateData();
+    ErrorState *err;
     int fd;
     storeLockObject(entry);
     gopherState->entry = entry;
@@ -846,7 +880,14 @@ gopherStart(StoreEntry * entry)
     /* Parse url. */
     if (gopher_url_parser(url, gopherState->host, &gopherState->port,
 	    &gopherState->type_id, gopherState->request)) {
-	assert(!ERR_INVALID_URL);
+		/* was assert */
+                ErrorState *err;
+                err=xcalloc(1,sizeof(ErrorState));
+                err->type=ERR_INVALID_URL;
+                err->http_status=HTTP_BAD_REQUEST;
+                err->url=url;
+                errorAppendEntry(entry, err);
+
 	storeAbort(entry, 0);
 	gopherStateFree(-1, gopherState);
 	return;
@@ -860,13 +901,39 @@ gopherStart(StoreEntry * entry)
 	url);
     if (fd == COMM_ERROR) {
 	debug(10, 4) ("gopherStart: Failed because we're out of sockets.\n");
-	assert(!ERR_SOCKET_FAILURE);
+		/* was assert */
+                err=xcalloc(1,sizeof(ErrorState));
+                err->type=ERR_SOCKET_FAILURE;
+		err->errno=errno;
+                err->http_status=HTTP_INTERNAL_SERVER_ERROR;
+		if (entry && entry->url)
+                	err->url=entry->url;
+                errorAppendEntry(entry, err);
+
 	storeAbort(entry, 0);
 	gopherStateFree(-1, gopherState);
 	return;
     }
     comm_add_close_handler(fd, gopherStateFree, gopherState);
     storeRegisterAbort(entry, gopherAbort, gopherState);
+
+    /* check if IP is already in cache. It must be. 
+     * It should be done before this route is called. 
+     * Otherwise, we cannot check return code for connect. */
+    if (!ipcache_gethostbyname(gopherState->host, 0)) {
+	debug(10, 4) ("gopherStart: Called without IP entry in ipcache. OR lookup failed.\n");
+	/* was assert */
+        err=xcalloc(1,sizeof(ErrorState));
+        err->type=ERR_DNS_FAIL;
+	err->http_status = HTTP_SERVICE_UNAVAILABLE;
+        err->dnsserver_msg = xstrdup(dns_error_message);
+        err->url=entry->url;
+        errorAppendEntry(entry, err);
+	storeAbort(entry, 0);
+	comm_close(fd);
+	return;
+    }
+
     if (((gopherState->type_id == GOPHER_INDEX) || (gopherState->type_id == GOPHER_CSO))
 	&& (strchr(gopherState->request, '?') == NULL)) {
 	/* Index URL without query word */
@@ -899,13 +966,31 @@ static void
 gopherConnectDone(int fd, int status, void *data)
 {
     GopherStateData *gopherState = data;
+    StoreEntry *entry = gopherState->entry;
+
+	ErrorState *err;
     if (status == COMM_ERR_DNS) {
 	debug(10, 4) ("gopherConnectDone: Unknown host: %s\n", gopherState->host);
-	assert(!ERR_DNS_FAIL);
+	/* was assert */
+        err=xcalloc(1,sizeof(ErrorState));
+        err->type=ERR_DNS_FAIL;
+	err->dnsserver_msg = xstrdup(dns_error_message);
+        err->http_status=HTTP_SERVICE_UNAVAILABLE;
+        err->url=entry->url;
+        errorAppendEntry(entry, err);
 	storeAbort(gopherState->entry, 0);
 	comm_close(fd);
     } else if (status != COMM_OK) {
-	assert(!ERR_CONNECT_FAIL);
+	/* was assert */
+        ErrorState *err;
+        err=xcalloc(1,sizeof(ErrorState));
+        err->type=ERR_CONNECT_FAIL;
+        err->http_status=HTTP_SERVICE_UNAVAILABLE;
+	err->errno= errno;
+	err->host = xstrdup(gopherState->host);
+	err->port = gopherState->port;
+        err->url=entry->url;
+        errorAppendEntry(entry, err);
 	storeAbort(gopherState->entry, 0);
 	comm_close(fd);
     } else {
