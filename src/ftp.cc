@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.212 1998/03/27 22:44:20 wessels Exp $
+ * $Id: ftp.cc,v 1.213 1998/03/28 20:03:14 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1014,7 +1014,7 @@ ftpConnectDone(int fd, int status, void *data)
 	ftpState->data.size = SQUID_TCP_SO_RCVBUF;
 	ftpState->data.freefunc = xfree;
 	commSetSelect(fd, COMM_SELECT_READ, ftpReadControlReply, ftpState, 0);
-        commSetTimeout(fd, Config.Timeout.read, ftpTimeout, ftpState);
+	commSetTimeout(fd, Config.Timeout.read, ftpTimeout, ftpState);
     }
 }
 
@@ -1511,7 +1511,7 @@ ftpSendPasv(FtpStateData * ftpState)
 	0,
 	COMM_NONBLOCKING,
 	storeUrl(ftpState->entry));
-    debug(9,3)("ftpSendPasv: Unconnected data socket created on FD %d\n", fd);
+    debug(9, 3) ("ftpSendPasv: Unconnected data socket created on FD %d\n", fd);
     if (fd < 0) {
 	ftpFail(ftpState);
 	return;
@@ -1625,7 +1625,7 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
 	port,
 	COMM_NONBLOCKING | (fallback ? COMM_REUSEADDR : 0),
 	storeUrl(ftpState->entry));
-    debug(9,3)("ftpOpenListenSocket: Unconnected data socket created on FD %d\n", fd);
+    debug(9, 3) ("ftpOpenListenSocket: Unconnected data socket created on FD %d\n", fd);
     if (fd < 0) {
 	debug(9, 0) ("ftpOpenListenSocket: comm_open failed\n");
 	return -1;
@@ -1698,10 +1698,12 @@ ftpAcceptDataConnection(int fd, void *data)
     }
     /* Replace the Listen socket with the accepted data socket */
     comm_close(ftpState->data.fd);
-    debug(9,3)("ftpAcceptDataConnection: Connected data socket on FD %d\n", fd);
+    debug(9, 3) ("ftpAcceptDataConnection: Connected data socket on FD %d\n", fd);
     ftpState->data.fd = fd;
     ftpState->data.port = ntohs(peer.sin_port);
     ftpState->data.host = xstrdup(inet_ntoa(peer.sin_addr));
+    commSetTimeout(ftpState->data.fd, Config.Timeout.read, ftpTimeout,
+	ftpState);
     /* XXX We should have a flag to track connect state...
      *    host NULL -> not connected, port == local port
      *    host set  -> connected, port == remote port
@@ -1832,8 +1834,10 @@ ftpReadList(FtpStateData * ftpState)
 	    Config.Timeout.read);
 	commSetDefer(ftpState->data.fd, protoCheckDeferRead, ftpState->entry);
 	ftpState->state = READING_DATA;
-	/* Cancel the timeout on the Control socket and establish one
-	 * on the data socket */
+	/*
+	 * Cancel the timeout on the Control socket and establish one
+	 * on the data socket
+	 */
 	commSetTimeout(ftpState->ctrl.fd, -1, NULL, NULL);
 	commSetTimeout(ftpState->data.fd, Config.Timeout.read, ftpTimeout, ftpState);
 	return;
@@ -1843,7 +1847,13 @@ ftpReadList(FtpStateData * ftpState)
 	    COMM_SELECT_READ,
 	    ftpAcceptDataConnection,
 	    ftpState,
-	    Config.Timeout.read);
+	    0);
+	/*
+	 * Cancel the timeout on the Control socket and establish one
+	 * on the data socket
+	 */
+	commSetTimeout(ftpState->ctrl.fd, -1, NULL, NULL);
+	commSetTimeout(ftpState->data.fd, Config.Timeout.read, ftpTimeout, ftpState);
 	return;
     } else if (!EBIT_TEST(ftpState->flags, FTP_TRIED_NLST) && code > 300) {
 	ftpSendNlst(ftpState);
@@ -1891,7 +1901,7 @@ ftpReadRetr(FtpStateData * ftpState)
 	    COMM_SELECT_READ,
 	    ftpAcceptDataConnection,
 	    ftpState,
-	    Config.Timeout.read);
+	    0);
 	/*
 	 * Cancel the timeout on the Control socket and establish one
 	 * on the data socket
