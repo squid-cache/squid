@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.131 1997/04/28 04:23:17 wessels Exp $
+ * $Id: neighbors.cc,v 1.132 1997/04/29 22:13:02 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -438,7 +438,7 @@ neighbors_open(int fd)
 int
 neighborsUdpPing(request_t * request,
     StoreEntry * entry,
-    IRCB callback,
+    IRCB * callback,
     void *callback_data,
     int *exprep)
 {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.32 1997/04/28 04:23:19 wessels Exp $
+ * $Id: net_db.cc,v 1.33 1997/04/29 22:13:04 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -175,7 +175,7 @@ netdbPurgeLRU(void)
     qsort((char *) list,
 	list_count,
 	sizeof(netdbEntry *),
-	(QS) netdbLRU);
+	(QS *) netdbLRU);
     for (k = 0; k < list_count; k++) {
 	if (meta_data.netdb_addrs < Config.Netdb.low)
 	    break;
@@ -573,7 +573,7 @@ netdbDump(StoreEntry * sentry)
     qsort((char *) list,
 	i,
 	sizeof(netdbEntry *),
-	(QS) sortByRtt);
+	(QS *) sortByRtt);
     for (k = 0; k < i; k++) {
 	n = *(list + k);
 	storeAppendPrintf(sentry, "{%-16.16s %4d/%4d %7.1f %5.1f",	/* } */
@@ -648,6 +648,6 @@ netdbUpdatePeer(request_t * r, peer * e, int irtt, int ihops)
     qsort((char *) n->peers,
 	n->n_peers,
 	sizeof(net_db_peer),
-	(QS) sortPeerByRtt);
+	(QS *) sortPeerByRtt);
 #endif
 }

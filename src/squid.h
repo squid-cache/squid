@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.104 1997/04/28 04:23:27 wessels Exp $
+ * $Id: squid.h,v 1.105 1997/04/29 22:13:07 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -265,8 +265,8 @@ typedef unsigned long u_num32;
 #include <regex.h>
 #endif
 
-typedef void (*SIH) (void *, int);	/* swap in */
-typedef int (*QS) (const void *, const void *);
+typedef void SIH _PARAMS((void *, int));	/* swap in */
+typedef int QS _PARAMS((const void *, const void *));	/* qsort */
 
 #include "cache_cf.h"
 #include "comm.h"
@@ -280,6 +280,7 @@ typedef int (*QS) (const void *, const void *);
 #include "icp.h"
 #include "errorpage.h"		/* must go after icp.h */
 #include "dns.h"
+#include "event.h"
 #include "ipcache.h"
 #include "fqdncache.h"
 #include "mime.h"
@@ -293,7 +294,6 @@ typedef int (*QS) (const void *, const void *);
 #include "ftp.h"
 #include "gopher.h"
 #include "util.h"
-#include "event.h"
 #include "acl.h"
 #include "async_io.h"
 #include "redirect.h"

@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.141 1997/04/28 04:23:16 wessels Exp $
+ * $Id: main.cc,v 1.142 1997/04/29 22:13:02 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -607,7 +607,7 @@ mainInitialize(void)
 	eventAdd("storeDirClean", storeDirClean, NULL, 15);
 	if (Config.Announce.on)
 	    eventAdd("start_announce", start_announce, NULL, 3600);
-	eventAdd("ipcache_purgelru", (EVH) ipcache_purgelru, NULL, 10);
+	eventAdd("ipcache_purgelru", ipcache_purgelru, NULL, 10);
     }
     first_time = 0;
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.134 1997/04/28 05:32:50 wessels Exp $
+ * $Id: stat.cc,v 1.135 1997/04/29 22:13:08 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -136,7 +136,7 @@ static const char *describeFlags _PARAMS((const StoreEntry *));
 static const char *describeTimestamps _PARAMS((const StoreEntry *));
 static void dummyhandler _PARAMS((cacheinfo *, StoreEntry *));
 static void info_get _PARAMS((const cacheinfo *, StoreEntry *));
-static void logReadEndHandler _PARAMS((int, int, log_read_data_t *));
+static FILE_WALK_HD logReadEndHandler;
 static void log_clear _PARAMS((cacheinfo *, StoreEntry *));
 static void log_disable _PARAMS((cacheinfo *, StoreEntry *));
 static void log_enable _PARAMS((cacheinfo *, StoreEntry *));
@@ -148,7 +148,7 @@ static void proto_newobject _PARAMS((cacheinfo *, protocol_t, int, int));
 static void proto_purgeobject _PARAMS((cacheinfo *, protocol_t, int));
 static void proto_touchobject _PARAMS((cacheinfo *, protocol_t, int));
 static void server_list _PARAMS((const cacheinfo *, StoreEntry *));
-static void squidReadEndHandler _PARAMS((int, int, squid_read_data_t *));
+static FILE_WALK_HD squidReadEndHandler;
 static void squid_get_start _PARAMS((const cacheinfo *, StoreEntry *));
 static void statFiledescriptors _PARAMS((StoreEntry *));
 static void stat_get _PARAMS((const cacheinfo *, const char *req, StoreEntry *));
@@ -156,8 +156,8 @@ static void stat_io_get _PARAMS((StoreEntry *));
 static void stat_objects_get _PARAMS((const cacheinfo *, StoreEntry *, int vm_or_not));
 static void stat_utilization_get _PARAMS((cacheinfo *, StoreEntry *, const char *desc));
 static int cache_size_get _PARAMS((const cacheinfo *));
-static int logReadHandler _PARAMS((int, const char *, int, log_read_data_t *));
-static int squidReadHandler _PARAMS((int, const char *, int, squid_read_data_t *));
+static FILE_WALK_LHD logReadHandler;
+static FILE_WALK_LHD squidReadHandler;
 static int memoryAccounted _PARAMS((void));
 
 #ifdef UNUSED_CODE
@@ -460,25 +460,24 @@ log_status_get(const cacheinfo * obj, StoreEntry * sentry)
 
 /* log convert handler */
 /* call for each line in file, use fileWalk routine */
-static int
-logReadHandler(int fd_unused, const char *buf, int size_unused, log_read_data_t * data)
+static void
+logReadHandler(int fd_unused, const char *buf, int size_unused, void *data)
 {
-    storeAppendPrintf(data->sentry, "{%s}\n", buf);
-    return 0;
+    log_read_data_t *ctrl = data;
+    storeAppendPrintf(ctrl->sentry, "{%s}\n", buf);
 }
 
 /* log convert end handler */
 /* call when a walk is completed or error. */
 static void
-logReadEndHandler(int fd, int errflag_unused, log_read_data_t * data)
+logReadEndHandler(int fd, int errflag_unused, void *data)
 {
-    storeAppendPrintf(data->sentry, close_bracket);
-    storeComplete(data->sentry);
-    safe_free(data);
+    log_read_data_t *ctrl = data;
+    storeAppendPrintf(ctrl->sentry, close_bracket);
+    storeComplete(ctrl->sentry);
+    safe_free(ctrl);
     file_close(fd);
 }
-
-
 
 /* start converting logfile to processed format */
 static void
@@ -513,22 +512,23 @@ log_get_start(const cacheinfo * obj, StoreEntry * sentry)
 
 /* squid convert handler */
 /* call for each line in file, use fileWalk routine */
-static int
-squidReadHandler(int fd_unused, const char *buf, int size_unused, squid_read_data_t * data)
+static void
+squidReadHandler(int fd_unused, const char *buf, int size_unused, void *data)
 {
-    storeAppendPrintf(data->sentry, "{\"%s\"}\n", buf);
-    return 0;
+    squid_read_data_t *ctrl = data;
+    storeAppendPrintf(ctrl->sentry, "{\"%s\"}\n", buf);
 }
 
 /* squid convert end handler */
 /* call when a walk is completed or error. */
 static void
-squidReadEndHandler(int fd_unused, int errflag_unused, squid_read_data_t * data)
+squidReadEndHandler(int fd_unused, int errflag_unused, void *data)
 {
-    storeAppendPrintf(data->sentry, close_bracket);
-    storeComplete(data->sentry);
-    file_close(data->fd);
-    safe_free(data);
+    squid_read_data_t *ctrl = data;
+    storeAppendPrintf(ctrl->sentry, close_bracket);
+    storeComplete(ctrl->sentry);
+    file_close(ctrl->fd);
+    safe_free(ctrl);
 }
 
 
@@ -542,8 +542,7 @@ squid_get_start(const cacheinfo * obj, StoreEntry * sentry)
     data->sentry = sentry;
     data->fd = file_open(ConfigFile, NULL, O_RDONLY, NULL, NULL);
     storeAppendPrintf(sentry, open_bracket);
-    file_walk(data->fd, squidReadEndHandler, data,
-	squidReadHandler, data);
+    file_walk(data->fd, squidReadEndHandler, data, squidReadHandler, data);
 }
 
 

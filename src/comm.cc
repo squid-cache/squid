@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.142 1997/04/28 05:32:41 wessels Exp $
+ * $Id: comm.cc,v 1.143 1997/04/29 22:12:50 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -153,7 +153,7 @@ static void commSetTcpNoDelay _PARAMS((int));
 static void commSetTcpRcvbuf _PARAMS((int, int));
 static void commConnectFree _PARAMS((int fd, void *data));
 static void commConnectHandle _PARAMS((int fd, void *data));
-static void commHandleWrite _PARAMS((int fd, RWStateData * state));
+static void commHandleWrite _PARAMS((int fd, void *data));
 
 static struct timeval zero_tv;
 
@@ -640,7 +640,7 @@ comm_select_incoming(void)
     unsigned long N = 0;
     unsigned long i, nfds;
     int dopoll = 0;
-    PF hdl = NULL;
+    PF *hdl = NULL;
     if (theInIcpConnection >= 0)
 	fds[N++] = theInIcpConnection;
     if (theInIcpConnection != theOutIcpConnection)
@@ -700,7 +700,7 @@ comm_select_incoming(void)
     int fds[4];
     int N = 0;
     int i = 0;
-    PF hdl = NULL;
+    PF *hdl = NULL;
     FD_ZERO(&read_mask);
     FD_ZERO(&write_mask);
     if (theHttpConnection >= 0 && fdstat_are_n_free_fd(RESERVED_FD))
@@ -753,7 +753,7 @@ int
 comm_select(time_t sec)
 {
     struct pollfd pfds[SQUID_MAXFD];
-    PF hdl = NULL;
+    PF *hdl = NULL;
     int fd;
     int i;
     int maxfd;
@@ -943,7 +943,7 @@ comm_select(time_t sec)
 {
     fd_set readfds;
     fd_set writefds;
-    PF hdl = NULL;
+    PF *hdl = NULL;
     int fd;
     int i;
     int maxfd;
@@ -1081,7 +1081,7 @@ comm_select(time_t sec)
 #endif
 
 void
-commSetSelect(int fd, unsigned int type, PF handler, void *client_data, time_t timeout)
+commSetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t timeout)
 {
     if (fd < 0) {
 	debug_trap("commSetSelect: FD < 0");
@@ -1136,7 +1136,7 @@ comm_get_select_handler(int fd,
 }
 
 void
-comm_add_close_handler(int fd, PF handler, void *data)
+comm_add_close_handler(int fd, PF * handler, void *data)
 {
     struct close_handler *new = xmalloc(sizeof(*new));
     debug(5, 5, "comm_add_close_handler: FD %d, handler=%p, data=%p\n",
@@ -1148,7 +1148,7 @@ comm_add_close_handler(int fd, PF handler, void *data)
 }
 
 void
-comm_remove_close_handler(int fd, PF handler, void *data)
+comm_remove_close_handler(int fd, PF * handler, void *data)
 {
     struct close_handler *p, *last = NULL;
 
@@ -1409,7 +1409,7 @@ static void
 checkTimeouts(void)
 {
     int fd;
-    PF hdl = NULL;
+    PF *hdl = NULL;
     FD_ENTRY *f = NULL;
     void *data;
     /* scan for timeout */
@@ -1435,7 +1435,7 @@ checkLifetimes(void)
     int fd;
     FD_ENTRY *fde = NULL;
 
-    PF hdl = NULL;
+    PF *hdl = NULL;
 
     for (fd = 0; fd <= Biggest_FD; fd++) {
 	fde = &fd_table[fd];
@@ -1489,8 +1489,9 @@ Reserve_More_FDs(void)
 
 /* Write to FD. */
 static void
-commHandleWrite(int fd, RWStateData * state)
+commHandleWrite(int fd, void *data)
 {
+    RWStateData *state = data;
     int len = 0;
     int nleft;
 

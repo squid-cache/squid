@@ -1,5 +1,5 @@
 /*
- * $Id: disk.cc,v 1.59 1997/04/28 05:32:41 wessels Exp $
+ * $Id: disk.cc,v 1.60 1997/04/29 22:12:52 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -125,21 +125,21 @@ typedef struct _dwalk_ctrl {
     off_t offset;
     char *buf;			/* line buffer */
     int cur_len;		/* line len */
-    FILE_WALK_HD handler;
+    FILE_WALK_HD *handler;
     void *client_data;
-    int (*line_handler) (int fd, char *buf, int size, void *line_data);
+    FILE_WALK_LHD *line_handler;
     void *line_data;
 } dwalk_ctrl;
 
 /* table for FILE variable, write lock and queue. Indexed by fd. */
 FileEntry *file_table;
 
-static int diskHandleRead _PARAMS((int, dread_ctrl *));
-static int diskHandleWalk _PARAMS((int, dwalk_ctrl *));
-static int diskHandleWrite _PARAMS((int, FileEntry *));
 static int diskHandleWriteComplete _PARAMS((void *, int, int));
 static int diskHandleReadComplete _PARAMS((void *, int, int));
 static int diskHandleWalkComplete _PARAMS((void *, int, int));
+static void diskHandleWalk _PARAMS((int, void *));
+static void diskHandleRead _PARAMS((int, void *));
+static void diskHandleWrite _PARAMS((int, void *));
 static void file_open_complete _PARAMS((void *, int, int));
 
 /* initialize table */
@@ -340,15 +340,16 @@ file_close(int fd)
 
 
 /* write handler */
-static int
-diskHandleWrite(int fd, FileEntry * entry)
+static void
+diskHandleWrite(int fd, void *data)
 {
+    FileEntry *entry = data;
     int len = 0;
     disk_ctrl_t *ctrlp;
     dwrite_q *q = NULL;
     dwrite_q *wq = NULL;
     if (!entry->write_q)
-	return DISK_OK;
+	return;
     if (file_table[fd].at_eof == NO)
 	lseek(fd, 0, SEEK_END);
     /* We need to combine subsequent write requests after the first */
@@ -383,12 +384,11 @@ diskHandleWrite(int fd, FileEntry * entry)
 	entry->write_q->len - entry->write_q->cur_offset,
 	diskHandleWriteComplete,
 	ctrlp);
-    return DISK_OK;
 #else
     len = write(fd,
 	entry->write_q->buf + entry->write_q->cur_offset,
 	entry->write_q->len - entry->write_q->cur_offset);
-    return diskHandleWriteComplete(ctrlp, len, errno);
+    diskHandleWriteComplete(ctrlp, len, errno);
 #endif
 }
 
@@ -515,9 +515,10 @@ file_write(int fd,
 
 
 /* Read from FD */
-static int
-diskHandleRead(int fd, dread_ctrl * ctrl_dat)
+static void
+diskHandleRead(int fd, void *data)
 {
+    dread_ctrl *ctrl_dat = data;
     int len;
     disk_ctrl_t *ctrlp;
     ctrlp = xcalloc(1, sizeof(disk_ctrl_t));
@@ -532,12 +533,11 @@ diskHandleRead(int fd, dread_ctrl * ctrl_dat)
 	ctrl_dat->req_len - ctrl_dat->cur_len,
 	diskHandleReadComplete,
 	ctrlp);
-    return DISK_OK;
 #else
     len = read(fd,
 	ctrl_dat->buf + ctrl_dat->cur_len,
 	ctrl_dat->req_len - ctrl_dat->cur_len);
-    return diskHandleReadComplete(ctrlp, len, errno);
+    diskHandleReadComplete(ctrlp, len, errno);
 #endif
 }
 
@@ -609,7 +609,7 @@ diskHandleReadComplete(void *data, int retcode, int errcode)
  * It must have at least req_len space in there. 
  * call handler when a reading is complete. */
 int
-file_read(int fd, char *buf, int req_len, int offset, FILE_READ_HD handler, void *client_data)
+file_read(int fd, char *buf, int req_len, int offset, FILE_READ_HD * handler, void *client_data)
 {
     dread_ctrl *ctrl_dat;
     if (fd < 0)
@@ -637,9 +637,10 @@ file_read(int fd, char *buf, int req_len, int offset, FILE_READ_HD handler, void
 
 
 /* Read from FD and pass a line to routine. Walk to EOF. */
-static int
-diskHandleWalk(int fd, dwalk_ctrl * walk_dat)
+static void
+diskHandleWalk(int fd, void *data)
 {
+    dwalk_ctrl *walk_dat = data;
     int len;
     disk_ctrl_t *ctrlp;
     ctrlp = xcalloc(1, sizeof(disk_ctrl_t));
@@ -653,10 +654,9 @@ diskHandleWalk(int fd, dwalk_ctrl * walk_dat)
 	DISK_LINE_LEN - 1,
 	diskHandleWalkComplete,
 	ctrlp);
-    return DISK_OK;
 #else
     len = read(fd, walk_dat->buf, DISK_LINE_LEN - 1);
-    return diskHandleWalkComplete(ctrlp, len, errno);
+    diskHandleWalkComplete(ctrlp, len, errno);
 #endif
 }
 
@@ -681,8 +681,7 @@ diskHandleWalkComplete(void *data, int retcode, int errcode)
 
     if (len < 0) {
 	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-	    commSetSelect(fd, COMM_SELECT_READ, diskHandleWalk,
-		walk_dat, 0);
+	    commSetSelect(fd, COMM_SELECT_READ, diskHandleWalk, walk_dat, 0);
 	    return DISK_OK;
 	}
 	debug(50, 1, "diskHandleWalk: FD %d: error readingd: %s\n",
@@ -734,9 +733,9 @@ diskHandleWalkComplete(void *data, int retcode, int errcode)
  * call a completion handler when done. */
 int
 file_walk(int fd,
-    FILE_WALK_HD handler,
+    FILE_WALK_HD * handler,
     void *client_data,
-    FILE_WALK_LHD line_handler,
+    FILE_WALK_LHD * line_handler,
     void *line_data)
 {
     dwalk_ctrl *walk_dat;
