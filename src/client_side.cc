@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.377 1998/08/14 19:25:15 wessels Exp $
+ * $Id: client_side.cc,v 1.378 1998/08/16 06:35:15 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -522,6 +522,9 @@ clientUpdateCounters(clientHttpRequest * http)
      * (we *tried* to validate it, but failed).
      */
     switch (http->log_type) {
+    case LOG_TCP_REFRESH_HIT:
+	statHistCount(&Counter.client_http.nh_svc_time, svc_time);
+	break;
     case LOG_TCP_IMS_HIT:
 	statHistCount(&Counter.client_http.nm_svc_time, svc_time);
 	break;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.277 1998/08/11 21:53:05 wessels Exp $
+ * $Id: stat.cc,v 1.278 1998/08/16 06:35:17 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -487,6 +487,9 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\tCache Hits:           %8.5f %8.5f\n",
 	statMedianSvc(5, MEDIAN_HIT) / 1000.0,
 	statMedianSvc(60, MEDIAN_HIT) / 1000.0);
+    storeAppendPrintf(sentry, "\tNear Hits:            %8.5f %8.5f\n",
+	statMedianSvc(5, MEDIAN_NH) / 1000.0,
+	statMedianSvc(60, MEDIAN_NH) / 1000.0);
     storeAppendPrintf(sentry, "\tNot-Modified Replies: %8.5f %8.5f\n",
 	statMedianSvc(5, MEDIAN_NM) / 1000.0,
 	statMedianSvc(60, MEDIAN_NM) / 1000.0);
@@ -652,6 +655,10 @@ statAvgDump(StoreEntry * sentry, int minutes, int hours)
     x = statHistDeltaMedian(&l->client_http.nm_svc_time,
 	&f->client_http.nm_svc_time);
     storeAppendPrintf(sentry, "client_http.nm_median_svc_time = %f seconds\n",
+	x / 1000.0);
+    x = statHistDeltaMedian(&l->client_http.nh_svc_time,
+	&f->client_http.nh_svc_time);
+    storeAppendPrintf(sentry, "client_http.nh_median_svc_time = %f seconds\n",
 	x / 1000.0);
     x = statHistDeltaMedian(&l->client_http.hit_svc_time,
 	&f->client_http.hit_svc_time);
@@ -851,6 +858,7 @@ statCountersInitSpecial(StatCounters * C)
     statHistLogInit(&C->client_http.all_svc_time, 300, 0.0, 3600000.0 * 3.0);
     statHistLogInit(&C->client_http.miss_svc_time, 300, 0.0, 3600000.0 * 3.0);
     statHistLogInit(&C->client_http.nm_svc_time, 300, 0.0, 3600000.0 * 3.0);
+    statHistLogInit(&C->client_http.nh_svc_time, 300, 0.0, 3600000.0 * 3.0);
     statHistLogInit(&C->client_http.hit_svc_time, 300, 0.0, 3600000.0 * 3.0);
     /*
      * ICP svc_time hist is kept in micro-seconds; max of 1 minute.
@@ -877,6 +885,7 @@ statCountersClean(StatCounters * C)
     statHistClean(&C->client_http.all_svc_time);
     statHistClean(&C->client_http.miss_svc_time);
     statHistClean(&C->client_http.nm_svc_time);
+    statHistClean(&C->client_http.nh_svc_time);
     statHistClean(&C->client_http.hit_svc_time);
     statHistClean(&C->icp.query_svc_time);
     statHistClean(&C->icp.reply_svc_time);
@@ -900,6 +909,7 @@ statCountersCopy(StatCounters * dest, const StatCounters * orig)
     statHistCopy(&dest->client_http.all_svc_time, &orig->client_http.all_svc_time);
     statHistCopy(&dest->client_http.miss_svc_time, &orig->client_http.miss_svc_time);
     statHistCopy(&dest->client_http.nm_svc_time, &orig->client_http.nm_svc_time);
+    statHistCopy(&dest->client_http.nh_svc_time, &orig->client_http.nh_svc_time);
     statHistCopy(&dest->client_http.hit_svc_time, &orig->client_http.hit_svc_time);
     statHistCopy(&dest->icp.query_svc_time, &orig->icp.query_svc_time);
     statHistCopy(&dest->icp.reply_svc_time, &orig->icp.reply_svc_time);
@@ -919,6 +929,8 @@ statCountersHistograms(StoreEntry * sentry)
     statHistDump(&f->client_http.miss_svc_time, sentry, NULL);
     storeAppendPrintf(sentry, "client_http.nm_svc_time histogram:\n");
     statHistDump(&f->client_http.nm_svc_time, sentry, NULL);
+    storeAppendPrintf(sentry, "client_http.nh_svc_time histogram:\n");
+    statHistDump(&f->client_http.nh_svc_time, sentry, NULL);
     storeAppendPrintf(sentry, "client_http.hit_svc_time histogram:\n");
     statHistDump(&f->client_http.hit_svc_time, sentry, NULL);
     storeAppendPrintf(sentry, "icp.query_svc_time histogram:\n");
@@ -1160,6 +1172,9 @@ statMedianSvc(int interval, int which)
 	break;
     case MEDIAN_NM:
 	x = statHistDeltaMedian(&l->client_http.nm_svc_time, &f->client_http.nm_svc_time);
+	break;
+    case MEDIAN_NH:
+	x = statHistDeltaMedian(&l->client_http.nh_svc_time, &f->client_http.nh_svc_time);
 	break;
     case MEDIAN_ICP_QUERY:
 	x = statHistDeltaMedian(&l->icp.query_svc_time, &f->icp.query_svc_time);
