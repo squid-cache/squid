@@ -244,6 +244,7 @@ extern DEFER httpAcceptDefer;
 extern PF snmpHandleUdp;
 extern void snmpInit(void);
 extern void snmpConnectionOpen(void);
+extern void snmpConnectionShutdown(void);
 extern void snmpConnectionClose(void);
 extern int create_view(char **);
 extern int create_user(char **);
@@ -257,7 +258,8 @@ extern PF icpUdpReply;
 extern void icpHandleIcpV3(int, struct sockaddr_in, char *, int);
 extern int icpCheckUdpHit(StoreEntry *, request_t * request);
 extern void icpConnectionsOpen(void);
-extern void icpConnectionsClose(void);
+extern void icpConnectionShutdown(void);
+extern void icpConnectionClose(void);
 
 extern void ipcache_nbgethostbyname(const char *name,
     IPH * handler,
