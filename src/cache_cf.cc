@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.46 1996/04/16 05:48:57 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.47 1996/04/16 18:30:06 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -427,9 +427,10 @@ static void parseCacheHostLine()
     while ((token = strtok(NULL, w_space))) {
 	if (!strcasecmp(token, "proxy-only")) {
 	    proxy_only = 1;
-	} else if (!strcasecmp(token, "weight=")) {
+	} else if (!strncasecmp(token, "weight=", 7)) {
 	    weight = atoi(token + 7);
 	} else {
+	    debug(3,0,"parseCacheHostLine: token='%s'\n", token);
 	    self_destruct();
 	}
     }
