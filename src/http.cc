@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.370 2000/11/13 12:25:12 adrian Exp $
+ * $Id: http.cc,v 1.371 2000/11/13 20:42:33 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -749,7 +749,9 @@ httpBuildRequestHeader(request_t * request,
     /* append Via */
     if (httpRequestHdrAllowedByName(HDR_VIA)) {
 	String strVia = httpHeaderGetList(hdr_in, HDR_VIA);
-	snprintf(bbuf, BBUF_SZ, "%3.1f %s", orig_request->http_ver, ThisCache);
+	snprintf(bbuf, BBUF_SZ, "%d.%d %s",
+	    orig_request->http_ver.major,
+	    orig_request->http_ver.minor, ThisCache);
 	strListAdd(&strVia, bbuf, ',');
 	httpHeaderPutStr(hdr_out, HDR_VIA, strBuf(strVia));
 	stringClean(&strVia);
@@ -1019,7 +1021,8 @@ httpSendRequestEntryDone(int fd, char *bufnotused, size_t size, int errflag, voi
 }
 
 void
-httpBuildVersion(http_version_t *version, unsigned int major,unsigned int minor) {
-    version->major=major;
-    version->minor=minor;
+httpBuildVersion(http_version_t * version, unsigned int major, unsigned int minor)
+{
+    version->major = major;
+    version->minor = minor;
 }
