@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.175 1996/12/03 23:30:49 wessels Exp $
+ * $Id: store.cc,v 1.176 1996/12/06 17:53:43 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2564,6 +2564,7 @@ storeWriteCleanLog(void)
     int n = 0;
     int x = 0;
     time_t start, stop, r;
+    struct stat sb;
 
     if (store_rebuilding) {
 	debug(20, 1, "storeWriteCleanLog: Not currently OK to rewrite swap log.\n");
@@ -2577,6 +2578,8 @@ storeWriteCleanLog(void)
 	debug(50, 0, "storeWriteCleanLog: %s: %s\n", tmp_filename, xstrerror());
 	return 0;
     }
+    if (stat(swaplog_file, &sb) == 0)
+	fchmod(fileno(fp), sb.st_mode);
     for (e = storeGetFirst(); e; e = storeGetNext()) {
 	if (e->swap_file_number < 0)
 	    continue;
