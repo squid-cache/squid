@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_cache_digest.cc,v 1.5 1998/03/31 05:37:52 wessels Exp $
+ * $Id: test_cache_digest.cc,v 1.6 1998/03/31 09:07:53 rousskov Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -52,6 +52,21 @@ typedef struct _CacheEntry {
     unsigned char key_arr[MD5_DIGEST_CHARS];
 } CacheEntry;
 
+typedef int (*FI_READER)(struct _FileIterator *fi);
+
+typedef struct _FileIterator {
+    const char *fname;
+    FILE *file;
+    time_t inner_time;  /* timestamp of the current entry */
+    int line_count;     /* number of lines scanned */
+    int bad_line_count; /* number of parsing errors */
+    FI_READER reader;   /* reads next entry and updates inner_time */
+    void *entry;        /* buffer for the current entry, freed with xfree() */
+} FileIterator;
+
+
+static int cacheIndexScanCleanPrefix(CacheIndex * idx, const char *fname, FILE * file);
+static int cacheIndexScanAccessLog(CacheIndex * idx, const char *fname, FILE * file);
 
 /* copied from url.c */
 const char *RequestMethodStr[] =
@@ -65,13 +80,6 @@ const char *RequestMethodStr[] =
     "TRACE",
     "PURGE"
 };
-
-
-static CacheIndex *Peer = NULL;
-
-static int cacheIndexScanCleanPrefix(CacheIndex * idx, const char *fname, FILE * file);
-static int cacheIndexScanAccessLog(CacheIndex * idx, const char *fname, FILE * file);
-
 /* copied from url.c */
 static method_t
 cacheIndexParseMethod(const char *s)
@@ -94,6 +102,7 @@ cacheIndexParseMethod(const char *s)
     return METHOD_NONE;
 }
 
+/* CacheEntry */
 
 static CacheEntry *
 cacheEntryCreate(const storeSwapLogData * s)
@@ -112,6 +121,46 @@ cacheEntryDestroy(CacheEntry * e)
     assert(e);
     xfree(e);
 }
+
+
+/* FileIterator */
+
+static FileIterator *
+fileIteratorCreate(const char *fname, FI_READER reader)
+{
+    FileIterator *fi = xcalloc(1, sizeof(FileIterator));
+    assert(fname && reader);
+    fi->fname = fname;
+    fi->reader = reader;
+    fileIteratorAdvance(fi);
+    return fi;   
+}
+
+static void
+fileIteratorDestroy(FileIterator *fi)
+{
+    assert(fi);
+    xfree(fi->entry);
+    xfree(fi);
+}
+
+static void
+fileIteratorAdvance(FileIterator *fi)
+{
+    assert(fi);
+    do {
+	const int res = fi->reader(fi);
+	fi->line_count++;
+        if (res < 0)
+	    fi->bad_line_count++;
+	else
+	if (res == 0)
+	    fi->inner_time = -1; /* eof */
+    } while (res < 0);
+}
+
+
+
 
 static CacheIndex *
 cacheIndexCreate(const char *name)
@@ -454,23 +503,39 @@ int
 main(int argc, char *argv[])
 {
     CacheIndex *they = NULL;
-    int i;
+    FileIterator **fis = NULL;
+    const int fi_count = argc-1;
+    int i, j;
 
     if (argc < 3)
 	return usage(argv[0]);
 
-    they = Peer = cacheIndexCreate("they");
+    fis = xcalloc(fi_count, sizeof(FileIterator *));
+    /* init iterators with files */
+    fis[0] = fileIteratorCreate(argv[1], accessLogReader);
     for (i = 2; i < argc; ++i) {
-	cacheIndexAddLog(they, argv[i]);
+	fis[i-1] = fileIteratorCreate(argv[i], swapStateReader);
     }
-    cacheIndexInitDigest(they);
-    cacheIndexInitReport(they);
-
-    if (!cacheIndexAddAccessLog(NULL, argv[1]))
-	return 1;
-    cacheIndexIcpReport(NULL);
-
-    cacheIndexDestroy(they);
+    /* read prefix to get start-up contents of peer cache */
+    for (i = 1; i < fi_count; ++i) {
+	fileIteratorScan(fis[i], swapStatePrefixScanner);
+    }
+    /* digest peer cache content */
+    /* ...resetDigest() */
+    /* iterate */
+    cur_time = -1;
+    for (i = 0; i < fi_count; ++i) {
+	int next_i = -1;
+	time_t next_time = -1;
+	for (j = 0; j < fi_count; ++j) {
+	    if (fis[j].inner_time > next_time) 
+	}
+    }
+    /* cleaning */
+    for (int i = 0; i < argc-1; ++i) {
+	fileIteratorDestroy(fis[i]);
+    }
+    xfree(fis);
 
     return 0;
 }
