@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.98 1998/08/17 23:27:59 wessels Exp $
+# $Id: cf.data.pre,v 1.99 1998/08/20 22:45:45 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1008,15 +1008,26 @@ DOC_START
 
 	options: override-expire
 		 override-lastmod
+		 reload-into-ims
+		 ignore-reload
 
 		override-expire enforces min age even if the server
-		sent a Expires: header. Warning: This breaks HTTP
-		freshness control, and may have servere inpact on
-		the usability of sites that makes correct use of
-		Expires: headers on dynamic data.
+		sent a Expires: header. Doing this VIOLATES the HTTP
+		standard.  Enabling this feature could make you liable
+		for problems which it causes.
 
 		override-lastmod enforces min age even on objects
 		that was modified recently.
+
+		reload-into-ims changes client no-cache or ``reload''
+		to If-Modified-Since requests. Doing this VIOLATES the
+		HTTP standard. Enabling this feature could make you
+		liable for problems which it causes.
+
+		ignore-reload ignores a client no-cache or ``reload''
+		header. Doing this VIOLATES the HTTP standard. Enabling
+		this feature could make you liable for problems which
+		it causes.
 		
 	Please see the file doc/Release-Notes-1.1.txt for a full
 	description of Squid's refresh algorithm.  Basically a
@@ -2040,6 +2051,9 @@ DOC_START
 	Doing this VIOLATES the HTTP standard.  Enabling this
 	feature could make you liable for problems which it
 	causes.
+	
+	see also refresh_pattern for a more selective approach.
+
 reload_into_ims off
 DOC_END
 

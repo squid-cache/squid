@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.120 1998/08/20 22:29:58 wessels Exp $
+ * $Id: enums.h,v 1.121 1998/08/20 22:45:47 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -480,7 +480,7 @@ enum {
     REQ_REFRESH,
     REQ_USED_PROXY_AUTH,
     REQ_REDIRECTED,
-    REQ_NOCACHE_IMS		/* for changing no-cache requests into IMS */
+    REQ_NOCACHE_HACK		/* for changing/ignoring no-cache requests */
 };
 
 enum {

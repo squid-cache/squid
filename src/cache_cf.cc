@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.299 1998/08/20 02:49:10 wessels Exp $
+ * $Id: cache_cf.cc,v 1.300 1998/08/20 22:45:44 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1115,15 +1115,17 @@ static void
 dump_refreshpattern(StoreEntry * entry, const char *name, refresh_t * head)
 {
     while (head != NULL) {
-	storeAppendPrintf(entry, "%s%s %s %d %d%% %d%s%s\n",
+	storeAppendPrintf(entry, "%s%s %s %d %d%% %d%s%s%s%s\n",
 	    name,
 	    head->flags.icase ? " -i" : null_string,
 	    head->pattern,
 	    (int) head->min / 60,
 	    (int) (100.0 * head->pct + 0.5),
 	    (int) head->max / 60,
-	    head->flags.override_expire ? " override_expire" : null_string,
-	    head->flags.override_lastmod ? " override_lastmod" : null_string);
+	    head->flags.override_expire ? " override-expire" : null_string,
+	    head->flags.override_lastmod ? " override-lastmod" : null_string,
+	    head->flags.reload_into_ims ? " reload-into-ims" : null_string,
+	    head->flags.ignore_reload ? " ignore-reload" : null_string);
 	head = head->next;
     }
 }
@@ -1138,6 +1140,8 @@ parse_refreshpattern(refresh_t ** head)
     time_t max = 0;
     int override_expire = 0;
     int override_lastmod = 0;
+    int reload_into_ims = 0;
+    int ignore_reload = 0;
     int i;
     refresh_t *t;
     regex_t comp;
@@ -1167,8 +1171,16 @@ parse_refreshpattern(refresh_t ** head)
 	    override_expire = 1;
 	else if (!strcmp(token, "override-expire"))
 	    override_lastmod = 1;
-	else
-	    debug(22, 0) ("redreshAddToLost: Unknown option '%s': %s\n",
+	else if (!strcmp(token, "reload-into-ims")) {
+	    reload_into_ims = 1;
+	    refresh_nocache_hack = 1;
+	    /* tell client_side.c that this is used */
+	} else if (!strcmp(token, "ignore-reload")) {
+	    ignore_reload = 1;
+	    refresh_nocache_hack = 1;
+	    /* tell client_side.c that this is used */
+	} else
+	    debug(22, 0) ("redreshAddToList: Unknown option '%s': %s\n",
 		pattern, token);
     }
     if ((errcode = regcomp(&comp, pattern, flags)) != 0) {
@@ -1194,6 +1206,10 @@ parse_refreshpattern(refresh_t ** head)
 	t->flags.override_expire = 1;
     if (override_lastmod)
 	t->flags.override_lastmod = 1;
+    if (reload_into_ims)
+	t->flags.reload_into_ims = 1;
+    if (ignore_reload)
+	t->flags.ignore_reload = 1;
     t->next = NULL;
     while (*head)
 	head = &(*head)->next;
