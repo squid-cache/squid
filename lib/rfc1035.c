@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.18 2000/09/14 15:41:03 wessels Exp $
+ * $Id: rfc1035.c,v 1.19 2000/11/03 16:43:58 wessels Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -341,6 +341,7 @@ rfc1035RRUnpack(const char *buf, size_t sz, off_t off, rfc1035_rr * RR)
 	 * replies at 512 octets, as per RFC 1035.  Returning sz+1
 	 * should cause no further processing for this reply.
 	 */
+	memset(RR, '\0', sizeof(*RR));
 	return sz + 1;
     }
     switch (RR->type) {
