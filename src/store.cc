@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.95 1996/09/04 22:03:31 wessels Exp $
+ * $Id: store.cc,v 1.96 1996/09/04 22:50:15 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -554,39 +554,29 @@ void storeReleaseRequest(e)
 int storeUnlockObject(e)
      StoreEntry *e;
 {
-    int lock_count;
-
-    if ((int) e->lock_count > 0)
-	e->lock_count--;
-    else if (e->lock_count == 0) {
-	debug(20, 0, "Entry lock count %d is out-of-whack\n", e->lock_count);
-    }
-    debug(20, 3, "storeUnlockObject: key '%s' count=%d\n", e->key, e->lock_count);
-
+    MemObject *mem = e->mem_obj;
+    e->lock_count--;
+    debug(20, 3, "storeUnlockObject: key '%s' count=%d\n",
+	e->key, e->lock_count);
     if (e->lock_count)
 	return (int) e->lock_count;
-
-    /* Prevent UMR if we end up freeing the entry */
-    lock_count = (int) e->lock_count;
-
     if (e->flag & RELEASE_REQUEST) {
 	storeRelease(e);
     } else if (e->flag & ABORT_MSG_PENDING) {
 	/* This is where the negative cache gets storeAppended */
 	/* Briefly lock to replace content with abort message */
 	e->lock_count++;
-	destroy_MemObjectData(e->mem_obj);
+	destroy_MemObjectData(mem);
 	e->object_len = 0;
-	e->mem_obj->data = new_MemObjectData();
-	storeAppend(e, e->mem_obj->e_abort_msg, strlen(e->mem_obj->e_abort_msg));
-	e->object_len = e->mem_obj->e_current_len
-	    = strlen(e->mem_obj->e_abort_msg);
+	mem->data = new_MemObjectData();
+	storeAppend(e, mem->e_abort_msg, strlen(mem->e_abort_msg));
+	e->object_len = mem->e_current_len = strlen(mem->e_abort_msg);
 	BIT_RESET(e->flag, ABORT_MSG_PENDING);
 	e->lock_count--;
-    } else if (storeCheckPurgeMem(e)) {
+    } else if (meta_data.hot_vm > store_hotobj_high && storeCheckPurgeMem(e)) {
 	storePurgeMem(e);
     }
-    return lock_count;
+    return 0;
 }
 
 /* Lookup an object in the cache. 
@@ -1314,7 +1304,7 @@ void storeSwapOutHandle(fd, flag, e)
 	/* check if it's request to be released. */
 	if (e->flag & RELEASE_REQUEST)
 	    storeRelease(e);
-	else if (storeCheckPurgeMem(e))
+	else if (meta_data.hot_vm > store_hotobj_high && storeCheckPurgeMem(e))
 	    storePurgeMem(e);
 	return;
     }
@@ -1838,8 +1828,6 @@ int storePurgeOld()
 }
 
 
-#define MEM_LRUSCAN_BLOCK 16
-#define MEM_MAX_HELP 5
 /* Clear Memory storage to accommodate the given object len */
 int storeGetMemSpace(size, check_vm_number)
      int size;
@@ -2852,8 +2840,6 @@ static int storeCheckPurgeMem(e)
     if (e->store_status != STORE_OK)
 	return 0;
     if (e->swap_status != SWAP_OK)
-	return 0;
-    if (store_hotobj_high)
 	return 0;
     return 1;
 }
