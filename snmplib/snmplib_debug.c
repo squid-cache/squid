@@ -8,7 +8,11 @@
 #include <varargs.h>
 #endif
 
-#include "snmp_debug.h"
+#ifdef __STDC__
+void (*snmplib_debug_hook) (int,char *,...) = NULL;
+#else
+void (*snmplib_debug_hook) (va_alist) = NULL;
+#endif
 
 extern void
 #ifdef __STDC__
