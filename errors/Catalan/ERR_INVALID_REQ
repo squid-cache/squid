@@ -1,0 +1,31 @@
+<HTML><HEAD>
+<TITLE>ERROR: No es pot mostrar la URL que heu sol.licitat</TITLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>No es pot mostrar la URL que heu sol.licitat</H2>
+<HR>
+<P>
+Mentre s'intentava llegir la URL:
+<PRE>
+%R
+</PRE>
+<P>
+S'ha produ&iuml;t el seg&uuml;ent error:
+<UL>
+<LI>
+<STRONG>
+Petici&oacute; no v&agrave;lida
+</STRONG>
+</UL>
+
+<P>
+Algun camp de la petici&oacute; HTTP no &eacute;s v&agrave;lid. Causes probables:
+<UL>
+<LI>M&egrave;tode de petici&oacute; desconegut o absent.
+<LI>no hi ha URL.
+<LI>Falta l'identificador HTTP (HTTP/1.0).   
+<LI>La petici&ocute; &eacute;s massa llarga.
+<LI>Falta el camp <i>Content-Length</i>.
+<LI>Car&agrave;cter no perm&egrave;s en el nom del servidor.
+</UL>
+<P>L'administrador d'aquesta <i>cache</i> &eacute;s<A HREF="mailto:%w">%w</A>.

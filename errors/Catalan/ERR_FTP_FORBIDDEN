@@ -1,0 +1,17 @@
+<HTML><HEAD>
+<TITLE>ERROR: No es pot mostrar la URL que heu sol.licitat</TITLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>No es pot mostrar la URL que heu sol.licitat</H2>
+<HR>
+<P>
+S'ha produ&iuml;t un error en l'autentificaci&oacute; FTP
+mentre s'intentava llegir la URL
+<A HREF="%U">%U</A>
+<P>
+La <i>cache</i> ha enviat la comanda FTP:
+<blockquote><strong><pre>%f</pre></strong></blockquote>
+i ha rebut aquesta resposta:
+<blockquote><strong><pre>%F</pre></strong></blockquote>
+<blockquote><strong><pre>%g</pre></strong></blockquote>
+<P>L'administrador d'aquesta <i>cache</i> &eacute;s<A HREF="mailto:%w">%w</A>.

@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<TITLE>ERROR: No es pot mostrar la URL que heu sol.licitat</TITLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>No es pot mostrar la URL que heu sol.licitat</H2>
+<HR>
+<P>
+Mentre s'intentava llegir la URL:
+<A HREF="%U">%U</A>
+<P>
+S'ha produ&iuml;t el seg&uuml;ent error:
+<UL>
+<LI>
+<STRONG>
+S'ha excedit el temps de lectura
+</STRONG>
+</UL>
+
+<P>
+El sistema ha respost:
+<PRE><I>    %E</I></PRE>
+
+<P>
+Hi ha hagut un exc&eacute;s en el temps de lectura de dades de la xarxa.
+Hi ha congesti&oacute; o indisposici&oacute; del servidor i/o la xarxa.
+Intenteu-ho d'aqui a una estona.
+<P>L'administrador d'aquesta <i>cache</i> &eacute;s<A HREF="mailto:%w">%w</A>.

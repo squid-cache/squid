@@ -1,0 +1,28 @@
+<HTML><HEAD>
+<TITLE>ERROR: No es pot mostrar la URL que heu sol.licitat</TITLE>
+</HEAD><BODY>
+<H2>No es pot mostrar la URL que heu sol.licitat</H2>
+<HR>
+<P>
+Mentre s'intentava llegir la URL:
+<A HREF="%U">%U</A>
+<P>
+S'ha produ&iuml;t el seg&uuml;ent error:
+<BLOCKQUOTE>
+No ha estat possible determinar l'adre&ccedil;a IP del servidor
+<I>%H</I>
+</BLOCKQUOTE>
+
+<P>
+El servidor de DNS diu:
+<BLOCKQUOTE>
+%z
+</BLOCKQUOTE>
+
+<P>
+Aix&ograce; vol dir que:
+<PRE>
+ La <i>cache<i> no ha pogut resoldre el nom del servidor que heu escrit
+ a la URL. Comproveu si aquesta adre&ccedil;a &eacute;s correcta.
+</PRE>
+<P>L'administrador d'aquesta <i>cache</i> &eacute;s<A HREF="mailto:%w">%w</A>.
