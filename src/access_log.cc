@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.90 2003/07/18 12:18:56 hno Exp $
+ * $Id: access_log.cc,v 1.91 2003/07/28 08:57:49 adrian Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -253,6 +253,9 @@ static char *
 accessLogFormatName(const char *name)
 {
     if (NULL == name)
+        return NULL;
+
+    if (name[0] == '\0')
         return NULL;
 
     return username_quote(name);
