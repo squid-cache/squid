@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: structs.h,v 1.252 1998/12/09 23:01:03 wessels Exp $
+ * $Id: structs.h,v 1.253 1998/12/11 20:06:52 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -419,6 +419,13 @@ struct _SquidConfig {
     int max_open_disk_fds;
     int uri_whitespace;
     size_t rangeOffsetLimit;
+#if MULTICAST_MISS_STREAM
+    struct {
+	struct in_addr addr;
+	unsigned short port;
+	char *encode_key;
+    } mcast_miss;
+#endif
 };
 
 struct _SquidConfig2 {

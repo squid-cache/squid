@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.44 1998/11/12 06:27:53 wessels Exp $
+ * $Id: access_log.cc,v 1.45 1998/12/11 20:06:49 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -41,6 +41,12 @@ static void accessLogOpen(const char *fname);
 static char *log_quote(const char *header);
 static void accessLogSquid(AccessLogEntry * al, MemBuf * mb);
 static void accessLogCommon(AccessLogEntry * al, MemBuf * mb);
+
+#if MULTICAST_MISS_STREAM
+static int mcast_miss_fd = -1;
+static struct sockaddr_in mcast_miss_to;
+static void mcast_encode(unsigned int *, size_t, const unsigned int *);
+#endif
 
 const char *log_tags[] =
 {
@@ -261,6 +267,25 @@ accessLogLog(AccessLogEntry * al)
     }
     file_write_mbuf(LogfileFD, -1, mb, NULL, NULL);
     safe_free(xbuf);
+#if MULTICAST_MISS_STREAM
+    if (al->cache.code != LOG_TCP_MISS)
+	(void) 0;
+    else if (al->http.method != METHOD_GET)
+	(void) 0;
+    else if (mcast_miss_fd < 0)
+	(void) 0;
+    else {
+	unsigned int ibuf[365];
+	size_t isize;
+	xstrncpy((char *) ibuf, al->url, 364 * sizeof(int));
+	isize = ((strlen(al->url) + 8) / 8) * 2;
+	mcast_encode((unsigned int *) ibuf, isize,
+		(const unsigned int *) Config.mcast_miss.encode_key);
+	comm_udp_sendto(mcast_miss_fd,
+	    &mcast_miss_to, sizeof(mcast_miss_to),
+	    ibuf, isize * sizeof(int));
+    }
+#endif
 }
 
 void
@@ -332,6 +357,27 @@ accessLogInit(void)
     accessLogOpen(Config.Log.access);
 #if FORW_VIA_DB
     fvdbInit();
+#endif
+#if MULTICAST_MISS_STREAM
+    if (Config.mcast_miss.addr.s_addr != no_addr.s_addr) {
+	memset(&mcast_miss_to, '\0', sizeof(mcast_miss_to));
+	mcast_miss_to.sin_family = AF_INET;
+	mcast_miss_to.sin_port = htons(Config.mcast_miss.port);
+	mcast_miss_to.sin_addr.s_addr = Config.mcast_miss.addr.s_addr;
+	mcast_miss_fd = comm_open(SOCK_DGRAM,
+	    0,
+	    Config.Addrs.udp_incoming,
+	    Config.mcast_miss.port,
+	    COMM_NONBLOCKING,
+	    "Multicast Miss Stream");
+	if (mcast_miss_fd < 0)
+	    fatal("Cannot open Multicast Miss Stream Socket");
+	debug(46, 1) ("Multicast Miss Stream Socket opened on FD %d\n",
+	    mcast_miss_fd);
+	mcastSetTtl(mcast_miss_fd, 128);
+	if (strlen(Config.mcast_miss.encode_key) < 16)
+	    fatal("mcast_encode_key is too short, must be 16 characters");
+    }
 #endif
 }
 
@@ -433,6 +479,44 @@ fvdbClear(void)
     hashFreeItems(forw_table, fvdbFreeEntry);
     hashFreeMemory(forw_table);
     forw_table = hash_create((HASHCMP *) strcmp, 977, hash4);
+}
+
+#endif
+
+#if MULTICAST_MISS_STREAM
+/*
+ * From http://www.io.com/~paulhart/game/algorithms/tea.html
+ *
+ * size of 'ibuf' must be a multiple of 2.
+ * size of 'key' must be 4.
+ * 'ibuf' is modified in place, encrypted data is written in
+ * network byte order.
+ */
+static void
+mcast_encode(unsigned int *ibuf, size_t isize, const unsigned int *key)
+{
+    unsigned int y;
+    unsigned int z;
+    unsigned int sum;
+    const unsigned int delta = 0x9e3779b9;
+    unsigned int n = 32;
+    const unsigned int k0 = htonl(key[0]);
+    const unsigned int k1 = htonl(key[1]);
+    const unsigned int k2 = htonl(key[2]);
+    const unsigned int k3 = htonl(key[3]);
+    int i;
+    for (i = 0; i < isize; i += 2) {
+	y = htonl(ibuf[i]);
+	z = htonl(ibuf[i + 1]);
+	sum = 0;
+	for (n = 32; n; n--) {
+	    sum += delta;
+	    y += (z << 4) + (k0 ^ z) + (sum ^ (z >> 5)) + k1;
+	    z += (y << 4) + (k2 ^ y) + (sum ^ (y >> 5)) + k3;
+	}
+	ibuf[i] = htonl(y);
+	ibuf[i + 1] = htonl(z);
+    }
 }
 
 #endif
