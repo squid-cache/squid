@@ -1,4 +1,4 @@
-Changes to squid-1.1.4 (January XX, 1997):
+Changes to squid-1.1.4 (January 13, 1997):
 
 	- Created USE_GNUREGEX define to fix forcing GNU regex on 
 	  Solaris and NeXTStep.
@@ -11,6 +11,9 @@ Changes to squid-1.1.4 (January XX, 1997):
 	  (Hiroyuki Inoue).
 	- Added 'udp_hit_obj_size' option (Mark Treacy).
 	- Fixed cachemgr.cgi to print 'NEVER' instead of '27Y ago'.
+	- Fixed finding FTP end-of-transfer marker in the middle
+	  of the file.
+	- More ipcache fixes for long-pending requests which get preempted.
 
 Changes to squid-1.novm.3 (January 7, 1996):
 
