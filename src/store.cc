@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.139 1996/10/25 03:44:53 wessels Exp $
+ * $Id: store.cc,v 1.140 1996/10/25 17:34:55 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2488,9 +2488,11 @@ storeInitHashValues(void)
 
     /* Calculate size of hash table.  Target is an arbitrary 10
      * objects per bucket (maximum currently 64k buckets).  */
-    i = Config.Swap.maxSize / AVG_OBJECT_SIZE / 10;
+    i = Config.Swap.maxSize / AVG_OBJECT_SIZE;
     debug(20, 1, "Swap maxSize %d, estimated %d objects\n",
 	Config.Swap.maxSize, i);
+    i /= OBJECTS_PER_BUCKET;
+    debug(20, 1, "Target number of buckets: %d\n", i);
 
     /* ideally the full scan period should be configurable, for the
      * moment it remains at approximately 24 hours.  */
@@ -2506,7 +2508,7 @@ storeInitHashValues(void)
 	store_buckets = 65357, store_maintain_rate = 1;
     store_maintain_buckets = 1;
 
-    debug(20, 1, "Using %d Store buckets, maintain %d bucket%s per %d second%s\n",
+    debug(20, 1, "Using %d Store buckets, maintain %d bucket%s every %d second%s\n",
 	store_buckets,
 	store_maintain_buckets,
 	store_maintain_buckets == 1 ? null_string : "s",
