@@ -248,8 +248,8 @@ storeAufsKickWriteQueue(storeIOState * sio)
     struct _queued_write *q = linklistShift(&aiostate->pending_writes);
     if (NULL == q)
 	return 0;
-    debug(78, 3) ("storeAufsKickWriteQueue: writing queued chunk of %d bytes\n",
-	q->size);
+    debug(78, 3) ("storeAufsKickWriteQueue: writing queued chunk of %ld bytes\n",
+	(long int) q->size);
     storeAufsWrite(INDEXSD(sio->swap_dirn), sio, q->buf, q->size, q->offset, q->free_func);
     memPoolFree(aufs_qwrite_pool, q);
     return 1;
@@ -262,8 +262,8 @@ storeAufsKickReadQueue(storeIOState * sio)
     struct _queued_read *q = linklistShift(&(aiostate->pending_reads));
     if (NULL == q)
 	return 0;
-    debug(78, 3) ("storeAufsKickReadQueue: reading queued request of %d bytes\n",
-	q->size);
+    debug(78, 3) ("storeAufsKickReadQueue: reading queued request of %ld bytes\n",
+	(long int) q->size);
     storeAufsRead(INDEXSD(sio->swap_dirn), sio, q->buf, q->size, q->offset, q->callback, q->callback_data);
     memPoolFree(aufs_qread_pool, q);
     return 1;
@@ -354,8 +354,8 @@ storeAufsWriteDone(int fd, int errflag, size_t len, void *my_data)
     static int loop_detect = 0;
     storeIOState *sio = my_data;
     squidaiostate_t *aiostate = (squidaiostate_t *) sio->fsstate;
-    debug(78, 3) ("storeAufsWriteDone: dirno %d, fileno %08X, FD %d, len %d, err=%d\n",
-	sio->swap_dirn, sio->swap_filen, fd, len, errflag);
+    debug(78, 3) ("storeAufsWriteDone: dirno %d, fileno %08X, FD %d, len %ld, err=%d\n",
+	sio->swap_dirn, sio->swap_filen, fd, (long int) len, errflag);
 #if ASYNC_WRITE
     /* Translate from errno to Squid disk error */
     errno = errflag;

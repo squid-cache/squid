@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.395 2001/10/24 05:46:26 hno Exp $
+ * $Id: cache_cf.cc,v 1.396 2001/10/24 07:45:34 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1260,7 +1260,7 @@ parse_cachedir_option_maxsize(SwapDir * sd, const char *option, const char *valu
     size = atoi(value);
 
     if (reconfiguring && sd->max_objsize != size)
-	debug(3, 1) ("Cache dir '%s' max object size now %d\n", sd->path, size);
+	debug(3, 1) ("Cache dir '%s' max object size now %ld\n", sd->path, (long int) size);
 
     sd->max_objsize = size;
 }
@@ -1269,7 +1269,7 @@ static void
 dump_cachedir_option_maxsize(StoreEntry * e, const char *option, SwapDir * sd)
 {
     if (sd->max_objsize != -1)
-	storeAppendPrintf(e, " %s=%d", option, sd->max_objsize);
+	storeAppendPrintf(e, " %s=%ld", option, (long int) sd->max_objsize);
 }
 
 void
@@ -2001,7 +2001,7 @@ dump_body_size_t(StoreEntry * entry, const char *name, dlink_list bodylist)
 	acl_list *l;
 	acl_access *head = bs->access_list;
 	while (head != NULL) {
-	    storeAppendPrintf(entry, "%s %d %s", name, bs->maxsize,
+	    storeAppendPrintf(entry, "%s %ld %s", name, (long int) bs->maxsize,
 		head->allow ? "Allow" : "Deny");
 	    for (l = head->acl_list; l != NULL; l = l->next) {
 		storeAppendPrintf(entry, " %s%s",

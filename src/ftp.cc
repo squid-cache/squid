@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.314 2001/10/24 06:16:16 hno Exp $
+ * $Id: ftp.cc,v 1.315 2001/10/24 07:45:34 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -799,7 +799,7 @@ ftpParseListing(FtpStateData * ftpState)
     while (*end != '\r' && *end != '\n' && end > sbuf)
 	end--;
     usable = end - sbuf;
-    debug(9, 3) ("ftpParseListing: usable = %d\n", usable);
+    debug(9, 3) ("ftpParseListing: usable = %d\n", (int) usable);
     if (usable == 0) {
 	debug(9, 3) ("ftpParseListing: didn't find end for %s\n", storeUrl(e));
 	xfree(sbuf);
@@ -1126,7 +1126,7 @@ static void
 ftpWriteCommandCallback(int fd, char *bufnotused, size_t size, int errflag, void *data)
 {
     FtpStateData *ftpState = data;
-    debug(9, 7) ("ftpWriteCommandCallback: wrote %d bytes\n", size);
+    debug(9, 7) ("ftpWriteCommandCallback: wrote %d bytes\n", (int) size);
     if (size > 0) {
 	fd_bytes(fd, size, FD_WRITE);
 	kb_incr(&statCounter.server.all.kbytes_out, size);
@@ -1172,7 +1172,7 @@ ftpParseControlReply(char *buf, size_t len, int *codep, int *used)
 	safe_free(sbuf);
 	return NULL;
     }
-    debug(9, 3) ("ftpParseControlReply: %d bytes to play with\n", len);
+    debug(9, 3) ("ftpParseControlReply: %d bytes to play with\n", (int) len);
     end++;
     s = sbuf;
     s += strspn(s, crlf);
@@ -2189,7 +2189,7 @@ static void
 ftpRequestBody(char *buf, size_t size, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *) data;
-    debug(9, 3) ("ftpRequestBody: buf=%p size=%d ftpState=%p\n", buf, size, data);
+    debug(9, 3) ("ftpRequestBody: buf=%p size=%d ftpState=%p\n", buf, (int) size, data);
     ftpState->data.offset = size;
     if (size > 0) {
 	/* DataWrite */
