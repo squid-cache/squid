@@ -43,6 +43,27 @@
 	  check for opendir() failure.
 	- Fixed storeRebuildStart to properly link the directory
 	  list for storeRebuildfromDirectory mode.
+	- Added -S command line option to double-check store
+	  consistency with disk files in storeCleanup().
+	- Fixed a problem with transactional logging.  In many
+	  cases we were adding the public cache key and then
+	  logging a delete for the private key.  This is worthless
+	  because during rebuild we could not locate the previous
+	  public-keyed entry.  Now we assert that only public-keyed
+	  entries can be logged to swap.state.  storeSetPublicKey()
+	  and storeSetPrivateKey() have been modified to log an
+	  ADD or DEL when the key changes.
+	- Fixed storeDirClean bug.  Needed to call
+	  storeDirProperFileno() so the "dirn bits" get set.
+	- Fixed a storeRebuildFromDirectory bug.  fullpath[] and
+	  fullfilename[] were static to that function and did
+	  not change when the "rebuild_dir" arg did.  Moved these
+	  buffers to the rebuild_dir structure.
+	- In storeRebuildFromSwapLog, we were calling storeRelease()
+	  for cache key collisions.  This only set the RELEASE_REQUEST
+	  bit and did not clear the swap_file_number in the filemap or
+	  in the StoreEntry, so the swap file could get unlinked later
+	  when it was really released.
 
 Changes to squid-1.2.beta14 (Feb 6, 1998):
 
