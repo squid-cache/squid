@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.131 1998/09/19 20:51:21 wessels Exp $
+ * $Id: enums.h,v 1.132 1998/09/24 20:20:20 rousskov Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -212,6 +212,7 @@ typedef enum {
     HDR_PROXY_CONNECTION,
     HDR_PUBLIC,
     HDR_RANGE,
+    HDR_REQUEST_RANGE,          /* some clients use this, sigh */
     HDR_REFERER,
     HDR_RETRY_AFTER,
     HDR_SERVER,
