@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.348 2003/03/06 11:51:56 robertc Exp $
+ * $Id: ftp.cc,v 1.349 2003/06/09 04:51:10 robertc Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -690,24 +690,26 @@ ftpListParseParts(const char *buf, struct _ftp_flags flags)
             snprintf(tbuf, 128, "%s %2s %-5s",
                      month, day, year);
 
-        if ((t = strstr(buf, tbuf))) {
+        char const *copyFrom = NULL;
+
+        if ((copyFrom = strstr(buf, tbuf))) {
             p->type = *tokens[0];
             p->size = atoi(size);
             p->date = xstrdup(tbuf);
 
             if (flags.skip_whitespace) {
-                t += strlen(tbuf);
+                copyFrom += strlen(tbuf);
 
-                while (strchr(w_space, *t))
-                    t++;
+                while (strchr(w_space, *copyFrom))
+                    copyFrom++;
             } else {
                 /* XXX assumes a single space between date and filename
                  * suggested by:  Nathan.Bailey@cc.monash.edu.au and
                  * Mike Battersby <mike@starbug.bofh.asn.au> */
-                t += strlen(tbuf) + 1;
+                copyFrom += strlen(tbuf) + 1;
             }
 
-            p->name = xstrdup(t);
+            p->name = xstrdup(copyFrom);
 
             if ((t = strstr(p->name, " -> "))) {
                 *t = '\0';
