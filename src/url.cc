@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.84 1998/03/31 05:37:53 wessels Exp $
+ * $Id: url.cc,v 1.85 1998/04/05 02:34:59 rousskov Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -367,6 +367,29 @@ urlCanonicalClean(const request_t * request)
 	    break;
 	}
     return buf;
+}
+
+/* makes internal url with a given host and port (remote internal url) */
+char *
+urlRInternal(const char *host, int port, const char *dir, const char *name)
+{
+    LOCAL_ARRAY(char, buf, MAX_URL);
+    assert(host && port && name);
+    if (!dir || !*dir)
+	snprintf(buf, MAX_URL, "http://%s:%d/%s", host, port, name);
+    else
+	snprintf(buf, MAX_URL, "http://%s:%d/%s/%s", host, port, dir, name);
+    return buf;
+}
+
+/* makes internal url with local host and port */
+char *
+urlInternal(const char *dir, const char *name)
+{
+    static char host[SQUIDHOSTNAMELEN];
+    xstrncpy(host, getMyHostname(), SQUIDHOSTNAMELEN);
+    Tolower(host);
+    return urlRInternal(host, Config.Port.http->i, dir, name);
 }
 
 request_t *
