@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.229 1998/07/22 20:37:37 wessels Exp $
+ * $Id: neighbors.cc,v 1.230 1998/07/30 22:59:45 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -1066,6 +1066,8 @@ dump_peer_options(StoreEntry * sentry, peer * p)
     if (EBIT_TEST(p->options, NEIGHBOR_HTCP))
 	storeAppendPrintf(sentry, " htcp");
 #endif
+    if (EBIT_TEST(p->options, NEIGHBOR_NO_NETDB_EXCHANGE))
+	storeAppendPrintf(sentry, " no-netdb-exchange");
     if (p->mcast.ttl > 0)
 	storeAppendPrintf(sentry, " ttl=%d", p->mcast.ttl);
     storeAppendPrintf(sentry, "\n");
