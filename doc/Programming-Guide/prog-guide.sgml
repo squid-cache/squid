@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Duane Wessels, Squid Developers
-<date>$Id: prog-guide.sgml,v 1.41 2001/06/18 16:02:55 wessels Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.42 2001/06/18 16:05:47 wessels Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -2047,7 +2047,7 @@ coupling between the storage layer and the replacement policy.
 	<P>The data types are presented in C for the simple reason that squid is
         currently written exclusively in C.
 		
-	<sect2>Function typedefs.
+	<sect2>Function typedefs
 	
 	<P>Each function related to the general case of HTTP authentication has
         a matching typedef. There are some additional function types used to
@@ -2378,7 +2378,7 @@ struct _authscheme_entry {
         any backend existence it needs. Remember any blocking code must go in
         AUTHSSTART function(s) and _MUST_ use callbacks.
 		
-<sect1>How to ``hook in'' new functions to the API.
+<sect1>How to ``hook in'' new functions to the API
 		
 	<P>Start of by figuring the code path that will result in the function
         being called, and what data it will need. Then create a typedef for the
@@ -2588,7 +2588,7 @@ struct _authscheme_entry {
 	variable. Thus, dynamic allocation of headers is not needed.
 
 
-<sect1>Header Manipulation.
+<sect1>Header Manipulation
 
 	<P>
 	The mostly common operations on HTTP headers are testing
@@ -2680,7 +2680,7 @@ struct _authscheme_entry {
 	<em/httpHeaderDelByName()/ function rather than the loop
 	above.
 
-<sect1>I/O and Headers.
+<sect1>I/O and Headers
 
 	<P>
 	To store a header in a file or socket, pack it using
@@ -2692,7 +2692,7 @@ struct _authscheme_entry {
 	HTTP protocol.
 
 
-<sect1>Adding new header-field ids.
+<sect1>Adding new header-field ids
 
 	<P> 
 	Adding new ids is simple. First add new HDR_ entry to the
@@ -2740,7 +2740,7 @@ struct _authscheme_entry {
 	HttpHeaderMask type in <tt/typedefs.h/.
 
 
-<sect1>A Word on Efficiency.
+<sect1>A Word on Efficiency
 
 	<P>
 	<tt/httpHeaderHas()/ is a very cheap (fast) operation
