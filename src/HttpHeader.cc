@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.79 2002/06/24 06:07:38 hno Exp $
+ * $Id: HttpHeader.cc,v 1.80 2002/08/11 07:54:04 robertc Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -380,7 +380,7 @@ httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMas
 int
 httpHeaderReset(HttpHeader * hdr)
 {
-    http_hdr_owner_type ho = hdr->owner;
+    http_hdr_owner_type ho;
     assert(hdr);
     ho = hdr->owner;
     httpHeaderClean(hdr);
