@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.1 1999/04/14 05:16:15 wessels Exp $
+ * $Id: dns_internal.cc,v 1.2 1999/04/14 06:35:34 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -124,7 +124,18 @@ idnsParseResolvConf(void)
 static void
 idnsStats(StoreEntry * sentry)
 {
+    dlink_node *n;
+    idns_query *q;
     storeAppendPrintf(sentry, "Internal DNS Statistics:\n");
+    storeAppendPrintf(sentry, "\nThe Queue:\n");
+	storeAppendPrintf(sentry, " ID  SIZE SENDS   DELAY\n");
+	storeAppendPrintf(sentry, "---- ---- ----- --------\n");
+    for (n = lru_list.head; n; n = n->next) {
+	q = n->data;
+	storeAppendPrintf(sentry, "%#04hx %4d %5d %8.3f\n",
+		q->id, q->sz, q->nsends,
+		tvSubDsec(q->start, current_time));
+    }
 }
 
 static void
@@ -141,6 +152,7 @@ idnsSendQuery(idns_query * q)
 	sizeof(nameservers[ns].S),
 	q->buf,
 	q->sz);
+    q->nsends++;
     dlinkAdd(q, &q->lru, &lru_list);
 }
 
@@ -183,7 +195,7 @@ idnsGrokReply(const char *buf, size_t sz)
 	sz,
 	&answers,
 	&rid);
-    debug(78, 1) ("idnsGrokReply: ID %#hx, %d answers\n", rid, n);
+    debug(78, 3) ("idnsGrokReply: ID %#hx, %d answers\n", rid, n);
     if (rid == 0xFFFF) {
 	debug(78, 1) ("idnsGrokReply: Unknown error\n");
 	/* XXX leak answers? */
@@ -195,6 +207,7 @@ idnsGrokReply(const char *buf, size_t sz)
 	rfc1035RRDestroy(answers, n);
 	return;
     }
+    dlinkDelete(&q->lru, &lru_list);
     if (n < 0)
 	debug(78, 1) ("idnsGrokReply: error %d\n", rfc1035_errno);
     valid = cbdataValid(q->callback_data);
@@ -202,6 +215,7 @@ idnsGrokReply(const char *buf, size_t sz)
     if (valid)
 	q->callback(q->callback_data, answers, n);
     rfc1035RRDestroy(answers, n);
+    memFree(q, MEM_IDNS_QUERY);
 }
 
 static void
@@ -234,7 +248,7 @@ idnsRead(int fd, void *data)
 		    fd, xstrerror());
 	    break;
 	}
-	debug(78, 1) ("idnsRead: FD %d: received %d bytes from %s.\n",
+	debug(78, 3) ("idnsRead: FD %d: received %d bytes from %s.\n",
 	    fd,
 	    len,
 	    inet_ntoa(from.sin_addr));
@@ -290,10 +304,11 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
     idns_query *q = memAllocate(MEM_IDNS_QUERY);
     q->sz = sizeof(q->buf);
     q->id = rfc1035BuildAQuery(name, q->buf, &q->sz);
-    debug(78, 1) ("idnsSubmit: buf is %d bytes for %s, id = %#hx\n",
+    debug(78, 3) ("idnsALookup: buf is %d bytes for %s, id = %#hx\n",
 	(int) q->sz, name, q->id);
     q->callback = callback;
     q->callback_data = data;
     cbdataLock(q->callback_data);
+    q->start = current_time;
     idnsSendQuery(q);
 }
