@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.343 2002/10/21 05:54:12 adrian Exp $
+ * $Id: comm.cc,v 1.344 2002/10/21 06:43:07 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -554,7 +554,7 @@ fdc_open(int fd, unsigned int type, char *desc)
  */
 
 int
-comm_recvfrom(int fd, void *buf, size_t len, int flags,
+comm_udp_recvfrom(int fd, void *buf, size_t len, int flags,
   struct sockaddr *from, socklen_t *fromlen)
 {
 	statCounter.syscalls.sock.recvfroms++;     
@@ -562,13 +562,13 @@ comm_recvfrom(int fd, void *buf, size_t len, int flags,
 }
 
 int
-comm_recv(int fd, void *buf, size_t len, int flags)
+comm_udp_recv(int fd, void *buf, size_t len, int flags)
 {
-	return comm_recvfrom(fd, buf, len, flags, NULL, 0);
+	return comm_udp_recvfrom(fd, buf, len, flags, NULL, 0);
 }
 
 ssize_t
-comm_send(int s, const void *buf, size_t len, int flags)
+comm_udp_send(int s, const void *buf, size_t len, int flags)
 {
 	return send(s, buf, len, flags);
 }

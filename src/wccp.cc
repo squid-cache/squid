@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.27 2002/10/21 05:54:36 adrian Exp $
+ * $Id: wccp.cc,v 1.28 2002/10/21 06:43:08 adrian Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Glenn Chisholm
@@ -220,7 +220,7 @@ wccpHandleUdp(int sock, void *not_used)
     memset(&from, '\0', from_len);
     memset(&wccp_i_see_you, '\0', sizeof(wccp_i_see_you));
 
-    len = comm_recvfrom(sock,
+    len = comm_udp_recvfrom(sock,
 	(void *) &wccp_i_see_you,
 	WCCP_RESPONSE_SIZE,
 	0,

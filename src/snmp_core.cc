@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.57 2002/10/21 06:34:04 adrian Exp $
+ * $Id: snmp_core.cc,v 1.58 2002/10/21 06:43:07 adrian Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -460,7 +460,7 @@ snmpHandleUdp(int sock, void *not_used)
     memset(&from, '\0', from_len);
     memset(buf, '\0', SNMP_REQUEST_SIZE);
 
-    len = comm_recvfrom(sock,
+    len = comm_udp_recvfrom(sock,
 	buf,
 	SNMP_REQUEST_SIZE,
 	0,
