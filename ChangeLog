@@ -1,3 +1,7 @@
+	- Fixed 'quick_abort' parsing bug
+	- NULL terminate too-long URL strings in urlParse().
+	- Added shadow password patch from John Saunders <johns@rd.scitec.com.au>
+
 Changes to squid-1.1.alpha12:
 
 	- Rewrote storeGetMemSpace().
