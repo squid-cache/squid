@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.41 1996/11/24 04:33:00 wessels Exp $
+ * $Id: fqdncache.cc,v 1.42 1996/11/25 06:15:30 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -510,7 +510,7 @@ fqdncache_parsebuffer(const char *inbuf, dnsserver_t * dnsData)
     return &f;
 }
 
-static void 
+static void
 fqdncache_dnsHandleRead(int fd, void *data)
 {
     dnsserver_t *dnsData = data;

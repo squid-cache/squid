@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.46 1996/11/23 07:09:45 wessels Exp $
+ * $Id: cachemgr.cc,v 1.47 1996/11/25 06:15:29 wessels Exp $
  *
  * DEBUG: Section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -899,9 +899,15 @@ main(int argc, char *argv[])
 		    p_state = 1;
 		    for (s = reserve; *s; s++)
 			switch (*s) {
-			case '<': printf("&lt;");  break;
-			case '&': printf("&amp;"); break;
-			default:  putchar(*s);     break;
+			case '<':
+			    printf("&lt;");
+			    break;
+			case '&':
+			    printf("&amp;");
+			    break;
+			default:
+			    putchar(*s);
+			    break;
 			}
 		    break;
 		case INFO:
