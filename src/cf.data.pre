@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.271 2002/07/03 08:52:34 hno Exp $
+# $Id: cf.data.pre,v 1.272 2002/07/14 23:51:06 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -3793,11 +3793,15 @@ DOC_END
 NAME: pipeline_prefetch
 TYPE: onoff
 LOC: Config.onoff.pipeline_prefetch
-DEFAULT: on
+DEFAULT: off
 DOC_START
 	To boost the performance of pipelined requests to closer
 	match that of a non-proxied environment Squid tries to fetch
 	up to two requests in parallell from a pipeline.
+
+	Note: This is known to be broken in Squid-DEVEL due to changes
+	in the internal store_client_copy() interface. Do not enable
+	for now.
 DOC_END
 
 NAME: extension_methods
