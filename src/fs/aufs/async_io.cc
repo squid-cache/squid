@@ -1,6 +1,6 @@
 
 /*
- * $Id: async_io.cc,v 1.4 2000/06/08 18:05:37 hno Exp $
+ * $Id: async_io.cc,v 1.5 2000/06/27 08:33:53 hno Exp $
  *
  * DEBUG: section 32    Asynchronous Disk I/O
  * AUTHOR: Pete Bentley <pete@demon.net>
@@ -42,6 +42,7 @@
 #define _AIO_WRITE	2
 #define _AIO_CLOSE	3
 #define _AIO_UNLINK	4
+#define _AIO_TRUNCATE	4
 #define _AIO_OPENDIR	5
 #define _AIO_STAT	6
 
@@ -346,6 +347,34 @@ aioUnlink(const char *pathname, AIOCB * callback, void *callback_data)
     used_list = ctrlp;
     xfree(path);
 }				/* aioUnlink */
+
+void
+aioTruncate(const char *pathname, off_t length, AIOCB * callback, void *callback_data)
+{
+    aio_ctrl_t *ctrlp;
+    char *path;
+    assert(initialised);
+    aio_counts.unlink++;
+    ctrlp = memPoolAlloc(aio_ctrl_pool);
+    ctrlp->fd = -2;
+    ctrlp->done_handler = callback;
+    ctrlp->done_handler_data = callback_data;
+    ctrlp->operation = _AIO_TRUNCATE;
+    path = xstrdup(pathname);
+    cbdataLock(callback_data);
+    if (aio_truncate(path, length, &ctrlp->result) < 0) {
+	int ret = truncate(path, length);
+        if (callback)
+	    (callback) (ctrlp->fd, callback_data, ret, errno);
+	cbdataUnlock(callback_data);
+	memPoolFree(aio_ctrl_pool, ctrlp);
+	xfree(path);
+	return;
+    }
+    ctrlp->next = used_list;
+    used_list = ctrlp;
+    xfree(path);
+}				/* aioTruncate */
 
 
 int
