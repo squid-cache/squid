@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.86 1996/08/21 20:09:52 wessels Exp $
+ * $Id: store.cc,v 1.87 1996/08/23 21:25:59 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -215,6 +215,8 @@ static char *storeDescribeStatus _PARAMS((StoreEntry *));
 static int compareLastRef _PARAMS((StoreEntry ** e1, StoreEntry ** e2));
 static int compareSize _PARAMS((StoreEntry ** e1, StoreEntry ** e2));
 static int storeClientListSearch _PARAMS((MemObject *, int fd));
+static void storeHashMemInsert _PARAMS((StoreEntry *));
+static void storeHashMemDelete _PARAMS((StoreEntry *));
 
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */
@@ -323,7 +325,7 @@ static void destroy_StoreEntry(e)
 static mem_ptr new_MemObjectData()
 {
     debug(20, 3, "new_MemObjectData: calling memInit()\n");
-    meta_data.hot_vm++;
+    /* meta_data.hot_vm++; */
     return memInit();
 }
 
@@ -339,7 +341,7 @@ static void destroy_MemObjectData(mem)
     if (mem->data) {
 	mem->data->mem_free(mem->data);
 	mem->data = NULL;
-	meta_data.hot_vm--;
+	/* meta_data.hot_vm--; */
     }
     mem->e_current_len = 0;
 }
@@ -359,9 +361,22 @@ HashID storeCreateHashTable(cmp_func)
     return store_table;
 }
 
-/*
- * if object is in memory, also insert into in_mem_table
- */
+static void storeHashMemInsert(e)
+     StoreEntry *e;
+{
+    hash_insert(in_mem_table, e->key, e);
+    meta_data.hot_vm++;
+}
+
+static void storeHashMemDelete(e)
+     StoreEntry *e;
+{
+    hash_link *hptr = hash_lookup(in_mem_table, e->key);
+    if (hptr == NULL)
+	fatal_dump("storeHashMemDelete: key not found");
+    hash_delete_link(in_mem_table, hptr);
+    meta_data.hot_vm--;
+}
 
 static int storeHashInsert(e)
      StoreEntry *e;
@@ -369,45 +384,32 @@ static int storeHashInsert(e)
     debug(20, 3, "storeHashInsert: Inserting Entry %p key '%s'\n",
 	e, e->key);
     if (e->mem_status == IN_MEMORY)
-	hash_insert(in_mem_table, e->key, e);
-    return (hash_join(store_table, (hash_link *) e));
+	storeHashMemInsert(e);
+    return hash_join(store_table, (hash_link *) e);
 }
-
-/*
- * if object in memory, also remove from in_mem_table
- */
 
 static int storeHashDelete(e)
      StoreEntry *e;
 {
-    hash_link *hptr = NULL;
-    if (e->mem_status == IN_MEMORY && e->key) {
-	if ((hptr = hash_lookup(in_mem_table, e->key)))
-	    hash_delete_link(in_mem_table, hptr);
-    }
-    return (hash_remove_link(store_table, (hash_link *) e));
+    if (e->mem_status == IN_MEMORY)
+	storeHashMemDelete(e);
+    return hash_remove_link(store_table, (hash_link *) e);
 }
 
 /*
  * maintain the in-mem hash table according to the changes of mem_status
  * This routine replaces the instruction "e->store_status = status;"
  */
-
 void storeSetMemStatus(e, status)
      StoreEntry *e;
      mem_status_t status;
 {
-    hash_link *ptr = NULL;
-
     if (e->key == NULL)
 	fatal_dump("storeSetMemStatus: NULL key");
-
-    if (status != IN_MEMORY && e->mem_status == IN_MEMORY) {
-	if ((ptr = hash_lookup(in_mem_table, e->key)))
-	    hash_delete_link(in_mem_table, ptr);
-    } else if (status == IN_MEMORY && e->mem_status != IN_MEMORY) {
-	hash_insert(in_mem_table, e->key, e);
-    }
+    if (status != IN_MEMORY && e->mem_status == IN_MEMORY)
+	storeHashMemDelete(e);
+    else if (status == IN_MEMORY && e->mem_status != IN_MEMORY)
+	storeHashMemInsert(e);
     e->mem_status = status;
 }
 
@@ -742,8 +744,6 @@ StoreEntry *storeCreateEntry(url, req_hdr, flags, method)
     MemObject *mem = NULL;
     debug(20, 3, "storeCreateEntry: '%s' icp flags=%x\n", url, flags);
 
-    if (meta_data.hot_vm > store_hotobj_high)
-	storeGetMemSpace(0, 1);
     e = new_StoreEntry(WITH_MEMOBJ);
     e->lock_count = 1;		/* Note lock here w/o calling storeLock() */
     mem = e->mem_obj;
@@ -1714,6 +1714,8 @@ int storeAbort(e, msg)
     LOCAL_ARRAY(char, abort_msg, 2000);
     MemObject *mem = e->mem_obj;
 
+    if (e->store_status != STORE_PENDING)	/* XXX remove later */
+	fatal_dump("storeAbort: bad store_status");
     if (mem == NULL)		/* XXX remove later */
 	fatal_dump("storeAbort: null mem");
 
@@ -1883,168 +1885,78 @@ int storeGetMemSpace(size, check_vm_number)
      int size;
      int check_vm_number;
 {
-    static int over_highwater = 0;
-    static int over_max = 0;
-    StoreEntry *LRU = NULL, *e = NULL;
-    dynamic_array *LRU_list = NULL;
-    dynamic_array *pending_entry_list = NULL;
-    int entry_to_delete_behind = 0;
-    int n_deleted_behind = 0;
-    int n_scanned = 0;
+    StoreEntry *e = NULL;
+    StoreEntry **list = NULL;
+    int list_count = 0;
     int n_expired = 0;
-    int n_purged = 0;
     int n_released = 0;
     int i;
-    int n_inmem = 0;		/* extra debugging */
-    int n_locked = 0;		/* extra debugging */
-    int locked_bytes = 0;	/* extra debugging */
-    int compareLastRef();
-    int compareSize();
+    static time_t last_warning = 0;
+    static time_t last_check = 0;
 
-    if (!check_vm_number && ((store_mem_size + size) < store_mem_high))
+    if (squid_curtime == last_check)
 	return 0;
+    last_check = squid_curtime;
 
+    if (meta_data.hot_vm < store_hotobj_high && ((store_mem_size + size) < store_mem_high))
+	return 0;
     debug(20, 2, "storeGetMemSpace: Starting...\n");
 
-    LRU_list = create_dynamic_array(meta_data.store_in_mem_objects, MEM_LRUSCAN_BLOCK);
-    pending_entry_list = create_dynamic_array(meta_data.store_in_mem_objects, MEM_LRUSCAN_BLOCK);
-
+    list = xcalloc(meta_data.store_in_mem_objects, sizeof(ipcache_entry *));
     for (e = storeGetInMemFirst(); e; e = storeGetInMemNext()) {
-	n_scanned++;
-	n_inmem++;
-	if (e->store_status == STORE_PENDING) {
-	    if (!(e->flag & DELETE_BEHIND)) {
-		/* it's not deleting behind, we can do something about it. */
-		insert_dynamic_array(pending_entry_list, e);
-	    }
+	if (list_count == meta_data.store_in_mem_objects)
+	    break;
+	if (storeEntryLocked(e))
 	    continue;
-	}
 	if (squid_curtime > e->expires) {
 	    debug(20, 2, "storeGetMemSpace: Expired: %s\n", e->url);
 	    n_expired++;
-	    /* Delayed release */
 	    storeRelease(e);
 	    continue;
 	}
-	if (squid_curtime + Config.negativeTtl > e->expires) {
-	    debug(20, 2, "storeGetMemSpace: '%s' expires with Negative TTL time\n", e->url);
-	    continue;
-	}
-	if (!storeEntryLocked(e)) {
-	    insert_dynamic_array(LRU_list, e);
-	} else {
-	    n_locked++;
-	    locked_bytes += e->mem_obj->e_current_len;
-	    debug(20, 5, "storeGetMemSpace: Locked: %s\n",
-		storeDescribeStatus(e));
-	}
+	debug(20, 3, "storeGetMemSpace: Adding '%s'\n", e->url);
+	*(list + list_count) = e;
+	list_count++;
     }
 #ifdef EXTRA_DEBUGGING
     debug(20, 5, "storeGetMemSpace: Current size:     %7d bytes\n", store_mem_size);
     debug(20, 5, "storeGetMemSpace: High W Mark:      %7d bytes\n", store_mem_high);
     debug(20, 5, "storeGetMemSpace: Low W Mark:       %7d bytes\n", store_mem_low);
     debug(20, 5, "storeGetMemSpace: Entry count:      %7d items\n", meta_data.store_entries);
-    debug(20, 5, "storeGetMemSpace: Scanned:          %7d items\n", n_scanned);
-    debug(20, 5, "storeGetMemSpace: In memory:        %7d items\n", n_inmem);
-    debug(20, 5, "storeGetMemSpace: Hot vm count:     %7d items\n", meta_data.hot_vm);
-    debug(20, 5, "storeGetMemSpace: Expired:          %7d items\n", n_expired);
-    debug(20, 5, "storeGetMemSpace: Can't purge:      %7d items\n", n_locked);
-    debug(20, 5, "storeGetMemSpace: Can't purge size: %7d bytes\n", locked_bytes);
-    debug(20, 5, "storeGetMemSpace: Sorting LRU_list: %7d items\n", LRU_list->index);
 #endif
-    qsort((char *) LRU_list->collection,
-	LRU_list->index,
-	sizeof(StoreEntry *),
-	(QS) compareLastRef);
-
-    /* Kick LRU out until we have enough memory space */
-
-    if (check_vm_number) {
-	/* look for vm slot */
-	for (i = 0; (i < LRU_list->index) && (meta_data.hot_vm > store_hotobj_low); i++) {
-	    if ((LRU = (StoreEntry *) LRU_list->collection[i]))
-		if ((LRU->store_status != STORE_PENDING) && (LRU->swap_status == NO_SWAP)) {
-		    n_released++;
-		    storeRelease(LRU);
-		} else {
-		    n_purged++;
-		    storePurgeMem(LRU);
-		}
-	}
-    } else {
-	/* look for space */
-	for (i = 0; (i < LRU_list->index) && ((store_mem_size + size) > store_mem_low); i++) {
-	    if ((LRU = (StoreEntry *) LRU_list->collection[i]))
-		if ((LRU->store_status != STORE_PENDING) && (LRU->swap_status == NO_SWAP)) {
-		    n_released++;
-		    storeRelease(LRU);
-		} else {
-		    n_purged++;
-		    storePurgeMem(LRU);
-		}
-	}
-    }
-
-    destroy_dynamic_array(LRU_list);
-
-    debug(20, 2, "storeGetMemSpace: After freeing size: %7d bytes\n", store_mem_size);
-    debug(20, 2, "storeGetMemSpace: Purged:             %7d items\n", n_purged);
-    debug(20, 2, "storeGetMemSpace: Released:           %7d items\n", n_released);
-
-
-    if (check_vm_number) {
-	/* don't check for size */
-	destroy_dynamic_array(pending_entry_list);
-	debug(20, 2, "storeGetMemSpace: Done.\n");
-	return 0;
-    }
-    if ((store_mem_size + size) < store_mem_high) {
-	/* we don't care for hot_vm count here, just the storage size. */
-	over_highwater = over_max = 0;
-	destroy_dynamic_array(pending_entry_list);
-	debug(20, 2, "storeGetMemSpace: Done.\n");
-	return 0;
-    }
-    if ((store_mem_size + size) < Config.Mem.maxSize) {
-	/* We're over high water mark here, but still under absolute max */
-	if (!over_highwater) {
-	    /* print only once when the condition occur until it clears. */
-	    debug(20, 1, "storeGetMemSpace: Allocating beyond the high water mark with total size of %d\n",
-		store_mem_size + size);
-	    over_highwater = 1;
-	}
-	/* we can delete more than one if we want to be more aggressive. */
-	entry_to_delete_behind = 1;
-    } else {
-	/* We're over absolute max */
-	if (!over_max) {
-	    /* print only once when the condition occur until it clears. */
-	    debug(20, 1, "storeGetMemSpace: Allocating beyond the MAX Store with total size of %d\n",
-		store_mem_size + size);
-	    debug(20, 1, " Start Deleting Behind for every pending objects\n");
-	    debug(20, 1, " You should really adjust your cache_mem, high/low water mark,\n");
-	    debug(20, 1, " max object size to suit your need.\n");
-	    over_max = 1;
-	}
-	/* delete all of them, we desperate for a space. */
-	entry_to_delete_behind = pending_entry_list->index;
-    }
-
-    /* sort the stuff by size */
-    qsort((char *) pending_entry_list->collection,
-	pending_entry_list->index,
+    debug(20, 5, "storeGetMemSpace: Sorting LRU_list: %7d items\n", list_count);
+    qsort((char *) list,
+	list_count,
 	sizeof(StoreEntry *),
 	(QS) compareSize);
-    for (i = 0; (i < pending_entry_list->index) && (i < entry_to_delete_behind); i++)
-	if (pending_entry_list->collection[i]) {
-	    n_deleted_behind++;
-	    storeStartDeleteBehind(pending_entry_list->collection[i]);
-	}
-    if (n_deleted_behind) {
-	debug(20, 1, "storeGetMemSpace: Due to memory flucuation, put %d objects to DELETE_BEHIND MODE.\n",
-	    n_deleted_behind);
+
+    /* Kick LRU out until we have enough memory space */
+    for (i = 0; i < list_count; i++) {
+	if (meta_data.hot_vm > store_hotobj_low) {
+	    storeRelease(*(list + i));
+	    n_released++;
+	} else if ((store_mem_size + size) > store_mem_low) {
+	    storeRelease(*(list + i));
+	    n_released++;
+	} else
+	    break;
     }
-    destroy_dynamic_array(pending_entry_list);
+
+    debug(20, 2, "storeGetMemSpace: After freeing size: %7d bytes\n", store_mem_size);
+    debug(20, 2, "storeGetMemSpace: Released:           %7d items\n", n_released);
+    if (meta_data.hot_vm > store_hotobj_high) {
+	if (squid_curtime - last_warning > 10) {
+	    debug(20, 0, "WARNING: Over hot_vm object count (%d > %d)\n",
+		meta_data.hot_vm, store_hotobj_high);
+	    last_warning = squid_curtime;
+	}
+    } else if ((store_mem_size + size) > store_mem_high) {
+	if (squid_curtime - last_warning > 10) {
+	    debug(20, 0, "WARNING: Over store_mem high-water mark (%d > %d)\n",
+		store_mem_size + size, store_mem_high);
+	    last_warning = squid_curtime;
+	}
+    }
     debug(20, 2, "storeGetMemSpace: Done.\n");
     return 0;
 }
@@ -2701,6 +2613,14 @@ int storeInit()
     store_hotobj_low = (int) (Config.hotVmFactor *
 	store_mem_low / (1 << 20));
 
+    /* Note, there will always be a few 'hot_vm' objects as the
+     * make the transition from STORE_PENDING to SWAPPING_OUT.
+     Set some minimum values to prevent thrasing and warning
+     messages. */
+    if (store_hotobj_high < 32) {
+	store_hotobj_high = 32;
+	store_hotobj_low = 16;
+    }
     /* check for validity */
     if (store_hotobj_low > store_hotobj_high)
 	store_hotobj_low = store_hotobj_high;
