@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.295 1998/10/06 18:32:41 wessels Exp $
+ * $Id: stat.cc,v 1.296 1998/10/08 03:17:30 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1286,7 +1286,11 @@ statByteHitRatio(int minutes)
     assert(minutes < N_COUNT_HIST);
     c = CountHist[0].client_http.kbytes_out.kb - CountHist[minutes].client_http.kbytes_out.kb;
     s = CountHist[0].server.all.kbytes_in.kb - CountHist[minutes].server.all.kbytes_in.kb;
-    return dpercent(c - s, c);
+    /* size_t might be unsigned */
+    if (c > s)
+    	return dpercent(c - s, c);
+    else
+    	return (-1.0 * dpercent(s - c, c));
 }
 
 #if STAT_GRAPHS
