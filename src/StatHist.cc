@@ -1,6 +1,6 @@
 
 /*
- * $Id: StatHist.cc,v 1.5 1998/03/05 00:42:45 wessels Exp $
+ * $Id: StatHist.cc,v 1.6 1998/04/12 06:00:44 rousskov Exp $
  *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels
@@ -222,4 +222,12 @@ void
 statHistEnumInit(StatHist * H, int last_enum)
 {
     statHistInit(H, last_enum + 3, &Null, &Null, -1, last_enum + 1 + 1);
+}
+
+void
+statHistIntDumper(StoreEntry * sentry, int idx, double val, double size, int count)
+{
+    if (count)
+        storeAppendPrintf(sentry, "%2d\t %5d\t %5d\n",
+            idx, (int) val, count);
 }
