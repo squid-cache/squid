@@ -1,5 +1,5 @@
 /*
- * $Id: config.h,v 1.2 2001/10/08 16:18:31 hno Exp $
+ * $Id: config.h,v 1.3 2001/10/22 23:55:43 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -34,7 +34,7 @@
 #ifndef SQUID_CONFIG_H
 #define SQUID_CONFIG_H
 
-#include "autoconf.h"	/* For GNU autoconf variables */
+#include "autoconf.h"		/* For GNU autoconf variables */
 #include "version.h"
 
 /****************************************************************************
@@ -50,40 +50,40 @@
 #endif
 
 /* define the _SQUID_TYPE_ based on a guess of the OS */
-#if defined(__sun__) || defined(__sun)		/* SUN */
+#if defined(__sun__) || defined(__sun)	/* SUN */
 #define _SQUID_SUN_
-#if defined(__SVR4)				/* SOLARIS */
+#if defined(__SVR4)		/* SOLARIS */
 #define _SQUID_SOLARIS_
-#else						/* SUNOS */
+#else /* SUNOS */
 #define _SQUID_SUNOS_
 #endif
 
-#elif defined(__hpux)                           /* HP-UX - SysV-like? */
+#elif defined(__hpux)		/* HP-UX - SysV-like? */
 #define _SQUID_HPUX_
 #define _SQUID_SYSV_
 
-#elif defined(__osf__)                          /* OSF/1 */
+#elif defined(__osf__)		/* OSF/1 */
 #define _SQUID_OSF_
 
-#elif defined(__ultrix)				/* Ultrix */
+#elif defined(__ultrix)		/* Ultrix */
 #define _SQUID_ULTRIX_
 
-#elif defined(_AIX)                          	/* AIX */
+#elif defined(_AIX)		/* AIX */
 #define _SQUID_AIX_
 
-#elif defined(__linux__)                        /* Linux */
+#elif defined(__linux__)	/* Linux */
 #define _SQUID_LINUX_
 #if USE_ASYNC_IO
 #define _SQUID_LINUX_THREADS_
 #endif
 
-#elif defined(__FreeBSD__)			/* FreeBSD */
+#elif defined(__FreeBSD__)	/* FreeBSD */
 #define _SQUID_FREEBSD_
 #if USE_ASYNC_IO && defined(LINUXTHREADS)
 #define _SQUID_LINUX_THREADS_
 #endif
 
-#elif defined(__sgi__)	|| defined(sgi) || defined(__sgi) /* SGI */
+#elif defined(__sgi__)	|| defined(sgi) || defined(__sgi)	/* SGI */
 #define _SQUID_SGI_
 #if !defined(_SVR4_SOURCE)
 #define _SVR4_SOURCE		/* for tempnam(3) */
@@ -96,12 +96,12 @@
 #define _SQUID_NEXT_
 
 #elif defined(__bsdi__)
-#define _SQUID_BSDI_                          /* BSD/OS */
+#define _SQUID_BSDI_		/* BSD/OS */
 
 #elif defined(__NetBSD__)
 #define _SQUID_NETBSD_
 
-#elif defined(__CYGWIN32__)  || defined(__CYGWIN__) 
+#elif defined(__CYGWIN32__)  || defined(__CYGWIN__)
 #define _SQUID_CYGWIN_
 
 #elif defined(WIN32) || defined(WINNT) || defined(__WIN32__) || defined(__WIN32)
@@ -173,6 +173,12 @@
 #else
 #define squid_random rand
 #define squid_srandom srand
+#endif
+
+#if __GNUC__
+#define PRINTF_FORMAT_ARG(pos) __attribute__ ((format (printf, pos, pos + 1)))
+#else
+#define PRINTF_FORMAT_ARG(pos)
 #endif
 
 #endif /* SQUID_CONFIG_H */
