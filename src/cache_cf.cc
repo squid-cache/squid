@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.210 1997/07/16 20:31:57 wessels Exp $
+ * $Id: cache_cf.cc,v 1.211 1997/07/16 20:55:42 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -486,24 +486,16 @@ parse_peer(peer ** head)
     peer *p;
     int i;
     ushortlist *u;
-    const char *me = getMyHostname();
-debug(0,0)("this be cache_peer()\n");
-debug(0,0)("%s\n", strtok(NULL, null_string));
+    const char *me = getMyHostname();;
     p = xcalloc(1, sizeof(peer));
     p->http_port = CACHE_HTTP_PORT;
     p->icp_port = CACHE_ICP_PORT;
     p->weight = 1;
-    token = strtok(NULL, w_space);
-debug(0,0)("token = %p\n", token);
-    if (token == NULL) {
-	debug(0,0)("bad hostname\n");
+    if ((token = strtok(NULL, w_space)) == NULL)
 	self_destruct();
-    }
     p->host = xstrdup(token);
-    if ((token = strtok(NULL, w_space)) == NULL) {
-	debug(0, 0) ("bad type\n");
+    if ((token = strtok(NULL, w_space)) == NULL)
 	self_destruct();
-    }
     p->type = parseNeighborType(token);
     GetInteger(i);
     p->http_port = (u_short) i;
