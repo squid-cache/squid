@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.101 1996/11/08 00:02:23 wessels Exp $
+ * $Id: stat.cc,v 1.102 1996/11/12 07:06:45 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -996,11 +996,11 @@ static char c2x[] =
 
 /* log_quote -- URL-style encoding on MIME headers. */
 
-char *
-log_quote(const char *header)
+static char *
+log_quote(const unsigned char *header)
 {
     int c, i;
-    char *buf, *buf_cursor;
+    unsigned char *buf, *buf_cursor;
     if (header == NULL) {
 	buf = xcalloc(1, 1);
 	*buf = '\0';
