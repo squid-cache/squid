@@ -73,6 +73,9 @@
 /* Define if you have the mallinfo function.  */
 #undef HAVE_MALLINFO
 
+/* Define if you have the mallocblksize function.  */
+#undef HAVE_MALLOCBLKSIZE
+
 /* Define if you have the mallopt function.  */
 #undef HAVE_MALLOPT
 
