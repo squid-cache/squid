@@ -842,6 +842,8 @@ struct _MemObject {
 	off_t queue_offset;
 	off_t done_offset;
 	int fd;
+        int meta_len;
+        char *meta_buf;
     } swapout;
     struct _http_reply *reply;
     request_t *request;
@@ -868,10 +870,11 @@ struct _StoreEntry {
     time_t expires;
     time_t lastmod;
     int object_len;
+    u_short refcount;
+    u_short flag;
+
     int swap_file_number;
     dlink_node lru;
-    u_short flag;
-    u_short refcount;
     u_char lock_count;		/* Assume < 256! */
     mem_status_t mem_status:3;
     ping_status_t ping_status:3;

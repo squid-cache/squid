@@ -374,3 +374,14 @@ enum {
     SNMP_C_USER,
     SNMP_C_COMMUNITY
 };
+
+enum {
+    SWAP_META_VOID,		/* should not come up */
+    SWAP_META_KEY_URL,		/* key w/ keytype */
+    SWAP_META_KEY_SHA,
+    SWAP_META_KEY_MD5,
+    SWAP_META_URL,		/* the url , if not in the header */
+    SWAP_META_STD,		/* standard metadata */
+    SWAP_META_HITMETERING,	/* reserved for hit metering */
+    SWAP_META_VALID
+};

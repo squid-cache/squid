@@ -173,3 +173,7 @@
 #define VIEWINCLUDED    1
 #define VIEWEXCLUDED    2
 #endif
+
+#define META_OK     0x03
+#define META_DIRTY  0x04
+#define META_BAD    0x05
