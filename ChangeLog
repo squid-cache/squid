@@ -1,3 +1,7 @@
+	- A generic client-to-server "pump" was added to handle HTTP PUT as 
+	  well as POST methods on the client-cache side. Based on "pump" 
+	  PUT requests can be made to either HTTP or FTP url's. Code is still
+	  beta and interoperability with browsers etc has not been tested.
 	- Fixed ICP bug when we send queries, but expect zero
 	  replies.
 	- Fixed alignment/casting bugs for ICP messages.
