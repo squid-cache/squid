@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.188 1997/10/13 22:09:11 kostas Exp $
+ * $Id: http.cc,v 1.189 1997/10/14 18:31:24 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1015,11 +1015,7 @@ httpStart(request_t * request, StoreEntry * entry, peer * e)
 	RequestMethodStr[request->method], entry->url);
     if (e) {
 	if (e->options & NEIGHBOR_PROXY_ONLY)
-#if DONT_USE_VM
 	    storeReleaseRequest(entry);
-#else
-	    storeStartDeleteBehind(entry);
-#endif
 	if ((fd = pconnPop(e->host, e->http_port)) >= 0) {
 	    debug(11, 3) ("httpStart: reusing pconn FD %d\n", fd);
 	    httpState = httpBuildState(fd, entry, request, e);

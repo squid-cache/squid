@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.81 1997/10/13 22:09:26 kostas Exp $
+ * $Id: wais.cc,v 1.82 1997/10/14 18:31:28 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -171,7 +171,6 @@ waisReadReply(int fd, void *data)
     }
     if (entry->flag & DELETE_BEHIND && !storeClientWaiting(entry)) {
 	/* we can terminate connection right now */
-	assert(!ERR_NO_CLIENTS);
 	storeAbort(entry, 0);
 	comm_close(fd);
 	return;
