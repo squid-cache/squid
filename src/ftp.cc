@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.299 2000/11/13 21:45:48 adrian Exp $
+ * $Id: ftp.cc,v 1.300 2000/11/14 07:06:19 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2494,13 +2494,13 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
 	HttpHdrRangeSpec range_spec;
 	range_spec.offset = ftpState->restarted_offset;
 	range_spec.length = ftpState->size - ftpState->restarted_offset;
-        httpBuildVersion(&version,1,0);
+	httpBuildVersion(&version, 1, 0);
 	httpReplySetHeaders(reply, version, HTTP_PARTIAL_CONTENT, "Gatewaying",
 	    mime_type, ftpState->size - ftpState->restarted_offset, ftpState->mdtm, -2);
 	httpHeaderAddContRange(&reply->header, range_spec, ftpState->size);
     } else {
 	/* Full reply */
-        httpBuildVersion(&version,1,0);
+	httpBuildVersion(&version, 1, 0);
 	httpReplySetHeaders(reply, version, HTTP_OK, "Gatewaying",
 	    mime_type, ftpState->size, ftpState->mdtm, -2);
     }
