@@ -76,3 +76,6 @@
 	- Removed check for "\r\n" in icpRead, use 'immed' flag instead
 	- Invented request_t struct and urlParse to avoid sscanf'ing
 	  the URL string too often.
+
+alpha19
+	- Fixed problem with free()'ing config_file.
