@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.97 1998/08/17 22:04:56 wessels Exp $
+# $Id: cf.data.pre,v 1.98 1998/08/17 23:27:59 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -922,31 +922,28 @@ redirect_children 5
 DOC_END
 
 NAME: authenticate_program
-TYPE: string
+TYPE: wordlist
 LOC: Config.Program.authenticate
 DEFAULT: none
 DOC_START
-	Specify the location of the executable for the authenticator.
-	Such a program reads a line containing "username password"
-	and replies "OK" or "ERR" in an endless loop.
-	If you use an authenticator, make sure you have 1 acl of type
-	proxy_auth.
-	By default, the authenticator_program is not used.
+	Specify the command for the external authenticator.  Such a
+	program reads a line containing "username password" and replies
+	"OK" or "ERR" in an endless loop.  If you use an authenticator,
+	make sure you have 1 acl of type proxy_auth.  By default, the
+	authenticator_program is not used.
 
-authenticate_program @DEFAULT_AUTH_PROGRAM@
+	If you want to use the traditional proxy authentication,
+	jump over to the ../auth_modules/NCSA directory and
+	type:
+		% make
+		% make install
+
+	Then, set this line to something like
+
+	authenticate_program @DEFAULT_PREFIX@/bin/ncsa_auth @DEFAULT_PREFIX@/etc/passwd
+
+authenticate_program none
 DOC_END
-
-
-NAME: authenticate_options
-TYPE: wordlist
-LOC: Config.Program.authenticate_options
-DEFAULT: none
-DOC_START
-	Command line options for the authenticate program.
-
-authenticate_options @DEFAULT_PASSWD_FILE@
-DOC_END
-
 
 NAME: authenticate_children
 TYPE: int
