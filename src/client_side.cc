@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.440 1999/01/29 23:39:15 wessels Exp $
+ * $Id: client_side.cc,v 1.441 1999/03/24 00:17:03 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1295,6 +1295,35 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 }
 
 
+/* appends a "part" HTTP header (as in a multi-part/range reply) to the buffer */
+static void
+clientPackRangeHdr(const HttpReply *rep, const HttpHdrRangeSpec *spec, String boundary, MemBuf *mb)
+{
+    HttpHeader hdr;
+    Packer p;
+    assert(rep);
+    assert(spec);
+
+    /* put boundary */
+    debug(33, 5) ("clientPackRangeHdr: appending boundary: %s\n", strBuf(boundary));
+
+    /* rfc2046 requires to _prepend_ boundary with <crlf>! */
+    memBufPrintf(mb, "\r\n--%s\r\n", strBuf(boundary));
+
+    /* stuff the header with required entries and pack it */
+    httpHeaderInit(&hdr, hoReply);
+    if (httpHeaderHas(&rep->header, HDR_CONTENT_TYPE))
+        httpHeaderPutStr(&hdr, HDR_CONTENT_TYPE, httpHeaderGetStr(&rep->header, HDR_CONTENT_TYPE));
+    httpHeaderAddContRange(&hdr, *spec, rep->content_length);
+    packerToMemInit(&p, mb);
+    httpHeaderPackInto(&hdr, &p);
+    packerClean(&p);
+    httpHeaderClean(&hdr);
+
+    /* append <crlf> (we packed a header, not a reply */
+    memBufPrintf(mb, crlf);
+}
+
 /* extracts a "range" from *buf and appends them to mb, updating all offsets and such */
 static void
 clientPackRange(clientHttpRequest * http, HttpHdrRangeIter * i, const char **buf, ssize_t * size, MemBuf * mb)
@@ -1303,40 +1332,33 @@ clientPackRange(clientHttpRequest * http, HttpHdrRangeIter * i, const char **buf
     off_t body_off = http->out.offset - i->prefix_size;
     assert(*size > 0);
     assert(i->spec);
+
     /* intersection of "have" and "need" ranges must not be empty */
     assert(body_off < i->spec->offset + i->spec->length);
     assert(body_off + *size > i->spec->offset);
-    /* put boundary and headers at the beginning of range in a multi-range */
+
+    /* put boundary and headers at the beginning of a range in a multi-range */
     if (http->request->range->specs.count > 1 && i->debt_size == i->spec->length) {
-	HttpReply *rep = http->entry->mem_obj ?		/* original reply */
-	http->entry->mem_obj->reply : NULL;
-	HttpHeader hdr;
-	Packer p;
-	assert(rep);
-	/* put boundary */
-	debug(33, 5) ("clientPackRange: appending boundary: %s\n", strBuf(i->boundary));
-	/* rfc2046 requires to _prepend_ boundary with <crlf>! */
-	memBufPrintf(mb, "\r\n--%s\r\n", strBuf(i->boundary));
-	httpHeaderInit(&hdr, hoReply);
-	if (httpHeaderHas(&rep->header, HDR_CONTENT_TYPE))
-	    httpHeaderPutStr(&hdr, HDR_CONTENT_TYPE, httpHeaderGetStr(&rep->header, HDR_CONTENT_TYPE));
-	httpHeaderAddContRange(&hdr, *i->spec, rep->content_length);
-	packerToMemInit(&p, mb);
-	httpHeaderPackInto(&hdr, &p);
-	packerClean(&p);
-	httpHeaderClean(&hdr);
-	/* append <crlf> (we packed a header, not a reply */
-	memBufPrintf(mb, crlf);
+	assert(http->entry->mem_obj);
+	clientPackRangeHdr(
+	    http->entry->mem_obj->reply, /* original reply */
+	    i->spec,                     /* current range */
+	    i->boundary,                 /* boundary, the same for all */
+	    mb
+	);
     }
-    /* append */
+
+    /* append content */
     debug(33, 3) ("clientPackRange: appending %d bytes\n", copy_sz);
     memBufAppend(mb, *buf, copy_sz);
+
     /* update offsets */
     *size -= copy_sz;
     i->debt_size -= copy_sz;
     body_off += copy_sz;
     *buf += copy_sz;
     http->out.offset = body_off + i->prefix_size;	/* sync */
+
     /* paranoid check */
     assert(*size >= 0 && i->debt_size >= 0);
 }
