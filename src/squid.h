@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.100 1997/03/04 05:16:42 wessels Exp $
+ * $Id: squid.h,v 1.101 1997/03/29 04:45:20 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -272,7 +272,6 @@ typedef int (*QS) (const void *, const void *);
 #include "debug.h"
 #include "disk.h"
 #include "fdstat.h"
-#include "filemap.h"
 #include "hash.h"
 #include "proto.h"		/* must go before neighbors.h */
 #include "peer_select.h"	/* must go before neighbors.h */
@@ -321,7 +320,6 @@ extern int theOutIcpConnection;	/* main.c */
 extern int vizSock;
 extern volatile int shutdown_pending;	/* main.c */
 extern volatile int reread_pending;	/* main.c */
-extern int opt_unlink_on_reload;	/* main.c */
 extern int opt_reload_hit_only;	/* main.c */
 extern int opt_dns_tests;	/* main.c */
 extern int opt_foreground_rebuild;	/* main.c */
