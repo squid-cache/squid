@@ -1,6 +1,6 @@
 
 /*
- * $Id: async_io.cc,v 1.3 2000/05/29 21:06:28 hno Exp $
+ * $Id: async_io.cc,v 1.4 2000/06/08 18:05:37 hno Exp $
  *
  * DEBUG: section 32    Asynchronous Disk I/O
  * AUTHOR: Pete Bentley <pete@demon.net>
@@ -335,7 +335,8 @@ aioUnlink(const char *pathname, AIOCB * callback, void *callback_data)
     cbdataLock(callback_data);
     if (aio_unlink(path, &ctrlp->result) < 0) {
 	int ret = unlink(path);
-	(callback) (ctrlp->fd, callback_data, ret, errno);
+        if (callback)
+	    (callback) (ctrlp->fd, callback_data, ret, errno);
 	cbdataUnlock(callback_data);
 	memPoolFree(aio_ctrl_pool, ctrlp);
 	xfree(path);
@@ -347,7 +348,7 @@ aioUnlink(const char *pathname, AIOCB * callback, void *callback_data)
 }				/* aioUnlink */
 
 
-void
+int
 aioCheckCallbacks(SwapDir * SD)
 {
     aio_result_t *resultp;
@@ -355,7 +356,8 @@ aioCheckCallbacks(SwapDir * SD)
     aio_ctrl_t *prev;
     AIOCB *done_handler;
     void *their_data;
-
+    int retval = 0;
+   
     assert(initialised);
     aio_counts.check_callback++;
     for (;;) {
@@ -376,6 +378,7 @@ aioCheckCallbacks(SwapDir * SD)
 	    ctrlp->done_handler = NULL;
 	    ctrlp->done_handler_data = NULL;
 	    if (cbdataValid(their_data))
+                retval = 1; /* Return that we've actually done some work */
 		done_handler(ctrlp->fd, their_data,
 		    ctrlp->result.aio_return, ctrlp->result.aio_errno);
 	    cbdataUnlock(their_data);
@@ -384,6 +387,7 @@ aioCheckCallbacks(SwapDir * SD)
 	    aioFDWasClosed(ctrlp->fd);
 	memPoolFree(aio_ctrl_pool, ctrlp);
     }
+    return retval;
 }
 
 void

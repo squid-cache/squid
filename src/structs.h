@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.338 2000/05/31 07:01:42 hno Exp $
+ * $Id: structs.h,v 1.339 2000/06/08 18:05:36 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -210,6 +210,11 @@ struct _delayConfig {
 
 #endif
 
+struct _RemovalPolicySettings {
+    char *type;
+    wordlist *args;
+};
+
 struct _SquidConfig {
     struct {
 	size_t maxSize;
@@ -227,14 +232,8 @@ struct _SquidConfig {
 	int pct;
 	size_t max;
     } quickAbort;
-#if HEAP_REPLACEMENT
-    char *replPolicy;
-#else
-    /* 
-     * Note: the non-LRU policies do not use referenceAge, but we cannot
-     * remove it until we find out how to implement #else for cf_parser.c
-     */
-#endif
+    RemovalPolicySettings *replPolicy;
+    RemovalPolicySettings *memPolicy;
     time_t referenceAge;
     time_t negativeTtl;
     time_t negativeDnsTtl;
@@ -1272,6 +1271,39 @@ struct _store_client {
 };
 
 
+/* Removal policies */
+
+struct _RemovalPolicyNode {
+    void *data;
+};
+
+struct _RemovalPolicy {
+    char *_type;
+    void *_data;
+    void (*Free)(RemovalPolicy *policy);
+    void (*Add)(RemovalPolicy *policy, StoreEntry *entry, RemovalPolicyNode *node);
+    void (*Remove)(RemovalPolicy *policy, StoreEntry *entry, RemovalPolicyNode *node);
+    void (*Referenced)(RemovalPolicy *policy, const StoreEntry *entry, RemovalPolicyNode *node);
+    void (*Dereferenced)(RemovalPolicy *policy, const StoreEntry *entry, RemovalPolicyNode *node);
+    RemovalPolicyWalker *(*WalkInit)(RemovalPolicy *policy);
+    RemovalPurgeWalker *(*PurgeInit)(RemovalPolicy *policy, int max_scan);
+};
+
+struct _RemovalPolicyWalker {
+    RemovalPolicy *_policy;
+    void *_data;
+    const StoreEntry *(*Next)(RemovalPolicyWalker *walker);
+    void (*Done)(RemovalPolicyWalker *walker);
+};
+
+struct _RemovalPurgeWalker {
+    RemovalPolicy *_policy;
+    void *_data;
+    int scanned, max_scan, locked;
+    StoreEntry *(*Next)(RemovalPurgeWalker *walker);
+    void (*Done)(RemovalPurgeWalker *walker);
+};
+
 /* This structure can be freed while object is purged out from memory */
 struct _MemObject {
     method_t method;
@@ -1297,14 +1329,7 @@ struct _MemObject {
 	void *data;
     } abort;
     char *log_url;
-#if HEAP_REPLACEMENT
-    /* 
-     * A MemObject knows where it is in the in-memory heap.
-     */
-    heap_node *node;
-#else
-    dlink_node lru;
-#endif
+    RemovalPolicyNode repl;
     int id;
     ssize_t object_sz;
     size_t swap_hdr_sz;
@@ -1327,12 +1352,7 @@ struct _StoreEntry {
     u_short flags;
     sdirno swap_dirn;
     sfileno swap_filen;
-    union {
-#ifdef HEAP_REPLACEMENT
-	heap_node *node;
-#endif
-	dlink_node lru;
-    } repl;
+    RemovalPolicyNode repl;
     u_short lock_count;		/* Assume < 65536! */
     mem_status_t mem_status:3;
     ping_status_t ping_status:3;
@@ -1349,17 +1369,7 @@ struct _SwapDir {
     int index;			/* This entry's index into the swapDirs array */
     int suggest;
     ssize_t max_objsize;
-    union {
-#ifdef HEAP_REPLACEMENT
-	struct {
-	    heap *heap;
-	} heap;
-#endif
-	struct {
-	    dlink_list list;
-	    dlink_node *walker;
-	} lru;
-    } repl;
+    RemovalPolicy *repl;
     int removals;
     int scanned;
     struct {
@@ -1392,8 +1402,10 @@ struct _SwapDir {
 	STLOGCLOSE *close;
 	STLOGWRITE *write;
 	struct {
-	    STLOGCLEANOPEN *open;
+	    STLOGCLEANSTART *start;
+	    STLOGCLEANNEXTENTRY *nextentry;
 	    STLOGCLEANWRITE *write;
+	    STLOGCLEANDONE *done;
 	    void *state;
 	} clean;
     } log;
@@ -1897,3 +1909,4 @@ struct _Logfile {
     size_t bufsz;
     off_t offset;
 };
+

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.2 2000/05/12 00:29:19 wessels Exp $
+ * $Id: store_dir_coss.cc,v 1.3 2000/06/08 18:05:38 hno Exp $
  *
  * DEBUG: section 81    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -39,13 +39,12 @@
 
 #define STORE_META_BUFSZ 4096
 
-extern void storeCossFlushMemBufs(SwapDir * SD);
-
 int n_coss_dirs = 0;
 /* static int last_coss_pick_index = -1; */
 int coss_initialised = 0;
 MemPool *coss_membuf_pool = NULL;
 MemPool *coss_state_pool = NULL;
+MemPool *coss_index_pool = NULL;
 
 typedef struct _RebuildState RebuildState;
 struct _RebuildState {
@@ -87,16 +86,18 @@ static void storeCossDirCloseTmpSwapLog(SwapDir * sd);
 static FILE *storeCossDirOpenTmpSwapLog(SwapDir *, int *, int *);
 static STLOGOPEN storeCossDirOpenSwapLog;
 static STINIT storeCossDirInit;
-static STLOGCLEANOPEN storeCossDirWriteCleanOpen;
-static void storeCossDirWriteCleanClose(SwapDir * sd);
+static STLOGCLEANSTART storeCossDirWriteCleanStart;
+static STLOGCLEANNEXTENTRY storeCossDirCleanLogNextEntry;
 static STLOGCLEANWRITE storeCossDirWriteCleanEntry;
+static STLOGCLEANDONE storeCossDirWriteCleanDone;
 static STLOGCLOSE storeCossDirCloseSwapLog;
 static STLOGWRITE storeCossDirSwapLog;
 static STNEWFS storeCossDirNewfs;
 static STCHECKOBJ storeCossDirCheckObj;
-static void storeCossDirShutdown(SwapDir * sd);
-static void storeCossDirParse(SwapDir *, int, char *);
-static void storeCossDirReconfigure(SwapDir *, int, char *);
+static STFREE storeCossDirShutdown;
+static STFSPARSE storeCossDirParse;
+static STFSRECONFIGURE storeCossDirReconfigure;
+static STDUMP storeCossDirDump;
 
 static char *
 storeCossDirSwapLogFile(SwapDir * sd, const char *ext)
@@ -165,10 +166,45 @@ storeCossDirInit(SwapDir * sd)
     n_coss_dirs++;
 }
 
+void
+storeCossRemove(SwapDir *sd, StoreEntry *e)
+{
+    CossInfo *cs = (CossInfo *) sd->fsdata;
+    CossIndexNode *coss_node = e->repl.data;
+    e->repl.data = NULL;
+    dlinkDelete(&coss_node->node, &cs->index);
+    memPoolFree(coss_index_pool, coss_node);
+    cs->count -= 1;
+}
+
+void
+storeCossAdd(SwapDir *sd, StoreEntry *e)
+{
+    CossInfo *cs = (CossInfo *) sd->fsdata;
+    CossIndexNode *coss_node = memPoolAlloc(coss_index_pool);
+    assert(!e->repl.data);
+    e->repl.data = coss_node;
+    dlinkAdd(e, &coss_node->node, &cs->index);
+    cs->count += 1;
+}
+
+static void
+storeCossRebuildComplete(void *data)
+{
+    RebuildState *rb = data;
+    SwapDir *sd = rb->sd;
+    storeCossStartMembuf(sd);
+    store_dirs_rebuilding--;
+    storeCossDirCloseTmpSwapLog(rb->sd);
+    storeRebuildComplete(&rb->counts);
+    cbdataFree(rb);
+}
+
 static void
 storeCossRebuildFromSwapLog(void *data)
 {
     RebuildState *rb = data;
+    SwapDir *sd = rb->sd;
     StoreEntry *e = NULL;
     storeSwapLogData s;
     size_t ss = sizeof(storeSwapLogData);
@@ -182,10 +218,7 @@ storeCossRebuildFromSwapLog(void *data)
 		rb->sd->path, rb->n_read);
 	    fclose(rb->log);
 	    rb->log = NULL;
-	    store_dirs_rebuilding--;
-	    storeCossDirCloseTmpSwapLog(rb->sd);
-	    storeRebuildComplete(&rb->counts);
-	    cbdataFree(rb);
+	    storeCossRebuildComplete(rb);
 	    return;
 	}
 	rb->n_read++;
@@ -215,7 +248,7 @@ storeCossRebuildFromSwapLog(void *data)
 		}
 		storeRelease(e);
 		/* Fake an unlink here, this is a bad hack :( */
-		dlinkDelete(&e->repl.lru, &rb->sd->repl.lru.list);
+		storeCossRemove(sd, e);
 		rb->counts.objcount--;
 		rb->counts.cancelcount++;
 	    }
@@ -285,9 +318,6 @@ storeCossAddDiskRestore(SwapDir * SD, const cache_key * key,
     e->swap_filen = file_number;
     e->swap_file_sz = swap_file_sz;
     e->lock_count = 0;
-#if !HEAP_REPLACEMENT
-    e->refcount = 0;
-#endif
     e->lastref = lastref;
     e->timestamp = timestamp;
     e->expires = expires;
@@ -300,7 +330,7 @@ storeCossAddDiskRestore(SwapDir * SD, const cache_key * key,
     e->ping_status = PING_NONE;
     EBIT_CLR(e->flags, ENTRY_VALIDATED);
     storeHashInsert(e, key);	/* do it after we clear KEY_PRIVATE */
-    dlinkAdd(e, &e->repl.lru, &SD->repl.lru.list);
+    storeCossAdd(SD, e);
     e->swap_filen = storeCossAllocate(SD, e, COSS_ALLOC_NOTIFY);
     return e;
 }
@@ -313,8 +343,11 @@ storeCossDirRebuild(SwapDir * sd)
     int zero = 0;
     FILE *fp;
     EVH *func = NULL;
+    cbdataAdd(rb, cbdataXfree, 0);
     rb->sd = sd;
     rb->speed = opt_foreground_rebuild ? 1 << 30 : 50;
+    func = storeCossRebuildFromSwapLog;
+    rb->flags.clean = (unsigned int) clean;
     /*
      * If the swap.state file exists in the cache_dir, then
      * we'll use storeCossRebuildFromSwapLog().
@@ -322,6 +355,8 @@ storeCossDirRebuild(SwapDir * sd)
     fp = storeCossDirOpenTmpSwapLog(sd, &clean, &zero);
     debug(20, 1) ("Rebuilding COSS storage in %s (%s)\n",
 	sd->path, clean ? "CLEAN" : "DIRTY");
+    rb->log = fp;
+    store_dirs_rebuilding++;
     if (!clean || fp == NULL) {
 	/* COSS cannot yet rebuild from a dirty state. If the log
 	 * is dirty then the COSS contents is thrown away.
@@ -330,24 +365,15 @@ storeCossDirRebuild(SwapDir * sd)
 	 */
 	if (fp != NULL)
 	    fclose(fp);
-	storeCossDirCloseTmpSwapLog(rb->sd);
 	/*
 	 * XXX Make sure we don't trigger an assertion if this is the first
 	 * storedir, since if we are, this call will cause storeRebuildComplete
 	 * to prematurely complete the rebuild process, and then some other
 	 * storedir will try to rebuild and eventually die.
 	 */
-	store_dirs_rebuilding++;
-	storeRebuildComplete(&rb->counts);
-	store_dirs_rebuilding--;
-	xfree(rb);
+	eventAdd("storeCossRebuildComplete", storeCossRebuildComplete, rb, 0.0, 0);
 	return;
     }
-    func = storeCossRebuildFromSwapLog;
-    rb->log = fp;
-    rb->flags.clean = (unsigned int) clean;
-    store_dirs_rebuilding++;
-    cbdataAdd(rb, cbdataXfree, 0);
     eventAdd("storeCossRebuild", func, rb, 0.0, 1);
 }
 
@@ -435,6 +461,7 @@ struct _clean_state {
     char *outbuf;
     off_t outbuf_offset;
     int fd;
+    dlink_node *current;
 };
 
 #define CLEAN_BUF_SZ 16384
@@ -444,8 +471,9 @@ struct _clean_state {
  * we succeed, and assign the 'func' and 'data' return pointers.
  */
 static int
-storeCossDirWriteCleanOpen(SwapDir * sd)
+storeCossDirWriteCleanStart(SwapDir * sd)
 {
+    CossInfo *cs = (CossInfo *) sd->fsdata;
     struct _clean_state *state = xcalloc(1, sizeof(*state));
     struct stat sb;
     sd->log.clean.write = NULL;
@@ -460,6 +488,7 @@ storeCossDirWriteCleanOpen(SwapDir * sd)
     state->fd = file_open(state->new, O_WRONLY | O_CREAT | O_TRUNC);
     if (state->fd < 0)
 	return -1;
+    state->current = cs->index.tail;
     debug(20, 3) ("storeCOssDirWriteCleanLogs: opened %s, FD %d\n",
 	state->new, state->fd);
 #if HAVE_FCHMOD
@@ -468,22 +497,33 @@ storeCossDirWriteCleanOpen(SwapDir * sd)
 #endif
     sd->log.clean.write = storeCossDirWriteCleanEntry;
     sd->log.clean.state = state;
+
     return 0;
+}
+
+static const StoreEntry *
+storeCossDirCleanLogNextEntry(SwapDir * sd)
+{
+    struct _clean_state *state = sd->log.clean.state;
+    const StoreEntry *entry;
+    if (!state)
+	return NULL;
+    if (!state->current)
+	return NULL;
+    entry = (const StoreEntry *)state->current->data;
+    state->current = state->current->prev;
+    return entry;
 }
 
 /*
  * "write" an entry to the clean log file.
  */
 static void
-storeCossDirWriteCleanEntry(const StoreEntry * e, SwapDir * sd)
+storeCossDirWriteCleanEntry(SwapDir *sd, const StoreEntry * e)
 {
     storeSwapLogData s;
     static size_t ss = sizeof(storeSwapLogData);
     struct _clean_state *state = sd->log.clean.state;
-    if (NULL == e) {
-	storeCossDirWriteCleanClose(sd);
-	return;
-    }
     memset(&s, '\0', ss);
     s.op = (char) SWAP_LOG_ADD;
     s.swap_filen = e->swap_filen;
@@ -515,7 +555,7 @@ storeCossDirWriteCleanEntry(const StoreEntry * e, SwapDir * sd)
 }
 
 static void
-storeCossDirWriteCleanClose(SwapDir * sd)
+storeCossDirWriteCleanDone(SwapDir * sd)
 {
     struct _clean_state *state = sd->log.clean.state;
     if (state->fd < 0)
@@ -600,13 +640,9 @@ static void
 storeCossDirShutdown(SwapDir * SD)
 {
     CossInfo *cs = (CossInfo *) SD->fsdata;
-    CossMemBuf *t;
 
-    /* we need to do this synchronously! */
-    for (t = cs->membufs; t; t = t->next) {
-	lseek(cs->fd, t->diskstart, SEEK_SET);
-	write(cs->fd, t->buffer, COSS_MEMBUF_SZ);
-    }
+    storeCossSync(SD);
+
     file_close(cs->fd);
     cs->fd = -1;
 
@@ -705,7 +741,7 @@ storeCossDirParse(SwapDir * sd, int index, char *path)
     sd->refobj = NULL;		/* LRU is done in storeCossRead */
     sd->unrefobj = NULL;
     sd->callback = NULL;
-    sd->sync = NULL;		/* should we make it call the coss sync? */
+    sd->sync = storeCossSync;
 
     sd->obj.create = storeCossCreate;
     sd->obj.open = storeCossOpen;
@@ -717,25 +753,19 @@ storeCossDirParse(SwapDir * sd, int index, char *path)
     sd->log.open = storeCossDirOpenSwapLog;
     sd->log.close = storeCossDirCloseSwapLog;
     sd->log.write = storeCossDirSwapLog;
-    sd->log.clean.open = storeCossDirWriteCleanOpen;
+    sd->log.clean.start = storeCossDirWriteCleanStart;
     sd->log.clean.write = storeCossDirWriteCleanEntry;
+    sd->log.clean.nextentry = storeCossDirCleanLogNextEntry;
+    sd->log.clean.done = storeCossDirWriteCleanDone;
 
     cs->current_offset = 0;
     cs->fd = -1;
     cs->swaplog_fd = -1;
     cs->numcollisions = 0;
-    cs->membufs = memPoolAlloc(coss_membuf_pool);
-    cs->membufs->diskstart = 0;
-    cs->membufs->diskend = COSS_MEMBUF_SZ;
-    cs->membufs->lockcount = 0;
-    cs->membufs->flags.full = 0;
-    cs->membufs->flags.writing = 0;
-    cs->membufs->next = NULL;
-    cs->membufs->SD = sd;
+    cs->membufs = NULL; /* set when the rebuild completes */
     cs->current_membuf = cs->membufs;
-
-    sd->repl.lru.list.head = NULL;
-    sd->repl.lru.list.tail = NULL;
+    cs->index.head = NULL;
+    cs->index.tail = NULL;
 }
 
 
@@ -778,7 +808,7 @@ storeCossDirDump(StoreEntry * entry, const char *name, SwapDir * s)
 	s->max_size >> 20);
 }
 
-#if 0
+#if OLD_UNUSED_CODE
 SwapDir *
 storeCossDirPick(void)
 {
@@ -840,5 +870,6 @@ storeFsSetup_coss(storefs_entry_t * storefs)
     storefs->donefunc = storeCossDirDone;
     coss_membuf_pool = memPoolCreate("COSS Membuf data", sizeof(CossMemBuf));
     coss_state_pool = memPoolCreate("COSS IO State data", sizeof(CossState));
+    coss_index_pool = memPoolCreate("COSS index data", sizeof(CossIndexNode));
     coss_initialised = 1;
 }

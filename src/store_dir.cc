@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.110 2000/05/28 22:15:42 wessels Exp $
+ * $Id: store_dir.cc,v 1.111 2000/06/08 18:05:36 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -36,8 +36,6 @@
 #include "squid.h"
 
 static int storeDirValidSwapDirSize(int, ssize_t);
-static void storeDirLRUWalkInitHead(SwapDir * sd);
-static void *storeDirLRUWalkNext(SwapDir * sd);
 
 void
 storeDirInit(void)
@@ -365,15 +363,14 @@ storeDirCloseSwapLogs(void)
 int
 storeDirWriteCleanLogs(int reopen)
 {
-    StoreEntry *e = NULL;
+    const StoreEntry *e = NULL;
     int n = 0;
     struct timeval start;
     double dt;
     SwapDir *sd;
+    RemovalPolicyWalker **walkers;
     int dirn;
-#if HEAP_REPLACEMENT
-    int node;
-#endif
+    int notdone = 1;
     if (store_dirs_rebuilding) {
 	debug(20, 1) ("Not currently OK to rewrite swap log.\n");
 	debug(20, 1) ("storeDirWriteCleanLogs: Operation aborted.\n");
@@ -382,28 +379,24 @@ storeDirWriteCleanLogs(int reopen)
     debug(20, 1) ("storeDirWriteCleanLogs: Starting...\n");
     getCurrentTime();
     start = current_time;
+    walkers = xcalloc(Config.cacheSwap.n_configured, sizeof *walkers);
     for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
 	sd = &Config.cacheSwap.swapDirs[dirn];
-	if (sd->log.clean.open(sd) < 0) {
-	    debug(20, 1) ("log.clean.open() failed for dir #%d\n", sd->index);
+	if (sd->log.clean.start(sd) < 0) {
+	    debug(20, 1) ("log.clean.start() failed for dir #%d\n", sd->index);
 	    continue;
 	}
-	if (NULL == sd->log.clean.write)
-	    continue;
-#if HEAP_REPLACEMENT
-	if (NULL == sd->repl.heap.heap)
-	    continue;
-#endif
-#if HEAP_REPLACEMENT
-	for (node = 0; node < heap_nodes(sd->repl.heap.heap); node++)
-#else
-	storeDirLRUWalkInitHead(sd);
-	while ((e = storeDirLRUWalkNext(sd)) != NULL)
-#endif
-	{
-#if HEAP_REPLACEMENT
-	    e = (StoreEntry *) heap_peep(sd->repl.heap.heap, node);
-#endif
+    }
+    while(notdone) {
+	notdone = 0;
+	for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
+	    sd = &Config.cacheSwap.swapDirs[dirn];
+	    if (NULL == sd->log.clean.write)
+		continue;
+	    e = sd->log.clean.nextentry(sd);
+	    if (!e)
+		continue;
+	    notdone = 1;
 	    if (e->swap_filen < 0)
 		continue;
 	    if (e->swap_status != SWAPOUT_DONE)
@@ -416,14 +409,17 @@ storeDirWriteCleanLogs(int reopen)
 		continue;
 	    if (EBIT_TEST(e->flags, ENTRY_SPECIAL))
 		continue;
-	    sd->log.clean.write(e, sd);
+	    sd->log.clean.write(sd, e);
 	    if ((++n & 0xFFFF) == 0) {
 		getCurrentTime();
 		debug(20, 1) ("  %7d entries written so far.\n", n);
 	    }
 	}
-	/* Flush */
-	sd->log.clean.write(NULL, sd);
+    }
+    /* Flush */
+    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
+	sd = &Config.cacheSwap.swapDirs[dirn];
+        sd->log.clean.done(sd);
     }
     if (reopen)
 	storeDirOpenSwapLogs();
@@ -458,51 +454,20 @@ storeDirSync(void)
 void
 storeDirCallback(void)
 {
-    int i;
+    int i, j;
     SwapDir *SD;
-
-    for (i = 0; i < Config.cacheSwap.n_configured; i++) {
-	SD = &Config.cacheSwap.swapDirs[i];
-	if (SD->callback != NULL)
-	    SD->callback(SD);
-    }
+    static int ndir = 0;
+    do {
+        j = 0;
+        for (i = 0; i < Config.cacheSwap.n_configured; i++) {
+            if (ndir >= Config.cacheSwap.n_configured)
+                ndir = ndir % Config.cacheSwap.n_configured;
+            SD = &Config.cacheSwap.swapDirs[ndir++];
+            if (NULL == SD->callback)
+                continue;
+            j += SD->callback(SD);
+        }
+    } while (j > 0);
+    ndir++;
 }
 
-#if 0				/* from Squid-2.4.DEVEL3 */
-void
-storeDirLRUDelete(StoreEntry * e)
-{
-    SwapDir *sd;
-    if (e->swap_filen < 0)
-	return;
-    sd = &Config.cacheSwap.swapDirs[e->swap_dirn];
-    dlinkDelete(&e->lru, &sd->repl.lru.list);
-}
-
-void
-storeDirLRUAdd(StoreEntry * e)
-{
-    SwapDir *sd;
-    if (e->swap_file_number < 0)
-	return;
-    sd = &Config.cacheSwap.swapDirs[e->swap_dirn];
-    dlinkAdd(e, &e->lru, &sd->repl.lru.list);
-}
-#endif /* from Squid-2.4.DEVEL3 */
-
-static void
-storeDirLRUWalkInitHead(SwapDir * sd)
-{
-    sd->repl.lru.walker = sd->repl.lru.list.head;
-}
-
-static void *
-storeDirLRUWalkNext(SwapDir * sd)
-{
-    void *p;
-    if (NULL == sd->repl.lru.walker)
-	return NULL;
-    p = sd->repl.lru.walker->data;
-    sd->repl.lru.walker = sd->repl.lru.walker->next;
-    return p;
-}

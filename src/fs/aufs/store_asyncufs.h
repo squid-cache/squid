@@ -47,7 +47,7 @@ void aioWrite(int, int offset, char *, int size, AIOCB *, void *, FREE *);
 void aioRead(int, int offset, char *, int size, AIOCB *, void *);
 void aioStat(char *, struct stat *, AIOCB *, void *);
 void aioUnlink(const char *, AIOCB *, void *);
-void aioCheckCallbacks(SwapDir *);
+int aioCheckCallbacks(SwapDir *);
 void aioSync(SwapDir *);
 int aioQueueSize(void);
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.349 2000/05/31 07:01:41 hno Exp $
+ * $Id: cache_cf.cc,v 1.350 2000/06/08 18:05:34 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -348,14 +348,6 @@ configDoConfigure(void)
 	debug(3, 0) ("WARNING: resetting 'maximum_single_addr_tries to 1\n");
 	Config.retry.maxtries = 1;
     }
-#if HEAP_REPLACEMENT
-    /* The non-LRU policies do not use referenceAge */
-#else
-    if (Config.referenceAge < 300) {
-	debug(3, 0) ("WARNING: resetting 'reference_age' to 1 week\n");
-	Config.referenceAge = 86400 * 7;
-    }
-#endif
     requirePathnameExists("MIME Config Table", Config.mimeTablePathname);
 #if USE_DNSSERVERS
     requirePathnameExists("cache_dns_program", Config.Program.dnsserver);
@@ -1732,6 +1724,40 @@ dump_uri_whitespace(StoreEntry * entry, const char *name, int var)
     storeAppendPrintf(entry, "%s %s\n", name, s);
 }
 
+static void
+free_removalpolicy(RemovalPolicySettings **settings)
+{
+    if (!*settings)
+	return;
+    free_string(&(*settings)->type);
+    free_wordlist(&(*settings)->args);
+    xfree(*settings);
+    *settings = NULL;
+}
+
+static void
+parse_removalpolicy(RemovalPolicySettings **settings)
+{
+    if (*settings)
+	free_removalpolicy(settings);
+    *settings = xcalloc(1, sizeof(**settings));
+    parse_string(&(*settings)->type);
+    parse_wordlist(&(*settings)->args);
+}
+
+static void
+dump_removalpolicy(StoreEntry * entry, const char *name, RemovalPolicySettings *settings)
+{
+    wordlist *args;
+    storeAppendPrintf(entry, "%s %s", name, settings->type);
+    args = settings->args;
+    while (args) {
+	storeAppendPrintf(entry, " %s", args->key);
+	args = args->next;
+    }
+}
+    
+
 #include "cf_parser.c"
 
 peer_t
@@ -1833,3 +1859,5 @@ requirePathnameExists(const char *name, const char *path)
     if (stat(path, &sb) < 0)
 	fatalf("%s: %s", path, xstrerror());
 }
+
+

@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.187 2000/05/31 07:01:42 hno Exp $
+# $Id: cf.data.pre,v 1.188 2000/06/08 18:05:35 hno Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -589,6 +589,58 @@ LOC: Config.fqdncache.size
 DOC_START
 	Maximum number of FQDN cache entries.
 DOC_END
+
+NAME: cache_replacement_policy
+TYPE: removalpolicy
+LOC: Config.replPolicy
+DEFAULT: lru
+DOC_START
+	The cache replacement policy parameter determines which
+	objects are evicted (replaced) when disk space is needed.
+
+	    lru       : Squid's original list based LRU policy
+	    heap GDSF : Greedy-Dual Size Frequency
+	    heap LFUDA: Least Frequently Used with Dynamic Aging
+	    heap LRU  : LRU policy implemented using a heap
+
+	Applies to any cache_dir lines listed below this.
+
+	The LRU policies keeps recently referenced objects.
+
+	The heap GDSF policy optimizes object hit rate by keeping smaller
+	popular objects in cache so it has a better chance of getting a
+	hit.  It achieves a lower byte hit rate than LFUDA though since
+	it evicts larger (possibly popular) objects.
+
+	The heap LFUDA policy keeps popular objects in cache regardless of
+	their size and thus optimizes byte hit rate at the expense of
+	hit rate since one large, popular object will prevent many
+	smaller, slightly less popular objects from being cached.
+
+	Both policies utilize a dynamic aging mechanism that prevents
+	cache pollution that can otherwise occur with frequency-based
+	replacement policies.
+
+	NOTE: if using the LFUDA replacement policy you should increase
+	the value of maximum_object_size above its default of 4096 KB to
+	to maximize the potential byte hit rate improvement of LFUDA.  
+
+	For more information about the GDSF and LFUDA cache replacement
+	policies see http://www.hpl.hp.com/techreports/1999/HPL-1999-69.html
+	and http://fog.hpl.external.hp.com/techreports/98/HPL-98-173.html.
+DOC_END
+
+NAME: memory_replacement_policy
+TYPE: removalpolicy
+LOC: Config.memPolicy
+DEFAULT: lru
+DOC_START
+	The memory replacement policy parameter determines which
+	objects are purged from memory when memory space is needed.
+
+	See cache_replacement_policy for details.
+DOC_END
+
 
 COMMENT_START
  LOGFILE PATHNAMES AND CACHE DIRECTORIES
@@ -1226,49 +1278,6 @@ DOC_START
 	to change one. The default setting is only active if none is
 	used.
 DOC_END
-
-
-NAME: replacement_policy
-TYPE: string
-LOC: Config.replPolicy
-DEFAULT: LFUDA
-IFDEF: HEAP_REPLACEMENT
-DOC_START
-	The cache replacement policy parameter determines which
-	objects are evicted (replaced) when disk space is needed.
-	Squid used to have only a single replacement policy, LRU.
-	But when built with -DHEAP_REPLACEMENT you can choose
-	between two new, enhanced policies:
-
-		   GDSF: Greedy-Dual Size Frequency
-		   LFUDA: Least Frequently Used with Dynamic Aging
-
-	Both of these policies are frequency based rather than recency
-	based, and perform better than LRU.
-
-	The GDSF policy optimizes object hit rate by keeping smaller
-	popular objects in cache so it has a better chance of getting a
-	hit.  It achieves a lower byte hit rate than LFUDA though since
-	it evicts larger (possibly popular) objects.
-
-	The LFUDA policy keeps popular objects in cache regardless of
-	their size and thus optimizes byte hit rate at the expense of
-	hit rate since one large, popular object will prevent many
-	smaller, slightly less popular objects from being cached.
-
-	Both policies utilize a dynamic aging mechanism that prevents
-	cache pollution that can otherwise occur with frequency-based
-	replacement policies.
-
-	NOTE: if using the LFUDA replacement policy you should increase
-	the value of maximum_object_size above its default of 4096 KB to
-	to maximize the potential byte hit rate improvement of LFUDA.  
-
-	For more information about these cache replacement policies see
-	http://www.hpl.hp.com/techreports/1999/HPL-1999-69.html and
-	http://fog.hpl.external.hp.com/techreports/98/HPL-98-173.html.
-DOC_END
-
 
 NAME: reference_age
 TYPE: time_t

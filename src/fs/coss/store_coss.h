@@ -31,6 +31,16 @@ struct _cossinfo {
     int fd;
     int swaplog_fd;
     int numcollisions;
+    dlink_list index;
+    int count;
+    dlink_node *walk_current;
+};
+
+struct _cossindex {
+    /* Note: the dlink_node MUST be the first member of the structure.
+     * This member is later pointer typecasted to coss_index_node *.
+     */
+    dlink_node node;
 };
 
 
@@ -50,12 +60,13 @@ struct _cossstate {
 typedef struct _cossmembuf CossMemBuf;
 typedef struct _cossinfo CossInfo;
 typedef struct _cossstate CossState;
+typedef struct _cossindex CossIndexNode;
 
 /* Whether the coss system has been setup or not */
 extern int coss_initialised;
 extern MemPool *coss_membuf_pool;
 extern MemPool *coss_state_pool;
-
+extern MemPool *coss_index_pool;
 
 /*
  * Store IO stuff
@@ -66,17 +77,11 @@ extern STOBJCLOSE storeCossClose;
 extern STOBJREAD storeCossRead;
 extern STOBJWRITE storeCossWrite;
 extern STOBJUNLINK storeCossUnlink;
+extern STSYNC storeCossSync;
 
 extern off_t storeCossAllocate(SwapDir * SD, const StoreEntry * e, int which);
-extern void storeCossFree(StoreEntry * e);
-extern void storeCossMaintainSwapSpace(SwapDir * SD);
-extern void storeCossDirStats(SwapDir *, StoreEntry *);
-extern void storeCossDirDump(StoreEntry * entry, const char *name, SwapDir * s);
-extern void storeCossDirFree(SwapDir *);
-extern SwapDir *storeCossDirPick(void);
-
-void storeFsSetup_ufs(storefs_entry_t *);
-
-
+extern void storeCossAdd(SwapDir *, StoreEntry *);
+extern void storeCossRemove(SwapDir *, StoreEntry *);
+extern void storeCossStartMembuf(SwapDir *SD);
 
 #endif
