@@ -1,6 +1,6 @@
 
 /*
- * $Id: referer.cc,v 1.4 2001/05/22 20:31:34 hno Exp $
+ * $Id: referer.cc,v 1.5 2002/10/18 22:43:23 hno Exp $
  *
  * DEBUG: section 40    User-Agent and Referer logging
  * AUTHOR: Joe Ramey <ramey@csc.ti.com> (useragent)
@@ -75,5 +75,16 @@ logReferer(const char *client, const char *referer, const char *uri)
 	client,
 	referer,
 	uri ? uri : "-");
+#endif
+}
+
+void
+refererCloseLog(void)
+{
+#if USE_REFERER_LOG
+    if (NULL == refererlog)
+	return;
+    logfileClose(refererlog);
+    refererlog = NULL;
 #endif
 }
