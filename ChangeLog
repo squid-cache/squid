@@ -45,11 +45,11 @@ Changes to squid-2.5 ():
 	- Added SSL gatewaying support, allowing Squid to act as a SSL server
 	  in accelerator setups.
 	- SASL authentication helper by Ian Castle
-        - msntauth updated to v2.0.3
+	- msntauth updated to v2.0.3
 	- no_cache now applies to cache hits as well as cache misses
 	- the Gopher client in Squid has been significantly improved
 	- Squid now sanity checks FTP data connections to ensure the
- 	  connection is from the requested server. Can be disabled if
+	  connection is from the requested server. Can be disabled if
 	  needed by turning off the ftp_sanitycheck option.
 	- external acl support. A mechanism where flexible ACL checks
 	  can be driven by external helpers. See the external_acl_type
@@ -68,7 +68,7 @@ Changes to squid-2.5 ():
 	  caches if not used locally. If forwarding of proxy authentication
 	  is desired then it must now be configured with the login=PASS
 	  cache_peer option.
-        - Responses with Vary: in the header are now cached by squid.
+	- Responses with Vary: in the header are now cached by squid.
 	  (Henrik Nordstrom).
 
 Changes to Squid-2.4.STABLE7 (July 2, 2002):
@@ -107,7 +107,7 @@ Changes to Squid-2.4.STABLE5 (March 15, 2002):
 Changes to Squid-2.4.STABLE4 (Feb 19, 2002)
 
 	- htcp_port 0 now properly disables htcp
-        - Fixed problem with certain non-anonymous ftp:// style URL's
+	- Fixed problem with certain non-anonymous ftp:// style URL's
 	- SNMP bugfixes including several memory leaks
 
 Changes to Squid-2.4.STABLE3 (Nov 28, 2001):
@@ -783,8 +783,8 @@ Changes to Squid-2.2 (April 19, 1999):
 	  Nordstrom).
 	- Rewrote peer digest module to fix memory leaks on reconfigure
 	  and clean the code. Increased "current" digest version to 5
- 	  ("required" version is still 3). Revised "Peer Select" cache 
- 	  manager stats.
+	  ("required" version is still 3). Revised "Peer Select" cache 
+	  manager stats.
 	- Added "-k parse" command line option: parses the config file
 	  but does not send a signal unlike other -k options.
 	- Revamped storeAbort() calling.  Only store_client.c has all
@@ -1119,15 +1119,15 @@ Changes to Squid-2.0 (October 2, 1998):
 	  handle complex ranges, even for hits) Note: Support for
 	  complex ranges requires storage of partial objects.
 	- Removed SNMP mib-2.system group from squid.
-        - Removed SNMP ability to iterate through ipcache and friends.
-        - Added SNMP ipcache/fqdncache basic statistics.
-        - Converted SQUID-MIB to SMIv2 (RFC 1902).
-        - Moved SQUID-MIB to enterprises section of the tree in preparation
-          of the split into PROXY-MIB & SQUID-MIB.
-        - Corrected minor errors in SQUID-MIB.
-        - Moved uptime into cacheSystem from cacheConfig.
-        - Corrected a number of get-next-request bugs, snmpwalk should now
-          return all objects and not skip some.
+	- Removed SNMP ability to iterate through ipcache and friends.
+	- Added SNMP ipcache/fqdncache basic statistics.
+	- Converted SQUID-MIB to SMIv2 (RFC 1902).
+	- Moved SQUID-MIB to enterprises section of the tree in preparation
+	  of the split into PROXY-MIB & SQUID-MIB.
+	- Corrected minor errors in SQUID-MIB.
+	- Moved uptime into cacheSystem from cacheConfig.
+	- Corrected a number of get-next-request bugs, snmpwalk should now
+	  return all objects and not skip some.
 	- Fixed netdbClosestParent() so it won't return sibling
 	  peers.
 	- Fixed a bug with secondary clients on entries with
@@ -1379,7 +1379,7 @@ Changes to squid-1.2.beta22 (June 1, 1998):
 	- Fixed single-bit-int flag checks (Henrik Nordstrom).
 	- Replaced "complex" (offset accounting) calls to snprintf with MemBuf
 	- Do not send only-if-cached cc directive with requests 
-          for peer's digests.
+	  for peer's digests.
 	- Added "automatic tuning" for incoming request rate, i.e.
 	  how often to check HTTP and ICP sockets.  See comm.c
 	  comments for details.
@@ -1395,7 +1395,7 @@ Changes to squid-1.2.beta21 (May 22, 1998):
 	- Made FTP directory listing "Generated" tagline like
 	  the one for error pages.
 	- Fixed an assertion coredump in statHistCopy from 
-   	  reconfiguring with different #peers in squid.conf
+	  reconfiguring with different #peers in squid.conf
 	- Ignore leading whitespace on requests (and replies).  RFC
 	  2068 section 4.1, robustness (Henrik Nordstrom)
 	- Fixed keep_alive bug.  We did not always honour reply
@@ -1415,24 +1415,24 @@ Changes to squid-1.2.beta21 (May 22, 1998):
 	- Changed URN menu output to be sorted.
 	- Added fast select(2) timeouts when using ASYNC_IO.
 	- Added ARP ACL support for Linux (David Luyer).
-        - Added binary http headers to requests
-        - request_t objects are now created and destroyed in a consistent way
-        - Fixed cache control printf bug
-        - Added a lot of new http header ids
-        - Improved Connection: header handling; now both Connection and
-          Proxy-Connection headers are checked for connection directives
-        - Connection request header is now handled correctly regardless
-          of its position and the number of entries
+	- Added binary http headers to requests
+	- request_t objects are now created and destroyed in a consistent way
+	- Fixed cache control printf bug
+	- Added a lot of new http header ids
+	- Improved Connection: header handling; now both Connection and
+	  Proxy-Connection headers are checked for connection directives
+	- Connection request header is now handled correctly regardless
+	  of its position and the number of entries
 	- Only replies with valid Content-Length can be sent with keep-alive
 	  connection directive (Henrik Nordstrom)
-        - Better handling of persistent connection "clues" in HTTP headers;
+	- Better handling of persistent connection "clues" in HTTP headers;
 	  the decision now depends on HTTP version (and User-Agent exceptions)
-        - Removed handling of "length=" directive in IMS headers;
-          the directive is not in the HTTP/1.1 standard;
-          standing by for objections
-        - allowed/denied headers are now checked using bit masks instead of
-          strcmp loops
-        - removed Uri: from allowed headers; Uri is deprecated in RFC 2068
+	- Removed handling of "length=" directive in IMS headers;
+	  the directive is not in the HTTP/1.1 standard;
+	  standing by for objections
+	- allowed/denied headers are now checked using bit masks instead of
+	  strcmp loops
+	- removed Uri: from allowed headers; Uri is deprecated in RFC 2068
 	- removed processing of Request-Range header (not in specs?)
 	- Fixed byte-order bugs in cacheDigestHashKey.
 	- Changed hash_remove_link() to return void.
@@ -1993,8 +1993,8 @@ Changes to squid-1.2.beta13 (Feb 4, 1998):
 	- An fstat() call is now added after every
 	  storeSwapInFileOpened() so object sizes can be checked.   Added
 	  code to storeRelease() the object if the sizes don't match (SLF).
-        - #defining USE_ASYNC_IO now uses the async unlink() rather than
-          unlinkd() (SLF).
+	- #defining USE_ASYNC_IO now uses the async unlink() rather than
+	  unlinkd() (SLF).
 	- #defining MONOTONIC_STORE will support the creation of disk
 	  objects clustered into directories.  This GREATLY improves disk
 	  performance (factor of 3) over old `write-over-old-object'
@@ -2036,7 +2036,7 @@ Changes to squid-1.2.beta12 (Jan 30, 1998):
 	- Year-2000 fixes (Arjan de Vet).
 	- Fixed looping for cache hits on HEAD requests.
 	- Fixed parseHttpRequest() coredump for 
-          "GET http://foo HTTP/1.0\r\n\r\n\r\n"
+	  "GET http://foo HTTP/1.0\r\n\r\n\r\n"
 
 Changes to squid-1.2.beta11 (Jan 6, 1998):
 
@@ -2299,12 +2299,12 @@ Changes to squid-1.2.alpha6 ():
 	- Simpler cacheobj implementation.
 	- persistent connection histogram
 	- SERVER-SIDE PERSISTENT CONNECTIONS:
-        	- Added pconn.c 
-        	- Addec Cofig.Timeout.pconn; default 120 seconds
-        	- Added httpState->flags
-        	- Added flags arg to httpBuildRequestHeader()
-        	- Added HTTP_PROXYING and HTTP_KEEPALIVE flags
-        	- Added 'Connection' to allowed HTTP headers (http-anon.c)
+		- Added pconn.c 
+		- Addec Cofig.Timeout.pconn; default 120 seconds
+		- Added httpState->flags
+		- Added flags arg to httpBuildRequestHeader()
+		- Added HTTP_PROXYING and HTTP_KEEPALIVE flags
+		- Added 'Connection' to allowed HTTP headers (http-anon.c)
 		- Added 'Proxy-Connection' to allowed HTTP headers
 		  (http-anon.c)
 		- Merged proxyhttpStart() with httpStart() and created
