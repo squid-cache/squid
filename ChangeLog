@@ -9,6 +9,7 @@ Changes to squid-1.1.beta5 (October 7, 1996):
 	- Added browser ACL patch (Carson Gaspar).
 	- Added reading ACLs from file patch (Arjan de Vet).
 	- Squid-1.0 changes up to 1.0.18.
+	- Added release/cleanup functions to net_db.c.
 
 Changes to squid-1.1.beta4 (September 26, 1996):
 
