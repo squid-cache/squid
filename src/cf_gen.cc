@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.23 1998/05/28 23:00:05 wessels Exp $
+ * $Id: cf_gen.cc,v 1.24 1998/05/28 23:41:20 wessels Exp $
  *
  * DEBUG: none
  * AUTHOR: Max Okumoto
@@ -157,7 +157,7 @@ main(int argc, char *argv[])
 		state = sDOC;
 	    } else {
 		printf("Error on line %d\n", linenum);
-		printf("--> %d bytes, %s\n", strlen(buff), buff);
+		printf("--> %s\n", buff);
 		exit(1);
 	    }
 	    break;
