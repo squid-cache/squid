@@ -75,7 +75,7 @@ typedef struct _dlink_node dlink_node;
 typedef struct _dlink_list dlink_list;
 
 typedef void AIOCB(void *, int aio_return, int aio_errno);
-typedef void CWCB(int fd, char *, int size, int errflag, void *data);
+typedef void CWCB(int fd, char *, size_t size, int flag, void *data);
 typedef void CNCB(int fd, int status, void *);
 typedef void FREE(void *);
 typedef void FOCB(void *, int fd);
@@ -97,7 +97,7 @@ typedef void SIH(int fd, void *);	/* swap in */
 typedef int QS(const void *, const void *);	/* qsort */
 typedef void STCB(void *, char *, ssize_t);	/* store callback */
 typedef void STABH(void *);
-typedef void ERCB(int fd, void *, int size);
+typedef void ERCB(int fd, void *, size_t);
 typedef void OBJH(StoreEntry *);
 typedef void SIGHDLR(int sig);
 

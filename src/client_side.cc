@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.143 1997/11/10 20:54:30 wessels Exp $
+ * $Id: client_side.cc,v 1.144 1997/11/12 00:08:45 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -121,6 +121,7 @@ clientAccessCheckDone(int answer, void *data)
 	redirectStart(http, clientRedirectDone, http);
     } else {
 	debug(33, 5) ("Access Denied: %s\n", http->url);
+	http->log_type = LOG_TCP_DENIED;
 	redirectUrl = aclGetDenyInfoUrl(&Config.denyInfoList, AclMatchedName);
 	if (redirectUrl) {
 	    err = errorCon(ERR_ACCESS_DENIED, HTTP_MOVED_TEMPORARILY);
@@ -183,7 +184,7 @@ icpProcessExpired(int fd, void *data)
 
     debug(33, 3) ("icpProcessExpired: FD %d '%s'\n", fd, http->url);
 
-    BIT_SET(http->request->flags, REQ_REFRESH);
+    EBIT_SET(http->request->flags, REQ_REFRESH);
     http->old_entry = http->entry;
     entry = storeCreateEntry(url,
 	http->log_url,
@@ -222,7 +223,7 @@ clientGetsOldEntry(StoreEntry * new_entry, StoreEntry * old_entry, request_t * r
     }
     /* If the client did not send IMS in the request, then it
      * must get the old object, not this "Not Modified" reply */
-    if (!BIT_TEST(request->flags, REQ_IMS)) {
+    if (!EBIT_TEST(request->flags, REQ_IMS)) {
 	debug(33, 5) ("clientGetsOldEntry: YES, no client IMS\n");
 	return 1;
     }
@@ -388,6 +389,7 @@ clientPurgeRequest(clientHttpRequest * http)
     const cache_key *k;
     debug(33, 3) ("Config.onoff.enable_purge = %d\n", Config.onoff.enable_purge);
     if (!Config.onoff.enable_purge) {
+	http->log_type = LOG_TCP_DENIED;
 	err = errorCon(ERR_ACCESS_DENIED, HTTP_FORBIDDEN);
 	err->request = requestLink(http->request);
 	err->src_addr = http->conn->peer.sin_addr;
@@ -411,7 +413,7 @@ clientPurgeRequest(clientHttpRequest * http)
 int
 checkNegativeHit(StoreEntry * e)
 {
-    if (!BIT_TEST(e->flag, ENTRY_NEGCACHED))
+    if (!EBIT_TEST(e->flag, ENTRY_NEGCACHED))
 	return 0;
     if (e->expires <= squid_curtime)
 	return 0;
@@ -530,7 +532,7 @@ icpParseRequestHeaders(clientHttpRequest * http)
     request->ims = -2;
     request->imslen = -1;
     if ((t = mime_get_header(request_hdr, "If-Modified-Since"))) {
-	BIT_SET(request->flags, REQ_IMS);
+	EBIT_SET(request->flags, REQ_IMS);
 	request->ims = parse_rfc1123(t);
 	while ((t = strchr(t, ';'))) {
 	    for (t++; isspace(*t); t++);
@@ -540,22 +542,22 @@ icpParseRequestHeaders(clientHttpRequest * http)
     }
     if ((t = mime_get_header(request_hdr, "Pragma"))) {
 	if (!strcasecmp(t, "no-cache"))
-	    BIT_SET(request->flags, REQ_NOCACHE);
+	    EBIT_SET(request->flags, REQ_NOCACHE);
     }
     if (mime_get_header(request_hdr, "Range")) {
-	BIT_SET(request->flags, REQ_NOCACHE);
-	BIT_SET(request->flags, REQ_RANGE);
+	EBIT_SET(request->flags, REQ_NOCACHE);
+	EBIT_SET(request->flags, REQ_RANGE);
     } else if (mime_get_header(request_hdr, "Request-Range")) {
-	BIT_SET(request->flags, REQ_NOCACHE);
-	BIT_SET(request->flags, REQ_RANGE);
+	EBIT_SET(request->flags, REQ_NOCACHE);
+	EBIT_SET(request->flags, REQ_RANGE);
     }
     if (mime_get_header(request_hdr, "Authorization"))
-	BIT_SET(request->flags, REQ_AUTH);
+	EBIT_SET(request->flags, REQ_AUTH);
     if (request->login[0] != '\0')
-	BIT_SET(request->flags, REQ_AUTH);
+	EBIT_SET(request->flags, REQ_AUTH);
     if ((t = mime_get_header(request_hdr, "Proxy-Connection"))) {
 	if (!strcasecmp(t, "Keep-Alive"))
-	    BIT_SET(request->flags, REQ_PROXY_KEEPALIVE);
+	    EBIT_SET(request->flags, REQ_PROXY_KEEPALIVE);
     }
     if ((t = mime_get_header(request_hdr, "Via")))
 	if (strstr(t, ThisCache)) {
@@ -564,7 +566,7 @@ icpParseRequestHeaders(clientHttpRequest * http)
 		    http->url);
 		debug(12, 1) ("--> %s\n", t);
 	    }
-	    BIT_SET(request->flags, REQ_LOOPDETECT);
+	    EBIT_SET(request->flags, REQ_LOOPDETECT);
 	}
 #if USE_USERAGENT_LOG
     if ((t = mime_get_header(request_hdr, "User-Agent")))
@@ -622,9 +624,9 @@ icpHierarchical(clientHttpRequest * http)
 
     /* IMS needs a private key, so we can use the hierarchy for IMS only
      * if our neighbors support private keys */
-    if (BIT_TEST(request->flags, REQ_IMS) && !neighbors_do_private_keys)
+    if (EBIT_TEST(request->flags, REQ_IMS) && !neighbors_do_private_keys)
 	return 0;
-    if (BIT_TEST(request->flags, REQ_AUTH))
+    if (EBIT_TEST(request->flags, REQ_AUTH))
 	return 0;
     if (method == METHOD_TRACE)
 	return 1;
@@ -634,7 +636,7 @@ icpHierarchical(clientHttpRequest * http)
     for (p = Config.hierarchy_stoplist; p; p = p->next)
 	if (strstr(url, p->key))
 	    return 0;
-    if (BIT_TEST(request->flags, REQ_LOOPDETECT))
+    if (EBIT_TEST(request->flags, REQ_LOOPDETECT))
 	return 0;
     if (request->protocol == PROTO_HTTP)
 	return httpCachable(method);
@@ -648,7 +650,7 @@ icpHierarchical(clientHttpRequest * http)
 }
 
 static void
-clientErrorComplete(int fd, void *data, int size)
+clientErrorComplete(int fd, void *data, size_t size)
 {
     clientHttpRequest *http = data;
     if (http)
@@ -735,7 +737,7 @@ clientBuildReplyHeader(clientHttpRequest * http,
     snprintf(ybuf, 4096, "X-Cache: %s", isTcpHit(http->log_type) ? "HIT" : "MISS");
     clientAppendReplyHeader(hdr_out, ybuf, &len, out_sz);
     /* Append Proxy-Connection: */
-    if (BIT_TEST(http->request->flags, REQ_PROXY_KEEPALIVE)) {
+    if (EBIT_TEST(http->request->flags, REQ_PROXY_KEEPALIVE)) {
 	snprintf(ybuf, 4096, "Proxy-Connection: Keep-Alive");
 	clientAppendReplyHeader(hdr_out, ybuf, &len, out_sz);
     }
@@ -869,7 +871,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 }
 
 void
-clientWriteComplete(int fd, char *bufnotused, int size, int errflag, void *data)
+clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
 {
     clientHttpRequest *http = data;
     ConnStateData *conn;
@@ -897,7 +899,7 @@ clientWriteComplete(int fd, char *bufnotused, int size, int errflag, void *data)
 	    http->out.size);
 	if (http->entry->mem_obj->reply->content_length <= 0) {
 	    comm_close(fd);
-	} else if (BIT_TEST(http->request->flags, REQ_PROXY_KEEPALIVE)) {
+	} else if (EBIT_TEST(http->request->flags, REQ_PROXY_KEEPALIVE)) {
 	    debug(12, 5) ("clientWriteComplete: FD %d Keeping Alive\n", fd);
 	    conn = http->conn;
 	    httpRequestFree(http);
@@ -1011,7 +1013,7 @@ icpGetHeadersForIMS(void *data, char *buf, ssize_t size)
 }
 
 static void
-icpHandleIMSComplete(int fd, char *bufnotused, int size, int errflag, void *data)
+icpHandleIMSComplete(int fd, char *bufnotused, size_t size, int flag, void *data)
 {
     clientHttpRequest *http = data;
     StoreEntry *entry = http->entry;
@@ -1025,7 +1027,7 @@ icpHandleIMSComplete(int fd, char *bufnotused, int size, int errflag, void *data
     http->entry = NULL;
     http->out.size += size;
     http->al.http.code = 304;
-    if (errflag != COMM_ERR_CLOSING)
+    if (flag != COMM_ERR_CLOSING)
 	comm_close(fd);
 }
 
@@ -1069,15 +1071,15 @@ icpProcessRequest(int fd, clientHttpRequest * http)
 	return;
     }
     if (icpCachable(http))
-	BIT_SET(request->flags, REQ_CACHABLE);
+	EBIT_SET(request->flags, REQ_CACHABLE);
     if (icpHierarchical(http))
-	BIT_SET(request->flags, REQ_HIERARCHICAL);
+	EBIT_SET(request->flags, REQ_HIERARCHICAL);
     debug(12, 5) ("icpProcessRequest: REQ_NOCACHE = %s\n",
-	BIT_TEST(request->flags, REQ_NOCACHE) ? "SET" : "NOT SET");
+	EBIT_TEST(request->flags, REQ_NOCACHE) ? "SET" : "NOT SET");
     debug(12, 5) ("icpProcessRequest: REQ_CACHABLE = %s\n",
-	BIT_TEST(request->flags, REQ_CACHABLE) ? "SET" : "NOT SET");
+	EBIT_TEST(request->flags, REQ_CACHABLE) ? "SET" : "NOT SET");
     debug(12, 5) ("icpProcessRequest: REQ_HIERARCHICAL = %s\n",
-	BIT_TEST(request->flags, REQ_HIERARCHICAL) ? "SET" : "NOT SET");
+	EBIT_TEST(request->flags, REQ_HIERARCHICAL) ? "SET" : "NOT SET");
 
     /* NOTE on HEAD requests: We currently don't cache HEAD reqeusts
      * at all, so look for the corresponding GET object, or just go
@@ -1092,7 +1094,7 @@ icpProcessRequest(int fd, clientHttpRequest * http)
     if ((entry = storeGet(pubkey)) == NULL) {
 	/* this object isn't in the cache */
 	http->log_type = LOG_TCP_MISS;
-    } else if (BIT_TEST(entry->flag, ENTRY_SPECIAL)) {
+    } else if (EBIT_TEST(entry->flag, ENTRY_SPECIAL)) {
 	if (entry->mem_status == IN_MEMORY)
 	    http->log_type = LOG_TCP_MEM_HIT;
 	else
@@ -1101,15 +1103,15 @@ icpProcessRequest(int fd, clientHttpRequest * http)
 	http->log_type = LOG_TCP_MISS;
 	storeRelease(entry);
 	entry = NULL;
-    } else if (BIT_TEST(request->flags, REQ_NOCACHE)) {
+    } else if (EBIT_TEST(request->flags, REQ_NOCACHE)) {
 	/* NOCACHE should always eject a negative cached object */
-	if (BIT_TEST(entry->flag, ENTRY_NEGCACHED))
+	if (EBIT_TEST(entry->flag, ENTRY_NEGCACHED))
 	    storeRelease(entry);
 	/* NOCACHE+IMS should not eject a valid object */
-	else if (BIT_TEST(request->flags, REQ_IMS))
+	else if (EBIT_TEST(request->flags, REQ_IMS))
 	    (void) 0;
 	/* Request-Range should not eject a valid object */
-	else if (BIT_TEST(request->flags, REQ_RANGE))
+	else if (EBIT_TEST(request->flags, REQ_RANGE))
 	    (void) 0;
 	else
 	    storeRelease(entry);
@@ -1126,7 +1128,7 @@ icpProcessRequest(int fd, clientHttpRequest * http)
 	    http->log_type = LOG_TCP_REFRESH_MISS;
 	else
 	    http->log_type = LOG_TCP_MISS;	/* XXX zoinks */
-    } else if (BIT_TEST(request->flags, REQ_IMS)) {
+    } else if (EBIT_TEST(request->flags, REQ_IMS)) {
 	/* User-initiated IMS request for something we think is valid */
 	http->log_type = LOG_TCP_IMS_MISS;
     } else {
@@ -1437,7 +1439,7 @@ clientReadRequest(int fd, void *data)
 	}
 	/* It might be half-closed, we can't tell */
 	debug(12, 5) ("clientReadRequest: FD %d closed?\n", fd);
-	BIT_SET(F->flags, FD_SOCKET_EOF);
+	EBIT_SET(F->flags, FD_SOCKET_EOF);
 	conn->defer.until = squid_curtime + 1;
 	conn->defer.n++;
 	commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, conn, 0);
@@ -1651,9 +1653,9 @@ CheckQuickAbort2(const clientHttpRequest * http)
     long minlen;
     long expectlen;
 
-    if (!BIT_TEST(http->request->flags, REQ_CACHABLE))
+    if (!EBIT_TEST(http->request->flags, REQ_CACHABLE))
 	return 1;
-    if (BIT_TEST(http->entry->flag, KEY_PRIVATE))
+    if (EBIT_TEST(http->entry->flag, KEY_PRIVATE))
 	return 1;
     if (http->entry->mem_obj == NULL)
 	return 1;
@@ -1711,7 +1713,6 @@ icpCheckTransferDone(clientHttpRequest * http)
 	return 0;
     if (mem->reply->content_length == 0)
 	return 0;
-    assert(http->out.offset <= mem->reply->content_length + mem->reply->hdr_sz);
     if (http->out.offset >= mem->reply->content_length + mem->reply->hdr_sz)
 	return 1;
     return 0;

@@ -33,13 +33,13 @@
 #define COMM_ERR_DNS     (-8)
 #define COMM_ERR_CLOSING (-9)
 
-#define COMM_NONBLOCKING  (0x1)
-#define COMM_NOCLOEXEC	  (0x8)
-
 /* Select types. */
 #define COMM_SELECT_READ   (0x1)
 #define COMM_SELECT_WRITE  (0x2)
 #define MAX_DEBUG_SECTIONS 100
+
+#define COMM_NONBLOCKING	0x01
+#define COMM_NOCLOEXEC		0x02
 
 #ifdef HAVE_SYSLOG
 #define debug(SECTION, LEVEL) \
@@ -55,25 +55,13 @@
 #define DISK_EOF                 (-2)
 #define DISK_NO_SPACE_LEFT       (-6)
 
-#define DNS_FLAG_ALIVE          0x01
-#define DNS_FLAG_BUSY           0x02
-#define DNS_FLAG_CLOSING        0x04
-
 #define DNS_INBUF_SZ 4096
-
-#define FD_CLOSE_REQUEST	0x02
-#define FD_WRITE_DAEMON		0x04
-#define FD_WRITE_PENDING	0x08
-#define FD_CLOSING		0x10
-#define FD_SOCKET_EOF		0x40
 
 #define FD_DESC_SZ		64
 
 #define FQDN_FLAG_UNUSED_01	0x01
 #define FQDN_LOOKUP_IF_MISS	0x02
-
 #define FQDN_MAX_NAMES 5
-
 #define FQDNCACHE_AV_FACTOR 1000
 
 /*  
@@ -121,14 +109,6 @@
 /* Mark a neighbor cache as dead if it doesn't answer this many pings */
 #define HIER_MAX_DEFICIT  20
 
-/* bitfields for peer->options */
-#define NEIGHBOR_PROXY_ONLY		0x01
-#define NEIGHBOR_NO_QUERY		0x02
-#define NEIGHBOR_DEFAULT_PARENT		0x04
-#define NEIGHBOR_ROUNDROBIN		0x08
-#define NEIGHBOR_MCAST_RESPONDER	0x10
-#define NEIGHBOR_CLOSEST_ONLY		0x20
-
 #define ICP_FLAG_HIT_OBJ     0x80000000ul
 #define ICP_FLAG_SRC_RTT     0x40000000ul
 
@@ -158,50 +138,21 @@
 #define SM_PAGE_SIZE 4096
 #define DISK_PAGE_SIZE  8192
 
+#if UNUSED_CODE
 #define BIT_SET(flag, bit) 	((flag) |= (bit))
 #define BIT_CLR(flag, bit) 	((flag) &= ~(bit))
 #define BIT_TEST(flag, bit) 	((flag) & (bit))
+#endif
 
 #define EBIT_SET(flag, bit) 	((flag) |= ((1<<bit)))
 #define EBIT_CLR(flag, bit) 	((flag) &= ~((1<<bit)))
 #define EBIT_TEST(flag, bit) 	((flag) & ((1<<bit)))
-
-#define ENTRY_VALIDATED		(1<<16)
-#define ENTRY_UNUSED15		(1<<15)
-#define ENTRY_NEGCACHED		(1<<14)
-#define HIERARCHICAL 		(1<<13)		/* can we query neighbors? */
-#define KEY_PRIVATE 		(1<<12)		/* is the key currently private? */
-#define ENTRY_DISPATCHED 	(1<<11)
-#define ENTRY_UNUSED10 		(1<<10)
-#define ENTRY_UNUSED09 		(1<<9)
-#define ENTRY_UNUSED08		(1<<8)
-#define ENTRY_CACHABLE   	(1<<7)
-#define REFRESH_REQUEST   	(1<<6)
-#define RELEASE_REQUEST 	(1<<5)
-#define ENTRY_UNUSED04	 	(1<<4)
-#define DELAY_SENDING 		(1<<3)
-#define ENTRY_REVALIDATE 	(1<<2)
-#define ENTRY_UNUSED01   	(1<<1)
-#define ENTRY_SPECIAL		(1<<0)
 
 #define MAX_FILES_PER_DIR (1<<20)
 
 #define MAX_URL  4096
 #define MAX_LOGIN_SZ  128
 
-/* bitfields for request_t->flags */
-#define REQ_RANGE		0x01
-#define REQ_NOCACHE		0x02
-#define REQ_IMS			0x04
-#define REQ_AUTH		0x08
-#define REQ_CACHABLE		0x10
-#define REQ_UNUSED2		0x20
-#define REQ_HIERARCHICAL	0x40
-#define REQ_LOOPDETECT		0x80
-#define REQ_PROXY_KEEPALIVE	0x100
-#define REQ_PROXYING		0x200
-#define REQ_REFRESH		0x400
-#define REQ_USED_PROXY_AUTH	0x800
 #define PEER_MAX_ADDRESSES 10
 #define RTT_AV_FACTOR      1000
 
@@ -220,10 +171,5 @@
 #if !defined(ERROR_BUF_SZ) && defined(MAX_URL)
 #define ERROR_BUF_SZ (MAX_URL << 2)
 #endif
-
-#define ERR_FLAG_CBDATA		0x01
-
-#define HTTP_PROXYING		(1<<0)
-#define HTTP_KEEPALIVE		(1<<1)
 
 #define READ_AHEAD_GAP		(1<<14)

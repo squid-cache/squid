@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.166 1997/11/05 05:29:31 wessels Exp $
+ * $Id: neighbors.cc,v 1.167 1997/11/12 00:08:58 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -190,10 +190,10 @@ peerAllowedToUse(const peer * p, request_t * request)
     aclCheck_t checklist;
     if (request == NULL)
 	fatal_dump("peerAllowedToUse: NULL request");
-    if (BIT_TEST(request->flags, REQ_NOCACHE))
+    if (EBIT_TEST(request->flags, REQ_NOCACHE))
 	if (neighborType(p, request) == PEER_SIBLING)
 	    return 0;
-    if (BIT_TEST(request->flags, REQ_REFRESH))
+    if (EBIT_TEST(request->flags, REQ_REFRESH))
 	if (neighborType(p, request) == PEER_SIBLING)
 	    return 0;
     if (p->pinglist == NULL && p->acls == NULL)
@@ -227,7 +227,7 @@ peerWouldBePinged(const peer * p, request_t * request)
     /* the case below seems strange, but can happen if the
      * URL host is on the other side of a firewall */
     if (p->type == PEER_SIBLING)
-	if (!BIT_TEST(request->flags, REQ_HIERARCHICAL))
+	if (!EBIT_TEST(request->flags, REQ_HIERARCHICAL))
 	    return 0;
     if (p->icp_port == echo_port)
 	if (!neighborUp(p))
@@ -301,7 +301,7 @@ getRoundRobinParent(request_t * request)
     peer *p;
     peer *q = NULL;
     for (p = Config.peers; p; p = p->next) {
-	if (!BIT_TEST(p->options, NEIGHBOR_ROUNDROBIN))
+	if (!EBIT_TEST(p->options, NEIGHBOR_ROUNDROBIN))
 	    continue;
 	if (neighborType(p, request) != PEER_PARENT)
 	    continue;
@@ -324,7 +324,7 @@ getDefaultParent(request_t * request)
     for (p = Config.peers; p; p = p->next) {
 	if (neighborType(p, request) != PEER_PARENT)
 	    continue;
-	if (!BIT_TEST(p->options, NEIGHBOR_DEFAULT_PARENT))
+	if (!EBIT_TEST(p->options, NEIGHBOR_DEFAULT_PARENT))
 	    continue;
 	if (!peerHTTPOkay(p, request))
 	    continue;
@@ -452,7 +452,7 @@ neighborsUdpPing(request_t * request,
 	    flags = 0;
 	    /* check if we should set ICP_FLAG_HIT_OBJ */
 	    if (opt_udp_hit_obj)
-		if (!BIT_TEST(request->flags, REQ_NOCACHE))
+		if (!EBIT_TEST(request->flags, REQ_NOCACHE))
 		    if (p->icp_version == ICP_VERSION_2)
 			flags |= ICP_FLAG_HIT_OBJ;
 	    if (Config.onoff.query_icmp)
@@ -604,7 +604,7 @@ ignoreMulticastReply(peer * p, MemObject * mem)
 {
     if (p == NULL)
 	return 0;
-    if (!BIT_TEST(p->options, NEIGHBOR_MCAST_RESPONDER))
+    if (!EBIT_TEST(p->options, NEIGHBOR_MCAST_RESPONDER))
 	return 0;
     if (peerHTTPOkay(p, mem->request))
 	return 0;
@@ -633,7 +633,7 @@ neighborsUdpAck(const char *url, icp_common_t * header, const struct sockaddr_in
 	return;
     opcode_d = IcpOpcodeStr[opcode];
     /* check if someone is already fetching it */
-    if (BIT_TEST(entry->flag, ENTRY_DISPATCHED)) {
+    if (EBIT_TEST(entry->flag, ENTRY_DISPATCHED)) {
 	debug(15, 3) ("neighborsUdpAck: '%s' already being fetched.\n", url);
 	neighborCountIgnored(p, opcode);
 	return;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.31 1997/11/04 06:16:52 wessels Exp $
+ * $Id: peer_select.cc,v 1.32 1997/11/12 00:09:01 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -94,12 +94,12 @@ peerSelectIcpPing(request_t * request, int direct, StoreEntry * entry)
 	return 0;
     if (direct == DIRECT_YES)
 	fatal_dump("direct == DIRECT_YES");
-    if (!BIT_TEST(entry->flag, HIERARCHICAL) && direct != DIRECT_NO)
+    if (!EBIT_TEST(entry->flag, HIERARCHICAL) && direct != DIRECT_NO)
 	return 0;
     if (Config.onoff.single_parent_bypass && !Config.onoff.source_ping)
 	if (getSingleParent(request))
 	    return 0;
-    if (BIT_TEST(entry->flag, KEY_PRIVATE) && !neighbors_do_private_keys)
+    if (EBIT_TEST(entry->flag, KEY_PRIVATE) && !neighbors_do_private_keys)
 	if (direct != DIRECT_NO)
 	    return 0;
     n = neighborsCount(request);
@@ -354,7 +354,7 @@ peerIcpParentMiss(peer * p, icp_common_t * header, ps_state * ps)
     int rtt;
     int hops;
     if (Config.onoff.query_icmp) {
-	if (BIT_TEST(header->flags, ICP_FLAG_SRC_RTT)) {
+	if (header->flags & ICP_FLAG_SRC_RTT) {
 	    rtt = header->pad & 0xFFFF;
 	    hops = (header->pad >> 16) & 0xFFFF;
 	    if (rtt > 0 && rtt < 0xFFFF)
@@ -366,7 +366,7 @@ peerIcpParentMiss(peer * p, icp_common_t * header, ps_state * ps)
 	}
     }
     /* if closest-only is set, the don't allow FIRST_PARENT_MISS */
-    if (BIT_TEST(p->options, NEIGHBOR_CLOSEST_ONLY))
+    if (EBIT_TEST(p->options, NEIGHBOR_CLOSEST_ONLY))
 	return;
     /* set FIRST_MISS if thre is no CLOSEST parent */
     if (ps->closest_parent_miss != NULL)

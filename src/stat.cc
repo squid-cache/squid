@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.168 1997/11/05 05:29:37 wessels Exp $
+ * $Id: stat.cc,v 1.169 1997/11/12 00:09:06 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -287,21 +287,21 @@ describeFlags(const StoreEntry * entry)
     int flags = (int) entry->flag;
     char *t;
     buf[0] = '\0';
-    if (BIT_TEST(flags, DELAY_SENDING))
+    if (EBIT_TEST(flags, DELAY_SENDING))
 	strcat(buf, "DS,");
-    if (BIT_TEST(flags, RELEASE_REQUEST))
+    if (EBIT_TEST(flags, RELEASE_REQUEST))
 	strcat(buf, "RL,");
-    if (BIT_TEST(flags, REFRESH_REQUEST))
+    if (EBIT_TEST(flags, REFRESH_REQUEST))
 	strcat(buf, "RF,");
-    if (BIT_TEST(flags, ENTRY_CACHABLE))
+    if (EBIT_TEST(flags, ENTRY_CACHABLE))
 	strcat(buf, "EC,");
-    if (BIT_TEST(flags, ENTRY_DISPATCHED))
+    if (EBIT_TEST(flags, ENTRY_DISPATCHED))
 	strcat(buf, "ED,");
-    if (BIT_TEST(flags, KEY_PRIVATE))
+    if (EBIT_TEST(flags, KEY_PRIVATE))
 	strcat(buf, "KP,");
-    if (BIT_TEST(flags, HIERARCHICAL))
+    if (EBIT_TEST(flags, HIERARCHICAL))
 	strcat(buf, "HI,");
-    if (BIT_TEST(flags, ENTRY_NEGCACHED))
+    if (EBIT_TEST(flags, ENTRY_NEGCACHED))
 	strcat(buf, "NG,");
     if ((t = strrchr(buf, ',')))
 	*t = '\0';
@@ -336,7 +336,7 @@ statObjects(StoreEntry * sentry, int vm_or_not)
 	if ((++N & 0xFF) == 0) {
 	    debug(18, 3) ("stat_objects_get:  Processed %d objects...\n", N);
 	}
-	BIT_SET(sentry->flag, DELAY_SENDING);
+	EBIT_SET(sentry->flag, DELAY_SENDING);
 	storeAppendPrintf(sentry, "KEY %s\n", storeKeyText(entry->key));
 	storeAppendPrintf(sentry, "\t%s %s\n",
 	    RequestMethodStr[entry->method], storeUrl(entry));
@@ -371,7 +371,7 @@ statObjects(StoreEntry * sentry, int vm_or_not)
 	    storeAppendPrintf(sentry, "\t\tswapin_fd: %d\n",
 		(int) sc->swapin_fd);
 	}
-	BIT_CLR(sentry->flag, DELAY_SENDING);
+	EBIT_CLR(sentry->flag, DELAY_SENDING);
 	storeAppendPrintf(sentry, "\n");
     }
 }

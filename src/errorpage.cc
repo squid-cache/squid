@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.100 1997/11/05 05:29:22 wessels Exp $
+ * $Id: errorpage.cc,v 1.101 1997/11/12 00:08:49 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -166,7 +166,7 @@ errorSend(int fd, ErrorState * err)
     debug(4, 3) ("errorSend: FD %d, err=%p\n", fd, err);
     assert(fd >= 0);
     buf = errorBuildBuf(err, &len);
-    BIT_SET(err->flags, ERR_FLAG_CBDATA);
+    EBIT_SET(err->flags, ERR_FLAG_CBDATA);
     cbdataAdd(err);
     comm_write(fd, xstrdup(buf), len, errorSendComplete, err, xfree);
 }
@@ -181,7 +181,7 @@ errorSend(int fd, ErrorState * err)
  *            closeing the FD, otherwise we do it ourseves.
  */
 static void
-errorSendComplete(int fd, char *bufnotused, int size, int errflag, void *data)
+errorSendComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
 {
     ErrorState *err = data;
     debug(4, 3) ("errorSendComplete: FD %d, size=%d\n", fd, size);
@@ -202,7 +202,7 @@ errorStateFree(ErrorState * err)
     safe_free(err->url);
     safe_free(err->host);
     safe_free(err->dnsserver_msg);
-    if (BIT_TEST(err->flags, ERR_FLAG_CBDATA))
+    if (EBIT_TEST(err->flags, ERR_FLAG_CBDATA))
 	cbdataFree(err);
     else
 	safe_free(err);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.219 1997/11/10 21:32:00 wessels Exp $
+ * $Id: http.cc,v 1.220 1997/11/12 00:08:52 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -254,7 +254,7 @@ httpTimeout(int fd, void *data)
     assert(entry->store_status == STORE_PENDING);
     if (entry->mem_obj->inmem_hi == 0) {
 	err = errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT);
-	err->request = requestLink(httpState->request);
+	err->request = requestLink(httpState->orig_request);
 	errorAppendEntry(entry, err);
     }
     storeAbort(entry, 0);
@@ -265,7 +265,7 @@ httpTimeout(int fd, void *data)
 static void
 httpMakePublic(StoreEntry * entry)
 {
-    if (BIT_TEST(entry->flag, ENTRY_CACHABLE))
+    if (EBIT_TEST(entry->flag, ENTRY_CACHABLE))
 	storeSetPublicKey(entry);
 }
 
@@ -274,7 +274,7 @@ static void
 httpMakePrivate(StoreEntry * entry)
 {
     storeExpireNow(entry);
-    BIT_CLR(entry->flag, ENTRY_CACHABLE);
+    EBIT_CLR(entry->flag, ENTRY_CACHABLE);
     storeReleaseRequest(entry);	/* delete object when not used */
 }
 
@@ -283,7 +283,7 @@ static void
 httpCacheNegatively(StoreEntry * entry)
 {
     storeNegativeCache(entry);
-    if (BIT_TEST(entry->flag, ENTRY_CACHABLE))
+    if (EBIT_TEST(entry->flag, ENTRY_CACHABLE))
 	storeSetPublicKey(entry);
 }
 
@@ -427,7 +427,7 @@ httpCachableReply(HttpStateData * httpState)
 	return 0;
     if (EBIT_TEST(reply->cache_control, SCC_NOCACHE))
 	return 0;
-    if (BIT_TEST(httpState->request->flags, REQ_AUTH))
+    if (EBIT_TEST(httpState->request->flags, REQ_AUTH))
 	if (!EBIT_TEST(reply->cache_control, SCC_PROXYREVALIDATE))
 	    return 0;
     /*
@@ -552,7 +552,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	    break;
 	}
 	if (EBIT_TEST(reply->cache_control, SCC_PROXYREVALIDATE))
-	    BIT_SET(entry->flag, ENTRY_REVALIDATE);
+	    EBIT_SET(entry->flag, ENTRY_REVALIDATE);
 	if (EBIT_TEST(reply->misc_headers, HDR_PROXY_KEEPALIVE))
 	    if (httpState->peer)
 		httpState->peer->stats.n_keepalives_recv++;
@@ -566,7 +566,7 @@ httpPconnTransferDone(HttpStateData * httpState)
     MemObject *mem = httpState->entry->mem_obj;
     struct _http_reply *reply = mem->reply;
     debug(11, 3) ("httpPconnTransferDone: FD %d\n", httpState->fd);
-    if (!BIT_TEST(httpState->flags, HTTP_KEEPALIVE))
+    if (!EBIT_TEST(httpState->flags, HTTP_KEEPALIVE))
 	return 0;
     debug(11, 5) ("httpPconnTransferDone: content_length=%d\n",
 	reply->content_length);
@@ -633,7 +633,7 @@ httpReadReply(int fd, void *data)
 	    if (clen == 0) {
 		err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
 		err->xerrno = errno;
-		err->request = requestLink(httpState->request);
+		err->request = requestLink(httpState->orig_request);
 		errorAppendEntry(entry, err);
 	    }
 	    storeAbort(entry, 0);
@@ -648,7 +648,7 @@ httpReadReply(int fd, void *data)
 	    httpState->eof = 1;
 	    err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE);
 	    err->xerrno = errno;
-	    err->request = requestLink(httpState->request);
+	    err->request = requestLink(httpState->orig_request);
 	    errorAppendEntry(entry, err);
 	    storeAbort(entry, 0);
 	    comm_close(fd);
@@ -683,7 +683,7 @@ httpReadReply(int fd, void *data)
 /* This will be called when request write is complete. Schedule read of
  * reply. */
 static void
-httpSendComplete(int fd, char *bufnotused, int size, int errflag, void *data)
+httpSendComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
 {
     HttpStateData *httpState = data;
     StoreEntry *entry = httpState->entry;
@@ -695,7 +695,7 @@ httpSendComplete(int fd, char *bufnotused, int size, int errflag, void *data)
     if (errflag) {
 	err = errorCon(ERR_WRITE_ERROR, HTTP_INTERNAL_SERVER_ERROR);
 	err->xerrno = errno;
-	err->request = requestLink(httpState->request);
+	err->request = requestLink(httpState->orig_request);
 	errorAppendEntry(entry, err);
 	storeAbort(entry, 0);
 	comm_close(fd);
@@ -785,7 +785,7 @@ httpBuildRequestHeader(request_t * request,
 	    continue;
 	if (strncasecmp(xbuf, "Proxy-authorization:", 20) == 0)
 	    /* If we're not going to do proxy auth, then it must be passed on */
-	    if (BIT_TEST(request->flags, REQ_USED_PROXY_AUTH))
+	    if (EBIT_TEST(request->flags, REQ_USED_PROXY_AUTH))
 		continue;
 	if (strncasecmp(xbuf, "Connection:", 11) == 0)
 	    continue;
@@ -844,8 +844,8 @@ httpBuildRequestHeader(request_t * request,
 	    assert(strstr(url, request->urlpath));
     }
     /* maybe append Connection: Keep-Alive */
-    if (BIT_TEST(flags, HTTP_KEEPALIVE)) {
-	if (BIT_TEST(flags, HTTP_PROXYING)) {
+    if (EBIT_TEST(flags, HTTP_KEEPALIVE)) {
+	if (EBIT_TEST(flags, HTTP_PROXYING)) {
 	    snprintf(ybuf, YBUF_SZ, "Proxy-Connection: Keep-Alive");
 	} else {
 	    snprintf(ybuf, YBUF_SZ, "Connection: Keep-Alive");
@@ -906,19 +906,19 @@ httpSendRequest(int fd, void *data)
     else
 	cfd = entry->mem_obj->fd;
     if (p != NULL)
-	BIT_SET(httpState->flags, HTTP_PROXYING);
+	EBIT_SET(httpState->flags, HTTP_PROXYING);
     if (req->method == METHOD_GET) {
 	if (p) {
 	    d = (double) p->stats.n_keepalives_recv /
 		(double) ++p->stats.n_keepalives_sent;
 	    if (d > 0.50 || p->stats.n_keepalives_sent < 10)
-		BIT_SET(httpState->flags, HTTP_KEEPALIVE);
+		EBIT_SET(httpState->flags, HTTP_KEEPALIVE);
 	} else {
-	    BIT_SET(httpState->flags, HTTP_KEEPALIVE);
+	    EBIT_SET(httpState->flags, HTTP_KEEPALIVE);
 	}
     }
     len = httpBuildRequestHeader(req,
-	httpState->orig_request ? httpState->orig_request : req,
+	httpState->orig_request,
 	entry,
 	NULL,
 	buf,
@@ -950,11 +950,10 @@ httpSocketOpen(StoreEntry * entry, request_t * request)
 	COMM_NONBLOCKING,
 	storeUrl(entry));
     if (fd < 0) {
-	debug(11, 4) ("httpSocketOpen: Failed because we're out of sockets.\n");
+	debug(50, 4) ("httpSocketOpen: %s\n", xstrerror());
 	err = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
 	err->xerrno = errno;
-	if (request)
-	    err->request = requestLink(request);
+	err->request = requestLink(request);
 	errorAppendEntry(entry, err);
 	storeAbort(entry, 0);
     }
@@ -979,9 +978,10 @@ httpBuildState(int fd, StoreEntry * entry, request_t * orig_request, peer * e)
 	httpState->request = requestLink(request);
 	httpState->peer = e;
 	httpState->orig_request = requestLink(orig_request);
-	BIT_SET(request->flags, REQ_PROXYING);
+	EBIT_SET(request->flags, REQ_PROXYING);
     } else {
 	httpState->request = requestLink(orig_request);
+	httpState->orig_request = requestLink(orig_request);
     }
     /* register the handler to free HTTP state data when the FD closes */
     comm_add_close_handler(httpState->fd, httpStateFree, httpState);
@@ -1021,7 +1021,7 @@ httpStart(request_t * request, StoreEntry * entry, peer * e)
 	    return;
 	}
     }
-    if ((fd = httpSocketOpen(entry, NULL)) < 0)
+    if ((fd = httpSocketOpen(entry, request)) < 0)
 	return;
     httpState = httpBuildState(fd, entry, request, e);
     commSetTimeout(httpState->fd,
@@ -1045,7 +1045,7 @@ httpRestart(HttpStateData * httpState)
 	comm_close(httpState->fd);
 	httpState->fd = -1;
     }
-    httpState->fd = httpSocketOpen(httpState->entry, httpState->request);
+    httpState->fd = httpSocketOpen(httpState->entry, httpState->orig_request);
     if (httpState->fd < 0)
 	return;
     comm_add_close_handler(httpState->fd, httpStateFree, httpState);
@@ -1071,7 +1071,7 @@ httpConnectDone(int fd, int status, void *data)
 	debug(11, 4) ("httpConnectDone: Unknown host: %s\n", request->host);
 	err = errorCon(ERR_DNS_FAIL, HTTP_SERVICE_UNAVAILABLE);
 	err->dnsserver_msg = xstrdup(dns_error_message);
-	err->request = requestLink(request);
+	err->request = requestLink(httpState->orig_request);
 	errorAppendEntry(entry, err);
 	storeAbort(entry, 0);
 	comm_close(fd);
@@ -1080,7 +1080,7 @@ httpConnectDone(int fd, int status, void *data)
 	err->xerrno = errno;
 	err->host = xstrdup(request->host);
 	err->port = request->port;
-	err->request = requestLink(request);
+	err->request = requestLink(httpState->orig_request);
 	errorAppendEntry(entry, err);
 	storeAbort(entry, 0);
 	if (httpState->peer)

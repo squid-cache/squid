@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.111 1997/11/05 05:29:26 wessels Exp $
+ * $Id: gopher.cc,v 1.112 1997/11/12 00:08:51 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -171,11 +171,7 @@ static void gopherEndHTML(GopherStateData *);
 static void gopherToHTML(GopherStateData *, char *inbuf, int len);
 static PF gopherTimeout;
 static PF gopherReadReply;
-static void gopherSendComplete(int fd,
-    char *buf,
-    int size,
-    int errflag,
-    void *data);
+static CWCB gopherSendComplete;
 static PF gopherSendRequest;
 static GopherStateData *CreateGopherStateData(void);
 static CNCB gopherConnectDone;
@@ -375,7 +371,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 	    "<ISINDEX></BODY></HTML>\n", storeUrl(entry), storeUrl(entry));
 	storeAppend(entry, outbuf, strlen(outbuf));
 	/* now let start sending stuff to client */
-	BIT_CLR(entry->flag, DELAY_SENDING);
+	EBIT_CLR(entry->flag, DELAY_SENDING);
 	gopherState->data_in = 1;
 
 	return;
@@ -391,7 +387,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 
 	storeAppend(entry, outbuf, strlen(outbuf));
 	/* now let start sending stuff to client */
-	BIT_CLR(entry->flag, DELAY_SENDING);
+	EBIT_CLR(entry->flag, DELAY_SENDING);
 	gopherState->data_in = 1;
 
 	return;
@@ -639,7 +635,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
     if ((int) strlen(outbuf) > 0) {
 	storeAppend(entry, outbuf, strlen(outbuf));
 	/* now let start sending stuff to client */
-	BIT_CLR(entry->flag, DELAY_SENDING);
+	EBIT_CLR(entry->flag, DELAY_SENDING);
     }
     return;
 }
@@ -724,7 +720,7 @@ gopherReadReply(int fd, void *data)
 	if (gopherState->conversion != NORMAL)
 	    gopherEndHTML(data);
 	storeTimestampsSet(entry);
-	BIT_CLR(entry->flag, DELAY_SENDING);
+	EBIT_CLR(entry->flag, DELAY_SENDING);
 	storeComplete(entry);
 	comm_close(fd);
     } else {
@@ -745,7 +741,7 @@ gopherReadReply(int fd, void *data)
 /* This will be called when request write is complete. Schedule read of
  * reply. */
 static void
-gopherSendComplete(int fd, char *buf, int size, int errflag, void *data)
+gopherSendComplete(int fd, char *buf, size_t size, int errflag, void *data)
 {
     GopherStateData *gopherState = (GopherStateData *) data;
     StoreEntry *entry = gopherState->entry;
@@ -774,19 +770,19 @@ gopherSendComplete(int fd, char *buf, int size, int errflag, void *data)
     switch (gopherState->type_id) {
     case GOPHER_DIRECTORY:
 	/* we got to convert it first */
-	BIT_SET(entry->flag, DELAY_SENDING);
+	EBIT_SET(entry->flag, DELAY_SENDING);
 	gopherState->conversion = HTML_DIR;
 	gopherState->HTML_header_added = 0;
 	break;
     case GOPHER_INDEX:
 	/* we got to convert it first */
-	BIT_SET(entry->flag, DELAY_SENDING);
+	EBIT_SET(entry->flag, DELAY_SENDING);
 	gopherState->conversion = HTML_INDEX_RESULT;
 	gopherState->HTML_header_added = 0;
 	break;
     case GOPHER_CSO:
 	/* we got to convert it first */
-	BIT_SET(entry->flag, DELAY_SENDING);
+	EBIT_SET(entry->flag, DELAY_SENDING);
 	gopherState->conversion = HTML_CSO_RESULT;
 	gopherState->cso_recno = 0;
 	gopherState->HTML_header_added = 0;
@@ -826,7 +822,7 @@ gopherSendRequest(int fd, void *data)
 	gopherSendComplete,
 	data,
 	put_free_4k_page);
-    if (BIT_TEST(gopherState->entry->flag, ENTRY_CACHABLE))
+    if (EBIT_TEST(gopherState->entry->flag, ENTRY_CACHABLE))
 	storeSetPublicKey(gopherState->entry);	/* Make it public */
 }
 

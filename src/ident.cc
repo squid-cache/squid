@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.36 1997/11/05 05:29:29 wessels Exp $
+ * $Id: ident.cc,v 1.37 1997/11/12 00:08:54 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -33,7 +33,6 @@
 
 #define IDENT_PORT 113
 
-static CWCB identRequestComplete;
 static PF identReadReply;
 static PF identClose;
 static CNCB identConnectDone;
@@ -88,27 +87,8 @@ identConnectDone(int fd, int status, void *data)
     snprintf(reqbuf, BUFSIZ, "%d, %d\r\n",
 	ntohs(connState->peer.sin_port),
 	ntohs(connState->me.sin_port));
-    comm_write(fd,
-	reqbuf,
-	strlen(reqbuf),
-	identRequestComplete,
-	connState,
-	NULL);
-    commSetSelect(fd,
-	COMM_SELECT_READ,
-	identReadReply,
-	connState, 0);
-}
-
-static void
-identRequestComplete(
-    int fd,
-    char *bufnotused,
-    int size,
-    int flagnotused,
-    void *datanotused)
-{
-    debug(30, 5) ("identRequestComplete: FD %d: wrote %d bytes\n", fd, size);
+    comm_write(fd, xstrdup(reqbuf), strlen(reqbuf), NULL, connState, xfree);
+    commSetSelect(fd, COMM_SELECT_READ, identReadReply, connState, 0);
 }
 
 static void

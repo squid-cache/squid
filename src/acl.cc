@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.113 1997/11/05 05:29:17 wessels Exp $
+ * $Id: acl.cc,v 1.114 1997/11/12 00:08:44 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1229,7 +1229,7 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
 	} else {
 	    /* register that we used the proxy authentication header */
 	    checklist->state[ACL_PROXY_AUTH] = ACL_LOOKUP_DONE;
-	    BIT_SET(r->flags, REQ_USED_PROXY_AUTH);
+	    EBIT_SET(r->flags, REQ_USED_PROXY_AUTH);
 	    return 1;
 	}
 	/* NOTREACHED */

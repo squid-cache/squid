@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.337 1997/11/10 20:54:33 wessels Exp $
+ * $Id: store.cc,v 1.338 1997/11/12 00:09:09 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -459,12 +459,12 @@ storeLockObject(StoreEntry * e)
 void
 storeReleaseRequest(StoreEntry * e)
 {
-    if (BIT_TEST(e->flag, RELEASE_REQUEST))
+    if (EBIT_TEST(e->flag, RELEASE_REQUEST))
 	return;
     if (!storeEntryLocked(e))
 	fatal_dump("storeReleaseRequest: unlocked entry");
     debug(20, 3) ("storeReleaseRequest: '%s'\n", storeKeyText(e->key));
-    BIT_SET(e->flag, RELEASE_REQUEST);
+    EBIT_SET(e->flag, RELEASE_REQUEST);
     storeSetPrivateKey(e);
 }
 
@@ -479,11 +479,11 @@ storeUnlockObject(StoreEntry * e)
     if (e->lock_count)
 	return (int) e->lock_count;
     if (e->store_status == STORE_PENDING) {
-	assert(!BIT_TEST(e->flag, ENTRY_DISPATCHED));
-	BIT_SET(e->flag, RELEASE_REQUEST);
+	assert(!EBIT_TEST(e->flag, ENTRY_DISPATCHED));
+	EBIT_SET(e->flag, RELEASE_REQUEST);
     }
     assert(storePendingNClients(e) == 0);
-    if (BIT_TEST(e->flag, RELEASE_REQUEST))
+    if (EBIT_TEST(e->flag, RELEASE_REQUEST))
 	storeRelease(e);
     else if (storeKeepInMemory(e)) {
 	storeSetMemStatus(e, IN_MEMORY);
@@ -517,7 +517,7 @@ storeSetPrivateKey(StoreEntry * e)
 {
     const cache_key *newkey;
     MemObject *mem = e->mem_obj;
-    if (e->key && BIT_TEST(e->flag, KEY_PRIVATE))
+    if (e->key && EBIT_TEST(e->flag, KEY_PRIVATE))
 	return;			/* is already private */
     if (e->key)
 	storeHashDelete(e);
@@ -529,7 +529,7 @@ storeSetPrivateKey(StoreEntry * e)
     }
     assert(hash_lookup(store_table, newkey) == NULL);
     storeHashInsert(e, newkey);
-    BIT_SET(e->flag, KEY_PRIVATE);
+    EBIT_SET(e->flag, KEY_PRIVATE);
 }
 
 void
@@ -538,7 +538,7 @@ storeSetPublicKey(StoreEntry * e)
     StoreEntry *e2 = NULL;
     const cache_key *newkey;
     MemObject *mem = e->mem_obj;
-    if (e->key && !BIT_TEST(e->flag, KEY_PRIVATE))
+    if (e->key && !EBIT_TEST(e->flag, KEY_PRIVATE))
 	return;			/* is already public */
     assert(mem);
     newkey = storeKeyPublic(mem->url, e->method);
@@ -551,7 +551,7 @@ storeSetPublicKey(StoreEntry * e)
     if (e->key)
 	storeHashDelete(e);
     storeHashInsert(e, newkey);
-    BIT_CLR(e->flag, KEY_PRIVATE);
+    EBIT_CLR(e->flag, KEY_PRIVATE);
 }
 
 StoreEntry *
@@ -565,21 +565,21 @@ storeCreateEntry(const char *url, const char *log_url, int flags, method_t metho
     e->lock_count = 1;		/* Note lock here w/o calling storeLock() */
     mem = e->mem_obj;
     e->method = method;
-    if (neighbors_do_private_keys || !BIT_TEST(flags, REQ_HIERARCHICAL))
+    if (neighbors_do_private_keys || !EBIT_TEST(flags, REQ_HIERARCHICAL))
 	storeSetPrivateKey(e);
     else
 	storeSetPublicKey(e);
-    if (BIT_TEST(flags, REQ_CACHABLE)) {
-	BIT_SET(e->flag, ENTRY_CACHABLE);
-	BIT_CLR(e->flag, RELEASE_REQUEST);
+    if (EBIT_TEST(flags, REQ_CACHABLE)) {
+	EBIT_SET(e->flag, ENTRY_CACHABLE);
+	EBIT_CLR(e->flag, RELEASE_REQUEST);
     } else {
-	BIT_CLR(e->flag, ENTRY_CACHABLE);
+	EBIT_CLR(e->flag, ENTRY_CACHABLE);
 	storeReleaseRequest(e);
     }
-    if (BIT_TEST(flags, REQ_HIERARCHICAL))
-	BIT_SET(e->flag, HIERARCHICAL);
+    if (EBIT_TEST(flags, REQ_HIERARCHICAL))
+	EBIT_SET(e->flag, HIERARCHICAL);
     else
-	BIT_CLR(e->flag, HIERARCHICAL);
+	EBIT_CLR(e->flag, HIERARCHICAL);
     e->store_status = STORE_PENDING;
     storeSetMemStatus(e, NOT_IN_MEMORY);
     e->swap_status = SWAPOUT_NONE;
@@ -589,7 +589,7 @@ storeCreateEntry(const char *url, const char *log_url, int flags, method_t metho
     e->lastref = squid_curtime;
     e->timestamp = 0;		/* set in storeTimestampsSet() */
     e->ping_status = PING_NONE;
-    BIT_SET(e->flag, ENTRY_VALIDATED);
+    EBIT_SET(e->flag, ENTRY_VALIDATED);
     return e;
 }
 
@@ -627,18 +627,18 @@ storeAddDiskRestore(const cache_key * key,
     e->lastmod = lastmod;
     e->refcount = refcount;
     e->flag = flags;
-    BIT_SET(e->flag, ENTRY_CACHABLE);
-    BIT_CLR(e->flag, RELEASE_REQUEST);
-    BIT_CLR(e->flag, KEY_PRIVATE);
+    EBIT_SET(e->flag, ENTRY_CACHABLE);
+    EBIT_CLR(e->flag, RELEASE_REQUEST);
+    EBIT_CLR(e->flag, KEY_PRIVATE);
     e->ping_status = PING_NONE;
     if (clean) {
-	BIT_SET(e->flag, ENTRY_VALIDATED);
+	EBIT_SET(e->flag, ENTRY_VALIDATED);
 	/* Only set the file bit if we know its a valid entry */
 	/* otherwise, set it in the validation procedure */
 	storeDirMapBitSet(file_number);
 	storeDirUpdateSwapSize(e->swap_file_number, size, 1);
     } else {
-	BIT_CLR(e->flag, ENTRY_VALIDATED);
+	EBIT_CLR(e->flag, ENTRY_VALIDATED);
     }
     return e;
 }
@@ -841,7 +841,7 @@ storeCheckSwapOut(StoreEntry * e)
     debug(20, 3) ("storeCheckSwapOut: store_status = %s\n",
 	storeStatusStr[e->store_status]);
     if (e->store_status == STORE_ABORTED) {
-	assert(BIT_TEST(e->flag, RELEASE_REQUEST));
+	assert(EBIT_TEST(e->flag, RELEASE_REQUEST));
 	storeSwapOutFileClose(e);
 	return;
     }
@@ -861,7 +861,7 @@ storeCheckSwapOut(StoreEntry * e)
     assert(lowest_offset >= mem->inmem_lo);
 
     new_mem_lo = lowest_offset;
-    if (!BIT_TEST(e->flag, ENTRY_CACHABLE)) {
+    if (!EBIT_TEST(e->flag, ENTRY_CACHABLE)) {
 	memFreeDataUpto(mem->data, new_mem_lo);
 	mem->inmem_lo = new_mem_lo;
 	return;
@@ -935,7 +935,7 @@ storeAppend(StoreEntry * e, const char *buf, int len)
 	memAppend(mem->data, buf, len);
 	mem->inmem_hi += len;
     }
-    if (e->store_status != STORE_ABORTED && !BIT_TEST(e->flag, DELAY_SENDING))
+    if (e->store_status != STORE_ABORTED && !EBIT_TEST(e->flag, DELAY_SENDING))
 	InvokeHandlers(e);
     storeCheckSwapOut(e);
 }
@@ -972,7 +972,7 @@ storeSwapInStart(StoreEntry * e, SIH * callback, void *callback_data)
 {
     swapin_ctrl_t *ctrlp;
     assert(e->mem_status == NOT_IN_MEMORY);
-    if (!BIT_TEST(e->flag, ENTRY_VALIDATED)) {
+    if (!EBIT_TEST(e->flag, ENTRY_VALIDATED)) {
 	if (storeDirMapBitTest(e->swap_file_number)) {
 	    /* someone took our file while we weren't looking */
 	    callback(-1, callback_data);
@@ -986,7 +986,7 @@ storeSwapInStart(StoreEntry * e, SIH * callback, void *callback_data)
     ctrlp->e = e;
     ctrlp->callback = callback;
     ctrlp->callback_data = callback_data;
-    if (BIT_TEST(e->flag, ENTRY_VALIDATED))
+    if (EBIT_TEST(e->flag, ENTRY_VALIDATED))
 	storeSwapInValidateComplete(ctrlp);
     else
 	storeValidate(e, storeSwapInValidateComplete, ctrlp);
@@ -1000,7 +1000,7 @@ storeSwapInValidateComplete(void *data)
     StoreEntry *e;
     e = ctrlp->e;
     assert(e->mem_status == NOT_IN_MEMORY);
-    if (!BIT_TEST(e->flag, ENTRY_VALIDATED)) {
+    if (!EBIT_TEST(e->flag, ENTRY_VALIDATED)) {
 	/* Invoke a store abort that should free the memory object */
 	(ctrlp->callback) (-1, ctrlp->callback_data);
 	xfree(ctrlp);
@@ -1121,7 +1121,7 @@ storeDoRebuildFromDisk(void *data)
 	    RB->invalid++;
 	    continue;
 	}
-	if (BIT_TEST(scan7, KEY_PRIVATE)) {
+	if (EBIT_TEST(scan7, KEY_PRIVATE)) {
 	    RB->badflags++;
 	    continue;
 	}
@@ -1223,9 +1223,9 @@ storeCleanup(void *datanotused)
 	link_ptr = hash_get_bucket(store_table, bucketnum);
 	for (; link_ptr; link_ptr = link_ptr->next) {
 	    e = (StoreEntry *) link_ptr;
-	    if (BIT_TEST(e->flag, ENTRY_VALIDATED))
+	    if (EBIT_TEST(e->flag, ENTRY_VALIDATED))
 		continue;
-	    if (BIT_TEST(e->flag, RELEASE_REQUEST))
+	    if (EBIT_TEST(e->flag, RELEASE_REQUEST))
 		continue;
 	    curr = xcalloc(1, sizeof(storeCleanList));
 	    curr->key = storeKeyDup(e->key);
@@ -1240,7 +1240,7 @@ storeCleanup(void *datanotused)
     curr = list;
     list = list->next;
     e = (StoreEntry *) hash_lookup(store_table, curr->key);
-    if (e && !BIT_TEST(e->flag, ENTRY_VALIDATED)) {
+    if (e && !EBIT_TEST(e->flag, ENTRY_VALIDATED)) {
 	storeLockObject(e);
 	storeValidate(e, storeCleanupComplete, e);
 	if ((++validnum & 0xFFF) == 0)
@@ -1257,7 +1257,7 @@ storeCleanupComplete(void *data)
 {
     StoreEntry *e = data;
     storeUnlockObject(e);
-    if (!BIT_TEST(e->flag, ENTRY_VALIDATED))
+    if (!EBIT_TEST(e->flag, ENTRY_VALIDATED))
 	storeRelease(e);
 }
 
@@ -1270,9 +1270,9 @@ storeValidate(StoreEntry * e, VCB callback, void *callback_data)
 #if !USE_ASYNC_IO
     int x;
 #endif
-    assert(!BIT_TEST(e->flag, ENTRY_VALIDATED));
+    assert(!EBIT_TEST(e->flag, ENTRY_VALIDATED));
     if (e->swap_file_number < 0) {
-	BIT_CLR(e->flag, ENTRY_VALIDATED);
+	EBIT_CLR(e->flag, ENTRY_VALIDATED);
 	callback(callback_data);
 	return;
     }
@@ -1307,9 +1307,9 @@ storeValidateComplete(void *data, int retcode, int errcode)
 	retcode = stat(path, sb);
     }
     if (retcode < 0 || sb->st_size == 0 || sb->st_size != e->object_len) {
-	BIT_CLR(e->flag, ENTRY_VALIDATED);
+	EBIT_CLR(e->flag, ENTRY_VALIDATED);
     } else {
-	BIT_SET(e->flag, ENTRY_VALIDATED);
+	EBIT_SET(e->flag, ENTRY_VALIDATED);
 	storeDirMapBitSet(e->swap_file_number);
 	storeDirUpdateSwapSize(e->swap_file_number, e->object_len, 1);
     }
@@ -1388,24 +1388,24 @@ storeCheckCachable(StoreEntry * e)
 {
     if (e->method != METHOD_GET) {
 	debug(20, 2) ("storeCheckCachable: NO: non-GET method\n");
-    } else if (!BIT_TEST(e->flag, ENTRY_CACHABLE)) {
+    } else if (!EBIT_TEST(e->flag, ENTRY_CACHABLE)) {
 	debug(20, 2) ("storeCheckCachable: NO: not cachable\n");
-    } else if (BIT_TEST(e->flag, RELEASE_REQUEST)) {
+    } else if (EBIT_TEST(e->flag, RELEASE_REQUEST)) {
 	debug(20, 2) ("storeCheckCachable: NO: release requested\n");
     } else if (e->store_status == STORE_OK && !storeEntryValidLength(e)) {
 	debug(20, 2) ("storeCheckCachable: NO: wrong content-length\n");
-    } else if (BIT_TEST(e->flag, ENTRY_NEGCACHED)) {
+    } else if (EBIT_TEST(e->flag, ENTRY_NEGCACHED)) {
 	debug(20, 2) ("storeCheckCachable: NO: negative cached\n");
 	return 0;		/* avoid release call below */
     } else if (e->mem_obj->inmem_hi > Config.Store.maxObjectSize) {
 	debug(20, 2) ("storeCheckCachable: NO: too big\n");
-    } else if (BIT_TEST(e->flag, KEY_PRIVATE)) {
+    } else if (EBIT_TEST(e->flag, KEY_PRIVATE)) {
 	debug(20, 3) ("storeCheckCachable: NO: private key\n");
     } else {
 	return 1;
     }
     storeReleaseRequest(e);
-    BIT_CLR(e->flag, ENTRY_CACHABLE);
+    EBIT_CLR(e->flag, ENTRY_CACHABLE);
     return 0;
 }
 
@@ -1597,11 +1597,11 @@ storeRelease(StoreEntry * e)
 	    storeUrl(e));
 	storeExpireNow(e);
 	storeSetPrivateKey(e);
-	BIT_SET(e->flag, RELEASE_REQUEST);
+	EBIT_SET(e->flag, RELEASE_REQUEST);
 	return 0;
     }
     if (e->swap_file_number > -1) {
-	if (BIT_TEST(e->flag, ENTRY_VALIDATED))
+	if (EBIT_TEST(e->flag, ENTRY_VALIDATED))
 	    storePutUnusedFileno(e->swap_file_number);
 	storeDirUpdateSwapSize(e->swap_file_number, e->object_len, -1);
 	e->swap_file_number = -1;
@@ -1623,7 +1623,7 @@ storeEntryLocked(const StoreEntry * e)
 	return 1;
     if (e->store_status == STORE_PENDING)
 	return 1;
-    if (BIT_TEST(e->flag, ENTRY_SPECIAL))
+    if (EBIT_TEST(e->flag, ENTRY_SPECIAL))
 	return 1;
     return 0;
 }
@@ -1965,9 +1965,9 @@ storeWriteCleanLogs(int reopen)
 	    continue;
 	if (e->object_len <= 0)
 	    continue;
-	if (BIT_TEST(e->flag, RELEASE_REQUEST))
+	if (EBIT_TEST(e->flag, RELEASE_REQUEST))
 	    continue;
-	if (BIT_TEST(e->flag, KEY_PRIVATE))
+	if (EBIT_TEST(e->flag, KEY_PRIVATE))
 	    continue;
 	dirn = storeDirNumber(e->swap_file_number);
 	assert(dirn < Config.cacheSwap.n_configured);
@@ -2108,7 +2108,7 @@ storeCheckExpired(const StoreEntry * e, int check_lru_age)
 {
     if (storeEntryLocked(e))
 	return 0;
-    if (BIT_TEST(e->flag, ENTRY_NEGCACHED) && squid_curtime >= e->expires)
+    if (EBIT_TEST(e->flag, ENTRY_NEGCACHED) && squid_curtime >= e->expires)
 	return 1;
     if (!check_lru_age)
 	return 0;
@@ -2156,7 +2156,7 @@ void
 storeNegativeCache(StoreEntry * e)
 {
     e->expires = squid_curtime + Config.negativeTtl;
-    BIT_SET(e->flag, ENTRY_NEGCACHED);
+    EBIT_SET(e->flag, ENTRY_NEGCACHED);
 }
 
 void
@@ -2191,9 +2191,9 @@ expiresMoreThan(time_t expires, time_t when)
 int
 storeEntryValidToSend(StoreEntry * e)
 {
-    if (BIT_TEST(e->flag, RELEASE_REQUEST))
+    if (EBIT_TEST(e->flag, RELEASE_REQUEST))
 	return 0;
-    if (BIT_TEST(e->flag, ENTRY_NEGCACHED))
+    if (EBIT_TEST(e->flag, ENTRY_NEGCACHED))
 	if (e->expires <= squid_curtime)
 	    return 0;
     if (e->store_status == STORE_ABORTED)
