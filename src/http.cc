@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.282 1998/06/04 18:57:14 wessels Exp $
+ * $Id: http.cc,v 1.283 1998/06/04 20:03:07 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -236,11 +236,11 @@ httpCachableReply(HttpStateData * httpState)
 	return 0;
     switch (httpState->entry->mem_obj->reply->sline.status) {
 	/* Responses that are cacheable */
-    case 200:			/* OK */
-    case 203:			/* Non-Authoritative Information */
-    case 300:			/* Multiple Choices */
-    case 301:			/* Moved Permanently */
-    case 410:			/* Gone */
+    case HTTP_OK:
+    case HTTP_NON_AUTHORITATIVE_INFORMATION:
+    case HTTP_MULTIPLE_CHOICES:
+    case HTTP_MOVED_PERMANENTLY:
+    case HTTP_GONE:
 	/* don't cache objects from peers w/o LMT, Date, or Expires */
 	/* check that is it enough to check headers @?@ */
 	if (rep->date > -1)
@@ -257,37 +257,36 @@ httpCachableReply(HttpStateData * httpState)
 	/* NOTREACHED */
 	break;
 	/* Responses that only are cacheable if the server says so */
-    case 302:			/* Moved temporarily */
+    case HTTP_MOVED_TEMPORARILY:
 	if (rep->expires > -1)
 	    return 1;
 	else
 	    return 0;
 	/* NOTREACHED */
 	break;
-/* @?@ should we replace these magic numbers with http_status enums? */
 	/* Errors can be negatively cached */
-    case 204:			/* No Content */
-    case 305:			/* Use Proxy (proxy redirect) */
-    case 400:			/* Bad Request */
-    case 403:			/* Forbidden */
-    case 404:			/* Not Found */
-    case 405:			/* Method Now Allowed */
-    case 414:			/* Request-URI Too Long */
-    case 500:			/* Internal Server Error */
-    case 501:			/* Not Implemented */
-    case 502:			/* Bad Gateway */
-    case 503:			/* Service Unavailable */
-    case 504:			/* Gateway Timeout */
+    case HTTP_NO_CONTENT:
+    case HTTP_USE_PROXY:
+    case HTTP_BAD_REQUEST:
+    case HTTP_FORBIDDEN:
+    case HTTP_NOT_FOUND:
+    case HTTP_METHOD_NOT_ALLOWED:
+    case HTTP_REQUEST_URI_TOO_LARGE:
+    case HTTP_INTERNAL_SERVER_ERROR:
+    case HTTP_NOT_IMPLEMENTED:
+    case HTTP_BAD_GATEWAY:
+    case HTTP_SERVICE_UNAVAILABLE:
+    case HTTP_GATEWAY_TIMEOUT:
 	return -1;
 	/* NOTREACHED */
 	break;
 	/* Some responses can never be cached */
-    case 206:			/* Partial Content -- Not yet supported */
-    case 303:			/* See Other */
-    case 304:			/* Not Modified */
-    case 401:			/* Unauthorized */
-    case 407:			/* Proxy Authentication Required */
-    case 600:			/* Squid header parsing error */
+    case HTTP_PARTIAL_CONTENT:			/* Not yet supported */
+    case HTTP_SEE_OTHER:
+    case HTTP_NOT_MODIFIED:
+    case HTTP_UNAUTHORIZED:
+    case HTTP_PROXY_AUTHENTICATION_REQUIRED:
+    case HTTP_INVALID_HEADER:		/* Squid header parsing error */
     default:			/* Unknown status code */
 	return 0;
 	/* NOTREACHED */
