@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.46 1998/07/20 17:20:04 wessels Exp $
+ * $Id: snmp_agent.cc,v 1.47 1998/07/20 22:40:47 wessels Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -227,7 +227,7 @@ snmp_sysFn(variable_list * Var, snint * ErrP)
 	    Answer->type = ASN_INTEGER;
 	    *(Answer->val.integer) = Var->name[11];
 	    break;
-#if 0
+#if UNIMPLEMENTED
 	case SYS_FD_TYPE:
 	    Answer->val_len = sizeof(snint);
 	    Answer->val.integer = xmalloc(Answer->val_len);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_cache_digest.cc,v 1.21 1998/07/20 17:20:17 wessels Exp $
+ * $Id: test_cache_digest.cc,v 1.22 1998/07/20 22:40:47 wessels Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -90,13 +90,6 @@ struct _FileIterator {
 
 /* globals */
 static time_t cur_time = -1;	/* timestamp of the current log entry */
-
-#if 0
-
-static int cacheIndexScanCleanPrefix(CacheIndex * idx, const char *fname, FILE * file);
-static int cacheIndexScanAccessLog(CacheIndex * idx, const char *fname, FILE * file);
-
-#endif
 
 /* copied from url.c */
 const char *RequestMethodStr[] =
