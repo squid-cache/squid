@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.159 1998/08/17 23:00:36 wessels Exp $
+#  $Id: Makefile.in,v 1.160 1998/08/17 23:27:15 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -27,6 +27,7 @@ UNLINKD_EXE	= unlinkd$(exec_suffix)
 PINGER_EXE	= pinger$(exec_suffix)
 CACHEMGR_EXE	= cachemgr$(cgi_suffix)
 
+DEFAULT_PREFIX		= $(prefix)
 DEFAULT_CONFIG_FILE     = $(sysconfdir)/squid.conf
 DEFAULT_MIME_TABLE	= $(sysconfdir)/mime.conf
 DEFAULT_DNSSERVER       = $(libexecdir)/$(DNSSERVER_EXE)
@@ -40,7 +41,6 @@ DEFAULT_UNLINKD		= $(libexecdir)/$(UNLINKD_EXE)
 DEFAULT_ICON_DIR	= $(sysconfdir)/icons
 DEFAULT_ERROR_DIR	= $(sysconfdir)/errors
 DEFAULT_MIB_PATH	= $(sysconfdir)/mib.txt
-DEFAULT_PASSWD_FILE	= $(sysconfdir)/passwd
 
 CC		= @CC@
 MAKEDEPEND	= @MAKEDEPEND@
@@ -73,7 +73,6 @@ CLIENT_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 DNSSERVER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 PINGER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 STD_APP_LIBS    = -L../lib -lmiscutil $(XTRA_LIBS)
-AUTH_LIBS	= -L../lib -lmiscutil $(CRYPTLIB) $(XTRA_LIBS)
 
 PROGS           = $(SQUID_EXE) $(CLIENT_EXE)
 UTILS           = $(DNSSERVER_EXE) $(UNLINKD_EXE)
@@ -253,8 +252,8 @@ cf.data: cf.data.pre Makefile
 	s%@DEFAULT_ICON_DIR@%$(DEFAULT_ICON_DIR)%g;\
         s%@DEFAULT_MIB_PATH@%$(DEFAULT_MIB_PATH)%g;\
 	s%@DEFAULT_ERROR_DIR@%$(DEFAULT_ERROR_DIR)%g;\
-	s%@DEFAULT_AUTH_PROGRAM@%$(DEFAULT_AUTH_PROGRAM)%g;\
-	s%@DEFAULT_PASSWD_FILE@%$(DEFAULT_PASSWD_FILE)%g" < $(srcdir)/cf.data.pre >$@
+	s%@DEFAULT_PREFIX@%$(DEFAULT_PREFIX)%g;"\
+	< $(srcdir)/cf.data.pre >$@
 
 install-mkdirs:
 	-@if test ! -d $(prefix); then \
