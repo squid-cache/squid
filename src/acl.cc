@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.50 1996/10/13 09:16:32 wessels Exp $
+ * $Id: acl.cc,v 1.51 1996/10/15 04:58:23 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -227,7 +227,7 @@ decode_addr(char *asc, struct in_addr *addr, struct in_addr *mask)
 	}
     default:
 	/* Note, must use plain gethostbyname() here because at startup
-	   ipcache hasn't been initialized */
+	 * ipcache hasn't been initialized */
 	if ((hp = gethostbyname(asc)) != NULL) {
 	    *addr = inaddrFromHostent(hp);
 	} else {
