@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v3.cc,v 1.29 1999/05/25 06:53:43 wessels Exp $
+ * $Id: icp_v3.cc,v 1.30 1999/06/14 03:02:07 wessels Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -55,7 +55,13 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
     header.reqnum = ntohl(header.reqnum);
     header.flags = ntohl(header.flags);
     header.pad = ntohl(header.pad);
-
+    /*
+     * Length field should match the number of bytes read
+     */
+    if (len != header.length) {
+	debug(12, 3) ("icpHandleIcpV3: ICP message is too small\n");
+	return;
+    }
     switch (header.opcode) {
     case ICP_QUERY:
 	/* We have a valid packet */
