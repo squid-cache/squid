@@ -85,6 +85,23 @@ Changes to Squid-2.2 ():
 	  connected sockets (Luyer).
 	- Fixed parsing of FTP DOS directory listings with spaces
 	  (Nordstrom).
+	- Numerous DELAY_POOL changes/fixes from David Luyer:
+		- Makes no-delay neighbors for DELAY_POOLS work by
+		  using a fd_set with the connections to no-delay
+		  peers marked in it.
+		- Makes IP addresses ending in 0 and 255, and
+		  network number 255, work with individual and
+		  network delay pools (they were previously not
+		  permitted, and documented as such).
+		- Massive overhaul of delay pools code - dynamically
+		  allocated delay pools, as many as required.
+		- delayPoolsUpdate stops running if DELAY_POOLS is
+		  configured but no delay pools are configured.
+		- Initial delay pool levels are now configurable
+		  as a percentage of the maximum for the pool in
+		  question (used to be all set to 1 second worth
+		  of traffic).  Pools are restored to this level
+		  on reconfiguratoin.
 
 Changes to Squid-2.1 (November 16, 1998):
 
