@@ -118,6 +118,9 @@
 /* Define if you have the mktime function.  */
 #undef HAVE_MKTIME
 
+/* Define if you have the poll function.  */
+#undef HAVE_POLL
+
 /* Define if you have the pw_encrypt function.  */
 #undef HAVE_PW_ENCRYPT
 
@@ -228,6 +231,9 @@
 
 /* Define if you have the <netinet/tcp.h> header file.  */
 #undef HAVE_NETINET_TCP_H
+
+/* Define if you have the <poll.h> header file.  */
+#undef HAVE_POLL_H
 
 /* Define if you have the <pwd.h> header file.  */
 #undef HAVE_PWD_H

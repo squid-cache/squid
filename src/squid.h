@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.80 1996/12/02 07:06:56 wessels Exp $
+ * $Id: squid.h,v 1.81 1996/12/03 00:46:13 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -161,6 +161,14 @@
 #endif
 #if HAVE_GETOPT_H
 #include <getopt.h>
+#endif
+
+#if defined(USE_POLL) && HAVE_POLL
+#if HAVE_POLL_H
+#include <poll.h>
+#endif /* HAVE_POLL_H */
+#else
+#undef USE_POLL
 #endif
 
 #ifdef __STDC__
