@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.399 1998/09/21 06:49:41 wessels Exp $
+ * $Id: client_side.cc,v 1.400 1998/09/22 21:16:28 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -34,6 +34,19 @@
  */
 
 #include "squid.h"
+
+#if IPF_TRANSPARENT
+#if HAVE_SYS_IOCTL_H
+#include <sys/ioctl.h>
+#endif
+#include <netinet/tcp.h>
+#include <net/if.h>
+#include <ip_compat.h>
+#include <ip_fil.h>
+#include <ip_nat.h>
+#endif
+
+
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
@@ -1768,6 +1781,10 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     size_t url_sz;
     method_t method;
     clientHttpRequest *http = NULL;
+#if IPF_TRANSPARENT
+    struct natlookup natLookup;
+    static int natfd = -1;
+#endif
 
     /* Make sure a complete line has been received */
     if ((t = strchr(conn->in.buf, '\n')) == NULL) {
@@ -1900,10 +1917,36 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	    /* Put the local socket IP address as the hostname */
 	    url_sz = strlen(url) + 32 + Config.appendDomainLen;
 	    http->uri = xcalloc(url_sz, 1);
+#if IPF_TRANSPARENT
+            natLookup.nl_inport = http->conn->me.sin_port;
+            natLookup.nl_outport = http->conn->peer.sin_port;
+            natLookup.nl_inip = http->conn->me.sin_addr;
+            natLookup.nl_outip = http->conn->peer.sin_addr;
+            natLookup.nl_flags = IPN_TCP;
+            if (natfd < 0)
+               natfd = open(IPL_NAT, O_RDONLY,0 );
+            if (natfd < 0) {
+               debug(50,1)("parseHttpRequest: NAT open failed: %s\n",
+			xstrerror());
+               return NULL;
+	    }
+            if (ioctl(natfd, SIOCGNATL, &natLookup) < 0) {
+               debug(50,1)("parseHttpRequest: NAT lookup failed: %s\n",
+			xstrerror());
+               close(natfd);
+               natfd = -1;
+               return NULL;
+            }
+            snprintf(http->uri, url_sz, "http://%s:%d%s",
+               inet_ntoa(natLookup.nl_realip), 
+               (int)Config.Accel.port,
+               url);
+#else
 	    snprintf(http->uri, url_sz, "http://%s:%d%s",
 		inet_ntoa(http->conn->me.sin_addr),
 		(int) Config.Accel.port,
 		url);
+#endif
 	    debug(33, 5) ("VHOST REWRITE: '%s'\n", http->uri);
 	} else {
 	    url_sz = strlen(Config2.Accel.prefix) + strlen(url) +

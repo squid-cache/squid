@@ -230,6 +230,13 @@
  */
 #define HTTP_VIOLATIONS 1
 
+/*
+ * Enable support for Transparent Proxy on systems using IP-Filter
+ * address redirection. This provides "masquerading" support for non
+ *  Linux system.
+ */
+#undef IPF_TRANSPARENT
+
 /* The number of bytes in a int.  */
 #undef SIZEOF_INT
 
@@ -392,6 +399,15 @@
 /* Define if you have the <grp.h> header file.  */
 #undef HAVE_GRP_H
 
+/* Define if you have the <ip_compat.h> header file.  */
+#undef HAVE_IP_COMPAT_H
+
+/* Define if you have the <ip_fil.h> header file.  */
+#undef HAVE_IP_FIL_H
+
+/* Define if you have the <ip_nat.h> header file.  */
+#undef HAVE_IP_NAT_H
+
 /* Define if you have the <libc.h> header file.  */
 #undef HAVE_LIBC_H
 
@@ -412,6 +428,9 @@
 
 /* Define if you have the <ndir.h> header file.  */
 #undef HAVE_NDIR_H
+
+/* Define if you have the <net/if.h> header file.  */
+#undef HAVE_NET_IF_H
 
 /* Define if you have the <netdb.h> header file.  */
 #undef HAVE_NETDB_H
@@ -460,6 +479,9 @@
 
 /* Define if you have the <sys/file.h> header file.  */
 #undef HAVE_SYS_FILE_H
+
+/* Define if you have the <sys/ioctl.h> header file.  */
+#undef HAVE_SYS_IOCTL_H
 
 /* Define if you have the <sys/ndir.h> header file.  */
 #undef HAVE_SYS_NDIR_H
