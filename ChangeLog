@@ -68,3 +68,4 @@
 	- Fixed double free() bug caused by setting flag=0 in
 	  storeAddFromDisk().
 	- Fixed memory leaks.
+	- Check specifically for tm_gmtoff and set HAVE_TM_GMTOFF
