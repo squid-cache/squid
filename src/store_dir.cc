@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.34 1997/10/27 22:49:50 wessels Exp $
+ * $Id: store_dir.cc,v 1.35 1997/10/30 00:51:07 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -378,7 +378,7 @@ storeDirStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "Current Store Swap Size: %8d KB\n", store_swap_size);
     storeAppendPrintf(sentry, "Current Capacity       : %d%% used, %d%% free\n",
 	percent((int) store_swap_size, (int) Config.Swap.maxSize),
-	percent((int) (Config.Swap.maxSize- store_swap_size), (int) Config.Swap.maxSize));
+	percent((int) (Config.Swap.maxSize - store_swap_size), (int) Config.Swap.maxSize));
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
 	SD = &Config.cacheSwap.swapDirs[i];
 	storeAppendPrintf(sentry, "\n");

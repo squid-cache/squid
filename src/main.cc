@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.180 1997/10/27 23:30:24 wessels Exp $
+ * $Id: main.cc,v 1.181 1997/10/30 00:51:05 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -271,6 +271,7 @@ time_tick(int sig)
     signal(sig, time_tick);
 #endif
 }
+
 #endif
 
 static void

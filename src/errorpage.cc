@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.93 1997/10/29 22:39:51 wessels Exp $
+ * $Id: errorpage.cc,v 1.94 1997/10/30 00:51:04 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -96,7 +96,7 @@ errorStateFree(ErrorState * err)
     safe_free(err->host);
     safe_free(err->dnsserver_msg);
     if (BIT_TEST(err->flags, ERR_FLAG_CBDATA))
-        cbdataFree(err);
+	cbdataFree(err);
     else
 	safe_free(err);
 }
@@ -183,16 +183,16 @@ errorConvert(char token, ErrorState * err)
     case 'f':
 	/* FTP REQUEST LINE */
 	if (err->ftp.request)
-		p = err->ftp.request;
+	    p = err->ftp.request;
 	else
-		p = "<none>";
+	    p = "<none>";
 	break;
     case 'F':
 	/* FTP REPLY LINE */
 	if (err->ftp.request)
-		p = err->ftp.reply;
+	    p = err->ftp.reply;
 	else
-		p = "<none>";
+	    p = "<none>";
 	break;
 /*
  * e - errno                                    x
@@ -207,8 +207,8 @@ errorConvert(char token, ErrorState * err)
  * h - cache hostname                           x
  * d - seconds elapsed since request received
  * p - URL port #                               x
- * f - FTP request line				x
- * F - FTP reply line				x
+ * f - FTP request line                         x
+ * F - FTP reply line                           x
  */
     default:
 	p = "%UNKNOWN%";
