@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.116 2001/10/17 20:25:02 hno Exp $
+ * $Id: peer_select.cc,v 1.117 2001/11/15 01:15:45 hno Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -535,7 +535,8 @@ peerIcpParentMiss(peer * p, icp_common_t * header, ps_state * ps)
     if (ps->closest_parent_miss.sin_addr.s_addr != any_addr.s_addr)
 	return;
     rtt = tvSubMsec(ps->ping.start, current_time) / p->weight;
-    if (ps->ping.w_rtt == 0 || rtt < ps->ping.w_rtt) {
+    if (ps->first_parent_miss.sin_addr.s_addr == any_addr.s_addr ||
+	    rtt < ps->ping.w_rtt) {
 	ps->first_parent_miss = p->in_addr;
 	ps->ping.w_rtt = rtt;
     }
