@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.117 2000/12/05 09:11:24 wessels Exp $
+ * $Id: store_dir.cc,v 1.118 2001/01/02 01:41:31 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -248,7 +248,8 @@ storeDirSwapLog(const StoreEntry * e, int op)
 void
 storeDirUpdateSwapSize(SwapDir * SD, size_t size, int sign)
 {
-    int k = ((size + 1023) >> 10) * sign;
+    int blks = (size + SD->fs.blksize - 1) / SD->fs.blksize;
+    int k = blks * SD->fs.kperblk * sign;
     SD->cur_size += k;
     store_swap_size += k;
     if (sign > 0)
@@ -280,6 +281,8 @@ storeDirStats(StoreEntry * sentry)
 	SD = &(Config.cacheSwap.swapDirs[i]);
 	storeAppendPrintf(sentry, "Store Directory #%d (%s): %s\n", i, SD->type,
 	    storeSwapDir(i));
+	storeAppendPrintf(sentry, "FS Block Size %d KB\n",
+	    SD->fs.kperblk);
 	SD->statfs(SD, sentry);
     }
 }
@@ -451,4 +454,24 @@ storeDirCallback(void)
 	}
     } while (j > 0);
     ndir++;
+}
+
+int
+storeDirGetBlkSize(const char *path, int *blksize)
+{
+#if HAVE_STATVFS
+    struct statvfs sfs;
+    if (statvfs(path, &sfs)) {
+	debug(0, 0) ("%s: %s\n", path, xstrerror());
+	return 1;
+    }
+#else
+    struct statfs sfs;
+    if (statfs(path, &sfs)) {
+	debug(0, 0) ("%s: %s\n", path, xstrerror());
+	return 1;
+    }
+#endif
+    *blksize = (int) sfs.f_bsize;
+    return 0;
 }

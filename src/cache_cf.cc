@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.361 2000/12/09 04:16:07 wessels Exp $
+ * $Id: cache_cf.cc,v 1.362 2001/01/02 01:41:30 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -947,6 +947,9 @@ parse_cachedir(cacheSwap * swap)
     /* XXX should we dupe the string here, in case it gets trodden on? */
     sd->type = storefs_list[fs].typestr;
     sd->max_objsize = maxobjsize;
+    /* defaults in case fs implementation fails to set these */
+    sd->fs.blksize = 1024;
+    sd->fs.kperblk = 1;
     swap->n_configured++;
     /* Update the max object size */
     update_maxobjsize();
