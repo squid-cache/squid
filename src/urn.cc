@@ -1,7 +1,7 @@
 
 /*
  *
- * $Id: urn.cc,v 1.47 1998/09/21 06:52:23 wessels Exp $
+ * $Id: urn.cc,v 1.48 1998/09/29 16:32:50 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -72,7 +72,7 @@ urnFindMinRtt(url_entry * urls, method_t m, int *rtt_ret)
     assert(urls != NULL);
     for (i = 0; NULL != urls[i].url; i++)
 	urlcnt++;
-    debug(0, 0) ("urnFindMinRtt: Counted %d URLs\n", i);
+    debug(53, 3) ("urnFindMinRtt: Counted %d URLs\n", i);
     if (1 == urlcnt) {
 	debug(52, 3) ("urnFindMinRtt: Only one URL - return it!\n");
 	return urls;
@@ -237,7 +237,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     urls = urnParseReply(s, urnState->request->method);
     for (i = 0; NULL != urls[i].url; i++)
 	urlcnt++;
-    debug(0, 0) ("urnFindMinRtt: Counted %d URLs\n", i);
+    debug(53, 3) ("urnFindMinRtt: Counted %d URLs\n", i);
     if (urls == NULL) {		/* unkown URN error */
 	debug(52, 3) ("urnTranslateDone: unknown URN %s\n", storeUrl(e));
 	err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND);
@@ -256,7 +256,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
 	"<TABLE BORDER=0 WIDTH=\"100%%\">\n", storeUrl(e), storeUrl(e));
     for (i = 0; i < urlcnt; i++) {
 	u = &urls[i];
-	debug(0, 0) ("URL {%s}\n", u->url);
+	debug(52, 3) ("URL {%s}\n", u->url);
 	memBufPrintf(&mb,
 	    "<TR><TD><A HREF=\"%s\">%s</A></TD>", u->url, u->url);
 	if (urls[i].rtt > 0)
@@ -339,6 +339,6 @@ urnParseReply(const char *inbuf, method_t m)
 	list[i].flags.cached = storeGetPublic(url, m) ? 1 : 0;
 	i++;
     }
-    debug(0, 0) ("urnParseReply: Found %d URLs\n", i);
+    debug(52, 3) ("urnParseReply: Found %d URLs\n", i);
     return list;
 }
