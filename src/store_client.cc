@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.86 2000/04/18 06:06:17 wessels Exp $
+ * $Id: store_client.cc,v 1.87 2000/05/03 17:15:43 adrian Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -138,7 +138,7 @@ storeClientListAdd(StoreEntry * e, void *data)
     if (sc->type == STORE_DISK_CLIENT)
 	/* assert we'll be able to get the data we want */
 	/* maybe we should open swapin_fd here */
-	assert(e->swap_file_number > -1 || storeSwapOutAble(e));
+	assert(e->swap_filen > -1 || storeSwapOutAble(e));
     for (T = &mem->clients; *T; T = &(*T)->next);
     *T = sc;
 #if DELAY_POOLS
@@ -152,7 +152,6 @@ storeClientCallback(store_client * sc, ssize_t sz)
     STCB *callback = sc->callback;
     char *buf = sc->copy_buf;
     assert(sc->callback);
-    assert(sc->copy_buf);
     sc->callback = NULL;
     sc->copy_buf = NULL;
     if (cbdataValid(sc->callback_data))
@@ -259,6 +258,7 @@ storeClientCopy3(StoreEntry * e, store_client * sc)
 {
     MemObject *mem = e->mem_obj;
     size_t sz;
+
     if (storeClientNoMoreToSend(e, sc)) {
 	/* There is no more to send! */
 	storeClientCallback(sc, 0);
@@ -307,10 +307,11 @@ storeClientCopy3(StoreEntry * e, store_client * sc)
 	/* What the client wants is in memory */
 	debug(20, 3) ("storeClientCopy3: Copying from memory\n");
 	sz = stmemCopy(&mem->data_hdr,
-	    sc->copy_offset, sc->copy_buf, sc->copy_size);
-	storeClientCallback(sc, sz);
-	return;
+  	sc->copy_offset, sc->copy_buf, sc->copy_size);
+        storeClientCallback(sc, sz);
+        return;
     }
+    /* What the client wants is not in memory. Schedule a disk read */
     assert(STORE_DISK_CLIENT == sc->type);
     assert(!sc->flags.disk_io_pending);
     debug(20, 3) ("storeClientCopy3: reading from STORE\n");
@@ -386,7 +387,7 @@ storeClientReadHeader(void *data, const char *buf, ssize_t len)
 	return;
     }
     if (tlv_list == NULL) {
-	debug(20, 1) ("WRNING: failed to unpack meta data\n");
+	debug(20, 1) ("WARNING: failed to unpack meta data\n");
 	storeClientCallback(sc, -1);
 	return;
     }
@@ -526,6 +527,8 @@ storeLowestMemReaderOffset(const StoreEntry * entry)
     for (sc = mem->clients; sc; sc = nx) {
 	nx = sc->next;
 	if (sc->callback_data == NULL)	/* open slot */
+	    continue;
+	if (sc->type != STORE_MEM_CLIENT)
 	    continue;
 	if (sc->type == STORE_DISK_CLIENT)
 	    if (NULL != sc->swapin_sio)

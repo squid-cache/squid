@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.324 2000/03/06 16:23:34 wessels Exp $
+ * $Id: stat.cc,v 1.325 2000/05/03 17:15:42 adrian Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -264,8 +264,8 @@ statStoreEntry(StoreEntry * s, StoreEntry * e)
 	(int) e->lock_count,
 	storePendingNClients(e),
 	(int) e->refcount);
-    storeAppendPrintf(s, "\tSwap File %#08X\n",
-	e->swap_file_number);
+    storeAppendPrintf(s, "\tSwap Dir %d, File %#08X\n",
+	e->swap_dirn, e->swap_filen);
     if (mem != NULL) {
 	storeAppendPrintf(s, "\tinmem_lo: %d\n", (int) mem->inmem_lo);
 	storeAppendPrintf(s, "\tinmem_hi: %d\n", (int) mem->inmem_hi);
@@ -495,13 +495,6 @@ info_get(StoreEntry * sentry)
 	store_swap_size);
     storeAppendPrintf(sentry, "\tStorage Mem size:\t%d KB\n",
 	(int) (store_mem_size >> 10));
-#if HEAP_REPLACEMENT
-    storeAppendPrintf(sentry, "\tStorage Replacement Threshold:\t%f\n",
-	heap_peepminkey(store_heap));
-#else
-    storeAppendPrintf(sentry, "\tStorage LRU Expiration Age:\t%6.2f days\n",
-	(double) storeExpiredReferenceAge() / 86400.0);
-#endif
     storeAppendPrintf(sentry, "\tMean Object Size:\t%0.2f KB\n",
 	n_disk_objects ? (double) store_swap_size / n_disk_objects : 0.0);
     storeAppendPrintf(sentry, "\tRequests given to unlinkd:\t%d\n",
@@ -616,8 +609,6 @@ info_get(StoreEntry * sentry)
 	memInUse(MEM_MEMOBJECT));
     storeAppendPrintf(sentry, "\t%6d Hot Object Cache Items\n",
 	hot_obj_count);
-    storeAppendPrintf(sentry, "\t%6d Filemap bits set\n",
-	storeDirMapBitsInUse());
     storeAppendPrintf(sentry, "\t%6d on-disk objects\n",
 	n_disk_objects);
 

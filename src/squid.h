@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.200 2000/05/02 20:58:30 hno Exp $
+ * $Id: squid.h,v 1.201 2000/05/03 17:15:42 adrian Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -420,7 +420,13 @@ struct rusage {
 #define SQUID_NONBLOCK O_NDELAY
 #endif
 
-#define SWAP_DIR_SHIFT 24
-#define SWAP_FILE_MASK 0x00FFFFFF
+#include <sys/param.h>
+#include <sys/mount.h>
+
+/*
+ * I'm sick of having to keep doing this ..
+ */
+
+#define INDEXSD(i)   (&Config.cacheSwap.swapDirs[(i)])
 
 #endif /* SQUID_H */

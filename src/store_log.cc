@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_log.cc,v 1.12 2000/03/24 20:40:29 wessels Exp $
+ * $Id: store_log.cc,v 1.13 2000/05/03 17:15:44 adrian Exp $
  *
  * DEBUG: section 20    Storage Manager Logging Functions
  * AUTHOR: Duane Wessels
@@ -62,11 +62,17 @@ storeLog(int tag, const StoreEntry * e)
 	mem->log_url = xstrdup(mem->url);
     }
     reply = mem->reply;
-    logfilePrintf(storelog, "%9d.%03d %-7s %08X %4d %9d %9d %9d %s %d/%d %s %s\n",
+    /*
+     * XXX Ok, where should we print the dir number here?
+     * Because if we print it before the swap file number, it'll break
+     * the existing log format.
+     */
+    logfilePrintf(storelog, "%9d.%03d %-7s %02d %08X %4d %9d %9d %9d %s %d/%d %s %s\n",
 	(int) current_time.tv_sec,
 	(int) current_time.tv_usec / 1000,
 	storeLogTags[tag],
-	e->swap_file_number,
+        e->swap_dirn,
+	e->swap_filen,
 	reply->sline.status,
 	(int) reply->date,
 	(int) reply->last_modified,

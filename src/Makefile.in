@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.184 2000/05/02 21:12:42 hno Exp $
+#  $Id: Makefile.in,v 1.185 2000/05/03 17:15:40 adrian Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -18,6 +18,8 @@ localstatedir   = @localstatedir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+SUBDIRS		= fs
+
 # Gotta love the DOS legacy
 #
 SQUID_EXE	= squid$(exec_suffix)
@@ -26,8 +28,6 @@ DNSSERVER_EXE	= dnsserver$(exec_suffix)
 UNLINKD_EXE	= unlinkd$(exec_suffix)
 PINGER_EXE	= pinger$(exec_suffix)
 CACHEMGR_EXE	= cachemgr$(cgi_suffix)
-DISKD_EXE	= diskd$(exec_suffix)
-OPT_DISKD_EXE	= @OPT_DISKD_EXE@
 
 DEFAULT_PREFIX		= $(prefix)
 DEFAULT_CONFIG_FILE     = $(sysconfdir)/squid.conf
@@ -62,6 +62,8 @@ AC_CFLAGS	= @CFLAGS@
 LDFLAGS		= @LDFLAGS@
 XTRA_LIBS	= @XTRA_LIBS@
 XTRA_OBJS 	= @XTRA_OBJS@
+STORE_OBJS	= @STORE_OBJS@
+STORE_MODULES	= @STORE_MODULES@
 MV		= @MV@
 RM		= @RM@
 SHELL		= /bin/sh
@@ -77,14 +79,13 @@ PINGER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 STD_APP_LIBS    = -L../lib -lmiscutil $(XTRA_LIBS)
 
 PROGS           = $(SQUID_EXE) $(CLIENT_EXE)
-UTILS           = $(DNSSERVER_EXE) $(UNLINKD_EXE) $(OPT_DISKD_EXE)
+UTILS           = $(DNSSERVER_EXE) $(UNLINKD_EXE) $(DISKD_EXE)
 SUID_UTILS	= $(PINGER_EXE)
 CGIPROGS	= $(CACHEMGR_EXE)
 OBJS	 	= \
 		access_log.o \
 		acl.o \
 		asn.o \
-		@ASYNC_OBJS@ \
 		authenticate.o \
 		cache_cf.o \
 		CacheDigest.o \
@@ -156,18 +157,17 @@ OBJS	 	= \
 		stmem.o \
 		store.o \
 		store_io.o \
-		store_io_ufs.o \
-		@DISKD_OBJS@ \
 		store_client.o \
 		store_digest.o \
 		store_dir.o \
-		store_dir_ufs.o \
 		store_key_md5.o \
 		store_log.o \
+		store_modules.o \
 		store_rebuild.o \
 		store_swapin.o \
 		store_swapmeta.o \
 		store_swapout.o \
+		store_heap_replacement.o \
 		string_arrays.o \
 		tools.o \
 		unlinkd.o \
@@ -187,28 +187,23 @@ HTCP_OBJS	= htcp.o
 
 DELAY_OBJS	= delay_pools.o
 
-ASYNC_OBJS	= \
-		aiops.o \
-		async_io.o \
-		store_io_asyncufs.o
-
 LEAKFINDER_OBJS	= \
 		leakfinder.o
 
 DEFAULTS        = \
 	-DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"
 
-all:    squid.conf $(PROGS) $(UTILS) $(SUID_UTILS) $(CGIPROGS)
+all:    squid.conf store_modules $(PROGS) $(UTILS) $(SUID_UTILS) $(CGIPROGS)
 
 $(OBJS): $(top_srcdir)/include/version.h
 
 $(SNMP_OBJS): ../snmplib/libsnmp.a $(top_srcdir)/include/cache_snmp.h
 
-$(SQUID_EXE): $(OBJS)
-	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(SQUID_LIBS)
+$(SQUID_EXE): $(OBJS) $(STORE_OBJS)
+	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(STORE_OBJS) $(SQUID_LIBS)
 
 globals.o: globals.c Makefile
-	$(CC) -c $< $(CFLAGS) -I$(srcdir) $(DEFAULTS)
+	$(CC) -c globals.c $(CFLAGS) -I$(srcdir) $(DEFAULTS)
 
 globals.c: globals.h mk-globals-c.pl
 	$(PERL) $(srcdir)/mk-globals-c.pl < $(srcdir)/globals.h > $@
@@ -221,12 +216,6 @@ $(CLIENT_EXE): client.o
 
 $(DNSSERVER_EXE): dnsserver.o
 	$(CC) -o $@ $(LDFLAGS) dnsserver.o $(DNSSERVER_LIBS)
-
-$(DISKD_EXE): diskd-daemon.o
-	$(CC) -o $@ $(LDFLAGS) diskd-daemon.o $(DISKD_LIBS)
-
-diskd-daemon.o: diskd.c
-	$(CC) -c $(CFLAGS) -DDISKD_DAEMON=1 $(srcdir)/diskd.c -o $@
 
 $(CACHEMGR_EXE): cachemgr.o
 	$(CC) -o $@ $(LDFLAGS) cachemgr.o $(CLIENT_LIBS)
@@ -276,6 +265,17 @@ cf.data: cf.data.pre Makefile
 	s%@DEFAULT_PREFIX@%$(DEFAULT_PREFIX)%g;"\
 	< $(srcdir)/cf.data.pre >$@
 
+store_modules.c: store_modules.sh Makefile 
+	@sh $(srcdir)/store_modules.sh $(STORE_MODULES) >store_modules.c
+
+store_modules.o: store_modules.c
+	$(CC) -c store_modules.c $(CFLAGS) -I$(srcdir)
+
+$(STORE_OBJS): fs/stamp
+
+store_modules fs/stamp:
+	@sh -c "cd fs && $(MAKE) all"
+
 install-mkdirs:
 	-@if test ! -d $(prefix); then \
 		echo "mkdir $(prefix)"; \
@@ -309,6 +309,10 @@ install-mkdirs:
 # Michael Lupp <mike@nemesis.saar.de> wants to know about additions
 # to the install target.
 install: all install-mkdirs
+	@for dir in $(SUBDIRS); do \
+		echo "Making $@ in $$dir..."; \
+		(cd $$dir ; $(MAKE) $(MFLAGS) prefix="$(prefix)" $@) || exit 1; \
+	done
 	@for f in $(PROGS); do \
 		if test -f $(bindir)/$$f; then \
 			echo $(MV) $(bindir)/$$f $(bindir)/-$$f; \
@@ -378,13 +382,23 @@ install-pinger:
 clean: 
 	-rm -rf *.o *pure_* core $(PROGS) $(UTILS) $(CGIPROGS) $(SUID_UTILS)
 	-rm -f cf_gen cf_gen_defines.h cf_parser.c cf.data globals.c string_arrays.c
+	-rm -f store_modules.c
+	@for dir in $(SUBDIRS); do \
+		echo "Making $@ in $$dir..."; \
+		(cd $$dir ; $(MAKE) $(MFLAGS) prefix="$(prefix)" $@) || exit 1; \
+	done
 
 distclean:	clean
 	-rm -f Makefile squid.conf squid.conf.pre
 	-rm -f Makefile.bak
+	-rm -f tags
+	@for dir in $(SUBDIRS); do \
+		echo "Making $@ in $$dir..."; \
+		(cd $$dir ; $(MAKE) $(MFLAGS) prefix="$(prefix)" $@) || exit 1; \
+	done
 
 tags:
 	ctags *.[ch] ../include/*.h ../lib/*.[ch]
 
-depend:
-	$(MAKEDEPEND) -I../include -I. -fMakefile *.c
+depend: cf_parser.c
+	$(MAKEDEPEND) $(INCLUDE) -fMakefile $(srcdir)/*.c

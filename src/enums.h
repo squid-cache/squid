@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.166 2000/05/02 21:38:12 hno Exp $
+ * $Id: enums.h,v 1.167 2000/05/03 17:15:41 adrian Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -507,7 +507,6 @@ typedef enum {
     MEM_ACL_NAME_LIST,
     MEM_ACL_PROXY_AUTH_USER,
     MEM_ACL_TIME_DATA,
-    MEM_AIO_RESULT_T,
     MEM_CACHEMGR_PASSWD,
 #if USE_CACHE_DIGESTS
     MEM_CACHE_DIGEST,
@@ -521,7 +520,6 @@ typedef enum {
 #if USE_CACHE_DIGESTS
     MEM_DIGEST_FETCH_STATE,
 #endif
-    MEM_DISK_BUF,
     MEM_DLINK_LIST,
     MEM_DLINK_NODE,
     MEM_DNSSERVER_T,
@@ -660,12 +658,3 @@ enum {
     NETDB_EX_RTT,
     NETDB_EX_HOPS
 };
-
-typedef enum {
-    SWAPDIR_UFS,
-    SWAPDIR_ASYNCUFS,
-#if USE_DISKD
-    SWAPDIR_DISKD,
-#endif
-    SWAPDIR_MAX
-} swapdir_t;

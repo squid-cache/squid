@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.328 2000/05/02 21:35:24 hno Exp $
+ * $Id: structs.h,v 1.329 2000/05/03 17:15:44 adrian Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -151,11 +151,6 @@ struct _aclCheck_t {
 #endif
     PF *callback;
     void *callback_data;
-};
-
-struct _aio_result_t {
-    int aio_return;
-    int aio_errno;
 };
 
 struct _wordlist {
@@ -316,9 +311,7 @@ struct _SquidConfig {
 #if USE_ICMP
 	char *pinger;
 #endif
-#if USE_UNLINKD
 	char *unlinkd;
-#endif
     } Program;
 #if USE_DNSSERVERS
     int dnsChildren;
@@ -1284,6 +1277,7 @@ struct _MemObject {
     int nclients;
     struct {
 	off_t queue_offset;	/* relative to in-mem data */
+        mem_node *memnode;	/* which node we're currently paging out */
 	storeIOState *sio;
     } swapout;
     HttpReply *reply;
@@ -1325,12 +1319,14 @@ struct _StoreEntry {
     size_t swap_file_sz;
     u_short refcount;
     u_short flags;
-    sfileno swap_file_number;
-#if HEAP_REPLACEMENT
-    heap_node *node;
-#else
-    dlink_node lru;
+    sdirno swap_dirn;
+    sfileno swap_filen;
+    union {
+#ifdef HEAP_REPLACEMENT
+        heap_node *node;
 #endif
+        dlink_node lru;
+    } repl;
     u_short lock_count;		/* Assume < 65536! */
     mem_status_t mem_status:3;
     ping_status_t ping_status:3;
@@ -1339,23 +1335,46 @@ struct _StoreEntry {
 };
 
 struct _SwapDir {
-    swapdir_t type;
-    fileMap *map;
+    char *type;
     int cur_size;
     int low_size;
     int max_size;
     char *path;
     int index;			/* This entry's index into the swapDirs array */
-    sfileno suggest;
+    int suggest;
+    size_t max_objsize;
+    union {
+#ifdef HEAP_REPLACEMENT
+        struct {
+	   heap *heap;
+	} heap;
+#endif
+        struct {
+	   dlink_list list;
+	   dlink_node *walker;
+	} lru;
+    } repl;
     int removals;
     int scanned;
     struct {
 	unsigned int selected:1;
 	unsigned int read_only:1;
     } flags;
-    STINIT *init;
-    STNEWFS *newfs;
+    STINIT *init;		/* Initialise the fs */
+    STNEWFS *newfs;		/* Create a new fs */
+    STDUMP *dump;		/* Dump fs config snippet */
+    STFREE *freefs;		/* Free the fs data */
+    STDBLCHECK *dblcheck;	/* Double check the obj integrity */
+    STSTATFS *statfs;		/* Dump fs statistics */
+    STMAINTAINFS *maintainfs;	/* Replacement maintainence */
+    STCHECKOBJ *checkobj;	/* Check if the fs will store an object */
+    /* These two are notifications */
+    STREFOBJ *refobj;		/* Reference this object */
+    STUNREFOBJ *unrefobj;	/* Unreference this object */
+    STCALLBACK *callback;	/* Handle pending callbacks */
+    STSYNC *sync;		/* Sync the directory */
     struct {
+        STOBJCREATE *create;
 	STOBJOPEN *open;
 	STOBJCLOSE *close;
 	STOBJREAD *read;
@@ -1372,33 +1391,7 @@ struct _SwapDir {
 	    void *state;
 	} clean;
     } log;
-#if !HEAP_REPLACEMENT
-    dlink_list lru_list;
-    dlink_node *lru_walker;
-#endif
-    union {
-	struct {
-	    int l1;
-	    int l2;
-	    int swaplog_fd;
-	} ufs;
-#if USE_DISKD
-	struct {
-	    int l1;
-	    int l2;
-	    int swaplog_fd;
-	    int smsgid;
-	    int rmsgid;
-	    int wfd;
-	    int away;
-	    struct {
-		char *buf;
-		link_list *stack;
-		int id;
-	    } shm;
-	} diskd;
-#endif
-    } u;
+    void *fsdata;
 };
 
 struct _request_flags {
@@ -1428,10 +1421,13 @@ struct _link_list {
 };
 
 struct _storeIOState {
-    sfileno swap_file_number;
+    sdirno swap_dirn;
+    sfileno swap_filen;
+    StoreEntry *e;		/* Need this so the FS layers can play god */
     mode_t mode;
     size_t st_size;		/* do stat(2) after read open */
-    off_t offset;		/* current offset pointer */
+    off_t offset;		/* current on-disk offset pointer */
+    STFNCB *file_callback;	/* called on delayed sfileno assignments */
     STIOCB *callback;
     void *callback_data;
     struct {
@@ -1441,38 +1437,7 @@ struct _storeIOState {
     struct {
 	unsigned int closing:1;	/* debugging aid */
     } flags;
-    union {
-	struct {
-	    int fd;
-	    struct {
-		unsigned int close_request:1;
-		unsigned int reading:1;
-		unsigned int writing:1;
-	    } flags;
-	} ufs;
-	struct {
-	    int fd;
-	    struct {
-		unsigned int close_request:1;
-		unsigned int reading:1;
-		unsigned int writing:1;
-		unsigned int opening:1;
-	    } flags;
-	    const char *read_buf;
-	    link_list *pending_writes;
-	    link_list *pending_reads;
-	} aufs;
-#if USE_DISKD
-	struct {
-	    int id;
-	    struct {
-		unsigned int reading:1;
-		unsigned int writing:1;
-	    } flags;
-	    char *read_buf;
-	} diskd;
-#endif
-    } type;
+    void *fsstate;
 };
 
 struct _request_t {
@@ -1714,9 +1679,13 @@ struct _tlv {
     tlv *next;
 };
 
+/*
+ * Do we need to have the dirn in here? I don't think so, since we already
+ * know the dirn .. 
+ */
 struct _storeSwapLogData {
     char op;
-    sfileno swap_file_number;
+    sfileno swap_filen;
     time_t timestamp;
     time_t lastref;
     time_t expires;
@@ -1884,6 +1853,35 @@ struct _store_rebuild_data {
     int badflags;		/* # bad e->flags */
     int bad_log_op;
     int zero_object_sz;
+};
+
+/*
+ * This defines an fs type
+ */
+
+struct _storefs_entry {
+    char *typestr;
+    STFSPARSE *parsefunc;
+    STFSRECONFIGURE *reconfigurefunc;
+    STFSSHUTDOWN *donefunc;
+};
+
+/*
+ * Async disk IO - this defines a async disk io queue
+ */
+
+struct _diskd_queue {
+    int smsgid;			/* send sysvmsg id */
+    int rmsgid;			/* recv sysvmsg id */
+    int wfd;			/* queue file descriptor ? */
+    int away;			/* number of requests away */
+    int sent_count;		/* number of messages sent */
+    int recv_count;		/* number of messages received */
+    struct {
+	char *buf;		/* shm buffer */
+	link_list *stack;	
+	int id;			/* sysvshm id */
+    } shm;
 };
 
 struct _Logfile {

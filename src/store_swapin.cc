@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapin.cc,v 1.22 2000/03/06 16:23:35 wessels Exp $
+ * $Id: store_swapin.cc,v 1.23 2000/05/03 17:15:44 adrian Exp $
  *
  * DEBUG: section 20    Storage Manager Swapin Functions
  * AUTHOR: Duane Wessels
@@ -36,6 +36,7 @@
 #include "squid.h"
 
 static STIOCB storeSwapInFileClosed;
+static STFNCB storeSwapInFileNotify;
 
 void
 storeSwapInStart(store_client * sc)
@@ -46,24 +47,22 @@ storeSwapInStart(store_client * sc)
 	/* We're still reloading and haven't validated this entry yet */
 	return;
     }
-    debug(20, 3) ("storeSwapInStart: called for %08X %s \n",
-	e->swap_file_number, storeKeyText(e->key));
+    debug(20, 3) ("storeSwapInStart: called for %d %08X %s \n",
+	e->swap_dirn, e->swap_filen, storeKeyText(e->key));
     if (e->swap_status != SWAPOUT_WRITING && e->swap_status != SWAPOUT_DONE) {
 	debug(20, 1) ("storeSwapInStart: bad swap_status (%s)\n",
 	    swapStatusStr[e->swap_status]);
 	return;
     }
-    if (e->swap_file_number < 0) {
-	debug(20, 1) ("storeSwapInStart: swap_file_number < 0\n");
+    if (e->swap_filen < 0) {
+	debug(20, 1) ("storeSwapInStart: swap_filen < 0\n");
 	return;
     }
     assert(e->mem_obj != NULL);
     debug(20, 3) ("storeSwapInStart: Opening fileno %08X\n",
-	e->swap_file_number);
-    sc->swapin_sio = storeOpen(e->swap_file_number,
-	O_RDONLY,
-	storeSwapInFileClosed,
-	sc);
+	e->swap_filen);
+    sc->swapin_sio = storeOpen(e, storeSwapInFileNotify, storeSwapInFileClosed,
+      sc);
     cbdataLock(sc->swapin_sio);
 }
 
@@ -81,4 +80,16 @@ storeSwapInFileClosed(void *data, int errflag, storeIOState * sio)
 	sc->callback = NULL;
 	callback(sc->callback_data, sc->copy_buf, errflag);
     }
+}
+
+static void
+storeSwapInFileNotify(void *data, int errflag, storeIOState * sio)
+{
+  store_client *sc = data;
+  StoreEntry *e = sc->entry;
+ 
+  debug(1, 3) ("storeSwapInFileNotify: changing %d/%d to %d/%d\n", e->swap_filen, e->swap_dirn, sio->swap_filen, sio->swap_dirn);
+
+  e->swap_filen = sio->swap_filen;
+  e->swap_dirn = sio->swap_dirn;
 }

@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Duane Wessels, Squid Developers
-<date>$Id: prog-guide.sgml,v 1.26 2000/04/27 07:58:09 adrian Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.27 2000/05/03 17:15:40 adrian Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -106,22 +106,22 @@ Squid consists of the following major components
 	Squid can quickly locate cached objects because it keeps
 	(in memory) a hash table of all <em/StoreEntry/'s.  The
 	keys for the hash table are MD5 checksums of the objects
-	URI.  In addition there is also a doubly-linked list of
-	<em/StoreEntry/'s used for the LRU replacement algorithm.
-	When an entry is accessed, it is moved to the head of the
-	LRU list.  When Squid needs to replace cached objects, it
-	takes objects from the tail of the LRU list.
+	URI.  In addition there is also a storage policy such
+	as LRU that keeps track of the objects and determines
+	the removal order when space needs to be reclaimed.
+	For the LRU policy this is implemented as a doubly linked
+	list.
 
 	<P>
-	Objects are saved to disk in a two-level directory structure.
-	For each object the <em/StoreEntry/ includes a 4-byte
-	<em/fileno/ field.  This file number is converted to a disk
-	pathname by a simple algorithm which evenly distributes
-	the files across all cache directories.  A cache swap file
-	consists of two parts: the cache metadata, and the object
-	data.  Note the object data includes the full HTTP
-	reply---headers and body.  The HTTP reply headers are not
-	the same as the cache metadata.
+	For each object the <em/StoreEntry/ maps to a cache_dir
+	and location via sdirn and sfilen. For the "ufs" store
+	this file number (sfilen) is converted to a disk pathname
+	by a simple modulo of L2 and L1, but other storage drivers may
+	map sfilen in other ways.  A cache swap file consists
+	of two parts: the cache metadata, and the object data. 
+	Note the object data includes the full HTTP reply---headers
+	and body.  The HTTP reply headers are not the same as the
+	cache metadata.
 
 	<P>
 	Client-side requests register themselves with a <em/StoreEntry/
@@ -652,11 +652,61 @@ Squid consists of the following major components
 <!-- %%%% Chapter : CLIENT REQUEST PROCESSING %%%% -->
 <sect>Processing Client Requests
 
+	<P>
+	To be written...
+
 <!-- %%%% Chapter : STORAGE MANAGER %%%% -->
 <sect>Storage Manager
 
-<!-- %%%% Chapter : FILESYSTEM INTERFACE %%%% -->
-<sect>Filesystem Interface
+<sect1>Introduction
+
+	<P>
+	The Storage Manager is the glue between client and server
+	sides.  Every object saved in the cache is allocated a
+	<em/StoreEntry/ structure.  While the object is being
+	accessed, it also has a <em/MemObject/ structure.
+
+	<P>
+	Squid can quickly locate cached objects because it keeps
+	(in memory) a hash table of all <em/StoreEntry/'s.  The
+	keys for the hash table are MD5 checksums of the objects
+	URI.  In addition there is also a storage policy such
+	as LRU that keeps track of the objects and determines
+	the removal order when space needs to be reclaimed.
+	For the LRU policy this is implemented as a doubly linked
+	list.
+
+	<P>
+	For each object the <em/StoreEntry/ maps to a cache_dir
+	and location via sdirn and sfilen. For the "ufs" store
+	this file number (sfilen) is converted to a disk pathname
+	by a simple modulo of L2 and L1, but other storage drivers may
+	map sfilen in other ways.  A cache swap file consists
+	of two parts: the cache metadata, and the object data. 
+	Note the object data includes the full HTTP reply---headers
+	and body.  The HTTP reply headers are not the same as the
+	cache metadata.
+
+	<P>
+	Client-side requests register themselves with a <em/StoreEntry/
+	to be notified when new data arrives.  Multiple clients
+	may receive data via a single <em/StoreEntry/.  For POST
+	and PUT request, this process works in reverse.  Server-side
+	functions are notified when additional data is read from
+	the client.
+	
+<sect1>Object storage
+
+	<P>
+	To be written...
+
+<sect1>Object retreival
+
+	<P>
+	To be written...
+
+<!-- %%%% Chapter : STORAGE INTERFACE %%%% -->
+<sect>Storage Interface
 
 <sect1>Introduction
 
@@ -673,134 +723,554 @@ Squid consists of the following major components
 	We want to try out our own, customized filesystems with Squid.
 	In order to do that, we need a well-defined interface
 	for the bits of Squid that access the permanent storage
-	devices.
+	devices. We also require tigher control of the replacement
+	policy by each storage module, rather than a single global
+	replacement policy.
 
-<sect1>The Interface
-
-<sect2>Data Structures
-
-<sect3><em/storeIOState/
+<sect1>Build structure
 
 	<P>
-	Every cache object that is ``opened'' for reading or writing
-	will have a <em/storeIOState/ data structure associated with
-	it.  Currently, this structure looks like:
+	The storage types live in squid/src/fs/ . Each subdirectory corresponds
+	to the name of the storage type. When a new storage type is implemented
+	configure.in must be updated to autogenerate a Makefile in
+	squid/src/fs/$type/ from a Makefile.in file.
+
+	<P>
+	configure will take a list of storage types through the
+	<em/--enable-store-io/ parameter. This parameter takes a list of
+	space seperated storage types. For example,
+	--enable-store-io="ufs coss" .
+
+	<P>
+	Each storage type must create an archive file
+	<tt/in squid/src/fs/$type/.a . This file is automatically linked into
+	squid at compile time.
+
+	<P>
+	Each storefs must export a function named <tt/storeFsSetup_$type()/.
+	This function is called at runtime to initialise each storage type.
+	The list of storage types is passed through <tt/store_modules.sh/
+	to generate the initialisation function <tt/storeFsSetup()/. This
+	function lives in <tt/store_modules.c/.
+
+	<P>
+	An example of the automatically generated file:
+
 <verb>
-        struct _storeIOState {
-            sfileno swap_file_number;
-            mode_t mode;
-            size_t st_size;             /* do stat(2) after read open */
-            off_t offset;               /* current offset pointer */
-            STIOCB *callback;
-            void *callback_data;
-            struct {
-                STRCB *callback;
-                void *callback_data;
-            } read;
-            struct {
-                unsigned int closing:1; /* debugging aid */
-            } flags;
-            union {
-                struct {
-                    int fd;
-                    struct {
-                        unsigned int close_request:1;
-                        unsigned int reading:1;
-                        unsigned int writing:1;
-                    } flags;
-                } ufs;
-            } type;
-        };
+	/* automatically generated by ./store_modules.sh ufs coss
+	 * do not edit
+	 */
+	#include "squid.h"
+
+	extern STSETUP storeFsSetup_ufs;
+	extern STSETUP storeFsSetup_coss;
+	void storeFsSetup(void)
+	{
+       		storeFsAdd("ufs", storeFsSetup_ufs);
+        	storeFsAdd("coss", storeFsSetup_coss);
+	}
 </verb>
 
-	<em/swap_file_number/ is the 32-bit swap file number for the
-	object, taken from the <em/StoreEntry/.
 
-	<em/mode/ is either O_RDONLY or O_WRONLY.
-
-	<em/offset/ represents the file (byte) offset after the
-	last operation completed.  For example, after a read operation,
-	<em/offset/ must be incremented by the number of bytes read.
-	The same goes for write operations.  This means that the
-	filesystem layer needs explicit (callback) notification
-	for writes.  It is wrong to increment <em/offset/ before
-	an I/O operation has been known to succeed.
-
-	<em/st_size/ is filled in with the object's on-disk size
-	after an object is opened for reading.  This allows
-	the upper layers to double-check that the disk object
-	actually belongs to the StoreEntry.
-
-	Note that there are two callback functions.  The first,
-	<em/callback/, of type <em/STIOCB/ (store I/O callback),
-	is callback for the <em/storeIOState/ as a whole.  This
-	callback is used to indicate success or failure of accessing
-	the object, whether its for reading or writing.
-	There are no callbacks for open and write operations,
-	unless they fail.
-
-	The second, <em/read.callback/, of type <em/STRCB/ (store
-	read callback) is used for every read operation.
-
-	The ugly union is used to hold filesystem-specific state
-	information.
-
-	<em/storeIOState/ structures are allocated by calling
-	<tt/storeOpen()/, and will be deallocated by the
-	filesystem layer after
-	<tt/storeClose()/ is called.
-
-<sect2>External Functions
-
-<sect3>Object I/O
+<sect1>Initialisation of a storage type
 
 	<P>
-	These functions all relate to per-object I/O tasks: opening,
-	closing, reading, writing, and unlinking objects on disk.
-	These functions can all be found in <tt/store_io.c/.
+	Each storage type initialises through the <tt/storeFsSetup_$type()/
+	function.  The <tt/storeFsSetup_$type()/ function takes a single
+	argument - a <tt/storefs_entry_t/ pointer. This pointer references
+	the storefs_entry to initialise. A typical setup function is as
+	follows:
 
-	<P>
-	Note that the underlying storage system functions are
-	accessed through function pointers, kept in the
-	<em/SwapDir/ structure:
 <verb>
-    struct _SwapDir {
-	....
-        struct {
-            STOBJOPEN *open;
-            STOBJCLOSE *close;
-            STOBJREAD *read;
-            STOBJWRITE *write;
-            STOBJUNLINK *unlink;
-        } obj;
-	....
-    };
+	void
+	storeFsSetup_ufs(storefs_entry_t *storefs)
+	{   
+		assert(!ufs_initialised);
+		storefs->parsefunc = storeUfsDirParse;
+		storefs->reconfigurefunc = storeUfsDirReconfigure;
+		storefs->donefunc = storeUfsDirDone;
+		ufs_state_pool = memPoolCreate("UFS IO State data", sizeof(ufsstate_t));
+		ufs_initialised = 1;
+	}
 </verb>
 
 	<P>
-	Thus, a storage system must do something like this
-	when initializing its <em/SwapDir/ structure:
+	There are five function pointers in the storefs_entry which require
+	initialising. In this example, some protection is made against the
+	setup function being called twice, and a memory pool is initialised
+	for use inside the storage module.
+
+	<P>
+	Each function will be covered below.
+
+
+<sect2>done
+
+	<P>
 <verb>
-            SwapDir->obj.open = storeFooOpen;
-            SwapDir->obj.close = storeFooClose;
-            SwapDir->obj.read = storeFooRead;
-            SwapDir->obj.write = storeFooWrite;
-            SwapDir->obj.unlink = storeFooUnlink;
+	typedef void
+	STFSSHUTDOWN(void);
 </verb>
 
-<sect4><tt/storeOpen()/
+	<P>
+	This function is called whenever the storage system is to be shut down.
+	It should take care of deallocating any resources currently allocated.
+
+
+<verb>
+	typedef void STFSPARSE(SwapDir *SD, int index, char *path);
+	typedef void STFSRECONFIGURE(SwapDir *SD, int index, char *path);
+</verb>
+
+	<P>
+	These functions handle configuring and reconfiguring a storage
+	directory. Additional arguments from the cache_dir configuration
+	line can be retrieved through calls to strtok() and GetInteger().
+
+	<P>
+	<em/STFSPARSE/ has the task of initialising a new swapdir. It should
+	parse the remaining arguments on the cache_dir line, initialise the
+	relevant function pointers and data structures, and choose the
+	replacement policy. <em/STFSRECONFIGURE/ deals with reconfiguring an
+	active swapdir.  It should parse the remaining arguments on the
+	cache_dir line and change any active configuration parameters. The
+	actual storage initialisation is done through the <em/STINIT/ function
+	pointer in the SwapDir.
+
+	<P>
+<verb>
+	struct _SwapDir {
+		char *type;				/* Pointer to the store dir type string */
+		int cur_size;				/* Current swapsize in kb */
+		int low_size;				/* ?? */
+		int max_size;				/* Maximum swapsize in kb */
+		char *path;				/* Path to store */
+		int index;				/* This entry's index into the swapDir array */
+		int suggest;				/* Suggestion for UFS style stores (??) */
+		size_t max_objsize;			/* Maximum object size for this store */
+		union {					/* Replacement policy-specific fields */
+		#ifdef HEAP_REPLACEMENT
+			struct {
+				heap *heap;
+			} heap;
+		#endif
+			struct {
+				dlink_list list;
+				dlink_node *walker;
+			} lru;
+		} repl;
+		int removals;
+		int scanned;
+		struct {
+			unsigned int selected:1;	/* Currently selected for write */
+			unsigned int read_only:1;	/* This store is read only */
+		} flags;
+		STINIT *init;				/* Initialise the fs */
+		STNEWFS *newfs;				/* Create a new fs */
+		STDUMP *dump;				/* Dump fs config snippet */
+		STFREE *freefs;				/* Free the fs data */
+		STDBLCHECK *dblcheck;			/* Double check the obj integrity */
+		STSTATFS *statfs;			/* Dump fs statistics */
+		STMAINTAINFS *maintainfs;		/* Replacement maintainence */
+		STCHECKOBJ *checkob;			/* Check if the fs will store an object, and get the FS load */
+		/* These two are notifications */
+		STREFOBJ *refobj;			/* Reference this object */
+		STUNREFOBJ *unrefobj;			/* Unreference this object */
+		STCALLBACK *callback;			/* Handle pending callbacks */
+		STSYNC *sync;				/* Sync the directory */
+		struct {
+			STOBJCREATE *create;		/* Create a new object */
+			STOBJOPEN *open;		/* Open an existing object */
+			STOBJCLOSE *close;		/* Close an open object */
+			STOBJREAD *read;		/* Read from an open object */
+			STOBJWRITE *write;		/* Write to a created object */
+			STOBJUNLINK *unlink;		/* Remove the given object */
+		} obj;
+		struct {
+			STLOGOPEN *open;		/* Open the log */
+			STLOGCLOSE *close;		/* Close the log */
+			STLOGWRITE *write;		/* Write to the log */
+			struct {
+				STLOGCLEANOPEN *open;	/* Open a clean log */
+				STLOGCLEANWRITE *write;	/* Write to the log */
+				void *state;		/* Current state */
+			} clean;
+		} log;
+		void *fsdata;				/* FS-specific data */
+	};
+</verb>
+
+
+
+<sect1>Operation of a storage module
+
+	<P>
+	Squid understands the concept of multiple diverse storage directories.
+	Each storage directory provides a caching object store, with object
+	storage, retrieval, indexing and replacement. 
+
+	<P>
+	Each open object has associated with it a <em/storeIOState/ object. The
+	<em/storeIOState/ object is used to record the state of the current
+	object. Each <em/storeIOState/ can have a storage module specific data
+	structure containing information private to the storage module.
+
+	<P>
+<verb>
+	struct _storeIOState {
+		sdirno swap_dirn;		/* SwapDir index */
+		sfileno swap_filen;		/* Unique file index number */
+		StoreEntry *e;			/* Pointer to parent StoreEntry */
+		mode_t mode;			/* Mode - O_RDONLY or O_WRONLY */
+		size_t st_size;			/* Size of the object if known */
+		off_t offset;			/* current _on-disk_ offset pointer */
+		STFNCB *file_callback;		/* called on delayed sfileno assignments */
+		STIOCB *callback;		/* IO Error handler callback */
+		void *callback_data;		/* IO Error handler callback data */
+		struct {
+			STRCB *callback;	/* Read completion callback */
+			void *callback_data;	/* Read complation callback data */
+		} read;
+		struct {
+			unsigned int closing:1; /* debugging aid */
+		} flags;
+		void *fsstate;			/* pointer to private fs state */
+	};
+</verb>
+
+	<P>
+	Each <em/SwapDir/ has the concept of a maximum object size. This is used
+	as a basic hint to the storage layer in first choosing a suitable
+	<em/SwapDir/. The checkobj function is then called for suitable
+	candidate <em/SwapDirs/ to find out whether it wants to store a
+	given <em/StoreEntry/. A <em/maxobjsize/ of -1 means 'any size'.
+
+	<P>
+	The specific filesystem operations listed in the SwapDir object are
+	covered below.
+
+<sect2>initfs
+
+	<P>
+<verb>
+	typedef void
+	STINIT(SwapDir *SD);
+</verb>
+
+	<P>
+	Initialise the given <em/SwapDir/. Operations such as verifying and
+	rebuilding the storage and creating any needed bitmaps are done
+	here.
+
+
+<sect2>newfs
+
+	<P>
+<verb>
+	typedef void
+	STNEWFS(SwapDir *SD);
+</verb>
+
+	<P>
+	Called for each configured <em/SwapDir/ to perform filesystem
+	initialisation. This happens when '-z' is given to squid on the
+	command line.
+
+
+<sect2>dumpfs
+
+	<P>
+<verb>
+	typedef void
+	STDUMP(StoreEntry *e, const char *path, SwapDir *SD);
+</verb>
+
+	<P>
+	Dump the configuration of the current <em/SwapDir/ to the given
+	<em/StoreEntry/.  Used to grab a configuration file dump from th
+	<em/cachemgr/ interface. 'const char *' refers to the path of the
+	given <em/Swapdir/, and is redundant.
+
+
+<sect2>freefs
+
+	<P>
+<verb>
+	typedef void
+	STFREE(SwapDir *SD);
+</verb>
+
+	<P>
+	Free the <em/SwapDir/ filesystem information. This routine should
+	deallocate <em/SD->fsdata/.
+
+
+<sect2>doublecheckfs
+
+	<P>
+<verb>
+	typedef int
+	STDBLCHECK(SwapDir *SD, StoreEntry *e);
+</verb>
+
+	<P>
+	Double-check the given object for validity. Called during rebuild if
+	the '-S' flag is given to squid on the command line. Returns 1 if the
+	object is indeed valid, and 0 if the object is found invalid.
+
+
+<sect2>statfs
+
+	<P>
+<verb>
+	typedef void
+	STSTATFS(SwapDir *SD, StoreEntry *e);
+</verb>
+
+	<P>
+	Called to retrieve filesystem statistics, such as usage, load and
+	errors. The information should be appended to the passed
+	<em/StoreEntry/ e.
+
+
+<sect2>maintainfs
+
+	<P>
+<verb>
+	typedef void
+	STMAINTAINFS(SwapDir *SD);
+</verb>
+
+	<P>
+	Called periodically to replace objects. The active replacement policy
+	should be used to timeout unused objects in order to make room for
+	new objects. 
+
+<sect2>callback
+
+	<P>
+<verb>
+	typedef void
+	STCALLBACK(SwapDir *SD);
+</verb>
+
+	<P>
+	This function is called inside the comm_select/comm_poll loop to handle
+	any callbacks pending.
+
+
+<sect2>sync
+
+	<P>
+<verb>
+	typedef void
+	STSYNC(SwapDir *SD);
+</verb>
+
+	<P>
+	This function is called whenever a sync to disk is required. This
+	function should not return until all pending data has been flushed to
+	disk.
+
+
+<sect2>parse/reconfigure
+
+	<P>
+
+<sect2>checkobj
+
+	<P>
+<verb>
+	typedef int
+	STCHECKOBJ(SwapDir *SD, const StoreEntry *e);
+</verb>
+
+	<P>
+	Called by <tt/storeDirSelectSwapDir()/ to determine whether the
+	<em/SwapDir/ will store the given <em/StoreEntry/ object. If the
+	<em/SwapDir/ is not willing to store the given <em/StoreEntry/
+	-1 should be returned. Otherwise, a value between 0 and 1000 should
+	be returned indicating the current IO load. A value of 1000 indicates
+	the <em/SwapDir/ has an IO load of 100%. This is used by
+	<tt/storeDirSelectSwapDir()/ to choose the <em/SwapDir/ with the
+	lowest IO load.
+
+
+<sect2>referenceobj
+
+	<P>
+<verb>
+	typedef void
+	STREFOBJ(SwapDir *SD, StoreEntry *e);
+</verb>
+
+	<P>
+	Called whenever an object is locked by <tt/storeLockObject()/.
+	It is typically used to update the objects position in the replacement
+	policy.
+
+
+<sect2>unreferenceobj
+
+	<P>
+<verb>
+	typedef void
+	STUNREFOBJ(SwapDir *SD, StoreEntry *e);
+</verb>
+
+	<P>
+	Called whenever the object is unlocked by <tt/storeUnlockObject()/
+	and the lock count reaches 0. It is also typically used to update the
+	objects position in the replacement policy.
+
+
+<sect2>createobj
+
+	<P>
+<verb>
+	typedef storeIOState *
+	STOBJCREATE(SwapDir *SD, StoreEntry *e, STFNCB *file_callback, STIOCB *io_callback, void *io_callback_data);
+</verb>
+
+	<P>
+	Create an object in the <em/SwapDir/ *SD. <em/file_callback/ is called
+	whenever the filesystem allocates or reallocates the <em/swap_filen/.
+	Note - <em/STFNCB/ is called with a generic cbdata pointer, which
+	points to the <em/StoreEntry/ e.  The <em/StoreEntry/ should not be
+	modified EXCEPT for the replacement policy fields.
+
+	<P>
+	The IO callback should be called when an error occurs and when the
+	object is closed. Once the IO callback is called, the <em/storeIOState/
+	becomes invalid.
+
+	<P>
+	<em/STOBJCREATE/ returns a <em/storeIOState/ suitable for writing on
+	sucess, or NULL if an error occurs.
+
+
+<sect2>openobj
+
+	<P>
+<verb>
+	typedef storeIOState *
+	STOBJOPEN(SwapDir *SD, StoreEntry *e, STFNCB *file_callback, STIOCB *io_callback, void *io_callback_data);
+</verb>
+
+	<P>
+	Open the <em/StoreEntry/ in <em/SwapDir/ *SD for reading. Much the
+	same is applicable from <em/STOBJCREATE/, the major difference being
+	that the data passed to <em/file_callback/ is the relevant
+	<em/store_client/ .
+
+
+<sect2>closeobj
+
+	<P>
+<verb>
+	typedef void
+	STOBJCLOSE(SwapDir *SD, storeIOState *sio);
+</verb>
+
+	<P>
+	Close an opened object. The <em/STIOCB/ callback should be called at
+	the end of this routine.
+
+
+<sect2>readobj
+
+	<P>
+<verb>
+	typedef void
+	STOBJREAD(SwapDir *SD, storeIOState *sio, char *buf, size_t size, off_t offset, STRCB *read_callback, void *read_callback_data);
+</verb>
+
+	<P>
+	Read part of the object of into <em/buf/. It is safe to request a read
+	when there are other pending reads or writes. <em/STRCB/ is called at
+	completion.
+
+	<P>
+	If a read operation fails, the filesystem layer notifies the
+	calling module by calling the <em/STIOCB/ callback with an
+	error status code.
+
+
+<sect2>writeobj
+
+	<P>
+<verb>
+	typedef void
+	STOBJWRITE(SwapDir *SD, storeIOState *sio, char *buf, size_t size, off_t offset, FREE *freefunc);
+</verb>
+
+	<P>
+	Write the given block of data to the given store object. <em/buf/ is
+	allocated by the caller. When the write is complete, the data is freed
+	through <em/free_func/.
+
+	<P>
+	If a write operation fails, the filesystem layer notifies the
+	calling module by calling the <em/STIOCB/ callback with an
+	error status code.
+
+
+<sect2>unlinkobj
+
+	<P>
+<verb>
+	typedef void STOBJUNLINK(SwapDir *, StoreEntry *);
+</verb>
+
+	<P>
+	Remove the <em/StoreEntry/ e from the <em/SwapDir/ SD and the
+	replacement policy.
+
+
+
+<sect1>Store IO calls
+
+	<P>
+	These routines are used inside the storage manager to create and
+	retrieve objects from a storage directory.
+
+<sect2>storeCreate()
 
 	<P>
 <verb>
 	storeIOState *
-	storeOpen(sfileno f, mode_t mode, STIOCB *callback, void *callback_data)
+	storeCreate(StoreEntry *e, STIOCB *file_callback, STIOCB *close_callback, void * callback_data)
 </verb>
 
 	<P>
-	<tt/storeOpen()/
-	submits a request to open a cache object for reading or writing.
-	<tt/f/ is the 32-bit swap file number of the cached object.
-	<tt/mode/ should be either <tt/O_RDONLY/ or <tt/O_WRONLY/.
+	<tt/storeCreate/ is called to store the given <em/StoreEntry/ in
+	a storage directory. 
+
+	<P>
+	<tt/callback/ is a function that will be called either when
+	an error is encountered, or when the object is closed (by
+	calling <tt/storeClose()/).  If the open request is
+	successful, there is no callback.  The calling module must
+	assume the open request will succeed, and may begin reading
+	or writing immediately.
+
+	<P>
+	<tt/storeCreate()/ may return NULL if the requested object
+	can not be created.  In this case the <tt/callback/ function
+	will not be called.
+
+
+<sect2>storeOpen()
+
+	<P>
+<verb>
+	storeIOState *
+	storeOpen(StoreEntry *e, STFNCB * file_callback, STIOCB * callback, void *callback_data)
+</verb>
+
+	<P>
+	<tt/storeOpen/ is called to open the given <em/StoreEntry/ from
+	the storage directory it resides on.
 
 	<P>
 	<tt/callback/ is a function that will be called either when
@@ -815,25 +1285,10 @@ Squid consists of the following major components
 	can not be openeed.  In this case the <tt/callback/ function
 	will not be called.
 
-<sect4><tt/storeClose()/
 
-	<P>
-<verb>
-	void
-	storeClose(storeIOState *sio)
-</verb>
+<sect2>storeRead()
 
-	<P>
-	<tt/storeClose()/
-	submits a request to close the cache object.  It is safe to request
-	a close even if there are read or write operations pending.
-	When the underlying filesystem actually closes the object,
-	the <em/STIOCB/ callback (registered with <tt/storeOpen()/) will
-	be called.
-
-<sect4><tt/storeRead()/
-
-	<P>
+        <P>
 <verb>
 	void
 	storeRead(storeIOState *sio, char *buf, size_t size, off_t offset, STRCB *callback, void *callback_data)
@@ -842,7 +1297,7 @@ Squid consists of the following major components
 	<P>
 	<tt/storeRead()/ is more complicated than the other functions
 	because it requires its own callback function to notify the
-	caller when the requested data has actually been read. 
+	caller when the requested data has actually been read.
 	<em/buf/ must be a valid memory buffer of at least <em/size/
 	bytes.  <em/offset/ specifies the byte offset where the
 	read should begin.  Note that with the Swap Meta Headers
@@ -850,11 +1305,12 @@ Squid consists of the following major components
 	the offset into the actual object data.
 
 	<P>
-	The caller is responsible for allocating and freeing <em/buf/
+	The caller is responsible for allocating and freeing <em/buf/ .
 
-<sect4><tt/storeWrite()/
 
-	<P>
+<sect2>storeWrite()
+
+        <P>
 <verb>
 	void
 	storeWrite(storeIOState *sio, char *buf, size_t size, off_t offset, FREE *free_func)
@@ -862,7 +1318,7 @@ Squid consists of the following major components
 
 	<P>
 	<tt/storeWrite()/ submits a request to write a block
-	of data to the disk store.  
+	of data to the disk store.
 	The caller is responsible for allocating <em/buf/, but since
 	there is no per-write callback, this memory must be freed by
 	the lower filesystem implementation.  Therefore, the caller
@@ -874,12 +1330,13 @@ Squid consists of the following major components
 	calling module by calling the <em/STIOCB/ callback with an
 	error status code.
 
-<sect4><tt/storeUnlink()/
 
-	<P>
+<sect2>storeUnlink()
+
+        <P>
 <verb>
-	void
-	storeUnlink(sfileno f)
+        void
+	storeUnlink(StoreEntry *e)
 </verb>
 
 	<P>
@@ -888,21 +1345,28 @@ Squid consists of the following major components
 	does not need to be opened first.  The filesystem
 	layer will remove the object if it exists on the disk.
 
-<sect4><tt/storeOffset()/
 
-	<P>
+<sect2>storeOffset()
+
+        <P>
 <verb>
-	off_t
-	storeOffset(storeIOState *sio)
+        off_t storeOffset(storeIOState *sio)
 </verb>
 
-	<P>
-	Returns the current byte-offset of the cache object on
-	disk.  For read-objects, this is the offset after the last
-	successful disk read operation.  For write-objects, it is
-	the offset of the last successful disk write operation.
 
-<sect4><em/STIOCB/ callback
+
+	<P>
+	<tt/storeOffset()/ returns the current _ondisk_ offset. This is used to
+	determine how much of an objects memory can be freed to make way for
+	other in-transit and cached objects. You must make sure that the
+	<em/storeIOState->offset/ refers to the ondisk offset, or undefined
+	results will occur. For reads, this returns the current offset of
+	sucessfully read data, not including queued reads.
+
+
+<sect1>Callbacks
+
+<sect2><em/STIOCB/ callback
 
 	<P>
 <verb>
@@ -929,7 +1393,7 @@ Squid consists of the following major components
 	Once the The <em/stiocb/ function has been called,
 	the <em/sio/ structure should not be accessed further.
 
-<sect4><em/STRCB/ callback
+<sect2><em/STRCB/ callback
 
 	<P>
 <verb>
@@ -946,43 +1410,11 @@ Squid consists of the following major components
 	called if the read operation is successful.  If it fails,
 	then the <em/STIOCB/ callback will be called instead.
 
-<sect3>Config file parsing
+<sect1>State Logging
 
 	<P>
-	There are three functions relating to the Squid configuration
-	file: parsing, dumping, and freeing.
-
-	<P>
-	The parse function is called at startup, and during a reconfigure,
-	for a <em/cache_dir/ line.  The first keyword after the <em/cache_dir/
-	keyword will be a filesystem type (such as "ufs").  A switch
-	statement in <tt/parse_cachedir/ will call the appropriate
-	filesystem-dependent parsing function.  The parsing function
-	may use <tt/strtok()/ to continue reading keywords after the
-	filesystem type on the <em/cache_dir/ line.
-
-
-	<P>
-	The ``dump'' function is used to output a configuration
-	file from the in-memory configuration structure.  It is
-	called with a <em/SwapDir/ argument, and must append one
-	line to the <em/StoreEntry/ that is holding the configuration
-	file being generated.
-
-	<P>
-	The free function is called during a reconfigure (and at
-	exit) to free up (or un-initialize) any memory or structures
-	associated with the configuration line.  The <em/SwapDir/
-	structure includes common and private sections.  The
-	<tt/free_cachedir()/ function will handle freeing anything
-	in the common section, and relies on a filesystem-dependent
-	function to free, or un-initialize private members.
-
-<sect3>Filesystem Startup, Initialization, and State Logging
-
-	<P>
-	These functions deal with initializing, state
-	logging, and related tasks for a squid storage system.
+	These functions deal with state
+	logging and related tasks for a squid storage system.
 	These functions are used (called) in <tt/store_dir.c/.
 
 	<P>
@@ -1010,36 +1442,7 @@ Squid consists of the following major components
     };
 </verb>
 
-<sect4><tt/init()/
-
-	<P>
-<verb>
-        void
-        STINIT(SwapDir *);
-</verb>
-
-	<P>
-	The <tt/init/ function, of type <em/STINIT/ is called by
-	<tt/storeDirInit()/ when Squid first starts up.  The
-	<tt/init/ function should probably start the process of
-	reading saved state information from disk (aka the "rebuild"
-	procedure).
-
-<sect4><tt/newfs()/
-
-	<P>
-<verb>
-	void
-	STNEWFS(SwapDir *);
-</verb>
-
-	<P>
-	The <tt/newfs/ function, of type <em/STNEWFS/, is used to
-	prepare a cache_dir for use by squid.  It is called when
-	the user runs <em/squid -z/.  For the Unix file system,
-	the <tt/newfs/ function makes all the two-layer subdirectories.
-
-<sect4><tt/log.open()/
+<sect2><tt/log.open()/
 
 	<P>
 <verb>
@@ -1060,7 +1463,7 @@ Squid consists of the following major components
 	the state log and then re-opens them.  A <em/squid -k reconfigure/
 	does the same.
 
-<sect4><tt/log.close()/
+<sect2><tt/log.close()/
 
 	<P>
 <verb>
@@ -1074,7 +1477,7 @@ Squid consists of the following major components
 	the open state-holding log files (if any) for the storage
 	system.
 
-<sect4><tt/log.write()/
+<sect2><tt/log.write()/
 
 	<P>
 <verb>
@@ -1089,7 +1492,7 @@ Squid consists of the following major components
 	This feature may not be required by some storage systems
 	and can be implemented as a null-function (no-op).
 
-<sect4><tt/log.clean.open()/
+<sect2><tt/log.clean.open()/
 
 	<P>
 <verb>
@@ -1111,7 +1514,7 @@ Squid consists of the following major components
 	keep state information for the clean-writing process, but
 	should not be accessed by upper layers.
 
-<sect4><tt/log.clean.write()/
+<sect2><tt/log.clean.write()/
 
 	<P>
 <verb>
@@ -1130,8 +1533,300 @@ Squid consists of the following major components
 	to become the official state-holding log.
 
 
+<sect1>Replacement policy implementation
+
+<P>
+The replacement policy can be updated during STOBJREAD/STOBJWRITE/STOBJOPEN/
+STOBJCLOSE as well as STREFOBJ and STUNREFOBJ. Care should be taken to
+only modify the relevant replacement policy entries in the StoreEntry.
+The responsibility of replacement policy maintainence has been moved into
+each SwapDir so that the storage code can have tight control of the
+replacement policy. Cyclic filesystems such as COSS require this tight
+coupling between the storage layer and the replacement policy.
+
+
+<sect1>Future removal policy
+
+	<P>
+	(replaces the above Replace policy)
+
+	<P>
+	The removal policy is responsible for determining in which order
+	objects are deleted when Squid needs to reclaim space for new objects.
+	Such a policy is used by a object storage for maintaining the stored
+	objects and determining what to remove to reclaim space for new objects.
+	(together they implements a replacement policy)
+	
+<sect2>API
+	<P>
+	It is implemented as a modular API where a storage directory or
+	memory creates a policy of choice for maintaining it's objects,
+	and modules registerering to be used by this API.
+
+<sect3>createRemovalPolicy()
+
+<P>
+<verb>
+	RemovalPolicy policy = createRemovalPolicy(cons char *type, cons char *args)
+</verb>
+
+	<P>
+	Creates a removal policy instance where object priority can be
+	maintained
+
+	<P>
+	The returned RemovalPolicy instance is cbdata registered
+
+<sect3>policy.Free()
+	
+	<P>
+<verb>
+	policy-&gt;Free(RemovalPolicy *policy)
+</verb>
+
+<P>
+	Destroys the policy instance and frees all related memory.
+
+<sect3>policy.Add()
+
+<P>
+<verb>
+	policy-&gt;Add(RemovalPolicy *policy, StoreEntry *, RemovalPolicyNode *node)
+</verb>
+
+	<P>
+	Adds a StoreEntry to the policy instance.
+	
+	<P>
+	datap is a pointer to where policy specific data can be stored
+	for the store entry, currently the size of one (void *) pointer.
+
+<sect3>policy.Remove()
+
+<P>
+<verb>
+	policy-&gt;Remove(RemovalPolicy *policy, StoreEntry *, RemovalPolicyNode *node)
+</verb>
+
+	<P>
+	Removes a StoreEntry from the policy instance out of
+	policy order. For example when an object is replaced
+	by a newer one or is manually purged from the store.
+
+	<P>
+	datap is a pointer to where policy specific data is stored
+	for the store entry, currently the size of one (void *) pointer.
+
+<sect3>policy.Referenced()
+
+<P>
+<verb>
+	policy-&gt;Referenced(RemovalPolicy *policy, const StoreEntry *, RemovalPolicyNode *node)
+</verb>
+
+	<P>
+	Tells the policy that a StoreEntry has been referenced.
+
+	<P>
+	datap is a pointer to where policy specific data is stored
+	for the store entry, currently the size of one (void *) pointer.
+
+<sect3>policy.WalkInit()
+
+<P>
+<verb>
+	RemovalPolicyWalker walker = policy-&gt;WalkInit(RemovalPolicy *policy)
+</verb>
+
+	<P>
+	Initiates a walk of all objects in the policy instance.
+	The objects is returned in an order suitable for using
+	as reinsertion order when rebuilding the policy.
+
+	<P>
+	The returned RemovalPolicyWalker instance is cbdata registered
+
+	<P>
+	Note: The walk must be performed as an atomic operation
+	with no other policy actions interveaning, or the outcome
+	will be undefined.
+
+<sect3>walker.Next()
+
+	<P>
+<verb>
+	const StoreEntry *entry = walker-&gt;Next(RemovalPolicyWalker *walker)
+</verb>
+
+<P>
+	Gets the next object in the walk chain
+
+	<P>
+	Return NULL when there is no further objects
+
+<sect3>walker.Done()
+
+<P>
+<verb>
+	walker-&gt;Done(RemovalPolicyWalker *walker)
+</verb>
+
+	<P>
+	Finishes a walk of the maintaned objects, destroys
+	walker.
+
+<sect3>policy.PurgeInit()
+
+<P>
+<verb>
+	RemovalPurgeWalker purgewalker = policy-&gt;PurgeInit(RemovalPolicy *policy, int max_scan)
+</verb>
+
+	<P>
+	Initiates a search for removal candidates. Seach depth is indicated
+	by max_scan.
+
+	<P>
+	The returned RemovalPurgeWalker instance is cbdata registered
+
+	<P>
+	Note: The walk must be performed as an atomic operation
+	with no other policy actions interveaning, or the outcome
+	will be undefined.
+
+<sect3>purgewalker.Next()
+
+<P>
+<verb>
+	StoreEntry *entry = purgewalker-&gt;Next(RemovalPurgeWalker *purgewalker)
+</verb>
+
+	<P>
+	Gets the next object to purge. The purgewalker will remove each
+	returned object from the policy.
+	
+	<P>It is the policys responsibility to verify that the object
+	isn't locked or otherwise prevented from being removed. What this
+	means is that the policy must not return objects where
+	storeEntryLocked() is true.
+
+	<P>
+	Return NULL when there is no further purgeable objects in the policy.
+
+<sect3>purgewalker.Done()
+
+<P>
+<verb>
+	purgewalker-&gt;Done(RemovalPurgeWalker *purgewalker)
+</verb>
+
+	<P>
+	Finishes a walk of the maintaned objects, destroys
+	walker and restores the policy to it's normal state.
+
+<sect2>Future removal policy implementation
+
+<sect3>Source layout
+
+<P>
+	Policy implementations resides in src/repl/&lt;name&gt;/, and a make in
+	such a directory must result in a object archive src/repl/&lt;name&gt;.a
+	containing all the objects implementing the policy.
+
+<sect3>Internal structures
+
+<sect4>RemovalPolicy
+
+<P>
+<verb>
+	typedef struct _RemovalPolicy RemovalPolicy;
+	struct _RemovalPolicy {
+	    char *_type;
+	    void *_data;
+	    void (*add)(RemovalPolicy *policy, StoreEntry *);
+	    ... /* see the API definition above */
+	};
+</verb>
+
+<P>
+	The _type member is mainly for debugging and diagnostics purposes, and
+	should be a pointer to the name of the policy (same name as used for
+	creation)
+
+<P>
+	The _data member is for storing policy specific information.
+
+<sect4>RemovalPolicyWalker
+
+<P>
+<verb>
+	typedef struct _RemovalPolicyWalker RemovalPolicyWalker;
+	struct _RemovalPolicyWalker {
+	    RemovalPolicy *_policy;
+	    void *_data;
+	    StoreEntry *(*next)(RemovalPolicyWalker *);
+	    ... /* see the API definition above */
+	};
+</verb>
+
+<sect4>RemovalPolicyNode
+
+<P>
+<verb>
+	typedef struct _RemovalPolicyNode RemovalPolicyNode;
+	struct _RemovalPolicyNode {
+	    void *data;
+	};
+</verb>
+
+	Stores policy specific information about a entry. Currently
+	there is only space for a single pointer, but plans are to
+	maybe later provide more space here to allow simple policies
+	to store all their data "inline" to preserve some memory.
+
+<sect3>Policy registration
+
+<P>
+	Policies are automatically registered in the Squid binary from the
+	policy selection made by the user building Squid. In the future this
+	might get extended to support loadable modules. All registered
+	policies are available to object stores which wishes to use them.
+
+<sect3>Policy instance creation
+
+<P>
+	Each policy must implement a "create/new" function "<tt/RemovalPolicy *
+	createRemovalPolicy_&lt;name&gt;(char *arguments)/". This function
+	creates the policy instance and populates it with at least the API
+	methods supported. Currently all API calls are mandatory, but the
+	policy implementation must make sure to NULL fill the structure prior
+	to populating it in order to assure future API compability.
+
+<P>
+	It should also populate the _data member with a pointer to policy
+	specific data.
+
+<P>
+	Prior to returning the created instance must be registered as
+	callback-data by calling cbdataAdd().
+
+<sect3>Walker
+
+<P>
+	When a walker is created the policy populates it with at least the API
+	methods supported. Currently all API calls are mandatory, but the
+	policy implementation must make sure to NULL fill the structure prior
+	to populating it in order to assure future API compability.
+
+<P>
+	Prior to returning the created instance must be registered as
+	callback-data by calling cbdataAdd().
+
 <!-- %%%% Chapter : FORWARDING SELECTION %%%% -->
 <sect>Forwarding Selection
+
+	<P>
+	To be written...
 
 <!-- %%%% Chapter : IP/FQDN CACHE %%%% -->
 <sect>IP Cache and FQDN Cache
@@ -1217,30 +1912,72 @@ Squid consists of the following major components
 <!-- %%%% Chapter : SERVER PROTOCOLS %%%% -->
 <sect>Server Protocols
 <sect1>HTTP
+
+	<P>
+	To be written...
+
 <sect1>FTP
+
+	<P>
+	To be written...
+
 <sect1>Gopher
+
+	<P>
+	To be written...
+
 <sect1>Wais
+
+	<P>
+	To be written...
+
 <sect1>SSL
+
+	<P>
+	To be written...
+
 <sect1>Passthrough
+
+	<P>
+	To be written...
 
 <!-- %%%% Chapter : TIMEOUTS %%%% -->
 <sect>Timeouts
 
+	<P>
+	To be written...
+
 <!-- %%%% Chapter : EVENTS %%%% -->
 <sect>Events
+
+	<P>
+	To be written...
 
 <!-- %%%% Chapter : ACCESS CONTROLS %%%% -->
 <sect>Access Controls
 
+	<P>
+	To be written...
+
 <!-- %%%% Chapter : ICP %%%% -->
 <sect>ICP
+
+	<P>
+	To be written...
 
 <!-- %%%% Chapter : NETDB %%%% -->
 <sect>Network Measurement Database
 
+	<P>
+	To be written...
+
 <!-- %%%% Chapter : Error Pages %%%% -->
 <sect>Error Pages
 
+	<P>
+	To be written...
+
+<!-- %%%% Chapter : Callback Data Base %%%% -->
 <sect>Callback Data Database
 
 	<P>
@@ -1308,6 +2045,9 @@ Squid consists of the following major components
 
 <!-- %%%% Chapter : CACHE MANAGER %%%% -->
 <sect>Cache Manager
+
+	<P>
+	To be written...
 
 <!-- %%%% Chapter : HTTP Headers %%%% -->
 <sect>HTTP Headers
