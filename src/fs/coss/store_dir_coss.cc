@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.24 2001/08/09 21:41:53 adrian Exp $
+ * $Id: store_dir_coss.cc,v 1.25 2001/08/10 03:20:37 adrian Exp $
  *
  * DEBUG: section 81    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -155,6 +155,10 @@ storeCossDirInit(SwapDir * sd)
     storeCossDirOpenSwapLog(sd);
     storeCossDirRebuild(sd);
     cs->fd = file_open(sd->path, O_RDWR | O_CREAT);
+    if (cs->fd < 0) {
+        debug(81, 1) ("%s: %s\n", sd->path, xstrerror());
+        fatal("storeCossDirInit: Failed to open a COSS directory.");
+    }
     n_coss_dirs++;
     (void) storeDirGetBlkSize(sd->path, &sd->fs.blksize);
 }
