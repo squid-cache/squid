@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.147 1997/12/31 05:28:33 wessels Exp $
+ * $Id: squid.h,v 1.148 1998/01/02 18:04:30 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -215,20 +215,21 @@
 #if defined(_SQUID_HPUX_)
 #define HAVE_GETRUSAGE 1
 #define getrusage(a, b)  syscall(SYS_GETRUSAGE, a, b)
-#else
+#endif
+#endif
+
+#if !HAVE_STRUCT_RUSAGE
 /*
  * If we don't have getrusage() then we create a fake structure
  * with only the fields Squid cares about.  This just makes the
  * source code cleaner, so we don't need lots of #ifdefs in other
  * places
  */
-typedef void struct {
+typedef struct {
     struct timeval ru_stime;
     int ru_maxrss;
     int ru_majflt;
 } rusage;
-
-#endif
 #endif
 
 #if !defined(HAVE_GETPAGESIZE) && defined(_SQUID_HPUX_)
