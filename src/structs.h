@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.368 2000/12/30 23:29:07 wessels Exp $
+ * $Id: structs.h,v 1.369 2001/01/01 23:09:59 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -380,6 +380,7 @@ struct _SquidConfig {
 	int size;
     } fqdncache;
     int minDirectHops;
+    int minDirectRtt;
     cachemgr_passwd *passwd_list;
     struct {
 	int objectsPerBucket;
