@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.47 1996/11/04 18:12:28 wessels Exp $
+ * $Id: errorpage.cc,v 1.48 1996/11/05 16:53:44 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -157,10 +157,10 @@ squid_error_entry(StoreEntry *entry, log_type type, const char *msg)
 {
     int error_index;
 
-    if (entry->store_status != STORE_PENDING) {
-	debug_trap("squid_error_entry() called on STORE_PENDING object");
+    if (!entry)
 	return;
-    }
+    if (entry->store_status != STORE_PENDING)
+	return;
     if (type < ERR_MIN || type > ERR_MAX)
 	fatal_dump("squid_error_entry: type out of range.");
     error_index = (int) (type - ERR_MIN);
