@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.294 1998/07/31 00:15:35 wessels Exp $
+ * $Id: cache_cf.cc,v 1.295 1998/08/17 21:27:30 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1109,13 +1109,15 @@ static void
 dump_refreshpattern(StoreEntry * entry, const char *name, refresh_t * head)
 {
     while (head != NULL) {
-	storeAppendPrintf(entry, "%s%s %s %d %d%% %d\n",
+	storeAppendPrintf(entry, "%s%s %s %d %d%% %d%s%s\n",
 	    name,
 	    head->flags.icase ? " -i" : null_string,
 	    head->pattern,
 	    (int) head->min / 60,
 	    (int) (100.0 * head->pct + 0.5),
-	    (int) head->max / 60);
+	    (int) head->max / 60,
+	    head->flags.override_expire ? " override_expire" : null_string,
+	    head->flags.override_lastmod ? " override_lastmod" : null_string);
 	head = head->next;
     }
 }
@@ -1128,6 +1130,8 @@ parse_refreshpattern(refresh_t ** head)
     time_t min = 0;
     double pct = 0.0;
     time_t max = 0;
+    int override_expire = 0;
+    int override_lastmod = 0;
     int i;
     refresh_t *t;
     regex_t comp;
@@ -1151,6 +1155,16 @@ parse_refreshpattern(refresh_t ** head)
     pct = (double) i / 100.0;
     GetInteger(i);		/* token: max */
     max = (time_t) (i * 60);	/* convert minutes to seconds */
+    /* Options */
+    while ((token = strtok(NULL, w_space)) != NULL) {
+	if (!strcmp(token, "override-expire"))
+	    override_expire = 1;
+	else if (!strcmp(token, "override-expire"))
+	    override_lastmod = 1;
+	else
+	    debug(22, 0) ("redreshAddToLost: Unknown option '%s': %s\n",
+		pattern, token);
+    }
     if ((errcode = regcomp(&comp, pattern, flags)) != 0) {
 	char errbuf[256];
 	regerror(errcode, &comp, errbuf, sizeof errbuf);
@@ -1170,6 +1184,10 @@ parse_refreshpattern(refresh_t ** head)
     t->max = max;
     if (flags & REG_ICASE)
 	t->flags.icase = 1;
+    if (override_expire)
+	t->flags.override_expire = 1;
+    if (override_lastmod)
+	t->flags.override_lastmod = 1;
     t->next = NULL;
     while (*head)
 	head = &(*head)->next;

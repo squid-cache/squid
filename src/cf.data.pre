@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.95 1998/08/14 16:42:02 wessels Exp $
+# $Id: cf.data.pre,v 1.96 1998/08/17 21:27:31 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -963,19 +963,32 @@ TYPE: refreshpattern
 LOC: Config.Refresh
 DEFAULT: none
 DOC_START
-	usage: refresh_pattern regex min percent max
+	usage: refresh_pattern regex min percent max [options]
 
 	min and max are specified in MINUTES.
 	percent is an integer number.
 
+	options: override-expire
+		 override-lastmod
+
+		override-expire enforces min age even if the server
+		sent a Expires: header. Warning: This breaks HTTP
+		freshness control, and may have servere inpact on
+		the usability of sites that makes correct use of
+		Expires: headers on dynamic data.
+
+		override-lastmod enforces min age even on objects
+		that was modified recently.
+		
 	Please see the file doc/Release-Notes-1.1.txt for a full
 	description of Squid's refresh algorithm.  Basically a
-	cached object is:
+	cached object is: (the order is changed from 1.1.X)
 
-		FRESH if age < min
-		STALE if expires < now
 		STALE if age > max
-		FRESH if lm-factor < percent
+		FRESH if expires < now, else STALE
+		FRESH if lm-factor < percent, else STALE
+		FRESH if age < min
+		else STALE
 
 	The refresh_pattern lines are checked in the order listed here.
 	The first entry which matches is used.  If none of the entries
