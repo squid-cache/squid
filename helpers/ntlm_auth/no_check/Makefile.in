@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.8 2001/11/29 11:17:30 hno Exp $
+#  $Id: Makefile.in,v 1.9 2001/12/27 00:23:34 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -127,6 +127,8 @@ install_sh = @install_sh@
 makesnmplib = @makesnmplib@
 
 libexec_SCRIPTS = no_check.pl
+
+EXTRA_DIST = no_check.pl
 subdir = src/auth/ntlm/helpers/no_check
 mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/include/autoconf.h

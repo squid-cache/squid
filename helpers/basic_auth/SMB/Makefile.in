@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.7 2001/11/29 11:17:08 hno Exp $
+#  $Id: Makefile.in,v 1.8 2001/12/27 00:23:33 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -138,6 +138,7 @@ SMB_AUTH_HELPER_PATH = $(libexecdir)/$(SMB_AUTH_HELPER)
 libexec_SCRIPTS = $(SMB_AUTH_HELPER)
 libexec_PROGRAMS = smb_auth
 smb_auth_CFLAGS = -DSAMBAPREFIX=\"$(SAMBAPREFIX)\" -DHELPERSCRIPT=\"$(SMB_AUTH_HELPER_PATH)\"
+EXTRA_DIST = smb_auth.sh
 
 LDADD = $(XTRA_LIBS)
 
