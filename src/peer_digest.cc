@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.85 2002/04/13 23:07:51 hno Exp $
+ * $Id: peer_digest.cc,v 1.86 2002/05/10 18:56:45 hno Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -123,11 +123,8 @@ peerDigestDestroy(PeerDigest * pd)
     assert(pd);
 
     /* inform peer (if any) that we are gone */
-    p = pd->peer;
-    pd->peer = NULL;
-    if (cbdataReferenceValid(p))
+    if (cbdataReferenceValidDone(pd->peer, &p))
 	peerNoteDigestGone(p);
-    cbdataReferenceDone(p);
 
     peerDigestClean(pd);
     cbdataFree(pd);
