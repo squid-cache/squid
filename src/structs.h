@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.358 2000/11/01 04:03:15 wessels Exp $
+ * $Id: structs.h,v 1.359 2000/11/09 03:09:47 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -675,6 +675,7 @@ struct _HttpHdrCc {
     int mask;
     int max_age;
     int s_maxage;
+    int max_stale;
 };
 
 /* http byte-range-spec */
