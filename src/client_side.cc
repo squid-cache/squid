@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.328 1998/06/03 22:33:00 rousskov Exp $
+ * $Id: client_side.cc,v 1.329 1998/06/04 05:46:01 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1109,6 +1109,7 @@ clientBuildRangeHeader(clientHttpRequest * http, HttpReply * rep)
     else
     if (httpHeaderHas(&http->request->header, HDR_IF_RANGE) && !clientIfRangeMatch(http, rep))
 	range_err = "If-Range match failed";
+    else
     if (!httpHdrRangeCanonize(http->request->range, rep->content_length))
 	range_err = "canonization failed";
     else
