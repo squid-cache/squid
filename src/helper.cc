@@ -188,6 +188,9 @@ void
 helperFree(helper * hlp)
 {
     /* note, don't free hlp->name, it probably points to static memory */
+    if (hlp->queue.head)
+	debug(29, 0) ("WARNING: freeing %s helper with %d requests queued\n",
+	    hlp->id_name, hlp->stats.queue_size);
     cbdataFree(hlp);
 }
 
@@ -282,6 +285,8 @@ Enqueue(helper * hlp, helper_request * r)
 	return;
     if (squid_curtime - hlp->last_queue_warn < 600)
 	return;
+    if (shutting_down || reconfiguring)
+	return;
     hlp->last_queue_warn = squid_curtime;
     debug(14, 0) ("WARNING: All %s processes are busy.\n", hlp->id_name);
     debug(14, 0) ("WARNING: %d pending requests queued\n", hlp->stats.queue_size);
@@ -309,6 +314,8 @@ GetFirstAvailable(helper * hlp)
 {
     dlink_node *n;
     helper_server *srv = NULL;
+    if (hlp->n_running == 0)
+	return NULL;
     for (n = hlp->servers.head; n != NULL; n = n->next) {
 	srv = n->data;
 	if (srv->flags.busy)
