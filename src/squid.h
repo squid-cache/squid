@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.86 1996/12/17 23:27:12 wessels Exp $
+ * $Id: squid.h,v 1.87 1996/12/20 23:45:44 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -183,10 +183,6 @@
 #define MAXPATHLEN SQUID_MAXPATHLEN
 #endif
 
-#ifndef INADDR_NONE
-#define INADDR_NONE ((unsigned long) -1)
-#endif
-
 #if !defined(HAVE_GETRUSAGE) && defined(_SQUID_HPUX_)
 #define HAVE_GETRUSAGE 1
 #define getrusage(a, b)  syscall(SYS_GETRUSAGE, a, b)
@@ -336,6 +332,7 @@ extern const char *const appname;	/* main.c */
 extern struct in_addr local_addr;	/* main.c */
 extern struct in_addr theOutICPAddr;	/* main.c */
 extern const char *const localhost;
+extern unsigned int inaddr_none;
 extern struct in_addr any_addr;	/* comm.c */
 extern struct in_addr no_addr;	/* comm.c */
 extern int opt_udp_hit_obj;	/* main.c */

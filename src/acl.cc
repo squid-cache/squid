@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.70 1996/12/18 00:02:59 wessels Exp $
+ * $Id: acl.cc,v 1.71 1996/12/20 23:45:35 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -213,7 +213,7 @@ decode_addr(const char *asc, struct in_addr *addr, struct in_addr *mask)
 
     switch (sscanf(asc, "%d.%d.%d.%d", &a1, &a2, &a3, &a4)) {
     case 4:			/* a dotted quad */
-	if ((a = (u_num32) inet_addr(asc)) != INADDR_NONE ||
+	if ((a = (u_num32) inet_addr(asc)) != inaddr_none ||
 	    !strcmp(asc, "255.255.255.255")) {
 	    addr->s_addr = a;
 	    /* inet_addr() outputs in network byte order */

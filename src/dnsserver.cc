@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.29 1996/11/12 18:21:21 wessels Exp $
+ * $Id: dnsserver.cc,v 1.30 1996/12/20 23:45:38 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -208,10 +208,6 @@
 #include <resolv.h>
 #endif
 
-#ifndef INADDR_NONE
-#define INADDR_NONE -1
-#endif
-
 #include "ansiproto.h"
 #include "util.h"
 
@@ -231,6 +227,7 @@ struct hostent *_res_gethostbyname(char *name);
 #endif /* _SQUID_NEXT_ */
 
 static int do_debug = 0;
+static unsigned int inaddr_none;
 
 /* error messages from gethostbyname() */
 static char *
@@ -263,6 +260,8 @@ main(int argc, char *argv[])
     int alias_count = 0;
     int i;
     int c;
+
+    inaddr_none = inet_addr("X");
 
 #if HAVE_RES_INIT
     res_init();
@@ -319,7 +318,7 @@ main(int argc, char *argv[])
 	result = NULL;
 	start = time(NULL);
 	/* check if it's already an IP address in text form. */
-	if (inet_addr(request) != INADDR_NONE) {
+	if (inet_addr(request) != inaddr_none) {
 #if NO_REVERSE_LOOKUP
 	    printf("$name %s\n", request);
 	    printf("$h_name %s\n", request);

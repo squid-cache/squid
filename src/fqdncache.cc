@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.42 1996/11/25 06:15:30 wessels Exp $
+ * $Id: fqdncache.cc,v 1.43 1996/12/20 23:45:39 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -758,7 +758,7 @@ fqdncache_gethostbyaddr(struct in_addr addr, int flags)
     }
     FqdncacheStats.misses++;
     /* check if it's already a FQDN address in text form. */
-    if (inet_addr(name) == INADDR_NONE) {
+    if (inet_addr(name) == inaddr_none) {
 	return name;
     }
     if (flags & FQDN_BLOCKING_LOOKUP) {
