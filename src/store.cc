@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.361 1998/01/01 00:05:53 wessels Exp $
+ * $Id: store.cc,v 1.362 1998/01/05 21:13:59 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1940,6 +1940,7 @@ urlcmp(const void *url1, const void *url2)
  * 
  *  Writes a "clean" swap log file from in-memory metadata.
  */
+#define CLEAN_BUF_SZ 16384
 int
 storeWriteCleanLogs(int reopen)
 {
@@ -1954,6 +1955,9 @@ storeWriteCleanLogs(int reopen)
     char **cln;
     int dirn;
     dlink_node *m;
+    int linelen;
+    char **outbufs;
+    int *outbuflens;
     if (store_rebuilding) {
 	debug(20, 1) ("Not currently OK to rewrite swap log.\n");
 	debug(20, 1) ("storeWriteCleanLogs: Operation aborted.\n");
@@ -1986,8 +1990,14 @@ storeWriteCleanLogs(int reopen)
 	    fchmod(fd[dirn], sb.st_mode);
 #endif
     }
-    line = xcalloc(1, 16384);
-    for (m = all_list.head; m; m = m->next) {
+    line = xcalloc(1, CLEAN_BUF_SZ);
+    outbufs = xcalloc(Config.cacheSwap.n_configured, sizeof(char *));
+    outbuflens = xcalloc(Config.cacheSwap.n_configured, sizeof(int));
+    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
+	outbufs[dirn] = xcalloc(Config.cacheSwap.n_configured, CLEAN_BUF_SZ);
+	outbuflens[dirn] = 0;
+    }
+    for (m = all_list.tail; m; m = m->prev) {
 	e = m->data;
 	if (e->swap_file_number < 0)
 	    continue;
@@ -2003,7 +2013,7 @@ storeWriteCleanLogs(int reopen)
 	assert(dirn < Config.cacheSwap.n_configured);
 	if (fd[dirn] < 0)
 	    continue;
-	snprintf(line, 16384, "%08x %08x %08x %08x %08x %9d %6d %08x %s\n",
+	snprintf(line, CLEAN_BUF_SZ, "%08x %08x %08x %08x %08x %9d %6d %08x %s\n",
 	    (int) e->swap_file_number,
 	    (int) e->timestamp,
 	    (int) e->lastref,
@@ -2013,20 +2023,44 @@ storeWriteCleanLogs(int reopen)
 	    e->refcount,
 	    e->flag,
 	    storeKeyText(e->key));
-	if (write(fd[dirn], line, strlen(line)) < 0) {
-	    debug(50, 0) ("storeWriteCleanLogs: %s: %s\n", new[dirn], xstrerror());
-	    debug(20, 0) ("storeWriteCleanLogs: Current swap logfile not replaced.\n");
-	    file_close(fd[dirn]);
-	    fd[dirn] = -1;
-	    safeunlink(cln[dirn], 0);
-	    continue;
+	linelen = strlen(line);
+	/* buffered write */
+	if (linelen + outbuflens[dirn] > CLEAN_BUF_SZ-2) {
+	    if (write(fd[dirn], outbufs[dirn], outbuflens[dirn]) < 0) {
+		debug(50, 0) ("storeWriteCleanLogs: %s: %s\n", new[dirn], xstrerror());
+		debug(20, 0) ("storeWriteCleanLogs: Current swap logfile not replaced.\n");
+		file_close(fd[dirn]);
+		fd[dirn] = -1;
+		safeunlink(cln[dirn], 0);
+		continue;
+	    }
+	    outbuflens[dirn] = 0;
 	}
+	strcpy(outbufs[dirn] + outbuflens[dirn], line);
+	outbuflens[dirn] += linelen;
 	if ((++n & 0x3FFF) == 0) {
 	    getCurrentTime();
 	    debug(20, 1) ("  %7d lines written so far.\n", n);
 	}
     }
     safe_free(line);
+    /* flush */
+    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
+	if (outbuflens[dirn] > 0) {
+	    if (write(fd[dirn], outbufs[dirn], outbuflens[dirn]) < 0) {
+		debug(50, 0) ("storeWriteCleanLogs: %s: %s\n", new[dirn], xstrerror());
+		debug(20, 0) ("storeWriteCleanLogs: Current swap logfile not replaced.\n");
+		file_close(fd[dirn]);
+		fd[dirn] = -1;
+		safeunlink(cln[dirn], 0);
+		continue;
+	    }
+	}
+	safe_free(outbufs[dirn]);
+    }
+    safe_free(outbufs);
+    safe_free(outbuflens);
+    /* close */
     for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
 	file_close(fd[dirn]);
 	fd[dirn] = -1;
@@ -2058,6 +2092,7 @@ storeWriteCleanLogs(int reopen)
     safe_free(fd);
     return n;
 }
+#undef CLEAN_BUF_SZ
 
 int
 storePendingNClients(const StoreEntry * e)
