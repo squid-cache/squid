@@ -1092,8 +1092,6 @@ read_mib(filename)
     char mbuf[256];
     char *p;
 
-    snmplib_debug(0, "reading MIB file: '%s'\n", filename);
-
     fp = fopen(filename, "r");
     if (fp == NULL) {
 	snmplib_debug(0, "failed to open MIB file: '%s'\n", filename);
