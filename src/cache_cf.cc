@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.147 1996/11/30 23:09:49 wessels Exp $
+ * $Id: cache_cf.cc,v 1.148 1996/12/01 00:51:54 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -953,7 +953,7 @@ parseVizHackLine(void)
     if (sscanf(token, "%d", &i) == 1)
 	Config.vizHack.port = i;
     Config.vizHack.mcast_ttl = 64;
-    if ((token = strtok(NULL, w_space)) != NULL)
+    if ((token = strtok(NULL, w_space)) == NULL)
 	return;
     if (sscanf(token, "%d", &i) == 1)
 	Config.vizHack.mcast_ttl = i;
