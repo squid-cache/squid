@@ -92,7 +92,8 @@ typedef void IDCB(void *);
 typedef void IPH(const ipcache_addrs *, void *);
 typedef void IRCB(peer *, peer_t, icp_common_t *, void *data);
 typedef void PSC(peer *, void *);
-typedef void RH(void *data, char *result);
+typedef void RH(void *data, char *);
+typedef void UH(void *data, wordlist *);
 typedef int DEFER(int fd, void *data);
 
 typedef void SIH(int fd, void *);	/* swap in */

@@ -1,6 +1,5 @@
-
 /*
- * $Id: store.cc,v 1.354 1997/12/02 05:06:44 wessels Exp $
+ * $Id: store.cc,v 1.355 1997/12/06 05:17:01 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived

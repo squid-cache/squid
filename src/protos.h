@@ -77,6 +77,7 @@ extern char *clientConstructTraceEcho(clientHttpRequest *);
 extern void clientPurgeRequest(clientHttpRequest *);
 extern int checkNegativeHit(StoreEntry *);
 extern void clientHttpConnectionsOpen(void);
+extern StoreEntry *clientCreateStoreEntry(clientHttpRequest *, method_t, int);
 
 extern int commSetNonBlocking(int fd);
 extern void commSetCloseOnExec(int fd);
@@ -331,8 +332,6 @@ extern void netdbFreeMemory(void);
 extern int netdbHostHops(const char *host);
 extern int netdbHostRtt(const char *host);
 extern void netdbUpdatePeer(request_t *, peer * e, int rtt, int hops);
-extern netdbEntry *netdbGetFirst(hash_table * table);
-extern netdbEntry *netdbGetNext(hash_table * table);
 
 extern void objcachePasswdAdd(cachemgr_passwd **, char *, wordlist *);
 extern void objcachePasswdDestroy(cachemgr_passwd ** a);
@@ -348,6 +347,9 @@ extern void protoDispatch(int, StoreEntry *, request_t *);
 extern int protoUnregister(StoreEntry *, request_t *);
 extern int protoAbortFetch(StoreEntry * entry);
 extern DEFER protoCheckDeferRead;
+
+extern void urnStart(clientHttpRequest *);
+extern UH urnTranslateDone;
 
 extern void redirectStart(clientHttpRequest *, RH *, void *);
 extern void redirectOpenServers(void);

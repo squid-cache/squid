@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.68 1997/11/28 08:14:09 wessels Exp $
+ * $Id: url.cc,v 1.69 1997/12/06 05:17:04 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -56,6 +56,7 @@ const char *ProtocolStr[] =
 
 static int url_acceptable[256];
 static const char *const hex = "0123456789abcdef";
+static request_t * urnParse(method_t method, char *urn);
 
 /* convert %xx in url string to a character 
  * Allocate a new string and return a pointer to converted string */
@@ -167,6 +168,8 @@ urlParseProtocol(const char *s)
 	return PROTO_WAIS;
     if (strncasecmp(s, "cache_object", 12) == 0)
 	return PROTO_CACHEOBJ;
+    if (strncasecmp(s, "urn", 3) == 0)
+	return PROTO_URN;
     return PROTO_NONE;
 }
 
@@ -214,6 +217,8 @@ urlParse(method_t method, char *url)
 	port = CONNECT_PORT;
 	if (sscanf(url, "%[^:]:%d", host, &port) < 1)
 	    return NULL;
+    } else if (!strncmp(url, "urn:", 4)) {
+	return urnParse(method, url);
     } else {
 	if (sscanf(url, "%[^:]://%[^/]%s", proto, host, urlpath) < 2)
 	    return NULL;
@@ -271,6 +276,20 @@ urlParse(method_t method, char *url)
     return request;
 }
 
+static request_t *
+urnParse(method_t method, char *urn)
+{
+    request_t *request = NULL;
+    debug(50,5)("urnParse: %s\n", urn);
+    request = get_free_request_t();
+    request->method = method;
+    request->protocol = PROTO_URN;
+    xstrncpy(request->urlpath, &urn[4], MAX_URL);
+    request->max_age = -1;
+    request->max_forwards = -1;
+    return request;
+}
+
 char *
 urlCanonical(const request_t * request, char *buf)
 {
@@ -305,7 +324,9 @@ urlCanonicalClean(const request_t * request)
     LOCAL_ARRAY(char, portbuf, 32);
     LOCAL_ARRAY(char, loginbuf, MAX_LOGIN_SZ + 1);
     char *t;
-    switch (request->method) {
+    if (request->protocol == PROTO_URN) {
+	snprintf(buf, MAX_URL, "urn:%s", request->urlpath);
+    } else switch (request->method) {
     case METHOD_CONNECT:
 	snprintf(buf, MAX_URL, "%s:%d", request->host, request->port);
 	break;
@@ -393,6 +414,7 @@ urlCheckRequest(const request_t * r)
     if (r->method == METHOD_PURGE)
 	return 1;
     switch (r->protocol) {
+    case PROTO_URN:
     case PROTO_HTTP:
     case PROTO_CACHEOBJ:
 	rc = 1;
