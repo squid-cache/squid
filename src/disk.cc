@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: disk.cc,v 1.125 1998/08/14 23:52:45 wessels Exp $
+ * $Id: disk.cc,v 1.126 1998/08/15 07:24:12 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -446,9 +446,6 @@ diskHandleReadComplete(void *data, int len, int errcode)
     int fd = ctrl_dat->fd;
     int rc = DISK_OK;
     errno = errcode;
-
-    xfree(data);
-
     if (len == -2 && errcode == -2) {	/* Read cancelled - cleanup */
 	cbdataUnlock(ctrl_dat->client_data);
 	memFree(MEM_DREAD_CTRL, ctrl_dat);
