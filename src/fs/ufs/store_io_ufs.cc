@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.24 2004/08/30 05:12:33 robertc Exp $
+ * $Id: store_io_ufs.cc,v 1.25 2004/11/07 14:03:18 hno Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -137,7 +137,7 @@ UFSFile::open (int flags, mode_t mode, IORequestor::Pointer callback)
     ioRequestor = callback;
 
     if (fd < 0) {
-        debug(79, 3) ("UFSFile::open: got failure (%d)\n", errno);
+        debug(79, 1) ("UFSFile::open: Failed to open %s (%s)\n", path_, xstrerror());
         error(true);
     } else {
         closed = false;
