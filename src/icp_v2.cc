@@ -359,7 +359,7 @@ icpConnectionsOpen(void)
 	NULL, 0);
     for (s = Config.mcast_group_list; s; s = s->next)
 	ipcache_nbgethostbyname(s->key, mcastJoinGroups, NULL);
-    debug(1, 1) ("Accepting ICP messages on port %d, FD %d.\n",
+    debug(12, 1) ("Accepting ICP messages on port %d, FD %d.\n",
 	(int) port, theInIcpConnection);
     if ((addr = Config.Addrs.udp_outgoing).s_addr != no_addr.s_addr) {
 	enter_suid();
@@ -376,7 +376,7 @@ icpConnectionsOpen(void)
 	    COMM_SELECT_READ,
 	    icpHandleUdp,
 	    NULL, 0);
-	debug(1, 1) ("Outgoing ICP messages on port %d, FD %d.\n",
+	debug(12, 1) ("Outgoing ICP messages on port %d, FD %d.\n",
 	    (int) port, theOutIcpConnection);
 	fd_note(theOutIcpConnection, "Outgoing ICP socket");
 	fd_note(theInIcpConnection, "Incoming ICP socket");
@@ -395,14 +395,19 @@ icpConnectionsOpen(void)
 	theOutICPAddr = xaddr.sin_addr;
 }
 
+/*
+ * icpConnectionShutdown only closes the 'in' socket if it is 
+ * different than the 'out' socket.
+ */
 void
-icpConnectionsClose(void)
+icpConnectionShutdown(void)
 {
     if (theInIcpConnection < 0)
 	return;
-    debug(1, 1) ("FD %d Closing ICP connection\n", theInIcpConnection);
-    if (theInIcpConnection != theOutIcpConnection)
+    if (theInIcpConnection != theOutIcpConnection) {
+        debug(12, 1) ("FD %d Closing ICP connection\n", theInIcpConnection);
 	comm_close(theInIcpConnection);
+    }
     /*
      * Here we set 'theInIcpConnection' to -1 even though the ICP 'in'
      * and 'out' sockets might be just one FD.  This prevents this
@@ -418,4 +423,14 @@ icpConnectionsClose(void)
      */
     assert(theOutIcpConnection > -1);
     commSetSelect(theOutIcpConnection, COMM_SELECT_READ, NULL, NULL, 0);
+}
+
+void
+icpConnectionClose(void)
+{
+    icpConnectionShutdown();
+    if (theOutIcpConnection > -1) {
+        debug(12, 1) ("FD %d Closing ICP connection\n", theOutIcpConnection);
+	comm_close(theOutIcpConnection);
+    }
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.214 1998/02/06 17:30:53 wessels Exp $
+ * $Id: main.cc,v 1.215 1998/02/06 23:58:04 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -339,10 +339,10 @@ serverConnectionsClose(void)
      * is pending
      */
     clientHttpConnectionsClose();
-    icpConnectionsClose();
+    icpConnectionShutdown();
     icmpClose();
 #ifdef SQUID_SNMP
-    snmpConnectionClose();
+    snmpConnectionShutdown();
 #endif
 }
 
@@ -352,16 +352,14 @@ mainReconfigure(void)
     debug(1, 0) ("Restarting Squid Cache (version %s)...\n", version_string);
     /* Already called serverConnectionsClose and ipcacheShutdownServers() */
     serverConnectionsClose();
-    if (theOutIcpConnection > 0) {
-	comm_close(theOutIcpConnection);
-	theOutIcpConnection = -1;
-    }
+    icpConnectionClose();
+#ifdef SQUID_SNMP
+    snmpConnectionClose();
+#endif
     dnsShutdownServers();
     asnCleanup();
     redirectShutdownServers();
-#if 0
     storeDirCloseSwapLogs();
-#endif
     errorFree();
     parseConfigFile(ConfigFile);
     _db_init(Config.Log.log, Config.debugOptions);
@@ -601,10 +599,8 @@ main(int argc, char **argv)
 	    break;
 	case COMM_SHUTDOWN:
 	    /* delayed close so we can transmit while shutdown pending */
-	    if (theOutIcpConnection > 0) {
-		comm_close(theOutIcpConnection);
-		theOutIcpConnection = -1;
-	    }
+	    icpConnectionClose();
+	    snmpConnectionClose();
 	    if (shutdown_pending) {
 		normal_shutdown();
 #if 0
