@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.185 1997/05/15 01:06:50 wessels Exp $
+ * $Id: cache_cf.cc,v 1.186 1997/05/15 01:18:42 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -225,7 +225,6 @@ const char *DefaultConfigFile = DEFAULT_CONFIG_FILE;
 char *ConfigFile = NULL;	/* the whole thing */
 const char *cfg_filename = NULL;	/* just the last part */
 
-static const char *const w_space = " \t\n\r";
 static const char *const list_sep = ", \t\n\r";
 char config_input_line[BUFSIZ];
 int config_lineno = 0;

@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.42 1997/01/31 21:16:48 wessels Exp $
+ * $Id: debug.cc,v 1.43 1997/05/15 01:18:43 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -107,7 +107,6 @@
 
 FILE *debug_log = NULL;
 static char *debug_log_file = NULL;
-static const char *const w_space = " \t\n\r";
 
 #define MAX_DEBUG_SECTIONS 100
 static int debugLevels[MAX_DEBUG_SECTIONS];

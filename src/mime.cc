@@ -1,5 +1,5 @@
 /*
- * $Id: mime.cc,v 1.28 1997/05/15 01:06:59 wessels Exp $
+ * $Id: mime.cc,v 1.29 1997/05/15 01:18:46 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -119,10 +119,6 @@ typedef struct _mime_entry {
 
 static mimeEntry *MimeTable = NULL;
 static mimeEntry **MimeTableTail = NULL;
-
-static const char *const w_space = " \t\n\r";
-static const char *const dash_str = "-";
-
 
 char *
 mime_get_header(const char *mime, const char *name)

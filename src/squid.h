@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.111 1997/05/15 01:07:02 wessels Exp $
+ * $Id: squid.h,v 1.112 1997/05/15 01:18:48 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -367,6 +367,7 @@ extern int httpAnonDenied _PARAMS((const char *line));
 
 extern const char *const dash_str;
 extern const char *const null_string;
+extern const char *const w_space;
 
 #define OR(A,B) (A ? A : B)
 
