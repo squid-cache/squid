@@ -880,6 +880,13 @@ extern int ipcCreate(int type,
     int *rfd,
     int *wfd);
 
+/* CacheDigest */
+extern CacheDigest *cacheDigestCreate(int capacity);
+extern void cacheDigestDestroy(CacheDigest *cd);
+extern int cacheDigestTest(const CacheDigest *cd, const cache_key *key);
+extern void cacheDigestAdd(CacheDigest *cd, const cache_key *key);
+extern void cacheDigestDel(CacheDigest *cd, const cache_key *key);
+
 /*
  * prototypes for system functions missing from system includes
  */
