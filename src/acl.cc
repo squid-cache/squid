@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.88 1997/02/28 21:33:34 wessels Exp $
+ * $Id: acl.cc,v 1.89 1997/03/02 05:34:45 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1197,6 +1197,7 @@ aclCheck(aclCheck_t * checklist)
 	}
 	checklist->access_list = A->next;
     }
+    debug(28, 3, "aclCheck: NO match found, returning %d\n", !allow);
     aclCheckCallback(checklist, !allow);
 }
 
