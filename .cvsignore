@@ -3,3 +3,4 @@ config.cache
 config.log
 config.status
 autom4te.cache
+makefile
