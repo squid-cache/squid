@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.336 1997/11/05 20:00:57 wessels Exp $
+ * $Id: store.cc,v 1.337 1997/11/10 20:54:33 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -2358,4 +2358,19 @@ storeCreateMemObject(StoreEntry * e, const char *url, const char *log_url)
     if (e->mem_obj)
 	return;
     e->mem_obj = new_MemObject(url, log_url);
+}
+
+void
+storeCopyNotModifiedReplyHeaders(MemObject * oldmem, MemObject * newmem)
+{
+    http_reply *oldreply = oldmem->reply;
+    http_reply *newreply = newmem->reply;
+    oldreply->cache_control = newreply->cache_control;
+    oldreply->misc_headers = newreply->misc_headers;
+    if (newreply->date > -1)
+	oldreply->date = newreply->date;
+    if (newreply->last_modified > -1)
+	oldreply->last_modified = newreply->last_modified;
+    if (newreply->expires > -1)
+	oldreply->expires = newreply->expires;
 }
