@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.54 1998/04/24 07:09:41 wessels Exp $
+ * $Id: peer_select.cc,v 1.55 1998/04/24 18:47:42 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -66,11 +66,9 @@ static char *DirectStr[] =
 };
 
 static void peerSelectFoo(ps_state *);
-static void peerSelectCheckAS(ps_state *);
 static void peerPingTimeout(void *data);
 static void peerSelectCallbackFail(ps_state * psstate);
 static IRCB peerHandleIcpReply;
-static IPH peerSelectCheckASDone;
 static void peerSelectStateFree(ps_state * psstate);
 static void peerIcpParentMiss(peer *, icp_common_t *, ps_state *);
 static int peerCheckNetdbDirect(ps_state * psstate);
@@ -150,32 +148,8 @@ peerSelect(request_t * request,
     request->hier.peer_select_start = current_time;
 #endif
     cbdataLock(callback_data);
-    peerSelectCheckAS(psstate);
-}
-
-static void
-peerSelectCheckASDone(const ipcache_addrs * ia, void *data)
-{
-    ps_state *psstate = data;
     peerSelectFoo(psstate);
 }
-
-static void
-peerSelectCheckAS(ps_state * psstate)
-{
-    request_t *request = psstate->request;
-
-/* XXXX Just a quick hack to get the destination address to the 
- * ipcache, because peerSelectIcpPing requires non-blocking ACL
- * check. 
- * We should handle AS acl's differently than cache_host ones.   */
-
-    ipcache_nbgethostbyname(request->host,
-	peerSelectCheckASDone,
-	psstate);
-    return;
-}
-
 
 static void
 peerCheckNeverDirectDone(int answer, void *data)
