@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.76 1996/11/24 04:16:40 wessels Exp $
+ * $Id: squid.h,v 1.77 1996/11/25 23:36:50 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -42,7 +42,7 @@
  * hosed...
  */
 
-#if SQUID_MAXFD > 256
+#if SQUID_MAXFD > FD_SETSIZE
 #define FD_SETSIZE SQUID_MAXFD
 #endif
 
