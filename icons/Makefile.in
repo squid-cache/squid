@@ -13,7 +13,7 @@
 
 @SET_MAKE@
 
-# $Id: Makefile.in,v 1.17 2001/10/29 07:40:56 robertc Exp $
+# $Id: Makefile.in,v 1.18 2001/11/28 03:02:43 robertc Exp $
 #
 
 SHELL = @SHELL@
@@ -75,7 +75,8 @@ CRYPTLIB = @CRYPTLIB@
 DEPDIR = @DEPDIR@
 DIGEST_AUTH_HELPERS = @DIGEST_AUTH_HELPERS@
 DLLIB = @DLLIB@
-ERR_LANGUAGE = @ERR_LANGUAGE@
+ERR_DEFAULT_LANGUAGE = @ERR_DEFAULT_LANGUAGE@
+ERR_LANGUAGES = @ERR_LANGUAGES@
 EXEEXT = @EXEEXT@
 FALSE = @FALSE@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
@@ -150,7 +151,7 @@ ICON2 = anthony-bomb.gif \
 		anthony-xpm.gif
 
 
-icondir = $(sysconfdir)/icons
+icondir = $(sharedstatedir)/squid/icons
 icon_DATA = $(ICON1) $(ICON2)
 EXTRA_DIST = $(ICON1) $(ICON2) icons.shar
 DISTCLEANFILES = $(ICON1) $(ICON2)
