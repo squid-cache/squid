@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.40 1996/04/15 22:50:41 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.41 1996/04/15 22:56:31 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -972,17 +972,6 @@ static void parseBindAddressLine()
     debug(3, 1, "parseBindAddressLine: adding %s\n", token);
     wordlistAdd(&Config.bind_addr_list, token);
 }
-
-#ifdef OLD_CODE
-static void parseBlockListLine()
-{
-    char *token;
-    token = strtok(NULL, w_space);
-    if (token == (char *) NULL)
-	return;
-    blockAddToList(token);
-}
-#endif
 
 static void parseLocalDomainLine()
 {
