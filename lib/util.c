@@ -1,5 +1,5 @@
 /*
- * $Id: util.c,v 1.12 1996/09/14 08:50:52 wessels Exp $
+ * $Id: util.c,v 1.13 1996/09/14 16:14:25 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -129,7 +129,7 @@
 
 #include "util.h"
 
-void (*failure_notify) _PARAMS((char *)) = NULL;
+void (*failure_notify) (char *) = NULL;
 static char msg[128];
 
 extern int sys_nerr;
@@ -163,7 +163,7 @@ malloc_stat(int sz)
 }
 
 void
-malloc_statistics(void (*func) _PARAMS((int, int, void *)), void *data)
+malloc_statistics(void (*func) (int, int, void *), void *data)
 {
     int i;
     for (i = 0; i <= DBG_MAXSIZE; i += DBG_GRAIN)
