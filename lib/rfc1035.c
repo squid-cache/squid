@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.13 2000/02/01 05:15:26 wessels Exp $
+ * $Id: rfc1035.c,v 1.14 2000/03/27 21:56:21 wessels Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -12,10 +12,10 @@
  *  Internet community.  Development is led by Duane Wessels of the
  *  National Laboratory for Applied Network Research and funded by the
  *  National Science Foundation.  Squid is Copyrighted (C) 1998 by
- *  Duane Wessels and the University of California San Diego.  Please
- *  see the COPYRIGHT file for full details.  Squid incorporates
- *  software developed and/or copyrighted by other sources.  Please see
- *  the CREDITS file for full details.
+ *  the Regents of the University of California.  Please see the
+ *  COPYRIGHT file for full details.  Squid incorporates software
+ *  developed and/or copyrighted by other sources.  Please see the
+ *  CREDITS file for full details.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -31,6 +31,12 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ */
+
+/*
+ * KNOWN BUGS:
+ * 
+ * UDP replies with TC set should be retried via TCP
  */
 
 #include "config.h"
@@ -227,7 +233,7 @@ rfc1035HeaderUnpack(const char *buf, size_t sz, rfc1035_header * h)
     h->qr = (t >> 15) & 0x01;
     h->opcode = (t >> 11) & 0x0F;
     h->aa = (t >> 10) & 0x01;
-    h->tc = (t >> 8) & 0x01;
+    h->tc = (t >> 9) & 0x01;
     h->rd = (t >> 8) & 0x01;
     h->ra = (t >> 7) & 0x01;
     h->rcode = t & 0x0F;
@@ -321,6 +327,14 @@ rfc1035RRUnpack(const char *buf, size_t sz, off_t off, rfc1035_rr * RR)
     RR->ttl = ntohl(i);
     memcpy(&s, buf + off, sizeof(s));
     off += sizeof(s);
+    if (off + ntohs(s) > sz) {
+	/*
+	 * We got a truncated packet.  'dnscache' truncates UDP
+	 * replies at 512 octets, as per RFC 1035.  Returning sz+1
+	 * should cause no further processing for this reply.
+	 */
+	return sz + 1;
+    }
     switch (RR->type) {
     case RFC1035_TYPE_PTR:
 	RR->rdata = malloc(RFC1035_MAXHOSTNAMESZ);
@@ -432,7 +446,8 @@ rfc1035AnswersUnpack(const char *buf,
     recs = calloc(i, sizeof(*recs));
     while (i--) {
 	off = rfc1035RRUnpack(buf, sz, off, &recs[i]);
-	assert(off <= sz);
+	if (off > sz)		/* truncated packet */
+	    break;
 	nr++;
     }
     *records = recs;
