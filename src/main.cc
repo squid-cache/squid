@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.337 2001/05/05 17:49:55 hno Exp $
+ * $Id: main.cc,v 1.338 2001/05/19 19:32:02 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -573,7 +573,7 @@ main(int argc, char **argv)
 	Squid_MaxFD = FD_SETSIZE;
 
 #if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
-    if (WIN32_init_err = WIN32_Subsystem_Init())
+    if ((WIN32_init_err = WIN32_Subsystem_Init()))
 	return WIN32_init_err;
 #endif
 
