@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.13 2002/05/20 02:05:32 hno Exp $
+#  $Id: Makefile.in,v 1.14 2002/06/19 22:53:56 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -126,6 +126,7 @@ libexec_PROGRAMS = msnt_auth
 msnt_auth_SOURCES = md4.c rfcnb-io.c rfcnb-util.c session.c msntauth.c \
 		msntauth.h smbdes.c smbencrypt.c smblib-util.c smblib.c \
 		valid.c denyusers.c allowusers.c confload.c \
+		usersfile.c \
 		byteorder.h rfcnb-common.h rfcnb-error.h rfcnb.h \
 		rfcnb-io.h rfcnb-priv.h rfcnb-util.h smblib-common.h \
 		smblib.h smblib-priv.h std-defines.h std-includes.h valid.h
@@ -154,7 +155,7 @@ am_msnt_auth_OBJECTS = md4.$(OBJEXT) rfcnb-io.$(OBJEXT) \
 	rfcnb-util.$(OBJEXT) session.$(OBJEXT) msntauth.$(OBJEXT) \
 	smbdes.$(OBJEXT) smbencrypt.$(OBJEXT) smblib-util.$(OBJEXT) \
 	smblib.$(OBJEXT) valid.$(OBJEXT) denyusers.$(OBJEXT) \
-	allowusers.$(OBJEXT) confload.$(OBJEXT)
+	allowusers.$(OBJEXT) confload.$(OBJEXT) usersfile.$(OBJEXT)
 msnt_auth_OBJECTS = $(am_msnt_auth_OBJECTS)
 msnt_auth_LDADD = $(LDADD)
 msnt_auth_DEPENDENCIES =
@@ -172,7 +173,7 @@ depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/rfcnb-util.Po $(DEPDIR)/session.Po \
 @AMDEP_TRUE@	$(DEPDIR)/smbdes.Po $(DEPDIR)/smbencrypt.Po \
 @AMDEP_TRUE@	$(DEPDIR)/smblib-util.Po $(DEPDIR)/smblib.Po \
-@AMDEP_TRUE@	$(DEPDIR)/valid.Po
+@AMDEP_TRUE@	$(DEPDIR)/usersfile.Po $(DEPDIR)/valid.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -238,6 +239,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/smbencrypt.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/smblib-util.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/smblib.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/usersfile.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/valid.Po@am__quote@
 
 distclean-depend:

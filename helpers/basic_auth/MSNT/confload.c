@@ -17,15 +17,18 @@
 #include <errno.h>
 #include <sys/param.h>
 #include <netdb.h>
+#include <assert.h>
 
 #include "msntauth.h"
 #include "valid.h"
 
-#define CONFIGFILE   "/usr/local/squid/etc/msntauth.conf"	/* Path to configuration file */
+/* Path to configuration file */
+#define CONFIGFILE   "/usr/local/squid/etc/msntauth.conf"
 #define DENYUSERSDEFAULT   "/usr/local/squid/etc/denyusers"
 #define ALLOWUSERSDEFAULT  "/usr/local/squid/etc/allowusers"
 
-#define MAXSERVERS 5		/* Maximum number of servers to query. This number can be increased. */
+/* Maximum number of servers to query. This number can be increased. */
+#define MAXSERVERS 5
 #define NTHOSTLEN 65
 
 extern char Denyuserpath[MAXPATHLEN];	/* MAXPATHLEN defined in param.h */
@@ -60,29 +63,34 @@ OpenConfigFile(void)
     /* Initialise defaults */
 
     Serversqueried = 0;
-    strcpy(Denyuserpath, DENYUSERSDEFAULT);
-    strcpy(Allowuserpath, ALLOWUSERSDEFAULT);
+    memset(ServerArray, '\0', sizeof(ServerArray));
+    memset(Denyuserpath, '\0', MAXPATHLEN);
+    memset(Allowuserpath, '\0', MAXPATHLEN);
+    strncpy(Denyuserpath, DENYUSERSDEFAULT, MAXPATHLEN - 1);
+    strncpy(Allowuserpath, ALLOWUSERSDEFAULT, MAXPATHLEN - 1);
 
     /* Open file */
     if ((ConfigFile = fopen(CONFIGFILE, "r")) == NULL) {
-	syslog(LOG_USER | LOG_ERR, "OpenConfigFile: Failed to open %s.", CONFIGFILE);
-	syslog(LOG_USER | LOG_ERR, strerror(errno));
+	syslog(LOG_ERR, "OpenConfigFile: Failed to open %s.", CONFIGFILE);
+	syslog(LOG_ERR, "%s", strerror(errno));
 	return 1;
     }
     /* Read in, one line at a time */
-
     while (!feof(ConfigFile)) {
 	Confbuf[0] = '\0';
-	fgets(Confbuf, 2049, ConfigFile);
+	if (NULL == fgets(Confbuf, 2048, ConfigFile))
+	    break;
+	Confbuf[2048] = '\0';
 	ProcessLine(Confbuf);
     }
 
-    /* Check that at least one server is being queried. Report error if not.
+    /*
+     * Check that at least one server is being queried. Report error if not.
      * Denied and allowed user files are hardcoded, so it's fine if they're
-     * not set in the confugration file. */
-
+     * not set in the confugration file.
+     */
     if (Serversqueried == 0) {
-	syslog(LOG_USER | LOG_ERR, "OpenConfigFile: No servers set in %s. At least one is needed.", CONFIGFILE);
+	syslog(LOG_ERR, "OpenConfigFile: No servers set in %s. At least one is needed.", CONFIGFILE);
 	return 1;
     }
     fclose(ConfigFile);
@@ -114,13 +122,18 @@ ProcessLine(char *Linebuf)
     /* Check for server line. Check for 3 parameters. */
     if (strcasecmp(Directive, "server") == 0) {
 	Param1 = strtok(NULL, " \t\n");
+	if (NULL == Param1) {
+	    syslog(LOG_ERR, "ProcessLine: 'server' missing PDC parameter.");
+	    return;
+	}
 	Param2 = strtok(NULL, " \t\n");
+	if (NULL == Param2) {
+	    syslog(LOG_ERR, "ProcessLine: 'server' missing BDC parameter.");
+	    return;
+	}
 	Param3 = strtok(NULL, " \t\n");
-
-	if ((Param1[0] == '\0') ||
-	    (Param2[0] == '\0') ||
-	    (Param3[0] == '\0')) {
-	    syslog(LOG_USER | LOG_ERR, "ProcessLine: A 'server' line needs PDC, BDC, and domain parameters.");
+	if (NULL == Param3) {
+	    syslog(LOG_ERR, "ProcessLine: 'server' missing domain parameter.");
 	    return;
 	}
 	AddServer(Param1, Param2, Param3);
@@ -130,26 +143,28 @@ ProcessLine(char *Linebuf)
     if (strcasecmp(Directive, "denyusers") == 0) {
 	Param1 = strtok(NULL, " \t\n");
 
-	if (Param1[0] == '\0') {
-	    syslog(LOG_USER | LOG_ERR, "ProcessLine: A 'denyusers' line needs a filename parameter.");
+	if (NULL == Param1) {
+	    syslog(LOG_ERR, "ProcessLine: A 'denyusers' line needs a filename parameter.");
 	    return;
 	}
-	strcpy(Denyuserpath, Param1);
+	memset(Denyuserpath, '\0', MAXPATHLEN);
+	strncpy(Denyuserpath, Param1, MAXPATHLEN - 1);
 	return;
     }
     /* Check for allowusers line */
     if (strcasecmp(Directive, "allowusers") == 0) {
 	Param1 = strtok(NULL, " \t\n");
 
-	if (Param1[0] == '\0') {
-	    syslog(LOG_USER | LOG_ERR, "ProcessLine: An 'allowusers' line needs a filename parameter.");
+	if (NULL == Param1) {
+	    syslog(LOG_ERR, "ProcessLine: An 'allowusers' line needs a filename parameter.");
 	    return;
 	}
-	strcpy(Allowuserpath, Param1);
+	memset(Allowuserpath, '\0', MAXPATHLEN);
+	strncpy(Allowuserpath, Param1, MAXPATHLEN - 1);
 	return;
     }
     /* Reports error for unknown line */
-    syslog(LOG_USER | LOG_ERR, "ProcessLine: Ignoring '%s' line.", Directive);
+    syslog(LOG_ERR, "ProcessLine: Ignoring '%s' line.", Directive);
 }
 
 /*
@@ -162,25 +177,27 @@ ProcessLine(char *Linebuf)
 void
 AddServer(char *ParamPDC, char *ParamBDC, char *ParamDomain)
 {
-    if (Serversqueried + 1 > MAXSERVERS) {
-	syslog(LOG_USER | LOG_ERR, "AddServer: Ignoring '%s' server line; too many servers.", ParamPDC);
+    if (Serversqueried == MAXSERVERS) {
+	syslog(LOG_ERR, "AddServer: Ignoring '%s' server line; "
+	    "too many servers.", ParamPDC);
 	return;
     }
-    if (gethostbyname(ParamPDC) == (struct hostent *) NULL) {
-	syslog(LOG_USER | LOG_ERR, "AddServer: Ignoring host '%s'. Cannot resolve its address.", ParamPDC);
+    if (gethostbyname(ParamPDC) == NULL) {
+	syslog(LOG_ERR, "AddServer: Ignoring host '%s'. "
+	    "Cannot resolve its address.", ParamPDC);
 	return;
     }
-    if (gethostbyname(ParamBDC) == (struct hostent *) NULL) {
-	syslog(LOG_USER | LOG_ERR, "AddServer: Ignoring host '%s'. Cannot resolve its address.", ParamBDC);
+    if (gethostbyname(ParamBDC) == NULL) {
+	syslog(LOG_USER | LOG_ERR, "AddServer: Ignoring host '%s'. "
+	    "Cannot resolve its address.", ParamBDC);
 	return;
     }
+    /* NOTE: ServerArray is zeroed in OpenConfigFile() */
+    assert(Serversqueried < MAXSERVERS);
+    strncpy(ServerArray[Serversqueried].pdc, ParamPDC, NTHOSTLEN - 1);
+    strncpy(ServerArray[Serversqueried].bdc, ParamBDC, NTHOSTLEN - 1);
+    strncpy(ServerArray[Serversqueried].domain, ParamDomain, NTHOSTLEN - 1);
     Serversqueried++;
-    strncpy(ServerArray[Serversqueried].pdc, ParamPDC, NTHOSTLEN);
-    strncpy(ServerArray[Serversqueried].bdc, ParamBDC, NTHOSTLEN);
-    strncpy(ServerArray[Serversqueried].domain, ParamDomain, NTHOSTLEN);
-    ServerArray[Serversqueried].pdc[NTHOSTLEN - 1] = '\0';
-    ServerArray[Serversqueried].bdc[NTHOSTLEN - 1] = '\0';
-    ServerArray[Serversqueried].domain[NTHOSTLEN - 1] = '\0';
 }
 
 /*
@@ -192,17 +209,12 @@ AddServer(char *ParamPDC, char *ParamBDC, char *ParamDomain)
 int
 QueryServers(char *username, char *password)
 {
-    int Queryresult = 1;	/* Default result is an error */
-    int x = 1;
-
-    while (x <= Serversqueried) {	/* Query one server. Change Queryresult if user passed. */
-	if (QueryServerForUser(x++, username, password) == 0) {
-	    Queryresult = 0;
-	    break;
-	}
+    int i;
+    for (i = 0; i < Serversqueried; i++) {
+	if (0 == QueryServerForUser(i, username, password))
+	    return 0;
     }
-
-    return Queryresult;
+    return 1;
 }
 
 /*
@@ -216,7 +228,7 @@ QueryServers(char *username, char *password)
 #define LOG_AUTHPRIV LOG_AUTH
 #endif
 
-int
+static int
 QueryServerForUser(int x, char *username, char *password)
 {
     int result = 1;
@@ -228,13 +240,17 @@ QueryServerForUser(int x, char *username, char *password)
     case 0:
 	break;
     case 1:
-	syslog(LOG_AUTHPRIV | LOG_INFO, "Server error when checking %s.", username);
+	syslog(LOG_AUTHPRIV | LOG_INFO, "Server error when checking %s.",
+	    username);
 	break;
     case 2:
-	syslog(LOG_AUTHPRIV | LOG_INFO, "Protocol error when checking %s.", username);
+	syslog(LOG_AUTHPRIV | LOG_INFO, "Protocol error when checking %s.",
+	    username);
 	break;
     case 3:
-	syslog(LOG_AUTHPRIV | LOG_INFO, "Authentication failed for %s.", username);
+	syslog(LOG_AUTHPRIV | LOG_INFO, "Authentication failed for %s.",
+	    username);
+	break;
     }
 
     return result;
