@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.59 1998/11/14 18:46:26 rousskov Exp $
+ * $Id: peer_digest.cc,v 1.60 1998/11/19 22:28:51 rousskov Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -50,6 +50,7 @@ static STCB peerDigestSwapInHeaders;
 static STCB peerDigestSwapInCBlock;
 static STCB peerDigestSwapInMask;
 static int peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const char *step_name);
+static void peerDigestFetchStop(DigestFetchState * fetch, char *buf, const char *reason);
 static void peerDigestFetchAbort(DigestFetchState * fetch, char *buf, const char *reason);
 static void peerDigestReqFinish(DigestFetchState * fetch, char *buf, int, int, int, const char *reason, int err);
 static void peerDigestPDFinish(DigestFetchState * fetch, int pcb_valid, int err);
@@ -383,7 +384,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 	/* must have a ready-to-use store entry if we got here */
 	/* can we stay with the old in-memory digest? */
 	if (status == HTTP_NOT_MODIFIED && fetch->pd->cd)
-	    peerDigestFetchAbort(fetch, buf, "Not modified");
+	    peerDigestFetchStop(fetch, buf, "Not modified");
 	else
 	    storeClientCopy(fetch->entry,	/* have to swap in */
 		0, 0, SM_PAGE_SIZE, buf, peerDigestSwapInHeaders, fetch);
@@ -570,10 +571,24 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
     return reason != NULL;
 }
 
+/* call this when all callback data is valid and fetch must be stopped but
+ * no error has occurred (e.g. we received 304 reply and reuse old digest) */
+static void
+peerDigestFetchStop(DigestFetchState * fetch, char *buf, const char *reason)
+{
+    assert(reason);
+    debug(72, 2) ("peerDigestFetchStop: peer %s, reason: %s\n",
+	strBuf(fetch->pd->host), reason);
+    peerDigestReqFinish(fetch, buf, 1, 1, 1, reason, 0);
+}
+
 /* call this when all callback data is valid but something bad happened */
 static void
 peerDigestFetchAbort(DigestFetchState * fetch, char *buf, const char *reason)
 {
+    assert(reason);
+    debug(72, 2) ("peerDigestFetchAbort: peer %s, reason: %s\n",
+	strBuf(fetch->pd->host), reason);
     peerDigestReqFinish(fetch, buf, 1, 1, 1, reason, 1);
 }
 
