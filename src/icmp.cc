@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.24 1996/10/31 07:30:04 wessels Exp $
+ * $Id: icmp.cc,v 1.25 1996/10/31 18:30:17 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -92,7 +92,7 @@ icmpRecv(int unused1, void *unused2)
 	    commSetSelect(icmp_sock,
 		COMM_SELECT_READ,
 		NULL,
-		NULL,	
+		NULL,
 		0);
 	    comm_close(icmp_sock);
 	    icmp_sock = -1;
