@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.266 2001/10/23 12:14:48 hno Exp $
+ * $Id: acl.cc,v 1.267 2001/10/24 05:46:26 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1102,7 +1102,7 @@ aclMatchUser(void *proxyauth_acl, char *user)
     debug(28, 7) ("aclMatchUser: user is %s, case_insensitive is %d\n",
 	user, data->flags.case_insensitive);
     debug(28, 8) ("Top is %p, Top->data is %s\n", Top,
-	(Top != NULL ? (Top)->data : "Unavailable"));
+	(char *)(Top != NULL ? (Top)->data : "Unavailable"));
 
     if (user == NULL)
 	return 0;
@@ -1117,7 +1117,7 @@ aclMatchUser(void *proxyauth_acl, char *user)
 	Top = splay_splay(user, Top, (SPLAYCMP *) strcmp);
     /* Top=splay_splay(user,Top,(SPLAYCMP *)dumping_strcmp); */
     debug(28, 7) ("aclMatchUser: returning %d,Top is %p, Top->data is %s\n",
-	!splayLastResult, Top, (Top ? Top->data : "Unavailable"));
+	!splayLastResult, Top, (char *)(Top ? Top->data : "Unavailable"));
     data->names = Top;
     return !splayLastResult;
 }
@@ -1149,7 +1149,7 @@ aclCacheMatchAcl(dlink_list * cache, squid_acl acltype, void *data,
     while (link) {
 	auth_match = link->data;
 	if (auth_match->acl_data == data) {
-	    debug(28, 4) ("aclCacheMatchAcl: cache hit on acl '%d'\n", data);
+	    debug(28, 4) ("aclCacheMatchAcl: cache hit on acl '%p'\n", data);
 	    return auth_match->matchrv;
 	}
 	link = link->next;
@@ -1264,7 +1264,7 @@ aclDumpUserMaxIP(void *data)
     char buf[128];
     if (acldata->flags.strict)
 	wordlistAdd(&W, "-s");
-    snprintf(buf, sizeof(buf), "%ld", acldata->max);
+    snprintf(buf, sizeof(buf), "%lu", (unsigned long int)acldata->max);
     wordlistAdd(&W, buf);
     return W;
 }
@@ -2194,7 +2194,7 @@ aclDomainCompare(const void *a, const void *b)
     }
     if (ret == 0) {
 	debug(28, 0) ("WARNING: '%s' is a subdomain of '%s'\n", d1, d2);
-	debug(28, 0) ("WARNING: because of this '%s' is ignored to keep splay tree searching predictable\n", a);
+	debug(28, 0) ("WARNING: because of this '%s' is ignored to keep splay tree searching predictable\n", (char *)a);
 	debug(28, 0) ("WARNING: You should probably remove '%s' from the ACL named '%s'\n", d1, AclMatchedName);
     }
     return ret;
