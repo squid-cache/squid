@@ -1,0 +1,21 @@
+<HTML><HEAD>
+<TITLE>HIBA: A kért URN nem tölthető le</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2"></HEAD><BODY>
+<H1>HIBA</H1>
+<H2>Az URN egy URL-je nem tölthető le</H2>
+<HR>
+<P>
+Az alábbi URN letöltésekor:
+<A HREF="%U">%U</A>
+<P>
+a következő hiba lépett fel:
+<UL>
+<LI>
+<STRONG>
+Az URN-t nem lehet feloldani
+</STRONG>
+</UL>
+
+<P>
+Nem érdemes túl sokat várni a %T-n lévő URN-ektől :)
+</P>

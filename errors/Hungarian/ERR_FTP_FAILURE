@@ -1,0 +1,21 @@
+<HTML><HEAD>
+<TITLE>HIBA: A kért URL nem tölthető le</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2"></HEAD><BODY>
+<H1>HIBA</H1>
+<H2>A kért URL nem tölthető le</H2>
+<HR>
+<P>
+FTP protokoll hiba történt az alábbi URL letöltésekor:
+<A HREF="%U">%U</A>
+<P>
+A Squid az alábbi FTP parancsot küldte:
+<blockquote><strong><pre>%f</pre></strong></blockquote>
+és ezt a választ kapta
+<blockquote><strong><pre>%F</pre></strong></blockquote>
+<blockquote><strong><pre>%g</pre></strong></blockquote>
+<P>
+A hibát lehet hogy az okozta, hogy az FTP URL abszolút elérési utat tartalmaz
+(ami nem felel meg az RFC 1738 előírásnak). Amennyiben az a hiba oka, akkor a
+az állományt a <A HREF="%B">%B</A> címen lehet megtalálni.
+</P>
+

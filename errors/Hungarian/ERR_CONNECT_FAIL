@@ -1,0 +1,25 @@
+<HTML><HEAD>
+<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2"></HEAD><BODY>
+<H1>ERROR</H1>
+<H2>The requested URL could not be retrieved</H2>
+<HR>
+<P>
+While trying to retrieve the URL:
+<A HREF="%U">%U</A>
+<P>
+The following error was encountered:
+<UL>
+<LI>
+<STRONG>
+Connection Failed
+</STRONG>
+</UL>
+
+<P>
+The system returned:
+<PRE><I>    %E</I></PRE>
+
+<P>
+The remote host or network may be down.  Please try the request again.
+</P>

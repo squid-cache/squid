@@ -1,0 +1,23 @@
+<HTML><HEAD>
+<TITLE>HIBA: A kért URL nem tölthető le</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2"></HEAD><BODY>
+<H1>HIBA</H1>
+<H2>A kért URL nem tölthető le</H2>
+<HR>
+<P>
+Az alábbi URL letöltésekor:
+<A HREF="%U">%U</A>
+<P>
+a következő hiba lépett fel:
+<UL>
+<LI>
+<STRONG>
+Nem támogatott kérési metódus és protokoll
+</STRONG>
+</UL>
+
+<P>
+A Squid nem támogat minden kérési metódust minden protokolltípushoz.
+Például nem lehet Gopher protokollhoz POST metódust alkalmazni.
+</P>
+
