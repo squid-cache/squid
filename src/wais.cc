@@ -1,4 +1,4 @@
-/* $Id: wais.cc,v 1.6 1996/03/23 00:03:05 wessels Exp $ */
+/* $Id: wais.cc,v 1.7 1996/03/25 19:05:52 wessels Exp $ */
 
 #include "config.h"
 #if USE_WAIS_RELAY
@@ -55,7 +55,7 @@ void waisReadReplyTimeout(fd, data)
 
     entry = data->entry;
     debug(4, "waisReadReplyTimeout: Timeout on %d\n url: %s\n", fd, entry->url);
-    cached_error(entry, ERR_READ_TIMEOUT);
+    cached_error_entry(entry, ERR_READ_TIMEOUT);
     comm_set_select_handler(fd, COMM_SELECT_READ, 0, 0);
     comm_close(fd);
     safe_free(data);
@@ -70,7 +70,7 @@ void waisLifetimeExpire(fd, data)
 
     entry = data->entry;
     debug(4, "waisLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
-    cached_error(entry, ERR_LIFETIME_EXP);
+    cached_error_entry(entry, ERR_LIFETIME_EXP);
     comm_set_select_handler(fd, COMM_SELECT_READ | COMM_SELECT_WRITE, 0, 0);
     comm_close(fd);
     safe_free(data);
@@ -108,7 +108,7 @@ void waisReadReply(fd, data)
 	    }
 	} else {
 	    /* we can terminate connection right now */
-	    cached_error(entry, ERR_NO_CLIENTS_BIG_OBJ);
+	    cached_error_entry(entry, ERR_NO_CLIENTS_BIG_OBJ);
 	    comm_close(fd);
 	    safe_free(data);
 	    return;
@@ -129,7 +129,7 @@ void waisReadReply(fd, data)
 	    storeAppend(entry, tmp_error_buf, strlen(tmp_error_buf));
 	    storeComplete(entry);
 	} else {
-	    cached_error(entry, ERR_READ_ERROR);
+	    cached_error_entry(entry, ERR_READ_ERROR);
 	}
 	comm_close(fd);
 	safe_free(data);
@@ -171,7 +171,7 @@ void waisSendComplete(fd, buf, size, errflag, data)
     debug(5, "waisSendComplete - fd: %d size: %d errflag: %d\n",
 	fd, size, errflag);
     if (errflag) {
-	cached_error(entry, ERR_CONNECT_FAIL, xstrerror());
+	cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	comm_close(fd);
 	safe_free(data);
     } else {
@@ -230,7 +230,7 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
 
     if (!getWaisRelayHost()) {
 	debug(0, "waisStart: Failed because no relay host defined!\n");
-	cached_error(entry, ERR_NO_RELAY);
+	cached_error_entry(entry, ERR_NO_RELAY);
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -243,7 +243,7 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
     sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
     if (sock == COMM_ERROR) {
 	debug(4, "waisStart: Failed because we're out of sockets.\n");
-	cached_error(entry, ERR_NO_FDS);
+	cached_error_entry(entry, ERR_NO_FDS);
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -253,7 +253,7 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
     if (!ipcache_gethostbyname(data->host)) {
 	debug(4, "waisstart: Called without IP entry in ipcache. OR lookup failed.\n");
 	comm_close(sock);
-	cached_error(entry, ERR_DNS_FAIL, dns_error_message);
+	cached_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
 	safe_free(data);
 	return COMM_ERROR;
     }
@@ -261,7 +261,7 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
     if ((status = comm_connect(sock, data->host, data->port))) {
 	if (status != EINPROGRESS) {
 	    comm_close(sock);
-	    cached_error(entry, ERR_CONNECT_FAIL, xstrerror());
+	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	    safe_free(data);
 	    return COMM_ERROR;
 	} else {
