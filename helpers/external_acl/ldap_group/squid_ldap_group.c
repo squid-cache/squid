@@ -39,6 +39,9 @@
 #include <ctype.h>
 #include <lber.h>
 #include <ldap.h>
+#if defined(LDAP_OPT_NETWORK_TIMEOUT)
+#include <sys/time.h>
+#endif
 
 #define PROGRAM_NAME "squid_ldap_group"
 
@@ -207,7 +210,7 @@ strwordtok(char *buf, char **t)
 int
 main(int argc, char **argv)
 {
-    char buf[256];
+    char buf[8192];
     char *user, *group, *extension_dn = NULL;
     char *ldapServer = NULL;
     LDAP *ld = NULL;

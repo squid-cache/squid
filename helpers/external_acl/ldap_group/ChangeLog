@@ -1,3 +1,8 @@
+Version 2.13
+
+2003-01-05 Henrik Nordstrom <hno@squid-cache.org>
+	Corrected TLS mode (-Z)
+
 Version 2.12
 
 2003-03-01 Christoph Lechleitner <lech@ibcl.at>
