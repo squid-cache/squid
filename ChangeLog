@@ -1,3 +1,10 @@
+	- Fixed poll() for Linux (David Luyer).
+	- SHA optimizations (David Luyer).
+	- Fixed errno clashes with macro on Linux (David Luyer).
+	- Fixed storeDirCloseSwapLogs(); logs might not be open.
+	- Fixed storeClientCopy2() bug.  Detect when there is
+	  no more data to send for objects in STORE_OK state.
+
 Changes to squid-1.2.beta6 (Nov 13, 1997):
 
 	- Fixed Authorized responses getting swapped out when they
