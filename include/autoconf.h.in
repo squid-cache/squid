@@ -266,6 +266,12 @@
 #undef IPF_TRANSPARENT
 
 /*
+ * Enable support for Transparent Proxy on systems using PF address
+ * redirection. This provides "masquerading" support for OpenBSD.
+ */
+#undef PF_TRANSPARENT
+
+/*
  * Enable code for assiting in finding memory leaks.  Hacker stuff only.
  */
 #undef USE_LEAKFINDER
@@ -367,22 +373,6 @@
 
 #undef u_int64_t
 
-/*
- * Enable support for the X-Accelerator-Vary HTTP header
- */
-#undef X_ACCELERATOR_VARY
-
-/* Support for poll/select/etc stuff */
-#undef USE_POLL
-#undef USE_SELECT
-#undef USE_KQUEUE
-
-/* The number of bytes in a __int64.  */
-#undef SIZEOF___INT64
-
-/* The number of bytes in a int.  */
-#undef SIZEOF_INT
-
 /* The number of bytes in a int16_t.  */
 #undef SIZEOF_INT16_T
 
@@ -392,14 +382,11 @@
 /* The number of bytes in a int64_t.  */
 #undef SIZEOF_INT64_T
 
-/* The number of bytes in a long.  */
-#undef SIZEOF_LONG
+/* The number of bytes in a off_t.  */
+#undef SIZEOF_OFF_T
 
-/* The number of bytes in a long long.  */
-#undef SIZEOF_LONG_LONG
-
-/* The number of bytes in a short.  */
-#undef SIZEOF_SHORT
+/* The number of bytes in a size_t.  */
+#undef SIZEOF_SIZE_T
 
 /* The number of bytes in a u_int16_t.  */
 #undef SIZEOF_U_INT16_T
@@ -410,14 +397,27 @@
 /* The number of bytes in a u_int64_t.  */
 #undef SIZEOF_U_INT64_T
 
-/* The number of bytes in a uint16_t.  */
-#undef SIZEOF_UINT16_T
+/*
+ * Enable support for the X-Accelerator-Vary HTTP header
+ */
+#undef X_ACCELERATOR_VARY
 
-/* The number of bytes in a uint32_t.  */
-#undef SIZEOF_UINT32_T
+/* Support for poll/select/etc stuff */
+#undef USE_POLL
+#undef USE_SELECT
+#undef USE_KQUEUE
 
-/* The number of bytes in a uint64_t.  */
-#undef SIZEOF_UINT64_T
+/* The number of bytes in a int.  */
+#undef SIZEOF_INT
+
+/* The number of bytes in a long.  */
+#undef SIZEOF_LONG
+
+/* The number of bytes in a long long.  */
+#undef SIZEOF_LONG_LONG
+
+/* The number of bytes in a short.  */
+#undef SIZEOF_SHORT
 
 /* The number of bytes in a void *.  */
 #undef SIZEOF_VOID_P
@@ -662,6 +662,9 @@
 /* Define if you have the <net/if.h> header file.  */
 #undef HAVE_NET_IF_H
 
+/* Define if you have the <net/pfvar.h> header file.  */
+#undef HAVE_NET_PFVAR_H
+
 /* Define if you have the <netdb.h> header file.  */
 #undef HAVE_NETDB_H
 
@@ -821,6 +824,9 @@
 /* Define if you have the bsd library (-lbsd).  */
 #undef HAVE_LIBBSD
 
+/* Define if you have the dl library (-ldl).  */
+#undef HAVE_LIBDL
+
 /* Define if you have the gnumalloc library (-lgnumalloc).  */
 #undef HAVE_LIBGNUMALLOC
 
@@ -836,8 +842,14 @@
 /* Define if you have the nsl library (-lnsl).  */
 #undef HAVE_LIBNSL
 
+/* Define if you have the pthread library (-lpthread).  */
+#undef HAVE_LIBPTHREAD
+
 /* Define if you have the resolv library (-lresolv).  */
 #undef HAVE_LIBRESOLV
+
+/* Define if you have the rt library (-lrt).  */
+#undef HAVE_LIBRT
 
 /* Define if you have the socket library (-lsocket).  */
 #undef HAVE_LIBSOCKET
