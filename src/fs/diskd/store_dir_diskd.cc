@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.55 2001/10/17 15:00:54 hno Exp $
+ * $Id: store_dir_diskd.cc,v 1.56 2001/10/17 19:33:06 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -363,7 +363,7 @@ storeDiskdDirInit(SwapDir * sd)
     int i;
     int rfd;
     int ikey;
-    char *args[5];
+    const char *args[5];
     char skey1[32];
     char skey2[32];
     char skey3[32];
