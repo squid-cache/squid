@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.69 1998/08/05 07:12:27 wessels Exp $
+ * $Id: debug.cc,v 1.70 1998/08/19 22:23:48 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -84,7 +84,7 @@ _db_print(va_alist)
     if (_db_level <= 1 && opt_syslog_enable) {
 	tmpbuf[0] = '\0';
 	vsnprintf(tmpbuf, BUFSIZ, format, args);
-	tmpbuf[1023] = '\0';
+	tmpbuf[BUFSIZ-1] = '\0';
 	syslog(_db_level == 0 ? LOG_WARNING : LOG_NOTICE, "%s", tmpbuf);
     }
 #endif /* HAVE_SYSLOG */
