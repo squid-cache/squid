@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.226 2001/10/01 12:46:13 hno Exp $
+# $Id: cf.data.pre,v 1.227 2001/10/01 18:28:04 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -19,12 +19,12 @@
 #  it under the terms of the GNU General Public License as published by
 #  the Free Software Foundation; either version 2 of the License, or
 #  (at your option) any later version.
-#  
+#
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-#  
+#
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -528,7 +528,7 @@ DOC_START
 	SIZE.  IT PLACES A LIMIT ON ONE ASPECT OF SQUID'S MEMORY
 	USAGE.  SQUID USES MEMORY FOR OTHER THINGS AS WELL.
 	YOUR PROCESS WILL PROBABLY BECOME TWICE OR THREE TIMES
-	BIGGER THAN THE VALUE YOU PUT HERE 
+	BIGGER THAN THE VALUE YOU PUT HERE
 
 	'cache_mem' specifies the ideal amount of memory to be used
 	for:
@@ -689,7 +689,7 @@ DOC_START
 
 	NOTE: if using the LFUDA replacement policy you should increase
 	the value of maximum_object_size above its default of 4096 KB to
-	to maximize the potential byte hit rate improvement of LFUDA.  
+	to maximize the potential byte hit rate improvement of LFUDA.
 
 	For more information about the GDSF and LFUDA cache replacement
 	policies see http://www.hpl.hp.com/techreports/1999/HPL-1999-69.html
@@ -849,7 +849,7 @@ DOC_START
 	a representation of the cache_dir name where each / is replaced
 	with '.'. This is needed to allow adding/removing cache_dir
 	lines when cache_swap_log is being used.
-	    
+	
 	If have more than one 'cache_dir', and %s is not used in the name
 	then these swap logs will have names such as:
 
@@ -972,7 +972,7 @@ DOC_START
 	in the access.log. To do this Squid does a DNS lookup of all
 	IP's connecting to it. This can (in some situations) increase
 	latency, which makes your cache seem slower for interactive
-	browsing. 
+	browsing.
 DOC_END
 
 
@@ -1220,7 +1220,7 @@ DOC_START
 
 	Once an authentication scheme is fully configured, it can only be shutdown
 	by shutting squid down and restarting. Changes can be made on the fly and
-	activated with a reconfigure. I.E. You can change to a different helper, 
+	activated with a reconfigure. I.E. You can change to a different helper,
 	but not unconfigure the helper completely.
 
 	=== Parameters for the basic scheme follow. ===
@@ -1258,7 +1258,7 @@ DOC_START
 
 	"credentialsttl" timetolive
 	Specifies how long squid assumes an externally validated username:password
-	pair is valid for - in other words how often the helper program is called 
+	pair is valid for - in other words how often the helper program is called
 	for that user. Set this low to force revalidation with short lived passwords.
 	Note that setting this high does not impact your susceptability to replay
 	attacks unless you are using a one-time password system (such as SecureID).
@@ -1272,11 +1272,11 @@ DOC_START
 	program reads a line containing "username":"realm" and replies
 	with the appropriate H(A1) value base64 encoded. See rfc 2616 for
 	the definition of H(A1).  If you use an authenticator,
-	make sure you have 1 acl of type proxy_auth.  By default, 
+	make sure you have 1 acl of type proxy_auth.  By default,
 	authentication is not used.
 
 	If you want to use build a authenticator,
-	jump over to the ../digest_auth_modules directory and choose the 
+	jump over to the ../digest_auth_modules directory and choose the
 	authenticator to use. It it's directory type
         	% make
 	        % make install
@@ -1290,7 +1290,7 @@ DOC_START
 	The number of authenticator processes to spawn (no default). If you
 	start too few Squid will have to wait for them to process a backlog
 	of H(A1) calculations, slowing it down. When the H(A1) calculations
-	are done via a (slow) network you are likely to need lots of 
+	are done via a (slow) network you are likely to need lots of
 	authenticator processes.
 	auth_param digest children 5
 
@@ -1305,7 +1305,7 @@ DOC_START
 	are checked for validity.
 
 	"nonce_max_duration" timeinterval
-	Specifies the maximum length of time a given nonce will be valid for. 
+	Specifies the maximum length of time a given nonce will be valid for.
 
 	"nonce_max_count" number
 	Specifies the maximum number of times a given nonce can be used.
@@ -1332,15 +1332,15 @@ DOC_START
 
 	"max_challenge_reuses" number
 	The maximum number of times a challenge given by a ntlm authentication
-	helper can be reused. Increasing this number increases your exposure 
-	to replay attacks on your network. 0 means use the challenge only once. 
+	helper can be reused. Increasing this number increases your exposure
+	to replay attacks on your network. 0 means use the challenge only once.
 	(disable challenge caching)
 	See max_ntlm_challenge_lifetime for more information.
 	auth_param ntlm max_challenge_reuses 0
 
 	"max_challenge_lifetime" timespan
 	The maximum time period that a ntlm challenge is reused over.
-	The actual period will be the minimum of this time AND the number of 
+	The actual period will be the minimum of this time AND the number of
 	reused challenges.
 	auth_param ntlm max_challenge_lifetime 2 minutes
 
@@ -1368,7 +1368,7 @@ TYPE: time_t
 DEFAULT: 1 hour
 LOC: Config.authenticateGCInterval
 DOC_START
-	The time period between garbage collection across the username cache. 
+	The time period between garbage collection across the username cache.
 	This is a tradeoff between memory utilisation (long intervals - say
 	2 days) and CPU (short intervals - say 1 minute). Only change if
 	you have good reason to.
@@ -1850,11 +1850,11 @@ DOC_START
 	acl aclname ident_regex [-i] pattern ...
 	  # string match on ident output.
 	  # use REQUIRED to accept any non-null ident.
-	acl aclname src_as   number ... 
+	acl aclname src_as   number ...
 	acl aclname dst_as   number ...
 	  # Except for access control, AS numbers can be used for
-	  # routing of requests to specific caches. Here's an 
-	  # example for routing all requests for AS#1241 and only 
+	  # routing of requests to specific caches. Here's an
+	  # example for routing all requests for AS#1241 and only
 	  # those to mycache.mydomain.net:
 	  # acl asexample dst_as 1241
 	  # cache_peer_access mycache.mydomain.net allow asexample
@@ -1880,7 +1880,7 @@ DOC_START
 	acl aclname snmp_community string ...
 	  # A community string to limit access to your SNMP Agent
 	  # Example:
-	  # 
+	  #
 	  #	acl snmppublic snmp_community public
 
 	acl aclname maxconn number
@@ -1888,10 +1888,10 @@ DOC_START
 	  # more than <number> HTTP connections established.
 
 	acl aclname max_user_ip
-	  # This will be matched when the user attempts to log in from more 
+	  # This will be matched when the user attempts to log in from more
 	  # than <number> different ip address's. The authenticate_ip_ttl
 	  # parameter controls the timeout on the ip entries.
-	  # NOTE: in acceleration mode, clients may appear to come from 
+	  # NOTE: in acceleration mode, clients may appear to come from
 	  # multiple address's if they are going through proxy farms,
 	  # so a limit of 1 may cause user problems.
 
@@ -1989,7 +1989,7 @@ DOC_START
 
         http_reply_access allow|deny [!] aclname ...
 
-        NOTE: if there are no access lines present, the default is to allow 
+        NOTE: if there are no access lines present, the default is to allow
 	all replies
 
         If none of the access lines cause a match, then the opposite of the
@@ -2084,7 +2084,7 @@ DOC_START
 
 	To enable ident lookups for specific client addresses, you
 	can follow this example:
- 
+
 	acl ident_aware_hosts src 198.168.1.0/255.255.255.0
 	ident_lookup_access allow ident_aware_hosts
 	ident_lookup_access deny all
@@ -2119,7 +2119,7 @@ DOC_START
 	partial responses and give them out as hits.  You should NOT
 	use this option if you have downstream caches.
 
-	WARNING: A maximum size larger than the size of squid's error messages 
+	WARNING: A maximum size larger than the size of squid's error messages
 	will cause an infinite loop and crash squid. Ensure that the smallest
 	non-zero value you use is greater that the maximum header size plus
 	the size of your largest error page.
@@ -2453,7 +2453,7 @@ LOC: Config.onoff.mem_pools
 DOC_START
 	If set, Squid will keep pools of allocated (but unused) memory
 	available for future use.  If memory is a premium on your
-	system and you believe your malloc library outperforms Squid 
+	system and you believe your malloc library outperforms Squid
 	routines, disable this.
 DOC_END
 
@@ -2806,7 +2806,7 @@ LOC: Config.header_access
 DEFAULT: none
 DOC_START
 	Usage: header_access header_name allow|deny [!]aclname ...
-  
+
 	This option replaces the old 'anonymize_headers' and the
 	older 'http_anonymizer' option with something that is much
 	more configurable. This new method creates a list of ACLs
@@ -2816,10 +2816,10 @@ DOC_START
 	You can only specify known headers for the header name.
 	Other headers are reclassified as 'Other'. You can also
 	refer to all the headers with 'All'.
-  
+
 	For example, to achieve the same behaviour as the old
 	'http_anonymizer standard' option, you should use:
-  
+
 		header_access From deny all
 		header_access Referer deny all
 		header_access Server deny all
@@ -2829,7 +2829,7 @@ DOC_START
 
 	Or, to reproduce the old 'http_anonymizer paranoid' feature
 	you should use:
-  
+
 		header_access Allow allow all
 		header_access Authorization allow all
 		header_access Cache-Control allow all
@@ -2854,7 +2854,7 @@ DOC_START
 		header_access Connection allow all
 		header_access Proxy-Connection allow all
 		header_access All deny all
-  
+
 	By default, all headers are allowed (no anonymizing is
 	performed).
 DOC_END
@@ -2866,12 +2866,12 @@ DEFAULT: none
 DOC_START
 	Usage:   header_replace header_name message
 	Example: header_replace User-Agent Nutscrape/1.0 (CP/M; 8-bit)
-  
+
 	This option allows you to change the contents of headers
 	denied with header_access above, by replacing them with
 	some fixed string. This replaces the old fake_user_agent
 	option.
-  
+
 	By default, headers are removed if denied.
 DOC_END
 
@@ -3662,15 +3662,14 @@ TYPE: int
 LOC: Config.sleep_after_fork
 DEFAULT: 0
 DOC_START
-	When this is set to a non-zero value, the main Squid process 
-	sleeps the specified number of microseconds after a fork() 
-	system call. This sleep may help the situation where your 
-	system reports fork() failures due to lack of (virtual) 
-	memory. Note, however, that if you have a lot of child 
-	processes, then these sleep delays will add up and your 
-	Squid will not service requests for some amount of time 
-	until all the child processes have been started. 
+	When this is set to a non-zero value, the main Squid process
+	sleeps the specified number of microseconds after a fork()
+	system call. This sleep may help the situation where your
+	system reports fork() failures due to lack of (virtual)
+	memory. Note, however, that if you have a lot of child
+	processes, then these sleep delays will add up and your
+	Squid will not service requests for some amount of time
+	until all the child processes have been started.
 DOC_END
 
 EOF
-
