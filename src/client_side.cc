@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.444 1999/04/23 23:01:23 wessels Exp $
+ * $Id: client_side.cc,v 1.445 1999/04/26 21:04:42 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -81,8 +81,8 @@ static int clientOnlyIfCached(clientHttpRequest * http);
 static STCB clientSendMoreData;
 static STCB clientCacheHit;
 static void clientSetKeepaliveFlag(clientHttpRequest *);
-static void clientPackRangeHdr(const HttpReply *rep, const HttpHdrRangeSpec *spec, String boundary, MemBuf *mb);
-static void clientPackTermBound(String boundary, MemBuf *mb);
+static void clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String boundary, MemBuf * mb);
+static void clientPackTermBound(String boundary, MemBuf * mb);
 static void clientInterpretRequestHeaders(clientHttpRequest *);
 static void clientProcessRequest(clientHttpRequest *);
 static void clientProcessExpired(void *data);
@@ -990,7 +990,8 @@ clientIfRangeMatch(clientHttpRequest * http, HttpReply * rep)
  *          time of the actuall assembly will be exactly the same as
  *          the headers when clientMRangeCLen() is called */
 static int
-clientMRangeCLen(clientHttpRequest * http) {
+clientMRangeCLen(clientHttpRequest * http)
+{
     int clen = 0;
     HttpHdrRangePos pos = HttpHdrRangeInitPos;
     const HttpHdrRangeSpec *spec;
@@ -1362,7 +1363,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 
 /* put terminating boundary for multiparts */
 static void
-clientPackTermBound(String boundary, MemBuf *mb)
+clientPackTermBound(String boundary, MemBuf * mb)
 {
     memBufPrintf(mb, "\r\n--%s--\r\n", strBuf(boundary));
     debug(33, 6) ("clientPackTermBound: buf offset: %d\n", mb->size);
@@ -1370,7 +1371,7 @@ clientPackTermBound(String boundary, MemBuf *mb)
 
 /* appends a "part" HTTP header (as in a multi-part/range reply) to the buffer */
 static void
-clientPackRangeHdr(const HttpReply *rep, const HttpHdrRangeSpec *spec, String boundary, MemBuf *mb)
+clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String boundary, MemBuf * mb)
 {
     HttpHeader hdr;
     Packer p;
@@ -1385,7 +1386,7 @@ clientPackRangeHdr(const HttpReply *rep, const HttpHdrRangeSpec *spec, String bo
     /* stuff the header with required entries and pack it */
     httpHeaderInit(&hdr, hoReply);
     if (httpHeaderHas(&rep->header, HDR_CONTENT_TYPE))
-        httpHeaderPutStr(&hdr, HDR_CONTENT_TYPE, httpHeaderGetStr(&rep->header, HDR_CONTENT_TYPE));
+	httpHeaderPutStr(&hdr, HDR_CONTENT_TYPE, httpHeaderGetStr(&rep->header, HDR_CONTENT_TYPE));
     httpHeaderAddContRange(&hdr, *spec, rep->content_length);
     packerToMemInit(&p, mb);
     httpHeaderPackInto(&hdr, &p);
@@ -1413,13 +1414,12 @@ clientPackRange(clientHttpRequest * http, HttpHdrRangeIter * i, const char **buf
     if (http->request->range->specs.count > 1 && i->debt_size == i->spec->length) {
 	assert(http->entry->mem_obj);
 	clientPackRangeHdr(
-	    http->entry->mem_obj->reply, /* original reply */
-	    i->spec,                     /* current range */
-	    i->boundary,                 /* boundary, the same for all */
+	    http->entry->mem_obj->reply,	/* original reply */
+	    i->spec,		/* current range */
+	    i->boundary,	/* boundary, the same for all */
 	    mb
-	);
+	    );
     }
-
     /* append content */
     debug(33, 3) ("clientPackRange: appending %d bytes\n", copy_sz);
     memBufAppend(mb, *buf, copy_sz);

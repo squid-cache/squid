@@ -1,7 +1,7 @@
 
 /*
- * $Id: main.cc,v 1.296 1999/04/26 20:44:09 glenn Exp $
- * $Id: main.cc,v 1.296 1999/04/26 20:44:09 glenn Exp $
+ * $Id: main.cc,v 1.297 1999/04/26 21:04:45 wessels Exp $
+ * $Id: main.cc,v 1.297 1999/04/26 21:04:45 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -472,7 +472,7 @@ mainInitialize(void)
 	unlinkdInit();
 	urlInitialize();
 	cachemgrInit();
-	eventInit();	/* eventInit() before statInit() */
+	eventInit();		/* eventInit() before statInit() */
 	statInit();
 	storeInit();
 	mainSetCwd();
@@ -520,7 +520,7 @@ mainInitialize(void)
 	eventAdd("ipcache_purgelru", ipcache_purgelru, NULL, 10.0, 1);
 	eventAdd("fqdncache_purgelru", fqdncache_purgelru, NULL, 15.0, 1);
 #ifdef WCCP
-	if(Config.Wccp.router.s_addr != inet_addr("0.0.0.0"))
+	if (Config.Wccp.router.s_addr != inet_addr("0.0.0.0"))
 	    eventAdd("wccpHereIam", wccpHereIam, NULL, 10.0, 1);
 #endif
     }
