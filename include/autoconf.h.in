@@ -389,6 +389,9 @@
 /* Define if you have the seteuid function.  */
 #undef HAVE_SETEUID
 
+/* Define if you have the setgroups function.  */
+#undef HAVE_SETGROUPS
+
 /* Define if you have the setpgrp function.  */
 #undef HAVE_SETPGRP
 
@@ -502,6 +505,9 @@
 
 /* Define if you have the <netdb.h> header file.  */
 #undef HAVE_NETDB_H
+
+/* Define if you have the <netinet/if_ether.h> header file.  */
+#undef HAVE_NETINET_IF_ETHER_H
 
 /* Define if you have the <netinet/in.h> header file.  */
 #undef HAVE_NETINET_IN_H
