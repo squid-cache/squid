@@ -33,10 +33,15 @@ static STCB urnHandleReply;
 static wordlist *urnParseReply(const char *inbuf);
 static const char *const crlf = "\r\n";
 
+enum {
+	URN_FORCE_MENU
+};
+
 typedef struct {
 	StoreEntry *entry;
 	StoreEntry *urlres_e;
 	request_t *request;
+	int flags;
 } UrnState;
 
 wordlist *
@@ -89,22 +94,24 @@ urnStart(request_t *r, StoreEntry *e)
     UrnState *urnState;
     StoreEntry *urlres_e;
     debug(50, 3) ("urnStart: '%s'\n", storeUrl(e));
-    t = strchr(r->urlpath, ':');
-    if (t == NULL) {
-        ErrorState *err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND);
-	err->request = requestLink(r);
-	err->url = xstrdup(storeUrl(e));
-	errorAppendEntry(e, err);
-	return;
-    }
-    *t = '\0';
-    host = xstrdup(r->urlpath);
-    *t = ':';
     urnState = xcalloc(1, sizeof(UrnState));
     urnState->entry = e;
     urnState->request = requestLink(r);
     cbdataAdd(urnState);
     storeLockObject(urnState->entry);
+    if ((t = strchr(r->urlpath, ':')) != NULL) {
+    	*t = '\0';
+    	host = xstrdup(r->urlpath);
+    	*t = ':';
+    } else {
+	host = xstrdup(r->urlpath);
+    }
+    if (strncasecmp(host, "menu.", 5) == 0) {
+	EBIT_SET(urnState->flags, URN_FORCE_MENU);
+	t = xstrdup(host + 5);
+	xfree(host);
+	host = t;
+    }
     snprintf(urlres, 4096, "http://%s/uri-res/N2L?urn:%s", host, r->urlpath);
     safe_free(host);
     k = storeKeyPublic(urlres, METHOD_GET);
@@ -225,7 +232,9 @@ urnHandleReply(void *data, char *buf, ssize_t size)
 	squid_curtime);
     storeAppend(e, hdr, strlen(hdr));
     httpParseReplyHeaders(hdr, e->mem_obj->reply);
-    if (min_w) {
+    if (EBIT_TEST(urnState->flags, URN_FORCE_MENU)) {
+	debug(51,3)("urnHandleReply: forcing menu\n");
+    } else if (min_w) {
 	l = snprintf(line, 4096, "Location: %s\r\n", min_w->key);
         storeAppend(e, line, l);
     }
