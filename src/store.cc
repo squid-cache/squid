@@ -1,5 +1,5 @@
 
-/* $Id: store.cc,v 1.10 1996/03/27 01:46:23 wessels Exp $ */
+/* $Id: store.cc,v 1.11 1996/03/27 04:42:09 wessels Exp $ */
 
 /* 
  * Here is a summary of the routines which change mem_status and swap_status:
@@ -2344,7 +2344,7 @@ int urlcmp(url1, url2)
      char *url1, *url2;
 {
     if (!url1 || !url2)
-	death();
+	fatal_dump("urlcmp: Got a NULL url pointer.\n");
     return (strcmp(url1, url2));
 }
 
