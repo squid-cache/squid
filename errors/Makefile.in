@@ -14,7 +14,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.40 2003/02/06 09:59:52 robertc Exp $
+# $Id: Makefile.in,v 1.41 2003/02/12 01:10:59 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -101,6 +101,7 @@ REPL_LIBS = @REPL_LIBS@
 REPL_OBJS = @REPL_OBJS@
 REPL_POLICIES = @REPL_POLICIES@
 RM = @RM@
+SAMBASOURCES = @SAMBASOURCES@
 SH = @SH@
 SNMPLIB = @SNMPLIB@
 SSLLIB = @SSLLIB@
