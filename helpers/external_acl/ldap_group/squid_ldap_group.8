@@ -4,7 +4,7 @@
 squid_ldap_group - Squid LDAP external acl group helper
 .
 .SH SYNOPSIS
-squid_ldap_auth -b "base DN" -f "LDAP search filter" [options] [ldap_server_name[:port]...]
+squid_ldap_group -b "base DN" -f "LDAP search filter" [options] [ldap_server_name[:port]...]
 .
 .SH DESCRIPTION
 This helper allows Squid to connect to a LDAP directory to
@@ -18,17 +18,36 @@ is found it is determined that the user belongs to the group.
 .BI "-b " "basedn " (REQUIRED)
 Specifies the base DN under which the groups are located.
 .
-.TB
+.TP
+.BI "-B " "basedn "
+Specifies the base DN under which the users are located (if different)
+.
+.TP
 .B "-g"
 Specifies that the first query argument sent to the helper by Squid is
-a additional RDN that will be added to the basedn for this query.
+a extension to the basedn and will be temporarily added infront of the
+global basedn for this query.
+.
 .TP
 .BI "-f " filter
 LDAP search filter used to search the LDAP directory for any
 matching group memberships.
 .BR
-In the filter %v will be replaces by the user login name
-and %a by the requested group name.
+In the filter %u will be replaced by the user login name (or DN if
+the -F or -u options are used) and %g by the requested group name.
+.
+.TP
+.BI "-F " filter
+LDAP search filter used to search the LDAP directory for any
+matching users.
+.BR
+In the filter %s will be replaced by the user login name. If % is to be
+included literally in the filter then use %%.
+.
+.TP
+.BI "-u " attr
+LDAP attribute used to construct the user DN from the login name and
+base dn.
 .
 .TP
 .BI "-s " base|one|sub
@@ -85,6 +104,25 @@ Specify the LDAP server to connect to
 Specify an alternate TCP port where the ldap server is listening if
 other than the default LDAP port 389.
 .
+.TP
+.BI -S
+Strip NT domain name component from usernames (/ or \\ separated)
+.
+.SH SQUID CONFIGURATION
+.
+This helper is intended to be used as a external_acl_type helper from
+squid.conf.
+.P
+.ft CR
+.nf
+external_acl_type ldap_group %LOGIN /path/to/squid_ldap_group ...
+.br
+acl group1 ldap_group Group1
+.br
+acl group2 ldap_gorup Group2
+.fi
+.ft
+.
 .SH NOTES
 .
 When constructing search filters it is strongly recommended to test the filter
@@ -103,11 +141,7 @@ based on prior work in squid_ldap_auth by
 .I Glen Newton <glen.newton@nrc.ca>
 .
 .SH KNOWN LIMITATIONS
-The program assumes that the loginname is in the group member attribute.
-If the loginname cannot be found in a attribute of the groups then
-squid_ldap_group won't be able to find the group memberships. The program
-really should search for the user DN like squid_ldap_auth and then use this
-when matching groups.
+Max 16 occurances of %s in the -u argument is supported.
 .
 .SH QUESTIONS
 Any questions on usage can be sent to 

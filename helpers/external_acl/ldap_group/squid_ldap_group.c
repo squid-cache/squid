@@ -1,25 +1,60 @@
 /*
- * squid_ldap_match: lookup group membership in LDAP
+ * squid_ldap_group: lookup group membership in LDAP
+ *
+ * (C)2002 MARA Systems AB
+ *
+ * License: squid_ldap_group is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2,
+ * or (at your option) any later version.
  * 
- * Author: Flavio Pescuma <flavio@marasystems.com>
- *         MARA Systems AB, Sweden <http://www.marasystems.com>
+ * Authors:
+ *  Flavio Pescuma <flavio@marasystems.com>
+ *  Henriok Nordstrom <hno@marasystems.com>
+ *  MARA Systems AB, Sweden <http://www.marasystems.com>
  *
- * URL: http://marasystems.com/download/LDAP_Group/
+ * With contributions from others mentioned in the change histor section
+ * below.
  *
- * Based on squid_ldap_auth by Glen Newton
+ * In part based on squid_ldap_auth by Glen Newton and Henrik Nordstrom.
+ *
+ * Latest version of this program can always be found from MARA Systems
+ * at http://marasystems.com/download/LDAP_Group/
  * 
  * Dependencies: You need to get the OpenLDAP libraries
- * from http://www.openldap.org
+ * from http://www.openldap.org or use another compatible
+ * LDAP C-API library.
  *
  * If you want to make a TLS enabled connection you will also need the
  * OpenSSL libraries linked into openldap. See http://www.openssl.org/
  * 
- * License: squid_ldap_match is free software; you can redistribute it 
+ * License: squid_ldap_group is free software; you can redistribute it 
  * and/or modify it under the terms of the GNU General Public License 
  * as published by the Free Software Foundation; either version 2, 
  * or (at your option) any later version.
  *
- * Changes:
+ * History:
+ *
+ * Version 2.8
+ * 2002-11-27 Henrik Nordstrom <hno@marasystems.com>
+ * 		Replacement for ldap_build_filter. Also changed
+ * 		the % codes to %u (user) and %g (group) which
+ * 		is a bit more intuitive.
+ * 2002-11-21 Gerard Eviston
+ * 		Fix ldap_search_s error management. This fixes
+ * 		a core dump if there is a LDAP search filter
+ * 		syntax error (possibly caused by malformed input).
+ * Version 2.7
+ * 2002-10-22: Henrik Nordstrom <hno@marasystems.com>
+ * 		strwordtok bugfix
+ * Version 2.6
+ * 2002-09-21: Gerard Eviston
+ * 		-S option to strip NT domain names from
+ * 		login names
+ * Version 2.5
+ * 2002-09-09: Henrik Nordstrom <hno@marasystems.com>
+ * 		Added support for user DN lookups
+ * 		(-u -B -F options)
  * Version 2.4
  * 2002-09-06: Henrik Nordstrom <hno@marasystems.com>
  * 		Many bugfixes in connection management
@@ -33,7 +68,7 @@
  * Version 2.2
  * 2002-09-04: Henrik Nordstrom <hno@marasystems.com>
  *              Merged changes from squid_ldap_auth.c
- *              - TLS support
+ *              - TLS support (Michael Cunningham)
  *              - -p option to specify port
  *              Documented the % codes to use in -f
  * Version 2.1
@@ -44,11 +79,11 @@
  *              Added optional third query argument for search RDN
  * 2002-01-22: Henrik Nordstrom <hno@marasystems.com>
  *              Removed unused options, and fully changed name
- *              to squid_ldap_match.
+ *              to squid_ldap_group.
  * Version 1.0
  * 2001-07-17: Flavio Pescuma <flavio@marasystems.com>
  *              Using the main function from squid_ldap_auth
- *              wrote squid_ldap_match. This program replaces 
+ *              wrote squid_ldap_group. This program replaces 
  *              the %a and %v (ldapfilter.conf) from the filter 
  *              template supplied with -f with the two arguments 
  *              sent by squid. Returns OK if the ldap_search 
@@ -87,9 +122,15 @@
 #include <ldap_cdefs.h>
 #include <ldap.h>
 
-/* Change this to your search base */
-static char *basedn;
+#define PROGRAM_NAME "squid_ldap_group"
+
+/* Globals */
+
+static char *basedn = NULL;
 static char *searchfilter = NULL;
+static char *userbasedn = NULL;
+static char *userdnattr = NULL;
+static char *usersearchfilter = NULL;
 static char *binddn = NULL;
 static char *bindpasswd = NULL;
 static int searchscope = LDAP_SCOPE_SUBTREE;
@@ -102,7 +143,7 @@ static int aliasderef = LDAP_DEREF_NEVER;
 static int use_tls = 0;
 static int version = -1;
 
-static int searchLDAP(LDAP * ld, char *group, char *user, char *grouprdn);
+static int searchLDAP(LDAP * ld, char *group, char *user, char *extension_dn);
 
 /* Yuck.. we need to glue to different versions of the API */
 
@@ -125,15 +166,11 @@ squid_ldap_set_referrals(LDAP * ld, int referrals)
     int *value = referrals ? LDAP_OPT_ON : LDAP_OPT_OFF;
     ldap_set_option(ld, LDAP_OPT_REFERRALS, value);
 }
-
-#if UNUSED
 static void 
 squid_ldap_memfree(char *p)
 {
     ldap_memfree(p);
 }
-
-#endif
 #else
 static int 
 squid_ldap_errno(LDAP * ld)
@@ -153,14 +190,11 @@ squid_ldap_set_referrals(LDAP * ld, int referrals)
     else
 	ld->ld_options &= ~LDAP_OPT_REFERRALS;
 }
-#if UNUSED
 static void 
 squid_ldap_memfree(char *p)
 {
     free(p);
 }
-
-#endif
 #endif
 
 static char *
@@ -212,12 +246,13 @@ int
 main(int argc, char **argv)
 {
     char buf[256];
-    char *user, *group, *grouprdn = NULL;
+    char *user, *group, *extension_dn = NULL;
     char *ldapServer = NULL;
     LDAP *ld = NULL;
-    int tryagain, rc;
+    int tryagain = 0, rc;
     int port = LDAP_PORT;
-    int use_grouprdn = 0;
+    int use_extension_dn = 0;
+    int strip_nt_domain = 0;
 
     setbuf(stdout, NULL);
 
@@ -230,6 +265,7 @@ main(int argc, char **argv)
 	case 'z':
 	case 'Z':
 	case 'g':
+	case 'S':
 	    break;
 	default:
 	    if (strlen(argv[1]) > 2) {
@@ -263,6 +299,15 @@ main(int argc, char **argv)
 	case 'f':
 	    searchfilter = value;
 	    break;
+	case 'B':
+	    userbasedn = value;
+	    break;
+	case 'F':
+	    usersearchfilter = value;
+	    break;
+	case 'u':
+	    userdnattr = value;
+	    break;
 	case 's':
 	    if (strcmp(value, "base") == 0)
 		searchscope = LDAP_SCOPE_BASE;
@@ -271,7 +316,7 @@ main(int argc, char **argv)
 	    else if (strcmp(value, "sub") == 0)
 		searchscope = LDAP_SCOPE_SUBTREE;
 	    else {
-		fprintf(stderr, "squid_ldap_match: ERROR: Unknown search scope '%s'\n", value);
+		fprintf(stderr, PROGRAM_NAME " ERROR: Unknown search scope '%s'\n", value);
 		exit(1);
 	    }
 	    break;
@@ -285,7 +330,7 @@ main(int argc, char **argv)
 	    else if (strcmp(value, "find") == 0)
 		aliasderef = LDAP_DEREF_FINDING;
 	    else {
-		fprintf(stderr, "squid_ldap_match: ERROR: Unknown alias dereference method '%s'\n", value);
+		fprintf(stderr, PROGRAM_NAME " ERROR: Unknown alias dereference method '%s'\n", value);
 		exit(1);
 	    }
 	    break;
@@ -330,10 +375,13 @@ main(int argc, char **argv)
 	    debug = 1;
 	    break;
 	case 'g':
-	    use_grouprdn = 1;
+	    use_extension_dn = 1;
+	    break;
+	case 'S':
+	    strip_nt_domain = 1;
 	    break;
 	default:
-	    fprintf(stderr, "squid_ldap_match: ERROR: Unknown command line option '%c'\n", option);
+	    fprintf(stderr, PROGRAM_NAME " ERROR: Unknown command line option '%c'\n", option);
 	    exit(1);
 	}
     }
@@ -357,9 +405,11 @@ main(int argc, char **argv)
 	ldapServer = "localhost";
 
     if (!basedn || !searchfilter) {
-	fprintf(stderr, "Usage: squid_ldap_match -b basedn -f filter [options] ldap_server_name\n\n");
-	fprintf(stderr, "\t-b basedn (REQUIRED)\tbase dn under where to search\n");
-	fprintf(stderr, "\t-f filter (REQUIRED)\tsearch filter pattern. %%v = user, %%a = group\n");
+	fprintf(stderr, "Usage: " PROGRAM_NAME " -b basedn -f filter [options] ldap_server_name\n\n");
+	fprintf(stderr, "\t-b basedn (REQUIRED)\tbase dn under where to search for groups\n");
+	fprintf(stderr, "\t-f filter (REQUIRED)\tgroup search filter pattern. %%v = user,\n\t\t\t\t%%a = group\n");
+	fprintf(stderr, "\t-B basedn (REQUIRED)\tbase dn under where to search for users\n");
+	fprintf(stderr, "\t-F filter (REQUIRED)\tuser search filter pattern. %%s = login\n");
 	fprintf(stderr, "\t-s base|one|sub\t\tsearch scope\n");
 	fprintf(stderr, "\t-D binddn\t\tDN to bind as to perform searches\n");
 	fprintf(stderr, "\t-w bindpasswd\t\tpassword for binddn\n");
@@ -369,21 +419,28 @@ main(int argc, char **argv)
 	fprintf(stderr, "\t-R\t\t\tdo not follow referrals\n");
 	fprintf(stderr, "\t-a never|always|search|find\n\t\t\t\twhen to dereference aliases\n");
 	fprintf(stderr, "\t-v 1|2\t\t\tLDAP version\n");
-	fprintf(stderr, "\t-Z\t\t\tTLS encrypt the LDAP connection, requires LDAP version 3\n");
-	fprintf(stderr, "\t-g\t\t\tfirst query parameter is additional groups base RDN for this query\n");
+	fprintf(stderr, "\t-Z\t\t\tTLS encrypt the LDAP connection, requires\n\t\t\t\tLDAP version 3\n");
+	fprintf(stderr, "\t-g\t\t\tfirst query parameter is base DN extension\n\t\t\t\tfor this query\n");
+	fprintf(stderr, "\t-S\t\t\tStrip NT domain from usernames\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "\tIf you need to bind as a user to perform searches then use the\n\t-D binddn -w bindpasswd options\n\n");
 	exit(1);
     }
     while (fgets(buf, 256, stdin) != NULL) {
-	char *t;
+	char *tptr;
 	int found = 0;
-	user = strwordtok(buf, &t);
-	if (use_grouprdn)
-		grouprdn = strwordtok(NULL, &t);
+	user = strwordtok(buf, &tptr);
+	if (user && strip_nt_domain) {
+	    char *u = strchr(user, '\\');
+	    if (!u)
+		u = strchr(user, '/');
+	    if (u && u[1])
+		user = u + 1;
+	}
+	if (use_extension_dn)
+		extension_dn = strwordtok(NULL, &tptr);
 
-	tryagain = 1;
-	while (!found && user && (group = strwordtok(NULL, &t)) != NULL) {
+	while (!found && user && (group = strwordtok(NULL, &tptr)) != NULL) {
 
 	  recover:
 	    if (ld == NULL) {
@@ -411,17 +468,19 @@ main(int argc, char **argv)
 		}
 		squid_ldap_set_referrals(ld, !noreferrals);
 		squid_ldap_set_aliasderef(ld, aliasderef);
+		if (binddn && bindpasswd && *binddn && *bindpasswd) {
+		    rc = ldap_simple_bind_s(ld, binddn, bindpasswd);
+		    if (rc != LDAP_SUCCESS) {
+			fprintf(stderr, PROGRAM_NAME " WARNING, could not bind to binddn '%s'\n", ldap_err2string(rc));
+			ldap_unbind(ld);
+			ld = NULL;
+			break;
+		    }
+		}
+		if (debug)
+		    fprintf(stderr, "Connected OK\n");
 	    }
-	    rc = ldap_simple_bind_s(ld, binddn, bindpasswd);
-	    if (rc != LDAP_SUCCESS) {
-		fprintf(stderr, "squid_ldap_match: WARNING, could not bind to binddn '%s'\n", ldap_err2string(rc));
-		ldap_unbind(ld);
-		ld = NULL;
-		break;
-	    }
-	    if (debug)
-		printf("Binding OK\n");
-	    if (searchLDAP(ld, group, user, grouprdn) == 0) {
+	    if (searchLDAP(ld, group, user, extension_dn) == 0) {
 		found = 1;
 		break;
 	    } else {
@@ -442,6 +501,8 @@ main(int argc, char **argv)
 	    if (!persistent || (squid_ldap_errno(ld) != LDAP_SUCCESS && squid_ldap_errno(ld) != LDAP_INVALID_CREDENTIALS)) {
 		ldap_unbind(ld);
 		ld = NULL;
+	    } else {
+		tryagain = 1;
 	    }
 	}
     }
@@ -451,34 +512,115 @@ main(int argc, char **argv)
 }
 
 static int
-searchLDAP(LDAP * ld, char *group, char *member, char *grouprdn)
+ldap_escape_value(char *filter, int size, const char *src)
+{
+    int n = 0;
+    while (size > 0 && *src) {
+	switch(*src) {
+	case '*':
+	case '(':
+	case ')':
+	case '\\':
+	    n += 3;
+	    size -= 3;
+	    if (size > 0) {
+		*filter++ = '\\';
+		snprintf(filter, 3, "%02x", (int)*src++);
+		filter+=2;
+	    }
+	    break;
+	default:
+	    *filter++ = *src++;
+	    n++;
+	    size--;
+	}
+    }
+    return n;
+}
+
+static int
+build_filter(char *filter, int size, const char *template, const char *user, const char *group)
+{
+    int n;
+    while(*template && size > 0) {
+	switch(*template) {
+	case '%':
+	    template++;
+	    switch (*template) {
+	    case 'u':
+	    case 'v':
+		template++;
+		n = ldap_escape_value(filter, size, user);
+		size -= n;
+		filter += n;
+		break;
+	    case 'g':
+	    case 'a':
+		template++;
+		n = ldap_escape_value(filter, size, group);
+		size -= n;
+		filter += n;
+		break;
+	    default:
+		fprintf(stderr, "ERROR: Unknown filter template string %%%c\n", *template);
+		return 1;
+		break;
+	    }
+	    break;
+	case '\\':
+	    template++;
+	    if (*template) {
+		*filter++ = *template++;
+		size--;
+	    }
+	    break;
+	default:
+	    *filter++ = *template++;
+	    size--;
+	    break;
+	}
+    }
+    if (size <= 0) {
+	fprintf(stderr, "ERROR: Filter too large\n");
+	return 1;
+    }
+    *filter = '\0';
+    return 0;
+}
+
+static int
+searchLDAPGroup(LDAP * ld, char *group, char *member, char *extension_dn)
 {
     char filter[256];
     static char searchbase[256];
     LDAPMessage *res = NULL;
     LDAPMessage *entry;
+    int rc;
 
-    if (grouprdn)
-	snprintf(searchbase, sizeof(searchbase), "%s,%s", grouprdn, basedn);
+    if (extension_dn && *extension_dn)
+	snprintf(searchbase, sizeof(searchbase), "%s,%s", extension_dn, basedn);
     else
 	snprintf(searchbase, sizeof(searchbase), "%s", basedn);
 
-    ldap_build_filter(filter, sizeof(filter), searchfilter, NULL, NULL, group, member, NULL);
+    if (build_filter(filter, sizeof(filter), searchfilter, member, group) != 0) {
+	fprintf(stderr, PROGRAM_NAME " ERROR, Failed to construct LDAP search filter. filter=\"%s\", user=\"%s\", group=\"%s\"\n", filter, member, group);
+	return 1;
+    }
+
     if (debug)
-	printf("filter %s\n", filter);
+	fprintf(stderr, "filter %s\n", filter);
 
-
-    if (ldap_search_s(ld, searchbase, searchscope, filter, NULL, 1, &res) != LDAP_SUCCESS) {
-	int rc = ldap_result2error(ld, res, 0);
+    rc = ldap_search_s(ld, searchbase, searchscope, filter, NULL, 1, &res);
+    if (rc != LDAP_SUCCESS) {
 	if (noreferrals && rc == LDAP_PARTIAL_RESULTS) {
 	    /* Everything is fine. This is expected when referrals
 	     * are disabled.
 	     */
 	} else {
-	    fprintf(stderr, "squid_ldap_match: WARNING, LDAP search error '%s'\n", ldap_err2string(rc));
+	    fprintf(stderr, PROGRAM_NAME " WARNING, LDAP search error '%s'\n", ldap_err2string(rc));
+	    ldap_msgfree(res);
+	    return 1;
 	}
-	ldap_msgfree(res);
-	return 1;
     }
     entry = ldap_first_entry(ld, res);
     if (!entry) {
@@ -487,4 +629,55 @@ searchLDAP(LDAP * ld, char *group, char *member, char *grouprdn)
     }
     ldap_msgfree(res);
     return 0;
+}
+
+static int
+searchLDAP(LDAP *ld, char *group, char *login, char *extension_dn)
+{
+
+    if (usersearchfilter) {
+	char filter[8192];
+	char searchbase[8192];
+	char escaped_login[1024];
+	LDAPMessage *res = NULL;
+	LDAPMessage *entry;
+	int rc;
+	char *userdn;
+	ldap_escape_value(escaped_login, sizeof(escaped_login), login);
+	snprintf(filter, sizeof(filter), usersearchfilter, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login);
+	if (debug)
+	    fprintf(stderr, "user filter %s\n", filter);
+	rc = ldap_search_s(ld, userbasedn ? userbasedn : basedn, searchscope, filter, NULL, 1, &res);
+	if (rc != LDAP_SUCCESS) {
+	    if (noreferrals && rc == LDAP_PARTIAL_RESULTS) {
+		/* Everything is fine. This is expected when referrals
+		 * are disabled.
+		 */
+	    } else {
+		fprintf(stderr, PROGRAM_NAME " WARNING, LDAP search error '%s'\n", ldap_err2string(rc));
+		ldap_msgfree(res);
+		return 1;
+	    }
+	}
+	entry = ldap_first_entry(ld, res);
+	if (!entry) {
+	    fprintf(stderr, PROGRAM_NAME " WARNING, User '%s' not found\n", filter);
+	    ldap_msgfree(res);
+	    return 1;
+	}
+	userdn = ldap_get_dn(ld, entry);
+	rc = searchLDAPGroup(ld, group, userdn, extension_dn);
+	squid_ldap_memfree(userdn);
+	ldap_msgfree(res);
+	return rc;
+    } else if (userdnattr) {
+	char dn[8192];
+	if (extension_dn && *extension_dn)
+	    sprintf(dn, "%s=%s, %s, %s", userdnattr, login, extension_dn, userbasedn ? userbasedn : basedn);
+	else
+	    sprintf(dn, "%s=%s, %s", userdnattr, login, userbasedn ? userbasedn : basedn);
+	return searchLDAPGroup(ld, group, dn, extension_dn);
+    } else {
+	return searchLDAPGroup(ld, group, login, extension_dn);
+    }
 }
