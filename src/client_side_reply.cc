@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.5 2002/09/15 20:57:19 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.6 2002/09/19 11:15:25 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -416,6 +416,9 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	/* here the data to send is the data we just recieved */
 	context->old_reqofs = 0;
 	context->old_reqsize = 0;
+	/* clientSendMoreData tracks the offset as well. 
+	 * Force it back to zero */
+	context->reqofs = 0;
 	assert(!EBIT_TEST(entry->flags, ENTRY_ABORTED));
 	/* TODO: provide SendMoreData with the ready parsed reply */
 	clientSendMoreData(context, context->tempbuf, context->reqsize);
@@ -1368,6 +1371,11 @@ clientSendMoreData(void *data, char *retbuf, ssize_t retsize)
     const char *body_buf = buf;
     ssize_t size = context->reqofs + retsize;
     ssize_t body_size = size;
+
+    /* This is not valid once we start doing range requests.
+     * Then it becomes context->reqofs == startoffirstrangeentry
+     */
+    assert (context->reqofs == 0 || context->flags.headersSent);
 
     if (buf != retbuf) {
 	/* we've got to copy some data */
