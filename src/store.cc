@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.424 1998/06/28 07:52:59 wessels Exp $
+ * $Id: store.cc,v 1.425 1998/07/07 02:54:17 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -155,7 +155,6 @@ static void storeGetMemSpace(int);
 static void storeHashDelete(StoreEntry *);
 static MemObject *new_MemObject(const char *, const char *);
 static void destroy_MemObject(StoreEntry *);
-static void destroy_MemObjectData(MemObject *);
 static FREE destroy_StoreEntry;
 static void storePurgeMem(StoreEntry *);
 static unsigned int getKeyCounter(method_t);
@@ -205,7 +204,8 @@ destroy_MemObject(StoreEntry * e)
     const Ctx ctx = ctx_enter(mem->url);
     debug(20, 3) ("destroy_MemObject: destroying %p\n", mem);
     assert(mem->swapout.fd == -1);
-    destroy_MemObjectData(mem);
+    stmemFree(&mem->data_hdr);
+    mem->inmem_hi = 0;
     /* XXX account log_url */
 #if USE_ASYNC_IO
     while (mem->clients != NULL)
@@ -236,18 +236,6 @@ destroy_StoreEntry(void *data)
     storeHashDelete(e);
     assert(e->key == NULL);
     memFree(MEM_STOREENTRY, e);
-}
-
-static void
-destroy_MemObjectData(MemObject * mem)
-{
-    debug(20, 3) ("destroy_MemObjectData: destroying %p, %d bytes\n",
-	mem->data, (int) mem->inmem_hi);
-    if (mem->data) {
-	stmemFree(mem->data);
-	mem->data = NULL;
-    }
-    mem->inmem_hi = 0;
 }
 
 /* ----- INTERFACE BETWEEN STORAGE MANAGER AND HASH TABLE FUNCTIONS --------- */
@@ -430,7 +418,6 @@ storeCreateEntry(const char *url, const char *log_url, int flags, method_t metho
     storeSetMemStatus(e, NOT_IN_MEMORY);
     e->swap_status = SWAPOUT_NONE;
     e->swap_file_number = -1;
-    mem->data = memAllocate(MEM_MEM_HDR);
     e->refcount = 0;
     e->lastref = squid_curtime;
     e->timestamp = 0;		/* set in storeTimestampsSet() */
@@ -459,7 +446,7 @@ storeAppend(StoreEntry * e, const char *buf, int len)
 	    len,
 	    storeKeyText(e->key));
 	storeGetMemSpace(len);
-	stmemAppend(mem->data, buf, len);
+	stmemAppend(&mem->data_hdr, buf, len);
 	mem->inmem_hi += len;
     }
     if (EBIT_TEST(e->flag, DELAY_SENDING))
@@ -903,7 +890,7 @@ storeKeepInMemory(const StoreEntry * e)
     MemObject *mem = e->mem_obj;
     if (mem == NULL)
 	return 0;
-    if (mem->data == NULL)
+    if (mem->data_hdr.head == NULL)
 	return 0;
     return mem->inmem_lo == 0;
 }
@@ -1025,8 +1012,12 @@ storeUnregisterAbort(StoreEntry * e)
 void
 storeMemObjectDump(MemObject * mem)
 {
-    debug(20, 1) ("MemObject->data: %p\n",
-	mem->data);
+    debug(20, 1) ("MemObject->data.head: %p\n",
+	mem->data_hdr.head);
+    debug(20, 1) ("MemObject->data.tail: %p\n",
+	mem->data_hdr.tail);
+    debug(20, 1) ("MemObject->data.origin_offset: %d\n",
+	mem->data_hdr.origin_offset);
     debug(20, 1) ("MemObject->start_ping: %d.%06d\n",
 	(int) mem->start_ping.tv_sec,
 	(int) mem->start_ping.tv_usec);
