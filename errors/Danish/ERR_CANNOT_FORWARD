@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<TITLE>FEJL: Den angivne URL kunne ikke hentes</TITLE>
+<META CONTENT="text/html; charset=iso-8859-1">
+</HEAD><BODY>
+<H1>FEJL</H1>
+<H2>Den angivne URL kunne ikke hentes</H2>
+<HR>
+<P>
+Under hentning af f&oslash;gende URL:
+<A HREF="%U">%U</A>
+<P>
+Opstod f&oslash;lgende fejl:
+<UL>
+<LI>
+<STRONG>
+Kunne ikke vidersende foresp&oslash;rgslen.
+</STRONG>
+<P>
+Denne foresp&oslash;rgsel kunne ikke videresendes til den
+oprindelige server eller en af for&aelig;ldre cache'ene. Dette
+skyldes sandsynligvis at:
+<UL>
+<LI>Cache administratoren tillader ikke denne cache at udf&oslash;re
+direkte forbindelser til servere og
+<LI>Alle for&aelig;ldre cache'er kan ikke n&aring;s for &oslash;jeblikket. 
+</UL>
+</P>

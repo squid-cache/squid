@@ -1,0 +1,22 @@
+<HTML><HEAD>
+<TITLE>FEJL: Den angivne URL kunne ikke hentes</TITLE>
+<META CONTENT="text/html; charset=iso-8859-1">
+</HEAD><BODY>
+<H1>FEJL</H1>
+<H2>Den angivne URL kunne ikke hentes</H2>
+<HR>
+<P>
+Den f&oslash;gende URL kunne ikke hentes:
+<A HREF="%U">%U</A>
+<P>
+Proxy'en Squid sendte f&oslash;lgende FTP kommando
+<blockquote><strong><pre>%f</pre></strong></blockquote>
+og fik f&oslash;lgende svar
+<blockquote><strong><pre>%F</pre></strong></blockquote>
+<blockquote><strong><pre>%g</pre></strong></blockquote>
+<P>
+Dette kan muligvis for&aring;rsages af en FTP URL med en
+absolut sti (hvilket ikke er i overensstemmelse med standarden 
+RFC 1738). Hvis dette er &aring;rsagen, kan filen findes p&aring;
+<A HREF="%B">%B</A>.
+</P>

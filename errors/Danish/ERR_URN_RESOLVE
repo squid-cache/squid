@@ -1,0 +1,23 @@
+<HTML><HEAD>
+<TITLE>FEJL: Den angivne URN kunne ikke hentes</TITLE>
+<META CONTENT="text/html; charset=iso-8859-1">
+</HEAD><BODY>
+<H1>FEJL</H1>
+<H2>URL for den angivne URN kunne ikke hentes</H2>
+<HR>
+<P>
+Under hentning af f&oslash;gende URN:
+<A HREF="%U">%U</A>
+<P>
+Opstod f&oslash;lgende fejl:
+<UL>
+<LI>
+<STRONG>
+Kan Ikke Opl&oslash;se URN
+</STRONG>
+</UL>
+
+<P>
+Hallo, forvent nu ikke for meget af URNs på %T :)
+</P>
+

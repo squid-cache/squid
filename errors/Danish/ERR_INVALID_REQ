@@ -1,0 +1,36 @@
+<HTML><HEAD>
+<TITLE>FEJL: Den angivne URL kunne ikke hentes</TITLE>
+<META CONTENT="text/html; charset=iso-8859-1">
+</HEAD><BODY>
+<H1>FEJL</H1>
+<H2>Den angivne URL kunne ikke hentes</H2>
+<HR>
+<P>
+Under bearbejdning af foresp&oslash;rgslen:
+<PRE>
+%R
+</PRE>
+<P>
+St&oslash;dte poxy'en Squid ind i f&oslash;lgende fejl:
+<UL>
+<LI>
+<STRONG>
+Ugyldig foresp&oslash;rgsel.
+</STRONG>
+</UL>
+
+<P>
+Et eller andet i HTTP forsp&oslash;rgslen er fejlbeh&aelig;ftet. 
+Mulige problemer kan v&aelig;re:
+<UL>
+<LI>Manglende eller ukendt foresp&oslash;rgsels metode
+<LI>Manglende URL
+<LI>Manglende HTTP Identifikator (ved HTTP/1.0)
+<LI>Foresp&oslash;rgslen er for stor
+<LI>"Content-Length" mangler til POST eller PUT foresp&oslash;rgsler
+<LI>Ulovlige bogstaver i maskinnavnet; &aelig;, &oslash; , &aring; og _ tegn 
+er ikke tilladt i maskinnavne (som f.eks. i: www.&oslash;l.dk)!
+<LI>Blanktegn i foresp&oslash;rgslen (kan som regel slettes)
+</UL>
+</P>
+
