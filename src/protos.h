@@ -522,6 +522,7 @@ extern void peerDestroy(peer * e);
 extern char *neighborTypeStr(const peer * e);
 extern void peerCheckConnectStart(peer *);
 extern void dump_peer_options(StoreEntry *, peer *);
+extern int peerHTTPOkay(const peer *, request_t *);
 
 extern void netdbInit(void);
 extern void netdbHandlePingReply(const struct sockaddr_in *from, int hops, int rtt);
@@ -539,7 +540,7 @@ extern int netdbHostPeerRtt(const char *host, peer * peer);
 extern void netdbBinaryExchange(StoreEntry *);
 extern EVH netdbExchangeStart;
 extern void netdbExchangeUpdatePeer(struct in_addr, peer *, double, double);
-extern peer *netdbClosestParent(const char *host);
+extern peer *netdbClosestParent(const request_t *);
 
 extern void cachemgrStart(int fd, request_t * request, StoreEntry * entry);
 extern void cachemgrRegister(const char *, const char *, OBJH *, int);

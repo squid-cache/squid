@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.103 1998/05/20 21:06:23 wessels Exp $
+ * $Id: net_db.cc,v 1.104 1998/05/21 00:46:17 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -1071,7 +1071,7 @@ netdbExchangeStart(void *data)
 }
 
 peer *
-netdbClosestParent(const char *host)
+netdbClosestParent(const request_t *request)
 {
 #if USE_ICMP
     peer *p = NULL;
@@ -1079,10 +1079,10 @@ netdbClosestParent(const char *host)
     const ipcache_addrs *ia;
     net_db_peer *h;
     int i;
-    n = netdbLookupHost(host);
+    n = netdbLookupHost(request->host);
     if (NULL == n) {
 	/* try IP addr */
-	ia = ipcache_gethostbyname(host, 0);
+	ia = ipcache_gethostbyname(request->host, 0);
 	if (NULL != ia)
 	    n = netdbLookupAddr(ia->in_addrs[ia->cur]);
     }
@@ -1100,8 +1100,12 @@ netdbClosestParent(const char *host)
 	if (n->rtt > 0)
 	    if (n->rtt < h->rtt)
 		break;
-	if ((p = peerFindByName(h->peername)))
-	    return p;
+	p = peerFindByName(h->peername);
+	if (NULL == p)	/* not found */
+	    continue;
+	if (!peerHTTPOkay(p, request))	/* not allowed */
+	    continue;
+	return p;
     }
 #endif
     return NULL;

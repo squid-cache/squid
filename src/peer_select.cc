@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.58 1998/05/15 15:16:30 wessels Exp $
+ * $Id: peer_select.cc,v 1.59 1998/05/21 00:46:18 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -291,7 +291,7 @@ peerSelectFoo(ps_state * psstate)
 	peerSelectCallback(psstate, p);
 	return;
 #endif
-    } else if ((p = netdbClosestParent(request->host))) {
+    } else if ((p = netdbClosestParent(request))) {
 	request->hier.alg = PEER_SA_NETDB;
 	code = CLOSEST_PARENT;
 	debug(44, 2) ("peerSelect: %s/%s\n", hier_strings[code], p->host);
