@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.332 2000/05/12 03:11:40 wessels Exp $
+ * $Id: structs.h,v 1.333 2000/05/12 03:43:00 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -845,6 +845,7 @@ struct _clientHttpRequest {
     ConnStateData *conn;
     request_t *request;		/* Parsed URL ... */
     store_client *sc;		/* The store_client we're using */
+    store_client *old_sc;	/* ... for entry to be validated */
     char *uri;
     char *log_uri;
     struct {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.483 2000/05/12 00:29:06 wessels Exp $
+ * $Id: client_side.cc,v 1.484 2000/05/12 03:43:00 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -345,14 +345,13 @@ clientProcessExpired(void *data)
     }
     http->request->flags.refresh = 1;
     http->old_entry = http->entry;
+    http->old_sc = http->sc;
     /*
      * Assert that 'http' is already a client of old_entry.  If 
      * it is not, then the beginning of the object data might get
      * freed from memory before we need to access it.
      */
-#if STORE_CLIENT_LIST_SEARCH
-    assert(storeClientListSearch(http->old_entry->mem_obj, http));
-#endif
+    assert(http->sc->callback_data == http);
     entry = storeCreateEntry(url,
 	http->log_uri,
 	http->request->flags,
@@ -448,6 +447,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	storeUnregister(http->sc, entry, http);
 	storeUnlockObject(entry);
 	entry = http->entry = http->old_entry;
+	http->sc = http->old_sc;
     } else if (STORE_PENDING == entry->store_status && 0 == status) {
 	debug(33, 3) ("clientHandleIMSReply: Incomplete headers for '%s'\n", url);
 	if (size >= CLIENT_SOCK_SZ) {
@@ -458,6 +458,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	    storeUnregister(http->sc, entry, http);
 	    storeUnlockObject(entry);
 	    entry = http->entry = http->old_entry;
+	    http->sc = http->old_sc;
 	    /* continue */
 	} else {
 	    storeClientCopy(http->sc, entry,
@@ -486,6 +487,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	httpReplyUpdateOnNotModified(oldentry->mem_obj->reply, mem->reply);
 	storeTimestampsSet(oldentry);
 	storeUnregister(http->sc, entry, http);
+	http->sc = http->old_sc;
 	storeUnlockObject(entry);
 	entry = http->entry = oldentry;
 	entry->timestamp = squid_curtime;
@@ -502,11 +504,12 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	    storeTimestampsSet(http->old_entry);
 	    http->log_type = LOG_TCP_REFRESH_HIT;
 	}
-	storeUnregister(http->sc, http->old_entry, http);
+	storeUnregister(http->old_sc, http->old_entry, http);
 	storeUnlockObject(http->old_entry);
 	recopy = 0;
     }
     http->old_entry = NULL;	/* done with old_entry */
+    http->old_sc = NULL;
     assert(!EBIT_TEST(entry->flags, ENTRY_ABORTED));
     if (recopy) {
 	storeClientCopy(http->sc, entry,
