@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.148 2003/07/22 15:23:02 robertc Exp $
+ * $Id: store_dir.cc,v 1.149 2003/07/29 12:20:59 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -42,8 +42,15 @@
 #if HAVE_SYS_STATVFS_H
 #include <sys/statvfs.h>
 #endif
+#endif /* HAVE_STATVFS */
+/* statfs() needs <sys/param.h> and <sys/mount.h> on BSD systems */
+#if HAVE_SYS_PARAM_H
+#include <sys/param.h>
 #endif
-/* Windows uses sys/vfs.h */
+#if HAVE_SYS_MOUNT_H
+#include <sys/mount.h>
+#endif
+/* Windows and Linux use sys/vfs.h */
 #if HAVE_SYS_VFS_H
 #include <sys/vfs.h>
 #endif
