@@ -78,7 +78,7 @@ do
 	    bootstrap aclocal$amver
 	    bootstrap autoheader$acver
 	    bootstrap libtoolize --force --copy --automake
-	    bootstrap automake$amver --foreign --add-missing --copy --force
+	    bootstrap automake$amver --foreign --add-missing --copy -f
 	    bootstrap autoconf$acver
 	fi ); then
 	    : # OK
