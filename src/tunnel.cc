@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.105 2000/05/12 00:29:08 wessels Exp $
+ * $Id: tunnel.cc,v 1.106 2000/05/30 09:27:18 hno Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -246,7 +246,14 @@ sslReadClient(int fd, void *data)
     }
     cbdataLock(sslState);
     if (len < 0) {
-	debug(50, ECONNRESET == errno ? 3 : 1) ("sslReadClient: FD %d: read failure: %s\n",
+	int level = 1;
+#ifdef ECONNRESET
+	if (errno == ECONNRESET)
+	    level = 2;
+#endif
+	if (ignoreErrno(errno))
+	    level = 3;
+	debug(50, level) ("sslReadClient: FD %d: read failure: %s\n",
 	    fd, xstrerror());
 	if (!ignoreErrno(errno))
 	    comm_close(fd);
