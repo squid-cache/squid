@@ -611,6 +611,11 @@ struct _HierarchyLogEntry {
     hier_code code;
     char host[SQUIDHOSTNAMELEN];
     icp_ping_data icp;
+#if CACHE_DIGEST
+    int used_cd;
+    int used_icp;
+    int cd_hit;
+#endif
 };
 
 struct _AccessLogEntry {
@@ -1126,6 +1131,10 @@ struct _StatCounters {
 	kb_t kbytes_recv;
 	StatHist query_svc_time;
 	StatHist reply_svc_time;
+#if CACHE_DIGEST
+	StatHist client_svc_time;
+	int times_used;
+#endif
     } icp;
     struct {
 	int requests;
@@ -1133,6 +1142,19 @@ struct _StatCounters {
     struct {
 	StatHist svc_time;
     } dns;
+#if CACHE_DIGEST
+    struct {
+	int times_used;
+	int true_hits;
+	int false_hits;
+	int true_misses;
+	int false_misses;
+	kb_t kbtes_sent;
+	kb_t kbtes_recv;
+	kb_t memory;
+	StatHist client_svc_time;
+    } cd;
+#endif
     int page_faults;
     int select_loops;
     double cputime;
