@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.220 2001/11/15 14:58:38 hno Exp $
+#  $Id: Makefile.in,v 1.221 2001/11/28 03:02:42 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -80,7 +80,8 @@ CRYPTLIB = @CRYPTLIB@
 DEPDIR = @DEPDIR@
 DIGEST_AUTH_HELPERS = @DIGEST_AUTH_HELPERS@
 DLLIB = @DLLIB@
-ERR_LANGUAGE = @ERR_LANGUAGE@
+ERR_DEFAULT_LANGUAGE = @ERR_DEFAULT_LANGUAGE@
+ERR_LANGUAGES = @ERR_LANGUAGES@
 EXEEXT = @EXEEXT@
 FALSE = @FALSE@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
@@ -377,8 +378,8 @@ DEFAULT_SWAP_DIR = $(localstatedir)/cache
 DEFAULT_PINGER = $(libexecdir)/@OPT_PINGER_EXE@
 DEFAULT_UNLINKD = $(libexecdir)/$(UNLINKD_EXE)
 DEFAULT_DISKD = $(libexecdir)/@OPT_DISKD_EXE@
-DEFAULT_ICON_DIR = $(sysconfdir)/icons
-DEFAULT_ERROR_DIR = $(sysconfdir)/errors
+DEFAULT_ICON_DIR = $(sharedstatedir)/squid/icons
+DEFAULT_ERROR_DIR = $(sharedstatedir)/squid/errors/@ERR_DEFAULT_LANGUAGE@
 DEFAULT_MIB_PATH = $(sysconfdir)/mib.txt
 
 DEFS = @DEFS@ -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"
@@ -435,53 +436,53 @@ pinger_OBJECTS = $(am_pinger_OBJECTS)
 pinger_LDADD = $(LDADD)
 pinger_DEPENDENCIES =
 pinger_LDFLAGS =
-@USE_DELAY_POOLS_FALSE@am__objects_2 =
-@USE_DELAY_POOLS_TRUE@am__objects_2 = delay_pools.$(OBJEXT)
-@USE_DNSSERVER_TRUE@am__objects_3 = dns.$(OBJEXT)
-@USE_DNSSERVER_FALSE@am__objects_3 = dns_internal.$(OBJEXT)
-@ENABLE_HTCP_TRUE@am__objects_4 = htcp.$(OBJEXT)
-@MAKE_LEAKFINDER_FALSE@am__objects_5 =
-@MAKE_LEAKFINDER_TRUE@am__objects_5 = leakfinder.$(OBJEXT)
-@USE_SNMP_TRUE@am__objects_6 = snmp_core.$(OBJEXT) snmp_agent.$(OBJEXT)
-@USE_SNMP_FALSE@am__objects_6 =
-@ENABLE_SSL_TRUE@am__objects_7 = ssl_support.$(OBJEXT)
-@ENABLE_SSL_FALSE@am__objects_7 =
-@ENABLE_UNLINKD_FALSE@am__objects_8 =
-@ENABLE_UNLINKD_TRUE@am__objects_8 = unlinkd.$(OBJEXT)
-@ENABLE_WIN32SPECIFIC_FALSE@am__objects_9 =
-@ENABLE_WIN32SPECIFIC_TRUE@am__objects_9 = win32.$(OBJEXT)
+@USE_DELAY_POOLS_FALSE@am__objects_3 =
+@USE_DELAY_POOLS_TRUE@am__objects_3 = delay_pools.$(OBJEXT)
+@USE_DNSSERVER_TRUE@am__objects_4 = dns.$(OBJEXT)
+@USE_DNSSERVER_FALSE@am__objects_4 = dns_internal.$(OBJEXT)
+@ENABLE_HTCP_TRUE@am__objects_5 = htcp.$(OBJEXT)
+@MAKE_LEAKFINDER_FALSE@am__objects_6 =
+@MAKE_LEAKFINDER_TRUE@am__objects_6 = leakfinder.$(OBJEXT)
+@USE_SNMP_TRUE@am__objects_7 = snmp_core.$(OBJEXT) snmp_agent.$(OBJEXT)
+@USE_SNMP_FALSE@am__objects_7 =
+@ENABLE_SSL_TRUE@am__objects_8 = ssl_support.$(OBJEXT)
+@ENABLE_SSL_FALSE@am__objects_8 =
+@ENABLE_UNLINKD_FALSE@am__objects_9 =
+@ENABLE_UNLINKD_TRUE@am__objects_9 = unlinkd.$(OBJEXT)
+@ENABLE_WIN32SPECIFIC_FALSE@am__objects_10 =
+@ENABLE_WIN32SPECIFIC_TRUE@am__objects_10 = win32.$(OBJEXT)
 am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) asn.$(OBJEXT) \
 	authenticate.$(OBJEXT) cache_cf.$(OBJEXT) CacheDigest.$(OBJEXT) \
 	cache_manager.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
 	client_db.$(OBJEXT) client_side.$(OBJEXT) comm.$(OBJEXT) \
-	comm_select.$(OBJEXT) debug.$(OBJEXT) $(am__objects_2) \
-	disk.$(OBJEXT) $(am__objects_3) errorpage.$(OBJEXT) \
+	comm_select.$(OBJEXT) debug.$(OBJEXT) $(am__objects_3) \
+	disk.$(OBJEXT) $(am__objects_4) errorpage.$(OBJEXT) \
 	ETag.$(OBJEXT) event.$(OBJEXT) fd.$(OBJEXT) filemap.$(OBJEXT) \
 	forward.$(OBJEXT) fqdncache.$(OBJEXT) ftp.$(OBJEXT) \
-	gopher.$(OBJEXT) helper.$(OBJEXT) $(am__objects_4) \
+	gopher.$(OBJEXT) helper.$(OBJEXT) $(am__objects_5) \
 	http.$(OBJEXT) HttpStatusLine.$(OBJEXT) HttpHdrCc.$(OBJEXT) \
 	HttpHdrRange.$(OBJEXT) HttpHdrContRange.$(OBJEXT) \
 	HttpHeader.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
 	HttpBody.$(OBJEXT) HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) \
 	HttpRequest.$(OBJEXT) icmp.$(OBJEXT) icp_v2.$(OBJEXT) \
 	icp_v3.$(OBJEXT) ident.$(OBJEXT) internal.$(OBJEXT) \
-	ipc.$(OBJEXT) ipcache.$(OBJEXT) $(am__objects_5) \
+	ipc.$(OBJEXT) ipcache.$(OBJEXT) $(am__objects_6) \
 	logfile.$(OBJEXT) main.$(OBJEXT) mem.$(OBJEXT) \
 	MemPool.$(OBJEXT) MemBuf.$(OBJEXT) mime.$(OBJEXT) \
 	multicast.$(OBJEXT) neighbors.$(OBJEXT) net_db.$(OBJEXT) \
 	Packer.$(OBJEXT) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
 	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
-	refresh.$(OBJEXT) send-announce.$(OBJEXT) $(am__objects_6) \
-	ssl.$(OBJEXT) $(am__objects_7) stat.$(OBJEXT) \
+	refresh.$(OBJEXT) send-announce.$(OBJEXT) $(am__objects_7) \
+	ssl.$(OBJEXT) $(am__objects_8) stat.$(OBJEXT) \
 	StatHist.$(OBJEXT) String.$(OBJEXT) stmem.$(OBJEXT) \
 	store.$(OBJEXT) store_io.$(OBJEXT) store_client.$(OBJEXT) \
 	store_digest.$(OBJEXT) store_dir.$(OBJEXT) \
 	store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
 	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
 	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
-	tools.$(OBJEXT) $(am__objects_8) url.$(OBJEXT) urn.$(OBJEXT) \
+	tools.$(OBJEXT) $(am__objects_9) url.$(OBJEXT) urn.$(OBJEXT) \
 	useragent.$(OBJEXT) wais.$(OBJEXT) wccp.$(OBJEXT) \
-	whois.$(OBJEXT) $(am__objects_9)
+	whois.$(OBJEXT) $(am__objects_10)
 nodist_squid_OBJECTS = repl_modules.$(OBJEXT) auth_modules.$(OBJEXT) \
 	store_modules.$(OBJEXT) globals.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
