@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.289 2000/03/06 16:23:31 wessels Exp $
+ * $Id: ftp.cc,v 1.290 2000/05/02 20:20:10 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1645,6 +1645,14 @@ ftpSendPasv(FtpStateData * ftpState)
     int fd;
     struct sockaddr_in addr;
     socklen_t addr_len;
+    if (ftpState->request->method == METHOD_HEAD) {
+	/* Terminate here for HEAD requests */
+	ftpAppendSuccessHeader(ftpState);
+	storeTimestampsSet(ftpState->entry);
+	fwdComplete(ftpState->fwd);
+	ftpSendQuit(ftpState);
+	return;
+    }
     if (ftpState->data.fd >= 0) {
 	if (!ftpState->flags.datachannel_hack) {
 	    /* We are already connected, reuse this connection. */
