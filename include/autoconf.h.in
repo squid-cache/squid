@@ -376,9 +376,6 @@
 /* Define if you have the vsnprintf function.  */
 #undef HAVE_VSNPRINTF
 
-/* Define if you have the <alloca.h> header file.  */
-#undef HAVE_ALLOCA_H
-
 /* Define if you have the <arpa/inet.h> header file.  */
 #undef HAVE_ARPA_INET_H
 
