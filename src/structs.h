@@ -292,7 +292,7 @@ struct _dnsserver_t {
     time_t answer;
     off_t offset;
     size_t size;
-    char *ip_inbuf;
+    char ip_inbuf[DNS_INBUF_SZ];
     struct timeval dispatch_time;
     void *data;
 };
@@ -890,6 +890,7 @@ struct _ErrorState {
 	char *request;
 	char *reply;
     } ftp;
+    char *request_hdrs;
 };
 
 struct _StatCounters {

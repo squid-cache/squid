@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.205 1997/11/15 00:14:47 wessels Exp $
+ * $Id: comm.cc,v 1.206 1997/11/23 06:52:36 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -110,10 +110,6 @@
 #ifdef HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>
 #endif
-
-/* Block processing new client requests (accepts on ascii port) when we start
- * running shy of free file descriptors.  For example, under SunOS, we'll keep
- * 64 file descriptors free for disk-i/o and connections to remote servers */
 
 #define min(x,y) ((x)<(y)? (x) : (y))
 #define max(a,b) ((a)>(b)? (a) : (b))
@@ -829,6 +825,7 @@ comm_poll(time_t sec)
 #if !ALARM_UPDATES_TIME
 	getCurrentTime();
 #endif
+#if 0
 	if (shutdown_pending || reconfigure_pending) {
 	    serverConnectionsClose();
 	    dnsShutdownServers();
@@ -841,6 +838,7 @@ comm_poll(time_t sec)
 		setSocketShutdownLifetimes(Config.shutdownLifetime);
 	    else
 		setSocketShutdownLifetimes(1);
+#endif
 	}
 	nfds = 0;
 	maxfd = Biggest_FD + 1;

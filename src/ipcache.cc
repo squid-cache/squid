@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.143 1997/11/14 17:21:22 wessels Exp $
+ * $Id: ipcache.cc,v 1.144 1997/11/23 06:52:38 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -592,10 +592,7 @@ ipcache_dnsHandleRead(int fd, void *data)
 	    ("FD %d: Connection from DNSSERVER #%d is closed, disabling\n",
 	    fd, dnsData->id);
 	dnsData->flags = 0;
-	commSetSelect(fd,
-	    COMM_SELECT_WRITE,
-	    NULL,
-	    NULL, 0);
+	commSetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
 	comm_close(fd);
 	return;
     }
@@ -604,12 +601,8 @@ ipcache_dnsHandleRead(int fd, void *data)
     dnsData->offset += len;
     dnsData->ip_inbuf[dnsData->offset] = '\0';
     i = dnsData->data;
-    if (i == NULL) {
-	debug_trap("NULL ipcache_entry");
-	return;
-    }
-    if (i->status != IP_DISPATCHED)
-	fatal_dump("ipcache_dnsHandleRead: bad status");
+    assert(i != NULL);
+    assert(i->status == IP_DISPATCHED);
     if (strstr(dnsData->ip_inbuf, "$end\n")) {
 	/* end of record found */
 	IpcacheStats.avg_svc_time = intAverage(IpcacheStats.avg_svc_time,
@@ -638,6 +631,9 @@ ipcache_dnsHandleRead(int fd, void *data)
     if (dnsData->offset == 0) {
 	dnsData->data = NULL;
 	EBIT_CLR(dnsData->flags, HELPER_BUSY);
+	if (EBIT_TEST(dnsData->flags, HELPER_SHUTDOWN))
+		dnsShutdownServer(dnsData);
+        cbdataUnlock(dnsData);
     }
     ipcacheNudgeQueue();
 }
@@ -745,6 +741,7 @@ ipcache_dnsDispatch(dnsserver_t * dns, ipcache_entry * i)
     EBIT_SET(dns->flags, HELPER_BUSY);
     dns->data = i;
     i->status = IP_DISPATCHED;
+    cbdataLock(dns);
     comm_write(dns->outpipe,
 	buf,
 	strlen(buf),
@@ -1155,10 +1152,12 @@ ipcache_restart(void)
 	    continue;
 	if (this->status == IP_NEGATIVE_CACHED)
 	    continue;
+#if DONT
 	/* else its PENDING or DISPATCHED; there are no dnsservers
 	 * running, so abort it */
 	this->status = IP_NEGATIVE_CACHED;
 	ipcache_release(this);
+#endif
     }
     /* recalculate these while we're at it */
     ipcache_high = (long) (((float) Config.ipcache.size *

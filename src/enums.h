@@ -350,7 +350,8 @@ enum {
 enum {
     HELPER_ALIVE,
     HELPER_BUSY,
-    HELPER_CLOSING
+    HELPER_CLOSING,
+    HELPER_SHUTDOWN
 };
 
 enum {
