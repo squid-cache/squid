@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.350 2002/10/23 10:11:03 adrian Exp $
+ * $Id: comm.cc,v 1.351 2002/10/23 10:11:53 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -581,6 +581,9 @@ comm_read_cancel(int fd, IOCB *callback, void *data)
     /* Delete the callback */
     fdc_table[fd].read.handler = NULL;
     fdc_table[fd].read.handler_data = NULL;
+
+    /* And the IO event */
+   commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
 }
 
 
