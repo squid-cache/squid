@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.350 1999/06/24 22:53:46 wessels Exp $
+ * $Id: http.cc,v 1.351 1999/07/13 14:51:14 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -800,7 +800,7 @@ httpSendRequest(HttpStateData * httpState)
 
     debug(11, 5) ("httpSendRequest: FD %d: httpState %p.\n", httpState->fd, httpState);
 
-    if (req->body)
+    if (httpState->orig_request->body)
 	sendHeaderDone = httpSendRequestEntry;
     else
 	sendHeaderDone = httpSendComplete;

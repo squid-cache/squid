@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.84 1999/06/24 20:20:03 wessels Exp $
+ * $Id: globals.h,v 1.85 1999/07/13 14:51:13 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -97,10 +97,6 @@ extern int DnsSocket;		/* -1 */
 extern int theInSnmpConnection;	/* -1 */
 extern int theOutSnmpConnection;	/* -1 */
 extern char *snmp_agentinfo;
-#endif
-#ifdef WCCP
-extern int theInWccpConnection;	/* -1 */
-extern int theOutWccpConnection;	/* -1 */
 #endif
 extern int vhost_mode;		/* 0 */
 extern int n_disk_objects;	/* 0 */

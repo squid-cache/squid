@@ -104,8 +104,10 @@
 /* Define to enable SNMP monitoring of Squid */
 #undef SQUID_SNMP
 
-/* Define to enable WCCP */
-#undef WCCP
+/*
+ * Define to enable WCCP
+ */
+#define USE_WCCP 1
 
 /*
  * Squid frequently calls gettimeofday() for accurate timestamping.
@@ -248,6 +250,22 @@
  * If your system has statvfs(), and if it actually works!
  */
 #undef HAVE_STATVFS
+
+/*
+ * If --disable-internal-dns was given to configure, then we'll use
+ * the dnsserver processes instead.
+ */
+#undef USE_DNSSERVERS
+
+/*
+ * we check for the existance of struct mallinfo
+ */
+#undef HAVE_STRUCT_MALLINFO
+
+/*
+ * Do we want to use truncate(2) or unlink(2)?
+ */
+#undef USE_TRUNCATE
 
 /* The number of bytes in a int.  */
 #undef SIZEOF_INT
@@ -464,6 +482,15 @@
 
 /* Define if you have the <netinet/in.h> header file.  */
 #undef HAVE_NETINET_IN_H
+
+/* Define if you have the <netinet/ip_compat.h> header file.  */
+#undef HAVE_NETINET_IP_COMPAT_H
+
+/* Define if you have the <netinet/ip_fil.h> header file.  */
+#undef HAVE_NETINET_IP_FIL_H
+
+/* Define if you have the <netinet/ip_nat.h> header file.  */
+#undef HAVE_NETINET_IP_NAT_H
 
 /* Define if you have the <netinet/tcp.h> header file.  */
 #undef HAVE_NETINET_TCP_H

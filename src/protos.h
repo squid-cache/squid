@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.341 1999/06/30 05:49:42 wessels Exp $
+ * $Id: protos.h,v 1.342 1999/07/13 14:51:17 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -523,7 +523,7 @@ extern variable_list *snmp_meshPtblFn(variable_list *, snint *);
 extern variable_list *snmp_meshCtblFn(variable_list *, snint *);
 #endif /* SQUID_SNMP */
 
-#ifdef WCCP
+#if USE_WCCP
 extern PF wccpHandleUdp;
 extern PF wccpHandleGre;
 extern EVH wccpHereIam;
@@ -531,7 +531,7 @@ extern void wccpInit(void);
 extern void wccpConnectionOpen(void);
 extern void wccpConnectionShutdown(void);
 extern void wccpConnectionClose(void);
-#endif /* WCCP */
+#endif /* USE_WCCP */
 
 extern void icpHandleIcpV3(int, struct sockaddr_in, char *, int);
 extern int icpCheckUdpHit(StoreEntry *, request_t * request);

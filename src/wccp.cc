@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.4 1999/06/11 23:30:37 glenn Exp $
+ * $Id: wccp.cc,v 1.5 1999/07/13 14:51:30 wessels Exp $
  *
  * DEBUG: section 80     WCCP Support
  * AUTHOR: Glenn Chisholm
@@ -33,6 +33,8 @@
  *
  */
 #include "squid.h"
+
+#if USE_WCCP
 
 #define WCCP_PORT 2048
 #define WCCP_VERSION 4
@@ -79,6 +81,8 @@ struct wccp_assign_bucket_t {
     char bucket[WCCP_BUCKETS];
 };
 
+static int theInWccpConnection = -1;
+static int theOutWccpConnection = -1;
 static struct wccp_here_i_am_t wccp_here_i_am;
 static struct sockaddr_in router;
 static int router_len;
@@ -126,7 +130,7 @@ wccpConnectionOpen(void)
 	enter_suid();
 	theInWccpConnection = comm_open(SOCK_DGRAM,
 	    0,
-	    Config.Addrs.wccp_incoming,
+	    Config.Wccp.incoming,
 	    port,
 	    COMM_NONBLOCKING,
 	    "WCCP Port");
@@ -136,11 +140,11 @@ wccpConnectionOpen(void)
 	commSetSelect(theInWccpConnection, COMM_SELECT_READ, wccpHandleUdp, NULL, 0);
 	debug(1, 1) ("Accepting WCCP UDP messages on port %d, FD %d.\n",
 	    (int) port, theInWccpConnection);
-	if (Config.Addrs.wccp_outgoing.s_addr != no_addr.s_addr) {
+	if (Config.Wccp.outgoing.s_addr != no_addr.s_addr) {
 	    enter_suid();
 	    theOutWccpConnection = comm_open(SOCK_DGRAM,
 		0,
-		Config.Addrs.wccp_outgoing,
+		Config.Wccp.outgoing,
 		port,
 		COMM_NONBLOCKING,
 		"WCCP Port");
@@ -295,3 +299,5 @@ wccpAssignBuckets(struct wccp_i_see_you_t *wccp_i_see_you)
 	(struct sockaddr *) &router,
 	router_len);
 }
+
+#endif /* USE_WCCP */

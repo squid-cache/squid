@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.505 1999/06/24 20:26:31 wessels Exp $
+ * $Id: store.cc,v 1.506 1999/07/13 14:51:21 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -693,8 +693,7 @@ storeGetMemSpace(int size)
 #else
     heap *heap = inmem_heap;
     heap_key age, min_age = 0.0;
-    dlink_list locked_entries;
-    locked_entries.head = locked_entries.tail = NULL;
+    linklist *locked_entries = NULL;
 #endif
     if (squid_curtime == last_check)
 	return;
@@ -713,7 +712,7 @@ storeGetMemSpace(int size)
 	if (storeEntryLocked(e)) {
 	    locked++;
 	    debug(20, 5) ("storeGetMemSpace: locked key %s\n", storeKeyText(e->key));
-	    dlinkAdd(e, &e->lock_list, &locked_entries);
+	    linklistPush(e, &locked_entries);
 	    continue;
 	}
 	released++;
@@ -732,11 +731,8 @@ storeGetMemSpace(int size)
     /*
      * Reinsert all bumped locked entries back into heap...
      */
-    for (m = locked_entries.tail; m; m = prev) {
-	prev = m->prev;
-	e = m->data;
+    while ((e = linklistPop(&locked_entries)))
 	e->mem_obj->node = heap_insert(inmem_heap, e);
-    }
 #else
     head = inmem_list.head;
     for (m = inmem_list.tail; m; m = prev) {
@@ -790,8 +786,7 @@ storeMaintainSwapSpace(void *datanotused)
 #if HEAP_REPLACEMENT
     heap *heap = store_heap;
     heap_key age, min_age = 0.0;
-    dlink_list locked_entries;
-    locked_entries.head = locked_entries.tail = NULL;
+    linklist *locked_entries = NULL;
 #if HEAP_REPLACEMENT_DEBUG
     if (!verify_heap_property(store_heap)) {
 	debug(20, 1) ("Heap property violated!\n");
@@ -828,7 +823,7 @@ storeMaintainSwapSpace(void *datanotused)
 		 */
 		debug(20, 4) ("storeMaintainSwapSpace: locked url %s\n",
 		    (e->mem_obj && e->mem_obj->url) ? e->mem_obj->url : storeKeyText(e->key));
-		dlinkAdd(e, &e->lock_list, &locked_entries);
+		linklistPush(e, &locked_entries);
 	    }
 	    locked++;
 	    continue;
@@ -847,7 +842,7 @@ storeMaintainSwapSpace(void *datanotused)
 	     * Did not expire the object so we need to add it back into the heap!
 	     */
 	    debug(20, 5) ("storeMaintainSwapSpace: non-expired %s\n", storeKeyText(e->key));
-	    dlinkAdd(e, &e->lock_list, &locked_entries);
+	    linklistAdd(e, &locked_entries);
 	    continue;
 	}
 	if ((store_swap_size < store_swap_low)
@@ -863,11 +858,8 @@ storeMaintainSwapSpace(void *datanotused)
     /*
      * Reinsert all bumped locked entries back into heap...
      */
-    for (m = locked_entries.tail; m; m = prev) {
-	prev = m->prev;
-	e = m->data;
+    while ((e = linklistPop(&locked_entries)))
 	e->node = heap_insert(store_heap, e);
-    }
 #else
     for (m = store_list.tail; m; m = prev) {
 	prev = m->prev;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.303 1999/06/30 06:29:02 wessels Exp $
+ * $Id: structs.h,v 1.304 1999/07/13 14:51:27 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -280,9 +280,11 @@ struct _SquidConfig {
 	u_short localPort;
     } Snmp;
 #endif
-#if WCCP
+#if USE_WCCP
     struct {
 	struct in_addr router;
+	struct in_addr incoming;
+	struct in_addr outgoing;
     } Wccp;
 #endif
     char *as_whois_server;
@@ -334,10 +336,6 @@ struct _SquidConfig {
 #if SQUID_SNMP
 	struct in_addr snmp_incoming;
 	struct in_addr snmp_outgoing;
-#endif
-#if WCCP
-	struct in_addr wccp_incoming;
-	struct in_addr wccp_outgoing;
 #endif
 	struct in_addr client_netmask;
     } Addrs;
@@ -1269,7 +1267,6 @@ struct _StoreEntry {
     sfileno swap_file_number;
 #if HEAP_REPLACEMENT
     heap_node *node;
-    dlink_node lock_list;
 #else
     dlink_node lru;
 #endif

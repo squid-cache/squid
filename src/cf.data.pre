@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.159 1999/06/25 16:21:21 wessels Exp $
+# $Id: cf.data.pre,v 1.160 1999/07/13 14:51:07 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -487,13 +487,6 @@ DOC_START
 	decreases, blocks will be freed until the high-water mark is
 	reached.  Thereafter, blocks will be used to store hot
 	objects.
-
-	The values of cache_mem_low and cache_mem_high (below) can be
-	used to tune the use of the memory pool.  When the high mark is
-	reached, in-transit and hot objects will be released to clear
-	space.  When an object transfer is completed, it will remain in
-	memory only if the current memory usage is below the low water
-	mark.
 
 	The default is 8 Megabytes.
 
@@ -2624,7 +2617,7 @@ NAME: wccp_router
 TYPE: address
 LOC: Config.Wccp.router
 DEFAULT: 0.0.0.0
-IFDEF: WCCP
+IFDEF: USE_WCCP
 DOC_START
 	Specifies the router that will manage WCCP for this
 	cache.
@@ -2634,15 +2627,15 @@ DOC_END
 
 NAME: wccp_incoming_address
 TYPE: address
-LOC: Config.Addrs.wccp_outgoing
+LOC: Config.Wccp.incoming
 DEFAULT: 0.0.0.0
-IFDEF: WCCP
+IFDEF: USE_WCCP
 DOC_NONE
 NAME: wccp_outgoing_address
 TYPE: address
-LOC: Config.Addrs.wccp_outgoing
+LOC: Config.Wccp.outgoing
 DEFAULT: 255.255.255.255
-IFDEF: WCCP
+IFDEF: USE_WCCP
 DOC_START
         Just like 'udp_incoming_address' above, but for the WCCP port.
 
