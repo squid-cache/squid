@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.138 2000/10/03 23:01:31 wessels Exp $
+ * $Id: fqdncache.cc,v 1.139 2000/10/04 01:02:13 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -194,7 +194,7 @@ fqdncacheCallback(fqdncache_entry * f)
     f->handlerData = NULL;
     if (cbdataValid(handlerData)) {
 	dns_error_message = f->error_message;
-	handler(f->flags.negcached ? f->names[0] : NULL, handlerData);
+	handler(f->flags.negcached ? NULL : f->names[0], handlerData);
     }
     cbdataUnlock(handlerData);
     fqdncacheUnlockEntry(f);
