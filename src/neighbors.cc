@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.210 1998/05/15 15:16:27 wessels Exp $
+ * $Id: neighbors.cc,v 1.211 1998/05/15 16:58:33 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -901,12 +901,6 @@ peerDestroy(peer * p)
     struct _domain_ping *nl = NULL;
     if (p == NULL)
 	return;
-    if (p->type == PEER_MULTICAST) {
-	if (p->mcast.flags & PEER_COUNT_EVENT_PENDING)
-	    eventDelete(peerCountMcastPeersStart, p);
-	if (p->mcast.flags & PEER_COUNTING)
-	    eventDelete(peerCountMcastPeersDone, p);
-    }
     for (l = p->pinglist; l; l = nl) {
 	nl = l->next;
 	safe_free(l->domain);
@@ -949,7 +943,8 @@ peerDNSConfigure(const ipcache_addrs * ia, void *data)
     ap->sin_port = htons(p->icp_port);
     if (p->type == PEER_MULTICAST)
 	peerCountMcastPeersSchedule(p, 10);
-    eventAddIsh("netdbExchangeStart", netdbExchangeStart, p, 30.0, 1);
+    if (p->type != PEER_MULTICAST)
+        eventAddIsh("netdbExchangeStart", netdbExchangeStart, p, 30.0, 1);
 }
 
 static void
@@ -1052,6 +1047,7 @@ peerCountMcastPeersStart(void *data)
     psstate->fail_callback = NULL;
     psstate->callback_data = p;
     psstate->icp.start = current_time;
+    cbdataAdd(psstate, MEM_NONE);
     mem = fake->mem_obj;
     mem->request = requestLink(psstate->request);
     mem->start_ping = current_time;
@@ -1085,10 +1081,11 @@ peerCountMcastPeersDone(void *data)
 	(double) psstate->icp.n_recv,
 	++p->mcast.n_times_counted,
 	10);
-    debug(15, 1) ("Group %s: %d replies, %4.1f average\n",
+    debug(15, 1) ("Group %s: %d replies, %4.1f average, RTT %d\n",
 	p->host,
 	psstate->icp.n_recv,
-	p->mcast.avg_n_members);
+	p->mcast.avg_n_members,
+	p->stats.rtt);
     p->mcast.n_replies_expected = (int) p->mcast.avg_n_members;
     fake->store_status = STORE_ABORTED;
     requestUnlink(fake->mem_obj->request);
@@ -1096,14 +1093,20 @@ peerCountMcastPeersDone(void *data)
     storeReleaseRequest(fake);
     storeUnlockObject(fake);
     requestUnlink(psstate->request);
-    xfree(psstate);
+    cbdataFree(psstate);
 }
 
 static void
-peerCountHandleIcpReply(peer * pnotused, peer_t type, icp_common_t * hdrnotused, void *data)
+peerCountHandleIcpReply(peer * p, peer_t type, icp_common_t * hdrnotused, void *data)
 {
     ps_state *psstate = data;
+    StoreEntry *fake = psstate->entry;
+    MemObject *mem = fake->mem_obj;
+    int rtt = tvSubMsec(mem->start_ping, current_time);
+    assert(fake);
+    assert(mem);
     psstate->icp.n_recv++;
+    p->stats.rtt = intAverage(p->stats.rtt, rtt, psstate->icp.n_recv, RTT_AV_FACTOR);
 }
 
 static void
