@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.20 1997/07/17 05:28:07 wessels Exp $
+ * $Id: peer_select.cc,v 1.21 1997/07/17 05:32:27 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -201,6 +201,7 @@ peerSelectCallbackFail(ps_state * psstate)
 	psstate->fail_callback(NULL, data);
     cbdataUnlock(data);
     peerSelectStateFree(psstate);
+    /* XXX When this happens, the client request just hangs */
 }
 
 static void
