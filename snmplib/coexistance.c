@@ -115,14 +115,12 @@ snmp_coexist_V2toV1(struct snmp_pdu *PDU)
 	return (1);
 	break;
 
-#ifdef SNMP_PDU_GETBULK
     case SNMP_PDU_GETBULK:
 	PDU->non_repeaters = 0;
 	PDU->max_repetitions = 0;
 	PDU->command = SNMP_PDU_GETNEXT;
 	return (1);
 	break;
-#endif
 
     default:
 	snmplib_debug(2, "Unable to translate PDU %d to SNMPv1!\n", PDU->command);

@@ -25,7 +25,7 @@
  * 
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
  * 
- * $Id: snmp_pdu.h,v 1.8 2002/02/13 02:34:37 hno Exp $
+ * $Id: snmp_pdu.h,v 1.9 2002/02/13 02:40:33 hno Exp $
  * 
  **********************************************************************/
 
@@ -80,7 +80,9 @@ void snmp_add_null_var(struct snmp_pdu *, oid *, int);
 #ifdef UNUSED_CODE
 #define SNMP_PDU_SET        (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x3)
 #define TRP_REQ_MSG	    (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x4)	/*Obsolete */
+#endif
 #define SNMP_PDU_GETBULK    (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x5)
+#ifdef UNUSED_CODE
 #define SNMP_PDU_INFORM     (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x6)
 #define SNMP_PDU_V2TRAP     (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x7)
 #define SNMP_PDU_REPORT     (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x8)

@@ -405,7 +405,6 @@ snmp_pdu_encode(u_char * DestBuf, int *DestBufLen,
 
 /**********************************************************************/
 
-#ifdef SNMP_PDU_GETBULK
     case SNMP_PDU_GETBULK:
 
 	/* SNMPv2 Bulk Request */
@@ -434,7 +433,6 @@ snmp_pdu_encode(u_char * DestBuf, int *DestBufLen,
 	    return (NULL);
 	break;
 
-#endif
 /**********************************************************************/
 
     default:
@@ -563,7 +561,6 @@ snmp_pdu_decode(u_char * Packet,	/* data */
 
 /**********************************************************************/
 
-#ifdef SNMP_PDU_GETBULK
     case SNMP_PDU_GETBULK:
 
 	/* SNMPv2 Bulk Request */
@@ -589,7 +586,6 @@ snmp_pdu_decode(u_char * Packet,	/* data */
 	if (bufp == NULL)
 	    ASN_PARSE_ERROR(NULL);
 	break;
-#endif
 
 /**********************************************************************/
 
