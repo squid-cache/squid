@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.271 1998/07/25 04:59:11 wessels Exp $
+ * $Id: stat.cc,v 1.272 1998/07/30 22:07:54 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -139,9 +139,6 @@ stat_io_get(StoreEntry * sentry)
 
     storeAppendPrintf(sentry, "HTTP I/O\n");
     storeAppendPrintf(sentry, "number of reads: %d\n", IOStats.Http.reads);
-    storeAppendPrintf(sentry, "deferred reads: %d (%d%%)\n",
-	IOStats.Http.reads_deferred,
-	percent(IOStats.Http.reads_deferred, IOStats.Http.reads));
     storeAppendPrintf(sentry, "Read Histogram:\n");
     for (i = 0; i < 16; i++) {
 	storeAppendPrintf(sentry, "%5d-%5d: %9d %2d%%\n",
@@ -154,9 +151,6 @@ stat_io_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\n");
     storeAppendPrintf(sentry, "FTP I/O\n");
     storeAppendPrintf(sentry, "number of reads: %d\n", IOStats.Ftp.reads);
-    storeAppendPrintf(sentry, "deferred reads: %d (%d%%)\n",
-	IOStats.Ftp.reads_deferred,
-	percent(IOStats.Ftp.reads_deferred, IOStats.Ftp.reads));
     storeAppendPrintf(sentry, "Read Histogram:\n");
     for (i = 0; i < 16; i++) {
 	storeAppendPrintf(sentry, "%5d-%5d: %9d %2d%%\n",
@@ -169,9 +163,6 @@ stat_io_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\n");
     storeAppendPrintf(sentry, "Gopher I/O\n");
     storeAppendPrintf(sentry, "number of reads: %d\n", IOStats.Gopher.reads);
-    storeAppendPrintf(sentry, "deferred reads: %d (%d%%)\n",
-	IOStats.Gopher.reads_deferred,
-	percent(IOStats.Gopher.reads_deferred, IOStats.Gopher.reads));
     storeAppendPrintf(sentry, "Read Histogram:\n");
     for (i = 0; i < 16; i++) {
 	storeAppendPrintf(sentry, "%5d-%5d: %9d %2d%%\n",
@@ -184,9 +175,6 @@ stat_io_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\n");
     storeAppendPrintf(sentry, "WAIS I/O\n");
     storeAppendPrintf(sentry, "number of reads: %d\n", IOStats.Wais.reads);
-    storeAppendPrintf(sentry, "deferred reads: %d (%d%%)\n",
-	IOStats.Wais.reads_deferred,
-	percent(IOStats.Wais.reads_deferred, IOStats.Wais.reads));
     storeAppendPrintf(sentry, "Read Histogram:\n");
     for (i = 0; i < 16; i++) {
 	storeAppendPrintf(sentry, "%5d-%5d: %9d %2d%%\n",
