@@ -113,6 +113,10 @@ static int readSecret(char *filename);
 
 /* Yuck.. we need to glue to different versions of the API */
 
+#ifndef LDAP_NO_ATTRS
+#define LDAP_NO_ATTRS "1.1"
+#endif
+
 #if defined(LDAP_API_VERSION) && LDAP_API_VERSION > 1823
 static int 
 squid_ldap_errno(LDAP * ld)
@@ -672,6 +676,7 @@ searchLDAPGroup(LDAP * ld, char *group, char *member, char *extension_dn)
     LDAPMessage *res = NULL;
     LDAPMessage *entry;
     int rc;
+    char *searchattr[] = {LDAP_NO_ATTRS, NULL};
 
     if (extension_dn && *extension_dn)
 	snprintf(searchbase, sizeof(searchbase), "%s,%s", extension_dn, basedn);
@@ -686,7 +691,7 @@ searchLDAPGroup(LDAP * ld, char *group, char *member, char *extension_dn)
     if (debug)
 	fprintf(stderr, "group filter '%s', searchbase '%s'\n", filter, searchbase);
 
-    rc = ldap_search_s(ld, searchbase, searchscope, filter, NULL, 1, &res);
+    rc = ldap_search_s(ld, searchbase, searchscope, filter, searchattr, 1, &res);
     if (rc != LDAP_SUCCESS) {
 	if (noreferrals && rc == LDAP_PARTIAL_RESULTS) {
 	    /* Everything is fine. This is expected when referrals
@@ -725,6 +730,7 @@ searchLDAP(LDAP *ld, char *group, char *login, char *extension_dn)
 	LDAPMessage *entry;
 	int rc;
 	char *userdn;
+	char *searchattr[] = {LDAP_NO_ATTRS, NULL};
 	if (extension_dn && *extension_dn)
 	    snprintf(searchbase, sizeof(searchbase), "%s,%s", extension_dn, userbasedn ? userbasedn : basedn);
 	else
@@ -733,7 +739,7 @@ searchLDAP(LDAP *ld, char *group, char *login, char *extension_dn)
 	snprintf(filter, sizeof(filter), usersearchfilter, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login);
 	if (debug)
 	    fprintf(stderr, "user filter '%s', searchbase '%s'\n", filter, searchbase);
-	rc = ldap_search_s(ld, searchbase, searchscope, filter, NULL, 1, &res);
+	rc = ldap_search_s(ld, searchbase, searchscope, filter, searchattr, 1, &res);
 	if (rc != LDAP_SUCCESS) {
 	    if (noreferrals && rc == LDAP_PARTIAL_RESULTS) {
 		/* Everything is fine. This is expected when referrals
