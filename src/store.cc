@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.365 1998/01/10 07:50:38 kostas Exp $
+ * $Id: store.cc,v 1.366 1998/01/12 04:30:13 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -241,7 +241,6 @@ static int storeEntryValidLength(const StoreEntry *);
 static void storeGetMemSpace(int);
 static void storeHashDelete(StoreEntry *);
 static VCB storeSwapInValidateComplete;
-static mem_hdr *new_MemObjectData(void);
 static MemObject *new_MemObject(const char *, const char *);
 static StoreEntry *new_StoreEntry(int, const char *, const char *);
 static StoreEntry *storeAddDiskRestore(const cache_key *,
@@ -323,8 +322,8 @@ static int store_maintain_buckets;
 static MemObject *
 new_MemObject(const char *url, const char *log_url)
 {
-    MemObject *mem = get_free_mem_obj();
-    mem->reply = xcalloc(1, sizeof(struct _http_reply));
+    MemObject *mem = memAllocate(MEM_MEMOBJECT, 1);
+    mem->reply = memAllocate(MEM_HTTP_REPLY, 1);
     mem->reply->date = -2;
     mem->reply->expires = -2;
     mem->reply->last_modified = -2;
@@ -332,8 +331,6 @@ new_MemObject(const char *url, const char *log_url)
     mem->url = xstrdup(url);
     mem->log_url = xstrdup(log_url);
     mem->swapout.fd = -1;
-    meta_data.mem_obj_count++;
-    meta_data.misc += sizeof(struct _http_reply);
     meta_data.misc += strlen(log_url);
     debug(20, 3) ("new_MemObject: returning %p\n", mem);
     return mem;
@@ -343,8 +340,7 @@ static StoreEntry *
 new_StoreEntry(int mem_obj_flag, const char *url, const char *log_url)
 {
     StoreEntry *e = NULL;
-    e = xcalloc(1, sizeof(StoreEntry));
-    meta_data.store_entries++;
+    e = memAllocate(MEM_STOREENTRY, 1);
     if (mem_obj_flag)
 	e->mem_obj = new_MemObject(url, log_url);
     debug(20, 3) ("new_StoreEntry: returning %p\n", e);
@@ -360,14 +356,12 @@ destroy_MemObject(MemObject * mem)
     meta_data.misc -= strlen(mem->log_url);
     assert(mem->clients == NULL);
     safe_free(mem->swapout.meta_buf);
-    safe_free(mem->reply);
+    memFree(MEM_HTTP_REPLY, mem->reply);
     safe_free(mem->url);
     safe_free(mem->log_url);
     requestUnlink(mem->request);
     mem->request = NULL;
-    put_free_mem_obj(mem);
-    meta_data.mem_obj_count--;
-    meta_data.misc -= sizeof(struct _http_reply);
+    memFree(MEM_MEMOBJECT, mem);
 }
 
 static void
@@ -380,15 +374,6 @@ destroy_StoreEntry(StoreEntry * e)
     storeHashDelete(e);
     assert(e->key == NULL);
     xfree(e);
-    meta_data.store_entries--;
-}
-
-static mem_hdr *
-new_MemObjectData(void)
-{
-    debug(20, 3) ("new_MemObjectData: calling memInit()\n");
-    meta_data.mem_data_count++;
-    return memInit();
 }
 
 static void
@@ -397,9 +382,8 @@ destroy_MemObjectData(MemObject * mem)
     debug(20, 3) ("destroy_MemObjectData: destroying %p, %d bytes\n",
 	mem->data, mem->inmem_hi);
     if (mem->data) {
-	memFree(mem->data);
+	stmemFree(mem->data);
 	mem->data = NULL;
-	meta_data.mem_data_count--;
     }
     mem->inmem_hi = 0;
 }
@@ -621,7 +605,7 @@ storeCreateEntry(const char *url, const char *log_url, int flags, method_t metho
     storeSetMemStatus(e, NOT_IN_MEMORY);
     e->swap_status = SWAPOUT_NONE;
     e->swap_file_number = -1;
-    mem->data = new_MemObjectData();
+    mem->data = memAllocate(MEM_MEM_HDR, 1);
     e->refcount = 0;
     e->lastref = squid_curtime;
     e->timestamp = 0;		/* set in storeTimestampsSet() */
@@ -901,13 +885,13 @@ storeCheckSwapOut(StoreEntry * e)
     new_mem_lo = lowest_offset;
     if (!EBIT_TEST(e->flag, ENTRY_CACHABLE)) {
 	assert(EBIT_TEST(e->flag, KEY_PRIVATE));
-	memFreeDataUpto(mem->data, new_mem_lo);
+	stmemFreeDataUpto(mem->data, new_mem_lo);
 	mem->inmem_lo = new_mem_lo;
 	return;
     }
     if (mem->swapout.queue_offset < new_mem_lo)
 	new_mem_lo = mem->swapout.queue_offset;
-    memFreeDataUpto(mem->data, new_mem_lo);
+    stmemFreeDataUpto(mem->data, new_mem_lo);
     mem->inmem_lo = new_mem_lo;
 
     swapout_size = (size_t) (mem->inmem_hi - mem->swapout.queue_offset);
@@ -929,27 +913,26 @@ storeCheckSwapOut(StoreEntry * e)
     if (e->swap_status == SWAPOUT_OPENING)
 	return;
     assert(mem->swapout.fd > -1);
-
-    swap_buf = get_free_8k_page();
+    swap_buf = memAllocate(MEM_DISK_BUF, 1);
     if (mem->swapout.queue_offset==0) 
 	hdr_len= storeBuildMetaData(e, swap_buf);
 
     if (swapout_size > SWAP_BUF - hdr_len)
 	swapout_size = SWAP_BUF - hdr_len;
     
-    swap_buf_len = memCopy(mem->data,
+    swap_buf_len = stmemCopy(mem->data,
 	mem->swapout.queue_offset,
 	swap_buf+hdr_len,
 	swapout_size) + hdr_len;
 
     if (swap_buf_len < 0) {
-	debug(20, 1) ("memCopy returned %d for '%s'\n", swap_buf_len, storeKeyText(e->key));
+	debug(20, 1) ("stmemCopy returned %d for '%s'\n", swap_buf_len, storeKeyText(e->key));
 	/* XXX This is probably wrong--we should storeRelease()? */
 	storeDirMapBitReset(e->swap_file_number);
 	safeunlink(storeSwapFullPath(e->swap_file_number, NULL), 1);
 	e->swap_file_number = -1;
 	e->swap_status = SWAPOUT_NONE;
-	put_free_8k_page(swap_buf);
+	memFree(MEM_DISK_BUF, swap_buf);
 	storeSwapOutFileClose(e);
 	return;
     }
@@ -963,7 +946,7 @@ storeCheckSwapOut(StoreEntry * e)
 	swap_buf_len,
 	storeSwapOutHandle,
 	e,
-	put_free_8k_page);
+	memFreeDISK);
     assert(x == DISK_OK);
 }
 
@@ -979,7 +962,7 @@ storeAppend(StoreEntry * e, const char *buf, int len)
 	    len,
 	    storeKeyText(e->key));
 	storeGetMemSpace(len);
-	memAppend(mem->data, buf, len);
+	stmemAppend(mem->data, buf, len);
 	mem->inmem_hi += len;
     }
     if (EBIT_TEST(e->flag, DELAY_SENDING))
@@ -1313,7 +1296,7 @@ storeCleanup(void *datanotused)
 	storeValidate(e, storeCleanupComplete, e);
 	if ((++validnum & 0xFFF) == 0)
 	    debug(20, 1) ("  %7d Entries Validated so far.\n", validnum);
-	assert(validnum <= meta_data.store_entries);
+	assert(validnum <= memInUse(MEM_STOREENTRY));
     }
     storeKeyFree(curr->key);
     xfree(curr);
@@ -1412,7 +1395,7 @@ storeRebuiltFromDisk(struct storeRebuildState *data)
 	debug(20, 1) ("  store_swap_size = %dk\n", store_swap_size);
 	store_rebuilding = 0;
     }
-    safe_free(data->line_in);
+    memFree(MEM_4K_BUF, data->line_in);
     safe_free(data);
 }
 
@@ -1555,7 +1538,7 @@ storeGetMemSpace(int size)
 	return;
     last_check = squid_curtime;
     pages_needed = (size / SM_PAGE_SIZE) + 1;
-    if (sm_stats.n_pages_in_use + pages_needed < store_pages_high)
+    if (memInUse(MEM_STMEM_BUF) + pages_needed < store_pages_high)
 	return;
     if (store_rebuilding)
 	return;
@@ -1567,7 +1550,7 @@ storeGetMemSpace(int size)
 	    continue;
 	released++;
 	storeRelease(e);
-	if (sm_stats.n_pages_in_use + pages_needed < store_pages_low)
+	if (memInUse(MEM_STMEM_BUF) + pages_needed < store_pages_low)
 	    break;
     }
     debug(20, 3) ("storeGetMemSpace stats:\n");
@@ -1625,7 +1608,7 @@ storeMaintainSwapSpace(void *datanotused)
 	    break;
     }
     debug(20, 3) ("storeMaintainSwapSpace stats:\n");
-    debug(20, 3) ("  %6d objects\n", meta_data.store_entries);
+    debug(20, 3) ("  %6d objects\n", memInUse(MEM_STOREENTRY));
     debug(20, 3) ("  %6d were scanned\n", scanned);
     debug(20, 3) ("  %6d were locked\n", locked);
     debug(20, 3) ("  %6d were expired\n", expired);
@@ -1725,8 +1708,8 @@ storeClientListAdd(StoreEntry * e, void *data)
     if (storeClientListSearch(mem, data) != NULL)
 	return;
     mem->nclients++;
-    sc = xcalloc(1, sizeof(store_client));
-    cbdataAdd(sc);		/* sc is callback_data for file_read */
+    sc = memAllocate(MEM_STORE_CLIENT, 1);
+    cbdataAdd(sc, MEM_STORE_CLIENT);	/* sc is callback_data for file_read */
     sc->callback_data = data;
     sc->seen_offset = 0;
     sc->copy_offset = 0;
@@ -1797,7 +1780,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     } else if (sc->copy_offset >= mem->inmem_lo && mem->inmem_lo < mem->inmem_hi) {
 	/* What the client wants is in memory */
 	debug(20, 3) ("storeClientCopy2: Copying from memory\n");
-	sz = memCopy(mem->data, sc->copy_offset, sc->copy_buf, sc->copy_size);
+	sz = stmemCopy(mem->data, sc->copy_offset, sc->copy_buf, sc->copy_size);
 	sc->callback = NULL;
 	callback(sc->callback_data, sc->copy_buf, sz);
     } else if (sc->swapin_fd < 0) {
@@ -2299,9 +2282,9 @@ storeFreeMemory(void)
     StoreEntry **list;
     int i = 0;
     int j;
-    list = xcalloc(meta_data.store_entries, sizeof(StoreEntry *));
+    list = xcalloc(memInUse(MEM_STOREENTRY), sizeof(StoreEntry *));
     e = (StoreEntry *) hash_first(store_table);
-    while (e && i < meta_data.store_entries) {
+    while (e && i < memInUse(MEM_STOREENTRY)) {
 	*(list + i) = e;
 	i++;
 	e = (StoreEntry *) hash_next(store_table);

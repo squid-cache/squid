@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.12 1998/01/08 23:41:23 kostas Exp $
+ * $Id: asn.cc,v 1.13 1998/01/12 04:29:55 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -180,7 +180,7 @@ asnCacheStart(int as)
     const cache_key *k;
     StoreEntry *e;
     ASState *asState = xcalloc(1, sizeof(ASState));
-    cbdataAdd(asState);
+    cbdataAdd(asState, MEM_NONE);
     debug(53, 3) ("asnCacheStart: AS %d\n", as);
     snprintf(asres, 4096, "whois://%s/!gAS%d", Config.as_whois_server, as);
     k = storeKeyPublic(asres, METHOD_GET);
@@ -195,7 +195,7 @@ asnCacheStart(int as)
 	storeClientListAdd(e, asState);
     }
     asState->entry = e;
-    storeClientCopy(e, 0, 0, 4096, get_free_4k_page(), asHandleReply, asState);
+    storeClientCopy(e, 0, 0, 4096, memAllocate(MEM_4K_BUF, 1), asHandleReply, asState);
 }
 
 static void
@@ -208,14 +208,14 @@ asHandleReply(void *data, char *buf, ssize_t size)
     char *t;
     debug(50, 3) ("asHandleReply: Called with size=%d.\n", size);
     if (e->store_status == STORE_ABORTED) {
-	put_free_4k_page(buf);
+	memFree(MEM_4K_BUF, buf);
 	return;
     }
     if (size == 0) {
-	put_free_4k_page(buf);
+	memFree(MEM_4K_BUF, buf);
 	return;
     } else if (size < 0) {
-	put_free_4k_page(buf);
+	memFree(MEM_4K_BUF, buf);
 	return;
     }
     if (e->store_status == STORE_PENDING) {
@@ -363,7 +363,7 @@ whoisStart(request_t * request, StoreEntry * entry)
     whoisState *p = xcalloc(1, sizeof(whoisState));
     p->request = request;
     p->entry = entry;
-    cbdataAdd(p);
+    cbdataAdd(p, MEM_NONE);
     storeLockObject(p->entry);
 
     fd = comm_open(SOCK_STREAM, 0, any_addr, 0, COMM_NONBLOCKING, "whois");
@@ -396,7 +396,7 @@ whoisReadReply(int fd, void *data)
 {
     whoisState *p = data;
     StoreEntry *entry = p->entry;
-    char *buf = get_free_4k_page();
+    char *buf = memAllocate(MEM_4K_BUF, 1);
     int len;
 
     len = read(fd, buf, 4096);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.232 1998/01/10 08:15:14 kostas Exp $
+ * $Id: http.cc,v 1.233 1998/01/12 04:30:03 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -225,7 +225,7 @@ httpStateFree(int fdnotused, void *data)
     assert(httpState->entry->store_status != STORE_PENDING);
     storeUnlockObject(httpState->entry);
     if (httpState->reply_hdr) {
-	put_free_8k_page(httpState->reply_hdr);
+	memFree(MEM_8K_BUF, httpState->reply_hdr);
 	httpState->reply_hdr = NULL;
     }
     requestUnlink(httpState->request);
@@ -294,7 +294,7 @@ httpCacheNegatively(StoreEntry * entry)
 void
 httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 {
-    char *headers = get_free_4k_page();
+    char *headers = memAllocate(MEM_4K_BUF, 1);
     char *line;
     char *end;
     char *s = NULL;
@@ -314,11 +314,11 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 	    if ((t = strchr(t, ' ')))
 		reply->code = atoi(++t);
 	}
-	put_free_4k_page(headers);
+	memFree(MEM_4K_BUF, headers);
 	return;
     }
     reply->hdr_sz = end - headers;
-    line = get_free_4k_page();
+    line = memAllocate(MEM_4K_BUF, 1);
     for (s = headers; s < end; s += strcspn(s, crlf), s += strspn(s, crlf)) {
 	l = strcspn(s, crlf) + 1;
 	if (l > 4096)
@@ -417,8 +417,8 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 		EBIT_SET(reply->misc_headers, HDR_PROXY_KEEPALIVE);
 	}
     }
-    put_free_4k_page(headers);
-    put_free_4k_page(line);
+    memFree(MEM_4K_BUF, headers);
+    memFree(MEM_4K_BUF, line);
 }
 
 static int
@@ -510,7 +510,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
     debug(11, 3) ("httpProcessReplyHeader: key '%s'\n",
 	storeKeyText(entry->key));
     if (httpState->reply_hdr == NULL)
-	httpState->reply_hdr = get_free_8k_page();
+	httpState->reply_hdr = memAllocate(MEM_8K_BUF, 1);
     if (httpState->reply_hdr_state == 0) {
 	hdr_len = strlen(httpState->reply_hdr);
 	room = 8191 - hdr_len;
@@ -771,9 +771,9 @@ httpBuildRequestHeader(request_t * request,
 {
     LOCAL_ARRAY(char, ybuf, YBUF_SZ);
     LOCAL_ARRAY(char, no_forward, 1024);
-    char *xbuf = get_free_4k_page();
-    char *viabuf = get_free_4k_page();
-    char *fwdbuf = get_free_4k_page();
+    char *xbuf = memAllocate(MEM_4K_BUF, 1);
+    char *viabuf = memAllocate(MEM_4K_BUF, 1);
+    char *fwdbuf = memAllocate(MEM_4K_BUF, 1);
     char *t = NULL;
     char *s = NULL;
     char *end = NULL;
@@ -883,9 +883,9 @@ httpBuildRequestHeader(request_t * request,
 	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
     }
     httpAppendRequestHeader(hdr_out, null_string, &len, out_sz, 1);
-    put_free_4k_page(xbuf);
-    put_free_4k_page(viabuf);
-    put_free_4k_page(fwdbuf);
+    memFree(MEM_4K_BUF, xbuf);
+    memFree(MEM_4K_BUF, viabuf);
+    memFree(MEM_4K_BUF, fwdbuf);
     if (in_len)
 	*in_len = hdr_len;
     if ((l = strlen(hdr_out)) != len) {
@@ -921,7 +921,7 @@ httpSendRequest(int fd, void *data)
 	return;
     }
     if (buflen < DISK_PAGE_SIZE) {
-	buf = get_free_8k_page();
+	buf = memAllocate(MEM_8K_BUF, 1);
 	buftype = BUF_TYPE_8K;
 	buflen = DISK_PAGE_SIZE;
     } else {
@@ -958,7 +958,7 @@ httpSendRequest(int fd, void *data)
 	len,
 	httpSendComplete,
 	httpState,
-	buftype == BUF_TYPE_8K ? put_free_8k_page : xfree);
+	buftype == BUF_TYPE_8K ? memFree8K : xfree);
 #ifdef BREAKS_PCONN_RESTART
     requestUnlink(httpState->orig_request);
     httpState->orig_request = NULL;
@@ -992,11 +992,11 @@ httpBuildState(int fd, StoreEntry * entry, request_t * orig_request, peer * e)
     HttpStateData *httpState = xcalloc(1, sizeof(HttpStateData));
     request_t *request;
     storeLockObject(entry);
-    cbdataAdd(httpState);
+    cbdataAdd(httpState, MEM_NONE);
     httpState->entry = entry;
     httpState->fd = fd;
     if (e) {
-	request = get_free_request_t();
+	request = memAllocate(MEM_REQUEST_T, 1);
 	request->method = orig_request->method;
 	xstrncpy(request->host, e->host, SQUIDHOSTNAMELEN);
 	request->port = e->http_port;

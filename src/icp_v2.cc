@@ -261,7 +261,7 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 	break;
     }
     if (icp_request)
-	put_free_request_t(icp_request);
+	memFree(MEM_REQUEST_T, icp_request);
 }
 
 #ifdef ICP_PKT_DUMP

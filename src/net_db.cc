@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.59 1998/01/09 08:06:32 wessels Exp $
+ * $Id: net_db.cc,v 1.60 1998/01/12 04:30:06 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -374,7 +374,7 @@ static void
 netdbReloadState(void)
 {
     LOCAL_ARRAY(char, path, SQUID_MAXPATHLEN);
-    char *buf = get_free_4k_page();
+    char *buf = memAllocate(MEM_4K_BUF, 1);
     char *t;
     FILE *fp;
     netdbEntry *n;
@@ -422,7 +422,7 @@ netdbReloadState(void)
 	    netdbHashLink(n, t);
 	count++;
     }
-    put_free_4k_page(buf);
+    memFree(MEM_4K_BUF, buf);
     fclose(fp);
     debug(37, 0) ("NETDB state reloaded; %d entries, %d msec\n",
 	count, tvSubMsec(start, current_time));
@@ -472,7 +472,7 @@ netdbPingSite(const char *hostname)
 	if (n->next_ping_time > squid_curtime)
 	    return;
     h = xstrdup(hostname);
-    cbdataAdd(h);
+    cbdataAdd(h, MEM_NONE);
     cbdataLock(h);
     ipcache_nbgethostbyname(hostname, netdbSendPing, h);
 #endif

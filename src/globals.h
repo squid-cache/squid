@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.25 1998/01/10 07:50:35 kostas Exp $
+ * $Id: globals.h,v 1.26 1998/01/12 04:30:01 wessels Exp $
  */
 
 extern FILE *debug_log;		/* NULL */
@@ -61,7 +61,6 @@ extern int opt_debug_stderr;	/* 0 */
 extern int opt_dns_tests;	/* 1 */
 extern int opt_foreground_rebuild;	/* 0 */
 extern int opt_forwarded_for;	/* 1 */
-extern int opt_mem_pools;	/* 1 */
 extern int opt_reload_hit_only;	/* 0 */
 extern int opt_syslog_enable;	/* 0 */
 extern int opt_udp_hit_obj;	/* 0 */
@@ -77,10 +76,6 @@ extern char *snmp_agentinfo;
 extern int vhost_mode;		/* 0 */
 extern int vizSock;		/* -1 */
 extern iostats IOStats;
-extern stmem_stats disk_stats;
-extern stmem_stats mem_obj_pool;
-extern stmem_stats request_pool;
-extern stmem_stats sm_stats;
 extern struct _acl_deny_info_list *DenyInfoList;	/* NULL */
 extern struct in_addr any_addr;
 extern struct in_addr local_addr;

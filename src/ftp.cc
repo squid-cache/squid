@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.185 1998/01/07 21:16:30 wessels Exp $
+ * $Id: ftp.cc,v 1.186 1998/01/12 04:30:01 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -207,7 +207,7 @@ ftpStateFree(int fdnotused, void *data)
     storeUnregisterAbort(ftpState->entry);
     storeUnlockObject(ftpState->entry);
     if (ftpState->reply_hdr) {
-	put_free_8k_page(ftpState->reply_hdr);
+	memFree(MEM_8K_BUF, ftpState->reply_hdr);
 	ftpState->reply_hdr = NULL;
     }
     requestUnlink(ftpState->request);
@@ -639,7 +639,7 @@ ftpParseListing(FtpStateData * ftpState, int len)
 	debug(9, 3) ("ftpParseListing: didn't find end for %s\n", storeUrl(e));
 	return;
     }
-    line = get_free_4k_page();
+    line = memAllocate(MEM_4K_BUF, 1);
     end++;
     /* XXX there is an ABR bug here.   We need to make sure buf is
      * NULL terminated */
@@ -667,7 +667,7 @@ ftpParseListing(FtpStateData * ftpState, int len)
 	xstrncpy(ftpState->data.buf, line, ftpState->data.size);
 	ftpState->data.offset = strlen(ftpState->data.buf);
     }
-    put_free_4k_page(line);
+    memFree(MEM_4K_BUF, line);
 }
 
 static void
@@ -863,7 +863,7 @@ ftpStart(request_t * request, StoreEntry * entry)
     char *response;
     int fd;
     ErrorState *err;
-    cbdataAdd(ftpState);
+    cbdataAdd(ftpState, MEM_NONE);
     debug(9, 3) ("FtpStart: '%s'\n", url);
     storeLockObject(entry);
     ftpState->entry = entry;
@@ -941,8 +941,8 @@ ftpConnectDone(int fd, int status, void *data)
 	comm_close(ftpState->ctrl.fd);
     } else {
 	ftpState->state = BEGIN;
-	ftpState->ctrl.buf = get_free_4k_page();
-	ftpState->ctrl.freefunc = put_free_4k_page;
+	ftpState->ctrl.buf = memAllocate(MEM_4K_BUF, 1);
+	ftpState->ctrl.freefunc = memFree4K;
 	ftpState->ctrl.size = 4096;
 	ftpState->ctrl.offset = 0;
 	ftpState->data.buf = xmalloc(SQUID_TCP_SO_RCVBUF);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.99 1997/12/03 09:00:20 wessels Exp $
+ * $Id: wais.cc,v 1.100 1998/01/12 04:30:17 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -306,7 +306,7 @@ waisStart(request_t * request, StoreEntry * entry)
 	return;
     }
     waisState = xcalloc(1, sizeof(WaisStateData));
-    cbdataAdd(waisState);
+    cbdataAdd(waisState, MEM_NONE);
     waisState->method = method;
     waisState->relayhost = Config.Wais.relayHost;
     waisState->relayport = Config.Wais.relayPort;

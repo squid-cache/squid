@@ -287,6 +287,7 @@ struct _SquidConfig {
 	int log_fqdn;
 	int announce;
 	int accel_with_proxy;
+	int mem_pools;
     } onoff;
     struct _acl *aclList;
     struct {
@@ -761,9 +762,6 @@ struct _proto_stat {
 
 struct _Meta_data {
     int hot_vm;
-    int store_entries;
-    int mem_obj_count;
-    int mem_data_count;
     int ipcache_count;
     int fqdncache_count;
     int netdb_addrs;
@@ -804,15 +802,6 @@ struct _mem_hdr {
     mem_node *head;
     mem_node *tail;
     int origin_offset;
-};
-
-/* Memory allocator routines for fixed size blocks */
-struct _stmem_stats {
-    int max_pages;
-    int total_pages_allocated;
-    size_t page_size;
-    int n_pages_in_use;
-    Stack free_page_stack;
 };
 
 /* keep track each client receiving data from that particular StoreEntry */

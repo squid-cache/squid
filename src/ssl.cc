@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.72 1997/11/14 17:21:23 wessels Exp $
+ * $Id: ssl.cc,v 1.73 1998/01/12 04:30:11 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -368,7 +368,7 @@ sslStart(int fd, const char *url, request_t * request, size_t * size_ptr)
 	return;
     }
     sslState = xcalloc(1, sizeof(SslStateData));
-    cbdataAdd(sslState);
+    cbdataAdd(sslState, MEM_NONE);
     sslState->url = xstrdup(url);
     sslState->request = requestLink(request);
     sslState->size_ptr = size_ptr;

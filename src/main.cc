@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.206 1998/01/10 07:50:36 kostas Exp $
+ * $Id: main.cc,v 1.207 1998/01/12 04:30:05 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -429,7 +429,7 @@ mainInitialize(void)
     debug(1, 1) ("With %d file descriptors available\n", Squid_MaxFD);
 
     if (!configured_once) {
-	stmemInit();		/* stmem must go before at least redirect */
+	memInit();		/* memInit must go before at least redirect */
 	disk_init();		/* disk_init must go before ipcache_init() */
     }
     ipcache_init();

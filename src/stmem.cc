@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.54 1998/01/05 21:18:15 wessels Exp $
+ * $Id: stmem.cc,v 1.55 1998/01/12 04:30:12 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -106,16 +106,8 @@
 
 #include "squid.h"
 
-#ifndef USE_MEMALIGN
-#define USE_MEMALIGN 0
-#endif
-
-static void *get_free_thing(stmem_stats *);
-static void put_free_thing(stmem_stats *, void *);
-static void stmemFreeThingMemory(stmem_stats *);
-
 void
-memFree(mem_hdr * mem)
+stmemFree(mem_hdr * mem)
 {
     mem_node *lastp;
     mem_node *p = mem->head;
@@ -125,24 +117,23 @@ memFree(mem_hdr * mem)
 	    lastp = p;
 	    p = p->next;
 	    if (lastp) {
-		put_free_4k_page(lastp->data);
+		memFree(MEM_STMEM_BUF, lastp->data);
 		store_mem_size -= SM_PAGE_SIZE;
 		safe_free(lastp);
 	    }
 	}
 
 	if (p) {
-	    put_free_4k_page(p->data);
+	    memFree(MEM_STMEM_BUF, p->data);
 	    store_mem_size -= SM_PAGE_SIZE;
 	    safe_free(p);
 	}
     }
-    memset(mem, '\0', sizeof(mem_hdr *));	/* nuke in case ref'ed again */
-    safe_free(mem);
+    memFree(MEM_MEM_HDR, mem);
 }
 
 int
-memFreeDataUpto(mem_hdr * mem, int target_offset)
+stmemFreeDataUpto(mem_hdr * mem, int target_offset)
 {
     int current_offset = mem->origin_offset;
     mem_node *lastp;
@@ -157,7 +148,7 @@ memFreeDataUpto(mem_hdr * mem, int target_offset)
 	    lastp = p;
 	    p = p->next;
 	    current_offset += lastp->len;
-	    put_free_4k_page(lastp->data);
+	    memFree(MEM_STMEM_BUF, lastp->data);
 	    store_mem_size -= SM_PAGE_SIZE;
 	    safe_free(lastp);
 	}
@@ -174,7 +165,7 @@ memFreeDataUpto(mem_hdr * mem, int target_offset)
 
 /* Append incoming data. */
 void
-memAppend(mem_hdr * mem, const char *data, int len)
+stmemAppend(mem_hdr * mem, const char *data, int len)
 {
     mem_node *p;
     int avail_len;
@@ -197,7 +188,7 @@ memAppend(mem_hdr * mem, const char *data, int len)
 	p = xcalloc(1, sizeof(mem_node));
 	p->next = NULL;
 	p->len = len_to_copy;
-	p->data = get_free_4k_page();
+	p->data = memAllocate(MEM_STMEM_BUF, 1);
 	store_mem_size += SM_PAGE_SIZE;
 	xmemcpy(p->data, data, len_to_copy);
 	if (!mem->head) {
@@ -214,7 +205,7 @@ memAppend(mem_hdr * mem, const char *data, int len)
 }
 
 ssize_t
-memCopy(const mem_hdr * mem, off_t offset, char *buf, size_t size)
+stmemCopy(const mem_hdr * mem, off_t offset, char *buf, size_t size)
 {
     mem_node *p = mem->head;
     off_t t_off = mem->origin_offset;
@@ -252,156 +243,4 @@ memCopy(const mem_hdr * mem, off_t offset, char *buf, size_t size)
 	p = p->next;
     }
     return size - bytes_to_go;
-}
-
-
-/* Do whatever is necessary to begin storage of new object */
-mem_hdr *
-memInit(void)
-{
-    mem_hdr *new = xcalloc(1, sizeof(mem_hdr));
-    new->tail = new->head = NULL;
-    return new;
-}
-
-static void *
-get_free_thing(stmem_stats * thing)
-{
-    void *p = NULL;
-    if (!empty_stack(&thing->free_page_stack)) {
-	p = pop(&thing->free_page_stack);
-	assert(p != NULL);
-    } else {
-	p = xmalloc(thing->page_size);
-	thing->total_pages_allocated++;
-    }
-    thing->n_pages_in_use++;
-    memset(p, '\0', thing->page_size);
-    return p;
-}
-
-void *
-get_free_request_t(void)
-{
-    return get_free_thing(&request_pool);
-}
-
-void *
-get_free_mem_obj(void)
-{
-    return get_free_thing(&mem_obj_pool);
-}
-
-char *
-get_free_4k_page(void)
-{
-    return (char *) get_free_thing(&sm_stats);
-}
-
-char *
-get_free_8k_page(void)
-{
-    return (char *) get_free_thing(&disk_stats);
-}
-
-static void
-put_free_thing(stmem_stats * thing, void *p)
-{
-    assert(p != NULL);
-    thing->n_pages_in_use--;
-    if (thing->total_pages_allocated > thing->max_pages) {
-	xfree(p);
-	thing->total_pages_allocated--;
-    } else if (full_stack(&thing->free_page_stack)) {
-	xfree(p);
-	thing->total_pages_allocated--;
-    } else {
-	push(&thing->free_page_stack, p);
-    }
-}
-
-void
-put_free_request_t(void *req)
-{
-    put_free_thing(&request_pool, req);
-}
-
-void
-put_free_mem_obj(void *mem)
-{
-    put_free_thing(&mem_obj_pool, mem);
-}
-
-void
-put_free_4k_page(void *page)
-{
-    put_free_thing(&sm_stats, page);
-}
-
-void
-put_free_8k_page(void *page)
-{
-    put_free_thing(&disk_stats, page);
-}
-
-void
-stmemInit(void)
-{
-    sm_stats.page_size = SM_PAGE_SIZE;
-    sm_stats.total_pages_allocated = 0;
-    sm_stats.n_pages_in_use = 0;
-    sm_stats.max_pages = Config.Mem.maxSize / SM_PAGE_SIZE;
-
-    disk_stats.page_size = DISK_PAGE_SIZE;
-    disk_stats.total_pages_allocated = 0;
-    disk_stats.n_pages_in_use = 0;
-    disk_stats.max_pages = 200;
-
-    request_pool.page_size = sizeof(request_t);
-    request_pool.total_pages_allocated = 0;
-    request_pool.n_pages_in_use = 0;
-    request_pool.max_pages = Squid_MaxFD >> 3;
-
-    mem_obj_pool.page_size = sizeof(MemObject);
-    mem_obj_pool.total_pages_allocated = 0;
-    mem_obj_pool.n_pages_in_use = 0;
-    mem_obj_pool.max_pages = Squid_MaxFD >> 3;
-
-#if PURIFY
-    debug(19, 0) ("Disabling stacks under purify\n");
-    sm_stats.max_pages = 0;
-    disk_stats.max_pages = 0;
-    request_pool.max_pages = 0;
-    mem_obj_pool.max_pages = 0;
-#endif
-    if (!opt_mem_pools) {
-	sm_stats.max_pages = 0;
-	disk_stats.max_pages = 0;
-	request_pool.max_pages = 0;
-	mem_obj_pool.max_pages = 0;
-    }
-    init_stack(&sm_stats.free_page_stack, sm_stats.max_pages);
-    init_stack(&disk_stats.free_page_stack, disk_stats.max_pages);
-    init_stack(&request_pool.free_page_stack, request_pool.max_pages);
-    init_stack(&mem_obj_pool.free_page_stack, mem_obj_pool.max_pages);
-}
-
-static void
-stmemFreeThingMemory(stmem_stats * thing)
-{
-    void *p;
-    while (!empty_stack(&thing->free_page_stack)) {
-	p = pop(&thing->free_page_stack);
-	safe_free(p);
-    }
-    stackFreeMemory(&thing->free_page_stack);
-}
-
-void
-stmemFreeMemory(void)
-{
-    stmemFreeThingMemory(&sm_stats);
-    stmemFreeThingMemory(&disk_stats);
-    stmemFreeThingMemory(&request_pool);
-    stmemFreeThingMemory(&mem_obj_pool);
 }
