@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_cache_digest.cc,v 1.7 1998/04/01 00:14:03 rousskov Exp $
+ * $Id: test_cache_digest.cc,v 1.8 1998/04/01 05:02:21 rousskov Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -77,6 +77,7 @@ struct _FileIterator {
     const char *fname;
     FILE *file;
     time_t inner_time;  /* timestamp of the current entry */
+    time_t time_offset;  /* to adjust time set by reader */
     int line_count;     /* number of lines scanned */
     int bad_line_count; /* number of parsing errors */
     int time_warp_count;/* number of out-of-order entries in the file */
@@ -162,20 +163,35 @@ fileIteratorDestroy(FileIterator *fi)
 }
 
 static void
+fileIteratorSetCurTime(FileIterator *fi, time_t ct)
+{
+    assert(fi);
+    assert(fi->inner_time > 0);
+    fi->time_offset = ct - fi->inner_time;
+}
+
+static void
 fileIteratorAdvance(FileIterator *fi)
 {
     int res;
     assert(fi);
     do {
-	time_t last_time = fi->inner_time;
+	const time_t last_time = fi->inner_time;
+	fi->inner_time = -1;
 	res = fi->reader(fi);
 	fi->line_count++;
+	if (fi->inner_time < 0)
+	    fi->inner_time = last_time;
+	else
+	    fi->inner_time += fi->time_offset;
         if (res == frError)
 	    fi->bad_line_count++;
 	else
-	if (res == frEof)
+	if (res == frEof) {
+	    fprintf(stderr, "exhausted %s (%d entries) at %s",
+		fi->fname, fi->line_count, ctime(&fi->inner_time));
 	    fi->inner_time = -1;
-	else
+	} else
 	if (fi->inner_time < last_time) {
 	    assert(last_time >= 0);
 	    fi->time_warp_count++;
@@ -183,8 +199,9 @@ fileIteratorAdvance(FileIterator *fi)
 	}
 	/* report progress */
 	if (!(fi->line_count % 50000))
-	    fprintf(stderr, "%s scanned %d K entries (%d bad)\n",
-		fi->fname, fi->line_count / 1000, fi->bad_line_count);
+	    fprintf(stderr, "%s scanned %d K entries (%d bad) at %s",
+		fi->fname, fi->line_count / 1000, fi->bad_line_count,
+		ctime(&fi->inner_time));
     } while (res < 0);
 }
 
@@ -319,130 +336,6 @@ cacheQueryReport(Cache * cache, CacheQueryStats *stats)
 	xpercentInt(stats->false_hit_count + stats->false_miss_count, stats->query_count)
 	);
 }
-
-#if 0
-
-static int
-cacheAddLog(Cache * idx, const char *fname)
-{
-    FILE *file;
-    int scanned_count = 0;
-    assert(idx);
-    assert(fname && strlen(fname));
-
-    file = fopen(fname, "r");
-    if (!file) {
-	fprintf(stderr, "cannot open %s: %s\n", fname, strerror(errno));
-	return 0;
-    }
-    scanned_count = cacheIndexScanCleanPrefix(idx, fname, file);
-    fclose(file);
-    return scanned_count;
-}
-
-static void
-cacheInitReport(Cache * cache)
-{
-    assert(idx);
-    fprintf(stderr, "%s: bad swap_add:  %d\n",
-	idx->name, idx->bad_add_count);
-    fprintf(stderr, "%s: bad swap_del:  %d\n",
-	idx->name, idx->bad_del_count);
-    fprintf(stderr, "%s: scanned lines: %d\n",
-	idx->name, idx->scanned_count);
-}
-
-#if 0
-static int
-cacheGetLogEntry(Cache * idx, storeSwapLogData * s)
-{
-    if (!idx->has_log_entry)
-	cacheIndexStepLogEntry();
-    if (idx->has_log_entry) {
-	*s = idx->log_entry_buf;
-	return 1;
-    }
-    return 0;
-}
-
-static int
-cacheStepLogEntry(Cache * cache)
-{
-    if (fread(&idx->log_entry_buf, sizeof(idx->log_entry_buf), 1, idx->log) == 1) {
-	int op = (int) idx->log_entry_buf.op;
-	idx->scanned_count++;
-	idx->has_log_entry = 1;
-	if (op != SWAP_LOG_ADD && op != SWAP_LOG_DEL) {
-	    fprintf(stderr, "%s:%d: unknown swap log action %d\n", idx->log_fname, idx->scanned_count, op);
-	    exit(-3);
-	}
-    } else
-	idx->has_log_entry = 0;
-}
-
-static int
-cacheScan(Cache * idx, const char *fname, FILE * file)
-{
-    int count = 0;
-    int del_count = 0;
-    storeSwapLogData s;
-    fprintf(stderr, "%s scanning\n", fname);
-    while (fread(&s, sizeof(s), 1, file) == 1) {
-	count++;
-	idx->scanned_count++;
-	if (s.op == SWAP_LOG_ADD) {
-	    CacheEntry *olde = (CacheEntry *) hash_lookup(idx->hash, s.key);
-	    if (olde) {
-		idx->bad_add_count++;
-	    } else {
-		CacheEntry *e = cacheEntryCreate(&s);
-		hash_join(idx->hash, (hash_link *) e);
-		idx->count++;
-	    }
-	} else if (s.op == SWAP_LOG_DEL) {
-	    CacheEntry *olde = (CacheEntry *) hash_lookup(idx->hash, s.key);
-	    if (!olde)
-		idx->bad_del_count++;
-	    else {
-		assert(idx->count);
-		hash_remove_link(idx->hash, (hash_link *) olde);
-		cacheEntryDestroy(olde);
-		idx->count--;
-	    }
-	    del_count++;
-	} else {
-	    fprintf(stderr, "%s:%d: unknown swap log action\n", fname, count);
-	    exit(-3);
-	}
-    }
-    fprintf(stderr, "%s scanned %d entries, alloc: %d bytes\n",
-	fname, count,
-	(int) (count * sizeof(CacheEntry)));
-    return count;
-}
-#endif
-
-/* Us */
-
-static int
-cacheAddAccessLog(Cache * idx, const char *fname)
-{
-    FILE *file;
-    int scanned_count = 0;
-    assert(!idx);
-    assert(fname && strlen(fname));
-
-    file = fopen(fname, "r");
-    if (!file) {
-	fprintf(stderr, "cannot open %s: %s\n", fname, strerror(errno));
-	return 0;
-    }
-    scanned_count = cacheIndexScanAccessLog(idx, fname, file);
-    fclose(file);
-    return scanned_count;
-}
-
-#endif
 
 static void
 cacheFetch(Cache *cache, const RawAccessLogEntry *e)
@@ -594,6 +487,7 @@ main(int argc, char *argv[])
     FileIterator **fis = NULL;
     const int fi_count = argc-1;
     int active_fi_count = 0;
+    time_t ready_time;
     Cache *them, *us;
     int i;
 
@@ -612,9 +506,11 @@ main(int argc, char *argv[])
 	fis[i-1] = fileIteratorCreate(argv[i], swapStateReader);
     }
     /* read prefix to get start-up contents of the peer cache */
+    ready_time = -1;
     for (i = 1; i < fi_count; ++i) {
 	FileIterator *fi = fis[i];
 	while (fi->inner_time > 0) {
+	    ready_time = fi->inner_time;
 	    if (((storeSwapLogData*)fi->entry)->op != SWAP_LOG_ADD) {
 		break;
 	    } else {
@@ -626,6 +522,9 @@ main(int argc, char *argv[])
     /* digest peer cache content */
     cacheResetDigest(them);
     us->digest = cacheDigestClone(them->digest); /* @netw@ */
+
+    /* shift the time in access log to match ready_time */
+    fileIteratorSetCurTime(fis[0], ready_time);
 
     /* iterate, use the iterator with the smallest positive inner_time */
     cur_time = -1;
@@ -643,15 +542,12 @@ main(int argc, char *argv[])
 	    }
 	}
 	if (next_i >= 0) {
-	    /* skip access log entries recorder before creation of swap.state */
-	    if (cur_time > 0 || next_i > 0) {
-		cur_time = next_time;
-		/*fprintf(stderr, "%2d time: %d %s", next_i, (int)cur_time, ctime(&cur_time));*/
-		if (next_i == 0)
-		    cacheFetch(us, fis[next_i]->entry);
-		else
-		    cacheUpdateStore(them, fis[next_i]->entry, 0);
-	    }
+	    cur_time = next_time;
+	    /*fprintf(stderr, "%2d time: %d %s", next_i, (int)cur_time, ctime(&cur_time));*/
+	    if (next_i == 0)
+		cacheFetch(us, fis[next_i]->entry);
+	    else
+		cacheUpdateStore(them, fis[next_i]->entry, 0);
 	    fileIteratorAdvance(fis[next_i]);
 	}
     } while (active_fi_count);
