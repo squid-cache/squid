@@ -1,6 +1,6 @@
 
 /*
- * $Id: internal.cc,v 1.19 2000/11/13 12:25:12 adrian Exp $
+ * $Id: internal.cc,v 1.20 2000/11/15 13:01:54 adrian Exp $
  *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
@@ -98,8 +98,15 @@ internalRemoteUri(const char *host, u_short port, const char *dir, const char *n
     static char lc_host[SQUIDHOSTNAMELEN];
     assert(host && port && name);
     /* convert host name to lower case */
-    xstrncpy(lc_host, host, sizeof(lc_host));
+    xstrncpy(lc_host, host, SQUIDHOSTNAMELEN - 1);
     Tolower(lc_host);
+    /*
+     * append the domain in order to mirror the requests with appended
+     * domains
+     */
+    if (Config.appendDomain && !strchr(lc_host, '.'))
+        strncat(lc_host, Config.appendDomain, SQUIDHOSTNAMELEN - 
+        strlen(lc_host) - 1);
     /* build uri in mb */
     memBufReset(&mb);
     memBufPrintf(&mb, "http://%s", lc_host);

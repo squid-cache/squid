@@ -3,6 +3,10 @@ Changes to squid-2.5
 	- Fixed forwarding/peer loop detection code (Brian Degenhardt) -
 	  now a peer is ignored if it turns out to be us, rather than
 	  committing suicide
+	- Changed the internal URL code to obey appendDomain for internal
+	  objects if it needs appending. This fixes weirdnesses where
+	  a machine can think it is "foo.bar.com", and "foo" is requested.
+	  (Brian Degenhardt)
 
 Changes to Squid-2.4.DEVEL4 ():
 
