@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.5 2001/09/18 04:10:50 wessels Exp $
+ * $Id: auth_digest.cc,v 1.6 2001/09/18 04:17:02 wessels Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -152,15 +152,17 @@ authenticateDigestNonceNew()
  * ====
  * 
  * Now for my reasoning:
- * We will not accept a unrecognised nonce->we have all recognisable nonces stored
- * If we send out unique base64 encodings we guarantee that a given nonce applies
- * to only one user (barring attacks or really bad timing with expiry and creation).
- * Using a random component in the nonce allows us to loop to find a unique nonce.
+ * We will not accept a unrecognised nonce->we have all recognisable
+ * nonces stored If we send out unique base64 encodings we guarantee
+ * that a given nonce applies to only one user (barring attacks or
+ * really bad timing with expiry and creation).  Using a random
+ * component in the nonce allows us to loop to find a unique nonce.
  * We use H(nonce_data) so the nonce is meaningless to the reciever.
  * So our nonce looks like base64(H(timestamp,pointertohash,randomdata))
- * And even if our randomness is not very random (probably due to bad coding on my
- * part) we don't really care - the timestamp and memory pointer should provide
- * enough protection for the users authentication.
+ * And even if our randomness is not very random (probably due to
+ * bad coding on my part) we don't really care - the timestamp and
+ * memory pointer should provide enough protection for the users
+ * authentication.
  */
 
     /* create a new nonce */
@@ -171,7 +173,10 @@ authenticateDigestNonceNew()
     newnonce->noncedata.randomdata = random();
 
     authDigestNonceEncode(newnonce);
-    /* loop until we get a unique nonce. The nonce creation must have a random factor */
+    /*
+     * loop until we get a unique nonce. The nonce creation must
+     * have a random factor
+     */
     while ((temp = authenticateDigestNonceFindNonce(newnonce->hash.key))) {
 	/* create a new nonce */
 	newnonce->noncedata.randomdata = random();
@@ -244,9 +249,10 @@ void
 authenticateDigestNonceCacheCleanup(void *data)
 {
     /*
-     * We walk the hash by nonceb64 as that is the unique key we use.
-     * For big hashs tables we could consider stepping through the cache, 100/200
-     * entries at a time. Lets see how it flys first.
+     * We walk the hash by nonceb64 as that is the unique key we
+     * use.  For big hash tables we could consider stepping through
+     * the cache, 100/200 entries at a time. Lets see how it flies
+     * first.
      */
     digest_nonce_h *nonce;
     debug(29, 3) ("authenticateDigestNonceCacheCleanup: Cleaning the nonce cache now\n");
@@ -659,10 +665,12 @@ authenticateDigestAuthenticateUser(auth_user_request_t * auth_user_request, requ
     if (digest_request->nonce == NULL) {
 	/* this isn't a nonce we issued */
 	/* TODO: record breaks in authentication at the request level 
-	 * This is probably best done with support changes at the auth_rewrite level -RBC
+	 * This is probably best done with support changes at the
+	 * auth_rewrite level -RBC
 	 * and can wait for auth_rewrite V2.
-	 * RBC 20010902 further note: flags.credentials ok is now a local scheme
-	 * flag, so we can move this to the request level at any time.
+	 * RBC 20010902 further note: flags.credentials ok is now
+	 * a local scheme flag, so we can move this to the request
+	 * level at any time.
 	 */
 	digest_user->flags.credentials_ok = 3;
 	return;
@@ -1146,10 +1154,14 @@ authenticateDigestDecodeAuth(auth_user_request_t * auth_user_request, const char
 
     /* now we validate the data given to us */
 
-    /* TODO: on invalid parameters we should return 400, not 407. Find some clean way 
-     * of doing this. perhaps return a valid struct, and set the direction to clientwards
-     * combined with a change to the clientwards handling code (ie let the clientwards
-     * call set the error type (but limited to known correct values - 400/401/407 */
+    /*
+     * TODO: on invalid parameters we should return 400, not 407.
+     * Find some clean way of doing this. perhaps return a valid
+     * struct, and set the direction to clientwards combined with
+     * a change to the clientwards handling code (ie let the
+     * clientwards call set the error type (but limited to known
+     * correct values - 400/401/407
+     */
 
     /* first the NONCE count */
     if (digest_request->cnonce && strlen(digest_request->nc) != 8) {
@@ -1189,7 +1201,8 @@ authenticateDigestDecodeAuth(auth_user_request_t * auth_user_request, const char
 	auth_user_request->scheme_data = NULL;
 	return;
     }
-    /* we can't check the URI just yet. We'll check it in the authenticate phase */
+    /* we can't check the URI just yet. We'll check it in the
+    authenticate phase */
 
     /* is the response the correct length? */
 
@@ -1265,13 +1278,14 @@ authenticateDigestDecodeAuth(auth_user_request_t * auth_user_request, const char
 	auth_user->scheme_data = digest_user;
 	/* set the user type */
 	auth_user->auth_type = AUTH_DIGEST;
-	/* this auth_user struct is the one to get added to the username cache */
+	/* this auth_user struct is the one to get added to the
+	username cache */
 	/* store user in hash's */
 	authenticateUserNameCacheAdd(auth_user);
 	/* 
-	 * Add the digest to the user so we can tell if a hacking or spoofing attack
-	 * is taking place. We do this by assuming the user agent won't change user
-	 * name without warning.
+	 * Add the digest to the user so we can tell if a hacking
+	 * or spoofing attack is taking place. We do this by assuming
+	 * the user agent won't change user name without warning.
 	 */
 	authDigestUserLinkNonce(auth_user, nonce);
     } else {
