@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.106 2002/10/14 11:51:07 adrian Exp $
+ * $Id: mime.cc,v 1.107 2002/10/25 07:36:32 robertc Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -481,7 +481,6 @@ MimeIcon::created (StoreEntry *newEntry)
 	file_close(fd);
 	return;
     }
-    flags = null_request_flags;
     flags.cachable = 1;
     StoreEntry *e = storeCreateEntry(url,
 	url,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.19 2002/10/15 13:12:00 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.20 2002/10/25 07:36:32 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -158,7 +158,7 @@ clientSetReplyToError(void *data,
     context->http->al.http.code = errstate->httpStatus;
 
     context->http->entry =
-	clientCreateStoreEntry(context, method, null_request_flags);
+	clientCreateStoreEntry(context, method, request_flags());
     if (auth_user_request) {
 	errstate->auth_user_request = auth_user_request;
 	authenticateAuthUserRequestLock(errstate->auth_user_request);
@@ -233,7 +233,7 @@ clientReplyContext::restoreState(clientHttpRequest * http)
 void
 startError(clientReplyContext * context, clientHttpRequest * http, ErrorState * err)
 {
-    http->entry = clientCreateStoreEntry(context, http->request->method, null_request_flags);
+    http->entry = clientCreateStoreEntry(context, http->request->method, request_flags());
     triggerStoreReadWithClientParameters(context, http);
     errorAppendEntry(http->entry, err);
 }
@@ -680,7 +680,7 @@ clientCacheHit(void *data, StoreIOBuffer result)
 	    clientRemoveStoreReference(context, &context->sc, &http->entry);
 	    http->entry = e =
 		clientCreateStoreEntry(context, http->request->method,
-		null_request_flags);
+		request_flags());
 	    /*
 	     * Copy timestamp from the original entry so the 304
 	     * reply has a meaningful Age: header.
@@ -750,7 +750,7 @@ clientProcessMiss(clientReplyContext * context)
 	    clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL,
 	    &http->conn->peer.sin_addr, http->request);
 	http->entry =
-	    clientCreateStoreEntry(context, r->method, null_request_flags);
+	    clientCreateStoreEntry(context, r->method, request_flags());
 	errorAppendEntry(http->entry, err);
 	triggerStoreReadWithClientParameters(context, http);
 	return;
@@ -945,7 +945,7 @@ clientReplyContext::purgeDoPurgeHead(_StoreEntry *newEntry)
      */
     http->entry =
 	clientCreateStoreEntry(this, http->request->method,
-	null_request_flags);
+	request_flags());
     triggerStoreReadWithClientParameters(this, http);
     httpReplyReset(r = http->entry->mem_obj->reply);
     httpBuildVersion(&version, 1, 0);
@@ -964,7 +964,7 @@ clientTraceReply(clientStreamNode * node, clientReplyContext * context)
     assert(context->http->request->max_forwards == 0);
     context->http->entry =
 	clientCreateStoreEntry(context, context->http->request->method,
-	null_request_flags);
+	request_flags());
     tempBuffer.offset = next->readBuffer.offset + context->headers_sz;
     tempBuffer.length = next->readBuffer.length;
     tempBuffer.data = next->readBuffer.data;
@@ -1575,7 +1575,7 @@ clientSendMoreData(void *data, StoreIOBuffer result)
 	fd, storeUrl(entry), (long int) http->out.offset);
     /* update size of the request */
     context->reqsize = size;
-    if (http->request->flags.reset_tcp) {
+    if (http->request->flags.resetTCP()) {
 	/* yuck. FIXME: move to client_side.c */
 	if (fd != -1)
 	    comm_reset_close(fd);

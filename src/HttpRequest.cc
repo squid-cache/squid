@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.31 2002/10/13 20:34:57 robertc Exp $
+ * $Id: HttpRequest.cc,v 1.32 2002/10/25 07:36:31 robertc Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -158,4 +158,25 @@ httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConn)
     if (strConn && strListIsMember(strConn, strBuf(e->name), ','))
 	return 0;
     return 1;
+}
+
+/* request_flags */
+bool
+request_flags::resetTCP() const
+{
+    return reset_tcp != 0;
+}
+
+void
+request_flags::setResetTCP()
+{
+    debug (73, 9) ("request_flags::setResetTCP\n");
+    reset_tcp = 1;
+}
+
+void
+request_flags::clearResetTCP()
+{
+    debug(73, 9) ("request_flags::clearResetTCP\n");
+    reset_tcp = 0;
 }
