@@ -95,6 +95,13 @@
 #undef USE_USERAGENT_LOG
 
 /*
+ * If you want to log Referer request header values, define this.
+ * By default, they are written to referer.log in the Squid log
+ * directory.
+ */
+#undef USE_REFERER_LOG
+
+/*
  * A dangerous feature which causes Squid to kill its parent process
  * (presumably the RunCache script) upon receipt of SIGTERM or SIGINT.
  * Use with caution.
