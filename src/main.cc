@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.159 1997/07/14 19:24:37 wessels Exp $
+ * $Id: main.cc,v 1.160 1997/07/14 19:31:40 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -637,7 +637,6 @@ main(int argc, char **argv)
 	eventRun();
 	if ((loop_delay = eventNextTime()) < 0)
 	    loop_delay = 0;
-debug(0,0)("loop_delay=%d\n", loop_delay);
 #if HAVE_POLL
 	switch (comm_poll(loop_delay)) {
 #else
