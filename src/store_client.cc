@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.53 1999/01/12 23:37:50 wessels Exp $
+ * $Id: store_client.cc,v 1.54 1999/01/13 05:56:08 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -530,11 +530,11 @@ CheckQuickAbort2(StoreEntry * entry)
     assert(mem);
     debug(20, 3) ("CheckQuickAbort2: entry=%p, mem=%p\n", entry, mem);
     if (mem->request && !mem->request->flags.cachable) {
-	debug(20, 1) ("CheckQuickAbort2: YES !mem->request->flags.cachable\n");
+	debug(20, 3) ("CheckQuickAbort2: YES !mem->request->flags.cachable\n");
 	return 1;
     }
     if (EBIT_TEST(entry->flags, KEY_PRIVATE)) {
-	debug(20, 1) ("CheckQuickAbort2: YES KEY_PRIVATE\n");
+	debug(20, 3) ("CheckQuickAbort2: YES KEY_PRIVATE\n");
 	return 1;
     }
     expectlen = mem->reply->content_length;
@@ -545,7 +545,7 @@ CheckQuickAbort2(StoreEntry * entry)
 	return 0;
     }
     if (curlen > expectlen) {
-	debug(20, 1) ("CheckQuickAbort2: YES bad content length\n");
+	debug(20, 3) ("CheckQuickAbort2: YES bad content length\n");
 	return 1;
     }
     if ((expectlen - curlen) < minlen) {
@@ -553,7 +553,7 @@ CheckQuickAbort2(StoreEntry * entry)
 	return 0;
     }
     if ((expectlen - curlen) > (Config.quickAbort.max << 10)) {
-	debug(20, 1) ("CheckQuickAbort2: YES too much left to go\n");
+	debug(20, 3) ("CheckQuickAbort2: YES too much left to go\n");
 	return 1;
     }
     if (expectlen < 100) {
@@ -564,7 +564,7 @@ CheckQuickAbort2(StoreEntry * entry)
 	debug(20, 3) ("CheckQuickAbort2: NO past point of no return\n");
 	return 0;
     }
-    debug(20, 1) ("CheckQuickAbort2: YES default, returning 1\n");
+    debug(20, 3) ("CheckQuickAbort2: YES default, returning 1\n");
     return 1;
 }
 
