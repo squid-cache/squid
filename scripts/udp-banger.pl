@@ -18,7 +18,7 @@ $port=(shift || '3130') ;
 
 @CODES=('xxx', 'QUERY', 'HIT', 'MISS', 'ERROR');
 
-require "$ENV{'HARVEST_HOME'}/lib/socket.ph";
+require 'sys/socket.ph';
 
 $sockaddr = 'S n a4 x8';
 ($name, $aliases, $proto) = getprotobyname("udp");
