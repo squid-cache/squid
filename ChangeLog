@@ -12,6 +12,11 @@ Changes to squid-1.1.beta4 ():
 	- Moved ICMP socket to external 'pinger' program.
 	- Moved tvSubMsec() to lib/util.c.
 	- Moved accessLogTime() to debug.c.
+	- Fixed handling of race condition in icpHandleIMSReply().
+	- Fixed "\r\n\0" bug in gopherSendRequest();
+	- Fixed cachemgr output for non-table browsers (Cord Beermann).
+	- Moved accept() for dnsserver into Squid.
+	- Moved sample config.site file to contrib directory (Markus Gyger).
 
 Changes to squid-1.1.beta3 (September 16, 1996):
 
