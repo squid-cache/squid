@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.91 1999/06/30 06:29:00 wessels Exp $
+ * $Id: mime.cc,v 1.92 1999/07/05 21:40:08 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -286,7 +286,6 @@ mimeInit(char *filename)
     regex_t re;
     mimeEntry *m;
     int re_flags = REG_EXTENDED | REG_NOSUB | REG_ICASE;
-return;
     if (filename == NULL)
 	return;
     if ((fp = fopen(filename, "r")) == NULL) {
