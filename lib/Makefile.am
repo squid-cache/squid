@@ -1,9 +1,12 @@
 ## Process this file with automake to produce Makefile.in
 #
-#  $Id: Makefile.am,v 1.10 2003/03/10 04:56:21 robertc Exp $
+#  $Id: Makefile.am,v 1.11 2003/06/19 13:12:00 robertc Exp $
 #
 
 SUBDIRS = libTrie
+
+AM_CFLAGS = @SQUID_CFLAGS@
+AM_CXXFLAGS = @SQUID_CXXFLAGS@
 
 if ENABLE_XPROF_STATS
 XPROF_STATS_SOURCE = Profiler.c

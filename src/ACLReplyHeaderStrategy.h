@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLReplyHeaderStrategy.h,v 1.1 2003/02/25 12:22:34 robertc Exp $
+ * $Id: ACLReplyHeaderStrategy.h,v 1.2 2003/06/19 13:12:01 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -55,7 +55,7 @@ public:
     ACLReplyHeaderStrategy(ACLReplyHeaderStrategy const &);
 
 private:
-    static ACLReplyHeaderStrategy Instance_;
+    static ACLReplyHeaderStrategy *Instance_;
     ACLReplyHeaderStrategy(){}
 
     ACLReplyHeaderStrategy&operator=(ACLReplyHeaderStrategy const &);
@@ -77,10 +77,13 @@ template <http_hdr_type header>
 ACLReplyHeaderStrategy<header> *
 ACLReplyHeaderStrategy<header>::Instance()
 {
-    return &Instance_;
+    if (!Instance_)
+        Instance_ = new ACLReplyHeaderStrategy<header>;
+
+    return Instance_;
 }
 
 template <http_hdr_type header>
-ACLReplyHeaderStrategy<header> ACLReplyHeaderStrategy<header>::Instance_;
+ACLReplyHeaderStrategy<header> * ACLReplyHeaderStrategy<header>::Instance_(NULL);
 
 #endif /* SQUID_REPLYHEADERSTRATEGY_H */

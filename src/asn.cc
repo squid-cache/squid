@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.92 2003/03/06 06:21:37 robertc Exp $
+ * $Id: asn.cc,v 1.93 2003/06/19 13:12:04 robertc Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -186,7 +186,7 @@ asnInit(void)
     if (0 == inited++)
         squid_rn_init();
 
-    squid_rn_inithead((void **) &AS_tree_head, 8);
+    squid_rn_inithead(&AS_tree_head, 8);
 
     cachemgrRegister("asndb", "AS Number Database", asnStats, 0, 1);
 }

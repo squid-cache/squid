@@ -1,5 +1,5 @@
 /*
- * $Id: radix.h,v 1.16 2003/01/23 00:36:47 robertc Exp $
+ * $Id: radix.h,v 1.17 2003/06/19 13:12:00 robertc Exp $
  */
 
 #ifndef SQUID_RADIX_H
@@ -119,7 +119,7 @@ struct squid_radix_node_head {
 
 
 SQUIDCEXTERN void squid_rn_init (void);
-SQUIDCEXTERN int squid_rn_inithead(void **, int);
+SQUIDCEXTERN int squid_rn_inithead(struct squid_radix_node_head **, int);
 SQUIDCEXTERN int squid_rn_refines(void *, void *);
 SQUIDCEXTERN int squid_rn_walktree(struct squid_radix_node_head *, int (*)(struct squid_radix_node *, void *), void *);
 SQUIDCEXTERN struct squid_radix_node *squid_rn_addmask(void *, int, int);

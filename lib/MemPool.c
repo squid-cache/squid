@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemPool.c,v 1.16 2003/02/08 01:45:47 robertc Exp $
+ * $Id: MemPool.c,v 1.17 2003/06/19 13:12:00 robertc Exp $
  *
  * DEBUG: section 63    Low Level Memory Pool Management
  * AUTHOR: Alex Rousskov, Andres Kroonmaa
@@ -567,20 +567,10 @@ memPoolFree(MemPool * pool, void *obj)
 
 }
 
-/* removes empty Chunks from pool */
 static void
-memPoolCleanOne(MemPool * pool, time_t maxage)
+memPoolConvertFreeCacheToChunkSpecific(MemPool * const pool)
 {
-    MemChunk *chunk, *freechunk, *listTail;
-    void **Free;
-    time_t age;
-
-    if (!pool)
-	return;
-    if (!pool->Chunks)
-	return;
-
-    memPoolFlushMetersFull(pool);
+    void *Free;
     /*
      * OK, so we have to go through all the global freeCache and find the Chunk
      * any given Free belongs to, and stuff it into that Chunk's freelist 
@@ -590,15 +580,31 @@ memPoolCleanOne(MemPool * pool, time_t maxage)
 	lastPool = pool;
 	pool->allChunks = splay_splay((const void **)&Free, pool->allChunks, memCompObjChunks);
 	assert(splayLastResult == 0);
-	chunk = pool->allChunks->data;
+	MemChunk *chunk = pool->allChunks->data;
 	assert(chunk->inuse_count > 0);
 	chunk->inuse_count--;
-	pool->freeCache = *Free;	/* remove from global cache */
-	*Free = chunk->freeList;	/* stuff into chunks freelist */
+	pool->freeCache = *(void **)Free;	/* remove from global cache */
+	*(void **)Free = chunk->freeList;	/* stuff into chunks freelist */
 	chunk->freeList = Free;
 	chunk->lastref = squid_curtime;
     }
 
+}
+
+/* removes empty Chunks from pool */
+static void
+memPoolCleanOne(MemPool * pool, time_t maxage)
+{
+    MemChunk *chunk, *freechunk, *listTail;
+    time_t age;
+
+    if (!pool)
+	return;
+    if (!pool->Chunks)
+	return;
+
+    memPoolFlushMetersFull(pool);
+    memPoolConvertFreeCacheToChunkSpecific(pool);
     /* Now we have all chunks in this pool cleared up, all free items returned to their home */
     /* We start now checking all chunks to see if we can release any */
     /* We start from pool->Chunks->next, so first chunk is not released */
