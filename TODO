@@ -1,23 +1,26 @@
 Squid-3.0:
+  - Update automake and autoconf on squid-cache.org for the squid-3 CVS snapshot generation. 
+  - Someone other than Robert to review my draft squid 3 release notes (in CVS already).
+  - epoll linkage.
 
-  - Windows port
-  - ESI client side streams support framework
-  - Authentication tidyups in proxy_auth acl managagement
-  - Appropriate parts of rproxy
-  - Some kind of Range support to at least the level of 2.5 and earlier
-  - ETag caching
+  - Windows port (Merging in process, won't delay 3.0).
+  - ESI client side streams support framework (done).
+  - ESI (done).
+  - Authentication tidyups in proxy_auth acl managagement (Done).
+  - Appropriate parts of rproxy (Done).
+  - Some kind of Range support to at least the level of 2.5 and earlier (Done).
+  - ETag caching (???)
   - Other sponsored work that needs to get into mainline sooner rather
-    than later
+    than later (None known of - RC).
   - Go over the old TODO (below) and sort out what has
      o) Been done
      o) Needs to be done, and when
      o) Can be ignored
   - Generalize socket binding to allow for multipe ICP/HTCP/SNMP sockets
-    (get rid of udp_incoming_address)
+    (get rid of udp_incoming_address) (???)
 
 Squid-3.0 if finished in time:
 
-  - ESI
   - Customized logging capabilities
   - External logging
   - IPv6
@@ -30,12 +33,6 @@ Later:
   - Buffer management (required by store API and comm code improvements)
   - Improved reply processing to not reparse the reply headers several
     times
-
-
-
-
-
-
 
 
 
