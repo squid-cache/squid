@@ -53,6 +53,11 @@
 	- Fixed proxy-authentication hangs (Henrik Nordstrom).
 	- Fixed request_t->flags bug causing authenticated, proxied
 	  responses to be cached (Arjan de Vet).
+	- Fixed MIME types for .tgz extension (Henrik Nordstrom).
+	- Added view and download options to FTP listings (Henrik
+	  Nordstrom).
+	- Modified configure to allow using pre-installed libdlmalloc.a
+	  (Masashi Fujita).
 	- Fixed cachemgr 'objects' implementation.
 
 Changes to squid-1.2.beta22 (June 1, 1998):
