@@ -360,6 +360,13 @@ storeUnregister(StoreEntry * e, void *data)
     }
     if (sc == NULL)
 	return 0;
+    if (sc == mem->clients) {
+	/*
+	 * If we are unregistering the _first_ client for this
+	 * entry, then we have to reset the client FD to -1.
+	 */
+	mem->fd = -1;
+    }
     *S = sc->next;
     mem->nclients--;
     sc->flags.disk_io_pending = 0;
