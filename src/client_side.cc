@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.77 1996/12/18 00:03:00 wessels Exp $
+ * $Id: client_side.cc,v 1.78 1996/12/18 00:05:26 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -73,7 +73,7 @@ static void
 clientLookupDstFQDNDone(int fd, const char *fqdn, void *data)
 {
     icpStateData *icpState = data;
-    debug(33, 0, "clientLookupDstFQDNDone: FD %d, '%s', FQDN %s\n",
+    debug(33, 5, "clientLookupDstFQDNDone: FD %d, '%s', FQDN %s\n",
 	fd,
 	icpState->url,
 	fqdn ? fqdn : "NULL");
