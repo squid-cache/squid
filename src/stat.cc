@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.347 2001/07/17 10:35:46 hno Exp $
+ * $Id: stat.cc,v 1.348 2001/08/16 00:16:18 hno Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -986,7 +986,7 @@ statCountersInitSpecial(StatCounters * C)
     statHistEnumInit(&C->comm_icp_incoming, INCOMING_ICP_MAX);
     statHistEnumInit(&C->comm_dns_incoming, INCOMING_DNS_MAX);
     statHistEnumInit(&C->comm_http_incoming, INCOMING_HTTP_MAX);
-    statHistIntInit(&C->select_fds_hist, 256); /* was SQUID_MAXFD, but it is way too much. It is OK to crop this statistics */
+    statHistIntInit(&C->select_fds_hist, 256);	/* was SQUID_MAXFD, but it is way too much. It is OK to crop this statistics */
 }
 
 /* add special cases here as they arrive */

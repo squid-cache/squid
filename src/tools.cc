@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.208 2001/08/11 18:27:20 adrian Exp $
+ * $Id: tools.cc,v 1.209 2001/08/16 00:16:19 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -968,6 +968,9 @@ parseEtcHosts(void)
     char *lt = buf;
     char *addr = buf;
     char *host = NULL;
+#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
+    char *systemroot = NULL;
+#endif
     if (NULL == Config.etcHostsPath)
 	return;
     if (0 == strcmp(Config.etcHostsPath, "none"))
@@ -978,7 +981,7 @@ parseEtcHosts(void)
 	    Config.etcHostsPath, xstrerror());
 	return;
     }
-#if defined(_SQUID_CYGWIN_)
+#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
     setmode(fileno(fp), O_TEXT);
 #endif
     while (fgets(buf, 1024, fp)) {	/* for each line */

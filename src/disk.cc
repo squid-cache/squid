@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.156 2001/07/28 22:43:24 hno Exp $
+ * $Id: disk.cc,v 1.157 2001/08/16 00:16:16 hno Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -295,7 +295,7 @@ file_write(int fd,
     off_t file_offset,
     void *ptr_to_buf,
     int len,
-    DWCB *handle,
+    DWCB * handle,
     void *handle_data,
     FREE * free_func)
 {

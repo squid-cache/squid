@@ -57,7 +57,7 @@ static char *__foo;
 #define debug(X...)		/* */
 #endif /* DEBUG */
 #else /* __GNUC__ */
-static void 
+static void
 debug(char *format,...)
 {
 }
