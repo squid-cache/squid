@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.91 2003/10/16 21:40:17 robertc Exp $
+#  $Id: Makefile.am,v 1.92 2003/10/20 11:23:38 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -519,6 +519,7 @@ ufsdump_SOURCES = debug.cc \
 	int.cc \
 	ufsdump.cc \
 	store.cc \
+	StoreFileSystem.cc \
 	StoreMeta.cc \
 	StoreMeta.h \
 	StoreMetaMD5.cc \
@@ -556,7 +557,6 @@ ufsdump_SOURCES = debug.cc \
 	comm_select.cc \
 	comm_poll.cc \
 	comm_kqueue.cc \
-	comm_epoll.cc \
 	defines.h \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \

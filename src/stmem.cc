@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.84 2003/10/20 03:57:25 robertc Exp $
+ * $Id: stmem.cc,v 1.85 2003/10/20 11:23:37 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Harvest Derived
@@ -152,7 +152,7 @@ mem_hdr::makeAppendSpace()
 void
 mem_hdr::internalAppend(const char *data, int len)
 {
-    debug(19, 6) ("memInternalAppend: len %d\n", len);
+    debugs(19, 6, "memInternalAppend: len " << len);
 
     while (len > 0) {
         makeAppendSpace();
@@ -217,10 +217,10 @@ mem_hdr::debugDump() const
  * we supply 0-500 and stop.
  */
 ssize_t
-mem_hdr::copy(off_t offset, char *buf, size_t size) const
+mem_hdr::copy(StoreIOBuffer const &target) const
 {
 
-    debugs(19, 6, "memCopy: offset " << offset << ": size " <<  size);
+    debugs(19, 6, "memCopy: " << target.range());
 
     /* we shouldn't ever ask for absent offsets */
 
@@ -232,22 +232,22 @@ mem_hdr::copy(off_t offset, char *buf, size_t size) const
     }
 
     /* RC: the next assert is nearly useless */
-    assert(size > 0);
+    assert(target.length > 0);
 
     /* Seek our way into store */
-    mem_node *p = getBlockContainingLocation((size_t)offset);
+    mem_node *p = getBlockContainingLocation((size_t)target.offset);
 
     if (!p) {
-        debugs(19, 1, "memCopy: could not find offset " << offset <<
+        debugs(19, 1, "memCopy: could not find start of " << target.range() <<
                " in memory.");
         debugDump();
         fatal("Squid has attempted to read data from memory that is not present. This is an indication of of (pre-3.0) code that hasn't been updated to deal with sparse objects in memory. Squid should coredump.allowing to review the cause. Immediately preceeding this message is a dump of the available data in the format [start,end). The [ means from the value, the ) means up to the value. I.e. [1,5) means that there are 4 bytes of data, at offsets 1,2,3,4.\n");
         return 0;
     }
 
-    size_t bytes_to_go = size;
-    char *ptr_to_buf = buf;
-    off_t location = offset;
+    size_t bytes_to_go = target.length;
+    char *ptr_to_buf = target.data;
+    off_t location = target.offset;
 
     /* Start copying begining with this block until
      * we're satiated */
@@ -259,7 +259,7 @@ mem_hdr::copy(off_t offset, char *buf, size_t size) const
         /* hit a sparse patch */
 
         if (bytes_to_copy == 0)
-            return size - bytes_to_go;
+            return target.length - bytes_to_go;
 
         location += bytes_to_copy;
 
@@ -270,7 +270,7 @@ mem_hdr::copy(off_t offset, char *buf, size_t size) const
         p = getBlockContainingLocation(location);
     }
 
-    return size - bytes_to_go;
+    return target.length - bytes_to_go;
 }
 
 bool
@@ -336,8 +336,7 @@ bool
 mem_hdr::write (StoreIOBuffer const &writeBuffer)
 {
     PROF_start(mem_hdr_write);
-    //    mem_node *tempNode;
-    debug(19, 6) ("mem_hdr::write: offset %lu len %ld, object end %lu\n", (unsigned long)writeBuffer.offset, (long)writeBuffer.length, (unsigned long)endOffset());
+    debugs(19, 6, "mem_hdr::write: " << writeBuffer.range() << " object end " << endOffset());
 
     if (unionNotEmpty(writeBuffer)) {
         fatal("Attempt to overwrite already in-memory data\n");
@@ -391,8 +390,8 @@ mem_hdr::NodeCompare(mem_node * const &left, mem_node * const &right)
 void
 mem_hdr::dump() const
 {
-    debug(20, 1) ("mem_hdr: %p nodes.start() %p\n", this, nodes.start());
-    debug(20, 1) ("mem_hdr: %p nodes.finish() %p\n", this, nodes.finish());
+    debugs(20, 1, "mem_hdr: " << (void *)this << " nodes.start() " << nodes.start());
+    debugs(20, 1, "mem_hdr: " << (void *)this << " nodes.finish() " << nodes.finish());
 }
 
 size_t

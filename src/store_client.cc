@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.133 2003/08/10 05:11:22 robertc Exp $
+ * $Id: store_client.cc,v 1.134 2003/10/20 11:23:38 robertc Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -153,7 +153,7 @@ store_client::callback(ssize_t sz, bool error)
     }
 
     result.offset = cmp_offset;
-    assert(callbackPending());
+    assert(_callback.pending());
     cmp_offset = copyInto.offset + sz;
     STCB *temphandler = _callback.callback_handler;
     void *cbdata = _callback.callback_data;
@@ -174,7 +174,7 @@ storeClientCopyEvent(void *data)
     assert (sc->flags.copy_event_pending);
     sc->flags.copy_event_pending = 0;
 
-    if (!sc->callbackPending())
+    if (!sc->_callback.pending())
         return;
 
     storeClientCopy2(sc->entry, sc);
@@ -239,7 +239,7 @@ store_client::copy(StoreEntry * anEntry,
     assert(this == storeClientListSearch(entry->mem_obj, data));
 #endif
 
-    assert(!callbackPending());
+    assert(!_callback.pending());
 #if ONLYCONTIGUOUSREQUESTS
 
     assert(cmp_offset == copyRequest.offset);
@@ -315,7 +315,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     }
 
     debug(90, 3)("storeClientCopy2: %s\n", e->getMD5Text());
-    assert(sc->callbackPending());
+    assert(sc->_callback.pending());
     /*
      * We used to check for ENTRY_ABORTED here.  But there were some
      * problems.  For example, we might have a slow client (or two) and
@@ -442,9 +442,7 @@ store_client::scheduleMemRead()
     /* What the client wants is in memory */
     /* Old style */
     debug(90, 3)("store_client::doCopy: Copying normal from memory\n");
-    MemObject *mem = entry->mem_obj;
-    size_t sz = mem->data_hdr.copy(copyInto.offset, copyInto.data,
-                                   copyInto.length);
+    size_t sz = entry->mem_obj->data_hdr.copy(copyInto);
     callback(sz);
     flags.store_copying = 0;
 }
@@ -454,7 +452,7 @@ store_client::fileRead()
 {
     MemObject *mem = entry->mem_obj;
 
-    assert(callbackPending());
+    assert(_callback.pending());
     assert(!flags.disk_io_pending);
     flags.disk_io_pending = 1;
 
@@ -477,7 +475,7 @@ storeClientReadBody(void *data, const char *buf, ssize_t len)
     store_client *sc = (store_client *)data;
     assert(sc->flags.disk_io_pending);
     sc->flags.disk_io_pending = 0;
-    assert(sc->callbackPending());
+    assert(sc->_callback.pending());
     debug(90, 3)("storeClientReadBody: len %d", (int) len);
 
     if (sc->copyInto.offset == 0 && len > 0 && sc->entry->getReply()->sline.status == 0)
@@ -500,7 +498,7 @@ store_client::fail()
      * not synchronous
      */
 
-    if (callbackPending())
+    if (_callback.pending())
         callback(0, true);
 }
 
@@ -565,7 +563,7 @@ store_client::readHeader(char const *buf, ssize_t len)
 
     assert(flags.disk_io_pending);
     flags.disk_io_pending = 0;
-    assert(callbackPending());
+    assert(_callback.pending());
 
     unpackHeader (buf, len);
 
@@ -625,7 +623,7 @@ storeClientCopyPending(store_client * sc, StoreEntry * e, void *data)
 
 #endif
 
-    if (!sc->callbackPending())
+    if (!sc->_callback.pending())
         return 0;
 
     return 1;
@@ -671,7 +669,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
         statCounter.swap.ins++;
     }
 
-    if (sc->callbackPending()) {
+    if (sc->_callback.pending()) {
         /* callback with ssize = -1 to indicate unexpected termination */
         debug(90, 3) ("storeUnregister: store_client for %s has a callback\n",
                       mem->url);
@@ -721,7 +719,7 @@ InvokeHandlers(StoreEntry * e)
         nx = node->next;
         debug(90, 3) ("InvokeHandlers: checking client #%d\n", i++);
 
-        if (!sc->callbackPending())
+        if (!sc->_callback.pending())
             continue;
 
         if (sc->flags.disk_io_pending)
@@ -744,9 +742,6 @@ storePendingNClients(const StoreEntry * e)
 static int
 CheckQuickAbort2(StoreEntry * entry)
 {
-    size_t curlen;
-    size_t minlen;
-    size_t expectlen;
     MemObject * const mem = entry->mem_obj;
     assert(mem);
     debug(90, 3) ("CheckQuickAbort2: entry=%p, mem=%p\n", entry, mem);
@@ -761,15 +756,15 @@ CheckQuickAbort2(StoreEntry * entry)
         return 1;
     }
 
-    expectlen = entry->getReply()->content_length + entry->getReply()->hdr_sz;
+    size_t expectlen = entry->getReply()->content_length + entry->getReply()->hdr_sz;
 
     if (expectlen < 0)
         /* expectlen is < 0 if *no* information about the object has been recieved */
         return 1;
 
-    curlen = (size_t) mem->endOffset ();
+    size_t curlen = (size_t) mem->endOffset ();
 
-    minlen = (size_t) Config.quickAbort.min << 10;
+    size_t minlen = (size_t) Config.quickAbort.min << 10;
 
     if (minlen < 0) {
         debug(90, 3) ("CheckQuickAbort2: NO disabled\n");
@@ -828,7 +823,7 @@ CheckQuickAbort(StoreEntry * entry)
 void
 store_client::dumpStats(StoreEntry * output, int clientNumber) const
 {
-    if (callbackPending())
+    if (_callback.pending())
         return;
 
     storeAppendPrintf(output, "\tClient #%d, %p\n", clientNumber, _callback.callback_data);
@@ -854,9 +849,9 @@ store_client::dumpStats(StoreEntry * output, int clientNumber) const
 }
 
 bool
-store_client::callbackPending() const
+store_client::Callback::pending() const
 {
-    return _callback.callback_handler && _callback.callback_data;
+    return callback_handler && callback_data;
 }
 
 store_client::Callback::Callback(STCB *function, void *data) : callback_handler(function), callback_data (data) {}
