@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.79 2002/10/21 16:12:47 hno Exp $
+ * $Id: icmp.cc,v 1.80 2002/10/22 21:12:51 hno Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -79,7 +79,7 @@ icmpRecv(int unused1, void *unused2)
 	sizeof(pingerReplyData),
 	0);
     if (n < 0) {
-	debug(50, 1) ("icmpRecv: recv: %s\n", xstrerror());
+	debug(37, 1) ("icmpRecv: recv: %s\n", xstrerror());
 	if (++fail_count == 10 || errno == ECONNREFUSED)
 	    icmpClose();
 	return;
@@ -117,7 +117,7 @@ icmpSend(pingerEchoData * pkt, int len)
 	inet_ntoa(pkt->to), (int) pkt->opcode, pkt->psize);
     x = comm_udp_send(icmp_sock, (char *) pkt, len, 0);
     if (x < 0) {
-	debug(50, 1) ("icmpSend: send: %s\n", xstrerror());
+	debug(37, 1) ("icmpSend: send: %s\n", xstrerror());
 	if (errno == ECONNREFUSED || errno == EPIPE) {
 	    icmpClose();
 	    return;
@@ -209,7 +209,7 @@ icmpOpen(void)
     fd_note(icmp_sock, "pinger");
     commSetSelect(icmp_sock, COMM_SELECT_READ, icmpRecv, NULL, 0);
     commSetTimeout(icmp_sock, -1, NULL, NULL);
-    debug(29, 1) ("Pinger socket opened on FD %d\n", icmp_sock);
+    debug(37, 1) ("Pinger socket opened on FD %d\n", icmp_sock);
 #endif
 }
 
@@ -219,7 +219,7 @@ icmpClose(void)
 #if USE_ICMP
     if (icmp_sock < 0)
 	return;
-    debug(29, 1) ("Closing Pinger socket on FD %d\n", icmp_sock);
+    debug(37, 1) ("Closing Pinger socket on FD %d\n", icmp_sock);
     comm_close(icmp_sock);
     icmp_sock = -1;
 #endif
