@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.174 1999/05/25 22:05:47 wessels Exp $
+#  $Id: Makefile.in,v 1.175 1999/05/26 20:41:15 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -185,7 +185,8 @@ DELAY_OBJS	= delay_pools.o
 
 ASYNC_OBJS	= \
 		aiops.o \
-		async_io.o
+		async_io.o \
+		store_io_asyncufs.o
 
 LEAKFINDER_OBJS	= \
 		leakfinder.o

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.335 1999/05/26 17:08:00 wessels Exp $
+ * $Id: protos.h,v 1.336 1999/05/26 20:41:21 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -80,12 +80,12 @@ extern int aio_operations_pending(void);
 extern int aio_overloaded(void);
 extern int aio_sync(void);
 
-extern void aioCancel(int, void *);
-extern void aioOpen(const char *, int, mode_t, AIOCB *, void *, void *);
+extern void aioCancel(int);
+extern void aioOpen(const char *, int, mode_t, AIOCB *, void *);
 extern void aioClose(int);
-extern void aioWrite(int, int offset, char *, int size, AIOCB *, void *);
+extern void aioWrite(int, int offset, char *, int size, AIOCB *, void *, FREE *);
 extern void aioRead(int, int offset, char *, int size, AIOCB *, void *);
-extern void aioStat(char *, struct stat *, AIOCB *, void *, void *);
+extern void aioStat(char *, struct stat *, AIOCB *, void *);
 extern void aioUnlink(const char *, AIOCB *, void *);
 extern void aioCheckCallbacks(void);
 extern void aioSync(void);
@@ -862,13 +862,25 @@ extern STOBJWRITE storeWrite;
 extern STOBJUNLINK storeUnlink;
 extern off_t storeOffset(storeIOState *);
 
-/* store_io_ufs.c */
-extern storeIOState *storeUfsOpen(sfileno f, mode_t mode, STIOCB * callback, void *callback_data);
+/*
+ * store_io_ufs.c
+ */
+extern storeIOState *storeUfsOpen(sfileno, mode_t, STIOCB *, void *);
 extern void storeUfsClose(storeIOState * sio);
-extern void storeUfsRead(storeIOState * sio, char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data);
-extern void storeUfsWrite(storeIOState * sio, char *buf, size_t size, off_t offset, FREE *);
+extern void storeUfsRead(storeIOState *, char *, size_t, off_t, STRCB *, void *);
+extern void storeUfsWrite(storeIOState *, char *, size_t, off_t, FREE *);
 extern void storeUfsUnlink(int fileno);
-extern char *storeUfsFullPath(sfileno fn, char *fullpath);	/* XXX want this to be static */
+
+#if USE_ASYNC_IO
+/*
+ * store_io_ufs.c
+ */
+extern storeIOState *storeAufsOpen(sfileno, mode_t, STIOCB *, void *);
+extern void storeAufsClose(storeIOState * sio);
+extern void storeAufsRead(storeIOState *, char *, size_t, off_t, STRCB *, void *);
+extern void storeAufsWrite(storeIOState *, char *, size_t, off_t, FREE *);
+extern void storeAufsUnlink(int fileno);
+#endif
 
 /*
  * store_log.c
@@ -940,6 +952,10 @@ extern OBJH storeUfsDirStats;
 extern void storeUfsDirParse(cacheSwap * swap);
 extern void storeUfsDirDump(StoreEntry * entry, const char *name, SwapDir * s);
 extern void storeUfsDirFree(SwapDir *);
+extern char *storeUfsFullPath(sfileno fn, char *fullpath);
+#if USE_ASYNC_IO
+extern void storeAufsDirParse(cacheSwap * swap);
+#endif
 
 
 /*
