@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.665 2003/10/21 09:30:09 robertc Exp $
+ * $Id: client_side.cc,v 1.666 2003/10/21 12:23:53 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1067,7 +1067,11 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
         range_err = "unknown length";
     else if (rep->content_length != http->memObject()->getReply()->content_length)
         range_err = "INCONSISTENT length";	/* a bug? */
-    else if (httpHeaderHas(&http->request->header, HDR_IF_RANGE) && !clientIfRangeMatch(http, rep))
+
+    /* hits only - upstream peer determines correct behaviour on misses, and client_side_reply determines
+     * hits candidates 
+     */
+    else if (logTypeIsATcpHit(http->logType) && httpHeaderHas(&http->request->header, HDR_IF_RANGE) && !clientIfRangeMatch(http, rep))
         range_err = "If-Range match failed";
     else if (!http->request->range->canonize(rep))
         range_err = "canonization failed";
