@@ -213,10 +213,10 @@ storeRebuildFromSwapLog(rebuild_dir * d)
 		 * because adding to store_swap_size happens in
 		 * the cleanup procedure.
 		 */
-        	storeExpireNow(e);
-        	storeSetPrivateKey(e);
-        	EBIT_SET(e->flag, RELEASE_REQUEST);
-    		storeDirMapBitReset(e->swap_file_number);
+		storeExpireNow(e);
+		storeSetPrivateKey(e);
+		EBIT_SET(e->flag, RELEASE_REQUEST);
+		storeDirMapBitReset(e->swap_file_number);
 		e->swap_file_number = -1;
 		RebuildState.objcount--;
 		RebuildState.cancelcount++;

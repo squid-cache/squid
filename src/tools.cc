@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.146 1998/02/04 23:41:31 wessels Exp $
+ * $Id: tools.cc,v 1.147 1998/02/06 17:50:27 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -801,7 +801,7 @@ dlinkDelete(dlink_node * m, dlink_list * list)
 	list->tail = m->prev;
 }
 
-void 
+void
 kb_incr(kb_t * k, size_t v)
 {
     k->bytes += v;

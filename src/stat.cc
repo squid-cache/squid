@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.192 1998/02/05 21:10:23 wessels Exp $
+ * $Id: stat.cc,v 1.193 1998/02/06 17:50:24 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -453,7 +453,7 @@ statMemoryAccounted(void)
 	meta_data.ipcache_count * sizeof(ipcache_entry) +
 	meta_data.fqdncache_count * sizeof(fqdncache_entry) +
 	hash_links_allocated * sizeof(hash_link) +
-                 meta_data.netdb_peers * sizeof(struct _net_db_peer) +
+	meta_data.netdb_peers * sizeof(struct _net_db_peer) +
                  meta_data.client_info * client_info_sz +
                  meta_data.misc;
 }
