@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.21 2004/12/20 16:30:32 robertc Exp $
+ * $Id: ACLChecklist.cc,v 1.22 2004/12/20 17:35:58 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -61,7 +61,7 @@ ACLChecklist::authenticated()
     }
 
     /* get authed here */
-    /* Note: this fills in auth_user_request when applicable */
+    /* Note: this fills in auth_user_request when applicable (auth incomplete)*/
     switch (AuthUserRequest::tryToAuthenticateAndSetAuthUser (&auth_user_request, headertype, request, conn(), src_addr)) {
 
     case AUTH_ACL_CANNOT_AUTHENTICATE:
@@ -69,6 +69,12 @@ ACLChecklist::authenticated()
         return 0;
 
     case AUTH_AUTHENTICATED:
+
+        if (auth_user_request) {
+            auth_user_request->unlock();
+            auth_user_request = NULL;
+        }
+
         return 1;
         break;
 
@@ -220,18 +226,6 @@ ACLChecklist::checkCallback(allow_t answer)
     PF *callback_;
     void *cbdata_;
     debug(28, 3) ("ACLChecklist::checkCallback: %p answer=%d\n", this, answer);
-    /* During reconfigure, we can end up not finishing call
-     * sequences into the auth code */
-
-    if (auth_user_request) {
-        /* the checklist lock */
-        auth_user_request->unlock();
-        /* it might have been connection based */
-        assert(conn().getRaw() != NULL);
-        conn()->auth_user_request = NULL;
-        conn()->auth_type = AUTH_BROKEN;
-        auth_user_request = NULL;
-    }
 
     callback_ = callback;
     callback = NULL;
@@ -324,6 +318,21 @@ ACLChecklist::~ACLChecklist()
 
     if (extacl_entry)
         cbdataReferenceDone(extacl_entry);
+
+    /* During reconfigure or if authentication is used in aclCheckFast without
+     * first being authenticated in http_access we can end up not finishing call
+     * sequences into the auth code. In such case we must make sure to forget
+     * the authentication state completely
+     */
+    if (auth_user_request) {
+        /* the checklist lock */
+        auth_user_request->unlock();
+        /* it might have been connection based */
+        assert(conn().getRaw() != NULL);
+        conn()->auth_user_request = NULL;
+        conn()->auth_type = AUTH_BROKEN;
+        auth_user_request = NULL;
+    }
 
     if (request)
         requestUnlink(request);

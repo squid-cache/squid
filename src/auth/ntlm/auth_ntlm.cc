@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.44 2004/12/20 16:30:40 robertc Exp $
+ * $Id: auth_ntlm.cc,v 1.45 2004/12/20 17:35:58 robertc Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -51,6 +51,8 @@
 static void
 authenticateStateFree(authenticateStateData * r)
 {
+    r->auth_user_request->unlock();
+    r->auth_user_request = NULL;
     cbdataFree(r);
 }
 
@@ -762,6 +764,10 @@ AuthNTLMUserRequest::module_start(RH * handler, void *data)
             r->data = cbdataReference(data);
             r->auth_user_request = this;
 
+            lock()
+
+                ; /* locking myself */
+
             if (server == NULL) {
                 helperStatefulSubmit(ntlmauthenticators, NULL, authenticateNTLMHandleplaceholder, r, NULL);
             } else {
@@ -790,11 +796,19 @@ AuthNTLMUserRequest::module_start(RH * handler, void *data)
         r->handler = handler;
         r->data = cbdataReference(data);
         r->auth_user_request = this;
+
+        lock()
+
+            ;
         snprintf(buf, 8192, "KK %s\n", sent_string);
+
         /* getting rid of deferred request status */
         authserver_deferred = 0;
+
         helperStatefulSubmit(ntlmauthenticators, buf, authenticateNTLMHandleReply, r, authserver);
+
         debug(29, 9) ("authenticateNTLMstart: finished\n");
+
         break;
 
     default:
