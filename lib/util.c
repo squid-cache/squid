@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.62 1998/07/22 20:36:39 wessels Exp $
+ * $Id: util.c,v 1.63 1998/07/31 22:23:55 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -211,7 +211,7 @@ check_malloc(void *p, size_t sz)
     int B, I;
     if (!dbg_initd)
 	check_init();
-    B = DBG_HASH_BUCKET(s);
+    B = DBG_HASH_BUCKET(p);
     for (I = 0; I < DBG_ARRY_SZ; I++) {
 	if (!(P = malloc_ptrs[B][I]))
 	    continue;
@@ -244,7 +244,7 @@ size_t
 xmallocblksize(void *p)
 {
     int B, I;
-    B = DBG_HASH_BUCKET(s);
+    B = DBG_HASH_BUCKET(p);
     for (I = 0; I < DBG_ARRY_SZ; I++) {
 	if (malloc_ptrs[B][I] == p)
 	    return malloc_size[B][I];
@@ -258,7 +258,7 @@ static char *
 malloc_file_name(void *p)
 {
     int B, I;
-    B = DBG_HASH_BUCKET(s);
+    B = DBG_HASH_BUCKET(p);
     for (I = 0; I < DBG_ARRY_SZ; I++) {
 	if (malloc_ptrs[B][I] == p)
 	    return malloc_file[B][I];
@@ -269,7 +269,7 @@ int
 malloc_line_number(void *p)
 {
     int B, I;
-    B = DBG_HASH_BUCKET(s);
+    B = DBG_HASH_BUCKET(p);
     for (I = 0; I < DBG_ARRY_SZ; I++) {
 	if (malloc_ptrs[B][I] == p)
 	    return malloc_line[B][I];
@@ -280,7 +280,7 @@ int
 malloc_number(void *p)
 {
     int B, I;
-    B = DBG_HASH_BUCKET(s);
+    B = DBG_HASH_BUCKET(p);
     for (I = 0; I < DBG_ARRY_SZ; I++) {
 	if (malloc_ptrs[B][I] == p)
 	    return malloc_count[B][I];
@@ -331,7 +331,7 @@ xmalloc_scan_region(void *start, int size, int depth)
     while (ptr <= end) {
 	void *p = *(void **) ptr;
 	if (p && p != start) {
-	    B = DBG_HASH_BUCKET(s);
+	    B = DBG_HASH_BUCKET(p);
 	    for (I = 0; I < DBG_ARRY_SZ; I++) {
 		if (malloc_ptrs[B][I] == p) {
 		    if (!malloc_refs[B][I]++) {
