@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.510 1999/12/30 17:36:53 wessels Exp $
+ * $Id: store.cc,v 1.511 2000/01/11 05:32:56 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -150,6 +150,7 @@ new_StoreEntry(int mem_obj_flag, const char *url, const char *log_url)
 	e->mem_obj = new_MemObject(url, log_url);
     debug(20, 3) ("new_StoreEntry: returning %p\n", e);
     e->expires = e->lastmod = e->lastref = e->timestamp = -1;
+    e->swap_file_number = -1;
     return e;
 }
 
@@ -210,8 +211,6 @@ storeHashInsert(StoreEntry * e, const cache_key * key)
 	e->node = heap_insert(store_heap, e);
 	debug(20, 4) ("storeHashInsert: inserted node %p\n", e->node);
     }
-#else
-    dlinkAdd(e, &e->lru, &store_list);
 #endif
 }
 
@@ -225,8 +224,6 @@ storeHashDelete(StoreEntry * e)
 	heap_delete(store_heap, e->node);
 	e->node = NULL;
     }
-#else
-    dlinkDelete(&e->lru, &store_list);
 #endif
     storeKeyFree(e->key);
     e->key = NULL;
@@ -264,8 +261,8 @@ storeLockObject(StoreEntry * e)
 	 */
 	debug(20, 4) ("storeLockObject: just locked node %p\n", e->node);
 #else
-	dlinkDelete(&e->lru, &store_list);
-	dlinkAdd(e, &e->lru, &store_list);
+	storeDirLRUDelete(e);
+	storeDirLRUAdd(e);
 #endif
     }
     debug(20, 3) ("storeLockObject: key '%s' count=%d\n",
@@ -304,6 +301,9 @@ storeUnlockObject(StoreEntry * e)
     assert(storePendingNClients(e) == 0);
 #if HEAP_REPLACEMENT
     storeHeapPositionUpdate(e);
+#else
+    storeDirLRUDelete(e);
+    storeDirLRUAdd(e);
 #endif
     if (EBIT_TEST(e->flags, RELEASE_REQUEST))
 	storeRelease(e);
@@ -313,19 +313,8 @@ storeUnlockObject(StoreEntry * e)
 	e->mem_obj->request = NULL;
     } else {
 	storePurgeMem(e);
-	if (EBIT_TEST(e->flags, KEY_PRIVATE)) {
-#if HEAP_REPLACEMENT
-	    /*
-	     * Squid/LRU is moving things around in the linked list in order
-	     * to keep from bumping into them when purging from the LRU list.
-	     */
-	    debug(20, 4) ("storeUnlockObject: purged private node %p\n",
-		e->node);
-#else
-	    dlinkDelete(&e->lru, &store_list);
-	    dlinkAddTail(e, &e->lru, &store_list);
-#endif
-	}
+	if (EBIT_TEST(e->flags, KEY_PRIVATE))
+	    debug(0, 0) ("WARNING: %s:%d: found KEY_PRIVATE\n", __FILE__, __LINE__);
     }
     return 0;
 }
@@ -525,7 +514,6 @@ struct _store_check_cachable_hist {
 	int private_key;
 	int too_many_open_files;
 	int too_many_open_fds;
-	int lru_age_too_low;
     } no;
     struct {
 	int Default;
@@ -586,18 +574,6 @@ storeCheckCachable(StoreEntry * e)
     } else if (fdNFree() < RESERVED_FD) {
 	debug(20, 2) ("storeCheckCachable: NO: too many FD's open\n");
 	store_check_cachable_hist.no.too_many_open_fds++;
-#if HEAP_REPLACEMENT
-	/*
-	 * With the HEAP-based replacement policies a low reference
-	 * age should not prevent cacheability of an object.  We
-	 * do not use LRU age at all.
-	 */
-#else
-    } else if (storeExpiredReferenceAge() < 300) {
-	debug(20, 2) ("storeCheckCachable: NO: LRU Age = %d\n",
-	    storeExpiredReferenceAge());
-	store_check_cachable_hist.no.lru_age_too_low++;
-#endif
     } else {
 	store_check_cachable_hist.yes.Default++;
 	return 1;
@@ -630,8 +606,6 @@ storeCheckCachableStats(StoreEntry * sentry)
 	store_check_cachable_hist.no.too_many_open_files);
     storeAppendPrintf(sentry, "no.too_many_open_fds\t%d\n",
 	store_check_cachable_hist.no.too_many_open_fds);
-    storeAppendPrintf(sentry, "no.lru_age_too_low\t%d\n",
-	store_check_cachable_hist.no.lru_age_too_low);
     storeAppendPrintf(sentry, "yes.default\t%d\n",
 	store_check_cachable_hist.yes.Default);
 }
@@ -811,11 +785,13 @@ storeMaintainSwapSpace(void *datanotused)
     int expired = 0;
     int max_scan;
     int max_remove;
+    int i;
+    int j;
+    static int ndir = 0;
     double f;
     static time_t last_warn_time = 0;
 #if !HEAP_REPLACEMENT
-    dlink_node *m;
-    dlink_node *prev = NULL;
+    SwapDir *sd;
 #else
     heap_key age;
     heap_key min_age = 0.0;
@@ -834,7 +810,8 @@ storeMaintainSwapSpace(void *datanotused)
 	f = (double) (store_swap_size - store_swap_low) / (store_swap_high - store_swap_low);
 	f = f < 0.0 ? 0.0 : f > 1.0 ? 1.0 : f;
 	max_scan = (int) (f * 400.0 + 100.0);
-	max_remove = (int) (f * 70.0 + 10.0);
+	if ((max_remove = stat5minClientRequests()) < 10)
+	    max_remove = 10;
 	eventAdd("MaintainSwapSpace", storeMaintainSwapSpace, NULL, 1.0 - f, 1);
     }
     debug(20, 3) ("storeMaintainSwapSpace: f=%f, max_scan=%d, max_remove=%d\n",
@@ -905,32 +882,50 @@ storeMaintainSwapSpace(void *datanotused)
     while ((e = linklistShift(&locked_entries)))
 	e->node = heap_insert(store_heap, e);
 #else
-    for (m = store_list.tail; m; m = prev) {
-	prev = m->prev;
-	e = m->data;
-	scanned++;
-	if (storeEntryLocked(e)) {
-	    /*
-	     * If there is a locked entry at the tail of the LRU list,
-	     * move it to the beginning to get it out of the way.
-	     * Theoretically, we might have all locked objects at the
-	     * tail, and then we'll never remove anything here and the
-	     * LRU age will go to zero.
-	     */
-	    if (memInUse(MEM_STOREENTRY) > max_scan) {
-		dlinkDelete(&e->lru, &store_list);
-		dlinkAdd(e, &e->lru, &store_list);
-	    }
-	    locked++;
-	} else if (storeCheckExpired(e)) {
-	    expired++;
-	    storeRelease(e);
-	}
-	if (expired >= max_remove)
-	    break;
-	if (scanned >= max_scan)
-	    break;
+    for (i = 0; i < Config.cacheSwap.n_configured; i++) {
+	sd = &Config.cacheSwap.swapDirs[i];
+	sd->lru_walker = sd->lru_list.tail;
     }
+    do {
+	j = 0;
+	for (i = 0; i < Config.cacheSwap.n_configured; i++) {
+	    if (ndir >= Config.cacheSwap.n_configured)
+		ndir = ndir % Config.cacheSwap.n_configured;
+	    sd = &Config.cacheSwap.swapDirs[ndir++];
+	    if (sd->cur_size < sd->high_size)
+		continue;
+	    if (NULL == sd->lru_walker)
+		continue;
+	    e = sd->lru_walker->data;
+	    sd->lru_walker = sd->lru_walker->prev;
+	    j++;
+	    scanned++;
+	    sd->scanned++;
+	    if (storeEntryLocked(e)) {
+		/*
+		 * If there is a locked entry at the tail of the LRU list,
+		 * move it to the beginning to get it out of the way.
+		 * Theoretically, we might have all locked objects at the
+		 * tail, and then we'll never remove anything here and the
+		 * LRU age will go to zero.
+		 */
+		if (memInUse(MEM_STOREENTRY) > max_scan) {
+		    storeDirLRUDelete(e);
+		    if (!EBIT_TEST(e->flags, ENTRY_SPECIAL))
+			storeDirLRUAdd(e);
+		}
+		locked++;
+	    } else if (storeCheckExpired(e)) {
+		expired++;
+		sd->removals++;
+		storeRelease(e);
+	    }
+	    if (expired >= max_remove)
+		break;
+	    if (scanned >= max_scan)
+		break;
+	}
+    } while (j > 0 && expired < max_remove && scanned < max_scan);
 #endif
     debug(20, (expired ? 2 : 3)) ("storeMaintainSwapSpace: scanned %d/%d removed %d/%d locked %d f=%.03f\n",
 	scanned, max_scan, expired, max_remove, locked, f);
@@ -980,12 +975,12 @@ storeRelease(StoreEntry * e)
     storeLog(STORE_LOG_RELEASE, e);
     if (e->swap_file_number > -1) {
 	storeUnlink(e->swap_file_number);
-	storeDirMapBitReset(e->swap_file_number);
 	if (e->swap_status == SWAPOUT_DONE)
 	    if (EBIT_TEST(e->flags, ENTRY_VALIDATED))
 		storeDirUpdateSwapSize(e->swap_file_number, e->swap_file_sz, -1);
 	if (!EBIT_TEST(e->flags, KEY_PRIVATE))
 	    storeDirSwapLog(e, SWAP_LOG_DEL);
+	storeSwapFileNumberSet(e, -1);
     }
     storeSetMemStatus(e, NOT_IN_MEMORY);
     destroy_StoreEntry(e);
@@ -1137,7 +1132,6 @@ storeInit(void)
 	store_heap = new_heap(10000, HeapKeyGen_StoreEntry_GDSF);
     }
 #else
-    store_list.head = store_list.tail = NULL;
     inmem_list.head = inmem_list.tail = NULL;
 #endif
     stackInit(&LateReleaseStack);
@@ -1182,17 +1176,7 @@ storeCheckExpired(const StoreEntry * e)
 	return 1;
     if (EBIT_TEST(e->flags, ENTRY_NEGCACHED) && squid_curtime >= e->expires)
 	return 1;
-#if HEAP_REPLACEMENT
-    /*
-     * With HEAP_REPLACEMENT we are not using the LRU reference age, the heap
-     * controls the replacement of objects.
-     */
     return 1;
-#else
-    if (squid_curtime - e->lastref > storeExpiredReferenceAge())
-	return 1;
-    return 0;
-#endif
 }
 
 #if !HEAP_REPLACEMENT
@@ -1476,3 +1460,20 @@ storeHeapPositionUpdate(StoreEntry * e)
 	heap_update(inmem_heap, e->mem_obj->node, e);
 }
 #endif
+
+void
+storeSwapFileNumberSet(StoreEntry * e, sfileno filn)
+{
+    if (e->swap_file_number == filn)
+	return;
+    if (filn < 0) {
+	assert(-1 == filn);
+	storeDirMapBitReset(e->swap_file_number);
+	storeDirLRUDelete(e);
+	e->swap_file_number = -1;
+    } else {
+	assert(-1 == e->swap_file_number);
+	storeDirMapBitSet(e->swap_file_number = filn);
+	storeDirLRUAdd(e);
+    }
+}
