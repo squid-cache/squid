@@ -1,8 +1,8 @@
 /*
- * $Id: pam_auth.c,v 1.12 2003/01/23 00:35:35 robertc Exp $
+ * $Id: pam_auth.c,v 1.13 2003/11/05 09:37:43 hno Exp $
  *
  * PAM authenticator module for Squid.
- * Copyright (C) 1999,2002 Henrik Nordstrom <hno@squid-cache.org>
+ * Copyright (C) 1999,2002,2003 Henrik Nordstrom <hno@squid-cache.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -36,6 +36,15 @@
  * user password database
  *
  * Change Log:
+ *
+ *   Version 2.2, 2003-11-05
+ *      One shot mode is now the default mode of operation
+ *      with persistent PAM connections enabled by -t option.
+ *      Support for clearing the PAM_AUTHTOK attribute on
+ *      persistent PAM connections.
+ *
+ *   Version 2.1, 2002-08-12
+ *      Squid-2.5 support (URL encoded login, password strings)
  *
  *   Version 2.0, 2002-01-07
  *      One shot mode, command line options
@@ -76,7 +85,7 @@
 
 /* The default TTL */
 #ifndef DEFAULT_SQUID_PAM_TTL
-#define DEFAULT_SQUID_PAM_TTL 60
+#define DEFAULT_SQUID_PAM_TTL 0
 #endif
 
 static char *password = NULL;	/* Workaround for Solaris 2.6 brokenness */
@@ -221,12 +230,11 @@ start:
 	    }
 	    pamh_created = time(NULL);
 	}
+	/* Authentication */
 	retval = PAM_SUCCESS;
 	if (ttl != 0) {
 	    if (retval == PAM_SUCCESS)
 		retval = pam_set_item(pamh, PAM_USER, user);
-	    if (retval == PAM_SUCCESS)
-		retval = pam_set_item(pamh, PAM_CONV, &conv);
 	}
 	if (retval == PAM_SUCCESS)
 	    retval = pam_authenticate(pamh, 0);
@@ -238,7 +246,15 @@ start:
 error:
 	    fprintf(stdout, "ERR\n");
 	}
-	if (ttl == 0) {
+	/* cleanup */
+	if (ttl != 0) {
+	    retval = pam_set_item(pamh, PAM_CONV, &conv);
+#ifdef PAM_AUTHTOK
+	    if (retval == PAM_SUCCESS)
+		retval = pam_set_item(pamh, PAM_AUTHTOK, NULL);
+#endif
+	}
+	if (ttl == 0 || retval != PAM_SUCCESS) {
 	    retval = pam_end(pamh, retval);
 	    if (retval != PAM_SUCCESS) {
 		fprintf(stderr, "WARNING: failed to release PAM authenticator\n");
