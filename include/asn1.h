@@ -68,19 +68,6 @@ typedef u_char oid;
 #define IS_CONSTRUCTOR(byte)	((byte) & ASN_CONSTRUCTOR)
 #define IS_EXTENSION_ID(byte)	(((byte) & ASN_EXTENSION_ID) == ASN_EXTENSION_ID)
 
-/* 32 bit integer compatability hack */
-#if SIZEOF_INT == 4
-typedef int num32;
-typedef unsigned int u_num32;
-#elif SIZEOF_LONG == 4
-typedef long num32;
-typedef unsigned long u_num32;
-#else
-typedef long num32;		/* assume that long's are 32bit */
-typedef unsigned long u_num32;
-#endif
-#define NUM32LEN sizeof(num32)	/* this should always be 4 */
-
 /* 
  * internal 64 bit representation:
  */

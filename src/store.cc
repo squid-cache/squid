@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.353 1997/12/01 02:15:25 wessels Exp $
+ * $Id: store.cc,v 1.354 1997/12/02 05:06:44 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1133,6 +1133,10 @@ storeDoRebuildFromDisk(void *data)
 	size = (off_t) scan5;
 
 	key = storeKeyScan(keytext);
+	if (key == NULL) {
+	    debug(20,1)("storeDoRebuildFromDisk: bad key: '%s'\n", keytext);
+	    continue;
+	}
 	e = storeGet(key);
 	used = storeDirMapBitTest(sfileno);
 	/* If this URL already exists in the cache, does the swap log

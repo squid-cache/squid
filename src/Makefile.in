@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.103 1997/12/01 22:45:47 wessels Exp $
+#  $Id: Makefile.in,v 1.104 1997/12/02 05:06:41 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -15,6 +15,7 @@ USE_SPLAY_TREE  = # -DUSE_SPLAY_TREE
 USE_BIN_TREE    = # -DUSE_BIN_TREE
 ALARM_UPDATES_TIME = # -DALARM_UPDATES_TIME=1
 STORE_KEY_SHA	= # -DSTORE_KEY_SHA=1
+STORE_KEY_MD5	= # -DSTORE_KEY_MD5=1
 USE_ASYNC_IO	= # -DUSE_ASYNC_IO=1
 
 # define all three for SNMP support
@@ -26,7 +27,8 @@ DEFINES         = $(HOST_OPT) \
                   $(ICMP_OPT) $(DELAY_HACK) $(USERAGENT_OPT) \
                   $(KILL_PARENT_OPT) $(USE_POLL_OPT) \
                   $(USE_SPLAY_TREE) $(USE_BIN_TREE) \
-		  $(ALARM_UPDATES_TIME) $(STORE_KEY_SHA) \
+		  $(ALARM_UPDATES_TIME) \
+		  $(STORE_KEY_SHA) $(STORE_KEY_MD5) \
 		  $(USE_ASYNC_IO) $(SQUID_SNMP)
 
 prefix		= @prefix@
@@ -136,6 +138,7 @@ OBJS	 	= \
 		store.o \
 		store_clean.o \
 		store_dir.o \
+		store_key_md5.o \
 		store_key_sha.o \
 		store_key_url.o \
 		string_arrays.o \
