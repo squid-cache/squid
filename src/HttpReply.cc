@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.21 1998/05/22 22:29:59 rousskov Exp $
+ * $Id: HttpReply.cc,v 1.22 1998/05/22 22:38:42 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -411,20 +411,32 @@ httpMsgIsolateHeaders(const char **parse_start, const char **blk_start, const ch
     return 0;
 }
 
-/* returns true if connection should be "persistent" after processing this message */
+/*
+ *returns true if connection should be "persistent" after processing
+ this message
+ */
 int
-httpMsgIsPersistent(float http_ver, const HttpHeader *hdr)
+httpMsgIsPersistent(float http_ver, const HttpHeader * hdr)
 {
     if (http_ver >= 1.1) {
-	/* for modern versions of HTTP: persistent if not "close"d */
+	/*
+	 * for modern versions of HTTP: persistent unless there is
+	 * a "Connection: close" header.
+	 */
 	return !httpHeaderHasConnDir(hdr, "close");
     } else {
-	/* pconns in Netscape 3.x are allegedly broken, return false 
-	 *  if it is a client connection */
-	const char *agent = httpHeaderGetStr(hdr, HDR_USER_AGENT);
-	if (agent && !httpHeaderHas(hdr, HDR_VIA) &&
-	    (!strncasecmp(agent, "Mozilla/3.", 10) || !strncasecmp(agent, "Netscape/3.", 11)))
-	    return 0;
+	/*
+	 * Persistent connections in Netscape 3.x are allegedly broken,
+	 * return false if it is a browser connection.  If there is a
+	 * VIA header, then we assume this is NOT a browser connection.
+	 */
+        const char *agent; = httpHeaderGetStr(hdr, HDR_USER_AGENT);
+	if (agent && !httpHeaderHas(hdr, HDR_VIA)) {
+	    if (!strncasecmp(agent, "Mozilla/3.", 10))
+		return 0;
+	    if (!strncasecmp(agent, "Netscape/3.", 11))
+	        return 0;
+	}
 	/* for old versions of HTTP: persistent if has "keep-alive" */
 	return httpHeaderHasConnDir(hdr, "keep-alive");
     }
