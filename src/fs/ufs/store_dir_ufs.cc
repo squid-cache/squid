@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.10 2000/10/17 08:06:09 adrian Exp $
+ * $Id: store_dir_ufs.cc,v 1.11 2000/10/31 23:48:18 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -465,7 +465,7 @@ storeUfsDirRebuildFromDirectory(void *data)
 	    storeUfsDirUnlinkFile(SD, sfileno);
 	    continue;
 	}
-	tmpe.key = key;
+	tmpe.hash.key = key;
 	/* check sizes */
 	if (tmpe.swap_file_sz == 0) {
 	    tmpe.swap_file_sz = sb.st_size;
@@ -959,7 +959,7 @@ storeUfsDirWriteCleanStart(SwapDir * sd)
     unlink(state->cln);
     state->fd = file_open(state->new, O_WRONLY | O_CREAT | O_TRUNC);
     if (state->fd < 0)
-	return -1;	/* state not free'd - possible leak */
+	return -1;		/* state not free'd - possible leak */
     debug(20, 3) ("storeDirWriteCleanLogs: opened %s, FD %d\n",
 	state->new, state->fd);
 #if HAVE_FCHMOD
@@ -1003,7 +1003,7 @@ storeUfsDirWriteCleanEntry(SwapDir * sd, const StoreEntry * e)
     s.swap_file_sz = e->swap_file_sz;
     s.refcount = e->refcount;
     s.flags = e->flags;
-    xmemcpy(&s.key, e->key, MD5_DIGEST_CHARS);
+    xmemcpy(&s.key, e->hash.key, MD5_DIGEST_CHARS);
     xmemcpy(state->outbuf + state->outbuf_offset, &s, ss);
     state->outbuf_offset += ss;
     /* buffered write */
@@ -1095,7 +1095,7 @@ storeUfsDirSwapLog(const SwapDir * sd, const StoreEntry * e, int op)
     s->swap_file_sz = e->swap_file_sz;
     s->refcount = e->refcount;
     s->flags = e->flags;
-    xmemcpy(s->key, e->key, MD5_DIGEST_CHARS);
+    xmemcpy(s->key, e->hash.key, MD5_DIGEST_CHARS);
     file_write(ufsinfo->swaplog_fd,
 	-1,
 	s,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.356 2000/10/17 08:06:05 adrian Exp $
+ * $Id: structs.h,v 1.357 2000/10/31 23:48:15 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -62,9 +62,7 @@ struct _acl_name_list {
 };
 
 struct _acl_proxy_auth_user {
-    /* first two items must be same as hash_link */
-    char *user;
-    acl_proxy_auth_user *next;
+    hash_link hash;		/* must be first */
     /* extra fields for proxy_auth */
     char *passwd;
     int passwd_ok;		/* 1 = passwd checked OK */
@@ -1102,8 +1100,7 @@ struct _peer {
 };
 
 struct _net_db_name {
-    char *name;
-    net_db_name *htbl_next;
+    hash_link hash;		/* must be first */
     net_db_name *next;
     netdbEntry *net_db_entry;
 };
@@ -1116,9 +1113,7 @@ struct _net_db_peer {
 };
 
 struct _netdbEntry {
-    /* first two items must be equivalent to hash_link */
-    char *key;
-    netdbEntry *next;
+    hash_link hash;		/* must be first */
     char network[16];
     int pings_sent;
     int pings_recv;
@@ -1306,9 +1301,7 @@ struct _MemObject {
 };
 
 struct _StoreEntry {
-    /* first two items must be same as hash_link */
-    const cache_key *key;
-    StoreEntry *next;
+    hash_link hash;		/* must be first */
     MemObject *mem_obj;
     time_t timestamp;
     time_t lastref;
@@ -1711,9 +1704,7 @@ struct _MemPool {
 };
 
 struct _ClientInfo {
-    /* first two items must be equivalent to hash_link */
-    char *key;
-    ClientInfo *next;
+    hash_link hash;		/* must be first */
     struct in_addr addr;
     struct {
 	int result_hist[LOG_TYPE_MAX];
@@ -1848,17 +1839,17 @@ struct _store_rebuild_data {
 struct _PumpStateData {
     FwdState *fwd;
     request_t *req;
-    store_client *sc;           /* The store client we're using */
-    int c_fd;                   /* client fd */
-    int s_fd;                   /* server end */
-    int rcvd;                   /* bytes received from client */
-    int sent;                   /* bytes sent to server */
-    StoreEntry *request_entry;  /* the request entry */
-    StoreEntry *reply_entry;    /* the reply entry */
-    CWCB *callback;             /* what to do when we finish sending */
-    void *cbdata;               /* callback data passed to callback func */
+    store_client *sc;		/* The store client we're using */
+    int c_fd;			/* client fd */
+    int s_fd;			/* server end */
+    int rcvd;			/* bytes received from client */
+    int sent;			/* bytes sent to server */
+    StoreEntry *request_entry;	/* the request entry */
+    StoreEntry *reply_entry;	/* the reply entry */
+    CWCB *callback;		/* what to do when we finish sending */
+    void *cbdata;		/* callback data passed to callback func */
     struct {
-        int closing:1;
+	int closing:1;
     } flags;
     struct _PumpStateData *next;
 };

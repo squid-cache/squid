@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_cache_digest.cc,v 1.25 2000/05/16 07:09:34 wessels Exp $
+ * $Id: test_cache_digest.cc,v 1.26 2000/10/31 23:48:15 wessels Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -467,7 +467,7 @@ cacheStore(Cache * cache, storeSwapLogData * s, int update_digest)
 	cache->bad_add_count++;
     } else {
 	CacheEntry *e = cacheEntryCreate(s);
-	hash_join(cache->hash, (hash_link *) e);
+	hash_join(cache->hash, &e->hash);
 	cache->count++;
 	if (update_digest)
 	    cacheDigestAdd(cache->digest, e->key);

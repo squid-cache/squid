@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.141 2000/10/17 08:06:03 adrian Exp $
+ * $Id: fqdncache.cc,v 1.142 2000/10/31 23:48:13 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -41,9 +41,7 @@
 typedef struct _fqdncache_entry fqdncache_entry;
 
 struct _fqdncache_entry {
-    /* first two items must be equivalent to hash_link */
-    char *name;
-    fqdncache_entry *next;
+    hash_link hash;		/* must be first */
     time_t lastref;
     time_t expires;
     unsigned char name_count;
@@ -103,9 +101,9 @@ fqdncacheRelease(fqdncache_entry * f)
     for (k = 0; k < (int) f->name_count; k++)
 	safe_free(f->names[k]);
     debug(35, 5) ("fqdncacheRelease: Released FQDN record for '%s'.\n",
-	f->name);
+	hashKeyStr(&f->hash));
     dlinkDelete(&f->lru, &lru_list);
-    safe_free(f->name);
+    safe_free(f->hash.key);
     safe_free(f->error_message);
     memFree(f, MEM_FQDNCACHE_ENTRY);
 }
@@ -161,7 +159,7 @@ fqdncacheCreateEntry(const char *name)
 {
     static fqdncache_entry *f;
     f = memAllocate(MEM_FQDNCACHE_ENTRY);
-    f->name = xstrdup(name);
+    f->hash.key = xstrdup(name);
     f->expires = squid_curtime + Config.negativeDnsTtl;
     return f;
 }
@@ -169,13 +167,13 @@ fqdncacheCreateEntry(const char *name)
 static void
 fqdncacheAddEntry(fqdncache_entry * f)
 {
-    hash_link *e = hash_lookup(fqdn_table, f->name);
+    hash_link *e = hash_lookup(fqdn_table, f->hash.key);
     if (NULL != e) {
 	/* avoid colission */
 	fqdncache_entry *q = (fqdncache_entry *) e;
 	fqdncacheRelease(q);
     }
-    hash_join(fqdn_table, (hash_link *) f);
+    hash_join(fqdn_table, &f->hash);
     dlinkAdd(f, &f->lru, &lru_list);
     f->lastref = squid_curtime;
 }
@@ -371,7 +369,7 @@ fqdncache_nbgethostbyaddr(struct in_addr addr, FQDNH * handler, void *handlerDat
     c->data = f;
     cbdataAdd(c, memFree, MEM_GEN_CBDATA);
 #if USE_DNSSERVERS
-    dnsSubmit(f->name, fqdncacheHandleReply, c);
+    dnsSubmit(hashKeyStr(&f->hash), fqdncacheHandleReply, c);
 #else
     idnsPTRLookup(addr, fqdncacheHandleReply, c);
 #endif
@@ -461,7 +459,7 @@ fqdnStats(StoreEntry * sentry)
     while ((f = (fqdncache_entry *) hash_next(fqdn_table))) {
 	ttl = (f->expires - squid_curtime);
 	storeAppendPrintf(sentry, " %-32.32s %c %6d %d",
-	    f->name,
+	    hashKeyStr(&f->hash),
 	    f->flags.negcached ? 'N' : ' ',
 	    ttl,
 	    (int) f->name_count);
@@ -513,7 +511,7 @@ fqdncacheFreeEntry(void *data)
     int k;
     for (k = 0; k < (int) f->name_count; k++)
 	safe_free(f->names[k]);
-    safe_free(f->name);
+    safe_free(f->hash.key);
     safe_free(f->error_message);
     memFree(f, MEM_FQDNCACHE_ENTRY);
 }

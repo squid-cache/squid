@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.21 2000/10/17 08:06:08 adrian Exp $
+ * $Id: store_dir_diskd.cc,v 1.22 2000/10/31 23:48:18 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -633,7 +633,7 @@ storeDiskdDirRebuildFromDirectory(void *data)
 	    storeDiskdDirUnlinkFile(SD, sfileno);
 	    continue;
 	}
-	tmpe.key = key;
+	tmpe.hash.key = key;
 	/* check sizes */
 	if (tmpe.swap_file_sz == 0) {
 	    tmpe.swap_file_sz = sb.st_size;
@@ -1196,7 +1196,7 @@ storeDiskdDirWriteCleanEntry(SwapDir * sd, const StoreEntry * e)
     s.swap_file_sz = e->swap_file_sz;
     s.refcount = e->refcount;
     s.flags = e->flags;
-    xmemcpy(&s.key, e->key, MD5_DIGEST_CHARS);
+    xmemcpy(&s.key, e->hash.key, MD5_DIGEST_CHARS);
     xmemcpy(state->outbuf + state->outbuf_offset, &s, ss);
     state->outbuf_offset += ss;
     /* buffered write */
@@ -1288,7 +1288,7 @@ storeDiskdDirSwapLog(const SwapDir * sd, const StoreEntry * e, int op)
     s->swap_file_sz = e->swap_file_sz;
     s->refcount = e->refcount;
     s->flags = e->flags;
-    xmemcpy(s->key, e->key, MD5_DIGEST_CHARS);
+    xmemcpy(s->key, e->hash.key, MD5_DIGEST_CHARS);
     file_write(diskdinfo->swaplog_fd,
 	-1,
 	s,

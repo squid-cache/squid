@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.339 2000/10/17 08:06:04 adrian Exp $
+ * $Id: stat.cc,v 1.340 2000/10/31 23:48:14 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -259,7 +259,7 @@ statStoreEntry(StoreEntry * s, StoreEntry * e)
     int i;
     struct _store_client *sc;
     dlink_node *node;
-    storeAppendPrintf(s, "KEY %s\n", storeKeyText(e->key));
+    storeAppendPrintf(s, "KEY %s\n", storeKeyText(e->hash.key));
     if (mem)
 	storeAppendPrintf(s, "\t%s %s\n",
 	    RequestMethodStr[mem->method], mem->log_url);
@@ -394,7 +394,7 @@ info_get_mallstat(int size, int number, int oldnum, void *data)
 {
     StoreEntry *sentry = data;
     if (number > 0)
-	storeAppendPrintf(sentry, "%d\t %d\t %d\t %.1f\n", size, number, number - oldnum , xdiv((number - oldnum),xm_deltat));
+	storeAppendPrintf(sentry, "%d\t %d\t %d\t %.1f\n", size, number, number - oldnum, xdiv((number - oldnum), xm_deltat));
 }
 #endif
 
@@ -1424,9 +1424,9 @@ statClientRequests(StoreEntry * s)
 	    http->out.offset, http->out.size);
 	storeAppendPrintf(s, "req_sz %d\n", http->req_sz);
 	e = http->entry;
-	storeAppendPrintf(s, "entry %p/%s\n", e, e ? storeKeyText(e->key) : "N/A");
+	storeAppendPrintf(s, "entry %p/%s\n", e, e ? storeKeyText(e->hash.key) : "N/A");
 	e = http->old_entry;
-	storeAppendPrintf(s, "old_entry %p/%s\n", e, e ? storeKeyText(e->key) : "N/A");
+	storeAppendPrintf(s, "old_entry %p/%s\n", e, e ? storeKeyText(e->hash.key) : "N/A");
 	storeAppendPrintf(s, "start %d.%06d (%f seconds ago)\n", http->start.tv_sec,
 	    http->start.tv_usec,
 	    tvSubDsec(http->start, current_time));

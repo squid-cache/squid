@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_log.cc,v 1.19 2000/10/10 18:15:30 wessels Exp $
+ * $Id: store_log.cc,v 1.20 2000/10/31 23:48:15 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Logging Functions
  * AUTHOR: Duane Wessels
@@ -73,7 +73,7 @@ storeLog(int tag, const StoreEntry * e)
 	    storeLogTags[tag],
 	    e->swap_dirn,
 	    e->swap_filen,
-	    storeKeyText(e->key),
+	    storeKeyText(e->hash.key),
 	    reply->sline.status,
 	    (int) reply->date,
 	    (int) reply->last_modified,
@@ -91,7 +91,7 @@ storeLog(int tag, const StoreEntry * e)
 	    storeLogTags[tag],
 	    e->swap_dirn,
 	    e->swap_filen,
-	    storeKeyText(e->key));
+	    storeKeyText(e->hash.key));
     }
 }
 

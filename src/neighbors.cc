@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.286 2000/10/10 02:10:42 wessels Exp $
+ * $Id: neighbors.cc,v 1.287 2000/10/31 23:48:14 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -398,7 +398,7 @@ neighborsUdpPing(request_t * request,
     mem->start_ping = current_time;
     mem->ping_reply_callback = callback;
     mem->ircb_data = callback_data;
-    reqnum = icpSetCacheKey(entry->key);
+    reqnum = icpSetCacheKey(entry->hash.key);
     for (i = 0, p = first_ping; i++ < Config.npeers; p = p->next) {
 	if (p == NULL)
 	    p = Config.peers;
@@ -410,7 +410,7 @@ neighborsUdpPing(request_t * request,
 	    p->host, url);
 	if (p->type == PEER_MULTICAST)
 	    mcastSetTtl(theOutIcpConnection, p->mcast.ttl);
-	debug(15, 3) ("neighborsUdpPing: key = '%s'\n", storeKeyText(entry->key));
+	debug(15, 3) ("neighborsUdpPing: key = '%s'\n", storeKeyText(entry->hash.key));
 	debug(15, 3) ("neighborsUdpPing: reqnum = %d\n", reqnum);
 
 #if USE_HTCP
@@ -900,7 +900,7 @@ neighborUp(const peer * p)
 	return 0;
     /*
      * The peer can not be UP if we don't have any IP addresses
-     * for it.
+     * for it. 
      */
     if (0 == p->n_addresses)
 	return 0;
@@ -1113,7 +1113,7 @@ peerCountMcastPeersStart(void *data)
     mem->ircb_data = psstate;
     mcastSetTtl(theOutIcpConnection, p->mcast.ttl);
     p->mcast.id = mem->id;
-    reqnum = icpSetCacheKey(fake->key);
+    reqnum = icpSetCacheKey(fake->hash.key);
     query = icpCreateMessage(ICP_QUERY, 0, url, reqnum, 0);
     icpUdpSend(theOutIcpConnection,
 	&p->in_addr,

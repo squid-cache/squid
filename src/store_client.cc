@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.97 2000/10/10 02:10:43 wessels Exp $
+ * $Id: store_client.cc,v 1.98 2000/10/31 23:48:15 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -189,7 +189,7 @@ storeClientCopy(store_client * sc,
 {
     assert(!EBIT_TEST(e->flags, ENTRY_ABORTED));
     debug(20, 3) ("storeClientCopy: %s, seen %d, want %d, size %d, cb %p, cbdata %p\n",
-	storeKeyText(e->key),
+	storeKeyText(e->hash.key),
 	(int) seen_offset,
 	(int) copy_offset,
 	(int) size,
@@ -249,7 +249,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     }
     cbdataLock(sc);		/* ick, prevent sc from getting freed */
     sc->flags.store_copying = 1;
-    debug(20, 3) ("storeClientCopy2: %s\n", storeKeyText(e->key));
+    debug(20, 3) ("storeClientCopy2: %s\n", storeKeyText(e->hash.key));
     assert(sc->callback != NULL);
     /*
      * We used to check for ENTRY_ABORTED here.  But there were some
@@ -410,10 +410,10 @@ storeClientReadHeader(void *data, const char *buf, ssize_t len)
 	case STORE_META_KEY:
 	    assert(t->length == MD5_DIGEST_CHARS);
 	    if (!EBIT_TEST(e->flags, KEY_PRIVATE) &&
-		memcmp(t->value, e->key, MD5_DIGEST_CHARS)) {
+		memcmp(t->value, e->hash.key, MD5_DIGEST_CHARS)) {
 		debug(20, 2) ("storeClientReadHeader: swapin MD5 mismatch\n");
 		debug(20, 2) ("\t%s\n", storeKeyText(t->value));
-		debug(20, 2) ("\t%s\n", storeKeyText(e->key));
+		debug(20, 2) ("\t%s\n", storeKeyText(e->hash.key));
 		if (isPowTen(++md5_mismatches))
 		    debug(20, 1) ("WARNING: %d swapin MD5 mismatches\n",
 			md5_mismatches);
@@ -499,7 +499,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 #endif
     if (mem == NULL)
 	return 0;
-    debug(20, 3) ("storeUnregister: called for '%s'\n", storeKeyText(e->key));
+    debug(20, 3) ("storeUnregister: called for '%s'\n", storeKeyText(e->hash.key));
     if (sc == NULL)
 	return 0;
     if (mem->clients.head == NULL)
@@ -574,7 +574,7 @@ InvokeHandlers(StoreEntry * e)
     dlink_node *nx = NULL;
     dlink_node *node;
 
-    debug(20, 3) ("InvokeHandlers: %s\n", storeKeyText(e->key));
+    debug(20, 3) ("InvokeHandlers: %s\n", storeKeyText(e->hash.key));
     /* walk the entire list looking for valid callbacks */
     for (node = mem->clients.head; node; node = nx) {
 	sc = node->data;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: hash.c,v 1.9 2000/03/27 21:56:21 wessels Exp $
+ * $Id: hash.c,v 1.10 2000/10/31 23:48:12 wessels Exp $
  *
  * DEBUG: section 0     Hash Tables
  * AUTHOR: Harvest Derived
@@ -345,6 +345,15 @@ hashPrime(int n)
 	best_prime = hash_primes[i];
     }
     return best_prime;
+}
+
+/*
+ * return the key of a hash_link as a const string
+ */
+const char *
+hashKeyStr(hash_link * hl)
+{
+    return (const char *) hl->key;
 }
 
 

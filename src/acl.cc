@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.224 2000/10/04 00:24:16 wessels Exp $
+ * $Id: acl.cc,v 1.225 2000/10/31 23:48:13 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1120,7 +1120,7 @@ aclMatchProxyAuth(void *data, const char *proxy_auth, acl_proxy_auth_user * auth
 	    auth_user->expiretime = current_time.tv_sec + Config.authenticateTTL;
 	    auth_user->ip_expiretime = squid_curtime + Config.authenticateIpTTL;
 	    auth_user->ipaddr = checklist->src_addr;
-	    hash_join(proxy_auth_cache, (hash_link *) auth_user);
+	    hash_join(proxy_auth_cache, &auth_user->hash);
 	    /* Continue checking below, as normal */
 	}
     }
@@ -1212,7 +1212,7 @@ aclLookupProxyAuthStart(aclCheck_t * checklist)
     debug(28, 4) ("aclLookupProxyAuthStart: going to ask authenticator on %s\n", user);
     /* we must still check this user's password */
     auth_user = memAllocate(MEM_ACL_PROXY_AUTH_USER);
-    auth_user->user = xstrdup(user);
+    auth_user->hash.key = xstrdup(user);
     auth_user->passwd = xstrdup(password);
     auth_user->passwd_ok = -1;
     auth_user->expiretime = -1;
@@ -1852,7 +1852,7 @@ static void
 aclFreeProxyAuthUser(void *data)
 {
     acl_proxy_auth_user *u = data;
-    xfree(u->user);
+    xfree(u->hash.key);
     xfree(u->passwd);
     memFree(u, MEM_ACL_PROXY_AUTH_USER);
 }

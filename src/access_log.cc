@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.59 2000/10/10 18:15:30 wessels Exp $
+ * $Id: access_log.cc,v 1.60 2000/10/31 23:48:13 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -397,8 +397,8 @@ fvdbCount(hash_table * hash, const char *key)
     fv = hash_lookup(hash, key);
     if (NULL == fv) {
 	fv = xcalloc(1, sizeof(fvdb_entry));
-	fv->key = xstrdup(key);
-	hash_join(hash, (hash_link *) fv);
+	fv->hash.key = xstrdup(key);
+	hash_join(hash, &fv->hash);
     }
     fv->n++;
 }
@@ -425,7 +425,7 @@ fvdbDumpTable(StoreEntry * e, hash_table * hash)
     hash_first(hash);
     while ((h = hash_next(hash))) {
 	fv = (fvdb_entry *) h;
-	storeAppendPrintf(e, "%9d %s\n", fv->n, fv->key);
+	storeAppendPrintf(e, "%9d %s\n", fv->n, hashKeyStr(&fv->hash));
     }
 }
 
@@ -446,7 +446,7 @@ void
 fvdbFreeEntry(void *data)
 {
     fvdb_entry *fv = data;
-    xfree(fv->key);
+    xfree(fv->hash.key);
     xfree(fv);
 }
 
