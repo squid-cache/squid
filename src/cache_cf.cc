@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.213 1997/07/16 22:58:23 wessels Exp $
+ * $Id: cache_cf.cc,v 1.214 1997/07/17 05:21:32 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -490,7 +490,7 @@ parse_peer(peer ** head)
     peer *p;
     int i;
     ushortlist *u;
-    const char *me = getMyHostname();;
+    const char *me = null_string; /* XXX */
     p = xcalloc(1, sizeof(peer));
     p->http_port = CACHE_HTTP_PORT;
     p->icp_port = CACHE_ICP_PORT;
