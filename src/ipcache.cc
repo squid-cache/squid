@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.180 1998/04/22 01:40:15 wessels Exp $
+ * $Id: ipcache.cc,v 1.181 1998/04/24 06:40:05 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -757,8 +757,6 @@ ipcacheStatPrint(ipcache_entry * i, StoreEntry * sentry)
     for (k = 0; k < (int) i->addrs.count; k++) {
 	storeAppendPrintf(sentry, " %15s-%3s", inet_ntoa(i->addrs.in_addrs[k]),
 	    i->addrs.bad_mask[k] ? "BAD" : "OK ");
-	if (i->addrs.count > 1 && k == i->addrs.cur)
-	    storeAppendPrintf(sentry, ",CUR");
     }
     storeAppendPrintf(sentry, "\n");
 }
