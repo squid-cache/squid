@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.221 2000/08/11 19:33:09 hno Exp $
+ * $Id: acl.cc,v 1.222 2000/08/17 09:15:06 adrian Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -565,7 +565,7 @@ aclParseTimeSpec(void *curlist)
 		debug(28, 0) ("%s line %d: %s\n",
 		    cfg_filename, config_lineno, config_input_line);
 		debug(28, 0) ("aclParseTimeSpec: IGNORING Bad time range\n");
-		xfree(q);
+		memFree(q, MEM_ACL_TIME_DATA);
 		return;
 	    }
 	    q->start = h1 * 60 + m1;
@@ -574,7 +574,7 @@ aclParseTimeSpec(void *curlist)
 		debug(28, 0) ("%s line %d: %s\n",
 		    cfg_filename, config_lineno, config_input_line);
 		debug(28, 0) ("aclParseTimeSpec: IGNORING Reversed time range\n");
-		xfree(q);
+		memFree(q, MEM_ACL_TIME_DATA);
 		return;
 	    }
 	}
@@ -784,7 +784,7 @@ aclParseAclLine(acl ** head)
     if (A->data == NULL) {
 	debug(28, 0) ("aclParseAclLine: IGNORING invalid ACL: %s\n",
 	    A->cfgline);
-	xfree(A);
+	memFree(A, MEM_ACL);
 	return;
     }
     /* append */
@@ -854,14 +854,14 @@ aclParseDenyInfoLine(acl_deny_info_list ** head)
 	debug(28, 0) ("aclParseDenyInfoLine: missing 'error page' parameter.\n");
 	return;
     }
-    A = xcalloc(1, sizeof(acl_deny_info_list));
+    A = memAllocate(MEM_ACL_DENY_INFO_LIST);
     A->err_page_id = errorReservePageId(t);
     A->err_page_name = xstrdup(t);
     A->next = (acl_deny_info_list *) NULL;
     /* next expect a list of ACL names */
     Tail = &A->acl_list;
     while ((t = strtok(NULL, w_space))) {
-	L = xcalloc(1, sizeof(acl_name_list));
+	L = memAllocate(MEM_ACL_NAME_LIST);
 	xstrncpy(L->name, t, ACL_NAME_SZ);
 	*Tail = L;
 	Tail = &L->next;
@@ -870,7 +870,7 @@ aclParseDenyInfoLine(acl_deny_info_list ** head)
 	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
 	debug(28, 0) ("aclParseDenyInfoLine: deny_info line contains no ACL's, skipping\n");
-	xfree(A);
+	memFree(A, MEM_ACL_DENY_INFO_LIST);
 	return;
     }
     for (B = *head, T = head; B; T = &B->next, B = B->next);	/* find the tail */
@@ -905,7 +905,7 @@ aclParseAccessLine(acl_access ** head)
 	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
 	debug(28, 0) ("aclParseAccessLine: expecting 'allow' or 'deny', got '%s'.\n", t);
-	xfree(A);
+	memFree(A, MEM_ACL_ACCESS);
 	return;
     }
 
@@ -926,7 +926,7 @@ aclParseAccessLine(acl_access ** head)
 	    debug(28, 0) ("%s line %d: %s\n",
 		cfg_filename, config_lineno, config_input_line);
 	    debug(28, 0) ("aclParseAccessLine: ACL name '%s' not found.\n", t);
-	    xfree(L);
+	    memFree(L, MEM_ACL_LIST);
 	    continue;
 	}
 	L->acl = a;
@@ -937,7 +937,7 @@ aclParseAccessLine(acl_access ** head)
 	debug(28, 0) ("%s line %d: %s\n",
 	    cfg_filename, config_lineno, config_input_line);
 	debug(28, 0) ("aclParseAccessLine: Access line contains no ACL's, skipping\n");
-	xfree(A);
+        memFree(A, MEM_ACL_ACCESS);
 	return;
     }
     A->cfgline = xstrdup(config_input_line);
@@ -1978,7 +1978,7 @@ aclDestroyDenyInfoList(acl_deny_info_list ** list)
 	}
 	a_next = a->next;
 	xfree(a->err_page_name);
-	safe_free(a);
+        memFree(a, MEM_ACL_DENY_INFO_LIST);
     }
     *list = NULL;
 }
