@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.34 1996/10/09 15:34:21 wessels Exp $
+ * $Id: cachemgr.cc,v 1.35 1996/10/14 23:45:25 wessels Exp $
  *
  * DEBUG: Section 0     CGI Cache Manager
  * AUTHOR: Harvest Derived
@@ -220,6 +220,7 @@ typedef enum {
     INFO,
     CACHED,
     SERVER,
+    CLIENTS,
     LOG,
     PARAM,
     STATS_I,
@@ -245,6 +246,7 @@ static char *op_cmds[] =
     "info",
     "squid.conf",
     "server_list",
+    "client_list",
     "log",
     "parameter",
     "stats/ipcache",
@@ -270,6 +272,7 @@ static char *op_cmds_descr[] =
     "Cache Information",
     "Cache Configuration File",
     "Cache Server List",
+    "Cache Client List",
     "Cache Log",
     "Cache Parameters",
     "IP Cache Contents",
@@ -367,6 +370,7 @@ noargs_html(char *host, int port, char *url)
     print_option(op, STATS_O);
     print_option(op, STATS_VM);
     print_option(op, SERVER);
+    print_option(op, CLIENTS);
     print_option(op, STATS_I);
     print_option(op, STATS_F);
     print_option(op, STATS_D);
@@ -680,6 +684,7 @@ main(int argc, char *argv[])
     case INFO:
     case CACHED:
     case SERVER:
+    case CLIENTS:
     case LOG:
     case PARAM:
     case STATS_I:
@@ -737,6 +742,7 @@ main(int argc, char *argv[])
     print_option(op, STATS_O);
     print_option(op, STATS_VM);
     print_option(op, SERVER);
+    print_option(op, CLIENTS);
     print_option(op, STATS_I);
     print_option(op, STATS_F);
     print_option(op, STATS_D);
@@ -777,6 +783,7 @@ main(int argc, char *argv[])
     case INFO:
     case CACHED:
     case SERVER:
+    case CLIENTS:
     case LOG:
     case STATS_I:
     case STATS_F:
@@ -849,6 +856,7 @@ main(int argc, char *argv[])
 		case INFO:
 		case CACHED:
 		case SERVER:
+		case CLIENTS:
 		case LOG:
 		case STATS_I:
 		case STATS_F:
