@@ -1,2 +1,3 @@
 .deps
 Makefile
+squid_ldap_auth

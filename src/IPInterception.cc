@@ -1,6 +1,6 @@
 
 /*
- * $Id: IPInterception.cc,v 1.6 2003/02/21 22:50:05 robertc Exp $
+ * $Id: IPInterception.cc,v 1.7 2003/08/03 08:09:26 robertc Exp $
  *
  * DEBUG: section 89    NAT / IP Interception 
  * AUTHOR: Robert Collins
@@ -149,11 +149,6 @@ clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct s
 
         return 0;
     }
-    else
-    {
-        return -1;
-    }
-}
 }
 
 #elif LINUX_NETFILTER

@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.34 2003/07/14 14:16:21 robertc Exp $
+ * $Id: auth_ntlm.cc,v 1.35 2003/08/03 08:09:30 robertc Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -598,7 +598,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
         /* we only expect LD when finishing the handshake */
         assert(ntlm_request->auth_state == AUTHENTICATE_STATE_RESPONSE);
         ntlm_user->username = xstrndup(reply, MAX_LOGIN_SZ);
-        helperstate = helperStatefulServerGetData(ntlm_request->authserver);
+        helperstate = static_cast<ntlm_helper_state_t *>(helperStatefulServerGetData(ntlm_request->authserver));
         ntlm_request->authserver = NULL;
         /* BH code: mark helper as broken */
         /* mark it for starving */

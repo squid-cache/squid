@@ -1,2 +1,3 @@
 .deps
 Makefile
+digest_pw_auth

@@ -1,2 +1,3 @@
 .deps
 Makefile
+pam_auth
