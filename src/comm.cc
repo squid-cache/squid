@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.267 1998/05/30 19:43:05 rousskov Exp $
+ * $Id: comm.cc,v 1.268 1998/06/09 05:54:33 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1317,6 +1317,7 @@ commHandleWrite(int fd, void *data)
 
     nleft = state->size - state->offset;
     len = write(fd, state->buf + state->offset, nleft);
+    debug(5,5)("commHandleWrite: write() returns %d\n", len);
     fd_bytes(fd, len, FD_WRITE);
 
     if (len == 0) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.332 1998/06/05 17:34:16 wessels Exp $
+ * $Id: client_side.cc,v 1.333 1998/06/09 05:54:12 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1582,6 +1582,7 @@ clientKeepaliveNextRequest(clientHttpRequest * http)
 {
     ConnStateData *conn = http->conn;
     StoreEntry *entry;
+    debug(33,3)("clientKeepaliveNextRequest: FD %d\n", conn->fd);
     conn->defer.until = 0;	/* Kick it to read a new request */
     httpRequestFree(http);
     if ((http = conn->chr) != NULL) {
@@ -1590,7 +1591,7 @@ clientKeepaliveNextRequest(clientHttpRequest * http)
 	entry = http->entry;
 	if (0 == storeClientCopyPending(entry, http)) {
 	    if (entry->store_status == STORE_ABORTED)
-		debug(33, 0) ("clientWriteComplete: entry->swap_status == STORE_ABORTED\n");
+		debug(33, 0) ("clientKeepaliveNextRequest: entry->swap_status == STORE_ABORTED\n");
 	    storeClientCopy(entry,
 		http->out.offset,
 		http->out.offset,
@@ -1600,7 +1601,7 @@ clientKeepaliveNextRequest(clientHttpRequest * http)
 		http);
 	}
     } else {
-	debug(33, 5) ("clientWriteComplete: FD %d reading next request\n",
+	debug(33, 5) ("clientKeepaliveNextRequest: FD %d reading next request\n",
 	    conn->fd);
 	fd_note(conn->fd, "Reading next request");
 	/*
@@ -1647,13 +1648,14 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
     } else if ((done = clientCheckTransferDone(http)) != 0 || size == 0) {
 	debug(33, 5) ("clientWriteComplete: FD %d transfer is DONE\n", fd);
 	/* We're finished case */
-	if (http->entry->mem_obj->reply->content_length < 0 || !done ||
-	    EBIT_TEST(entry->flag, ENTRY_BAD_LENGTH)) {
-	    /* 
-	     * Client connection closed due to unknown or invalid
-	     * content length. Persistent connection is not possible.
-	     * This catches most cases, but probably not all.
-	     */
+	if (http->entry->mem_obj->reply->content_length < 0) {
+	    debug(33,5)("clientWriteComplete: closing, content_length < 0\n");
+	    comm_close(fd);
+	} else if (!done) {
+	    debug(33,5)("clientWriteComplete: closing, !done\n");
+	    comm_close(fd);
+	} else if (EBIT_TEST(entry->flag, ENTRY_BAD_LENGTH)) {
+	    debug(33,5)("clientWriteComplete: closing, ENTRY_BAD_LENGTH\n");
 	    comm_close(fd);
 	} else if (EBIT_TEST(http->request->flags, REQ_PROXY_KEEPALIVE)) {
 	    debug(33, 5) ("clientWriteComplete: FD %d Keeping Alive\n", fd);
