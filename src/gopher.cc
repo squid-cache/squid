@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.51 1996/09/23 22:13:30 wessels Exp $
+ * $Id: gopher.cc,v 1.52 1996/10/09 22:49:32 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -156,6 +156,7 @@ typedef struct gopher_ds {
     int cso_recno;
     int len;
     char *buf;			/* pts to a 4k page */
+    ConnectStateData connectState;
 } GopherStateData;
 
 static int gopherStateFree _PARAMS((int fd, GopherStateData *));
@@ -178,6 +179,7 @@ static void gopherSendComplete(int fd,
     void *data);
 static void gopherSendRequest _PARAMS((int fd, GopherStateData *));
 static GopherStateData *CreateGopherStateData _PARAMS((void));
+static void gopherConnectDone _PARAMS((int fd, int status, void *data));
 
 static char def_gopher_bin[] = "www/unknown";
 static char def_gopher_text[] = "text/plain";
@@ -957,7 +959,7 @@ int
 gopherStart(int unusedfd, char *url, StoreEntry * entry)
 {
     /* Create state structure. */
-    int sock, status;
+    int sock;
     GopherStateData *data = CreateGopherStateData();
 
     storeLockObject(data->entry = entry, NULL, NULL);
@@ -1018,28 +1020,35 @@ gopherStart(int unusedfd, char *url, StoreEntry * entry)
 	comm_close(sock);
 	return COMM_OK;
     }
-    /* Open connection. */
-    if ((status = comm_connect(sock, data->host, data->port)) != 0) {
-	if (status != EINPROGRESS) {
-	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	    comm_close(sock);
-	    return COMM_ERROR;
-	} else {
-	    debug(10, 5, "startGopher: conn %d EINPROGRESS\n", sock);
-	}
+    data->connectState.fd = sock;
+    data->connectState.host = data->host;
+    data->connectState.port = data->port;
+    data->connectState.handler = gopherConnectDone;
+    data->connectState.data = data;
+    comm_nbconnect(sock, &data->connectState);
+    return COMM_OK;
+}
+
+static void
+gopherConnectDone(int fd, int status, void *data)
+{
+    GopherStateData *gopherState = data;
+    if (status == COMM_ERROR) {
+	squid_error_entry(gopherState->entry, ERR_CONNECT_FAIL, xstrerror());
+	comm_close(fd);
+	return;
     }
     /* Install connection complete handler. */
     if (opt_no_ipcache)
-	ipcacheInvalidate(data->host);
-    comm_set_select_handler(sock,
+	ipcacheInvalidate(gopherState->host);
+    comm_set_select_handler(fd,
 	COMM_SELECT_LIFETIME,
 	(PF) gopherLifetimeExpire,
-	(void *) data);
-    comm_set_select_handler(sock,
+	(void *) gopherState);
+    comm_set_select_handler(fd,
 	COMM_SELECT_WRITE,
 	(PF) gopherSendRequest,
-	(void *) data);
-    return COMM_OK;
+	(void *) gopherState);
 }
 
 

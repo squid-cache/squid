@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.62 1996/10/09 15:43:53 wessels Exp $
+ * $Id: neighbors.cc,v 1.63 1996/10/09 22:49:38 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -321,11 +321,10 @@ neighbors_open(int fd)
     struct sockaddr_in name;
     struct sockaddr_in *ap;
     int len = sizeof(struct sockaddr_in);
-    char **list = NULL;
+    ipcache_addrs *ia = NULL;
     edge *e = NULL;
     edge *next = NULL;
     edge **E = NULL;
-    struct in_addr *ina = NULL;
     struct servent *sep = NULL;
 
     memset(&name, '\0', sizeof(struct sockaddr_in));
@@ -338,7 +337,7 @@ neighbors_open(int fd)
     while ((e = next)) {
 	next = e->next;
 	debug(15, 2, "Finding IP addresses for '%s'\n", e->host);
-	if ((list = getAddressList(e->host)) == NULL) {
+	if ((ia = ipcache_gethostbyname(e->host, IP_BLOCKING_LOOKUP)) == NULL) {
 	    debug(0, 0, "WARNING!!: DNS lookup for '%s' failed!\n", e->host);
 	    debug(0, 0, "THIS NEIGHBOR WILL BE IGNORED.\n");
 	    *E = next;		/* skip */
@@ -346,10 +345,8 @@ neighbors_open(int fd)
 	    continue;
 	}
 	e->n_addresses = 0;
-	for (j = 0; *list && j < EDGE_MAX_ADDRESSES; j++) {
-	    ina = &e->addresses[j];
-	    xmemcpy(&(ina->s_addr), *list, 4);
-	    list++;
+	for (j = 0; j < (int) ia->count && j < EDGE_MAX_ADDRESSES; j++) {
+	    e->addresses[j] = ia->in_addrs[j];
 	    e->n_addresses++;
 	}
 	if (e->n_addresses < 1) {
@@ -396,7 +393,7 @@ neighborsUdpPing(protodispatch_data * proto)
     char *host = proto->request->host;
     char *url = proto->url;
     StoreEntry *entry = proto->entry;
-    struct hostent *hep = NULL;
+    ipcache_addrs *ia = NULL;
     struct sockaddr_in to_addr;
     edge *e = NULL;
     int i;
@@ -504,17 +501,17 @@ neighborsUdpPing(protodispatch_data * proto)
     if (friends->n) {
 	if (!proto->source_ping) {
 	    debug(15, 6, "neighborsUdpPing: Source Ping is disabled.\n");
-	} else if ((hep = ipcache_gethostbyname(host, IP_BLOCKING_LOOKUP))) {
+	} else if ((ia = ipcache_gethostbyname(host, IP_BLOCKING_LOOKUP))) {
 	    debug(15, 6, "neighborsUdpPing: Source Ping: to %s for '%s'\n",
 		host, url);
 	    echo_hdr.reqnum = reqnum;
 #if USE_ICMP
 	    if (icmp_sock != -1) {
-		icmpSourcePing(inaddrFromHostent(hep), &echo_hdr, url);
+		icmpSourcePing(ia->in_addrs[ia->cur], &echo_hdr, url);
 	    } else {
 #endif
 		to_addr.sin_family = AF_INET;
-		to_addr.sin_addr = inaddrFromHostent(hep);
+		to_addr.sin_addr = ia->in_addrs[ia->cur];
 		to_addr.sin_port = htons(echo_port);
 		icpUdpSend(theOutIcpConnection,
 		    url,

@@ -1,5 +1,6 @@
+
 /*
- * $Id: stat.cc,v 1.79 1996/10/09 15:34:37 wessels Exp $
+ * $Id: stat.cc,v 1.80 1996/10/09 22:49:43 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -667,7 +668,7 @@ static void
 info_get(cacheinfo * obj, StoreEntry * sentry)
 {
     char *tod = NULL;
-    time_t f;
+    float f;
 #if HAVE_MALLINFO
     int t;
 #endif
@@ -694,7 +695,7 @@ info_get(cacheinfo * obj, StoreEntry * sentry)
     storeAppendPrintf(sentry, "{\tNumber of UDP connections:\t%lu}\n",
 	nudpconn);
 
-    f = squid_curtime - squid_starttime;
+    f = (float) (squid_curtime - squid_starttime);
     storeAppendPrintf(sentry, "{\tConnections per hour:\t%.1f}\n",
 	f == 0.0 ? 0.0 : ((ntcpconn + nudpconn) / (f / 3600)));
 

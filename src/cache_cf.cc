@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.105 1996/10/09 15:43:49 wessels Exp $
+ * $Id: cache_cf.cc,v 1.106 1996/10/09 22:49:28 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -884,14 +884,14 @@ static void
 parseAddressLine(struct in_addr *addr)
 {
     char *token;
-    struct hostent *hp = NULL;
+    ipcache_addrs *ia = NULL;
     token = strtok(NULL, w_space);
     if (token == NULL)
 	self_destruct();
     if (inet_addr(token) != INADDR_NONE)
 	(*addr).s_addr = inet_addr(token);
-    else if ((hp = gethostbyname(token)))
-	*addr = inaddrFromHostent(hp);
+    else if ((ia = ipcache_gethostbyname(token, IP_BLOCKING_LOOKUP)))
+	*addr = ia->in_addrs[0];
     else
 	self_destruct();
 }

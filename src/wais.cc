@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.44 1996/09/20 06:29:19 wessels Exp $
+ * $Id: wais.cc,v 1.45 1996/10/09 22:49:45 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -116,6 +116,7 @@ typedef struct {
     int relayport;
     char *mime_hdr;
     char request[MAX_URL + 1];
+    ConnectStateData connectState;
 } WaisStateData;
 
 static int waisStateFree _PARAMS((int, WaisStateData *));
@@ -124,8 +125,8 @@ static void waisLifetimeExpire _PARAMS((int, WaisStateData *));
 static void waisReadReply _PARAMS((int, WaisStateData *));
 static void waisSendComplete _PARAMS((int, char *, int, int, void *));
 static void waisSendRequest _PARAMS((int, WaisStateData *));
-static void waisConnInProgress _PARAMS((int, WaisStateData *));
-static void waisConnect _PARAMS((int, struct hostent *, void *));
+static void waisConnect _PARAMS((int, ipcache_addrs *, void *));
+static void waisConnectDone _PARAMS((int fd, int status, void *data));
 
 static int
 waisStateFree(int fd, WaisStateData * waisState)
@@ -341,37 +342,6 @@ waisSendRequest(int fd, WaisStateData * waisState)
 	storeSetPublicKey(waisState->entry);	/* Make it public */
 }
 
-static void
-waisConnInProgress(int fd, WaisStateData * waisState)
-{
-    StoreEntry *entry = waisState->entry;
-
-    debug(11, 5, "waisConnInProgress: FD %d waisState=%p\n", fd, waisState);
-
-    if (comm_connect(fd, waisState->relayhost, waisState->relayport) != COMM_OK) {
-	debug(11, 5, "waisConnInProgress: FD %d: %s\n", fd, xstrerror());
-	switch (errno) {
-	case EINPROGRESS:
-	case EALREADY:
-	    /* schedule this handler again */
-	    comm_set_select_handler(fd,
-		COMM_SELECT_WRITE,
-		(PF) waisConnInProgress,
-		(void *) waisState);
-	    return;
-	default:
-	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	    comm_close(fd);
-	    return;
-	}
-    }
-    /* Call the real write handler, now that we're fully connected */
-    if (opt_no_ipcache)
-	ipcacheInvalidate(waisState->relayhost);
-    comm_set_select_handler(fd, COMM_SELECT_WRITE,
-	(PF) waisSendRequest, (void *) waisState);
-}
-
 int
 waisStart(int unusedfd, char *url, method_t method, char *mime_hdr, StoreEntry * entry)
 {
@@ -416,40 +386,35 @@ waisStart(int unusedfd, char *url, method_t method, char *mime_hdr, StoreEntry *
 
 
 static void
-waisConnect(int fd, struct hostent *hp, void *data)
+waisConnect(int fd, ipcache_addrs * ia, void *data)
 {
-    int status;
     WaisStateData *waisState = data;
-    char *host = waisState->relayhost;
-    u_short port = waisState->relayport;
     if (!ipcache_gethostbyname(waisState->relayhost, 0)) {
 	debug(24, 4, "waisstart: Unknown host: %s\n", waisState->relayhost);
 	squid_error_entry(waisState->entry, ERR_DNS_FAIL, dns_error_message);
 	comm_close(waisState->fd);
 	return;
     }
-    /* Open connection. */
-    if ((status = comm_connect(fd, host, port))) {
-	if (status != EINPROGRESS) {
-	    squid_error_entry(waisState->entry, ERR_CONNECT_FAIL, xstrerror());
-	    comm_close(fd);
-	    return;
-	} else {
-	    debug(24, 5, "waisStart: FD %d EINPROGRESS\n", fd);
-	    comm_set_select_handler(fd,
-		COMM_SELECT_LIFETIME,
-		(PF) waisLifetimeExpire,
-		(void *) waisState);
-	    comm_set_select_handler(fd,
-		COMM_SELECT_WRITE,
-		(PF) waisConnInProgress,
-		(void *) waisState);
-	    return;
-	}
+    waisState->connectState.fd = fd;
+    waisState->connectState.host = waisState->relayhost;
+    waisState->connectState.port = waisState->relayport;
+    waisState->connectState.handler = waisConnectDone;
+    waisState->connectState.data = waisState;
+    comm_nbconnect(fd, &waisState->connectState);
+}
+
+static void
+waisConnectDone(int fd, int status, void *data)
+{
+    WaisStateData *waisState = data;
+    if (status == COMM_ERROR) {
+	squid_error_entry(waisState->entry, ERR_CONNECT_FAIL, xstrerror());
+	comm_close(fd);
+	return;
     }
     /* Install connection complete handler. */
     if (opt_no_ipcache)
-	ipcacheInvalidate(host);
+	ipcacheInvalidate(waisState->relayhost);
     comm_set_select_handler(fd,
 	COMM_SELECT_LIFETIME,
 	(PF) waisLifetimeExpire,

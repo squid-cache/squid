@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.39 1996/10/08 14:57:06 wessels Exp $
+ * $Id: client_side.cc,v 1.40 1996/10/09 22:49:29 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -33,20 +33,20 @@
 
 static void clientRedirectDone _PARAMS((void *data, char *result));
 static int icpHandleIMSReply _PARAMS((int fd, StoreEntry * entry, void *data));
-static void clientLookupDstIPDone _PARAMS((int fd, struct hostent * hp, void *data));
+static void clientLookupDstIPDone _PARAMS((int fd, ipcache_addrs *, void *data));
 static void clientLookupSrcFQDNDone _PARAMS((int fd, char *fqdn, void *data));
 
 
 static void
-clientLookupDstIPDone(int fd, struct hostent *hp, void *data)
+clientLookupDstIPDone(int fd, ipcache_addrs * ia, void *data)
 {
     icpStateData *icpState = data;
     debug(33, 5, "clientLookupDstIPDone: FD %d, '%s'\n",
 	fd,
 	icpState->url);
     icpState->aclChecklist->state[ACL_DST_IP] = ACL_LOOKUP_DONE;
-    if (hp) {
-	icpState->aclChecklist->dst_addr = inaddrFromHostent(hp);
+    if (ia) {
+	icpState->aclChecklist->dst_addr = ia->in_addrs[0];
 	debug(33, 5, "clientLookupDstIPDone: %s is %s\n",
 	    icpState->request->host,
 	    inet_ntoa(icpState->aclChecklist->dst_addr));

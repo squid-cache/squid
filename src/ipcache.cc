@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.67 1996/10/09 15:34:31 wessels Exp $
+ * $Id: ipcache.cc,v 1.68 1996/10/09 22:49:37 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -148,18 +148,18 @@ static void ipcache_call_pending _PARAMS((ipcache_entry *));
 static void ipcache_add _PARAMS((char *, ipcache_entry *, struct hostent *, int));
 static int ipcacheHasPending _PARAMS((ipcache_entry *));
 static ipcache_entry *ipcache_get _PARAMS((char *));
-static void dummy_handler _PARAMS((int, struct hostent * hp, void *));
+static void dummy_handler _PARAMS((int, ipcache_addrs *, void *));
 static int ipcacheExpiredEntry _PARAMS((ipcache_entry *));
 static void ipcacheAddPending _PARAMS((ipcache_entry *, int fd, IPH, void *));
 static void ipcacheEnqueue _PARAMS((ipcache_entry *));
 static void *ipcacheDequeue _PARAMS((void));
 static void ipcache_dnsDispatch _PARAMS((dnsserver_t *, ipcache_entry *));
-static struct hostent *ipcacheCheckNumeric _PARAMS((char *name));
+static ipcache_addrs *ipcacheCheckNumeric _PARAMS((char *name));
 static void ipcacheStatPrint _PARAMS((ipcache_entry *, StoreEntry *));
 static void ipcacheUnlockEntry _PARAMS((ipcache_entry *));
 static void ipcacheLockEntry _PARAMS((ipcache_entry *));
 
-static struct hostent *static_result = NULL;
+static ipcache_addrs static_addrs;
 static HashID ip_table = 0;
 static struct ipcacheQueueData *ipcacheQueueHead = NULL;
 static struct ipcacheQueueData **ipcacheQueueTailP = &ipcacheQueueHead;
@@ -220,7 +220,6 @@ static void
 ipcache_release(ipcache_entry * i)
 {
     hash_link *table_entry = NULL;
-    int k;
 
     if ((table_entry = hash_lookup(ip_table, i->name)) == NULL) {
 	debug(14, 0, "ipcache_release: Could not find key '%s'\n", i->name);
@@ -242,13 +241,7 @@ ipcache_release(ipcache_entry * i)
 	return;
     }
     if (i->status == IP_CACHED) {
-	for (k = 0; k < (int) i->addr_count; k++)
-	    safe_free(*(i->entry.h_addr_list + k));
-	safe_free(i->entry.h_addr_list);
-	for (k = 0; k < (int) i->alias_count; k++)
-	    safe_free(i->entry.h_aliases[k]);
-	safe_free(i->entry.h_aliases);
-	safe_free(i->entry.h_name);
+	safe_free(i->addrs.in_addrs);
 	debug(14, 5, "ipcache_release: Released IP cached record for '%s'.\n",
 	    i->name);
     }
@@ -396,7 +389,6 @@ ipcache_create(void)
     new = xcalloc(1, sizeof(ipcache_entry));
     /* set default to 4, in case parser fail to get token $h_length from
      * dnsserver. */
-    new->entry.h_length = 4;
     new->expires = squid_curtime + Config.negativeDnsTtl;
     return new;
 
@@ -417,7 +409,6 @@ static void
 ipcache_add(char *name, ipcache_entry * i, struct hostent *hp, int cached)
 {
     int addr_count;
-    int alias_count;
     int k;
 
     if (ipcache_get(name))
@@ -430,34 +421,12 @@ ipcache_add(char *name, ipcache_entry * i, struct hostent *hp, int cached)
 	addr_count = 0;
 	while ((addr_count < 255) && *(hp->h_addr_list + addr_count))
 	    ++addr_count;
-
-	i->addr_count = (unsigned char) addr_count;
-
-	/* count for Alias */
-	alias_count = 0;
-	if (hp->h_aliases)
-	    while ((alias_count < 255) && hp->h_aliases[alias_count])
-		++alias_count;
-
-	i->alias_count = (unsigned char) alias_count;
-
-	/* copy ip addresses information */
-	i->entry.h_addr_list = xcalloc(addr_count + 1, sizeof(char *));
-	for (k = 0; k < addr_count; k++) {
-	    *(i->entry.h_addr_list + k) = xcalloc(1, hp->h_length);
-	    xmemcpy(*(i->entry.h_addr_list + k), *(hp->h_addr_list + k), hp->h_length);
-	}
-
-	if (alias_count) {
-	    /* copy aliases information */
-	    i->entry.h_aliases = xcalloc(alias_count + 1, sizeof(char *));
-	    for (k = 0; k < alias_count; k++) {
-		i->entry.h_aliases[k] = xcalloc(1, strlen(hp->h_aliases[k]) + 1);
-		strcpy(i->entry.h_aliases[k], hp->h_aliases[k]);
-	    }
-	}
-	i->entry.h_length = hp->h_length;
-	i->entry.h_name = xstrdup(hp->h_name);
+	i->addrs.count = (unsigned char) addr_count;
+	i->addrs.in_addrs = xcalloc(addr_count, sizeof(struct in_addr));
+	for (k = 0; k < addr_count; k++)
+	    memcpy(&i->addrs.in_addrs[k].s_addr,
+		*(hp->h_addr_list + k),
+		hp->h_length);
 	i->status = IP_CACHED;
 	i->expires = squid_curtime + Config.positiveDnsTtl;
     } else {
@@ -484,7 +453,7 @@ ipcache_call_pending(ipcache_entry * i)
 	    nhandler++;
 	    dns_error_message = i->error_message;
 	    p->handler(p->fd,
-		(i->status == IP_CACHED) ? &(i->entry) : NULL,
+		i->status == IP_CACHED ? &i->addrs : NULL,
 		p->handlerData);
 	}
 	memset(p, '\0', sizeof(struct _ip_pending));
@@ -529,42 +498,33 @@ ipcache_parsebuffer(char *inbuf, dnsserver_t * dnsData)
 	} else if (!strcmp(token, "$h_name")) {
 	    if ((token = strtok(NULL, w_space)) == NULL)
 		fatal_dump("Invalid $h_name");
-	    i.entry.h_name = xstrdup(token);
+	    /* ignore $h_name */
 	} else if (!strcmp(token, "$h_len")) {
 	    if ((token = strtok(NULL, w_space)) == NULL)
 		fatal_dump("Invalid $h_len");
-	    i.entry.h_length = atoi(token);
+	    /* ignore $h_length */
 	} else if (!strcmp(token, "$ipcount")) {
 	    if ((token = strtok(NULL, w_space)) == NULL)
 		fatal_dump("Invalid $ipcount");
 	    ipcount = atoi(token);
-	    i.addr_count = (unsigned char) ipcount;
+	    i.addrs.count = (unsigned char) ipcount;
 	    if (ipcount == 0) {
-		i.entry.h_addr_list = NULL;
+		i.addrs.in_addrs = NULL;
 	    } else {
-		i.entry.h_addr_list = xcalloc(ipcount + 1, sizeof(char *));
+		i.addrs.in_addrs = xcalloc(ipcount, sizeof(struct in_addr));
 	    }
 	    for (k = 0; k < ipcount; k++) {
 		if ((token = strtok(NULL, w_space)) == NULL)
 		    fatal_dump("Invalid IP address");
-		*(i.entry.h_addr_list + k) = xcalloc(1, i.entry.h_length);
-		*((u_num32 *) (void *) *(i.entry.h_addr_list + k))
-		    = inet_addr(token);
+		i.addrs.in_addrs[k].s_addr = inet_addr(token);
 	    }
 	} else if (!strcmp(token, "$aliascount")) {
 	    if ((token = strtok(NULL, w_space)) == NULL)
 		fatal_dump("Invalid $aliascount");
 	    aliascount = atoi(token);
-	    i.alias_count = (unsigned char) aliascount;
-	    if (aliascount == 0) {
-		i.entry.h_aliases = NULL;
-	    } else {
-		i.entry.h_aliases = xcalloc(aliascount, sizeof(char *));
-	    }
 	    for (k = 0; k < aliascount; k++) {
 		if ((token = strtok(NULL, w_space)) == NULL)
 		    fatal_dump("Invalid alias");
-		*(i.entry.h_aliases + k) = xstrdup(token);
 	    }
 	} else if (!strcmp(token, "$ttl")) {
 	    if ((token = strtok(NULL, w_space)) == NULL)
@@ -624,9 +584,7 @@ ipcache_dnsHandleRead(int fd, dnsserver_t * dnsData)
 	    dnsData->offset = 0;
 	    dnsData->ip_inbuf[0] = '\0';
 	    i = dnsData->data;
-	    i->addr_count = x->addr_count;
-	    i->alias_count = x->alias_count;
-	    i->entry = x->entry;
+	    i->addrs = x->addrs;
 	    i->error_message = x->error_message;
 	    i->status = x->status;
 	    i->expires = x->expires;
@@ -665,7 +623,7 @@ ipcache_nbgethostbyname(char *name, int fd, IPH handler, void *handlerData)
 {
     ipcache_entry *i = NULL;
     dnsserver_t *dnsData = NULL;
-    struct hostent *hp = NULL;
+    ipcache_addrs *addrs;
 
     if (!handler)
 	fatal_dump("ipcache_nbgethostbyname: NULL handler");
@@ -678,8 +636,8 @@ ipcache_nbgethostbyname(char *name, int fd, IPH handler, void *handlerData)
 	handler(fd, NULL, handlerData);
 	return;
     }
-    if ((hp = ipcacheCheckNumeric(name))) {
-	handler(fd, hp, handlerData);
+    if ((addrs = ipcacheCheckNumeric(name))) {
+	handler(fd, addrs, handlerData);
 	return;
     }
     if ((i = ipcache_get(name))) {
@@ -777,12 +735,8 @@ ipcache_init(void)
     }
 
     ip_table = hash_create(urlcmp, 229, hash_string);	/* small hash table */
-    /* init static area */
-    static_result = xcalloc(1, sizeof(struct hostent));
-    static_result->h_length = 4;
-    static_result->h_addr_list = xcalloc(2, sizeof(char *));
-    *(static_result->h_addr_list + 0) = xcalloc(1, 4);
-    static_result->h_name = xcalloc(1, SQUIDHOSTNAMELEN + 1);
+    memset(&static_addrs, '\0', sizeof(ipcache_addrs));
+    static_addrs.in_addrs = xcalloc(1, sizeof(struct in_addr));
 
     ipcache_high = (long) (((float) Config.ipcache.size *
 	    (float) Config.ipcache.high) / (float) 100);
@@ -815,11 +769,12 @@ ipcache_unregister(char *name, int fd)
     return n;
 }
 
-struct hostent *
+ipcache_addrs *
 ipcache_gethostbyname(char *name, int flags)
 {
     ipcache_entry *i = NULL;
-    struct hostent *hp = NULL;
+    ipcache_addrs *addrs;
+    struct hostent *hp;
 
     if (!name)
 	fatal_dump("ipcache_gethostbyname: NULL name");
@@ -841,12 +796,12 @@ ipcache_gethostbyname(char *name, int flags)
 	} else {
 	    IpcacheStats.hits++;
 	    i->lastref = squid_curtime;
-	    return &i->entry;
+	    return &i->addrs;
 	}
     }
     IpcacheStats.misses++;
-    if ((hp = ipcacheCheckNumeric(name)))
-	return hp;
+    if ((addrs = ipcacheCheckNumeric(name)))
+	return addrs;
     if (flags & IP_BLOCKING_LOOKUP) {
 	IpcacheStats.ghbn_calls++;
 	hp = gethostbyname(name);
@@ -856,7 +811,7 @@ ipcache_gethostbyname(char *name, int flags)
 	    i = ipcache_get(name);
 	    i->lastref = squid_curtime;
 	    i->expires = squid_curtime + Config.positiveDnsTtl;
-	    return &i->entry;
+	    return &i->addrs;
 	}
 	/* bad address, negative cached */
 	if (ip_table) {
@@ -876,21 +831,15 @@ static void
 ipcacheStatPrint(ipcache_entry * i, StoreEntry * sentry)
 {
     int k;
-    struct in_addr addr;
     storeAppendPrintf(sentry, " {%-32.32s  %c%c %6d %6d %d",
 	i->name,
 	ipcache_status_char[i->status],
 	i->locks ? 'L' : ' ',
 	(int) (squid_curtime - i->lastref),
 	(int) (i->expires - squid_curtime),
-	i->addr_count);
-    for (k = 0; k < (int) i->addr_count; k++)
-	xmemcpy(&addr.s_addr, i->entry.h_addr_list[k], sizeof(struct in_addr));
-    storeAppendPrintf(sentry, " %15s", inet_ntoa(addr));
-    for (k = 0; k < (int) i->alias_count; k++)
-	storeAppendPrintf(sentry, " %s", i->entry.h_aliases[k]);
-    if (i->entry.h_name && strncmp(i->name, i->entry.h_name, MAX_LINELEN))
-	storeAppendPrintf(sentry, " %s", i->entry.h_name);
+	(int) i->addrs.count);
+    for (k = 0; k < (int) i->addrs.count; k++)
+	storeAppendPrintf(sentry, " %15s", inet_ntoa(i->addrs.in_addrs[k]));
     storeAppendPrintf(sentry, close_bracket);
 }
 
@@ -949,7 +898,7 @@ stat_ipcache_get(StoreEntry * sentry)
 }
 
 static void
-dummy_handler(int u1, struct hostent *u2, void *u3)
+dummy_handler(int u1, ipcache_addrs * addrs, void *u3)
 {
     return;
 }
@@ -989,16 +938,17 @@ ipcacheInvalidate(char *name)
      * FMR */
 }
 
-static struct hostent *
+static ipcache_addrs *
 ipcacheCheckNumeric(char *name)
 {
     unsigned int ip;
     /* check if it's already a IP address in text form. */
     if ((ip = inet_addr(name)) == INADDR_NONE)
 	return NULL;
-    *((u_num32 *) (void *) static_result->h_addr_list[0]) = ip;
-    strncpy(static_result->h_name, name, SQUIDHOSTNAMELEN);
-    return static_result;
+    static_addrs.count = 1;
+    static_addrs.cur = 0;
+    static_addrs.in_addrs[0].s_addr = ip;
+    return &static_addrs;
 }
 
 int
@@ -1025,4 +975,38 @@ ipcacheUnlockEntry(ipcache_entry * i)
     i->locks--;
     if (ipcacheExpiredEntry(i))
 	ipcache_release(i);
+}
+
+void
+ipcacheCycleAddr(char *name)
+{
+    ipcache_entry *i;
+    if ((i = ipcache_get(name)) == NULL)
+	return;
+    if (i->status != IP_CACHED)
+	return;
+    if (++i->addrs.cur == i->addrs.count)
+	i->addrs.cur = 0;
+}
+
+void
+ipcacheRemoveBadAddr(char *name, struct in_addr addr)
+{
+    ipcache_entry *i;
+    ipcache_addrs *ia;
+    int k;
+    if ((i = ipcache_get(name)) == NULL)
+	return;
+    ia = &i->addrs;
+    for (k = 0; k < (int) ia->count; k++) {
+	if (ia->in_addrs[k].s_addr == addr.s_addr)
+	    break;
+    }
+    if (k == (int) ia->count)
+	return;
+    ia->in_addrs[k] = ia->in_addrs[--ia->count];
+    if (ia->count == 0)
+	i->expires = squid_curtime;
+    if (ia->cur >= ia->count)
+	ia->cur = 0;
 }

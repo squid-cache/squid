@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.81 1996/10/09 15:34:29 wessels Exp $
+ * $Id: http.cc,v 1.82 1996/10/09 22:49:33 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -125,8 +125,8 @@ static void httpCacheNegatively _PARAMS((StoreEntry *));
 static void httpReadReply _PARAMS((int fd, HttpStateData *));
 static void httpSendComplete _PARAMS((int fd, char *, int, int, void *));
 static void httpSendRequest _PARAMS((int fd, HttpStateData *));
-static void httpConnInProgress _PARAMS((int fd, HttpStateData *));
-static void httpConnect _PARAMS((int fd, struct hostent *, void *));
+static void httpConnect _PARAMS((int fd, ipcache_addrs *, void *));
+static void httpConnectDone _PARAMS((int fd, int status, void *data));
 
 static int
 httpStateFree(int fd, HttpStateData * httpState)
@@ -649,38 +649,6 @@ httpSendRequest(int fd, HttpStateData * httpState)
 	buftype == BUF_TYPE_8K ? put_free_8k_page : xfree);
 }
 
-static void
-httpConnInProgress(int fd, HttpStateData * httpState)
-{
-    StoreEntry *entry = httpState->entry;
-    request_t *req = httpState->request;
-
-    debug(11, 5, "httpConnInProgress: FD %d httpState=%p\n", fd, httpState);
-
-    if (comm_connect(fd, req->host, req->port) != COMM_OK) {
-	debug(11, 5, "httpConnInProgress: FD %d: %s\n", fd, xstrerror());
-	switch (errno) {
-	case EINPROGRESS:
-	case EALREADY:
-	    /* schedule this handler again */
-	    comm_set_select_handler(fd,
-		COMM_SELECT_WRITE,
-		(PF) httpConnInProgress,
-		(void *) httpState);
-	    return;
-	default:
-	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	    comm_close(fd);
-	    return;
-	}
-    }
-    /* Call the real write handler, now that we're fully connected */
-    if (opt_no_ipcache)
-	ipcacheInvalidate(entry->mem_obj->request->host);
-    comm_set_select_handler(fd, COMM_SELECT_WRITE,
-	(PF) httpSendRequest, (void *) httpState);
-}
-
 int
 proxyhttpStart(edge * e, char *url, StoreEntry * entry)
 {
@@ -731,46 +699,50 @@ proxyhttpStart(edge * e, char *url, StoreEntry * entry)
 }
 
 static void
-httpConnect(int fd, struct hostent *hp, void *data)
+httpConnect(int fd, ipcache_addrs * ia, void *data)
 {
     HttpStateData *httpState = data;
     request_t *request = httpState->request;
     StoreEntry *entry = httpState->entry;
-    edge *e = NULL;
-    int status;
-    if (hp == NULL) {
+    if (ia == NULL) {
 	debug(11, 4, "httpConnect: Unknown host: %s\n", request->host);
 	squid_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
 	comm_close(fd);
 	return;
     }
     /* Open connection. */
-    if ((status = comm_connect(fd, request->host, request->port))) {
-	if (status != EINPROGRESS) {
-	    squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
-	    comm_close(fd);
-	    if ((e = httpState->neighbor)) {
-		e->last_fail_time = squid_curtime;
-		e->neighbor_up = 0;
-	    }
-	    return;
-	} else {
-	    debug(11, 5, "proxyhttpStart: FD %d: EINPROGRESS.\n", fd);
-	    comm_set_select_handler(fd, COMM_SELECT_LIFETIME,
-		(PF) httpLifetimeExpire, (void *) httpState);
-	    comm_set_select_handler(fd, COMM_SELECT_WRITE,
-		(PF) httpConnInProgress, (void *) httpState);
-	    return;
+    httpState->connectState.fd = fd;
+    httpState->connectState.host = request->host;
+    httpState->connectState.port = request->port;
+    httpState->connectState.handler = httpConnectDone;
+    httpState->connectState.data = httpState;
+    comm_nbconnect(fd, &httpState->connectState);
+}
+
+static void
+httpConnectDone(int fd, int status, void *data)
+{
+    HttpStateData *httpState = data;
+    request_t *request = httpState->request;
+    StoreEntry *entry = httpState->entry;
+    edge *e = NULL;
+    if (status != COMM_OK) {
+	if ((e = httpState->neighbor)) {
+	    e->last_fail_time = squid_curtime;
+	    e->neighbor_up = 0;
 	}
+	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
+	comm_close(fd);
+    } else {
+	/* Install connection complete handler. */
+	if (opt_no_ipcache)
+	    ipcacheInvalidate(request->host);
+	fd_note(fd, entry->url);
+	comm_set_select_handler(fd, COMM_SELECT_LIFETIME,
+	    (PF) httpLifetimeExpire, (void *) httpState);
+	comm_set_select_handler(fd, COMM_SELECT_WRITE,
+	    (PF) httpSendRequest, (void *) httpState);
     }
-    /* Install connection complete handler. */
-    if (opt_no_ipcache)
-	ipcacheInvalidate(request->host);
-    fd_note(fd, entry->url);
-    comm_set_select_handler(fd, COMM_SELECT_LIFETIME,
-	(PF) httpLifetimeExpire, (void *) httpState);
-    comm_set_select_handler(fd, COMM_SELECT_WRITE,
-	(PF) httpSendRequest, (void *) httpState);
 }
 
 int

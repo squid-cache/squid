@@ -1,5 +1,5 @@
 /*
- * $Id: ident.cc,v 1.16 1996/09/20 06:28:54 wessels Exp $
+ * $Id: ident.cc,v 1.17 1996/10/09 22:49:36 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
 static void identRequestComplete _PARAMS((int, char *, int, int, void *));
 static void identReadReply _PARAMS((int, icpStateData *));
 static void identClose _PARAMS((int, icpStateData *));
+static void identConnectDone _PARAMS((int fd, int status, void *data));
 
 static void
 identClose(int fd, icpStateData * icpState)
@@ -44,50 +45,50 @@ identClose(int fd, icpStateData * icpState)
 
 /* start a TCP connection to the peer host on port 113 */
 void
-identStart(int sock, icpStateData * icpState)
+identStart(int fd, icpStateData * icpState)
 {
-    char *host;
-    LOCAL_ARRAY(char, reqbuf, BUFSIZ);
-    int status;
-
-    host = inet_ntoa(icpState->peer.sin_addr);
-
-    if (sock < 0) {
-	sock = comm_open(SOCK_STREAM,
+    if (fd < 0) {
+	fd = comm_open(SOCK_STREAM,
 	    0,
 	    Config.Addrs.tcp_outgoing,
 	    0,
 	    COMM_NONBLOCKING,
 	    "ident");
-	if (sock == COMM_ERROR)
+	if (fd == COMM_ERROR)
 	    return;
     }
-    icpState->ident_fd = sock;
-    comm_add_close_handler(sock,
+    icpState->ident_fd = fd;
+    comm_add_close_handler(fd,
 	(PF) identClose,
 	(void *) icpState);
-    if ((status = comm_connect(sock, host, IDENT_PORT)) < 0) {
-	if (status != EINPROGRESS) {
-	    comm_close(sock);
-	    return;		/* die silently */
-	}
-	comm_set_select_handler(sock,
-	    COMM_SELECT_WRITE,
-	    (PF) identStart,
-	    (void *) icpState);
-	return;
+    icpState->identConnectState.fd = fd;
+    icpState->identConnectState.host = inet_ntoa(icpState->peer.sin_addr);
+    icpState->identConnectState.port = IDENT_PORT;
+    icpState->identConnectState.handler = identConnectDone;
+    icpState->identConnectState.data = icpState;
+    comm_nbconnect(fd, &icpState->identConnectState);
+}
+
+static void
+identConnectDone(int fd, int status, void *data)
+{
+    icpStateData *icpState = data;
+    LOCAL_ARRAY(char, reqbuf, BUFSIZ);
+    if (status == COMM_ERROR) {
+	comm_close(fd);
+	return;			/* die silently */
     }
     sprintf(reqbuf, "%d, %d\r\n",
 	ntohs(icpState->peer.sin_port),
 	ntohs(icpState->me.sin_port));
-    comm_write(sock,
+    comm_write(fd,
 	reqbuf,
 	strlen(reqbuf),
 	5,			/* timeout */
 	identRequestComplete,
 	(void *) icpState,
 	NULL);
-    comm_set_select_handler(sock,
+    comm_set_select_handler(fd,
 	COMM_SELECT_READ,
 	(PF) identReadReply,
 	(void *) icpState);

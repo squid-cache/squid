@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.47 1996/10/09 16:27:16 wessels Exp $
+ * $Id: acl.cc,v 1.48 1996/10/09 22:49:27 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -76,21 +76,22 @@ strtokFile(void)
     char *t, *fn;
     LOCAL_ARRAY(char, buf, 256);
 
-strtok_again:
+  strtok_again:
     if (!aclFromFile) {
 	t = (strtok(NULL, w_space));
 	if (t && (*t == '\"' || *t == '\'')) {
 	    /* quote found, start reading from file */
 	    fn = ++t;
-	    while (*t && *t != '\"' && *t != '\'') t++;
+	    while (*t && *t != '\"' && *t != '\'')
+		t++;
 	    *t = '\0';
 	    if ((aclFile = fopen(fn, "r")) == NULL) {
 		debug(28, 0, "strtokFile: %s not found\n", fn);
-		return(NULL);
+		return (NULL);
 	    }
 	    aclFromFile = 1;
 	} else {
-	    return(t);
+	    return (t);
 	}
     }
     /* aclFromFile */
@@ -104,7 +105,7 @@ strtok_again:
 	/* skip leading and trailing white space */
 	t += strspn(buf, w_space);
 	t[strcspn(t, w_space)] = '\0';
-	return(t);
+	return (t);
     }
 }
 
@@ -207,7 +208,7 @@ aclParseMethodList(void)
 static int
 decode_addr(char *asc, struct in_addr *addr, struct in_addr *mask)
 {
-    struct hostent *hp = NULL;
+    ipcache_addrs *ia = NULL;
     u_num32 a;
     int a1, a2, a3, a4;
 
@@ -225,9 +226,8 @@ decode_addr(char *asc, struct in_addr *addr, struct in_addr *mask)
 	    break;
 	}
     default:
-	if ((hp = gethostbyname(asc)) != NULL) {
-	    /* We got a host name */
-	    *addr = inaddrFromHostent(hp);
+	if ((ia = ipcache_gethostbyname(asc, IP_BLOCKING_LOOKUP)) != NULL) {
+	    *addr = ia->in_addrs[0];
 	} else {
 	    /* XXX: Here we could use getnetbyname */
 	    debug(28, 0, "decode_addr: Invalid IP address or hostname  '%s'\n", asc);
@@ -680,8 +680,8 @@ aclMatchIp(struct _acl_ip_data *data, struct in_addr c)
     unsigned long lh, la1, la2;
     struct _acl_ip_data *first, *prev;
 
-    first = data; /* remember first element, this will never be moved */
-    prev = NULL; /* previous element in the list */
+    first = data;		/* remember first element, this will never be moved */
+    prev = NULL;		/* previous element in the list */
     while (data) {
 	h.s_addr = c.s_addr & data->mask.s_addr;
 	debug(28, 3, "aclMatchIp: h     = %s\n", inet_ntoa(h));
@@ -692,7 +692,7 @@ aclMatchIp(struct _acl_ip_data *data, struct in_addr c)
 		debug(28, 3, "aclMatchIp: returning 1\n");
 		if (prev != NULL) {
 		    /* shift the element just found to the second position
-		       in the list */
+		     * in the list */
 		    prev->next = data->next;
 		    data->next = first->next;
 		    first->next = data;
@@ -731,13 +731,13 @@ aclMatchDomainList(wordlist * data, char *host)
 	if (matchDomainName(data->key, host)) {
 	    if (prev != NULL) {
 		/* shift the element just found to the second position
-		   in the list */
+		 * in the list */
 		prev->next = data->next;
 		data->next = first->next;
 		first->next = data;
 	    }
 	    return 1;
-    }
+	}
 	prev = data;
     }
     return 0;
@@ -757,7 +757,7 @@ aclMatchRegex(relist * data, char *word)
 	if (regexec(&data->regex, word, 0, 0, 0) == 0) {
 	    if (prev != NULL) {
 		/* shift the element just found to the second position
-		   in the list */
+		 * in the list */
 		prev->next = data->next;
 		data->next = first->next;
 		first->next = data;
@@ -780,7 +780,7 @@ aclMatchInteger(intlist * data, int i)
 	if (data->i == i) {
 	    if (prev != NULL) {
 		/* shift the element just found to the second position
-		   in the list */
+		 * in the list */
 		prev->next = data->next;
 		data->next = first->next;
 		first->next = data;
@@ -817,7 +817,7 @@ int
 aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
 {
     request_t *r = checklist->request;
-    struct hostent *hp = NULL;
+    ipcache_addrs *ia = NULL;
     char *fqdn = NULL;
     int k;
     if (!acl)
@@ -828,10 +828,10 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
 	return aclMatchIp(acl->data, checklist->src_addr);
 	/* NOTREACHED */
     case ACL_DST_IP:
-	hp = ipcache_gethostbyname(r->host, IP_LOOKUP_IF_MISS);
-	if (hp) {
-	    for (k = 0; *(hp->h_addr_list + k); k++) {
-		checklist->dst_addr = inaddrFromHostent(hp);
+	ia = ipcache_gethostbyname(r->host, IP_LOOKUP_IF_MISS);
+	if (ia) {
+	    for (k = 0; k < (int) ia->count; k++) {
+		checklist->dst_addr = ia->in_addrs[k];
 		if (aclMatchIp(acl->data, checklist->dst_addr))
 		    return 1;
 	    }
