@@ -20,7 +20,6 @@ typedef enum {
     LOG_UDP_DENIED,
     LOG_UDP_INVALID,
     LOG_UDP_MISS_NOFETCH,
-    LOG_METER_EXPIRES,
     LOG_TYPE_MAX
 } log_type;
 
