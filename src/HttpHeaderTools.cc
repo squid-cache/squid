@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.41 2003/03/10 04:56:36 robertc Exp $
+ * $Id: HttpHeaderTools.cc,v 1.42 2003/06/19 19:02:33 hno Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -261,7 +261,13 @@ int
 strListGetItem(const String * str, char del, const char **item, int *ilen, const char **pos)
 {
     size_t len;
+    static char delim[2][3] = {
+                                  { '"', '?', 0},
+                                  { '"', '\\', 0}};
+    int quoted = 0;
     assert(str && item && pos);
+
+    delim[0][1] = del;
 
     if (*pos) {
         if (!**pos)		/* end of string */
@@ -281,10 +287,24 @@ strListGetItem(const String * str, char del, const char **item, int *ilen, const
     *item = *pos;		/* remember item's start */
 
     /* find next delimiter */
-    *pos = strchr(*item, del);
+    do {
+        *pos += strcspn(*pos, delim[quoted]);
 
-    if (!*pos)			/* last item */
-        *pos = *item + strlen(*item);
+        if (**pos == del)
+            break;
+
+        if (**pos == '"') {
+            quoted = !quoted;
+            *pos += 1;
+        }
+
+        if (quoted && **pos == '\\') {
+            *pos += 1;
+
+            if (**pos)
+                *pos += 1;
+        }
+    } while (**pos);
 
     len = *pos - *item;		/* *pos points to del or '\0' */
 
