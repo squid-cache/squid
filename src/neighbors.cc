@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.199 1998/04/23 19:29:12 wessels Exp $
+ * $Id: neighbors.cc,v 1.200 1998/04/24 06:08:18 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -551,7 +551,7 @@ neighborsUdpPing(request_t * request,
 lookup_t
 peerDigestLookup(peer *p, request_t * request, StoreEntry * entry)
 {
-#if SQUID_PEER_DIGEST
+#if USE_CACHE_DIGESTS
     const cache_key *key = request ? storeKeyPublic(storeUrl(entry), request->method) : NULL;
     assert(p);
     assert(request);
@@ -589,7 +589,7 @@ peer *
 neighborsDigestSelect(request_t * request, StoreEntry * entry)
 {
     peer *best_p = NULL;
-#if SQUID_PEER_DIGEST
+#if USE_CACHE_DIGESTS
     const cache_key *key;
     int best_rtt = 0;
     int choice_count = 0;
@@ -637,7 +637,7 @@ neighborsDigestSelect(request_t * request, StoreEntry * entry)
 void
 peerNoteDigestLookup(request_t * request, peer *p, lookup_t lookup)
 {
-#if SQUID_PEER_DIGEST
+#if USE_CACHE_DIGESTS
     if (p)
 	strncpy(request->hier.cd_host, p->host, sizeof(request->hier.cd_host));
     else

@@ -29,6 +29,9 @@
 	  and ALIVE neighbors (Joe Ramey).
 	- Fixed FTP directory parsing bugs.
 	- Fixed daylight savings time bug (again).
+	- Changed error message to 'Generated TIME by HOST (SQUID/VER)'
+	  because any string with an '@' must be an email address.
+
 
 Changes to squid-1.2.beta19 (Apr 8, 1998):
 

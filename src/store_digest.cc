@@ -1,5 +1,5 @@
 /*
- * $Id: store_digest.cc,v 1.9 1998/04/22 16:22:58 rousskov Exp $
+ * $Id: store_digest.cc,v 1.10 1998/04/24 06:08:24 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -94,7 +94,7 @@ static int storeDigestResize();
 void
 storeDigestInit()
 {
-#if SQUID_MAINTAIN_CACHE_DIGEST
+#if USE_CACHE_DIGESTS
     const int cap = storeDigestCalcCap();
     store_digest = cacheDigestCreate(cap, StoreDigestBitsPerEntry);
     debug(71, 1) ("Local cache digest enabled; rebuild/rewrite every %d/%d sec\n",

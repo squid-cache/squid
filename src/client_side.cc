@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.289 1998/04/24 05:05:10 wessels Exp $
+ * $Id: client_side.cc,v 1.290 1998/04/24 06:08:16 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -534,7 +534,7 @@ clientUpdateCounters(clientHttpRequest * http)
 {
     int svc_time = tvSubMsec(http->start, current_time);
     icp_ping_data *i;
-#if SQUID_PEER_DIGEST
+#if USE_CACHE_DIGESTS
     const HttpReply *reply = NULL;
     int sst = 0;		/* server-side service time */
     HierarchyLogEntry *H;
@@ -576,7 +576,7 @@ clientUpdateCounters(clientHttpRequest * http)
 	statHistCount(&Counter.icp.query_svc_time, tvSubUsec(i->start, i->stop));
     if (i->timeout)
 	Counter.icp.query_timeouts++;
-#if SQUID_PEER_DIGEST
+#if USE_CACHE_DIGESTS
     H = &http->request->hier;
     if (H->peer_select_start.tv_sec && H->store_complete_stop.tv_sec)
 	sst = tvSubMsec(H->peer_select_start, H->store_complete_stop);
@@ -596,7 +596,7 @@ clientUpdateCounters(clientHttpRequest * http)
     }
     /*
      * account for outgoing digest traffic (this has nothing to do with
-     * SQUID_PEER_DIGEST, but counters are all in SQUID_PEER_DIGEST ifdefs)
+     * USE_CACHE_DIGESTS, but counters are all in USE_CACHE_DIGESTS ifdefs)
      */
     if (http->flags.internal && strStr(http->request->urlpath, StoreDigestUrlPath)) {
 	kb_incr(&Counter.cd.kbytes_sent, http->out.size);
@@ -1026,7 +1026,7 @@ clientBuildReplyHeader(clientHttpRequest * http,
 	isTcpHit(http->log_type) ? "HIT" : "MISS",
 	getMyHostname());
     clientAppendReplyHeader(hdr_out, ybuf, &len, out_sz);
-#if SQUID_PEER_DIGEST
+#if USE_CACHE_DIGESTS
     /* Append X-Cache-Lookup: -- temporary hack, to be removed @?@ @?@ */
     snprintf(ybuf, 4096, "X-Cache-Lookup: %s from %s:%d",
 	http->lookup_type ? http->lookup_type : "NONE",
@@ -1469,7 +1469,7 @@ clientProcessRequest2(clientHttpRequest * http)
     const cache_key *key = storeKeyPublic(http->uri, r->method);
     StoreEntry *e;
     e = http->entry = storeGet(key);
-#if SQUID_PEER_DIGEST
+#if USE_CACHE_DIGESTS
     http->lookup_type = e ? "HIT" : "MISS";
 #endif
     if (!e) {
