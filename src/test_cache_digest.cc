@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_cache_digest.cc,v 1.20 1998/05/24 03:41:15 wessels Exp $
+ * $Id: test_cache_digest.cc,v 1.21 1998/07/20 17:20:17 wessels Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -24,7 +24,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

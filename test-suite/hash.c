@@ -1,6 +1,6 @@
 
 /*
- * $Id: hash.c,v 1.3 1998/02/28 03:10:35 kostas Exp $
+ * $Id: hash.c,v 1.4 1998/07/20 17:20:25 wessels Exp $
  *
  * DEBUG: section 0     Hash Tables
  * AUTHOR: Harvest Derived
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

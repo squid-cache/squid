@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.35 1998/06/08 17:29:16 wessels Exp $
+ * $Id: client_db.cc,v 1.36 1998/07/20 17:19:27 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.19 1998/05/26 19:08:54 wessels Exp $
+ * $Id: event.cc,v 1.20 1998/07/20 17:19:36 wessels Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

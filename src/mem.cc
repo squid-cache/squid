@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.27 1998/07/13 21:37:16 wessels Exp $
+ * $Id: mem.cc,v 1.28 1998/07/20 17:19:52 wessels Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

@@ -1,5 +1,5 @@
 /*
- * $Id: carp.cc,v 1.1 1998/07/17 01:02:24 wessels Exp $
+ * $Id: carp.cc,v 1.2 1998/07/20 17:19:24 wessels Exp $
  *
  * DEBUG: section 44    Cache Array Routing Protocol
  * AUTHOR: Eric Stern
@@ -24,7 +24,7 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *      
  */     
 

@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.35 1998/07/15 23:55:32 wessels Exp $
+ * $Id: access_log.cc,v 1.36 1998/07/20 17:19:14 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -26,7 +26,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

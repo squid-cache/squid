@@ -1,6 +1,6 @@
 
 /*
- * $Id: filemap.cc,v 1.29 1998/05/27 18:34:57 wessels Exp $
+ * $Id: filemap.cc,v 1.30 1998/07/20 17:19:38 wessels Exp $
  *
  * DEBUG: section 8     Swap File Bitmap
  * AUTHOR: Harvest Derived
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.48 1998/07/06 19:49:35 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.49 1998/07/20 17:19:05 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: useragent.cc,v 1.13 1998/02/02 21:15:12 wessels Exp $
+ * $Id: useragent.cc,v 1.14 1998/07/20 17:20:22 wessels Exp $
  *
  * DEBUG: section 40    User-Agent logging
  * AUTHOR: Joe Ramey <ramey@csc.ti.com>
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

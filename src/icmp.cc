@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.59 1998/03/31 22:36:32 wessels Exp $
+ * $Id: icmp.cc,v 1.60 1998/07/20 17:19:46 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

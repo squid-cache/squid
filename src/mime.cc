@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.68 1998/06/03 20:48:19 rousskov Exp $
+ * $Id: mime.cc,v 1.69 1998/07/20 17:19:53 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

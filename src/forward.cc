@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.17 1998/07/14 06:12:59 wessels Exp $
+ * $Id: forward.cc,v 1.18 1998/07/20 17:19:39 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

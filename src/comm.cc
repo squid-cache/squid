@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.273 1998/07/14 22:55:59 wessels Exp $
+ * $Id: comm.cc,v 1.274 1998/07/20 17:19:30 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -26,7 +26,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

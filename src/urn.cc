@@ -1,7 +1,7 @@
 
 /*
  *
- * $Id: urn.cc,v 1.37 1998/07/14 06:13:01 wessels Exp $
+ * $Id: urn.cc,v 1.38 1998/07/20 17:20:21 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -26,7 +26,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

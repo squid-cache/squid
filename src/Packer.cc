@@ -1,6 +1,6 @@
 
 /*
- * $Id: Packer.cc,v 1.7 1998/06/03 15:52:17 rousskov Exp $
+ * $Id: Packer.cc,v 1.8 1998/07/20 17:19:11 wessels Exp $
  *
  * DEBUG: section 60    Packer: A uniform interface to store-like modules
  * AUTHOR: Alex Rousskov
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

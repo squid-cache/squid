@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.295 1998/07/20 16:27:08 wessels Exp $
+ * $Id: http.cc,v 1.296 1998/07/20 17:19:45 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.12 1998/05/11 18:44:32 rousskov Exp $
+ * $Id: cache_manager.cc,v 1.13 1998/07/20 17:19:22 wessels Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.111 1998/06/09 21:18:57 wessels Exp $
+ * $Id: wais.cc,v 1.112 1998/07/20 17:20:23 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -25,7 +25,7 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
 
