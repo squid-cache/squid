@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.10 2001/10/29 08:10:21 robertc Exp $
+#  $Id: Makefile.am,v 1.11 2001/11/15 14:58:38 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -206,6 +206,7 @@ nodist_squid_SOURCES = \
 	string_arrays.c
 
 squid_LDADD = \
+	-L../lib \
 	@XTRA_OBJS@ \
 	@REPL_OBJS@ \
 	@STORE_OBJS@ \
@@ -217,7 +218,7 @@ squid_LDADD = \
 	@SNMPLIB@ \
 	@LIB_MALLOC@ \
 	@SSLLIB@ \
-	../lib/libmiscutil.a \
+	-lmiscutil \
 	@XTRA_LIBS@
 
 unlinkd_SOURCES = 
@@ -244,7 +245,7 @@ sysconf_DATA = \
 	mib.txt \
 	mime.conf.default
 
-LDADD = ../lib/libmiscutil.a @XTRA_LIBS@
+LDADD = -L../lib -lmiscutil @XTRA_LIBS@
 
 EXTRA_DIST = \
 	cf_gen_defines \

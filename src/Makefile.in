@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.219 2001/11/14 23:20:54 hno Exp $
+#  $Id: Makefile.in,v 1.220 2001/11/15 14:58:38 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -309,6 +309,7 @@ nodist_squid_SOURCES = \
 
 
 squid_LDADD = \
+	-L../lib \
 	@XTRA_OBJS@ \
 	@REPL_OBJS@ \
 	@STORE_OBJS@ \
@@ -320,7 +321,7 @@ squid_LDADD = \
 	@SNMPLIB@ \
 	@LIB_MALLOC@ \
 	@SSLLIB@ \
-	../lib/libmiscutil.a \
+	-lmiscutil \
 	@XTRA_LIBS@
 
 
@@ -349,7 +350,7 @@ sysconf_DATA = \
 	mime.conf.default
 
 
-LDADD = ../lib/libmiscutil.a @XTRA_LIBS@
+LDADD = -L../lib -lmiscutil @XTRA_LIBS@
 
 EXTRA_DIST = \
 	cf_gen_defines \
@@ -412,27 +413,27 @@ PROGRAMS = $(bin_PROGRAMS) $(libexec_PROGRAMS) $(noinst_PROGRAMS)
 cachemgr_SOURCES = cachemgr.c
 cachemgr_OBJECTS = cachemgr.$(OBJEXT)
 cachemgr_LDADD = $(LDADD)
-cachemgr_DEPENDENCIES = ../lib/libmiscutil.a
+cachemgr_DEPENDENCIES =
 cachemgr_LDFLAGS =
 am_cf_gen_OBJECTS = cf_gen.$(OBJEXT)
 cf_gen_OBJECTS = $(am_cf_gen_OBJECTS)
 cf_gen_LDADD = $(LDADD)
-cf_gen_DEPENDENCIES = ../lib/libmiscutil.a
+cf_gen_DEPENDENCIES =
 cf_gen_LDFLAGS =
 client_SOURCES = client.c
 client_OBJECTS = client.$(OBJEXT)
 client_LDADD = $(LDADD)
-client_DEPENDENCIES = ../lib/libmiscutil.a
+client_DEPENDENCIES =
 client_LDFLAGS =
 dnsserver_SOURCES = dnsserver.c
 dnsserver_OBJECTS = dnsserver.$(OBJEXT)
 dnsserver_LDADD = $(LDADD)
-dnsserver_DEPENDENCIES = ../lib/libmiscutil.a
+dnsserver_DEPENDENCIES =
 dnsserver_LDFLAGS =
 am_pinger_OBJECTS = pinger.$(OBJEXT) debug.$(OBJEXT) globals.$(OBJEXT)
 pinger_OBJECTS = $(am_pinger_OBJECTS)
 pinger_LDADD = $(LDADD)
-pinger_DEPENDENCIES = ../lib/libmiscutil.a
+pinger_DEPENDENCIES =
 pinger_LDFLAGS =
 @USE_DELAY_POOLS_FALSE@am__objects_2 =
 @USE_DELAY_POOLS_TRUE@am__objects_2 = delay_pools.$(OBJEXT)
@@ -485,7 +486,7 @@ nodist_squid_OBJECTS = repl_modules.$(OBJEXT) auth_modules.$(OBJEXT) \
 	store_modules.$(OBJEXT) globals.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 squid_OBJECTS = $(am_squid_OBJECTS) $(nodist_squid_OBJECTS)
-squid_DEPENDENCIES = ../lib/libmiscutil.a
+squid_DEPENDENCIES =
 squid_LDFLAGS =
 am_unlinkd_OBJECTS =
 unlinkd_OBJECTS = $(am_unlinkd_OBJECTS)
