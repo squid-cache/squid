@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.h,v 1.11 2005/03/18 17:12:34 hno Exp $
+ * $Id: ssl_support.h,v 1.12 2005/03/18 17:17:51 hno Exp $
  *
  * AUTHOR: Benno Rice
  *
@@ -57,5 +57,6 @@ typedef char const *SSLGETATTRIBUTE(SSL *, const char *);
 SSLGETATTRIBUTE sslGetUserAttribute;
 SSLGETATTRIBUTE sslGetCAAttribute;
 const char *sslGetUserCertificatePEM(SSL *ssl);
+const char *sslGetUserCertificateChainPEM(SSL *ssl);
 
 #endif /* SQUID_SSL_SUPPORT_H */
