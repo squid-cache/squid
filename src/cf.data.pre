@@ -1375,7 +1375,7 @@ COMMENT_START
 
 	An 'announcement' message is sent (via UDP) to the registration
 	service by Squid.  By default, the annoucement message is NOT
-	SENT unless you enable it with 'cache_announce' below.
+	SENT unless you enable it with 'announce_period' below.
 
 	The announcement message includes your hostname, plus the
 	following information from this configuration file:
@@ -1385,18 +1385,20 @@ COMMENT_START
 		cache_mgr
 
 	All current information is processed regularly and made
-	available on the Web at http://www.nlanr.net/Cache/Tracker/.
+	available on the Web at http://ircache.nlanr.net/Cache/Tracker/.
 COMMENT_END
 
 NAME: announce_period
 TYPE: time_t
 LOC: Config.Announce.period
-DEFAULT: 1 day
+DEFAULT: 0
 DOC_START
-	This is how frequently to send cache announcements.  The default
-	is `0' which disables sending the announcement messages.
+	This is how frequently to send cache announcements.  The
+	default is `0' which disables sending the announcement
+	messages.
 
-	To enable announcing your cache, just uncomment the line below.
+	To enable announcing your cache, just uncomment the line
+	below.
 
 announce_period 1 day
 DOC_END
@@ -1419,12 +1421,13 @@ TYPE: ushort
 DEFAULT: 3131
 LOC: Config.Announce.port
 DOC_START
-	announce_host and announce_port set the hostname and portnumber where
-	the registration message will be sent.
+	announce_host and announce_port set the hostname and port
+	number where the registration message will be sent.
 
-	Hostname will default to 'tracker.ircache.net' and port will default
-	to 3131.  If the 'filename' argument is given, the contents of that
-	file will be included in the announce message.
+	Hostname will default to 'tracker.ircache.net' and port will
+	default default to 3131.  If the 'filename' argument is given,
+	the contents of that file will be included in the announce
+	message.
 
 announce_host tracker.ircache.net
 announce_port 3131
