@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.12 1998/06/28 07:52:13 wessels Exp $
+ * $Id: forward.cc,v 1.13 1998/06/28 16:18:21 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -53,16 +53,16 @@ fwdStateFree(FwdState * fwdState)
     static int loop_detect = 0;
     assert(loop_detect++ == 0);
     assert(e->mem_obj);
-    if (e->store_status == STORE_ABORTED) {
-	;
-    } else if (e->mem_obj->inmem_hi == 0) {
-	assert(fwdState->fail.err_code);
-	err = errorCon(fwdState->fail.err_code, fwdState->fail.http_code);
-	err->request = requestLink(fwdState->request);
-	err->xerrno = fwdState->fail.xerrno;
-	errorAppendEntry(e, err);
-    } else if (e->store_status == STORE_PENDING) {
-	storeAbort(e, 0);
+    if (e->store_status == STORE_PENDING) {
+	if (e->mem_obj->inmem_hi == 0) {
+	    assert(fwdState->fail.err_code);
+	    err = errorCon(fwdState->fail.err_code, fwdState->fail.http_code);
+	    err->request = requestLink(fwdState->request);
+	    err->xerrno = fwdState->fail.xerrno;
+	    errorAppendEntry(e, err);
+	} else {
+	    storeAbort(e, 0);
+	}
     }
     while ((s = n)) {
 	n = s->next;
@@ -89,6 +89,8 @@ fwdStateFree(FwdState * fwdState)
 static int
 fwdCheckRetry(FwdState * fwdState)
 {
+    if (fwdState->entry->store_status != STORE_PENDING)
+	return 0;
     if (fwdState->entry->mem_obj->inmem_hi > 0)
 	return 0;
     if (fwdState->n_tries > 10)
@@ -280,7 +282,7 @@ fwdDispatch(FwdState * fwdState)
 	    urnStart(request, entry);
 	    break;
 	case PROTO_WHOIS:
-	    whoisStart(request, entry, fwdState->server_fd);
+	    whoisStart(fwdState, fwdState->server_fd);
 	    break;
 	case PROTO_INTERNAL:
 	    internalStart(request, entry);
