@@ -1,0 +1,64 @@
+section 0     Announcement Server
+section 0     CGI Cache Manager
+section 0     Client Database
+section 0     DNS Resolver
+section 0     Debug Routines
+section 0     Hash Tables
+section 0     WWW Client
+section 1     Startup and Main Loop
+section 3     Configuration File Parsing
+section 4     Error Generation
+section 5     Socket Functions
+section 6     Disk I/O Routines
+section 7     Multicast
+section 8     Swap File Bitmap
+section 9     File Transfer Protocol (FTP)
+section 10    Gopher
+section 11    Hypertext Transfer Protocol (HTTP)
+section 12    Unlink Daemon
+section 13    Memory Pool Management
+section 14    IP Cache
+section 15    Neighbor Routines
+section 16    Cache Manager Objects
+section 17    Neighbor Selection
+section 18    Cache Manager Statistics
+section 19    Store Memory Primitives
+section 20    Storeage Manager
+section 21    Misc Functions
+section 22    Refresh Calculation
+section 23    URL Parsing
+section 24    WAIS Relay
+section 25    MIME Parsing
+section 26    Secure Sockets Layer Proxy
+section 27    Cache Announcer
+section 28    Access Control
+section 29    Redirector
+section 30    Ident (RFC 931)
+section 32    Asynchronous Disk I/O
+section 33    Client-side Routines
+section 34    Dnsserver interface
+section 35    FQDN Cache
+section 36    Cache Directory Cleanup
+section 37    ICMP Routines
+section 37    Network Measurement Database
+section 39    HTTP Passthrough
+section 40    User-Agent logging
+section 41    Event Processing
+section 42    ICMP Pinger program
+section 43    AIOPS
+section 44    Peer Selection Algorithm
+section 45    Callback Data Registry
+section 46    Access Log
+section 47    Store Directory Routines
+section 48    Persistent Connections
+section 49    SNMP support
+section 51    Filedescriptor Functions
+section 52    URN Parsing
+section 53    AS Number handling
+section 54    Interprocess Communication
+section 55    HTTP Header
+section 56    HTTP Message Body
+section 57    HTTP Status-line
+section 58    HTTP Reply (Response)
+section 59    auto-growing Memory Buffer with printf
+section 60    Packer: A uniform interface to store-like modules
