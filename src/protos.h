@@ -4,6 +4,7 @@ extern void accessLogLog(AccessLogEntry *);
 extern void accessLogRotate(void);
 extern void accessLogClose(void);
 extern void accessLogOpen(const char *);
+extern void accessLogInit(void);
 extern void hierarchyNote(HierarchyLogEntry *, hier_code, icp_ping_data *, const char *);
 
 extern aclCheck_t *aclChecklistCreate(const struct _acl_access *,
@@ -241,7 +242,6 @@ extern void icmpPing(struct in_addr to);
 extern void icmpSourcePing(struct in_addr to, const icp_common_t *, const char *url);
 extern void icmpDomainPing(struct in_addr to, const char *domain);
 
-
 extern void *icpCreateMessage(icp_opcode opcode,
     int flags,
     const char *url,
@@ -264,13 +264,13 @@ extern void icpSendERROR(int fd,
     clientHttpRequest *,
     int httpCode);
 extern void AppendUdp(icpUdpData *);
-extern void icpParseRequestHeaders(clientHttpRequest *);
-extern void icpProcessRequest(int, clientHttpRequest *);
 extern PF icpUdpReply;
-extern ERCB icpErrorComplete;
-extern STCB icpSendMoreData;
-extern STCB clientCacheHit;
-
+extern void icpHandleIcpV3(int, struct sockaddr_in, char *, int);
+extern int icpCheckUdpHit(StoreEntry *, request_t * request);
+#if USE_ICP_HIT_OBJ
+extern int icpCheckUdpHitObj(StoreEntry * e, request_t * r, icp_common_t * h, int len);
+extern void *icpCreateHitObjMessage(icp_opcode, int, const char *, int, int, StoreEntry *);
+#endif
 
 extern void ipcache_nbgethostbyname(const char *name,
     IPH * handler,

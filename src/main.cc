@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.188 1997/11/04 23:29:36 wessels Exp $
+ * $Id: main.cc,v 1.189 1997/11/05 00:39:55 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -256,6 +256,7 @@ mainParseOptions(int argc, char *argv[])
     }
 }
 
+/* ARGSUSED */
 static void
 rotate_logs(int sig)
 {
@@ -279,6 +280,7 @@ time_tick(int sig)
 
 #endif
 
+/* ARGSUSED */
 static void
 reconfigure(int sig)
 {
@@ -525,6 +527,7 @@ mainInitialize(void)
     redirectOpenServers();
     useragentOpenLog();
     errorInitialize();
+    accessLogInit();
 
 #if MALLOC_DBG
     malloc_debug(0, malloc_debug_level);

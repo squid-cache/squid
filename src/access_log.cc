@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.6 1997/10/17 15:44:32 wessels Exp $
+ * $Id: access_log.cc,v 1.7 1997/11/05 00:39:49 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -31,6 +31,29 @@
 
 
 #include "squid.h"
+
+const char *log_tags[] =
+{
+    "NONE",
+    "TCP_HIT",
+    "TCP_MISS",
+    "TCP_REFRESH_HIT",
+    "TCP_REF_FAIL_HIT",
+    "TCP_REFRESH_MISS",
+    "TCP_CLIENT_REFRESH",
+    "TCP_IMS_HIT",
+    "TCP_IMS_MISS",
+    "TCP_SWAPFAIL_MISS",
+    "TCP_NEGATIVE_HIT",
+    "TCP_MEM_HIT",
+    "UDP_HIT",
+    "UDP_HIT_OBJ",
+    "UDP_MISS",
+    "UDP_DENIED",
+    "UDP_INVALID",
+    "UDP_MISS_NOFETCH",
+    "LOG_TYPE_MAX"
+};
 
 #define MAX_LINELEN (4096)
 #define max(a,b)  ((a)>(b)? (a): (b))
@@ -269,4 +292,10 @@ hierarchyNote(HierarchyLogEntry * hl,
 	hl->icp = *icpdata;
     xstrncpy(hl->host, cache_peer, SQUIDHOSTNAMELEN);
     hl->icp.stop = current_time;
+}
+
+void
+accessLogInit(void)
+{
+	assert(sizeof(log_tags) == (LOG_TYPE_MAX + 1) * sizeof(char *));
 }
