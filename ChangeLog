@@ -1,6 +1,8 @@
 	- Fixed 'quick_abort' parsing bug
 	- NULL terminate too-long URL strings in urlParse().
 	- Added shadow password patch from John Saunders <johns@rd.scitec.com.au>
+	- Added _dns_ttl_ hack from bne@CareNet.hu to get real TTL values
+	  from DNS queries.  See Release-Notes-1.1.txt for more info.
 
 Changes to squid-1.1.alpha12:
 
