@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.56 1996/08/29 16:54:16 wessels Exp $
+ * $Id: stat.cc,v 1.57 1996/08/30 22:44:12 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1280,4 +1280,9 @@ void stat_rotate_log()
 	fatal("Cannot open logfile.");
     }
     CacheInfo->logfile_access = file_write_lock(CacheInfo->logfile_fd);
+}
+
+void statCloseLog()
+{
+    file_close(CacheInfo->logfile_fd);
 }
