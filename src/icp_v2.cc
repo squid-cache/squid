@@ -305,51 +305,57 @@ icpHandleUdp(int sock, void *datanotused)
     LOCAL_ARRAY(char, buf, SQUID_UDP_SO_RCVBUF);
     int len;
     int icp_version;
-
+    int max = 16;
     commSetSelect(sock, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
-    from_len = sizeof(from);
-    memset(&from, '\0', from_len);
-    len = recvfrom(sock,
-	buf,
-	SQUID_UDP_SO_RCVBUF - 1,
-	0,
-	(struct sockaddr *) &from,
-	&from_len);
-    if (len < 0) {
+    while (max--) {
+	from_len = sizeof(from);
+	memset(&from, '\0', from_len);
+	len = recvfrom(sock,
+	    buf,
+	    SQUID_UDP_SO_RCVBUF - 1,
+	    0,
+	    (struct sockaddr *) &from,
+	    &from_len);
+	if (len == 0)
+	    break;
+	if (len < 0) {
+	    if (ignoreErrno(errno))
+		break;
 #ifdef _SQUID_LINUX_
-	/* Some Linux systems seem to set the FD for reading and then
-	 * return ECONNREFUSED when sendto() fails and generates an ICMP
-	 * port unreachable message. */
-	/* or maybe an EHOSTUNREACH "No route to host" message */
-	if (errno != ECONNREFUSED && errno != EHOSTUNREACH)
+	    /* Some Linux systems seem to set the FD for reading and then
+	     * return ECONNREFUSED when sendto() fails and generates an ICMP
+	     * port unreachable message. */
+	    /* or maybe an EHOSTUNREACH "No route to host" message */
+	    if (errno != ECONNREFUSED && errno != EHOSTUNREACH)
 #endif
-	    debug(50, 1) ("icpHandleUdp: FD %d recvfrom: %s\n",
-		sock, xstrerror());
-	return;
-    }
-    icpCount(buf, RECV, (size_t) len, 0);
-    buf[len] = '\0';
-    debug(12, 4) ("icpHandleUdp: FD %d: received %d bytes from %s.\n",
-	sock,
-	len,
-	inet_ntoa(from.sin_addr));
+		debug(50, 1) ("icpHandleUdp: FD %d recvfrom: %s\n",
+		    sock, xstrerror());
+	    break;
+	}
+	icpCount(buf, RECV, (size_t) len, 0);
+	buf[len] = '\0';
+	debug(12, 4) ("icpHandleUdp: FD %d: received %d bytes from %s.\n",
+	    sock,
+	    len,
+	    inet_ntoa(from.sin_addr));
 #ifdef ICP_PACKET_DUMP
-    icpPktDump(buf);
+	icpPktDump(buf);
 #endif
-    if (len < sizeof(icp_common_t)) {
-	debug(12, 4) ("icpHandleUdp: Ignoring too-small UDP packet\n");
-	return;
+	if (len < sizeof(icp_common_t)) {
+	    debug(12, 4) ("icpHandleUdp: Ignoring too-small UDP packet\n");
+	    break;
+	}
+	icp_version = (int) buf[1];	/* cheat! */
+	if (icp_version == ICP_VERSION_2)
+	    icpHandleIcpV2(sock, from, buf, len);
+	else if (icp_version == ICP_VERSION_3)
+	    icpHandleIcpV3(sock, from, buf, len);
+	else
+	    debug(12, 0) ("WARNING: Unused ICP version %d received from %s:%d\n",
+		icp_version,
+		inet_ntoa(from.sin_addr),
+		ntohs(from.sin_port));
     }
-    icp_version = (int) buf[1];	/* cheat! */
-    if (icp_version == ICP_VERSION_2)
-	icpHandleIcpV2(sock, from, buf, len);
-    else if (icp_version == ICP_VERSION_3)
-	icpHandleIcpV3(sock, from, buf, len);
-    else
-	debug(12, 0) ("WARNING: Unused ICP version %d received from %s:%d\n",
-	    icp_version,
-	    inet_ntoa(from.sin_addr),
-	    ntohs(from.sin_port));
 }
 
 void
