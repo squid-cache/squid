@@ -350,11 +350,10 @@ icpConnectionsOpen(void)
 	Config.Addrs.udp_incoming,
 	port,
 	COMM_NONBLOCKING,
-	"ICP Port");
+	"ICP Socket");
     leave_suid();
     if (theInIcpConnection < 0)
 	fatal("Cannot open ICP Port");
-    fd_note(theInIcpConnection, "ICP socket");
     commSetSelect(theInIcpConnection,
 	COMM_SELECT_READ,
 	icpHandleUdp,
