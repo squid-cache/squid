@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.115 1996/11/25 06:49:36 wessels Exp $
+ * $Id: http.cc,v 1.116 1996/11/25 18:50:29 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -819,10 +819,8 @@ httpConnectDone(int fd, int status, void *data)
     StoreEntry *entry = httpState->entry;
     edge *e = NULL;
     if (status != COMM_OK) {
-	if ((e = httpState->neighbor)) {
+	if ((e = httpState->neighbor))
 	    e->last_fail_time = squid_curtime;
-	    e->neighbor_up = 0;
-	}
 	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	comm_close(fd);
     } else {

@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.88 1996/11/25 18:47:17 wessels Exp $
+ * $Id: neighbors.cc,v 1.89 1996/11/25 18:50:29 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -117,14 +117,11 @@ static u_short echo_port;
 
 static struct {
     int n;
-    int n_parent;
-    int n_sibling;
     edge *edges_head;
     edge *edges_tail;
     edge *first_ping;
 } friends = {
-
-    0, 0, 0, NULL, NULL, NULL
+    0, NULL, NULL, NULL
 };
 
 const char *hier_strings[] =
@@ -133,6 +130,7 @@ const char *hier_strings[] =
     "DIRECT",
     "SIBLING_HIT",
     "PARENT_HIT",
+    "DEFAULT_PARENT",
     "SINGLE_PARENT",
     "FIRST_UP_PARENT",
     "NO_PARENT_DIRECT",
@@ -224,8 +222,6 @@ getSingleParent(request_t * request, int *n)
     edge *e = NULL;
     int count = 0;
 
-    if (n == NULL && friends.n_parent < 1)
-	return NULL;
     for (e = friends.edges_head; e; e = e->next) {
 	if (!edgeWouldBePinged(e, request))
 	    continue;
@@ -259,15 +255,31 @@ edge *
 getFirstUpParent(request_t * request)
 {
     edge *e = NULL;
-    if (friends.n_parent < 1)
-	return NULL;
     for (e = friends.edges_head; e; e = e->next) {
-	if (!e->neighbor_up)
+	if (!neighborUp(e))
 	    continue;
 	if (neighborType(e, request) != EDGE_PARENT)
 	    continue;
 	if (edgeWouldBePinged(e, request))
 	    return e;
+    }
+    return NULL;
+}
+
+edge *
+getDefaultParent(request_t * request)
+{
+    edge *e = NULL;
+    for (e = friends.edges_head; e; e = e->next) {
+	if (!neighborUp(e))
+	    continue;
+	if (neighborType(e, request) != EDGE_PARENT)
+	    continue;
+	if (!BIT_SET(e->options, NEIGHBOR_DEFAULT_PARENT))
+	    continue;
+	if (!edgeWouldBePinged(e, request))
+	    continue;
+	return e;
     }
     return NULL;
 }
@@ -376,8 +388,6 @@ neighbors_open(int fd)
 	ap->sin_family = AF_INET;
 	ap->sin_addr = e->addresses[0];
 	ap->sin_port = htons(e->icp_port);
-
-	e->neighbor_up = 1;
 	E = &e->next;
     }
 
@@ -490,13 +500,11 @@ neighborsUdpPing(protodispatch_data * proto)
 	debug(15, 3, "neighborsUdpPing: %s: ack_deficit = %d\n",
 	    e->host, e->stats.ack_deficit);
 
-	if (e->stats.ack_deficit < HIER_MAX_DEFICIT) {
+	if (neighborUp(e)) {
 	    /* its alive, expect a reply from it */
-	    e->neighbor_up = 1;
 	    mem->e_pings_n_pings++;
 	} else {
 	    /* Neighbor is dead; ping it anyway, but don't expect a reply */
-	    e->neighbor_up = 0;
 	    /* log it once at the threshold */
 	    if ((e->stats.ack_deficit == HIER_MAX_DEFICIT)) {
 		debug(15, 0, "Detected DEAD %s: %s/%d/%d\n",
@@ -547,7 +555,6 @@ neighborAlive(edge * e, const MemObject * mem, const icp_common_t * header)
 	    e->type == EDGE_PARENT ? "PARENT" : "SIBLING",
 	    e->host, e->http_port, e->icp_port);
     }
-    e->neighbor_up = 1;
     e->stats.ack_deficit = 0;
     n = ++e->stats.pings_acked;
     if ((icp_opcode) header->opcode <= ICP_OP_END)
@@ -754,13 +761,8 @@ neighborAdd(const char *host,
     e->pinglist = NULL;
     e->typelist = NULL;
     e->acls = NULL;
-    e->neighbor_up = 0;
     e->icp_version = ICP_VERSION_CURRENT;
     e->type = parseNeighborType(type);
-    if (e->type == EDGE_PARENT)
-	friends.n_parent++;
-    else if (e->type == EDGE_SIBLING)
-	friends.n_sibling++;
 
     /* Append edge */
     if (!friends.edges_head)
@@ -877,6 +879,16 @@ parseNeighborType(const char *s)
 	return EDGE_SIBLING;
     debug(15, 0, "WARNING: Unknown neighbor type: %s\n", s);
     return EDGE_SIBLING;
+}
+
+int
+neighborUp(edge * e)
+{
+    if (squid_curtime - e->last_fail_time > (time_t) 60)
+	return 0;
+    if (e->stats.ack_deficit > HIER_MAX_DEFICIT)
+	return 0;
+    return 1;
 }
 
 void

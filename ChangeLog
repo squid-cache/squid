@@ -3,6 +3,7 @@ Changes to squid-1.1.beta24 ():
 	- Added 'cache_stoplist_pattern' to squid.conf
 	- Remove trailing slashes from FTP URLs.
 	- Added 'passthrough_proxy' support.
+	- Added 'default' option for cache_host line.
 
 Changes to squid-1.1.beta23 (November 25, 1996):
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.107 1996/11/24 04:19:13 wessels Exp $
+ * $Id: stat.cc,v 1.108 1996/11/25 18:50:31 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -568,7 +568,7 @@ server_list(const cacheinfo * obj, StoreEntry * sentry)
 	    e->http_port,
 	    e->icp_port);
 	storeAppendPrintf(sentry, "{Status     : %s}\n",
-	    e->neighbor_up ? "Up" : "Down");
+	    neighborUp(e) ? "Up" : "Down");
 	storeAppendPrintf(sentry, "{AVG RTT    : %d msec}\n", e->stats.rtt);
 	storeAppendPrintf(sentry, "{ACK DEFICIT: %8d}\n", e->stats.ack_deficit);
 	storeAppendPrintf(sentry, "{PINGS SENT : %8d}\n", e->stats.pings_sent);
