@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.338 1998/06/28 16:53:09 wessels Exp $
+ * $Id: client_side.cc,v 1.339 1998/06/29 15:26:49 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1732,7 +1732,7 @@ clientGetHeadersForIMS(void *data, char *buf, ssize_t size)
 	 * cancelled the request, then http->entry will be NULL.
 	 */
 	if (entry != NULL) {
-	    debug(33, 1) ("clientGetHeadersForIMS: storeClientCopy failed for '%s'\n",
+	    debug(33, 3) ("clientGetHeadersForIMS: storeClientCopy failed for '%s'\n",
 		storeKeyText(entry->key));
 	    clientProcessMiss(http);
 	}
