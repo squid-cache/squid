@@ -111,6 +111,7 @@ typedef struct _MemMeter MemMeter;
 typedef struct _MemPoolMeter MemPoolMeter;
 typedef struct _MemPool MemPool;
 typedef struct _ClientInfo ClientInfo;
+typedef struct _CacheDigest CacheDigest;
 
 /* define AIOCB even without USE_ASYNC_IO */
 typedef void AIOCB(void *, int aio_return, int aio_errno);

@@ -1198,3 +1198,13 @@ struct _ClientInfo {
 	int n_denied;
     } cutoff;
 };
+
+
+struct _CacheDigest {
+    /* public, read-only */
+    char *mask;       /* bit mask */
+    size_t mask_size; /* mask size in bytes */
+    int capacity;     /* expected maximum for .count, not a hard limit */
+    int count;        /* number of digested entries */
+    int del_count;    /* number of deletions performed so far */
+};

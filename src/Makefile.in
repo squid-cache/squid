@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.139 1998/03/29 20:20:04 rousskov Exp $
+#  $Id: Makefile.in,v 1.140 1998/03/30 20:42:40 rousskov Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -60,7 +60,7 @@ SQUID_LIBS	= -L../lib $(CRYPTLIB) $(REGEXLIB) @SQUID_PTHREAD_LIB@ \
 CLIENT_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 DNSSERVER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
 PINGER_LIBS	= -L../lib -lmiscutil $(XTRA_LIBS)
-CACHE_DIFF_LIBS = -L../lib -lmiscutil $(XTRA_LIBS)
+STD_APP_LIBS    = -L../lib -lmiscutil $(XTRA_LIBS)
 
 PROGS           = squid client
 UTILS           = dnsserver unlinkd
@@ -200,7 +200,10 @@ unlinkd-daemon.o: unlinkd.c
 	$(CC) -c $(CFLAGS) -DUNLINK_DAEMON $(srcdir)/unlinkd.c -o $@
 
 cache_diff: cache_diff.o debug.o globals.o hash.o store_key_md5.o
-	$(CC) -o $@ $(LDFLAGS) $@.o debug.o globals.o hash.o store_key_md5.o $(CACHE_DIFF_LIBS)
+	$(CC) -o $@ $(LDFLAGS) $@.o debug.o globals.o hash.o store_key_md5.o $(STD_APP_LIBS)
+
+test_cache_digest: test_cache_digest.o CacheDigest.o debug.o globals.o hash.o store_key_md5.o
+	$(CC) -o $@ $(LDFLAGS) $@.o CacheDigest.o debug.o globals.o hash.o store_key_md5.o $(STD_APP_LIBS)
 
 cache_cf.o: cf_parser.c
 
