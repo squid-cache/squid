@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.230 2001/10/03 23:11:05 hno Exp $
+# $Id: cf.data.pre,v 1.231 2001/10/04 12:47:59 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1568,7 +1568,7 @@ TYPE: int
 DEFAULT: 95
 LOC: Config.quickAbort.pct
 DOC_START
-	The cache by defaults continues downloading aborted requests
+	The cache by default continues downloading aborted requests
 	which are almost completed (less than 16 KB remaining). This
 	may be undesirable on slow (e.g. SLIP) links and/or very busy
 	caches.  Impatient users may tie up file descriptors and
@@ -1592,7 +1592,7 @@ DOC_START
 	has aborted, set both 'quick_abort_min' and 'quick_abort_max'
 	to '0 KB'.
 
-	If you want retreivals to always continue if they are being
+	If you want retrievals to always continue if they are being
 	cached then set 'quick_abort_min' to '-1 KB'.
 DOC_END
 
