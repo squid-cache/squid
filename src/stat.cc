@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.281 1998/08/21 16:58:12 wessels Exp $
+ * $Id: stat.cc,v 1.282 1998/09/03 03:37:35 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -58,7 +58,6 @@ static void statCountersInit(StatCounters *);
 static void statCountersInitSpecial(StatCounters *);
 static void statCountersClean(StatCounters *);
 static void statCountersCopy(StatCounters * dest, const StatCounters * orig);
-static double statMedianSvc(int, int);
 static void statStoreEntry(StoreEntry * s, StoreEntry * e);
 static double statCPUUsage(int minutes);
 static OBJH stat_io_get;
@@ -743,6 +742,12 @@ statAvgDump(StoreEntry * sentry, int minutes, int hours)
 	XAVG(page_faults));
     storeAppendPrintf(sentry, "select_loops = %f/sec\n",
 	XAVG(select_loops));
+    storeAppendPrintf(sentry, "select_fds = %f/sec\n",
+	XAVG(select_fds));
+    storeAppendPrintf(sentry, "average_select_fd_period = %f/fd\n",
+        f->select_fds > l->select_fds ?
+	(f->select_time - l->select_time) / (f->select_fds - l->select_fds)
+	: 0.0);
     storeAppendPrintf(sentry, "cpu_time = %f seconds\n", ct);
     storeAppendPrintf(sentry, "wall_time = %f seconds\n", dt);
     storeAppendPrintf(sentry, "cpu_usage = %f%%\n", dpercent(ct, dt));
@@ -1146,7 +1151,7 @@ statAvg60min(StoreEntry * e)
     statAvgDump(e, 60, 0);
 }
 
-static double
+double
 statMedianSvc(int interval, int which)
 {
     StatCounters *f;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.214 1998/08/30 05:21:43 wessels Exp $
+ * $Id: structs.h,v 1.215 1998/09/03 03:37:36 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1386,6 +1386,8 @@ struct _StatCounters {
     } netdb;
     int page_faults;
     int select_loops;
+    int select_fds;
+    double select_time;
     double cputime;
     struct timeval timestamp;
     StatHist comm_icp_incoming;
