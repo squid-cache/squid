@@ -147,7 +147,7 @@ main(int argc, char **argv)
 	    printf("ERR\n");
 	    continue;
 	}
-	u = hash_lookup(hash, user);
+	u = (user_data *)hash_lookup(hash, user);
 	if (u == NULL) {
 	    printf("ERR\n");
 	} else {
