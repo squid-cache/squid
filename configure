@@ -1722,6 +1722,100 @@ EOF
 fi
 
 
+echo $ac_n "checking for pid_t""... $ac_c" 1>&6
+if eval "test \"`echo '$''{'ac_cv_type_pid_t'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  cat > conftest.$ac_ext <<EOF
+#line 1731 "configure"
+#include "confdefs.h"
+#include <sys/types.h>
+#if STDC_HEADERS
+#include <stdlib.h>
+#endif
+EOF
+if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
+  egrep "pid_t" >/dev/null 2>&1; then
+  rm -rf conftest*
+  ac_cv_type_pid_t=yes
+else
+  rm -rf conftest*
+  ac_cv_type_pid_t=no
+fi
+rm -f conftest*
+
+fi
+echo "$ac_t""$ac_cv_type_pid_t" 1>&6
+if test $ac_cv_type_pid_t = no; then
+  cat >> confdefs.h <<\EOF
+#define pid_t int
+EOF
+
+fi
+
+echo $ac_n "checking for size_t""... $ac_c" 1>&6
+if eval "test \"`echo '$''{'ac_cv_type_size_t'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  cat > conftest.$ac_ext <<EOF
+#line 1762 "configure"
+#include "confdefs.h"
+#include <sys/types.h>
+#if STDC_HEADERS
+#include <stdlib.h>
+#endif
+EOF
+if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
+  egrep "size_t" >/dev/null 2>&1; then
+  rm -rf conftest*
+  ac_cv_type_size_t=yes
+else
+  rm -rf conftest*
+  ac_cv_type_size_t=no
+fi
+rm -f conftest*
+
+fi
+echo "$ac_t""$ac_cv_type_size_t" 1>&6
+if test $ac_cv_type_size_t = no; then
+  cat >> confdefs.h <<\EOF
+#define size_t int
+EOF
+
+fi
+
+echo $ac_n "checking for off_t""... $ac_c" 1>&6
+if eval "test \"`echo '$''{'ac_cv_type_off_t'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  cat > conftest.$ac_ext <<EOF
+#line 1793 "configure"
+#include "confdefs.h"
+#include <sys/types.h>
+#if STDC_HEADERS
+#include <stdlib.h>
+#endif
+EOF
+if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
+  egrep "off_t" >/dev/null 2>&1; then
+  rm -rf conftest*
+  ac_cv_type_off_t=yes
+else
+  rm -rf conftest*
+  ac_cv_type_off_t=no
+fi
+rm -f conftest*
+
+fi
+echo "$ac_t""$ac_cv_type_off_t" 1>&6
+if test $ac_cv_type_off_t = no; then
+  cat >> confdefs.h <<\EOF
+#define off_t int
+EOF
+
+fi
+
+
 echo $ac_n "checking for -lnsl""... $ac_c" 1>&6
 ac_lib_var=`echo nsl | tr '.-/+' '___p'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
@@ -1730,7 +1824,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lnsl  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1734 "configure"
+#line 1828 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1770,7 +1864,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lsocket  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1774 "configure"
+#line 1868 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1810,7 +1904,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lmalloc  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1814 "configure"
+#line 1908 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1844,7 +1938,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lresolv  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1848 "configure"
+#line 1942 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1884,7 +1978,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lbsd  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1888 "configure"
+#line 1982 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1925,7 +2019,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-l44bsd  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1929 "configure"
+#line 2023 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1959,7 +2053,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lresolv  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1963 "configure"
+#line 2057 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1994,7 +2088,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lcrypt  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1998 "configure"
+#line 2092 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -2030,7 +2124,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lshadow  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 2034 "configure"
+#line 2128 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -2072,7 +2166,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-labi  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 2076 "configure"
+#line 2170 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -2106,7 +2200,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lposix4  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 2110 "configure"
+#line 2204 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -2208,11 +2302,9 @@ for ac_func in \
 	setsid \
 	sigaction \
 	srand48 \
-	strdup \
 	strerror \
 	sysconf \
 	syslog \
-	tempnam \
 	timegm \
 
 do
@@ -2221,7 +2313,7 @@ if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 2225 "configure"
+#line 2317 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char $ac_func(); below.  */
@@ -2266,12 +2358,64 @@ fi
 done
 
 
+for ac_func in \
+	tempnam \
+
+do
+echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
+if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  cat > conftest.$ac_ext <<EOF
+#line 2371 "configure"
+#include "confdefs.h"
+/* System header to define __stub macros and hopefully few prototypes,
+    which can conflict with char $ac_func(); below.  */
+#include <assert.h>
+/* Override any gcc2 internal prototype to avoid an error.  */
+char $ac_func();
+
+int main() { return 0; }
+int t() {
+
+/* The GNU C library defines this for functions which it implements
+    to always fail with ENOSYS.  Some functions are actually named
+    something starting with __ and the normal name is an alias.  */
+#if defined (__stub_$ac_func) || defined (__stub___$ac_func)
+choke me
+#else
+$ac_func();
+#endif
+
+; return 0; }
+EOF
+if eval $ac_link; then
+  rm -rf conftest*
+  eval "ac_cv_func_$ac_func=yes"
+else
+  rm -rf conftest*
+  eval "ac_cv_func_$ac_func=no"
+fi
+rm -f conftest*
+
+fi
+if eval "test \"`echo '$ac_cv_func_'$ac_func`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+  :
+else
+  echo "$ac_t""no" 1>&6
+LIBOBJS="$LIBOBJS ${ac_func}.o"
+fi
+
+done
+
+
 echo $ac_n "checking Maximum number of filedescriptors we can open""... $ac_c" 1>&6
 if test "$cross_compiling" = yes; then
   SQUID_FD_SETSIZE=256
 else
 cat > conftest.$ac_ext <<EOF
-#line 2275 "configure"
+#line 2419 "configure"
 #include "confdefs.h"
 
 #include <unistd.h>
@@ -2304,7 +2448,7 @@ main() {
 #endif /* HAVE_SETRLIMIT */
 #if HAVE_SYSCONF && defined(_SC_OPEN_MAX)
         i = sysconf(_SC_OPEN_MAX);
-#elif HAVE_GETDTABLESIZE
+#elif HAVE_GETDTABLESIZE && !defined(__linux__)
         i = getdtablesize();
 #elif defined(OPEN_MAX)
         i = OPEN_MAX;
@@ -2341,7 +2485,7 @@ if test "$cross_compiling" = yes; then
   SQUID_UDP_SO_SNDBUF=16384
 else
 cat > conftest.$ac_ext <<EOF
-#line 2345 "configure"
+#line 2489 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -2377,7 +2521,7 @@ if test "$cross_compiling" = yes; then
   SQUID_UDP_SO_RCVBUF=16384
 else
 cat > conftest.$ac_ext <<EOF
-#line 2381 "configure"
+#line 2525 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -2413,7 +2557,7 @@ if test "$cross_compiling" = yes; then
   SQUID_TCP_SO_SNDBUF=16384
 else
 cat > conftest.$ac_ext <<EOF
-#line 2417 "configure"
+#line 2561 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -2449,7 +2593,7 @@ if test "$cross_compiling" = yes; then
   SQUID_TCP_SO_RCVBUF=16384
 else
 cat > conftest.$ac_ext <<EOF
-#line 2453 "configure"
+#line 2597 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -2482,7 +2626,7 @@ EOF
 
 echo $ac_n "checking if sys_errlist is already defined""... $ac_c" 1>&6
 cat > conftest.$ac_ext <<EOF
-#line 2486 "configure"
+#line 2630 "configure"
 #include "confdefs.h"
 #include <stdio.h>
 int main() { return 0; }
@@ -2506,7 +2650,7 @@ rm -f conftest*
 
 echo $ac_n "checking for libresolv _dns_ttl_ hack""... $ac_c" 1>&6
 cat > conftest.$ac_ext <<EOF
-#line 2510 "configure"
+#line 2654 "configure"
 #include "confdefs.h"
 extern int _dns_ttl_;
 int main() { return 0; }
@@ -2694,6 +2838,7 @@ s%@PERL@%$PERL%g
 s%@ALLOCA@%$ALLOCA%g
 s%@CRYPT_LIB@%$CRYPT_LIB%g
 s%@AIO_LIBS@%$AIO_LIBS%g
+s%@LIBOBJS@%$LIBOBJS%g
 s%@XTRA_OBJS@%$XTRA_OBJS%g
 s%@XTRA_LIBS@%$XTRA_LIBS%g
 
