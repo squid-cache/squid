@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.239 1998/10/10 14:57:43 wessels Exp $
+ * $Id: structs.h,v 1.240 1998/10/14 21:12:02 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -438,6 +438,7 @@ struct _SquidConfig {
 	int http_min_poll;
     } comm_incoming;
     int max_open_disk_fds;
+    int uri_whitespace;
 };
 
 struct _SquidConfig2 {

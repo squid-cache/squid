@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.411 1998/10/13 23:39:08 wessels Exp $
+ * $Id: client_side.cc,v 1.412 1998/10/14 21:11:58 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1882,16 +1882,25 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
     debug(33, 5) ("parseHttpRequest: Method is '%s'\n", mstr);
     *method_p = method;
 
-    /* look for URL */
-    if ((url = strtok(NULL, "\r\n\t ")) == NULL) {
+    /* look for URL+HTTP/x.x */
+    if ((url = strtok(NULL, "\r\n")) == NULL) {
 	debug(33, 1) ("parseHttpRequest: Missing URL\n");
 	return parseHttpRequestAbort(conn, "error:missing-url");
     }
-    debug(33, 5) ("parseHttpRequest: Request is '%s'\n", url);
-
-    token = strtok(NULL, null_string);
-    for (t = token; t && *t && *t != '\n' && *t != '\r'; t++);
-    if (t == NULL || *t == '\0' || t == token || strncasecmp(token, "HTTP/", 5)) {
+    t = url + strlen(url);
+    assert(*t == '\0');
+    token = NULL;
+    while (t > url) {
+	t--;
+	if (isspace(*t) && !strncmp(t + 1, "HTTP/", 5)) {
+	    token = t + 1;
+	    break;
+	}
+    }
+    while (t > url && isspace(*t))
+	*(t--) = '\0';
+    debug(33, 5) ("parseHttpRequest: URI is '%s'\n", url);
+    if (token == NULL) {
 	debug(33, 3) ("parseHttpRequest: Missing HTTP identifier\n");
 #if RELAXED_HTTP_PARSER
 	http_ver = (float) 0.9;	/* wild guess */
@@ -2030,7 +2039,10 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 	strcpy(http->uri, url);
 	http->flags.accel = 0;
     }
-    http->log_uri = xstrdup(http->uri);
+    if (!stringHasWhitespace(http->uri))
+	http->log_uri = xstrdup(http->uri);
+    else
+	http->log_uri = xstrdup(rfc1738_escape(http->uri));
     debug(33, 5) ("parseHttpRequest: Complete request received\n");
     if (free_request)
 	safe_free(url);

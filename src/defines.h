@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.66 1998/09/14 22:18:45 wessels Exp $
+ * $Id: defines.h,v 1.67 1998/10/14 21:12:00 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -258,3 +258,8 @@
 #define PEER_TCP_MAGIC_COUNT 10
 
 #define CLIENT_SOCK_SZ 4096
+
+#define URI_WHITESPACE_DENY 0
+#define URI_WHITESPACE_ALLOW 1
+#define URI_WHITESPACE_ENCODE 2
+#define URI_WHITESPACE_CHOP 3
