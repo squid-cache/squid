@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.50 1996/04/16 22:52:04 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.51 1996/04/16 23:05:44 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -162,10 +162,6 @@ intlist https =
 intlist *connect_port_list = &https;
 
 
-
-ip_acl *proxy_ip_acl = NULL;
-ip_acl *accel_ip_acl = NULL;
-ip_acl *manager_ip_acl = NULL;
 ip_acl *local_ip_list = NULL;
 
 int zap_disk_store = 0;		/* off, try to rebuild from disk */
@@ -175,7 +171,8 @@ time_t neighbor_timeout = DefaultNeighborTimeout;	/* for fast access */
 int single_parent_bypass = 0;
 int DnsPositiveTtl = DefaultPositiveDnsTtl;
 char *DefaultSwapDir = DEFAULT_SWAP_DIR;
-char *config_file = xstrdup(DEFAULT_CONFIG_FILE);
+char *DefaultConfigFile = DEFAULT_CONFIG_FILE;
+char *ConfigFile = NULL		/* the whole thing */
 char *cfg_filename = NULL;	/* just the last part */
 
 char w_space[] = " \t\n";
@@ -1359,8 +1356,6 @@ int parseConfigFile(file_name)
 	printf("         For this run, however, %s will use %d minutes for clean_rate.\n", appname, (int) (getCleanRate() / 60));
 	fflush(stdout);		/* print message */
     }
-    if (accel_ip_acl == NULL)
-	accel_ip_acl = proxy_ip_acl;
 
     if (getDnsChildren() < 1) {
 	printf("WARNING: dns_children was set to a bad value: %d\n",
