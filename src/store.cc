@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.473 1998/11/21 02:13:30 wessels Exp $
+ * $Id: store.cc,v 1.474 1998/12/04 22:20:24 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -89,6 +89,7 @@ static void storePurgeMem(StoreEntry *);
 static int getKeyCounter(void);
 static int storeKeepInMemory(const StoreEntry *);
 static OBJH storeCheckCachableStats;
+static EVH storeLateRelease;
 
 /*
  * local variables
@@ -100,6 +101,7 @@ static int store_swap_high = 0;
 static int store_swap_low = 0;
 static int store_swap_mid = 0;
 static int store_maintain_rate;
+static Stack LateReleaseStack;
 
 static MemObject *
 new_MemObject(const char *url, const char *log_url)
@@ -782,19 +784,26 @@ storeRelease(StoreEntry * e)
 	storeReleaseRequest(e);
 	return;
     }
-    if (store_rebuilding) {
-	debug(20, 2) ("storeRelease: Delaying release until store is rebuilt: '%s'\n",
-	    storeUrl(e));
-	storeExpireNow(e);
-	storeReleaseRequest(e);
-	return;
-    }
 #if USE_ASYNC_IO
     /*
      * Make sure all forgotten async ops are cancelled
      */
     aioCancel(-1, e);
 #endif
+    if (store_rebuilding) {
+	storeSetPrivateKey(e);
+	if (e->mem_obj) {
+	    storeSetMemStatus(e, NOT_IN_MEMORY);
+	    destroy_MemObject(e);
+	}
+	/*
+	 * Fake a call to storeLockObject().  When rebuilding is done,
+	 * we'll just call storeUnlockObject() on these.
+	 */
+	e->lock_count++;
+	stackPush(&LateReleaseStack, e);
+	return;
+    }
     storeLog(STORE_LOG_RELEASE, e);
     if (e->swap_file_number > -1) {
 	storeUnlinkFileno(e->swap_file_number);
@@ -807,6 +816,29 @@ storeRelease(StoreEntry * e)
     }
     storeSetMemStatus(e, NOT_IN_MEMORY);
     destroy_StoreEntry(e);
+}
+
+static void
+storeLateRelease(void *unused)
+{
+    StoreEntry *e;
+    int i;
+    static int n = 0;
+    if (store_rebuilding) {
+	eventAdd("storeLateRelease", storeLateRelease, NULL, 1.0, 1);
+	return;
+    }
+    for (i = 0; i < 10; i++) {
+	e = stackPop(&LateReleaseStack);
+	if (e == NULL) {
+	    /* done! */
+	    debug(20, 0) ("storeLateRelease: released %d objects\n", n);
+	    return;
+	}
+	storeUnlockObject(e);
+	n++;
+    }
+    eventAdd("storeLateRelease", storeLateRelease, NULL, 0.0, 1);
 }
 
 /* return 1 if a store entry is locked */
@@ -912,6 +944,8 @@ storeInit(void)
     storeDirOpenSwapLogs();
     store_list.head = store_list.tail = NULL;
     inmem_list.head = inmem_list.tail = NULL;
+    stackInit(&LateReleaseStack);
+    eventAdd("storeLateRelease", storeLateRelease, NULL, 1.0, 1);
     storeRebuildStart();
     cachemgrRegister("storedir",
 	"Store Directory Stats",

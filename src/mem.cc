@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.36 1998/11/13 21:02:05 rousskov Exp $
+ * $Id: mem.cc,v 1.37 1998/12/04 22:20:19 wessels Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -263,6 +263,7 @@ memInit(void)
     memDataInit(MEM_PEER, "peer", sizeof(peer), 0);
 #if USE_CACHE_DIGESTS
     memDataInit(MEM_PEER_DIGEST, "PeerDigest", sizeof(PeerDigest), 0);
+    memDataInit(MEM_DIGEST_FETCH_STATE, "DigestFetchState", sizeof(DigestFetchState), 0);
 #endif
     memDataInit(MEM_PINGERECHODATA, "pingerEchoData",
 	sizeof(pingerEchoData), 0);
