@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.382 2001/05/27 23:33:31 hno Exp $
+ * $Id: cache_cf.cc,v 1.383 2001/06/01 06:51:16 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -55,7 +55,14 @@ static const char *const B_MBYTES_STR = "MB";
 static const char *const B_GBYTES_STR = "GB";
 
 static const char *const list_sep = ", \t\n\r";
-static struct cache_dir_option common_cachedir_options[];
+
+static struct cache_dir_option common_cachedir_options[] =
+{
+    {"read-only", parse_cachedir_option_readonly, dump_cachedir_option_readonly},
+    {"max-size", parse_cachedir_option_maxsize, dump_cachedir_option_maxsize},
+    {NULL, NULL}
+};
+
 
 static void update_maxobjsize(void);
 static void configDoConfigure(void);
@@ -1142,13 +1149,6 @@ dump_cachedir_option_maxsize(StoreEntry * e, const char *option, SwapDir * sd)
     if (sd->max_objsize != -1)
 	storeAppendPrintf(e, " %s=%d", option, sd->max_objsize);
 }
-
-static struct cache_dir_option common_cachedir_options[] =
-{
-    {"read-only", parse_cachedir_option_readonly, dump_cachedir_option_readonly},
-    {"max-size", parse_cachedir_option_maxsize, dump_cachedir_option_maxsize},
-    {NULL, NULL}
-};
 
 void
 parse_cachedir_options(SwapDir * sd, struct cache_dir_option *options, int reconfiguring)
