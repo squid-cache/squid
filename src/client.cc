@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: client.cc,v 1.68 1998/05/22 23:43:59 wessels Exp $
+ * $Id: client.cc,v 1.69 1998/05/26 15:25:30 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -345,8 +345,8 @@ main(int argc, char *argv[])
 	if (put_file) {
 	    int x;
 	    lseek(put_fd, 0, SEEK_SET);
-	    while ((x = read(put_fd, msg, BUFSIZ)) > 0) {
-		x = write(conn, msg, x);
+	    while ((x = read(put_fd, buf, sizeof(buf))) > 0) {
+		x = write(conn, buf, x);
 		total_bytes += x;
 		if (x <= 0)
 		    break;
