@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.38 1998/06/02 04:18:12 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.39 1998/06/02 04:28:09 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -81,7 +81,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] =
     {"Accept-Language", HDR_ACCEPT_LANGUAGE, ftStr},
     {"Accept-Ranges", HDR_ACCEPT_RANGES, ftStr},
     {"Age", HDR_AGE, ftInt},
-    {"Age", HDR_ALLOW, ftStr},
+    {"Allow", HDR_ALLOW, ftStr},
     {"Authorization", HDR_AUTHORIZATION, ftStr},	/* for now */
     {"Cache-Control", HDR_CACHE_CONTROL, ftPCc},
     {"Connection", HDR_CONNECTION, ftStr},
