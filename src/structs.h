@@ -750,6 +750,16 @@ struct _store_client {
     struct _store_client *next;
 };
 
+struct _dlink_node {
+    void *data;
+    dlink_node *prev;
+    dlink_node *next;
+};
+
+struct _dlink_list {
+    dlink_node *head;
+    dlink_node *tail;
+};
 
 /* This structure can be freed while object is purged out from memory */
 struct _MemObject {
@@ -774,13 +784,14 @@ struct _MemObject {
 	void *data;
     } abort;
     char *log_url;
+    dlink_node lru;
 };
 
 /* A cut down structure for store manager */
 struct _StoreEntry {
     /* first two items must be same as hash_link in hash.h */
     char *key;
-    struct sentry *next;
+    struct _StoreEntry *next;
     char *url;
     MemObject *mem_obj;
     u_num32 flag;
@@ -791,6 +802,7 @@ struct _StoreEntry {
     time_t lastmod;
     int object_len;
     int swap_file_number;
+    dlink_node lru;
     mem_status_t mem_status:3;
     ping_status_t ping_status:3;
     store_status_t store_status:3;

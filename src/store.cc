@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.318 1997/10/27 18:26:57 wessels Exp $
+ * $Id: store.cc,v 1.319 1997/10/27 21:34:52 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -218,14 +218,7 @@ typedef struct swapout_ctrl_t {
     StoreEntry *e;
 } swapout_ctrl_t;
 
-struct _mem_entry {
-    StoreEntry *e;
-    struct _mem_entry *next;
-    struct _mem_entry *prev;
-};
-
 /* Static Functions */
-static void storeCreateHashTable(HASHCMP *);
 static int compareLastRef(StoreEntry **, StoreEntry **);
 static int compareBucketOrder(struct _bucketOrder *, struct _bucketOrder *);
 static int storeCheckExpired(const StoreEntry *, int flag);
@@ -233,7 +226,7 @@ static store_client *storeClientListSearch(const MemObject *, void *);
 static int storeEntryLocked(const StoreEntry *);
 static int storeEntryValidLength(const StoreEntry *);
 static void storeGetMemSpace(int);
-static int storeHashDelete(StoreEntry *);
+static void storeHashDelete(StoreEntry *);
 static VCB storeSwapInValidateComplete;
 static mem_hdr *new_MemObjectData(void);
 static MemObject *new_MemObject(const char *);
@@ -274,16 +267,17 @@ static SIH storeClientCopyFileOpened;
 static DRCB storeClientCopyHandleRead;
 static FOCB storeSwapInFileOpened;
 static void storeClientCopyFileRead(store_client * sc);
-static void storeInMemAdd(StoreEntry * e);
-static void storeInMemDelete(StoreEntry * e);
+static void storeEntryListAdd(StoreEntry * e, dlink_node *, dlink_list *);
+static void storeEntryListDelete(dlink_node *, dlink_list *);
 static void storeSetMemStatus(StoreEntry * e, int);
 static void storeClientCopy2(StoreEntry *, store_client *);
+static void storeHashInsert(StoreEntry * e);
 
 /* Now, this table is inaccessible to outsider. They have to use a method
  * to access a value in internal storage data structure. */
 static hash_table *store_table = NULL;
-static struct _mem_entry *inmem_head = NULL;
-static struct _mem_entry *inmem_tail = NULL;
+static dlink_list inmem_list;
+static dlink_list all_list;
 
 static int store_pages_max = 0;
 static int store_pages_high = 0;
@@ -396,23 +390,19 @@ destroy_MemObjectData(MemObject * mem)
 /* ----- INTERFACE BETWEEN STORAGE MANAGER AND HASH TABLE FUNCTIONS --------- */
 
 static void
-storeCreateHashTable(HASHCMP * cmp_func)
-{
-    store_table = hash_create(cmp_func, store_buckets, hash4);
-}
-
-static int
 storeHashInsert(StoreEntry * e)
 {
     debug(20, 3) ("storeHashInsert: Inserting Entry %p key '%s'\n",
 	e, e->key);
-    return hash_join(store_table, (hash_link *) e);
+    hash_join(store_table, (hash_link *) e);
+    storeEntryListAdd(e, &e->lru, &all_list);
 }
 
-static int
+static void
 storeHashDelete(StoreEntry * e)
 {
-    return hash_remove_link(store_table, (hash_link *) e);
+    hash_remove_link(store_table, (hash_link *) e);
+    storeEntryListDelete(&e->lru, &all_list);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -474,7 +464,10 @@ storePurgeMem(StoreEntry * e)
 void
 storeLockObject(StoreEntry * e)
 {
-    e->lock_count++;
+    if (e->lock_count++ == 0) {
+	storeEntryListDelete(&e->lru, &all_list);
+	storeEntryListAdd(e, &e->lru, &all_list);
+    }
     debug(20, 3) ("storeLockObject: key '%s' count=%d\n",
 	e->key, (int) e->lock_count);
     e->lastref = squid_curtime;
@@ -1512,7 +1505,6 @@ storeComplete(StoreEntry * e)
 {
     debug(20, 3) ("storeComplete: '%s'\n", e->key);
     e->object_len = e->mem_obj->inmem_hi;
-    e->lastref = squid_curtime;
     e->store_status = STORE_OK;
     assert(e->mem_status == NOT_IN_MEMORY);
     InvokeHandlers(e);
@@ -1537,7 +1529,6 @@ storeAbort(StoreEntry * e, int cbflag)
     storeSetMemStatus(e, NOT_IN_MEMORY);
     /* No DISK swap for negative cached object */
     e->swap_status = SWAPOUT_NONE;
-    e->lastref = squid_curtime;
     /* Count bytes faulted through cache but not moved to disk */
     HTTPCacheInfo->proto_touchobject(HTTPCacheInfo,
 	mem->request ? mem->request->protocol : PROTO_NONE,
@@ -1582,8 +1573,8 @@ storeGetMemSpace(int size)
     int n_released = 0;
     static time_t last_check = 0;
     int pages_needed;
-    struct _mem_entry *m;
-    struct _mem_entry *prev;
+    dlink_node *m;
+    dlink_node *prev;
     if (squid_curtime == last_check)
 	return;
     last_check = squid_curtime;
@@ -1593,9 +1584,9 @@ storeGetMemSpace(int size)
     if (store_rebuilding)
 	return;
     debug(20, 2) ("storeGetMemSpace: Starting, need %d pages\n", pages_needed);
-    for (m = inmem_tail; m; m = prev) {
+    for (m = inmem_list.tail; m; m = prev) {
 	prev = m->prev;
-	e = m->e;
+	e = m->data;
 	if (storeEntryLocked(e))
 	    continue;
 	if (storeCheckExpired(e, 0)) {
@@ -1655,124 +1646,48 @@ storeGetBucketNum(void)
 void
 storeGetSwapSpace(int size)
 {
-    static int fReduceSwap = 0;
-    static int swap_help = 0;
+    dlink_node *m;
+    dlink_node *prev;
     StoreEntry *e = NULL;
     int scanned = 0;
-    int removed = 0;
     int locked = 0;
     int expired = 0;
-    int locked_size = 0;
-    int list_count = 0;
-    int scan_count = 0;
-    int max_list_count = SWAP_LRUSCAN_COUNT << 1;
-    int i;
-    static int DL = 3;
+    int purged = 0;
     static time_t last_warn_time = 0;
-    StoreEntry **LRU_list;
-    hash_link *link_ptr = NULL, *next = NULL;
     int kb_size = ((size + 1023) >> 10);
-
-    if (store_swap_size + kb_size <= store_swap_low)
-	fReduceSwap = 0;
-    if (!fReduceSwap && (store_swap_size + kb_size <= store_swap_high))
+    if (store_swap_size + kb_size <= store_swap_high)
 	return;
-    debug(20, DL) ("storeGetSwapSpace: Starting...\n");
-
-    /* Set flag if swap size over high-water-mark */
-    if (store_swap_size + kb_size > store_swap_high)
-	fReduceSwap = 1;
-
-    debug(20, DL) ("storeGetSwapSpace: Need %d bytes...\n", size);
-
-    LRU_list = xcalloc(max_list_count, sizeof(StoreEntry *));
-    /* remove expired objects until recover enough or no expired objects */
-    for (i = 0; i < store_buckets; i++) {
-	link_ptr = hash_get_bucket(store_table, storeGetBucketNum());
-	if (link_ptr == NULL)
-	    continue;
-	/* this for loop handles one bucket of hash table */
-	for (; link_ptr; link_ptr = next) {
-	    if (list_count == max_list_count)
-		break;
-	    scanned++;
-	    next = link_ptr->next;
-	    e = (StoreEntry *) link_ptr;
-	    if (!BIT_TEST(e->flag, ENTRY_VALIDATED))
-		continue;
-	    if (storeCheckExpired(e, 0)) {
-		debug(20, DL) ("storeGetSwapSpace: Expired '%s'\n", e->url);
-		storeRelease(e);
-		expired++;
-	    } else if (!storeEntryLocked(e)) {
-		*(LRU_list + list_count) = e;
-		list_count++;
-		scan_count++;
-	    } else {
-		locked++;
-		locked_size += e->mem_obj->inmem_hi;
-	    }
-	}			/* for, end of one bucket of hash table */
-	qsort((char *) LRU_list,
-	    list_count,
-	    sizeof(StoreEntry *),
-	    (QS *) compareLastRef);
-	if (list_count > SWAP_LRU_REMOVE_COUNT)
-	    list_count = SWAP_LRU_REMOVE_COUNT;		/* chop list */
-	if (scan_count > SWAP_LRUSCAN_COUNT)
-	    break;
-    }				/* for */
-
-    /* end of candidate selection */
-    debug(20, DL) ("storeGetSwapSpace: Current Size:   %7d kbytes\n",
-	store_swap_size);
-    debug(20, DL) ("storeGetSwapSpace: High W Mark:    %7d kbytes\n",
-	store_swap_high);
-    debug(20, DL) ("storeGetSwapSpace: Low W Mark:     %7d kbytes\n",
-	store_swap_low);
-    debug(20, DL) ("storeGetSwapSpace: Entry count:    %7d items\n",
-	meta_data.store_entries);
-    debug(20, DL) ("storeGetSwapSpace: Visited:        %7d buckets\n",
-	i + 1);
-    debug(20, DL) ("storeGetSwapSpace: Scanned:        %7d items\n",
-	scanned);
-    debug(20, DL) ("storeGetSwapSpace: Expired:        %7d items\n",
-	expired);
-    debug(20, DL) ("storeGetSwapSpace: Locked:         %7d items\n",
-	locked);
-    debug(20, DL) ("storeGetSwapSpace: Locked Space:   %7d bytes\n",
-	locked_size);
-    debug(20, DL) ("storeGetSwapSpace: LRU candidate:  %7d items\n",
-	list_count);
-
-    for (i = 0; i < list_count; i++)
-	removed += storeRelease(*(LRU_list + i));
-    if (store_swap_size + kb_size <= store_swap_low)
-	fReduceSwap = 0;
-    debug(20, DL) ("storeGetSwapSpace: After Freeing Size:   %7d kbytes\n",
-	store_swap_size);
-    /* free the list */
-    safe_free(LRU_list);
-
-    if (store_swap_size + kb_size > Config.Swap.maxSize) {
-	if (squid_curtime - last_warn_time > 10) {
-	    debug(20, 0) ("WARNING: Disk space over limit: %d KB > %d KB\n",
-		store_swap_size, Config.Swap.maxSize);
-	    last_warn_time = squid_curtime;
+    debug(20, 1) ("storeGetSwapSpace: Need %d bytes...\n", size);
+    for (m = all_list.tail; m; m = prev) {
+	prev = m->prev;
+	e = m->data;
+	if (storeEntryLocked(e)) {
+	    locked++;
+	} else if (storeCheckExpired(e, 0)) {
+	    expired++;
+	    storeRelease(e);
+	} else {
+	    storeRelease(e);
+	    purged++;
 	}
-	if (removed == 0)
-	    swap_help++;
-	DL = swap_help > 2 ? 1 : 3;
-	debug(20, DL) ("storeGetSwapSpace: Disk usage is over high water mark\n");
-	debug(20, DL) ("--> store_swap_high = %d KB\n", store_swap_high);
-	debug(20, DL) ("--> store_swap_size = %d KB\n", store_swap_size);
-	debug(20, DL) ("--> asking for        %d KB\n", kb_size);
-	assert(swap_help < SWAP_MAX_HELP);
-    } else {
-	swap_help = 0;
-	DL = 3;
+	if (store_swap_size + kb_size <= store_swap_high)
+	    break;
+	if (++scanned > SWAP_LRUSCAN_COUNT)
+	    break;
     }
-    debug(20, DL) ("Removed %d objects\n", removed);
+    debug(20, 1) ("storeGetSwapSpace stats:\n");
+    debug(20, 1) ("  %6d objects\n", meta_data.store_entries);
+    debug(20, 1) ("  %6d were scanned\n", scanned);
+    debug(20, 1) ("  %6d were locked\n", locked);
+    debug(20, 1) ("  %6d were expired\n", expired);
+    debug(20, 1) ("  %6d were purged\n", purged);
+    if (store_swap_size + kb_size < Config.Swap.maxSize)
+	return;
+    if (squid_curtime - last_warn_time < 10)
+	return;
+    debug(20, 0) ("WARNING: Disk space over limit: %d KB > %d KB\n",
+	store_swap_size, Config.Swap.maxSize);
+    last_warn_time = squid_curtime;
 }
 
 
@@ -1929,7 +1844,13 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     STCB *callback = sc->callback;
     MemObject *mem = e->mem_obj;
     size_t sz;
-    assert(sc->seen_offset <= mem->inmem_hi || e->store_status != STORE_PENDING);
+    assert(callback != NULL);
+    if (e->store_status == STORE_ABORTED) {
+	sc->callback = NULL;
+	callback(sc->callback_data, sc->copy_buf, 0);
+	return;
+    }
+    assert(sc->seen_offset <= mem->inmem_hi || e->store_status == STORE_OK);
     if (e->store_status == STORE_PENDING && sc->seen_offset == mem->inmem_hi) {
 	/* client has already seen this, wait for more */
 	debug(20, 3) ("storeClientCopy2: Waiting for more\n");
@@ -2100,7 +2021,7 @@ storeInit(void)
 {
     char *fname = NULL;
     storeInitHashValues();
-    storeCreateHashTable(urlcmp);
+    store_table = hash_create(urlcmp, store_buckets, hash4);
     if (strcmp((fname = Config.Log.store), "none") == 0)
 	storelog_fd = -1;
     else
@@ -2113,6 +2034,8 @@ storeInit(void)
 	storeStartRebuildFromDisk();
     else
 	store_rebuilding = 0;
+    all_list.head = all_list.tail = NULL;
+    inmem_list.head = inmem_list.tail = NULL;
 }
 
 void
@@ -2586,52 +2509,47 @@ storeMemObjectDump(MemObject * mem)
 }
 
 static void
-storeInMemAdd(StoreEntry * e)
+storeEntryListAdd(StoreEntry * e, dlink_node * m, dlink_list * list)
 {
-    struct _mem_entry *m = xmalloc(sizeof(struct _mem_entry));
-    debug(20, 3) ("storeInMemAdd: %s\n", e->url);
-    assert(e->mem_obj->inmem_lo == 0);
-    m->e = e;
+    debug(20, 3) ("storeEntryListAdd: %s\n", e->url);
+    m->data = e;
     m->prev = NULL;
-    m->next = inmem_head;
-    if (inmem_head)
-	inmem_head->prev = m;
-    inmem_head = m;
-    if (inmem_tail == NULL)
-	inmem_tail = m;
-    meta_data.hot_vm++;
+    m->next = list->head;
+    if (list->head)
+	list->head->prev = m;
+    list->head = m;
+    if (list->tail == NULL)
+	list->tail = m;
 }
 
 static void
-storeInMemDelete(StoreEntry * e)
+storeEntryListDelete(dlink_node * m, dlink_list * list)
 {
-    struct _mem_entry *m;
-    for (m = inmem_tail; m; m = m->prev) {
-	if (m->e == e)
-	    break;
-    }
-    assert(m != NULL);
-    debug(20, 3) ("storeInMemDelete: %s\n", e->url);
     if (m->next)
 	m->next->prev = m->prev;
     if (m->prev)
 	m->prev->next = m->next;
-    if (m == inmem_head)
-	inmem_head = m->next;
-    if (m == inmem_tail)
-	inmem_tail = m->prev;
-    meta_data.hot_vm--;
+    if (m == list->head)
+	list->head = m->next;
+    if (m == list->tail)
+	list->tail = m->prev;
 }
 
 /* NOTE, this function assumes only two mem states */
 static void
 storeSetMemStatus(StoreEntry * e, int new_status)
 {
+    MemObject *mem = e->mem_obj;
     if (new_status == e->mem_status)
 	return;
-    if (new_status == IN_MEMORY)
-	storeInMemAdd(e);
-    else
-	storeInMemDelete(e);
+    assert(mem != NULL);
+    if (new_status == IN_MEMORY) {
+	assert(mem->inmem_lo == 0);
+	storeEntryListAdd(e, &mem->lru, &inmem_list);
+	meta_data.hot_vm++;
+    } else {
+	storeEntryListDelete(&mem->lru, &inmem_list);
+	meta_data.hot_vm--;
+    }
     e->mem_status = new_status;
 }
