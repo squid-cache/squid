@@ -1,5 +1,5 @@
 /*
- * $Id: MemBuf.cc,v 1.19 1998/07/24 00:58:35 wessels Exp $
+ * $Id: MemBuf.cc,v 1.20 1998/09/02 04:00:42 wessels Exp $
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov
@@ -104,7 +104,11 @@
 
 /* default values for buffer sizes, used by memBufDefInit */
 #define MEM_BUF_INIT_SIZE   (2*1024)
+#if CLIENT_SOCK_SZ < 16384
 #define MEM_BUF_MAX_SIZE   (32*1024)
+#else
+#define MEM_BUF_MAX_SIZE   (CLIENT_SOCK_SZ<<1)
+#endif
 
 
 /* local routines */
