@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.136 1999/01/24 02:44:10 wessels Exp $
+# $Id: cf.data.pre,v 1.137 1999/01/24 03:25:22 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -2263,37 +2263,48 @@ DOC_START
 	and firewall_ip.
 DOC_END
 
-NAME: http_header
+NAME: anonymize_headers
 TYPE: http_header
-LOC: Config.http_header
+LOC: Config.anonymize_headers
 DEFAULT: none
 DOC_START
-        Lets you to configure which headers are passed by squid
-	to allow you to anonymize the requests delivered by your
-	proxy server. Please read the HTTP rfc's for header names
-	and functions.
+        Usage: anonymize_headers allow|deny header_name ...
 
-	There are two methods of using this command. You can choose
-	two methods either:
+	This option replaces the old 'http_anonymizer' option with
+	something that is much more configurable.  You may now
+	specify exactly which headers are to be allowed, or which
+	are to be removed from outgoing requests.
+
+	There are two methods of using this option.  You may either
+	allow specific headers (thus denying all others), or you
+	may deny specific headers (thus allowing all others).
+
+	For example, to achieve the same behaviour as the old
+	'http_anonymizer standard' option, you should use:
+
+		anonymize_headers deny From Referer Server
+		anonymize_headers deny User-Agent WWW-Authenticate Link
 		
-		http_header allow header_name ...
+	Or, to reproduce the old 'http_anonymizer paranoid' feature
+	you should use:
 
-	Which denys all headers expect for those listed. Or :
+		anonymize_headers allow Allow Authorization Cache-Control
+		anonymize_headers allow Content-Encoding Content-Length
+		anonymize_headers allow Content-Type Date Expires Host
+		anonymize_headers allow If-Modified-Since Last-Modified
+		anonymize_headers allow Location Pragma Accept Charset
+		anonymize_headers allow Accept-Encoding Accept-Language
+		anonymize_headers allow Content-Language Mime-Version
+		anonymize_headers allow Retry-After Title Connection
+		anonymize_headers allow Proxy-Connection
 
-		http_header deny header_name ...
+	NOTE: You can not mix "allow" and "deny".  All 'anonymize_headers'
+	lines must have the same second argument.
 
-	Which allows all headers except for those listed. By default
-	all headers are allowed. You CAN NOT have allow and deny
-	commands together in the same configuration.
+	By default, all headers are allowed (no anonymizing is
+	performed).
 
-        usage:
-
-        http_header allow|deny header_name ...
-
-Example:
-This example acts like the old standard configuration:
-
-http_header deny From Referer Server User-Agent WWW-Authenticate Link
+anonymize_headers
 DOC_END
 
 NAME: fake_user_agent
@@ -2301,8 +2312,8 @@ TYPE: eol
 LOC: Config.fake_ua
 DEFAULT: none
 DOC_START
-	If you filter the User-Agent header with 'http_header' it will
-	cause some Web servers to refuse your request. Use this to
+	If you filter the User-Agent header with 'anonymize_headers' it
+	may cause some Web servers to refuse your request.  Use this to
 	fake one up.  For example:
 
 	fake_user_agent Nutscrape/1.0 (CP/M; 8-bit)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.21 1999/01/22 19:07:00 glenn Exp $
+ * $Id: HttpRequest.cc,v 1.22 1999/01/24 03:25:22 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -147,7 +147,7 @@ httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConn)
 {
     assert(e);
     /* check with anonymizer tables */
-    if (CBIT_TEST(Config.http_header, e->id))
+    if (CBIT_TEST(Config.anonymize_headers, e->id))
 	return 0;
     /* check connection header */
     if (strConn && strListIsMember(strConn, strBuf(e->name), ','))
