@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.126 1997/02/24 23:43:14 wessels Exp $
+ * $Id: stat.cc,v 1.127 1997/02/26 19:46:22 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -488,7 +488,7 @@ log_get_start(const cacheinfo * obj, StoreEntry * sentry)
 	storeComplete(sentry);
 	return;
     }
-    fd = file_open(obj->logfilename, NULL, O_RDONLY);
+    fd = file_open(obj->logfilename, NULL, O_RDONLY, NULL, NULL);
     if (fd < 0) {
 	debug(50, 0, "Cannot open logfile: %s: %s\n",
 	    obj->logfilename, xstrerror());
@@ -535,7 +535,7 @@ squid_get_start(const cacheinfo * obj, StoreEntry * sentry)
 
     data = xcalloc(1, sizeof(squid_read_data_t));
     data->sentry = sentry;
-    data->fd = file_open(ConfigFile, NULL, O_RDONLY);
+    data->fd = file_open(ConfigFile, NULL, O_RDONLY, NULL, NULL);
     storeAppendPrintf(sentry, open_bracket);
     file_walk(data->fd, (FILE_WALK_HD) squidReadEndHandler, (void *) data,
 	(FILE_WALK_LHD) squidReadHandler, (void *) data);
@@ -606,9 +606,9 @@ server_list(const cacheinfo * obj, StoreEntry * sentry)
     storeAppendPrintf(sentry, close_bracket);
 }
 
-#if XMALLOC_STATISTICS
+#ifdef XMALLOC_STATISTICS
 static void
-info_get_mallstat(int size, number, StoreEntry * sentry)
+info_get_mallstat(int size, int number, StoreEntry * sentry)
 {
     if (number > 0)
 	storeAppendPrintf(sentry, "{\t%d = %d}\n", size, number);
@@ -1161,7 +1161,7 @@ log_enable(cacheinfo * obj, StoreEntry * sentry)
 	obj->logfile_status = LOG_ENABLE;
 
 	/* open the logfile */
-	obj->logfile_fd = file_open(obj->logfilename, NULL, O_WRONLY | O_CREAT);
+	obj->logfile_fd = file_open(obj->logfilename, NULL, O_WRONLY | O_CREAT, NULL, NULL);
 	if (obj->logfile_fd == DISK_ERROR) {
 	    debug(18, 0, "Cannot open logfile: %s\n", obj->logfilename);
 	    obj->logfile_status = LOG_DISABLE;
@@ -1194,7 +1194,7 @@ log_clear(cacheinfo * obj, StoreEntry * sentry)
     unlink(obj->logfilename);
 
     /* reopen it anyway */
-    obj->logfile_fd = file_open(obj->logfilename, NULL, O_WRONLY | O_CREAT);
+    obj->logfile_fd = file_open(obj->logfilename, NULL, O_WRONLY | O_CREAT, NULL, NULL);
     if (obj->logfile_fd == DISK_ERROR) {
 	debug(18, 0, "Cannot open logfile: %s\n", obj->logfilename);
 	obj->logfile_status = LOG_DISABLE;
@@ -1287,7 +1287,7 @@ stat_init(cacheinfo ** object, const char *logfilename)
     if (logfilename) {
 	memset(obj->logfilename, '0', SQUID_MAXPATHLEN);
 	xstrncpy(obj->logfilename, logfilename, SQUID_MAXPATHLEN);
-	obj->logfile_fd = file_open(obj->logfilename, NULL, O_WRONLY | O_CREAT);
+	obj->logfile_fd = file_open(obj->logfilename, NULL, O_WRONLY | O_CREAT, NULL, NULL);
 	if (obj->logfile_fd == DISK_ERROR) {
 	    debug(50, 0, "%s: %s\n", obj->logfilename, xstrerror());
 	    fatal("Cannot open logfile.");
@@ -1373,7 +1373,7 @@ stat_rotate_log(void)
     /* Close and reopen the log.  It may have been renamed "manually"
      * before HUP'ing us. */
     file_close(HTTPCacheInfo->logfile_fd);
-    HTTPCacheInfo->logfile_fd = file_open(fname, NULL, O_WRONLY | O_CREAT);
+    HTTPCacheInfo->logfile_fd = file_open(fname, NULL, O_WRONLY | O_CREAT, NULL, NULL);
     if (HTTPCacheInfo->logfile_fd == DISK_ERROR) {
 	debug(18, 0, "stat_rotate_log: Cannot open logfile: %s\n", fname);
 	HTTPCacheInfo->logfile_status = LOG_DISABLE;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.45 1997/02/07 04:57:13 wessels Exp $
+ * $Id: fqdncache.cc,v 1.46 1997/02/26 19:46:12 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -526,6 +526,13 @@ fqdncache_dnsHandleRead(int fd, void *data)
     debug(35, 5, "fqdncache_dnsHandleRead: Result from DNS ID %d (%d bytes)\n",
 	dnsData->id, len);
     if (len <= 0) {
+	if (len < 0 && (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN)) {
+	    commSetSelect(fd,
+		COMM_SELECT_READ,
+		fqdncache_dnsHandleRead,
+		dnsData, 0);
+	    return;
+	}
 	debug(35, dnsData->flags & DNS_FLAG_CLOSING ? 5 : 1,
 	    "FD %d: Connection from DNSSERVER #%d is closed, disabling\n",
 	    fd, dnsData->id);

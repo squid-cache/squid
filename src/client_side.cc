@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.90 1997/02/24 20:21:37 wessels Exp $
+ * $Id: client_side.cc,v 1.91 1997/02/26 19:46:09 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -516,10 +516,13 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	}
 	icpState->log_type = LOG_TCP_REFRESH_HIT;
 	hbuf = get_free_8k_page();
-	storeClientCopy(oldentry, 0, 8191, hbuf, &len, fd);
-	if (oldentry->mem_obj->request == NULL) {
-	    oldentry->mem_obj->request = requestLink(mem->request);
-	    unlink_request = 1;
+	if (storeClientCopy(oldentry, 0, 8191, hbuf, &len, fd) < 0) {
+	    debug(33, 1, "icpHandleIMSReply: Couldn't copy old entry\n");
+	} else {
+	    if (oldentry->mem_obj->request == NULL) {
+		oldentry->mem_obj->request = requestLink(mem->request);
+		unlink_request = 1;
+	    }
 	}
 	storeUnregister(entry, fd);
 	storeUnlockObject(entry);

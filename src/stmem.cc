@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.37 1997/01/07 20:31:25 wessels Exp $
+ * $Id: stmem.cc,v 1.38 1997/02/26 19:46:23 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -265,7 +265,8 @@ memCopy(const mem_ptr mem, int offset, char *buf, int size)
     debug(19, 6, "memCopy: offset %d: size %d\n", offset, size);
 
     if (p == NULL)
-	fatal_dump("memCopy: NULL mem_node");
+	return -1;
+    /*      fatal_dump("memCopy: NULL mem_node"); *//* Can happen on async */
 
     if (size <= 0)
 	return size;

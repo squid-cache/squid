@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl.cc,v 1.39 1997/02/25 19:18:24 wessels Exp $
+ * $Id: ssl.cc,v 1.40 1997/02/26 19:46:22 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -143,7 +143,7 @@ sslReadServer(int fd, void *data)
     if (len < 0) {
 	debug(50, 1, "sslReadServer: FD %d: read failure: %s\n",
 	    sslState->server.fd, xstrerror());
-	if (errno == EAGAIN || errno == EWOULDBLOCK) {
+	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
 	    commSetSelect(sslState->server.fd,
@@ -183,7 +183,7 @@ sslReadClient(int fd, void *data)
     if (len < 0) {
 	debug(50, 1, "sslReadClient: FD %d: read failure: %s\n",
 	    fd, xstrerror());
-	if (errno == EAGAIN || errno == EWOULDBLOCK) {
+	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
 	    commSetSelect(sslState->client.fd,
@@ -217,6 +217,13 @@ sslWriteServer(int fd, void *data)
 	sslState->client.len - sslState->client.offset);
     debug(26, 5, "sslWriteServer FD %d, wrote %d bytes\n", fd, len);
     if (len < 0) {
+	if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK) {
+	    commSetSelect(sslState->server.fd,
+		COMM_SELECT_WRITE,
+		sslWriteServer,
+		(void *) sslState, 0);
+	    return;
+	}
 	debug(50, 2, "sslWriteServer: FD %d: write failure: %s.\n",
 	    sslState->server.fd, xstrerror());
 	sslClose(sslState);
@@ -257,6 +264,13 @@ sslWriteClient(int fd, void *data)
 	sslState->server.len - sslState->server.offset);
     debug(26, 5, "sslWriteClient FD %d, wrote %d bytes\n", fd, len);
     if (len < 0) {
+	if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK) {
+	    commSetSelect(sslState->client.fd,
+		COMM_SELECT_WRITE,
+		sslWriteClient,
+		(void *) sslState, 0);
+	    return;
+	}
 	debug(50, 2, "sslWriteClient: FD %d: write failure: %s.\n",
 	    sslState->client.fd, xstrerror());
 	sslClose(sslState);
@@ -295,11 +309,11 @@ sslConnected(int fd, void *data)
     strcpy(sslState->server.buf, conn_established);
     sslState->server.len = strlen(conn_established);
     sslState->server.offset = 0;
+    comm_set_fd_lifetime(fd, 86400);	/* extend lifetime */
     commSetSelect(sslState->client.fd,
 	COMM_SELECT_WRITE,
 	sslWriteClient,
 	(void *) sslState, 0);
-    comm_set_fd_lifetime(fd, 86400);	/* extend lifetime */
     commSetSelect(sslState->client.fd,
 	COMM_SELECT_READ,
 	sslReadClient,
@@ -473,11 +487,11 @@ sslProxyConnected(int fd, void *data)
     debug(26, 3, "sslProxyConnected: Sending 'CONNECT %s HTTP/1.0'\n", sslState->url);
     sslState->client.len = strlen(sslState->client.buf);
     sslState->client.offset = 0;
+    comm_set_fd_lifetime(fd, 86400);	/* extend lifetime */
     commSetSelect(sslState->server.fd,
 	COMM_SELECT_WRITE,
 	sslWriteServer,
 	(void *) sslState, 0);
-    comm_set_fd_lifetime(fd, 86400);	/* extend lifetime */
     commSetSelect(sslState->server.fd,
 	COMM_SELECT_READ,
 	sslReadServer,

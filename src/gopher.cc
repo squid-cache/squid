@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.70 1996/12/03 20:26:53 wessels Exp $
+ * $Id: gopher.cc,v 1.71 1997/02/26 19:46:13 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -159,6 +159,12 @@ typedef struct gopher_ds {
     ConnectStateData connectState;
 } GopherStateData;
 
+typedef struct gopher_ctrl_t {
+    int unusedfd;
+    char *url;
+    StoreEntry *entry;
+} gopher_ctrl_t;
+
 static int gopherStateFree _PARAMS((int fd, GopherStateData *));
 static void gopher_mime_content _PARAMS((char *buf, const char *name, const char *def));
 static void gopherMimeCreate _PARAMS((GopherStateData *));
@@ -177,6 +183,7 @@ static void gopherSendComplete(int fd,
     int size,
     int errflag,
     void *data);
+static void gopherStartComplete _PARAMS((void *, int));
 static void gopherSendRequest _PARAMS((int fd, GopherStateData *));
 static GopherStateData *CreateGopherStateData _PARAMS((void));
 static void gopherConnectDone _PARAMS((int fd, int status, void *data));
@@ -771,7 +778,7 @@ gopherReadReply(int fd, GopherStateData * data)
     }
     if (len < 0) {
 	debug(50, 1, "gopherReadReply: error reading: %s\n", xstrerror());
-	if (errno == EAGAIN || errno == EWOULDBLOCK) {
+	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
 	    /* reinstall handlers */
 	    /* XXX This may loop forever */
 	    commSetSelect(fd,
@@ -938,20 +945,39 @@ gopherSendRequest(int fd, GopherStateData * data)
 int
 gopherStart(int unusedfd, const char *url, StoreEntry * entry)
 {
+    gopher_ctrl_t *ctrlp;
+    ctrlp = xmalloc(sizeof(gopher_ctrl_t));
+    ctrlp->unusedfd = unusedfd;
+    ctrlp->url = xstrdup(url);
+    ctrlp->entry = entry;
+    storeLockObject(entry, gopherStartComplete, ctrlp);
+    return COMM_OK;
+}
+
+
+static void
+gopherStartComplete(void *datap, int status)
+{
+    gopher_ctrl_t *ctrlp = (gopher_ctrl_t *) datap;
     /* Create state structure. */
-    int sock;
     GopherStateData *data = CreateGopherStateData();
-
-    storeLockObject(data->entry = entry, NULL, NULL);
-
+    int sock;
+    int unusedfd;
+    char *url;
+    StoreEntry *entry;
+    unusedfd = ctrlp->unusedfd;
+    url = ctrlp->url;
+    entry = ctrlp->entry;
+    xfree(ctrlp);
+    data->entry = entry;
     debug(10, 3, "gopherStart: url: %s\n", url);
-
     /* Parse url. */
     if (gopher_url_parser(url, data->host, &data->port,
 	    &data->type_id, data->request)) {
 	squid_error_entry(entry, ERR_INVALID_URL, NULL);
 	gopherStateFree(-1, data);
-	return COMM_ERROR;
+	xfree(url);
+	return;
     }
     /* Create socket. */
     sock = comm_open(SOCK_STREAM,
@@ -964,12 +990,12 @@ gopherStart(int unusedfd, const char *url, StoreEntry * entry)
 	debug(10, 4, "gopherStart: Failed because we're out of sockets.\n");
 	squid_error_entry(entry, ERR_NO_FDS, xstrerror());
 	gopherStateFree(-1, data);
-	return COMM_ERROR;
+	xfree(url);
+	return;
     }
     comm_add_close_handler(sock,
 	(PF) gopherStateFree,
 	(void *) data);
-
     /* check if IP is already in cache. It must be. 
      * It should be done before this route is called. 
      * Otherwise, we cannot check return code for connect. */
@@ -977,7 +1003,8 @@ gopherStart(int unusedfd, const char *url, StoreEntry * entry)
 	debug(10, 4, "gopherStart: Called without IP entry in ipcache. OR lookup failed.\n");
 	squid_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
 	comm_close(sock);
-	return COMM_ERROR;
+	xfree(url);
+	return;
     }
     if (((data->type_id == GOPHER_INDEX) || (data->type_id == GOPHER_CSO))
 	&& (strchr(data->request, '?') == NULL)
@@ -985,7 +1012,6 @@ gopherStart(int unusedfd, const char *url, StoreEntry * entry)
 	/* Index URL without query word */
 	/* We have to generate search page back to client. No need for connection */
 	gopherMimeCreate(data);
-
 	if (data->type_id == GOPHER_INDEX) {
 	    data->conversion = HTML_INDEX_PAGE;
 	} else {
@@ -998,7 +1024,8 @@ gopherStart(int unusedfd, const char *url, StoreEntry * entry)
 	gopherToHTML(data, (char *) NULL, 0);
 	storeComplete(entry);
 	comm_close(sock);
-	return COMM_OK;
+	xfree(url);
+	return;
     }
     data->connectState.fd = sock;
     data->connectState.host = data->host;
@@ -1006,7 +1033,8 @@ gopherStart(int unusedfd, const char *url, StoreEntry * entry)
     data->connectState.handler = gopherConnectDone;
     data->connectState.data = data;
     comm_nbconnect(sock, &data->connectState);
-    return COMM_OK;
+    xfree(url);
+    return;
 }
 
 static void
