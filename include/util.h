@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.28 1996/12/01 07:42:34 wessels Exp $
+ * $Id: util.h,v 1.29 1997/04/28 04:30:02 wessels Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -150,5 +150,8 @@ extern char *rfc1738_escape _PARAMS((const char *));
 #if XMALLOC_STATISTICS
 void malloc_statistics _PARAMS((void (*)_PARAMS((int, int, void *)), void *));
 #endif
+
+typedef struct in_addr SIA;
+extern int safe_inet_addr _PARAMS((const char *, SIA *));
 
 #endif /* ndef _UTIL_H_ */

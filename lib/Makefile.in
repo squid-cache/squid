@@ -3,7 +3,7 @@
 #
 #  Darren Hardy, hardy@cs.colorado.edu, April 1994
 #
-#  $Id: Makefile.in,v 1.21 1997/02/20 21:04:07 wessels Exp $
+#  $Id: Makefile.in,v 1.22 1997/04/28 04:30:03 wessels Exp $
 #
 prefix		= @prefix@
 srcdir		= @srcdir@
@@ -21,6 +21,7 @@ LDFLAGS		= @LDFLAGS@
 XTRA_LIBS	= @XTRA_LIBS@
 RM		= @RM@
 LIBOBJS		= @LIBOBJS@
+AR_R		= @AR_R@
 
 INCLUDE		= -I../include -I$(srcdir)/../include
 UTILOBJS	= rfc1123.o \
@@ -31,6 +32,7 @@ UTILOBJS	= rfc1123.o \
 		  uudecode.o \
 		  tree.o \
 		  splay.o \
+		  safe_inet_addr.o \
 		  $(LIBOBJS)
 REGEXOBJS	= GNUregex.o
 LIBS		= libmiscutil.a @LIBREGEX@
@@ -43,11 +45,12 @@ $(UTILOBJS): ../include/version.h
 
 libmiscutil.a: $(UTILOBJS)
 	$(RM) -f $@
-	ar r $@ $(UTILOBJS)
+	$(AR_R) $@ $(UTILOBJS)
 	$(RANLIB) $@
 
 libregex.a: $(REGEXOBJS)
-	ar r $@ $(REGEXOBJS)
+	$(RM) -f $@
+	$(AR_R) $@ $(REGEXOBJS)
 	$(RANLIB) $@
 
 clean:

@@ -1,6 +1,6 @@
 
 /*
- * $Id: getfullhostname.c,v 1.12 1996/11/06 23:14:13 wessels Exp $
+ * $Id: getfullhostname.c,v 1.13 1997/04/28 04:30:04 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -156,6 +156,6 @@ getfullhostname(void)
     if (gethostname(buf, SQUIDHOSTNAMELEN) < 0)
 	return NULL;
     if ((hp = gethostbyname(buf)) != NULL)
-	strncpy(buf, hp->h_name, SQUIDHOSTNAMELEN);
+	xstrncpy(buf, hp->h_name, SQUIDHOSTNAMELEN);
     return buf;
 }
