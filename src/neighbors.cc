@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.237 1998/08/26 19:08:55 wessels Exp $
+ * $Id: neighbors.cc,v 1.238 1998/08/26 19:53:40 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -377,7 +377,7 @@ neighborsUdpPing(request_t * request,
 
 #if USE_HTCP
 	if (EBIT_TEST(p->options, NEIGHBOR_HTCP)) {
-	    debug(15, 0) ("neighborsUdpPing: sending HTCP query\n");
+	    debug(15, 3) ("neighborsUdpPing: sending HTCP query\n");
 	    htcpQuery(entry, request, p);
 	} else
 #endif
@@ -833,13 +833,17 @@ peerFindByName(const char *name)
 int
 neighborUp(const peer * p)
 {
+    int rc = 0;
     if (!p->tcp_up)
-	return 0;
-    if (squid_curtime - p->stats.last_query > Config.Timeout.deadPeer)
-	return 1;
-    if (p->stats.last_query - p->stats.last_reply >= Config.Timeout.deadPeer)
-	return 0;
-    return 1;
+	rc = 0;
+    else if (squid_curtime - p->stats.last_query > Config.Timeout.deadPeer)
+	rc = 1;
+    else if (p->stats.last_query - p->stats.last_reply >= Config.Timeout.deadPeer)
+	rc = 0;
+    else
+	rc = 1;
+    debug(1, 1) ("neighborUp: %s is %s\n", p->host, rc ? "UP" : "DOWN");
+    return rc;
 }
 
 void
@@ -1145,6 +1149,16 @@ dump_peers(StoreEntry * sentry, peer * peers)
 	    e->stats.ignored_replies,
 	    percent(e->stats.ignored_replies, e->stats.pings_acked));
 	storeAppendPrintf(sentry, "Histogram of PINGS ACKED:\n");
+#if USE_HTCP
+	if (EBIT_TEST(e->options, NEIGHBOR_HTCP)) {
+	    storeAppendPrintf(sentry, "\tMisses\t%8d %3d%%\n",
+		e->htcp.counts[0],
+		percent(e->htcp.counts[0], e->stats.pings_acked));
+	    storeAppendPrintf(sentry, "\tHits\t%8d %3d%%\n",
+		e->htcp.counts[1],
+		percent(e->htcp.counts[1], e->stats.pings_acked));
+	} else {
+#endif
 	for (op = ICP_INVALID; op < ICP_END; op++) {
 	    if (e->icp.counts[op] == 0)
 		continue;
@@ -1153,19 +1167,21 @@ dump_peers(StoreEntry * sentry, peer * peers)
 		e->icp.counts[op],
 		percent(e->icp.counts[op], e->stats.pings_acked));
 	}
+#if USE_HTCP
+}
+#endif
 	if (e->last_fail_time) {
 	    storeAppendPrintf(sentry, "Last failed connect() at: %s\n",
 		mkhttpdlogtime(&(e->last_fail_time)));
 	}
-	if (e->pinglist != NULL)
+	if (e->pinglist != NULL) {
 	    storeAppendPrintf(sentry, "DOMAIN LIST: ");
-	for (d = e->pinglist; d; d = d->next) {
-	    if (d->do_ping)
-		storeAppendPrintf(sentry, "%s ", d->domain);
-	    else
-		storeAppendPrintf(sentry, "!%s ", d->domain);
+	    for (d = e->pinglist; d; d = d->next) {
+		    storeAppendPrintf(sentry, "%s%s ",
+			d->do_ping ? null_string : "!", d->domain);
+	    }
+	    storeAppendPrintf(sentry, "\n");
 	}
-	storeAppendPrintf(sentry, "\n");
 	storeAppendPrintf(sentry, "keep-alive ratio: %d%%\n",
 	    percent(e->stats.n_keepalives_recv, e->stats.n_keepalives_sent));
     }

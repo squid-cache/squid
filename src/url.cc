@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.107 1998/08/21 03:15:29 wessels Exp $
+ * $Id: url.cc,v 1.108 1998/08/26 19:53:41 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -56,6 +56,9 @@ const char *ProtocolStr[] =
     "wais",
     "cache_object",
     "icp",
+#if USE_HTCP
+    "htcp",
+#endif
     "urn",
     "whois",
     "internal",
