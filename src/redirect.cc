@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.65 1998/09/04 23:04:58 wessels Exp $
+ * $Id: redirect.cc,v 1.66 1998/09/14 21:58:53 wessels Exp $
  *
  * DEBUG: section 29    Redirector
  * AUTHOR: Duane Wessels
@@ -46,7 +46,7 @@ typedef struct {
 
 typedef struct _redirector {
     int index;
-    int flags;
+    helper_flags flags;
     int fd;
     char *inbuf;
     unsigned int size;
@@ -103,10 +103,13 @@ redirectHandleRead(int fd, void *data)
     if (len <= 0) {
 	if (len < 0)
 	    debug(50, 1) ("redirectHandleRead: FD %d read: %s\n", fd, xstrerror());
-	debug(29, EBIT_TEST(redirector->flags, HELPER_CLOSING) ? 5 : 1)
+	debug(29, redirector->flags.closing ? 5 : 1)
 	    ("FD %d: Connection from Redirector #%d is closed, disabling\n",
 	    fd, redirector->index + 1);
-	redirector->flags = 0;
+	redirector->flags.alive = 0;
+	redirector->flags.busy = 0;
+	redirector->flags.closing = 0;
+	redirector->flags.shutdown = 0;
 	memFree(MEM_8K_BUF, redirector->inbuf);
 	redirector->inbuf = NULL;
 	comm_close(fd);
@@ -146,7 +149,7 @@ redirectHandleRead(int fd, void *data)
 	    }
 	    redirectStateFree(r);
 	    redirector->redirectState = NULL;
-	    EBIT_CLR(redirector->flags, HELPER_BUSY);
+	    redirector->flags.busy = 0;
 	    redirector->offset = 0;
 	    n = ++RedirectStats.replies;
 	    RedirectStats.avg_svc_time =
@@ -193,9 +196,9 @@ GetFirstAvailable(void)
     redirector_t *redirect = NULL;
     for (k = 0; k < NRedirectors; k++) {
 	redirect = *(redirect_child_table + k);
-	if (EBIT_TEST(redirect->flags, HELPER_BUSY))
+	if (redirect->flags.busy)
 	    continue;
-	if (!EBIT_TEST(redirect->flags, HELPER_ALIVE))
+	if (!redirect->flags.alive)
 	    continue;
 	return redirect;
     }
@@ -222,7 +225,7 @@ redirectDispatch(redirector_t * redirect, redirectStateData * r)
 	redirectStateFree(r);
 	return;
     }
-    EBIT_SET(redirect->flags, HELPER_BUSY);
+    redirect->flags.busy = 1;
     redirect->redirectState = r;
     redirect->dispatch_time = current_time;
     if ((fqdn = fqdncache_gethostbyaddr(r->client_addr, 0)) == NULL)
@@ -337,9 +340,9 @@ redirectOpenServers(void)
 	    &redirectsocket);
 	if (x < 0) {
 	    debug(29, 1) ("WARNING: Cannot run '%s' process.\n", prg);
-	    EBIT_CLR(redirect_child_table[k]->flags, HELPER_ALIVE);
+	    redirect_child_table[k]->flags.alive = 0;
 	} else {
-	    EBIT_SET(redirect_child_table[k]->flags, HELPER_ALIVE);
+	    redirect_child_table[k]->flags.alive = 1;
 	    redirect_child_table[k]->index = k;
 	    redirect_child_table[k]->fd = redirectsocket;
 	    redirect_child_table[k]->inbuf = memAllocate(MEM_8K_BUF);
@@ -386,19 +389,19 @@ redirectShutdownServers(void *unused)
     }
     for (k = 0; k < NRedirectors; k++) {
 	redirect = *(redirect_child_table + k);
-	if (!EBIT_TEST(redirect->flags, HELPER_ALIVE))
+	if (!redirect->flags.alive)
 	    continue;
-	if (EBIT_TEST(redirect->flags, HELPER_CLOSING))
+	if (redirect->flags.closing)
 	    continue;
-	if (EBIT_TEST(redirect->flags, HELPER_BUSY)) {
+	if (redirect->flags.busy) {
 	    na++;
 	    continue;
 	}
 	debug(29, 3) ("redirectShutdownServers: closing redirector #%d, FD %d\n",
 	    redirect->index + 1, redirect->fd);
 	comm_close(redirect->fd);
-	EBIT_SET(redirect->flags, HELPER_CLOSING);
-	EBIT_SET(redirect->flags, HELPER_BUSY);
+	redirect->flags.closing = 1;
+	redirect->flags.busy = 1;
     }
     if (na)
 	eventAdd("redirectShutdownServers", redirectShutdownServers, NULL, 1.0, 1);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.221 1998/09/14 21:28:17 wessels Exp $
+ * $Id: structs.h,v 1.222 1998/09/14 21:58:54 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -456,9 +456,16 @@ struct _dread_ctrl {
     void *client_data;
 };
 
+struct _helper_flags {
+    int alive:1;
+    int busy:1;
+    int closing:1;
+    int shutdown:1;
+};
+
 struct _dnsserver_t {
     int id;
-    int flags;
+    helper_flags flags;
     int inpipe;
     int outpipe;
     time_t answer;
@@ -988,7 +995,22 @@ struct _peer {
     domain_ping *pinglist;
     domain_type *typelist;
     acl_access *access;
-    int options;
+    struct {
+	int proxy_only:1;
+	int no_query:1;
+	int no_digest:1;
+	int default_parent:1;
+	int roundrobin:1;
+	int mcast_responder:1;
+	int closest_only:1;
+#if USE_HTCP
+	int htcp:1;
+#endif
+	int no_netdb_exchange:1;
+#if DELAY_POOLS
+	int no_delay:1;
+#endif
+    } options;
     int weight;
     struct {
 	double avg_n_members;

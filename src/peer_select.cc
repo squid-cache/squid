@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.80 1998/09/14 21:28:08 wessels Exp $
+ * $Id: peer_select.cc,v 1.81 1998/09/14 21:58:52 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -433,7 +433,7 @@ peerIcpParentMiss(peer * p, icp_common_t * header, ps_state * ps)
 	}
     }
     /* if closest-only is set, then don't allow FIRST_PARENT_MISS */
-    if (EBIT_TEST(p->options, NEIGHBOR_CLOSEST_ONLY))
+    if (p->options.closest_only)
 	return;
     /* set FIRST_MISS if there is no CLOSEST parent */
     if (ps->closest_parent_miss.sin_addr.s_addr != any_addr.s_addr)
@@ -526,7 +526,7 @@ peerHtcpParentMiss(peer * p, htcpReplyData * htcp, ps_state * ps)
 	}
     }
     /* if closest-only is set, then don't allow FIRST_PARENT_MISS */
-    if (EBIT_TEST(p->options, NEIGHBOR_CLOSEST_ONLY))
+    if (p->options.closest_only)
 	return;
     /* set FIRST_MISS if there is no CLOSEST parent */
     if (ps->closest_parent_miss.sin_addr.s_addr != any_addr.s_addr)

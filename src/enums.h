@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.127 1998/09/14 21:28:01 wessels Exp $
+ * $Id: enums.h,v 1.128 1998/09/14 21:58:47 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -443,31 +443,6 @@ enum {
 
 enum {
     ERR_FLAG_CBDATA
-};
-
-enum {
-    HELPER_ALIVE,
-    HELPER_BUSY,
-    HELPER_CLOSING,
-    HELPER_SHUTDOWN
-};
-
-enum {
-    NEIGHBOR_PROXY_ONLY,
-    NEIGHBOR_NO_QUERY,
-    NEIGHBOR_NO_DIGEST,
-    NEIGHBOR_DEFAULT_PARENT,
-    NEIGHBOR_ROUNDROBIN,
-    NEIGHBOR_MCAST_RESPONDER,
-    NEIGHBOR_CLOSEST_ONLY,
-#if USE_HTCP
-    NEIGHBOR_HTCP,
-#endif
-    NEIGHBOR_NO_NETDB_EXCHANGE,
-#if DELAY_POOLS
-    NEIGHBOR_NO_DELAY,
-#endif
-    NEIGHBOR_END
 };
 
 typedef enum {

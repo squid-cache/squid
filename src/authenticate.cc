@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.3 1998/09/04 23:04:38 wessels Exp $
+ * $Id: authenticate.cc,v 1.4 1998/09/14 21:58:45 wessels Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -43,7 +43,7 @@ typedef struct {
 
 typedef struct _authenticator {
     int index;
-    int flags;
+    helper_flags flags;
     int fd;
     char *inbuf;
     unsigned int size;
@@ -100,10 +100,13 @@ authenticateHandleRead(int fd, void *data)
     if (len <= 0) {
 	if (len < 0)
 	    debug(50, 1) ("authenticateHandleRead: FD %d read: %s\n", fd, xstrerror());
-	debug(29, EBIT_TEST(authenticator->flags, HELPER_CLOSING) ? 5 : 1)
+	debug(29, authenticator->flags.closing ? 5 : 1)
 	    ("FD %d: Connection from Authenticator #%d is closed, disabling\n",
 	    fd, authenticator->index + 1);
-	authenticator->flags = 0;
+	authenticator->flags.alive = 0;
+	authenticator->flags.busy = 0;
+	authenticator->flags.closing = 0;
+	authenticator->flags.shutdown = 0;
 	memFree(MEM_8K_BUF, authenticator->inbuf);
 	authenticator->inbuf = NULL;
 	comm_close(fd);
@@ -143,7 +146,7 @@ authenticateHandleRead(int fd, void *data)
 	    }
 	    authenticateStateFree(r);
 	    authenticator->authenticateState = NULL;
-	    EBIT_CLR(authenticator->flags, HELPER_BUSY);
+	    authenticator->flags.busy = 0;
 	    authenticator->offset = 0;
 	    n = ++AuthenticateStats.replies;
 	    AuthenticateStats.avg_svc_time =
@@ -190,9 +193,9 @@ GetFirstAvailable(void)
     authenticator_t *authenticate = NULL;
     for (k = 0; k < NAuthenticators; k++) {
 	authenticate = *(authenticate_child_table + k);
-	if (EBIT_TEST(authenticate->flags, HELPER_BUSY))
+	if (authenticate->flags.busy)
 	    continue;
-	if (!EBIT_TEST(authenticate->flags, HELPER_ALIVE))
+	if (!authenticate->flags.alive)
 	    continue;
 	return authenticate;
     }
@@ -217,7 +220,7 @@ authenticateDispatch(authenticator_t * authenticate, authenticateStateData * r)
 	authenticateStateFree(r);
 	return;
     }
-    EBIT_SET(authenticate->flags, HELPER_BUSY);
+    authenticate->flags.busy = 1;
     authenticate->authenticateState = r;
     authenticate->dispatch_time = current_time;
     buf = memAllocate(MEM_8K_BUF);
@@ -331,9 +334,9 @@ authenticateOpenServers(void)
 	    &authenticatesocket);
 	if (x < 0) {
 	    debug(29, 1) ("WARNING: Cannot run '%s' process.\n", prg);
-	    EBIT_CLR(authenticate_child_table[k]->flags, HELPER_ALIVE);
+	    authenticate_child_table[k]->flags.alive = 0;
 	} else {
-	    EBIT_SET(authenticate_child_table[k]->flags, HELPER_ALIVE);
+	    authenticate_child_table[k]->flags.alive = 1;
 	    authenticate_child_table[k]->index = k;
 	    authenticate_child_table[k]->fd = authenticatesocket;
 	    authenticate_child_table[k]->inbuf = memAllocate(MEM_8K_BUF);
@@ -380,19 +383,19 @@ authenticateShutdownServers(void *unused)
     }
     for (k = 0; k < NAuthenticators; k++) {
 	authenticate = *(authenticate_child_table + k);
-	if (!EBIT_TEST(authenticate->flags, HELPER_ALIVE))
+	if (!authenticate->flags.alive)
 	    continue;
-	if (EBIT_TEST(authenticate->flags, HELPER_CLOSING))
+	if (authenticate->flags.closing)
 	    continue;
-	if (EBIT_TEST(authenticate->flags, HELPER_BUSY)) {
+	if (authenticate->flags.busy) {
 	    na++;
 	    continue;
 	}
 	debug(29, 3) ("authenticateShutdownServers: closing authenticator #%d, FD %d\n",
 	    authenticate->index + 1, authenticate->fd);
 	comm_close(authenticate->fd);
-	EBIT_SET(authenticate->flags, HELPER_CLOSING);
-	EBIT_SET(authenticate->flags, HELPER_BUSY);
+	authenticate->flags.closing = 1;
+	authenticate->flags.busy = 1;
     }
     if (na)
 	eventAdd("authenticateShutdownServers", authenticateShutdownServers, NULL, 1.0, 1);

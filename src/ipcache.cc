@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.200 1998/09/04 23:04:54 wessels Exp $
+ * $Id: ipcache.cc,v 1.201 1998/09/14 21:58:50 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -409,10 +409,13 @@ ipcache_dnsHandleRead(int fd, void *data)
 		0);
 	    return;
 	}
-	debug(14, EBIT_TEST(dnsData->flags, HELPER_CLOSING) ? 5 : 1)
+	debug(14, dnsData->flags.closing ? 5 : 1)
 	    ("FD %d: Connection from DNSSERVER #%d is closed, disabling\n",
 	    fd, dnsData->id);
-	dnsData->flags = 0;
+	dnsData->flags.alive = 0;
+	dnsData->flags.busy = 0;
+	dnsData->flags.closing = 0;
+	dnsData->flags.shutdown = 0;
 	commSetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
 	comm_close(fd);
 	return;
@@ -450,8 +453,8 @@ ipcache_dnsHandleRead(int fd, void *data)
     }
     if (dnsData->offset == 0) {
 	dnsData->data = NULL;
-	EBIT_CLR(dnsData->flags, HELPER_BUSY);
-	if (EBIT_TEST(dnsData->flags, HELPER_SHUTDOWN))
+	dnsData->flags.busy = 0;
+	if (dnsData->flags.shutdown)
 	    dnsShutdownServer(dnsData);
 	cbdataUnlock(dnsData);
     }
@@ -545,7 +548,7 @@ static void
 ipcache_dnsDispatch(dnsserver_t * dns, ipcache_entry * i)
 {
     char *buf = NULL;
-    assert(EBIT_TEST(dns->flags, HELPER_ALIVE));
+    assert(dns->flags.alive);
     if (!ipcacheHasPending(i)) {
 	debug(14, 3) ("Skipping lookup of '%s' because client(s) disappeared.\n",
 	    i->name);
@@ -556,7 +559,7 @@ ipcache_dnsDispatch(dnsserver_t * dns, ipcache_entry * i)
     assert(i->status == IP_PENDING);
     buf = xcalloc(1, 256);
     snprintf(buf, 256, "%s\n", i->name);
-    EBIT_SET(dns->flags, HELPER_BUSY);
+    dns->flags.busy = 1;
     dns->data = i;
     i->status = IP_DISPATCHED;
     cbdataLock(dns);
