@@ -64,6 +64,8 @@ Changes to squid-2.5 ():
 	- Login and password send to Basic auth helpers is now URL escaped
 	  to allow for spaces and other "odd" characters in logins and
 	  passwords
+        - Responses with Vary: in the header are now cached by squid.
+	  (Henrik Nordstrom).
 
 Changes to Squid-2.4.STABLE7 (July 2, 2002):
 
