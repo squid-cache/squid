@@ -12,6 +12,8 @@ static void
 icpLogIcp(struct in_addr caddr, log_type logcode, int len, const char *url, int delay)
 {
     AccessLogEntry al;
+    if (LOG_TAG_NONE == logcode)
+	return;
     clientdbUpdate(caddr, logcode, PROTO_ICP, len);
     Counter.icp.pkts_sent++;
     if (logcode == LOG_UDP_HIT)
