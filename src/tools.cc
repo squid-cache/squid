@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.248 2005/01/03 16:08:26 robertc Exp $
+ * $Id: tools.cc,v 1.249 2005/02/06 01:03:58 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -409,7 +409,10 @@ sigusr2_handle(int sig)
 
 #endif
 #if !HAVE_SIGACTION
-    signal(sig, sigusr2_handle);	/* reinstall */
+    if (signal(sig, sigusr2_handle) == SIG_ERR)
+
+        ;	/* reinstall */
+    debug(50, 0) ("signal: sig=%d func=%p: %s\n", sig, func, xstrerror());
 
 #endif
 }
@@ -923,7 +926,8 @@ squid_signal(int sig, SIGHDLR * func, int flags)
 
 #else
 
-    signal(sig, func);
+    if (signal(sig, func) == SIG_ERR)
+        debug(50, 0) ("signal: sig=%d func=%p: %s\n", sig, func, xstrerror());
 
 #endif
 }
