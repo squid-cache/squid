@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.26 1998/07/21 03:16:07 wessels Exp $
+ * $Id: refresh.cc,v 1.27 1998/07/21 17:26:40 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -58,7 +58,7 @@ struct {
 #define REFRESH_DEFAULT_PCT	0.20
 #define REFRESH_DEFAULT_MAX	(time_t)259200
 
-static const refresh_t * refreshLimits(const char *);
+static const refresh_t *refreshLimits(const char *);
 static const refresh_t *refreshUncompiledPattern(const char *);
 static OBJH refreshStats;
 

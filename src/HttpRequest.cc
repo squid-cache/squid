@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.12 1998/07/20 19:26:49 wessels Exp $
+ * $Id: HttpRequest.cc,v 1.13 1998/07/21 17:26:16 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -105,7 +105,7 @@ httpRequestSwapOut(const request_t * req, StoreEntry * e)
 
 /* packs request-line and headers, appends <crlf> terminator */
 void
-httpRequestPack(const request_t * req, Packer *p)
+httpRequestPack(const request_t * req, Packer * p)
 {
     assert(req && p);
     /* pack request-line */

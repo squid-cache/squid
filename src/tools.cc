@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.162 1998/07/20 17:20:18 wessels Exp $
+ * $Id: tools.cc,v 1.163 1998/07/21 17:26:46 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -904,7 +904,7 @@ debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm)
     assert(label && obj && pm);
     memBufDefInit(&mb);
     packerToMemInit(&p, &mb);
-    (*pm)(obj, &p);
+    (*pm) (obj, &p);
     debug(section, level) ("%s%s", label, mb.buf);
     packerClean(&p);
     memBufClean(&mb);

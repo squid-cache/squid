@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.71 1998/07/20 22:50:38 wessels Exp $
+ * $Id: mime.cc,v 1.72 1998/07/21 17:26:35 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -115,7 +115,7 @@ typedef struct _mime_entry {
     char *content_type;
     char *content_encoding;
     char transfer_mode;
-    unsigned int view_option:1,download_option:1;
+    unsigned int view_option:1, download_option:1;
     struct _mime_entry *next;
 } mimeEntry;
 
@@ -295,7 +295,7 @@ mimeGetEntry(const char *fn, int skip_encodings)
     mimeEntry *m;
     char *t;
     char *name = xstrdup(fn);
-try_again:
+  try_again:
     for (m = MimeTable; m; m = m->next) {
 	if (regexec(&m->compiled_pattern, name, 0, 0, 0) == 0)
 	    break;
@@ -307,7 +307,7 @@ try_again:
 	    goto try_again;
 	}
 	/* What? A encoding without a extension? */
-	m=NULL;
+	m = NULL;
     }
     xfree(name);
     return m;
@@ -432,14 +432,14 @@ mimeInit(char *filename)
 	    debug(25, 1) ("mimeInit: parse error: '%s'\n", buf);
 	    continue;
 	}
-	download_option=0;
-	view_option=0;
+	download_option = 0;
+	view_option = 0;
 	while ((option = strtok(NULL, w_space)) != NULL) {
-	    if (!strcmp(option,"+download"))
+	    if (!strcmp(option, "+download"))
 		download_option = 1;
-	    else if (!strcmp(option,"+view"))
+	    else if (!strcmp(option, "+view"))
 		view_option = 1;
-	    else 
+	    else
 		debug(25, 1) ("mimeInit: unknown option: '%s' (%s)\n", buf, option);
 	}
 	if (regcomp(&re, pattern, re_flags) != 0) {

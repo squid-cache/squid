@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.43 1998/07/20 22:40:46 wessels Exp $
+ * $Id: asn.cc,v 1.44 1998/07/21 17:26:20 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -35,7 +35,7 @@
 /* BEGIN of definitions for radix tree entries */
 
 /* int in memory with length */
-typedef u_char m_int[1 + sizeof(unsigned int)];	
+typedef u_char m_int[1 + sizeof(unsigned int)];
 #define store_m_int(i, m) \
     (i = htonl(i), m[0] = sizeof(m_int), xmemcpy(m+1, &i, sizeof(unsigned int)))
 #define get_m_int(i, m) \

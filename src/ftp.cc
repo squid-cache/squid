@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.239 1998/07/20 22:50:37 wessels Exp $
+ * $Id: ftp.cc,v 1.240 1998/07/21 17:26:29 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -575,7 +575,7 @@ ftpHtmlifyListEntry(char *line, FtpStateData * ftpState)
     LOCAL_ARRAY(char, html, 8192);
     size_t width = Config.Ftp.list_width;
     ftpListParts *parts;
-    *icon=*href=*text=*size=*chdir=*view=*download=*link=*html='\0';
+    *icon = *href = *text = *size = *chdir = *view = *download = *link = *html = '\0';
     if ((int) strlen(line) > 1024) {
 	snprintf(html, 8192, "%s\n", line);
 	return html;
@@ -610,7 +610,7 @@ ftpHtmlifyListEntry(char *line, FtpStateData * ftpState)
 	    strcpy(text, "Home Directory");
 	}
 	snprintf(html, 8192, "<A HREF=\"%s\">%s</A> <A HREF=\"%s\">%s</A> %s\n",
-		href, icon, href, text, link);
+	    href, icon, href, text, link);
 	return html;
     }
     if ((parts = ftpListParseParts(line, ftpState->flags)) == NULL) {
@@ -636,7 +636,7 @@ ftpHtmlifyListEntry(char *line, FtpStateData * ftpState)
 	}
     }
     /* {icon} {text} . . . {date}{size}{chdir}{view}{download}{link}\n  */
-    xstrncpy(href,rfc1738_escape(parts->name),2048);
+    xstrncpy(href, rfc1738_escape(parts->name), 2048);
     xstrncpy(text, parts->showname, 2048);
     switch (parts->type) {
     case 'd':
@@ -660,7 +660,7 @@ ftpHtmlifyListEntry(char *line, FtpStateData * ftpState)
 	    mimeGetIconURL(parts->name),
 	    "[UNKNOWN]");
 	snprintf(chdir, 2048, " <A HREF=\"%s/;type=d\"><IMG BORDER=0 SRC=\"%s\" "
-				"ALT=\"[DIR]\"></A>",
+	    "ALT=\"[DIR]\"></A>",
 	    rfc1738_escape(parts->name),
 	    mimeGetIconURL("internal-dir"));
 	break;
@@ -675,25 +675,25 @@ ftpHtmlifyListEntry(char *line, FtpStateData * ftpState)
     if (parts->type != 'd') {
 	if (mimeGetViewOption(parts->name)) {
 	    snprintf(view, 2048, " <A HREF=\"%s;type=a\"><IMG BORDER=0 SRC=\"%s\" "
-				    "ALT=\"[VIEW]\"></A>",
+		"ALT=\"[VIEW]\"></A>",
 		href, mimeGetIconURL("internal-view"));
 	}
 	if (mimeGetDownloadOption(parts->name)) {
 	    snprintf(download, 2048, " <A HREF=\"%s;type=i\"><IMG BORDER=0 SRC=\"%s\" "
-				    "ALT=\"[DOWNLOAD]\"></A>",
+		"ALT=\"[DOWNLOAD]\"></A>",
 		href, mimeGetIconURL("internal-download"));
 	}
     }
     /* <A HREF="{href}">{icon}</A> <A HREF="{href}">{text}</A> . . . {date}{size}{chdir}{view}{download}{link}\n  */
     if (parts->type != '\0') {
 	snprintf(html, 8192, "<A HREF=\"%s\">%s</A> <A HREF=\"%s\">%s</A>%s "
-	    			"%s%8s%s%s%s%s\n",
+	    "%s%8s%s%s%s%s\n",
 	    href, icon, href, text, dots_fill(strlen(text)),
 	    parts->date, size, chdir, view, download, link);
     } else {
 	/* Plain listing. {icon} {text} ... {chdir}{view}{download} */
 	snprintf(html, 8192, "<A HREF=\"%s\">%s</A> <A HREF=\"%s\">%s</A>%s "
-	    			"%s%s%s%s\n",
+	    "%s%s%s%s\n",
 	    href, icon, href, text, dots_fill(strlen(text)),
 	    chdir, view, download, link);
     }
@@ -2079,10 +2079,10 @@ ftpFail(FtpStateData * ftpState)
     ErrorState *err;
     debug(9, 3) ("ftpFail\n");
     /* Try the / hack to support "Netscape" FTP URL's for retreiving files */
-    if (!ftpState->flags.isdir &&			/* Not a directory */
-	!ftpState->flags.try_slash_hack &&		/* Not in slash hack */
+    if (!ftpState->flags.isdir &&	/* Not a directory */
+	!ftpState->flags.try_slash_hack &&	/* Not in slash hack */
 	ftpState->mdtm <= 0 && ftpState->size < 0 &&	/* Not known as a file */
-	!strNCaseCmp(ftpState->request->urlpath, "/%2f", 4)) { /* No slash encoded */
+	!strNCaseCmp(ftpState->request->urlpath, "/%2f", 4)) {	/* No slash encoded */
 	switch (ftpState->state) {
 	case SENT_CWD:
 	case SENT_RETR:

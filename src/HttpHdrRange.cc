@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.11 1998/07/20 17:19:04 wessels Exp $
+ * $Id: HttpHdrRange.cc,v 1.12 1998/07/21 17:26:14 wessels Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -148,7 +148,7 @@ static int
 httpHdrRangeSpecCanonize(HttpHdrRangeSpec * spec, size_t clen)
 {
     debug(64, 5) ("httpHdrRangeSpecCanonize: have: [%d, %d) len: %d\n",
-	spec->offset, spec->offset+spec->length, spec->length);
+	spec->offset, spec->offset + spec->length, spec->length);
     if (!known_spec(spec->offset))	/* suffix */
 	spec->offset = size_diff(clen, spec->length);
     else if (!known_spec(spec->length))		/* trailer */
@@ -159,7 +159,7 @@ httpHdrRangeSpecCanonize(HttpHdrRangeSpec * spec, size_t clen)
     spec->length = size_min(size_diff(clen, spec->offset), spec->length);
     /* check range validity */
     debug(64, 5) ("httpHdrRangeSpecCanonize: done: [%d, %d) len: %d\n",
-	spec->offset, spec->offset+spec->length, spec->length);
+	spec->offset, spec->offset + spec->length, spec->length);
     return spec->length > 0;
 }
 
@@ -169,20 +169,20 @@ static int
 httpHdrRangeSpecMergeWith(HttpHdrRangeSpec * recep, const HttpHdrRangeSpec * donor)
 {
     int merged = 0;
-    size_t rhs = recep->offset + recep->length; /* no -1 ! */
-    const size_t donor_rhs = donor->offset + donor->length; /* no -1 ! */
+    size_t rhs = recep->offset + recep->length;		/* no -1 ! */
+    const size_t donor_rhs = donor->offset + donor->length;	/* no -1 ! */
     assert(known_spec(recep->offset));
     assert(known_spec(donor->offset));
     assert(recep->length > 0);
     assert(donor->length > 0);
     /* do we have a left hand side overlap? */
     if (donor->offset < recep->offset && recep->offset <= donor_rhs) {
-	recep->offset = donor->offset; /* decrease left offset */
+	recep->offset = donor->offset;	/* decrease left offset */
 	merged = 1;
     }
     /* do we have a right hand side overlap? */
     if (donor->offset <= rhs && rhs < donor_rhs) {
-	rhs = donor_rhs; /* increase right offset */
+	rhs = donor_rhs;	/* increase right offset */
 	merged = 1;
     }
     /* adjust length if offsets have been changed */
@@ -330,13 +330,13 @@ httpHdrRangeCanonize(HttpHdrRange * range, size_t clen)
 		/* merged with current so get rid of the prev one */
 		assert(prev_spec == stackPop(&range->specs));
 		httpHdrRangeSpecDestroy(prev_spec);
-		continue; /* re-iterate */
+		continue;	/* re-iterate */
 	    }
 	}
 	stackPush(&range->specs, spec);
-	i++; /* progress */
+	i++;			/* progress */
     }
-    debug(64, 3) ("httpHdrRangeCanonize: merged %d specs\n", 
+    debug(64, 3) ("httpHdrRangeCanonize: merged %d specs\n",
 	goods.count - range->specs.count);
     stackClean(&goods);
     debug(64, 3) ("httpHdrRangeCanonize: finished with %d specs\n",
@@ -346,7 +346,7 @@ httpHdrRangeCanonize(HttpHdrRange * range, size_t clen)
 
 /* searches for next range, returns true if found */
 HttpHdrRangeSpec *
-httpHdrRangeGetSpec(const HttpHdrRange * range, HttpHdrRangePos *pos)
+httpHdrRangeGetSpec(const HttpHdrRange * range, HttpHdrRangePos * pos)
 {
     assert(range);
     assert(pos && *pos >= -1 && *pos < range->specs.count);

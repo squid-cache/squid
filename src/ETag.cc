@@ -1,6 +1,6 @@
 
 /*
- * $Id: ETag.cc,v 1.2 1998/07/20 17:19:00 wessels Exp $
+ * $Id: ETag.cc,v 1.3 1998/07/21 17:26:11 wessels Exp $
  *
  * DEBUG: section 7?    HTTP ETag
  * AUTHOR: Alex Rousskov
@@ -39,7 +39,7 @@
 /* parses a string as weak or strong entity-tag; returns true on success */
 /* note: we do not duplicate "str"! */
 int
-etagParseInit(ETag *etag, const char *str)
+etagParseInit(ETag * etag, const char *str)
 {
     int len;
     assert(etag && str);
@@ -49,16 +49,16 @@ etagParseInit(ETag *etag, const char *str)
 	str += 2;
     /* check format (quoted-string) */
     len = strlen(str);
-    if (len >= 2 && str[0] == '"' && str[len-1] == '"')
+    if (len >= 2 && str[0] == '"' && str[len - 1] == '"')
 	etag->str = str;
     return etag->str != NULL;
 }
 
 /* returns true if etags are equal */
 int
-etagIsEqual(const ETag *tag1, const ETag *tag2)
+etagIsEqual(const ETag * tag1, const ETag * tag2)
 {
     assert(tag1 && tag2);
-    assert(!tag1->weak && !tag2->weak); /* weak comparison not implemented yet */
+    assert(!tag1->weak && !tag2->weak);		/* weak comparison not implemented yet */
     return !strcmp(tag1->str, tag2->str);
 }

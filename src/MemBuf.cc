@@ -1,5 +1,5 @@
 /*
- * $Id: MemBuf.cc,v 1.16 1998/07/20 17:19:10 wessels Exp $
+ * $Id: MemBuf.cc,v 1.17 1998/07/21 17:26:17 wessels Exp $
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov
@@ -171,8 +171,8 @@ memBufIsNull(MemBuf * mb)
 {
     assert(mb);
     if (!mb->buf && !mb->max_capacity && !mb->capacity && !mb->size)
-	return 1; /* null, not initialized */
-    assert(mb->buf && mb->max_capacity && mb->capacity); /* paranoid */
+	return 1;		/* null, not initialized */
+    assert(mb->buf && mb->max_capacity && mb->capacity);	/* paranoid */
     return 0;
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.71 1998/07/20 17:19:59 wessels Exp $
+ * $Id: peer_select.cc,v 1.72 1998/07/21 17:26:38 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -87,8 +87,8 @@ peerSelectStateFree(ps_state * psstate)
     requestUnlink(psstate->request);
     psstate->request = NULL;
     if (psstate->entry) {
-        storeUnlockObject(psstate->entry);
-        psstate->entry = NULL;
+	storeUnlockObject(psstate->entry);
+	psstate->entry = NULL;
     }
     cbdataFree(psstate);
 }
@@ -158,7 +158,7 @@ peerSelect(request_t * request,
     request->hier.peer_select_start = current_time;
 #endif
     if (psstate->entry)
-        storeLockObject(psstate->entry);
+	storeLockObject(psstate->entry);
     cbdataLock(callback_data);
     peerSelectFoo(psstate);
 }
@@ -305,9 +305,9 @@ peerSelectFoo(ps_state * psstate)
 #endif
 #if USE_CARP
     } else if ((p = carpSelectParent(request))) {
-        hierarchyNote(&request->hier, CARP, &psstate->icp, p->host);
-        peerSelectCallback(psstate, p);
-        return;
+	hierarchyNote(&request->hier, CARP, &psstate->icp, p->host);
+	peerSelectCallback(psstate, p);
+	return;
 #endif
     } else if ((p = netdbClosestParent(request))) {
 	request->hier.alg = PEER_SA_NETDB;
@@ -386,7 +386,7 @@ peerPingTimeout(void *data)
     if (!cbdataValid(psstate->callback_data)) {
 	/* request aborted */
 	cbdataUnlock(psstate->callback_data);
-        peerSelectStateFree(psstate);
+	peerSelectStateFree(psstate);
 	return;
     }
     if (entry)

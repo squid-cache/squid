@@ -2,7 +2,7 @@
 
 
 /*
- * $Id: HttpBody.cc,v 1.13 1998/07/20 17:19:01 wessels Exp $
+ * $Id: HttpBody.cc,v 1.14 1998/07/21 17:26:12 wessels Exp $
  *
  * DEBUG: section 56    HTTP Message Body
  * AUTHOR: Alex Rousskov
@@ -50,11 +50,11 @@ httpBodyClean(HttpBody * body)
 
 /* set body by absorbing mb */
 void
-httpBodySet(HttpBody * body, MemBuf *mb)
+httpBodySet(HttpBody * body, MemBuf * mb)
 {
     assert(body);
     assert(memBufIsNull(&body->mb));
-    body->mb = *mb; /* absorb */
+    body->mb = *mb;		/* absorb */
 }
 
 void

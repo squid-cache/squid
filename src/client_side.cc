@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.361 1998/07/21 17:22:02 wessels Exp $
+ * $Id: client_side.cc,v 1.362 1998/07/21 17:26:26 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -409,7 +409,7 @@ modifiedSince(StoreEntry * entry, request_t * request)
     debug(33, 3) ("modifiedSince: '%s'\n", storeUrl(entry));
     if (mod_time < 0)
 	mod_time = entry->timestamp;
-    debug(33,3)("modifiedSince: mod_time = %d\n", (int) mod_time);
+    debug(33, 3) ("modifiedSince: mod_time = %d\n", (int) mod_time);
     if (mod_time < 0)
 	return 1;
     /* Find size of the object */
@@ -786,7 +786,7 @@ clientCheckContentLength(request_t * r)
 {
     /* We only require a content-length for "upload" methods */
     if (!pumpMethod(r->method))
-        return 1;
+	return 1;
     if (httpHeaderGetInt(&r->header, HDR_CONTENT_LENGTH) < 0)
 	return 0;
     return 1;
@@ -1165,8 +1165,8 @@ clientCacheHit(void *data, char *buf, ssize_t size)
 	/*
 	 * We hold a stale copy; it needs to be validated
 	 */
-        if (e->lastmod < 0) {
- 	    /*
+	if (e->lastmod < 0) {
+	    /*
 	     * Previous reply didn't have a Last-Modified header,
 	     * we cannot revalidate it.
 	     */

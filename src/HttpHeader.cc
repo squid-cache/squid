@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.50 1998/07/20 20:20:50 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.51 1998/07/21 17:26:15 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -172,7 +172,7 @@ static http_hdr_type ReplyHeadersArr[] =
     HDR_MIME_VERSION, HDR_PUBLIC, HDR_RETRY_AFTER, HDR_SERVER, HDR_SET_COOKIE,
     HDR_VARY,
     HDR_WARNING, HDR_PROXY_CONNECTION, HDR_X_CACHE,
-    HDR_X_CACHE_LOOKUP, 
+    HDR_X_CACHE_LOOKUP,
     HDR_X_REQUEST_URI,
     HDR_X_SQUID_ERROR
 };
@@ -324,7 +324,7 @@ httpHeaderAppend(HttpHeader * dest, const HttpHeader * src)
 
 /* use fresh entries to replace old ones */
 void
-httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask *denied_mask)
+httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask * denied_mask)
 {
     const HttpHeaderEntry *e;
     HttpHeaderPos pos = HttpHeaderInitPos;
@@ -493,7 +493,7 @@ httpHeaderDelById(HttpHeader * hdr, http_hdr_type id)
     debug(55, 8) ("%p del-by-id %d\n", hdr, id);
     assert(hdr);
     assert_eid(id);
-    assert_eid(id != HDR_OTHER); /* does not make sense */
+    assert_eid(id != HDR_OTHER);	/* does not make sense */
     if (!CBIT_TEST(hdr->mask, id))
 	return 0;
     while ((e = httpHeaderGetEntry(hdr, &pos))) {
@@ -639,7 +639,7 @@ httpHeaderPutCc(HttpHeader * hdr, const HttpHdrCc * cc)
 }
 
 void
-httpHeaderPutContRange(HttpHeader * hdr, const HttpHdrContRange *cr)
+httpHeaderPutContRange(HttpHeader * hdr, const HttpHdrContRange * cr)
 {
     MemBuf mb;
     Packer p;
@@ -658,7 +658,7 @@ httpHeaderPutContRange(HttpHeader * hdr, const HttpHdrContRange *cr)
 }
 
 void
-httpHeaderPutRange(HttpHeader * hdr, const HttpHdrRange *range)
+httpHeaderPutRange(HttpHeader * hdr, const HttpHdrRange * range)
 {
     MemBuf mb;
     Packer p;
@@ -808,9 +808,10 @@ httpHeaderGetAuth(const HttpHeader * hdr, http_hdr_type id, const char *authSche
 ETag
 httpHeaderGetETag(const HttpHeader * hdr, http_hdr_type id)
 {
-    ETag etag = { NULL, -1 };
+    ETag etag =
+    {NULL, -1};
     HttpHeaderEntry *e;
-    assert(Headers[id].type == ftETag);  /* must be of an appropriate type */
+    assert(Headers[id].type == ftETag);		/* must be of an appropriate type */
     if ((e = httpHeaderFindEntry(hdr, id)))
 	etagParseInit(&etag, strBuf(e->value));
     return etag;
@@ -821,7 +822,7 @@ httpHeaderGetTimeOrTag(const HttpHeader * hdr, http_hdr_type id)
 {
     TimeOrTag tot;
     HttpHeaderEntry *e;
-    assert(Headers[id].type == ftDate_1123_or_ETag);  /* must be of an appropriate type */
+    assert(Headers[id].type == ftDate_1123_or_ETag);	/* must be of an appropriate type */
     memset(&tot, 0, sizeof(tot));
     if ((e = httpHeaderFindEntry(hdr, id))) {
 	const char *str = strBuf(e->value);
@@ -836,7 +837,7 @@ httpHeaderGetTimeOrTag(const HttpHeader * hdr, http_hdr_type id)
 	    tot.tag.str = NULL;
 	}
     }
-    assert(tot.time < 0 || !tot.tag.str); /* paranoid */
+    assert(tot.time < 0 || !tot.tag.str);	/* paranoid */
     return tot;
 }
 
@@ -951,7 +952,7 @@ httpHeaderNoteParsedEntry(http_hdr_type id, String context, int error)
  */
 
 /* tmp variable used to pass stat info to dumpers */
-extern const HttpHeaderStat *dump_stat; /* argh! */
+extern const HttpHeaderStat *dump_stat;		/* argh! */
 const HttpHeaderStat *dump_stat = NULL;
 
 static void

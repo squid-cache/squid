@@ -247,8 +247,8 @@ extern int httpAnonHdrDenied(http_hdr_type hdr_id);
 extern void httpBuildRequestHeader(request_t *, request_t *, StoreEntry *, HttpHeader *, int, int);
 
 /* ETag */
-extern int etagParseInit(ETag *etag, const char *str);
-extern int etagIsEqual(const ETag *tag1, const ETag *tag2);
+extern int etagParseInit(ETag * etag, const char *str);
+extern int etagIsEqual(const ETag * tag1, const ETag * tag2);
 
 /* Http Status Line */
 /* init/clean */
@@ -273,7 +273,7 @@ extern void httpBodyClean(HttpBody * body);
 /* get body ptr (always use this) */
 extern const char *httpBodyPtr(const HttpBody * body);
 /* set body, does not clone mb so you should not reuse it */
-extern void httpBodySet(HttpBody * body, MemBuf *mb);
+extern void httpBodySet(HttpBody * body, MemBuf * mb);
 
 /* pack */
 extern void httpBodyPackInto(const HttpBody * body, Packer * p);
@@ -360,8 +360,8 @@ extern void httpHeaderPutTime(HttpHeader * hdr, http_hdr_type type, time_t time)
 extern void httpHeaderPutStr(HttpHeader * hdr, http_hdr_type type, const char *str);
 extern void httpHeaderPutAuth(HttpHeader * hdr, const char *authScheme, const char *realm);
 extern void httpHeaderPutCc(HttpHeader * hdr, const HttpHdrCc * cc);
-extern void httpHeaderPutContRange(HttpHeader * hdr, const HttpHdrContRange *cr);
-extern void httpHeaderPutRange(HttpHeader * hdr, const HttpHdrRange *range);
+extern void httpHeaderPutContRange(HttpHeader * hdr, const HttpHdrContRange * cr);
+extern void httpHeaderPutRange(HttpHeader * hdr, const HttpHdrRange * range);
 extern void httpHeaderPutExt(HttpHeader * hdr, const char *name, const char *value);
 extern int httpHeaderGetInt(const HttpHeader * hdr, http_hdr_type id);
 extern time_t httpHeaderGetTime(const HttpHeader * hdr, http_hdr_type id);
@@ -430,7 +430,7 @@ extern request_t *requestLink(request_t *);
 extern void requestUnlink(request_t *);
 extern int httpRequestParseHeader(request_t * req, const char *parse_start);
 extern void httpRequestSwapOut(const request_t * req, StoreEntry * e);
-extern void httpRequestPack(const request_t * req, Packer *p);
+extern void httpRequestPack(const request_t * req, Packer * p);
 extern int httpRequestPrefixLen(const request_t * req);
 extern int httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConnection);
 
@@ -1019,7 +1019,7 @@ extern char *internalRemoteUri(const char *, u_short, const char *, const char *
 
 #if USE_CARP
 extern void carpInit(void);
-extern peer * carpSelectParent(request_t *);
+extern peer *carpSelectParent(request_t *);
 #endif
 
 /* packs, then prints an object using debug() */

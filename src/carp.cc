@@ -1,5 +1,5 @@
 /*
- * $Id: carp.cc,v 1.2 1998/07/20 17:19:24 wessels Exp $
+ * $Id: carp.cc,v 1.3 1998/07/21 17:26:23 wessels Exp $
  *
  * DEBUG: section 44    Cache Array Routing Protocol
  * AUTHOR: Eric Stern
@@ -26,7 +26,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *      
- */     
+ */
 
 #include "squid.h"
 
@@ -47,7 +47,7 @@ carpInit(void)
 	a += p->carp.load_factor;
 	K++;
     }
-    if (a == 0.0) 
+    if (a == 0.0)
 	/* CARP load factors not configured */
 	return;
     /*
@@ -88,21 +88,21 @@ carpSelectParent(request_t * request)
     /* select peer */
     for (tp = Config.peers; tp; tp = tp->next) {
 	if (p->carp.load_factor == 0.0)
-		continue;
+	    continue;
 	assert(p->type == PEER_PARENT);
 	combined_hash = (url_hash ^ tp->carp.hash);
 	combined_hash += combined_hash * 0x62531965;
 	combined_hash = combined_hash << 21;
 	combined_hash = combined_hash * tp->carp.load_multiplier;
 	debug(44, 3) ("carpSelectParent: %s combined_hash %d\n",
-		tp->host, combined_hash);
+	    tp->host, combined_hash);
 	if ((combined_hash > high_score) && neighborUp(tp)) {
 	    p = tp;
 	    high_score = combined_hash;
 	}
     }
     if (p)
-        debug(44, 3) ("carpSelectParent: selected CARP %s\n", p->host);
+	debug(44, 3) ("carpSelectParent: selected CARP %s\n", p->host);
     return p;
 }
 #endif
