@@ -1,3 +1,6 @@
+Changes to squid-1.2.beta16 (Mar 4, 1998):
+
+	- Added Portugese erorr messages from Pedro Lineu Orso
 	- Added a simple but very effective hack to cachemgr.cgi that tries to
 	  interpret lines with '\t' as table records and formats them
 	  accordingly. With a few exceptions (see source code), first line
@@ -6,35 +9,36 @@
 	- Added "mem_pools_limit" configuration option. Semantics of
 	  "mem_pools" option has also changed a bit to reflect new memory
 	  management policy.
-	- Reorganized memory pools. Squid now supports a global pool limit
-	  instead of individual pool limits. Per-pool limits can be
+	- Reorganized memory pools. Squid now supports a global pool
+	  limit instead of individual pool limits. Per-pool limits can be
 	  implemented on top of the current scheme if needed, but it is
-	  probably hard to guess their values.  Squid distributes pool memory
-	  among "frequently allocated" objects.  There is a configurable limit
-	  on the total amount of "idle" memory to be kept in reserve. All
-	  requests that exceed that amount are satisfied using malloc library.
-	  Support for variable size objects (mostly strings) will be enabled
-	  soon.
-	- memAllocate() has now only one parameter. Objects are always reset
-	  with 0s. (We actually never used that parameter before; it was
-	  always set to "clear").
-	- Added Squid "signature" to all ERR_ pages. The signature is hard-
-	  -coded and is added on-the-fly. The signature may use %-escapes.
-	  Added interface to add more hard-coded responses if needed (see
-	  errorpage.c::error_hard_text).
-	- Both default and configured directories are searched for ERR_ pages
-	  now. Configured directory is, of course, searched first. This allows
-	  you to customize a subset of ERR_ pages (in a separate directory)
-	  without danger of getting other copies out of sync.
-	- Security controls for the SNMP agent added. Besides communities
-          (like password) and views (part of tree accessible), the snmp_acl
-	  config option can be used to do acl based access checks per
-	  community.
-	- SNMP agent was heavily re-written, based on cmu-snmpV1.8. 
-	  You can now walk through the whole mib tree. Several 
-	  new variables added under cacheProtoAggregateStats
+	  probably hard to guess their values.  Squid distributes pool
+	  memory among "frequently allocated" objects.  There is a
+	  configurable limit on the total amount of "idle" memory to be
+	  kept in reserve. All requests that exceed that amount are
+	  satisfied using malloc library.  Support for variable size
+	  objects (mostly strings) will be enabled soon.
+	- memAllocate() has now only one parameter. Objects are always
+	  reset with 0s. (We actually never used that parameter before;
+	  it was always set to "clear").
+	- Added Squid "signature" to all ERR_ pages. The signature is
+	  hardcoded and is added on-the-fly. The signature may use
+	  %-escapes.  Added interface to add more hard-coded responses if
+	  needed (see errorpage.c::error_hard_text).
+	- Both default and configured directories are searched for ERR_
+	  pages now. Configured directory is, of course, searched first.
+	  This allows you to customize a subset of ERR_ pages (in a
+	  separate directory) without danger of getting other copies out
+	  of sync.
+	- Security controls for the SNMP agent added. Besides
+	  communities (like password) and views (part of tree
+	  accessible), the snmp_acl config option can be used to do acl
+	  based access checks per community.
+	- SNMP agent was heavily re-written, based on cmu-snmpV1.8. You
+	  can now walk through the whole mib tree. Several new variables
+	  added under cacheProtoAggregateStats
 	- Added rudimental statistics for HTTP headers.
-	- Adjusted StatLogHist to a more "generic"/flexible StatHist.
+	- Adjusted StatLogHist to a more generic/flexible StatHist.
 	  Moved StatHist implementation into a separate file.
 	- Added FTP support for PORT if PASV fails, also try the
 	  default FTP data port (Henrik Nordstrom).
@@ -60,7 +64,6 @@
 	  as argument.  Debugging equal-to or less-than the argument
 	  will be written to stderr.
 	- Removed unused urlClean() function from url.c.	
-
 	- Fixed a bug that allowed '?' parts of urls to be recorded in
 	  store.log.  Logged urls are now "clean".
 	- Cache Manager got new Web interface (cachemgr.cgi). New .cgi
