@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.80 1997/10/21 03:33:41 wessels Exp $
+ * $Id: errorpage.cc,v 1.81 1997/10/21 16:06:26 kostas Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -145,10 +145,14 @@ errorConvert(char token, ErrorState * err)
 	snprintf(buf, CVT_BUF_SZ, "%s", getMyHostname());
 	p = buf;
 	break;
+    case 't':
+	xstrncpy(buf, 128 , mkhttpdlogtime(squid_curtime));
+	p=buf;
+	break;
 /*
- * e - errno                                  x
+ * e - errno                                    x
  * E - strerror()                               x
- * t - local time
+ * t - local time				x
  * T - UTC
  * c - Squid error code
  * I - server IP address
