@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.568 2003/06/23 16:49:13 wessels Exp $
+ * $Id: store.cc,v 1.569 2003/06/24 12:42:27 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -763,12 +763,16 @@ storeExpireNow(StoreEntry * e)
 void
 storeWriteComplete (void *data, StoreIOBuffer wroteBuffer)
 {
+    PROF_start(storeWriteComplete);
     StoreEntry *e = (StoreEntry *)data;
 
-    if (EBIT_TEST(e->flags, DELAY_SENDING))
+    if (EBIT_TEST(e->flags, DELAY_SENDING)) {
+        PROF_stop(storeWriteComplete);
         return;
+    }
 
     InvokeHandlers(e);
+    PROF_stop(storeWriteComplete);
 }
 
 void
@@ -782,12 +786,16 @@ StoreEntry::write (StoreIOBuffer writeBuffer)
     if (!writeBuffer.length)
         return;
 
+    PROF_start(StoreEntry_write);
+
     debug(20, 5) ("storeWrite: writing %u bytes for '%s'\n",
                   writeBuffer.length, getMD5Text());
 
     storeGetMemSpace(writeBuffer.length);
 
     mem_obj->write (writeBuffer, storeWriteComplete, this);
+
+    PROF_stop(StoreEntry_write);
 }
 
 /* Append incoming data from a primary server to an entry. */
@@ -1095,21 +1103,26 @@ storeAbort(StoreEntry * e)
 static void
 storeGetMemSpace(int size)
 {
+    PROF_start(storeGetMemSpace);
     StoreEntry *e = NULL;
     int released = 0;
     static time_t last_check = 0;
     size_t pages_needed;
     RemovalPurgeWalker *walker;
 
-    if (squid_curtime == last_check)
+    if (squid_curtime == last_check) {
+        PROF_stop(storeGetMemSpace);
         return;
+    }
 
     last_check = squid_curtime;
 
     pages_needed = (size / SM_PAGE_SIZE) + 1;
 
-    if (mem_node::InUseCount() + pages_needed < store_pages_max)
+    if (mem_node::InUseCount() + pages_needed < store_pages_max) {
+        PROF_stop(storeGetMemSpace);
         return;
+    }
 
     debug(20, 2) ("storeGetMemSpace: Starting, need %d pages\n", pages_needed);
 
@@ -1128,6 +1141,7 @@ storeGetMemSpace(int size)
     debug(20, 3) ("storeGetMemSpace stats:\n");
     debug(20, 3) ("  %6d HOT objects\n", hot_obj_count);
     debug(20, 3) ("  %6d were released\n", released);
+    PROF_stop(storeGetMemSpace);
 }
 
 /* The maximum objects to scan for maintain storage space */
