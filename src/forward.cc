@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.39 1998/12/16 06:25:11 wessels Exp $
+ * $Id: forward.cc,v 1.40 1998/12/29 22:51:11 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -344,6 +344,9 @@ fwdReforward(FwdState * fwdState)
     }
     if (fwdState->n_tries > 9)
 	return 0;
+    if (pumpMethod(fwdState->request->method))
+	if (0 == pumpRestart(fwdState->request))
+	    return 0;
     assert(fs);
     fwdState->servers = fs->next;
     fwdServerFree(fs);
