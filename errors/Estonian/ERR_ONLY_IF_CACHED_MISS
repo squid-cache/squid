@@ -26,4 +26,4 @@ direktiiviga. Dokumenti ei leitud vahemälu serverist <em>v&otilde;i</em>ta
 n&otilde;udis uuendamist, mis on aga keelatud <code>only-if-cached</code>
 direktiiviga.
 
-<P>Teie teenusepakkuja aadress on <A HREF="mailto:%w">%w</A>.
+<P>Teie teenusepakkuja aadress on <A HREF="mailto:%w%W">%w</A>.

@@ -31,4 +31,4 @@ request.
 <BR>
 通过网络写入数据时发生了错误，请重新尝试。
 </P>
-<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>
+<P>本缓存服务器管理员：<A HREF="mailto:%w%W">%w</A>

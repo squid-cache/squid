@@ -26,4 +26,4 @@ Squid did not receive any data for this request.
 <BR>
 本缓存服务器从被连接的服务器上没有收到任何数据。
 </P>
-<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>
+<P>本缓存服务器管理员：<A HREF="mailto:%w%W">%w</A>

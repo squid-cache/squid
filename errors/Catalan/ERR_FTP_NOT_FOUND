@@ -20,4 +20,4 @@ i ha rebut aquesta resposta:
 Aquest error pot ser causat per una URL del protocol FTP amb
 un cam&iacute; absolut (que no compleix amb la RFC 1738). Si aquesta
 n'&eacute;s la causa, trobareu el fitxer desitjat a <A HREF="%B">%B</A>.
-<P>L'administrador d'aquesta <i>cache</i> &eacute;s<A HREF="mailto:%w">%w</A>.
+<P>L'administrador d'aquesta <i>cache</i> &eacute;s<A HREF="mailto:%w%W">%w</A>.

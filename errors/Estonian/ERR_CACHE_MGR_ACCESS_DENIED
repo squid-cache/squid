@@ -27,7 +27,7 @@ sellele vahemälu serveri haldajale, kuni te pole l&auml;binud autoriseerimist.
 
 <P> Autoriseerimiseks on teil vaja brauserit mis toetab HTTP/1.1 standardit,
 nagu Netscape versioon 2.0 v&otilde;i uuem, v&otilde;i MS Internet Explorer
-3.0. Palun kontakteeruge <A HREF="mailto:%w">vahemälu serveri administraatoriga</a>,
+3.0. Palun kontakteeruge <A HREF="mailto:%w%W">vahemälu serveri administraatoriga</a>,
 kui teil on probleeme autoriseerimisega v&otilde;i kui te <em>olete</em>
 administraator, lugege Squidi dokumentatsiooni vahemälu serveri haldaja interfeisi kohta
 ja kontrollige vahemälu serveri logi t&auml;psema veakirjelduse saamiseks.</P>

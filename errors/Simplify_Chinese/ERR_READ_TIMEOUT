@@ -32,4 +32,4 @@ or server may be down or congested.  Please retry your request.
 当通过网络读取数据时，超过了等待时限。
 可能是因为网络堵塞或连接的网络服务器已关闭。请重新尝试。
 </P>
-<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>
+<P>本缓存服务器管理员：<A HREF="mailto:%w%W">%w</A>

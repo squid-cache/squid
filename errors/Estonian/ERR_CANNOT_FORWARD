@@ -26,4 +26,4 @@ P&auml;ringut ei &otilde;nnestunud edastada ei originaali serverile ega
 originaali serverile ja
 <LI>K&otilde;ik kirjeldatud vanem vahemälu serverid on hetkel k&auml;ttesaamatud.
 </UL>
-<P>Teie teenusepakkuja aadress on <A HREF="mailto:%w">%w</A>.
+<P>Teie teenusepakkuja aadress on <A HREF="mailto:%w%W">%w</A>.

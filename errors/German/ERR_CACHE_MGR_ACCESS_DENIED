@@ -25,7 +25,7 @@ von diesem Cache zu beziehen, bis Sie sich authentifiziert haben.
 <P>
 Sie ben&ouml;tigen hierzu Netscape Version 2.0 (oder h&ouml;her), Microsoft Internet
 Explorer 3.0 oder einen anderen HTTP/1.1 Browser.
-Bitte kontaktieren Sie den <A HREF="mailto:%w">Cache-Administrator</a>, wenn Sie Probleme haben,
+Bitte kontaktieren Sie den <A HREF="mailto:%w%W">Cache-Administrator</a>, wenn Sie Probleme haben,
 sich zu authentifizieren, oder wenn Sie der Administrator <em>sind</em>,
 lesen Sie die Squid-Dokumentation &uuml;ber das Cache-Manager
 Interface und &uuml;berpr&uuml;fen Sie das Cache-Log f&uuml;r detailiertere

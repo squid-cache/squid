@@ -31,7 +31,7 @@ Cache Manager Access Denied.
 
 <P> You need to use Netscape version 2.0 or greater, or Microsoft Internet
 Explorer 3.0, or an HTTP/1.1 compliant browser for this to work.  Please
-contact the <A HREF="mailto:%w">cache administrator</a> if you have
+contact the <A HREF="mailto:%w%W">cache administrator</a> if you have
 difficulties authenticating yourself or, if you <em>are</em> the
 administrator, read Squid documentation on cache manager interface and check
 cache log for more detailed error messages.
@@ -39,7 +39,7 @@ cache log for more detailed error messages.
 您需要使用 Netscape version 2.0 或最新的版本，或是使用 Microsoft Internet 
 Explorer 3.0，或是一个 HTTP/1.1 相容的浏览器来进行工作。如果您是在身份验证上发
 生问题，请先确定您有权对缓存使用管理器。
-或是与<A HREF="mailto:%w">管理者</a>联系。如果您<em>就是</em>管理者，请详细阅读 Squid 所附文件中与
+或是与<A HREF="mailto:%w%W">管理者</a>联系。如果您<em>就是</em>管理者，请详细阅读 Squid 所附文件中与
 cache manager 有关部份或检查 cache log 以便得到更详尽的细节。
 </P>
-<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>
+<P>本缓存服务器管理员：<A HREF="mailto:%w%W">%w</A>

@@ -28,5 +28,5 @@ Sistem je dao povratnu informaciju:
     Udaljeni raèunar ili mreža nisu operativni. Molimo pokušajte kasnije.
 </PRE>
 </P>
-<P>Vaš cache administrator je <A HREF="mailto:%w">%w</A>.
+<P>Vaš cache administrator je <A HREF="mailto:%w%W">%w</A>.
 

@@ -27,4 +27,4 @@ parent caches.  The most likely cause for this error is that:
     direct connections to origin servers, and
 <LI>All configured parent caches are currently unreachable.
 </UL>
-<P>מנהל השרת הוא <A HREF="mailto:%w">%w</A>. 
+<P>מנהל השרת הוא <A HREF="mailto:%w%W">%w</A>. 

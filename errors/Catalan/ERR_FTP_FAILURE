@@ -15,4 +15,4 @@ La <i>cache</i> ha enviat la comanda FTP:
 i ha rebut aquesta resposta:
 <blockquote><strong><pre>%F</pre></strong></blockquote>
 <blockquote><strong><pre>%g</pre></strong></blockquote>
-<P>L'administrador d'aquesta <i>cache</i> &eacute;s<A HREF="mailto:%w">%w</A>.
+<P>L'administrador d'aquesta <i>cache</i> &eacute;s<A HREF="mailto:%w%W">%w</A>.

@@ -19,4 +19,4 @@ und erhielt die Antwort:
 Plattenplatz. Versuchen Sie es dann erneut.
 </P>
 <P>
-Ihr Cache Administrator ist <A HREF="mailto:%w">%w</A>.
+Ihr Cache Administrator ist <A HREF="mailto:%w%W">%w</A>.

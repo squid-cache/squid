@@ -22,4 +22,4 @@ Reenviament denegat.
 Aquesta <i>cache</i> no reenviar&agrave; la vostra petici&oacute;
 donat que est&agrave; for&ccedil;ant una connexi&oacute; a una <i>cache</i>
 germana. Potser que el client %i sigui una <i>cache</i> mal configurada.
-<P>L'administrador d'aquesta <i>cache</i> &eacute;s<A HREF="mailto:%w">%w</A>.
+<P>L'administrador d'aquesta <i>cache</i> &eacute;s<A HREF="mailto:%w%W">%w</A>.

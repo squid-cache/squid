@@ -27,4 +27,4 @@ Mis t&auml;hendab:
  Vahemälu server ei suutnud lahendada URLis antud hosti nime. Palun kontrollige
  aadressi korrektsust.
 </PRE>
-<P>Teie teenuseVahemälu serve aadress on <A HREF="mailto:%w">%w</A>.
+<P>Teie teenuseVahemälu serve aadress on <A HREF="mailto:%w%W">%w</A>.

@@ -23,5 +23,5 @@ Levetiden for forbindelsen udl&oslash;b
 Proxy'en Squid har afsluttet foresp&oslash;rgslen fordi den
 har overskredet den maksimale levetid for forbindelser (connection timeout).
 Hvis dette er en fejl kontakt 
-<A HREF="mailto:%w">cache administratoren</a>.
+<A HREF="mailto:%w%W">cache administratoren</a>.
 </P>

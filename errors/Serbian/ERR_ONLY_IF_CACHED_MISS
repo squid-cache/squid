@@ -22,4 +22,4 @@ Za vaš zahtev postavljena je <code>only-if-cached</code> proksi direktiva.
 Dokument nije naðen u proksi arhivi, <em>ili</em> se zahteva revalidacija koja
 je zabranjena direktivom <code>only-if-cached</code>.
 
-<P>Vaš cache/proxy administrator je: <A HREF="mailto:%w">%w</A>. 
+<P>Vaš cache/proxy administrator je: <A HREF="mailto:%w%W">%w</A>. 

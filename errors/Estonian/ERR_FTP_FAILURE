@@ -19,4 +19,4 @@ ja sai j&auml;rgneva vastuse
 See olukord v&otilde;ib olla tekkinud, kui FTP URL on antud absoluutse
 teega (mis on vastuolus RFC 1738-ga). Kui see on nii, siis saab faili 
 aadressilt <A HREF="%B">%B</A>.
-<P>Teie teenusepakkuja aadress on <A HREF="mailto:%w">%w</A>.
+<P>Teie teenusepakkuja aadress on <A HREF="mailto:%w%W">%w</A>.

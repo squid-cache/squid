@@ -27,4 +27,4 @@ This means that:
  The cache was not able to resolve the hostname presented in the URL. 
  Check if the address is correct. 
 </PRE>
-<P>Your cache administrator is <A HREF="mailto:%w">%w</A>. 
+<P>Your cache administrator is <A HREF="mailto:%w%W">%w</A>. 

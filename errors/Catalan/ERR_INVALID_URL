@@ -26,4 +26,4 @@ Alguna part de la URL no &eacute;s correcte.  Possibles problemes:
 <LI>La URL cont&eacute; un doble car&agrave;cter d'escapament.
 <LI>Car&agrave;cter no perm&egrave;s en el nom del servidor.
 </UL>
-<P>L'administrador d'aquesta <i>cache</i> &eacute;s<A HREF="mailto:%w">%w</A>.
+<P>L'administrador d'aquesta <i>cache</i> &eacute;s<A HREF="mailto:%w%W">%w</A>.

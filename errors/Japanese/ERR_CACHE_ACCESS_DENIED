@@ -30,7 +30,7 @@
 Netscape Navigator のバージョン 2.0 以降，Microsoft Internet Exploror の
 バージョン 3.0 以降，もしくは HTTP/1.1 準拠の Web ブラウザを使うことによ
 って，認証を行うことができます．もし，あなたがあなた自身の認証を行うこと
-が難しい場合には，<A HREF="mailto:%w">キャッシュ管理者</a>に連絡するか，
+が難しい場合には，<A HREF="mailto:%w%W">キャッシュ管理者</a>に連絡するか，
 あなたのデフォルトのパスワードを
 <A HREF="http://%h/cgi-bin/chpasswd.cgi">変更</a>してください．
 </P>

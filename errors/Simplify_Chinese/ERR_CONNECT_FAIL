@@ -30,4 +30,4 @@ The remote host or network may be down.  Please try the request again.
 <BR>
 您要连结的网络服务器或网络可能发生故障。请稍后再试。
 </P>
-<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>
+<P>本缓存服务器管理员：<A HREF="mailto:%w%W">%w</A>

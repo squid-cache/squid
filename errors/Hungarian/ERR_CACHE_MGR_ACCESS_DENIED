@@ -30,7 +30,7 @@ amíg nem jelentkezik be rendszerünkbe.
 <P>
 Netscape 2.0 (vagy magasabb verziószámú) vagy Microsoft Internet Explorer 3.0 vagy
 egyéb HTTP/1.1 kompatibilis böngészõ segítségével jelentkezhet be rendszerünkbe.
-Kérjük, forduljon a <A HREF="mailto:%w">cache adminisztrátorhoz</a> amennyiben nem 
+Kérjük, forduljon a <A HREF="mailto:%w%W">cache adminisztrátorhoz</a> amennyiben nem 
 sikerül bejelentkeznie vagy ha <em>Ön</em> a cache adminisztrátor, olvassa el alaposan
 a Squid dokumentáció cache vezérlõpulttal kapcsolatos fejezetét és ellenõrizze a cache
 naplóállományát, ha részletesebb hibaüzenetekre van szüksége a probléma felderítéséhez.

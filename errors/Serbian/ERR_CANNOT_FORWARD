@@ -28,4 +28,4 @@ parent caches.  The most likely cause for this error is that:
 direktno pristupi izvornom serveru, 
 <LI>Svi konfigurisani nadreðeni proksi serveri su trenutno nedostupni.
 </UL>
-<P>Vaš cache administrator je <A HREF="mailto:%w">%w</A>. 
+<P>Vaš cache administrator je <A HREF="mailto:%w%W">%w</A>. 

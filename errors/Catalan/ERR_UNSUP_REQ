@@ -22,4 +22,4 @@ M&egrave;tode i protocol no admesos
 La <i>cache</i> no admet tots els tipus de petici&oacute; per a tots
 els protocols. Per exemple, no es pot fer una petici&oacute; tipus POST
 en el protocol Gopher.
-<P>L'administrador d'aquesta <i>cache</i> &eacute;s<A HREF="mailto:%w">%w</A>.
+<P>L'administrador d'aquesta <i>cache</i> &eacute;s<A HREF="mailto:%w%W">%w</A>.

@@ -25,4 +25,4 @@ auf. Bitte versuchen Sie Ihre Anfrage erneut.
 </P>
 
 <P>
-Ihr Cache Administrator ist <A HREF="mailto:%w">%w</A>.
+Ihr Cache Administrator ist <A HREF="mailto:%w%W">%w</A>.

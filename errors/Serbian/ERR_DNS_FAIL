@@ -33,4 +33,4 @@ DNS server je vratio informaciju:
    adresi (URL). Proverite da li je adresa ispravna.
 </PRE>
 </P>
-<P>Vaš cache administrator je <A HREF="mailto:%w">%w</A>.
+<P>Vaš cache administrator je <A HREF="mailto:%w%W">%w</A>.

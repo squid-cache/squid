@@ -26,5 +26,5 @@ van deze cache op te vragen totdat u zich geidentificeerd hebt.
 </P>
 
 <P>
-U dient Netscape 2.0 of recenter, Microsoft Internet Explorer 3.0, of een HTTP/1.1 compatibele browser te gebruiken om dit te laten werken. Neem contact op met de <A HREF="mailto:%w">cache beheerder</a> als u problemen heeft om uzelf te identificeren of <A HREF="http://%h/cgi-bin/chpasswd.cgi">verander</a> hier uw standaard wachtwoord.
+U dient Netscape 2.0 of recenter, Microsoft Internet Explorer 3.0, of een HTTP/1.1 compatibele browser te gebruiken om dit te laten werken. Neem contact op met de <A HREF="mailto:%w%W">cache beheerder</a> als u problemen heeft om uzelf te identificeren of <A HREF="http://%h/cgi-bin/chpasswd.cgi">verander</a> hier uw standaard wachtwoord.
 </P>

@@ -20,4 +20,4 @@ Zero Sized Reply
 
 <P>
 Squid did not receive any data for this request.
-<P>Your cache administrator is <A HREF="mailto:%w">%w</A>. 
+<P>Your cache administrator is <A HREF="mailto:%w%W">%w</A>. 

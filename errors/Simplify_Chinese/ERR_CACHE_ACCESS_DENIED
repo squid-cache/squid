@@ -32,13 +32,13 @@ Cache Access Denied.
 <P>
 You need to use Netscape version 2.0 or greater, or Microsoft Internet
 Explorer 3.0, or an HTTP/1.1 compliant browser for this to work.  Please
-contact the <A HREF="mailto:%w">cache administrator</a> if you have
+contact the <A HREF="mailto:%w%W">cache administrator</a> if you have
 difficulties authenticating yourself or 
 <A HREF="http://%h/cgi-bin/chpasswd.cgi">change</a> your default password.
 <BR>
 您需要使用 Netscape version 2.0 或更新的版本，或是使用 Microsoft Internet 
 Explorer 3.0，或是一个 HTTP/1.1 相容的浏览器来进行工作。如果您在身份验证上
-发生困难，请与 <A HREF="mailto:%w">管理者</a> 联系。
+发生困难，请与 <A HREF="mailto:%w%W">管理者</a> 联系。
 或是<A HREF="http://%h/cgi-bin/chpasswd.cgi">更改</a>您的密码。
 </P>
-<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>
+<P>本缓存服务器管理员：<A HREF="mailto:%w%W">%w</A>

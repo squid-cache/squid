@@ -22,4 +22,4 @@ Forwarding Denied.
 This cache will not forward your request because it is trying to enforce a
 sibling relationship.  Perhaps the client at %i is a cache which has been
 misconfigured.
-<P>Your cache administrator is <A HREF="mailto:%w">%w</A>. 
+<P>Your cache administrator is <A HREF="mailto:%w%W">%w</A>. 

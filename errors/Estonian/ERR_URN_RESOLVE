@@ -20,4 +20,4 @@ Ei suuda lahendada URN
 
 <P>
 Hei, mida sa ootad URNidelt %T peal:)
-<P>Teie teenusepakkuja aadress on <A HREF="mailto:%w">%w</A>.
+<P>Teie teenusepakkuja aadress on <A HREF="mailto:%w%W">%w</A>.

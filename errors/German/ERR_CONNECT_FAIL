@@ -24,4 +24,4 @@ Der Zielrechner oder das Zielnetzwerk k&ouml;nnten deaktiviert sein.
 Bitte versuchen Sie die Anfrage noch einmal.
 </P>
 <P>
-Ihr Cache Administrator ist <A HREF="mailto:%w">%w</A>.
+Ihr Cache Administrator ist <A HREF="mailto:%w%W">%w</A>.

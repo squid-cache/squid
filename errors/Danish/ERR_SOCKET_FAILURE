@@ -27,7 +27,7 @@ Systemet returnerede:
 Proxy'en Squid kunne ikke skabe en TCP socket, sandsynligvis pga. 
 h&oslash;j last p&aring; proxy maskinen. Ved gentagne fejl
 af denne type kontakt venligst
-<A HREF="mailto:%w">cache administratoren</a>. Pr&oslash;v igen nu
+<A HREF="mailto:%w%W">cache administratoren</a>. Pr&oslash;v igen nu
 eller p&aring; et mindre belastet tidspunkt.
 </P>
 

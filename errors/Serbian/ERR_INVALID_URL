@@ -26,6 +26,6 @@ Neki aspekt zahtevane adrese (URL) nije ispravan. Moguæi problemi:
 <LI>Nedozvoljeni karakteri u imenu raèunara; donja crta (_) nije dozvoljena
 </UL>
 
-<P>Vaš cache/proxy administrator je: <A HREF="mailto:%w">%w</A>. 
+<P>Vaš cache/proxy administrator je: <A HREF="mailto:%w%W">%w</A>. 
 
 

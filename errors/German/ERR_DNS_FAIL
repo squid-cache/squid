@@ -28,4 +28,4 @@ zur&uuml;ck.
  &Uuml;berpr&uuml;fen Sie, ob die Adresse korrekt ist.
 </P>
 <P>
-Ihr Cache Administrator ist <A HREF="mailto:%w">%w</A>.
+Ihr Cache Administrator ist <A HREF="mailto:%w%W">%w</A>.
