@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.260 1998/09/03 03:48:38 wessels Exp $
+ * $Id: protos.h,v 1.261 1998/09/10 19:50:55 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -793,6 +793,7 @@ extern void storeSetPrivateKey(StoreEntry *);
 extern int objectLen(const StoreEntry * e);
 extern int contentLen(const StoreEntry * e);
 extern HttpReply *storeEntryReply(StoreEntry *);
+extern int storeTooManyDiskFilesOpen(void);
 
 /*
  * store_log.c
