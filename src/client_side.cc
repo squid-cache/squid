@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.445 1999/04/26 21:04:42 wessels Exp $
+ * $Id: client_side.cc,v 1.446 1999/04/26 21:06:13 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1093,9 +1093,11 @@ clientBuildRangeHeader(clientHttpRequest * http, HttpReply * rep)
     }
 }
 
-/* filters out unwanted entries from original reply header
+/*
+ * filters out unwanted entries from original reply header
  * adds extra entries if we have more info than origin server
- * adds Squid specific entries */
+ * adds Squid specific entries
+ */
 static void
 clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
 {
@@ -1162,12 +1164,10 @@ clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
 	http->lookup_type ? http->lookup_type : "NONE",
 	getMyHostname(), Config.Port.http->i);
 #endif
-    /*
-     * Clear keepalive for NON-HEAD requests with invalid content length
-     */
-    if (request->method != METHOD_HEAD)
-	if (http->entry->mem_obj->reply->content_length < 0)
-	    request->flags.proxy_keepalive = 0;
+    if (httpReplyBodySize(request->method, http->entry->mem_obj->reply) < 0) {
+	debug(0, 0) ("persistent connection lossage\n");
+	request->flags.proxy_keepalive = 0;
+    }
     /* Signal keep-alive if needed */
     httpHeaderPutStr(hdr,
 	http->flags.accel ? HDR_CONNECTION : HDR_PROXY_CONNECTION,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.36 1999/04/23 02:57:16 wessels Exp $
+ * $Id: HttpReply.cc,v 1.37 1999/04/26 21:06:12 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -400,4 +400,23 @@ httpReplyIsolateStart(const char **parse_start, const char **blk_start, const ch
 
     *parse_start = *blk_end;
     return 1;
+}
+
+/*
+ * Returns the body size of a HTTP response
+ */
+int
+httpReplyBodySize(method_t method, HttpReply * reply)
+{
+    if (METHOD_HEAD == method)
+	return 0;
+    else if (reply->sline.status == HTTP_OK)
+	(void) 0;		/* common case, continue */
+    else if (reply->sline.status == HTTP_NO_CONTENT)
+	return 0;
+    else if (reply->sline.status == HTTP_NOT_MODIFIED)
+	return 0;
+    else if (reply->sline.status < HTTP_OK)
+	return 0;
+    return reply->content_length;
 }
