@@ -1,6 +1,6 @@
 
 /*
- * $Id: cf_gen.cc,v 1.44 2002/07/17 15:15:21 hno Exp $
+ * $Id: cf_gen.cc,v 1.45 2002/08/22 12:29:15 hno Exp $
  *
  * DEBUG: none          Generate squid.conf.default and cf_parser.h
  * AUTHOR: Max Okumoto
@@ -183,7 +183,7 @@ main(int argc, char *argv[])
 		}
 		curr = calloc(1, sizeof(Entry));
 		curr->name = xstrdup(name);
-		while((aliasname = strtok(NULL, WS)) != NULL) {
+		while ((aliasname = strtok(NULL, WS)) != NULL) {
 		    EntryAlias *alias = calloc(1, sizeof(EntryAlias));
 		    alias->next = curr->alias;
 		    alias->name = xstrdup(aliasname);
@@ -496,7 +496,7 @@ gen_parse(Entry * head, FILE * fp)
 	    fprintf(fp, "#if %s\n", entry->ifdef);
 	name = entry->name;
 	alias = entry->alias;
-next_alias:
+      next_alias:
 	fprintf(fp, "\telse if (!strcmp(token, \"%s\"))\n", name);
 	assert(entry->loc);
 	if (strcmp(entry->loc, "none") == 0) {
