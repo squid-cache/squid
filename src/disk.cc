@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.118 1998/06/03 15:52:18 rousskov Exp $
+ * $Id: disk.cc,v 1.119 1998/07/06 19:43:21 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -218,6 +218,9 @@ file_close(int fd)
 #if USE_ASYNC_IO
     aioClose(fd);
 #else
+#if CALL_FSYNC_BEFORE_CLOSE
+    fsync(fd);
+#endif
     close(fd);
 #endif
     debug(6, F->flags.close_request ? 2 : 5)
