@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.118 1997/11/13 05:25:48 wessels Exp $
+ * $Id: acl.cc,v 1.119 1997/11/17 22:11:24 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1070,7 +1070,12 @@ aclMatchProxyAuth(struct _acl_proxy_auth *p, aclCheck_t * checklist)
     debug(28, 3) ("aclMatchProxyAuth: cleartext = '%s'\n", cleartext);
     xstrncpy(sent_user, cleartext, ICP_IDENT_SZ);
     xfree(cleartext);
-    strtok(sent_user, ":");	/* Remove :password */
+    if ((passwd = strchr(sent_user, ':')) != NULL)
+	*passwd++ = '\0';
+    if (passwd == NULL) {
+        debug(28, 3) ("aclMatchProxyAuth: No passwd in auth blob\n");
+	return 0;
+    }
     debug(28, 5) ("aclMatchProxyAuth: checking user %s\n", sent_user);
     /* reread password file if necessary */
     aclReadProxyAuth(p);
@@ -1080,15 +1085,14 @@ aclMatchProxyAuth(struct _acl_proxy_auth *p, aclCheck_t * checklist)
 	debug(28, 4) ("aclMatchProxyAuth: user %s does not exist\n", sent_user);
 	return 0;
     }
-    passwd = strtok(sent_user, null_string);
     /* See if we've already validated them */
-    passwd[0] |= 0x80;
+    *passwd |= 0x80;
     if (strcmp(hashr->item, passwd) == 0) {
 	debug(28, 5) ("aclMatchProxyAuth: user %s previously validated\n",
 	    sent_user);
 	return 1;
     }
-    passwd[0] &= (~0x80);
+    *passwd &= (~0x80);
     if (strcmp(hashr->item, (char *) crypt(passwd, hashr->item))) {
 	/* Passwords differ, deny access */
 	p->last_time = 0;	/* Trigger a check of the password file */
@@ -1096,7 +1100,7 @@ aclMatchProxyAuth(struct _acl_proxy_auth *p, aclCheck_t * checklist)
 	    "passwords differ\n", sent_user);
 	return 0;
     }
-    passwd[0] |= 0x80;
+    *passwd |= 0x80;
     debug(28, 5) ("aclMatchProxyAuth: user %s validated OK\n", sent_user);
     hash_delete(p->hash, sent_user);
     hash_insert(p->hash, xstrdup(sent_user), (void *) xstrdup(passwd));
