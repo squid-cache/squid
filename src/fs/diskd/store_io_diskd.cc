@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_diskd.cc,v 1.13 2000/07/06 00:08:28 wessels Exp $
+ * $Id: store_io_diskd.cc,v 1.14 2000/07/16 07:28:38 wessels Exp $
  *
  * DEBUG: section 81    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -102,6 +102,7 @@ storeDiskdOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
 	cbdataFree(sio);
 	return NULL;
     }
+    diskd_stats.open.ops++;
     return sio;
 }
 
@@ -162,6 +163,7 @@ storeDiskdCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
 	return NULL;
     }
     storeDiskdDirReplAdd(SD, e);
+    diskd_stats.create.ops++;
     return sio;
 }
 
@@ -184,6 +186,7 @@ storeDiskdClose(SwapDir * SD, storeIOState * sio)
 	debug(50, 1) ("storeDiskdSend CLOSE: %s\n", xstrerror());
 	storeDiskdIOCallback(sio, DISK_ERROR);
     }
+    diskd_stats.close.ops++;
 }
 
 void
@@ -222,6 +225,7 @@ storeDiskdRead(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t o
 	storeDiskdShmPut(SD, shm_offset);
 	storeDiskdIOCallback(sio, DISK_ERROR);
     }
+    diskd_stats.read.ops++;
 }
 
 void
@@ -253,6 +257,7 @@ storeDiskdWrite(SwapDir * SD, storeIOState * sio, char *buf, size_t size, off_t 
 	storeDiskdShmPut(SD, shm_offset);
 	storeDiskdIOCallback(sio, DISK_ERROR);
     }
+    diskd_stats.write.ops++;
 }
 
 void
@@ -288,6 +293,7 @@ storeDiskdUnlink(SwapDir * SD, StoreEntry * e)
 	unlink(buf);		/* XXX EWW! */
 	storeDiskdShmPut(SD, shm_offset);
     }
+    diskd_stats.unlink.ops++;
 }
 
 
@@ -301,7 +307,10 @@ storeDiskdOpenDone(diomsg * M)
     debug(81, 3) ("storeDiskdOpenDone: dirno %d, fileno %08x status %d\n",
 	sio->swap_dirn, sio->swap_filen, M->status);
     if (M->status < 0) {
+	diskd_stats.open.fail++;
 	storeDiskdIOCallback(sio, DISK_ERROR);
+    } else {
+	diskd_stats.open.success++;
     }
 }
 
@@ -313,9 +322,11 @@ storeDiskdCloseDone(diomsg * M)
     debug(81, 3) ("storeDiskdCloseDone: dirno %d, fileno %08x status %d\n",
 	sio->swap_dirn, sio->swap_filen, M->status);
     if (M->status < 0) {
+	diskd_stats.close.fail++;
 	storeDiskdIOCallback(sio, DISK_ERROR);
 	return;
     }
+    diskd_stats.close.success++;
     storeDiskdIOCallback(sio, DISK_OK);
 }
 
@@ -339,9 +350,11 @@ storeDiskdReadDone(diomsg * M)
     debug(81, 3) ("storeDiskdReadDone: dirno %d, fileno %08x status %d\n",
 	sio->swap_dirn, sio->swap_filen, M->status);
     if (M->status < 0) {
+	diskd_stats.read.fail++;
 	storeDiskdIOCallback(sio, DISK_ERROR);
 	return;
     }
+    diskd_stats.read.success++;
     sbuf = diskdinfo->shm.buf + M->shm_offset;
     len = M->status;
     xmemcpy(their_buf, sbuf, len);	/* yucky copy */
@@ -364,9 +377,11 @@ storeDiskdWriteDone(diomsg * M)
     debug(81, 3) ("storeDiskdWriteDone: dirno %d, fileno %08x status %d\n",
 	sio->swap_dirn, sio->swap_filen, M->status);
     if (M->status < 0) {
+	diskd_stats.write.fail++;
 	storeDiskdIOCallback(sio, DISK_ERROR);
 	return;
     }
+    diskd_stats.write.success++;
     sio->offset += M->status;
 }
 
@@ -376,6 +391,10 @@ storeDiskdUnlinkDone(diomsg * M)
     debug(81, 3) ("storeDiskdUnlinkDone: fileno %08x status %d\n",
 	M->id, M->status);
     statCounter.syscalls.disk.unlinks++;
+    if (M->status < 0)
+	diskd_stats.unlink.fail++;
+    else
+	diskd_stats.unlink.success++;
 }
 
 void
