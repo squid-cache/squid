@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.93 1997/01/31 22:30:36 wessels Exp $
+ * $Id: squid.h,v 1.94 1997/02/20 22:23:08 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -354,6 +354,8 @@ extern int passStart _PARAMS((int fd,
 	int *size_ptr));
 extern void identStart _PARAMS((int, icpStateData *,
 	void       (*callback) _PARAMS((void *))));
+extern int httpAnonAllowed _PARAMS((const char *line));
+extern int httpAnonDenied _PARAMS((const char *line));
 
 extern const char *const dash_str;
 extern const char *const null_string;
