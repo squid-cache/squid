@@ -88,7 +88,7 @@ private:
     char const *stripePath() const;
     ConfigOption * getOptionTree() const;
     const char *ioModule;
-    ConfigOptionVector *currentIOOptions;
+    mutable ConfigOptionVector *currentIOOptions;
     const char *stripe_path;
 };
 

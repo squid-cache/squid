@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufscommon.h,v 1.2 2005/01/03 16:08:27 robertc Exp $
+ * $Id: ufscommon.h,v 1.3 2005/02/05 22:02:32 serassio Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -139,7 +139,7 @@ private:
     void changeIO(DiskIOModule *);
     bool optionIOParse(char const *option, const char *value, int reconfiguring);
     void optionIODump(StoreEntry * e) const;
-    ConfigOptionVector *currentIOOptions;
+    mutable ConfigOptionVector *currentIOOptions;
     char const *ioType;
 
 };

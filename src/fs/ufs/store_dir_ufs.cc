@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.68 2005/01/03 16:08:27 robertc Exp $
+ * $Id: store_dir_ufs.cc,v 1.69 2005/02/05 22:02:32 serassio Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -188,7 +188,11 @@ UFSSwapDir::getOptionTree() const
 {
     ConfigOption *parentResult = SwapDir::getOptionTree();
 
+    if (currentIOOptions == NULL)
+        currentIOOptions = new ConfigOptionVector();
+
     currentIOOptions->options.push_back(parentResult);
+
     currentIOOptions->options.push_back(new ConfigOptionAdapter<UFSSwapDir>(*const_cast<UFSSwapDir *>(this), &UFSSwapDir::optionIOParse, &UFSSwapDir::optionIODump));
 
     ConfigOption *ioOptions  = IO->io->getOptionTree();
@@ -196,7 +200,11 @@ UFSSwapDir::getOptionTree() const
     if (ioOptions)
         currentIOOptions->options.push_back(ioOptions);
 
-    return currentIOOptions;
+    ConfigOption* result = currentIOOptions;
+
+    currentIOOptions = NULL;
+
+    return result;
 }
 
 /*

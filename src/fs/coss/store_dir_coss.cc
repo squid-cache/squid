@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.59 2005/01/06 14:09:26 serassio Exp $
+ * $Id: store_dir_coss.cc,v 1.60 2005/02/05 22:02:32 serassio Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store COSS Directory Routines
@@ -259,6 +259,9 @@ CossSwapDir::changeIO(DiskIOModule *module)
     io = anIO;
     /* Change the IO Options */
 
+    if (currentIOOptions == NULL)
+        currentIOOptions = new ConfigOptionVector();
+
     if (currentIOOptions->options.size() > 3)
         delete currentIOOptions->options.pop_back();
 
@@ -306,8 +309,13 @@ CossSwapDir::getOptionTree() const
 {
     ConfigOption *parentResult = SwapDir::getOptionTree();
 
+    if (currentIOOptions == NULL)
+        currentIOOptions = new ConfigOptionVector();
+
     currentIOOptions->options.push_back(parentResult);
+
     currentIOOptions->options.push_back(new ConfigOptionAdapter<CossSwapDir>(*const_cast<CossSwapDir *>(this), &CossSwapDir::optionIOParse, &CossSwapDir::optionIODump));
+
     currentIOOptions->options.push_back(
         new ConfigOptionAdapter<CossSwapDir>(*const_cast<CossSwapDir *>(this),
                                              &CossSwapDir::optionBlockSizeParse,
@@ -322,7 +330,11 @@ CossSwapDir::getOptionTree() const
     if (ioOptions)
         currentIOOptions->options.push_back(ioOptions);
 
-    return currentIOOptions;
+    ConfigOption* result = currentIOOptions;
+
+    currentIOOptions = NULL;
+
+    return result;
 }
 
 void
