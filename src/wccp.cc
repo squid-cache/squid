@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.30 2002/11/09 09:34:22 hno Exp $
+ * $Id: wccp.cc,v 1.31 2002/11/10 04:37:14 hno Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Glenn Chisholm
@@ -86,7 +86,7 @@ static struct wccp_here_i_am_t wccp_here_i_am;
 static struct wccp_i_see_you_t wccp_i_see_you;
 static int change;
 static int last_assign_buckets_change;
-static int number_caches;
+static unsigned int number_caches;
 static struct in_addr local_ip;
 
 static PF wccpHandleUdp;
@@ -122,7 +122,7 @@ wccpConnectionOpen(void)
 {
     u_short port = WCCP_PORT;
     struct sockaddr_in router, local;
-    int local_len, router_len;
+    socklen_t local_len, router_len;
     debug(80, 5) ("wccpConnectionOpen: Called\n");
     if (Config.Wccp.router.s_addr == any_addr.s_addr) {
 	debug(1, 1) ("WCCP Disabled.\n");
@@ -240,7 +240,7 @@ wccpHandleUdp(int sock, void *not_used)
 	return;
     if (Config.Wccp.router.s_addr != from.sin_addr.s_addr)
 	return;
-    if (ntohl(wccp_i_see_you.version) != Config.Wccp.version)
+    if (ntohl(wccp_i_see_you.version) != (unsigned)Config.Wccp.version)
 	return;
     if (ntohl(wccp_i_see_you.type) != WCCP_I_SEE_YOU)
 	return;
@@ -272,7 +272,7 @@ wccpHandleUdp(int sock, void *not_used)
 static int
 wccpLowestIP(void)
 {
-    int loop;
+    unsigned int loop;
     for (loop = 0; loop < ntohl(wccp_i_see_you.number); loop++) {
 	if (wccp_i_see_you.wccp_cache_entry[loop].ip_addr.s_addr < local_ip.s_addr)
 	    return 0;
@@ -302,7 +302,7 @@ wccpAssignBuckets(void)
     int wab_len;
     char *buckets;
     int buckets_per_cache;
-    int loop;
+    unsigned int loop;
     int bucket = 0;
     int *caches;
     int cache_len;
@@ -315,7 +315,7 @@ wccpAssignBuckets(void)
     wab_len = sizeof(struct wccp_assign_bucket_t);
     cache_len = WCCP_CACHE_LEN * number_caches;
 
-    buf = xmalloc(wab_len +
+    buf = (char *)xmalloc(wab_len +
 	WCCP_BUCKETS +
 	cache_len);
     wccp_assign_bucket = (struct wccp_assign_bucket_t *) buf;
