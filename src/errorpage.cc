@@ -1,4 +1,4 @@
-/* $Id: errorpage.cc,v 1.13 1996/04/04 18:41:23 wessels Exp $ */
+/* $Id: errorpage.cc,v 1.14 1996/04/05 23:21:11 wessels Exp $ */
 
 /* DEBUG: Section 4             cached_error: Error printing routines */
 
@@ -98,12 +98,17 @@ error_data ErrorData[] =
 };
 
 /* GLOBAL */
-char tmp_error_buf[BUFSIZ];
+char *tmp_error_buf;
 
 /* LOCAL */
-static char tbuf[BUFSIZ];
+static char *tbuf;
 
 int log_errors = 1;
+
+void errorInitialize() {
+	tmp_error_buf = (char *) xmalloc(MAX_URL * 4);
+	tbuf = (char *) xmalloc(MAX_URL * 3);
+}
 
 
 void cached_error_entry(entry, type, msg)
@@ -146,7 +151,7 @@ char *cached_error_url(url, method, type, address, code, msg)
 {
     int index;
 
-    tmp_error_buf[0] = '\0';
+    *tmp_error_buf = '\0';
     if (type == ERR_MIN || type > ERR_MAX)
 	fatal_dump("cached_error_url: type out of range.");
     index = (int) (type - ERR_MIN);
@@ -191,7 +196,7 @@ char *cached_error_request(request, type, address, code)
 {
     int index;
 
-    tmp_error_buf[0] = '\0';
+    *tmp_error_buf = '\0';
     if (type == ERR_MIN || type > ERR_MAX)
 	fatal_dump("cached_error_url: type out of range.");
     index = (int) (type - ERR_MIN);
