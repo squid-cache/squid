@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.19 1998/05/13 21:16:30 wessels Exp $
+ * $Id: CacheDigest.cc,v 1.20 1998/05/13 22:59:44 wessels Exp $
  *
  * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -40,7 +40,7 @@ typedef struct {
 } CacheDigestStats;
 
 /* local functions */
-static void cacheDigestHashKey(const CacheDigest * cd, const void * key);
+static void cacheDigestHashKey(const CacheDigest * cd, const cache_key * key);
 
 /* static array used by cacheDigestHashKey for optimization purposes */
 static u_num32 hashed_keys[4];
@@ -320,10 +320,12 @@ cacheDigestHashKey(const CacheDigest * cd, const cache_key * key)
 #endif
 
 static void
-cacheDigestHashKey(const CacheDigest * cd, const void *key)
+cacheDigestHashKey(const CacheDigest * cd, const cache_key *key)
 {
     const unsigned int bit_count = cd->mask_size * 8;
-    const unsigned int *tmp_keys = key;
+    unsigned int tmp_keys[4];
+    /* we must memcpy to ensure alignment */
+    xmemcpy(tmp_keys, key, sizeof(tmp_keys));
     hashed_keys[0] = htonl(tmp_keys[0]) % bit_count;
     hashed_keys[1] = htonl(tmp_keys[1]) % bit_count;
     hashed_keys[2] = htonl(tmp_keys[2]) % bit_count;
