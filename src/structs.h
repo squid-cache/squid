@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.290 1999/05/19 21:57:52 wessels Exp $
+ * $Id: structs.h,v 1.291 1999/05/22 07:42:16 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1260,18 +1260,28 @@ struct _StoreEntry {
 };
 
 struct _SwapDir {
-    char *path;
-    int l1;
-    int l2;
+    swapdir_t type;
+    fileMap *map;
     int cur_size;
     int max_size;
+    char *path;
     int suggest;
-    fileMap *map;
-    int swaplog_fd;
     struct {
 	unsigned int selected:1;
 	unsigned int read_only:1;
     } flags;
+    STOPEN *open;
+    STCLOSE *close;
+    STREAD *read;
+    STWRITE *write;
+    STUNLINK *unlink;
+    union {
+	struct {
+	    int l1;
+	    int l2;
+	    int swaplog_fd;
+	} ufs;
+    } u;
 };
 
 struct _request_flags {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.70 1999/05/21 22:23:25 wessels Exp $
+ * $Id: store_client.cc,v 1.71 1999/05/22 07:42:10 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -230,14 +230,6 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
      */
     if (storeClientNoMoreToSend(e, sc)) {
 	/* There is no more to send! */
-#if USE_ASYNC_IO
-	if (sc->flags.disk_io_pending) {
-	    if (sc->swapin_fd >= 0)
-		aioCancel(sc->swapin_fd, NULL);
-	    else
-		aioCancel(-1, sc);
-	}
-#endif
 	sc->flags.disk_io_pending = 0;
 	sc->callback = NULL;
 	callback(sc->callback_data, sc->copy_buf, 0);
@@ -248,14 +240,6 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
 	/* What the client wants is in memory */
 	debug(20, 3) ("storeClientCopy2: Copying from memory\n");
 	sz = stmemCopy(&mem->data_hdr, sc->copy_offset, sc->copy_buf, sc->copy_size);
-#if USE_ASYNC_IO
-	if (sc->flags.disk_io_pending) {
-	    if (sc->swapin_fd >= 0)
-		aioCancel(sc->swapin_fd, NULL);
-	    else
-		aioCancel(-1, sc);
-	}
-#endif
 	sc->flags.disk_io_pending = 0;
 	sc->callback = NULL;
 	callback(sc->callback_data, sc->copy_buf, sz);
@@ -439,10 +423,6 @@ storeUnregister(StoreEntry * e, void *data)
 	storeClose(sc->swapin_sio);
 	/* XXX this probably leaks file_read handler structures */
     }
-#if USE_ASYNC_IO
-    else
-	aioCancel(-1, sc);
-#endif
     if ((callback = sc->callback) != NULL) {
 	/* callback with ssize = -1 to indicate unexpected termination */
 	debug(20, 3) ("storeUnregister: store_client for %s has a callback\n",

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.329 1999/05/10 19:27:50 wessels Exp $
+ * $Id: cache_cf.cc,v 1.330 1999/05/22 07:42:01 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -58,8 +58,6 @@ static const char *const list_sep = ", \t\n\r";
 
 static int http_header_first = 0;
 
-static void self_destruct(void);
-
 static void configDoConfigure(void);
 static void parse_refreshpattern(refresh_t **);
 static int parseTimeUnits(const char *unit);
@@ -79,7 +77,7 @@ static void dump_http_header(StoreEntry * entry, const char *name, HttpHeaderMas
 static void parse_http_header(HttpHeaderMask * header);
 static void free_http_header(HttpHeaderMask * header);
 
-static void
+void
 self_destruct(void)
 {
     fatalf("Bungled %s line %d: %s",
@@ -157,12 +155,17 @@ intlistFind(intlist * list, int i)
  * defined
  */
 
-#define GetInteger(var) \
-	token = strtok(NULL, w_space); \
-	if( token == NULL) \
-		self_destruct(); \
-	if (sscanf(token, "%d", &var) != 1) \
-		self_destruct();
+int
+GetInteger(void)
+{
+    char *token = strtok(NULL, w_space);
+    int i;
+    if (token == NULL)
+	self_destruct();
+    if (sscanf(token, "%d", &i) != 1)
+	self_destruct();
+    return i;
+}
 
 int
 parseConfigFile(const char *file_name)
@@ -664,7 +667,7 @@ parse_delay_pool_rates(delayConfig * cfg)
 	if (sscanf(token, "%d", &i) != 1)
 	    self_destruct();
 	ptr->restore_bps = i;
-	GetInteger(i);
+	i = GetInteger();
 	ptr->max_bytes = i;
 	ptr++;
     }
@@ -752,12 +755,15 @@ dump_cachedir(StoreEntry * entry, const char *name, cacheSwap swap)
     int i;
     for (i = 0; i < swap.n_configured; i++) {
 	s = swap.swapDirs + i;
-	storeAppendPrintf(entry, "%s %s %d %d %d\n",
-	    name,
-	    s->path,
-	    s->max_size >> 10,
-	    s->l1,
-	    s->l2);
+	switch (s->type) {
+	case SWAPDIR_UFS:
+	    storeUfsDirDump(entry, name, s);
+	    break;
+	default:
+	    debug(0, 0) ("dump_cachedir doesn't know about type %d\n",
+		(int) s->type);
+	    break;
+	}
     }
 }
 
@@ -773,71 +779,34 @@ check_null_string(char *s)
     return s == NULL;
 }
 
-static void
-parse_cachedir(cacheSwap * swap)
+void
+allocate_new_swapdir(cacheSwap * swap)
 {
-    char *token;
-    char *path;
-    int i;
-    int size;
-    int l1;
-    int l2;
-    unsigned int read_only = 0;
-    SwapDir *tmp = NULL;
-    if ((path = strtok(NULL, w_space)) == NULL)
-	self_destruct();
-    GetInteger(i);
-    size = i << 10;		/* Mbytes to kbytes */
-    if (size <= 0)
-	fatal("parse_cachedir: invalid size value");
-    GetInteger(i);
-    l1 = i;
-    if (l1 <= 0)
-	fatal("parse_cachedir: invalid level 1 directories value");
-    GetInteger(i);
-    l2 = i;
-    if (l2 <= 0)
-	fatal("parse_cachedir: invalid level 2 directories value");
-    if ((token = strtok(NULL, w_space)))
-	if (!strcasecmp(token, "read-only"))
-	    read_only = 1;
-    for (i = 0; i < swap->n_configured; i++) {
-	tmp = swap->swapDirs + i;
-	if (!strcmp(path, tmp->path)) {
-	    /* just reconfigure it */
-	    if (size == tmp->max_size)
-		debug(3, 1) ("Cache dir '%s' size remains unchanged at %d KB\n",
-		    path, size);
-	    else
-		debug(3, 1) ("Cache dir '%s' size changed to %d KB\n",
-		    path, size);
-	    tmp->max_size = size;
-	    if (tmp->flags.read_only != read_only)
-		debug(3, 1) ("Cache dir '%s' now %s\n",
-		    path, read_only ? "Read-Only" : "Read-Write");
-	    tmp->flags.read_only = read_only;
-	    return;
-	}
-    }
     if (swap->swapDirs == NULL) {
 	swap->n_allocated = 4;
 	swap->swapDirs = xcalloc(swap->n_allocated, sizeof(SwapDir));
     }
     if (swap->n_allocated == swap->n_configured) {
+	SwapDir *tmp;
 	swap->n_allocated <<= 1;
 	tmp = xcalloc(swap->n_allocated, sizeof(SwapDir));
 	xmemcpy(tmp, swap->swapDirs, swap->n_configured * sizeof(SwapDir));
 	xfree(swap->swapDirs);
 	swap->swapDirs = tmp;
     }
-    tmp = swap->swapDirs + swap->n_configured;
-    tmp->path = xstrdup(path);
-    tmp->max_size = size;
-    tmp->l1 = l1;
-    tmp->l2 = l2;
-    tmp->flags.read_only = read_only;
-    tmp->swaplog_fd = -1;
-    swap->n_configured++;
+}
+
+static void
+parse_cachedir(cacheSwap * swap)
+{
+    char *type_str;
+    if ((type_str = strtok(NULL, w_space)) == NULL)
+	self_destruct();
+    if (0 == strcasecmp(type_str, "ufs")) {
+	storeUfsDirParse(swap);
+    } else {
+	fatalf("Unknown cache_dir type '%s'\n", type_str);
+    }
 }
 
 static void
@@ -850,9 +819,14 @@ free_cachedir(cacheSwap * swap)
 	return;
     for (i = 0; i < swap->n_configured; i++) {
 	s = swap->swapDirs + i;
-	if (s->swaplog_fd > -1) {
-	    file_close(s->swaplog_fd);
-	    s->swaplog_fd = -1;
+	switch (s->type) {
+	case SWAPDIR_UFS:
+	    storeUfsDirFree(s);
+	    break;
+	default:
+	    debug(0, 0) ("dump_cachedir doesn't know about type %d\n",
+		(int) s->type);
+	    break;
 	}
 	xfree(s->path);
 	filemapFreeMemory(s->map);
@@ -936,9 +910,9 @@ parse_peer(peer ** head)
     if ((token = strtok(NULL, w_space)) == NULL)
 	self_destruct();
     p->type = parseNeighborType(token);
-    GetInteger(i);
+    i = GetInteger();
     p->http_port = (u_short) i;
-    GetInteger(i);
+    i = GetInteger();
     p->icp.port = (u_short) i;
     if (strcmp(p->host, me) == 0) {
 	for (u = Config.Port.http; u; u = u->next) {
@@ -1245,9 +1219,8 @@ dump_int(StoreEntry * entry, const char *name, int var)
 static void
 parse_int(int *var)
 {
-    char *token;
     int i;
-    GetInteger(i);
+    i = GetInteger();
     *var = i;
 }
 
@@ -1338,11 +1311,11 @@ parse_refreshpattern(refresh_t ** head)
     if (token == NULL)
 	self_destruct();
     pattern = xstrdup(token);
-    GetInteger(i);		/* token: min */
+    i = GetInteger();		/* token: min */
     min = (time_t) (i * 60);	/* convert minutes to seconds */
-    GetInteger(i);		/* token: pct */
+    i = GetInteger();		/* token: pct */
     pct = (double) i / 100.0;
-    GetInteger(i);		/* token: max */
+    i = GetInteger();		/* token: max */
     max = (time_t) (i * 60);	/* convert minutes to seconds */
     /* Options */
     while ((token = strtok(NULL, w_space)) != NULL) {
@@ -1484,9 +1457,8 @@ dump_kb_size_t(StoreEntry * entry, const char *name, size_t var)
 static void
 parse_size_t(size_t * var)
 {
-    char *token;
     int i;
-    GetInteger(i);
+    i = GetInteger();
     *var = (size_t) i;
 }
 
@@ -1528,10 +1500,9 @@ free_ushort(u_short * u)
 static void
 parse_ushort(u_short * var)
 {
-    char *token;
     int i;
 
-    GetInteger(i);
+    i = GetInteger();
     if (i < 0)
 	i = 0;
     *var = (u_short) i;

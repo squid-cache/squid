@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.329 1999/05/19 21:57:49 wessels Exp $
+ * $Id: protos.h,v 1.330 1999/05/22 07:42:05 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -91,6 +91,9 @@ extern void aioCheckCallbacks(void);
 extern void aioSync(void);
 #endif
 
+/*
+ * cache_cf.c
+ */
 extern int parseConfigFile(const char *file_name);
 extern void intlistDestroy(intlist **);
 extern int intlistFind(intlist * list, int i);
@@ -99,6 +102,10 @@ extern wordlist *wordlistDup(const wordlist *);
 extern void wordlistDestroy(wordlist **);
 extern void configFreeMemory(void);
 extern void wordlistCat(const wordlist *, MemBuf * mb);
+extern void allocate_new_swapdir(cacheSwap *);
+extern void self_destruct(void);
+extern int GetInteger(void);
+
 
 extern void cbdataInit(void);
 #if CBDATA_DEBUG
@@ -849,11 +856,11 @@ extern int storeTooManyDiskFilesOpen(void);
 extern void storeEntryReset(StoreEntry *);
 
 /* store_io.c */
-extern storeIOState *storeOpen(sfileno f, mode_t mode, STIOCB * callback, void *callback_data);
-extern void storeClose(storeIOState * sio);
-extern void storeRead(storeIOState * sio, char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data);
-extern void storeWrite(storeIOState * sio, char *buf, size_t size, off_t offset, FREE *);
-extern void storeUnlink(int fileno);
+extern STOPEN storeOpen;
+extern STCLOSE storeClose;
+extern STREAD storeRead;
+extern STWRITE storeWrite;
+extern STUNLINK storeUnlink;
 extern off_t storeOffset(storeIOState *);
 
 /* store_io_ufs.c */
@@ -944,6 +951,9 @@ extern void storeUfsDirCloseTmpSwapLog(int dirn);
 extern void storeUfsDirInit(void);
 extern void storeUfsDirOpenSwapLogs(void);
 extern void storeUfsDirSwapLog(const StoreEntry *, int op);
+extern void storeUfsDirParse(cacheSwap * swap);
+extern void storeUfsDirDump(StoreEntry * entry, const char *name, SwapDir * s);
+extern void storeUfsDirFree(SwapDir *);
 
 
 /*
