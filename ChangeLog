@@ -40,7 +40,9 @@
 	- added improved IP ACL routines; now handles netmasks.
 	- Added storeEntryValidLength().  Objects with invalid 
 	  content lengths will be ejected.
-	- Added clean shutdown mode.  On sigterm close incoming and 
+	- Added clean shutdown mode.  On SIGTERM, close incoming and 
 	  dnsserver sockets.  When no sockets left in select loop
 	  return and exit.
 	- Added support for shttp and CONNECT urls.
+	- Added support for large POST objects.
+	- Started arranging for HUP to re-read config file.
