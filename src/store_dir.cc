@@ -359,7 +359,7 @@ storeDirCloseTmpSwapLog(int dirn)
     safe_free(swaplog_path);
     safe_free(new_path);
     SD->swaplog_fd = fd;
-    debug(20, 3, "Cache Dir #%d log opened on FD %d\n", i, fd);
+    debug(20, 3, "Cache Dir #%d log opened on FD %d\n", dirn, fd);
 }
 
 void
