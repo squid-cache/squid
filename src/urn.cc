@@ -30,7 +30,7 @@
 #include "squid.h"
 
 static STCB urnHandleReply;
-static wordlist *urn_parsebuffer(const char *inbuf);
+static wordlist *urnParseReply(const char *inbuf);
 static const char *const crlf = "\r\n";
 
 typedef struct {
@@ -188,7 +188,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     }
     while (isspace(*s))
 	s++;
-    urls = urn_parsebuffer(s);
+    urls = urnParseReply(s);
     if (urls == NULL) {	/* unkown URN error */
 	debug(50, 3) ("urnTranslateDone: unknown URN %s\n", storeUrl(e));
 	err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND);
@@ -233,6 +233,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     storeAppend(e, S->buf, stringLength(S));
     storeComplete(e);
     put_free_4k_page(buf);
+    wordlistDestroy(&urls);
     stringFree(S);
     storeUnregister(urlres_e, urnState);
     storeUnlockObject(urlres_e);
@@ -242,21 +243,22 @@ urnHandleReply(void *data, char *buf, ssize_t size)
 }
 
 static wordlist *
-urn_parsebuffer(const char *inbuf)
+urnParseReply(const char *inbuf)
 {
     char *buf = xstrdup(inbuf);
     char *token;
     wordlist *u;
     wordlist *head = NULL;
     wordlist **last = &head;
-    debug(50, 3) ("urn_parsebuffer\n");
+    debug(50, 3) ("urnParseReply\n");
     for (token = strtok(buf, crlf); token; token = strtok(NULL, crlf)) {
-	debug(50, 3) ("urn_parsebuffer: got '%s'\n", token);
+	debug(50, 3) ("urnParseReply: got '%s'\n", token);
 	u = xmalloc(sizeof(wordlist));
 	u->key = xstrdup(token);
 	u->next = NULL;
 	*last = u;
 	last = &u->next;
     }
+    safe_free(buf);
     return head;
 }
