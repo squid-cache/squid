@@ -819,6 +819,7 @@ struct _net_db_peer {
 };
 
 struct _netdbEntry {
+    /* first two items must be equivalent to hash_link in hash.h */
     char *key;
     netdbEntry *next;
     char network[16];
@@ -1178,6 +1179,7 @@ struct _MemPool {
 };
 
 struct _ClientInfo {
+    /* first two items must be equivalent to hash_link in hash.h */
     char *key;
     struct client_info *next;
     struct in_addr addr;
