@@ -826,16 +826,16 @@ snmp_prfProtoFn(variable_list * Var, long *ErrP)
 	    *(Answer->val.integer) = (long) Counter.icp.kbytes_recv.kb;
 	    break;
 	case PERF_PROTOSTAT_AGGR_REQ:
-	    *(Answer->val.integer) = (long) Counter.server.requests;
+	    *(Answer->val.integer) = (long) Counter.server.all.requests;
 	    break;
 	case PERF_PROTOSTAT_AGGR_ERRORS:
-	    *(Answer->val.integer) = (long) Counter.server.errors;
+	    *(Answer->val.integer) = (long) Counter.server.all.errors;
 	    break;
 	case PERF_PROTOSTAT_AGGR_KBYTES_IN:
-	    *(Answer->val.integer) = (long) Counter.server.kbytes_in.kb;
+	    *(Answer->val.integer) = (long) Counter.server.all.kbytes_in.kb;
 	    break;
 	case PERF_PROTOSTAT_AGGR_KBYTES_OUT:
-	    *(Answer->val.integer) = (long) Counter.server.kbytes_out.kb;
+	    *(Answer->val.integer) = (long) Counter.server.all.kbytes_out.kb;
 	    break;
 	case PERF_PROTOSTAT_AGGR_CURSWAP:
 	    *(Answer->val.integer) = (long) store_swap_size;
