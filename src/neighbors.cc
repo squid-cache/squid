@@ -1,4 +1,4 @@
-/* $Id: neighbors.cc,v 1.17 1996/04/15 18:06:31 wessels Exp $ */
+/* $Id: neighbors.cc,v 1.18 1996/04/15 19:20:25 wessels Exp $ */
 
 /* TODO:
  * - change 'neighbor' to 'sibling'
@@ -348,10 +348,13 @@ int neighborsUdpPing(proto)
     struct sockaddr_in to_addr;
     edge *e = NULL;
     int i;
+    MemObject *m = entry->mem_obj;
 
-    entry->mem_obj->e_pings_n_pings = 0;
-    entry->mem_obj->e_pings_n_acks = 0;
-    entry->mem_obj->e_pings_first_miss = NULL;
+    m->e_pings_n_pings = 0;
+    m->e_pings_n_acks = 0;
+    m->e_pings_first_miss = NULL;
+    m->w_rtt = 0;
+    m->start_ping = current_time;
 
     if (friends->edges_head == (edge *) NULL)
 	return 0;
@@ -399,7 +402,7 @@ int neighborsUdpPing(proto)
 	if (e->ack_deficit < HIER_MAX_DEFICIT) {
 	    /* consider it's alive. count it */
 	    e->neighbor_up = 1;
-	    entry->mem_obj->e_pings_n_pings++;
+	    m->e_pings_n_pings++;
 	} else {
 	    /* consider it's dead. send a ping but don't count it. */
 	    e->neighbor_up = 0;
@@ -443,7 +446,7 @@ int neighborsUdpPing(proto)
 	    debug(15, 6, "neighborsUdpPing: Source Ping is disabled.\n");
 	}
     }
-    return (entry->mem_obj->e_pings_n_pings);
+    return (m->e_pings_n_pings);
 }
 
 
@@ -461,6 +464,8 @@ void neighborsUdpAck(fd, url, header, from, entry)
      StoreEntry *entry;
 {
     edge *e = NULL;
+    MemObject *m = entry->mem_obj;
+    int w_rtt;
 
     debug(15, 6, "neighborsUdpAck: url=%s (%d chars), header=0x%x, from=0x%x, ent=0x%x\n",
 	url, strlen(url), header, from, entry);
@@ -535,7 +540,7 @@ void neighborsUdpAck(fd, url, header, from, entry)
 	/* If an edge is not found, count it as a MISS message. */
 	if (!e) {
 	    /* count it as a MISS message */
-	    entry->mem_obj->e_pings_n_acks++;
+	    m->e_pings_n_acks++;
 	    return;
 	}
 	/* GOT a HIT here */
@@ -552,7 +557,7 @@ void neighborsUdpAck(fd, url, header, from, entry)
 	return;
     } else if ((header->opcode == ICP_OP_MISS) || (header->opcode == ICP_OP_DECHO)) {
 	/* everytime we get here, count it as a miss */
-	entry->mem_obj->e_pings_n_acks++;
+	m->e_pings_n_acks++;
 	if (e)
 	    e->misses++;
 
@@ -562,12 +567,13 @@ void neighborsUdpAck(fd, url, header, from, entry)
 	    if (e) {
 		debug(15, 6, "Got DECHO from non-cached cache:%s\n",
 		    inet_ntoa(e->in_addr.sin_addr));
-		debug(15, 6, "Good.");
 
 		if (e->type == EDGE_PARENT) {
-		    if (entry->mem_obj->e_pings_first_miss == NULL) {
-			debug(15, 6, "OK. We got dumb-cached parent as the first miss here.\n");
-			entry->mem_obj->e_pings_first_miss = e;
+		    w_rtt = tvSubMsec(m->start_ping, current_time) / e->weight;
+		    if (m->w_rtt == 0 || w_rtt < m->w_rtt) {
+			debug(15, 6, "Dumb-cache has minimum weighted RTT = %d\n", w_rtt);
+			m->e_pings_first_miss = e;
+			m->w_rtt = w_rtt;
 		    }
 		} else {
 		    debug(15, 6, "Dumb Cached as a neighbor does not make sense.\n");
@@ -580,15 +586,16 @@ void neighborsUdpAck(fd, url, header, from, entry)
 		debug(15, 6, "Count it anyway.\n");
 	    }
 
-	} else {
+	} else if (e && e->type == EDGE_PARENT) {
 	    /* ICP_OP_MISS from a cache */
-	    if ((entry->mem_obj->e_pings_first_miss == NULL) && e && e->type == EDGE_PARENT) {
-		entry->mem_obj->e_pings_first_miss = e;
-
+	    w_rtt = tvSubMsec(m->start_ping, current_time) / e->weight;
+	    if (m->w_rtt == 0 || w_rtt < m->w_rtt) {
+		m->e_pings_first_miss = e;
+		m->w_rtt = w_rtt;
 	    }
 	}
 
-	if (entry->mem_obj->e_pings_n_acks == entry->mem_obj->e_pings_n_pings) {
+	if (m->e_pings_n_acks == m->e_pings_n_pings) {
 	    BIT_SET(entry->flag, ENTRY_DISPATCHED);
 	    entry->ping_status = DONE;
 	    debug(15, 6, "Receive MISSes from all neighbors and parents\n");
@@ -603,12 +610,13 @@ void neighborsUdpAck(fd, url, header, from, entry)
     }
 }
 
-void neighbors_cf_add(host, type, ascii_port, udp_port, proxy_only)
+void neighbors_cf_add(host, type, ascii_port, udp_port, proxy_only, weight)
      char *host;
      char *type;
      int ascii_port;
      int udp_port;
      int proxy_only;
+    int weight;
 {
     struct neighbor_cf *t, *u;
 
@@ -618,6 +626,7 @@ void neighbors_cf_add(host, type, ascii_port, udp_port, proxy_only)
     t->ascii_port = ascii_port;
     t->udp_port = udp_port;
     t->proxy_only = proxy_only;
+    t->weight = weight;
     t->next = (struct neighbor_cf *) NULL;
 
     if (Neighbor_cf == (struct neighbor_cf *) NULL) {
@@ -687,6 +696,7 @@ void neighbors_init()
 	e->ascii_port = t->ascii_port;
 	e->udp_port = t->udp_port;
 	e->proxy_only = t->proxy_only;
+	e->weight = t->weight;
 	e->host = t->host;
 	e->domains = t->domains;
 	e->neighbor_up = 1;
