@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.419 2002/10/14 08:43:46 hno Exp $
+ * $Id: cache_cf.cc,v 1.420 2002/10/17 02:11:23 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -900,7 +900,8 @@ parse_delay_pool_class(delayConfig * cfg)
 	delayFreeDelayPool(pool);
 	safe_free(cfg->rates[pool]);
     }
-    cfg->rates[pool] = (delaySpecSet *)xmalloc(delay_class * sizeof(delaySpecSet));
+    /* Allocates a "delaySpecSet" just as large as needed for the class */
+    cfg->rates[pool] = (delaySpecSet *)xmalloc(delay_class * sizeof(delaySpec));
     cfg->delay_class[pool] = delay_class;
     cfg->rates[pool]->aggregate.restore_bps = cfg->rates[pool]->aggregate.max_bytes = -1;
     if (cfg->delay_class[pool] >= 3)
