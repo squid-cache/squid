@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.146 1997/11/12 21:04:31 wessels Exp $
+ * $Id: client_side.cc,v 1.147 1997/11/12 23:47:37 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -170,8 +170,7 @@ clientAccessCheckDone(int answer, void *data)
     http->acl_checklist = NULL;
     if (answer == ACCESS_ALLOWED) {
 	urlCanonical(http->request, http->url);
-	if (http->redirect_state != REDIRECT_NONE)
-	    fatal_dump("clientAccessCheckDone: wrong redirect_state");
+	assert(http->redirect_state == REDIRECT_NONE);
 	http->redirect_state = REDIRECT_PENDING;
 	redirectStart(http, clientRedirectDone, http);
     } else if (answer == ACCESS_REQ_PROXY_AUTH) {
@@ -215,8 +214,7 @@ clientRedirectDone(void *data, char *result)
     request_t *old_request = http->request;
     debug(33, 5) ("clientRedirectDone: '%s' result=%s\n", http->url,
 	result ? result : "NULL");
-    if (http->redirect_state != REDIRECT_PENDING)
-	fatal_dump("clientRedirectDone: wrong redirect_state");
+    assert(http->redirect_state == REDIRECT_PENDING);
     http->redirect_state = REDIRECT_DONE;
     if (result)
 	new_request = urlParse(old_request->method, result);
