@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.245 1998/04/08 16:56:32 wessels Exp $
+ * $Id: main.cc,v 1.246 1998/04/22 16:21:39 rousskov Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -524,8 +524,6 @@ mainInitialize(void)
 	    eventAdd("start_announce", start_announce, NULL, 3600);
 	eventAdd("ipcache_purgelru", ipcache_purgelru, NULL, 10);
 	eventAdd("fqdncache_purgelru", fqdncache_purgelru, NULL, 15);
-	if (store_digest)
-	    storeDigestScheduleRebuild();
     }
     configured_once = 1;
 }
