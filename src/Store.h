@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.1 2002/10/13 20:34:57 robertc Exp $
+ * $Id: Store.h,v 1.2 2002/10/14 06:19:49 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -70,7 +70,7 @@ public:
     virtual bool isNull() {
 	return false;
     }
-    void *operator new(unsigned int byteCount);
+    void *operator new(size_t byteCount);
     void operator delete(void *address);
 private:
     static MemPool *pool;

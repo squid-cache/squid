@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.h,v 1.1 2002/10/13 20:34:58 robertc Exp $
+ * $Id: authenticate.h,v 1.2 2002/10/14 06:19:49 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -53,7 +53,7 @@ public:
     
     AuthUserHashPointer (AuthUser *);
     
-    void *operator new (unsigned int byteCount);
+    void *operator new (size_t byteCount);
     void operator delete (void *address);
     AuthUser *user() const;
 private:
@@ -99,7 +99,7 @@ public:
     void absorb(auth_user_t *from);
     AuthUser (const char *);
     ~AuthUser ();
-    void *operator new (unsigned int byteCount);
+    void *operator new (size_t byteCount);
     void operator delete (void *address);
     char const *username() const;
 private:
@@ -121,7 +121,7 @@ public:
     static void addReplyAuthHeader(HttpReply * rep, auth_user_request_t * auth_user_request, request_t * request, int accelerated, int internal);
 
     ~AuthUserRequest();
-    void *operator new (unsigned int byteCount);
+    void *operator new (size_t byteCount);
     void operator delete (void *address);
     void start ( RH * handler, void *data);
     void setDenyMessage (char const *);
