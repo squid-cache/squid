@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.20 1996/04/01 04:51:14 wessels Exp $ */
+/* $Id: http.cc,v 1.21 1996/04/01 18:23:13 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -153,7 +153,6 @@ static void httpProcessReplyHeader(data, buf)
     char *t = NULL;
     StoreEntry *entry = data->entry;
     char *headers = NULL;
-    int l;
 
     if (data->reply_hdr == NULL) {
 	data->reply_hdr = get_free_8k_page();
@@ -203,25 +202,30 @@ static void httpProcessReplyHeader(data, buf)
 	    debug(11, 3, "httpReadReply: HTTP CODE: %d\n", data->http_code);
 	if (data->content_length)
 	    debug(11, 3, "httpReadReply: Content Length: %d\n", data->content_length);
-	/* If we know this is cachable we can unchange the key */
 	switch (data->http_code) {
 	case 200:		/* OK */
-	case 203:		/* ? */
-	case 300:		/* ? */
+	case 203:		/* Non-Authoritative Information */
+	case 300:		/* Multiple Choices */
 	case 301:		/* Moved Permanently */
-	case 302:		/* Moved Temporarily */
-	case 410:		/* ? */
-	    /* cachable, make the key public */
+	case 410:		/* Gone */
+	    /* These can be cached for a long time, make the key public */
+	    entry->expires = cached_curtime + ttlSet(entry);
 	    storeUnChangeKey(entry);
 	    break;
-	default:
+	case 401:		/* Unauthorized */
+	case 407:		/* Proxy Authentication Required */
+	    /* These should never be cached at all */
+	    storeExpireNow(entry);
 	    BIT_RESET(entry->flag, CACHABLE);
 	    BIT_SET(entry->flag, RELEASE_REQUEST);
 	    break;
+	default:
+	    /* These can be negative cached, make key public */
+	    entry->expires = cached_curtime + getNegativeTTL();
+	    storeUnChangeKey(entry);
+	    break;
 	}
     }
-    /* Calculate expiry time */
-    entry->expires = cached_curtime + ttlSet(entry);
 }
 
 
