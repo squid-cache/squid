@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.247 1998/04/01 17:24:09 wessels Exp $
+ * $Id: client_side.cc,v 1.248 1998/04/01 21:23:02 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -839,6 +839,9 @@ clientBuildReplyHeader(clientHttpRequest * http,
     end = hdr_in + hdr_len;
     for (t = hdr_in; t < end; t += strcspn(t, crlf), t += strspn(t, crlf)) {
 	l = strcspn(t, crlf) + 1;
+	/* Wow, we might find a NULL before 'end' */
+	if (1 == l)
+	    break;
 	xstrncpy(xbuf, t, l > 4096 ? 4096 : l);
 	/* enforce 1.0 reply version, this hack will be rewritten */
 	if (t == hdr_in && !strncasecmp(xbuf, "HTTP/", 5) && l > 8 &&

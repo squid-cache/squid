@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.261 1998/03/31 05:37:42 wessels Exp $
+ * $Id: http.cc,v 1.262 1998/04/01 21:23:01 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -625,7 +625,8 @@ httpBuildRequestHeader(request_t * request,
 	l = strcspn(t, crlf) + 1;
 	if (l > 4096)
 	    l = 4096;
-	if (0 == l)
+	/* We might find a NULL before 'end' */
+	if (1 == l)
 	    break;
 	xstrncpy(xbuf, t, l);
 	debug(11, 5) ("httpBuildRequestHeader: %s\n", xbuf);
