@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.149 1999/04/19 04:45:03 wessels Exp $
+ * $Id: enums.h,v 1.150 1999/05/03 21:55:01 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -345,7 +345,6 @@ enum {
 
 enum {
     SWAPOUT_NONE,
-    SWAPOUT_OPENING,
     SWAPOUT_WRITING,
     SWAPOUT_DONE
 };
@@ -556,6 +555,7 @@ typedef enum {
     MEM_SWAPDIR,
     MEM_USHORTLIST,
     MEM_WORDLIST,
+    MEM_STORE_IO,
     MEM_IDNS_QUERY,
     MEM_EVENT,
     MEM_MAX

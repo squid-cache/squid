@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.41 1999/04/19 04:45:06 wessels Exp $
+ * $Id: mem.cc,v 1.42 1999/05/03 21:55:02 wessels Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -290,6 +290,7 @@ memInit(void)
 	sizeof(helper_request), 0);
     memDataInit(MEM_HELPER_SERVER, "helper_server",
 	sizeof(helper_server), 0);
+    memDataInit(MEM_STORE_IO, "storeIOState", sizeof(storeIOState), 0);
     /* init string pools */
     for (i = 0; i < mem_str_pool_count; i++) {
 	StrPools[i].pool = memPoolCreate(StrPoolsAttrs[i].name, StrPoolsAttrs[i].obj_size);

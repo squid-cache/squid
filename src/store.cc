@@ -1,7 +1,7 @@
 
 /*
- * $Id: store.cc,v 1.491 1999/05/03 20:39:33 wessels Exp $
- * $Id: store.cc,v 1.491 1999/05/03 20:39:33 wessels Exp $
+ * $Id: store.cc,v 1.492 1999/05/03 21:55:07 wessels Exp $
+ * $Id: store.cc,v 1.492 1999/05/03 21:55:07 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -63,7 +63,6 @@ const char *storeStatusStr[] =
 const char *swapStatusStr[] =
 {
     "SWAPOUT_NONE",
-    "SWAPOUT_OPENING",
     "SWAPOUT_WRITING",
     "SWAPOUT_DONE"
 };
@@ -109,7 +108,6 @@ new_MemObject(const char *url, const char *log_url)
     mem->reply = httpReplyCreate();
     mem->url = xstrdup(url);
     mem->log_url = xstrdup(log_url);
-    mem->swapout.fd = -1;
     mem->object_sz = -1;
     mem->fd = -1;
     /* XXX account log_url */
@@ -137,7 +135,7 @@ destroy_MemObject(StoreEntry * e)
     debug(20, 3) ("destroy_MemObject: destroying %p\n", mem);
     e->mem_obj = NULL;
     if (!shutting_down)
-	assert(mem->swapout.fd == -1);
+	assert(mem->swapout.sio == NULL);
     stmemFree(&mem->data_hdr);
     mem->inmem_hi = 0;
     /* XXX account log_url */
@@ -411,7 +409,7 @@ storeAppend(StoreEntry * e, const char *buf, int len)
     if (EBIT_TEST(e->flags, DELAY_SENDING))
 	return;
     InvokeHandlers(e);
-    storeCheckSwapOut(e);
+    storeSwapOut(e);
 }
 
 void
@@ -588,7 +586,9 @@ storeComplete(StoreEntry * e)
 	e->mem_obj->request->hier.store_complete_stop = current_time;
 #endif
     InvokeHandlers(e);
-    storeCheckSwapOut(e);
+    storeSwapOut(e);
+    if (e->mem_obj->swapout.sio)
+	storeClose(e->mem_obj->swapout.sio);
 }
 
 /*
@@ -608,8 +608,6 @@ storeAbort(StoreEntry * e)
     storeReleaseRequest(e);
     EBIT_SET(e->flags, ENTRY_ABORTED);
     storeSetMemStatus(e, NOT_IN_MEMORY);
-    /* No DISK swap for negative cached object */
-    e->swap_status = SWAPOUT_NONE;
     e->store_status = STORE_OK;
     /*
      * We assign an object length here.  The only other place we assign
@@ -640,8 +638,6 @@ storeAbort(StoreEntry * e)
 	if (mem->swapout.fd >= 0)
 	    aioCancel(mem->swapout.fd, NULL);
 #endif
-	/* we have to close the disk file if there is no write pending */
-	if (!storeSwapOutWriteQueued(mem))
 	    storeSwapOutFileClose(e);
     }
     storeUnlockObject(e);	/* unlock */
@@ -802,7 +798,7 @@ storeRelease(StoreEntry * e)
     }
     storeLog(STORE_LOG_RELEASE, e);
     if (e->swap_file_number > -1) {
-	storeUnlinkFileno(e->swap_file_number);
+	storeUnlink(e->swap_file_number);
 	storeDirMapBitReset(e->swap_file_number);
 	if (e->swap_status == SWAPOUT_DONE)
 	    if (EBIT_TEST(e->flags, ENTRY_VALIDATED))
@@ -842,8 +838,6 @@ static int
 storeEntryLocked(const StoreEntry * e)
 {
     if (e->lock_count)
-	return 1;
-    if (e->swap_status == SWAPOUT_OPENING)
 	return 1;
     if (e->swap_status == SWAPOUT_WRITING)
 	return 1;
@@ -1111,8 +1105,6 @@ storeMemObjectDump(MemObject * mem)
 	mem->clients);
     debug(20, 1) ("MemObject->nclients: %d\n",
 	mem->nclients);
-    debug(20, 1) ("MemObject->swapout.fd: %d\n",
-	mem->swapout.fd);
     debug(20, 1) ("MemObject->reply: %p\n",
 	mem->reply);
     debug(20, 1) ("MemObject->request: %p\n",
@@ -1194,18 +1186,7 @@ storeBufferFlush(StoreEntry * e)
 {
     EBIT_CLR(e->flags, DELAY_SENDING);
     InvokeHandlers(e);
-    storeCheckSwapOut(e);
-}
-
-void
-storeUnlinkFileno(int fileno)
-{
-    debug(20, 5) ("storeUnlinkFileno: %08X\n", fileno);
-#if USE_ASYNC_IO
-    safeunlink(storeSwapFullPath(fileno, NULL), 1);
-#else
-    unlinkdUnlink(storeSwapFullPath(fileno, NULL));
-#endif
+    storeSwapOut(e);
 }
 
 int
@@ -1238,7 +1219,7 @@ storeEntryReset(StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
     debug(20, 3) ("storeEntryReset: %s\n", storeUrl(e));
-    assert(mem->swapout.fd == -1);
+    assert(mem->swapout.sio == NULL);
     stmemFree(&mem->data_hdr);
     mem->inmem_hi = mem->inmem_lo = 0;
     httpReplyDestroy(mem->reply);

@@ -1,7 +1,7 @@
 
 /*
- * $Id: store_dir.cc,v 1.86 1999/04/23 02:57:37 wessels Exp $
- * $Id: store_dir.cc,v 1.86 1999/04/23 02:57:37 wessels Exp $
+ * $Id: store_dir.cc,v 1.87 1999/05/03 21:55:09 wessels Exp $
+ * $Id: store_dir.cc,v 1.87 1999/05/03 21:55:09 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -52,24 +52,10 @@ static int storeVerifyDirectory(const char *path);
 static int storeCreateDirectory(const char *path, int);
 static void storeCreateSwapSubDirs(int j);
 
-/* return full name to swapfile */
 char *
-storeSwapFullPath(int fn, char *fullpath)
+storeSwapFullPath(sfileno f, char *buf)
 {
-    LOCAL_ARRAY(char, fullfilename, SQUID_MAXPATHLEN);
-    int dirn = (fn >> SWAP_DIR_SHIFT) % Config.cacheSwap.n_configured;
-    int filn = fn & SWAP_FILE_MASK;
-    int L1 = Config.cacheSwap.swapDirs[dirn].l1;
-    int L2 = Config.cacheSwap.swapDirs[dirn].l2;
-    if (!fullpath)
-	fullpath = fullfilename;
-    fullpath[0] = '\0';
-    snprintf(fullpath, SQUID_MAXPATHLEN, "%s/%02X/%02X/%08X",
-	Config.cacheSwap.swapDirs[dirn].path,
-	((filn / L2) / L2) % L1,
-	(filn / L2) % L2,
-	filn);
-    return fullpath;
+	return storeUfsFullPath(f, buf);
 }
 
 static char *

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.448 1999/04/27 06:33:38 wessels Exp $
+ * $Id: client_side.cc,v 1.449 1999/05/03 21:54:57 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1882,6 +1882,7 @@ clientProcessRequest(clientHttpRequest * http)
     if (NULL != http->entry) {
 	storeLockObject(http->entry);
 	storeCreateMemObject(http->entry, http->uri, http->log_uri);
+	http->entry->mem_obj->method = r->method;
 	storeClientListAdd(http->entry, http);
 #if DELAY_POOLS
 	delaySetStoreClient(http->entry, http, delayClient(r));

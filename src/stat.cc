@@ -1,7 +1,7 @@
 
 /*
- * $Id: stat.cc,v 1.314 1999/04/23 02:57:34 wessels Exp $
- * $Id: stat.cc,v 1.314 1999/04/23 02:57:34 wessels Exp $
+ * $Id: stat.cc,v 1.315 1999/05/03 21:55:05 wessels Exp $
+ * $Id: stat.cc,v 1.315 1999/05/03 21:55:05 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -270,10 +270,11 @@ statStoreEntry(StoreEntry * s, StoreEntry * e)
     if (mem != NULL) {
 	storeAppendPrintf(s, "\tinmem_lo: %d\n", (int) mem->inmem_lo);
 	storeAppendPrintf(s, "\tinmem_hi: %d\n", (int) mem->inmem_hi);
-	storeAppendPrintf(s, "\tswapout: %d bytes done, %d queued, FD %d\n",
-	    (int) mem->swapout.done_offset,
-	    (int) mem->swapout.queue_offset,
-	    mem->swapout.fd);
+	storeAppendPrintf(s, "\tswapout: %d bytes queued\n",
+	    (int) mem->swapout.queue_offset);
+	if (mem->swapout.sio)
+	    storeAppendPrintf(s, "\tswapout: %d bytes written\n",
+	        (int) storeOffset(mem->swapout.sio));
 	for (i = 0, sc = &mem->clients[i]; sc != NULL; sc = sc->next, i++) {
 	    if (sc->callback_data == NULL)
 		continue;
@@ -284,8 +285,6 @@ statStoreEntry(StoreEntry * s, StoreEntry * e)
 		(int) sc->seen_offset);
 	    storeAppendPrintf(s, "\t\tcopy_size: %d\n",
 		(int) sc->copy_size);
-	    storeAppendPrintf(s, "\t\tswapin_fd: %d\n",
-		(int) sc->swapin_fd);
 	    storeAppendPrintf(s, "\t\tflags:");
 	    if (sc->flags.disk_io_pending)
 		storeAppendPrintf(s, " disk_io_pending");
@@ -370,8 +369,8 @@ statObjectsOpenfdFilter(const StoreEntry * e)
 {
     if (e->mem_obj == NULL)
 	return 0;
-    if (e->mem_obj->swapout.fd < 0)
-	return 0;;
+    if (e->mem_obj->swapout.sio == NULL)
+	return 0;
     return 1;
 }
 
