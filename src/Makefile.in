@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.264 2002/12/15 09:04:57 robertc Exp $
+#  $Id: Makefile.in,v 1.265 2002/12/27 10:30:14 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -305,6 +305,8 @@ squid_SOURCES = \
 	Store.h \
 	store_io.cc \
 	StoreIOBuffer.h \
+	StoreIOState.cc \
+	StoreIOState.h \
 	store_client.cc \
 	StoreClient.h \
 	store_digest.cc \
@@ -316,6 +318,8 @@ squid_SOURCES = \
 	store_swapmeta.cc \
 	store_swapout.cc \
 	structs.h \
+	SwapDir.cc \
+	SwapDir.h \
 	tools.cc \
 	typedefs.h \
 	ufscommon.cc \
@@ -353,7 +357,7 @@ squid_LDADD = \
 	-lmiscutil \
 	@XTRA_LIBS@
 
-squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a
+squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a @STORE_OBJS@
 
 unlinkd_SOURCES = unlinkd.cc
 unlinkd_CXXFLAGS = -DUNLINK_DAEMON
@@ -542,14 +546,15 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) asn.$(OBJEXT) \
 	refresh.$(OBJEXT) send-announce.$(OBJEXT) $(am__objects_8) \
 	ssl.$(OBJEXT) $(am__objects_9) stat.$(OBJEXT) \
 	StatHist.$(OBJEXT) String.$(OBJEXT) stmem.$(OBJEXT) \
-	store.$(OBJEXT) store_io.$(OBJEXT) store_client.$(OBJEXT) \
-	store_digest.$(OBJEXT) store_dir.$(OBJEXT) \
-	store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
+	store.$(OBJEXT) store_io.$(OBJEXT) StoreIOState.$(OBJEXT) \
+	store_client.$(OBJEXT) store_digest.$(OBJEXT) \
+	store_dir.$(OBJEXT) store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
 	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
 	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
-	tools.$(OBJEXT) ufscommon.$(OBJEXT) $(am__objects_10) \
-	url.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) wais.$(OBJEXT) \
-	wccp.$(OBJEXT) whois.$(OBJEXT) $(am__objects_11)
+	SwapDir.$(OBJEXT) tools.$(OBJEXT) ufscommon.$(OBJEXT) \
+	$(am__objects_10) url.$(OBJEXT) urn.$(OBJEXT) \
+	useragent.$(OBJEXT) wais.$(OBJEXT) wccp.$(OBJEXT) \
+	whois.$(OBJEXT) $(am__objects_11)
 nodist_squid_OBJECTS = repl_modules.$(OBJEXT) auth_modules.$(OBJEXT) \
 	store_modules.$(OBJEXT) globals.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
@@ -579,7 +584,8 @@ depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/HttpStatusLine.Po \
 @AMDEP_TRUE@	$(DEPDIR)/IPInterception.Po $(DEPDIR)/MemBuf.Po \
 @AMDEP_TRUE@	$(DEPDIR)/Packer.Po $(DEPDIR)/ProfStats.Po \
-@AMDEP_TRUE@	$(DEPDIR)/StatHist.Po $(DEPDIR)/String.Po \
+@AMDEP_TRUE@	$(DEPDIR)/StatHist.Po $(DEPDIR)/StoreIOState.Po \
+@AMDEP_TRUE@	$(DEPDIR)/String.Po $(DEPDIR)/SwapDir.Po \
 @AMDEP_TRUE@	$(DEPDIR)/access_log.Po $(DEPDIR)/acl.Po \
 @AMDEP_TRUE@	$(DEPDIR)/asn.Po $(DEPDIR)/auth_modules.Po \
 @AMDEP_TRUE@	$(DEPDIR)/authenticate.Po $(DEPDIR)/cache_cf.Po \
@@ -790,7 +796,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/Packer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ProfStats.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/StatHist.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/StoreIOState.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/String.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/SwapDir.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/access_log.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/acl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/asn.Po@am__quote@
