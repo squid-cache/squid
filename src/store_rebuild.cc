@@ -566,9 +566,11 @@ storeValidate(StoreEntry * e, STVLDCB callback, void *callback_data, void *tag)
 #if USE_ASYNC_IO
     aioStat(path, sb, storeValidateComplete, ctrlp, tag);
 #else
-    /* When evaluating the actual arguments in a function call, the order
+    /*
+     * When evaluating the actual arguments in a function call, the order
      * in which the arguments and the function expression are evaluated is
-     * not specified; */
+     * not specified;
+     */
     x = stat(path, sb);
     storeValidateComplete(ctrlp, x, errno);
 #endif
