@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.91 1998/05/06 06:56:46 wessels Exp $
+ * $Id: net_db.cc,v 1.92 1998/05/06 20:09:15 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -936,8 +936,8 @@ netdbExchangeStart(void *data)
     ex->r->headers = xstrdup("\r\n");
     ex->r->headers_sz = strlen(ex->r->headers);
     ex->e = storeCreateEntry(uri, uri, 0, METHOD_GET);
-    ex->buf_sz = SQUID_TCP_SO_RCVBUF;
-    ex->buf = xmalloc(ex->buf_sz);
+    ex->buf_sz = 4096;;
+    ex->buf = memAllocate(MEM_4K_BUF);
     assert(NULL != ex->e);
     storeClientListAdd(ex->e, ex);
     storeClientCopy(ex->e, ex->seen, ex->used, ex->buf_sz,
@@ -1027,7 +1027,7 @@ netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
 static void
 netdbExchangeDone(netdbExchangeState * ex)
 {
-    safe_free(ex->buf);
+    memFree(MEM_4K_BUF, ex->buf);
     requestUnlink(ex->r);
     storeUnregister(ex->e, ex);
     storeUnlockObject(ex->e);
