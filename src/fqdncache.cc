@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.153 2003/01/23 00:37:21 robertc Exp $
+ * $Id: fqdncache.cc,v 1.154 2003/02/13 20:47:53 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -65,8 +65,6 @@ static struct {
     int hits;
     int misses;
     int negative_hits;
-    int errors;
-    int ghba_calls;		/* # calls to blocking gethostbyaddr() */
 } FqdncacheStats;
 
 static dlink_list lru_list;
@@ -470,8 +468,6 @@ fqdnStats(StoreEntry * sentry)
 	FqdncacheStats.negative_hits);
     storeAppendPrintf(sentry, "FQDNcache Misses: %d\n",
 	FqdncacheStats.misses);
-    storeAppendPrintf(sentry, "Blocking calls to gethostbyaddr(): %d\n",
-	FqdncacheStats.ghba_calls);
     storeAppendPrintf(sentry, "FQDN Cache Contents:\n\n");
     storeAppendPrintf(sentry, "%-15.15s %3s %3s %3s %s\n",
 	"Address", "Flg", "TTL", "Cnt", "Hostnames");
@@ -637,7 +633,7 @@ snmp_netFqdnFn(variable_list * Var, snint * ErrP)
 	break;
     case FQDN_GHBN:
 	Answer = snmp_var_new_integer(Var->name, Var->name_length,
-	    FqdncacheStats.ghba_calls,
+	    0, /* deprecated */
 	    SMI_COUNTER32);
 	break;
     default:
