@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.385 2001/12/28 02:39:42 hno Exp $
+ * $Id: http.cc,v 1.386 2002/01/28 17:51:27 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -327,7 +327,6 @@ httpCachableReply(HttpStateData * httpState)
 const char *
 httpMakeVaryMark(request_t * request, HttpReply * reply)
 {
-    int ok = 1;
     String vary, hdr;
     const char *pos = NULL;
     const char *item;
@@ -375,7 +374,7 @@ httpMakeVaryMark(request_t * request, HttpReply * reply)
     }
     stringClean(&vary);
 #endif
-    debug(11, 3) ("httpMakeVaryMark: %d / %s\n", ok, strBuf(vstr));
+    debug(11, 3) ("httpMakeVaryMark: %s\n", strBuf(vstr));
     return strBuf(vstr);
 }
 
