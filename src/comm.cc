@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.247 1998/04/08 21:37:17 wessels Exp $
+ * $Id: comm.cc,v 1.248 1998/04/08 22:48:47 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1453,7 +1453,9 @@ ignoreErrno(int ierrno)
 #endif
     case EALREADY:
     case EINTR:
-    case ERESTART:		/* Solaris only? */
+#ifdef ERESTART
+    case ERESTART:
+#endif
 	return 1;
     default:
 	return 0;
