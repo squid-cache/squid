@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.236 1998/03/27 04:41:32 wessels Exp $
+ * $Id: client_side.cc,v 1.237 1998/03/28 20:33:45 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -932,13 +932,18 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	freefunc(buf);
 	return;
     } else if (entry->store_status == STORE_ABORTED) {
+	/* call clientWriteComplete so the client socket gets closed */
+	clientWriteComplete(fd, NULL, 0, COMM_OK, http);
 	freefunc(buf);
 	return;
     } else if (size < 0) {
+	/* call clientWriteComplete so the client socket gets closed */
+	clientWriteComplete(fd, NULL, 0, COMM_OK, http);
 	freefunc(buf);
 	return;
     } else if (size == 0) {
-	clientWriteComplete(fd, NULL, 0, DISK_OK, http);
+	/* call clientWriteComplete so the client socket gets closed */
+	clientWriteComplete(fd, NULL, 0, COMM_OK, http);
 	freefunc(buf);
 	return;
     }
