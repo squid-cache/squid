@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.418 1998/05/26 15:48:28 wessels Exp $
+ * $Id: store.cc,v 1.419 1998/05/26 23:04:15 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -194,6 +194,7 @@ new_StoreEntry(int mem_obj_flag, const char *url, const char *log_url)
     if (mem_obj_flag)
 	e->mem_obj = new_MemObject(url, log_url);
     debug(20, 3) ("new_StoreEntry: returning %p\n", e);
+    e->expires = e->lastmod = e->lastref = e->timestamp = -1;
     return e;
 }
 
@@ -991,7 +992,8 @@ storeTimestampsSet(StoreEntry * entry)
     if (served_date < 0)
 	served_date = squid_curtime;
     entry->expires = reply->expires;
-    entry->lastmod = reply->last_modified;
+    if (reply->last_modified > -1)
+        entry->lastmod = reply->last_modified;
     if (entry->lastmod < 0)
 	entry->lastmod = served_date;
     entry->timestamp = served_date;
