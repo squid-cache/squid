@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.237 2001/10/20 11:12:37 hno Exp $
+# $Id: cf.data.pre,v 1.238 2001/10/22 14:40:23 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1452,15 +1452,15 @@ DOC_END
 NAME: request_body_max_size
 COMMENT: (KB)
 TYPE: b_size_t
-DEFAULT: 1 MB
+DEFAULT: 0 KB
 LOC: Config.maxRequestBodySize
 DOC_START
 	This specifies the maximum size for an HTTP request body.
 	In other words, the maximum size of a PUT/POST request.
 	A user who attempts to send a request with a body larger
 	than this limit receives an "Invalid Request" error message.
-	If you set this parameter to a zero, there will be no limit
-	imposed.
+	If you set this parameter to a zero (the default), there will
+	be no limit imposed.
 DOC_END
 
 NAME: refresh_pattern
