@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.314 1998/05/26 16:34:19 wessels Exp $
+ * $Id: client_side.cc,v 1.315 1998/05/27 18:35:22 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2140,32 +2140,36 @@ httpAccept(int sock, void *notused)
     ConnStateData *connState = NULL;
     struct sockaddr_in peer;
     struct sockaddr_in me;
-    memset(&peer, '\0', sizeof(struct sockaddr_in));
-    memset(&me, '\0', sizeof(struct sockaddr_in));
-    commSetSelect(sock, COMM_SELECT_READ, httpAccept, NULL, 0);
-    if ((fd = comm_accept(sock, &peer, &me)) < 0) {
-	debug(50, 1) ("httpAccept: FD %d: accept failure: %s\n",
-	    sock, xstrerror());
-	return;
+    int max = 10;
+    while (max-- && !httpAcceptDefer(sock, notused)) {
+	memset(&peer, '\0', sizeof(struct sockaddr_in));
+	memset(&me, '\0', sizeof(struct sockaddr_in));
+	commSetSelect(sock, COMM_SELECT_READ, httpAccept, NULL, 0);
+	if ((fd = comm_accept(sock, &peer, &me)) < 0) {
+	    if (!ignoreErrno(errno))
+	        debug(50, 1) ("httpAccept: FD %d: accept failure: %s\n",
+		    sock, xstrerror());
+	    break;
+	}
+	debug(33, 4) ("httpAccept: FD %d: accepted\n", fd);
+	connState = xcalloc(1, sizeof(ConnStateData));
+	connState->peer = peer;
+	connState->log_addr = peer.sin_addr;
+	connState->log_addr.s_addr &= Config.Addrs.client_netmask.s_addr;
+	connState->me = me;
+	connState->fd = fd;
+	connState->ident.fd = -1;
+	connState->in.size = REQUEST_BUF_SIZE;
+	connState->in.buf = xcalloc(connState->in.size, 1);
+	cbdataAdd(connState, MEM_NONE);
+	/* XXX account connState->in.buf */
+	comm_add_close_handler(fd, connStateFree, connState);
+	if (Config.onoff.log_fqdn)
+	    fqdncache_gethostbyaddr(peer.sin_addr, FQDN_LOOKUP_IF_MISS);
+	commSetTimeout(fd, Config.Timeout.request, requestTimeout, connState);
+	commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, connState, 0);
+	commSetDefer(fd, clientReadDefer, connState);
     }
-    debug(33, 4) ("httpAccept: FD %d: accepted\n", fd);
-    connState = xcalloc(1, sizeof(ConnStateData));
-    connState->peer = peer;
-    connState->log_addr = peer.sin_addr;
-    connState->log_addr.s_addr &= Config.Addrs.client_netmask.s_addr;
-    connState->me = me;
-    connState->fd = fd;
-    connState->ident.fd = -1;
-    connState->in.size = REQUEST_BUF_SIZE;
-    connState->in.buf = xcalloc(connState->in.size, 1);
-    cbdataAdd(connState, MEM_NONE);
-    /* XXX account connState->in.buf */
-    comm_add_close_handler(fd, connStateFree, connState);
-    if (Config.onoff.log_fqdn)
-	fqdncache_gethostbyaddr(peer.sin_addr, FQDN_LOOKUP_IF_MISS);
-    commSetTimeout(fd, Config.Timeout.request, requestTimeout, connState);
-    commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, connState, 0);
-    commSetDefer(fd, clientReadDefer, connState);
 }
 
 /* return 1 if the request should be aborted */
