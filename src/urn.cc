@@ -1,5 +1,8 @@
 
 /*
+ *
+ * $Id: urn.cc,v 1.26 1998/04/06 22:21:38 wessels Exp $
+ *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
  *
