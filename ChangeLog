@@ -6,6 +6,7 @@ Changes to squid-1.1.0 (December 6, 1996):
 	- Added anonymizer options; compile with USE_ANONYMIZER (Lutz
 	  Donnerhacke).
 	- Added Gauntlet proxy support to ftpget (Mukaigawa Shin'ichi).
+	- Changed UDP_HIT_OBJ to be disabled by default.
 	- Updated doc/Release-Notes-1.1.txt
 
 ==============================================================================
