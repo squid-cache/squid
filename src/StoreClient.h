@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreClient.h,v 1.12 2004/08/30 05:12:31 robertc Exp $
+ * $Id: StoreClient.h,v 1.13 2004/12/27 11:04:36 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -70,7 +70,7 @@ public:
     void doCopy (StoreEntry *e);
     void readHeader(const char *buf, ssize_t len);
     void copy(StoreEntry *, StoreIOBuffer, STCB *, void *);
-    void dumpStats(StoreEntry * output, int clientNumber) const;
+    void dumpStats(MemBuf * output, int clientNumber) const;
 
     off_t cmp_offset;
 #if STORE_CLIENT_LIST_DEBUG

@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.386 2004/12/20 19:26:11 robertc Exp $
+ * $Id: stat.cc,v 1.387 2004/12/27 11:04:36 serassio Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -76,7 +76,7 @@ static void statCountersInitSpecial(StatCounters *);
 static void statCountersClean(StatCounters *);
 static void statCountersCopy(StatCounters * dest, const StatCounters * orig);
 static double statMedianSvc(int, int);
-static void statStoreEntry(StoreEntry * s, StoreEntry * e);
+static void statStoreEntry(MemBuf * mb, StoreEntry * e);
 static double statCPUUsage(int minutes);
 static OBJH stat_io_get;
 static OBJH stat_objects_get;
@@ -309,24 +309,24 @@ describeTimestamps(const StoreEntry * entry)
 }
 
 static void
-statStoreEntry(StoreEntry * s, StoreEntry * e)
+statStoreEntry(MemBuf * mb, StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
-    storeAppendPrintf(s, "KEY %s\n", e->getMD5Text());
-    storeAppendPrintf(s, "\t%s\n", describeStatuses(e));
-    storeAppendPrintf(s, "\t%s\n", storeEntryFlags(e));
-    storeAppendPrintf(s, "\t%s\n", describeTimestamps(e));
-    storeAppendPrintf(s, "\t%d locks, %d clients, %d refs\n",
-                      (int) e->lock_count,
-                      storePendingNClients(e),
-                      (int) e->refcount);
-    storeAppendPrintf(s, "\tSwap Dir %d, File %#08X\n",
-                      e->swap_dirn, e->swap_filen);
+    memBufPrintf(mb, "KEY %s\n", e->getMD5Text());
+    memBufPrintf(mb, "\t%s\n", describeStatuses(e));
+    memBufPrintf(mb, "\t%s\n", storeEntryFlags(e));
+    memBufPrintf(mb, "\t%s\n", describeTimestamps(e));
+    memBufPrintf(mb, "\t%d locks, %d clients, %d refs\n",
+                 (int) e->lock_count,
+                 storePendingNClients(e),
+                 (int) e->refcount);
+    memBufPrintf(mb, "\tSwap Dir %d, File %#08X\n",
+                 e->swap_dirn, e->swap_filen);
 
     if (mem != NULL)
-        mem->stat (s);
+        mem->stat (mb);
 
-    storeAppendPrintf(s, "\n");
+    memBufPrintf(mb, "\n");
 }
 
 /* process objects list */
@@ -352,23 +352,29 @@ statObjects(void *data)
         return;
     }
 
-    storeBuffer(state->sentry);
     debug(49, 3) ("statObjects: Bucket #%d\n", state->bucket);
     link_next = hash_get_bucket(store_table, state->bucket);
 
-    while (NULL != (link_ptr = link_next)) {
-        link_next = link_ptr->next;
-        e = (StoreEntry *) link_ptr;
+    if (link_next) {
+        MemBuf mb;
+        memBufDefInit(&mb);
 
-        if (state->filter && 0 == state->filter(e))
-            continue;
+        while (NULL != (link_ptr = link_next)) {
+            link_next = link_ptr->next;
+            e = (StoreEntry *) link_ptr;
 
-        statStoreEntry(state->sentry, e);
+            if (state->filter && 0 == state->filter(e))
+                continue;
+
+            statStoreEntry(&mb, e);
+        }
+
+        storeAppend(state->sentry, mb.buf, mb.size);
+        memBufClean(&mb);
     }
 
     state->bucket++;
     eventAdd("statObjects", statObjects, state, 0.0, 1);
-    storeBufferFlush(state->sentry);
 }
 
 static void
