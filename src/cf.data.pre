@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.329 2003/07/06 21:50:55 hno Exp $
+# $Id: cf.data.pre,v 1.330 2003/07/07 21:55:04 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1110,6 +1110,7 @@ DOC_START
 			default %d/%b/%Y:%H:%M:S %z
 		tg	GMT time. Optional strftime format argument
 			default %d/%b/%Y:%H:%M:S %z
+		tr	Response time (milliseconds)
 		>h	Request header. Optional header name argument
 			on the format header[:[separator]element]
 		<h	Reply header. Optional header name argument
