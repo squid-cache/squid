@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.181 1997/10/30 00:51:05 wessels Exp $
+ * $Id: main.cc,v 1.182 1997/10/30 04:49:37 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -110,6 +110,7 @@
 extern void (*failure_notify) (const char *);
 
 static int opt_send_signal = -1;
+static int opt_no_daemon = 0;
 static volatile int rotate_pending = 0;		/* set by SIGUSR1 handler */
 static int httpPortNumOverride = 1;
 static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
@@ -128,6 +129,7 @@ static void usage(void);
 static void mainParseOptions(int, char **);
 static void sendSignal(void);
 static void serverConnectionsOpen(void);
+static void daemonize(char **);
 
 static void
 usage(void)
@@ -162,7 +164,7 @@ mainParseOptions(int argc, char *argv[])
     extern char *optarg;
     int c;
 
-    while ((c = getopt(argc, argv, "CDFRVYXa:bdf:hk:m:su:vz?")) != -1) {
+    while ((c = getopt(argc, argv, "CDFNRVYXa:bdf:hk:m:su:vz?")) != -1) {
 	switch (c) {
 	case 'C':
 	    opt_catch_signals = 0;
@@ -173,6 +175,8 @@ mainParseOptions(int argc, char *argv[])
 	case 'F':
 	    opt_foreground_rebuild = 1;
 	    break;
+	case 'N':
+	    opt_no_daemon = 1;
 	case 'R':
 	    do_reuse = 0;
 	    break;
@@ -618,6 +622,8 @@ main(int argc, char **argv)
 	sendSignal();
 	/* NOTREACHED */
     }
+    if (!opt_no_daemon)
+	daemonize(argv);
     setMaxFD();
 
     if (opt_catch_signals)
@@ -715,4 +721,52 @@ sendSignal(void)
     }
     /* signal successfully sent */
     exit(0);
+}
+
+static void
+daemonize(char *argv[])
+{
+    char *prog;
+    char *t;
+    size_t l;
+    int failcount = 0;
+    time_t start;
+    time_t stop;
+#ifdef _SQUID_NEXT_
+    union wait status;
+#else
+    int status;
+#endif
+    if (*(argv[0]) == '(')
+	return;
+    for (;;) {
+	if (fork() == 0) {
+	    /* child */
+	    prog = xstrdup(argv[0]);
+	    if ((t = strrchr(prog, '/')) == NULL)
+		t = prog;
+	    argv[0] = xmalloc(l = strlen(prog) + 3);
+	    snprintf(argv[0], l, "(%s)", prog);
+	    execv(prog, argv);
+	    fatal("execl failed");
+	}
+	/* parent */
+	time(&start);
+#ifdef _SQUID_NEXT_
+	wait3(&status, 0, NULL);
+#else
+	waitpid(-1, &status, 0);
+#endif
+	time(&stop);
+	if (stop - start < 10)
+	    failcount++;
+	if (failcount == 5)
+	    exit(1);
+	debug(0, 0) ("exit status = %d\n", WEXITSTATUS(status));
+	debug(0, 0) ("term sig    = %d\n", WTERMSIG(status));
+	if (WIFEXITED(status))
+	    if (WEXITSTATUS(status) == 0)
+		exit(0);
+	sleep(3);
+    }
 }
