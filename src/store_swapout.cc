@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.26 1998/08/24 21:11:30 wessels Exp $
+ * $Id: store_swapout.cc,v 1.27 1998/09/06 16:20:05 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -162,7 +162,6 @@ storeCheckSwapOut(StoreEntry * e)
 #else
     assert(mem->inmem_hi >= mem->swapout.queue_offset);
 #endif
-    swapout_size = (size_t) (mem->inmem_hi - mem->swapout.queue_offset);
     lowest_offset = storeLowestMemReaderOffset(e);
     debug(20, 3) ("storeCheckSwapOut: lowest_offset = %d\n",
 	(int) lowest_offset);
@@ -175,19 +174,28 @@ storeCheckSwapOut(StoreEntry * e)
      * not yet on disk.
      */
     if (storeSwapOutAble(e))
-        if ((on_disk = storeSwapOutObjectBytesOnDisk(mem)) < new_mem_lo)
+	if ((on_disk = storeSwapOutObjectBytesOnDisk(mem)) < new_mem_lo)
 	    new_mem_lo = on_disk;
     stmemFreeDataUpto(&mem->data_hdr, new_mem_lo);
     mem->inmem_lo = new_mem_lo;
     if (e->swap_status == SWAPOUT_WRITING)
 	assert(mem->inmem_lo <= mem->swapout.done_offset);
     if (!storeSwapOutAble(e))
-	    return;
+	return;
     swapout_size = (size_t) (mem->inmem_hi - mem->swapout.queue_offset);
     debug(20, 3) ("storeCheckSwapOut: swapout_size = %d\n",
 	(int) swapout_size);
-    if (swapout_size == 0)
+    if (swapout_size == 0) {
+	if (e->store_status == STORE_OK) {
+	    debug(20, 1) ("storeCheckSwapOut: nothing to write for STORE_OK\n");
+	    storeUnlinkFileno(e->swap_file_number);
+	    storeDirMapBitReset(e->swap_file_number);
+	    e->swap_file_number = -1;
+	    e->swap_status = SWAPOUT_NONE;
+	    storeSwapOutFileClose(e);
+	}
 	return;
+    }
     if (e->store_status == STORE_PENDING && swapout_size < VM_WINDOW_SZ)
 	return;			/* wait for a full block */
     /* Ok, we have stuff to swap out.  Is there a swapout.fd open? */
@@ -212,7 +220,6 @@ storeCheckSwapOut(StoreEntry * e)
 	swapout_size);
     if (swap_buf_len < 0) {
 	debug(20, 1) ("stmemCopy returned %d for '%s'\n", swap_buf_len, storeKeyText(e->key));
-	/* XXX This is probably wrong--we should storeRelease()? */
 	storeUnlinkFileno(e->swap_file_number);
 	storeDirMapBitReset(e->swap_file_number);
 	e->swap_file_number = -1;
