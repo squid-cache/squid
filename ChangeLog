@@ -1,4 +1,5 @@
 	- Simpler cacheobj implementation.
+	- persistent connection histogram
 
 Changes to squid-1.2.alpha5 ():
 

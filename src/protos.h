@@ -341,8 +341,7 @@ extern void netdbUpdatePeer _PARAMS((request_t *, peer * e, int rtt, int hops));
 extern void objcachePasswdAdd _PARAMS((cachemgr_passwd **, char *, wordlist *));
 extern void objcachePasswdDestroy _PARAMS((cachemgr_passwd ** a));
 extern void objcacheStart _PARAMS((int fd, StoreEntry *));
-
-
+extern void objcacheInit _PARAMS((void));
 
 extern void peerSelect _PARAMS((request_t *, StoreEntry *, PSC *, PSC *, void *data));
 extern peer *peerGetSomeParent _PARAMS((request_t *, hier_code *));
@@ -387,6 +386,7 @@ extern void init_stack _PARAMS((Stack *, int));
 extern void stackFreeMemory _PARAMS((Stack *));
 
 extern void stat_init _PARAMS((cacheinfo **, const char *));
+extern void pconnHistCount _PARAMS((int, int));
 
 /* To reduce memory fragmentation, we now store the memory version of an
  * object in fixed size blocks of size PAGE_SIZE and instead of calling 
@@ -555,3 +555,4 @@ extern OBJH info_get;
 extern OBJH server_list;
 extern OBJH parameter_get;
 extern OBJH storeDirStats;
+extern OBJH pconnHistDump;
