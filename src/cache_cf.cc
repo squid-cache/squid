@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.134 1996/11/08 00:02:16 wessels Exp $
+ * $Id: cache_cf.cc,v 1.135 1996/11/11 21:42:16 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1091,7 +1091,7 @@ parseConfigFile(const char *file_name)
 
 #if USE_USERAGENT_LOG
 	else if (!strcmp(token, "useragent_log"))
-	    parsePathname(&Config.Log.swap);
+	    parsePathname(&Config.Log.useragent);
 #endif
 
 	else if (!strcmp(token, "logfile_rotate"))
