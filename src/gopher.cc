@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.123 1998/03/16 21:59:58 wessels Exp $
+ * $Id: gopher.cc,v 1.124 1998/03/27 22:44:21 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -926,6 +926,7 @@ gopherConnectDone(int fd, int status, void *data)
 	comm_close(fd);
     } else {
 	commSetSelect(fd, COMM_SELECT_WRITE, gopherSendRequest, gopherState, 0);
+	commSetTimeout(fd, Config.Timeout.read, gopherTimeout, gopherState);
     }
 }
 

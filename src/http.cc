@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.257 1998/03/20 18:06:44 rousskov Exp $
+ * $Id: http.cc,v 1.258 1998/03/27 22:44:22 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -948,6 +948,7 @@ httpConnectDone(int fd, int status, void *data)
 	fd_note(fd, storeUrl(entry));
 	fd_table[fd].uses++;
 	commSetSelect(fd, COMM_SELECT_WRITE, httpSendRequest, httpState, 0);
+	commSetTimeout(fd, Config.Timeout.read, httpTimeout, httpState);
     }
 }
 

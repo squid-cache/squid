@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.103 1998/03/05 00:43:11 wessels Exp $
+ * $Id: wais.cc,v 1.104 1998/03/27 22:44:26 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -359,6 +359,7 @@ waisConnectDone(int fd, int status, void *data)
 	comm_close(fd);
     } else {
 	commSetSelect(fd, COMM_SELECT_WRITE, waisSendRequest, waisState, 0);
+        commSetTimeout(fd, Config.Timeout.read, waisTimeout, waisState);
     }
 }
 
