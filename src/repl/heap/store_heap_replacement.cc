@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_heap_replacement.cc,v 1.2 2000/11/03 16:38:46 wessels Exp $
+ * $Id: store_heap_replacement.cc,v 1.3 2000/11/03 16:39:42 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Heap-based replacement
  * AUTHOR: John Dilley
@@ -64,7 +64,8 @@
  * for this to become a problem. (estimation is 10^8 cache
  * turnarounds)
  */
-heap_key HeapKeyGen_StoreEntry_LFUDA(void *entry, double age)
+heap_key 
+HeapKeyGen_StoreEntry_LFUDA(void *entry, double age)
 {
     StoreEntry *e = entry;
     heap_key key;
@@ -77,11 +78,11 @@ heap_key HeapKeyGen_StoreEntry_LFUDA(void *entry, double age)
 	tie = 1.0 - exp((double) (e->lastref - squid_curtime) / 86400.0);
     key = age + (double) e->refcount - tie;
     debug(81, 3) ("HeapKeyGen_StoreEntry_LFUDA: %s refcnt=%ld lastref=%ld age=%f tie=%f -> %f\n",
-	    storeKeyText(e->hash.key), e->refcount, e->lastref, age, tie, key);
+	storeKeyText(e->hash.key), e->refcount, e->lastref, age, tie, key);
     if (e->mem_obj && e->mem_obj->url)
 	debug(81, 3) ("HeapKeyGen_StoreEntry_LFUDA: url=%s\n",
 	    e->mem_obj->url);
-    return (double)key;
+    return (double) key;
 }
 
 
@@ -104,7 +105,8 @@ heap_key HeapKeyGen_StoreEntry_LFUDA(void *entry, double age)
  * for this to become a problem. (estimation is 10^8 cache
  * turnarounds)
  */
-heap_key HeapKeyGen_StoreEntry_GDSF(void *entry, double age)
+heap_key 
+HeapKeyGen_StoreEntry_GDSF(void *entry, double age)
 {
     StoreEntry *e = entry;
     heap_key key;
@@ -112,7 +114,7 @@ heap_key HeapKeyGen_StoreEntry_GDSF(void *entry, double age)
     double tie = (e->lastref > 1) ? (1.0 / e->lastref) : 1.0;
     key = age + ((double) e->refcount / size) - tie;
     debug(81, 3) ("HeapKeyGen_StoreEntry_GDSF: %s size=%f refcnt=%ld lastref=%ld age=%f tie=%f -> %f\n",
-	    storeKeyText(e->hash.key), size, e->refcount, e->lastref, age, tie, key);
+	storeKeyText(e->hash.key), size, e->refcount, e->lastref, age, tie, key);
     if (e->mem_obj && e->mem_obj->url)
 	debug(81, 3) ("HeapKeyGen_StoreEntry_GDSF: url=%s\n",
 	    e->mem_obj->url);
@@ -126,11 +128,12 @@ heap_key HeapKeyGen_StoreEntry_GDSF(void *entry, double age)
  * Don't use it unless you are trying to compare performance among
  * heap-based replacement policies...
  */
-heap_key HeapKeyGen_StoreEntry_LRU(void *entry, double age)
+heap_key 
+HeapKeyGen_StoreEntry_LRU(void *entry, double age)
 {
     StoreEntry *e = entry;
     debug(81, 3) ("HeapKeyGen_StoreEntry_LRU: %s age=%f lastref=%f\n",
-	    storeKeyText(e->hash.key), age, (double)e->lastref);
+	storeKeyText(e->hash.key), age, (double) e->lastref);
     if (e->mem_obj && e->mem_obj->url)
 	debug(81, 3) ("HeapKeyGen_StoreEntry_LRU: url=%s\n",
 	    e->mem_obj->url);

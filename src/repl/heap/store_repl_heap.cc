@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_heap.cc,v 1.1 2000/06/08 18:05:40 hno Exp $
+ * $Id: store_repl_heap.cc,v 1.2 2000/11/03 16:39:42 wessels Exp $
  *
  * DEBUG: section ?     HEAP based removal policies
  * AUTHOR: Henrik Nordstrom
@@ -48,9 +48,9 @@ struct _HeapPolicyData {
     heap_key_func *keyfunc;
     int count;
     int nwalkers;
-    enum heap_entry_type
-    { TYPE_UNKNOWN = 0, TYPE_STORE_ENTRY, TYPE_STORE_MEM }
-    type;
+    enum heap_entry_type {
+	TYPE_UNKNOWN = 0, TYPE_STORE_ENTRY, TYPE_STORE_MEM
+    } type;
 };
 
 /* Hack to avoid having to remember the RemovalPolicyNode location.
@@ -79,7 +79,7 @@ heap_add(RemovalPolicy * policy, StoreEntry * entry, RemovalPolicyNode * node)
     HeapPolicyData *heap = policy->_data;
     assert(!node->data);
     if (EBIT_TEST(entry->flags, ENTRY_SPECIAL))
-	return; /* We won't manage these.. they messes things up */
+	return;			/* We won't manage these.. they messes things up */
     node->data = heap_insert(heap->heap, entry);
     heap->count += 1;
     if (!heap->type)
@@ -115,8 +115,7 @@ heap_referenced(RemovalPolicy * policy, const StoreEntry * entry,
 /** RemovalPolicyWalker **/
 
 typedef struct _HeapWalkData HeapWalkData;
-struct _HeapWalkData
-{
+struct _HeapWalkData {
     int current;
 };
 
@@ -166,8 +165,7 @@ heap_walkInit(RemovalPolicy * policy)
 /** RemovalPurgeWalker **/
 
 typedef struct _HeapPurgeData HeapPurgeData;
-struct _HeapPurgeData
-{
+struct _HeapPurgeData {
     link_list *locked_entries;
     heap_key min_age;
 };
@@ -206,8 +204,8 @@ heap_purgeDone(RemovalPurgeWalker * walker)
     heap->nwalkers -= 1;
     if (heap_walker->min_age > 0) {
 	heap->heap->age = heap_walker->min_age;
-	debug (81, 3) ("heap_purgeDone: Heap age set to %f\n",
-		(double) heap->heap->age);
+	debug(81, 3) ("heap_purgeDone: Heap age set to %f\n",
+	    (double) heap->heap->age);
     }
     /*
      * Reinsert the locked entries
