@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.77 1999/10/04 05:05:32 wessels Exp $
+ * $Id: store_client.cc,v 1.78 1999/10/04 22:49:30 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -290,7 +290,7 @@ storeClientCopy3(StoreEntry * e, store_client * sc)
     }
     assert(STORE_DISK_CLIENT == sc->type);
     if (sc->flags.disk_io_pending) {
-	debug(20, 1) ("storeClientCopy3: Averted multiple fd operation?\n");
+	debug(20, 3) ("storeClientCopy3: Averted multiple fd operation?\n");
 	return;
     }
     debug(20, 3) ("storeClientCopy3: reading from STORE\n");
