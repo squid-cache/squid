@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.37 2001/01/15 22:37:10 wessels Exp $
+ * $Id: store_dir_diskd.cc,v 1.38 2001/01/23 17:27:21 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1543,28 +1543,13 @@ storeDiskdDirMaintain(SwapDir * SD)
 int
 storeDiskdDirCheckObj(SwapDir * SD, const StoreEntry * e)
 {
-    int loadav;
-
     diskdinfo_t *diskdinfo = SD->fsdata;
-#if OLD_UNUSED_CODE
-    if (storeDiskdDirExpiredReferenceAge(SD) < 300) {
-	debug(20, 3) ("storeDiskdDirCheckObj: NO: LRU Age = %d\n",
-	    storeDiskdDirExpiredReferenceAge(SD));
-	/* store_check_cachable_hist.no.lru_age_too_low++; */
-	return -1;
-    }
-#endif
-
     /* Check the queue length */
     if (diskdinfo->away >= diskdinfo->magic1)
 	return -1;
-
     /* Calculate the storedir load relative to magic2 on a scale of 0 .. 1000 */
-    if (diskdinfo->away == 0)
-	loadav = 0;
-    else
-	loadav = diskdinfo->magic2 * 1000 / diskdinfo->away;
-    return loadav;
+    /* the parse function guarantees magic2 is positivie */
+    return diskdinfo->away * 1000 / diskdinfo->magic2;
 }
 
 /*
