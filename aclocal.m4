@@ -598,9 +598,9 @@ done])
 # -----------------
 # Like AS_DIRNAME, only do it during macro expansion
 AC_DEFUN([_AM_DIRNAME],
-       [m4_if(m4_bregex([$1], [^.*[^/]//*[^/][^/]*/*$]), -1,
-	      m4_if(m4_bregex([$1], [^//\([^/]\|$\)]), -1,
-		    m4_if(m4_bregex([$1], [^/.*]), -1,
+       [m4_if(m4_bregexp([$1], [^.*[^/]//*[^/][^/]*/*$]), -1,
+	      m4_if(m4_bregexp([$1], [^//\([^/]\|$\)]), -1,
+		    m4_if(m4_bregexp([$1], [^/.*]), -1,
 			  [.],
 			  m4_bpatsubst([$1], [^\(/\).*], [\1])),
 		    m4_bpatsubst([$1], [^\(//\)\([^/].*\|$\)], [\1])),
