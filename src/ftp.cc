@@ -1,5 +1,5 @@
 /*
- * $Id: ftp.cc,v 1.169 1997/11/14 17:21:18 wessels Exp $
+ * $Id: ftp.cc,v 1.170 1997/11/18 00:48:23 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -636,6 +636,7 @@ ftpParseListing(FtpStateData * ftpState, int len)
 static void
 ftpReadComplete(FtpStateData * ftpState)
 {
+    debug(9, 0) ("ftpReadComplete\n");
     /* Connection closed; retrieval done. */
     if (EBIT_TEST(ftpState->flags, FTP_HTML_HEADER_SENT))
 	ftpListingFinish(ftpState);
@@ -709,12 +710,15 @@ ftpReadData(int fd, void *data)
 	ftpReadComplete(ftpState);
     } else {
 	if (EBIT_TEST(ftpState->flags, FTP_ISDIR)) {
+	    EBIT_SET(entry->flag, DELAY_SENDING);
 	    ftpParseListing(ftpState, len);
+	    EBIT_CLR(entry->flag, DELAY_SENDING);
+	    InvokeHandlers(entry);
 	} else {
 	    assert(ftpState->data.offset == 0);
 	    storeAppend(entry, ftpState->data.buf, len);
 	}
-	if (mem->inmem_hi >= ftpState->size + mem->reply->hdr_sz)
+	if (ftpState->size && mem->inmem_hi >= ftpState->size + mem->reply->hdr_sz)
 	    ftpReadComplete(ftpState);
 	else
 	    commSetSelect(fd,
