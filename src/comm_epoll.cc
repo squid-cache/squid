@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_epoll.cc,v 1.1 2003/03/04 02:57:51 robertc Exp $
+ * $Id: comm_epoll.cc,v 1.2 2003/03/04 06:02:12 robertc Exp $
  *
  * DEBUG: section 5    Socket functions
  *
@@ -54,6 +54,7 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "fde.h"
 
 #ifdef USE_EPOLL
 #define DEBUG_EPOLL 0
