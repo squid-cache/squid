@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.61 1996/07/18 20:25:37 wessels Exp $
+ * $Id: cache_cf.cc,v 1.62 1996/07/22 17:19:50 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -142,6 +142,7 @@ static struct {
 	char *hierarchy;
 	char *store;
 	int rotateNumber;
+	int log_fqdn;
     } Log;
     char *adminEmail;
     char *effectiveUser;
@@ -1424,6 +1425,9 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "client_netmask"))
 	    parseAddressLine(&Config.Addrs.client_netmask);
 
+	else if (!strcmp(token, "log_fqdn"))
+	    parseOnOff(&Config.Log.log_fqdn);
+
 	else if (!strcmp(token, "bind_address"))
 	    parseAddressLine(&Config.Addrs.tcp_incoming);
 
@@ -1942,6 +1946,7 @@ static void configDoConfigure()
     sprintf(ForwardedBy, "Forwarded: by http://%s:%d/",
 	getMyHostname(), getHttpPortNum());
     do_redirect = getRedirectProgram()? 1 : 0;
+    opt_log_fqdn = Config.Log.log_fqdn;
 
 
 #if !ALLOW_HOT_CACHE
