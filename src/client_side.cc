@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.73 1996/12/14 18:53:55 wessels Exp $
+ * $Id: client_side.cc,v 1.74 1996/12/14 18:56:03 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -35,7 +35,7 @@ static void clientRedirectDone _PARAMS((void *data, char *result));
 static void icpHandleIMSReply _PARAMS((int fd, StoreEntry * entry, void *data));
 static void clientLookupDstIPDone _PARAMS((int fd, const ipcache_addrs *, void *data));
 static void clientLookupSrcFQDNDone _PARAMS((int fd, const char *fqdn, void *data));
-static int clientGetsOldEntry _PARAMS((StoreEntry *new, StoreEntry *old, request_t *request));
+static int clientGetsOldEntry _PARAMS((StoreEntry * new, StoreEntry * old, request_t * request));
 static int checkAccelOnly _PARAMS((icpStateData * icpState));
 
 
@@ -162,7 +162,7 @@ clientAccessCheck(icpStateData * icpState, void (*handler) (icpStateData *, int)
     ch = icpState->aclChecklist;
     icpState->aclHandler = handler;
     if (checkAccelOnly(icpState)) {
-	    answer = 0;
+	answer = 0;
     } else {
 	answer = aclCheck(HTTPAccessList, ch);
 	if (ch->state[ACL_DST_IP] == ACL_LOOKUP_NEED) {
@@ -530,7 +530,7 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 }
 
 int
-modifiedSince(StoreEntry *entry, request_t *request)
+modifiedSince(StoreEntry * entry, request_t * request)
 {
     int object_length;
     MemObject *mem = entry->mem_obj;
