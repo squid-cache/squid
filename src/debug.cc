@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.82 2001/06/26 21:07:09 wessels Exp $
+ * $Id: debug.cc,v 1.83 2001/06/29 21:16:42 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -49,29 +49,38 @@ void
 #if STDC_HEADERS
 _db_print(const char *format,...)
 {
-    va_list args;
 #else
 _db_print(va_alist)
      va_dcl
 {
-    va_list args;
     const char *format = NULL;
 #endif
     LOCAL_ARRAY(char, f, BUFSIZ);
+    va_list args1;
 #if STDC_HEADERS
-    va_start(args, format);
+    va_list args2;
+    va_list args3;
+    va_start(args1, format);
+    va_start(args2, format);
+    va_start(args3, format);
 #else
-    format = va_arg(args, const char *);
+#define args2 args1
+#define args3 args1
+    format = va_arg(args1, const char *);
 #endif
     snprintf(f, BUFSIZ, "%s| %s",
 	debugLogTime(squid_curtime),
 	format);
-    _db_print_file(f, args);
-    _db_print_stderr(f, args);
+    _db_print_file(f, args1);
+    _db_print_stderr(f, args2);
 #if HAVE_SYSLOG
-    _db_print_syslog(format, args);
+    _db_print_syslog(format, args3);
 #endif
-    va_end(args);
+    va_end(args1);
+#if STDC_HEADERS
+    va_end(args2);
+    va_end(args3);
+#endif
 }
 
 static void
