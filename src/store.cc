@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.136 1996/10/24 22:21:30 wessels Exp $
+ * $Id: store.cc,v 1.137 1996/10/24 23:18:21 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -141,7 +141,6 @@
 /* rate of checking expired objects in main loop */
 #define STORE_MAINTAIN_RATE	(10)
 
-#define STORE_BUCKETS		(7921)
 #define STORE_IN_MEM_BUCKETS		(143)
 
 #define STORE_LOG_CREATE	0
@@ -272,6 +271,12 @@ static char **CacheDirs = NULL;
 static int CacheDirsAllocated = 0;
 int ncache_dirs = 0;
 
+/* expiration parameters and stats */
+static int store_buckets;
+int store_maintain_rate;
+static int store_maintain_buckets;
+int scan_revolutions;
+
 static MemObject *
 new_MemObject(void)
 {
@@ -376,8 +381,8 @@ destroy_MemObjectData(MemObject * mem)
 static HashID
 storeCreateHashTable(int (*cmp_func) (char *, char *))
 {
-    store_table = hash_create(cmp_func, STORE_BUCKETS, hash_url);
-    in_mem_table = hash_create(cmp_func, STORE_IN_MEM_BUCKETS, hash_url);
+    store_table = hash_create(cmp_func, store_buckets, hash4);
+    in_mem_table = hash_create(cmp_func, STORE_IN_MEM_BUCKETS, hash4);
     return store_table;
 }
 
@@ -563,7 +568,7 @@ storeReleaseRequest(StoreEntry * e)
 	return;
     if (!storeEntryLocked(e)) {
 	debug_trap("Someone called storeReleaseRequest on an unlocked entry");
-	debug(20,0,"  --> '%s'\n", e->url ? e->url : "NULL URL");
+	debug(20, 0, "  --> '%s'\n", e->url ? e->url : "NULL URL");
 	return;
     }
     debug(20, 3, "storeReleaseRequest: FOR '%s'\n", e->key ? e->key : e->url);
@@ -1953,13 +1958,13 @@ static unsigned int
 storeGetBucketNum(void)
 {
     static unsigned int bucket = 0;
-    if (bucket >= STORE_BUCKETS)
+    if (bucket >= store_buckets)
 	bucket = 0;
     return (bucket++);
 }
 
 #define SWAP_LRUSCAN_BLOCK 16
-#define SWAP_MAX_HELP STORE_BUCKETS/2
+#define SWAP_MAX_HELP (store_buckets/2)
 
 /* The maximum objects to scan for maintain storage space */
 #define SWAP_LRUSCAN_COUNT	256
@@ -2000,7 +2005,7 @@ storeGetSwapSpace(int size)
 
     LRU_list = xcalloc(max_list_count, sizeof(StoreEntry *));
     /* remove expired objects until recover enough or no expired objects */
-    for (i = 0; i < STORE_BUCKETS; i++) {
+    for (i = 0; i < store_buckets; i++) {
 	int expired_in_one_bucket = 0;
 	link_ptr = hash_get_bucket(store_table, storeGetBucketNum());
 	if (link_ptr == NULL)
@@ -2486,6 +2491,41 @@ storeCreateSwapSubDirs(void)
     }
 }
 
+static void
+storeInitHashValues(void)
+{
+    int i;
+#define	AVG_OBJECT_SIZE	20
+#define	OBJECTS_PER_BUCKET	10
+
+    /* Calculate size of hash table.  Target is an arbitrary 10
+     * objects per bucket (maximum currently 64k buckets).  */
+    i = Config.Swap.maxSize / AVG_OBJECT_SIZE / 10;
+    debug(20, 1, "Swap maxSize %d, estimated %d objects\n",
+	Config.Swap.maxSize, i);
+
+    /* ideally the full scan period should be configurable, for the
+     * moment it remains at approximately 24 hours.  */
+    if (i < 8192)
+	store_buckets = 7951, store_maintain_rate = 10;
+    else if (i < 12288)
+	store_buckets = 12149, store_maintain_rate = 7;
+    else if (i < 16384)
+	store_buckets = 16231, store_maintain_rate = 5;
+    else if (i < 32768)
+	store_buckets = 33493, store_maintain_rate = 2;
+    else
+	store_buckets = 65357, store_maintain_rate = 1;
+    store_maintain_buckets = 1;
+
+    debug(20, 1, "Using %d Store buckets, maintain %d bucket%s per %d second%s\n",
+	store_buckets,
+	store_maintain_buckets,
+	store_maintain_buckets == 1 ? null_string : "s",
+	store_maintain_rate,
+	store_maintain_rate == 1 ? null_string : "s");
+}
+
 void
 storeInit(void)
 {
@@ -2493,6 +2533,7 @@ storeInit(void)
     wordlist *w = NULL;
     char *fname = NULL;
     file_map_create(MAX_SWAP_FILE);
+    storeInitHashValues();
     storeCreateHashTable(urlcmp);
     if (strcmp((fname = Config.Log.store), "none") == 0)
 	storelog_fd = -1;
@@ -2595,27 +2636,37 @@ storeMaintainSwapSpace(void)
     hash_link *link_ptr = NULL, *next = NULL;
     StoreEntry *e = NULL;
     int rm_obj = 0;
+    int scan_buckets;
+    int scan_obj = 0;
 
     /* We can't delete objects while rebuilding swap */
     if (store_rebuilding == STORE_REBUILDING_FAST)
 	return -1;
 
     /* Purges expired objects, check one bucket on each calling */
-    if (squid_curtime - last_time >= STORE_MAINTAIN_RATE) {
-	last_time = squid_curtime;
-	if (bucket >= STORE_BUCKETS)
-	    bucket = 0;
-	link_ptr = hash_get_bucket(store_table, bucket++);
-	for (; link_ptr; link_ptr = next) {
-	    next = link_ptr->next;
-	    e = (StoreEntry *) link_ptr;
-	    if (!storeCheckExpired(e))
-		continue;
-	    storeRelease(e);
-	    ++rm_obj;
+    if (squid_curtime - last_time >= store_maintain_rate) {
+	for (scan_buckets = store_maintain_buckets; scan_buckets > 0;
+	    scan_buckets--) {
+	    last_time = squid_curtime;
+	    if (bucket >= store_buckets) {
+		bucket = 0;
+		scan_revolutions++;
+		debug(20, 1, "Completed %d full expiration scans of store table\n",
+		    scan_revolutions);
+	    }
+	    link_ptr = hash_get_bucket(store_table, bucket++);
+	    for (; link_ptr; link_ptr = next) {
+		scan_obj++;
+		next = link_ptr->next;
+		e = (StoreEntry *) link_ptr;
+		if (!storeCheckExpired(e))
+		    continue;
+		storeRelease(e);
+		++rm_obj;
+	    }
 	}
     }
-    debug(20, rm_obj ? 2 : 3, "Removed %d expired objects\n", rm_obj);
+    debug(20, rm_obj ? 1 : 2, "Scanned %d objects, Removed %d expired objects\n", scan_obj, rm_obj);
 
     /* Scan row of hash table each second and free storage if we're
      * over the high-water mark */
@@ -2811,11 +2862,14 @@ storeCheckPurgeMem(StoreEntry * e)
 static int
 storeCheckExpired(StoreEntry * e)
 {
+    int expired = 0;
     if (storeEntryLocked(e))
 	return 0;
-    if (squid_curtime - e->expires < Config.expireAge)
-	return 0;
-    return 1;
+    if (Config.referenceAge && squid_curtime - e->lastref > Config.referenceAge)
+	return 1;
+    if (squid_curtime - e->expires > Config.expireAge)
+	return 1;
+    return 0;
 }
 
 static char *
