@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_diskd.cc,v 1.12 2000/06/27 22:06:25 hno Exp $
+ * $Id: store_io_diskd.cc,v 1.13 2000/07/06 00:08:28 wessels Exp $
  *
  * DEBUG: section 81    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -468,8 +468,20 @@ storeDiskdSend(int mtype, SwapDir * sd, int id, storeIOState * sio, int size, in
      * then we can have a lot of messages in the queue (probably
      * up to 2*magic1) and we can run out of shared memory buffers.
      */
-    while (diskdinfo->away > diskdinfo->magic2)
-	storeDiskdDirCallback(sd);
+    /*
+     * Note that we call storeDirCallback (for all SDs), rather
+     * than storeDiskdDirCallback for just this SD, so that while
+     * we're "blocking" on this SD we can also handle callbacks
+     * from other SDs that might be ready.
+     */
+    while (diskdinfo->away > diskdinfo->magic2) {
+	struct timeval delay =
+	{0, 1};
+	select(0, NULL, NULL, NULL, &delay);
+	storeDirCallback();
+	if (delay.tv_usec < 1000000)
+	    delay.tv_usec <<= 1;
+    }
     return x;
 }
 
