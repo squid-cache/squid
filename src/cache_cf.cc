@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.332 1999/05/27 02:42:31 wessels Exp $
+ * $Id: cache_cf.cc,v 1.333 1999/06/24 20:19:56 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -306,10 +306,14 @@ configDoConfigure(void)
 	debug(3, 0) ("WARNING: resetting 'maximum_single_addr_tries to 1\n");
 	Config.retry.maxtries = 1;
     }
+#if HEAP_REPLACEMENT
+    /* The non-LRU policies do not use referenceAge */
+#else
     if (Config.referenceAge < 300) {
 	debug(3, 0) ("WARNING: resetting 'reference_age' to 1 week\n");
 	Config.referenceAge = 86400 * 7;
     }
+#endif
     requirePathnameExists("MIME Config Table", Config.mimeTablePathname);
     requirePathnameExists("cache_dns_program", Config.Program.dnsserver);
     requirePathnameExists("unlinkd_program", Config.Program.unlinkd);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.339 1999/06/10 21:06:24 wessels Exp $
+ * $Id: protos.h,v 1.340 1999/06/24 20:20:05 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -855,6 +855,7 @@ extern int contentLen(const StoreEntry * e);
 extern HttpReply *storeEntryReply(StoreEntry *);
 extern int storeTooManyDiskFilesOpen(void);
 extern void storeEntryReset(StoreEntry *);
+extern void storeHeapPositionUpdate(StoreEntry *);
 
 /* store_io.c */
 extern STOBJOPEN storeOpen;

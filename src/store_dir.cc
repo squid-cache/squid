@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.97 1999/05/26 06:48:08 wessels Exp $
+ * $Id: store_dir.cc,v 1.98 1999/06/24 20:20:14 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -380,7 +380,11 @@ storeDirWriteCleanLogs(int reopen)
     SwapDir *sd;
     int dirn;
     int N = Config.cacheSwap.n_configured;
+#if HEAP_REPLACEMENT
+    int node;
+#else
     dlink_node *m;
+#endif
     if (store_dirs_rebuilding) {
 	debug(20, 1) ("Not currently OK to rewrite swap log.\n");
 	debug(20, 1) ("storeDirWriteCleanLogs: Operation aborted.\n");
@@ -396,8 +400,17 @@ storeDirWriteCleanLogs(int reopen)
 	    continue;
 	}
     }
-    for (m = store_list.tail; m; m = m->prev) {
+#if HEAP_REPLACEMENT
+    for (node = 0; node < heap_nodes(store_heap); node++)
+#else
+    for (m = store_list.tail; m; m = m->prev)
+#endif
+    {
+#if HEAP_REPLACEMENT
+	e = (StoreEntry *) heap_peep(store_heap, node);
+#else
 	e = m->data;
+#endif
 	if (e->swap_file_number < 0)
 	    continue;
 	if (e->swap_status != SWAPOUT_DONE)
