@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.175 1998/07/22 20:37:50 wessels Exp $
+ * $Id: squid.h,v 1.176 1998/08/13 17:38:18 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -66,6 +66,11 @@
 /* Increase FD_SETSIZE if SQUID_MAXFD is bigger */
 #if CHANGE_FD_SETSIZE && SQUID_MAXFD > DEFAULT_FD_SETSIZE
 #define FD_SETSIZE SQUID_MAXFD
+#endif
+
+#if PURIFY
+/* disable assert() under purify */
+#define NODEBUG
 #endif
 
 #if HAVE_UNISTD_H
@@ -283,8 +288,6 @@ struct rusage {
 #endif
 
 #if PURIFY
-/* disable assert() under purify */
-#define NODEBUG
 #define LOCAL_ARRAY(type,name,size) \
         static type *local_##name=NULL; \
         type *name = local_##name ? local_##name : \
