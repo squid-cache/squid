@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemPool.c,v 1.8 2002/04/06 15:06:13 hno Exp $
+ * $Id: MemPool.c,v 1.9 2002/04/08 08:19:05 hno Exp $
  *
  * DEBUG: section 63    Low Level Memory Pool Management
  * AUTHOR: Alex Rousskov, Andres Kroonmaa
@@ -184,9 +184,9 @@ memPoolSetIdleLimit(size_t new_idle_limit)
 static int
 memCompChunks(MemChunk * chunkA, MemChunk * chunkB)
 {
-    if (chunkA > chunkB)
+    if (chunkA->objCache > chunkB->objCache)
 	return 1;
-    else if (chunkA < chunkB)
+    else if (chunkA->objCache < chunkB->objCache)
 	return -1;
     else
 	return 0;
