@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.120 2001/01/04 19:11:49 wessels Exp $
+ * $Id: store_dir.cc,v 1.121 2001/01/04 21:55:42 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -38,6 +38,10 @@
 #if HAVE_STATVFS
 #if HAVE_SYS_STATVFS_H
 #include <sys/statvfs.h>
+#endif
+/* Windows uses sys/vfs.h */
+#if HAVE_SYS_VFS_H
+#include <sys/vfs.h>
 #endif
 #endif
 
