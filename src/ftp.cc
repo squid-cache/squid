@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.158 1997/10/30 02:40:59 wessels Exp $
+ * $Id: ftp.cc,v 1.159 1997/10/30 02:49:00 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -579,7 +579,8 @@ ftpParseListing(FtpStateData * ftpState, int len)
     }
     line = get_free_4k_page();
     end++;
-    /* XXX there is an ABR bug here.   We need to make sure buf is NULL terminated */
+    /* XXX there is an ABR bug here.   We need to make sure buf is
+     * NULL terminated */
     for (s = buf; s < end; s += strcspn(s, crlf), s += strspn(s, crlf)) {
 	linelen = strcspn(s, crlf) + 1;
 	if (linelen > 4096)
@@ -1502,12 +1503,9 @@ ftpReadQuit(FtpStateData * ftpState)
 static void
 ftpFail(FtpStateData * ftpState)
 {
-    /* XXX NEED TO SEND BACK SOME CONTENT! */
     ErrorState *err;
     debug(9, 3) ("ftpFail\n");
-    err = xcalloc(1, sizeof(ErrorState));
-    err->type = ERR_FTP_FAILURE;
-    err->http_status = HTTP_INTERNAL_SERVER_ERROR;
+    err = errorCon(ERR_FTP_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
     err->request = requestLink(ftpState->request);
     err->ftp.request = ftpState->ctrl.last_command;
     err->ftp.reply = ftpState->ctrl.last_reply;
