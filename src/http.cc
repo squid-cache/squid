@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.16 1996/03/30 00:09:04 wessels Exp $ */
+/* $Id: http.cc,v 1.17 1996/04/01 03:34:42 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -37,7 +37,7 @@ typedef struct _httpdata {
 char *HTTP_OPS[] =
 {"GET", "POST", "HEAD", ""};
 
-void httpCloseAndFree(fd, data)
+static void httpCloseAndFree(fd, data)
      int fd;
      HttpData *data;
 {
@@ -50,7 +50,7 @@ void httpCloseAndFree(fd, data)
     }
 }
 
-int http_url_parser(url, host, port, request)
+static int http_url_parser(url, host, port, request)
      char *url;
      char *host;
      int *port;
@@ -104,7 +104,7 @@ int httpCachable(url, type, req_hdr)
 }
 
 /* This will be called when timeout on read. */
-void httpReadReplyTimeout(fd, data)
+static void httpReadReplyTimeout(fd, data)
      int fd;
      HttpData *data;
 {
@@ -124,7 +124,7 @@ void httpReadReplyTimeout(fd, data)
 }
 
 /* This will be called when socket lifetime is expired. */
-void httpLifetimeExpire(fd, data)
+static void httpLifetimeExpire(fd, data)
      int fd;
      HttpData *data;
 {
@@ -145,7 +145,7 @@ void httpLifetimeExpire(fd, data)
 }
 
 
-void httpProcessReplyHeader(data, buf)
+static void httpProcessReplyHeader(data, buf)
      HttpData *data;
      char *buf;			/* chunk just read by httpReadReply() */
 {
@@ -219,7 +219,7 @@ void httpProcessReplyHeader(data, buf)
 /* This will be called when data is ready to be read from fd.  Read until
  * error or connection closed. */
 /* XXX this function is too long! */
-void httpReadReply(fd, data)
+static void httpReadReply(fd, data)
      int fd;
      HttpData *data;
 {
@@ -331,7 +331,7 @@ void httpReadReply(fd, data)
 
 /* This will be called when request write is complete. Schedule read of
  * reply. */
-void httpSendComplete(fd, buf, size, errflag, data)
+static void httpSendComplete(fd, buf, size, errflag, data)
      int fd;
      char *buf;
      int size;
@@ -371,7 +371,7 @@ void httpSendComplete(fd, buf, size, errflag, data)
 }
 
 /* This will be called when connect completes. Write request. */
-void httpSendRequest(fd, data)
+static void httpSendRequest(fd, data)
      int fd;
      HttpData *data;
 {
@@ -444,7 +444,7 @@ void httpSendRequest(fd, data)
     data->icp_rwd_ptr = icpWrite(fd, buf, len, 30, httpSendComplete, (caddr_t) data);
 }
 
-void httpConnInProgress(fd, data)
+static void httpConnInProgress(fd, data)
      int fd;
      HttpData *data;
 {
