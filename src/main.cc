@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.99 1996/10/24 05:17:45 wessels Exp $
+ * $Id: main.cc,v 1.100 1996/10/24 05:23:54 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -644,10 +644,6 @@ main(int argc, char **argv)
     hash_init(0);
 
     mainInitialize();
-    if (get_url) {
-	sigusr2_handle(0);
-	icpFakeRequest(get_url);
-    }
 
     /* main loop */
     for (;;) {
