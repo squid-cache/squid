@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.142 1998/02/25 19:15:05 kostas Exp $
+ * $Id: acl.cc,v 1.143 1998/02/25 21:30:39 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1549,7 +1549,7 @@ aclChecklistCreate(const acl_access * A,
      * pointer, so lock it.
      */
     cbdataLock(A);
-    if (checklist->request)
+    if (request != NULL)
     	checklist->request = requestLink(request);
     checklist->src_addr = src_addr;
     for (i = 0; i < ACL_ENUM_MAX; i++)
