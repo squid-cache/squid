@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.89 2003/01/23 00:37:02 robertc Exp $
+ * $Id: util.c,v 1.90 2003/03/02 22:20:31 hno Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -645,18 +645,24 @@ xstrndup(const char *s, size_t n)
  * xstrerror() - strerror() wrapper
  */
 const char *
-xstrerror(void)
+xstrerr(int error)
 {
     static char xstrerror_buf[BUFSIZ];
     static char strerror_buf[BUFSIZ];
 
-    snprintf(strerror_buf, BUFSIZ, "%s", strerror(errno));
+    snprintf(strerror_buf, BUFSIZ, "%s", strerror(error));
 
     if (strerror_buf)
-	snprintf(xstrerror_buf, BUFSIZ, "(%d) %s", errno, strerror_buf);
+	snprintf(xstrerror_buf, BUFSIZ, "(%d) %s", error, strerror_buf);
     else
-	snprintf(xstrerror_buf, BUFSIZ, "(%d) Unknown", errno);
+	snprintf(xstrerror_buf, BUFSIZ, "(%d) Unknown", error);
     return xstrerror_buf;
+}
+
+const char *
+xstrerror(void)
+{
+    return xstrerr(errno);
 }
 
 void

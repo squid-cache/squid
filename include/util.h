@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.69 2003/02/02 22:04:13 robertc Exp $
+ * $Id: util.h,v 1.70 2003/03/02 22:20:31 hno Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -71,6 +71,7 @@ SQUIDCEXTERN const char *mkrfc1123(time_t);
 SQUIDCEXTERN char *uudecode(const char *);
 SQUIDCEXTERN char *xstrdup(const char *);
 SQUIDCEXTERN char *xstrndup(const char *, size_t);
+SQUIDCEXTERN const char *xstrerr(int xerrno);
 SQUIDCEXTERN const char *xstrerror(void);
 SQUIDCEXTERN int tvSubMsec(struct timeval, struct timeval);
 SQUIDCEXTERN int tvSubUsec(struct timeval, struct timeval);
