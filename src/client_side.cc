@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.582 2002/07/20 12:30:04 hno Exp $
+ * $Id: client_side.cc,v 1.583 2002/07/20 23:23:17 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2910,26 +2910,26 @@ clientNegotiateSSL(int fd, void *data)
 	}
 	ret = ERR_get_error();
 	if (ret) {
-	    debug(81, 1) ("clientNegotiateSSL: Error negotiating SSL connection on FD %d: %s\n",
+	    debug(83, 1) ("clientNegotiateSSL: Error negotiating SSL connection on FD %d: %s\n",
 		fd, ERR_error_string(ret, NULL));
 	}
 	comm_close(fd);
 	return;
     }
-    debug(81, 5) ("clientNegotiateSSL: FD %d negotiated cipher %s\n", fd,
+    debug(83, 5) ("clientNegotiateSSL: FD %d negotiated cipher %s\n", fd,
 	SSL_get_cipher(fd_table[fd].ssl));
 
     client_cert = SSL_get_peer_certificate(fd_table[fd].ssl);
     if (client_cert != NULL) {
-	debug(81, 5) ("clientNegotiateSSL: FD %d client certificate: subject: %s\n", fd,
+	debug(83, 5) ("clientNegotiateSSL: FD %d client certificate: subject: %s\n", fd,
 	    X509_NAME_oneline(X509_get_subject_name(client_cert), 0, 0));
 
-	debug(81, 5) ("clientNegotiateSSL: FD %d client certificate: issuer: %s\n", fd,
+	debug(83, 5) ("clientNegotiateSSL: FD %d client certificate: issuer: %s\n", fd,
 	    X509_NAME_oneline(X509_get_issuer_name(client_cert), 0, 0));
 
 	X509_free(client_cert);
     } else {
-	debug(81, 5) ("clientNegotiateSSL: FD %d has no certificate.\n", fd);
+	debug(83, 5) ("clientNegotiateSSL: FD %d has no certificate.\n", fd);
     }
 
     commSetSelect(fd, COMM_SELECT_READ, clientReadRequest, conn, 0);
@@ -2970,7 +2970,7 @@ httpsAccept(int sock, void *data)
 	}
 	if ((ssl = SSL_new(sslContext)) == NULL) {
 	    ssl_error = ERR_get_error();
-	    debug(81, 1) ("httpsAccept: Error allocating handle: %s\n",
+	    debug(83, 1) ("httpsAccept: Error allocating handle: %s\n",
 		ERR_error_string(ssl_error, NULL));
 	    break;
 	}
