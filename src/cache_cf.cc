@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.110 1996/10/15 18:05:56 wessels Exp $
+ * $Id: cache_cf.cc,v 1.111 1996/10/15 18:06:22 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1427,15 +1427,15 @@ parseConfigFile(char *file_name)
 	Config.dnsChildren = DefaultDnsChildrenMax;
     }
     if (Config.Program.redirect) {
-        if (Config.redirectChildren < 1) {
+	if (Config.redirectChildren < 1) {
 	    Config.redirectChildren = 0;
 	    safe_free(Config.Program.redirect);
-        } else if (Config.redirectChildren > DefaultRedirectChildrenMax) {
+	} else if (Config.redirectChildren > DefaultRedirectChildrenMax) {
 	    printf("WARNING: redirect_children was set to a bad value: %d\n",
-	        Config.redirectChildren);
+		Config.redirectChildren);
 	    printf("Setting it to the maximum (%d).\n", DefaultRedirectChildrenMax);
 	    Config.redirectChildren = DefaultRedirectChildrenMax;
-        }
+	}
     }
     fclose(fp);
     configDoConfigure();

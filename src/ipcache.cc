@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.73 1996/10/15 18:05:58 wessels Exp $
+ * $Id: ipcache.cc,v 1.74 1996/10/15 18:06:24 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -145,7 +145,7 @@ static ipcache_entry *ipcache_GetNext _PARAMS((void));
 static ipcache_entry *ipcache_create _PARAMS((char *name));
 static void ipcache_add_to_hash _PARAMS((ipcache_entry *));
 static void ipcache_call_pending _PARAMS((ipcache_entry *));
-static ipcache_entry * ipcacheAddNew _PARAMS((char *, struct hostent *, ipcache_status_t));
+static ipcache_entry *ipcacheAddNew _PARAMS((char *, struct hostent *, ipcache_status_t));
 static void ipcacheAddHostent _PARAMS((ipcache_entry *, struct hostent *));
 static int ipcacheHasPending _PARAMS((ipcache_entry *));
 static ipcache_entry *ipcache_get _PARAMS((char *));
@@ -408,20 +408,20 @@ ipcache_add_to_hash(ipcache_entry * i)
 }
 
 static void
-ipcacheAddHostent(ipcache_entry *i, struct hostent *hp)
+ipcacheAddHostent(ipcache_entry * i, struct hostent *hp)
 {
-    	int addr_count = 0;
-	int k;
-	safe_free(i->addrs.in_addrs);
-        while ((addr_count < 255) && *(hp->h_addr_list + addr_count))
-            ++addr_count;
-        i->addrs.count = (unsigned char) addr_count;
-        i->addrs.in_addrs = xcalloc(addr_count, sizeof(struct in_addr));
-        for (k = 0; k < addr_count; k++)
-            memcpy(&i->addrs.in_addrs[k].s_addr,
-                *(hp->h_addr_list + k),
-                hp->h_length);
-        i->status = IP_CACHED;
+    int addr_count = 0;
+    int k;
+    safe_free(i->addrs.in_addrs);
+    while ((addr_count < 255) && *(hp->h_addr_list + addr_count))
+	++addr_count;
+    i->addrs.count = (unsigned char) addr_count;
+    i->addrs.in_addrs = xcalloc(addr_count, sizeof(struct in_addr));
+    for (k = 0; k < addr_count; k++)
+	memcpy(&i->addrs.in_addrs[k].s_addr,
+	    *(hp->h_addr_list + k),
+	    hp->h_length);
+    i->status = IP_CACHED;
 }
 
 static ipcache_entry *
@@ -795,8 +795,8 @@ ipcache_gethostbyname(char *name, int flags)
     if (i) {
 	if (i->status == IP_PENDING || i->status == IP_DISPATCHED) {
 	    if (!BIT_TEST(flags, IP_BLOCKING_LOOKUP)) {
-	        IpcacheStats.pending_hits++;
-	        return NULL;
+		IpcacheStats.pending_hits++;
+		return NULL;
 	    }
 	} else if (i->status == IP_NEGATIVE_CACHED) {
 	    IpcacheStats.negative_hits++;
@@ -811,21 +811,21 @@ ipcache_gethostbyname(char *name, int flags)
     IpcacheStats.misses++;
     if ((addrs = ipcacheCheckNumeric(name)))
 	return addrs;
-    if (BIT_TEST(flags,IP_BLOCKING_LOOKUP)) {
+    if (BIT_TEST(flags, IP_BLOCKING_LOOKUP)) {
 	IpcacheStats.ghbn_calls++;
-        debug(14, 3, "ipcache_gethostbyname: blocking on gethostbyname() for '%s'\n", name);
+	debug(14, 3, "ipcache_gethostbyname: blocking on gethostbyname() for '%s'\n", name);
 	hp = gethostbyname(name);
 	if (hp && hp->h_name && (hp->h_name[0] != '\0') && ip_table) {
 	    /* good address, cached */
 	    if (i == NULL) {
-	        i = ipcacheAddNew(name, hp, IP_CACHED);
+		i = ipcacheAddNew(name, hp, IP_CACHED);
 	    } else {
 		ipcacheAddHostent(i, hp);
 	    }
 	    i->expires = squid_curtime + Config.positiveDnsTtl;
 #if LIBRESOLV_DNS_TTL_HACK
 	    if (_dns_ttl_ > -1)
-	        i->expires = squid_curtime + _dns_ttl_;
+		i->expires = squid_curtime + _dns_ttl_;
 #endif /* LIBRESOLV_DNS_TTL_HACK */
 	    return &i->addrs;
 	}

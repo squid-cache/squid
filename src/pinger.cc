@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.7 1996/10/14 21:29:02 wessels Exp $
+ * $Id: pinger.cc,v 1.8 1996/10/15 18:06:25 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -357,7 +357,7 @@ main(int argc, char *argv[])
 	    pingerRecv();
 	if (10 + last_check_time > squid_curtime) {
 	    if (send(1, &tv, 0, 0) < 0)
-	        return 1;
+		return 1;
 	    last_check_time = squid_curtime;
 	}
     }
