@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.102 1997/10/23 16:38:10 wessels Exp $
+ * $Id: gopher.cc,v 1.103 1997/10/24 18:10:38 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -711,7 +711,7 @@ gopherReadReply(int fd, void *data)
 	    ErrorState *err;
 	    err = xcalloc(1, sizeof(ErrorState));
 	    err->type = ERR_READ_ERROR;
-	    err->errno = errno;
+	    err->xerrno = errno;
 	    err->http_status = HTTP_INTERNAL_SERVER_ERROR;
 	    err->url = entry->url;
 	    errorAppendEntry(entry, err);
@@ -723,7 +723,7 @@ gopherReadReply(int fd, void *data)
 	ErrorState *err;
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_ZERO_SIZE_OBJECT;
-	err->errno = errno;
+	err->xerrno = errno;
 	err->http_status = HTTP_SERVICE_UNAVAILABLE;
 	err->url = gopherState->request;
 	errorAppendEntry(entry, err);
@@ -767,7 +767,7 @@ gopherSendComplete(int fd, char *buf, int size, int errflag, void *data)
 	ErrorState *err;
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_CONNECT_FAIL;
-	err->errno = errno;
+	err->xerrno = errno;
 	err->host = xstrdup(gopherState->host);
 	err->port = gopherState->port;
 	err->http_status = HTTP_SERVICE_UNAVAILABLE;
@@ -880,7 +880,7 @@ gopherStart(StoreEntry * entry)
 	/* was assert */
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_SOCKET_FAILURE;
-	err->errno = errno;
+	err->xerrno = errno;
 	err->http_status = HTTP_INTERNAL_SERVER_ERROR;
 	if (entry && entry->url)
 	    err->url = entry->url;
@@ -943,7 +943,7 @@ gopherConnectDone(int fd, int status, void *data)
 	err = xcalloc(1, sizeof(ErrorState));
 	err->type = ERR_CONNECT_FAIL;
 	err->http_status = HTTP_SERVICE_UNAVAILABLE;
-	err->errno = errno;
+	err->xerrno = errno;
 	err->host = xstrdup(gopherState->host);
 	err->port = gopherState->port;
 	err->url = entry->url;
