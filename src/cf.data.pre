@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.342 2003/09/07 17:55:53 hno Exp $
+# $Id: cf.data.pre,v 1.343 2003/10/14 20:18:06 wessels Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2528,7 +2528,7 @@ http_access deny CONNECT !SSL_ports
 #
 # INSERT YOUR OWN RULE(S) HERE TO ALLOW ACCESS FROM YOUR CLIENTS
 
-# Exampe rule allowing access from your local networks. Adapt
+# Example rule allowing access from your local networks. Adapt
 # to list your (internal) IP networks from where browsing should
 # be allowed
 #acl our_networks src 192.168.1.0/24 192.168.2.0/24
