@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.241 2005/03/06 14:46:29 serassio Exp $
+ * $Id: enums.h,v 1.242 2005/03/18 15:12:36 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -251,7 +251,7 @@ typedef enum {
 
 typedef enum {
     HIER_NONE,
-    DIRECT,
+    HIER_DIRECT,
     SIBLING_HIT,
     PARENT_HIT,
     DEFAULT_PARENT,
