@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.31 2000/07/18 06:16:41 wessels Exp $
+ * $Id: dns_internal.cc,v 1.32 2000/07/22 17:56:55 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -194,6 +194,7 @@ idnsStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "RCODE");
     for (i = 0; i < MAX_ATTEMPT; i++)
 	storeAppendPrintf(sentry, " ATTEMPT%d", i + 1);
+    storeAppendPrintf(sentry, "\n");
     for (j = 0; j < MAX_RCODE; j++) {
 	storeAppendPrintf(sentry, "%5d", j);
 	for (i = 0; i < MAX_ATTEMPT; i++)
