@@ -28,11 +28,15 @@
 #include <unistd.h>
 #endif
 
+/* these are part of rfcnb-priv.h and smblib-priv.h */
+extern int SMB_Get_Error_Msg(int msg, char *msgbuf, int len);
+extern int SMB_Get_Last_Error();
+extern int RFCNB_Get_Last_Errno();
+
 #include "smblib-priv.h"	/* for SMB_Handle_Type */
 
 /* a few forward-declarations. Hackish, but I don't care right now */
-SMB_Handle_Type SMB_Connect_Server(SMB_Handle_Type Con_Handle,
-    char *server, char *NTdomain);
+SMB_Handle_Type SMB_Connect_Server(SMB_Handle_Type Con_Handle, char *server, char *NTdomain);
 
 /* this one is reallllly haackiish. We really should be using anything from smblib-priv.h
  */
@@ -49,13 +53,13 @@ static char *SMB_Prots[] =
     "Samba",
     "NT LM 0.12",
     "NT LANMAN 1.0",
-    NULL};
+    NULL
+};
 
 #if 0
 int SMB_Discon(SMB_Handle_Type Con_Handle, BOOL KeepHandle);
 int SMB_Negotiate(void *Con_Handle, char *Prots[]);
-int SMB_Logon_Server(SMB_Handle_Type Con_Handle, char *UserName,
-    char *PassWord, char *Domain, int precrypted);
+int SMB_Logon_Server(SMB_Handle_Type Con_Handle, char *UserName, char *PassWord, char *Domain, int precrypted);
 #endif
 
 #ifdef DEBUG
@@ -87,8 +91,7 @@ connectedp()
 
 /* Tries to connect to a DC. Returns 0 on failure, 1 on OK */
 int
-is_dc_ok(char *domain,
-    char *domain_controller)
+is_dc_ok(char *domain, char *domain_controller)
 {
     SMB_Handle_Type h = SMB_Connect_Server(NULL, domain_controller, domain);
     if (h == NULL)
@@ -137,21 +140,46 @@ init_challenge(char *domain, char *domain_controller)
 const char *
 make_challenge(char *domain, char *domain_controller)
 {
-    if (init_challenge(domain, domain_controller) > 0)
+    if (init_challenge(domain, domain_controller) > 0) {
 	return NULL;
-    return ntlm_make_challenge(domain, domain_controller, challenge,
-	NONCE_LEN);
+    }
+    return ntlm_make_challenge(domain, domain_controller, challenge, NONCE_LEN);
 }
 
 #define min(A,B) (A<B?A:B)
+
+int ntlm_errno;
+static char credentials[1024];	/* we can afford to waste */
+
+/* Fetches the user's credentials from the challenge.
+ * Returns NULL if domain or user is not defined
+ * No identity control is performed.
+ * WARNING! The result is static storage, shared with ntlm_check_auth
+ */
+char *
+fetch_credentials(ntlm_authenticate * auth, int auth_length)
+{
+    char *p = credentials;
+    lstring tmp;
+    tmp = ntlm_fetch_string((char *) auth, auth_length, &auth->domain);
+    if (tmp.str == NULL)
+	return NULL;
+    memcpy(p, tmp.str, tmp.l);
+    p += tmp.l;
+    *p++ = '\\';
+    tmp = ntlm_fetch_string((char *) auth, auth_length, &auth->user);
+    if (tmp.str == NULL)
+	return NULL;
+    *(p + tmp.l) = '\0';
+    return credentials;
+}
+
 /* returns NULL on failure, or a pointer to
  * the user's credentials (domain\\username)
  * upon success. WARNING. It's pointing to static storage.
  * In case of problem sets as side-effect ntlm_errno to one of the
  * codes defined in ntlm.h
  */
-int ntlm_errno;
-static char credentials[1024];	/* we can afford to waste */
 char *
 ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
 {
@@ -200,21 +228,13 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     debug("checking domain: '%s', user: '%s', pass='%s'\n", domain, user, pass);
 
     rv = SMB_Logon_Server(handle, user, pass, domain, 1);
-
-    while ((rv == NTLM_BAD_PROTOCOL || rv == NTLM_SERVER_ERROR)
-	&& retries < BAD_DC_RETRIES_NUMBER) {
-	retries++;
-	usleep((unsigned long) 100000);
-	rv = SMB_Logon_Server(handle, user, pass, domain, 1);
-    }
-
-    debug("\tresult is %d\n", rv);
+    debug("Login attempt had result %d\n", rv);
 
     if (rv != NTV_NO_ERROR) {	/* failed */
 	ntlm_errno = rv;
 	return NULL;
     }
-    *(user - 1) = '\\';
+    *(user - 1) = '\\';		/* hack. Performing, but ugly. */
 
     debug("credentials: %s\n", credentials);
     return credentials;

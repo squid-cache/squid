@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.243 2001/01/31 21:48:24 hno Exp $
+ * $Id: acl.cc,v 1.244 2001/01/31 22:16:38 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1217,7 +1217,7 @@ aclMatchProxyAuth(void *data, http_hdr_type headertype,
 	    if (!authenticateValidateUser(auth_user_request = authenticateGetAuthUser(proxy_auth))) {
 		/* the decode might have left a username for logging, or a message to
 		 * the user */
-		if (auth_user_request) {
+		if (authenticateUserRequestUsername(auth_user_request)) {
 		    /* lock the user for the request structure link */
 		    authenticateAuthUserRequestLock(auth_user_request);
 		    checklist->request->auth_user_request = auth_user_request;

@@ -12,24 +12,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
- * Warning! We MIGHT be open to buffer overflows caused by malformed headers
- *
- * DONE list:
- * use hashtable to cache authentications. Yummy performance-boost, security
- *  loss should be negligible for two reasons:
- *   - if they-re using NT, there's no security to speak of anyways
- *   - it can't get worse than basic authentication.
- * cache expiration
- * challenge hash expiry and renewal.
- * PDC disconnect, after X minutes of inactivity
- *
- * TODO list:
- * change syntax from options-driven to args-driven, with args domain
- *   or domain[/\]server, and an arbitrary number of backup Domain Controllers
- * we don't really need the "status" management, it's more for debugging
- *  purposes. Remove it.
- * Maybe we can cache the created challenge, saving more time?
- *
  */
 
 
@@ -38,19 +20,20 @@
 #include "ntlm.h"
 #include "util.h"
 
+/* these are part of rfcnb-priv.h and smblib-priv.h */
+extern int SMB_Get_Error_Msg(int msg, char *msgbuf, int len);
+extern int SMB_Get_Last_Error();
+extern int SMB_Get_Last_SMB_Err();
+
+
 #define BUFFER_SIZE 10240
 
 #if HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
-
-
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-
-
-
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
@@ -58,11 +41,17 @@
 #include <ctype.h>
 #endif
 
-char load_balance = 0, failover_enabled = 0, protocol_pedantic = 0;
+#ifdef DEBUG
+char error_messages_buffer[BUFFER_SIZE];
+#endif
+
+char load_balance = 0, failover_enabled = 0, protocol_pedantic = 0, last_ditch_enabled = 0;
 
 dc *controllers = NULL;
 int numcontrollers = 0;
 dc *current_dc;
+
+char smb_error_buffer[1000];
 
 /* housekeeping cycle and periodic operations */
 static unsigned char need_dc_resurrection = 0;
@@ -100,10 +89,28 @@ lc(char *string)
     }
 }
 
+
+void
+send_bh_or_ld(char *bhmessage, ntlm_authenticate * failedauth, int authlen)
+{
+    char *creds = NULL;
+    if (last_ditch_enabled) {
+	creds = fetch_credentials(failedauth, authlen);
+	if (creds) {
+	    SEND2("LD %s", creds);
+	} else {
+	    SEND("NA last-ditch on, but no credentials");
+	}
+    } else {
+	SEND(bhmessage);
+    }
+}
+
 /*
  * options:
  * -b try load-balancing the domain-controllers
  * -f fail-over to another DC if DC connection fails.
+ * -l last-ditch-mode
  * domain\controller ...
  */
 char *my_program_name = NULL;
@@ -115,12 +122,12 @@ usage()
 	"%s usage:\n"
 	"%s [-b] [-f] domain\\controller [domain\\controller ...]\n"
 	"-b, if specified, enables load-balancing among controllers\n"
-	"-f, if specified, enables failover among controllers\n\n"
-	"You MUST specify at least one Domain Controller.\n"
+	"-f, if specified, enables failover among controllers\n"
+	"-l, if specified, changes behavior on domain controller failyures to"
+	"\tlast-ditch\n\n" "You MUST specify at least one Domain Controller.\n"
 	"You can use either \\ or / as separator between the domain name \n"
-	"\tand the controller name\n"
-	,my_program_name
-	,my_program_name);
+	"\tand the controller name\n",
+	my_program_name, my_program_name);
 }
 
 
@@ -129,13 +136,16 @@ process_options(int argc, char *argv[])
 {
     int opt, j, had_error = 0;
     dc *new_dc = NULL, *last_dc = NULL;
-    while (-1 != (opt = getopt(argc, argv, "bf"))) {
+    while (-1 != (opt = getopt(argc, argv, "bfl"))) {
 	switch (opt) {
 	case 'b':
 	    load_balance = 1;
 	    break;
 	case 'f':
 	    failover_enabled = 1;
+	    break;
+	case 'l':
+	    last_ditch_enabled = 1;
 	    break;
 	default:
 	    fprintf(stderr, "unknown option: -%c. Exiting\n", opt);
@@ -149,15 +159,27 @@ process_options(int argc, char *argv[])
     /* we can avoid memcpy-ing, and just reuse argv[] */
     for (j = optind; j < argc; j++) {
 	char *d, *c;
-	d = argv[j];
+	/* d will not be freed in case of non-error. Since we don't reconfigure,
+	 * it's going to live as long as the process anyways */
+	d = malloc(strlen(argv[j]) + 1);
+	strcpy(d, argv[j]);
+	debug("Adding domain-controller %s\n", d);
 	if (NULL == (c = strchr(d, '\\')) && NULL == (c = strchr(d, '/'))) {
 	    fprintf(stderr, "Couldn't grok domain-controller %s\n", d);
+	    free(d);
+	    continue;
+	}
+	/* more than one delimiter is not allowed */
+	if (NULL != strchr(c + 1, '\\') || NULL != strchr(c + 1, '/')) {
+	    fprintf(stderr, "Broken domain-controller %s\n", d);
+	    free(d);
 	    continue;
 	}
 	*c++ = '\0';
 	new_dc = (dc *) malloc(sizeof(dc));
 	if (!new_dc) {
 	    fprintf(stderr, "Malloc error while parsing DC options\n");
+	    free(d);
 	    continue;
 	}
 	/* capitalize */
@@ -191,12 +213,15 @@ obtain_challenge()
 {
     int j = 0;
     const char *ch;
+    debug("obtain_challenge: getting new challenge\n");
     for (j = 0; j < numcontrollers; j++) {
 	if (current_dc->status == DC_OK) {
+	    debug("getting challenge from %s\%s\n", current_dc->domain, current_dc->controller);
 	    ch = make_challenge(current_dc->domain, current_dc->controller);
 	    if (ch)
 		return ch;	/* All went OK, returning */
 	    /* Huston, we've got a problem. Take this DC out of the loop */
+	    debug("Marking DC as DEAD\n");
 	    current_dc->status = DC_DEAD;
 	    need_dc_resurrection = 1;
 	}
@@ -205,14 +230,16 @@ obtain_challenge()
 	/* Try with the next */
 	current_dc = current_dc->next;
     }
+    /* DC (all DCs if failover is enabled) failed. */
     return NULL;
 }
+
 
 void
 manage_request()
 {
     ntlmhdr *fast_header;
-    char buf[10240];
+    char buf[BUFFER_SIZE];
     const char *ch;
     char *ch2, *decoded, *cred;
     int plen;
@@ -259,36 +286,79 @@ manage_request()
 	    plen = strlen(buf) * 3 / 4;		/* we only need it here. Optimization */
 	    cred = ntlm_check_auth((ntlm_authenticate *) decoded, plen);
 	    if (cred == NULL) {
+		int errorclass, errorcode;
+#ifdef DEBUG
+		SMB_Get_Error_Msg(SMB_Get_Last_SMB_Err(),
+		    error_messages_buffer, BUFFER_SIZE);
+		debug("Authentication failure. SMB error: %d: %s\n. Class=%d, "
+		    "Code=%d\n",
+		    SMB_Get_Last_SMB_Err(), error_messages_buffer,
+		    SMB_Get_Last_SMB_Err() & 0xff, SMB_Get_Last_SMB_Err() >> 16);
+#endif
+		/* This is kind of a special case, which happens when the
+		 * client sends credentials in a domain which is not trusted
+		 * by the domain we're using when authenticating. Unfortunately,
+		 * it can't currently be accommodated in the current framework so
+		 * I'll leave it hanging here, waiting for the general framework
+		 * to be expanded to better accommodate the generale case. */
+		errorclass = SMB_Get_Last_SMB_Err() & 0xff;
+		errorcode = SMB_Get_Last_SMB_Err() >> 16;
+		if (errorclass == 1 && errorcode == 5) {
+		    SEND("NA Wrong password or untrusted domain");
+		    return;
+		}
 		switch (ntlm_errno) {
 		case NTLM_LOGON_ERROR:
 		    SEND("NA authentication failure");
-		    dc_disconnect();
-		    current_dc = current_dc->next;
+		    /* I must have been drugged when I wrote the following two lines */
+		    /* dc_disconnect();
+		     * current_dc = current_dc->next; */
 		    return;
 		case NTLM_SERVER_ERROR:
-		    SEND("BH Domain Controller Error");
-		    dc_disconnect();
-		    current_dc = current_dc->next;
+		    send_bh_or_ld("BH Domain Controller Error", (ntlm_authenticate *) decoded, plen);
+		    /* SEND("BH Domain Controller Error"); */
+		    /* we don't really need to disconnect NOW.
+		     * Besides, we asked squid to force a reconnect. This way, if we
+		     * have authentications in flight, we might even succeed.
+		     */
+		    /* dc_disconnect(); */
+
+		    SMB_Get_Error_Msg(SMB_Get_Last_Error(), smb_error_buffer, 1000);
+		    debug("Last error was: %s, RFC errno=%d\n", smb_error_buffer,
+			RFCNB_Get_Last_Errno());
+		    if (failover_enabled)
+			current_dc = current_dc->next;
 		    return;
 		case NTLM_PROTOCOL_ERROR:
-		    SEND("BH Domain Controller communication error");
-		    dc_disconnect();
-		    current_dc = current_dc->next;
+		    send_bh_or_ld("BH Domain Controller communication error", (ntlm_authenticate *) decoded, plen);
+		    /* SEND("BH Domain Controller communication error"); */
+		    /* dc_disconnect(); */
+		    if (failover_enabled)
+			current_dc = current_dc->next;
 		    return;
 		case NTLM_NOT_CONNECTED:
-		    SEND("BH Domain Controller (or network) died on us");
-		    dc_disconnect();
-		    current_dc = current_dc->next;
+		    send_bh_or_ld("BH Domain Controller (or network) died on us", (ntlm_authenticate *) decoded, plen);
+		    /* SEND("BH Domain Controller (or network) died on us"); */
+		    /* dc_disconnect(); */
+		    if (failover_enabled)
+			current_dc = current_dc->next;
 		    return;
 		case NTLM_BAD_PROTOCOL:
-		    SEND("BH Domain controller failure");
-		    dc_disconnect();
-		    current_dc = current_dc->next;
+		    send_bh_or_ld("BH Domain controller failure", (ntlm_authenticate *) decoded, plen);
+		    /* SEND("BH Domain controller failure"); */
+		    /* dc_disconnect(); *//* maybe we're overreacting? */
+		    SMB_Get_Error_Msg(SMB_Get_Last_Error(), smb_error_buffer, 1000);
+		    debug("Last error was: %s. RFCNB errno=%d\n", smb_error_buffer,
+			RFCNB_Get_Last_Errno());
+		    if (failover_enabled)
+			current_dc = current_dc->next;
 		    return;
 		default:
-		    SEND("BH Unhandled error while talking to Domain Controller");
-		    dc_disconnect();
-		    current_dc = current_dc->next;
+		    send_bh_or_ld("BH Unhandled error while talking to Domain Controller", (ntlm_authenticate *) decoded, plen);
+		    /* SEND("BH Unhandled error while talking to Domain Controller"); */
+		    /* dc_disconnect(); *//* maybe we're overreacting? */
+		    if (failover_enabled)
+			current_dc = current_dc->next;
 		    return;
 		}
 	    }
@@ -306,6 +376,8 @@ manage_request()
     if (memcmp(buf, "YR", 2) == 0) {	/* refresh-request */
 	dc_disconnect();
 	ch = obtain_challenge();
+	/* Robert says we can afford to wait forever. I'll trust him on this
+	 * one */
 	while (ch == NULL) {
 	    sleep(30);
 	    ch = obtain_challenge();
@@ -326,7 +398,7 @@ int
 main(int argc, char *argv[])
 {
 
-    debug("starting up...\n");
+    debug("ntlm_auth build " __DATE__ ", " __TIME__ " starting up...\n");
 
     my_program_name = argv[0];
     process_options(argc, argv);

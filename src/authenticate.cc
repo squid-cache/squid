@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.19 2001/01/12 00:37:14 wessels Exp $
+ * $Id: authenticate.cc,v 1.20 2001/01/31 22:16:38 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -61,7 +61,8 @@ authenticateAuthSchemeConfigured(const char *proxy_auth)
     int i;
     for (i = 0; i < Config.authConfig.n_configured; i++) {
 	scheme = Config.authConfig.schemes + i;
-	if (strncasecmp(proxy_auth, scheme->typestr, strlen(scheme->typestr)) == 0)
+	if ((strncasecmp(proxy_auth, scheme->typestr, strlen(scheme->typestr)) == 0) &&
+	    (authscheme_list[scheme->Id].Active()))
 	    return 1;
     }
     return 0;
@@ -296,7 +297,10 @@ char *
 authenticateUserRequestUsername(auth_user_request_t * auth_user_request)
 {
     assert(auth_user_request != NULL);
-    return authenticateUserUsername(auth_user_request->auth_user);
+    if (auth_user_request->auth_user)
+	return authenticateUserUsername(auth_user_request->auth_user);
+    else
+	return NULL;
 }
 
 /* returns
@@ -322,7 +326,7 @@ authenticateActiveSchemeCount()
 {
     int i = 0, rv = 0;
     for (i = 0; authscheme_list && authscheme_list[i].typestr; i++)
-	if (authscheme_list[i].Active())
+	if (authscheme_list[i].configured())
 	    rv++;
     debug(29, 9) ("authenticateActiveSchemeCount: %d active.\n", rv);
     return rv;
@@ -351,7 +355,7 @@ authenticateInit(authConfig * config)
     authScheme *scheme;
     for (i = 0; i < config->n_configured; i++) {
 	scheme = config->schemes + i;
-	if (authscheme_list[scheme->Id].init) {
+	if (authscheme_list[scheme->Id].init && authscheme_list[scheme->Id].configured()) {
 	    authscheme_list[scheme->Id].init(scheme);
 	}
     }
@@ -370,7 +374,7 @@ authenticateShutdown(void)
 	    authscheme_list[i].donefunc();
 	else
 	    debug(29, 2) ("authenticateShutdown: scheme %s has not registered a shutdown function.\n", authscheme_list[i].typestr);
-	if (!reconfiguring)
+	if (shutting_down)
 	    authscheme_list[i].typestr = NULL;
     }
 }
@@ -409,7 +413,7 @@ authenticateFixHeader(HttpReply * rep, auth_user_request_t * auth_user_request, 
 	else {
 	    int i;
 	    authScheme *scheme;
-	    /* call each configured authscheme */
+	    /* call each configured & running authscheme */
 	    for (i = 0; i < Config.authConfig.n_configured; i++) {
 		scheme = Config.authConfig.schemes + i;
 		if (authscheme_list[scheme->Id].Active())

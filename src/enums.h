@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.183 2001/01/12 00:37:17 wessels Exp $
+ * $Id: enums.h,v 1.184 2001/01/31 22:16:38 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -496,6 +496,7 @@ typedef enum {
     AUTH_UNKNOWN,		/* default */
     AUTH_BASIC,
     AUTH_NTLM,
+    AUTH_DIGEST,
     AUTH_BROKEN			/* known type, but broken data */
 } auth_type_t;
 

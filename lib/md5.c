@@ -1,5 +1,5 @@
 /*
- * $Id: md5.c,v 1.9 1999/05/04 21:20:39 wessels Exp $
+ * $Id: md5.c,v 1.10 2001/01/31 22:16:37 hno Exp $
  */
 
 /* taken from RFC-1321/Appendix A.3 */
@@ -63,9 +63,9 @@
 #define S43 15
 #define S44 21
 
-static void MD5Transform(u_num32[4], unsigned char[64]);
+static void MD5Transform(u_num32[4], const unsigned char[64]);
 static void Encode(unsigned char *, u_num32 *, unsigned int);
-static void Decode(u_num32 *, unsigned char *, unsigned int);
+static void Decode(u_num32 *, const unsigned char *, unsigned int);
 
 #if HAVE_MEMCPY
 #define MD5_memcpy(to,from,count) memcpy(to,from,count)
@@ -145,7 +145,7 @@ MD5Init(MD5_CTX * context)
  * processing another message block, and updating the context.
  */
 void
-MD5Update(MD5_CTX * context, unsigned char *input, unsigned int inputLen)
+MD5Update(MD5_CTX * context, const unsigned char *input, unsigned int inputLen)
 {
     unsigned int i, index, partLen;
 
@@ -213,7 +213,7 @@ MD5Final(unsigned char digest[16], MD5_CTX * context)
  * MD5 basic transformation. Transforms state based on block.
  */
 static void
-MD5Transform(u_num32 state[4], unsigned char block[64])
+MD5Transform(u_num32 state[4], const unsigned char block[64])
 {
     u_num32 a = state[0], b = state[1], c = state[2], d = state[3], x[16];
 
@@ -324,7 +324,7 @@ Encode(unsigned char *output, u_num32 * input, unsigned int len)
  * multiple of 4.
  */
 static void
-Decode(u_num32 * output, unsigned char *input, unsigned int len)
+Decode(u_num32 * output, const unsigned char *input, unsigned int len)
 {
     unsigned int i, j;
 

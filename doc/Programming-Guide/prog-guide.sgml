@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Duane Wessels, Squid Developers
-<date>$Id: prog-guide.sgml,v 1.34 2001/01/07 23:36:35 hno Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.35 2001/01/31 22:16:36 hno Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -2063,10 +2063,15 @@ coupling between the storage layer and the replacement policy.
 	<P>typedef int   AUTHSACTIVE();
 		
 	<P>The Active function is used by squid to determine whether the auth
-        module has successfully configured and initialised itself. If Active
-        returns 0 no other module functions except Shutdown/Dump/Parse/FreeConfig
-	will be called by Squid.
-		
+        module has successfully initialised itself with the current configuration.
+
+	<P>typedef int   AUTHSCONFIGURED();
+
+	<P>The configured function is used to see if the auth module has been given 
+	valid parameters and is able to handle authentication requests if initialised.
+	If configured returns 0 no other module functions except 
+	Shutdown/Dump/Parse/FreeConfig will be called by Squid.
+
 	<P>typedef void  AUTHSSETUP(authscheme_entry_t *);
 		
 	<P>functions of type AUTHSSETUP are used to register an auth module with

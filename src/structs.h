@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.379 2001/01/12 00:37:22 wessels Exp $
+ * $Id: structs.h,v 1.380 2001/01/31 22:16:38 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -139,6 +139,7 @@ struct _authscheme_entry {
     AUTHSADDTRAILER *AddTrailer;
     AUTHSAUTHED *authenticated;
     AUTHSAUTHUSER *authAuthenticate;
+    AUTHSCONFIGURED *configured;
     AUTHSDUMP *dump;
     AUTHSFIXERR *authFixHeader;
     AUTHSFREE *FreeUser;
