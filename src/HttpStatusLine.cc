@@ -1,5 +1,5 @@
 /*
- * $Id: HttpStatusLine.cc,v 1.9 1998/04/09 10:50:45 rousskov Exp $
+ * $Id: HttpStatusLine.cc,v 1.10 1998/05/02 06:40:23 wessels Exp $
  *
  * DEBUG: section 57    HTTP Status-line
  * AUTHOR: Alex Rousskov
@@ -109,115 +109,115 @@ httpStatusString(http_status status)
     case 0:
 	p = "Init";		/* we init .status with code 0 */
 	break;
-    case 100:
+    case HTTP_CONTINUE:
 	p = "Continue";
 	break;
-    case 101:
+    case HTTP_SWITCHING_PROTOCOLS:
 	p = "Switching Protocols";
 	break;
-    case 200:
+    case HTTP_OK:
 	p = "OK";
 	break;
-    case 201:
+    case HTTP_CREATED:
 	p = "Created";
 	break;
-    case 202:
+    case HTTP_ACCEPTED:
 	p = "Accepted";
 	break;
-    case 203:
+    case HTTP_NON_AUTHORITATIVE_INFORMATION:
 	p = "Non-Authoritative Information";
 	break;
-    case 204:
+    case HTTP_NO_CONTENT:
 	p = "No Content";
 	break;
-    case 205:
+    case HTTP_RESET_CONTENT:
 	p = "Reset Content";
 	break;
-    case 206:
+    case HTTP_PARTIAL_CONTENT:
 	p = "Partial Content";
 	break;
-    case 300:
+    case HTTP_MULTIPLE_CHOICES:
 	p = "Multiple Choices";
 	break;
-    case 301:
+    case HTTP_MOVED_PERMANENTLY:
 	p = "Moved Permanently";
 	break;
-    case 302:
+    case HTTP_MOVED_TEMPORARILY:
 	p = "Moved Temporarily";
 	break;
-    case 303:
+    case HTTP_SEE_OTHER:
 	p = "See Other";
 	break;
-    case 304:
+    case HTTP_NOT_MODIFIED:
 	p = "Not Modified";
 	break;
-    case 305:
+    case HTTP_USE_PROXY:
 	p = "Use Proxy";
 	break;
-    case 400:
+    case HTTP_BAD_REQUEST:
 	p = "Bad Request";
 	break;
-    case 401:
+    case HTTP_UNAUTHORIZED:
 	p = "Unauthorized";
 	break;
-    case 402:
+    case HTTP_PAYMENT_REQUIRED:
 	p = "Payment Required";
 	break;
-    case 403:
+    case HTTP_FORBIDDEN:
 	p = "Forbidden";
 	break;
-    case 404:
+    case HTTP_NOT_FOUND:
 	p = "Not Found";
 	break;
-    case 405:
+    case HTTP_METHOD_NOT_ALLOWED:
 	p = "Method Not Allowed";
 	break;
-    case 406:
+    case HTTP_NOT_ACCEPTABLE:
 	p = "Not Acceptable";
 	break;
-    case 407:
+    case HTTP_PROXY_AUTHENTICATION_REQUIRED:
 	p = "Proxy Authentication Required";
 	break;
-    case 408:
+    case HTTP_REQUEST_TIMEOUT:
 	p = "Request Time-out";
 	break;
-    case 409:
+    case HTTP_CONFLICT:
 	p = "Conflict";
 	break;
-    case 410:
+    case HTTP_GONE:
 	p = "Gone";
 	break;
-    case 411:
+    case HTTP_LENGTH_REQUIRED:
 	p = "Length Required";
 	break;
-    case 412:
+    case HTTP_PRECONDITION_FAILED:
 	p = "Precondition Failed";
 	break;
-    case 413:
+    case HTTP_REQUEST_ENTITY_TOO_LARGE:
 	p = "Request Entity Too Large";
 	break;
-    case 414:
+    case HTTP_REQUEST_URI_TOO_LARGE:
 	p = "Request-URI Too Large";
 	break;
-    case 415:
+    case HTTP_UNSUPPORTED_MEDIA_TYPE:
 	p = "Unsupported Media Type";
 	break;
-    case 500:
+    case HTTP_INTERNAL_SERVER_ERROR:
 	p = "Internal Server Error";
 	break;
-    case 501:
+    case HTTP_NOT_IMPLEMENTED:
 	p = "Not Implemented";
 	break;
-    case 502:
+    case HTTP_BAD_GATEWAY:
 	p = "Bad Gateway";
 	break;
-    case 503:
+    case HTTP_SERVICE_UNAVAILABLE:
 	p = "Service Unavailable";
 	break;
-    case 504:
+    case HTTP_GATEWAY_TIMEOUT:
 	p = "Gateway Time-out";
 	break;
-    case 505:
+    case HTTP_HTTP_VERSION_NOT_SUPPORTED:
 	p = "HTTP Version not supported";
 	break;
     default:
