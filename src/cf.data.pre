@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.110 1998/09/14 22:29:11 wessels Exp $
+# $Id: cf.data.pre,v 1.111 1998/09/14 22:34:02 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1383,7 +1383,7 @@ acl localhost src 127.0.0.1/255.255.255.255
 acl all src 0.0.0.0/0.0.0.0
 acl myexample dst_as 1241
 acl SSL_ports port 443 563
-acl Dangerous_ports port 7 9 19
+acl Safe_ports port 80 21 70 1025-65535
 acl CONNECT method CONNECT
 acl password proxy_auth 300
 DOC_END
@@ -1417,7 +1417,7 @@ DOC_START
 	Only allow access to the cache manager functions from the local host.
 http_access deny manager !localhost
 http_access deny CONNECT !SSL_ports
-http_access deny Dangerous_ports
+http_access deny !Safe_ports
 
 	Allow everything else
 http_access allow  all
