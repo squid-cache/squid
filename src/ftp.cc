@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.298 2000/11/13 12:25:12 adrian Exp $
+ * $Id: ftp.cc,v 1.299 2000/11/13 21:45:48 adrian Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1482,7 +1482,7 @@ ftpTraverseDirectory(FtpStateData * ftpState)
     w = ftpState->pathcomps;
     ftpState->filepath = w->key;
     ftpState->pathcomps = w->next;
-    xfree(w);
+    memFree(w, MEM_WORDLIST);
     /* Check if we are to CWD or RETR */
     if (ftpState->pathcomps != NULL || ftpState->flags.isdir) {
 	ftpSendCwd(ftpState);
