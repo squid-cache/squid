@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.40 2001/11/13 18:11:19 hno Exp $
+ * $Id: store_dir_aufs.cc,v 1.41 2002/02/19 00:50:01 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -715,9 +715,6 @@ storeAufsDirGetNextFile(RebuildState * rb, sfileno * filn_p, int *size)
 	    snprintf(rb->fullpath, SQUID_MAXPATHLEN, "%s/%02X/%02X",
 		rb->sd->path,
 		rb->curlvl1, rb->curlvl2);
-	    if (rb->flags.init && rb->td != NULL)
-		closedir(rb->td);
-	    rb->td = NULL;
 	    if (dirs_opened)
 		return -1;
 	    rb->td = opendir(rb->fullpath);
@@ -760,6 +757,9 @@ storeAufsDirGetNextFile(RebuildState * rb, sfileno * filn_p, int *size)
 		store_open_disk_fd++;
 	    continue;
 	}
+	if (rb->td != NULL)
+	    closedir(rb->td);
+	rb->td = NULL;
 	rb->in_dir = 0;
 	if (++rb->curlvl2 < aioinfo->l2)
 	    continue;
