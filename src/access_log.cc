@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.55 2000/03/14 23:07:51 wessels Exp $
+ * $Id: access_log.cc,v 1.56 2000/03/25 04:58:39 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -41,6 +41,9 @@ static char *log_quote(const char *header);
 static void accessLogSquid(AccessLogEntry * al);
 static void accessLogCommon(AccessLogEntry * al);
 static Logfile *logfile = NULL;
+#if HEADERS_LOG
+static Logfile *headerslog = NULL;
+#endif
 
 #if MULTICAST_MISS_STREAM
 static int mcast_miss_fd = -1;
@@ -298,6 +301,9 @@ accessLogRotate(void)
     if (NULL == logfile)
 	return;
     logfileRotate(logfile);
+#if HEADERS_LOG
+    logfileRotate(headerslog);
+#endif
 }
 
 void
@@ -305,6 +311,10 @@ accessLogClose(void)
 {
     logfileClose(logfile);
     logfile = NULL;
+#if HEADERS_LOG
+    logfileClose(headerslog);
+    headerslog = NULL;
+#endif
 }
 
 void
@@ -323,6 +333,10 @@ accessLogInit(void)
     assert(sizeof(log_tags) == (LOG_TYPE_MAX + 1) * sizeof(char *));
     logfile = logfileOpen(Config.Log.access, MAX_URL << 1);
     LogfileStatus = LOG_ENABLE;
+#if HEADERS_LOG
+    headerslog = logfileOpen("/usr/local/squid/logs/headers.log", 512);
+    assert(NULL != headerslog);
+#endif
 #if FORW_VIA_DB
     fvdbInit();
 #endif
@@ -485,6 +499,57 @@ mcast_encode(unsigned int *ibuf, size_t isize, const unsigned int *key)
 	ibuf[i] = htonl(y);
 	ibuf[i + 1] = htonl(z);
     }
+}
+
+#endif
+
+#if HEADERS_LOG
+void
+headersLog(int cs, int pq, method_t m, void *data)
+{
+    HttpReply *rep;
+    request_t *req;
+    unsigned short magic = 0;
+    unsigned char M = (unsigned char) m;
+    unsigned short S;
+    char *hmask;
+    int ccmask = 0;
+    if (0 == pq) {
+	/* reply */
+	rep = data;
+	req = NULL;
+	magic = 0x0050;
+	hmask = rep->header.mask;
+	if (rep->cache_control)
+	    ccmask = rep->cache_control->mask;
+    } else {
+	/* request */
+	req = data;
+	rep = NULL;
+	magic = 0x0051;
+	hmask = req->header.mask;
+	if (req->cache_control)
+	    ccmask = req->cache_control->mask;
+    }
+    if (0 == cs) {
+	/* client */
+	magic |= 0x4300;
+    } else {
+	/* server */
+	magic |= 0x5300;
+    }
+    magic = htons(magic);
+    ccmask = htonl(ccmask);
+    if (0 == pq)
+	S = (unsigned short) rep->sline.status;
+    else
+	S = (unsigned short) HTTP_STATUS_NONE;
+    logfileWrite(headerslog, &magic, sizeof(magic));
+    logfileWrite(headerslog, &M, sizeof(M));
+    logfileWrite(headerslog, &S, sizeof(S));
+    logfileWrite(headerslog, hmask, sizeof(HttpHeaderMask));
+    logfileWrite(headerslog, &ccmask, sizeof(int));
+    logfileFlush(headerslog);
 }
 
 #endif

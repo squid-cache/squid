@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.471 2000/03/06 16:23:29 wessels Exp $
+ * $Id: client_side.cc,v 1.472 2000/03/25 04:58:39 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1699,6 +1699,9 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	http->out.offset += rep->hdr_sz;
 	check_size += rep->hdr_sz;
 	httpReplyDestroy(rep);
+#if HEADERS_LOG
+	headersLog(0, 0, http->request->method, rep);
+#endif
 	rep = NULL;
     } else {
 	memBufDefInit(&mb);
@@ -2511,6 +2514,9 @@ clientReadRequest(int fd, void *data)
 		    break;
 		}
 	    }
+#if HEADERS_LOG
+	    headersLog(0, 1, request->method, request);
+#endif
 	    clientAccessCheck(http);
 	    continue;		/* while offset > 0 */
 	} else if (parser_return_code == 0) {
