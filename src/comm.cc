@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.55 1996/08/21 20:25:51 wessels Exp $
+ * $Id: comm.cc,v 1.56 1996/08/23 21:29:56 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -682,7 +682,7 @@ int comm_select(sec, failtime)
 
     do {
 	if (sec > 60)
-		fatal_dump(NULL);
+	    fatal_dump(NULL);
 	if (0 < failtime && failtime < squid_curtime)
 	    break;
 
