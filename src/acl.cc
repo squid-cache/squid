@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.254 2001/06/14 19:10:29 hno Exp $
+ * $Id: acl.cc,v 1.255 2001/06/28 20:16:30 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1326,6 +1326,11 @@ aclMatchProxyAuth(void *data, http_hdr_type headertype,
 	return aclCacheMatchAcl(&auth_user_request->auth_user->
 	    proxy_match_cache, acltype, data,
 	    authenticateUserRequestUsername(auth_user_request));
+    } else {
+	debug(28, 1) ("XXX authenticateCheckAuthUserIP returned 0, somebody "
+	    "make sure the username gets logged to access.log.\n");
+	debug(28, 1) ("XXX if it works, tell developers to remove this "
+	    "message\n");
     }
     /* this acl check completed */
     authenticateAuthUserRequestUnlock(auth_user_request);
