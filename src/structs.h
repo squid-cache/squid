@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.376 2001/01/09 01:13:36 wessels Exp $
+ * $Id: structs.h,v 1.377 2001/01/09 01:43:08 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1434,16 +1434,16 @@ struct _MemObject {
 struct _StoreEntry {
     hash_link hash;		/* must be first */
     MemObject *mem_obj;
+    RemovalPolicyNode repl;
     time_t timestamp;
     time_t lastref;
     time_t expires;
     time_t lastmod;
     size_t swap_file_sz;
+    sfileno swap_filen:24;
+    sdirno swap_dirn:8;
     u_short refcount;
     u_short flags;
-    sdirno swap_dirn;
-    sfileno swap_filen;
-    RemovalPolicyNode repl;
     u_short lock_count;		/* Assume < 65536! */
     mem_status_t mem_status:3;
     ping_status_t ping_status:3;

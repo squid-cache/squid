@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.117 2001/01/08 19:36:27 hno Exp $
+ * $Id: typedefs.h,v 1.118 2001/01/09 01:43:08 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -39,7 +39,7 @@ typedef unsigned int mem_status_t;
 typedef unsigned int ping_status_t;
 typedef unsigned int swap_status_t;
 typedef int sfileno;
-typedef int sdirno;
+typedef char sdirno;
 
 typedef struct {
     size_t bytes;
