@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.139 1998/01/02 21:35:15 wessels Exp $
+ * $Id: tools.cc,v 1.140 1998/01/02 21:52:40 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -253,6 +253,8 @@ rusage_maxrss(struct rusage *r)
     return r->ru_maxrss;
 #elif HAVE_GETPAGESIZE
     return (r->ru_maxrss * getpagesize()) >> 10;
+#elif defined(PAGESIZE)
+    return (r->ru_maxrss * PAGESIZE) >> 10;
 #else
     return r->ru_maxrss;
 #endif
