@@ -584,9 +584,9 @@ CRYPT_LIB=''
 
 SOCKET_PH_TYPE='default'
 
-echo '-----------------------'
+echo '--------------------------------'
 echo "Installing Squid in $myprefix"
-echo '-----------------------'
+echo '--------------------------------'
 
 
 
@@ -1365,14 +1365,6 @@ EOF
 
 
 
-if test -x "/bin/uname"; then
-        if /bin/uname -sr | grep 'SunOS 5.[0-9]' >/dev/null 2>&1; then
-                NO_LIBMALLOC=x
-		XTRA_CFLAGS="-DUSE_MALLINFO=0 -DUSE_MALLOPT=0 $XTRA_CFLAGS"
-        fi
-fi
-
-
 for ac_func in getdtablesize sysconf strerror setrlimit strdup \
                regcomp regexec regfree timegm
 do
@@ -1381,7 +1373,7 @@ if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1385 "configure"
+#line 1377 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char $ac_func(); below.  */
@@ -1434,7 +1426,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lsocket  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1438 "configure"
+#line 1430 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1460,8 +1452,7 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
-if test x$NO_LIBMALLOC = x ; then
-	echo $ac_n "checking for -lmalloc""... $ac_c" 1>&6
+echo $ac_n "checking for -lmalloc""... $ac_c" 1>&6
 ac_lib_var=`echo malloc | tr '.-/+' '___p'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1469,7 +1460,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lmalloc  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1473 "configure"
+#line 1464 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1490,12 +1481,11 @@ LIBS="$ac_save_LIBS"
 fi
 if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
   echo "$ac_t""yes" 1>&6
-  XTRA_LIBS="$XTRA_LIBS -lmalloc"
+  XTRA_LIBS="$XTRA_LIBS -lmalloc"; HAVE_LIBMALLOC="yes"
 else
   echo "$ac_t""no" 1>&6
 fi
 
-fi
 echo $ac_n "checking for -lnsl""... $ac_c" 1>&6
 ac_lib_var=`echo nsl | tr '.-/+' '___p'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
@@ -1504,7 +1494,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lnsl  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1508 "configure"
+#line 1498 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1538,7 +1528,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lresolv  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1542 "configure"
+#line 1532 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1572,7 +1562,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lbsd  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1576 "configure"
+#line 1566 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1607,7 +1597,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-l44bsd  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1611 "configure"
+#line 1601 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1628,7 +1618,7 @@ LIBS="$ac_save_LIBS"
 fi
 if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
   echo "$ac_t""yes" 1>&6
-  HAVE_44BSD="yes"
+  HAVE_LIB44BSD="yes"
 else
   echo "$ac_t""no" 1>&6
 fi
@@ -1641,7 +1631,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lresolv  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1645 "configure"
+#line 1635 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1662,7 +1652,7 @@ LIBS="$ac_save_LIBS"
 fi
 if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
   echo "$ac_t""yes" 1>&6
-  if test "$HAVE_44BSD" = "yes"; then XTRA_LIBS="$XTRA_LIBS -l44bsd"; fi
+  if test "$HAVE_LIB44BSD" = "yes"; then XTRA_LIBS="$XTRA_LIBS -l44bsd"; fi
 else
   echo "$ac_t""no" 1>&6
 fi
@@ -1676,7 +1666,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lcrypt  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1680 "configure"
+#line 1670 "configure"
 #include "confdefs.h"
 
 int main() { return 0; }
@@ -1703,8 +1693,23 @@ else
 fi
 
 
+
+case "$host" in
+	*-sun-solaris*)
+        	echo "Removing -lmalloc for Solaris..."
+        	XTRA_LIBS=`echo $XTRA_LIBS | sed -e s/-lmalloc//`
+        	HAVE_LIBMALLOC="no"
+		;;
+	*-sgi-irix*)
+        	echo "Removing -lsocket for IRIX..."
+        	XTRA_LIBS=`echo $XTRA_LIBS | sed -e s/-lmalloc//`
+        	echo "Removing -lnsl for IRIX..."
+        	XTRA_LIBS=`echo $XTRA_LIBS | sed -e s/-lnsl//`
+		;;
+esac
+
 XTRA_OBJS=''
-if test x$NO_LIBMALLOC != x ; then
+if test "$HAVE_LIBMALLOC" = "yes" ; then
 	if test -r /usr/lib/debug/malloc.o ; then
 		XTRA_OBJS="$XTRA_OBJS /usr/lib/debug/malloc.o"
 	fi
@@ -1715,22 +1720,12 @@ fi
 
 
 
-
 if test -n "$XTRA_LIBS_OVERRIDE"; then
   XTRA_LIBS="$XTRA_LIBS_OVERRIDE";
 fi
 
 
-if test -x "/bin/uname"; then
-        XXMyOs=`/bin/uname`;
-fi
-
 if test -z "$STD_CFLAGS"; then
-    if test "HP-UX" = "$XXMyOs"; then
-    	STD_CFLAGS=''
-    else
-    	STD_CFLAGS='-g'
-    fi
     XXXCC=`echo $CC | awk '{print $1}'`
     if test "`basename $XXXCC`" = "gcc"; then
 	STD_CFLAGS="$STD_CFLAGS -Wall"
@@ -1743,18 +1738,21 @@ if test -z "$STD_LDFLAGS"; then
 fi
 
 
-if test "HP-UX" = "$XXMyOs"; then
-	RANLIB=":";
-fi
-
-if test "IRIX" = "$XXMyOs"; then
-	XXXCC=`echo $CC | awk '{print $1}'`
-	if test "`basename $XXXCC`" = "gcc"; then
-		XTRA_CFLAGS="$XTRA_CFLAGS -ansi"
-	else
-		XTRA_CFLAGS="$XTRA_CFLAGS -D__STRICT_ANSI__"
-	fi
-fi
+case "$host" in
+	*-sgi-irix*)
+		echo "Adding ANSI compile flags for IRIX..."
+		XXXCC=`echo $CC | awk '{print $1}'`
+		if test "`basename $XXXCC`" = "gcc"; then
+			XTRA_CFLAGS="$XTRA_CFLAGS -ansi"
+		else
+			XTRA_CFLAGS="$XTRA_CFLAGS -D__STRICT_ANSI__"
+		fi
+		;;
+	*-hp-hpux*)
+		echo "Disabling 'ranlib' for HP-UX..."
+		RANLIB=":"
+		;;
+esac
 
 
 rm -f core 
@@ -1908,8 +1906,8 @@ s%@MKDIR@%$MKDIR%g
 s%@LN@%$LN%g
 s%@CMD_PERL@%$CMD_PERL%g
 s%@PERL@%$PERL%g
-s%@XTRA_OBJS@%$XTRA_OBJS%g
 s%@CRYPT_LIB@%$CRYPT_LIB%g
+s%@XTRA_OBJS@%$XTRA_OBJS%g
 s%@XTRA_LIBS@%$XTRA_LIBS%g
 s%@STD_CFLAGS@%$STD_CFLAGS%g
 s%@STD_LDFLAGS@%$STD_LDFLAGS%g
