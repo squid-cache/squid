@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.237 1998/03/17 05:12:36 wessels Exp $
+ * $Id: main.cc,v 1.238 1998/03/23 22:37:11 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -480,6 +480,7 @@ mainInitialize(void)
 	do_mallinfo = 1;
 	mimeInit(Config.mimeTablePathname);
 	pconnInit();
+	eventInit();
     }
     serverConnectionsOpen();
     if (theOutIcpConnection >= 0 && (!Config2.Accel.on || Config.onoff.accel_with_proxy))
