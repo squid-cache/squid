@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.112 1996/12/11 07:50:19 wessels Exp $
+ * $Id: stat.cc,v 1.113 1996/12/18 00:01:26 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1096,13 +1096,15 @@ log_append(const cacheinfo * obj,
 	hier_timeout = hierData->timeout;
     }
     if (Config.commonLogFormat)
-	sprintf(tmp, "%s %s - [%s] \"%s %s\" %s %d\n",
+	sprintf(tmp, "%s %s - [%s] \"%s %s\" %s:%s%s %d\n",
 	    client,
 	    ident,
 	    mkhttpdlogtime(&squid_curtime),
 	    method,
 	    url,
 	    action,
+	    hier_timeout ? "TIMEOUT_" : null_string,
+	    hier_strings[hier_code],
 	    size);
     else
 	sprintf(tmp, "%9d.%03d %6d %s %s/%03d %d %s %s %s %s%s/%s %s\n",
