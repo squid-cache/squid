@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.38 1998/12/16 06:04:15 wessels Exp $
+ * $Id: forward.cc,v 1.39 1998/12/16 06:25:11 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -50,7 +50,7 @@ static void fwdLogReplyStatus(int tries, http_status status);
 static OBJH fwdStats;
 
 #define MAX_FWD_STATS_IDX 9
-static int FwdReplyCodes[MAX_FWD_STATS_IDX+1][HTTP_INVALID_HEADER+1];
+static int FwdReplyCodes[MAX_FWD_STATS_IDX + 1][HTTP_INVALID_HEADER + 1];
 
 static void
 fwdServerFree(FwdServer * fs)
@@ -222,6 +222,7 @@ fwdConnectStart(FwdState * fwdState)
     if ((fd = pconnPop(host, port)) >= 0) {
 	debug(17, 3) ("fwdConnectStart: reusing pconn FD %d\n", fd);
 	fwdState->server_fd = fd;
+	fwdState->n_tries++;
 	comm_add_close_handler(fd, fwdServerClosed, fwdState);
 	fwdConnectDone(fd, COMM_OK, fwdState);
 	return;
@@ -492,13 +493,13 @@ fwdComplete(FwdState * fwdState)
     assert(e->store_status == STORE_PENDING);
     debug(17, 3) ("fwdComplete: %s\n\tstatus %d\n", storeUrl(e),
 	e->mem_obj->reply->sline.status);
+    fwdLogReplyStatus(fwdState->n_tries, e->mem_obj->reply->sline.status);
     if (fwdReforward(fwdState)) {
 	debug(17, 1) ("fwdComplete: re-forwarding %d %s\n",
 	    e->mem_obj->reply->sline.status,
 	    storeUrl(e));
 	if (fwdState->server_fd > -1)
 	    fwdUnregister(fwdState->server_fd, fwdState);
-	fwdLogReplyStatus(fwdState->n_tries, e->mem_obj->reply->sline.status);
 	storeEntryReset(e);
 	fwdStartComplete(fwdState->servers, fwdState);
     } else {
@@ -518,9 +519,9 @@ fwdComplete(FwdState * fwdState)
 void
 fwdInit(void)
 {
-	cachemgrRegister("forward",
-		"Request Forwarding Statistics",
-		fwdStats, 0, 1);
+    cachemgrRegister("forward",
+	"Request Forwarding Statistics",
+	fwdStats, 0, 1);
 }
 
 static void
@@ -536,15 +537,22 @@ fwdLogReplyStatus(int tries, http_status status)
 }
 
 static void
-fwdStats(StoreEntry *s)
+fwdStats(StoreEntry * s)
 {
-	int i;
-	int j;
-	for (i=0; i<=(int) HTTP_INVALID_HEADER; i++) {
-		storeAppendPrintf(s, "%3d", i);
-		for (j=0; j<=MAX_FWD_STATS_IDX; j++) {
-		    storeAppendPrintf(s, "\t%d", FwdReplyCodes[j][i]);
-		}
-		storeAppendPrintf(s, "\n");
+    int i;
+    int j;
+    storeAppendPrintf(s, "Status");
+    for (j = 0; j <= MAX_FWD_STATS_IDX; j++) {
+	storeAppendPrintf(s, "\ttry#%d", j + 1);
+    }
+    storeAppendPrintf(s, "\n");
+    for (i = 0; i <= (int) HTTP_INVALID_HEADER; i++) {
+	if (FwdReplyCodes[0][i] == 0)
+	    continue;
+	storeAppendPrintf(s, "%3d", i);
+	for (j = 0; j <= MAX_FWD_STATS_IDX; j++) {
+	    storeAppendPrintf(s, "\t%d", FwdReplyCodes[j][i]);
 	}
+	storeAppendPrintf(s, "\n");
+    }
 }
