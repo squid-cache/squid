@@ -1,5 +1,18 @@
 	- Simpler cacheobj implementation.
 	- persistent connection histogram
+	- SERVER-SIDE PERSISTENT CONNECTIONS:
+        	- Added pconn.c 
+        	- Addec Cofig.Timeout.pconn; default 120 seconds
+        	- Added httpState->flags
+        	- Added flags arg to httpBuildRequestHeader()
+        	- Added HTTP_PROXYING and HTTP_KEEPALIVE flags
+        	- Added 'Connection' to allowed HTTP headers (http-anon.c)
+		- Added 'Proxy-Connection' to allowed HTTP headers
+		  (http-anon.c)
+		- Merged proxyhttpStart() with httpStart() and crated
+		  new httpBuildState().
+		- New httpPconnTransferDone() detects end-of-data on
+		  persistent connections.
 
 Changes to squid-1.2.alpha5 ():
 
