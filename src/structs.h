@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.226 1998/09/14 22:38:27 wessels Exp $
+ * $Id: structs.h,v 1.227 1998/09/14 23:35:25 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -522,6 +522,7 @@ struct _fde {
 	unsigned int nolinger:1;
 	unsigned int nonblocking:1;
 	unsigned int ipc:1;
+	unsigned int called_connect:1;
 #ifdef OPTIMISTIC_IO
 	unsigned int calling_io_handler:1;
 #endif

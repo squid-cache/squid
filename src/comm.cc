@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.285 1998/09/04 23:04:41 wessels Exp $
+ * $Id: comm.cc,v 1.286 1998/09/14 23:35:24 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -318,6 +318,7 @@ commResetFD(ConnectStateData * cs)
 	return 0;
     }
     close(fd2);
+    fd_table[cs->fd].flags.called_connect = 0;
     commSetNonBlocking(cs->fd);
     return 1;
 }
@@ -401,46 +402,39 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
 {
     int status = COMM_OK;
     fde *F = &fd_table[sock];
-    socklen_t len;
     int x;
+    int err = 0;
+    int errlen;
     assert(ntohs(address->sin_port) != 0);
     /* Establish connection. */
-    Counter.syscalls.sock.connects++;
-    if (connect(sock, (struct sockaddr *) address, sizeof(struct sockaddr_in)) < 0) {
+    errno = 0;
+    if (!F->flags.called_connect) {
+	F->flags.called_connect = 1;
+	Counter.syscalls.sock.connects++;
+	x = connect(sock, (struct sockaddr *) address, sizeof(*address));
 	debug(5, 9) ("connect FD %d: %s\n", sock, xstrerror());
-#ifdef _SQUID_HPUX_
-	if (EALREADY == errno) {
-	    /*
-	     * On my HP-UX box (HP-UX tirana B.10.10 A 9000/851), 
-	     * we get into fast loops on EALREADY.  select(2) continually
-	     * says the FD is ready for writing, but connect always
-	     * returns EALREADY. I applied a patch (PHNE_12906) but
-	     * it didn't help.  -DW Dec 1, 1997
-	     */
-	    debug(50, 1) ("connect: %s:%d: %s.\n",
-		fqdnFromAddr(address->sin_addr),
-		ntohs(address->sin_port),
-		xstrerror());
-	    return COMM_ERROR;
-	} else
+    } else {
+	errlen = sizeof(err);
+	x = getsockopt(sock, SOL_SOCKET, SO_ERROR, &err, &errlen);
+	if (x == 0)
+	    errno = err;
+#if defined(_SQUID_SOLARIS_)
+	/*
+	 * Solaris 2.4's socket emulation doesn't allow you
+	 * to determine the error from a failed non-blocking
+	 * connect and just returns EPIPE.  Create a fake
+	 * error message for connect.   -- fenner@parc.xerox.com
+	 */
+	if (x < 0 && errno == EPIPE)
+	    errno = ENOTCONN;
 #endif
-	if (ignoreErrno(errno)) {
-	    status = COMM_INPROGRESS;
-	} else if (EISCONN == errno) {
-	    status = COMM_OK;
-	} else {
-	    if (EINVAL == errno) {
-		len = sizeof(x);
-		if (getsockopt(sock, SOL_SOCKET, SO_ERROR, (char *) &x, &len) >= 0)
-		    errno = x;
-	    }
-	    debug(50, 2) ("connect: %s:%d: %s.\n",
-		fqdnFromAddr(address->sin_addr),
-		ntohs(address->sin_port),
-		xstrerror());
-	    return COMM_ERROR;
-	}
     }
+    if (errno == 0 || errno == EISCONN)
+	status = COMM_OK;
+    else if (ignoreErrno(errno))
+	status = COMM_INPROGRESS;
+    else
+	return COMM_ERROR;
     xstrncpy(F->ipaddr, inet_ntoa(address->sin_addr), 16);
     F->remote_port = ntohs(address->sin_port);
     if (status == COMM_OK) {
@@ -449,7 +443,6 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
     } else if (status == COMM_INPROGRESS) {
 	debug(5, 10) ("comm_connect_addr: FD %d connection pending\n", sock);
     }
-    /* Add new socket to list of open sockets. */
     return status;
 }
 
