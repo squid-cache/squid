@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.27 1996/04/09 18:20:26 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.28 1996/04/10 03:51:26 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -278,10 +278,14 @@ void addToIPACL(list, ip_str, access)
 
 	switch (c) {
 	case 4:
-	    if (a3 == 0 && a4 == 0)
-		lmask.s_addr = 0xffff0000;
-	    else if (a4 == 0)
-		lmask.s_addr = 0xffffff00;
+	    if (a1 == 0 && a2 == 0 && a3 == 0 && a4 == 0)  /* world   */
+		lmask.s_addr = 0x00000000;
+	    else if (a2 == 0 && a3 == 0 && a4 == 0)        /* class A */
+		lmask.s_addr = htonl(0xff000000);
+	    else if (a3 == 0 && a4 == 0)                   /* class B */
+		lmask.s_addr = htonl(0xffff0000);
+	    else if (a4 == 0)                              /* class C */
+		lmask.s_addr = htonl(0xffffff00);
 	    else
 		lmask.s_addr = 0xffffffff;
 	    break;
