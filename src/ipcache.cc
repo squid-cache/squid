@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.115 1997/05/15 01:18:45 wessels Exp $
+ * $Id: ipcache.cc,v 1.116 1997/05/15 23:40:15 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -237,6 +237,7 @@ ipcache_release(ipcache_entry * i)
 	fatal_dump("ipcache_release: i != table_entry!");
     if (i->locks) {
 	i->expires = squid_curtime;
+        ipcacheChangeKey(i);
 	IpcacheStats.release_locked++;
 	return;
     }
