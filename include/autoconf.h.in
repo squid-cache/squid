@@ -572,6 +572,9 @@
 /* Define if you have the <sys/msg.h> header file.  */
 #undef HAVE_SYS_MSG_H
 
+/* Define if you have the <sys/mount.h> header file.  */
+#undef HAVE_SYS_MOUNT_H
+
 /* Define if you have the <sys/ndir.h> header file.  */
 #undef HAVE_SYS_NDIR_H
 
