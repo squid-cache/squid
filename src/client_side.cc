@@ -51,7 +51,7 @@ void clientAccessCheck(icpState, handler)
     int answer = 1;
     request_t *r = icpState->request;
     aclCheck_t *ch = NULL;
-    acl_lookup_state i;
+    squid_acl i;
     if (icpState->aclChecklist == NULL) {
 	icpState->aclChecklist = xcalloc(1, sizeof(aclCheck_t));
 	icpState->aclChecklist->src_addr = icpState->peer.sin_addr;

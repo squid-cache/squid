@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.9 1996/07/22 16:40:23 wessels Exp $
+ * $Id: dnsserver.cc,v 1.10 1996/07/25 05:49:14 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -268,7 +268,7 @@ int main(argc, argv)
 #endif
 	    addrbuf = inet_addr(request);
 	    for (;;) {
-		result = gethostbyaddr(&addrbuf, 4, AF_INET);
+		result = gethostbyaddr((char *)&addrbuf, 4, AF_INET);
 		if (result || h_errno != TRY_AGAIN)
 		    break;
 		if (++retry_count == 2)
