@@ -35,7 +35,8 @@ w
 EOS
 
 ./configure --silent
-make dist
+make dist-all
 
 cd $startdir
 cp -p $tmpdir/${PACKAGE}-${VERSION}-${date}.tar.gz .
+cp -p $tmpdir/${PACKAGE}-${VERSION}-${date}.tar.bz2 .
