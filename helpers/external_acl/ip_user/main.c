@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.1 2002/06/23 14:25:17 hno Exp $ 
+/* $Id: main.c,v 1.2 2002/07/06 12:33:09 hno Exp $ 
 * Copyright (C) 2002 Rodrigo Campos
 *
 * This program is free software; you can redistribute it and/or modify
@@ -73,6 +73,8 @@ main (int argc, char *argv[])
       username = strtok (NULL, " \t");
     } else {
       fprintf (stderr, "helper: unable to read tokens\n");
+      printf ("ERR\n");
+      continue;
     }
 #ifdef DEBUG
     printf ("result: %d\n",
