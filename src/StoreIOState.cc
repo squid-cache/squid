@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreIOState.cc,v 1.3 2003/02/21 22:50:06 robertc Exp $
+ * $Id: StoreIOState.cc,v 1.4 2003/08/31 12:44:30 robertc Exp $
  *
  * DEBUG: section ??    Swap Dir base object
  * AUTHOR: Robert Collins
@@ -59,6 +59,8 @@ storeIOState::offset() const
 
 storeIOState::~storeIOState()
 {
+    debugs(20,3, "StoreIOState::~StoreIOState: " << this);
+
     if (read.callback_data)
         cbdataReferenceDone(read.callback_data);
 
