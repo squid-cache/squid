@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.138 1999/01/24 04:03:49 wessels Exp $
+# $Id: cf.data.pre,v 1.139 1999/01/24 05:24:22 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -761,6 +761,7 @@ NAME: ident_lookup_access
 TYPE: acl_access
 IFDEF: USE_IDENT
 DEFAULT: none
+DEFAULT_IF_NONE: deny all
 LOC: Config.accessList.identLookup
 DOC_START
 	A list of ACL elements which, if matched, cause an ident
