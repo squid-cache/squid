@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.244 1998/09/11 17:07:45 wessels Exp $
+ * $Id: neighbors.cc,v 1.245 1998/09/14 20:29:30 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -472,7 +472,7 @@ neighborsUdpPing(request_t * request,
      * If there is a configured timeout, use it
      */
     if (Config.Timeout.icp_query)
-	*timeout = Config.Timeout.icp_query * 1000;
+	*timeout = Config.Timeout.icp_query;
     else if (*exprep > 0)
 	(*timeout) = 2 * (*timeout) / (*exprep);
     else
