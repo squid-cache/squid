@@ -1,5 +1,5 @@
 /*
- * $Id: cachemgr.cc,v 1.69 1998/02/25 09:53:55 rousskov Exp $
+ * $Id: cachemgr.cc,v 1.70 1998/02/26 00:09:23 rousskov Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -359,7 +359,7 @@ read_reply(int s, cachemgr_request * req)
 	    }
 	    /* this is a way to pass HTTP status to the Web server */
 	    if (statusStr)
-		printf("Status: %d %s", status, statusStr);
+		printf("Status: %d %s\n", status, statusStr);
 	    break;
 	case isHeaders:
 	    /* forward header field */
@@ -383,7 +383,7 @@ read_reply(int s, cachemgr_request * req)
 		printf("<PRE>\n");
 	    }
 	    istate = isBody;
-	    break;
+	    /* yes, fall through, we do not want to loose the first line */
 	case isBody:
 	    /* interpret [and reformat] cache response */
 	    if (parse_menu)
