@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.12 2003/02/05 01:42:20 robertc Exp $
+ * $Id: client_side_request.cc,v 1.13 2003/02/05 02:20:09 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -351,6 +351,14 @@ void
 clientAccessCheckDone(int answer, void *data)
 {
     ClientRequestContext *context = (ClientRequestContext *)data;
+    
+    clientHttpRequest *http_ = context->http;
+
+    if (!cbdataReferenceValid (http_)) {
+	context->deleteSelf();
+	return;
+    }
+    
     clientHttpRequest *http = context->http;
     err_type page_id;
     http_status status;
