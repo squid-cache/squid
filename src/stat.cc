@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.51 1996/07/27 07:07:46 wessels Exp $
+ * $Id: stat.cc,v 1.52 1996/08/12 23:22:37 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -906,7 +906,6 @@ void log_append(obj, url, caddr, size, action, method, http_code, msec, ident, h
 	hier_host = hierData->host;
 	hier_timeout = hierData->timeout;
     }
-
     if (obj->logfile_status == LOG_ENABLE) {
 	if (Config.commonLogFormat)
 	    sprintf(tmp, "%s %s - [%s] \"%s %s\" %s %d\n",
@@ -1150,7 +1149,7 @@ char *stat_describe(entry)
     LOCAL_ARRAY(char, state, 256);
 
     state[0] = '\0';
-    sprintf (state, "%s/%s",
+    sprintf(state, "%s/%s",
 	storeStatusStr[entry->store_status],
 	pingStatusStr[entry->ping_status]);
     return (state);
@@ -1162,7 +1161,7 @@ char *mem_describe(entry)
     LOCAL_ARRAY(char, where, 100);
 
     where[0] = '\0';
-    sprintf (where, "D%d/%s/%s",
+    sprintf(where, "D%d/%s/%s",
 	entry->swap_file_number,
 	swapStatusStr[entry->swap_status],
 	memStatusStr[entry->mem_status]);
