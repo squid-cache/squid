@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.239 1998/03/30 06:56:24 rousskov Exp $
+ * $Id: client_side.cc,v 1.240 1998/03/31 03:57:15 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -653,7 +653,7 @@ clientParseRequestHeaders(clientHttpRequest * http)
 	if (!strcasecmp(t, "Keep-Alive"))
 	    EBIT_SET(request->flags, REQ_PROXY_KEEPALIVE);
     }
-    if ((t = mime_get_header(request_hdr, "Via")))
+    if ((t = mime_get_header(request_hdr, "Via"))) {
 	if (strstr(t, ThisCache)) {
 	    if (!http->accel) {
 		debug(33, 1) ("WARNING: Forwarding loop detected for '%s'\n",
@@ -662,9 +662,17 @@ clientParseRequestHeaders(clientHttpRequest * http)
 	    }
 	    EBIT_SET(request->flags, REQ_LOOPDETECT);
 	}
+#if FORW_VIA_DB
+	fvdbCountVia(t);
+#endif
+    }
 #if USE_USERAGENT_LOG
     if ((t = mime_get_header(request_hdr, "User-Agent")))
 	logUserAgent(fqdnFromAddr(http->conn->peer.sin_addr), t);
+#endif
+#if FORW_VIA_DB
+    if ((t = mime_get_header(request_hdr, "X-Forwarded-For")))
+	fvdbCountForw(t);
 #endif
     request->max_age = -1;
     if ((t = mime_get_header(request_hdr, "Cache-control"))) {
@@ -2195,3 +2203,4 @@ clientHttpConnectionsClose(void)
     }
     NHttpSockets = 0;
 }
+

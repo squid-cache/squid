@@ -6,6 +6,10 @@ extern void accessLogClose(void);
 extern void accessLogInit(void);
 extern const char *accessLogTime(time_t);
 extern void hierarchyNote(HierarchyLogEntry *, hier_code, icp_ping_data *, const char *);
+#if FORW_VIA_DB
+extern void fvdbCountVia(const char *key);
+extern void fvdbCountForw(const char *key);
+#endif
 
 extern aclCheck_t *aclChecklistCreate(const struct _acl_access *,
     request_t *,
