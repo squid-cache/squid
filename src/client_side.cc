@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.441 1999/03/24 00:17:03 rousskov Exp $
+ * $Id: client_side.cc,v 1.442 1999/03/24 04:16:08 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -81,6 +81,8 @@ static int clientOnlyIfCached(clientHttpRequest * http);
 static STCB clientSendMoreData;
 static STCB clientCacheHit;
 static void clientSetKeepaliveFlag(clientHttpRequest *);
+static void clientPackRangeHdr(const HttpReply *rep, const HttpHdrRangeSpec *spec, String boundary, MemBuf *mb);
+static void clientPackTermBound(String boundary, MemBuf *mb);
 static void clientInterpretRequestHeaders(clientHttpRequest *);
 static void clientProcessRequest(clientHttpRequest *);
 static void clientProcessExpired(void *data);
@@ -961,6 +963,44 @@ clientIfRangeMatch(clientHttpRequest * http, HttpReply * rep)
     return 0;
 }
 
+/* returns expected content length for multi-range replies
+ * note: assumes that httpHdrRangeCanonize has already been called
+ * warning: assumes that HTTP headers for individual ranges at the
+ *          time of the actuall assembly will be exactly the same as
+ *          the headers when clientMRangeCLen() is called */
+static int
+clientMRangeCLen(clientHttpRequest * http) {
+    int clen = 0;
+    HttpHdrRangePos pos = HttpHdrRangeInitPos;
+    const HttpHdrRangeSpec *spec;
+    MemBuf mb;
+
+    assert(http->entry->mem_obj);
+
+    memBufDefInit(&mb);
+    while ((spec = httpHdrRangeGetSpec(http->request->range, &pos))) {
+
+	/* account for headers for this range */
+	memBufReset(&mb);
+	clientPackRangeHdr(http->entry->mem_obj->reply,
+	    spec, http->range_iter.boundary, &mb);
+	clen += mb.size;
+
+	/* account for range content */
+	clen += spec->length;
+
+	debug(33, 6) ("clientMRangeCLen: (clen += %d + %d) == %d\n",
+	    mb.size, spec->length, clen);
+    }
+    /* account for the terminating boundary */
+    memBufReset(&mb);
+    clientPackTermBound(http->range_iter.boundary, &mb);
+    clen += mb.size;
+
+    memBufClean(&mb);
+    return clen;
+}
+
 /* adds appropriate Range headers if needed */
 static void
 clientBuildRangeHeader(clientHttpRequest * http, HttpReply * rep)
@@ -992,7 +1032,9 @@ clientBuildRangeHeader(clientHttpRequest * http, HttpReply * rep)
 	http->request->range = NULL;
     } else {
 	const int spec_count = http->request->range->specs.count;
-	debug(33, 2) ("clientBuildRangeHeader: range spec count: %d clen: %d\n",
+	int actual_clen = -1;
+
+	debug(33, 2) ("clientBuildRangeHeader: range spec count: %d virgin clen: %d\n",
 	    spec_count, rep->content_length);
 	assert(spec_count > 0);
 	/* ETags should not be returned with Partial Content replies? */
@@ -1004,11 +1046,9 @@ clientBuildRangeHeader(clientHttpRequest * http, HttpReply * rep)
 	    assert(spec);
 	    /* append Content-Range */
 	    httpHeaderAddContRange(hdr, *spec, rep->content_length);
-	    /* set new Content-Length to the actual number of OCTETs
+	    /* set new Content-Length to the actual number of bytes
 	     * transmitted in the message-body */
-	    httpHeaderDelById(hdr, HDR_CONTENT_LENGTH);
-	    httpHeaderPutInt(hdr, HDR_CONTENT_LENGTH, spec->length);
-	    debug(33, 2) ("clientBuildRangeHeader: actual content length: %d\n", spec->length);
+	    actual_clen = spec->length;
 	} else {
 	    /* multipart! */
 	    /* generate boundary string */
@@ -1018,11 +1058,16 @@ clientBuildRangeHeader(clientHttpRequest * http, HttpReply * rep)
 	    httpHeaderPutStrf(hdr, HDR_CONTENT_TYPE,
 		"multipart/byteranges; boundary=\"%s\"",
 		strBuf(http->range_iter.boundary));
-	    /* no need for Content-Length in multipart responses */
-	    /* but we must delete the original one if we cannot (yet)
-	     * calculate the actual length */
-	    httpHeaderDelById(hdr, HDR_CONTENT_LENGTH);
+	    /* Content-Length is not required in multipart responses
+	     * but it is always nice to have one */
+	    actual_clen = clientMRangeCLen(http);
 	}
+
+	/* replace Content-Length header */
+	assert(actual_clen >= 0);
+	httpHeaderDelById(hdr, HDR_CONTENT_LENGTH);
+	httpHeaderPutInt(hdr, HDR_CONTENT_LENGTH, actual_clen);
+	debug(33, 2) ("clientBuildRangeHeader: actual content length: %d\n", actual_clen);
     }
 }
 
@@ -1294,6 +1339,13 @@ clientCacheHit(void *data, char *buf, ssize_t size)
     }
 }
 
+/* put terminating boundary for multiparts */
+static void
+clientPackTermBound(String boundary, MemBuf *mb)
+{
+    memBufPrintf(mb, "\r\n--%s--\r\n", strBuf(boundary));
+    debug(33, 6) ("clientPackTermBound: buf offset: %d\n", mb->size);
+}
 
 /* appends a "part" HTTP header (as in a multi-part/range reply) to the buffer */
 static void
@@ -1306,7 +1358,6 @@ clientPackRangeHdr(const HttpReply *rep, const HttpHdrRangeSpec *spec, String bo
 
     /* put boundary */
     debug(33, 5) ("clientPackRangeHdr: appending boundary: %s\n", strBuf(boundary));
-
     /* rfc2046 requires to _prepend_ boundary with <crlf>! */
     memBufPrintf(mb, "\r\n--%s\r\n", strBuf(boundary));
 
@@ -1320,7 +1371,7 @@ clientPackRangeHdr(const HttpReply *rep, const HttpHdrRangeSpec *spec, String bo
     packerClean(&p);
     httpHeaderClean(&hdr);
 
-    /* append <crlf> (we packed a header, not a reply */
+    /* append <crlf> (we packed a header, not a reply) */
     memBufPrintf(mb, crlf);
 }
 
@@ -1432,7 +1483,7 @@ clientPackMoreRanges(clientHttpRequest * http, const char *buf, ssize_t size, Me
 	    assert(body_off == i->spec->offset + i->spec->length - i->debt_size);
     } else if (http->request->range->specs.count > 1) {
 	/* put terminating boundary for multiparts */
-	memBufPrintf(mb, "\r\n--%s--\r\n", strBuf(i->boundary));
+	clientPackTermBound(i->boundary, mb);
     }
     http->out.offset = body_off + i->prefix_size;	/* sync */
     return i->debt_size > 0;
