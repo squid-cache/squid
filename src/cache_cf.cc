@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.3 1996/03/26 05:14:46 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.4 1996/03/26 21:58:41 wessels Exp $ */
 
 #include "config.h"
 #include <stdio.h>
@@ -895,6 +895,16 @@ void parseBindAddressLine(line_in)
     addToStopList(&bind_addr_list, token);
 }
 
+void parseBlockListLine(line_in)
+     char *line_in;
+{
+    char *token;
+    token = strtok(NULL, w_space);
+    if (token == (char *) NULL)
+	return;
+    blockAddToList(token);
+}
+
 void parseLocalDomainLine(line_in)
      char *line_in;
 {
@@ -1167,6 +1177,10 @@ int parseConfigFile(file_name)
 
 	else if (!strcmp(token, "ttl_pattern"))
 	    parseTTLPattern(line_in);
+
+	/* Parse a blocklist line */
+	else if (!strcmp(token, "blocklist"))
+	    parseBlockListLine(line_in);
 
 	/* Parse a negative_ttl line */
 	else if (!strcmp(token, "negative_ttl"))
