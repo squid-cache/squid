@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.161 1999/10/04 05:05:09 wessels Exp $
+ * $Id: enums.h,v 1.162 1999/12/30 17:36:31 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -102,6 +102,7 @@ typedef enum {
     ACL_URLPATH_REGEX,
     ACL_URL_REGEX,
     ACL_URL_PORT,
+    ACL_MY_PORT,
 #if USE_IDENT
     ACL_IDENT,
 #endif
@@ -247,6 +248,7 @@ typedef enum {
     CC_MUST_REVALIDATE,
     CC_PROXY_REVALIDATE,
     CC_MAX_AGE,
+    CC_S_MAXAGE,
     CC_ONLY_IF_CACHED,
     CC_OTHER,
     CC_ENUM_END
@@ -367,7 +369,7 @@ enum {
     METHOD_TRACE,		/* 110 */
     METHOD_PURGE,		/* 111 */
     METHOD_OPTIONS,
-#ifndef RFC_2518
+    METHOD_DELETE,		/* RFC2616 section 9.7 */
     METHOD_PROPFIND,
     METHOD_PROPPATCH,
     METHOD_MKCOL,
@@ -375,7 +377,6 @@ enum {
     METHOD_MOVE,
     METHOD_LOCK,
     METHOD_UNLOCK,
-#endif
     METHOD_ENUM_END
 };
 typedef unsigned int method_t;
@@ -402,6 +403,7 @@ typedef enum {
     HTTP_STATUS_NONE = 0,
     HTTP_CONTINUE = 100,
     HTTP_SWITCHING_PROTOCOLS = 101,
+    HTTP_PROCESSING = 102,	/* RFC2518 section 10.1 */
     HTTP_OK = 200,
     HTTP_CREATED = 201,
     HTTP_ACCEPTED = 202,
@@ -409,6 +411,7 @@ typedef enum {
     HTTP_NO_CONTENT = 204,
     HTTP_RESET_CONTENT = 205,
     HTTP_PARTIAL_CONTENT = 206,
+    HTTP_MULTI_STATUS = 207,	/* RFC2518 section 10.2 */
     HTTP_MULTIPLE_CHOICES = 300,
     HTTP_MOVED_PERMANENTLY = 301,
     HTTP_MOVED_TEMPORARILY = 302,
@@ -431,12 +434,16 @@ typedef enum {
     HTTP_REQUEST_ENTITY_TOO_LARGE = 413,
     HTTP_REQUEST_URI_TOO_LARGE = 414,
     HTTP_UNSUPPORTED_MEDIA_TYPE = 415,
+    HTTP_UNPROCESSABLE_ENTITY = 422,	/* RFC2518 section 10.3 */
+    HTTP_LOCKED = 423,		/* RFC2518 section 10.4 */
+    HTTP_FAILED_DEPENDENCY = 424,	/* RFC2518 section 10.5 */
     HTTP_INTERNAL_SERVER_ERROR = 500,
     HTTP_NOT_IMPLEMENTED = 501,
     HTTP_BAD_GATEWAY = 502,
     HTTP_SERVICE_UNAVAILABLE = 503,
     HTTP_GATEWAY_TIMEOUT = 504,
     HTTP_HTTP_VERSION_NOT_SUPPORTED = 505,
+    HTTP_INSUFFICIENT_STORAGE = 507,	/* RFC2518 section 10.6 */
     HTTP_INVALID_HEADER = 600	/* Squid header parsing error */
 } http_status;
 

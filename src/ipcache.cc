@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.217 1999/06/17 22:20:40 wessels Exp $
+ * $Id: ipcache.cc,v 1.218 1999/12/30 17:36:40 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -155,7 +155,8 @@ ipcacheExpiredEntry(ipcache_entry * i)
     if (i->locks != 0)
 	return 0;
     if (i->addrs.count == 0)
-	return 1;
+	if (i->status != IP_NEGATIVE_CACHED)
+	    return 1;
     if (i->expires > squid_curtime)
 	return 0;
     return 1;
@@ -340,7 +341,7 @@ ipcacheParse(rfc1035_rr * answers, int nr)
     int j;
     int na = 0;
     memset(&i, '\0', sizeof(i));
-    i.expires = squid_curtime;
+    i.expires = squid_curtime + Config.negativeDnsTtl;
     i.status = IP_NEGATIVE_CACHED;
     if (nr < 0) {
 	debug(14, 3) ("ipcacheParse: Lookup failed (error %d)\n",

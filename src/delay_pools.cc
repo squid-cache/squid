@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.11 1999/10/04 05:05:08 wessels Exp $
+ * $Id: delay_pools.cc,v 1.12 1999/12/30 17:36:30 wessels Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: David Luyer <luyer@ucs.uwa.edu.au>
@@ -283,6 +283,7 @@ delayClient(request_t * r)
     memset(&ch, '\0', sizeof(ch));
     ch.src_addr = r->client_addr;
     ch.my_addr = r->my_addr;
+    ch.my_port = r->my_port;
     ch.request = r;
     for (pool = 0; pool < Config.Delay.pools; pool++) {
 	if (aclCheckFast(Config.Delay.access[pool], &ch))

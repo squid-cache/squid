@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.334 1999/06/30 05:49:39 wessels Exp $
+ * $Id: cache_cf.cc,v 1.335 1999/12/30 17:36:23 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -76,6 +76,10 @@ static OBJH dump_config;
 static void dump_http_header(StoreEntry * entry, const char *name, HttpHeaderMask header);
 static void parse_http_header(HttpHeaderMask * header);
 static void free_http_header(HttpHeaderMask * header);
+static void parse_sockaddr_in_list(sockaddr_in_list **);
+static void dump_sockaddr_in_list(StoreEntry *, const char *, const sockaddr_in_list *);
+static void free_sockaddr_in_list(sockaddr_in_list **);
+static int check_null_sockaddr_in_list(const sockaddr_in_list *);
 
 void
 self_destruct(void)
@@ -276,11 +280,11 @@ configDoConfigure(void)
     storeConfigure();
     if (Config2.Accel.on && !strcmp(Config.Accel.host, "virtual"))
 	vhost_mode = 1;
-    if (Config.Port.http == NULL)
+    if (Config.Sockaddr.http == NULL)
 	fatal("No http_port specified!");
     snprintf(ThisCache, sizeof(ThisCache), "%s:%d (%s)",
 	uniqueHostname(),
-	(int) Config.Port.http->i,
+	(int) ntohs(Config.Sockaddr.http->s.sin_port),
 	full_appname_string);
     /*
      * the extra space is for loop detection in client_side.c -- we search
@@ -288,7 +292,7 @@ configDoConfigure(void)
      */
     snprintf(ThisCache2, sizeof(ThisCache), " %s:%d (%s)",
 	uniqueHostname(),
-	(int) Config.Port.http->i,
+	(int) ntohs(Config.Sockaddr.http->s.sin_port),
 	full_appname_string);
     if (!Config.udpMaxHitObjsz || Config.udpMaxHitObjsz > SQUID_UDP_SO_SNDBUF)
 	Config.udpMaxHitObjsz = SQUID_UDP_SO_SNDBUF;
@@ -911,7 +915,7 @@ parse_peer(peer ** head)
     char *token = NULL;
     peer *p;
     int i;
-    ushortlist *u;
+    sockaddr_in_list *s;
     const char *me = null_string;	/* XXX */
     p = memAllocate(MEM_PEER);
     p->http_port = CACHE_HTTP_PORT;
@@ -929,8 +933,8 @@ parse_peer(peer ** head)
     i = GetInteger();
     p->icp.port = (u_short) i;
     if (strcmp(p->host, me) == 0) {
-	for (u = Config.Port.http; u; u = u->next) {
-	    if (p->http_port != u->i)
+	for (s = Config.Sockaddr.http; s; s = s->next) {
+	    if (p->http_port != ntohs(s->s.sin_port))
 		continue;
 	    debug(15, 0) ("parse_peer: Peer looks like myself: %s %s/%d/%d\n",
 		p->type, p->host, p->http_port, p->icp.port);
@@ -981,6 +985,10 @@ parse_peer(peer ** head)
 	    p->login = xstrdup(token + 6);
 	} else if (!strncasecmp(token, "connect-timeout=", 16)) {
 	    p->connect_timeout = atoi(token + 16);
+#if USE_CACHE_DIGESTS
+	} else if (!strncasecmp(token, "digest-url=", 11)) {
+	    p->digest_url = xstrdup(token + 11);
+#endif
 	} else {
 	    debug(3, 0) ("parse_peer: token='%s'\n", token);
 	    self_destruct();
@@ -1180,6 +1188,7 @@ parse_hostdomaintype(void)
     }
 }
 
+#if UNUSED_CODE
 static void
 dump_ushortlist(StoreEntry * entry, const char *name, ushortlist * u)
 {
@@ -1223,6 +1232,7 @@ free_ushortlist(ushortlist ** P)
 	xfree(u);
     }
 }
+#endif
 
 static void
 dump_int(StoreEntry * entry, const char *name, int var)
@@ -1561,7 +1571,9 @@ parse_uri_whitespace(int *var)
     char *token = strtok(NULL, w_space);
     if (token == NULL)
 	self_destruct();
-    if (!strcasecmp(token, "deny"))
+    if (!strcasecmp(token, "strip"))
+	*var = URI_WHITESPACE_STRIP;
+    else if (!strcasecmp(token, "deny"))
 	*var = URI_WHITESPACE_DENY;
     else if (!strcasecmp(token, "allow"))
 	*var = URI_WHITESPACE_ALLOW;
@@ -1584,8 +1596,10 @@ dump_uri_whitespace(StoreEntry * entry, const char *name, int var)
 	s = "encode";
     else if (var == URI_WHITESPACE_CHOP)
 	s = "chop";
-    else
+    else if (var == URI_WHITESPACE_DENY)
 	s = "deny";
+    else
+	s = "strip";
     storeAppendPrintf(entry, "%s %s\n", name, s);
 }
 
@@ -1606,6 +1620,72 @@ parseNeighborType(const char *s)
 	return PEER_MULTICAST;
     debug(15, 0) ("WARNING: Unknown neighbor type: %s\n", s);
     return PEER_SIBLING;
+}
+
+static void
+parse_sockaddr_in_list(sockaddr_in_list ** head)
+{
+    char *token;
+    char *t;
+    char *host = NULL;
+    const struct hostent *hp;
+    int i;
+    sockaddr_in_list *s;
+    while ((token = strtok(NULL, w_space))) {
+	if ((t = strchr(token, ':'))) {
+	    /* host:port */
+	    host = token;
+	    *t = '\0';
+	    i = atoi(t + 1);
+	    if (i <= 0)
+		self_destruct();
+	} else if ((i = atoi(token)) > 0) {
+	    /* port */
+	} else {
+	    self_destruct();
+	}
+	s = xcalloc(1, sizeof(*s));
+	s->s.sin_port = htons(i);
+	if (NULL == host)
+	    s->s.sin_addr = any_addr;
+	else if (1 == safe_inet_addr(host, &s->s.sin_addr))
+	    (void) 0;
+	else if ((hp = gethostbyname(token)))	/* dont use ipcache */
+	    s->s.sin_addr = inaddrFromHostent(hp);
+	else
+	    self_destruct();
+	while (*head)
+	    head = &(*head)->next;
+	*head = s;
+    }
+}
+
+static void
+dump_sockaddr_in_list(StoreEntry * e, const char *n, const sockaddr_in_list * s)
+{
+    while (s) {
+	storeAppendPrintf(e, "%s %s:%d\n",
+	    n,
+	    inet_ntoa(s->s.sin_addr),
+	    ntohs(s->s.sin_port));
+	s = s->next;
+    }
+}
+
+static void
+free_sockaddr_in_list(sockaddr_in_list ** head)
+{
+    sockaddr_in_list *s;
+    while ((s = *head) != NULL) {
+	*head = s->next;
+	xfree(s);
+    }
+}
+
+static int
+check_null_sockaddr_in_list(const sockaddr_in_list * s)
+{
+    return NULL == s;
 }
 
 void

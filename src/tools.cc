@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.187 1999/10/04 05:05:36 wessels Exp $
+ * $Id: tools.cc,v 1.188 1999/12/30 17:37:01 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -52,6 +52,8 @@ static void mail_warranty(void);
 extern void log_trace_done();
 extern void log_trace_init(char *);
 #endif
+
+extern void (*failure_notify) (const char *);
 
 void
 releaseServerSockets(void)
@@ -364,6 +366,7 @@ fatalvf(const char *fmt, va_list args)
 void
 fatal_dump(const char *message)
 {
+    failure_notify = NULL;
     releaseServerSockets();
     if (message)
 	fatal_common(message);
@@ -413,13 +416,16 @@ getMyHostname(void)
     const struct hostent *h = NULL;
     if (Config.visibleHostname != NULL)
 	return Config.visibleHostname;
-    /*
-     * If tcp_incoming is set then try to get the corresponding hostname
-     */
-    if (!present && Config.Addrs.tcp_incoming.s_addr != INADDR_ANY) {
+    if (present) {
+	(void) 0;
+    } else if (Config.Sockaddr.http->s.sin_addr.s_addr != any_addr.s_addr) {
+	/*
+	 * If the first http_port address has a specific address, try a
+	 * reverse DNS lookup on it.
+	 */
 	host[0] = '\0';
-	h = gethostbyaddr((char *) &Config.Addrs.tcp_incoming,
-	    sizeof(Config.Addrs.tcp_incoming), AF_INET);
+	h = gethostbyaddr((char *) &Config.Sockaddr.http->s.sin_addr,
+	    sizeof(Config.Sockaddr.http->s.sin_addr), AF_INET);
 	if (h != NULL) {
 	    /* DNS lookup successful */
 	    /* use the official name from DNS lookup */
@@ -430,11 +436,10 @@ getMyHostname(void)
 	} else {
 	    debug(50, 6) ("getMyHostname: failed to resolve tcp_incoming_addr\n");
 	}
-    }
-    /*
-     * Get the host name and store it in host to return
-     */
-    if (!present) {
+    } else {
+	/*
+	 * Get the host name and store it in host to return
+	 */
 	host[0] = '\0';
 	if (gethostname(host, SQUIDHOSTNAMELEN) == -1) {
 	    debug(50, 1) ("getMyHostname: gethostname failed: %s\n",

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.16 1999/10/04 05:05:16 wessels Exp $
+ * $Id: ipc.cc,v 1.17 1999/12/30 17:36:39 wessels Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -252,7 +252,8 @@ ipcCreate(int type, const char *prog, char *const args[], const char *name, int 
      */
     do {
 	x = open(_PATH_DEVNULL, 0, 0444);
-	commSetCloseOnExec(x);
+	if (x > -1)
+	    commSetCloseOnExec(x);
     } while (x < 3);
     t1 = dup(crfd);
     t2 = dup(cwfd);

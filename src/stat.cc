@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.321 1999/10/04 05:05:29 wessels Exp $
+ * $Id: stat.cc,v 1.322 1999/12/30 17:36:52 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -385,7 +385,7 @@ statOpenfdObj(StoreEntry * sentry)
 static void
 info_get_mallstat(int size, int number, void *data)
 {
-    StoreEntry * sentry = data;
+    StoreEntry *sentry = data;
     if (number > 0)
 	storeAppendPrintf(sentry, "\t%d = %d\n", size, number);
 }
@@ -490,7 +490,8 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\tStorage Mem size:\t%d KB\n",
 	(int) (store_mem_size >> 10));
 #if HEAP_REPLACEMENT
-    /* The non-LRU policies do not use referenceAge */
+    storeAppendPrintf(sentry, "\tStorage Replacement Threshold:\t%f\n",
+	heap_peepminkey(store_heap));
 #else
     storeAppendPrintf(sentry, "\tStorage LRU Expiration Age:\t%6.2f days\n",
 	(double) storeExpiredReferenceAge() / 86400.0);

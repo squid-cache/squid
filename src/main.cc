@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.306 1999/12/10 18:11:02 wessels Exp $
+ * $Id: main.cc,v 1.307 1999/12/30 17:36:41 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -439,9 +439,9 @@ mainInitialize(void)
     squid_signal(SIGCHLD, sig_child, SA_NODEFER | SA_RESTART);
 
     setEffectiveUser();
-    assert(Config.Port.http);
+    assert(Config.Sockaddr.http);
     if (httpPortNumOverride != 1)
-	Config.Port.http->i = (u_short) httpPortNumOverride;
+	Config.Sockaddr.http->s.sin_port = htons(httpPortNumOverride);
     if (icpPortNumOverride != 1)
 	Config.Port.icp = (u_short) icpPortNumOverride;
 
@@ -546,6 +546,7 @@ main(int argc, char **argv)
     int errcount = 0;
     int n;			/* # of GC'd objects */
     time_t loop_delay;
+    mode_t oldmask;
 
     debug_log = stderr;
     if (FD_SETSIZE < Squid_MaxFD)
@@ -566,6 +567,16 @@ main(int argc, char **argv)
     mallopt(M_NLBLKS, 32);
 #endif
 #endif /* HAVE_MALLOPT */
+
+    /*
+     * The plan here is to set the umask to 007 (deny others for
+     * read,write,execute), but only if the umask is not already
+     * set.  Unfortunately, there is no way to get the current
+     * umask value without setting it.
+     */
+    oldmask = umask(S_IRWXO);
+    if (oldmask)
+	umask(oldmask);
 
     memset(&local_addr, '\0', sizeof(struct in_addr));
     safe_inet_addr(localhost, &local_addr);
@@ -786,9 +797,6 @@ watch_child(char *argv[])
 #endif
     for (i = 0; i < Squid_MaxFD; i++)
 	close(i);
-#if NOT_NEEDED
-    umask(0);
-#endif
     for (;;) {
 	mainStartScript(argv[0]);
 	if ((pid = fork()) == 0) {
@@ -906,6 +914,7 @@ SquidShutdown(void *unused)
 #endif
     debug(1, 1) ("Squid Cache (Version %s): Exiting normally.\n",
 	version_string);
-    fclose(debug_log);
+    if (debug_log)
+	fclose(debug_log);
     exit(0);
 }

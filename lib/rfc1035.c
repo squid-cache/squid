@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.10 1999/10/04 05:04:51 wessels Exp $
+ * $Id: rfc1035.c,v 1.11 1999/12/30 17:36:15 wessels Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -424,14 +424,7 @@ rfc1035AnswersUnpack(const char *buf,
 	    }
 	} while (l > 0);	/* a zero-length label terminates */
 	off += 4;		/* qtype, qclass */
-	if (off > sz) {
-	    /*
-	     * This used be an assertion and it triggered once, but the
-	     * core file was useless for debugging.   Sigh, I guess we
-	     * need a debug_hook.
-	     */
-	    return 0;
-	}
+	assert (off <= sz);
     }
     i = (int) hdr.ancount;
     if (i == 0)

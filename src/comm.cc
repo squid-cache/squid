@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.303 1999/10/04 05:05:06 wessels Exp $
+ * $Id: comm.cc,v 1.304 1999/12/30 17:36:27 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -717,6 +717,23 @@ commSetNonBlocking(int fd)
 	return COMM_ERROR;
     }
     fd_table[fd].flags.nonblocking = 1;
+    return 0;
+}
+
+int
+commUnsetNonBlocking(int fd)
+{
+    int flags;
+    int dummy = 0;
+    if ((flags = fcntl(fd, F_GETFL, dummy)) < 0) {
+	debug(50, 0) ("FD %d: fcntl F_GETFL: %s\n", fd, xstrerror());
+	return COMM_ERROR;
+    }
+    if (fcntl(fd, F_SETFL, flags & (~SQUID_NONBLOCK)) < 0) {
+	debug(50, 0) ("commUnsetNonBlocking: FD %d: %s\n", fd, xstrerror());
+	return COMM_ERROR;
+    }
+    fd_table[fd].flags.nonblocking = 0;
     return 0;
 }
 

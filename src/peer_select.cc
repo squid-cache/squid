@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.101 1999/10/04 05:05:21 wessels Exp $
+ * $Id: peer_select.cc,v 1.102 1999/12/30 17:36:45 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -237,8 +237,6 @@ peerSelectFoo(ps_state * ps)
 	    ps->acl_checklist = aclChecklistCreate(
 		Config.accessList.AlwaysDirect,
 		request,
-		request->client_addr,
-		request->my_addr,
 		NULL,		/* user agent */
 		NULL);		/* ident */
 	    aclNBCheck(ps->acl_checklist,
@@ -251,8 +249,6 @@ peerSelectFoo(ps_state * ps)
 	    ps->acl_checklist = aclChecklistCreate(
 		Config.accessList.NeverDirect,
 		request,
-		request->client_addr,
-		request->my_addr,
 		NULL,		/* user agent */
 		NULL);		/* ident */
 	    aclNBCheck(ps->acl_checklist,

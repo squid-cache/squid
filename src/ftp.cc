@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.287 1999/10/04 05:05:12 wessels Exp $
+ * $Id: ftp.cc,v 1.288 1999/12/30 17:36:33 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -165,10 +165,11 @@ static void ftpUnhack(FtpStateData * ftpState);
 static void ftpScheduleReadControlReply(FtpStateData *, int);
 static void ftpHandleControlReply(FtpStateData *);
 static char *ftpHtmlifyListEntry(char *line, FtpStateData * ftpState);
-static void ftpFailed(FtpStateData *, err_type /* ERR_NONE if unknown */ );
-static void ftpFailedErrorMessage(FtpStateData *, err_type /* ERR_NONE if unknown */ );
+static void ftpFailed(FtpStateData *, err_type);
+static void ftpFailedErrorMessage(FtpStateData *, err_type);
 
-/* State machine functions
+/*
+ * State machine functions
  * send == state transition
  * read == wait for response, and select next state transition
  * other == Transition logic
@@ -336,6 +337,12 @@ ftpTimeout(int fd, void *data)
     FtpStateData *ftpState = data;
     StoreEntry *entry = ftpState->entry;
     debug(9, 4) ("ftpTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
+    if (SENT_PASV == ftpState->state && fd == ftpState->data.fd) {
+	/* stupid ftp.netscape.com */
+	ftpState->fwd->flags.dont_retry = 0;
+	ftpState->fwd->flags.ftp_pasv_failed = 1;
+	debug(9, 1) ("ftpTimeout: timeout in SENT_PASV state\n");
+    }
     ftpFailed(ftpState, ERR_READ_TIMEOUT);
     /* ftpFailed closes ctrl.fd and frees ftpState */
 }
@@ -1084,7 +1091,6 @@ ftpStart(FwdState * fwd)
     ftpState->data.size = SQUID_TCP_SO_RCVBUF;
     ftpState->data.freefunc = xfree;
     ftpScheduleReadControlReply(ftpState, 0);
-    commSetTimeout(fd, Config.Timeout.read, ftpTimeout, ftpState);
 }
 
 /* ====================================================================== */
@@ -1203,6 +1209,14 @@ ftpScheduleReadControlReply(FtpStateData * ftpState, int buffered_ok)
 	    ftpReadControlReply,
 	    ftpState,
 	    Config.Timeout.read);
+	/*
+	 * Cancel the timeout on the Data socket (if any) and
+	 * establish one on the control socket.
+	 */
+	if (ftpState->data.fd > -1)
+	    commSetTimeout(ftpState->data.fd, -1, NULL, NULL);
+	commSetTimeout(ftpState->ctrl.fd, Config.Timeout.read, ftpTimeout,
+	    ftpState);
     }
 }
 
@@ -1671,6 +1685,11 @@ ftpSendPasv(FtpStateData * ftpState)
     snprintf(cbuf, 1024, "PASV\r\n");
     ftpWriteCommand(cbuf, ftpState);
     ftpState->state = SENT_PASV;
+    /*
+     * ugly hack for ftp servers like ftp.netscape.com that sometimes
+     * dont acknowledge PORT commands.
+     */
+    commSetTimeout(ftpState->data.fd, 15, ftpTimeout, ftpState);
 }
 
 static void
@@ -1687,8 +1706,6 @@ ftpReadPasv(FtpStateData * ftpState)
     debug(9, 3) ("This is ftpReadPasv\n");
     if (code != 227) {
 	debug(9, 3) ("PASV not supported by remote end\n");
-	comm_close(ftpState->data.fd);
-	ftpState->data.fd = -1;
 	ftpSendPort(ftpState);
 	return;
     }
@@ -1753,6 +1770,14 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
     socklen_t addr_len;
     int on = 1;
     u_short port = 0;
+    /*
+     * * Tear down any old data connection if any. We are about to
+     * * establish a new one.
+     */
+    if (ftpState->data.fd > 0) {
+	comm_close(ftpState->data.fd);
+	ftpState->data.fd = -1;
+    }
     /*
      * Set up a listen socket on the same local address as the
      * control connection.
@@ -1827,8 +1852,6 @@ ftpReadPort(FtpStateData * ftpState)
     if (code != 200) {
 	/* Fall back on using the same port as the control connection */
 	debug(9, 3) ("PORT not supported by remote end\n");
-	comm_close(ftpState->data.fd);
-	ftpState->data.fd = -1;
 	ftpOpenListenSocket(ftpState, 1);
     }
     ftpRestOrList(ftpState);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.38 1999/10/04 05:04:57 wessels Exp $
+ * $Id: HttpReply.cc,v 1.39 1999/12/30 17:36:17 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -311,8 +311,10 @@ httpReplyHdrCacheInit(HttpReply * rep)
     rep->content_range = httpHeaderGetContRange(hdr);
     rep->keep_alive = httpMsgIsPersistent(rep->sline.version, &rep->header);
     /* final adjustments */
-    /* The max-age directive takes priority over Expires, check it first */
-    if (rep->cache_control && rep->cache_control->max_age >= 0)
+    /* The s-maxage and max-age directive takes priority over Expires */
+    if (rep->cache_control && rep->cache_control->s_maxage >= 0)
+	rep->expires = squid_curtime + rep->cache_control->s_maxage;
+    else if (rep->cache_control && rep->cache_control->max_age >= 0)
 	rep->expires = squid_curtime + rep->cache_control->max_age;
     else
 	/*

@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.28 1999/10/04 05:05:14 wessels Exp $
+ * $Id: htcp.cc,v 1.29 1999/12/30 17:36:35 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -57,20 +57,20 @@ struct _htcpHeader {
 struct _htcpDataHeader {
     u_short length;
 #if !WORDS_BIGENDIAN
-    u_char opcode:4;
-    u_char response:4;
+    unsigned int opcode:4;
+    unsigned int response:4;
 #else
-    u_char response:4;
-    u_char opcode:4;
+    unsigned int response:4;
+    unsigned int opcode:4;
 #endif
 #if !WORDS_BIGENDIAN
-    u_char reserved:6;
-    u_char F1:1;
-    u_char RR:1;
+    unsigned int reserved:6;
+    unsigned int F1:1;
+    unsigned int RR:1;
 #else
-    u_char RR:1;
-    u_char F1:1;
-    u_char reserved:6;
+    unsigned int RR:1;
+    unsigned int F1:1;
+    unsigned int reserved:6;
 #endif
     u_num32 msg_id;
 };
@@ -552,6 +552,7 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, struct
     stuff.rr = RR_RESPONSE;
     stuff.f1 = 0;
     stuff.response = e ? 0 : 1;
+    debug(31, 3) ("htcpTstReply: response = %d\n", stuff.response);
     stuff.msg_id = dhdr->msg_id;
     if (spec) {
 	memBufDefInit(&mb);
@@ -614,17 +615,30 @@ htcpCheckHit(const htcpSpecifier * s)
     request_t *request;
     method_t m = urlParseMethod(s->method);
     StoreEntry *e = storeGetPublic(s->uri, m);
-    if (NULL == e)
+    char *blk_end;
+    if (NULL == e) {
+	debug(31, 3) ("htcpCheckHit: NO; public object not found\n");
 	return NULL;
-    if (!storeEntryValidToSend(e))
+    }
+    if (!storeEntryValidToSend(e)) {
+	debug(31, 3) ("htcpCheckHit: NO; entry not valid to send\n");
 	return NULL;
+    }
     request = urlParse(m, s->uri);
-    if (NULL == request)
+    if (NULL == request) {
+	debug(31, 3) ("htcpCheckHit: NO; failed to parse URL\n");
 	return NULL;
-    if (!httpRequestParseHeader(request, s->req_hdrs))
+    }
+    blk_end = s->req_hdrs + strlen(s->req_hdrs);
+    if (!httpHeaderParse(&request->header, s->req_hdrs, blk_end)) {
+	debug(31, 3) ("htcpCheckHit: NO; failed to parse request headers\n");
 	e = NULL;
-    else if (refreshCheckHTCP(e, request))
+    } else if (refreshCheckHTCP(e, request)) {
+	debug(31, 3) ("htcpCheckHit: NO; cached response is stale\n");
 	e = NULL;
+    } else {
+	debug(31, 3) ("htcpCheckHit: YES!?\n");
+    }
     requestDestroy(request);
     return e;
 }

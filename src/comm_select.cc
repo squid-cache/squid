@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.37 1999/07/13 14:51:10 wessels Exp $
+ * $Id: comm_select.cc,v 1.38 1999/12/30 17:36:28 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -174,6 +174,31 @@ fdIsHttp(int fd)
     return 0;
 }
 
+#if DELAY_POOLS
+static int slowfdcnt = 0;
+static int slowfdarr[SQUID_MAXFD];
+
+static void
+commAddSlowFd(int fd)
+{
+    assert(slowfdcnt < SQUID_MAXFD);
+    slowfdarr[slowfdcnt++] = fd;
+}
+
+static int
+commGetSlowFd(void)
+{
+    int whichfd, retfd;
+
+    if (!slowfdcnt)
+	return -1;
+    whichfd = squid_random() % slowfdcnt;
+    retfd = slowfdarr[whichfd];
+    slowfdarr[whichfd] = slowfdarr[--slowfdcnt];
+    return retfd;
+}
+#endif
+
 #if HAVE_POLL
 static int
 comm_check_incoming_poll_handlers(int nfds, int *fds)
@@ -288,6 +313,9 @@ int
 comm_poll(int msec)
 {
     struct pollfd pfds[SQUID_MAXFD];
+#if DELAY_POOLS
+    fd_set slowfds;
+#endif
     PF *hdl = NULL;
     int fd;
     int i;
@@ -310,6 +338,9 @@ comm_poll(int msec)
 #if USE_DISKD
 	storeDiskdReadQueue();
 #endif
+#if DELAY_POOLS
+	FD_ZERO(&slowfds);
+#endif
 	if (commCheckICPIncoming)
 	    comm_poll_icp_incoming();
 	if (commCheckDNSIncoming)
@@ -323,8 +354,23 @@ comm_poll(int msec)
 	    int events;
 	    events = 0;
 	    /* Check each open socket for a handler. */
-	    if (fd_table[i].read_handler && !commDeferRead(i))
-		events |= POLLRDNORM;
+	    if (fd_table[i].read_handler) {
+		switch (commDeferRead(i)) {
+		case 0:
+		    events |= POLLRDNORM;
+		    break;
+		case 1:
+		    break;
+#if DELAY_POOLS
+		case -1:
+		    events |= POLLRDNORM;
+		    FD_SET(i, &slowfds);
+		    break;
+#endif
+		default:
+		    fatalf("bad return value from commDeferRead(FD %d)\n", i);
+		}
+	    }
 	    if (fd_table[i].write_handler)
 		events |= POLLWRNORM;
 	    if (events) {
@@ -385,17 +431,23 @@ comm_poll(int msec)
 	    F = &fd_table[fd];
 	    if (revents & (POLLRDNORM | POLLIN | POLLHUP | POLLERR)) {
 		debug(5, 6) ("comm_poll: FD %d ready for reading\n", fd);
-		if ((hdl = F->read_handler)) {
+		if (NULL == (hdl = F->read_handler))
+		    (void) 0;
+#if DELAY_POOLS
+		else if (FD_ISSET(fd, &slowfds))
+		    commAddSlowFd(fd);
+#endif
+		else {
 		    F->read_handler = NULL;
 		    hdl(fd, F->read_data);
 		    Counter.select_fds++;
+		    if (commCheckICPIncoming)
+			comm_poll_icp_incoming();
+		    if (commCheckDNSIncoming)
+			comm_poll_dns_incoming();
+		    if (commCheckHTTPIncoming)
+			comm_poll_http_incoming();
 		}
-		if (commCheckICPIncoming)
-		    comm_poll_icp_incoming();
-		if (commCheckDNSIncoming)
-		    comm_poll_dns_incoming();
-		if (commCheckHTTPIncoming)
-		    comm_poll_http_incoming();
 	    }
 	    if (revents & (POLLWRNORM | POLLOUT | POLLHUP | POLLERR)) {
 		debug(5, 5) ("comm_poll: FD %d ready for writing\n", fd);
@@ -403,13 +455,13 @@ comm_poll(int msec)
 		    F->write_handler = NULL;
 		    hdl(fd, F->write_data);
 		    Counter.select_fds++;
+		    if (commCheckICPIncoming)
+			comm_poll_icp_incoming();
+		    if (commCheckDNSIncoming)
+			comm_poll_dns_incoming();
+		    if (commCheckHTTPIncoming)
+			comm_poll_http_incoming();
 		}
-		if (commCheckICPIncoming)
-		    comm_poll_icp_incoming();
-		if (commCheckDNSIncoming)
-		    comm_poll_dns_incoming();
-		if (commCheckHTTPIncoming)
-		    comm_poll_http_incoming();
 	    }
 	    if (revents & POLLNVAL) {
 		close_handler *ch;
@@ -442,6 +494,23 @@ comm_poll(int msec)
 	    comm_poll_dns_incoming();
 	if (callhttp)
 	    comm_poll_http_incoming();
+#if DELAY_POOLS
+	while ((fd = commGetSlowFd()) != -1) {
+	    fde *F = &fd_table[fd];
+	    debug(5, 6) ("comm_select: slow FD %d selected for reading\n", fd);
+	    if ((hdl = F->read_handler)) {
+		F->read_handler = NULL;
+		hdl(fd, F->read_data);
+		Counter.select_fds++;
+		if (commCheckICPIncoming)
+		    comm_poll_icp_incoming();
+		if (commCheckDNSIncoming)
+		    comm_poll_dns_incoming();
+		if (commCheckHTTPIncoming)
+		    comm_poll_http_incoming();
+	    }
+	}
+#endif
 #if !ALARM_UPDATES_TIME
 	getCurrentTime();
 	Counter.select_time += (current_dtime - start);
@@ -572,6 +641,9 @@ comm_select(int msec)
 {
     fd_set readfds;
     fd_set writefds;
+#if DELAY_POOLS
+    fd_set slowfds;
+#endif
     PF *hdl = NULL;
     int fd;
     int maxfd;
@@ -600,6 +672,9 @@ comm_select(int msec)
 #if USE_DISKD
 	storeDiskdReadQueue();
 #endif
+#if DELAY_POOLS
+	FD_ZERO(&slowfds);
+#endif
 	if (commCheckICPIncoming)
 	    comm_select_icp_incoming();
 	if (commCheckDNSIncoming)
@@ -623,14 +698,30 @@ comm_select(int msec)
 		    continue;
 		/* Found a set bit */
 		fd = (j * FD_MASK_BITS) + k;
-		if (commDeferRead(fd))
+		switch (commDeferRead(fd)) {
+		case 0:
+		    break;
+		case 1:
 		    FD_CLR(fd, &readfds);
+		    break;
+#if DELAY_POOLS
+		case -1:
+		    FD_SET(fd, &slowfds);
+		    break;
+#endif
+		default:
+		    fatalf("bad return value from commDeferRead(FD %d)\n", fd);
+		}
 	    }
 	}
 #if DEBUG_FDBITS
 	for (i = 0; i < maxfd; i++) {
 	    /* Check each open socket for a handler. */
+#if DELAY_POOLS
+	    if (fd_table[i].read_handler && commDeferRead(i) != 1) {
+#else
 	    if (fd_table[i].read_handler && !commDeferRead(i)) {
+#endif
 		assert(FD_ISSET(i, &readfds));
 	    }
 	    if (fd_table[i].write_handler) {
@@ -684,10 +775,13 @@ comm_select(int msec)
 	    if ((tmask = fdsp[j]) == 0)
 		continue;	/* no bits here */
 	    for (k = 0; k < FD_MASK_BITS; k++) {
+		if (tmask == 0)
+		    break;	/* no more bits left */
 		if (!EBIT_TEST(tmask, k))
 		    continue;
 		/* Found a set bit */
 		fd = (j * FD_MASK_BITS) + k;
+		EBIT_CLR(tmask, k);	/* this will be done */
 #if DEBUG_FDBITS
 		debug(5, 9) ("FD %d bit set for reading\n", fd);
 		assert(FD_ISSET(fd, &readfds));
@@ -706,22 +800,24 @@ comm_select(int msec)
 		}
 		F = &fd_table[fd];
 		debug(5, 6) ("comm_select: FD %d ready for reading\n", fd);
-		if (F->read_handler) {
-		    hdl = F->read_handler;
+		if (NULL == (hdl = F->read_handler))
+		    (void) 0;
+#if DELAY_POOLS
+		else if (FD_ISSET(fd, &slowfds))
+		    commAddSlowFd(fd);
+#endif
+		else {
 		    F->read_handler = NULL;
 		    commUpdateReadBits(fd, NULL);
 		    hdl(fd, F->read_data);
 		    Counter.select_fds++;
+		    if (commCheckICPIncoming)
+			comm_select_icp_incoming();
+		    if (commCheckDNSIncoming)
+			comm_select_dns_incoming();
+		    if (commCheckHTTPIncoming)
+			comm_select_http_incoming();
 		}
-		if (commCheckICPIncoming)
-		    comm_select_icp_incoming();
-		if (commCheckDNSIncoming)
-		    comm_select_dns_incoming();
-		if (commCheckHTTPIncoming)
-		    comm_select_http_incoming();
-		EBIT_CLR(tmask, k);	/* this bit is done */
-		if (tmask == 0)
-		    break;	/* and no more bits left */
 	    }
 	}
 	fdsp = (fd_mask *) & writefds;
@@ -729,10 +825,13 @@ comm_select(int msec)
 	    if ((tmask = fdsp[j]) == 0)
 		continue;	/* no bits here */
 	    for (k = 0; k < FD_MASK_BITS; k++) {
+		if (tmask == 0)
+		    break;	/* no more bits left */
 		if (!EBIT_TEST(tmask, k))
 		    continue;
 		/* Found a set bit */
 		fd = (j * FD_MASK_BITS) + k;
+		EBIT_CLR(tmask, k);	/* this will be done */
 #if DEBUG_FDBITS
 		debug(5, 9) ("FD %d bit set for writing\n", fd);
 		assert(FD_ISSET(fd, &writefds));
@@ -751,22 +850,18 @@ comm_select(int msec)
 		}
 		F = &fd_table[fd];
 		debug(5, 5) ("comm_select: FD %d ready for writing\n", fd);
-		if (F->write_handler) {
-		    hdl = F->write_handler;
+		if ((hdl = F->write_handler)) {
 		    F->write_handler = NULL;
 		    commUpdateWriteBits(fd, NULL);
 		    hdl(fd, F->write_data);
 		    Counter.select_fds++;
+		    if (commCheckICPIncoming)
+			comm_select_icp_incoming();
+		    if (commCheckDNSIncoming)
+			comm_select_dns_incoming();
+		    if (commCheckHTTPIncoming)
+			comm_select_http_incoming();
 		}
-		if (commCheckICPIncoming)
-		    comm_select_icp_incoming();
-		if (commCheckDNSIncoming)
-		    comm_select_dns_incoming();
-		if (commCheckHTTPIncoming)
-		    comm_select_http_incoming();
-		EBIT_CLR(tmask, k);	/* this bit is done */
-		if (tmask == 0)
-		    break;	/* and no more bits left */
 	    }
 	}
 	if (callicp)
@@ -775,6 +870,24 @@ comm_select(int msec)
 	    comm_select_dns_incoming();
 	if (callhttp)
 	    comm_select_http_incoming();
+#if DELAY_POOLS
+	while ((fd = commGetSlowFd()) != -1) {
+	    F = &fd_table[fd];
+	    debug(5, 6) ("comm_select: slow FD %d selected for reading\n", fd);
+	    if ((hdl = F->read_handler)) {
+		F->read_handler = NULL;
+		commUpdateReadBits(fd, NULL);
+		hdl(fd, F->read_data);
+		Counter.select_fds++;
+		if (commCheckICPIncoming)
+		    comm_select_icp_incoming();
+		if (commCheckDNSIncoming)
+		    comm_select_dns_incoming();
+		if (commCheckHTTPIncoming)
+		    comm_select_http_incoming();
+	    }
+	}
+#endif
 	return COMM_OK;
     }
     while (timeout > current_dtime);

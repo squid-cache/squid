@@ -10,12 +10,12 @@ FTP protokoll hiba történt az alábbi URL letöltésekor:
 <P>
 A Squid az alábbi FTP parancsot küldte:
 <blockquote><strong><pre>%f</pre></strong></blockquote>
-és ezt a választ kapta:
+és ezt a választ kapta
 <blockquote><strong><pre>%F</pre></strong></blockquote>
 <blockquote><strong><pre>%g</pre></strong></blockquote>
 <P>
 A hibát lehet hogy az okozta, hogy az FTP URL abszolút elérési utat tartalmaz
-(ami nem felel meg az RFC 1738 elõírásnak). Amennyiben az a hiba oka, akkor a
+(ami nem felel meg az RFC 1738 elõírásnak). Amennyiben ez a hiba oka, akkor
 az állományt a <A HREF="%B">%B</A> címen lehet megtalálni.
 </P>
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.99 1999/12/01 04:28:08 wessels Exp $
+ * $Id: store_dir.cc,v 1.100 1999/12/30 17:36:56 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -394,6 +394,8 @@ storeDirWriteCleanLogs(int reopen)
 	}
     }
 #if HEAP_REPLACEMENT
+    if (NULL == store_heap)
+	return 0;
     for (node = 0; node < heap_nodes(store_heap); node++)
 #else
     for (m = store_list.tail; m; m = m->prev)

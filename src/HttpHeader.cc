@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.64 1999/10/04 05:04:55 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.65 1999/12/30 17:36:17 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -384,22 +384,18 @@ httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_e
     HttpHeaderStats[hdr->owner].parsedCount++;
     /* commonn format headers are "<name>:[ws]<value>" lines delimited by <CRLF> */
     while (field_start < header_end) {
-	const char *field_end = field_start;
+	const char *field_end;
+	const char *field_ptr = field_start;
 	do {
-	    field_end = field_end + strcspn(field_end, "\r\n");
+	    field_end = field_ptr = field_ptr + strcspn(field_ptr, "\r\n");
 	    /* skip CRLF */
-	    if (*field_end == '\r')
-		field_end++;
-	    if (*field_end == '\n')
-		field_end++;
-	} while (*field_end == ' ' || *field_end == '\t');
+	    if (*field_ptr == '\r')
+		field_ptr++;
+	    if (*field_ptr == '\n')
+		field_ptr++;
+	} while (*field_ptr == ' ' || *field_ptr == '\t');
 	if (!*field_end || field_end > header_end)
 	    return httpHeaderReset(hdr);	/* missing <CRLF> */
-	/* back up over CRLF */
-	if (field_end > field_start && field_end[-1] == '\n')
-	    field_end--;
-	if (field_end > field_start && field_end[-1] == '\r')
-	    field_end--;
 	e = httpHeaderEntryParseCreate(field_start, field_end);
 	if (e != NULL)
 	    httpHeaderAddEntry(hdr, e);

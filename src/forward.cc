@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.66 1999/10/04 05:05:11 wessels Exp $
+ * $Id: forward.cc,v 1.67 1999/12/30 17:36:32 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -413,8 +413,7 @@ fwdServersFree(FwdServer ** FS)
 }
 
 void
-fwdStart(int fd, StoreEntry * e, request_t * r, struct in_addr client_addr,
-    struct in_addr my_addr)
+fwdStart(int fd, StoreEntry * e, request_t * r)
 {
     FwdState *fwdState;
     aclCheck_t ch;
@@ -425,19 +424,20 @@ fwdStart(int fd, StoreEntry * e, request_t * r, struct in_addr client_addr,
      * from peer_digest.c, asn.c, netdb.c, etc and should always
      * be allowed.  yuck, I know.
      */
-    if (client_addr.s_addr != no_addr.s_addr) {
+    if (r->client_addr.s_addr != no_addr.s_addr) {
 	/*      
 	 * Check if this host is allowed to fetch MISSES from us (miss_access)
 	 */
 	memset(&ch, '\0', sizeof(aclCheck_t));
-	ch.src_addr = client_addr;
-	ch.my_addr = my_addr;
+	ch.src_addr = r->client_addr;
+	ch.my_addr = r->my_addr;
+	ch.my_port = r->my_port;
 	ch.request = r;
 	answer = aclCheckFast(Config.accessList.miss, &ch);
 	if (answer == 0) {
 	    err = errorCon(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN);
 	    err->request = requestLink(r);
-	    err->src_addr = client_addr;
+	    err->src_addr = r->client_addr;
 	    errorAppendEntry(e, err);
 	    return;
 	}
@@ -489,6 +489,7 @@ fwdCheckDeferRead(int fd, void *data)
 {
     StoreEntry *e = data;
     MemObject *mem = e->mem_obj;
+    int rc = 0;
     if (mem == NULL)
 	return 0;
 #if URL_CHECKSUM_DEBUG
@@ -499,13 +500,21 @@ fwdCheckDeferRead(int fd, void *data)
 	(void) 0;
     else if (delayIsNoDelay(fd))
 	(void) 0;
-    else if (delayMostBytesWanted(mem, 1) == 0)
-	return 1;
+    else {
+	int i = delayMostBytesWanted(mem, INT_MAX);
+	if (0 == i)
+	    return 1;
+	/* was: rc = -(rc != INT_MAX); */
+	else if (INT_MAX == i)
+	    rc = 0;
+	else
+	    rc = -1;
+    }
 #endif
     if (EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT))
-	return 0;
+	return rc;
     if (mem->inmem_hi - storeLowestMemReaderOffset(e) < READ_AHEAD_GAP)
-	return 0;
+	return rc;
     return 1;
 }
 

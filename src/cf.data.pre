@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.163 1999/12/11 15:57:43 wessels Exp $
+# $Id: cf.data.pre,v 1.164 1999/12/30 17:36:24 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -54,17 +54,32 @@ COMMENT_START
 COMMENT_END
 
 NAME: http_port ascii_port
-TYPE: ushortlist
+TYPE: sockaddr_in_list
 DEFAULT: none
 DEFAULT_IF_NONE: 3128
-LOC: Config.Port.http
+LOC: Config.Sockaddr.http
 DOC_START
-	The port number where Squid will listen for HTTP client
-	requests.  Default is 3128, for httpd-accel mode use port 80.
-	May be overridden with -a on the command line.
+	Usage:	port
+		hostname:port
+		1.2.3.4:port
 
-	You may specify multiple ports here, but they MUST all be on
-	a single line.
+	The socket addresses where Squid will listen for HTTP client
+	requests.  You may specify multiple socket addresses.
+	There are three forms: port alone, hostname with port, and
+	IP address with port.  If you specify a hostname or IP
+	address, then Squid binds the socket to that specific
+	address.  This replaces the old 'tcp_incoming_address'
+	option.  Most likely, you do not need to bind to a specific
+	address, so you can use the port number alone.
+
+	The default port number is 3128.
+
+	If you are running Squid in accelerateor mode, then you
+	probably want to listen on port 80 also, or instead.
+
+	The -a command line option will override the *first* port
+	number listed here.   That option will NOT override an IP
+	address, however.
 
 http_port 3128
 DOC_END
@@ -131,12 +146,6 @@ mcast_groups 239.128.16.128
 DOC_END
 
 
-NAME: tcp_incoming_address bind_address
-TYPE: address
-LOC: Config.Addrs.tcp_incoming
-DEFAULT: 0.0.0.0
-DOC_NONE
-
 NAME: tcp_outgoing_address outbound_address
 TYPE: address
 LOC: Config.Addrs.tcp_outgoing
@@ -157,8 +166,6 @@ DOC_START
 	Usage: tcp_incoming_address 10.20.30.40
 	       udp_outgoing_address fully.qualified.domain.name
 
-	tcp_incoming_address	is used for the HTTP socket which accepts
-				connections from clients and other caches.
 	tcp_outgoing_address	is used for connections made to remote
 				servers and other caches.
 	udp_incoming_address	is used for the ICP socket receiving packets
@@ -172,7 +179,9 @@ DOC_START
 	have the same value (unless it is 0.0.0.0) since they both use
 	port 3130.
 
-tcp_incoming_address 0.0.0.0
+	NOTE, tcp_incoming_address has been removed.  You can now
+	specify IP addresses on the 'http_port' line.
+
 tcp_outgoing_address 0.0.0.0
 udp_incoming_address 0.0.0.0
 udp_outgoing_address 0.0.0.0
@@ -225,6 +234,7 @@ DOC_START
 		     no-delay
 		     login=user:password
 		     connect-timeout=nn
+		     digest-url=url
 
 		     use 'proxy-only' to specify that objects fetched
 		     from this cache should not be saved locally.
@@ -277,6 +287,10 @@ DOC_START
 		     specific connect timeout (also see the
 		     peer_connect_timeout directive)
 
+		     use 'digest-url=url' to tell Squid to fetch the cache
+		     digest (if digests are enabled) for this host from
+		     the specified URL rather than the Squid default
+		     location.
 
 	NOTE: non-ICP neighbors must be specified as 'parent'.
 
@@ -965,9 +979,9 @@ TYPE: onoff
 DEFAULT: on
 LOC: Config.onoff.redir_rewrites_host
 DOC_START
-	By default Squid rewrites any Host: header in redirected requests.
-	If you are running a accelerator then this may not be a wanted effect
-	of a redirector.
+	By default Squid rewrites any Host: header in redirected
+	requests.  If you are running a accelerator then this may
+	not be a wanted effect of a redirector.
 redirect_rewrites_host_header on
 DOC_END
 
@@ -1135,10 +1149,20 @@ DOC_START
 	By default, regular expressions are CASE-SENSITIVE.  To make
 	them case-insensitive, use the -i option.
 
-	min and max are specified in MINUTES.
-	percent is an integer number.
+	'Min' is the time (in minutes) an object without an explicit
+	expiry time should be considered fresh. The recommended
+	value is 0, any higher values may cause dynamic applications
+	to be erronously cached unless the application designer
+	has taken the appropriate actions.
 
-	options: override-expire
+	'Percent' is a percentage of the objects age (time since last
+	modification age) an object without explicit exipry time
+	will be considered fresh.
+
+	'Max' is an upper limit on how long objects without an explicit
+	expiry time will be considered fresh.
+
+	options: overrsde-expire
 		 override-lastmod
 		 reload-into-ims
 		 ignore-reload
@@ -1242,7 +1266,7 @@ DOC_START
 	The 'reference_age' parameter defines the maximum LRU age.  For
 	example, setting reference_age to '1 week' will cause objects
 	to be removed if they have not been accessed for a week or
-	more.  The default value is one month.
+	more.  The default value is one year.
 
 	Specify a number here, followed by units of time.  For example:
 		1 week
@@ -1579,6 +1603,7 @@ DOC_START
 	acl aclname urlpath_regex [-i] \.gif$ ...	# regex matching on URL path
 	acl aclname port     80 70 21 ...
 	acl aclname port     0-1024 ...		# ranges allowed
+	acl aclname myport   3128 ...		# (local socket TCP port)
 	acl aclname proto    HTTP FTP ...
 	acl aclname method   GET POST ...
 	acl aclname browser  [-i] regexp
@@ -2270,7 +2295,7 @@ LOC: Config.Store.objectsPerBucket
 DOC_START
 	Target number of objects per bucket in the store hash table.
 	Lowering this value increases the total number of buckets and
-	also the storage maintenance rate.  The default is 20.
+	also the storage maintenance rate.  The default is 50.
 
 store_objects_per_bucket 20
 DOC_END
@@ -2893,11 +2918,13 @@ DOC_END
 NAME: uri_whitespace
 TYPE: uri_whitespace
 LOC: Config.uri_whitespace
-DEFAULT: deny
+DEFAULT: strip
 DOC_START
 	What to do with requests that have whitespace characters in the
 	URI.  Options:
 
+	strip:  The whitespace characters are stripped out of the URL.
+		This is the behavior recommended by RFC2616.
 	deny:   The request is denied.  The user receives an "Invalid
 		Request" message.
 	allow:  The request is allowed and the URI is not changed.  The
@@ -2911,7 +2938,7 @@ DOC_START
 	chop:	The request is allowed and the URI is chopped at the
 		first whitespace.  This might also be considered a
 		violation.
-uri_whitespace deny
+uri_whitespace strip
 DOC_END
 
 NAME: broken_posts
@@ -2947,6 +2974,17 @@ DOC_START
 
 	Do not enable this option unless you are are absolutely
 	certain you understand what you are doing.
+DOC_END
+
+NAME: mcast_miss_ttl
+IFDEF: MULTICAST_MISS_TTL
+TYPE: ushort
+LOC: Config.mcast_miss.ttl
+DEFAULT: 16
+DOC_START
+	This is the time-to-live value for packets multicasted
+	when multicasting off cache miss URLs is enabled.  By
+	default this is set to 'site scope', i.e. 16.
 DOC_END
 
 NAME: mcast_miss_port
@@ -3034,4 +3072,83 @@ DOC_START
 ignore_unknown_nameservers on
 DOC_END
 
+NAME: digest_generation
+IFDEF: USE_CACHE_DIGESTS
+TYPE: onoff
+LOC: Config.onoff.digest_generation
+DEFAULT: on
+DOC_START
+	This controls whether the server will generate a Cache Digest
+	of its contents.  By default, Cache Digest generation is
+	enabled if Squid is compiled with USE_CACHE_DIGESTS defined.
+
+digest_generation on
+DOC_END
+
+NAME: digest_bits_per_entry
+IFDEF: USE_CACHE_DIGESTS
+TYPE: int
+LOC: Config.digest.bits_per_entry
+DEFAULT: 5
+DOC_START
+	This is the number of bits of the server's Cache Digest which
+	will be associated with the Digest entry for a given HTTP
+	Method and URL (public key) combination.  The default is 5.
+
+digest_bits_per_entry 5
+DOC_END
+
+NAME: digest_rebuild_period
+IFDEF: USE_CACHE_DIGESTS
+TYPE: int
+LOC: Config.digest.rebuild_period
+DEFAULT: 3600
+DOC_START
+	This is the number of seconds between Cache Digest rebuilds.
+	By default the server's Digest is rebuilt every hour - 60
+	minutes * 60 seconds per minute, 3600 seconds.
+
+digest_rebuild_period 3600
+DOC_END
+
+NAME: digest_rewrite_period
+IFDEF: USE_CACHE_DIGESTS
+TYPE: int
+LOC: Config.digest.rewrite_period
+DEFAULT: 3600
+DOC_START
+	This is the number of seconds between Cache Digest writes to
+	disk.  By default the server's Digest is written to disk every
+	hour - 60 minutes * 60 seconds per minute, 3600 seconds.
+
+digest_rewrite_period 3600
+DOC_END
+
+NAME: digest_swapout_chunk_size
+IFDEF: USE_CACHE_DIGESTS
+TYPE: int
+LOC: Config.digest.swapout_chunk_size
+DEFAULT: 4096
+DOC_START
+	This is the number of bytes of the Cache Digest to write to
+	disk at a time.  It defaults to 4096 (4KB), the Squid default
+	swap page.
+
+digest_swapout_chunk_size 4096
+DOC_END
+
+NAME: digest_rebuild_chunk_percentage
+IFDEF: USE_CACHE_DIGESTS
+TYPE: int
+LOC: Config.digest.rebuild_chunk_percentage
+DEFAULT: 10
+DOC_START
+	This is the portion (where 0 < portion <= 100) of the Cache Digest
+	to be scanned at a time.  By default it is set to 10 (10%) of
+	the Cache Digest.
+
+digest_rebuild_chunk_percentage 10
+DOC_END
+
 EOF
+

@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.140 1999/10/04 05:05:20 wessels Exp $
+ * $Id: net_db.cc,v 1.141 1999/12/30 17:36:44 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -975,7 +975,7 @@ netdbExchangeStart(void *data)
     ex->r->flags.loopdetect = 1;	/* cheat! -- force direct */
     if (p->login)
 	xstrncpy(ex->r->login, p->login, MAX_LOGIN_SZ);
-    fwdStart(-1, ex->e, ex->r, no_addr, no_addr);
+    fwdStart(-1, ex->e, ex->r);
 #endif
 }
 

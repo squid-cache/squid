@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.208 1999/10/04 05:04:59 wessels Exp $
+ * $Id: acl.cc,v 1.209 1999/12/30 17:36:20 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -175,6 +175,8 @@ aclStrToType(const char *s)
 	return ACL_URL_REGEX;
     if (!strcmp(s, "port"))
 	return ACL_URL_PORT;
+    if (!strcmp(s, "myport"))
+	return ACL_MY_PORT;
     if (!strcmp(s, "maxconn"))
 	return ACL_MAXCONN;
 #if USE_IDENT
@@ -231,6 +233,8 @@ aclTypeToStr(squid_acl type)
 	return "url_regex";
     if (type == ACL_URL_PORT)
 	return "port";
+    if (type == ACL_MY_PORT)
+	return "myport";
     if (type == ACL_MAXCONN)
 	return "maxconn";
 #if USE_IDENT
@@ -709,6 +713,7 @@ aclParseAclLine(acl ** head)
 	aclParseIntlist(&A->data);
 	break;
     case ACL_URL_PORT:
+    case ACL_MY_PORT:
 	aclParseIntRange(&A->data);
 	break;
 #if USE_IDENT
@@ -998,20 +1003,27 @@ aclDecodeProxyAuth(const char *proxy_auth, char **user, char **password, char *b
 {
     char *sent_auth;
     char *cleartext;
-    debug(28, 6) ("aclDecodeProxyAuth: header = '%s'\n", proxy_auth);
     if (proxy_auth == NULL)
 	return 0;
-    if (strlen(proxy_auth) < SKIP_BASIC_SZ)
+    debug(28, 6) ("aclDecodeProxyAuth: header = '%s'\n", proxy_auth);
+    if (strncasecmp(proxy_auth, "Basic ", 6) != 0) {
+	debug(28, 1) ("aclDecodeProxyAuth: Unsupported proxy-auth sheme, '%s'\n", proxy_auth);
 	return 0;
-    proxy_auth += SKIP_BASIC_SZ;
-    sent_auth = xstrdup(proxy_auth);	/* username and password */
-    /* Trim trailing \n before decoding */
-    strtok(sent_auth, "\n");
+    }
+    proxy_auth += 6;		/* "Basic " */
     /* Trim leading whitespace before decoding */
     while (xisspace(*proxy_auth))
 	proxy_auth++;
+    sent_auth = xstrdup(proxy_auth);	/* username and password */
+    /* Trim trailing \n before decoding */
+    strtok(sent_auth, "\n");
     cleartext = uudecode(sent_auth);
     xfree(sent_auth);
+    /*
+     * Don't allow NL or CR in the credentials.
+     * Oezguer Kesim <oec@codeblau.de>
+     */
+    strtok(cleartext, "\r\n");
     debug(28, 6) ("aclDecodeProxyAuth: cleartext = '%s'\n", cleartext);
     xstrncpy(buf, cleartext, bufsize);
     xfree(cleartext);
@@ -1364,7 +1376,10 @@ aclMatchAcl(acl * ae, aclCheck_t * checklist)
 	return ((k > ((intlist *) ae->data)->i) ? 0 : 1);
 	/* NOTREACHED */
     case ACL_URL_PORT:
-	return aclMatchIntegerRange(ae->data, r->port);
+	return aclMatchIntegerRange(ae->data, (int) r->port);
+	/* NOTREACHED */
+    case ACL_MY_PORT:
+	return aclMatchIntegerRange(ae->data, (int) checklist->my_port);
 	/* NOTREACHED */
 #if USE_IDENT
     case ACL_IDENT:
@@ -1709,8 +1724,6 @@ aclLookupProxyAuthDone(void *data, char *result)
 aclCheck_t *
 aclChecklistCreate(const acl_access * A,
     request_t * request,
-    struct in_addr src_addr,
-    struct in_addr my_addr,
     const char *user_agent,
     const char *ident)
 {
@@ -1723,10 +1736,12 @@ aclChecklistCreate(const acl_access * A,
      * pointer, so lock it.
      */
     cbdataLock(A);
-    if (request != NULL)
+    if (request != NULL) {
 	checklist->request = requestLink(request);
-    checklist->src_addr = src_addr;
-    checklist->my_addr = my_addr;
+	checklist->src_addr = request->client_addr;
+	checklist->my_addr = request->my_addr;
+	checklist->my_port = request->my_port;
+    }
     for (i = 0; i < ACL_ENUM_MAX; i++)
 	checklist->state[i] = ACL_LOOKUP_NONE;
     if (user_agent)
@@ -1842,6 +1857,7 @@ aclDestroyAcls(acl ** head)
 	    intlistDestroy((intlist **) & a->data);
 	    break;
 	case ACL_URL_PORT:
+	case ACL_MY_PORT:
 	    aclDestroyIntRange(a->data);
 	    break;
 	case ACL_NONE:
@@ -1963,7 +1979,7 @@ aclHostDomainCompare(const void *a, const void *b)
 {
     const char *h = a;
     const char *d = b;
-    return matchDomainName(d, h);
+    return matchDomainName(h, d);
 }
 
 /* compare two network specs
@@ -2170,6 +2186,7 @@ aclDumpGeneric(const acl * a)
 	return aclDumpIntlistList(a->data);
 	break;
     case ACL_URL_PORT:
+    case ACL_MY_PORT:
 	return aclDumpIntRangeList(a->data);
 	break;
     case ACL_PROTO:
@@ -2299,27 +2316,122 @@ aclMatchArp(void *dataptr, struct in_addr c)
 {
     struct arpreq arpReq;
     struct sockaddr_in ipAddr;
+    unsigned char ifbuffer[sizeof(struct ifreq) * 64];
+    struct ifconf ifc;
+    struct ifreq *ifr;
+    int offset;
     splayNode **Top = dataptr;
+    /*
+     * The linux kernel 2.2 maintains per interface ARP caches and
+     * thus requires an interface name when doing ARP queries.
+     * 
+     * The older 2.0 kernels appear to use a unified ARP cache,
+     * and require an empty interface name
+     * 
+     * To support both, we attempt the lookup with a blank interface
+     * name first. If that does not succeed, the try each interface
+     * in turn
+     */
+    /*
+     * Set up structures for ARP lookup with blank interface name
+     */
     ipAddr.sin_family = AF_INET;
     ipAddr.sin_port = 0;
     ipAddr.sin_addr = c;
+    memset(&arpReq, '\0', sizeof(arpReq));
     memcpy(&arpReq.arp_pa, &ipAddr, sizeof(struct sockaddr_in));
-    arpReq.arp_dev[0] = '\0';
-    arpReq.arp_flags = 0;
-    /* any AF_INET socket will do... gives back hardware type, device, etc */
-    if (ioctl(HttpSockets[0], SIOCGARP, &arpReq) == -1) {
-	debug(28, 1) ("ARP query failed - %d", errno);
-	return 0;
-    } else if (arpReq.arp_ha.sa_family != ARPHRD_ETHER) {
-	debug(28, 1) ("Non-ethernet interface returned from ARP query - %d",
-	    arpReq.arp_ha.sa_family);
-	/* update here and MAC address parsing to handle non-ethernet */
-	return 0;
-    } else
+    /* Query ARP table */
+    if (ioctl(HttpSockets[0], SIOCGARP, &arpReq) != -1) {
+	/* Skip non-ethernet interfaces */
+	if (arpReq.arp_ha.sa_family != ARPHRD_ETHER) {
+	    return 0;
+	}
+	debug(28, 4) ("Got address %02x:%02x:%02x:%02x:%02x:%02x\n",
+	    arpReq.arp_ha.sa_data[0] & 0xff, arpReq.arp_ha.sa_data[1] & 0xff,
+	    arpReq.arp_ha.sa_data[2] & 0xff, arpReq.arp_ha.sa_data[3] & 0xff,
+	    arpReq.arp_ha.sa_data[4] & 0xff, arpReq.arp_ha.sa_data[5] & 0xff);
+	/* Do lookup */
 	*Top = splay_splay(&arpReq.arp_ha.sa_data, *Top, aclArpCompare);
-    debug(28, 3) ("aclMatchArp: '%s' %s\n",
-	inet_ntoa(c), splayLastResult ? "NOT found" : "found");
-    return !splayLastResult;
+	debug(28, 3) ("aclMatchArp: '%s' %s\n",
+	    inet_ntoa(c), splayLastResult ? "NOT found" : "found");
+	return (0 == splayLastResult);
+    }
+    /* lookup list of interface names */
+    ifc.ifc_len = sizeof(ifbuffer);
+    ifc.ifc_buf = ifbuffer;
+    if (ioctl(HttpSockets[0], SIOCGIFCONF, &ifc) < 0) {
+	debug(28, 1) ("Attempt to retrieve interface list failed: %s\n",
+	    xstrerror());
+	return 0;
+    }
+    if (ifc.ifc_len > sizeof(ifbuffer)) {
+	debug(28, 1) ("Interface list too long - %d\n", ifc.ifc_len);
+	return 0;
+    }
+    /* Attempt ARP lookup on each interface */
+    offset = 0;
+    while (offset < ifc.ifc_len) {
+	ifr = (struct ifreq *) (ifbuffer + offset);
+	offset += sizeof(*ifr);
+	/* Skip loopback and aliased interfaces */
+	if (0 == strncmp(ifr->ifr_name, "lo", 2))
+	    continue;
+	if (NULL != strchr(ifr->ifr_name, ':'))
+	    continue;
+	debug(28, 4) ("Looking up ARP address for %s on %s\n", inet_ntoa(c),
+	    ifr->ifr_name);
+	/* Set up structures for ARP lookup */
+	ipAddr.sin_family = AF_INET;
+	ipAddr.sin_port = 0;
+	ipAddr.sin_addr = c;
+	memset(&arpReq, '\0', sizeof(arpReq));
+	memcpy(&arpReq.arp_pa, &ipAddr, sizeof(struct sockaddr_in));
+	strncpy(arpReq.arp_dev, ifr->ifr_name, sizeof(arpReq.arp_dev) - 1);
+	arpReq.arp_dev[sizeof(arpReq.arp_dev) - 1] = '\0';
+	/* Query ARP table */
+	if (-1 == ioctl(HttpSockets[0], SIOCGARP, &arpReq)) {
+	    /*
+	     * Query failed.  Do not log failed lookups or "device
+	     * not supported"
+	     */
+	    if (ENXIO == errno)
+		(void) 0;
+	    else if (ENODEV == errno)
+		(void) 0;
+	    else
+		debug(28, 1) ("ARP query failed: %s: %s\n",
+		    ifr->ifr_name, xstrerror());
+	    continue;
+	}
+	/* Skip non-ethernet interfaces */
+	if (arpReq.arp_ha.sa_family != ARPHRD_ETHER)
+	    continue;
+	debug(28, 4) ("Got address %02x:%02x:%02x:%02x:%02x:%02x on %s\n",
+	    arpReq.arp_ha.sa_data[0] & 0xff,
+	    arpReq.arp_ha.sa_data[1] & 0xff,
+	    arpReq.arp_ha.sa_data[2] & 0xff,
+	    arpReq.arp_ha.sa_data[3] & 0xff,
+	    arpReq.arp_ha.sa_data[4] & 0xff,
+	    arpReq.arp_ha.sa_data[5] & 0xff,
+	    ifr->ifr_name);
+	/* Do lookup */
+	*Top = splay_splay(&arpReq.arp_ha.sa_data, *Top, aclArpCompare);
+	/* Return if match, otherwise continue to other interfaces */
+	if (0 == splayLastResult) {
+	    debug(28, 3) ("aclMatchArp: %s found on %s\n",
+		inet_ntoa(c), ifr->ifr_name);
+	    return 1;
+	}
+	/*
+	 * Should we stop looking here? Can the same IP address
+	 * exist on multiple interfaces?
+	 */
+    }
+    /*
+     * Address was not found on any interface
+     */
+    debug(28, 3) ("aclMatchArp: %s NOT found\n", inet_ntoa(c));
+    return 0;
 }
 
 static int
