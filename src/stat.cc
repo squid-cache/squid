@@ -1,4 +1,4 @@
-/* $Id: stat.cc,v 1.24 1996/04/15 18:00:28 wessels Exp $ */
+/* $Id: stat.cc,v 1.25 1996/04/15 18:06:33 wessels Exp $ */
 
 /*
  * DEBUG: Section 18          stat
@@ -352,7 +352,7 @@ void server_list(obj, sentry)
 	sprintf(tempbuf, "\n{Hostname:    %s}\n", e->host);
 	storeAppend(sentry, tempbuf, strlen(tempbuf));
 	sprintf(tempbuf, "{Edge type:   %s}\n",
-	    e->type == is_a_parent ? "parent" : "neighbor");
+	    e->type == EDGE_PARENT ? "parent" : "neighbor");
 	storeAppend(sentry, tempbuf, strlen(tempbuf));
 	sprintf(tempbuf, "{Status:      %s}\n",
 	    e->neighbor_up ? "Up" : "Down");
