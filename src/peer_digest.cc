@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.3 1998/04/08 23:05:04 rousskov Exp $
+ * $Id: peer_digest.cc,v 1.4 1998/04/09 00:08:48 rousskov Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -30,6 +30,8 @@
  */
 
 #include "squid.h"
+
+#if SQUID_PEER_DIGEST
 
 /* local types */
 
@@ -522,3 +524,4 @@ peerDigestUpdateMask(peer *peer, int offset, const char *buf, int size)
     return 1;
 }
 		
+#endif
