@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.55 2002/04/13 23:07:49 hno Exp $
+ * $Id: comm_select.cc,v 1.56 2002/04/27 08:47:43 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -368,6 +368,7 @@ comm_select(int msec)
 	    howmany(maxfd, FD_MASK_BITS) * FD_MASK_BYTES);
 	/* remove stalled FDs, and deal with pending descriptors */
 	pending = 0;
+	FD_ZERO(&pendingfds);
 	maxindex = howmany(maxfd, FD_MASK_BITS);
 	fdsp = (fd_mask *) & readfds;
 	for (j = 0; j < maxindex; j++) {
