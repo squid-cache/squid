@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.87 2002/10/02 11:06:30 robertc Exp $
+ * $Id: util.c,v 1.88 2002/10/18 22:42:00 hno Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -490,7 +490,7 @@ xfree(void *s)
 void
 xxfree(const void *s_const)
 {
-    void *s = (void *)s_const;
+    void *s = (void *) s_const;
     PROF_start(xxfree);
 #if XMALLOC_TRACE
     xmalloc_show_trace(s, -1);
@@ -651,11 +651,11 @@ xstrerror(void)
     static char strerror_buf[BUFSIZ];
 
     snprintf(strerror_buf, BUFSIZ, "%s", strerror(errno));
-   
-    if (strerror_buf) 
+
+    if (strerror_buf)
 	snprintf(xstrerror_buf, BUFSIZ, "(%d) %s", errno, strerror_buf);
     else
-        snprintf(xstrerror_buf, BUFSIZ, "(%d) Unknown", errno); 
+	snprintf(xstrerror_buf, BUFSIZ, "(%d) Unknown", errno);
     return xstrerror_buf;
 }
 
@@ -787,11 +787,11 @@ double_to_str(char *buf, int buf_size, double value)
 {
     /* select format */
     if (value < 1e9)
-        snprintf(buf, buf_size, "%.2f MB", value / 1e6);
+	snprintf(buf, buf_size, "%.2f MB", value / 1e6);
     else if (value < 1e12)
-        snprintf(buf, buf_size, "%.3f GB", value / 1e9);
+	snprintf(buf, buf_size, "%.3f GB", value / 1e9);
     else
-        snprintf(buf, buf_size, "%.4f TB", value / 1e12);
+	snprintf(buf, buf_size, "%.4f TB", value / 1e12);
     return buf;
 }
 
