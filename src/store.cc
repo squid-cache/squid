@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.536 2001/01/12 00:37:21 wessels Exp $
+ * $Id: store.cc,v 1.537 2001/02/22 20:53:15 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -1027,11 +1027,14 @@ storeTimestampsSet(StoreEntry * entry)
     if (served_date < 0 || served_date > squid_curtime)
 	served_date = squid_curtime;
     /*
-     * Compensate with Age header if origin server clock is ahead of us
-     * and there is a cache in between us and the origin server
+     * Compensate with Age header if origin server clock is ahead
+     * of us and there is a cache in between us and the origin
+     * server.  But DONT compensate if the age value is larger than
+     * squid_curtime because it results in a negative served_date.
      */
     if (age > squid_curtime - served_date)
-	served_date = squid_curtime - age;
+	if (squid_curtime < age)
+	    served_date = squid_curtime - age;
     entry->expires = reply->expires;
     entry->lastmod = reply->last_modified;
     entry->timestamp = served_date;
