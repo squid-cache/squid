@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.38 2003/06/22 07:47:43 robertc Exp $
+ * $Id: pconn.cc,v 1.39 2003/06/23 12:11:45 robertc Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -262,7 +262,7 @@ pconnPush(int fd, const char *host, u_short port, const char *domain)
     }
 
     assert(table != NULL);
-    strcpy(key, pconnKey(host, port, domain));
+    strncpy(key, pconnKey(host, port, domain), SQUIDHOSTNAMELEN + 10);
 
     p = (struct _pconn *) hash_lookup(table, key);
 
@@ -309,7 +309,7 @@ pconnPop(const char *host, u_short port, const char *domain)
     int fd = -1;
     LOCAL_ARRAY(char, key, SQUIDHOSTNAMELEN + 10);
     assert(table != NULL);
-    strcpy(key, pconnKey(host, port, domain));
+    strncpy(key, pconnKey(host, port, domain), SQUIDHOSTNAMELEN + 10);
     hptr = (hash_link *)hash_lookup(table, key);
 
     if (hptr != NULL) {
