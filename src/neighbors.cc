@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.112 1997/02/07 04:56:17 wessels Exp $
+ * $Id: neighbors.cc,v 1.113 1997/02/07 04:57:15 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -508,7 +508,7 @@ neighborsUdpPing(protodispatch_data * proto)
 
 	debug(15, 4, "neighborsUdpPing: pinging peer %s for '%s'\n",
 	    e->host, url);
-        if (e->type == PEER_MULTICAST)
+	if (e->type == PEER_MULTICAST)
 	    comm_set_mcast_ttl(theOutIcpConnection, e->mcast_ttl);
 	reqnum = storeReqnum(entry, request->method);
 	debug(15, 3, "neighborsUdpPing: key = '%s'\n", entry->key);
@@ -545,11 +545,11 @@ neighborsUdpPing(protodispatch_data * proto)
 	debug(15, 3, "neighborsUdpPing: %s: ack_deficit = %d\n",
 	    e->host, e->stats.ack_deficit);
 	if (e->type == PEER_MULTICAST) {
-		e->stats.ack_deficit = 0;
-		ICP_mcasts_sent++;
+	    e->stats.ack_deficit = 0;
+	    ICP_mcasts_sent++;
 	} else if (neighborUp(e)) {
 	    /* its alive, expect a reply from it */
-	        mem->e_pings_n_pings++;
+	    mem->e_pings_n_pings++;
 	} else {
 	    /* Neighbor is dead; ping it anyway, but don't expect a reply */
 	    /* log it once at the threshold */
@@ -583,7 +583,7 @@ neighborsUdpPing(protodispatch_data * proto)
 		    query,
 		    LOG_TAG_NONE,
 		    PROTO_NONE);
-	    ICP_queries_sent++;
+		ICP_queries_sent++;
 	    }
 	} else {
 	    debug(15, 6, "neighborsUdpPing: Source Ping: unknown host: %s\n",
@@ -985,4 +985,3 @@ peerUpdateFudge(void *unused)
     eventAdd("peerUpdateFudge", peerUpdateFudge, NULL, 10);
     debug(15, 3, "peerUpdateFudge: Factor = %d\n", MulticastFudgeFactor);
 }
-
