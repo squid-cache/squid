@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.103 2005/01/03 16:08:25 robertc Exp $
+#  $Id: Makefile.am,v 1.104 2005/02/06 13:19:39 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -683,6 +683,7 @@ ufsdump_SOURCES = debug.cc \
 	IPInterception.cc \
 	IPInterception.h \
 	$(LEAKFINDERSOURCE) \
+        list.cc \
 	logfile.cc \
 	mem.cc \
 	mem_node.cc \
