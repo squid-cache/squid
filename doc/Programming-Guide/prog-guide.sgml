@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Duane Wessels, Squid Developers
-<date>$Id: prog-guide.sgml,v 1.28 2000/06/08 18:05:33 hno Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.29 2001/01/04 03:38:05 wessels Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -2534,5 +2534,81 @@ When reading a swap file, there is a similar process to extract
 the swap meta data.  First, <tt/storeSwapMetaUnpack()/ converts a
 character buffer into a <em/tlv/ linked list.  It also tells us
 the value for <em/MemObject->swap_hdr_sz/.
+
+<sect>leakFinder
+
+<p>
+<em>src/leakfinder.c</em> contains some routines useful for debugging
+and finding memory leaks.  It is not enabled by default.  To enable
+it, use
+<verb>
+configure --enable-leakfinder ...
+</verb>
+
+<p>
+The module has three public functions: <em>leakAdd</em>,
+<em>leakFree</em>, and <em>leakTouch</em> Note, these are actually
+macros that insert __FILE__ and __LINE__ arguments to the real
+functions.
+<p>
+<em>leakAdd</em> should be called when a pointer is first created.
+Usually this follows immediately after a call to malloc or some
+other memory allocation function.  For example:
+<verb>
+    ...
+    void *p;
+    p = malloc(100);
+    leakAdd(p);
+    ...
+</verb>
+
+<p>
+<em>leakFree</em> is the opposite.  Call it just before releasing
+the pointer memory, such as a call to free.  For example:
+<verb>
+    ...
+    leakFree(foo);
+    free(foo);
+    return;
+</verb>
+NOTE: <em>leakFree</em> aborts with an assertion if you give it a
+pointer that was never added with <em>leakAdd</em>.
+
+
+<p>
+The definition of a leak is memory that was allocated but never
+freed.  Thus, to find a leak we need to track the pointer between
+the time it got allocated and the time when it should have been
+freed.  Use <em>leakTouch</em> to accomplish this.  You can sprinkle
+<em>leakTouch</em> calls throughout the code where the pointer is
+used.  For example:
+<verb>
+void
+myfunc(void *ptr)
+{
+    ...
+    leakTouch(ptr);
+    ...
+}
+</verb>
+NOTE:  <em>leakTouch</em> aborts with an assertion if you give it
+a pointer that was never added with <em>leakAdd</em>, or if the
+pointer was already freed.
+
+<p>
+For each pointer tracked, the module remembers the filename, line
+number, and time of last access.  You can view this data with the
+cache manager by selecting the <em>leaks</em> option.  You can also
+do it from the command line:
+<verb>
+% client mgr:leaks | less
+</verb>
+
+<p>
+The way to identify possible leaks is to look at the time of last
+access.  Pointers that haven't been accessed for a long time are
+candidates for leaks.  The filename and line numbers tell you where
+that pointer was last accessed.  If there is a leak, then the bug
+occurs somewhere after that point of the code.
 
 </article>
