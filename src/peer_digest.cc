@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.36 1998/06/04 15:54:08 rousskov Exp $
+ * $Id: peer_digest.cc,v 1.37 1998/06/04 16:09:37 rousskov Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -383,7 +383,12 @@ peerDigestSwapInHeaders(void *data, char *buf, ssize_t size)
 	assert(fetch->entry->mem_obj->reply);
 	if (!fetch->entry->mem_obj->reply->sline.status)
 	    httpReplyParse(fetch->entry->mem_obj->reply, buf);
-	assert(fetch->entry->mem_obj->reply->sline.status == HTTP_OK);
+	if (fetch->entry->mem_obj->reply->sline.status != HTTP_OK) {
+	    debug(72, 1) ("peerDigestSwapInHeaders: %s status %d got cached!\n",
+		peer->host, fetch->entry->mem_obj->reply->sline.status);
+	    peerDigestFetchFinish(fetch, buf, "internal status error");
+	    return;
+	}
 	fetch->offset += hdr_size;
 	storeClientCopy(fetch->entry, size, fetch->offset,
 	    SM_PAGE_SIZE, buf,
