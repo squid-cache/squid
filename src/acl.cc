@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.102 1997/07/07 05:29:38 wessels Exp $
+ * $Id: acl.cc,v 1.103 1997/07/14 03:33:34 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -37,9 +37,6 @@
 #if defined(USE_SPLAY_TREE)
 #include "splay.h"
 #endif
-
-/* Global */
-const char *AclMatchedName = NULL;
 
 static int aclFromFile = 0;
 static FILE *aclFile;

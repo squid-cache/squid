@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.45 1997/07/07 05:29:55 wessels Exp $
+ * $Id: stmem.cc,v 1.46 1997/07/14 03:33:40 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -105,11 +105,6 @@
  */
 
 #include "squid.h"
-
-stmem_stats sm_stats;
-stmem_stats disk_stats;
-stmem_stats request_pool;
-stmem_stats mem_obj_pool;
 
 #define min(x,y) ((x)<(y)? (x) : (y))
 

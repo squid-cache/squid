@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.57 1997/06/19 22:51:48 wessels Exp $
+ * $Id: errorpage.cc,v 1.58 1997/07/14 03:33:37 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -132,9 +132,6 @@ static error_data ErrorData[] =
 	"Access Denied",
 	"You must authenticate yourself before accessing this cache."}
 };
-
-/* GLOBAL */
-char *tmp_error_buf;
 
 /* LOCAL */
 static char *tbuf = NULL;
