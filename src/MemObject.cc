@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.2 2003/02/05 10:36:48 robertc Exp $
+ * $Id: MemObject.cc,v 1.3 2003/02/08 17:43:18 hno Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -138,7 +138,7 @@ MemObject::unlinkRequest()
 void
 MemObject::write ( StoreIOBuffer writeBuffer, STMCB *callback, void *callbackData)
 {
-    debug(19, 6) ("memWrite: offset %lu len %d\n", writeBuffer.offset, writeBuffer.length);
+    debug(19, 6) ("memWrite: offset %lu len %ld\n", (unsigned long)writeBuffer.offset, (long)writeBuffer.length);
 
     /* the offset is into the content, not the headers */
     writeBuffer.offset += (_reply ? _reply->hdr_sz : 0);
