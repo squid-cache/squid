@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.207 2001/04/27 16:23:48 hno Exp $
+ * $Id: tools.cc,v 1.208 2001/08/11 18:27:20 adrian Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -354,7 +354,10 @@ fatal(const char *message)
     if (0 == store_dirs_rebuilding)
 	storeDirWriteCleanLogs(0);
     fatal_common(message);
-    exit(shutting_down ? 0 : 1);
+    if (shutting_down)
+	exit(0);
+    else
+	abort();
 }
 
 /* printf-style interface for fatal */
