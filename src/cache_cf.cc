@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.35 1996/04/11 22:53:40 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.36 1996/04/11 23:51:57 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -38,6 +38,7 @@ static struct {
 	char *log;
 	char *access;
 	char *hierarchy;
+	char *store;
 	int rotateNumber;
     } Log;
     char *adminEmail;
@@ -116,6 +117,7 @@ static struct {
 #define DefaultCacheLogFile	DEFAULT_CACHE_LOG
 #define DefaultAccessLogFile	DEFAULT_ACCESS_LOG
 #define DefaultHierarchyLogFile DEFAULT_HIERARCHY_LOG
+#define DefaultStoreLogFile	DEFAULT_STORE_LOG
 #define DefaultLogRotateNumber  10
 #define DefaultAdminEmail	"webmaster"
 #define DefaultFtpgetProgram	DEFAULT_FTPGET
@@ -767,6 +769,16 @@ static void parseHierachyLogLine()
     Config.Log.hierarchy = xstrdup(token);
 }
 
+static void parseStoreLogLine()
+{
+    char *token;
+    token = strtok(NULL, w_space);
+    if (token == (char *) NULL)
+	self_destruct();
+    safe_free(Config.Log.store);
+    Config.Log.store = xstrdup(token);
+}
+
 static void parseLogfileRotateLine()
 {
     char *token;
@@ -1149,6 +1161,10 @@ int parseConfigFile(file_name)
 	/* Parse a cache_hierarchy_log line */
 	else if (!strcmp(token, "cache_hierarchy_log"))
 	    parseHierachyLogLine();
+
+	/* Parse a cache_store_log line */
+	else if (!strcmp(token, "cache_store_log"))
+	    parseStoreLogLine();
 
 	/* Parse a logfile_rotate line */
 	else if (!strcmp(token, "logfile_rotate"))
@@ -1560,6 +1576,10 @@ char *getHierarchyLogFile()
 {
     return Config.Log.hierarchy;
 }
+char *getStoreLogFile()
+{
+    return Config.Log.store;
+}
 int getLogfileRotateNumber()
 {
     return Config.Log.rotateNumber;
@@ -1770,6 +1790,7 @@ static void configSetFactoryDefaults()
     Config.Log.log = safe_xstrdup(DefaultCacheLogFile);
     Config.Log.access = safe_xstrdup(DefaultAccessLogFile);
     Config.Log.hierarchy = safe_xstrdup(DefaultHierarchyLogFile);
+    Config.Log.store = safe_xstrdup(DefaultStoreLogFile);
     Config.Log.rotateNumber = DefaultLogRotateNumber;
     Config.Program.ftpget = safe_xstrdup(DefaultFtpgetProgram);
     Config.Program.ftpget_opts = safe_xstrdup(DefaultFtpgetOptions);

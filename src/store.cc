@@ -1,6 +1,6 @@
 
-/* $Id: store.cc,v 1.43 1996/04/11 04:47:27 wessels Exp $ */
-#ident "$Id: store.cc,v 1.43 1996/04/11 04:47:27 wessels Exp $"
+/* $Id: store.cc,v 1.44 1996/04/11 23:52:00 wessels Exp $ */
+#ident "$Id: store.cc,v 1.44 1996/04/11 23:52:00 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
@@ -2384,7 +2384,7 @@ int storeInit()
     int dir_created;
     wordlist *w = NULL;
 
-    storelog_fd = file_open("store.log", NULL, O_WRONLY | O_APPEND | O_CREAT);
+    storelog_fd = file_open(getStoreLogFile(), NULL, O_WRONLY | O_APPEND | O_CREAT);
 
     for (w = getCacheDirs(); w; w = w->next)
 	storeAddSwapDisk(w->key);
@@ -2643,3 +2643,33 @@ int storePendingNClients(e)
     }
     return npend;
 }
+
+void storeRotateLog()
+{
+    char *fname = NULL;
+    int i;
+    static char from[MAXPATHLEN];
+    static char to[MAXPATHLEN];
+
+    if ((fname = getStoreLogFile()) == NULL)
+        return;
+
+    debug(20, 1, "storeRotateLog: Rotating.\n");
+
+    /* Rotate numbers 0 through N up one */
+    for (i = getLogfileRotateNumber(); i > 1;) {
+        i--;
+        sprintf(from, "%s.%d", fname, i - 1);
+        sprintf(to, "%s.%d", fname, i);
+        rename(from, to);
+    }
+    /* Rotate the current log to .0 */
+    if (getLogfileRotateNumber() > 0) {
+        sprintf(to, "%s.%d", fname, 0);
+        rename(fname, to);
+    }
+    if (storelog_fd > -1)
+    	file_close(storelog_fd);
+    storelog_fd = file_open(getStoreLogFile(), NULL, O_WRONLY | O_APPEND | O_CREAT);
+}
+
