@@ -4,9 +4,11 @@
 # configure has not been run, or if a Makefile.am in a non-configured directory
 # has been updated
 
-# Autotool versions required
-acver=""
-amver=""
+# Autotool versions required. To override either edit the script
+# to match the versions you want to use, or set the variables on
+# the command line like "env acver=.. amver=... ./bootstrap.sh"
+acver="${acver:-2.53}"
+amver="${amver:-1.5}"
 
 bootstrap() {
   if "$@"; then
@@ -23,14 +25,14 @@ bootstrap() {
 mkdir -p cfgaux
 
 # Adjust paths of required autool packages
-#if autoconf --version | grep -q $acver; then
-#  acver=""
-#fi
-#if automake --version | grep -q $amver; then
-#  amver=""
-#fi
+if autoconf --version | grep -q "$acver"; then
+  acver=""
+fi
+if automake --version | grep -q "$amver"; then
+  amver=""
+fi
 acver=`echo $acver | sed -e 's/\.//'`
-#amver=`echo $amver | sed -e 's/\.//'`
+amver=`echo $amver | sed -e 's/\.//'`
 
 # Bootstrap the autotool subsystems
 bootstrap aclocal$amver
