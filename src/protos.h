@@ -549,3 +549,6 @@ extern void dump_peers(StoreEntry *, peer *);
 extern void pconnPush(int, const char *host, u_short port);
 extern int pconnPop(const char *host, u_short port);
 extern void pconnInit(void);
+
+extern int asnMatchIp(void *, struct in_addr);
+extern void asnAclInitialize (acl *);

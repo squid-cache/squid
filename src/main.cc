@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.190 1997/11/10 20:52:57 wessels Exp $
+ * $Id: main.cc,v 1.191 1997/11/13 05:25:49 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -528,6 +528,7 @@ mainInitialize(void)
     useragentOpenLog();
     errorInitialize();
     accessLogInit();
+    asnAclInitialize(Config.aclList);
 
 #if MALLOC_DBG
     malloc_debug(0, malloc_debug_level);
