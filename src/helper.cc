@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.50 2002/10/21 14:00:02 adrian Exp $
+ * $Id: helper.cc,v 1.51 2002/10/21 15:26:09 adrian Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "comm.h"
 
 #define HELPER_MAX_ARGS 64
 
@@ -1011,6 +1012,12 @@ StatefulGetFirstAvailable(statefulhelper * hlp)
 
 
 static void
+helperDispatchWriteDone(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+{
+	/* nothing! */
+}
+
+static void
 helperDispatch(helper_server * srv, helper_request * r)
 {
     helper *hlp = srv->parent;
@@ -1023,18 +1030,25 @@ helperDispatch(helper_server * srv, helper_request * r)
     srv->flags.busy = 1;
     srv->request = r;
     srv->dispatch_time = current_time;
-    comm_old_write(srv->wfd,
+    comm_write(srv->wfd,
 	r->buf,
 	strlen(r->buf),
-	NULL,			/* Handler */
-	NULL,			/* Handler-data */
-	NULL);			/* free */
+	helperDispatchWriteDone,	/* Handler */
+	hlp);				/* Handler-data */
     comm_read(srv->rfd, srv->buf + srv->offset, srv->buf_sz - srv->offset, helperHandleRead, srv);
     debug(84, 5) ("helperDispatch: Request sent to %s #%d, %d bytes\n",
 	hlp->id_name, srv->index + 1, (int) strlen(r->buf));
     srv->stats.uses++;
     hlp->stats.requests++;
 }
+
+static void
+helperStatefulDispatchWriteDone(int fd, char *buf, size_t len, comm_err_t flag,
+  int xerrno, void *data)
+{
+	/* nothing! */
+}
+
 
 static void
 helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r)
@@ -1074,12 +1088,11 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
     srv->flags.busy = 1;
     srv->request = r;
     srv->dispatch_time = current_time;
-    comm_old_write(srv->wfd,
+    comm_write(srv->wfd,
 	r->buf,
 	strlen(r->buf),
-	NULL,			/* Handler */
-	NULL,			/* Handler-data */
-	NULL);			/* free */
+	helperStatefulDispatchWriteDone,	/* Handler */
+	hlp);				/* Handler-data */
     comm_read(srv->rfd, srv->buf + srv->offset, srv->buf_sz - srv->offset,
       helperStatefulHandleRead, srv);
     debug(84, 5) ("helperStatefulDispatch: Request sent to %s #%d, %d bytes\n",
