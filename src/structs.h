@@ -925,8 +925,10 @@ struct _ErrorState {
 };
 
 struct _StatLogHist {
-    int nbins;
-    int *bins;
+    int bins[STAT_LOG_HIST_BINS];
+    double min;
+    double max;
+    double scale;
     DTOI *val_to_bin;
     DTOD *bin_to_val;
 };
