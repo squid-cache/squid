@@ -19,6 +19,11 @@
  * and/or modify it under the terms of the GNU General Public License 
  * as published by the Free Software Foundation; either version 2, 
  * or (at your option) any later version.
+ *
+ * Changes:
+ * 2001-04-15: Henrik Nordstrom <hno@squid-cache.org>
+ *             - Added command line option for basedn
+ *             - Added the ability to search for the user DN
  */
 
 #include <stdio.h>
