@@ -1,7 +1,7 @@
 #
 #  Makefile for the COSS storage driver for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.1 2000/05/03 17:15:47 adrian Exp $
+#  $Id: Makefile.in,v 1.2 2001/08/09 21:41:53 adrian Exp $
 #
 
 FS		= coss

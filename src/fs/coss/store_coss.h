@@ -5,13 +5,25 @@
 #define	COSS_MEMBUF_SZ	1048576
 #endif
 
+#ifndef	COSS_BLOCK_SZ
+#define	COSS_BLOCK_SZ	512
+#endif
+
+/* Macros to help block<->offset transiting */
+#define	COSS_OFS_TO_BLK(ofs)		((ofs) / COSS_BLOCK_SZ)
+#define	COSS_BLK_TO_OFS(ofs)		((ofs) * COSS_BLOCK_SZ)
+
+/* Note that swap_filen in sio/e are actually disk offsets too! */
+
+/* What we're doing in storeCossAllocate() */
 #define COSS_ALLOC_NOTIFY		0
 #define COSS_ALLOC_ALLOCATE		1
 #define COSS_ALLOC_REALLOC		2
 
 struct _cossmembuf {
-    size_t diskstart;
-    size_t diskend;
+    dlink_node node;
+    size_t diskstart;		/* in blocks */
+    size_t diskend;		/* in blocks */
     SwapDir *SD;
     int lockcount;
     char buffer[COSS_MEMBUF_SZ];
@@ -19,15 +31,14 @@ struct _cossmembuf {
 	unsigned int full:1;
 	unsigned int writing:1;
     } flags;
-    struct _cossmembuf *next;
 };
 
 
 /* Per-storedir info */
 struct _cossinfo {
-    struct _cossmembuf *membufs;
+    dlink_list membufs;
     struct _cossmembuf *current_membuf;
-    size_t current_offset;
+    size_t current_offset;	/* in Blocks */
     int fd;
     int swaplog_fd;
     int numcollisions;
@@ -49,8 +60,8 @@ struct _cossstate {
     char *readbuffer;
     char *requestbuf;
     size_t requestlen;
-    size_t requestoffset;
-    sfileno reqdiskoffset;
+    size_t requestoffset;	/* in blocks */
+    sfileno reqdiskoffset;	/* in blocks */
     struct {
 	unsigned int reading:1;
 	unsigned int writing:1;
