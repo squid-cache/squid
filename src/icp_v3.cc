@@ -48,7 +48,7 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 	}
 	/* The peer is allowed to use this cache */
 	key = storeKeyPublic(url, METHOD_GET);
-	storeGet(key);
+	entry = storeGet(key);
 	debug(12, 5) ("icpHandleIcpV3: OPCODE %s\n",
 	    IcpOpcodeStr[header.opcode]);
 	if (icpCheckUdpHit(entry, icp_request)) {
