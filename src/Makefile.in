@@ -1,21 +1,19 @@
 #
 #  Makefile for the Harvest Object Cache server
 #
-#  $Id: Makefile.in,v 1.11 1996/04/08 18:28:53 wessels Exp $
+#  $Id: Makefile.in,v 1.12 1996/04/08 23:25:19 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
 LOG_OPT		= # -DNO_LOGGGING
-PORT_OPT	= # -DCACHE_HTTP_PORT=3128 -DCACHE_ICP_PORT=3130
 HOST_OPT	= # -DCACHEMGR_HOSTNAME="getfullhostname()"
-DEFINES		= $(LOG_OPT) $(PORT_OPT) $(HOST_OPT)
+DEFINES		= $(LOG_OPT) $(HOST_OPT)
 
-prefix = @prefix@
-top_srcdir = @top_srcdir@
-INSTALL_BINDIR	= $(prefix)/bin
-INSTALL_LIBDIR	= $(prefix)/lib
-INSTALL_MANDIR 	= $(prefix)/man
-INSTALL_CGIDIR  = $(prefix)/cgi-bin
+prefix		= @prefix@
+exec_prefix	= @exec_prefix@
+top_srcdir	= @top_srcdir@
+bindir		= @bindir@
+sysconfdir	= @sysconfdir@
 
 CC		= @CC@
 INSTALL		= @INSTALL@
@@ -41,8 +39,6 @@ SHELL		= /bin/sh
 #CC		= cc
 #XTRA_CFLAGS	= -D_HARVEST_HPUX_ -d_AIX -D_ALL_SOURCE
 #
-# In addition, add -DBUGGY_AIX_SOCKETS if you suspect your sockets
-# implementation is broken.
 
 ## LINUX users might need to use these values
 #
@@ -66,10 +62,21 @@ OBJS	 	= blocklist.o cache_cf.o cached_error.o comm.o \
 		store.o storetoString.o tools.o ttl.o \
 		url.o wais.o $(XTRA_OBJS)
 
+DEFAULTS        = \
+	-DDEFAULT_CONFIG_FILE=\"$(sysconfdir)/cached.conf\" \
+	-DDEFAULT_FTPGET=\"$(bindir)/ftpget\" \
+	-DDEFAULT_DNSSERVER=\"$(bindir)/dnsserver\" \
+	-DDEFAULT_CACHE_LOG=\"$(prefix)/logs/cache.log\" \
+	-DDEFAULT_ACCESS_LOG=\"$(prefix)/logs/access.log\" \
+	-DDEFAULT_HIERARCHY_LOG=\"$(prefix)/logs/hierarchy.log\"
+
 all:	$(PROGS) $(UTILS) $(CGIPROGS)
 
 cached:	$(OBJS)
 	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(CRYPT_LIB) $(LIBS)
+
+cache_cf.o: cache_cf.c
+	$(CC) -c cache_cf.c $(CFLAGS) $(DEFAULTS)
 
 client:	client.o
 	$(CC) -o $@ $(LDFLAGS) $@.o $(CLIENT_LIBS)
@@ -83,31 +90,47 @@ cachemgr.cgi:	cachemgr.o
 ftpget: ftpget.o
 	$(CC) -o $@ $(LDFLAGS) ftpget.o $(LIBS)
 
-install: all
+install-mkdirs:
 	@if test ! -d $(prefix); then \
 		echo "mkdir $(prefix)"; \
 		mkdir $(prefix); \
 	fi
-	@if test ! -d $(INSTALL_BINDIR); then \
-		echo "mkdir $(INSTALL_BINDIR)"; \
-		mkdir $(INSTALL_BINDIR); \
+	@if test ! -d $(exec_prefix); then \
+		echo "mkdir $(exec_prefix)"; \
+		mkdir $(exec_prefix); \
 	fi
+	@if test ! -d $(bindir); then \
+		echo "mkdir $(bindir)"; \
+		mkdir $(bindir); \
+	fi
+	@if test ! -d $(confdir); then \
+		echo "mkdir $(confdir)"; \
+		mkdir $(confdir); \
+	fi
+	@if test ! -d $(exec_prefix)/logs; then \
+		echo "mkdir $(exec_prefix)/logs"; \
+		mkdir $(exec_prefix)/logs; \
+	fi
+
+install: all install-mkdirs
 	@for f in $(PROGS); do \
-		echo $(INSTALL_BIN) $$f $(INSTALL_BINDIR); \
-		$(INSTALL_BIN) $$f $(INSTALL_BINDIR); \
+		echo $(INSTALL_BIN) $$f $(bindir); \
+		$(INSTALL_BIN) $$f $(bindir); \
 	done
 	@for f in $(UTILS); do \
-		echo $(INSTALL_BIN) $$f $(INSTALL_BINDIR); \
-		$(INSTALL_BIN) $$f $(INSTALL_BINDIR); \
+		echo $(INSTALL_BIN) $$f $(bindir); \
+		$(INSTALL_BIN) $$f $(bindir); \
 	done
-	@if test ! -d $(INSTALL_CGIDIR); then \
-		echo "mkdir $(INSTALL_CGIDIR)"; \
-		mkdir $(INSTALL_CGIDIR); \
-	fi
 	@for f in $(CGIPROGS); do \
-		echo $(INSTALL_BIN) $$f $(INSTALL_CGIDIR); \
-		$(INSTALL_BIN) $$f $(INSTALL_CGIDIR); \
+		echo $(INSTALL_BIN) $$f $(bindir); \
+		$(INSTALL_BIN) $$f $(bindir); \
 	done
+	@if test -f $(confdir)/cached.conf ; then \
+		echo "$@ will not overwrite existing $(confdir)/cached.conf" ; \
+	else \
+		echo "$(INSTALL_FILE) cached.conf $(confdir)"; \
+		$(INSTALL_FILE) cached.conf $(confdir); \
+	fi
 
 clean: 
 	-rm -rf *.o *pure_* core $(PROGS) $(UTILS) $(CGIPROGS)

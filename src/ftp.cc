@@ -1,4 +1,4 @@
-/* $Id: ftp.cc,v 1.23 1996/04/08 18:28:56 wessels Exp $ */
+/* $Id: ftp.cc,v 1.24 1996/04/08 23:25:21 wessels Exp $ */
 
 /*
  * DEBUG: Section 9           ftp: FTP
@@ -378,7 +378,7 @@ void ftpConnInProgress(fd, data)
 
     debug(9, 5, "ftpConnInProgress: FD %d\n", fd);
 
-    if (comm_connect(fd, "localhost", 3131) != COMM_OK)
+    if (comm_connect(fd, "localhost", CACHE_FTP_PORT) != COMM_OK)
 	switch (errno) {
 	case EINPROGRESS:
 	case EALREADY:
@@ -435,7 +435,7 @@ int ftpStart(unusedfd, url, entry)
     /* Pipe/socket created ok */
 
     /* Now connect ... */
-    if ((status = comm_connect(data->ftp_fd, "localhost", 3131))) {
+    if ((status = comm_connect(data->ftp_fd, "localhost", CACHE_FTP_PORT))) {
 	if (status != EINPROGRESS) {
 	    cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	    ftpCloseAndFree(data->ftp_fd, data);
@@ -502,8 +502,8 @@ int ftpInitialize()
     /* inherit stdin,stdout,stderr */
     for (fd = 3; fd < fdstat_biggest_fd(); fd++)
 	(void) close(fd);
-    sprintf(pbuf, "%d", 3131);
-    execlp(ftpget, ftpget, "-D26,1", "-S", pbuf, NULL);
+    sprintf(pbuf, "%d", CACHE_FTP_PORT);
+    execlp(ftpget, ftpget, "-S", pbuf, NULL);
     debug(9, 0, "ftpInitialize: %s: %s\n", ftpget, xstrerror());
     _exit(1);
     return (1);			/* eliminate compiler warning */

@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.24 1996/04/08 18:39:21 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.25 1996/04/08 23:25:20 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -101,14 +101,14 @@ static struct {
 #define DefaultAsciiPortNum	CACHE_HTTP_PORT
 #define DefaultUdpPortNum	CACHE_ICP_PORT
 
-#define DefaultCacheLogFile	"cache.log"
-#define DefaultAccessLogFile	"cache.access.log"
-#define DefaultHierarchyLogFile "cache.hierarchy.log"
+#define DefaultCacheLogFile	DEFAULT_CACHE_LOG
+#define DefaultAccessLogFile	DEFAULT_ACCESS_LOG
+#define DefaultHierarchyLogFile DEFAULT_HIERARCHY_LOG
 #define DefaultLogRotateNumber  10
 #define DefaultAdminEmail	"webmaster"
-#define DefaultFtpgetProgram	"ftpget"
+#define DefaultFtpgetProgram	DEFAULT_FTPGET
 #define DefaultFtpgetOptions	""
-#define DefaultDnsserverProgram "dnsserver"
+#define DefaultDnsserverProgram DEFAULT_DNSSERVER
 #define DefaultEffectiveUser	(char *)NULL	/* default NONE */
 #define DefaultEffectiveGroup	(char *)NULL	/* default NONE */
 #define DefaultAppendDomain	(char *)NULL	/* default NONE */
@@ -1487,7 +1487,6 @@ int parseConfigFile(file_name)
 	printf("         For this run, however, cached will use %d minutes for clean_rate.\n", (int) (getCleanRate() / 60));
 	fflush(stdout);		/* print message */
     }
-    storeSanityCheck();
 
     if (accel_ip_acl == NULL)
 	accel_ip_acl = proxy_ip_acl;
