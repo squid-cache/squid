@@ -559,7 +559,6 @@ extern void storeSwapOutStart(StoreEntry * e);
 extern void storeSwapOutHandle(int fdnotused, int flag, size_t len, void *data);
 extern void storeCheckSwapOut(StoreEntry * e);
 extern void storeSwapOutFileClose(StoreEntry * e);
-extern void storeSwapOutFileClose(StoreEntry * e);
 
 /*
  * store_client.c
