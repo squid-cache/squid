@@ -13,6 +13,11 @@ Changes to squid-1.1.beta24 ():
 	- Added warning message when forwarding loops detected.
 	- Split getSingleParent() into getSingleParent() and
 	  neighborsCount().
+	- Dont check sibling caches for REFRESH requests.
+	- Add X-Forwarded-For: header which is the comma-separated
+	  list of client addresses along the request path.
+	- Fixed icpDetectClientClose() to check if Content-Length
+	  bytes have been delivered.
 
 Changes to squid-1.1.beta23 (November 25, 1996):
 
