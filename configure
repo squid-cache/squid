@@ -514,7 +514,7 @@ fi
 
 
 
-# From configure.in Revision: 1.59 
+# From configure.in Revision: 1.60 
 ac_aux_dir=
 for ac_dir in aux $srcdir/aux; do
   if test -f $ac_dir/install-sh; then
@@ -2546,6 +2546,17 @@ EOF
 		;;
 esac
 
+# Recommended by Balint Nagy Endre <bne@CareNet.hu>
+case "$host" in
+	*-univel-sysv4.2MP)
+		if test `uname -v` = "2.03"; then
+			echo "disabling mallinfo for $host"
+			ac_cv_func_mallinfo=no
+		fi
+		;;
+esac
+
+
 for ac_func in \
 	bcopy \
 	getdtablesize \
@@ -2583,7 +2594,7 @@ if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 2587 "configure"
+#line 2598 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char $ac_func(); below.  */
@@ -2607,7 +2618,7 @@ $ac_func();
 
 ; return 0; }
 EOF
-if { (eval echo configure:2611: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
+if { (eval echo configure:2622: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
   rm -rf conftest*
   eval "ac_cv_func_$ac_func=yes"
 else
@@ -2658,7 +2669,7 @@ if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 2662 "configure"
+#line 2673 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char $ac_func(); below.  */
@@ -2682,7 +2693,7 @@ $ac_func();
 
 ; return 0; }
 EOF
-if { (eval echo configure:2686: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
+if { (eval echo configure:2697: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
   rm -rf conftest*
   eval "ac_cv_func_$ac_func=yes"
 else
@@ -2708,7 +2719,7 @@ if test "$cross_compiling" = yes; then
   SQUID_MAXFD=256
 else
 cat > conftest.$ac_ext <<EOF
-#line 2712 "configure"
+#line 2723 "configure"
 #include "confdefs.h"
 
 #include <stdio.h>
@@ -2760,7 +2771,7 @@ main() {
 }
 
 EOF
-{ (eval echo configure:2764: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
+{ (eval echo configure:2775: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
 if test -s conftest && (./conftest; exit) 2>/dev/null; then
   SQUID_MAXFD=`cat conftestval`
 else
@@ -2779,7 +2790,7 @@ if test "$cross_compiling" = yes; then
   SQUID_UDP_SO_SNDBUF=16384
 else
 cat > conftest.$ac_ext <<EOF
-#line 2783 "configure"
+#line 2794 "configure"
 #include "confdefs.h"
 
 #include <stdlib.h>
@@ -2798,7 +2809,7 @@ main ()
 }
 
 EOF
-{ (eval echo configure:2802: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
+{ (eval echo configure:2813: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
 if test -s conftest && (./conftest; exit) 2>/dev/null; then
   SQUID_UDP_SO_SNDBUF=`cat conftestval`
 else
@@ -2817,7 +2828,7 @@ if test "$cross_compiling" = yes; then
   SQUID_UDP_SO_RCVBUF=16384
 else
 cat > conftest.$ac_ext <<EOF
-#line 2821 "configure"
+#line 2832 "configure"
 #include "confdefs.h"
 
 #include <stdlib.h>
@@ -2836,7 +2847,7 @@ main ()
 }
 
 EOF
-{ (eval echo configure:2840: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
+{ (eval echo configure:2851: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
 if test -s conftest && (./conftest; exit) 2>/dev/null; then
   SQUID_UDP_SO_RCVBUF=`cat conftestval`
 else
@@ -2855,7 +2866,7 @@ if test "$cross_compiling" = yes; then
   SQUID_TCP_SO_SNDBUF=16384
 else
 cat > conftest.$ac_ext <<EOF
-#line 2859 "configure"
+#line 2870 "configure"
 #include "confdefs.h"
 
 #include <stdlib.h>
@@ -2874,7 +2885,7 @@ main ()
 }
 
 EOF
-{ (eval echo configure:2878: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
+{ (eval echo configure:2889: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
 if test -s conftest && (./conftest; exit) 2>/dev/null; then
   SQUID_TCP_SO_SNDBUF=`cat conftestval`
 else
@@ -2893,7 +2904,7 @@ if test "$cross_compiling" = yes; then
   SQUID_TCP_SO_RCVBUF=16384
 else
 cat > conftest.$ac_ext <<EOF
-#line 2897 "configure"
+#line 2908 "configure"
 #include "confdefs.h"
 
 #include <stdlib.h>
@@ -2912,7 +2923,7 @@ main ()
 }
 
 EOF
-{ (eval echo configure:2916: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
+{ (eval echo configure:2927: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
 if test -s conftest && (./conftest; exit) 2>/dev/null; then
   SQUID_TCP_SO_RCVBUF=`cat conftestval`
 else
@@ -2928,7 +2939,7 @@ EOF
 
 echo $ac_n "checking if sys_errlist is already defined""... $ac_c" 1>&6
 cat > conftest.$ac_ext <<EOF
-#line 2932 "configure"
+#line 2943 "configure"
 #include "confdefs.h"
 #include <stdio.h>
 int main() { return 0; }
@@ -2936,7 +2947,7 @@ int t() {
 char *s = sys_errlist[0];
 ; return 0; }
 EOF
-if { (eval echo configure:2940: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:2951: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
 else
@@ -2952,7 +2963,7 @@ rm -f conftest*
 
 echo $ac_n "checking for libresolv _dns_ttl_ hack""... $ac_c" 1>&6
 cat > conftest.$ac_ext <<EOF
-#line 2956 "configure"
+#line 2967 "configure"
 #include "confdefs.h"
 extern int _dns_ttl_;
 int main() { return 0; }
@@ -2960,7 +2971,7 @@ int t() {
 return _dns_ttl_;
 ; return 0; }
 EOF
-if { (eval echo configure:2964: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
+if { (eval echo configure:2975: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
 cat >> confdefs.h <<\EOF
