@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.321 2002/04/21 14:07:05 hno Exp $
+ * $Id: ftp.cc,v 1.322 2002/04/21 16:20:25 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -457,11 +457,6 @@ ftpListPartsFree(ftpListParts ** parts)
 
 #define MAX_TOKENS 64
 
-#define SCAN_FTP1       "%[0123456789]"
-#define SCAN_FTP2       "%[0123456789:]"
-#define SCAN_FTP3       "%[0123456789]-%[0123456789]-%[0123456789]"
-#define SCAN_FTP4       "%[0123456789]:%[0123456789]%[AaPp]%[Mm]"
-
 static ftpListParts *
 ftpListParseParts(const char *buf, struct _ftp_flags flags)
 {
@@ -471,16 +466,28 @@ ftpListParseParts(const char *buf, struct _ftp_flags flags)
     char *tokens[MAX_TOKENS];
     int i;
     int n_tokens;
-    static char sbuf[128];
+    static char tbuf[128];
     char *xbuf = NULL;
+    static int scan_ftp_initialized = 0;
+    static regex_t scan_ftp_integer;
+    static regex_t scan_ftp_time;
+    static regex_t scan_ftp_dostime;
+    static regex_t scan_ftp_dosdate;
+
+    if (!scan_ftp_initialized) {
+	scan_ftp_initialized = 1;
+	regcomp(&scan_ftp_integer, "^[0123456789]+$", REG_EXTENDED | REG_NOSUB);
+	regcomp(&scan_ftp_time, "^[0123456789:]+$", REG_EXTENDED | REG_NOSUB);
+	regcomp(&scan_ftp_dosdate, "^[0123456789]+-[0123456789]+-[0123456789]+$", REG_EXTENDED | REG_NOSUB);
+	regcomp(&scan_ftp_dostime, "^[0123456789]+:[0123456789]+[AP]M$", REG_EXTENDED | REG_NOSUB | REG_ICASE);
+    }
     if (buf == NULL)
 	return NULL;
     if (*buf == '\0')
 	return NULL;
     p = xcalloc(1, sizeof(ftpListParts));
     n_tokens = 0;
-    for (i = 0; i < MAX_TOKENS; i++)
-	tokens[i] = (char *) NULL;
+    memset(tokens, 0, sizeof(tokens));
     xbuf = xstrdup(buf);
     if (flags.tried_nlst) {
 	/* Machine readable format, one name per line */
@@ -493,55 +500,58 @@ ftpListParseParts(const char *buf, struct _ftp_flags flags)
     xfree(xbuf);
     /* locate the Month field */
     for (i = 3; i < n_tokens - 2; i++) {
-	if (!is_month(tokens[i]))	/* Month */
+	char *size = tokens[i - 1];
+	char *month = tokens[i];
+	char *day = tokens[i + 1];
+	char *year = tokens[i + 2];
+	if (!is_month(month))
 	    continue;
-	if (!sscanf(tokens[i - 1], SCAN_FTP1, sbuf))	/* Size */
+	if (regexec(&scan_ftp_integer, size, 0, NULL, 0) != 0)
 	    continue;
-	if (!sscanf(tokens[i + 1], SCAN_FTP1, sbuf))	/* Day */
+	if (regexec(&scan_ftp_integer, day, 0, NULL, 0) != 0)
 	    continue;
-	if (!sscanf(tokens[i + 2], SCAN_FTP2, sbuf))	/* Yr | hh:mm */
+	if (regexec(&scan_ftp_time, day, 0, NULL, 0) != 0)	/* Yr | hh:mm */
 	    continue;
-	p->type = *tokens[0];
-	p->size = atoi(tokens[i - 1]);
-	snprintf(sbuf, 128, "%s %2s %5s",
-	    tokens[i], tokens[i + 1], tokens[i + 2]);
-	if (!strstr(buf, sbuf))
-	    snprintf(sbuf, 128, "%s %2s %-5s",
-		tokens[i], tokens[i + 1], tokens[i + 2]);
-	if ((t = strstr(buf, sbuf))) {
-	    p->date = xstrdup(sbuf);
+	snprintf(tbuf, 128, "%s %2s %5s",
+	    month, day, year);
+	if (!strstr(buf, tbuf))
+	    snprintf(tbuf, 128, "%s %2s %-5s",
+		month, day, year);
+	if ((t = strstr(buf, tbuf))) {
+	    p->type = *tokens[0];
+	    p->size = atoi(size);
+	    p->date = xstrdup(tbuf);
 	    if (flags.skip_whitespace) {
-		t += strlen(sbuf);
+		t += strlen(tbuf);
 		while (strchr(w_space, *t))
 		    t++;
 	    } else {
 		/* XXX assumes a single space between date and filename
 		 * suggested by:  Nathan.Bailey@cc.monash.edu.au and
 		 * Mike Battersby <mike@starbug.bofh.asn.au> */
-		t += strlen(sbuf) + 1;
+		t += strlen(tbuf) + 1;
 	    }
 	    p->name = xstrdup(t);
 	    if ((t = strstr(p->name, " -> "))) {
 		*t = '\0';
 		p->link = xstrdup(t + 4);
 	    }
+	    goto found;
 	}
 	break;
     }
-    /* try it as a DOS listing */
-    if (n_tokens > 3 && p->name == NULL &&
-	sscanf(tokens[0], SCAN_FTP3, sbuf, sbuf, sbuf) == 3 &&
-    /* 04-05-70 */
-	sscanf(tokens[1], SCAN_FTP4, sbuf, sbuf, sbuf, sbuf) == 4) {
-	/* 09:33PM */
+    /* try it as a DOS listing, 04-05-70 09:33PM ... */
+    if (n_tokens > 3 &&
+	regexec(&scan_ftp_dosdate, tokens[0], 0, NULL, 0) == 0 &&
+	regexec(&scan_ftp_dostime, tokens[1], 0, NULL, 0) == 0) {
 	if (!strcasecmp(tokens[2], "<dir>")) {
 	    p->type = 'd';
 	} else {
 	    p->type = '-';
 	    p->size = atoi(tokens[2]);
 	}
-	snprintf(sbuf, 128, "%s %s", tokens[0], tokens[1]);
-	p->date = xstrdup(sbuf);
+	snprintf(tbuf, 128, "%s %s", tokens[0], tokens[1]);
+	p->date = xstrdup(tbuf);
 	if (p->type == 'd') {
 	    /* Directory.. name begins with first printable after <dir> */
 	    ct = strstr(buf, tokens[2]);
@@ -552,33 +562,36 @@ ftpListParseParts(const char *buf, struct _ftp_flags flags)
 		ct = NULL;
 	} else {
 	    /* A file. Name begins after size, with a space in between */
-	    snprintf(sbuf, 128, " %s %s", tokens[2], tokens[3]);
-	    ct = strstr(buf, sbuf);
+	    snprintf(tbuf, 128, " %s %s", tokens[2], tokens[3]);
+	    ct = strstr(buf, tbuf);
 	    if (ct) {
 		ct += strlen(tokens[2]) + 2;
 	    }
 	}
 	p->name = xstrdup(ct ? ct : tokens[3]);
+	goto found;
     }
     /* Try EPLF format; carson@lehman.com */
-    if (p->name == NULL && buf[0] == '+') {
+    if (buf[0] == '+') {
 	ct = buf + 1;
 	p->type = 0;
 	while (ct && *ct) {
-	    long lt;
 	    time_t t;
+	    int l = strcspn(ct + 1, ",");
+	    char *tmp;
+	    if (l < 1)
+		goto blank;
 	    switch (*ct) {
 	    case '\t':
-		sscanf(ct + 1, "%[^,]", sbuf);
-		p->name = xstrdup(sbuf);
+		p->name = xstrndup(ct + 1, l + 1);
 		break;
 	    case 's':
-		sscanf(ct + 1, "%d", &(p->size));
+		p->size = atoi(ct + 1);
 		break;
 	    case 'm':
-		if (1 != sscanf(ct + 1, "%ld", &lt))
-		    break;
-		t = lt;
+		t = (time_t) strtol(ct + 1, &tmp, 0);
+		if (*tmp || (tmp == ct + 1))
+		    break;	/* not a valid integer */
 		p->date = xstrdup(ctime(&t));
 		*(strstr(p->date, "\n")) = '\0';
 		break;
@@ -593,6 +606,7 @@ ftpListParseParts(const char *buf, struct _ftp_flags flags)
 	    default:
 		break;
 	    }
+	  blank:
 	    ct = strstr(ct, ",");
 	    if (ct) {
 		ct++;
@@ -601,11 +615,16 @@ ftpListParseParts(const char *buf, struct _ftp_flags flags)
 	if (p->type == 0) {
 	    p->type = '-';
 	}
+	if (p->name)
+	    goto found;
+	else
+	    safe_free(p->date);
     }
+  found:
     for (i = 0; i < n_tokens; i++)
 	xfree(tokens[i]);
-    if (p->name == NULL)
-	ftpListPartsFree(&p);
+    if (!p->name)
+	ftpListPartsFree(&p);	/* cleanup */
     return p;
 }
 
@@ -708,7 +727,7 @@ ftpHtmlifyListEntry(const char *line, FtpStateData * ftpState)
 	snprintf(icon, 2048, "<IMG BORDER=0 SRC=\"%s\" ALT=\"%-6s\">",
 	    mimeGetIconURL("internal-dir"),
 	    "[DIR]");
-	strncat(href, "/", 2048);
+	strcat(href, "/");	/* margin is allocated above */
 	break;
     case 'l':
 	snprintf(icon, 2048, "<IMG BORDER=0 SRC=\"%s\" ALT=\"%-6s\">",
@@ -947,11 +966,11 @@ ftpCheckAuth(FtpStateData * ftpState, const HttpHeader * req_hdr)
     ftpState->flags.authenticated = 1;
     orig_user = xstrdup(ftpState->user);
     ftpLoginParser(auth, ftpState, FTP_LOGIN_NOT_ESCAPED);
-    if (!strcmp(orig_user, ftpState->user)) {
+    if (strcmp(orig_user, ftpState->user) == 0) {
 	xfree(orig_user);
 	return 1;		/* same username */
     }
-    strcpy(ftpState->user, orig_user);
+    xstrncpy(ftpState->user, orig_user, sizeof(ftpState->user));
     xfree(orig_user);
     return 0;			/* different username */
 }
@@ -1701,7 +1720,7 @@ ftpReadPasv(FtpStateData * ftpState)
     int n;
     u_short port;
     int fd = ftpState->data.fd;
-    char *buf = ftpState->ctrl.last_reply;
+    char *buf;
     LOCAL_ARRAY(char, ipaddr, 1024);
     debug(9, 3) ("This is ftpReadPasv\n");
     if (code != 227) {
@@ -1709,42 +1728,42 @@ ftpReadPasv(FtpStateData * ftpState)
 	ftpSendPort(ftpState);
 	return;
     }
-    if ((int) strlen(buf) > 1024) {
-	debug(9, 1) ("ftpReadPasv: Avoiding potential buffer overflow\n");
+    /*  227 Entering Passive Mode (h1,h2,h3,h4,p1,p2).  */
+    /*  ANSI sez [^0-9] is undefined, it breaks on Watcom cc */
+    debug(9, 5) ("scanning: %s\n", ftpState->ctrl.last_reply);
+    buf = strstr(ftpState->ctrl.last_reply, "(");
+    if (!buf) {
+	debug(9, 1) ("Unsafe PASV reply from %s: '%s'\n", fd_table[ftpState->ctrl.fd].ipaddr, ftpState->ctrl.last_reply);
 	ftpSendPort(ftpState);
 	return;
     }
-    /*  227 Entering Passive Mode (h1,h2,h3,h4,p1,p2).  */
-    /*  ANSI sez [^0-9] is undefined, it breaks on Watcom cc */
-    debug(9, 5) ("scanning: %s\n", buf);
-    n = sscanf(buf, "%[^0123456789]%d,%d,%d,%d,%d,%d",
-	ipaddr, &h1, &h2, &h3, &h4, &p1, &p2);
-    if (n != 7 || p1 < 0 || p2 < 0 || p1 > 255 || p2 > 255) {
-	debug(9, 3) ("Bad 227 reply\n");
-	debug(9, 3) ("n=%d, p1=%d, p2=%d\n", n, p1, p2);
+    buf++;			/* skip ( */
+    n = sscanf(buf, "%d,%d,%d,%d,%d,%d", &h1, &h2, &h3, &h4, &p1, &p2);
+    if (n != 6 || p1 < 0 || p2 < 0 || p1 > 255 || p2 > 255) {
+	debug(9, 1) ("Unsafe PASV reply from %s: %s\n", fd_table[ftpState->ctrl.fd].ipaddr, ftpState->ctrl.last_reply);
 	ftpSendPort(ftpState);
 	return;
     }
     snprintf(ipaddr, 1024, "%d.%d.%d.%d", h1, h2, h3, h4);
     if (!safe_inet_addr(ipaddr, NULL)) {
-	debug(9, 1) ("unsafe PASV address (%s) from %s\n", ipaddr, fd_table[ftpState->ctrl.fd].ipaddr);
+	debug(9, 1) ("Unsafe PASV reply from %s: %s\n", fd_table[ftpState->ctrl.fd].ipaddr, ftpState->ctrl.last_reply);
 	ftpSendPort(ftpState);
 	return;
     }
     port = ((p1 << 8) + p2);
     if (0 == port) {
-	debug(9, 1) ("ftpReadPasv: Invalid PASV reply: %s\n", buf);
+	debug(9, 1) ("Unsafe PASV reply from %s: %s\n", fd_table[ftpState->ctrl.fd].ipaddr, ftpState->ctrl.last_reply);
 	ftpSendPort(ftpState);
 	return;
     }
     if (Config.Ftp.sanitycheck) {
 	if (strcmp(fd_table[ftpState->ctrl.fd].ipaddr, ipaddr) != 0) {
-	    debug(9, 1) ("unsafe PASV address (%s) from %s\n", ipaddr, fd_table[ftpState->ctrl.fd].ipaddr);
-	    ftpSendPort(ftpState); 
+	    debug(9, 1) ("Unsafe PASV reply from %s: %s\n", fd_table[ftpState->ctrl.fd].ipaddr, ftpState->ctrl.last_reply);
+	    ftpSendPort(ftpState);
 	    return;
 	}
 	if (port < 1024) {
-	    debug(9, 1) ("unsafe PASV port (%d) from %s\n", port, fd_table[ftpState->ctrl.fd].ipaddr);
+	    debug(9, 1) ("Unsafe PASV reply from %s: %s\n", fd_table[ftpState->ctrl.fd].ipaddr, ftpState->ctrl.last_reply);
 	    ftpSendPort(ftpState);
 	    return;
 	}
@@ -1885,7 +1904,7 @@ ftpAcceptDataConnection(int fd, void *data)
     if (Config.Ftp.sanitycheck) {
 	char *ipaddr = inet_ntoa(my_peer.sin_addr);
 	if (strcmp(fd_table[ftpState->ctrl.fd].ipaddr, ipaddr) != 0) {
-	    debug(9, 1) ("FTP data connection from unexpected server (%s:%d), expecting %s\n", ipaddr, (int)ntohs(my_peer.sin_port), fd_table[ftpState->ctrl.fd].ipaddr);
+	    debug(9, 1) ("FTP data connection from unexpected server (%s:%d), expecting %s\n", ipaddr, (int) ntohs(my_peer.sin_port), fd_table[ftpState->ctrl.fd].ipaddr);
 	    comm_close(fd);
 	    commSetSelect(ftpState->data.fd,
 		COMM_SELECT_READ,
@@ -2574,7 +2593,7 @@ ftpUrlWith2f(const request_t * request)
 	snprintf(portbuf, 32, ":%d", request->port);
     loginbuf[0] = '\0';
     if ((int) strlen(request->login) > 0) {
-	strcpy(loginbuf, request->login);
+	xstrncpy(loginbuf, request->login, sizeof(loginbuf) - 2);
 	if ((t = strchr(loginbuf, ':')))
 	    *t = '\0';
 	strcat(loginbuf, "@");
