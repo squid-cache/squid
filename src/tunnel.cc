@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.80 1998/06/04 18:57:19 wessels Exp $
+ * $Id: tunnel.cc,v 1.81 1998/06/09 21:18:53 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -88,7 +88,6 @@ sslClientClosed(int fd, void *data)
     debug(26, 3) ("sslClientClosed: FD %d\n", fd);
     /* we have been called from comm_close for the client side, so
      * just need to clean up the server side */
-    fwdUnregister(NULL, sslState->request);
     comm_close(sslState->server.fd);
 }
 

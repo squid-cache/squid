@@ -1373,6 +1373,7 @@ struct _FwdState {
     StoreEntry *entry;
     request_t *request;
     FwdServer *servers;
+    int server_fd;
     struct {
         int err_code;
         http_status http_code;

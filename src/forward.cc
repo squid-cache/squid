@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.4 1998/06/09 05:57:34 wessels Exp $
+ * $Id: forward.cc,v 1.5 1998/06/09 21:18:46 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -34,7 +34,7 @@
 
 static void fwdStartComplete(peer * p, void *data);
 static void fwdStartFail(peer * p, void *data);
-static void fwdDispatch(FwdState *, int server_fd);
+static void fwdDispatch(FwdState *);
 static void fwdConnectStart(FwdState * fwdState);
 static void fwdStateFree(FwdState * fwdState);
 static PF fwdConnectTimeout;
@@ -46,7 +46,10 @@ fwdStateFree(FwdState * fwdState)
 {
     FwdServer *s;
     FwdServer *n = fwdState->servers;
+    int sfd;
+    static int loop_detect = 0;
     assert(cbdataValid(fwdState));
+    assert(loop_detect++ == 0);
     while ((s = n)) {
 	n = s->next;
 	xfree(s->host);
@@ -55,9 +58,18 @@ fwdStateFree(FwdState * fwdState)
     fwdState->servers = NULL;
     requestUnlink(fwdState->request);
     fwdState->request = NULL;
+    storeUnregisterAbort(fwdState->entry);
     storeUnlockObject(fwdState->entry);
     fwdState->entry = NULL;
+    sfd = fwdState->server_fd;
+    if (sfd > -1) {
+	comm_remove_close_handler(sfd, fwdServerClosed, fwdState);
+	fwdState->server_fd = -1;
+	debug(17,1)("fwdStateFree: closing FD %d\n", sfd);
+	comm_close(sfd);
+    }
     cbdataFree(fwdState);
+    loop_detect--;
 }
 
 static void
@@ -66,6 +78,8 @@ fwdServerClosed(int fd, void *data)
     FwdState *fwdState = data;
     debug(17, 3) ("fwdServerClosed: FD %d %s\n", fd,
 	storeUrl(fwdState->entry));
+    assert(fwdState->server_fd == fd);
+    fwdState->server_fd = -1;
     fwdStateFree(fwdState);
 }
 
@@ -78,6 +92,7 @@ fwdConnectDone(int server_fd, int status, void *data)
     cbdataUnlock(fwdState);
     if (!valid)
 	return;
+    assert(fwdState->server_fd == server_fd);
     if (status == COMM_ERR_DNS) {
 	debug(17, 4) ("fwdConnectDone: Unknown host: %s\n",
 	    fwdState->request->host);
@@ -100,7 +115,7 @@ fwdConnectDone(int server_fd, int status, void *data)
     } else {
 	fd_note(server_fd, storeUrl(fwdState->entry));
 	fd_table[server_fd].uses++;
-	fwdDispatch(fwdState, server_fd);
+	fwdDispatch(fwdState);
     }
 }
 
@@ -111,6 +126,7 @@ fwdConnectTimeout(int fd, void *data)
     StoreEntry *entry = fwdState->entry;
     ErrorState *err;
     debug(17, 3) ("fwdConnectTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
+    assert(fd == fwdState->server_fd);
     if (entry->mem_obj->inmem_hi == 0) {
 	err = errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT);
 	err->request = requestLink(fwdState->request);
@@ -133,6 +149,7 @@ fwdConnectStart(FwdState * fwdState)
     cbdataLock(fwdState);
     if ((fd = pconnPop(srv->host, srv->port)) >= 0) {
 	debug(17, 3) ("fwdConnectStart: reusing pconn FD %d\n", fd);
+        fwdState->server_fd = fd;
 	comm_add_close_handler(fd, fwdServerClosed, fwdState);
 	fwdConnectDone(fd, COMM_OK, fwdState);
 	return;
@@ -153,6 +170,7 @@ fwdConnectStart(FwdState * fwdState)
 	fwdStateFree(fwdState);
 	return;
     }
+    fwdState->server_fd = fd;
     comm_add_close_handler(fd, fwdServerClosed, fwdState);
     commSetTimeout(fd,
 	Config.Timeout.connect,
@@ -204,7 +222,7 @@ fwdStartFail(peer * peernotused, void *data)
 }
 
 static void
-fwdDispatch(FwdState * fwdState, int server_fd)
+fwdDispatch(FwdState * fwdState)
 {
     peer *p;
     request_t *request = fwdState->request;
@@ -220,20 +238,20 @@ fwdDispatch(FwdState * fwdState, int server_fd)
     netdbPingSite(request->host);
     if (fwdState->servers && (p = fwdState->servers->peer)) {
 	p->stats.fetches++;
-	httpStart(fwdState, server_fd);
+	httpStart(fwdState, fwdState->server_fd);
     } else {
 	switch (request->protocol) {
 	case PROTO_HTTP:
-	    httpStart(fwdState, server_fd);
+	    httpStart(fwdState, fwdState->server_fd);
 	    break;
 	case PROTO_GOPHER:
-	    gopherStart(entry, server_fd);
+	    gopherStart(entry, fwdState->server_fd);
 	    break;
 	case PROTO_FTP:
-	    ftpStart(request, entry, server_fd);
+	    ftpStart(request, entry, fwdState->server_fd);
 	    break;
 	case PROTO_WAIS:
-	    waisStart(request, entry, server_fd);
+	    waisStart(request, entry, fwdState->server_fd);
 	    break;
 	case PROTO_CACHEOBJ:
 	    cachemgrStart(fwdState->client_fd, request, entry);
@@ -242,7 +260,7 @@ fwdDispatch(FwdState * fwdState, int server_fd)
 	    urnStart(request, entry);
 	    break;
 	case PROTO_WHOIS:
-	    whoisStart(request, entry, server_fd);
+	    whoisStart(request, entry, fwdState->server_fd);
 	    break;
 	case PROTO_INTERNAL:
 	    internalStart(request, entry);
@@ -262,29 +280,6 @@ fwdDispatch(FwdState * fwdState, int server_fd)
 
 /* PUBLIC FUNCTIONS */
 
-int
-fwdUnregister(StoreEntry * entry, request_t * request)
-{
-    const char *url = entry ? storeUrl(entry) : NULL;
-    protocol_t proto = request ? request->protocol : PROTO_NONE;
-    ErrorState *err;
-    debug(17, 5) ("fwdUnregister '%s'\n", url ? url : "NULL");
-    if (proto == PROTO_CACHEOBJ)
-	return 0;
-    if (entry == NULL)
-	return 0;
-    if (EBIT_TEST(entry->flag, ENTRY_DISPATCHED))
-	return 0;
-    if (entry->mem_status != NOT_IN_MEMORY)
-	return 0;
-    if (entry->store_status != STORE_PENDING)
-	return 0;
-    err = errorCon(ERR_CLIENT_ABORT, HTTP_INTERNAL_SERVER_ERROR);
-    err->request = request;
-    errorAppendEntry(entry, err);
-    return 1;
-}
-
 void
 fwdStart(int fd, StoreEntry * entry, request_t * request)
 {
@@ -296,18 +291,20 @@ fwdStart(int fd, StoreEntry * entry, request_t * request)
     cbdataAdd(fwdState, MEM_NONE);
     fwdState->entry = entry;
     fwdState->client_fd = fd;
+    fwdState->server_fd = -1;
     fwdState->request = requestLink(request);
     storeLockObject(entry);
     switch (request->protocol) {
     case PROTO_CACHEOBJ:
     case PROTO_WAIS:
     case PROTO_INTERNAL:
-	fwdDispatch(fwdState, -1);
+	fwdDispatch(fwdState);
 	return;
     default:
 	break;
     }
     cbdataLock(fwdState);
+    storeRegisterAbort(entry, fwdAbort, fwdState);
     peerSelect(request,
 	entry,
 	fwdStartComplete,
@@ -362,4 +359,15 @@ fwdFail(FwdState * fwdState, int err_code, http_status http_code, int xerrno)
     fwdState->fail.err_code = err_code;
     fwdState->fail.http_code = http_code;
     fwdState->fail.xerrno = xerrno;
+}
+
+/*
+ * Called when someone else calls StoreAbort() on this entry
+ */
+void
+fwdAbort(void *data)
+{
+	FwdState * fwdState = data;
+	debug(17,1)("fwdAbort: %s\n", storeUrl(fwdState->entry));
+        fwdStateFree(fwdState);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.228 1998/06/04 18:57:11 wessels Exp $
+ * $Id: ftp.cc,v 1.229 1998/06/09 21:18:48 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -145,7 +145,9 @@ static void ftpLoginParser(const char *, FtpStateData *);
 static wordlist *ftpParseControlReply(char *buf, size_t len, int *code);
 static void ftpAppendSuccessHeader(FtpStateData * ftpState);
 static void ftpAuthRequired(HttpReply * reply, request_t * request, const char *realm);
+#if OLD_CODE
 static STABH ftpAbort;
+#endif
 static void ftpHackShortcut(FtpStateData * ftpState, FTPSM * nextState);
 static void ftpPutStart(FtpStateData *);
 static CWCB ftpPutTransferDone;
@@ -979,7 +981,9 @@ ftpStart(request_t * request, StoreEntry * entry, int fd)
 	ftpState->request->host, strBuf(ftpState->request->urlpath),
 	ftpState->user, ftpState->password);
     comm_add_close_handler(fd, ftpStateFree, ftpState);
+#if OLD_CODE
     storeRegisterAbort(entry, ftpAbort, ftpState);
+#endif
     ftpState->state = BEGIN;
     ftpState->ctrl.buf = memAllocate(MEM_4K_BUF);
     ftpState->ctrl.freefunc = memFree4K;
@@ -2166,6 +2170,7 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
     storeSetPublicKey(e);
 }
 
+#if OLD_CODE
 static void
 ftpAbort(void *data)
 {
@@ -2177,6 +2182,7 @@ ftpAbort(void *data)
     }
     comm_close(ftpState->ctrl.fd);
 }
+#endif
 
 static void
 ftpAuthRequired(HttpReply * old_reply, request_t * request, const char *realm)

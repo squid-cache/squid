@@ -588,10 +588,10 @@ extern EVH peerDigestInit;
 
 /* forward.c */
 extern void fwdStart(int, StoreEntry *, request_t *);
-extern int fwdUnregister(StoreEntry *, request_t *);
 extern int fwdAbortFetch(StoreEntry * entry);
 extern DEFER fwdCheckDeferRead;
 extern void fwdFail(FwdState *, int, http_status, int);
+extern STABH fwdAbort;
 
 extern void urnStart(request_t *, StoreEntry *);
 
