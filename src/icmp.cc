@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.7 1996/09/20 06:28:51 wessels Exp $
+ * $Id: icmp.cc,v 1.8 1996/09/20 07:31:02 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -225,7 +225,7 @@ icmpRecv(int unused1, void *unused2)
     int n;
     int fromlen;
     struct sockaddr_in from;
-    int iphdrlen;
+    int iphdrlen = 20;
     struct iphdr *ip = NULL;
     register struct icmphdr *icmp = NULL;
     char *pkt = get_free_8k_page();
@@ -245,6 +245,16 @@ icmpRecv(int unused1, void *unused2)
     debug(37, 9, "icmpRecv: %d bytes from %s\n", n, inet_ntoa(from.sin_addr));
     ip = (struct iphdr *) (void *) pkt;
     iphdrlen = ip->ip_hl << 2;
+#if HAVE_IP_HL 
+    iphdrlen = ip->ip_hl << 2;
+#else
+#if BYTE_ORDER == BIG_ENDIAN
+    iphdrlen = (ip->ip_vhl >> 4) << 2;
+#endif
+#if BYTE_ORDER == LITTLE_ENDIAN
+    iphdrlen = (ip->ip_vhl & 0xF) << 2;
+#endif
+#endif
     icmp = (struct icmphdr *) (void *) (pkt + iphdrlen);
     if (icmp->icmp_type == ICMP_ECHOREPLY) {
 	if (icmp->icmp_id == icmp_ident) {
@@ -344,7 +354,7 @@ icmpSend(int fd, icmpQueueData * queue)
 static void
 icmpLog(struct icmphdr *icmp, struct in_addr addr, int rtt, int hops)
 {
-    debug(0, 0, "icmpLog: %9d.%06d %-16s %d %-15.15s %dms %d hops\n",
+    debug(37, 2, "icmpLog: %9d.%06d %-16s %d %-15.15s %dms %d hops\n",
 	(int) current_time.tv_sec,
 	(int) current_time.tv_usec,
 	inet_ntoa(addr),

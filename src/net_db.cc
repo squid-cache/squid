@@ -102,7 +102,7 @@ netdbSendPing(int fdunused, struct hostent *hp, void *data)
     addr = inaddrFromHostent(hp);
     if ((n = netdbLookupHost(hostname)) == NULL)
 	n = netdbAdd(addr, hostname);
-    debug(37, 0, "netdbSendPing: pinging %s\n", hostname);
+    debug(37, 3, "netdbSendPing: pinging %s\n", hostname);
     icmpDomainPing(addr, hostname);
     n->next_ping_time = squid_curtime + NET_DB_TTL;
     xfree(hostname);
@@ -122,7 +122,7 @@ netdbHandlePingReply(struct sockaddr_in *from, int hops, int rtt)
 {
     netdbEntry *n;
     int N;
-    debug(37, 0, "netdbHandlePingReply: from %s\n", inet_ntoa(from->sin_addr));
+    debug(37, 3, "netdbHandlePingReply: from %s\n", inet_ntoa(from->sin_addr));
     if ((n = netdbLookupAddr(from->sin_addr)) == NULL)
 	return;
     N = ++n->n;
@@ -130,7 +130,7 @@ netdbHandlePingReply(struct sockaddr_in *from, int hops, int rtt)
 	N = 100;
     n->hops = ((n->hops * (N - 1)) + hops) / N;
     n->rtt = ((n->rtt * (N - 1)) + rtt) / N;
-    debug(37, 0, "netdbHandlePingReply: %s; rtt=%5.1f  hops=%4.1f\n",
+    debug(37, 3, "netdbHandlePingReply: %s; rtt=%5.1f  hops=%4.1f\n",
 	n->network,
 	n->rtt,
 	n->hops);
@@ -141,11 +141,11 @@ networkFromInaddr(struct in_addr a)
 {
     struct in_addr b = a;
     if (IN_CLASSC(b.s_addr))
-	b.s_addr &= IN_CLASSC_NET;
+	b.s_addr &= htonl(IN_CLASSC_NET);
     else if (IN_CLASSB(b.s_addr))
-	b.s_addr &= IN_CLASSB_NET;
+	b.s_addr &= htonl(IN_CLASSB_NET);
     else if (IN_CLASSA(b.s_addr))
-	b.s_addr &= IN_CLASSA_NET;
+	b.s_addr &= htonl(IN_CLASSA_NET);
     return b;
 }
 
