@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeader.cc,v 1.15 1998/03/05 00:42:42 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.16 1998/03/05 00:45:37 rousskov Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -443,7 +443,7 @@ httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_e
 	 * robust. Note that we should be able to parse any commonn format field
 	 */
 	if (!httpHeaderEntryParseInit(&e, field_start, field_end, mask))
-	    debug(55, 1) ("warning: ignoring unparseable http header field near '%s'\n",
+	    debug(55, 2) ("warning: ignoring unparseable http header field near '%s'\n",
 		getStringPrefix(field_start));
 	else
 	    httpHeaderAddParsedEntry(hdr, &e);
@@ -982,7 +982,7 @@ httpHeaderEntryParseByTypeInit(HttpHeaderEntry * e, int id, const HttpHeaderExtF
     case ftInt:
 	field.v_int = atoi(f->value);
 	if (!field.v_int && !isdigit(*f->value)) {
-	    debug(55, 1) ("cannot parse an int header field: id: %d, field: '%s: %s'\n",
+	    debug(55, 2) ("cannot parse an int header field: id: %d, field: '%s: %s'\n",
 		id, f->name, f->value);
 	    Headers[id].stat.errCount++;
 	    return 0;
@@ -1006,7 +1006,7 @@ httpHeaderEntryParseByTypeInit(HttpHeaderEntry * e, int id, const HttpHeaderExtF
     case ftPSCC:
 	field.v_pcc = httpHdrCcParseCreate(f->value);
 	if (!field.v_pcc) {
-	    debug(55, 0) ("failed to parse scc hdr: id: %d, field: '%s: %s'\n",
+	    debug(55, 2) ("failed to parse scc hdr: id: %d, field: '%s: %s'\n",
 		id, f->name, f->value);
 	    Headers[id].stat.errCount++;
 	    return 0;
@@ -1014,7 +1014,7 @@ httpHeaderEntryParseByTypeInit(HttpHeaderEntry * e, int id, const HttpHeaderExtF
 	break;
 
     default:
-	debug(55, 0) ("something went wrong with hdr field type analysis: id: %d, type: %d, field: '%s: %s'\n",
+	debug(55, 2) ("something went wrong with hdr field type analysis: id: %d, type: %d, field: '%s: %s'\n",
 	    id, type, f->name, f->value);
 	assert(0);
     }
@@ -1247,11 +1247,11 @@ httpSccParseInit(HttpScc * scc, const char *str)
 	type = httpHeaderIdByName(item, ilen,
 	    SccAttrs, SCC_ENUM_END, -1);
 	if (type < 0) {
-	    debug(55, 0) ("cc: unknown cache-directive: near '%s' in '%s'\n", item, str);
+	    debug(55, 2) ("cc: unknown cache-directive: near '%s' in '%s'\n", item, str);
 	    continue;
 	}
 	if (EBIT_TEST(scc->mask, type)) {
-	    debug(55, 0) ("cc: ignoring duplicate cache-directive: near '%s' in '%s'\n", item, str);
+	    debug(55, 2) ("cc: ignoring duplicate cache-directive: near '%s' in '%s'\n", item, str);
 	    SccAttrs[type].stat.repCount++;
 	    continue;
 	}
@@ -1263,7 +1263,7 @@ httpSccParseInit(HttpScc * scc, const char *str)
 	    if (p)
 		scc->max_age = (time_t) atoi(p);
 	    if (scc->max_age < 0) {
-		debug(55, 0) ("scc: invalid max-age specs near '%s'\n", item);
+		debug(55, 2) ("scc: invalid max-age specs near '%s'\n", item);
 		scc->max_age = -1;
 		EBIT_CLR(scc->mask, type);
 	    }

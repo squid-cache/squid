@@ -1,5 +1,5 @@
 /*
- * $Id: HttpStatusLine.cc,v 1.7 1998/03/05 00:42:44 wessels Exp $
+ * $Id: HttpStatusLine.cc,v 1.8 1998/03/05 00:45:37 rousskov Exp $
  *
  * DEBUG: section 57    HTTP Status-line
  * AUTHOR: Alex Rousskov
@@ -216,7 +216,7 @@ httpStatusString(http_status status)
 	break;
     default:
 	p = "Unknown";
-	debug(11, 0) ("Unknown HTTP status code: %d\n", status);
+	debug(57, 0) ("Unknown HTTP status code: %d\n", status);
 	break;
     }
     return p;
