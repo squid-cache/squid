@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.206 1997/11/23 06:52:36 wessels Exp $
+ * $Id: comm.cc,v 1.207 1997/11/28 19:47:22 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -926,7 +926,9 @@ comm_poll(time_t sec)
 		if (F->close_handler) {
 		    for (ch = F->close_handler; ch; ch = next) {
 			next = ch->next;
-			ch->handler(fd, ch->data);
+			if (cbdataValid(ch->data))
+			    ch->handler(fd, ch->data);
+			cbdataUnlock(ch->data);
 			safe_free(ch);
 		    }
 		} else if (F->timeout_handler) {
@@ -1122,6 +1124,7 @@ comm_remove_close_handler(int fd, PF * handler, void *data)
 	last->next = p->next;
     else
 	fd_table[fd].close_handler = p->next;
+    cbdataUnlock(p->data);
     safe_free(p);
 }
 
@@ -1264,7 +1267,9 @@ examine_select(fd_set * readfds, fd_set * writefds)
 	if (F->close_handler) {
 	    for (ch = F->close_handler; ch; ch = next) {
 		next = ch->next;
-		ch->handler(fd, ch->data);
+		if (cbdataValid(ch->data))
+		    ch->handler(fd, ch->data);
+		cbdataUnlock(ch->data);
 		safe_free(ch);
 	    }
 	} else if (F->timeout_handler) {
