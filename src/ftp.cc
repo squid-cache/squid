@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.58 1996/09/17 02:29:56 wessels Exp $
+ * $Id: ftp.cc,v 1.59 1996/09/18 21:39:31 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -507,6 +507,10 @@ ftpSendRequest(int fd, FtpData * data)
     }
     if (data->authenticated) {
 	strcat(buf, "-a ");
+    }
+    if (Config.Addrs.tcp_outgoing.s_addr != INADDR_NONE) {
+	sprintf(tbuf, "-o %s ", inet_ntoa(Config.Addrs.tcp_outgoing));
+	strcat(buf, tbuf);
     }
     strcat(buf, "-h ");		/* httpify */
     strcat(buf, "- ");		/* stdout */

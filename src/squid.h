@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.54 1996/09/18 20:13:05 wessels Exp $
+ * $Id: squid.h,v 1.55 1996/09/18 21:39:41 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -66,6 +66,9 @@
 #endif
 #if HAVE_NETDB_H && !defined(_SQUID_NETDB_H_)	/* protect NEXTSTEP */
 #define _SQUID_NETDB_H_
+#ifdef _SQUID_NEXT_
+#include <netinet/in_systm.h>
+#endif
 #include <netdb.h>
 #endif
 #if HAVE_PWD_H
@@ -282,6 +285,9 @@ extern struct in_addr local_addr;	/* main.c */
 extern char localhost[];
 extern struct in_addr any_addr;	/* comm.c */
 extern struct in_addr no_addr;	/* comm.c */
+extern int opt_udp_hit_obj;	/* main.c */
+extern int opt_mem_pools;	/* main.c */
+extern int opt_forwarded_for;	/* main.c */
 
 /* Prototypes and definitions which don't really deserve a seaprate
  * include file */

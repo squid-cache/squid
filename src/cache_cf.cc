@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.93 1996/09/18 20:13:02 wessels Exp $
+ * $Id: cache_cf.cc,v 1.94 1996/09/18 21:39:28 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -212,6 +212,7 @@ static char *safe_xstrdup __P((char *p));
 static void parseOnOff __P((int *));
 static void parseIntegerValue __P((int *));
 static char fatal_str[BUFSIZ];
+
 static void configDoConfigure __P((void));
 static void configFreeMemory __P((void));
 static void configSetFactoryDefaults __P((void));
@@ -252,6 +253,7 @@ static void parseTTLPattern __P((int icase, int force));
 static void parseVisibleHostnameLine __P((void));
 static void parseWAISRelayLine __P((void));
 static void parseMinutesLine __P((int *));
+static void ip_acl_destroy __P((ip_acl **));
 
 void
 self_destruct(void)
@@ -273,6 +275,18 @@ ip_acl_match(struct in_addr c, ip_acl * a)
 	return 0;
 }
 
+static void 
+ip_acl_destroy(a)
+     ip_acl **a;
+{
+    ip_acl *b;
+    ip_acl *n;
+    for (b = *a; b; b = n) {
+	n = b->next;
+	safe_free(b);
+    }
+    a = NULL;
+}
 
 ip_access_type
 ip_access_check(struct in_addr address, ip_acl * list)
@@ -435,8 +449,7 @@ intlistDestroy(intlist ** list)
 
 
 /* Use this #define in all the parse*() functions.  Assumes 
- * ** char *token is defined
- */
+ * char *token is defined */
 
 #define GetInteger(var) \
 	token = strtok(NULL, w_space); \
@@ -505,7 +518,6 @@ parseHostAclLine(void)
     while ((aclname = strtok(NULL, ", \t\n")))
 	neighbors_cf_acl(host, aclname);
 }
-
 
 static void
 parseMemLine(void)
@@ -1056,6 +1068,9 @@ parseConfigFile(char *file_name)
     aclDestroyDenyInfoList(&DenyInfoList);
     aclDestroyAccessList(&HTTPAccessList);
     aclDestroyAccessList(&ICPAccessList);
+#if DELAY_HACK
+    aclDestroyAccessList(&DelayAccessList);
+#endif
 
     if ((fp = fopen(file_name, "r")) == NULL) {
 	sprintf(fatal_str, "Unable to open configuration file: %s: %s",
@@ -1158,6 +1173,11 @@ parseConfigFile(char *file_name)
 
 	else if (!strcmp(token, "cache_stoplist"))
 	    parseWordlist(&Config.cache_stoplist);
+
+#if DELAY_HACK
+	else if (!strcmp(token, "delay_access"))
+	    aclParseAccessLine(&DelayAccessList);
+#endif
 
 	else if (!strcmp(token, "gopher"))
 	    parseGopherLine();
@@ -1329,6 +1349,14 @@ parseConfigFile(char *file_name)
 	else if (!strcmp(token, "ipcache_high"))
 	    parseIntegerValue(&Config.ipcache.high);
 
+	else if (!strcmp(token, "memory_pools"))
+	    parseOnOff(&opt_mem_pools);
+	else if (!strcmp(token, "udp_hit_obj"))
+	    parseOnOff(&opt_udp_hit_obj);
+	else if (!strcmp(token, "forwarded_for"))
+	    parseOnOff(&opt_forwarded_for);
+
+	/* If unknown, treat as a comment line */
 	else {
 	    debug(3, 0, "parseConfigFile: line %d unrecognized: '%s'\n",
 		config_lineno,
@@ -1427,12 +1455,14 @@ configFreeMemory(void)
     safe_free(Config.Announce.host);
     safe_free(Config.Announce.file);
     safe_free(Config.errHtmlText);
+    safe_free(Config.sslProxy.host);
     wordlistDestroy(&Config.cache_dirs);
     wordlistDestroy(&Config.hierarchy_stoplist);
     wordlistDestroy(&Config.local_domain_list);
     wordlistDestroy(&Config.inside_firewall_list);
     wordlistDestroy(&Config.dns_testname_list);
-    safe_free(Config.sslProxy.host);
+    ip_acl_destroy(&Config.local_ip_list);
+    ip_acl_destroy(&Config.firewall_ip_list);
     ttlFreeList();
 }
 

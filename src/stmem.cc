@@ -1,5 +1,5 @@
 /*
- * $Id: stmem.cc,v 1.23 1996/09/17 02:30:04 wessels Exp $
+ * $Id: stmem.cc,v 1.24 1996/09/18 21:39:41 wessels Exp $
  *
  * DEBUG: section 19    Memory Primitives
  * AUTHOR: Harvest Derived
@@ -376,8 +376,9 @@ put_free_thing(stmem_stats * thing, void *p)
     }
 }
 
-void
-put_free_request_t(void *req)
+void 
+put_free_request_t(req)
+     void *req;
 {
     put_free_thing(&request_pool, req);
 }
@@ -430,7 +431,12 @@ stmemInit(void)
     request_pool.max_pages = 0;
     mem_obj_pool.max_pages = 0;
 #endif
-
+    if (!opt_mem_pools) {
+	sm_stats.max_pages = 0;
+	disk_stats.max_pages = 0;
+	request_pool.max_pages = 0;
+	mem_obj_pool.max_pages = 0;
+    }
     init_stack(&sm_stats.free_page_stack, sm_stats.max_pages);
     init_stack(&disk_stats.free_page_stack, disk_stats.max_pages);
     init_stack(&request_pool.free_page_stack, request_pool.max_pages);

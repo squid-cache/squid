@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.81 1996/09/18 20:13:04 wessels Exp $
+ * $Id: main.cc,v 1.82 1996/09/18 21:39:37 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -119,6 +119,9 @@ int opt_zap_disk_store = 0;
 int opt_syslog_enable = 0;	/* disabled by default */
 int opt_no_ipcache = 0;		/* use ipcache by default */
 static int opt_send_signal = -1;	/* no signal to send */
+int opt_udp_hit_obj = 1;
+int opt_mem_pools = 1;
+int opt_forwarded_for = 1;
 int vhost_mode = 0;
 volatile int unbuffered_logs = 1;	/* debug and hierarchy unbuffered by default */
 volatile int shutdown_pending = 0;	/* set by SIGTERM handler (shut_down()) */

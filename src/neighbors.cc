@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.55 1996/09/17 02:30:01 wessels Exp $
+ * $Id: neighbors.cc,v 1.56 1996/09/18 21:39:37 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -175,6 +175,8 @@ edgeWouldBePinged(edge * e, request_t * request)
     struct _acl_list *a = NULL;
     aclCheck_t checklist;
 
+    if (e->type == EDGE_SIBLING && BIT_TEST(request->flags, REQ_NOCACHE))
+	return 0;
     if (e->domains == NULL && e->acls == NULL)
 	return do_ping;
     do_ping = 0;
@@ -203,24 +205,24 @@ getSingleParent(request_t * request, int *n)
     if (n == NULL && friends->n_parent < 1)
 	return NULL;
     for (e = friends->edges_head; e; e = e->next) {
-	if (edgeWouldBePinged(e, request)) {
-	    count++;
-	    if (e->type != EDGE_PARENT) {
-		/* we matched a neighbor, not a parent.  There
-		 * can be no single parent */
-		if (n == NULL)
-		    return NULL;
-		continue;
-	    }
-	    if (p) {
-		/* already have a parent, this makes the second,
-		 * so there can be no single parent */
-		if (n == NULL)
-		    return NULL;
-		continue;
-	    }
-	    p = e;
+	if (!edgeWouldBePinged(e, request))
+	    continue;
+	count++;
+	if (e->type != EDGE_PARENT) {
+	    /* we matched a neighbor, not a parent.  There
+	     * can be no single parent */
+	    if (n == NULL)
+		return NULL;
+	    continue;
 	}
+	if (p) {
+	    /* already have a parent, this makes the second,
+	     * so there can be no single parent */
+	    if (n == NULL)
+		return NULL;
+	    continue;
+	}
+	p = e;
     }
     /* Ok, all done checking the edges.  If only one parent matched, then
      * p will already point to it */
@@ -429,11 +431,6 @@ neighborsUdpPing(protodispatch_data * proto)
 	    e = friends->edges_head;
 	debug(15, 5, "neighborsUdpPing: Edge %s\n", e->host);
 
-	/* Don't resolve refreshes through neighbors because we don't resolve
-	 * misses through neighbors */
-	if (entry->flag & REFRESH_REQUEST && e->type == EDGE_SIBLING)
-	    continue;
-
 	/* skip any cache where we failed to connect() w/in the last 60s */
 	if (squid_curtime - e->last_fail_time < 60)
 	    continue;
@@ -460,7 +457,7 @@ neighborsUdpPing(protodispatch_data * proto)
 		url,
 		&echo_hdr,
 		&e->in_addr,
-		entry->flag,
+		proto->request->flags,
 		ICP_OP_DECHO,
 		LOG_TAG_NONE,
 		PROTO_NONE);
@@ -470,7 +467,7 @@ neighborsUdpPing(protodispatch_data * proto)
 		url,
 		&e->header,
 		&e->in_addr,
-		entry->flag,
+		proto->request->flags,
 		ICP_OP_QUERY,
 		LOG_TAG_NONE,
 		PROTO_NONE);

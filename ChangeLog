@@ -15,6 +15,7 @@ Changes to squid-1.1.beta3 ():
 	  replies.
 	- Simplified storeGet().
 	- Removed meta_data.hash_links member.
+	- Includes squid-1.0 changes up to 1.0.16.
 
 Changes to squid-1.1.beta2 (September 16, 1996):
 
@@ -291,6 +292,50 @@ Changes to squid-1.1.alpha2:
 	- Added support for RFC931/ident
 
 ==============================================================================
+
+Changes to squid-1.0.16 (September 16, 1996):
+
+	- Fixed shadow passwd support (John Saunders).
+	- Added checkFailureRatio() to detect high fail:success ratios
+	  and go into ICP "hit only" mode for 5 minutes when the ratio
+	  exceeds 1.
+	- Added ip_acl_destroy() to reset 'local_ip' and 'firewall_ip'
+	  on HUP signal.
+
+Changes to squid-1.0.15 (September 13, 1996):
+
+	- Fixed stupid bugs from moving icpState->flags to
+	  request->flags.
+
+Changes to squid-1.0.14 (September 13, 1996):
+
+	- Added '#if DELAY_HACK' code for Mike Groeneweg
+	  <mikeg@scorpion.murdoch.edu.au>.
+	- Fixed debug bug in ttlSet().
+	- Moved icpState->flags to request->flags.
+	- Fixed edgeWouldBePinged() to skip SIBLINGS and NO-CACHE
+	  requests.
+	- Fixed bad SET/TEST in httpProcessReplyHeader() (Miguel A.L.
+	  Paraz).
+
+Changes to squid-1.0.13 (September 12, 1996):
+
+	- Fixed ftpget parsing PASV reply bug (Carson Gaspar).
+	- Forced include of <netinet/in_systm.h> for NeXT (Holger
+	  Hoffstaette).
+	- Promulgate tcp_outgoing_addr to ftpget with -o option (Edward
+	  Moy).
+	- add Date: header to Squid-generated Gopher objects (Geoffrey
+	  Keating).
+	- cachemgr.cgi HTML fixes (Cord Beermann).
+	- Collapsed some config parsing functions to parseOnOff().
+	- Added config option: memory_pools on|off
+	- Added config option: udp_hit_obj on|off
+	- Added config option: forwarded_for on|off
+	- Copied better stmem.c and stack.c routines from v1.1 code.
+	- Added support for HTTP/1.1 Cache-Controls 'private' and 
+	  'no-cache'.
+	- Copied dnsserver "hello/alive" test from v1.1 code.
 
 Changes to squid-1.0.12 (September 3, 1996):
 
