@@ -1,11 +1,5 @@
-
-
-
-
-
-
 /*
- * $Id: client.cc,v 1.35 1997/10/25 17:22:35 wessels Exp $
+ * $Id: client.cc,v 1.36 1997/10/25 17:58:08 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -116,32 +110,38 @@
 #endif
 
 /* Local functions */
-static int client_comm_connect(int sock, char *dest_host, u_short dest_port);
+static int client_comm_connect(int, char *, u_short, struct timeval *);
 static void usage(const char *progname);
+static int Now(struct timeval *);
+static SIGHDLR catch;
 
 static void
 usage(const char *progname)
 {
     fprintf(stderr,
-	"Usage: %s [-ars] [-i IMS] [-h host] [-p port] [-m method] [-t count] url\n"
+	"Usage: %s [-ars] [-i IMS] [-h host] [-p port] [-m method] [-t count] [-I ping-interval] url\n"
 	"Options:\n"
-	"    -a         Do NOT include Accept: header.\n"
-	"    -r         Force cache to reload URL.\n"
-	"    -s         Silent.  Do not print data to stdout.\n"
-	"    -i IMS     If-Modified-Since time (in Epoch seconds).\n"
-	"    -h host    Retrieve URL from cache on hostname.  Default is localhost.\n"
-	"    -p port    Port number of cache.  Default is %d.\n"
-	"    -m method  Request method, default is GET.\n"
-	"    -t count   Trace count cache-hops\n",
+	"    -a           Do NOT include Accept: header.\n"
+	"    -r           Force cache to reload URL.\n"
+	"    -s           Silent.  Do not print data to stdout.\n"
+	"    -i IMS       If-Modified-Since time (in Epoch seconds).\n"
+	"    -h host      Retrieve URL from cache on hostname.  Default is localhost.\n"
+	"    -p port      Port number of cache.  Default is %d.\n"
+	"    -m method    Request method, default is GET.\n"
+	"    -t count     Trace count cache-hops\n"
+	"    -g count     Ping mode, \"count\" iterations (0 to loop until interrupted).\n"
+	"    -I interval  Ping interval in seconds (default 1 second).\n",
 	progname, CACHE_HTTP_PORT);
     exit(1);
 }
 
+static int interrupted = 0;
 int
 main(int argc, char *argv[])
 {
     int conn, c, len, bytesWritten;
     int port, to_stdout, reload;
+    int ping, pcount;
     int keep_alive = 0;
     int opt_noaccept = 0;
     char url[BUFSIZ], msg[BUFSIZ], buf[BUFSIZ], hostname[BUFSIZ];
@@ -149,12 +149,19 @@ main(int argc, char *argv[])
     extern char *optarg;
     time_t ims = 0;
     int max_forwards = -1;
+    struct timeval tv1, tv2;
+    int i = 0, loops;
+    long ping_int;
+    long ping_min = 0, ping_max = 0, ping_sum = 0, ping_mean = 0;
 
     /* set the defaults */
     strcpy(hostname, "localhost");
     port = CACHE_HTTP_PORT;
     to_stdout = 1;
     reload = 0;
+    ping = 0;
+    pcount = 0;
+    ping_int = 1 * 1000;
 
     if (argc < 2) {
 	usage(argv[0]);		/* need URL */
@@ -162,7 +169,7 @@ main(int argc, char *argv[])
 	strcpy(url, argv[argc - 1]);
 	if (url[0] == '-')
 	    usage(argv[0]);
-	while ((c = getopt(argc, argv, "ah:i:km:p:rst:?")) != -1)
+	while ((c = getopt(argc, argv, "ah:i:km:p:rst:g:I:?")) != -1)
 	    switch (c) {
 	    case 'a':
 		opt_noaccept = 1;
@@ -195,27 +202,20 @@ main(int argc, char *argv[])
 		method = xstrdup("TRACE");
 		max_forwards = atoi(optarg);
 		break;
+	    case 'g':
+		ping = 1;
+		pcount = atoi(optarg);
+		to_stdout = 0;
+		break;
+	    case 'I':
+		if ((ping_int = atoi(optarg) * 1000) <= 0)
+		    usage(argv[0]);
+		break;
 	    case '?':		/* usage */
 	    default:
 		usage(argv[0]);
 		break;
 	    }
-    }
-    /* Connect to the server */
-    if ((conn = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
-	perror("client: socket");
-	exit(1);
-    }
-    if (client_comm_connect(conn, hostname, port) < 0) {
-	if (errno == 0) {
-	    fprintf(stderr, "client: ERROR: Cannot connect to %s:%d: Host unknown.\n", hostname, port);
-	} else {
-	    char tbuf[BUFSIZ];
-	    snprintf(tbuf, BUFSIZ, "client: ERROR: Cannot connect to %s:%d",
-		hostname, port);
-	    perror(tbuf);
-	}
-	exit(1);
     }
     /* Build the HTTP request */
     snprintf(msg, BUFSIZ, "%s %s HTTP/1.0\r\n", method, url);
@@ -242,39 +242,134 @@ main(int argc, char *argv[])
     snprintf(buf, BUFSIZ, "\r\n");
     strcat(msg, buf);
 
-    /* Send the HTTP request */
-    bytesWritten = write(conn, msg, strlen(msg));
-    if (bytesWritten < 0) {
-	perror("client: ERROR: write");
-	exit(1);
-    } else if (bytesWritten != strlen(msg)) {
-	fprintf(stderr, "client: ERROR: Cannot send request?: %s\n", msg);
-	exit(1);
+    if (ping) {
+#if HAVE_SIGACTION
+	struct sigaction sa, osa;
+	if (sigaction(SIGINT, NULL, &osa) == 0 && osa.sa_handler == SIG_DFL) {
+	    sa.sa_handler = catch;
+	    sa.sa_flags = 0;
+	    sigemptyset(&sa.sa_mask);
+	    (void) sigaction(SIGINT, &sa, NULL);
+	}
+#else
+	void (*osig) ();
+	if ((osig = signal(SIGINT, catch)) != SIG_DFL)
+	    (void) signal(SIGINT, osig);
+#endif
     }
-    /* Read the data */
-    while ((len = read(conn, buf, sizeof(buf))) > 0) {
-	if (to_stdout)
-	    fwrite(buf, len, 1, stdout);
+    loops = ping ? pcount : 1;
+    for (i = 0; loops == 0 || i < loops; i++) {
+	/* Connect to the server */
+	if ((conn = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
+	    perror("client: socket");
+	    exit(1);
+	}
+	if (client_comm_connect(conn, hostname, port, ping ? &tv1 : NULL) < 0) {
+	    if (errno == 0) {
+		fprintf(stderr, "client: ERROR: Cannot connect to %s:%d: Host unknown.\n", hostname, port);
+	    } else {
+		char tbuf[BUFSIZ];
+		sprintf(tbuf, "client: ERROR: Cannot connect to %s:%d",
+		    hostname, port);
+		perror(tbuf);
+	    }
+	    exit(1);
+	}
+	/* Send the HTTP request */
+	bytesWritten = write(conn, msg, strlen(msg));
+	if (bytesWritten < 0) {
+	    perror("client: ERROR: write");
+	    exit(1);
+	} else if (bytesWritten != strlen(msg)) {
+	    fprintf(stderr, "client: ERROR: Cannot send request?: %s\n", msg);
+	    exit(1);
+	}
+	/* Read the data */
+	while ((len = read(conn, buf, sizeof(buf))) > 0) {
+	    if (to_stdout)
+		fwrite(buf, len, 1, stdout);
+	}
+	(void) close(conn);	/* done with socket */
+
+	if (interrupted)
+	    break;
+
+	if (ping) {
+	    struct tm *tmp;
+	    time_t t2s;
+	    long elapsed_msec;
+
+	    (void) Now(&tv2);
+	    elapsed_msec = tvSubMsec(tv1, tv2);
+	    t2s = tv2.tv_sec;
+	    tmp = localtime(&t2s);
+	    fprintf(stderr, "%d-%02d-%02d %02d:%02d:%02d [%d]: %ld.%03ld secs\n",
+		tmp->tm_year + 1900, tmp->tm_mon + 1, tmp->tm_mday,
+		tmp->tm_hour, tmp->tm_min, tmp->tm_sec, i + 1,
+		elapsed_msec / 1000, elapsed_msec % 1000);
+	    if (i == 0 || elapsed_msec < ping_min)
+		ping_min = elapsed_msec;
+	    if (i == 0 || elapsed_msec > ping_max)
+		ping_max = elapsed_msec;
+	    ping_sum += elapsed_msec;
+	    /* Delay until next "ping_int" boundary */
+	    if ((loops == 0 || i + 1 < loops) && elapsed_msec < ping_int) {
+		struct timeval tvs;
+		long msec_left = ping_int - elapsed_msec;
+
+		tvs.tv_sec = msec_left / 1000;
+		tvs.tv_usec = (msec_left % 1000) * 1000;
+		select(0, NULL, NULL, NULL, &tvs);
+	    }
+	}
     }
-    (void) close(conn);		/* done with socket */
+
+    if (ping && i) {
+	ping_mean = ping_sum / i;
+	fprintf(stderr, "%d requests, round-trip (secs) min/avg/max = "
+	    "%ld.%03ld/%ld.%03ld/%ld.%03ld\n", i,
+	    ping_min / 1000, ping_min % 1000, ping_mean / 1000, ping_mean % 1000,
+	    ping_max / 1000, ping_max % 1000);
+    }
     exit(0);
     /*NOTREACHED */
     return 0;
 }
 
 static int
-client_comm_connect(int sock, char *dest_host, u_short dest_port)
+client_comm_connect(int sock, char *dest_host, u_short dest_port, struct timeval *tvp)
 {
-    const struct hostent *hp;
+    static const struct hostent *hp = NULL;
     static struct sockaddr_in to_addr;
 
     /* Set up the destination socket address for message to send to. */
-    to_addr.sin_family = AF_INET;
+    if (hp == NULL) {
+	to_addr.sin_family = AF_INET;
 
-    if ((hp = gethostbyname(dest_host)) == 0) {
-	return (-1);
+	if ((hp = gethostbyname(dest_host)) == 0) {
+	    return (-1);
+	}
+	xmemcpy(&to_addr.sin_addr, hp->h_addr, hp->h_length);
+	to_addr.sin_port = htons(dest_port);
     }
-    xmemcpy(&to_addr.sin_addr, hp->h_addr, hp->h_length);
-    to_addr.sin_port = htons(dest_port);
+    if (tvp)
+	(void) Now(tvp);
     return connect(sock, (struct sockaddr *) &to_addr, sizeof(struct sockaddr_in));
+}
+
+static int
+Now(struct timeval *tp)
+{
+#if GETTIMEOFDAY_NO_TZP
+    return gettimeofday(tp);
+#else
+    return gettimeofday(tp, NULL);
+#endif
+}				/* ARGSUSED */
+
+static void
+catch(int sig)
+{
+    interrupted = 1;
+    fprintf(stderr, "Interrupted.\n");
 }
