@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemPool.c,v 1.17 2003/06/19 13:12:00 robertc Exp $
+ * $Id: MemPool.c,v 1.18 2003/06/19 19:53:15 hno Exp $
  *
  * DEBUG: section 63    Low Level Memory Pool Management
  * AUTHOR: Alex Rousskov, Andres Kroonmaa
@@ -577,10 +577,11 @@ memPoolConvertFreeCacheToChunkSpecific(MemPool * const pool)
      */
 
     while ((Free = pool->freeCache) != NULL) {
+	MemChunk *chunk;
 	lastPool = pool;
 	pool->allChunks = splay_splay((const void **)&Free, pool->allChunks, memCompObjChunks);
 	assert(splayLastResult == 0);
-	MemChunk *chunk = pool->allChunks->data;
+	chunk = pool->allChunks->data;
 	assert(chunk->inuse_count > 0);
 	chunk->inuse_count--;
 	pool->freeCache = *(void **)Free;	/* remove from global cache */
