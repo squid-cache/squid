@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1123.c,v 1.3 1996/11/04 18:14:02 wessels Exp $
+ * $Id: rfc1123.c,v 1.4 1996/11/06 22:21:23 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -268,7 +268,7 @@ mkrfc1123(time_t t)
 }
 
 const char *
-mkhttpdlogtime(const time_t *t)
+mkhttpdlogtime(const time_t * t)
 {
     static char buf[128];
 

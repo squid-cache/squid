@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.98 1996/11/06 22:14:32 wessels Exp $
+ * $Id: comm.cc,v 1.99 1996/11/06 22:21:29 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -160,8 +160,8 @@ commCancelRWHandler(int fd)
 {
     RWStateData *RWState = fd_table[fd].rwstate;
     if (RWState) {
-        RWState->handler = NULL;
-        RWState->handler_data = NULL;
+	RWState->handler = NULL;
+	RWState->handler_data = NULL;
     }
 }
 
