@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.6 1998/02/02 19:39:25 wessels Exp $
+# $Id: Makefile.in,v 1.7 1999/04/07 19:48:56 wessels Exp $
 #
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
@@ -46,7 +46,9 @@ ICONS		= anthony-binhex.gif \
 		  anthony-xbm.gif \
 		  anthony-xpm.gif
 
-all: anthony-xpm.gif
+all:
+
+unshar: anthony-xpm.gif
 
 anthony-xpm.gif: $(SHARFILE)
 	$(SH) $(SHARFILE)
