@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.107 1996/11/22 05:07:12 wessels Exp $
+ * $Id: comm.cc,v 1.108 1996/11/22 07:06:36 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -227,7 +227,8 @@ commBind(int s, struct in_addr in_addr, u_short port)
     debug(50, 0, "commBind: Cannot bind socket FD %d to %s:%d: %s\n",
 	s,
 	S.sin_addr.s_addr == INADDR_ANY ? "*" : inet_ntoa(S.sin_addr),
-	port, xstrerror());
+	(int) port,
+	xstrerror());
     return COMM_ERROR;
 }
 
