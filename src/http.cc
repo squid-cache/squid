@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.263 1998/04/05 20:32:45 wessels Exp $
+ * $Id: http.cc,v 1.264 1998/04/24 05:05:12 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -641,6 +641,9 @@ httpBuildRequestHeader(request_t * request,
 	    continue;
 	}
 	if (strncasecmp(xbuf, "Host:", 5) == 0) {
+	    /* Don't use client's Host: header for redirected requests */
+	    if (EBIT_TEST(request->flags, REQ_REDIRECTED))
+		continue;
 	    EBIT_SET(hdr_flags, HDR_HOST);
 	} else if (strncasecmp(xbuf, "Cache-Control:", 14) == 0) {
 	    for (s = xbuf + 14; *s && isspace(*s); s++);
@@ -686,6 +689,10 @@ httpBuildRequestHeader(request_t * request,
     httpAppendRequestHeader(hdr_out, fwdbuf, &len, out_sz, 1);
     if (!EBIT_TEST(hdr_flags, HDR_HOST)) {
 	snprintf(ybuf, YBUF_SZ, "Host: %s", orig_request->host);
+	if (orig_request->port != urlDefaultPort(orig_request->protocol)) {
+	    int l = strlen(ybuf);
+	    snprintf(ybuf+l, YBUF_SZ-l, ":%d", (int) orig_request->port);
+	}
 	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
     }
     if (!EBIT_TEST(cc_flags, CCC_MAXAGE)) {

@@ -669,14 +669,16 @@ struct _clientHttpRequest {
     const char *lookup_type;	/* temporary hack: storeGet() result: HIT/MISS/NONE */
 #endif
     http_status http_code;
-    int accel;
-    int internal;		/* Set to true on /squid-internal/ request, to prevent looping */
     struct timeval start;
     float http_ver;
     int redirect_state;
     aclCheck_t *acl_checklist;	/* need ptr back so we can unreg if needed */
     clientHttpRequest *next;
     AccessLogEntry al;
+    struct {
+	int accel:1;
+	int internal:1;
+    } flags;
 };
 
 struct _ConnStateData {
