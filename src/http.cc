@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.208 1997/10/30 03:31:22 wessels Exp $
+ * $Id: http.cc,v 1.209 1997/10/31 19:34:59 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -153,6 +153,7 @@ typedef enum {
     HDR_SET_COOKIE,
     HDR_UPGRADE,
     HDR_WARNING,
+    HDR_PROXY_KEEPALIVE,
     HDR_MISC_END
 } http_hdr_misc_t;
 
@@ -408,6 +409,10 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 	} else if (!strncasecmp(t, "Set-Cookie:", 11)) {
 	    EBIT_SET(reply->misc_headers, HDR_SET_COOKIE);
 	    ReplyHeaderStats.misc[HDR_SET_COOKIE]++;
+	} else if (!strncasecmp(t, "Proxy-Connection:", 17)) {
+	    for (t += 14; isspace(*t); t++);
+	    if (!strcasecmp(t, "Keep-Alive"))
+		EBIT_SET(reply->misc_headers, HDR_PROXY_KEEPALIVE);
 	}
     }
     put_free_4k_page(headers);
@@ -437,12 +442,12 @@ httpCachableReply(HttpStateData * httpState)
     case 300:			/* Multiple Choices */
     case 301:			/* Moved Permanently */
     case 410:			/* Gone */
-	/* don't cache objects from neighbors w/o LMT, Date, or Expires */
+	/* don't cache objects from peers w/o LMT, Date, or Expires */
 	if (reply->date > -1)
 	    return 1;
 	else if (reply->last_modified > -1)
 	    return 1;
-	else if (!httpState->neighbor)
+	else if (!httpState->peer)
 	    return 1;
 	else if (reply->expires > -1)
 	    return 1;
@@ -540,6 +545,9 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	}
 	if (EBIT_TEST(reply->cache_control, SCC_PROXYREVALIDATE))
 	    BIT_SET(entry->flag, ENTRY_REVALIDATE);
+	if (EBIT_TEST(reply->misc_headers, HDR_PROXY_KEEPALIVE))
+	    if (httpState->peer)
+		httpState->peer->stats.n_keepalives_recv++;
     }
 }
 
@@ -718,6 +726,7 @@ httpAppendRequestHeader(char *hdr, const char *line, size_t * sz, size_t max, in
     *sz = n;
 }
 
+#define YBUF_SZ (MAX_URL+32)
 size_t
 httpBuildRequestHeader(request_t * request,
     request_t * orig_request,
@@ -728,7 +737,7 @@ httpBuildRequestHeader(request_t * request,
     int cfd,
     int flags)
 {
-    LOCAL_ARRAY(char, ybuf, MAX_URL + 32);
+    LOCAL_ARRAY(char, ybuf, YBUF_SZ);
     char *xbuf = get_free_4k_page();
     char *viabuf = get_free_4k_page();
     char *fwdbuf = get_free_4k_page();
@@ -748,13 +757,13 @@ httpBuildRequestHeader(request_t * request,
     debug(11, 3) ("httpBuildRequestHeader: INPUT:\n%s\n", hdr_in);
     xstrncpy(fwdbuf, "X-Forwarded-For: ", 4096);
     xstrncpy(viabuf, "Via: ", 4096);
-    snprintf(ybuf, MAX_URL + 32, "%s %s HTTP/1.0",
+    snprintf(ybuf, YBUF_SZ, "%s %s HTTP/1.0",
 	RequestMethodStr[request->method],
 	*request->urlpath ? request->urlpath : "/");
     httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
     /* Add IMS header */
     if (entry && entry->lastmod && request->method == METHOD_GET) {
-	snprintf(ybuf, MAX_URL + 32, "If-Modified-Since: %s", mkrfc1123(entry->lastmod));
+	snprintf(ybuf, YBUF_SZ, "If-Modified-Since: %s", mkrfc1123(entry->lastmod));
 	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
 	EBIT_SET(hdr_flags, HDR_IMS);
     }
@@ -806,24 +815,24 @@ httpBuildRequestHeader(request_t * request,
     }
     hdr_len = t - hdr_in;
     if (Config.fake_ua && strstr(hdr_out, "User-Agent") == NULL) {
-	snprintf(ybuf, MAX_URL + 32, "User-Agent: %s", Config.fake_ua);
+	snprintf(ybuf, YBUF_SZ, "User-Agent: %s", Config.fake_ua);
 	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 0);
     }
     /* Append Via: */
     /* snprintf would fail here too */
-    snprintf(ybuf, MAX_URL + 32, "%3.1f %s", orig_request->http_ver, ThisCache);
+    snprintf(ybuf, YBUF_SZ, "%3.1f %s", orig_request->http_ver, ThisCache);
     strcat(viabuf, ybuf);
     httpAppendRequestHeader(hdr_out, viabuf, &len, out_sz, 1);
     /* Append to X-Forwarded-For: */
     strcat(fwdbuf, cfd < 0 ? "unknown" : fd_table[cfd].ipaddr);
     httpAppendRequestHeader(hdr_out, fwdbuf, &len, out_sz, 1);
     if (!EBIT_TEST(hdr_flags, HDR_HOST)) {
-	snprintf(ybuf, MAX_URL + 32, "Host: %s", orig_request->host);
+	snprintf(ybuf, YBUF_SZ, "Host: %s", orig_request->host);
 	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
     }
     if (!EBIT_TEST(cc_flags, CCC_MAXAGE)) {
 	url = entry ? entry->url : urlCanonical(orig_request, NULL);
-	snprintf(ybuf, MAX_URL + 32, "Cache-control: Max-age=%d", (int) getMaxAge(url));
+	snprintf(ybuf, YBUF_SZ, "Cache-control: Max-age=%d", (int) getMaxAge(url));
 	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
 	if (request->urlpath) {
 	    assert(strstr(url, request->urlpath));
@@ -832,9 +841,9 @@ httpBuildRequestHeader(request_t * request,
     /* maybe append Connection: Keep-Alive */
     if (BIT_TEST(flags, HTTP_KEEPALIVE)) {
 	if (BIT_TEST(flags, HTTP_PROXYING)) {
-	    snprintf(ybuf, MAX_URL + 32, "Proxy-Connection: Keep-Alive");
+	    snprintf(ybuf, YBUF_SZ, "Proxy-Connection: Keep-Alive");
 	} else {
-	    snprintf(ybuf, MAX_URL + 32, "Connection: Keep-Alive");
+	    snprintf(ybuf, YBUF_SZ, "Connection: Keep-Alive");
 	}
 	httpAppendRequestHeader(hdr_out, ybuf, &len, out_sz, 1);
     }
@@ -864,6 +873,8 @@ httpSendRequest(int fd, void *data)
     int buftype = 0;
     StoreEntry *entry = httpState->entry;
     int cfd;
+    static int xcount = 0;
+    peer *p = httpState->peer;
 
     debug(11, 5) ("httpSendRequest: FD %d: httpState %p.\n", fd, httpState);
     buflen = strlen(req->urlpath);
@@ -889,10 +900,18 @@ httpSendRequest(int fd, void *data)
 	cfd = -1;
     else
 	cfd = entry->mem_obj->fd;
-    if (httpState->neighbor != NULL)
+    if (p != NULL)
 	BIT_SET(httpState->flags, HTTP_PROXYING);
-    if (req->method == METHOD_GET)
+    if (req->method == METHOD_GET) {
 	BIT_SET(httpState->flags, HTTP_KEEPALIVE);
+	if (p) {
+	    p->stats.n_keepalives_sent++;
+	    if ((xcount++ & 0x3F) == 0)
+		debug(0, 0) ("%s Keepalive Ratio = %f\n",
+		    p->host,
+		    p->stats.n_keepalives_recv / p->stats.n_keepalives_sent);
+	}
+    }
     len = httpBuildRequestHeader(req,
 	httpState->orig_request ? httpState->orig_request : req,
 	entry,
@@ -953,7 +972,7 @@ httpBuildState(int fd, StoreEntry * entry, request_t * orig_request, peer * e)
 	request->port = e->http_port;
 	xstrncpy(request->urlpath, entry->url, MAX_URL);
 	httpState->request = requestLink(request);
-	httpState->neighbor = e;
+	httpState->peer = e;
 	httpState->orig_request = requestLink(orig_request);
 	BIT_SET(request->flags, REQ_PROXYING);
     } else {
@@ -1059,8 +1078,8 @@ httpConnectDone(int fd, int status, void *data)
 	err->request = requestLink(request);
 	errorAppendEntry(entry, err);
 	storeAbort(entry, 0);
-	if (httpState->neighbor)
-	    peerCheckConnectStart(httpState->neighbor);
+	if (httpState->peer)
+	    peerCheckConnectStart(httpState->peer);
 	comm_close(fd);
     } else {
 	fd_note(fd, entry->url);

@@ -394,10 +394,10 @@ struct _HttpStateData {
     request_t *request;
     char *reply_hdr;
     int reply_hdr_state;
-    peer *neighbor;		/* neighbor request made to */
+    peer *peer;			/* peer request made to */
     int eof;			/* reached end-of-object? */
     request_t *orig_request;
-    int fd;			/* needed as identifier for ipcache */
+    int fd;
     int flags;
 };
 
@@ -559,6 +559,8 @@ struct _peer {
 	int rtt;
 	int counts[ICP_OP_END];
 	int ignored_replies;
+	int n_keepalives_sent;
+	int n_keepalives_recv;
     } stats;
     u_short icp_port;
     u_short http_port;
