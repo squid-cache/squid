@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICP.h,v 1.1 2002/10/13 20:34:57 robertc Exp $
+ * $Id: ICP.h,v 1.2 2002/10/21 14:00:01 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -81,6 +81,20 @@ class ICPState {
 };
 
 #endif
+
+typedef struct _icpUdpData icpUdpData;
+struct _icpUdpData {
+    struct sockaddr_in address;
+    void *msg;
+    size_t len;
+    icpUdpData *next;
+#ifndef LESS_TIMING
+    struct timeval start;
+#endif
+    log_type logcode;
+    struct timeval queue_time;
+};
+
 
 request_t *
           icpGetRequest(char *url, int reqnum, int fd, struct sockaddr_in *from);

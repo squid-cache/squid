@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.335 2002/10/15 01:00:22 adrian Exp $
+ * $Id: ftp.cc,v 1.336 2002/10/21 14:00:02 adrian Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1118,7 +1118,7 @@ ftpWriteCommand(const char *buf, FtpStateData * ftpState)
     safe_free(ftpState->ctrl.last_command);
     safe_free(ftpState->ctrl.last_reply);
     ftpState->ctrl.last_command = xstrdup(buf);
-    comm_write(ftpState->ctrl.fd,
+    comm_old_write(ftpState->ctrl.fd,
 	xstrdup(buf),
 	strlen(buf),
 	ftpWriteCommandCallback,
@@ -2208,7 +2208,7 @@ ftpRequestBody(char *buf, ssize_t size, void *data)
     ftpState->data.offset = size;
     if (size > 0) {
 	/* DataWrite */
-	comm_write(ftpState->data.fd, buf, size, ftpDataWriteCallback, ftpState, NULL);
+	comm_old_write(ftpState->data.fd, buf, size, ftpDataWriteCallback, ftpState, NULL);
     } else if (size < 0) {
 	/* Error */
 	debug(9, 1) ("ftpRequestBody: request aborted");

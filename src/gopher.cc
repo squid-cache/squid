@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.175 2002/10/14 08:16:58 robertc Exp $
+ * $Id: gopher.cc,v 1.176 2002/10/21 14:00:02 adrian Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -792,7 +792,7 @@ gopherSendRequest(int fd, void *data)
 	snprintf(buf, 4096, "%s\r\n", gopherState->request);
     }
     debug(10, 5) ("gopherSendRequest: FD %d\n", fd);
-    comm_write(fd,
+    comm_old_write(fd,
 	buf,
 	strlen(buf),
 	gopherSendComplete,

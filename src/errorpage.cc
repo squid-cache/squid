@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.178 2002/10/13 20:35:00 robertc Exp $
+ * $Id: errorpage.cc,v 1.179 2002/10/21 14:00:02 adrian Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -369,7 +369,7 @@ errorSend(int fd, ErrorState * err)
     /* moved in front of errorBuildBuf @?@ */
     err->flags.flag_cbdata = 1;
     rep = errorBuildReply(err);
-    comm_write_mbuf(fd, httpReplyPack(rep), errorSendComplete, err);
+    comm_old_write_mbuf(fd, httpReplyPack(rep), errorSendComplete, err);
     httpReplyDestroy(rep);
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.435 2002/10/14 08:16:59 robertc Exp $
+ * $Id: structs.h,v 1.436 2002/10/21 14:00:03 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -867,18 +867,6 @@ struct _http_state_flags {
     unsigned int proxying:1;
     unsigned int keepalive:1;
     unsigned int only_if_cached:1;
-};
-
-struct _icpUdpData {
-    struct sockaddr_in address;
-    void *msg;
-    size_t len;
-    icpUdpData *next;
-#ifndef LESS_TIMING
-    struct timeval start;
-#endif
-    log_type logcode;
-    struct timeval queue_time;
 };
 
 struct _ping_data {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.71 2002/10/21 09:18:40 adrian Exp $
+ * $Id: icp_v2.cc,v 1.72 2002/10/21 14:00:02 adrian Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -47,6 +47,7 @@ static void icpCount(void *, int, size_t, int);
  * to call icpUdpSendQueue.
  */
 static icpUdpData *IcpQueueTail = NULL;
+static icpUdpData *IcpQueueHead = NULL;
 
 /* icp_common_t */
 _icp_common_t::_icp_common_t() : opcode(ICP_INVALID), version(0), length(0), reqnum(0), flags(0), pad(0), shostid(0)
