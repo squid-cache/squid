@@ -120,8 +120,7 @@ typedef enum {
 typedef enum {
     MGR_NONE,
     MGR_CLIENT_LIST,
-    MGR_CONFIG,
-    MGR_CONFIG_FILE,
+    MGR_CONFIGURATION,
     MGR_DNSSERVERS,
     MGR_FILEDESCRIPTORS,
     MGR_FQDNCACHE,

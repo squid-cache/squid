@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.218 1997/08/25 02:17:45 wessels Exp $
+ * $Id: cache_cf.cc,v 1.219 1997/08/25 03:51:47 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -58,6 +58,7 @@ static void parseTimeLine _PARAMS((time_t * tptr, const char *units));
 static void parse_string _PARAMS((char **));
 static void parse_wordlist _PARAMS((wordlist **));
 static void default_all _PARAMS((void));
+static void defaults_if_none _PARAMS((void));
 static int parse_line _PARAMS((char *));
 static void parseBytesLine _PARAMS((size_t * bptr, const char *units));
 static size_t parseBytesUnits _PARAMS((const char *unit));
@@ -204,6 +205,7 @@ parseConfigFile(const char *file_name)
 	}
     }
     fclose(fp);
+    defaults_if_none();
     configDoConfigure();
     return 0;
 }
@@ -331,9 +333,9 @@ parseBytesUnits(const char *unit)
  *****************************************************************************/
 
 static void
-dump_acl(acl * acl)
+dump_acl(StoreEntry *entry, const char *name, acl * acl)
 {
-    assert(0);
+    storeAppendPrintf(entry, "%s -- UNIMPLEMENTED\n", name);
 }
 
 static void
@@ -349,9 +351,9 @@ free_acl(acl ** acl)
 }
 
 static void
-dump_acl_access(struct _acl_access *head)
+dump_acl_access(StoreEntry *entry, const char *name, struct _acl_access *head)
 {
-    assert(0);
+    storeAppendPrintf(entry, "%s -- UNIMPLEMENTED\n", name);
 }
 
 static void
@@ -367,9 +369,9 @@ free_acl_access(struct _acl_access **head)
 }
 
 static void
-dump_address(struct in_addr addr)
+dump_address(StoreEntry *entry, const char *name, struct in_addr addr)
 {
-    printf("%s", inet_ntoa(addr));
+    storeAppendPrintf(entry, "%s %s\n", name, inet_ntoa(addr));
 }
 
 static void
@@ -395,9 +397,25 @@ free_address(struct in_addr *addr)
 }
 
 static void
-dump_cachedir(struct _cacheSwap swap)
+dump_cachedir(StoreEntry * entry, const char *name, struct _cacheSwap swap)
 {
-    assert(0);
+    SwapDir *s;
+    int i;
+    for (i = 0; i<swap.n_configured; i++) {
+	s = swap.swapDirs+i;
+	storeAppendPrintf(entry, "%s %s %d %d %d\n",
+	    name,
+	    s->path,
+	    s->max_size>>10,
+	    s->l1,
+	    s->l2);
+    }
+}
+
+static int
+check_null_cachedir(struct _cacheSwap swap)
+{
+    return swap.swapDirs == NULL;
 }
 
 static void
@@ -478,9 +496,9 @@ free_cachedir(struct _cacheSwap *swap)
 }
 
 static void
-dump_peer(peer * p)
+dump_peer(StoreEntry *entry, const char *name, peer * p)
 {
-    assert(0);
+    storeAppendPrintf(entry, "%s -- UNIMPLEMENTED\n", name);
 }
 
 static void
@@ -562,9 +580,9 @@ free_peer(peer ** P)
 }
 
 static void
-dump_cachemgrpasswd(cachemgr_passwd * list)
+dump_cachemgrpasswd(StoreEntry *entry, const char *name, cachemgr_passwd * list)
 {
-    assert(0);
+    storeAppendPrintf(entry, "%s -- UNIMPLEMENTED\n", name);
 }
 
 static void
@@ -591,9 +609,9 @@ free_cachemgrpasswd(cachemgr_passwd ** head)
 
 
 static void
-dump_denyinfo(struct _acl_deny_info_list *var)
+dump_denyinfo(StoreEntry *entry, const char *name, struct _acl_deny_info_list *var)
 {
-    assert(0);
+    storeAppendPrintf(entry, "%s -- UNIMPLEMENTED\n", name);
 }
 
 static void
@@ -714,7 +732,7 @@ parse_hostdomaintype(void)
 }
 
 static void
-dump_httpanonymizer(int var)
+dump_httpanonymizer(StoreEntry *entry, const char *name, int var)
 {
     switch (var) {
     case ANONYMIZER_NONE:
@@ -746,12 +764,18 @@ parse_httpanonymizer(int *var)
 
 
 static void
-dump_ushortlist(ushortlist * u)
+dump_ushortlist(StoreEntry *entry, const char *name, ushortlist * u)
 {
     while (u) {
-	printf("%d ", (int) u->i);
+	storeAppendPrintf(entry, "%s %d\n", name, (int) u->i);
 	u = u->next;
     }
+}
+
+static int
+check_null_ushortlist(ushortlist * u)
+{
+    return u == NULL;
 }
 
 static void
@@ -784,9 +808,9 @@ free_ushortlist(ushortlist ** P)
 }
 
 static void
-dump_int(int var)
+dump_int(StoreEntry *entry, const char *name, int var)
 {
-    printf("%d", var);
+    storeAppendPrintf(entry, "%s %d\n", name, var);
 }
 
 static void
@@ -805,9 +829,9 @@ free_int(int *var)
 }
 
 static void
-dump_onoff(int var)
+dump_onoff(StoreEntry *entry, const char *name, int var)
 {
-    printf(var ? "on" : "off");
+    storeAppendPrintf(entry, "%s %s\n", name, var ? "on" : "off");
 }
 
 static void
@@ -842,9 +866,9 @@ parse_pathname_stat(char **path)
 }
 
 static void
-dump_refreshpattern(refresh_t * head)
+dump_refreshpattern(StoreEntry *entry, const char *name, refresh_t * head)
 {
-    assert(0);
+    storeAppendPrintf(entry, "%s -- UNIMPLEMENTED\n", name);
 }
 
 static void
@@ -915,9 +939,9 @@ free_refreshpattern(refresh_t ** head)
 }
 
 static void
-dump_regexlist(relist * var)
+dump_regexlist(StoreEntry *entry, const char *name, relist * var)
 {
-    assert(0);
+    storeAppendPrintf(entry, "%s -- UNIMPLEMENTED\n", name);
 }
 
 static void
@@ -934,9 +958,10 @@ free_regexlist(relist ** var)
 }
 
 static void
-dump_string(char *var)
+dump_string(StoreEntry *entry, const char *name, char *var)
 {
-    printf("%s", var);
+    if (var != NULL)
+        storeAppendPrintf(entry, "%s %s\n", name, var);
 }
 
 static void
@@ -967,9 +992,9 @@ parse_eol(char *volatile *var)
 }
 
 static void
-dump_time_t(time_t var)
+dump_time_t(StoreEntry *entry, const char *name, time_t var)
 {
-    printf("%d", (int) var);
+    storeAppendPrintf(entry, "%s %d seconds\n", name, (int) var);
 }
 
 static void
@@ -985,21 +1010,21 @@ free_time_t(time_t * var)
 }
 
 static void
-dump_size_t(size_t var)
+dump_size_t(StoreEntry *entry, const char *name, size_t var)
 {
-    printf("%d", (int) var);
+    storeAppendPrintf(entry, "%s %d\n", name, (int) var);
 }
 
 static void
-dump_b_size_t(size_t var)
+dump_b_size_t(StoreEntry *entry, const char *name, size_t var)
 {
-    printf("%d bytes", (int) var);
+    storeAppendPrintf(entry, "%s %d %s\n", name, (int) var, B_BYTES_STR);
 }
 
 static void
-dump_kb_size_t(size_t var)
+dump_kb_size_t(StoreEntry *entry, const char *name, size_t var)
 {
-    printf("%d KB", (int) var);
+    storeAppendPrintf(entry, "%s %d %s\n", name, (int) var, B_KBYTES_STR);
 }
 
 static void
@@ -1035,9 +1060,9 @@ free_size_t(size_t * var)
 #define free_gb_size_t free_size_t
 
 static void
-dump_ushort(u_short var)
+dump_ushort(StoreEntry *entry, const char *name, u_short var)
 {
-    printf("%d", var);
+    storeAppendPrintf(entry, "%s %d\n", name, var);
 }
 
 static void
@@ -1059,14 +1084,12 @@ parse_ushort(u_short * var)
 }
 
 static void
-dump_wordlist(wordlist * list)
+dump_wordlist(StoreEntry *entry, const char *name, wordlist * list)
 {
-    printf("{");
     while (list != NULL) {
-	printf("%s ", list->key);
+	storeAppendPrintf(entry, "%s %s\n", name, list->key);
 	list = list->next;
     }
-    printf("}");
 }
 
 static void
