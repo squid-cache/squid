@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.191 1997/10/23 16:38:09 wessels Exp $
+ * $Id: comm.cc,v 1.192 1997/10/23 20:41:13 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -156,6 +156,7 @@ static int fdIsHttpOrIcp _PARAMS((int fd));
 static IPH commConnectDnsHandle;
 static void commConnectCallback _PARAMS((ConnectStateData * cs, int status));
 static int commDeferRead(int fd);
+static int ignoreErrno(int errno);
 
 static struct timeval zero_tv;
 
@@ -1318,7 +1319,7 @@ commHandleWrite(int fd, void *data)
 	CommWriteStateCallbackAndFree(fd, nleft ? COMM_ERROR : COMM_OK);
     } else if (len < 0) {
 	/* An error */
-	if (errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR) {
+	if (ignoreErrno(errno)) {
 	    debug(50, 10) ("commHandleWrite: FD %d: write failure: %s.\n",
 		fd, xstrerror());
 	    commSetSelect(fd,
@@ -1372,4 +1373,20 @@ comm_write(int fd, char *buf, int size, CWCB * handler, void *handler_data, FREE
 	commHandleWrite,
 	fd_table[fd].rwstate,
 	0);
+}
+
+static int
+ignoreErrno(int errno)
+{
+    if (errno == EWOULDBLOCK)
+	return 1;
+#if EAGAIN != EWOULDBLOCK
+    if (errno == EAGAIN)
+	return 1;
+#endif
+    if (errno == EALREADY)
+	return 1;
+    if (errno == EINTR)
+	return 1;
+    return 0;
 }
