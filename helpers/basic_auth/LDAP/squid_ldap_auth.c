@@ -51,7 +51,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <lber.h>
-#include <ldap_cdefs.h>
 #include <ldap.h>
 
 /* Change this to your search base */
