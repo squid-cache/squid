@@ -7,10 +7,15 @@ UPCOMING CHANGES:
 
 Changes to squid-1.1.beta19 (November 13, 1996):
 
+	- Fixed havoc-wreaking getsockname() bug (Noriyuki Soda
+	  <soda@sra.co.jp>).
 	- Fixed InvokeHandlers() debug_trap bug.
 	- Lock entry while calling swapin handler in case someone tries to
 	  release it.
 	- Changed configure to allow overriding of XTRA_LIBS in config.site.
+	- Fixed comm_accept() FMR bug.
+	- Replaced MemObject->fd_of_first_client structure member with
+	  storeFirstClientFD() function.
 
 Changes to squid-1.1.beta18 (November 13, 1996):
 
