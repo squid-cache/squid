@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.11 1996/08/29 17:58:55 wessels Exp $
+ * $Id: fqdncache.cc,v 1.12 1996/08/30 22:38:15 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -1036,3 +1036,15 @@ char *fqdnFromAddr(addr)
     strncpy(buf, inet_ntoa(addr), 31);
     return buf;
 }
+
+int fqdncacheQueueDrain()
+{
+    fqdncache_entry *i;
+    dnsserver_t *dnsData;
+    if (!fqdncacheQueueHead)
+        return 0;
+    while ((dnsData = dnsGetFirstAvailable()) && (i = fqdncacheDequeue()))
+        fqdncache_dnsDispatch(dnsData, i);
+    return 1;
+}
+
