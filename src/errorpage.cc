@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.79 1997/10/20 22:59:45 wessels Exp $
+ * $Id: errorpage.cc,v 1.80 1997/10/21 03:33:41 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -79,7 +79,7 @@ errorInitialize(void)
 	if (fstat(fd, &sb) < 0)
 	    fatal_dump("stat() failed on error text file");
 	safe_free(error_text[i]);
-	error_text[i] = xcalloc(sb.st_size, 1);
+	error_text[i] = xcalloc(sb.st_size+1, 1);
 	if (read(fd, error_text[i], sb.st_size) != sb.st_size)
 	    fatal_dump("failed to fully read error text file");
 	file_close(fd);
