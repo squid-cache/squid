@@ -1,5 +1,5 @@
 #
-#  $Id: Makefile.in,v 1.37 1998/03/20 18:07:36 rousskov Exp $
+#  $Id: Makefile.in,v 1.38 1998/04/08 05:33:26 wessels Exp $
 #
 prefix		= @prefix@
 top_srcdir	= @top_srcdir@
@@ -27,7 +27,6 @@ UTILOBJS	= rfc1123.o \
 		  getfullhostname.o \
 		  base64.o \
 		  uudecode.o \
-		  tree.o \
 		  splay.o \
 		  safe_inet_addr.o \
 		  iso3307.o \

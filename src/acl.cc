@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.158 1998/04/08 00:42:21 wessels Exp $
+ * $Id: acl.cc,v 1.159 1998/04/08 05:33:27 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -30,10 +30,6 @@
  */
 
 #include "squid.h"
-
-#if defined(USE_BIN_TREE)
-#include "tree.h"
-#endif
 
 #if defined(USE_SPLAY_TREE)
 #include "splay.h"
@@ -70,7 +66,7 @@ static wordlist *aclDumpWordList(wordlist * data);
 static wordlist *aclDumpProtoList(intlist * data);
 static wordlist *aclDumpMethodList(intlist * data);
 static wordlist *aclDumpProxyAuthList(acl_proxy_auth * data);
-#if USE_BIN_TREE || USE_SPLAY_TREE
+#if USE_SPLAY_TREE
 static wordlist *aclDumpUnimplemented(void);
 #endif
 
@@ -89,34 +85,15 @@ static int aclDomainCompare(const void *, splayNode *);
 static int aclArpNetworkCompare(const void *, splayNode *);
 #endif
 
-#elif defined(USE_BIN_TREE)
-static int bintreeDomainCompare(void *, void *);
-static int bintreeHostDomainCompare(void *, void *);
-static int bintreeNetworkCompare(void *, void *);
-static int bintreeIpNetworkCompare(void *, void *);
-static int aclDomainCompare(const char *d1, const char *d2);
-static void aclDestroyTree(tree **);
-#if USE_ARP_ACL
-static int bintreeArpNetworkCompare(void *, void *);
-#endif
-
 #else /* LINKED LIST */
 static void aclDestroyIpList(acl_ip_data * data);
 
 #endif /* USE_SPLAY_TREE */
 
-#if defined(USE_BIN_TREE)
-static void aclParseDomainList(void **curtree);
-static void aclParseIpList(void **curtree);
-#if USE_ARP_ACL
-static void aclParseArpList(void **curtree);
-#endif
-#else
 static void aclParseDomainList(void *curlist);
 static void aclParseIpList(void *curlist);
 #if USE_ARP_ACL
 static void aclParseArpList(void *curlist);
-#endif
 #endif
 
 static void aclParseIntlist(void *curlist);
@@ -477,33 +454,6 @@ aclParseIpList(void *curlist)
     }
 }
 
-#elif defined(USE_BIN_TREE)
-static void
-aclParseIpList(void **curtree)
-{
-    tree **Tree;
-    char *t = NULL;
-    acl_ip_data *q;
-    acl_ip_data *x;
-    Tree = xmalloc(sizeof(tree *));
-    *curtree = Tree;
-    tree_init(Tree);
-    while ((t = strtokFile())) {
-	q = aclParseIpData(t);
-	while (q != NULL) {
-	    x = tree_srch(Tree, bintreeIpNetworkCompare, &q->addr1);
-	    if (NULL != x) {
-		debug(0, 0) ("aclParseIpList: Ignoring duplicate/clashing entry\n");
-		debug(0, 0) ("--> %s already exists\n", inet_ntoa(x->addr1));
-		debug(0, 0) ("--> %s is ignored\n", inet_ntoa(q->addr1));
-	    } else {
-		tree_add(Tree, bintreeNetworkCompare, q, NULL);
-	    }
-	    q = q->next;
-	}
-    }
-}
-
 #else
 static void
 aclParseIpList(void *curlist)
@@ -668,25 +618,7 @@ aclParseDomainList(void *curlist)
     }
 }
 
-#elif defined(USE_BIN_TREE)
-static void
-aclParseDomainList(void **curtree)
-{
-    tree **Tree;
-    char *t = NULL;
-    char *tt;
-
-    Tree = xmalloc(sizeof(tree *));
-    *curtree = Tree;
-    tree_init(Tree);
-    while ((t = strtokFile())) {
-	Tolower(t);
-	tt = xstrdup(t);
-	tree_add(Tree, bintreeDomainCompare, tt, NULL);
-    }
-}
-
-#else /* !USE_BIN_TREE */
+#else
 static void
 aclParseDomainList(void *curlist)
 {
@@ -1029,19 +961,6 @@ aclMatchIp(void *dataptr, struct in_addr c)
     return !splayLastResult;
 }
 
-#elif defined(USE_BIN_TREE)
-static int
-aclMatchIp(void *dataptr, struct in_addr c)
-{
-    tree ***data = dataptr;
-    if (tree_srch(*data, bintreeIpNetworkCompare, &c)) {
-	debug(28, 3) ("aclMatchIp: '%s' found\n", inet_ntoa(c));
-	return 1;
-    }
-    debug(28, 3) ("aclMatchIp: '%s' NOT found\n", inet_ntoa(c));
-    return 0;
-}
-
 #else
 static int
 aclMatchIp(void *dataptr, struct in_addr c)
@@ -1113,22 +1032,6 @@ aclMatchDomainList(void *dataptr, const char *host)
     debug(28, 3) ("aclMatchDomainList: '%s' %s\n",
 	host, splayLastResult ? "NOT found" : "found");
     return !splayLastResult;
-}
-
-#elif defined(USE_BIN_TREE)
-static int
-aclMatchDomainList(void *dataptr, const char *host)
-{
-    tree **data = dataptr;
-    if (host == NULL)
-	return 0;
-    debug(28, 3) ("aclMatchDomainList: checking '%s'\n", host);
-    if (tree_srch(data, bintreeHostDomainCompare, (void *) host)) {
-	debug(28, 3) ("aclMatchDomainList: '%s' found\n", host);
-	return 1;
-    }
-    debug(28, 3) ("aclMatchDomainList: '%s' NOT found\n", host);
-    return 0;
 }
 
 #else /* LINKED LIST */
@@ -1691,20 +1594,7 @@ aclNBCheck(aclCheck_t * checklist, PF callback, void *callback_data)
 /* Destroy functions */
 /*********************/
 
-#if defined(USE_BIN_TREE)
-void
-destroyTreeItem(void **t)
-{
-    safe_free(t);
-}
-
-static void
-aclDestroyTree(tree ** data)
-{
-    tree_mung(data, destroyTreeItem);
-}
-
-#elif !defined(USE_SPLAY_TREE)
+#if !defined(USE_SPLAY_TREE)
 static void
 aclDestroyIpList(acl_ip_data * data)
 {
@@ -1772,8 +1662,6 @@ aclDestroyAcls(acl ** head)
 	case ACL_SRC_ARP:
 #if defined (USE_SPLAY_TREE)
 	    splay_destroy(a->data, xfree);
-#elif defined(USE_BIN_TREE)
-	    aclDestroyTree(a->data);
 #else /* LINKED LIST */
 	    aclDestroyIpList(a->data);
 #endif
@@ -1782,8 +1670,6 @@ aclDestroyAcls(acl ** head)
 	case ACL_SRC_DOMAIN:
 #if defined(USE_SPLAY_TREE)
 	    splay_destroy(a->data, xfree);
-#elif defined(USE_BIN_TREE)
-	    aclDestroyTree(a->data);
 #else /* LINKED LIST */
 	    wordlistDestroy((wordlist **) & a->data);
 #endif
@@ -1893,25 +1779,7 @@ aclDomainCompare(const void *data, splayNode * n)
     return (d1[l1] - d2[l2]);
 }
 
-#elif defined(USE_BIN_TREE)
-static int
-aclDomainCompare(const char *d1, const char *d2)
-{
-    int l1, l2;
-    l1 = strlen(d1);
-    l2 = strlen(d2);
-    while (d1[l1] == d2[l2]) {
-	if ((l1 == 0) && (l2 == 0))
-	    return 0;		/* d1 == d2 */
-	if (l1-- == 0)
-	    return -1;		/* d1 < d2 */
-	if (l2-- == 0)
-	    return 1;		/* d1 > d2 */
-    }
-    return (d1[l1] - d2[l2]);
-}
-
-#endif /* USE_BIN_TREE || SPLAY_TREE */
+#endif /* SPLAY_TREE */
 
 /* Original ProxyAuth code by Jon Thackray <jrmt@uk.gdscorp.com> */
 /* Generalized to ACL's by Arjan.deVet <Arjan.deVet@adv.IAEhv.nl> */
@@ -2000,33 +1868,7 @@ aclHostDomainCompare(const void *data, splayNode * n)
     return (h[l1] - d[l2]);
 }
 
-#elif defined(USE_BIN_TREE)
-static int
-aclHostDomainCompare(const char *h, const char *d)
-{
-    int l1, l2;
-    if (matchDomainName(d, h))
-	return 0;
-    l1 = strlen(h);
-    l2 = strlen(d);
-    /* h != d */
-    while (h[l1] == d[l2]) {
-	if (l1 == 0)
-	    break;
-	if (l2 == 0)
-	    break;
-	l1--;
-	l2--;
-    }
-    /* a '.' is a special case */
-    if ((h[l1] == '.') || (l1 == 0))
-	return -1;		/* domain(h) < d */
-    if ((d[l2] == '.') || (l2 == 0))
-	return 1;		/* domain(h) > d */
-    return (h[l1] - d[l2]);
-}
-
-#endif /* USE_SPLAY_TREE || USE_BIN_TREE */
+#endif /* USE_SPLAY_TREE */
 
 /* compare two network specs
  * 
@@ -2038,35 +1880,6 @@ aclHostDomainCompare(const char *h, const char *d)
  * 
  * Currently only the first address of the first network is used.
  */
-
-#if defined(USE_BIN_TREE)
-static int
-networkCompare(acl_ip_data * net, acl_ip_data * data)
-{
-    struct in_addr addr;
-    acl_ip_data acl_ip;
-    int rc = 0;
-    xmemcpy(&acl_ip, net, sizeof(acl_ip));
-    addr = acl_ip.addr1;
-    addr.s_addr &= data->mask.s_addr;	/* apply netmask */
-    if (data->addr2.s_addr == 0) {	/* single address check */
-	if (ntohl(addr.s_addr) > ntohl(data->addr1.s_addr))
-	    rc = 1;
-	else if (ntohl(addr.s_addr) < ntohl(data->addr1.s_addr))
-	    rc = -1;
-	else
-	    rc = 0;
-    } else {			/* range address check */
-	if (ntohl(addr.s_addr) > ntohl(data->addr2.s_addr))
-	    rc = 1;
-	else if (ntohl(addr.s_addr) < ntohl(data->addr1.s_addr))
-	    rc = -1;
-	else
-	    rc = 0;
-    }
-    return rc;
-}
-#endif /* USE_BIN_TREE */
 
 /* compare an address and a network spec */
 
@@ -2097,75 +1910,15 @@ aclIpNetworkCompare(const void *a, splayNode * n)
     }
     return rc;
 }
-
-#elif defined(USE_BIN_TREE)
-static int
-aclIpNetworkCompare(struct in_addr addr, acl_ip_data * data)
-{
-    int rc = 0;
-    addr.s_addr &= data->mask.s_addr;	/* apply netmask */
-    if (data->addr2.s_addr == 0) {	/* single address check */
-	if (ntohl(addr.s_addr) > ntohl(data->addr1.s_addr))
-	    rc = 1;
-	else if (ntohl(addr.s_addr) < ntohl(data->addr1.s_addr))
-	    rc = -1;
-	else
-	    rc = 0;
-    } else {			/* range address check */
-	if (ntohl(addr.s_addr) > ntohl(data->addr2.s_addr))
-	    rc = 1;
-	else if (ntohl(addr.s_addr) < ntohl(data->addr1.s_addr))
-	    rc = -1;
-	else
-	    rc = 0;
-    }
-    return rc;
-}
-
-#endif /* USE_SPLAY_TREE || USE_BIN_TREE */
+#endif /* USE_SPLAY_TREE */
 
 
 /* compare functions for different kind of tree search algorithms */
 
-#if defined(USE_BIN_TREE)
-static int
-bintreeDomainCompare(void *t1, void *t2)
-{
-    return aclDomainCompare((char *) t1, (char *) t2);
-}
-
-static int
-bintreeHostDomainCompare(void *t1, void *t2)
-{
-    /* t1 is the hostname, t2 the domainname to compare with */
-    return aclHostDomainCompare((char *) t1, (char *) t2);
-}
-
-static int
-bintreeNetworkCompare(void *t1, void *t2)
-{
-    return networkCompare((acl_ip_data *) t1,
-	(acl_ip_data *) t2);
-}
-
-static int
-bintreeIpNetworkCompare(void *t1, void *t2)
-{
-    struct in_addr addr;
-    acl_ip_data *data;
-    xmemcpy(&addr, t1, sizeof(addr));
-    data = (acl_ip_data *) t2;
-    return aclIpNetworkCompare(addr, data);
-}
-
-#endif /* USE_BIN_TREE */
-
 static wordlist *
 aclDumpIpList(acl_ip_data * ip)
 {
-#if USE_BIN_TREE
-    return aclDumpUnimplemented();
-#elif USE_SPLAY_TREE
+#if USE_SPLAY_TREE
     return aclDumpUnimplemented();
 #else
     wordlist *W = NULL;
@@ -2193,9 +1946,7 @@ aclDumpIpList(acl_ip_data * ip)
 static wordlist *
 aclDumpDomainList(void *data)
 {
-#if USE_BIN_TREE
-    return aclDumpUnimplemented();
-#elif USE_SPLAY_TREE
+#if USE_SPLAY_TREE
     return aclDumpUnimplemented();
 #else
     return aclDumpWordList(data);
@@ -2329,7 +2080,7 @@ aclDumpProxyAuthList(acl_proxy_auth * data)
     return W;
 }
 
-#if USE_BIN_TREE || USE_SPLAY_TREE
+#if USE_SPLAY_TREE
 static wordlist *
 aclDumpUnimplemented(void)
 {
@@ -2479,22 +2230,6 @@ aclParseArpList(void *curlist)
 	*Top = splay_insert(q, *Top, aclArpNetworkCompare);
     }
 }
-#elif defined(USE_BIN_TREE)
-static void
-aclParseArpList(void **curtree)
-{
-    tree **Tree;
-    char *t = NULL;
-    acl_arp_data *q;
-    Tree = xmalloc(sizeof(tree *));
-    *curtree = Tree;
-    tree_init(Tree);
-    while ((t = strtokFile())) {
-	if ((q = aclParseArpData(t)) == NULL)
-	    continue;
-	tree_add(Tree, bintreeNetworkCompare, q, NULL);
-    }
-}
 #else
 static void
 aclParseArpList(void *curlist)
@@ -2525,18 +2260,6 @@ aclMatchArp(void *dataptr, struct in_addr c)
     debug(28, 3) ("aclMatchArp: '%s' %s\n",
 	inet_ntoa(c), splayLastResult ? "NOT found" : "found");
     return !splayLastResult;
-}
-#elif defined(USE_BIN_TREE)
-static int
-aclMatchArp(void *dataptr, struct in_addr c)
-{
-    tree **data = dataptr;
-    if (tree_srch(data, bintreeArpNetworkCompare, &c)) {
-	debug(28, 3) ("aclMatchArp: '%s' found\n", inet_ntoa(c));
-	return 1;
-    }
-    debug(28, 3) ("aclMatchArp: '%s' NOT found\n", inet_ntoa(c));
-    return 0;
 }
 #else
 static int
@@ -2570,18 +2293,6 @@ aclMatchArp(void *dataptr, struct in_addr c)
     return 0;
 }
 #endif /* USE_SPLAY_TREE */
-
-#if USE_BIN_TREE
-static int
-bintreeArpNetworkCompare(void *t1, void *t2)
-{
-    struct in_addr addr;
-    acl_arp_data *data;
-    xmemcpy(&addr, t1, sizeof(addr));
-    data = (acl_arp_data *) t2;
-    return aclArpNetworkCompare(addr, data);
-}
-#endif
 
 static int
 checkARP(u_long ip, char *eth)
