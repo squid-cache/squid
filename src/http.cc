@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.286 1998/06/09 22:58:02 wessels Exp $
+ * $Id: http.cc,v 1.287 1998/06/25 20:08:54 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -223,14 +223,9 @@ httpCachableReply(HttpStateData * httpState)
 	if (!EBIT_TEST(cc_mask, CC_PROXY_REVALIDATE))
 	    return 0;
     /*
-     * Dealing with cookies is quite a bit more complicated
-     * than this.  Ideally we should strip the cookie
-     * header from the reply but still cache the reply body.
-     * More confusion at draft-ietf-http-state-mgmt-05.txt.
+     * We don't properly deal with Vary features yet, so we can't
+     * cache these
      */
-    /* With new headers the above stripping should be easy to do? @?@ */
-    if (httpHeaderHas(hdr, HDR_SET_COOKIE))
-	return 0;
     if (httpHeaderHas(hdr, HDR_VARY))
 	return 0;
     switch (httpState->entry->mem_obj->reply->sline.status) {
