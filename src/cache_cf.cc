@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.126 1996/11/04 18:12:10 wessels Exp $
+ * $Id: cache_cf.cc,v 1.127 1996/11/04 22:07:24 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -211,6 +211,7 @@ static int ip_acl_match _PARAMS((struct in_addr, const ip_acl *));
 static void addToIPACL _PARAMS((ip_acl **, const char *, ip_access_type));
 static void parseOnOff _PARAMS((int *));
 static void parseIntegerValue _PARAMS((int *));
+static void parseString _PARAMS((char **));
 static void self_destruct _PARAMS((void));
 static void wordlistAdd _PARAMS((wordlist **, const char *));
 
@@ -246,6 +247,7 @@ static void parseVisibleHostnameLine _PARAMS((void));
 static void parseWAISRelayLine _PARAMS((void));
 static void parseMinutesLine _PARAMS((int *));
 static void ip_acl_destroy _PARAMS((ip_acl **));
+static void parseCachemgrPasswd _PARAMS((void));
 static void parsePathname _PARAMS((char **));
 
 static void
@@ -440,8 +442,10 @@ intlistDestroy(intlist ** list)
 }
 
 
-/* Use this #define in all the parse*() functions.  Assumes 
- * char *token is defined */
+/*
+ * Use this #define in all the parse*() functions.  Assumes char *token is
+ * defined
+ */
 
 #define GetInteger(var) \
 	token = strtok(NULL, w_space); \
@@ -976,11 +980,32 @@ parseIntegerValue(int *iptr)
 }
 
 static void
+parseString(char **sptr)
+{
+    char *token;
+    token = strtok(NULL, w_space);
+    if (token == NULL)
+	self_destruct();
+    *sptr = xstrdup(token);
+}
+
+static void
 parseErrHtmlLine(void)
 {
     char *token;
     if ((token = strtok(NULL, null_string)))
 	Config.errHtmlText = xstrdup(token);
+}
+
+static void
+parseCachemgrPasswd(void)
+{
+    char *passwd = NULL;
+    wordlist *actions = NULL;
+    parseString(&passwd);
+    parseWordlist(&actions);
+    objcachePasswdAdd(&Config.passwd_list, passwd, actions);
+    wordlistDestroy(&actions);
 }
 
 int
@@ -1291,6 +1316,9 @@ parseConfigFile(const char *file_name)
 	else if (!strcmp(token, "minimum_direct_hops"))
 	    parseIntegerValue(&Config.minDirectHops);
 
+	else if (!strcmp(token, "cachemgr_passwd"))
+	    parseCachemgrPasswd();
+
 	else if (!strcmp(token, "store_objects_per_bucket"))
 	    parseIntegerValue(&Config.Store.objectsPerBucket);
 	else if (!strcmp(token, "store_avg_object_size"))
@@ -1410,6 +1438,8 @@ configFreeMemory(void)
     wordlistDestroy(&Config.dns_testname_list);
     ip_acl_destroy(&Config.local_ip_list);
     ip_acl_destroy(&Config.firewall_ip_list);
+    objcachePasswdDestroy(&Config.passwd_list);
+    ttlFreeList();
     refreshFreeMemory();
 }
 
