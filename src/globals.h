@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.16 1997/11/05 00:39:51 wessels Exp $
+ * $Id: globals.h,v 1.17 1997/11/05 05:29:25 wessels Exp $
  */
 
 extern FILE *debug_log;		/* NULL */
@@ -94,9 +94,9 @@ extern int store_rebuilding;	/* 1 */
 extern int store_swap_size;	/* 0 */
 extern int client_info_sz;	/* 0 */
 extern unsigned long store_mem_size;	/* 0 */
-extern icpUdpData *UdpQueueHead; /* NULL */
-extern icpUdpData *UdpQueueTail; /* NULL */
-extern time_t hit_only_mode_until; /* 0 */
+extern icpUdpData *UdpQueueHead;	/* NULL */
+extern icpUdpData *UdpQueueTail;	/* NULL */
+extern time_t hit_only_mode_until;	/* 0 */
 
 #ifdef HAVE_SYSLOG
 extern int _db_level;

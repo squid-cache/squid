@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.167 1997/11/03 23:18:17 wessels Exp $
+ * $Id: stat.cc,v 1.168 1997/11/05 05:29:37 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -446,7 +446,7 @@ dump_peers(StoreEntry * sentry, peer * peers)
 	}
 	storeAppendPrintf(sentry, close_bracket);	/* } */
 	storeAppendPrintf(sentry, "{Keep-Alive Ratio: %d%%}\n",
-		percent(e->stats.n_keepalives_recv, e->stats.n_keepalives_sent));
+	    percent(e->stats.n_keepalives_recv, e->stats.n_keepalives_sent));
     }
     storeAppendPrintf(sentry, close_bracket);
 }

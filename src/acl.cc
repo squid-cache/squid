@@ -1,5 +1,6 @@
+
 /*
- * $Id: acl.cc,v 1.112 1997/11/03 20:05:36 wessels Exp $
+ * $Id: acl.cc,v 1.113 1997/11/05 05:29:17 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1278,7 +1279,7 @@ aclCheck(aclCheck_t * checklist)
     const struct _acl_access *A;
     int match;
     ipcache_addrs *ia;
-    while ((A = checklist->access_list)) {
+    while ((A = checklist->access_list) != NULL) {
 	debug(28, 3) ("aclCheck: checking '%s'\n", A->cfgline);
 	allow = A->allow;
 	match = aclMatchAclList(A->acl_list, checklist);
@@ -1461,10 +1462,9 @@ aclDestroyRegexList(struct _relist *data)
 static void
 aclDestroyProxyAuth(struct _acl_proxy_auth *p)
 {
-    int i;
     hash_link *hashr = NULL;
     /* destroy hash list contents */
-    for (i = 0, hashr = hash_first(p->hash); hashr; hashr = hash_next(p->hash))
+    for (hashr = hash_first(p->hash); hashr; hashr = hash_next(p->hash))
 	hash_delete(p->hash, hashr->key);
     /* destroy and free the hash table itself */
     hashFreeMemory(p->hash);
@@ -1633,7 +1633,6 @@ aclReadProxyAuth(struct _acl_proxy_auth *p)
     static char *passwords = NULL;
     char *user = NULL;
     char *passwd = NULL;
-    int i;
     hash_link *hashr = NULL;
     FILE *f = NULL;
     if ((squid_curtime - p->last_time) >= p->check_interval) {
@@ -1643,7 +1642,7 @@ aclReadProxyAuth(struct _acl_proxy_auth *p)
 		p->change_time = buf.st_mtime;
 		if (p->hash != 0) {
 		    debug(28, 5) ("aclReadProxyAuth: invalidating old entries\n");
-		    for (i = 0, hashr = hash_first(p->hash); hashr; hashr = hash_next(p->hash)) {
+		    for (hashr = hash_first(p->hash); hashr; hashr = hash_next(p->hash)) {
 			debug(28, 6) ("aclReadProxyAuth: deleting %s\n", hashr->key);
 			hash_delete(p->hash, hashr->key);
 		    }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.50 1997/10/25 17:22:51 wessels Exp $
+ * $Id: net_db.cc,v 1.51 1997/11/05 05:29:32 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -49,6 +49,9 @@ static net_db_peer *netdbPeerByName(const netdbEntry * n, const char *);
 static net_db_peer *netdbPeerAdd(netdbEntry * n, peer * e);
 static char *netdbPeerName(const char *name);
 static IPH netdbSendPing;
+static QS sortPeerByRtt;
+static QS sortByRtt;
+static QS netdbLRU;
 
 /* We have to keep a local list of peer names.  The Peers structure
  * gets freed during a reconfigure.  We want this database to
@@ -148,8 +151,10 @@ netdbRelease(netdbEntry * n)
 }
 
 static int
-netdbLRU(netdbEntry ** n1, netdbEntry ** n2)
+netdbLRU(const void *A, const void *B)
 {
+    const netdbEntry *const *n1 = A;
+    const netdbEntry *const *n2 = B;
     if ((*n1)->last_use_time > (*n2)->last_use_time)
 	return (1);
     if ((*n1)->last_use_time < (*n2)->last_use_time)
@@ -175,7 +180,7 @@ netdbPurgeLRU(void)
     qsort((char *) list,
 	list_count,
 	sizeof(netdbEntry *),
-	(QS *) netdbLRU);
+	netdbLRU);
     for (k = 0; k < list_count; k++) {
 	if (meta_data.netdb_addrs < Config.Netdb.low)
 	    break;
@@ -249,8 +254,10 @@ networkFromInaddr(struct in_addr a)
 }
 
 static int
-sortByRtt(netdbEntry ** n1, netdbEntry ** n2)
+sortByRtt(const void *A, const void *B)
 {
+    const netdbEntry *const *n1 = A;
+    const netdbEntry *const *n2 = B;
     if ((*n1)->rtt > (*n2)->rtt)
 	return 1;
     else if ((*n1)->rtt < (*n2)->rtt)
@@ -303,8 +310,10 @@ netdbPeerAdd(netdbEntry * n, peer * e)
 }
 
 static int
-sortPeerByRtt(net_db_peer * p1, net_db_peer * p2)
+sortPeerByRtt(const void *A, const void *B)
 {
+    const net_db_peer *p1 = A;
+    const net_db_peer *p2 = B;
     if (p1->rtt > p2->rtt)
 	return 1;
     else if (p1->rtt < p2->rtt)
@@ -575,7 +584,7 @@ netdbDump(StoreEntry * sentry)
     qsort((char *) list,
 	i,
 	sizeof(netdbEntry *),
-	(QS *) sortByRtt);
+	sortByRtt);
     for (k = 0; k < i; k++) {
 	n = *(list + k);
 	storeAppendPrintf(sentry, "{%-16.16s %4d/%4d %7.1f %5.1f",	/* } */
@@ -653,6 +662,6 @@ netdbUpdatePeer(request_t * r, peer * e, int irtt, int ihops)
     qsort((char *) n->peers,
 	n->n_peers,
 	sizeof(net_db_peer),
-	(QS *) sortPeerByRtt);
+	sortPeerByRtt);
 #endif
 }

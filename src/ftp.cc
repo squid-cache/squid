@@ -1,5 +1,5 @@
 /*
- * $Id: ftp.cc,v 1.164 1997/11/03 22:43:10 wessels Exp $
+ * $Id: ftp.cc,v 1.165 1997/11/05 05:29:24 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -178,7 +178,7 @@ FTPSM *FTP_SM_FUNCS[] =
 };
 
 static void
-ftpStateFree(int fd, void *data)
+ftpStateFree(int fdnotused, void *data)
 {
     FtpStateData *ftpState = data;
     if (ftpState == NULL)
@@ -622,7 +622,6 @@ ftpParseListing(FtpStateData * ftpState, int len)
     if (usable < len) {
 	/* must copy partial line to beginning of buf */
 	linelen = len - usable;
-	assert(linelen > 0);
 	if (linelen > 4096)
 	    linelen = 4096;
 	xstrncpy(line, end, linelen);
@@ -638,7 +637,6 @@ ftpReadData(int fd, void *data)
     FtpStateData *ftpState = data;
     int len;
     int clen;
-    int off;
     int bin;
     StoreEntry *entry = ftpState->entry;
     ErrorState *err;
@@ -650,7 +648,6 @@ ftpReadData(int fd, void *data)
     }
     /* check if we want to defer reading */
     clen = entry->mem_obj->inmem_hi;
-    off = storeLowestMemReaderOffset(entry);
     if (EBIT_TEST(ftpState->flags, FTP_ISDIR))
 	if (!EBIT_TEST(ftpState->flags, FTP_HTML_HEADER_SENT))
 	    ftpListingStart(ftpState);
@@ -1000,7 +997,7 @@ ftpWriteCommand(const char *buf, FtpStateData * ftpState)
 }
 
 static void
-ftpWriteCommandCallback(int fd, char *buf, int size, int errflag, void *data)
+ftpWriteCommandCallback(int fd, char *bufnotused, int size, int errflag, void *data)
 {
     FtpStateData *ftpState = data;
     StoreEntry *entry = ftpState->entry;
@@ -1427,7 +1424,7 @@ ftpSendPort(FtpStateData * ftpState)
 }
 
 static void
-ftpReadPort(FtpStateData * ftpState)
+ftpReadPort(FtpStateData * ftpStateNotUsed)
 {
     debug(9, 3) ("This is ftpReadPort\n");
 }

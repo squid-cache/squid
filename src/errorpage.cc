@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.99 1997/11/04 19:54:46 wessels Exp $
+ * $Id: errorpage.cc,v 1.100 1997/11/05 05:29:22 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -181,7 +181,7 @@ errorSend(int fd, ErrorState * err)
  *            closeing the FD, otherwise we do it ourseves.
  */
 static void
-errorSendComplete(int fd, char *buf, int size, int errflag, void *data)
+errorSendComplete(int fd, char *bufnotused, int size, int errflag, void *data)
 {
     ErrorState *err = data;
     debug(4, 3) ("errorSendComplete: FD %d, size=%d\n", fd, size);

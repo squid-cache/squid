@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.8 1997/06/04 06:15:51 wessels Exp $
+ * $Id: event.cc,v 1.9 1997/11/05 05:29:23 wessels Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -66,7 +66,7 @@ eventDelete(EVH * func, void *arg)
 {
     struct ev_entry **E;
     struct ev_entry *event;
-    for (E = &tasks; (event = *E); E = &(*E)->next) {
+    for (E = &tasks; (event = *E) != NULL; E = &(*E)->next) {
 	if (event->func != func)
 	    continue;
 	if (event->arg != arg)

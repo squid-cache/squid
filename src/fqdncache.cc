@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.64 1997/10/30 02:40:59 wessels Exp $
+ * $Id: fqdncache.cc,v 1.65 1997/11/05 05:29:23 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -135,7 +135,7 @@ static struct {
     int ghba_calls;		/* # calls to blocking gethostbyaddr() */
 } FqdncacheStats;
 
-static int fqdncache_compareLastRef(fqdncache_entry **, fqdncache_entry **);
+static QS fqdncache_compareLastRef;
 static void fqdncache_dnsHandleRead(int, void *);
 static fqdncache_entry *fqdncache_parsebuffer(const char *buf, dnsserver_t *);
 static int fqdncache_purgelru(void);
@@ -269,10 +269,11 @@ fqdncache_GetNext(void)
 }
 
 static int
-fqdncache_compareLastRef(fqdncache_entry ** e1, fqdncache_entry ** e2)
+fqdncache_compareLastRef(const void *A, const void *B)
 {
-    if (!e1 || !e2)
-	fatal_dump(NULL);
+    fqdncache_entry *const *e1 = A;
+    fqdncache_entry *const *e2 = B;
+    assert(e1 != NULL && e2 != NULL);
     if ((*e1)->lastref > (*e2)->lastref)
 	return (1);
     if ((*e1)->lastref < (*e2)->lastref)
@@ -344,7 +345,7 @@ fqdncache_purgelru(void)
     qsort((char *) LRU_list,
 	LRU_list_count,
 	sizeof(fqdncache_entry *),
-	(QS *) fqdncache_compareLastRef);
+	fqdncache_compareLastRef);
     for (k = 0; k < LRU_list_count; k++) {
 	if (meta_data.fqdncache_count < fqdncache_low)
 	    break;
@@ -843,7 +844,7 @@ fqdnStats(StoreEntry * sentry)
 }
 
 static void
-dummy_handler(const char *u2, void *u3)
+dummy_handler(const char *bufnotused, void *datanotused)
 {
     return;
 }
@@ -977,7 +978,7 @@ fqdncache_restart(void)
 	fatal_dump("fqdncache_restart: fqdn_table == 0\n");
     while (fqdncacheDequeue());
     next = (fqdncache_entry *) hash_first(fqdn_table);
-    while ((this = next)) {
+    while ((this = next) != NULL) {
 	next = (fqdncache_entry *) hash_next(fqdn_table);
 	if (this->status == FQDN_CACHED)
 	    continue;

@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.165 1997/11/03 22:43:16 wessels Exp $
+ * $Id: neighbors.cc,v 1.166 1997/11/05 05:29:31 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -546,7 +546,7 @@ neighborAlive(peer * p, const MemObject * mem, const icp_common_t * header)
 }
 
 static void
-neighborCountIgnored(peer * p, icp_opcode op_unused)
+neighborCountIgnored(peer * p, icp_opcode opnotused)
 {
     if (p == NULL)
 	return;
@@ -618,7 +618,7 @@ ignoreMulticastReply(peer * p, MemObject * mem)
  * If a hit process is already started, then sobeit
  */
 void
-neighborsUdpAck(int fd, const char *url, icp_common_t * header, const struct sockaddr_in *from, StoreEntry * entry, char *data, int data_sz)
+neighborsUdpAck(const char *url, icp_common_t * header, const struct sockaddr_in *from, StoreEntry * entry)
 {
     peer *p = NULL;
     MemObject *mem = entry->mem_obj;
@@ -807,11 +807,11 @@ peerDNSConfigure(const ipcache_addrs * ia, void *data)
 }
 
 static void
-peerRefreshDNS(void *junk)
+peerRefreshDNS(void *datanotused)
 {
     peer *p = NULL;
     peer *next = Config.peers;
-    while ((p = next)) {
+    while ((p = next) != NULL) {
 	next = p->next;
 	p->ip_lookup_pending = 1;
 	/* some random, bogus FD for ipcache */
@@ -840,7 +840,7 @@ peerCheckConnect(void *data)
 }
 
 static void
-peerCheckConnect2(const ipcache_addrs * ia, void *data)
+peerCheckConnect2(const ipcache_addrs * ianotused, void *data)
 {
     peer *p = data;
     p->ip_lookup_pending = 0;
@@ -959,7 +959,7 @@ peerCountMcastPeersDone(void *data)
 }
 
 static void
-peerCountHandleIcpReply(peer * p, peer_t type, icp_common_t * hdr, void *data)
+peerCountHandleIcpReply(peer * pnotused, peer_t type, icp_common_t * hdrnotused, void *data)
 {
     ps_state *psstate = data;
     psstate->icp.n_recv++;

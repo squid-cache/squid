@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.14 1997/11/04 23:21:12 wessels Exp $
+ * $Id: cf_gen.cc,v 1.15 1997/11/05 05:29:19 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Max Okumoto
@@ -78,7 +78,6 @@ typedef struct Entry {
 
 
 static const char WS[] = " \t";
-static const char NS[] = "";
 static int gen_default(Entry *, FILE *);
 static void gen_parse(Entry *, FILE *);
 static void gen_dump(Entry *, FILE *);
@@ -120,6 +119,7 @@ main(int argc, char *argv[])
 	case sSTART:
 	    if ((strlen(buff) == 0) || (!strncmp(buff, "#", 1))) {
 		/* ignore empty and comment lines */
+		(void) 0;
 	    } else if (!strncmp(buff, "NAME:", 5)) {
 		char *name;
 		if ((name = strtok(buff + 5, WS)) == NULL) {
@@ -145,6 +145,7 @@ main(int argc, char *argv[])
 	case s1:
 	    if ((strlen(buff) == 0) || (!strncmp(buff, "#", 1))) {
 		/* ignore empty and comment lines */
+		(void) 0;
 	    } else if (!strncmp(buff, "COMMENT:", 8)) {
 		ptr = buff + 8;
 		while (isspace(*ptr))
@@ -366,6 +367,7 @@ gen_parse(Entry * head, FILE * fp)
 	"\tdebug(0,10)(\"parse_line: %%s\\n\", buff);\n"
 	"\tif ((token = strtok(buff, w_space)) == NULL) {\n"
 	"\t\t/* ignore empty lines */\n"
+	"\t\t(void) 0;\n"
 	);
 
     for (entry = head; entry != NULL; entry = entry->next) {

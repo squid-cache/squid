@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.140 1997/11/05 00:39:50 wessels Exp $
+ * $Id: client_side.cc,v 1.141 1997/11/05 05:29:20 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -433,7 +433,7 @@ httpRequestFree(void *data)
 	entry = http->entry;	/* reset, IMS might have changed it */
 	if (entry && entry->ping_status == PING_WAITING)
 	    storeReleaseRequest(entry);
-	protoUnregister(entry, request, conn->peer.sin_addr);
+	protoUnregister(entry, request);
     }
     assert(http->log_type < LOG_TYPE_MAX);
     if (entry)
@@ -504,7 +504,7 @@ connStateFree(int fd, void *data)
     clientHttpRequest *http;
     debug(12, 3) ("connStateFree: FD %d\n", fd);
     assert(connState != NULL);
-    while ((http = connState->chr)) {
+    while ((http = connState->chr) != NULL) {
 	assert(http->conn == connState);
 	assert(connState->chr != connState->chr->next);
 	httpRequestFree(http);
@@ -865,7 +865,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 }
 
 void
-clientWriteComplete(int fd, char *buf, int size, int errflag, void *data)
+clientWriteComplete(int fd, char *bufnotused, int size, int errflag, void *data)
 {
     clientHttpRequest *http = data;
     ConnStateData *conn;
@@ -897,7 +897,7 @@ clientWriteComplete(int fd, char *buf, int size, int errflag, void *data)
 	    debug(12, 5) ("clientWriteComplete: FD %d Keeping Alive\n", fd);
 	    conn = http->conn;
 	    httpRequestFree(http);
-	    if ((http = conn->chr)) {
+	    if ((http = conn->chr) != NULL) {
 		debug(12, 1) ("clientWriteComplete: FD %d Sending next request\n", fd);
 		storeClientCopy(entry,
 		    http->out.offset,
@@ -1007,7 +1007,7 @@ icpGetHeadersForIMS(void *data, char *buf, ssize_t size)
 }
 
 static void
-icpHandleIMSComplete(int fd, char *buf_unused, int size, int errflag, void *data)
+icpHandleIMSComplete(int fd, char *bufnotused, int size, int errflag, void *data)
 {
     clientHttpRequest *http = data;
     StoreEntry *entry = http->entry;
@@ -1396,7 +1396,7 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 }
 
 static int
-clientReadDefer(int fd, void *data)
+clientReadDefer(int fdnotused, void *data)
 {
     ConnStateData *conn = data;
     return conn->defer.until > squid_curtime;
@@ -1581,7 +1581,7 @@ requestTimeout(int fd, void *data)
 }
 
 int
-httpAcceptDefer(int fd, void *notused)
+httpAcceptDefer(int fdnotused, void *notused)
 {
     return !fdstat_are_n_free_fd(RESERVED_FD);
 }

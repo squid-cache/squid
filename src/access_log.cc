@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.7 1997/11/05 00:39:49 wessels Exp $
+ * $Id: access_log.cc,v 1.8 1997/11/05 05:29:16 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -102,7 +102,7 @@ log_quote(const char *header)
      * modulo the inclusion of space (x40) to make the raw logs a bit
      * more readable.
      */
-    while ((c = *(const unsigned char *) header++)) {
+    while ((c = *(const unsigned char *) header++) != '\0') {
 	if (c <= 0x1F
 	    || c >= 0x7F
 	    || c == '"'
@@ -126,7 +126,7 @@ log_quote(const char *header)
 	    *buf_cursor++ = c2x[i];
 	    *buf_cursor++ = c2x[i + 1];
 	} else {
-	    *buf_cursor++ = c;
+	    *buf_cursor++ = (char) c;
 	}
     }
     *buf_cursor = '\0';
@@ -297,5 +297,5 @@ hierarchyNote(HierarchyLogEntry * hl,
 void
 accessLogInit(void)
 {
-	assert(sizeof(log_tags) == (LOG_TYPE_MAX + 1) * sizeof(char *));
+    assert(sizeof(log_tags) == (LOG_TYPE_MAX + 1) * sizeof(char *));
 }

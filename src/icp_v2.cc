@@ -35,7 +35,7 @@ icpUdpReply(int fd, void *data)
     int x;
     /* Disable handler, in case of errors. */
     commSetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
-    while ((queue = UdpQueueHead)) {
+    while ((queue = UdpQueueHead) != NULL) {
 	debug(12, 5) ("icpUdpReply: FD %d sending %d bytes to %s port %d\n",
 	    fd,
 	    queue->len,
@@ -80,9 +80,9 @@ icpCreateMessage(
 	buf_len += sizeof(u_num32);
     buf = xcalloc(buf_len, 1);
     headerp = (icp_common_t *) (void *) buf;
-    headerp->opcode = opcode;
+    headerp->opcode = (char) opcode;
     headerp->version = ICP_VERSION_CURRENT;
-    headerp->length = htons(buf_len);
+    headerp->length = (u_short) htons(buf_len);
     headerp->reqnum = htonl(reqnum);
     headerp->flags = htonl(flags);
     headerp->pad = htonl(pad);
@@ -336,13 +336,7 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
 		IcpOpcodeStr[header.opcode]);
 	} else {
 	    /* call neighborsUdpAck even if ping_status != PING_WAITING */
-	    neighborsUdpAck(fd,
-		url,
-		&header,
-		&from,
-		entry,
-		data,
-		(int) data_sz);
+	    neighborsUdpAck(url, &header, &from, entry);
 	}
 	break;
 
@@ -379,7 +373,7 @@ icpPktDump(icp_common_t * pkt)
 #endif
 
 void
-icpHandleUdp(int sock, void *not_used)
+icpHandleUdp(int sock, void *datanotused)
 {
     struct sockaddr_in from;
     int from_len;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.334 1997/11/03 23:18:18 wessels Exp $
+ * $Id: store.cc,v 1.335 1997/11/05 05:29:38 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -272,7 +272,6 @@ static hash_table *store_table = NULL;
 static dlink_list inmem_list;
 static dlink_list all_list;
 
-static int store_pages_max = 0;
 static int store_pages_high = 0;
 static int store_pages_low = 0;
 
@@ -654,7 +653,7 @@ storeUnregister(StoreEntry * e, void *data)
     if (mem == NULL)
 	return 0;
     debug(20, 3) ("storeUnregister: called for '%s'\n", storeKeyText(e->key));
-    for (S = &mem->clients; (sc = *S); S = &(*S)->next) {
+    for (S = &mem->clients; (sc = *S) != NULL; S = &(*S)->next) {
 	if (sc->callback_data == data)
 	    break;
     }
@@ -668,7 +667,7 @@ storeUnregister(StoreEntry * e, void *data)
 	commSetSelect(sc->swapin_fd, COMM_SELECT_READ, NULL, NULL, 0);
 	file_close(sc->swapin_fd);
     }
-    if ((callback = sc->callback)) {
+    if ((callback = sc->callback) != NULL) {
 	/* callback with ssize = -1 to indicate unexpected termination */
 	debug(20, 3) ("storeUnregister: store_client for %s has a callback\n",
 	    mem->url);
@@ -780,7 +779,7 @@ storeSwapOutStart(StoreEntry * e)
 }
 
 static void
-storeSwapOutHandle(int fd, int flag, size_t len, void *data)
+storeSwapOutHandle(int fdnotused, int flag, size_t len, void *data)
 {
     StoreEntry *e = data;
     MemObject *mem = e->mem_obj;
@@ -834,7 +833,7 @@ storeCheckSwapOut(StoreEntry * e)
     off_t new_mem_lo;
     size_t swapout_size;
     char *swap_buf;
-    size_t swap_buf_len;
+    ssize_t swap_buf_len;
     int x;
     assert(mem != NULL);
     /* should we swap something out to disk? */
@@ -1205,7 +1204,7 @@ storeDoRebuildFromDisk(void *data)
 }
 
 static void
-storeCleanup(void *data)
+storeCleanup(void *datanotused)
 {
     static storeCleanList *list = NULL;
     storeCleanList *curr;
@@ -1490,7 +1489,7 @@ storeGetMemSpace(int size)
     static time_t last_check = 0;
     int pages_needed;
     dlink_node *m;
-    dlink_node *prev;
+    dlink_node *prev = NULL;
     if (squid_curtime == last_check)
 	return;
     last_check = squid_curtime;
@@ -1527,10 +1526,10 @@ storeGetMemSpace(int size)
  * This should get called 1/s from main().
  */
 void
-storeMaintainSwapSpace(void *NOTUSED)
+storeMaintainSwapSpace(void *datanotused)
 {
     dlink_node *m;
-    dlink_node *prev;
+    dlink_node *prev = NULL;
     StoreEntry *e = NULL;
     int scanned = 0;
     int locked = 0;
@@ -1781,7 +1780,7 @@ storeClientCopyFileRead(store_client * sc)
 }
 
 static void
-storeClientCopyHandleRead(int fd, const char *buf, int len, int flag, void *data)
+storeClientCopyHandleRead(int fd, const char *buf, int len, int flagnotused, void *data)
 {
     store_client *sc = data;
     MemObject *mem = sc->mem;
@@ -1896,7 +1895,6 @@ storeConfigure(void)
     store_swap_low = (long) (((float) Config.Swap.maxSize *
 	    (float) Config.Swap.lowWaterMark) / (float) 100);
 
-    store_pages_max = Config.Mem.maxSize / SM_PAGE_SIZE;
     store_pages_high = store_mem_high / SM_PAGE_SIZE;
     store_pages_low = store_mem_low / SM_PAGE_SIZE;
 }

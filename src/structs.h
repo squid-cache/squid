@@ -747,7 +747,7 @@ struct _store_client {
     STCB *callback;
     void *callback_data;
     MemObject *mem;		/* ptr to the parent structure, argh! */
-    short swapin_fd;
+    int swapin_fd;
     struct _store_client *next;
 };
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.44 1997/10/17 00:00:45 wessels Exp $
+ * $Id: send-announce.cc,v 1.45 1997/11/05 05:29:35 wessels Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -34,7 +34,7 @@
 static IPH send_announce;
 
 void
-start_announce(void *unused)
+start_announce(void *datanotused)
 {
     if (!Config.onoff.announce)
 	return;
@@ -43,7 +43,7 @@ start_announce(void *unused)
 }
 
 static void
-send_announce(const ipcache_addrs * ia, void *data)
+send_announce(const ipcache_addrs * ia, void *datanotused)
 {
     LOCAL_ARRAY(char, tbuf, 256);
     LOCAL_ARRAY(char, sndbuf, BUFSIZ);
@@ -77,7 +77,7 @@ send_announce(const ipcache_addrs * ia, void *data)
 	mkhttpdlogtime(&squid_curtime));
     strcat(sndbuf, tbuf);
     l = strlen(sndbuf);
-    if ((file = Config.Announce.file)) {
+    if ((file = Config.Announce.file) != NULL) {
 	fd = file_open(file, O_RDONLY, NULL, NULL);
 	if (fd > -1 && (n = read(fd, sndbuf + l, BUFSIZ - l - 1)) > 0) {
 	    fd_bytes(fd, n, FD_READ);

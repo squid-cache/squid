@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.110 1997/11/03 22:43:11 wessels Exp $
+ * $Id: gopher.cc,v 1.111 1997/11/05 05:29:26 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -185,7 +185,7 @@ static char def_gopher_bin[] = "www/unknown";
 static char def_gopher_text[] = "text/plain";
 
 static void
-gopherStateFree(int fd, void *data)
+gopherStateFree(int fdnotused, void *data)
 {
     GopherStateData *gopherState = data;
     if (gopherState == NULL)
@@ -670,7 +670,6 @@ gopherReadReply(int fd, void *data)
     char *buf = NULL;
     int len;
     int clen;
-    int off;
     int bin;
     if (protoAbortFetch(entry)) {
 	storeAbort(entry, 0);
@@ -679,7 +678,6 @@ gopherReadReply(int fd, void *data)
     }
     /* check if we want to defer reading */
     clen = entry->mem_obj->inmem_hi;
-    off = storeLowestMemReaderOffset(entry);
     buf = get_free_4k_page();
     errno = 0;
     /* leave one space for \0 in gopherToHTML */
