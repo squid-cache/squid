@@ -33,7 +33,8 @@ parse_iso3307_time(const char *buf)
     if ((int) strlen(buf) < 14)
 	return 0;
     memset(&tms, '\0', sizeof(struct tm));
-    tms.tm_year = (ASCII_DIGIT(buf[2]) * 10) + ASCII_DIGIT(buf[3]);
+    tms.tm_year = (ASCII_DIGIT(buf[0]) * 1000) + (ASCII_DIGIT(buf[1]) * 100) +
+	(ASCII_DIGIT(buf[2]) * 10) + ASCII_DIGIT(buf[3]) - 1900;
     tms.tm_mon = (ASCII_DIGIT(buf[4]) * 10) + ASCII_DIGIT(buf[5]) - 1;
     tms.tm_mday = (ASCII_DIGIT(buf[6]) * 10) + ASCII_DIGIT(buf[7]);
     tms.tm_hour = (ASCII_DIGIT(buf[8]) * 10) + ASCII_DIGIT(buf[9]);
