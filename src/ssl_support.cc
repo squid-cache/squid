@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.16 2004/09/25 15:46:44 hno Exp $
+ * $Id: ssl_support.cc,v 1.17 2004/11/06 22:03:57 hno Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
@@ -547,7 +547,7 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
 
     if ((!SSL_CTX_load_verify_locations(sslContext, CAfile, CApath))) {
         ssl_error = ERR_get_error();
-        debug(83, 1) ("Error error setting CA certificate locations: %s\n",
+        debug(83, 1) ("Error setting CA certificate locations: %s\n",
                       ERR_error_string(ssl_error, NULL));
         debug(83, 1) ("continuing anyway...\n");
     }
@@ -555,7 +555,7 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
     if (!(fl & SSL_FLAG_NO_DEFAULT_CA) &&
             !SSL_CTX_set_default_verify_paths(sslContext)) {
         ssl_error = ERR_get_error();
-        debug(83, 1) ("Error error setting default CA certificate location: %s\n",
+        debug(83, 1) ("Error setting default CA certificate location: %s\n",
                       ERR_error_string(ssl_error, NULL));
         debug(83, 1) ("continuing anyway...\n");
     }
@@ -714,17 +714,18 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
 
     debug(83, 9) ("Setting CA certificate locations.\n");
 
-    if ((!SSL_CTX_load_verify_locations(sslContext, CAfile, CApath))) {
-        ssl_error = ERR_get_error();
-        debug(83, 1) ("Error error setting CA certificate locations: %s\n",
-                      ERR_error_string(ssl_error, NULL));
-        debug(83, 1) ("continuing anyway...\n");
-    }
+    if (CAfile || CApath)
+        if ((!SSL_CTX_load_verify_locations(sslContext, CAfile, CApath))) {
+            ssl_error = ERR_get_error();
+            debug(83, 1) ("Error setting CA certificate locations: %s\n",
+                          ERR_error_string(ssl_error, NULL));
+            debug(83, 1) ("continuing anyway...\n");
+        }
 
     if (!(fl & SSL_FLAG_NO_DEFAULT_CA) &&
             !SSL_CTX_set_default_verify_paths(sslContext)) {
         ssl_error = ERR_get_error();
-        debug(83, 1) ("Error error setting default CA certificate location: %s\n",
+        debug(83, 1) ("Error setting default CA certificate location: %s\n",
                       ERR_error_string(ssl_error, NULL));
         debug(83, 1) ("continuing anyway...\n");
     }
