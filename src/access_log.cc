@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.84 2003/07/06 21:50:55 hno Exp $
+ * $Id: access_log.cc,v 1.85 2003/07/09 13:57:43 hno Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -759,7 +759,6 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
                 case LOG_QUOTE_NONE:
                     newout = rfc1738_escape_unescaped(out);
-                    newfree = 1;
                     break;
 
                 case LOG_QUOTE_QUOTES:
