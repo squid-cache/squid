@@ -101,8 +101,8 @@ lc(char *string)
 void
 send_bh_or_ld(char *bhmessage, ntlm_authenticate * failedauth, int authlen)
 {
-    char *creds = NULL;
 #ifdef NTLM_FAIL_OPEN
+    char *creds = NULL;
     if (last_ditch_enabled) {
 	creds = fetch_credentials(failedauth, authlen);
 	if (creds) {
