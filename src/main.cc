@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.262 1998/07/25 00:16:27 wessels Exp $
+ * $Id: main.cc,v 1.263 1998/07/25 18:25:44 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -287,7 +287,7 @@ serverConnectionsOpen(void)
 void
 serverConnectionsClose(void)
 {
-    assert(shutting_down);
+    assert(shutting_down || reconfiguring);
     clientHttpConnectionsClose();
     icpConnectionShutdown();
 #if USE_HTCP
