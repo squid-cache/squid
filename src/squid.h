@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.92 1997/01/20 18:47:52 wessels Exp $
+ * $Id: squid.h,v 1.93 1997/01/31 22:30:36 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -217,7 +217,7 @@
 
 typedef struct sentry StoreEntry;
 typedef struct mem_hdr *mem_ptr;
-typedef struct _edge edge;
+typedef struct _peer peer;
 typedef struct icp_common_s icp_common_t;
 typedef struct _cacheinfo cacheinfo;
 typedef struct _aclCheck_t aclCheck_t;

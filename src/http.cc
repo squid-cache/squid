@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.145 1997/01/31 20:13:32 wessels Exp $
+ * $Id: http.cc,v 1.146 1997/01/31 22:30:31 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -882,7 +882,7 @@ int
 proxyhttpStart(const char *url,
     request_t * orig_request,
     StoreEntry * entry,
-    edge * e)
+    peer * e)
 {
     int sock;
     HttpStateData *httpState = NULL;
@@ -959,7 +959,7 @@ httpConnectDone(int fd, int status, void *data)
     HttpStateData *httpState = data;
     request_t *request = httpState->request;
     StoreEntry *entry = httpState->entry;
-    edge *e = NULL;
+    peer *e = NULL;
     if (status != COMM_OK) {
 	if ((e = httpState->neighbor))
 	    e->last_fail_time = squid_curtime;
