@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.3 1999/04/27 05:46:13 glenn Exp $
+ * $Id: wccp.cc,v 1.4 1999/06/11 23:30:37 glenn Exp $
  *
  * DEBUG: section 80     WCCP Support
  * AUTHOR: Glenn Chisholm
@@ -33,8 +33,6 @@
  *
  */
 #include "squid.h"
-#include <netinet/in_systm.h>
-#include <netinet/ip.h>
 
 #define WCCP_PORT 2048
 #define WCCP_VERSION 4
@@ -47,15 +45,6 @@
 #define WCCP_HERE_I_AM 7
 #define WCCP_I_SEE_YOU 8
 #define WCCP_ASSIGN_BUCKET 9
-
-#define GRE_PROTOCOL_TYPE 0x883E
-#define GRE_PROTOCOL 47
-#define GRE_REQUEST_SIZE 65536
-
-struct gre_packet_t {
-    int header;
-    char *data;
-};
 
 struct wccp_here_i_am_t {
     int type;
@@ -141,21 +130,12 @@ wccpConnectionOpen(void)
 	    port,
 	    COMM_NONBLOCKING,
 	    "WCCP Port");
-	theInGreConnection = comm_open(SOCK_RAW,
-	    GRE_PROTOCOL,
-	    Config.Addrs.wccp_incoming,
-	    0,
-	    COMM_NONBLOCKING,
-	    "GRE Port");
 	leave_suid();
-	if ((theInWccpConnection < 0) || (theInGreConnection < 0))
+	if (theInWccpConnection < 0)
 	    fatal("Cannot open WCCP Port");
 	commSetSelect(theInWccpConnection, COMM_SELECT_READ, wccpHandleUdp, NULL, 0);
-	commSetSelect(theInGreConnection, COMM_SELECT_READ, wccpHandleGre, NULL, 0);
 	debug(1, 1) ("Accepting WCCP UDP messages on port %d, FD %d.\n",
 	    (int) port, theInWccpConnection);
-	debug(1, 1) ("Accepting WCCP GRE messages on FD %d.\n",
-	    theInGreConnection);
 	if (Config.Addrs.wccp_outgoing.s_addr != no_addr.s_addr) {
 	    enter_suid();
 	    theOutWccpConnection = comm_open(SOCK_DGRAM,
@@ -164,22 +144,12 @@ wccpConnectionOpen(void)
 		port,
 		COMM_NONBLOCKING,
 		"WCCP Port");
-	    theOutGreConnection = comm_open(SOCK_RAW,
-		GRE_PROTOCOL,
-		Config.Addrs.wccp_outgoing,
-		0,
-		COMM_NONBLOCKING,
-		"GRE Port");
 	    leave_suid();
-	    if ((theOutWccpConnection < 0) || (theOutGreConnection < 0))
+	    if (theOutWccpConnection < 0)
 		fatal("Cannot open Outgoing WCCP Port");
 	    commSetSelect(theOutWccpConnection,
 		COMM_SELECT_READ,
 		wccpHandleUdp,
-		NULL, 0);
-	    commSetSelect(theInGreConnection,
-		COMM_SELECT_READ,
-		wccpHandleGre,
 		NULL, 0);
 	    debug(1, 1) ("Outgoing WCCP messages on port %d, FD %d.\n",
 		(int) port, theOutWccpConnection);
@@ -187,7 +157,6 @@ wccpConnectionOpen(void)
 	    fd_note(theInWccpConnection, "Incoming WCCP socket");
 	} else {
 	    theOutWccpConnection = theInWccpConnection;
-	    theOutGreConnection = theInGreConnection;
 	}
     } else {
 	debug(1, 1) ("WCCP Disabled.\n");
@@ -220,47 +189,6 @@ wccpConnectionClose(void)
 /*          
  * Functions for handling the requests.
  */
-
-/*
- * Accept the GRE packet
- */
-void
-wccpHandleGre(int sock, void *not_used)
-{
-    struct gre_packet_t *gre_packet = NULL;
-    struct sockaddr_in from;
-    struct ip *ip_header = NULL;
-    char buf[GRE_REQUEST_SIZE];
-    socklen_t from_len;
-    int len;
-
-    debug(80, 6) ("wccpHandleGre: Called.\n");
-
-    commSetSelect(sock, COMM_SELECT_READ, wccpHandleGre, NULL, 0);
-    from_len = sizeof(struct sockaddr_in);
-    memset(&from, '\0', from_len);
-
-    Counter.syscalls.sock.recvfroms++;
-
-    len = recvfrom(sock,
-	buf,
-	GRE_REQUEST_SIZE,
-	0,
-	(struct sockaddr *) &from,
-	&from_len);
-
-    if (len > 0) {
-	debug(80, 1) ("wccpHandleGre: FD %d: received %d bytes from %s.\n",
-	    sock,
-	    len,
-	    inet_ntoa(from.sin_addr));
-	buf[len] = '\0';
-	ip_header = (struct ip *) buf;
-	len = ip_header->ip_hl << 2;
-	gre_packet = (struct gre_packet_t *) (buf + len);
-	debug(80, 1) ("wccpHandleGre: Packet %x, IP Len %d.\n", ntohl(gre_packet->header), len);
-    }
-}
 
 /*          
  * Accept the UDP packet
