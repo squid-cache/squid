@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.28 1998/10/01 22:28:28 wessels Exp $
+ * $Id: fd.cc,v 1.29 1999/01/12 16:42:18 wessels Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -45,24 +45,30 @@ const char *fdTypeStr[] =
     "Unknown"
 };
 
-static void fdUpdateBiggest(int fd, unsigned int status);
+static void fdUpdateBiggest(int fd, int);
 
 static void
-fdUpdateBiggest(int fd, unsigned int status)
+fdUpdateBiggest(int fd, int opening)
 {
     if (fd < Biggest_FD)
 	return;
     assert(fd < Squid_MaxFD);
     if (fd > Biggest_FD) {
-	if (status != FD_OPEN)
-	    debug(51, 1) ("fdUpdateBiggest: status != FD_OPEN\n");
+	/*
+	 * assert that we are not closing a FD bigger than
+	 * our known biggest FD
+	 */
+	assert(opening);
 	Biggest_FD = fd;
 	return;
     }
     /* if we are here, then fd == Biggest_FD */
-    if (status != FD_CLOSE)
-	debug(51, 1) ("fdUpdateBiggest: status != FD_CLOSE\n");
-    while (fd_table[Biggest_FD].open != FD_OPEN)
+    /*
+     * assert that we are closing the biggest FD; we can't be
+     * re-opening it
+     */
+    assert(!opening);
+    while (!fd_table[Biggest_FD].flags.open)
 	Biggest_FD--;
 }
 
@@ -75,7 +81,8 @@ fd_close(int fd)
 	assert(F->write_handler == NULL);
     }
     debug(51, 3) ("fd_close FD %d %s\n", fd, F->desc);
-    fdUpdateBiggest(fd, F->open = FD_CLOSE);
+    F->flags.open = 0;
+    fdUpdateBiggest(fd, 0);
     Number_FD--;
     if (F->type == FD_FILE)
 	open_disk_fd--;
@@ -90,14 +97,15 @@ fd_open(int fd, unsigned int type, const char *desc)
 {
     fde *F = &fd_table[fd];
     assert(fd >= 0);
-    if (F->open != 0) {
+    if (!F->flags.open) {
 	debug(51, 1) ("WARNING: Closing open FD %4d\n", fd);
 	fd_close(fd);
     }
-    assert(F->open == 0);
+    assert(!F->flags.open);
     debug(51, 3) ("fd_open FD %d %s\n", fd, desc);
     F->type = type;
-    fdUpdateBiggest(fd, F->open = FD_OPEN);
+    F->flags.open = 1;
+    fdUpdateBiggest(fd, 1);
     if (desc)
 	xstrncpy(F->desc, desc, FD_DESC_SZ);
     Number_FD++;
@@ -138,7 +146,7 @@ fdDumpOpen(void)
     fde *F;
     for (i = 0; i < Squid_MaxFD; i++) {
 	F = &fd_table[i];
-	if (!F->open)
+	if (!F->flags.open)
 	    continue;
 	if (i == fileno(debug_log))
 	    continue;

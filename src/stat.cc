@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.306 1999/01/11 19:42:22 wessels Exp $
+ * $Id: stat.cc,v 1.307 1999/01/12 16:42:19 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -410,7 +410,7 @@ statFiledescriptors(StoreEntry * sentry)
     storeAppendPrintf(sentry, "---- ------ ---- ------- ------- --------------------- ------------------------------\n");
     for (i = 0; i < Squid_MaxFD; i++) {
 	f = &fd_table[i];
-	if (!f->open)
+	if (!f->flags.open)
 	    continue;
 	storeAppendPrintf(sentry, "%4d %-6.6s %4d %7d %7d %-21s %s\n",
 	    i,
