@@ -1,6 +1,6 @@
 
-/* $Id: store.cc,v 1.38 1996/04/10 03:54:44 wessels Exp $ */
-#ident "$Id: store.cc,v 1.38 1996/04/10 03:54:44 wessels Exp $"
+/* $Id: store.cc,v 1.39 1996/04/10 05:07:27 wessels Exp $ */
+#ident "$Id: store.cc,v 1.39 1996/04/10 05:07:27 wessels Exp $"
 
 /*
  * DEBUG: Section 20          store
@@ -433,7 +433,7 @@ void storeReleaseRequest(e, file, line)
 {
     if (e->flag & RELEASE_REQUEST)
 	return;
-    debug(20, 1, "storeReleaseRequest: FROM %s:%d FOR '%s'\n",
+    debug(20, 3, "storeReleaseRequest: FROM %s:%d FOR '%s'\n",
 	file, line, e->key ? e->key : e->url);
     e->flag |= RELEASE_REQUEST;
 }

@@ -1,4 +1,4 @@
-/* $Id: ftp.cc,v 1.30 1996/04/10 03:54:43 wessels Exp $ */
+/* $Id: ftp.cc,v 1.31 1996/04/10 05:06:57 wessels Exp $ */
 
 /*
  * DEBUG: Section 9           ftp: FTP
@@ -67,9 +67,10 @@ int ftp_url_parser(url, data)
     char *user = data->user;
     char *password = data->password;
 
+    debug(9, 3, "ftp_url_parser: parsing '%s'\n", url);
+
     /* initialize everything */
     proto[0] = hostbuf[0] = '\0';
-    request[0] = host[0] = user[0] = password[0] = '\0';
 
     t = sscanf(url, "%[a-zA-Z]://%[^/]%s", proto, hostbuf, request);
     if (t < 2)
@@ -109,11 +110,11 @@ int ftp_url_parser(url, data)
 
     (void) url_convert_hex(password, 0);
 
-    debug(9, 1, "ftp_url_parser: proto = %s\n", proto);
-    debug(9, 1, "ftp_url_parser:  user = %s\n", data->user);
-    debug(9, 1, "ftp_url_parser:  pass = %s\n", data->password);
-    debug(9, 1, "ftp_url_parser:  host = %s\n", data->host);
-    debug(9, 1, "ftp_url_parser:  port = %d\n", data->port);
+    debug(9, 5, "ftp_url_parser: proto = %s\n", proto);
+    debug(9, 5, "ftp_url_parser:  user = %s\n", data->user);
+    debug(9, 5, "ftp_url_parser:  pass = %s\n", data->password);
+    debug(9, 5, "ftp_url_parser:  host = %s\n", data->host);
+    debug(9, 5, "ftp_url_parser:  port = %d\n", data->port);
 
     return 0;
 }
