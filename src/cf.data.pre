@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.158 1999/06/24 20:19:58 wessels Exp $
+# $Id: cf.data.pre,v 1.159 1999/06/25 16:21:21 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1588,7 +1588,7 @@ DOC_START
 
 Examples:
 acl myexample dst_as 1241
-acl password proxy_auth 300
+acl password proxy_auth REQUIRED
 
 Defaults:
 NOCOMMENT_START
