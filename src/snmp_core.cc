@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_core.cc,v 1.19 1998/11/25 09:00:25 wessels Exp $
+ * $Id: snmp_core.cc,v 1.20 1998/12/02 05:49:24 glenn Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -542,6 +542,7 @@ snmpHandleUdp(int sock, void *not_used)
 	snmp_rq->outbuf = xmalloc(snmp_rq->outlen = SNMP_REQUEST_SIZE);
 	memcpy(&snmp_rq->from, &from, sizeof(struct sockaddr_in));
 	snmpDecodePacket(snmp_rq);
+	xfree(snmp_rq);
     } else {
 	debug(49, 1) ("snmpHandleUdp: FD %d recvfrom: %s\n", sock, xstrerror());
     }
@@ -568,7 +569,6 @@ snmpDecodePacket(snmp_request_t * rq)
     Session->authenticator = NULL;
     Session->community = (u_char *) xstrdup("public");
     Session->community_len = 6;
-    cbdataAdd(rq, MEM_NONE);
     PDU = snmp_pdu_create(0);
     Community = snmp_parse(Session, PDU, buf, len);
 
