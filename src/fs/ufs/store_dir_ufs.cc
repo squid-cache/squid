@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.62 2003/08/04 22:14:53 robertc Exp $
+ * $Id: store_dir_ufs.cc,v 1.63 2003/08/10 07:43:42 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -996,6 +996,13 @@ UFSSwapDir::writeCleanDone()
     cleanLog = NULL;
 }
 
+static void
+FreeObject(void *address)
+{
+    StoreSwapLogData *anObject = static_cast <StoreSwapLogData *>(address);
+    delete anObject;
+}
+
 void
 UFSSwapDir::logEntry(const StoreEntry & e, int op) const
 {
@@ -1016,7 +1023,7 @@ UFSSwapDir::logEntry(const StoreEntry & e, int op) const
                sizeof(StoreSwapLogData),
                NULL,
                NULL,
-               FreeObject<StoreSwapLogData>);
+               FreeObject);
 }
 
 static QS rev_int_sort;
