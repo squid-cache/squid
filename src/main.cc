@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.301 1999/06/17 05:02:21 wessels Exp $
+ * $Id: main.cc,v 1.302 1999/06/24 23:07:09 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -335,6 +335,7 @@ mainReconfigure(void)
     authenticateShutdown();
     storeDirCloseSwapLogs();
     errorClean();
+    mimeFreeMemory();
     parseConfigFile(ConfigFile);
     _db_init(Config.Log.log, Config.debugOptions);
     ipcache_restart();		/* clear stuck entries */
@@ -352,6 +353,7 @@ mainReconfigure(void)
 	    debug(1, 1) ("ICP port disabled in httpd_accelerator mode\n");
     }
     storeDirOpenSwapLogs();
+    mimeInit(Config.mimeTablePathname);
     writePidFile();		/* write PID file */
     debug(1, 1) ("Ready to serve requests.\n");
     reconfiguring = 0;
