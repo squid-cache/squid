@@ -1,5 +1,5 @@
 /*
- * $Id: squid.h,v 1.23 1996/07/09 03:41:39 wessels Exp $
+ * $Id: squid.h,v 1.24 1996/07/09 04:46:52 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -123,6 +123,9 @@
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if USE_ASYNC_IO && HAVE_AIO_H
+#include <aio.h>
 #endif
 
 #if defined(__STRICT_ANSI__)

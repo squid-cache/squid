@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.33 1996/07/09 03:41:20 wessels Exp $
+ * $Id: comm.cc,v 1.34 1996/07/09 04:46:50 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -668,6 +668,11 @@ int comm_select(sec, failtime)
 	nfds = 0;
 	maxfd = fdstat_biggest_fd() + 1;
 	for (i = 0; i < maxfd; i++) {
+#if USE_ASYNC_IO
+           /* Using async IO for disk handle, so don't select on them */
+           if (fdstat_type(i) == FD_FILE) 
+               continue;
+#endif
 	    /* Check each open socket for a handler. */
 	    if (fd_table[i].read_handler && fd_table[i].stall_until <= squid_curtime) {
 		nfds++;
@@ -692,8 +697,14 @@ int comm_select(sec, failtime)
 	if (shutdown_pending || reread_pending)
 	    debug(5, 2, "comm_select: Still waiting on %d FDs\n", nfds);
 	while (1) {
+#if USE_ASYNC_IO
+           /* Another CPU vs latency tradeoff for async IO */
+           poll_time.tv_sec = 0;
+           poll_time.tv_usec = 250000;
+#else      
 	    poll_time.tv_sec = sec > 1 ? 1 : 0;
 	    poll_time.tv_usec = 0;
+#endif
 	    num = select(maxfd, &readfds, &writefds, &exceptfds, &poll_time);
 	    if (num >= 0)
 		break;
@@ -705,6 +716,9 @@ int comm_select(sec, failtime)
 	    return COMM_ERROR;
 	    /* NOTREACHED */
 	}
+#if USE_ASYNC_IO
+       aioExamine();          /* See if any IO completed */
+#endif
 	if (num < 0)
 	    continue;
 	debug(5, num ? 5 : 8, "comm_select: %d sockets ready at %d\n",
