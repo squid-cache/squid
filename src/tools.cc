@@ -1,5 +1,5 @@
 
-/* $Id: tools.cc,v 1.9 1996/03/27 05:12:40 wessels Exp $ */
+/* $Id: tools.cc,v 1.10 1996/03/27 18:15:55 wessels Exp $ */
 
 #include "squid.h"
 
@@ -56,14 +56,14 @@ void print_warranty()
 }
 
 void death(sig)
-	int sig;
+     int sig;
 {
     if (sig == SIGSEGV)
-    	fprintf(stderr, "FATAL: Received Segment Violation...dying.\n");
+	fprintf(stderr, "FATAL: Received Segment Violation...dying.\n");
     else if (sig == SIGBUS)
-        fprintf(stderr, "FATAL: Received bus error...dying.\n");
+	fprintf(stderr, "FATAL: Received bus error...dying.\n");
     else
-        fprintf(stderr, "FATAL: Received signal %d...dying.\n", sig);
+	fprintf(stderr, "FATAL: Received signal %d...dying.\n", sig);
     signal(SIGSEGV, SIG_DFL);
     signal(SIGBUS, SIG_DFL);
     signal(sig, SIG_DFL);
@@ -77,7 +77,7 @@ void death(sig)
 void rotate_logs(sig)
      int sig;
 {
-    debug(1, "rotate_logs: SIGHUP received.\n");
+    debug(0, 1, "rotate_logs: SIGHUP received.\n");
 
     storeWriteCleanLog();
     neighbors_rotate_log();
@@ -91,10 +91,10 @@ void rotate_logs(sig)
 void shut_down(sig)
      int sig;
 {
-    debug(1, "Shutting down...\n");
+    debug(0, 1, "Shutting down...\n");
     storeWriteCleanLog();
     PrintRusage(NULL, stderr);
-    debug(0, "Harvest Cache (Version %s): Exiting due to signal %d.\n",
+    debug(0, 0, "Harvest Cache (Version %s): Exiting due to signal %d.\n",
 	SQUID_VERSION, sig);
     exit(1);
 }
@@ -112,8 +112,8 @@ void fatal_common(message)
     fflush(stderr);
     PrintRusage(NULL, stderr);
     if (debug_log != stderr) {
-	debug(0, "FATAL: %s\n", message);
-	debug(0, "Harvest Cache (Version %s): Terminated abnormally.\n",
+	debug(0, 0, "FATAL: %s\n", message);
+	debug(0, 0, "Harvest Cache (Version %s): Terminated abnormally.\n",
 	    SQUID_VERSION);
     }
 }
@@ -220,7 +220,7 @@ void sig_child(sig)
     int pid;
 
     if ((pid = waitpid(-1, &status, WNOHANG)) > 0)
-	debug(3, "sig_child: Ate pid %d\n", pid);
+	debug(0, 3, "sig_child: Ate pid %d\n", pid);
 
 #if defined(_SQUID_SYSV_SIGNALS_)
     signal(sig, sig_child);
@@ -248,7 +248,7 @@ int getMaxFD()
 #else
 	i = 64;			/* 64 is a safe default */
 #endif
-	debug(10, "getMaxFD set MaxFD at %d\n", i);
+	debug(0, 10, "getMaxFD set MaxFD at %d\n", i);
     }
     return (i);
 }
@@ -263,7 +263,7 @@ char *getMyHostname()
     if (!present) {
 	host[0] = '\0';
 	if (gethostname(host, SQUIDHOSTNAMELEN) == -1) {
-	    debug(1, "comm_hostname: gethostname failed: %s\n",
+	    debug(0, 1, "comm_hostname: gethostname failed: %s\n",
 		xstrerror());
 	    return NULL;
 	} else {
@@ -285,6 +285,51 @@ int safeunlink(s, quiet)
     int err;
     if ((err = unlink(s)) < 0)
 	if (!quiet)
-	    debug(1, "safeunlink: Couldn't delete %s. %s\n", s, xstrerror());
+	    debug(0, 1, "safeunlink: Couldn't delete %s. %s\n", s, xstrerror());
     return (err);
+}
+
+/* 
+ * Daemonize a process according to guidlines in "Advanced Programming
+ * For The UNIX Environment", W.R. Stevens ( Addison Wesley, 1992) - Ch. 13
+ */
+int daemonize()
+{
+    int n_openf, i;
+    pid_t pid;
+    if ((pid = fork()) < 0)
+	return -1;
+    else if (pid != 0)
+	exit(0);
+    /* Child continues */
+    setsid();			/* Become session leader */
+    n_openf = getMaxFD();	/* Close any inherited files */
+    for (i = 0; i < n_openf; i++)
+	close(i);
+    umask(0);			/* Clear file mode creation mask */
+    return 0;
+}
+
+void check_suid()
+{
+    struct passwd *pwd = NULL;
+    struct group *grp = NULL;
+    if (geteuid() != 0)
+	return;
+    /* Started as a root, check suid option */
+    if (getEffectiveUser() == NULL)
+	return;
+    if ((pwd = getpwnam(getEffectiveUser())) == NULL)
+	return;
+    /* change current directory to swap space so we can get core */
+    if (chdir(swappath(0))) {
+	debug(0, 1, "Chdir Failed: Cached cannot write core file when it crash: %s\n",
+	    xstrerror());
+    }
+    if (getEffectiveGroup() && (grp = getgrnam(getEffectiveGroup()))) {
+	setgid(grp->gr_gid);
+    } else {
+	setgid(pwd->pw_gid);
+    }
+    setuid(pwd->pw_uid);
 }

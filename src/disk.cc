@@ -1,4 +1,4 @@
-/* $Id: disk.cc,v 1.4 1996/03/27 01:45:59 wessels Exp $ */
+/* $Id: disk.cc,v 1.5 1996/03/27 18:15:43 wessels Exp $ */
 
 #include "squid.h"
 
@@ -111,7 +111,7 @@ int file_open(path, handler, mode)
 
     /* Open file */
     if ((fd = open(path, mode | O_NDELAY, 0644)) < 0) {
-	debug(0, "file_open: error opening file %s: %s\n",
+	debug(0, 0, "file_open: error opening file %s: %s\n",
 	    path, xstrerror());
 	return (DISK_ERROR);
     }
@@ -138,13 +138,13 @@ int file_open(path, handler, mode)
     /* set non-blocking mode */
 #if defined(O_NONBLOCK) && !defined(_SQUID_SUNOS_) && !defined(_SQUID_SOLARIS_)
     if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
-	debug(0, "file_open: FD %d: Failure to set O_NONBLOCK: %s\n",
+	debug(0, 0, "file_open: FD %d: Failure to set O_NONBLOCK: %s\n",
 	    fd, xstrerror());
 	return DISK_ERROR;
     }
 #else
     if (fcntl(fd, F_SETFL, FNDELAY) < 0) {
-	debug(0, "file_open: FD %d: Failure to set FNDELAY: %s\n",
+	debug(0, 0, "file_open: FD %d: Failure to set FNDELAY: %s\n",
 	    fd, xstrerror());
 	return DISK_ERROR;
     }
@@ -209,7 +209,7 @@ int file_close(fd)
 	file_table[fd].filename[0] = '\0';
 
 	if (fdstat_type(fd) == Socket) {
-	    debug(0, "FD %d: Someone called file_close() on a socket\n", fd);
+	    debug(0, 0, "FD %d: Someone called file_close() on a socket\n", fd);
 	    fatal_dump(NULL);
 	}
 	/* update fdstat */
@@ -249,7 +249,7 @@ int file_write_lock(fd)
      int fd;
 {
     if (file_table[fd].write_lock == LOCK) {
-	debug(0, "trying to lock a locked file\n");
+	debug(0, 0, "trying to lock a locked file\n");
 	return DISK_WRT_LOCK_FAIL;
     } else {
 	file_table[fd].write_lock = LOCK;
@@ -269,7 +269,7 @@ int file_write_unlock(fd, access_code)
 	file_table[fd].write_lock = UNLOCK;
 	return DISK_OK;
     } else {
-	debug(0, "trying to unlock the file with the wrong access code\n");
+	debug(0, 0, "trying to unlock the file with the wrong access code\n");
 	return DISK_WRT_WRONG_CODE;
     }
 }
@@ -308,7 +308,7 @@ int diskHandleWrite(fd, entry)
 		return DISK_OK;
 	    default:
 		/* disk i/o failure--flushing all outstanding writes  */
-		debug(1, "diskHandleWrite: disk write error %s\n",
+		debug(0, 1, "diskHandleWrite: disk write error %s\n",
 		    xstrerror());
 		entry->write_daemon = NOT_PRESENT;
 		entry->write_pending = NO_WRT_PENDING;
@@ -404,7 +404,7 @@ int file_write(fd, ptr_to_buf, len, access_code, handle, handle_data)
     }
     if ((file_table[fd].write_lock == LOCK) &&
 	(file_table[fd].access_code != access_code)) {
-	debug(0, "file write: access code checked failed. Sync problem.\n");
+	debug(0, 0, "file write: access code checked failed. Sync problem.\n");
 	return DISK_WRT_WRONG_CODE;
     }
     /* if we got here. Caller is eligible to write. */
@@ -460,7 +460,7 @@ int diskHandleRead(fd, ctrl_dat)
 	case EWOULDBLOCK:
 	    break;
 	default:
-	    debug(1, "diskHandleRead: FD %d: error reading: %s\n",
+	    debug(0, 1, "diskHandleRead: FD %d: error reading: %s\n",
 		fd, xstrerror());
 	    ctrl_dat->handler(fd, ctrl_dat->buf,
 		ctrl_dat->cur_len, DISK_ERROR,
@@ -550,7 +550,7 @@ int diskHandleWalk(fd, walk_dat)
 	case EWOULDBLOCK:
 	    break;
 	default:
-	    debug(1, "diskHandleWalk: FD %d: error readingd: %s\n",
+	    debug(0, 1, "diskHandleWalk: FD %d: error readingd: %s\n",
 		fd, xstrerror());
 	    walk_dat->handler(fd, DISK_ERROR, walk_dat->client_data);
 	    safe_free(walk_dat->buf);

@@ -1,4 +1,4 @@
-/* $Id: url.cc,v 1.3 1996/03/27 01:46:28 wessels Exp $ */
+/* $Id: url.cc,v 1.4 1996/03/27 18:15:57 wessels Exp $ */
 
 #include "squid.h"
 
@@ -125,7 +125,7 @@ char *the_url(e)
 	/* discard "/head/" or "head/" from the key and get url */
 	return URL;
     } else {
-	debug(0, "Should not be here. Unknown format of the key: %s\n",
+	debug(0, 0, "Should not be here. Unknown format of the key: %s\n",
 	    e->key);
 	return (NULL);
     }

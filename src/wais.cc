@@ -1,4 +1,4 @@
-/* $Id: wais.cc,v 1.9 1996/03/27 01:46:29 wessels Exp $ */
+/* $Id: wais.cc,v 1.10 1996/03/27 18:15:58 wessels Exp $ */
 
 #include "squid.h"
 
@@ -39,7 +39,7 @@ void waisReadReplyTimeout(fd, data)
     StoreEntry *entry = NULL;
 
     entry = data->entry;
-    debug(4, "waisReadReplyTimeout: Timeout on %d\n url: %s\n", fd, entry->url);
+    debug(0, 4, "waisReadReplyTimeout: Timeout on %d\n url: %s\n", fd, entry->url);
     cached_error_entry(entry, ERR_READ_TIMEOUT);
     comm_set_select_handler(fd, COMM_SELECT_READ, 0, 0);
     comm_close(fd);
@@ -54,7 +54,7 @@ void waisLifetimeExpire(fd, data)
     StoreEntry *entry = NULL;
 
     entry = data->entry;
-    debug(4, "waisLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
+    debug(0, 4, "waisLifeTimeExpire: FD %d: <URL:%s>\n", fd, entry->url);
     cached_error_entry(entry, ERR_LIFETIME_EXP);
     comm_set_select_handler(fd, COMM_SELECT_READ | COMM_SELECT_WRITE, 0, 0);
     comm_close(fd);
@@ -80,8 +80,8 @@ void waisReadReply(fd, data)
 	    /* check if we want to defer reading */
 	    if ((entry->mem_obj->e_current_len -
 		    entry->mem_obj->e_lowest_offset) > WAIS_DELETE_GAP) {
-		debug(3, "waisReadReply: Read deferred for Object: %s\n", entry->key);
-		debug(3, "                Current Gap: %d bytes\n",
+		debug(0, 3, "waisReadReply: Read deferred for Object: %s\n", entry->key);
+		debug(0, 3, "                Current Gap: %d bytes\n",
 		    entry->mem_obj->e_current_len -
 		    entry->mem_obj->e_lowest_offset);
 
@@ -115,10 +115,10 @@ void waisReadReply(fd, data)
 	}
     }
     len = read(fd, buf, 4096);
-    debug(5, "waisReadReply - fd: %d read len:%d\n", fd, len);
+    debug(0, 5, "waisReadReply - fd: %d read len:%d\n", fd, len);
 
     if (len < 0 || ((len == 0) && (entry->mem_obj->e_current_len == 0))) {
-	debug(1, "waisReadReply - error reading errno %d: %s\n",
+	debug(0, 1, "waisReadReply - error reading errno %d: %s\n",
 	    errno, xstrerror());
 	if (errno == ECONNRESET) {
 	    /* Connection reset by peer */
@@ -168,7 +168,7 @@ void waisSendComplete(fd, buf, size, errflag, data)
 {
     StoreEntry *entry = NULL;
     entry = data->entry;
-    debug(5, "waisSendComplete - fd: %d size: %d errflag: %d\n",
+    debug(0, 5, "waisSendComplete - fd: %d size: %d errflag: %d\n",
 	fd, size, errflag);
     if (errflag) {
 	cached_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
@@ -193,7 +193,7 @@ void waisSendRequest(fd, data)
     int len = strlen(data->request) + 4;
     char *buf;
 
-    debug(5, "waisSendRequest - fd: %d\n", fd);
+    debug(0, 5, "waisSendRequest - fd: %d\n", fd);
 
     if (data->type)
 	len += strlen(data->type);
@@ -207,7 +207,7 @@ void waisSendRequest(fd, data)
 	    data->mime_hdr, CR, LF);
     else
 	sprintf(buf, "%s %s%c%c", data->type, data->request, CR, LF);
-    debug(6, "waisSendRequest - buf:%s\n", buf);
+    debug(0, 6, "waisSendRequest - buf:%s\n", buf);
     icpWrite(fd, buf, len, 30, waisSendComplete, data);
 }
 
@@ -222,14 +222,14 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
     int sock, status;
     WAISData *data = NULL;
 
-    debug(3, "waisStart - url:%s, type:%s\n", url, type);
-    debug(4, "            header: %s\n", mime_hdr);
+    debug(0, 3, "waisStart - url:%s, type:%s\n", url, type);
+    debug(0, 4, "            header: %s\n", mime_hdr);
 
     data = (WAISData *) xcalloc(1, sizeof(WAISData));
     data->entry = entry;
 
     if (!getWaisRelayHost()) {
-	debug(0, "waisStart: Failed because no relay host defined!\n");
+	debug(0, 0, "waisStart: Failed because no relay host defined!\n");
 	cached_error_entry(entry, ERR_NO_RELAY);
 	safe_free(data);
 	return COMM_ERROR;
@@ -242,7 +242,7 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
     /* Create socket. */
     sock = comm_open(COMM_NONBLOCKING, 0, 0, url);
     if (sock == COMM_ERROR) {
-	debug(4, "waisStart: Failed because we're out of sockets.\n");
+	debug(0, 4, "waisStart: Failed because we're out of sockets.\n");
 	cached_error_entry(entry, ERR_NO_FDS);
 	safe_free(data);
 	return COMM_ERROR;
@@ -251,7 +251,7 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
      * It should be done before this route is called. 
      * Otherwise, we cannot check return code for connect. */
     if (!ipcache_gethostbyname(data->host)) {
-	debug(4, "waisstart: Called without IP entry in ipcache. OR lookup failed.\n");
+	debug(0, 4, "waisstart: Called without IP entry in ipcache. OR lookup failed.\n");
 	comm_close(sock);
 	cached_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
 	safe_free(data);
@@ -265,7 +265,7 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
 	    safe_free(data);
 	    return COMM_ERROR;
 	} else {
-	    debug(5, "waisStart - conn %d EINPROGRESS\n", sock);
+	    debug(0, 5, "waisStart - conn %d EINPROGRESS\n", sock);
 	}
     }
     /* Install connection complete handler. */

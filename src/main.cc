@@ -1,4 +1,4 @@
-/* $Id: main.cc,v 1.9 1996/03/27 04:42:08 wessels Exp $ */
+/* $Id: main.cc,v 1.10 1996/03/27 18:15:49 wessels Exp $ */
 
 #include "squid.h"
 
@@ -14,7 +14,6 @@ int theAsciiConnection = -1;
 int theBinaryConnection = -1;
 int theUdpConnection = -1;
 int do_reuse = 1;
-int debug_level = 0;
 int catch_signals = 1;
 int do_dns_test = 1;
 char *config_file = NULL;
@@ -36,16 +35,12 @@ static int asciiPortNumOverride = 0;
 static int binaryPortNumOverride = 0;
 static int udpPortNumOverride = 0;
 
-void raise_debug_lvl(), reset_debug_lvl();
-void sig_child();
-
 int main(argc, argv)
      int argc;
      char **argv;
 {
     int c;
     int malloc_debug_level = 0;
-    int debug_level_overwrite = 0;
     extern char *optarg;
     int errcount = 0;
     static int neighbors = 0;
@@ -175,12 +170,6 @@ int main(argc, argv)
 	case 'u':
 	    udpPortNumOverride = atoi(optarg);
 	    break;
-	case 'd':
-	    stderr_enable = 1;
-	    debug_level_overwrite = 1;
-	    debug_level = atoi(optarg);
-	    unbuffered_logs = 1;
-	    break;
 	case 'm':
 	    malloc_debug_level = atoi(optarg);
 	    break;
@@ -191,7 +180,7 @@ int main(argc, argv)
 	case 'h':
 	default:
 	    printf("\
-Usage: cached [-Rsehvz] [-f config-file] [-d debug-level] [-[apu] port]\n\
+Usage: cached [-Rsehvz] [-f config-file] [-[apu] port]\n\
        -e        Print messages to stderr.\n\
        -h        Print help message.\n\
        -s        Disable syslog output.\n\
@@ -202,7 +191,6 @@ Usage: cached [-Rsehvz] [-f config-file] [-d debug-level] [-[apu] port]\n\
        -R        Do not set REUSEADDR on port.\n\
        -f file   Use given config-file instead of\n\
                  $HARVEST_HOME/lib/cached.conf.\n\
-       -d level  Use given debug-level, prints messages to stderr.\n\
        -a port	 Specify ASCII port number (default: %d).\n\
        -u port	 Specify UDP port number (default: %d).\n",
 		CACHE_HTTP_PORT, CACHE_ICP_PORT);
@@ -235,26 +223,11 @@ Usage: cached [-Rsehvz] [-f config-file] [-d debug-level] [-[apu] port]\n\
     if (udpPortNumOverride > 0)
 	setUdpPortNum(udpPortNumOverride);
 
-    if (!debug_level_overwrite) {
-	debug_level = getDebugLevel();
-    }
-    /* to toggle debugging */
-#ifdef SIGUSR1
-    signal(SIGUSR1, raise_debug_lvl);
-#endif
-#ifdef SIGUSR2
-    signal(SIGUSR2, reset_debug_lvl);
-#endif
-
-#ifdef NO_LOGGING
-    _db_init("cached", 0, getCacheLogFile());
-#else
-    _db_init("cached", debug_level, getCacheLogFile());
-#endif
+    _db_init("cached", getCacheLogFile());
     fdstat_open(fileno(debug_log), LOG);
     fd_note(fileno(debug_log), getCacheLogFile());
 
-    debug(0, "Starting Harvest Cache (version %s)...\n", SQUID_VERSION);
+    debug(0, 0, "Starting Harvest Cache (version %s)...\n", SQUID_VERSION);
 
     /* init ipcache */
     ipcache_init();
@@ -266,7 +239,7 @@ Usage: cached [-Rsehvz] [-f config-file] [-d debug-level] [-[apu] port]\n\
 
 
 #if defined(MALLOC_DBG)
-    malloc_debug(malloc_debug_level);
+    malloc_debug(0, malloc_debug_level);
 #endif
 
     theAsciiConnection = comm_open(COMM_NONBLOCKING,
@@ -283,7 +256,7 @@ Usage: cached [-Rsehvz] [-f config-file] [-d debug-level] [-[apu] port]\n\
 	COMM_SELECT_READ,
 	asciiHandleConn,
 	0);
-    debug(1, "Accepting HTTP (ASCII) connections on FD %d.\n",
+    debug(0, 1, "Accepting HTTP (ASCII) connections on FD %d.\n",
 	theAsciiConnection);
 
     if (!httpd_accel_mode || getAccelWithProxy()) {
@@ -301,7 +274,7 @@ Usage: cached [-Rsehvz] [-f config-file] [-d debug-level] [-[apu] port]\n\
 	    COMM_SELECT_READ,
 	    icpHandleTcp,
 	    0);
-	debug(1, "Binary connection opened on fd %d\n", theBinaryConnection);
+	debug(0, 1, "Binary connection opened on fd %d\n", theBinaryConnection);
 #endif
 	if (getUdpPortNum() > -1) {
 	    theUdpConnection = comm_open(COMM_NONBLOCKING | COMM_DGRAM,
@@ -316,7 +289,7 @@ Usage: cached [-Rsehvz] [-f config-file] [-d debug-level] [-[apu] port]\n\
 		COMM_SELECT_READ,
 		icpHandleUdp,
 		0);
-	    debug(1, "Accepting ICP (UDP) connections on FD %d.\n",
+	    debug(0, 1, "Accepting ICP (UDP) connections on FD %d.\n",
 		theUdpConnection);
 	}
     }
@@ -353,7 +326,7 @@ Usage: cached [-Rsehvz] [-f config-file] [-d debug-level] [-[apu] port]\n\
 
     /* after this point we want to see the mallinfo() output */
     do_mallinfo = 1;
-    debug(0, "Ready to serve requests.\n");
+    debug(0, 0, "Ready to serve requests.\n");
 
     /* main loop */
     if (getCleanRate() > 0)
@@ -370,7 +343,7 @@ Usage: cached [-Rsehvz] [-f config-file] [-d debug-level] [-[apu] port]\n\
 	    break;
 	case COMM_ERROR:
 	    errcount++;
-	    debug(0, "Select loop Error. Retry. %d\n", errcount);
+	    debug(0, 0, "Select loop Error. Retry. %d\n", errcount);
 	    if (errcount == 10)
 		fatal_dump("Select Loop failed.!\n");
 	    break;
@@ -379,38 +352,18 @@ Usage: cached [-Rsehvz] [-f config-file] [-d debug-level] [-[apu] port]\n\
 	     * when next_cleaning has arrived */
 	    /* garbage collection */
 	    if (getCleanRate() > 0 && cached_curtime >= next_cleaning) {
-		debug(1, "Performing a garbage collection...\n");
+		debug(0, 1, "Performing a garbage collection...\n");
 		n = storePurgeOld();
-		debug(1, "Garbage collection done, %d objects removed\n", n);
+		debug(0, 1, "Garbage collection done, %d objects removed\n", n);
 		next_cleaning = cached_curtime + getCleanRate();
 	    }
 	    /* house keeping */
 	    break;
 	default:
-	    debug(0, "MAIN: Internal error -- this should never happen.\n");
+	    debug(0, 0, "MAIN: Internal error -- this should never happen.\n");
 	    break;
 	}
     }
     /* NOTREACHED */
     exit(0);
-}
-
-void raise_debug_lvl()
-{
-    extern int _db_level;
-    _db_level = 10;
-
-#if defined(_SQUID_SYSV_SIGNALS_) && defined(SIGUSR1)
-    signal(SIGUSR1, raise_debug_lvl);
-#endif
-}
-
-void reset_debug_lvl()
-{
-    extern int _db_level;
-    _db_level = debug_level;
-
-#if defined(_SQUID_SYSV_SIGNALS_) && defined(SIGUSR2)
-    signal(SIGUSR2, reset_debug_lvl);
-#endif
 }

@@ -1,4 +1,4 @@
-/* $Id: neighbors.cc,v 1.4 1996/03/27 01:46:14 wessels Exp $ */
+/* $Id: neighbors.cc,v 1.5 1996/03/27 18:15:50 wessels Exp $ */
 
 #include "squid.h"
 
@@ -42,7 +42,7 @@ edge *whichEdge(header, from)
     port = ntohs(from->sin_port);
     ip = from->sin_addr;
 
-    debug(3, "whichEdge: from %s port %d\n", inet_ntoa(ip), port);
+    debug(0, 3, "whichEdge: from %s port %d\n", inet_ntoa(ip), port);
 
     for (e = friends->edges_head; e; e = e->next) {
 	for (j = 0; j < e->n_addresses; j++) {
@@ -213,7 +213,7 @@ void neighbors_install(host, type, ascii_port, udp_port, proxy_only, domains)
 {
     edge *e;
 
-    debug(1, "Adding a %s: %s\n", type, host);
+    debug(0, 1, "Adding a %s: %s\n", type, host);
 
     e = (edge *) xcalloc(1, sizeof(edge));
 
@@ -263,7 +263,7 @@ void neighbors_open(fd)
 
     if (getsockname(fd, (struct sockaddr *) &our_socket_name,
 	    &sock_name_length) == -1) {
-	debug(1, "getsockname(%d,%p,%p) failed.\n",
+	debug(0, 1, "getsockname(%d,%p,%p) failed.\n",
 	    fd, &our_socket_name, &sock_name_length);
     }
     friends->fd = fd;
@@ -272,16 +272,16 @@ void neighbors_open(fd)
     if ((fname = getHierarchyLogFile())) {
 	log_fd = file_open(fname, NULL, O_WRONLY | O_CREAT | O_APPEND);
 	if (log_fd < 0) {
-	    debug(1, "%s: %s\n", fname, xstrerror());
-	    debug(1, "Hierachical logging is disabled.\n");
+	    debug(0, 1, "%s: %s\n", fname, xstrerror());
+	    debug(0, 1, "Hierachical logging is disabled.\n");
 	} else if (!(cache_hierarchy_log = fdopen(log_fd, "a"))) {
-	    debug(1, "%s: %s\n", fname, xstrerror());
-	    debug(1, "Hierachical logging is disabled.\n");
+	    debug(0, 1, "%s: %s\n", fname, xstrerror());
+	    debug(0, 1, "Hierachical logging is disabled.\n");
 	}
     }
     /* Prepare neighbor connections, one at a time */
     for (e = friends->edges_head; e; e = e->next) {
-	debug(2, "Finding IP addresses for '%s'\n", e->host);
+	debug(0, 2, "Finding IP addresses for '%s'\n", e->host);
 	if ((list = getAddressList(e->host)) == NULL) {
 	    sprintf(tmp_error_buf, "DNS lookup for '%s' failed! Cannot continue.\n",
 		e->host);
@@ -299,7 +299,7 @@ void neighbors_open(fd)
 	    fatal(tmp_error_buf);
 	}
 	for (j = 0; j < e->n_addresses; j++) {
-	    debug(2, "--> IP address #%d: %s\n", j, inet_ntoa(e->addresses[j]));
+	    debug(0, 2, "--> IP address #%d: %s\n", j, inet_ntoa(e->addresses[j]));
 	}
 	e->rtt = 1000;
 
@@ -318,12 +318,12 @@ void neighbors_open(fd)
 	ap->sin_port = htons(e->udp_port);
 
 	if (e->type == is_a_parent) {
-	    debug(3, "parent_install: host %s addr %s port %d\n",
+	    debug(0, 3, "parent_install: host %s addr %s port %d\n",
 		e->host, inet_ntoa(ap->sin_addr),
 		e->udp_port);
 	    e->neighbor_up = 1;
 	} else {
-	    debug(3, "neighbor_install: host %s addr %s port %d\n",
+	    debug(0, 3, "neighbor_install: host %s addr %s port %d\n",
 		e->host, inet_ntoa(ap->sin_addr),
 		e->udp_port);
 	    e->neighbor_up = 1;
@@ -383,7 +383,7 @@ int neighborsUdpPing(proto)
     for (i = 0, e = friends->first_ping; i++ < friends->n; e = e->next) {
 	if (e == (edge *) NULL)
 	    e = friends->edges_head;
-	debug(5, "neighborsUdpPing: Edge %s\n", e->host);
+	debug(0, 5, "neighborsUdpPing: Edge %s\n", e->host);
 
 	/* Don't resolve refreshes through neighbors because we don't resolve
 	 * misses through neighbors */
@@ -398,13 +398,13 @@ int neighborsUdpPing(proto)
 	if (!edgeWouldBePinged(e, host))
 	    continue;		/* next edge */
 
-	debug(4, "neighborsUdpPing: pinging cache %s for <URL:%s>\n",
+	debug(0, 4, "neighborsUdpPing: pinging cache %s for <URL:%s>\n",
 	    e->host, url);
 
 	e->header.reqnum++;
 
 	if (e->udp_port == echo_port) {
-	    debug(4, "neighborsUdpPing: Looks like a dumb cache, send DECHO ping\n");
+	    debug(0, 4, "neighborsUdpPing: Looks like a dumb cache, send DECHO ping\n");
 	    icpUdpSend(friends->fd, url, &echo_hdr, &e->in_addr, ICP_OP_DECHO);
 	} else {
 	    icpUdpSend(friends->fd, url, &e->header, &e->in_addr, ICP_OP_QUERY);
@@ -425,7 +425,7 @@ int neighborsUdpPing(proto)
 		/* do this to prevent wrap around but we still want it
 		 * to move a bit so we can debug it easier. */
 		e->ack_deficit = HIER_MAX_DEFICIT + 1;
-	    debug(6, "cache %s is considered dead but send PING anyway, hope it comes up soon.\n",
+	    debug(0, 6, "cache %s is considered dead but send PING anyway, hope it comes up soon.\n",
 		inet_ntoa(e->in_addr.sin_addr));
 	    /* log it once at the threshold */
 	    if ((e->ack_deficit == HIER_MAX_DEFICIT)) {
@@ -446,19 +446,19 @@ int neighborsUdpPing(proto)
     /* only do source_ping if we have neighbors */
     if (echo_hdr.opcode) {
 	if (proto->source_ping && (hep = ipcache_gethostbyname(host))) {
-	    debug(6, "neighborsUdpPing: Send to original host\n");
-	    debug(6, "neighborsUdpPing: url=%s, host=%s, t=%d\n",
+	    debug(0, 6, "neighborsUdpPing: Send to original host\n");
+	    debug(0, 6, "neighborsUdpPing: url=%s, host=%s, t=%d\n",
 		url, host, t);
 	    to_addr.sin_family = AF_INET;
 	    memcpy(&to_addr.sin_addr, hep->h_addr, hep->h_length);
 	    to_addr.sin_port = echo_port;
 	    echo_hdr.reqnum = cached_curtime;
-	    debug(6, "neighborsUdpPing - url: %s to url-host %s \n",
+	    debug(0, 6, "neighborsUdpPing - url: %s to url-host %s \n",
 		url, inet_ntoa(to_addr.sin_addr));
 	    /* send to original site */
 	    icpUdpSend(friends->fd, url, &echo_hdr, &to_addr, ICP_OP_SECHO);
 	} else {
-	    debug(6, "neighborsUdpPing: Source Ping is disabled.\n");
+	    debug(0, 6, "neighborsUdpPing: Source Ping is disabled.\n");
 	}
     }
     return (entry->mem_obj->e_pings_n_pings);
@@ -480,12 +480,12 @@ void neighborsUdpAck(fd, url, header, from, entry)
 {
     edge *e = NULL;
 
-    debug(6, "neighborsUdpAck: url=%s (%d chars), header=0x%x, from=0x%x, ent=0x%x\n",
+    debug(0, 6, "neighborsUdpAck: url=%s (%d chars), header=0x%x, from=0x%x, ent=0x%x\n",
 	url, strlen(url), header, from, entry);
-    debug(6, "     hdr: opcode=%d, ver=%d, shostid=%x, len=%d, rn=0x%x\n",
+    debug(0, 6, "     hdr: opcode=%d, ver=%d, shostid=%x, len=%d, rn=0x%x\n",
 	header->opcode, header->version, header->shostid,
 	header->length, header->reqnum);
-    debug(6, "     from: fam=%d, port=%d, addr=0x%x\n",
+    debug(0, 6, "     from: fam=%d, port=%d, addr=0x%x\n",
 	from->sin_family, from->sin_port, from->sin_addr.s_addr);
 
     /* look up for neighbor/parent entry */
@@ -510,33 +510,33 @@ void neighborsUdpAck(fd, url, header, from, entry)
     /* check if someone is already fetching it */
     if (BIT_TEST(entry->flag, REQ_DISPATCHED) || (entry->ping_status != WAITING)) {
 	if (entry->ping_status == DONE) {
-	    debug(5, "There is already a cache/source dispatched for this object\n");
-	    debug(5, "--> <URL:%s>\n", entry->url);
-	    debug(5, "--> entry->flag & REQ_DISPATCHED = %d\n",
+	    debug(0, 5, "There is already a cache/source dispatched for this object\n");
+	    debug(0, 5, "--> <URL:%s>\n", entry->url);
+	    debug(0, 5, "--> entry->flag & REQ_DISPATCHED = %d\n",
 		BIT_TEST(entry->flag, REQ_DISPATCHED));
-	    debug(5, "--> entry->ping_status = %d\n", entry->ping_status);
+	    debug(0, 5, "--> entry->ping_status = %d\n", entry->ping_status);
 	} else {
-	    debug(5, "The ping already timed out.\n");
-	    debug(5, "--> <URL:%s>\n", entry->url);
-	    debug(5, "--> entry->flag & REQ_DISPATCHED = %lx\n",
+	    debug(0, 5, "The ping already timed out.\n");
+	    debug(0, 5, "--> <URL:%s>\n", entry->url);
+	    debug(0, 5, "--> entry->flag & REQ_DISPATCHED = %lx\n",
 		BIT_TEST(entry->flag, REQ_DISPATCHED));
-	    debug(5, "--> entry->ping_status = %d\n", entry->ping_status);
+	    debug(0, 5, "--> entry->ping_status = %d\n", entry->ping_status);
 	}
 	return;
     }
-    debug(6, "neighborsUdpAck - url: %s to us %s \n",
+    debug(0, 6, "neighborsUdpAck - url: %s to us %s \n",
 	url, e ? inet_ntoa(e->in_addr.sin_addr) : "url-host");
 
     if (header->opcode == ICP_OP_SECHO) {
 	/* receive ping back from source or from non-cached cache */
 	if (e) {
-	    debug(6, "Got SECHO from non-cached cache:%s\n",
+	    debug(0, 6, "Got SECHO from non-cached cache:%s\n",
 		inet_ntoa(e->in_addr.sin_addr));
-	    debug(6, "This is not supposed to happen.  Ignored.\n");
+	    debug(0, 6, "This is not supposed to happen.  Ignored.\n");
 	} else {
 	    /* if we reach here, source is the one has the fastest respond. */
 	    /* fetch directly from source */
-	    debug(6, "Source is the first to respond.\n");
+	    debug(0, 6, "Source is the first to respond.\n");
 	    hierarchy_log_append(entry->url,
 		HIER_SOURCE_FASTEST,
 		0,
@@ -555,7 +555,7 @@ void neighborsUdpAck(fd, url, header, from, entry)
 	    return;
 	}
 	/* GOT a HIT here */
-	debug(6, "HIT: Getting %s from host: %s\n", entry->url, e->host);
+	debug(0, 6, "HIT: Getting %s from host: %s\n", entry->url, e->host);
 	if (e->type == is_a_neighbor) {
 	    hierarchy_log_append(entry->url, HIER_NEIGHBOR_HIT, 0, e->host);
 	} else {
@@ -576,24 +576,24 @@ void neighborsUdpAck(fd, url, header, from, entry)
 	    /* receive ping back from non-cached cache */
 
 	    if (e) {
-		debug(6, "Got DECHO from non-cached cache:%s\n",
+		debug(0, 6, "Got DECHO from non-cached cache:%s\n",
 		    inet_ntoa(e->in_addr.sin_addr));
-		debug(6, "Good.");
+		debug(0, 6, "Good.");
 
 		if (e->type == is_a_parent) {
 		    if (entry->mem_obj->e_pings_first_miss == NULL) {
-			debug(6, "OK. We got dumb-cached parent as the first miss here.\n");
+			debug(0, 6, "OK. We got dumb-cached parent as the first miss here.\n");
 			entry->mem_obj->e_pings_first_miss = e;
 		    }
 		} else {
-		    debug(6, "Dumb Cached as a neighbor does not make sense.\n");
-		    debug(6, "Count it anyway.\n");
+		    debug(0, 6, "Dumb Cached as a neighbor does not make sense.\n");
+		    debug(0, 6, "Count it anyway.\n");
 		}
 
 
 	    } else {
-		debug(6, "Got DECHO from non-cached cache: But the host is not in the list.\n");
-		debug(6, "Count it anyway.\n");
+		debug(0, 6, "Got DECHO from non-cached cache: But the host is not in the list.\n");
+		debug(0, 6, "Count it anyway.\n");
 	    }
 
 	} else {
@@ -607,14 +607,14 @@ void neighborsUdpAck(fd, url, header, from, entry)
 	if (entry->mem_obj->e_pings_n_acks == entry->mem_obj->e_pings_n_pings) {
 	    BIT_SET(entry->flag, REQ_DISPATCHED);
 	    entry->ping_status = DONE;
-	    debug(6, "Receive MISSes from all neighbors and parents\n");
+	    debug(0, 6, "Receive MISSes from all neighbors and parents\n");
 	    /* pass in fd=0 here so getFromCache() looks up the real FD
 	     * and resets the timeout handler */
 	    getFromDefaultSource(0, entry);
 	    return;
 	}
     } else {
-	debug(0, "neighborsUdpAck: WHY ARE WE HERE?  header->opcode = %d\n",
+	debug(0, 0, "neighborsUdpAck: WHY ARE WE HERE?  header->opcode = %d\n",
 	    header->opcode);
     }
 }
@@ -686,9 +686,9 @@ void neighbors_init()
 		t->ascii_port, t->udp_port, t->proxy_only,
 		t->domains);
 	} else {
-	    debug(0, "neighbors_init: skipping cache_host %s %s %d %d\n",
+	    debug(0, 0, "neighbors_init: skipping cache_host %s %s %d %d\n",
 		t->type, t->host, t->ascii_port, t->udp_port);
-	    debug(0, "neighbors_init: because it seems to be identical to this cached\n");
+	    debug(0, 0, "neighbors_init: because it seems to be identical to this cached\n");
 	}
 	xfree(t->host);
 	xfree(t->type);
@@ -707,7 +707,7 @@ void neighbors_rotate_log()
     if ((fname = getHierarchyLogFile()) == NULL)
 	return;
 
-    debug(1, "neighbors_rotate_log: Rotating.\n");
+    debug(0, 1, "neighbors_rotate_log: Rotating.\n");
 
     /* Rotate numbers 0 through N up one */
     for (i = getLogfileRotateNumber(); i > 1;) {
@@ -726,11 +726,11 @@ void neighbors_rotate_log()
     fclose(cache_hierarchy_log);
     log_fd = file_open(fname, NULL, O_WRONLY | O_CREAT | O_APPEND);
     if (log_fd < 0) {
-	debug(0, "rotate_logs: %s: %s\n", fname, xstrerror());
-	debug(1, "Hierachical logging is disabled.\n");
+	debug(0, 0, "rotate_logs: %s: %s\n", fname, xstrerror());
+	debug(0, 1, "Hierachical logging is disabled.\n");
     } else if ((cache_hierarchy_log = fdopen(log_fd, "a")) == NULL) {
-	debug(0, "rotate_logs: %s: %s\n",
+	debug(0, 0, "rotate_logs: %s: %s\n",
 	    fname, xstrerror());
-	debug(1, "Hierachical logging is disabled.\n");
+	debug(0, 1, "Hierachical logging is disabled.\n");
     }
 }

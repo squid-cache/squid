@@ -1,4 +1,4 @@
-/* $Id: stat.cc,v 1.7 1996/03/27 01:46:20 wessels Exp $ */
+/* $Id: stat.cc,v 1.8 1996/03/27 18:15:53 wessels Exp $ */
 
 #include "squid.h"
 
@@ -156,7 +156,7 @@ void stat_objects_get(obj, sentry, vm_or_not)
 	    continue;
 	if ((++N & 0xFF) == 0) {
 	    cached_curtime = time(NULL);
-	    debug(3, "stat_objects_get:  Processed %d objects...\n", N);
+	    debug(0, 3, "stat_objects_get:  Processed %d objects...\n", N);
 	}
 	obj_size = entry->object_len;
 	npend = storePendingNClients(entry);
@@ -739,10 +739,6 @@ void parameter_get(obj, sentry)
 	httpd_accel_mode);
     storeAppend(sentry, line, strlen(line));
 
-    sprintf(line, "{DebugLevel %d \"# Cache debug level\"}\n",
-	debug_level);
-    storeAppend(sentry, line, strlen(line));
-
     /* end of stats */
     storeAppend(sentry, close_bracket, strlen(close_bracket));
 }
@@ -788,7 +784,7 @@ void log_append(obj, url, id, size, action, method)
 
 	if (file_write(obj->logfile_fd, buf = xstrdup(tmp), strlen(tmp),
 		obj->logfile_access, NULL, NULL) != DISK_OK) {
-	    debug(1, "log_append: File write failed.\n");
+	    debug(0, 1, "log_append: File write failed.\n");
 	    safe_free(buf);
 	}
     }
@@ -806,7 +802,7 @@ void log_enable(obj, sentry)
 	/* open the logfile */
 	obj->logfile_fd = file_open(obj->logfilename, NULL, O_RDWR | O_CREAT);
 	if (obj->logfile_fd == DISK_ERROR) {
-	    debug(0, "Cannot open logfile: %s\n", obj->logfilename);
+	    debug(0, 0, "Cannot open logfile: %s\n", obj->logfilename);
 	    obj->logfile_status = LOG_DISABLE;
 	}
 	obj->logfile_access = file_write_lock(obj->logfile_fd);
@@ -852,7 +848,7 @@ void log_clear(obj, sentry)
     /* reopen it anyway */
     obj->logfile_fd = file_open(obj->logfilename, NULL, O_RDWR | O_CREAT);
     if (obj->logfile_fd == DISK_ERROR) {
-	debug(0, "Cannot open logfile: %s\n", obj->logfilename);
+	debug(0, 0, "Cannot open logfile: %s\n", obj->logfilename);
 	obj->logfile_status = LOG_DISABLE;
     }
     /* at the moment, store one char to make a storage manager happy */
@@ -974,7 +970,7 @@ void stat_init(object, logfilename)
     memcpy(obj->logfilename, logfilename, (int) (strlen(logfilename) + 1) % 256);
     obj->logfile_fd = file_open(obj->logfilename, NULL, O_RDWR | O_CREAT);
     if (obj->logfile_fd == DISK_ERROR) {
-	debug(0, "Cannot open logfile: %s\n", obj->logfilename);
+	debug(0, 0, "Cannot open logfile: %s\n", obj->logfilename);
 	obj->logfile_status = LOG_DISABLE;
 	fatal("Cannot open logfile.\n");
     }
@@ -1199,7 +1195,7 @@ void stat_rotate_log()
     if ((fname = CacheInfo->logfilename) == NULL)
 	return;
 
-    debug(1, "stat_rotate_log: Rotating\n");
+    debug(0, 1, "stat_rotate_log: Rotating\n");
 
     /* Rotate numbers 0 through N up one */
     for (i = getLogfileRotateNumber(); i > 1;) {
@@ -1218,7 +1214,7 @@ void stat_rotate_log()
     file_close(CacheInfo->logfile_fd);
     CacheInfo->logfile_fd = file_open(fname, NULL, O_RDWR | O_CREAT | O_APPEND);
     if (CacheInfo->logfile_fd == DISK_ERROR) {
-	debug(0, "rotate_logs: Cannot open logfile: %s\n", fname);
+	debug(0, 0, "rotate_logs: Cannot open logfile: %s\n", fname);
 	CacheInfo->logfile_status = LOG_DISABLE;
 	fatal("Cannot open logfile.\n");
     }
