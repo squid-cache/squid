@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.15 2004/12/27 11:31:10 hno Exp $
+# $Id: Makefile.in,v 1.16 2004/12/27 12:12:13 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -140,8 +140,7 @@ DIST_COMMON = README AUTHORS COPYING ChangeLog INSTALL Makefile.am \
 	Makefile.in NEWS acinclude.m4 aclocal.m4 cfgaux/config.guess \
 	cfgaux/config.sub cfgaux/depcomp cfgaux/install-sh \
 	cfgaux/ltmain.sh cfgaux/missing cfgaux/mkinstalldirs \
-	config.guess config.h.in config.sub configure configure.in \
-	depcomp install-sh ltmain.sh missing mkinstalldirs
+	config.h.in configure configure.in
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
