@@ -2,7 +2,7 @@
 
 SQUID-MIB DEFINITIONS ::= BEGIN
 --
--- $Id: mib.txt,v 1.27 2003/02/14 22:47:46 hno Exp $
+-- $Id: mib.txt,v 1.28 2003/05/02 09:57:54 hno Exp $
 --
 
 IMPORTS
@@ -212,7 +212,7 @@ squid MODULE-IDENTITY
         ::= { cacheSysPerf 6 }
 
 	cacheNumObjCount OBJECT-TYPE
-                SYNTAX Counter32
+                SYNTAX Gauge32
 		MAX-ACCESS read-only
                 STATUS  current
                 DESCRIPTION
@@ -228,7 +228,7 @@ squid MODULE-IDENTITY
         ::= { cacheSysPerf 8 }
 
         cacheCurrentUnlinkRequests OBJECT-TYPE
-                SYNTAX Counter32
+                SYNTAX Gauge32
                 MAX-ACCESS read-only
                 STATUS current
 		DESCRIPTION
@@ -366,7 +366,7 @@ squid MODULE-IDENTITY
         ::= { cacheProtoAggregateStats 13 }
 
 	cacheCurrentSwapSize OBJECT-TYPE
-                SYNTAX Counter32
+                SYNTAX Gauge32
                 MAX-ACCESS read-only
                 STATUS current
 		DESCRIPTION
@@ -374,7 +374,7 @@ squid MODULE-IDENTITY
         ::= { cacheProtoAggregateStats 14 }
 
        cacheClients OBJECT-TYPE
-                SYNTAX Counter32
+                SYNTAX Gauge32
                 MAX-ACCESS read-only
                 STATUS current
 		DESCRIPTION

@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.87 2003/02/21 22:50:10 robertc Exp $
+ * $Id: snmp_agent.cc,v 1.88 2003/05/02 09:57:54 hno Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -343,7 +343,7 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
     case PERF_SYS_CURUNLREQ:
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
                                       (snint) statCounter.unlink.requests,
-                                      SMI_COUNTER32);
+                                      SMI_GAUGE32);
         break;
 
     case PERF_SYS_CURUNUSED_FD:
@@ -361,7 +361,7 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
     case PERF_SYS_NUMOBJCNT:
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
                                       (snint) StoreEntry::inUseCount(),
-                                      SMI_COUNTER32);
+                                      SMI_GAUGE32);
         break;
 
     default:
@@ -470,13 +470,13 @@ snmp_prfProtoFn(variable_list * Var, snint * ErrP)
         case PERF_PROTOSTAT_AGGR_CURSWAP:
             Answer = snmp_var_new_integer(Var->name, Var->name_length,
                                           (snint) store_swap_size,
-                                          SMI_COUNTER32);
+                                          SMI_GAUGE32);
             break;
 
         case PERF_PROTOSTAT_AGGR_CLIENTS:
             Answer = snmp_var_new_integer(Var->name, Var->name_length,
                                           (snint) statCounter.client_http.clients,
-                                          SMI_COUNTER32);
+                                          SMI_GAUGE32);
             break;
 
         default:
