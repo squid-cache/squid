@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.70 1996/08/23 21:15:45 wessels Exp $
+ * $Id: cache_cf.cc,v 1.71 1996/08/26 22:00:04 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -164,7 +164,9 @@ struct SquidConfig Config;
 #define DefaultSourcePing	0	/* default off */
 #define DefaultCommonLogFormat	0	/* default off */
 #define DefaultIdentLookup	0	/* default off */
-#define DefaultQuickAbort	0	/* default off */
+#define DefaultQuickAbortMin	-1	/* default off */
+#define DefaultQuickAbortPct	0	/* default off */
+#define DefaultQuickAbortMax	0	/* default off */
 #define DefaultNeighborTimeout  2	/* 2 seconds */
 #define DefaultStallDelay	1	/* 1 seconds */
 #define DefaultSingleParentBypass 0	/* default off */
@@ -540,16 +542,53 @@ static void parseTTLPattern()
     if (token != (char *) NULL) {	/* pct_age is optional */
 	if (sscanf(token, "%d", &pct_age) != 1)
 	    self_destruct();
-    }
-    token = strtok(NULL, w_space);	/* token: age_max */
-    if (token != (char *) NULL) {	/* age_max is optional */
-	if (sscanf(token, "%d", &i) != 1)
-	    self_destruct();
-	age_max = (time_t) (i * 60);	/* convert minutes to seconds */
+
+	token = strtok(NULL, w_space);	/* token: age_max */
+	if (token != (char *) NULL) {	/* age_max is optional */
+	    if (sscanf(token, "%d", &i) != 1)
+		self_destruct();
+	    age_max = (time_t) (i * 60);	/* convert minutes to seconds */
+	}
     }
     ttlAddToList(pattern, abs_ttl, pct_age, age_max);
 
     safe_free(pattern);
+}
+
+static void parseTTLForcePattern()
+{
+    char *token;
+    char *pattern;
+    time_t abs_ttl = 0;
+    time_t age_max = Config.ageMaxDefault;
+    int i;
+
+    token = strtok(NULL, w_space);	/* token: regex pattern */
+    if (token == NULL)
+	self_destruct();
+    pattern = xstrdup(token);
+
+    GetInteger(i);		/* token: abs_ttl */
+    abs_ttl = (time_t) (i * 60);	/* convert minutes to seconds */
+
+    GetInteger(i);
+    age_max = (time_t) (i * 60);	/* convert minutes to seconds */
+    ttlAddToForceList(pattern, abs_ttl, age_max);
+
+    safe_free(pattern);
+}
+
+static void parseQuickAbort()
+{
+    char *token;
+    int i;
+
+    GetInteger(i);
+    Config.quickAbort.min = i * 1024;
+    GetInteger(i);
+    Config.quickAbort.pct = i * 128 / 100;	/* 128 is full scale */
+    GetInteger(i);
+    Config.quickAbort.max = i * 1024;
 }
 
 static void parseNegativeLine()
@@ -1106,6 +1145,12 @@ int parseConfigFile(file_name)
 	else if (!strcmp(token, "ttl_pattern"))
 	    parseTTLPattern();
 
+	else if (!strcmp(token, "ttl_force_pattern"))
+	    parseTTLForcePattern();
+
+	else if (!strcmp(token, "quick_abort"))
+	    parseQuickAbort();
+
 	else if (!strcmp(token, "negative_ttl"))
 	    parseNegativeLine();
 
@@ -1153,9 +1198,6 @@ int parseConfigFile(file_name)
 
 	else if (!strcmp(token, "source_ping"))
 	    parseOnOff(&Config.sourcePing);
-
-	else if (!strcmp(token, "quick_abort"))
-	    parseOnOff(&Config.quickAbort);
 
 	else if (!strcmp(token, "emulate_httpd_log"))
 	    parseOnOff(&Config.commonLogFormat);
@@ -1263,8 +1305,6 @@ int parseConfigFile(file_name)
 	printf("WARNING: cache_swap (%d kbytes) is less than cache_mem (%d bytes).\n", Config.Swap.maxSize, Config.Mem.maxSize);
 	printf("         This will cause serious problems with your cache!!!\n");
 	printf("         Change your configuration file.\n");
-	Config.Swap.maxSize = Config.Mem.maxSize >> 10;
-	printf("         For this run, however, %s will use %d kbytes for cache_swap.\n", appname, Config.Swap.maxSize);
 	fflush(stdout);		/* print message */
     }
     if (Config.cleanRate > -1 && Config.cleanRate < 60) {
@@ -1355,6 +1395,7 @@ static void configFreeMemory()
     wordlistDestroy(&Config.inside_firewall_list);
     wordlistDestroy(&Config.dns_testname_list);
     safe_free(Config.sslProxy.host);
+    ttlFreeList();
 }
 
 
@@ -1392,7 +1433,9 @@ static void configSetFactoryDefaults()
     Config.redirectChildren = DefaultRedirectChildren;
     Config.hotVmFactor = DefaultHotVmFactor;
     Config.sourcePing = DefaultSourcePing;
-    Config.quickAbort = DefaultQuickAbort;
+    Config.quickAbort.min = DefaultQuickAbortMin;
+    Config.quickAbort.pct = DefaultQuickAbortPct;
+    Config.quickAbort.max = DefaultQuickAbortMax;
     Config.commonLogFormat = DefaultCommonLogFormat;
     Config.debugOptions = safe_xstrdup(DefaultDebugOptions);
     Config.neighborTimeout = DefaultNeighborTimeout;
