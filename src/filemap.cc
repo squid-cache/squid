@@ -1,6 +1,6 @@
 
 /*
- * $Id: filemap.cc,v 1.34 2000/03/06 16:23:31 wessels Exp $
+ * $Id: filemap.cc,v 1.35 2000/04/28 19:06:51 adrian Exp $
  *
  * DEBUG: section 8     Swap File Bitmap
  * AUTHOR: Harvest Derived
@@ -133,7 +133,7 @@ file_map_allocate(fileMap * fm, int suggestion)
     for (bit = 0; bit < BITS_IN_A_LONG; bit++) {
 	suggestion = ((unsigned long) word << LONG_BIT_SHIFT) | bit;
 	if (!file_map_bit_test(fm, suggestion)) {
-	    return file_map_bit_set(fm, suggestion);
+	    return suggestion;
 	}
     }
     debug(8, 3) ("growing from file_map_allocate\n");
