@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.85 2003/10/20 11:23:37 robertc Exp $
+ * $Id: stmem.cc,v 1.86 2003/10/22 20:56:39 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Harvest Derived
@@ -202,11 +202,11 @@ mem_hdr::copyAvailable(mem_node *aNode, size_t location, size_t amount, char *ta
 void
 mem_hdr::debugDump() const
 {
-    debugs (19, 1, "mem_hdr::debugDump: lowest offset: " << lowestOffset() << " highest offset + 1: " << endOffset() << ".");
+    debugs (19, 0, "mem_hdr::debugDump: lowest offset: " << lowestOffset() << " highest offset + 1: " << endOffset() << ".");
     std::ostringstream result;
     PointerPrinter<mem_node *> foo(result, " - ");
     for_each (getNodes().begin(), getNodes().end(), foo);
-    debugs (19, 1, "mem_hdr::debugDump: Current available data is: " << result.str() << ".");
+    debugs (19, 0, "mem_hdr::debugDump: Current available data is: " << result.str() << ".");
 }
 
 /* FIXME: how do we deal with sparse results -
@@ -339,7 +339,9 @@ mem_hdr::write (StoreIOBuffer const &writeBuffer)
     debugs(19, 6, "mem_hdr::write: " << writeBuffer.range() << " object end " << endOffset());
 
     if (unionNotEmpty(writeBuffer)) {
-        fatal("Attempt to overwrite already in-memory data\n");
+        debugs(19,0,"mem_hdr::write: writeBuffer: " << writeBuffer.Range());
+        debugDump();
+        fatal("Attempt to overwrite already in-memory data. Preceeding this there should be a mem_hdr::write output that lists the attempted write, and the currently present data. Please get a 'backtrace full' from this error - using the generated core, and file a bug report with the squid developers including the last 10 lines of cache.log and the backtrace.\n");
         PROF_stop(mem_hdr_write);
         return false;
     }
