@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.206 1998/02/24 23:26:39 wessels Exp $
+ * $Id: stat.cc,v 1.207 1998/02/25 09:54:01 rousskov Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -113,13 +113,10 @@ static const char *describeFlags(const StoreEntry *);
 static const char *describeTimestamps(const StoreEntry *);
 static void statAvgTick(void *notused);
 static void statAvgDump(StoreEntry *, int minutes);
+static void statCountersInit(StatCounters *);
+static void statCountersClean(StatCounters *);
+static void statCountersCopy(StatCounters *dest, const StatCounters *orig);
 static void statCountersDump(StoreEntry * sentry);
-static void statCounterInit(StatCounters *);
-void statLogHistInit(StatLogHist *, double, double);
-static int statLogHistBin(StatLogHist *, double);
-static double statLogHistVal(StatLogHist *, double);
-static double statLogHistDeltaMedian(StatLogHist * A, StatLogHist * B);
-static void statLogHistDump(StoreEntry * sentry, StatLogHist * H);
 static OBJH stat_io_get;
 static OBJH stat_objects_get;
 static OBJH stat_vmobjects_get;
@@ -568,70 +565,6 @@ info_get(StoreEntry * sentry)
 #endif
 }
 
-static void
-statCountersDump(StoreEntry * sentry)
-{
-    StatCounters *f = &Counter;
-    struct rusage rusage;
-    squid_getrusage(&rusage);
-    f->page_faults = rusage_pagefaults(&rusage);
-    f->cputime = rusage_cputime(&rusage);
-
-    storeAppendPrintf(sentry, "client_http.requests = %d\n",
-	f->client_http.requests);
-    storeAppendPrintf(sentry, "client_http.hits = %d\n",
-	f->client_http.hits);
-    storeAppendPrintf(sentry, "client_http.errors = %d\n",
-	f->client_http.errors);
-    storeAppendPrintf(sentry, "client_http.kbytes_in = %d\n",
-	(int) f->client_http.kbytes_in.kb);
-    storeAppendPrintf(sentry, "client_http.kbytes_out = %d\n",
-	(int) f->client_http.kbytes_out.kb);
-    storeAppendPrintf(sentry, "client_http.all_svc_time histogram:\n");
-    statLogHistDump(sentry, &f->client_http.all_svc_time);
-    storeAppendPrintf(sentry, "client_http.miss_svc_time histogram:\n");
-    statLogHistDump(sentry, &f->client_http.miss_svc_time);
-    storeAppendPrintf(sentry, "client_http.nm_svc_time histogram:\n");
-    statLogHistDump(sentry, &f->client_http.nm_svc_time);
-    storeAppendPrintf(sentry, "client_http.hit_svc_time histogram:\n");
-    statLogHistDump(sentry, &f->client_http.hit_svc_time);
-
-    storeAppendPrintf(sentry, "server.requests = %d\n",
-	(int) f->server.requests);
-    storeAppendPrintf(sentry, "server.errors = %d\n",
-	(int) f->server.errors);
-    storeAppendPrintf(sentry, "server.kbytes_in = %d\n",
-	(int) f->server.kbytes_in.kb);
-    storeAppendPrintf(sentry, "server.kbytes_out = %d\n",
-	(int) f->server.kbytes_out.kb);
-
-    storeAppendPrintf(sentry, "icp.pkts_sent = %d\n",
-	f->icp.pkts_sent);
-    storeAppendPrintf(sentry, "icp.pkts_recv = %d\n",
-	f->icp.pkts_recv);
-    storeAppendPrintf(sentry, "icp.kbytes_sent = %d\n",
-	(int) f->icp.kbytes_sent.kb);
-    storeAppendPrintf(sentry, "icp.kbytes_recv = %d\n",
-	(int) f->icp.kbytes_recv.kb);
-    storeAppendPrintf(sentry, "icp.query_svc_time histogram:\n");
-    statLogHistDump(sentry, &f->icp.query_svc_time);
-    storeAppendPrintf(sentry, "icp.reply_svc_time histogram:\n");
-    statLogHistDump(sentry, &f->icp.reply_svc_time);
-
-    storeAppendPrintf(sentry, "dns.svc_time histogram:\n");
-    statLogHistDump(sentry, &f->dns.svc_time);
-    storeAppendPrintf(sentry, "unlink.requests = %d\n",
-	f->unlink.requests);
-    storeAppendPrintf(sentry, "page_faults = %d\n",
-	f->page_faults);
-    storeAppendPrintf(sentry, "select_loops = %d\n",
-	f->select_loops);
-    storeAppendPrintf(sentry, "cpu_time = %f\n",
-	f->cputime);
-    storeAppendPrintf(sentry, "wall_time = %f\n",
-	tvSubDsec(f->timestamp, current_time));
-}
-
 #define XAVG(X) (dt ? (double) (f->X - l->X) / dt : 0.0)
 static void
 statAvgDump(StoreEntry * sentry, int minutes)
@@ -661,19 +594,19 @@ statAvgDump(StoreEntry * sentry, int minutes)
     storeAppendPrintf(sentry, "client_http.kbytes_out = %f/sec\n",
 	XAVG(client_http.kbytes_out.kb));
 
-    x = statLogHistDeltaMedian(&l->client_http.all_svc_time,
+    x = statHistDeltaMedian(&l->client_http.all_svc_time,
 	&f->client_http.all_svc_time);
     storeAppendPrintf(sentry, "client_http.all_median_svc_time = %f seconds\n",
 	x / 1000.0);
-    x = statLogHistDeltaMedian(&l->client_http.miss_svc_time,
+    x = statHistDeltaMedian(&l->client_http.miss_svc_time,
 	&f->client_http.miss_svc_time);
     storeAppendPrintf(sentry, "client_http.miss_median_svc_time = %f seconds\n",
 	x / 1000.0);
-    x = statLogHistDeltaMedian(&l->client_http.nm_svc_time,
+    x = statHistDeltaMedian(&l->client_http.nm_svc_time,
 	&f->client_http.nm_svc_time);
     storeAppendPrintf(sentry, "client_http.nm_median_svc_time = %f seconds\n",
 	x / 1000.0);
-    x = statLogHistDeltaMedian(&l->client_http.hit_svc_time,
+    x = statHistDeltaMedian(&l->client_http.hit_svc_time,
 	&f->client_http.hit_svc_time);
     storeAppendPrintf(sentry, "client_http.hit_median_svc_time = %f seconds\n",
 	x / 1000.0);
@@ -695,13 +628,13 @@ statAvgDump(StoreEntry * sentry, int minutes)
 	XAVG(icp.kbytes_sent.kb));
     storeAppendPrintf(sentry, "icp.kbytes_recv = %f/sec\n",
 	XAVG(icp.kbytes_recv.kb));
-    x = statLogHistDeltaMedian(&l->icp.query_svc_time, &f->icp.query_svc_time);
+    x = statHistDeltaMedian(&l->icp.query_svc_time, &f->icp.query_svc_time);
     storeAppendPrintf(sentry, "icp.query_median_svc_time = %f seconds\n",
 	x / 1000000.0);
-    x = statLogHistDeltaMedian(&l->icp.reply_svc_time, &f->icp.reply_svc_time);
+    x = statHistDeltaMedian(&l->icp.reply_svc_time, &f->icp.reply_svc_time);
     storeAppendPrintf(sentry, "icp.reply_median_svc_time = %f seconds\n",
 	x / 1000000.0);
-    x = statLogHistDeltaMedian(&l->dns.svc_time, &f->dns.svc_time);
+    x = statHistDeltaMedian(&l->dns.svc_time, &f->dns.svc_time);
     storeAppendPrintf(sentry, "dns.median_svc_time = %f seconds\n",
 	x / 1000.0);
     storeAppendPrintf(sentry, "unlink.requests = %f/sec\n",
@@ -715,28 +648,6 @@ statAvgDump(StoreEntry * sentry, int minutes)
     storeAppendPrintf(sentry, "cpu_usage = %f%%\n", dpercent(ct, dt));
 }
 
-static void
-statCounterInit(StatCounters * C)
-{
-    C->timestamp = current_time;
-    /*
-     * HTTP svc_time hist is kept in milli-seconds; max of 3 hours.
-     */
-    statLogHistInit(&C->client_http.all_svc_time, 0.0, 3600000.0 * 3.0);
-    statLogHistInit(&C->client_http.miss_svc_time, 0.0, 3600000.0 * 3.0);
-    statLogHistInit(&C->client_http.nm_svc_time, 0.0, 3600000.0 * 3.0);
-    statLogHistInit(&C->client_http.hit_svc_time, 0.0, 3600000.0 * 3.0);
-    /*
-     * ICP svc_time hist is kept in micro-seconds; max of 1 minute.
-     */
-    statLogHistInit(&C->icp.query_svc_time, 0.0, 1000000.0 * 60.0);
-    statLogHistInit(&C->icp.reply_svc_time, 0.0, 1000000.0 * 60.0);
-    /*
-     * DNS svc_time hist is kept in milli-seconds; max of 10 minutes.
-     */
-    statLogHistInit(&C->dns.svc_time, 0.0, 60000.0 * 10.0);
-}
-
 void
 statInit(void)
 {
@@ -744,8 +655,8 @@ statInit(void)
     debug(18, 5) ("statInit: Initializing...\n");
     memset(CountHist, '\0', N_COUNT_HIST * sizeof(StatCounters));
     for (i = 0; i < N_COUNT_HIST; i++)
-	statCounterInit(&CountHist[i]);
-    statCounterInit(&Counter);
+	statCountersInit(&CountHist[i]);
+    statCountersInit(&Counter);
     eventAdd("statAvgTick", statAvgTick, NULL, 60);
     cachemgrRegister("info",
 	"General Runtime Information",
@@ -785,9 +696,136 @@ statAvgTick(void *notused)
     c->page_faults = rusage_pagefaults(&rusage);
     c->cputime = rusage_cputime(&rusage);
     c->timestamp = current_time;
+    /* even if NCountHist is small, we already Init()ed the tail */
+    statCountersClean(CountHist+N_COUNT_HIST-1);
     xmemmove(p, t, (N_COUNT_HIST - 1) * sizeof(StatCounters));
+#if 0
     memcpy(t, c, sizeof(StatCounters));
+#endif
+    statCountersCopy(t, c);
     NCountHist++;
+}
+
+/* add special cases here as they arrive */
+static void
+statCountersInit(StatCounters *C)
+{
+    assert(C);
+    C->timestamp = current_time;
+    /*
+     * HTTP svc_time hist is kept in milli-seconds; max of 3 hours.
+     */
+    statHistLogInit(&C->client_http.all_svc_time, 300, 0.0, 3600000.0 * 3.0);
+    statHistLogInit(&C->client_http.miss_svc_time, 300, 0.0, 3600000.0 * 3.0);
+    statHistLogInit(&C->client_http.nm_svc_time, 300, 0.0, 3600000.0 * 3.0);
+    statHistLogInit(&C->client_http.hit_svc_time, 300, 0.0, 3600000.0 * 3.0);
+    /*
+     * ICP svc_time hist is kept in micro-seconds; max of 1 minute.
+     */
+    statHistLogInit(&C->icp.query_svc_time, 300, 0.0, 1000000.0 * 60.0);
+    statHistLogInit(&C->icp.reply_svc_time, 300, 0.0, 1000000.0 * 60.0);
+    /*
+     * DNS svc_time hist is kept in milli-seconds; max of 10 minutes.
+     */
+    statHistLogInit(&C->dns.svc_time, 300, 0.0, 60000.0 * 10.0);
+}
+
+/* add special cases here as they arrive */
+void
+statCountersClean(StatCounters *C)
+{
+    assert(C);
+    statHistClean(&C->client_http.all_svc_time);
+    statHistClean(&C->client_http.miss_svc_time);
+    statHistClean(&C->client_http.nm_svc_time);
+    statHistClean(&C->client_http.hit_svc_time);
+    statHistClean(&C->icp.query_svc_time);
+    statHistClean(&C->icp.reply_svc_time);
+    statHistClean(&C->dns.svc_time);
+}
+
+/* add special cases here as they arrive */
+void
+statCountersCopy(StatCounters *dest, const StatCounters *orig)
+{
+    assert(dest && orig);
+    /* prepare space where to copy */
+    statCountersInit(dest);
+    /* this should take care of most of the fields */
+    memcpy(dest, orig, sizeof(*dest));
+    /* now handle spacial cases */
+    /* note: we assume that histogram capacities do not change */
+    statHistCopy(&dest->client_http.all_svc_time, &orig->client_http.all_svc_time);
+    statHistCopy(&dest->client_http.miss_svc_time, &orig->client_http.miss_svc_time);
+    statHistCopy(&dest->client_http.nm_svc_time, &orig->client_http.nm_svc_time);
+    statHistCopy(&dest->client_http.hit_svc_time, &orig->client_http.hit_svc_time);
+    statHistCopy(&dest->icp.query_svc_time, &orig->icp.query_svc_time);
+    statHistCopy(&dest->icp.reply_svc_time, &orig->icp.reply_svc_time);
+    statHistCopy(&dest->dns.svc_time, &orig->dns.svc_time);
+}
+
+static void
+statCountersDump(StoreEntry * sentry)
+{
+    StatCounters *f = &Counter;
+    struct rusage rusage;
+    squid_getrusage(&rusage);
+    f->page_faults = rusage_pagefaults(&rusage);
+    f->cputime = rusage_cputime(&rusage);
+
+    storeAppendPrintf(sentry, "client_http.requests = %d\n",
+	f->client_http.requests);
+    storeAppendPrintf(sentry, "client_http.hits = %d\n",
+	f->client_http.hits);
+    storeAppendPrintf(sentry, "client_http.errors = %d\n",
+	f->client_http.errors);
+    storeAppendPrintf(sentry, "client_http.kbytes_in = %d\n",
+	(int) f->client_http.kbytes_in.kb);
+    storeAppendPrintf(sentry, "client_http.kbytes_out = %d\n",
+	(int) f->client_http.kbytes_out.kb);
+    storeAppendPrintf(sentry, "client_http.all_svc_time histogram:\n");
+    statHistDump(&f->client_http.all_svc_time, sentry, NULL);
+    storeAppendPrintf(sentry, "client_http.miss_svc_time histogram:\n");
+    statHistDump(&f->client_http.miss_svc_time, sentry, NULL);
+    storeAppendPrintf(sentry, "client_http.nm_svc_time histogram:\n");
+    statHistDump(&f->client_http.nm_svc_time, sentry, NULL);
+    storeAppendPrintf(sentry, "client_http.hit_svc_time histogram:\n");
+    statHistDump(&f->client_http.hit_svc_time, sentry, NULL);
+
+    storeAppendPrintf(sentry, "server.requests = %d\n",
+	(int) f->server.requests);
+    storeAppendPrintf(sentry, "server.errors = %d\n",
+	(int) f->server.errors);
+    storeAppendPrintf(sentry, "server.kbytes_in = %d\n",
+	(int) f->server.kbytes_in.kb);
+    storeAppendPrintf(sentry, "server.kbytes_out = %d\n",
+	(int) f->server.kbytes_out.kb);
+
+    storeAppendPrintf(sentry, "icp.pkts_sent = %d\n",
+	f->icp.pkts_sent);
+    storeAppendPrintf(sentry, "icp.pkts_recv = %d\n",
+	f->icp.pkts_recv);
+    storeAppendPrintf(sentry, "icp.kbytes_sent = %d\n",
+	(int) f->icp.kbytes_sent.kb);
+    storeAppendPrintf(sentry, "icp.kbytes_recv = %d\n",
+	(int) f->icp.kbytes_recv.kb);
+    storeAppendPrintf(sentry, "icp.query_svc_time histogram:\n");
+    statHistDump(&f->icp.query_svc_time, sentry, NULL);
+    storeAppendPrintf(sentry, "icp.reply_svc_time histogram:\n");
+    statHistDump(&f->icp.reply_svc_time, sentry, NULL);
+
+    storeAppendPrintf(sentry, "dns.svc_time histogram:\n");
+    statHistDump(&f->dns.svc_time, sentry, NULL);
+    storeAppendPrintf(sentry, "unlink.requests = %d\n",
+	f->unlink.requests);
+    storeAppendPrintf(sentry, "page_faults = %d\n",
+	f->page_faults);
+    storeAppendPrintf(sentry, "select_loops = %d\n",
+	f->select_loops);
+    storeAppendPrintf(sentry, "cpu_time = %f\n",
+	f->cputime);
+    storeAppendPrintf(sentry, "wall_time = %f\n",
+	tvSubDsec(f->timestamp, current_time));
 }
 
 void
@@ -808,91 +846,6 @@ statAvg60min(StoreEntry * e)
     statAvgDump(e, 60);
 }
 
-void
-statLogHistInit(StatLogHist * H, double min, double max)
-{
-    H->min = min;
-    H->max = max;
-    H->scale = (STAT_LOG_HIST_BINS - 1) / log(1.0 + max - min);
-}
-
-void
-statLogHistCount(StatLogHist * H, double val)
-{
-    int bin = statLogHistBin(H, val);
-    assert(H->scale != 0.0);	/* make sure it got initialized */
-    assert(0 <= bin && bin < STAT_LOG_HIST_BINS);
-    H->bins[bin]++;
-}
-
-double
-statLogHistDeltaMedian(StatLogHist * A, StatLogHist * B)
-{
-    StatLogHist D;
-    int i;
-    int s1 = 0;
-    int h = 0;
-    int a = 0;
-    int b = 0;
-    int I = 0;
-    int J = STAT_LOG_HIST_BINS;
-    int K;
-    double f;
-    memset(&D, '\0', sizeof(StatLogHist));
-    for (i = 0; i < STAT_LOG_HIST_BINS; i++) {
-	assert(B->bins[i] >= A->bins[i]);
-	D.bins[i] = B->bins[i] - A->bins[i];
-    }
-    for (i = 0; i < STAT_LOG_HIST_BINS; i++)
-	s1 += D.bins[i];
-    h = s1 >> 1;
-    for (i = 0; i < STAT_LOG_HIST_BINS; i++) {
-	J = i;
-	b += D.bins[J];
-	if (a <= h && h <= b)
-	    break;
-	I = i;
-	a += D.bins[I];
-    }
-    if (s1 == 0)
-	return 0.0;
-    if (a > h) {
-	debug(0, 0) ("statLogHistDeltaMedian: a=%d, h=%d\n", a, h);
-	return 0.0;
-    }
-    if (a >= b) {
-	debug(0, 0) ("statLogHistDeltaMedian: a=%d, b=%d\n", a, b);
-	return 0.0;
-    }
-    if (I >= J) {
-	debug(0, 0) ("statLogHistDeltaMedian: I=%d, J=%d\n", I, J);
-	return 0.0;
-    }
-    f = (h - a) / (b - a);
-    K = f * (double) (J - I) + I;
-    return statLogHistVal(A, K);
-}
-
-static int
-statLogHistBin(StatLogHist * H, double v)
-{
-    int bin;
-    double x = 1.0 + v - H->min;
-    if (x < 0.0)
-	return 0;
-    bin = (int) (H->scale * log(x) + 0.5);
-    if (bin < 0)
-	bin = 0;
-    if (bin > STAT_LOG_HIST_BINS - 1)
-	bin = STAT_LOG_HIST_BINS - 1;
-    return bin;
-}
-
-static double
-statLogHistVal(StatLogHist * H, double bin)
-{
-    return exp(bin / H->scale) + H->min - 1.0;
-}
 
 enum {
     HTTP_SVC, ICP_SVC, DNS_SVC
@@ -913,30 +866,17 @@ get_median_svc(int interval, int which)
     assert(l);
     switch (which) {
     case HTTP_SVC:
-	x = statLogHistDeltaMedian(&l->client_http.all_svc_time, &f->client_http.all_svc_time);
+	x = statHistDeltaMedian(&l->client_http.all_svc_time, &f->client_http.all_svc_time);
 	break;
     case ICP_SVC:
-	x = statLogHistDeltaMedian(&l->icp.query_svc_time, &f->icp.query_svc_time);
+	x = statHistDeltaMedian(&l->icp.query_svc_time, &f->icp.query_svc_time);
 	break;
     case DNS_SVC:
-	x = statLogHistDeltaMedian(&l->dns.svc_time, &f->dns.svc_time);
+	x = statHistDeltaMedian(&l->dns.svc_time, &f->dns.svc_time);
 	break;
     default:
 	debug(49, 5) ("get_median_val: unknown type.\n");
 	x = 0;
     }
     return (int) x;
-}
-static void
-statLogHistDump(StoreEntry * sentry, StatLogHist * H)
-{
-    int i;
-    for (i = 0; i < STAT_LOG_HIST_BINS; i++) {
-	if (H->bins[i] == 0)
-	    continue;
-	storeAppendPrintf(sentry, "\t%3d/%f\t%d\n",
-	    i,
-	    statLogHistVal(H, 0.5 + i),
-	    H->bins[i]);
-    }
 }
