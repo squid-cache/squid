@@ -172,8 +172,8 @@ storeCheckSwapOut(StoreEntry * e)
     if (swap_buf_len < 0) {
 	debug(20, 1) ("stmemCopy returned %d for '%s'\n", swap_buf_len, storeKeyText(e->key));
 	/* XXX This is probably wrong--we should storeRelease()? */
+	storeUnlinkFileno(e->swap_file_number);
 	storeDirMapBitReset(e->swap_file_number);
-	safeunlink(storeSwapFullPath(e->swap_file_number, NULL), 1);
 	e->swap_file_number = -1;
 	e->swap_status = SWAPOUT_NONE;
 	memFree(MEM_DISK_BUF, swap_buf);
