@@ -1,5 +1,5 @@
 
-/* $Id: store.cc,v 1.17 1996/03/29 21:20:12 wessels Exp $ */
+/* $Id: store.cc,v 1.18 1996/04/01 04:27:11 wessels Exp $ */
 
 /*
  * DEBUG: Section 20          store
@@ -749,6 +749,15 @@ static void InvokeHandlers(e)
 
 }
 
+/* Mark object as expired
+ */
+void storeExpireNow(e)
+     StoreEntry *e;
+{
+    debug(20, 3, "storeExpireNow: Object %s\n", e->key);
+    e->expires = cached_curtime;
+}
+
 /* switch object to deleting behind mode 
  * call by retrieval module when object gets too big.
  */
@@ -766,7 +775,7 @@ void storeStartDeleteBehind(e)
     BIT_SET(e->flag, DELETE_BEHIND);
     BIT_SET(e->flag, RELEASE_REQUEST);
     BIT_RESET(e->flag, CACHABLE);
-    e->expires = cached_curtime;
+    storeExpireNow(e);
 }
 
 /* Append incoming data from a primary server to an entry. */
@@ -1296,6 +1305,11 @@ void storeComplete(e)
 {
     debug(20, 5, "storeComplete: <URL:%s>\n", e->url);
 
+    if (e->flag & KEY_CHANGE) {
+	/* Never cache private objects */
+	BIT_SET(e->flag, RELEASE_REQUEST);
+	BIT_RESET(e->flag, CACHABLE);
+    }
     e->object_len = e->mem_obj->e_current_len;
     InvokeHandlers(e);
     e->lastref = cached_curtime;
@@ -1879,6 +1893,7 @@ int storeRelease(e)
     /* If, for any reason we can't discard this object because of an
      * outstanding request, mark it for pending release */
     if (storeEntryLocked(e)) {
+	storeExpireNow(e);
 	BIT_SET(e->flag, RELEASE_REQUEST);
 	return -1;
     }
@@ -1952,7 +1967,7 @@ void storeChangeKey(e)
 	return;
     }
     if (table == (HashID) 0)
-	fatal_dump("storeUnChangeKey: Hash table 'table' is zero!\n");
+	fatal_dump("storeChangeKey: Hash table 'table' is zero!\n");
 
     if ((table_entry = hash_lookup(table, e->key)))
 	result = (StoreEntry *) table_entry;
@@ -2023,7 +2038,7 @@ void storeUnChangeKey(e)
     storeHashInsert(e);
     BIT_RESET(E1->flag, KEY_CHANGE);
     BIT_SET(E1->flag, KEY_URL);
-    debug(25, 0, "storeUnChangeKey: Changed back to '%s'\n", key);
+    debug(25, 1, "storeUnChangeKey: Changed back to '%s'\n", key);
 }
 
 /* return if the current key is the original one. */
@@ -2199,9 +2214,6 @@ int storeClientCopy(e, stateoffset, maxSize, buf, size, fd)
     return *size;
 }
 
-
-
-
 /*
  * Go through the first 300 bytes of MIME header of a cached object, returning
  * fields that match.
@@ -2250,7 +2262,9 @@ int storeGrep(e, string, nbytes)
 int storeEntryValidToSend(e)
      StoreEntry *e;
 {
-    if ((cached_curtime < e->expires) || (e->status == STORE_PENDING))
+    if (cached_curtime < e->expires)
+	return 1;
+    if (e->expires == 0 && e->status == STORE_PENDING)
 	return 1;
     return 0;
 }
