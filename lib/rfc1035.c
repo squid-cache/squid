@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1035.c,v 1.2 1999/04/13 21:25:56 wessels Exp $
+ * $Id: rfc1035.c,v 1.3 1999/04/14 05:16:13 wessels Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -62,18 +62,15 @@
 #include <strings.h>
 #endif
 
-#define RFC1035_TYPE_A 1
-#define RFC1035_CLASS_IN 1
+#include "rfc1035.h"
 
 #define RFC1035_MAXLABELSZ 63
-#define RFC1035_MAXHOSTNAMESZ 128
 
-typedef struct _rfc1305_header rfc1305_header;
-typedef struct _rfc1305_rr rfc1305_rr;
+typedef struct _rfc1035_header rfc1035_header;
 
 int rfc1035_errno;
-
-struct _rfc1305_header {
+const char *rfc1035_error_message;
+struct _rfc1035_header {
     unsigned short id;
     unsigned int qr:1;
     unsigned int opcode:4;
@@ -88,23 +85,14 @@ struct _rfc1305_header {
     unsigned short arcount;
 };
 
-struct _rfc1305_rr {
-    char name[RFC1035_MAXHOSTNAMESZ];
-    unsigned short type;
-    unsigned short class;
-    unsigned int ttl;
-    unsigned short rdlength;
-    char *rdata;
-};
-
 /*
  * rfc1035HeaderPack()
  * 
- * Packs a rfc1305_header structure into a buffer.
+ * Packs a rfc1035_header structure into a buffer.
  * Returns number of octets packed (should always be 12)
  */
 static off_t
-rfc1035HeaderPack(char *buf, size_t sz, rfc1305_header * hdr)
+rfc1035HeaderPack(char *buf, size_t sz, rfc1035_header * hdr)
 {
     off_t off = 0;
     unsigned short s;
@@ -216,13 +204,13 @@ rfc1035QuestionPack(char *buf,
 /*
  * rfc1035HeaderUnpack()
  * 
- * Unpacks a RFC1035 message header buffer into a rfc1305_header
+ * Unpacks a RFC1035 message header buffer into a rfc1035_header
  * structure.
  * Returns the new buffer offset, which is the same as number of
  * octects unpacked since the header starts at offset 0.
  */
 static off_t
-rfc1035HeaderUnpack(const char *buf, size_t sz, rfc1305_header * h)
+rfc1035HeaderUnpack(const char *buf, size_t sz, rfc1035_header * h)
 {
     unsigned short s;
     unsigned short t;
@@ -294,8 +282,8 @@ rfc1035NameUnpack(const char *buf, size_t sz, off_t off, char *name, size_t ns)
 	    len = (size_t) c;
 	    if (len == 0)
 		break;
-	    if (len > (ns-1))
-		len = ns-1;
+	    if (len > (ns - 1))
+		len = ns - 1;
 	    memcpy(name + no, buf + off, len);
 	    off += len;
 	    no += len;
@@ -315,7 +303,7 @@ rfc1035NameUnpack(const char *buf, size_t sz, off_t off, char *name, size_t ns)
  * Returns the new message buffer offset.
  */
 static off_t
-rfc1035RRUnpack(const char *buf, size_t sz, off_t off, rfc1305_rr * RR)
+rfc1035RRUnpack(const char *buf, size_t sz, off_t off, rfc1035_rr * RR)
 {
     unsigned short s;
     unsigned int i;
@@ -339,26 +327,75 @@ rfc1035RRUnpack(const char *buf, size_t sz, off_t off, rfc1305_rr * RR)
     return off;
 }
 
+static unsigned short
+rfc1035Qid(void)
+{
+    static unsigned short qid = 0x0001;
+    if (++qid == 0xFFFF)
+	qid = 0x0001;
+    return qid;
+}
+
+void
+rfc1035RRDestroy(rfc1035_rr * rr, int n)
+{
+    if (rr == NULL)
+	return;
+    assert(n > 0);
+    while (n--) {
+	if (rr[n].rdata)
+	    free(rr[n].rdata);
+    }
+    free(rr);
+}
+
 int
-rfc1035ARecordsUnpack(const char *buf,
-	size_t sz,
-	struct in_addr *addrs,
-	int naddrs,
-	char *name,
-	size_t namelen,
-	unsigned short *id,
-	time_t * ttl)
+rfc1035AnswersUnpack(const char *buf,
+    size_t sz,
+    rfc1035_rr ** records,
+    unsigned short *id)
 {
     off_t off = 0;
     int l;
     int i;
-    int na = 0;
-    rfc1305_header hdr;
+    int nr = 0;
+    rfc1035_header hdr;
+    rfc1035_rr *recs;
     memset(&hdr, '\0', sizeof(hdr));
     off = rfc1035HeaderUnpack(buf + off, sz - off, &hdr);
     *id = hdr.id;
+    rfc1035_errno = 0;
+    rfc1035_error_message = NULL;
     if (hdr.rcode) {
 	rfc1035_errno = (int) hdr.rcode;
+	switch (rfc1035_errno) {
+	case 0:
+	    rfc1035_error_message = "No error condition";
+	    break;
+	case 1:
+	    rfc1035_error_message = "Format Error: The name server was "
+		"unable to interpret the query.";
+	    break;
+	case 2:
+	    rfc1035_error_message = "Server Failure: The name server was "
+		"unable to process this query.";
+	    break;
+	case 3:
+	    rfc1035_error_message = "Name Error: The domain name does "
+		"not exist.";
+	    break;
+	case 4:
+	    rfc1035_error_message = "Not Implemented: The name server does "
+		"not support the requested kind of query.";
+	    break;
+	case 5:
+	    rfc1035_error_message = "Refused: The name server refuses to "
+		"perform the specified operation.";
+	    break;
+	default:
+	    rfc1035_error_message = "Unknown Error";
+	    break;
+	}
 	return -rfc1035_errno;
     }
     i = (int) hdr.qdcount;
@@ -378,27 +415,14 @@ rfc1035ARecordsUnpack(const char *buf,
 	assert(off <= sz);
     }
     i = (int) hdr.ancount;
+    recs = calloc(i, sizeof(*recs));
     while (i--) {
-	rfc1305_rr RR;
-	memset(&RR, '\0', sizeof(RR));
-	off = rfc1035RRUnpack(buf, sz, off, &RR);
-	if (RR.type != RFC1035_TYPE_A) {
-	    free(RR.rdata);
-	    RR.rdata = NULL;
-	    continue;
-	}
-	if (na == 0) {
-	    strncpy(name, RR.name, namelen);
-	    *ttl = (time_t) RR.ttl;
-	}
-	memcpy(&addrs[na].s_addr, RR.rdata, 4);
-	free(RR.rdata);
-	RR.rdata = NULL;
+	off = rfc1035RRUnpack(buf, sz, off, &recs[i]);
 	assert(off <= sz);
-	if (++na == naddrs)
-	    break;
+	nr++;
     }
-    return na;
+    *records = recs;
+    return nr;
 }
 
 /*
@@ -412,14 +436,13 @@ rfc1035ARecordsUnpack(const char *buf,
  * Return value is the query ID.
  */
 unsigned short
-rfc1035BuildQuery(const char *hostname, char *buf, size_t * szp)
+rfc1035BuildAQuery(const char *hostname, char *buf, size_t * szp)
 {
-    static unsigned short id = 0x0001;
-    static rfc1305_header h;
+    static rfc1035_header h;
     off_t offset = 0;
     size_t sz = *szp;
     memset(&h, '\0', sizeof(h));
-    h.id = id;
+    h.id = rfc1035Qid();
     h.qr = 0;
     h.rd = 1;
     h.opcode = 0;		/* QUERY */
@@ -432,14 +455,14 @@ rfc1035BuildQuery(const char *hostname, char *buf, size_t * szp)
 	RFC1035_CLASS_IN);
     assert(offset <= sz);
     *szp = (size_t) offset;
-    return id++;
+    return h.id;
 }
 
 #if DRIVER
 int
 main(int argc, char *argv[])
 {
-    rfc1305_header h;
+    rfc1035_header h;
     char input[512];
     char buf[512];
     char rbuf[512];
@@ -478,18 +501,18 @@ main(int argc, char *argv[])
 	S.sin_addr.s_addr = inet_addr("128.117.28.219");
 	sendto(s, buf, (size_t) offset, 0, (struct sockaddr *) &S, sizeof(S));
 	do {
-    	    fd_set R;
-    	    struct timeval to;
+	    fd_set R;
+	    struct timeval to;
 	    FD_ZERO(&R);
 	    FD_SET(s, &R);
 	    to.tv_sec = 10;
 	    to.tv_usec = 0;
-	    rl = select(s+1, &R, NULL, NULL, &to);
-	} while(0);
-	    if (rl < 1) {
-		    printf("TIMEOUT\n");
-		    continue;
-	    }
+	    rl = select(s + 1, &R, NULL, NULL, &to);
+	} while (0);
+	if (rl < 1) {
+	    printf("TIMEOUT\n");
+	    continue;
+	}
 	memset(rbuf, '\0', 512);
 	rl = recv(s, rbuf, 512, 0);
 	{

@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.290 1999/01/24 04:03:52 wessels Exp $
+ * $Id: main.cc,v 1.291 1999/04/14 05:16:17 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -320,6 +320,7 @@ mainReconfigure(void)
     snmpConnectionClose();
 #endif
     dnsShutdown();
+    idnsShutdown();
     redirectShutdown();
     authenticateShutdown();
     storeDirCloseSwapLogs();
@@ -330,6 +331,7 @@ mainReconfigure(void)
     fqdncache_restart();	/* sigh, fqdncache too */
     errorInitialize();		/* reload error pages */
     dnsInit();
+    idnsInit();
     redirectInit();
     authenticateInit();
     serverConnectionsOpen();
@@ -406,6 +408,7 @@ mainInitialize(void)
     ipcache_init();
     fqdncache_init();
     dnsInit();
+    idnsInit();
     redirectInit();
     authenticateInit();
     useragentOpenLog();
@@ -594,6 +597,7 @@ main(int argc, char **argv)
 	    shutting_down = 1;
 	    serverConnectionsClose();
 	    dnsShutdown();
+	    idnsShutdown();
 	    redirectShutdown();
 	    authenticateShutdown();
 	    eventAdd("SquidShutdown", SquidShutdown, NULL, (double) (wait + 1), 1);
