@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.251 2002/04/02 11:38:02 hno Exp $
+# $Id: cf.data.pre,v 1.252 2002/04/02 20:32:43 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -83,7 +83,7 @@ DOC_START
 
 	You may specify multiple socket addresses on multiple lines.
 
-	If you run Squid on a dual-homed machine with a internal
+	If you run Squid on a dual-homed machine with an internal
 	and an external interface then we recommend you to specify the
 	internal address:port in http_port. This way Squid will only be
 	visible on the internal address.
@@ -1187,7 +1187,7 @@ DEFAULT: on
 LOC: Config.onoff.redir_rewrites_host
 DOC_START
 	By default Squid rewrites any Host: header in redirected
-	requests.  If you are running a accelerator then this may
+	requests.  If you are running an accelerator then this may
 	not be a wanted effect of a redirector.
 DOC_END
 
@@ -1265,7 +1265,7 @@ DOC_START
 	pair is valid for - in other words how often the helper program is called
 	for that user. Set this low to force revalidation with short lived passwords.
 	Note that setting this high does not impact your susceptability to replay
-	attacks unless you are using a one-time password system (such as SecureID).
+	attacks unless you are using an one-time password system (such as SecureID).
 	If you are using such a system, you will be vulnerable to replay attacks
 	unless you also enable the IP ttl is strict option.
 
@@ -1279,7 +1279,7 @@ DOC_START
 	make sure you have 1 acl of type proxy_auth.  By default,
 	authentication is not used.
 
-	If you want to use build a authenticator,
+	If you want to use build an authenticator,
 	jump over to the ../digest_auth_modules directory and choose the
 	authenticator to use. It it's directory type
         	% make
@@ -2391,7 +2391,7 @@ TYPE: onoff
 LOC: Config.Accel.single_host
 DEFAULT: off
 DOC_START
-	If you are running Squid as a accelerator and have a single backend
+	If you are running Squid as an accelerator and have a single backend
 	server then set this to on. This causes Squid to forward the request
 	to this server irregardles of what any redirectors or Host headers
 	says.
@@ -3396,10 +3396,10 @@ DEFAULT: none
 LOC: Config.accessList.brokenPosts
 DOC_START
 	A list of ACL elements which, if matched, causes Squid to send
-	a extra CRLF pair after the body of a PUT/POST request.
+	an extra CRLF pair after the body of a PUT/POST request.
 
 	Some HTTP servers has broken implementations of PUT/POST,
-	and rely on a extra CRLF pair sent by some WWW clients.
+	and rely on an extra CRLF pair sent by some WWW clients.
 
 	Quote from RFC 2068 section 4.1 on this matter:
 
