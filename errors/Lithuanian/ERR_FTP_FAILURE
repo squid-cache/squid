@@ -1,0 +1,22 @@
+<HTML><HEAD>
+<TITLE>KLAIDA: Puslapis nurodytu adresu negali bûti atsiøstas</TITLE>
+</HEAD><BODY>
+<H1>KLAIDA</H1>
+<H2>Puslapis nurodytu adresu negali bûti atsiøstas</H2>
+<HR>
+<P>
+Ávyko FTP protokolo klaida
+bandant atsiusti puslapá:
+<A HREF="%U">%U</A>
+<P>
+Squid nusiuntë ðià FTP komandà:
+<blockquote><strong><pre>%f</pre></strong></blockquote>
+ir gavo ðá atsakymà:
+<blockquote><strong><pre>%F</pre></strong></blockquote>
+<blockquote><strong><pre>%g</pre></strong></blockquote>
+<P>
+Tai gali bûti sàlygota FTP adreso su pilnu keliu (kuris neatitinka
+RFC 1738 standarto). Jei taip atsitiko, tada duomenys gali bûti
+rasti <A HREF="%B">%B</A> adresu.
+</P>
+

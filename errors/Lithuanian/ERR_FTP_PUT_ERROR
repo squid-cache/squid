@@ -1,0 +1,25 @@
+<HTML><HEAD>
+<TITLE>KLAIDA: FTP uploadas nepavyko</TITLE>
+</HEAD><BODY>
+<H1>KLAIDA</H1>
+<H2>FTP PUT/uploadas nepavyko</H2>
+<HR>
+<P>
+Bandydamas pakrauti dokumentà:
+<A HREF="%U">%U</A>
+<P>
+Squid nusiuntë ðià FTP komandà:
+<PRE><STRONG>
+        %f
+</STRONG></PRE>
+ir gavo toká atsakymà:
+<PRE><STRONG>
+        %F
+</STRONG></PRE>
+<P>
+Tai reiðkia:
+<PRE>
+Patikrinkite kelià, teises, disko talpà ir pabandykite dar kartà.
+</PRE>
+</P>
+

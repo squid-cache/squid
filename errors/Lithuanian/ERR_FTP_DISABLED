@@ -1,0 +1,21 @@
+<HTML><HEAD>
+<TITLE>KLAIDA: Puslapis nurodytu adresu negali bûti atsiøstas</TITLE>
+</HEAD><BODY>
+<H1>KLAIDA</H1>
+<H2>Puslapis nurodytu adresu negali bûti atsiøstas</H2>
+<HR>
+<P>
+Bandant atsiøsti puslapá:
+<A HREF="%U">%U</A>
+<P>
+Gautas klaidos praneðimas:
+<UL>
+<LI>
+<STRONG>
+FTP yra atjungtas
+</STRONG>
+</UL>
+
+<P>
+Ðis proxy serveris nepalaiko FTP.
+</P>

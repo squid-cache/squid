@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<TITLE>KLAIDA: Puslapis nurodytu adresu negali bûti atsiøstas</TITLE>
+</HEAD><BODY>
+<H1>KLAIDA</H1>
+<H2>Puslapis nurodytu adresu negali bûti atsiøstas</H2>
+<HR>
+<P>
+Bandant atsiøsti puslapá:
+<A HREF="%U">%U</A>
+<P>
+Gautas klaidos praneðimas:
+<UL>
+<LI>
+<STRONG>
+Ðiuo metu negaliu persiøsti uþklausimo.
+</STRONG>
+</UL>
+
+<P>
+Uþklausimas negali bûti persiøstas á pagrindiná serverá arba kurá nors 
+pagalbiná proxy serverá. Pagrindinës tokios klaidos prieþastys yra ðios:
+<UL>
+<LI>Proxy administratorius neleidþia serveriui kurti tiesioginiø 
+    susijungimø su serveriais, ir
+<LI>Visi pagalbiniai proxy serveriai ðiuo metu yra nepasiekiami.
+</UL>
+</P>

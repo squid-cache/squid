@@ -1,0 +1,24 @@
+<HTML><HEAD>
+<TITLE>KLAIDA: Puslapis nurodytu adresu negali bûti atsiøstas</TITLE>
+</HEAD><BODY>
+<H1>KLAIDA</H1>
+<H2>Puslapis nurodytu adresu negali bûti atsiøstas</H2>
+<HR>
+<P>
+Bandant atsiøsti puslapá:
+<A HREF="%U">%U</A>
+<P>
+Gautas klaidos praneðimas:
+<UL>
+<LI>
+<STRONG>
+Tinkamas dokumentas nerastas proxy serveryje ir <code>only-if-cached</code>
+komanda buvo nurodyta.
+</STRONG>
+</UL>
+
+<P>
+Jûs davëte uþklausimà su <code>only-if-cached</code> proxy kontrolës 
+komanda. Dokumentas nerastas serveryje, <em>arba</em> jis pareikalavo
+patvirtinimo uþdrausto <code>only-if-cached</code> komandos.
+</P>

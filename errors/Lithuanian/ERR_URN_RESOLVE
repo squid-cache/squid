@@ -1,0 +1,21 @@
+<HTML><HEAD>
+<TITLE>KLAIDA: Nurodytas URN negali bûti atsiøstas</TITLE>
+</HEAD><BODY>
+<H1>KLAIDA</H1>
+<H2>puslapis nurodytam URN negali bûti atsiøstas</H2>
+<HR>
+<P>
+Bandant atsiøsti URN:
+<A HREF="%U">%U</A>
+<P>
+Gautas klaidos praneðimas:
+<UL>
+<LI>
+<STRONG>
+Negaliu aptikti URN
+</STRONG>
+</UL>
+
+<P>
+Mielieji, siûlau daug nesitikëti ið URNu %T :)
+</P>

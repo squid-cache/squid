@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<TITLE>KLAIDA: Puslapis nurodytu adresu negali bûti atsiøstas</TITLE>
+</HEAD><BODY>
+<H1>KLAIDA</H1>
+<H2>Puslapis nurodytu adresu negali bûti atsiøstas</H2>
+<HR>
+<P>
+Bandant atsiøsti puslapá:
+<A HREF="%U">%U</A>
+<P>
+Gautas klaidos praneðimas:
+<UL>
+<LI>
+<STRONG>
+Klaidingas adresas
+</STRONG>
+</UL>
+
+<P>
+Kaþkuri adreso dalis yra klaidinga. Galimos ðios problemos:
+<UL>
+<LI>Trûksta arba klaidingas protokolas (turetø bûti `http://' ar panaðus)
+<LI>Trûksta serverio vardo
+<LI>Neleistinas double-escape kodas adrese
+<LI>Neleistinas simbolis serverio varde; underscores simboliai yra neleistini
+</UL>
+</P>
