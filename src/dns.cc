@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.63 1998/07/29 03:57:37 wessels Exp $
+ * $Id: dns.cc,v 1.64 1998/09/14 21:58:47 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -65,11 +65,11 @@ dnsGetFirstAvailable(void)
     dnsserver_t *dns = NULL;
     for (k = 0; k < NDnsServersAlloc; k++) {
 	dns = *(dns_child_table + k);
-	if (EBIT_TEST(dns->flags, HELPER_BUSY))
+	if (dns->flags.busy)
 	    continue;
-	if (EBIT_TEST(dns->flags, HELPER_CLOSING))
+	if (dns->flags.closing)
 	    continue;
-	if (!EBIT_TEST(dns->flags, HELPER_ALIVE))
+	if (!dns->flags.alive)
 	    continue;
 	return dns;
     }
@@ -131,14 +131,14 @@ dnsOpenServers(void)
 	    &wfd);
 	if (x < 0) {
 	    debug(34, 1) ("dnsOpenServers: WARNING: Failed to start 'dnsserver' #%d.\n", k + 1);
-	    EBIT_CLR(dns_child_table[k]->flags, HELPER_ALIVE);
+	    dns_child_table[k]->flags.alive = 0;
 	    dns_child_table[k]->id = k + 1;
 	    dns_child_table[k]->inpipe = -1;
 	    dns_child_table[k]->outpipe = -1;
 	} else {
 	    debug(34, 4) ("dnsOpenServers: FD %d connected to %s #%d.\n",
 		wfd, prg, k + 1);
-	    EBIT_SET(dns_child_table[k]->flags, HELPER_ALIVE);
+	    dns_child_table[k]->flags.alive = 1;
 	    dns_child_table[k]->id = k + 1;
 	    dns_child_table[k]->inpipe = rfd;
 	    dns_child_table[k]->outpipe = wfd;
@@ -196,10 +196,10 @@ dnsStats(StoreEntry * sentry)
 	    k + 1,
 	    dns->inpipe,
 	    DnsStats.hist[k],
-	    EBIT_TEST(dns->flags, HELPER_ALIVE) ? 'A' : ' ',
-	    EBIT_TEST(dns->flags, HELPER_BUSY) ? 'B' : ' ',
-	    EBIT_TEST(dns->flags, HELPER_CLOSING) ? 'C' : ' ',
-	    EBIT_TEST(dns->flags, HELPER_SHUTDOWN) ? 'S' : ' ',
+	    dns->flags.alive ? 'A' : ' ',
+	    dns->flags.busy ? 'B' : ' ',
+	    dns->flags.closing ? 'C' : ' ',
+	    dns->flags.shutdown ? 'S' : ' ',
 	    0.001 * tvSubMsec(dns->dispatch_time, current_time),
 	    (int) dns->offset);
     }
@@ -218,17 +218,17 @@ dnsShutdownServers(void *notused)
     debug(34, 3) ("dnsShutdownServers:\n");
     for (k = 0; k < NDnsServersAlloc; k++) {
 	dns = *(dns_child_table + k);
-	if (!EBIT_TEST(dns->flags, HELPER_ALIVE)) {
+	if (!dns->flags.alive) {
 	    debug(34, 3) ("dnsShutdownServers: #%d is NOT ALIVE.\n", dns->id);
 	    continue;
 	}
-	if (EBIT_TEST(dns->flags, HELPER_BUSY)) {
+	if (dns->flags.busy) {
 	    debug(34, 3) ("dnsShutdownServers: #%d is BUSY.\n", dns->id);
-	    EBIT_SET(dns->flags, HELPER_SHUTDOWN);
+	    dns->flags.shutdown = 1;
 	    na++;
 	    continue;
 	}
-	if (EBIT_TEST(dns->flags, HELPER_CLOSING)) {
+	if (dns->flags.closing) {
 	    debug(34, 3) ("dnsShutdownServers: #%d is CLOSING.\n", dns->id);
 	    continue;
 	}
@@ -266,18 +266,21 @@ dnsShutdownServer(dnsserver_t * dns)
 	dnsShutdownRead,
 	dns,
 	0);
-    EBIT_SET(dns->flags, HELPER_CLOSING);
+    dns->flags.closing = 1;
 }
 
 static void
 dnsShutdownRead(int fd, void *data)
 {
     dnsserver_t *dns = data;
-    debug(14, EBIT_TEST(dns->flags, HELPER_CLOSING) ? 5 : 1)
+    debug(14, dns->flags.closing ? 5 : 1)
 	("FD %d: Connection from DNSSERVER #%d is closed, disabling\n",
 	fd,
 	dns->id);
-    dns->flags = 0;
+    dns->flags.alive = 0;
+    dns->flags.busy = 0;
+    dns->flags.closing = 0;
+    dns->flags.shutdown = 0;
     commSetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
     cbdataUnlock(dns);
     comm_close(fd);

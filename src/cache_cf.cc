@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.304 1998/09/01 22:12:06 wessels Exp $
+ * $Id: cache_cf.cc,v 1.305 1998/09/14 21:58:46 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -770,17 +770,17 @@ parse_peer(peer ** head)
     }
     while ((token = strtok(NULL, w_space))) {
 	if (!strcasecmp(token, "proxy-only")) {
-	    EBIT_SET(p->options, NEIGHBOR_PROXY_ONLY);
+	    p->options.proxy_only = 1;
 	} else if (!strcasecmp(token, "no-query")) {
-	    EBIT_SET(p->options, NEIGHBOR_NO_QUERY);
+	    p->options.no_query = 1;
 	} else if (!strcasecmp(token, "no-digest")) {
-	    EBIT_SET(p->options, NEIGHBOR_NO_DIGEST);
+	    p->options.no_digest = 1;
 	} else if (!strcasecmp(token, "multicast-responder")) {
-	    EBIT_SET(p->options, NEIGHBOR_MCAST_RESPONDER);
+	    p->options.mcast_responder = 1;
 	} else if (!strncasecmp(token, "weight=", 7)) {
 	    p->weight = atoi(token + 7);
 	} else if (!strcasecmp(token, "closest-only")) {
-	    EBIT_SET(p->options, NEIGHBOR_CLOSEST_ONLY);
+	    p->options.closest_only = 1;
 	} else if (!strncasecmp(token, "ttl=", 4)) {
 	    p->mcast.ttl = atoi(token + 4);
 	    if (p->mcast.ttl < 0)
@@ -788,15 +788,15 @@ parse_peer(peer ** head)
 	    if (p->mcast.ttl > 128)
 		p->mcast.ttl = 128;
 	} else if (!strcasecmp(token, "default")) {
-	    EBIT_SET(p->options, NEIGHBOR_DEFAULT_PARENT);
+	    p->options.default_parent = 1;
 	} else if (!strcasecmp(token, "round-robin")) {
-	    EBIT_SET(p->options, NEIGHBOR_ROUNDROBIN);
+	    p->options.roundrobin = 1;
 #if USE_HTCP
 	} else if (!strcasecmp(token, "htcp")) {
-	    EBIT_SET(p->options, NEIGHBOR_HTCP);
+	    p->options.htcp = 1;
 #endif
 	} else if (!strcasecmp(token, "no-netdb-exchange")) {
-	    EBIT_SET(p->options, NEIGHBOR_NO_NETDB_EXCHANGE);
+	    p->options.no_netdb_exchange = 1;
 #if USE_CARP
 	} else if (!strncasecmp(token, "carp-load-factor=", 17)) {
 	    if (p->type != PEER_PARENT)
@@ -806,7 +806,7 @@ parse_peer(peer ** head)
 #endif
 #if DELAY_POOLS
 	} else if (!strcasecmp(token, "no-delay")) {
-	    EBIT_SET(p->options, NEIGHBOR_NO_DELAY);
+	    p->options.no_delay = 1;
 #endif
 	} else {
 	    debug(3, 0) ("parse_peer: token='%s'\n", token);

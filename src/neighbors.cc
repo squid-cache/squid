@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.246 1998/09/14 21:28:06 wessels Exp $
+ * $Id: neighbors.cc,v 1.247 1998/09/14 21:58:51 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -153,9 +153,9 @@ peerWouldBePinged(const peer * p, request_t * request)
 {
     if (!peerAllowedToUse(p, request))
 	return 0;
-    if (EBIT_TEST(p->options, NEIGHBOR_NO_QUERY))
+    if (p->options.no_query)
 	return 0;
-    if (EBIT_TEST(p->options, NEIGHBOR_MCAST_RESPONDER))
+    if (p->options.mcast_responder)
 	return 0;
     /* the case below seems strange, but can happen if the
      * URL host is on the other side of a firewall */
@@ -207,7 +207,7 @@ getSingleParent(request_t * request)
 	    return NULL;	/* oops, found second parent */
 	p = q;
     }
-    if (p != NULL && !EBIT_TEST(p->options, NEIGHBOR_NO_QUERY))
+    if (p != NULL && !p->options.no_query)
 	return NULL;
     debug(15, 3) ("getSingleParent: returning %s\n", p ? p->host : "NULL");
     return p;
@@ -236,7 +236,7 @@ getRoundRobinParent(request_t * request)
     peer *p;
     peer *q = NULL;
     for (p = Config.peers; p; p = p->next) {
-	if (!EBIT_TEST(p->options, NEIGHBOR_ROUNDROBIN))
+	if (!p->options.roundrobin)
 	    continue;
 	if (neighborType(p, request) != PEER_PARENT)
 	    continue;
@@ -259,7 +259,7 @@ getDefaultParent(request_t * request)
     for (p = Config.peers; p; p = p->next) {
 	if (neighborType(p, request) != PEER_PARENT)
 	    continue;
-	if (!EBIT_TEST(p->options, NEIGHBOR_DEFAULT_PARENT))
+	if (!p->options.default_parent)
 	    continue;
 	if (!peerHTTPOkay(p, request))
 	    continue;
@@ -376,7 +376,7 @@ neighborsUdpPing(request_t * request,
 	debug(15, 3) ("neighborsUdpPing: reqnum = %d\n", reqnum);
 
 #if USE_HTCP
-	if (EBIT_TEST(p->options, NEIGHBOR_HTCP)) {
+	if (p->options.htcp) {
 	    debug(15, 3) ("neighborsUdpPing: sending HTCP query\n");
 	    htcpQuery(entry, request, p);
 	} else
@@ -684,7 +684,7 @@ ignoreMulticastReply(peer * p, MemObject * mem)
 {
     if (p == NULL)
 	return 0;
-    if (!EBIT_TEST(p->options, NEIGHBOR_MCAST_RESPONDER))
+    if (!p->options.mcast_responder)
 	return 0;
     if (peerHTTPOkay(p, mem->request))
 	return 0;
@@ -882,7 +882,7 @@ peerDNSConfigure(const ipcache_addrs * ia, void *data)
     if (p->type == PEER_MULTICAST)
 	peerCountMcastPeersSchedule(p, 10);
     if (p->type != PEER_MULTICAST)
-	if (!EBIT_TEST(p->options, NEIGHBOR_NO_NETDB_EXCHANGE))
+	if (!p->options.no_netdb_exchange)
 	    eventAddIsh("netdbExchangeStart", netdbExchangeStart, p, 30.0, 1);
 }
 
@@ -1068,28 +1068,28 @@ neighborDumpNonPeers(StoreEntry * sentry)
 void
 dump_peer_options(StoreEntry * sentry, peer * p)
 {
-    if (EBIT_TEST(p->options, NEIGHBOR_PROXY_ONLY))
+    if (p->options.proxy_only)
 	storeAppendPrintf(sentry, " proxy-only");
-    if (EBIT_TEST(p->options, NEIGHBOR_NO_QUERY))
+    if (p->options.no_query)
 	storeAppendPrintf(sentry, " no-query");
-    if (EBIT_TEST(p->options, NEIGHBOR_NO_DIGEST))
+    if (p->options.no_digest)
 	storeAppendPrintf(sentry, " no-digest");
-    if (EBIT_TEST(p->options, NEIGHBOR_DEFAULT_PARENT))
+    if (p->options.default_parent)
 	storeAppendPrintf(sentry, " default");
-    if (EBIT_TEST(p->options, NEIGHBOR_ROUNDROBIN))
+    if (p->options.roundrobin)
 	storeAppendPrintf(sentry, " round-robin");
-    if (EBIT_TEST(p->options, NEIGHBOR_MCAST_RESPONDER))
+    if (p->options.mcast_responder)
 	storeAppendPrintf(sentry, " multicast-responder");
-    if (EBIT_TEST(p->options, NEIGHBOR_CLOSEST_ONLY))
+    if (p->options.closest_only)
 	storeAppendPrintf(sentry, " closest-only");
 #if USE_HTCP
-    if (EBIT_TEST(p->options, NEIGHBOR_HTCP))
+    if (p->options.htcp)
 	storeAppendPrintf(sentry, " htcp");
 #endif
-    if (EBIT_TEST(p->options, NEIGHBOR_NO_NETDB_EXCHANGE))
+    if (p->options.no_netdb_exchange)
 	storeAppendPrintf(sentry, " no-netdb-exchange");
 #if DELAY_POOLS
-    if (EBIT_TEST(p->options, NEIGHBOR_NO_DELAY))
+    if (p->options.no_delay)
 	storeAppendPrintf(sentry, " no-delay");
 #endif
     if (p->mcast.ttl > 0)
@@ -1138,7 +1138,7 @@ dump_peers(StoreEntry * sentry, peer * peers)
 	    percent(e->stats.ignored_replies, e->stats.pings_acked));
 	storeAppendPrintf(sentry, "Histogram of PINGS ACKED:\n");
 #if USE_HTCP
-	if (EBIT_TEST(e->options, NEIGHBOR_HTCP)) {
+	if (e->options.htcp) {
 	    storeAppendPrintf(sentry, "\tMisses\t%8d %3d%%\n",
 		e->htcp.counts[0],
 		percent(e->htcp.counts[0], e->stats.pings_acked));
