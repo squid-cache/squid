@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.168 1998/07/14 21:29:54 wessels Exp $
+ * $Id: acl.cc,v 1.169 1998/07/14 22:28:08 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1116,7 +1116,7 @@ aclMatchIdent(wordlist * data, const char *ident)
 static int
 aclMatchProxyAuth(acl_proxy_auth * p, aclCheck_t * checklist)
 {
-    LOCAL_ARRAY(char, sent_user, ICP_IDENT_SZ);
+    LOCAL_ARRAY(char, sent_user, USER_IDENT_SZ);
     const char *s;
     char *cleartext;
     char *sent_auth;
@@ -1134,7 +1134,7 @@ aclMatchProxyAuth(acl_proxy_auth * p, aclCheck_t * checklist)
     cleartext = uudecode(sent_auth);
     xfree(sent_auth);
     debug(28, 3) ("aclMatchProxyAuth: cleartext = '%s'\n", cleartext);
-    xstrncpy(sent_user, cleartext, ICP_IDENT_SZ);
+    xstrncpy(sent_user, cleartext, USER_IDENT_SZ);
     xfree(cleartext);
     if ((passwd = strchr(sent_user, ':')) != NULL)
 	*passwd++ = '\0';
@@ -1143,6 +1143,8 @@ aclMatchProxyAuth(acl_proxy_auth * p, aclCheck_t * checklist)
 	return 0;
     }
     debug(28, 5) ("aclMatchProxyAuth: checking user %s\n", sent_user);
+    /* copy username to checklist for logging on client-side */
+    xstrncpy(checklist->request->user_ident, sent_user, USER_IDENT_SZ);
     /* reread password file if necessary */
     aclReadProxyAuth(p);
     u = hash_lookup(p->hash, sent_user);
@@ -1576,7 +1578,7 @@ aclChecklistCreate(const acl_access * A,
     if (user_agent)
 	xstrncpy(checklist->browser, user_agent, BROWSERNAMELEN);
     if (ident)
-	xstrncpy(checklist->ident, ident, ICP_IDENT_SZ);
+	xstrncpy(checklist->ident, ident, USER_IDENT_SZ);
     return checklist;
 }
 

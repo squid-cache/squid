@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.348 1998/07/14 22:18:20 wessels Exp $
+ * $Id: client_side.cc,v 1.349 1998/07/14 22:28:10 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -162,7 +162,6 @@ clientAccessCheckDone(int answer, void *data)
     clientHttpRequest *http = data;
     int page_id = -1;
     ErrorState *err = NULL;
-    HttpReply *rep;
     debug(33, 5) ("clientAccessCheckDone: '%s' answer=%d\n", http->uri, answer);
     http->acl_checklist = NULL;
     if (answer == ACCESS_ALLOWED) {
@@ -171,14 +170,11 @@ clientAccessCheckDone(int answer, void *data)
 	http->redirect_state = REDIRECT_PENDING;
 	redirectStart(http, clientRedirectDone, http);
     } else if (answer == ACCESS_REQ_PROXY_AUTH) {
-	http->al.http.code = HTTP_PROXY_AUTHENTICATION_REQUIRED;
 	http->log_type = LOG_TCP_DENIED;
 	http->entry = clientCreateStoreEntry(http, http->request->method, 0);
-	/* create appropreate response */
-	rep = clientConstructProxyAuthReply(http);
-	httpReplySwapOut(rep, http->entry);
-	/* do not need it anymore */
-	httpReplyDestroy(rep);
+	/* create appropriate response */
+	http->entry->mem_obj->reply = clientConstructProxyAuthReply(http);
+	httpReplySwapOut(http->entry->mem_obj->reply, http->entry);
 	storeComplete(http->entry);
     } else {
 	debug(33, 5) ("Access Denied: %s\n", http->uri);
@@ -619,7 +615,10 @@ httpRequestFree(void *data)
 	http->al.cache.size = http->out.size;
 	http->al.cache.code = http->log_type;
 	http->al.cache.msec = tvSubMsec(http->start, current_time);
-	http->al.cache.ident = conn->ident.ident;
+	if (request->user_ident[0])
+	    http->al.cache.ident = request->user_ident;
+	else
+	    http->al.cache.ident = conn->ident.ident;
 	if (request) {
 	    Packer p;
 	    MemBuf mb;
