@@ -12,7 +12,13 @@ XTRA_LIBS = -lm  -lmalloc
 all:  membanger
 
 membanger: $(OBJS) $(TARGLIB)
-	gcc -o membanger $(OBJS) $(LIB)
+	$(CC) -o membanger $(OBJS) $(LIB)
+
+tcp-banger2: tcp-banger2.o
+	$(CC) -o $@ tcp-banger2.o
+
+tcp-banger2.o: tcp-banger2.c
+	$(CC) -c -I../include tcp-banger2.c
 
 $(OBJS): Makefile
 
