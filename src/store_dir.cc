@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.49 1998/02/10 00:55:04 wessels Exp $
+ * $Id: store_dir.cc,v 1.50 1998/02/10 02:16:39 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -49,13 +49,15 @@ storeSwapFullPath(int fn, char *fullpath)
     LOCAL_ARRAY(char, fullfilename, SQUID_MAXPATHLEN);
     int dirn = (fn >> SWAP_DIR_SHIFT) % Config.cacheSwap.n_configured;
     int filn = fn & SWAP_FILE_MASK;
+    int L1 = Config.cacheSwap.swapDirs[dirn].l1;
+    int L2 = Config.cacheSwap.swapDirs[dirn].l2;
     if (!fullpath)
 	fullpath = fullfilename;
     fullpath[0] = '\0';
     snprintf(fullpath, SQUID_MAXPATHLEN, "%s/%02X/%02X/%08X",
 	Config.cacheSwap.swapDirs[dirn].path,
-	((filn / Config.cacheSwap.swapDirs[dirn].l2) / Config.cacheSwap.swapDirs[dirn].l2) % Config.cacheSwap.swapDirs[dirn].l1,
-	(filn / Config.cacheSwap.swapDirs[dirn].l2) % Config.cacheSwap.swapDirs[dirn].l2,
+	((filn / L2) / L2) % L1,
+	(filn / L2) % L2,
 	filn);
     return fullpath;
 }
@@ -80,17 +82,19 @@ storeSwapSubSubDir(int fn, char *fullpath)
     LOCAL_ARRAY(char, fullfilename, SQUID_MAXPATHLEN);
     int dirn = (fn >> SWAP_DIR_SHIFT) % Config.cacheSwap.n_configured;
     int filn = fn & SWAP_FILE_MASK;
+    int L1 = Config.cacheSwap.swapDirs[dirn].l1;
+    int L2 = Config.cacheSwap.swapDirs[dirn].l2;
     if (!fullpath)
 	fullpath = fullfilename;
     fullpath[0] = '\0';
     snprintf(fullpath, SQUID_MAXPATHLEN, "%s/%02X/%02X",
 	Config.cacheSwap.swapDirs[dirn].path,
-	((filn / Config.cacheSwap.swapDirs[dirn].l2) / Config.cacheSwap.swapDirs[dirn].l2) % Config.cacheSwap.swapDirs[dirn].l1,
-	(filn / Config.cacheSwap.swapDirs[dirn].l2) % Config.cacheSwap.swapDirs[dirn].l2);
+	((filn / L2) / L2) % L1,
+	(filn / L2) % L2);
     return fullpath;
 }
 
-static void
+static void 
 storeCreateDirectory(const char *path, int lvl)
 {
     struct stat st;
@@ -519,8 +523,8 @@ storeDirWriteCleanLogs(int reopen)
 	    debug(50, 0) ("storeDirWriteCleanLogs: %s: %s\n", new[dirn], xstrerror());
 	    continue;
 	}
-        debug(20, 3) ("storeDirWriteCleanLogs: opened %s, FD %d\n",
-		new[dirn], fd[dirn]);
+	debug(20, 3) ("storeDirWriteCleanLogs: opened %s, FD %d\n",
+	    new[dirn], fd[dirn]);
 #if HAVE_FCHMOD
 	if (stat(cur[dirn], &sb) == 0)
 	    fchmod(fd[dirn], sb.st_mode);
@@ -619,12 +623,12 @@ storeDirWriteCleanLogs(int reopen)
 	r > 0 ? r : 0, (double) n / (r > 0 ? r : 1));
     /* touch a timestamp file if we're not still validating */
     if (!store_rebuilding) {
-        for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
+	for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
 	    if (fd[dirn] < 0)
-	        continue;
+		continue;
 	    file_close(file_open(cln[dirn],
-		O_WRONLY | O_CREAT | O_TRUNC, NULL, NULL, NULL));
-        }
+		    O_WRONLY | O_CREAT | O_TRUNC, NULL, NULL, NULL));
+	}
     }
     /* close */
     for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
