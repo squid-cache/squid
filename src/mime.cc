@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.107 2002/10/25 07:36:32 robertc Exp $
+ * $Id: mime.cc,v 1.108 2002/11/10 04:43:04 hno Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -351,7 +351,7 @@ mimeInit(char *filename)
     if (filename == NULL)
 	return;
     if ((fp = fopen(filename, "r")) == NULL) {
-	debug(50, 1) ("mimeInit: %s: %s\n", filename, xstrerror());
+	debug(25, 1) ("mimeInit: %s: %s\n", filename, xstrerror());
 	return;
     }
 #if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
@@ -477,7 +477,7 @@ MimeIcon::created (StoreEntry *newEntry)
 	return;
     }
     if (fstat(fd, &sb) < 0) {
-	debug(50, 0) ("mimeLoadIconFile: FD %d: fstat: %s\n", fd, xstrerror());
+	debug(25, 0) ("mimeLoadIconFile: FD %d: fstat: %s\n", fd, xstrerror());
 	file_close(fd);
 	return;
     }
