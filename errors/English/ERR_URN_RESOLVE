@@ -1,0 +1,20 @@
+<HTML><HEAD>
+<TITLE>ERROR: The requested URN not be retrieved</TITLE>
+</HEAD><BODY>
+<H1>ERROR</H1>
+<H2>A URL for the requested URN could not be retrieved</H2>
+<HR>
+<P>
+While trying to retrieve the URL:
+<A HREF="%U">%U</A>
+<P>
+The following error was encountered:
+<UL>
+<LI>
+<STRONG>
+Cannot Resolve URN
+</STRONG>
+</UL>
+
+<P>
+Hey, don't expect too much from URNs in 1997 :)
