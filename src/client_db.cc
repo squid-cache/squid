@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.30 1998/03/29 08:50:57 wessels Exp $
+ * $Id: client_db.cc,v 1.31 1998/04/24 05:44:08 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -133,6 +133,10 @@ clientdbDump(StoreEntry * sentry)
 {
     ClientInfo *c;
     log_type l;
+    int icp_total = 0;
+    int icp_hits = 0;
+    int http_total = 0;
+    int http_hits = 0;
     storeAppendPrintf(sentry, "Cache Clients:\n");
     c = (ClientInfo *) hash_first(client_table);
     while (c) {
@@ -143,6 +147,9 @@ clientdbDump(StoreEntry * sentry)
 	for (l = LOG_TAG_NONE; l < LOG_TYPE_MAX; l++) {
 	    if (c->Icp.result_hist[l] == 0)
 		continue;
+	    icp_total += c->Icp.result_hist[l];
+	    if (LOG_UDP_HIT == l)
+		icp_hits += c->Icp.result_hist[l];
 	    storeAppendPrintf(sentry,
 		"        %-20.20s %7d %3d%%\n",
 		log_tags[l],
@@ -154,6 +161,9 @@ clientdbDump(StoreEntry * sentry)
 	for (l = LOG_TAG_NONE; l < LOG_TYPE_MAX; l++) {
 	    if (c->Http.result_hist[l] == 0)
 		continue;
+	    http_total += c->Http.result_hist[l];
+	    if (isTcpHit(l))
+		http_hits += c->Http.result_hist[l];
 	    storeAppendPrintf(sentry,
 		"        %-20.20s %7d %3d%%\n",
 		log_tags[l],
@@ -163,6 +173,11 @@ clientdbDump(StoreEntry * sentry)
 	storeAppendPrintf(sentry, "\n");
 	c = (ClientInfo *) hash_next(client_table);
     }
+    storeAppendPrintf(sentry, "TOTALS\n");
+    storeAppendPrintf(sentry, "ICP : %d Queries, %d Hits (%3d%%)\n",
+	icp_total, icp_hits, percent(icp_hits, icp_total));
+    storeAppendPrintf(sentry, "HTTP: %d Requests, %d Hits (%3d%%)\n",
+	http_total, http_hits, percent(http_hits, http_total));
 }
 
 static void
