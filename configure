@@ -558,7 +558,7 @@ fi
 
 
 
-# From configure.in Revision: 1.95 
+# From configure.in Revision: 1.96 
 ac_aux_dir=
 for ac_dir in aux $srcdir/aux; do
   if test -f $ac_dir/install-sh; then
@@ -969,14 +969,14 @@ if test "${enable_acltree+set}" = set; then
   enableval="$enable_acltree"
    case "$enableval" in
   splay)
-  	echo "ACL lists using BIN trees"
+  	echo "ACL lists using SPLAY trees"
   	cat >> confdefs.h <<\EOF
 #define USE_SPLAY_TREE 1
 EOF
 
       	;;
   yes|bin)
-  	echo "ACL lists using SPLAY trees"
+  	echo "ACL lists using BIN trees"
   	cat >> confdefs.h <<\EOF
 #define USE_BIN_TREE 1
 EOF

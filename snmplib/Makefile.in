@@ -8,6 +8,9 @@
 ## set to installation prefix (overridden by configure --prefix=path):
 
 prefix		= @prefix@
+top_srcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 VERSION		= 3.4
 ALIB		= libsnmp.a
@@ -24,7 +27,7 @@ AR_R		= @AR_R@
 RANLIB		= @RANLIB@
 AC_CFLAGS	= @CFLAGS@
 DEFS		= -DSQUID_SNMP=1
-INCLUDE		= -I../include -I$(srcdir)/../include
+INCLUDE		= -I../include -I$(top_srcdir)/include
 MIBDEFS		= -DMIBFILEPATH=\"$(prefix)/lib\"
 CFLAGS		= $(AC_CFLAGS) $(DEFS) $(INCLUDE)
 
@@ -41,7 +44,7 @@ $(ALIB):    ${OBJS}
 ## special rule to include -DMIBFILEPATH=...:
 ##
 mib.o:		mib.c
-	$(CC) $(CFLAGS) $(MIBDEFS)	-c mib.c 
+	$(CC) $(CFLAGS) $(MIBDEFS)	-c $(srcdir)/mib.c 
 
 distclean: clean
 	-rm -f Makefile
