@@ -1,6 +1,5 @@
 
 
-
 extern void accessLogLog(AccessLogEntry *);
 extern void accessLogRotate(void);
 extern void accessLogClose(void);
@@ -29,6 +28,19 @@ extern void aclDestroyRegexList(struct _relist *data);
 extern int aclMatchRegex(relist * data, const char *word);
 extern void aclParseRegexList(void *curlist);
 
+#if USE_ARP_ACL
+extern int checkARP(u_long ip, char *eth);
+extern int decode_eth(const char *asc, char *eth);
+extern int aclMatchArp(void *dataptr, struct in_addr c);
+#if USE_SPLAY_TREE
+extern int aclArpNetworkCompare(const void *, splayNode *);
+extern void aclParseArpList(void *curlist);
+#elif USE_BIN_TREE
+extern int bintreeArpNetworkCompare(void *, void *);
+extern void aclParseArpList(void **curtree);
+#endif
+extern void aclParseArpList(void *curlist);
+#endif
 
 extern int aio_cancel(aio_result_t *);
 extern int aio_open(const char *, int, mode_t, aio_result_t *);
@@ -585,3 +597,13 @@ extern void asnAclInitialize(acl *);
 
 extern void dlinkAdd(void *data, dlink_node *, dlink_list *);
 extern void dlinkDelete(dlink_node * m, dlink_list * list);
+
+/*
+ * prototypes for system functions missing from system includes
+ */
+
+#ifdef _SQUID_SOLARIS_
+int getrusage(int, struct rusage *);
+int getpagesize(void);
+int gethostname(char *, int);
+#endif
