@@ -1,11 +1,11 @@
 <HTML><HEAD>
-<TITLE>錯誤：欲連結之網站/網頁位置無法正確的傳回</TITLE>
+<TITLE>錯誤：欲連結之網址（URL）無法正確的傳回</TITLE>
 </HEAD><BODY>
 <H1>錯誤</H1>
-<H2>欲連結之網站/網頁位置無法正確的傳回</H2>
+<H2>欲連結之網址（URL）無法正確的傳回</H2>
 <HR>
 <P>
-當嘗試傳回下面的位置時：
+當嘗試傳回下面的網址（URL）時：
 <A HREF="%U">%U</A>
 <P>
 發生了下列的錯誤：
@@ -13,13 +13,13 @@
 <LI>
 <STRONG>
 FTP is Disabled
-<BR>
-檔案傳輸服務禁止使用
+<LI>
+禁止使用檔案傳輸
 </STRONG>
 </UL>
 
 <P>
 This cache does not support FTP.
-<BR>
-本伺服器並未支援檔案傳輸 PROXY 服務。
+</P><P>
+本快取伺服器並未開放支援檔案傳輸服務。
 </P>
