@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.48 2003/02/21 22:50:08 robertc Exp $
+ * $Id: fd.cc,v 1.49 2003/11/09 17:11:11 hno Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -163,6 +163,7 @@ fd_open(int fd, unsigned int type, const char *desc)
     debug(51, 3) ("fd_open FD %d %s\n", fd, desc);
     F->type = type;
     F->flags.open = 1;
+    F->epoll_state = 0;
 #ifdef _SQUID_MSWIN_
 
     switch (type) {

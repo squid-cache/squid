@@ -1,6 +1,6 @@
 
 /*
- * $Id: fde.h,v 1.5 2003/07/15 06:50:42 robertc Exp $
+ * $Id: fde.h,v 1.6 2003/11/09 17:11:11 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -93,12 +93,16 @@ unsigned int close_on_exec:
 
 unsigned int read_pending:
         1;
+
+unsigned int write_pending:
+        1;
     }
 
     flags;
     int bytes_read;
     int bytes_written;
     int uses;                   /* ie # req's over persistent conn */
+    unsigned epoll_state;
 
     struct _fde_disk disk;
     PF *read_handler;
