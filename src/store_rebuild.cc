@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_rebuild.cc,v 1.65 1999/05/27 02:42:32 wessels Exp $
+ * $Id: store_rebuild.cc,v 1.66 1999/05/27 03:13:12 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -117,7 +117,7 @@ storeCleanup(void *datanotused)
 	     * otherwise, set it in the validation procedure
 	     */
 	    storeDirUpdateSwapSize(e->swap_file_number, e->swap_file_sz, 1);
-	    if ((++validnum & 0xFFFF) == 0)
+	    if ((++validnum & 0x3FFFF) == 0)
 		debug(20, 1) ("  %7d Entries Validated so far.\n", validnum);
 	}
     }
