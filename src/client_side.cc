@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.48 1996/10/22 04:27:58 wessels Exp $
+ * $Id: client_side.cc,v 1.49 1996/10/24 05:05:20 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -142,7 +142,7 @@ clientAccessCheck(icpStateData * icpState, void (*handler) (icpStateData *, int)
     icpState->aclHandler = handler;
     if (httpd_accel_mode && !Config.Accel.withProxy && r->protocol != PROTO_CACHEOBJ) {
 	/* this cache is an httpd accelerator ONLY */
-	if (!BIT_TEST(icpState->request->flags, REQ_ACCEL))
+	if (icpState->accel == 0)
 	    answer = 0;
     } else {
 	answer = aclCheck(HTTPAccessList, ch);
