@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.185 1997/10/30 22:40:51 wessels Exp $
+ * $Id: main.cc,v 1.186 1997/10/31 19:34:48 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -299,7 +299,7 @@ shut_down(int sig)
     {
 	pid_t ppid = getppid();
 	if (ppid > 1) {
-	    debug(1, 1, "Killing RunCache, pid %d\n", ppid);
+	    debug(1, 1) ("Killing RunCache, pid %d\n", ppid);
 	    kill(ppid, sig);
 	}
     }
