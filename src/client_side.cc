@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.506 2000/10/17 08:06:02 adrian Exp $
+ * $Id: client_side.cc,v 1.507 2000/10/20 23:47:46 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -176,7 +176,7 @@ clientAccessCheck(void *data)
 
 /*
  * returns true if client specified that the object must come from the cache
- * witout contacting origin server
+ * without contacting origin server
  */
 static int
 clientOnlyIfCached(clientHttpRequest * http)
