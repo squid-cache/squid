@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.130 1998/09/19 17:06:00 wessels Exp $
+ * $Id: enums.h,v 1.131 1998/09/19 20:51:21 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -349,11 +349,11 @@ enum {
     SWAPOUT_DONE
 };
 
-enum {
+typedef enum {
     STORE_NON_CLIENT,
     STORE_MEM_CLIENT,
     STORE_DISK_CLIENT
-};
+} store_client_t;
 
 enum {
     METHOD_NONE,		/* 000 */

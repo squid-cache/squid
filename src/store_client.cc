@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.43 1998/09/19 17:06:13 wessels Exp $
+ * $Id: store_client.cc,v 1.44 1998/09/19 20:51:20 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -46,6 +46,7 @@ static SIH storeClientFileOpened;
 static void storeClientCopy2(StoreEntry * e, store_client * sc);
 static void storeClientFileRead(store_client * sc);
 static EVH storeClientCopyEvent;
+static store_client_t storeClientType(StoreEntry *);
 
 /* check if there is any client waiting for this object at all */
 /* return 1 if there is at least one client */
@@ -72,6 +73,34 @@ storeClientListSearch(const MemObject * mem, void *data)
     return sc;
 }
 
+static store_client_t
+storeClientType(StoreEntry *e)
+{
+    MemObject *mem = e->mem_obj;
+    /*
+     * If some data has been freed from memory, then we must swap in
+     */
+    if (mem->inmem_lo)
+	return STORE_DISK_CLIENT;
+    /*
+     * If we're not transferring, we have the whole thing and there
+     * will be no delays delivering this to the client
+     */
+    else if (e->store_status != STORE_PENDING)
+	return STORE_MEM_CLIENT;
+    /*
+     * If this is the first client, let it be the mem client
+     */
+    else if (mem->nclients > 1)
+	return STORE_DISK_CLIENT;
+    /*
+     * otherwise, make subsequent clients read from disk so they
+     * can not delay the first, and vice-versa.
+     */
+    else
+	return STORE_MEM_CLIENT;
+}
+
 /* add client with fd to client list */
 void
 storeClientListAdd(StoreEntry * e, void *data)
@@ -91,16 +120,11 @@ storeClientListAdd(StoreEntry * e, void *data)
     sc->swapin_fd = -1;
     sc->flags.disk_io_pending = 0;
     sc->entry = e;
-    if (e->store_status == STORE_PENDING && mem->swapout.fd == -1) {
-	sc->type = STORE_MEM_CLIENT;
-	/* assert we'll be able to get the data we want */
-	assert(mem->inmem_lo == 0);
-    } else {
-	sc->type = STORE_DISK_CLIENT;
+    sc->type = storeClientType(e);
+    if (sc->type == STORE_DISK_CLIENT)
 	/* assert we'll be able to get the data we want */
 	/* maybe we should open swapin_fd here */
 	assert(e->swap_file_number > -1);
-    }
     for (T = &mem->clients; *T; T = &(*T)->next);
     *T = sc;
 }
