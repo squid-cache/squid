@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.359 2005/01/29 19:14:08 serassio Exp $
+ * $Id: ftp.cc,v 1.360 2005/02/06 10:45:57 serassio Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -428,10 +428,10 @@ ftpLoginParser(const char *login, FtpStateData * ftpState, int escaped)
         *s = 0;
         xstrncpy(ftpState->password, s + 1, MAX_URL);
 
-        if (escaped)
+        if (escaped) {
             rfc1738_unescape(ftpState->password);
-
-        ftpState->password_url = 1;
+            ftpState->password_url = 1;
+        }
     } else {
         xstrncpy(ftpState->password, null_string, MAX_URL);
     }
@@ -2919,7 +2919,11 @@ ftpFailedErrorMessage(FtpStateData * ftpState, err_type error, int xerrno)
         case SENT_PASS:
 
             if (ftpState->ctrl.replycode > 500)
-                err = errorCon(ERR_FTP_FORBIDDEN, HTTP_FORBIDDEN);
+                if (ftpState->password_url)
+                    err = errorCon(ERR_FTP_FORBIDDEN, HTTP_FORBIDDEN);
+                else
+                    err = errorCon(ERR_FTP_FORBIDDEN, HTTP_UNAUTHORIZED);
+
             else if (ftpState->ctrl.replycode == 421)
                 err = errorCon(ERR_FTP_UNAVAILABLE, HTTP_SERVICE_UNAVAILABLE);
 
