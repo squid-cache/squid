@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.290 2002/10/13 20:34:59 robertc Exp $
+# $Id: cf.data.pre,v 1.291 2002/11/15 13:12:36 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -3824,6 +3824,19 @@ DEFAULT: none
 DOC_START
 	Squid only knows about standardized HTTP request methods.
 	You can add up to 20 additional "extension" methods here.
+DOC_END
+
+NAME: request_entities
+TYPE: onoff
+LOC: Config.onoff.request_entities
+DEFAULT: off
+DOC_START
+	Squid defaults to deny GET and HEAD requests with request entities,
+	as the meaning of such requests are undefined in the HTTP standard
+	even if not explicitly forbidden.
+
+	Set this directive to on if you have clients which insists
+	on sending request entities in GET or HEAD requests.
 DOC_END
 
 NAME: high_response_time_warning
