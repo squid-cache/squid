@@ -1,4 +1,4 @@
-/* $Id: wais.cc,v 1.14 1996/03/29 21:13:31 wessels Exp $ */
+/* $Id: wais.cc,v 1.15 1996/04/01 23:34:47 wessels Exp $ */
 
 /*
  * DEBUG: Section 24          wais
@@ -301,5 +301,6 @@ int waisStart(unusedfd, url, type, mime_hdr, entry)
 	(PF) waisLifetimeExpire, (caddr_t) data);
     comm_set_select_handler(sock, COMM_SELECT_WRITE,
 	(PF) waisSendRequest, (caddr_t) data);
+    storeAddEntry(entry);	/* XXX Make it public */
     return COMM_OK;
 }

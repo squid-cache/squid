@@ -1,4 +1,4 @@
-/* $Id: gopher.cc,v 1.11 1996/03/29 21:19:20 wessels Exp $ */
+/* $Id: gopher.cc,v 1.12 1996/04/01 23:34:43 wessels Exp $ */
 
 /*
  * DEBUG: Section 10          gopher: GOPHER
@@ -931,6 +931,7 @@ int gopherStart(unusedfd, url, entry)
 	COMM_SELECT_WRITE,
 	(PF) gopherSendRequest,
 	(caddr_t) data);
+    storeAddEntry(entry);	/* Make it public */
 
     return COMM_OK;
 }
