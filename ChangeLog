@@ -3,6 +3,7 @@
 	- Fixed errState->errno causing problems with some macros
 	  (Michael O'Reilly).
 	- Fixed memory leaks in pconn.c (Max Okumoto).
+	- Enhanced 'client' program with 'ping' behaviour (Ron Gomes).
 	
 Changes to squid-1.2.beta1 ():
 
