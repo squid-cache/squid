@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.27 1996/07/12 17:40:27 wessels Exp $
+ * $Id: neighbors.cc,v 1.28 1996/07/15 23:18:53 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -337,6 +337,7 @@ void neighborRemove(target)
     }
     if (e) {
 	*E = e->next;
+	safe_free(e->host);
 	safe_free(e);
 	friends->n--;
     }
@@ -352,7 +353,6 @@ void neighborsDestroy()
     for (e = friends->edges_head; e; e = next) {
 	next = e->next;
 	safe_free(e->host);
-	/* XXX I think we need to free e->domains too -DW */
 	safe_free(e);
     }
     safe_free(friends);
