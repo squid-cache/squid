@@ -47,21 +47,21 @@ urnFindMinRtt(wordlist * urls, method_t m, int *rtt_ret)
     int rtt;
     wordlist *w;
     wordlist *min_w = NULL;
-    debug(50, 1) ("urnFindMinRtt\n");
+    debug(50, 3) ("urnFindMinRtt\n");
     assert(urls != NULL);
     for (w = urls; w; w = w->next) {
 	r = urlParse(m, w->key);
 	if (r == NULL)
 	    continue;
-	debug(50, 1) ("Parsed %s\n", w->key);
+	debug(50, 3) ("Parsed %s\n", w->key);
 	rtt = netdbHostRtt(r->host);
 	if (rtt == 0) {
-	    debug(50, 1) ("Pinging %s\n", r->host);
+	    debug(50, 3) ("Pinging %s\n", r->host);
 	    netdbPingSite(r->host);
 	    put_free_request_t(r);
 	    continue;
 	}
-	debug(0, 0) ("%s rtt=%d\n", r->host, rtt);
+	debug(50, 3) ("%s rtt=%d\n", r->host, rtt);
 	if (rtt == 0)
 		continue;
 	if (rtt > min_rtt && min_rtt != 0)
@@ -72,7 +72,7 @@ urnFindMinRtt(wordlist * urls, method_t m, int *rtt_ret)
     }
     if (rtt_ret)
 	*rtt_ret = min_rtt;
-    debug(50, 1) ("Returning '%s' RTT %d\n",
+    debug(50, 1) ("urnFindMinRtt: Returning '%s' RTT %d\n",
 	min_w ? min_w->key : "NONE",
 	min_rtt);
     return min_w;
@@ -87,8 +87,7 @@ urnStart(request_t *r, StoreEntry *e)
     char *t;
     UrnState *urnState;
     StoreEntry *urlres_e;
-    debug(50, 1) ("urnStart\n");
-    debug(50, 1) ("urnStart: '%s'\n", storeUrl(e));
+    debug(50, 3) ("urnStart: '%s'\n", storeUrl(e));
     t = strchr(r->urlpath, ':');
     if (t == NULL) {
         ErrorState *err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND);
@@ -141,7 +140,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     String *S;
     ErrorState *err;
 
-    debug(50, 1) ("urnHandleReply: Called with size=%d.\n", size);
+    debug(50, 3) ("urnHandleReply: Called with size=%d.\n", size);
     if (urlres_e->store_status == STORE_ABORTED) {
 	put_free_4k_page(buf);
 	return;
@@ -166,16 +165,16 @@ urnHandleReply(void *data, char *buf, ssize_t size)
     /* we know its STORE_OK */
     s = mime_headers_end(buf);
     if (s == NULL) {
-	debug(0, 0) ("urnHandleReply: didn't find end-of-headers for %s\n",
+	debug(50, 1) ("urnHandleReply: didn't find end-of-headers for %s\n",
 	    storeUrl(e));
 	return;
     }
     assert(urlres_e->mem_obj->reply);
     httpParseReplyHeaders(buf, urlres_e->mem_obj->reply);
-    debug(50, 1) ("mem->reply exists, code=%d.\n",
+    debug(50, 3) ("mem->reply exists, code=%d.\n",
 	urlres_e->mem_obj->reply->code);
-    if (urlres_e->mem_obj->reply->code != 200) {
-	debug(50, 1) ("urnHandleReply: failed.\n");
+    if (urlres_e->mem_obj->reply->code != HTTP_OK) {
+	debug(50, 3) ("urnHandleReply: failed.\n");
 	err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND);
 	err->request = requestLink(urnState->request);
 	err->url = xstrdup(storeUrl(e));
@@ -186,7 +185,7 @@ urnHandleReply(void *data, char *buf, ssize_t size)
 	s++;
     urls = urn_parsebuffer(s);
     if (urls == NULL) {	/* unkown URN error */
-	debug(50, 1) ("urnTranslateDone: unknown URN (%s).\n", storeUrl(e));
+	debug(50, 3) ("urnTranslateDone: unknown URN %s\n", storeUrl(e));
 	err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND);
 	err->request = requestLink(urnState->request);
 	err->url = xstrdup(storeUrl(e));
@@ -240,9 +239,9 @@ urn_parsebuffer(const char *inbuf)
     wordlist *u;
     wordlist *head = NULL;
     wordlist **last = &head;
-    debug(50, 1) ("urn_parsebuffer\n");
+    debug(50, 3) ("urn_parsebuffer\n");
     for (token = strtok(buf, crlf); token; token = strtok(NULL, crlf)) {
-	debug(0, 0) ("urn_parsebuffer: got '%s'\n", token);
+	debug(50, 3) ("urn_parsebuffer: got '%s'\n", token);
 	u = xmalloc(sizeof(wordlist));
 	u->key = xstrdup(token);
 	u->next = NULL;
