@@ -414,6 +414,8 @@ storeAufsIOCallback(storeIOState * sio, int errflag)
     debug(79, 9) ("%s:%d\n", __FILE__, __LINE__);
     aiostate->fd = -1;
     cbdataFree(sio);
+    if (aiostate->flags.opening)
+	Opening_FD--;
     if (fd < 0)
 	return;
     debug(79, 9) ("%s:%d\n", __FILE__, __LINE__);
@@ -433,10 +435,11 @@ storeAufsNeedCompletetion(storeIOState * sio)
 	return 1;
     if (aiostate->flags.opening && FILE_MODE(sio->mode) == O_WRONLY)
 	return 1;
+    if (aiostate->flags.reading)
+	return 1;
     if (aiostate->flags.inreaddone)
 	return 1;
 
-    /* Note: Pending read operations are silently cancelled on close */
     return 0;
 }
 
