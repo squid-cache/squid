@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.149 1998/03/16 23:12:55 wessels Exp $
+ * $Id: acl.cc,v 1.150 1998/03/17 00:05:54 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -176,6 +176,10 @@ aclStrToType(const char *s)
 	return ACL_DST_DOMAIN;
     if (!strcmp(s, "srcdomain"))
 	return ACL_SRC_DOMAIN;
+    if (!strcmp(s, "dstdom_regex"))
+	return ACL_DST_DOM_REGEX;
+    if (!strcmp(s, "srcdom_regex"))
+	return ACL_SRC_DOM_REGEX;
     if (!strcmp(s, "time"))
 	return ACL_TIME;
     if (!strcmp(s, "pattern"))
@@ -218,6 +222,10 @@ aclTypeToStr(squid_acl type)
 	return "dstdomain";
     if (type == ACL_SRC_DOMAIN)
 	return "srcdomain";
+    if (type == ACL_DST_DOM_REGEX)
+	return "dstdom_regex";
+    if (type == ACL_SRC_DOM_REGEX)
+	return "srcdom_regex";
     if (type == ACL_TIME)
 	return "time";
     if (type == ACL_URLPATH_REGEX)
@@ -773,6 +781,10 @@ aclParseAclLine(acl ** head)
     case ACL_DST_DOMAIN:
 	aclParseDomainList(&A->data);
 	break;
+    case ACL_SRC_DOM_REGEX:
+    case ACL_DST_DOM_REGEX:
+	aclParseRegexList(&A->data);
+	break;
     case ACL_TIME:
 	aclParseTimeSpec(&A->data);
 	break;
@@ -1319,9 +1331,34 @@ aclMatchAcl(acl * acl, aclCheck_t * checklist)
 		acl->name, inet_ntoa(checklist->src_addr));
 	    checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_NEEDED;
 	    return 0;
-	} else {
-	    return aclMatchDomainList(&acl->data, "none");
 	}
+	return aclMatchDomainList(&acl->data, "none");
+	/* NOTREACHED */
+    case ACL_DST_DOM_REGEX:
+	if ((ia = ipcacheCheckNumeric(r->host)) == NULL)
+	    return aclMatchRegex(acl->data, r->host);
+	fqdn = fqdncache_gethostbyaddr(ia->in_addrs[0], FQDN_LOOKUP_IF_MISS);
+	if (fqdn)
+	    return aclMatchRegex(acl->data, fqdn);
+	if (checklist->state[ACL_DST_DOMAIN] == ACL_LOOKUP_NONE) {
+	    debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
+		acl->name, inet_ntoa(ia->in_addrs[0]));
+	    checklist->state[ACL_DST_DOMAIN] = ACL_LOOKUP_NEEDED;
+	    return 0;
+	}
+	return aclMatchRegex(acl->data, "none");
+	/* NOTREACHED */
+    case ACL_SRC_DOM_REGEX:
+	fqdn = fqdncache_gethostbyaddr(checklist->src_addr, FQDN_LOOKUP_IF_MISS);
+	if (fqdn) {
+	    return aclMatchRegex(acl->data, fqdn);
+	} else if (checklist->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NONE) {
+	    debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
+		acl->name, inet_ntoa(checklist->src_addr));
+	    checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_NEEDED;
+	    return 0;
+	}
+	return aclMatchRegex(acl->data, "none");
 	/* NOTREACHED */
     case ACL_TIME:
 	return aclMatchTime(acl->data, squid_curtime);

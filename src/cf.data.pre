@@ -150,7 +150,7 @@ DOC_START
 
 		hostname type http_port icp_port
 
-   For example,
+	For example,
 
 	#                                        proxy  icp
 	#          hostname             type     port   port  options
@@ -677,7 +677,7 @@ TYPE: string
 DEFAULT: @DEFAULT_PID_FILE@
 LOC: Config.pidFilename
 DOC_START
-       A filename to write the process-id to.  To disable, enter "none".
+	A filename to write the process-id to.  To disable, enter "none".
 
 pid_filename @DEFAULT_PID_FILE@
 DOC_END
@@ -1199,8 +1199,15 @@ DOC_START
 	acl aclname src      ip-address/netmask ... (clients IP address)
 	acl aclname src      addr1-addr2/netmask ... (range of addresses)
 	acl aclname dst      ip-address/netmask ... (URL host's IP address)
-	acl aclname srcdomain   foo.com ... (taken from reverse DNS lookup)
-	acl aclname dstdomain   foo.com ... (taken from the URL)
+
+	acl aclname srcdomain   foo.com ...     # reverse lookup, client IP
+	acl aclname dstdomain   foo.com ...     # Destination server from URL
+	acl aclname srcdom_regex xxx ...        # regex matching client name
+	acl aclname dstdom_regex xxx ...        # regex matching server
+	  # For dstdomain and dstdom_regex  a reverse lookup is tried if a IP
+	  # based URL is used. The name "none" is used if the reverse lookup
+	  # fails.
+
 	acl aclname time     [day-abbrevs]  [h1:m1-h2:m2]
 	    day-abbrevs:
 		S - Sunday
@@ -1212,7 +1219,7 @@ DOC_START
 		A - Saturday
 	    h1:m1 must be less than h2:m2
 	acl aclname url_regex  ^http:// ...	# regex matching on whole URL
-	acl aclname urlpath_regex  \.gif$ ...	# regex matching on URL path only
+	acl aclname urlpath_regex  \.gif$ ...	# regex matching on URL path
 	acl aclname port     80 70 21 ...
 	acl aclname proto    HTTP FTP ...
 	acl aclname method   GET POST ...
@@ -1227,7 +1234,7 @@ DOC_START
 	  # example for routing all requests for AS#1241 and only 
 	  # those to mycache.mydomain.net:
 	  # acl asexample dst_as 1241
-          # cache_host_acl mycache.mydomain.net asexample
+	  # cache_host_acl mycache.mydomain.net asexample
 	  # cache_host_acl mycache_mydomain.net !all
 
 	acl aclname proxy_auth passwd_file [ refresh ]
@@ -1616,7 +1623,7 @@ DOC_START
 	If set, Squid will keep pools of allocated (but unused) memory
 	available for future use.  If memory is a premium on your
 	system and you believe your malloc library outperforms Squid 
-        routines, disable this.
+	routines, disable this.
 
 memory_pools on
 DOC_END
@@ -1917,7 +1924,7 @@ TYPE: acl_access
 LOC: Config.accessList.NeverDirect
 DEFAULT: none
 DOC_START
-        Usage: never_direct allow|deny [!]aclname ...
+	Usage: never_direct allow|deny [!]aclname ...
 
 	never_direct is the opposite of always_direct.  Please read
 	the description for always_direct if you have not already.
@@ -1929,10 +1936,10 @@ DOC_START
 	example, to force the use of a proxy for all requests, except
 	those in your local domain, use something like:
 
-                acl local-servers dstdomain my.domain.net
+		acl local-servers dstdomain my.domain.net
 		acl all src 0.0.0.0/0.0.0.0
-                never_direct deny local-servers
-                never_direct allow all
+		never_direct deny local-servers
+		never_direct allow all
 DOC_END
 
 NAME: fake_user_agent
@@ -1940,13 +1947,13 @@ TYPE: eol
 LOC: Config.fake_ua
 DEFAULT: none
 DOC_START
-       If you use the paranoid http_anonymizer setting, Squid will strip
-       your User-agent string from the request.  Some Web servers will
-       refuse your request without a User-agent string.  Use this to
-       fake one up.  For example:
+	If you use the paranoid http_anonymizer setting, Squid will strip
+	your User-agent string from the request.  Some Web servers will
+	refuse your request without a User-agent string.  Use this to
+	fake one up.  For example:
 
-       fake_user_agent Nutscrape/1.0 (CP/M; 8-bit)
-       (credit to Paul Southworth pauls@etext.org for this one!)
+	fake_user_agent Nutscrape/1.0 (CP/M; 8-bit)
+	(credit to Paul Southworth pauls@etext.org for this one!)
 
 fake_user_agent none
 DOC_END
@@ -2054,9 +2061,9 @@ DOC_START
 	allow you to set Squid into port 161 and your system's snmpd to
 	another port by changing /etc/services.
 
-        WARNING: Because of Squid acting as a proxy snmpd for system  
-        you have to do security checks on THIS snmpd for all objects.
-        Check your snmp_config_file.
+	WARNING: Because of Squid acting as a proxy snmpd for system
+	you have to do security checks on THIS snmpd for all objects.
+	Check your snmp_config_file.
 forward_snmpd_port 0
 DOC_END
 
