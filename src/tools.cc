@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.145 1998/02/03 22:08:20 wessels Exp $
+ * $Id: tools.cc,v 1.146 1998/02/04 23:41:31 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -123,7 +123,7 @@ static void shutdownTimeoutHandler(int fd, void *data);
 static void safeunlinkComplete(void *data, int retcode, int errcode);
 #endif
 
-static void
+void
 releaseServerSockets(void)
 {
     int i;
@@ -165,7 +165,7 @@ mail_warranty(void)
     unlink(filename);
 }
 
-static void
+void
 dumpMallocStats(void)
 {
 #if HAVE_MSTATS && HAVE_GNUMALLOC_H
@@ -267,7 +267,7 @@ rusage_pagefaults(struct rusage *r)
 }
 
 
-static void
+void
 PrintRusage(void)
 {
     struct rusage rusage;
@@ -372,46 +372,6 @@ setSocketShutdownLifetimes(int to)
 	    f->timeout_handler ? f->timeout_handler : shutdownTimeoutHandler,
 	    f->timeout_data);
     }
-}
-
-void
-normal_shutdown(void)
-{
-    debug(21, 1) ("Shutting down...\n");
-    if (Config.pidFilename && strcmp(Config.pidFilename, "none")) {
-	enter_suid();
-	safeunlink(Config.pidFilename, 0);
-	leave_suid();
-    }
-    releaseServerSockets();
-#if !USE_ASYNC_IO
-    unlinkdClose();
-#endif
-    storeDirWriteCleanLogs(0);
-    PrintRusage();
-    dumpMallocStats();
-    storeLogClose();
-    accessLogClose();
-#if PURIFY
-    configFreeMemory();
-    storeFreeMemory();
-    dnsFreeMemory();
-    redirectFreeMemory();
-    stmemFreeMemory();
-    netdbFreeMemory();
-    ipcacheFreeMemory();
-    fqdncacheFreeMemory();
-    asnFreeMemory();
-#endif
-    file_close(0);
-    file_close(1);
-    file_close(2);
-    fdDumpOpen();
-    fdFreeMemory();
-    debug(21, 0) ("Squid Cache (Version %s): Exiting normally.\n",
-	version_string);
-    fclose(debug_log);
-    exit(0);
 }
 
 static void
