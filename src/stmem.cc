@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.69 2001/09/07 18:02:45 adrian Exp $
+ * $Id: stmem.cc,v 1.70 2001/10/24 08:19:08 hno Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Harvest Derived
@@ -133,7 +133,7 @@ stmemCopy(const mem_hdr * mem, off_t offset, char *buf, size_t size)
     char *ptr_to_buf = NULL;
     int bytes_from_this_packet = 0;
     int bytes_into_this_packet = 0;
-    debug(19, 6) ("memCopy: offset %d: size %d\n", (int) offset, size);
+    debug(19, 6) ("memCopy: offset %ld: size %d\n", (long int) offset, (int) size);
     if (p == NULL)
 	return 0;
     assert(size > 0);

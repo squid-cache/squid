@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrContRange.cc,v 1.13 2001/01/12 00:37:13 wessels Exp $
+ * $Id: HttpHdrContRange.cc,v 1.14 2001/10/24 08:19:07 hno Exp $
  *
  * DEBUG: section 68    HTTP Content-Range Header
  * AUTHOR: Alex Rousskov
@@ -88,8 +88,8 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec * spec, const char *field, int fl
     }
     /* we managed to parse, check if the result makes sence */
     if (known_spec(spec->length) && !spec->length) {
-	debug(68, 2) ("invalid range (%d += %d) in resp-range-spec near: '%s'\n",
-	    spec->offset, spec->length, field);
+	debug(68, 2) ("invalid range (%ld += %ld) in resp-range-spec near: '%s'\n",
+	    (long int) spec->offset, (long int) spec->length, field);
 	return 0;
     }
     return 1;
@@ -101,8 +101,8 @@ httpHdrRangeRespSpecPackInto(const HttpHdrRangeSpec * spec, Packer * p)
     if (!known_spec(spec->offset) || !known_spec(spec->length))
 	packerPrintf(p, "*");
     else
-	packerPrintf(p, "bytes %d-%d",
-	    spec->offset, spec->offset + spec->length - 1);
+	packerPrintf(p, "bytes %ld-%ld",
+	    (long int) spec->offset, (long int) spec->offset + spec->length - 1);
 }
 
 /*
@@ -152,9 +152,9 @@ httpHdrContRangeParseInit(HttpHdrContRange * range, const char *str)
 	range->elength = range_spec_unknown;
     else if (!httpHeaderParseSize(p, &range->elength))
 	return 0;
-    debug(68, 8) ("parsed content-range field: %d-%d / %d\n",
-	range->spec.offset, range->spec.offset + range->spec.length - 1,
-	range->elength);
+    debug(68, 8) ("parsed content-range field: %ld-%ld / %ld\n",
+	(long int) range->spec.offset, (long int) range->spec.offset + range->spec.length - 1,
+	(long int) range->elength);
     return 1;
 }
 
@@ -183,7 +183,7 @@ httpHdrContRangePackInto(const HttpHdrContRange * range, Packer * p)
     if (!known_spec(range->elength))
 	packerPrintf(p, "/*");
     else
-	packerPrintf(p, "/%d", range->elength);
+	packerPrintf(p, "/%ld", (long int) range->elength);
 }
 
 void

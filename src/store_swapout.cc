@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.82 2001/06/27 00:14:11 wessels Exp $
+ * $Id: store_swapout.cc,v 1.83 2001/10/24 08:19:09 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -242,8 +242,8 @@ storeSwapOut(StoreEntry * e)
 
 	debug(20, 3) ("storeSwapOut: swap_buf_len = %d\n", (int) swap_buf_len);
 	assert(swap_buf_len > 0);
-	debug(20, 3) ("storeSwapOut: swapping out %d bytes from %d\n",
-	    swap_buf_len, (int) mem->swapout.queue_offset);
+	debug(20, 3) ("storeSwapOut: swapping out %ld bytes from %ld\n",
+	    (long int) swap_buf_len, (long int) mem->swapout.queue_offset);
 	mem->swapout.queue_offset += swap_buf_len;
 	storeWrite(mem->swapout.sio, mem->swapout.memnode->data, swap_buf_len, -1, NULL);
 	/* the storeWrite() call might generate an error */
