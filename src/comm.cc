@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.224 1998/02/02 21:16:20 wessels Exp $
+ * $Id: comm.cc,v 1.225 1998/02/05 20:33:58 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -167,8 +167,8 @@ CommWriteStateCallbackAndFree(int fd, int code)
     fd_table[fd].rwstate = NULL;
     if (CommWriteState == NULL)
 	return;
-    if (CommWriteState->free) {
-	CommWriteState->free(CommWriteState->buf);
+    if (CommWriteState->free_func) {
+	CommWriteState->free_func(CommWriteState->buf);
 	CommWriteState->buf = NULL;
     }
     callback = CommWriteState->handler;
@@ -592,7 +592,7 @@ comm_accept(int fd, struct sockaddr_in *peer, struct sockaddr_in *me)
     /* fdstat update */
     fd_open(sock, FD_SOCKET, "HTTP Request");
     F = &fd_table[sock];
-    strcpy(F->ipaddr, inet_ntoa(P.sin_addr));
+    xstrncpy(F->ipaddr, inet_ntoa(P.sin_addr), 16);
     F->remote_port = htons(P.sin_port);
     F->local_port = htons(M.sin_port);
     commSetNonBlocking(sock);
@@ -1431,7 +1431,7 @@ comm_write(int fd, char *buf, int size, CWCB * handler, void *handler_data, FREE
     state->offset = 0;
     state->handler = handler;
     state->handler_data = handler_data;
-    state->free = free_func;
+    state->free_func = free_func;
     fd_table[fd].rwstate = state;
     cbdataLock(handler_data);
     commSetSelect(fd,
