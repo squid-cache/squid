@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.465 2003/05/29 15:54:08 hno Exp $
+ * $Id: structs.h,v 1.466 2003/06/27 22:32:31 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1071,6 +1071,8 @@ struct _AccessLogEntry
         const char *ssluser;
 #endif
 
+        const char *extuser;
+
     }
 
     cache;
@@ -1703,6 +1705,8 @@ public:
     const char *vary_headers;	/* Used when varying entities are detected. Changes how the store key is calculated */
     char *peer_domain;		/* Configured peer forceddomain */
     String tag;			/* Internal tag for this request */
+    String extacl_user;		/* User name returned by extacl lookup */
+    String extacl_passwd;	/* Password returned by extacl lookup */
 };
 
 #endif

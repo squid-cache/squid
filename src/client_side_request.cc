@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.23 2003/06/20 01:01:00 robertc Exp $
+ * $Id: client_side_request.cc,v 1.24 2003/06/27 22:32:31 hno Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -773,6 +773,8 @@ clientRedirectDone(void *data, char *result)
         }
 
         new_request->content_length = old_request->content_length;
+        new_request->extacl_user = old_request->extacl_user;
+        new_request->extacl_passwd = old_request->extacl_passwd;
         new_request->flags.proxy_keepalive = old_request->flags.proxy_keepalive;
         requestUnlink(old_request);
         http->request = requestLink(new_request);

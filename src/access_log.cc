@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.82 2003/06/09 21:52:21 wessels Exp $
+ * $Id: access_log.cc,v 1.83 2003/06/27 22:32:30 hno Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -262,6 +262,9 @@ accessLogSquid(AccessLogEntry * al)
         client = inet_ntoa(al->cache.caddr);
 
     user = accessLogFormatName(al->cache.authuser);
+
+    if (!user)
+        user = accessLogFormatName(al->cache.extuser);
 
 #if USE_SSL
 

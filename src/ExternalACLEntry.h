@@ -1,6 +1,6 @@
 
 /*
- * $Id: ExternalACLEntry.h,v 1.2 2003/06/27 20:54:45 hno Exp $
+ * $Id: ExternalACLEntry.h,v 1.3 2003/06/27 22:32:31 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -59,6 +59,7 @@ public:
 
     int result;
     String user;
+    String password;
     String message;
     String tag;
 };
@@ -85,6 +86,7 @@ public:
     int result;
     time_t date;
     String user;
+    String password;
     String message;
     String tag;
     external_acl *def;
