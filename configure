@@ -54,7 +54,7 @@ ac_help="$ac_help
   --enable-forw-via-db    Enable Forw/Via database"
 ac_help="$ac_help
   --enable-cache-digests  Use Cache Digests
-                          see http://squid.nlanr.net/Squid/FAQ/FAQ-15.html"
+                          see http://squid.nlanr.net/Squid/FAQ/FAQ-16.html"
 ac_help="$ac_help
   --enable-err-language=lang
                           Select language for Error pages (see errors dir) "
@@ -3950,7 +3950,7 @@ EOF
 if test "$SQUID_MAXFD" -lt 512 ; then
     echo "WARNING: $SQUID_MAXFD may not be enough filedescriptors if your"
     echo "         cache will be very busy.  Please see the FAQ page"
-    echo "         http://squid.nlanr.net/Squid/FAQ/FAQ-10.html#filedescriptors"
+    echo "         http://squid.nlanr.net/Squid/FAQ/FAQ-11.html#filedescriptors"
     echo "         on how to increase your filedescriptor limit"
     sleep 10
 fi
