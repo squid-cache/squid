@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.642 2003/06/23 08:38:39 hno Exp $
+ * $Id: client_side.cc,v 1.643 2003/06/23 14:13:03 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2526,7 +2526,10 @@ requestTimeout(int fd, void *data)
     ConnStateData *conn = data;
     debug(33, 3) ("requestTimeout: FD %d: lifetime is expired.\n", fd);
 
-    if (fd_table[fd].rwstate) {
+    if (fd_table[fd].wstate) {
+        /* FIXME: If this code is reinstated, check the conn counters,
+         * not the fd table state
+         */
         /*
          * Some data has been sent to the client, just close the FD
          */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: fde.h,v 1.3 2003/03/04 01:40:27 robertc Exp $
+ * $Id: fde.h,v 1.4 2003/06/23 14:13:03 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -109,7 +109,7 @@ unsigned int read_pending:
     void *timeout_data;
     void *lifetime_data;
     close_handler *closeHandler;        /* linked list */
-    CommWriteStateData *rwstate;        /* State data for comm_write */
+    CommWriteStateData *wstate;        /* State data for comm_write */
     READ_HANDLER *read_method;
     WRITE_HANDLER *write_method;
 #if USE_SSL
