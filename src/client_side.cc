@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.584 2002/08/09 11:13:33 adrian Exp $
+ * $Id: client_side.cc,v 1.585 2002/08/15 18:11:48 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1735,28 +1735,28 @@ clientKeepaliveNextRequest(clientHttpRequest * http)
 	if (0 == storeClientCopyPending(http->sc, entry, http)) {
 	    if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
 		debug(33, 0) ("clientKeepaliveNextRequest: ENTRY_ABORTED\n");
-            /* If we have any data in our reqbuf, use it */
+	    /* If we have any data in our reqbuf, use it */
 	    if (http->reqsize > 0) {
 		/*
-                 * We can pass in reqbuf/size here, since clientSendMoreData ignores what
-                 * is passed and uses them itself.. :-)
-                 * -- adrian
-                 */
-                clientSendMoreData(http, http->reqbuf, http->reqsize);
+		 * We can pass in reqbuf/size here, since clientSendMoreData ignores what
+		 * is passed and uses them itself.. :-)
+		 * -- adrian
+		 */
+		clientSendMoreData(http, http->reqbuf, http->reqsize);
 	    } else {
 		assert(http->out.offset == 0);
-                /*
-	         * here - have no data (don't ever think we get here..)
-                 * so lets start copying..
-	         * -- adrian
-	         */
-	        storeClientCopy(http->sc, entry,
-	  	    http->out.offset,
+		/*
+		 * here - have no data (don't ever think we get here..)
+		 * so lets start copying..
+		 * -- adrian
+		 */
+		storeClientCopy(http->sc, entry,
+		    http->out.offset,
 		    HTTP_REQBUF_SZ,
 		    http->reqbuf,
 		    clientSendMoreData,
 		    http);
-            }
+	    }
 	}
     }
 }
@@ -3270,17 +3270,21 @@ varyEvaluateMatch(StoreEntry * entry, request_t * request)
 	/* virtual "vary" object found. Calculate the vary key and
 	 * continue the search
 	 */
-	vary = request->vary_headers = xstrdup(httpMakeVaryMark(request, entry->mem_obj->reply));
-	if (vary)
+	vary = httpMakeVaryMark(request, entry->mem_obj->reply);
+	if (vary) {
+	    request->vary_headers = xstrdup(vary);
 	    return VARY_OTHER;
-	else {
+	} else {
 	    /* Ouch.. we cannot handle this kind of variance */
 	    /* XXX This cannot really happen, but just to be complete */
 	    return VARY_CANCEL;
 	}
     } else {
-	if (!vary)
-	    vary = request->vary_headers = xstrdup(httpMakeVaryMark(request, entry->mem_obj->reply));
+	if (!vary) {
+	    vary = httpMakeVaryMark(request, entry->mem_obj->reply);
+	    if (vary)
+		request->vary_headers = xstrdup(vary);
+	}
 	if (!vary) {
 	    /* Ouch.. we cannot handle this kind of variance */
 	    /* XXX This cannot really happen, but just to be complete */
