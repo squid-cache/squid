@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.191 1998/07/23 05:39:32 wessels Exp $
+ * $Id: structs.h,v 1.192 1998/07/24 00:55:04 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -895,6 +895,7 @@ struct _DigestFetchState {
     int offset;
     int mask_offset;
     time_t start_time;
+    request_t *request;
 };
 
 /* statistics for cache digests and other hit "predictors" */

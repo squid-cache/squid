@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.43 1998/07/22 20:37:40 wessels Exp $
+ * $Id: peer_digest.cc,v 1.44 1998/07/24 00:55:03 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -250,8 +250,6 @@ peerDigestRequest(peer * p)
 	debug(72, 1) ("peerDigestRequest: Bad URI: %s\n", url);
 	return;			/* @?@ */
     }
-    requestLink(req);
-    assert(req);
     /* add custom headers */
     assert(!req->header.len);
     httpHeaderPutStr(&req->header, HDR_ACCEPT, StoreDigestMimeStr);
@@ -259,6 +257,7 @@ peerDigestRequest(peer * p)
     /* create fetch state structure */
     fetch = memAllocate(MEM_DIGEST_FETCH_STATE);
     cbdataAdd(fetch, MEM_DIGEST_FETCH_STATE);
+    fetch->request = requestLink(req);
     fetch->peer = p;
     fetch->start_time = squid_curtime;
     p->digest.last_req_timestamp = squid_curtime;
@@ -499,13 +498,12 @@ peerDigestFetchFinish(DigestFetchState * fetch, char *buf, const char *err_msg)
 {
     peer *peer = fetch->peer;
     MemObject *mem = fetch->entry->mem_obj;
-    request_t *req = mem->request;
     const time_t expires = fetch->entry->expires;
     const time_t fetch_resp_time = squid_curtime - fetch->start_time;
     const int b_read = (fetch->entry->store_status == STORE_PENDING) ?
     mem->inmem_hi : mem->object_sz;
-    const int req_len = req ? httpRequestPrefixLen(req) : 0;
-    assert(req);
+    const int req_len = fetch->request ? httpRequestPrefixLen(fetch->request) : 0;
+    assert(fetch->request);
     /* final checks */
     if (!err_msg) {
 	if (!peer->digest.cd)
@@ -568,8 +566,9 @@ peerDigestFetchFinish(DigestFetchState * fetch, char *buf, const char *err_msg)
     /* unlock everything */
     storeUnregister(fetch->entry, fetch);
     storeUnlockObject(fetch->entry);
-    requestUnlink(req);
+    requestUnlink(fetch->request);
     fetch->entry = NULL;
+    fetch->request = NULL;
     cbdataFree(fetch);
     fetch = NULL;
     if (buf)
