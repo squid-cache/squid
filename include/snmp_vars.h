@@ -276,7 +276,6 @@ struct variable {
     oid name[32];		/* object identifier of variable */
 };
 
-extern int compare();
 extern void Interface_Scan_Init();
 extern int Interface_Scan_Next();
 
