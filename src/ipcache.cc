@@ -1,4 +1,4 @@
-/* $Id: ipcache.cc,v 1.14 1996/04/05 17:48:31 wessels Exp $ */
+/* $Id: ipcache.cc,v 1.15 1996/04/05 21:51:46 wessels Exp $ */
 
 /*
  * DEBUG: Section 14          ipcache: IP Cache
@@ -12,7 +12,6 @@ char ipcache_status_char _PARAMS((ipcache_entry *));
 int ipcache_hash_entry_count();
 
 #define IP_POS_TTL	86400	/* one day  */
-#define IP_NEG_TTL	  120	/* 2 minutes */
 #define MAX_IP		 1024	/* Maximum cached IP */
 #define IP_LOW_WATER       70
 #define IP_HIGH_WATER      90
@@ -452,7 +451,7 @@ void ipcache_add(name, e, data, cached)
     } else {
 	e->lastref = e->timestamp = cached_curtime;
 	e->status = NEGATIVE_CACHED;
-	e->ttl = IP_NEG_TTL;
+	e->ttl = getNegativeDNSTTL();
     }
 
     ipcache_add_to_hash(e);
@@ -515,7 +514,7 @@ void ipcache_update_content(name, e, data, cached)
     } else {
 	e->lastref = e->timestamp = cached_curtime;
 	e->status = NEGATIVE_CACHED;
-	e->ttl = IP_NEG_TTL;
+	e->ttl = getNegativeDNSTTL();
     }
 
 }
@@ -741,7 +740,7 @@ int ipcache_parsebuffer(buf, offset, data)
 		plist = globalpending_search(token, data->global_pending);
 		if (plist) {
 		    plist->entry->lastref = plist->entry->timestamp = cached_curtime;
-		    plist->entry->ttl = IP_NEG_TTL;
+		    plist->entry->ttl = getNegativeDNSTTL();
 		    plist->entry->status = NEGATIVE_CACHED;
 		    ipcache_call_pending(plist->entry);
 		    globalpending_remove(plist, data);
