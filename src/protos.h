@@ -482,7 +482,7 @@ extern int neighborsUdpPing(request_t *,
     void *data,
     int *exprep);
 extern void neighborAddAcl(const char *, const char *);
-extern void neighborsUdpAck(const char *, icp_common_t *, const struct sockaddr_in *, StoreEntry *);
+extern void neighborsUdpAck(const cache_key *, icp_common_t *, const struct sockaddr_in *);
 extern void neighborAdd(const char *, const char *, int, int, int, int, int);
 extern void neighbors_open(int);
 extern peer *peerFindByName(const char *);

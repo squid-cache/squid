@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.394 1998/03/12 02:20:09 wessels Exp $
+ * $Id: store.cc,v 1.395 1998/03/19 07:13:33 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -158,7 +158,7 @@ static void destroy_MemObject(StoreEntry *);
 static void destroy_MemObjectData(MemObject *);
 static void destroy_StoreEntry(StoreEntry *);
 static void storePurgeMem(StoreEntry *);
-static unsigned int getKeyCounter(void);
+static unsigned int getKeyCounter(method_t);
 static int storeKeepInMemory(const StoreEntry *);
 
 /*
@@ -342,12 +342,12 @@ storeGet(const cache_key * key)
 }
 
 static unsigned int
-getKeyCounter(void)
+getKeyCounter(method_t method)
 {
     static unsigned int key_counter = 0;
     if (++key_counter == (1 << 24))
 	key_counter = 1;
-    return key_counter;
+    return (method << 24) | key_counter;
 }
 
 void
@@ -363,10 +363,10 @@ storeSetPrivateKey(StoreEntry * e)
 	storeHashDelete(e);
     }
     if (mem != NULL) {
-	mem->reqnum = getKeyCounter();
+	mem->reqnum = getKeyCounter(mem->method);
 	newkey = storeKeyPrivate(mem->url, mem->method, mem->reqnum);
     } else {
-	newkey = storeKeyPrivate("JUNK", METHOD_NONE, getKeyCounter());
+	newkey = storeKeyPrivate("JUNK", METHOD_NONE, getKeyCounter(METHOD_NONE));
     }
     assert(hash_lookup(store_table, newkey) == NULL);
     storeHashInsert(e, newkey);

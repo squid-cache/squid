@@ -66,7 +66,8 @@ storeKeyPrivate(const char *url, method_t method, int num)
     int n;
     char key_buf[MAX_URL + 100];
     assert(num > 0);
-    debug(20, 3) ("storeKeyPrivate: '%s'\n", url);
+    debug(20, 3) ("storeKeyPrivate: %s %s\n",
+	RequestMethodStr[method], url);
     n = snprintf(key_buf, MAX_URL + 100, "%d %s %s",
 	num,
 	RequestMethodStr[method],
