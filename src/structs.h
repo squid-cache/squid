@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.481 2003/09/01 03:49:40 robertc Exp $
+ * $Id: structs.h,v 1.482 2003/09/21 04:31:25 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1463,7 +1463,7 @@ struct request_flags
     request_flags():range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),accelerated(0),transparent(0),internal(0),internalclient(0),body_sent(0),destinationIPLookedUp_(0)
     {
 #if HTTP_VIOLATIONS
-        nocache_hack = 1;
+        nocache_hack = 0;
 #endif
 
     }
