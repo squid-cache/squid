@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_coss.cc,v 1.4 2000/06/08 18:05:38 hno Exp $
+ * $Id: store_io_coss.cc,v 1.5 2001/01/02 00:11:54 wessels Exp $
  *
  * DEBUG: section 81    Storage Manager COSS Interface
  * AUTHOR: Eric Stern
@@ -417,7 +417,7 @@ storeCossSync(SwapDir * SD)
     int end;
     if (!cs->membufs)
 	return;
-    for (t=cs->membufs; t; t = t->next) {
+    for (t = cs->membufs; t; t = t->next) {
 	if (t->flags.writing)
 	    sleep(5);
 	lseek(cs->fd, t->diskstart, SEEK_SET);
@@ -517,7 +517,7 @@ storeCossCreateMemBuf(SwapDir * SD, size_t start,
  * Creates the initial membuf after rebuild
  */
 void
-storeCossStartMembuf(SwapDir *sd)
+storeCossStartMembuf(SwapDir * sd)
 {
     CossInfo *cs = (CossInfo *) sd->fsdata;
     CossMemBuf *newmb = storeCossCreateMemBuf(sd, cs->current_offset, -1, NULL);

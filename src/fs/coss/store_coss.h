@@ -82,6 +82,6 @@ extern STSYNC storeCossSync;
 extern off_t storeCossAllocate(SwapDir * SD, const StoreEntry * e, int which);
 extern void storeCossAdd(SwapDir *, StoreEntry *);
 extern void storeCossRemove(SwapDir *, StoreEntry *);
-extern void storeCossStartMembuf(SwapDir *SD);
+extern void storeCossStartMembuf(SwapDir * SD);
 
 #endif

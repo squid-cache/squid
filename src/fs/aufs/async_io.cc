@@ -1,6 +1,6 @@
 
 /*
- * $Id: async_io.cc,v 1.6 2000/11/10 21:42:03 hno Exp $
+ * $Id: async_io.cc,v 1.7 2001/01/02 00:11:51 wessels Exp $
  *
  * DEBUG: section 32    Asynchronous Disk I/O
  * AUTHOR: Pete Bentley <pete@demon.net>
@@ -298,22 +298,22 @@ aioCheckCallbacks(SwapDir * SD)
     AIOCB *done_handler;
     void *their_data;
     int retval = 0;
-   
+
     assert(initialised);
     aio_counts.check_callback++;
     for (;;) {
 	if ((resultp = aio_poll_done()) == NULL)
 	    break;
-	ctrlp = (aio_ctrl_t *)resultp->data;
+	ctrlp = (aio_ctrl_t *) resultp->data;
 	if (ctrlp == NULL)
-	    continue; /* XXX Should not happen */
+	    continue;		/* XXX Should not happen */
 	dlinkDelete(&ctrlp->node, &used_list);
 	if ((done_handler = ctrlp->done_handler)) {
 	    their_data = ctrlp->done_handler_data;
 	    ctrlp->done_handler = NULL;
 	    ctrlp->done_handler_data = NULL;
 	    if (cbdataValid(their_data)) {
-                retval = 1; /* Return that we've actually done some work */
+		retval = 1;	/* Return that we've actually done some work */
 		done_handler(ctrlp->fd, their_data,
 		    ctrlp->result.aio_return, ctrlp->result.aio_errno);
 	    }

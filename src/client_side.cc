@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.518 2000/12/17 07:18:56 hno Exp $
+ * $Id: client_side.cc,v 1.519 2001/01/02 00:09:55 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -854,22 +854,21 @@ clientInterpretRequestHeaders(clientHttpRequest * http)
      * Now knows about IE 5.5 fix (is actually only fixed in SP1, 
      * but we can't tell whether we are talking to SP1 or not so 
      * all 5.5 versions are treated 'normally').
-    */
+     */
     if (Config.onoff.ie_refresh) {
-        if (http->flags.accel && request->flags.ims) {
-           if ( (str = httpHeaderGetStr(req_hdr, HDR_USER_AGENT)) ) {
-               if (strstr(str, "MSIE 5.01") != NULL)
-                   no_cache++;
-               else if (strstr(str, "MSIE 5.0") != NULL)
-                   no_cache++;
-               else if (strstr(str, "MSIE 4.") != NULL)
-                   no_cache++;
-               else if (strstr(str, "MSIE 3.") != NULL)
-                   no_cache++;
-            }
-        }
+	if (http->flags.accel && request->flags.ims) {
+	    if ((str = httpHeaderGetStr(req_hdr, HDR_USER_AGENT))) {
+		if (strstr(str, "MSIE 5.01") != NULL)
+		    no_cache++;
+		else if (strstr(str, "MSIE 5.0") != NULL)
+		    no_cache++;
+		else if (strstr(str, "MSIE 4.") != NULL)
+		    no_cache++;
+		else if (strstr(str, "MSIE 3.") != NULL)
+		    no_cache++;
+	    }
+	}
     }
-
     if (no_cache) {
 #if HTTP_VIOLATIONS
 	if (Config.onoff.reload_into_ims)
@@ -2473,9 +2472,9 @@ parseHttpRequest(ConnStateData * conn, method_t * method_p, int *status,
 		    vport, url);
 #else
 #if LINUX_NETFILTER
-	  /* If the call fails the address structure will be unchanged */
-	  getsockopt(conn->fd, SOL_IP, SO_ORIGINAL_DST, &conn->me, &sock_sz );
-	    debug(33, 5) ("parseHttpRequest: addr = %s", inet_ntoa(conn->me.sin_addr) );
+	    /* If the call fails the address structure will be unchanged */
+	    getsockopt(conn->fd, SOL_IP, SO_ORIGINAL_DST, &conn->me, &sock_sz);
+	    debug(33, 5) ("parseHttpRequest: addr = %s", inet_ntoa(conn->me.sin_addr));
 #endif
 	    snprintf(http->uri, url_sz, "http://%s:%d%s",
 		inet_ntoa(http->conn->me.sin_addr),

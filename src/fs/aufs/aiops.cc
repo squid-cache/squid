@@ -1,5 +1,5 @@
 /*
- * $Id: aiops.cc,v 1.5 2000/12/09 04:43:30 wessels Exp $
+ * $Id: aiops.cc,v 1.6 2001/01/02 00:11:51 wessels Exp $
  *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
@@ -92,10 +92,10 @@ typedef struct aio_request_t {
 typedef struct aio_request_queue_t {
     pthread_mutex_t mutex;
     pthread_cond_t cond;
-    aio_request_t * volatile head;
-    aio_request_t * volatile * volatile tailp;
+    aio_request_t *volatile head;
+    aio_request_t *volatile *volatile tailp;
     unsigned long requests;
-    unsigned long blocked; /* main failed to lock the queue */
+    unsigned long blocked;	/* main failed to lock the queue */
 } aio_request_queue_t;
 
 typedef struct aio_thread_t aio_thread_t;
@@ -145,19 +145,29 @@ static int aio_initialised = 0;
 #define AIO_TINY_BUFS	AIO_LARGE_BUFS >> 3
 #define AIO_MICRO_BUFS	128
 
-static MemPool *aio_large_bufs = NULL;		/* 16K */
+static MemPool *aio_large_bufs = NULL;	/* 16K */
 static MemPool *aio_medium_bufs = NULL;		/* 8K */
-static MemPool *aio_small_bufs = NULL;		/* 4K */
-static MemPool *aio_tiny_bufs = NULL;		/* 2K */
-static MemPool *aio_micro_bufs = NULL;		/* 128K */
+static MemPool *aio_small_bufs = NULL;	/* 4K */
+static MemPool *aio_tiny_bufs = NULL;	/* 2K */
+static MemPool *aio_micro_bufs = NULL;	/* 128K */
 
 static int request_queue_len = 0;
 static MemPool *aio_request_pool = NULL;
 static MemPool *aio_thread_pool = NULL;
 static aio_request_queue_t request_queue;
-static struct { aio_request_t *head, **tailp; } request_queue2 = { NULL, &request_queue2.head };
+static struct {
+    aio_request_t *head, **tailp;
+} request_queue2 = {
+
+    NULL, &request_queue2.head
+};
 static aio_request_queue_t done_queue;
-static struct { aio_request_t *head, **tailp; } done_requests = { NULL, &done_requests.head };
+static struct {
+    aio_request_t *head, **tailp;
+} done_requests = {
+
+    NULL, &done_requests.head
+};
 static pthread_attr_t globattr;
 static struct sched_param globsched;
 static pthread_t main_thread;
@@ -167,16 +177,16 @@ aio_get_pool(int size)
 {
     MemPool *p;
     if (size <= AIO_LARGE_BUFS) {
-        if (size <= AIO_MICRO_BUFS)
-           p = aio_micro_bufs;
+	if (size <= AIO_MICRO_BUFS)
+	    p = aio_micro_bufs;
 	else if (size <= AIO_TINY_BUFS)
-           p = aio_tiny_bufs;
-        else if (size <= AIO_SMALL_BUFS)
-           p = aio_small_bufs;
-        else if (size <= AIO_MEDIUM_BUFS)
-           p = aio_medium_bufs;
-        else
-           p = aio_large_bufs;
+	    p = aio_tiny_bufs;
+	else if (size <= AIO_SMALL_BUFS)
+	    p = aio_small_bufs;
+	else if (size <= AIO_MEDIUM_BUFS)
+	    p = aio_medium_bufs;
+	else
+	    p = aio_large_bufs;
     } else
 	p = NULL;
     return p;
@@ -188,7 +198,7 @@ aio_xmalloc(int size)
     void *p;
     MemPool *pool;
 
-    if ( (pool = aio_get_pool(size)) != NULL) {
+    if ((pool = aio_get_pool(size)) != NULL) {
 	p = memPoolAlloc(pool);
     } else
 	p = xmalloc(size);
@@ -200,7 +210,7 @@ static char *
 aio_xstrdup(const char *str)
 {
     char *p;
-    int len = strlen(str)+1;
+    int len = strlen(str) + 1;
 
     p = aio_xmalloc(len);
     strncpy(p, str, len);
@@ -213,22 +223,22 @@ aio_xfree(void *p, int size)
 {
     MemPool *pool;
 
-    if ( (pool = aio_get_pool(size)) != NULL) {
-        memPoolFree(pool, p);
+    if ((pool = aio_get_pool(size)) != NULL) {
+	memPoolFree(pool, p);
     } else
-        xfree(p);
+	xfree(p);
 }
 
 static void
 aio_xstrfree(char *str)
 {
     MemPool *pool;
-    int len = strlen(str)+1;
+    int len = strlen(str) + 1;
 
-    if ( (pool = aio_get_pool(len)) != NULL) {
-        memPoolFree(pool, str);
+    if ((pool = aio_get_pool(len)) != NULL) {
+	memPoolFree(pool, str);
     } else
-        xfree(str);
+	xfree(str);
 }
 
 static void
@@ -335,16 +345,16 @@ aio_thread_loop(void *ptr)
 	threadp->current_req = request = NULL;
 	request = NULL;
 	/* Get a request to process */
-	    threadp->status = _THREAD_WAITING;
+	threadp->status = _THREAD_WAITING;
 	pthread_mutex_lock(&request_queue.mutex);
-	while(!request_queue.head) {
+	while (!request_queue.head) {
 	    pthread_cond_wait(&request_queue.cond, &request_queue.mutex);
 	}
 	request = request_queue.head;
 	if (request)
 	    request_queue.head = request->next;
-	    if (!request_queue.head)
-		request_queue.tailp = &request_queue.head;
+	if (!request_queue.head)
+	    request_queue.tailp = &request_queue.head;
 	pthread_mutex_unlock(&request_queue.mutex);
 	/* process the request */
 	threadp->status = _THREAD_BUSY;
@@ -404,7 +414,7 @@ aio_queue_request(aio_request_t * request)
 {
     static int high_start = 0;
     debug(41, 9) ("aio_queue_request: %p type=%d result=%p\n",
-	    request, request->request_type, request->resultp);
+	request, request->request_type, request->resultp);
     /* Mark it as not executed (failing result, no error) */
     request->ret = -1;
     request->err = 0;
@@ -420,11 +430,11 @@ aio_queue_request(aio_request_t * request)
 	    request_queue.tailp = &request->next;
 	    pthread_cond_signal(&request_queue.cond);
 	    pthread_mutex_unlock(&request_queue.mutex);
-    } else {
+	} else {
 	    /* Oops, the request queue is blocked, use request_queue2 */
 	    *request_queue2.tailp = request;
 	    request_queue2.tailp = &request->next;
-    }
+	}
     } else {
 	/* Secondary path. We have blocked requests to deal with */
 	/* add the request to the chain */
@@ -469,7 +479,7 @@ aio_queue_request(aio_request_t * request)
 	    debug(43, 1) ("aio_queue_request: WARNING - Disk I/O overloading\n");
 	    if (squid_curtime >= (high_start + 15))
 		debug(43, 1) ("aio_queue_request: Queue Length: current=%d, high=%d, low=%d, duration=%d\n",
-			request_queue_len, queue_high, queue_low, squid_curtime - high_start);
+		    request_queue_len, queue_high, queue_low, squid_curtime - high_start);
 	    last_warn = squid_curtime;
 	}
     } else {
@@ -541,7 +551,7 @@ aio_cancel(aio_result_t * resultp)
 
     if (request && request->resultp == resultp) {
 	debug(41, 9) ("aio_cancel: %p type=%d result=%p\n",
-		request, request->request_type, request->resultp);
+	    request, request->request_type, request->resultp);
 	request->cancelled = 1;
 	request->resultp = NULL;
 	resultp->_data = NULL;
@@ -830,7 +840,7 @@ aio_poll_done(void)
 	return NULL;
     }
     debug(41, 9) ("aio_poll_done: %p type=%d result=%p\n",
-	    request, request->request_type, request->resultp);
+	request, request->request_type, request->resultp);
     done_requests.head = request->next;
     if (!done_requests.head)
 	done_requests.tailp = &done_requests.head;
