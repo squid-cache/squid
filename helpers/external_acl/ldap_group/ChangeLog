@@ -1,5 +1,9 @@
 Version 2.12
 
+2003-03-01 Christoph Lechleitner <lech@ibcl.at>
+        Added -W option to read bindpasswd from file, 
+        e.g. from /etc/ldap.secret
+
 2003-03-01 Juerg Michel
 
 	Added support for ldap URI via the -H option

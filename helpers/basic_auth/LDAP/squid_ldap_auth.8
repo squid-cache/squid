@@ -68,6 +68,16 @@ This to limit the damage in case someone could get hold of a copy of your
 Squid configuration file.
 .
 .TP
+.BI "-D " "binddn " "-W " "secretfile "
+The DN and the name of a file containing the password
+to bind as while performing searches. 
+.IP
+Less insecure version of the former parameter pair with two advantages:
+The password does not occur in the process listing, 
+and the password is not being compromised if someone gets the squid 
+configuration file without getting the secretfile.
+.
+.TP
 .BI -P
 Use a persistent LDAP connection. Normally the LDAP connection
 is only open while validating a username to preserve resources
