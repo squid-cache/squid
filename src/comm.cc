@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.374 2003/04/24 06:35:08 hno Exp $
+ * $Id: comm.cc,v 1.375 2003/05/18 00:03:55 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -983,6 +983,7 @@ comm_accept_check_event(void *data)
     int fd = ((fdc_t *)(data))->fd;
 
     if (fdNFree() < RESERVED_FD) {
+        /* activate accept checking rather than period event based checks */
         commSetSelect(fd, COMM_SELECT_READ, comm_accept_try, NULL, 0);
         return;
     }
