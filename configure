@@ -1020,7 +1020,7 @@ INSTALL_STRIP_PROGRAM="\${SHELL} \$(install_sh) -c -s"
 
   
 
-# From configure.in Revision: 1.254 
+# From configure.in Revision: 1.255 
 echo $ac_n "checking whether to enable maintainer-specific portions of Makefiles""... $ac_c" 1>&6
 echo "configure:1026: checking whether to enable maintainer-specific portions of Makefiles" >&5
     # Check whether --enable-maintainer-mode or --disable-maintainer-mode was given.
@@ -7881,6 +7881,7 @@ trap 'rm -fr `echo "\
 	src/fs/ufs/Makefile \
 	src/repl/heap/Makefile \
 	src/repl/lru/Makefile \
+	doc/Makefile \
  include/autoconf.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
@@ -8096,6 +8097,7 @@ CONFIG_FILES=\${CONFIG_FILES-"\
 	src/fs/ufs/Makefile \
 	src/repl/heap/Makefile \
 	src/repl/lru/Makefile \
+	doc/Makefile \
 "}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
