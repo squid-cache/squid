@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.220 1998/04/24 05:54:19 wessels Exp $
+ * $Id: ftp.cc,v 1.221 1998/04/25 07:19:55 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -718,6 +718,7 @@ ftpParseListing(FtpStateData * ftpState, int len)
     while (*end != '\r' && *end != '\n' && end > sbuf)
 	end--;
     usable = end - sbuf;
+    debug(9,3)("ftpParseListing: usable = %d\n", usable);
     if (usable == 0) {
 	debug(9, 3) ("ftpParseListing: didn't find end for %s\n", storeUrl(e));
 	xfree(sbuf);
@@ -727,8 +728,9 @@ ftpParseListing(FtpStateData * ftpState, int len)
     line = memAllocate(MEM_4K_BUF);
     end++;
     storeBuffer(e);
-    for (s = sbuf; s < end; s += strcspn(s, crlf)) {
-	s += strspn(s, crlf);
+    s = sbuf;
+    s += strspn(s, crlf);
+    for (; s < end; s += strcspn(s, crlf), s += strspn(s, crlf)) {
 	debug(9, 3) ("ftpParseListing: s = {%s}\n", s);
 	linelen = strcspn(s, crlf) + 1;
 	if (linelen < 2)
