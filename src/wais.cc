@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.118 1998/09/04 23:05:06 wessels Exp $
+ * $Id: wais.cc,v 1.119 1998/09/14 21:28:19 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -131,7 +131,7 @@ waisReadReply(int fd, void *data)
 		waisReadReply, waisState, 0);
 	} else {
 	    ErrorState *err;
-	    EBIT_CLR(entry->flag, ENTRY_CACHABLE);
+	    entry->flags.entry_cachable = 0;
 	    storeReleaseRequest(entry);
 	    err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
 	    err->xerrno = errno;
@@ -213,7 +213,7 @@ waisSendRequest(int fd, void *data)
     memBufPrintf(&mb, "\r\n");
     debug(24, 6) ("waisSendRequest: buf: %s\n", mb.buf);
     comm_write_mbuf(fd, mb, waisSendComplete, waisState);
-    if (EBIT_TEST(waisState->entry->flag, ENTRY_CACHABLE))
+    if (waisState->entry->flags.entry_cachable)
 	storeSetPublicKey(waisState->entry);	/* Make it public */
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.457 1998/09/11 17:07:48 wessels Exp $
+ * $Id: store.cc,v 1.458 1998/09/14 21:28:12 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -225,17 +225,17 @@ storeLockObject(StoreEntry * e)
 void
 storeReleaseRequest(StoreEntry * e)
 {
-    if (EBIT_TEST(e->flag, RELEASE_REQUEST))
+    if (e->flags.release_request)
 	return;
     assert(storeEntryLocked(e));
     debug(20, 3) ("storeReleaseRequest: '%s'\n", storeKeyText(e->key));
-    EBIT_SET(e->flag, RELEASE_REQUEST);
+    e->flags.release_request = 1;
     /*
      * Clear cachable flag here because we might get called before
      * anyone else even looks at the cachability flag.  Also, this
      * prevents httpMakePublic from really setting a public key.
      */
-    EBIT_CLR(e->flag, ENTRY_CACHABLE);
+    e->flags.entry_cachable = 0;
     storeSetPrivateKey(e);
 }
 
@@ -250,11 +250,11 @@ storeUnlockObject(StoreEntry * e)
     if (e->lock_count)
 	return (int) e->lock_count;
     if (e->store_status == STORE_PENDING) {
-	assert(!EBIT_TEST(e->flag, ENTRY_DISPATCHED));
-	EBIT_SET(e->flag, RELEASE_REQUEST);
+	assert(!e->flags.entry_dispatched);
+	e->flags.release_request = 1;
     }
     assert(storePendingNClients(e) == 0);
-    if (EBIT_TEST(e->flag, RELEASE_REQUEST))
+    if (e->flags.release_request)
 	storeRelease(e);
     else if (storeKeepInMemory(e)) {
 	storeSetMemStatus(e, IN_MEMORY);
@@ -262,7 +262,7 @@ storeUnlockObject(StoreEntry * e)
 	e->mem_obj->request = NULL;
     } else {
 	storePurgeMem(e);
-	if (EBIT_TEST(e->flag, KEY_PRIVATE)) {
+	if (e->flags.key_private) {
 	    dlinkDelete(&e->lru, &store_list);
 	    dlinkAddTail(e, &e->lru, &store_list);
 	}
@@ -293,7 +293,7 @@ storeSetPrivateKey(StoreEntry * e)
 {
     const cache_key *newkey;
     MemObject *mem = e->mem_obj;
-    if (e->key && EBIT_TEST(e->flag, KEY_PRIVATE))
+    if (e->key && e->flags.key_private)
 	return;			/* is already private */
     if (e->key) {
 	if (e->swap_file_number > -1)
@@ -307,7 +307,7 @@ storeSetPrivateKey(StoreEntry * e)
 	newkey = storeKeyPrivate("JUNK", METHOD_NONE, getKeyCounter());
     }
     assert(hash_lookup(store_table, newkey) == NULL);
-    EBIT_SET(e->flag, KEY_PRIVATE);
+    e->flags.key_private = 1;
     storeHashInsert(e, newkey);
 }
 
@@ -317,7 +317,7 @@ storeSetPublicKey(StoreEntry * e)
     StoreEntry *e2 = NULL;
     const cache_key *newkey;
     MemObject *mem = e->mem_obj;
-    if (e->key && !EBIT_TEST(e->flag, KEY_PRIVATE))
+    if (e->key && !e->flags.key_private)
 	return;			/* is already public */
     assert(mem);
     /*
@@ -327,7 +327,7 @@ storeSetPublicKey(StoreEntry * e)
      * store clients won't be able to access object data which has
      * been freed from memory.
      */
-    assert(!EBIT_TEST(e->flag, RELEASE_REQUEST));
+    assert(!e->flags.release_request);
     newkey = storeKeyPublic(mem->url, mem->method);
     if ((e2 = (StoreEntry *) hash_lookup(store_table, newkey))) {
 	debug(20, 3) ("storeSetPublicKey: Making old '%s' private.\n", mem->url);
@@ -337,7 +337,7 @@ storeSetPublicKey(StoreEntry * e)
     }
     if (e->key)
 	storeHashDelete(e);
-    EBIT_CLR(e->flag, KEY_PRIVATE);
+    e->flags.key_private = 0;
     storeHashInsert(e, newkey);
     if (e->swap_file_number > -1)
 	storeDirSwapLog(e, SWAP_LOG_ADD);
@@ -359,10 +359,10 @@ storeCreateEntry(const char *url, const char *log_url, request_flags flags, meth
     else
 	storeSetPublicKey(e);
     if (flags.cachable) {
-	EBIT_SET(e->flag, ENTRY_CACHABLE);
-	EBIT_CLR(e->flag, RELEASE_REQUEST);
+	e->flags.entry_cachable = 1;
+	e->flags.release_request = 0;
     } else {
-	EBIT_CLR(e->flag, ENTRY_CACHABLE);
+	e->flags.entry_cachable = 0;
 	storeReleaseRequest(e);
     }
     e->store_status = STORE_PENDING;
@@ -373,9 +373,9 @@ storeCreateEntry(const char *url, const char *log_url, request_flags flags, meth
     e->lastref = squid_curtime;
     e->timestamp = 0;		/* set in storeTimestampsSet() */
     e->ping_status = PING_NONE;
-    EBIT_SET(e->flag, ENTRY_VALIDATED);
+    e->flags.entry_validated = 1;
 #ifdef PPNR_WIP
-    EBIT_SET(e->flag, ENTRY_FWD_HDR_WAIT);
+    e->flags.entry_fwd_hdr_wait = 1;
 #endif /* PPNR_WIP */
     return e;
 }
@@ -403,7 +403,7 @@ storeAppend(StoreEntry * e, const char *buf, int len)
 	stmemAppend(&mem->data_hdr, buf, len);
 	mem->inmem_hi += len;
     }
-    if (EBIT_TEST(e->flag, DELAY_SENDING))
+    if (e->flags.delay_sending)
 	return;
 #ifdef OPTIMISTIC_IO
     storeLockObject(e);
@@ -483,23 +483,23 @@ storeCheckCachable(StoreEntry * e)
 	store_check_cachable_hist.no.non_get++;
     } else
 #endif
-    if (!EBIT_TEST(e->flag, ENTRY_CACHABLE)) {
+    if (!e->flags.entry_cachable) {
 	debug(20, 2) ("storeCheckCachable: NO: not cachable\n");
 	store_check_cachable_hist.no.not_entry_cachable++;
-    } else if (EBIT_TEST(e->flag, RELEASE_REQUEST)) {
+    } else if (e->flags.release_request) {
 	debug(20, 2) ("storeCheckCachable: NO: release requested\n");
 	store_check_cachable_hist.no.release_request++;
-    } else if (e->store_status == STORE_OK && EBIT_TEST(e->flag, ENTRY_BAD_LENGTH)) {
+    } else if (e->store_status == STORE_OK && e->flags.entry_bad_length) {
 	debug(20, 2) ("storeCheckCachable: NO: wrong content-length\n");
 	store_check_cachable_hist.no.wrong_content_length++;
-    } else if (EBIT_TEST(e->flag, ENTRY_NEGCACHED)) {
+    } else if (e->flags.entry_negcached) {
 	debug(20, 3) ("storeCheckCachable: NO: negative cached\n");
 	store_check_cachable_hist.no.negative_cached++;
 	return 0;		/* avoid release call below */
     } else if (e->mem_obj->inmem_hi > Config.Store.maxObjectSize) {
 	debug(20, 2) ("storeCheckCachable: NO: too big\n");
 	store_check_cachable_hist.no.too_big++;
-    } else if (EBIT_TEST(e->flag, KEY_PRIVATE)) {
+    } else if (e->flags.key_private) {
 	debug(20, 3) ("storeCheckCachable: NO: private key\n");
 	store_check_cachable_hist.no.private_key++;
     } else if (storeTooManyDiskFilesOpen()) {
@@ -514,7 +514,7 @@ storeCheckCachable(StoreEntry * e)
 	return 1;
     }
     storeReleaseRequest(e);
-    EBIT_CLR(e->flag, ENTRY_CACHABLE);
+    e->flags.entry_cachable = 0;
     return 0;
 }
 
@@ -553,7 +553,7 @@ storeComplete(StoreEntry * e)
     e->store_status = STORE_OK;
     assert(e->mem_status == NOT_IN_MEMORY);
     if (!storeEntryValidLength(e))
-	EBIT_SET(e->flag, ENTRY_BAD_LENGTH);
+	e->flags.entry_bad_length = 1;
 #if USE_CACHE_DIGESTS
     if (e->mem_obj->request)
 	e->mem_obj->request->hier.store_complete_stop = current_time;
@@ -566,8 +566,8 @@ storeComplete(StoreEntry * e)
 void
 storePPNR(StoreEntry * e)
 {
-    assert(EBIT_TEST(e->flag, ENTRY_FWD_HDR_WAIT));
-    EBIT_CLR(e->flag, ENTRY_FWD_HDR_WAIT);
+    assert(e->flags.entry_fwd_hdr_wait);
+    e->flags.entry_fwd_hdr_wait = 0;
 }
 #endif /* PPNR_WIP */
 
@@ -774,7 +774,7 @@ storeRelease(StoreEntry * e)
 	    storeUrl(e));
 	storeExpireNow(e);
 	storeSetPrivateKey(e);
-	EBIT_SET(e->flag, RELEASE_REQUEST);
+	e->flags.release_request = 1;
 	return;
     }
 #endif
@@ -783,9 +783,9 @@ storeRelease(StoreEntry * e)
 	storeUnlinkFileno(e->swap_file_number);
 	storeDirMapBitReset(e->swap_file_number);
 	if (e->swap_status == SWAPOUT_DONE)
-	    if (EBIT_TEST(e->flag, ENTRY_VALIDATED))
+	    if (e->flags.entry_validated)
 		storeDirUpdateSwapSize(e->swap_file_number, e->swap_file_sz, -1);
-	if (!EBIT_TEST(e->flag, KEY_PRIVATE))
+	if (!e->flags.key_private)
 	    storeDirSwapLog(e, SWAP_LOG_DEL);
     }
     storeSetMemStatus(e, NOT_IN_MEMORY);
@@ -804,7 +804,7 @@ storeEntryLocked(const StoreEntry * e)
 	return 1;
     if (e->store_status == STORE_PENDING)
 	return 1;
-    if (EBIT_TEST(e->flag, ENTRY_SPECIAL))
+    if (e->flags.entry_special)
 	return 1;
     return 0;
 }
@@ -940,9 +940,9 @@ storeCheckExpired(const StoreEntry * e)
 {
     if (storeEntryLocked(e))
 	return 0;
-    if (EBIT_TEST(e->flag, RELEASE_REQUEST))
+    if (e->flags.release_request)
 	return 1;
-    if (EBIT_TEST(e->flag, ENTRY_NEGCACHED) && squid_curtime >= e->expires)
+    if (e->flags.entry_negcached && squid_curtime >= e->expires)
 	return 1;
     if (squid_curtime - e->lastref > storeExpiredReferenceAge())
 	return 1;
@@ -981,7 +981,7 @@ void
 storeNegativeCache(StoreEntry * e)
 {
     e->expires = squid_curtime + Config.negativeTtl;
-    EBIT_SET(e->flag, ENTRY_NEGCACHED);
+    e->flags.entry_negcached = 1;
 }
 
 void
@@ -1006,9 +1006,9 @@ expiresMoreThan(time_t expires, time_t when)
 int
 storeEntryValidToSend(StoreEntry * e)
 {
-    if (EBIT_TEST(e->flag, RELEASE_REQUEST))
+    if (e->flags.release_request)
 	return 0;
-    if (EBIT_TEST(e->flag, ENTRY_NEGCACHED))
+    if (e->flags.entry_negcached)
 	if (e->expires <= squid_curtime)
 	    return 0;
     if (e->store_status == STORE_ABORTED)
@@ -1090,7 +1090,7 @@ storeEntryDump(StoreEntry * e, int l)
     debug(20, l) ("StoreEntry->lastmod: %d\n", (int) e->lastmod);
     debug(20, l) ("StoreEntry->swap_file_sz: %d\n", (int) e->swap_file_sz);
     debug(20, l) ("StoreEntry->refcount: %d\n", e->refcount);
-    debug(20, l) ("StoreEntry->flag: %X\n", e->flag);
+    debug(20, l) ("StoreEntry->flags: %s\n", storeEntryFlags(e));
     debug(20, l) ("StoreEntry->swap_file_number: %d\n", (int) e->swap_file_number);
     debug(20, l) ("StoreEntry->lock_count: %d\n", (int) e->lock_count);
     debug(20, l) ("StoreEntry->mem_status: %d\n", (int) e->mem_status);
@@ -1141,14 +1141,14 @@ storeCreateMemObject(StoreEntry * e, const char *url, const char *log_url)
 void
 storeBuffer(StoreEntry * e)
 {
-    EBIT_SET(e->flag, DELAY_SENDING);
+    e->flags.delay_sending = 1;
 }
 
 /* this just clears DELAY_SENDING and Invokes the handlers */
 void
 storeBufferFlush(StoreEntry * e)
 {
-    EBIT_CLR(e->flag, DELAY_SENDING);
+    e->flags.delay_sending = 0;
     InvokeHandlers(e);
     storeCheckSwapOut(e);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.75 1998/08/20 02:49:12 wessels Exp $
+ * $Id: store_dir.cc,v 1.76 1998/09/14 21:28:14 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -392,12 +392,12 @@ storeDirSwapLog(const StoreEntry * e, int op)
     int dirn;
     dirn = e->swap_file_number >> SWAP_DIR_SHIFT;
     assert(dirn < Config.cacheSwap.n_configured);
-    assert(!EBIT_TEST(e->flag, KEY_PRIVATE));
+    assert(!e->flags.key_private);
     assert(e->swap_file_number >= 0);
     /*
      * icons and such; don't write them to the swap log
      */
-    if (EBIT_TEST(e->flag, ENTRY_SPECIAL))
+    if (e->flags.entry_special)
 	return;
     assert(op > SWAP_LOG_NOP && op < SWAP_LOG_MAX);
     debug(20, 3) ("storeDirSwapLog: %s %s %08X\n",
@@ -413,7 +413,7 @@ storeDirSwapLog(const StoreEntry * e, int op)
     s->lastmod = e->lastmod;
     s->swap_file_sz = e->swap_file_sz;
     s->refcount = e->refcount;
-    s->flags = e->flag;
+    s->flags = e->flags;
     xmemcpy(s->key, e->key, MD5_DIGEST_CHARS);
     file_write(Config.cacheSwap.swapDirs[dirn].swaplog_fd,
 	-1,
@@ -676,11 +676,11 @@ storeDirWriteCleanLogs(int reopen)
 	    continue;
 	if (e->swap_file_sz <= 0)
 	    continue;
-	if (EBIT_TEST(e->flag, RELEASE_REQUEST))
+	if (e->flags.release_request)
 	    continue;
-	if (EBIT_TEST(e->flag, KEY_PRIVATE))
+	if (e->flags.key_private)
 	    continue;
-	if (EBIT_TEST(e->flag, ENTRY_SPECIAL))
+	if (e->flags.entry_special)
 	    continue;
 	dirn = storeDirNumber(e->swap_file_number);
 	assert(dirn < N);
@@ -695,7 +695,7 @@ storeDirWriteCleanLogs(int reopen)
 	s.lastmod = e->lastmod;
 	s.swap_file_sz = e->swap_file_sz;
 	s.refcount = e->refcount;
-	s.flags = e->flag;
+	s.flags = e->flags;
 	xmemcpy(&s.key, e->key, MD5_DIGEST_CHARS);
 	xmemcpy(outbuf[dirn] + outbufoffset[dirn], &s, ss);
 	outbufoffset[dirn] += ss;
