@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.150 1996/12/02 07:06:54 wessels Exp $
+ * $Id: cache_cf.cc,v 1.151 1996/12/03 20:26:48 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -381,7 +381,7 @@ addToIPACL(ip_acl ** list, const char *ip_str, ip_access_type access)
 		    ip_str);
 		return;
 	    }
-	    lmask.s_addr = htonl(0xfffffffful << (32 - m1));
+	    lmask.s_addr = m1 ? htonl(0xfffffffful << (32 - m1)) : 0;
 	    break;
 
 	case 8:

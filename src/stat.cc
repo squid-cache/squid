@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.110 1996/12/02 05:55:10 wessels Exp $
+ * $Id: stat.cc,v 1.111 1996/12/03 20:26:59 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1053,13 +1053,12 @@ log_append(const cacheinfo * obj,
     int http_code,
     int msec,
     const char *ident,
-#if !LOG_FULL_HEADERS
-    const struct _hierarchyLogData *hierData
-#else
     const struct _hierarchyLogData *hierData,
+#if LOG_FULL_HEADERS
     const char *request_hdr,
-    const char *reply_hdr
+    const char *reply_hdr,
 #endif				/* LOG_FULL_HEADERS */
+    const char *content_type
 )
 {
 #if LOG_FULL_HEADERS
@@ -1073,6 +1072,9 @@ log_append(const cacheinfo * obj,
     const char *hier_host = dash_str;
     int hier_timeout = 0;
 
+    if (obj->logfile_status != LOG_ENABLE)
+	return;
+
     if (Config.Log.log_fqdn)
 	client = fqdncache_gethostbyaddr(caddr, 0);
     if (client == NULL)
@@ -1084,6 +1086,8 @@ log_append(const cacheinfo * obj,
 	method = dash_str;
     if (!url)
 	url = dash_str;
+    if (!content_type)
+	content_type = dash_str;
     if (!ident || ident[0] == '\0')
 	ident = dash_str;
     if (hierData) {
@@ -1091,55 +1095,54 @@ log_append(const cacheinfo * obj,
 	hier_host = hierData->host ? hierData->host : dash_str;
 	hier_timeout = hierData->timeout;
     }
-    if (obj->logfile_status == LOG_ENABLE) {
-	if (Config.commonLogFormat)
-	    sprintf(tmp, "%s %s - [%s] \"%s %s\" %s %d\n",
-		client,
-		ident,
-		mkhttpdlogtime(&squid_curtime),
-		method,
-		url,
-		action,
-		size);
-	else
-	    sprintf(tmp, "%9d.%03d %6d %s %s/%03d %d %s %s %s %s%s/%s\n",
-		(int) current_time.tv_sec,
-		(int) current_time.tv_usec / 1000,
-		msec,
-		client,
-		action,
-		http_code,
-		size,
-		method,
-		url,
-		ident,
-		hier_timeout ? "TIMEOUT_" : null_string,
-		hier_strings[hier_code],
-		hier_host);
+    if (Config.commonLogFormat)
+	sprintf(tmp, "%s %s - [%s] \"%s %s\" %s %d\n",
+	    client,
+	    ident,
+	    mkhttpdlogtime(&squid_curtime),
+	    method,
+	    url,
+	    action,
+	    size);
+    else
+	sprintf(tmp, "%9d.%03d %6d %s %s/%03d %d %s %s %s %s%s/%s %s\n",
+	    (int) current_time.tv_sec,
+	    (int) current_time.tv_usec / 1000,
+	    msec,
+	    client,
+	    action,
+	    http_code,
+	    size,
+	    method,
+	    url,
+	    ident,
+	    hier_timeout ? "TIMEOUT_" : null_string,
+	    hier_strings[hier_code],
+	    hier_host,
+	    content_type);
 #if LOG_FULL_HEADERS
-	if (Config.logMimeHdrs) {
-	    int msize = strlen(tmp);
-	    char *ereq = log_quote(request_hdr);
-	    char *erep = log_quote(reply_hdr);
+    if (Config.logMimeHdrs) {
+	int msize = strlen(tmp);
+	char *ereq = log_quote(request_hdr);
+	char *erep = log_quote(reply_hdr);
 
-	    if (msize + strlen(ereq) + strlen(erep) + 7 <= sizeof(tmp))
-		sprintf(tmp + msize - 1, " [%s] [%s]\n", ereq, erep);
-	    else
-		debug(18, 1, "log_append: Long headers not logged.\n");
-	    safe_free(ereq);
-	    safe_free(erep);
-	}
-#endif /* LOG_FULL_HEADERS */
-	x = file_write(obj->logfile_fd,
-	    xstrdup(tmp),
-	    strlen(tmp),
-	    obj->logfile_access,
-	    NULL,
-	    NULL,
-	    xfree);
-	if (x != DISK_OK)
-	    debug(18, 1, "log_append: File write failed.\n");
+	if (msize + strlen(ereq) + strlen(erep) + 7 <= sizeof(tmp))
+	    sprintf(tmp + msize - 1, " [%s] [%s]\n", ereq, erep);
+	else
+	    debug(18, 1, "log_append: Long headers not logged.\n");
+	safe_free(ereq);
+	safe_free(erep);
     }
+#endif /* LOG_FULL_HEADERS */
+    x = file_write(obj->logfile_fd,
+	xstrdup(tmp),
+	strlen(tmp),
+	obj->logfile_access,
+	NULL,
+	NULL,
+	xfree);
+    if (x != DISK_OK)
+	debug(18, 1, "log_append: File write failed.\n");
 }
 
 static void

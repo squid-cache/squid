@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.114 1996/12/03 00:46:12 wessels Exp $
+ * $Id: comm.cc,v 1.115 1996/12/03 20:26:51 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -668,7 +668,7 @@ comm_select_incoming(void)
     /* TO FIX: repoll ICP connection here */
 }
 
-#else 
+#else
 
 static void
 comm_select_incoming(void)
@@ -1317,9 +1317,12 @@ examine_select(fd_set * readfds, fd_set * writefds)
 	    continue;
 	}
 	f = &fd_table[fd];
+	debug(5, 0, "FD %d: %s\n", xstrerror());
 	debug(5, 0, "WARNING: FD %d has handlers, but it's invalid.\n", fd);
-	debug(5, 0, "FD %d is a %s\n", fd, fdstatTypeStr[fdstatGetType(fd)]);
-	debug(5, 0, "--> %s\n", fd_note(fd, NULL));
+	debug(5, 0, "FD %d is a %s called '%s'\n",
+	    fd,
+	    fdstatTypeStr[fdstatGetType(fd)],
+	    fd_note(fd, NULL));
 	debug(5, 0, "lifetm:%p tmout:%p read:%p write:%p\n",
 	    f->lifetime_handler,
 	    f->timeout_handler,

@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.124 1996/12/03 17:00:11 wessels Exp $
+ * $Id: http.cc,v 1.125 1996/12/03 20:26:53 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -260,7 +260,8 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
     char *headers = NULL;
     char *t = NULL;
     char *s = NULL;
-    int delta;
+    time_t delta;
+    size_t l;
 
     ReplyHeaderStats.parsed++;
     headers = xstrdup(buf);
@@ -277,8 +278,12 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 	    }
 	} else if (!strncasecmp(t, "Content-type:", 13)) {
 	    if ((t = strchr(t, ' '))) {
-		t++;
-		xstrncpy(reply->content_type, t, HTTP_REPLY_FIELD_SZ);
+		while (isspace(*t))
+		    t++;
+		l = strcspn(t, crlf) + 1;
+		if (l > HTTP_REPLY_FIELD_SZ)
+		    l = HTTP_REPLY_FIELD_SZ;
+		xstrncpy(reply->content_type, t, l);
 		ReplyHeaderStats.ctype++;
 	    }
 	} else if (!strncasecmp(t, "Content-length:", 15)) {
@@ -289,20 +294,24 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 	    }
 	} else if (!strncasecmp(t, "Date:", 5)) {
 	    if ((t = strchr(t, ' '))) {
-		t++;
-		xstrncpy(reply->date, t, HTTP_REPLY_FIELD_SZ);
+		reply->date = parse_rfc1123(++t);
 		ReplyHeaderStats.date++;
 	    }
 	} else if (!strncasecmp(t, "Expires:", 8)) {
 	    if ((t = strchr(t, ' '))) {
-		t++;
-		xstrncpy(reply->expires, t, HTTP_REPLY_FIELD_SZ);
+		reply->expires = parse_rfc1123(++t);
+		/*
+		 * The HTTP/1.0 specs says that robust implementations
+		 * should consider bad or malformed Expires header as
+		 * equivalent to "expires immediately."
+		 */
+		if (reply->expires == -1)
+		    reply->expires = squid_curtime;
 		ReplyHeaderStats.exp++;
 	    }
 	} else if (!strncasecmp(t, "Last-Modified:", 14)) {
 	    if ((t = strchr(t, ' '))) {
-		t++;
-		xstrncpy(reply->last_modified, t, HTTP_REPLY_FIELD_SZ);
+		reply->last_modified = parse_rfc1123(++t);
 		ReplyHeaderStats.lm++;
 	    }
 	} else if (!strncasecmp(t, "Cache-Control:", 14)) {
@@ -332,22 +341,15 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
 		ReplyHeaderStats.cc[SCC_PROXYREVALIDATE]++;
 	    } else if (!strncasecmp(t, "max-age", 7)) {
 		if ((t = strchr(t, '='))) {
-		    delta = atoi(++t);
+		    delta = (time_t) atoi(++t);
+		    reply->expires = squid_curtime + delta;
 		    EBIT_SET(reply->cache_control, SCC_MAXAGE);
 		    ReplyHeaderStats.cc[SCC_MAXAGE]++;
-		    strcpy(reply->expires, mkrfc1123(squid_curtime + delta));
 		}
 	    }
 	}
 	t = strtok(NULL, "\n");
     }
-#if LOG_TIMESTAMPS
-    fprintf(timestamp_log, "T %9d D %9d L %9d E %9d\n",
-	squid_curtime,
-	parse_rfc1123(reply->date),
-	parse_rfc1123(reply->last_modified),
-	parse_rfc1123(reply->expires));
-#endif /* LOG_TIMESTAMPS */
     safe_free(headers);
 }
 
@@ -395,7 +397,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	    httpState->reply_hdr);
 	/* Parse headers into reply structure */
 	httpParseReplyHeaders(httpState->reply_hdr, reply);
-	timestampsSet(entry);
+	storeTimestampsSet(entry);
 	/* Check if object is cacheable or not based on reply code */
 	if (reply->code)
 	    debug(11, 3, "httpProcessReplyHeader: HTTP CODE: %d\n", reply->code);
@@ -411,13 +413,13 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 		httpMakePrivate(entry);
 	    else if (EBIT_TEST(reply->cache_control, SCC_NOCACHE))
 		httpMakePrivate(entry);
-	    else if (*reply->date)
+	    else if (reply->date > -1)
 		httpMakePublic(entry);
-	    else if (*reply->last_modified)
+	    else if (reply->last_modified > -1)
 		httpMakePublic(entry);
 	    else if (!httpState->neighbor)
 		httpMakePublic(entry);
-	    else if (*reply->expires)
+	    else if (reply->expires > -1)
 		httpMakePublic(entry);
 	    else if (entry->mem_obj->request->protocol != PROTO_HTTP)
 		/* XXX Remove this check after a while.  DW 8/21/96
@@ -430,7 +432,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	    break;
 	    /* Responses that only are cacheable if the server says so */
 	case 302:		/* Moved temporarily */
-	    if (*reply->expires)
+	    if (reply->expires > -1)
 		httpMakePublic(entry);
 	    else
 		httpMakePrivate(entry);
