@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.23 1998/10/21 06:54:21 wessels Exp $
+ * $Id: event.cc,v 1.24 1998/12/02 05:03:28 wessels Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -185,4 +185,15 @@ eventFreeMemory(void)
 	xfree(event);
     }
     tasks = NULL;
+}
+
+int
+eventFind(EVH * func, void *arg)
+{
+    struct ev_entry *event;
+    for (event = tasks; event != NULL; event = event->next) {
+	if (event->func == func && event->arg == arg)
+	    return 1;
+    }
+    return 0;
 }
