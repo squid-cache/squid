@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cc,v 1.15 2003/03/06 11:51:55 robertc Exp $
+ * $Id: String.cc,v 1.16 2003/03/08 09:35:15 robertc Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -58,7 +58,10 @@ String::init(char const *str)
 String::String (char const *aString) : size_(0), len_(0), buf_(NULL)
 {
     init (aString);
+#if DEBUGSTRINGS
+
     StringRegistry::Instance().add(this);
+#endif
 }
 
 String &
@@ -93,7 +96,10 @@ String::limitInit(const char *str, int len)
 String::String (String const &old) : size_(0), len_(0), buf_(NULL)
 {
     init (old.buf());
+#if DEBUGSTRINGS
+
     StringRegistry::Instance().add(this);
+#endif
 }
 
 void
@@ -114,7 +120,10 @@ String::clean()
 String::~String()
 {
     clean();
+#if DEBUGSTRINGS
+
     StringRegistry::Instance().remove(this);
+#endif
 }
 
 void
