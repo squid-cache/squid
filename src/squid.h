@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.89 1997/01/03 22:59:17 wessels Exp $
+ * $Id: squid.h,v 1.90 1997/01/07 20:05:44 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -245,11 +245,11 @@ typedef unsigned long u_num32;
 
 #include "ansiproto.h"
 
-#if HAVE_REGEX_H && !defined(_SQUID_NEXT_)
-#include <regex.h>
-#else /* HAVE_REGEX_H */
+#ifdef USE_GNUREGEX
 #include "GNUregex.h"
-#endif /* HAVE_REGEX_H */
+#elif HAVE_REGEX_H
+#include <regex.h>
+#endif
 
 /*
  * So if FD_SETSIZE is less than SQUID_MAXFD we'd probably better
