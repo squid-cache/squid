@@ -1181,7 +1181,7 @@ struct _MemPool {
 struct _ClientInfo {
     /* first two items must be equivalent to hash_link in hash.h */
     char *key;
-    struct client_info *next;
+    ClientInfo *next;
     struct in_addr addr;
     struct {
 	int result_hist[LOG_TYPE_MAX];
