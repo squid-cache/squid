@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.321 1998/05/29 04:34:48 rousskov Exp $
+ * $Id: client_side.cc,v 1.322 1998/06/02 04:18:18 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -56,7 +56,7 @@ static int clientCheckTransferDone(clientHttpRequest *);
 static void CheckQuickAbort(clientHttpRequest *);
 static void checkFailureRatio(err_type, hier_code);
 static void clientProcessMiss(clientHttpRequest *);
-static void clientBuildReplyHeader(clientHttpRequest * http, HttpReply *rep);
+static void clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep);
 static clientHttpRequest *parseHttpRequestAbort(ConnStateData * conn, const char *uri);
 static clientHttpRequest *parseHttpRequest(ConnStateData *, method_t *, int *, char **, size_t *);
 static RH clientRedirectDone;
@@ -541,6 +541,7 @@ updateCDJunkStats()
 {
     /* rewrite */
 }
+
 #endif
 
 void
@@ -958,7 +959,7 @@ clientAppendReplyHeader(char *hdr, const char *line, size_t * sz, size_t max)
 }
 #endif
 
-#if OLD_CODE /* use new interfaces instead */
+#if OLD_CODE			/* use new interfaces instead */
 static size_t
 clientBuildReplyHeader(clientHttpRequest * http,
     char *hdr_in,
@@ -1050,7 +1051,7 @@ clientBuildReplyHeader(clientHttpRequest * http,
 #endif
 
 static void
-clientBuildReplyHeader(clientHttpRequest * http, HttpReply *rep)
+clientBuildReplyHeader(clientHttpRequest * http, HttpReply * rep)
 {
     HttpHeader *hdr = &rep->header;
     int is_hit = isTcpHit(http->log_type);
@@ -1093,7 +1094,7 @@ clientBuildReplyHeader(clientHttpRequest * http, HttpReply *rep)
 	EBIT_CLR(http->request->flags, REQ_PROXY_KEEPALIVE);
     /* Signal keep-alive if needed */
     if (EBIT_TEST(http->request->flags, REQ_PROXY_KEEPALIVE))
-	httpHeaderPutStr(hdr, 
+	httpHeaderPutStr(hdr,
 	    http->flags.accel ? HDR_CONNECTION : HDR_PROXY_CONNECTION,
 	    "keep-alive");
 #if ADD_X_REQUEST_URI
@@ -1103,16 +1104,16 @@ clientBuildReplyHeader(clientHttpRequest * http, HttpReply *rep)
      * but X-Request-URI is likely to be the very last header to ease use from a
      * debugger [hdr->entries.count-1].
      */
-     httpHeaderPutStr(hdr, HDR_X_REQUEST_URI,
+    httpHeaderPutStr(hdr, HDR_X_REQUEST_URI,
 	http->entry->mem_obj->url ? http->entry->mem_obj->url : http->uri);
 #endif
 }
 
-static HttpReply*
+static HttpReply *
 clientBuildReply(clientHttpRequest * http, const char *buf, size_t size)
 {
     HttpReply *rep = httpReplyCreate();
-    assert(size <= 4096); /* httpReplyParse depends on this */
+    assert(size <= 4096);	/* httpReplyParse depends on this */
     if (httpReplyParse(rep, buf)) {
 	/* enforce 1.0 reply version */
 	rep->sline.version = 1.0;
@@ -1268,9 +1269,9 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
     if (http->request->method == METHOD_HEAD) {
 	size_t k = 0;
 	if (rep)
-	    body_size = 0; /* do not forward body for HEAD replies */
+	    body_size = 0;	/* do not forward body for HEAD replies */
 	else
-	    k = body_size = headersEnd(buf, size); /* unparseable reply, stop and end-of-headers */
+	    k = body_size = headersEnd(buf, size);	/* unparseable reply, stop and end-of-headers */
 	if (rep || k) {
 	    /* force end */
 	    if (entry->store_status == STORE_PENDING)
@@ -2298,7 +2299,7 @@ httpAccept(int sock, void *data)
 	commSetSelect(sock, COMM_SELECT_READ, httpAccept, NULL, 0);
 	if ((fd = comm_accept(sock, &peer, &me)) < 0) {
 	    if (!ignoreErrno(errno))
-	        debug(50, 1) ("httpAccept: FD %d: accept failure: %s\n",
+		debug(50, 1) ("httpAccept: FD %d: accept failure: %s\n",
 		    sock, xstrerror());
 	    break;
 	}
@@ -2507,7 +2508,7 @@ clientHttpConnectionsOpen(void)
 	    continue;
 	comm_listen(fd);
 	commSetSelect(fd, COMM_SELECT_READ, httpAccept, NULL, 0);
-	/*commSetDefer(fd, httpAcceptDefer, NULL);*/
+	/*commSetDefer(fd, httpAcceptDefer, NULL); */
 	debug(1, 1) ("Accepting HTTP connections on port %d, FD %d.\n",
 	    (int) u->i, fd);
 	HttpSockets[NHttpSockets++] = fd;

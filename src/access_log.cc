@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.32 1998/05/30 19:43:00 rousskov Exp $
+ * $Id: access_log.cc,v 1.33 1998/06/02 04:18:15 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -35,8 +35,8 @@
 
 static void accessLogOpen(const char *fname);
 static char *log_quote(const char *header);
-static void accessLogSquid(AccessLogEntry * al, MemBuf *mb);
-static void accessLogCommon(AccessLogEntry * al, MemBuf *mb);
+static void accessLogSquid(AccessLogEntry * al, MemBuf * mb);
+static void accessLogCommon(AccessLogEntry * al, MemBuf * mb);
 
 const char *log_tags[] =
 {
@@ -154,7 +154,7 @@ log_quote(const char *header)
 }
 
 static void
-accessLogSquid(AccessLogEntry * al, MemBuf *mb)
+accessLogSquid(AccessLogEntry * al, MemBuf * mb)
 {
     const char *client = NULL;
     if (Config.onoff.log_fqdn)
@@ -179,7 +179,7 @@ accessLogSquid(AccessLogEntry * al, MemBuf *mb)
 }
 
 static void
-accessLogCommon(AccessLogEntry * al, MemBuf *mb)
+accessLogCommon(AccessLogEntry * al, MemBuf * mb)
 {
     const char *client = NULL;
     if (Config.onoff.log_fqdn)

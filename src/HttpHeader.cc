@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.37 1998/05/27 22:51:41 rousskov Exp $
+ * $Id: HttpHeader.cc,v 1.38 1998/06/02 04:18:12 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -184,7 +184,7 @@ static http_hdr_type ReplyHeadersArr[] =
     HDR_MIME_VERSION, HDR_PUBLIC, HDR_RETRY_AFTER, HDR_SERVER, HDR_SET_COOKIE,
     HDR_VARY,
     HDR_WARNING, HDR_PROXY_CONNECTION, HDR_X_CACHE,
-    HDR_X_CACHE_LOOKUP, 
+    HDR_X_CACHE_LOOKUP,
     HDR_X_REQUEST_URI,
     HDR_X_SQUID_ERROR
 };
@@ -336,7 +336,7 @@ httpHeaderAppend(HttpHeader * dest, const HttpHeader * src)
 
 /* use fresh entries to replace old ones */
 void
-httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask *denied_mask)
+httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask * denied_mask)
 {
     const HttpHeaderEntry *e;
     HttpHeaderPos pos = HttpHeaderInitPos;
@@ -509,7 +509,7 @@ httpHeaderDelById(HttpHeader * hdr, http_hdr_type id)
     debug(55, 8) ("%p del-by-id %d\n", hdr, id);
     assert(hdr);
     assert_eid(id);
-    assert_eid(id != HDR_OTHER); /* does not make sense */
+    assert_eid(id != HDR_OTHER);	/* does not make sense */
     if (!CBIT_TEST(hdr->mask, id))
 	return 0;
     while ((e = httpHeaderGetEntry(hdr, &pos))) {

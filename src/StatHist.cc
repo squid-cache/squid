@@ -1,6 +1,6 @@
 
 /*
- * $Id: StatHist.cc,v 1.9 1998/05/27 20:31:31 wessels Exp $
+ * $Id: StatHist.cc,v 1.10 1998/06/02 04:18:15 wessels Exp $
  *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels
@@ -192,7 +192,7 @@ statHistBinDumper(StoreEntry * sentry, int idx, double val, double size, int cou
 }
 
 void
-statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper *bd)
+statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper * bd)
 {
     int i;
     double left_border = H->min;
@@ -248,7 +248,7 @@ statHistEnumDumper(StoreEntry * sentry, int idx, double val, double size, int co
 void
 statHistIntInit(StatHist * H, int n)
 {
-    statHistInit(H, n, &Null, &Null, 0, n-1);
+    statHistInit(H, n, &Null, &Null, 0, n - 1);
 }
 
 void

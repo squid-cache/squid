@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.34 1998/05/29 20:59:08 rousskov Exp $
+ * $Id: peer_digest.cc,v 1.35 1998/06/02 04:18:24 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -506,7 +506,7 @@ peerDigestFetchFinish(DigestFetchState * fetch, char *buf, const char *err_msg)
     const time_t expires = fetch->entry->expires;
     const time_t fetch_resp_time = squid_curtime - fetch->start_time;
     const int b_read = (fetch->entry->store_status == STORE_PENDING) ?
-	mem->inmem_hi : mem->object_sz;
+    mem->inmem_hi : mem->object_sz;
     const int req_len = req ? httpRequestPrefixLen(req) : 0;
     assert(req);
     /* final checks */
