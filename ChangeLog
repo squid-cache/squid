@@ -1,5 +1,5 @@
-Changes to squid-1.2.beta20 ():
-	- Fixed "huge 304 reply" loop bug.
+Changes to squid-1.2.beta20 (April 24, 1998):
+
 	- Improved support for only-if-cached cache control directive.
 	- Enabled 304 replies for ENTRY_SPECIAL objects (e.g., icons).
 	- Fixed 'quick_abort' percent calculation bug.
@@ -58,6 +58,7 @@ Changes to squid-1.2.beta20 ():
 	- Changed error message to 'Generated TIME by HOST (SQUID/VER)'
 	  because any string with an '@' must be an email address.
 	- Fixed POST for content-length == 0.
+	- Fixed "huge 304 reply" loop bug.
 
 Changes to squid-1.2.beta19 (Apr 8, 1998):
 
@@ -65,7 +66,8 @@ Changes to squid-1.2.beta19 (Apr 8, 1998):
 	  Cygnus Gnu-WIN32 b19 (Henrik Nordstrom).
 	- Added French Error pages by Frank DENIS.
 	- Added Dutch Error pages by Mark Visser
-	- Added German Error pages by Mark Visser
+	- Added German Error pages by Bernd P. Ziller, Jens Frank,
+	  and Anke S.
 	- Added support for only-if-cached cache-control directive.
 	- Added RELAXED_HTTP_PARSER #define to allow requests which are
 	  missing the HTTP identifier on the request line (e.g. buggy
