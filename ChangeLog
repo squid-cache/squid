@@ -29,7 +29,7 @@ Changes to Squid-2.2 ():
 	- Added "-k parse" command line option: parses the config file
 	  but does not send a signal unlike other -k options.
 
-Changes to Squid-2.1 ():
+Changes to Squid-2.1 (November 16, 1998):
 
 	- Changed delayPoolsUpdate() to be called as an event.
 	- Replaced comm_select FD scanning loops with global fd_set
@@ -109,6 +109,14 @@ Changes to Squid-2.1 ():
 	  authentication information.  (Henrik Nordstrom)
 	- Changed refreshCheck() so that objects with negative age
 	  are always stale.
+	- Fixed "plain" FTP listings (Henrik Nordstrom).
+	- Fixed showing banner/logon message for top-level FTP
+	  directories (Henrik Nordstrom).
+	* Changes below have been made to SQUID_2_1_PATCH1
+	- Fixed pinger packet size assertion.
+	- Fixed WAIS forwarding.
+	- Fixed dnsserver coredump bug caused by using both -D and
+	  -s options.
 
 Changes to Squid-2.0 (October 2, 1998):
 

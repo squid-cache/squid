@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.122 1998/10/12 21:39:06 wessels Exp $
+ * $Id: wais.cc,v 1.123 1998/11/21 16:54:30 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -39,8 +39,6 @@ typedef struct {
     int fd;
     StoreEntry *entry;
     method_t method;
-    char *relayhost;
-    int relayport;
     const HttpHeader *request_hdr;
     char url[MAX_URL];
     request_t *request;
@@ -172,10 +170,8 @@ waisSendComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
 	return;
     if (errflag) {
 	ErrorState *err;
-	err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
+	err = errorCon(ERR_WRITE_ERROR, HTTP_SERVICE_UNAVAILABLE);
 	err->xerrno = errno;
-	err->host = xstrdup(waisState->relayhost);
-	err->port = waisState->relayport;
 	err->request = requestLink(waisState->request);
 	errorAppendEntry(entry, err);
 	comm_close(fd);
@@ -197,7 +193,8 @@ waisSendRequest(int fd, void *data)
     MemBuf mb;
     const char *Method = RequestMethodStr[waisState->method];
     debug(24, 5) ("waisSendRequest: FD %d\n", fd);
-    memBufPrintf(&mb, "%s %s", Method, waisState->url);
+    memBufDefInit(&mb);
+    memBufPrintf(&mb, "%s %s HTTP/1.0\r\n", Method, waisState->url);
     if (waisState->request_hdr) {
 	Packer p;
 	packerToMemInit(&p, &mb);
@@ -220,19 +217,9 @@ waisStart(request_t * request, StoreEntry * entry, int fd)
     debug(24, 3) ("waisStart: \"%s %s\"\n", RequestMethodStr[method], url);
     Counter.server.all.requests++;
     Counter.server.other.requests++;
-    if (!Config.Wais.relayHost) {
-	ErrorState *err;
-	debug(24, 0) ("waisStart: Failed because no relay host defined!\n");
-	err = errorCon(ERR_NO_RELAY, HTTP_INTERNAL_SERVER_ERROR);
-	err->request = requestLink(request);
-	errorAppendEntry(entry, err);
-	return;
-    }
     waisState = xcalloc(1, sizeof(WaisStateData));
     cbdataAdd(waisState, MEM_NONE);
     waisState->method = method;
-    waisState->relayhost = Config.Wais.relayHost;
-    waisState->relayport = Config.Wais.relayPort;
     waisState->request_hdr = &request->header;
     waisState->fd = fd;
     waisState->entry = entry;

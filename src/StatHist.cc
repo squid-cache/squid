@@ -1,6 +1,6 @@
 
 /*
- * $Id: StatHist.cc,v 1.19 1998/11/12 06:27:52 wessels Exp $
+ * $Id: StatHist.cc,v 1.20 1998/11/21 16:54:25 wessels Exp $
  *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels
@@ -161,7 +161,7 @@ statHistBin(const StatHist * H, double v)
 static double
 statHistVal(const StatHist * H, int bin)
 {
-    return H->val_out(bin / H->scale) + H->min;
+    return H->val_out((double) bin / H->scale) + H->min;
 }
 
 double

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.249 1998/11/13 21:02:11 rousskov Exp $
+ * $Id: structs.h,v 1.250 1998/11/21 16:54:29 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -933,12 +933,12 @@ struct _cd_guess_stats {
 };
 
 struct _PeerDigest {
-    peer *peer;                 /* pointer back to peer structure, argh */
-    CacheDigest *cd;            /* actual digest structure */
-    String host;                /* copy of peer->host */
+    peer *peer;			/* pointer back to peer structure, argh */
+    CacheDigest *cd;		/* actual digest structure */
+    String host;		/* copy of peer->host */
     const char *req_result;	/* text status of the last request */
     struct {
-	unsigned int needed:1;  /* there were requests for this digest */
+	unsigned int needed:1;	/* there were requests for this digest */
 	unsigned int usable:1;	/* can be used for lookups */
 	unsigned int requested:1;	/* in process of receiving [fresh] digest */
     } flags;
@@ -949,7 +949,7 @@ struct _PeerDigest {
 	time_t next_check;	/* next scheduled check/refresh event */
 	time_t retry_delay;	/* delay before re-checking _invalid_ digest */
 	time_t requested;	/* requested a fresh copy of a digest */
-	time_t req_delay;       /* last request response time */
+	time_t req_delay;	/* last request response time */
 	time_t received;	/* received the current copy of a digest */
 	time_t disabled;	/* disabled for good */
     } times;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.31 1998/11/12 06:28:05 wessels Exp $
+ * $Id: forward.cc,v 1.32 1998/11/21 16:54:27 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -230,6 +230,14 @@ fwdStartComplete(peer * p, void *data)
 	s->host = xstrdup(p->host);
 	s->port = p->http_port;
 	s->peer = p;
+    } else if (fwdState->request->protocol == PROTO_WAIS) {
+	if (!Config.Wais.relayHost) {
+	    fwdStartFail(NULL, fwdState);
+	    return;
+	} else {
+	    s->host = xstrdup(Config.Wais.relayHost);
+	    s->port = Config.Wais.relayPort;
+	}
     } else {
 	s->host = xstrdup(fwdState->request->host);
 	s->port = fwdState->request->port;

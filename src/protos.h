@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.290 1998/11/18 00:16:38 glenn Exp $
+ * $Id: protos.h,v 1.291 1998/11/21 16:54:29 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1042,7 +1042,8 @@ extern void htcpSocketClose(void);
 #define strCaseCmp(s,str) strcasecmp(strBuf(s), (str))
 #define strNCaseCmp(s,str,n) strncasecmp(strBuf(s), (str), (n))
 #define strSet(s,ptr,ch) (s).buf[ptr-(s).buf] = (ch)
-#define strCut(s,pos) (s).buf[pos] = '\0'
+#define strCut(s,pos) (((s).len = pos) , ((s).buf[pos] = '\0'))
+#define strCutPtr(s,ptr) (((s).len = (ptr)-(s).buf) , ((s).buf[(s).len] = '\0'))
 /* #define strCat(s,str)  stringAppend(&(s), (str), strlen(str)+1) */
 extern void stringInit(String * s, const char *str);
 extern void stringLimitInit(String * s, const char *str, int len);
