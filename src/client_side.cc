@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.340 1998/07/04 00:17:15 wessels Exp $
+ * $Id: client_side.cc,v 1.341 1998/07/04 00:34:07 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1440,7 +1440,8 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	if (rep) {
 	    body_size = size - rep->hdr_sz;
 	    assert(body_size >= 0);
-	    body_buf = buf + rep->hdr_sz;
+	    if (body_size)
+	        body_buf = buf + rep->hdr_sz;
 	    http->range_iter.prefix_size = rep->hdr_sz;
 	    debug(33, 3) ("clientSendMoreData: Appending %d bytes after %d bytes of headers\n",
 		body_size, rep->hdr_sz);
