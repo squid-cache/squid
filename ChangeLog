@@ -26,6 +26,7 @@ Changes to squid-1.1.beta16 ():
 	  checking ACL's.  If you have 'ident_lookup on' then this
 	  may cause noticable delay while waiting for the ident
 	  lookup.
+	- Fixed storeSwapOutHandle() FMR bug.
 
 Changes to squid-1.1.beta15 ():
 
