@@ -4655,8 +4655,8 @@ echo "configure:4655: checking if IP-Filter header files are installed" >&5
     # hold on to your hats...
     if test "$ac_cv_header_ip_compat_h" = "yes" ||
         test "$ac_cv_header_ip_fil_compat_h" = "yes" ||
-        test "$ac_cv_header_netinet_ip_compat_h" == "yes" ||
-        test "$ac_cv_header_netinet_ip_fil_compat_h" == "yes" ; then
+        test "$ac_cv_header_netinet_ip_compat_h" = "yes" ||
+        test "$ac_cv_header_netinet_ip_fil_compat_h" = "yes" ; then
         have_ipfilter_compat_header="yes"
      fi
      if test "x$have_ipfilter_compat_header" = "xyes" &&
