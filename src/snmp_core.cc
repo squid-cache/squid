@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.41 2000/03/06 16:23:34 wessels Exp $
+ * $Id: snmp_core.cc,v 1.42 2000/05/16 07:06:06 wessels Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -499,7 +499,7 @@ snmpDecodePacket(snmp_request_t * rq)
     PDU = snmp_pdu_create(0);
     Session.Version = SNMP_VERSION_1;
     Community = snmp_parse(&Session, PDU, buf, len);
-
+    memset(&checklist, '\0', sizeof(checklist));
     checklist.src_addr = rq->from.sin_addr;
     checklist.snmp_community = (char *) Community;
 

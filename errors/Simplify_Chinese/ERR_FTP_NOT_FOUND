@@ -1,0 +1,21 @@
+<HTML><HEAD>
+<meta charset=gb2312">
+<TITLE>错误：您所请求的网址（URL）无法获取</TITLE>
+</HEAD><BODY>
+<H1>错误</H1>
+<H2>您所请求的网址（URL）无法获取</H2>
+<HR>
+<P>
+以下网址无法读取：
+<A HREF="%U">%U</A>
+<P>
+本缓存服务器发出以下 FTP 命令：
+<blockquote><strong><pre>%f</pre></strong></blockquote>
+然后收到如下回应：
+<blockquote><strong><pre>%F</pre></strong></blockquote>
+<blockquote><strong><pre>%g</pre></strong></blockquote>
+<P>
+这可能是由于 FTP 网址（URL）中包含了绝对路径所致（不符合 RFC1738）。如果真的是这样，
+文件可以从<A HREF="%B">%B</A>位置找到。
+</P>
+

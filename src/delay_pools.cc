@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.16 2000/05/12 00:29:07 wessels Exp $
+ * $Id: delay_pools.cc,v 1.17 2000/05/16 07:06:04 wessels Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: David Luyer <luyer@ucs.uwa.edu.au>
@@ -39,12 +39,14 @@
 #include "squid.h"
 
 struct _class1DelayPool {
+    int class;
     int aggregate;
 };
 
 #define IND_MAP_SZ 256
 
 struct _class2DelayPool {
+    int class;
     int aggregate;
     /* OK: -1 is terminator.  individual[255] is always host 255. */
     /* 255 entries + 1 terminator byte */
@@ -58,6 +60,7 @@ struct _class2DelayPool {
 #define C3_IND_SZ (NET_MAP_SZ*IND_MAP_SZ)
 
 struct _class3DelayPool {
+    int class;
     int aggregate;
     /* OK: -1 is terminator.  network[255] is always host 255. */
     /* 255 entries + 1 terminator byte */
@@ -89,6 +92,7 @@ static delayPool *delay_data = NULL;
 static fd_set delay_no_delay;
 static time_t delay_pools_last_update = 0;
 static hash_table *delay_id_ptr_hash = NULL;
+static long memory_used = 0;
 
 static OBJH delayPoolStats;
 
@@ -139,7 +143,8 @@ delayInitDelayData(unsigned short pools)
 {
     if (!pools)
 	return;
-    delay_data = xcalloc(pools, sizeof(delayPool));
+    delay_data = xcalloc(pools, sizeof(*delay_data));
+    memory_used += sizeof(*delay_data);
     eventAdd("delayPoolsUpdate", delayPoolsUpdate, NULL, 1.0, 1);
     delay_id_ptr_hash = hash_create(delayIdPtrHashCmp, 256, delayIdPtrHash);
 }
@@ -151,12 +156,14 @@ delayIdZero(void *hlink)
     delay_id *id = (delay_id *) h->key;
     *id = 0;
     xfree(h);
+    memory_used -= sizeof(*h);
 }
 
 void
 delayFreeDelayData(void)
 {
     safe_free(delay_data);
+    memory_used -= sizeof(*delay_data);
     if (!delay_id_ptr_hash)
 	return;
     hashFreeItems(delay_id_ptr_hash, delayIdZero);
@@ -173,6 +180,7 @@ delayRegisterDelayIdPtr(delay_id * loc)
     if (*loc == 0)
 	return;
     lnk = xmalloc(sizeof(hash_link));
+    memory_used += sizeof(hash_link);
     lnk->key = (char *) loc;
     hash_join(delay_id_ptr_hash, lnk);
 }
@@ -194,6 +202,7 @@ delayUnregisterDelayIdPtr(delay_id * loc)
     assert(lnk);
     hash_remove_link(delay_id_ptr_hash, lnk);
     xxfree(lnk);
+    memory_used -= sizeof(*lnk);
 }
 
 void
@@ -202,12 +211,18 @@ delayCreateDelayPool(unsigned short pool, u_char class)
     switch (class) {
     case 1:
 	delay_data[pool].class1 = xmalloc(sizeof(class1DelayPool));
+	delay_data[pool].class1->class = 1;
+	memory_used += sizeof(class1DelayPool);
 	break;
     case 2:
 	delay_data[pool].class2 = xmalloc(sizeof(class2DelayPool));
+	delay_data[pool].class1->class = 2;
+	memory_used += sizeof(class2DelayPool);
 	break;
     case 3:
 	delay_data[pool].class3 = xmalloc(sizeof(class3DelayPool));
+	delay_data[pool].class1->class = 3;
+	memory_used += sizeof(class3DelayPool);
 	break;
     default:
 	assert(0);
@@ -248,6 +263,20 @@ void
 delayFreeDelayPool(unsigned short pool)
 {
     /* this is a union - and all free() cares about is the pointer location */
+    switch (delay_data[pool].class1->class) {
+    case 1:
+	memory_used -= sizeof(class1DelayPool);
+	break;
+    case 2:
+	memory_used -= sizeof(class2DelayPool);
+	break;
+    case 3:
+	memory_used -= sizeof(class3DelayPool);
+	break;
+    default:
+	debug(77, 1) ("delayFreeDelayPool: bad class %d\n",
+	    delay_data[pool].class1->class);
+    }
     safe_free(delay_data[pool].class1);
 }
 
@@ -290,6 +319,10 @@ delayClient(request_t * r)
     ch.my_addr = r->my_addr;
     ch.my_port = r->my_port;
     ch.request = r;
+    if (r->client_addr.s_addr == INADDR_BROADCAST) {
+	debug(77, 2) ("delayClient: WARNING: Called with 'allones' address, ignoring\n");
+	return delayId(0, 0);
+    }
     for (pool = 0; pool < Config.Delay.pools; pool++) {
 	if (aclCheckFast(Config.Delay.access[pool], &ch))
 	    break;
@@ -437,6 +470,7 @@ delayUpdateClass3(class3DelayPool * class3, delaySpecSet * rates, int incr)
     int individual_restore_bytes, network_restore_bytes;
     int mpos;
     unsigned int i, j;
+    char individual_255_used;
     /* delaySetSpec may be pointer to partial structure so MUST pass by
      * reference.
      */
@@ -452,21 +486,14 @@ delayUpdateClass3(class3DelayPool * class3, delaySpecSet * rates, int incr)
 	return;
     individual_restore_bytes *= incr;
     network_restore_bytes *= incr;
-    if (class3->network_255_used)
-	i = 255;
-    else
-	i = 0;
-    for (;;) {
+    for (i = 0; i < ((class3->network_255_used) ? NET_MAP_SZ : NET_MAP_SZ - 1); ++i) {
 	assert(i < NET_MAP_SZ);
 	if (i != 255 && class3->network_map[i] == 255)
 	    return;
 	if (individual_restore_bytes != -incr) {
 	    mpos = i << 8;
-	    if (class3->individual_255_used[i / 8] & (1 << (i % 8)))
-		j = 255;
-	    else
-		j = 0;
-	    for (;;) {
+	    individual_255_used = class3->individual_255_used[i / 8] & (1 << (i % 8));
+	    for (j = 0; j < ((individual_255_used) ? IND_MAP_SZ : IND_MAP_SZ - 1); ++j, ++mpos) {
 		assert(i < NET_MAP_SZ);
 		assert(j < IND_MAP_SZ);
 		if (j != 255 && class3->individual_map[i][j] == 255)
@@ -476,11 +503,6 @@ delayUpdateClass3(class3DelayPool * class3, delaySpecSet * rates, int incr)
 		    (class3->individual[mpos] += individual_restore_bytes) >
 		    rates->individual.max_bytes)
 		    class3->individual[mpos] = rates->individual.max_bytes;
-		mpos++;
-		if (j == (IND_MAP_SZ - 1))
-		    mpos -= 256;
-		if (++j == (IND_MAP_SZ - 1))
-		    break;
 	    }
 	}
 	if (network_restore_bytes != -incr &&
@@ -814,6 +836,7 @@ delayPoolStats(StoreEntry * sentry)
 	    assert(0);
 	}
     }
+    storeAppendPrintf(sentry, "Memory Used: %d bytes\n", (int) memory_used);
 }
 
 #endif

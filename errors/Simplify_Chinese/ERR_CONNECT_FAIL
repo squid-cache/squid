@@ -1,0 +1,31 @@
+<HTML><HEAD>
+<meta charset=gb2312">
+<TITLE>错误：您所请求的网址（URL）无法获取</TITLE>
+</HEAD><BODY>
+<H1>错误</H1>
+<H2>您所请求的网址（URL）无法获取</H2>
+<HR>
+<P>
+当尝试读取以下网址（URL）时：
+<A HREF="%U">%U</A>
+<P>
+发生了下列的错误：
+<UL>
+<LI>
+<STRONG>
+Connection Failed
+<BR>
+连接失败
+</STRONG>
+</UL>
+
+<P>
+系统返回以下内容：
+<PRE><I>    %E</I></PRE>
+
+<P>
+The remote host or network may be down.  Please try the request again.
+<BR>
+您要连结的网络服务器或网络可能发生故障。请稍后再试。
+</P>
+<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.51 2000/03/06 16:23:32 wessels Exp $
+ * $Id: ident.cc,v 1.52 2000/05/16 07:06:05 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -51,7 +51,7 @@ typedef struct _IdentStateData {
     struct _IdentStateData *next;
     int fd;			/* IDENT fd */
     struct sockaddr_in me;
-    struct sockaddr_in peer;
+    struct sockaddr_in my_peer;
     IdentClient *clients;
 } IdentStateData;
 
@@ -94,7 +94,7 @@ identTimeout(int fd, void *data)
 {
     IdentStateData *state = data;
     debug(30, 3) ("identTimeout: FD %d, %s\n", fd,
-	inet_ntoa(state->peer.sin_addr));
+	inet_ntoa(state->my_peer.sin_addr));
     comm_close(fd);
 }
 
@@ -123,7 +123,7 @@ identConnectDone(int fd, int status, void *data)
     }
     memBufDefInit(&mb);
     memBufPrintf(&mb, "%d, %d\r\n",
-	ntohs(state->peer.sin_port),
+	ntohs(state->my_peer.sin_port),
 	ntohs(state->me.sin_port));
     comm_write_mbuf(fd, mb, NULL, state);
     commSetSelect(fd, COMM_SELECT_READ, identReadReply, state, 0);
@@ -185,7 +185,7 @@ identClientAdd(IdentStateData * state, IDCB * callback, void *callback_data)
  * start a TCP connection to the peer host on port 113
  */
 void
-identStart(struct sockaddr_in *me, struct sockaddr_in *peer, IDCB * callback, void *data)
+identStart(struct sockaddr_in *me, struct sockaddr_in *my_peer, IDCB * callback, void *data)
 {
     IdentStateData *state;
     int fd;
@@ -196,8 +196,8 @@ identStart(struct sockaddr_in *me, struct sockaddr_in *peer, IDCB * callback, vo
 	inet_ntoa(me->sin_addr),
 	ntohs(me->sin_port));
     snprintf(key2, IDENT_KEY_SZ, "%s:%d",
-	inet_ntoa(peer->sin_addr),
-	ntohs(peer->sin_port));
+	inet_ntoa(my_peer->sin_addr),
+	ntohs(my_peer->sin_port));
     snprintf(key, IDENT_KEY_SZ, "%s,%s", key1, key2);
     if ((state = hash_lookup(ident_hash, key)) != NULL) {
 	identClientAdd(state, callback, data);
@@ -219,7 +219,7 @@ identStart(struct sockaddr_in *me, struct sockaddr_in *peer, IDCB * callback, vo
     state->key = xstrdup(key);
     state->fd = fd;
     state->me = *me;
-    state->peer = *peer;
+    state->my_peer = *my_peer;
     identClientAdd(state, callback, data);
     hash_join(ident_hash, (hash_link *) state);
     comm_add_close_handler(fd,
@@ -227,7 +227,7 @@ identStart(struct sockaddr_in *me, struct sockaddr_in *peer, IDCB * callback, vo
 	state);
     commSetTimeout(fd, Config.Timeout.ident, identTimeout, state);
     commConnectStart(fd,
-	inet_ntoa(state->peer.sin_addr),
+	inet_ntoa(state->my_peer.sin_addr),
 	IDENT_PORT,
 	identConnectDone,
 	state);

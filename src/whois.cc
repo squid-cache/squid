@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.10 2000/03/06 16:23:36 wessels Exp $
+ * $Id: whois.cc,v 1.11 2000/05/16 07:06:08 wessels Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -86,6 +86,7 @@ whoisReadReply(int fd, void *data)
     WhoisState *p = data;
     StoreEntry *entry = p->entry;
     char *buf = memAllocate(MEM_4K_BUF);
+    MemObject *mem = entry->mem_obj;
     int len;
     Counter.syscalls.sock.reads++;
     len = read(fd, buf, 4095);
@@ -93,6 +94,8 @@ whoisReadReply(int fd, void *data)
     debug(75, 3) ("whoisReadReply: FD %d read %d bytes\n", fd, len);
     debug(75, 5) ("{%s}\n", buf);
     if (len > 0) {
+	if (0 == mem->inmem_hi)
+	    mem->reply->sline.status = HTTP_OK;
 	fd_bytes(fd, len, FD_READ);
 	kb_incr(&Counter.server.all.kbytes_in, len);
 	kb_incr(&Counter.server.http.kbytes_in, len);
@@ -103,7 +106,7 @@ whoisReadReply(int fd, void *data)
 	    fd, xstrerror());
 	if (ignoreErrno(errno)) {
 	    commSetSelect(fd, COMM_SELECT_READ, whoisReadReply, p, Config.Timeout.read);
-	} else if (entry->mem_obj->inmem_hi == 0) {
+	} else if (mem->inmem_hi == 0) {
 	    ErrorState *err;
 	    err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
 	    err->xerrno = errno;

@@ -1,0 +1,30 @@
+<HTML><HEAD>
+<meta charset=gb2312">
+<TITLE>错误：您所请求的网址（URL）无法获取</TITLE>
+</HEAD><BODY>
+<H1>错误</H1>
+<H2>您所请求的网址（URL）无法获取</H2>
+<HR>
+<P>
+当尝试读取以下网址（URL）时：
+<A HREF="%U">%U</A>
+<P>
+发生了下列的错误：
+<UL>
+<LI>
+<STRONG>
+Forwarding Denied.
+<BR>
+拒绝转送
+</STRONG>
+</UL>
+
+<P>
+This cache will not forward your request because it is trying to enforce a
+sibling relationship.  Perhaps the client at %i is a cache which has been
+misconfigured.
+<BR>
+本缓存服务器无法转送您的请求，也许您是通过一个并未被本缓存服务器
+设定为允许存取的缓存服务器（%i）来访问的。
+</P>
+<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>

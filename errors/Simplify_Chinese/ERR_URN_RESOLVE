@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<meta charset=gb2312">
+<TITLE>错误：您所请求的 URN 无法获取</TITLE>
+</HEAD><BODY>
+<H1>错误</H1>
+<H2>URN 中的一个网址（URL）无法获取</H2>
+<HR>
+<P>
+当尝试读取以下 URN 时：
+<A HREF="%U">%U</A>
+<P>
+发生了下列的错误：
+<UL>
+<LI>
+<STRONG>
+Cannot Resolve URN
+<BR>
+无法解析 URN
+</STRONG>
+</UL>
+
+<P>
+Hey, don't expect too much from URNs on %T :)
+<BR>
+抱歉！您不能对 %T 上的 URNs 期待太多 :)
+</P>
+<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>

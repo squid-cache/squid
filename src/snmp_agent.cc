@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.75 2000/05/12 00:29:08 wessels Exp $
+ * $Id: snmp_agent.cc,v 1.76 2000/05/16 07:06:06 wessels Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -104,22 +104,22 @@ snmp_confFn(variable_list * Var, snint * ErrP)
     case CONF_STORAGE:
 	switch (Var->name[LEN_SQ_CONF + 1]) {
 	case CONF_ST_MMAXSZ:
-	    snmp_var_new_integer(Var->name, Var->name_length,
+	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
 		(snint) Config.memMaxSize >> 20,
 		ASN_INTEGER);
 	    break;
 	case CONF_ST_SWMAXSZ:
-	    snmp_var_new_integer(Var->name, Var->name_length,
+	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
 		(snint) Config.Swap.maxSize >> 10,
 		ASN_INTEGER);
 	    break;
 	case CONF_ST_SWHIWM:
-	    snmp_var_new_integer(Var->name, Var->name_length,
+	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
 		(snint) Config.Swap.highWaterMark,
 		ASN_INTEGER);
 	    break;
 	case CONF_ST_SWLOWM:
-	    snmp_var_new_integer(Var->name, Var->name_length,
+	    Answer = snmp_var_new_integer(Var->name, Var->name_length,
 		(snint) Config.Swap.lowWaterMark,
 		ASN_INTEGER);
 	    break;

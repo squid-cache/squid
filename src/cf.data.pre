@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.182 2000/05/12 03:17:50 wessels Exp $
+# $Id: cf.data.pre,v 1.183 2000/05/16 07:06:03 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -547,6 +547,16 @@ DOC_START
 	See replacement_policy below for a discussion of this policy.
 DOC_END
 
+NAME: minimum_object_size
+COMMENT: (bytes)
+TYPE: b_size_t
+DEFAULT: 0 KB
+LOC: Config.Store.minObjectSize
+DOC_START
+	Objects smaller than this size will NOT be saved on disk.  The
+	value is specified in kilobytes, and the default is 0 KB, which
+	means there is no minimum.
+DOC_END
 
 NAME: ipcache_size
 COMMENT: (number of entries)
@@ -851,6 +861,15 @@ DOC_START
 	can cut off long filenames when browsing ftp sites.
 DOC_END
 
+NAME: ftp_passive
+TYPE: onoff
+DEFAULT: on
+LOC: Config.Ftp.passive
+DOC_START
+	If your firewall does not allow Squid to use passive
+	connections, then turn off this option.
+DOC_END
+
 NAME: cache_dns_program
 TYPE: string
 IFDEF: USE_DNSSERVERS
@@ -939,6 +958,8 @@ LOC: Config.Program.pinger
 IFDEF: USE_ICMP
 DOC_START
 	Specify the location of the executable for the pinger process.
+	This is only useful if you configured Squid (during compilation)
+	with the '--enable-icmp' option.
 DOC_END
 
 
@@ -2639,6 +2660,17 @@ DOC_START
 	Use this option to define your WCCP ``home'' router for
 	Squid.   Setting the 'wccp_router' to 0.0.0.0 (the default)
 	disables WCCP.
+DOC_END
+
+NAME: wccp_version
+TYPE: int
+LOC: Config.Wccp.version
+DEFAULT: 4
+IFDEF: USE_WCCP
+DOC_START
+	According to some users, Cisco IOS 11.2 only supports WCCP
+	version 3.  If you're using that version of IOS, change
+	this value to 3.
 DOC_END
 
 NAME: wccp_incoming_address

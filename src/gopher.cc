@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: gopher.cc,v 1.152 2000/03/06 16:23:31 wessels Exp $
+ * $Id: gopher.cc,v 1.153 2000/05/16 07:06:04 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -284,7 +284,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
     char *host = NULL;
     char *port = NULL;
     char *escaped_selector = NULL;
-    char *icon_url = NULL;
+    const char *icon_url = NULL;
     char gtype;
     StoreEntry *entry = NULL;
 

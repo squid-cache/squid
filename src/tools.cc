@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.190 2000/04/17 17:24:57 wessels Exp $
+ * $Id: tools.cc,v 1.191 2000/05/16 07:06:07 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -416,46 +416,47 @@ getMyHostname(void)
     const struct hostent *h = NULL;
     if (Config.visibleHostname != NULL)
 	return Config.visibleHostname;
-    if (present) {
-	(void) 0;
-    } else if (Config.Sockaddr.http->s.sin_addr.s_addr != any_addr.s_addr) {
+    if (present)
+	return host;
+    host[0] = '\0';
+    if (Config.Sockaddr.http->s.sin_addr.s_addr != any_addr.s_addr) {
 	/*
 	 * If the first http_port address has a specific address, try a
 	 * reverse DNS lookup on it.
 	 */
-	host[0] = '\0';
 	h = gethostbyaddr((char *) &Config.Sockaddr.http->s.sin_addr,
 	    sizeof(Config.Sockaddr.http->s.sin_addr), AF_INET);
 	if (h != NULL) {
 	    /* DNS lookup successful */
 	    /* use the official name from DNS lookup */
-	    strcpy(host, h->h_name);
-	    debug(50, 4) ("getMyHostname: resolved tcp_incoming_addr to '%s'\n",
+	    xstrncpy(host, h->h_name, SQUIDHOSTNAMELEN);
+	    debug(50, 4) ("getMyHostname: resolved %s to '%s'\n",
+		inet_ntoa(Config.Sockaddr.http->s.sin_addr),
 		host);
 	    present = 1;
-	} else {
-	    debug(50, 6) ("getMyHostname: failed to resolve tcp_incoming_addr\n");
+	    return host;
 	}
-    } else {
-	/*
-	 * Get the host name and store it in host to return
-	 */
-	host[0] = '\0';
-	if (gethostname(host, SQUIDHOSTNAMELEN) == -1) {
-	    debug(50, 1) ("getMyHostname: gethostname failed: %s\n",
-		xstrerror());
-	} else {
-	    if ((h = gethostbyname(host)) != NULL) {
-		debug(50, 6) ("getMyHostname: '%s' resolved into '%s'\n",
-		    host, h->h_name);
-		/* DNS lookup successful */
-		/* use the official name from DNS lookup */
-		strcpy(host, h->h_name);
-	    }
-	}
-	present = 1;
+	debug(50, 1) ("WARNING: failed to resolve %s to a hostname\n",
+	    inet_ntoa(Config.Sockaddr.http->s.sin_addr));
     }
-    return present ? host : NULL;
+    /*
+     * Get the host name and store it in host to return
+     */
+    if (gethostname(host, SQUIDHOSTNAMELEN) < 0) {
+	debug(50, 1) ("WARNING: gethostname failed: %s\n", xstrerror());
+    } else if ((h = gethostbyname(host)) == NULL) {
+	debug(50, 1) ("WARNING: gethostbyname failed for %s\n", host);
+    } else {
+	debug(50, 6) ("getMyHostname: '%s' resolved into '%s'\n",
+	    host, h->h_name);
+	/* DNS lookup successful */
+	/* use the official name from DNS lookup */
+	xstrncpy(host, h->h_name, SQUIDHOSTNAMELEN);
+	present = 1;
+	return host;
+    }
+    fatal("Could not determine fully qualified hostname.  Please set 'visible_hostname'\n");
+    return NULL;		/* keep compiler happy */
 }
 
 const char *
@@ -480,38 +481,28 @@ safeunlink(const char *s, int quiet)
 void
 leave_suid(void)
 {
-    struct passwd *pwd = NULL;
-    struct group *grp = NULL;
-    gid_t gid;
     debug(21, 3) ("leave_suid: PID %d called\n", getpid());
     if (geteuid() != 0)
 	return;
     /* Started as a root, check suid option */
     if (Config.effectiveUser == NULL)
 	return;
-    if ((pwd = getpwnam(Config.effectiveUser)) == NULL)
-	return;
-    if (Config.effectiveGroup && (grp = getgrnam(Config.effectiveGroup))) {
-	gid = grp->gr_gid;
-    } else {
-	gid = pwd->pw_gid;
-    }
 #if HAVE_SETGROUPS
-    setgroups(1, &gid);
+    setgroups(1, &Config2.effectiveGroupID);
 #endif
-    if (setgid(gid) < 0)
-	debug(50, 1) ("leave_suid: setgid: %s\n", xstrerror());
+    if (setgid(Config2.effectiveGroupID) < 0)
+	debug(50, 0) ("ALERT: setgid: %s\n", xstrerror());
     debug(21, 3) ("leave_suid: PID %d giving up root, becoming '%s'\n",
-	getpid(), pwd->pw_name);
+	getpid(), Config.effectiveUser);
 #if HAVE_SETRESUID
-    if (setresuid(pwd->pw_uid, pwd->pw_uid, 0) < 0)
-	debug(50, 1) ("leave_suid: setresuid: %s\n", xstrerror());
+    if (setresuid(Config2.effectiveUserID, Config2.effectiveUserID, 0) < 0)
+	debug(50, 0) ("ALERT: setresuid: %s\n", xstrerror());
 #elif HAVE_SETEUID
-    if (seteuid(pwd->pw_uid) < 0)
-	debug(50, 1) ("leave_suid: seteuid: %s\n", xstrerror());
+    if (seteuid(Config2.effectiveUserID) < 0)
+	debug(50, 0) ("ALERT: seteuid: %s\n", xstrerror());
 #else
-    if (setuid(pwd->pw_uid) < 0)
-	debug(50, 1) ("leave_suid: setuid: %s\n", xstrerror());
+    if (setuid(Config2.effectiveUserID) < 0)
+	debug(50, 0) ("ALERT: setuid: %s\n", xstrerror());
 #endif
 }
 

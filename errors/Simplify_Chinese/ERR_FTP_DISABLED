@@ -1,0 +1,27 @@
+<HTML><HEAD>
+<meta charset=gb2312">
+<TITLE>错误：您所请求的网址（URL）无法获取</TITLE>
+</HEAD><BODY>
+<H1>错误</H1>
+<H2>您所请求的网址（URL）无法获取</H2>
+<HR>
+<P>
+当尝试读取以下网址（URL）时：
+<A HREF="%U">%U</A>
+<P>
+发生了下列的错误：
+<UL>
+<LI>
+<STRONG>
+FTP is Disabled
+<BR>
+禁止使用文件传输协议
+</STRONG>
+</UL>
+
+<P>
+This cache does not support FTP.
+<BR>
+本缓存服务器未开放文件传输服务。
+</P>
+<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>

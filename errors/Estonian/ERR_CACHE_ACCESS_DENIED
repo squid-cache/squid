@@ -1,9 +1,9 @@
 <HTML><HEAD>
-<TITLE>VIGA: Cache kasutamine blokeeritud</TITLE>
+<TITLE>VIGA: Vahemälu serveri kasutamine blokeeritud</TITLE>
 </HEAD>
 <BODY>
 <H1>VIGA</H1>
-<H2>Cache kasutamine keelatud</H2>
+<H2>Vahemälu serveri kasutamine keelatud</H2>
 <HR>
 <P>
 Sooritades p&auml;ringut URLile
@@ -13,7 +13,7 @@ tekkis j&auml;rgnev viga:
 <UL>
 <LI>
 <STRONG>
-Cache kasutamine keelatud.
+Vahemälu serveri kasutamine keelatud.
 </STRONG>
 </UL>
 </P>
@@ -26,7 +26,7 @@ kuni te pole l&auml;binud autoriseerimist.
 <P>
 Autoriseerimiseks on teil vaja brauserit mis toetab HTTP/1.1 standardit,
 nagu Netscape versioon 2.0 v&otilde;i uuem, v&otilde;i MS Internet Explorer
-3.0. Palun kontakteeruge <A HREF="mailto:%w">cache administraatoriga</a>,
+3.0. Palun kontakteeruge <A HREF="mailto:%w">vahemälu serveri administraatoriga</a>,
 kui teil on probleeme autoriseerimisega v&otilde;i
 <A HREF="http://%h/cgi-bin/chpasswd.cgi\">vahetage/a> oma parool.
 </P>

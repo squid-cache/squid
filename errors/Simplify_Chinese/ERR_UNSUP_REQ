@@ -1,0 +1,29 @@
+<HTML><HEAD>
+<meta charset=gb2312">
+<TITLE>错误：您所请求的网址（URL）无法获取</TITLE>
+</HEAD><BODY>
+<H1>错误</H1>
+<H2>您所请求的网址（URL）无法获取</H2>
+<HR>
+<P>
+当尝试读取以下网址（URL）时：
+<A HREF="%U">%U</A>
+<P>
+发生了下列的错误：
+<UL>
+<LI>
+<STRONG>
+Unsupported Request Method and Protocol
+<BR>
+不支持的请求方式和协议
+</STRONG>
+</UL>
+
+<P>
+Squid does not support all request methods for all access protocols.
+For example, you can not POST a Gopher request.
+<BR>
+Squid （缓存服务器）不能对所有的存取协议支持所有的请求方式。
+比如说，你不能对 GOPHER 进行一个 POST 请求。
+</P>
+<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.365 2000/05/12 00:29:08 wessels Exp $
+ * $Id: protos.h,v 1.366 2000/05/16 07:06:06 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -590,7 +590,7 @@ extern void mimeFreeMemory(void);
 extern char *mimeGetContentEncoding(const char *fn);
 extern char *mimeGetContentType(const char *fn);
 extern char *mimeGetIcon(const char *fn);
-extern char *mimeGetIconURL(const char *fn);
+extern const char *mimeGetIconURL(const char *fn);
 extern char mimeGetTransferMode(const char *fn);
 extern int mimeGetDownloadOption(const char *fn);
 extern int mimeGetViewOption(const char *fn);

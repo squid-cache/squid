@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.48 2000/03/06 16:23:29 wessels Exp $
+ * $Id: client_db.cc,v 1.49 2000/05/16 07:06:03 wessels Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -232,7 +232,6 @@ client_entry(struct in_addr *current)
 {
     ClientInfo *c = NULL;
     char *key;
-
     if (current) {
 	key = inet_ntoa(*current);
 	hash_first(client_table);
@@ -271,8 +270,7 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
     if (c == NULL) {
 	debug(49, 5) ("snmp_meshCtblFn: not found.\n");
 	*ErrP = SNMP_ERR_NOSUCHNAME;
-	snmp_var_free(Answer);
-	return (NULL);
+	return NULL;
     }
     switch (Var->name[LEN_SQ_NET + 2]) {
     case MESH_CTBL_ADDR:

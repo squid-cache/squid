@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.144 2000/05/07 16:18:19 adrian Exp $
+ * $Id: net_db.cc,v 1.145 2000/05/16 07:06:06 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -569,6 +569,10 @@ netdbExchangeHandleReply(void *data, char *buf, ssize_t size)
 		o += sizeof(int);
 		hops = (double) ntohl(j) / 1000.0;
 		break;
+	    default:
+		debug(38, 1) ("netdbExchangeHandleReply: corrupt data, aborting\n");
+		netdbExchangeDone(ex);
+		return;
 	    }
 	}
 	if (addr.s_addr != any_addr.s_addr && rtt > 0)
@@ -966,7 +970,7 @@ netdbExchangeStart(void *data)
     assert(NULL != ex->r);
     ex->r->http_ver = 1.0;
     ex->e = storeCreateEntry(uri, uri, null_request_flags, METHOD_GET);
-    ex->buf_sz = 4096;;
+    ex->buf_sz = 4096;
     ex->buf = memAllocate(MEM_4K_BUF);
     assert(NULL != ex->e);
     ex->sc = storeClientListAdd(ex->e, ex);

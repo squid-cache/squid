@@ -22,8 +22,7 @@ DNS server vastas:
 <P>
 Mis t&auml;hendab:
 <PRE>
- Cache ei suutnud lahendada URLis antud hosti nime. Palun kontrollige
+ Vahemälu server ei suutnud lahendada URLis antud hosti nime. Palun kontrollige
  aadressi korrektsust.
 </PRE>
-</P>
-
+<P>Teie teenuseVahemälu serve aadress on <A HREF="mailto:%w">%w</A>.

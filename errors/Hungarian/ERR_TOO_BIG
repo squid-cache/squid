@@ -1,26 +1,28 @@
 <HTML><HEAD>
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+<TITLE>HIBA: A kért URL nem tölthető le</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2"></HEAD>
 </HEAD><BODY>
-<H1>ERROR</H1>
-<H2>The requested URL could not be retrieved</H2>
+<H1>HIBA</H1>
+<H2>A kért URL nem tölthető le</H2>
 <HR>
 <P>
-While trying to retrieve the URL:
+Az alábbi URL letöltésekor:
 <A HREF="%U">%U</A>
 <P>
-The following error was encountered:
+a következő hiba lépett fel:
 <UL>
 <LI>
 <STRONG>
-The request or reply is too large.
+A kérés vagy a válasz túl nagy méretű.
 </STRONG>
 <P>
-If you are making a POST or PUT request, then your request body
-(the thing you are trying to upload) is too large.  If you are 
-making a GET request, then the reply body (what you are trying
-to download) is too large.   These limits have been established
-by the Internet Service Provider who operates this cache.  Please
-contact them directly if you feel this is an error.
+POST vagy PUT kérés esetén a kérés törzse (az az anyag
+amit feltöltene) túl nagy méretű. Ha GET típusú
+kérésről van szó, akkor a válasz törzse (az az anyag amit éppen
+letöltene) túl nagy méretű. A cache-t működtető Internet 
+szolgáltató vezette be ezeket a korlátozásokat. Kérjük, forduljon
+közvetlenül szolgáltatójához amennyiben a szerver helytelen
+beállításában látja a hiba okát.
 </UL>
 <P>
-Your cache administrator is <A HREF="mailto:%w">%w</A>.
+A cache adminisztrátora: <A HREF="mailto:%w">%w</A>.

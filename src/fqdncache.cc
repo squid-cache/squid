@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: fqdncache.cc,v 1.132 2000/03/06 16:23:31 wessels Exp $
+ * $Id: fqdncache.cc,v 1.133 2000/05/16 07:06:04 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -652,20 +652,10 @@ fqdncacheChangeKey(fqdncache_entry * f)
     hash_join(fqdn_table, (hash_link *) f);
 }
 
-/* call during reconfigure phase to clear out all the
- * pending and dispatched reqeusts that got lost */
+/* Recalculate FQDN cache size upon reconfigure */
 void
 fqdncache_restart(void)
 {
-    fqdncache_entry *this;
-    assert(fqdn_table);
-    hash_first(fqdn_table);
-    while ((this = (fqdncache_entry *) hash_next(fqdn_table))) {
-	if (this->status == FQDN_CACHED)
-	    continue;
-	if (this->status == FQDN_NEGATIVE_CACHED)
-	    continue;
-    }
     fqdncache_high = (long) (((float) Config.fqdncache.size *
 	    (float) FQDN_HIGH_WATER) / (float) 100);
     fqdncache_low = (long) (((float) Config.fqdncache.size *
@@ -681,8 +671,7 @@ variable_list *
 snmp_netFqdnFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer = NULL;
-    debug(49, 5) ("snmp_netFqdnFn: Processing request:\n", Var->name[LEN_SQ_NET +
-	    1]);
+    debug(49, 5) ("snmp_netFqdnFn: Processing request:\n", Var->name[LEN_SQ_NET + 1]);
     snmpDebugOid(5, Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
     switch (Var->name[LEN_SQ_NET + 1]) {

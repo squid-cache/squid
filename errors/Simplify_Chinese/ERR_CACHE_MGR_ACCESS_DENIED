@@ -1,0 +1,43 @@
+<HTML><HEAD>
+<meta charset=gb2312">
+<TITLE>错误：缓存管理器拒绝访问</TITLE>
+</HEAD>
+<BODY>
+<H1>错误</H1>
+<H2>缓存管理器拒绝访问</H2>
+<HR>
+<P>
+当尝试读取下面的网址（URL）时： 
+<A HREF="%U">%U</A>
+<P>
+发生了下列的错误： 
+<UL>
+<LI>
+<STRONG>
+Cache Manager Access Denied.
+<BR>
+缓存管理器拒绝访问
+</STRONG>
+</UL>
+</P>
+
+<P>
+抱歉，您不被允许通过本缓存管理器访问以下位置： 
+<BR>    %U<BR>
+除非您通过我们的身份验证。
+</P>
+
+<P> You need to use Netscape version 2.0 or greater, or Microsoft Internet
+Explorer 3.0, or an HTTP/1.1 compliant browser for this to work.  Please
+contact the <A HREF="mailto:%w">cache administrator</a> if you have
+difficulties authenticating yourself or, if you <em>are</em> the
+administrator, read Squid documentation on cache manager interface and check
+cache log for more detailed error messages.
+<BR>
+您需要使用 Netscape version 2.0 或最新的版本，或是使用 Microsoft Internet 
+Explorer 3.0，或是一个 HTTP/1.1 相容的浏览器来进行工作。如果您是在身份验证上发
+生问题，请先确定您有权对缓存使用管理器。
+或是与<A HREF="mailto:%w">管理者</a>联系。如果您<em>就是</em>管理者，请详细阅读 Squid 所附文件中与
+cache manager 有关部份或检查 cache log 以便得到更详尽的细节。
+</P>
+<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>

@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.43 2000/03/06 16:23:33 wessels Exp $
+ * $Id: pinger.cc,v 1.44 2000/05/16 07:06:06 wessels Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -215,7 +215,11 @@ pingerRecv(void)
 	0,
 	(struct sockaddr *) &from,
 	&fromlen);
+#if GETTIMEOFDAY_NO_TZP
+    gettimeofday(&now);
+#else
     gettimeofday(&now, NULL);
+#endif
     debug(42, 9) ("pingerRecv: %d bytes from %s\n", n, inet_ntoa(from.sin_addr));
     ip = (struct iphdr *) (void *) pkt;
 #if HAVE_IP_HL
@@ -304,12 +308,18 @@ pingerReadRequest(void)
     n = recv(0, (char *) &pecho, sizeof(pecho), 0);
     if (n < 0)
 	return n;
+    if (0 == n) {
+	/* EOF indicator */
+	fprintf(stderr, "EOF encountered\n");
+	errno = 0;
+	return -1;
+    }
     guess_size = n - (sizeof(pingerEchoData) - PINGER_PAYLOAD_SZ);
     if (guess_size != pecho.psize) {
 	fprintf(stderr, "size mismatch, guess=%d psize=%d\n",
 	    guess_size, pecho.psize);
-	errno = 0;
-	return -1;
+	/* don't process this message, but keep running */
+	return 0;
     }
     pingerSendEcho(pecho.to,
 	pecho.opcode,

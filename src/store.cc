@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.522 2000/05/12 00:29:08 wessels Exp $
+ * $Id: store.cc,v 1.523 2000/05/16 07:06:06 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -97,9 +97,9 @@ static EVH storeLateRelease;
 #else
 static dlink_list inmem_list;
 #endif
-int store_pages_max = 0;
-int store_swap_high = 0;
-int store_swap_low = 0;
+static int store_pages_max = 0;
+static int store_swap_high = 0;
+static int store_swap_low = 0;
 static Stack LateReleaseStack;
 
 #if URL_CHECKSUM_DEBUG
@@ -421,7 +421,7 @@ storeCreateEntry(const char *url, const char *log_url, request_flags flags, meth
     e->swap_dirn = -1;
     e->refcount = 0;
     e->lastref = squid_curtime;
-    e->timestamp = 0;		/* set in storeTimestampsSet() */
+    e->timestamp = -1;		/* set in storeTimestampsSet() */
     e->ping_status = PING_NONE;
     EBIT_SET(e->flags, ENTRY_VALIDATED);
     return e;
@@ -498,6 +498,7 @@ struct _store_check_cachable_hist {
 	int wrong_content_length;
 	int negative_cached;
 	int too_big;
+	int too_small;
 	int private_key;
 	int too_many_open_files;
 	int too_many_open_fds;
@@ -514,6 +515,19 @@ storeTooManyDiskFilesOpen(void)
 	return 0;
     if (store_open_disk_fd > Config.max_open_disk_fds)
 	return 1;
+    return 0;
+}
+
+static int
+storeCheckTooSmall(StoreEntry * e)
+{
+    MemObject *mem = e->mem_obj;
+    if (STORE_OK == e->store_status)
+	if (mem->object_sz < Config.Store.minObjectSize)
+	    return 1;
+    if (mem->reply->content_length > -1)
+	if (mem->reply->content_length < (int) Config.Store.minObjectSize)
+	    return 1;
     return 0;
 }
 
@@ -547,6 +561,9 @@ storeCheckCachable(StoreEntry * e)
     } else if (e->mem_obj->reply->content_length > (int) Config.Store.maxObjectSize) {
 	debug(20, 2) ("storeCheckCachable: NO: too big\n");
 	store_check_cachable_hist.no.too_big++;
+    } else if (storeCheckTooSmall(e)) {
+	debug(20, 2) ("storeCheckCachable: NO: too small\n");
+	store_check_cachable_hist.no.too_small++;
     } else if (EBIT_TEST(e->flags, KEY_PRIVATE)) {
 	debug(20, 3) ("storeCheckCachable: NO: private key\n");
 	store_check_cachable_hist.no.private_key++;
@@ -589,6 +606,8 @@ storeCheckCachableStats(StoreEntry * sentry)
 	store_check_cachable_hist.no.negative_cached);
     storeAppendPrintf(sentry, "no.too_big\t%d\n",
 	store_check_cachable_hist.no.too_big);
+    storeAppendPrintf(sentry, "no.too_small\t%d\n",
+	store_check_cachable_hist.no.too_small);
     storeAppendPrintf(sentry, "no.private_key\t%d\n",
 	store_check_cachable_hist.no.private_key);
     storeAppendPrintf(sentry, "no.too_many_open_files\t%d\n",
@@ -624,8 +643,14 @@ storeComplete(StoreEntry * e)
     if (e->mem_obj->request)
 	e->mem_obj->request->hier.store_complete_stop = current_time;
 #endif
-    InvokeHandlers(e);
+    /*
+     * We used to call InvokeHandlers, then storeSwapOut.  However,
+     * Madhukar Reddy <myreddy@persistence.com> reported that
+     * responses without content length would sometimes get released
+     * in client_side, thinking that the response is incomplete.
+     */
     storeSwapOut(e);
+    InvokeHandlers(e);
 }
 
 /*

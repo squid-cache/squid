@@ -1,0 +1,38 @@
+<HTML><HEAD>
+<meta charset=gb2312">
+<TITLE>错误；您所请求的网址（URL）无法获取</TITLE>
+</HEAD><BODY>
+<H1>错误</H1>
+<H2>您所请求的网址（URL）无法获取</H2>
+<HR>
+<P>
+当尝试读取下面的网址（URL）时：
+<A HREF="%U">%U</A>
+<P>
+发生了下列的错误：
+<UL>
+<LI>
+<STRONG>
+Unable to forward this request at this time.
+<BR>
+目前无法将您的请求进行转送操作
+</STRONG>
+</UL>
+
+<P>
+This request could not be forwarded to the origin server or to any
+parent caches.  The most likely cause for this error is that:
+<UL>
+<LI>The cache administrator does not allow this cache to make 
+    direct connections to origin servers, and
+<LI>All configured parent caches are currently unreachable.
+</UL>
+</P>
+<P>
+您的请求无法被转送到原始网络服务器或其他的上层缓存服务器，发生这个问题最可能的原因是：
+<UL>
+<LI>缓存服务器管理员不允许本服务器与原始网络服务器直接连结，而
+<LI>所有本服务器指定的上层缓存服务器都暂时无法连结。
+</UL>
+</P>
+<P>本缓存服务器管理员：<A HREF="mailto:%w">%w</A>
