@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.435 1998/07/25 04:49:40 wessels Exp $
+ * $Id: store.cc,v 1.436 1998/07/25 17:48:33 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -361,8 +361,8 @@ storeExpireNow(StoreEntry * e)
 {
     debug(20, 3) ("storeExpireNow: '%s'\n", storeKeyText(e->key));
     e->expires = squid_curtime;
-    dlinkDelete(&e->lru, &inmem_list);
-    dlinkAddTail(e, &e->lru, &inmem_list);
+    dlinkDelete(&e->lru, &store_list);
+    dlinkAddTail(e, &e->lru, &store_list);
 }
 
 /* Append incoming data from a primary server to an entry. */
