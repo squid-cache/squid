@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.394 2001/07/09 19:12:21 wessels Exp $
+ * $Id: structs.h,v 1.395 2001/07/28 09:21:32 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -197,6 +197,12 @@ struct _header_mangler {
     char *replacement;
 };
 
+struct _body_size {
+    dlink_node node;
+    acl_access *access_list;
+    size_t maxsize;
+};
+
 struct _http_version_t {
     unsigned int major;
     unsigned int minor;
@@ -378,7 +384,7 @@ struct _SquidConfig {
     } Timeout;
     size_t maxRequestHeaderSize;
     size_t maxRequestBodySize;
-    size_t maxReplyBodySize;
+    dlink_list ReplyBodySize;
     struct {
 	u_short icp;
 #if USE_HTCP
@@ -910,6 +916,7 @@ struct _HttpReply {
     HttpStatusLine sline;
     HttpHeader header;
     HttpBody body;		/* for small constant memory-resident text bodies only */
+    size_t maxBodySize;
 };
 
 struct _http_state_flags {

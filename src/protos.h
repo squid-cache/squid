@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.407 2001/05/21 04:50:57 hno Exp $
+ * $Id: protos.h,v 1.408 2001/07/28 09:21:32 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -495,6 +495,7 @@ extern time_t httpReplyExpires(const HttpReply * rep);
 extern int httpReplyHasCc(const HttpReply * rep, http_hdr_cc_type type);
 extern void httpRedirectReply(HttpReply *, http_status, const char *);
 extern int httpReplyBodySize(method_t, HttpReply *);
+extern void httpReplyBodyBuildSize(request_t *, HttpReply *, dlink_list *);
 
 /* Http Request */
 extern request_t *requestCreate(method_t, protocol_t, const char *urlpath);
