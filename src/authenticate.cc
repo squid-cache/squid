@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.16 2001/01/08 19:36:26 hno Exp $
+ * $Id: authenticate.cc,v 1.17 2001/01/10 17:35:32 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -523,9 +523,6 @@ authenticateFreeProxyAuthUser(void *data)
 {
     auth_user_t *u = data;
     auth_user_request_t *auth_user_request;
-#if 0
-    auth_user_hash_pointer *proxy_auth_hash;
-#endif
     dlink_node *link, *tmplink;
     assert(data != NULL);
     debug(29, 5) ("authenticateFreeProxyAuthUser: Freeing auth_user '%d' with refcount '%d'.\n", u, u->references);
