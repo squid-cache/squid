@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.43 1997/05/15 01:18:43 wessels Exp $
+ * $Id: debug.cc,v 1.44 1997/05/15 23:33:43 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -112,6 +112,7 @@ static char *debug_log_file = NULL;
 static int debugLevels[MAX_DEBUG_SECTIONS];
 
 static char *accessLogTime _PARAMS((time_t));
+extern int opt_debug_stderr;
 
 #ifdef __STDC__
 void
@@ -166,6 +167,8 @@ _db_print(va_alist)
     vfprintf(debug_log, f, args);
     if (unbuffered_logs)
 	fflush(debug_log);
+    if (opt_debug_stderr)
+	vfprintf(stderr, f, args);
     va_end(args);
 }
 
