@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm.cc,v 1.281 1998/07/29 02:57:35 wessels Exp $
+ * $Id: comm.cc,v 1.282 1998/08/11 05:53:49 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -880,6 +880,8 @@ commCloseAllSockets(void)
 	if (F->open != FD_OPEN)
 	    continue;
 	if (F->type != FD_SOCKET)
+	    continue;
+	if (F->flags.ipc)	/* don't close inter-process sockets */
 	    continue;
 	if (F->timeout_handler) {
 	    debug(5, 5) ("commCloseAllSockets: FD %d: Calling timeout handler\n",

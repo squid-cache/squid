@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.194 1998/08/03 19:30:27 wessels Exp $
+ * $Id: structs.h,v 1.195 1998/08/11 05:53:50 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -490,6 +490,7 @@ struct _fde {
 	int socket_eof:1;
 	int nolinger:1;
 	int nonblocking:1;
+	int ipc:1;
     } flags;
     int bytes_read;
     int bytes_written;
