@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.89 1996/08/27 16:05:16 wessels Exp $
+ * $Id: store.cc,v 1.90 1996/08/28 20:11:07 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1868,10 +1868,9 @@ int storePurgeOld()
 {
     int n;
 
-    debug(20, 3, "storePurgeOld: Begin purging TTL-expired objects\n");
+    debug(20, 0, "Performing Garbage Collection...\n");
     n = storeWalkThrough(removeOldEntry, (void *) &squid_curtime);
-    debug(20, 3, "storePurgeOld: Done purging TTL-expired objects.\n");
-    debug(20, 3, "storePurgeOld: %d objects expired\n", n);
+    debug(20, 0, "Done.  %d objects removed\n", n);
     return n;
 }
 
