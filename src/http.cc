@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.324 1998/09/23 20:13:51 wessels Exp $
+ * $Id: http.cc,v 1.325 1998/09/24 20:41:21 rousskov Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -570,7 +570,7 @@ httpBuildRequestHeader(request_t * request,
     LOCAL_ARRAY(char, bbuf, BBUF_SZ);
     String strConnection = StringNull;
     const HttpHeader *hdr_in = &orig_request->header;
-    int filter_range;
+    int we_do_ranges;
     const HttpHeaderEntry *e;
     HttpHeaderPos pos = HttpHeaderInitPos;
     httpHeaderInit(hdr_out, hoRequest);
@@ -578,11 +578,20 @@ httpBuildRequestHeader(request_t * request,
     if (entry && entry->lastmod > -1 && request->method == METHOD_GET)
 	httpHeaderPutTime(hdr_out, HDR_IF_MODIFIED_SINCE, entry->lastmod);
 
-    /* decide if we want to filter out Range specs
-     * no reason to filter out if the reply will not be cachable
-     * or if we cannot parse the specs */
-    filter_range =
-	orig_request->range && orig_request->flags.cachable;
+    /* decide if we want to do Ranges ourselves 
+     * (and fetch the whole object now)
+     * We want to handle Ranges ourselves iff
+     *    - we can actually parse client Range specs
+     *    - the specs are expected to be simple enough (e.g. no out-of-order ranges)
+     *    - reply will be cachable
+     * (If the reply will be uncachable we have to though it away after 
+     *  serving this request, so it is better to forward ranges to 
+     *  the server and fetch only the requested content) 
+     */
+    we_do_ranges =
+	orig_request->range && orig_request->flags.cachable && !httpHdrRangeWillBeComplex(orig_request->range);
+    debug(11, 8) ("httpBuildRequestHeader: range specs: %p, cachable: %d; we_do_ranges: %d\n",
+	orig_request->range, orig_request->flags.cachable, we_do_ranges);
 
     strConnection = httpHeaderGetList(hdr_in, HDR_CONNECTION);
     while ((e = httpHeaderGetEntry(hdr_in, &pos))) {
@@ -617,7 +626,8 @@ httpBuildRequestHeader(request_t * request,
 	    break;
 	case HDR_RANGE:
 	case HDR_IF_RANGE:
-	    if (!filter_range)
+	case HDR_REQUEST_RANGE:
+	    if (!we_do_ranges)
 		httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
 	    break;
 	case HDR_PROXY_CONNECTION:
