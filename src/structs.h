@@ -805,6 +805,7 @@ struct _MemObject {
 	off_t queue_offset;	/* relative to in-mem data */
 	off_t done_offset;	/* relative to swap file with meta headers! */
 	int fd;
+	void *ctrl;
     } swapout;
     struct _http_reply *reply;
     request_t *request;

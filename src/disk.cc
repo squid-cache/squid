@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.103 1998/02/09 21:17:25 wessels Exp $
+ * $Id: disk.cc,v 1.104 1998/02/10 00:55:03 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -200,10 +200,14 @@ void
 file_close(int fd)
 {
     fde *F = &fd_table[fd];
+#if USE_ASYNC_IO
     if (fd < 0) {
 	debug(6, 0) ("file_close: FD less than zero: %d\n", fd);
 	return;
     }
+#else
+    assert(fd >= 0);
+#endif
     assert(F->open);
     if (EBIT_TEST(F->flags, FD_WRITE_DAEMON)) {
 	EBIT_SET(F->flags, FD_CLOSE_REQUEST);
@@ -304,15 +308,32 @@ diskHandleWriteComplete(void *data, int len, int errcode)
 	    status = errno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR;
 	    debug(50, 1) ("diskHandleWrite: FD %d: disk write error: %s\n",
 		fd, xstrerror());
-	    if (fdd->wrt_handle == NULL || status != DISK_NO_SPACE_LEFT) {
-		/* FLUSH PENDING BUFFERS */
-		do {
-		    fdd->write_q = q->next;
-		    if (q->free_func)
-			(q->free_func) (q->buf);
-		    safe_free(q);
-		} while ((q = fdd->write_q));
-	    }
+	    /*
+	     * If there is no write callback, then this file is
+	     * most likely something important like a log file, or
+	     * an interprocess pipe.  Its not a swapfile.  We feel
+	     * that a write failure on a log file is rather important,
+	     * and Squid doesn't otherwise deal with this condition.
+	     * So to get the administrators attention, we exit with
+	     * a fatal message.
+	     */
+	    if (fdd->wrt_handle == NULL)
+		fatal("Write failure -- check your disk space and cache.log");
+	    /*
+	     * If there is a write failure, then we notify the
+	     * upper layer via the callback, at the end of this
+	     * function.  Meanwhile, flush all pending buffers
+	     * here.  Let the upper layer decide how to handle the
+	     * failure.  This will prevent experiencing multiple,
+	     * repeated write failures for the same FD because of
+	     * the queued data.
+	     */
+	    do {
+		fdd->write_q = q->next;
+		if (q->free_func)
+		    (q->free_func) (q->buf);
+		safe_free(q);
+	    } while ((q = fdd->write_q));
 	}
 	len = 0;
     }
@@ -337,11 +358,16 @@ diskHandleWriteComplete(void *data, int len, int errcode)
 	EBIT_CLR(F->flags, FD_WRITE_DAEMON);
     } else {
 	/* another block is queued */
+	cbdataLock(fdd->wrt_handle_data);
 	commSetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
 	EBIT_SET(F->flags, FD_WRITE_DAEMON);
     }
-    if (fdd->wrt_handle)
-	fdd->wrt_handle(fd, status, len, fdd->wrt_handle_data);
+    if (fdd->wrt_handle) {
+	if (fdd->wrt_handle_data == NULL || cbdataValid(fdd->wrt_handle_data))
+	    fdd->wrt_handle(fd, status, len, fdd->wrt_handle_data);
+	if (fdd->wrt_handle_data != NULL)
+	    cbdataUnlock(fdd->wrt_handle_data);
+    }
     if (EBIT_TEST(F->flags, FD_CLOSE_REQUEST))
 	file_close(fd);
 }
@@ -382,6 +408,7 @@ file_write(int fd,
 	F->disk.write_q_tail = wq;
     }
     if (!EBIT_TEST(F->flags, FD_WRITE_DAEMON)) {
+	cbdataLock(F->disk.wrt_handle_data);
 #if USE_ASYNC_IO
 	diskHandleWrite(fd, NULL);
 #else

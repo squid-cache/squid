@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.48 1998/02/06 18:54:10 wessels Exp $
+ * $Id: store_dir.cc,v 1.49 1998/02/10 00:55:04 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -519,6 +519,8 @@ storeDirWriteCleanLogs(int reopen)
 	    debug(50, 0) ("storeDirWriteCleanLogs: %s: %s\n", new[dirn], xstrerror());
 	    continue;
 	}
+        debug(20, 3) ("storeDirWriteCleanLogs: opened %s, FD %d\n",
+		new[dirn], fd[dirn]);
 #if HAVE_FCHMOD
 	if (stat(cur[dirn], &sb) == 0)
 	    fchmod(fd[dirn], sb.st_mode);
@@ -564,12 +566,12 @@ storeDirWriteCleanLogs(int reopen)
 	/* buffered write */
 	if (outbufoffset[dirn] + sizeof(storeSwapData) > CLEAN_BUF_SZ) {
 	    if (write(fd[dirn], outbuf[dirn], outbufoffset[dirn]) < 0) {
-		debug(50, 0) ("storeDirWriteCleanLogs: %s: %s\n",
+		debug(50, 0) ("storeDirWriteCleanLogs: %s: write: %s\n",
 		    new[dirn], xstrerror());
 		debug(20, 0) ("storeDirWriteCleanLogs: Current swap logfile not replaced.\n");
 		file_close(fd[dirn]);
 		fd[dirn] = -1;
-		unlink(cln[dirn]);
+		unlink(new[dirn]);
 		continue;
 	    }
 	    outbufoffset[dirn] = 0;
@@ -583,22 +585,25 @@ storeDirWriteCleanLogs(int reopen)
     for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
 	if (outbufoffset[dirn] == 0)
 	    continue;
+	if (fd[dirn] < 0)
+	    continue;
 	if (write(fd[dirn], outbuf[dirn], outbufoffset[dirn]) < 0) {
-	    debug(50, 0) ("storeDirWriteCleanLogs: %s: %s\n", new[dirn], xstrerror());
+	    debug(50, 0) ("storeDirWriteCleanLogs: %s: write: %s\n",
+		new[dirn], xstrerror());
 	    debug(20, 0) ("storeDirWriteCleanLogs: Current swap logfile not replaced.\n");
 	    file_close(fd[dirn]);
 	    fd[dirn] = -1;
-	    unlink(cln[dirn]);
+	    unlink(new[dirn]);
 	    continue;
 	}
 	safe_free(outbuf[dirn]);
     }
     safe_free(outbuf);
     safe_free(outbufoffset);
-    /* close */
+    /* rename */
     for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
-	file_close(fd[dirn]);
-	fd[dirn] = -1;
+	if (fd[dirn] < 0)
+	    continue;
 	if (rename(new[dirn], cur[dirn]) < 0) {
 	    debug(50, 0) ("storeDirWriteCleanLogs: rename failed: %s, %s -> %s\n",
 		xstrerror(), new[dirn], cur[dirn]);
@@ -613,13 +618,23 @@ storeDirWriteCleanLogs(int reopen)
     debug(20, 1) ("  Took %d seconds (%6.1lf entries/sec).\n",
 	r > 0 ? r : 0, (double) n / (r > 0 ? r : 1));
     /* touch a timestamp file if we're not still validating */
-    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
-	if (!store_rebuilding)
+    if (!store_rebuilding) {
+        for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
+	    if (fd[dirn] < 0)
+	        continue;
 	    file_close(file_open(cln[dirn],
-		    O_WRONLY | O_CREAT | O_TRUNC, NULL, NULL, NULL));
+		O_WRONLY | O_CREAT | O_TRUNC, NULL, NULL, NULL));
+        }
+    }
+    /* close */
+    for (dirn = 0; dirn < Config.cacheSwap.n_configured; dirn++) {
 	safe_free(cur[dirn]);
 	safe_free(new[dirn]);
 	safe_free(cln[dirn]);
+	if (fd[dirn] < 0)
+	    continue;
+	file_close(fd[dirn]);
+	fd[dirn] = -1;
     }
     safe_free(cur);
     safe_free(new);

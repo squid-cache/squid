@@ -72,12 +72,13 @@ storeRebuildFromDirectory(rebuild_dir * d)
     tlv *t;
     double x;
     assert(d != NULL);
-    debug(20, 3) ("storeRebuildFromDirectory: DIR #%s\n", d->dirn);
+    debug(20, 3) ("storeRebuildFromDirectory: DIR #%d\n", d->dirn);
     for (count = 0; count < d->speed; count++) {
 	assert(fd == -1);
 	fd = storeGetNextFile(d, &sfileno, &size);
 	if (fd == -2) {
-	    debug(20, 1) ("storeRebuildFromDirectory: done!\n");
+	    debug(20, 1) ("storeRebuildFromDirectory: DIR #%d done!\n", d->dirn);
+	    storeDirCloseTmpSwapLog(d->dirn);
 	    store_rebuilding = 0;
 	    return -1;
 	} else if (fd < 0) {
