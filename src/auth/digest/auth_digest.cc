@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.39 2004/12/20 18:28:09 robertc Exp $
+ * $Id: auth_digest.cc,v 1.40 2004/12/20 19:13:54 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -1360,7 +1360,9 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
 
     lock()
 
-        snprintf(buf, 8192, "\"%s\":\"%s\"\n", digest_user->username(), realm);
+        ;
+
+    snprintf(buf, 8192, "\"%s\":\"%s\"\n", digest_user->username(), realm);
 
     helperSubmit(digestauthenticators, buf, authenticateDigestHandleReply, r);
 }
