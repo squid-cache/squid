@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.105 2000/03/06 16:23:35 wessels Exp $
+ * $Id: store_dir.cc,v 1.106 2000/03/09 04:50:13 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -390,8 +390,8 @@ storeDirConfigure(void)
 	Config.Swap.maxSize += SD->max_size;
 	if (NULL == SD->map)
 	    SD->map = file_map_create();
-	SD->high_size = (int) (((float) SD->max_size *
-		(float) Config.Swap.highWaterMark) / 100.0);
+	SD->low_size = (int) (((float) SD->max_size *
+		(float) Config.Swap.lowWaterMark) / 100.0);
     }
 }
 
