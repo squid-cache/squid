@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.42 2002/11/15 13:08:26 hno Exp $
+#  $Id: Makefile.am,v 1.43 2002/11/22 14:04:31 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -108,6 +108,7 @@ EXTRA_squid_SOURCES = \
 	dnsserver.cc \
 	dns_internal.cc \
 	htcp.cc \
+	ProfStats.cc \
 	leakfinder.cc \
 	snmp_core.cc \
 	snmp_agent.cc \
