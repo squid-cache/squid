@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.322 2000/05/02 20:28:30 hno Exp $
+ * $Id: structs.h,v 1.323 2000/05/02 20:31:45 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1117,6 +1117,7 @@ struct _peer {
     struct in_addr addresses[10];
     int n_addresses;
     int rr_count;
+    int rr_lastcount;
     peer *next;
     int test_fd;
 #if USE_CARP
