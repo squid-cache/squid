@@ -1,9 +1,9 @@
 ## Process this file with automake to produce Makefile.in
 #
-# $Id: Makefile.am,v 1.7 2002/05/20 01:16:41 hno Exp $
+# $Id: Makefile.am,v 1.8 2002/06/12 11:45:20 robertc Exp $
 #
 
-AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects VERSION=1.5
+AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects 1.5
 DIST_SUBDIRS	= lib snmplib scripts src icons errors contrib doc
 SUBDIRS		= lib @makesnmplib@ scripts src icons errors doc
 
