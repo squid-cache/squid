@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.305 1999/08/02 06:18:48 wessels Exp $
+ * $Id: structs.h,v 1.306 1999/09/29 00:22:20 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1251,6 +1251,9 @@ struct _MemObject {
     int id;
     ssize_t object_sz;
     size_t swap_hdr_sz;
+#if URL_CHECKSUM_DEBUG
+    unsigned int chksum;
+#endif
 };
 
 struct _StoreEntry {

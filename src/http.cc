@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.352 1999/08/02 06:18:37 wessels Exp $
+ * $Id: http.cc,v 1.353 1999/09/29 00:22:14 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -560,6 +560,9 @@ httpSendComplete(int fd, char *bufnotused, size_t size, int errflag, void *data)
     ErrorState *err;
     debug(11, 5) ("httpSendComplete: FD %d: size %d: errflag %d.\n",
 	fd, size, errflag);
+#if URL_CHECKSUM_DEBUG
+    assert(entry->mem_obj->chksum == url_checksum(entry->mem_obj->url));
+#endif
     if (size > 0) {
 	fd_bytes(fd, size, FD_WRITE);
 	kb_incr(&Counter.server.all.kbytes_out, size);
