@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.70 1998/05/30 19:43:18 rousskov Exp $
+ * $Id: store_dir.cc,v 1.71 1998/06/08 17:00:06 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -127,6 +127,7 @@ storeCreateDirectory(const char *path, int should_exist)
 {
     int created = 0;
     struct stat st;
+    getCurrentTime();
     if (0 == stat(path, &st)) {
 	if (S_ISDIR(st.st_mode)) {
 	    debug(20, should_exist ? 3 : 1) ("%s exists\n", path);
