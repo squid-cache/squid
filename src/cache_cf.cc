@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.278 1998/04/21 16:39:00 wessels Exp $
+ * $Id: cache_cf.cc,v 1.279 1998/04/23 19:27:23 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -117,6 +117,21 @@ wordlistAdd(wordlist ** list, const char *key)
     }
 }
 
+char *
+wordlistCat(const wordlist * w)
+{
+    LOCAL_ARRAY(char, buf, 16384);
+    int o = 0;
+    buf[0] = '\0';
+    while (NULL != w) {
+	if (o + strlen(w->key) > 16384)
+	    break;
+	o += snprintf(buf + o, 16384 - o, "%s\n", w->key);
+	w = w->next;
+    }
+    return buf;
+}
+
 void
 intlistDestroy(intlist ** list)
 {
@@ -205,7 +220,7 @@ configDoConfigure(void)
     /* calculate Config.Swap.maxSize */
     Config.Swap.maxSize = 0;
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
-        SD = &Config.cacheSwap.swapDirs[i];;
+	SD = &Config.cacheSwap.swapDirs[i];;
 	Config.Swap.maxSize += SD->max_size;
 	n = 2 * SD->max_size / Config.Store.avgObjectSize;
 	if (NULL == SD->map) {
@@ -214,7 +229,7 @@ configDoConfigure(void)
 	} else if (n > SD->map->max_n_files) {
 	    /* it grew, need to expand */
 	    fm = file_map_create(n);
-            filemapCopy(SD->map, fm);
+	    filemapCopy(SD->map, fm);
 	    filemapFreeMemory(SD->map);
 	    SD->map = fm;
 	}
@@ -1292,7 +1307,7 @@ parse_wordlist(wordlist ** list)
 }
 
 static int
-check_null_wordlist(wordlist *w)
+check_null_wordlist(wordlist * w)
 {
     return w == NULL;
 }
