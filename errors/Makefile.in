@@ -14,7 +14,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.14 2001/11/30 14:53:07 hno Exp $
+# $Id: Makefile.in,v 1.15 2001/11/30 15:35:45 hno Exp $
 #
 
 SHELL = @SHELL@
@@ -122,7 +122,7 @@ am__quote = @am__quote@
 install_sh = @install_sh@
 makesnmplib = @makesnmplib@
 
-errordir = $(datadir)/squid/errors
+errordir = $(datadir)/errors
 
 DEFAULT_ERROR_DIR = $(errordir)
 
