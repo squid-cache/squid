@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.65 2000/12/18 09:48:50 adrian Exp $
+ * $Id: asn.cc,v 1.66 2001/01/05 09:51:36 adrian Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -151,6 +151,7 @@ asnAclInitialize(acl * acls)
 
 /* initialize the radix tree structure */
 
+CBDATA_TYPE(ASState);
 void
 asnInit(void)
 {
@@ -162,6 +163,7 @@ asnInit(void)
     rn_inithead((void **) &AS_tree_head, 8);
     asnAclInitialize(Config.aclList);
     cachemgrRegister("asndb", "AS Number Database", asnStats, 0, 1);
+    CBDATA_INIT_TYPE(ASState);
 }
 
 void
@@ -187,8 +189,8 @@ asnCacheStart(int as)
     LOCAL_ARRAY(char, asres, 4096);
     StoreEntry *e;
     request_t *req;
-    ASState *asState = xcalloc(1, sizeof(ASState));
-    cbdataAdd(asState, cbdataXfree, 0);
+    ASState *asState;
+    asState = CBDATA_ALLOC(ASState, NULL);
     debug(53, 3) ("asnCacheStart: AS %d\n", as);
     snprintf(asres, 4096, "whois://%s/!gAS%d", Config.as_whois_server, as);
     asState->as_number = as;

@@ -20,7 +20,7 @@ static void storeAufsIOCallback(storeIOState * sio, int errflag);
 static AIOCB storeAufsOpenDone;
 static int storeAufsSomethingPending(storeIOState *);
 static int storeAufsKickWriteQueue(storeIOState * sio);
-static void storeAufsIOFreeEntry(void *, int);
+static CBDUNL storeAufsIOFreeEntry;
 
 /* === PUBLIC =========================================================== */
 
@@ -51,8 +51,7 @@ storeAufsOpen(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
 	return NULL;
     }
 #endif
-    sio = memAllocate(MEM_STORE_IO);
-    cbdataAdd(sio, storeAufsIOFreeEntry, MEM_STORE_IO);
+    sio = CBDATA_ALLOC(storeIOState, storeAufsIOFreeEntry);
     sio->fsstate = memPoolAlloc(aio_state_pool);
     ((aiostate_t *) (sio->fsstate))->fd = -1;
     ((aiostate_t *) (sio->fsstate))->flags.opening = 1;
@@ -106,8 +105,7 @@ storeAufsCreate(SwapDir * SD, StoreEntry * e, STFNCB * file_callback, STIOCB * c
 	return NULL;
     }
 #endif
-    sio = memAllocate(MEM_STORE_IO);
-    cbdataAdd(sio, storeAufsIOFreeEntry, MEM_STORE_IO);
+    sio = CBDATA_ALLOC(storeIOState, storeAufsIOFreeEntry);
     sio->fsstate = memPoolAlloc(aio_state_pool);
     ((aiostate_t *) (sio->fsstate))->fd = -1;
     ((aiostate_t *) (sio->fsstate))->flags.opening = 1;
@@ -453,12 +451,12 @@ storeAufsSomethingPending(storeIOState * sio)
 
 
 /*      
- * We can't pass memFree() as a free function here, because we need to free
- * the fsstate variable ..
+ * Clean up references from the SIO before it gets released.
+ * The actuall SIO is managed by cbdata so we do not need
+ * to bother with that.
  */
 static void
-storeAufsIOFreeEntry(void *sio, int foo)
+storeAufsIOFreeEntry(void *sio)
 {
     memPoolFree(aio_state_pool, ((storeIOState *) sio)->fsstate);
-    memFree(sio, MEM_STORE_IO);
 }

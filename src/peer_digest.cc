@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.75 2000/06/27 22:06:03 hno Exp $
+ * $Id: peer_digest.cc,v 1.76 2001/01/05 09:51:39 adrian Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -97,6 +97,8 @@ peerDigestClean(PeerDigest * pd)
     stringClean(&pd->host);
 }
 
+CBDATA_TYPE(PeerDigest);
+
 /* allocate new peer digest, call Init, and lock everything */
 PeerDigest *
 peerDigestCreate(peer * p)
@@ -104,8 +106,8 @@ peerDigestCreate(peer * p)
     PeerDigest *pd;
     assert(p);
 
-    pd = memAllocate(MEM_PEER_DIGEST);
-    cbdataAdd(pd, memFree, MEM_PEER_DIGEST);
+    CBDATA_INIT_TYPE(PeerDigest);
+    pd = CBDATA_ALLOC(PeerDigest, NULL);
     peerDigestInit(pd, p);
     cbdataLock(pd->peer);	/* we will use the peer */
 
@@ -293,8 +295,7 @@ peerDigestRequest(PeerDigest * pd)
     if (p->login)
 	xstrncpy(req->login, p->login, MAX_LOGIN_SZ);
     /* create fetch state structure */
-    fetch = memAllocate(MEM_DIGEST_FETCH_STATE);
-    cbdataAdd(fetch, memFree, MEM_DIGEST_FETCH_STATE);
+    fetch = CBDATA_ALLOC(DigestFetchState, NULL);
     fetch->request = requestLink(req);
     fetch->pd = pd;
     fetch->offset = 0;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.54 2000/10/31 23:48:13 wessels Exp $
+ * $Id: ident.cc,v 1.55 2001/01/05 09:51:38 adrian Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -178,6 +178,8 @@ identClientAdd(IdentStateData * state, IDCB * callback, void *callback_data)
     *C = c;
 }
 
+CBDATA_TYPE(IdentStateData);
+
 /**** PUBLIC FUNCTIONS ****/
 
 /*
@@ -213,8 +215,8 @@ identStart(struct sockaddr_in *me, struct sockaddr_in *my_peer, IDCB * callback,
 	callback(NULL, data);
 	return;
     }
-    state = xcalloc(1, sizeof(IdentStateData));
-    cbdataAdd(state, cbdataXfree, 0);
+    CBDATA_INIT_TYPE(IdentStateData);
+    state = CBDATA_ALLOC(IdentStateData, NULL);
     state->hash.key = xstrdup(key);
     state->fd = fd;
     state->me = *me;

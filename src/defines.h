@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.84 2001/01/04 03:42:34 wessels Exp $
+ * $Id: defines.h,v 1.85 2001/01/05 09:51:37 adrian Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -281,6 +281,11 @@
 #ifndef _PATH_DEVNULL
 #define _PATH_DEVNULL "/dev/null"
 #endif
+
+/* cbdata macros */
+#define CBDATA_ALLOC(type, unl) ((type *)cbdataInternalAlloc(CBDATA_##type, unl))
+#define CBDATA_TYPE(type)	static cbdata_type CBDATA_##type = 0
+#define CBDATA_INIT_TYPE(type)	(CBDATA_##type = cbdataAddType(CBDATA_##type, #type, sizeof(type)))
 
 #ifndef O_TEXT
 #define O_TEXT 0

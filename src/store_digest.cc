@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.44 2000/11/14 07:06:19 wessels Exp $
+ * $Id: store_digest.cc,v 1.45 2001/01/05 09:51:40 adrian Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -51,7 +51,7 @@
 typedef struct {
     StoreDigestCBlock cblock;
     int rebuild_lock;		/* bucket number */
-    StoreEntry *rewrite_lock;	/* store entry with the digest */
+    generic_cbdata *rewrite_lock;	/* points to store entry with the digest */
     int rebuild_offset;
     int rewrite_offset;
     int rebuild_count;
@@ -350,9 +350,10 @@ storeDigestRewriteStart(void *datanotused)
     url = internalLocalUri("/squid-internal-periodic/", StoreDigestFileName);
     flags = null_request_flags;
     flags.cachable = 1;
-    sd_state.rewrite_lock = e = storeCreateEntry(url, url, flags, METHOD_GET);
-    assert(sd_state.rewrite_lock);
-    cbdataAdd(sd_state.rewrite_lock, NULL, 0);
+    e = storeCreateEntry(url, url, flags, METHOD_GET);
+    assert(e);
+    sd_state.rewrite_lock = CBDATA_ALLOC(generic_cbdata, NULL);
+    sd_state.rewrite_lock->data = e;
     debug(71, 3) ("storeDigestRewrite: url: %s key: %s\n", url, storeKeyText(e->hash.key));
     e->mem_obj->request = requestLink(urlParse(METHOD_GET, url));
     /* wait for rebuild (if any) to finish */
@@ -366,11 +367,12 @@ storeDigestRewriteStart(void *datanotused)
 static void
 storeDigestRewriteResume(void)
 {
-    StoreEntry *e = sd_state.rewrite_lock;
+    StoreEntry *e;
     http_version_t version;
 
     assert(sd_state.rewrite_lock);
     assert(!sd_state.rebuild_lock);
+    e = sd_state.rewrite_lock->data;
     sd_state.rewrite_offset = 0;
     EBIT_SET(e->flags, ENTRY_SPECIAL);
     /* setting public key will purge old digest entry if any */
@@ -394,7 +396,7 @@ storeDigestRewriteResume(void)
 static void
 storeDigestRewriteFinish(StoreEntry * e)
 {
-    assert(e == sd_state.rewrite_lock);
+    assert(sd_state.rewrite_lock && e == sd_state.rewrite_lock->data);
     storeComplete(e);
     storeTimestampsSet(e);
     debug(71, 2) ("storeDigestRewriteFinish: digest expires at %d (%+d)\n",
@@ -403,10 +405,6 @@ storeDigestRewriteFinish(StoreEntry * e)
     requestUnlink(e->mem_obj->request);
     e->mem_obj->request = NULL;
     storeUnlockObject(e);
-    /*
-     * note, it won't really get free()'d here because we used
-     * MEM_DONTFREE in the call to cbdataAdd().
-     */
     cbdataFree(sd_state.rewrite_lock);
     sd_state.rewrite_lock = e = NULL;
     sd_state.rewrite_count++;
@@ -421,10 +419,11 @@ storeDigestRewriteFinish(StoreEntry * e)
 static void
 storeDigestSwapOutStep(void *data)
 {
-    StoreEntry *e = data;
+    StoreEntry *e;
     int chunk_size = Config.digest.swapout_chunk_size;
+    assert(data == sd_state.rewrite_lock);
+    e = (StoreEntry *) ((generic_cbdata *) data)->data;
     assert(e);
-    assert(e == sd_state.rewrite_lock);
     /* _add_ check that nothing bad happened while we were waiting @?@ @?@ */
     if (sd_state.rewrite_offset + chunk_size > store_digest->mask_size)
 	chunk_size = store_digest->mask_size - sd_state.rewrite_offset;
@@ -436,7 +435,7 @@ storeDigestSwapOutStep(void *data)
     if (sd_state.rewrite_offset >= store_digest->mask_size)
 	storeDigestRewriteFinish(e);
     else
-	eventAdd("storeDigestSwapOutStep", storeDigestSwapOutStep, e, 0.0, 1);
+	eventAdd("storeDigestSwapOutStep", storeDigestSwapOutStep, data, 0.0, 1);
 }
 
 static void

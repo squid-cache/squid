@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.159 2001/01/04 03:42:34 wessels Exp $
+ * $Id: errorpage.cc,v 1.160 2001/01/05 09:51:37 adrian Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -236,7 +236,8 @@ errorPageName(int pageId)
 ErrorState *
 errorCon(err_type type, http_status status)
 {
-    ErrorState *err = memAllocate(MEM_ERRORSTATE);
+    ErrorState *err;
+    err = CBDATA_ALLOC(ErrorState, NULL);
     err->page_id = type;	/* has to be reset manually if needed */
     err->type = type;
     err->http_status = status;
@@ -340,7 +341,6 @@ errorSend(int fd, ErrorState * err)
 	err->request->err_type = err->type;
     /* moved in front of errorBuildBuf @?@ */
     err->flags.flag_cbdata = 1;
-    cbdataAdd(err, memFree, MEM_ERRORSTATE);
     rep = errorBuildReply(err);
     comm_write_mbuf(fd, httpReplyPack(rep), errorSendComplete, err);
     httpReplyDestroy(rep);
@@ -382,10 +382,7 @@ errorStateFree(ErrorState * err)
     wordlistDestroy(&err->ftp.server_msg);
     safe_free(err->ftp.request);
     safe_free(err->ftp.reply);
-    if (err->flags.flag_cbdata)
-	cbdataFree(err);
-    else
-	memFree(err, MEM_ERRORSTATE);
+    cbdataFree(err);
 }
 
 #define CVT_BUF_SZ 512

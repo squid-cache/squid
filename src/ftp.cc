@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.300 2000/11/14 07:06:19 wessels Exp $
+ * $Id: ftp.cc,v 1.301 2001/01/05 09:51:37 adrian Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1033,6 +1033,7 @@ ftpBuildTitleUrl(FtpStateData * ftpState)
     strcat(t, "/");
 }
 
+CBDATA_TYPE(FtpStateData);
 void
 ftpStart(FwdState * fwd)
 {
@@ -1041,11 +1042,13 @@ ftpStart(FwdState * fwd)
     int fd = fwd->server_fd;
     LOCAL_ARRAY(char, realm, 8192);
     const char *url = storeUrl(entry);
-    FtpStateData *ftpState = xcalloc(1, sizeof(FtpStateData));
+    FtpStateData *ftpState;
     HttpReply *reply;
     StoreEntry *pe = NULL;
     const cache_key *key = NULL;
-    cbdataAdd(ftpState, cbdataXfree, 0);
+
+    CBDATA_INIT_TYPE(FtpStateData);
+    ftpState = CBDATA_ALLOC(FtpStateData, NULL);
     debug(9, 3) ("ftpStart: '%s'\n", url);
     statCounter.server.all.requests++;
     statCounter.server.ftp.requests++;

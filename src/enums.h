@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.177 2000/12/09 01:47:18 wessels Exp $
+ * $Id: enums.h,v 1.178 2001/01/05 09:51:37 adrian Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -675,3 +675,32 @@ enum {
     NETDB_EX_RTT,
     NETDB_EX_HOPS
 };
+
+/*
+ * cbdata types. similar to the MEM_* types above, but managed
+ * in cbdata.c. A big difference is that these types are dynamically
+ * allocated. This list is only a list of predefined types. Other types
+ * are added runtime
+ */
+typedef enum {
+    CBDATA_UNKNOWN = 0,
+    CBDATA_acl_access,
+    CBDATA_aclCheck_t,
+    CBDATA_clientHttpRequest,
+    CBDATA_ConnStateData,
+    CBDATA_DigestFetchState,
+    CBDATA_ErrorState,
+    CBDATA_FwdState,
+    CBDATA_generic_cbdata,
+    CBDATA_helper,
+    CBDATA_helper_server,
+    CBDATA_HttpStateData,
+    CBDATA_peer,
+    CBDATA_ps_state,
+    CBDATA_RemovalPolicy,
+    CBDATA_RemovalPolicyWalker,
+    CBDATA_RemovalPurgeWalker,
+    CBDATA_store_client,
+    CBDATA_storeIOState,
+    CBDATA_FIRST_CUSTOM_TYPE
+} cbdata_type;

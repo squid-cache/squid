@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.20 2000/06/27 22:06:02 hno Exp $
+ * $Id: helper.cc,v 1.21 2001/01/05 09:51:38 adrian Exp $
  *
  * DEBUG: section 29    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -93,8 +93,7 @@ helperOpenServers(helper * hlp)
 	    continue;
 	}
 	hlp->n_running++;
-	srv = memAllocate(MEM_HELPER_SERVER);
-	cbdataAdd(srv, memFree, MEM_HELPER_SERVER);
+	srv = CBDATA_ALLOC(helper_server, NULL);
 	srv->flags.alive = 1;
 	srv->index = k;
 	srv->rfd = rfd;
@@ -224,8 +223,8 @@ helperShutdown(helper * hlp)
 helper *
 helperCreate(const char *name)
 {
-    helper *hlp = memAllocate(MEM_HELPER);
-    cbdataAdd(hlp, memFree, MEM_HELPER);
+    helper *hlp;
+    hlp = CBDATA_ALLOC(helper, NULL);
     hlp->id_name = name;
     return hlp;
 }

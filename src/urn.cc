@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.62 2000/12/05 09:16:02 wessels Exp $
+ * $Id: urn.cc,v 1.63 2001/01/05 09:51:41 adrian Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -95,6 +95,7 @@ urnFindMinRtt(url_entry * urls, method_t m, int *rtt_ret)
     return min_u;
 }
 
+CBDATA_TYPE(UrnState);
 void
 urnStart(request_t * r, StoreEntry * e)
 {
@@ -106,10 +107,10 @@ urnStart(request_t * r, StoreEntry * e)
     StoreEntry *urlres_e;
     ErrorState *err;
     debug(52, 3) ("urnStart: '%s'\n", storeUrl(e));
-    urnState = xcalloc(1, sizeof(UrnState));
+    CBDATA_INIT_TYPE(UrnState);
+    urnState = CBDATA_ALLOC(UrnState, NULL);
     urnState->entry = e;
     urnState->request = requestLink(r);
-    cbdataAdd(urnState, cbdataXfree, 0);
     storeLockObject(urnState->entry);
     if (strncasecmp(strBuf(r->urlpath), "menu.", 5) == 0) {
 	char *new_path = xstrdup(strBuf(r->urlpath) + 5);

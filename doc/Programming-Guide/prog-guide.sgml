@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Duane Wessels, Squid Developers
-<date>$Id: prog-guide.sgml,v 1.29 2001/01/04 03:38:05 wessels Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.30 2001/01/05 09:51:34 adrian Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -257,7 +257,7 @@ Squid consists of the following major components
 	and <tt/squid.conf/.  <tt/cf_parser.c/ is included directly
 	into <tt/cache_cf.c/ at compile time.
 
-<sect1>Callback Data Database
+<sect1>Callback Data Allocator
 
 	<P>
 	Squid's extensive use of callback functions makes it very
@@ -1840,10 +1840,6 @@ coupling between the storage layer and the replacement policy.
 	It should also populate the _data member with a pointer to policy
 	specific data.
 
-<P>
-	Prior to returning the created instance must be registered as
-	callback-data by calling cbdataAdd().
-
 <sect3>Walker
 
 <P>
@@ -1851,10 +1847,6 @@ coupling between the storage layer and the replacement policy.
 	methods supported. Currently all API calls are mandatory, but the
 	policy implementation must make sure to NULL fill the structure prior
 	to populating it in order to assure future API compability.
-
-<P>
-	Prior to returning the created instance must be registered as
-	callback-data by calling cbdataAdd().
 
 <sect2>Design notes/bugs
 
@@ -2037,8 +2029,8 @@ coupling between the storage layer and the replacement policy.
 	<P>
 	To be written...
 
-<!-- %%%% Chapter : Callback Data Base %%%% -->
-<sect>Callback Data Database
+<!-- %%%% Chapter : Callback Data Allocator %%%% -->
+<sect>Callback Data Allocator
 
 	<P>
 	Squid's extensive use of callback functions makes it very
@@ -2060,14 +2052,14 @@ coupling between the storage layer and the replacement policy.
 	before the operation completes.
 
 	<P>
-	The callback data database lets us do this in a uniform and
-	safe manner.  Every callback_data pointer must be added to the
-	database.  It is then locked while the blocking operation executes
-	elsewhere, and is freed when the operation completes.  The normal
-	sequence of events is:
+	The callback data allocator lets us do this in a uniform and
+	safe manner.  The callback data allocator is used to allocate,
+	track and free memory pool objects used during callback
+	operations.  Allocated memory is locked while the blocking
+	operation executes elsewhere, and is freed when the operation
+	completes.  The normal sequence of events is:
 <verb>
-	callback_data = malloc(...);
-	cbdataAdd(callback_data);
+	callback_data = CBDATA_ALLOC(type_of_data, free_handler);
 	...
 	cbdataLock(callback_data);
 	fooOperationStart(bar, callback_func, callback_data);
@@ -2083,8 +2075,7 @@ coupling between the storage layer and the replacement policy.
 	With this scheme, nothing bad happens if <tt/cbdataFree/ gets called
 	before <tt/cbdataUnlock/:
 <verb>
-	callback_data = malloc(...);
-	cbdataAdd(callback_data);
+	callback_data = CBDATA_ALLOC(...);
 	...
 	cbdataLock(callback_data);
 	fooOperationStart(bar, callback_func, callback_data);

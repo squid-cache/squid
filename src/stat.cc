@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.340 2000/10/31 23:48:14 wessels Exp $
+ * $Id: stat.cc,v 1.341 2001/01/05 09:51:40 adrian Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -88,6 +88,7 @@ StatCounters CountHist[N_COUNT_HIST];
 static int NCountHist = 0;
 static StatCounters CountHourHist[N_COUNT_HOUR_HIST];
 static int NCountHourHist = 0;
+CBDATA_TYPE(StatObjectsState);
 
 extern unsigned int mem_pool_alloc_calls;
 extern unsigned int mem_pool_free_calls;
@@ -343,11 +344,11 @@ statObjects(void *data)
 static void
 statObjectsStart(StoreEntry * sentry, STOBJFLT * filter)
 {
-    StatObjectsState *state = xcalloc(1, sizeof(*state));
+    StatObjectsState *state;
+    state = CBDATA_ALLOC(StatObjectsState, NULL);
     state->sentry = sentry;
     state->filter = filter;
     storeLockObject(sentry);
-    cbdataAdd(state, cbdataXfree, 0);
     eventAdd("statObjects", statObjects, state, 0.0, 1);
 }
 
@@ -832,6 +833,7 @@ statInit(void)
 {
     int i;
     debug(18, 5) ("statInit: Initializing...\n");
+    CBDATA_INIT_TYPE(StatObjectsState);
     for (i = 0; i < N_COUNT_HIST; i++)
 	statCountersInit(&CountHist[i]);
     for (i = 0; i < N_COUNT_HOUR_HIST; i++)
