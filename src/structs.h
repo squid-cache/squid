@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.243 1998/10/16 20:02:49 wessels Exp $
+ * $Id: structs.h,v 1.244 1998/10/19 17:48:29 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -464,16 +464,8 @@ struct _dread_ctrl {
     void *client_data;
 };
 
-struct _helper_flags {
-    unsigned int alive:1;
-    unsigned int busy:1;
-    unsigned int closing:1;
-    unsigned int shutdown:1;
-};
-
 struct _dnsserver_t {
     int id;
-    helper_flags flags;
     int inpipe;
     int outpipe;
     time_t answer;
@@ -1647,7 +1639,12 @@ struct _helper_server {
     dlink_node link;
     helper *parent;
     helper_request *request;
-    helper_flags flags;
+    struct _helper_flags {
+	unsigned int alive:1;
+	unsigned int busy:1;
+	unsigned int closing:1;
+	unsigned int shutdown:1;
+    } flags;
     struct {
 	int uses;
     } stats;
