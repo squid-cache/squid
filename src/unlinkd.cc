@@ -1,5 +1,5 @@
 /*
- * $Id: unlinkd.cc,v 1.26 1998/08/14 17:38:19 wessels Exp $
+ * $Id: unlinkd.cc,v 1.27 1998/09/10 19:56:28 wessels Exp $
  *
  * DEBUG: section 12    Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -113,13 +113,11 @@ void
 unlinkdClose(void)
 {
 #if USE_UNLINKD
-    if (unlinkd_wfd < 0) {
-	debug_trap("unlinkdClose: unlinkd_wfd < 0");
-	return;
-    }
+    assert(unlinkd_wfd > -1);
     debug(12, 1) ("Closing unlinkd pipe on FD %d\n", unlinkd_wfd);
     file_close(unlinkd_wfd);
-    file_close(unlinkd_rfd);
+    if (unlinkd_wfd != unlinkd_rfd)
+        file_close(unlinkd_rfd);
     unlinkd_wfd = -1;
     unlinkd_rfd = -1;
 #endif
