@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.335 1999/01/08 21:12:14 wessels Exp $
+ * $Id: http.cc,v 1.336 1999/01/11 16:50:32 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -504,7 +504,7 @@ httpReadReply(int fd, void *data)
 	}
 	storeAppend(entry, buf, len);
 #ifdef OPTIMISTIC_IO
-	if (entry->store_status == STORE_ABORTED) {
+	if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
 	    /*
 	     * the above storeAppend() call could ABORT this entry,
 	     * in that case, the server FD should already be closed.

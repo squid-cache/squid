@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.68 1998/12/16 05:38:57 wessels Exp $
+ * $Id: peer_digest.cc,v 1.69 1999/01/11 16:50:36 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -540,7 +540,7 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
 	    reason = "swap failure";
 	else if (!fetch->entry)
 	    reason = "swap aborted?!";
-	else if (fetch->entry->store_status == STORE_ABORTED)
+	else if (EBIT_TEST(fetch->entry->flags, ENTRY_ABORTED))
 	    reason = "swap aborted";
     }
     /* continue checking (maybe-successful eof case) */

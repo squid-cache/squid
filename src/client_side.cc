@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.426 1999/01/08 21:12:06 wessels Exp $
+ * $Id: client_side.cc,v 1.427 1999/01/11 16:50:29 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -315,8 +315,8 @@ clientProcessExpired(void *data)
     fwdStart(http->conn->fd, http->entry, http->request,
 	http->conn->peer.sin_addr);
     /* Register with storage manager to receive updates when data comes in. */
-    if (entry->store_status == STORE_ABORTED)
-	debug(33, 0) ("clientProcessExpired: entry->swap_status == STORE_ABORTED\n");
+    if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
+	debug(33, 0) ("clientProcessExpired: found ENTRY_ABORTED object\n");
     storeClientCopy(entry,
 	http->out.offset,
 	http->out.offset,
@@ -370,9 +370,9 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
     int recopy = 1;
     const http_status status = mem->reply->sline.status;
     debug(33, 3) ("clientHandleIMSReply: %s, %d bytes\n", url, (int) size);
-    if (size < 0 && entry->store_status != STORE_ABORTED)
+    if (size < 0 && !EBIT_TEST(entry->flags, ENTRY_ABORTED))
 	return;
-    if (entry->store_status == STORE_ABORTED) {
+    if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
 	debug(33, 3) ("clientHandleIMSReply: ABORTED '%s'\n", url);
 	/* We have an existing entry, but failed to validate it */
 	/* Its okay to send the old one anyway */
@@ -440,7 +440,7 @@ clientHandleIMSReply(void *data, char *buf, ssize_t size)
 	recopy = 0;
     }
     http->old_entry = NULL;	/* done with old_entry */
-    assert(entry->store_status != STORE_ABORTED);
+    assert(!EBIT_TEST(entry->flags, ENTRY_ABORTED));
     if (recopy) {
 	storeClientCopy(entry,
 	    http->out.offset,
@@ -1174,7 +1174,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
     }
     assert(size > 0);
     mem = e->mem_obj;
-    assert(e->store_status != STORE_ABORTED);
+    assert(!EBIT_TEST(e->flags, ENTRY_ABORTED));
     if (mem->reply->sline.status == 0) {
 	/*
 	 * we don't have full reply headers yet; either wait for more or
@@ -1444,7 +1444,7 @@ clientSendMoreData(void *data, char *buf, ssize_t size)
 	debug(33, 1) ("clientSendMoreData: Deferring %s\n", storeUrl(entry));
 	memFree(buf, MEM_CLIENT_SOCK_BUF);
 	return;
-    } else if (entry && entry->store_status == STORE_ABORTED) {
+    } else if (entry && EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
 	/* call clientWriteComplete so the client socket gets closed */
 	clientWriteComplete(fd, NULL, 0, COMM_OK, http);
 	memFree(buf, MEM_CLIENT_SOCK_BUF);
@@ -1572,8 +1572,8 @@ clientKeepaliveNextRequest(clientHttpRequest * http)
 	    conn->fd);
 	assert(entry);
 	if (0 == storeClientCopyPending(entry, http)) {
-	    if (entry->store_status == STORE_ABORTED)
-		debug(33, 0) ("clientKeepaliveNextRequest: entry->swap_status == STORE_ABORTED\n");
+	    if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
+		debug(33, 0) ("clientKeepaliveNextRequest: ENTRY_ABORTED\n");
 	    storeClientCopy(entry,
 		http->out.offset,
 		http->out.offset,
@@ -1606,7 +1606,7 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
 	comm_close(fd);
     } else if (NULL == entry) {
 	comm_close(fd);		/* yuk */
-    } else if (entry->store_status == STORE_ABORTED) {
+    } else if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
 	comm_close(fd);
     } else if ((done = clientCheckTransferDone(http)) != 0 || size == 0) {
 	debug(33, 5) ("clientWriteComplete: FD %d transfer is DONE\n", fd);
@@ -1629,8 +1629,8 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, int errflag, void *da
     } else {
 	/* More data will be coming from primary server; register with 
 	 * storage manager. */
-	if (entry->store_status == STORE_ABORTED)
-	    debug(33, 0) ("clientWriteComplete 2: entry->swap_status == STORE_ABORTED\n");
+	if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
+	    debug(33, 0) ("clientWriteComplete 2: ENTRY_ABORTED\n");
 	storeClientCopy(entry,
 	    http->out.offset,
 	    http->out.offset,
@@ -2457,10 +2457,10 @@ clientCheckTransferDone(clientHttpRequest * http)
     if (http->flags.done_copying)
 	return 1;
     /*
-     * Handle STORE_OK and STORE_ABORTED objects.
+     * Handle STORE_OK objects.
      * objectLen(entry) will be set proprely.
      */
-    if (entry->store_status != STORE_PENDING) {
+    if (entry->store_status == STORE_OK) {
 	if (http->out.offset >= objectLen(entry))
 	    return 1;
 	else
@@ -2490,8 +2490,7 @@ clientCheckTransferDone(clientHttpRequest * http)
     /*
      * Figure out how much data we are supposed to send.
      * If we are sending a body and we don't have a content-length,
-     * then we must wait for the object to become STORE_OK or
-     * STORE_ABORTED.
+     * then we must wait for the object to become STORE_OK.
      */
     if (sending == SENDING_HDRSONLY)
 	sendlen = reply->hdr_sz;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.51 1999/01/08 22:07:54 wessels Exp $
+ * $Id: store_client.cc,v 1.52 1999/01/11 16:50:42 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -81,9 +81,9 @@ storeClientType(StoreEntry * e)
     MemObject *mem = e->mem_obj;
     if (mem->inmem_lo)
 	return STORE_DISK_CLIENT;
-    if (e->store_status == STORE_ABORTED) {
+    if (EBIT_TEST(e->flags, ENTRY_ABORTED)) {
 	/* I don't think we should be adding clients to aborted entries */
-	debug(20, 1) ("storeClientType: adding to STORE_ABORTED entry\n");
+	debug(20, 1) ("storeClientType: adding to ENTRY_ABORTED entry\n");
 	return STORE_MEM_CLIENT;
     }
     if (e->store_status == STORE_OK) {
@@ -156,7 +156,7 @@ storeClientCopy(StoreEntry * e,
     void *data)
 {
     store_client *sc;
-    assert(e->store_status != STORE_ABORTED);
+    assert(!EBIT_TEST(e->flags, ENTRY_ABORTED));
     debug(20, 3) ("storeClientCopy: %s, seen %d, want %d, size %d, cb %p, cbdata %p\n",
 	storeKeyText(e->key),
 	(int) seen_offset,
@@ -179,7 +179,7 @@ storeClientCopy(StoreEntry * e,
 /*
  * This function is used below to decide if we have any more data to
  * send to the client.  If the store_status is STORE_PENDING, then we
- * do have more data to send.  If its STORE_OK or STORE_ABORTED, then
+ * do have more data to send.  If its STORE_OK, then
  * we continue checking.  If the object length is negative, then we
  * don't know the real length and must open the swap file to find out.
  * If the length is >= 0, then we compare it to the requested copy
@@ -221,7 +221,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     debug(20, 3) ("storeClientCopy2: %s\n", storeKeyText(e->key));
     assert(callback != NULL);
     /*
-     * We used to check for STORE_ABORTED here.  But there were some
+     * We used to check for ENTRY_ABORTED here.  But there were some
      * problems.  For example, we might have a slow client (or two) and
      * the server-side is reading far ahead and swapping to disk.  Even
      * if the server-side aborts, we want to give the client(s)
@@ -530,11 +530,11 @@ CheckQuickAbort2(StoreEntry * entry)
     assert(mem);
     debug(20, 3) ("CheckQuickAbort2: entry=%p, mem=%p\n", entry, mem);
     if (mem->request && !mem->request->flags.cachable) {
-	debug(20, 3) ("CheckQuickAbort2: YES !mem->request->flags.cachable\n");
+	debug(20, 1) ("CheckQuickAbort2: YES !mem->request->flags.cachable\n");
 	return 1;
     }
     if (EBIT_TEST(entry->flags, KEY_PRIVATE)) {
-	debug(20, 3) ("CheckQuickAbort2: YES KEY_PRIVATE\n");
+	debug(20, 1) ("CheckQuickAbort2: YES KEY_PRIVATE\n");
 	return 1;
     }
     expectlen = mem->reply->content_length;
@@ -545,7 +545,7 @@ CheckQuickAbort2(StoreEntry * entry)
 	return 0;
     }
     if (curlen > expectlen) {
-	debug(20, 3) ("CheckQuickAbort2: YES bad content length\n");
+	debug(20, 1) ("CheckQuickAbort2: YES bad content length\n");
 	return 1;
     }
     if ((expectlen - curlen) < minlen) {
@@ -553,7 +553,7 @@ CheckQuickAbort2(StoreEntry * entry)
 	return 0;
     }
     if ((expectlen - curlen) > (Config.quickAbort.max << 10)) {
-	debug(20, 3) ("CheckQuickAbort2: YES too much left to go\n");
+	debug(20, 1) ("CheckQuickAbort2: YES too much left to go\n");
 	return 1;
     }
     if (expectlen < 100) {
@@ -564,7 +564,7 @@ CheckQuickAbort2(StoreEntry * entry)
 	debug(20, 3) ("CheckQuickAbort2: NO past point of no return\n");
 	return 0;
     }
-    debug(20, 3) ("CheckQuickAbort2: YES default, returning 1\n");
+    debug(20, 1) ("CheckQuickAbort2: YES default, returning 1\n");
     return 1;
 }
 

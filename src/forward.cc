@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.41 1999/01/08 21:12:10 wessels Exp $
+ * $Id: forward.cc,v 1.42 1999/01/11 16:50:31 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -423,7 +423,6 @@ fwdStart(int fd, StoreEntry * e, request_t * r, struct in_addr client_addr)
     fwdState->request = requestLink(r);
     fwdState->start = squid_curtime;
     storeLockObject(e);
-    storeRegisterAbort(e, fwdAbort, fwdState);
     peerSelect(r, e, fwdStartComplete, fwdState);
 }
 
@@ -457,17 +456,6 @@ fwdFail(FwdState * fwdState, int err_code, http_status http_code, int xerrno)
 }
 
 /*
- * Called when someone else calls StoreAbort() on this entry
- */
-void
-fwdAbort(void *data)
-{
-    FwdState *fwdState = data;
-    debug(17, 3) ("fwdAbort: %s\n", storeUrl(fwdState->entry));
-    fwdStateFree(fwdState);
-}
-
-/*
  * Frees fwdState without closing FD or generating an abort
  */
 void
@@ -475,6 +463,7 @@ fwdUnregister(int fd, FwdState * fwdState)
 {
     debug(17, 3) ("fwdUnregister: %s\n", storeUrl(fwdState->entry));
     assert(fd = fwdState->server_fd);
+    assert(fd > -1);
     comm_remove_close_handler(fd, fwdServerClosed, fwdState);
     fwdState->server_fd = -1;
 }

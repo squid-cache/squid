@@ -1,5 +1,5 @@
 /*
- * $Id: asn.cc,v 1.53 1999/01/07 22:13:35 wessels Exp $
+ * $Id: asn.cc,v 1.54 1999/01/11 16:50:27 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -221,7 +221,7 @@ asHandleReply(void *data, char *buf, ssize_t size)
     char *s;
     char *t;
     debug(53, 3) ("asHandleReply: Called with size=%d\n", size);
-    if (e->store_status == STORE_ABORTED) {
+    if (EBIT_TEST(e->flags, ENTRY_ABORTED)) {
 	memFree(buf, MEM_4K_BUF);
 	asStateFree(asState);
 	return;

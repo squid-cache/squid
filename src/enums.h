@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.140 1998/12/05 00:54:22 wessels Exp $
+ * $Id: enums.h,v 1.141 1999/01/11 16:50:30 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -339,8 +339,7 @@ enum {
 
 enum {
     STORE_OK,
-    STORE_PENDING,
-    STORE_ABORTED
+    STORE_PENDING
 };
 
 enum {
@@ -447,7 +446,8 @@ enum {
     ENTRY_FWD_HDR_WAIT,
     ENTRY_NEGCACHED,
     ENTRY_VALIDATED,
-    ENTRY_BAD_LENGTH
+    ENTRY_BAD_LENGTH,
+    ENTRY_ABORTED
 };
 
 typedef enum {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.40 1999/01/08 21:12:17 wessels Exp $
+ * $Id: store_swapout.cc,v 1.41 1999/01/11 16:50:43 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -141,7 +141,7 @@ storeCheckSwapOut(StoreEntry * e)
     debug(20, 7) ("storeCheckSwapOut: %s\n", storeUrl(e));
     debug(20, 7) ("storeCheckSwapOut: store_status = %s\n",
 	storeStatusStr[e->store_status]);
-    if (e->store_status == STORE_ABORTED) {
+    if (EBIT_TEST(e->flags, ENTRY_ABORTED)) {
 	assert(EBIT_TEST(e->flags, RELEASE_REQUEST));
 	storeSwapOutFileClose(e);
 	return;
