@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.356 2002/10/27 14:13:35 adrian Exp $
+ * $Id: comm.cc,v 1.357 2002/10/27 14:15:49 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -595,6 +595,10 @@ comm_read_cancel(int fd, IOCB *callback, void *data)
 }
 
 
+/*
+ * Open a filedescriptor, set some sane defaults
+ * + accept() poll time is 250ms
+ */
 void
 fdc_open(int fd, unsigned int type, char *desc)
 {
@@ -602,6 +606,7 @@ fdc_open(int fd, unsigned int type, char *desc)
 
 	fdc_table[fd].active = 1;
 	fdc_table[fd].fd = fd;
+	comm_accept_setcheckperiod(fd, 250);
 	fd_open(fd, type, desc);
 }
 
