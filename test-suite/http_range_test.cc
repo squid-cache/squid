@@ -1,6 +1,6 @@
 
 /*
- * $Id: http_range_test.cc,v 1.6 2003/05/21 02:58:10 robertc Exp $
+ * $Id: http_range_test.cc,v 1.7 2003/07/08 23:10:59 hno Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -111,12 +111,6 @@ ACLChecklist::operator delete (void *address)
 }
 
 ACLChecklist::~ACLChecklist(){}
-
-SQUIDCEXTERN void fatal (char const *msg)
-{
-    printf ("%s\n",msg);
-    exit (1);
-}
 
 SQUIDCEXTERN ACLChecklist *aclChecklistCreate(const acl_access *,
         request_t *,

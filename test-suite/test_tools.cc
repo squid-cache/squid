@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_tools.cc,v 1.3 2003/07/08 23:01:47 robertc Exp $
+ * $Id: test_tools.cc,v 1.4 2003/07/08 23:10:59 hno Exp $
  *
  * AUTHOR: Robert Collins
  *
@@ -44,7 +44,6 @@ xassert(const char *msg, const char *file, int line)
     std::cout << "Assertion failed: (" << msg << ") at " << file << ":" << line << std::endl;
     exit (1);
 }
-time_t squid_curtime = 0;
 
 int Debug::Levels[MAX_DEBUG_SECTIONS];
 int Debug::level;
