@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.135 1998/05/30 19:43:07 rousskov Exp $
+ * $Id: errorpage.cc,v 1.136 1998/06/02 04:18:19 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -372,8 +372,8 @@ errorConvert(char token, ErrorState * err)
 {
     request_t *r = err->request;
     static MemBuf mb = MemBufNULL;
-    const char *p = NULL; /* takes priority over mb if set */
-    
+    const char *p = NULL;	/* takes priority over mb if set */
+
     memBufReset(&mb);
     switch (token) {
     case 'B':
@@ -503,7 +503,7 @@ errorConvert(char token, ErrorState * err)
 	break;
     }
     if (!p)
-	p = mb.buf; /* do not use mb after this assignment! */
+	p = mb.buf;		/* do not use mb after this assignment! */
     assert(p);
     debug(4, 3) ("errorConvert: %%%c --> '%s'\n", token, p);
     return p;

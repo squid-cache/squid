@@ -1,6 +1,7 @@
 
 
 
+
 struct _acl_ip_data {
     struct in_addr addr1;	/* if addr2 non-zero then its a range */
     struct in_addr addr2;
@@ -556,8 +557,8 @@ struct _HttpHeader {
     /* protected, do not use these, use interface functions instead */
     Array entries;		/* parsed fields in raw format */
     HttpHeaderMask mask;	/* bit set <=> entry present */
-    http_hdr_owner_type owner;  /* request or reply */
-    int len;                    /* length when packed, not counting terminating '\0' */
+    http_hdr_owner_type owner;	/* request or reply */
+    int len;			/* length when packed, not counting terminating '\0' */
 };
 
 struct _HttpReply {
@@ -669,7 +670,7 @@ struct _clientHttpRequest {
 	off_t offset;
 	size_t size;
     } out;
-    size_t req_sz;              /* raw request size on input, not current request size */
+    size_t req_sz;		/* raw request size on input, not current request size */
     StoreEntry *entry;
     StoreEntry *old_entry;
     log_type log_type;

@@ -1,5 +1,5 @@
 /*
- * $Id: MemBuf.cc,v 1.12 1998/05/30 19:42:59 rousskov Exp $
+ * $Id: MemBuf.cc,v 1.13 1998/06/02 04:18:14 wessels Exp $
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov
@@ -154,12 +154,12 @@ memBufReset(MemBuf * mb)
 {
     assert(mb);
 
-    if (!mb->buf && !mb->max_capacity && !mb->capacity && !mb->size) { 
+    if (!mb->buf && !mb->max_capacity && !mb->capacity && !mb->size) {
 	/* Null */
 	memBufDefInit(mb);
     } else {
 	assert(mb->buf);
-	assert(mb->freefunc); /* not frozen */
+	assert(mb->freefunc);	/* not frozen */
 	/* reset */
 	memset(mb->buf, 0, mb->capacity);
 	mb->size = 0;
@@ -233,7 +233,7 @@ memBufVPrintf(MemBuf * mb, const char *fmt, va_list vargs)
     /* on Linux and FreeBSD, '\0' is not counted in return value */
     /* on XXX it might be counted */
     /* check that '\0' is appended and not counted */
-    if (!mb->size || mb->buf[mb->size-1])
+    if (!mb->size || mb->buf[mb->size - 1])
 	assert(!mb->buf[mb->size]);
     else
 	mb->size--;
@@ -281,7 +281,7 @@ memBufGrow(MemBuf * mb, mb_size_t min_cap)
     if (new_cap > mb->max_capacity)
 	new_cap = mb->max_capacity;
 
-    assert(new_cap <= mb->max_capacity);/* no overflow */
+    assert(new_cap <= mb->max_capacity);	/* no overflow */
     assert(new_cap > mb->capacity);	/* progress */
 
     old_mb = *mb;
@@ -317,7 +317,7 @@ memBufGrow(MemBuf * mb, mb_size_t min_cap)
     /* copy and free old buffer if needed */
     if (old_mb.buf && old_mb.freefunc) {
 	memcpy(mb->buf, old_mb.buf, old_mb.size);
-	(*old_mb.freefunc)(old_mb.buf);
+	(*old_mb.freefunc) (old_mb.buf);
     } else {
 	assert(!old_mb.buf && !old_mb.freefunc);
     }

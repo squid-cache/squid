@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.5 1998/05/27 22:51:45 rousskov Exp $
+ * $Id: HttpRequest.cc,v 1.6 1998/06/02 04:18:14 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -94,7 +94,7 @@ httpRequestParseHeader(request_t * req, const char *parse_start)
 
 /* swaps out request-line and headers, appends <crlf> terminator */
 void
-httpRequestSwapOut(const request_t *req, StoreEntry *e)
+httpRequestSwapOut(const request_t * req, StoreEntry * e)
 {
     assert(req && e);
     /* store request-line */
@@ -113,7 +113,7 @@ httpRequestSwapOut(const request_t *req, StoreEntry *e)
 
 #if UNUSED_CODE
 void
-httpRequestSetHeaders(request_t *req, method_t method, const char *uri, const char *header_str)
+httpRequestSetHeaders(request_t * req, method_t method, const char *uri, const char *header_str)
 {
 #if OLD_CODE
     MemBuf mb;
@@ -132,16 +132,17 @@ httpRequestSetHeaders(request_t *req, method_t method, const char *uri, const ch
 #endif
     httpHeaderParse(&req->header, header_str, header_str + strlen(header_str));
 }
+
 #endif
 
 /* returns the length of request line + headers + crlf */
 int
-httpRequestPrefixLen(const request_t *req)
+httpRequestPrefixLen(const request_t * req)
 {
     assert(req);
     return strlen(RequestMethodStr[req->method]) + 1 +
 	strLen(req->urlpath) + 1 +
-	4+1+3 + 2 +
+	4 + 1 + 3 + 2 +
 	req->header.len + 2;
 }
 

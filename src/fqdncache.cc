@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: fqdncache.cc,v 1.104 1998/05/24 03:41:08 wessels Exp $
+ * $Id: fqdncache.cc,v 1.105 1998/06/02 04:18:20 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -881,7 +881,7 @@ snmp_fqdncacheFn(variable_list * Var, snint * ErrP)
     while (cnt--) {
 	fq = (fqdncache_entry *) hash_next(fqdn_table);
 	if (NULL == fq)
-		break;
+	    break;
     }
     if (fq == NULL || cnt != 0) {
 	*ErrP = SNMP_ERR_NOSUCHNAME;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.283 1998/05/30 19:43:02 rousskov Exp $
+ * $Id: cache_cf.cc,v 1.284 1998/06/02 04:18:16 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -116,7 +116,7 @@ wordlistAdd(wordlist ** list, const char *key)
 }
 
 void
-wordlistCat(const wordlist * w, MemBuf *mb)
+wordlistCat(const wordlist * w, MemBuf * mb)
 {
     while (NULL != w) {
 	memBufPrintf(mb, "%s\n", w->key);

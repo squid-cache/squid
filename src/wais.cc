@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.108 1998/05/27 22:52:04 rousskov Exp $
+ * $Id: wais.cc,v 1.109 1998/06/02 04:18:29 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -265,7 +265,7 @@ static void
 waisSendRequest(int fd, void *data)
 {
     WaisStateData *waisState = data;
-#if OLD_CODE    
+#if OLD_CODE
     int len = strlen(waisState->request) + 4;
     char *buf = NULL;
 #else
