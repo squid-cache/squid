@@ -76,6 +76,7 @@ extern void clientdbInit(void);
 extern void clientdbUpdate(struct in_addr, log_type, protocol_t);
 extern int clientdbCutoffDenied(struct in_addr);
 extern void clientdbDump(StoreEntry *);
+extern void clientdbFreeMemory(void);
 
 extern void clientAccessCheck(void *);
 extern void clientAccessCheckDone(int, void *);
@@ -840,7 +841,6 @@ extern int pconnPop(const char *host, u_short port);
 extern void pconnInit(void);
 
 extern int asnMatchIp(void *, struct in_addr);
-extern void asnCleanup(void);
 extern void asnAclInitialize(acl *);
 extern void asnInit(void);
 extern void asnFreeMemory(void);
