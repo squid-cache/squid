@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.149 1999/04/26 20:44:07 glenn Exp $
+# $Id: cf.data.pre,v 1.150 1999/04/30 18:06:34 wessels Exp $
 #
 #
 # SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -2455,7 +2455,7 @@ DOC_START
 	snmp_access allow|deny [!]aclname ...
 
 Example:
-snmp_access allow public localhost
+snmp_access allow snmpppublic localhost
 snmp_access deny all
 DOC_END
 
