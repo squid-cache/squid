@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.28 1996/04/05 01:01:52 wessels Exp $ */
+/* $Id: http.cc,v 1.29 1996/04/05 16:57:26 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -182,7 +182,7 @@ static void httpProcessReplyHeader(data, buf, size)
 	strncat(data->reply_hdr, buf, room < size ? room : size);
 	hdr_len += room < size ? room : size;
 	if (hdr_len > 4 && strncmp(data->reply_hdr, "HTTP/", 5)) {
-	    debug(11, 1, "httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", entry->key);
+	    debug(11, 3, "httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", entry->key);
 	    data->reply_hdr_state += 2;
 	    return;
 	}
