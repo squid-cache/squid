@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_core.cc,v 1.20 1998/12/02 05:49:24 glenn Exp $
+ * $Id: snmp_core.cc,v 1.21 1998/12/02 05:51:00 wessels Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -594,17 +594,13 @@ snmpConstructReponse(snmp_request_t * rq, struct snmp_session *Session)
 {
     struct snmp_pdu *RespPDU;
     int ret;
-
     debug(49, 5) ("snmpConstructReponse: Called.\n");
-
     Session->community = rq->community;
     Session->community_len = strlen((char *) rq->community);
-
     RespPDU = snmpAgentResponse(rq->PDU);
     snmp_free_pdu(rq->PDU);
     xfree(Session);
-    if (RespPDU == NULL) {
-    } else {
+    if (RespPDU != NULL) {
 	ret = snmp_build(Session, RespPDU, rq->outbuf, &rq->outlen);
 	snmpUdpSend(rq->sock, &rq->from, rq->outbuf, rq->outlen);
 	snmp_free_pdu(RespPDU);
