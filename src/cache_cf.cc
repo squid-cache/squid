@@ -1,4 +1,4 @@
-/* $Id: cache_cf.cc,v 1.23 1996/04/08 18:28:54 wessels Exp $ */
+/* $Id: cache_cf.cc,v 1.24 1996/04/08 18:39:21 wessels Exp $ */
 
 /* DEBUG: Section 3             cache_cf: Configuration file parsing */
 
@@ -138,16 +138,18 @@ stoplist *local_domain_list = NULL;
 stoplist *inside_firewall_list = NULL;
 
  /* default CONNECT ports */
- intlist snews = {
-       563,
-       NULL,
- };
- intlist https = {
-       443,
-       &snews,
- };
- intlist *connect_port_list = &https;
- 
+intlist snews =
+{
+    563,
+    NULL,
+};
+intlist https =
+{
+    443,
+    &snews,
+};
+intlist *connect_port_list = &https;
+
 
 
 ip_acl *proxy_ip_acl = NULL;
@@ -421,26 +423,26 @@ void addToStopList(list, key)
 }
 
 static void addToIntList(list, str)
-      intlist **list;
-      char *str;
- {
-     intlist *p, *q;
- 
-     if (!(*list)) {
-       /* empty list */
-       *list = (intlist *) xcalloc(1, sizeof(intlist));
-       (*list)->i = atoi(str);
-       (*list)->next = NULL;
-     } else {
-       p = *list;
-       while (p->next)
-           p = p->next;
-       q = (intlist *) xcalloc(1, sizeof(intlist));
-       q->i = atoi(str);
-       q->next = NULL;
-       p->next = q;
-     }
- }
+     intlist **list;
+     char *str;
+{
+    intlist *p, *q;
+
+    if (!(*list)) {
+	/* empty list */
+	*list = (intlist *) xcalloc(1, sizeof(intlist));
+	(*list)->i = atoi(str);
+	(*list)->next = NULL;
+    } else {
+	p = *list;
+	while (p->next)
+	    p = p->next;
+	q = (intlist *) xcalloc(1, sizeof(intlist));
+	q->i = atoi(str);
+	q->next = NULL;
+	p->next = q;
+    }
+}
 
 
 /* Use this #define in all the parse*() functions.  Assumes 
@@ -1164,20 +1166,20 @@ static void parseFtpUserLine(line_in)
     Config.ftpUser = xstrdup(token);
 }
 
- static void parseConnectPortsLine(line_in)
-      char *line_in;
- {
-     char *token;
-     static char origPortList = 1;
- 
-     if (origPortList) {
-       connect_port_list = NULL;
-       origPortList = 0;
-     }
-     while ((token = strtok(NULL, w_space))) {
-       addToIntList(&connect_port_list, token);
-     }
- }
+static void parseConnectPortsLine(line_in)
+     char *line_in;
+{
+    char *token;
+    static char origPortList = 1;
+
+    if (origPortList) {
+	connect_port_list = NULL;
+	origPortList = 0;
+    }
+    while ((token = strtok(NULL, w_space))) {
+	addToIntList(&connect_port_list, token);
+    }
+}
 
 
 int parseConfigFile(file_name)
@@ -1448,6 +1450,9 @@ int parseConfigFile(file_name)
 
 	else if (!strcmp(token, "ftp_user"))
 	    parseFtpUserLine(line_in);
+
+	else if (!strcmp(token, "connect_ports"))
+	    parseConnectPortsLine(line_in);
 
 	/* If unknown, treat as a comment line */
 	else {
