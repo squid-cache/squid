@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.68 2000/05/29 23:36:23 hno Exp $
+ * $Id: store_swapout.cc,v 1.69 2000/05/31 04:26:32 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -102,7 +102,7 @@ storeSwapOut(StoreEntry * e)
     off_t lowest_offset;
     off_t new_mem_lo;
     off_t on_disk = 0;
-    size_t swapout_size;
+    ssize_t swapout_size;
     ssize_t swap_buf_len;
     if (mem == NULL)
 	return;
@@ -132,7 +132,7 @@ storeSwapOut(StoreEntry * e)
      * Grab the swapout_size and check to see whether we're going to defer
      * the swapout based upon size
      */
-    swapout_size = (size_t) (mem->inmem_hi - mem->swapout.queue_offset);
+    swapout_size = (ssize_t) (mem->inmem_hi - mem->swapout.queue_offset);
     if ((e->store_status != STORE_OK) && (swapout_size < store_maxobjsize)) {
 	debug(20, 5) ("storeSwapOut: Deferring starting swapping out\n");
 	return;
@@ -247,7 +247,7 @@ storeSwapOut(StoreEntry * e)
 	/* the storeWrite() call might generate an error */
 	if (e->swap_status != SWAPOUT_WRITING)
 	    break;
-	swapout_size = (size_t) (mem->inmem_hi - mem->swapout.queue_offset);
+	swapout_size = (ssize_t) (mem->inmem_hi - mem->swapout.queue_offset);
 	if (e->store_status == STORE_PENDING)
 	    if (swapout_size < SM_PAGE_SIZE)
 		break;
