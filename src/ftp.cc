@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.118 1997/06/02 19:56:01 wessels Exp $
+ * $Id: ftp.cc,v 1.119 1997/06/02 19:56:44 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -561,7 +561,7 @@ ftpParseListing(FtpStateData * ftpState, int len)
 	end--;
     usable = end - buf;
     if (usable == 0) {
-	debug(9, 1, "ftpParseListing: didn't find end for %s\n", e->url);
+	debug(9, 3, "ftpParseListing: didn't find end for %s\n", e->url);
 	return;
     }
     line = get_free_4k_page();
