@@ -1,5 +1,5 @@
 
-/* $Id: comm.cc,v 1.23 1996/04/12 21:22:54 wessels Exp $ */
+/* $Id: comm.cc,v 1.24 1996/04/15 22:50:55 wessels Exp $ */
 
 /* DEBUG: Section 5             comm: socket level functions */
 
@@ -526,7 +526,6 @@ int comm_select(sec, failtime)
 	if (!fdstat_are_n_free_fd(RESERVED_FD)) {
 	    FD_CLR(theAsciiConnection, &readfds);
 	}
-	debug(5, 5, "comm_select: nfds = %d\n", nfds);
 	if (nfds == 0)
 	    return COMM_SHUTDOWN;
 	while (1) {

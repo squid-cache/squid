@@ -1,4 +1,4 @@
-/* $Id: disk.cc,v 1.9 1996/04/05 17:48:28 wessels Exp $ */
+/* $Id: disk.cc,v 1.10 1996/04/15 22:51:38 wessels Exp $ */
 
 /* DEBUG: Section 6             disk: disk I/O routines */
 
@@ -406,7 +406,7 @@ int file_write(fd, ptr_to_buf, len, access_code, handle, handle_data)
     }
     if ((file_table[fd].write_lock == LOCK) &&
 	(file_table[fd].access_code != access_code)) {
-	debug(6, 0, "file write: access code checked failed. Sync problem.\n");
+	debug(6, 0, "file write: FD %d access code checked failed.\n", fd);
 	return DISK_WRT_WRONG_CODE;
     }
     /* if we got here. Caller is eligible to write. */
