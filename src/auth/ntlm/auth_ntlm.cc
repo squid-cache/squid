@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.38 2003/10/15 12:03:08 robertc Exp $
+ * $Id: auth_ntlm.cc,v 1.39 2004/04/08 00:48:29 hno Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -769,7 +769,7 @@ authenticateNTLMStart(auth_user_request_t * auth_user_request, RH * handler, voi
     assert(ntlm_request);
     assert(handler);
     assert(data);
-    assert(auth_user->auth_type = AUTH_NTLM);
+    assert(auth_user->auth_type == AUTH_NTLM);
     debug(29, 9) ("authenticateNTLMStart: auth state '%d'\n", ntlm_request->auth_state);
 
     switch (ntlm_request->auth_state) {
