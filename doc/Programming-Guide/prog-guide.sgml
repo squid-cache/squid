@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Duane Wessels, Squid Developers
-<date>$Id: prog-guide.sgml,v 1.39 2001/04/27 23:42:05 wessels Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.40 2001/05/08 15:24:34 hno Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -990,15 +990,16 @@ Squid consists of the following major components
 	<P>
 <verb>
 	typedef void
-	STDUMP(StoreEntry *e, const char *path, SwapDir *SD);
+	STDUMP(StoreEntry *e, SwapDir *SD);
 </verb>
 
 	<P>
-	Dump the configuration of the current <em/SwapDir/ to the given
-	<em/StoreEntry/.  Used to grab a configuration file dump from th
-	<em/cachemgr/ interface. 'const char *' refers to the path of the
-	given <em/Swapdir/, and is redundant.
+	Dump the FS specific configuration data of the current <em/SwapDir/
+	to the given <em/StoreEntry/.  Used to grab a configuration file dump
+	from th <em/cachemgr/ interface.
 
+	Note: The printed options should start with a space character to
+	separate them from the cache_dir path.
 
 <sect2>freefs
 

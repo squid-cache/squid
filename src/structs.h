@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.389 2001/05/04 13:37:42 hno Exp $
+ * $Id: structs.h,v 1.390 2001/05/08 15:24:35 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2110,4 +2110,5 @@ struct _Logfile {
 struct cache_dir_option {
     char *name;
     void (*parse) (SwapDir * sd, const char *option, const char *value, int reconfiguring);
+    void (*dump) (StoreEntry * e, const char *option, SwapDir * sd);
 };

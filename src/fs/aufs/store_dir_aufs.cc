@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_aufs.cc,v 1.34 2001/03/17 13:31:16 hno Exp $
+ * $Id: store_dir_aufs.cc,v 1.35 2001/05/08 15:24:36 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1493,8 +1493,8 @@ storeAufsDirStats(SwapDir * SD, StoreEntry * sentry)
 static struct cache_dir_option options[] =
 {
 #if NOT_YET_DONE
-    {"L1", storeAufsDirParseL1},
-    {"L2", storeAufsDirParseL2},
+    {"L1", storeAufsDirParseL1, storeAufsDirDumpL1},
+    {"L2", storeAufsDirParseL2, storeAufsDirDumpL2},
 #endif
     {NULL, NULL}
 };
@@ -1540,16 +1540,14 @@ storeAufsDirReconfigure(SwapDir * sd, int index, char *path)
 }
 
 void
-storeAufsDirDump(StoreEntry * entry, const char *name, SwapDir * s)
+storeAufsDirDump(StoreEntry * entry, SwapDir * s)
 {
     aioinfo_t *aioinfo = (aioinfo_t *) s->fsdata;
-    storeAppendPrintf(entry, "%s %s %s %d %d %d\n",
-	name,
-	"aufs",
-	s->path,
+    storeAppendPrintf(entry, " %d %d %d",
 	s->max_size >> 10,
 	aioinfo->l1,
 	aioinfo->l2);
+    dump_cachedir_options(entry, options, s);
 }
 
 /*

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.380 2001/05/04 13:37:41 hno Exp $
+ * $Id: cache_cf.cc,v 1.381 2001/05/08 15:24:35 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -55,6 +55,7 @@ static const char *const B_MBYTES_STR = "MB";
 static const char *const B_GBYTES_STR = "GB";
 
 static const char *const list_sep = ", \t\n\r";
+static struct cache_dir_option common_cachedir_options[];
 
 static void update_maxobjsize(void);
 static void configDoConfigure(void);
@@ -888,6 +889,16 @@ free_http_header_replace(header_mangler header[])
     }
 }
 
+void
+dump_cachedir_options(StoreEntry * entry, struct cache_dir_option *options, SwapDir * sd)
+{
+    struct cache_dir_option *option;
+    if (!options)
+	return;
+    for (option = options; option->name; option++)
+	option->dump(entry, option->name, sd);
+}
+
 static void
 dump_cachedir(StoreEntry * entry, const char *name, cacheSwap swap)
 {
@@ -895,7 +906,11 @@ dump_cachedir(StoreEntry * entry, const char *name, cacheSwap swap)
     int i;
     for (i = 0; i < swap.n_configured; i++) {
 	s = swap.swapDirs + i;
-	s->dump(entry, name, s);
+	storeAppendPrintf(entry, "%s %s %s", name, s->type, s->path);
+	if (s->dump)
+	    s->dump(entry, s);
+	dump_cachedir_options(entry, common_cachedir_options, s);
+	storeAppendPrintf(entry, "\n");
     }
 }
 
@@ -1099,6 +1114,13 @@ parse_cachedir_option_readonly(SwapDir * sd, const char *option, const char *val
 }
 
 static void
+dump_cachedir_option_readonly(StoreEntry * e, const char *option, SwapDir * sd)
+{
+    if (sd->flags.read_only)
+	storeAppendPrintf(e, " %s", option);
+}
+
+static void
 parse_cachedir_option_maxsize(SwapDir * sd, const char *option, const char *value, int reconfiguring)
 {
     ssize_t size;
@@ -1114,10 +1136,17 @@ parse_cachedir_option_maxsize(SwapDir * sd, const char *option, const char *valu
     sd->max_objsize = size;
 }
 
+static void
+dump_cachedir_option_maxsize(StoreEntry * e, const char *option, SwapDir * sd)
+{
+    if (sd->max_objsize != -1)
+	storeAppendPrintf(e, " %s=%d", option, sd->max_objsize);
+}
+
 static struct cache_dir_option common_cachedir_options[] =
 {
-    {"read-only", parse_cachedir_option_readonly},
-    {"max-size", parse_cachedir_option_maxsize},
+    {"read-only", parse_cachedir_option_readonly, dump_cachedir_option_readonly},
+    {"max-size", parse_cachedir_option_maxsize, dump_cachedir_option_maxsize},
     {NULL, NULL}
 };
 
