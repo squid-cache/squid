@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.19 2002/04/04 23:59:27 hno Exp $
+ * $Id: auth_ntlm.cc,v 1.20 2002/04/06 08:49:39 adrian Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -109,18 +109,15 @@ authNTLMDone(void)
     ntlmauthenticators = NULL;
     if (ntlm_helper_state_pool) {
 	assert(memPoolInUseCount(ntlm_helper_state_pool) == 0);
-	memPoolDestroy(ntlm_helper_state_pool);
-	ntlm_helper_state_pool = NULL;
+	memPoolDestroy(&ntlm_helper_state_pool);
     }
     if (ntlm_request_pool) {
 	assert(memPoolInUseCount(ntlm_request_pool) == 0);
-	memPoolDestroy(ntlm_request_pool);
-	ntlm_request_pool = NULL;
+	memPoolDestroy(&ntlm_request_pool);
     }
     if (ntlm_user_pool) {
 	assert(memPoolInUseCount(ntlm_user_pool) == 0);
-	memPoolDestroy(ntlm_user_pool);
-	ntlm_user_pool = NULL;
+	memPoolDestroy(&ntlm_user_pool);
     }
     debug(29, 2) ("authNTLMDone: NTLM authentication Shutdown.\n");
 }

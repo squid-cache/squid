@@ -1,5 +1,8 @@
 /*
- * $Id: splay.c,v 1.12 1999/10/04 05:04:52 wessels Exp $
+ * $Id: splay.c,v 1.13 2002/04/06 08:49:26 adrian Exp $
+ *
+ * based on ftp://ftp.cs.cmu.edu/user/sleator/splaying/top-down-splay.c
+ * http://bobo.link.cs.cmu.edu/cgi-bin/splay/splay-cgi.pl
  */
 
 #include "config.h"
@@ -97,6 +100,26 @@ splay_splay(const void *data, splayNode * top, SPLAYCMP * compare)
     top->left = N.right;
     top->right = N.left;
     return top;
+}
+
+splayNode *
+splay_delete(const void *data, splayNode * top, SPLAYCMP * compare)
+{
+    splayNode *x;
+    if (top == NULL)
+        return NULL;
+    top = splay_splay(data, top, compare);
+    if (splayLastResult == 0) {		/* found it */
+	if (top->left == NULL) {
+	    x = top->right;
+	} else {
+	    x = splay_splay(data, top->left, compare);
+	    x->right = top->right;
+	}
+	xfree(top);
+	return x;
+    }
+    return top;				/* It wasn't there */
 }
 
 void

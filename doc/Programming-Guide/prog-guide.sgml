@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Squid Developers</author>
-<date>$Id: prog-guide.sgml,v 1.47 2002/01/13 01:04:49 robertc Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.48 2002/04/06 08:49:22 adrian Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -3084,5 +3084,263 @@ access.  Pointers that haven't been accessed for a long time are
 candidates for leaks.  The filename and line numbers tell you where
 that pointer was last accessed.  If there is a leak, then the bug
 occurs somewhere after that point of the code.
+
+<sect>MemPools
+
+<p>
+MemPools are a pooled memory allocator running on top of malloc(). It's
+purpose is to reduce memory fragmentation and provide detailed statistics
+on memory consumption.
+
+<p>
+Preferably all memory allocations in Squid should be done using MemPools
+or one of the types built on top of it (i.e. cbdata).
+
+<p>
+Note: Usually it is better to use cbdata types as these gives you additional
+safeguards in references and typechecking. However, for high usage pools where
+the cbdata functionality of cbdata is not required directly using a MemPool
+might be the way to go.
+
+<sect1>Public API
+
+<p>
+This defines the public API definitions
+
+<sect2>createMemPool
+
+<p>
+<verb>
+	MemPool * pool = memPoolCreate(char *name, size_t element_size);
+</verb>
+
+	<p>
+	Creates a MemPool of elements with the given size.
+
+<sect2>memPoolAlloc
+
+<p>
+<verb>
+	type * data = memPoolAlloc(pool);
+</verb>
+
+	<p>
+	Allocate one element from the pool
+
+<sect2>memPoolFree
+
+<p>
+<verb>
+	memPoolFree(pool, data);
+</verb>
+
+	<p>
+	Free a element allocated by memPoolAlloc();
+
+<sect2>memPoolDestroy
+
+<p>
+<verb>
+	memPoolDestroy(&amp;pool);
+</verb>
+
+	<p>
+	Destroys a memory pool created by memPoolCreate() and reset pool to NULL.
+
+	<p>
+	Typical usage could be:
+<verb>
+	...
+	myStructType *myStruct;
+	MemPool * myType_pool = memPoolCreate("This is cute pool", sizeof(myStructType));
+	myStruct = memPoolAlloc(myType_pool);
+	myStruct->item = xxx;
+	   ...
+	memPoolFree(myStruct, myType_pool);
+	memPoolDestroy(&amp;myType_pool)
+</verb>
+
+<sect2>memPoolIterate
+
+<p>
+<verb>
+	MemPoolIterator * iter = memPoolIterate(void);
+</verb>
+
+	<p>
+	Initialise iteration through all of the pools.
+
+<sect2>memPoolIterateNext
+
+<p>
+<verb>
+	MemPool * pool = memPoolIterateNext(MemPoolIterator * iter);
+</verb>
+
+	<p>
+	Get next pool pointer, until getting NULL pointer.
+
+	<P>
+<verb>
+	MemPoolIterator *iter;
+	iter = memPoolIterate();
+	while ( (pool = memPoolIterateNext(iter)) ) {
+	    ... handle(pool);
+	}
+	memPoolIterateDone(&amp;iter);
+</verb>
+
+<sect2>memPoolIterateDone
+
+<p>
+<verb>
+	memPoolIterateDone(MemPoolIterator ** iter);
+</verb>
+
+	<p>
+	Should be called after finished with iterating through all pools.
+
+<sect2>memPoolSetChunkSize
+
+<p>
+<verb>
+	memPoolSetChunkSize(MemPool * pool, size_t chunksize);
+</verb>
+
+	<p>
+	Allows you tune chunk size of pooling. Objects are allocated in chunks
+	instead of individually. This conserves memory, reduces fragmentation.
+	Because of that memory can be freed also only in chunks. Therefore
+	there is tradeoff between memory conservation due to chunking and free
+	memory fragmentation.
+	As a general guideline, increase chunk size only for pools that keep very
+	many items for relatively long time. 
+
+<sect2>memPoolSetIdleLimit
+
+<p>
+<verb>
+	memPoolSetIdleLimit(size_t new_idle_limit);
+</verb>
+
+	<p>
+	Sets upper limit in bytes to amount of free ram kept in pools. This is
+	not strict upper limit, but a hint. When MemPools are over this limit,
+	totally free chunks are immediately considered for release. Otherwise
+	only chunks that have not been referenced for a long time are checked.
+
+<sect2>memPoolGetStats
+
+<p>
+<verb>
+	int inuse = memPoolGetStats(MemPoolStats * stats, MemPool * pool);
+</verb>
+
+	<p>
+	Fills MemPoolStats struct with statistical data about pool. As a
+	return value returns number of objects in use, ie. allocated.
+	<p>
+<verb>
+	struct _MemPoolStats {
+	    MemPool *pool;
+	    const char *label;
+	    MemPoolMeter *meter;
+	    int obj_size;
+	    int chunk_capacity;
+	    int chunk_size;
+
+	    int chunks_alloc;
+	    int chunks_inuse;
+	    int chunks_partial;
+	    int chunks_free;
+
+	    int items_alloc;
+	    int items_inuse;
+	    int items_idle;
+
+	    int overhead;
+	};
+
+	/* object to track per-pool cumulative counters */
+	typedef struct {
+	    double count;
+	    double bytes;
+	} mgb_t;
+
+	/* object to track per-pool memory usage (alloc = inuse+idle) */
+	struct _MemPoolMeter {
+	    MemMeter alloc;
+	    MemMeter inuse;
+	    MemMeter idle;
+	    mgb_t gb_saved;             /* account Allocations */
+	    mgb_t gb_osaved;            /* history Allocations */
+	    mgb_t gb_freed;             /* account Free calls */
+	};
+</verb>
+
+<sect2>memPoolGetGlobalStats
+
+<p>
+<verb>
+	int pools_inuse = memPoolGetGlobalStats(MemPoolGlobalStats * stats);
+</verb>
+
+	<p>
+	Fills MemPoolGlobalStats struct with statistical data about overall
+	usage for all pools. As a return value returns number of pools that
+	have at least one object in use. Ie. number of dirty pools.
+	<p>
+<verb>
+	struct _MemPoolGlobalStats {
+	    MemPoolMeter *TheMeter;
+
+	    int tot_pools_alloc;
+	    int tot_pools_inuse;
+	    int tot_pools_mempid;
+
+	    int tot_chunks_alloc;
+	    int tot_chunks_inuse;
+	    int tot_chunks_partial;
+	    int tot_chunks_free;
+
+	    int tot_items_alloc;
+	    int tot_items_inuse;
+	    int tot_items_idle;
+
+	    int tot_overhead;
+	    int mem_idle_limit;
+	};
+</verb>
+
+<sect2>memPoolClean
+
+<p>
+<verb>
+	memPoolClean(time_t maxage);
+</verb>
+
+<p>
+	Main cleanup handler. For MemPools to stay within upper idle limits,
+	this function needs to be called periodically, preferrably at some
+ 	constant rate, eg. from Squid event. It looks through all pools and
+	chunks, cleans up internal states and checks for releasable chunks.
+<p>
+	Between the calls to this function objects are placed onto internal
+	cache instead of returning to their home chunks, mainly for speedup	
+	purpose. During that time state of chunk is not known, it is not
+	known whether chunk is free or in use. This call returns all objects
+	to their chunks and restores consistency.
+<p>
+	Should be called relatively often, as it sorts chunks in suitable
+	order as to reduce free memory fragmentation and increase chunk
+	utilisation.
+<p>
+	Parameter maxage instructs to release all totally idle chunks that
+	have not been referenced for maxage seconds.
+<p>
+	Suitable frequency for cleanup is in range of few tens of seconds to
+	few minutes, depending of memory activity.
+	Several functions above call memPoolClean internally to operate on
+	consistent states.
 
 </article>

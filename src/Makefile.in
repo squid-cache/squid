@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.231 2002/02/26 15:48:13 adrian Exp $
+#  $Id: Makefile.in,v 1.232 2002/04/06 08:49:27 adrian Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -256,7 +256,6 @@ squid_SOURCES = \
 	logfile.c \
 	main.c \
 	mem.c \
-	MemPool.c \
 	MemBuf.c \
 	mime.c \
 	multicast.c \
@@ -473,13 +472,12 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) asn.$(OBJEXT) \
 	HttpRequest.$(OBJEXT) icmp.$(OBJEXT) icp_v2.$(OBJEXT) \
 	icp_v3.$(OBJEXT) ident.$(OBJEXT) internal.$(OBJEXT) \
 	ipc.$(OBJEXT) ipcache.$(OBJEXT) $(am__objects_6) \
-	logfile.$(OBJEXT) main.$(OBJEXT) mem.$(OBJEXT) \
-	MemPool.$(OBJEXT) MemBuf.$(OBJEXT) mime.$(OBJEXT) \
-	multicast.$(OBJEXT) neighbors.$(OBJEXT) net_db.$(OBJEXT) \
-	Packer.$(OBJEXT) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
-	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
-	refresh.$(OBJEXT) send-announce.$(OBJEXT) $(am__objects_7) \
-	ssl.$(OBJEXT) $(am__objects_8) stat.$(OBJEXT) \
+	logfile.$(OBJEXT) main.$(OBJEXT) mem.$(OBJEXT) MemBuf.$(OBJEXT) \
+	mime.$(OBJEXT) multicast.$(OBJEXT) neighbors.$(OBJEXT) \
+	net_db.$(OBJEXT) Packer.$(OBJEXT) pconn.$(OBJEXT) \
+	peer_digest.$(OBJEXT) peer_select.$(OBJEXT) redirect.$(OBJEXT) \
+	referer.$(OBJEXT) refresh.$(OBJEXT) send-announce.$(OBJEXT) \
+	$(am__objects_7) ssl.$(OBJEXT) $(am__objects_8) stat.$(OBJEXT) \
 	StatHist.$(OBJEXT) String.$(OBJEXT) stmem.$(OBJEXT) \
 	store.$(OBJEXT) store_io.$(OBJEXT) store_client.$(OBJEXT) \
 	store_digest.$(OBJEXT) store_dir.$(OBJEXT) \
@@ -516,38 +514,37 @@ depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/HttpHeaderTools.Po $(DEPDIR)/HttpMsg.Po \
 @AMDEP_TRUE@	$(DEPDIR)/HttpReply.Po $(DEPDIR)/HttpRequest.Po \
 @AMDEP_TRUE@	$(DEPDIR)/HttpStatusLine.Po $(DEPDIR)/MemBuf.Po \
-@AMDEP_TRUE@	$(DEPDIR)/MemPool.Po $(DEPDIR)/Packer.Po \
-@AMDEP_TRUE@	$(DEPDIR)/StatHist.Po $(DEPDIR)/String.Po \
-@AMDEP_TRUE@	$(DEPDIR)/access_log.Po $(DEPDIR)/acl.Po \
-@AMDEP_TRUE@	$(DEPDIR)/asn.Po $(DEPDIR)/auth_modules.Po \
-@AMDEP_TRUE@	$(DEPDIR)/authenticate.Po $(DEPDIR)/cache_cf.Po \
-@AMDEP_TRUE@	$(DEPDIR)/cache_manager.Po $(DEPDIR)/cachemgr.Po \
-@AMDEP_TRUE@	$(DEPDIR)/carp.Po $(DEPDIR)/cbdata.Po \
-@AMDEP_TRUE@	$(DEPDIR)/cf_gen.Po $(DEPDIR)/client.Po \
-@AMDEP_TRUE@	$(DEPDIR)/client_db.Po $(DEPDIR)/client_side.Po \
-@AMDEP_TRUE@	$(DEPDIR)/comm.Po $(DEPDIR)/comm_kqueue.Po \
-@AMDEP_TRUE@	$(DEPDIR)/comm_poll.Po $(DEPDIR)/comm_select.Po \
-@AMDEP_TRUE@	$(DEPDIR)/debug.Po $(DEPDIR)/delay_pools.Po \
-@AMDEP_TRUE@	$(DEPDIR)/disk.Po $(DEPDIR)/dns.Po \
-@AMDEP_TRUE@	$(DEPDIR)/dns_internal.Po $(DEPDIR)/dnsserver.Po \
-@AMDEP_TRUE@	$(DEPDIR)/errorpage.Po $(DEPDIR)/event.Po \
-@AMDEP_TRUE@	$(DEPDIR)/fd.Po $(DEPDIR)/filemap.Po \
-@AMDEP_TRUE@	$(DEPDIR)/forward.Po $(DEPDIR)/fqdncache.Po \
-@AMDEP_TRUE@	$(DEPDIR)/ftp.Po $(DEPDIR)/globals.Po \
-@AMDEP_TRUE@	$(DEPDIR)/gopher.Po $(DEPDIR)/helper.Po \
-@AMDEP_TRUE@	$(DEPDIR)/htcp.Po $(DEPDIR)/http.Po \
-@AMDEP_TRUE@	$(DEPDIR)/icmp.Po $(DEPDIR)/icp_v2.Po \
-@AMDEP_TRUE@	$(DEPDIR)/icp_v3.Po $(DEPDIR)/ident.Po \
-@AMDEP_TRUE@	$(DEPDIR)/internal.Po $(DEPDIR)/ipc.Po \
-@AMDEP_TRUE@	$(DEPDIR)/ipcache.Po $(DEPDIR)/leakfinder.Po \
-@AMDEP_TRUE@	$(DEPDIR)/logfile.Po $(DEPDIR)/main.Po \
-@AMDEP_TRUE@	$(DEPDIR)/mem.Po $(DEPDIR)/mime.Po \
-@AMDEP_TRUE@	$(DEPDIR)/multicast.Po $(DEPDIR)/neighbors.Po \
-@AMDEP_TRUE@	$(DEPDIR)/net_db.Po $(DEPDIR)/pconn.Po \
-@AMDEP_TRUE@	$(DEPDIR)/peer_digest.Po $(DEPDIR)/peer_select.Po \
-@AMDEP_TRUE@	$(DEPDIR)/pinger.Po $(DEPDIR)/redirect.Po \
-@AMDEP_TRUE@	$(DEPDIR)/referer.Po $(DEPDIR)/refresh.Po \
-@AMDEP_TRUE@	$(DEPDIR)/repl_modules.Po \
+@AMDEP_TRUE@	$(DEPDIR)/Packer.Po $(DEPDIR)/StatHist.Po \
+@AMDEP_TRUE@	$(DEPDIR)/String.Po $(DEPDIR)/access_log.Po \
+@AMDEP_TRUE@	$(DEPDIR)/acl.Po $(DEPDIR)/asn.Po \
+@AMDEP_TRUE@	$(DEPDIR)/auth_modules.Po $(DEPDIR)/authenticate.Po \
+@AMDEP_TRUE@	$(DEPDIR)/cache_cf.Po $(DEPDIR)/cache_manager.Po \
+@AMDEP_TRUE@	$(DEPDIR)/cachemgr.Po $(DEPDIR)/carp.Po \
+@AMDEP_TRUE@	$(DEPDIR)/cbdata.Po $(DEPDIR)/cf_gen.Po \
+@AMDEP_TRUE@	$(DEPDIR)/client.Po $(DEPDIR)/client_db.Po \
+@AMDEP_TRUE@	$(DEPDIR)/client_side.Po $(DEPDIR)/comm.Po \
+@AMDEP_TRUE@	$(DEPDIR)/comm_kqueue.Po $(DEPDIR)/comm_poll.Po \
+@AMDEP_TRUE@	$(DEPDIR)/comm_select.Po $(DEPDIR)/debug.Po \
+@AMDEP_TRUE@	$(DEPDIR)/delay_pools.Po $(DEPDIR)/disk.Po \
+@AMDEP_TRUE@	$(DEPDIR)/dns.Po $(DEPDIR)/dns_internal.Po \
+@AMDEP_TRUE@	$(DEPDIR)/dnsserver.Po $(DEPDIR)/errorpage.Po \
+@AMDEP_TRUE@	$(DEPDIR)/event.Po $(DEPDIR)/fd.Po \
+@AMDEP_TRUE@	$(DEPDIR)/filemap.Po $(DEPDIR)/forward.Po \
+@AMDEP_TRUE@	$(DEPDIR)/fqdncache.Po $(DEPDIR)/ftp.Po \
+@AMDEP_TRUE@	$(DEPDIR)/globals.Po $(DEPDIR)/gopher.Po \
+@AMDEP_TRUE@	$(DEPDIR)/helper.Po $(DEPDIR)/htcp.Po \
+@AMDEP_TRUE@	$(DEPDIR)/http.Po $(DEPDIR)/icmp.Po \
+@AMDEP_TRUE@	$(DEPDIR)/icp_v2.Po $(DEPDIR)/icp_v3.Po \
+@AMDEP_TRUE@	$(DEPDIR)/ident.Po $(DEPDIR)/internal.Po \
+@AMDEP_TRUE@	$(DEPDIR)/ipc.Po $(DEPDIR)/ipcache.Po \
+@AMDEP_TRUE@	$(DEPDIR)/leakfinder.Po $(DEPDIR)/logfile.Po \
+@AMDEP_TRUE@	$(DEPDIR)/main.Po $(DEPDIR)/mem.Po \
+@AMDEP_TRUE@	$(DEPDIR)/mime.Po $(DEPDIR)/multicast.Po \
+@AMDEP_TRUE@	$(DEPDIR)/neighbors.Po $(DEPDIR)/net_db.Po \
+@AMDEP_TRUE@	$(DEPDIR)/pconn.Po $(DEPDIR)/peer_digest.Po \
+@AMDEP_TRUE@	$(DEPDIR)/peer_select.Po $(DEPDIR)/pinger.Po \
+@AMDEP_TRUE@	$(DEPDIR)/redirect.Po $(DEPDIR)/referer.Po \
+@AMDEP_TRUE@	$(DEPDIR)/refresh.Po $(DEPDIR)/repl_modules.Po \
 @AMDEP_TRUE@	$(DEPDIR)/send-announce.Po $(DEPDIR)/snmp_agent.Po \
 @AMDEP_TRUE@	$(DEPDIR)/snmp_core.Po $(DEPDIR)/ssl.Po \
 @AMDEP_TRUE@	$(DEPDIR)/ssl_support.Po $(DEPDIR)/stat.Po \
@@ -686,7 +683,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpRequest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/HttpStatusLine.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/MemBuf.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/MemPool.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/Packer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/StatHist.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/String.Po@am__quote@

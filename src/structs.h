@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.413 2002/04/04 21:03:47 hno Exp $
+ * $Id: structs.h,v 1.414 2002/04/06 08:49:28 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1897,30 +1897,6 @@ struct _storeSwapLogData {
     u_short refcount;
     u_short flags;
     unsigned char key[MD5_DIGEST_CHARS];
-};
-
-/* object to track per-action memory usage (e.g. #idle objects) */
-struct _MemMeter {
-    ssize_t level;		/* current level (count or volume) */
-    ssize_t hwater_level;	/* high water mark */
-    time_t hwater_stamp;	/* timestamp of last high water mark change */
-};
-
-/* object to track per-pool memory usage (alloc = inuse+idle) */
-struct _MemPoolMeter {
-    MemMeter alloc;
-    MemMeter inuse;
-    MemMeter idle;
-    gb_t saved;
-    gb_t total;
-};
-
-/* a pool is a [growing] space for objects of the same size */
-struct _MemPool {
-    const char *label;
-    size_t obj_size;
-    Stack pstack;		/* stack for free pointers */
-    MemPoolMeter meter;
 };
 
 struct _ClientInfo {

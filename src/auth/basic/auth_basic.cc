@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.15 2002/04/04 23:59:26 hno Exp $
+ * $Id: auth_basic.cc,v 1.16 2002/04/06 08:49:31 adrian Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -120,7 +120,7 @@ authBasicDone(void)
 	helperFree(basicauthenticators);
     basicauthenticators = NULL;
     if (basic_data_pool) {
-	memPoolDestroy(basic_data_pool);
+	memPoolDestroy(&basic_data_pool);
 	basic_data_pool = NULL;
     }
     debug(29, 2) ("authBasicDone: Basic authentication Shutdown.\n");

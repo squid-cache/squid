@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.31 2002/04/01 21:53:21 hno Exp $
+ * $Id: store_dir_coss.cc,v 1.32 2002/04/06 08:49:43 adrian Exp $
  *
  * DEBUG: section 81    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -879,7 +879,8 @@ storeCossDirPick(void)
 static void
 storeCossDirDone(void)
 {
-    memPoolDestroy(coss_state_pool);
+    memPoolDestroy(&coss_state_pool);
+/*  memPoolDestroy(&coss_index_pool);  XXX Should be here? */
     coss_initialised = 0;
 }
 

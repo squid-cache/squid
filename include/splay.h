@@ -1,5 +1,5 @@
 /*
- * $Id: splay.h,v 1.10 2001/10/08 16:18:31 hno Exp $
+ * $Id: splay.h,v 1.11 2002/04/06 08:49:24 adrian Exp $
  */
 
 #ifndef SQUID_SPLAY_H
@@ -19,6 +19,7 @@ extern int splayLastResult;
 
 extern splayNode *splay_insert(void *, splayNode *, SPLAYCMP *);
 extern splayNode *splay_splay(const void *, splayNode *, SPLAYCMP *);
+extern splayNode *splay_delete(const void *, splayNode *, SPLAYCMP *);
 extern void splay_destroy(splayNode *, SPLAYFREE *);
 extern void splay_walk(splayNode *, SPLAYWALKEE *, void *);
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_diskd.cc,v 1.61 2002/04/04 23:59:28 hno Exp $
+ * $Id: store_dir_diskd.cc,v 1.62 2002/04/06 08:49:43 adrian Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1941,7 +1941,7 @@ storeDiskdDirParse(SwapDir * sd, int index, char *path)
 static void
 storeDiskdDirDone(void)
 {
-    memPoolDestroy(diskd_state_pool);
+    memPoolDestroy(&diskd_state_pool);
     diskd_initialised = 0;
 }
 

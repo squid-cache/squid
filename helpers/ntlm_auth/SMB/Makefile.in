@@ -16,7 +16,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.9 2002/02/26 15:48:26 adrian Exp $
+#  $Id: Makefile.in,v 1.10 2002/04/06 08:49:40 adrian Exp $
 #
 
 SHELL = @SHELL@
