@@ -48,9 +48,9 @@ clientdbUpdate(struct in_addr addr, log_type log_type, u_short port)
     if (c == NULL)
 	debug_trap("clientdbUpdate: Failed to add entry");
     c->result_hist[log_type]++;
-    if (port == CACHE_HTTP_PORT)
+    if (port == Config.Port.http)
 	c->n_http++;
-    else if (port == CACHE_ICP_PORT)
+    else if (port == Config.Port.icp)
 	c->n_icp++;
     c->n_requests++;
 }
