@@ -30,9 +30,9 @@ SOFTWARE.
 
 #undef _ANSI_ARGS_
 #if (defined(__STDC__) && ! defined(NO_PROTOTYPE)) || defined(USE_PROTOTYPE)
-# define _ANSI_ARGS_(x) x
+#define _ANSI_ARGS_(x) x
 #else
-# define _ANSI_ARGS_(x) ()
+#define _ANSI_ARGS_(x) ()
 #endif
 
 
@@ -50,62 +50,62 @@ typedef int ssize_t;
 typedef struct sockaddr_in ipaddr;
 
 typedef struct {
-    u_char	securityModel;
-    u_char	qoS;
-    u_char	agentID[12];
-    u_long	agentBoots;
-    int		agentTime;
-    int		MMS;
-    int	     	userLen;
-    u_char   	userName[16];
-    int		authLen;
-    u_char	authDigest[16];
-    u_char     *authDigestPtr;
-    int		contextLen;
-    u_char	contextSelector[40];
+    u_char securityModel;
+    u_char qoS;
+    u_char agentID[12];
+    u_long agentBoots;
+    int agentTime;
+    int MMS;
+    int userLen;
+    u_char userName[16];
+    int authLen;
+    u_char authDigest[16];
+    u_char *authDigestPtr;
+    int contextLen;
+    u_char contextSelector[40];
 } Parameters;
 
 struct snmp_session {
-    int	    retries;		/* Number of retries before timeout. */
-    long    timeout;    	/* Number of uS until first timeout, then exponential backoff */
-    char    *peername;		/* Domain name or dotted IP address of default peer */
+    int retries;		/* Number of retries before timeout. */
+    long timeout;		/* Number of uS until first timeout, then exponential backoff */
+    char *peername;		/* Domain name or dotted IP address of default peer */
     u_short remote_port;	/* UDP port number of peer. */
-    u_short local_port; 	/* My UDP port number, 0 for default, picked randomly */
+    u_short local_port;		/* My UDP port number, 0 for default, picked randomly */
 
     /* Authentication function or NULL if null authentication is used */
-    int    (*authenticator)();
-    int	    (*callback)();  	/* Function to interpret incoming data */
+    int (*authenticator) ();
+    int (*callback) ();		/* Function to interpret incoming data */
 
     /* Pointer to data that the callback function may consider important */
-    void    *callback_magic;
+    void *callback_magic;
 
-    int		version; 	/* SNMP version number */
+    int version;		/* SNMP version number */
 
     /* fields to support SNMPv1 community model */
-    int	        community_len;
-    u_char      *community;
+    int community_len;
+    u_char *community;
 
     /* the private keys to use for user-based security */
-    u_char   	authKey[16];
-    u_char   	privKey[16];
+    u_char authKey[16];
+    u_char privKey[16];
 
     /* fields to support user-based security model in SNMPv2 */
-    Parameters	params;
+    Parameters params;
 
-    u_char	qoS;
-    u_char	agentID[16];
-    u_long	agentBoots;
-    int		agentTime;		/* the agentTime value */
-    int		agentClock;		/* the running agentClock */
-    int	     	userLen;
-    u_char   	userName[32];
-    int		MMS;
-    int		contextLen;
-    u_char	contextSelector[64];
+    u_char qoS;
+    u_char agentID[16];
+    u_long agentBoots;
+    int agentTime;		/* the agentTime value */
+    int agentClock;		/* the running agentClock */
+    int userLen;
+    u_char userName[32];
+    int MMS;
+    int contextLen;
+    u_char contextSelector[64];
 
     /* misc stuff */
-    int		readView;
-    int		writeView;
+    int readView;
+    int writeView;
 };
 
 /*
@@ -134,55 +134,55 @@ struct snmp_session {
 extern int snmp_errno;
 /* Error return values */
 #define SNMPERR_GENERR		-1
-#define SNMPERR_BAD_LOCPORT	-2  /* local port was already in use */
+#define SNMPERR_BAD_LOCPORT	-2	/* local port was already in use */
 #define SNMPERR_BAD_ADDRESS	-3
 #define SNMPERR_BAD_SESSION	-4
 #define SNMPERR_TOO_LONG	-5
 
 
 struct snmp_pdu {
-    ipaddr  address;	/* Address of peer */
+    ipaddr address;		/* Address of peer */
 
-    int	    command;	/* Type of this PDU */
+    int command;		/* Type of this PDU */
 
     Parameters params;
 
-    u_long  reqid;	/* Request id */
-    u_long  errstat;	/* Error status */
-    u_long  errindex;	/* Error index */
+    u_long reqid;		/* Request id */
+    u_long errstat;		/* Error status */
+    u_long errindex;		/* Error index */
 
     /* Trap information */
-    oid	    *enterprise;/* System OID */
-    int	    enterprise_length;
-    ipaddr  agent_addr;	/* address of object generating trap */
-    int	    trap_type;	/* trap type */
-    int	    specific_type;  /* specific type */
-    u_long  time;	/* Uptime */
+    oid *enterprise;		/* System OID */
+    int enterprise_length;
+    ipaddr agent_addr;		/* address of object generating trap */
+    int trap_type;		/* trap type */
+    int specific_type;		/* specific type */
+    u_long time;		/* Uptime */
 
     struct variable_list *variables;
 };
 
 
 struct variable_list {
-    struct variable_list *next_variable;    /* NULL for last variable */
-    oid	    *name;  /* Object identifier of variable */
-    int	    name_length;    /* number of subid's in name */
-    u_char  type;   /* ASN type of variable */
-    union { /* value of variable */
-	long	*integer;
-	u_char	*string;
-	oid	*objid;
-	u_char  *bitstring;
+    struct variable_list *next_variable;	/* NULL for last variable */
+    oid *name;			/* Object identifier of variable */
+    int name_length;		/* number of subid's in name */
+    u_char type;		/* ASN type of variable */
+    union {			/* value of variable */
+	long *integer;
+	u_char *string;
+	oid *objid;
+	u_char *bitstring;
 	struct counter64 *counter64;
 
     } val;
-    int	    val_len;
+    int val_len;
 };
 
 #ifndef SQUID_SNMP
 /*
  * struct snmp_session *snmp_open(session)
- *	struct snmp_session *session;
+ *      struct snmp_session *session;
  * 
  * Sets up the session with the snmp_session information provided
  * by the user.  Then opens and binds the necessary UDP port.
@@ -190,7 +190,7 @@ struct variable_list {
  * the pointer passed to snmp_open()).  On any error, NULL is returned
  * and snmp_errno is set to the appropriate error code.
  */
-struct snmp_session *snmp_open _ANSI_ARGS_((struct snmp_session *session));
+struct snmp_session *snmp_open _ANSI_ARGS_((struct snmp_session * session));
 
 /*
  * int snmp_close(session)
@@ -200,13 +200,13 @@ struct snmp_session *snmp_open _ANSI_ARGS_((struct snmp_session *session));
  * dequeues any pending requests, and closes any sockets allocated for
  * the session.  Returns 0 on error, 1 otherwise.
  */
-int snmp_close _ANSI_ARGS_((struct snmp_session *session));
+int snmp_close _ANSI_ARGS_((struct snmp_session * session));
 
 
 /*
  * int snmp_send(session, pdu)
  *     struct snmp_session *session;
- *     struct snmp_pdu	*pdu;
+ *     struct snmp_pdu  *pdu;
  * 
  * Sends the input pdu on the session after calling snmp_build to create
  * a serialized packet.  If necessary, set some of the pdu data from the
@@ -216,8 +216,8 @@ int snmp_close _ANSI_ARGS_((struct snmp_session *session));
  * On any error, 0 is returned.
  * The pdu is freed by snmp_send() unless a failure occured.
  */
-int snmp_send _ANSI_ARGS_((struct snmp_session *session,
-			   struct snmp_pdu *pdu));
+int snmp_send _ANSI_ARGS_((struct snmp_session * session,
+	struct snmp_pdu * pdu));
 
 
 /*
@@ -230,7 +230,7 @@ int snmp_send _ANSI_ARGS_((struct snmp_session *session,
  * is passed to the callback routine for that session.  If the callback
  * routine returns successfully, the pdu and it's request are deleted.
  */
-void snmp_read (fd_set  *fdset);
+void snmp_read(fd_set * fdset);
 
 
 /*
@@ -240,7 +240,7 @@ void snmp_read (fd_set  *fdset);
  * 
  * Frees the pdu and any malloc'd data associated with it.
  */
-void snmp_free_pdu (struct snmp_pdu *pdu);
+void snmp_free_pdu(struct snmp_pdu *pdu);
 
 /*
  * int snmp_select_info(numfds, fdset, timeout, block)
@@ -269,9 +269,9 @@ void snmp_free_pdu (struct snmp_pdu *pdu);
  * snmp_select_info returns the number of open sockets.  (i.e. The number of sessions open)
  */
 int snmp_select_info _ANSI_ARGS_((int *numfds,
-				  fd_set *fdset,
-				  struct timeval *timeout,
-				  int *block));
+	fd_set * fdset,
+	struct timeval * timeout,
+	int *block));
 
 /*
  * void snmp_timeout();
@@ -291,10 +291,10 @@ void snmp_timeout _ANSI_ARGS_((void));
  * This routine must be supplied by the application:
  *
  * u_char *authenticator(pdu, length, community, community_len)
- * u_char *pdu;		The rest of the PDU to be authenticated
- * int *length;		The length of the PDU (updated by the authenticator)
- * u_char *community;	The community name to authenticate under.
- * int	community_len	The length of the community name.
+ * u_char *pdu;         The rest of the PDU to be authenticated
+ * int *length;         The length of the PDU (updated by the authenticator)
+ * u_char *community;   The community name to authenticate under.
+ * int  community_len   The length of the community name.
  *
  * Returns the authenticated pdu, or NULL if authentication failed.
  * If null authentication is used, the authenticator in snmp_session can be
@@ -307,9 +307,9 @@ void snmp_timeout _ANSI_ARGS_((void));
  * int callback(operation, session, reqid, pdu, magic)
  * int operation;
  * struct snmp_session *session;    The session authenticated under.
- * int reqid;			    The request id of this pdu (0 for TRAP)
- * struct snmp_pdu *pdu;	    The pdu information.
- * void *magic			    A link to the data for this routine.
+ * int reqid;                       The request id of this pdu (0 for TRAP)
+ * struct snmp_pdu *pdu;            The pdu information.
+ * void *magic                      A link to the data for this routine.
  *
  * Returns 1 if request was successful, 0 if it should be kept pending.
  * Any data in the pdu must be copied because it will be freed elsewhere.

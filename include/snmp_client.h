@@ -29,15 +29,15 @@ SOFTWARE.
 
 #undef _ANSI_ARGS_
 #if (defined(__STDC__) && ! defined(NO_PROTOTYPE)) || defined(USE_PROTOTYPE)
-# define _ANSI_ARGS_(x) x
+#define _ANSI_ARGS_(x) x
 #else
-# define _ANSI_ARGS_(x) ()
+#define _ANSI_ARGS_(x) ()
 #endif
 
 
 
 struct synch_state {
-    int	waiting;
+    int waiting;
     int status;
 /* status codes */
 #define STAT_SUCCESS	0
@@ -51,8 +51,8 @@ extern struct synch_state snmp_synch_state;
 
 extern struct snmp_pdu *snmp_pdu_create _ANSI_ARGS_((int cmd));
 
-extern struct snmp_pdu *snmp_fix_pdu _ANSI_ARGS_((struct snmp_pdu *pdu,
-						  int cmd));
+extern struct snmp_pdu *snmp_fix_pdu _ANSI_ARGS_((struct snmp_pdu * pdu,
+	int cmd));
 extern char *snmp_errstring _ANSI_ARGS_((int errstat));
 
 #endif

@@ -31,9 +31,9 @@ SOFTWARE.
 
 #undef _ANSI_ARGS_
 #if (defined(__STDC__) && ! defined(NO_PROTOTYPE)) || defined(USE_PROTOTYPE)
-# define _ANSI_ARGS_(x) x
+#define _ANSI_ARGS_(x) x
 #else
-# define _ANSI_ARGS_(x) ()
+#define _ANSI_ARGS_(x) ()
 #endif
 
 
@@ -55,7 +55,7 @@ SOFTWARE.
 #define BUILD_ERROR	-2
 
 #define SID_MAX_LEN	200
-#define MAX_NAME_LEN	64  /* number of subid's in a objid */
+#define MAX_NAME_LEN	64	/* number of subid's in a objid */
 
 #ifndef NULL
 #define NULL 0
@@ -77,9 +77,9 @@ SOFTWARE.
 #define ACTION      3
 #define FREE        4
 
-#define RONLY	0xAAAA	/* read access for everyone */
-#define RWRITE	0xAABA	/* add write access for community private */
-#define NOACCESS 0x0000	/* no access for anybody */
+#define RONLY	0xAAAA		/* read access for everyone */
+#define RWRITE	0xAABA		/* add write access for community private */
+#define NOACCESS 0x0000		/* no access for anybody */
 
 #define INTEGER	    ASN_INTEGER
 #define STRING	    ASN_OCTET_STR
@@ -103,35 +103,35 @@ SOFTWARE.
 #define ERROR(string)
 #endif
 
-/* from snmp.c*/
-extern u_char	sid[];	/* size SID_MAX_LEN */
+/* from snmp.c */
+extern u_char sid[];		/* size SID_MAX_LEN */
 
-extern u_char *snmp_parse_var_op _ANSI_ARGS_((u_char *data,
-					      oid *var_name,
-					      int *var_name_len,
-					      u_char *var_val_type,
-					      int *var_val_len,
-					      u_char **var_val, 
-					      int *listlength));
+extern u_char *snmp_parse_var_op _ANSI_ARGS_((u_char * data,
+	oid * var_name,
+	int *var_name_len,
+	u_char * var_val_type,
+	int *var_val_len,
+	u_char ** var_val,
+	int *listlength));
 
-extern u_char *snmp_build_var_op _ANSI_ARGS_((u_char *data,
-					      oid *var_name,
-					      int *var_name_len,
-					      u_char var_val_type,
-					      int var_val_len,
-					      u_char *var_val,
-					      int *listlength));
+extern u_char *snmp_build_var_op _ANSI_ARGS_((u_char * data,
+	oid * var_name,
+	int *var_name_len,
+	u_char var_val_type,
+	int var_val_len,
+	u_char * var_val,
+	int *listlength));
 
-extern u_char *snmp_auth_parse _ANSI_ARGS_((u_char *data,
-					    int *length,
-					    u_char *sid,
-					    int *slen,
-					    long *version));
+extern u_char *snmp_auth_parse _ANSI_ARGS_((u_char * data,
+	int *length,
+	u_char * sid,
+	int *slen,
+	long *version));
 
-extern u_char *snmp_auth_build _ANSI_ARGS_((u_char *data,
-					    int *length,
-					    struct snmp_session *session,
-					    int is_agent,
-					    int messagelen));
+extern u_char *snmp_auth_build _ANSI_ARGS_((u_char * data,
+	int *length,
+	struct snmp_session * session,
+	int is_agent,
+	int messagelen));
 
 #endif

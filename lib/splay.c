@@ -17,7 +17,7 @@
 int splayLastResult = 0;
 
 splayNode *
-splay_insert(void *data, splayNode * top, SPCMP *compare)
+splay_insert(void *data, splayNode * top, SPCMP * compare)
 {
     splayNode *new = xcalloc(sizeof(splayNode), 1);
     new->data = data;
@@ -44,7 +44,7 @@ splay_insert(void *data, splayNode * top, SPCMP *compare)
 }
 
 splayNode *
-splay_splay(const void *data, splayNode * top, SPCMP *compare)
+splay_splay(const void *data, splayNode * top, SPCMP * compare)
 {
     splayNode N;
     splayNode *l;

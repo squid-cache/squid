@@ -195,7 +195,7 @@ typedef enum {
     ICP_UNUSED19,
     ICP_UNUSED20,
     ICP_MISS_NOFETCH,
-    ICP_DENIED,	
+    ICP_DENIED,
     ICP_HIT_OBJ,
     ICP_END
 } icp_opcode;
