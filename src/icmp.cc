@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.17 1996/10/10 22:20:56 wessels Exp $
+ * $Id: icmp.cc,v 1.18 1996/10/11 19:35:28 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -116,6 +116,7 @@ icmpOpen(void)
 	(PF) icmpRecv,
 	(void *) -1);
     comm_set_fd_lifetime(icmp_sock, -1);
+    debug(29,0,"Pinger socket opened on FD %d\n", icmp_sock);
 }
 
 void

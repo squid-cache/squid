@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.5 1996/09/24 20:37:32 wessels Exp $
+ * $Id: pinger.cc,v 1.6 1996/10/11 19:35:29 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -130,7 +130,7 @@ pingerOpen(void)
 	exit(1);
     }
     icmp_ident = getpid() & 0xffff;
-    debug(37, 0, "ICMP socket opened on FD %d\n", icmp_sock);
+    debug(37, 0, "ICMP socket opened\n", icmp_sock);
 }
 
 void
@@ -206,14 +206,14 @@ pingerRecv(void)
     ip = (struct iphdr *) (void *) pkt;
 #if HAVE_IP_HL
     iphdrlen = ip->ip_hl << 2;
-#else
+#else /* HAVE_IP_HL */
 #if BYTE_ORDER == BIG_ENDIAN
     iphdrlen = (ip->ip_vhl >> 4) << 2;
 #endif
 #if BYTE_ORDER == LITTLE_ENDIAN
     iphdrlen = (ip->ip_vhl & 0xF) << 2;
 #endif
-#endif
+#endif /* HAVE_IP_HL */
     icmp = (struct icmphdr *) (void *) (pkt + iphdrlen);
     if (icmp->icmp_type != ICMP_ECHOREPLY)
 	return;
