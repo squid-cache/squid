@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.48 1999/05/04 19:22:31 wessels Exp $
+ * $Id: store_swapout.cc,v 1.49 1999/05/19 21:57:51 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -65,8 +65,7 @@ storeSwapOutStart(StoreEntry * e)
     buf = storeSwapMetaPack(tlv_list, &swap_hdr_sz);
     storeSwapTLVFree(tlv_list);
     mem->swap_hdr_sz = (size_t) swap_hdr_sz;
-    mem->swapout.free_write_buf = xfree;
-    storeWrite(mem->swapout.sio, buf, mem->swap_hdr_sz, 0);
+    storeWrite(mem->swapout.sio, buf, mem->swap_hdr_sz, 0, xfree);
 }
 
 void
@@ -195,8 +194,7 @@ storeSwapOut(StoreEntry * e)
     debug(20, 3) ("storeSwapOut: swapping out %d bytes from %d\n",
 	swap_buf_len, (int) mem->swapout.queue_offset);
     mem->swapout.queue_offset += swap_buf_len - hdr_len;
-    mem->swapout.free_write_buf = memFreeDISK;
-    storeWrite(mem->swapout.sio, swap_buf, swap_buf_len, -1);
+    storeWrite(mem->swapout.sio, swap_buf, swap_buf_len, -1, memFreeDISK);
 }
 
 void

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.289 1999/05/10 19:33:25 wessels Exp $
+ * $Id: structs.h,v 1.290 1999/05/19 21:57:52 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1220,7 +1220,6 @@ struct _MemObject {
     struct {
 	off_t queue_offset;	/* relative to in-mem data */
 	storeIOState *sio;
-	FREE *free_write_buf;
     } swapout;
     HttpReply *reply;
     request_t *request;

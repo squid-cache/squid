@@ -24,9 +24,9 @@ storeRead(storeIOState * sio, char *buf, size_t size, off_t offset, STRCB * call
 }
 
 void
-storeWrite(storeIOState * sio, char *buf, size_t size, off_t offset)
+storeWrite(storeIOState * sio, char *buf, size_t size, off_t offset, FREE * free_func)
 {
-    storeUfsWrite(sio, buf, size, offset);
+    storeUfsWrite(sio, buf, size, offset, free_func);
 }
 
 void
