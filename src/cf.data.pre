@@ -1132,7 +1132,7 @@ DOC_START
 	establishment.  For persistent connections, wait this long
 	after the previous request completes.
 
-defer_timeout 30 seconds
+request_timeout 30 seconds
 DOC_END
 
 
@@ -1155,7 +1155,7 @@ DOC_START
 	should probably change client_lifetime only as a last resort.
 	If you seem to have many client connections tying up
 	filedescriptors, we recommend first tuning the read_timeout,
-	defer_timeout, pconn_timeout and quick_abort values.
+	request_timeout, pconn_timeout and quick_abort values.
 
 client_lifetime 1 day
 DOC_END
