@@ -161,9 +161,6 @@
 /* Define if you have the setpgrp function.  */
 #undef HAVE_SETPGRP
 
-/* Define if you have the setresuid function.  */
-#undef HAVE_SETRESUID
-
 /* Define if you have the setrlimit function.  */
 #undef HAVE_SETRLIMIT
 
