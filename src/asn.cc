@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.97 2003/08/10 11:00:40 robertc Exp $
+ * $Id: asn.cc,v 1.98 2003/10/20 12:33:01 robertc Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -63,6 +63,11 @@ typedef u_char m_int[1 + sizeof(unsigned int)];
 
 struct squid_radix_node_head *AS_tree_head;
 
+/* explicit instantiation required for some systems */
+
+template cbdata_type List<int>
+::CBDATA_List;
+
 /*
  * Structure for as number information. it could be simply 
  * a list but it's coded as a structure for future
@@ -105,15 +110,21 @@ struct _rtentry
 typedef struct _rtentry rtentry_t;
 
 static int asnAddNet(char *, int);
+
 static void asnCacheStart(int as);
+
 static STCB asHandleReply;
 
 static int destroyRadixNode(struct squid_radix_node *rn, void *w);
 
 static int printRadixNode(struct squid_radix_node *rn, void *sentry);
-void asnAclInitialize(acl * acls);
+
+void asnAclInitialize(ACL * acls);
+
 static void asStateFree(void *data);
+
 static void destroyRadixNodeInfo(as_info *);
+
 static OBJH asnStats;
 
 /* PUBLIC */
@@ -623,9 +634,18 @@ ACLASN::clone() const
     return new ACLASN(*this);
 }
 
+/* explicit template instantiation required for some systems */
+
+template class ACLStrategised<struct in_addr>
+
+;
+
 ACL::Prototype ACLASN::SourceRegistryProtoype(&ACLASN::SourceRegistryEntry_, "src_as");
+
 ACLStrategised<struct in_addr> ACLASN::SourceRegistryEntry_(new ACLASN, ACLSourceASNStrategy::Instance(), "src_as");
+
 ACL::Prototype ACLASN::DestinationRegistryProtoype(&ACLASN::DestinationRegistryEntry_, "dst_as");
+
 ACLStrategised<struct in_addr> ACLASN::DestinationRegistryEntry_(new ACLASN, ACLDestinationASNStrategy::Instance(), "dst_as");
 
 int

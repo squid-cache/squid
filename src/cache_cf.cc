@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.450 2003/09/01 03:49:37 robertc Exp $
+ * $Id: cache_cf.cc,v 1.451 2003/10/20 12:33:01 robertc Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -716,7 +716,7 @@ parseBytesUnits(const char *unit)
  *****************************************************************************/
 
 static void
-dump_acl(StoreEntry * entry, const char *name, acl * ae)
+dump_acl(StoreEntry * entry, const char *name, ACL * ae)
 {
     wordlist *w;
     wordlist *v;
@@ -742,13 +742,13 @@ dump_acl(StoreEntry * entry, const char *name, acl * ae)
 }
 
 static void
-parse_acl(acl ** ae)
+parse_acl(ACL ** ae)
 {
     ACL::ParseAclLine(ae);
 }
 
 static void
-free_acl(acl ** ae)
+free_acl(ACL ** ae)
 {
     aclDestroyAcls(ae);
 }

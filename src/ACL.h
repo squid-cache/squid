@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACL.h,v 1.10 2003/08/04 22:14:38 robertc Exp $
+ * $Id: ACL.h,v 1.11 2003/10/20 12:33:01 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -39,7 +39,7 @@
 
 /* acl.c */
 SQUIDCEXTERN void aclDestroyAccessList(acl_access **list);
-SQUIDCEXTERN void aclDestroyAcls(acl **);
+SQUIDCEXTERN void aclDestroyAcls(ACL **);
 SQUIDCEXTERN void aclDestroyAclList(acl_list **);
 SQUIDCEXTERN void aclParseAccessLine(acl_access **);
 SQUIDCEXTERN void aclParseAclList(acl_list **);
@@ -49,7 +49,7 @@ SQUIDCEXTERN err_type aclGetDenyInfoPage(acl_deny_info_list ** head, const char 
 SQUIDCEXTERN void aclParseDenyInfoLine(struct _acl_deny_info_list **);
 
 SQUIDCEXTERN void aclDestroyDenyInfoList(struct _acl_deny_info_list **);
-SQUIDCEXTERN wordlist *aclDumpGeneric(const acl *);
+SQUIDCEXTERN wordlist *aclDumpGeneric(const ACL *);
 SQUIDCEXTERN void aclCacheMatchFlush(dlink_list * cache);
 extern void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head);
 int aclPurgeMethodInUse(acl_access * a);
@@ -63,7 +63,7 @@ public:
     void operator delete(void *);
 
     static ACL *Factory (char const *);
-    static void ParseAclLine(acl ** head);
+    static void ParseAclLine(ACL ** head);
     static void Initialize();
     static ACL* FindByName(const char *name);
 
@@ -142,7 +142,7 @@ public:
     void negated(bool isNegated);
     bool matches (ACLChecklist *)const;
     int op;
-    acl *_acl;
+    ACL *_acl;
     ACLList *next;
 
 private:

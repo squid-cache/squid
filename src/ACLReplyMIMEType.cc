@@ -1,5 +1,5 @@
 /*
- * $Id: ACLReplyMIMEType.cc,v 1.1 2003/02/25 12:16:55 robertc Exp $
+ * $Id: ACLReplyMIMEType.cc,v 1.2 2003/10/20 12:33:01 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -39,5 +39,12 @@
 #include "ACLChecklist.h"
 #include "ACLRegexData.h"
 
+/* explicit template instantiation required for some systems */
+
+template class ACLReplyHeaderStrategy<HDR_CONTENT_TYPE>
+
+;
+
 ACL::Prototype ACLReplyMIMEType::RegistryProtoype(&ACLReplyMIMEType::RegistryEntry_, "rep_mime_type");
+
 ACLStrategised<char const *> ACLReplyMIMEType::RegistryEntry_(new ACLRegexData, ACLReplyHeaderStrategy<HDR_CONTENT_TYPE>::Instance(), "rep_mime_type");

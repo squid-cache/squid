@@ -1,5 +1,5 @@
 /*
- * $Id: ACLIntRange.cc,v 1.2 2003/08/04 22:14:38 robertc Exp $
+ * $Id: ACLIntRange.cc,v 1.3 2003/10/20 12:33:01 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Robert Collins
@@ -36,6 +36,11 @@
 
 #include "squid.h"
 #include "ACLIntRange.h"
+
+/* explicit instantiation required for some systems */
+
+template cbdata_type List<Range<int> >
+::CBDATA_List;
 
 void
 ACLIntRange::parse()

@@ -1,5 +1,5 @@
 /*
- * $Id: ACLReferer.cc,v 1.1 2003/02/17 07:01:34 robertc Exp $
+ * $Id: ACLReferer.cc,v 1.2 2003/10/20 12:33:01 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -39,5 +39,12 @@
 #include "ACLChecklist.h"
 #include "ACLRegexData.h"
 
+/* explicit template instantiation required for some systems */
+
+template class ACLRequestHeaderStrategy<HDR_REFERER>
+
+;
+
 ACL::Prototype ACLReferer::RegistryProtoype(&ACLReferer::RegistryEntry_, "referer_regex");
+
 ACLStrategised<char const *> ACLReferer::RegistryEntry_(new ACLRegexData, ACLRequestHeaderStrategy<HDR_REFERER>::Instance(), "referer_regex");

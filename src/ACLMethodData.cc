@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMethodData.cc,v 1.3 2003/08/04 22:14:38 robertc Exp $
+ * $Id: ACLMethodData.cc,v 1.4 2003/10/20 12:33:01 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -76,6 +76,11 @@ ACLMethodData::match(method_t toFind)
 {
     return values->findAndTune (toFind);
 }
+
+/* explicit instantiation required for some systems */
+
+template cbdata_type List<method_t>
+::CBDATA_List;
 
 wordlist *
 ACLMethodData::dump()

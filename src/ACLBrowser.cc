@@ -1,5 +1,5 @@
 /*
- * $Id: ACLBrowser.cc,v 1.1 2003/02/17 07:01:34 robertc Exp $
+ * $Id: ACLBrowser.cc,v 1.2 2003/10/20 12:33:01 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -39,5 +39,15 @@
 #include "ACLChecklist.h"
 #include "ACLRegexData.h"
 
+/* explicit template instantiation required for some systems */
+
+template class ACLStrategised<char const *>
+
+;
+template class ACLRequestHeaderStrategy<HDR_USER_AGENT>
+
+;
+
 ACL::Prototype ACLBrowser::RegistryProtoype(&ACLBrowser::RegistryEntry_, "browser");
+
 ACLStrategised<char const *> ACLBrowser::RegistryEntry_(new ACLRegexData, ACLRequestHeaderStrategy<HDR_USER_AGENT>::Instance(), "browser");
