@@ -1,5 +1,6 @@
+
 /*
- * $Id: wais.cc,v 1.35 1996/07/25 07:10:45 wessels Exp $
+ * $Id: wais.cc,v 1.36 1996/08/26 19:16:08 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -360,6 +361,8 @@ static void waisConnInProgress(fd, waisState)
 	}
     }
     /* Call the real write handler, now that we're fully connected */
+    if (opt_no_ipcache)
+	ipcacheInvalidate(waisState->relayhost);
     comm_set_select_handler(fd, COMM_SELECT_WRITE,
 	(PF) waisSendRequest, (void *) waisState);
 }
@@ -440,6 +443,8 @@ static int waisConnect(fd, hp, waisState)
 	}
     }
     /* Install connection complete handler. */
+    if (opt_no_ipcache)
+	ipcacheInvalidate(host);
     comm_set_select_handler(fd,
 	COMM_SELECT_LIFETIME,
 	(PF) waisLifetimeExpire,

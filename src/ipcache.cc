@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.40 1996/08/21 05:50:08 wessels Exp $
+ * $Id: ipcache.cc,v 1.41 1996/08/26 19:16:07 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -1108,4 +1108,16 @@ void ipcacheReleaseInvalid(name)
     if (i->status != IP_NEGATIVE_CACHED)
 	return;
     ipcache_release(i);
+}
+
+void ipcacheInvalidate(name)
+     char *name;
+{
+    ipcache_entry *i;
+    if ((i = ipcache_get(name)) == NULL)
+	return;
+    if (i->status != IP_CACHED)
+	i->ttl = 0;
+    else
+        ipcache_release(i);
 }

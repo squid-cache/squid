@@ -1,5 +1,5 @@
 /*
- * $Id: gopher.cc,v 1.38 1996/07/26 17:18:23 wessels Exp $
+ * $Id: gopher.cc,v 1.39 1996/08/26 19:16:05 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -1000,6 +1000,8 @@ int gopherStart(unusedfd, url, entry)
 	}
     }
     /* Install connection complete handler. */
+    if (opt_no_ipcache)
+	ipcacheInvalidate(data->host);
     comm_set_select_handler(sock,
 	COMM_SELECT_LIFETIME,
 	(PF) gopherLifetimeExpire,
