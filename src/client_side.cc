@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.63 1996/11/12 22:37:03 wessels Exp $
+ * $Id: client_side.cc,v 1.64 1996/11/14 03:00:52 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -394,7 +394,6 @@ icpProcessExpired(int fd, void *data)
 	entry->lastmod);
 
     entry->refcount++;		/* EXPIRED CASE */
-    entry->mem_obj->fd_of_first_client = fd;
     icpState->entry = entry;
     icpState->offset = 0;
     /* Register with storage manager to receive updates when data comes in. */

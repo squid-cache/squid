@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.162 1996/11/13 18:12:10 wessels Exp $
+ * $Id: store.cc,v 1.163 1996/11/14 03:00:55 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -872,8 +872,6 @@ storeUnregister(StoreEntry * e, int fd)
     mem->clients[i].last_offset = 0;
     mem->clients[i].callback = NULL;
     mem->clients[i].callback_data = NULL;
-    if (mem->fd_of_first_client == fd)
-	mem->fd_of_first_client = -1;
     debug(20, 9, "storeUnregister: returning 1\n");
     return 1;
 }
@@ -2832,4 +2830,19 @@ storeEntryValidToSend(StoreEntry * e)
     if (e->store_status == STORE_ABORTED)
 	return 0;
     return 1;
+}
+
+int
+storeFirstClientFD(MemObject *mem)
+{
+    int i;
+    if (mem == NULL)
+	return -1;
+    if (mem->clients == NULL)
+	return -1;
+    for (i = 0; i < mem->nclients; i++) {
+	if (mem->clients[i].fd > -1)
+	    return mem->clients[i].fd;
+    }
+    return -1;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.102 1996/11/12 22:37:05 wessels Exp $
+ * $Id: http.cc,v 1.103 1996/11/14 03:00:53 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -670,7 +670,7 @@ httpSendRequest(int fd, void *data)
     /* Add Forwarded: header */
     ybuf = get_free_4k_page();
     if (entry->mem_obj)
-	cfd = entry->mem_obj->fd_of_first_client;
+	cfd = storeFirstClientFD(entry->mem_obj);
     if (cfd > -1 && opt_forwarded_for) {
 	sprintf(ybuf, "%s for %s\r\n", ForwardedBy, fd_table[cfd].ipaddr);
     } else {
