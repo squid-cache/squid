@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.67 1999/12/30 17:36:32 wessels Exp $
+ * $Id: forward.cc,v 1.68 2000/01/11 04:58:03 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -142,7 +142,7 @@ fwdServerClosed(int fd, void *data)
 	    fs->next = NULL;
 	}
 	/* use eventAdd to break potential call sequence loops */
-	eventAdd("fwdConnectStart", fwdConnectStart, fwdState, 0.0, 1);
+	eventAdd("fwdConnectStart", fwdConnectStart, fwdState, 0.0, 0);
     } else {
 	fwdStateFree(fwdState);
     }
