@@ -13,6 +13,8 @@ Changes to squid-1.1.beta2 ():
 	  so we only need it in one place.
 	- Made a lot of proto.c functions static and added prototypes.
 	- Switched to ANSI style coding.
+	- Fixed icpProcessRequest() bug.  Need to check EXPIRED
+	  before IMS.
 
 Changes to squid-1.1.beta1 (September 12, 1996):
 
