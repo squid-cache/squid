@@ -1,0 +1,29 @@
+#!/bin/sh
+
+PATH=
+
+PKG="$1"
+DST="$2"
+
+PKGNAME=`/usr/bin/basename $1`
+
+USAGE="Usage: $PKGNAME.pre_install package_path [install_path]"
+
+trap 'echo "FAILED (interrupted by signal)"; exit 1' 1 2 3 4 15
+
+BEGINDATE=`/bin/date`
+#FDATE=`echo $BEGINDATE | /bin/awk '{print $2 "_" $3 "_" $7 "_" $4}'`
+echo
+echo $PKGNAME pre-installation script starts at $BEGINDATE
+
+failed()
+{
+	# show failed message and exit
+	echo "FAILED ($*)"
+	exit 1
+}
+
+echo
+
+#	check if caller runs as super user:
+[ `/usr/ucb/whoami` = root ] || failed "must be super user"
