@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.275 1999/01/22 04:18:47 wessels Exp $
+ * $Id: ftp.cc,v 1.276 1999/01/22 04:28:17 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -835,7 +835,7 @@ ftpDataRead(int fd, void *data)
 #endif
     assert(fd == ftpState->data.fd);
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-	comm_close(fd);
+	comm_close(ftpState->ctrl.fd);
 	return;
     }
     errno = 0;
