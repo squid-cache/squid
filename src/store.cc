@@ -1,5 +1,5 @@
 /*
- * $Id: store.cc,v 1.88 1996/08/26 23:26:59 wessels Exp $
+ * $Id: store.cc,v 1.89 1996/08/27 16:05:16 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -1967,6 +1967,7 @@ int storeGetMemSpace(size, check_vm_number)
 	}
     }
     debug(20, 2, "storeGetMemSpace: Done.\n");
+    xfree(list);
     return 0;
 }
 
