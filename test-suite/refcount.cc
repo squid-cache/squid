@@ -1,6 +1,6 @@
 
 /*
- * $Id: refcount.cc,v 1.1 2002/11/21 12:35:53 robertc Exp $
+ * $Id: refcount.cc,v 1.2 2002/12/13 03:41:28 robertc Exp $
  *
  * DEBUG: section xx    Refcount allocator
  * AUTHOR:  Robert Collins
@@ -51,6 +51,12 @@ typedef RefCount<_ToRefCount> ToRefCount;
 
 /* Must be zero at the end for the test to pass. */
 int _ToRefCount::Instances = 0;
+
+class AlsoRefCountable : public RefCountable, public _ToRefCount {
+  public:
+    typedef RefCount<AlsoRefCountable> Pointer;
+    int doSomething() { if (!this) exit (1); return 1;}
+};
 
 int
 main (int argc, char **argv)
@@ -112,6 +118,17 @@ main (int argc, char **argv)
       ToRefCount anObject (new _ToRefCount);
       _ToRefCount *aPointer = anObject.getRaw();
       aPointer = NULL;
+    }
+    /* Create a doubley inheriting refcount instance,
+     * cast to a single inheritance instance,
+     * then hope :}
+     */
+    {
+      ToRefCount aBaseObject;
+	{
+	  AlsoRefCountable::Pointer anObject (new AlsoRefCountable);
+	  aBaseObject = anObject.getRaw();
+	}
     }
     return _ToRefCount::Instances == 0 ? 0 : 1;
 }

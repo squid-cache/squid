@@ -1,6 +1,6 @@
 
 /*
- * $Id: RefCount.h,v 1.1 2002/11/21 12:35:53 robertc Exp $
+ * $Id: RefCount.h,v 1.2 2002/12/13 03:41:28 robertc Exp $
  *
  * DEBUG: section xx    Refcount allocator
  * AUTHOR:  Robert Collins
@@ -81,10 +81,10 @@ private:
 
 };
 
-struct RefCountable
+struct RefCountable_
 {
-    RefCountable():count_(0){}
-    virtual ~RefCountable(){}
+    RefCountable_():count_(0){}
+    virtual ~RefCountable_(){}
     virtual void deleteSelf() const = 0;
     /* Not private, to allow class hierarchies */
     void RefCountReference() const { ++count_; }
@@ -92,5 +92,7 @@ struct RefCountable
 private:
     mutable unsigned count_;
 };
+
+#define RefCountable virtual RefCountable_
 
 #endif /* _SQUID_REFCOUNT_H_ */
