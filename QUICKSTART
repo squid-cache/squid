@@ -1,7 +1,7 @@
 
 Squid QUICKSTART
 
-$Id: QUICKSTART,v 1.7 2003/01/23 00:34:50 robertc Exp $
+$Id: QUICKSTART,v 1.8 2003/07/18 11:10:32 hno Exp $
 
 This document is intended only for people who want to get Squid running
 quickly It is not a substitute for the real documentation.  Squid has
@@ -19,24 +19,19 @@ Uncomment and edit the following lines in /usr/local/squid/etc/squid.conf:
 
 ==============================================================================
 
-cache_peer
+cache_peer, never_direct/always_direct
 
     If you have a parent cache, put it here.  The administrators of the
     parent cache typically provided you with instructions.  You should
-    always ask permission before adding a parent cache.
-
-cache_mem
-
-    Add here the amount of memory (RAM memory) to devote to caching.
-    Warning: Squid uses much more than this value.  Rule of thumb: if
-    you have N megabytes free for Squid, put N/3 here.
+    always ask permission before adding a parent cache. See also the
+    never_direct/always_direct directives.
 
 cache_dir /usr/local/squid/var/cache 100 16 256
 
     Add here (first number, here 100) the amount of hard disk space 
     (in megabytes) to devote to caching.
 
-acl, http_access, icp_access, miss_access
+acl, http_access, icp_access
 
     Access control lists.  This is important because it prevents people
     from stealing your network resources.  To fill in the
@@ -54,9 +49,6 @@ acl, http_access, icp_access, miss_access
 
         icp_access  allow  allowed_hosts
         icp_access deny all
-
-	miss_access allow allowed_hosts
-	miss_access deny all
 
 cache_mgr
 
@@ -81,8 +73,7 @@ line TWICE:
     % /usr/local/squid/sbin/squid 
 
 Check in the cache.log (/usr/local/squid/var/logs/cache.log) that
-everything is all right.  Note that "WARNING: Cannot write to swap
-directory" is normal the first time you run Squid.
+everything is all right.
 
 Once Squid created all its files (it can take several minutes on some
 systems), test it with echoping or a regular Web client. By default,
