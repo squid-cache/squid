@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.194 1998/02/18 00:38:54 wessels Exp $
+ * $Id: ftp.cc,v 1.195 1998/02/21 00:56:55 rousskov Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -139,7 +139,11 @@ static char *ftpGetBasicAuth(const char *);
 static void ftpLoginParser(const char *, FtpStateData *);
 static wordlist *ftpParseControlReply(char *buf, size_t len, int *code);
 static void ftpAppendSuccessHeader(FtpStateData * ftpState);
+#if 0
 static char *ftpAuthRequired(const request_t *, const char *);
+#else
+static void ftpAuthRequired(HttpReply *reply, request_t *request, const char *realm);
+#endif
 static STABH ftpAbort;
 static void ftpHackShortcut(FtpStateData * ftpState, FTPSM * nextState);
 
@@ -919,7 +923,9 @@ ftpStart(request_t * request, StoreEntry * entry)
     LOCAL_ARRAY(char, realm, 8192);
     const char *url = storeUrl(entry);
     FtpStateData *ftpState = xcalloc(1, sizeof(FtpStateData));
+#if 0
     char *response;
+#endif
     int fd;
     ErrorState *err;
     cbdataAdd(ftpState, MEM_NONE);
@@ -939,9 +945,19 @@ ftpStart(request_t * request, StoreEntry * entry)
 	    snprintf(realm, 8192, "ftp %s port %d",
 		ftpState->user, request->port);
 	}
+#if 0
 	response = ftpAuthRequired(request, realm);
 	storeAppend(entry, response, strlen(response));
 	httpParseReplyHeaders(response, entry->mem_obj->reply);
+#else
+	{
+	    HttpReply *reply = entry->mem_obj->reply;
+	    assert(reply);
+	    /* create appropreate reply */
+	    ftpAuthRequired(reply, request, realm);
+	    httpReplySwapOut(reply, entry);
+	}
+#endif
 	storeComplete(entry);
 	ftpStateFree(-1, ftpState);
 	return;
@@ -1944,6 +1960,7 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
 	}
     }
     storeBuffer(e);
+#if 0 /* old code */
     storeAppendPrintf(e, "HTTP/1.0 200 Gatewaying\r\n");
     reply->code = 200;
     reply->version = 1.0;
@@ -1966,6 +1983,16 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
 	reply->last_modified = ftpState->mdtm;
     }
     storeAppendPrintf(e, "\r\n");
+#else
+    httpReplyReset(reply);
+    /* set standard stuff */
+    httpReplySetHeaders(reply, 1.0, HTTP_OK, "Gatewaying",
+	mime_type, ftpState->size, ftpState->mdtm, -2);
+    /* additional info */
+    if (mime_enc)
+	httpHeaderSetStr(&reply->hdr, HDR_CONTENT_ENCODING, mime_enc);
+    httpReplySwapOut(reply, e);
+#endif
     storeBufferFlush(e);
     reply->hdr_sz = e->mem_obj->inmem_hi;
     storeTimestampsSet(e);
@@ -1984,6 +2011,7 @@ ftpAbort(void *data)
     comm_close(ftpState->ctrl.fd);
 }
 
+#if 0 /* use new interfaces instead */
 static char *
 ftpAuthRequired(const request_t * request, const char *realm)
 {
@@ -2031,6 +2059,22 @@ ftpAuthRequired(const request_t * request, const char *realm)
 	realm);
     l += snprintf(buf + l, s - l, "\r\n%s", content);
     return buf;
+}
+#endif
+
+static void
+ftpAuthRequired(HttpReply *reply, request_t *request, const char *realm)
+{
+    ErrorState *err = errorCon(ERR_ACCESS_DENIED, HTTP_UNAUTHORIZED);
+    HttpReply *rep;
+    err->request = requestLink(request);
+    rep = errorBuildReply(err);
+    /* add Authenticate header */
+    httpHeaderSetStr(&rep->hdr, HDR_WWW_AUTHENTICATE, realm);
+    errorStateFree(err);
+    /* substitute, should be OK because we clean it @?@ */
+    httpReplyClean(reply);
+    *reply = *rep; /* @?@ warning is generated due to hdr_sz being constant */
 }
 
 char *

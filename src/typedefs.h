@@ -41,7 +41,11 @@ typedef struct _fileMap fileMap;
 typedef struct _fqdncache_entry fqdncache_entry;
 typedef struct _hash_link hash_link;
 typedef struct _hash_table hash_table;
+#if 0 /* use new interfaces */
 typedef struct _http_reply http_reply;
+#else
+typedef struct _HttpReply http_reply;
+#endif
 typedef struct _HttpStateData HttpStateData;
 typedef struct _icpUdpData icpUdpData;
 typedef struct _clientHttpRequest clientHttpRequest;

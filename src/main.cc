@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.224 1998/02/20 21:02:42 wessels Exp $
+ * $Id: main.cc,v 1.225 1998/02/21 00:56:57 rousskov Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -441,6 +441,7 @@ mainInitialize(void)
     dnsOpenServers();
     redirectOpenServers();
     useragentOpenLog();
+    httpHeaderInitModule();     /* must go before any header processing (e.g. the one in errorInitialize) */
     errorInitialize();
     accessLogInit();
 

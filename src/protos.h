@@ -108,6 +108,7 @@ extern void comm_write(int fd,
     CWCB * handler,
     void *handler_data,
     FREE *);
+extern void comm_write_mbuf(int fd, MemBuf mb, CWCB *handler, void *handler_data);
 extern void commCallCloseHandlers(int fd);
 extern int commSetTimeout(int fd, int, PF *, void *);
 extern void commSetDefer(int fd, DEFER * func, void *);
@@ -199,9 +200,11 @@ extern HASHHASH hash4;
 
 extern int httpCachable(method_t);
 extern void httpStart(request_t *, StoreEntry *, peer *);
-extern void httpParseReplyHeaders(const char *, struct _http_reply *);
+extern void httpParseReplyHeaders(const char *, http_reply *);
 extern void httpProcessReplyHeader(HttpStateData *, const char *, int);
+#if 0
 extern void httpReplyHeaderStats(StoreEntry *);
+#endif
 extern size_t httpBuildRequestHeader(request_t * request,
     request_t * orig_request,
     StoreEntry * entry,
@@ -212,12 +215,14 @@ extern size_t httpBuildRequestHeader(request_t * request,
     int flags);
 extern int httpAnonAllowed(const char *line);
 extern int httpAnonDenied(const char *line);
+#if 0
 extern char *httpReplyHeader(double ver,
     http_status status,
     char *ctype,
     int clen,
     time_t lmt,
     time_t expires);
+#endif
 extern void httpInit(void);
 
 
@@ -449,6 +454,7 @@ extern void storeAppendPrintf(StoreEntry *, const char *,...);
 #else
 extern void storeAppendPrintf();
 #endif
+extern void storeAppendVPrintf(StoreEntry *, const char *, va_list ap);
 extern int storeCheckCachable(StoreEntry * e);
 extern void storeUnlinkFileno(int fileno);
 extern void storeSetPrivateKey(StoreEntry *);
@@ -616,8 +622,10 @@ extern void useragentRotateLog(void);
 extern void logUserAgent(const char *, const char *);
 extern peer_t parseNeighborType(const char *s);
 
+extern HttpReply *errorBuildReply(ErrorState * err);
 extern void errorSend(int fd, ErrorState *);
 extern void errorAppendEntry(StoreEntry *, ErrorState *);
+void errorStateFree(ErrorState * err);
 extern void errorInitialize(void);
 extern void errorFree(void);
 extern ErrorState *errorCon(err_type, http_status);

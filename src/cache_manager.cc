@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.2 1998/02/19 23:11:48 wessels Exp $
+ * $Id: cache_manager.cc,v 1.3 1998/02/21 00:56:50 rousskov Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -140,7 +140,9 @@ cachemgrStart(int fd, StoreEntry * entry)
 {
     cachemgrStateData *mgr = NULL;
     ErrorState *err = NULL;
+#if 0
     char *hdr;
+#endif
     action_table *a;
     debug(16, 3) ("objectcacheStart: '%s'\n", storeUrl(entry));
     if ((mgr = cachemgrParse(storeUrl(entry))) == NULL) {
@@ -168,6 +170,14 @@ cachemgrStart(int fd, StoreEntry * entry)
     a = cachemgrFindAction(mgr->action);
     assert(a != NULL);
     storeBuffer(entry);
+    {
+	HttpReply *rep = httpReplyCreate();
+	httpReplySetHeaders(rep, (double) 1.0, HTTP_OK, NULL,
+	    "text/plain", -1 /* C-Len */, squid_curtime /* LMT */, squid_curtime);
+	httpReplySwapOut(rep, entry);
+	httpReplyDestroy(rep);
+    }
+#if 0
     hdr = httpReplyHeader((double) 1.0,
 	HTTP_OK,
 	"text/plain",
@@ -176,6 +186,7 @@ cachemgrStart(int fd, StoreEntry * entry)
 	squid_curtime);
     storeAppend(entry, hdr, strlen(hdr));
     storeAppend(entry, "\r\n", 2);
+#endif
     a->handler(entry);
     storeBufferFlush(entry);
     storeComplete(entry);

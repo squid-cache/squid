@@ -245,8 +245,8 @@ storeClientReadBody(int fd, const char *buf, int len, int flagnotused, void *dat
     sc->disk_op_in_progress = 0;
     assert(sc->callback != NULL);
     debug(20, 3) ("storeClientReadBody: FD %d, len %d\n", fd, len);
-    if (sc->copy_offset == 0 && len > 0 && mem->reply->code == 0)
-	httpParseReplyHeaders(sc->copy_buf, mem->reply);
+    if (sc->copy_offset == 0 && len > 0 && mem->reply->sline.status == 0)
+	httpReplyParse(mem->reply, sc->copy_buf);
     sc->callback = NULL;
     callback(sc->callback_data, sc->copy_buf, len);
 }
@@ -305,8 +305,8 @@ storeClientReadHeader(int fd, const char *buf, int len, int flagnotused, void *d
 	    copy_sz);
 	xmemcpy(sc->copy_buf, buf + swap_hdr_sz, copy_sz);
 	memFree(MEM_DISK_BUF, (void *) buf);
-	if (sc->copy_offset == 0 && len > 0 && mem->reply->code == 0)
-	    httpParseReplyHeaders(sc->copy_buf, mem->reply);
+	if (sc->copy_offset == 0 && len > 0 && mem->reply->sline.status == 0)
+	    httpReplyParse(mem->reply, sc->copy_buf);
 	sc->callback = NULL;
 	callback(sc->callback_data, sc->copy_buf, copy_sz);
 	return;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.44 1998/02/18 08:21:31 wessels Exp $
+ * $Id: util.c,v 1.45 1998/02/21 00:56:39 rousskov Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -587,11 +587,10 @@ xstrdup(const char *s)
 	}
 	exit(1);
     }
-    sz = strlen(s);
-    p = xmalloc((size_t) sz + 1);
-    memcpy(p, s, sz);		/* copy string */
-    p[sz] = '\0';		/* terminate string */
-    return (p);
+    sz = strlen(s)+1;
+    p = xmalloc(sz);
+    memcpy(p, s, sz);		/* copy string, including terminating character */
+    return p;
 }
 
 /*
@@ -655,17 +654,31 @@ tvSubDsec(struct timeval t1, struct timeval t2)
 
 /*
  *  xstrncpy() - similar to strncpy(3) but terminates string
- *  always with '\0' if n != 0, and doesn't do padding
+ *  always with '\0' if (n != 0 and dst != NULL), 
+ *  and doesn't do padding
  */
 char *
 xstrncpy(char *dst, const char *src, size_t n)
 {
-    if (n == 0)
+    if (!n || !dst)
 	return dst;
-    if (src == NULL)
-	return dst;
-    while (--n != 0 && *src != '\0')
-	*dst++ = *src++;
+    if (src)
+	while (--n != 0 && *src != '\0')
+	    *dst++ = *src++;
     *dst = '\0';
     return dst;
+}
+
+/* returns the number of leading white spaces in str; handy in skipping ws */
+size_t
+xcountws(const char *str)
+{
+    size_t count = 0;
+    if (str) {
+	while (isspace(*str)) {
+	    str++;
+	    count++;
+	}
+    }
+    return count;
 }
