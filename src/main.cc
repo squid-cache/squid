@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.329 2001/01/07 23:36:39 hno Exp $
+ * $Id: main.cc,v 1.330 2001/01/11 00:01:53 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -713,7 +713,6 @@ main(int argc, char **argv)
 	    idnsShutdown();
 #endif
 	    redirectShutdown();
-	    authenticateShutdown();
 	    eventAdd("SquidShutdown", SquidShutdown, NULL, (double) (wait + 1), 1);
 	}
 	eventRun();
@@ -939,6 +938,7 @@ SquidShutdown(void *unused)
 #endif
     releaseServerSockets();
     commCloseAllSockets();
+    authenticateShutdown();
 #if USE_UNLINKD
     unlinkdClose();
 #endif

@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.3 2001/01/10 00:24:39 hno Exp $
+ * $Id: auth_ntlm.cc,v 1.4 2001/01/11 00:01:54 hno Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -99,12 +99,25 @@ authNTLMDone(void)
     authntlm_initialised = 0;
     if (!shutting_down)
 	return;
-    helperStatefulFree(ntlmauthenticators);
+    if (ntlmauthenticators)
+	helperStatefulFree(ntlmauthenticators);
     ntlmauthenticators = NULL;
-    memPoolDestroy(ntlm_helper_state_pool);
-    memPoolDestroy(ntlm_request_pool);
-    memPoolDestroy(ntlm_user_pool);
-
+    if (ntlm_helper_state_pool) {
+	assert(memPoolInUseCount(ntlm_helper_state_pool) == 0);
+	memPoolDestroy(ntlm_helper_state_pool);
+	ntlm_helper_state_pool = NULL;
+    }
+    if (ntlm_request_pool) {
+	assert(memPoolInUseCount(ntlm_request_pool) == 0);
+	memPoolDestroy(ntlm_request_pool);
+	ntlm_request_pool = NULL;
+    }
+    if (ntlm_user_pool) {
+	assert(memPoolInUseCount(ntlm_user_pool) == 0);
+	memPoolDestroy(ntlm_user_pool);
+	ntlm_user_pool = NULL;
+    }
+    debug(29, 2) ("authNTLMDone: NTLM authentication Shutdown.\n");
 }
 
 /* free any allocated configuration details */
@@ -231,9 +244,9 @@ int
 authenticateNTLMActive()
 {
     if ((ntlmConfig != NULL) && (ntlmConfig->authenticate != NULL) &&
-        (ntlmConfig->authenticateChildren != 0) && (ntlmConfig->challengeuses > -1) 
-        && (ntlmConfig->challengelifetime>-1))
-        return 1;
+	(ntlmConfig->authenticateChildren != 0) && (ntlmConfig->challengeuses > -1)
+	&& (ntlmConfig->challengelifetime > -1))
+	return 1;
     return 0;
 }
 
@@ -364,10 +377,10 @@ authenticateNTLMHandleplaceholder(void *data, void *lastserver, char *reply)
     assert(r->auth_user_request);
     /* standard callback stuff */
     valid = cbdataValid(r->data);
-    cbdataUnlock(r->data);
     /* call authenticateNTLMStart to retry this request */
     debug(29, 9) ("authenticateNTLMHandleplaceholder: calling authenticateNTLMStart\n");
     authenticateNTLMStart(r->auth_user_request, r->handler, r->data);
+    cbdataUnlock(r->data);
     authenticateStateFree(r);
     return result;
 }
@@ -386,7 +399,6 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
     ntlm_request_t *ntlm_request;
     debug(29, 9) ("authenticateNTLMHandleReply: Helper: '%d' {%s}\n", lastserver, reply ? reply : "<NULL>");
     valid = cbdataValid(r->data);
-    cbdataUnlock(r->data);
     if (valid) {
 	if (reply) {
 	    /* seperate out the useful data */
@@ -512,6 +524,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 	debug(29, 1) ("AuthenticateNTLMHandleReply: invalid callback data. Releasing helper '%d'.\n", lastserver);
 	result = S_HELPER_RELEASE;
     }
+    cbdataUnlock(r->data);
     authenticateStateFree(r);
     debug(29, 9) ("NTLM HandleReply, telling stateful helper : %d\n", result);
     return result;
