@@ -1,9 +1,19 @@
+Changes to squid-1.1.beta26 ():
+
 	- Another 'rm -rf' fix for store.c (Bernd Ernesti).
 	- Use of the Host: header for httpd_accel requests is now
 	  disabled unless 'httpd_accel_uses_host_header' is set.
 	- Have configure check for libgnumalloc.a.
-	- Added support for using poll() instead of select()
-	  (Stewart Forster, Anthony Baxter).
+	- Added support for using poll() instead of select(); enable
+	  USE_POLL_OPT in src/Makefile (Stewart Forster, Anthony
+	  Baxter).
+	- Fixed httpBuildRequestHeader() 'strcat' bug (Andres Kroonmaa).
+	- Changed store.log to include date, last-modified, and
+	  expires timestamps, plus content-type.
+	- Added content-type to access.log too.
+	- parse HTTP timestamps directly in httpParseReplyHeaders().
+	- moved timestampsSet() to storeTimestampsSet().
+	- fixed ACL '/32' bug (Ansgar Hockmann).
 
 Changes to squid-1.1.beta25 ():
 
