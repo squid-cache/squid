@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.111 1997/10/26 02:35:27 wessels Exp $
+ * $Id: acl.cc,v 1.112 1997/11/03 20:05:36 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -867,8 +867,8 @@ aclMatchIp(void *dataptr, struct in_addr c)
 static int
 aclMatchIp(void *dataptr, struct in_addr c)
 {
-    tree **data = dataptr;
-    if (tree_srch(data, bintreeIpNetworkCompare, &c)) {
+    tree ***data = dataptr;
+    if (tree_srch(*data, bintreeIpNetworkCompare, &c)) {
 	debug(28, 3) ("aclMatchIp: '%s' found\n", inet_ntoa(c));
 	return 1;
     }
