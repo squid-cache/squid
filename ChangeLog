@@ -7,7 +7,8 @@ Changes to squid-1.2.beta17 (Mar 17, 1998):
 	  array fields will be replaced using string pools. Same for most
 	  malloc()-ed buffers.
 	- Changed icon handling to use the hostname and port of the squid
-	  server, instead of the special hostname "internal.squid".
+	  server, instead of the special hostname "internal.squid"
+	  (Henrik Nordstrom).
 	- All icons are now configured in mime.conf. No hardcoded icons,
 	  including gohper icons (Henrik Nordstrom).
 	- Fixed ICP bug when we send queries, but expect zero
