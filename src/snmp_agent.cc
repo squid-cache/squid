@@ -16,6 +16,7 @@ enum {
 };
 
 static struct snmp_pdu *snmp_agent_response(struct snmp_pdu *PDU);
+static int community_check(char *b, oid *name, int namelen);
 struct snmp_session *Session;
 extern StatCounters *CountHist;
 extern int get_median_svc(int, int);
@@ -31,6 +32,8 @@ snmp_agent_parse(u_char * buf, int len, u_char * outbuf, int *outlen,
 {
     struct snmp_pdu *PDU, *RespPDU;
     u_char *Community;
+    variable_list *VarPtr;
+    variable_list **VarPtrP;
     int ret;
     /* Now that we have the data, turn it into a PDU */
     PDU = snmp_pdu_create(0);
@@ -41,13 +44,17 @@ snmp_agent_parse(u_char * buf, int len, u_char * outbuf, int *outlen,
 	snmp_free_pdu(PDU);
 	return 0;
     }
-#if 0
-    if (!community_check(Community)) {
-	xfree(Community);
-	/* Wrong community! XXXXX */
-    }
-#endif
+    for (VarPtrP = &(PDU->variables);
+        *VarPtrP;
+        VarPtrP = &((*VarPtrP)->next_variable)) {
+        VarPtr = *VarPtrP;
 
+    	if (!community_check(Community, VarPtr->name, VarPtr->name_length)) {
+		xfree(Community);
+	/* Wrong community! XXXXX */
+		return 0;
+    	}
+    }
     xfree(Community);
     debug(49, 5) ("snmp_agent_parse: reqid=%d\n", PDU->reqid);
     RespPDU = snmp_agent_response(PDU);
@@ -168,12 +175,48 @@ snmp_agent_response(struct snmp_pdu *PDU)
     return (NULL);
 }
 
-char private_community[] = "public";
-
 int
-community_check(char *b)
+in_view(oid * name, int namelen, int viewIndex)
 {
-    return (!strcmp(b, private_community));
+    viewEntry *vwp, *savedvwp = NULL;
+
+    debug(49,8)("in_view: called with index=%d\n",viewIndex);
+    for (vwp = Config.Snmp.views; vwp; vwp = vwp->next) {
+        if (vwp->viewIndex != viewIndex)
+            continue;
+	debug(49,8)("in_view: found view for subtree:\n");
+	print_oid(vwp->viewSubtree, vwp->viewSubtreeLen);
+        if (vwp->viewSubtreeLen > namelen
+            || memcmp(vwp->viewSubtree, name, vwp->viewSubtreeLen * sizeof(oid)))
+            continue;
+        /* no wildcards here yet */
+        if (!savedvwp) { 
+            savedvwp = vwp; 
+        } else {
+            if (vwp->viewSubtreeLen > savedvwp->viewSubtreeLen)
+                savedvwp = vwp; 
+        }
+    }
+    if (!savedvwp)
+        return FALSE;
+    if (savedvwp->viewType == VIEWINCLUDED)
+        return TRUE;
+    return FALSE;
+}
+
+
+static int
+community_check(char *b, oid *name, int namelen)
+{
+    communityEntry *cp;
+    debug(49,5)("community_check: %s against:\n",b);
+    print_oid(name,namelen);
+    for (cp = Config.Snmp.communities; cp; cp = cp->next) 
+        if (!strcmp(b, cp->name)) {
+	    debug(49,6)("community_check: found %s, comparing with\n",cp->name);
+            return in_view(name, namelen, cp->readView);
+	}
+    return 0;
 }
 
 int
