@@ -16,6 +16,14 @@
 	  them goes BAD.
 	- Fixed squid-internal bug for mixed-case hostnames (Henrik
 	  Nordstrom).
+	- Added some additional fault toleranse on FTP data channels
+	  (Henrik Nordstrom).
+	- Corrected error reporting on FTP "hacks" (Henrik Nordstrom).
+	- Added lock/unlock for StoreEntry during storeAbort().
+	- Added filemap bit usage stats to cachemgr 'storedir' and
+	  'info'.
+	- Replaced 'cache_stoplist' with 'no_cache' Access list.
+	- Fixed (hopefully) remaining swapfile-open-at-exit bugs.
 
 Changes to squid-1.2.beta19 (Apr 8, 1998):
 
