@@ -1,18 +1,45 @@
 
-/* $Id: mime.cc,v 1.6 1996/03/29 21:19:23 wessels Exp $ */
+/* $Id: mime.cc,v 1.7 1996/04/01 04:08:25 wessels Exp $ */
 
 #include "squid.h"
 #include "mime_table.h"
 
+char *mime_get_header(char *mime, char *name)
+{
+    static char header[1024];
+    char *p;
+    char got = 0;
+
+    for (p = mime; *p; p += strcspn(p, "\n\r")) {
+	if (strcmp(p, "\r\n\r\n") == 0 || strcmp(p, "\n\n") == 0)
+	    return NULL;
+	while (isspace(*p))
+	    p++;
+	if (strncasecmp(p, name, strlen(name)) == 0 &&
+	    (isspace(p[strlen(name)]) || p[strlen(name)] == ':')) {
+	    strncpy(header, p, sizeof(header));
+	    header[sizeof(header) - 1] = 0;
+	    header[strcspn(header, "\n\r")] = 0;
+	    p = header;
+	    p += strlen(name);
+	    if (*p == ':')
+		p++, got = 1;
+	    while (isspace(*p))
+		p++, got = 1;
+	    if (got)
+		return p;
+	}
+    }
+    return NULL;
+}
+
 int mime_refresh_request(mime)
      char *mime;
 {
-    if (strstr(mime, "no-cache"))
+    char *pr;
+    pr = mime_get_header(mime, "pragma");
+    if (pr && strstr(pr, "no-cache"))
 	return 1;
-
-    if (strstr(mime, "If-Modified-Since"))
-	return 1;
-
     return 0;
 }
 
