@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.53 2000/11/09 18:21:27 wessels Exp $
+ * $Id: refresh.cc,v 1.54 2000/11/11 05:15:47 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -293,7 +293,7 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta)
     }
     /*
      * At this point the response is stale, unless one of
-     * the override optios kicks in.
+     * the override options kicks in.
      */
     if (sf.expires) {
 #if HTTP_VIOLATIONS
