@@ -2,6 +2,7 @@ Changes to squid-1.novm.5 (February XX, 1996):
 
 	- Fixed stuck objects (and FD leak) due to not unlocking
 	  objects in storeAbort().
+	- Merged squid-1.1.5 changes.
 
 Changes to squid-1.1.5 (January 22, 1996):
 
