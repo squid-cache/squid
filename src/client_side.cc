@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.562 2002/02/13 19:34:01 hno Exp $
+ * $Id: client_side.cc,v 1.563 2002/02/14 00:59:50 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -817,6 +817,7 @@ httpRequestFree(void *data)
     safe_free(http->log_uri);
     safe_free(http->al.headers.request);
     safe_free(http->al.headers.reply);
+    safe_free(http->al.cache.authuser);
     safe_free(http->redirect.location);
     stringClean(&http->range_iter.boundary);
     if ((e = http->entry)) {
