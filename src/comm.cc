@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.165 1997/06/18 01:43:42 wessels Exp $
+ * $Id: comm.cc,v 1.166 1997/06/18 03:06:48 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -280,6 +280,7 @@ comm_open(int sock_type,
 	return (COMM_ERROR);
     }
     /* update fdstat */
+    debug(5,5)("comm_open: FD %d is a new socket\n", new_socket);
     fd_open(new_socket, FD_SOCKET, note);
     fde = &fd_table[new_socket];
     if (!BIT_TEST(flags, COMM_NOCLOEXEC))
@@ -416,6 +417,7 @@ commConnectHandle(int fd, void *data)
     }
     switch (comm_connect_addr(fd, &cs->S)) {
     case COMM_INPROGRESS:
+	debug(5, 5) ("FD %d: COMM_INPROGRESS\n", fd);
 	commSetSelect(fd, COMM_SELECT_WRITE, commConnectHandle, cs, 0);
 	break;
     case COMM_OK:
@@ -473,15 +475,10 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
     FD_ENTRY *fde = &fd_table[sock];
     int len;
     int x;
-    /* sanity check */
-    if (ntohs(address->sin_port) == 0) {
-	debug(5, 10) ("comm_connect_addr: %s:%d: URL uses port 0?\n",
-	    inet_ntoa(address->sin_addr), ntohs(address->sin_port));
-	errno = 0;
-	return COMM_ERROR;
-    }
+    assert(ntohs(address->sin_port) != 0);
     /* Establish connection. */
     if (connect(sock, (struct sockaddr *) address, sizeof(struct sockaddr_in)) < 0) {
+	debug(5,9)("connect FD %d: %s\n", sock, xstrerror());
 	switch (errno) {
 	case EALREADY:
 #if EAGAIN != EWOULDBLOCK
@@ -1087,9 +1084,9 @@ void
 commSetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t timeout)
 {
     FD_ENTRY *fde;
-    if (fd < 0)
-	fatal_dump("commSetSelect: bad FD");
+    assert(fd >= 0);
     fde = &fd_table[fd];
+    debug(5,5)("commSetSelect: FD %d, handler=%p, data=%p\n", fd, handler, client_data);
     if (type & COMM_SELECT_READ) {
 	fde->read_handler = handler;
 	fde->read_data = client_data;
