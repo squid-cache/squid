@@ -551,6 +551,7 @@ extern OBJH dump_config;
 extern OBJH storeDirStats;
 extern OBJH pconnHistDump;
 extern void dump_peers(StoreEntry *, peer *);
+extern OBJH statAvgDump;
 
 extern void pconnPush(int, const char *host, u_short port);
 extern int pconnPop(const char *host, u_short port);
