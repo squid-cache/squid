@@ -55,14 +55,14 @@ extern void configFreeMemory(void);
 
 extern void cbdataInit(void);
 #if CBDATA_DEBUG
-extern void cbdataAddDbg(void *p, const char *, int);
+extern void cbdataAddDbg(const void *p, const char *, int);
 #else
-extern void cbdataAdd(void *p);
+extern void cbdataAdd(const void *p);
 #endif
 extern void cbdataFree(void *p);
-extern void cbdataLock(void *p);
-extern void cbdataUnlock(void *p);
-extern int cbdataValid(void *p);
+extern void cbdataLock(const void *p);
+extern void cbdataUnlock(const void *p);
+extern int cbdataValid(const void *p);
 extern void cbdataDump(StoreEntry *);
 
 extern void clientdbInit(void);
