@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.175 1997/06/26 22:35:49 wessels Exp $
+ * $Id: http.cc,v 1.176 1997/07/02 22:42:55 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -402,6 +402,92 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
     put_free_4k_page(line);
 }
 
+/* httpCheckPublic
+ *
+ *  Return 1 if the entry can be made public
+ *         0 if the entry must be made private
+ *        -1 if the entry should be negatively cached
+ */
+int
+httpCheckPublic(struct _http_reply *reply, HttpStateData * httpState)
+{
+    request_t *request = httpState->request;
+    switch (reply->code) {
+	/* Responses that are cacheable */
+    case 200:			/* OK */
+    case 203:			/* Non-Authoritative Information */
+    case 300:			/* Multiple Choices */
+    case 301:			/* Moved Permanently */
+    case 410:			/* Gone */
+	/* don't cache objects from neighbors w/o LMT, Date, or Expires */
+	if (EBIT_TEST(reply->cache_control, SCC_PRIVATE))
+	    return 0;
+	if (EBIT_TEST(reply->cache_control, SCC_NOCACHE))
+	    return 0;
+	if (BIT_TEST(request->flags, REQ_AUTH))
+	    if (!EBIT_TEST(reply->cache_control, SCC_PROXYREVALIDATE))
+		return 0;
+	/*
+	 * Dealing with cookies is quite a bit more complicated
+	 * than this.  Ideally we should strip the cookie
+	 * header from the reply but still cache the reply body.
+	 * More confusion at draft-ietf-http-state-mgmt-05.txt.
+	 */
+	if (EBIT_TEST(reply->misc_headers, HDR_SET_COOKIE))
+	    return 0;
+	if (reply->date > -1)
+	    return 1;
+	if (reply->last_modified > -1)
+	    return 1;
+	if (!httpState->neighbor)
+	    return 1;
+	if (reply->expires > -1)
+	    return 1;
+#ifdef OLD_CODE
+	if (entry->mem_obj->request->protocol != PROTO_HTTP)
+	    /* XXX Remove this check after a while.  DW 8/21/96
+	     * We won't keep some FTP objects from neighbors running
+	     * 1.0.8 or earlier because their ftpget's don't 
+	     * add a Date: field */
+	    return 1;
+#endif
+	else
+	    return 0;
+	break;
+	/* Responses that only are cacheable if the server says so */
+    case 302:			/* Moved temporarily */
+	if (reply->expires > -1)
+	    return 1;
+	else
+	    return 0;
+	break;
+	/* Errors can be negatively cached */
+    case 204:			/* No Content */
+    case 305:			/* Use Proxy (proxy redirect) */
+    case 400:			/* Bad Request */
+    case 403:			/* Forbidden */
+    case 404:			/* Not Found */
+    case 405:			/* Method Now Allowed */
+    case 414:			/* Request-URI Too Long */
+    case 500:			/* Internal Server Error */
+    case 501:			/* Not Implemented */
+    case 502:			/* Bad Gateway */
+    case 503:			/* Service Unavailable */
+    case 504:			/* Gateway Timeout */
+	return -1;
+	break;
+	/* Some responses can never be cached */
+    case 303:			/* See Other */
+    case 304:			/* Not Modified */
+    case 401:			/* Unauthorized */
+    case 407:			/* Proxy Authentication Required */
+    case 600:			/* Squid header parsing error */
+    default:			/* Unknown status code */
+	return 0;
+	break;
+    }
+    assert(0);
+}
 
 void
 httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
@@ -411,9 +497,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
     int room;
     int hdr_len;
     struct _http_reply *reply = entry->mem_obj->reply;
-
     debug(11, 3) ("httpProcessReplyHeader: key '%s'\n", entry->key);
-
     if (httpState->reply_hdr == NULL)
 	httpState->reply_hdr = get_free_8k_page();
     if (httpState->reply_hdr_state == 0) {
@@ -444,75 +528,22 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	storeTimestampsSet(entry);
 	/* Check if object is cacheable or not based on reply code */
 	debug(11, 3) ("httpProcessReplyHeader: HTTP CODE: %d\n", reply->code);
-	switch (reply->code) {
-	    /* Responses that are cacheable */
-	case 200:		/* OK */
-	case 203:		/* Non-Authoritative Information */
-	case 300:		/* Multiple Choices */
-	case 301:		/* Moved Permanently */
-	case 410:		/* Gone */
-	    /* don't cache objects from neighbors w/o LMT, Date, or Expires */
-	    if (EBIT_TEST(reply->cache_control, SCC_PRIVATE))
-		httpMakePrivate(entry);
-	    else if (EBIT_TEST(reply->cache_control, SCC_NOCACHE))
-		httpMakePrivate(entry);
-	    /*
-	     * Dealing with cookies is quite a bit more complicated
-	     * than this.  Ideally we should strip the cookie
-	     * header from the reply but still cache the reply body.
-	     * More confusion at draft-ietf-http-state-mgmt-05.txt.
-	     */
-	    else if (EBIT_TEST(reply->misc_headers, HDR_SET_COOKIE))
-		httpMakePrivate(entry);
-	    else if (reply->date > -1)
-		httpMakePublic(entry);
-	    else if (reply->last_modified > -1)
-		httpMakePublic(entry);
-	    else if (!httpState->neighbor)
-		httpMakePublic(entry);
-	    else if (reply->expires > -1)
-		httpMakePublic(entry);
-	    else if (entry->mem_obj->request->protocol != PROTO_HTTP)
-		/* XXX Remove this check after a while.  DW 8/21/96
-		 * We won't keep some FTP objects from neighbors running
-		 * 1.0.8 or earlier because their ftpget's don't 
-		 * add a Date: field */
-		httpMakePublic(entry);
-	    else
-		httpMakePrivate(entry);
+	switch (httpCheckPublic(reply, httpState)) {
+	case 1:
+	    httpMakePublic(entry);
 	    break;
-	    /* Responses that only are cacheable if the server says so */
-	case 302:		/* Moved temporarily */
-	    if (reply->expires > -1)
-		httpMakePublic(entry);
-	    else
-		httpMakePrivate(entry);
-	    break;
-	    /* Errors can be negatively cached */
-	case 204:		/* No Content */
-	case 305:		/* Use Proxy (proxy redirect) */
-	case 400:		/* Bad Request */
-	case 403:		/* Forbidden */
-	case 404:		/* Not Found */
-	case 405:		/* Method Now Allowed */
-	case 414:		/* Request-URI Too Long */
-	case 500:		/* Internal Server Error */
-	case 501:		/* Not Implemented */
-	case 502:		/* Bad Gateway */
-	case 503:		/* Service Unavailable */
-	case 504:		/* Gateway Timeout */
-	    httpCacheNegatively(entry);
-	    break;
-	    /* Some responses can never be cached */
-	case 303:		/* See Other */
-	case 304:		/* Not Modified */
-	case 401:		/* Unauthorized */
-	case 407:		/* Proxy Authentication Required */
-	case 600:		/* Squid header parsing error */
-	default:		/* Unknown status code */
+	case 0:
 	    httpMakePrivate(entry);
 	    break;
+	case -1:
+	    httpCacheNegatively(entry);
+	    break;
+	default:
+	    assert(0);
+	    break;
 	}
+	if (EBIT_TEST(reply->cache_control, SCC_PROXYREVALIDATE))
+	    BIT_SET(entry->flag, ENTRY_REVALIDATE);
     }
 }
 

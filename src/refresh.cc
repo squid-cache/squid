@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.12 1997/06/04 06:16:08 wessels Exp $
+ * $Id: refresh.cc,v 1.13 1997/07/02 22:42:57 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -127,6 +127,10 @@ refreshCheck(const StoreEntry * entry, const request_t * request, time_t delta)
     int factor;
     time_t check_time = squid_curtime + delta;
     debug(22, 3) ("refreshCheck: '%s'\n", entry->url);
+    if (BIT_TEST(entry->flag, ENTRY_REVALIDATE)) {
+	debug(22, 3)("refreshCheck: YES: Required Authorization\n");
+	return 1;
+    }
     for (R = Refresh_tbl; R; R = R->next) {
 	if (regexec(&(R->compiled_pattern), entry->url, 0, 0, 0) != 0)
 	    continue;
