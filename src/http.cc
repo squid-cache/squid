@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.427 2003/09/01 03:49:38 robertc Exp $
+ * $Id: http.cc,v 1.428 2003/09/21 00:30:47 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1665,17 +1665,20 @@ httpSendRequestEntityDone(int fd, void *data)
     ACLChecklist ch;
     debug(11, 5) ("httpSendRequestEntityDone: FD %d\n", fd);
     ch.request = requestLink(httpState->request);
+    ch.accessList = Config.accessList.brokenPosts;
 
     if (!Config.accessList.brokenPosts) {
         debug(11, 5) ("httpSendRequestEntityDone: No brokenPosts list\n");
         HttpStateData::SendComplete(fd, NULL, 0, COMM_OK, data);
-    } else if (!aclCheckFast(Config.accessList.brokenPosts, &ch)) {
+    } else if (!ch.fastCheck()) {
         debug(11, 5) ("httpSendRequestEntityDone: didn't match brokenPosts\n");
         HttpStateData::SendComplete(fd, NULL, 0, COMM_OK, data);
     } else {
         debug(11, 2) ("httpSendRequestEntityDone: matched brokenPosts\n");
         comm_old_write(fd, "\r\n", 2, HttpStateData::SendComplete, data, NULL);
     }
+
+    ch.accessList = NULL;
 }
 
 static void

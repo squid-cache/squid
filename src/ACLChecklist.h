@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLChecklist.h,v 1.17 2003/08/11 13:00:41 robertc Exp $
+ * $Id: ACLChecklist.h,v 1.18 2003/09/21 00:30:48 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -91,6 +91,7 @@ class NullState : public AsyncState
     ACLChecklist &operator=(ACLChecklist const &);
 
     void nonBlockingCheck(PF * callback, void *callback_data);
+    int fastCheck();
     void checkCallback(allow_t answer);
     _SQUID_INLINE_ bool matchAclListFast(const acl_list * list);
     _SQUID_INLINE_ void matchAclListSlow(const acl_list * list);
@@ -154,7 +155,6 @@ private:
 SQUIDCEXTERN ACLChecklist *aclChecklistCreate(const acl_access *,
         HttpRequest *,
         const char *ident);
-SQUIDCEXTERN int aclCheckFast(const acl_access *A, ACLChecklist *);
 
 #ifdef _USE_INLINE_
 #include "ACLChecklist.cci"

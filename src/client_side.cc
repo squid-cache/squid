@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.659 2003/09/06 12:47:34 robertc Exp $
+ * $Id: client_side.cc,v 1.660 2003/09/21 00:30:46 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -512,7 +512,7 @@ ClientHttpRequest::logRequest()
 
         checklist->reply = al.reply;
 
-        if (!Config.accessList.log || aclCheckFast(Config.accessList.log, checklist)) {
+        if (!Config.accessList.log || checklist->fastCheck()) {
             al.request = requestLink(request);
             accessLogLog(&al, checklist);
             updateCounters();
@@ -2742,8 +2742,12 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 
     identChecklist.my_port = ntohs(details->me.sin_port);
 
-    if (aclCheckFast(Config.accessList.identLookup, &identChecklist))
+    identChecklist.accessList = Config.accessList.identLookup;
+
+    if (identChecklist.fastCheck())
         identStart(&details->me, &details->peer, clientIdentDone, connState);
+
+    identChecklist.accessList = NULL;
 
 #endif
 
