@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.369 1998/07/30 21:49:11 rousskov Exp $
+ * $Id: client_side.cc,v 1.370 1998/07/30 21:52:01 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -874,7 +874,7 @@ clientIfRangeMatch(clientHttpRequest * http, HttpReply * rep)
 static void
 clientBuildRangeHeader(clientHttpRequest * http, HttpReply * rep)
 {
-    HttpHeader *hdr = &rep->header;
+    HttpHeader *hdr = rep ? &rep->header : 0;
     const char *range_err = NULL;
     assert(http->request->range);
     /* check if we still want to do ranges */
