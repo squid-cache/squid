@@ -200,8 +200,8 @@ struct _SquidConfig {
 	time_t pconn;
 	time_t siteSelect;
 	time_t deadPeer;
-        int icp_query;			/* msec */
-        int mcast_icp_query;		/* msec */
+	int icp_query;		/* msec */
+	int mcast_icp_query;	/* msec */
     } Timeout;
     size_t maxRequestSize;
     struct {
@@ -260,6 +260,7 @@ struct _SquidConfig {
     char *pidFilename;
     char *mimeTablePathname;
     char *visibleHostname;
+    char *uniqueHostname;
     char *errHtmlText;
     struct {
 	char *host;
@@ -417,8 +418,8 @@ struct _dwrite_q {
  * Note: "str" points to memory in HttpHeaderEntry (for now)
  *       so ETags should be used as tmp variables only (for now) */
 struct _ETag {
-    const char *str; /* quoted-string */
-    int weak;        /* true if it is a weak validator */
+    const char *str;		/* quoted-string */
+    int weak;			/* true if it is a weak validator */
 };
 
 struct _fde {
@@ -555,18 +556,18 @@ struct _HttpHdrContRange {
 
 /* some fields can hold either time or etag specs (e.g. If-Range) */
 struct _TimeOrTag {
-    ETag tag;		/* entity tag */
+    ETag tag;			/* entity tag */
     time_t time;
-    int valid;		/* true if struct is usable */
+    int valid;			/* true if struct is usable */
 };
 
 /* data for iterating thru range specs */
-struct _HttpHdrRangeIter  {
+struct _HttpHdrRangeIter {
     HttpHdrRangePos pos;
-    const HttpHdrRangeSpec *spec; /* current spec at pos */
-    size_t debt_size;	/* bytes left to send from the current spec */
-    size_t prefix_size; /* the size of the incoming HTTP msg prefix */
-    String boundary;    /* boundary for multipart responses */
+    const HttpHdrRangeSpec *spec;	/* current spec at pos */
+    size_t debt_size;		/* bytes left to send from the current spec */
+    size_t prefix_size;		/* the size of the incoming HTTP msg prefix */
+    String boundary;		/* boundary for multipart responses */
 };
 
 /* constant attributes of http header fields */
@@ -661,7 +662,7 @@ struct _icp_ping_data {
     int n_sent;
     int n_recv;
     int n_replies_expected;
-    int timeout;	/* msec */
+    int timeout;		/* msec */
     int timedout;
     int w_rtt;
     int p_rtt;
@@ -717,8 +718,8 @@ struct _clientHttpRequest {
 	off_t offset;
 	size_t size;
     } out;
-    HttpHdrRangeIter range_iter;/* data for iterating thru range specs */
-    size_t req_sz;              /* raw request size on input, not current request size */
+    HttpHdrRangeIter range_iter;	/* data for iterating thru range specs */
+    size_t req_sz;		/* raw request size on input, not current request size */
     StoreEntry *entry;
     StoreEntry *old_entry;
     log_type log_type;
@@ -1210,6 +1211,7 @@ struct _StatHist {
  */
 struct _StatCounters {
     struct {
+	int clients;
 	int requests;
 	int hits;
 	int errors;

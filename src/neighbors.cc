@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.221 1998/06/05 17:34:19 wessels Exp $
+ * $Id: neighbors.cc,v 1.222 1998/06/08 17:29:17 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -545,7 +545,7 @@ neighborsUdpPing(request_t * request,
     else if (*exprep > 0)
 	(*timeout) = 2 * (*timeout) / (*exprep);
     else
-	*timeout = 2000;		/* 2 seconds */
+	*timeout = 2000;	/* 2 seconds */
     return peers_pinged;
 }
 
@@ -986,12 +986,12 @@ static void
 peerCheckConnectDone(int fd, int status, void *data)
 {
     peer *p = data;
-    p->tcp_up = status == COMM_OK ? 1 : 0;
-    if (p->tcp_up) {
+    if (status == COMM_OK) {
+	p->tcp_up = PEER_TCP_MAGIC_COUNT;
 	debug(15, 0) ("TCP connection to %s/%d succeeded\n",
 	    p->host, p->http_port);
     } else {
-	eventAdd("peerCheckConnect", peerCheckConnect, p, 80.0, 1);
+	eventAdd("peerCheckConnect", peerCheckConnect, p, 60.0, 1);
     }
     comm_close(fd);
     return;
@@ -1003,9 +1003,11 @@ peerCheckConnectStart(peer * p)
     if (!p->tcp_up)
 	return;
     debug(15, 0) ("TCP connection to %s/%d failed\n", p->host, p->http_port);
-    p->tcp_up = 0;
+    p->tcp_up--;
+    if (p->tcp_up != (PEER_TCP_MAGIC_COUNT - 1))
+	return;
     p->last_fail_time = squid_curtime;
-    eventAdd("peerCheckConnect", peerCheckConnect, p, 80.0, 1);
+    eventAdd("peerCheckConnect", peerCheckConnect, p, 30.0, 1);
 }
 
 static void

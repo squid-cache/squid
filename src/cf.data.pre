@@ -1404,6 +1404,19 @@ DOC_START
 visible_hostname www-cache.foo.org
 DOC_END
 
+
+NAME: unique_hostname
+TYPE: string
+LOC: Config.uniqueHostname
+DEFAULT: none
+DOC_START
+	If you want to have multiple machines with the same
+	'visible_hostname' then you must give each machine a different
+	'unique_hostname' so that forwarding loops can be detected.
+
+unique_hostname www-cache1.foo.org
+DOC_END
+
 COMMENT_START
  OPTIONS FOR THE CACHE REGISTRATION SERVICE
  -----------------------------------------------------------------------------

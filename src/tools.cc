@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.157 1998/06/03 20:48:21 rousskov Exp $
+ * $Id: tools.cc,v 1.158 1998/06/08 17:29:21 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -522,6 +522,12 @@ getMyHostname(void)
 	}
     }
     return host;
+}
+
+const char *
+uniqueHostname(void)
+{
+    return Config.uniqueHostname ? Config.uniqueHostname : getMyHostname();
 }
 
 void
