@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.322 1999/01/24 05:27:36 wessels Exp $
+ * $Id: cache_cf.cc,v 1.323 1999/01/29 21:36:47 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -862,7 +862,10 @@ dump_cachemgrpasswd(StoreEntry * entry, const char *name, cachemgr_passwd * list
 {
     wordlist *w;
     while (list != NULL) {
-	storeAppendPrintf(entry, "%s XXXXXXXXXX", name);
+	if (strcmp(list->passwd, "none") && strcmp(list->passwd, "disable"))
+	    storeAppendPrintf(entry, "%s XXXXXXXXXX", name);
+	else
+	    storeAppendPrintf(entry, "%s %s", name, list->passwd);
 	for (w = list->actions; w != NULL; w = w->next) {
 	    storeAppendPrintf(entry, " %s", w->key);
 	}
