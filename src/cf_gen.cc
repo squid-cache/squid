@@ -1,5 +1,5 @@
 /*
- * $Id: cf_gen.cc,v 1.5 1997/07/14 04:27:38 wessels Exp $
+ * $Id: cf_gen.cc,v 1.6 1997/07/14 19:56:15 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Max Okumoto
@@ -288,9 +288,22 @@ gen_default(Entry * head, FILE * fp)
     int rc = 0;
     fprintf(fp,
 	"void\n"
+	"default_line(const char *s)\n"
+	"{\n"
+	"\tLOCAL_ARRAY(char, tmp_line, BUFSIZ);\n"
+        "\txstrncpy(tmp_line, s, BUFSIZ);\n"
+        "\txstrncpy(config_input_line, s, BUFSIZ);\n"
+	"\tconfig_lineno++;\n"
+        "\tparse_line(tmp_line);\n"
+	"}\n"
+	);
+
+    fprintf(fp,
+	"void\n"
 	"default_all(void)\n"
 	"{\n"
 	"\tcfg_filename = \"Default Configuration\";\n"
+	"\tconfig_lineno = 0;\n"
 	);
     for (entry = head; entry != NULL; entry = entry->next) {
 	assert(entry->name);
@@ -308,7 +321,7 @@ gen_default(Entry * head, FILE * fp)
 	if (strcmp(entry->default_value, "none") == 0) {
 	    fprintf(fp, "\t/* No default for %s */\n", entry->name);
 	} else {
-	    fprintf(fp, "\tparse_line(\"%s %s\");\n",
+	    fprintf(fp, "\tdefault_line(\"%s %s\");\n",
 		entry->name,
 		entry->default_value);
 	}
