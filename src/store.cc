@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.102 1996/09/11 22:41:14 wessels Exp $
+ * $Id: store.cc,v 1.103 1996/09/12 00:31:43 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -964,6 +964,7 @@ static void InvokeHandlers(e)
      StoreEntry *e;
 {
     int i;
+    int fd;
     MemObject *mem = e->mem_obj;
     struct pentry *p = NULL;
     PIF handler = NULL;
@@ -976,10 +977,11 @@ static void InvokeHandlers(e)
 	if ((handler = p->handler) == NULL)
 	    continue;
 	data = p->data;
+	fd = p->fd;
 	memset(p, '\0', sizeof(struct pentry));
 	safe_free(p);
 	mem->pending[i] = NULL;
-	handler(mem->pending[i]->fd, e, data);
+	handler(fd, e, data);
     }
 }
 
