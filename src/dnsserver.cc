@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.28 1996/11/06 23:14:29 wessels Exp $
+ * $Id: dnsserver.cc,v 1.29 1996/11/12 18:21:21 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -220,6 +220,15 @@ extern int h_errno;
 #if LIBRESOLV_DNS_TTL_HACK
 extern int _dns_ttl_;		/* this is a really *dirty* hack - bne */
 #endif
+
+#ifdef _SQUID_NEXT_
+/* This is a really bloody hack. frank@langen.bull.de
+ * Workaround bug in gethostbyname which sets h_errno wrong
+ * WARNING: This hack queries only the resolver and not NetInfo or YP
+ */
+struct hostent *_res_gethostbyname(char *name);
+#define gethostbyname _res_gethostbyname
+#endif /* _SQUID_NEXT_ */
 
 static int do_debug = 0;
 
