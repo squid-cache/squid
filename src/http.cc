@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.384 2001/10/24 08:19:08 hno Exp $
+ * $Id: http.cc,v 1.385 2001/12/28 02:39:42 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -375,7 +375,7 @@ httpMakeVaryMark(request_t * request, HttpReply * reply)
     }
     stringClean(&vary);
 #endif
-    debug(11, 0) ("httpMakeVaryMark: %d / %s\n", ok, strBuf(vstr));
+    debug(11, 3) ("httpMakeVaryMark: %d / %s\n", ok, strBuf(vstr));
     return strBuf(vstr);
 }
 
