@@ -7,22 +7,14 @@ fdUpdateBiggest(int fd, unsigned int status)
 {
     if (fd < Biggest_FD)
 	return;
-    if (fd >= Squid_MaxFD) {
-	debug_trap("Running out of file descriptors.\n");
-	return;
-    }
+    assert(fd < Squid_MaxFD);
     if (fd > Biggest_FD) {
-	if (status == FD_OPEN)
-	    Biggest_FD = fd;
-	else
-	    debug_trap("Biggest_FD inconsistency");
+	assert(status == FD_OPEN);
+	Biggest_FD = fd;
 	return;
     }
     /* if we are here, then fd == Biggest_FD */
-    if (status != FD_CLOSE) {
-	debug_trap("re-opening Biggest_FD?");
-	return;
-    }
+    assert(status == FD_CLOSE);
     while (fd_table[Biggest_FD].open != FD_OPEN)
 	Biggest_FD--;
 }
@@ -46,6 +38,7 @@ void
 fd_open(int fd, unsigned int type, const char *desc)
 {
     FD_ENTRY *fde = &fd_table[fd];
+    assert(fde->open == 0);
     fde->type = type;
     fdUpdateBiggest(fd, fde->open = FD_OPEN);
     if (desc)
