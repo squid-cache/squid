@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.102 1996/10/07 17:14:52 wessels Exp $
+ * $Id: cache_cf.cc,v 1.103 1996/10/08 19:37:33 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -197,6 +197,7 @@ struct SquidConfig Config;
 #define DefaultIpcacheLow	90
 #define DefaultIpcacheHigh	95
 #define DefaultMaxHotvmObjSize	(256<<10)	/* 256k */
+#define DefaultMinDirectHops	4
 
 int httpd_accel_mode = 0;	/* for fast access */
 char *DefaultSwapDir = DEFAULT_SWAP_DIR;
@@ -1365,6 +1366,9 @@ parseConfigFile(char *file_name)
 	else if (!strcmp(token, "max_hotvm_obj_size"))
 	    parseIntegerValue(&Config.maxHotvmObjSize);
 
+	else if (!strcmp(token, "minimum_direct_hops"))
+	    parseIntegerValue(&Config.minDirectHops);
+
 	/* If unknown, treat as a comment line */
 	else {
 	    debug(3, 0, "parseConfigFile: line %d unrecognized: '%s'\n",
@@ -1566,6 +1570,7 @@ configSetFactoryDefaults(void)
     Config.ipcache.low = DefaultIpcacheLow;
     Config.ipcache.high = DefaultIpcacheHigh;
     Config.maxHotvmObjSize = DefaultMaxHotvmObjSize;
+    Config.minDirectHops = DefaultMinDirectHops;
 }
 
 static void
