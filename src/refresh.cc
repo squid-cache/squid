@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.67 2004/12/22 16:21:33 serassio Exp $
+ * $Id: refresh.cc,v 1.68 2004/12/23 22:17:22 hno Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -397,14 +397,11 @@ refreshIsCachable(const StoreEntry * entry)
     /*
      * Don't look at the request to avoid no-cache and other nuisances.
      * the object should have a mem_obj so the URL will be found there.
-     * 60 seconds delta, to avoid objects which expire almost
-     * immediately, and which can't be refreshed.
+     * minimum_expiry_time seconds delta (defaults to 60 seconds), to 
+     * avoid objects which expire almost immediately, and which can't 
+     * be refreshed.
      */
-    /* For ESI, we use a delta of 0, as ESI objects typically can be
-     * refreshed, but the expiry may be low to enforce regular
-     * checks
-     */
-    int reason = refreshCheck(entry, NULL, ESI ? 0 : 60);
+    int reason = refreshCheck(entry, NULL, Config.minimum_expiry_time);
     refreshCounts[rcStore].total++;
     refreshCounts[rcStore].status[reason]++;
 
