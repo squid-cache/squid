@@ -9,6 +9,13 @@
 	- Changed "Invalid dnsserver output" to non-fatal debug_trap()
 	  (Joe Ramey).
 	- Changed STORE_IN_MEM_BUCKETS to the prime 229 (Neil Murray).
+	- Changed FD_SETSIZE to SQUID_MAXFD (Jonathan Larmour).
+	- Strip :port from Host: header if present.
+	- Reschedule fqdncache_dnsHandleRead() to prevent dnsservers
+	  from getting stuck (Makoto Ishisone).
+	- Fixed handing SSL requests inside firewalls (Akira Sato).
+	- Fixed passthrough neighbor selection bug (Akira Sato).
+	- Removed 'post_buf' stuff from http.c.
 
 Changes to squid-1.1.beta20 (November 17, 1996):
 
