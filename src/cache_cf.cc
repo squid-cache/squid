@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.152 1996/12/04 17:51:40 wessels Exp $
+ * $Id: cache_cf.cc,v 1.153 1996/12/04 18:22:45 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1588,5 +1588,5 @@ configDoConfigure(void)
     sprintf(ThisCache, "%s:%d (Squid/%s)",
 	getMyHostname(),
 	(int) Config.Port.http,
-        SQUID_VERSION);
+	SQUID_VERSION);
 }

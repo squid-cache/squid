@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.124 1996/12/04 17:51:43 wessels Exp $
+ * $Id: main.cc,v 1.125 1996/12/04 18:22:47 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -137,7 +137,7 @@ struct in_addr any_addr;
 struct in_addr theOutICPAddr;
 const char *const dash_str = "-";
 const char *const null_string = "";
-char ThisCache[SQUIDHOSTNAMELEN<<1];
+char ThisCache[SQUIDHOSTNAMELEN << 1];
 
 /* for error reporting from xmalloc and friends */
 extern void (*failure_notify) _PARAMS((const char *));
