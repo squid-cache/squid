@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.7 1998/06/02 21:38:06 rousskov Exp $
+ * $Id: HttpRequest.cc,v 1.8 1998/07/02 17:39:41 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -101,7 +101,7 @@ httpRequestSwapOut(const request_t * req, StoreEntry * e)
     assert(req && e);
     /* store request-line */
     storeAppendPrintf(e, "%s %s HTTP/1.0\r\n",
-	RequestMethodStr[req->method], req->urlpath);
+	RequestMethodStr[req->method], strBuf(req->urlpath));
     /* store headers */
     {
 	Packer p;
