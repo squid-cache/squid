@@ -55,6 +55,11 @@
 	- Don't cache HTTP replies with Vary: headers until we
 	  get content negotiation working.
 	- Fixed SSL proxying to forward full HTTP request headers.
+	- Changed storeGetMemSpace().  Only purge down to the HIGH
+	  water mark; move locked entries to the head of the inmem
+	  list.
+	- Changed clientReadRequest() to locally handle any
+	  "squid-internal-static" URL for any host.
 
 Changes to squid-1.2.beta20 (April 24, 1998):
 
