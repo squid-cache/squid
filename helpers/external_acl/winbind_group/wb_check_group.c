@@ -1,32 +1,56 @@
 /*
- * $Id: wb_check_group.c,v 1.9 2003/02/11 14:34:41 hno Exp $
+ * winbind_group: lookup group membership in a Windows NT/2000 domain
+ *
+ * (C)2002,2003 Guido Serassio - Acme Consulting S.r.l.
+ *
+ * Authors:
+ *  Guido Serassio <guido.serassio@acmeconsulting.it>
+ *  Acme Consulting S.r.l., Italy <http://www.acmeconsulting.it>
+ *
+ * With contributions from others mentioned in the change history section
+ * below.
+ *
+ * In part based on check_group by Rodrigo Albani de Campos and wbinfo
+ * from Samba Project.
+ *
+ * Dependencies: Samba 2.2.4 or later with Winbindd.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+ *
+ * History:
+ *
+ * Version 1.10
+ * 26-04-2003 Guido Serassio
+ *              Added option for case insensitive group name comparation.
+ *              More debug info.
+ *              Updated documentation.
+ * 21-03-2003 Nicolas Chaillot
+ *              Segfault bug fix (Bugzilla #574)
+ * Version 1.0
+ * 02-07-2002 Guido Serassio
+ *              Using the main function from check_group and sections
+ *              from wbinfo wrote winbind_group
  *
  * This is a helper for the external ACL interface for Squid Cache
- * Copyright (C) 2002 Guido Serassio <squidnt@serassio.it>
- * Based on previous work of Rodrigo Albani de Campos
  * 
  * It reads from the standard input the domain username and a list of
  * groups and tries to match it against the groups membership of the
  * specified username.
  *
  * Returns `OK' if the user belongs to a group or `ERR' otherwise, as
- * described on http://devel.squid-cache.org/ external_acl/config.html
- *
- * Requires Samba 2.2.4 or later with Winbindd.
- * 
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+ * described on http://devel.squid-cache.org/external_acl/config.html
  *
  */
 #include "wbntlm.h"
@@ -45,6 +69,7 @@
 char debug_enabled=0;
 char *myname;
 pid_t mypid;
+int use_case_insensitive_compare=0;
 
 NSS_STATUS winbindd_request(int req_type,
 			    struct winbindd_request *request,
@@ -96,6 +121,11 @@ strwordtok(char *buf, char **t)
 }
 
 
+int strCaseCmp (const char *s1, const char *s2)
+{
+    while (*s1 && toupper (*s1) == toupper (*s2)) s1++, s2++;
+    return *s1 - *s2;
+}
 
 /* Convert sid to string */
 
@@ -120,7 +150,6 @@ char * wbinfo_lookupsid(char * group, char *sid)
     strcpy(group,response.data.name.name);
     return group;
 }
-
 
 /* Convert gid to sid */
 
@@ -152,7 +181,7 @@ static inline int strcmparray(const char *str, const char **array)
 {
     while (*array) {
     	debug("Windows group: %s, Squid group: %s\n", str, *array);
-	if (strcmp(str, *array) == 0)
+	if ((use_case_insensitive_compare ? strCaseCmp(str, *array) : strcmp(str, *array)) == 0)
 	    return 0;
 	array++;
     }
@@ -180,8 +209,10 @@ Valid_Groups(char *UserName, const char **UserGroups)
 
     result = winbindd_request(WINBINDD_GETGROUPS, &request, &response);
 
-    if (result != NSS_STATUS_SUCCESS)
+    if (result != NSS_STATUS_SUCCESS) {
+    	warn("Warning: Can't enum user groups.\n");
 	return match;
+    }	
 
     for (i = 0; i < response.data.num_entries; i++) {
     	if ((wbinfo_gid_to_sid(sid, (int)((gid_t *)response.extra_data)[i])) != NULL) {
@@ -204,7 +235,8 @@ Valid_Groups(char *UserName, const char **UserGroups)
 static void
 usage(char *program)
 {
-    fprintf(stderr,"Usage: %s [-d] [-h]\n"
+    fprintf(stderr,"Usage: %s [-c] [-d] [-h]\n"
+	    	" -c      use case insensitive compare\n"
 	    	" -d      enable debugging\n"
 		" -h      this message\n",
 		program);
@@ -216,8 +248,11 @@ process_options(int argc, char *argv[])
     int opt;
 
     opterr = 0;
-    while (-1 != (opt = getopt(argc, argv, "dh"))) {
+    while (-1 != (opt = getopt(argc, argv, "cdh"))) {
 	switch (opt) {
+	case 'c':
+	    use_case_insensitive_compare = 1;
+	    break;
 	case 'd':
 	    debug_enabled = 1;
 	    break;
@@ -265,6 +300,8 @@ main (int argc, char *argv[])
 
     debug("External ACL winbindd group helper build " __DATE__ ", " __TIME__
     " starting up...\n");
+    if (use_case_insensitive_compare)
+        debug("Warning: running in case insensitive mode !!!\n");
  
     /* Main Loop */
     while (fgets (buf, BUFSIZE, stdin))
@@ -277,14 +314,14 @@ main (int argc, char *argv[])
 	    warn("Oversized message\n");
 	    goto error;
 	}
-
+	
 	if ((p = strchr(buf, '\n')) != NULL)
 	    *p = '\0';		/* strip \n */
 	if ((p = strchr(buf, '\r')) != NULL)
 	    *p = '\0';		/* strip \r */
 
 	debug("Got '%s' from Squid (length: %d).\n",buf,strlen(buf));
-
+	
 	if (buf[0] == '\0') {
 	    warn("Invalid Request\n");
 	    goto error;
@@ -294,6 +331,11 @@ main (int argc, char *argv[])
 	for (n = 0; (group = strwordtok(NULL, &t)) != NULL; n++)
 	    groups[n] = group;
 	groups[n] = NULL;
+
+        if (NULL == username) {
+            warn("Invalid Request\n");
+            goto error;
+        }
 
 	if (Valid_Groups(username, groups)) {
 	    printf ("OK\n");
