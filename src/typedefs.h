@@ -72,6 +72,7 @@ typedef struct _pingerReplyData pingerReplyData;
 typedef struct _icp_common_t icp_common_t;
 typedef struct _Meta_data Meta_data;
 typedef struct _iostats iostats;
+typedef struct _MemBuf MemBuf;
 typedef struct _mem_node mem_node;
 typedef struct _mem_hdr mem_hdr;
 typedef struct _store_client store_client;
@@ -129,3 +130,6 @@ typedef unsigned char cache_key;
 
 /* context-based debugging, the actual type is subject to change */
 typedef int Ctx;
+
+/* in case we want to change it later */
+typedef size_t mb_size_t;
