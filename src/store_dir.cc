@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.109 2000/05/16 07:06:07 wessels Exp $
+ * $Id: store_dir.cc,v 1.110 2000/05/28 22:15:42 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -35,7 +35,7 @@
 
 #include "squid.h"
 
-static int storeDirValidSwapDirSize(int, size_t);
+static int storeDirValidSwapDirSize(int, ssize_t);
 static void storeDirLRUWalkInitHead(SwapDir * sd);
 static void *storeDirLRUWalkNext(SwapDir * sd);
 
@@ -82,7 +82,7 @@ storeCreateSwapDirectories(void)
  * ie any-sized-object swapdirs. This is a good thing.
  */
 static int
-storeDirValidSwapDirSize(int swapdir, size_t objsize)
+storeDirValidSwapDirSize(int swapdir, ssize_t objsize)
 {
     /*
      * If the swapdir's max_obj_size is -1, then it definitely can
@@ -181,9 +181,9 @@ storeDirSelectSwapDir(void)
 int
 storeDirSelectSwapDir(const StoreEntry * e)
 {
-    size_t objsize;
-    size_t least_size;
-    size_t least_objsize;
+    ssize_t objsize;
+    ssize_t least_size;
+    ssize_t least_objsize;
     int least_load = 1000;
     int load;
     int dirn = -1;
@@ -191,7 +191,7 @@ storeDirSelectSwapDir(const StoreEntry * e)
     SwapDir *SD;
 
     /* Calculate the object size */
-    objsize = objectLen(e);
+    objsize = (ssize_t) objectLen(e);
     if (objsize != -1)
 	objsize += e->mem_obj->swap_hdr_sz;
     /* Initial defaults */

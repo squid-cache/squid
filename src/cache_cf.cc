@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.345 2000/05/16 07:06:03 wessels Exp $
+ * $Id: cache_cf.cc,v 1.346 2000/05/28 22:15:42 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -197,7 +197,7 @@ static void
 update_maxobjsize(void)
 {
     int i;
-    size_t ms = -1;
+    ssize_t ms = -1;
 
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
 	if (Config.cacheSwap.swapDirs[i].max_objsize > ms)
@@ -892,12 +892,12 @@ parse_cachedir(cacheSwap * swap)
     SwapDir *sd;
     int i;
     int fs;
-    size_t maxobjsize;
+    ssize_t maxobjsize;
 
     if ((type_str = strtok(NULL, w_space)) == NULL)
 	self_destruct();
 
-    maxobjsize = (size_t) GetInteger();
+    maxobjsize = (ssize_t) GetInteger();
 
     if ((path_str = strtok(NULL, w_space)) == NULL)
 	self_destruct();

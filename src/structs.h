@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.334 2000/05/16 07:06:07 wessels Exp $
+ * $Id: structs.h,v 1.335 2000/05/28 22:15:42 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1346,7 +1346,7 @@ struct _SwapDir {
     char *path;
     int index;			/* This entry's index into the swapDirs array */
     int suggest;
-    size_t max_objsize;
+    ssize_t max_objsize;
     union {
 #ifdef HEAP_REPLACEMENT
 	struct {
