@@ -520,6 +520,8 @@ extern char *mimeGetContentType(const char *fn);
 extern char *mimeGetIcon(const char *fn);
 extern char *mimeGetIconURL(const char *fn);
 extern char mimeGetTransferMode(const char *fn);
+extern int mimeGetDownloadOption(const char *fn);
+extern int mimeGetViewOption(const char *fn);
 
 extern int mcastSetTtl(int, int);
 extern IPH mcastJoinGroups;
