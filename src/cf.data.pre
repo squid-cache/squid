@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.234 2001/10/19 23:40:28 hno Exp $
+# $Id: cf.data.pre,v 1.235 2001/10/19 23:49:36 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -90,7 +90,7 @@ TYPE: https_port_list
 DEFAULT: none
 LOC: Config.Sockaddr.https
 DOC_START
-        Usage:  [ip:]port cert=certificate.pem [key=key.pem] [...]
+        Usage:  [ip:]port cert=certificate.pem [key=key.pem] [options...]
 
         The socket address where Squid will listen for HTTPS client
         requests.
@@ -100,7 +100,7 @@ DOC_START
         accelerator level.
 
 	You may specify multiple socket addresses on multiple lines,
-	each with their own SSL certificate.
+	each with their own SSL certificate and/or options.
 			      
 	Options:
 
