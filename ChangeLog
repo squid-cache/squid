@@ -48,6 +48,10 @@
 	  Now we return ICP error and escape the URL before logging.
 	- Added configure check for socklen_t (David Luyer).
 	- Removed USE_SPLAY #defines; it is now standard.
+	- Added FD arg to async IO callbacks (AIOCB) so we can eliminate
+	  temporary disk_ctrl_t structures.
+	- Changed ENOSPC disk write errors to reduce specific cache_dir
+	  sizes, and not just the size of the cache as a whole.
 
 Changes to squid-1.2.beta23 (June 22, 1998):
 
