@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.255 1998/03/03 00:31:01 rousskov Exp $
+ * $Id: cache_cf.cc,v 1.256 1998/03/05 17:43:32 rousskov Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -608,10 +608,10 @@ parse_cachedir(cacheSwap * swap)
 	if (!strcmp(path, tmp->path)) {
 	    /* just reconfigure it */
 	    if (size == tmp->max_size)
-		debug(3, 1) ("Cache dir '%s' size remains unchanged at %d MB\n",
+		debug(3, 1) ("Cache dir '%s' size remains unchanged at %d KB\n",
 		    path, size);
 	    else
-		debug(3, 1) ("Cache dir '%s' size changed to %d MB\n",
+		debug(3, 1) ("Cache dir '%s' size changed to %d KB\n",
 		    path, size);
 	    tmp->max_size = size;
 	    if (tmp->read_only != readonly)
