@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.49 1998/02/13 19:59:01 wessels Exp $
+ * $Id: mime.cc,v 1.50 1998/02/21 00:56:59 rousskov Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -396,7 +396,9 @@ mimeLoadIconFile(const char *icon)
 {
     int fd;
     int n;
+#if 0
     int l;
+#endif
     int flags;
     struct stat sb;
     StoreEntry *e;
@@ -429,6 +431,7 @@ mimeLoadIconFile(const char *icon)
 	METHOD_GET);
     assert(e != NULL);
     e->mem_obj->request = requestLink(urlParse(METHOD_GET, url));
+#if 0 /* use new interface */
     buf = memAllocate(MEM_4K_BUF, 1);
     l = 0;
     l += snprintf(buf + l, SM_PAGE_SIZE - l, "HTTP/1.0 200 OK\r\n");
@@ -441,7 +444,15 @@ mimeLoadIconFile(const char *icon)
     l += snprintf(buf + l, SM_PAGE_SIZE - l, "\r\n");
     httpParseReplyHeaders(buf, e->mem_obj->reply);
     storeAppend(e, buf, l);
-    while ((n = read(fd, buf, SM_PAGE_SIZE)) > 0)
+#else
+    httpReplyReset(e->mem_obj->reply);
+    httpReplySetHeaders(e->mem_obj->reply, 1.0, 200, NULL, 
+	type, (int) sb.st_size, sb.st_mtime, squid_curtime + 86400);
+    httpReplySwapOut(e->mem_obj->reply, e);
+    /* read the file into the buffer and append it to store */
+    buf = memAllocate(MEM_4K_BUF, 1);
+#endif
+    while ((n = read(fd, buf, 4096)) > 0)
 	storeAppend(e, buf, n);
     file_close(fd);
     storeSetPublicKey(e);

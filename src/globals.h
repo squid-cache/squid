@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.38 1998/02/20 21:03:44 wessels Exp $
+ * $Id: globals.h,v 1.39 1998/02/21 00:56:56 rousskov Exp $
  */
 
 extern FILE *debug_log;		/* NULL */
@@ -26,6 +26,7 @@ extern const char *const dash_str;	/* "-" */
 extern const char *const localhost;	/* "127.0.0.1" */
 extern const char *const null_string;	/* "" */
 extern const char *const version_string;	/* SQUID_VERSION */
+extern const char *const full_appname_string;   /* "Squid/" SQUID_VERSION */
 extern const char *const w_space;	/* " \t\n\r" */
 extern const char *fdTypeStr[];
 extern const char *hier_strings[];

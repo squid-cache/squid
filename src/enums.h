@@ -43,6 +43,7 @@ typedef enum {
     ERR_FTP_FAILURE,
     ERR_URN_RESOLVE,
     ERR_ACCESS_DENIED,
+    ERR_CACHE_ACCESS_DENIED,
     ERR_MAX
 } err_type;
 
@@ -141,7 +142,9 @@ typedef enum {
     MGR_REDIRECTORS,
     MGR_REFRESH,
     MGR_REMOVE,
+    MGR_REQUEST_HDRS,
     MGR_REPLY_HDRS,
+    MGR_MSG_HDRS,
     MGR_SERVER_LIST,
     MGR_NON_PEERS,
     MGR_SHUTDOWN,
@@ -296,7 +299,8 @@ typedef enum {
     HTTP_BAD_GATEWAY = 502,
     HTTP_SERVICE_UNAVAILABLE = 503,
     HTTP_GATEWAY_TIMEOUT = 504,
-    HTTP_HTTP_VERSION_NOT_SUPPORTED = 505
+    HTTP_HTTP_VERSION_NOT_SUPPORTED = 505,
+    HTTP_INVALID_HEADER = 600 /* Squid header parsing error */
 } http_status;
 
 /* These are for StoreEntry->flag, which is defined as a SHORT */
@@ -410,7 +414,12 @@ typedef enum {
     MEM_FQDNCACHE_ENTRY,
     MEM_HASH_LINK,
     MEM_HASH_TABLE,
+#if 0 /* renamed to detect all old uses */
     MEM_HTTP_REPLY,
+#else
+    MEM_HTTPREPLY,
+#endif
+    MEM_HTTP_SCC,
     MEM_HTTPSTATEDATA,
     MEM_ICPUDPDATA,
     MEM_CLIENTHTTPREQUEST,

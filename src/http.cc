@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.238 1998/02/19 23:09:52 wessels Exp $
+ * $Id: http.cc,v 1.239 1998/02/21 00:56:56 rousskov Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -113,6 +113,7 @@
 
 static const char *const crlf = "\r\n";
 
+#if 0 /* moved to HttpHeader */
 typedef enum {
     SCC_PUBLIC,
     SCC_PRIVATE,
@@ -124,6 +125,7 @@ typedef enum {
     SCC_MAXAGE,
     SCC_ENUM_END
 } http_server_cc_t;
+#endif
 
 enum {
     CCC_NOCACHE,
@@ -135,6 +137,7 @@ enum {
     CCC_ENUM_END
 };
 
+#if 0 /* moved to HttpHeader.h */
 typedef enum {
     HDR_ACCEPT,
     HDR_AGE,
@@ -197,6 +200,7 @@ static struct {
     int misc[HDR_MISC_END];
     int cc[SCC_ENUM_END];
 } ReplyHeaderStats;
+#endif /* if 0 */
 
 static CNCB httpConnectDone;
 static CWCB httpSendComplete;
@@ -208,7 +212,9 @@ static void httpAppendRequestHeader(char *hdr, const char *line, size_t * sz, si
 static void httpCacheNegatively(StoreEntry *);
 static void httpMakePrivate(StoreEntry *);
 static void httpMakePublic(StoreEntry *);
+#if 0 /* moved to HttpResponse */
 static char *httpStatusString(int status);
+#endif
 static STABH httpAbort;
 static HttpStateData *httpBuildState(int, StoreEntry *, request_t *, peer *);
 static int httpSocketOpen(StoreEntry *, request_t *);
@@ -290,6 +296,7 @@ httpCacheNegatively(StoreEntry * entry)
 }
 
 
+#if 0
 /* Build a reply structure from HTTP reply headers */
 void
 httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
@@ -420,17 +427,20 @@ httpParseReplyHeaders(const char *buf, struct _http_reply *reply)
     memFree(MEM_4K_BUF, headers);
     memFree(MEM_4K_BUF, line);
 }
+#endif /* 0 */
 
 static int
 httpCachableReply(HttpStateData * httpState)
 {
-    struct _http_reply *reply = httpState->entry->mem_obj->reply;
-    if (EBIT_TEST(reply->cache_control, SCC_PRIVATE))
+    HttpHeader *hdr = &httpState->entry->mem_obj->reply->hdr;
+    const HttpScc *scc = httpHeaderGetScc(hdr);
+    const int scc_mask = (scc) ? scc->mask : 0;
+    if (EBIT_TEST(scc_mask, SCC_PRIVATE))
 	return 0;
-    if (EBIT_TEST(reply->cache_control, SCC_NOCACHE))
+    if (EBIT_TEST(scc_mask, SCC_NO_CACHE))
 	return 0;
     if (EBIT_TEST(httpState->request->flags, REQ_AUTH))
-	if (!EBIT_TEST(reply->cache_control, SCC_PROXYREVALIDATE))
+	if (!EBIT_TEST(scc_mask, SCC_PROXY_REVALIDATE))
 	    return 0;
     /*
      * Dealing with cookies is quite a bit more complicated
@@ -438,9 +448,10 @@ httpCachableReply(HttpStateData * httpState)
      * header from the reply but still cache the reply body.
      * More confusion at draft-ietf-http-state-mgmt-05.txt.
      */
-    if (EBIT_TEST(reply->misc_headers, HDR_SET_COOKIE))
+    /* With new headers the above stripping should be easy to do? @?@ */
+    if (httpHeaderHas(hdr, HDR_SET_COOKIE))
 	return 0;
-    switch (reply->code) {
+    switch (httpState->entry->mem_obj->reply->sline.status) {
 	/* Responses that are cacheable */
     case 200:			/* OK */
     case 203:			/* Non-Authoritative Information */
@@ -448,13 +459,14 @@ httpCachableReply(HttpStateData * httpState)
     case 301:			/* Moved Permanently */
     case 410:			/* Gone */
 	/* don't cache objects from peers w/o LMT, Date, or Expires */
-	if (reply->date > -1)
+	/* check that is it enough to check headers @?@ */
+	if (httpHeaderHas(hdr, HDR_DATE))
 	    return 1;
-	else if (reply->last_modified > -1)
+	else if (httpHeaderHas(hdr, HDR_LAST_MODIFIED))
 	    return 1;
 	else if (!httpState->peer)
 	    return 1;
-	else if (reply->expires > -1)
+	else if (httpHeaderHas(hdr, HDR_EXPIRES))
 	    return 1;
 	else
 	    return 0;
@@ -462,12 +474,13 @@ httpCachableReply(HttpStateData * httpState)
 	break;
 	/* Responses that only are cacheable if the server says so */
     case 302:			/* Moved temporarily */
-	if (reply->expires > -1)
+	if (httpHeaderHas(hdr, HDR_EXPIRES))
 	    return 1;
 	else
 	    return 0;
 	/* NOTREACHED */
 	break;
+/* @?@ should we replace these magic numbers with http_status enums? */
 	/* Errors can be negatively cached */
     case 204:			/* No Content */
     case 305:			/* Use Proxy (proxy redirect) */
@@ -499,6 +512,7 @@ httpCachableReply(HttpStateData * httpState)
     /* NOTREACHED */
 }
 
+/* rewrite this later using new interfaces @?@ */
 void
 httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 {
@@ -506,7 +520,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
     StoreEntry *entry = httpState->entry;
     int room;
     int hdr_len;
-    struct _http_reply *reply = entry->mem_obj->reply;
+    HttpReply *reply = entry->mem_obj->reply;
     debug(11, 3) ("httpProcessReplyHeader: key '%s'\n",
 	storeKeyText(entry->key));
     if (httpState->reply_hdr == NULL)
@@ -519,7 +533,7 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	if (hdr_len > 4 && strncmp(httpState->reply_hdr, "HTTP/", 5)) {
 	    debug(11, 3) ("httpProcessReplyHeader: Non-HTTP-compliant header: '%s'\n", httpState->reply_hdr);
 	    httpState->reply_hdr_state += 2;
-	    reply->code = 555;
+	    reply->sline.status = 555;
 	    return;
 	}
 	t = httpState->reply_hdr + hdr_len;
@@ -535,10 +549,12 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	debug(11, 9) ("GOT HTTP REPLY HDR:\n---------\n%s\n----------\n",
 	    httpState->reply_hdr);
 	/* Parse headers into reply structure */
-	httpParseReplyHeaders(httpState->reply_hdr, reply);
+	/* Old code never parsed headers if mime_headers_end failed, was it intentional ? @?@ @?@ */
+	/* what happens if we fail to parse here? @?@ @?@ */
+	httpReplyParse(reply, httpState->reply_hdr); /* httpState->eof); */
 	storeTimestampsSet(entry);
 	/* Check if object is cacheable or not based on reply code */
-	debug(11, 3) ("httpProcessReplyHeader: HTTP CODE: %d\n", reply->code);
+	debug(11, 3) ("httpProcessReplyHeader: HTTP CODE: %d\n", reply->sline.status);
 	switch (httpCachableReply(httpState)) {
 	case 1:
 	    httpMakePublic(entry);
@@ -553,12 +569,12 @@ httpProcessReplyHeader(HttpStateData * httpState, const char *buf, int size)
 	    assert(0);
 	    break;
 	}
-	if (EBIT_TEST(reply->cache_control, SCC_PROXYREVALIDATE))
+	if (httpReplyHasScc(reply, SCC_PROXY_REVALIDATE))
 	    EBIT_SET(entry->flag, ENTRY_REVALIDATE);
 	if (EBIT_TEST(httpState->flags, HTTP_KEEPALIVE))
 	    if (httpState->peer)
 		httpState->peer->stats.n_keepalives_sent++;
-	if (EBIT_TEST(reply->misc_headers, HDR_PROXY_KEEPALIVE))
+	if (httpHeaderHas(&reply->hdr, HDR_PROXY_KEEPALIVE))
 	    if (httpState->peer)
 		httpState->peer->stats.n_keepalives_recv++;
     }
@@ -569,7 +585,7 @@ httpPconnTransferDone(HttpStateData * httpState)
 {
     /* return 1 if we got the last of the data on a persistent connection */
     MemObject *mem = httpState->entry->mem_obj;
-    struct _http_reply *reply = mem->reply;
+    HttpReply *reply = mem->reply;
     debug(11, 3) ("httpPconnTransferDone: FD %d\n", httpState->fd);
     /*
      * If we didn't send a Keepalive request header, then this
@@ -578,7 +594,7 @@ httpPconnTransferDone(HttpStateData * httpState)
     if (!EBIT_TEST(httpState->flags, HTTP_KEEPALIVE))
 	return 0;
     debug(11, 5) ("httpPconnTransferDone: content_length=%d\n",
-	reply->content_length);
+	httpReplyContentLen(reply));
     /*
      * Deal with gross HTTP stuff
      *    - If we haven't seen the end of the reply headers, we can't
@@ -592,13 +608,13 @@ httpPconnTransferDone(HttpStateData * httpState)
      */
     if (httpState->reply_hdr_state < 2)
 	return 0;
-    else if (reply->code == HTTP_OK)
+    else if (reply->sline.status == HTTP_OK)
 	(void) 0;		/* common case, continue */
-    else if (reply->code == HTTP_NO_CONTENT)
+    else if (reply->sline.status == HTTP_NO_CONTENT)
 	return 1;
-    else if (reply->code == HTTP_NOT_MODIFIED)
+    else if (reply->sline.status == HTTP_NOT_MODIFIED)
 	return 1;
-    else if (reply->code < HTTP_OK)
+    else if (reply->sline.status < HTTP_OK)
 	return 1;
     else if (httpState->request->method == METHOD_HEAD)
 	return 1;
@@ -607,9 +623,9 @@ httpPconnTransferDone(HttpStateData * httpState)
      * persistent.  If there is a content length, then we must
      * wait until we've seen the end of the body.
      */
-    if (reply->content_length < 0)
+    if (httpReplyContentLen(reply) < 0)
 	return 0;
-    else if (mem->inmem_hi < reply->content_length + reply->hdr_sz)
+    else if (mem->inmem_hi < httpReplyContentLen(reply) + reply->hdr_sz)
 	return 0;
     else
 	return 1;
@@ -1117,6 +1133,7 @@ httpConnectDone(int fd, int status, void *data)
     }
 }
 
+#if 0 /* moved to httpHeader */
 void
 httpReplyHeaderStats(StoreEntry * entry)
 {
@@ -1134,13 +1151,14 @@ httpReplyHeaderStats(StoreEntry * entry)
 	    HttpServerCCStr[i],
 	    ReplyHeaderStats.cc[i]);
 }
+#endif
 
 void
 httpInit(void)
 {
     cachemgrRegister("reply_headers",
 	"HTTP Reply Header Histograms",
-	httpReplyHeaderStats, 0);
+	httpHeaderStoreRepReport, 0);
 }
 
 static void
@@ -1151,6 +1169,7 @@ httpAbort(void *data)
     comm_close(httpState->fd);
 }
 
+#if 0 /* moved to httpResponse.c */
 static char *
 httpStatusString(int status)
 {
@@ -1274,7 +1293,9 @@ httpStatusString(int status)
     }
     return p;
 }
+#endif
 
+#if 0 /* moved to HttpResponse.c */
 char *
 httpReplyHeader(double ver,
     http_status status,
@@ -1302,3 +1323,4 @@ httpReplyHeader(double ver,
 	l += snprintf(buf + l, s - l, "Content-Type: %s\r\n", ctype);
     return buf;
 }
+#endif

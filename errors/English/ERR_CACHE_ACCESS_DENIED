@@ -1,0 +1,32 @@
+<HTML><HEAD>
+<TITLE>ERROR: Cache Access Denied</TITLE>
+</HEAD>
+<BODY>
+<H1>ERROR</H1>
+<H2>Cache Access Denied</H2>
+<HR>
+<P>
+While trying to retrieve the URL:
+<A HREF="%U">%U</A>
+<P>
+The following error was encountered:
+<UL>
+<LI>
+<STRONG>
+Cache Access Denied.
+</STRONG>
+</UL>
+</P>
+
+<P>Sorry, you are not currently allowed to request:
+<PRE>    %U</PRE>
+from this cache until you have authenticated yourself.
+</P>
+
+<P>
+You need to use Netscape version 2.0 or greater, or Microsoft Internet
+Explorer 3.0, or an HTTP/1.1 compliant browser for this to work.  Please
+contact the <A HREF="mailto:%w">cache administrator</a> if you have
+difficulties authenticating yourself or 
+<A HREF="http://%h/cgi-bin/chpasswd.cgi\">change</a> your default password.
+</P>

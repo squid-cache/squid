@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.383 1998/02/20 16:03:20 wessels Exp $
+ * $Id: store.cc,v 1.384 1998/02/21 00:57:02 rousskov Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -176,11 +176,7 @@ static MemObject *
 new_MemObject(const char *url, const char *log_url)
 {
     MemObject *mem = memAllocate(MEM_MEMOBJECT, 1);
-    mem->reply = memAllocate(MEM_HTTP_REPLY, 1);
-    mem->reply->date = -2;
-    mem->reply->expires = -2;
-    mem->reply->last_modified = -2;
-    mem->reply->content_length = -1;
+    mem->reply = httpReplyCreate();
     mem->url = xstrdup(url);
     mem->log_url = xstrdup(log_url);
     mem->swapout.fd = -1;
@@ -214,7 +210,7 @@ destroy_MemObject(StoreEntry * e)
 	storeUnregister(e, mem->clients->callback_data);
 #endif
     assert(mem->clients == NULL);
-    memFree(MEM_HTTP_REPLY, mem->reply);
+    httpReplyDestroy(mem->reply);
     safe_free(mem->url);
     safe_free(mem->log_url);
     requestUnlink(mem->request);
@@ -458,6 +454,7 @@ storeAppend(StoreEntry * e, const char *buf, int len)
 	debug(20, 5) ("storeAppend: appending %d bytes for '%s'\n",
 	    len,
 	    storeKeyText(e->key));
+	tmp_debug(here) ("bytes: '%.20s'\n", buf); /* @?@ @?@ */
 	storeGetMemSpace(len);
 	stmemAppend(mem->data, buf, len);
 	mem->inmem_hi += len;
@@ -473,7 +470,6 @@ void
 storeAppendPrintf(StoreEntry * e, const char *fmt,...)
 {
     va_list args;
-    LOCAL_ARRAY(char, buf, 4096);
     va_start(args, fmt);
 #else
 void
@@ -483,15 +479,22 @@ storeAppendPrintf(va_alist)
     va_list args;
     StoreEntry *e = NULL;
     const char *fmt = NULL;
-    LOCAL_ARRAY(char, buf, 4096);
     va_start(args);
     e = va_arg(args, StoreEntry *);
     fmt = va_arg(args, char *);
 #endif
-    buf[0] = '\0';
-    vsnprintf(buf, 4096, fmt, args);
-    storeAppend(e, buf, strlen(buf));
+    storeAppendVPrintf(e, fmt, args);
     va_end(args);
+}
+
+/* used be storeAppendPrintf and Packer */
+void
+storeAppendVPrintf(StoreEntry * e, const char *fmt, va_list vargs)
+{
+    LOCAL_ARRAY(char, buf, 4096);
+    buf[0] = '\0';
+    vsnprintf(buf, 4096, fmt, vargs);
+    storeAppend(e, buf, strlen(buf));
 }
 
 int
@@ -746,16 +749,18 @@ storeEntryValidLength(const StoreEntry * e)
 {
     int diff;
     http_reply *reply;
+    int clen;
     assert(e->mem_obj != NULL);
     reply = e->mem_obj->reply;
+    clen = httpReplyContentLen(reply);
     debug(20, 3) ("storeEntryValidLength: Checking '%s'\n", storeKeyText(e->key));
     debug(20, 5) ("storeEntryValidLength:     object_len = %d\n",
 	objectLen(e));
     debug(20, 5) ("storeEntryValidLength:         hdr_sz = %d\n",
 	reply->hdr_sz);
     debug(20, 5) ("storeEntryValidLength: content_length = %d\n",
-	reply->content_length);
-    if (reply->content_length < 0) {
+	clen);
+    if (clen < 0) {
 	debug(20, 5) ("storeEntryValidLength: Unspecified content length: %s\n",
 	    storeKeyText(e->key));
 	return 1;
@@ -770,11 +775,11 @@ storeEntryValidLength(const StoreEntry * e)
 	    storeKeyText(e->key));
 	return 1;
     }
-    if (reply->code == HTTP_NOT_MODIFIED)
+    if (reply->sline.status == HTTP_NOT_MODIFIED)
 	return 1;
-    if (reply->code == HTTP_NO_CONTENT)
+    if (reply->sline.status == HTTP_NO_CONTENT)
 	return 1;
-    diff = reply->hdr_sz + reply->content_length - objectLen(e);
+    diff = reply->hdr_sz + clen - objectLen(e);
     if (diff == 0)
 	return 1;
     debug(20, 3) ("storeEntryValidLength: %d bytes too %s; '%s'\n",
@@ -966,14 +971,25 @@ void
 storeTimestampsSet(StoreEntry * entry)
 {
     time_t served_date = -1;
-    struct _http_reply *reply = entry->mem_obj->reply;
+    HttpReply *reply = entry->mem_obj->reply;
+#if 0 /* new interface */
     served_date = reply->date > -1 ? reply->date : squid_curtime;
     entry->expires = reply->expires;
     if (reply->last_modified > -1)
 	entry->lastmod = reply->last_modified;
     else
 	entry->lastmod = served_date;
+#else
+    served_date = httpHeaderGetTime(&reply->hdr, HDR_DATE);
+    if (served_date < 0)
+	served_date = squid_curtime;
+    entry->expires = httpReplyExpires(reply);
+    entry->lastmod = httpHeaderGetTime(&reply->hdr, HDR_LAST_MODIFIED);
+    if (entry->lastmod < 0)
+	entry->lastmod = served_date;
+#endif
     entry->timestamp = served_date;
+
 }
 
 void
@@ -1080,6 +1096,7 @@ storeCreateMemObject(StoreEntry * e, const char *url, const char *log_url)
     e->mem_obj = new_MemObject(url, log_url);
 }
 
+#if 0 /* moved to HttpReply.c (has nothing to do with store.c) */
 void
 storeCopyNotModifiedReplyHeaders(MemObject * oldmem, MemObject * newmem)
 {
@@ -1094,6 +1111,7 @@ storeCopyNotModifiedReplyHeaders(MemObject * oldmem, MemObject * newmem)
     if (newreply->expires > -1)
 	oldreply->expires = newreply->expires;
 }
+#endif
 
 /* this just sets DELAY_SENDING */
 void

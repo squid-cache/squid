@@ -1,4 +1,5 @@
-/* $Id: version.h,v 1.100 1998/02/13 18:47:35 wessels Exp $
+/*
+ * $Id: version.h,v 1.101 1998/02/21 00:56:37 rousskov Exp $
  *
  *  SQUID_VERSION - String for version id of this distribution
  */
