@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.227 1997/04/30 22:46:27 wessels Exp $
+ * $Id: store.cc,v 1.228 1997/05/02 21:34:15 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -165,10 +165,10 @@ const char *memStatusStr[] =
 
 const char *pingStatusStr[] =
 {
+    "PING_NONE",
     "PING_WAITING",
     "PING_TIMEOUT",
-    "PING_DONE",
-    "PING_NONE"
+    "PING_DONE"
 };
 
 const char *storeStatusStr[] =
@@ -568,7 +568,7 @@ storeLockObject(StoreEntry * e, SIH * callback, void *callback_data)
     if (e->mem_status == NOT_IN_MEMORY && e->swap_status == SWAP_OK) {
 	/* object is in disk and no swapping daemon running. Bring it in. */
 	if (callback == NULL)
-	    debug(20, 0, "storeLockObject: NULL callback\n");
+	    debug_trap("storeLockObject: NULL callback\n");
 	ctrlp = xmalloc(sizeof(lock_ctrl_t));
 	ctrlp->callback = callback;
 	ctrlp->callback_data = callback_data;
@@ -618,10 +618,8 @@ storeUnlockObject(StoreEntry * e)
     if (e->lock_count)
 	return (int) e->lock_count;
     if (e->store_status == STORE_PENDING) {
-#ifdef COMPLAIN
 	debug_trap("storeUnlockObject: Someone unlocked STORE_PENDING object");
 	debug(20, 1, "   --> Key '%s'\n", e->key);
-#endif
 	e->store_status = STORE_ABORTED;
     }
     if (storePendingNClients(e) > 0)
@@ -1171,7 +1169,7 @@ storeSwapInValidateComplete(void *data, int status)
     }
     path = storeSwapFullPath(e->swap_file_number, NULL);
     ctrlp->path = xstrdup(path);
-    file_open(path, NULL, O_RDONLY, storeSwapInStartComplete, ctrlp);
+    file_open(path, O_RDONLY, storeSwapInStartComplete, ctrlp);
 }
 
 static void
@@ -1315,7 +1313,6 @@ storeSwapOutStart(StoreEntry * e)
     ctrlp->swapfileno = swapfileno;
     e->swap_status = SWAPPING_OUT;
     file_open(swapfilename,
-	NULL,
 	O_WRONLY | O_CREAT | O_TRUNC,
 	storeSwapOutStartComplete,
 	ctrlp);
@@ -1764,11 +1761,14 @@ storeAbort(StoreEntry * e, const char *msg)
     char *abort_msg;
     MemObject *mem = e->mem_obj;
 
-    if (e->store_status != STORE_PENDING) {	/* XXX remove later */
+    if (e->store_status != STORE_PENDING) {
 	debug_trap("storeAbort: bad store_status");
 	return;
-    } else if (mem == NULL) {	/* XXX remove later */
-	debug_trap("storeAbort: null mem");
+    } else if (mem == NULL) {
+	debug_trap("storeAbort: null mem_obj");
+	return;
+    } else if (e->ping_status == PING_WAITING) {
+	debug_trap("storeAbort: ping_status == PING_WAITING");
 	return;
     }
     debug(20, 6, "storeAbort: '%s'\n", e->key);
@@ -2460,7 +2460,7 @@ storeInit(void)
     if (strcmp((fname = Config.Log.store), "none") == 0)
 	storelog_fd = -1;
     else
-	storelog_fd = file_open(fname, NULL, O_WRONLY | O_CREAT, NULL, NULL);
+	storelog_fd = file_open(fname, O_WRONLY | O_CREAT, NULL, NULL);
     if (storelog_fd < 0)
 	debug(20, 1, "Store logging disabled\n");
     if (ncache_dirs < 1)
@@ -2600,7 +2600,10 @@ storeWriteCleanLogs(void)
 	cln[dirn] = xstrdup(storeDirSwapLogFile(dirn, ".last-clean"));
 	safeunlink(new[dirn], 1);
 	safeunlink(cln[dirn], 1);
-	fd[dirn] = open(new[dirn], O_WRONLY | O_APPEND | O_CREAT | O_TRUNC, 0644);
+	fd[dirn] = file_open(new[dirn],
+		O_WRONLY | O_CREAT | O_TRUNC,
+		NULL,
+		NULL);
 	if (fd[dirn] < 0) {
 	    debug(50, 0, "storeWriteCleanLogs: %s: %s\n", new[dirn], xstrerror());
 	    continue;
@@ -2668,7 +2671,7 @@ storeWriteCleanLogs(void)
     /* touch a timestamp file if we're not still validating */
     for (dirn = 0; dirn < ncache_dirs; dirn++) {
 	if (!store_validating)
-	    file_close(file_open(cln[dirn], NULL,
+	    file_close(file_open(cln[dirn],
 		    O_WRONLY | O_CREAT | O_TRUNC, NULL, NULL));
 	safe_free(cur[dirn]);
 	safe_free(new[dirn]);
@@ -2741,7 +2744,7 @@ storeRotateLog(void)
 	sprintf(to, "%s.%d", fname, 0);
 	rename(fname, to);
     }
-    storelog_fd = file_open(fname, NULL, O_WRONLY | O_CREAT, NULL, NULL);
+    storelog_fd = file_open(fname, O_WRONLY | O_CREAT, NULL, NULL);
     if (storelog_fd < 0) {
 	debug(50, 0, "storeRotateLog: %s: %s\n", fname, xstrerror());
 	debug(20, 1, "Store logging disabled\n");
@@ -2827,7 +2830,7 @@ static const char *
 storeDescribeStatus(const StoreEntry * e)
 {
     static char buf[MAX_URL << 1];
-    sprintf(buf, "mem:%13s ping:%12s store:%13s swap:%12s locks:%d %s\n",
+    sprintf(buf, "mem:%s ping:%s store:%s swap:%s locks:%d %s\n",
 	memStatusStr[e->mem_status],
 	pingStatusStr[e->ping_status],
 	storeStatusStr[e->store_status],

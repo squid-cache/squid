@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.148 1997/04/30 20:06:25 wessels Exp $
+ * $Id: comm.cc,v 1.149 1997/05/02 21:34:04 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -120,30 +120,28 @@ int RESERVED_FD = 64;
 #define min(x,y) ((x)<(y)? (x) : (y))
 #define max(a,b) ((a)>(b)? (a) : (b))
 
-typedef struct _RWStateData {
+struct _cwstate {
     char *buf;
     long size;
     long offset;
-    RWCB *handler;
+    CWCB *handler;
     void *handler_data;
     void (*free) (void *);
-} RWStateData;
+};
 
 /* GLOBAL */
 FD_ENTRY *fd_table = NULL;	/* also used in disk.c */
 
 /* STATIC */
 static int commBind _PARAMS((int s, struct in_addr, u_short port));
-static int comm_cleanup_fd_entry _PARAMS((int));
 #ifndef USE_POLL
 static int examine_select _PARAMS((fd_set *, fd_set *));
 #endif
 static void checkTimeouts _PARAMS((void));
-static void Reserve_More_FDs _PARAMS((void));
 static void commSetReuseAddr _PARAMS((int));
 static void commSetNoLinger _PARAMS((int));
 static void comm_select_incoming _PARAMS((void));
-static void RWStateCallbackAndFree _PARAMS((int fd, int code));
+static void CommWriteStateCallbackAndFree _PARAMS((int fd, int code));
 #ifdef TCP_NODELAY
 static void commSetTcpNoDelay _PARAMS((int));
 #endif
@@ -155,38 +153,38 @@ static void commHandleWrite _PARAMS((int fd, void *data));
 static struct timeval zero_tv;
 
 void
-commCancelRWHandler(int fd)
+commCancelWriteHandler(int fd)
 {
-    RWStateData *RWState = fd_table[fd].rwstate;
-    if (RWState) {
-	RWState->handler = NULL;
-	RWState->handler_data = NULL;
+    CommWriteStateData *CommWriteState = fd_table[fd].rwstate;
+    if (CommWriteState) {
+	CommWriteState->handler = NULL;
+	CommWriteState->handler_data = NULL;
     }
 }
 
 
 static void
-RWStateCallbackAndFree(int fd, int code)
+CommWriteStateCallbackAndFree(int fd, int code)
 {
-    RWStateData *RWState = fd_table[fd].rwstate;
-    RWCB *callback = NULL;
+    CommWriteStateData *CommWriteState = fd_table[fd].rwstate;
+    CWCB *callback = NULL;
     fd_table[fd].rwstate = NULL;
-    if (RWState == NULL)
+    if (CommWriteState == NULL)
 	return;
-    if (RWState->free) {
-	RWState->free(RWState->buf);
-	RWState->buf = NULL;
+    if (CommWriteState->free) {
+	CommWriteState->free(CommWriteState->buf);
+	CommWriteState->buf = NULL;
     }
-    callback = RWState->handler;
-    RWState->handler = NULL;
+    callback = CommWriteState->handler;
+    CommWriteState->handler = NULL;
     if (callback) {
 	callback(fd,
-	    RWState->buf,
-	    RWState->offset,
+	    CommWriteState->buf,
+	    CommWriteState->offset,
 	    code,
-	    RWState->handler_data);
+	    CommWriteState->handler_data);
     }
-    safe_free(RWState);
+    safe_free(CommWriteState);
 }
 
 /* Return the local port associated with fd. */
@@ -256,7 +254,6 @@ comm_open(int sock_type,
 	case ENFILE:
 	case EMFILE:
 	    debug(50, 1, "comm_open: socket failure: %s\n", xstrerror());
-	    Reserve_More_FDs();
 	    break;
 	default:
 	    debug(50, 0, "comm_open: socket failure: %s\n", xstrerror());
@@ -476,7 +473,6 @@ comm_accept(int fd, struct sockaddr_in *peer, struct sockaddr_in *me)
 	    return COMM_NOMESSAGE;
 	case ENFILE:
 	case EMFILE:
-	    Reserve_More_FDs();
 	    return COMM_ERROR;
 	default:
 	    debug(50, 1, "comm_accept: FD %d: accept failure: %s\n",
@@ -531,7 +527,7 @@ comm_close(int fd)
     if (fd_table[fd].type == FD_FILE)
 	fatal_dump("comm_close: not a SOCKET");
     fde->open = 0;
-    RWStateCallbackAndFree(fd, COMM_ERROR);
+    CommWriteStateCallbackAndFree(fd, COMM_ERROR);
     commCallCloseHandlers(fd);
     fd_close(fd);		/* update fdstat */
 #if USE_ASYNC_IO
@@ -539,16 +535,6 @@ comm_close(int fd)
 #else
     close(fd);
 #endif
-}
-
-/* use to clean up fdtable when socket is closed without
- * using comm_close */
-static int
-comm_cleanup_fd_entry(int fd)
-{
-    RWStateCallbackAndFree(fd, COMM_ERROR);
-    fd_close(fd);
-    return 0;
 }
 
 
@@ -1333,36 +1319,10 @@ checkTimeouts(void)
 	    callback = fde->timeout_handler;
 	    fde->timeout_handler = NULL;
 	    callback(fd, fde->timeout_data);
-	} else if (fde->read_handler) {
-	    debug(5, 5, "checkTimeouts: FD %d: Call read handler\n", fd);
-	    callback = fde->read_handler;
-	    fde->read_handler = NULL;
-	    callback(fd, fde->read_data);
-	} else if (fde->write_handler) {
-	    debug(5, 5, "checkTimeouts: FD %d: Call write handler\n", fd);
-	    callback = fde->write_handler;
-	    fde->write_handler = NULL;
-	    callback(fd, fde->write_data);
 	} else {
 	    debug(5, 5, "checkTimeouts: FD %d: Forcing comm_close()\n", fd);
 	    comm_close(fd);
-	    comm_cleanup_fd_entry(fd);
 	}
-    }
-}
-
-/*
- * Reserve_More_FDs() called when acceopt(), open(), or socket is failing
- */
-static void
-Reserve_More_FDs(void)
-{
-    if (RESERVED_FD < Squid_MaxFD - 64) {
-	RESERVED_FD = RESERVED_FD + 1;
-    } else if (RESERVED_FD == Squid_MaxFD - 64) {
-	RESERVED_FD = RESERVED_FD + 1;
-	debug(5, 0, "Don't you have a tiny open-file table size of %d\n",
-	    Squid_MaxFD - RESERVED_FD);
     }
 }
 
@@ -1370,7 +1330,7 @@ Reserve_More_FDs(void)
 static void
 commHandleWrite(int fd, void *data)
 {
-    RWStateData *state = data;
+    CommWriteStateData *state = data;
     int len = 0;
     int nleft;
 
@@ -1386,7 +1346,7 @@ commHandleWrite(int fd, void *data)
 	/* We're done */
 	if (nleft != 0)
 	    debug(5, 2, "commHandleWrite: FD %d: write failure: connection closed with %d bytes remaining.\n", fd, nleft);
-	RWStateCallbackAndFree(fd, nleft ? COMM_ERROR : COMM_OK);
+	CommWriteStateCallbackAndFree(fd, nleft ? COMM_ERROR : COMM_OK);
     } else if (len < 0) {
 	/* An error */
 	if (errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR) {
@@ -1400,7 +1360,7 @@ commHandleWrite(int fd, void *data)
 	} else {
 	    debug(50, 2, "commHandleWrite: FD %d: write failure: %s.\n",
 		fd, xstrerror());
-	    RWStateCallbackAndFree(fd, COMM_ERROR);
+	    CommWriteStateCallbackAndFree(fd, COMM_ERROR);
 	}
     } else {
 	/* A successful write, continue */
@@ -1413,7 +1373,7 @@ commHandleWrite(int fd, void *data)
 		state,
 		0);
 	} else {
-	    RWStateCallbackAndFree(fd, COMM_OK);
+	    CommWriteStateCallbackAndFree(fd, COMM_OK);
 	}
     }
 }
@@ -1423,18 +1383,16 @@ commHandleWrite(int fd, void *data)
 /* Select for Writing on FD, until SIZE bytes are sent.  Call
  * * HANDLER when complete. */
 void
-comm_write(int fd, char *buf, int size, RWCB * handler, void *handler_data, void (*free_func) (void *))
+comm_write(int fd, char *buf, int size, CWCB * handler, void *handler_data, FREE *free_func)
 {
-    RWStateData *state = NULL;
-
+    CommWriteStateData *state = NULL;
     debug(5, 5, "comm_write: FD %d: sz %d: hndl %p: data %p.\n",
 	fd, size, handler, handler_data);
-
     if (fd_table[fd].rwstate) {
 	debug(5, 1, "WARNING: FD %d: A comm_write is already active.\n", fd);
-	RWStateCallbackAndFree(fd, COMM_ERROR);
+	CommWriteStateCallbackAndFree(fd, COMM_ERROR);
     }
-    state = xcalloc(1, sizeof(RWStateData));
+    state = xcalloc(1, sizeof(CommWriteStateData));
     state->buf = buf;
     state->size = size;
     state->offset = 0;
@@ -1447,10 +1405,4 @@ comm_write(int fd, char *buf, int size, RWCB * handler, void *handler_data, void
 	commHandleWrite,
 	fd_table[fd].rwstate,
 	0);
-}
-
-void
-commFreeMemory(void)
-{
-    safe_free(fd_table);
 }

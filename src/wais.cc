@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.68 1997/04/30 20:06:37 wessels Exp $
+ * $Id: wais.cc,v 1.69 1997/05/02 21:34:19 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -120,10 +120,9 @@ typedef struct {
 } WaisStateData;
 
 static PF waisStateFree;
-static void waisStartComplete _PARAMS((void *, int));
 static PF waisTimeout;
 static PF waisReadReply;
-static void waisSendComplete _PARAMS((int, char *, int, int, void *));
+static CWCB waisSendComplete;
 static PF waisSendRequest;
 static IPH waisConnect;
 static CNCB waisConnectDone;
@@ -335,22 +334,14 @@ waisStart(method_t method, char *mime_hdr, StoreEntry * entry)
 	waisStateFree,
 	waisState);
     commSetTimeout(fd, Config.Timeout.read, waisTimeout, waisState);
-    storeLockObject(entry, waisStartComplete, waisState);
-    return COMM_OK;
-}
-
-
-static void
-waisStartComplete(void *data, int status)
-{
-    WaisStateData *waisState = data;
+    storeLockObject(entry, NULL, NULL);
     waisState->ip_lookup_pending = 1;
     ipcache_nbgethostbyname(waisState->relayhost,
 	waisState->fd,
 	waisConnect,
 	waisState);
+    return COMM_OK;
 }
-
 
 static void
 waisConnect(int fd, const ipcache_addrs * ia, void *data)
