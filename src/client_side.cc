@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.438 1999/01/29 21:28:10 wessels Exp $
+ * $Id: client_side.cc,v 1.439 1999/01/29 23:01:04 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -255,6 +255,7 @@ clientRedirectDone(void *data, char *result)
 	new_request->http_ver = old_request->http_ver;
 	httpHeaderAppend(&new_request->header, &old_request->header);
 	new_request->client_addr = old_request->client_addr;
+	new_request->my_addr = old_request->my_addr;
 	new_request->flags.redirected = 1;
 	if (old_request->body) {
 	    new_request->body = xmalloc(old_request->body_sz);
@@ -2264,6 +2265,7 @@ clientReadRequest(int fd, void *data)
 	    safe_free(http->log_uri);
 	    http->log_uri = xstrdup(urlCanonicalClean(request));
 	    request->client_addr = conn->peer.sin_addr;
+	    request->my_addr = conn->me.sin_addr;
 	    request->http_ver = http->http_ver;
 	    if (!urlCheckRequest(request)) {
 		err = errorCon(ERR_UNSUP_REQ, HTTP_NOT_IMPLEMENTED);

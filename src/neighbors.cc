@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.269 1999/01/29 22:17:09 wessels Exp $
+ * $Id: neighbors.cc,v 1.270 1999/01/29 23:01:06 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -147,7 +147,7 @@ peerAllowedToUse(const peer * p, request_t * request)
     if (p->access == NULL)
 	return do_ping;
     checklist.src_addr = request->client_addr;
-    checklist.my_addr = no_addr;	/* XXX wrong */
+    checklist.my_addr = request->my_addr;
     checklist.request = request;
     return aclCheckFast(p->access, &checklist);
 }
