@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.638 2003/06/18 12:34:51 robertc Exp $
+ * $Id: client_side.cc,v 1.639 2003/06/19 18:18:46 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2375,7 +2375,7 @@ clientReadBody(request_t * request, char *buf, size_t size, CBCB * callback,
                   conn->fd, (unsigned long int) conn->body.size_left,
                   (unsigned long int) conn->in.notYetUsed, callback, request);
     conn->body.callback = callback;
-    conn->body.cbdata = cbdata;
+    conn->body.cbdata = cbdataReference(cbdata);
     conn->body.buf = buf;
     conn->body.bufsize = size;
     conn->body.request = requestLink(request);
@@ -2458,9 +2458,10 @@ ClientBody::processBuffer()
     }
 
     /* Invoke callback function */
-    void *cbdata = conn->body.cbdata;
+    void *cbdata;
 
-    callback(buf, size, cbdata);
+    if (cbdataReferenceValidDone(conn->body.cbdata, &cbdata))
+        callback(buf, size, cbdata);
 
     if (request != NULL) {
         requestUnlink(request);	/* Linked in clientReadBody */
@@ -2487,7 +2488,7 @@ clientReadBodyAbortHandler(char *buf, ssize_t size, void *data)
         conn->body.callback = clientReadBodyAbortHandler;
         conn->body.buf = bodyAbortBuf;
         conn->body.bufsize = sizeof(bodyAbortBuf);
-        conn->body.cbdata = data;
+        conn->body.cbdata = cbdataReference(data);
     }
 }
 
@@ -2498,7 +2499,6 @@ clientAbortBody(request_t * request)
     ConnStateData *conn = request->body_connection;
     char *buf;
     CBCB *callback;
-    void *cbdata;
     request->body_connection = NULL;
 
     if (!conn || conn->body.size_left <= 0)
@@ -2507,13 +2507,16 @@ clientAbortBody(request_t * request)
     if (conn->body.callback != NULL) {
         buf = conn->body.buf;
         callback = conn->body.callback;
-        cbdata = conn->body.cbdata;
         assert(request == conn->body.request);
         conn->body.buf = NULL;
         conn->body.callback = NULL;
         conn->body.cbdata = NULL;
         conn->body.request = NULL;
-        callback(buf, -1, cbdata);	/* Signal abort to clientReadBody caller */
+        void *cbdata;
+
+        if (cbdataReferenceValidDone(conn->body.cbdata, &cbdata))
+            callback(buf, -1, cbdata);	/* Signal abort to clientReadBody caller */
+
         requestUnlink(request);
     }
 
