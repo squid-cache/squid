@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.44 1996/10/07 17:14:51 wessels Exp $
+ * $Id: acl.cc,v 1.45 1996/10/07 22:04:56 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -95,6 +95,8 @@ aclType(char *s)
 	return ACL_PROTO;
     if (!strcmp(s, "method"))
 	return ACL_METHOD;
+    if (!strcmp(s, "browser"))
+	return ACL_BROWSER;
     return ACL_NONE;
 }
 
@@ -471,6 +473,9 @@ aclParseAclLine(void)
     case ACL_METHOD:
 	A->data = (void *) aclParseMethodList();
 	break;
+    case ACL_BROWSER:
+	A->data = (void *) aclParseRegexList();
+	break;
     case ACL_NONE:
     default:
 	debug(28, 0, "%s line %d: %s\n",
@@ -788,6 +793,9 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
     case ACL_METHOD:
 	return aclMatchInteger(acl->data, r->method);
 	/* NOTREACHED */
+    case ACL_BROWSER:
+	return aclMatchRegex(acl->data, checklist->browser);
+	/* NOTREACHED */
     case ACL_NONE:
     default:
 	debug(28, 0, "aclMatchAcl: '%s' has bad type %d\n",
@@ -886,6 +894,7 @@ aclDestroyAcls(void)
 	    break;
 	case ACL_URL_REGEX:
 	case ACL_URLPATH_REGEX:
+	case ACL_BROWSER:
 	    aclDestroyRegexList(a->data);
 	    break;
 	case ACL_URL_PORT:
