@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.33 1998/12/05 00:54:23 wessels Exp $
+ * $Id: forward.cc,v 1.34 1998/12/11 23:10:48 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -72,6 +72,7 @@ fwdStateFree(FwdState * fwdState)
     ErrorState *err;
     int sfd;
     static int loop_detect = 0;
+    debug(17,3)("fwdStateFree: %p\n", fwdState);
     assert(loop_detect++ == 0);
     assert(e->mem_obj);
     if (e->store_status == STORE_PENDING) {
@@ -466,7 +467,6 @@ fwdUnregister(int fd, FwdState * fwdState)
     assert(fd = fwdState->server_fd);
     comm_remove_close_handler(fd, fwdServerClosed, fwdState);
     fwdState->server_fd = -1;
-    fwdStateFree(fwdState);
 }
 
 /*
@@ -480,7 +480,7 @@ fwdComplete(FwdState * fwdState)
 {
     StoreEntry *e = fwdState->entry;
     assert(e->store_status == STORE_PENDING);
-    debug(17, 3) ("fwdComplete: %s\n\tstatus %d", storeUrl(e),
+    debug(17, 3) ("fwdComplete: %s\n\tstatus %d\n", storeUrl(e),
 	e->mem_obj->reply->sline.status);
     if (!EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT)) {
 	debug(17, 3) ("ENTRY_FWD_HDR_WAIT not set, calling storeComplete\n");
@@ -489,11 +489,8 @@ fwdComplete(FwdState * fwdState)
 debug(0,0)("fwdComplete: re-forwarding %d %s\n", 
 	e->mem_obj->reply->sline.status,
 	storeUrl(e));
-	assert(fwdState->server_fd > -1);
-	/* XXX this breaks pconn */
-	comm_remove_close_handler(fwdState->server_fd,
-	    fwdServerClosed, fwdState);
-	fwdState->server_fd = -1;
+	if (fwdState->server_fd > -1)
+		fwdUnregister(fwdState->server_fd, fwdState);
 	storeEntryReset(e);
 	fwdStartComplete(fwdState->servers, fwdState);
     } else {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.333 1998/12/05 00:54:28 wessels Exp $
+ * $Id: http.cc,v 1.334 1998/12/11 23:10:47 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -522,11 +522,9 @@ httpReadReply(int fd, void *data)
 	    commSetTimeout(fd, -1, NULL, NULL);
 	    commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
 	    comm_remove_close_handler(fd, httpStateFree, httpState);
-	    fwdComplete(httpState->fwd);
-	    /* call fwdComplete BEFORE fwdUnregister or else fwdUnregister
-	     * will storeAbort */
 	    fwdUnregister(fd, httpState->fwd);
 	    pconnPush(fd, request->host, request->port);
+	    fwdComplete(httpState->fwd);
 	    httpState->fd = -1;
 	    httpStateFree(-1, httpState);
 	} else {
