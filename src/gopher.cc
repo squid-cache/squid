@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.184 2003/08/10 11:00:43 robertc Exp $
+ * $Id: gopher.cc,v 1.185 2003/11/29 08:37:29 hno Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -85,9 +85,9 @@ typedef struct gopher_ds
         HTML_CSO_PAGE
     } conversion;
     int HTML_header_added;
+    int HTML_pre;
     char type_id;
     char request[MAX_URL];
-    int data_in;
     int cso_recno;
     int len;
     char *buf;			/* pts to a 4k page */
@@ -308,10 +308,10 @@ gopherEndHTML(GopherStateData * gopherState)
 {
     StoreEntry *e = gopherState->entry;
 
-    if (!gopherState->data_in) {
+    if (!gopherState->HTML_header_added) {
         gopherHTMLHeader(e, "Server Return Nothing", NULL);
         storeAppendPrintf(e, "<P>The Gopher query resulted in a blank response</P>");
-    } else {
+    } else if (gopherState->HTML_pre) {
         storeAppendPrintf(e, "</PRE>\n");
     }
 
@@ -353,7 +353,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
         gopherHTMLFooter(entry);
         /* now let start sending stuff to client */
         storeBufferFlush(entry);
-        gopherState->data_in = 1;
+        gopherState->HTML_header_added = 1;
 
         return;
     }
@@ -368,7 +368,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
         gopherHTMLFooter(entry);
         /* now let start sending stuff to client */
         storeBufferFlush(entry);
-        gopherState->data_in = 1;
+        gopherState->HTML_header_added = 1;
 
         return;
     }
@@ -385,6 +385,8 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
         outbuf.append ("<PRE>");
 
         gopherState->HTML_header_added = 1;
+
+        gopherState->HTML_pre = 1;
     }
 
     while ((pos != NULL) && (pos < inbuf + len)) {
@@ -595,7 +597,6 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 
                         safe_free(escaped_selector);
                         outbuf.append(tmpbuf);
-                        gopherState->data_in = 1;
                     } else {
                         memset(line, '\0', TEMP_BUF_SIZE);
                         continue;
@@ -636,7 +637,6 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                     }
 
                     outbuf.append(tmpbuf);
-                    gopherState->data_in = 1;
                     break;
                 } else {
                     int code;
@@ -667,7 +667,6 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                             /* Print the message the server returns */
                             snprintf(tmpbuf, TEMP_BUF_SIZE, "</PRE><HR noshade size=\"1px\"><H2>%s</H2>\n<PRE>", html_quote(result));
                             outbuf.append(tmpbuf);
-                            gopherState->data_in = 1;
                             break;
                         }
 
