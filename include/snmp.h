@@ -27,7 +27,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  * 
- * $Id: snmp.h,v 1.9 1998/02/22 11:48:42 kostas Exp $
+ * $Id: snmp.h,v 1.10 1998/02/22 20:02:27 kostas Exp $
  * 
  **********************************************************************/
 
@@ -58,8 +58,9 @@
 #include <version.h>
 #include <snmp_error.h>
 #include <snmp_api_error.h>
+#if 0
 #include <mini-client.h>
-
+#endif
 /* Other stuff I didn't touch */
 #include <snmp_impl.h>
 #include <snmp_api.h>
