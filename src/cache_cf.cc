@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.192 1997/05/26 04:04:55 wessels Exp $
+ * $Id: cache_cf.cc,v 1.193 1997/05/27 02:48:50 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -287,10 +287,8 @@ void
 wordlistDestroy(wordlist ** list)
 {
     wordlist *w = NULL;
-    wordlist *n = NULL;
-
-    for (w = *list; w; w = n) {
-	n = w->next;
+    while ((w = *list)) {
+	*list = w->next;
 	safe_free(w->key);
 	safe_free(w);
     }
@@ -803,6 +801,7 @@ parseProxyLine(peer ** E)
 	e->http_port = atoi(t);
     }
     e->host = xstrdup(token);
+    e->tcp_up = 1;
     *E = e;
 }
 
@@ -883,9 +882,9 @@ parseCacheDir(void)
 	if (!strcasecmp(token, "read-only"))
 	    readonly = 1;
     if (configured_once)
-        storeReconfigureSwapDisk(dir, size, l1, l2, readonly);
+	storeReconfigureSwapDisk(dir, size, l1, l2, readonly);
     else
-        storeAddSwapDisk(dir, size, l1, l2, readonly);
+	storeAddSwapDisk(dir, size, l1, l2, readonly);
 }
 
 int

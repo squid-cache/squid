@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.110 1997/05/26 04:04:58 wessels Exp $
+ * $Id: ftp.cc,v 1.111 1997/05/27 02:48:52 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -198,6 +198,9 @@ ftpStateFree(int fd, void *data)
 	wordlistDestroy(&ftpState->ctrl.message);
     if (ftpState->cwd_message)
 	wordlistDestroy(&ftpState->cwd_message);
+    safe_free(ftpState->ctrl.last_message);
+    safe_free(ftpState->title_url);
+    safe_free(ftpState->filepath);
     xfree(ftpState);
 }
 
@@ -492,11 +495,8 @@ ftpListParseParts(const char *buf, int flags)
     }
     for (i = 0; i < n_tokens; i++)
 	xfree(tokens[i]);
-    if (p->name == NULL) {
-	xfree(p->date);
-	xfree(p);
-	p = NULL;
-    }
+    if (p->name == NULL)
+	ftpListPartsFree(&p);
     return p;
 }
 
@@ -547,6 +547,7 @@ ftpHtmlifyListEntry(char *line, int flags)
     }
     if (!strcmp(parts->name, ".") || !strcmp(parts->name, "..")) {
 	*html = '\0';
+	ftpListPartsFree(&parts);
 	return html;
     }
     parts->size += 1023;
@@ -617,19 +618,24 @@ static void
 ftpParseListing(FtpStateData * ftpState, int len)
 {
     char *buf = ftpState->data.buf;
-    char *end = buf + ftpState->data.offset + len - 1;
-    char *line = get_free_4k_page();
+    char *end;
+    char *line;
     char *s;
     char *t;
     size_t linelen;
+    size_t usable;
     StoreEntry *e = ftpState->entry;
+    len += ftpState->data.offset;
+    end = buf + len - 1;
     debug(0, 0, "buf=\n%s|\n", buf);
     while (*end != '\r' && *end != '\n' && end > buf)
 	end--;
-    if (end == buf) {
+    usable = end - buf;
+    if (usable == 0) {
 	debug(0, 0, "ftpParseListing: didn't find end\n");
 	return;
     }
+    line = get_free_4k_page();
     end++;
     for (s = buf; s < end; s += strcspn(s, crlf), s += strspn(s, crlf)) {
 	linelen = strcspn(s, crlf) + 1;
@@ -643,21 +649,18 @@ ftpParseListing(FtpStateData * ftpState, int len)
 	assert(t != NULL);
 	storeAppend(e, t, strlen(t));
     }
-    if (end - buf == len)
-	return;
-    /* must copy partial line to beginning of buf */
-    linelen = ftpState->data.offset + len - (end - buf) + 1;
-    debug(0, 0, "len=%d\n", len);
-    debug(0, 0, "buf=%d\n", buf);
-    debug(0, 0, "end=%d\n", end);
-    debug(0, 0, "linelen=%d\n", linelen);
-    assert(0 < linelen);
-    if (linelen > 4096)
-	linelen = 4096;
-    xstrncpy(line, end, linelen);
-    xstrncpy(ftpState->data.buf, line, ftpState->data.size);
-    ftpState->data.offset = strlen(ftpState->data.buf);
-    debug(0, 0, "offset=%d\n", ftpState->data.offset);
+    assert(usable <= len);
+    if (usable < len) {
+	/* must copy partial line to beginning of buf */
+	linelen = len - usable + 1;
+	assert(linelen > 0);
+	if (linelen > 4096)
+	    linelen = 4096;
+	xstrncpy(line, end, linelen);
+	xstrncpy(ftpState->data.buf, line, ftpState->data.size);
+	ftpState->data.offset = strlen(ftpState->data.buf);
+    }
+    put_free_4k_page(line);
 }
 
 static void
@@ -744,10 +747,12 @@ ftpReadData(int fd, void *data)
 	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
 	ftpDataTransferDone(ftpState);
     } else {
-	if (EBIT_TEST(ftpState->flags, FTP_ISDIR))
+	if (EBIT_TEST(ftpState->flags, FTP_ISDIR)) {
 	    ftpParseListing(ftpState, len);
-	else
-	    storeAppend(entry, buf, len);
+	} else {
+	    assert(ftpState->data.offset == 0);
+	    storeAppend(entry, ftpState->data.buf, len);
+	}
 	commSetSelect(fd, COMM_SELECT_READ, ftpReadData, data, 0);
     }
 }
@@ -1032,7 +1037,7 @@ ftpParseControlReply(char *buf, size_t len, int *codep)
     wordlist **tail = &head;
     off_t offset;
     size_t linelen;
-    int code;
+    int code = -1;
     debug(0, 0, "ftpParseControlReply\n");
     if (*(buf + len - 1) != '\n')
 	return NULL;
@@ -1049,7 +1054,7 @@ ftpParseControlReply(char *buf, size_t len, int *codep)
 	list = xcalloc(1, sizeof(wordlist));
 	list->key = xmalloc(linelen - offset);
 	xstrncpy(list->key, s + offset, linelen - offset);
-	debug(38, 0, "%s\n", list->key);
+	debug(38, 0, "%p: %s\n", list->key, list->key);
 	*tail = list;
 	tail = &list->next;
     }
@@ -1106,11 +1111,14 @@ ftpReadControlReply(int fd, void *data)
 	comm_close(fd);
 	return;
     }
+    len += ftpState->ctrl.offset;
+    ftpState->ctrl.offset = len;
     assert(len <= ftpState->ctrl.size);
     wordlistDestroy(&ftpState->ctrl.message);
     ftpState->ctrl.message = ftpParseControlReply(ftpState->ctrl.buf, len,
 	&ftpState->ctrl.replycode);
     if (ftpState->ctrl.message == NULL) {
+	debug(0, 0, "ftpReadControlReply: partial server reply\n");
 	if (len == ftpState->ctrl.size) {
 	    oldbuf = ftpState->ctrl.buf;
 	    ftpState->ctrl.buf = xcalloc(ftpState->ctrl.size << 1, 1);
@@ -1123,6 +1131,7 @@ ftpReadControlReply(int fd, void *data)
 	return;
     }
     for (W = &ftpState->ctrl.message; *W && (*W)->next; W = &(*W)->next);
+    safe_free(ftpState->ctrl.last_message);
     ftpState->ctrl.last_message = (*W)->key;
     safe_free(*W);
     ftpState->ctrl.offset = 0;
@@ -1213,6 +1222,7 @@ ftpReadType(FtpStateData * ftpState)
 		*T = w;
 		T = &w->next;
 	    }
+	    xfree(path);
 	    ftpSendCwd(ftpState);
 	}
     } else {
@@ -1501,6 +1511,7 @@ ftpReadTransferDone(FtpStateData * ftpState)
 static void
 ftpDataTransferDone(FtpStateData * ftpState)
 {
+    debug(38, 1, "This is ftpDataTransferDone\n");
     assert(ftpState->data.fd >= 0);
     comm_close(ftpState->data.fd);
     ftpState->data.fd = -1;
