@@ -1,4 +1,4 @@
-/* $Id: http.cc,v 1.39 1996/04/12 04:33:48 wessels Exp $ */
+/* $Id: http.cc,v 1.40 1996/04/12 04:53:48 wessels Exp $ */
 
 /*
  * DEBUG: Section 11          http: HTTP
@@ -535,7 +535,7 @@ int proxyhttpStart(e, url, entry)
     data->entry = entry;
 
     strncpy(data->request, url, sizeof(data->request) - 1);
-    data->method = entry->type_id;
+    data->method = entry->method;
     data->port = e->ascii_port;
     data->req_hdr = entry->mem_obj->mime_hdr;
     strncpy(data->host, e->host, sizeof(data->host) - 1);
