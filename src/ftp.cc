@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.324 2002/07/21 17:12:22 hno Exp $
+ * $Id: ftp.cc,v 1.325 2002/08/24 01:50:46 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -68,7 +68,7 @@ struct _ftp_flags {
     unsigned int authenticated:1;
     unsigned int http_header_sent:1;
     unsigned int tried_nlst:1;
-    unsigned int use_base:1;
+    unsigned int need_base_href:1;
     unsigned int root_dir:1;
     unsigned int no_dotdot:1;
     unsigned int html_header_sent:1;
@@ -361,7 +361,7 @@ ftpListingStart(FtpStateData * ftpState)
 	html_quote(strBuf(ftpState->title_url)));
     storeAppendPrintf(e, "</TITLE>\n");
     storeAppendPrintf(e, "<STYLE type=\"text/css\"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>\n");
-    if (ftpState->flags.use_base)
+    if (ftpState->flags.need_base_href)
 	storeAppendPrintf(e, "<BASE HREF=\"%s\">\n",
 	    html_quote(strBuf(ftpState->base_href)));
     storeAppendPrintf(e, "</HEAD><BODY>\n");
@@ -990,20 +990,20 @@ ftpCheckUrlpath(FtpStateData * ftpState)
 	}
     }
     l = strLen(request->urlpath);
-    ftpState->flags.use_base = 1;
+    ftpState->flags.need_base_href = 1;
     /* check for null path */
     if (!l) {
 	ftpState->flags.isdir = 1;
 	ftpState->flags.root_dir = 1;
     } else if (!strCmp(request->urlpath, "/%2f/")) {
 	/* UNIX root directory */
-	ftpState->flags.use_base = 0;
+	ftpState->flags.need_base_href = 0;
 	ftpState->flags.isdir = 1;
 	ftpState->flags.root_dir = 1;
     } else if ((l >= 1) && (*(strBuf(request->urlpath) + l - 1) == '/')) {
 	/* Directory URL, ending in / */
 	ftpState->flags.isdir = 1;
-	ftpState->flags.use_base = 0;
+	ftpState->flags.need_base_href = 0;
 	if (l == 1)
 	    ftpState->flags.root_dir = 1;
     }
@@ -1027,7 +1027,7 @@ ftpBuildTitleUrl(FtpStateData * ftpState)
     strCat(ftpState->title_url, strBuf(request->urlpath));
 
     stringReset(&ftpState->base_href, "ftp://");
-    if (strcmp(ftpState->user, "anonymous")) {
+    if (strcmp(ftpState->user, "anonymous") != 0) {
 	strCat(ftpState->base_href, rfc1738_escape_part(ftpState->user));
 	if (ftpState->password_url) {
 	    strCat(ftpState->base_href, ":");
@@ -1407,7 +1407,8 @@ ftpSendType(FtpStateData * ftpState)
     /*
      * Ref section 3.2.2 of RFC 1738
      */
-    switch (mode = ftpState->typecode) {
+    mode = ftpState->typecode;
+    switch (mode) {
     case 'D':
 	mode = 'A';
 	break;
@@ -1577,7 +1578,7 @@ ftpListDir(FtpStateData * ftpState)
 	debug(9, 3) ("Directory path did not end in /\n");
 	strCat(ftpState->title_url, "/");
 	ftpState->flags.isdir = 1;
-	ftpState->flags.use_base = 1;
+	ftpState->flags.need_base_href = 1;
     }
     ftpSendPasv(ftpState);
 }
@@ -1945,7 +1946,7 @@ ftpRestOrList(FtpStateData * ftpState)
     debug(9, 3) ("This is ftpRestOrList\n");
     if (ftpState->typecode == 'D') {
 	ftpState->flags.isdir = 1;
-	ftpState->flags.use_base = 1;
+	ftpState->flags.need_base_href = 1;
 	if (ftpState->flags.put) {
 	    ftpSendMkdir(ftpState);	/* PUT name;type=d */
 	} else {
@@ -2065,7 +2066,7 @@ static void
 ftpSendList(FtpStateData * ftpState)
 {
     if (ftpState->filepath) {
-	ftpState->flags.use_base = 1;
+	ftpState->flags.need_base_href = 1;
 	snprintf(cbuf, 1024, "LIST %s\r\n", ftpState->filepath);
     } else {
 	snprintf(cbuf, 1024, "LIST\r\n");
@@ -2079,7 +2080,7 @@ ftpSendNlst(FtpStateData * ftpState)
 {
     ftpState->flags.tried_nlst = 1;
     if (ftpState->filepath) {
-	ftpState->flags.use_base = 1;
+	ftpState->flags.need_base_href = 1;
 	snprintf(cbuf, 1024, "NLST %s\r\n", ftpState->filepath);
     } else {
 	snprintf(cbuf, 1024, "NLST\r\n");
