@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.164 1997/12/02 00:17:32 wessels Exp $
+ * $Id: client_side.cc,v 1.165 1997/12/02 22:12:56 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -54,7 +54,7 @@ static void CheckQuickAbort(clientHttpRequest *);
 #if CHECK_FAILURE_IS_BROKE
 static void checkFailureRatio(log_type, hier_code);
 #endif
-static void clientProcessMiss(int, clientHttpRequest *);
+static void clientProcessMiss(clientHttpRequest *);
 static void clientAppendReplyHeader(char *, const char *, size_t *, size_t);
 size_t clientBuildReplyHeader(clientHttpRequest *, char *, size_t *, char *, size_t);
 static clientHttpRequest *parseHttpRequest(ConnStateData *, method_t *, int *, char **, size_t *);
@@ -66,7 +66,8 @@ static ERCB clientErrorComplete;
 static STCB clientSendMoreData;
 static STCB clientCacheHit;
 static void clientParseRequestHeaders(clientHttpRequest *);
-static void clientProcessRequest(int, clientHttpRequest *);
+static void clientProcessRequest(clientHttpRequest *);
+static void clientProcessExpired(void *data);
 static char *clientConstructProxyAuthReply(clientHttpRequest * http);
 static int clientCachable(clientHttpRequest * http);
 static int clientHierarchical(clientHttpRequest * http);
@@ -210,7 +211,6 @@ static void
 clientRedirectDone(void *data, char *result)
 {
     clientHttpRequest *http = data;
-    int fd = http->conn->fd;
     size_t l;
     request_t *new_request = NULL;
     request_t *old_request = http->request;
@@ -236,19 +236,17 @@ clientRedirectDone(void *data, char *result)
 	urlCanonical(http->request, http->url);
     }
     clientParseRequestHeaders(http);
-    fd_note(fd, http->url);
-    clientProcessRequest(fd, http);
+    fd_note(http->conn->fd, http->url);
+    clientProcessRequest(http);
 }
 
-void
-clientProcessExpired(int fd, void *data)
+static void
+clientProcessExpired(void *data)
 {
     clientHttpRequest *http = data;
     char *url = http->url;
     StoreEntry *entry = NULL;
-
-    debug(33, 3) ("clientProcessExpired: FD %d '%s'\n", fd, http->url);
-
+    debug(33, 3) ("clientProcessExpired: '%s'\n", http->url);
     EBIT_SET(http->request->flags, REQ_REFRESH);
     http->old_entry = http->entry;
     entry = storeCreateEntry(url,
@@ -258,15 +256,13 @@ clientProcessExpired(int fd, void *data)
     /* NOTE, don't call storeLockObject(), storeCreateEntry() does it */
     storeClientListAdd(entry, http);
     storeClientListAdd(http->old_entry, http);
-
     entry->lastmod = http->old_entry->lastmod;
     debug(33, 5) ("clientProcessExpired: setting lmt = %d\n",
 	entry->lastmod);
-
     entry->refcount++;		/* EXPIRED CASE */
     http->entry = entry;
     http->out.offset = 0;
-    protoDispatch(fd, http->entry, http->request);
+    protoDispatch(http->conn->fd, http->entry, http->request);
     /* Register with storage manager to receive updates when data comes in. */
     storeClientCopy(entry,
 	http->out.offset,
@@ -307,13 +303,12 @@ static void
 icpHandleIMSReply(void *data, char *buf, ssize_t size)
 {
     clientHttpRequest *http = data;
-    int fd = http->conn->fd;
     StoreEntry *entry = http->entry;
     MemObject *mem = entry->mem_obj;
     const char *url = storeUrl(entry);
     int unlink_request = 0;
     StoreEntry *oldentry;
-    debug(33, 3) ("icpHandleIMSReply: FD %d '%s'\n", fd, url);
+    debug(33, 3) ("icpHandleIMSReply: %d '%s'\n", url);
     put_free_4k_page(buf);
     buf = NULL;
     /* unregister this handler */
@@ -842,7 +837,7 @@ clientCacheHit(void *data, char *buf, ssize_t size)
     } else {
 	/* swap in failure */
 	http->log_type = LOG_TCP_SWAPFAIL_MISS;
-	clientProcessMiss(http->conn->fd, http);
+	clientProcessMiss(http);
     }
 }
 
@@ -1014,7 +1009,6 @@ static void
 icpGetHeadersForIMS(void *data, char *buf, ssize_t size)
 {
     clientHttpRequest *http = data;
-    int fd = http->conn->fd;
     StoreEntry *entry = http->entry;
     MemObject *mem = entry->mem_obj;
     char *reply = NULL;
@@ -1023,13 +1017,13 @@ icpGetHeadersForIMS(void *data, char *buf, ssize_t size)
 	debug(12, 1) ("icpGetHeadersForIMS: storeClientCopy failed for '%s'\n",
 	    storeKeyText(entry->key));
 	put_free_4k_page(buf);
-	clientProcessMiss(fd, http);
+	clientProcessMiss(http);
 	return;
     }
     if (mem->reply->code == 0) {
 	if (entry->mem_status == IN_MEMORY) {
 	    put_free_4k_page(buf);
-	    clientProcessMiss(fd, http);
+	    clientProcessMiss(http);
 	    return;
 	}
 	/* All headers are not yet available, wait for more data */
@@ -1061,7 +1055,7 @@ icpGetHeadersForIMS(void *data, char *buf, ssize_t size)
 	debug(12, 4) ("icpGetHeadersForIMS: Reply code %d!=200\n",
 	    mem->reply->code);
 	put_free_4k_page(buf);
-	clientProcessMiss(fd, http);
+	clientProcessMiss(http);
 	return;
     }
     +
@@ -1080,7 +1074,7 @@ icpGetHeadersForIMS(void *data, char *buf, ssize_t size)
     }
     debug(12, 4) ("icpGetHeadersForIMS: Not modified '%s'\n", storeUrl(entry));
     reply = icpConstruct304reply(mem->reply);
-    comm_write(fd,
+    comm_write(http->conn->fd,
 	xstrdup(reply),
 	strlen(reply),
 	icpHandleIMSComplete,
@@ -1170,24 +1164,22 @@ clientProcessRequest2(clientHttpRequest * http)
 }
 
 static void
-clientProcessRequest(int fd, clientHttpRequest * http)
+clientProcessRequest(clientHttpRequest * http)
 {
     char *url = http->url;
     StoreEntry *entry = NULL;
     request_t *r = http->request;
+    int fd = http->conn->fd;
     char *reply;
     debug(12, 4) ("clientProcessRequest: %s '%s'\n",
 	RequestMethodStr[r->method],
 	url);
-    switch (r->method) {
-    case METHOD_CONNECT:
+    if (r->method == METHOD_CONNECT) {
 	http->log_type = LOG_TCP_MISS;
-	sslStart(fd, url, r, &http->out.size);
-	return;
-    case METHOD_PURGE:
-	clientPurgeRequest(http);
-	return;
-    case METHOD_TRACE:
+	return sslStart(fd, url, r, &http->out.size);
+    } else if (r->method == METHOD_PURGE) {
+	return clientPurgeRequest(http);
+    } else if (r->method == METHOD_TRACE) {
 	if (r->max_forwards == 0) {
 	    reply = clientConstructTraceEcho(http);
 	    comm_write(fd,
@@ -1199,15 +1191,16 @@ clientProcessRequest(int fd, clientHttpRequest * http)
 	    return;
 	}
 	/* yes, continue */
-	break;
-    case METHOD_POST:
+    } else if (r->protocol != PROTO_HTTP) {
+	(void) 0;		/* fallthrough */
+    } else if (r->method == METHOD_POST) {
 	http->log_type = LOG_TCP_MISS;
-	passStart(fd, url, r, &http->out.size);
-	return;
-    default:
-	http->log_type = clientProcessRequest2(http);
-	break;
+	return passStart(fd, url, r, &http->out.size);
+    } else if (r->method == METHOD_PUT) {
+	http->log_type = LOG_TCP_MISS;
+	return passStart(fd, url, r, &http->out.size);
     }
+    http->log_type = clientProcessRequest2(http);
     debug(12, 4) ("clientProcessRequest: %s for '%s'\n",
 	log_tags[http->log_type],
 	http->url);
@@ -1240,10 +1233,10 @@ clientProcessRequest(int fd, clientHttpRequest * http)
 	    http);
 	break;
     case LOG_TCP_REFRESH_MISS:
-	clientProcessExpired(fd, http);
+	clientProcessExpired(http);
 	break;
     default:
-	clientProcessMiss(fd, http);
+	clientProcessMiss(http);
 	break;
     }
 }
@@ -1252,7 +1245,7 @@ clientProcessRequest(int fd, clientHttpRequest * http)
  * Prepare to fetch the object as it's a cache miss of some kind.
  */
 static void
-clientProcessMiss(int fd, clientHttpRequest * http)
+clientProcessMiss(clientHttpRequest * http)
 {
     char *url = http->url;
     char *request_hdr = http->request->headers;
@@ -1276,7 +1269,7 @@ clientProcessMiss(int fd, clientHttpRequest * http)
 	err->src_addr = http->conn->peer.sin_addr;
 	err->callback = clientErrorComplete;
 	err->callback_data = http;
-	errorSend(fd, err);
+	errorSend(http->conn->fd, err);
 	return;
     }
     /* Get rid of any references to a StoreEntry (if any) */
@@ -1291,7 +1284,7 @@ clientProcessMiss(int fd, clientHttpRequest * http)
 	http->request->method);
     /* NOTE, don't call storeLockObject(), storeCreateEntry() does it */
     storeClientListAdd(entry, http);
-    entry->mem_obj->fd = fd;
+    entry->mem_obj->fd = http->conn->fd;
     entry->refcount++;		/* MISS CASE */
     http->entry = entry;
     http->out.offset = 0;
@@ -1305,8 +1298,7 @@ clientProcessMiss(int fd, clientHttpRequest * http)
 	http);
     /* protoDispatch() needs to go after storeClientCopy() at least
      * for OBJCACHE requests */
-    protoDispatch(fd, http->entry, http->request);
-    return;
+    protoDispatch(http->conn->fd, http->entry, http->request);
 }
 
 /*
