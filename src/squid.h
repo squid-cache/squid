@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.120 1997/06/16 22:01:52 wessels Exp $
+ * $Id: squid.h,v 1.121 1997/06/17 03:03:26 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -273,6 +273,7 @@ typedef void STCB _PARAMS((void *, char *, size_t));	/* store callback */
 
 #include "cache_cf.h"
 #include "fd.h"
+#include "callback.h"
 #include "comm.h"
 #include "disk.h"
 #include "debug.h"

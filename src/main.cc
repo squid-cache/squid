@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.153 1997/06/16 22:01:49 wessels Exp $
+ * $Id: main.cc,v 1.154 1997/06/17 03:03:23 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -390,7 +390,7 @@ serverConnectionsOpen(void)
 		icpHandleUdp,
 		NULL, 0);
 	    for (s = Config.mcast_group_list; s; s = s->next)
-		ipcache_nbgethostbyname(s->key, mcastJoinGroups, NULL);
+		ipcache_nbgethostbyname(s->key, mcastJoinGroups, NULL, NULL);
 	    debug(1, 1) ("Accepting ICP connections on port %d, FD %d.\n",
 		(int) port, theInIcpConnection);
 
