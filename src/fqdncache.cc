@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: fqdncache.cc,v 1.126 1998/12/05 00:54:24 wessels Exp $
+ * $Id: fqdncache.cc,v 1.127 1999/04/18 05:27:13 wessels Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -52,8 +52,13 @@ static struct {
 
 static dlink_list lru_list;
 
+#if USE_DNSSERVERS
 static HLPCB fqdncacheHandleReply;
 static fqdncache_entry *fqdncacheParse(const char *buf);
+#else
+static IDNSCB fqdncacheHandleReply;
+static fqdncache_entry *fqdncacheParse(rfc1035_rr *, int);
+#endif
 static void fqdncache_release(fqdncache_entry *);
 static fqdncache_entry *fqdncache_create(const char *name);
 static void fqdncache_call_pending(fqdncache_entry *);
@@ -220,7 +225,7 @@ fqdncache_call_pending(fqdncache_entry * f)
     fqdncacheUnlockEntry(f);
 }
 
-
+#if USE_DNSSERVERS
 static fqdncache_entry *
 fqdncacheParse(const char *inbuf)
 {
@@ -271,9 +276,55 @@ fqdncacheParse(const char *inbuf)
     }
     return &f;
 }
+#else
+static fqdncache_entry *
+fqdncacheParse(rfc1035_rr * answers, int nr)
+{
+    static fqdncache_entry f;
+    int k;
+    int j;
+    int na = 0;
+    memset(&f, '\0', sizeof(f));
+    f.expires = squid_curtime;
+    f.status = FQDN_NEGATIVE_CACHED;
+    if (nr < 0) {
+	debug(35, 1) ("fqdncacheParse: Lookup failed (error %d)\n",
+	    rfc1035_errno);
+	assert(rfc1035_error_message);
+	f.error_message = xstrdup(rfc1035_error_message);
+	return &f;
+    }
+    if (nr == 0) {
+	debug(35, 1) ("fqdncacheParse: No DNS records\n");
+	f.error_message = xstrdup("No DNS records");
+	return &f;
+    }
+    debug(35, 1) ("fqdncacheParse: %d answers\n", nr);
+    assert(answers);
+    for (j = 0, k = 0; k < nr; k++) {
+	if (answers[k].type != RFC1035_TYPE_PTR)
+	    continue;
+	if (answers[k].class != RFC1035_CLASS_IN)
+	    continue;
+	na++;
+	f.status = FQDN_CACHED;
+	f.names[0] = xstrdup(answers[k].rdata);
+	f.name_count = 1;
+	f.expires = squid_curtime + answers[k].ttl;
+	return &f;
+    }
+    debug(35, 1) ("fqdncacheParse: No PTR record\n");
+    f.error_message = xstrdup("No PTR record");
+    return &f;
+}
+#endif
 
 static void
+#if USE_DNSSERVERS
 fqdncacheHandleReply(void *data, char *reply)
+#else
+fqdncacheHandleReply(void *data, rfc1035_rr * answers, int na)
+#endif
 {
     int n;
     generic_cbdata *c = data;
@@ -286,7 +337,11 @@ fqdncacheHandleReply(void *data, char *reply)
     n = ++FqdncacheStats.replies;
     statHistCount(&Counter.dns.svc_time,
 	tvSubMsec(f->request_time, current_time));
+#if USE_DNSSERVERS
     x = fqdncacheParse(reply);
+#else
+    x = fqdncacheParse(answers, na);
+#endif
     assert(x);
     f->name_count = x->name_count;
     for (n = 0; n < (int) f->name_count; n++)
@@ -369,7 +424,11 @@ fqdncache_nbgethostbyaddr(struct in_addr addr, FQDNH * handler, void *handlerDat
     cbdataAdd(c, cbdataXfree, 0);
     f->status = FQDN_DISPATCHED;
     fqdncacheLockEntry(f);	/* lock while FQDN_DISPATCHED */
+#if USE_DNSSERVERS
     dnsSubmit(f->name, fqdncacheHandleReply, c);
+#else
+    idnsPTRLookup(addr, fqdncacheHandleReply, c);
+#endif
 }
 
 /* initialize the fqdncache */
