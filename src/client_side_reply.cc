@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.36 2003/02/05 10:36:49 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.37 2003/02/08 15:23:53 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1960,6 +1960,11 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 	    debug (88,0)("Broken head response - probably phttpd/0.99.72\n");
 	    http->flags.done_copying = 1;
 	    flags.complete = 1;
+	    /*
+	     * And as this is a malformed HTTP reply we cannot keep
+	     * the connection persistent
+	     */
+	    request->flags.proxy_keepalive = 0;
 	    
 	    StoreIOBuffer tempBuffer;
 	    assert(body_buf && body_size);
