@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.61 1998/02/21 19:28:12 rousskov Exp $
+ * $Id: debug.cc,v 1.62 1998/02/24 20:01:44 rousskov Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -431,15 +431,18 @@ ctx_print()
     /* ok, user saw [0,Ctx_Reported_Level] descriptions */
     /* first inform about entries popped since user saw them */
     if (Ctx_Valid_Level < Ctx_Reported_Level) {
-	_db_print("ctx: exit: from %2d downto %2d\n", 
-	    Ctx_Reported_Level, Ctx_Valid_Level+1);
+	if (Ctx_Reported_Level != Ctx_Valid_Level+1)
+	    _db_print("ctx: exit levels from %2d down to %2d\n", 
+		Ctx_Reported_Level, Ctx_Valid_Level+1);
+	else
+	    _db_print("ctx: exit level %2d\n", Ctx_Reported_Level);
 	Ctx_Reported_Level = Ctx_Valid_Level;
     }
     /* report new contexts that were pushed since last report */
     while (Ctx_Reported_Level < Ctx_Current_Level) {
 	Ctx_Reported_Level++;
 	Ctx_Valid_Level++;
-	_db_print("ctx: enter: %2d '%s'\n", Ctx_Reported_Level, 
+	_db_print("ctx: enter level %2d: '%s'\n", Ctx_Reported_Level, 
 	    ctx_get_descr(Ctx_Reported_Level));
     }
     /* unlock */
