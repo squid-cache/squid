@@ -1,0 +1,137 @@
+<!doctype linuxdoc system>
+<article>
+<title>Squid 3.0 release notes</title>
+<author>Squid Developers</author>
+<date>$Id: release-3.0.sgml,v 1.1 2003/04/20 03:35:38 robertc Exp $</date>
+
+<abstract>
+This document contains the release notes for version 3.0 of Squid.
+Squid is a WWW Cache application developed by the National Laboratory
+for Applied Network Research and members of the Web Caching community.
+</abstract>
+
+<toc>
+<sect>Key changes from squid 2.5:
+<p>
+<itemize>
+        <item>Clean up the squid code to consistenly use &lsqb;u_]int&lt;len&gt;_t throughout, rather than some &lsqb;u_]num&lt;len&gt; and some &lsqb;u_]&lt;len&gt;_t instances. (Robert Collins).
+	<item>Escapes Basic auth login and password information when sent to the helpers, to allow for spaces and other odd characters (Henrik Nordstrom).
+	<item>New option ftp_sanitycheck (Henrik Nordstrom).
+	<item>Gopher improvements (Henrik Nordstrom).
+	<item>CARP enabled by default (Henrik Nordstrom).
+	<item>Documented no_cache change (not new, but rather important) (Henrik)
+	<item>Make http_port optional, allowing for SSL-only operation. Squid will refuse to start unless at least one port is defined. (Henrik).
+	<item>Ability to read the configuration file from an external program pipe (Henrik).
+	<item>Major cleanup or CARP. Now plays well with the other peering algorithms as just another non-ICP peering method. (Henrik)
+	<item>Spelling corrections by Reuben Farrelly.
+	<item>SASL auth helper by Ian Castle.
+	<item>SNMP leak fix (Henrik).
+	<item>Object reference counting supported to ease some programming tasks (Robert Collins).
+	<item>EXEEXT cleanups, to hopefully allow pinger to install cleanly on cygwin etc.. (Henrik)
+	<item>epoll support (David Nicklay)
+	<item>Deferred reads removed from comms layer, implemented a layer above, allowing more efficent comms layers (such as epoll). (Robert Collins).
+	<item>ACL Source code extracted into multiple separate classes, allowing great flexability in future development, and also for custom squid builds today. (Robert Collins)
+	<item>Delay classes heavily refactored to allow easier extension and reuse. (Robert Collins).
+	<item>Class 4 delay pools - user specific buckets. (Robert Collins).
+	<item>Convert core squid source to C++ (Robert Collins).
+	<item>clientStreams, rationalising the client side logic to allow plugin output streams, and providing a simple interface to the store. See the programmers guide for details. (Robert Collins).
+	<item>Andres Kroonmaa's chunked memory pool allocator included. (Squid 2.5 ?)
+	<item>Comms layer refactored to increase efficiency (Adrian Chadd).
+	<item>Range processing moved from client side to both client and server (Robert Collins).
+	<item>autoconf 2.5 support (Robert Collins).
+	<item>Added support for sys/bitypes.h, apparently needed for some of the bittypes on tru64 and possibly others. (Henrik Nordstrom)
+	<item>Edge Side Include implementation (www.esi.org). (Robert Collins).
+	<item>Reduce the depth of recursion in make, improving make -j performance. (Robert Collins)
+	<item>Hi-resolution CPU profiling from Andres Kroonma, for single-threaded use only.
+	<item>kqueue support (Adrian Chadd).
+	<item>Cleanup of the relation between accelerated request and transparently intercepted request. The two are now handled separately from each other. 
+This fixes two issues:<itemize><item>Transparently intercepted requests is no longer under the restrictions of accelerated requests in peering relations etc..
+<item>No risk of confusion in authentication. Authentication is now allowed for accelerated requests but not transparently intercepted requests.
+</itemize> (Henrik Nordstrom)
+       <item>--enable-auth-on-accel configure option to enable authentication in accelerator setups (Henrik Nordstrom)
+       <item>Cleaned up module/helper configure checks to use the same logics everywhere. (Henrik Nordstrom)
+       <item>Added a small trap detecting incorrect --with-aufs-threads arguments (Henrik Nordstrom)
+       <item>Change --disable-hostname-checks to --enable-hostname-checks, default to not verify hostname sanity. (Henrik Nordstrom)
+       <item>also removed the dot magics. These are more evil than helpful and breaks semantic transparency in certain configurations. (Henrik Nordstrom)
+       <item>added reporting of "Process Data Segment Size via sbrk()" when sbrk() call exists.  According to the sbrk() man page, calling sbrk(0) returns the end of the data segment.  By storing the data segment offset when Squid starts, we can report the size of the data segment at any time.  This might be a better metric than getrusage()'s MAX RSS, which, in my experience, is often less than the process size reported by 'ps' (presumably because some of the processes memory is swapped to disk).  However, initial tests show that the sbrk() trick reports a value slightly smaller than reported by 'ps'. (Duane Wessels)
+       <item>failure_ratio is a ratio, not a percentage.  Removed %% from printf. (Duane Wessels)
+       <item>Start using inline C and C++ code via .cci source files. This defaults to inlined, with a configure option to disable for troubleshooting or development. (Robert Collins).
+       <item>Unify much of the IO logic, shrinking the code base for diskd/aufs/ufs. (Robert Collins).
+       <item>Introduce 'make check' support to provide an automated test suite for squid. (Robert Collins).
+       <item>Fix --disable-... options to default to be enabled.. (CARP, WCCP, IDENT, ..) (Henrik Nordstrom)
+       <item>pthreads detection and compilation bugfixes. (Henrik Nordstrom, Robert Collins)
+       <item>Better MacOSX support (Robert Collins, Adrian Chadd, Henrik Nordstrom)
+       <item>--with-filedescriptors=XX configure option (Francesco Chemolli)
+       <item>Killed the remains of ALARM_UPDATES_TIME (--enable-time-hack) (Henrik Nordstrom)
+       <item>Not all systems support the 'obsolete' getpass() function (Henrik Nordstrom)
+       <item>UNIX domain IPC sockets support - Centralised the IPC type selection to defines.h by the defines IPC_STREAM and IPC_DGRAM. (Henrik Nordstrom)
+       <item>Removed potentially dangerous debugging options. Developers know how to edit configure.in or set defines. configure --help lineups. (Henrik Nordstrom)
+       <item>--enable-large-files to enable support for large files (>2GB) on 32-bit GNU libc systems. (Henrik Nordstrom)
+       <item>Astyle is the code formatter of choice for squid-3 C++ code. See http://www.squid-cache.org/~robertc/squid-3-style.txt for the squid 3 style conventions.
+       <item>WIN32 port update by Guido - Fix the problems on Windows related to open file renaming and text/binary file issues.
+       <item>LDAP basic auth helper improvements (Henrik, David Begley, Christoph Lechleitner, Juerg Michel)
+       <item>Digest auth helper improvements (Robert Collins, Sean Burford)
+       <item>Digest authentication scheme bugfixs & improvements (Robert Collins)
+       <item>Merge of http(s)_port and accelerator directive updates from rproxy<itemize><item>The httpd_accel_* directives is now gone, replaced by http(s)_port options
+       <item>The http(s)_port options has a list of new options for controlling the type and mode of port created with respect to<itemize><item>transparent proxying
+       <item>plain acceleration
+       <item>host header based acceleration
+       <item>normal proxying (default)
+       </itemize>
+       <item>To enforce a reasonable level of security in accelerators, accelerated requests are denied to go direct unless forced by always_direct.
+       </itemize>(Henrik Nordstrom)
+    <item>Cache manager auth helper output tidyup (Duane Wessels).
+    <item>Native Windows port enhancements:<itemize><item>Another fix for profiling support
+      <item>Added correct timezone handling
+      <item>Fixed rotate problem
+      <item>Added native Windows support to client.cc
+      <item>This patch add the native Windows support for profiling and fix some C++/C include files problems.
+      <item>Support for Windows .NET (5.2). 
+      <item>Added native Windows and Cygwin support to pinger.cc
+      <item>Introduced the use of IPPROTO_TCP and IPPROTO_UDP defines instead of '0' on comm_open, needed by Winsocket. See this old squid-dev thread about http://www.squid-cache.org/mail-archive/squid-dev/200108/0162.html.
+      <item>Added native Windows support to cachemgr.cc
+      <item>Added native Windows support to dnsserver.cc
+      <item>On Windows, fork() is not available, so we need to use a workaround in store_dir.cc for create store directories sequentially
+      </itemize>By Guido Serassio.
+  <item>SSL support update<itemize><item>Support for outgoing SSL connections
+  <item>SSL encrypted peers
+  <item>https:// gatewaying for clients not supporting SSL or URLs rewritten via a redirector to https://...
+  <item>Client certificate support
+  <item>Hardware crypto SSL acceleration support via OpenSSL engine
+  <item>SSL key/certificate now read while parsing squid.conf to support secure key protection and chroot.
+  <item>A few minor bugfixes/optimizations
+  </itemize>(Henrik Nordstrom)
+   <item>--enable-default-hostsfile configure option by Guido Serassio. Tells the default /etc/hosts file location
+   <item>Fix "access_log none" (and "forward_log none")  (Arkadi E. Shishlov).
+   <item>New squid.conf directive to disable hostname verifications. It isn't really our business to enforce what characters is used in hostnames. (Henrik Nordstrom).
+   <item>ftp_sanitycheck option (default on) to make Squid sanity check the FTP data connection.<itemize><item>Ignore "BAD" PASV replies, asking Squid to connect to another server than requested.
+   <item>Ignore PORT and default connections coming from another address than expected.
+   </itemize>(Henrik Nordstrom)
+  <item>Peering enhancement options for satellite or other high latency links by Robert Cohen.
+  <item>Cleanup of authentication forwarding, and added gatewaying proxy->reverseproxy when the same Squid is acting as both proxy and reverseproxy with authentication. (Henrik Nordstrom)
+ <item>The mailto links on Squid's ERR pages now contain data about the cccurred error by default, so that the email will contain this data in its body. This feature can be disabled via the email_err_data directive. (Clemens Löser)
+ <item>Disable pipeline_prefetch in HEAD as it is known to be broken due to the store_client_copy() api change (Henrik)
+</itemize>
+
+<sect>Changes to squid.conf
+<p><descrip>
+<tag>read_ahead_gap</tag>Config directive by Jeffrey D. Wheelhouse. Allows the read-ahead gap to be configured from squid.conf (previously hardcoded at 16 KB)
+<tag>request_entities</tag>New squid.conf directive "request_entities on/off".If set to "on" then Squid will allow GET/HEAD requests with request entities, even if such entites are "undefined" in the HTTP specification.  (Henrik Nordstrom)
+<tag>cache_peer</tag>New options for reverse proxy setups<itemize><item>originserver
+<item>name=XXX
+<item>forceddomain=XXX
+</itemize>
+<tag>https_port</tag>New option : dhparams=/path/to/file.pem https_port option to specify DH parameters for forward-secrecy in encryption (practically denies decryption even if the private key is known from what I understand). (Henrik Nordstrom)
+<tag>header_replace</tag>This is now dependent on --disable-http-violations (Henrik Nordstrom) 
+<tag>email_err_data</tag>Allow disabling the data now embedded in the mailto links on Squid's ERR pages.
+<tag>refresh_pattern</tag>Make the default refresh_pattern merely a suggested default. This is consistent with older Squid versions due to a bug in the "DEFAULT-IF-NONE" processing of refresh_pattern.  (Henrik)
+</descrip>
+
+<sect>Known limitations
+<p>
+<itemize>
+  <item>SSL Acceleration Support - CRL's are not currently supported. The design has been completed, but time to implement is missing - contact squid-dev@squid-cache.org for more details.
+</itemize>
+
+</article>
+
