@@ -1,3 +1,4 @@
+
 /*
  * SNMP Variable Binding.  Complies with:
  *
@@ -83,7 +84,9 @@
 #include "snmp.h"
 #include "asn1.h"
 #include "snmp_vars.h"
+#if 0
 #include "mibii.h"
+#endif
 #include "snmp_api_error.h"
 #include "snmp_pdu.h"
 #include "snmp_msg.h"
@@ -96,64 +99,52 @@
 /* #define DEBUG_VARS_DECODE 1 */
 /* #define DEBUG_VARS_ENCODE 1 */
 
-#define ASN_PARSE_ERROR(x) { snmpInASNParseErrs_Add(1); return(x); }
+#define ASN_PARSE_ERROR(x) { return(x); }
 
 /* Create a new variable_list structure representing oid Name of length Len.
  *
  * Returns NULL upon error.
  */
 
-struct variable_list *snmp_var_new(oid *Name, int Len)
+struct variable_list *
+snmp_var_new(oid * Name, int Len)
 {
-  struct variable_list *New;
+    struct variable_list *New;
 
 #ifdef DEBUG_VARS
-  printf("VARS: Creating.\n");
+    printf("VARS: Creating.\n");
 #endif
 
-  New = (struct variable_list *)xmalloc(sizeof(struct variable_list));
-  if (New == NULL) {
-    snmp_set_api_error(SNMPERR_OS_ERR);
-    return(NULL);
-  }
-  memset(New, '\0', sizeof(struct variable_list));
-  /*  New->next_variable = NULL; */
+    New = (struct variable_list *) xmalloc(sizeof(struct variable_list));
+    if (New == NULL) {
+	snmp_set_api_error(SNMPERR_OS_ERR);
+	return (NULL);
+    }
+    memset(New, '\0', sizeof(struct variable_list));
+    /*  New->next_variable = NULL; */
 
-  New->type = ASN_NULL;
-  New->name_length = Len;
+    New->type = ASN_NULL;
+    New->name_length = Len;
 
-  if (New->name_length == 0) {
-    New->name = NULL;
-    return(New);
-  }
-
-  New->name = (oid *)xmalloc(Len * sizeof(oid));
-  if (New->name == NULL) {
-    xfree(New);
-    snmp_set_api_error(SNMPERR_OS_ERR);
-    return(NULL);
-  }
-
+    if (New->name_length == 0) {
+	New->name = NULL;
+	return (New);
+    }
+    New->name = (oid *) xmalloc(Len * sizeof(oid));
+    if (New->name == NULL) {
+	xfree(New);
+	snmp_set_api_error(SNMPERR_OS_ERR);
+	return (NULL);
+    }
 #ifdef DEBUG_VARS
-  printf("VARS: Copying name, size (%d)\n", Len);
+    printf("VARS: Copying name, size (%d)\n", Len);
 #endif
 
-  /* Only copy a name if it was specified. */
-  if (Name)
-    xmemcpy((char *)New->name, (char *)Name, Len * sizeof(oid));
-  
-  /*  New->val.string = NULL; */
-  /*  New->val_len = 0; */
+    /* Only copy a name if it was specified. */
+    if (Name)
+	xmemcpy((char *) New->name, (char *) Name, Len * sizeof(oid));
 
-#ifdef DEBUG_VARS
-  printf("VARS: Created %x.\n", (unsigned int)New);
-#endif
-
-#ifdef DEBUG_VARS_MALLOC
-  printf("VARS: Created (%x)\n", (unsigned int)New);
-  printf("VARS: Name is (%x)\n", (unsigned int)New->name);
-#endif
-  return(New);
+    return (New);
 }
 
 /* Clone a variable list.
@@ -161,88 +152,80 @@ struct variable_list *snmp_var_new(oid *Name, int Len)
  * Returns NULL upon error.
  */
 
-struct variable_list *snmp_var_clone(struct variable_list *Src)
+struct variable_list *
+snmp_var_clone(struct variable_list *Src)
 {
-  struct variable_list *Dest;
+    struct variable_list *Dest;
 
 #ifdef DEBUG_VARS
-  printf("VARS: Cloning.\n");
+    printf("VARS: Cloning.\n");
 #endif
 
-  Dest = (struct variable_list *)xmalloc(sizeof(struct variable_list));
-  if (Dest == NULL) {
-    snmp_set_api_error(SNMPERR_OS_ERR);
-    return(NULL);
-  }
-
-#ifdef DEBUG_VARS
-  printf("VARS: Copying entire variable list.  (Size %d)\n",
-	 sizeof(struct variable_list));
-#endif
-
-  xmemcpy((char *)Dest, (char *)Src, sizeof(struct variable_list));
-
-  if (Src->name != NULL){
-    Dest->name = (oid *)xmalloc(Src->name_length * sizeof(oid));
-    if (Dest->name == NULL) {
-      snmp_set_api_error(SNMPERR_OS_ERR);
-      xfree(Dest);
-      return(NULL);
+    Dest = (struct variable_list *) xmalloc(sizeof(struct variable_list));
+    if (Dest == NULL) {
+	snmp_set_api_error(SNMPERR_OS_ERR);
+	return (NULL);
     }
 #ifdef DEBUG_VARS
-    printf("VARS: Copying name OID. (Size %d)\n", Src->name_length);
+    printf("VARS: Copying entire variable list.  (Size %d)\n",
+	sizeof(struct variable_list));
 #endif
-    xmemcpy((char *)Dest->name, (char *)Src->name,
-    	   Src->name_length * sizeof(oid));
-  }
 
-  /* CISCO Catalyst 2900 returns NULL strings as data of length 0. */
-  if ((Src->val.string != NULL) &&
-      (Src->val_len)) {
-    Dest->val.string = (u_char *)xmalloc(Src->val_len);
-    if (Dest->val.string == NULL) {
-      snmp_set_api_error(SNMPERR_OS_ERR);
-      xfree(Dest->name);
-      xfree(Dest);
-      return(NULL);
+    xmemcpy((char *) Dest, (char *) Src, sizeof(struct variable_list));
+
+    if (Src->name != NULL) {
+	Dest->name = (oid *) xmalloc(Src->name_length * sizeof(oid));
+	if (Dest->name == NULL) {
+	    snmp_set_api_error(SNMPERR_OS_ERR);
+	    xfree(Dest);
+	    return (NULL);
+	}
+#ifdef DEBUG_VARS
+	printf("VARS: Copying name OID. (Size %d)\n", Src->name_length);
+#endif
+	xmemcpy((char *) Dest->name, (char *) Src->name,
+	    Src->name_length * sizeof(oid));
     }
-
+    /* CISCO Catalyst 2900 returns NULL strings as data of length 0. */
+    if ((Src->val.string != NULL) &&
+	(Src->val_len)) {
+	Dest->val.string = (u_char *) xmalloc(Src->val_len);
+	if (Dest->val.string == NULL) {
+	    snmp_set_api_error(SNMPERR_OS_ERR);
+	    xfree(Dest->name);
+	    xfree(Dest);
+	    return (NULL);
+	}
 #ifdef DEBUG_VARS
-    printf("VARS: Copying value (Size %d)\n", Src->val_len);
+	printf("VARS: Copying value (Size %d)\n", Src->val_len);
 #endif
-    xmemcpy((char *)Dest->val.string, (char *)Src->val.string, Src->val_len);
-  }
-
+	xmemcpy((char *) Dest->val.string, (char *) Src->val.string, Src->val_len);
+    }
 #ifdef DEBUG_VARS
-  printf("VARS: Cloned %x.\n", (unsigned int)Dest);
+    printf("VARS: Cloned %x.\n", (unsigned int) Dest);
 #endif
 #ifdef DEBUG_VARS_MALLOC
-  printf("VARS: Cloned  (%x)\n", (unsigned int)Dest);
-  printf("VARS: Name is (%x)\n", (unsigned int)Dest->name);
+    printf("VARS: Cloned  (%x)\n", (unsigned int) Dest);
+    printf("VARS: Name is (%x)\n", (unsigned int) Dest->name);
 #endif
 
-  return(Dest);
+    return (Dest);
 }
 
 /* Free a variable_list.
  */
-void snmp_var_free(struct variable_list *Ptr)
+void 
+snmp_var_free(struct variable_list *Ptr)
 {
-#ifdef DEBUG_VARS_MALLOC
-  printf("VARS: Free'd  (%x)\n", (unsigned int)Ptr);
-  printf("VARS: Name was(%x)\n", (unsigned int)Ptr->name);
-#endif
+    if (Ptr->name && Ptr->name_length > 0)
+	xfree((char *) Ptr->name);
 
-  if (Ptr->name && Ptr->name_length > 0)
-    xfree((char *) Ptr->name);
+    if (Ptr->val.string && Ptr->val_len > 0)
+	xfree((char *) Ptr->val.string);
+    else if (Ptr->val.integer && Ptr->val_len > 0)
+	xfree((char *) Ptr->val.integer);
 
-  if (Ptr->val.string && Ptr->val_len > 0)
-    xfree((char *) Ptr->val.string);
-  else
-  if (Ptr->val.integer && Ptr->val_len > 0)
-    xfree((char *) Ptr->val.integer);
-
-  xfree(Ptr);
+    xfree(Ptr);
 }
 
 /**********************************************************************/
@@ -263,376 +246,317 @@ void snmp_var_free(struct variable_list *Ptr)
  *     }
  *   }
  */
-u_char *snmp_var_EncodeVarBind(u_char *Buffer, int *BufLenP,
-			       struct variable_list *VarList,
-			       int Version)
+u_char *
+snmp_var_EncodeVarBind(u_char * Buffer, int *BufLenP,
+    variable_list * VarList,
+    int Version)
 {
-  struct variable_list *Vars;
-  u_char *bufp;
-  u_char *HeaderStart;
-  u_char *HeaderEnd;
-  int FakeArg = *BufLenP;
-#ifdef DEBUG_VARS_ENCODE
-  int StartLen = *BufLenP;
-  int Counter = 1;
-#endif
+    struct variable_list *Vars;
+    u_char *bufp;
+    u_char *HeaderStart;
+    u_char *HeaderEnd;
+    int FakeArg = *BufLenP;
 
-  bufp = Buffer;
+    bufp = Buffer;
 
-#ifdef DEBUG_VARS_ENCODE
-  printf("VARS: Encoding Variable list into buffer at 0x%x.\n", Buffer);
-#endif
+    for (Vars = VarList; Vars; Vars = Vars->next_variable) {
 
-  for (Vars=VarList; Vars; Vars=Vars->next_variable) {
+	/* Build the header for this variable
+	 *
+	 * Use Maximum size.
+	 */
+	HeaderStart = bufp;
+	HeaderEnd = asn_build_header(HeaderStart, BufLenP,
+	    (u_char) (ASN_SEQUENCE | ASN_CONSTRUCTOR),
+	    FakeArg);
+	if (HeaderEnd == NULL)
+	    return (NULL);
 
-#ifdef DEBUG_VARS_ENCODE
-    printf("VARS %d: Encoding Variable 0x%x.\n", Counter, Vars);
-    printf("VARS %d: Starting at 0x%x (%d bytes left)\n", 
-	   Counter, bufp, *BufLenP);
-#endif
+	/* Now, let's put the Object Identifier into the buffer */
+	bufp = asn_build_objid(HeaderEnd, BufLenP,
+	    (u_char) (ASN_UNIVERSAL |
+		ASN_PRIMITIVE |
+		ASN_OBJECT_ID),
+	    Vars->name, Vars->name_length);
+	if (bufp == NULL)
+	    return (NULL);
 
-    /* Build the header for this variable
-     *
-     * Use Maximum size.
-     */
-    HeaderStart = bufp;
-    HeaderEnd = asn_build_header(HeaderStart, BufLenP,
-				 (u_char)(ASN_SEQUENCE | ASN_CONSTRUCTOR), 
-				 FakeArg);
-    if (HeaderEnd == NULL)
-      return(NULL);
+	/* Now put the data in */
+	switch (Vars->type) {
 
-#ifdef DEBUG_VARS_ENCODE
-    printf("VARS %d: Encoding Object Identifier 0x%x (%d bytes) at 0x%x (%d bytes left)\n", 
-	   Counter, Vars,
-	   Vars->name_length, HeaderEnd, *BufLenP);
-    print_oid(Vars->name, Vars->name_length),
-#endif
-    /* Now, let's put the Object Identifier into the buffer */
-    bufp = asn_build_objid(HeaderEnd, BufLenP,
-			   (u_char)(ASN_UNIVERSAL | 
-				    ASN_PRIMITIVE | 
-				    ASN_OBJECT_ID),
-			   Vars->name, Vars->name_length);
-    if (bufp == NULL)
-      return(NULL);
+	case ASN_INTEGER:
+	    bufp = asn_build_int(bufp,
+		BufLenP, Vars->type,
+		(int *) Vars->val.integer, Vars->val_len);
+	    break;
 
-    /* Now put the data in */
-    switch(Vars->type) {
+	case SMI_COUNTER32:
+	case SMI_GAUGE32:
+	    /*  case SMI_UNSIGNED32: */
+	case SMI_TIMETICKS:
+	    bufp = asn_build_unsigned_int(bufp, BufLenP,
+		Vars->type,
+		(u_int *) Vars->val.integer, Vars->val_len);
+	    break;
 
-    case ASN_INTEGER:
-#ifdef DEBUG_VARS_ENCODE
-      printf("VARS %d: Encoding Integer %d at 0x%x\n", Counter,
-	     *(Vars->val.integer), bufp);
-#endif
+	case ASN_OCTET_STR:
+	case SMI_IPADDRESS:
+	case SMI_OPAQUE:
+	    bufp = asn_build_string(bufp, BufLenP, Vars->type,
+		Vars->val.string, Vars->val_len);
+	    break;
 
-      bufp = asn_build_int(bufp, 
-			   BufLenP, Vars->type,
-			   (int *)Vars->val.integer, Vars->val_len);
-      break;
+	case ASN_OBJECT_ID:
+	    bufp = asn_build_objid(bufp, BufLenP, Vars->type,
+		(oid *) Vars->val.objid, Vars->val_len / sizeof(oid));
+	    break;
 
-    case SMI_COUNTER32:
-    case SMI_GAUGE32:
-      /*  case SMI_UNSIGNED32: */
-    case SMI_TIMETICKS:
-#ifdef DEBUG_VARS_ENCODE
-      printf("VARS %d: Encoding Timeticks %d at 0x%x\n", Counter,
-	     *(Vars->val.integer), bufp);
-#endif
-      bufp = asn_build_unsigned_int(bufp, BufLenP, 
-				    Vars->type,
-				    (u_int *)Vars->val.integer, Vars->val_len);
-      break;
+	case SMI_NOSUCHINSTANCE:
+	case SMI_NOSUCHOBJECT:
+	case SMI_ENDOFMIBVIEW:
+	    if (Version == SNMP_VERSION_1) {
+		/* SNMP Version 1 does not support these error codes. */
+		bufp = asn_build_null(bufp, BufLenP, SMI_NOSUCHOBJECT);
+	    } else {
+		bufp = asn_build_exception(bufp, BufLenP, Vars->type);
+	    }
+	    break;
 
-    case ASN_OCTET_STR:
-    case SMI_IPADDRESS:
-    case SMI_OPAQUE:
-#ifdef DEBUG_VARS_ENCODE
-      printf("VARS %d: Encoding String %s (%d bytes) at 0x%x\n", Counter,
-	     (Vars->val.string), Vars->val_len, bufp);
-#endif
-      bufp = asn_build_string(bufp, BufLenP, Vars->type,
-			      Vars->val.string, Vars->val_len);
-      break;
+	case ASN_NULL:
+	    bufp = asn_build_null(bufp, BufLenP, Vars->type);
+	    break;
 
-    case ASN_OBJECT_ID:
-#ifdef DEBUG_VARS_ENCODE
-      printf("VARS %d: Encoding Object Identifier (%d bytes) at 0x%x\n",
-	     Counter,
-	     Vars->val_len, bufp);
-#endif
-      bufp = asn_build_objid(bufp, BufLenP, Vars->type,
-			     (oid *)Vars->val.objid, Vars->val_len / sizeof(oid));
-      break;
+	case SMI_COUNTER64:
+	    snmplib_debug(2, "Unable to encode type SMI_COUNTER64!\n");
+	    /* Fall through */
 
-    case SMI_NOSUCHINSTANCE:
-    case SMI_NOSUCHOBJECT:
-    case SMI_ENDOFMIBVIEW:
+	default:
+	    snmp_set_api_error(SNMPERR_UNSUPPORTED_TYPE);
+	    return (NULL);
+	}
 
-#ifdef DEBUG_VARS_ENCODE
-      printf("VARS %d: Encoding NULL at 0x%x\n", Counter, bufp);
-#endif
-      if (Version == SNMP_VERSION_1) {
-        /* SNMP Version 1 does not support these error codes. */
-	bufp = asn_build_null(bufp, BufLenP, SMI_NOSUCHOBJECT);
-      } else {
-	bufp = asn_build_exception(bufp, BufLenP, Vars->type);
-      }
-      break;
+	/* ASSERT:  bufp should now point to the next valid byte. */
+	if (bufp == NULL)
+	    return (NULL);
 
-    case ASN_NULL:
-#ifdef DEBUG_VARS_ENCODE
-      printf("VARS %d: Encoding NULL at 0x%x\n", Counter, bufp);
-#endif
-      bufp = asn_build_null(bufp, BufLenP, Vars->type);
-      break;
+	/* Rebuild the header with the appropriate length */
+	HeaderEnd = asn_build_header(HeaderStart, &FakeArg,
+	    (u_char) (ASN_SEQUENCE | ASN_CONSTRUCTOR),
+	    (bufp - HeaderEnd));
 
-    case SMI_COUNTER64:
-      snmplib_debug(2, "Unable to encode type SMI_COUNTER64!\n");
-      /* Fall through */
+	/* Returns NULL */
+	if (HeaderEnd == NULL)
+	    return (NULL);
 
-    default:
-      snmp_set_api_error(SNMPERR_UNSUPPORTED_TYPE);
-      return(NULL);
     }
 
-    /* ASSERT:  bufp should now point to the next valid byte. */
-    if (bufp == NULL)
-      return(NULL);
-
-    /* Rebuild the header with the appropriate length */
-#ifdef DEBUG_VARS_ENCODE
-    printf("VARS %d: Resetting length to %d at 0x%x (%d bytes left)\n",
-	   Counter,
-	   (bufp - HeaderEnd), HeaderStart, *BufLenP);
-#endif
-    HeaderEnd = asn_build_header(HeaderStart, &FakeArg,
-				 (u_char)(ASN_SEQUENCE | ASN_CONSTRUCTOR), 
-				 (bufp - HeaderEnd));
-
-    /* Returns NULL */
-    if (HeaderEnd == NULL)
-      return(NULL);
-
-#ifdef DEBUG_VARS_ENCODE
-    Counter++;
-#endif
-  }
-
-#ifdef DEBUG_VARS_ENCODE
-  printf("VARS: Variable list of %d vars takes up %d bytes.\n",
-	 --Counter, StartLen - *BufLenP);
-#endif
-
-  /* or the end of the entire thing */
-  return(bufp);
+    /* or the end of the entire thing */
+    return (bufp);
 }
 
-			      
+
 
 
 /* Parse all Vars from the buffer */
-u_char *snmp_var_DecodeVarBind(u_char *Buffer, int *BufLen,
-			       struct variable_list **VarP,
-			       int Version)
+u_char *
+snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
+    struct variable_list ** VarP,
+    int Version)
 {
-  struct variable_list *Var, **VarLastP;
-  u_char *bufp, *tmp;
-  u_char  VarBindType;
-  u_char *DataPtr;
-  int     DataLen;
-  oid TmpBuf[MAX_NAME_LEN];
+    struct variable_list *Var, **VarLastP;
+    u_char *bufp, *tmp;
+    u_char VarBindType;
+    u_char *DataPtr;
+    int DataLen;
+    oid TmpBuf[MAX_NAME_LEN];
 
-  int AllVarLen = *BufLen;
-  int ThisVarLen = 0;
+    int AllVarLen = *BufLen;
+    int ThisVarLen = 0;
 
-  VarLastP = VarP;
+    VarLastP = VarP;
 #ifdef DEBUG_VARS_DECODE
-  printf("VARS: Decoding buffer of length %d\n", *BufLen);
+    printf("VARS: Decoding buffer of length %d\n", *BufLen);
 #endif
 
-  /* Now parse the variables */
-  bufp = asn_parse_header(Buffer, &AllVarLen, &VarBindType);
-  if (bufp == NULL)
-    ASN_PARSE_ERROR(NULL);
+    /* Now parse the variables */
+    bufp = asn_parse_header(Buffer, &AllVarLen, &VarBindType);
+    if (bufp == NULL)
+	ASN_PARSE_ERROR(NULL);
 
-  if (VarBindType != (u_char)(ASN_SEQUENCE | ASN_CONSTRUCTOR)) {
-      snmp_set_api_error(SNMPERR_PDU_PARSE);
-      ASN_PARSE_ERROR(NULL);
-  }
-
+    if (VarBindType != (u_char) (ASN_SEQUENCE | ASN_CONSTRUCTOR)) {
+	snmp_set_api_error(SNMPERR_PDU_PARSE);
+	ASN_PARSE_ERROR(NULL);
+    }
 #ifdef DEBUG_VARS_DECODE
-  printf("VARS: All Variable length %d\n", AllVarLen);
+    printf("VARS: All Variable length %d\n", AllVarLen);
 #endif
 
-  /* We know how long the variable list is.  Parse it. */
-  while ((int)AllVarLen > 0) {
+    /* We know how long the variable list is.  Parse it. */
+    while ((int) AllVarLen > 0) {
 
-    /* Create a new variable */
-    Var = snmp_var_new(NULL, MAX_NAME_LEN);
-    if (Var == NULL)
-      return(NULL);
-    
-    /* Parse the header to find out the length of this variable. */
-    ThisVarLen = AllVarLen;
-    tmp = asn_parse_header(bufp, &ThisVarLen, &VarBindType);
-    if (tmp == NULL)
-      ASN_PARSE_ERROR(NULL);
+	/* Create a new variable */
+	Var = snmp_var_new(NULL, MAX_NAME_LEN);
+	if (Var == NULL)
+	    return (NULL);
 
-    /* Now that we know the length , figure out how it relates to 
-     * the entire variable list
-     */
-    AllVarLen = AllVarLen - (ThisVarLen + (tmp - bufp));
-    bufp = tmp;
+	/* Parse the header to find out the length of this variable. */
+	ThisVarLen = AllVarLen;
+	tmp = asn_parse_header(bufp, &ThisVarLen, &VarBindType);
+	if (tmp == NULL)
+	    ASN_PARSE_ERROR(NULL);
 
-    /* Is it valid? */
-    if (VarBindType != (u_char)(ASN_SEQUENCE | ASN_CONSTRUCTOR)) {
-      snmp_set_api_error(SNMPERR_PDU_PARSE);
-      ASN_PARSE_ERROR(NULL);
+	/* Now that we know the length , figure out how it relates to 
+	 * the entire variable list
+	 */
+	AllVarLen = AllVarLen - (ThisVarLen + (tmp - bufp));
+	bufp = tmp;
+
+	/* Is it valid? */
+	if (VarBindType != (u_char) (ASN_SEQUENCE | ASN_CONSTRUCTOR)) {
+	    snmp_set_api_error(SNMPERR_PDU_PARSE);
+	    ASN_PARSE_ERROR(NULL);
+	}
+#ifdef DEBUG_VARS_DECODE
+	printf("VARS: Header type 0x%x (%d bytes left)\n", VarBindType, ThisVarLen);
+#endif
+
+	/* Parse the OBJID */
+	bufp = asn_parse_objid(bufp, &ThisVarLen, &VarBindType,
+	    Var->name, &(Var->name_length));
+	if (bufp == NULL)
+	    ASN_PARSE_ERROR(NULL);
+
+	if (VarBindType != (u_char) (ASN_UNIVERSAL |
+		ASN_PRIMITIVE |
+		ASN_OBJECT_ID)) {
+	    snmp_set_api_error(SNMPERR_PDU_PARSE);
+	    ASN_PARSE_ERROR(NULL);
+	}
+#ifdef DEBUG_VARS_DECODE
+	printf("VARS: Decoded OBJID (%d bytes). (%d bytes left)\n",
+	    Var->name_length, ThisVarLen);
+#endif
+
+	/* Keep a pointer to this object */
+	DataPtr = bufp;
+	DataLen = ThisVarLen;
+
+	/* find out type of object */
+	bufp = asn_parse_header(bufp, &ThisVarLen, &(Var->type));
+	if (bufp == NULL)
+	    ASN_PARSE_ERROR(NULL);
+	ThisVarLen = DataLen;
+
+#ifdef DEBUG_VARS_DECODE
+	printf("VARS: Data type %d\n", Var->type);
+#endif
+
+	/* Parse the type */
+
+	switch ((short) Var->type) {
+
+	case ASN_INTEGER:
+	    Var->val.integer = (int *) xmalloc(sizeof(int));
+	    if (Var->val.integer == NULL) {
+		snmp_set_api_error(SNMPERR_OS_ERR);
+		return (NULL);
+	    }
+	    Var->val_len = sizeof(int);
+	    bufp = asn_parse_int(DataPtr, &ThisVarLen,
+		&Var->type, (int *) Var->val.integer,
+		Var->val_len);
+#ifdef DEBUG_VARS_DECODE
+	    printf("VARS: Decoded integer '%d' (%d bytes left)\n",
+		*(Var->val.integer), ThisVarLen);
+#endif
+	    break;
+
+	case SMI_COUNTER32:
+	case SMI_GAUGE32:
+	    /*  case SMI_UNSIGNED32: */
+	case SMI_TIMETICKS:
+	    Var->val.integer = (int *) xmalloc(sizeof(u_int));
+	    if (Var->val.integer == NULL) {
+		snmp_set_api_error(SNMPERR_OS_ERR);
+		return (NULL);
+	    }
+	    Var->val_len = sizeof(u_int);
+	    bufp = asn_parse_unsigned_int(DataPtr, &ThisVarLen,
+		&Var->type, (u_int *) Var->val.integer,
+		Var->val_len);
+#ifdef DEBUG_VARS_DECODE
+	    printf("VARS: Decoded timeticks '%d' (%d bytes left)\n",
+		*(Var->val.integer), ThisVarLen);
+#endif
+	    break;
+
+	case ASN_OCTET_STR:
+	case SMI_IPADDRESS:
+	case SMI_OPAQUE:
+	    Var->val_len = *&ThisVarLen;	/* String is this at most */
+	    Var->val.string = (u_char *) xmalloc((unsigned) Var->val_len);
+	    if (Var->val.string == NULL) {
+		snmp_set_api_error(SNMPERR_OS_ERR);
+		return (NULL);
+	    }
+	    bufp = asn_parse_string(DataPtr, &ThisVarLen,
+		&Var->type, Var->val.string,
+		&Var->val_len);
+#ifdef DEBUG_VARS_DECODE
+	    printf("VARS: Decoded string '%s' (length %d) (%d bytes left)\n",
+		(Var->val.string), Var->val_len, ThisVarLen);
+#endif
+	    break;
+
+	case ASN_OBJECT_ID:
+	    Var->val_len = MAX_NAME_LEN;
+	    bufp = asn_parse_objid(DataPtr, &ThisVarLen,
+		&Var->type, TmpBuf, &Var->val_len);
+	    Var->val_len *= sizeof(oid);
+	    Var->val.objid = (oid *) xmalloc((unsigned) Var->val_len);
+	    if (Var->val.integer == NULL) {
+		snmp_set_api_error(SNMPERR_OS_ERR);
+		return (NULL);
+	    }
+	    /* Only copy if we successfully decoded something */
+	    if (bufp) {
+		xmemcpy((char *) Var->val.objid, (char *) TmpBuf, Var->val_len);
+	    }
+#ifdef DEBUG_VARS_DECODE
+	    printf("VARS: Decoded OBJID (length %d) (%d bytes left)\n",
+		Var->val_len, ThisVarLen);
+#endif
+	    break;
+
+	case ASN_NULL:
+	case SMI_NOSUCHINSTANCE:
+	case SMI_NOSUCHOBJECT:
+	case SMI_ENDOFMIBVIEW:
+	    break;
+
+	case SMI_COUNTER64:
+	    snmplib_debug(2, "Unable to parse type SMI_COUNTER64!\n");
+	    snmp_set_api_error(SNMPERR_UNSUPPORTED_TYPE);
+	    return (NULL);
+	    break;
+
+	default:
+	    snmplib_debug(2, "bad type returned (%x)\n", Var->type);
+	    snmp_set_api_error(SNMPERR_PDU_PARSE);
+	    return (NULL);
+	    break;
+	}			/* End of var type switch */
+
+	if (bufp == NULL)
+	    return (NULL);
+
+#ifdef DEBUG_VARS_DECODE
+	printf("VARS:  Adding to list.\n");
+#endif
+	/* Add variable to the list */
+	*VarLastP = Var;
+	VarLastP = &(Var->next_variable);
     }
 
-#ifdef DEBUG_VARS_DECODE
-    printf("VARS: Header type 0x%x (%d bytes left)\n", VarBindType, ThisVarLen);
-#endif
-
-    /* Parse the OBJID */
-    bufp = asn_parse_objid(bufp, &ThisVarLen, &VarBindType, 
-			   Var->name, &(Var->name_length));
-    if (bufp == NULL)
-      ASN_PARSE_ERROR(NULL);
-
-    if (VarBindType != (u_char)(ASN_UNIVERSAL | 
-				ASN_PRIMITIVE | 
-				ASN_OBJECT_ID)) {
-      snmp_set_api_error(SNMPERR_PDU_PARSE);
-      ASN_PARSE_ERROR(NULL);
-    }
-
-#ifdef DEBUG_VARS_DECODE
-    printf("VARS: Decoded OBJID (%d bytes). (%d bytes left)\n", 
-	   Var->name_length, ThisVarLen);
-#endif
-
-    /* Keep a pointer to this object */
-    DataPtr = bufp;
-    DataLen = ThisVarLen;
-
-    /* find out type of object */
-    bufp = asn_parse_header(bufp, &ThisVarLen, &(Var->type));
-    if (bufp == NULL)
-      ASN_PARSE_ERROR(NULL);
-    ThisVarLen = DataLen;
-
-#ifdef DEBUG_VARS_DECODE
-    printf("VARS: Data type %d\n", Var->type);
-#endif
-
-    /* Parse the type */
-    
-    switch((short)Var->type){
-
-    case ASN_INTEGER:
-      Var->val.integer = (int *)xmalloc(sizeof(int));
-      if (Var->val.integer == NULL) {
-	snmp_set_api_error(SNMPERR_OS_ERR);
-	return(NULL);
-      }
-      Var->val_len = sizeof(int);
-      bufp = asn_parse_int(DataPtr, &ThisVarLen, 
-			   &Var->type, (int *)Var->val.integer, 
-			   Var->val_len);
-#ifdef DEBUG_VARS_DECODE
-      printf("VARS: Decoded integer '%d' (%d bytes left)\n",
-	     *(Var->val.integer), ThisVarLen);
-#endif
-      break;
-
-    case SMI_COUNTER32:
-    case SMI_GAUGE32:
-      /*  case SMI_UNSIGNED32: */
-    case SMI_TIMETICKS:
-      Var->val.integer = (int *)xmalloc(sizeof(u_int));
-      if (Var->val.integer == NULL) {
-	snmp_set_api_error(SNMPERR_OS_ERR);
-	return(NULL);
-      }
-      Var->val_len = sizeof(u_int);
-      bufp = asn_parse_unsigned_int(DataPtr, &ThisVarLen, 
-				    &Var->type, (u_int *)Var->val.integer, 
-				    Var->val_len);
-#ifdef DEBUG_VARS_DECODE
-      printf("VARS: Decoded timeticks '%d' (%d bytes left)\n",
-	     *(Var->val.integer), ThisVarLen);
-#endif
-      break;
-
-    case ASN_OCTET_STR:
-    case SMI_IPADDRESS:
-    case SMI_OPAQUE:
-      Var->val_len = *&ThisVarLen; /* String is this at most */
-      Var->val.string = (u_char *)xmalloc((unsigned)Var->val_len);
-      if (Var->val.string == NULL) {
-	snmp_set_api_error(SNMPERR_OS_ERR);
-	return(NULL);
-      }
-      bufp = asn_parse_string(DataPtr, &ThisVarLen, 
-			      &Var->type, Var->val.string, 
-			      &Var->val_len);
-#ifdef DEBUG_VARS_DECODE
-      printf("VARS: Decoded string '%s' (length %d) (%d bytes left)\n",
-	     (Var->val.string), Var->val_len, ThisVarLen);
-#endif
-      break;
-         
-    case ASN_OBJECT_ID:
-      Var->val_len = MAX_NAME_LEN;
-      bufp = asn_parse_objid(DataPtr, &ThisVarLen, 
-			     &Var->type, TmpBuf, &Var->val_len);
-      Var->val_len *= sizeof(oid);
-      Var->val.objid = (oid *)xmalloc((unsigned)Var->val_len);
-      if (Var->val.integer == NULL) {
-	snmp_set_api_error(SNMPERR_OS_ERR);
-	return(NULL);
-      }
-      /* Only copy if we successfully decoded something */
-      if (bufp) {
-	xmemcpy((char *)Var->val.objid, (char *)TmpBuf, Var->val_len);
-      }
-#ifdef DEBUG_VARS_DECODE
-      printf("VARS: Decoded OBJID (length %d) (%d bytes left)\n",
-	      Var->val_len, ThisVarLen);
-#endif
-      break;
-
-    case ASN_NULL:
-    case SMI_NOSUCHINSTANCE:
-    case SMI_NOSUCHOBJECT:
-    case SMI_ENDOFMIBVIEW:
-      break;
-
-    case SMI_COUNTER64:
-      snmplib_debug(2, "Unable to parse type SMI_COUNTER64!\n");
-      snmp_set_api_error(SNMPERR_UNSUPPORTED_TYPE);
-      return(NULL);
-      break;
-
-    default:
-      snmplib_debug(2, "bad type returned (%x)\n", Var->type);
-      snmp_set_api_error(SNMPERR_PDU_PARSE);
-      return(NULL);
-      break;
-    } /* End of var type switch */
-
-    if (bufp == NULL)
-      return(NULL);
-
-#ifdef DEBUG_VARS_DECODE
-    printf("VARS:  Adding to list.\n");
-#endif
-    /* Add variable to the list */
-    *VarLastP = Var;
-    VarLastP = &(Var->next_variable);
-  }
-
-  return(bufp);
+    return (bufp);
 }

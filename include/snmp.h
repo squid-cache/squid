@@ -27,7 +27,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  * 
- * $Id: snmp.h,v 1.12 1998/02/24 22:46:14 kostas Exp $
+ * $Id: snmp.h,v 1.13 1998/04/04 01:43:42 kostas Exp $
  * 
  **********************************************************************/
 
@@ -41,9 +41,11 @@
 /* These come first */
 #include "asn1.h"
 #include "snmp_error.h"
+#if 0
 #include "mibii.h"
 #include "snmp_extra.h"
 #include "snmp_dump.h"
+#endif
 
 /* I didn't touch this */
 #include "snmp_session.h"
@@ -61,9 +63,11 @@
 /* Other stuff I didn't touch */
 #include "snmp_impl.h"
 #include "snmp_api.h"
+#if 0
 #include "snmp_client.h"
-#include "snmp-internal.h"
 #include "mib.h"
+#endif
+#include "snmp-internal.h"
 #include "parse.h"
 #include "snmp_compat.h"
 #include "snmp_debug.h"

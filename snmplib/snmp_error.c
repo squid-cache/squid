@@ -33,37 +33,39 @@
 #include "snmp_error.h"
 
 
-static char *error_string[19] = {
-  "No Error",
-  "Response message would have been too large.",
-  "There is no such variable name in this MIB.",
-  "The value given has the wrong type, length, or value",
-  "This variable is read only",
-  "A general failure occured",
+static char *error_string[19] =
+{
+    "No Error",
+    "Response message would have been too large.",
+    "There is no such variable name in this MIB.",
+    "The value given has the wrong type, length, or value",
+    "This variable is read only",
+    "A general failure occured",
 
   /* SNMPv2 Errors */
-  "NOACCESS",
-  "WRONGTYPE",
-  "WRONGLENGTH",
-  "WRONGENCODING",
-  "WRONGVALUE",
-  "NOCREATION",
-  "INCONSISTENTVALUE",
-  "RESOURCEUNAVAILABLE",
-  "COMMITFAILED",
-  "UNDOFAILED",
-  "AUTHORIZATIONERROR",
-  "NOTWRITABLE",
-  "INCONSISTENTNAME",
+    "NOACCESS",
+    "WRONGTYPE",
+    "WRONGLENGTH",
+    "WRONGENCODING",
+    "WRONGVALUE",
+    "NOCREATION",
+    "INCONSISTENTVALUE",
+    "RESOURCEUNAVAILABLE",
+    "COMMITFAILED",
+    "UNDOFAILED",
+    "AUTHORIZATIONERROR",
+    "NOTWRITABLE",
+    "INCONSISTENTNAME",
 
 };
 
-char *snmp_errstring(int errstat)
+char *
+snmp_errstring(int errstat)
 {
-  if ((errstat <= (SNMP_ERR_INCONSISTENTNAME)) && 
-      (errstat >= (SNMP_ERR_NOERROR))) {
-    return error_string[errstat];
-  } else {
-    return "Unknown Error";
-  }
+    if ((errstat <= (SNMP_ERR_INCONSISTENTNAME)) &&
+	(errstat >= (SNMP_ERR_NOERROR))) {
+	return error_string[errstat];
+    } else {
+	return "Unknown Error";
+    }
 }

@@ -24,7 +24,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  * 
- * $Id: snmp_error.h,v 1.1 1998/02/22 11:48:46 kostas Exp $
+ * $Id: snmp_error.h,v 1.2 1998/04/04 01:43:46 kostas Exp $
  * 
  **********************************************************************/
 
@@ -59,10 +59,10 @@
 extern "C" {
 #endif
 
-  char *snmp_errstring(int);
+    char *snmp_errstring(int);
 
 #ifdef __cplusplus
 }
-#endif
 
-#endif /* _SNMP_ERROR_H_ */
+#endif
+#endif				/* _SNMP_ERROR_H_ */

@@ -26,7 +26,7 @@
  * 
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
  * 
- * $Id: snmp_coexist.h,v 1.1 1998/02/22 11:48:45 kostas Exp $
+ * $Id: snmp_coexist.h,v 1.2 1998/04/04 01:43:44 kostas Exp $
  * 
  **********************************************************************/
 
@@ -34,11 +34,11 @@
 extern "C" {
 #endif
 
-int snmp_coexist_V2toV1(struct snmp_pdu *);
-int snmp_coexist_V1toV2(struct snmp_pdu *);
+    int snmp_coexist_V2toV1(struct snmp_pdu *);
+    int snmp_coexist_V1toV2(struct snmp_pdu *);
 
 #ifdef __cplusplus
 }
-#endif
 
-#endif /* _SNMP_COEXISTANCE_H_ */
+#endif
+#endif				/* _SNMP_COEXISTANCE_H_ */

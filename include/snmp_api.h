@@ -51,22 +51,22 @@ SOFTWARE.
 extern "C" {
 #endif
 
-  /* Parse the buffer pointed to by arg3, of length arg4, into pdu arg2.
-   *
-   * Returns the community of the incoming PDU, or NULL
-   */
-u_char *snmp_parse(struct snmp_session *, struct snmp_pdu *,
-		   u_char *, int);
+    /* Parse the buffer pointed to by arg3, of length arg4, into pdu arg2.
+     *
+     * Returns the community of the incoming PDU, or NULL
+     */
+    u_char *snmp_parse(struct snmp_session *, struct snmp_pdu *,
+	u_char *, int);
 
 /* Encode pdu arg2 into buffer arg3.  arg4 contains the size of
  * the buffer.
  */
-int snmp_build(struct snmp_session *, struct snmp_pdu *,
-	       u_char *, int *);
+    int snmp_build(struct snmp_session *, struct snmp_pdu *,
+	u_char *, int *);
 
 /*
  * struct snmp_session *snmp_open(session)
- *	struct snmp_session *session;
+ *      struct snmp_session *session;
  * 
  * Sets up the session with the snmp_session information provided
  * by the user.  Then opens and binds the necessary UDP port.
@@ -75,7 +75,7 @@ int snmp_build(struct snmp_session *, struct snmp_pdu *,
  * and snmp_errno is set to the appropriate error code.
  */
 #if 0
-struct snmp_session *snmp_open(struct snmp_session *);
+    struct snmp_session *snmp_open(struct snmp_session *);
 
 /*
  * int snmp_close(session)
@@ -85,13 +85,13 @@ struct snmp_session *snmp_open(struct snmp_session *);
  * dequeues any pending requests, and closes any sockets allocated for
  * the session.  Returns 0 on error, 1 otherwise.
  */
-int snmp_close(struct snmp_session *);
+    int snmp_close(struct snmp_session *);
 
 
 /*
  * int snmp_send(session, pdu)
  *     struct snmp_session *session;
- *     struct snmp_pdu	*pdu;
+ *     struct snmp_pdu  *pdu;
  * 
  * Sends the input pdu on the session after calling snmp_build to create
  * a serialized packet.  If necessary, set some of the pdu data from the
@@ -101,7 +101,7 @@ int snmp_close(struct snmp_session *);
  * On any error, 0 is returned.
  * The pdu is freed by snmp_send() unless a failure occured.
  */
-int snmp_send(struct snmp_session *, struct snmp_pdu *);
+    int snmp_send(struct snmp_session *, struct snmp_pdu *);
 
 /*
  * void snmp_read(fdset)
@@ -113,7 +113,7 @@ int snmp_send(struct snmp_session *, struct snmp_pdu *);
  * is passed to the callback routine for that session.  If the callback
  * routine returns successfully, the pdu and it's request are deleted.
  */
-void snmp_read(fd_set *);
+    void snmp_read(fd_set *);
 
 
 /*
@@ -142,7 +142,7 @@ void snmp_read(fd_set *);
  *
  * snmp_select_info returns the number of open sockets.  (i.e. The number of sessions open)
  */
-int snmp_select_info(int *, fd_set *, struct timeval *, int *);
+    int snmp_select_info(int *, fd_set *, struct timeval *, int *);
 
 /*
  * void snmp_timeout();
@@ -155,7 +155,7 @@ int snmp_select_info(int *, fd_set *, struct timeval *, int *);
  * resent.  If there are no more retries available, the callback for the session
  * is used to alert the user of the timeout.
  */
-void snmp_timeout(void);
+    void snmp_timeout(void);
 
 
 /*
@@ -164,9 +164,9 @@ void snmp_timeout(void);
  * int callback(operation, session, reqid, pdu, magic)
  * int operation;
  * struct snmp_session *session;    The session authenticated under.
- * int reqid;			    The request id of this pdu (0 for TRAP)
- * struct snmp_pdu *pdu;	    The pdu information.
- * void *magic			    A link to the data for this routine.
+ * int reqid;                       The request id of this pdu (0 for TRAP)
+ * struct snmp_pdu *pdu;            The pdu information.
+ * void *magic                      A link to the data for this routine.
  *
  * Returns 1 if request was successful, 0 if it should be kept pending.
  * Any data in the pdu must be copied because it will be freed elsewhere.
@@ -177,11 +177,10 @@ void snmp_timeout(void);
 
 
 
-void snmp_api_stats(void *);
+    void snmp_api_stats(void *);
 #endif
 #ifdef __cplusplus
 }
+
 #endif
-
-
-#endif /* _SNMP_API_H_ */
+#endif				/* _SNMP_API_H_ */

@@ -10,6 +10,12 @@ struct _acl_ip_data {
 #endif
 };
 
+struct _acl_snmp_comm {
+    char *name;
+    void *community;
+    acl_snmp_comm *next;
+};
+
 struct _acl_time_data {
     int weekbits;
     int start;
@@ -62,7 +68,8 @@ struct _String {
 };
 
 #if SQUID_SNMP
-struct _snmp_request_t {
+
+typedef struct _snmp_request_t {
     u_char *buf;
     u_char *outbuf;
     int len;
@@ -73,7 +80,7 @@ struct _snmp_request_t {
     struct snmp_pdu *PDU;
     aclCheck_t *acl_checklist;
     u_char *community;
-};
+} snmp_request_t;
 
 typedef struct _viewEntry {
     char viewName[32];

@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.155 1998/03/29 08:50:56 wessels Exp $
+ * $Id: acl.cc,v 1.156 1998/04/04 01:44:00 kostas Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -124,6 +124,7 @@ static void aclParseWordList(void *curlist);
 static void aclParseProtoList(void *curlist);
 static void aclParseMethodList(void *curlist);
 static void aclParseTimeSpec(void *curlist);
+static void aclParseSnmpComm(void *curlist);
 static char *strtokFile(void);
 
 static char *
@@ -206,6 +207,8 @@ aclStrToType(const char *s)
 	return ACL_SRC_ASN;
     if (!strcmp(s, "dst_as"))
 	return ACL_DST_ASN;
+    if (!strcmp(s, "snmp_community"))
+	return ACL_SNMP_COMM;
 #if USE_ARP_ACL
     if (!strcmp(s, "arp"))
 	return ACL_SRC_ARP;
@@ -250,6 +253,8 @@ aclTypeToStr(squid_acl type)
 	return "src_as";
     if (type == ACL_DST_ASN)
 	return "dst_as";
+    if (type == ACL_SNMP_COMM)
+	return "snmp_community";
 #if USE_ARP_ACL
     if (type == ACL_SRC_ARP)
 	return "arp";
@@ -736,6 +741,23 @@ aclParseProxyAuth(void *data)
     return;
 }
 
+static void
+aclParseSnmpComm(void *data)
+{
+    acl_snmp_comm **q=data;
+    acl_snmp_comm *p;
+    char *t;
+    t = strtok(NULL, w_space);
+    if (t) {
+	p=xcalloc(1, sizeof(acl_snmp_comm));
+	p->name=xstrdup(t);
+	p->community=NULL;
+	*q=p;
+    }
+    t=strtok(NULL, w_space);
+    return;
+}
+
 void
 aclParseAclLine(acl ** head)
 {
@@ -820,6 +842,9 @@ aclParseAclLine(acl ** head)
 	break;
     case ACL_PROXY_AUTH:
 	aclParseProxyAuth(&A->data);
+	break;
+    case ACL_SNMP_COMM:
+	aclParseSnmpComm(&A->data);
 	break;
 #if USE_ARP_ACL
     case ACL_SRC_ARP:
@@ -1411,6 +1436,8 @@ aclMatchAcl(acl * acl, aclCheck_t * checklist)
 	    return 1;
 	}
 	/* NOTREACHED */
+    case ACL_SNMP_COMM:
+	return asnMatchIp(acl->data, checklist->src_addr);
     case ACL_SRC_ASN:
 	return asnMatchIp(acl->data, checklist->src_addr);
     case ACL_DST_ASN:

@@ -394,10 +394,10 @@ extern int snmpInitConfig(void);
 extern void snmpConnectionOpen(void);
 extern void snmpConnectionShutdown(void);
 extern void snmpConnectionClose(void);
-extern int create_view(char **);
-extern int create_user(char **);
-extern int create_community(char **);
-extern void tokenize(char *, char **, int);
+extern int snmpCreateView(char **);
+extern int snmpCreateUser(char **);
+extern int snmpCreateCommunity(char **);
+extern void snmpTokenize(char *, char **, int);
 extern int snmpCompare(oid * name1, int len1, oid * name2, int len2);
 #endif /* SQUID_SNMP */
 
@@ -908,7 +908,7 @@ extern int cacheDigestTest(const CacheDigest * cd, const cache_key * key);
 extern void cacheDigestAdd(CacheDigest * cd, const cache_key * key);
 extern void cacheDigestDel(CacheDigest * cd, const cache_key * key);
 extern double cacheDigestUtil(const CacheDigest * cd, int *bit_cnt_p, int *on_cnt_p);
-extern void cacheDigestReport(CacheDigest *cd, const char *label, StoreEntry * e);
+extern void cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e);
 
 /*
  * prototypes for system functions missing from system includes

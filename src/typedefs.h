@@ -28,7 +28,7 @@ typedef struct _acl_proxy_auth acl_proxy_auth;
 typedef struct _acl_proxy_auth_user acl_proxy_auth_user;
 typedef struct _acl_arp_data acl_arp_data;
 typedef struct _acl acl;
-typedef struct _snmp_request_t snmp_request_t;
+typedef struct _acl_snmp_comm acl_snmp_comm;
 typedef struct _acl_list acl_list;
 typedef struct _acl_access acl_access;
 typedef struct _aclCheck_t aclCheck_t;

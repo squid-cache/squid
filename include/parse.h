@@ -31,7 +31,7 @@ SOFTWARE.
  */
 struct enum_list {
     struct enum_list *next;
-    int	value;
+    int value;
     char *label;
 };
 
@@ -46,7 +46,7 @@ struct snmp_mib_tree {
     u_int subid;		/* This node's integer subidentifier */
     int type;			/* This node's object type */
     struct enum_list *enums;	/* (optional) list of enumerated integers (otherwise NULL) */
-    void (*printer)();     /* Value printing function */
+    void (*printer) ();		/* Value printing function */
 };
 
 /* non-aggregate types for tree end nodes */
@@ -66,25 +66,24 @@ struct snmp_mib_tree {
 extern "C" {
 #endif
 
-void init_mib(char *);
-int read_objid(char *, oid *, int *);
-void  print_objid(oid *, int);
-void sprint_objid(char *, oid *, int);
-void print_variable(oid *, int, struct variable_list *);
-void sprint_variable(char *, oid *, int, struct variable_list *);
-void sprint_value(char *, oid *, int, struct variable_list *);
-void print_value(oid *, int, struct variable_list *);
+    void init_mib(char *);
+    int read_objid(char *, oid *, int *);
+    void print_objid(oid *, int);
+    void sprint_objid(char *, oid *, int);
+    void print_variable(oid *, int, struct variable_list *);
+    void sprint_variable(char *, oid *, int, struct variable_list *);
+    void sprint_value(char *, oid *, int, struct variable_list *);
+    void print_value(oid *, int, struct variable_list *);
 
-/*void print_variable_list(struct variable_list *);*/
-/*void print_variable_list_value(struct variable_list *);*/
-/*void print_type(struct variable_list *);*/
-void print_oid_nums(oid *, int);
+/*void print_variable_list(struct variable_list *); */
+/*void print_variable_list_value(struct variable_list *); */
+/*void print_type(struct variable_list *); */
+    void print_oid_nums(oid *, int);
 
-struct snmp_mib_tree *read_mib();
+    struct snmp_mib_tree *read_mib();
 
 #ifdef __cplusplus
 }
+
 #endif
-
-
-#endif /* _HAVE_PARSE_H_ */
+#endif				/* _HAVE_PARSE_H_ */

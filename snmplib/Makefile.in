@@ -17,16 +17,16 @@ ALIB		= libsnmp.a
 
 TARG		= libsnmp.a
 
-CSRCS		= asn1.c parse.c snmp_dump.c snmp_vars.c \
+CSRCS		= asn1.c parse.c snmp_vars.c \
 		  coexistance.c snmp_api.c snmp_error.c  \
 		  mib.c snmp_api_error.c   \
-		  mibii.c snmp_api_util.c snmp_msg.c \
+		  snmp_msg.c \
 		  snmp_pdu.c  snmplib_debug.c
 
-OBJS		= asn1.o parse.o snmp_dump.o snmp_vars.o \
+OBJS		= asn1.o parse.o snmp_vars.o \
                   coexistance.o snmp_api.o snmp_error.o  \
                   mib.o snmp_api_error.o   \
-                  mibii.o snmp_api_util.o snmp_msg.o \
+                  snmp_msg.o \
                   snmp_pdu.o snmplib_debug.o
 
 CC		= @CC@
@@ -35,7 +35,6 @@ RANLIB		= @RANLIB@
 AC_CFLAGS	= @CFLAGS@
 DEFS		= -DSQUID_SNMP=1
 INCLUDE		= -I../include -I$(top_srcdir)/include
-MIBDEFS		= -DMIBFILEPATH=\"$(prefix)/lib\"
 CFLAGS		= $(AC_CFLAGS) $(DEFS) $(INCLUDE)
 
 
@@ -50,8 +49,6 @@ $(ALIB):    ${OBJS}
 ##
 ## special rule to include -DMIBFILEPATH=...:
 ##
-mib.o:		mib.c
-	$(CC) $(CFLAGS) $(MIBDEFS)	-c $(srcdir)/mib.c 
 
 distclean: clean
 	-rm -f Makefile

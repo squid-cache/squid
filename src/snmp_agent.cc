@@ -1,289 +1,47 @@
+
+/*
+ * $Id: snmp_agent.cc,v 1.44 1998/04/04 01:44:02 kostas Exp $
+ *
+ * DEBUG: section 49     SNMP Interface
+ * AUTHOR: Kostas Anagnostakis
+ *
+ * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
+ * --------------------------------------------------------
+ *
+ *  Squid is the result of efforts by numerous individuals from the
+ *  Internet community.  Development is led by Duane Wessels of the
+ *  National Laboratory for Applied Network Research and funded by
+ *  the National Science Foundation.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *  
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *  
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  
+ */
+
+
 #include "squid.h"
 
 #include "snmp.h"
 #include "snmp_impl.h"
 #include "asn1.h"
 #include "snmp_api.h"
-#include "snmp_client.h"
 #include "snmp_vars.h"
 #include "snmp_oidlist.h"
 #include "cache_snmp.h"
 
-#include "mib.h"
-
-void snmpAclCheckDone(int answer, void *);
-static struct snmp_pdu *snmp_agent_response(struct snmp_pdu *PDU);
-static int community_check(char *b, oid * name, int namelen);
-struct snmp_session *Session;
 extern StatCounters *snmpStatGet(int);
-extern void snmp_agent_parse_done(int, snmp_request_t *);
-void addr2oid(struct in_addr addr, oid *);
-void snmpAclCheckStart(snmp_request_t * rq);
 
-
-/* returns: 
- * 2: no such object in this mib
- * 1: ok
- * 0: failed */
-
-void
-snmp_agent_parse(snmp_request_t * rq)
-{
-    snint this_reqid;
-    u_char *buf = rq->buf;
-    int len = rq->len;
-
-    struct snmp_pdu *PDU;
-    u_char *Community;
-
-    /* Now that we have the data, turn it into a PDU */
-    cbdataAdd(rq, MEM_NONE);
-    PDU = snmp_pdu_create(0);
-    Community = snmp_parse(Session, PDU, buf, len);
-
-    if (!snmp_coexist_V2toV1(PDU)) {	/* incompatibility */
-	debug(49, 3) ("snmp_agent_parse: Incompatible V2 packet.\n");
-	snmp_free_pdu(PDU);
-	snmp_agent_parse_done(0, rq);
-	return;
-    }
-    rq->community = Community;
-    rq->PDU = PDU;
-    this_reqid = PDU->reqid;
-    debug(49, 5) ("snmp_agent_parse: reqid=%d\n", PDU->reqid);
-
-    if (Community == NULL) {
-	debug(49, 8) ("snmp_agent_parse: Community == NULL\n");
-
-	snmp_free_pdu(PDU);
-	snmp_agent_parse_done(0, rq);
-	return;
-    }
-    snmpAclCheckStart(rq);
-}
-
-void
-snmpAclCheckStart(snmp_request_t * rq)
-{
-    communityEntry *cp;
-    for (cp = Config.Snmp.communities; cp != NULL; cp = cp->next)
-	if (!strcmp((char *) rq->community, cp->name) && cp->acls) {
-	    rq->acl_checklist = aclChecklistCreate(cp->acls,
-		NULL, rq->from.sin_addr, NULL, NULL);
-	    aclNBCheck(rq->acl_checklist, snmpAclCheckDone, rq);
-	    return;
-	}
-    snmpAclCheckDone(ACCESS_ALLOWED, rq);
-}
-
-void
-snmpAclCheckDone(int answer, void *data)
-{
-    snmp_request_t *rq = data;
-    u_char *outbuf = rq->outbuf;
-
-    struct snmp_pdu *PDU, *RespPDU;
-    u_char *Community;
-    variable_list *VarPtr;
-    variable_list **VarPtrP;
-    int ret;
-
-    debug(49, 5) ("snmpAclCheckDone: called with answer=%d.\n", answer);
-    rq->acl_checklist = NULL;
-    PDU = rq->PDU;
-    Community = rq->community;
-
-    if (answer == ACCESS_DENIED) {
-	debug(49, 5) ("snmpAclCheckDone: failed on acl.\n");
-	snmp_agent_parse_done(0, rq);
-	return;
-    }
-    for (VarPtrP = &(PDU->variables);
-	*VarPtrP;
-	VarPtrP = &((*VarPtrP)->next_variable)) {
-	VarPtr = *VarPtrP;
-
-	debug(49, 5) ("snmpAclCheckDone: checking.\n");
-	/* access check for each variable */
-
-	if (!community_check((char *) Community, VarPtr->name, VarPtr->name_length)) {
-	    debug(49, 5) ("snmpAclCheckDone: failed on community_check.\n");
-	    snmp_agent_parse_done(0, rq);
-	    return;
-	}
-    }
-    Session->community = Community;
-    Session->community_len = strlen((char *) Community);
-    RespPDU = snmp_agent_response(PDU);
-    snmp_free_pdu(PDU);
-    if (RespPDU == NULL) {
-	debug(49, 8) ("snmpAclCheckDone: RespPDU == NULL. Returning code 2.\n");
-	debug(49, 5) ("snmpAclCheckDone: failed on RespPDU==NULL.\n");
-	snmp_agent_parse_done(2, rq);
-	return;
-    }
-    debug(49, 8) ("snmpAclCheckDone: Response pdu (%x) errstat=%d reqid=%d.\n",
-	RespPDU, RespPDU->errstat, RespPDU->reqid);
-
-    /* Encode it */
-    ret = snmp_build(Session, RespPDU, outbuf, &rq->outlen);
-    /* XXXXX Handle failure */
-    snmp_free_pdu(RespPDU);
-    /* XXX maybe here */
-    debug(49, 5) ("snmpAclCheckDone: ok!\n");
-    snmp_agent_parse_done(1, rq);
-}
-
-
-
-static struct snmp_pdu *
-snmp_agent_response(struct snmp_pdu *PDU)
-{
-    struct snmp_pdu *Answer = NULL;
-    variable_list *VarPtr, *VarNew = NULL;
-    variable_list **VarPtrP, **RespVars;
-    int index = 0;
-    oid_ParseFn *ParseFn;
-
-    debug(49, 9) ("snmp_agent_response: Received a %d PDU\n", PDU->command);
-
-    /* Create a response */
-    Answer = snmp_pdu_create(SNMP_PDU_RESPONSE);
-    if (Answer == NULL)
-	return (NULL);
-    Answer->reqid = PDU->reqid;
-    Answer->errindex = 0;
-
-    if (PDU->command == SNMP_PDU_GET) {
-
-	RespVars = &(Answer->variables);
-	/* Loop through all variables */
-	for (VarPtrP = &(PDU->variables);
-	    *VarPtrP;
-	    VarPtrP = &((*VarPtrP)->next_variable)) {
-	    VarPtr = *VarPtrP;
-
-	    index++;
-
-	    /* Find the parsing function for this variable */
-	    ParseFn = oidlist_Find(VarPtr->name, VarPtr->name_length);
-
-	    if (ParseFn == NULL) {
-		Answer->errstat = SNMP_ERR_NOSUCHNAME;
-		debug(49, 5) ("snmp_agent_response: No such oid. ");
-	    } else
-		VarNew = (*ParseFn) (VarPtr, (snint *) & (Answer->errstat));
-
-	    /* Was there an error? */
-	    if ((Answer->errstat != SNMP_ERR_NOERROR) ||
-		(VarNew == NULL)) {
-		Answer->errindex = index;
-		debug(49, 5) ("snmp_agent_parse: successful.\n");
-		/* Just copy the rest of the variables.  Quickly. */
-		*RespVars = VarPtr;
-		*VarPtrP = NULL;
-		return (Answer);
-	    }
-	    /* No error.  Insert this var at the end, and move on to the next.
-	     */
-	    *RespVars = VarNew;
-	    RespVars = &(VarNew->next_variable);
-	}
-
-	return (Answer);
-    } else if (PDU->command == SNMP_PDU_GETNEXT) {
-	oid *TmpOidName;
-	int TmpOidNameLen = 0;
-
-	/* Find the next OID. */
-	VarPtr = PDU->variables;
-
-	ParseFn = oidlist_Next(VarPtr->name, VarPtr->name_length,
-	    &(TmpOidName), (snint *) & (TmpOidNameLen));
-
-	if (ParseFn == NULL) {
-	    Answer->errstat = SNMP_ERR_NOSUCHNAME;
-	    debug(49, 9) ("snmp_agent_response: No such oid: ");
-	    print_oid(VarPtr->name, VarPtr->name_length);
-	} else {
-	    xfree(VarPtr->name);
-	    VarPtr->name = TmpOidName;
-	    VarPtr->name_length = TmpOidNameLen;
-	    VarNew = (*ParseFn) (VarPtr, (snint *) & (Answer->errstat));
-	}
-
-	/* Was there an error? */
-	if (Answer->errstat != SNMP_ERR_NOERROR) {
-	    Answer->errindex = 1;
-
-	    /* Just copy this variable */
-	    Answer->variables = VarPtr;
-	    PDU->variables = NULL;
-	} else {
-	    Answer->variables = VarNew;
-	}
-
-	/* Done.  Return this PDU */
-	return (Answer);
-    }				/* end SNMP_PDU_GETNEXT */
-    debug(49, 9) ("snmp_agent_response: Ignoring PDU %d\n", PDU->command);
-    snmp_free_pdu(Answer);
-    return (NULL);
-}
-
-int
-in_view(oid * name, int namelen, int viewIndex)
-{
-    viewEntry *vwp, *savedvwp = NULL;
-
-    debug(49, 8) ("in_view: called with index=%d\n", viewIndex);
-    for (vwp = Config.Snmp.views; vwp; vwp = vwp->next) {
-	if (vwp->viewIndex != viewIndex)
-	    continue;
-	debug(49, 8) ("in_view: found view for subtree:\n");
-	print_oid(vwp->viewSubtree, vwp->viewSubtreeLen);
-	if (vwp->viewSubtreeLen > namelen
-	    || memcmp(vwp->viewSubtree, name, vwp->viewSubtreeLen * sizeof(oid)))
-	    continue;
-	/* no wildcards here yet */
-	if (!savedvwp) {
-	    savedvwp = vwp;
-	} else {
-	    if (vwp->viewSubtreeLen > savedvwp->viewSubtreeLen)
-		savedvwp = vwp;
-	}
-    }
-    if (!savedvwp)
-	return FALSE;
-    if (savedvwp->viewType == VIEWINCLUDED)
-	return TRUE;
-    return FALSE;
-}
-
-
-static int
-community_check(char *b, oid * name, int namelen)
-{
-    communityEntry *cp;
-    debug(49, 8) ("community_check: %s against:\n", b);
-    print_oid(name, namelen);
-    for (cp = Config.Snmp.communities; cp; cp = cp->next)
-	if (!strcmp(b, cp->name)) {
-	    return in_view(name, namelen, cp->readView);
-	}
-    return 0;
-}
-
-int
-init_agent_auth()
-{
-    Session = (struct snmp_session *) xmalloc(sizeof(struct snmp_session));
-    Session->Version = SNMP_VERSION_1;
-    Session->authenticator = NULL;
-    Session->community = (u_char *) xstrdup("public");
-    Session->community_len = 6;
-    return 1;
-}
 
 /************************************************************************
 
@@ -358,8 +116,8 @@ snmp_sysFn(variable_list * Var, snint * ErrP)
     static struct in_addr addr;
     static snint snint_return;
 
-    debug(49, 5) ("snmp_sysFn: Processing request with magic %d: \n", Var->name[8]);
-    print_oid(Var->name, Var->name_length);
+    debug(49, 5) ("snmp_sysFn: Processing request:\n", Var->name[8]);
+    snmpDebugOid(5, Var->name, Var->name_length);
 
     Answer = snmp_var_new(Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
@@ -935,12 +693,6 @@ struct in_addr *
 oid2addr(oid * id)
 {
     static struct in_addr laddr;
-#if 0
-    static u_char buf[15];
-    snprintf(buf, 15, "%d.%d.%d.%d", id[0], id[1], id[2], id[3]);
-    safe_inet_addr(buf, &laddr);
-    return &laddr;
-#endif
     u_char *cp = (u_char *) & (laddr.s_addr);
     cp[0] = id[0];
     cp[1] = id[1];

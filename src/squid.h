@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.168 1998/04/03 22:05:56 rousskov Exp $
+ * $Id: squid.h,v 1.169 1998/04/04 01:44:05 kostas Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -308,10 +308,6 @@ struct rusage {
 #include "md5.h"
 #include "Stack.h"
 
-#ifdef SQUID_SNMP
-#include "cache_snmp.h"
-#endif
-
 /* Needed for poll() on Linux at least */
 #if HAVE_POLL
 #ifndef POLLRDNORM
@@ -320,6 +316,10 @@ struct rusage {
 #ifndef POLLWRNORM
 #define POLLWRNORM POLLOUT
 #endif
+#endif
+
+#ifdef SQUID_SNMP
+#include "cache_snmp.h"
 #endif
 
 #include "defines.h"
