@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.311 1998/05/21 04:01:02 wessels Exp $
+ * $Id: client_side.cc,v 1.312 1998/05/21 23:14:05 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1986,11 +1986,18 @@ clientReadRequest(int fd, void *data)
 			http->uri, prefix);
 		/* continue anyway? */
 	    }
-	    if (!http->flags.internal)
-		if (internalCheck(strBuf(request->urlpath)))
-		    if (0 == strcasecmp(request->host, getMyHostname()))
+	    if (!http->flags.internal) {
+		if (internalCheck(strBuf(request->urlpath))) {
+		    if (0 == strcasecmp(request->host, getMyHostname())) {
 			if (request->port == Config.Port.http->i)
 			    http->flags.internal = 1;
+		    } else if (internalStaticCheck(strBuf(request->urlpath))) {
+			    xstrncpy(request->host, getMyHostname(), SQUIDHOSTNAMELEN);
+			    request->port = Config.Port.http->i;
+			    http->flags.internal = 1;
+		    }
+		}
+	    }
 	    safe_free(http->log_uri);
 	    http->log_uri = xstrdup(urlCanonicalClean(request));
 	    request->client_addr = conn->peer.sin_addr;

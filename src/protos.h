@@ -964,6 +964,7 @@ extern void cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * 
 
 extern void internalStart(request_t *, StoreEntry *);
 extern int internalCheck(const char *urlpath);
+extern int internalStaticCheck(const char *urlpath);
 extern char *internalLocalUri(const char *dir, const char *name);
 extern char *internalRemoteUri(const char *, u_short, const char *, const char *);
 
