@@ -1,5 +1,5 @@
 
-/* $Id: tools.cc,v 1.13 1996/03/27 20:21:11 wessels Exp $ */
+/* $Id: tools.cc,v 1.14 1996/03/28 02:34:05 wessels Exp $ */
 
 #include "squid.h"
 
@@ -141,7 +141,7 @@ void fatal_dump(message)
 void dumpMallocStats(f)
      FILE *f;
 {
-#if USE_MALLINFO
+#if HAVE_MALLINFO
     struct mallinfo mp;
 
     if (!do_mallinfo)
@@ -176,7 +176,7 @@ void dumpMallocStats(f)
 #if PRINT_MMAP
     mallocmap();
 #endif /* PRINT_MMAP */
-#endif /* USE_MALLINFO */
+#endif /* HAVE_MALLINFO */
 }
 
 int PrintRusage(f, lf)
@@ -202,7 +202,7 @@ int PrintRusage(f, lf)
 
 int getHeapSize()
 {
-#if USE_MALLINFO
+#if HAVE_MALLINFO
     struct mallinfo mp;
 
     mp = mallinfo();
