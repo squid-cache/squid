@@ -348,8 +348,7 @@ extern int protoUnregister(StoreEntry *, request_t *);
 extern int protoAbortFetch(StoreEntry * entry);
 extern DEFER protoCheckDeferRead;
 
-extern void urnStart(clientHttpRequest *);
-extern UH urnTranslateDone;
+extern void urnStart(request_t *, StoreEntry *);
 
 extern void redirectStart(clientHttpRequest *, RH *, void *);
 extern void redirectOpenServers(void);

@@ -511,7 +511,6 @@ struct _clientHttpRequest {
     request_t *request;		/* Parsed URL ... */
     char *uri;
     char *log_uri;
-    wordlist *urls;
     struct {
 	char *buf;
 	off_t offset;
