@@ -68,7 +68,7 @@ storeClientCopyEvent(void *data)
 {
     store_client *sc = data;
     int valid = cbdataValid(sc);
-debug(0,0)("storeClientCopyEvent: Running\n");
+    debug(20, 3) ("storeClientCopyEvent: Running\n");
     cbdataUnlock(sc);
     if (!valid)
 	return;
@@ -108,12 +108,12 @@ storeClientCopy(StoreEntry * e,
     sc->copy_offset = copy_offset;
     if (sc->flags.store_copying) {
 	cbdataLock(sc);
-debug(0,0)("storeClientCopy: Queueing storeClientCopyEvent()\n");
+	debug(20, 3) ("storeClientCopy: Queueing storeClientCopyEvent()\n");
 	eventAdd("storeClientCopyEvent", storeClientCopyEvent, sc, 0);
     } else {
-        sc->flags.store_copying = 1;
-        storeClientCopy2(e, sc);
-        sc->flags.store_copying = 0;
+	sc->flags.store_copying = 1;
+	storeClientCopy2(e, sc);
+	sc->flags.store_copying = 0;
     }
 }
 
