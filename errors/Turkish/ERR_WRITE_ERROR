@@ -8,20 +8,17 @@
 <P>
 <A HREF="%U">%U</A>
 <P>
-adresine ulaþýrken aþaðýdaki hata oluþtu
+adresine ulaþýrken aþaðýdaki hata oluþtu:
 <P>
 <UL>
 <LI>
-
 <STRONG>
-Yazma Hatasý
+Yazma Hatasý.
 </STRONG>
 </UL>
-
 <P>
-Sistem aþaðýdaki mesajý verdi:
+Sistem, aþaðýdaki mesajý verdi:
 <PRE><I>    %E</I></PRE>
-
 <P>
-Bilgiler aðý üzerine gönderilirken hata oluþtu. Lütfen isteðinizi tekrar giriniz.
+Bilgiler að üzerine gönderilirken hata oluþtu. Lütfen isteðinizi tekrar giriniz.
 </P>

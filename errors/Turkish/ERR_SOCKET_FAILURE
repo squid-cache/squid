@@ -8,20 +8,18 @@
 <P>
 <A HREF="%U">%U</A>
 <P>
-adresine ulaþýrken aþaðýdaki hata oluþtu
+adresine ulaþýrken aþaðýdaki hata oluþtu:
 <P>
 <UL>
 <LI>
 <STRONG>
-Soket hatasý (Socket Failure)
+Baðlantý hatasý (Socket Failure).
 </STRONG>
 </UL>
-
 <P>
 Sistem aþaðýdaki mesajý verdi: 
 <PRE><I>    %E</I></PRE>
-
 <P>
-Squid TCP soket yaratamadý. Bunun nedeni sunucunun çok fazla yüklendiði olabilir.
-Lütfen isteðinizi tekrar girinizi.
+Squid, TCP baðlantý yaratamadý. Bunun nedeni hedef sunucunun çok fazla yüklenmiþ olmasý olabilir.
+Lütfen isteðinizi tekrar giriniz.
 </P>

@@ -3,21 +3,20 @@
 <META http-equiv="Content-Type" content="text/html;charset=iso-8859-9">
 </HEAD><BODY>
 <H1>HATA</H1>
-<H2>İstenilen URL'e ulaşılamadı</H2>
+<H2>İstenilen URL'e ulaşılamadı.</H2>
 <HR>
 <P>
 <A HREF="%U">%U</A>
 <P>
-adresine ulaşırken aşağıdaki FTP hatası oluştu
+adresine ulaşmaya çalışırken FTP hatası oluştu.
 <P>
-Squid şu FTP komutlarını gönderdi:
+Squid, şu FTP komutlarını gönderdi:
 <blockquote><strong><pre>%f</pre></strong></blockquote>
-ve şu cevabı aldı
+ve şu cevabı aldı:
 <blockquote><strong><pre>%F</pre></strong></blockquote>
 <blockquote><strong><pre>%g</pre></strong></blockquote>
 <P>
-Bunun nedeni, verdiğiniz URL adresinin RFC 1738'e uyumlu olmaması olabilir.
+Bunun nedeni, verdiğiniz FTP URL adresinin RFC 1738'e uyumlu olmaması olabilir.
 Bu durumda istediğiniz dokümanı
  <A HREF="%B">%B</A> adresinde bulabilirsiniz.
 </P>
-

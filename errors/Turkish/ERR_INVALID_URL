@@ -8,20 +8,19 @@
 <P>
 <A HREF="%U">%U</A>
 <P>
-adresine ulaþýrken aþaðýdaki hata oluþtu
+adresine ulaþýrken aþaðýdaki hata oluþtu:
 <P>
 <UL>
 <LI>
 <STRONG>
-Yanlýþ URL
+Yanlýþ URL.
 </STRONG>
 </UL>
-
 <P>
-Vermiþ olduðunuz URL yanlýþ. Bunun nedenleri bunlar olabilir:
+Vermiþ olduðunuz URL yanlýþ. Buna sebep aþaðidakilerden herhangi biri olabilir:
 <UL>
-<LI>Eksik veya yanlýþ protokol ismi (`http://'' veya benzeri olmalý)
-<LI>Eksik adres
-<LI>Adreste yanlýþ karakterler; alt çizgi kullanýlamaz 
+<LI>Eksik veya yanlýþ protokol ismi (`http://'' veya benzeri olmalý),
+<LI>Eksik adres,
+<LI>Adreste yanlýþ karakterler (alt çizgi, vs. kullanýlamaz).
 </UL>
 </P>

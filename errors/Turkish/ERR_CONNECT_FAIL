@@ -8,7 +8,7 @@
 <P>
 <A HREF="%U">%U</A>
 <P>
-adresine ulaþýrken aþaðýdaki hata oluþtu
+adresine ulaþýrken aþaðýdaki hata oluþtu:
 <P>
 <UL>
 <LI>
@@ -16,11 +16,9 @@ adresine ulaþýrken aþaðýdaki hata oluþtu
 Baðlantý kurulamadý.
 </STRONG>
 </UL>
-
 <P>
 Sistemden gelen mesaj:
 <PRE><I>    %E</I></PRE>
-
 <P>
-Nedef WWW sunucu ile baðlantý kurulamadý. Lütfen tekrar deneyin.
+Hedef WWW sunucu ile baðlantý kurulamadý. Lütfen tekrar deneyin.
 </P>

@@ -8,19 +8,16 @@
 <P>
 <A HREF="%U">%U</A>
 <P>
-adresine ulaþýrken aþaðýdaki hata oluþtu
+adresine ulaþýrken aþaðýdaki hata oluþtu:
 <P>
 <UL>
 <LI>
 <STRONG>
 Ýstediðiniz doðru doküman cache sunucusunda bulunamadý ve <code>only-if-cached</code> 
-(sadece cache sunucu içinde ise) tanýmlý.
+(sadece Cache Sunucunda bulunuyor ise) tanýmlý.
 </STRONG>
 </UL>
-
 <P>
-
 <code>only-if-cached</code> kontrol mekanizmalý istekte bulundunuz. Bu doküman 
-cache sunucusunda bulunamadý veya bu kontrolün izin vermediði tazeleme yapýlmasý gerekiyor.
-
+cache sunucusunda bulunamadý veya bu mekanizmanýn izin vermediði tazeleme yapýlmasý gerekiyor.
 </P>

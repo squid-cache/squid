@@ -8,16 +8,14 @@
 <P>
 <A HREF="%U">%U</A>
 <P>
-adresine ulaþýrken aþaðýdaki hata oluþtu
+adresine ulaþýrken aþaðýdaki hata oluþtu:
 <P>
 <UL>
 <LI>
-
 <STRONG>
 Baðlantý süresi doldu.
 </STRONG>
 </UL>
-
 <P>
-Squid baðlantý süresi dolduðu için isteðinizi durdurdu.
+Squid, baðlantý süresi dolduðu için isteðinizi durdurdu.
 </P>

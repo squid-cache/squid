@@ -8,17 +8,14 @@
 <P>
 <A HREF="%U">%U</A>
 <P>
-adresine ulaþýrken aþaðýdaki hata oluþtu
+adresine ulaþýrken aþaðýdaki hata oluþtu:
 <P>
 <UL>
 <LI>
 <STRONG>
-Desteklenmeyen istek metodu ve protokol
+Desteklenmeyen istek yöntemi ve protokol.
 </STRONG>
 </UL>
-
 <P>
-Squid tüm istek metodlarý mevcut tüm protokler için desteklemiyor.
-Örneðin Gopher isteðinizde POST yapamazsýnýz.
+Squid, bazý eriþim protokollerin, bazý istek yöntemlerini desteklemiyor. Örneðin Gopher isteðinizde POST yapamazsýnýz.
 </P>
-

@@ -8,7 +8,7 @@
 <P>
 <A HREF="%U">%U</A>
 <P>
-adresine ulaþýrken aþaðýdaki hata oluþtu
+adresine ulaþýrken aþaðýdaki hata oluþtu:
 <P>
 <UL>
 <LI>
@@ -16,15 +16,14 @@ adresine ulaþýrken aþaðýdaki hata oluþtu
 Yanlýþ Ýstek.
 </STRONG>
 </UL>
-
 <P>
-Vermiþ olduðunuz HTTP isteði yanlýþ. Bunun nedenler bunlar olabilir:
+Vermiþ olduðunuz HTTP isteði yanlýþ. Buna sebep aþaðidakilerden herhangi biri olabilir:
 <UL>
-<LI>Eksik veya bilinmeyen metod (GET, POST)
-<LI>Eksik URL
-<LI>Eksik HTTP Belirleyici (HTTP/1.0)
-<LI>Ýstek çok büyük olabilir
-<LI>Content-Length, POST veya PUT istekleri için eksik
-<LI>Adreste yanlýþ karakterler; alt çizgi kullanýlamaz
+<LI>Eksik veya bilinmeyen metod (GET, POST),
+<LI>Eksik URL,
+<LI>Eksik HTTP Belirleyici (HTTP/1.0),
+<LI>Ýstenilen dosya çok büyük, 
+<LI>Content-Length, POST veya PUT istekleri için eksik,
+<LI>Adreste yanlýþ karakterler (alt çizgi, vs. kullanýlamaz).
 </UL>
 </P>

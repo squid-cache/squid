@@ -8,23 +8,18 @@
 <P>
 <A HREF="%U">%U</A>
 <P>
-adresine ulaþýrken aþaðýdaki hata oluþtu
+adresine ulaþýrken aþaðýdaki hata oluþtu:
 <P>
 <BLOCKQUOTE>
-<I>%H</I> isimli sunucuya ayit herhangi bir IP ardes bulunamadý.
+<I>%H</I> isimli sunucuya ayit herhangi bir IP adresi bulunamadý.
 </BLOCKQUOTE>
 </UL>
-
 <P>
 DNS sunucusundan gelen cevap:
 <BLOCKQUOTE>
 %z
 </BLOCKQUOTE>
-
 <P>
-<PRE>
- Cache sunucusu verdiðiniz hedef WWW sunucusunun IP adresini bulamadý.
- Adresin doðru olup olmadýðýný lütfen tekrar kontrol ediniz.
-</PRE>
+ Cache Sunucusu, verdiðiniz hedef WWW sunucusunun IP adresini bulamadý.
+ Adresin doðru olup olmadýðýný tekrar kontrol ediniz.
 </P>
-
