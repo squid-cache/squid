@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.60 1996/11/06 23:14:18 wessels Exp $
+ * $Id: acl.cc,v 1.61 1996/11/07 20:24:47 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -274,9 +274,9 @@ aclParseIpList(void)
 	    q->mask.s_addr = 0;
 	} else {
 	    p = t;
-	    memset(addr1, 0, sizeof(addr1));
-	    memset(addr2, 0, sizeof(addr2));
-	    memset(mask, 0, sizeof(mask));
+	    memset(addr1, 0, 256);
+	    memset(addr2, 0, 256);
+	    memset(mask, 0, 256);
 
 	    /* Split the adress in addr1-addr2/mask */
 	    strncpy(addr1, p, strcspn(p, "-/"));
