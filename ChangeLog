@@ -52,6 +52,7 @@ Changes to Squid-2.4.DEVEL3 ():
 	- Show all FTP server messages
 	- squid.conf.default now indicates if a directive isn't enabled in
 	  the installed binary, and what configure option to use for enabling it
+	- Fixed a temporary memory leak on persistent POSTs
 
 Changes to Squid-2.4.DEVEL2 ():
 
