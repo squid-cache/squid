@@ -2,12 +2,17 @@
  * squid_ldap_match: lookup group membership in LDAP
  * 
  * Author: Flavio Pescuma <flavio@marasystems.com>
- *         MARA Systems AB, Sweden
+ *         MARA Systems AB, Sweden <http://www.marasystems.com>
+ *
+ * URL: http://marasystems.com/download/LDAP_Group/
  *
  * Based on squid_ldap_auth by Glen Newton
  * 
  * Dependencies: You need to get the OpenLDAP libraries
  * from http://www.openldap.org
+ *
+ * If you want to make a TLS enabled connection you will also need the
+ * OpenSSL libraries linked into openldap. See http://www.openssl.org/
  * 
  * License: squid_ldap_match is free software; you can redistribute it 
  * and/or modify it under the terms of the GNU General Public License 
@@ -15,6 +20,15 @@
  * or (at your option) any later version.
  *
  * Changes:
+ * Version 2.2
+ * 2002-09-04: Henrik Nordstrom <hno@marasystems.com>
+ *              Merged changes from squid_ldap_auth.c
+ *              - TLS support
+ *              - -p option to specify port
+ *              Documented the % codes to use in -f
+ * Version 2.1
+ * 2002-08-21: Henrik Nordstrom <hno@marasystems.com>
+ * 		Support groups or usernames having spaces
  * Version 2.0
  * 2002-01-22: Henrik Nordstrom <hno@marasystems.com>
  *		Added optional third query argument for search RDN
@@ -30,7 +44,12 @@
  *		sent by squid. Returns OK if the ldap_search 
  *		using the composed filter succeeds.
  *
- * OLD Change: (from squid_ldap_auth.c)
+ * OLD Changes: (from squid_ldap_auth.c)
+ * 2001-12-12: Michael Cunningham <m.cunningham@xpedite.com>
+ *             - Added TLS support and partial ldap version 3 support. 
+ * 2001-09-05: Henrik Nordstrom <hno@squid-cache.org>
+ *             - Added ability to specify another default LDAP port to
+ *               connect to. Persistent connections moved to -P
  * 2001-05-02: Henrik Nordstrom <hno@squid-cache.org>
  *             - Support newer OpenLDAP 2.x libraries using the
  *	         revised Internet Draft API which unfortunately
@@ -67,6 +86,10 @@ static int noreferrals = 0;
 static int debug = 0;
 static int aliasderef = LDAP_DEREF_NEVER;
 
+/* Added for TLS support and version 3 */
+static int use_tls = 0;
+static int version = -1;
+
 static int searchLDAP(LDAP * ld, char *group, char *user, char *grouprdn);
 
 /* Yuck.. we need to glue to different versions of the API */
@@ -87,6 +110,10 @@ static void squid_ldap_set_referrals(LDAP *ld, int referrals)
     int *value = referrals ? LDAP_OPT_ON : LDAP_OPT_OFF;
     ldap_set_option(ld, LDAP_OPT_REFERRALS, value);
 }
+static void squid_ldap_memfree(char *p)
+{
+    ldap_memfree(p);
+}
 #else
 static int squid_ldap_errno(LDAP *ld)
 {
@@ -103,39 +130,103 @@ static void squid_ldap_set_referrals(LDAP *ld, int referrals)
     else
 	ld->ld_options &= ~LDAP_OPT_REFERRALS;
 }
+static void squid_ldap_memfree(char *p)
+{
+    free(p);
+}
 #endif
+
+static char *
+strwordtok(char *buf, char **t)
+{
+    unsigned char *word = NULL;
+    unsigned char *p = (unsigned char *) buf;
+    unsigned char *d;
+    unsigned char ch;
+    int quoted = 0;
+    if (!p)
+	p = (unsigned char *) *t;
+    if (!p)
+	goto error;
+    while (*p && isspace(*p))
+	p++;
+    if (!*p)
+	goto error;
+    word = d = p;
+    while ((ch = *p)) {
+	switch (ch) {
+	case '\\':
+	    p++;
+	    *d++ = ch = *p;
+	    if (ch)
+		p++;
+	    break;
+	case '"':
+	    quoted = !quoted;
+	    p++;
+	default:
+	    if (!quoted && isspace(*p)) {
+		p++;
+		goto done;
+	    }
+	    *d++ = *p++;
+	    break;
+	}
+    }
+  done:
+    *d++ = '\0';
+  error:
+    *t = (char *) p;
+    return (char *) word;
+}
 
 int
 main(int argc, char **argv)
 {
     char buf[256];
     char *user, *group, *grouprdn;
-    char *ldapServer;
+    char *ldapServer = NULL;
     LDAP *ld = NULL;
     int tryagain,rc;
+    int port = LDAP_PORT;
 
     setbuf(stdout, NULL);
 
-    while (argc > 2 && argv[1][0] == '-') {
+    while (argc > 1 && argv[1][0] == '-') {
 	char *value = "";
 	char option = argv[1][1];
 	switch(option) {
-	case 'p':
+	case 'P':
 	case 'R':
+	case 'z':
+	case 'Z':
 	    break;
 	default:
 	    if (strlen(argv[1]) > 2) {
 		value = argv[1]+2;
-	    } else {
+	    } else if (argc > 2) {
 		value = argv[2];
 		argv++;
 		argc--;
-	    }
+	    } else
+		value = "";
 	    break;
 	}
 	argv++;
 	argc--;
 	switch(option) {
+	case 'h':
+		if (ldapServer) {
+		    int len = strlen(ldapServer) + 1 + strlen(value) + 1;
+		    char *newhost = malloc(len);
+		    snprintf(newhost, len, "%s %s", ldapServer, value);
+		    free(ldapServer);
+		    ldapServer = newhost;
+		} else {
+		    ldapServer = strdup(value);
+		}
+		break;
+
 	case 'b':
 		basedn = value;
 		break;
@@ -174,11 +265,36 @@ main(int argc, char **argv)
 	case 'w':
 		bindpasswd = value;
 		break;
-	case 'p':
+	case 'P':
 		persistent = !persistent;
+		break;
+	case 'p':
+		port = atoi(value);
 		break;
 	case 'R':
 		noreferrals = !noreferrals;
+		break;
+	case 'v':
+		switch(atoi(value)) {
+		case 2:
+		    version = LDAP_VERSION2;
+		    break;
+		case 3:
+		    version = LDAP_VERSION3;
+		    break;
+		default:
+		    fprintf( stderr, "Protocol version should be 2 or 3\n");
+		    exit(1);
+		}
+		break;
+	case 'Z':
+		if ( version == LDAP_VERSION2 ) {
+		    fprintf( stderr, "TLS (-Z) is incompatible with version %d\n",
+			    version);
+		    exit(1);
+		}
+		version = LDAP_VERSION3;
+		use_tls = 1;
 		break;
 	case 'd':
 		debug = 1;
@@ -189,27 +305,48 @@ main(int argc, char **argv)
 	}
     }
 
-    if (!basedn || !searchfilter || argc != 2) {
-	fprintf(stderr, "Usage: squid_ldap_match [options] ldap_server_name\n\n");
+    while (argc > 1) {
+	char *value = argv[1];
+	if (ldapServer) {
+	    int len = strlen(ldapServer) + 1 + strlen(value) + 1;
+	    char *newhost = malloc(len);
+	    snprintf(newhost, len, "%s %s", ldapServer, value);
+	    free(ldapServer);
+	    ldapServer = newhost;
+	} else {
+	    ldapServer = strdup(value);
+	}
+	argc--;
+	argv++;
+    }
+
+    if (!ldapServer)
+	ldapServer = "localhost";
+
+    if (!basedn || !searchfilter) {
+	fprintf(stderr, "Usage: squid_ldap_match -f basedn -f filter [options] ldap_server_name\n\n");
 	fprintf(stderr, "\t-b basedn (REQUIRED)\tbase dn under where to search\n");
-	fprintf(stderr, "\t-f filter (REQUIRED)\tsearch filter pattern\n");
+	fprintf(stderr, "\t-f filter (REQUIRED)\tsearch filter pattern. %v = user, %a = group\n");
 	fprintf(stderr, "\t-s base|one|sub\t\tsearch scope\n");
 	fprintf(stderr, "\t-D binddn\t\tDN to bind as to perform searches\n");
 	fprintf(stderr, "\t-w bindpasswd\t\tpassword for binddn\n");
-	fprintf(stderr, "\t-p\t\t\tpersistent LDAP connection\n");
+	fprintf(stderr, "\t-h server\t\tLDAP server (defaults to localhost)\n");
+	fprintf(stderr, "\t-p port\t\t\tLDAP server port (defaults to %d)\n", LDAP_PORT);
+	fprintf(stderr, "\t-P\t\t\tpersistent LDAP connection\n");
 	fprintf(stderr, "\t-R\t\t\tdo not follow referrals\n");
 	fprintf(stderr, "\t-a never|always|search|find\n\t\t\t\twhen to dereference aliases\n");
+	fprintf(stderr, "\t-v 1|2\t\t\tLDAP version\n");
+	fprintf(stderr, "\t-Z\t\t\tTLS encrypt the LDAP connection, requires LDAP version 3\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "\tIf you need to bind as a user to perform searches then use the\n\t-D binddn -w bindpasswd options\n\n");
 	exit(1);
     }
 
-    ldapServer = (char *) argv[1];
-
     while (fgets(buf, 256, stdin) != NULL) {
-	user = strtok(buf, " \n\r");
-	group = strtok(NULL, " \n\r");
-	grouprdn = strtok(NULL, " \n\r");
+	char *t;
+	user = strwordtok(buf, &t);
+	group = strwordtok(NULL, &t);
+	grouprdn = strwordtok(NULL, &t);
 
 	if (!user || !group) {
 	    printf("ERR\n");
@@ -219,18 +356,42 @@ main(int argc, char **argv)
 	tryagain = 1;
 recover:
 	if (ld == NULL) {
-	    if ((ld = ldap_init(ldapServer, LDAP_PORT)) == NULL) {
+	    if ((ld = ldap_init(ldapServer, port)) == NULL) {
 		fprintf(stderr, "\nUnable to connect to LDAP server:%s port:%d\n",
-		    ldapServer, LDAP_PORT);
-		exit(1);
+		    ldapServer, port);
+		printf("ERR\n");
+		continue;
 	    }
+	    if (version == -1 ) {
+		version = LDAP_VERSION2;
+	    }
+
+	    if( ldap_set_option( ld, LDAP_OPT_PROTOCOL_VERSION, &version )
+		    != LDAP_OPT_SUCCESS )
+	    {
+		fprintf( stderr, "Could not set LDAP_OPT_PROTOCOL_VERSION %d\n",
+			version );
+	        ldap_unbind(ld);
+		printf("ERR\n");
+		continue;
+	    }
+
+	    if ( use_tls && ( version == LDAP_VERSION3 ) && ( ldap_start_tls_s( ld, NULL, NULL ) == LDAP_SUCCESS )) {
+		fprintf( stderr, "Could not Activate TLS connection\n");
+	        ldap_unbind(ld);
+		printf("ERR\n");
+		continue;
+	    }
+	    
 	    squid_ldap_set_referrals(ld, !noreferrals);
 	    squid_ldap_set_aliasderef(ld, aliasderef);
 	}
 	rc = ldap_simple_bind_s(ld, binddn, bindpasswd);
 	if (rc != LDAP_SUCCESS) {
 	    fprintf(stderr, "squid_ldap_match: WARNING, could not bind to binddn '%s'\n", ldap_err2string(rc));
-	    exit(1);
+	    ldap_unbind(ld);
+	    printf("ERR\n");
+	    continue;
 	}
 	if (debug) printf("Binding OK\n");
 	if (searchLDAP(ld, group, user, grouprdn) != 0) {
