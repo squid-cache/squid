@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.257 2002/04/17 22:08:02 hno Exp $
+# $Id: cf.data.pre,v 1.258 2002/04/17 22:09:39 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1429,8 +1429,8 @@ DOC_START
 	stationary then higher values may be used.
 
 	See also the acl max_user_ip. The max_user_ip acl replaces
-	the authenticate_ip_is_strict option found in earlier Squid
-	versions.
+	the authenticate_ip_ttl_is_strict option found in earlier
+	Squid versions.
 DOC_END
 
 COMMENT_START
