@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.166 1997/06/18 03:06:48 wessels Exp $
+ * $Id: comm.cc,v 1.167 1997/06/18 16:00:09 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -187,6 +187,7 @@ CommWriteStateCallbackAndFree(int fd, int code)
 {
     CommWriteStateData *CommWriteState = fd_table[fd].rwstate;
     CWCB *callback = NULL;
+    void *data;
     fd_table[fd].rwstate = NULL;
     if (CommWriteState == NULL)
 	return;
@@ -195,14 +196,11 @@ CommWriteStateCallbackAndFree(int fd, int code)
 	CommWriteState->buf = NULL;
     }
     callback = CommWriteState->handler;
+    data = CommWriteState->handler_data;
     CommWriteState->handler = NULL;
-    if (callback) {
-	callback(fd,
-	    CommWriteState->buf,
-	    CommWriteState->offset,
-	    code,
-	    CommWriteState->handler_data);
-    }
+    if (callback && cbdataValid(data))
+	callback(fd, CommWriteState->buf, CommWriteState->offset, code, data);
+    cbdataUnlock(data);
     safe_free(CommWriteState);
 }
 
@@ -1384,6 +1382,7 @@ comm_write(int fd, char *buf, int size, CWCB * handler, void *handler_data, FREE
     state->handler_data = handler_data;
     state->free = free_func;
     fd_table[fd].rwstate = state;
+    cbdataLock(handler_data);
     commSetSelect(fd,
 	COMM_SELECT_WRITE,
 	commHandleWrite,
