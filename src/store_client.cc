@@ -73,6 +73,8 @@ storeClientCopyEvent(void *data)
     if (!valid)
 	return;
     sc->flags.copy_event_pending = 0;
+    if (!sc->callback)
+	return;
     storeClientCopy2(sc->entry, sc);
 }
 

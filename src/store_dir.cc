@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.64 1998/04/16 17:47:15 wessels Exp $
+ * $Id: store_dir.cc,v 1.65 1998/05/07 20:49:19 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -37,7 +37,7 @@
 #define DefaultLevelTwoDirs     256
 
 static char *storeSwapSubDir(int dirn, int subdirn);
-static int storeMostFreeSwapDir(void);
+static int storeDirSelectSwapDir(void);
 static int storeVerifyDirectory(const char *path);
 static void storeCreateDirectory(const char *path, int lvl);
 static void storeCreateSwapSubDirs(int j);
@@ -209,6 +209,7 @@ storeCreateSwapSubDirs(int j)
     }
 }
 
+#if OLD_CODE
 static int
 storeMostFreeSwapDir(void)
 {
@@ -227,6 +228,93 @@ storeMostFreeSwapDir(void)
 	least_used = this_used;
 	dirn = i;
     }
+    return dirn;
+}
+#endif
+
+/*
+ *Spread load across least 3/4 of the store directories
+ */
+static int
+storeDirSelectSwapDir(void)
+{
+    double least_used = 1.0;
+    int dirn;
+    int i, j;
+    SwapDir *SD;
+    static int nleast = 0;
+    static int nconf = 0;
+    static int *dirq = NULL;
+    static double *diru = NULL;
+    /*
+     * Handle simplest case of a single swap directory immediately
+     */
+    if (Config.cacheSwap.n_configured == 1)
+	return 0;
+    /*
+     * Initialise dirq on the first call or on change of number of dirs
+     */
+    if (nconf != Config.cacheSwap.n_configured) {
+	nconf = Config.cacheSwap.n_configured;
+	nleast = (nconf * 3) / 4;
+	if (dirq != NULL)
+	    xfree(dirq);
+	dirq = (int *) xmalloc(sizeof(int) * nleast);
+	if (diru != NULL)
+	    xfree(diru);
+	diru = (double *) xmalloc(sizeof(double) * nconf);
+	for (j = 0; j < nleast; j++)
+	    dirq[j] = -1;
+    }
+    /*
+     * Scan for a non-negative dirn in the dirq array and return that one
+     */
+    dirn = -1;
+    for (j = 0; j < nleast; j++) {
+	dirn = dirq[j];
+	if (dirn < 0)
+	    continue;
+	dirq[j] = -1;
+	break;
+    }
+    /*
+     * If we found a valid dirn return it
+     */
+    if (dirn >= 0)
+	return dirn;
+    /*
+     * Now for the real guts of the algorithm - building the dirq array
+     */
+    for (i = 0; i < nconf; i++) {
+	diru[i] = 1.1;
+	SD = &Config.cacheSwap.swapDirs[i];
+	if (SD->read_only)
+	    continue;
+	diru[i] = (double) SD->cur_size;
+	diru[i] /= SD->max_size;
+    }
+    for (j = 0; j < nleast; j++) {
+	dirq[j] = -1;
+	least_used = 1.0;
+	dirn = -1;
+	for (i = 0; i < nconf; i++) {
+	    if (diru[i] < least_used) {
+		least_used = diru[i];
+		dirn = i;
+	    }
+	}
+	if (dirn < 0)
+	    break;
+	dirq[j] = dirn;
+	diru[dirn] = 1.1;
+    }
+    /*
+     * Setup default return of 0 if no least found
+     */
+    if (dirq[0] < 0)
+	dirq[0] = 0;
+    dirn = dirq[0];
+    dirq[0] = -1;
     return dirn;
 }
 
@@ -273,7 +361,7 @@ storeDirMapBitReset(int fn)
 int
 storeDirMapAllocate(void)
 {
-    int dirn = storeMostFreeSwapDir();
+    int dirn = storeDirSelectSwapDir();
     SwapDir *SD = &Config.cacheSwap.swapDirs[dirn];
     int filn = file_map_allocate(SD->map, SD->suggest);
     SD->suggest = filn + 1;
