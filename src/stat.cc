@@ -1,6 +1,6 @@
 
 /*
- * $Id: stat.cc,v 1.89 1996/10/17 11:14:48 wessels Exp $
+ * $Id: stat.cc,v 1.90 1996/10/18 20:36:25 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -750,7 +750,7 @@ info_get(cacheinfo * obj, StoreEntry * sentry)
 
     f = (float) (squid_curtime - squid_starttime);
     storeAppendPrintf(sentry, "{\tConnections per hour:\t%.1f}\n",
-	f == 0.0 ? 0.0 : ((ntcpconn + nudpconn) / (f / 3600)));
+	f == 0.0 ? 0.0 : ((ntcpconn + nudpconn) / (f / 3600.0)));
 
     storeAppendPrintf(sentry, "{Cache information for %s:}\n",
 	appname);

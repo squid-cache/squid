@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.25 1996/10/09 15:34:24 wessels Exp $
+ * $Id: dnsserver.cc,v 1.26 1996/10/18 20:36:22 wessels Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -286,7 +286,7 @@ main(int argc, char *argv[])
 	}
     }
 
-    while (1) {
+    for (;;) {
 	int retry_count = 0;
 	int addrbuf;
 	memset(request, '\0', 256);
