@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.58 2003/03/09 12:29:40 robertc Exp $
+ * $Id: client_db.cc,v 1.59 2004/10/14 23:31:30 hno Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -41,6 +41,15 @@ static hash_table *client_table = NULL;
 
 static ClientInfo *clientdbAdd(struct in_addr addr);
 static FREE clientdbFreeItem;
+static void clientdbStartGC(void);
+static void clientdbScheduledGC(void *);
+
+static int max_clients = 32;
+static int cleanup_running = 0;
+static int cleanup_scheduled = 0;
+static int cleanup_removed;
+
+#define CLIENT_DB_HASH_SIZE 467
 
 static ClientInfo *
 
@@ -52,6 +61,13 @@ clientdbAdd(struct in_addr addr)
     c->addr = addr;
     hash_join(client_table, &c->hash);
     statCounter.client_http.clients++;
+
+    if ((statCounter.client_http.clients > max_clients) && !cleanup_running && !cleanup_scheduled < 2)
+    {
+        cleanup_scheduled++;
+        eventAdd("client_db garbage collector", clientdbScheduledGC, NULL, 90, 0);
+    }
+
     return c;
 }
 
@@ -61,7 +77,7 @@ clientdbInit(void)
     if (client_table)
         return;
 
-    client_table = hash_create((HASHCMP *) strcmp, 467, hash_string);
+    client_table = hash_create((HASHCMP *) strcmp, CLIENT_DB_HASH_SIZE, hash_string);
 
     cachemgrRegister("client_list",
                      "Cache Client List",
@@ -106,6 +122,8 @@ clientdbUpdate(struct in_addr addr, log_type ltype, protocol_t p, size_t size)
         if (LOG_UDP_HIT == ltype)
             kb_incr(&c->Icp.hit_kbytes_out, size);
     }
+
+    c->last_seen = squid_curtime;
 }
 
 /*
@@ -286,6 +304,75 @@ clientdbFreeMemory(void)
     hashFreeItems(client_table, clientdbFreeItem);
     hashFreeMemory(client_table);
     client_table = NULL;
+}
+
+static void
+clientdbScheduledGC(void *unused)
+{
+    cleanup_scheduled = 0;
+    clientdbStartGC();
+}
+
+static void
+clientdbGC(void *unused)
+{
+    static int bucket = 0;
+    hash_link *link_next;
+
+    link_next = hash_get_bucket(client_table, bucket++);
+
+    while (link_next != NULL) {
+        ClientInfo *c = (ClientInfo *)link_next;
+        int age = squid_curtime - c->last_seen;
+        link_next = link_next->next;
+
+        if (c->n_established)
+            continue;
+
+        if (age < 24 * 3600 && c->Http.n_requests > 100)
+            continue;
+
+        if (age < 4 * 3600 && (c->Http.n_requests > 10 || c->Icp.n_requests > 10))
+            continue;
+
+        if (age < 5 * 60 && (c->Http.n_requests > 1 || c->Icp.n_requests > 1))
+            continue;
+
+        if (age < 60)
+            continue;
+
+        hash_remove_link(client_table, &c->hash);
+
+        clientdbFreeItem(c);
+
+        statCounter.client_http.clients--;
+
+        cleanup_removed++;
+    }
+
+    if (bucket < CLIENT_DB_HASH_SIZE)
+        eventAdd("client_db garbage collector", clientdbGC, NULL, 0.15, 0);
+    else {
+        bucket = 0;
+        cleanup_running = 0;
+        max_clients = statCounter.client_http.clients * 3 / 2;
+
+        if (!cleanup_scheduled) {
+            cleanup_scheduled = 1;
+            eventAdd("client_db garbage collector", clientdbScheduledGC, NULL, 6 * 3600, 0);
+        }
+
+        debug(49, 2) ("clientdbGC: Removed %d entries\n", cleanup_removed);
+    }
+}
+
+static void
+clientdbStartGC(void)
+{
+    max_clients = statCounter.client_http.clients;
+    cleanup_running = 1;
+    cleanup_removed = 0;
+    clientdbGC(NULL);
 }
 
 #if SQUID_SNMP
