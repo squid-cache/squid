@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.19 2002/10/13 20:35:17 robertc Exp $
+ * $Id: auth_basic.cc,v 1.20 2002/10/15 09:25:34 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -387,9 +387,9 @@ authBasicAuthUserFindUsername(const char *username)
     if (username && (usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, username)))) {
 	while (usernamehash) {
 	    if ((authUserHashPointerUser(usernamehash)->auth_type == AUTH_BASIC) &&
-		!strcmp(username, usernamehash->key))
+		!strcmp(username, (char const *)usernamehash->key))
 		return authUserHashPointerUser(usernamehash);
-	    usernamehash = usernamehash->next;
+	    usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
 	}
     }
     return NULL;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.16 2002/10/13 20:35:20 robertc Exp $
+ * $Id: auth_digest.cc,v 1.17 2002/10/15 09:25:34 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -121,9 +121,9 @@ authDigestNonceEncode(digest_nonce_h * nonce)
 {
     if (!nonce)
 	return;
-    if (nonce->hash.key)
-	xfree(nonce->hash.key);
-    nonce->hash.key = xstrdup(base64_encode_bin((char *) &(nonce->noncedata), sizeof(digest_nonce_data)));
+    if (nonce->key)
+	xfree(nonce->key);
+    nonce->key = xstrdup(base64_encode_bin((char *) &(nonce->noncedata), sizeof(digest_nonce_data)));
 }
 
 static digest_nonce_h *
@@ -183,12 +183,12 @@ authenticateDigestNonceNew(void)
      * loop until we get a unique nonce. The nonce creation must
      * have a random factor
      */
-    while ((temp = authenticateDigestNonceFindNonce((char const *)(newnonce->hash.key)))) {
+    while ((temp = authenticateDigestNonceFindNonce((char const *)(newnonce->key)))) {
 	/* create a new nonce */
 	newnonce->noncedata.randomdata = squid_random();
 	authDigestNonceEncode(newnonce);
     }
-    hash_join(digest_nonce_cache, &newnonce->hash);
+    hash_join(digest_nonce_cache, newnonce);
     /* the cache's link */
     authDigestNonceLink(newnonce);
     newnonce->flags.incache = 1;
@@ -203,10 +203,10 @@ authenticateDigestNonceDelete(digest_nonce_h * nonce)
 	assert(nonce->references == 0);
 #if UNREACHABLECODE
 	if (nonce->flags.incache)
-	    hash_remove_link(digest_nonce_cache, &nonce->hash);
+	    hash_remove_link(digest_nonce_cache, nonce);
 #endif
 	assert(nonce->flags.incache == 0);
-	safe_free(nonce->hash.key);
+	safe_free(nonce->key);
 	memPoolFree(digest_nonce_pool, nonce);
     }
 }
@@ -265,10 +265,10 @@ authenticateDigestNonceCacheCleanup(void *data)
 	(long int)current_time.tv_sec);
     hash_first(digest_nonce_cache);
     while ((nonce = ((digest_nonce_h *) hash_next(digest_nonce_cache)))) {
-	debug(29, 3) ("authenticateDigestNonceCacheCleanup: nonce entry  : %p '%s'\n", nonce, (char *)nonce->hash.key);
+	debug(29, 3) ("authenticateDigestNonceCacheCleanup: nonce entry  : %p '%s'\n", nonce, (char *)nonce->key);
 	debug(29, 4) ("authenticateDigestNonceCacheCleanup: Creation time: %ld\n", (long int)nonce->noncedata.creationtime);
 	if (authDigestNonceIsStale(nonce)) {
-	    debug(29, 4) ("authenticateDigestNonceCacheCleanup: Removing nonce %s from cache due to timeout.\n", (char *)nonce->hash.key);
+	    debug(29, 4) ("authenticateDigestNonceCacheCleanup: Removing nonce %s from cache due to timeout.\n", (char *)nonce->key);
 	    assert(nonce->flags.incache);
 	    /* invalidate nonce so future requests fail */
 	    nonce->flags.valid = 0;
@@ -319,7 +319,7 @@ authenticateDigestNonceNonceb64(digest_nonce_h * nonce)
 {
     if (!nonce)
 	return NULL;
-    return (char const *)nonce->hash.key;
+    return (char const *)nonce->key;
 }
 
 static digest_nonce_h *
@@ -414,7 +414,7 @@ authDigestNoncePurge(digest_nonce_h * nonce)
 	return;
     if (!nonce->flags.incache)
 	return;
-    hash_remove_link(digest_nonce_cache, &nonce->hash);
+    hash_remove_link(digest_nonce_cache, nonce);
     nonce->flags.incache = 0;
     /* the cache's link */
     authDigestNonceUnlink(nonce);
@@ -440,7 +440,7 @@ authDigestUserFindUsername(const char *username)
     if (username && (usernamehash = static_cast<auth_user_hash_pointer *>(hash_lookup(proxy_auth_username_cache, username)))) {
 	while ((authUserHashPointerUser(usernamehash)->auth_type != AUTH_DIGEST) &&
 	    (usernamehash->next))
-	    usernamehash = usernamehash->next;
+	    usernamehash = static_cast<auth_user_hash_pointer *>(usernamehash->next);
 	auth_user = NULL;
 	if (authUserHashPointerUser(usernamehash)->auth_type == AUTH_DIGEST) {
 	    auth_user = authUserHashPointerUser(usernamehash);

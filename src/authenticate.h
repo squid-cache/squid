@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.h,v 1.2 2002/10/14 06:19:49 adrian Exp $
+ * $Id: authenticate.h,v 1.3 2002/10/15 09:25:33 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -43,10 +43,8 @@
 class AuthUser;
 #endif
 
-struct AuthUserHashPointer {
+struct AuthUserHashPointer : public hash_link {
     /* first two items must be same as hash_link */
-    char const *key;
-    auth_user_hash_pointer *next;
 #ifdef __cplusplus
 public:
     static void removeFromCache (void *anAuthUserHashPointer);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.550 2002/10/15 08:03:30 robertc Exp $
+ * $Id: store.cc,v 1.551 2002/10/15 09:25:33 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -361,12 +361,11 @@ storeUnlockObject(StoreEntry * e)
 StoreEntry *
 storeGet(const cache_key * key)
 {
-    void *p;
     PROF_start(storeGet);
     debug(20, 3) ("storeGet: looking up %s\n", storeKeyText(key));
-    p = hash_lookup(store_table, key);
+    StoreEntry *p = static_cast<StoreEntry *>(hash_lookup(store_table, key));
     PROF_stop(storeGet);
-    return (StoreEntry *) p;
+    return p;
 }
 
 void

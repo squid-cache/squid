@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.15 2002/10/13 20:35:01 robertc Exp $
+ * $Id: external_acl.cc,v 1.16 2002/10/15 09:25:33 robertc Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -64,8 +64,7 @@ static void external_acl_cache_touch(external_acl * def, external_acl_entry * en
  * external_acl cache entry
  * Used opaqueue in the interface
  */
-struct _external_acl_entry {
-    hash_link hash;
+struct _external_acl_entry: public hash_link {
     dlink_node lru;
     int result;
     time_t date;
@@ -409,7 +408,7 @@ aclMatchExternal(void *data, aclCheck_t * ch)
     entry = ch->extacl_entry;
     if (entry) {
 	if (cbdataReferenceValid(entry) && entry->def == acl->def &&
-	    strcmp((char *)entry->hash.key, key) == 0) {
+	    strcmp((char *)entry->key, key) == 0) {
 	    /* Ours, use it.. */
 	} else {
 	    /* Not valid, or not ours.. get rid of it */
@@ -577,7 +576,7 @@ static void
 free_external_acl_entry(void *data)
 {
     external_acl_entry *entry = static_cast<external_acl_entry *>(data);
-    safe_free(entry->hash.key);
+    safe_free(entry->key);
     safe_free(entry->user);
     safe_free(entry->error);
 }
@@ -605,7 +604,7 @@ external_acl_cache_add(external_acl * def, const char *key, int result, char *us
     if (def->cache_size && def->cache_entries >= def->cache_size)
 	external_acl_cache_delete(def, static_cast<external_acl_entry *>(def->lru_list.tail->data));
     entry = cbdataAlloc(external_acl_entry);
-    entry->hash.key = xstrdup(key);
+    entry->key = xstrdup(key);
     entry->date = squid_curtime;
     entry->result = result;
     if (user)
@@ -613,7 +612,7 @@ external_acl_cache_add(external_acl * def, const char *key, int result, char *us
     if (error)
 	entry->error = xstrdup(error);
     entry->def = def;
-    hash_join(def->cache, &entry->hash);
+    hash_join(def->cache, entry);
     dlinkAdd(entry, &entry->lru, &def->lru_list);
     def->cache_entries += 1;
     return entry;
@@ -622,7 +621,7 @@ external_acl_cache_add(external_acl * def, const char *key, int result, char *us
 static void
 external_acl_cache_delete(external_acl * def, external_acl_entry * entry)
 {
-    hash_remove_link(def->cache, &entry->hash);
+    hash_remove_link(def->cache, entry);
     dlinkDelete(&entry->lru, &def->lru_list);
     def->cache_entries -= 1;
     cbdataFree(entry);

@@ -62,10 +62,8 @@ struct _auth_ntlm_config {
     time_t challengelifetime;
 };
 
-struct ProxyAuthCachePointer {
-    /* first two items must be same as hash_link */
-    char *key;
-    auth_user_hash_pointer *next;dlink_node link;
+struct ProxyAuthCachePointer : public hash_link {
+    dlink_node link;
     /* other hash entries that point to the same auth_user */
     auth_user_t *auth_user;
 };
