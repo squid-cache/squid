@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.1 1996/10/27 08:40:23 wessels Exp $
+ * $Id: refresh.cc,v 1.2 1996/10/28 07:44:25 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -120,7 +120,7 @@ refreshCheck(StoreEntry * entry, request_t * request_unused)
     char *pattern = ".";
     time_t age;
     int factor;
-    debug(22,1,"refreshCheck: '%s'\n", entry->url);
+    debug(22, 3, "refreshCheck: '%s'\n", entry->url);
     for (R = Refresh_tbl; R; R = R->next) {
 	if (regexec(&(R->compiled_pattern), entry->url, 0, 0, 0) != 0)
 	    continue;
@@ -130,30 +130,30 @@ refreshCheck(StoreEntry * entry, request_t * request_unused)
 	pattern = R->pattern;
 	break;
     }
-    debug(22, 1, "refreshCheck: Matched '%s %d %d%% %d'\n",
+    debug(22, 3, "refreshCheck: Matched '%s %d %d%% %d'\n",
 	pattern, (int) min, pct, (int) max);
     age = squid_curtime - entry->timestamp;
-    debug(22,1,"refreshCheck: age = %d\n", (int) age);
+    debug(22, 3, "refreshCheck: age = %d\n", (int) age);
     if (age <= min) {
-	debug(22,1,"refreshCheck: NO: age < min\n");
+	debug(22, 3, "refreshCheck: NO: age < min\n");
 	return 0;
     }
     if (-1 < entry->expires && entry->expires <= squid_curtime) {
-	debug(22,1,"refreshCheck: YES: expires <= curtime\n");
+	debug(22, 3, "refreshCheck: YES: expires <= curtime\n");
 	return 1;
     }
     if (age > max) {
-	debug(22,1,"refreshCheck: YES: age > max\n");
+	debug(22, 3, "refreshCheck: YES: age > max\n");
 	return 1;
     }
     if (entry->timestamp <= entry->lastmod) {
-	debug(22,1,"refreshCheck: YES: lastvalid <= lastmod\n");
+	debug(22, 3, "refreshCheck: YES: lastvalid <= lastmod\n");
 	return 1;
     }
     factor = 100 * age / (entry->timestamp - entry->lastmod);
-    debug(22,1,"refreshCheck: factor = %d\n", factor);
+    debug(22, 3, "refreshCheck: factor = %d\n", factor);
     if (factor > pct) {
-	debug(22,1,"refreshCheck: YES: factor > pc\n");
+	debug(22, 3, "refreshCheck: YES: factor > pc\n");
 	return 1;
     }
     return 0;

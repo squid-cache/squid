@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.52 1996/10/27 07:11:52 wessels Exp $
+ * $Id: client_side.cc,v 1.53 1996/10/28 07:44:20 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -381,6 +381,7 @@ icpProcessExpired(int fd, icpStateData * icpState)
 	icpState->request->flags,
 	icpState->method);
     /* NOTE, don't call storeLockObject(), storeCreateEntry() does it */
+    storeClientListAdd(entry, fd, 0);
 
     entry->lastmod = icpState->old_entry->lastmod;
     debug(33, 5, "icpProcessExpired: setting lmt = %d\n",
@@ -407,14 +408,14 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
     StoreEntry *oldentry;
     debug(33, 3, "icpHandleIMSReply: FD %d '%s'\n", fd, entry->url);
     /* unregister this handler */
-    storeUnregister(entry, fd);
     if (entry->store_status == STORE_ABORTED) {
 	debug(33, 1, "icpHandleIMSReply: ABORTED/%s '%s'\n",
 	    log_tags[entry->mem_obj->abort_code], entry->url);
 	/* We have an existing entry, but failed to validate it,
 	 * so send the old one anyway */
-	icpState->log_type = LOG_TCP_EXPIRED_FAIL_HIT;
+	icpState->log_type = LOG_TCP_REFRESH_FAIL_HIT;
 	storeUnlockObject(entry);
+	storeUnregister(entry, fd);
 	icpState->entry = icpState->old_entry;
 	icpState->entry->refcount++;
     } else if (mem->reply->code == 0) {
@@ -437,7 +438,7 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 		(void *) icpState);
 	    return 0;
 	}
-	icpState->log_type = LOG_TCP_EXPIRED_HIT;
+	icpState->log_type = LOG_TCP_REFRESH_HIT;
 	hbuf = get_free_8k_page();
 	storeClientCopy(oldentry, 0, 8191, hbuf, &len, fd);
 	if (oldentry->mem_obj->request == NULL) {
@@ -445,6 +446,7 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	    unlink_request = 1;
 	}
 	storeUnlockObject(entry);
+	storeUnregister(entry, fd);
 	entry = icpState->entry = oldentry;
 	entry->timestamp = squid_curtime;
 	if (mime_headers_end(hbuf)) {
@@ -461,13 +463,14 @@ icpHandleIMSReply(int fd, StoreEntry * entry, void *data)
 	}
     } else {
 	/* the client can handle this reply, whatever it is */
-	icpState->log_type = LOG_TCP_EXPIRED_MISS;
+	icpState->log_type = LOG_TCP_REFRESH_MISS;
 	if (mem->reply->code == 304) {
 	    icpState->old_entry->timestamp = squid_curtime;
 	    icpState->old_entry->refcount++;
-	    icpState->log_type = LOG_TCP_EXPIRED_HIT;
+	    icpState->log_type = LOG_TCP_REFRESH_HIT;
 	}
 	storeUnlockObject(icpState->old_entry);
+	storeUnregister(icpState->old_entry, fd);
     }
     icpState->old_entry = NULL;	/* done with old_entry */
     icpSendMoreData(fd, icpState);	/* give data to the client */
