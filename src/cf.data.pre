@@ -1000,7 +1000,7 @@ DOC_END
 
 
 NAME: negative_ttl
-COMMENT: (in minutes)
+COMMENT: time-units
 TYPE: time_t
 LOC: Config.negativeTtl
 DEFAULT: 5 minutes
@@ -1016,7 +1016,7 @@ DOC_END
 
 
 NAME: positive_dns_ttl
-COMMENT: (in minutes)
+COMMENT: time-units
 TYPE: time_t
 LOC: Config.positiveDnsTtl
 DEFAULT: 6 hours
@@ -1030,7 +1030,7 @@ DOC_END
 
 
 NAME: negative_dns_ttl
-COMMENT: (in minutes)
+COMMENT: time-units
 TYPE: time_t
 LOC: Config.negativeDnsTtl
 DEFAULT: 5 minutes
@@ -1048,7 +1048,7 @@ DOC_START
 DOC_END
 
 NAME: connect_timeout
-COMMENT: (in seconds)
+COMMENT: time-units
 TYPE: time_t
 LOC: Config.Timeout.connect
 DEFAULT: 2 minutes
@@ -1064,7 +1064,7 @@ DOC_END
 
 
 NAME: read_timeout
-COMMENT: (in minutes)
+COMMENT: time-units
 TYPE: time_t
 LOC: Config.Timeout.read
 DEFAULT: 15 minutes
@@ -1093,7 +1093,7 @@ DOC_END
 
 
 NAME: client_lifetime
-COMMENT: (in minutes)
+COMMENT: time-units
 TYPE: time_t
 LOC: Config.Timeout.lifetime
 DEFAULT: 1 day
@@ -1128,7 +1128,7 @@ DOC_END
 
 
 NAME: shutdown_lifetime
-COMMENT: (in seconds)
+COMMENT: time-units
 TYPE: time_t
 LOC: Config.shutdownLifetime
 DEFAULT: 30 seconds
