@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.24 1996/07/23 02:39:49 wessels Exp $
+ * $Id: acl.cc,v 1.25 1996/07/23 04:07:48 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -679,36 +679,40 @@ int aclMatchAcl(acl, checklist)
 	return aclMatchIp(acl->data, checklist->src_addr);
 	/* NOTREACHED */
     case ACL_DST_IP:
-	if ((hp = ipcache_gethostbyname(r->host, IP_LOOKUP_IF_MISS)) == NULL) {
-	    /* if lookup previously failed, s_addr == INADDR_NONE */
-	    if (checklist->dst_addr.s_addr != INADDR_ANY)
-		return aclMatchIp(acl->data, checklist->dst_addr);
+	hp = ipcache_gethostbyname(r->host, IP_LOOKUP_IF_MISS);
+	if (hp) {
+	    for (k = 0; *(hp->h_addr_list + k); k++) {
+		xmemcpy(&checklist->dst_addr.s_addr,
+		    *(hp->h_addr_list + k),
+		    hp->h_length);
+		if (aclMatchIp(acl->data, checklist->dst_addr))
+		    return 1;
+	    }
+	    return 0;
+	} else if (checklist->state[ACL_DST_IP] == ACL_LOOKUP_NONE) {
 	    debug(28, 3, "aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
 		acl->name, r->host);
-	    checklist->need |= (1 << ACL_DST_IP);
+	    checklist->state[ACL_DST_IP] = ACL_LOOKUP_NEED;
 	    return 0;
+	} else {
+	    return aclMatchIp(acl->data, no_addr);
 	}
-	for (k = 0; *(hp->h_addr_list + k); k++) {
-	    xmemcpy(&checklist->dst_addr.s_addr,
-		*(hp->h_addr_list + k),
-		hp->h_length);
-	    if (aclMatchIp(acl->data, checklist->dst_addr))
-		return 1;
-	}
-	return 0;
 	/* NOTREACHED */
     case ACL_DST_DOMAIN:
 	return aclMatchDomainList(acl->data, r->host);
 	/* NOTREACHED */
     case ACL_SRC_DOMAIN:
 	fqdn = fqdncache_gethostbyaddr(checklist->src_addr, FQDN_LOOKUP_IF_MISS);
-	if (fqdn == NULL) {
+	if (fqdn) {
+	    return aclMatchDomainList(acl->data, fqdn);
+	} else if (checklist->state[ACL_SRC_DOMAIN] == ACL_LOOKUP_NONE) {
 	    debug(28, 3, "aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
 		acl->name, inet_ntoa(checklist->src_addr));
-	    checklist->need |= (1 << ACL_SRC_DOMAIN);
+	    checklist->state[ACL_SRC_DOMAIN] = ACL_LOOKUP_NEED;
 	    return 0;
+	} else {
+	    return aclMatchDomainList(acl->data, "NONE");
 	}
-	return aclMatchDomainList(acl->data, fqdn);
 	/* NOTREACHED */
     case ACL_TIME:
 	return aclMatchTime(acl->data, squid_curtime);
