@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.226 1998/03/15 04:25:27 rousskov Exp $
+ * $Id: client_side.cc,v 1.227 1998/03/16 17:03:25 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -67,7 +67,7 @@ static HttpReply *clientConstructProxyAuthReply(clientHttpRequest * http);
 static int clientCachable(clientHttpRequest * http);
 static int clientHierarchical(clientHttpRequest * http);
 static int isTcpHit(log_type code);
-static int clientCheckContentLength(request_t *r);
+static int clientCheckContentLength(request_t * r);
 
 static int
 checkAccelOnly(clientHttpRequest * http)
@@ -690,23 +690,17 @@ clientParseRequestHeaders(clientHttpRequest * http)
 }
 
 static int
-clientCheckContentLength(request_t *r)
+clientCheckContentLength(request_t * r)
 {
     char *t;
     int len;
     /*
-     * We only require a request content-length for POST and PUT
+     * We only require a content-length for "upload" methods
      */
-    switch(r->method) {
-    case METHOD_POST:
-    case METHOD_PUT:
-	break;
-    default:
+    if (0 == pumpMethod(r->method))
 	return 1;
-	break;
-    }
     t = mime_get_header(r->headers, "Content-Length");
-    if (t == NULL)
+    if (NULL == t)
 	return 0;
     len = atoi(t);
     if (len < 0)
@@ -826,6 +820,8 @@ clientBuildReplyHeader(clientHttpRequest * http,
     size_t len = 0;
     size_t hdr_len = 0;
     size_t l;
+    if (0 != strncmp(hdr_in, "HTTP/", 5))
+	return 0;
     end = mime_headers_end(hdr_in);
     if (end == NULL) {
 	debug(33, 3) ("clientBuildReplyHeader: DIDN'T FIND END-OF-HEADERS\n");
@@ -1285,12 +1281,12 @@ clientProcessRequest(clientHttpRequest * http)
 	    return;
 	}
 	/* yes, continue */
-    } else if (r->method == METHOD_PUT || r->method == METHOD_POST)  {
+    } else if (pumpMethod(r->method)) {
 	http->log_type = LOG_TCP_MISS;
 	/* XXX oof, POST can be cached! */
 	pumpInit(fd, r, http->uri);
     } else {
-        http->log_type = clientProcessRequest2(http);
+	http->log_type = clientProcessRequest2(http);
     }
     http->log_type = clientProcessRequest2(http);
     debug(33, 4) ("clientProcessRequest: %s for '%s'\n",
