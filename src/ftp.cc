@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.93 1997/01/07 20:31:21 wessels Exp $
+ * $Id: ftp.cc,v 1.94 1997/01/13 19:29:12 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -365,6 +365,12 @@ ftpReadReply(int fd, FtpStateData * data)
 	squid_error_entry(entry, ERR_CLIENT_ABORT, NULL);
 	comm_close(fd);
     } else {
+	if (data->got_marker) {
+	    /* oh, this is so gross -- we found the marker at the
+	     * end of the previous read, but theres more data!
+	     * So put the marker back in. */
+	    storeAppend(entry, MAGIC_MARKER, MAGIC_MARKER_SZ);
+	}
 	/* check for a magic marker at the end of the read */
 	data->got_marker = 0;
 	if (len >= MAGIC_MARKER_SZ) {
