@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.124 1997/12/30 02:46:35 wessels Exp $
+ * $Id: acl.cc,v 1.125 1997/12/30 21:58:05 kostas Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -1287,7 +1287,7 @@ aclMatchAcl(struct _acl *acl, aclCheck_t * checklist)
 		acl->name, r->host);
 	    checklist->state[ACL_DST_ASN] = ACL_LOOKUP_NEEDED;
 	} else {
-	    return asnMatchIp(&acl->data, no_addr);
+	    return asnMatchIp(&(acl->data), no_addr);
 	}
 	return 0;
 #if USE_ARP_ACL
