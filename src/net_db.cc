@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.148 2000/10/06 05:42:46 wessels Exp $
+ * $Id: net_db.cc,v 1.149 2000/10/10 18:15:30 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -368,34 +368,27 @@ static void
 netdbSaveState(void *foo)
 {
     LOCAL_ARRAY(char, path, SQUID_MAXPATHLEN);
-    int fd;
+    Logfile *lf;
     netdbEntry *n;
     net_db_name *x;
     struct timeval start = current_time;
     int count = 0;
-    size_t wl = 4096;
-    char *wbuf = xmalloc(wl);
-    off_t wo = 0;
     snprintf(path, SQUID_MAXPATHLEN, "%s/netdb_state", storeSwapDir(0));
     /*
      * This was nicer when we were using stdio, but thanks to
      * Solaris bugs, its a bad idea.  fopen can fail if more than
      * 256 FDs are open.
      */
-    fd = file_open(path, O_WRONLY | O_CREAT | O_TRUNC);
-    if (fd < 0) {
+    lf = logfileOpen(path, 4096, 0);
+    if (NULL == lf) {
 	debug(50, 1) ("netdbSaveState: %s: %s\n", path, xstrerror());
 	return;
     }
     hash_first(addr_table);
     while ((n = (netdbEntry *) hash_next(addr_table))) {
-#define RBUF_SZ 4096
-	char rbuf[RBUF_SZ];
-	off_t ro;
 	if (n->pings_recv == 0)
 	    continue;
-	ro = 0;
-	ro += snprintf(rbuf, RBUF_SZ, "%s %d %d %10.5f %10.5f %d %d",
+	logfilePrintf(lf, "%s %d %d %10.5f %10.5f %d %d",
 	    n->network,
 	    n->pings_sent,
 	    n->pings_recv,
@@ -404,24 +397,12 @@ netdbSaveState(void *foo)
 	    (int) n->next_ping_time,
 	    (int) n->last_use_time);
 	for (x = n->hosts; x; x = x->next)
-	    ro += snprintf(rbuf + ro, RBUF_SZ - ro, " %s", x->name);
-	ro += snprintf(rbuf + ro, RBUF_SZ - ro, "\n");
-	assert(ro <= RBUF_SZ);
-	while (ro + wo > wl) {
-	    char *t;
-	    t = wbuf;
-	    wl <<= 1;
-	    wbuf = xmalloc(wl);
-	    xmemcpy(wbuf, t, wo);
-	    xfree(t);
-	}
-	xmemcpy(wbuf + wo, rbuf, ro);
-	wo += ro;
+	    logfilePrintf(lf, " %s", x->name);
+	logfilePrintf(lf, "\n");
 	count++;
 #undef RBUF_SZ
     }
-    write(fd, wbuf, wo);
-    file_close(fd);
+    logfileClose(lf);
     getCurrentTime();
     debug(38, 1) ("NETDB state saved; %d entries, %d msec\n",
 	count, tvSubMsec(start, current_time));

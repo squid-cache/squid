@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.354 2000/10/04 15:32:14 wessels Exp $
+ * $Id: structs.h,v 1.355 2000/10/10 18:15:30 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1889,4 +1889,7 @@ struct _Logfile {
     char *buf;
     size_t bufsz;
     off_t offset;
+    struct {
+	unsigned int fatal:1;
+    } flags;
 };

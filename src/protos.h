@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.381 2000/10/10 02:10:42 wessels Exp $
+ * $Id: protos.h,v 1.382 2000/10/10 18:15:30 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1179,7 +1179,7 @@ extern void *leakFreeFL(void *, const char *, int);
 #endif
 
 /* logfile.c */
-extern Logfile *logfileOpen(const char *path, size_t bufsz);
+extern Logfile *logfileOpen(const char *path, size_t bufsz, int);
 extern void logfileClose(Logfile * lf);
 extern void logfileRotate(Logfile * lf);
 extern void logfileWrite(Logfile * lf, void *buf, size_t len);
