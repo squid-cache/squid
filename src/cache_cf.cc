@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.169 1997/01/31 22:30:29 wessels Exp $
+ * $Id: cache_cf.cc,v 1.170 1997/02/06 18:02:08 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1214,6 +1214,8 @@ parseConfigFile(const char *file_name)
 
 	else if (!strcmp(token, "dns_children"))
 	    parseIntegerValue(&Config.dnsChildren);
+	else if (!strcmp(token, "dns_defnames"))
+	    parseOnOff(&Config.Options.res_defnames);
 
 	else if (!strcmp(token, "redirect_program"))
 	    parsePathname(&Config.Program.redirect);
