@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_hdr_test.cc,v 1.1 2003/06/24 12:31:02 robertc Exp $
+ * $Id: mem_hdr_test.cc,v 1.2 2003/06/26 12:52:00 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -63,10 +63,40 @@ testLowAndHigh()
     assert (!aHeader.hasContigousContentRange(Range<size_t>(10,101)));
 }
 
+void
+testSplayOfNodes()
+{
+    Splay<mem_node *> aSplay;
+    mem_node *temp5;
+    temp5 = new mem_node(5);
+    temp5->nodeBuffer.length = 10;
+    aSplay.insert (temp5, mem_hdr::NodeCompare);
+    assert (aSplay.start()->data == temp5);
+    assert (aSplay.end()->data == temp5);
+
+    mem_node *temp0;
+    temp0 = new mem_node(0);
+    temp0->nodeBuffer.length = 5;
+    aSplay.insert (temp0, mem_hdr::NodeCompare);
+    assert (aSplay.start()->data == temp0);
+    assert (aSplay.end()->data == temp5);
+
+    mem_node *temp14;
+    temp14 = new mem_node (14);
+    temp14->nodeBuffer.length = 1;
+    assert (aSplay.find(temp14,mem_hdr::NodeCompare));
+
+    mem_node ref13  (13);
+    assert (!aSplay.find(&ref13,mem_hdr::NodeCompare));
+    ref13.nodeBuffer.length = 1;
+    assert (aSplay.find(&ref13,mem_hdr::NodeCompare));
+}
+
 int
 main (int argc, char *argv)
 {
     testLowAndHigh();
     assert (mem_node::InUseCount() == 0);
+    testSplayOfNodes();
     return 0;
 }

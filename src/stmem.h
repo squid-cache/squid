@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.h,v 1.3 2003/06/24 12:30:59 robertc Exp $
+ * $Id: stmem.h,v 1.4 2003/06/26 12:51:57 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -29,6 +29,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
 #ifndef SQUID_STMEM_H
@@ -55,25 +56,28 @@ public:
     bool hasContigousContentRange(Range<size_t> const &range) const;
     /* success or fail */
     bool write (StoreIOBuffer const &);
+    void dump() const;
+    size_t size() const;
+    /* Not an iterator - thus the start, not begin() */
+    mem_node const *start() const;
+    mem_node *getBlockContainingLocation (size_t location) const;
 
     /* Only for use of MemObject */
     void internalAppend(const char *data, int len);
-    mem_node *head;
-    mem_node *tail;
+
+    static SplayNode<mem_node *>::SPLAYCMP NodeCompare;
 
 private:
-    void unlinkHead();
+    void unlink(mem_node *aNode);
     void makeAppendSpace();
     int appendToNode(mem_node *aNode, const char *data, int maxLength);
     void appendNode (mem_node *aNode);
-    mem_node *getBlockContainingLocation (size_t location) const;
     size_t copyAvailable(mem_node *aNode, size_t location, size_t amount, char *target) const;
     bool unionNotEmpty (StoreIOBuffer const &);
-    mem_node *getHighestBlockBeforeLocation (size_t location) const;
     mem_node *nodeToRecieve(off_t offset);
     size_t writeAvailable(mem_node *aNode, size_t location, size_t amount, char const *source);
     off_t inmem_hi;
-    Splay<mem_node> nodes;
+    Splay<mem_node *> nodes;
 };
 
 #endif /* SQUID_STMEM_H */

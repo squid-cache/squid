@@ -1,5 +1,5 @@
 /*
- * $Id: splay.h,v 1.20 2003/06/24 12:30:59 robertc Exp $
+ * $Id: splay.h,v 1.21 2003/06/26 12:51:57 robertc Exp $
  */
 
 #ifndef SQUID_SPLAY_H
@@ -7,11 +7,17 @@
 
 #ifndef __cplusplus
 /* legacy C bindings - can be removed when mempool is C++ */
-typedef struct _splay_node {
+
+typedef struct _splay_node
+{
     void *data;
+
     struct _splay_node *left;
+
     struct _splay_node *right;
-} splayNode;
+}
+
+splayNode;
 
 typedef int SPLAYCMP(const void **a, const void **b);
 typedef void SPLAYWALKEE(void **nodedata, void *state);
@@ -27,37 +33,61 @@ SQUIDCEXTERN void splay_walk(splayNode *, SPLAYWALKEE *, void *);
 
 
 template <class V>
-class SplayNode {
-  public:
+
+class SplayNode
+{
+
+public:
     typedef V Value;
     typedef int SPLAYCMP(Value const &a, Value const &b);
     typedef void SPLAYFREE(Value &);
     typedef void SPLAYWALKEE(Value const & nodedata, void *state);
     static void DefaultFree (Value &aValue) {aValue->deleteSelf();}
+
     Value data;
     mutable SplayNode<V> *left;
     mutable SplayNode<V> *right;
     void destroy(SPLAYFREE *);
     void walk(SPLAYWALKEE *, void *callerState);
     SplayNode<V> const * start() const;
-    SplayNode<V> * remove(const Value data, SPLAYCMP * compare);
+    SplayNode<V> const * end() const;
+
+    SplayNode<V> * remove
+        (const Value data, SPLAYCMP * compare);
+
     SplayNode<V> * insert(Value data, SPLAYCMP * compare);
+
     SplayNode<V> * splay(const Value &data, SPLAYCMP * compare) const;
 };
 
 typedef SplayNode<void *> splayNode;
 
 template <class V>
-class Splay {
-  public:
+
+class Splay
+{
+
+public:
     typedef V Value;
     typedef int SPLAYCMP(Value const &a, Value const &b);
+    typedef void SPLAYFREE(Value &);
     Splay():head(NULL), elements (0){}
+
     mutable SplayNode<V> * head;
     Value const *find (Value const &, SPLAYCMP *compare) const;
     void insert(Value const &, SPLAYCMP *compare);
-    void remove(Value const &, SPLAYCMP *compare);
+
+    void remove
+        (Value const &, SPLAYCMP *compare);
+
+    void destroy(SPLAYFREE *);
+
     SplayNode<V> const * start() const;
+
+    SplayNode<V> const * end() const;
+
+    size_t size() const;
+
     size_t elements;
 };
 
@@ -65,9 +95,13 @@ class Splay {
 SQUIDCEXTERN int splayLastResult;
 
 SQUIDCEXTERN splayNode *splay_insert(void *, splayNode *, splayNode::SPLAYCMP *);
+
 SQUIDCEXTERN splayNode *splay_delete(const void *, splayNode *, splayNode::SPLAYCMP *);
+
 SQUIDCEXTERN splayNode *splay_splay(const void **, splayNode *, splayNode::SPLAYCMP *);
+
 SQUIDCEXTERN void splay_destroy(splayNode *, splayNode::SPLAYFREE *);
+
 SQUIDCEXTERN void splay_walk(splayNode *, splayNode::SPLAYWALKEE *, void *callerState);
 
 /* inline methods */
@@ -76,12 +110,15 @@ void
 SplayNode<V>::walk(SPLAYWALKEE * walkee, void *state)
 {
     if (this == NULL)
-	return;
+        return;
+
     if (left)
-	left->walk(walkee, state);
+        left->walk(walkee, state);
+
     walkee(data, state);
+
     if (right)
-	right->walk(walkee, state);
+        right->walk(walkee, state);
 }
 
 template<class V>
@@ -89,7 +126,18 @@ SplayNode<V> const *
 SplayNode<V>::start() const
 {
     if (this && left)
-	return left->start();
+        return left->start();
+
+    return this;
+}
+
+template<class V>
+SplayNode<V> const *
+SplayNode<V>::end() const
+{
+    if (this && right)
+        return right->end();
+
     return this;
 }
 
@@ -98,35 +146,45 @@ void
 SplayNode<V>::destroy(SPLAYFREE * free_func)
 {
     if (!this)
-	return;
+        return;
+
     if (left)
-	left->destroy(free_func);
+        left->destroy(free_func);
+
     if (right)
-	right->destroy(free_func);
+        right->destroy(free_func);
+
     free_func(data);
+
     delete this;
 }
 
 template<class V>
 SplayNode<V> *
-SplayNode<V>::remove(Value const dataToRemove, SPLAYCMP * compare)
+SplayNode<V>::remove
+    (Value const dataToRemove, SPLAYCMP * compare)
 {
     if (this == NULL)
-	return NULL;
+        return NULL;
+
     SplayNode<V> *result = splay(dataToRemove, compare);
+
     if (splayLastResult == 0) {	/* found it */
-	SplayNode<V> *newTop;
-	if (result->left == NULL) {
-	    newTop = result->right;
-	} else {
-	    newTop = result->left->splay(dataToRemove, compare);
-	    /* temporary */
-	    newTop->right = result->right;
-	    result->right = NULL;
-	}
-	delete result;
-	return newTop;
+        SplayNode<V> *newTop;
+
+        if (result->left == NULL) {
+            newTop = result->right;
+        } else {
+            newTop = result->left->splay(dataToRemove, compare);
+            /* temporary */
+            newTop->right = result->right;
+            result->right = NULL;
+        }
+
+        delete result;
+        return newTop;
     }
+
     return result;			/* It wasn't there */
 }
 
@@ -137,27 +195,29 @@ SplayNode<V>::insert(Value dataToInsert, SPLAYCMP * compare)
     /* create node to insert */
     SplayNode<V> *newNode = new SplayNode<V>;
     newNode->data = dataToInsert;
+
     if (this == NULL) {
-	splayLastResult = -1;
-	newNode->left = newNode->right = NULL;
-	return newNode;
+        splayLastResult = -1;
+        newNode->left = newNode->right = NULL;
+        return newNode;
     }
-    
+
     SplayNode<V> *newTop = splay(dataToInsert, compare);
+
     if (splayLastResult < 0) {
-	newNode->left = newTop->left;
-	newNode->right = newTop;
-	newTop->left = NULL;
-	return newNode;
+        newNode->left = newTop->left;
+        newNode->right = newTop;
+        newTop->left = NULL;
+        return newNode;
     } else if (splayLastResult > 0) {
-	newNode->right = newTop->right;
-	newNode->left = newTop;
-	newTop->right = NULL;
-	return newNode;
+        newNode->right = newTop->right;
+        newNode->left = newTop;
+        newTop->right = NULL;
+        return newNode;
     } else {
-	/* duplicate entry */
-	delete newNode;
-	return newTop;
+        /* duplicate entry */
+        delete newNode;
+        return newTop;
     }
 }
 
@@ -166,10 +226,11 @@ SplayNode<V> *
 SplayNode<V>::splay(Value const &dataToFind, SPLAYCMP * compare) const
 {
     if (this == NULL) {
-	/* can't have compared successfully :} */
-	splayLastResult = -1;
-	return NULL;
+        /* can't have compared successfully :} */
+        splayLastResult = -1;
+        return NULL;
     }
+
     SplayNode<V> N;
     SplayNode<V> *l;
     SplayNode<V> *r;
@@ -178,40 +239,49 @@ SplayNode<V>::splay(Value const &dataToFind, SPLAYCMP * compare) const
     l = r = &N;
 
     SplayNode<V> *top = const_cast<SplayNode<V> *>(this);
+
     for (;;) {
-	splayLastResult = compare(dataToFind, top->data);
-	if (splayLastResult < 0) {
-	    if (top->left == NULL)
-		break;
-	    if ((splayLastResult = compare(dataToFind, top->left->data)) < 0) {
-		y = top->left;	/* rotate right */
-		top->left = y->right;
-		y->right = top;
-		top = y;
-		if (top->left == NULL)
-		    break;
-	    }
-	    r->left = top;	/* link right */
-	    r = top;
-	    top = top->left;
-	} else if (splayLastResult > 0) {
-	    if (top->right == NULL)
-		break;
-	    if ((splayLastResult = compare(dataToFind, top->right->data)) > 0) {
-		y = top->right;	/* rotate left */
-		top->right = y->left;
-		y->left = top;
-		top = y;
-		if (top->right == NULL)
-		    break;
-	    }
-	    l->right = top;	/* link left */
-	    l = top;
-	    top = top->right;
-	} else {
-	    break;
-	}
+        splayLastResult = compare(dataToFind, top->data);
+
+        if (splayLastResult < 0) {
+            if (top->left == NULL)
+                break;
+
+            if ((splayLastResult = compare(dataToFind, top->left->data)) < 0) {
+                y = top->left;	/* rotate right */
+                top->left = y->right;
+                y->right = top;
+                top = y;
+
+                if (top->left == NULL)
+                    break;
+            }
+
+            r->left = top;	/* link right */
+            r = top;
+            top = top->left;
+        } else if (splayLastResult > 0) {
+            if (top->right == NULL)
+                break;
+
+            if ((splayLastResult = compare(dataToFind, top->right->data)) > 0) {
+                y = top->right;	/* rotate left */
+                top->right = y->left;
+                y->left = top;
+                top = y;
+
+                if (top->right == NULL)
+                    break;
+            }
+
+            l->right = top;	/* link left */
+            l = top;
+            top = top->right;
+        } else {
+            break;
+        }
     }
+
     l->right = top->left;	/* assemble */
     r->left = top->right;
     top->left = N.right;
@@ -224,8 +294,10 @@ typename Splay<V>::Value const *
 Splay<V>::find (Value const &value, SPLAYCMP *compare) const
 {
     head = head->splay(value, compare);
+
     if (splayLastResult != 0)
-	return NULL;
+        return NULL;
+
     return &head->data;
 }
 
@@ -240,19 +312,54 @@ Splay<V>::insert(Value const &value, SPLAYCMP *compare)
 
 template <class V>
 void
-Splay<V>::remove(Value const &value, SPLAYCMP *compare)
+Splay<V>::remove
+    (Value const &value, SPLAYCMP *compare)
 {
     assert (find (value, compare));
-    head = head->remove(value, compare);
+
+    head = head->remove
+           (value, compare);
+
     --elements;
 }
 
 template <class V>
-SplayNode<V> const * 
-Splay<V>:: start() const{
+SplayNode<V> const *
+Splay<V>:: start() const
+{
     if (head)
-	return head->start();
+        return head->start();
+
     return NULL;
+}
+
+template <class V>
+SplayNode<V> const *
+Splay<V>:: end() const
+{
+    if (head)
+        return head->end();
+
+    return NULL;
+}
+
+template <class V>
+void
+Splay<V>:: destroy(SPLAYFREE *free_func)
+{
+    if (head)
+        head->destroy(free_func);
+
+    head = NULL;
+
+    elements = 0;
+}
+
+template <class V>
+size_t
+Splay<V>::size() const
+{
+    return elements;
 }
 
 #endif

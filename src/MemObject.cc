@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.8 2003/06/24 12:42:25 robertc Exp $
+ * $Id: MemObject.cc,v 1.9 2003/06/26 12:51:57 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -176,10 +176,7 @@ MemObject::write ( StoreIOBuffer writeBuffer, STMCB *callback, void *callbackDat
 void
 MemObject::dump() const
 {
-    debug(20, 1) ("MemObject->data.head: %p\n",
-                  data_hdr.head);
-    debug(20, 1) ("MemObject->data.tail: %p\n",
-                  data_hdr.tail);
+    data_hdr.dump();
 #if 0
     /* do we want this one? */
     debug(20, 1) ("MemObject->data.origin_offset: %d\n",
