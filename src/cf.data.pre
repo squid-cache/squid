@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.270 2002/07/03 07:12:40 hno Exp $
+# $Id: cf.data.pre,v 1.271 2002/07/03 08:52:34 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -3634,7 +3634,7 @@ DEFAULT: off
 DOC_START
 	Normally Squid tries to use parents for most requests. If you by some
 	reason like it to first try going direct and only use a parent if
-	going direct fails then set this to off.
+	going direct fails then set this to on.
 
 	By combining nonhierarchical_direct off and prefer_direct on you
 	can set up Squid to use a parent as a backup path if going direct
