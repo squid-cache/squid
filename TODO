@@ -8,7 +8,6 @@ Our Todo List
 	interesting since we just optimized the LRU replacement with a 
 	doubly-linked list.
 (1) **	Send full HTTP requests in ICP messages (DW)
-(1)	SSL doesn't work with Proxy Authentication
 
 (2)	be more persistent in forwarding requests; return fewer error pages
 (2)	Fix some problems with peer-selection.
@@ -119,3 +118,4 @@ DONE:
 		- Replace bzero with memset
 		- Replace bcopy with xmemcpy
 (4) **	FTP PUT (KA)
+(1)	SSL doesn't work with Proxy Authentication

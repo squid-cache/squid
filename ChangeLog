@@ -1,3 +1,5 @@
+Changes to squid-1.2.beta21 (May 22, 1998):
+
 	- Added Italian error pages by Alessio Bragadini.
 	- Added Estonian error pages by Toomas Soome.
 	- Added Russian (koi-r) error pages by Andrew L. Davydov.
