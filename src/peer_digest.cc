@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.1 1998/04/08 22:48:08 rousskov Exp $
+ * $Id: peer_digest.cc,v 1.2 1998/04/08 22:52:38 rousskov Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -50,7 +50,7 @@ static int peerDigestUpdateMask(peer *peer, int offset, const char *buf, int siz
 #define StoreDigestCBlockSize sizeof(StoreDigestCBlock)
 
 /* min interval for requesting digests from the same peer */
-static const time_t PeerDigestRequestMinGap = 1 * 60; /* seconds */
+static const time_t PeerDigestRequestMinGap = 15 * 60; /* seconds */
 
 void 
 peerDigestInit(peer *p)

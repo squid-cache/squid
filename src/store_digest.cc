@@ -1,5 +1,5 @@
 /*
- * $Id: store_digest.cc,v 1.5 1998/04/08 22:51:17 rousskov Exp $
+ * $Id: store_digest.cc,v 1.6 1998/04/08 22:52:38 rousskov Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -48,9 +48,9 @@ typedef struct {
  */
 
 /* how often we want to rebuild the digest, seconds */
-static const time_t StoreDigestRebuildPeriod = 6 * 60;
+static const time_t StoreDigestRebuildPeriod = 60 * 60;
 /* how often we want to rewrite the digest, seconds */
-static const time_t StoreDigestRewritePeriod = 6 * 60;
+static const time_t StoreDigestRewritePeriod = 60 * 60;
 /* how many bytes to swap out at a time */
 static const int StoreDigestSwapOutChunkSize = SM_PAGE_SIZE;
 /* portion (0,1] of a hash table to be rescanned at a time */
