@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.32 2002/09/26 21:13:52 robertc Exp $
+#  $Id: Makefile.am,v 1.33 2002/09/29 12:55:52 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -39,11 +39,15 @@ endif
 if ENABLE_UNLINKD
 UNLINKDSOURCE = unlinkd.c
 UNLINKD = unlinkd
-UNLINKD_EXE = unlinkd$(EXEEXT)
 else
 UNLINKDSOURCE = 
 UNLINKD = 
-UNLINKD_EXE =
+endif
+
+if ENABLE_PINGER
+PINGER = pinger
+else
+PINGER = 
 endif
 
 if ENABLE_SSL
@@ -79,7 +83,7 @@ bin_PROGRAMS = \
 	squidclient
 
 libexec_PROGRAMS = \
-	@OPT_PINGER@ \
+	$(PINGER) \
 	$(DNSSERVER) \
 	$(UNLINKD) \
 	cachemgr$(CGIEXT)
@@ -282,16 +286,16 @@ EXTRA_DIST = \
 DEFAULT_PREFIX		= $(prefix)
 DEFAULT_CONFIG_FILE     = $(sysconfdir)/squid.conf
 DEFAULT_MIME_TABLE	= $(sysconfdir)/mime.conf
-DEFAULT_DNSSERVER       = $(libexecdir)/@OPT_DNSSERVER_EXE@
+DEFAULT_DNSSERVER       = $(libexecdir)/dnsserver$(EXEEXT)
 DEFAULT_LOG_PREFIX	= $(localstatedir)/logs
 DEFAULT_CACHE_LOG       = $(DEFAULT_LOG_PREFIX)/cache.log
 DEFAULT_ACCESS_LOG      = $(DEFAULT_LOG_PREFIX)/access.log
 DEFAULT_STORE_LOG       = $(DEFAULT_LOG_PREFIX)/store.log
 DEFAULT_PID_FILE        = $(DEFAULT_LOG_PREFIX)/squid.pid
 DEFAULT_SWAP_DIR        = $(localstatedir)/cache
-DEFAULT_PINGER		= $(libexecdir)/@OPT_PINGER_EXE@
-DEFAULT_UNLINKD		= $(libexecdir)/$(UNLINKD_EXE)
-DEFAULT_DISKD		= $(libexecdir)/@OPT_DISKD_EXE@
+DEFAULT_PINGER		= $(libexecdir)/pinger$(EXEEXT)
+DEFAULT_UNLINKD		= $(libexecdir)/unlinkd$(EXEEXT)
+DEFAULT_DISKD		= $(libexecdir)/diskd$(EXEEXT)
 DEFAULT_ICON_DIR	= $(datadir)/icons
 DEFAULT_ERROR_DIR	= $(datadir)/errors/@ERR_DEFAULT_LANGUAGE@
 DEFAULT_MIB_PATH	= $(datadir)/mib.txt
