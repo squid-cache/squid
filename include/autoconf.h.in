@@ -85,6 +85,9 @@
 /* Define if you have the bcopy function.  */
 #undef HAVE_BCOPY
 
+/* Define if you have the fchmod function.  */
+#undef HAVE_FCHMOD
+
 /* Define if you have the getdtablesize function.  */
 #undef HAVE_GETDTABLESIZE
 
