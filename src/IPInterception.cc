@@ -1,6 +1,6 @@
 
 /*
- * $Id: IPInterception.cc,v 1.7 2003/08/03 08:09:26 robertc Exp $
+ * $Id: IPInterception.cc,v 1.8 2004/12/21 16:17:59 hno Exp $
  *
  * DEBUG: section 89    NAT / IP Interception 
  * AUTHOR: Robert Collins
@@ -211,7 +211,7 @@ clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct s
         return -1;
     } else
     {
-        int natted = me.sin_addr.s_addr != nt.rdaddr.v4.s_addr;
+        int natted = me.sin_addr.s_addr != nl.rdaddr.v4.s_addr;
         dst->sin_family = AF_INET;
         dst->sin_port = nl.rdport;
         dst->sin_addr = nl.rdaddr.v4;

@@ -1,5 +1,5 @@
 /*
- * $Id: radix.c,v 1.20 2003/06/19 13:12:00 robertc Exp $
+ * $Id: radix.c,v 1.21 2004/12/21 16:17:58 hno Exp $
  *
  * DEBUG: section 53     Radix tree data structure implementation
  * AUTHOR: NetBSD Derived
@@ -96,7 +96,7 @@
 #endif
 #if HAVE_GNUMALLOC_H
 #include <gnumalloc.h>
-#elif HAVE_MALLOC_H && !defined(_SQUID_FREEBSD_) && !defined(_SQUID_NEXT_)
+#elif HAVE_MALLOC_H
 #include <malloc.h>
 #endif
 #if HAVE_MEMORY_H

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.105 2003/08/11 13:07:56 robertc Exp $
+ * $Id: cachemgr.cc,v 1.106 2004/12/21 16:17:59 hno Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -61,7 +61,7 @@
 #endif
 #if HAVE_GNUMALLOC_H
 #include <gnumalloc.h>
-#elif HAVE_MALLOC_H && !defined(_SQUID_FREEBSD_) && !defined(_SQUID_NEXT_)
+#elif HAVE_MALLOC_H
 #include <malloc.h>
 #endif
 #if HAVE_MEMORY_H

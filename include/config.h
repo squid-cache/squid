@@ -1,5 +1,5 @@
 /*
- * $Id: config.h,v 1.13 2004/12/20 16:30:29 robertc Exp $
+ * $Id: config.h,v 1.14 2004/12/21 16:17:58 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -107,6 +107,9 @@
 
 #elif defined(__NetBSD__)
 #define _SQUID_NETBSD_
+
+#elif defined(__OpenBSD__)
+#define _SQUID_OPENBSD_
 
 #elif defined(__CYGWIN32__)  || defined(__CYGWIN__)
 #define _SQUID_CYGWIN_
@@ -307,6 +310,13 @@ typedef union {
 	uint32_t	_l[4];
 } upad128_t;
 #endif
+#endif
+
+/* 
+ * Don't allow inclusion of malloc.h on FreeBSD, Next and OpenBSD 
+ */
+#if defined(HAVE_MALLOC_H) && (defined(_SQUID_FREEBSD_) || defined(_SQUID_NEXT_) || defined(_SQUID_OPENBSD_))
+#undef HAVE_MALLOC_H
 #endif
 
 #if !defined(CACHEMGR_HOSTNAME)

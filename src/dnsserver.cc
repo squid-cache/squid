@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.67 2004/12/20 16:30:35 robertc Exp $
+ * $Id: dnsserver.cc,v 1.68 2004/12/21 16:17:59 hno Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -61,7 +61,7 @@
 #endif
 #if HAVE_GNUMALLOC_H
 #include <gnumalloc.h>
-#elif HAVE_MALLOC_H && !defined(_SQUID_FREEBSD_) && !defined(_SQUID_NEXT_)
+#elif HAVE_MALLOC_H
 #include <malloc.h>
 #endif
 #if HAVE_MEMORY_H

@@ -1,6 +1,6 @@
 
 /*
- * $Id: Profiler.c,v 1.3 2003/02/03 21:33:14 robertc Exp $
+ * $Id: Profiler.c,v 1.4 2004/12/21 16:17:58 hno Exp $
  *
  * DEBUG: section 81     CPU Profiling Routines
  * AUTHOR: Andres Kroonmaa, Sep.2000
@@ -112,7 +112,7 @@
 
 #if HAVE_GNUMALLLOC_H
 #include <gnumalloc.h>
-#elif HAVE_MALLOC_H && !defined(_SQUID_FREEBSD_) && !defined(_SQUID_NEXT_)
+#elif HAVE_MALLOC_H
 #include <malloc.h>
 #endif
 #if HAVE_UNISTD_H
