@@ -1,11 +1,4 @@
-Squid-2.5:
-
-  - WCCP fixes (done)
-  - Run a polygraph test of aufs
-  - Write release notes (done)
-  - HTML tidyups from "PsychoTekk / C.L." (done)
-
-Squid-2.6:
+Squid-3.0:
 
   - Windows port
   - ESI client side streams support framework
@@ -22,7 +15,7 @@ Squid-2.6:
   - Generalize socket binding to allow for multipe ICP/HTCP/SNMP sockets
     (get rid of udp_incoming_address)
 
-Squid-2.6 if finished in time:
+Squid-3.0 if finished in time:
 
   - ESI
   - Customized logging capabilities
