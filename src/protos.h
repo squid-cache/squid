@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.435 2002/04/14 21:51:36 hno Exp $
+ * $Id: protos.h,v 1.436 2002/04/21 21:23:15 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -291,7 +291,7 @@ extern void ftpStart(FwdState *);
 extern char *ftpUrlWith2f(const request_t *);
 
 extern void gopherStart(FwdState *);
-extern int gopherCachable(const char *);
+extern int gopherCachable(const request_t *);
 
 
 extern void whoisStart(FwdState *);
