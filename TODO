@@ -3,7 +3,6 @@ Our Todo List
 (1) is high priority, (5) is low priority
 ==============================================================================
 
-(1) reconfigure (SIGHUP) causes problems with Config.cacheSwap.swapDirs[].
 (1) A customizable cache replacement policy.  Ugh, this could be
     interesting since we just optimized the LRU replacement with a 
     doubly-linked list.
@@ -22,7 +21,8 @@ Our Todo List
 (3) hit metering
 (3) ETag support (makes metadata bigger--ack!)
 (3) AS # routing
-(3) URLs --> MD5?
+	- whois -h whois.ra.net '\!gAS194'
+	- Stevens V2 Ch.18
 (3) Efficient public peer access control *without ACLs*
     Bill Wichers <billw@unix0.waveform.net>
     Dave Zarzycki <zarzycki@ricochet.net>
@@ -32,11 +32,13 @@ Our Todo List
     #    x milliseconds, then deny.
     distant_peer_deny   200  75  10
 (3) Resource limits.
+(3) SIGHUP should reread error text files
 
 (4) support ftp://host/pub;type=d
 (4) FTP PUT
 (4) Everywhere that we use 'pattern' or such, use ACL elements instead.
     stoplist_pattern, refresh_pattern, ...
+(4) Base stoplists on ACLs.
 
 (5) X-Proxy-hops header?
 (5) internalize redirectors?
@@ -63,3 +65,7 @@ DONE:
 + make USE_PROXY_AUTH standard
 + single linked list for disk LRU replacement
 + Incorporate Pelletier's latest retry patch for 1.1
+(3) URLs --> MD5?
+(1) reconfigure (SIGHUP) causes problems with Config.cacheSwap.swapDirs[].
+(1) I think we're assuming persistent connections and not looking at
+    the reply headers.

@@ -4,6 +4,12 @@
 	  not support Persistent connections then this ratio will tend
 	  toward zero.  If the ratio is less than 50% after 10 requests
 	  then we'll stop sending Keep-Alive.
+	- Proper support for %nn escapes in FTP, and numerous
+	  other fixes (Henrik Nordstrom).
+	- Support for Secure Hash Algorithm and framework for other
+	  hash functions as cache keys.
+	- Fixed SSL snprintf() bug which broke SSL proxying.
+	- Fixed store_dir swap log bug from reconfigure (SIGHUP).
 
 Changes to squid-1.2.beta4 (Oct 30, 1997):
 
@@ -26,7 +32,7 @@ Changes to squid-1.2.beta3 (Oct 29, 1997):
 	
 Changes to squid-1.2.beta2 (Oct 28, 1997):
 
-	- Fixed aiops.c and async_iu.c so that they actually compile
+	- Fixed aiops.c and async_io.c so that they actually compile
 	  with USE_ASYNC_IO (Arjan de Vet).
 	- Fixed errState->errno causing problems with some macros
 	  (Michael O'Reilly).
