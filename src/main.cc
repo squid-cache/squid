@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.293 1999/04/19 04:45:05 wessels Exp $
+ * $Id: main.cc,v 1.294 1999/04/19 05:00:19 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -460,6 +460,7 @@ mainInitialize(void)
 	unlinkdInit();
 	urlInitialize();
 	cachemgrInit();
+	eventInit();	/* eventInit() before statInit() */
 	statInit();
 	storeInit();
 	mainSetCwd();
@@ -467,7 +468,6 @@ mainInitialize(void)
 	do_mallinfo = 1;
 	mimeInit(Config.mimeTablePathname);
 	pconnInit();
-	eventInit();
 	refreshInit();
 #if DELAY_POOLS
 	delayPoolsInit();
