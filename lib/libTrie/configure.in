@@ -29,7 +29,8 @@ fi
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_MAKE_SET
-AM_INIT_AUTOMAKE
+# for old automakes - like squid-cache.orgs!
+AM_INIT_AUTOMAKE(libTrie, 0.1)
 AM_MAINTAINER_MODE
 AC_PROG_RANLIB
 
