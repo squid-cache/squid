@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.361 2000/11/13 12:25:13 adrian Exp $
+ * $Id: structs.h,v 1.362 2000/12/05 06:24:00 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1043,6 +1043,7 @@ struct _peer {
 	time_t last_connect_failure;
 	time_t last_connect_probe;
 	int logged_state;	/* so we can print dead/revived msgs */
+	int conn_open;		/* current opened connections */
     } stats;
     struct {
 	int version;
@@ -1109,6 +1110,7 @@ struct _peer {
 #endif
     char *login;		/* Proxy authorization */
     time_t connect_timeout;
+    int max_conn;
 };
 
 struct _net_db_name {
