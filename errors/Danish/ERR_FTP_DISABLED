@@ -1,0 +1,22 @@
+<HTML><HEAD>
+<TITLE>FEJL: Den angivne URL kunne ikke hentes</TITLE>
+<META CONTENT="text/html; charset=iso-8859-1">
+</HEAD><BODY>
+<H1>FEJL</H1>
+<H2>Den angivne URL kunne ikke hentes</H2>
+<HR>
+<P>
+Under hentning af f&oslash;gende URL:
+<A HREF="%U">%U</A>
+<P>
+Opstod f&oslash;lgende fejl:
+<UL>
+<LI>
+<STRONG>
+FTP er sl&aring;et fra
+</STRONG>
+</UL>
+
+<P>
+Denne cache underst&oslash;tter ikke FTP.
+</P>

@@ -1,0 +1,34 @@
+<HTML><HEAD>
+<TITLE>FEJL: Cache Adgang N&aelig;gtet</TITLE>
+<META CONTENT="text/html; charset=iso-8859-1">
+</HEAD><BODY>
+<H1>FEJL</H1>
+<H2>Cache Adgang N&aelig;gtet</H2>
+<HR>
+<P>
+Under hentning af f&oslash;gende URL:
+<A HREF="%U">%U</A>
+<P>
+Opstod f&oslash;lgende fejl:
+<UL>
+<LI>
+<STRONG>
+Cache Adgang N&aelig;gtet.
+</STRONG>
+</UL>
+</P>
+
+<P>Du har desv&aelig;rre ikke lov til at hente:
+<PRE>    %U</PRE>
+fra denne cache f&oslash;rend du har autenticieret dig selv.
+</P>
+
+<P>
+Du er n&oslash;dt til at bruge Netscape version 2.0 eller bedre, 
+Internet Explorer version 3.0 eller bedre, eller en browser der 
+opfylder HTTP/1.1 standarden. Kontakt 
+<A HREF="mailto:%w">cache administratoren</a> hvis du har problemer 
+med at autenticiere dig eller 
+<A HREF="http://%h/cgi-bin/chpasswd.cgi\">skift</a> dit
+password.
+</P>

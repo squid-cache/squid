@@ -1,0 +1,23 @@
+<HTML><HEAD>
+<TITLE>FEJL: Den angivne URL kunne ikke hentes</TITLE>
+<META CONTENT="text/html; charset=iso-8859-1">
+</HEAD><BODY>
+<H1>FEJL</H1>
+<H2>Den angivne URL kunne ikke hentes</H2>
+<HR>
+<P>
+Under hentning af f&oslash;gende URL:
+<A HREF="%U">%U</A>
+<P>
+Opstod f&oslash;lgende fejl:
+<UL>
+<LI>
+<STRONG>
+Videresendelse n&aelig;gtet.
+</STRONG>
+
+<P>
+Denne cache vil ikke videresende din foresp&oslash;rgsel fordi
+den pr&oslash;ver at opretholde et s&oslash;skendeforhold. M&aring;ske
+er klienten p&aring; %i en fejlkonfigureret cache.
+</P>

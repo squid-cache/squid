@@ -1,0 +1,26 @@
+<HTML><HEAD>
+<TITLE>FEJL: FTP upload fejlede</TITLE>
+<META CONTENT="text/html; charset=iso-8859-1">
+</HEAD><BODY>
+<H1>FEJL</H1>
+<H2>FTP PUT/upload fejlede</H2>
+<HR>
+<P>
+Under udf&oslash;relse af PUT kommando (sending) p&aring; 
+f&oslash;lgende URL:
+<A HREF="%U">%U</A>
+<P>
+sendte proxy'en Squid f&oslash;lgende FTP kommando:
+<PRE><STRONG>
+        %f
+</STRONG></PRE>
+og fik dette svar:
+<PRE><STRONG>
+        %F
+</STRONG></PRE>
+<P>
+Dette betyder at:
+<PRE>
+Du skal checke sti, rettigheder, diskplads og eventuelt pr&oslash;ve igen.
+</PRE>
+<P>

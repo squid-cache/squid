@@ -1,0 +1,25 @@
+<HTML><HEAD>
+<TITLE>FEJL: Den angivne URL kunne ikke hentes</TITLE>
+<META CONTENT="text/html; charset=iso-8859-1">
+</HEAD><BODY>
+<H1>FEJL</H1>
+<H2>Den angivne URL kunne ikke hentes</H2>
+<HR>
+<P>
+Under hentning af f&oslash;gende URL:
+<A HREF="%U">%U</A>
+<P>
+Opstod f&oslash;lgende fejl:
+<UL>
+<LI>
+<STRONG>
+Dokumentet blev ikke fundet i cachen og <code>only-if-cached</code>
+(kun-hvis-gemt-i-cachen) direktivet var specificeret.
+</STRONG>
+</UL>
+<P>
+Du har sendt en foresp&oslash;rgsel med en <code>only-if-cached</code>
+cache kontrol direktiv. Dokumentet blev ikke fundet i cachen, <em>eller</em>
+det kr&aelig;ver en bekr&aelig;ftelse af gyldighed som bliver forbudt
+af <code>only-if-cached</code> direktivet.
+</P>
