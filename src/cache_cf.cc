@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.156 1996/12/17 04:06:02 wessels Exp $
+ * $Id: cache_cf.cc,v 1.157 1996/12/17 07:16:51 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -908,7 +908,7 @@ parseCacheAnnounceLine(void)
     GetInteger(i);
     Config.Announce.rate = i * 3600;	/* hours to seconds */
     if (Config.Announce.rate > 0)
-       Config.Announce.on = 1;
+	Config.Announce.on = 1;
 }
 
 static void

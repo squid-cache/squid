@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.180 1996/12/15 03:29:44 wessels Exp $
+ * $Id: store.cc,v 1.181 1996/12/17 07:16:58 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -666,6 +666,11 @@ storeGeneratePublicKey(const char *url, method_t method)
 	break;
     case METHOD_CONNECT:
 	sprintf(key_temp_buffer, "/connect/%s", url);
+	return key_temp_buffer;
+	/* NOTREACHED */
+	break;
+    case METHOD_TRACE:
+	sprintf(key_temp_buffer, "/trace/%s", url);
 	return key_temp_buffer;
 	/* NOTREACHED */
 	break;

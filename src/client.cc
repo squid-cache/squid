@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.15 1996/11/06 23:14:23 wessels Exp $
+ * $Id: client.cc,v 1.16 1996/12/17 07:16:52 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -139,6 +139,7 @@ main(int argc, char *argv[])
     const char *method = "GET";
     extern char *optarg;
     time_t ims = 0;
+    int max_forwards = -1;
 
     /* set the defaults */
     strcpy(hostname, "localhost");
@@ -152,7 +153,7 @@ main(int argc, char *argv[])
 	strcpy(url, argv[argc - 1]);
 	if (url[0] == '-')
 	    usage(argv[0]);
-	while ((c = getopt(argc, argv, "fsrnp:c:h:i:m:?")) != -1)
+	while ((c = getopt(argc, argv, "fsrnp:c:h:i:m:t:?")) != -1)
 	    switch (c) {
 	    case 'h':		/* host:arg */
 	    case 'c':		/* backward compat */
@@ -176,6 +177,10 @@ main(int argc, char *argv[])
 		break;
 	    case 'm':
 		method = xstrdup(optarg);
+		break;
+	    case 't':
+		method = xstrdup("TRACE");
+		max_forwards = atoi(optarg);
 		break;
 	    case '?':		/* usage */
 	    default:
@@ -209,6 +214,10 @@ main(int argc, char *argv[])
     strcat(msg, buf);
     if (ims) {
 	sprintf(buf, "If-Modified-Since: %s\r\n", mkrfc1123(ims));
+	strcat(msg, buf);
+    }
+    if (max_forwards > -1) {
+	sprintf(buf, "Max-Forwards: %d\r\n", max_forwards);
 	strcat(msg, buf);
     }
     sprintf(buf, "\r\n");

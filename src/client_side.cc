@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.74 1996/12/14 18:56:03 wessels Exp $
+ * $Id: client_side.cc,v 1.75 1996/12/17 07:16:53 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -558,4 +558,31 @@ modifiedSince(StoreEntry * entry, request_t * request)
 	debug(33, 3, "--> YES: same LMT, different length\n");
 	return 1;
     }
+}
+
+char *
+clientConstructTraceEcho(icpStateData * icpState)
+{
+    LOCAL_ARRAY(char, line, 256);
+    LOCAL_ARRAY(char, buf, 8192);
+    size_t len;
+    memset(buf, '\0', 8192);
+    sprintf(buf, "HTTP/1.0 200 OK\r\n");
+    sprintf(line, "Date: %s\r\n", mkrfc1123(squid_curtime));
+    strcat(buf, line);
+    sprintf(line, "Server: Squid/%s\r\n", SQUID_VERSION);
+    strcat(buf, line);
+    sprintf(line, "Content-Type: message/http\r\n");
+    strcat(buf, line);
+    strcat(buf, "\r\n");
+    len = strlen(buf);
+    httpBuildRequestHeader(icpState->request,
+	icpState->request,
+	NULL,			/* entry */
+	icpState->request_hdr,
+	NULL,			/* in_len */
+	buf + len,
+	8192 - len,
+	icpState->fd);
+    return buf;
 }
