@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.165 1997/06/01 18:19:52 wessels Exp $
+ * $Id: http.cc,v 1.166 1997/06/01 23:22:20 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -200,7 +200,6 @@ static struct {
 
 static CNCB httpConnectDone;
 static CWCB httpSendComplete;
-static IPH httpConnect;
 static PF httpReadReply;
 static PF httpSendRequest;
 static PF httpStateFree;
@@ -221,8 +220,6 @@ httpStateFree(int fd, void *data)
 	put_free_8k_page(httpState->reply_hdr);
 	httpState->reply_hdr = NULL;
     }
-    if (httpState->ip_lookup_pending)
-	ipcacheUnregister(httpState->request->host, httpState);
     requestUnlink(httpState->request);
     requestUnlink(httpState->orig_request);
     xfree(httpState);
@@ -871,35 +868,13 @@ proxyhttpStart(request_t * orig_request,
     comm_add_close_handler(httpState->fd,
 	httpStateFree,
 	httpState);
-    commSetTimeout(fd, Config.Timeout.read, httpTimeout, httpState);
     request->method = orig_request->method;
     xstrncpy(request->host, e->host, SQUIDHOSTNAMELEN);
     request->port = e->http_port;
     xstrncpy(request->urlpath, entry->url, MAX_URL);
     BIT_SET(request->flags, REQ_PROXYING);
-    httpState->ip_lookup_pending = 1;
-    ipcache_nbgethostbyname(request->host,
-	httpState->fd,
-	httpConnect,
-	httpState);
-}
-
-static void
-httpConnect(int fd, const ipcache_addrs * ia, void *data)
-{
-    HttpStateData *httpState = data;
-    request_t *request = httpState->request;
-    StoreEntry *entry = httpState->entry;
-    httpState->ip_lookup_pending = 0;
-    if (ia == NULL) {
-	debug(11, 4, "httpConnect: Unknown host: %s\n", request->host);
-	squid_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
-	comm_close(fd);
-	return;
-    }
-    /* Open connection. */
     commSetTimeout(fd, Config.Timeout.connect, httpTimeout, httpState);
-    commConnectStart(fd,
+    commConnectStart(httpState->fd,
 	request->host,
 	request->port,
 	httpConnectDone,
@@ -912,7 +887,11 @@ httpConnectDone(int fd, int status, void *data)
     HttpStateData *httpState = data;
     request_t *request = httpState->request;
     StoreEntry *entry = httpState->entry;
-    if (status != COMM_OK) {
+    if (status == COMM_ERR_DNS) {
+	debug(11, 4, "httpConnectDone: Unknown host: %s\n", request->host);
+	squid_error_entry(entry, ERR_DNS_FAIL, dns_error_message);
+	comm_close(fd);
+    } else if (status != COMM_OK) {
 	squid_error_entry(entry, ERR_CONNECT_FAIL, xstrerror());
 	if (httpState->neighbor)
 	    peerCheckConnectStart(httpState->neighbor);
@@ -954,11 +933,11 @@ httpStart(request_t * request, StoreEntry * entry)
     comm_add_close_handler(httpState->fd,
 	httpStateFree,
 	httpState);
-    commSetTimeout(fd, Config.Timeout.read, httpTimeout, httpState);
-    httpState->ip_lookup_pending = 1;
-    ipcache_nbgethostbyname(request->host,
-	httpState->fd,
-	httpConnect,
+    commSetTimeout(fd, Config.Timeout.connect, httpTimeout, httpState);
+    commConnectStart(httpState->fd,
+	request->host,
+	request->port,
+	httpConnectDone,
 	httpState);
 }
 

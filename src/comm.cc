@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.155 1997/05/26 04:04:56 wessels Exp $
+ * $Id: comm.cc,v 1.156 1997/06/01 23:22:17 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -154,6 +154,7 @@ static void commConnectFree _PARAMS((int fd, void *data));
 static void commConnectHandle _PARAMS((int fd, void *data));
 static void commHandleWrite _PARAMS((int fd, void *data));
 static int fdIsHttpOrIcp _PARAMS((int fd));
+static IPH commConnectDnsHandle;
 
 static struct timeval zero_tv;
 
@@ -166,7 +167,6 @@ commCancelWriteHandler(int fd)
 	CommWriteState->handler_data = NULL;
     }
 }
-
 
 static void
 CommWriteStateCallbackAndFree(int fd, int code)
@@ -321,6 +321,19 @@ commConnectStart(int fd, const char *host, u_short port, CNCB * callback, void *
     cs->callback = callback;
     cs->data = data;
     comm_add_close_handler(fd, commConnectFree, cs);
+    ipcache_nbgethostbyname(host, fd, commConnectDnsHandle, cs);
+}
+
+static void
+commConnectDnsHandle(int fd, const ipcache_addrs * ia, void *data)
+{
+    ConnectStateData *cs = data;
+    if (ia == NULL) {
+	debug(5, 3, "commConnectDnsHandle: Unknown host: %s\n", cs->host);
+	cs->callback(fd, COMM_ERR_DNS, cs->data);
+	return;
+    }
+    cs->in_addr = ia->in_addrs[ia->cur];
     commConnectHandle(fd, cs);
 }
 
@@ -332,24 +345,34 @@ commConnectFree(int fd, void *data)
     xfree(cs);
 }
 
+static int
+commRetryConnect(int fd, ConnectStateData * connectState)
+{
+    int fd2;
+    if (++connectState->tries == 4)
+	return 0;
+    fd2 = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd2 < 0) {
+	debug(5, 0, "commRetryConnect: socket: %s\n", xstrerror());
+	return 0;
+    }
+    if (dup2(fd2, fd) < 0) {
+	debug(5, 0, "commRetryConnect: dup2: %s\n", xstrerror());
+	return 0;
+    }
+    commSetNonBlocking(fd);
+    close(fd2);
+    return 1;
+}
+
 /* Connect SOCK to specified DEST_PORT at DEST_HOST. */
 static void
 commConnectHandle(int fd, void *data)
 {
     ConnectStateData *connectState = data;
-    const ipcache_addrs *ia = NULL;
     if (connectState->S.sin_addr.s_addr == 0) {
-	ia = ipcache_gethostbyname(connectState->host, IP_BLOCKING_LOOKUP);
-	if (ia == NULL) {
-	    debug(5, 3, "commConnectHandle: Unknown host: %s\n",
-		connectState->host);
-	    connectState->callback(fd,
-		COMM_ERROR,
-		connectState->data);
-	    return;
-	}
 	connectState->S.sin_family = AF_INET;
-	connectState->S.sin_addr = ia->in_addrs[ia->cur];
+	connectState->S.sin_addr = connectState->in_addr;
 	connectState->S.sin_port = htons(connectState->port);
 	if (Config.Log.log_fqdn)
 	    fqdncache_gethostbyaddr(connectState->S.sin_addr, FQDN_LOOKUP_IF_MISS);
@@ -369,8 +392,19 @@ commConnectHandle(int fd, void *data)
 	connectState->callback(fd, COMM_OK, connectState->data);
 	break;
     default:
-	ipcacheRemoveBadAddr(connectState->host, connectState->S.sin_addr);
-	connectState->callback(fd, COMM_ERROR, connectState->data);
+	if (commRetryConnect(fd, connectState)) {
+	    debug(5, 1, "Retrying connection to %s: %s\n",
+		connectState->host, xstrerror());
+	    connectState->S.sin_addr.s_addr = 0;
+	    ipcacheCycleAddr(connectState->host);
+	    ipcache_nbgethostbyname(connectState->host,
+		fd,
+		commConnectDnsHandle,
+		connectState);
+	} else {
+	    ipcacheRemoveBadAddr(connectState->host, connectState->S.sin_addr);
+	    connectState->callback(fd, COMM_ERR_CONNECT, connectState->data);
+	}
 	break;
     }
 }
@@ -419,8 +453,6 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
     if (connect(sock, (struct sockaddr *) address, sizeof(struct sockaddr_in)) < 0) {
 	switch (errno) {
 	case EALREADY:
-	    return COMM_ERROR;
-	    /* NOTREACHED */
 #if EAGAIN != EWOULDBLOCK
 	case EAGAIN:
 #endif
@@ -1093,42 +1125,35 @@ comm_set_mcast_ttl(int fd, int mcast_ttl)
     return 0;
 }
 
-int
-comm_join_mcast_groups(int fd)
+void
+comm_join_mcast_groups(int fd, const ipcache_addrs * ia, void *data)
 {
 #ifdef IP_MULTICAST_TTL
     struct ip_mreq mr;
-    wordlist *s = NULL;
-    const ipcache_addrs *ia = NULL;
     int i;
     int x;
     char c = 0;
-    for (s = Config.mcast_group_list; s; s = s->next) {
-	debug(5, 10, "comm_join_mcast_groups: joining group %s on FD %d\n",
-	    s->key, fd);
-	ia = ipcache_gethostbyname(s->key, IP_BLOCKING_LOOKUP);
-	if (ia == NULL) {
-	    debug(5, 0, "Unknown host: %s\n", s->key);
-	    continue;
-	}
-	for (i = 0; i < (int) ia->count; i++) {
-	    mr.imr_multiaddr.s_addr = (ia->in_addrs + i)->s_addr;
-	    mr.imr_interface.s_addr = INADDR_ANY;
-	    x = setsockopt(fd, IPPROTO_IP, IP_ADD_MEMBERSHIP,
-		(char *) &mr, sizeof(struct ip_mreq));
-	    if (x < 0)
-		debug(5, 1, "comm_join_mcast_groups: FD %d, addr: %s [%s]\n",
-		    fd, s->key, inet_ntoa(*(ia->in_addrs + i)));
-	    x = setsockopt(fd, IPPROTO_IP, IP_MULTICAST_LOOP, &c, 1);
-	    if (x < 0)
-		debug(5, 1,
-		    "comm_join_mcast_groups: can't disable m'cast loopback: %s\n",
-		    xstrerror());
-
-	}
+    if (ia == NULL) {
+	debug(5, 0, "comm_join_mcast_groups: Unknown host\n");
+	return;
+    }
+    for (i = 0; i < (int) ia->count; i++) {
+	debug(5, 10, "Listening for ICP requests on %s\n",
+	    inet_ntoa(*(ia->in_addrs + i)));
+	mr.imr_multiaddr.s_addr = (ia->in_addrs + i)->s_addr;
+	mr.imr_interface.s_addr = INADDR_ANY;
+	x = setsockopt(fd, IPPROTO_IP, IP_ADD_MEMBERSHIP,
+	    (char *) &mr, sizeof(struct ip_mreq));
+	if (x < 0)
+	    debug(5, 1, "comm_join_mcast_groups: FD %d, [%s]\n",
+		fd, inet_ntoa(*(ia->in_addrs + i)));
+	x = setsockopt(fd, IPPROTO_IP, IP_MULTICAST_LOOP, &c, 1);
+	if (x < 0)
+	    debug(5, 1,
+		"comm_join_mcast_groups: can't disable m'cast loopback: %s\n",
+		xstrerror());
     }
 #endif
-    return 0;
 }
 
 static void
