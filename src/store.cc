@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.326 1997/10/29 02:36:36 wessels Exp $
+ * $Id: store.cc,v 1.327 1997/10/29 17:52:51 wessels Exp $
  *
  * DEBUG: section 20    Storeage Manager
  * AUTHOR: Harvest Derived
@@ -749,9 +749,10 @@ storeUnregister(StoreEntry * e, void *data)
 	file_close(sc->swapin_fd);
     }
     if ((callback = sc->callback)) {
+	/* callback with ssize = -1 to indicate unexpected termination */
 	debug(20,1)("WARNING: store_client for %s has a callback\n", e->url);
 	sc->callback = NULL;
-	callback(sc->callback_data, sc->copy_buf, 0);
+	callback(sc->callback_data, sc->copy_buf, -1);
     }
     cbdataFree(sc);
     return 1;
