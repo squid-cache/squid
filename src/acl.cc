@@ -1,6 +1,6 @@
 
 /*
- * $Id: acl.cc,v 1.187 1998/11/12 06:27:54 wessels Exp $
+ * $Id: acl.cc,v 1.188 1998/11/12 06:41:36 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -60,7 +60,9 @@ static int aclMatchUser(wordlist * data, const char *ident);
 static int aclMatchIp(void *dataptr, struct in_addr c);
 static int aclMatchDomainList(void *dataptr, const char *);
 static int aclMatchIntegerRange(intrange * data, int i);
+#if SQUID_SNMP
 static int aclMatchWordList(wordlist *, const char *);
+#endif
 static squid_acl aclStrToType(const char *s);
 static int decode_addr(const char *, struct in_addr *, struct in_addr *);
 static void aclCheck(aclCheck_t * checklist);
@@ -613,36 +615,6 @@ aclParseDomainList(void *curlist)
     }
 }
 
-/* default proxy_auth timeout is 3600 seconds */
-#define PROXY_AUTH_TIMEOUT 3600
-
-static void
-aclParseProxyAuth(void *data)
-{
-    acl_proxy_auth *p;
-    acl_proxy_auth **q = data;
-    char *t;
-
-    p = xcalloc(1, sizeof(acl_proxy_auth));
-
-    /* read timeout value (if any) */
-    t = strtok(NULL, w_space);
-    if (t == NULL) {
-	p->timeout = PROXY_AUTH_TIMEOUT;
-    } else {
-	p->timeout = atoi(t);
-    }
-    /* the minimum timeout is 10 seconds */
-    if (p->timeout < 10)
-	p->timeout = 10;
-
-    /* First time around, 7921 should be big enough */
-    p->hash = hash_create((HASHCMP *) strcmp, 7921, hash_string);
-    assert(p->hash);
-    *q = p;
-    return;
-}
-
 void
 aclParseAclLine(acl ** head)
 {
@@ -1189,6 +1161,7 @@ aclMatchTime(acl_time_data * data, time_t when)
     return data->weekbits & (1 << tm.tm_wday) ? 1 : 0;
 }
 
+#if SQUID_SNMP
 static int
 aclMatchWordList(wordlist * w, const char *word)
 {
@@ -1201,6 +1174,7 @@ aclMatchWordList(wordlist * w, const char *word)
     }
     return 0;
 }
+#endif
 
 static int
 aclMatchAcl(acl * ae, aclCheck_t * checklist)
@@ -2091,8 +2065,6 @@ aclDumpGeneric(const acl * a)
  * NOTE: Linux code by David Luyer <luyer@ucs.uwa.edu.au>.
  *       Original (BSD-specific) code no longer works.
  */
-
-#include "squid.h"
 
 #include <sys/sysctl.h>
 #ifdef _SQUID_LINUX_
