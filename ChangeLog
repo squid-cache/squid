@@ -1,3 +1,7 @@
+Changes to squid-1.novm.6 (February 7, 1997):
+
+	- Merged squid-1.1.6 changes.
+
 Changes to squid-1.1.6 (February 7, 1997):
 
 	- Fix redirector to make sure the redirector child process is 
