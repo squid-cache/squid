@@ -3,7 +3,7 @@ dnl  Configuration input file for Squid
 dnl
 dnl  Duane Wessels, wessels@nlanr.net, February 1996 (autoconf v2.9)
 dnl
-dnl  $Id: configure.in,v 1.241 2001/11/18 03:41:28 adrian Exp $
+dnl  $Id: configure.in,v 1.242 2001/11/21 23:47:11 hno Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AC_INIT(src/main.c)
 AC_CONFIG_AUX_DIR(cfgaux)
 AM_INIT_AUTOMAKE(Squid, 2.5-DEVEL)
 AM_CONFIG_HEADER(include/autoconf.h)
-AC_REVISION($Revision: 1.241 $)dnl
+AC_REVISION($Revision: 1.242 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -560,13 +560,15 @@ SSLINC=""
 AC_ARG_ENABLE(ssl,
 [  --enable-ssl            Enable ssl gatewaying support using OpenSSL],
 [ if test "$enableval" != "no"; then
-    echo "SSL gatewaying enabled"
+    echo "SSL gatewaying using OpenSSL enabled"
     AC_DEFINE(USE_SSL)
     AM_CONDITIONAL(ENABLE_SSL, true)
     SSLLIB='-lssl -lcrypto'
     USE_OPENSSL=1
   fi
 ])
+
+AM_CONDITIONAL(NEED_OWN_MD5, true)
 
 AC_ARG_WITH(openssl,
 [  --with-openssl[=prefix]
@@ -578,7 +580,6 @@ AC_ARG_WITH(openssl,
   case "$with_ssl" in
   yes)
     USE_OPENSSL=1
-    AM_CONDITIONAL(ENABLE_SSL, true)
     ;;
   no)
     USE_OPENSSL=
@@ -587,12 +588,13 @@ AC_ARG_WITH(openssl,
     SSLLIBDIR="$with_ssl/lib"
     SSLINC="-I$with_ssl/include"
     USE_OPENSSL=1
-    AM_CONDITIONAL(ENABLE_SSL, true)
   esac
 ])
 
 if test -n "$USE_OPENSSL"; then
+  echo "Using OpenSSL MD5 implementation"
   AC_DEFINE(USE_OPENSSL)
+  AM_CONDITIONAL(NEED_OWN_MD5, false)
   if test -z "$SSLLIB"; then
     SSLLIB="-lcrypto" # for MD5 routines
   fi

@@ -1,5 +1,5 @@
 /*
- * $Id: md5.c,v 1.13 2001/10/17 13:30:50 hno Exp $
+ * $Id: md5.c,v 1.14 2001/11/21 23:47:12 hno Exp $
  */
 
 /* taken from RFC-1321/Appendix A.3 */
@@ -31,12 +31,6 @@
  */
 
 #include "config.h"
-
-#if !USE_OPENSSL
-/*
- * Only compile md5.c if we need it.  Its needed for MD5 store keys
- * and by the SNMP routines.
- */
 
 #if HAVE_STRING_H
 #include <string.h>
@@ -362,5 +356,3 @@ MD5_memset(char *output, int value, unsigned int len)
 }
 
 #endif
-
-#endif /* USE_OPENSSL */
