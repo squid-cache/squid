@@ -1,5 +1,5 @@
 /*
- * $Id: ipcache.cc,v 1.43 1996/08/26 19:57:07 wessels Exp $
+ * $Id: ipcache.cc,v 1.44 1996/08/27 05:19:09 wessels Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -1149,10 +1149,10 @@ void ipcacheInvalidate(name)
     ipcache_entry *i;
     if ((i = ipcache_get(name)) == NULL)
 	return;
-    if (i->status != IP_CACHED)
-	i->expires = squid_curtime;
-    else
-	ipcache_release(i);
+    i->expires = squid_curtime;
+    /* NOTE, don't call ipcache_release here becuase we might be here due
+     * to a thread started from ipcache_call_pending() which will cause a
+     * FMR */
 }
 
 static struct hostent *ipcacheCheckNumeric(name)
