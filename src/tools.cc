@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.213 2001/11/17 11:09:25 hno Exp $
+ * $Id: tools.cc,v 1.214 2002/03/30 16:29:51 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -966,9 +966,7 @@ parseEtcHosts(void)
     char buf2[512];
     char *nt = buf;
     char *lt = buf;
-#if defined(_SQUID_MSWIN_) || defined(_SQUID_CYGWIN_)
-    char *systemroot = NULL;
-#endif
+
     if (NULL == Config.etcHostsPath)
 	return;
     if (0 == strcmp(Config.etcHostsPath, "none"))
