@@ -57,3 +57,5 @@
 	- Created "store.log" which logs RELEASE/SWAPIN/SWAPOUT events.
 	- Added announce to cached; no longer external program.
 	- Added ftpProcessReplyHeader() (a twin of the one in http.c).
+	- Fixed bad free() in ipcacheShtudownServers()
+	- Cleaned up FTP url parsing; support port.
