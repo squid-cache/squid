@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.221 1998/02/17 23:04:04 wessels Exp $
+ * $Id: main.cc,v 1.222 1998/02/18 01:00:43 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -749,9 +749,7 @@ normal_shutdown(void)
     {
 	extern int xmalloc_total;
 	extern void xmalloc_find_leaks(void);
-	extern void xmalloc_dump_map(void);
 	xmalloc_find_leaks();
-	xmalloc_dump_map();
 	debug(1, 0) ("Memory used after shutdown: %d\n", xmalloc_total);
     }
 #endif
