@@ -1,5 +1,5 @@
 /*
- * $Id: http.cc,v 1.116 1996/11/25 18:50:29 wessels Exp $
+ * $Id: http.cc,v 1.117 1996/11/25 19:41:00 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -664,6 +664,8 @@ httpSendRequest(int fd, void *data)
     if (httpState->req_hdr) {	/* we have to parse the request header */
 	xbuf = xstrdup(httpState->req_hdr);
 	for (t = strtok(xbuf, crlf); t; t = strtok(NULL, crlf)) {
+	    if (strncasecmp(t, "Proxy-Connection:", 17) == 0)
+		continue;
 	    if (strncasecmp(t, "Connection:", 11) == 0)
 		continue;
 	    if (strncasecmp(t, "Host:", 5) == 0)
