@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: access_log.cc,v 1.34 1998/07/14 23:58:08 wessels Exp $
+ * $Id: access_log.cc,v 1.35 1998/07/15 23:55:32 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -217,8 +217,8 @@ void
 accessLogLog(AccessLogEntry * al)
 {
     MemBuf mb;
-    char *t;
     char *xbuf = NULL;
+    LOCAL_ARRAY(char, ident_buf, USER_IDENT_SZ);
 
     if (LogfileStatus != LOG_ENABLE)
 	return;
@@ -227,16 +227,10 @@ accessLogLog(AccessLogEntry * al)
     if (!al->http.content_type || *al->http.content_type == '\0')
 	al->http.content_type = dash_str;
     if (!al->cache.ident || *al->cache.ident == '\0') {
-	/* argh, binary headers did not come through */
-	t = mime_get_header(al->headers.request, "Proxy-authorization:");
-	if (t == NULL) {
-	    al->cache.ident = dash_str;
-	} else if (strlen(t) < SKIP_BASIC_SZ) {
-	    al->cache.ident = dash_str;
-	} else {
-	    al->cache.ident = xbuf = uudecode(t + SKIP_BASIC_SZ);
-	    strtok((char *) al->cache.ident, ":");	/*  remove password  */
-	}
+	al->cache.ident = dash_str;
+    } else {
+	xstrncpy(ident_buf, rfc1738_escape(al->cache.ident), USER_IDENT_SZ);
+	al->cache.ident = ident_buf;
     }
     if (al->icp.opcode)
 	al->private.method_str = icp_opcode_str[al->icp.opcode];
