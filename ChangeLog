@@ -1,3 +1,7 @@
+Changes to squid-1.1.beta23 (November 25, 1996):
+
+	- Force use of GNUregex for OSF.
+
 Changes to squid-1.1.beta22 (November 25, 1996):
 
 	- Fixed xstrncpy() bug in mime_get_header().
