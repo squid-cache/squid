@@ -5,6 +5,8 @@
 	  the Host: header (Eric Stern).
 	- Year-2000 fixes (Arjan de Vet).
 	- Fixed looping for cache hits on HEAD requests.
+	- Fixed netdbSendPing() bug when a hostname changes from one
+	  IP network to another.
 
 Changes to squid-1.2.beta11 (Jan 6, 1998):
 
