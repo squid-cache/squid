@@ -439,8 +439,9 @@ enum {
     NEIGHBOR_MCAST_RESPONDER,
     NEIGHBOR_CLOSEST_ONLY,
 #if USE_HTCP
-    NEIGHBOR_HTCP
+    NEIGHBOR_HTCP,
 #endif
+    NEIGHBOR_END
 };
 
 typedef enum {
