@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.134 1998/09/30 02:53:19 wessels Exp $
+ * $Id: enums.h,v 1.135 1998/10/12 21:40:57 wessels Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -295,6 +295,7 @@ typedef enum {
 #if USE_CARP
     CARP,
 #endif
+    ANY_OLD_PARENT,
     HIER_MAX
 } hier_code;
 
