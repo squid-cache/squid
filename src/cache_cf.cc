@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.120 1996/10/29 02:37:11 wessels Exp $
+ * $Id: cache_cf.cc,v 1.121 1996/10/30 06:02:49 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -996,7 +996,7 @@ parseVizHackLine(void)
     int i;
     struct hostent *hp;
     token = strtok(NULL, w_space);
-    memset((char *)&Config.vizHackAddr, '\0', sizeof(struct sockaddr_in));
+    memset((char *) &Config.vizHackAddr, '\0', sizeof(struct sockaddr_in));
     Config.vizHackAddr.sin_family = AF_INET;
     if (token == NULL)
 	self_destruct();
@@ -1009,8 +1009,8 @@ parseVizHackLine(void)
     if ((token = strtok(NULL, w_space)) == NULL)
 	self_destruct();
     if (sscanf(token, "%d", &i) == 1)
-        Config.vizHackAddr.sin_port = htons(i);
-    debug(0,0,"parseVizHackLine: got %s %d\n",
+	Config.vizHackAddr.sin_port = htons(i);
+    debug(0, 0, "parseVizHackLine: got %s %d\n",
 	inet_ntoa(Config.vizHackAddr.sin_addr),
 	ntohs(Config.vizHackAddr.sin_port));
 }
