@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.194 1998/04/07 23:44:17 rousskov Exp $
+ * $Id: neighbors.cc,v 1.195 1998/04/08 22:51:14 rousskov Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -547,6 +547,43 @@ neighborsUdpPing(request_t * request,
     return peers_pinged;
 }
 
+/* lookup the digest of a given peer */
+lookup_t
+peerDigestLookup(peer *p, request_t * request, StoreEntry * entry)
+{
+#if SQUID_PEER_DIGEST
+    const cache_key *key = storeKeyPublic(storeUrl(entry), request->method);
+    assert(p);
+    debug(15, 5) ("neighborsDigestPeerLookup: peer %s\n", p->host);
+ 	/* does the peeer have a valid digest? */
+    if (EBIT_TEST(p->digest.flags, PD_DISABLED)) {
+	return LOOKUP_NONE;
+    } else
+    if (!peerAllowedToUse(p, request)) {
+	return LOOKUP_NONE;
+    } else
+    if (EBIT_TEST(p->digest.flags, PD_USABLE)) {
+	/* fall through; put here to have common case on top */;
+    } else
+    if (!EBIT_TEST(p->digest.flags, PD_INITED)) {
+	peerDigestInit(p);
+	return LOOKUP_NONE;
+    } else {
+	assert(EBIT_TEST(p->digest.flags, PD_REQUESTED));
+	return LOOKUP_NONE;
+    }
+    debug(15, 5) ("neighborsDigestPeerLookup: OK to lookup peer %s\n", p->host);
+    assert(p->digest.cd);
+    /* does digest predict a hit? */
+    if (!cacheDigestTest(p->digest.cd, key))
+	return LOOKUP_MISS;
+    debug(15, 5) ("neighborsDigestPeerLookup: peer %s says HIT!\n", p->host);
+    return LOOKUP_HIT;
+#endif
+    return LOOKUP_NONE;
+}
+
+/* select best peer based on cache digests */
 peer *
 neighborsDigestSelect(request_t * request, StoreEntry * entry)
 {
@@ -562,33 +599,19 @@ neighborsDigestSelect(request_t * request, StoreEntry * entry)
 
     key = storeKeyPublic(storeUrl(entry), request->method);
     for (i = 0, p = first_ping; i++ < Config.npeers; p = p->next) {
+	lookup_t lookup;
 	if (!p)
 	    p = Config.peers;
 	if (i == 1)
 	    first_ping = p;
-	debug(15, 5) ("neighborsDigestSelect: considering peer %s\n", p->host);
-	/* does the peeer have a valid digest? */
-	if (EBIT_TEST(p->digest.flags, PD_DISABLED)) {
+	lookup = peerDigestLookup(p, request, entry);
+	if (lookup == LOOKUP_NONE)
 	    continue;
-	} else
-	if (EBIT_TEST(p->digest.flags, PD_USABLE)) {
-	    ;
-	} else
-	if (!EBIT_TEST(p->digest.flags, PD_INITED)) {
-	    peerDigestInit(p);
-	    continue;
-	} else {
-	    assert(EBIT_TEST(p->digest.flags, PD_REQUESTED));
-	    continue;
-	}
 	choice_count++;
-	debug(15, 5) ("neighborsDigestSelect: peer %s is a candidate\n", p->host);
-	assert(p->digest.cd);
-	/* does digest predict a hit? */
-	if (!cacheDigestTest(p->digest.cd, key))
+	if (lookup == LOOKUP_MISS)
 	    continue;
-	p_rtt = netdbHostPeerRtt(request->host, p);
-	debug(15, 5) ("neighborsDigestSelect: peer %s says hit with rtt %d\n",
+	p_rtt = netdbHostRtt(p->host);
+	debug(15, 5) ("neighborsDigestSelect: peer %s rtt: %d\n",
 	    p->host, p_rtt);
 	/* is this peer better than others in terms of rtt ? */
 	if (!best_p || (p_rtt && p_rtt < best_rtt)) {
@@ -600,12 +623,28 @@ neighborsDigestSelect(request_t * request, StoreEntry * entry)
 		p->host, best_rtt);
 	}
     }
-    debug(15, 5) ("neighborsDigestSelect: selected peer %s, rtt: %d\n",
-	best_p ? best_p->host : "<none>", best_rtt);
+    debug(15, 4) ("neighborsDigestSelect: choices: %d (%d)\n",
+	choice_count, ichoice_count);
+    peerNoteDigestLookup(request, best_p,
+	best_p ? LOOKUP_HIT : (choice_count ? LOOKUP_MISS : LOOKUP_NONE));
     request->hier.n_choices = choice_count;
     request->hier.n_ichoices = ichoice_count;
 #endif
     return best_p;
+}
+
+void
+peerNoteDigestLookup(request_t * request, peer *p, lookup_t lookup)
+{
+#if SQUID_PEER_DIGEST
+    if (p)
+	strncpy(request->hier.cd_host, p->host, sizeof(request->hier.cd_host));
+    else
+	*request->hier.cd_host = '\0';
+    request->hier.cd_lookup = lookup;
+    debug(15, 4) ("peerNoteDigestLookup: peer %s, lookup: %s\n",
+	p ? p->host : "<none>", lookup_t_str[lookup]);
+#endif
 }
 
 static void
