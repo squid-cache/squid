@@ -1,5 +1,5 @@
 /*
- * $Id: neighbors.cc,v 1.97 1996/12/16 16:23:43 wessels Exp $
+ * $Id: neighbors.cc,v 1.98 1996/12/18 05:08:48 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -111,6 +111,7 @@ static edge *whichEdge _PARAMS((const struct sockaddr_in * from));
 static void neighborAlive _PARAMS((edge *, const MemObject *, const icp_common_t *));
 static void neighborCountIgnored _PARAMS((edge * e, icp_opcode op_unused));
 static neighbor_t parseNeighborType _PARAMS((const char *s));
+static char * neighborTypeStr _PARAMS((edge * e));
 
 static icp_common_t echo_hdr;
 static u_short echo_port;
@@ -146,6 +147,14 @@ const char *hier_strings[] =
     "SSL_PARENT_MISS",
     "INVALID CODE"
 };
+
+static char *
+neighborTypeStr(edge * e)
+{
+    if (e->type == EDGE_SIBLING)
+	return "Sibling";
+    return "Parent";
+}
 
 
 static edge *
@@ -353,7 +362,7 @@ neighbors_open(int fd)
     while ((e = next)) {
 	getCurrentTime();
 	next = e->next;
-	debug(15, 1, "Configuring neighbor %s/%d/%d\n",
+	debug(15, 1, "Configuring %s %s/%d/%d\n", neighborTypeStr(e),
 	    e->host, e->http_port, e->icp_port);
 	if ((ia = ipcache_gethostbyname(e->host, IP_BLOCKING_LOOKUP)) == NULL) {
 	    debug(0, 0, "WARNING!!: DNS lookup for '%s' failed!\n", e->host);
@@ -505,7 +514,7 @@ neighborsUdpPing(protodispatch_data * proto)
 	    /* log it once at the threshold */
 	    if ((e->stats.ack_deficit == HIER_MAX_DEFICIT)) {
 		debug(15, 0, "Detected DEAD %s: %s/%d/%d\n",
-		    e->type == EDGE_SIBLING ? "SIBLING" : "PARENT",
+		    neighborTypeStr(e),
 		    e->host, e->http_port, e->icp_port);
 	    }
 	}
@@ -549,7 +558,7 @@ neighborAlive(edge * e, const MemObject * mem, const icp_common_t * header)
     /* Neighbor is alive, reset the ack deficit */
     if (e->stats.ack_deficit >= HIER_MAX_DEFICIT) {
 	debug(15, 0, "Detected REVIVED %s: %s/%d/%d\n",
-	    e->type == EDGE_PARENT ? "PARENT" : "SIBLING",
+	    neighborTypeStr(e),
 	    e->host, e->http_port, e->icp_port);
     }
     e->stats.ack_deficit = 0;
