@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.377 2001/01/09 01:43:08 hno Exp $
+ * $Id: structs.h,v 1.378 2001/01/09 14:11:15 hno Exp $
  *
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1440,8 +1440,8 @@ struct _StoreEntry {
     time_t expires;
     time_t lastmod;
     size_t swap_file_sz;
-    sfileno swap_filen:24;
-    sdirno swap_dirn:8;
+    sfileno swap_filen:25;
+    sdirno swap_dirn:7;
     u_short refcount;
     u_short flags;
     u_short lock_count;		/* Assume < 65536! */
