@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.421 2003/07/15 20:20:33 hno Exp $
+ * $Id: http.cc,v 1.422 2003/07/23 10:41:20 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1109,7 +1109,7 @@ HttpStateData::SendComplete(int fd, char *bufnotused, size_t size, comm_err_t er
 /*
  * build request headers and append them to a given MemBuf 
  * used by httpBuildRequestPrefix()
- * note: calls httpHeaderInit(), the caller is responsible for Clean()-ing
+ * note: initialised the HttpHeader, the caller is responsible for Clean()-ing
  */
 void
 httpBuildRequestHeader(request_t * request,

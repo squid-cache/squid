@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIVarState.cc,v 1.1 2003/07/14 14:15:55 robertc Exp $
+ * $Id: ESIVarState.cc,v 1.2 2003/07/23 10:41:20 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -303,13 +303,11 @@ ESIVariableQuery::~ESIVariableQuery()
 }
 
 ESIVarState::ESIVarState (HttpHeader const *aHeader, char const *uri)
-        : output (NULL)
+        : output (NULL), hdr(hoReply)
 {
     /* TODO: only grab the needed headers */
     /* Note that as we pass these through to included requests, we
      * cannot trim them */
-    httpHeaderInit (&hdr, hoReply);
-
     httpHeaderAppend (&hdr, aHeader);
 
     /* populate our variables trie with the available variables.
