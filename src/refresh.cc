@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.28 1998/07/22 20:37:45 wessels Exp $
+ * $Id: refresh.cc,v 1.29 1998/08/11 19:18:37 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -168,6 +168,7 @@ refreshCheck(const StoreEntry * entry, request_t * request, time_t delta)
 	refreshCounts.conf_min_age_fresh++;
 	return 0;
     }
+    debug(22, 3) ("refreshCheck: YES: default stale\n");
     refreshCounts.default_stale++;
     return 1;
 }
