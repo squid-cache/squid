@@ -489,7 +489,7 @@ DOC_END
 NAME: cache_dir
 TYPE: cachedir
 DEFAULT: none
-DEFAULT_IF_NONE: @DEFAULT_SWAP_DIR@ 100 256 16
+DEFAULT_IF_NONE: @DEFAULT_SWAP_DIR@ 100 16 256
 LOC: Config.cacheSwap
 DOC_START
 	Directory for on-disk cache storage.  The cache will change into
