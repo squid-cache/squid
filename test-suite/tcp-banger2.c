@@ -94,6 +94,7 @@ static int reqpersec;
 static int nrequests;
 static int opt_ims = 0;
 static int opt_range = 0;
+static int opt_accel = 0;
 static int max_connections = 64;
 static time_t lifetime = 60;
 static time_t process_lifetime = 86400;
@@ -290,6 +291,7 @@ request(char *urlin)
     char buf[4096];
     char msg[8192];
     char *method, *url, *file, *size, *checksum, *status;
+    char *host;
     char urlbuf[8192];
     int len, len2;
     time_t w;
@@ -346,9 +348,19 @@ request(char *urlin)
 	r->validstatus = strtoul(status, NULL, 0);
     else
 	r->validstatus = accepted_status;
-    msg[0] = '\0';
-    sprintf(buf, "%s %s HTTP/1.0\r\n", method, url);
-    strcat(msg, buf);
+    if (opt_accel) {
+	host = strchr(url, '/') + 2;
+	url = strchr(host, '/');
+    } else {
+	host = NULL;
+    }
+    sprintf(msg, "%s %s HTTP/1.0\r\n", method, url);
+    if (host) {
+	url[0] = '\0';
+	sprintf(buf, "Host: %s\r\n", host);
+	strcat(msg, buf);
+	url[0] = '/';
+    }
     strcat(msg, "Accept: */*\r\n");
     if (opt_ims && (lrand48() & 0x03) == 0) {
 	w = time(NULL) - (lrand48() & 0x3FFFF);
@@ -454,6 +466,7 @@ usage(void)
     fprintf(stderr, " -i              Send random If-Modified-Since times\n");
     fprintf(stderr, " -l <seconds>    Connection lifetime timeout (default 60)\n");
     fprintf(stderr, " -s <status>     HTTP status expected (default 200, 0 == ignore)\n");
+    fprintf(stderr, " -a              Accelerator mode\n");
 }
 
 int
@@ -474,8 +487,11 @@ main(argc, argv)
     progname = strdup(argv[0]);
     gettimeofday(&now, NULL);
     start = last = now;
-    while ((c = getopt(argc, argv, "p:h:n:icrl:L:t:")) != -1) {
+    while ((c = getopt(argc, argv, "ap:h:n:icrl:L:t:")) != -1) {
 	switch (c) {
+	case 'a':
+	    opt_accel = 1;
+	    break;
 	case 'p':
 	    proxy_port = atoi(optarg);
 	    break;
