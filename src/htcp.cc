@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.13 1998/08/25 06:20:42 wessels Exp $
+ * $Id: htcp.cc,v 1.14 1998/08/25 07:02:42 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -164,30 +164,32 @@ static ssize_t htcpBuildTstOpData(char *buf, size_t buflen, htcpStuff * stuff);
 static void htcpFreeSpecifier(htcpSpecifier * s);
 static void htcpHandle(char *buf, int sz, struct sockaddr_in *from);
 static void htcpHandleData(char *buf, int sz, struct sockaddr_in *from);
-static void htcpHandleMon(char *buf, int sz, struct sockaddr_in *from);
-static void htcpHandleNop(char *buf, int sz, struct sockaddr_in *from);
-static void htcpHandleSet(char *buf, int sz, struct sockaddr_in *from);
-static void htcpHandleTst(char *buf, int sz, struct sockaddr_in *from);
+static void htcpHandleMon(htcpDataHeader *, char *buf, int sz, struct sockaddr_in *from);
+static void htcpHandleNop(htcpDataHeader *, char *buf, int sz, struct sockaddr_in *from);
+static void htcpHandleSet(htcpDataHeader *, char *buf, int sz, struct sockaddr_in *from);
+static void htcpHandleTst(htcpDataHeader *, char *buf, int sz, struct sockaddr_in *from);
 static void htcpRecv(int fd, void *data);
 static void htcpSend(const char *buf, int len, struct sockaddr_in *to);
 static void htcpTstReply(StoreEntry *, htcpSpecifier *, struct sockaddr_in *);
+static void htcpHandleTstRequest(char *buf, int sz, struct sockaddr_in *from);
+static void htcpHandleTstResponse(htcpDataHeader *, char *, int, struct sockaddr_in *);
 
 static void
 htcpHexdump(const char *tag, const char *s, int sz)
 {
-	int i;
-	int k;
-	char hex[80];
-	debug(31,1)("htcpHexdump %s\n", tag);
+    int i;
+    int k;
+    char hex[80];
+    debug(31, 1) ("htcpHexdump %s\n", tag);
+    memset(hex, '\0', 80);
+    for (i = 0; i < sz; i++) {
+	k = i % 16;
+	snprintf(&hex[k * 3], 4, " %02x", (int) *(s + i));
+	if (k < 15 && i < (sz - 1))
+	    continue;
+	debug(31, 1) ("\t%s\n", hex);
 	memset(hex, '\0', 80);
-	for (i=0; i<sz; i++) {
-		k = i % 16;
-		snprintf(&hex[k*3], 4, " %02x", (int) *(s+i));
-		if (k < 15 && i < (sz-1))
-			continue;
-		debug(31,1)("\t%s\n", hex);
-		memset(hex, '\0', 80);
-	}
+    }
 }
 
 /*
@@ -216,18 +218,18 @@ htcpBuildCountstr(char *buf, size_t buflen, const char *s)
     if (buflen - off < 2)
 	return -1;
     if (s)
-        len = strlen(s);
+	len = strlen(s);
     else
 	len = 0;
-    debug(31,1)("htcpBuildCountstr: LENGTH = %d\n", len);
-    debug(31,1)("htcpBuildCountstr: TEXT = {%s}\n", s);
+    debug(31, 1) ("htcpBuildCountstr: LENGTH = %d\n", len);
+    debug(31, 1) ("htcpBuildCountstr: TEXT = {%s}\n", s);
     length = htons((u_short) len);
     xmemcpy(buf + off, &length, 2);
     off += 2;
     if (buflen - off < len)
 	return -1;
     if (len)
-        xmemcpy(buf + off, s, len);
+	xmemcpy(buf + off, s, len);
     off += len;
     return off;
 }
@@ -253,7 +255,7 @@ htcpBuildSpecifier(char *buf, size_t buflen, htcpStuff * stuff)
     if (s < 0)
 	return s;
     off += s;
-    debug(31,1)("htcpBuildSpecifier: size %d\n", (int) off);
+    debug(31, 1) ("htcpBuildSpecifier: size %d\n", (int) off);
     return off;
 }
 
@@ -282,11 +284,15 @@ htcpBuildTstOpData(char *buf, size_t buflen, htcpStuff * stuff)
 {
     switch (stuff->rr) {
     case RR_REQUEST:
-    	debug(31,1)("htcpBuildTstOpData: RR_REQUEST\n");
+	debug(31, 1) ("htcpBuildTstOpData: RR_REQUEST\n");
 	return htcpBuildSpecifier(buf, buflen, stuff);
     case RR_RESPONSE:
-    	debug(31,1)("htcpBuildTstOpData: RR_RESPONSE\n");
-	return htcpBuildDetail(buf, buflen, stuff);
+	debug(31, 1) ("htcpBuildTstOpData: RR_RESPONSE\n");
+	debug(31, 1) ("htcpBuildTstOpData: F1 = %d\n", stuff->f1);
+	if (stuff->f1)		/* cache miss */
+	    return 0;
+	else			/* cache hit */
+	    return htcpBuildDetail(buf, buflen, stuff);
     default:
 	fatal_dump("htcpBuildTstOpData: bad RR value");
     }
@@ -297,7 +303,7 @@ static ssize_t
 htcpBuildOpData(char *buf, size_t buflen, htcpStuff * stuff)
 {
     ssize_t off = 0;
-    debug(31,1)("htcpBuildOpData: opcode %s\n",
+    debug(31, 1) ("htcpBuildOpData: opcode %s\n",
 	htcpOpcodeStr[stuff->op]);
     switch (stuff->op) {
     case HTCP_TST:
@@ -324,7 +330,7 @@ htcpBuildData(char *buf, size_t buflen, htcpStuff * stuff)
     if (op_data_sz < 0)
 	return op_data_sz;
     off += op_data_sz;
-    debug(31,1)("htcpBuildData: hdr.length = %d\n", (int) off);
+    debug(31, 1) ("htcpBuildData: hdr.length = %d\n", (int) off);
     hdr.length = (u_short) off;
     hdr.opcode = stuff->op;
     hdr.response = stuff->response;
@@ -335,7 +341,7 @@ htcpBuildData(char *buf, size_t buflen, htcpStuff * stuff)
     hdr.length = htons(hdr.length);
     hdr.msg_id = htonl(hdr.msg_id);
     xmemcpy(buf, &hdr, hdr_sz);
-    debug(31,1)("htcpBuildData: size %d\n", (int) off);
+    debug(31, 1) ("htcpBuildData: size %d\n", (int) off);
     return off;
 }
 
@@ -365,7 +371,7 @@ htcpBuildPacket(htcpStuff * stuff, ssize_t * len)
     hdr.minor = 0;
     xmemcpy(buf, &hdr, hdr_sz);
     *len = off;
-    debug(31,1)("htcpBuildPacket: size %d\n", (int) off);
+    debug(31, 1) ("htcpBuildPacket: size %d\n", (int) off);
     return buf;
 }
 
@@ -373,7 +379,7 @@ static void
 htcpSend(const char *buf, int len, struct sockaddr_in *to)
 {
     int x;
-    debug(31,1)("htcpSend: %s/%d\n",
+    debug(31, 1) ("htcpSend: %s/%d\n",
 	inet_ntoa(to->sin_addr), (int) ntohs(to->sin_port));
     htcpHexdump("htcpSend", buf, len);
     x = comm_udp_sendto(htcpOutSocket,
@@ -468,42 +474,91 @@ htcpUnpackSpecifier(char *buf, int sz)
     buf += o;
     sz -= o;
 
-    debug(31,1)("htcpUnpackSpecifier: %d bytes left\n", sz);
+    debug(31, 1) ("htcpUnpackSpecifier: %d bytes left\n", sz);
     return s;
 }
 
 static void
-htcpHandleNop(char *buf, int sz, struct sockaddr_in *from)
+htcpTstReply(StoreEntry * e, htcpSpecifier * spec, struct sockaddr_in *from)
+{
+    htcpStuff stuff;
+    char *pkt;
+    ssize_t pktlen;
+    stuff.op = HTCP_TST;
+    stuff.rr = RR_RESPONSE;
+    stuff.f1 = e ? 0 : 1;
+    if (spec) {
+	stuff.method = spec->method;
+	stuff.uri = spec->uri;
+	stuff.version = spec->version;
+	stuff.req_hdrs = spec->req_hdrs;
+	stuff.resp_hdrs = NULL;
+	stuff.entity_hdrs = NULL;
+	stuff.cache_hdrs = NULL;
+    }
+    pkt = htcpBuildPacket(&stuff, &pktlen);
+    if (pkt == NULL) {
+	debug(31, 0) ("htcpTstReply: htcpBuildPacket() failed\n");
+	return;
+    }
+    htcpSend(pkt, (int) pktlen, from);
+    xfree(pkt);
+}
+
+static void
+htcpHandleNop(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
 {
     debug(31, 1) ("htcpHandleNop: Unimplemented\n");
 }
 
 static void
-htcpHandleTst(char *buf, int sz, struct sockaddr_in *from)
+htcpHandleTst(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
 {
-    /* buf should be a SPECIFIER */
-    htcpSpecifier *s = htcpUnpackSpecifier(buf, sz);
-    StoreEntry *e;
-    const cache_key *key;
-    method_t m;
     debug(31, 1) ("htcpHandleTst: sz = %d\n", (int) sz);
-#if WIP
+    if (hdr->RR == RR_REQUEST)
+	htcpHandleTstRequest(buf, sz, from);
+    else
+	htcpHandleTstResponse(hdr, buf, sz, from);
+}
+
+static void
+htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
+{
+    peer *p = whichPeer(from);
     if (NULL == p) {
 	debug(31, 1) ("htcpHandle: HTCP message from non-peer: %s:%d\n",
 	    inet_ntoa(from->sin_addr), (int) ntohs(from->sin_port));
 	return;
     }
-#endif
-    if (NULL == s) {
-	debug(31, 1) ("htcpHandleTst: htcpUnpackSpecifier failed\n");
+    if (hdr->F1)
+	debug(31, 1) ("htcpHandleTstResponse: MISS\n");
+    else
+	debug(31, 1) ("htcpHandleTstResponse: HIT\n");
+}
+
+static void
+htcpHandleTstRequest(char *buf, int sz, struct sockaddr_in *from)
+{
+    /* buf should be a SPECIFIER */
+    htcpSpecifier *s;
+    StoreEntry *e;
+    const cache_key *key;
+    method_t m;
+    if (sz == 0) {
+	debug(31, 1) ("htcpHandleTst: nothing to do\n");
 	return;
     }
-    debug(31, 1) ("htcpHandleTst: %s %s %s\n",
+    s = htcpUnpackSpecifier(buf, sz);
+    if (NULL == s) {
+	debug(31, 1) ("htcpHandleTstRequest: htcpUnpackSpecifier failed\n");
+	return;
+    }
+    debug(31, 1) ("htcpHandleTstRequest: %s %s %s\n",
 	s->method,
 	s->uri,
 	s->version);
     m = urlParseMethod(s->method);
-    debug(31, 1) ("htcpHandleTst: %s\n", s->req_hdrs);
+    debug(31, 1) ("htcpHandleTstRequest: %s\n", s->req_hdrs);
     key = storeKeyPublic(s->uri, m);
     e = storeGet(key);
     if (NULL == e) {
@@ -516,47 +571,19 @@ htcpHandleTst(char *buf, int sz, struct sockaddr_in *from)
 #endif
     } else {
 	/* hit */
-	assert(e);
-	assert(s);
-	assert(from);
 	htcpTstReply(e, s, from);
     }
+    htcpFreeSpecifier(s);
 }
 
 static void
-htcpTstReply(StoreEntry * e, htcpSpecifier * spec, struct sockaddr_in *from)
-{
-    htcpStuff stuff;
-    char *pkt;
-    ssize_t pktlen;
-    assert(spec);
-    stuff.op = HTCP_TST;
-    stuff.rr = RR_RESPONSE;
-    stuff.f1 = e ? 0 : 1;
-    stuff.method = spec->method;
-    stuff.uri = spec->uri;
-    stuff.version = spec->version;
-    stuff.req_hdrs = spec->req_hdrs;
-    stuff.resp_hdrs = NULL;
-    stuff.entity_hdrs = NULL;
-    stuff.cache_hdrs = NULL;
-    pkt = htcpBuildPacket(&stuff, &pktlen);
-    if (pkt == NULL) {
-	debug(31, 0) ("htcpTstReply: htcpBuildPacket() failed\n");
-	return;
-    }
-    htcpSend(pkt, (int) pktlen, from);
-    xfree(pkt);
-}
-
-static void
-htcpHandleMon(char *buf, int sz, struct sockaddr_in *from)
+htcpHandleMon(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
 {
     debug(31, 1) ("htcpHandleMon: Unimplemented\n");
 }
 
 static void
-htcpHandleSet(char *buf, int sz, struct sockaddr_in *from)
+htcpHandleSet(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
 {
     debug(31, 1) ("htcpHandleSet: Unimplemented\n");
 }
@@ -589,22 +616,27 @@ htcpHandleData(char *buf, int sz, struct sockaddr_in *from)
 	debug(31, 0) ("htcpHandle: sz < hdr.length\n");
 	return;
     }
+    /*
+     * set sz = hdr.length so we ignore any AUTH fields following
+     * the DATA.
+     */
+    sz = (int) hdr.length;
     buf += sizeof(htcpDataHeader);
     sz -= sizeof(htcpDataHeader);
     debug(31, 1) ("htcpHandleData: sz = %d\n", sz);
     htcpHexdump("htcpHandleData", buf, sz);
     switch (hdr.opcode) {
     case HTCP_NOP:
-	htcpHandleNop(buf, sz, from);
+	htcpHandleNop(&hdr, buf, sz, from);
 	break;
     case HTCP_TST:
-	htcpHandleTst(buf, sz, from);
+	htcpHandleTst(&hdr, buf, sz, from);
 	break;
     case HTCP_MON:
-	htcpHandleMon(buf, sz, from);
+	htcpHandleMon(&hdr, buf, sz, from);
 	break;
     case HTCP_SET:
-	htcpHandleSet(buf, sz, from);
+	htcpHandleSet(&hdr, buf, sz, from);
 	break;
     default:
 	assert(0);
