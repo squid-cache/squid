@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.4 1998/02/10 22:17:53 wessels Exp $
+ * $Id: ipc.cc,v 1.5 1998/02/18 23:37:40 wessels Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -171,9 +171,9 @@ ipcCreate(int type, const char *prog, char *const args[], const char *name, int 
 	}
 	memset(hello_buf, '\0', HELLO_BUF_SZ);
 	if (type == IPC_UDP_SOCKET)
-	    x = recv(prfd, hello_buf, 127, 0);
+	    x = recv(prfd, hello_buf, HELLO_BUF_SZ, 0);
 	else
-	    x = read(prfd, hello_buf, 127);
+	    x = read(prfd, hello_buf, HELLO_BUF_SZ);
 	if (x < 0) {
 	    debug(50, 0) ("ipcCreate: PARENT: hello read test failed\n");
 	    debug(50, 0) ("--> read: %s\n", xstrerror());
