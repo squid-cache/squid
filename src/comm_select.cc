@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: comm_select.cc,v 1.9 1998/09/09 18:18:03 wessels Exp $
+ * $Id: comm_select.cc,v 1.10 1998/09/15 06:25:17 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -85,7 +85,7 @@ static struct timeval zero_tv;
  * like to see as an average number of events minus the number of
  * events just processed.
  *
- *  incoming_interval = incoming_interval + 1 - number_of_events_processed
+ *  incoming_interval = incoming_interval + target_average - number_of_events_processed
  *
  * There are separate incoming_interval counters for both HTTP and ICP events
  * 
@@ -216,8 +216,7 @@ comm_poll_icp_incoming(void)
     if (nfds == 0)
 	return;
     nevents = comm_check_incoming_poll_handlers(nfds, fds);
-    incoming_icp_interval = incoming_icp_interval
-	+ Config.comm_incoming.icp_average - nevents;
+    incoming_icp_interval += Config.comm_incoming.icp_average - nevents;
     if (incoming_icp_interval < Config.comm_incoming.icp_min_poll)
        incoming_icp_interval = Config.comm_incoming.icp_min_poll;
     if (incoming_icp_interval > MAX_INCOMING_INTERVAL)
@@ -484,7 +483,7 @@ comm_select_icp_incoming(void)
     if (nfds == 0)
 	return;
     nevents = comm_check_incoming_select_handlers(nfds, fds);
-    incoming_icp_interval = incoming_icp_interval + 1 - nevents;
+    incoming_icp_interval += Config.comm_incoming.icp_average - nevents;
     if (incoming_icp_interval < 0)
 	incoming_icp_interval = 0;
     if (incoming_icp_interval > MAX_INCOMING_INTERVAL)
@@ -510,7 +509,7 @@ comm_select_http_incoming(void)
 	fds[nfds++] = HttpSockets[j];
     }
     nevents = comm_check_incoming_select_handlers(nfds, fds);
-    incoming_http_interval = incoming_http_interval + 1 - nevents;
+    incoming_http_interval += Config.comm_incoming.http_average - nevents;
     if (incoming_http_interval < 0)
 	incoming_http_interval = 0;
     if (incoming_http_interval > MAX_INCOMING_INTERVAL)
