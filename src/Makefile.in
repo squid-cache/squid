@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.314 2003/07/15 12:29:40 robertc Exp $
+#  $Id: Makefile.in,v 1.315 2003/07/15 13:22:34 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -684,6 +684,8 @@ ufsdump_SOURCES = debug.cc \
 	StoreMetaURL.h \
 	StoreMetaVary.cc \
 	StoreMetaVary.h \
+	StoreSwapLogData.cc \
+	StoreSwapLogData.h \
 	access_log.cc \
 	acl.cc \
 	ACLChecklist.cc \
@@ -718,6 +720,7 @@ ufsdump_SOURCES = debug.cc \
 	ETag.cc \
 	event.cc \
 	external_acl.cc \
+	ExternalACLEntry.cc \
 	fd.cc \
 	fde.cc \
 	fde.h \
@@ -1146,10 +1149,11 @@ am__ufsdump_SOURCES_DIST = debug.cc int.cc ufsdump.cc store.cc \
 	StoreMeta.cc StoreMeta.h StoreMetaMD5.cc StoreMetaMD5.h \
 	StoreMetaSTD.cc StoreMetaSTD.h StoreMetaUnpacker.cc \
 	StoreMetaUnpacker.h StoreMetaURL.cc StoreMetaURL.h \
-	StoreMetaVary.cc StoreMetaVary.h access_log.cc acl.cc \
-	ACLChecklist.cc ACLARP.cc ACLARP.h ACLASN.cc ACLASN.h \
-	ACLDestinationASN.h ACLSourceASN.h ACLBrowser.cc ACLBrowser.h \
-	ACLData.h ACLDestinationDomain.cc ACLDestinationDomain.h \
+	StoreMetaVary.cc StoreMetaVary.h StoreSwapLogData.cc \
+	StoreSwapLogData.h access_log.cc acl.cc ACLChecklist.cc \
+	ACLARP.cc ACLARP.h ACLASN.cc ACLASN.h ACLDestinationASN.h \
+	ACLSourceASN.h ACLBrowser.cc ACLBrowser.h ACLData.h \
+	ACLDestinationDomain.cc ACLDestinationDomain.h \
 	ACLDestinationIP.cc ACLDestinationIP.h ACLDomainData.h \
 	ACLDomainData.cc ACLExtUser.h ACLExtUser.cc ACLIntRange.cc \
 	ACLIntRange.h ACLIP.cc ACLIP.h ACLMaxConnection.cc \
@@ -1185,13 +1189,14 @@ am__ufsdump_SOURCES_DIST = debug.cc int.cc ufsdump.cc store.cc \
 	ESIInclude.h ESILiteral.h ESIParser.cc ESIParser.h \
 	ESISegment.cc ESISegment.h ESISequence.cc ESISequence.h \
 	ESIVar.h ESIVarState.cc ESIVarState.h ETag.cc event.cc \
-	external_acl.cc fd.cc fde.cc fde.h filemap.cc forward.cc \
-	fqdncache.cc ftp.cc gopher.cc helper.cc htcp.cc htcp.h http.cc \
-	HttpStatusLine.cc HttpHdrCc.cc HttpHdrRange.cc HttpHdrSc.cc \
-	HttpHdrScTarget.cc HttpHdrContRange.cc HttpHeader.cc \
-	HttpHeaderTools.cc HttpBody.cc HttpMsg.cc HttpReply.cc \
-	HttpRequest.cc HttpRequest.h icmp.cc icp_v2.cc icp_v3.cc \
-	ACLIdent.cc ACLIdent.h ident.cc internal.cc ipc.cc ipcache.cc \
+	external_acl.cc ExternalACLEntry.cc fd.cc fde.cc fde.h \
+	filemap.cc forward.cc fqdncache.cc ftp.cc gopher.cc helper.cc \
+	htcp.cc htcp.h http.cc HttpStatusLine.cc HttpHdrCc.cc \
+	HttpHdrRange.cc HttpHdrSc.cc HttpHdrScTarget.cc \
+	HttpHdrContRange.cc HttpHeader.cc HttpHeaderTools.cc \
+	HttpBody.cc HttpMsg.cc HttpReply.cc HttpRequest.cc \
+	HttpRequest.h icmp.cc icp_v2.cc icp_v3.cc ACLIdent.cc \
+	ACLIdent.h ident.cc internal.cc ipc.cc ipcache.cc \
 	IPInterception.cc IPInterception.h leakfinder.cc logfile.cc \
 	mem.cc mem_node.cc mem_node.h Mem.h MemBuf.cc MemObject.cc \
 	MemObject.h mime.cc multicast.cc neighbors.cc net_db.cc \
@@ -1211,9 +1216,9 @@ am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) ufsdump.$(OBJEXT) \
 	store.$(OBJEXT) StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
 	StoreMetaSTD.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
 	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
-	access_log.$(OBJEXT) acl.$(OBJEXT) ACLChecklist.$(OBJEXT) \
-	$(am__objects_3) asn.$(OBJEXT) authenticate.$(OBJEXT) \
-	cache_cf.$(OBJEXT) CacheDigest.$(OBJEXT) \
+	StoreSwapLogData.$(OBJEXT) access_log.$(OBJEXT) acl.$(OBJEXT) \
+	ACLChecklist.$(OBJEXT) $(am__objects_3) asn.$(OBJEXT) \
+	authenticate.$(OBJEXT) cache_cf.$(OBJEXT) CacheDigest.$(OBJEXT) \
 	cache_manager.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
 	client_db.$(OBJEXT) client_side.$(OBJEXT) \
 	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
@@ -1221,12 +1226,12 @@ am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) ufsdump.$(OBJEXT) \
 	comm_poll.$(OBJEXT) comm_kqueue.$(OBJEXT) comm_epoll.$(OBJEXT) \
 	$(am__objects_5) disk.$(OBJEXT) $(am__objects_6) \
 	errorpage.$(OBJEXT) $(am__objects_8) ETag.$(OBJEXT) \
-	event.$(OBJEXT) external_acl.$(OBJEXT) fd.$(OBJEXT) \
-	fde.$(OBJEXT) filemap.$(OBJEXT) forward.$(OBJEXT) \
-	fqdncache.$(OBJEXT) ftp.$(OBJEXT) gopher.$(OBJEXT) \
-	helper.$(OBJEXT) $(am__objects_9) http.$(OBJEXT) \
-	HttpStatusLine.$(OBJEXT) HttpHdrCc.$(OBJEXT) \
-	HttpHdrRange.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
+	event.$(OBJEXT) external_acl.$(OBJEXT) \
+	ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) fde.$(OBJEXT) \
+	filemap.$(OBJEXT) forward.$(OBJEXT) fqdncache.$(OBJEXT) \
+	ftp.$(OBJEXT) gopher.$(OBJEXT) helper.$(OBJEXT) \
+	$(am__objects_9) http.$(OBJEXT) HttpStatusLine.$(OBJEXT) \
+	HttpHdrCc.$(OBJEXT) HttpHdrRange.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
 	HttpHdrScTarget.$(OBJEXT) HttpHdrContRange.$(OBJEXT) \
 	HttpHeader.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
 	HttpBody.$(OBJEXT) HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) \
