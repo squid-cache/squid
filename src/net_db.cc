@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.72 1998/03/03 00:31:10 rousskov Exp $
+ * $Id: net_db.cc,v 1.73 1998/03/03 17:10:57 wessels Exp $
  *
  * DEBUG: section 37    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -629,6 +629,7 @@ netdbDump(StoreEntry * sentry)
 	    n->hops);
 	for (x = n->hosts; x; x = x->next)
 	    storeAppendPrintf(sentry, " %s", x->name);
+	storeAppendPrintf(sentry, "\n");
 	p = n->peers;
 	for (j = 0; j < n->n_peers; j++, p++) {
 	    storeAppendPrintf(sentry, "    %-22.22s %7.1f %5.1f\n",
@@ -636,9 +637,6 @@ netdbDump(StoreEntry * sentry)
 		p->rtt,
 		p->hops);
 	}
-	/* put a new line if no peers */
-	if (!n->n_peers)
-	    storeAppendPrintf(sentry, "\n");
     }
     xfree(list);
 #else
