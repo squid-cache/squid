@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.46 2002/10/21 06:43:07 adrian Exp $
+ * $Id: htcp.cc,v 1.47 2002/10/21 09:31:55 hno Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "Store.h"
 #include "StoreClient.h"
+#include "comm.h"
 
 typedef struct _Countstr Countstr;
 typedef struct _htcpHeader htcpHeader;
