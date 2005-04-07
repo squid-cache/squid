@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.503 2005/01/03 16:08:26 robertc Exp $
+ * $Id: protos.h,v 1.504 2005/04/06 18:44:25 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -175,6 +175,7 @@ SQUIDCEXTERN void packerPrintf();
 SQUIDCEXTERN Ctx ctx_enter(const char *descr);
 SQUIDCEXTERN void ctx_exit(Ctx ctx);
 
+SQUIDCEXTERN void _db_set_syslog(const char *facility);
 SQUIDCEXTERN void _db_init(const char *logfile, const char *options);
 SQUIDCEXTERN void _db_rotate_log(void);
 
