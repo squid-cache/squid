@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.406 2005/04/03 17:11:21 serassio Exp $
+ * $Id: main.cc,v 1.407 2005/04/06 18:44:25 serassio Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -67,6 +67,7 @@ SQUIDCEXTERN void (*failure_notify) (const char *);
 
 static int opt_send_signal = -1;
 static int opt_parse_cfg_only = 0;
+static char *opt_syslog_facility = NULL;
 static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
 static int configured_once = 0;
 #if MALLOC_DBG
@@ -106,9 +107,9 @@ usage(void)
 {
     fprintf(stderr,
 #if USE_WIN32_SERVICE
-            "Usage: %s [-cdhirsvzCDFNRVYX] [-f config-file] [-[au] port] [-k signal] [-n name] [-O CommandLine]\n"
+            "Usage: %s [-cdhirvzCDFNRVYX] [-s | -l facility] [-f config-file] [-[au] port] [-k signal] [-n name] [-O CommandLine]\n"
 #else
-            "Usage: %s [-cdhsvzCDFNRVYX] [-f config-file] [-[au] port] [-k signal]\n"
+            "Usage: %s [-cdhvzCDFNRVYX] [-s | -l facility] [-f config-file] [-[au] port] [-k signal]\n"
 #endif
             "       -a port   Specify HTTP port number (default: %d).\n"
             "       -d level  Write debugging to stderr also.\n"
@@ -126,7 +127,8 @@ usage(void)
             "                 default is: " _WIN_SQUID_DEFAULT_SERVICE_NAME ".\n"
             "       -r        Removes a Windows Service (see -n option).\n"
 #endif
-            "       -s        Enable logging to syslog.\n"
+            "       -s | -l facility\n"
+            "                 Enable logging to syslog.\n"
             "       -u port   Specify ICP port number (default: %d), disable with 0.\n"
             "       -v        Print version.\n"
             "       -z        Create swap directories\n"
@@ -155,10 +157,10 @@ mainParseOptions(int argc, char *argv[])
 
 #if USE_WIN32_SERVICE
 
-    while ((c = getopt(argc, argv, "CDFNO:RSVYXa:d:f:hik:m::n:rsu:vz?")) != -1)
+    while ((c = getopt(argc, argv, "CDFNO:RSVYXa:d:f:hik:m::n:rsl:u:vz?")) != -1)
 #else
 
-    while ((c = getopt(argc, argv, "CDFNRSVYXa:d:f:hk:m::su:vz?")) != -1)
+    while ((c = getopt(argc, argv, "CDFNRSVYXa:d:f:hk:m::sl:u:vz?")) != -1)
 #endif
 
     {
@@ -339,10 +341,13 @@ mainParseOptions(int argc, char *argv[])
 
 #endif
 
+        case 'l':
+            opt_syslog_facility = xstrdup(optarg);
+
         case 's':
 #if HAVE_SYSLOG
 
-            opt_syslog_enable = 1;
+            _db_set_syslog(opt_syslog_facility);
 
             break;
 
