@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.106 2005/04/06 19:03:46 serassio Exp $
+#  $Id: Makefile.am,v 1.107 2005/04/06 19:07:03 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -627,6 +627,7 @@ ufsdump_SOURCES = debug.cc \
 	clientStream.h \
 	comm.cc \
 	comm.h \
+        CommIO.h \
 	comm_select.cc \
 	comm_poll.cc \
         comm_epoll.cc \
