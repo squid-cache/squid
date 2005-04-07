@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.402 2005/04/01 21:11:28 serassio Exp $
+ * $Id: comm.cc,v 1.403 2005/04/06 19:01:01 serassio Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -39,6 +39,7 @@
 #include "StoreIOBuffer.h"
 #include "comm.h"
 #include "fde.h"
+#include "CommIO.h"
 #include "ConnectionDetail.h"
 
 #if defined(_SQUID_CYGWIN_)
@@ -2425,7 +2426,7 @@ int CommIO::DoneReadFD = -1;
 void
 CommIO::FlushPipe() {
     char buf[256];
-    read(DoneReadFD, buf, sizeof(buf));
+    FD_READ_METHOD(DoneReadFD, buf, sizeof(buf));
 }
 
 void

@@ -34,26 +34,6 @@ extern int commIsHalfClosed(int);
 extern void commCheckHalfClosed(void *);
 extern bool comm_has_incomplete_write(int);
 
-/* Where should this belong? */
-
-class CommIO
-{
-
-public:
-    static inline void NotifyIOCompleted();
-    static void ResetNotifications();
-    static void Initialise();
-    static void NotifyIOClose();
-
-private:
-    static void NULLFDHandler(int, void *);
-    static void FlushPipe();
-    static bool Initialised;
-    static bool DoneSignalled;
-    static int DoneFD;
-    static int DoneReadFD;
-};
-
 /* Not sure where these should live yet */
 
 class Acceptor
@@ -122,19 +102,6 @@ private:
     void addCheck (int const);
 
     void removeCheck (int const);
-};
-
-/* Inline code. TODO: make structued approach to inlining */
-void
-CommIO::NotifyIOCompleted()
-{
-    if (!Initialised)
-        Initialise();
-
-    if (!DoneSignalled) {
-        DoneSignalled = true;
-        write(DoneFD, "!", 1);
-    }
 };
 
 #endif

@@ -1,5 +1,5 @@
 /*
- * $Id: aiops.cc,v 1.2 2005/04/01 21:11:28 serassio Exp $
+ * $Id: aiops.cc,v 1.3 2005/04/06 19:01:02 serassio Exp $
  *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
@@ -50,7 +50,7 @@
 #if HAVE_SCHED_H
 #include	<sched.h>
 #endif
-#include "comm.h"
+#include "CommIO.h"
 
 #define RIDICULOUS_LENGTH	4096
 
