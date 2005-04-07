@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsIOStrategy.cc,v 1.2 2005/04/01 21:11:28 serassio Exp $
+ * $Id: DiskThreadsIOStrategy.cc,v 1.3 2005/04/06 20:36:10 serassio Exp $
  *
  * DEBUG: section 79    Squid-side Disk I/O functions.
  * AUTHOR: Robert Collins
@@ -195,6 +195,7 @@ DiskThreadsIOStrategy::aioStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "unlink\t%d\t%d\n", squidaio_counts.unlink_start, squidaio_counts.unlink_finish);
     storeAppendPrintf(sentry, "check_callback\t%d\t-\n", squidaio_counts.check_callback);
     storeAppendPrintf(sentry, "queue\t%d\t-\n", squidaio_get_queue_len());
+    squidaio_stats(sentry);
 }
 
 DiskThreadsIOStrategy DiskThreadsIOStrategy::Instance;
