@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.12 2004/12/21 17:28:28 robertc Exp $
+ * $Id: ESI.cc,v 1.13 2005/04/18 21:52:41 hno Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -1437,7 +1437,7 @@ ESIContext::freeResources ()
     /* don't touch incoming, it's a pointer into buffered anyway */
 }
 
-extern ErrorState *clientBuildError (err_type, http_status, char const *, struct in_addr *, HttpRequest *);
+extern ErrorState *clientBuildError (err_type, http_status, char const *, struct IN_ADDR *, HttpRequest *);
 
 
 /* This can ONLY be used before we have sent *any* data to the client */

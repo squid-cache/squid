@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMaxUserIP.cc,v 1.6 2004/08/30 05:12:31 robertc Exp $
+ * $Id: ACLMaxUserIP.cc,v 1.7 2005/04/18 21:52:41 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -109,7 +109,7 @@ ACLMaxUserIP::parse()
 int
 ACLMaxUserIP::match(auth_user_request_t * auth_user_request,
 
-                    struct in_addr const &src_addr)
+                    struct IN_ADDR const &src_addr)
 {
     /*
      * the logic for flush the ip list when the limit is hit vs keep

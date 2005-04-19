@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.66 2004/12/20 16:30:35 robertc Exp $
+ * $Id: dns_internal.cc,v 1.67 2005/04/18 21:52:42 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -122,7 +122,7 @@ static void
 idnsAddNameserver(const char *buf)
 {
 
-    struct in_addr A;
+    struct IN_ADDR A;
 
     if (!safe_inet_addr(buf, &A)) {
         debug(78, 0) ("WARNING: rejecting '%s' as a name server, because it is not a numeric IP address\n", buf);
@@ -795,7 +795,7 @@ idnsInit(void)
     if (DnsSocket < 0) {
         int port;
 
-        struct in_addr addr;
+        struct IN_ADDR addr;
 
         if (Config.Addrs.udp_outgoing.s_addr != no_addr.s_addr)
             addr = Config.Addrs.udp_outgoing;
@@ -933,7 +933,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
 
 void
 
-idnsPTRLookup(const struct in_addr addr, IDNSCB * callback, void *data)
+idnsPTRLookup(const struct IN_ADDR addr, IDNSCB * callback, void *data)
 {
     idns_query *q;
 

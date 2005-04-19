@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.403 2005/04/06 19:01:01 serassio Exp $
+ * $Id: comm.cc,v 1.404 2005/04/18 21:52:42 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -66,7 +66,7 @@ public:
     struct sockaddr_in S;
     CallBack<CNCB> callback;
 
-    struct in_addr in_addr;
+    struct IN_ADDR in_addr;
     int fd;
     int tries;
     int addrcount;
@@ -78,7 +78,7 @@ private:
 
 /* STATIC */
 
-static comm_err_t commBind(int s, struct in_addr, u_short port);
+static comm_err_t commBind(int s, struct IN_ADDR, u_short port);
 static void commSetReuseAddr(int);
 static void commSetNoLinger(int);
 static void CommWriteStateCallbackAndFree(int fd, comm_err_t code);
@@ -1015,7 +1015,7 @@ comm_local_port(int fd)
 
 static comm_err_t
 
-commBind(int s, struct in_addr in_addr, u_short port)
+commBind(int s, struct IN_ADDR in_addr, u_short port)
 {
 
     struct sockaddr_in S;
@@ -1044,7 +1044,7 @@ int
 comm_open(int sock_type,
           int proto,
 
-          struct in_addr addr,
+          struct IN_ADDR addr,
           u_short port,
           int flags,
           const char *note)
@@ -1064,7 +1064,7 @@ int
 comm_openex(int sock_type,
             int proto,
 
-            struct in_addr addr,
+            struct IN_ADDR addr,
             u_short port,
             int flags,
             unsigned char TOS,

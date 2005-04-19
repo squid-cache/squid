@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1035.h,v 1.10 2003/12/18 01:16:01 robertc Exp $
+ * $Id: rfc1035.h,v 1.11 2005/04/18 21:52:40 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -59,7 +59,7 @@ struct _rfc1035_rr {
 SQUIDCEXTERN unsigned short rfc1035BuildAQuery(const char *hostname,
     char *buf,
     size_t * szp);
-SQUIDCEXTERN unsigned short rfc1035BuildPTRQuery(const struct in_addr,
+SQUIDCEXTERN unsigned short rfc1035BuildPTRQuery(const struct IN_ADDR,
     char *buf,
     size_t * szp);
 SQUIDCEXTERN unsigned short rfc1035RetryQuery(char *);

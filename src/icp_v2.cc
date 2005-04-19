@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.84 2003/09/21 00:30:47 robertc Exp $
+ * $Id: icp_v2.cc,v 1.85 2005/04/18 21:52:42 hno Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -42,7 +42,7 @@
 #include "ACL.h"
 #include "AccessLogEntry.h"
 
-static void icpLogIcp(struct in_addr, log_type, int, const char *, int);
+static void icpLogIcp(struct IN_ADDR, log_type, int, const char *, int);
 
 static void icpHandleIcpV2(int, struct sockaddr_in, char *, int);
 static void icpCount(void *, int, size_t, int);
@@ -155,7 +155,7 @@ ICP2State::created (StoreEntry *newEntry)
 
 static void
 
-icpLogIcp(struct in_addr caddr, log_type logcode, int len, const char *url, int delay)
+icpLogIcp(struct IN_ADDR caddr, log_type logcode, int len, const char *url, int delay)
 {
     AccessLogEntry al;
 
@@ -566,7 +566,7 @@ static void
 icpPktDump(icp_common_t * pkt)
 {
 
-    struct in_addr a;
+    struct IN_ADDR a;
 
     debug(12, 9) ("opcode:     %3d %s\n",
                   (int) pkt->opcode,
@@ -663,7 +663,7 @@ icpConnectionsOpen(void)
 {
     u_int16_t port;
 
-    struct in_addr addr;
+    struct IN_ADDR addr;
 
     struct sockaddr_in xaddr;
     int x;
@@ -729,7 +729,7 @@ icpConnectionsOpen(void)
         theOutIcpConnection = theInIcpConnection;
     }
 
-    memset(&theOutICPAddr, '\0', sizeof(struct in_addr));
+    memset(&theOutICPAddr, '\0', sizeof(struct IN_ADDR));
 
     len = sizeof(struct sockaddr_in);
     memset(&xaddr, '\0', len);

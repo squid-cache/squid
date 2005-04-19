@@ -1,5 +1,5 @@
 /*
- * $Id: ACLARP.cc,v 1.11 2005/01/06 10:44:39 serassio Exp $
+ * $Id: ACLARP.cc,v 1.12 2005/04/18 21:52:41 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -82,7 +82,7 @@ struct arpreq
 #endif
 static void aclParseArpList(SplayNode<acl_arp_data *> **curlist);
 static int decode_eth(const char *asc, char *eth);
-static int aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct in_addr c);
+static int aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c);
 static SplayNode<acl_arp_data *>::SPLAYCMP aclArpCompare;
 static SplayNode<acl_arp_data *>::SPLAYWALKEE aclDumpArpListWalkee;
 
@@ -231,7 +231,7 @@ ACLARP::match(ACLChecklist *checklist)
 /* aclMatchArp */
 /***************/
 int
-aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct in_addr c)
+aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
 {
 #if defined(_SQUID_LINUX_)
 

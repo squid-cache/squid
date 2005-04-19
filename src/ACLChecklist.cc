@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.25 2004/12/27 15:57:15 hno Exp $
+ * $Id: ACLChecklist.cc,v 1.26 2005/04/18 21:52:41 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -301,11 +301,11 @@ ACLChecklist::ACLChecklist() : accessList (NULL), my_port (0), request (NULL),
         sourceDomainChecked_(false)
 {
 
-    memset (&src_addr, '\0', sizeof (struct in_addr));
+    memset (&src_addr, '\0', sizeof (struct IN_ADDR));
 
-    memset (&dst_addr, '\0', sizeof (struct in_addr));
+    memset (&dst_addr, '\0', sizeof (struct IN_ADDR));
 
-    memset (&my_addr, '\0', sizeof (struct in_addr));
+    memset (&my_addr, '\0', sizeof (struct IN_ADDR));
     rfc931[0] = '\0';
 }
 

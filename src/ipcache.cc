@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.250 2005/02/13 15:49:50 serassio Exp $
+ * $Id: ipcache.cc,v 1.251 2005/04/18 21:52:42 hno Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -333,7 +333,7 @@ ipcacheParse(ipcache_entry *i, const char *inbuf)
     if (ipcount > 0) {
         int j, k;
 
-        i->addrs.in_addrs = (struct in_addr *)xcalloc(ipcount, sizeof(struct in_addr));
+        i->addrs.in_addrs = (struct IN_ADDR *)xcalloc(ipcount, sizeof(struct IN_ADDR));
         i->addrs.bad_mask = (unsigned char *)xcalloc(ipcount, sizeof(unsigned char));
 
         for (j = 0, k = 0; k < ipcount; k++) {
@@ -416,7 +416,7 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
         return 0;
     }
 
-    i->addrs.in_addrs = (struct in_addr *)xcalloc(na, sizeof(struct in_addr));
+    i->addrs.in_addrs = (struct IN_ADDR *)xcalloc(na, sizeof(struct IN_ADDR));
     i->addrs.bad_mask = (unsigned char *)xcalloc(na, sizeof(unsigned char));
 
     for (j = 0, k = 0; k < nr; k++) {
@@ -571,7 +571,7 @@ ipcache_init(void)
 
     memset(&static_addrs, '\0', sizeof(ipcache_addrs));
 
-    static_addrs.in_addrs = (struct in_addr *)xcalloc(1, sizeof(struct in_addr));
+    static_addrs.in_addrs = (struct IN_ADDR *)xcalloc(1, sizeof(struct IN_ADDR));
     static_addrs.bad_mask = (unsigned char *)xcalloc(1, sizeof(unsigned char));
     ipcache_high = (long) (((float) Config.ipcache.size *
                             (float) Config.ipcache.high) / (float) 100);
@@ -718,7 +718,7 @@ ipcache_addrs *
 ipcacheCheckNumeric(const char *name)
 {
 
-    struct in_addr ip;
+    struct IN_ADDR ip;
     /* check if it's already a IP address in text form. */
 
     if (!safe_inet_addr(name, &ip))
@@ -804,7 +804,7 @@ ipcacheCycleAddr(const char *name, ipcache_addrs * ia)
  */
 void
 
-ipcacheMarkBadAddr(const char *name, struct in_addr addr)
+ipcacheMarkBadAddr(const char *name, struct IN_ADDR addr)
 {
     ipcache_entry *i;
     ipcache_addrs *ia;
@@ -837,7 +837,7 @@ ipcacheMarkBadAddr(const char *name, struct in_addr addr)
 
 void
 
-ipcacheMarkGoodAddr(const char *name, struct in_addr addr)
+ipcacheMarkGoodAddr(const char *name, struct IN_ADDR addr)
 {
     ipcache_entry *i;
     ipcache_addrs *ia;
@@ -906,7 +906,7 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
 {
     ipcache_entry *i;
 
-    struct in_addr ip;
+    struct IN_ADDR ip;
 
     if (!safe_inet_addr(ipaddr, &ip)) {
         if (strchr(ipaddr, ':') && strspn(ipaddr, "0123456789abcdefABCDEF:") == strlen(ipaddr)) {
@@ -936,7 +936,7 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
     i->addrs.cur = 0;
     i->addrs.badcount = 0;
 
-    i->addrs.in_addrs = (struct in_addr *)xcalloc(1, sizeof(struct in_addr));
+    i->addrs.in_addrs = (struct IN_ADDR *)xcalloc(1, sizeof(struct IN_ADDR));
     i->addrs.bad_mask = (unsigned char *)xcalloc(1, sizeof(unsigned char));
     i->addrs.in_addrs[0].s_addr = ip.s_addr;
     i->addrs.bad_mask[0] = FALSE;

@@ -112,11 +112,11 @@ int
 aclIpAddrNetworkCompare(acl_ip_data * const &p, acl_ip_data * const &q)
 {
 
-    struct in_addr A = p->addr1;
+    struct IN_ADDR A = p->addr1;
 
-    const struct in_addr B = q->addr1;
+    const struct IN_ADDR B = q->addr1;
 
-    const struct in_addr C = q->addr2;
+    const struct IN_ADDR C = q->addr2;
     A.s_addr &= q->mask.s_addr;	/* apply netmask */
 
     if (C.s_addr == 0) {	/* single address check */
@@ -181,7 +181,7 @@ acl_ip_data::NetworkCompare(acl_ip_data * const & a, acl_ip_data * const &b)
  */
 bool
 
-acl_ip_data::DecodeMask(const char *asc, struct in_addr *mask)
+acl_ip_data::DecodeMask(const char *asc, struct IN_ADDR *mask)
 {
     char junk;
     int a1 = 0;
@@ -360,7 +360,7 @@ ACLIP::valid () const
 
 int
 
-ACLIP::match(struct in_addr &clientip)
+ACLIP::match(struct IN_ADDR &clientip)
 {
     static acl_ip_data ClientAddress (any_addr, any_addr, no_addr, NULL);
     /*
@@ -380,4 +380,4 @@ ACLIP::match(struct in_addr &clientip)
 
 acl_ip_data::acl_ip_data () :addr1(any_addr), addr2(any_addr), mask (any_addr), next (NULL) {}
 
-acl_ip_data::acl_ip_data (struct in_addr const &anAddress1, struct in_addr const &anAddress2, struct in_addr const &aMask, acl_ip_data *aNext) : addr1(anAddress1), addr2(anAddress2), mask(aMask), next(aNext){}
+acl_ip_data::acl_ip_data (struct IN_ADDR const &anAddress1, struct IN_ADDR const &anAddress2, struct IN_ADDR const &aMask, acl_ip_data *aNext) : addr1(anAddress1), addr2(anAddress2), mask(aMask), next(aNext){}

@@ -1,5 +1,5 @@
 /*
- * $Id: config.h,v 1.16 2004/12/24 01:03:39 hno Exp $
+ * $Id: config.h,v 1.17 2005/04/18 21:52:40 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -193,6 +193,17 @@
 #endif
 
 
+
+/* 
+ * This is hack to allow compiling IPv6-IPv4 version,
+ * not disturbing branches others than squid3-ipv6 
+ */
+
+#ifdef INET6 
+#define IN_ADDR in6_addr
+#else
+#define IN_ADDR in_addr
+#endif
 
 /* Typedefs for missing entries on a system */
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.65 2003/09/21 00:30:47 robertc Exp $
+ * $Id: snmp_core.cc,v 1.66 2005/04/18 21:52:43 hno Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -406,7 +406,7 @@ snmpConnectionOpen(void)
             theOutSnmpConnection = theInSnmpConnection;
         }
 
-        memset(&theOutSNMPAddr, '\0', sizeof(struct in_addr));
+        memset(&theOutSNMPAddr, '\0', sizeof(struct IN_ADDR));
 
         len = sizeof(struct sockaddr_in);
         memset(&xaddr, '\0', len);
@@ -854,7 +854,7 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
     u_char *cp = NULL;
     peer *peers = Config.peers;
 
-    struct in_addr *laddr = NULL;
+    struct IN_ADDR *laddr = NULL;
     char *host_addr = NULL, *current_addr = NULL, *last_addr = NULL;
 
     if (peers == NULL) {
@@ -919,7 +919,7 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
     oid *instance = NULL;
     u_char *cp = NULL;
 
-    struct in_addr *laddr = NULL;
+    struct IN_ADDR *laddr = NULL;
 
     if (*len <= current->len) {
         instance = (oid *)xmalloc(sizeof(name) * (*len + 4));
@@ -1142,7 +1142,7 @@ snmpSnmplibDebug(int lvl, char *buf)
 
 void
 
-addr2oid(struct in_addr addr, oid * Dest)
+addr2oid(struct IN_ADDR addr, oid * Dest)
 {
     u_char *cp;
     cp = (u_char *) & (addr.s_addr);
@@ -1152,12 +1152,12 @@ addr2oid(struct in_addr addr, oid * Dest)
     Dest[3] = *cp++;
 }
 
-struct in_addr
+struct IN_ADDR
             *
             oid2addr(oid * id)
 {
 
-    static struct in_addr laddr;
+    static struct IN_ADDR laddr;
     u_char *cp = (u_char *) & (laddr.s_addr);
     cp[0] = id[0];
     cp[1] = id[1];

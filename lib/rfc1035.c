@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.35 2005/01/23 14:59:06 serassio Exp $
+ * $Id: rfc1035.c,v 1.36 2005/04/18 21:52:40 hno Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -636,7 +636,7 @@ rfc1035BuildAQuery(const char *hostname, char *buf, size_t * szp)
  * Return value is the query ID.
  */
 unsigned short
-rfc1035BuildPTRQuery(const struct in_addr addr, char *buf, size_t * szp)
+rfc1035BuildPTRQuery(const struct IN_ADDR addr, char *buf, size_t * szp)
 {
     static rfc1035_header h;
     size_t offset = 0;
@@ -710,7 +710,7 @@ main(int argc, char *argv[])
     S.sin_port = htons(atoi(argv[2]));
     S.sin_addr.s_addr = inet_addr(argv[1]);
     while (fgets(input, 512, stdin)) {
-	struct in_addr junk;
+	struct IN_ADDR junk;
 	strtok(input, "\r\n");
 	memset(buf, '\0', 512);
 	sz = 512;
@@ -752,7 +752,7 @@ main(int argc, char *argv[])
 		printf("%d answers\n", n);
 		for (i = 0; i < n; i++) {
 		    if (answers[i].type == RFC1035_TYPE_A) {
-			struct in_addr a;
+			struct IN_ADDR a;
 			memcpy(&a, answers[i].rdata, 4);
 			printf("A\t%d\t%s\n", answers[i].ttl, inet_ntoa(a));
 		    } else if (answers[i].type == RFC1035_TYPE_PTR) {

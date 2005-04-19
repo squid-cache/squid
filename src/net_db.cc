@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.175 2005/01/05 21:59:34 serassio Exp $
+ * $Id: net_db.cc,v 1.176 2005/04/18 21:52:42 hno Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -79,10 +79,10 @@ netdbExchangeState;
 static hash_table *addr_table = NULL;
 static hash_table *host_table = NULL;
 
-static struct in_addr networkFromInaddr(struct in_addr a);
+static struct IN_ADDR networkFromInaddr(struct IN_ADDR a);
 static void netdbRelease(netdbEntry * n);
 
-static void netdbHashInsert(netdbEntry * n, struct in_addr addr);
+static void netdbHashInsert(netdbEntry * n, struct IN_ADDR addr);
 static void netdbHashDelete(const char *key);
 static void netdbHostInsert(netdbEntry * n, const char *hostname);
 static void netdbHostDelete(const net_db_name * x);
@@ -108,7 +108,7 @@ static wordlist *peer_names = NULL;
 
 static void
 
-netdbHashInsert(netdbEntry * n, struct in_addr addr)
+netdbHashInsert(netdbEntry * n, struct IN_ADDR addr)
 {
     xstrncpy(n->network, inet_ntoa(networkFromInaddr(addr)), 16);
     n->hash.key = n->network;
@@ -245,7 +245,7 @@ netdbPurgeLRU(void)
 
 static netdbEntry *
 
-netdbLookupAddr(struct in_addr addr)
+netdbLookupAddr(struct IN_ADDR addr)
 {
     netdbEntry *n;
     char *key = inet_ntoa(networkFromInaddr(addr));
@@ -255,7 +255,7 @@ netdbLookupAddr(struct in_addr addr)
 
 static netdbEntry *
 
-netdbAdd(struct in_addr addr)
+netdbAdd(struct IN_ADDR addr)
 {
     netdbEntry *n;
 
@@ -275,7 +275,7 @@ static void
 netdbSendPing(const ipcache_addrs * ia, void *data)
 {
 
-    struct in_addr addr;
+    struct IN_ADDR addr;
     char *hostname = (char *)((generic_cbdata *) data)->data;
     netdbEntry *n;
     netdbEntry *na;
@@ -341,12 +341,12 @@ netdbSendPing(const ipcache_addrs * ia, void *data)
     xfree(hostname);
 }
 
-static struct in_addr
+static struct IN_ADDR
 
-            networkFromInaddr(struct in_addr a)
+            networkFromInaddr(struct IN_ADDR a)
 {
 
-    struct in_addr b;
+    struct IN_ADDR b;
     b.s_addr = ntohl(a.s_addr);
 #if USE_CLASSFUL
 
@@ -529,7 +529,7 @@ netdbReloadState(void)
     netdbEntry *n;
     netdbEntry N;
 
-    struct in_addr addr;
+    struct IN_ADDR addr;
     int count = 0;
 
     struct timeval start = current_time;
@@ -674,7 +674,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer recievedData)
     int rec_sz = 0;
     off_t o;
 
-    struct in_addr addr;
+    struct IN_ADDR addr;
     double rtt;
     double hops;
     char *p;
@@ -974,7 +974,7 @@ netdbFreeMemory(void)
 
 int
 
-netdbHops(struct in_addr addr)
+netdbHops(struct IN_ADDR addr)
 {
 #if USE_ICMP
     netdbEntry *n = netdbLookupAddr(addr);
@@ -1143,7 +1143,7 @@ netdbUpdatePeer(HttpRequest * r, peer * e, int irtt, int ihops)
 
 void
 
-netdbExchangeUpdatePeer(struct in_addr addr, peer * e, double rtt, double hops)
+netdbExchangeUpdatePeer(struct IN_ADDR addr, peer * e, double rtt, double hops)
 {
 #if USE_ICMP
     netdbEntry *n;
@@ -1179,7 +1179,7 @@ netdbExchangeUpdatePeer(struct in_addr addr, peer * e, double rtt, double hops)
 
 void
 
-netdbDeleteAddrNetwork(struct in_addr addr)
+netdbDeleteAddrNetwork(struct IN_ADDR addr)
 {
 #if USE_ICMP
     netdbEntry *n = netdbLookupAddr(addr);
@@ -1206,7 +1206,7 @@ netdbBinaryExchange(StoreEntry * s)
     int rec_sz;
     char *buf;
 
-    struct in_addr addr;
+    struct IN_ADDR addr;
     storeBuffer(s);
     HttpVersion version(1, 0);
     httpReplySetHeaders(reply, version, HTTP_OK, "OK",

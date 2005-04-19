@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.38 2005/02/05 21:50:42 serassio Exp $
+ * $Id: wccp.cc,v 1.39 2005/04/18 21:52:43 hno Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Glenn Chisholm
@@ -61,7 +61,7 @@ struct wccp_here_i_am_t
 struct wccp_cache_entry_t
 {
 
-    struct in_addr ip_addr;
+    struct IN_ADDR ip_addr;
     int revision;
     char hash[WCCP_HASH_SIZE];
     int reserved;
@@ -96,7 +96,7 @@ static int last_id;
 static int last_assign_buckets_change;
 static unsigned int number_caches;
 
-static struct in_addr local_ip;
+static struct IN_ADDR local_ip;
 
 static PF wccpHandleUdp;
 static int wccpLowestIP(void);

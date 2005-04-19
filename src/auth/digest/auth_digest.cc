@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.41 2004/12/24 01:03:39 hno Exp $
+ * $Id: auth_digest.cc,v 1.42 2005/04/18 21:52:43 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -639,7 +639,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointe
             } else {
                 const char *useragent = httpHeaderGetStr(&request->header, HDR_USER_AGENT);
 
-                static struct in_addr last_broken_addr;
+                static struct IN_ADDR last_broken_addr;
                 static int seen_broken_client = 0;
 
                 if (!seen_broken_client) {

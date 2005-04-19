@@ -48,19 +48,19 @@ public:
 
     acl_ip_data ();
 
-    acl_ip_data (struct in_addr const &, struct in_addr const &, struct in_addr const &, acl_ip_data *);
+    acl_ip_data (struct IN_ADDR const &, struct IN_ADDR const &, struct IN_ADDR const &, acl_ip_data *);
     void toStr(char *buf, int len) const;
 
-    struct in_addr addr1;	/* if addr2 non-zero then its a range */
+    struct IN_ADDR addr1;	/* if addr2 non-zero then its a range */
 
-    struct in_addr addr2;
+    struct IN_ADDR addr2;
 
-    struct in_addr mask;
+    struct IN_ADDR mask;
     acl_ip_data *next;		/* used for parsing, not for storing */
 
 private:
 
-    static bool DecodeMask(const char *asc, struct in_addr *mask);
+    static bool DecodeMask(const char *asc, struct IN_ADDR *mask);
 };
 
 MEMPROXY_CLASS_INLINE(acl_ip_data)
@@ -87,7 +87,7 @@ public:
 
 protected:
 
-    int match(struct in_addr &);
+    int match(struct IN_ADDR &);
     IPSplay *data;
 
 private:

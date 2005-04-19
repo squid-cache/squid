@@ -1,6 +1,6 @@
 
 /*
- * $Id: fde.h,v 1.7 2005/03/18 15:17:17 hno Exp $
+ * $Id: fde.h,v 1.8 2005/04/18 21:52:42 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -50,7 +50,7 @@ public:
     u_short local_port;
     u_short remote_port;
 
-    struct in_addr local_addr;
+    struct IN_ADDR local_addr;
     unsigned char tos;
     char ipaddr[16];            /* dotted decimal address of peer */
     char desc[FD_DESC_SZ];

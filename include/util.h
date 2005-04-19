@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.71 2003/07/07 22:44:28 robertc Exp $
+ * $Id: util.h,v 1.72 2005/04/18 21:52:40 hno Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -126,7 +126,7 @@ extern size_t xmalloc_total;
 extern void xmalloc_find_leaks(void);
 #endif
 
-typedef struct in_addr SIA;
+typedef struct IN_ADDR SIA;
 SQUIDCEXTERN int safe_inet_addr(const char *, SIA *);
 SQUIDCEXTERN time_t parse_iso3307_time(const char *buf);
 SQUIDCEXTERN char *base64_decode(const char *coded);

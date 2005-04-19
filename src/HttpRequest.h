@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.10 2004/08/30 05:12:31 robertc Exp $
+ * $Id: HttpRequest.h,v 1.11 2005/04/18 21:52:41 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -82,9 +82,9 @@ public:
     int max_forwards;
     /* these in_addr's could probably be sockaddr_in's */
 
-    struct in_addr client_addr;
+    struct IN_ADDR client_addr;
 
-    struct in_addr my_addr;
+    struct IN_ADDR my_addr;
     unsigned short my_port;
     unsigned short client_port;
     HttpHeader header;
