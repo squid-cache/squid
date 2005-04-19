@@ -16,7 +16,7 @@
 
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.56 2005/03/20 01:10:53 hno Exp $
+#  $Id: Makefile.in,v 1.57 2005/04/19 00:10:41 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -734,12 +734,12 @@ clean-generic:
 
 distclean-generic:
 	-rm -f Makefile $(CONFIG_CLEAN_FILES)
+	-rm -f coss/$(am__dirstamp)
+	-rm -f null/$(DEPDIR)/$(am__dirstamp)
 	-rm -f ufs/$(am__dirstamp)
 	-rm -f coss/$(DEPDIR)/$(am__dirstamp)
-	-rm -f null/$(DEPDIR)/$(am__dirstamp)
-	-rm -f coss/$(am__dirstamp)
-	-rm -f null/$(am__dirstamp)
 	-rm -f ufs/$(DEPDIR)/$(am__dirstamp)
+	-rm -f null/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
