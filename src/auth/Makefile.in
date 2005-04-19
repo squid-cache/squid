@@ -218,7 +218,7 @@ target_alias = @target_alias@
 
 #  Makefile for authentication modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.50 2005/03/20 01:10:53 hno Exp $
+#  $Id: Makefile.in,v 1.51 2005/04/19 00:10:41 hno Exp $
 #
 AUTOMAKE_OPTIONS = subdir-objects
 AM_CFLAGS = @SQUID_CFLAGS@
@@ -599,11 +599,11 @@ clean-generic:
 
 distclean-generic:
 	-rm -f Makefile $(CONFIG_CLEAN_FILES)
-	-rm -f ntlm/$(DEPDIR)/$(am__dirstamp)
 	-rm -f ntlm/$(am__dirstamp)
-	-rm -f digest/$(DEPDIR)/$(am__dirstamp)
-	-rm -f basic/$(DEPDIR)/$(am__dirstamp)
 	-rm -f digest/$(am__dirstamp)
+	-rm -f basic/$(DEPDIR)/$(am__dirstamp)
+	-rm -f digest/$(DEPDIR)/$(am__dirstamp)
+	-rm -f ntlm/$(DEPDIR)/$(am__dirstamp)
 	-rm -f basic/$(am__dirstamp)
 
 maintainer-clean-generic:

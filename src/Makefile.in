@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.340 2005/04/07 00:10:38 hno Exp $
+#  $Id: Makefile.in,v 1.341 2005/04/19 00:10:40 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -263,8 +263,8 @@ DELAY_POOL_ALL_SOURCE = \
 	NullDelayId.cc \
 	NullDelayId.h
 
-@USE_DELAY_POOLS_FALSE@DELAY_POOL_SOURCE = 
 @USE_DELAY_POOLS_TRUE@DELAY_POOL_SOURCE = $(DELAY_POOL_ALL_SOURCE)
+@USE_DELAY_POOLS_FALSE@DELAY_POOL_SOURCE = 
 
 ESI_ALL_SOURCE = \
 	ElementList.h \
@@ -305,14 +305,14 @@ ESI_ALL_SOURCE = \
 @ENABLE_XPROF_STATS_FALSE@XPROF_STATS_SOURCE = 
 
 @ENABLE_HTCP_TRUE@HTCPSOURCE = htcp.cc htcp.h
-
-@MAKE_LEAKFINDER_TRUE@LEAKFINDERSOURCE = leakfinder.cc
 @MAKE_LEAKFINDER_FALSE@LEAKFINDERSOURCE = 
 
-@ENABLE_UNLINKD_TRUE@UNLINKDSOURCE = unlinkd.cc
+@MAKE_LEAKFINDER_TRUE@LEAKFINDERSOURCE = leakfinder.cc
 @ENABLE_UNLINKD_FALSE@UNLINKDSOURCE = 
-@ENABLE_UNLINKD_TRUE@UNLINKD = unlinkd
+
+@ENABLE_UNLINKD_TRUE@UNLINKDSOURCE = unlinkd.cc
 @ENABLE_UNLINKD_FALSE@UNLINKD = 
+@ENABLE_UNLINKD_TRUE@UNLINKD = unlinkd
 
 @ENABLE_PINGER_TRUE@PINGER = pinger
 @ENABLE_PINGER_FALSE@PINGER = 
@@ -325,15 +325,15 @@ SSL_ALL_SOURCE = \
 	ssl_support.cc \
 	ssl_support.h
 
-@ENABLE_SSL_FALSE@SSL_SOURCE = 
 @ENABLE_SSL_TRUE@SSL_SOURCE = $(SSL_ALL_SOURCE)
-@ENABLE_WIN32SPECIFIC_FALSE@WIN32SOURCE = 
+@ENABLE_SSL_FALSE@SSL_SOURCE = 
 
 @ENABLE_WIN32SPECIFIC_TRUE@WIN32SOURCE = win32.cc
+@ENABLE_WIN32SPECIFIC_FALSE@WIN32SOURCE = 
 
 IDENT_ALL_SOURCE = ACLIdent.cc ACLIdent.h ident.cc
-@ENABLE_IDENT_TRUE@IDENT_SOURCE = $(IDENT_ALL_SOURCE)
 @ENABLE_IDENT_FALSE@IDENT_SOURCE = 
+@ENABLE_IDENT_TRUE@IDENT_SOURCE = $(IDENT_ALL_SOURCE)
 
 ARP_ACL_ALL_SOURCE = ACLARP.cc ACLARP.h
 @ENABLE_ARP_ACL_FALSE@ARP_ACL_SOURCE = 
@@ -4801,37 +4801,37 @@ clean-generic:
 
 distclean-generic:
 	-rm -f Makefile $(CONFIG_CLEAN_FILES)
-	-rm -f DiskIO/DiskDaemon/$(DEPDIR)/$(am__dirstamp)
-	-rm -f tests/$(DEPDIR)/$(am__dirstamp)
-	-rm -f DiskIO/DiskDaemon/$(am__dirstamp)
-	-rm -f fs/ufs/$(DEPDIR)/$(am__dirstamp)
-	-rm -f tests/$(am__dirstamp)
 	-rm -f fs/diskd/$(DEPDIR)/$(am__dirstamp)
-	-rm -f fs/aufs/$(DEPDIR)/$(am__dirstamp)
-	-rm -f fs/ufs/$(am__dirstamp)
-	-rm -f fs/diskd/$(am__dirstamp)
-	-rm -f fs/aufs/$(am__dirstamp)
-	-rm -f DiskIO/Blocking/$(DEPDIR)/$(am__dirstamp)
-	-rm -f auth/ntlm/$(DEPDIR)/$(am__dirstamp)
-	-rm -f DiskIO/Blocking/$(am__dirstamp)
-	-rm -f auth/ntlm/$(am__dirstamp)
-	-rm -f fs/coss/$(DEPDIR)/$(am__dirstamp)
-	-rm -f auth/digest/$(DEPDIR)/$(am__dirstamp)
-	-rm -f ../test-suite/$(DEPDIR)/$(am__dirstamp)
-	-rm -f auth/basic/$(DEPDIR)/$(am__dirstamp)
-	-rm -f DiskIO/$(DEPDIR)/$(am__dirstamp)
-	-rm -f fs/null/$(DEPDIR)/$(am__dirstamp)
-	-rm -f fs/coss/$(am__dirstamp)
-	-rm -f auth/digest/$(am__dirstamp)
-	-rm -f ../test-suite/$(am__dirstamp)
-	-rm -f auth/basic/$(am__dirstamp)
-	-rm -f DiskIO/$(am__dirstamp)
-	-rm -f fs/null/$(am__dirstamp)
 	-rm -f DiskIO/DiskThreads/$(DEPDIR)/$(am__dirstamp)
+	-rm -f fs/ufs/$(DEPDIR)/$(am__dirstamp)
+	-rm -f fs/null/$(am__dirstamp)
+	-rm -f tests/$(am__dirstamp)
+	-rm -f fs/aufs/$(am__dirstamp)
+	-rm -f fs/diskd/$(am__dirstamp)
+	-rm -f ../test-suite/$(DEPDIR)/$(am__dirstamp)
+	-rm -f DiskIO/$(DEPDIR)/$(am__dirstamp)
+	-rm -f auth/ntlm/$(am__dirstamp)
+	-rm -f DiskIO/Blocking/$(am__dirstamp)
+	-rm -f DiskIO/Blocking/$(DEPDIR)/$(am__dirstamp)
+	-rm -f ../test-suite/$(am__dirstamp)
+	-rm -f fs/coss/$(DEPDIR)/$(am__dirstamp)
 	-rm -f DiskIO/AIO/$(DEPDIR)/$(am__dirstamp)
-	-rm -f DiskIO/DiskThreads/$(am__dirstamp)
+	-rm -f DiskIO/DiskDaemon/$(am__dirstamp)
 	-test -z "$(DISTCLEANFILES)" || rm -f $(DISTCLEANFILES)
+	-rm -f auth/digest/$(am__dirstamp)
+	-rm -f auth/ntlm/$(DEPDIR)/$(am__dirstamp)
+	-rm -f fs/null/$(DEPDIR)/$(am__dirstamp)
+	-rm -f DiskIO/$(am__dirstamp)
+	-rm -f fs/ufs/$(am__dirstamp)
 	-rm -f DiskIO/AIO/$(am__dirstamp)
+	-rm -f auth/basic/$(am__dirstamp)
+	-rm -f auth/digest/$(DEPDIR)/$(am__dirstamp)
+	-rm -f auth/basic/$(DEPDIR)/$(am__dirstamp)
+	-rm -f tests/$(DEPDIR)/$(am__dirstamp)
+	-rm -f DiskIO/DiskDaemon/$(DEPDIR)/$(am__dirstamp)
+	-rm -f fs/coss/$(am__dirstamp)
+	-rm -f DiskIO/DiskThreads/$(am__dirstamp)
+	-rm -f fs/aufs/$(DEPDIR)/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
