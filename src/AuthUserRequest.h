@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.h,v 1.1 2004/08/30 03:28:56 robertc Exp $
+ * $Id: AuthUserRequest.h,v 1.2 2005/04/18 21:52:41 hno Exp $
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 674533af-8b21-4641-b71a-74c4639072a0
@@ -49,7 +49,7 @@ struct AuthUserIP
     dlink_node node;
     /* IP addr this user authenticated from */
 
-    struct in_addr ipaddr;
+    struct IN_ADDR ipaddr;
     time_t ip_expiretime;
 };
 
@@ -81,7 +81,7 @@ public:
 
 public:
 
-    static auth_acl_t tryToAuthenticateAndSetAuthUser(auth_user_request_t **, http_hdr_type, HttpRequest *, ConnStateData::Pointer, struct in_addr);
+    static auth_acl_t tryToAuthenticateAndSetAuthUser(auth_user_request_t **, http_hdr_type, HttpRequest *, ConnStateData::Pointer, struct IN_ADDR);
     static void addReplyAuthHeader(HttpReply * rep, auth_user_request_t * auth_user_request, HttpRequest * request, int accelerated, int internal);
 
     AuthUserRequest();
@@ -110,7 +110,7 @@ public:
 
 private:
 
-    static auth_acl_t authenticate(auth_user_request_t ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData::Pointer conn, struct in_addr src_addr);
+    static auth_acl_t authenticate(auth_user_request_t ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData::Pointer conn, struct IN_ADDR src_addr);
 
     /* return a message on the 407 error pages */
     char *message;
@@ -131,7 +131,7 @@ extern size_t authenticateRequestRefCount (auth_user_request_t *);
 extern void authenticateFixHeader(HttpReply *, auth_user_request_t *, HttpRequest *, int, int);
 extern void authenticateAddTrailer(HttpReply *, auth_user_request_t *, HttpRequest *, int);
 
-extern void authenticateAuthUserRequestRemoveIp(auth_user_request_t *, struct in_addr);
+extern void authenticateAuthUserRequestRemoveIp(auth_user_request_t *, struct IN_ADDR);
 extern void authenticateAuthUserRequestClearIp(auth_user_request_t *);
 extern size_t authenticateAuthUserRequestIPCount(auth_user_request_t *);
 extern int authenticateDirection(auth_user_request_t *);

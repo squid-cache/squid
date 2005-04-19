@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.163 2005/02/13 15:49:50 serassio Exp $
+ * $Id: fqdncache.cc,v 1.164 2005/04/18 21:52:42 hno Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -432,7 +432,7 @@ fqdncacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error
 
 void
 
-fqdncache_nbgethostbyaddr(struct in_addr addr, FQDNH * handler, void *handlerData)
+fqdncache_nbgethostbyaddr(struct IN_ADDR addr, FQDNH * handler, void *handlerData)
 {
     fqdncache_entry *f = NULL;
     char *name = inet_ntoa(addr);
@@ -531,12 +531,12 @@ fqdncache_init(void)
 
 const char *
 
-fqdncache_gethostbyaddr(struct in_addr addr, int flags)
+fqdncache_gethostbyaddr(struct IN_ADDR addr, int flags)
 {
     char *name = inet_ntoa(addr);
     fqdncache_entry *f = NULL;
 
-    struct in_addr ip;
+    struct IN_ADDR ip;
     assert(name);
     FqdncacheStats.requests++;
     f = fqdncache_get(name);
@@ -636,7 +636,7 @@ dummy_handler(const char *bufnotused, void *datanotused)
 
 const char *
 
-fqdnFromAddr(struct in_addr addr)
+fqdnFromAddr(struct IN_ADDR addr)
 {
     const char *n;
     static char buf[32];

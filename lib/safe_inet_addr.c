@@ -1,6 +1,6 @@
 
 /*
- * $Id: safe_inet_addr.c,v 1.13 2003/01/23 00:37:01 robertc Exp $
+ * $Id: safe_inet_addr.c,v 1.14 2005/04/18 21:52:40 hno Exp $
  */
 
 #include "config.h"
@@ -31,11 +31,11 @@
 #include "snprintf.h"
 
 int
-safe_inet_addr(const char *buf, struct in_addr *addr)
+safe_inet_addr(const char *buf, struct IN_ADDR *addr)
 {
     static char addrbuf[32];
     int a1 = 0, a2 = 0, a3 = 0, a4 = 0;
-    struct in_addr A;
+    struct IN_ADDR A;
     char x;
 #if defined(_SQUID_HPUX_)
     /*

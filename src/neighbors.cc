@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.329 2005/03/10 20:22:46 serassio Exp $
+ * $Id: neighbors.cc,v 1.330 2005/04/18 21:52:42 hno Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -96,7 +96,7 @@ whichPeer(const struct sockaddr_in * from)
     int j;
     u_short port = ntohs(from->sin_port);
 
-    struct in_addr ip = from->sin_addr;
+    struct IN_ADDR ip = from->sin_addr;
     peer *p = NULL;
     debug(15, 3) ("whichPeer: from %s port %d\n", inet_ntoa(ip), port);
 

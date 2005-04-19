@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.90 2005/01/03 16:08:26 robertc Exp $
+ * $Id: snmp_agent.cc,v 1.91 2005/04/18 21:52:43 hno Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -175,7 +175,7 @@ snmp_meshPtblFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer = NULL;
 
-    struct in_addr *laddr;
+    struct IN_ADDR *laddr;
     char *cp = NULL;
     peer *p = NULL;
     int cnt = 0;

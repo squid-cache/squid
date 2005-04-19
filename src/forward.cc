@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.126 2005/03/18 15:22:05 hno Exp $
+ * $Id: forward.cc,v 1.127 2005/04/18 21:52:42 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -484,12 +484,12 @@ fwdConnectTimeout(int fd, void *data)
     comm_close(fd);
 }
 
-static struct in_addr
+static struct IN_ADDR
             aclMapAddr(acl_address * head, ACLChecklist * ch)
 {
     acl_address *l;
 
-    struct in_addr addr;
+    struct IN_ADDR addr;
 
     for (l = head; l; l = l->next)
     {
@@ -514,7 +514,7 @@ aclMapTOS(acl_tos * head, ACLChecklist * ch)
     return 0;
 }
 
-struct in_addr
+struct IN_ADDR
             getOutgoingAddr(HttpRequest * request)
 {
     ACLChecklist ch;
@@ -559,7 +559,7 @@ fwdConnectStart(void *data)
     int ctimeout;
     int ftimeout = Config.Timeout.forward - (squid_curtime - fwdState->start);
 
-    struct in_addr outgoing;
+    struct IN_ADDR outgoing;
     unsigned short tos;
     assert(fs);
     assert(fwdState->server_fd == -1);

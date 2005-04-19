@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLChecklist.h,v 1.19 2003/09/21 12:06:06 robertc Exp $
+ * $Id: ACLChecklist.h,v 1.20 2005/04/18 21:52:41 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -114,11 +114,11 @@ class NullState : public AsyncState
 
     const acl_access *accessList;
 
-    struct in_addr src_addr;
+    struct IN_ADDR src_addr;
 
-    struct in_addr dst_addr;
+    struct IN_ADDR dst_addr;
 
-    struct in_addr my_addr;
+    struct IN_ADDR my_addr;
     unsigned short my_port;
     HttpRequest *request;
     /* for acls that look at reply data */

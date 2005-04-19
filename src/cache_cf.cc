@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.468 2005/03/18 17:12:34 hno Exp $
+ * $Id: cache_cf.cc,v 1.469 2005/04/18 21:52:42 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -861,14 +861,14 @@ free_acl_access(acl_access ** head)
 
 static void
 
-dump_address(StoreEntry * entry, const char *name, struct in_addr addr)
+dump_address(StoreEntry * entry, const char *name, struct IN_ADDR addr)
 {
     storeAppendPrintf(entry, "%s %s\n", name, inet_ntoa(addr));
 }
 
 static void
 
-parse_address(struct in_addr *addr)
+parse_address(struct IN_ADDR *addr)
 {
 
     const struct hostent *hp;
@@ -887,10 +887,10 @@ parse_address(struct in_addr *addr)
 
 static void
 
-free_address(struct in_addr *addr)
+free_address(struct IN_ADDR *addr)
 {
 
-    memset(addr, '\0', sizeof(struct in_addr));
+    memset(addr, '\0', sizeof(struct IN_ADDR));
 }
 
 CBDATA_TYPE(acl_address);

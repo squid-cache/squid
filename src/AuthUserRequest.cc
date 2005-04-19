@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.cc,v 1.2 2004/12/20 17:35:58 robertc Exp $
+ * $Id: AuthUserRequest.cc,v 1.3 2005/04/18 21:52:41 hno Exp $
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 6803fde1-d5a2-4c29-9034-1c0c9f650eb4
@@ -201,7 +201,7 @@ AuthUserRequest::denyMessage(char const * const default_message)
 
 static void
 
-authenticateAuthUserRequestSetIp(auth_user_request_t * auth_user_request, struct in_addr ipaddr)
+authenticateAuthUserRequestSetIp(auth_user_request_t * auth_user_request, struct IN_ADDR ipaddr)
 {
     auth_user_ip_t *ipdata, *tempnode;
     auth_user_t *auth_user;
@@ -266,7 +266,7 @@ authenticateAuthUserRequestSetIp(auth_user_request_t * auth_user_request, struct
 
 void
 
-authenticateAuthUserRequestRemoveIp(auth_user_request_t * auth_user_request, struct in_addr ipaddr)
+authenticateAuthUserRequestRemoveIp(auth_user_request_t * auth_user_request, struct IN_ADDR ipaddr)
 {
     auth_user_ip_t *ipdata;
     auth_user_t *auth_user;
@@ -403,7 +403,7 @@ authTryGetUser (auth_user_request_t **auth_user_request, ConnStateData::Pointer 
  */
 auth_acl_t
 
-AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData::Pointer conn, struct in_addr src_addr)
+AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData::Pointer conn, struct IN_ADDR src_addr)
 {
     const char *proxy_auth;
     assert(headertype != 0);
@@ -616,7 +616,7 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
 
 auth_acl_t
 
-AuthUserRequest::tryToAuthenticateAndSetAuthUser(auth_user_request_t ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData::Pointer conn, struct in_addr src_addr)
+AuthUserRequest::tryToAuthenticateAndSetAuthUser(auth_user_request_t ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData::Pointer conn, struct IN_ADDR src_addr)
 {
     /* If we have already been called, return the cached value */
     auth_user_request_t *t = authTryGetUser (auth_user_request, conn, request);

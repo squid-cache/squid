@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLASN.h,v 1.5 2004/08/30 05:12:31 robertc Exp $
+ * $Id: ACLASN.h,v 1.6 2005/04/18 21:52:41 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -40,11 +40,11 @@
 #include "ACLStrategised.h"
 #include "ACLChecklist.h"
 
-SQUIDCEXTERN int asnMatchIp(List<int> *, struct in_addr);
+SQUIDCEXTERN int asnMatchIp(List<int> *, struct IN_ADDR);
 SQUIDCEXTERN void asnInit(void);
 SQUIDCEXTERN void asnFreeMemory(void);
 
-class ACLASN : public ACLData<struct in_addr>
+class ACLASN : public ACLData<struct IN_ADDR>
 {
 
 public:
@@ -52,17 +52,17 @@ public:
 
     virtual ~ACLASN();
 
-    virtual bool match(struct in_addr);
+    virtual bool match(struct IN_ADDR);
     virtual wordlist *dump();
     virtual void parse();
-    virtual ACLData<struct in_addr> *clone() const;
+    virtual ACLData<struct IN_ADDR> *clone() const;
     virtual void prepareForUse();
 
 private:
     static ACL::Prototype SourceRegistryProtoype;
-    static ACLStrategised<struct in_addr> SourceRegistryEntry_;
+    static ACLStrategised<struct IN_ADDR> SourceRegistryEntry_;
     static ACL::Prototype DestinationRegistryProtoype;
-    static ACLStrategised<struct in_addr> DestinationRegistryEntry_;
+    static ACLStrategised<struct IN_ADDR> DestinationRegistryEntry_;
     List<int> *data;
 };
 

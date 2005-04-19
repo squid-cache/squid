@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.107 2004/12/21 17:28:29 robertc Exp $
+ * $Id: cachemgr.cc,v 1.108 2005/04/18 21:52:42 hno Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -162,7 +162,7 @@ static const char *script_name = "/cgi-bin/cachemgr.cgi";
 static const char *progname = NULL;
 static time_t now;
 
-static struct in_addr no_addr;
+static struct IN_ADDR no_addr;
 
 /*
  * Function prototypes

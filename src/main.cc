@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.407 2005/04/06 18:44:25 serassio Exp $
+ * $Id: main.cc,v 1.408 2005/04/18 21:52:42 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -931,15 +931,15 @@ main(int argc, char **argv)
     if (oldmask)
         umask(oldmask);
 
-    memset(&local_addr, '\0', sizeof(struct in_addr));
+    memset(&local_addr, '\0', sizeof(struct IN_ADDR));
 
     safe_inet_addr(localhost, &local_addr);
 
-    memset(&any_addr, '\0', sizeof(struct in_addr));
+    memset(&any_addr, '\0', sizeof(struct IN_ADDR));
 
     safe_inet_addr("0.0.0.0", &any_addr);
 
-    memset(&no_addr, '\0', sizeof(struct in_addr));
+    memset(&no_addr, '\0', sizeof(struct IN_ADDR));
 
     safe_inet_addr("255.255.255.255", &no_addr);
 

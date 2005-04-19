@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.109 2004/12/20 16:30:36 robertc Exp $
+ * $Id: redirect.cc,v 1.110 2005/04/18 21:52:43 hno Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -46,7 +46,7 @@ typedef struct
     void *data;
     char *orig_url;
 
-    struct in_addr client_addr;
+    struct IN_ADDR client_addr;
     const char *client_ident;
     const char *method_s;
     RH *handler;

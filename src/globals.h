@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.129 2005/03/18 15:47:41 hno Exp $
+ * $Id: globals.h,v 1.130 2005/04/18 21:52:42 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -103,15 +103,15 @@ extern iostats IOStats;
 
 extern struct _acl_deny_info_list *DenyInfoList;	/* NULL */
 
-extern struct in_addr any_addr;
+extern struct IN_ADDR any_addr;
 
-extern struct in_addr local_addr;
+extern struct IN_ADDR local_addr;
 
-extern struct in_addr no_addr;
+extern struct IN_ADDR no_addr;
 
-extern struct in_addr theOutICPAddr;
+extern struct IN_ADDR theOutICPAddr;
 
-extern struct in_addr theOutSNMPAddr;
+extern struct IN_ADDR theOutSNMPAddr;
 
 extern struct timeval current_time;
 

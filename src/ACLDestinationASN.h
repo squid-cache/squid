@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLDestinationASN.h,v 1.1 2003/02/25 12:22:33 robertc Exp $
+ * $Id: ACLDestinationASN.h,v 1.2 2005/04/18 21:52:41 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,7 +38,7 @@
 #include "ACLASN.h"
 #include "ACLStrategy.h"
 
-class ACLDestinationASNStrategy : public ACLStrategy<struct in_addr>
+class ACLDestinationASNStrategy : public ACLStrategy<struct IN_ADDR>
 {
 
 public:

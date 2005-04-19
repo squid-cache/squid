@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.82 2005/03/09 20:43:38 serassio Exp $
+ * $Id: client_side_reply.cc,v 1.83 2005/04/18 21:52:42 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -59,7 +59,7 @@ CBDATA_CLASS_INIT(clientReplyContext);
 extern "C" CSS clientReplyStatus;
 extern ErrorState *clientBuildError(err_type, http_status, char const *,
 
-                                        struct in_addr *, HttpRequest *);
+                                        struct IN_ADDR *, HttpRequest *);
 
 /* privates */
 
@@ -88,7 +88,7 @@ void
 clientReplyContext::setReplyToError(
     err_type err, http_status status, method_t method, char const *uri,
 
-    struct in_addr *addr, HttpRequest * failedrequest, char *unparsedrequest,
+    struct IN_ADDR *addr, HttpRequest * failedrequest, char *unparsedrequest,
     auth_user_request_t * auth_user_request)
 {
     ErrorState *errstate =
@@ -2167,7 +2167,7 @@ clientReplyContext::createStoreEntry(method_t m, request_flags flags)
 ErrorState *
 clientBuildError(err_type page_id, http_status status, char const *url,
 
-                 struct in_addr * src_addr, HttpRequest * request)
+                 struct IN_ADDR * src_addr, HttpRequest * request)
 {
     ErrorState *err = errorCon(page_id, status);
     err->src_addr = *src_addr;

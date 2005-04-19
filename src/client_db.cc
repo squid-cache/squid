@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.62 2004/12/22 17:37:37 serassio Exp $
+ * $Id: client_db.cc,v 1.63 2005/04/18 21:52:42 hno Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -39,7 +39,7 @@
 
 static hash_table *client_table = NULL;
 
-static ClientInfo *clientdbAdd(struct in_addr addr);
+static ClientInfo *clientdbAdd(struct IN_ADDR addr);
 static FREE clientdbFreeItem;
 static void clientdbStartGC(void);
 static void clientdbScheduledGC(void *);
@@ -53,7 +53,7 @@ static int cleanup_removed;
 
 static ClientInfo *
 
-clientdbAdd(struct in_addr addr)
+clientdbAdd(struct IN_ADDR addr)
 {
     ClientInfo *c;
     c = (ClientInfo *)memAllocate(MEM_CLIENT_INFO);
@@ -87,7 +87,7 @@ clientdbInit(void)
 
 void
 
-clientdbUpdate(struct in_addr addr, log_type ltype, protocol_t p, size_t size)
+clientdbUpdate(struct IN_ADDR addr, log_type ltype, protocol_t p, size_t size)
 {
     char *key;
     ClientInfo *c;
@@ -135,7 +135,7 @@ clientdbUpdate(struct in_addr addr, log_type ltype, protocol_t p, size_t size)
  */
 int
 
-clientdbEstablished(struct in_addr addr, int delta)
+clientdbEstablished(struct IN_ADDR addr, int delta)
 {
     char *key;
     ClientInfo *c;
@@ -161,7 +161,7 @@ clientdbEstablished(struct in_addr addr, int delta)
 #define CUTOFF_SECONDS 3600
 int
 
-clientdbCutoffDenied(struct in_addr addr)
+clientdbCutoffDenied(struct IN_ADDR addr)
 {
     char *key;
     int NR;
@@ -377,9 +377,9 @@ clientdbStartGC(void)
 
 #if SQUID_SNMP
 
-struct in_addr *
+struct IN_ADDR *
 
-            client_entry(struct in_addr *current)
+            client_entry(struct IN_ADDR *current)
 {
     ClientInfo *c = NULL;
     char *key;

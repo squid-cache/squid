@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.h,v 1.9 2003/08/14 12:15:04 robertc Exp $
+ * $Id: client_side.h,v 1.10 2005/04/18 21:52:42 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -182,7 +182,7 @@ public:
 
     struct sockaddr_in me;
 
-    struct in_addr log_addr;
+    struct IN_ADDR log_addr;
     char rfc931[USER_IDENT_SZ];
     int nrequests;
 

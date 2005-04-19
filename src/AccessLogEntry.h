@@ -1,6 +1,6 @@
 
 /*
- * $Id: AccessLogEntry.h,v 1.3 2003/10/16 21:40:16 robertc Exp $
+ * $Id: AccessLogEntry.h,v 1.4 2005/04/18 21:52:41 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -90,7 +90,7 @@ public:
             memset(&caddr, '\0', sizeof(caddr));
         }
 
-        struct in_addr caddr;
+        struct IN_ADDR caddr;
         size_t size;
         off_t highOffset;
         size_t objectSize;

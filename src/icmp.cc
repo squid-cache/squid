@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.84 2003/06/12 23:54:17 wessels Exp $
+ * $Id: icmp.cc,v 1.85 2005/04/18 21:52:42 hno Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -54,7 +54,7 @@ static void icmpHandleSourcePing(const struct sockaddr_in *from, const char *buf
 
 static void
 
-icmpSendEcho(struct in_addr to, int opcode, const char *payload, int len)
+icmpSendEcho(struct IN_ADDR to, int opcode, const char *payload, int len)
 {
     static pingerEchoData pecho;
 
@@ -179,7 +179,7 @@ icmpHandleSourcePing(const struct sockaddr_in *from, const char *buf)
 #if ALLOW_SOURCE_PING
 void
 
-icmpSourcePing(struct in_addr to, const icp_common_t * header, const char *url)
+icmpSourcePing(struct IN_ADDR to, const icp_common_t * header, const char *url)
 {
 #if USE_ICMP
     char *payload;
@@ -211,7 +211,7 @@ icmpSourcePing(struct in_addr to, const icp_common_t * header, const char *url)
 
 void
 
-icmpDomainPing(struct in_addr to, const char *domain)
+icmpDomainPing(struct IN_ADDR to, const char *domain)
 {
 #if USE_ICMP
     debug(37, 3) ("icmpDomainPing: '%s'\n", domain);

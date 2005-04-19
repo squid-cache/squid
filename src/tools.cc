@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.253 2005/03/18 15:47:42 hno Exp $
+ * $Id: tools.cc,v 1.254 2005/04/18 21:52:43 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -556,7 +556,7 @@ getMyHostname(void)
 
     const struct hostent *h = NULL;
 
-    struct in_addr sa;
+    struct IN_ADDR sa;
 
     if (Config.visibleHostname != NULL)
         return Config.visibleHostname;
@@ -929,12 +929,12 @@ squid_signal(int sig, SIGHDLR * func, int flags)
 #endif
 }
 
-struct in_addr
+struct IN_ADDR
 
             inaddrFromHostent(const struct hostent *hp)
 {
 
-    struct in_addr s;
+    struct IN_ADDR s;
     xmemcpy(&s.s_addr, hp->h_addr, sizeof(s.s_addr));
     return s;
 }

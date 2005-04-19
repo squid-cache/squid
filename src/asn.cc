@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.99 2004/08/30 05:12:31 robertc Exp $
+ * $Id: asn.cc,v 1.100 2005/04/18 21:52:42 hno Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -130,7 +130,7 @@ static OBJH asnStats;
 /* PUBLIC */
 
 int
-asnMatchIp(List<int> *data, struct in_addr addr)
+asnMatchIp(List<int> *data, struct IN_ADDR addr)
 {
     unsigned long lh;
 
@@ -393,7 +393,7 @@ asnAddNet(char *as_string, int as_number)
     List<int> *q = NULL;
     as_info *asinfo = NULL;
 
-    struct in_addr in_a, in_m;
+    struct IN_ADDR in_a, in_m;
     long mask, addr;
     char *t;
     int bitl;
@@ -539,9 +539,9 @@ printRadixNode(struct squid_radix_node *rn, void *_sentry)
     List<int> *q;
     as_info *asinfo;
 
-    struct in_addr addr;
+    struct IN_ADDR addr;
 
-    struct in_addr mask;
+    struct IN_ADDR mask;
     assert(e);
     assert(e->e_info);
     (void) get_m_int(addr.s_addr, e->e_addr);
@@ -567,7 +567,7 @@ ACLASN::~ACLASN()
 
 bool
 
-ACLASN::match(struct in_addr toMatch)
+ACLASN::match(struct IN_ADDR toMatch)
 {
     return asnMatchIp(data, toMatch);
 }
@@ -606,7 +606,7 @@ ACLASN::parse()
     }
 }
 
-ACLData<struct in_addr> *
+ACLData<struct IN_ADDR> *
 ACLASN::clone() const
 {
     if (data)
@@ -617,17 +617,17 @@ ACLASN::clone() const
 
 /* explicit template instantiation required for some systems */
 
-template class ACLStrategised<struct in_addr>
+template class ACLStrategised<struct IN_ADDR>
 
 ;
 
 ACL::Prototype ACLASN::SourceRegistryProtoype(&ACLASN::SourceRegistryEntry_, "src_as");
 
-ACLStrategised<struct in_addr> ACLASN::SourceRegistryEntry_(new ACLASN, ACLSourceASNStrategy::Instance(), "src_as");
+ACLStrategised<struct IN_ADDR> ACLASN::SourceRegistryEntry_(new ACLASN, ACLSourceASNStrategy::Instance(), "src_as");
 
 ACL::Prototype ACLASN::DestinationRegistryProtoype(&ACLASN::DestinationRegistryEntry_, "dst_as");
 
-ACLStrategised<struct in_addr> ACLASN::DestinationRegistryEntry_(new ACLASN, ACLDestinationASNStrategy::Instance(), "dst_as");
+ACLStrategised<struct IN_ADDR> ACLASN::DestinationRegistryEntry_(new ACLASN, ACLDestinationASNStrategy::Instance(), "dst_as");
 
 int
 ACLSourceASNStrategy::match (ACLData<MatchType> * &data, ACLChecklist *checklist)

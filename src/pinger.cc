@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.53 2004/04/03 14:38:36 hno Exp $
+ * $Id: pinger.cc,v 1.54 2005/04/18 21:52:42 hno Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -200,7 +200,7 @@ static const char *icmpPktStr[] =
 static int in_cksum(unsigned short *ptr, int size);
 static void pingerRecv(void);
 
-static void pingerLog(struct icmphdr *, struct in_addr, int, int);
+static void pingerLog(struct icmphdr *, struct IN_ADDR, int, int);
 static int ipHops(int ttl);
 static void pingerSendtoSquid(pingerReplyData * preply);
 static void pingerOpen(void);
@@ -324,7 +324,7 @@ pingerClose(void)
 
 static void
 
-pingerSendEcho(struct in_addr to, int opcode, char *payload, int len)
+pingerSendEcho(struct IN_ADDR to, int opcode, char *payload, int len)
 {
     LOCAL_ARRAY(char, pkt, MAX_PKT_SZ);
 
@@ -502,7 +502,7 @@ in_cksum(unsigned short *ptr, int size)
 
 static void
 
-pingerLog(struct icmphdr *icmp, struct in_addr addr, int rtt, int hops)
+pingerLog(struct icmphdr *icmp, struct IN_ADDR addr, int rtt, int hops)
 {
     debug(42, 2) ("pingerLog: %9d.%06d %-16s %d %-15.15s %dms %d hops\n",
                   (int) current_time.tv_sec,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.515 2005/04/03 18:53:24 serassio Exp $
+ * $Id: structs.h,v 1.516 2005/04/18 21:52:43 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -118,7 +118,7 @@ struct _acl_address
     acl_address *next;
     acl_list *aclList;
 
-    struct in_addr addr;
+    struct IN_ADDR addr;
 };
 
 struct _acl_tos
@@ -341,11 +341,11 @@ struct _SquidConfig
     struct
     {
 
-        struct in_addr router;
+        struct IN_ADDR router;
 
-        struct in_addr incoming;
+        struct IN_ADDR incoming;
 
-        struct in_addr outgoing;
+        struct IN_ADDR outgoing;
         int version;
     }
 
@@ -453,17 +453,17 @@ struct _SquidConfig
     struct
     {
 
-        struct in_addr udp_incoming;
+        struct IN_ADDR udp_incoming;
 
-        struct in_addr udp_outgoing;
+        struct IN_ADDR udp_outgoing;
 #if SQUID_SNMP
 
-        struct in_addr snmp_incoming;
+        struct IN_ADDR snmp_incoming;
 
-        struct in_addr snmp_outgoing;
+        struct IN_ADDR snmp_outgoing;
 #endif
 
-        struct in_addr client_netmask;
+        struct IN_ADDR client_netmask;
     }
 
     Addrs;
@@ -682,7 +682,7 @@ struct _SquidConfig
     struct
     {
 
-        struct in_addr addr;
+        struct IN_ADDR addr;
         int ttl;
         unsigned short port;
         char *encode_key;
@@ -984,7 +984,7 @@ unsigned int request_sent:
 struct _ipcache_addrs
 {
 
-    struct in_addr *in_addrs;
+    struct IN_ADDR *in_addrs;
     unsigned char *bad_mask;
     unsigned char count;
     unsigned char cur;
@@ -1272,7 +1272,7 @@ unsigned int counting:
 
     int tcp_up;			/* 0 if a connect() fails */
 
-    struct in_addr addresses[10];
+    struct IN_ADDR addresses[10];
     int n_addresses;
     int rr_count;
     int rr_lastcount;
@@ -1352,7 +1352,7 @@ struct _netdbEntry
 struct _pingerEchoData
 {
 
-    struct in_addr to;
+    struct IN_ADDR to;
     unsigned char opcode;
     int psize;
     char payload[PINGER_PAYLOAD_SZ];
@@ -1361,7 +1361,7 @@ struct _pingerEchoData
 struct _pingerReplyData
 {
 
-    struct in_addr from;
+    struct IN_ADDR from;
     unsigned char opcode;
     int rtt;
     int hops;
@@ -1595,7 +1595,7 @@ struct _ErrorState
     char *dnsserver_msg;
     time_t ttl;
 
-    struct in_addr src_addr;
+    struct IN_ADDR src_addr;
     char *redirect_url;
     ERCB *callback;
     void *callback_data;
@@ -1841,7 +1841,7 @@ struct _ClientInfo
 {
     hash_link hash;		/* must be first */
 
-    struct in_addr addr;
+    struct IN_ADDR addr;
 
     struct
     {
