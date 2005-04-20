@@ -1,0 +1,165 @@
+Service Location Working Group                             Jonathan Wood
+INTERNET DRAFT                                     Sun Microsystems, Inc
+                                                           9 August 1999
+
+                    The wpad Abstract Service Type
+                     draft-ietf-svrloc-wpad-template-00.txt
+
+
+Status of This Memo
+
+   This document is a submission by the Service Location Working Group
+   of the Internet Engineering Task Force (IETF).  Comments should be
+   submitted to the srvloc@srvloc.org mailing list.
+
+   Distribution of this memo is unlimited.
+
+   This document is an Internet-Draft and is in full conformance
+   with all provisions of Section 10 of RFC2026.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF), its areas, and its working groups.  Note that
+   other groups may also distribute working documents as
+   Internet-Drafts.
+
+   Internet-Drafts are draft documents valid for a maximum of six
+   months and may be updated, replaced, or obsoleted by other
+   documents at any time.  It is inappropriate to use Internet-
+   Drafts as reference material or to cite them other than as
+   "work in progress."
+
+   The list of current Internet-Drafts can be accessed at
+   http://www.ietf.org/ietf/1id-abstracts.txt
+
+   The list of Internet-Draft Shadow Directories can be accessed at
+   http://www.ietf.org/shadow.html.
+
+Abstract
+
+   This document describes the wpad abstract type. The wpad service
+   provides access to web proxy auto-discovery (WPAD) configuration
+   files (CFILEs). This service type can be used in conjunction with
+   the Service Location Protocol (SLP) to dynamically retrieve CFILEs
+   which can automatically configure web browsers with suitable web
+   proxies.
+
+1. Introduction
+
+   The Service Location Protocol is defined in [1]. Service templates
+
+
+
+Wood, Tam                expires February 2000                  [Page 1]
+
+INTERNET DRAFT                                               August 1999
+
+
+   and abstract types are defined in [2]. The wpad abstract type is
+   intended to organize information pertaining to the location and
+   access method needed to dynamically obtain CFILEs. For more
+   information on CFILEs and WPAD, see [3].
+
+   The content of the WPAD file is opaque as far as this service type
+   is concerned. Different browsers may interpret CFILEs in
+   different ways. Hence customized CFILEs may be needed to
+   service various browsers. A "config-method" attribute is specified
+   in the template to allow web browsers to use SLP to search for
+   a suitable CFILE.
+
+   CFILEs tell web browsers which web proxies are available, and
+   how to select the proper one for its needs. This service type does
+   NOT contain any information about how to directly access web proxies.
+
+   Similarly, CFILEs do NOT contain any configuration information
+   for other web browser functions. The wpad service is not an
+   application configuration service.
+
+   The concrete type should be the access protocol used to retrieve
+   the CFILE. The URL should also specify the host that provides
+   access to the CFILE, and a path relative to the server host
+   that names the location of the CFILE. An example of a valid
+   wpad service: URL follows:
+
+   service:wpad:http://wserver.sun.com:8080/proxy-config/eng.proxy
+
+   A configuration URL (CURL) as defined in [3] can be extracted from
+   this service: URL simply by removing the leading "service:".
+
+2. The "wpad" Abstract Service
+
+  Name of submitter: "Jonathan Wood" <jonathan.wood@eng.sun.com>
+
+  Language of service template: en
+
+  Security Considerations: If a web browser is tricked into retrieving
+  a malicious CFILE, it could suffer denial-of-service attacks, or
+  potentially betray confidential information. As such, the web browser
+  should take care to ensure that the CFILE is not malicious. The use
+  of SLP's protected scopes is a means of ensuring a CFILE's validity.
+
+  Template text:
+
+  -------------------------template begins here-----------------------
+  template-type=wpad
+
+
+
+
+Wood, Tam                expires February 2000                  [Page 2]
+
+INTERNET DRAFT                                               August 1999
+
+
+  template-version=0.0
+
+  template-description=
+    This is an abstract service type for WPAD configuration URLs.
+
+  template-url-syntax=
+    url-path= ; an URL for the configuration data, as defined in [4].
+
+  config-method= string M X
+  # The method of determining the configuration.
+  # Since this may vary from browser to browser, clients should
+  # include this attribute in search requests to ensure that they
+  # get a configuration method that will be applicable to their
+  # specific browser.
+  #
+  # The values must refer to a browser type. If two different browsers
+  # use the same configuration method, they may use the same value for
+  # this attribute. For example, if Wiz Software creates a new browser
+  # that uses the same method as Netscape's Communicator (i.e.
+  # Javascript), it may use the "communicator" value.
+  communicator,ie,mosaic,hotjava
+
+  access-protocol= string
+  # The protocol to be used to access this CFILE. This attribute
+  # is useful for UAs which wish to query for a set of preferred
+  # access protocols. This attribute should match the access protocol
+  # given in the concrete type.
+
+  --------------------------template ends here------------------------
+
+
+References:
+
+    [1] E. Guttman, C. Perkins, J. Veizades, M. Day,
+        "Service Location Protocol Version 2", RFC 2608, June 1999.
+
+    [2] E. Guttman, C. Perkins, J. Kempf, "Service Templates and
+        service: Schemes", RFC 2609, June 1999.
+
+    [3] P. Gauthier, J. Cohen, M. Dunsmuir, C. Perkins, "Web Proxy
+        Auto-Discovery Protocol", Internet Draft, July 1999 (Work
+        In Progress)
+
+    [4] T. Berners-Lee, R. Fielding, and L. Masinter.  Uniform Resource
+        Locators (URL): Generic Syntax and Semantics.  RFC1738 as
+        amended by RFC1808
+
+
+
+
+
+Wood, Tam                expires February 2000                  [Page 3]
+
