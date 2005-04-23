@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.408 2005/04/18 21:52:42 hno Exp $
+ * $Id: main.cc,v 1.409 2005/04/23 12:28:11 serassio Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -65,7 +65,6 @@ void WINAPI WIN32_svcHandler(DWORD);
 /* for error reporting from xmalloc and friends */
 SQUIDCEXTERN void (*failure_notify) (const char *);
 
-static int opt_send_signal = -1;
 static int opt_parse_cfg_only = 0;
 static char *opt_syslog_facility = NULL;
 static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.469 2005/04/18 21:52:42 hno Exp $
+ * $Id: cache_cf.cc,v 1.470 2005/04/23 12:28:11 serassio Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -371,11 +371,14 @@ parseConfigFile(const char *file_name)
         enter_suid();
     }
 
-    configDoConfigure();
-    cachemgrRegister("config",
-                     "Current Squid Configuration",
-                     dump_config,
-                     1, 1);
+    if (opt_send_signal == -1) {
+        configDoConfigure();
+        cachemgrRegister("config",
+                         "Current Squid Configuration",
+                         dump_config,
+                         1, 1);
+    }
+
     return err_count;
 }
 
