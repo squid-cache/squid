@@ -23,8 +23,10 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#define BOOL int
-typedef short int16;
+/* the types are provided by squid's configure preocess */
+#include "config.h"
+#define BOOL int16_t
+#define int16 int16_t
 
 #include <netdb.h>
 #include <sys/types.h>
