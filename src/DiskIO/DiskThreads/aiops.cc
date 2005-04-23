@@ -1,5 +1,5 @@
 /*
- * $Id: aiops.cc,v 1.4 2005/04/06 20:36:10 serassio Exp $
+ * $Id: aiops.cc,v 1.5 2005/04/23 16:53:18 serassio Exp $
  *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
@@ -1091,7 +1091,7 @@ squidaio_stats(StoreEntry * sentry)
     threadp = threads;
 
     for (i = 0; i < NUMTHREADS; i++) {
-        storeAppendPrintf(sentry, "%i\t0x%lx\t%ld\n", i + 1, threadp->thread, threadp->requests);
+        storeAppendPrintf(sentry, "%i\t0x%lx\t%ld\n", i + 1, (unsigned long)threadp->thread, threadp->requests);
         threadp = threadp->next;
     }
 }
