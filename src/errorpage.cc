@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.199 2004/12/20 16:30:35 robertc Exp $
+ * $Id: errorpage.cc,v 1.200 2005/04/23 13:20:30 serassio Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -557,6 +557,7 @@ errorDump(ErrorState * err, MemBuf * mb)
 #define CVT_BUF_SZ 512
 
 /*
+ * a - User identity                            x
  * B - URL with FTP %2f hack                    x
  * c - Squid error code                         x
  * d - seconds elapsed since request received   x
@@ -600,16 +601,29 @@ errorConvert(char token, ErrorState * err)
 
     switch (token) {
 
+    case 'a':
+
+        if (r->auth_user_request)
+            p = r->auth_user_request->username();
+
+        if (!p)
+            p = "-";
+
+        break;
+
     case 'B':
         p = r ? ftpUrlWith2f(r) : "[no URL]";
+
         break;
 
     case 'c':
         p = errorPageName(err->type);
+
         break;
 
     case 'e':
         memBufPrintf(&mb, "%d", err->xerrno);
+
         break;
 
     case 'E':
