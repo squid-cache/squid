@@ -1,4 +1,4 @@
-.TH squid 8 "squid version 2.0"
+.TH squid 8 "squid version 3.0"
 .\" Copyright and licensing information
 .\" goes here.
 .SH NAME
@@ -6,7 +6,11 @@ squid \- proxy caching server
 .SH SYNOPSIS
 .B squid
 [
-.B \-dhsvzCDFNRVYX
+.B \-dhvzCDFNRVYX
+] [
+.B \-s
+|
+.BI \-l " facility"
 ] [
 .BI \-f " config-file"
 ] [
@@ -77,7 +81,7 @@ Print help message.
 .IP "-k reconfigure | rotate | shutdown | interrupt | kill | debug | check | parse"
 Parse configuration file, then send signal to running copy 
 (except -k parse) and exit.
-.IP -s
+.IP "-s | -l facility"
 Enable logging to syslog.
 .IP "-u port"
 Specify ICP port number (default: 3130), disable with 0.
