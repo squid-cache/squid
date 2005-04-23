@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.516 2005/04/18 21:52:43 hno Exp $
+ * $Id: structs.h,v 1.517 2005/04/23 14:49:41 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -878,6 +878,7 @@ struct _HttpHdrCc
     int max_age;
     int s_maxage;
     int max_stale;
+    String other;
 };
 
 /* some fields can hold either time or etag specs (e.g. If-Range) */
