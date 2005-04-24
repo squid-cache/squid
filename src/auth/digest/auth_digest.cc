@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.42 2005/04/18 21:52:43 hno Exp $
+ * $Id: auth_digest.cc,v 1.43 2005/04/24 14:00:52 serassio Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -635,6 +635,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointe
 
             if (strcasecmp(digest_request->response, Response)) {
                 credentials(Failed);
+                digest_request->setDenyMessage("Incorrect password");
                 return;
             } else {
                 const char *useragent = httpHeaderGetStr(&request->header, HDR_USER_AGENT);
@@ -654,6 +655,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointe
             }
         } else {
             credentials(Failed);
+            digest_request->setDenyMessage("Incorrect password");
             return;
         }
 
@@ -663,6 +665,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointe
                           digest_user->username());
             digest_request->flags.nonce_stale = 1;
             credentials(Failed);
+            digest_request->setDenyMessage("Stale nonce");
             return;
         }
     }
@@ -819,7 +822,7 @@ authenticateDigestHandleReply(void *data, char *reply)
 
     if (reply) {
         if ((t = strchr(reply, ' ')))
-            *t = '\0';
+            *t++ = '\0';
 
         if (*reply == '\0' || *reply == '\n')
             reply = NULL;
@@ -831,9 +834,12 @@ authenticateDigestHandleReply(void *data, char *reply)
     assert(digest_request);
     digest_user = dynamic_cast < digest_user_h * >(auth_user_request->user());
 
-    if (reply && (strncasecmp(reply, "ERR", 3) == 0))
+    if (reply && (strncasecmp(reply, "ERR", 3) == 0)) {
         digest_request->credentials(AuthDigestUserRequest::Failed);
-    else if (reply) {
+
+        if (t && *t)
+            digest_request->setDenyMessage(t);
+    } else if (reply) {
         CvtBin(reply, digest_user->HA1);
         digest_user->HA1created = 1;
     }

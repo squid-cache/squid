@@ -576,7 +576,7 @@ main(int argc, char **argv)
 	rfc1738_unescape(user);
 	rfc1738_unescape(passwd);
 	if (!validUsername(user)) {
-	    printf("ERR\n");
+	    printf("ERR No such user\n");
 	    continue;
 	}
 	tryagain = (ld != NULL);
@@ -590,7 +590,7 @@ main(int argc, char **argv)
 		ld = NULL;
 		goto recover;
 	    }
-	    printf("ERR\n");
+	    printf("ERR %s\n", ldap_err2string(squid_ldap_errno(ld)));
 	} else {
 	    printf("OK\n");
 	}
