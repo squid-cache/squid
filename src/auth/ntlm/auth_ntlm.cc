@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.46 2004/12/24 01:03:39 hno Exp $
+ * $Id: auth_ntlm.cc,v 1.47 2005/04/24 14:00:52 serassio Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -419,7 +419,6 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
     authenticateStateData *r = static_cast<authenticateStateData *>(data);
     ntlm_helper_state_t *helperstate;
     stateful_helper_callback_t result = S_HELPER_UNKNOWN;
-    char *t = NULL;
     auth_user_request_t *auth_user_request;
     auth_user_t *auth_user;
     ntlm_user_t *ntlm_user;
@@ -546,9 +545,10 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
         ntlm_request->authserver = NULL;
         debug(29, 4) ("authenticateNTLMHandleReply: Error validating user via NTLM. Error returned '%s'\n", reply);
         ntlm_request->auth_state = AUTHENTICATE_STATE_FAILED;
+        reply += 3;
 
-        if ((t = strchr(reply, ' ')))	/* strip after a space */
-            *t = '\0';
+        if (*reply)
+            auth_user_request->setDenyMessage(reply);
     } else if (strncasecmp(reply, "NA", 2) == 0) {
         /* NTLM Helper protocol violation! */
         fatal("NTLM Helper returned invalid response \"NA\" - a error message MUST be attached\n");
@@ -593,13 +593,15 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
         /* first the standard KK stuff */
         debug(29, 4) ("authenticateNTLMHandleReply: Error validating user via NTLM. Error returned '%s'\n", reply);
 
-        if ((t = strchr(reply, ' ')))	/* strip after a space */
-            *t = '\0';
-
         /* now we mark the helper for resetting. */
         helperstate->starve = 1;
 
         ntlm_request->auth_state = AUTHENTICATE_STATE_FAILED;
+
+        reply += 3;
+
+        if (*reply)
+            auth_user_request->setDenyMessage(reply);
     } else {
         /* TODO: only work with auth_user here if it exists */
         /* TODO: take the request state into consideration */

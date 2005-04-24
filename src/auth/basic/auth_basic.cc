@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.37 2005/03/19 15:41:55 serassio Exp $
+ * $Id: auth_basic.cc,v 1.38 2005/04/24 14:00:51 serassio Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -247,7 +247,7 @@ authenticateBasicHandleReply(void *data, char *reply)
 
     if (reply) {
         if ((t = strchr(reply, ' ')))
-            *t = '\0';
+            *t++ = '\0';
 
         if (*reply == '\0')
             reply = NULL;
@@ -259,8 +259,12 @@ authenticateBasicHandleReply(void *data, char *reply)
 
     if (reply && (strncasecmp(reply, "OK", 2) == 0))
         basic_auth->flags.credentials_ok = 1;
-    else
+    else {
         basic_auth->flags.credentials_ok = 3;
+
+        if (t && *t)
+            r->auth_user_request->setDenyMessage(t);
+    }
 
     basic_auth->credentials_checkedtime = squid_curtime;
 
