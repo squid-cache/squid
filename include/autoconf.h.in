@@ -140,6 +140,9 @@
 /* fd_mask is defined by the system headers */
 #undef HAVE_FD_MASK
 
+/* Define to 1 if you have the <fnmatch.h> header file. */
+#undef HAVE_FNMATCH_H
+
 /* Define to 1 if you have the `getdtablesize' function. */
 #undef HAVE_GETDTABLESIZE
 
