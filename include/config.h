@@ -1,5 +1,5 @@
 /*
- * $Id: config.h,v 1.17 2005/04/18 21:52:40 hno Exp $
+ * $Id: config.h,v 1.18 2005/04/23 20:40:50 serassio Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -332,6 +332,8 @@ typedef union {
 
 #if !defined(CACHEMGR_HOSTNAME)
 #define CACHEMGR_HOSTNAME ""
+#else
+#define CACHEMGR_HOSTNAME_DEFINED 1
 #endif
 
 #if SQUID_DETECT_UDP_SO_SNDBUF > 16384

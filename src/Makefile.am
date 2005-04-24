@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.107 2005/04/06 19:07:03 serassio Exp $
+#  $Id: Makefile.am,v 1.108 2005/04/23 20:40:50 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -196,6 +196,7 @@ nodist_cf_gen_HEADER = cf_gen_defines.h
 cf_gen.$(OBJEXT): cf_gen_defines.h
 squidclient_SOURCES = client.cc
 cachemgr__CGIEXT__SOURCES = cachemgr.cc
+cachemgr__CGIEXT__CFLAGS = -DDEFAULT_CACHEMGR_CONFIG=\"$(DEFAULT_CACHEMGR_CONFIG)\" $(AM_CFLAGS)
 
 all_FSMODULES = \
 	fs/aufs/StoreFSaufs.cc \
@@ -783,6 +784,7 @@ EXTRA_DIST = \
 	mk-string-arrays.pl \
 	repl_modules.sh \
 	mib.txt \
+	cachemgr.conf \
 	mime.conf.default
 
 libAIO_a_SOURCES = \
@@ -824,6 +826,7 @@ DiskIO_DiskDaemon_diskd_LDADD = $(top_builddir)/lib/libmiscutil.a @XTRA_LIBS@
 
 DEFAULT_PREFIX		= $(prefix)
 DEFAULT_CONFIG_FILE     = $(sysconfdir)/squid.conf
+DEFAULT_CACHEMGR_CONFIG = $(sysconfdir)/cachemgr.conf
 DEFAULT_MIME_TABLE	= $(sysconfdir)/mime.conf
 DEFAULT_DNSSERVER       = $(libexecdir)/`echo dnsserver | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_LOG_PREFIX	= $(localstatedir)/logs
@@ -908,6 +911,12 @@ install-data-local: install-sysconfDATA install-dataDATA
 	else \
 	        echo "$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE)"; \
 	        $(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE); \
+	fi
+	@if test -f $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG) ; then \
+	        echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG)" ; \
+	else \
+	        echo "$(INSTALL_DATA) $(srcdir)/cachemgr.conf $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG)"; \
+	        $(INSTALL_DATA) $(srcdir)/cachemgr.conf $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG); \
 	fi
 	$(mkinstalldirs) $(DESTDIR)$(DEFAULT_LOG_PREFIX)
 
