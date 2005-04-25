@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.470 2005/04/23 12:28:11 serassio Exp $
+ * $Id: cache_cf.cc,v 1.471 2005/04/25 15:46:35 serassio Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -296,6 +296,9 @@ parseConfigFile(const char *file_name)
         config_lineno++;
 
         if ((token = strchr(config_input_line, '\n')))
+            *token = '\0';
+
+        if ((token = strchr(config_input_line, '\r')))
             *token = '\0';
 
         if (strncmp(config_input_line, "#line ", 6) == 0) {
