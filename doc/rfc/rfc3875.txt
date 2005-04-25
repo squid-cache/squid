@@ -1,40 +1,37 @@
 
 
 
-INTERNET-DRAFT                                            David Robinson
-draft-coar-cgi-v11-04.txt                     Apache Software Foundation
-Expires 18 April 2004                                      Ken A.L. Coar
-                                                         IBM Corporation
-                                                         19 October 2003
+
+
+
+Network Working Group                                        D. Robinson
+Request for Comments: 3875                                       K. Coar
+Category: Informational                   The Apache Software Foundation
+                                                            October 2004
 
 
              The Common Gateway Interface (CGI) Version 1.1
 
-
 Status of this Memo
 
-   This document is an Internet-Draft and is in full conformance with
-   all provisions of Section 10 of RFC2026.
+   This memo provides information for the Internet community.  It does
+   not specify an Internet standard of any kind.  Distribution of this
+   memo is unlimited.
 
-   Internet-Drafts are working documents of the Internet Engineering
-   Task Force (IETF), its areas, and its working groups.  Note that
-   other groups may also distribute working documents as
-   Internet-Drafts.
+Copyright Notice
 
-   Internet-Drafts are draft documents valid for a maximum of six months
-   and may be updated, replaced, or obsoleted by other documents at any
-   time.  It is inappropriate to use Internet-Drafts as reference
-   material or to cite them other than as 'work in progress'.
+   Copyright (C) The Internet Society (2004).
 
-   The list of current Internet-Drafts can be accessed at
-   http://www.ietf.org/ietf/1id-abstracts.txt.
+IESG Note
 
-   The list of Internet-Draft Shadow Directories can be accessed at
-   http://www.ietf.org/shadow.html.
-
-   Distribution of this document is unlimited.  Please send comments to
-   the authors, or via the CGI-WG mailing list; see the project Web page
-   at <http://cgi-spec.golux.com>.
+   This document is not a candidate for any level of Internet Standard.
+   The IETF disclaims any knowledge of the fitness of this document for
+   any purpose, and in particular notes that it has not had IETF review
+   for such things as security, congestion control or inappropriate
+   interaction with deployed protocols.  The RFC Editor has chosen to
+   publish this document at its discretion.  Readers of this document
+   should exercise caution in evaluating its value for implementation
+   and deployment.
 
 Abstract
 
@@ -43,8 +40,8 @@ Abstract
    in a platform-independent manner.  Currently, the supported
    information servers are HTTP servers.
 
-   The interface has been in use by the World-Wide Web since 1993.  This
-   specification defines the 'current practice' parameters of the
+   The interface has been in use by the World-Wide Web (WWW) since 1993.
+   This specification defines the 'current practice' parameters of the
    'CGI/1.1' interface developed and documented at the U.S. National
    Centre for Supercomputing Applications.  This document also defines
    the use of the CGI/1.1 interface on UNIX(R) and other, similar
@@ -52,135 +49,141 @@ Abstract
 
 
 
-Robinson & Coar           Expires 18 April 2004                 [Page 1]
+
+
+
+
+
+
+Robinson & Coar              Informational                      [Page 1]
 
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
+RFC 3875                    CGI Version 1.1                 October 2004
 
 
-Contents
+Table of Contents
 
-   1  Introduction                                                     4
-      1.1 Purpose  . . . . . . . . . . . . . . . . . . . . . . . . .   4
-      1.2 Requirements . . . . . . . . . . . . . . . . . . . . . . .   4
-      1.3 Specifications . . . . . . . . . . . . . . . . . . . . . .   4
-      1.4 Terminology  . . . . . . . . . . . . . . . . . . . . . . .   5
+   1.  Introduction. . . . . . . . . . . . . . . . . . . . . . . . .   4
+       1.1. Purpose  . . . . . . . . . . . . . . . . . . . . . . . .   4
+       1.2. Requirements . . . . . . . . . . . . . . . . . . . . . .   4
+       1.3. Specifications . . . . . . . . . . . . . . . . . . . . .   4
+       1.4. Terminology  . . . . . . . . . . . . . . . . . . . . . .   5
 
-   2  Notational Conventions and Generic Grammar                       5
-      2.1 Augmented BNF  . . . . . . . . . . . . . . . . . . . . . .   5
-      2.2 Basic Rules  . . . . . . . . . . . . . . . . . . . . . . .   6
-      2.3 URL Encoding . . . . . . . . . . . . . . . . . . . . . . .   7
+   2.  Notational Conventions and Generic Grammar. . . . . . . . . .   5
+       2.1. Augmented BNF  . . . . . . . . . . . . . . . . . . . . .   5
+       2.2. Basic Rules  . . . . . . . . . . . . . . . . . . . . . .   6
+       2.3. URL Encoding . . . . . . . . . . . . . . . . . . . . . .   7
 
-   3  Invoking the Script                                              8
-      3.1 Server Responsibilities  . . . . . . . . . . . . . . . . .   8
-      3.2 Script Selection . . . . . . . . . . . . . . . . . . . . .   8
-      3.3 The Script-URI . . . . . . . . . . . . . . . . . . . . . .   9
-      3.4 Execution  . . . . . . . . . . . . . . . . . . . . . . . .  10
+   3.  Invoking the Script . . . . . . . . . . . . . . . . . . . . .   8
+       3.1. Server Responsibilities  . . . . . . . . . . . . . . . .   8
+       3.2. Script Selection . . . . . . . . . . . . . . . . . . . .   9
+       3.3. The Script-URI . . . . . . . . . . . . . . . . . . . . .   9
+       3.4. Execution  . . . . . . . . . . . . . . . . . . . . . . .  10
 
-   4  The CGI Request                                                 10
-      4.1 Request Meta-Variables . . . . . . . . . . . . . . . . . .  10
-          4.1.1  AUTH_TYPE . . . . . . . . . . . . . . . . . . . . .  11
-          4.1.2  CONTENT_LENGTH  . . . . . . . . . . . . . . . . . .  11
-          4.1.3  CONTENT_TYPE  . . . . . . . . . . . . . . . . . . .  12
-          4.1.4  GATEWAY_INTERFACE . . . . . . . . . . . . . . . . .  13
-          4.1.5  PATH_INFO . . . . . . . . . . . . . . . . . . . . .  13
-          4.1.6  PATH_TRANSLATED . . . . . . . . . . . . . . . . . .  14
-          4.1.7  QUERY_STRING  . . . . . . . . . . . . . . . . . . .  15
-          4.1.8  REMOTE_ADDR . . . . . . . . . . . . . . . . . . . .  15
-          4.1.9  REMOTE_HOST . . . . . . . . . . . . . . . . . . . .  16
-          4.1.10 REMOTE_IDENT  . . . . . . . . . . . . . . . . . . .  16
-          4.1.11 REMOTE_USER . . . . . . . . . . . . . . . . . . . .  16
-          4.1.12 REQUEST_METHOD  . . . . . . . . . . . . . . . . . .  16
-          4.1.13 SCRIPT_NAME . . . . . . . . . . . . . . . . . . . .  17
-          4.1.14 SERVER_NAME . . . . . . . . . . . . . . . . . . . .  17
-          4.1.15 SERVER_PORT . . . . . . . . . . . . . . . . . . . .  17
-          4.1.16 SERVER_PROTOCOL . . . . . . . . . . . . . . . . . .  18
-          4.1.17 SERVER_SOFTWARE . . . . . . . . . . . . . . . . . .  18
-          4.1.18 Protocol-Specific Meta-Variables  . . . . . . . . .  18
-      4.2 Request Message-Body . . . . . . . . . . . . . . . . . . .  19
-      4.3 Request Methods  . . . . . . . . . . . . . . . . . . . . .  20
-          4.3.1  GET . . . . . . . . . . . . . . . . . . . . . . . .  20
-          4.3.2  POST  . . . . . . . . . . . . . . . . . . . . . . .  20
-          4.3.3  HEAD  . . . . . . . . . . . . . . . . . . . . . . .  20
-          4.3.4  Protocol-Specific Methods . . . . . . . . . . . . .  20
-      4.4 The Script Command Line  . . . . . . . . . . . . . . . . .  21
-
-   5  NPH Scripts                                                     21
-      5.1 Identification . . . . . . . . . . . . . . . . . . . . . .  21
+   4.  The CGI Request . . . . . . . . . . . . . . . . . . . . . . .  10
+       4.1. Request Meta-Variables . . . . . . . . . . . . . . . . .  10
+            4.1.1.  AUTH_TYPE. . . . . . . . . . . . . . . . . . . .  11
+            4.1.2.  CONTENT_LENGTH . . . . . . . . . . . . . . . . .  12
+            4.1.3.  CONTENT_TYPE . . . . . . . . . . . . . . . . . .  12
+            4.1.4.  GATEWAY_INTERFACE. . . . . . . . . . . . . . . .  13
+            4.1.5.  PATH_INFO. . . . . . . . . . . . . . . . . . . .  13
+            4.1.6.  PATH_TRANSLATED. . . . . . . . . . . . . . . . .  14
+            4.1.7.  QUERY_STRING . . . . . . . . . . . . . . . . . .  15
+            4.1.8.  REMOTE_ADDR. . . . . . . . . . . . . . . . . . .  15
+            4.1.9.  REMOTE_HOST. . . . . . . . . . . . . . . . . . .  16
+            4.1.10. REMOTE_IDENT . . . . . . . . . . . . . . . . . .  16
+            4.1.11. REMOTE_USER. . . . . . . . . . . . . . . . . . .  16
+            4.1.12. REQUEST_METHOD . . . . . . . . . . . . . . . . .  17
+            4.1.13. SCRIPT_NAME. . . . . . . . . . . . . . . . . . .  17
+            4.1.14. SERVER_NAME. . . . . . . . . . . . . . . . . . .  17
+            4.1.15. SERVER_PORT. . . . . . . . . . . . . . . . . . .  18
+            4.1.16. SERVER_PROTOCOL. . . . . . . . . . . . . . . . .  18
+            4.1.17. SERVER_SOFTWARE. . . . . . . . . . . . . . . . .  19
+            4.1.18. Protocol-Specific Meta-Variables . . . . . . . .  19
+       4.2. Request Message-Body . . . . . . . . . . . . . . . . . .  20
+       4.3. Request Methods  . . . . . . . . . . . . . . . . . . . .  20
+            4.3.1.  GET. . . . . . . . . . . . . . . . . . . . . . .  20
+            4.3.2.  POST . . . . . . . . . . . . . . . . . . . . . .  21
+            4.3.3.  HEAD . . . . . . . . . . . . . . . . . . . . . .  21
+            4.3.4.  Protocol-Specific Methods. . . . . . . . . . . .  21
+       4.4. The Script Command Line. . . . . . . . . . . . . . . . .  21
 
 
-Robinson & Coar           Expires 18 April 2004                 [Page 2]
+
+
+
+Robinson & Coar              Informational                      [Page 2]
 
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
+RFC 3875                    CGI Version 1.1                 October 2004
 
 
-      5.2 NPH Response . . . . . . . . . . . . . . . . . . . . . . .  22
+   5.  NPH Scripts . . . . . . . . . . . . . . . . . . . . . . . . .  22
+       5.1. Identification . . . . . . . . . . . . . . . . . . . . .  22
+       5.2. NPH Response . . . . . . . . . . . . . . . . . . . . . .  22
 
-   6  CGI Response                                                    22
-      6.1 Response Handling  . . . . . . . . . . . . . . . . . . . .  22
-      6.2 Response Types . . . . . . . . . . . . . . . . . . . . . .  22
-          6.2.1  Document Response . . . . . . . . . . . . . . . . .  23
-          6.2.2  Local Redirect Response . . . . . . . . . . . . . .  23
-          6.2.3  Client Redirect Response  . . . . . . . . . . . . .  23
-          6.2.4  Client Redirect Response with Document  . . . . . .  24
-      6.3 Response Header Fields . . . . . . . . . . . . . . . . . .  24
-          6.3.1  Content-Type  . . . . . . . . . . . . . . . . . . .  24
-          6.3.2  Location  . . . . . . . . . . . . . . . . . . . . .  25
-          6.3.3  Status  . . . . . . . . . . . . . . . . . . . . . .  26
-          6.3.4  Protocol-Specific Header Fields . . . . . . . . . .  26
-          6.3.5  Extension Header Fields . . . . . . . . . . . . . .  27
-      6.4 Response Message-Body  . . . . . . . . . . . . . . . . . .  27
+   6.  CGI Response. . . . . . . . . . . . . . . . . . . . . . . . .  23
+       6.1. Response Handling. . . . . . . . . . . . . . . . . . . .  23
+       6.2. Response Types . . . . . . . . . . . . . . . . . . . . .  23
+            6.2.1.  Document Response. . . . . . . . . . . . . . . .  23
+            6.2.2.  Local Redirect Response. . . . . . . . . . . . .  24
+            6.2.3.  Client Redirect Response . . . . . . . . . . . .  24
+            6.2.4.  Client Redirect Response with Document . . . . .  24
+       6.3. Response Header Fields . . . . . . . . . . . . . . . . .  25
+            6.3.1.  Content-Type . . . . . . . . . . . . . . . . . .  25
+            6.3.2.  Location . . . . . . . . . . . . . . . . . . . .  26
+            6.3.3.  Status . . . . . . . . . . . . . . . . . . . . .  26
+            6.3.4.  Protocol-Specific Header Fields. . . . . . . . .  27
+            6.3.5.  Extension Header Fields. . . . . . . . . . . . .  27
+       6.4. Response Message-Body. . . . . . . . . . . . . . . . . .  28
 
-   7  System Specifications                                           27
-      7.1 AmigaDOS . . . . . . . . . . . . . . . . . . . . . . . . .  27
-      7.2 UNIX . . . . . . . . . . . . . . . . . . . . . . . . . . .  27
-      7.3 EBCDIC/POSIX . . . . . . . . . . . . . . . . . . . . . . .  28
+   7.  System Specifications . . . . . . . . . . . . . . . . . . . .  28
+       7.1. AmigaDOS . . . . . . . . . . . . . . . . . . . . . . . .  28
+       7.2. UNIX . . . . . . . . . . . . . . . . . . . . . . . . . .  28
+       7.3. EBCDIC/POSIX . . . . . . . . . . . . . . . . . . . . . .  29
 
-   8  Implementation                                                  29
-      8.1 Recommendations for Servers  . . . . . . . . . . . . . . .  29
-      8.2 Recommendations for Scripts  . . . . . . . . . . . . . . .  29
+   8.  Implementation. . . . . . . . . . . . . . . . . . . . . . . .  29
+       8.1. Recommendations for Servers. . . . . . . . . . . . . . .  29
+       8.2. Recommendations for Scripts. . . . . . . . . . . . . . .  30
 
-   9  Security Considerations                                         30
-      9.1 Safe Methods . . . . . . . . . . . . . . . . . . . . . . .  30
-      9.2 Header Fields Containing Sensitive Information . . . . . .  30
-      9.3 Data Privacy . . . . . . . . . . . . . . . . . . . . . . .  30
-      9.4 Information Security Model . . . . . . . . . . . . . . . .  30
-      9.5 Script Interference with the Server  . . . . . . . . . . .  30
-      9.6 Data Length and Buffering Considerations . . . . . . . . .  31
-      9.7 Stateless Processing . . . . . . . . . . . . . . . . . . .  31
-      9.8 Relative Paths . . . . . . . . . . . . . . . . . . . . . .  32
-      9.9 Non-parsed Header Output . . . . . . . . . . . . . . . . .  32
+   9.  Security Considerations . . . . . . . . . . . . . . . . . . .  30
+       9.1. Safe Methods . . . . . . . . . . . . . . . . . . . . . .  30
+       9.2. Header Fields Containing Sensitive Information . . . . .  31
+       9.3. Data Privacy . . . . . . . . . . . . . . . . . . . . . .  31
+       9.4. Information Security Model . . . . . . . . . . . . . . .  31
+       9.5. Script Interference with the Server. . . . . . . . . . .  31
+       9.6. Data Length and Buffering Considerations . . . . . . . .  32
+       9.7. Stateless Processing . . . . . . . . . . . . . . . . . .  32
+       9.8. Relative Paths . . . . . . . . . . . . . . . . . . . . .  33
+       9.9. Non-parsed Header Output . . . . . . . . . . . . . . . .  33
 
-   10 Acknowledgements                                                32
+   10. Acknowledgements. . . . . . . . . . . . . . . . . . . . . . .  33
 
-   11 References                                                      32
+   11. References. . . . . . . . . . . . . . . . . . . . . . . . . .  33
+       11.1. Normative References. . . . . . . . . . . . . . . . . .  33
+       11.2. Informative References. . . . . . . . . . . . . . . . .  34
 
-   12 Authors' Addresses                                              34
+   12. Authors' Addresses. . . . . . . . . . . . . . . . . . . . . .  35
 
-
-
-
-
-
+   13. Full Copyright Statement. . . . . . . . . . . . . . . . . . .  36
 
 
 
-Robinson & Coar           Expires 18 April 2004                 [Page 3]
+Robinson & Coar              Informational                      [Page 3]
 
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
+RFC 3875                    CGI Version 1.1                 October 2004
 
 
-1 Introduction
+1.  Introduction
 
-1.1 Purpose
+1.1.  Purpose
 
-   The Common Gateway Interface (CGI) [21] allows an HTTP [2], [8]
+   The Common Gateway Interface (CGI) [22] allows an HTTP [1], [4]
    server and a CGI script to share responsibility for responding to
-   client requests.  The client request comprises a Universal Resource
-   Identifier (URI) [1], a request method and various ancillary
+   client requests.  The client request comprises a Uniform Resource
+   Identifier (URI) [11], a request method and various ancillary
    information about the request provided by the transport protocol.
 
    The CGI defines the abstract parameters, known as meta-variables,
-   which describe the client's request.  Together with a concrete
+   which describe a client's request.  Together with a concrete
    programmer interface this specifies a platform-independent interface
    between the script and the HTTP server.
 
@@ -189,11 +192,11 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    the CGI script handles the application issues, such as data access
    and document processing.
 
-1.2 Requirements
+1.2.  Requirements
 
    The key words 'MUST', 'MUST NOT', 'REQUIRED', 'SHALL', 'SHALL NOT',
    'SHOULD', 'SHOULD NOT', 'RECOMMENDED', 'MAY' and 'OPTIONAL' in this
-   document are to be interpreted as described in RFC 2119 [5].
+   document are to be interpreted as described in BCP 14, RFC 2119 [3].
 
    An implementation is not compliant if it fails to satisfy one or more
    of the 'must' requirements for the protocols it implements.  An
@@ -203,42 +206,43 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    all of the 'should' requirements for its features is said to be
    'conditionally compliant'.
 
-1.3 Specifications
+1.3.  Specifications
 
    Not all of the functions and features of the CGI are defined in the
    main part of this specification.  The following phrases are used to
    describe the features that are not specified:
 
-   'system defined'
+   'system-defined'
       The feature may differ between systems, but must be the same for
       different implementations using the same system.  A system will
-      usually identify a class of operating-systems.  Some systems are
+      usually identify a class of operating systems.  Some systems are
       defined in section 7 of this document.  New systems may be defined
       by new specifications without revision of this document.
 
-   'implementation defined'
 
 
 
-Robinson & Coar           Expires 18 April 2004                 [Page 4]
+
+Robinson & Coar              Informational                      [Page 4]
 
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
+RFC 3875                    CGI Version 1.1                 October 2004
 
 
+   'implementation-defined'
       The behaviour of the feature may vary from implementation to
       implementation; a particular implementation must document its
       behaviour.
 
-1.4 Terminology
+1.4.  Terminology
 
    This specification uses many terms defined in the HTTP/1.1
-   specification [8]; however, the following terms are used here in a
+   specification [4]; however, the following terms are used here in a
    sense which may not accord with their definitions in that document,
    or with their common meaning.
 
    'meta-variable'
       A named parameter which carries information from the server to the
-      script.  It is not necessarily a variable in the operating-
+      script.  It is not necessarily a variable in the operating
       system's environment, although that is the most common
       implementation.
 
@@ -255,13 +259,13 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
       The application program that invokes the script in order to
       service requests from the client.
 
-2 Notational Conventions and Generic Grammar
+2.  Notational Conventions and Generic Grammar
 
-2.1 Augmented BNF
+2.1.  Augmented BNF
 
    All of the mechanisms specified in this document are described in
    both prose and an augmented Backus-Naur Form (BNF) similar to that
-   used by RFC 822 [6].  Unless stated otherwise, the elements are
+   used by RFC 822 [13].  Unless stated otherwise, the elements are
    case-sensitive.  This augmented BNF contains the following
    constructs:
 
@@ -270,17 +274,19 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
       character ('=').  Whitespace is only significant in that
       continuation lines of a definition are indented.
 
+
+
+
+
+
+Robinson & Coar              Informational                      [Page 5]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
+
    "literal"
       Double quotation marks (") surround literal text, except for a
       literal quotation mark, which is surrounded by angle-brackets ('<'
-
-
-
-Robinson & Coar           Expires 18 April 2004                 [Page 5]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
-
       and '>').
 
    rule1 | rule2
@@ -303,15 +309,15 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
       A rule preceded by a decimal number represents exactly N
       occurrences of the rule.  It is equivalent to 'N*N rule'.
 
-2.2 Basic Rules
+2.2.  Basic Rules
 
    This specification uses a BNF-like grammar defined in terms of
    characters.  Unlike many specifications which define the bytes
    allowed by a protocol, here each literal in the grammar corresponds
    to the character it represents.  How these characters are represented
-   in terms of bits and bytes within a a system are either
-   system-defined or specified in the particular context.  The single
-   exception is the rule 'OCTET', defined below.
+   in terms of bits and bytes within a system are either system-defined
+   or specified in the particular context.  The single exception is the
+   rule 'OCTET', defined below.
 
    The following rules are used throughout this specification to
    describe basic parsing constructs.
@@ -325,18 +331,19 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
                       "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" |
                       "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" |
                       "Y" | "Z"
+
+
+
+
+Robinson & Coar              Informational                      [Page 6]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
+
       digit         = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" |
                       "8" | "9"
       alphanum      = alpha | digit
       OCTET         = <any 8-bit byte>
-
-
-
-Robinson & Coar           Expires 18 April 2004                 [Page 6]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
-
       CHAR          = alpha | digit | separator | "!" | "#" | "$" |
                       "%" | "&" | "'" | "*" | "+" | "-" | "." | "`" |
                       "^" | "_" | "{" | "|" | "}" | "~" | CTL
@@ -358,45 +365,46 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    be a larger set of characters than <any CHAR excluding CTLs but
    including LWSP>.
 
-2.3 URL Encoding
+2.3.  URL Encoding
 
    Some variables and constructs used here are described as being
    'URL-encoded'.  This encoding is described in section 2 of RFC 2396
-   [3].  In a URL-encoded string an escape sequence consists of a
+   [2].  In a URL-encoded string an escape sequence consists of a
    percent character ("%") followed by two hexadecimal digits, where the
    two hexadecimal digits form an octet.  An escape sequence represents
    the graphic character that has the octet as its code within the
-   US-ASCII [20] coded character set, if it exists.  Currently there is
+   US-ASCII [9] coded character set, if it exists.  Currently there is
    no provision within the URI syntax to identify which character set
    non-ASCII codes represent, so CGI handles this issue on an ad-hoc
    basis.
 
    Note that some unsafe (reserved) characters may have different
    semantics when encoded.  The definition of which characters are
-   unsafe depends on the context; see section 2 of RFC 2396 [3], updated
-   by RFC 2732 [11], for an authoritative treatment.  These reserved
+   unsafe depends on the context; see section 2 of RFC 2396 [2], updated
+   by RFC 2732 [7], for an authoritative treatment.  These reserved
    characters are generally used to provide syntactic structure to the
    character string, for example as field separators.  In all cases, the
    string is first processed with regard to any reserved characters
    present, and then the resulting data can be URL-decoded by replacing
-   "%" escapes by their character values.
+   "%" escape sequences by their character values.
+
+
+
+
+Robinson & Coar              Informational                      [Page 7]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
 
    To encode a character string, all reserved and forbidden characters
-   are replaced by the corresponding "%" escapes.  The string can then
-   be used in assembling a URI.  The reserved characters will vary from
-   context to context, but will always be drawn from this set:
-
-
-
-Robinson & Coar           Expires 18 April 2004                 [Page 7]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
+   are replaced by the corresponding "%" escape sequences.  The string
+   can then be used in assembling a URI.  The reserved characters will
+   vary from context to context, but will always be drawn from this set:
 
       reserved = ";" | "/" | "?" | ":" | "@" | "&" | "=" | "+" | "$" |
                  "," | "[" | "]"
 
-   The last two characters were added by RFC 2732 [11].  In any
+   The last two characters were added by RFC 2732 [7].  In any
    particular context, a sub-set of these characters will be reserved;
    the other characters from this set MUST NOT be encoded when a string
    is URL-encoded in that context.  Other basic rules used to describe
@@ -408,9 +416,9 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
       unreserved = alpha | digit | mark
       mark       = "-" | "_" | "." | "!" | "~" | "*" | "'" | "(" | ")"
 
-3 Invoking the Script
+3.  Invoking the Script
 
-3.1 Server Responsibilities
+3.1.  Server Responsibilities
 
    The server acts as an application gateway.  It receives the request
    from the client, selects a CGI script to handle the request, converts
@@ -432,7 +440,19 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    NOT execute the script unless the request passes all defined access
    controls.
 
-3.2 Script Selection
+
+
+
+
+
+
+
+Robinson & Coar              Informational                      [Page 8]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
+
+3.2.  Script Selection
 
    The server determines which CGI is script to be executed based on a
    generic-form URI supplied by the client.  This URI includes a
@@ -441,21 +461,13 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    this path with an individual script, thus placing the script at a
    particular point in the path hierarchy.  The remainder of the path,
    if any, is a resource or sub-resource identifier to be interpreted by
-
-
-
-Robinson & Coar           Expires 18 April 2004                 [Page 8]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
-
    the script.
 
    Information about this split of the path is available to the script
    in the meta-variables, described below.  Support for non-hierarchical
    URI schemes is outside the scope of this specification.
 
-3.3 The Script-URI
+3.3.  The Script-URI
 
    The mapping from client request URI to choice of script is defined by
    the particular server implementation and its configuration.  The
@@ -466,17 +478,17 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
 
       1. MAY preserve the URI in the particular client request; or
 
-      2. MAY select a canonical URI from the set of possible values for
-         each script; or
+      2. it MAY select a canonical URI from the set of possible values
+         for each script; or
 
-      3. can implement any other selection of URI from the set.
+      3. it can implement any other selection of URI from the set.
 
    From the meta-variables thus generated, a URI, the 'Script-URI', can
    be constructed.  This MUST have the property that if the client had
    accessed this URI instead, then the script would have been executed
    with the same values for the SCRIPT_NAME, PATH_INFO and QUERY_STRING
    meta-variables.  The Script-URI has the structure of a generic URI as
-   defined in section 3 of RFC 2396 [3], with the exception that object
+   defined in section 3 of RFC 2396 [2], with the exception that object
    parameters and fragment identifiers are not permitted.  The various
    components of the Script-URI are defined by some of the
    meta-variables (see below);
@@ -488,23 +500,23 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    <server-port> and <query-string> are the values of the respective
    meta-variables.  The SCRIPT_NAME and PATH_INFO values, URL-encoded
    with ";", "=" and "?"  reserved, give <script-path> and <extra-path>.
+
+
+
+Robinson & Coar              Informational                      [Page 9]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
+
    See section 4.1.5 for more information about the PATH_INFO
    meta-variable.
 
    The scheme and the protocol are not identical as the scheme
-   identifies the access method in addition to the protocol.  For
-   example, a resource accessed using Transport Layer Security (TLS) [7]
-   would have a request URI with a scheme of https when using the HTTP
-   protocol [16].  CGI/1.1 provides no generic means for the script to
-   reconstruct this, and therefore the Script-URI as defined includes
-
-
-
-Robinson & Coar           Expires 18 April 2004                 [Page 9]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
-
+   identifies the access method in addition to the application protocol.
+   For example, a resource accessed using Transport Layer Security (TLS)
+   [14] would have a request URI with a scheme of https when using the
+   HTTP protocol [19].  CGI/1.1 provides no generic means for the script
+   to reconstruct this, and therefore the Script-URI as defined includes
    the base protocol used.  However, a script MAY make use of
    scheme-specific meta-variables to better deduce the URI scheme.
 
@@ -512,9 +524,9 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    would invoke the script with any permitted values for the path-info
    or query-string, by modifying the appropriate components.
 
-3.4 Execution
+3.4.  Execution
 
-   The script is invoked in a system defined manner.  Unless specified
+   The script is invoked in a system-defined manner.  Unless specified
    otherwise, the file containing the script will be invoked as an
    executable program.  The server prepares the CGI request as described
    in section 4; this comprises the request meta-variables (immediately
@@ -530,20 +542,27 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    the server and the client; so the script SHOULD be prepared to handle
    abnormal termination.
 
-4 The CGI Request
+4.  The CGI Request
 
    Information about a request comes from two different sources; the
    request meta-variables and any associated message-body.
 
-4.1 Request Meta-Variables
+4.1.  Request Meta-Variables
 
    Meta-variables contain data about the request passed from the server
-   to the script, and are accessed by the script in a system defined
+   to the script, and are accessed by the script in a system-defined
    manner.  Meta-variables are identified by case-insensitive names;
    there cannot be two different variables whose names differ in case
    only.  Here they are shown using a canonical representation of
    capitals plus underscore ("_").  A particular system can define a
    different representation.
+
+
+
+Robinson & Coar              Informational                     [Page 10]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
 
       meta-variable-name = "AUTH_TYPE" | "CONTENT_LENGTH" |
                            "CONTENT_TYPE" | "GATEWAY_INTERFACE" |
@@ -553,14 +572,6 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
                            "REMOTE_USER" | "REQUEST_METHOD" |
                            "SCRIPT_NAME" | "SERVER_NAME" |
                            "SERVER_PORT" | "SERVER_PROTOCOL" |
-
-
-
-Robinson & Coar           Expires 18 April 2004                [Page 10]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
-
                            "SERVER_SOFTWARE" | scheme |
                            protocol-var-name | extension-var-name
       protocol-var-name  = ( protocol | scheme ) "_" var-name
@@ -569,12 +580,12 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
       extension-var-name = token
 
    Meta-variables with the same name as a scheme, and names beginning
-   with the name of a protocol or scheme (e.g. HTTP_ACCEPT) are also be
-   specified.  The number and meaning of these variables may change
+   with the name of a protocol or scheme (e.g., HTTP_ACCEPT) are also
+   defined.  The number and meaning of these variables may change
    independently of this specification.  (See also section 4.1.18.)
 
-   The server MAY define additional implementation-specific extension
-   meta-variables, whose names SHOULD be prefixed with "X_".
+   The server MAY set additional implementation-defined extension meta-
+   variables, whose names SHOULD be prefixed with "X_".
 
    This specification does not distinguish between zero-length (NULL)
    values and missing values.  For example, a script cannot distinguish
@@ -586,37 +597,39 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    An optional meta-variable may be omitted (left unset) if its value is
    NULL.  Meta-variable values MUST be considered case-sensitive except
    as noted otherwise.  The representation of the characters in the
-   meta-variables is system defined; the server MUST convert values to
+   meta-variables is system-defined; the server MUST convert values to
    that representation.
 
-4.1.1 AUTH_TYPE
+4.1.1.  AUTH_TYPE
 
    The AUTH_TYPE variable identifies any mechanism used by the server to
    authenticate the user.  It contains a case-insensitive value defined
    by the client protocol or server implementation.
 
-   For HTTP, If the client request required authentication for external
+   For HTTP, if the client request required authentication for external
    access, then the server MUST set the value of this variable from the
    'auth-scheme' token in the request Authorization header field.
+
+
+
+
+
+
+Robinson & Coar              Informational                     [Page 11]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
 
       AUTH_TYPE      = "" | auth-scheme
       auth-scheme    = "Basic" | "Digest" | extension-auth
       extension-auth = token
 
-   HTTP access authentication schemes are described in RFC 2617 [9].
+   HTTP access authentication schemes are described in RFC 2617 [5].
 
-4.1.2 CONTENT_LENGTH
+4.1.2.  CONTENT_LENGTH
 
    The CONTENT_LENGTH variable contains the size of the message-body
    attached to the request, if any, in decimal number of octets.  If no
-
-
-
-Robinson & Coar           Expires 18 April 2004                [Page 11]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
-
    data is attached, then NULL (or unset).
 
       CONTENT_LENGTH = "" | 1*digit
@@ -626,10 +639,10 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    reflect the length of the message-body after the server has removed
    any transfer-codings or content-codings.
 
-4.1.3 CONTENT_TYPE
+4.1.3.  CONTENT_TYPE
 
    If the request includes a message-body, the CONTENT_TYPE variable is
-   set to the Internet Media Type [10] of the message-body.
+   set to the Internet Media Type [6] of the message-body.
 
       CONTENT_TYPE = "" | media-type
       media-type   = type "/" subtype *( ";" parameter )
@@ -639,10 +652,10 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
       attribute    = token
       value        = token | quoted-string
 
-   The type, subtype and parameter attribute names are not case-
-   sensitive.  Parameter values may be case sensitive.  Media types and
-   their use in HTTP are described section 3.7 of the HTTP/1.1
-   specification [8].
+   The type, subtype and parameter attribute names are not
+   case-sensitive.  Parameter values may be case sensitive.  Media types
+   and their use in HTTP are described section 3.7 of the HTTP/1.1
+   specification [4].
 
    There is no default value for this variable.  If and only if it is
    unset, then the script MAY attempt to determine the media type from
@@ -653,6 +666,16 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    Each media-type defines a set of optional and mandatory parameters.
    This may include a charset parameter with a case-insensitive value
    defining the coded character set for the message-body.  If the
+
+
+
+
+
+Robinson & Coar              Informational                     [Page 12]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
+
    charset parameter is omitted, then the default value should be
    derived according to whichever of the following rules is the first to
    apply:
@@ -660,18 +683,11 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
       1. There MAY be a system-defined default charset for some
          media-types.
 
-      2. The default for media-types of type "text" is ISO-8859-1 [8].
+      2. The default for media-types of type "text" is ISO-8859-1 [4].
 
       3. Any default defined in the media-type specification.
 
       4. The default is US-ASCII.
-
-
-
-Robinson & Coar           Expires 18 April 2004                [Page 12]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
 
    The server MUST set this meta-variable if an HTTP Content-Type field
    is present in the client request header.  If the server receives a
@@ -679,7 +695,7 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    MAY attempt to determine the correct content type, otherwise it
    should omit this meta-variable.
 
-4.1.4 GATEWAY_INTERFACE
+4.1.4.  GATEWAY_INTERFACE
 
    The GATEWAY_INTERFACE variable MUST be set to the dialect of CGI
    being used by the server to communicate with the script.  Syntax:
@@ -694,11 +710,11 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
 
    This document defines the 1.1 version of the CGI interface.
 
-4.1.5 PATH_INFO
+4.1.5.  PATH_INFO
 
    The PATH_INFO variable specifies a path to be interpreted by the CGI
    script.  It identifies the resource or sub-resource to be returned by
-   the CGI script, and is derived from the the portion of the URI path
+   the CGI script, and is derived from the portion of the URI path
    hierarchy following the part that identifies the script itself.
    Unlike a URI path, the PATH_INFO is not URL-encoded, and cannot
    contain path-segment parameters.  A PATH_INFO of "/" represents a
@@ -709,6 +725,13 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
       lsegment  = *lchar
       lchar     = <any TEXT or CTL except "/">
 
+
+
+Robinson & Coar              Informational                     [Page 13]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
+
    The value is considered case-sensitive and the server MUST preserve
    the case of the path as presented in the request URI.  The server MAY
    impose restrictions and limitations on what values it permits for
@@ -716,26 +739,19 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    any values considered objectionable.  That MAY include any requests
    that would result in an encoded "/" being decoded into PATH_INFO, as
    this might represent a loss of information to the script.  Similarly,
-   treatment of non US-ASCII characters in the path is system defined.
+   treatment of non US-ASCII characters in the path is system-defined.
 
    URL-encoded, the PATH_INFO string forms the extra-path component of
    the Script-URI (see section 3.3) which follows the SCRIPT_NAME part
    of that path.
 
-
-
-Robinson & Coar           Expires 18 April 2004                [Page 13]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
-
-4.1.6 PATH_TRANSLATED
+4.1.6.  PATH_TRANSLATED
 
    The PATH_TRANSLATED variable is derived by taking the PATH_INFO
    value, parsing it as a local URI in its own right, and performing any
    virtual-to-physical translation appropriate to map it onto the
    server's document repository structure.  The set of characters
-   permitted in the result is system defined.
+   permitted in the result is system-defined.
 
       PATH_TRANSLATED = *<any character>
 
@@ -763,40 +779,39 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
 
       /usr/local/www/htdocs/this.is.the.path;info
 
-   The result of the translation is the value of PATH_TRANSLATED.
+   The value of PATH_TRANSLATED is the result of the translation.
 
-   The value of PATH_TRANSLATED is derived in this way irrespective of
-   whether it maps to a valid repository location.  The server MUST
-   preserve the case of the extra-path segment unless the underlying
-   repository supports case-insensitive names.  If the repository is
-   only case-aware, case-preserving, or case-blind with regard to
-   document names, the server is not required to preserve the case of
-   the original segment through the translation.
+
+
+Robinson & Coar              Informational                     [Page 14]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
+
+   The value is derived in this way irrespective of whether it maps to a
+   valid repository location.  The server MUST preserve the case of the
+   extra-path segment unless the underlying repository supports case-
+   insensitive names.  If the repository is only case-aware, case-
+   preserving, or case-blind with regard to document names, the server
+   is not required to preserve the case of the original segment through
+   the translation.
 
    The translation algorithm the server uses to derive PATH_TRANSLATED
-   is implementation defined; CGI scripts which use this variable may
+   is implementation-defined; CGI scripts which use this variable may
    suffer limited portability.
-
-
-
-
-Robinson & Coar           Expires 18 April 2004                [Page 14]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
 
    The server SHOULD set this meta-variable if the request URI includes
    a path-info component.  If PATH_INFO is NULL, then the
    PATH_TRANSLATED variable MUST be set to NULL (or unset).
 
-4.1.7 QUERY_STRING
+4.1.7.  QUERY_STRING
 
    The QUERY_STRING variable contains a URL-encoded search or parameter
    string; it provides information to the CGI script to affect or refine
    the document to be returned by the script.
 
    The URL syntax for a search string is described in section 3 of RFC
-   2396 [3].  The QUERY_STRING value is case-sensitive.
+   2396 [2].  The QUERY_STRING value is case-sensitive.
 
       QUERY_STRING = query-string
       query-string = *uric
@@ -805,7 +820,7 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    When parsing and decoding the query string, the details of the
    parsing, reserved characters and support for non US-ASCII characters
    depends on the context.  For example, form submission from an HTML
-   document [15] uses application/x-www-form-urlencoded encoding, in
+   document [18] uses application/x-www-form-urlencoded encoding, in
    which the characters "+", "&" and "=" are reserved, and the ISO
    8859-1 encoding may be used for non US-ASCII characters.
 
@@ -816,10 +831,18 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    a query component, the QUERY_STRING MUST be defined as an empty
    string ("").
 
-4.1.8 REMOTE_ADDR
+4.1.8.  REMOTE_ADDR
 
    The REMOTE_ADDR variable MUST be set to the network address of the
    client sending the request to the server.
+
+
+
+
+Robinson & Coar              Informational                     [Page 15]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
 
       REMOTE_ADDR  = hostnumber
       hostnumber   = ipv4-address | ipv6-address
@@ -828,26 +851,15 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
       hexpart      = hexseq | ( [ hexseq ] "::" [ hexseq ] )
       hexseq       = 1*4hex *( ":" 1*4hex )
 
-   The format of IPv6 addresses is defined in RFC 2373 [12].
+   The format of an IPv6 address is described in RFC 3513 [15].
 
-
-
-
-
-
-
-Robinson & Coar           Expires 18 April 2004                [Page 15]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
-
-4.1.9 REMOTE_HOST
+4.1.9.  REMOTE_HOST
 
    The REMOTE_HOST variable contains the fully qualified domain name of
    the client sending the request to the server, if available, otherwise
    NULL.  Fully qualified domain names take the form as described in
-   section 3.5 of RFC 1034 [14] and section 2.1 of RFC 1123 [4].  Domain
-   names are not case sensitive.
+   section 3.5 of RFC 1034 [17] and section 2.1 of RFC 1123 [12].
+   Domain names are not case sensitive.
 
       REMOTE_HOST   = "" | hostname | hostnumber
       hostname      = *( domainlabel "." ) toplabel [ "." ]
@@ -859,10 +871,10 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    available for performance reasons or otherwise, the server MAY
    substitute the REMOTE_ADDR value.
 
-4.1.10 REMOTE_IDENT
+4.1.10.  REMOTE_IDENT
 
    The REMOTE_IDENT variable MAY be used to provide identity information
-   reported about the connection by an RFC 1413 [17] request to the
+   reported about the connection by an RFC 1413 [20] request to the
    remote agent, if available.  The server may choose not to support
    this feature, or not to request the data for efficiency reasons, or
    not to return available identity data.
@@ -872,43 +884,45 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    The data returned may be used for authentication purposes, but the
    level of trust reposed in it should be minimal.
 
-4.1.11 REMOTE_USER
+4.1.11.  REMOTE_USER
 
    The REMOTE_USER variable provides a user identification string
    supplied by client as part of user authentication.
 
       REMOTE_USER = *TEXT
 
-   If the client request required HTTP Authentication [9] (e.g. the
+
+
+
+
+Robinson & Coar              Informational                     [Page 16]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
+
+   If the client request required HTTP Authentication [5] (e.g., the
    AUTH_TYPE meta-variable is set to "Basic" or "Digest"), then the
    value of the REMOTE_USER meta-variable MUST be set to the user-ID
    supplied.
 
-4.1.12 REQUEST_METHOD
+4.1.12.  REQUEST_METHOD
 
    The REQUEST_METHOD meta-variable MUST be set to the method which
    should be used by the script to process the request, as described in
    section 4.3.
-
-
-
-Robinson & Coar           Expires 18 April 2004                [Page 16]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
 
       REQUEST_METHOD   = method
       method           = "GET" | "POST" | "HEAD" | extension-method
       extension-method = "PUT" | "DELETE" | token
 
    The method is case sensitive.  The HTTP methods are described in
-   section 5.1.1 of the HTTP/1.0 specification [2] and section 5.1.1 of
-   the HTTP/1.1 specification [8].
+   section 5.1.1 of the HTTP/1.0 specification [1] and section 5.1.1 of
+   the HTTP/1.1 specification [4].
 
-4.1.13 SCRIPT_NAME
+4.1.13.  SCRIPT_NAME
 
    The SCRIPT_NAME variable MUST be set to a URI path (not URL-encoded)
-   which could identify the CGI script (rather then the script's
+   which could identify the CGI script (rather than the script's
    output).  The syntax is the same as for PATH_INFO (section 4.1.5)
 
       SCRIPT_NAME = "" | ( "/" path )
@@ -917,27 +931,37 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    is NULL; however, the variable MUST still be set in that case.
 
    The SCRIPT_NAME string forms some leading part of the path component
-   of the Script-URI derived in some implementation defined manner.  No
+   of the Script-URI derived in some implementation-defined manner.  No
    PATH_INFO segment (see section 4.1.5) is included in the SCRIPT_NAME
    value.
 
-4.1.14 SERVER_NAME
+4.1.14.  SERVER_NAME
 
    The SERVER_NAME variable MUST be set to the name of the server host
    to which the client request is directed.  It is a case-insensitive
    hostname or network address.  It forms the host part of the
-   Script-URI.  The syntax for an IPv6 address in a URI is defined in
-   RFC 2373 [12].
+   Script-URI.
 
       SERVER_NAME = server-name
       server-name = hostname | ipv4-address | ( "[" ipv6-address "]" )
 
+
+
+
+
+
+
+Robinson & Coar              Informational                     [Page 17]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
+
    A deployed server can have more than one possible value for this
    variable, where several HTTP virtual hosts share the same IP address.
-   In that case, the server uses the contents of the Host header field
-   to select the correct virtual host.
+   In that case, the server would use the contents of the request's Host
+   header field to select the correct virtual host.
 
-4.1.15 SERVER_PORT
+4.1.15.  SERVER_PORT
 
    The SERVER_PORT variable MUST be set to the TCP/IP port number on
    which this request is received from the client.  This value is used
@@ -946,33 +970,29 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
       SERVER_PORT = server-port
       server-port = 1*digit
 
-
-
-Robinson & Coar           Expires 18 April 2004                [Page 17]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
-
    Note that this variable MUST be set, even if the port is the default
    port for the scheme and could otherwise be omitted from a URI.
 
-4.1.16 SERVER_PROTOCOL
+4.1.16.  SERVER_PROTOCOL
 
    The SERVER_PROTOCOL variable MUST be set to the name and version of
-   the application protocol used for this CGI request.  This is not
-   necessarily the same as the protocol version used by the server in
-   its communication with the client.
+   the application protocol used for this CGI request.  This MAY differ
+   from the protocol version used by the server in its communication
+   with the client.
 
       SERVER_PROTOCOL   = HTTP-Version | "INCLUDED" | extension-version
       HTTP-Version      = "HTTP" "/" 1*digit "." 1*digit
       extension-version = protocol [ "/" 1*digit "." 1*digit ]
       protocol          = token
 
-   'protocol' is a version of the scheme part of the Script-URI, and is
-   not case sensitive.  By convention, 'protocol' is in upper case.  The
-   protocol may not be identical to the scheme of the request; for
-   example, the request may have scheme "https", whilst the protocol is
-   "HTTP".
+   Here, 'protocol' defines the syntax of some of the information
+   passing between the server and the script (the 'protocol-specific'
+   features).  It is not case sensitive and is usually presented in
+   upper case.  The protocol is not the same as the scheme part of the
+   script URI, which defines the overall access mechanism used by the
+   client to communicate with the server.  For example, a request that
+   reaches the script with a protocol of "HTTP" may have used an "https"
+   scheme.
 
    A well-known value for SERVER_PROTOCOL which the server MAY use is
    "INCLUDED", which signals that the current document is being included
@@ -980,7 +1000,19 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    of the client request.  The script should treat this as an HTTP/1.0
    request.
 
-4.1.17 SERVER_SOFTWARE
+
+
+
+
+
+
+
+Robinson & Coar              Informational                     [Page 18]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
+
+4.1.17.  SERVER_SOFTWARE
 
    The SERVER_SOFTWARE meta-variable MUST be set to the name and version
    of the information server software making the CGI request (and
@@ -993,7 +1025,7 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
       comment         = "(" *( ctext | comment ) ")"
       ctext           = <any TEXT excluding "(" and ")">
 
-4.1.18 Protocol-Specific Meta-Variables
+4.1.18.  Protocol-Specific Meta-Variables
 
    The server SHOULD set meta-variables specific to the protocol and
    scheme for the request.  Interpretation of protocol-specific
@@ -1001,14 +1033,6 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    server MAY set a meta-variable with the name of the scheme to a
    non-NULL value if the scheme is not the same as the protocol.  The
    presence of such a variable indicates to a script which scheme is
-
-
-
-Robinson & Coar           Expires 18 April 2004                [Page 18]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
-
    used by the request.
 
    Meta-variables with names beginning with "HTTP_" contain values read
@@ -1020,7 +1044,7 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    its semantics.  If multiple header fields with the same field-name
    are received then the server MUST rewrite them as a single value
    having the same semantics.  Similarly, a header field that spans
-   multiple lines must be merged onto a single line.  The server MUST,
+   multiple lines MUST be merged onto a single line.  The server MUST,
    if necessary, change the representation of the data (for example, the
    character set) to be appropriate for a CGI meta-variable.
 
@@ -1032,7 +1056,19 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    MAY remove header fields that relate solely to client-side
    communication issues, such as 'Connection'.
 
-4.2 Request Message-Body
+
+
+
+
+
+
+
+Robinson & Coar              Informational                     [Page 19]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
+
+4.2.  Request Message-Body
 
    Request data is accessed by the script in a system-defined method;
    unless defined otherwise, this will be by reading the 'standard
@@ -1057,18 +1093,10 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    As transfer-codings are not supported on the request-body, the server
    MUST remove any such codings from the message-body, and recalculate
    the CONTENT_LENGTH.  If this is not possible (for example, because of
-
-
-
-Robinson & Coar           Expires 18 April 2004                [Page 19]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
-
    large buffering requirements), the server SHOULD reject the client
    request.  It MAY also remove content-codings from the message-body.
 
-4.3 Request Methods
+4.3.  Request Methods
 
    The Request Method, as supplied in the REQUEST_METHOD meta-variable,
    identifies the processing method to be applied by the script in
@@ -1077,55 +1105,56 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    script receives a request with a method it does not support it SHOULD
    reject it with an error (see section 6.3.3).
 
-4.3.1 GET
+4.3.1.  GET
 
-   The GET method method indicates that the script should produce a
-   document based on the meta-variable values.  By convention, the GET
-   method is 'safe' and 'idempotent' and SHOULD NOT have the the
-   significance of taking an action other than producing a document.
+   The GET method indicates that the script should produce a document
+   based on the meta-variable values.  By convention, the GET method is
+   'safe' and 'idempotent' and SHOULD NOT have the significance of
+   taking an action other than producing a document.
 
    The meaning of the GET method may be modified and refined by
    protocol-specific meta-variables.
 
-4.3.2 POST
+
+
+
+
+Robinson & Coar              Informational                     [Page 20]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
+
+4.3.2.  POST
 
    The POST method is used to request the script perform processing and
    produce a document based on the data in the request message-body, in
    addition to meta-variable values.  A common use is form submission in
-   HTML [15], intended to initiate processing by the script that has a
+   HTML [18], intended to initiate processing by the script that has a
    permanent affect, such a change in a database.
 
    The script MUST check the value of the CONTENT_LENGTH variable before
    reading the attached message-body, and SHOULD check the CONTENT_TYPE
    value before processing it.
 
-4.3.3 HEAD
+4.3.3.  HEAD
 
    The HEAD method requests the script to do sufficient processing to
    return the response header fields, without providing a response
    message-body.  The script MUST NOT provide a response message-body
    for a HEAD request.  If it does, then the server MUST discard the
-   message-body when reading the response.
+   message-body when reading the response from the script.
 
-4.3.4 Protocol-Specific Methods
+4.3.4.  Protocol-Specific Methods
 
    The script MAY implement any protocol-specific method, such as
    HTTP/1.1 PUT and DELETE; it SHOULD check the value of SERVER_PROTOCOL
    when doing so.
 
-
-
-
-Robinson & Coar           Expires 18 April 2004                [Page 20]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
-
    The server MAY decide that some methods are not appropriate or
    permitted for a script, and may handle the methods itself or return
    an error to the client.
 
-4.4 The Script Command Line
+4.4.  The Script Command Line
 
    Some systems support a method for supplying an array of strings to
    the CGI script.  This is only used in the case of an 'indexed' HTTP
@@ -1141,7 +1170,15 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
                       "$"
 
    After parsing, each search-word is URL-decoded, optionally encoded in
-   a system defined manner and then added to the argument list.
+   a system-defined manner and then added to the command line argument
+   list.
+
+
+
+Robinson & Coar              Informational                     [Page 21]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
 
    If the server cannot create any part of the argument list, then the
    server MUST NOT generate any command line information.  For example,
@@ -1153,9 +1190,9 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    unencoded "=" character, and SHOULD NOT use the command line
    arguments if it does.
 
-5 NPH Scripts
+5.  NPH Scripts
 
-5.1 Identification
+5.1.  Identification
 
    The server MAY support NPH (Non-Parsed Header) scripts; these are
    scripts to which the server passes all responsibility for response
@@ -1169,24 +1206,16 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    defined mechanism for identifying NPH scripts, perhaps based on the
    name or location of the script.
 
+5.2.  NPH Response
 
-
-
-Robinson & Coar           Expires 18 April 2004                [Page 21]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
-
-5.2 NPH Response
-
-   There MUST be a system defined method for the script to send data
+   There MUST be a system-defined method for the script to send data
    back to the server or client; a script MUST always return some data.
    Unless defined otherwise, this will be the same as for conventional
    CGI scripts.
 
    Currently, NPH scripts are only defined for HTTP client requests.  An
    (HTTP) NPH script MUST return a complete HTTP response message,
-   currently described in section 6 of the HTTP specifications [2], [8].
+   currently described in section 6 of the HTTP specifications [1], [4].
    The script MUST use the SERVER_PROTOCOL variable to determine the
    appropriate format for a response.  It MUST also take account of any
    generic or protocol-specific meta-variables in the request as might
@@ -1194,21 +1223,29 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
 
    The server MUST ensure that the script output is sent to the client
    unmodified.  Note that this requires the script to use the correct
-   character set (US-ASCII [20] and ISO 8859-1 [21] for HTTP) in the
+   character set (US-ASCII [9] and ISO 8859-1 [10] for HTTP) in the
    header fields.  The server SHOULD attempt to ensure that the script
    output is sent directly to the client, with minimal internal and no
    transport-visible buffering.
+
+
+
+
+Robinson & Coar              Informational                     [Page 22]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
 
    Unless the implementation defines otherwise, the script MUST NOT
    indicate in its response that the client can send further requests
    over the same connection.
 
-6 CGI Response
+6.  CGI Response
 
-6.1 Response Handling
+6.1.  Response Handling
 
    A script MUST always provide a non-empty response, and so there is a
-   system defined method for it to send this data back to the server.
+   system-defined method for it to send this data back to the server.
    Unless defined otherwise, this will be via the 'standard output' file
    descriptor.
 
@@ -1220,18 +1257,11 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    timeout and receives no data from a script within the timeout period,
    the server MAY terminate the script process.
 
-6.2 Response Types
+6.2.  Response Types
 
    The response comprises a message-header and a message-body, separated
-   by a blank line.  The message-header contains one ore more header
+   by a blank line.  The message-header contains one or more header
    fields.  The body may be NULL.
-
-
-
-Robinson & Coar           Expires 18 April 2004                [Page 22]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
 
       generic-response = 1*header-field NL [ response-body ]
 
@@ -1244,7 +1274,7 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
       CGI-Response = document-response | local-redir-response |
                      client-redir-response | client-redirdoc-response
 
-6.2.1 Document Response
+6.2.1.  Document Response
 
    The CGI script can return a document to the user in a document
    response, with an optional error code indicating the success status
@@ -1253,13 +1283,22 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
       document-response = Content-Type [ Status ] *other-field NL
                           response-body
 
+
+
+
+
+Robinson & Coar              Informational                     [Page 23]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
+
    The script MUST return a Content-Type header field.  A Status header
    field is optional, and status 200 'OK' is assumed if it is omitted.
    The server MUST make any appropriate modifications to the script's
    output to ensure that the response to the client complies with the
    response protocol version.
 
-6.2.2 Local Redirect Response
+6.2.2.  Local Redirect Response
 
    The CGI script can return a URI path and query-string
    ('local-pathquery') for a local resource in a Location header field.
@@ -1274,7 +1313,7 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
 
       scheme "://" server-name ":" server-port local-pathquery
 
-6.2.3 Client Redirect Response
+6.2.3.  Client Redirect Response
 
    The CGI script can return an absolute URI path in a Location header
    field, to indicate to the client that it should reprocess the request
@@ -1282,18 +1321,11 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
 
       client-redir-response = client-Location *extension-field NL
 
-
-
-Robinson & Coar           Expires 18 April 2004                [Page 23]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
-
    The script MUST not provide any other header fields, except for
    server-defined CGI extension fields.  For an HTTP client request, the
    server MUST generate a 302 'Found' HTTP response message.
 
-6.2.4 Client Redirect Response with Document
+6.2.4.  Client Redirect Response with Document
 
    The CGI script can return an absolute URI path in a Location header
    field together with an attached document, to indicate to the client
@@ -1303,17 +1335,26 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
                                  *other-field NL response-body
 
    The Status header field MUST be supplied and MUST contain a status
-   value of 302 'Found'.  The server MUST make any appropriate
-   modifications to the script's output to ensure that the response to
-   the client complies with the response protocol version.
+   value of 302 'Found', or it MAY contain an extension-code, that is,
+   another valid status code that means client redirection.  The server
+   MUST make any appropriate modifications to the script's output to
+   ensure that the response to the client complies with the response
+   protocol version.
 
-6.3 Response Header Fields
+
+
+Robinson & Coar              Informational                     [Page 24]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
+
+6.3.  Response Header Fields
 
    The response header fields are either CGI or extension header fields
-   to be interpreted by the server, or protocol-specific headers to be
-   included in the response returned to the client.  At least one CGI
-   field MUST be supplied; each CGI field MUST NOT appear more than once
-   in the response.  The response header fields have the syntax:
+   to be interpreted by the server, or protocol-specific header fields
+   to be included in the response returned to the client.  At least one
+   CGI field MUST be supplied; each CGI field MUST NOT appear more than
+   once in the response.  The response header fields have the syntax:
 
       header-field    = CGI-field | other-field
       CGI-field       = Content-Type | Location | Status
@@ -1332,18 +1373,10 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    and the field-value (but not between the field-name and the ":"), and
    also between tokens in the field-value.
 
-6.3.1 Content-Type
+6.3.1.  Content-Type
 
-   The Content-Type response field sets the Internet Media Type [10] of
+   The Content-Type response field sets the Internet Media Type [6] of
    the entity body.
-
-
-
-
-Robinson & Coar           Expires 18 April 2004                [Page 24]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
 
       Content-Type = "Content-Type:" media-type NL
 
@@ -1356,17 +1389,31 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    Unless it is otherwise system-defined, the default charset assumed by
    the client for text media-types is ISO-8859-1 if the protocol is HTTP
    and US-ASCII otherwise.  Hence the script SHOULD include a charset
-   parameter.  See section 3.4.1 of the HTTP/1.1 specification [8] for a
+   parameter.  See section 3.4.1 of the HTTP/1.1 specification [4] for a
    discussion of this issue.
 
-6.3.2 Location
+
+
+
+
+
+
+
+Robinson & Coar              Informational                     [Page 25]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
+
+6.3.2.  Location
 
    The Location header field is used to specify to the server that the
    script is returning a reference to a document rather than an actual
-   document.  It is either an absolute URI (with fragment), indicating
-   that the client is to fetch the referenced document, or a local URI
-   path (with query string), indicating that the server is to fetch the
-   referenced document.
+   document (see sections 6.2.3 and 6.2.4).  It is either an absolute
+   URI (optionally with a fragment identifier), indicating that the
+   client is to fetch the referenced document, or a local URI path
+   (optionally with a query string), indicating that the server is to
+   fetch the referenced document and return it to the client as the
+   response.
 
       Location        = local-Location | client-Location
       client-Location = "Location:" fragment-URI NL
@@ -1381,46 +1428,45 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
       extra           = ":" | "@" | "&" | "=" | "+" | "$" | ","
 
    The syntax of an absoluteURI is incorporated into this document from
-   that specified in RFC 2396 [3] and RFC 2732 [11].  A valid
-   absoluteURI always starts with the name of scheme followed by ":";
-   scheme names start with a letter and continue with alphanumerics,
-   "+", "-" or ".".  The local URI path and query must be an absolute
-   path, and not a relative path or NULL, and hence must start with a
-   "/".
+   that specified in RFC 2396 [2] and RFC 2732 [7].  A valid absoluteURI
+   always starts with the name of scheme followed by ":"; scheme names
+   start with a letter and continue with alphanumerics, "+", "-" or ".".
+   The local URI path and query must be an absolute path, and not a
+   relative path or NULL, and hence must start with a "/".
 
    Note that any message-body attached to the request (such as for a
    POST request) may not be available to the resource that is the target
    of the redirect.
 
-
-
-
-
-Robinson & Coar           Expires 18 April 2004                [Page 25]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
-
-6.3.3 Status
+6.3.3.  Status
 
    The Status header field contains a 3-digit integer result code that
    indicates the level of success of the script's attempt to handle the
    request.
 
-      Status        = "Status:" status-code SP reason-phrase NL
-      status-code   = "200" | "302" | "400" | "501" | 3digit
-      reason-phrase = *TEXT
+      Status         = "Status:" status-code SP reason-phrase NL
+      status-code    = "200" | "302" | "400" | "501" | extension-code
+      extension-code = 3digit
+      reason-phrase  = *TEXT
 
    Status code 200 'OK' indicates success, and is the default value
    assumed for a document response.  Status code 302 'Found' is used
    with a Location header field and response message-body.  Status code
+
+
+
+Robinson & Coar              Informational                     [Page 26]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
+
    400 'Bad Request' may be used for an unknown request format, such as
    a missing CONTENT_TYPE.  Status code 501 'Not Implemented' may be
    returned by a script if it receives an unsupported REQUEST_METHOD.
 
    Other valid status codes are listed in section 6.1.1 of the HTTP
-   specifications [2], [8], and also the IANA HTTP Status Code Registry
-   [18], and can be used in addition to or instead of the ones listed
+   specifications [1], [4], and also the IANA HTTP Status Code Registry
+   [8] and MAY be used in addition to or instead of the ones listed
    above.  The script SHOULD check the value of SERVER_PROTOCOL before
    using HTTP/1.1 status codes.  The script MAY reject with error 405
    'Method Not Allowed' HTTP/1.1 requests made using a method it does
@@ -1434,11 +1480,11 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    The reason-phrase is a textual description of the error to be
    returned to the client for human consumption.
 
-6.3.4 Protocol-Specific Header Fields
+6.3.4.  Protocol-Specific Header Fields
 
    The script MAY return any other header fields that relate to the
    response message defined by the specification for the SERVER_PROTOCOL
-   (HTTP/1.0 [2] or HTTP/1.1 [8]).  The server MUST translate the header
+   (HTTP/1.0 [1] or HTTP/1.1 [4]).  The server MUST translate the header
    data from the CGI header syntax to the HTTP header syntax if these
    differ.  For example, the character sequence for newline (such as
    UNIX's US-ASCII LF) used by CGI scripts may not be the same as that
@@ -1448,25 +1494,29 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    client-side communication issues and could affect the server's
    ability to send the response to the client.  The server MAY remove
    any such header fields returned by the client.  It SHOULD resolve any
-   conflicts between headers returned by the script and headers that it
+   conflicts between header fields returned by the script and header
+   fields that it would otherwise send itself.
+
+6.3.5.  Extension Header Fields
+
+   There may be additional implementation-defined CGI header fields,
+   whose field names SHOULD begin with "X-CGI-".  The server MAY ignore
+   (and delete) any unrecognised header fields with names beginning "X-
+   CGI-" that are received from the script.
 
 
 
-Robinson & Coar           Expires 18 April 2004                [Page 26]
+
+
+
+
+
+Robinson & Coar              Informational                     [Page 27]
 
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
+RFC 3875                    CGI Version 1.1                 October 2004
 
 
-   would otherwise send itself.
-
-6.3.5 Extension Header Fields
-
-   The server may define additional implementation-specific CGI header
-   fields, whose field names SHOULD begin with "X-CGI-".  It MAY ignore
-   (and delete) any unrecognised header fields with names beginning
-   "X-CGI-".
-
-6.4 Response Message-Body
+6.4.  Response Message-Body
 
    The response message-body is an attached document to be returned to
    the client by the server.  The server MUST read all the data provided
@@ -1477,9 +1527,9 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
 
       response-body = *OCTET
 
-7 System Specifications
+7.  System Specifications
 
-7.1 AmigaDOS
+7.1.  AmigaDOS
 
    Meta-Variables
       Meta-variables are passed to the script in identically named
@@ -1493,11 +1543,11 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
       directory containing the script.
 
    Character set
-      The US-ASCII character set [20] is used for the definition of
+      The US-ASCII character set [9] is used for the definition of
       meta-variables, header fields and values; the newline (NL)
       sequence is LF; servers SHOULD also accept CR LF as a newline.
 
-7.2 UNIX
+7.2.  UNIX
 
    For UNIX compatible operating systems, the following are defined:
 
@@ -1506,30 +1556,30 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
       environment variables.  These are accessed by the C library
       routine getenv() or variable environ.
 
-
-
-Robinson & Coar           Expires 18 April 2004                [Page 27]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
-
    The command line
-      This is accessed using the the argc and argv arguments to main().
-      The words have any characters which are 'active' in the Bourne
-      shell escaped with a backslash.
+      This is accessed using the argc and argv arguments to main().  The
+      words have any characters which are 'active' in the Bourne shell
+      escaped with a backslash.
 
    The current working directory
       The current working directory for the script SHOULD be set to the
       directory containing the script.
 
+
+
+Robinson & Coar              Informational                     [Page 28]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
+
    Character set
-      The US-ASCII character set [20], excluding NUL, is used for the
+      The US-ASCII character set [9], excluding NUL, is used for the
       definition of meta-variables, header fields and CHAR values; TEXT
       values use ISO-8859-1.  The PATH_TRANSLATED value can contain any
       8-bit byte except NUL.  The newline (NL) sequence is LF; servers
       should also accept CR LF as a newline.
 
-7.3 EBCDIC/POSIX
+7.3.  EBCDIC/POSIX
 
    For POSIX compatible operating systems using the EBCDIC character
    set, the following are defined:
@@ -1540,38 +1590,27 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
       routine getenv().
 
    The command line
-      This is accessed using the the argc and argv arguments to main().
-      The words have any characters which are 'active' in the Bourne
-      shell escaped with a backslash.
+      This is accessed using the argc and argv arguments to main().  The
+      words have any characters which are 'active' in the Bourne shell
+      escaped with a backslash.
 
    The current working directory
       The current working directory for the script SHOULD be set to the
       directory containing the script.
 
    Character set
-      The IBM1047 character set [19], excluding NUL, is used for the
+      The IBM1047 character set [21], excluding NUL, is used for the
       definition of meta-variables, header fields, values, TEXT strings
       and the PATH_TRANSLATED value.  The newline (NL) sequence is LF;
       servers should also accept CR LF as a newline.
 
    media-type charset default
-      The default charset value for text (and other
-      implementation-defined) media types is IBM1047.
+      The default charset value for text (and other implementation-
+      defined) media types is IBM1047.
 
+8.  Implementation
 
-
-
-
-
-
-Robinson & Coar           Expires 18 April 2004                [Page 28]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
-
-8 Implementation
-
-8.1 Recommendations for Servers
+8.1.  Recommendations for Servers
 
    Although the server and the CGI script need not be consistent in
    their handling of URL paths (client URLs and the PATH_INFO data,
@@ -1582,24 +1621,31 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
       1. define any restrictions on allowed path segments, in particular
          whether non-terminal NULL segments are permitted;
 
-      2. define the behaviour for "." or ".." path segments; i.e.
+
+
+Robinson & Coar              Informational                     [Page 29]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
+
+      2. define the behaviour for "." or ".." path segments; i.e.,
          whether they are prohibited, treated as ordinary path segments
          or interpreted in accordance with the relative URL
-         specification [3];
+         specification [2];
 
       3. define any limits of the implementation, including limits on
          path or search string lengths, and limits on the volume of
          header fields the server will parse.
 
-8.2 Recommendations for Scripts
+8.2.  Recommendations for Scripts
 
    If the script does not intend processing the PATH_INFO data, then it
    should reject the request with 404 Not Found if PATH_INFO is not
    NULL.
 
    If the output of a form is being processed, check that CONTENT_TYPE
-   is "application/x-www-form-urlencoded" [15] or "multipart/form-data"
-   [13].  If CONTENT_TYPE is blank, the script can reject the request
+   is "application/x-www-form-urlencoded" [18] or "multipart/form-data"
+   [16].  If CONTENT_TYPE is blank, the script can reject the request
    with a 415 'Unsupported Media Type' error, where supported by the
    protocol.
 
@@ -1610,44 +1656,47 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    404 'Not Found'.
 
    When returning header fields, the script should try to send the CGI
-   headers as soon as possible, and should send them before any HTTP
-   headers.  This may help reduce the server's memory requirements.
+   header fields as soon as possible, and should send them before any
+   HTTP header fields.  This may help reduce the server's memory
+   requirements.
 
+   Script authors should be aware that the REMOTE_ADDR and REMOTE_HOST
+   meta-variables (see sections 4.1.8 and 4.1.9) may not identify the
+   ultimate source of the request.  They identify the client for the
+   immediate request to the server; that client may be a proxy, gateway,
+   or other intermediary acting on behalf of the actual source client.
 
+9.  Security Considerations
 
-
-
-
-
-
-Robinson & Coar           Expires 18 April 2004                [Page 29]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
-
-9 Security Considerations
-
-9.1 Safe Methods
+9.1.  Safe Methods
 
    As discussed in the security considerations of the HTTP
-   specifications [2], [8], the convention has been established that the
+   specifications [1], [4], the convention has been established that the
    GET and HEAD methods should be 'safe' and 'idempotent' (repeated
    requests have the same effect as a single request).  See section 9.1
-   of RFC 2616 [8] for a full discussion.
+   of RFC 2616 [4] for a full discussion.
 
-9.2 Header Fields Containing Sensitive Information
+
+
+
+Robinson & Coar              Informational                     [Page 30]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
+
+9.2.  Header Fields Containing Sensitive Information
 
    Some HTTP header fields may carry sensitive information which the
    server should not pass on to the script unless explicitly configured
-   to do so.  For example, if the server protects the script using the
-   Basic authentication scheme, then the client will send an
+   to do so.  For example, if the server protects the script by using
+   the Basic authentication scheme, then the client will send an
    Authorization header field containing a username and password.  The
    server validates this information and so it should not pass on the
    password via the HTTP_AUTHORIZATION meta-variable without careful
    consideration.  This also applies to the Proxy-Authorization header
    field and the corresponding HTTP_PROXY_AUTHORIZATION meta-variable.
 
-9.3 Data Privacy
+9.3.  Data Privacy
 
    Confidential data in a request should be placed in a message-body as
    part of a POST request, and not placed in the URI or message headers.
@@ -1656,7 +1705,7 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    existing servers, proxies and clients will permanently record the URI
    where it might be visible to third parties.
 
-9.4 Information Security Model
+9.4.  Information Security Model
 
    For a client connection using TLS, the security model applies between
    the client and the server, and not between the client and the script.
@@ -1668,19 +1717,11 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    authenticate the server which invoked it.  There is no enforced
    integrity on the CGI request and response messages.
 
-9.5 Script Interference with the Server
+9.5.  Script Interference with the Server
 
    The most common implementation of CGI invokes the script as a child
    process using the same user and group as the server process.  It
    should therefore be ensured that the script cannot interfere with the
-
-
-
-Robinson & Coar           Expires 18 April 2004                [Page 30]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
-
    server process, its configuration, documents or log files.
 
    If the script is executed by calling a function linked in to the
@@ -1688,7 +1729,18 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    should be taken to protect the core memory of the server, or to
    ensure that untrusted code cannot be executed.
 
-9.6 Data Length and Buffering Considerations
+
+
+
+
+
+
+Robinson & Coar              Informational                     [Page 31]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
+
+9.6.  Data Length and Buffering Considerations
 
    This specification places no limits on the length of the message-body
    presented to the script.  The script should not assume that
@@ -1711,7 +1763,7 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    assume that statically allocated buffers of any size are sufficient
    to contain the entire response.
 
-9.7 Stateless Processing
+9.7.  Stateless Processing
 
    The stateless nature of the Web makes each script execution and
    resource retrieval independent of all others even when multiple
@@ -1729,14 +1781,6 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    logic error, or malicious action.
 
    Authors of scripts involved in multi-request transactions should be
-
-
-
-Robinson & Coar           Expires 18 April 2004                [Page 31]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
-
    particularly cautious about validating the state information;
    undesirable effects may result from the substitution of dangerous
    values for portions of the submission which might otherwise be
@@ -1745,7 +1789,14 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    meant to be controlled by the client (e.g., hidden HTML form
    elements, cookies, embedded URLs, etc.).
 
-9.8 Relative Paths
+
+
+Robinson & Coar              Informational                     [Page 32]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
+
+9.8.  Relative Paths
 
    The server should be careful of ".." path segments in the request
    URI.  These should be removed or resolved in the request URI before
@@ -1754,13 +1805,13 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    taken to avoid the path resolution from providing translated paths
    outside an expected path hierarchy.
 
-9.9 Non-parsed Header Output
+9.9.  Non-parsed Header Output
 
    If a script returns a non-parsed header output, to be interpreted by
    the client in its native protocol, then the script must address all
    security considerations relating to that protocol.
 
-10 Acknowledgements
+10.  Acknowledgements
 
    This work is based on the original CGI interface that arose out of
    discussions on the 'www-talk' mailing list.  In particular, Rob
@@ -1773,117 +1824,111 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
    Morris, Jeremy Madea, Patrick McManus, Adam Donahue, Ross Patterson
    and Harald Alvestrand.
 
-11 References
+11.  References
 
-   [1]  Berners-Lee, T., 'Universal Resource Identifiers in WWW: A
-        Unifying Syntax for the Expression of Names and Addresses of
-        Objects on the Network as used in the World-Wide Web', RFC 1630,
-        CERN, June 1994.
+11.1  Normative References
 
-   [2]  Berners-Lee, T., Fielding, R. T. and Frystyk, H., 'Hypertext
-        Transfer Protocol -- HTTP/1.0', RFC 1945, MIT/LCS, UC Irvine,
-        May 1996.
+   [1]  Berners-Lee, T., Fielding, R. and H. Frystyk, "Hypertext
+        Transfer Protocol -- HTTP/1.0", RFC 1945, May 1996.
 
-   [3]  Berners-Lee, T., Fielding, R. and Masinter, L., 'Uniform
+   [2]  Berners-Lee, T., Fielding, R. and L. Masinter, "Uniform Resource
+        Identifiers (URI) : Generic Syntax", RFC 2396, August 1998.
+
+   [3]  Bradner, S., "Key words for use in RFCs to Indicate Requirements
+        Levels", BCP 14, RFC 2119, March 1997.
+
+   [4]  Fielding, R., Gettys, J., Mogul, J., Frystyk, H., Masinter, L.,
+        Leach, P., and T. Berners-Lee, "Hypertext Transfer Protocol --
+        HTTP/1.1", RFC 2616, June 1999.
+
+   [5]  Franks, J., Hallam-Baker, P., Hostetler, J., Lawrence, S.,
+        Leach, P., Luotonen, A., and L. Stewart, "HTTP Authentication:
+        Basic and Digest Access Authentication", RFC 2617, June 1999.
 
 
 
-Robinson & Coar           Expires 18 April 2004                [Page 32]
+Robinson & Coar              Informational                     [Page 33]
 
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
+RFC 3875                    CGI Version 1.1                 October 2004
 
 
-        Resource Identifiers (URI) : Generic Syntax', RFC 2396, MIT/LC,
-        U.C. Irvine, Xerox Corporation, August 1998.
+   [6]  Freed, N. and N. Borenstein, "Multipurpose Internet Mail
+        Extensions (MIME) Part Two: Media Types", RFC 2046, November
+        1996.
 
-   [4]  Braden, R. (Editor), 'Requirements for Internet Hosts --
-        Application and Support', STD 3, RFC 1123, IETF, October 1989.
+   [7]  Hinden, R., Carpenter, B., and L. Masinter, "Format for Literal
+        IPv6 Addresses in URL's", RFC 2732, December 1999.
 
-   [5]  Bradner, S., 'Key words for use in RFCs to Indicate Requirements
-        Levels', BCP 14, RFC 2119, Harvard University, March 1997.
-
-   [6]  Crocker, D.H., 'Standard for the Format of ARPA Internet Text
-        Messages', STD 11, RFC 822, University of Delaware, August 1982.
-
-   [7]  Dierks, T. and Allen, C., 'The TLS Protocol Version 1.0', RFC
-        2246, Certicom, January 1999.
-
-   [8]  Fielding, R., Gettys, J., Mogul, J., Frystyk, H., Masinter, L.,
-        Leach, P. and Berners-Lee, T., 'Hypertext Transfer Protocol --
-        HTTP/1.1', RFC 2616, UC Irving, Compaq/W3C, Compaq, W3C/MIT,
-        Xerox, Microsoft, W3C/MIT, June 1999.
-
-   [9]  Franks, J., Hallam-Baker, P., Hostetler, J., Lawrence, S.,
-        Leach, P., Luotonen, A. and Stewart L., 'HTTP Authentication:
-        Basic and Digest Access Authentication', RFC 2617, Northwestern
-        University, Verisign Inc., AbiSource, Inc., Agranat Systems,
-        Inc., Microsoft Corporation, Netscape Communications
-        Corporation, Open Market, Inc., June 1999.
-
-   [10] Freed, N. and Borenstein N., 'Multipurpose Internet Mail
-        Extensions (MIME) Part Two: Media Types', RFC 2046, Innosoft,
-        First Virtual, November 1996.
-
-   [11] Hinden, R., Carpenter, B. and Masinter, L., 'Format for Literal
-        IPv6 Addresses in URL's', RFC 2732, Nokia, IBM, AT&T, December
-        1999.
-
-   [12] Hinden R. and Deering S., 'IP Version 6 Addressing
-        Architecture', RFC 2373, Nokia, Cisco Systems, July 1998.
-
-   [13] Masinter, L., 'Returning Values from Forms:
-        multipart/form-data', RFC 2388, Xerox Corporation, August 1998.
-
-   [14] Mockapetris, P., 'Domain Names - Concepts and Facilities', STD
-        13, RFC 1034, ISI, November 1987.
-
-   [15] Raggett, D., Le Hors, A. and Jacobs, I. (eds), 'HTML 4.01
-        Specification', W3C Recommendation December 1999,
-        http://www.w3.org/TR/html401/.
-
-   [16] Rescola, E. 'HTTP Over TLS', RFC 2818, RTFM, May 2000.
-
-
-Robinson & Coar           Expires 18 April 2004                [Page 33]
-
-INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
-
-
-   [17] St. Johns, M., 'Identification Protocol', RFC 1413, US
-        Department of Defense, February 1993.
-
-   [18] 'HTTP Status Code Registry',
+   [8]  "HTTP Status Code Registry",
         http://www.iana.org/assignments/http-status-codes, IANA.
 
-   [19] IBM National Language Support Reference Manual Volume 2,
-        SE09-8002-01, March 1990.
-
-   [20] 'Information Systems -- Coded Character Sets -- 7-bit American
-        Standard Code for Information Interchange (7-Bit ASCII)', ANSI
+   [9]  "Information Systems -- Coded Character Sets -- 7-bit American
+        Standard Code for Information Interchange (7-Bit ASCII)", ANSI
         INCITS.4-1986 (R2002).
 
-   [21] 'Information technology -- 8-bit single-byte coded graphic
-        character sets -- Part 1: Latin alphabet No. 1', ISO/IEC
+   [10] "Information technology -- 8-bit single-byte coded graphic
+        character sets -- Part 1: Latin alphabet No. 1", ISO/IEC
         8859-1:1998.
 
-   [22] 'The Common Gateway Interface',
+11.2.  Informative References
+
+   [11] Berners-Lee, T., "Universal Resource Identifiers in WWW: A
+        Unifying Syntax for the Expression of Names and Addresses of
+        Objects on the Network as used in the World-Wide Web", RFC 1630,
+        June 1994.
+
+   [12] Braden, R., Ed., "Requirements for Internet Hosts -- Application
+        and Support", STD 3, RFC 1123, October 1989.
+
+   [13] Crocker, D., "Standard for the Format of ARPA Internet Text
+        Messages", STD 11, RFC 822, August 1982.
+
+   [14] Dierks, T. and C. Allen, "The TLS Protocol Version 1.0", RFC
+        2246, January 1999.
+
+   [15] Hinden R. and S. Deering, "Internet Protocol Version 6 (IPv6)
+        Addressing Architecture", RFC 3513, April 2003.
+
+   [16] Masinter, L., "Returning Values from Forms:
+        multipart/form-data", RFC 2388, August 1998.
+
+   [17] Mockapetris, P., "Domain Names - Concepts and Facilities", STD
+        13, RFC 1034, November 1987.
+
+   [18] Raggett, D., Le Hors, A., and I. Jacobs, Eds., "HTML 4.01
+        Specification", W3C Recommendation December 1999,
+        http://www.w3.org/TR/html401/.
+
+   [19] Rescola, E. "HTTP Over TLS", RFC 2818, May 2000.
+
+
+
+Robinson & Coar              Informational                     [Page 34]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
+
+   [20] St. Johns, M., "Identification Protocol", RFC 1413, February
+        1993.
+
+   [21] IBM National Language Support Reference Manual Volume 2,
+        SE09-8002-01, March 1990.
+
+   [22] "The Common Gateway Interface",
         http://hoohoo.ncsa.uiuc.edu/cgi/, NCSA, University of Illinois.
 
+12.  Authors' Addresses
 
-12 Authors' Addresses
+   David Robinson
+   The Apache Software Foundation
 
-      David Robinson
-      Apache Software Foundation
-      Email: drtr@apache.org
+   EMail: drtr@apache.org
 
-      Ken A. L. Coar
-      MeepZor Consulting
-      7824 Mayfaire Crest Lane, Suite 202
-      Raleigh, NC 27615-4875
-      USA
-      Tel: +1 (919) 254 4237
-      Fax: +1 (919) 254 5420
-      Email: Ken.Coar@Golux.com
+
+   Ken A. L. Coar
+   The Apache Software Foundation
+
+   EMail: coar@apache.org
 
 
 
@@ -1900,5 +1945,75 @@ INTERNET-DRAFT       Common Gateway Interface -- 1.1     19 October 2003
 
 
 
-Robinson & Coar           Expires 18 April 2004                [Page 34]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Robinson & Coar              Informational                     [Page 35]
+
+RFC 3875                    CGI Version 1.1                 October 2004
+
+
+13.  Full Copyright Statement
+
+   Copyright (C) The Internet Society (2004).  This document is subject
+   to the rights, licenses and restrictions contained in BCP 78 and at
+   www.rfc-editor.org, and except as set forth therein, the authors
+   retain all their rights.
+
+   This document and the information contained herein are provided on an
+   "AS IS" basis and THE CONTRIBUTOR, THE ORGANIZATION HE/SHE REPRESENTS
+   OR IS SPONSORED BY (IF ANY), THE INTERNET SOCIETY AND THE INTERNET
+   ENGINEERING TASK FORCE DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED,
+   INCLUDING BUT NOT LIMITED TO ANY WARRANTY THAT THE USE OF THE
+   INFORMATION HEREIN WILL NOT INFRINGE ANY RIGHTS OR ANY IMPLIED
+   WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+
+   Intellectual Property
+
+   The IETF takes no position regarding the validity or scope of any
+   Intellectual Property Rights or other rights that might be claimed to
+   pertain to the implementation or use of the technology described in
+   this document or the extent to which any license under such rights
+   might or might not be available; nor does it represent that it has
+   made any independent effort to identify any such rights.  Information
+   on the ISOC's procedures with respect to rights in ISOC Documents can
+   be found in BCP 78 and BCP 79.
+
+   Copies of IPR disclosures made to the IETF Secretariat and any
+   assurances of licenses to be made available, or the result of an
+   attempt made to obtain a general license or permission for the use of
+   such proprietary rights by implementers or users of this
+   specification can be obtained from the IETF on-line IPR repository at
+   http://www.ietf.org/ipr.
+
+   The IETF invites any interested party to bring to its attention any
+   copyrights, patents or patent applications, or other proprietary
+   rights that may cover technology that may be required to implement
+   this standard.  Please address the information to the IETF at ietf-
+   ipr@ietf.org.
+
+Acknowledgement
+
+   Funding for the RFC Editor function is currently provided by the
+   Internet Society.
+
+
+
+
+
+
+
+
+Robinson & Coar              Informational                     [Page 36]
 
