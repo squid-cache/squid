@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.254 2005/04/18 21:52:43 hno Exp $
+ * $Id: tools.cc,v 1.255 2005/04/25 18:43:00 serassio Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -774,12 +774,20 @@ readPidFile(void)
 {
     FILE *pid_fp = NULL;
     const char *f = Config.pidFilename;
+    char *chroot_f = NULL;
     pid_t pid = -1;
     int i;
 
     if (f == NULL || !strcmp(Config.pidFilename, "none")) {
         fprintf(stderr, "%s: ERROR: No pid file name defined\n", appname);
         exit(1);
+    }
+
+    if (Config.chroot_dir && geteuid() == 0) {
+        int len = strlen(Config.chroot_dir) + 1 + strlen(f) + 1;
+        chroot_f = (char *)xmalloc(strlen(Config.chroot_dir) + 1 + strlen(f) + 1);
+        snprintf(chroot_f, len, "%s/%s", Config.chroot_dir, f);
+        f = chroot_f;
     }
 
     pid_fp = fopen(f, "r");
@@ -799,6 +807,7 @@ readPidFile(void)
         }
     }
 
+    safe_free(chroot_f);
     return pid;
 }
 
