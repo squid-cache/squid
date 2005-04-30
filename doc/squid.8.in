@@ -6,10 +6,8 @@ squid \- proxy caching server
 .SH SYNOPSIS
 .B squid
 [
-.B \-dhvzCDFNRVYX
+.B \-dhsvzCDFNRVYX
 ] [
-.B \-s
-|
 .BI \-l " facility"
 ] [
 .BI \-f " config-file"
@@ -58,9 +56,8 @@ This manual page only lists the command line arguments.  For details
 on how to configure
 .B squid
 see the file 
-.BI /etc/squid/squid.conf,
-the FAQ included with the distribution
-and the documentation at the
+.BI @DEFAULT_CONFIG_FILE@,
+the Squid FAQ and the documentation at the
 .B squid
 home page http://www.squid-cache.org
 .PP
@@ -71,7 +68,7 @@ Specify HTTP port number (default: 3128).
 Write debugging to stderr also.
 .IP "-f file"
 Use the given config-file instead of
-.IR /etc/squid/squid.conf .
+.IR @DEFAULT_CONFIG_FILE@ .
 If the file name starts with a ! or | then it is assumed to be an external
 command or command line. Can for example be used to pre-process the
 configuration before it is being read by Squid. To facilitate this Squid
@@ -81,8 +78,10 @@ Print help message.
 .IP "-k reconfigure | rotate | shutdown | interrupt | kill | debug | check | parse"
 Parse configuration file, then send signal to running copy 
 (except -k parse) and exit.
-.IP "-s | -l facility"
+.IP -s
 Enable logging to syslog.
+.IP "-l facility"
+Use specified syslog facility. implies -s
 .IP "-u port"
 Specify ICP port number (default: 3130), disable with 0.
 .IP -v
@@ -106,13 +105,42 @@ Force full debugging.
 .IP -Y
 Only return UDP_HIT or UDP_MISS_NOFETCH during fast reload.   
 .SH FILES
-.I /etc/squid/squid.conf
+.I @DEFAULT_CONFIG_FILE@
 .RS
 The main configuration file.  You must initially make 
 changes to this file for 
 .B squid
 to work.  For example, the default configuration does not 
 allow access from any browser.
+.RE
+
+.I @DEFAULT_CONFIG_FILE@.default
+.RS
+Reference copy of the configuration file. Always kept up to date with
+the version of Squid you are using. Use this to look up configuration
+syntax after upgrading.
+.RE
+
+.I @DEFAULT_MIME_TABLE@ (mime_table)
+.RS
+MIME type mappings for FTP gatewaying
+.RE
+
+.I @DEFAULT_ERROR_DIR@ (error_directory)
+.RS
+Error page templates
+.RE
+
+.SH SEE ALSO
+.BR cachemgr.cgi "(8), "
+.BR pam_auth "(8), "
+.BR squid_ldap_auth "(8), "
+.BR squid_ldap_group "(8), "
+.BR squid_unix_group "(8), "
+.br
+.B The Squid FAQ
+
+
 
 .\" Could add the following sections:
 .\" .SH ENVIRONMENT
