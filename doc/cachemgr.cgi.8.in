@@ -1,0 +1,49 @@
+.TH cachemgr.cgi 8 "squid version 3.0"
+.\" Copyright and licensing information
+.\" goes here.
+.SH NAME
+cachemgr.cgi \- squid HTTP proxy manager interface
+.SH SYNOPSIS
+.B http://your.server/cgi-bin/cachemgr.cgi
+.SH DESCRIPTION
+The cache manager (cachemgr.cgi) is a CGI utility for displaying statistics
+about the Squid HTTP proxy process as it runs. The cache manager is a
+convenient way to manage the cache and view statistics without logging
+into the server.
+.SH FILES
+.I ./cachemgr.conf
+.br
+.I @DEFAULT_CACHEMGR_CONFIG@
+.RS
+The access configuration file defining which Squid servers may
+be managed via this cachemgr.cgi program. Each line specifies a
+.BR server : port
+followed by an optional description
+.P
+The server name may contain shell wildcard characters such as *, [] etc.
+A quick selection dropdown menu is automatically constructed from the simple
+server names.
+.P
+Specifying :port is optional. If not specified then
+the default proxy port is assumed. :* or :any matches
+any port on the target server.
+.RE
+.SH SECURITY
+cachemgr.cgi calls the requested server on the requested port using HTTP
+and returns a formatted version of the response. To avoid abuse it is
+recommended to configure your web server to restrict access to the
+cachemgr.cgi program.
+.P
+Configuration examples for many common web servers can be found in the
+Squid FAQ.
+.SH SEE ALSO
+.BR squid "(8)"
+.br
+.BR "The Squid FAQ" ", Chapter 9 The Cache Manager"
+.\" Could add the following sections:
+.\" .SH ENVIRONMENT
+.\" .SH DIAGNOSTICS
+.\" .SH BUGS
+.\" .SH AUTHOR
+.\" .SH SEE ALSO
+

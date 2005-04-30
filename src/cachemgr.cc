@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.109 2005/04/23 20:40:51 serassio Exp $
+ * $Id: cachemgr.cc,v 1.110 2005/04/30 15:30:57 serassio Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -135,7 +135,7 @@
 #include "snprintf.h"
 
 #ifndef DEFAULT_CACHEMGR_CONFIG
-#define DEFAULT_CACHEMGR_CONFIG "/etc/squid/cahemgr.conf"
+#define DEFAULT_CACHEMGR_CONFIG "/etc/squid/cachemgr.conf"
 #endif
 
 typedef struct
@@ -1181,10 +1181,16 @@ check_target_acl(const char *hostname, int port) {
         if ((token = strtok(NULL, ":")) != NULL) {
             int i;
 
-            if (sscanf(token, "%d", &i) != 1)
+            if (strcmp(token, "*") == 0)
+
+                ;   /* Wildcard port specification */
+            else if (strcasecmp(token, "any") == 0)
+
+                ;   /* Wildcard port specification */
+            else if (sscanf(token, "%d", &i) != 1)
                 continue;
 
-            if (i != port)
+            else if (i != port)
                 continue;
         } else if (port != CACHE_HTTP_PORT)
             continue;
