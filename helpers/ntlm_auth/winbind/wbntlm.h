@@ -37,7 +37,7 @@
 
 /* Debugging stuff */
 extern char *myname;
-static char *__foo;
+static const char *__foo;
 extern pid_t mypid;
 extern char debug_enabled;
 

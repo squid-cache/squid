@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLChecklist.h,v 1.20 2005/04/18 21:52:41 hno Exp $
+ * $Id: ACLChecklist.h,v 1.21 2005/04/30 19:32:01 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -64,6 +64,7 @@ public:
 
     public:
         virtual void checkForAsync(ACLChecklist *) const = 0;
+        virtual ~AsyncState() {}
 
     protected:
         void changeState (ACLChecklist *, AsyncState *) const;
@@ -75,6 +76,7 @@ class NullState : public AsyncState
     public:
         static NullState *Instance();
         virtual void checkForAsync(ACLChecklist *) const;
+        virtual ~NullState() {}
 
     private:
         static NullState _instance;

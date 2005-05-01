@@ -1,5 +1,5 @@
 /*
- * $Id: ESIParser.h,v 1.3 2005/03/28 21:44:12 hno Exp $
+ * $Id: ESIParser.h,v 1.4 2005/04/30 19:32:01 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -41,7 +41,9 @@ public:
     virtual void end(const char *el) = 0;
     virtual void parserDefault (const char *s, int len) =0;
     virtual void parserComment (const char *s) = 0;
-};
+    virtual ~ESIParserClient() {}}
+
+;
 
 class ESIParser : public RefCountable
 {

@@ -72,8 +72,8 @@ int SMB_Logon_Server(SMB_Handle_Type Con_Handle, char *UserName, char *PassWord,
 
 
 #define ENCODED_PASS_LEN 24
-static char challenge[NONCE_LEN];
-static char lmencoded_empty_pass[ENCODED_PASS_LEN],
+static unsigned char challenge[NONCE_LEN];
+static unsigned char lmencoded_empty_pass[ENCODED_PASS_LEN],
 	ntencoded_empty_pass[ENCODED_PASS_LEN];
 SMB_Handle_Type handle = NULL;
 
@@ -139,8 +139,8 @@ init_challenge(char *domain, char *domain_controller)
 	return 3;
     }
     memcpy(challenge, handle->Encrypt_Key, NONCE_LEN);
-		SMBencrypt("",challenge,lmencoded_empty_pass);
-		SMBNTencrypt("",challenge,ntencoded_empty_pass);
+		SMBencrypt((unsigned char *)"",challenge,lmencoded_empty_pass);
+		SMBNTencrypt((unsigned char *)"",challenge,ntencoded_empty_pass);
     return 0;
 }
 

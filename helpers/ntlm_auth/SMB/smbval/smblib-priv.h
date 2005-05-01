@@ -497,7 +497,7 @@ typedef enum {
 /* The following two arrays need to be in step!              */
 /* We must make it possible for callers to specify these ... */
 
-
+#if 0
 extern char *SMB_Prots[];
 
 /*
@@ -532,6 +532,8 @@ extern int SMB_Types[];
  * SMB_P_NT1,
  * -1};
  */
+#endif
+
 typedef struct SMB_Status {
 
     union {

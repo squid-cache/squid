@@ -138,7 +138,7 @@ init_random()
 }
 
 static unsigned char challenge[CHALLENGE_LEN + 1];
-static char *
+static unsigned char *
 build_challenge(void)
 {
     size_t gotchars;

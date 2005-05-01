@@ -316,7 +316,7 @@ open_ldap_connection(const char *ldapServer, int port)
 static int
 validUsername(const char *user)
 {
-    const unsigned char *p = user;
+    const unsigned char *p = (const unsigned char *)user;
 
     /* Leading whitespace? */
     if (isspace(p[0]))
