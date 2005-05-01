@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.471 2005/04/25 15:46:35 serassio Exp $
+ * $Id: cache_cf.cc,v 1.472 2005/05/01 08:11:47 serassio Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -410,7 +410,13 @@ configDoConfigure(void)
         Config.onoff.announce = 0;
     }
 
+    if (Config.onoff.httpd_suppress_version_string)
+        visible_appname_string = (char *)appname_string;
+    else
+        visible_appname_string = (char *)full_appname_string;
+
 #if USE_DNSSERVERS
+
     if (Config.dnsChildren < 1)
         fatal("No dnsservers allocated");
 
@@ -434,7 +440,7 @@ configDoConfigure(void)
 
     snprintf(ThisCache, sizeof(ThisCache), "%s (%s)",
              uniqueHostname(),
-             full_appname_string);
+             visible_appname_string);
 
     /*
      * the extra space is for loop detection in client_side.c -- we search
@@ -442,7 +448,7 @@ configDoConfigure(void)
      */
     snprintf(ThisCache2, sizeof(ThisCache), " %s (%s)",
              uniqueHostname(),
-             full_appname_string);
+             visible_appname_string);
 
     if (!Config.udpMaxHitObjsz || Config.udpMaxHitObjsz > SQUID_UDP_SO_SNDBUF)
         Config.udpMaxHitObjsz = SQUID_UDP_SO_SNDBUF;
