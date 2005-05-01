@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.386 2005/04/24 14:00:45 serassio Exp $
+# $Id: cf.data.pre,v 1.387 2005/05/01 08:11:48 serassio Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2946,6 +2946,16 @@ DOC_START
 	and only this GID is effective. If Squid is not started as
 	root the user starting Squid must be member of the specified
 	group.
+DOC_END
+
+
+NAME: httpd_suppress_version_string
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: off
+LOC: Config.onoff.httpd_suppress_version_string
+DOC_START
+	Suppress Squid version string info in HTTP headers and HTML error pages.
 DOC_END
 
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.200 2005/04/23 13:20:30 serassio Exp $
+ * $Id: errorpage.cc,v 1.201 2005/05/01 08:11:48 serassio Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -739,7 +739,7 @@ errorConvert(char token, ErrorState * err)
         break;
 
     case 's':
-        p = full_appname_string;
+        p = visible_appname_string;
         break;
 
     case 'S':

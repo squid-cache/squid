@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.70 2004/12/21 17:52:53 robertc Exp $
+ * $Id: HttpReply.cc,v 1.71 2005/05/01 08:11:47 serassio Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -273,7 +273,7 @@ httpReplySetHeaders(HttpReply * reply, HttpVersion ver, http_status status, cons
     assert(reply);
     httpStatusLineSet(&reply->sline, ver, status, reason);
     hdr = &reply->header;
-    httpHeaderPutStr(hdr, HDR_SERVER, full_appname_string);
+    httpHeaderPutStr(hdr, HDR_SERVER, visible_appname_string);
     httpHeaderPutStr(hdr, HDR_MIME_VERSION, "1.0");
     httpHeaderPutTime(hdr, HDR_DATE, squid_curtime);
 

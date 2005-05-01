@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.186 2005/01/28 09:23:41 serassio Exp $
+ * $Id: gopher.cc,v 1.187 2005/05/01 08:11:48 serassio Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -299,7 +299,7 @@ gopherHTMLFooter(StoreEntry * e)
     storeAppendPrintf(e, "Generated %s by %s (%s)\n",
                       mkrfc1123(squid_curtime),
                       getMyHostname(),
-                      full_appname_string);
+                      visible_appname_string);
     storeAppendPrintf(e, "</ADDRESS></BODY></HTML>\n");
 }
 
