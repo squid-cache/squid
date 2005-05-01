@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.409 2005/04/23 12:28:11 serassio Exp $
+ * $Id: main.cc,v 1.410 2005/04/30 19:32:01 serassio Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -1272,7 +1272,7 @@ mainStartScript(const char *prog)
 
     if ((cpid = fork()) == 0) {
         /* child */
-        execl(script, squid_start_script, NULL);
+        execl(script, squid_start_script, (char *)NULL);
         _exit(-1);
     } else {
         do {

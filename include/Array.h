@@ -1,5 +1,5 @@
 /*
- * $Id: Array.h,v 1.20 2005/01/03 16:08:24 robertc Exp $
+ * $Id: Array.h,v 1.21 2005/04/30 19:32:01 serassio Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -217,7 +217,7 @@ Vector<E>::preAppend(int app_count)
 }
 
 template<class E>
-Vector<E>::Vector<E> (Vector<E> const &rhs)
+Vector<E>::Vector (Vector<E> const &rhs)
 {
     items = NULL;
     capacity = 0;

@@ -50,7 +50,7 @@
 #ifdef DEBUG
 #include <stdio.h>
 #include <unistd.h>
-static char *__foo;
+static const char *__foo;
 extern char debug_enabled;
 #define debug(X...) if (debug_enabled) { \
                     fprintf(stderr,"ntlm-auth[%ld](%s:%d): ", (long)getpid(), \

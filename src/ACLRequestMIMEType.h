@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLRequestMIMEType.h,v 1.2 2003/02/21 22:50:04 robertc Exp $
+ * $Id: ACLRequestMIMEType.h,v 1.3 2005/04/30 19:32:01 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -50,6 +50,8 @@ private:
 };
 
 /* partial specialisation */
+
+template <>
 int
 ACLRequestHeaderStrategy<HDR_CONTENT_TYPE>::match (ACLData<char const *> * &data, ACLChecklist *checklist)
 {

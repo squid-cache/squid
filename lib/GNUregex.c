@@ -1,5 +1,5 @@
 /*
- * $Id: GNUregex.c,v 1.20 2005/01/06 10:55:34 serassio Exp $
+ * $Id: GNUregex.c,v 1.21 2005/04/30 19:32:01 serassio Exp $
  */
 
 /* Extended regular expression matching and search library,
@@ -3524,7 +3524,7 @@ re_match_2(bufp, string1, size1, string2, size2, pos, regs, stop)
 		    /* Compare that many; failure if mismatch, else move
 		     * past them.  */
 		    if (translate
-			? bcmp_translate(d, d2, mcnt, translate)
+			? bcmp_translate((unsigned char *)d, (unsigned char *)d2, mcnt, translate)
 			: memcmp(d, d2, mcnt))
 			goto fail;
 		    d += mcnt, d2 += mcnt;
