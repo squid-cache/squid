@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.44 2005/03/20 01:10:38 hno Exp $
+#  $Id: Makefile.in,v 1.45 2005/05/01 00:10:37 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -224,13 +224,33 @@ subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 
+DEFAULT_CONFIG_FILE = $(sysconfdir)/squid.conf
+DEFAULT_CACHEMGR_CONFIG = $(sysconfdir)/cachemgr.conf
+DEFAULT_MIME_TABLE = $(sysconfdir)/mime.conf
+DEFAULT_ERROR_DIR = $(datadir)/errors/@ERR_DEFAULT_LANGUAGE@
+
+SUBSTITUTE = sed "\
+	s%@DEFAULT_CONFIG_FILE@%$(DEFAULT_CONFIG_FILE)%g;\
+	s%@DEFAULT_CACHEMGR_CONFIG@%$(DEFAULT_CACHEMGR_CONFIG)%g;\
+	s%@DEFAULT_ERROR_DIR@%$(DEFAULT_ERROR_DIR)%g;\
+	s%@DEFAULT_MIME_TABLE@%$(DEFAULT_MIME_TABLE)%g;\
+	"
+
+
 man_MANS = \
-	squid.8
+	squid.8 \
+	cachemgr.cgi.8
 
 
 EXTRA_DIST = \
-	squid.8 \
+	squid.8.in \
+	cachemgr.cgi.8.in \
 	debug-sections.txt
+
+
+CLEANFILES = \
+	squid.8 \
+	cachemgr.cgi.8
 
 subdir = doc
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -369,6 +389,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-rm -f Makefile $(CONFIG_CLEAN_FILES)
@@ -432,6 +453,12 @@ uninstall-man: uninstall-man8
 	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
 	uninstall-info-am uninstall-man uninstall-man8
 
+
+squid.8: squid.8.in Makefile
+	$(SUBSTITUTE) < $< > $@
+
+cachemgr.cgi.8: cachemgr.cgi.8.in Makefile
+	$(SUBSTITUTE) < $< > $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
