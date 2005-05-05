@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.518 2005/05/01 08:11:48 serassio Exp $
+ * $Id: structs.h,v 1.519 2005/05/05 15:44:45 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -108,6 +108,8 @@ struct _snmp_request_t
     struct snmp_pdu *PDU;
     ACLChecklist *acl_checklist;
     u_char *community;
+
+    struct snmp_session session;
 };
 
 #endif
