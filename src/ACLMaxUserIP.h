@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLMaxUserIP.h,v 1.6 2005/05/06 01:57:55 hno Exp $
+ * $Id: ACLMaxUserIP.h,v 1.7 2005/05/06 02:37:36 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -54,6 +54,7 @@ public:
     virtual void parse();
     virtual int match(ACLChecklist *checklist);
     virtual wordlist *dump() const;
+    virtual bool empty () const;
     virtual bool valid () const;
     virtual bool requiresRequest() const {return true;}
 

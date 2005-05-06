@@ -300,7 +300,7 @@ acl_ip_data::FactoryParse(const char *t)
     if (!safe_inet_addr(addr2, &q->addr2)) {
         debug(28, 0) ("aclParseIpData: unknown second address in '%s'\n", t);
         delete q;
-        self_desctruct();
+        self_destruct();
         return NULL;
     }
 
