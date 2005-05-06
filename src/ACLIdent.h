@@ -68,7 +68,7 @@ public:
 
     virtual int match(ACLChecklist *checklist);
     virtual wordlist *dump() const;
-    virtual bool valid () const;
+    virtual bool empty () const;
     virtual ACL *clone()const;
 
 private:

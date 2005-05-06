@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMaxConnection.cc,v 1.4 2004/08/30 05:12:31 robertc Exp $
+ * $Id: ACLMaxConnection.cc,v 1.5 2005/05/06 01:57:55 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -47,7 +47,7 @@ ACLMaxConnection::clone() const
     return new ACLMaxConnection(*this);
 }
 
-ACLMaxConnection::ACLMaxConnection (char const *theClass) : class_ (theClass), limit(0)
+ACLMaxConnection::ACLMaxConnection (char const *theClass) : class_ (theClass), limit(-1)
 {}
 
 ACLMaxConnection::ACLMaxConnection (ACLMaxConnection const & old) :class_ (old.class_), limit (old.limit)
@@ -63,21 +63,32 @@ ACLMaxConnection::typeString() const
 }
 
 bool
+ACLMaxConnection::empty () const
+{
+    return false;
+}
+
+bool
 ACLMaxConnection::valid () const
 {
-    return limit != 0;
+    return limit > 0;
 }
 
 void
 ACLMaxConnection::parse()
 {
     char *t = strtokFile();
+
+    if (!t)
+        return;
+
     limit = (atoi (t));
+
     /* suck out file contents */
 
-    while ((t = strtokFile()))
-
-        ;
+    while ((t = strtokFile())) {
+        limit = 0;
+    }
 }
 
 int

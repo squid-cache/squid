@@ -98,7 +98,7 @@ ACLIdent::dump() const
 }
 
 bool
-ACLIdent::valid () const
+ACLIdent::empty () const
 {
     return data != NULL;
 }

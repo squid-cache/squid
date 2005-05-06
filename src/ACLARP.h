@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLARP.h,v 1.3 2004/08/30 05:12:31 robertc Exp $
+ * $Id: ACLARP.h,v 1.4 2005/05/06 01:57:55 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -60,7 +60,7 @@ public:
     virtual void parse();
     virtual int match(ACLChecklist *checklist);
     virtual wordlist *dump() const;
-    virtual bool valid () const;
+    virtual bool empty () const;
 
 protected:
     static Prototype RegistryProtoype;

@@ -83,7 +83,7 @@ public:
     //    virtual bool isProxyAuth() const {return true;}
     virtual int match(ACLChecklist *checklist) = 0;
     virtual wordlist *dump() const;
-    virtual bool valid () const;
+    virtual bool empty () const;
 
 protected:
 

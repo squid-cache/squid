@@ -72,18 +72,6 @@ ACLProxyAuth::typeString() const
 void
 ACLProxyAuth::parse()
 {
-    if (authenticateSchemeCount() == 0) {
-        debug(28, 0) ("aclProxyAuth::parse: IGNORING: Proxy Auth ACL '%s' "
-                      "because no authentication schemes were compiled.\n", cfgline);
-        return;
-    }
-
-    if (authenticateActiveSchemeCount() == 0) {
-        debug(28, 0) ("aclProxyAuth::parse: IGNORING: Proxy Auth ACL '%s' "
-                      "because no authentication schemes are fully configured.\n", cfgline);
-        return;
-    }
-
     data->parse();
 }
 
@@ -107,9 +95,25 @@ ACLProxyAuth::dump() const
 }
 
 bool
-ACLProxyAuth::valid () const
+ACLProxyAuth::empty () const
 {
     return data != NULL;
+}
+
+bool
+ACLProxyAuth::valid () const
+{
+    if (authenticateSchemeCount() == 0) {
+        debug(28, 0) ("Can't use proxy auth because no authentication schemes were compiled.\n");
+        return false;
+    }
+
+    if (authenticateActiveSchemeCount() == 0) {
+        debug(28, 0) ("Can't use proxy auth because no authentication schemes are fully configured.\n");
+        return false;
+    }
+
+    return true;
 }
 
 ProxyAuthNeeded ProxyAuthNeeded::instance_;

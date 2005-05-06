@@ -202,8 +202,6 @@ acl_ip_data::DecodeMask(const char *asc, struct IN_ADDR *mask)
     if (safe_inet_addr(asc, mask))
         return 1;
 
-    debug(28, 0) ("DecodeAddress: Invalid IP address: '%s'\n", asc);
-
     return 0;
 }
 
@@ -255,8 +253,7 @@ acl_ip_data::FactoryParse(const char *t)
 
         if ((hp = gethostbyname(addr1)) == NULL) {
             debug(28, 0) ("aclParseIpData: Bad host/IP: '%s'\n", t);
-            delete q;
-            return NULL;
+            self_destruct();
         }
 
         Q = &q;
@@ -269,7 +266,14 @@ acl_ip_data::FactoryParse(const char *t)
 
             r->addr2.s_addr = 0;
 
-            DecodeMask(mask, &r->mask);
+            if (!DecodeMask(mask, &r->mask)) {
+                debug(28, 0) ("aclParseIpData: unknown netmask '%s' in '%s'\n", mask, t);
+                delete r;
+                *Q = NULL;
+                self_destruct();
+                continue;
+            }
+
 
             Q = &r->next;
 
@@ -278,8 +282,7 @@ acl_ip_data::FactoryParse(const char *t)
 
         if (*Q != NULL) {
             debug(28, 0) ("aclParseIpData: Bad host/IP: '%s'\n", t);
-            delete q;
-            return NULL;
+            self_destruct();
         }
 
         return q;
@@ -287,28 +290,25 @@ acl_ip_data::FactoryParse(const char *t)
 
     /* Decode addr1 */
     if (!safe_inet_addr(addr1, &q->addr1)) {
-        debug(28, 0) ("%s line %d: %s\n",
-                      cfg_filename, config_lineno, config_input_line);
-        debug(28, 0) ("aclParseIpData: Ignoring invalid IP acl entry: unknown first address '%s'\n", addr1);
+        debug(28, 0) ("aclParseIpData: unknown first address in '%s'\n", t);
         delete q;
+        self_destruct();
         return NULL;
     }
 
     /* Decode addr2 */
     if (!safe_inet_addr(addr2, &q->addr2)) {
-        debug(28, 0) ("%s line %d: %s\n",
-                      cfg_filename, config_lineno, config_input_line);
-        debug(28, 0) ("aclParseIpData: Ignoring invalid IP acl entry: unknown second address '%s'\n", addr2);
+        debug(28, 0) ("aclParseIpData: unknown second address in '%s'\n", t);
         delete q;
+        self_desctruct();
         return NULL;
     }
 
     /* Decode mask */
     if (!DecodeMask(mask, &q->mask)) {
-        debug(28, 0) ("%s line %d: %s\n",
-                      cfg_filename, config_lineno, config_input_line);
-        debug(28, 0) ("aclParseIpData: Ignoring invalid IP acl entry: unknown netmask '%s'\n", mask);
+        debug(28, 0) ("aclParseIpData: unknown netmask '%s' in '%s'\n", mask, t);
         delete q;
+        self_destruct();
         return NULL;
     }
 
@@ -353,7 +353,7 @@ ACLIP::dump() const
 }
 
 bool
-ACLIP::valid () const
+ACLIP::empty () const
 {
     return data != NULL;
 }

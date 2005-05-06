@@ -1,6 +1,6 @@
 
 /*
- * $Id: ExternalACL.h,v 1.7 2005/03/30 23:08:19 hno Exp $
+ * $Id: ExternalACL.h,v 1.8 2005/05/06 01:57:55 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -80,6 +80,7 @@ public:
     virtual bool isProxyAuth() const;
     virtual wordlist *dump() const;
     virtual bool valid () const;
+    virtual bool empty () const;
 
 protected:
     static Prototype RegistryProtoype;

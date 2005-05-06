@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMaxUserIP.cc,v 1.7 2005/04/18 21:52:41 hno Exp $
+ * $Id: ACLMaxUserIP.cc,v 1.8 2005/05/06 01:57:55 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -49,7 +49,7 @@ ACLMaxUserIP::clone() const
     return new ACLMaxUserIP(*this);
 }
 
-ACLMaxUserIP::ACLMaxUserIP (char const *theClass) : class_ (theClass), maximum(0)
+ACLMaxUserIP::ACLMaxUserIP (char const *theClass) : class_ (theClass), maximum(-1)
 {}
 
 ACLMaxUserIP::ACLMaxUserIP (ACLMaxUserIP const & old) :class_ (old.class_), maximum (old.maximum), flags (old.flags)
@@ -65,9 +65,15 @@ ACLMaxUserIP::typeString() const
 }
 
 bool
+ACLMaxUserIP::empty () const
+{
+    return false;
+}
+
+bool
 ACLMaxUserIP::valid () const
 {
-    return maximum != 0;
+    return maximum > 0;
 }
 
 void
@@ -81,7 +87,7 @@ ACLMaxUserIP::parse()
     char *t = strtokFile();
 
     if (!t)
-        fatal("aclParseUserMaxIP: Malformed ACL\n");
+        return;
 
     debug(28, 5) ("aclParseUserMaxIP: First token is %s\n", t);
 
@@ -92,7 +98,7 @@ ACLMaxUserIP::parse()
     }
 
     if (!t)
-        fatal("aclParseUserMaxIP: Malformed ACL\n");
+        return;
 
     maximum = atoi(t);
 

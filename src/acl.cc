@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.314 2004/08/30 05:12:31 robertc Exp $
+ * $Id: acl.cc,v 1.315 2005/05/06 01:57:55 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -77,6 +77,11 @@ ACL::Factory (char const *type)
 
 ACL::ACL () {}
 
+bool ACL::valid () const
+{
+    return true;
+}
+
 void
 ACL::ParseAclLine(ACL ** head)
 {
@@ -89,9 +94,8 @@ ACL::ParseAclLine(ACL ** head)
     /* snarf the ACL name */
 
     if ((t = strtok(NULL, w_space)) == NULL) {
-        debug(28, 0) ("%s line %d: %s\n",
-                      cfg_filename, config_lineno, config_input_line);
         debug(28, 0) ("aclParseAclLine: missing ACL name.\n");
+        self_destruct();
         return;
     }
 
@@ -100,16 +104,14 @@ ACL::ParseAclLine(ACL ** head)
     char *theType;
 
     if ((theType = strtok(NULL, w_space)) == NULL) {
-        debug(28, 0) ("%s line %d: %s\n",
-                      cfg_filename, config_lineno, config_input_line);
         debug(28, 0) ("aclParseAclLine: missing ACL type.\n");
+        self_destruct();
         return;
     }
 
     if (!Prototype::Registered (theType)) {
-        debug(28, 0) ("%s line %d: %s\n",
-                      cfg_filename, config_lineno, config_input_line);
         debug(28, 0) ("aclParseAclLine: Invalid ACL type '%s'\n", theType);
+        self_destruct();
         return;
     }
 
@@ -121,7 +123,8 @@ ACL::ParseAclLine(ACL ** head)
         new_acl = 1;
     } else {
         if (strcmp (A->typeString(),theType) ) {
-            debug(28, 0) ("aclParseAclLine: ACL '%s' already exists with different type, skipping.\n", A->name);
+            debug(28, 0) ("aclParseAclLine: ACL '%s' already exists with different type.\n", A->name);
+            self_destruct();
             return;
         }
 
@@ -146,13 +149,14 @@ ACL::ParseAclLine(ACL ** head)
     if (!new_acl)
         return;
 
-    if (!A->valid()) {
-        debug(28, 0) ("aclParseAclLine: IGNORING invalid ACL: %s\n",
+    if (A->empty()) {
+        debug(28, 0) ("Warning: empty ACL: %s\n",
                       A->cfgline);
-        delete A;
-        /* Do we need this? */
-        A = NULL;
-        return;
+    }
+
+    if (!A->valid()) {
+        fatalf("ERROR: Invalid ACL: %s\n",
+               A->cfgline);
     }
 
     /* append */
@@ -356,10 +360,9 @@ aclParseAclList(acl_list ** head)
         a = ACL::FindByName(t);
 
         if (a == NULL) {
-            debug(28, 0) ("%s line %d: %s\n",
-                          cfg_filename, config_lineno, config_input_line);
             debug(28, 0) ("aclParseAccessLine: ACL name '%s' not found.\n", t);
             delete L;
+            self_destruct();
             continue;
         }
 

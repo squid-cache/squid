@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.cc,v 1.3 2005/04/18 21:52:41 hno Exp $
+ * $Id: AuthUserRequest.cc,v 1.4 2005/05/06 01:57:55 hno Exp $
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 6803fde1-d5a2-4c29-9034-1c0c9f650eb4
@@ -304,7 +304,7 @@ authenticateAuthUserRequestClearIp(auth_user_request_t * auth_user_request)
         auth_user_request->user()->clearIp();
 }
 
-size_t
+int
 authenticateAuthUserRequestIPCount(auth_user_request_t * auth_user_request)
 {
     assert(auth_user_request);
