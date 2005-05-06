@@ -1,5 +1,5 @@
 /*
- * $Id: ACLExtUser.cc,v 1.5 2004/08/30 05:12:31 robertc Exp $
+ * $Id: ACLExtUser.cc,v 1.6 2005/05/06 01:57:55 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -92,7 +92,7 @@ ACLExtUser::dump() const
 }
 
 bool
-ACLExtUser::valid () const
+ACLExtUser::empty () const
 {
     return data != NULL;
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.472 2005/05/01 08:11:47 serassio Exp $
+ * $Id: cache_cf.cc,v 1.473 2005/05/06 01:57:55 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -133,6 +133,7 @@ static void parse_b_size_t(size_t * var);
 void
 self_destruct(void)
 {
+    shutting_down = 1;
     fatalf("Bungled %s line %d: %s",
            cfg_filename, config_lineno, config_input_line);
 }

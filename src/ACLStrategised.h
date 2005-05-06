@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLStrategised.h,v 1.8 2004/12/24 08:57:59 robertc Exp $
+ * $Id: ACLStrategised.h,v 1.9 2005/05/06 01:57:55 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -65,7 +65,7 @@ public:
     virtual int match(ACLChecklist *checklist);
     virtual int match (M const &);
     virtual wordlist *dump() const;
-    virtual bool valid () const;
+    virtual bool empty () const;
     virtual ACL *clone()const;
 
 private:
@@ -160,9 +160,9 @@ ACLStrategised<MatchType>::dump() const
 
 template <class MatchType>
 bool
-ACLStrategised<MatchType>::valid () const
+ACLStrategised<MatchType>::empty () const
 {
-    return data != NULL;
+    return data == NULL;
 }
 
 template <class MatchType>

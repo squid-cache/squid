@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLMaxUserIP.h,v 1.5 2005/04/18 21:52:41 hno Exp $
+ * $Id: ACLMaxUserIP.h,v 1.6 2005/05/06 01:57:55 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -63,7 +63,7 @@ private:
 
     int match(auth_user_request_t *, struct IN_ADDR const &);
     char const *class_;
-    size_t maximum;
+    int maximum;
 
     struct Flags
     {

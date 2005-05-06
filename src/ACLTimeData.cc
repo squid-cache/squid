@@ -1,5 +1,5 @@
 /*
- * $Id: ACLTimeData.cc,v 1.8 2004/12/20 16:30:32 robertc Exp $
+ * $Id: ACLTimeData.cc,v 1.9 2005/05/06 01:57:55 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -190,9 +190,8 @@ ACLTimeData::parse()
             /* assume its time-of-day spec */
 
             if (sscanf(t, "%d:%d-%d:%d", &h1, &m1, &h2, &m2) < 4) {
-                debug(28, 0) ("%s line %d: %s\n",
-                              cfg_filename, config_lineno, config_input_line);
-                debug(28, 0) ("aclParseTimeSpec: IGNORING Bad time range\n");
+                debug(28, 0) ("aclParseTimeSpec: Bad time range '%s'\n", t);
+                self_destruct();
 
                 if (q != this)
                     delete q;
@@ -214,9 +213,8 @@ ACLTimeData::parse()
             weekbits = 0;
 
             if (q->start > q->stop) {
-                debug(28, 0) ("%s line %d: %s\n",
-                              cfg_filename, config_lineno, config_input_line);
-                debug(28, 0) ("aclParseTimeSpec: IGNORING Reversed time range\n");
+                debug(28, 0) ("aclParseTimeSpec: Reversed time range\n");
+                self_destruct();
 
                 if (q != this)
                     delete q;

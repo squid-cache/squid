@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.255 2005/04/25 18:43:00 serassio Exp $
+ * $Id: tools.cc,v 1.256 2005/05/06 01:57:55 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -359,9 +359,11 @@ death(int sig)
 
     storeDirWriteCleanLogs(0);
 
-    PrintRusage();
+    if (!shutting_down) {
+        PrintRusage();
 
-    dumpMallocStats();
+        dumpMallocStats();
+    }
 
     if (squid_curtime - SQUID_RELEASE_TIME < 864000) {
         /* skip if more than 10 days old */
@@ -452,7 +454,7 @@ fatal(const char *message)
     fatal_common(message);
 
     if (shutting_down)
-        exit(0);
+        exit(1);
     else
         abort();
 }

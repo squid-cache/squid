@@ -1,5 +1,5 @@
 /*
- * $Id: ACLARP.cc,v 1.12 2005/04/18 21:52:41 hno Exp $
+ * $Id: ACLARP.cc,v 1.13 2005/05/06 01:57:55 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -118,7 +118,7 @@ ACLARP::typeString() const
 }
 
 bool
-ACLARP::valid () const
+ACLARP::empty () const
 {
     return data != NULL;
 }

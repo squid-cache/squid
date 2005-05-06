@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.h,v 1.2 2005/04/18 21:52:41 hno Exp $
+ * $Id: AuthUserRequest.h,v 1.3 2005/05/06 01:57:55 hno Exp $
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 674533af-8b21-4641-b71a-74c4639072a0
@@ -133,7 +133,7 @@ extern void authenticateAddTrailer(HttpReply *, auth_user_request_t *, HttpReque
 
 extern void authenticateAuthUserRequestRemoveIp(auth_user_request_t *, struct IN_ADDR);
 extern void authenticateAuthUserRequestClearIp(auth_user_request_t *);
-extern size_t authenticateAuthUserRequestIPCount(auth_user_request_t *);
+extern int authenticateAuthUserRequestIPCount(auth_user_request_t *);
 extern int authenticateDirection(auth_user_request_t *);
 
 extern int authenticateUserAuthenticated(auth_user_request_t *);

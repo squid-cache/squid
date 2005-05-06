@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.62 2005/03/30 23:08:19 hno Exp $
+ * $Id: external_acl.cc,v 1.63 2005/05/06 01:57:55 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -53,6 +53,7 @@
 #endif
 #include "client_side.h"
 #include "HttpRequest.h"
+#include "authenticate.h"
 
 #ifndef DEFAULT_EXTERNAL_ACL_TTL
 #define DEFAULT_EXTERNAL_ACL_TTL 1 * 60 * 60
@@ -573,6 +574,30 @@ ACLExternal::parse()
     while ((token = strtokFile())) {
         wordlistAdd(&data->arguments, token);
     }
+}
+
+bool
+ACLExternal::valid () const
+{
+    if (data->def->require_auth) {
+        if (authenticateSchemeCount() == 0) {
+            debug(28, 0) ("Can't use proxy auth because no authentication schemes were compiled.\n");
+            return false;
+        }
+
+        if (authenticateActiveSchemeCount() == 0) {
+            debug(28, 0) ("Can't use proxy auth because no authentication schemes are fully configured.\n");
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool
+ACLExternal::empty () const
+{
+    return false;
 }
 
 ACLExternal::~ACLExternal()
@@ -1304,12 +1329,6 @@ char const *
 ACLExternal::typeString() const
 {
     return class_;
-}
-
-bool
-ACLExternal::valid () const
-{
-    return data != NULL;
 }
 
 bool

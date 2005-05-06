@@ -80,6 +80,7 @@ public:
     virtual int match(ACLChecklist *checklist);
     virtual wordlist *dump() const;
     virtual bool valid () const;
+    virtual bool empty () const;
     virtual bool requiresRequest() const {return true;}
 
     virtual ACL *clone()const;
