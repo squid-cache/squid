@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.473 2005/05/06 01:57:55 hno Exp $
+ * $Id: cache_cf.cc,v 1.474 2005/05/06 22:35:46 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -2922,6 +2922,9 @@ parse_https_port_list(https_port_list ** head)
             s->key = xstrdup(token + 4);
         } else if (strncmp(token, "version=", 8) == 0) {
             s->version = xatoi(token + 8);
+
+            if (s->version < 1 || s->version > 4)
+                self_destruct();
         } else if (strncmp(token, "options=", 8) == 0) {
             safe_free(s->options);
             s->options = xstrdup(token + 8);
