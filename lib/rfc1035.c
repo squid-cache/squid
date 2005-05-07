@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.36 2005/04/18 21:52:40 hno Exp $
+ * $Id: rfc1035.c,v 1.37 2005/05/06 21:54:50 wessels Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -442,9 +442,7 @@ rfc1035RRUnpack(const char *buf, size_t sz, off_t * off, rfc1035_rr * RR)
 static unsigned short
 rfc1035Qid(void)
 {
-    static unsigned short qid = 0x0001;
-    if (++qid == 0xFFFF)
-	qid = 0x0001;
+    unsigned short qid = squid_random() & 0xFFFF;
     return qid;
 }
 
