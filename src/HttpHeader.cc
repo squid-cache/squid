@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.103 2005/03/11 20:50:09 serassio Exp $
+ * $Id: HttpHeader.cc,v 1.104 2005/05/06 21:34:07 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -1330,8 +1330,8 @@ httpHeaderEntryParseCreate(const char *field_start, const char *field_end)
     if (!name_len || name_end > field_end)
         return NULL;
 
-    if (name_len > 65536) {
-        /* String has a 64K limit */
+    if (name_len > 65534) {
+        /* String must be LESS THAN 64K and it adds a terminating NULL */
         debug(55, 1) ("WARNING: ignoring header name of %d bytes\n", name_len);
         return NULL;
     }
@@ -1375,8 +1375,8 @@ httpHeaderEntryParseCreate(const char *field_start, const char *field_end)
     while (value_start < field_end && xisspace(field_end[-1]))
         field_end--;
 
-    if (field_end - value_start > 65536) {
-        /* String has a 64K limit */
+    if (field_end - value_start > 65534) {
+        /* String must be LESS THAN 64K and it adds a terminating NULL */
         debug(55, 1) ("WARNING: ignoring '%s' header of %d bytes\n",
                       e->name.buf(), (int) (field_end - value_start));
 
