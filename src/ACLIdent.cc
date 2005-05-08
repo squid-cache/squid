@@ -100,7 +100,7 @@ ACLIdent::dump() const
 bool
 ACLIdent::empty () const
 {
-    return data == NULL;
+    return data->empty();
 }
 
 ACL *
