@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMethodData.cc,v 1.6 2005/05/08 06:36:45 hno Exp $
+ * $Id: ACLMethodData.cc,v 1.7 2005/05/08 09:15:39 serassio Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -96,7 +96,7 @@ ACLMethodData::parse()
 bool
 ACLMethodData::empty() const
 {
-    return values != NULL;
+    return values == NULL;
 }
 
 ACLData<method_t> *
