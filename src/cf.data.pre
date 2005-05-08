@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.387 2005/05/01 08:11:48 serassio Exp $
+# $Id: cf.data.pre,v 1.388 2005/05/08 09:58:05 serassio Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2480,6 +2480,16 @@ DOC_START
 	acl aclname dst      ip-address/netmask ... (URL host's IP address)
 	acl aclname myip     ip-address/netmask ... (local socket IP address)
 
+	acl aclname arp      mac-address ... (xx:xx:xx:xx:xx:xx notation)
+	  # The arp ACL requires the special configure option --enable-arp-acl.
+	  # Furthermore, the ARP ACL code is not portable to all operating systems.
+	  # It works on Linux, Solaris, Windows, FreeBSD, OpenBSD and some other *BSD
+	  # variants.
+	  #
+	  # NOTE: Squid can only determine the MAC address for clients that are on
+	  # the same subnet. If the client is on a different subnet, then Squid cannot
+	  # find out its MAC address.
+
 	acl aclname srcdomain   .foo.com ...    # reverse lookup, client IP
 	acl aclname dstdomain   .foo.com ...    # Destination server from URL
 	acl aclname srcdom_regex [-i] xxx ...   # regex matching client name
@@ -2597,6 +2607,7 @@ DOC_START
 	  # use REQUIRED to accept any non-null user name.
 
 Examples:
+acl macaddress arp 09:00:2b:23:45:67
 acl myexample dst_as 1241
 acl password proxy_auth REQUIRED
 acl fileupload req_mime_type -i ^multipart/form-data$
