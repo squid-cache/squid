@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.388 2005/05/08 09:58:05 serassio Exp $
+# $Id: cf.data.pre,v 1.389 2005/05/08 14:11:12 serassio Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2483,8 +2483,7 @@ DOC_START
 	acl aclname arp      mac-address ... (xx:xx:xx:xx:xx:xx notation)
 	  # The arp ACL requires the special configure option --enable-arp-acl.
 	  # Furthermore, the ARP ACL code is not portable to all operating systems.
-	  # It works on Linux, Solaris, Windows, FreeBSD, OpenBSD and some other *BSD
-	  # variants.
+	  # It works on Linux, Solaris, Windows, FreeBSD, and some other *BSD variants.
 	  #
 	  # NOTE: Squid can only determine the MAC address for clients that are on
 	  # the same subnet. If the client is on a different subnet, then Squid cannot
