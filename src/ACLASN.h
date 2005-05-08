@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLASN.h,v 1.6 2005/04/18 21:52:41 hno Exp $
+ * $Id: ACLASN.h,v 1.7 2005/05/08 09:15:39 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -55,6 +55,7 @@ public:
     virtual bool match(struct IN_ADDR);
     virtual wordlist *dump();
     virtual void parse();
+    bool empty() const;
     virtual ACLData<struct IN_ADDR> *clone() const;
     virtual void prepareForUse();
 

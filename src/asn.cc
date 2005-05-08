@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.100 2005/04/18 21:52:42 hno Exp $
+ * $Id: asn.cc,v 1.101 2005/05/08 09:15:39 serassio Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -586,6 +586,12 @@ ACLASN::dump()
     }
 
     return W;
+}
+
+bool
+ACLASN::empty () const
+{
+    return data == NULL;
 }
 
 void
