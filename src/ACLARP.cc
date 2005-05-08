@@ -1,5 +1,5 @@
 /*
- * $Id: ACLARP.cc,v 1.16 2005/05/08 09:15:38 serassio Exp $
+ * $Id: ACLARP.cc,v 1.17 2005/05/08 09:58:05 serassio Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -677,8 +677,9 @@ aclDumpArpListWalkee(acl_arp_data * const &node, void *state)
     acl_arp_data *arp = node;
     static char buf[24];
     snprintf(buf, sizeof(buf), "%02x:%02x:%02x:%02x:%02x:%02x",
-             arp->eth[0], arp->eth[1], arp->eth[2], arp->eth[3],
-             arp->eth[4], arp->eth[5]);
+             arp->eth[0] & 0xff, arp->eth[1] & 0xff,
+             arp->eth[2] & 0xff, arp->eth[3] & 0xff,
+             arp->eth[4] & 0xff, arp->eth[5] & 0xff);
     wordlistAdd((wordlist **)state, buf);
 }
 
