@@ -355,7 +355,7 @@ ACLIP::dump() const
 bool
 ACLIP::empty () const
 {
-    return data != NULL;
+    return data == NULL;
 }
 
 int

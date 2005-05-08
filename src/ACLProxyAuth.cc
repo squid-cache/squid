@@ -97,7 +97,7 @@ ACLProxyAuth::dump() const
 bool
 ACLProxyAuth::empty () const
 {
-    return data != NULL;
+    return data == NULL;
 }
 
 bool

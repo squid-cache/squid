@@ -163,6 +163,12 @@ ACLUserData::parse()
 }
 
 
+bool
+ACLUserData::empty() const
+{
+    return names == NULL;
+}
+
 ACLData<char const *> *
 ACLUserData::clone() const
 {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLRegexData.h,v 1.5 2004/08/30 05:12:31 robertc Exp $
+ * $Id: ACLRegexData.h,v 1.6 2005/05/08 06:36:45 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -47,6 +47,7 @@ public:
     virtual bool match(char const *user);
     virtual wordlist *dump();
     virtual void parse();
+    virtual bool empty() const;
     virtual ACLData<char const *> *clone() const;
 
 private:

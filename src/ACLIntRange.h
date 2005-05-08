@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLIntRange.h,v 1.2 2003/08/04 22:14:38 robertc Exp $
+ * $Id: ACLIntRange.h,v 1.3 2005/05/08 06:36:45 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -49,6 +49,7 @@ public:
     virtual bool match(int);
     virtual wordlist *dump();
     virtual void parse();
+    virtual bool empty() const;
     virtual ACLData<int> *clone() const;
 
 private:

@@ -1,5 +1,5 @@
 /*
- * $Id: ACLTimeData.cc,v 1.9 2005/05/06 01:57:55 hno Exp $
+ * $Id: ACLTimeData.cc,v 1.10 2005/05/08 06:36:45 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -252,6 +252,11 @@ ACLTimeData::parse()
     }
 }
 
+bool
+ACLTimeData::empty() const
+{
+    return false;
+}
 
 ACLData<time_t> *
 ACLTimeData::clone() const

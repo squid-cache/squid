@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLStrategy.h,v 1.2 2004/12/24 08:57:59 robertc Exp $
+ * $Id: ACLStrategy.h,v 1.3 2005/05/08 06:36:45 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -51,6 +51,8 @@ public:
     virtual bool requiresRequest() const {return false;}
 
     virtual bool requiresReply() const {return false;}
+
+    virtual bool valid() const {return true;}
 
     virtual ~ACLStrategy(){}}
 
