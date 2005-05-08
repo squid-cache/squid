@@ -1,5 +1,5 @@
 /*
- * $Id: ACLProtocolData.cc,v 1.5 2004/08/30 05:12:31 robertc Exp $
+ * $Id: ACLProtocolData.cc,v 1.6 2005/05/08 06:36:45 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -91,6 +91,12 @@ ACLProtocolData::parse()
         *(Tail) = q;
         Tail = &q->next;
     }
+}
+
+bool
+ACLProtocolData::empty() const
+{
+    return values == NULL;
 }
 
 ACLData<protocol_t> *

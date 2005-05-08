@@ -1,5 +1,5 @@
 /*
- * $Id: ACLDestinationDomain.cc,v 1.8 2005/05/06 01:57:55 hno Exp $
+ * $Id: ACLDestinationDomain.cc,v 1.9 2005/05/08 06:36:45 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -106,7 +106,7 @@ ACLDestinationDomain::dump() const
 bool
 ACLDestinationDomain::empty () const
 {
-    return data != NULL;
+    return data == NULL;
 }
 
 DestinationDomainLookup DestinationDomainLookup::instance_;

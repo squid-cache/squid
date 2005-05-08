@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLTimeData.h,v 1.4 2004/08/30 05:12:31 robertc Exp $
+ * $Id: ACLTimeData.h,v 1.5 2005/05/08 06:36:45 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -52,6 +52,7 @@ public:
     bool match(time_t);
     wordlist *dump();
     void parse();
+    bool empty() const;
     virtual ACLData<time_t> *clone() const;
 
 private:

@@ -1,5 +1,5 @@
 /*
- * $Id: ACLDomainData.cc,v 1.9 2004/12/20 16:30:32 robertc Exp $
+ * $Id: ACLDomainData.cc,v 1.10 2005/05/08 06:36:45 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -151,6 +151,12 @@ ACLDomainData::parse()
         Tolower(t);
         domains = domains->insert(xstrdup(t), aclDomainCompare);
     }
+}
+
+bool
+ACLDomainData::empty() const
+{
+    return domains == NULL;
 }
 
 

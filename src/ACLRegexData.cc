@@ -1,5 +1,5 @@
 /*
- * $Id: ACLRegexData.cc,v 1.7 2004/08/30 05:12:31 robertc Exp $
+ * $Id: ACLRegexData.cc,v 1.8 2005/05/08 06:36:45 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -160,6 +160,11 @@ ACLRegexData::parse()
     aclParseRegexList(&data);
 }
 
+bool
+ACLRegexData::empty() const
+{
+    return data == NULL;
+}
 
 ACLData<char const *> *
 ACLRegexData::clone() const

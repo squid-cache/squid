@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLCertificateData.h,v 1.6 2004/08/30 05:12:31 robertc Exp $
+ * $Id: ACLCertificateData.h,v 1.7 2005/05/08 06:36:45 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -54,6 +54,7 @@ public:
     bool match(SSL *);
     wordlist *dump();
     void parse();
+    bool empty() const;
     virtual ACLData<SSL *> *clone() const;
 
     char *attribute;

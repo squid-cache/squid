@@ -1,5 +1,5 @@
 /*
- * $Id: ACLCertificateData.cc,v 1.7 2004/08/30 05:12:31 robertc Exp $
+ * $Id: ACLCertificateData.cc,v 1.8 2005/05/08 06:36:45 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -120,6 +120,11 @@ ACLCertificateData::parse()
     values.parse();
 }
 
+bool
+ACLCertificateData::empty() const
+{
+    return values.empty();
+}
 
 ACLData<SSL *> *
 ACLCertificateData::clone() const

@@ -1,5 +1,5 @@
 /*
- * $Id: ACLStringData.cc,v 1.5 2004/08/30 05:12:31 robertc Exp $
+ * $Id: ACLStringData.cc,v 1.6 2005/05/08 06:36:45 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -108,6 +108,12 @@ ACLStringData::parse()
 
     while ((t = strtokFile()))
         values = values->insert(xstrdup(t), splaystrcmp);
+}
+
+bool
+ACLStringData::empty() const
+{
+    return values == NULL;
 }
 
 ACLData<char const *> *

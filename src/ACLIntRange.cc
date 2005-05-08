@@ -1,5 +1,5 @@
 /*
- * $Id: ACLIntRange.cc,v 1.3 2003/10/20 12:33:01 robertc Exp $
+ * $Id: ACLIntRange.cc,v 1.4 2005/05/08 06:36:45 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Robert Collins
@@ -68,6 +68,12 @@ ACLIntRange::parse()
 
         Tail = &q->next;
     }
+}
+
+bool
+ACLIntRange::empty() const
+{
+    return ranges != NULL;
 }
 
 bool

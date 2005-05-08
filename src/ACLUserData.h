@@ -49,6 +49,7 @@ public:
     bool match(char const *user);
     wordlist *dump();
     void parse();
+    bool empty() const;
     virtual ACLData<char const *> *clone() const;
 
     SplayNode<char *> *names;
