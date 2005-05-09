@@ -1,5 +1,5 @@
 /*
- * $Id: ACLDestinationDomain.cc,v 1.10 2005/05/08 06:53:58 hno Exp $
+ * $Id: ACLDestinationDomain.cc,v 1.11 2005/05/09 01:41:25 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -36,78 +36,10 @@
 
 #include "squid.h"
 #include "ACLDestinationDomain.h"
-#include "authenticate.h"
 #include "ACLChecklist.h"
 #include "ACLRegexData.h"
 #include "ACLDomainData.h"
 #include "HttpRequest.h"
-
-ACLDestinationDomain::~ACLDestinationDomain()
-{
-    delete data;
-}
-
-ACLDestinationDomain::ACLDestinationDomain(ACLData<char const *> *newData, char const *theType) : data (newData), type_(theType) {}
-
-ACLDestinationDomain::ACLDestinationDomain (ACLDestinationDomain const &old) : data (old.data->clone()), type_(old.type_)
-{}
-
-ACLDestinationDomain &
-ACLDestinationDomain::operator= (ACLDestinationDomain const &rhs)
-{
-    data = rhs.data->clone();
-    type_ = rhs.type_;
-    return *this;
-}
-
-char const *
-ACLDestinationDomain::typeString() const
-{
-    return type_;
-}
-
-void
-ACLDestinationDomain::parse()
-{
-    data->parse();
-}
-
-int
-ACLDestinationDomain::match(ACLChecklist *checklist)
-{
-    const ipcache_addrs *ia = NULL;
-
-    if ((ia = ipcacheCheckNumeric(checklist->request->host)) == NULL)
-        return data->match(checklist->request->host);
-
-    const char *fqdn = NULL;
-
-    fqdn = fqdncache_gethostbyaddr(ia->in_addrs[0], FQDN_LOOKUP_IF_MISS);
-
-    if (fqdn)
-        return data->match(fqdn);
-
-    if (!checklist->destinationDomainChecked()) {
-        debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-                      name, inet_ntoa(ia->in_addrs[0]));
-        checklist->changeState(DestinationDomainLookup::Instance());
-        return 0;
-    }
-
-    return data->match("none");
-}
-
-wordlist *
-ACLDestinationDomain::dump() const
-{
-    return data->dump();
-}
-
-bool
-ACLDestinationDomain::empty () const
-{
-    return data->empty();
-}
 
 DestinationDomainLookup DestinationDomainLookup::instance_;
 
@@ -120,20 +52,8 @@ DestinationDomainLookup::Instance()
 void
 DestinationDomainLookup::checkForAsync(ACLChecklist *checklist)const
 {
-
-    ipcache_addrs *ia;
-    ia = ipcacheCheckNumeric(checklist->request->host);
-
-    if (ia == NULL) {
-        /* Make fatal? XXX this is checked during match() */
-        checklist->markDestinationDomainChecked();
-        checklist->changeState (ACLChecklist::NullState::Instance());
-    } else {
-        checklist->asyncInProgress(true);
-        checklist->dst_addr = ia->in_addrs[0];
-        fqdncache_nbgethostbyaddr(checklist->dst_addr,
-                                  LookupDone, checklist);
-    }
+    checklist->asyncInProgress(true);
+    fqdncache_nbgethostbyaddr(checklist->src_addr, LookupDone, checklist);
 }
 
 void
@@ -149,13 +69,42 @@ DestinationDomainLookup::LookupDone(const char *fqdn, void *data)
 }
 
 ACL::Prototype ACLDestinationDomain::LiteralRegistryProtoype(&ACLDestinationDomain::LiteralRegistryEntry_, "dstdomain");
-ACL::Prototype ACLDestinationDomain::LegacyRegistryProtoype(&ACLDestinationDomain::LiteralRegistryEntry_, "domain");
-ACLDestinationDomain ACLDestinationDomain::LiteralRegistryEntry_(new ACLDomainData, "dstdomain");
+ACLStrategised<char const *> ACLDestinationDomain::LiteralRegistryEntry_(new ACLDomainData, ACLDestinationDomainStrategy::Instance(), "dstdomain");
 ACL::Prototype ACLDestinationDomain::RegexRegistryProtoype(&ACLDestinationDomain::RegexRegistryEntry_, "dstdom_regex");
-ACLDestinationDomain ACLDestinationDomain::RegexRegistryEntry_(new ACLRegexData, "dstdom_regex");
+ACLStrategised<char const *> ACLDestinationDomain::RegexRegistryEntry_(new ACLRegexData,ACLDestinationDomainStrategy::Instance() ,"dstdom_regex");
 
-ACL *
-ACLDestinationDomain::clone() const
+int
+ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLChecklist *checklist)
 {
-    return new ACLDestinationDomain(*this);
+    const ipcache_addrs *ia = NULL;
+
+    if (data->match(checklist->request->host))
+        return 1;
+
+    if ((ia = ipcacheCheckNumeric(checklist->request->host)) == NULL)
+        return 0;
+
+    const char *fqdn = NULL;
+
+    fqdn = fqdncache_gethostbyaddr(ia->in_addrs[0], FQDN_LOOKUP_IF_MISS);
+
+    if (fqdn) {
+        return data->match(fqdn);
+    } else if (!checklist->destinationDomainChecked()) {
+        /* FIXME: Using AclMatchedName here is not OO correct. Should find a way to the current acl */
+        debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
+                      AclMatchedName, checklist->request->host);
+        checklist->changeState(DestinationDomainLookup::Instance());
+        return 0;
+    }
+
+    return data->match("none");
 }
+
+ACLDestinationDomainStrategy *
+ACLDestinationDomainStrategy::Instance()
+{
+    return &Instance_;
+}
+
+ACLDestinationDomainStrategy ACLDestinationDomainStrategy::Instance_;
