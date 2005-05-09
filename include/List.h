@@ -1,6 +1,6 @@
 
 /*
- * $Id: List.h,v 1.4 2004/08/30 05:12:29 robertc Exp $
+ * $Id: List.h,v 1.5 2005/05/08 23:28:44 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -49,6 +49,7 @@ public:
     bool findAndTune(C const &);
     List *next;
     C element;
+    bool empty() const { return this == NULL; }
 
 private:
     CBDATA_CLASS(List);
@@ -67,6 +68,25 @@ public:
     bool empty() const;
 
     List<C> *head;
+};
+
+template<class C>
+class ListIterator
+{
+public:
+    ListIterator(ListContainer<C> const &list) : next_entry(list.head) {}
+    const C & next() {
+	List<C> *entry = next_entry;
+	if (entry)
+	    next_entry = entry->next;
+	return entry->element;
+    }
+    bool end() {
+	return next_entry != NULL;
+    }
+
+private:
+    List<C> *next_entry;
 };
 
 /* implementation follows */
