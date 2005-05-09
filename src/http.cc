@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.449 2005/04/03 18:53:24 serassio Exp $
+ * $Id: http.cc,v 1.450 2005/05/09 17:11:57 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -979,10 +979,16 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
         IOStats.Http.read_hist[bin]++;
     }
 
-    if (!memBufIsNull(&reply_hdr) && flag == COMM_OK && len > 0 && fd_table[fd].uses > 1) {
-        /* Skip whitespace */
+    /* here the RFC says we should ignore whitespace between replies, but we can't as
+     * doing so breaks HTTP/0.9 replies beginning with witespace, and in addition
+     * the response splitting countermeasures is extremely likely to trigger on this,
+     * not allowing connection reuse in the first place.
+     */
+#if DONT_DO_THIS
+    if (reply_hdr_state == 0 && flag == COMM_OK && len > 0 && fd_table[fd].uses > 1) {
+        /* Skip whitespace between replies */
 
-        while (len > 0 && xisspace(*buf))
+        while (len > 0 && isspace(*buf))
             xmemmove(buf, buf + 1, len--);
 
         if (len == 0) {
@@ -993,6 +999,8 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
             return;
         }
     }
+
+#endif
 
     if (flag != COMM_OK || len < 0) {
         debug(50, 2) ("httpReadReply: FD %d: read failure: %s.\n",
