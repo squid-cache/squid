@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.4 2005/04/30 15:30:57 serassio Exp $
+#  $Id: Makefile.am,v 1.5 2005/05/09 08:31:51 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -18,11 +18,11 @@ SUBSTITUTE=sed "\
 	s%@DEFAULT_MIME_TABLE@%$(DEFAULT_MIME_TABLE)%g;\
 	"
 
-squid.8: squid.8.in Makefile
-	$(SUBSTITUTE) < $< > $@
+squid.8: $(srcdir)/squid.8.in Makefile
+	$(SUBSTITUTE) < $(srcdir)/squid.8.in > $@
 
-cachemgr.cgi.8: cachemgr.cgi.8.in Makefile
-	$(SUBSTITUTE) < $< > $@
+cachemgr.cgi.8: $(srcdir)/cachemgr.cgi.8.in Makefile
+	$(SUBSTITUTE) < $(srcdir)/cachemgr.cgi.8.in > $@
 
 man_MANS = \
 	squid.8 \
