@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.67 2005/04/18 21:52:42 hno Exp $
+ * $Id: dns_internal.cc,v 1.68 2005/05/09 01:36:55 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -583,7 +583,7 @@ idnsGrokReply(const char *buf, size_t sz)
 {
     int n;
     rfc1035_rr *answers = NULL;
-    unsigned short rid = 0xFFFF;
+    unsigned short rid;
     idns_query *q;
 
     n = rfc1035AnswersUnpack(buf,
@@ -592,9 +592,8 @@ idnsGrokReply(const char *buf, size_t sz)
                              &rid);
     debug(78, 3) ("idnsGrokReply: ID %#hx, %d answers\n", rid, n);
 
-    if (rid == 0xFFFF) {
-        debug(78, 1) ("idnsGrokReply: Unknown error\n");
-        /* XXX leak answers? */
+    if (n == -15 /* rfc1035_unpack_error */ ) {
+        debug(78, 1) ("idnsGrokReply: Malformed DNS response\n");
         return;
     }
 
