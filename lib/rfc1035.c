@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.39 2005/05/09 01:59:26 hno Exp $
+ * $Id: rfc1035.c,v 1.40 2005/05/09 02:09:16 hno Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -410,7 +410,7 @@ rfc1035RRUnpack(const char *buf, size_t sz, off_t * off, rfc1035_rr * RR)
 	RR->rdlength = 0; /* Filled in by rfc1035NameUnpack */
 	if (rfc1035NameUnpack(buf, sz, &rdata_off, &RR->rdlength, RR->rdata, RFC1035_MAXHOSTNAMESZ, 0))
 	    return 1;
-	if (rdata_off != ((*off) + rdlength)) {
+	if (rdata_off > ((*off) + rdlength)) {
 	    /*
 	     * This probably doesn't happen for valid packets, but
 	     * I want to make sure that NameUnpack doesn't go beyond
