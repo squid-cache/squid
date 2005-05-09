@@ -1,5 +1,5 @@
 /*
- * $Id: ACLStringData.cc,v 1.6 2005/05/08 06:36:45 hno Exp $
+ * $Id: ACLStringData.cc,v 1.7 2005/05/08 22:35:03 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -113,7 +113,7 @@ ACLStringData::parse()
 bool
 ACLStringData::empty() const
 {
-    return values == NULL;
+    return values->empty();
 }
 
 ACLData<char const *> *

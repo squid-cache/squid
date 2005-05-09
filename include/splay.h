@@ -1,5 +1,5 @@
 /*
- * $Id: splay.h,v 1.28 2005/01/06 13:16:38 serassio Exp $
+ * $Id: splay.h,v 1.29 2005/05/08 22:35:03 hno Exp $
  */
 
 #ifndef SQUID_SPLAY_H
@@ -28,6 +28,7 @@ public:
     mutable SplayNode<V> *right;
     void destroy(SPLAYFREE *);
     void walk(SPLAYWALKEE *, void *callerState);
+    bool empty() const { return this == NULL; }
     SplayNode<V> const * start() const;
     SplayNode<V> const * finish() const;
 

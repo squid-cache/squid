@@ -1,5 +1,5 @@
 /*
- * $Id: ACLDomainData.cc,v 1.10 2005/05/08 06:36:45 hno Exp $
+ * $Id: ACLDomainData.cc,v 1.11 2005/05/08 22:35:03 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -156,7 +156,7 @@ ACLDomainData::parse()
 bool
 ACLDomainData::empty() const
 {
-    return domains == NULL;
+    return domains->empty();
 }
 
 

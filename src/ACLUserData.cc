@@ -166,7 +166,7 @@ ACLUserData::parse()
 bool
 ACLUserData::empty() const
 {
-    return ((names == NULL) && (flags.required != 1));
+    return names->empty() && !flags.required;
 }
 
 ACLData<char const *> *
