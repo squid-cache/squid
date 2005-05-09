@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.69 2005/05/09 01:58:34 hno Exp $
+ * $Id: dns_internal.cc,v 1.70 2005/05/09 02:32:09 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -548,6 +548,25 @@ idnsFindQuery(unsigned short id)
     return NULL;
 }
 
+static unsigned short
+idnsQueryID(void)
+{
+    unsigned short id = squid_random() & 0xFFFF;
+    unsigned short first_id = id;
+
+    while(idnsFindQuery(id)) {
+        id++;
+
+        if (id > 0xFFFF)
+            id = 0;
+
+        if (id == first_id)
+            break;
+    }
+
+    return squid_random() & 0xFFFF;
+}
+
 static void
 idnsCallback(idns_query *q, rfc1035_rr *answers, int n, const char *error)
 {
@@ -578,6 +597,7 @@ idnsCallback(idns_query *q, rfc1035_rr *answers, int n, const char *error)
     }
 }
 
+/* FIXME: We should also verify that the response is to the correct query to eleminate overlaps */
 static void
 idnsGrokReply(const char *buf, size_t sz)
 {
@@ -623,7 +643,8 @@ idnsGrokReply(const char *buf, size_t sz)
              */
             assert(NULL == answers);
             q->start_t = current_time;
-            q->id = rfc1035RetryQuery(q->buf);
+            q->id = idnsQueryID();
+            rfc1035SetQueryID(q->buf, q->id);
             idnsSendQuery(q);
             return;
         }
@@ -910,9 +931,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
 
     q = (idns_query *)memAllocate(MEM_IDNS_QUERY);
 
-    q->sz = sizeof(q->buf);
-
-    q->id = rfc1035BuildAQuery(name, q->buf, &q->sz);
+    q->sz = rfc1035BuildAQuery(name, q->buf, sizeof(q->buf), idnsQueryID());
 
     debug(78, 3) ("idnsALookup: buf is %d bytes for %s, id = %#hx\n",
                   (int) q->sz, name, q->id);
@@ -941,9 +960,7 @@ idnsPTRLookup(const struct IN_ADDR addr, IDNSCB * callback, void *data)
 
     q = (idns_query *)memAllocate(MEM_IDNS_QUERY);
 
-    q->sz = sizeof(q->buf);
-
-    q->id = rfc1035BuildPTRQuery(addr, q->buf, &q->sz);
+    q->sz = rfc1035BuildPTRQuery(addr, q->buf, sizeof(q->buf), idnsQueryID());
 
     debug(78, 3) ("idnsPTRLookup: buf is %d bytes for %s, id = %#hx\n",
                   (int) q->sz, ip, q->id);

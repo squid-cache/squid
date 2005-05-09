@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.40 2005/05/09 02:09:16 hno Exp $
+ * $Id: rfc1035.c,v 1.41 2005/05/09 02:32:09 hno Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -433,13 +433,6 @@ rfc1035RRUnpack(const char *buf, size_t sz, off_t * off, rfc1035_rr * RR)
     return 0;
 }
 
-static unsigned short
-rfc1035Qid(void)
-{
-    unsigned short qid = squid_random() & 0xFFFF;
-    return qid;
-}
-
 static void
 rfc1035SetErrno(int n)
 {
@@ -587,16 +580,15 @@ rfc1035AnswersUnpack(const char *buf,
  * probably be at least 512 octets.  The 'szp' initially
  * specifies the size of the buffer, on return it contains
  * the size of the message (i.e. how much to write).
- * Return value is the query ID.
+ * Returns the size of the query
  */
-unsigned short
-rfc1035BuildAQuery(const char *hostname, char *buf, size_t * szp)
+ssize_t
+rfc1035BuildAQuery(const char *hostname, char *buf, size_t sz, unsigned short qid)
 {
     static rfc1035_header h;
     size_t offset = 0;
-    size_t sz = *szp;
     memset(&h, '\0', sizeof(h));
-    h.id = rfc1035Qid();
+    h.id = qid;
     h.qr = 0;
     h.rd = 1;
     h.opcode = 0;		/* QUERY */
@@ -608,8 +600,7 @@ rfc1035BuildAQuery(const char *hostname, char *buf, size_t * szp)
 	RFC1035_TYPE_A,
 	RFC1035_CLASS_IN);
     assert(offset <= sz);
-    *szp = (size_t) offset;
-    return h.id;
+    return offset;
 }
 
 /*
@@ -622,12 +613,11 @@ rfc1035BuildAQuery(const char *hostname, char *buf, size_t * szp)
  * the size of the message (i.e. how much to write).
  * Return value is the query ID.
  */
-unsigned short
-rfc1035BuildPTRQuery(const struct IN_ADDR addr, char *buf, size_t * szp)
+ssize_t
+rfc1035BuildPTRQuery(const struct IN_ADDR addr, char *buf, size_t sz, unsigned short qid)
 {
     static rfc1035_header h;
     size_t offset = 0;
-    size_t sz = *szp;
     static char rev[32];
     unsigned int i;
     memset(&h, '\0', sizeof(h));
@@ -637,7 +627,7 @@ rfc1035BuildPTRQuery(const struct IN_ADDR addr, char *buf, size_t * szp)
 	(i >> 8) & 255,
 	(i >> 16) & 255,
 	(i >> 24) & 255);
-    h.id = rfc1035Qid();
+    h.id = qid;
     h.qr = 0;
     h.rd = 1;
     h.opcode = 0;		/* QUERY */
@@ -649,8 +639,7 @@ rfc1035BuildPTRQuery(const struct IN_ADDR addr, char *buf, size_t * szp)
 	RFC1035_TYPE_PTR,
 	RFC1035_CLASS_IN);
     assert(offset <= sz);
-    *szp = offset;
-    return h.id;
+    return offset;
 }
 
 /*
@@ -658,13 +647,11 @@ rfc1035BuildPTRQuery(const struct IN_ADDR addr, char *buf, size_t * szp)
  * just need a new ID for it.  Lucky for us ID
  * is the first field in the message buffer.
  */
-unsigned short
-rfc1035RetryQuery(char *buf)
+void
+rfc1035SetQueryID(char *buf, unsigned short qid)
 {
-    unsigned short qid = rfc1035Qid();
     unsigned short s = htons(qid);
     memcpy(buf, &s, sizeof(s));
-    return qid;
 }
 
 #if DRIVER
