@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLDestinationDomain.h,v 1.7 2005/05/06 01:57:55 hno Exp $
+ * $Id: ACLDestinationDomain.h,v 1.8 2005/05/09 01:41:25 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,11 +33,30 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLDESTINATIONDOMAIN_H
-#define SQUID_ACLDESTINATIONDOMAIN_H
+#ifndef SQUID_ACLSOURCEDOMAIN_H
+#define SQUID_ACLSOURCEDOMAIN_H
 #include "ACL.h"
 #include "ACLData.h"
 #include "ACLChecklist.h"
+#include "ACLStrategised.h"
+
+class ACLDestinationDomainStrategy : public ACLStrategy<char const *>
+{
+
+public:
+    virtual int match (ACLData<MatchType> * &, ACLChecklist *);
+    static ACLDestinationDomainStrategy *Instance();
+    /* Not implemented to prevent copies of the instance. */
+    /* Not private to prevent brain dead g+++ warnings about
+     * private constructors with no friends */
+    ACLDestinationDomainStrategy(ACLDestinationDomainStrategy const &);
+
+private:
+    static ACLDestinationDomainStrategy Instance_;
+    ACLDestinationDomainStrategy(){}
+
+    ACLDestinationDomainStrategy&operator=(ACLDestinationDomainStrategy const &);
+};
 
 class DestinationDomainLookup : public ACLChecklist::AsyncState
 {
@@ -51,36 +70,14 @@ private:
     static void LookupDone(const char *, void *);
 };
 
-class ACLDestinationDomain : public ACL
+class ACLDestinationDomain
 {
 
-public:
-    MEMPROXY_CLASS(ACLDestinationDomain);
-
-    ~ACLDestinationDomain();
-    ACLDestinationDomain(ACLData<char const *> *, char const *);
-    ACLDestinationDomain (ACLDestinationDomain const &);
-    ACLDestinationDomain &operator= (ACLDestinationDomain const &);
-
-    virtual char const *typeString() const;
-    virtual void parse();
-    virtual int match(ACLChecklist *checklist);
-    virtual wordlist *dump() const;
-    virtual bool empty () const;
-    virtual bool requiresRequest() const {return true;}
-
-    virtual ACL *clone()const;
-
 private:
-    static Prototype LiteralRegistryProtoype;
-    static Prototype LegacyRegistryProtoype;
-    static ACLDestinationDomain LiteralRegistryEntry_;
-    static Prototype RegexRegistryProtoype;
-    static ACLDestinationDomain RegexRegistryEntry_;
-    ACLData<char const *> *data;
-    char const *type_;
+    static ACL::Prototype LiteralRegistryProtoype;
+    static ACLStrategised<char const *> LiteralRegistryEntry_;
+    static ACL::Prototype RegexRegistryProtoype;
+    static ACLStrategised<char const *> RegexRegistryEntry_;
 };
 
-MEMPROXY_CLASS_INLINE(ACLDestinationDomain)
-
-#endif /* SQUID_ACLDESTINATIONDOMAIN_H */
+#endif /* SQUID_ACLSOURCEDOMAIN_H */
