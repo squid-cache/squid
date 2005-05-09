@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.68 2005/05/09 01:36:55 hno Exp $
+ * $Id: dns_internal.cc,v 1.69 2005/05/09 01:58:34 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -914,19 +914,17 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
 
     q->id = rfc1035BuildAQuery(name, q->buf, &q->sz);
 
-    if (0 == q->id) {
-        /* problem with query data -- query not sent */
-        callback(data, NULL, 0, "Internal error");
-        memFree(q, MEM_IDNS_QUERY);
-        return;
-    }
-
     debug(78, 3) ("idnsALookup: buf is %d bytes for %s, id = %#hx\n",
                   (int) q->sz, name, q->id);
+
     q->callback = callback;
+
     q->callback_data = cbdataReference(data);
+
     q->start_t = current_time;
+
     idnsCacheQuery(q, name);
+
     idnsSendQuery(q);
 }
 
