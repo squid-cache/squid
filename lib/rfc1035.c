@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.38 2005/05/09 01:58:34 hno Exp $
+ * $Id: rfc1035.c,v 1.39 2005/05/09 01:59:26 hno Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -100,12 +100,6 @@ struct _rfc1035_header {
     unsigned short nscount;
     unsigned short arcount;
 };
-
-static const char *Alphanum =
-"abcdefghijklmnopqrstuvwxyz"
-"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-"0123456789";
-
 
 /*
  * rfc1035HeaderPack()
