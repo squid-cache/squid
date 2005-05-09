@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.71 2005/05/09 02:35:57 hno Exp $
+ * $Id: dns_internal.cc,v 1.72 2005/05/09 16:33:55 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -556,9 +556,6 @@ idnsQueryID(void)
 
     while(idnsFindQuery(id)) {
         id++;
-
-        if (id > 0xFFFF)
-            id = 0;
 
         if (id == first_id)
             break;
