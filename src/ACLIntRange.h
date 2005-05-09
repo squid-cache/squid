@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLIntRange.h,v 1.3 2005/05/08 06:36:45 hno Exp $
+ * $Id: ACLIntRange.h,v 1.4 2005/05/08 23:31:06 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -43,7 +43,7 @@ class ACLIntRange : public ACLData<int>
 {
 
 public:
-    ACLIntRange() : ranges(NULL) {}
+    ACLIntRange() {};
 
     virtual ~ACLIntRange();
     virtual bool match(int);
@@ -53,8 +53,8 @@ public:
     virtual ACLData<int> *clone() const;
 
 private:
-    typedef List<Range<int> > RangeType;
-    RangeType *ranges;
+    typedef Range<int> RangeType;
+    ListContainer <RangeType> ranges;
 };
 
 #endif /* SQUID_ACLINTRANGE_H */

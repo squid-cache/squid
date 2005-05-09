@@ -1,5 +1,5 @@
 /*
- * $Id: ACLIntRange.cc,v 1.5 2005/05/08 09:15:39 serassio Exp $
+ * $Id: ACLIntRange.cc,v 1.6 2005/05/08 23:31:06 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Robert Collins
@@ -45,15 +45,10 @@ template cbdata_type List<Range<int> >
 void
 ACLIntRange::parse()
 {
-    RangeType **Tail;
-    RangeType *q = NULL;
     char *t = NULL;
 
-    for (Tail = &ranges; *Tail; Tail = &((*Tail)->next))
-
-        ;
     while ((t = strtokFile())) {
-        Range<int> temp (0,0);
+        RangeType temp (0,0);
         temp.start = atoi(t);
         t = strchr(t, '-');
 
@@ -62,47 +57,28 @@ ACLIntRange::parse()
         else
             temp.end = temp.start+1;
 
-        q = new RangeType (temp);
-
-        *(Tail) = q;
-
-        Tail = &q->next;
+        ranges.push_back(temp);
     }
 }
 
 bool
 ACLIntRange::empty() const
 {
-    return ranges == NULL;
+    return ranges.empty();
 }
 
 bool
 ACLIntRange::match(int i)
 {
-    Range<int> const toFind (i, i+1);
-    RangeType *prev;
-    RangeType *data = ranges;
-    prev = NULL;
+    RangeType const toFind (i, i+1);
+    ListIterator<RangeType> iter(ranges);
 
-    while (data) {
-        Range<int> result = data->element.intersection (toFind);
+    while (!iter.end()) {
+        const RangeType & element = iter.next();
+        RangeType result = element.intersection (toFind);
 
-        if (result.size()) {
-            /* matched */
-
-            if (prev != NULL) {
-                /* shift the element just found to the second position
-                 * in the list */
-                prev->next = data->next;
-                data->next = ranges->next;
-                ranges->next = data;
-            }
-
+        if (result.size())
             return true;
-        }
-
-        prev = data;
-        data = data->next;
     }
 
     return false;
@@ -111,34 +87,31 @@ ACLIntRange::match(int i)
 ACLData<int> *
 ACLIntRange::clone() const
 {
-    if (ranges)
+    if (!ranges.empty())
         fatal("ACLIntRange::clone: attempt to clone used ACL");
 
     return new ACLIntRange (*this);
 }
 
 ACLIntRange::~ACLIntRange ()
-{
-    if (ranges)
-        delete ranges;
-}
+{}
 
 wordlist *
 ACLIntRange::dump ()
 {
     wordlist *W = NULL;
     char buf[32];
-    RangeType *data = ranges;
+    ListIterator<RangeType> iter(ranges);
 
-    while (data != NULL) {
-        if (data->element.size() == 1)
-            snprintf(buf, sizeof(buf), "%d", data->element.start);
+    while (!iter.end()) {
+        const RangeType & element = iter.next();
+
+        if (element.size() == 1)
+            snprintf(buf, sizeof(buf), "%d", element.start);
         else
-            snprintf(buf, sizeof(buf), "%d-%d", data->element.start, data->element.end);
+            snprintf(buf, sizeof(buf), "%d-%d", element.start, element.end);
 
         wordlistAdd(&W, buf);
-
-        data = data->next;
     }
 
     return W;
