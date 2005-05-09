@@ -1,5 +1,5 @@
 /*
- * $Id: ACLARP.cc,v 1.17 2005/05/08 09:58:05 serassio Exp $
+ * $Id: ACLARP.cc,v 1.18 2005/05/08 22:35:03 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -120,7 +120,7 @@ ACLARP::typeString() const
 bool
 ACLARP::empty () const
 {
-    return data == NULL;
+    return data->empty();
 }
 
 /* ==== BEGIN ARP ACL SUPPORT ============================================= */
