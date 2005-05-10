@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1035.h,v 1.12 2005/05/09 02:32:09 hno Exp $
+ * $Id: rfc1035.h,v 1.13 2005/05/10 08:23:06 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -56,6 +56,30 @@ struct _rfc1035_rr {
     unsigned short rdlength;
     char *rdata;
 };
+typedef struct _rfc1035_query rfc1035_query;
+struct _rfc1035_query {
+    char name[RFC1035_MAXHOSTNAMESZ];
+    unsigned short qtype;
+    unsigned short qclass;
+};
+typedef struct _rfc1035_message rfc1035_message;
+struct _rfc1035_message {
+    unsigned short id;
+    unsigned int qr:1;
+    unsigned int opcode:4;
+    unsigned int aa:1;
+    unsigned int tc:1;
+    unsigned int rd:1;
+    unsigned int ra:1;
+    unsigned int rcode:4;
+    unsigned short qdcount;
+    unsigned short ancount;
+    unsigned short nscount;
+    unsigned short arcount;
+    rfc1035_query *query;
+    rfc1035_rr *answer;
+};
+
 SQUIDCEXTERN ssize_t rfc1035BuildAQuery(const char *hostname,
     char *buf,
     size_t sz,
@@ -65,11 +89,10 @@ SQUIDCEXTERN ssize_t rfc1035BuildPTRQuery(const struct IN_ADDR,
     size_t sz,
     unsigned short qid);
 SQUIDCEXTERN void rfc1035SetQueryID(char *, unsigned short qid);
-SQUIDCEXTERN int rfc1035AnswersUnpack(const char *buf,
+SQUIDCEXTERN int rfc1035MessageUnpack(const char *buf,
     size_t sz,
-    rfc1035_rr ** records,
-    unsigned short *id);
-SQUIDCEXTERN void rfc1035RRDestroy(rfc1035_rr * rr, int n);
+    rfc1035_message ** answer);
+SQUIDCEXTERN void rfc1035MessageDestroy(rfc1035_message * message);
 SQUIDCEXTERN int rfc1035_errno;
 SQUIDCEXTERN const char *rfc1035_error_message;
 
