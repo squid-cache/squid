@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.45 2005/05/01 00:10:37 hno Exp $
+#  $Id: Makefile.in,v 1.46 2005/05/10 00:10:39 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -454,11 +454,11 @@ uninstall-man: uninstall-man8
 	uninstall-info-am uninstall-man uninstall-man8
 
 
-squid.8: squid.8.in Makefile
-	$(SUBSTITUTE) < $< > $@
+squid.8: $(srcdir)/squid.8.in Makefile
+	$(SUBSTITUTE) < $(srcdir)/squid.8.in > $@
 
-cachemgr.cgi.8: cachemgr.cgi.8.in Makefile
-	$(SUBSTITUTE) < $< > $@
+cachemgr.cgi.8: $(srcdir)/cachemgr.cgi.8.in Makefile
+	$(SUBSTITUTE) < $(srcdir)/cachemgr.cgi.8.in > $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
