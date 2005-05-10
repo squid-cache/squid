@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.43 2005/05/10 10:09:32 hno Exp $
+ * $Id: rfc1035.c,v 1.44 2005/05/10 10:25:02 hno Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -93,10 +93,10 @@ const char *rfc1035_error_message;
  * Packs a rfc1035_header structure into a buffer.
  * Returns number of octets packed (should always be 12)
  */
-static off_t
+static int
 rfc1035HeaderPack(char *buf, size_t sz, rfc1035_message * hdr)
 {
-    off_t off = 0;
+    int off = 0;
     unsigned short s;
     unsigned short t;
     assert(sz >= 12);
@@ -138,10 +138,10 @@ rfc1035HeaderPack(char *buf, size_t sz, rfc1035_message * hdr)
  * bytes to follow.  Labels must be smaller than 64 octets.
  * Returns number of octets packed.
  */
-static off_t
+static int
 rfc1035LabelPack(char *buf, size_t sz, const char *label)
 {
-    off_t off = 0;
+    int off = 0;
     size_t len = label ? strlen(label) : 0;
     if (label)
 	assert(!strchr(label, '.'));
@@ -163,10 +163,10 @@ rfc1035LabelPack(char *buf, size_t sz, const char *label)
  * Note message compression is not supported here.
  * Returns number of octets packed.
  */
-static off_t
+static int
 rfc1035NamePack(char *buf, size_t sz, const char *name)
 {
-    off_t off = 0;
+    int off = 0;
     char *copy = xstrdup(name);
     char *t;
     /*
@@ -186,14 +186,14 @@ rfc1035NamePack(char *buf, size_t sz, const char *name)
  * Packs a QUESTION section of a message.
  * Returns number of octets packed.
  */
-static off_t
+static int
 rfc1035QuestionPack(char *buf,
     size_t sz,
     const char *name,
     unsigned short type,
     unsigned short _class)
 {
-    off_t off = 0;
+    int off = 0;
     unsigned short s;
     off += rfc1035NamePack(buf + off, sz - off, name);
     s = htons(type);
@@ -218,7 +218,7 @@ rfc1035QuestionPack(char *buf,
  * Returns 0 (success) or 1 (error)
  */
 static int
-rfc1035HeaderUnpack(const char *buf, size_t sz, off_t * off, rfc1035_message * h)
+rfc1035HeaderUnpack(const char *buf, size_t sz, int *off, rfc1035_message * h)
 {
     unsigned short s;
     unsigned short t;
@@ -279,9 +279,9 @@ rfc1035HeaderUnpack(const char *buf, size_t sz, off_t * off, rfc1035_message * h
  * Returns 0 (success) or 1 (error)
  */
 static int
-rfc1035NameUnpack(const char *buf, size_t sz, off_t * off, unsigned short *rdlength, char *name, size_t ns, int rdepth)
+rfc1035NameUnpack(const char *buf, size_t sz, int *off, unsigned short *rdlength, char *name, size_t ns, int rdepth)
 {
-    off_t no = 0;
+    int no = 0;
     unsigned char c;
     size_t len;
     assert(ns > 0);
@@ -291,7 +291,7 @@ rfc1035NameUnpack(const char *buf, size_t sz, off_t * off, unsigned short *rdlen
 	if (c > 191) {
 	    /* blasted compression */
 	    unsigned short s;
-	    off_t ptr;
+	    int ptr;
 	    if (rdepth > 64)	/* infinite pointer loop */
 		return 1;
 	    memcpy(&s, buf + (*off), sizeof(s));
@@ -347,12 +347,12 @@ rfc1035NameUnpack(const char *buf, size_t sz, off_t * off, unsigned short *rdlen
  * Returns 0 (success) or 1 (error)
  */
 static int
-rfc1035RRUnpack(const char *buf, size_t sz, off_t * off, rfc1035_rr * RR)
+rfc1035RRUnpack(const char *buf, size_t sz, int *off, rfc1035_rr * RR)
 {
     unsigned short s;
     unsigned int i;
     unsigned short rdlength;
-    off_t rdata_off;
+    int rdata_off;
     if (rfc1035NameUnpack(buf, sz, off, NULL, RR->name, RFC1035_MAXHOSTNAMESZ, 0)) {
 	RFC1035_UNPACK_DEBUG;
 	memset(RR, '\0', sizeof(*RR));
@@ -479,7 +479,7 @@ rfc1035RRDestroy(rfc1035_rr * rr, int n)
  * Returns 0 (success) or 1 (error)
  */
 static int
-rfc1035QueryUnpack(const char *buf, size_t sz, off_t * off, rfc1035_query * query)
+rfc1035QueryUnpack(const char *buf, size_t sz, int *off, rfc1035_query * query)
 {
     unsigned short s;
     if (rfc1035NameUnpack(buf, sz, off, NULL, query->name, RFC1035_MAXHOSTNAMESZ, 0)) {
@@ -501,7 +501,7 @@ rfc1035QueryUnpack(const char *buf, size_t sz, off_t * off, rfc1035_query * quer
     return 0;
 }
 
-void 
+void
 rfc1035MessageDestroy(rfc1035_message * msg)
 {
     if (!msg)
@@ -546,7 +546,7 @@ rfc1035MessageUnpack(const char *buf,
     size_t sz,
     rfc1035_message ** answer)
 {
-    off_t off = 0;
+    int off = 0;
     int i;
     int nr = 0;
     rfc1035_message *msg;
@@ -656,7 +656,7 @@ rfc1035BuildAQuery(const char *hostname, char *buf, size_t sz, unsigned short qi
  * probably be at least 512 octets.  The 'szp' initially
  * specifies the size of the buffer, on return it contains
  * the size of the message (i.e. how much to write).
- * Return value is the query ID.
+ * Returns the size of the query
  */
 ssize_t
 rfc1035BuildPTRQuery(const struct IN_ADDR addr, char *buf, size_t sz, unsigned short qid, rfc1035_query * query)
