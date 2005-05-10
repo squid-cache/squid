@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.75 2005/05/10 10:39:56 hno Exp $
+ * $Id: dns_internal.cc,v 1.76 2005/05/10 11:46:41 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -674,7 +674,7 @@ idnsRead(int fd, void *data)
         from_len = sizeof(from);
         memset(&from, '\0', from_len);
 
-        len = comm_udp_recvfrom(fd, rbuf, 512, 0, (struct sockaddr *) &from, &from_len);
+        len = comm_udp_recvfrom(fd, rbuf, sizeof(rbuf), 0, (struct sockaddr *) &from, &from_len);
 
         if (len == 0)
             break;
@@ -718,26 +718,6 @@ idnsRead(int fd, void *data)
             }
 
             continue;
-        }
-
-        if (len > 512) {
-            /*
-             * Check for non-conforming replies.  RFC 1035 says
-             * DNS/UDP messages must be 512 octets or less.  If we
-             * get one that is too large, we generate a warning
-             * and then pretend that we only got 512 octets.  This
-             * should prevent the rfc1035.c code from reading past
-             * the end of our buffer.
-             */
-            static int other_large_pkts = 0;
-            int x;
-            x = (ns < 0) ? ++other_large_pkts : ++nameservers[ns].large_pkts;
-
-            if (isPowTen(x))
-                debug(78, 1) ("WARNING: Got %d large DNS replies from %s\n",
-                              x, inet_ntoa(from.sin_addr));
-
-            len = 512;
         }
 
         idnsGrokReply(rbuf, len);
