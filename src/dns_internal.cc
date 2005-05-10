@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.74 2005/05/10 10:09:32 hno Exp $
+ * $Id: dns_internal.cc,v 1.75 2005/05/10 10:39:56 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -594,7 +594,6 @@ idnsCallback(idns_query *q, rfc1035_rr *answers, int n, const char *error)
     }
 }
 
-/* FIXME: We should also verify that the response is to the correct query to eleminate overlaps */
 static void
 idnsGrokReply(const char *buf, size_t sz)
 {
@@ -621,7 +620,6 @@ idnsGrokReply(const char *buf, size_t sz)
         return;
     }
 
-    /* FIXME: We should also verify the query to match ours */
     if (rfc1035QueryCompare(&q->query, message->query) != 0) {
         debug(78, 3) ("idnsGrokReply: Query mismatch (%s != %s)\n", q->query.name, message->query->name);
         rfc1035MessageDestroy(message);
@@ -938,6 +936,13 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
 
     q->sz = rfc1035BuildAQuery(name, q->buf, sizeof(q->buf), q->id, &q->query);
 
+    if (q->sz < 0) {
+        /* problem with query data -- query not sent */
+        callback(data, NULL, 0, "Internal error");
+        memFree(q, MEM_IDNS_QUERY);
+        return;
+    }
+
     debug(78, 3) ("idnsALookup: buf is %d bytes for %s, id = %#hx\n",
                   (int) q->sz, name, q->id);
 
@@ -968,6 +973,14 @@ idnsPTRLookup(const struct IN_ADDR addr, IDNSCB * callback, void *data)
     q->id = idnsQueryID();
 
     q->sz = rfc1035BuildPTRQuery(addr, q->buf, sizeof(q->buf), q->id, &q->query);
+
+    if (q->sz < 0)
+    {
+        /* problem with query data -- query not sent */
+        callback(data, NULL, 0, "Internal error");
+        memFree(q, MEM_IDNS_QUERY);
+        return;
+    }
 
     debug(78, 3) ("idnsPTRLookup: buf is %d bytes for %s, id = %#hx\n",
                   (int) q->sz, ip, q->id);
