@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.42 2005/05/10 08:23:07 hno Exp $
+ * $Id: rfc1035.c,v 1.43 2005/05/10 10:09:32 hno Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -393,7 +393,7 @@ rfc1035RRUnpack(const char *buf, size_t sz, off_t * off, rfc1035_rr * RR)
     case RFC1035_TYPE_PTR:
 	RR->rdata = xmalloc(RFC1035_MAXHOSTNAMESZ);
 	rdata_off = *off;
-	RR->rdlength = 0; /* Filled in by rfc1035NameUnpack */
+	RR->rdlength = 0;	/* Filled in by rfc1035NameUnpack */
 	if (rfc1035NameUnpack(buf, sz, &rdata_off, &RR->rdlength, RR->rdata, RFC1035_MAXHOSTNAMESZ, 0))
 	    return 1;
 	if (rdata_off > ((*off) + rdlength)) {
@@ -403,7 +403,7 @@ rfc1035RRUnpack(const char *buf, size_t sz, off_t * off, rfc1035_rr * RR)
 	     * the RDATA area.
 	     */
 	    RFC1035_UNPACK_DEBUG;
-            xfree(RR->rdata);
+	    xfree(RR->rdata);
 	    memset(RR, '\0', sizeof(*RR));
 	    return 1;
 	}
@@ -494,17 +494,15 @@ rfc1035QueryUnpack(const char *buf, size_t sz, off_t * off, rfc1035_query * quer
     }
     memcpy(&s, buf + *off, 2);
     *off += 2;
-    buf+=2;
     query->qtype = ntohs(s);
     memcpy(&s, buf + *off, 2);
     *off += 2;
-    buf+=2;
-    query->qtype = ntohs(s);
+    query->qclass = ntohs(s);
     return 0;
 }
 
-void
-rfc1035MessageDestroy(rfc1035_message *msg)
+void 
+rfc1035MessageDestroy(rfc1035_message * msg)
 {
     if (!msg)
 	return;
@@ -513,6 +511,23 @@ rfc1035MessageDestroy(rfc1035_message *msg)
     if (msg->answer)
 	rfc1035RRDestroy(msg->answer, msg->ancount);
     xfree(msg);
+}
+
+/*
+ * rfc1035QueryCompare()
+ * 
+ * Compares two rfc1035_query entries
+ *
+ * Returns 0 (equal) or !=0 (different)
+ */
+int
+rfc1035QueryCompare(const rfc1035_query * a, const rfc1035_query * b)
+{
+    if (a->qtype != b->qtype)
+	return 1;
+    if (a->qclass != b->qclass)
+	return 1;
+    return strcmp(a->name, b->name);
 }
 
 /*
@@ -560,8 +575,8 @@ rfc1035MessageUnpack(const char *buf,
 	xfree(msg);
 	return -rfc1035_unpack_error;
     }
-    querys = msg->query = xcalloc((int)msg->qdcount, sizeof(*querys));
-    for (i = 0; i < (int)msg->qdcount; i++) {
+    querys = msg->query = xcalloc((int) msg->qdcount, sizeof(*querys));
+    for (i = 0; i < (int) msg->qdcount; i++) {
 	if (rfc1035QueryUnpack(buf, sz, &off, &querys[i])) {
 	    RFC1035_UNPACK_DEBUG;
 	    rfc1035SetErrno(rfc1035_unpack_error);
@@ -572,8 +587,8 @@ rfc1035MessageUnpack(const char *buf,
     *answer = msg;
     if (msg->ancount == 0)
 	return 0;
-    recs = msg->answer = xcalloc((int)msg->ancount, sizeof(*recs));
-    for (i = 0; i < (int)msg->ancount; i++) {
+    recs = msg->answer = xcalloc((int) msg->ancount, sizeof(*recs));
+    for (i = 0; i < (int) msg->ancount; i++) {
 	if (off >= sz) {	/* corrupt packet */
 	    RFC1035_UNPACK_DEBUG;
 	    break;
@@ -608,7 +623,7 @@ rfc1035MessageUnpack(const char *buf,
  * Returns the size of the query
  */
 ssize_t
-rfc1035BuildAQuery(const char *hostname, char *buf, size_t sz, unsigned short qid)
+rfc1035BuildAQuery(const char *hostname, char *buf, size_t sz, unsigned short qid, rfc1035_query * query)
 {
     static rfc1035_message h;
     size_t offset = 0;
@@ -624,6 +639,11 @@ rfc1035BuildAQuery(const char *hostname, char *buf, size_t sz, unsigned short qi
 	hostname,
 	RFC1035_TYPE_A,
 	RFC1035_CLASS_IN);
+    if (query) {
+	query->qtype = RFC1035_TYPE_A;
+	query->qclass = RFC1035_CLASS_IN;
+	xstrncpy(query->name, hostname, sizeof(query->name));
+    }
     assert(offset <= sz);
     return offset;
 }
@@ -639,7 +659,7 @@ rfc1035BuildAQuery(const char *hostname, char *buf, size_t sz, unsigned short qi
  * Return value is the query ID.
  */
 ssize_t
-rfc1035BuildPTRQuery(const struct IN_ADDR addr, char *buf, size_t sz, unsigned short qid)
+rfc1035BuildPTRQuery(const struct IN_ADDR addr, char *buf, size_t sz, unsigned short qid, rfc1035_query * query)
 {
     static rfc1035_message h;
     size_t offset = 0;
@@ -663,6 +683,11 @@ rfc1035BuildPTRQuery(const struct IN_ADDR addr, char *buf, size_t sz, unsigned s
 	rev,
 	RFC1035_TYPE_PTR,
 	RFC1035_CLASS_IN);
+    if (query) {
+	query->qtype = RFC1035_TYPE_PTR;
+	query->qclass = RFC1035_CLASS_IN;
+	xstrncpy(query->name, rev, sizeof(query->name));
+    }
     assert(offset <= sz);
     return offset;
 }

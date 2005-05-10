@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.73 2005/05/10 08:23:07 hno Exp $
+ * $Id: dns_internal.cc,v 1.74 2005/05/10 10:09:32 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -64,7 +64,7 @@ typedef struct _ns ns;
 struct _idns_query
 {
     hash_link hash;
-    char query[RFC1035_MAXHOSTNAMESZ+1];
+    rfc1035_query query;
     char buf[512];
     size_t sz;
     unsigned short id;
@@ -615,13 +615,19 @@ idnsGrokReply(const char *buf, size_t sz)
 
     q = idnsFindQuery(message->id);
 
-    /* FIXME: We should also verify the query to match ours */
-
     if (q == NULL) {
         debug(78, 3) ("idnsGrokReply: Late response\n");
         rfc1035MessageDestroy(message);
         return;
     }
+
+    /* FIXME: We should also verify the query to match ours */
+    if (rfc1035QueryCompare(&q->query, message->query) != 0) {
+        debug(78, 3) ("idnsGrokReply: Query mismatch (%s != %s)\n", q->query.name, message->query->name);
+        rfc1035MessageDestroy(message);
+        return;
+    }
+
 
     dlinkDelete(&q->lru, &lru_list);
     idnsRcodeCount(n, q->attempt);
@@ -912,10 +918,9 @@ idnsCachedLookup(const char *key, IDNSCB * callback, void *data)
 }
 
 static void
-idnsCacheQuery(idns_query *q, const char *key)
+idnsCacheQuery(idns_query *q)
 {
-    xstrncpy(q->query, key, sizeof(q->query));
-    q->hash.key = q->query;
+    q->hash.key = q->query.name;
     hash_join(idns_lookup_hash, &q->hash);
 }
 
@@ -931,7 +936,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
 
     q->id = idnsQueryID();
 
-    q->sz = rfc1035BuildAQuery(name, q->buf, sizeof(q->buf), q->id);
+    q->sz = rfc1035BuildAQuery(name, q->buf, sizeof(q->buf), q->id, &q->query);
 
     debug(78, 3) ("idnsALookup: buf is %d bytes for %s, id = %#hx\n",
                   (int) q->sz, name, q->id);
@@ -942,7 +947,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
 
     q->start_t = current_time;
 
-    idnsCacheQuery(q, name);
+    idnsCacheQuery(q);
 
     idnsSendQuery(q);
 }
@@ -962,7 +967,7 @@ idnsPTRLookup(const struct IN_ADDR addr, IDNSCB * callback, void *data)
 
     q->id = idnsQueryID();
 
-    q->sz = rfc1035BuildPTRQuery(addr, q->buf, sizeof(q->buf), q->id);
+    q->sz = rfc1035BuildPTRQuery(addr, q->buf, sizeof(q->buf), q->id, &q->query);
 
     debug(78, 3) ("idnsPTRLookup: buf is %d bytes for %s, id = %#hx\n",
                   (int) q->sz, ip, q->id);
@@ -973,7 +978,7 @@ idnsPTRLookup(const struct IN_ADDR addr, IDNSCB * callback, void *data)
 
     q->start_t = current_time;
 
-    idnsCacheQuery(q, ip);
+    idnsCacheQuery(q);
 
     idnsSendQuery(q);
 }
