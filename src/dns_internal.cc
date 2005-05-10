@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.72 2005/05/09 16:33:55 hno Exp $
+ * $Id: dns_internal.cc,v 1.73 2005/05/10 08:23:07 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -599,26 +599,27 @@ static void
 idnsGrokReply(const char *buf, size_t sz)
 {
     int n;
-    rfc1035_rr *answers = NULL;
-    unsigned short rid;
+    rfc1035_message *message = NULL;
     idns_query *q;
 
-    n = rfc1035AnswersUnpack(buf,
+    n = rfc1035MessageUnpack(buf,
                              sz,
-                             &answers,
-                             &rid);
-    debug(78, 3) ("idnsGrokReply: ID %#hx, %d answers\n", rid, n);
+                             &message);
 
-    if (n == -15 /* rfc1035_unpack_error */ ) {
+    if (message == NULL) {
         debug(78, 1) ("idnsGrokReply: Malformed DNS response\n");
         return;
     }
 
-    q = idnsFindQuery(rid);
+    debug(78, 3) ("idnsGrokReply: ID %#hx, %d answers\n", message->id, n);
+
+    q = idnsFindQuery(message->id);
+
+    /* FIXME: We should also verify the query to match ours */
 
     if (q == NULL) {
         debug(78, 3) ("idnsGrokReply: Late response\n");
-        rfc1035RRDestroy(answers, n);
+        rfc1035MessageDestroy(message);
         return;
     }
 
@@ -627,7 +628,7 @@ idnsGrokReply(const char *buf, size_t sz)
     q->error = NULL;
 
     if (n < 0) {
-        debug(78, 3) ("idnsGrokReply: error %d\n", rfc1035_errno);
+        debug(78, 3) ("idnsGrokReply: error %s (%d)\n", rfc1035_error_message, rfc1035_errno);
 
         q->error = rfc1035_error_message;
         q->rcode = -n;
@@ -638,7 +639,7 @@ idnsGrokReply(const char *buf, size_t sz)
              * unable to process this query due to a problem with
              * the name server."
              */
-            assert(NULL == answers);
+            rfc1035MessageDestroy(message);
             q->start_t = current_time;
             q->id = idnsQueryID();
             rfc1035SetQueryID(q->buf, q->id);
@@ -647,8 +648,8 @@ idnsGrokReply(const char *buf, size_t sz)
         }
     }
 
-    idnsCallback(q, answers, n, q->error);
-    rfc1035RRDestroy(answers, n);
+    idnsCallback(q, message->answer, n, q->error);
+    rfc1035MessageDestroy(message);
 
     memFree(q, MEM_IDNS_QUERY);
 }
