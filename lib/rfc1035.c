@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.44 2005/05/10 10:25:02 hno Exp $
+ * $Id: rfc1035.c,v 1.45 2005/05/11 14:26:52 hno Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -523,11 +523,24 @@ rfc1035MessageDestroy(rfc1035_message * msg)
 int
 rfc1035QueryCompare(const rfc1035_query * a, const rfc1035_query * b)
 {
+    size_t la, lb;
     if (a->qtype != b->qtype)
 	return 1;
     if (a->qclass != b->qclass)
 	return 1;
-    return strcmp(a->name, b->name);
+    la = strlen(a->name);
+    lb = strlen(b->name);
+    if (la != lb) {
+	/* Trim root label(s) */
+	while (la > 0 && a->name[la - 1] == '.')
+	    la--;
+	while (lb > 0 && b->name[lb - 1] == '.')
+	    lb--;
+    }
+    if (la != lb)
+	return 1;
+
+    return strncasecmp(a->name, b->name, la);
 }
 
 /*
@@ -561,12 +574,6 @@ rfc1035MessageUnpack(const char *buf,
     }
     rfc1035_errno = 0;
     rfc1035_error_message = NULL;
-    if (msg->rcode) {
-	RFC1035_UNPACK_DEBUG;
-	rfc1035SetErrno((int) msg->rcode);
-	xfree(msg);
-	return -rfc1035_errno;
-    }
     i = (int) msg->qdcount;
     if (i != 1) {
 	/* This can not be an answer to our queries.. */
@@ -585,6 +592,11 @@ rfc1035MessageUnpack(const char *buf,
 	}
     }
     *answer = msg;
+    if (msg->rcode) {
+	RFC1035_UNPACK_DEBUG;
+	rfc1035SetErrno((int) msg->rcode);
+	return -rfc1035_errno;
+    }
     if (msg->ancount == 0)
 	return 0;
     recs = msg->answer = xcalloc((int) msg->ancount, sizeof(*recs));
