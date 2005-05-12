@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.76 2005/05/10 11:46:41 hno Exp $
+ * $Id: dns_internal.cc,v 1.77 2005/05/11 19:22:20 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -557,11 +557,13 @@ idnsQueryID(void)
     while(idnsFindQuery(id)) {
         id++;
 
-        if (id == first_id)
+        if (id == first_id) {
+            debug(78, 1) ("idnsQueryID: Warning, too many pending DNS requests\n");
             break;
+        }
     }
 
-    return squid_random() & 0xFFFF;
+    return id;
 }
 
 static void
