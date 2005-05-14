@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.404 2005/04/18 21:52:42 hno Exp $
+ * $Id: comm.cc,v 1.405 2005/05/14 00:51:10 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -888,7 +888,7 @@ comm_write(int fd, const char *buf, size_t size, IOWCB *handler, void *handler_d
     /* Can't queue a write with no callback */
     assert(handler);
 
-    /* Queue a read */
+    /* Queue a write */
     fdc_table[fd].write.buf = buf;
     fdc_table[fd].write.size = size;
     fdc_table[fd].write.handler = handler;
