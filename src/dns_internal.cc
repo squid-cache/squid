@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.77 2005/05/11 19:22:20 hno Exp $
+ * $Id: dns_internal.cc,v 1.78 2005/05/14 02:40:56 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -61,6 +61,8 @@ typedef struct _idns_query idns_query;
 
 typedef struct _ns ns;
 
+typedef struct _nsvc nsvc;
+
 struct _idns_query
 {
     hash_link hash;
@@ -69,6 +71,7 @@ struct _idns_query
     size_t sz;
     unsigned short id;
     int nsends;
+    int need_vc;
 
     struct timeval start_t;
 
@@ -82,6 +85,17 @@ struct _idns_query
     idns_query *queue;
 };
 
+struct _nsvc
+{
+    int ns;
+    int fd;
+    unsigned short msglen;
+    int read_msglen;
+    MemBuf msg;
+    MemBuf queue;
+    bool busy;
+};
+
 struct _ns
 {
 
@@ -89,7 +103,10 @@ struct _ns
     int nqueries;
     int nreplies;
     int large_pkts;
+    nsvc *vc;
 };
+
+CBDATA_TYPE(nsvc);
 
 static ns *nameservers = NULL;
 static int nns = 0;
@@ -109,6 +126,7 @@ static void idnsParseResolvConf(void);
 static void idnsParseWIN32Registry(void);
 #endif
 static void idnsSendQuery(idns_query * q);
+static IOCB idnsReadVCHeader;
 
 static int idnsFromKnownNameserver(struct sockaddr_in *from);
 static idns_query *idnsFindQuery(unsigned short id);
@@ -465,6 +483,121 @@ idnsTickleQueue(void)
     event_queued = 1;
 }
 
+static void idnsDoSendQueryVC(nsvc *vc);
+
+static void
+idnsSentQueryVC(int fd, char *buf, size_t size, comm_err_t flag, void *data)
+{
+    nsvc * vc = (nsvc *)data;
+
+    if (flag == COMM_ERR_CLOSING)
+        return;
+
+    if (flag != COMM_OK || size <= 0) {
+        comm_close(fd);
+        return;
+    }
+
+    vc->busy = 0;
+    idnsDoSendQueryVC(vc);
+}
+
+static void
+idnsDoSendQueryVC(nsvc *vc)
+{
+    if (vc->busy)
+        return;
+
+    if (vc->queue.size == 0)
+        return;
+
+    MemBuf mb = vc->queue;
+
+    vc->queue = MemBufNULL;
+
+    vc->busy = 1;
+
+    commSetTimeout(vc->fd, Config.Timeout.idns_query, NULL, NULL);
+
+    comm_old_write_mbuf(vc->fd, mb, idnsSentQueryVC, vc);
+}
+
+static void
+idnsInitVCConnected(int fd, comm_err_t status, int xerrno, void *data)
+{
+    nsvc * vc = (nsvc *)data;
+
+    if (status != COMM_OK) {
+        comm_close(fd);
+        return;
+    }
+
+    comm_read(fd, (char *)&vc->msglen, 2 , idnsReadVCHeader, vc);
+    vc->busy = 0;
+    idnsDoSendQueryVC(vc);
+}
+
+static void
+idnsVCClosed(int fd, void *data)
+{
+    nsvc * vc = (nsvc *)data;
+    nameservers[vc->ns].vc = NULL;
+}
+
+static void
+idnsInitVC(int ns)
+{
+    nsvc *vc = cbdataAlloc(nsvc);
+    nameservers[ns].vc = vc;
+
+    struct IN_ADDR addr;
+
+    if (Config.Addrs.udp_outgoing.s_addr != no_addr.s_addr)
+        addr = Config.Addrs.udp_outgoing;
+    else
+        addr = Config.Addrs.udp_incoming;
+
+    vc->queue = MemBufNULL;
+
+    vc->msg = MemBufNULL;
+
+    vc->fd = comm_open(SOCK_STREAM,
+                       IPPROTO_TCP,
+                       addr,
+                       0,
+                       COMM_NONBLOCKING,
+                       "DNS Socket");
+
+    if (vc->fd < 0)
+        fatal("Could not create a DNS socket");
+
+    comm_add_close_handler(vc->fd, idnsVCClosed, vc);
+
+    vc->busy = 1;
+
+    commConnectStart(vc->fd, inet_ntoa(nameservers[ns].S.sin_addr), ntohs(nameservers[ns].S.sin_port), idnsInitVCConnected, vc);
+}
+
+static void
+idnsSendQueryVC(idns_query * q, int ns)
+{
+    if (nameservers[ns].vc == NULL)
+        idnsInitVC(ns);
+
+    nsvc *vc = nameservers[ns].vc;
+
+    if (memBufIsNull(&vc->queue))
+        memBufDefInit(&vc->queue);
+
+    short head = htons(q->sz);
+
+    memBufAppend(&vc->queue, (char *)&head, 2);
+
+    memBufAppend(&vc->queue, q->buf, q->sz);
+
+    idnsDoSendQueryVC(vc);
+}
+
 static void
 idnsSendQuery(idns_query * q)
 {
@@ -486,11 +619,15 @@ idnsSendQuery(idns_query * q)
 try_again:
     ns = q->nsends % nns;
 
-    x = comm_udp_sendto(DnsSocket,
-                        &nameservers[ns].S,
-                        sizeof(nameservers[ns].S),
-                        q->buf,
-                        q->sz);
+    if (q->need_vc) {
+        idnsSendQueryVC(q, ns);
+        x = 0;
+    } else
+        x = comm_udp_sendto(DnsSocket,
+                            &nameservers[ns].S,
+                            sizeof(nameservers[ns].S),
+                            q->buf,
+                            q->sz);
 
     q->nsends++;
 
@@ -628,6 +765,18 @@ idnsGrokReply(const char *buf, size_t sz)
         return;
     }
 
+    if (message->tc) {
+        dlinkDelete(&q->lru, &lru_list);
+        rfc1035MessageDestroy(message);
+
+        if (!q->need_vc) {
+            q->need_vc = 1;
+            q->nsends--;
+            idnsSendQuery(q);
+        }
+
+        return;
+    }
 
     dlinkDelete(&q->lru, &lru_list);
     idnsRcodeCount(n, q->attempt);
@@ -773,6 +922,66 @@ idnsCheckQueue(void *unused)
     idnsTickleQueue();
 }
 
+static void
+idnsReadVC(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+{
+    nsvc * vc = (nsvc *)data;
+
+    if (flag == COMM_ERR_CLOSING)
+        return;
+
+    if (flag != COMM_OK || len <= 0) {
+        comm_close(fd);
+        return;
+    }
+
+    vc->msg.size += len;
+
+    if (vc->msg.size < vc->msglen) {
+        comm_read(fd, buf + len, vc->msglen - vc->msg.size, idnsReadVC, vc);
+        return;
+    }
+
+    debug(78, 3) ("idnsReadVC: FD %d: received %d bytes via tcp from %s.\n",
+                  fd,
+                  (int) vc->msg.size,
+                  inet_ntoa(nameservers[vc->ns].S.sin_addr));
+
+    idnsGrokReply(vc->msg.buf, vc->msg.size);
+    memBufClean(&vc->msg);
+    comm_read(fd, (char *)&vc->msglen, 2 , idnsReadVCHeader, vc);
+}
+
+static void
+idnsReadVCHeader(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+{
+    nsvc * vc = (nsvc *)data;
+
+    if (flag == COMM_ERR_CLOSING)
+        return;
+
+    if (flag != COMM_OK || len <= 0) {
+        comm_close(fd);
+        return;
+    }
+
+    vc->read_msglen += len;
+
+    assert(vc->read_msglen <= 2);
+
+    if (vc->read_msglen < 2) {
+        comm_read(fd, buf + len, 2 - vc->read_msglen, idnsReadVCHeader, vc);
+        return;
+    }
+
+    vc->read_msglen = 0;
+
+    vc->msglen = ntohs(vc->msglen);
+
+    memBufInit(&vc->msg, vc->msglen, vc->msglen);
+    comm_read(fd, vc->msg.buf, vc->msglen, idnsReadVC, vc);
+}
+
 /*
  * rcode < 0 indicates an error, rocde >= 0 indicates success
  */
@@ -795,6 +1004,8 @@ void
 idnsInit(void)
 {
     static int init = 0;
+
+    CBDATA_INIT_TYPE(nsvc);
 
     if (DnsSocket < 0) {
         int port;
