@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.405 2005/05/14 00:51:10 hno Exp $
+ * $Id: comm.cc,v 1.406 2005/05/14 02:39:40 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1442,8 +1442,6 @@ commSetTimeout(int fd, int timeout, PF * handler, void *data)
         F->timeout_handler = NULL;
         F->timeout = 0;
     } else {
-        assert(handler || F->timeout_handler);
-
         if (handler) {
             cbdataReferenceDone(F->timeout_data);
             F->timeout_handler = handler;
