@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.388 2005/01/03 16:08:26 robertc Exp $
+ * $Id: stat.cc,v 1.389 2005/05/15 10:33:49 serassio Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -34,7 +34,9 @@
 
 #include "squid.h"
 #include "StoreClient.h"
+#include "AuthUserRequest.h"
 #include "Store.h"
+#include "HttpRequest.h"
 #include "MemObject.h"
 #include "fde.h"
 #include "mem_node.h"
@@ -1637,9 +1639,21 @@ statClientRequests(StoreEntry * s)
                           (long int) http->start.tv_sec,
                           (int) http->start.tv_usec,
                           tvSubDsec(http->start, current_time));
-#if DELAY_POOLS
 
+        if (http->request->auth_user_request) {
+            const char *p;
+
+            p = http->request->auth_user_request->username();
+
+            if (!p)
+                p = "-";
+
+            storeAppendPrintf(s, "username %s\n", p);
+        }
+
+#if DELAY_POOLS
         storeAppendPrintf(s, "delay_pool %d\n", DelayId::DelayClient(http) >> 16);
+
 #endif
 
         storeAppendPrintf(s, "\n");
