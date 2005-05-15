@@ -1,6 +1,6 @@
 
 /*
- * $Id: List.h,v 1.5 2005/05/08 23:28:44 hno Exp $
+ * $Id: List.h,v 1.6 2005/05/14 20:00:25 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -82,7 +82,7 @@ public:
 	return entry->element;
     }
     bool end() {
-	return next_entry != NULL;
+	return next_entry == NULL;
     }
 
 private:
