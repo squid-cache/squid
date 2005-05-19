@@ -3,6 +3,7 @@
  *
  * AUTHOR: Robert Collins. Based on ncsa_auth.c by Arjan de Vet
  * <Arjan.deVet@adv.iae.nl>
+ * LDAP backend extension by Flavio Pescuma, MARA Systems AB <flavio@marasystems.com>
  *
  * Example digest authentication program for Squid, based on the original
  * proxy_auth code from client_side.c, written by
@@ -31,9 +32,30 @@
 
 #include "digest_common.h"
 #include "text_backend.h"
+#include "ldap_backend.h"
+#define PROGRAM_NAME "digest_pw_auth"
+char *backend;
+
+
+void
+usage()
+{
+    fprintf(stderr, "\n\t\tYou need at least to specify the backend database\n");
+    fprintf(stderr, "\t\t%s -D LDAP or file\n", PROGRAM_NAME);
+    exit(1);
+}
+
+void
+GetHHA1(RequestData * requestData)
+{
+    if (strcmp(backend, "LDAP") == 0)
+	LDAPHHA1(requestData);
+    else if (strcmp(backend, "file") == 0)
+	TextHHA1(requestData);
+}
 
 static void
-ParseBuffer(char *buf, RequestData *requestData)
+ParseBuffer(char *buf, RequestData * requestData)
 {
     char *p;
     requestData->parsed = 0;
@@ -49,11 +71,11 @@ ParseBuffer(char *buf, RequestData *requestData)
 }
 
 static void
-OutputHHA1(RequestData *requestData)
+OutputHHA1(RequestData * requestData)
 {
     requestData->error = 0;
     GetHHA1(requestData);
-    if (requestData->error) {    
+    if (requestData->error) {
 	printf("ERR No such user\n");
 	return;
     }
@@ -64,12 +86,31 @@ static void
 DoOneRequest(char *buf)
 {
     RequestData requestData;
-    ParseBuffer (buf, &requestData);
+    ParseBuffer(buf, &requestData);
     if (!requestData.parsed) {
-	printf ("ERR\n");
+	printf("ERR\n");
 	return;
     }
     OutputHHA1(&requestData);
+}
+
+void
+ProcessArguments(int argc, char **argv)
+{
+    int i = 0;
+    if ((strncmp(argv[1], "-D", 2) != 0) || (argc < 3))
+	usage();
+    else {
+	backend = argv[2];
+	if (strcmp(backend, "LDAP") == 0) {
+	    i = LDAPArguments(argc, argv);
+	    if (i)
+		exit(i);
+	} else if (strcmp(backend, "file") == 0)
+	    TextArguments(argc, argv);
+	else
+	    usage();
+    }
 }
 
 int
@@ -77,8 +118,8 @@ main(int argc, char **argv)
 {
     char buf[256];
     setbuf(stdout, NULL);
-    ProcessArguments (argc, argv);
+    ProcessArguments(argc, argv);
     while (fgets(buf, 256, stdin) != NULL)
-	DoOneRequest (buf);
+	DoOneRequest(buf);
     exit(0);
 }

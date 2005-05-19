@@ -41,6 +41,7 @@
 typedef struct _request_data {
     char *user;
     char *realm;
+    char *password;
     HASHHEX HHA1;
     int parsed;
     int error;
@@ -51,6 +52,6 @@ typedef struct _request_data {
  * #define ProcessArguments(A, B) MyHandleArguments(A,B)
  * #define GetHHA1(A) MyGetHHA1(A)
  */
-typedef void HandleArguments (int, char **);
+typedef void HandleArguments(int, char **);
 typedef void HHA1Creator(RequestData *);
 #endif /* _SQUID_DIGEST_COMMON_H_ */
