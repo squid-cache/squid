@@ -34,7 +34,7 @@
 static hash_table *hash = NULL;
 static HASHFREE my_free;
 static char *passwdfile = NULL;
-static int ha1mode=0;
+static int ha1mode = 0;
 static time_t change_time = 0;
 
 typedef struct _user_data {
@@ -101,7 +101,7 @@ read_passwd_file(const char *passwdfile, int ha1mode)
 	    }
 	    u = xmalloc(sizeof(*u));
 	    if (realm) {
-		int len = strlen(user)+strlen(realm)+2;
+		int len = strlen(user) + strlen(realm) + 2;
 		u->hash.key = malloc(len);
 		snprintf(u->hash.key, len, "%s:%s", user, realm);
 	    } else {
@@ -112,25 +112,25 @@ read_passwd_file(const char *passwdfile, int ha1mode)
 	    else
 		u->passwd = xstrdup(passwd);
 	    hash_join(hash, &u->hash);
-  	}
+	}
     }
     fclose(f);
 }
 
 /* replace when changing the backend */
 void
-TextArguments (int argc, char **argv)
+TextArguments(int argc, char **argv)
 {
     struct stat sb;
-    if(argc == 2)
-        passwdfile = argv[1];
-    if((argc == 3) && !strcmp("-c", argv[1])){
-        ha1mode=1;
-        passwdfile = argv[2];
+    if (argc == 2)
+	passwdfile = argv[1];
+    if ((argc == 3) && !strcmp("-c", argv[1])) {
+	ha1mode = 1;
+	passwdfile = argv[2];
     }
     if (!passwdfile) {
-        fprintf(stderr, "Usage: digest_pw_auth [OPTIONS] <passwordfile>\n");
-        fprintf(stderr, "  -c   accept digest hashed passwords rather than plaintext in passwordfile\n");
+	fprintf(stderr, "Usage: digest_pw_auth [OPTIONS] <passwordfile>\n");
+	fprintf(stderr, "  -c   accept digest hashed passwords rather than plaintext in passwordfile\n");
 	exit(1);
     }
     if (stat(passwdfile, &sb) != 0) {
@@ -139,8 +139,8 @@ TextArguments (int argc, char **argv)
     }
 }
 
-const user_data *
-GetPassword (RequestData *requestData)
+static const user_data *
+GetPassword(RequestData * requestData)
 {
     user_data *u;
     struct stat sb;
@@ -157,23 +157,23 @@ GetPassword (RequestData *requestData)
     len = snprintf(buf, sizeof(buf), "%s:%s", requestData->user, requestData->realm);
     if (len >= sizeof(buf))
 	return NULL;
-    u = (user_data *)hash_lookup(hash, buf);
+    u = (user_data *) hash_lookup(hash, buf);
     if (u)
 	return u;
-    u = (user_data *)hash_lookup(hash, requestData->user);
+    u = (user_data *) hash_lookup(hash, requestData->user);
     return u;
 }
 
 void
-TextHHA1(RequestData *requestData)
+TextHHA1(RequestData * requestData)
 {
-    const user_data *u = GetPassword (requestData);
+    const user_data *u = GetPassword(requestData);
     if (!u) {
 	requestData->error = -1;
 	return;
     }
     if (u->ha1) {
-	xstrncpy (requestData->HHA1, u->ha1, sizeof (requestData->HHA1));
+	xstrncpy(requestData->HHA1, u->ha1, sizeof(requestData->HHA1));
     } else {
 	HASH HA1;
 	DigestCalcHA1("md5", requestData->user, requestData->realm, u->passwd, NULL, NULL, HA1, requestData->HHA1);

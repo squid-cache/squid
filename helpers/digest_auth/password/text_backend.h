@@ -21,7 +21,5 @@
 
 #include "digest_common.h"
 
-extern void TextArguments (int argc, char **argv);
-#define ProcessArguments(A, B) TextArguments(A,B)
-extern void TextHHA1(RequestData *requestData);
-#define GetHHA1(A) TextHHA1(A)
+extern void TextArguments(int argc, char **argv);
+extern void TextHHA1(RequestData * requestData);
