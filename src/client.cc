@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.108 2005/01/06 13:16:39 serassio Exp $
+ * $Id: client.cc,v 1.109 2005/05/26 09:44:30 hno Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -100,8 +100,8 @@ main(int argc, char *argv[])
     int opt_noaccept = 0;
     int opt_verbose = 0;
     const char *hostname, *localhost;
-    char url[BUFSIZ], msg[BUFSIZ], buf[BUFSIZ];
-    char extra_hdrs[BUFSIZ];
+    char url[BUFSIZ], msg[49152], buf[BUFSIZ];
+    char extra_hdrs[32768];
     const char *method = "GET";
     extern char *optarg;
     time_t ims = 0;
