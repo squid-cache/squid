@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.104 2005/05/06 21:34:07 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.105 2005/05/28 20:01:06 serassio Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -556,9 +556,27 @@ httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_e
 
         if (e->id == HDR_CONTENT_LENGTH && (e2 = httpHeaderFindEntry(hdr, e->id)) != NULL) {
             if (e->value.cmp(e2->value.buf()) != 0) {
-                debug(55, 1) ("WARNING: found two conflicting content-length headers in {%s}\n", getStringPrefix(header_start, header_end));
-                httpHeaderEntryDestroy(e);
-                return httpHeaderReset(hdr);
+                ssize_t l1, l2;
+                debug(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2) ("WARNING: found two conflicting content-length headers in {%s}\n", getStringPrefix(header_start, header_end));
+
+                if (!Config.onoff.relaxed_header_parser) {
+                    httpHeaderEntryDestroy(e);
+                    return httpHeaderReset(hdr);
+                }
+
+                if (!httpHeaderParseSize(e->value.buf(), &l1)) {
+                    debug(55, 1)("WARNING: Unparseable content-length '%s'\n", e->value.buf());
+                    httpHeaderEntryDestroy(e);
+                    continue;
+                } else if (!httpHeaderParseSize(e2->value.buf(), &l2)) {
+                    debug(55, 1)("WARNING: Unparseable content-length '%s'\n", e2->value.buf());
+                    httpHeaderDelById(hdr, e2->id);
+                } else if (l1 > l2) {
+                    httpHeaderDelById(hdr, e2->id);
+                } else {
+                    httpHeaderEntryDestroy(e);
+                    continue;
+                }
             } else {
                 debug(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2)
                 ("NOTICE: found double content-length header\n");
