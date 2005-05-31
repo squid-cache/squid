@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.31 2005/03/19 19:43:39 serassio Exp $
+ * $Id: ssl_support.cc,v 1.32 2005/05/31 16:19:56 hno Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
@@ -653,8 +653,17 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
     }
 
     if (clientCA) {
+        STACK_OF(X509_NAME) *cert_names;
         debug(83, 9) ("Set client certifying authority list.\n");
-        SSL_CTX_set_client_CA_list(sslContext, SSL_load_client_CA_file(clientCA));
+        cert_names = SSL_load_client_CA_file(clientCA);
+
+        if (cert_names == NULL) {
+            debug(83, 1) ("Error loading the client CA certificates from '%s\': %s\n", clientCA, ERR_error_string(ERR_get_error(), NULL));
+            goto error;
+        }
+
+        ERR_clear_error();
+        SSL_CTX_set_client_CA_list(sslContext, cert_names);
 
         if (fl & SSL_FLAG_DELAYED_AUTH) {
             debug(83, 9) ("Not requesting client certificates until acl processing requires one\n");
