@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.474 2005/05/06 22:35:46 wessels Exp $
+ * $Id: cache_cf.cc,v 1.475 2005/06/03 15:24:14 serassio Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1456,24 +1456,28 @@ parse_cachedir(_SquidConfig::_cacheSwap * swap)
 static const char *
 peer_type_str(const peer_t type)
 {
+    const char * result;
+
     switch (type) {
 
     case PEER_PARENT:
-        return "parent";
+        result = "parent";
         break;
 
     case PEER_SIBLING:
-        return "sibling";
+        result = "sibling";
         break;
 
     case PEER_MULTICAST:
-        return "multicast";
+        result = "multicast";
         break;
 
     default:
-        return "unknown";
+        result = "unknown";
         break;
     }
+
+    return result;
 }
 
 static void

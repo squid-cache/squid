@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.102 2005/01/03 16:08:26 robertc Exp $
+ * $Id: peer_digest.cc,v 1.103 2005/06/03 15:24:14 serassio Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -53,9 +53,9 @@ static EVH peerDigestCheck;
 static void peerDigestRequest(PeerDigest * pd);
 static STCB peerDigestHandleReply;
 static int peerDigestFetchReply(void *, char *, ssize_t);
-static int peerDigestSwapInHeaders(void *, char *, ssize_t);
-static int peerDigestSwapInCBlock(void *, char *, ssize_t);
-static int peerDigestSwapInMask(void *, char *, ssize_t);
+int peerDigestSwapInHeaders(void *, char *, ssize_t);
+int peerDigestSwapInCBlock(void *, char *, ssize_t);
+int peerDigestSwapInMask(void *, char *, ssize_t);
 static int peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const char *step_name);
 static void peerDigestFetchStop(DigestFetchState * fetch, char *buf, const char *reason);
 static void peerDigestFetchAbort(DigestFetchState * fetch, char *buf, const char *reason);
@@ -596,7 +596,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 }
 
 /* fetch headers from disk, pass on to SwapInCBlock */
-static int
+int
 peerDigestSwapInHeaders(void *data, char *buf, ssize_t size)
 {
     DigestFetchState *fetch = (DigestFetchState *)data;
@@ -636,7 +636,7 @@ peerDigestSwapInHeaders(void *data, char *buf, ssize_t size)
     fatal("peerDigestSwapInHeaders() - shouldn't get here!\n");
 }
 
-static int
+int
 peerDigestSwapInCBlock(void *data, char *buf, ssize_t size)
 {
     DigestFetchState *fetch = (DigestFetchState *)data;
@@ -676,7 +676,7 @@ peerDigestSwapInCBlock(void *data, char *buf, ssize_t size)
     fatal("peerDigestSwapInCBlock(): shouldn't get here!\n");
 }
 
-static int
+int
 peerDigestSwapInMask(void *data, char *buf, ssize_t size)
 {
     DigestFetchState *fetch = (DigestFetchState *)data;
