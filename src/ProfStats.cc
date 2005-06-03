@@ -1,6 +1,6 @@
 
 /*
- * $Id: ProfStats.cc,v 1.5 2003/03/10 04:56:36 robertc Exp $
+ * $Id: ProfStats.cc,v 1.6 2005/06/03 15:00:55 serassio Exp $
  *
  * DEBUG: section 81     CPU Profiling Routines
  * AUTHOR: Andres Kroonmaa
@@ -111,7 +111,7 @@ static void
 xprof_show_item(StoreEntry * sentry, const char *name, xprof_stats_data * hist)
 {
     storeAppendPrintf(sentry,
-                      "%s\t %llu\t %llu\t %llu\t %llu\t %llu\t %.2f\t %6.3f\t\n",
+                      "%s\t %" PRIu64 "\t %" PRIu64 "\t %" PRIu64 "\t %" PRIu64 "\t %" PRIu64 "\t %.2f\t %6.3f\t\n",
                       name,
                       hist->count,
                       hist->summ,
@@ -141,7 +141,7 @@ xprof_summary_item(StoreEntry * sentry, char const *descr, TimersArray * list)
 
     storeAppendPrintf(sentry, "\n%s:", descr);
 
-    storeAppendPrintf(sentry, " (Cumulated time: %llu, %.2f sec)\n",
+    storeAppendPrintf(sentry, " (Cumulated time: %" PRIu64 ", %.2f sec)\n",
                       show->delta,
                       time_frame
                      );
@@ -236,7 +236,7 @@ xprof_summary(StoreEntry * sentry)
                       "  (CPU times are in arbitrary units, most probably in CPU clock ticks)\n");
     storeAppendPrintf(sentry,
                       "Probe Name\t Event Count\t last Interval \t Avg Interval \t since squid start \t (since system boot) \n");
-    storeAppendPrintf(sentry, "Total\t %lu\t %llu \t %llu \t %llu \t %llu\n",
+    storeAppendPrintf(sentry, "Total\t %lu\t %" PRIu64 " \t %" PRIu64 " \t %" PRIu64 " \t %" PRIu64 "\n",
                       (long unsigned) xprof_events,
                       xprof_delta,
                       xprof_average_delta,
