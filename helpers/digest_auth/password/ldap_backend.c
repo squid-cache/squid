@@ -9,9 +9,41 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include "ldap_backend.h"
+
+#ifdef _SQUID_MSWIN_ /* Native Windows port and MinGW */
+
+#define snprintf _snprintf
+#include <windows.h>
+#include <winldap.h>
+#ifndef LDAPAPI
+#define LDAPAPI __cdecl
+#endif
+#ifdef LDAP_VERSION3
+#ifndef LDAP_OPT_X_TLS
+#define LDAP_OPT_X_TLS 0x6000
+#endif
+/* Some tricks to allow dynamic bind with ldap_start_tls_s entry point at
+   run time.
+ */
+#undef ldap_start_tls_s
+#if LDAP_UNICODE
+#define LDAP_START_TLS_S "ldap_start_tls_sW"
+typedef WINLDAPAPI ULONG (LDAPAPI * PFldap_start_tls_s) (IN PLDAP, OUT PULONG, OUT LDAPMessage **, IN PLDAPControlW *, IN PLDAPControlW *);
+#else
+#define LDAP_START_TLS_S "ldap_start_tls_sA"
+typedef WINLDAPAPI ULONG (LDAPAPI * PFldap_start_tls_s) (IN PLDAP, OUT PULONG, OUT LDAPMessage **, IN PLDAPControlA *, IN PLDAPControlA *);
+#endif /* LDAP_UNICODE */
+PFldap_start_tls_s Win32_ldap_start_tls_s;
+#define ldap_start_tls_s(l,s,c) Win32_ldap_start_tls_s(l,NULL,NULL,s,c)
+#endif /* LDAP_VERSION3 */
+
+#else
+
 #include <lber.h>
 #include <ldap.h>
-#include "ldap_backend.h"
+
+#endif
 #define PROGRAM_NAME "digest_pw_auth(LDAP_backend)"
 
 /* Globals */
@@ -270,6 +302,22 @@ ldapconnect(void)
 {
     int rc;
 
+/* On Windows ldap_start_tls_s is available starting from Windows XP, 
+   so we need to bind at run-time with the function entry point
+ */
+#ifdef _SQUID_MSWIN_
+    if (use_tls) {
+
+    	HMODULE WLDAP32Handle;
+
+    	WLDAP32Handle = GetModuleHandle("wldap32");
+        if ((Win32_ldap_start_tls_s = (PFldap_start_tls_s) GetProcAddress(WLDAP32Handle, LDAP_START_TLS_S)) == NULL) {
+            fprintf( stderr, PROGRAM_NAME ": ERROR: TLS (-Z) not supported on this platform.\n");
+	    exit(1);
+        }
+    }
+#endif
+
     if (ld == NULL) {
 #if HAS_URI_SUPPORT
 	if (strstr(ldapServer, "://") != NULL) {
@@ -306,7 +354,7 @@ ldapconnect(void)
 	    version = LDAP_VERSION2;
 	}
 	if (ldap_set_option(ld, LDAP_OPT_PROTOCOL_VERSION, &version)
-	    != LDAP_OPT_SUCCESS) {
+	    != LDAP_SUCCESS) {
 	    fprintf(stderr, "Could not set LDAP_OPT_PROTOCOL_VERSION %d\n",
 		version);
 	    ldap_unbind(ld);
