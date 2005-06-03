@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.13 2005/04/18 21:52:41 hno Exp $
+ * $Id: ESI.cc,v 1.14 2005/06/03 15:24:14 serassio Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -553,6 +553,8 @@ esiStreamStatus (clientStreamNode *thisNode, clientHttpRequest *http)
 static int
 esiAlwaysPassthrough(http_status sline)
 {
+    int result;
+
     switch (sline) {
 
     case HTTP_CONTINUE: /* Should never reach us... but squid needs to alter to accomodate this */
@@ -564,13 +566,15 @@ esiAlwaysPassthrough(http_status sline)
     case HTTP_NO_CONTENT: /* no body, no esi */
 
     case HTTP_NOT_MODIFIED: /* ESI does not affect assembled page headers, so 304s are valid */
-        return 1;
+        result = 1;
         /* unreached */
         break;
 
     default:
-        return 0;
+        result = 0;
     }
+
+    return result;
 }
 
 void
