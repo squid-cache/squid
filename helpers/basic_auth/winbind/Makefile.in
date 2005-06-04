@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.44 2005/05/25 00:10:53 hno Exp $
+#  $Id: Makefile.in,v 1.45 2005/06/04 00:10:47 hno Exp $
 #
 
 SOURCES = $(wb_auth_SOURCES)
@@ -203,6 +203,7 @@ USE_ESI_TRUE = @USE_ESI_TRUE@
 USE_SNMP_FALSE = @USE_SNMP_FALSE@
 USE_SNMP_TRUE = @USE_SNMP_TRUE@
 VERSION = @VERSION@
+WIN32_PSAPI = @WIN32_PSAPI@
 XTRA_LIBS = @XTRA_LIBS@
 XTRA_OBJS = @XTRA_OBJS@
 ac_ct_CC = @ac_ct_CC@

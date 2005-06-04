@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.47 2005/05/25 00:10:40 hno Exp $
+#  $Id: Makefile.in,v 1.48 2005/06/04 00:10:34 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -188,6 +188,7 @@ USE_ESI_TRUE = @USE_ESI_TRUE@
 USE_SNMP_FALSE = @USE_SNMP_FALSE@
 USE_SNMP_TRUE = @USE_SNMP_TRUE@
 VERSION = @VERSION@
+WIN32_PSAPI = @WIN32_PSAPI@
 XTRA_LIBS = @XTRA_LIBS@
 XTRA_OBJS = @XTRA_OBJS@
 ac_ct_CC = @ac_ct_CC@
