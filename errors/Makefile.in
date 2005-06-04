@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.62 2005/05/25 00:10:40 hno Exp $
+# $Id: Makefile.in,v 1.63 2005/06/04 00:10:35 hno Exp $
 #
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -180,6 +180,7 @@ USE_ESI_TRUE = @USE_ESI_TRUE@
 USE_SNMP_FALSE = @USE_SNMP_FALSE@
 USE_SNMP_TRUE = @USE_SNMP_TRUE@
 VERSION = @VERSION@
+WIN32_PSAPI = @WIN32_PSAPI@
 XTRA_LIBS = @XTRA_LIBS@
 XTRA_OBJS = @XTRA_OBJS@
 ac_ct_CC = @ac_ct_CC@

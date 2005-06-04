@@ -641,6 +641,9 @@
 /* Define to 1 if you have the `vsnprintf' function. */
 #undef HAVE_VSNPRINTF
 
+/* Define if you have PSAPI.DLL on Windows systems */
+#undef HAVE_WIN32_PSAPI
+
 /* __int64 is defined in system headers */
 #undef HAVE___INT64
 
