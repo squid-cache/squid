@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.85 2005/04/18 21:52:42 hno Exp $
+ * $Id: icp_v2.cc,v 1.86 2005/06/05 15:12:46 serassio Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -447,10 +447,12 @@ doV2Query(int fd, struct sockaddr_in from, char *buf, icp_common_t header)
     if (!icp_request)
         return;
 
+    requestLink(icp_request);
+
     if (!icpAccessAllowed(&from, icp_request))
     {
         icpDenyAccess(&from, url, header.reqnum, fd);
-        requestDestroy(icp_request);
+        requestUnlink(icp_request);
         return;
     }
 
@@ -480,6 +482,8 @@ doV2Query(int fd, struct sockaddr_in from, char *buf, icp_common_t header)
     state->src_rtt = src_rtt;
 
     StoreEntry::getPublic (state, url, METHOD_GET);
+
+    requestUnlink(icp_request);
 }
 
 void
