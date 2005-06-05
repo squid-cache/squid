@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.40 2005/05/27 07:18:08 hno Exp $
+ * $Id: ipc.cc,v 1.41 2005/06/04 23:57:05 hno Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -377,8 +377,10 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     for (x = 3; x < SQUID_MAXFD; x++)
         close(x);
 
-    if (opt_no_daemon)
+    if (opt_no_daemon) {
         squid_signal(SIGINT, SIG_IGN, SA_RESETHAND);
+        squid_signal(SIGHUP, SIG_IGN, SA_RESETHAND);
+    }
 
     execvp(prog, (char *const *) args);
 
