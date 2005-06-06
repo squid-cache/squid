@@ -1,6 +1,6 @@
 
 /*
- * $Id: IPInterception.cc,v 1.9 2004/12/21 17:28:29 robertc Exp $
+ * $Id: IPInterception.cc,v 1.10 2005/06/05 22:59:38 hno Exp $
  *
  * DEBUG: section 89    NAT / IP Interception 
  * AUTHOR: Robert Collins
@@ -99,7 +99,14 @@ clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct s
     {
         int save_errno;
         enter_suid();
+#ifdef IPL_NAME
+
+        natfd = open(IPL_NAME, O_RDONLY, 0);
+#else
+
         natfd = open(IPL_NAT, O_RDONLY, 0);
+#endif
+
         save_errno = errno;
         leave_suid();
         errno = save_errno;
