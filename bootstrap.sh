@@ -60,6 +60,9 @@ ltver=`find_version libtool ${ltversions}`
 # Set environment variable to tell automake which autoconf to use.
 AUTOCONF="autoconf${acver}" ; export AUTOCONF
 
+echo "automake : $amver"
+echo "autoconfg: $acver"
+echo "libtool  : $ltver"
 
 for dir in \
 	"" \
