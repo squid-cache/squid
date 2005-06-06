@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.519 2005/05/05 15:44:45 serassio Exp $
+ * $Id: structs.h,v 1.520 2005/06/05 23:29:02 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -580,6 +580,7 @@ struct _SquidConfig
         int via;
         int emailErrData;
         int httpd_suppress_version_string;
+        int global_internal_static;
     }
 
     onoff;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.684 2005/03/19 19:43:39 serassio Exp $
+ * $Id: client_side.cc,v 1.685 2005/06/05 23:29:02 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1765,7 +1765,6 @@ prepareAcceleratedURL(ConnStateData::Pointer & conn, clientHttpRequest *http, ch
     if (internalCheck(url)) {
         /* prepend our name & port */
         http->uri = xstrdup(internalLocalUri(NULL, url));
-        http->flags.internal = 1;
     } else if (vhost && (host = mime_get_header(req_hdr, "Host")) != NULL) {
         int url_sz = strlen(url) + 32 + Config.appendDomainLen +
                      strlen(host);
@@ -1813,11 +1812,7 @@ prepareTransparentURL(ConnStateData::Pointer & conn, clientHttpRequest *http, ch
 
     /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
 
-    if (internalCheck(url)) {
-        /* prepend our name & port */
-        http->uri = xstrdup(internalLocalUri(NULL, url));
-        http->flags.internal = 1;
-    } else if ((host = mime_get_header(req_hdr, "Host")) != NULL) {
+    if ((host = mime_get_header(req_hdr, "Host")) != NULL) {
         int url_sz = strlen(url) + 32 + Config.appendDomainLen +
                      strlen(host);
         http->uri = (char *)xcalloc(url_sz, 1);
@@ -1999,7 +1994,6 @@ parseHttpRequest(ConnStateData::Pointer & conn, method_t * method_p,
     } else if (internalCheck(url)) {
         /* prepend our name & port */
         http->uri = xstrdup(internalLocalUri(NULL, url));
-        http->flags.internal = 1;
         http->flags.accel = 1;
     }
 
@@ -2231,23 +2225,21 @@ clientProcessRequest(ConnStateData::Pointer &conn, ClientSocketContext *context,
 
     request->flags.transparent = http->flags.transparent;
 
-    if (!http->flags.internal) {
-        if (internalCheck(request->urlpath.buf())) {
-            if (internalHostnameIs(request->host) &&
-                    request->port == getMyPort()) {
-                http->flags.internal = 1;
-            } else if (internalStaticCheck(request->urlpath.buf())) {
-                xstrncpy(request->host, internalHostname(),
-                         SQUIDHOSTNAMELEN);
-                request->port = getMyPort();
-                http->flags.internal = 1;
-            }
+    if (internalCheck(request->urlpath.buf())) {
+        if (internalHostnameIs(request->host) &&
+                request->port == getMyPort()) {
+            http->flags.internal = 1;
+        } else if (Config.onoff.global_internal_static && internalStaticCheck(request->urlpath.buf())) {
+            xstrncpy(request->host, internalHostname(),
+                     SQUIDHOSTNAMELEN);
+            request->port = getMyPort();
+            http->flags.internal = 1;
         }
+    }
 
-        if (http->flags.internal) {
-            request->protocol = PROTO_HTTP;
-            request->login[0] = '\0';
-        }
+    if (http->flags.internal) {
+        request->protocol = PROTO_HTTP;
+        request->login[0] = '\0';
     }
 
     request->flags.internal = http->flags.internal;
