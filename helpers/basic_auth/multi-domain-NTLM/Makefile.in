@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.51 2005/06/04 00:10:47 hno Exp $
+#  $Id: Makefile.in,v 1.52 2005/06/06 00:39:56 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -84,6 +84,7 @@ CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CRYPTLIB = @CRYPTLIB@
 CXX = @CXX@
+CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
@@ -93,6 +94,7 @@ DIGEST_AUTH_HELPERS = @DIGEST_AUTH_HELPERS@
 DISK_LIBS = @DISK_LIBS@
 DISK_LINKOBJS = @DISK_LINKOBJS@
 DISK_PROGRAMS = @DISK_PROGRAMS@
+ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
@@ -118,17 +120,21 @@ ERR_DEFAULT_LANGUAGE = @ERR_DEFAULT_LANGUAGE@
 ERR_LANGUAGES = @ERR_LANGUAGES@
 EXEEXT = @EXEEXT@
 EXTERNAL_ACL_HELPERS = @EXTERNAL_ACL_HELPERS@
+F77 = @F77@
 FALSE = @FALSE@
+FFLAGS = @FFLAGS@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
+LIBADD_DL = @LIBADD_DL@
 LIBDLMALLOC = @LIBDLMALLOC@
 LIBOBJS = @LIBOBJS@
 LIBREGEX = @LIBREGEX@
 LIBS = @LIBS@
 LIBSASL = @LIBSASL@
+LIBTOOL = @LIBTOOL@
 LIB_LBER = @LIB_LBER@
 LIB_LDAP = @LIB_LDAP@
 LIB_MALLOC = @LIB_MALLOC@
@@ -158,6 +164,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PERL = @PERL@
+RANLIB = @RANLIB@
 REGEXLIB = @REGEXLIB@
 REPL_LIBS = @REPL_LIBS@
 REPL_OBJS = @REPL_OBJS@
@@ -191,8 +198,11 @@ VERSION = @VERSION@
 WIN32_PSAPI = @WIN32_PSAPI@
 XTRA_LIBS = @XTRA_LIBS@
 XTRA_OBJS = @XTRA_OBJS@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
+ac_ct_F77 = @ac_ct_F77@
+ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -291,6 +301,15 @@ uninstall-libexecSCRIPTS:
 	  echo " rm -f '$(DESTDIR)$(libexecdir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(libexecdir)/$$f"; \
 	done
+
+mostlyclean-libtool:
+	-rm -f *.lo
+
+clean-libtool:
+	-rm -rf .libs _libs
+
+distclean-libtool:
+	-rm -f libtool
 uninstall-info-am:
 tags: TAGS
 TAGS:
@@ -359,11 +378,11 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic mostlyclean-am
+clean-am: clean-generic clean-libtool mostlyclean-am
 
 distclean: distclean-am
 	-rm -f Makefile
-distclean-am: clean-am distclean-generic
+distclean-am: clean-am distclean-generic distclean-libtool
 
 dvi: dvi-am
 
@@ -391,7 +410,7 @@ maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-am
 
-mostlyclean-am: mostlyclean-generic
+mostlyclean-am: mostlyclean-generic mostlyclean-libtool
 
 pdf: pdf-am
 
@@ -403,14 +422,15 @@ ps-am:
 
 uninstall-am: uninstall-info-am uninstall-libexecSCRIPTS
 
-.PHONY: all all-am check check-am clean clean-generic distclean \
-	distclean-generic distdir dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am install-exec \
-	install-exec-am install-info install-info-am \
-	install-libexecSCRIPTS install-man install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
-	pdf-am ps ps-am uninstall uninstall-am uninstall-info-am \
+.PHONY: all all-am check check-am clean clean-generic clean-libtool \
+	distclean distclean-generic distclean-libtool distdir dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-data install-data-am install-exec install-exec-am \
+	install-info install-info-am install-libexecSCRIPTS \
+	install-man install-strip installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-generic mostlyclean-libtool pdf pdf-am \
+	ps ps-am uninstall uninstall-am uninstall-info-am \
 	uninstall-libexecSCRIPTS
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

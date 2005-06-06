@@ -110,8 +110,20 @@
    */
 #undef HAVE_DIRENT_H
 
+/* Define if you have the GNU dld library. */
+#undef HAVE_DLD
+
+/* Define to 1 if you have the `dlerror' function. */
+#undef HAVE_DLERROR
+
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
+
 /* Define to 1 if you have the `drand48' function. */
 #undef HAVE_DRAND48
+
+/* Define if you have the _dyld_func_lookup function. */
+#undef HAVE_DYLD
 
 /* Define to 1 if you have the <errno.h> header file. */
 #undef HAVE_ERRNO_H
@@ -443,6 +455,9 @@
 
 /* Define to 1 if you have the `setsid' function. */
 #undef HAVE_SETSID
+
+/* Define if you have the shl_load function. */
+#undef HAVE_SHL_LOAD
 
 /* short is defined in system headers */
 #undef HAVE_SHORT

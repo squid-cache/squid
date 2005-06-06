@@ -16,7 +16,7 @@
 
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.40 2005/06/04 00:10:51 hno Exp $
+#  $Id: Makefile.in,v 1.41 2005/06/06 00:40:01 hno Exp $
 #
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -85,6 +85,7 @@ CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CRYPTLIB = @CRYPTLIB@
 CXX = @CXX@
+CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
@@ -94,6 +95,7 @@ DIGEST_AUTH_HELPERS = @DIGEST_AUTH_HELPERS@
 DISK_LIBS = @DISK_LIBS@
 DISK_LINKOBJS = @DISK_LINKOBJS@
 DISK_PROGRAMS = @DISK_PROGRAMS@
+ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
@@ -119,17 +121,21 @@ ERR_DEFAULT_LANGUAGE = @ERR_DEFAULT_LANGUAGE@
 ERR_LANGUAGES = @ERR_LANGUAGES@
 EXEEXT = @EXEEXT@
 EXTERNAL_ACL_HELPERS = @EXTERNAL_ACL_HELPERS@
+F77 = @F77@
 FALSE = @FALSE@
+FFLAGS = @FFLAGS@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
+LIBADD_DL = @LIBADD_DL@
 LIBDLMALLOC = @LIBDLMALLOC@
 LIBOBJS = @LIBOBJS@
 LIBREGEX = @LIBREGEX@
 LIBS = @LIBS@
 LIBSASL = @LIBSASL@
+LIBTOOL = @LIBTOOL@
 LIB_LBER = @LIB_LBER@
 LIB_LDAP = @LIB_LDAP@
 LIB_MALLOC = @LIB_MALLOC@
@@ -159,6 +165,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PERL = @PERL@
+RANLIB = @RANLIB@
 REGEXLIB = @REGEXLIB@
 REPL_LIBS = @REPL_LIBS@
 REPL_OBJS = @REPL_OBJS@
@@ -192,8 +199,11 @@ VERSION = @VERSION@
 WIN32_PSAPI = @WIN32_PSAPI@
 XTRA_LIBS = @XTRA_LIBS@
 XTRA_OBJS = @XTRA_OBJS@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
+ac_ct_F77 = @ac_ct_F77@
+ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -268,6 +278,15 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
+
+mostlyclean-libtool:
+	-rm -f *.lo
+
+clean-libtool:
+	-rm -rf .libs _libs
+
+distclean-libtool:
+	-rm -f libtool
 uninstall-info-am:
 
 # This directory's subdirectories are mostly independent; you can cd
@@ -475,11 +494,12 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-recursive
 
-clean-am: clean-generic mostlyclean-am
+clean-am: clean-generic clean-libtool mostlyclean-am
 
 distclean: distclean-recursive
 	-rm -f Makefile
-distclean-am: clean-am distclean-generic distclean-tags
+distclean-am: clean-am distclean-generic distclean-libtool \
+	distclean-tags
 
 dvi: dvi-recursive
 
@@ -507,7 +527,7 @@ maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-recursive
 
-mostlyclean-am: mostlyclean-generic
+mostlyclean-am: mostlyclean-generic mostlyclean-libtool
 
 pdf: pdf-recursive
 
@@ -522,14 +542,15 @@ uninstall-am: uninstall-info-am
 uninstall-info: uninstall-info-recursive
 
 .PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am check check-am \
-	clean clean-generic clean-recursive ctags ctags-recursive \
-	distclean distclean-generic distclean-recursive distclean-tags \
-	distdir dvi dvi-am html html-am info info-am install \
-	install-am install-data install-data-am install-exec \
-	install-exec-am install-info install-info-am install-man \
-	install-strip installcheck installcheck-am installdirs \
-	installdirs-am maintainer-clean maintainer-clean-generic \
-	maintainer-clean-recursive mostlyclean mostlyclean-generic \
+	clean clean-generic clean-libtool clean-recursive ctags \
+	ctags-recursive distclean distclean-generic distclean-libtool \
+	distclean-recursive distclean-tags distdir dvi dvi-am html \
+	html-am info info-am install install-am install-data \
+	install-data-am install-exec install-exec-am install-info \
+	install-info-am install-man install-strip installcheck \
+	installcheck-am installdirs installdirs-am maintainer-clean \
+	maintainer-clean-generic maintainer-clean-recursive \
+	mostlyclean mostlyclean-generic mostlyclean-libtool \
 	mostlyclean-recursive pdf pdf-am ps ps-am tags tags-recursive \
 	uninstall uninstall-am uninstall-info-am
 
