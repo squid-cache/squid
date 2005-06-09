@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.505 2005/04/18 21:52:43 hno Exp $
+ * $Id: protos.h,v 1.506 2005/06/09 07:07:30 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -393,6 +393,7 @@ SQUIDCEXTERN void httpHeaderPackInto(const HttpHeader * hdr, Packer * p);
 SQUIDCEXTERN int httpHeaderHas(const HttpHeader * hdr, http_hdr_type type);
 SQUIDCEXTERN void httpHeaderPutInt(HttpHeader * hdr, http_hdr_type type, int number);
 SQUIDCEXTERN void httpHeaderPutTime(HttpHeader * hdr, http_hdr_type type, time_t htime);
+SQUIDCEXTERN void httpHeaderInsertTime(HttpHeader * hdr, http_hdr_type type, time_t htime);
 SQUIDCEXTERN void httpHeaderPutStr(HttpHeader * hdr, http_hdr_type type, const char *str);
 SQUIDCEXTERN void httpHeaderPutAuth(HttpHeader * hdr, const char *auth_scheme, const char *realm);
 SQUIDCEXTERN void httpHeaderPutCc(HttpHeader * hdr, const HttpHdrCc * cc);
@@ -426,6 +427,7 @@ extern int httpHeaderEntryGetInt(const HttpHeaderEntry * e);
 SQUIDCEXTERN HttpHeaderEntry *httpHeaderGetEntry(const HttpHeader * hdr, HttpHeaderPos * pos);
 SQUIDCEXTERN HttpHeaderEntry *httpHeaderFindEntry(const HttpHeader * hdr, http_hdr_type id);
 SQUIDCEXTERN void httpHeaderAddEntry(HttpHeader * hdr, HttpHeaderEntry * e);
+SQUIDCEXTERN void httpHeaderInsertEntry(HttpHeader * hdr, HttpHeaderEntry * e);
 SQUIDCEXTERN HttpHeaderEntry *httpHeaderEntryClone(const HttpHeaderEntry * e);
 SQUIDCEXTERN void httpHeaderEntryPackInto(const HttpHeaderEntry * e, Packer * p);
 /* store report about current header usage and other stats */
