@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.83 2005/04/18 21:52:42 hno Exp $
+ * $Id: client_side_reply.cc,v 1.84 2005/06/09 07:07:30 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1343,7 +1343,11 @@ clientReplyContext::buildReplyHeader()
             (void) 0;
         else if (http->storeEntry()->timestamp < 0)
             (void) 0;
-        else if (http->storeEntry()->timestamp < squid_curtime) {
+
+        if (EBIT_TEST(http->storeEntry()->flags, ENTRY_SPECIAL)) {
+            httpHeaderDelById(hdr, HDR_DATE);
+            httpHeaderInsertTime(hdr, HDR_DATE, squid_curtime);
+        } else if (http->storeEntry()->timestamp < squid_curtime) {
             httpHeaderPutInt(hdr, HDR_AGE,
                              squid_curtime - http->storeEntry()->timestamp);
             /* Signal old objects.  NB: rfc 2616 is not clear,

@@ -1,5 +1,5 @@
 /*
- * $Id: Array.h,v 1.21 2005/04/30 19:32:01 serassio Exp $
+ * $Id: Array.h,v 1.22 2005/06/09 07:07:30 hno Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -92,6 +92,8 @@ public:
     void clean();
     void reserve (size_t capacity);
     void push_back (E);
+    Vector &operator += (E item) {push_back(item);};
+    void insert (E);
     E &back();
     E pop_back();
     void preAppend(int app_count);
@@ -187,6 +189,21 @@ Vector<E>::push_back(E obj)
         reserve (size() + 1);
 
     items[count++] = obj;
+}
+
+template<class E>
+void
+Vector<E>::insert(E obj)
+{
+    if (size() >= capacity)
+        reserve (size() + 1);
+
+    int i;
+    for (i = count; i > 0; i--)
+        items[i] = items[i - 1];
+
+    items[i] = obj;
+    count += 1;
 }
 
 template<class E>

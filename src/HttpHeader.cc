@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.105 2005/05/28 20:01:06 serassio Exp $
+ * $Id: HttpHeader.cc,v 1.106 2005/06/09 07:07:30 hno Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -786,6 +786,29 @@ httpHeaderAddEntry(HttpHeader * hdr, HttpHeaderEntry * e)
     hdr->len += e->name.size() + 2 + e->value.size() + 2;
 }
 
+/* inserts an entry;
+ * does not call httpHeaderEntryClone() so one should not reuse "*e"
+ */
+void
+httpHeaderInsertEntry(HttpHeader * hdr, HttpHeaderEntry * e)
+{
+    assert(hdr && e);
+    assert_eid(e->id);
+
+    debugs(55, 7, hdr << " adding entry: " << e->id << " at " <<
+           hdr->entries.count);
+
+    if (CBIT_TEST(hdr->mask, e->id))
+        Headers[e->id].stat.repCount++;
+    else
+        CBIT_SET(hdr->mask, e->id);
+
+    hdr->entries.insert(e);
+
+    /* increment header length, allow for ": " and crlf */
+    hdr->len += e->name.size() + 2 + e->value.size() + 2;
+}
+
 /* return a list of entries with the same id separated by ',' and ws */
 String
 httpHeaderGetList(const HttpHeader * hdr, http_hdr_type id)
@@ -952,6 +975,15 @@ httpHeaderPutTime(HttpHeader * hdr, http_hdr_type id, time_t htime)
     assert(Headers[id].type == ftDate_1123);	/* must be of an appropriate type */
     assert(htime >= 0);
     httpHeaderAddEntry(hdr, httpHeaderEntryCreate(id, NULL, mkrfc1123(htime)));
+}
+
+void
+httpHeaderInsertTime(HttpHeader * hdr, http_hdr_type id, time_t htime)
+{
+    assert_eid(id);
+    assert(Headers[id].type == ftDate_1123);	/* must be of an appropriate type */
+    assert(htime >= 0);
+    httpHeaderInsertEntry(hdr, httpHeaderEntryCreate(id, NULL, mkrfc1123(htime)));
 }
 
 void
