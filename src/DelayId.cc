@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayId.cc,v 1.15 2003/09/21 00:30:48 robertc Exp $
+ * $Id: DelayId.cc,v 1.16 2005/06/09 16:04:30 serassio Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -114,7 +114,7 @@ DelayId::DelayClient(clientHttpRequest * http)
 
         ch.request = requestLink(r);
 
-        ch.accessList = DelayPools::delay_data[pool].access;
+        ch.accessList = cbdataReference(DelayPools::delay_data[pool].access);
 
         if (DelayPools::delay_data[pool].theComposite().getRaw() &&
                 ch.fastCheck()) {

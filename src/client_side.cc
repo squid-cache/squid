@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.685 2005/06/05 23:29:02 hno Exp $
+ * $Id: client_side.cc,v 1.686 2005/06/09 16:04:30 serassio Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2864,7 +2864,7 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 
     identChecklist.my_port = ntohs(details->me.sin_port);
 
-    identChecklist.accessList = Config.accessList.identLookup;
+    identChecklist.accessList = cbdataReference(Config.accessList.identLookup);
 
     if (identChecklist.fastCheck())
         identStart(&details->me, &details->peer, clientIdentDone, connState);
@@ -3035,7 +3035,7 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
 
     identChecklist.my_port = ntohs(details->me.sin_port);
 
-    identChecklist.accessList = Config.accessList.identLookup;
+    identChecklist.accessList = cbdataReference(Config.accessList.identLookup);
 
     if (identChecklist.fastCheck())
         identStart(&details->me, &details->peer, clientIdentDone, connState);
