@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.149 2004/12/27 15:59:55 hno Exp $
+ * $Id: tunnel.cc,v 1.150 2005/06/09 16:04:30 serassio Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -602,7 +602,7 @@ sslStart(clientHttpRequest * http, size_t * size_ptr, int *status_ptr)
         ch.my_addr = request->my_addr;
         ch.my_port = request->my_port;
         ch.request = requestLink(request);
-        ch.accessList = Config.accessList.miss;
+        ch.accessList = cbdataReference(Config.accessList.miss);
         answer = ch.fastCheck();
         ch.accessList = NULL;
 

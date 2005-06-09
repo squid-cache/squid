@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.330 2005/04/18 21:52:42 hno Exp $
+ * $Id: neighbors.cc,v 1.331 2005/06/09 16:04:30 serassio Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -185,7 +185,7 @@ peerAllowedToUse(const peer * p, HttpRequest * request)
 
     checklist.request = requestLink(request);
 
-    checklist.accessList = p->access;
+    checklist.accessList = cbdataReference(p->access);
 
 #if 0 && USE_IDENT
     /*

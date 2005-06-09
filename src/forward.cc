@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.127 2005/04/18 21:52:42 hno Exp $
+ * $Id: forward.cc,v 1.128 2005/06/09 16:04:30 serassio Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -879,7 +879,7 @@ fwdStart(int fd, StoreEntry * e, HttpRequest * r)
         ch.my_addr = r->my_addr;
         ch.my_port = r->my_port;
         ch.request = requestLink(r);
-        ch.accessList = Config.accessList.miss;
+        ch.accessList = cbdataReference(Config.accessList.miss);
         answer = ch.fastCheck();
         ch.accessList = NULL;
 
