@@ -17,6 +17,9 @@
 #   2002-07-05 Jerry Murdock <jmurdock@itraktech.com>
 #		Initial release
 #
+#   2005-06-28 Arno Streuli <astreuli@gmail.com>
+#               Add multi group check
+
 
 # Disable output buffering
 $|=1;           
@@ -46,9 +49,14 @@ sub check {
 while (<STDIN>) {
         chop;
 	&debug ("Got $_ from squid");
-        ($user, $group) = split(/\s+/);
+        ($user, @groups) = split(/\s+/);
 	$user =~ s/%([0-9a-fA-F][0-9a-fA-F])/pack("c",hex($1))/eg;
-	$group =~ s/%([0-9a-fA-F][0-9a-fA-F])/pack("c",hex($1))/eg;
+ 	# test for each group squid send in it's request
+ 	foreach $group (@groups) {
+		$group =~ s/%([0-9a-fA-F][0-9a-fA-F])/pack("c",hex($1))/eg;
+ 		$ans = &check($user, $group);
+ 		last if $ans eq "OK";
+ 	}
 	$ans = &check($user, $group);
 	&debug ("Sending $ans to squid");
 	print "$ans\n";
