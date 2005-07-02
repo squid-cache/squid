@@ -16,7 +16,7 @@
 
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.41 2005/06/06 00:40:01 hno Exp $
+#  $Id: Makefile.in,v 1.42 2005/07/02 00:11:16 hno Exp $
 #
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -171,7 +171,6 @@ REPL_LIBS = @REPL_LIBS@
 REPL_OBJS = @REPL_OBJS@
 REPL_POLICIES = @REPL_POLICIES@
 RM = @RM@
-SAMBASOURCES = @SAMBASOURCES@
 SET_MAKE = @SET_MAKE@
 SH = @SH@
 SHELL = @SHELL@
@@ -244,7 +243,7 @@ sharedstatedir = @sharedstatedir@
 subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-DIST_SUBDIRS = ip_user ldap_group unix_group wbinfo_group winbind_group
+DIST_SUBDIRS = ip_user ldap_group unix_group wbinfo_group
 SUBDIRS = @EXTERNAL_ACL_HELPERS@
 all: all-recursive
 

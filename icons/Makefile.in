@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# $Id: Makefile.in,v 1.67 2005/06/06 00:40:06 hno Exp $
+# $Id: Makefile.in,v 1.68 2005/07/02 00:11:18 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -171,7 +171,6 @@ REPL_LIBS = @REPL_LIBS@
 REPL_OBJS = @REPL_OBJS@
 REPL_POLICIES = @REPL_POLICIES@
 RM = @RM@
-SAMBASOURCES = @SAMBASOURCES@
 SET_MAKE = @SET_MAKE@
 SH = @SH@
 SHELL = @SHELL@
