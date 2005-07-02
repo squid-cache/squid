@@ -17,7 +17,7 @@ y recibi&oacute; esta respuesta
 <blockquote><pre><strong>%g</strong></pre></blockquote>
 <P>
 Esto puede ser causado por un URL FTP con un camino absoluto (y por
-lo tanto no cumple con RFC 1738). Si este es la causa, entonces el 
+lo tanto no cumple con RFC 1738). Si esta es la causa, entonces el 
 archivo puede ser obtenido en <A HREF="%B">%B</A>.
 </P>
 
