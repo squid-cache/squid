@@ -19,13 +19,13 @@ Imposibilidad de enviar la petici&oacute;n en este momento.
 </UL>
 
 <P>
-La petici&oacute;n no ha podido ser enviada al servidor origen o a alguna
-de las cach&eacute;s padres. Las razones m&aacute;s probables de que haya 
+La petici&oacute;n no ha podido ser enviada al servidor origen o a alguno
+de los cach&eacute;s padres. Las razones m&aacute;s probables de que haya 
 ocurrido este error son:
 <UL>
-<LI>El administrador de la cach&eacute; no permite que esta
+<LI>El administrador de lo cach&eacute; no permite que este
     cach&eacute; realice conexiones directas a los servidores
     origen, y
-<LI>Todas las cach&eacute;s configuradas como padres son inalcanzables
+<LI>Todos los cach&eacute;s configurados como padres son inalcanzables
     en este momento.
 </UL>

@@ -12,7 +12,7 @@ Mientras se intentaba traer el URL:
 Ha ocurrido el siguiente problema:
 <BLOCKQUOTE>
 Incapaz de determinar la direcci&oacute;n IP a partir
-del nombre de la máquina:
+del nombre de la m&aacute;quina:
 <I>%H</I>
 </BLOCKQUOTE>
 
@@ -25,7 +25,7 @@ El programa dnsserver ha devuelto el siguiente mensaje:
 <P>
 Esto significa que:
 <PRE>
- La cach&eacute; no ha sido capaz de resolver el nombre de m&aacute;quina
+ El cach&eacute; no ha sido capaz de resolver el nombre de m&aacute;quina
  presente en la URL.
  Compruebe que la direcci&oacute;n sea correcta.
 </PRE>
