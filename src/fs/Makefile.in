@@ -16,7 +16,7 @@
 
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.58 2005/06/06 00:40:21 hno Exp $
+#  $Id: Makefile.in,v 1.59 2005/07/02 00:11:19 hno Exp $
 #
 
 SOURCES = $(libcoss_a_SOURCES) $(libnull_a_SOURCES) $(libufs_a_SOURCES)
@@ -206,7 +206,6 @@ REPL_LIBS = @REPL_LIBS@
 REPL_OBJS = @REPL_OBJS@
 REPL_POLICIES = @REPL_POLICIES@
 RM = @RM@
-SAMBASOURCES = @SAMBASOURCES@
 SET_MAKE = @SET_MAKE@
 SH = @SH@
 SHELL = @SHELL@

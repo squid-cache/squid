@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.54 2005/06/06 00:40:05 hno Exp $
+#  $Id: Makefile.in,v 1.55 2005/07/02 00:11:18 hno Exp $
 #
 
 SOURCES = $(ntlm_auth_SOURCES)
@@ -197,7 +197,6 @@ REPL_LIBS = @REPL_LIBS@
 REPL_OBJS = @REPL_OBJS@
 REPL_POLICIES = @REPL_POLICIES@
 RM = @RM@
-SAMBASOURCES = @SAMBASOURCES@
 SET_MAKE = @SET_MAKE@
 SH = @SH@
 SHELL = @SHELL@

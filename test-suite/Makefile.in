@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.48 2005/06/06 00:40:22 hno Exp $
+#  $Id: Makefile.in,v 1.49 2005/07/02 00:11:19 hno Exp $
 #
 SOURCES = $(ESIExpressions_SOURCES) $(MemPoolTest_SOURCES) $(StackTest_SOURCES) $(VirtualDeleteOperator_SOURCES) $(debug_SOURCES) $(http_range_test_SOURCES) $(mem_hdr_test_SOURCES) $(mem_node_test_SOURCES) membanger.c $(refcount_SOURCES) $(rfc1738_SOURCES) $(splay_SOURCES) $(syntheticoperators_SOURCES) tcp-banger2.c
 
@@ -270,7 +270,6 @@ REPL_LIBS = @REPL_LIBS@
 REPL_OBJS = @REPL_OBJS@
 REPL_POLICIES = @REPL_POLICIES@
 RM = @RM@
-SAMBASOURCES = @SAMBASOURCES@
 SET_MAKE = @SET_MAKE@
 SH = @SH@
 SHELL = @SHELL@
