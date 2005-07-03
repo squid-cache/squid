@@ -26,7 +26,6 @@
 #ifndef _STD_DEFINES_H_
 #define _STD_DEFINES_H_
 
-#include "config.h"
 #define BOOL int16_t
 #define int16 int16_t
 
