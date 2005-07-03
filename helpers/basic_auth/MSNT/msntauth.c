@@ -31,13 +31,14 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "util.h"
+
 #include <stdio.h>
 #include <signal.h>
 #include <syslog.h>
 #include <string.h>
 #include <sys/time.h>
 
-#include "util.h"
 #include "msntauth.h"
 
 extern char version[];
