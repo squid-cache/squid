@@ -1,5 +1,5 @@
 /*
- * $Id: diskd.cc,v 1.2 2004/12/21 15:47:33 robertc Exp $
+ * $Id: diskd.cc,v 1.3 2005/07/03 15:25:09 serassio Exp $
  *
  * DEBUG: section --    External DISKD process implementation.
  * AUTHOR: Harvest Derived
@@ -41,9 +41,13 @@
 
 #include "DiskIO/DiskDaemon/diomsg.h"
 
-#undef assert
-#include <assert.h>
+void
+xassert(const char *msg, const char *file, int line)
+{
+    fprintf(stderr,"assertion failed: %s:%d: \"%s\"\n", file, line, msg);
 
+    abort();
+}
 
 const int diomsg::msg_snd_rcv_sz = sizeof(diomsg) - sizeof(mtyp_t);
 #define DEBUG(LEVEL) if ((LEVEL) <= DebugLevel)

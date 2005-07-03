@@ -135,7 +135,7 @@ int Line = 1;
 #define	WRITEONLY   20
 #undef NOACCESS
 #define NOACCESS    21
-#define STATUS	    22
+#define SNMP_STATUS 22
 #define MANDATORY   23
 #define SNMP_OPTIONAL    24
 #define OBSOLETE    25
@@ -193,7 +193,7 @@ struct tok tokens[] =
     {"read-only", sizeof("read-only") - 1, READONLY},
     {"ACCESS", sizeof("ACCESS") - 1, ACCESS},
     {"MAX-ACCESS", sizeof("MAX-ACCESS") - 1, ACCESS},
-    {"STATUS", sizeof("STATUS") - 1, STATUS},
+    {"STATUS", sizeof("STATUS") - 1, SNMP_STATUS},
     {"SYNTAX", sizeof("SYNTAX") - 1, SYNTAX},
     {"OBJECT-TYPE", sizeof("OBJECT-TYPE") - 1, OBJTYPE},
     {"{", sizeof("{") - 1, LEFTBRACKET},
@@ -867,7 +867,7 @@ parse_objecttype(register FILE *fp, char *name)
 	return 0;
     }
     type = get_token(fp, token);
-    if (type != STATUS) {
+    if (type != SNMP_STATUS) {
 	print_error("Should be STATUS", token, nexttype);
 	free_node(np);
 	return 0;

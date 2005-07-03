@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.176 2005/04/18 21:52:42 hno Exp $
+ * $Id: net_db.cc,v 1.177 2005/07/03 15:25:08 serassio Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -710,7 +710,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer recievedData)
 
     /* Get the size of the buffer now */
     size = ex->buf_ofs + recievedData.length;
-    debug(38, 3) ("netdbExchangeHandleReply: %d bytes buf\n", (int) size);
+    debugs(38, 3, "netdbExchangeHandleReply: " << size << " bytes buf");
 
     /* Check if we're still doing headers */
 
@@ -721,7 +721,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer recievedData)
         /* skip reply headers */
 
         if ((hdr_sz = headersEnd(p, ex->buf_ofs))) {
-            debug(38, 5) ("netdbExchangeHandleReply: hdr_sz = %d\n", hdr_sz);
+            debugs(38, 5, "netdbExchangeHandleReply: hdr_sz = " << hdr_sz);
             rep = ex->e->getReply();
             assert (0 != rep->sline.status);
             debug(38, 3) ("netdbExchangeHandleReply: reply status %d\n",

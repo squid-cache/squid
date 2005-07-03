@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.14 2005/06/03 15:24:14 serassio Exp $
+ * $Id: ESI.cc,v 1.15 2005/07/03 15:25:08 serassio Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -688,7 +688,7 @@ ESIContext::send ()
 
     cbdataReferenceDone (templock);
 
-    debug (86,5)("ESIContext::send: this=%p sent %d\n",this,len);
+    debugs (86,5,"ESIContext::send: this=" << this << " sent " << len);
 
     return len;
 }
@@ -785,7 +785,7 @@ esiProcessStream (clientStreamNode *thisNode, clientHttpRequest *http, HttpReply
         /* Increase our buffer area with incoming data */
         assert (recievedData.length <= HTTP_REQBUF_SZ);
         assert (thisNode->readBuffer.offset == recievedData.offset);
-        debug (86,5)("esiProcessStream found %u bytes of body data at offset %ld\n", recievedData.length, (long)recievedData.offset);
+        debugs (86,5, "esiProcessStream found " << recievedData.length << " bytes of body data at offset " << recievedData.offset);
         /* secure the data for later use */
 
         if (!context->incoming.getRaw()) {
@@ -1187,7 +1187,7 @@ ESIContext::parserComment (const char *s)
             debug (86,0)("ESIContext::parserComment: Parsing fragment '%s' failed.\n", s + 3);
             setError();
             char tempstr[1024];
-            snprintf(tempstr, 1023, "ESIContext::parserComment: Parse error at line %d:\n%s\n",
+            snprintf(tempstr, 1023, "ESIContext::parserComment: Parse error at line %ld:\n%s\n",
                      tempParser->lineNumber(),
                      tempParser->errorString());
             debug (86,0)("%s",tempstr);
@@ -1243,13 +1243,13 @@ ESIContext::parseOneBuffer()
 {
     assert (buffered.getRaw());
 
-    debug (86,9)("ESIContext::parseOneBuffer: %d bytes\n",buffered->len);
+    debugs (86,9,"ESIContext::parseOneBuffer: " << buffered->len << " bytes");
     bool lastBlock = buffered->next.getRaw() == NULL && flags.finishedtemplate ? true : false;
 
     if (! parserState.theParser->parse(buffered->buf, buffered->len, lastBlock)) {
         setError();
         char tempstr[1024];
-        snprintf (tempstr, 1023, "esiProcess: Parse error at line %d:\n%s\n",
+        snprintf (tempstr, 1023, "esiProcess: Parse error at line %ld:\n%s\n",
                   parserState.theParser->lineNumber(),
                   parserState.theParser->errorString());
         debug (86,0)("%s", tempstr);
@@ -2060,13 +2060,13 @@ esiChoose::addElement(ESIElement::Pointer element)
     } else {
         elements.push_back (element);
 
-        debug (86,3)("esiChooseAdd: Added a new element, elements = %d\n", elements.size());
+        debugs (86,3, "esiChooseAdd: Added a new element, elements = " << elements.size());
 
         if (chosenelement == -1)
             if ((dynamic_cast<esiWhen *>(element.getRaw()))->
                     testsTrue()) {
                 chosenelement = elements.size() - 1;
-                debug (86,3)("esiChooseAdd: Chose element %d\n", elements.size());
+                debugs (86,3, "esiChooseAdd: Chose element " << elements.size());
             }
     }
 
@@ -2083,7 +2083,7 @@ esiChoose::selectElement()
         if ((dynamic_cast<esiWhen *>(elements[counter].getRaw()))->
                 testsTrue()) {
             chosenelement = counter;
-            debug (86,3)("esiChooseAdd: Chose element %d\n", counter + 1);
+            debugs (86,3, "esiChooseAdd: Chose element " << counter + 1);
             return;
         }
     }

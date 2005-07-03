@@ -1,5 +1,5 @@
 /*
- * $Id: ESISequence.cc,v 1.4 2004/08/30 05:12:31 robertc Exp $
+ * $Id: ESISequence.cc,v 1.5 2005/07/03 15:25:08 serassio Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -90,7 +90,7 @@ esiSequence::render(ESISegment::Pointer output)
      * and rendered elements 
      */
     assert (output->next == NULL);
-    debug (86,5)("esiSequenceRender: rendering %d elements\n", processedcount);
+    debugs (86,5, "esiSequenceRender: rendering " << processedcount << " elements");
 
     for (size_t i = 0; i < processedcount; ++i) {
         elements[i]->render(output);
@@ -173,7 +173,7 @@ esiSequence::addElement (ESIElement::Pointer element)
     }
 
     elements.push_back(element);
-    debug (86,3)("esiSequenceAdd: Added a new element, elements = %d\n", elements.size());
+    debugs (86,3, "esiSequenceAdd: Added a new element, elements = " << elements.size());
     return true;
 }
 
@@ -203,7 +203,7 @@ esiSequence::processStep(int dovars)
 esiProcessResult_t
 esiSequence::processOne(int dovars, size_t index)
 {
-    debug (86,5)("esiSequence::process %p about to process element[%d] %p\n", this, index, elements[index].getRaw());
+    debugs (86,5, "esiSequence::process " << this << " about to process element[" << index << "] " << elements[index].getRaw());
 
     switch (elements[index]->process(dovars)) {
 

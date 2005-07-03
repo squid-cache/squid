@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIExpression.cc,v 1.3 2003/07/14 14:15:56 robertc Exp $
+ * $Id: ESIExpression.cc,v 1.4 2005/07/03 15:25:08 serassio Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -728,7 +728,7 @@ getsymbol (const char *s, char const **endptr)
                 debug (86,1) ("failed to convert '%s' to float \n", s);
                 *endptr = origs;
             } else {
-                debug (86,6) ("found %f of length %d\n",rv.value.floating, end - s);
+                debugs (86,6, "found " << rv.value.floating << " of length " << end - s);
                 *endptr = end;
                 rv.eval = evalliteral;
                 rv.valuestored = ESI_LITERAL_FLOAT;
@@ -744,7 +744,7 @@ getsymbol (const char *s, char const **endptr)
                 debug (86,1) ("failed to convert '%s' to int \n", s);
                 *endptr = origs;
             } else {
-                debug (86,6) ("found %d of length %d\n",rv.value.integral, end - s);
+                debugs (86,6, "found " << rv.value.integral << " of length " << end - s);
                 *endptr = end;
                 rv.eval = evalliteral;
                 rv.valuestored = ESI_LITERAL_INT;

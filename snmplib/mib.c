@@ -128,11 +128,11 @@ lc_cmp(const char *s1, const char *s2)
 
     while (*s1 && *s2) {
 	if (xisupper(*s1))
-	    c1 = tolower(*s1);
+	    c1 = xtolower(*s1);
 	else
 	    c1 = *s1;
 	if (xisupper(*s2))
-	    c2 = tolower(*s2);
+	    c2 = xtolower(*s2);
 	else
 	    c2 = *s2;
 	if (c1 != c2)

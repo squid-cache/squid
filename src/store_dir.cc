@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.150 2005/01/03 16:08:26 robertc Exp $
+ * $Id: store_dir.cc,v 1.151 2005/07/03 15:25:09 serassio Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -859,7 +859,7 @@ StoreHashIndex::maintain()
 }
 
 void
-StoreHashIndex::updateSize(unsigned int, int)
+StoreHashIndex::updateSize(size_t, int)
 {}
 
 void

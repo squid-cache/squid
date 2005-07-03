@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIVarState.cc,v 1.4 2005/01/06 13:16:39 serassio Exp $
+ * $Id: ESIVarState.cc,v 1.5 2005/07/03 15:25:08 serassio Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -129,7 +129,7 @@ void
 ESIVarState::feedData (const char *buf, size_t len)
 {
     /* TODO: if needed - tune to skip segment iteration */
-    debug (86,6)("esiVarState::feedData: accepting %d bytes\n", len);
+    debugs (86,6, "esiVarState::feedData: accepting " << len << " bytes");
     ESISegment::ListAppend (input, buf, len);
 }
 

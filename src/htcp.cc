@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.57 2004/08/30 05:12:31 robertc Exp $
+ * $Id: htcp.cc,v 1.58 2005/07/03 15:25:08 serassio Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -305,7 +305,7 @@ htcpBuildCountstr(char *buf, size_t buflen, const char *s)
     else
         len = 0;
 
-    debug(31, 3) ("htcpBuildCountstr: LENGTH = %d\n", len);
+    debugs(31, 3, "htcpBuildCountstr: LENGTH = " << len);
 
     debug(31, 3) ("htcpBuildCountstr: TEXT = {%s}\n", s ? s : "<NULL>");
 

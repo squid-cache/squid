@@ -1,6 +1,6 @@
 
 /*
- * $Id: heap.c,v 1.9 2003/01/23 00:37:01 robertc Exp $
+ * $Id: heap.c,v 1.10 2005/07/03 15:25:07 serassio Exp $
  *
  * AUTHOR: John Dilley, Hewlett Packard
  *
@@ -122,7 +122,7 @@ void
 delete_heap(heap * hp)
 {
     int i;
-    assert(hp);
+    assert(hp != NULL);
     for (i = 0; i < hp->last; i++) {
 	xfree(hp->nodes[i]);
     }

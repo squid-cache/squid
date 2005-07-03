@@ -30,7 +30,7 @@ get_tick(void)
 {
     hrtime_t regs;
 
-asm volatile ("rpcc $0":"=A" (regs));	/* I'm not sure of syntax */
+asm volatile ("rpcc %0" : "=r" (regs));
     return regs;
 }
 
@@ -39,6 +39,7 @@ static __inline hrtime_t
 get_tick(void)
 {
     hrtime_t regs;
+
     __asm {
         cpuid
         rdtsc

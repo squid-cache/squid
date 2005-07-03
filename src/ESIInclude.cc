@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIInclude.cc,v 1.5 2004/12/21 17:28:29 robertc Exp $
+ * $Id: ESIInclude.cc,v 1.6 2005/07/03 15:25:08 serassio Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -91,7 +91,7 @@ esiBufferRecipient (clientStreamNode *node, clientHttpRequest *http, HttpReply *
     assert (recievedData.length <= sizeof(esiStream->localbuffer->buf));
     assert (!esiStream->finished);
 
-    debug (86,5) ("esiBufferRecipient rep %p body %p len %d\n", rep, recievedData.data, recievedData.length);
+    debugs (86,5, "esiBufferRecipient rep " << rep << " body " << recievedData.data << " len " << recievedData.length);
     assert (node->readBuffer.offset == recievedData.offset || recievedData.length == 0);
 
     /* trivial case */
