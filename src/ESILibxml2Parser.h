@@ -1,5 +1,5 @@
 /*
- * $Id: ESILibxml2Parser.h,v 1.2 2005/03/28 21:44:12 hno Exp $
+ * $Id: ESILibxml2Parser.h,v 1.3 2005/07/03 15:25:08 serassio Exp $
  *
  * AUTHOR: Joachim Bauch (mail@joachim-bauch.de)
  *
@@ -63,7 +63,7 @@ public:
     ~ESILibxml2Parser();
     /* true on success */
     bool parse(char const *dataToParse, size_t const lengthOfData, bool const endOfStream);
-    size_t lineNumber() const;
+    long int lineNumber() const;
     char const * errorString() const;
 
     ESIParserClient *getClient() { return theClient; }

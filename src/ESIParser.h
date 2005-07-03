@@ -1,5 +1,5 @@
 /*
- * $Id: ESIParser.h,v 1.4 2005/04/30 19:32:01 serassio Exp $
+ * $Id: ESIParser.h,v 1.5 2005/07/03 15:25:08 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -55,7 +55,7 @@ public:
     static char *Type;
     /* true on success */
     virtual bool parse(char const *dataToParse, size_t const lengthOfData, bool const endOfStream) = 0;
-    virtual size_t lineNumber() const =0;
+    virtual long int lineNumber() const =0;
     virtual char const * errorString() const =0;
 
 protected:

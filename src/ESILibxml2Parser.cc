@@ -1,5 +1,5 @@
 /*
- * $Id: ESILibxml2Parser.cc,v 1.2 2005/03/28 21:44:12 hno Exp $
+ * $Id: ESILibxml2Parser.cc,v 1.3 2005/07/03 15:25:08 serassio Exp $
  *
  * AUTHOR: Joachim Bauch (mail@joachim-bauch.de)
  *
@@ -138,10 +138,10 @@ ESILibxml2Parser::parse(char const *dataToParse, size_t const lengthOfData, bool
     return (xmlParseChunk(parser, dataToParse, lengthOfData, endOfStream) == 0);
 }
 
-size_t
+long int
 ESILibxml2Parser::lineNumber() const
 {
-    return xmlSAX2GetLineNumber(parser);
+    return (long int)xmlSAX2GetLineNumber(parser);
 }
 
 char const *

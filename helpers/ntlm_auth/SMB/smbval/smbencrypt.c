@@ -200,7 +200,7 @@ strupper(char *s)
 	 * #endif *//* KANJI_WIN95_COMPATIBILITY */
 	{
 	    if (islower((int)(unsigned char)*s))
-		*s = toupper(*s);
+		*s = xtoupper(*s);
 	    s++;
 	}
     }

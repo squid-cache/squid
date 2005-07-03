@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIExpatParser.cc,v 1.3 2005/03/28 21:44:12 hno Exp $
+ * $Id: ESIExpatParser.cc,v 1.4 2005/07/03 15:25:08 serassio Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -93,10 +93,10 @@ ESIExpatParser::parse(char const *dataToParse, size_t const lengthOfData, bool c
     return XML_Parse(myParser(), dataToParse, lengthOfData, endOfStream);
 }
 
-size_t
+long int
 ESIExpatParser::lineNumber() const
 {
-    return XML_GetCurrentLineNumber(myParser());
+    return (long int)XML_GetCurrentLineNumber(myParser());
 }
 
 char const *

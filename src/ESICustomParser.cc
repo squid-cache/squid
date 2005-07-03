@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESICustomParser.cc,v 1.6 2005/03/28 21:44:12 hno Exp $
+ * $Id: ESICustomParser.cc,v 1.7 2005/07/03 15:25:08 serassio Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -51,14 +51,20 @@ ESICustomParser::GetTrie()
 
     SearchTrie = new Trie(new TrieCaseless);
 
-    assert (SearchTrie->add
-            ("<esi:",5,(void *)ESITAG));
+    static const ESITAG_t ESITAG_value = ESITAG;
 
     assert (SearchTrie->add
-            ("</esi:",6,(void *)ESIENDTAG));
+            ("<esi:",5,(void *)&ESITAG_value));
+
+    static const ESITAG_t ESIENDTAG_value = ESIENDTAG;
 
     assert (SearchTrie->add
-            ("<!--",4,(void *)ESICOMMENT));
+            ("</esi:",6,(void *)&ESIENDTAG_value));
+
+    static const ESITAG_t ESICOMMENT_value = ESICOMMENT;
+
+    assert (SearchTrie->add
+            ("<!--",4,(void *)&ESICOMMENT_value));
 
     return SearchTrie;
 }
@@ -75,19 +81,19 @@ char const *
 ESICustomParser::findTag(char const *buffer, size_t bufferLength)
 {
     size_t myOffset (0);
-    void *resulttype = NULL;
+    ESITAG_t *resulttype = NULL;
 
     while (myOffset < bufferLength &&
-            (resulttype =GetTrie()->findPrefix (buffer + myOffset, bufferLength - myOffset)) == NULL)
+            (resulttype = static_cast<ESITAG_t *>(GetTrie()->findPrefix (buffer + myOffset, bufferLength - myOffset)))
+            == NULL)
         ++myOffset;
 
     if (myOffset == bufferLength)
         return NULL;
 
-    debug (86,9)("ESICustomParser::findTag: found %p\n", resulttype);
+    debug (86,9)("ESICustomParser::findTag: found %d\n", *resulttype);
 
-    /* Yuck! */
-    lastTag = static_cast<ESITAG_t>((int)resulttype);
+    lastTag = *resulttype;
 
     return buffer + myOffset;
 }
@@ -285,7 +291,7 @@ ESICustomParser::parse(char const *dataToParse, size_t const lengthOfData, bool 
     return !openESITags;
 }
 
-size_t
+long int
 ESICustomParser::lineNumber() const
 {
     /* We don't track lines in the body */
