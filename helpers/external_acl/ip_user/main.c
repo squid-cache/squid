@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.4 2004/08/14 22:54:52 hno Exp $ 
+/* $Id: main.c,v 1.5 2005/07/02 18:34:03 serassio Exp $ 
 * Copyright (C) 2002 Rodrigo Campos
 *
 * This program is free software; you can redistribute it and/or modify
@@ -18,14 +18,15 @@
 * Author: Rodrigo Campos (rodrigo@geekbunker.org)
 * 
 */
+
+#include "util.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 
-
 #include "ip_user.h"
-#include "util.h"
 
 void
 usage (char *program_name)

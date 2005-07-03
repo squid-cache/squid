@@ -2,9 +2,9 @@
  * Written By Rabellino Sergio (rabellino@di.unito.it) For Solaris 2.x
  */
 
-#include <strings.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <syslog.h>
 #include <sys/types.h>
 #include <rpc/rpc.h>
