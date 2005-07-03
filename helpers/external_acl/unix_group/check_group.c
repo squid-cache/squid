@@ -1,5 +1,5 @@
 /*
- * $Id: check_group.c,v 1.4 2004/08/14 22:54:53 hno Exp $
+ * $Id: check_group.c,v 1.5 2005/07/02 18:34:03 serassio Exp $
  *
  * This is a helper for the external ACL interface for Squid Cache
  * Copyright (C) 2002 Rodrigo Albani de Campos (rodrigo@geekbunker.org)
@@ -52,6 +52,8 @@
  *
  */
 
+#include "util.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -60,8 +62,6 @@
 #include <unistd.h>
 #include <pwd.h>
 #include <ctype.h>
-
-#include "util.h"
 
 #define BUFSIZE 8192		/* the stdin buffer size */
 #define MAX_GROUP 10		/* maximum number of groups specified 
