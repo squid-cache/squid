@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.60 2005/02/05 22:02:32 serassio Exp $
+ * $Id: store_dir_coss.cc,v 1.61 2005/07/03 20:41:46 serassio Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store COSS Directory Routines
@@ -237,7 +237,7 @@ CossSwapDir::writeCompleted(int errflag, size_t len, RefCount<WriteRequest> writ
     if (errflag) {
         StoreFScoss::GetInstance().stats.stripe_write.fail++;
         debug(79, 1) ("storeCossWriteMemBufDone: got failure (%d)\n", errflag);
-        debug(79, 1) ("size=%x\n", cossWrite->membuf->diskend - cossWrite->membuf->diskstart);
+        debugs(79, 1, "size=" << cossWrite->membuf->diskend - cossWrite->membuf->diskstart);
     } else {
         StoreFScoss::GetInstance().stats.stripe_write.success++;
     }
