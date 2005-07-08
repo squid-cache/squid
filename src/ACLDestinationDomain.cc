@@ -1,5 +1,5 @@
 /*
- * $Id: ACLDestinationDomain.cc,v 1.11 2005/05/09 01:41:25 hno Exp $
+ * $Id: ACLDestinationDomain.cc,v 1.12 2005/07/07 21:22:52 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -53,7 +53,7 @@ void
 DestinationDomainLookup::checkForAsync(ACLChecklist *checklist)const
 {
     checklist->asyncInProgress(true);
-    fqdncache_nbgethostbyaddr(checklist->src_addr, LookupDone, checklist);
+    fqdncache_nbgethostbyaddr(checklist->dst_addr, LookupDone, checklist);
 }
 
 void
