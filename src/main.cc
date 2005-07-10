@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.410 2005/04/30 19:32:01 serassio Exp $
+ * $Id: main.cc,v 1.411 2005/07/09 20:02:49 serassio Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -1046,8 +1046,13 @@ main(int argc, char **argv)
     if (opt_send_signal != -1) {
         /* chroot if configured to run inside chroot */
 
-        if (Config.chroot_dir && chroot(Config.chroot_dir)) {
-            fatal("failed to chroot");
+        if (Config.chroot_dir) {
+            if (chroot(Config.chroot_dir))
+                fatal("failed to chroot");
+
+            no_suid();
+        } else {
+            leave_suid();
         }
 
         sendSignal();
@@ -1195,6 +1200,7 @@ main(int argc, char **argv)
     return 0;
 
 #endif
+
 }
 
 static void
@@ -1456,6 +1462,7 @@ watch_child(char *argv[])
 
     /* NOTREACHED */
 #endif /* _SQUID_MSWIN_ */
+
 }
 
 static void
