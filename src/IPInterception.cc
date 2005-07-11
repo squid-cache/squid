@@ -1,6 +1,6 @@
 
 /*
- * $Id: IPInterception.cc,v 1.10 2005/06/05 22:59:38 hno Exp $
+ * $Id: IPInterception.cc,v 1.11 2005/07/10 19:13:17 serassio Exp $
  *
  * DEBUG: section 89    NAT / IP Interception 
  * AUTHOR: Robert Collins
@@ -87,6 +87,7 @@ clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct s
     struct natlookup natLookup;
     static int natfd = -1;
     static int siocgnatl_cmd = SIOCGNATL & 0xff;
+    static time_t last_reported = 0;
     int x;
 
     natLookup.nl_inport = me.sin_port;
@@ -114,9 +115,12 @@ clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct s
 
     if (natfd < 0)
     {
-        debug(50, 1) ("parseHttpRequest: NAT open failed: %s\n",
-                      xstrerror());
-        return -1;
+        if (squid_curtime - last_reported > 60) {
+            debug(89, 1) ("clientNatLookup: NAT open failed: %s\n",
+                          xstrerror());
+            last_reported = squid_curtime;
+            return -1;
+        }
     }
 
     /*
@@ -139,7 +143,11 @@ clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct s
     if (x < 0)
     {
         if (errno != ESRCH) {
-            debug(50, 1) ("parseHttpRequest: NAT lookup failed: ioctl(SIOCGNATL)\n");
+            if (squid_curtime - last_reported > 60) {
+                debug(89, 1) ("clientNatLookup: NAT lookup failed: ioctl(SIOCGNATL)\n");
+                last_reported = squid_curtime;
+            }
+
             close(natfd);
             natfd = -1;
         }
@@ -163,13 +171,21 @@ int
 
 clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct sockaddr_in *dst)
 {
+    static time_t last_reported = 0;
     size_t sock_sz = sizeof(*dst);
     memcpy(dst, &me, sizeof(*dst));
 
     if (getsockopt(fd, SOL_IP, SO_ORIGINAL_DST, dst, &sock_sz) != 0)
-        return -1;
+    {
+        if (squid_curtime - last_reported > 60) {
+            debug(89, 1) ("clientNatLookup: NF getsockopt(SO_ORIGINAL_DST) failed: %s\n", xstrerror());
+            last_reported = squid_curtime;
+        }
 
-    debug(33, 5) ("clientNatLookup: addr = %s", inet_ntoa(dst->sin_addr));
+        return -1;
+    }
+
+    debug(89, 5) ("clientNatLookup: addr = %s", inet_ntoa(dst->sin_addr));
 
     if (me.sin_addr.s_addr != dst->sin_addr.s_addr)
         return 0;
@@ -185,15 +201,21 @@ clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct s
 
     struct pfioc_natlook nl;
     static int pffd = -1;
+    static time_t last_reported = 0;
 
     if (pffd < 0)
         pffd = open("/dev/pf", O_RDWR);
 
     if (pffd < 0)
     {
-        debug(50, 1) ("parseHttpRequest: PF open failed: %s\n",
-                      xstrerror());
+        if (squid_curtime - last_reported > 60) {
+            debug(89, 1) ("clientNatLookup: PF open failed: %s\n",
+                          xstrerror());
+            last_reported = squid_curtime;
+        }
+
         return -1;
+
     }
 
     memset(dst, 0, sizeof(*dst));
@@ -210,7 +232,11 @@ clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct s
     if (ioctl(pffd, DIOCNATLOOK, &nl))
     {
         if (errno != ENOENT) {
-            debug(50, 1) ("parseHttpRequest: PF lookup failed: ioctl(DIOCNATLOOK)\n");
+            if (squid_curtime - last_reported > 60) {
+                debug(89, 1) ("clientNatLookup: PF lookup failed: ioctl(DIOCNATLOOK)\n");
+                last_reported = squid_curtime;
+            }
+
             close(pffd);
             pffd = -1;
         }
@@ -235,7 +261,7 @@ int
 
 clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct sockaddr_in *dst)
 {
-    debug(33, 1) ("WARNING: transparent proxying not supported\n");
+    debug(89, 1) ("WARNING: transparent proxying not supported\n");
     return -1;
 }
 
