@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.110 2005/04/30 15:30:57 serassio Exp $
+ * $Id: cachemgr.cc,v 1.111 2005/07/13 23:15:46 wessels Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -126,7 +126,11 @@
 #include <sys/select.h>
 #endif
 #if HAVE_FNMATCH_H
+extern "C"
+{
 #include <fnmatch.h>
+}
+
 #endif
 
 #include <assert.h>
