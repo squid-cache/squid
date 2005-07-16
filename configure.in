@@ -3,7 +3,7 @@ dnl  Configuration input file for Squid
 dnl
 dnl  Duane Wessels, wessels@nlanr.net, February 1996 (autoconf v2.9)
 dnl
-dnl  $Id: configure.in,v 1.378 2005/07/04 15:28:09 serassio Exp $
+dnl  $Id: configure.in,v 1.379 2005/07/15 20:07:52 wessels Exp $
 dnl
 dnl
 dnl
@@ -13,7 +13,7 @@ AC_CONFIG_SRCDIR([src/main.cc])
 AC_CONFIG_AUX_DIR(cfgaux)
 AM_INIT_AUTOMAKE(squid, 3.0-PRE3-CVS)
 AM_CONFIG_HEADER(include/autoconf.h)
-AC_REVISION($Revision: 1.378 $)dnl
+AC_REVISION($Revision: 1.379 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -2116,6 +2116,22 @@ if test "$GCC" = "yes"; then
 		CFLAGS="`echo $CFLAGS | sed -e 's/-O[[0-9]]*//'`"
 		;;
 	esac
+fi
+
+if test "$GCC" = "yes"; then
+    GCCVER=`$CC -v 2>&1 | awk '$2 ==  "version" {print $3}'`
+    GCCVER2=`echo $GCCVER | awk '{print $1 * 100}'`
+    case "$host" in
+    i386-*-freebsd*)
+	if test $GCCVER2 -lt 300 ; then
+	    echo "GCC $GCCVER causes a coredump on $host"
+	    echo "Try a more recent GCC version"
+	    exit 1
+	fi
+	;;
+    esac
+    unset GCCVER
+    unset GCCVER2
 fi
 
 # Recommended by Balint Nagy Endre <bne@CareNet.hu>
