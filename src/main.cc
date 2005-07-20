@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.411 2005/07/09 20:02:49 serassio Exp $
+ * $Id: main.cc,v 1.412 2005/07/20 17:07:25 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -379,6 +379,8 @@ mainParseOptions(int argc, char *argv[])
             /* NOTREACHED */
 
         case 'z':
+            opt_debug_stderr = 1;
+
             opt_create_swap_dirs = 1;
 
             break;
