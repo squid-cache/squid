@@ -1,5 +1,5 @@
 /*
- * $Id: Array.h,v 1.22 2005/06/09 07:07:30 hno Exp $
+ * $Id: Array.h,v 1.23 2005/08/03 15:38:23 hno Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -92,7 +92,7 @@ public:
     void clean();
     void reserve (size_t capacity);
     void push_back (E);
-    Vector &operator += (E item) {push_back(item);};
+    Vector &operator += (E item) {push_back(item); return *this;};
     void insert (E);
     E &back();
     E pop_back();
