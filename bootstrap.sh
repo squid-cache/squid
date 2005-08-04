@@ -75,7 +75,7 @@ do
 	cd ./$dir
 	if [ -n "$dir" ] && [ -f bootstrap.sh ]; then
 	    ./bootstrap.sh
-	else
+	elif [ ! -f $dir/configure ]; then
 	    # Make sure cfgaux exists
 	    mkdir -p cfgaux
 
