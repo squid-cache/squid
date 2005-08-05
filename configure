@@ -21633,7 +21633,7 @@ if test "$GCC" = "yes"; then
 	if test $GCCVER2 -lt 300 ; then
 	    echo "ERROR: GCC $GCCVER causes a coredump on $host"
 	    echo "ERROR: Try a more recent GCC version"
-	    exit 1
+	    sleep 5
 	fi
 	;;
     esac
