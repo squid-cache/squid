@@ -3,7 +3,7 @@ dnl  Configuration input file for Squid
 dnl
 dnl  Duane Wessels, wessels@nlanr.net, February 1996 (autoconf v2.9)
 dnl
-dnl  $Id: configure.in,v 1.381 2005/08/05 16:12:35 hno Exp $
+dnl  $Id: configure.in,v 1.382 2005/08/07 12:16:50 serassio Exp $
 dnl
 dnl
 dnl
@@ -13,7 +13,7 @@ AC_CONFIG_SRCDIR([src/main.cc])
 AC_CONFIG_AUX_DIR(cfgaux)
 AM_INIT_AUTOMAKE(squid, 3.0-PRE3-CVS)
 AM_CONFIG_HEADER(include/autoconf.h)
-AC_REVISION($Revision: 1.381 $)dnl
+AC_REVISION($Revision: 1.382 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -1883,6 +1883,17 @@ dnl fallback #1
 dnl if this is defind we trust it to be 64 bits
 AC_CHECK_TYPE(uint64_t,
   AC_DEFINE(HAVE_UINT64_T,1,[uint64_t is defined in system headers]),
+  ,SQUID_DEFAULT_INCLUDES)
+
+dnl On Solaris 9 x86, gcc may includes a "fixed" set of old system include files
+dnl that is incompatible with the updated Solaris header files.
+dnl For this reason, we must check if pad128_t and upad128_t are defined.
+AC_CHECK_TYPE(pad128_t,
+  AC_DEFINE(HAVE_PAD128_T,1,[pad128_t is defined in system headers]),
+  ,SQUID_DEFAULT_INCLUDES)
+
+AC_CHECK_TYPE(upad128_t,
+  AC_DEFINE(HAVE_UPAD128_T,1,[upad128_t is defined in system headers]),
   ,SQUID_DEFAULT_INCLUDES)
 
 AC_CHECK_TYPE(pid_t, AC_DEFINE(HAVE_PID_T,1,[pid_t is defined by the system headers]),,SQUID_DEFAULT_INCLUDES)
