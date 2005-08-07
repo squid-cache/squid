@@ -1,5 +1,5 @@
 /*
- * $Id: config.h,v 1.18 2005/04/23 20:40:50 serassio Exp $
+ * $Id: config.h,v 1.19 2005/08/07 12:16:51 serassio Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -309,13 +309,13 @@ typedef long mtyp_t;
  * that is incompatible with the updated Solaris header files.
  */
 #if defined(_SQUID_SOLARIS_) && (defined(i386) || defined(__i386))
-#ifndef pad128_t
+#ifndef HAVE_PAD128_T
 typedef union {
 	long double	_q;
 	int32_t		_l[4];
 } pad128_t;
 #endif
-#ifndef upda128_t
+#ifndef HAVE_UPAD128_T
 typedef union {
 	long double	_q;
 	uint32_t	_l[4];
