@@ -368,6 +368,9 @@
 /* Define to 1 if you have the <openssl/ssl.h> header file. */
 #undef HAVE_OPENSSL_SSL_H
 
+/* pad128_t is defined in system headers */
+#undef HAVE_PAD128_T
+
 /* pid_t is defined by the system headers */
 #undef HAVE_PID_T
 
@@ -637,6 +640,9 @@
 
 /* Do we have unix sockets? (required for the winbind ntlm helper */
 #undef HAVE_UNIXSOCKET
+
+/* upad128_t is defined in system headers */
+#undef HAVE_UPAD128_T
 
 /* Define to 1 if you have the <utime.h> header file. */
 #undef HAVE_UTIME_H
