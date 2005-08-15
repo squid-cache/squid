@@ -3,7 +3,7 @@ dnl  Configuration input file for Squid
 dnl
 dnl  Duane Wessels, wessels@nlanr.net, February 1996 (autoconf v2.9)
 dnl
-dnl  $Id: configure.in,v 1.382 2005/08/07 12:16:50 serassio Exp $
+dnl  $Id: configure.in,v 1.383 2005/08/14 20:44:28 serassio Exp $
 dnl
 dnl
 dnl
@@ -13,7 +13,7 @@ AC_CONFIG_SRCDIR([src/main.cc])
 AC_CONFIG_AUX_DIR(cfgaux)
 AM_INIT_AUTOMAKE(squid, 3.0-PRE3-CVS)
 AM_CONFIG_HEADER(include/autoconf.h)
-AC_REVISION($Revision: 1.382 $)dnl
+AC_REVISION($Revision: 1.383 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -2386,6 +2386,17 @@ if test "$IPF_TRANSPARENT" = "no" ; then
     echo "WARNING: Cannot find necessary IP-Filter header files"
     echo "         Transparent Proxy support WILL NOT be enabled"
     sleep 10
+elif test "$IPF_TRANSPARENT" = "yes" ; then
+dnl On Solaris Ipfilter includes expect that SOLARIS2 is defined with the
+dnl Solaris minor version (8, 9, 10, ...)
+    case "$host" in
+	*-solaris*)
+	    solrev=`uname -r | sh -c 'IFS=. read j n x; echo $n'`
+	    CFLAGS="-DSOLARIS2=$solrev $CFLAGS" 
+	    ;;
+	*)
+	    ;;
+    esac
 fi
 
 dnl PF support requires a header file.
