@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.257 2005/07/09 20:02:49 serassio Exp $
+ * $Id: tools.cc,v 1.258 2005/08/14 18:43:41 serassio Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -128,7 +128,7 @@ mail_warranty(void)
 
     fclose(fp);
 
-    snprintf(command, 256, "mail %s < %s", Config.adminEmail, filename);
+    snprintf(command, 256, "%s %s < %s", Config.EmailProgram, Config.adminEmail, filename);
 
     system(command);		/* XXX should avoid system(3) */
 
