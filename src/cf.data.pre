@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.391 2005/06/05 23:29:02 hno Exp $
+# $Id: cf.data.pre,v 1.392 2005/08/14 18:43:40 serassio Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2926,6 +2926,19 @@ LOC: Config.adminEmail
 DOC_START
 	Email-address of local cache manager who will receive
 	mail if the cache dies.  The default is "webmaster."
+DOC_END
+
+
+NAME: mail_program
+TYPE: eol
+DEFAULT: mail
+LOC: Config.EmailProgram
+DOC_START
+	Email program used to send mail if the cache dies.
+	The default is "mail". The specified program must complain
+	with the standard Unix mail syntax:
+	mail_program recipient < mailfile
+	Optional command line options can be specified.
 DOC_END
 
 
