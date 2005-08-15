@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.84 2005/06/09 07:07:30 hno Exp $
+ * $Id: client_side_reply.cc,v 1.85 2005/08/14 20:34:54 serassio Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1261,6 +1261,8 @@ clientReplyContext::replyStatus()
 bool
 clientReplyContext::alwaysAllowResponse(http_status sline) const
 {
+    bool result;
+
     switch (sline) {
 
     case HTTP_CONTINUE:
@@ -1272,13 +1274,14 @@ clientReplyContext::alwaysAllowResponse(http_status sline) const
     case HTTP_NO_CONTENT:
 
     case HTTP_NOT_MODIFIED:
-        return true;
-        /* unreached */
+        result = true;
         break;
 
     default:
-        return false;
+        result = false;
     }
+
+    return result;
 }
 
 void
