@@ -1,4 +1,4 @@
-draft-brezak-kerberos-http-00.txt
+draft-jaganathan-kerberos-http-01.txt
 	HTTP Authentication: Kerberos Authentication
 	Microsoft Negotiate "HTTP" authentication scheme
 	Microsoft connection pinning HTTP extension to support
