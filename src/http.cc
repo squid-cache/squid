@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.451 2005/06/09 16:04:30 serassio Exp $
+ * $Id: http.cc,v 1.452 2005/08/17 15:57:26 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -862,7 +862,7 @@ HttpStateData::statusIfComplete() const
      * connection.
      */
     if (!flags.request_sent) {
-        debug(11, 1) ("httpReadReply: Request not yet fully sent \"%s %s\"\n",
+        debug(11, 1) ("statusIfComplete: Request not yet fully sent \"%s %s\"\n",
                       RequestMethodStr[orig_request->method],
                       storeUrl(entry));
         return COMPLETE_NONPERSISTENT_MSG;
@@ -918,9 +918,6 @@ HttpStateData::persistentConnStatus() const
     return result;
 }
 
-/* This will be called when data is ready to be read from fd.  Read until
- * error or connection closed. */
-/* XXX this function is too long! */
 static void
 httpReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno,void *data)
 {
@@ -931,6 +928,9 @@ httpReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno,void *d
     PROF_stop(HttpStateData_readReply);
 }
 
+/* This will be called when data is ready to be read from fd.  Read until
+ * error or connection closed. */
+/* XXX this function is too long! */
 void
 HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, int xerrno,void *data)
 {
