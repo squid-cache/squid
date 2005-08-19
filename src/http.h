@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.12 2005/08/19 16:49:27 wessels Exp $
+ * $Id: http.h,v 1.13 2005/08/19 17:03:28 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -60,7 +60,6 @@ public:
     FwdState *fwd;
     char *body_buf;
     off_t currentOffset;
-    int do_next_read;
     size_t read_sz;
     char buf[SQUID_TCP_SO_RCVBUF];
     bool ignoreCacheControl;
