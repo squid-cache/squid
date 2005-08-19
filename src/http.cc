@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.452 2005/08/17 15:57:26 wessels Exp $
+ * $Id: http.cc,v 1.453 2005/08/19 16:49:26 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -662,7 +662,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
     if (memBufIsNull(&reply_hdr))
         memBufDefInit(&reply_hdr);
 
-    assert(reply_hdr_state == 0);
+    assert(!flags.headers_parsed);
 
     memBufAppend(&reply_hdr, buf, size);
 
@@ -670,7 +670,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
 
     if (hdr_len > 4 && strncmp(reply_hdr.buf, "HTTP/", 5)) {
         debugs(11, 3, "httpProcessReplyHeader: Non-HTTP-compliant header: '" <<  reply_hdr.buf << "'");
-        reply_hdr_state += 2;
+        flags.headers_parsed = 1;
         memBufClean(&reply_hdr);
         failReply (reply, HTTP_INVALID_HEADER);
         ctx_exit(ctx);
@@ -690,7 +690,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
 
         failReply (reply, HTTP_HEADER_TOO_LARGE);
 
-        reply_hdr_state += 2;
+        flags.headers_parsed = 1;
 
         ctx_exit(ctx);
 
@@ -712,11 +712,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
 
     reply_hdr.buf[hdr_size] = '\0';
 
-    reply_hdr_state++;
-
-    assert(reply_hdr_state == 1);
-
-    reply_hdr_state++;
+    flags.headers_parsed = 1;
 
     debug(11, 9) ("GOT HTTP REPLY HDR:\n---------\n%s\n----------\n",
                   reply_hdr.buf);
@@ -897,7 +893,7 @@ HttpStateData::persistentConnStatus() const
                   reply->content_length);
     /* If we haven't seen the end of reply headers, we are not done */
 
-    if (reply_hdr_state < 2)
+    if (!flags.headers_parsed)
         return INCOMPLETE_MSG;
 
     clen = httpReplyBodySize(request->method, reply);
@@ -985,7 +981,7 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
      * not allowing connection reuse in the first place.
      */
 #if DONT_DO_THIS
-    if (reply_hdr_state == 0 && flag == COMM_OK && len > 0 && fd_table[fd].uses > 1) {
+    if (!flags.headers_parsed && flag == COMM_OK && len > 0 && fd_table[fd].uses > 1) {
         /* Skip whitespace between replies */
 
         while (len > 0 && isspace(*buf))
@@ -1033,14 +1029,13 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
         /* Connection closed; retrieval done. */
         eof = 1;
 
-        if (reply_hdr_state < 2)
+        if (!flags.headers_parsed)
             /*
-             * Yes Henrik, there is a point to doing this.  When we
-             * called httpProcessReplyHeader() before, we didn't find
-             * the end of headers, but now we are definately at EOF, so
-             * we want to process the reply headers.
+            * When we called httpProcessReplyHeader() before, we
+            * didn't find the end of headers, but now we are
+            * definately at EOF, so we want to process the reply
+            * headers.
              */
-            /* doesn't return */
             processReplyHeader(buf, len);
         else if (entry->getReply()->sline.status == HTTP_INVALID_HEADER && HttpVersion(0,9) != entry->getReply()->sline.version) {
             ErrorState *err;
@@ -1064,10 +1059,10 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
             comm_close(fd);
         }
     } else {
-        if (reply_hdr_state < 2) {
+        if (!flags.headers_parsed) {
             processReplyHeader(buf, len);
 
-            if (reply_hdr_state == 2) {
+            if (flags.headers_parsed) {
                 http_status s = entry->getReply()->sline.status;
                 HttpVersion httpver = entry->getReply()->sline.version;
 
@@ -1105,7 +1100,7 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
 void
 HttpStateData::processReplyData(const char *buf, size_t len)
 {
-    if (reply_hdr_state < 2) {
+    if (!flags.headers_parsed) {
         do_next_read = 1;
         maybeReadData();
         return;
@@ -1140,7 +1135,7 @@ HttpStateData::processReplyData(const char *buf, size_t len)
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
         /*
-         * the above storeAppend() call could ABORT this entry,
+         * the above entry->write() call could ABORT this entry,
          * in that case, the server FD should already be closed.
          * there's nothing for us to do.
          */
@@ -1844,7 +1839,7 @@ httpRequestBodyHandler(char *buf, ssize_t size, void *data)
     httpState->body_buf = NULL;
 
     if (size > 0) {
-        if (httpState->reply_hdr_state >= 2 && !httpState->flags.abuse_detected) {
+        if (httpState->flags.headers_parsed && !httpState->flags.abuse_detected) {
             httpState->flags.abuse_detected = 1;
             debug(11, 1) ("httpSendRequestEntryDone: Likely proxy abuse detected '%s' -> '%s'\n",
                           inet_ntoa(httpState->orig_request->client_addr),

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.11 2005/03/06 21:08:13 serassio Exp $
+ * $Id: http.h,v 1.12 2005/08/19 16:49:27 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -52,7 +52,6 @@ public:
     StoreEntry *entry;
     HttpRequest *request;
     MemBuf reply_hdr;
-    int reply_hdr_state;
     peer *_peer;		/* peer request made to */
     int eof;			/* reached end-of-object? */
     HttpRequest *orig_request;
