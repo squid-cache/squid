@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.522 2005/08/19 16:49:27 wessels Exp $
+ * $Id: structs.h,v 1.523 2005/08/19 17:03:28 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -988,6 +988,9 @@ unsigned int abuse_detected:
     1;
 
 unsigned int request_sent:
+    1;
+
+unsigned int do_next_read:
     1;
 };
 

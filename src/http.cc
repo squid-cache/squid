@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.453 2005/08/19 16:49:26 wessels Exp $
+ * $Id: http.cc,v 1.454 2005/08/19 17:03:28 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -932,7 +932,7 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
 {
     int bin;
     int clen;
-    do_next_read = 0;
+    flags.do_next_read = 0;
 
 
     assert(buf == readBuf);
@@ -990,7 +990,7 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
         if (len == 0) {
             /* Continue to read... */
             /* Timeout NOT increased. This whitespace was from previous reply */
-            do_next_read = 1;
+            flags.do_next_read = 1;
             maybeReadData();
             return;
         }
@@ -1003,17 +1003,17 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
                       fd, xstrerror());
 
         if (ignoreErrno(errno)) {
-            do_next_read = 1;
+            flags.do_next_read = 1;
         } else if (entry->isEmpty()) {
             ErrorState *err;
             err = errorCon(ERR_READ_ERROR, HTTP_BAD_GATEWAY);
             err->request = requestLink((HttpRequest *) request);
             err->xerrno = errno;
             fwdFail(fwd, err);
-            do_next_read = 0;
+            flags.do_next_read = 0;
             comm_close(fd);
         } else {
-            do_next_read = 0;
+            flags.do_next_read = 0;
             comm_close(fd);
         }
     } else if (flag == COMM_OK && len == 0 && entry->isEmpty()) {
@@ -1023,7 +1023,7 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
         err->request = requestLink((HttpRequest *) request);
         fwdFail(fwd, err);
         eof = 1;
-        do_next_read = 0;
+        flags.do_next_read = 0;
         comm_close(fd);
     } else if (flag == COMM_OK && len == 0) {
         /* Connection closed; retrieval done. */
@@ -1042,7 +1042,7 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
             err = errorCon(ERR_INVALID_RESP, HTTP_BAD_GATEWAY);
             err->request = requestLink((HttpRequest *) request);
             fwdFail(fwd, err);
-            do_next_read = 0;
+            flags.do_next_read = 0;
         } else {
             if (entry->mem_obj->getReply()->sline.status == HTTP_HEADER_TOO_LARGE) {
                 ErrorState *err;
@@ -1055,7 +1055,7 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
                 fwdComplete(fwd);
             }
 
-            do_next_read = 0;
+            flags.do_next_read = 0;
             comm_close(fd);
         }
     } else {
@@ -1101,7 +1101,7 @@ void
 HttpStateData::processReplyData(const char *buf, size_t len)
 {
     if (!flags.headers_parsed) {
-        do_next_read = 1;
+        flags.do_next_read = 1;
         maybeReadData();
         return;
     }
@@ -1152,13 +1152,13 @@ HttpStateData::processReplyData(const char *buf, size_t len)
                 commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
             }
 
-            do_next_read = 1;
+            flags.do_next_read = 1;
             break;
 
         case COMPLETE_PERSISTENT_MSG:
             /* yes we have to clear all these! */
             commSetTimeout(fd, -1, NULL, NULL);
-            do_next_read = 0;
+            flags.do_next_read = 0;
 
             comm_remove_close_handler(fd, httpStateFree, this);
             fwdUnregister(fd, fwd);
@@ -1198,8 +1198,8 @@ HttpStateData::processReplyData(const char *buf, size_t len)
 void
 HttpStateData::maybeReadData()
 {
-    if (do_next_read) {
-        do_next_read = 0;
+    if (flags.do_next_read) {
+        flags.do_next_read = 0;
         entry->delayAwareRead(fd, buf, SQUID_TCP_SO_RCVBUF, httpReadReply, this);
     }
 }
