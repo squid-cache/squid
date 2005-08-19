@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.111 2005/07/13 23:15:46 wessels Exp $
+ * $Id: cachemgr.cc,v 1.112 2005/08/19 16:40:15 wessels Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -799,7 +799,7 @@ process_request(cachemgr_request * req)
         return 1;
     }
 
-    memset(&S, '\0', sizeof(struct sockaddr_in));
+    memset(&S, '\0', sizeof(S));
     S.sin_family = AF_INET;
 
     if ((hp = gethostbyname(req->hostname)) != NULL) {
@@ -815,8 +815,11 @@ process_request(cachemgr_request * req)
 
     S.sin_port = htons(req->port);
 
-    if (connect(s, (struct sockaddr *) &S, sizeof(struct sockaddr_in)) < 0) {
-        snprintf(buf, 1024, "connect: %s\n", xstrerror());
+    if (connect(s, (struct sockaddr *) &S, sizeof(S)) < 0) {
+        snprintf(buf, 1024, "connect %s:%d: %s\n",
+                 inet_ntoa(S.sin_addr),
+                 ntohs(S.sin_port),
+                 xstrerror());
         error_html(buf);
         return 1;
     }
