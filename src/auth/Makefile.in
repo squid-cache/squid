@@ -272,7 +272,7 @@ target_alias = @target_alias@
 
 #  Makefile for authentication modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.54 2005/08/16 00:11:51 hno Exp $
+#  $Id: Makefile.in,v 1.55 2005/08/21 00:10:40 hno Exp $
 #
 AUTOMAKE_OPTIONS = subdir-objects
 AM_CFLAGS = @SQUID_CFLAGS@
@@ -283,7 +283,7 @@ libbasic_a_SOURCES = basic/auth_basic.cc basic/auth_basic.h
 libdigest_a_SOURCES = digest/auth_digest.cc digest/auth_digest.h
 libntlm_a_SOURCES = ntlm/auth_ntlm.cc ntlm/auth_ntlm.h
 INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
-	-I$(top_srcdir)/src/
+	-I$(top_srcdir)/src
 
 all: all-am
 
