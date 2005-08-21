@@ -1,6 +1,6 @@
 #  Makefile for authentication modules in the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.4 2003/03/11 22:11:39 robertc Exp $
+#  $Id: Makefile.am,v 1.5 2005/08/20 21:08:38 serassio Exp $
 #
 AUTOMAKE_OPTIONS = subdir-objects
 AM_CFLAGS = @SQUID_CFLAGS@
@@ -17,4 +17,4 @@ libdigest_a_SOURCES	= digest/auth_digest.cc digest/auth_digest.h
 libntlm_a_SOURCES	= ntlm/auth_ntlm.cc ntlm/auth_ntlm.h
 
 INCLUDES      = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
-	-I$(top_srcdir)/src/
+	-I$(top_srcdir)/src

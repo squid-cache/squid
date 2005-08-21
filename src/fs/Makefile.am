@@ -1,6 +1,6 @@
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.12 2004/12/20 17:25:28 robertc Exp $
+#  $Id: Makefile.am,v 1.13 2005/08/20 21:08:38 serassio Exp $
 #
 
 AUTOMAKE_OPTIONS = subdir-objects
@@ -32,7 +32,7 @@ EXTRA_DIST = \
 	null/StoreFSnull.h
 
 INCLUDES      = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
-	-I$(top_srcdir)/src/
+	-I$(top_srcdir)/src
 
 ## targets below to emulate distributed makefiles
 coss/all: libcoss.a
