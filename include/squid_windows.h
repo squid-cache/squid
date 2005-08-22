@@ -1,5 +1,5 @@
 /*
- * $Id: squid_windows.h,v 1.1 2003/04/21 12:54:10 hno Exp $
+ * $Id: squid_windows.h,v 1.1 2005/08/21 18:54:23 serassio Exp $
  *
  * AUTHOR: Guido Serassio
  *
