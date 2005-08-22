@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.75 2005/08/16 00:11:00 hno Exp $
+# $Id: Makefile.in,v 1.76 2005/08/22 00:10:51 hno Exp $
 #
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -274,8 +274,7 @@ EXTRA_DIST = \
 	QUICKSTART \
 	README \
 	SPONSORS \
-	bootstrap.sh \
-	include/samba/README.txt
+	bootstrap.sh
 
 all: all-recursive
 
@@ -476,7 +475,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/cfgaux $(distdir)/include $(distdir)/include/samba $(distdir)/scripts
+	$(mkdir_p) $(distdir)/cfgaux $(distdir)/include $(distdir)/scripts
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
