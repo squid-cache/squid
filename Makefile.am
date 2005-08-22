@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-# $Id: Makefile.am,v 1.24 2005/08/05 16:14:51 hno Exp $
+# $Id: Makefile.am,v 1.25 2005/08/21 18:50:35 serassio Exp $
 #
 
 AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects 1.5
@@ -37,8 +37,7 @@ EXTRA_DIST = \
 	QUICKSTART \
 	README \
 	SPONSORS \
-	bootstrap.sh \
-	include/samba/README.txt
+	bootstrap.sh
 
 install-pinger:
 	chown root $(DEFAULT_PINGER) 
