@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemPool.cc,v 1.1 2004/09/04 12:40:20 robertc Exp $
+ * $Id: MemPool.cc,v 1.2 2005/08/21 18:33:24 serassio Exp $
  *
  * DEBUG: section 63    Low Level Memory Pool Management
  * AUTHOR: Alex Rousskov, Andres Kroonmaa, Robert Collins
@@ -97,7 +97,7 @@
  * XXX This is a boundary violation between lib and src.. would be good
  * if it could be solved otherwise, but left for now.
  */
-extern time_t squid_curtime;
+extern "C" time_t squid_curtime;
 
 /* local data */
 static MemPoolMeter TheMeter;
