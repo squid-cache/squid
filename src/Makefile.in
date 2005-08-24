@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.345 2005/08/16 00:11:50 hno Exp $
+#  $Id: Makefile.in,v 1.346 2005/08/24 00:10:54 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -1173,8 +1173,7 @@ noinst_HEADERS = ACLChecklist.cci \
 	MemBuf.h \
 	Store.cci \
 	String.cci \
-	SquidString.h \
-	squid_windows.h
+	SquidString.h
 
 nodist_squid_SOURCES = \
 	repl_modules.cc \
