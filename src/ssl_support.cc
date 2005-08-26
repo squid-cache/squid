@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.32 2005/05/31 16:19:56 hno Exp $
+ * $Id: ssl_support.cc,v 1.33 2005/08/25 19:30:01 wessels Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
@@ -876,7 +876,7 @@ ssl_read_method(int fd, char *buf, int len)
     i = SSL_read(ssl, buf, len);
 
     if (i > 0 && SSL_pending(ssl) > 0) {
-        debug(83, 2) ("SSL fd %d is pending\n", fd);
+        debug(83, 2) ("SSL FD %d is pending\n", fd);
         fd_table[fd].flags.read_pending = 1;
     } else
         fd_table[fd].flags.read_pending = 0;

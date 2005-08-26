@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.406 2005/05/14 02:39:40 hno Exp $
+ * $Id: comm.cc,v 1.407 2005/08/25 19:30:01 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -537,7 +537,7 @@ CommRead::tryReading()
     errno = 0;
     int retval;
     retval = FD_READ_METHOD(fd, buf, len);
-    debug(5, 3) ("comm_read_try: fd %d, size %d, retval %d, errno %d\n",
+    debug(5, 3) ("comm_read_try: FD %d, size %d, retval %d, errno %d\n",
                  fd, len, retval, errno);
 
     if (retval < 0 && !ignoreErrno(errno)) {
@@ -848,7 +848,7 @@ comm_write_try(int fd, void *data)
     statCounter.syscalls.sock.writes++;
     errno = 0;
     retval = FD_WRITE_METHOD(fd, Fc->write.buf + Fc->write.curofs, Fc->write.size - Fc->write.curofs);
-    debug(5, 3) ("comm_write_try: fd %d: tried to write %d bytes, retval %d, errno %d\n",
+    debug(5, 3) ("comm_write_try: FD %d: tried to write %d bytes, retval %d, errno %d\n",
                  fd, Fc->write.size - Fc->write.curofs, retval, errno);
 
     if (retval < 0 && !ignoreErrno(errno)) {
@@ -1246,7 +1246,7 @@ commConnectDnsHandle(const ipcache_addrs * ia, void *data)
 void
 ConnectStateData::callCallback(comm_err_t status, int xerrno)
 {
-    debug(5, 3) ("commConnectCallback: fd %d, data %p\n", fd, callback.data);
+    debug(5, 3) ("commConnectCallback: FD %d, data %p\n", fd, callback.data);
     comm_remove_close_handler(fd, commConnectFree, this);
     CallBack<CNCB> aCallback = callback;
     callback = CallBack<CNCB>();
@@ -2503,7 +2503,7 @@ AbortChecker::AbortCheckReader(int fd, char *, size_t size, comm_err_t flag, int
      */
 
     if (flag != COMM_OK && flag != COMM_ERR_CLOSING) {
-        debug (5,3) ("AbortChecker::AbortCheckReader: fd %d aborted\n", fd);
+        debug (5,3) ("AbortChecker::AbortCheckReader: FD %d aborted\n", fd);
         comm_close(fd);
     }
 }
@@ -2515,7 +2515,7 @@ AbortChecker::monitor(int fd) {
     add
         (fd);
 
-    debug (5,3) ("AbortChecker::monitor: monitoring half closed fd %d for aborts\n", fd);
+    debug (5,3) ("AbortChecker::monitor: monitoring half closed FD %d for aborts\n", fd);
 }
 
 void
@@ -2525,7 +2525,7 @@ AbortChecker::stopMonitoring (int fd) {
     remove
         (fd);
 
-    debug (5,3) ("AbortChecker::stopMonitoring: stopped monitoring half closed fd %d for aborts\n", fd);
+    debug (5,3) ("AbortChecker::stopMonitoring: stopped monitoring half closed FD %d for aborts\n", fd);
 }
 
 #include "splay.h"
@@ -2613,7 +2613,7 @@ template cbdata_type List<DeferredRead>
 
 void
 DeferredReadManager::delayRead(DeferredRead const &aRead) {
-    debug (5, 3)("Adding deferred read on fd %d\n", aRead.theRead.fd);
+    debug (5, 3)("Adding deferred read on FD %d\n", aRead.theRead.fd);
     List<DeferredRead> *temp = deferredReads.push_back(aRead);
     comm_add_close_handler (aRead.theRead.fd, CloseHandler, temp);
 }
@@ -2677,7 +2677,7 @@ DeferredReadManager::kickARead(DeferredRead const &aRead) {
     if (aRead.cancelled)
         return;
 
-    debug (5,3)("Kicking deferred read on fd %d\n", aRead.theRead.fd);
+    debug (5,3)("Kicking deferred read on FD %d\n", aRead.theRead.fd);
 
     aRead.theReader(aRead.theContext, aRead.theRead);
 }
