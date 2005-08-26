@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.687 2005/06/12 14:30:50 serassio Exp $
+ * $Id: client_side.cc,v 1.688 2005/08/25 19:30:01 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1382,7 +1382,7 @@ ClientSocketContext::canPackMoreRanges() const
     /* first update "i" if needed */
 
     if (!http->range_iter.debt()) {
-        debug (33,5)("ClientSocketContext::canPackMoreRanges: At end of current range spec for fd %d\n",fd());
+        debug (33,5)("ClientSocketContext::canPackMoreRanges: At end of current range spec for FD %d\n",fd());
 
         if (http->range_iter.pos.incrementable())
             ++http->range_iter.pos;
@@ -1456,7 +1456,7 @@ ClientSocketContext::socketState()
             /* filter out data according to range specs */
 
             if (!canPackMoreRanges()) {
-                debug (33,5)("ClientSocketContext::socketState: Range request has hit end of returnable range sequence on fd %d\n", fd());
+                debug (33,5)("ClientSocketContext::socketState: Range request has hit end of returnable range sequence on FD %d\n", fd());
 
                 if (http->request->flags.proxy_keepalive)
                     return STREAM_COMPLETE;
