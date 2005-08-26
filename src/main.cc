@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.412 2005/07/20 17:07:25 wessels Exp $
+ * $Id: main.cc,v 1.413 2005/08/25 19:31:22 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -1146,10 +1146,6 @@ main(int argc, char **argv)
         }
 
         eventRun();
-        int loop_delay = eventNextTime();
-
-        if (loop_delay < 0)
-            loop_delay = 0;
 
         /* Attempt any pending storedir IO */
         Store::Root().callback();
@@ -1160,8 +1156,14 @@ main(int argc, char **argv)
          * resulting from the first call. These are usually
          * callbacks and should be dealt with immediately.
          */
+
         if (comm_iocallbackpending())
             comm_calliocallback();
+
+        int loop_delay = eventNextTime();
+
+        if (loop_delay < 0)
+            loop_delay = 0;
 
         switch (comm_select(loop_delay)) {
 
