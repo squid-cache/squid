@@ -1,6 +1,6 @@
 
 /*
- * $Id: win32.cc,v 1.16 2005/08/28 08:37:30 serassio Exp $
+ * $Id: win32.cc,v 1.17 2005/08/28 08:55:21 serassio Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -333,6 +333,11 @@ GetOSVersion()
         if ((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion == 2)) {
             WIN32_OS_string = xstrdup("Windows Server 2003");
             return _WIN_OS_WINNET;
+        }
+
+        if ((osvi.dwMajorVersion == 6) && (osvi.dwMinorVersion == 0)) {
+            WIN32_OS_string = xstrdup("Windows code name \"Longhorn\"");
+            return _WIN_OS_WINLON;
         }
 
         break;
@@ -725,8 +730,7 @@ WIN32_InstallService()
                                    NULL);				    /* no password            */
 
         if (schService) {
-            if ((WIN32_OS_version == _WIN_OS_WIN2K) || (WIN32_OS_version == _WIN_OS_WINXP)
-                    || (WIN32_OS_version == _WIN_OS_WINNET)) {
+            if (WIN32_OS_version > _WIN_OS_WINNT) {
                 HMODULE ADVAPI32Handle;
                 PFChangeServiceConfig2 ChangeServiceConfig2;
                 DWORD dwInfoLevel = SERVICE_CONFIG_DESCRIPTION;
