@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.506 2005/06/09 07:07:30 hno Exp $
+ * $Id: protos.h,v 1.507 2005/08/27 19:36:36 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1005,6 +1005,7 @@ SQUIDCEXTERN void WIN32_RemoveService(void);
 #ifdef _SQUID_MSWIN_
 
 SQUIDCEXTERN int WIN32_getrusage(int, struct rusage *);
+SQUIDCEXTERN void WIN32_ExceptionHandlerInit(void);
 #endif
 
 /* external_acl.c */

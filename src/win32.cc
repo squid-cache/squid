@@ -1,6 +1,6 @@
 
 /*
- * $Id: win32.cc,v 1.13 2004/12/20 16:30:37 robertc Exp $
+ * $Id: win32.cc,v 1.14 2005/08/27 19:36:36 serassio Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -39,8 +39,13 @@
 #define WIN32_C
 
 #include "squid.h"
-
 #include "squid_windows.h"
+
+#ifdef _SQUID_MSWIN_
+#if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
+#include <crtdbg.h>
+#endif
+#endif
 
 static unsigned int GetOSVersion();
 void WIN32_svcstatusupdate(DWORD, DWORD);
@@ -52,7 +57,16 @@ static void WIN32_build_argv (char *);
 #endif
 extern "C" void WINAPI SquidMain(DWORD, char **);
 
+#if defined(_SQUID_MSWIN_)
+#if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
+void Squid_Win32InvalidParameterHandler(const wchar_t*, const wchar_t*, const wchar_t*, unsigned int, uintptr_t);
+#endif
+void WIN32_ExceptionHandlerCleanup(void);
+static LPTOP_LEVEL_EXCEPTION_FILTER Win32_Old_ExceptionHandler = NULL;
+#endif
+
 static int Squid_Aborting = 0;
+
 #if USE_WIN32_SERVICE
 static SERVICE_STATUS svcStatus;
 static SERVICE_STATUS_HANDLE svcHandle;
@@ -381,6 +395,10 @@ WIN32_Exit()
     }
 
 #endif
+#ifdef _SQUID_MSWIN_
+    WIN32_ExceptionHandlerCleanup();
+
+#endif
 
     _exit(0);
 }
@@ -392,6 +410,10 @@ int
 WIN32_Subsystem_Init()
 #endif
 {
+#if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
+    _invalid_parameter_handler oldHandler, newHandler;
+#endif
+
     WIN32_OS_version = GetOSVersion();
 
     if ((WIN32_OS_version == _WIN_OS_UNKNOWN) || (WIN32_OS_version == _WIN_OS_WIN32S))
@@ -400,6 +422,15 @@ WIN32_Subsystem_Init()
     if (atexit(WIN32_Exit) != 0)
         return 1;
 
+#if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
+
+    newHandler = Squid_Win32InvalidParameterHandler;
+
+    oldHandler = _set_invalid_parameter_handler(newHandler);
+
+    _CrtSetReportMode(_CRT_ASSERT, 0);
+
+#endif
 #if USE_WIN32_SERVICE
 
     if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE)
@@ -858,4 +889,55 @@ int main(int argc, char **argv)
 
 #endif /* USE_WIN32_SERVICE */
 
+#if defined(_SQUID_MSWIN_)
+void Squid_Win32InvalidParameterHandler(const wchar_t* expression, const wchar_t* function, const wchar_t* file, unsigned int line, uintptr_t pReserved)
+{
+    return;
+}
+
+LONG CALLBACK WIN32_ExceptionHandler(EXCEPTION_POINTERS* ep)
+{
+    EXCEPTION_RECORD* er;
+
+    er = ep->ExceptionRecord;
+
+    switch (er->ExceptionCode) {
+
+    case EXCEPTION_ACCESS_VIOLATION:
+        raise(SIGSEGV);
+        break;
+
+    case EXCEPTION_DATATYPE_MISALIGNMENT:
+
+    case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:
+
+    case EXCEPTION_IN_PAGE_ERROR:
+        death(SIGBUS);
+        break;
+
+    default:
+        break;
+    }
+
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
+
+void WIN32_ExceptionHandlerInit()
+{
+#if !defined(_DEBUG)
+
+    if (Win32_Old_ExceptionHandler == NULL)
+        Win32_Old_ExceptionHandler = SetUnhandledExceptionFilter(WIN32_ExceptionHandler);
+
+#endif
+}
+
+void WIN32_ExceptionHandlerCleanup()
+{
+    if (Win32_Old_ExceptionHandler != NULL)
+        SetUnhandledExceptionFilter(Win32_Old_ExceptionHandler);
+}
+
+#endif
 #endif /* WIN32_C */
