@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.407 2005/08/25 19:30:01 wessels Exp $
+ * $Id: comm.cc,v 1.408 2005/08/27 18:40:20 serassio Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1942,12 +1942,20 @@ commSetNonBlocking(int fd)
 
     int nonblocking = TRUE;
 
+#ifdef _SQUID_CYGWIN_
+
     if (fd_table[fd].type != FD_PIPE) {
+#endif
+
         if (ioctl(fd, FIONBIO, &nonblocking) < 0) {
             debug(50, 0) ("commSetNonBlocking: FD %d: %s %d\n", fd, xstrerror(), fd_table[fd].type);
             return COMM_ERROR;
         }
+
+#ifdef _SQUID_CYGWIN_
+
     } else {
+#endif
 #endif
 #ifndef _SQUID_MSWIN_
 
@@ -1962,7 +1970,7 @@ commSetNonBlocking(int fd)
         }
 
 #endif
-#ifdef _SQUID_WIN32_
+#ifdef _SQUID_CYGWIN_
 
     }
 

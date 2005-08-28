@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.52 2005/01/06 13:16:39 serassio Exp $
+ * $Id: fd.cc,v 1.53 2005/08/27 18:40:20 serassio Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -165,6 +165,8 @@ fd_open(int fd, unsigned int type, const char *desc)
     F->flags.open = 1;
     F->epoll_state = 0;
 #ifdef _SQUID_MSWIN_
+
+    F->win32.handle = _get_osfhandle(fd);
 
     switch (type) {
 

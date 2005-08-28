@@ -1,6 +1,6 @@
 
 /*
- * $Id: fde.h,v 1.8 2005/04/18 21:52:42 hno Exp $
+ * $Id: fde.h,v 1.9 2005/08/27 18:40:20 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -121,6 +121,17 @@ unsigned int write_pending:
 
     SSL *ssl;
 #endif
+#ifdef _SQUID_MSWIN_
+
+    struct
+    {
+
+        long handle;
+    }
+
+    win32;
+#endif
+
 };
 
 #endif /* SQUID_FDE_H */
