@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.258 2005/08/14 18:43:41 serassio Exp $
+ * $Id: tools.cc,v 1.259 2005/08/27 19:36:36 serassio Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -346,7 +346,7 @@ death(int sig)
 #endif
 #endif /* PRINT_STACK_TRACE */
 
-#if SA_RESETHAND == 0
+#if SA_RESETHAND == 0 && !defined(_SQUID_MSWIN_)
     signal(SIGSEGV, SIG_DFL);
 
     signal(SIGBUS, SIG_DFL);
@@ -937,9 +937,45 @@ squid_signal(int sig, SIGHDLR * func, int flags)
         debug(50, 0) ("sigaction: sig=%d func=%p: %s\n", sig, func, xstrerror());
 
 #else
+#ifdef _SQUID_MSWIN_
+    /*
+    On Windows, only SIGINT, SIGILL, SIGFPE, SIGTERM, SIGBREAK, SIGABRT and SIGSEGV signals
+    are supported, so we must care of don't call signal() for other value.
+    The SIGILL, SIGSEGV, and SIGTERM signals are not generated under Windows. They are defined
+    for ANSI compatibility, so both SIGSEGV and SIGBUS are emulated with an Exception Handler.
+    */
+    switch (sig) {
 
-    if (signal(sig, func) == SIG_ERR)
-        debug(50, 0) ("signal: sig=%d func=%p: %s\n", sig, func, xstrerror());
+    case SIGINT:
+
+    case SIGILL:
+
+    case SIGFPE:
+
+    case SIGTERM:
+
+    case SIGBREAK:
+
+    case SIGABRT:
+        break;
+
+    case SIGSEGV:
+        WIN32_ExceptionHandlerInit();
+        break;
+
+    case SIGBUS:
+        WIN32_ExceptionHandlerInit();
+        return;
+        break;  /* Nor reached */
+
+    default:
+        return;
+        break;  /* Nor reached */
+    }
+
+#endif
+
+    signal(sig, func);
 
 #endif
 }
