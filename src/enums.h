@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.242 2005/03/18 15:12:36 hno Exp $
+ * $Id: enums.h,v 1.243 2005/08/28 08:55:21 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -725,7 +725,8 @@ enum {
     _WIN_OS_WINNT,
     _WIN_OS_WIN2K,
     _WIN_OS_WINXP,
-    _WIN_OS_WINNET
+    _WIN_OS_WINNET,
+    _WIN_OS_WINLON
 };
 
 #endif
