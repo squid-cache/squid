@@ -1,6 +1,6 @@
 
 /*
- * $Id: win32.cc,v 1.14 2005/08/27 19:36:36 serassio Exp $
+ * $Id: win32.cc,v 1.15 2005/08/27 19:53:42 serassio Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -42,6 +42,9 @@
 #include "squid_windows.h"
 
 #ifdef _SQUID_MSWIN_
+#ifndef _MSWSOCK_
+#include <mswsock.h>
+#endif
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 #include <crtdbg.h>
 #endif
@@ -61,8 +64,11 @@ extern "C" void WINAPI SquidMain(DWORD, char **);
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 void Squid_Win32InvalidParameterHandler(const wchar_t*, const wchar_t*, const wchar_t*, unsigned int, uintptr_t);
 #endif
+static int Win32SockInit(void);
+static void Win32SockCleanup(void);
 void WIN32_ExceptionHandlerCleanup(void);
 static LPTOP_LEVEL_EXCEPTION_FILTER Win32_Old_ExceptionHandler = NULL;
+static int s_iInitCount = 0;
 #endif
 
 static int Squid_Aborting = 0;
@@ -385,6 +391,9 @@ WIN32_Abort(int sig)
 void
 WIN32_Exit()
 {
+#ifdef _SQUID_MSWIN_
+    Win32SockCleanup();
+#endif
 #if USE_WIN32_SERVICE
 
     if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
@@ -509,8 +518,12 @@ WIN32_Subsystem_Init()
         svcStatus.dwCheckPoint = 0;
         svcStatus.dwWaitHint = 10000;
         SetServiceStatus(svcHandle, &svcStatus);
-
     }
+
+#endif
+#ifdef _SQUID_MSWIN_
+    if (Win32SockInit() < 0)
+        return 1;
 
 #endif
 
@@ -890,6 +903,65 @@ int main(int argc, char **argv)
 #endif /* USE_WIN32_SERVICE */
 
 #if defined(_SQUID_MSWIN_)
+static int Win32SockInit(void)
+{
+    int iVersionRequested;
+    WSADATA wsaData;
+    int err, opt;
+    int optlen = sizeof(opt);
+
+    if (s_iInitCount > 0) {
+        s_iInitCount++;
+        return (0);
+    } else if (s_iInitCount < 0)
+        return (s_iInitCount);
+
+    /* s_iInitCount == 0. Do the initailization */
+    iVersionRequested = MAKEWORD(2, 0);
+
+    err = WSAStartup((WORD) iVersionRequested, &wsaData);
+
+    if (err) {
+        s_iInitCount = -1;
+        return (s_iInitCount);
+    }
+
+    if (LOBYTE(wsaData.wVersion) != 2 ||
+            HIBYTE(wsaData.wVersion) != 0) {
+        s_iInitCount = -2;
+        WSACleanup();
+        return (s_iInitCount);
+    }
+
+    if (WIN32_OS_version !=_WIN_OS_WINNT) {
+        if (::getsockopt(INVALID_SOCKET, SOL_SOCKET, SO_OPENTYPE, (char *)&opt, &optlen)) {
+            s_iInitCount = -3;
+            WSACleanup();
+            return (s_iInitCount);
+        } else {
+            opt = opt | SO_SYNCHRONOUS_NONALERT;
+
+            if (::setsockopt(INVALID_SOCKET, SOL_SOCKET, SO_OPENTYPE, (char *) &opt, optlen)) {
+                s_iInitCount = -3;
+                WSACleanup();
+                return (s_iInitCount);
+            }
+        }
+    }
+
+    WIN32_Socks_initialized = 1;
+    s_iInitCount++;
+    return (s_iInitCount);
+}
+
+static void Win32SockCleanup(void)
+{
+    if (--s_iInitCount == 0)
+        WSACleanup();
+
+    return;
+}
+
 void Squid_Win32InvalidParameterHandler(const wchar_t* expression, const wchar_t* function, const wchar_t* file, unsigned int line, uintptr_t pReserved)
 {
     return;
