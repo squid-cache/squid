@@ -1,6 +1,6 @@
 
 /*
- * $Id: win32.cc,v 1.15 2005/08/27 19:53:42 serassio Exp $
+ * $Id: win32.cc,v 1.16 2005/08/28 08:37:30 serassio Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -254,7 +254,52 @@ WIN32_StoreKey(const char *key, DWORD type, unsigned char *value,
     return retval;
 }
 
-#endif
+/* Build argv, argc from string passed from Windows.  */
+static void WIN32_build_argv(char *cmd)
+{
+    int argvlen = 0;
+    char *word;
+
+    WIN32_argc = 1;
+    WIN32_argv = (char **) xmalloc ((WIN32_argc+1) * sizeof (char *));
+    WIN32_argv[0]=xstrdup(WIN32_module_name);
+    /* Scan command line until there is nothing left. */
+
+    while (*cmd) {
+        /* Ignore spaces */
+
+        if (xisspace(*cmd)) {
+            cmd++;
+            continue;
+        }
+
+        /* Found the beginning of an argument. */
+        word = cmd;
+
+        while (*cmd) {
+            cmd++;		/* Skip over this character */
+
+            if (xisspace(*cmd))	/* End of argument if space */
+                break;
+        }
+
+        if (*cmd)
+            *cmd++ = '\0';		/* Terminate `word' */
+
+        /* See if we need to allocate more space for argv */
+        if (WIN32_argc >= argvlen) {
+            argvlen = WIN32_argc + 1;
+            WIN32_argv = (char **) xrealloc (WIN32_argv, (1 + argvlen) * sizeof (char *));
+        }
+
+        /* Add word to argv file. */
+        WIN32_argv[WIN32_argc++] = word;
+    }
+
+    WIN32_argv[WIN32_argc] = NULL;
+}
+
+#endif /* USE_WIN32_SERVICE */
 
 static unsigned int
 GetOSVersion()
@@ -323,54 +368,6 @@ GetOSVersion()
     WIN32_OS_string = xstrdup("Unknown Windows system");
     return _WIN_OS_UNKNOWN;
 }
-
-#if USE_WIN32_SERVICE
-/* Build argv, argc from string passed from Windows.  */
-static void WIN32_build_argv(char *cmd)
-{
-    int argvlen = 0;
-    char *word;
-
-    WIN32_argc = 1;
-    WIN32_argv = (char **) xmalloc ((WIN32_argc+1) * sizeof (char *));
-    WIN32_argv[0]=xstrdup(WIN32_module_name);
-    /* Scan command line until there is nothing left. */
-
-    while (*cmd) {
-        /* Ignore spaces */
-
-        if (xisspace(*cmd)) {
-            cmd++;
-            continue;
-        }
-
-        /* Found the beginning of an argument. */
-        word = cmd;
-
-        while (*cmd) {
-            cmd++;		/* Skip over this character */
-
-            if (xisspace(*cmd))	/* End of argument if space */
-                break;
-        }
-
-        if (*cmd)
-            *cmd++ = '\0';		/* Terminate `word' */
-
-        /* See if we need to allocate more space for argv */
-        if (WIN32_argc >= argvlen) {
-            argvlen = WIN32_argc + 1;
-            WIN32_argv = (char **) xrealloc (WIN32_argv, (1 + argvlen) * sizeof (char *));
-        }
-
-        /* Add word to argv file. */
-        WIN32_argv[WIN32_argc++] = word;
-    }
-
-    WIN32_argv[WIN32_argc] = NULL;
-}
-
-#endif
 
 /* ====================================================================== */
 /* PUBLIC FUNCTIONS */
@@ -520,7 +517,7 @@ WIN32_Subsystem_Init()
         SetServiceStatus(svcHandle, &svcStatus);
     }
 
-#endif
+#endif /* USE_WIN32_SERVICE */
 #ifdef _SQUID_MSWIN_
     if (Win32SockInit() < 0)
         return 1;
@@ -1011,5 +1008,5 @@ void WIN32_ExceptionHandlerCleanup()
         SetUnhandledExceptionFilter(Win32_Old_ExceptionHandler);
 }
 
-#endif
+#endif /* SQUID_MSWIN_ */
 #endif /* WIN32_C */
