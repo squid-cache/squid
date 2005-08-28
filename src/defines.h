@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.117 2005/03/18 15:48:22 hno Exp $
+ * $Id: defines.h,v 1.118 2005/08/27 18:34:31 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -342,7 +342,7 @@
 #define _WIN_SQUID_SERVICE_CONTROL_RECONFIGURE	129
 #define _WIN_SQUID_SERVICE_CONTROL_DEBUG	130
 #define _WIN_SQUID_SERVICE_CONTROL_INTERRUPT 	131
-#define _WIN_SQUID_DEFAULT_SERVICE_NAME		"SquidNT"
+#define _WIN_SQUID_DEFAULT_SERVICE_NAME		"Squid"
 #define _WIN_SQUID_SERVICE_OPTION		"--ntservice"
 #define _WIN_SQUID_RUN_MODE_INTERACTIVE		0
 #define _WIN_SQUID_RUN_MODE_SERVICE		1
