@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.688 2005/08/25 19:30:01 wessels Exp $
+ * $Id: client_side.cc,v 1.689 2005/08/31 17:21:58 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2868,6 +2868,8 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 
     if (identChecklist.fastCheck())
         identStart(&details->me, &details->peer, clientIdentDone, connState);
+
+    cbdataReferenceDone(identChecklist.accessList);
 
     identChecklist.accessList = NULL;
 
