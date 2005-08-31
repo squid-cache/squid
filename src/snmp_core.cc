@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.68 2005/06/09 16:04:30 serassio Exp $
+ * $Id: snmp_core.cc,v 1.69 2005/08/30 20:44:00 serassio Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -721,7 +721,13 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
         count++;
 
         while ((mibTreeEntry) && (count < CurrentLen) && (!mibTreeEntry->parsefunction)) {
-            mibTreeEntry = snmpTreeEntry(Current[count], count, mibTreeEntry);
+            mib_tree_entry *nextmibTreeEntry = snmpTreeEntry(Current[count], count, mibTreeEntry);
+
+            if (!nextmibTreeEntry)
+                break;
+            else
+                mibTreeEntry = nextmibTreeEntry;
+
             count++;
         }
 
