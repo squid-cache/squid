@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.86 2003/09/01 03:49:40 robertc Exp $
+ * $Id: urn.cc,v 1.87 2005/08/31 19:15:36 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -311,7 +311,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
     url_entry *urls;
     url_entry *u;
     url_entry *min_u;
-    MemBuf mb;
+    MemBuf *mb = NULL;
     ErrorState *err;
     int i;
     int urlcnt = 0;
@@ -404,8 +404,9 @@ urnHandleReply(void *data, StoreIOBuffer result)
     min_u = urnFindMinRtt(urls, urnState->request->method, NULL);
     qsort(urls, urlcnt, sizeof(*urls), url_entry_sort);
     storeBuffer(e);
-    memBufDefInit(&mb);
-    memBufPrintf(&mb,
+    mb = new MemBuf;
+    memBufDefInit(mb);
+    memBufPrintf(mb,
                  "<TITLE>Select URL for %s</TITLE>\n"
                  "<STYLE type=\"text/css\"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}--></STYLE>\n"
                  "<H2>Select URL for %s</H2>\n"
@@ -414,20 +415,20 @@ urnHandleReply(void *data, StoreIOBuffer result)
     for (i = 0; i < urlcnt; i++) {
         u = &urls[i];
         debug(52, 3) ("URL {%s}\n", u->url);
-        memBufPrintf(&mb,
+        memBufPrintf(mb,
                      "<TR><TD><A HREF=\"%s\">%s</A></TD>", u->url, u->url);
 
         if (urls[i].rtt > 0)
-            memBufPrintf(&mb,
+            memBufPrintf(mb,
                          "<TD align=\"right\">%4d <it>ms</it></TD>", u->rtt);
         else
-            memBufPrintf(&mb, "<TD align=\"right\">Unknown</TD>");
+            memBufPrintf(mb, "<TD align=\"right\">Unknown</TD>");
 
-        memBufPrintf(&mb,
+        memBufPrintf(mb,
                      "<TD>%s</TD></TR>\n", u->flags.cached ? "    [cached]" : " ");
     }
 
-    memBufPrintf(&mb,
+    memBufPrintf(mb,
                  "</TABLE>"
                  "<HR noshade size=\"1px\">\n"
                  "<ADDRESS>\n"
@@ -436,7 +437,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
                  full_appname_string, getMyHostname());
     rep = httpReplyCreate();
     httpReplySetHeaders(rep, version, HTTP_MOVED_TEMPORARILY, NULL,
-                        "text/html", mb.size, 0, squid_curtime);
+                        "text/html", mb->contentSize(), 0, squid_curtime);
 
     if (urnState->flags.force_menu) {
         debug(51, 3) ("urnHandleReply: forcing menu\n");
@@ -444,7 +445,8 @@ urnHandleReply(void *data, StoreIOBuffer result)
         httpHeaderPutStr(&rep->header, HDR_LOCATION, min_u->url);
     }
 
-    httpBodySet(&rep->body, &mb);
+    httpBodySet(&rep->body, mb);
+    /* don't clean or delete mb; rep->body owns it now */
     httpReplySwapOut(rep, e);
     e->complete();
 

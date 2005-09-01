@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.408 2005/08/27 18:40:20 serassio Exp $
+ * $Id: comm.cc,v 1.409 2005/08/31 19:15:35 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -2159,8 +2159,8 @@ comm_old_write(int fd, const char *buf, int size, CWCB * handler, void *handler_
 
 /* a wrapper around comm_write to allow for MemBuf to be comm_written in a snap */
 void
-comm_old_write_mbuf(int fd, MemBuf mb, CWCB * handler, void *handler_data) {
-    comm_old_write(fd, mb.buf, mb.size, handler, handler_data, memBufFreeFunc(&mb));
+comm_old_write_mbuf(int fd, MemBuf *mb, CWCB * handler, void *handler_data) {
+    comm_old_write(fd, mb->buf, mb->size, handler, handler_data, memBufFreeFunc(mb));
 }
 
 

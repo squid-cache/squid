@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.69 2003/03/04 01:40:28 robertc Exp $
+ * $Id: ident.cc,v 1.70 2005/08/31 19:15:36 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -115,7 +115,6 @@ identConnectDone(int fd, comm_err_t status, int xerrno, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
     IdentClient *c;
-    MemBuf mb;
 
     if (status != COMM_OK) {
         /* Failed to connect */
@@ -137,11 +136,12 @@ identConnectDone(int fd, comm_err_t status, int xerrno, void *data)
         return;
     }
 
+    MemBuf mb;
     memBufDefInit(&mb);
     memBufPrintf(&mb, "%d, %d\r\n",
                  ntohs(state->my_peer.sin_port),
                  ntohs(state->me.sin_port));
-    comm_old_write_mbuf(fd, mb, NULL, state);
+    comm_old_write_mbuf(fd, &mb, NULL, state);
     comm_read(fd, state->buf, BUFSIZ, identReadReply, state);
     commSetTimeout(fd, Config.Timeout.ident, identTimeout, state);
 }

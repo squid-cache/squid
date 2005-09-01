@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.63 2005/05/06 01:57:55 hno Exp $
+ * $Id: external_acl.cc,v 1.64 2005/08/31 19:15:36 wessels Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -734,7 +734,7 @@ external_acl_cache_touch(external_acl * def, external_acl_entry * entry)
 static char *
 makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
 {
-    static MemBuf mb = MemBufNULL;
+    static MemBuf mb;
     char buf[256];
     int first = 1;
     wordlist *arg;
