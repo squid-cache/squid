@@ -1,0 +1,5 @@
+Makefile
+config.log
+config.status
+cppunit-config
+libtool
