@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.79 2005/08/28 08:55:21 serassio Exp $
+ * $Id: dns_internal.cc,v 1.80 2005/08/31 19:15:35 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -91,8 +91,8 @@ struct _nsvc
     int fd;
     unsigned short msglen;
     int read_msglen;
-    MemBuf msg;
-    MemBuf queue;
+    MemBuf *msg;
+    MemBuf *queue;
     bool busy;
 };
 
@@ -510,18 +510,20 @@ idnsDoSendQueryVC(nsvc *vc)
     if (vc->busy)
         return;
 
-    if (vc->queue.size == 0)
+    if (vc->queue->contentSize() == 0)
         return;
 
-    MemBuf mb = vc->queue;
+    MemBuf *mb = vc->queue;
 
-    vc->queue = MemBufNULL;
+    vc->queue = new MemBuf;
 
     vc->busy = 1;
 
     commSetTimeout(vc->fd, Config.Timeout.idns_query, NULL, NULL);
 
     comm_old_write_mbuf(vc->fd, mb, idnsSentQueryVC, vc);
+
+    delete mb;
 }
 
 static void
@@ -543,6 +545,9 @@ static void
 idnsVCClosed(int fd, void *data)
 {
     nsvc * vc = (nsvc *)data;
+    delete vc->queue;
+    delete vc->msg;
+    // XXX need to free and/or cbdataReferenceDone(vc) ?
     nameservers[vc->ns].vc = NULL;
 }
 
@@ -559,9 +564,9 @@ idnsInitVC(int ns)
     else
         addr = Config.Addrs.udp_incoming;
 
-    vc->queue = MemBufNULL;
+    vc->queue = new MemBuf;
 
-    vc->msg = MemBufNULL;
+    vc->msg = new MemBuf;
 
     vc->fd = comm_open(SOCK_STREAM,
                        IPPROTO_TCP,
@@ -588,14 +593,13 @@ idnsSendQueryVC(idns_query * q, int ns)
 
     nsvc *vc = nameservers[ns].vc;
 
-    if (memBufIsNull(&vc->queue))
-        memBufDefInit(&vc->queue);
+    memBufReset(vc->queue);
 
     short head = htons(q->sz);
 
-    memBufAppend(&vc->queue, (char *)&head, 2);
+    memBufAppend(vc->queue, (char *)&head, 2);
 
-    memBufAppend(&vc->queue, q->buf, q->sz);
+    memBufAppend(vc->queue, q->buf, q->sz);
 
     idnsDoSendQueryVC(vc);
 }
@@ -937,20 +941,20 @@ idnsReadVC(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *dat
         return;
     }
 
-    vc->msg.size += len;
+    vc->msg->size += len;	// XXX should not access -> size directly
 
-    if (vc->msg.size < vc->msglen) {
-        comm_read(fd, buf + len, vc->msglen - vc->msg.size, idnsReadVC, vc);
+    if (vc->msg->contentSize() < vc->msglen) {
+        comm_read(fd, buf + len, vc->msglen - vc->msg->contentSize(), idnsReadVC, vc);
         return;
     }
 
     debug(78, 3) ("idnsReadVC: FD %d: received %d bytes via tcp from %s.\n",
                   fd,
-                  (int) vc->msg.size,
+                  (int) vc->msg->contentSize(),
                   inet_ntoa(nameservers[vc->ns].S.sin_addr));
 
-    idnsGrokReply(vc->msg.buf, vc->msg.size);
-    memBufClean(&vc->msg);
+    idnsGrokReply(vc->msg->buf, vc->msg->contentSize());
+    memBufClean(vc->msg);
     comm_read(fd, (char *)&vc->msglen, 2 , idnsReadVCHeader, vc);
 }
 
@@ -980,8 +984,8 @@ idnsReadVCHeader(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
 
     vc->msglen = ntohs(vc->msglen);
 
-    memBufInit(&vc->msg, vc->msglen, vc->msglen);
-    comm_read(fd, vc->msg.buf, vc->msglen, idnsReadVC, vc);
+    memBufInit(vc->msg, vc->msglen, vc->msglen);
+    comm_read(fd, vc->msg->buf, vc->msglen, idnsReadVC, vc);
 }
 
 /*

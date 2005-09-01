@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.454 2005/08/19 17:03:28 wessels Exp $
+ * $Id: http.cc,v 1.455 2005/08/31 19:15:36 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1720,7 +1720,7 @@ httpSendRequest(HttpStateData * httpState)
                            &mb,
                            httpState->flags);
     debug(11, 6) ("httpSendRequest: FD %d:\n%s\n", fd, mb.buf);
-    comm_old_write_mbuf(fd, mb, sendHeaderDone, httpState);
+    comm_old_write_mbuf(fd, &mb, sendHeaderDone, httpState);
 }
 
 void

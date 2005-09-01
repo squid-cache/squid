@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemBuf.cc,v 1.37 2004/12/21 17:52:53 robertc Exp $
+ * $Id: MemBuf.cc,v 1.38 2005/08/31 19:15:35 wessels Exp $
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov
@@ -156,12 +156,17 @@ void
 memBufClean(MemBuf * mb)
 {
     assert(mb);
-    assert(mb->buf);
-    assert(!mb->stolen);	/* not frozen */
 
-    memFreeBuf(mb->capacity, mb->buf);
-    mb->buf = NULL;
-    mb->size = mb->capacity = mb->max_capacity = 0;
+    if (memBufIsNull(mb)) {
+        // nothing to do
+    } else {
+        assert(mb->buf);
+        assert(!mb->stolen);	/* not frozen */
+
+        memFreeBuf(mb->capacity, mb->buf);
+        mb->buf = NULL;
+        mb->size = mb->capacity = mb->max_capacity = 0;
+    }
 }
 
 /* cleans the buffer without changing its capacity
@@ -195,27 +200,78 @@ memBufIsNull(MemBuf * mb)
     return 0;
 }
 
+mb_size_t MemBuf::spaceSize() const
+{
+    const mb_size_t terminatedSize = size + 1;
+    return (terminatedSize < capacity) ? capacity - terminatedSize : 0;
+}
 
-/* calls memcpy, appends exactly size bytes, extends buffer if needed */
+mb_size_t MemBuf::potentialSpaceSize() const
+{
+    const mb_size_t terminatedSize = size + 1;
+    return (terminatedSize < max_capacity) ? max_capacity - terminatedSize : 0;
+}
+
+// removes sz bytes and "packs" by moving content left
+void MemBuf::consume(mb_size_t shiftSize)
+{
+    const mb_size_t cSize = contentSize();
+    assert(0 <= shiftSize && shiftSize <= cSize);
+    assert(!stolen); /* not frozen */
+
+    if (shiftSize > 0) {
+        if (shiftSize < cSize)
+            xmemmove(buf, buf + shiftSize, cSize - shiftSize);
+
+        size -= shiftSize;
+
+        terminate();
+    }
+}
+
+// calls memcpy, appends exactly size bytes, extends buffer if needed
+void MemBuf::append(const char *newContent, mb_size_t sz)
+{
+    assert(sz >= 0);
+    assert(buf);
+    assert(!stolen); /* not frozen */
+
+    if (sz > 0) {
+        if (size + sz + 1 > capacity)
+            memBufGrow(this, size + sz + 1);
+
+        assert(size + sz <= capacity); /* paranoid */
+
+        xmemcpy(space(), newContent, sz);
+
+        appended(sz);
+    }
+}
+
+// updates content size after external append
+void MemBuf::appended(mb_size_t sz)
+{
+    assert(size + sz <= capacity);
+    size += sz;
+    terminate();
+}
+
+// 0-terminate in case we are used as a string.
+// Extra octet is not counted in the content size (or space size)
+// XXX: but the extra octet is counted when growth decisions are made!
+// This will cause the buffer to grow when spaceSize() == 1 on append,
+// which will assert() if the buffer cannot grow any more.
+void MemBuf::terminate()
+{
+    assert(size < capacity);
+    *space() = '\0';
+}
+
 void
 memBufAppend(MemBuf * mb, const char *buf, mb_size_t sz)
 {
-    assert(mb && buf && sz >= 0);
-    assert(mb->buf);
-    assert(!mb->stolen);	/* not frozen */
-
-    if (sz > 0) {
-        if (mb->size + sz + 1 > mb->capacity)
-            memBufGrow(mb, mb->size + sz + 1);
-
-        assert(mb->size + sz <= mb->capacity);	/* paranoid */
-
-        xmemcpy(mb->buf + mb->size, buf, sz);
-
-        mb->size += sz;
-
-        mb->buf[mb->size] = '\0';	/* \0 terminate in case we are used as a string. Not counted in the size */
-    }
+    assert(mb);
+    mb->append(buf, sz);
 }
 
 /* calls memBufVPrintf */

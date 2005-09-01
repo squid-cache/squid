@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.65 2005/01/27 19:57:09 serassio Exp $
+ * $Id: helper.cc,v 1.66 2005/08/31 19:15:36 wessels Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -765,8 +765,14 @@ helperServerFree(int fd, void *data)
         srv->rbuf = NULL;
     }
 
-    if (!memBufIsNull(&srv->wqueue))
-        memBufClean(&srv->wqueue);
+    memBufClean(srv->wqueue);
+    delete srv->wqueue;
+
+    if (srv->writebuf) {
+        memBufClean(srv->writebuf);
+        delete srv->writebuf;
+        srv->writebuf = NULL;
+    }
 
     for (i = 0; i < concurrency; i++) {
         if ((r = srv->requests[i])) {
@@ -828,8 +834,9 @@ helperStatefulServerFree(int fd, void *data)
     }
 
 #if 0
-    if (!memBufIsNull(&srv->wqueue))
-        memBufClean(&srv->wqueue);
+    memBufClean(srv->wqueue);
+
+    delete srv->wqueue;
 
 #endif
 
@@ -1311,7 +1318,9 @@ helperDispatchWriteDone(int fd, char *buf, size_t len, comm_err_t flag, int xerr
 {
     helper_server *srv = (helper_server *)data;
 
-    memBufClean(&srv->writebuf);
+    memBufClean(srv->writebuf);
+    delete srv->writebuf;
+    srv->writebuf = NULL;
     srv->flags.writing = 0;
 
     if (flag != COMM_OK) {
@@ -1321,13 +1330,13 @@ helperDispatchWriteDone(int fd, char *buf, size_t len, comm_err_t flag, int xerr
         return;
     }
 
-    if (!memBufIsNull(&srv->wqueue)) {
+    if (!memBufIsNull(srv->wqueue)) {
         srv->writebuf = srv->wqueue;
-        srv->wqueue = MemBufNull;
+        srv->wqueue = new MemBuf;
         srv->flags.writing = 1;
         comm_write(srv->wfd,
-                   srv->writebuf.buf,
-                   srv->writebuf.size,
+                   srv->writebuf->content(),
+                   srv->writebuf->contentSize(),
                    helperDispatchWriteDone,	/* Handler */
                    srv);			/* Handler-data */
     }
@@ -1358,21 +1367,22 @@ helperDispatch(helper_server * srv, helper_request * r)
     srv->stats.pending += 1;
     r->dispatch_time = current_time;
 
-    if (memBufIsNull(&srv->wqueue))
-        memBufDefInit(&srv->wqueue);
+    if (memBufIsNull(srv->wqueue))
+        memBufDefInit(srv->wqueue);
 
     if (hlp->concurrency)
-        memBufPrintf(&srv->wqueue, "%d %s", slot, r->buf);
+        memBufPrintf(srv->wqueue, "%d %s", slot, r->buf);
     else
-        memBufAppend(&srv->wqueue, r->buf, strlen(r->buf));
+        memBufAppend(srv->wqueue, r->buf, strlen(r->buf));
 
     if (!srv->flags.writing) {
+        assert(NULL == srv->writebuf);
         srv->writebuf = srv->wqueue;
-        srv->wqueue = MemBufNull;
+        srv->wqueue = new MemBuf;
         srv->flags.writing = 1;
         comm_write(srv->wfd,
-                   srv->writebuf.buf,
-                   srv->writebuf.size,
+                   srv->writebuf->content(),
+                   srv->writebuf->contentSize(),
                    helperDispatchWriteDone,	/* Handler */
                    srv);			/* Handler-data */
     }

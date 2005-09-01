@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.507 2005/08/27 19:36:36 serassio Exp $
+ * $Id: protos.h,v 1.508 2005/08/31 19:15:36 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -144,7 +144,7 @@ SQUIDCEXTERN void comm_old_write(int fd,
                                  CWCB * handler,
                                  void *handler_data,
                                  FREE *);
-SQUIDCEXTERN void comm_old_write_mbuf(int fd, MemBuf mb, CWCB * handler, void *handler_data);
+SQUIDCEXTERN void comm_old_write_mbuf(int fd, MemBuf *mb, CWCB * handler, void *handler_data);
 SQUIDCEXTERN void commCallCloseHandlers(int fd);
 SQUIDCEXTERN int commSetTimeout(int fd, int, PF *, void *);
 SQUIDCEXTERN int ignoreErrno(int);

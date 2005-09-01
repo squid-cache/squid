@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.201 2005/05/01 08:11:48 serassio Exp $
+ * $Id: errorpage.cc,v 1.202 2005/08/31 19:15:35 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -101,7 +101,7 @@ static char *errorLoadText(const char *page_name);
 static const char *errorFindHardText(err_type type);
 static ErrorDynamicPageInfo *errorDynamicPageInfoCreate(int id, const char *page_name);
 static void errorDynamicPageInfoDestroy(ErrorDynamicPageInfo * info);
-static MemBuf errorBuildContent(ErrorState * err);
+static MemBuf *errorBuildContent(ErrorState * err);
 static int errorDump(ErrorState * err, MemBuf * mb);
 static const char *errorConvert(char token, ErrorState * err);
 static CWCB errorSendComplete;
@@ -483,7 +483,7 @@ static int
 errorDump(ErrorState * err, MemBuf * mb)
 {
     HttpRequest *r = err->request;
-    MemBuf str = MemBufNULL;
+    MemBuf str;
     const char *p = NULL;	/* takes priority over mb if set */
     memBufReset(&str);
     /* email subject line */
@@ -593,7 +593,7 @@ static const char *
 errorConvert(char token, ErrorState * err)
 {
     HttpRequest *r = err->request;
-    static MemBuf mb = MemBufNULL;
+    static MemBuf mb;
     const char *p = NULL;	/* takes priority over mb if set */
     int do_quote = 1;
 
@@ -747,11 +747,11 @@ errorConvert(char token, ErrorState * err)
 
         if (err->page_id != ERR_SQUID_SIGNATURE) {
             const int saved_id = err->page_id;
-            MemBuf sign_mb;
             err->page_id = ERR_SQUID_SIGNATURE;
-            sign_mb = errorBuildContent(err);
-            memBufPrintf(&mb, "%s", sign_mb.buf);
-            memBufClean(&sign_mb);
+            MemBuf *sign_mb = errorBuildContent(err);
+            memBufPrintf(&mb, "%s", sign_mb->content());
+            memBufClean(sign_mb);
+            delete sign_mb;
             err->page_id = saved_id;
             do_quote = 0;
         } else {
@@ -854,8 +854,8 @@ errorBuildReply(ErrorState * err)
 
         httpHeaderPutStrf(&rep->header, HDR_X_SQUID_ERROR, "%d %s\n", err->httpStatus, "Access Denied");
     } else {
-        MemBuf content = errorBuildContent(err);
-        httpReplySetHeaders(rep, version, err->httpStatus, NULL, "text/html", content.size, 0, squid_curtime);
+        MemBuf *content = errorBuildContent(err);
+        httpReplySetHeaders(rep, version, err->httpStatus, NULL, "text/html", content->contentSize(), 0, squid_curtime);
         /*
          * include some information for downstream caches. Implicit
          * replaceable content. This isn't quite sufficient. xerrno is not
@@ -866,37 +866,37 @@ errorBuildReply(ErrorState * err)
          */
         httpHeaderPutStrf(&rep->header, HDR_X_SQUID_ERROR, "%s %d",
                           name, err->xerrno);
-        httpBodySet(&rep->body, &content);
-        /* do not memBufClean() the content, it was absorbed by httpBody */
+        httpBodySet(&rep->body, content);
+        /* do not memBufClean() or delete the content, it was absorbed by httpBody */
     }
 
     return rep;
 }
 
-static MemBuf
+static MemBuf *
 errorBuildContent(ErrorState * err)
 {
-    MemBuf content;
+    MemBuf *content = new MemBuf;
     const char *m;
     const char *p;
     const char *t;
     assert(err != NULL);
     assert(err->page_id > ERR_NONE && err->page_id < error_page_count);
-    memBufDefInit(&content);
+    memBufDefInit(content);
     m = error_text[err->page_id];
     assert(m);
 
     while ((p = strchr(m, '%'))) {
-        memBufAppend(&content, m, p - m);	/* copy */
+        memBufAppend(content, m, p - m);	/* copy */
         t = errorConvert(*++p, err);	/* convert */
-        memBufPrintf(&content, "%s", t);	/* copy */
+        memBufPrintf(content, "%s", t);	/* copy */
         m = p + 1;		/* advance */
     }
 
     if (*m)
-        memBufPrintf(&content, "%s", m);	/* copy tail */
+        memBufPrintf(content, "%s", m);	/* copy tail */
 
-    assert((size_t)content.size == strlen(content.buf));
+    assert((size_t)content->contentSize() == strlen(content->content()));
 
     return content;
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.150 2003/08/10 11:00:45 robertc Exp $
+ * $Id: wais.cc,v 1.151 2005/08/31 19:15:36 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -240,7 +240,7 @@ waisSendRequest(int fd, void *data)
 
     memBufPrintf(&mb, "\r\n");
     debug(24, 6) ("waisSendRequest: buf: %s\n", mb.buf);
-    comm_old_write_mbuf(fd, mb, waisSendComplete, waisState);
+    comm_old_write_mbuf(fd, &mb, waisSendComplete, waisState);
 
     if (EBIT_TEST(waisState->entry->flags, ENTRY_CACHABLE))
         storeSetPublicKey(waisState->entry);	/* Make it public */

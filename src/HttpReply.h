@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.h,v 1.7 2004/08/30 05:12:31 robertc Exp $
+ * $Id: HttpReply.h,v 1.8 2005/08/31 19:15:35 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -53,17 +53,17 @@ extern void httpReplyPackHeadersInto(const HttpReply * rep, Packer * p);
 extern void httpReplyPackInto(const HttpReply * rep, Packer * p);
 /* ez-routines */
 /* mem-pack: returns a ready to use mem buffer with a packed reply */
-extern MemBuf httpReplyPack(const HttpReply * rep);
+extern MemBuf *httpReplyPack(const HttpReply * rep);
 /* swap: create swap-based packer, pack, destroy packer */
 extern void httpReplySwapOut(HttpReply * rep, StoreEntry * e);
 /* set commonly used info with one call */
 extern void httpReplySetHeaders(HttpReply * rep, HttpVersion ver, http_status status,
                                     const char *reason, const char *ctype, int clen, time_t lmt, time_t expires);
 /* do everything in one call: init, set, pack, clean, return MemBuf */
-extern MemBuf httpPackedReply(HttpVersion ver, http_status status, const char *ctype,
-                                  int clen, time_t lmt, time_t expires);
+extern MemBuf *httpPackedReply(HttpVersion ver, http_status status, const char *ctype,
+                                   int clen, time_t lmt, time_t expires);
 /* construct 304 reply and pack it into MemBuf, return MemBuf */
-extern MemBuf httpPacked304Reply(const HttpReply * rep);
+extern MemBuf *httpPacked304Reply(const HttpReply * rep);
 /* construct a 304 reply and return it */
 extern HttpReply *httpReplyMake304(const HttpReply *rep);
 /* update when 304 reply is received for a cached object */

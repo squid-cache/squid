@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.101 2004/12/26 11:31:11 serassio Exp $
+ * $Id: access_log.cc,v 1.102 2005/08/31 19:15:35 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -504,7 +504,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
     logformat *lf;
     Logfile *logfile;
     logformat_token *fmt;
-    static MemBuf mb = MemBufNULL;
+    static MemBuf mb;
     char tmp[1024];
     String sb;
 

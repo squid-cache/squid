@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.71 2005/05/01 08:11:47 serassio Exp $
+ * $Id: HttpReply.cc,v 1.72 2005/08/31 19:15:35 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -151,7 +151,7 @@ httpReplyParse(HttpReply * rep, const char *buf, ssize_t end)
      * becuase somebody may feed a non NULL-terminated buffer to
      * us.
      */
-    MemBuf mb = MemBufNull;
+    MemBuf mb;
     int success;
     /* reset current state, because we are not used in incremental fashion */
     httpReplyReset(rep);
@@ -182,15 +182,15 @@ httpReplyPackInto(const HttpReply * rep, Packer * p)
 }
 
 /* create memBuf, create mem-based packer,  pack, destroy packer, return MemBuf */
-MemBuf
+MemBuf *
 httpReplyPack(const HttpReply * rep)
 {
-    MemBuf mb;
+    MemBuf *mb = new MemBuf;
     Packer p;
     assert(rep);
 
-    memBufDefInit(&mb);
-    packerToMemInit(&p, &mb);
+    memBufDefInit(mb);
+    packerToMemInit(&p, mb);
     httpReplyPackInto(rep, &p);
     packerClean(&p);
     return mb;
@@ -207,14 +207,13 @@ httpReplySwapOut(HttpReply * rep, StoreEntry * e)
     storeEntryReplaceObject(e, rep);
 }
 
-MemBuf
+MemBuf *
 httpPackedReply(HttpVersion ver, http_status status, const char *ctype,
                 int clen, time_t lmt, time_t expires)
 {
     HttpReply *rep = httpReplyCreate();
-    MemBuf mb;
     httpReplySetHeaders(rep, ver, status, ctype, NULL, clen, lmt, expires);
-    mb = httpReplyPack(rep);
+    MemBuf *mb = httpReplyPack(rep);
     httpReplyDestroy(rep);
     return mb;
 }
@@ -250,17 +249,16 @@ httpReplyMake304 (const HttpReply * rep)
     return rv;
 }
 
-MemBuf
+MemBuf *
 httpPacked304Reply(const HttpReply * rep)
 {
     /* Not as efficient as skipping the header duplication,
      * but easier to maintain
      */
     HttpReply *temp;
-    MemBuf rv;
     assert (rep);
     temp = httpReplyMake304 (rep);
-    rv = httpReplyPack(temp);
+    MemBuf *rv = httpReplyPack(temp);
     httpReplyDestroy (temp);
     return rv;
 }

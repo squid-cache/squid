@@ -1,6 +1,5 @@
-
 /*
- * $Id: MemBuf.h,v 1.2 2003/02/21 22:50:06 robertc Exp $
+ * $Id: MemBuf.h,v 1.3 2005/08/31 19:15:35 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -42,20 +41,59 @@ class MemBuf
 
 public:
     _SQUID_INLINE_ MemBuf();
-    /* public, read-only */
-    char *buf;
-    mb_size_t size;		/* used space, does not count 0-terminator */
+    _SQUID_INLINE_ ~MemBuf();
+
+    /* use methods instead of deprecated buf and size members */
+
+    char *content() { return buf; }      // start of the added data
+
+    mb_size_t contentSize() const { return size; } // available data size
+
+    bool hasContent() const { return size > 0; }
+
+    // these space-related methods assume no growth and allow 0-termination
+    char *space() { return buf + size; } // space to add data
+
+    mb_size_t spaceSize() const;
+    bool hasSpace() const { return size+1 < capacity; }
+
+    mb_size_t potentialSpaceSize() const; // accounts for possible growth
+    bool hasPotentialSpace() const { return potentialSpaceSize() > 0; }
+
+    // there is currently no stretch() method to grow without appending
+
+    void consume(mb_size_t sz);  // removes sz bytes, moving content left
+    void append(const char *c, mb_size_t sz); // grows if needed and possible
+    void appended(mb_size_t sz); // updates content size after external append
+
+    // XXX: convert global memBuf*() functions into methods
+
+    void terminate(); // zero-terminates the buffer w/o increasing contentSize
+
+private:
+    /*
+     * private copy constructor and assignment operator generates
+     * compiler errors if someone tries to copy/assign a MemBuf
+     */
+    MemBuf(const MemBuf& m) {assert(false);};
+
+    MemBuf& operator= (const MemBuf& m) {assert(false); return *this;};
+
+public:
+    /* public, read-only, depricated in favor of space*() and content*() */
+    // XXX: hide these members completely and remove 0-termination
+    // so that consume() does not need to memmove all the time
+    char *buf;          // available content
+    mb_size_t size;     // used space, does not count 0-terminator
 
     /* private, stay away; use interface function instead */
+    // XXX: make these private after converting memBuf*() functions to methods
     mb_size_t max_capacity;	/* when grows: assert(new_capacity <= max_capacity) */
     mb_size_t capacity;		/* allocated space */
 
 unsigned stolen:
     1;		/* the buffer has been stolen for use by someone else */
 };
-
-/* to initialize static variables (see also MemBufNull) */
-#define MemBufNULL MemBuf();
 
 #ifdef _USE_INLINE_
 #include "MemBuf.cci"
@@ -87,7 +125,5 @@ SQUIDCEXTERN void memBufVPrintf(MemBuf * mb, const char *fmt, va_list ap);
 SQUIDCEXTERN FREE *memBufFreeFunc(MemBuf * mb);
 /* puts report on MemBuf _module_ usage into mb */
 SQUIDCEXTERN void memBufReport(MemBuf * mb);
-
-#define MemBufNull MemBuf();
 
 #endif /* SQUID_MEM_H */

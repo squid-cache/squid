@@ -1,6 +1,6 @@
 
 /*
- * $Id: internal.cc,v 1.30 2003/09/01 03:49:39 robertc Exp $
+ * $Id: internal.cc,v 1.31 2005/08/31 19:15:36 wessels Exp $
  *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
@@ -100,7 +100,6 @@ internalStaticCheck(const char *urlpath)
 char *
 internalRemoteUri(const char *host, u_short port, const char *dir, const char *name)
 {
-    static MemBuf mb = MemBufNULL;
     static char lc_host[SQUIDHOSTNAMELEN];
     assert(host && name);
     /* convert host name to lower case */
@@ -116,6 +115,8 @@ internalRemoteUri(const char *host, u_short port, const char *dir, const char *n
                 strlen(lc_host) - 1);
 
     /* build uri in mb */
+    static MemBuf mb;
+
     memBufReset(&mb);
 
     memBufPrintf(&mb, "http://%s", lc_host);

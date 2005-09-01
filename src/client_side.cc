@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.689 2005/08/31 17:21:58 wessels Exp $
+ * $Id: client_side.cc,v 1.690 2005/08/31 19:15:35 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -812,9 +812,9 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
     memBufDefInit(&mb);
     packRange(bodyData, &mb);
 
-    if (mb.size)
+    if (mb.contentSize())
         /* write */
-        comm_old_write_mbuf(fd(), mb, clientWriteComplete, this);
+        comm_old_write_mbuf(fd(), &mb, clientWriteComplete, this);
     else
         writeComplete(fd(), NULL, 0, COMM_OK);
 }
@@ -1168,11 +1168,10 @@ void
 ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData)
 {
     prepareReply(rep);
-    /* init mb; put status line and headers if any */
     assert (rep);
-    MemBuf mb = httpReplyPack(rep);
+    MemBuf *mb = httpReplyPack(rep);
     /* Save length of headers for persistent conn checks */
-    http->out.headers_sz = mb.size;
+    http->out.headers_sz = mb->contentSize();
 #if HEADERS_LOG
 
     headersLog(0, 0, http->request->method, rep);
@@ -1183,16 +1182,16 @@ ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData)
             size_t length = lengthToSend(bodyData.range());
             noteSentBodyBytes (length);
 
-            memBufAppend(&mb, bodyData.data, length);
+            memBufAppend(mb, bodyData.data, length);
         } else {
-            packRange(bodyData, &mb);
+            packRange(bodyData, mb);
         }
     }
 
     /* write */
     comm_old_write_mbuf(fd(), mb, clientWriteComplete, this);
 
-    /* if we don't do it, who will? */
+    delete mb;
 }
 
 /*

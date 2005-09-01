@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.523 2005/08/19 17:03:28 wessels Exp $
+ * $Id: structs.h,v 1.524 2005/08/31 19:15:36 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -864,7 +864,7 @@ struct _Packer
 struct _HttpBody
 {
     /* private */
-    MemBuf mb;
+    MemBuf *mb;
 };
 
 #include "SquidString.h"
@@ -1986,8 +1986,8 @@ struct _helper_server
     int pid;
     int rfd;
     int wfd;
-    MemBuf wqueue;
-    MemBuf writebuf;
+    MemBuf *wqueue;
+    MemBuf *writebuf;
     char *rbuf;
     size_t rbuf_sz;
     off_t roffset;
