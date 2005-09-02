@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.102 2005/08/31 19:15:35 wessels Exp $
+ * $Id: access_log.cc,v 1.103 2005/09/01 19:34:46 hno Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -881,7 +881,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
  * def is for sure null-terminated
  */
 static int
-accessLogGetNewLogFormatToken(logformat_token * lt, char *def, char *last)
+accessLogGetNewLogFormatToken(logformat_token * lt, char *def, enum log_quote *quote)
 {
     char *cur = def;
 
@@ -898,8 +898,36 @@ accessLogGetNewLogFormatToken(logformat_token * lt, char *def, char *last)
         xstrncpy(cp, cur, l + 1);
         lt->type = LFT_STRING;
         lt->data.string = cp;
-        *last = cur[l - 1];
-        cur += l;
+
+        while (l > 0) {
+            switch(*cur) {
+
+            case '"':
+
+                if (*quote == LOG_QUOTE_NONE)
+                    *quote = LOG_QUOTE_QUOTES;
+                else if (*quote == LOG_QUOTE_QUOTES)
+                    *quote = LOG_QUOTE_NONE;
+
+                break;
+
+            case '[':
+                if (*quote == LOG_QUOTE_NONE)
+                    *quote = LOG_QUOTE_BRAKETS;
+
+                break;
+
+            case ']':
+                if (*quote == LOG_QUOTE_BRAKETS)
+                    *quote = LOG_QUOTE_NONE;
+
+                break;
+            }
+
+            cur++;
+            l--;
+        }
+
         goto done;
     }
 
@@ -928,6 +956,10 @@ accessLogGetNewLogFormatToken(logformat_token * lt, char *def, char *last)
     case '#':
         lt->quote = LOG_QUOTE_URL;
         cur++;
+        break;
+
+    default:
+        lt->quote = *quote;
         break;
     }
 
@@ -973,13 +1005,6 @@ accessLogGetNewLogFormatToken(logformat_token * lt, char *def, char *last)
     if (lt->type == LFT_NONE) {
         fatalf("Can't parse configuration token: '%s'\n",
                def);
-    }
-
-    if (!lt->quote) {
-        if (*last == '"' && *cur == '"')
-            lt->quote = LOG_QUOTE_QUOTES;
-        else if (*last == '[' && *cur == ']')
-            lt->quote = LOG_QUOTE_BRAKETS;
     }
 
     if (*cur == ' ') {
@@ -1056,7 +1081,7 @@ accessLogParseLogFormat(logformat_token ** fmt, char *def)
 {
     char *cur, *eos;
     logformat_token *new_lt, *last_lt;
-    char last = '\0';
+    enum log_quote quote = LOG_QUOTE_NONE;
 
     debug(46, 1) ("accessLogParseLogFormat: got definition '%s'\n", def);
 
@@ -1067,13 +1092,13 @@ accessLogParseLogFormat(logformat_token ** fmt, char *def)
     cur = def;
     eos = def + strlen(def);
     *fmt = new_lt = last_lt = (logformat_token *)xmalloc(sizeof(logformat_token));
-    cur += accessLogGetNewLogFormatToken(new_lt, cur, &last);
+    cur += accessLogGetNewLogFormatToken(new_lt, cur, &quote);
 
     while (cur < eos) {
         new_lt = (logformat_token *)xmalloc(sizeof(logformat_token));
         last_lt->next = new_lt;
         last_lt = new_lt;
-        cur += accessLogGetNewLogFormatToken(new_lt, cur, &last);
+        cur += accessLogGetNewLogFormatToken(new_lt, cur, &quote);
     }
 
     return 1;
