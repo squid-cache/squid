@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.392 2005/08/14 18:43:40 serassio Exp $
+# $Id: cf.data.pre,v 1.393 2005/09/01 19:34:46 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1181,17 +1181,18 @@ DOC_START
 	The <format specification> is a string with embedded % format codes
 
 	% format codes all follow the same basic structure where all but
-	the formatcode is optional. Output strings are automatically quoted
+	the formatcode is optional. Output strings are automatically escaped
 	as required according to their context and the output format
-	modifiers are usually unneeded but can be specified if an explicit
-	quoting format is desired.
+	modifiers are usually not needed, but can be specified if an explicit
+	output format is desired.
 
 		% ["|[|'|#] [-] [[0]width] [{argument}] formatcode
 
-		"	quoted string output format
-		[	squid log quoted format as used by log_mime_hdrs
-		#	URL quoted output format
-		'	No automatic quoting
+		"	output in quoted string format
+		[	output in squid text log format as used by log_mime_hdrs
+		#	output in URL quoted format
+		'	output as-is
+
 		-	left aligned
 		width	field width. If starting with 0 the
 			output is zero padded
