@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.15 2005/07/03 15:25:08 serassio Exp $
+ * $Id: ESI.cc,v 1.16 2005/09/01 18:53:51 serassio Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -1464,15 +1464,15 @@ ESIContext::fail ()
     err->err_msg = errormessage;
     errormessage = NULL;
     rep = errorBuildReply (err);
-    assert (rep->body.mb.size >= 0);
-    size_t errorprogress = rep->body.mb.size;
+    assert (rep->body.mb->contentSize() >= 0);
+    size_t errorprogress = rep->body.mb->contentSize();
     /* Tell esiSend where to start sending from */
     outbound_offset = 0;
     /* copy the membuf from the reply to outbound */
 
-    while (errorprogress < (size_t)rep->body.mb.size) {
+    while (errorprogress < (size_t)rep->body.mb->contentSize()) {
         appendOutboundData(new ESISegment);
-        errorprogress += outboundtail->append(rep->body.mb.buf + errorprogress, rep->body.mb.size - errorprogress);
+        errorprogress += outboundtail->append(rep->body.mb->content() + errorprogress, rep->body.mb->contentSize() - errorprogress);
     }
 
     /* the esiCode now thinks that the error is the outbound,
