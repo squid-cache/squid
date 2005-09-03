@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.393 2005/09/01 19:34:46 hno Exp $
+# $Id: cf.data.pre,v 1.394 2005/09/03 11:53:31 serassio Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2927,6 +2927,18 @@ LOC: Config.adminEmail
 DOC_START
 	Email-address of local cache manager who will receive
 	mail if the cache dies.  The default is "webmaster."
+DOC_END
+
+
+NAME: mail_from
+TYPE: string
+DEFAULT: none
+LOC: Config.EmailFrom
+DOC_START
+	From: email-address for mail sent when the cache dies.
+	The default is to use 'appname@unique_hostname'.
+	Default appname value is "squid", can be changed into 
+	src/globals.h before building squid.
 DOC_END
 
 
