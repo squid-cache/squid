@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.477 2005/07/09 20:02:49 serassio Exp $
+ * $Id: cache_cf.cc,v 1.478 2005/09/03 10:32:08 serassio Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -3033,7 +3033,7 @@ requirePathnameExists(const char *name, const char *path)
     char pathbuf[BUFSIZ];
     assert(path != NULL);
 
-    if (Config.chroot_dir) {
+    if (Config.chroot_dir && (geteuid() == 0)) {
         snprintf(pathbuf, BUFSIZ, "%s/%s", Config.chroot_dir, path);
         path = pathbuf;
     }
