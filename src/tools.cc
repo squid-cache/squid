@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.259 2005/08/27 19:36:36 serassio Exp $
+ * $Id: tools.cc,v 1.260 2005/09/03 11:53:32 serassio Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -120,7 +120,10 @@ mail_warranty(void)
 
 #endif
 
-    fprintf(fp, "From: %s\n", appname);
+    if (Config.EmailFrom)
+        fprintf(fp, "From: %s\n", Config.EmailFrom);
+    else
+        fprintf(fp, "From: %s@%s\n", appname, uniqueHostname());
 
     fprintf(fp, "To: %s\n", Config.adminEmail);
 

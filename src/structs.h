@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.524 2005/08/31 19:15:36 wessels Exp $
+ * $Id: structs.h,v 1.525 2005/09/03 11:53:32 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -383,6 +383,7 @@ struct _SquidConfig
 
     Log;
     char *adminEmail;
+    char *EmailFrom;
     char *EmailProgram;
     char *effectiveUser;
     char *visible_appname_string;
