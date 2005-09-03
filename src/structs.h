@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.525 2005/09/03 11:53:32 serassio Exp $
+ * $Id: structs.h,v 1.526 2005/09/03 13:46:46 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -851,7 +851,7 @@ struct _Packer
 {
     /* protected, use interface functions instead */
     append_f append;
-    vprintf_f vprintf;
+    vprintf_f packer_vprintf;
     void *real_handler;		/* first parameter to real append and vprintf */
 };
 
