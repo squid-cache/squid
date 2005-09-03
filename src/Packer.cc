@@ -1,6 +1,6 @@
 
 /*
- * $Id: Packer.cc,v 1.16 2003/02/21 22:50:06 robertc Exp $
+ * $Id: Packer.cc,v 1.17 2005/09/03 13:46:46 serassio Exp $
  *
  * DEBUG: section 60    Packer: A uniform interface to store-like modules
  * AUTHOR: Alex Rousskov
@@ -109,7 +109,7 @@ packerToStoreInit(Packer * p, StoreEntry * e)
 {
     assert(p && e);
     p->append = (append_f) store_append;
-    p->vprintf = (vprintf_f) store_vprintf;
+    p->packer_vprintf = (vprintf_f) store_vprintf;
     p->real_handler = e;
 }
 
@@ -119,7 +119,7 @@ packerToMemInit(Packer * p, MemBuf * mb)
 {
     assert(p && mb);
     p->append = (append_f) memBuf_append;
-    p->vprintf = (vprintf_f) memBuf_vprintf;
+    p->packer_vprintf = (vprintf_f) memBuf_vprintf;
     p->real_handler = mb;
 }
 
@@ -130,7 +130,7 @@ packerClean(Packer * p)
     assert(p);
     /* it is not really necessary to do this, but, just in case... */
     p->append = NULL;
-    p->vprintf = NULL;
+    p->packer_vprintf = NULL;
     p->real_handler = NULL;
 }
 
@@ -163,7 +163,7 @@ va_dcl
 #endif
 
     assert(p);
-    assert(p->real_handler && p->vprintf);
-    p->vprintf(p->real_handler, fmt, args);
+    assert(p->real_handler && p->packer_vprintf);
+    p->packer_vprintf(p->real_handler, fmt, args);
     va_end(args);
 }
