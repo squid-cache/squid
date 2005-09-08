@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.394 2005/09/03 11:53:31 serassio Exp $
+# $Id: cf.data.pre,v 1.395 2005/09/07 19:24:49 wessels Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -166,7 +166,7 @@ DOC_START
 
 	   cipher=	Colon separated list of supported ciphers
 
-	   options=	Varions SSL engine options. The most important
+	   options=	Various SSL engine options. The most important
 			being:
 			    NO_SSLv2  Disallow the use of SSLv2
 			    NO_SSLv3  Disallow the use of SSLv3
@@ -1070,7 +1070,7 @@ DOC_START
 	cache among different disk partitions.
 
 	Type specifies the kind of storage system to use. Only "ufs"
-	is built by default. To eanble any of the other storage systems
+	is built by default. To enable any of the other storage systems
 	see the --enable-storeio configure option.
 
 	'Directory' is a top-level directory where cache swap
@@ -1512,7 +1512,7 @@ LOC: Config.Ftp.telnet
 DOC_START
 The FTP protocol is officially defined to use the telnet protocol
 as transport channel for the control connection. However, many
-implemenations are broken and does not respect this aspect of
+implementations are broken and does not respect this aspect of
 the FTP protocol.
 
 If you have trouble accessing files with ASCII code 255 in the
@@ -1617,7 +1617,7 @@ DOC_START
 
 	The file contains newline-separated definitions, in the
 	form ip_address_in_dotted_form name [name ...] names are
-	whitespace-separated. Lines beginnng with an hash (#)
+	whitespace-separated. Lines beginning with an hash (#)
 	character are comments.
 
 	The file is checked at startup and upon configuration.
@@ -1725,11 +1725,11 @@ DOC_START
 	would tell the basic authentication scheme it's program parameter.
 
 	The order authentication prompts are presented to the client_agent
-	is dependant on the order the scheme first appears in config file.
+	is dependent on the order the scheme first appears in config file.
 	IE has a bug (it's not rfc 2617 compliant) in that it will use the basic
 	scheme if basic is the first entry presented, even if more secure schemes
 	are presented. For now use the order in the file below. If other browsers
-	have difficulties (don't recognise the schemes offered even if you are using
+	have difficulties (don't recognize the schemes offered even if you are using
 	basic) either put basic first, or disable the other schemes (by commenting
 	out their program entry).
 
@@ -1786,7 +1786,7 @@ DOC_START
 	username:password pair is valid for - in other words how
 	often the helper program is called for that user. Set this
 	low to force revalidation with short lived passwords.  Note
-	setting this high does not impact your susceptability
+	setting this high does not impact your susceptibility
 	to replay attacks unless you are using an one-time password
 	system (such as SecureID).  If you are using such a system,
 	you will be vulnerable to replay attacks unless you also
@@ -1852,7 +1852,7 @@ DOC_START
 	used.
 
 	"nonce_strictness" on|off
-	Determines if squid requires strict increment-by-1 behaviour
+	Determines if squid requires strict increment-by-1 behavior
 	for nonce counts, or just incrementing (off - for use when
 	useragents generate nonce counts that occasionally miss 1
 	(ie, 1,2,4,6)). Default off.
@@ -1866,17 +1866,17 @@ DOC_START
 	"post_workaround" on|off
 	This is a workaround to certain buggy browsers who sends
 	an incorrect request digest in POST requests when reusing
-	the same nonce as aquired earlier on a GET request.
+	the same nonce as acquired earlier on a GET request.
 
 
 	=== NTLM scheme options follow ===
 
 	"program" cmdline
-	Specify the command for the external ntlm authenticator.
+	Specify the command for the external NTLM authenticator.
 	Such a program reads exchanged NTLMSSP packets with
 	the browser via Squid until authentication is completed.
-	If you use an ntlm authenticator, make sure you have 1 acl
-	of type proxy_auth.  By default, the ntlm authenticator_program
+	If you use an NTLM authenticator, make sure you have 1 acl
+	of type proxy_auth.  By default, the NTLM authenticator_program
 	is not used.
 
 	auth_param ntlm program @DEFAULT_PREFIX@/bin/ntlm_auth
@@ -1885,7 +1885,7 @@ DOC_START
 	The number of authenticator processes to spawn (no default).
 	If you start too few Squid will have to wait for them to
 	process a backlog of credential verifications, slowing it
-	down. When crendential verifications are done via a (slow)
+	down. When credential verifications are done via a (slow)
 	network you are likely to need lots of authenticator
 	processes.
 	auth_param ntlm children 5
@@ -1929,7 +1929,7 @@ DEFAULT: 1 hour
 LOC: Config.authenticateGCInterval
 DOC_START
 	The time period between garbage collection across the
-	username cache.  This is a tradeoff between memory utilisation
+	username cache.  This is a tradeoff between memory utilization
 	(long intervals - say 2 days) and CPU (short intervals -
 	say 1 minute). Only change if you have good reason to.
 DOC_END
@@ -2577,14 +2577,14 @@ DOC_START
 	acl aclname req_mime_type mime-type1 ...
 	  # regex match agains the mime type of the request generated
 	  # by the client. Can be used to detect file upload or some
-	  # types HTTP tunelling requests.
+	  # types HTTP tunneling requests.
 	  # NOTE: This does NOT match the reply. You cannot use this
 	  # to match the returned file type.
 
 	acl aclname rep_mime_type mime-type1 ...
-	  # regex match against the mime type of the reply recieved by
+	  # regex match against the mime type of the reply received by
 	  # squid. Can be used to detect file download or some
-	  # types HTTP tunelling requests.
+	  # types HTTP tunneling requests.
 	  # NOTE: This has no effect in http_access rules. It only has
 	  # effect in rules that affect the reply data stream such as
 	  # http_reply_access.
@@ -2841,7 +2841,7 @@ DOC_START
 
 	tcp_outgoing_address ipaddr [[!]aclname] ...
 
-	Example where requests from 10.0.0.0/24 will be forwareded
+	Example where requests from 10.0.0.0/24 will be forwarded
 	with source address 10.1.0.1, 10.0.2.0/24 forwarded with
 	source address 10.1.0.2 and the rest will be forwarded with
 	source address 10.1.0.3.
@@ -2877,9 +2877,9 @@ LOC: Config.ReplyBodySize
 DOC_START
         This option specifies the maximum size of a reply body. It can be
 	used to prevent users from downloading very large files, such as
-	MP3's and movies. When the reply headers are recieved, the
+	MP3's and movies. When the reply headers are received, the
 	reply_body_max_size lines are processed, and the first line where
-	all (if any) listed acls are true is used as the maximum body size
+	all (if any) listed ACLs are true is used as the maximum body size
 	for this reply.
 
 	This size is checked twice. First when we get the reply headers,
@@ -3656,7 +3656,7 @@ DOC_START
 	Other headers are reclassified as 'Other'. You can also
 	refer to all the headers with 'All'.
 
-	For example, to achieve the same behaviour as the old
+	For example, to achieve the same behavior as the old
 	'http_anonymizer standard' option, you should use:
 
 		request_header_access From deny all
@@ -3730,7 +3730,7 @@ DOC_START
 	Other headers are reclassified as 'Other'. You can also
 	refer to all the headers with 'All'.
 
-	For example, to achieve the same behaviour as the old
+	For example, to achieve the same behavior as the old
 	'http_anonymizer standard' option, you should use:
 
 		reply_header_access From deny all
@@ -3824,7 +3824,7 @@ LOC: Config.icons.use_short_names
 DEFAULT: on
 DOC_START
 	If this is enabled Squid will use short URLs for icons.
-	If disabled it will revert to the old behaviour of including
+	If disabled it will revert to the old behavior of including
 	it's own name and port in the URL.
 
 	If you run a complex cache hierarchy with a mix of Squid and
@@ -3855,7 +3855,7 @@ DOC_START
 	maximum is 255 tries.  A warning message will be generated
 	if it is set to a value greater than ten.
 
-	Note: This is in addition to the request reforwarding which
+	Note: This is in addition to the request re-forwarding which
 	takes place if Squid fails to get a satisfying response.
 DOC_END
 
@@ -4553,7 +4553,7 @@ DEFAULT: off
 DOC_START
 	To boost the performance of pipelined requests to closer
 	match that of a non-proxied environment Squid can try to fetch
-	up to two requests in parallell from a pipeline.
+	up to two requests in parallel from a pipeline.
 
 	Defaults to off for bandwidth management and access logging
 	reasons.
