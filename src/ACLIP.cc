@@ -341,7 +341,8 @@ ACLIP::parse()
 
 ACLIP::~ACLIP()
 {
-    data->destroy(IPSplay::DefaultFree);
+    if (data)
+        data->destroy(IPSplay::DefaultFree);
 }
 
 wordlist *
