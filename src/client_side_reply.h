@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.h,v 1.7 2005/04/18 21:52:42 hno Exp $
+ * $Id: client_side_reply.h,v 1.8 2005/09/09 17:31:33 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -53,7 +53,7 @@ public:
     static STCB HandleIMSReply;
     static STCB SendMoreData;
 
-    clientReplyContext(clientHttpRequest *);
+    clientReplyContext(ClientHttpRequest *);
     ~clientReplyContext();
 
     void saveState();
@@ -90,7 +90,7 @@ public:
     int lookingforstore;
     virtual void created (StoreEntry *newEntry);
 
-    clientHttpRequest *http;
+    ClientHttpRequest *http;
     int headers_sz;
     store_client *sc;		/* The store_client we're using */
     StoreIOBuffer tempBuffer;	/* For use in validating requests via IMS */

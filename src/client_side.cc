@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.690 2005/08/31 19:15:35 wessels Exp $
+ * $Id: client_side.cc,v 1.691 2005/09/09 17:31:33 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -88,7 +88,7 @@
  * data, or sending it.
  *
  * ClientKeepAliveNextRequest will then detect the presence of data in 
- * the next clientHttpRequest, and will send it, restablishing the 
+ * the next ClientHttpRequest, and will send it, restablishing the 
  * data flow.
  */
 
@@ -114,7 +114,7 @@ ClientSocketContext::operator delete (void *address)
 
 /* Local functions */
 /* ClientSocketContext */
-static ClientSocketContext *ClientSocketContextNew(clientHttpRequest *);
+static ClientSocketContext *ClientSocketContextNew(ClientHttpRequest *);
 /* other */
 static CWCB clientWriteComplete;
 static IOWCB clientWriteBodyComplete;
@@ -133,7 +133,7 @@ static IDCB clientIdentDone;
 #endif
 static CSCB clientSocketRecipient;
 static CSD clientSocketDetach;
-static void clientSetKeepaliveFlag(clientHttpRequest *);
+static void clientSetKeepaliveFlag(ClientHttpRequest *);
 static int clientIsContentLengthValid(HttpRequest * r);
 static bool okToAccept();
 static int clientIsRequestBodyValid(int bodyLength);
@@ -158,7 +158,7 @@ static char *findTrailingHTTPVersion(char *uriAndHTTPVersion);
 static void trimTrailingSpaces(char *aString, size_t len);
 #endif
 static ClientSocketContext *parseURIandHTTPVersion(char **url_p, HttpVersion * http_ver_p, ConnStateData::Pointer& conn, char *http_version_str);
-static void setLogUri(clientHttpRequest * http, char const *uri);
+static void setLogUri(ClientHttpRequest * http, char const *uri);
 static int connReadWasError(ConnStateData::Pointer& conn, comm_err_t, int size, int xerrno);
 static int connFinishedWithConn(ConnStateData::Pointer& conn, int size);
 static void connNoteUseOfBuffer(ConnStateData::Pointer & conn, size_t byteCount);
@@ -299,7 +299,7 @@ ClientSocketContext::ClientSocketContext() : http(NULL), next(NULL),
 }
 
 ClientSocketContext *
-ClientSocketContextNew(clientHttpRequest * http)
+ClientSocketContextNew(ClientHttpRequest * http)
 {
     ClientSocketContext *newContext;
     assert(http != NULL);
@@ -546,7 +546,7 @@ ClientHttpRequest::freeResources()
 void
 httpRequestFree(void *data)
 {
-    clientHttpRequest *http = (clientHttpRequest *)data;
+    ClientHttpRequest *http = (ClientHttpRequest *)data;
     assert(http != NULL);
     delete http;
 }
@@ -633,7 +633,7 @@ ConnStateData::~ConnStateData()
  * to handle hacks for broken servers and clients.
  */
 static void
-clientSetKeepaliveFlag(clientHttpRequest * http)
+clientSetKeepaliveFlag(ClientHttpRequest * http)
 {
     HttpRequest *request = http->request;
     const HttpHeader *req_hdr = &request->header;
@@ -996,7 +996,7 @@ ClientHttpRequest::mRangeCLen()
  * returns true if If-Range specs match reply, false otherwise
  */
 static int
-clientIfRangeMatch(clientHttpRequest * http, HttpReply * rep)
+clientIfRangeMatch(ClientHttpRequest * http, HttpReply * rep)
 {
     const TimeOrTag spec = httpHeaderGetTimeOrTag(&http->request->header, HDR_IF_RANGE);
     /* check for parsing falure */
@@ -1203,7 +1203,7 @@ ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData)
  *   There are no more entries in the stream chain.
  */
 static void
-clientSocketRecipient(clientStreamNode * node, clientHttpRequest * http,
+clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
                       HttpReply * rep, StoreIOBuffer recievedData)
 {
     int fd;
@@ -1245,7 +1245,7 @@ clientSocketRecipient(clientStreamNode * node, clientHttpRequest * http,
  * only
  */
 void
-clientSocketDetach(clientStreamNode * node, clientHttpRequest * http)
+clientSocketDetach(clientStreamNode * node, ClientHttpRequest * http)
 {
     /* Test preconditions */
     assert(node != NULL);
@@ -1569,7 +1569,7 @@ extern "C" CSD clientReplyDetach;
 static ClientSocketContext *
 parseHttpRequestAbort(ConnStateData::Pointer & conn, const char *uri)
 {
-    clientHttpRequest *http;
+    ClientHttpRequest *http;
     ClientSocketContext *context;
     StoreIOBuffer tempBuffer;
     http = new ClientHttpRequest;
@@ -1716,7 +1716,7 @@ clientParseHttpRequestLine(char *reqline, ConnStateData::Pointer &conn,
 }
 
 void
-setLogUri(clientHttpRequest * http, char const *uri)
+setLogUri(ClientHttpRequest * http, char const *uri)
 {
     safe_free(http->log_uri);
 
@@ -1727,7 +1727,7 @@ setLogUri(clientHttpRequest * http, char const *uri)
 }
 
 static void
-prepareAcceleratedURL(ConnStateData::Pointer & conn, clientHttpRequest *http, char *url, const char *req_hdr)
+prepareAcceleratedURL(ConnStateData::Pointer & conn, ClientHttpRequest *http, char *url, const char *req_hdr)
 {
     int vhost = conn->port->vhost;
     int vport = conn->port->vport;
@@ -1800,7 +1800,7 @@ prepareAcceleratedURL(ConnStateData::Pointer & conn, clientHttpRequest *http, ch
 }
 
 static void
-prepareTransparentURL(ConnStateData::Pointer & conn, clientHttpRequest *http, char *url, const char *req_hdr)
+prepareTransparentURL(ConnStateData::Pointer & conn, ClientHttpRequest *http, char *url, const char *req_hdr)
 {
     char *host;
 
@@ -1852,7 +1852,7 @@ parseHttpRequest(ConnStateData::Pointer & conn, method_t * method_p,
     size_t header_sz;		/* size of headers, not including first line */
     size_t prefix_sz;		/* size of whole request (req-line + headers) */
     size_t req_sz;
-    clientHttpRequest *http;
+    ClientHttpRequest *http;
     ClientSocketContext *result;
     StoreIOBuffer tempBuffer;
     char *http_version;
@@ -2169,7 +2169,7 @@ clientAfterReadingRequests(int fd, ConnStateData::Pointer &conn, int do_next_rea
 static void
 clientProcessRequest(ConnStateData::Pointer &conn, ClientSocketContext *context, method_t method, char *prefix, size_t req_line_sz)
 {
-    clientHttpRequest *http = context->http;
+    ClientHttpRequest *http = context->http;
     HttpRequest *request = NULL;
     /* We have an initial client stream in place should it be needed */
     /* setup our private context */
@@ -2695,9 +2695,9 @@ requestTimeout(int fd, void *data)
         /*
          * Generate an error
          */
-        clientHttpRequest **H;
+        ClientHttpRequest **H;
         clientStreamNode *node;
-        clientHttpRequest *http =
+        ClientHttpRequest *http =
             parseHttpRequestAbort(conn, "error:Connection%20lifetime%20expired");
         node = http->client_stream.tail->prev->data;
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
@@ -2747,7 +2747,7 @@ requestTimeout(int fd, void *data)
 static void
 clientLifetimeTimeout(int fd, void *data)
 {
-    clientHttpRequest *http = (clientHttpRequest *)data;
+    ClientHttpRequest *http = (ClientHttpRequest *)data;
     debug(33,
           1) ("WARNING: Closing client %s connection due to lifetime timeout\n",
               inet_ntoa(http->getConn()->peer.sin_addr));
@@ -3229,7 +3229,7 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
 }
 
 ACLChecklist *
-clientAclChecklistCreate(const acl_access * acl, clientHttpRequest * http)
+clientAclChecklistCreate(const acl_access * acl, ClientHttpRequest * http)
 {
     ACLChecklist *ch;
     ConnStateData::Pointer conn = http->getConn();

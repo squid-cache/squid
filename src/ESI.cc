@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.16 2005/09/01 18:53:51 serassio Exp $
+ * $Id: ESI.cc,v 1.17 2005/09/09 17:31:33 wessels Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -282,7 +282,7 @@ ESIStreamContext::ESIStreamContext() : finished(false), include (NULL), localbuf
 
 /* Local functions */
 /* ESIContext */
-static ESIContext *ESIContextNew(HttpReply *, clientStreamNode *, clientHttpRequest *);
+static ESIContext *ESIContextNew(HttpReply *, clientStreamNode *, ClientHttpRequest *);
 
 
 void *
@@ -431,7 +431,7 @@ ESIContext::kick ()
 /* request from downstream for more data
  */
 void
-esiStreamRead (clientStreamNode *thisNode, clientHttpRequest *http)
+esiStreamRead (clientStreamNode *thisNode, ClientHttpRequest *http)
 {
     clientStreamNode *next;
     /* Test preconditions */
@@ -525,7 +525,7 @@ esiStreamRead (clientStreamNode *thisNode, clientHttpRequest *http)
 }
 
 clientStream_status_t
-esiStreamStatus (clientStreamNode *thisNode, clientHttpRequest *http)
+esiStreamStatus (clientStreamNode *thisNode, ClientHttpRequest *http)
 {
     /* Test preconditions */
     assert (thisNode != NULL);
@@ -704,7 +704,7 @@ ESIContext::finishChildren()
 
 /* Detach event from a client Stream */
 void
-esiStreamDetach (clientStreamNode *thisNode, clientHttpRequest *http)
+esiStreamDetach (clientStreamNode *thisNode, ClientHttpRequest *http)
 {
     /* if we have pending callbacks, tell them we're done. */
     /* test preconditions */
@@ -738,7 +738,7 @@ esiStreamDetach (clientStreamNode *thisNode, clientHttpRequest *http)
  *   There is context data or a reply structure
  */
 void
-esiProcessStream (clientStreamNode *thisNode, clientHttpRequest *http, HttpReply *rep, StoreIOBuffer recievedData)
+esiProcessStream (clientStreamNode *thisNode, ClientHttpRequest *http, HttpReply *rep, StoreIOBuffer recievedData)
 {
     /* test preconditions */
     assert (thisNode != NULL);
@@ -886,7 +886,7 @@ ESIContext::~ESIContext()
 }
 
 ESIContext *
-ESIContextNew (HttpReply *rep, clientStreamNode *thisNode, clientHttpRequest *http)
+ESIContextNew (HttpReply *rep, clientStreamNode *thisNode, ClientHttpRequest *http)
 {
     assert (rep);
     ESIContext *rv = new ESIContext;
