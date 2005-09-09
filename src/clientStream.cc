@@ -1,6 +1,6 @@
 
 /*
- * $Id: clientStream.cc,v 1.11 2004/12/20 16:30:35 robertc Exp $
+ * $Id: clientStream.cc,v 1.12 2005/09/09 17:31:33 wessels Exp $
  *
  * DEBUG: section 87    Client-side Stream routines.
  * AUTHOR: Robert Collins
@@ -170,7 +170,7 @@ clientStreamInsertHead(dlink_list * list, CSR * func, CSCB * callback,
  * Callback the next node the in chain with it's requested data
  */
 void
-clientStreamCallback(clientStreamNode * thisObject, clientHttpRequest * http,
+clientStreamCallback(clientStreamNode * thisObject, ClientHttpRequest * http,
                      HttpReply * rep, StoreIOBuffer replyBuffer)
 {
     clientStreamNode *next;
@@ -187,7 +187,7 @@ clientStreamCallback(clientStreamNode * thisObject, clientHttpRequest * http,
  * Call the previous node in the chain to read some data
  */
 void
-clientStreamRead(clientStreamNode * thisObject, clientHttpRequest * http,
+clientStreamRead(clientStreamNode * thisObject, ClientHttpRequest * http,
                  StoreIOBuffer readBuffer)
 {
     /* place the parameters on the 'stack' */
@@ -205,7 +205,7 @@ clientStreamRead(clientStreamNode * thisObject, clientHttpRequest * http,
  * Detach from the stream - only allowed for terminal members
  */
 void
-clientStreamDetach(clientStreamNode * thisObject, clientHttpRequest * http)
+clientStreamDetach(clientStreamNode * thisObject, ClientHttpRequest * http)
 {
     clientStreamNode *temp = thisObject;
 
@@ -245,7 +245,7 @@ clientStreamDetach(clientStreamNode * thisObject, clientHttpRequest * http)
  * Abort the stream - detach every node in the pipeline.
  */
 void
-clientStreamAbort(clientStreamNode * thisObject, clientHttpRequest * http)
+clientStreamAbort(clientStreamNode * thisObject, ClientHttpRequest * http)
 {
     dlink_list *list;
 
@@ -264,7 +264,7 @@ clientStreamAbort(clientStreamNode * thisObject, clientHttpRequest * http)
  * Call the upstream node to find it's status 
  */
 clientStream_status_t
-clientStreamStatus(clientStreamNode * thisObject, clientHttpRequest * http)
+clientStreamStatus(clientStreamNode * thisObject, ClientHttpRequest * http)
 {
     clientStreamNode *prev;
     assert(thisObject && http && thisObject->node.prev);

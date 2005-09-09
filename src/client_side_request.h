@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.19 2003/09/01 03:49:38 robertc Exp $
+ * $Id: client_side_request.h,v 1.20 2005/09/09 17:31:33 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -43,8 +43,6 @@
 extern int clientBeginRequest(method_t, char const *, CSCB *, CSD *, ClientStreamData, HttpHeader const *, char *, size_t);
 
 class MemObject;
-
-typedef class ClientHttpRequest clientHttpRequest;
 
 class ConnStateData;
 
@@ -144,15 +142,15 @@ private:
 };
 
 /* client http based routines */
-SQUIDCEXTERN char *clientConstructTraceEcho(clientHttpRequest *);
+SQUIDCEXTERN char *clientConstructTraceEcho(ClientHttpRequest *);
 SQUIDCEXTERN ACLChecklist *clientAclChecklistCreate(const acl_access * acl,ClientHttpRequest * http);
-SQUIDCEXTERN int clientHttpRequestStatus(int fd, clientHttpRequest const *http);
+SQUIDCEXTERN int clientHttpRequestStatus(int fd, ClientHttpRequest const *http);
 SQUIDCEXTERN void clientAccessCheck(ClientHttpRequest *);
 
 /* ones that should be elsewhere */
-SQUIDCEXTERN void redirectStart(clientHttpRequest *, RH *, void *);
+SQUIDCEXTERN void redirectStart(ClientHttpRequest *, RH *, void *);
 
-SQUIDCEXTERN void sslStart(clientHttpRequest *, size_t *, int *);
+SQUIDCEXTERN void sslStart(ClientHttpRequest *, size_t *, int *);
 
 #ifdef _USE_INLINE_
 #include "Store.h"

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.85 2005/08/14 20:34:54 serassio Exp $
+ * $Id: client_side_reply.cc,v 1.86 2005/09/09 17:31:33 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -77,7 +77,7 @@ clientReplyContext::~clientReplyContext()
     cbdataReferenceDone(http);
 }
 
-clientReplyContext::clientReplyContext(clientHttpRequest *clientContext) : http (cbdataReference(clientContext)), old_entry (NULL), old_sc(NULL), deleting(false)
+clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) : http (cbdataReference(clientContext)), old_entry (NULL), old_sc(NULL), deleting(false)
 {}
 
 /* create an error in the store awaiting the client side to read it. */
@@ -1146,7 +1146,7 @@ clientReplyContext::storeNotOKTransferDone() const
  *
  */
 int
-clientHttpRequestStatus(int fd, clientHttpRequest const *http)
+clientHttpRequestStatus(int fd, ClientHttpRequest const *http)
 {
 #if SIZEOF_SIZE_T == 4
 
@@ -1187,7 +1187,7 @@ clientHttpRequestStatus(int fd, clientHttpRequest const *http)
  * of the object.
  */
 clientStream_status_t
-clientReplyStatus(clientStreamNode * aNode, clientHttpRequest * http)
+clientReplyStatus(clientStreamNode * aNode, ClientHttpRequest * http)
 {
     clientReplyContext *context = dynamic_cast<clientReplyContext *>(aNode->data.getRaw());
     assert (context);
@@ -1614,7 +1614,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
  * data context is not null
  */
 void
-clientGetMoreData(clientStreamNode * aNode, clientHttpRequest * http)
+clientGetMoreData(clientStreamNode * aNode, ClientHttpRequest * http)
 {
     /* Test preconditions */
     assert(aNode != NULL);
@@ -1709,7 +1709,7 @@ clientReplyContext::doGetMoreData()
 
 /* the next node has removed itself from the stream. */
 void
-clientReplyDetach(clientStreamNode * node, clientHttpRequest * http)
+clientReplyDetach(clientStreamNode * node, ClientHttpRequest * http)
 {
     /* detach from the stream */
     clientStreamDetach(node, http);

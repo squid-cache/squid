@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.389 2005/05/15 10:33:49 serassio Exp $
+ * $Id: stat.cc,v 1.390 2005/09/09 17:31:33 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1595,12 +1595,12 @@ static void
 statClientRequests(StoreEntry * s)
 {
     dlink_node *i;
-    clientHttpRequest *http;
+    ClientHttpRequest *http;
     StoreEntry *e;
     int fd;
 
     for (i = ClientActiveRequests.head; i; i = i->next) {
-        http = static_cast<clientHttpRequest *>(i->data);
+        http = static_cast<ClientHttpRequest *>(i->data);
         assert(http);
         ConnStateData::Pointer conn = http->getConn();
         storeAppendPrintf(s, "Connection: %p\n", conn.getRaw());

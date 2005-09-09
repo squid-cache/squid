@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.44 2005/03/06 21:08:13 serassio Exp $
+ * $Id: client_side_request.cc,v 1.45 2005/09/09 17:31:33 wessels Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -75,7 +75,7 @@ public:
 
     ACLChecklist *acl_checklist;	/* need ptr back so we can unreg if needed */
     int redirect_state;
-    clientHttpRequest *http;
+    ClientHttpRequest *http;
 
 private:
     CBDATA_CLASS(ClientRequestContext);
@@ -104,9 +104,9 @@ ClientRequestContext::operator delete (void *address)
 /* Local functions */
 /* other */
 static void clientAccessCheckDone(int, void *);
-static int clientCachable(clientHttpRequest * http);
-static int clientHierarchical(clientHttpRequest * http);
-static void clientInterpretRequestHeaders(clientHttpRequest * http);
+static int clientCachable(ClientHttpRequest * http);
+static int clientHierarchical(ClientHttpRequest * http);
+static void clientInterpretRequestHeaders(ClientHttpRequest * http);
 static void clientRedirectStart(ClientRequestContext *context);
 static RH clientRedirectDone;
 extern "C" CSR clientGetMoreData;
@@ -270,7 +270,7 @@ clientBeginRequest(method_t method, char const *url, CSCB * streamcallback,
 {
     size_t url_sz;
     HttpVersion http_ver (1, 0);
-    clientHttpRequest *http = new ClientHttpRequest;
+    ClientHttpRequest *http = new ClientHttpRequest;
     HttpRequest *request;
     StoreIOBuffer tempBuffer;
     http->http_ver = http_ver;
@@ -362,14 +362,14 @@ clientAccessCheckDone(int answer, void *data)
     ClientRequestContext *context = (ClientRequestContext *)data;
 
     context->acl_checklist = NULL;
-    clientHttpRequest *http_ = context->http;
+    ClientHttpRequest *http_ = context->http;
 
     if (!cbdataReferenceValid (http_)) {
         delete context;
         return;
     }
 
-    clientHttpRequest *http = context->http;
+    ClientHttpRequest *http = context->http;
     err_type page_id;
     http_status status;
     debug(85, 2) ("The request %s %s is %s, because it matched '%s'\n",
@@ -442,7 +442,7 @@ static void
 clientRedirectAccessCheckDone(int answer, void *data)
 {
     ClientRequestContext *context = (ClientRequestContext *)data;
-    clientHttpRequest *http = context->http;
+    ClientHttpRequest *http = context->http;
     context->acl_checklist = NULL;
 
     if (answer == ACCESS_ALLOWED)
@@ -454,7 +454,7 @@ clientRedirectAccessCheckDone(int answer, void *data)
 static void
 clientRedirectStart(ClientRequestContext *context)
 {
-    clientHttpRequest *http = context->http;
+    ClientHttpRequest *http = context->http;
     debug(33, 5) ("clientRedirectStart: '%s'\n", http->uri);
 
     if (Config.Program.redirect == NULL) {
@@ -470,7 +470,7 @@ clientRedirectStart(ClientRequestContext *context)
 }
 
 static int
-clientCachable(clientHttpRequest * http)
+clientCachable(ClientHttpRequest * http)
 {
     HttpRequest *req = http->request;
     method_t method = req->method;
@@ -511,7 +511,7 @@ clientCachable(clientHttpRequest * http)
 }
 
 static int
-clientHierarchical(clientHttpRequest * http)
+clientHierarchical(ClientHttpRequest * http)
 {
     const char *url = http->uri;
     HttpRequest *request = http->request;
@@ -564,7 +564,7 @@ clientHierarchical(clientHttpRequest * http)
 
 
 static void
-clientInterpretRequestHeaders(clientHttpRequest * http)
+clientInterpretRequestHeaders(ClientHttpRequest * http)
 {
     HttpRequest *request = http->request;
     const HttpHeader *req_hdr = &request->header;
@@ -730,14 +730,14 @@ void
 clientRedirectDone(void *data, char *result)
 {
     ClientRequestContext *context = (ClientRequestContext *)data;
-    clientHttpRequest *http_ = context->http;
+    ClientHttpRequest *http_ = context->http;
 
     if (!cbdataReferenceValid (http_)) {
         delete context;
         return;
     }
 
-    clientHttpRequest *http = context->http;
+    ClientHttpRequest *http = context->http;
     HttpRequest *new_request = NULL;
     HttpRequest *old_request = http->request;
     debug(85, 5) ("clientRedirectDone: '%s' result=%s\n", http->uri,
@@ -845,7 +845,7 @@ void
 ClientRequestContext::checkNoCacheDone(int answer)
 {
     acl_checklist = NULL;
-    clientHttpRequest *http_ = http;
+    ClientHttpRequest *http_ = http;
 
     if (!cbdataReferenceValid (http_)) {
         delete this;

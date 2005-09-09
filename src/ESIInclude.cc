@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIInclude.cc,v 1.6 2005/07/03 15:25:08 serassio Exp $
+ * $Id: ESIInclude.cc,v 1.7 2005/09/09 17:31:33 wessels Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -55,7 +55,7 @@ static ESIStreamContext *ESIStreamContextNew (ESIIncludePtr);
 /* Detach from a buffering stream
  */
 void
-esiBufferDetach (clientStreamNode *node, clientHttpRequest *http)
+esiBufferDetach (clientStreamNode *node, ClientHttpRequest *http)
 {
     /* Detach ourselves */
     clientStreamDetach (node, http);
@@ -71,7 +71,7 @@ esiBufferDetach (clientStreamNode *node, clientHttpRequest *http)
  *   There are no more entries in the stream chain.
  */
 void
-esiBufferRecipient (clientStreamNode *node, clientHttpRequest *http, HttpReply *rep, StoreIOBuffer recievedData)
+esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *rep, StoreIOBuffer recievedData)
 {
     /* Test preconditions */
     assert (node != NULL);
