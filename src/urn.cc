@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.87 2005/08/31 19:15:36 wessels Exp $
+ * $Id: urn.cc,v 1.88 2005/09/10 16:03:52 serassio Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -226,6 +226,7 @@ UrnState::setUriResFromRequest(HttpRequest *r)
         debug(52, 3) ("urnStart: Bad uri-res URL %s\n", urlres);
         ErrorState *err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND);
         err->url = urlres;
+        err->request = requestLink(r);
         urlres = NULL;
         errorAppendEntry(entry, err);
         return;

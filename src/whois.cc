@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.28 2003/09/01 03:49:40 robertc Exp $
+ * $Id: whois.cc,v 1.29 2005/09/10 16:03:52 serassio Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -153,14 +153,11 @@ WhoisState::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xerrn
 
         if (ignoreErrno(errno)) {
             do_next_read = 1;
-        } else if (!dataWritten) {
+        } else {
             ErrorState *err;
             err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
             err->xerrno = errno;
             fwdFail(fwd, err);
-            comm_close(fd);
-            do_next_read = 0;
-        } else {
             comm_close(fd);
             do_next_read = 0;
         }

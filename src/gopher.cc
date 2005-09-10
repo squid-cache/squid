@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.187 2005/05/01 08:11:48 serassio Exp $
+ * $Id: gopher.cc,v 1.188 2005/09/10 16:03:52 serassio Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -707,12 +707,8 @@ gopherTimeout(int fd, void *data)
     StoreEntry *entry = gopherState->entry;
     debug(10, 4) ("gopherTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
 
-    if (entry->store_status == STORE_PENDING) {
-        if (entry->isEmpty()) {
-            fwdFail(gopherState->fwdState,
-                    errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
-        }
-    }
+    fwdFail(gopherState->fwdState,
+            errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
 
     comm_close(fd);
 }
@@ -780,24 +776,16 @@ gopherReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void
 
         if (ignoreErrno(errno)) {
             do_next_read = 1;
-        } else if (entry->isEmpty()) {
+        } else {
             ErrorState *err;
             err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
             err->xerrno = errno;
-            err->url = xstrdup(storeUrl(entry));
-            errorAppendEntry(entry, err);
-            comm_close(fd);
-            do_next_read = 0;
-        } else {
+            fwdFail(gopherState->fwdState, err);
             comm_close(fd);
             do_next_read = 0;
         }
     } else if (len == 0 && entry->isEmpty()) {
-        ErrorState *err;
-        err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE);
-        err->xerrno = errno;
-        err->url = xstrdup(gopherState->request);
-        errorAppendEntry(entry, err);
+        fwdFail(gopherState->fwdState, errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE));
         comm_close(fd);
         do_next_read = 0;
     } else if (len == 0) {
@@ -850,12 +838,12 @@ gopherSendComplete(int fd, char *buf, size_t size, comm_err_t errflag, int xerrn
 
     if (errflag) {
         ErrorState *err;
-        err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
+        err = errorCon(ERR_WRITE_ERROR, HTTP_SERVICE_UNAVAILABLE);
         err->xerrno = errno;
         err->host = xstrdup(gopherState->req->host);
         err->port = gopherState->req->port;
         err->url = xstrdup(storeUrl(entry));
-        errorAppendEntry(entry, err);
+        fwdFail(gopherState->fwdState, err);
         comm_close(fd);
 
         if (buf)
@@ -963,18 +951,6 @@ gopherStart(FwdState * fwdState)
     /* Parse url. */
     gopher_request_parse(fwdState->request,
                          &gopherState->type_id, gopherState->request);
-#if OLD_PARSE_ERROR_CODE
-
-    if (...) {
-        ErrorState *err;
-        err = errorCon(ERR_INVALID_URL, HTTP_BAD_REQUEST);
-        err->url = xstrdup(storeUrl(entry));
-        errorAppendEntry(entry, err);
-        gopherStateFree(-1, gopherState);
-        return;
-    }
-
-#endif
     comm_add_close_handler(fd, gopherStateFree, gopherState);
 
     if (((gopherState->type_id == GOPHER_INDEX) || (gopherState->type_id == GOPHER_CSO))
