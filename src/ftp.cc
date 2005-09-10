@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.364 2005/09/03 10:09:09 serassio Exp $
+ * $Id: ftp.cc,v 1.365 2005/09/10 16:03:52 serassio Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2955,8 +2955,6 @@ ftpFailedErrorMessage(FtpStateData * ftpState, err_type error, int xerrno)
         err = errorCon(ERR_FTP_FAILURE, HTTP_BAD_GATEWAY);
 
     err->xerrno = xerrno;
-
-    err->request = requestLink(ftpState->request);
 
     err->ftp.server_msg = ftpState->ctrl.message;
 

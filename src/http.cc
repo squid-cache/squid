@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.455 2005/08/31 19:15:36 wessels Exp $
+ * $Id: http.cc,v 1.456 2005/09/10 16:03:52 serassio Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -124,10 +124,8 @@ httpTimeout(int fd, void *data)
     debug(11, 4) ("httpTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
 
     if (entry->store_status == STORE_PENDING) {
-        if (entry->isEmpty()) {
-            fwdFail(httpState->fwd,
-                    errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
-        }
+        fwdFail(httpState->fwd,
+                errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
     }
 
     comm_close(fd);
@@ -1004,24 +1002,16 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
 
         if (ignoreErrno(errno)) {
             flags.do_next_read = 1;
-        } else if (entry->isEmpty()) {
+        } else {
             ErrorState *err;
             err = errorCon(ERR_READ_ERROR, HTTP_BAD_GATEWAY);
-            err->request = requestLink((HttpRequest *) request);
             err->xerrno = errno;
             fwdFail(fwd, err);
             flags.do_next_read = 0;
             comm_close(fd);
-        } else {
-            flags.do_next_read = 0;
-            comm_close(fd);
         }
     } else if (flag == COMM_OK && len == 0 && entry->isEmpty()) {
-        ErrorState *err;
-        err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_BAD_GATEWAY);
-        err->xerrno = errno;
-        err->request = requestLink((HttpRequest *) request);
-        fwdFail(fwd, err);
+        fwdFail(fwd, errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_BAD_GATEWAY));
         eof = 1;
         flags.do_next_read = 0;
         comm_close(fd);
@@ -1038,18 +1028,12 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
              */
             processReplyHeader(buf, len);
         else if (entry->getReply()->sline.status == HTTP_INVALID_HEADER && HttpVersion(0,9) != entry->getReply()->sline.version) {
-            ErrorState *err;
-            err = errorCon(ERR_INVALID_RESP, HTTP_BAD_GATEWAY);
-            err->request = requestLink((HttpRequest *) request);
-            fwdFail(fwd, err);
+            fwdFail(fwd, errorCon(ERR_INVALID_RESP, HTTP_BAD_GATEWAY));
             flags.do_next_read = 0;
         } else {
             if (entry->mem_obj->getReply()->sline.status == HTTP_HEADER_TOO_LARGE) {
-                ErrorState *err;
                 storeEntryReset(entry);
-                err = errorCon(ERR_TOO_BIG, HTTP_BAD_GATEWAY);
-                err->request = requestLink((HttpRequest *) request);
-                fwdFail(fwd, err);
+                fwdFail(fwd, errorCon(ERR_TOO_BIG, HTTP_BAD_GATEWAY));
                 fwd->flags.dont_retry = 1;
             } else {
                 fwdComplete(fwd);
@@ -1067,11 +1051,8 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
                 HttpVersion httpver = entry->getReply()->sline.version;
 
                 if (s == HTTP_INVALID_HEADER && httpver != HttpVersion(0,9)) {
-                    ErrorState *err;
                     storeEntryReset(entry);
-                    err = errorCon(ERR_INVALID_RESP, HTTP_BAD_GATEWAY);
-                    err->request = requestLink((HttpRequest *) request);
-                    fwdFail(fwd, err);
+                    fwdFail(fwd, errorCon(ERR_INVALID_RESP, HTTP_BAD_GATEWAY));
                     comm_close(fd);
                     return;
                 }
@@ -1210,8 +1191,6 @@ void
 HttpStateData::SendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void *data)
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
-    StoreEntry *entry = httpState->entry;
-    ErrorState *err;
     debug(11, 5) ("httpSendComplete: FD %d: size %d: errflag %d.\n",
                   fd, (int) size, errflag);
 #if URL_CHECKSUM_DEBUG
@@ -1229,10 +1208,10 @@ HttpStateData::SendComplete(int fd, char *bufnotused, size_t size, comm_err_t er
         return;
 
     if (errflag) {
+        ErrorState *err;
         err = errorCon(ERR_WRITE_ERROR, HTTP_BAD_GATEWAY);
         err->xerrno = errno;
-        err->request = requestLink(httpState->orig_request);
-        errorAppendEntry(entry, err);
+        fwdFail(httpState->fwd, err);
         comm_close(fd);
         return;
     } else {
@@ -1869,7 +1848,6 @@ httpSendRequestEntity(int fd, char *bufnotused, size_t size, comm_err_t errflag,
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
     StoreEntry *entry = httpState->entry;
-    ErrorState *err;
     debug(11, 5) ("httpSendRequestEntity: FD %d: size %d: errflag %d.\n",
                   fd, (int) size, errflag);
 
@@ -1883,10 +1861,10 @@ httpSendRequestEntity(int fd, char *bufnotused, size_t size, comm_err_t errflag,
         return;
 
     if (errflag) {
+        ErrorState *err;
         err = errorCon(ERR_WRITE_ERROR, HTTP_BAD_GATEWAY);
         err->xerrno = errno;
-        err->request = requestLink(httpState->orig_request);
-        errorAppendEntry(entry, err);
+        fwdFail(httpState->fwd, err);
         comm_close(fd);
         return;
     }

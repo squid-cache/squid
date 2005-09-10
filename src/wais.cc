@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.151 2005/08/31 19:15:36 wessels Exp $
+ * $Id: wais.cc,v 1.152 2005/09/10 16:03:52 serassio Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -87,10 +87,8 @@ waisTimeout(int fd, void *data)
     debug(24, 4) ("waisTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
 
     if (entry->store_status == STORE_PENDING) {
-        if (!waisState->dataWritten) {
-            fwdFail(waisState->fwd,
-                    errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
-        }
+        fwdFail(waisState->fwd,
+                errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
     }
 
     comm_close(fd);
@@ -161,20 +159,13 @@ waisReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *
             comm_read(fd, waisState->buf, read_sz, waisReadReply, waisState);
         } else {
             ErrorState *err;
-            EBIT_CLR(entry->flags, ENTRY_CACHABLE);
-            storeReleaseRequest(entry);
             err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
             err->xerrno = errno;
-            err->request = requestLink(waisState->request);
-            errorAppendEntry(entry, err);
+            fwdFail(waisState->fwd, err);
             comm_close(fd);
         }
     } else if (flag == COMM_OK && len == 0 && !waisState->dataWritten) {
-        ErrorState *err;
-        err = errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE);
-        err->xerrno = errno;
-        err->request = requestLink(waisState->request);
-        errorAppendEntry(entry, err);
+        fwdFail(waisState->fwd, errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE));
         comm_close(fd);
     } else if (flag == COMM_OK && len == 0) {
         /* Connection closed; retrieval done. */
@@ -211,8 +202,7 @@ waisSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void
         ErrorState *err;
         err = errorCon(ERR_WRITE_ERROR, HTTP_SERVICE_UNAVAILABLE);
         err->xerrno = errno;
-        err->request = requestLink(waisState->request);
-        errorAppendEntry(entry, err);
+        fwdFail(waisState->fwd, err);
         comm_close(fd);
     } else {
         /* Schedule read reply. */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.128 2005/06/09 16:04:30 serassio Exp $
+ * $Id: forward.cc,v 1.129 2005/09/10 16:03:52 serassio Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -414,8 +414,6 @@ fwdConnectDone(int server_fd, comm_err_t status, int xerrno, void *data)
 
         err->dnsserver_msg = xstrdup(dns_error_message);
 
-        err->request = requestLink(request);
-
         fwdFail(fwdState, err);
 
         comm_close(server_fd);
@@ -432,7 +430,6 @@ fwdConnectDone(int server_fd, comm_err_t status, int xerrno, void *data)
             err->port = request->port;
         }
 
-        err->request = requestLink(request);
         fwdFail(fwdState, err);
 
         if (fs->_peer)
@@ -469,7 +466,6 @@ fwdConnectTimeout(int fd, void *data)
 
     if (entry->isEmpty()) {
         err = errorCon(ERR_CONNECT_FAIL, HTTP_GATEWAY_TIMEOUT);
-        err->request = requestLink(fwdState->request);
         err->xerrno = ETIMEDOUT;
         fwdFail(fwdState, err);
         /*
@@ -632,7 +628,6 @@ fwdConnectStart(void *data)
         debug(50, 4) ("fwdConnectStart: %s\n", xstrerror());
         err = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
         err->xerrno = errno;
-        err->request = requestLink(fwdState->request);
         fwdFail(fwdState, err);
         fwdStateFree(fwdState);
         return;
@@ -686,7 +681,6 @@ fwdStartFail(FwdState * fwdState)
     ErrorState *err;
     debug(17, 3) ("fwdStartFail: %s\n", storeUrl(fwdState->entry));
     err = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE);
-    err->request = requestLink(fwdState->request);
     err->xerrno = errno;
     fwdFail(fwdState, err);
     fwdStateFree(fwdState);
@@ -781,7 +775,6 @@ fwdDispatch(FwdState * fwdState)
             debug(17, 1) ("fwdDispatch: Cannot retrieve '%s'\n",
                           storeUrl(entry));
             err = errorCon(ERR_UNSUP_REQ, HTTP_BAD_REQUEST);
-            err->request = requestLink(request);
             fwdFail(fwdState, err);
             /*
              * Force a persistent connection to be closed because
@@ -953,7 +946,6 @@ fwdStart(int fd, StoreEntry * e, HttpRequest * r)
 void
 fwdFail(FwdState * fwdState, ErrorState * errorState)
 {
-    assert(EBIT_TEST(fwdState->entry->flags, ENTRY_FWD_HDR_WAIT));
     debug(17, 3) ("fwdFail: %s \"%s\"\n\t%s\n",
                   err_type_str[errorState->type],
                   httpStatusString(errorState->httpStatus),
@@ -963,6 +955,9 @@ fwdFail(FwdState * fwdState, ErrorState * errorState)
         errorStateFree(fwdState->err);
 
     fwdState->err = errorState;
+
+    if (!errorState->request)
+        errorState->request = requestLink(fwdState->request);
 }
 
 /*
