@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.578 2005/01/03 16:08:26 robertc Exp $
+ * $Id: store.cc,v 1.579 2005/09/10 19:31:31 serassio Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -1630,8 +1630,10 @@ storeBuffer(StoreEntry * e)
 void
 storeBufferFlush(StoreEntry * e)
 {
-    EBIT_CLR(e->flags, DELAY_SENDING);
-    InvokeHandlers(e);
+    if (EBIT_TEST(e->flags, DELAY_SENDING)) {
+        EBIT_CLR(e->flags, DELAY_SENDING);
+        InvokeHandlers(e);
+    }
 }
 
 ssize_t

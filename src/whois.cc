@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.29 2005/09/10 16:03:52 serassio Exp $
+ * $Id: whois.cc,v 1.30 2005/09/10 19:31:31 serassio Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -113,8 +113,9 @@ void
 WhoisState::setReplyToOK(StoreEntry *entry)
 {
     HttpReply *reply = httpReplyCreate();
+    storeBuffer(entry);
     HttpVersion version(1, 0);
-    httpReplySetHeaders(reply, version, HTTP_OK, NULL, NULL, 0, 0, -1);
+    httpReplySetHeaders(reply, version, HTTP_OK, "Gatewaying", "text/plain", -1, -1, -2);
     storeEntryReplaceObject (entry, reply);
 }
 
@@ -145,6 +146,8 @@ WhoisState::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xerrn
         dataWritten = 1;
 
         storeAppend(entry, buf, len);
+
+        storeBufferFlush(entry);
 
         do_next_read = 1;
     } else if (flag != COMM_OK || len < 0) {

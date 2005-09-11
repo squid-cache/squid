@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.188 2005/09/10 16:03:52 serassio Exp $
+ * $Id: gopher.cc,v 1.189 2005/09/10 19:31:31 serassio Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -856,27 +856,26 @@ gopherSendComplete(int fd, char *buf, size_t size, comm_err_t errflag, int xerrn
      * OK. We successfully reach remote site.  Start MIME typing
      * stuff.  Do it anyway even though request is not HTML type.
      */
+    storeBuffer(entry);
+
     gopherMimeCreate(gopherState);
 
     switch (gopherState->type_id) {
 
     case GOPHER_DIRECTORY:
         /* we got to convert it first */
-        storeBuffer(entry);
         gopherState->conversion = gopher_ds::HTML_DIR;
         gopherState->HTML_header_added = 0;
         break;
 
     case GOPHER_INDEX:
         /* we got to convert it first */
-        storeBuffer(entry);
         gopherState->conversion = gopher_ds::HTML_INDEX_RESULT;
         gopherState->HTML_header_added = 0;
         break;
 
     case GOPHER_CSO:
         /* we got to convert it first */
-        storeBuffer(entry);
         gopherState->conversion = gopher_ds::HTML_CSO_RESULT;
         gopherState->cso_recno = 0;
         gopherState->HTML_header_added = 0;
@@ -884,6 +883,7 @@ gopherSendComplete(int fd, char *buf, size_t size, comm_err_t errflag, int xerrn
 
     default:
         gopherState->conversion = gopher_ds::NORMAL;
+        storeBufferFlush(entry);
     }
 
     /* Schedule read reply. */
