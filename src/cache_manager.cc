@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.32 2005/09/10 16:03:52 serassio Exp $
+ * $Id: cache_manager.cc,v 1.33 2005/09/10 19:31:31 serassio Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -313,8 +313,7 @@ cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
     a = cachemgrFindAction(mgr->action);
     assert(a != NULL);
 
-    if (a->flags.atomic)
-        storeBuffer(entry);
+    storeBuffer(entry);
 
     {
         HttpVersion version(1,0);
@@ -332,10 +331,10 @@ cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
 
     a->handler(entry);
 
-    if (a->flags.atomic) {
-        storeBufferFlush(entry);
+    storeBufferFlush(entry);
+
+    if (a->flags.atomic)
         entry->complete();
-    }
 
     cachemgrStateFree(mgr);
 }
