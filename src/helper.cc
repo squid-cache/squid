@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.66 2005/08/31 19:15:36 wessels Exp $
+ * $Id: helper.cc,v 1.67 2005/09/11 10:19:41 serassio Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -126,6 +126,7 @@ helperOpenServers(helper * hlp)
         srv->rfd = rfd;
         srv->wfd = wfd;
         srv->rbuf = (char *)memAllocBuf(8192, &srv->rbuf_sz);
+        srv->wqueue = new MemBuf;
         srv->roffset = 0;
         srv->requests = (helper_request **)xcalloc(hlp->concurrency ? hlp->concurrency : 1, sizeof(*srv->requests));
         srv->parent = cbdataReference(hlp);
