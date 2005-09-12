@@ -1,6 +1,6 @@
 
 /*
- * $Id: IPInterception.cc,v 1.11 2005/07/10 19:13:17 serassio Exp $
+ * $Id: IPInterception.cc,v 1.12 2005/09/12 14:20:02 serassio Exp $
  *
  * DEBUG: section 89    NAT / IP Interception 
  * AUTHOR: Robert Collins
@@ -43,6 +43,11 @@
 #endif
 #include <netinet/tcp.h>
 #include <net/if.h>
+#ifdef HAVE_IPL_H
+#include <ipl.h>
+#elif HAVE_NETINET_IPL_H
+#include <netinet/ipl.h>
+#endif
 #if HAVE_IP_FIL_COMPAT_H
 #include <ip_fil_compat.h>
 #elif HAVE_NETINET_IP_FIL_COMPAT_H
@@ -84,11 +89,25 @@ int
 clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct sockaddr_in *dst)
 {
 
+#if defined(IPFILTER_VERSION) && (IPFILTER_VERSION >= 4000027)
+
+    struct ipfobj obj;
+#endif
+
     struct natlookup natLookup;
     static int natfd = -1;
     static int siocgnatl_cmd = SIOCGNATL & 0xff;
     static time_t last_reported = 0;
     int x;
+
+#if defined(IPFILTER_VERSION) && (IPFILTER_VERSION >= 4000027)
+
+    obj.ipfo_rev = IPFILTER_VERSION;
+    obj.ipfo_size = sizeof(natLookup);
+    obj.ipfo_ptr = &natLookup;
+    obj.ipfo_type = IPFOBJ_NATLOOKUP;
+    obj.ipfo_offset = 0;
+#endif
 
     natLookup.nl_inport = me.sin_port;
     natLookup.nl_outport = peer.sin_port;
@@ -100,9 +119,9 @@ clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct s
     {
         int save_errno;
         enter_suid();
-#ifdef IPL_NAME
+#ifdef IPNAT_NAME
 
-        natfd = open(IPL_NAME, O_RDONLY, 0);
+        natfd = open(IPNAT_NAME, O_RDONLY, 0);
 #else
 
         natfd = open(IPL_NAT, O_RDONLY, 0);
@@ -123,13 +142,17 @@ clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct s
         }
     }
 
+#if defined(IPFILTER_VERSION) && (IPFILTER_VERSION >= 4000027)
+    x = ioctl(natfd, SIOCGNATL, &obj);
+
+#else
     /*
-     * IP-Filter changed the type for SIOCGNATL between
-     * 3.3 and 3.4.  It also changed the cmd value for
-     * SIOCGNATL, so at least we can detect it.  We could
-     * put something in configure and use ifdefs here, but
-     * this seems simpler.
-     */
+    * IP-Filter changed the type for SIOCGNATL between
+    * 3.3 and 3.4.  It also changed the cmd value for
+    * SIOCGNATL, so at least we can detect it.  We could
+    * put something in configure and use ifdefs here, but
+    * this seems simpler.
+    */
     if (63 == siocgnatl_cmd)
     {
 
@@ -140,6 +163,7 @@ clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct s
         x = ioctl(natfd, SIOCGNATL, &natLookup);
     }
 
+#endif
     if (x < 0)
     {
         if (errno != ESRCH) {
