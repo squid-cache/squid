@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.260 2005/09/03 11:53:32 serassio Exp $
+ * $Id: tools.cc,v 1.261 2005/09/11 21:08:53 serassio Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -36,6 +36,10 @@
 #include "squid.h"
 #include "SwapDir.h"
 #include "fde.h"
+
+#if HAVE_SYS_PRCTL_H
+#include <sys/prctl.h>
+#endif
 
 #define DEAD_MSG "\
 The Squid Cache (version %s) died.\n\
@@ -701,6 +705,12 @@ leave_suid(void)
         debug(50, 0) ("ALERT: setuid: %s\n", xstrerror());
 
 #endif
+#if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
+    /* Set Linux DUMPABLE flag */
+    if (Config.coredump_dir && prctl(PR_SET_DUMPABLE, 1) != 0)
+        debug(50, 0) ("ALERT: prctl: %s\n", xstrerror());
+
+#endif
 }
 
 /* Enter a privilegied section */
@@ -714,6 +724,13 @@ enter_suid(void)
 #else
 
     setuid(0);
+#endif
+#if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
+    /* Set Linux DUMPABLE flag */
+
+    if (Config.coredump_dir && prctl(PR_SET_DUMPABLE, 1) != 0)
+        debug(50, 0) ("ALERT: prctl: %s\n", xstrerror());
+
 #endif
 }
 
@@ -738,6 +755,12 @@ no_suid(void)
 
     if (setuid(uid) < 0)
         debug(50, 1) ("no_suid: setuid: %s\n", xstrerror());
+
+#endif
+#if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
+    /* Set Linux DUMPABLE flag */
+    if (Config.coredump_dir && prctl(PR_SET_DUMPABLE, 1) != 0)
+        debug(50, 0) ("ALERT: prctl: %s\n", xstrerror());
 
 #endif
 }
