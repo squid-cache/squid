@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.109 2005/08/23 10:52:05 serassio Exp $
+#  $Id: Makefile.am,v 1.110 2005/09/12 23:28:57 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -412,6 +412,7 @@ squid_SOURCES = \
 	HttpHeaderTools.cc \
 	HttpBody.cc \
 	HttpMsg.cc \
+	HttpMsg.h \
 	HttpReply.cc \
 	HttpReply.h \
 	HttpRequest.cc \

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.h,v 1.8 2005/08/31 19:15:35 wessels Exp $
+ * $Id: HttpReply.h,v 1.9 2005/09/12 23:28:57 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,8 +34,7 @@
 #ifndef SQUID_HTTPREPLY_H
 #define SQUID_HTTPREPLY_H
 
-#include "typedefs.h"
-#include "HttpHeader.h"
+#include "HttpMsg.h"
 #include "HttpStatusLine.h"
 
 /* Http Reply */
@@ -47,8 +46,8 @@ extern void httpReplyDestroy(HttpReply * rep);
 extern void httpReplyReset(HttpReply * rep);
 /* absorb: copy the contents of a new reply to the old one, destroy new one */
 extern void httpReplyAbsorb(HttpReply * rep, HttpReply * new_rep);
-/* parse returns -1,0,+1 on error,need-more-data,success */
-extern int httpReplyParse(HttpReply * rep, const char *buf, ssize_t);
+/* parse returns true on success */
+extern bool httpReplyParse(HttpReply * rep, const char *buf, ssize_t);
 extern void httpReplyPackHeadersInto(const HttpReply * rep, Packer * p);
 extern void httpReplyPackInto(const HttpReply * rep, Packer * p);
 /* ez-routines */
@@ -76,38 +75,44 @@ extern int httpReplyHasCc(const HttpReply * rep, http_hdr_cc_type type);
 extern void httpRedirectReply(HttpReply *, http_status, const char *);
 extern int httpReplyBodySize(method_t, HttpReply const *);
 extern int httpReplyValidatorsMatch (HttpReply const *, HttpReply const *);
+extern void httpReplyHdrCacheInit(HttpReply * rep);
+
 
 /* Sync changes here with HttpReply.cc */
 
 class HttpHdrContRange;
 
-class HttpReply
+class HttpReply: public HttpMsg
 {
 
 public:
     MEMPROXY_CLASS(HttpReply);
     HttpReply();
-    /* unsupported, writable, may disappear/change in the future */
-    int hdr_sz;			/* sums _stored_ status-line, headers, and <CRLF> */
+
+    virtual void reset();
+
+    // returns true on success
+    // returns false and sets *error to zero when needs more data
+    // returns false and sets *error to a positive http_status code on error
+    virtual bool sanityCheckStartLine(MemBuf *buf, http_status *error);
 
     /* public, readable; never update these or their .hdr equivalents directly */
-    int content_length;
     time_t date;
     time_t last_modified;
     time_t expires;
     String content_type;
-    HttpHdrCc *cache_control;
     HttpHdrSc *surrogate_control;
     HttpHdrContRange *content_range;
     short int keep_alive;
 
-    /* public, readable */
-    HttpMsgParseState pstate;	/* the current parsing state */
-
     /* public, writable, but use httpReply* interfaces when possible */
     HttpStatusLine sline;
-    HttpHeader header;
     HttpBody body;		/* for small constant memory-resident text bodies only */
+
+    String protoPrefix;       // e.g., "HTTP/"
+
+protected:
+    virtual void packFirstLineInto(Packer * p, bool) const;
 };
 
 MEMPROXY_CLASS_INLINE(HttpReply)

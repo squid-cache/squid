@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.14 2005/03/06 21:08:13 serassio Exp $
+ * $Id: HttpMsg.cc,v 1.15 2005/09/12 23:28:57 wessels Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -34,7 +34,23 @@
  */
 
 #include "squid.h"
-#include "HttpVersion.h"
+#include "HttpMsg.h"
+#include "HttpRequest.h"
+#include "HttpReply.h"
+
+HttpMsg::HttpMsg(http_hdr_owner_type owner): header(owner),
+        cache_control(NULL), hdr_sz(0), content_length(0), protocol(PROTO_NONE),
+        pstate(psReadyToParseStartLine)
+{}
+
+
+HttpMsgParseState &operator++ (HttpMsgParseState &aState)
+{
+    int tmp = (int)aState;
+    aState = (HttpMsgParseState)(++tmp);
+    return aState;
+}
+
 
 /* find end of headers */
 int
@@ -96,6 +112,177 @@ httpMsgIsolateHeaders(const char **parse_start, const char **blk_start, const ch
     return 1;
 }
 
+/* find first CRLF */
+static int
+httpMsgIsolateStart(const char **parse_start, const char **blk_start, const char **blk_end)
+{
+    int slen = strcspn(*parse_start, "\r\n");
+
+    if (!(*parse_start)[slen])  /* no CRLF found */
+        return 0;
+
+    *blk_start = *parse_start;
+
+    *blk_end = *blk_start + slen;
+
+    while (**blk_end == '\r')   /* CR */
+        (*blk_end)++;
+
+    if (**blk_end == '\n')      /* LF */
+        (*blk_end)++;
+
+    *parse_start = *blk_end;
+
+    return 1;
+}
+
+// negative return is the negated HTTP_ error code
+// zero return means need more data
+// positive return is the size of parsed headers
+bool HttpMsg::parse(MemBuf *buf, bool eof, http_status *error)
+{
+    assert(error);
+    *error = HTTP_STATUS_NONE;
+
+    // httpMsgParseStep() and debugging require 0-termination, unfortunately
+    buf->terminate(); // does not affect content size
+
+    // find the end of headers
+    // TODO: Remove? httpReplyParseStep() should do similar checks
+    const size_t hdr_len = headersEnd(buf->content(), buf->contentSize());
+
+    if (hdr_len <= 0) {
+        debugs(58, 3, "HttpMsg::parse: failed to find end of headers " <<
+               "(eof: " << eof << ") in '" << buf->content() << "'");
+
+        if (eof) // iff we have seen the end, this is an error
+            *error = HTTP_INVALID_HEADER;
+
+        return false;
+    }
+
+    // TODO: move to httpReplyParseStep()
+    if (hdr_len > Config.maxReplyHeaderSize) {
+        debugs(58, 1, "HttpMsg::parse: Too large reply header (" <<
+               hdr_len << " > " << Config.maxReplyHeaderSize);
+        *error = HTTP_HEADER_TOO_LARGE;
+        return false;
+    }
+
+    if (!sanityCheckStartLine(buf, error))	// redundant; could be remvoed
+        return false;
+
+    const int res = httpMsgParseStep(buf->content(), eof);
+
+    if (res < 0) { // error
+        debugs(58, 3, "HttpMsg::parse: cannot parse isolated headers " <<
+               "in '" << buf->content() << "'");
+        *error = HTTP_INVALID_HEADER;
+        return false;
+    }
+
+    if (res == 0) {
+        debugs(58, 2, "HttpMsg::parse: strange, need more data near '" <<
+               buf->content() << "'");
+        return false; // but this should not happen due to headersEnd() above
+    }
+
+    assert(res > 0);
+    debugs(58, 9, "HttpMsg::parse success (" << hdr_len << " bytes) " <<
+           "near '" << buf->content() << "'");
+
+    if (hdr_sz != (int)hdr_len) {
+        debugs(58, 1, "internal HttpMsg::parse vs. headersEnd error: " <<
+               hdr_sz << " != " << hdr_len);
+        hdr_sz = (int)hdr_len; // because old http.cc code used hdr_len
+    }
+
+    return true;
+}
+
+
+
+/*
+ * parses a 0-terminating buffer into HttpMsg.
+ * Returns:
+ *      1 -- success
+ *       0 -- need more data (partial parse)
+ *      -1 -- parse error
+ */
+int
+HttpMsg::httpMsgParseStep(const char *buf, int atEnd)
+{
+    const char *parse_start = buf;
+    const char *blk_start, *blk_end;
+    const char **parse_end_ptr = &blk_end;
+    assert(parse_start);
+    assert(pstate < psParsed);
+    HttpReply *rep = dynamic_cast<HttpReply*>(this);
+    HttpRequest *req = dynamic_cast<HttpRequest*>(this);
+
+    *parse_end_ptr = parse_start;
+
+    if (pstate == psReadyToParseStartLine) {
+        if (!httpMsgIsolateStart(&parse_start, &blk_start, &blk_end))
+            return 0;
+
+        if (rep) {
+            if (!httpStatusLineParse(&rep->sline, rep->protoPrefix, blk_start, blk_end))
+                return httpMsgParseError();
+        } else if (req) {
+            if (!req->parseRequestLine(blk_start, blk_end))
+                return httpMsgParseError();
+        }
+
+        *parse_end_ptr = parse_start;
+
+        hdr_sz = *parse_end_ptr - buf;
+
+        ++pstate;
+    }
+
+    if (pstate == psReadyToParseHeaders) {
+        if (!httpMsgIsolateHeaders(&parse_start, &blk_start, &blk_end)) {
+            if (atEnd)
+                blk_start = parse_start, blk_end = blk_start + strlen(blk_start);
+            else
+                return 0;
+        }
+
+        if (!httpHeaderParse(&header, blk_start, blk_end))
+            return httpMsgParseError();
+
+        if (rep)
+            httpReplyHdrCacheInit(rep);
+        else if (req)
+            httpRequestHdrCacheInit(req);
+
+        *parse_end_ptr = parse_start;
+
+        hdr_sz = *parse_end_ptr - buf;
+
+        ++pstate;
+    }
+
+    return 1;
+}
+
+
+/* handy: resets and returns -1 */
+int
+HttpMsg::httpMsgParseError()
+{
+    reset();
+    /* indicate an error */
+
+    if (HttpReply *rep = dynamic_cast<HttpReply*>(this))
+        rep->sline.status = HTTP_INVALID_HEADER;
+
+    return -1;
+}
+
+
+
 /* returns true if connection should be "persistent"
  * after processing this message */
 int
@@ -109,7 +296,7 @@ httpMsgIsPersistent(HttpVersion const &http_ver, const HttpHeader * hdr)
          * a "Connection: close" header.
          */
         return !httpHeaderHasConnDir(hdr, "close");
-    } else {
+    } else
 #else
     {
 #endif
@@ -120,16 +307,24 @@ httpMsgIsPersistent(HttpVersion const &http_ver, const HttpHeader * hdr)
          */
         const char *agent = httpHeaderGetStr(hdr, HDR_USER_AGENT);
 
-        if (agent && !httpHeaderHas(hdr, HDR_VIA))
-        {
-            if (!strncasecmp(agent, "Mozilla/3.", 10))
-                return 0;
+    if (agent && !httpHeaderHas(hdr, HDR_VIA)) {
+        if (!strncasecmp(agent, "Mozilla/3.", 10))
+            return 0;
 
-            if (!strncasecmp(agent, "Netscape/3.", 11))
-                return 0;
-        }
-
-        /* for old versions of HTTP: persistent if has "keep-alive" */
-        return httpHeaderHasConnDir(hdr, "keep-alive");
+        if (!strncasecmp(agent, "Netscape/3.", 11))
+            return 0;
     }
+
+    /* for old versions of HTTP: persistent if has "keep-alive" */
+    return httpHeaderHasConnDir(hdr, "keep-alive");
 }
+}
+
+void HttpMsg::packInto(Packer *p, bool full_uri) const
+{
+    packFirstLineInto(p, full_uri);
+    httpHeaderPackInto(&header, p);
+    packerAppend(p, "\r\n", 2);
+}
+
+

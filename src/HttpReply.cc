@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.72 2005/08/31 19:15:35 wessels Exp $
+ * $Id: HttpReply.cc,v 1.73 2005/09/12 23:28:57 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -33,10 +33,9 @@
  *
  */
 
-#include "HttpReply.h"
 #include "squid.h"
 #include "Store.h"
-#include "HttpHeader.h"
+#include "HttpReply.h"
 #include "HttpHdrContRange.h"
 #include "ACLChecklist.h"
 
@@ -51,22 +50,11 @@ static http_hdr_type Denied304HeadersArr[] =
         HDR_OTHER
     };
 
-HttpMsgParseState &operator++ (HttpMsgParseState &aState)
-{
-    int tmp = (int)aState;
-    aState = (HttpMsgParseState)(++tmp);
-    return aState;
-}
-
 
 /* local routines */
 static void httpReplyClean(HttpReply * rep);
 static void httpReplyDoDestroy(HttpReply * rep);
-static void httpReplyHdrCacheInit(HttpReply * rep);
 static void httpReplyHdrCacheClean(HttpReply * rep);
-static int httpReplyParseStep(HttpReply * rep, const char *parse_start, int atEnd);
-static int httpReplyParseError(HttpReply * rep);
-static int httpReplyIsolateStart(const char **parse_start, const char **blk_start, const char **blk_end);
 static time_t httpReplyHdrExpirationTime(const HttpReply * rep);
 
 
@@ -74,6 +62,7 @@ static time_t httpReplyHdrExpirationTime(const HttpReply * rep);
 void
 httpReplyInitModule(void)
 {
+    assert(HTTP_STATUS_NONE == 0); // HttpReply::parse() interface assumes that
     httpHeaderMaskInit(&Denied304HeadersMask, 0);
     httpHeaderCalcMask(&Denied304HeadersMask, (const int *) Denied304HeadersArr, countof(Denied304HeadersArr));
 }
@@ -87,13 +76,16 @@ httpReplyCreate(void)
     return rep;
 }
 
-HttpReply::HttpReply() : hdr_sz (0), content_length (0), date (0), last_modified (0), expires (0), cache_control (NULL), surrogate_control (NULL), content_range (NULL), keep_alive (0), pstate(psReadyToParseStartLine), header (hoReply)
+HttpReply::HttpReply() : HttpMsg(hoReply), date (0), last_modified (0), expires (0), surrogate_control (NULL), content_range (NULL), keep_alive (0), protoPrefix("HTTP/")
 {
-    assert(this);
     httpBodyInit(&body);
     httpReplyHdrCacheInit(this);
     httpStatusLineInit(&sline);
+}
 
+void HttpReply::reset()
+{
+    httpReplyReset(this);
 }
 
 static void
@@ -118,8 +110,14 @@ httpReplyDestroy(HttpReply * rep)
 void
 httpReplyReset(HttpReply * rep)
 {
+    // reset should not reset the protocol; could have made protoPrefix a
+    // virtual function instead, but it is not clear whether virtual methods
+    // are allowed with MEMPROXY_CLASS() and whether some cbdata void*
+    // conversions are not going to kill virtual tables
+    const String pfx = rep->protoPrefix;
     httpReplyClean(rep);
     *rep = HttpReply();
+    rep->protoPrefix = pfx;
 }
 
 /* absorb: copy the contents of a new reply to the old one, destroy new one */
@@ -142,7 +140,7 @@ httpReplyAbsorb(HttpReply * rep, HttpReply * new_rep)
  * end is, but is unable to NULL-terminate the buffer.  This function
  * returns true on success.
  */
-int
+bool
 httpReplyParse(HttpReply * rep, const char *buf, ssize_t end)
 {
     /*
@@ -160,7 +158,7 @@ httpReplyParse(HttpReply * rep, const char *buf, ssize_t end)
     memBufDefInit(&mb);
     memBufAppend(&mb, buf, end);
     memBufAppend(&mb, "\0", 1);
-    success = httpReplyParseStep(rep, mb.buf, 0);
+    success = rep->httpMsgParseStep(mb.buf, 0);
     memBufClean(&mb);
     return success == 1;
 }
@@ -436,7 +434,7 @@ httpReplyHdrExpirationTime(const HttpReply * rep)
 }
 
 /* sync this routine when you update HttpReply struct */
-static void
+void
 httpReplyHdrCacheInit(HttpReply * rep)
 {
     const HttpHeader *hdr = &rep->header;
@@ -480,98 +478,6 @@ httpReplyHdrCacheClean(HttpReply * rep)
 }
 
 /*
- * parses a 0-terminating buffer into HttpReply. 
- * Returns:
- *      1 -- success 
- *       0 -- need more data (partial parse)
- *      -1 -- parse error
- */
-static int
-httpReplyParseStep(HttpReply * rep, const char *buf, int atEnd)
-{
-    const char *parse_start = buf;
-    const char *blk_start, *blk_end;
-    const char **parse_end_ptr = &blk_end;
-    assert(rep);
-    assert(parse_start);
-    assert(rep->pstate < psParsed);
-
-    *parse_end_ptr = parse_start;
-
-    if (rep->pstate == psReadyToParseStartLine) {
-        if (!httpReplyIsolateStart(&parse_start, &blk_start, &blk_end))
-            return 0;
-
-        if (!httpStatusLineParse(&rep->sline, blk_start, blk_end))
-            return httpReplyParseError(rep);
-
-        *parse_end_ptr = parse_start;
-
-        rep->hdr_sz = *parse_end_ptr - buf;
-
-        ++rep->pstate;
-    }
-
-    if (rep->pstate == psReadyToParseHeaders) {
-        if (!httpMsgIsolateHeaders(&parse_start, &blk_start, &blk_end)) {
-            if (atEnd)
-                blk_start = parse_start, blk_end = blk_start + strlen(blk_start);
-            else
-                return 0;
-        }
-
-        if (!httpHeaderParse(&rep->header, blk_start, blk_end))
-            return httpReplyParseError(rep);
-
-        httpReplyHdrCacheInit(rep);
-
-        *parse_end_ptr = parse_start;
-
-        rep->hdr_sz = *parse_end_ptr - buf;
-
-        ++rep->pstate;
-    }
-
-    return 1;
-}
-
-/* handy: resets and returns -1 */
-static int
-httpReplyParseError(HttpReply * rep)
-{
-    assert(rep);
-    /* reset */
-    httpReplyReset(rep);
-    /* indicate an error */
-    rep->sline.status = HTTP_INVALID_HEADER;
-    return -1;
-}
-
-/* find first CRLF */
-static int
-httpReplyIsolateStart(const char **parse_start, const char **blk_start, const char **blk_end)
-{
-    int slen = strcspn(*parse_start, "\r\n");
-
-    if (!(*parse_start)[slen])	/* no CRLF found */
-        return 0;
-
-    *blk_start = *parse_start;
-
-    *blk_end = *blk_start + slen;
-
-    while (**blk_end == '\r')	/* CR */
-        (*blk_end)++;
-
-    if (**blk_end == '\n')	/* LF */
-        (*blk_end)++;
-
-    *parse_start = *blk_end;
-
-    return 1;
-}
-
-/*
  * Returns the body size of a HTTP response
  */
 int
@@ -591,4 +497,20 @@ httpReplyBodySize(method_t method, HttpReply const * reply)
         return 0;
 
     return reply->content_length;
+}
+
+bool HttpReply::sanityCheckStartLine(MemBuf *buf, http_status *error)
+{
+    if (buf->contentSize() >= protoPrefix.size() && protoPrefix.cmp(buf->content(), protoPrefix.size()) != 0) {
+        debugs(58, 3, "HttpReply::sanityCheckStartLine: missing protocol prefix (" << protoPrefix.buf() << ") in '" << buf->content() << "'");
+        *error = HTTP_INVALID_HEADER;
+        return false;
+    }
+
+    return true;
+}
+
+void HttpReply::packFirstLineInto(Packer *p, bool unused) const
+{
+    httpStatusLinePackInto(&sline, p);
 }

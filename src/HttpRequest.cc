@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.48 2005/04/18 21:52:41 hno Exp $
+ * $Id: HttpRequest.cc,v 1.49 2005/09/12 23:28:57 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -34,19 +34,16 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "HttpRequest.h"
 #include "squid.h"
+#include "HttpRequest.h"
 #include "AuthUserRequest.h"
 #include "HttpHeaderRange.h"
 
-static void httpRequestHdrCacheInit(HttpRequest * req);
-
-HttpRequest::HttpRequest()  : header(hoRequest)
+HttpRequest::HttpRequest()  : HttpMsg(hoRequest)
 {
     /* We should initialise these ... */
 #if 0
     method_t method;
-    protocol_t protocol;
     char login[MAX_LOGIN_SZ];
     char host[SQUIDHOSTNAMELEN + 1];
     auth_user_request_t *auth_user_request;
@@ -55,9 +52,7 @@ HttpRequest::HttpRequest()  : header(hoRequest)
     char *canonical;
     int link_count;		/* free when zero */
     request_flags flags;
-    HttpHdrCc *cache_control;
     HttpHdrRange *range;
-    HttpVersion http_ver;
     time_t ims;
     int imslen;
     int max_forwards;
@@ -68,9 +63,7 @@ HttpRequest::HttpRequest()  : header(hoRequest)
     struct IN_ADDR my_addr;
     unsigned short my_port;
     unsigned short client_port;
-    HttpHeader header;
     ConnStateData::Pointer body_connection;	/* used by clientReadBody() */
-    int content_length;
     HierarchyLogEntry hier;
     err_type errType;
     char *peer_login;		/* Configured peer login:password */
@@ -103,40 +96,73 @@ requestCreate(method_t method, protocol_t protocol, const char *aUrlpath)
     return req;
 }
 
+void HttpRequest::reset()
+{
+    clean();
+    *this = HttpRequest(); // XXX: ugly; merge with clean()
+}
+
 void
 requestDestroy(HttpRequest * req)
 {
     assert(req);
+    req->clean();
+    delete req;
+}
 
-    if (req->body_connection.getRaw() != NULL)
+// note: this is a very low-level method that leaves us in inconsistent state
+// suitable for deletion or assignment only; XXX: should be merged with reset()
+void HttpRequest::clean()
+{
+    if (body_connection.getRaw() != NULL)
         fatal ("request being destroyed with body connection intact\n");
 
-    if (req->auth_user_request)
-        req->auth_user_request->unlock();
+    if (auth_user_request)
+        auth_user_request->unlock();
 
-    safe_free(req->canonical);
+    safe_free(canonical);
 
-    safe_free(req->vary_headers);
+    safe_free(vary_headers);
 
-    req->urlpath.clean();
+    urlpath.clean();
 
-    httpHeaderClean(&req->header);
+    httpHeaderClean(&header);
 
-    if (req->cache_control)
-        httpHdrCcDestroy(req->cache_control);
+    if (cache_control)
+        httpHdrCcDestroy(cache_control);
 
-    if (req->range)
-        delete req->range;
+    if (range)
+        delete range;
 
-    req->tag.clean();
+    tag.clean();
 
-    req->extacl_user.clean();
+    extacl_user.clean();
 
-    req->extacl_passwd.clean();
+    extacl_passwd.clean();
 
-    req->extacl_log.clean();
+    extacl_log.clean();
+}
 
-    delete req;
+bool HttpRequest::sanityCheckStartLine(MemBuf *buf, http_status *error)
+{
+    /*
+     * Just see if the request buffer starts with a known
+     * HTTP request method.  NOTE this whole function is somewhat
+     * superfluous and could just go away.
+     */
+
+    if (METHOD_NONE == urlParseMethod(buf->content())) {
+        debug(73, 3)("HttpRequest::sanityCheckStartLine: did not find HTTP request method\n");
+        return false;
+    }
+
+    return true;
+}
+
+bool HttpRequest::parseRequestLine(const char *start, const char *end)
+{
+    fatal("HttpRequest::parseRequestLine not implemented yet");
+    return false;
 }
 
 HttpRequest *
@@ -241,7 +267,7 @@ httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConn)
 }
 
 /* sync this routine when you update HttpRequest struct */
-static void
+void
 httpRequestHdrCacheInit(HttpRequest * req)
 {
     const HttpHeader *hdr = &req->header;
@@ -312,4 +338,24 @@ bool
 request_flags::destinationIPLookedUp() const
 {
     return destinationIPLookedUp_;
+}
+
+const char *HttpRequest::packableURI(bool full_uri) const
+{
+    if (full_uri)
+        return urlCanonical((HttpRequest*)this);
+
+    if (urlpath.size())
+        return urlpath.buf();
+
+    return "/";
+}
+
+void HttpRequest::packFirstLineInto(Packer * p, bool full_uri) const
+{
+    // form HTTP request-line
+    packerPrintf(p, "%s %s HTTP/%d.%d\r\n",
+                 RequestMethodStr[method],
+                 packableURI(full_uri),
+                 http_ver.major, http_ver.minor);
 }

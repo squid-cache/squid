@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.11 2005/04/18 21:52:41 hno Exp $
+ * $Id: HttpRequest.h,v 1.12 2005/09/12 23:28:57 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,10 +34,8 @@
 #ifndef SQUID_HTTPREQUEST_H
 #define SQUID_HTTPREQUEST_H
 
-#include "typedefs.h"
-#include "HttpHeader.h"
+#include "HttpMsg.h"
 #include "client_side.h"
-#include "HttpVersion.h"
 #include "HierarchyLogEntry.h"
 
 /*  Http Request */
@@ -51,21 +49,23 @@ extern void httpRequestPack(const HttpRequest * req, Packer * p);
 extern int httpRequestPrefixLen(const HttpRequest * req);
 extern int httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConnection);
 extern int httpRequestHdrAllowedByName(http_hdr_type id);
+extern void httpRequestHdrCacheInit(HttpRequest * req);
+
 
 class HttpHdrRange;
 
-class HttpRequest
+class HttpRequest: public HttpMsg
 {
 
 public:
     MEMPROXY_CLASS(HttpRequest);
     HttpRequest();
-    virtual ~HttpRequest() {}
+
+    virtual void reset();
 
     bool multipartRangeRequest() const;
 
     method_t method;
-    protocol_t protocol;
     char login[MAX_LOGIN_SZ];
     char host[SQUIDHOSTNAMELEN + 1];
     auth_user_request_t *auth_user_request;
@@ -74,9 +74,7 @@ public:
     char *canonical;
     int link_count;		/* free when zero */
     request_flags flags;
-    HttpHdrCc *cache_control;
     HttpHdrRange *range;
-    HttpVersion http_ver;
     time_t ims;
     int imslen;
     int max_forwards;
@@ -87,9 +85,7 @@ public:
     struct IN_ADDR my_addr;
     unsigned short my_port;
     unsigned short client_port;
-    HttpHeader header;
     ConnStateData::Pointer body_connection;	/* used by clientReadBody() */
-    int content_length;
     HierarchyLogEntry hier;
     err_type errType;
     char *peer_login;		/* Configured peer login:password */
@@ -100,6 +96,19 @@ public:
     String extacl_user;		/* User name returned by extacl lookup */
     String extacl_passwd;	/* Password returned by extacl lookup */
     String extacl_log;		/* String to be used for access.log purposes */
+
+public:
+    bool parseRequestLine(const char *start, const char *end);
+
+private:
+    const char *packableURI(bool full_uri) const;
+
+protected:
+    virtual void packFirstLineInto(Packer * p, bool full_uri) const;
+    virtual bool sanityCheckStartLine(MemBuf *buf, http_status *error);
+
+public: // should be private
+    void clean(); // low-level; treat as private
 };
 
 MEMPROXY_CLASS_INLINE(HttpRequest)
