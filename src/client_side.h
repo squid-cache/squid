@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.h,v 1.10 2005/04/18 21:52:42 hno Exp $
+ * $Id: client_side.h,v 1.11 2005/09/12 23:28:57 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -229,5 +229,7 @@ private:
     CBCB *callback;
     HttpRequest *request;
 };
+
+const char *findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *end = NULL);
 
 #endif /* SQUID_CLIENTSIDE_H */

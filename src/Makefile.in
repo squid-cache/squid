@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.346 2005/08/24 00:10:54 hno Exp $
+#  $Id: Makefile.in,v 1.347 2005/09/12 23:28:57 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -190,7 +190,7 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc ACL.h \
 	HttpHdrRange.cc HttpHdrSc.cc HttpHdrScTarget.cc \
 	HttpHdrContRange.cc HttpHdrContRange.h HttpHeader.cc \
 	HttpHeader.h HttpHeaderRange.h HttpHeaderTools.cc HttpBody.cc \
-	HttpMsg.cc HttpReply.cc HttpReply.h HttpRequest.cc \
+	HttpMsg.cc HttpMsg.h HttpReply.cc HttpReply.h HttpRequest.cc \
 	HttpRequest.h HttpVersion.h icmp.cc ICP.h icp_v2.cc icp_v3.cc \
 	ACLIdent.cc ACLIdent.h ident.cc int.cc internal.cc ipc.cc \
 	ipcache.cc IPInterception.cc IPInterception.h leakfinder.cc \
@@ -1061,6 +1061,7 @@ squid_SOURCES = \
 	HttpHeaderTools.cc \
 	HttpBody.cc \
 	HttpMsg.cc \
+	HttpMsg.h \
 	HttpReply.cc \
 	HttpReply.h \
 	HttpRequest.cc \

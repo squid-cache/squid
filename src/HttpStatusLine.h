@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpStatusLine.h,v 1.1 2003/09/01 03:49:37 robertc Exp $
+ * $Id: HttpStatusLine.h,v 1.2 2005/09/12 23:28:57 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -56,8 +56,8 @@ SQUIDCEXTERN void httpStatusLineSet(HttpStatusLine * sline, HttpVersion version,
 SQUIDCEXTERN const char *httpStatusLineReason(const HttpStatusLine * sline);
 /* parse/pack */
 /* parse a 0-terminating buffer and fill internal structires; returns true on success */
-SQUIDCEXTERN int httpStatusLineParse(HttpStatusLine * sline, const char *start,
-                                     const char *end);
+SQUIDCEXTERN int httpStatusLineParse(HttpStatusLine * sline, const String &protoPrefix,
+                                     const char *start, const char *end);
 /* pack fields using Packer */
 SQUIDCEXTERN void httpStatusLinePackInto(const HttpStatusLine * sline, Packer * p);
 
