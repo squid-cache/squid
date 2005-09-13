@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.691 2005/09/09 17:31:33 wessels Exp $
+ * $Id: client_side.cc,v 1.692 2005/09/12 19:24:29 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1656,7 +1656,6 @@ parseURIandHTTPVersion(char **url_p, HttpVersion * http_ver_p,
                        ConnStateData::Pointer & conn, char *http_version_str)
 {
     char *url;
-    char *t;
     /* look for URL (strtok initiated by clientParseRequestMethod) */
 
     if ((url = strtok(NULL, "\n")) == NULL) {
@@ -1675,7 +1674,7 @@ parseURIandHTTPVersion(char **url_p, HttpVersion * http_ver_p,
     if (http_version_str)
         http_version_str[-1] = '\0';
     else {
-        t = url + strlen(url) - 1;
+        char *t = url + strlen(url) - 1;
 
         while (t > url && *t == '\r')
             *t-- = '\0';
