@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.45 2005/09/09 17:31:33 wessels Exp $
+ * $Id: client_side_request.cc,v 1.46 2005/09/12 22:26:39 wessels Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -273,7 +273,6 @@ clientBeginRequest(method_t method, char const *url, CSCB * streamcallback,
     ClientHttpRequest *http = new ClientHttpRequest;
     HttpRequest *request;
     StoreIOBuffer tempBuffer;
-    http->http_ver = http_ver;
     http->setConn(NULL);
     http->start = current_time;
     /* this is only used to adjust the connection offset in client_side.c */

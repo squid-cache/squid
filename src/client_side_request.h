@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.20 2005/09/09 17:31:33 wessels Exp $
+ * $Id: client_side_request.h,v 1.21 2005/09/12 22:26:39 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -94,7 +94,6 @@ public:
     log_type logType;
 
     struct timeval start;
-    HttpVersion http_ver;
     AccessLogEntry al;
 
     struct

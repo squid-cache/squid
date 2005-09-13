@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.692 2005/09/12 19:24:29 wessels Exp $
+ * $Id: client_side.cc,v 1.693 2005/09/12 22:26:39 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -127,7 +127,7 @@ static PF clientLifetimeTimeout;
 static ClientSocketContext *parseHttpRequestAbort(ConnStateData::Pointer & conn,
         const char *uri);
 static ClientSocketContext *parseHttpRequest(ConnStateData::Pointer &, method_t *,
-        char **, size_t *);
+        char **, size_t *, HttpVersion *);
 #if USE_IDENT
 static IDCB clientIdentDone;
 #endif
@@ -1840,13 +1840,12 @@ prepareTransparentURL(ConnStateData::Pointer & conn, ClientHttpRequest *http, ch
  */
 static ClientSocketContext *
 parseHttpRequest(ConnStateData::Pointer & conn, method_t * method_p,
-                 char **prefix_p, size_t * req_line_sz_p)
+                 char **prefix_p, size_t * req_line_sz_p, HttpVersion *http_ver)
 {
     char *inbuf = NULL;
     char *url = NULL;
     char *req_hdr = NULL;
     char *t;
-    HttpVersion http_ver;
     char *end;
     size_t header_sz;		/* size of headers, not including first line */
     size_t prefix_sz;		/* size of whole request (req-line + headers) */
@@ -1910,7 +1909,7 @@ parseHttpRequest(ConnStateData::Pointer & conn, method_t * method_p,
 
     /* Is there a legitimate first line to the headers ? */
     if ((result = clientParseHttpRequestLine(inbuf, conn, method_p, &url,
-                  &http_ver, http_version))) {
+                  http_ver, http_version))) {
         /* something wrong, abort */
         xfree(inbuf);
         return result;
@@ -1945,8 +1944,6 @@ parseHttpRequest(ConnStateData::Pointer & conn, method_t * method_p,
 
     /* Ok, all headers are received */
     http = new ClientHttpRequest;
-
-    http->http_ver = http_ver;
 
     http->setConn(conn);
 
@@ -2166,7 +2163,7 @@ clientAfterReadingRequests(int fd, ConnStateData::Pointer &conn, int do_next_rea
 }
 
 static void
-clientProcessRequest(ConnStateData::Pointer &conn, ClientSocketContext *context, method_t method, char *prefix, size_t req_line_sz)
+clientProcessRequest(ConnStateData::Pointer &conn, ClientSocketContext *context, method_t method, char *prefix, size_t req_line_sz, HttpVersion http_ver)
 {
     ClientHttpRequest *http = context->http;
     HttpRequest *request = NULL;
@@ -2246,7 +2243,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, ClientSocketContext *context,
     request->client_port = ntohs(conn->peer.sin_port);
     request->my_addr = conn->me.sin_addr;
     request->my_port = ntohs(conn->me.sin_port);
-    request->http_ver = http->http_ver;
+    request->http_ver = http_ver;
 
     if (!urlCheckRequest(request) ||
             httpHeaderHas(&request->header, HDR_TRANSFER_ENCODING)) {
@@ -2347,6 +2344,7 @@ clientParseRequest(ConnStateData::Pointer conn, bool &do_next_read)
     char *prefix = NULL;
     ClientSocketContext *context;
     bool parsed_req = false;
+    HttpVersion http_ver;
 
     debug(33, 5) ("clientParseRequest: FD %d: attempting to parse\n", conn->fd);
 
@@ -2365,7 +2363,7 @@ clientParseRequest(ConnStateData::Pointer conn, bool &do_next_read)
         conn->in.buf[conn->in.notYetUsed] = '\0';
 
         /* Process request */
-        context = parseHttpRequest(conn, &method, &prefix, &req_line_sz);
+        context = parseHttpRequest(conn, &method, &prefix, &req_line_sz, &http_ver);
 
         /* partial or incomplete request */
         if (!context) {
@@ -2383,7 +2381,7 @@ clientParseRequest(ConnStateData::Pointer conn, bool &do_next_read)
             commSetTimeout(conn->fd, Config.Timeout.lifetime, clientLifetimeTimeout,
                            context->http);
 
-            clientProcessRequest(conn, context, method, prefix, req_line_sz);
+            clientProcessRequest(conn, context, method, prefix, req_line_sz, http_ver);
 
             safe_free(prefix);
             parsed_req = true;
