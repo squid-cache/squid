@@ -197,6 +197,9 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* Define to 1 if you have the <ipl.h> header file. */
+#undef HAVE_IPL_H
+
 /* Define to 1 if you have the <ip_compat.h> header file. */
 #undef HAVE_IP_COMPAT_H
 
@@ -325,6 +328,9 @@
 
 /* Define to 1 if you have the <netinet/in.h> header file. */
 #undef HAVE_NETINET_IN_H
+
+/* Define to 1 if you have the <netinet/ipl.h> header file. */
+#undef HAVE_NETINET_IPL_H
 
 /* Define to 1 if you have the <netinet/ip_compat.h> header file. */
 #undef HAVE_NETINET_IP_COMPAT_H
