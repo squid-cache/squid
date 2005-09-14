@@ -1,0 +1,26 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-7">
+<TITLE>ΣΦΑΛΜΑ: Η μεταφόρτωση FTP απέτυχε</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
+</HEAD><BODY>
+<H1>ΣΦΑΛΜΑ</H1>
+<H2>Η εντολή FTP PUT/upload απέτυχε</H2>
+<HR noshade size="1px">
+<P>
+Κατα τη διάρκεια μεταφόρτωσης στη διεύθυνση:
+<A HREF="%U">%U</A>
+<P>
+Το Squid έστειλε τη ακόλουθη εντολή FTP:
+<PRE><STRONG>
+        %f
+</STRONG></PRE>
+και έλαβε την ακόλουθη απάντηση
+<PRE><STRONG>
+        %F
+</STRONG></PRE>
+<P>
+Αυτό σημαίνει ότι:
+<PRE>
+Ελέγξτε τη διαδρομή, τα δικαιώματα, τον ελεύθερο χώρο και ξαναδοκιμάστε.
+</PRE>
+<P>Ο διαχειριστής του μεσολαβητή σας είναι ο <A HREF="mailto:%w">%w</A>. 

@@ -1,0 +1,23 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-7">
+<TITLE>ΣΦΑΛΜΑ: Αδύνατη η πρόσβαση στην αιτούμενη διεύθυνση</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
+</HEAD><BODY>
+<H1>ΣΦΑΛΜΑ</H1>
+<H2>Αδύνατη η πρόσβαση στην αιτούμενη διεύθυνση</H2>
+<HR noshade size="1px">
+<P>
+Στη προσπάθεια πρόσβασης στη διεύθυνση:
+<A HREF="%U">%U</A>
+<P>
+Προέκυψε το ακόλουθο σφάλμα:
+<UL>
+<LI>
+<STRONG>
+Απάντηση Μηδενικού Μεγέθους
+</STRONG>
+</UL>
+
+<P>
+Το Squid δεν έλαβε δεδομένα για αυτό το αίτημα.
+<P>Ο διαχειριστής του μεσολαβητή σας είναι ο <A HREF="mailto:%w">%w</A>. 
