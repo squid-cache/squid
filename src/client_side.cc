@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.693 2005/09/12 22:26:39 wessels Exp $
+ * $Id: client_side.cc,v 1.694 2005/09/14 17:10:38 serassio Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -643,15 +643,11 @@ clientSetKeepaliveFlag(ClientHttpRequest * http)
     debug(33, 3) ("clientSetKeepaliveFlag: method = %s\n",
                   RequestMethodStr[request->method]);
 
-    if (!Config.onoff.client_pconns)
-        request->flags.proxy_keepalive = 0;
-    else {
-        HttpVersion http_ver(1,0);
-        /* we are HTTP/1.0, no matter what the client requests... */
+    HttpVersion http_ver(1,0);
+    /* we are HTTP/1.0, no matter what the client requests... */
 
-        if (httpMsgIsPersistent(http_ver, req_hdr))
-            request->flags.proxy_keepalive = 1;
-    }
+    if (httpMsgIsPersistent(http_ver, req_hdr))
+        request->flags.proxy_keepalive = 1;
 }
 
 static int

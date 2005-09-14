@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.47 2005/04/24 14:00:52 serassio Exp $
+ * $Id: auth_ntlm.cc,v 1.48 2005/09/14 17:10:39 serassio Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -319,6 +319,9 @@ AuthNTLMConfig::fixHeader(auth_user_request_t *auth_user_request, HttpReply *rep
 {
     AuthNTLMUserRequest *ntlm_request;
 
+    if (!request->flags.proxy_keepalive)
+        return;
+
     if (authenticate) {
         /* New request, no user details */
 
@@ -353,6 +356,7 @@ AuthNTLMConfig::fixHeader(auth_user_request_t *auth_user_request, HttpReply *rep
                 /* pass the challenge to the client */
                 debug(29, 9) ("authenticateNTLMFixErrorHeader: Sending type:%d header: 'NTLM %s'\n", type, ntlm_request->authchallenge);
                 httpHeaderPutStrf(&rep->header, type, "NTLM %s", ntlm_request->authchallenge);
+                request->flags.must_keepalive = 1;
                 break;
 
             default:
