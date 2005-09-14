@@ -1,0 +1,34 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-7">
+<TITLE>ΣΦΑΛΜΑ: Απαγορεύεται η Πρόσβαση στο Μεσολαβητή</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
+</HEAD>
+<BODY>
+<H1>ΣΦΑΛΜΑ</H1>
+<H2>Η Πρόσβαση στο Μεσολαβητή Απαγορεύεται</H2>
+<HR noshade size="1px">
+<P>
+Στη προσπάθεια πρόσβασης στη διεύθυνση:
+<A HREF="%U">%U</A>
+<P>
+Προέκυψε το ακόλουθο σφάλμα:
+<UL>
+<LI>
+<STRONG>
+Απαγορεύεται η Πρόσβαση στο Μεσολαβητή.
+</STRONG>
+</UL>
+</P>
+
+<P>Λυπάμαι αλλά δεν σας επιτρέπεται η πρόσβαση στη σελίδα:
+<PRE>    %U</PRE>
+από αυτόν τον μεσολαβητή, μέχρι να πιστοποιήσετε τον εαυτό σας.
+</P>
+
+<P>
+Θα πρέπει να χρησιμοποιείτε φυλλομετρητή Netscape έκδοσής τουλάχιστον 2.0, τον
+Microsoft Internet Explorer 3.0 ή οποιονδήποτε φυλλομετρητή συμβατό με HTTP/1.1.
+Επικοινωνήστε με τον <A HREF="mailto:%w">διαχειριστή του μεσολαβητή σας</a>
+αν αντιμετωπίζετε δυσκολία να πιστοποιήσετε τον λογαριασμό σας ή να
+<A HREF="http://%h/cgi-bin/chpasswd.cgi">αλλάξτε</a> τον κωδικό σας.
+</P>

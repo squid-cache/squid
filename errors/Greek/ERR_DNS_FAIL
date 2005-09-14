@@ -1,0 +1,30 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-7">
+<TITLE>ΣΦΑΛΜΑ: Αδύνατη η πρόσβαση στην αιτούμενη διεύθυνση</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
+</HEAD><BODY>
+<H2>Αδύνατη η πρόσβαση στην αιτούμενη διεύθυνση</H2>
+<HR noshade size="1px">
+<P>
+Κατά την προσπάθεια πρόσβασης στη διεύθυνση:
+<A HREF="%U">%U</A>
+<P>
+Προέκυψε το ακόλουθο σφάλμα:
+<BLOCKQUOTE>
+Δεν ήταν δυνατόν να εξακριβωθεί η διεύθυνση IP για το όνομα
+<I>%H</I>
+</BLOCKQUOTE>
+
+<P>
+Ο εξυπηρετητής ονομάτων ενημέρωσε ότι:
+<BLOCKQUOTE>
+%z
+</BLOCKQUOTE>
+
+<P>
+Αυτό σημαίνει ότι:
+<PRE>
+ Ο μεσολαβητής δεν μπόρεσε να εξακριβώσει την διεύθυνση που πληκτρολογήσατε. 
+ Ελέγξτε αν η διεύθυνση είναι σωστή. 
+</PRE>
+<P>Ο διαχειριστής του μεσολαβητή σας είναι ο <A HREF="mailto:%w">%w</A>. 
