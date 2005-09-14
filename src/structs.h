@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.526 2005/09/03 13:46:46 serassio Exp $
+ * $Id: structs.h,v 1.527 2005/09/14 17:10:38 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1444,7 +1444,7 @@ struct _RemovalPurgeWalker
 
 struct request_flags
 {
-    request_flags():range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),accelerated(0),transparent(0),internal(0),internalclient(0),body_sent(0),destinationIPLookedUp_(0)
+    request_flags():range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),accelerated(0),transparent(0),internal(0),internalclient(0),body_sent(0),must_keepalive(0),destinationIPLookedUp_(0)
     {
 #if HTTP_VIOLATIONS
         nocache_hack = 0;
@@ -1506,6 +1506,9 @@ unsigned int internalclient:
     1;
 
 unsigned int body_sent:
+    1;
+
+unsigned int must_keepalive:
     1;
     bool resetTCP() const;
     void setResetTCP();

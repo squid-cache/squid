@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.86 2005/09/09 17:31:33 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.87 2005/09/14 17:10:38 serassio Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1417,10 +1417,13 @@ clientReplyContext::buildReplyHeader()
         request->flags.proxy_keepalive = 0;
     }
 
-    if (fdUsageHigh()) {
+    if (fdUsageHigh()&& !request->flags.must_keepalive) {
         debug(88, 3) ("clientBuildReplyHeader: Not many unused FDs, can't keep-alive\n");
         request->flags.proxy_keepalive = 0;
     }
+
+    if (!Config.onoff.client_pconns && !request->flags.must_keepalive)
+        request->flags.proxy_keepalive = 0;
 
     /* Append VIA */
     {
