@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.66 2005/08/16 00:11:09 hno Exp $
+# $Id: Makefile.in,v 1.67 2005/09/14 00:10:54 hno Exp $
 #
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -248,6 +248,7 @@ LANGUAGES = \
 		Finnish \
 		French \
 		German \
+		Greek \
 		Hebrew \
 		Hungarian \
 		Italian \
