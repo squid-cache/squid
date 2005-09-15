@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.100 2005/04/01 21:11:28 serassio Exp $
+ * $Id: store_swapout.cc,v 1.101 2005/09/14 18:23:21 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -148,7 +148,7 @@ doPages(StoreEntry *anEntry)
 
         mem->swapout.queue_offset += swap_buf_len;
 
-        storeIOWrite(mem->swapout.sio, mem->data_hdr.NodeGet(mem->swapout.memnode), swap_buf_len, -1, NULL);
+        storeIOWrite(mem->swapout.sio, mem->data_hdr.NodeGet(mem->swapout.memnode), swap_buf_len, -1, memNodeWriteComplete);
 
         /* the storeWrite() call might generate an error */
         if (anEntry->swap_status != SWAPOUT_WRITING)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.h,v 1.8 2005/04/01 21:11:28 serassio Exp $
+ * $Id: stmem.h,v 1.9 2005/09/14 18:23:21 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -74,7 +74,7 @@ public:
 
 private:
     void debugDump() const;
-    void unlink(mem_node *aNode);
+    bool unlink(mem_node *aNode);
     void makeAppendSpace();
     int appendToNode(mem_node *aNode, const char *data, int maxLength);
     void appendNode (mem_node *aNode);

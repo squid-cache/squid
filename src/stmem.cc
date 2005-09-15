@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.88 2005/04/01 21:11:28 serassio Exp $
+ * $Id: stmem.cc,v 1.89 2005/09/14 18:23:21 wessels Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Harvest Derived
@@ -40,10 +40,18 @@
 #include "MemObject.h"
 #include "Generic.h"
 
+/*
+ * NodeGet() is called to get the data buffer to pass to storeIOWrite().
+ * By setting the write_pending flag here we are assuming that there
+ * will be no other users of NodeGet().  The storeIOWrite() callback
+ * is memNodeWriteComplete(), which, for whatever reason, lives in
+ * mem_node.cc.
+ */
 char *
 mem_hdr::NodeGet(mem_node * aNode)
 {
-    aNode->uses++;
+    assert(!aNode->write_pending);
+    aNode->write_pending = 1;
     return aNode->data;
 }
 
@@ -79,16 +87,17 @@ mem_hdr::freeContent()
     inmem_hi = 0;
 }
 
-void
+bool
 mem_hdr::unlink(mem_node *aNode)
 {
+    if (aNode->write_pending) {
+        debug(0,0)("cannot unlink mem_node %p while write_pending\n", aNode);
+        return false;
+    }
+
     nodes.remove (aNode, NodeCompare);
-
-    if (!aNode->uses)
-        delete aNode;
-    else
-        aNode->uses--;
-
+    delete aNode;
+    return true;
 }
 
 int
@@ -98,10 +107,15 @@ mem_hdr::freeDataUpto(int target_offset)
 
     SplayNode<mem_node*> const * theStart = nodes.start();
 
-    while (theStart && theStart != nodes.finish() &&
-            theStart->data->end() <= (size_t) target_offset ) {
-        unlink(theStart->data);
-        theStart = nodes.start();
+    while ((theStart = nodes.start())) {
+        if (theStart == nodes.finish())
+            break;
+
+        if (theStart->data->end() > (size_t) target_offset )
+            break;
+
+        if (!unlink(theStart->data))
+            break;
     }
 
     assert (lowestOffset () <= target_offset);
