@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_node.cc,v 1.6 2004/08/30 05:12:31 robertc Exp $
+ * $Id: mem_node.cc,v 1.7 2005/09/14 18:23:21 wessels Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -36,7 +36,35 @@
 #include "squid.h"
 #include "mem_node.h"
 
+static int makeMemNodeDataOffset();
+
 unsigned long mem_node::store_mem_size;
+static int _mem_node_data_offset = makeMemNodeDataOffset();
+
+/*
+ * Calculate the offset between the start of a mem_node and
+ * its 'data' member
+ */
+static int
+makeMemNodeDataOffset()
+{
+    mem_node *p = 0L;
+    return int(&p->data);
+}
+
+/*
+ * This is the callback when storeIOWrite() is done.  We need to
+ * clear the write_pending flag for the mem_node.  First we have
+ * to calculate the start of the mem_node based on the character
+ * buffer that we wrote.  ick.
+ */
+void
+memNodeWriteComplete(void* d)
+{
+    mem_node* n = (mem_node*)((char*)d - _mem_node_data_offset);
+    assert(n->write_pending);
+    n->write_pending = 0;
+}
 
 mem_node::mem_node(off_t offset):nodeBuffer(0,offset,data)
 {}
