@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.367 2005/09/15 10:14:50 serassio Exp $
+ * $Id: ftp.cc,v 1.368 2005/09/15 10:25:07 serassio Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -906,7 +906,7 @@ ftpHtmlifyListEntry(const char *line, FtpStateData * ftpState)
                      "Back");
         } else {		/* NO_DOTDOT && ROOT_DIR */
             /* "UNIX Root" directory */
-            strcpy(href, "../");
+            strcpy(href, "/");
             strcpy(text, "Home Directory");
         }
 
