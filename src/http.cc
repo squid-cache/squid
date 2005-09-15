@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.456 2005/09/10 16:03:52 serassio Exp $
+ * $Id: http.cc,v 1.457 2005/09/15 15:10:14 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -700,6 +700,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
         if (eof)
             hdr_size = hdr_len;
         else {
+            httpReplyDestroy(reply);
             ctx_exit(ctx);
             return;		/* headers not complete */
         }
