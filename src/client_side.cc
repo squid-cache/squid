@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.694 2005/09/14 17:10:38 serassio Exp $
+ * $Id: client_side.cc,v 1.695 2005/09/14 21:09:38 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -153,7 +153,6 @@ static void clientUpdateSocketStats(log_type logType, size_t size);
 
 static ClientSocketContext *clientParseRequestMethod(char *inbuf, method_t * method_p, ConnStateData::Pointer & conn);
 static char *skipLeadingSpace(char *aString);
-static char *findTrailingHTTPVersion(char *uriAndHTTPVersion);
 #if UNUSED_CODE
 static void trimTrailingSpaces(char *aString, size_t len);
 #endif
@@ -1615,18 +1614,26 @@ skipLeadingSpace(char *aString)
     return result;
 }
 
-static char *
-findTrailingHTTPVersion(char *uriAndHTTPVersion)
+/*
+ * 'end' defaults to NULL for backwards compatibility
+ * remove default value if we ever get rid of NULL-terminated
+ * request buffers.
+ */
+const char *
+findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *end)
 {
-    char *token;
+    if (NULL == end) {
+        end = uriAndHTTPVersion + strcspn(uriAndHTTPVersion, "\r\n");
+        assert(end);
+    }
 
-    for (token = strchr(uriAndHTTPVersion, '\n'); token > uriAndHTTPVersion; token--) {
-        if (*token == '\n' || *token == '\r')
+    for (; end > uriAndHTTPVersion; end--) {
+        if (*end == '\n' || *end == '\r')
             continue;
 
-        if (xisspace(*token)) {
-            if (strncasecmp(token + 1, "HTTP/", 5) == 0)
-                return token + 1;
+        if (xisspace(*end)) {
+            if (strncasecmp(end + 1, "HTTP/", 5) == 0)
+                return end + 1;
             else
                 break;
         }
@@ -1849,7 +1856,7 @@ parseHttpRequest(ConnStateData::Pointer & conn, method_t * method_p,
     ClientHttpRequest *http;
     ClientSocketContext *result;
     StoreIOBuffer tempBuffer;
-    char *http_version;
+    const char *http_version;
 
     /* pre-set these values to make aborting simpler */
     *prefix_p = NULL;
@@ -1905,7 +1912,7 @@ parseHttpRequest(ConnStateData::Pointer & conn, method_t * method_p,
 
     /* Is there a legitimate first line to the headers ? */
     if ((result = clientParseHttpRequestLine(inbuf, conn, method_p, &url,
-                  http_ver, http_version))) {
+                  http_ver, (char *) http_version))) {
         /* something wrong, abort */
         xfree(inbuf);
         return result;
