@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.366 2005/09/10 19:31:31 serassio Exp $
+ * $Id: ftp.cc,v 1.367 2005/09/15 10:14:50 serassio Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2414,7 +2414,7 @@ ftpAcceptDataConnection(int fd, int newfd, ConnectionDetail *details,
     }
 
     if (flag != COMM_OK) {
-        debug(9, 1) ("ftpHandleDataAccept: comm_accept(%d): %s", newfd, xstrerr(xerrno));
+        debug(9, 1) ("ftpHandleDataAccept: comm_accept(%d): %s\n", newfd, xstrerr(xerrno));
         /* XXX Need to set error message */
         ftpFail(ftpState);
         return;
