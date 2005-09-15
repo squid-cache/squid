@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.370 2005/09/15 12:55:44 serassio Exp $
+ * $Id: ftp.cc,v 1.371 2005/09/15 13:38:45 serassio Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -102,6 +102,9 @@ unsigned int tried_nlst:
 unsigned int need_base_href:
     1;
 
+unsigned int dir_slash:
+    1;
+
 unsigned int root_dir:
     1;
 
@@ -141,6 +144,7 @@ public:
     int password_url;
     char *reply_hdr;
     int reply_hdr_state;
+    String clean_url;
     String title_url;
     String base_href;
     int conn_att;
@@ -150,6 +154,7 @@ public:
     int size;
     wordlist *pathcomps;
     char *filepath;
+    char *dirpath;
     int restart_offset;
     int restarted_offset;
     int rest_att;
@@ -557,9 +562,10 @@ ftpListingFinish(FtpStateData * ftpState)
     storeAppendPrintf(e, "</PRE>\n");
 
     if (ftpState->flags.listformat_unknown && !ftpState->flags.tried_nlst) {
-        storeAppendPrintf(e, "<A HREF=\"./;type=d\">[As plain directory]</A>\n");
+        storeAppendPrintf(e, "<A HREF=\"%s/;type=d\">[As plain directory]</A>\n",
+                          ftpState->flags.dir_slash ? rfc1738_escape_part(ftpState->filepath) : ".");
     } else if (ftpState->typecode == 'D') {
-        const char *path = ftpState->filepath ? ftpState->filepath : ".";
+        const char *path = ftpState->flags.dir_slash ? ftpState->filepath : ".";
         storeAppendPrintf(e, "<A HREF=\"%s/\">[As extended directory]</A>\n", html_quote(path));
     }
 
@@ -870,6 +876,7 @@ ftpHtmlifyListEntry(const char *line, FtpStateData * ftpState)
     LOCAL_ARRAY(char, download, 2048 + 40);
     LOCAL_ARRAY(char, link, 2048 + 40);
     LOCAL_ARRAY(char, html, 8192);
+    LOCAL_ARRAY(char, prefix, 2048);
     size_t width = Config.Ftp.list_width;
     ftpListParts *parts;
     *icon = *href = *text = *size = *chdir = *view = *download = *link = *html = '\0';
@@ -878,6 +885,11 @@ ftpHtmlifyListEntry(const char *line, FtpStateData * ftpState)
         snprintf(html, 8192, "%s\n", line);
         return html;
     }
+
+    if (ftpState->flags.dir_slash)
+        snprintf(prefix, sizeof(prefix), "%s/", rfc1738_escape_part(ftpState->dirpath));
+    else
+        prefix[0] = '\0';
 
     /* Handle builtin <dirup> */
     if (strcmp(line, "<internal-dirup>") == 0) {
@@ -888,7 +900,12 @@ ftpHtmlifyListEntry(const char *line, FtpStateData * ftpState)
 
         if (!ftpState->flags.no_dotdot && !ftpState->flags.root_dir) {
             /* Normal directory */
-            strcpy(href, "../");
+
+            if (!ftpState->flags.dir_slash)
+                strcpy(href, "../");
+            else
+                strcpy(href, "./");
+
             strcpy(text, "Parent Directory");
         } else if (!ftpState->flags.no_dotdot && ftpState->flags.root_dir) {
             /* "Top level" directory */
@@ -902,7 +919,7 @@ ftpHtmlifyListEntry(const char *line, FtpStateData * ftpState)
             strcpy(href, "%2e%2e/");
             strcpy(text, "Parent Directory");
             snprintf(link, 2048, "(<A HREF=\"%s\">%s</A>)",
-                     "../",
+                     !ftpState->flags.dir_slash ? "../" : "./",
                      "Back");
         } else {		/* NO_DOTDOT && ROOT_DIR */
             /* "UNIX Root" directory */
@@ -967,8 +984,8 @@ ftpHtmlifyListEntry(const char *line, FtpStateData * ftpState)
 
         if (parts->link) {
             char *link2 = xstrdup(html_quote(rfc1738_escape(parts->link)));
-            snprintf(link, 2048, " -> <A HREF=\"%s\">%s</A>",
-                     link2,
+            snprintf(link, 2048, " -> <A HREF=\"%s%s\">%s</A>",
+                     *link2 != '/' ? prefix : "", link2,
                      html_quote(parts->link));
             safe_free(link2);
         }
@@ -997,29 +1014,29 @@ ftpHtmlifyListEntry(const char *line, FtpStateData * ftpState)
 
     if (parts->type != 'd') {
         if (mimeGetViewOption(parts->name)) {
-            snprintf(view, 2048, " <A HREF=\"%s;type=a\"><IMG border=\"0\" SRC=\"%s\" "
+            snprintf(view, 2048, " <A HREF=\"%s%s;type=a\"><IMG border=\"0\" SRC=\"%s\" "
                      "ALT=\"[VIEW]\"></A>",
-                     href, mimeGetIconURL("internal-view"));
+                     prefix, href, mimeGetIconURL("internal-view"));
         }
 
         if (mimeGetDownloadOption(parts->name)) {
-            snprintf(download, 2048, " <A HREF=\"%s;type=i\"><IMG border=\"0\" SRC=\"%s\" "
+            snprintf(download, 2048, " <A HREF=\"%s%s;type=i\"><IMG border=\"0\" SRC=\"%s\" "
                      "ALT=\"[DOWNLOAD]\"></A>",
-                     href, mimeGetIconURL("internal-download"));
+                     prefix, href, mimeGetIconURL("internal-download"));
         }
     }
 
     /* <A HREF="{href}">{icon}</A> <A HREF="{href}">{text}</A> . . . {date}{size}{chdir}{view}{download}{link}\n  */
     if (parts->type != '\0') {
-        snprintf(html, 8192, "<A HREF=\"%s\">%s</A> <A HREF=\"%s\">%s</A>%s "
+        snprintf(html, 8192, "<A HREF=\"%s%s\">%s</A> <A HREF=\"%s%s\">%s</A>%s "
                  "%s%8s%s%s%s%s\n",
-                 href, icon, href, html_quote(text), dots_fill(strlen(text)),
+                 prefix, href, icon, prefix, href, html_quote(text), dots_fill(strlen(text)),
                  parts->date, size, chdir, view, download, link);
     } else {
         /* Plain listing. {icon} {text} ... {chdir}{view}{download} */
-        snprintf(html, 8192, "<A HREF=\"%s\">%s</A> <A HREF=\"%s\">%s</A>%s "
+        snprintf(html, 8192, "<A HREF=\"%s%s\">%s</A> <A HREF=\"%s%s\">%s</A>%s "
                  "%s%s%s%s\n",
-                 href, icon, href, html_quote(text), dots_fill(strlen(text)),
+                 prefix, href, icon, prefix, href, html_quote(text), dots_fill(strlen(text)),
                  chdir, view, download, link);
     }
 
@@ -1900,7 +1917,10 @@ ftpTraverseDirectory(FtpStateData * ftpState)
     debug(9, 4) ("ftpTraverseDirectory %s\n",
                  ftpState->filepath ? ftpState->filepath : "<NULL>");
 
-    safe_free(ftpState->filepath);
+    safe_free(ftpState->dirpath);
+    ftpState->dirpath = ftpState->filepath;
+    ftpState->filepath = NULL;
+
     /* Done? */
 
     if (ftpState->pathcomps == NULL) {
@@ -2023,7 +2043,7 @@ ftpListDir(FtpStateData * ftpState)
         debug(9, 3) ("Directory path did not end in /\n");
         ftpState->title_url.append("/");
         ftpState->flags.isdir = 1;
-        ftpState->flags.need_base_href = 1;
+        ftpState->flags.dir_slash = 1;
     }
 
     ftpSendPasv(ftpState);
