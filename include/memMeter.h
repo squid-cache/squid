@@ -11,7 +11,7 @@ class MemMeter {
     time_t hwater_stamp;        /* timestamp of last high water mark change */
 };
 
-#define memMeterSyncHWater(m)  { (m).hwater_level = (m).level; (m).hwater_stamp = squid_curtime; }
+#define memMeterSyncHWater(m)  { (m).hwater_level = (m).level; (m).hwater_stamp = squid_curtime ? squid_curtime : time(NULL); }
 #define memMeterCheckHWater(m) { if ((m).hwater_level < (m).level) memMeterSyncHWater((m)); }
 #define memMeterInc(m) { (m).level++; memMeterCheckHWater(m); }
 #define memMeterDec(m) { (m).level--; }
