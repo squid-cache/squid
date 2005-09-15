@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.369 2005/09/15 10:43:13 serassio Exp $
+ * $Id: ftp.cc,v 1.370 2005/09/15 12:55:44 serassio Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -559,7 +559,8 @@ ftpListingFinish(FtpStateData * ftpState)
     if (ftpState->flags.listformat_unknown && !ftpState->flags.tried_nlst) {
         storeAppendPrintf(e, "<A HREF=\"./;type=d\">[As plain directory]</A>\n");
     } else if (ftpState->typecode == 'D') {
-        storeAppendPrintf(e, "<A HREF=\"./\">[As extended directory]</A>\n");
+        const char *path = ftpState->filepath ? ftpState->filepath : ".";
+        storeAppendPrintf(e, "<A HREF=\"%s/\">[As extended directory]</A>\n", html_quote(path));
     }
 
     storeAppendPrintf(e, "<HR noshade size=\"1px\">\n");
@@ -1287,21 +1288,19 @@ ftpCheckUrlpath(FtpStateData * ftpState)
     }
 
     l = request->urlpath.size();
-    ftpState->flags.need_base_href = 1;
     /* check for null path */
 
     if (!l) {
         ftpState->flags.isdir = 1;
         ftpState->flags.root_dir = 1;
+        ftpState->flags.need_base_href = 1;	/* Work around broken browsers */
     } else if (!request->urlpath.cmp("/%2f/")) {
         /* UNIX root directory */
-        ftpState->flags.need_base_href = 0;
         ftpState->flags.isdir = 1;
         ftpState->flags.root_dir = 1;
     } else if ((l >= 1) && (*(request->urlpath.buf() + l - 1) == '/')) {
         /* Directory URL, ending in / */
         ftpState->flags.isdir = 1;
-        ftpState->flags.need_base_href = 0;
 
         if (l == 1)
             ftpState->flags.root_dir = 1;
@@ -1879,7 +1878,8 @@ ftpReadType(FtpStateData * ftpState)
 
             rfc1738_unescape(d);
 
-            wordlistAdd(&ftpState->pathcomps, d);
+            if (*d)
+                wordlistAdd(&ftpState->pathcomps, d);
         }
 
         xfree(path);
@@ -1940,10 +1940,7 @@ ftpSendCwd(FtpStateData * ftpState)
         ftpState->flags.no_dotdot = 0;
     }
 
-    if (*path)
-        snprintf(cbuf, 1024, "CWD %s\r\n", path);
-    else
-        snprintf(cbuf, 1024, "CWD\r\n");
+    snprintf(cbuf, 1024, "CWD %s\r\n", path);
 
     ftpWriteCommand(cbuf, ftpState);
 
@@ -2450,7 +2447,6 @@ ftpRestOrList(FtpStateData * ftpState)
 
     if (ftpState->typecode == 'D') {
         ftpState->flags.isdir = 1;
-        ftpState->flags.need_base_href = 1;
 
         if (ftpState->flags.put) {
             ftpSendMkdir(ftpState);	/* PUT name;type=d */
@@ -2574,7 +2570,6 @@ static void
 ftpSendList(FtpStateData * ftpState)
 {
     if (ftpState->filepath) {
-        ftpState->flags.need_base_href = 1;
         snprintf(cbuf, 1024, "LIST %s\r\n", ftpState->filepath);
     } else {
         snprintf(cbuf, 1024, "LIST\r\n");
@@ -2590,7 +2585,6 @@ ftpSendNlst(FtpStateData * ftpState)
     ftpState->flags.tried_nlst = 1;
 
     if (ftpState->filepath) {
-        ftpState->flags.need_base_href = 1;
         snprintf(cbuf, 1024, "NLST %s\r\n", ftpState->filepath);
     } else {
         snprintf(cbuf, 1024, "NLST\r\n");
