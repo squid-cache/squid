@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.146 2003/08/10 11:00:45 robertc Exp $
+ * $Id: url.cc,v 1.147 2005/09/14 21:09:38 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -189,9 +189,13 @@ method_t &operator++ (method_t &aMethod)
     return aMethod;
 }
 
-
+/*
+ * urlParseMethod() takes begin and end pointers, but for backwards
+ * compatibility, end defaults to NULL, in which case we assume begin
+ * is NULL-terminated.
+ */
 method_t
-urlParseMethod(const char *s)
+urlParseMethod(const char *b, const char *e)
 {
     method_t method = METHOD_NONE;
     /*
@@ -200,56 +204,78 @@ urlParseMethod(const char *s)
      * which have the form %EXT[0-9][0-9]
      */
 
-    if (*s == '%')
+    if (*b == '%')
         return METHOD_NONE;
 
+    /*
+     * if e is NULL, b must be NULL terminated and we
+     * make e point to the first whitespace character
+     * after b.
+     */
+    if (NULL == e)
+        e = b + strcspn(b, w_space);
+
     for (++method; method < METHOD_ENUM_END; ++method) {
-        if (0 == strcasecmp(s, RequestMethodStr[method]))
+        if (0 == strncasecmp(b, RequestMethodStr[method], e-b))
             return method;
     }
 
     return METHOD_NONE;
 }
 
-
+/*
+ * urlParseProtocol() takes begin (b) and end (e) pointers, but for
+ * backwards compatibility, e defaults to NULL, in which case we
+ * assume b is NULL-terminated.
+ */
 protocol_t
-urlParseProtocol(const char *s)
+urlParseProtocol(const char *b, const char *e)
 {
+    /*
+     * if e is NULL, b must be NULL terminated and we
+     * make e point to the first whitespace character
+     * after b.
+     */
+
+    if (NULL == e)
+        e = b + strcspn(b, ":");
+
+    int len = e - b;
+
     /* test common stuff first */
 
-    if (strcasecmp(s, "http") == 0)
+    if (strncasecmp(b, "http", len) == 0)
         return PROTO_HTTP;
 
-    if (strcasecmp(s, "ftp") == 0)
+    if (strncasecmp(b, "ftp", len) == 0)
         return PROTO_FTP;
 
-    if (strcasecmp(s, "https") == 0)
+    if (strncasecmp(b, "https", len) == 0)
         return PROTO_HTTPS;
 
-    if (strcasecmp(s, "file") == 0)
+    if (strncasecmp(b, "file", len) == 0)
         return PROTO_FTP;
 
-    if (strcasecmp(s, "gopher") == 0)
+    if (strncasecmp(b, "gopher", len) == 0)
         return PROTO_GOPHER;
 
-    if (strcasecmp(s, "wais") == 0)
+    if (strncasecmp(b, "wais", len) == 0)
         return PROTO_WAIS;
 
-    if (strcasecmp(s, "cache_object") == 0)
+    if (strncasecmp(b, "cache_object", len) == 0)
         return PROTO_CACHEOBJ;
 
-    if (strcasecmp(s, "urn") == 0)
+    if (strncasecmp(b, "urn", len) == 0)
         return PROTO_URN;
 
-    if (strcasecmp(s, "whois") == 0)
+    if (strncasecmp(b, "whois", len) == 0)
         return PROTO_WHOIS;
 
-    if (strcasecmp(s, "internal") == 0)
+    if (strncasecmp(b, "internal", len) == 0)
         return PROTO_INTERNAL;
 
     return PROTO_NONE;
 }
-
 
 int
 urlDefaultPort(protocol_t p)
@@ -284,14 +310,19 @@ urlDefaultPort(protocol_t p)
     }
 }
 
+/*
+ * Parse a URI/URL.
+ *
+ * If the 'request' arg is non-NULL, put parsed values there instead
+ * of allocating a new HttpRequest.
+ */
 HttpRequest *
-urlParse(method_t method, char *url)
+urlParse(method_t method, char *url, HttpRequest *request)
 {
     LOCAL_ARRAY(char, proto, MAX_URL);
     LOCAL_ARRAY(char, login, MAX_URL);
     LOCAL_ARRAY(char, host, MAX_URL);
     LOCAL_ARRAY(char, urlpath, MAX_URL);
-    HttpRequest *request = NULL;
     char *t = NULL;
     char *q = NULL;
     int port;
@@ -426,7 +457,14 @@ urlParse(method_t method, char *url)
         }
     }
 
-    request = requestCreate(method, protocol, urlpath);
+    if (NULL == request)
+        request = requestCreate(method, protocol, urlpath);
+    else {
+        request->method = method;
+        request->protocol = protocol;
+        request->urlpath = urlpath;
+    }
+
     xstrncpy(request->host, host, SQUIDHOSTNAMELEN);
     xstrncpy(request->login, login, MAX_LOGIN_SZ);
     request->port = (u_short) port;

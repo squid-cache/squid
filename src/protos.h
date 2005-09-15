@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.509 2005/09/12 23:28:57 wessels Exp $
+ * $Id: protos.h,v 1.510 2005/09/14 21:09:38 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -819,10 +819,10 @@ SQUIDCEXTERN void unlinkdUnlink(const char *);
 
 SQUIDCEXTERN char *url_convert_hex(char *org_url, int allocate);
 SQUIDCEXTERN char *url_escape(const char *url);
-SQUIDCEXTERN protocol_t urlParseProtocol(const char *);
-SQUIDCEXTERN method_t urlParseMethod(const char *);
+SQUIDCEXTERN protocol_t urlParseProtocol(const char *, const char *e = NULL);
+SQUIDCEXTERN method_t urlParseMethod(const char *, const char *e = NULL);
 SQUIDCEXTERN void urlInitialize(void);
-SQUIDCEXTERN HttpRequest *urlParse(method_t, char *);
+SQUIDCEXTERN HttpRequest *urlParse(method_t, char *, HttpRequest *request = NULL);
 SQUIDCEXTERN const char *urlCanonical(HttpRequest *);
 SQUIDCEXTERN char *urlRInternal(const char *host, u_short port, const char *dir, const char *name);
 SQUIDCEXTERN char *urlInternal(const char *dir, const char *name);
