@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.13 2005/09/15 19:22:30 wessels Exp $
+ * $Id: HttpRequest.h,v 1.14 2005/09/15 20:19:41 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -95,7 +95,7 @@ public:
     String extacl_log;		/* String to be used for access.log purposes */
 
 public:
-    bool parseRequestLine(const char *start, const char *end);
+    bool parseFirstLine(const char *start, const char *end);
     int parseHeader(const char *parse_start);
 
 private:

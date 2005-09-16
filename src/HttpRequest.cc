@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.50 2005/09/15 19:22:30 wessels Exp $
+ * $Id: HttpRequest.cc,v 1.51 2005/09/15 20:19:41 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -159,9 +159,9 @@ bool HttpRequest::sanityCheckStartLine(MemBuf *buf, http_status *error)
     return true;
 }
 
-bool HttpRequest::parseRequestLine(const char *start, const char *end)
+bool HttpRequest::parseFirstLine(const char *start, const char *end)
 {
-    fatal("HttpRequest::parseRequestLine not implemented yet");
+    fatal("HttpRequest::parseFirstLine not implemented yet");
     return false;
 }
 
