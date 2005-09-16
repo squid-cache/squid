@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrCc.cc,v 1.27 2005/04/23 14:49:41 serassio Exp $
+ * $Id: HttpHdrCc.cc,v 1.28 2005/09/15 19:04:56 wessels Exp $
  *
  * DEBUG: section 65    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
@@ -255,23 +255,6 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
 
     if (cc->other.size())
         packerPrintf(p, (pcount ? ", %s" : "%s"), cc->other.buf());
-}
-
-void
-httpHdrCcJoinWith(HttpHdrCc * cc, const HttpHdrCc * new_cc)
-{
-    assert(cc && new_cc);
-
-    if (cc->max_age < 0)
-        cc->max_age = new_cc->max_age;
-
-    if (cc->s_maxage < 0)
-        cc->s_maxage = new_cc->s_maxage;
-
-    if (cc->max_stale < 0)
-        cc->max_stale = new_cc->max_stale;
-
-    cc->mask |= new_cc->mask;
 }
 
 /* negative max_age will clean old max_Age setting */

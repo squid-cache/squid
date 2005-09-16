@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.510 2005/09/14 21:09:38 wessels Exp $
+ * $Id: protos.h,v 1.511 2005/09/15 19:04:56 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -321,7 +321,6 @@ SQUIDCEXTERN HttpHdrCc *httpHdrCcParseCreate(const String * str);
 SQUIDCEXTERN void httpHdrCcDestroy(HttpHdrCc * cc);
 SQUIDCEXTERN HttpHdrCc *httpHdrCcDup(const HttpHdrCc * cc);
 SQUIDCEXTERN void httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p);
-SQUIDCEXTERN void httpHdrCcJoinWith(HttpHdrCc * cc, const HttpHdrCc * new_cc);
 SQUIDCEXTERN void httpHdrCcSetMaxAge(HttpHdrCc * cc, int max_age);
 SQUIDCEXTERN void httpHdrCcSetSMaxAge(HttpHdrCc * cc, int s_maxage);
 SQUIDCEXTERN void httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist);
