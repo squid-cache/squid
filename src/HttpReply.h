@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.h,v 1.9 2005/09/12 23:28:57 wessels Exp $
+ * $Id: HttpReply.h,v 1.10 2005/09/15 19:22:30 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -65,8 +65,6 @@ extern MemBuf *httpPackedReply(HttpVersion ver, http_status status, const char *
 extern MemBuf *httpPacked304Reply(const HttpReply * rep);
 /* construct a 304 reply and return it */
 extern HttpReply *httpReplyMake304(const HttpReply *rep);
-/* update when 304 reply is received for a cached object */
-extern void httpReplyUpdateOnNotModified(HttpReply * rep, HttpReply const * freshRep);
 /* header manipulation */
 extern int httpReplyContentLen(const HttpReply * rep);
 extern const char *httpReplyContentType(const HttpReply * rep);
@@ -75,7 +73,6 @@ extern int httpReplyHasCc(const HttpReply * rep, http_hdr_cc_type type);
 extern void httpRedirectReply(HttpReply *, http_status, const char *);
 extern int httpReplyBodySize(method_t, HttpReply const *);
 extern int httpReplyValidatorsMatch (HttpReply const *, HttpReply const *);
-extern void httpReplyHdrCacheInit(HttpReply * rep);
 
 
 /* Sync changes here with HttpReply.cc */
@@ -111,8 +108,12 @@ public:
 
     String protoPrefix;       // e.g., "HTTP/"
 
+public:
+    void httpReplyUpdateOnNotModified(HttpReply const *other);
+
 protected:
     virtual void packFirstLineInto(Packer * p, bool) const;
+    virtual void hdrCacheInit();
 };
 
 MEMPROXY_CLASS_INLINE(HttpReply)

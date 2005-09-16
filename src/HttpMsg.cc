@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.15 2005/09/12 23:28:57 wessels Exp $
+ * $Id: HttpMsg.cc,v 1.16 2005/09/15 19:22:30 wessels Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -252,10 +252,7 @@ HttpMsg::httpMsgParseStep(const char *buf, int atEnd)
         if (!httpHeaderParse(&header, blk_start, blk_end))
             return httpMsgParseError();
 
-        if (rep)
-            httpReplyHdrCacheInit(rep);
-        else if (req)
-            httpRequestHdrCacheInit(req);
+        hdrCacheInit();
 
         *parse_end_ptr = parse_start;
 
@@ -327,4 +324,9 @@ void HttpMsg::packInto(Packer *p, bool full_uri) const
     packerAppend(p, "\r\n", 2);
 }
 
-
+void HttpMsg::hdrCacheInit()
+{
+    content_length = httpHeaderGetInt(&header, HDR_CONTENT_LENGTH);
+    assert(NULL == cache_control);
+    cache_control = httpHeaderGetCc(&header);
+}

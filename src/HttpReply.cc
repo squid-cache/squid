@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.73 2005/09/12 23:28:57 wessels Exp $
+ * $Id: HttpReply.cc,v 1.74 2005/09/15 19:22:30 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -79,7 +79,7 @@ httpReplyCreate(void)
 HttpReply::HttpReply() : HttpMsg(hoReply), date (0), last_modified (0), expires (0), surrogate_control (NULL), content_range (NULL), keep_alive (0), protoPrefix("HTTP/")
 {
     httpBodyInit(&body);
-    httpReplyHdrCacheInit(this);
+    hdrCacheInit();
     httpStatusLineInit(&sline);
 }
 
@@ -129,6 +129,7 @@ httpReplyAbsorb(HttpReply * rep, HttpReply * new_rep)
     *rep = *new_rep;
     new_rep->header.entries.clean();
     /* cannot use Clean() on new reply now! */
+    new_rep->cache_control = NULL;	// helps with debugging
     httpReplyDoDestroy(new_rep);
 }
 
@@ -361,18 +362,18 @@ httpReplyValidatorsMatch(HttpReply const * rep, HttpReply const * otherRep)
 
 
 void
-httpReplyUpdateOnNotModified(HttpReply * rep, HttpReply const * freshRep)
+HttpReply::httpReplyUpdateOnNotModified(HttpReply const * freshRep)
 {
-    assert(rep && freshRep);
+    assert(freshRep);
     /* Can not update modified headers that don't match! */
-    assert (httpReplyValidatorsMatch(rep, freshRep));
+    assert (httpReplyValidatorsMatch(this, freshRep));
     /* clean cache */
-    httpReplyHdrCacheClean(rep);
+    httpReplyHdrCacheClean(this);
     /* update raw headers */
-    httpHeaderUpdate(&rep->header, &freshRep->header,
+    httpHeaderUpdate(&header, &freshRep->header,
                      (const HttpHeaderMask *) &Denied304HeadersMask);
     /* init cache */
-    httpReplyHdrCacheInit(rep);
+    hdrCacheInit();
 }
 
 
@@ -435,30 +436,25 @@ httpReplyHdrExpirationTime(const HttpReply * rep)
 
 /* sync this routine when you update HttpReply struct */
 void
-httpReplyHdrCacheInit(HttpReply * rep)
+HttpReply::hdrCacheInit()
 {
-    const HttpHeader *hdr = &rep->header;
-    const char *str;
-    rep->content_length = httpHeaderGetInt(hdr, HDR_CONTENT_LENGTH);
-    rep->date = httpHeaderGetTime(hdr, HDR_DATE);
-    rep->last_modified = httpHeaderGetTime(hdr, HDR_LAST_MODIFIED);
-    str = httpHeaderGetStr(hdr, HDR_CONTENT_TYPE);
+    HttpMsg::hdrCacheInit();
+
+    content_length = httpHeaderGetInt(&header, HDR_CONTENT_LENGTH);
+    date = httpHeaderGetTime(&header, HDR_DATE);
+    last_modified = httpHeaderGetTime(&header, HDR_LAST_MODIFIED);
+    surrogate_control = httpHeaderGetSc(&header);
+    content_range = httpHeaderGetContRange(&header);
+    keep_alive = httpMsgIsPersistent(sline.version, &header);
+    const char *str = httpHeaderGetStr(&header, HDR_CONTENT_TYPE);
 
     if (str)
-        rep->content_type.limitInit(str, strcspn(str, ";\t "));
+        content_type.limitInit(str, strcspn(str, ";\t "));
     else
-        rep->content_type = String();
-
-    rep->cache_control = httpHeaderGetCc(hdr);
-
-    rep->surrogate_control = httpHeaderGetSc(hdr);
-
-    rep->content_range = httpHeaderGetContRange(hdr);
-
-    rep->keep_alive = httpMsgIsPersistent(rep->sline.version, &rep->header);
+        content_type = String();
 
     /* be sure to set expires after date and cache-control */
-    rep->expires = httpReplyHdrExpirationTime(rep);
+    expires = httpReplyHdrExpirationTime(this);
 }
 
 /* sync this routine when you update HttpReply struct */
@@ -467,14 +463,20 @@ httpReplyHdrCacheClean(HttpReply * rep)
 {
     rep->content_type.clean();
 
-    if (rep->cache_control)
+    if (rep->cache_control) {
         httpHdrCcDestroy(rep->cache_control);
+        rep->cache_control = NULL;
+    }
 
-    if (rep->surrogate_control)
+    if (rep->surrogate_control) {
         httpHdrScDestroy(rep->surrogate_control);
+        rep->surrogate_control = NULL;
+    }
 
-    if (rep->content_range)
+    if (rep->content_range) {
         httpHdrContRangeDestroy(rep->content_range);
+        rep->content_range = NULL;
+    }
 }
 
 /*

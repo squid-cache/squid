@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.12 2005/09/12 23:28:57 wessels Exp $
+ * $Id: HttpRequest.h,v 1.13 2005/09/15 19:22:30 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -43,14 +43,11 @@ extern HttpRequest *requestCreate(method_t, protocol_t, const char *urlpath);
 extern void requestDestroy(HttpRequest *);
 extern HttpRequest *requestLink(HttpRequest *);
 extern void requestUnlink(HttpRequest *);
-extern int httpRequestParseHeader(HttpRequest * req, const char *parse_start);
 extern void httpRequestSwapOut(const HttpRequest * req, StoreEntry * e);
 extern void httpRequestPack(const HttpRequest * req, Packer * p);
 extern int httpRequestPrefixLen(const HttpRequest * req);
 extern int httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConnection);
 extern int httpRequestHdrAllowedByName(http_hdr_type id);
-extern void httpRequestHdrCacheInit(HttpRequest * req);
-
 
 class HttpHdrRange;
 
@@ -99,6 +96,7 @@ public:
 
 public:
     bool parseRequestLine(const char *start, const char *end);
+    int parseHeader(const char *parse_start);
 
 private:
     const char *packableURI(bool full_uri) const;
@@ -106,6 +104,7 @@ private:
 protected:
     virtual void packFirstLineInto(Packer * p, bool full_uri) const;
     virtual bool sanityCheckStartLine(MemBuf *buf, http_status *error);
+    virtual void hdrCacheInit();
 
 public: // should be private
     void clean(); // low-level; treat as private
