@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.46 2005/09/12 22:26:39 wessels Exp $
+ * $Id: client_side_request.cc,v 1.47 2005/09/15 19:22:30 wessels Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -594,8 +594,6 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 
         s.clean();
     }
-
-    request->cache_control = httpHeaderGetCc(req_hdr);
 
     if (request->cache_control)
         if (EBIT_TEST(request->cache_control->mask, CC_NO_CACHE))

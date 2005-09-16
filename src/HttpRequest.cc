@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.49 2005/09/12 23:28:57 wessels Exp $
+ * $Id: HttpRequest.cc,v 1.50 2005/09/15 19:22:30 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -91,8 +91,6 @@ requestCreate(method_t method, protocol_t protocol, const char *aUrlpath)
 
     req->my_addr = no_addr;
 
-    httpRequestHdrCacheInit(req);
-
     return req;
 }
 
@@ -128,8 +126,10 @@ void HttpRequest::clean()
 
     httpHeaderClean(&header);
 
-    if (cache_control)
+    if (cache_control) {
         httpHdrCcDestroy(cache_control);
+        cache_control = NULL;
+    }
 
     if (range)
         delete range;
@@ -188,17 +188,17 @@ requestUnlink(HttpRequest * request)
 }
 
 int
-httpRequestParseHeader(HttpRequest * req, const char *parse_start)
+HttpRequest::parseHeader(const char *parse_start)
 {
     const char *blk_start, *blk_end;
 
     if (!httpMsgIsolateHeaders(&parse_start, &blk_start, &blk_end))
         return 0;
 
-    int result = httpHeaderParse(&req->header, blk_start, blk_end);
+    int result = httpHeaderParse(&header, blk_start, blk_end);
 
     if (result)
-        httpRequestHdrCacheInit(req);
+        hdrCacheInit();
 
     return result;
 }
@@ -268,37 +268,11 @@ httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConn)
 
 /* sync this routine when you update HttpRequest struct */
 void
-httpRequestHdrCacheInit(HttpRequest * req)
+HttpRequest::hdrCacheInit()
 {
-    const HttpHeader *hdr = &req->header;
-    /*  const char *str; */
-    req->content_length = httpHeaderGetInt(hdr, HDR_CONTENT_LENGTH);
-    /* TODO: canonicalise these into an HttpEntity */
-#if 0
+    HttpMsg::hdrCacheInit();
 
-    req->date = httpHeaderGetTime(hdr, HDR_DATE);
-    req->last_modified = httpHeaderGetTime(hdr, HDR_LAST_MODIFIED);
-    str = httpHeaderGetStr(hdr, HDR_CONTENT_TYPE);
-
-    if (str)
-        stringLimitInit(&req->content_type, str, strcspn(str, ";\t "));
-    else
-        req->content_type = String();
-
-#endif
-
-    req->cache_control = httpHeaderGetCc(hdr);
-
-    req->range = httpHeaderGetRange(hdr);
-
-#if 0
-
-    req->keep_alive = httpMsgIsPersistent(req->http_ver, &req->header);
-
-    /* be sure to set expires after date and cache-control */
-    req->expires = httpReplyHdrExpirationTime(req);
-
-#endif
+    range = httpHeaderGetRange(&header);
 }
 
 /* request_flags */

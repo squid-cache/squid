@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.87 2005/09/14 17:10:38 serassio Exp $
+ * $Id: client_side_reply.cc,v 1.88 2005/09/15 19:22:30 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -427,7 +427,9 @@ clientReplyContext::handleIMSGiveClientUpdatedOldEntry()
          * www.thegist.com (Netscape/1.13) returns a content-length for
          * 304's which seems to be the length of the 304 HEADERS!!! and
          * not the body they refer to.  */
-        httpReplyUpdateOnNotModified((HttpReply *)old_entry->getReply(), http->storeEntry()->getReply());
+        HttpReply *old_rep = (HttpReply *) old_entry->getReply();
+
+        old_rep->httpReplyUpdateOnNotModified(http->storeEntry()->getReply());
 
         storeTimestampsSet(old_entry);
 
@@ -469,8 +471,8 @@ clientReplyContext::handleIMSGiveClientNewEntry()
         http->logType = LOG_TCP_REFRESH_MISS;
 
         if (HTTP_NOT_MODIFIED == http->storeEntry()->getReply()->sline.status) {
-            httpReplyUpdateOnNotModified((HttpReply *)old_entry->getReply(),
-                                         http->storeEntry()->getReply());
+            HttpReply *old_rep = (HttpReply *) old_entry->getReply();
+            old_rep->httpReplyUpdateOnNotModified(http->storeEntry()->getReply());
             storeTimestampsSet(old_entry);
             http->logType = LOG_TCP_REFRESH_HIT;
         }
