@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.h,v 1.2 2005/09/15 19:22:30 wessels Exp $
+ * $Id: HttpMsg.h,v 1.3 2005/09/15 20:19:41 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -77,6 +77,7 @@ public:
 
 protected:
     virtual void packFirstLineInto(Packer * p, bool full_uri) const = 0;
+    virtual bool parseFirstLine(const char *blk_start, const char *blk_end) = 0;
     virtual void hdrCacheInit();
 };
 

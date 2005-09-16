@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.16 2005/09/15 19:22:30 wessels Exp $
+ * $Id: HttpMsg.cc,v 1.17 2005/09/15 20:19:41 wessels Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -217,8 +217,6 @@ HttpMsg::httpMsgParseStep(const char *buf, int atEnd)
     const char **parse_end_ptr = &blk_end;
     assert(parse_start);
     assert(pstate < psParsed);
-    HttpReply *rep = dynamic_cast<HttpReply*>(this);
-    HttpRequest *req = dynamic_cast<HttpRequest*>(this);
 
     *parse_end_ptr = parse_start;
 
@@ -226,13 +224,8 @@ HttpMsg::httpMsgParseStep(const char *buf, int atEnd)
         if (!httpMsgIsolateStart(&parse_start, &blk_start, &blk_end))
             return 0;
 
-        if (rep) {
-            if (!httpStatusLineParse(&rep->sline, rep->protoPrefix, blk_start, blk_end))
-                return httpMsgParseError();
-        } else if (req) {
-            if (!req->parseRequestLine(blk_start, blk_end))
-                return httpMsgParseError();
-        }
+        if (!parseFirstLine(blk_start, blk_end))
+            return httpMsgParseError();
 
         *parse_end_ptr = parse_start;
 

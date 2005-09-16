@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.74 2005/09/15 19:22:30 wessels Exp $
+ * $Id: HttpReply.cc,v 1.75 2005/09/15 20:19:41 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -515,4 +515,9 @@ bool HttpReply::sanityCheckStartLine(MemBuf *buf, http_status *error)
 void HttpReply::packFirstLineInto(Packer *p, bool unused) const
 {
     httpStatusLinePackInto(&sline, p);
+}
+
+bool HttpReply::parseFirstLine(const char *blk_start, const char *blk_end)
+{
+    return httpStatusLineParse(&sline, protoPrefix, blk_start, blk_end);
 }
