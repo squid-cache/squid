@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.58 2005/07/03 15:25:08 serassio Exp $
+ * $Id: htcp.cc,v 1.59 2005/09/17 04:53:44 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -39,6 +39,7 @@
 #include "StoreClient.h"
 #include "HttpRequest.h"
 #include "comm.h"
+#include "MemBuf.h"
 
 typedef struct _Countstr Countstr;
 

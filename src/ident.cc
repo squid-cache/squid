@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.70 2005/08/31 19:15:36 wessels Exp $
+ * $Id: ident.cc,v 1.71 2005/09/17 04:53:44 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "comm.h"
+#include "MemBuf.h"
 
 #define IDENT_PORT 113
 #define IDENT_KEY_SZ 50

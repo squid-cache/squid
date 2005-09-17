@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.189 2005/09/10 19:31:31 serassio Exp $
+ * $Id: gopher.cc,v 1.190 2005/09/17 04:53:44 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -41,6 +41,7 @@
 #include "DelayPools.h"
 #include "MemObject.h"
 #endif
+#include "MemBuf.h"
 
 /* gopher type code from rfc. Anawat. */
 #define GOPHER_FILE         '0'

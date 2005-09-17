@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.169 2005/01/03 16:08:26 robertc Exp $
+ * $Id: disk.cc,v 1.170 2005/09/17 04:53:44 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "fde.h"
+#include "MemBuf.h"
 
 static PF diskHandleRead;
 static PF diskHandleWrite;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.64 2005/08/31 19:15:36 wessels Exp $
+ * $Id: external_acl.cc,v 1.65 2005/09/17 04:53:44 wessels Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -54,6 +54,7 @@
 #include "client_side.h"
 #include "HttpRequest.h"
 #include "authenticate.h"
+#include "MemBuf.h"
 
 #ifndef DEFAULT_EXTERNAL_ACL_TTL
 #define DEFAULT_EXTERNAL_ACL_TTL 1 * 60 * 60

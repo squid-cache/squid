@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.51 2005/09/15 20:19:41 wessels Exp $
+ * $Id: HttpRequest.cc,v 1.52 2005/09/17 04:53:44 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -38,6 +38,7 @@
 #include "HttpRequest.h"
 #include "AuthUserRequest.h"
 #include "HttpHeaderRange.h"
+#include "MemBuf.h"
 
 HttpRequest::HttpRequest()  : HttpMsg(hoRequest)
 {

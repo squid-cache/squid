@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "ACLIP.h"
 #include "ACLChecklist.h"
+#include "MemBuf.h"
 
 void *
 ACLIP::operator new (size_t byteCount)

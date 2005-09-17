@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemBuf.cc,v 1.38 2005/08/31 19:15:35 wessels Exp $
+ * $Id: MemBuf.cc,v 1.39 2005/09/17 04:53:44 wessels Exp $
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov
@@ -112,6 +112,7 @@
 #endif
 
 #include "squid.h"
+#include "MemBuf.h"
 
 /* local constants */
 

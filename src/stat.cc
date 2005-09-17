@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.390 2005/09/09 17:31:33 wessels Exp $
+ * $Id: stat.cc,v 1.391 2005/09/17 04:53:44 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -45,6 +45,7 @@
 #endif
 #include "client_side_request.h"
 #include "client_side.h"
+#include "MemBuf.h"
 
 /* these are included because they expose stats calls */
 /* TODO: provide a self registration mechanism for those classes

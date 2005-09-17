@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.48 2004/12/20 16:30:32 robertc Exp $
+ * $Id: HttpHeaderTools.cc,v 1.49 2005/09/17 04:53:44 wessels Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -37,6 +37,7 @@
 #include "HttpHeader.h"
 #include "HttpHdrContRange.h"
 #include "ACLChecklist.h"
+#include "MemBuf.h"
 
 #if UNUSED_CODE
 static int httpHeaderStrCmp(const char *h1, const char *h2, int len);

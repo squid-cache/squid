@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.152 2005/09/09 17:31:33 wessels Exp $
+ * $Id: tunnel.cc,v 1.153 2005/09/17 04:53:45 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -43,6 +43,7 @@
 #include "DelayId.h"
 #endif
 #include "client_side.h"
+#include "MemBuf.h"
 
 class SslStateData
 {

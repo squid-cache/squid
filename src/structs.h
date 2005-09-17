@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.527 2005/09/14 17:10:38 serassio Exp $
+ * $Id: structs.h,v 1.528 2005/09/17 04:53:44 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -860,7 +860,8 @@ struct _Packer
  * Note: HttpBody is used only for messages with a small content that is
  * known a priory (e.g., error messages).
  */
-#include "MemBuf.h"
+
+class MemBuf;
 
 struct _HttpBody
 {
