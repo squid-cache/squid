@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.103 2005/09/01 19:34:46 hno Exp $
+ * $Id: access_log.cc,v 1.104 2005/09/17 04:53:44 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -44,6 +44,7 @@
 
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "MemBuf.h"
 
 static void accessLogSquid(AccessLogEntry * al, Logfile * logfile);
 static void accessLogCommon(AccessLogEntry * al, Logfile * logfile);

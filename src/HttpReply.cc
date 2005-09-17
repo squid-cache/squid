@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.75 2005/09/15 20:19:41 wessels Exp $
+ * $Id: HttpReply.cc,v 1.76 2005/09/17 04:53:44 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -38,6 +38,7 @@
 #include "HttpReply.h"
 #include "HttpHdrContRange.h"
 #include "ACLChecklist.h"
+#include "MemBuf.h"
 
 /* local constants */
 

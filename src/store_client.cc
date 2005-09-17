@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.139 2004/12/27 11:04:37 serassio Exp $
+ * $Id: store_client.cc,v 1.140 2005/09/17 04:53:44 wessels Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -45,6 +45,7 @@
 #include "DelayPools.h"
 #endif
 #include "HttpRequest.h"
+#include "MemBuf.h"
 
 /*
  * NOTE: 'Header' refers to the swapfile metadata header.

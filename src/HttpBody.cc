@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpBody.cc,v 1.22 2005/09/17 03:38:36 wessels Exp $
+ * $Id: HttpBody.cc,v 1.23 2005/09/17 04:53:44 wessels Exp $
  *
  * DEBUG: section 56    HTTP Message Body
  * AUTHOR: Alex Rousskov
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "MemBuf.h"
 
 
 void

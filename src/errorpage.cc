@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.202 2005/08/31 19:15:35 wessels Exp $
+ * $Id: errorpage.cc,v 1.203 2005/09/17 04:53:44 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -47,6 +47,7 @@
 #include "HttpRequest.h"
 #include "MemObject.h"
 #include "fde.h"
+#include "MemBuf.h"
 
 /* local types */
 

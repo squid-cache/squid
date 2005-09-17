@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.696 2005/09/15 19:22:30 wessels Exp $
+ * $Id: client_side.cc,v 1.697 2005/09/17 04:53:44 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -70,6 +70,7 @@
 #include "ACLChecklist.h"
 #include "ConnectionDetail.h"
 #include "client_side_reply.h"
+#include "MemBuf.h"
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close

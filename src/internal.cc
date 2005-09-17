@@ -1,6 +1,6 @@
 
 /*
- * $Id: internal.cc,v 1.31 2005/08/31 19:15:36 wessels Exp $
+ * $Id: internal.cc,v 1.32 2005/09/17 04:53:44 wessels Exp $
  *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
@@ -37,6 +37,7 @@
 #include "Store.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
+#include "MemBuf.h"
 
 /* called when we "miss" on an internal object;
  * generate known dynamic objects, 

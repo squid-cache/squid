@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.261 2005/09/11 21:08:53 serassio Exp $
+ * $Id: tools.cc,v 1.262 2005/09/17 04:53:45 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "SwapDir.h"
 #include "fde.h"
+#include "MemBuf.h"
 
 #if HAVE_SYS_PRCTL_H
 #include <sys/prctl.h>

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.409 2005/08/31 19:15:35 wessels Exp $
+ * $Id: comm.cc,v 1.410 2005/09/17 04:53:44 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -41,6 +41,7 @@
 #include "fde.h"
 #include "CommIO.h"
 #include "ConnectionDetail.h"
+#include "MemBuf.h"
 
 #if defined(_SQUID_CYGWIN_)
 #include <sys/ioctl.h>

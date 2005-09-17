@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.15 2005/01/03 16:08:25 robertc Exp $
+ * $Id: MemObject.cc,v 1.16 2005/09/17 04:53:44 wessels Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -43,6 +43,7 @@
 #if DELAY_POOLS
 #include "DelayPools.h"
 #endif
+#include "MemBuf.h"
 
 /* TODO: make this global or private */
 #if URL_CHECKSUM_DEBUG

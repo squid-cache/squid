@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.117 2005/08/31 19:15:36 wessels Exp $
+ * $Id: mime.cc,v 1.118 2005/09/17 04:53:44 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -40,6 +40,7 @@
 #include "HttpRequest.h"
 #include "MemObject.h"
 #include "fde.h"
+#include "MemBuf.h"
 
 #define GET_HDR_SZ 1024
 

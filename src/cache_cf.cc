@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.478 2005/09/03 10:32:08 serassio Exp $
+ * $Id: cache_cf.cc,v 1.479 2005/09/17 04:53:44 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -43,6 +43,7 @@
 #include "ACL.h"
 #include "StoreFileSystem.h"
 #include "Parsing.h"
+#include "MemBuf.h"
 
 #if SQUID_SNMP
 #include "snmp.h"
