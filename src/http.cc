@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.458 2005/09/17 04:53:44 wessels Exp $
+ * $Id: http.cc,v 1.459 2005/09/17 05:50:08 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -94,8 +94,8 @@ httpStateFree(int fd, void *data)
 
     storeUnlockObject(httpState->entry);
 
-    if (!memBufIsNull(&httpState->reply_hdr)) {
-        memBufClean(&httpState->reply_hdr);
+    if (!httpState->reply_hdr.isNull()) {
+        httpState->reply_hdr.clean();
     }
 
     requestUnlink(httpState->request);
@@ -658,19 +658,19 @@ HttpStateData::processReplyHeader(const char *buf, int size)
     debug(11, 3) ("httpProcessReplyHeader: key '%s'\n",
                   entry->getMD5Text());
 
-    if (memBufIsNull(&reply_hdr))
-        memBufDefInit(&reply_hdr);
+    if (reply_hdr.isNull())
+        reply_hdr.init();
 
     assert(!flags.headers_parsed);
 
-    memBufAppend(&reply_hdr, buf, size);
+    reply_hdr.append(buf, size);
 
     hdr_len = reply_hdr.size;
 
     if (hdr_len > 4 && strncmp(reply_hdr.buf, "HTTP/", 5)) {
         debugs(11, 3, "httpProcessReplyHeader: Non-HTTP-compliant header: '" <<  reply_hdr.buf << "'");
         flags.headers_parsed = 1;
-        memBufClean(&reply_hdr);
+        reply_hdr.clean();
         failReply (reply, HTTP_INVALID_HEADER);
         ctx_exit(ctx);
         return;
@@ -684,8 +684,8 @@ HttpStateData::processReplyHeader(const char *buf, int size)
     if (hdr_len > Config.maxReplyHeaderSize) {
         debugs(11, 1, "httpProcessReplyHeader: Too large reply header");
 
-        if (!memBufIsNull(&reply_hdr))
-            memBufClean(&reply_hdr);
+        if (!reply_hdr.isNull())
+            reply_hdr.clean();
 
         failReply (reply, HTTP_HEADER_TOO_LARGE);
 
@@ -708,7 +708,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
     }
 
     /* Cut away any excess body data (only needed for debug?) */
-    memBufAppend(&reply_hdr, "\0", 1);
+    reply_hdr.append("\0", 1);
 
     reply_hdr.buf[hdr_size] = '\0';
 
@@ -1618,10 +1618,10 @@ httpBuildRequestPrefix(HttpRequest * request,
 {
     const int offset = mb->size;
     HttpVersion httpver(1, 0);
-    memBufPrintf(mb, "%s %s HTTP/%d.%d\r\n",
-                 RequestMethodStr[request->method],
-                 request->urlpath.size() ? request->urlpath.buf() : "/",
-                 httpver.major,httpver.minor);
+    mb->Printf("%s %s HTTP/%d.%d\r\n",
+               RequestMethodStr[request->method],
+               request->urlpath.size() ? request->urlpath.buf() : "/",
+               httpver.major,httpver.minor);
     /* build and pack headers */
     {
         HttpHeader hdr(hoRequest);
@@ -1633,7 +1633,7 @@ httpBuildRequestPrefix(HttpRequest * request,
         packerClean(&p);
     }
     /* append header terminator */
-    memBufAppend(mb, crlf, 2);
+    mb->append(crlf, 2);
     return mb->size - offset;
 }
 
@@ -1694,7 +1694,7 @@ httpSendRequest(HttpStateData * httpState)
         httpState->flags.front_end_https = httpState->_peer->front_end_https;
     }
 
-    memBufDefInit(&mb);
+    mb.init();
     httpBuildRequestPrefix(req,
                            httpState->orig_request,
                            entry,

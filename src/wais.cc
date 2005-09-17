@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.153 2005/09/17 04:53:45 wessels Exp $
+ * $Id: wais.cc,v 1.154 2005/09/17 05:50:08 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -219,8 +219,8 @@ waisSendRequest(int fd, void *data)
     MemBuf mb;
     const char *Method = RequestMethodStr[waisState->method];
     debug(24, 5) ("waisSendRequest: FD %d\n", fd);
-    memBufDefInit(&mb);
-    memBufPrintf(&mb, "%s %s HTTP/1.0\r\n", Method, waisState->url);
+    mb.init();
+    mb.Printf("%s %s HTTP/1.0\r\n", Method, waisState->url);
 
     if (waisState->request_hdr) {
         Packer p;
@@ -229,7 +229,7 @@ waisSendRequest(int fd, void *data)
         packerClean(&p);
     }
 
-    memBufPrintf(&mb, "\r\n");
+    mb.Printf("\r\n");
     debug(24, 6) ("waisSendRequest: buf: %s\n", mb.buf);
     comm_old_write_mbuf(fd, &mb, waisSendComplete, waisState);
 

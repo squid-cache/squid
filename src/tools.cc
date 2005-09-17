@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.262 2005/09/17 04:53:45 wessels Exp $
+ * $Id: tools.cc,v 1.263 2005/09/17 05:50:08 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -1143,12 +1143,12 @@ debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm)
     MemBuf mb;
     Packer p;
     assert(label && obj && pm);
-    memBufDefInit(&mb);
+    mb.init();
     packerToMemInit(&p, &mb);
     (*pm) (obj, &p);
     debug(section, level) ("%s%s", label, mb.buf);
     packerClean(&p);
-    memBufClean(&mb);
+    mb.clean();
 }
 
 void
@@ -1272,23 +1272,23 @@ strwordquote(MemBuf * mb, const char *str)
 
     if (strchr(str, ' ')) {
         quoted = 1;
-        memBufAppend(mb, "\"", 1);
+        mb->append("\"", 1);
     }
 
     while (*str) {
         int l = strcspn(str, "\"\\\n\r");
-        memBufAppend(mb, str, l);
+        mb->append(str, l);
         str += l;
 
         switch(*str) {
 
         case '\n':
-            memBufAppend(mb, "\\n", 2);
+            mb->append("\\n", 2);
             str++;
             break;
 
         case '\r':
-            memBufAppend(mb, "\\r", 2);
+            mb->append("\\r", 2);
             str++;
             break;
 
@@ -1296,13 +1296,13 @@ strwordquote(MemBuf * mb, const char *str)
             break;
 
         default:
-            memBufAppend(mb, "\\", 1);
-            memBufAppend(mb, str, 1);
+            mb->append("\\", 1);
+            mb->append(str, 1);
             str++;
             break;
         }
     }
 
     if (quoted)
-        memBufAppend(mb, "\"", 1);
+        mb->append("\"", 1);
 }

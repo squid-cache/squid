@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.391 2005/09/17 04:53:44 wessels Exp $
+ * $Id: stat.cc,v 1.392 2005/09/17 05:50:08 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -320,21 +320,21 @@ static void
 statStoreEntry(MemBuf * mb, StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
-    memBufPrintf(mb, "KEY %s\n", e->getMD5Text());
-    memBufPrintf(mb, "\t%s\n", describeStatuses(e));
-    memBufPrintf(mb, "\t%s\n", storeEntryFlags(e));
-    memBufPrintf(mb, "\t%s\n", describeTimestamps(e));
-    memBufPrintf(mb, "\t%d locks, %d clients, %d refs\n",
-                 (int) e->lock_count,
-                 storePendingNClients(e),
-                 (int) e->refcount);
-    memBufPrintf(mb, "\tSwap Dir %d, File %#08X\n",
-                 e->swap_dirn, e->swap_filen);
+    mb->Printf("KEY %s\n", e->getMD5Text());
+    mb->Printf("\t%s\n", describeStatuses(e));
+    mb->Printf("\t%s\n", storeEntryFlags(e));
+    mb->Printf("\t%s\n", describeTimestamps(e));
+    mb->Printf("\t%d locks, %d clients, %d refs\n",
+               (int) e->lock_count,
+               storePendingNClients(e),
+               (int) e->refcount);
+    mb->Printf("\tSwap Dir %d, File %#08X\n",
+               e->swap_dirn, e->swap_filen);
 
     if (mem != NULL)
         mem->stat (mb);
 
-    memBufPrintf(mb, "\n");
+    mb->Printf("\n");
 }
 
 /* process objects list */
@@ -361,7 +361,7 @@ statObjects(void *data)
     storeBuffer(state->sentry);
     size_t statCount = 0;
     MemBuf mb;
-    memBufDefInit(&mb);
+    mb.init();
 
     while (statCount++ < static_cast<size_t>(Config.Store.objectsPerBucket) && state->
             theSearch->next()) {
@@ -375,7 +375,7 @@ statObjects(void *data)
 
     if (mb.size)
         storeAppend(state->sentry, mb.buf, mb.size);
-    memBufClean(&mb);
+    mb.clean();
 
     eventAdd("statObjects", statObjects, state, 0.0, 1);
 }

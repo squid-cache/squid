@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.81 2005/09/17 04:53:44 wessels Exp $
+ * $Id: dns_internal.cc,v 1.82 2005/09/17 05:50:08 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -594,13 +594,13 @@ idnsSendQueryVC(idns_query * q, int ns)
 
     nsvc *vc = nameservers[ns].vc;
 
-    memBufReset(vc->queue);
+    vc->queue->reset();
 
     short head = htons(q->sz);
 
-    memBufAppend(vc->queue, (char *)&head, 2);
+    vc->queue->append((char *)&head, 2);
 
-    memBufAppend(vc->queue, q->buf, q->sz);
+    vc->queue->append(q->buf, q->sz);
 
     idnsDoSendQueryVC(vc);
 }
@@ -955,7 +955,7 @@ idnsReadVC(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *dat
                   inet_ntoa(nameservers[vc->ns].S.sin_addr));
 
     idnsGrokReply(vc->msg->buf, vc->msg->contentSize());
-    memBufClean(vc->msg);
+    vc->msg->clean();
     comm_read(fd, (char *)&vc->msglen, 2 , idnsReadVCHeader, vc);
 }
 
@@ -985,7 +985,7 @@ idnsReadVCHeader(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
 
     vc->msglen = ntohs(vc->msglen);
 
-    memBufInit(vc->msg, vc->msglen, vc->msglen);
+    vc->msg->init(vc->msglen, vc->msglen);
     comm_read(fd, vc->msg->buf, vc->msglen, idnsReadVC, vc);
 }
 

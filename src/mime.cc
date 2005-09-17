@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.118 2005/09/17 04:53:44 wessels Exp $
+ * $Id: mime.cc,v 1.119 2005/09/17 05:50:08 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -338,8 +338,8 @@ mimeGetIconURL(const char *fn)
 
     if (Config.icons.use_short_names) {
         static MemBuf mb;
-        memBufReset(&mb);
-        memBufPrintf(&mb, "/squid-internal-static/icons/%s", icon);
+        mb.reset();
+        mb.Printf("/squid-internal-static/icons/%s", icon);
         return mb.content();
     } else {
         return internalLocalUri("/squid-internal-static/icons/", icon);

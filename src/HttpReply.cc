@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.76 2005/09/17 04:53:44 wessels Exp $
+ * $Id: HttpReply.cc,v 1.77 2005/09/17 05:50:07 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -157,11 +157,11 @@ httpReplyParse(HttpReply * rep, const char *buf, ssize_t end)
     httpReplyReset(rep);
     /* put a string terminator.  s is how many bytes to touch in
      * 'buf' including the terminating NULL. */
-    memBufDefInit(&mb);
-    memBufAppend(&mb, buf, end);
-    memBufAppend(&mb, "\0", 1);
+    mb.init();
+    mb.append(buf, end);
+    mb.append("\0", 1);
     success = rep->httpMsgParseStep(mb.buf, 0);
-    memBufClean(&mb);
+    mb.clean();
     return success == 1;
 }
 
@@ -189,7 +189,7 @@ httpReplyPack(const HttpReply * rep)
     Packer p;
     assert(rep);
 
-    memBufDefInit(mb);
+    mb->init();
     packerToMemInit(&p, mb);
     httpReplyPackInto(rep, &p);
     packerClean(&p);

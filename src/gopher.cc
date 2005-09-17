@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.190 2005/09/17 04:53:44 wessels Exp $
+ * $Id: gopher.cc,v 1.191 2005/09/17 05:50:08 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -146,10 +146,10 @@ gopher_mime_content(MemBuf * mb, const char *name, const char *def_ctype)
     char *cenc = mimeGetContentEncoding(name);
 
     if (cenc)
-        memBufPrintf(mb, "Content-Encoding: %s\r\n", cenc);
+        mb->Printf("Content-Encoding: %s\r\n", cenc);
 
-    memBufPrintf(mb, "Content-Type: %s\r\n",
-                 ctype ? ctype : def_ctype);
+    mb->Printf("Content-Type: %s\r\n",
+               ctype ? ctype : def_ctype);
 }
 
 
@@ -160,13 +160,12 @@ gopherMimeCreate(GopherStateData * gopherState)
 {
     MemBuf mb;
 
-    memBufDefInit(&mb);
+    mb.init();
 
-    memBufPrintf(&mb,
-                 "HTTP/1.0 200 OK Gatewaying\r\n"
-                 "Server: Squid/%s\r\n"
-                 "Date: %s\r\n",
-                 version_string, mkrfc1123(squid_curtime));
+    mb.Printf("HTTP/1.0 200 OK Gatewaying\r\n"
+              "Server: Squid/%s\r\n"
+              "Date: %s\r\n",
+              version_string, mkrfc1123(squid_curtime));
 
     switch (gopherState->type_id) {
 
@@ -179,7 +178,7 @@ gopherMimeCreate(GopherStateData * gopherState)
     case GOPHER_WWW:
 
     case GOPHER_CSO:
-        memBufPrintf(&mb, "Content-Type: text/html\r\n");
+        mb.Printf("Content-Type: text/html\r\n");
         break;
 
     case GOPHER_GIF:
@@ -187,17 +186,17 @@ gopherMimeCreate(GopherStateData * gopherState)
     case GOPHER_IMAGE:
 
     case GOPHER_PLUS_IMAGE:
-        memBufPrintf(&mb, "Content-Type: image/gif\r\n");
+        mb.Printf("Content-Type: image/gif\r\n");
         break;
 
     case GOPHER_SOUND:
 
     case GOPHER_PLUS_SOUND:
-        memBufPrintf(&mb, "Content-Type: audio/basic\r\n");
+        mb.Printf("Content-Type: audio/basic\r\n");
         break;
 
     case GOPHER_PLUS_MOVIE:
-        memBufPrintf(&mb, "Content-Type: video/mpeg\r\n");
+        mb.Printf("Content-Type: video/mpeg\r\n");
         break;
 
     case GOPHER_MACBINHEX:
@@ -218,10 +217,10 @@ gopherMimeCreate(GopherStateData * gopherState)
         break;
     }
 
-    memBufPrintf(&mb, "\r\n");
+    mb.Printf("\r\n");
     EBIT_CLR(gopherState->entry->flags, ENTRY_FWD_HDR_WAIT);
     storeAppend(gopherState->entry, mb.buf, mb.size);
-    memBufClean(&mb);
+    mb.clean();
 }
 
 /* Parse a gopher request into components.  By Anawat. */
