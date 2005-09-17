@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.65 2005/09/17 04:53:44 wessels Exp $
+ * $Id: external_acl.cc,v 1.66 2005/09/17 05:50:08 wessels Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -709,15 +709,15 @@ ACLExternal::dump() const
     wordlist *result = NULL;
     wordlist *arg;
     MemBuf mb;
-    memBufDefInit(&mb);
-    memBufPrintf(&mb, "%s", acl->def->name);
+    mb.init();
+    mb.Printf("%s", acl->def->name);
 
     for (arg = acl->arguments; arg; arg = arg->next) {
-        memBufPrintf(&mb, " %s", arg->key);
+        mb.Printf(" %s", arg->key);
     }
 
     wordlistAdd(&result, mb.buf);
-    memBufClean(&mb);
+    mb.clean();
     return result;
 }
 
@@ -741,7 +741,7 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
     wordlist *arg;
     external_acl_format *format;
     HttpRequest *request = ch->request;
-    memBufReset(&mb);
+    mb.reset();
 
     for (format = acl_data->def->format; format; format = format->next) {
         const char *str = NULL;
@@ -890,11 +890,11 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
             str = "-";
 
         if (!first)
-            memBufAppend(&mb, " ", 1);
+            mb.append(" ", 1);
 
         if (acl_data->def->quote == external_acl::QUOTE_METHOD_URL) {
             const char *quoted = rfc1738_escape(str);
-            memBufAppend(&mb, quoted, strlen(quoted));
+            mb.append(quoted, strlen(quoted));
         } else {
             strwordquote(&mb, str);
         }
@@ -906,11 +906,11 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
 
     for (arg = acl_data->arguments; arg; arg = arg->next) {
         if (!first)
-            memBufAppend(&mb, " ", 1);
+            mb.append(" ", 1);
 
         if (acl_data->def->quote == external_acl::QUOTE_METHOD_URL) {
             const char *quoted = rfc1738_escape(arg->key);
-            memBufAppend(&mb, quoted, strlen(quoted));
+            mb.append(quoted, strlen(quoted));
         } else {
             strwordquote(&mb, arg->key);
         }
@@ -1197,15 +1197,15 @@ ACLExternal::ExternalAclLookup(ACLChecklist * ch, ACLExternal * me, EAH * callba
         }
 
         /* Send it off to the helper */
-        memBufDefInit(&buf);
+        buf.init();
 
-        memBufPrintf(&buf, "%s\n", key);
+        buf.Printf("%s\n", key);
 
         helperSubmit(def->theHelper, buf.buf, externalAclHandleReply, state);
 
         dlinkAdd(state, &state->list, &def->queue);
 
-        memBufClean(&buf);
+        buf.clean();
     }
 
     if (graceful) {

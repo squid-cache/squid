@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.697 2005/09/17 04:53:44 wessels Exp $
+ * $Id: client_side.cc,v 1.698 2005/09/17 05:50:08 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -451,12 +451,12 @@ clientPrepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogE
     if (Config.onoff.log_mime_hdrs) {
         Packer p;
         MemBuf mb;
-        memBufDefInit(&mb);
+        mb.init();
         packerToMemInit(&p, &mb);
         httpHeaderPackInto(&request->header, &p);
         aLogEntry->headers.request = xstrdup(mb.buf);
         packerClean(&p);
-        memBufClean(&mb);
+        mb.clean();
     }
 
     aLogEntry->http.method = request->method;
@@ -805,7 +805,7 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
     }
 
     MemBuf mb;
-    memBufDefInit(&mb);
+    mb.init();
     packRange(bodyData, &mb);
 
     if (mb.contentSize())
@@ -819,7 +819,7 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
 static void
 clientPackTermBound(String boundary, MemBuf * mb)
 {
-    memBufPrintf(mb, "\r\n--%s--\r\n", boundary.buf());
+    mb->Printf("\r\n--%s--\r\n", boundary.buf());
     debug(33, 6) ("clientPackTermBound: buf offset: %ld\n", (long int) mb->size);
 }
 
@@ -835,7 +835,7 @@ clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String 
     /* put boundary */
     debug(33, 5) ("clientPackRangeHdr: appending boundary: %s\n", boundary.buf());
     /* rfc2046 requires to _prepend_ boundary with <crlf>! */
-    memBufPrintf(mb, "\r\n--%s\r\n", boundary.buf());
+    mb->Printf("\r\n--%s\r\n", boundary.buf());
 
     /* stuff the header with required entries and pack it */
 
@@ -853,7 +853,7 @@ clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String 
     httpHeaderClean(&hdr);
 
     /* append <crlf> (we packed a header, not a reply) */
-    memBufPrintf(mb, "\r\n");
+    mb->Printf("\r\n");
 }
 
 /*
@@ -898,7 +898,7 @@ ClientSocketContext::packRange(StoreIOBuffer const &source, MemBuf * mb)
 
             noteSentBodyBytes (copy_sz);
 
-            memBufAppend(mb, buf, copy_sz);
+            mb->append(buf, copy_sz);
 
             /*
              * update offsets
@@ -958,12 +958,12 @@ ClientHttpRequest::mRangeCLen()
 
     assert(memObject());
 
-    memBufDefInit(&mb);
+    mb.init();
     HttpHdrRange::iterator pos = request->range->begin();
 
     while (pos != request->range->end()) {
         /* account for headers for this range */
-        memBufReset(&mb);
+        mb.reset();
         clientPackRangeHdr(memObject()->getReply(),
                            *pos, range_iter.boundary, &mb);
         clen += mb.size;
@@ -977,13 +977,13 @@ ClientHttpRequest::mRangeCLen()
     }
 
     /* account for the terminating boundary */
-    memBufReset(&mb);
+    mb.reset();
 
     clientPackTermBound(range_iter.boundary, &mb);
 
     clen += mb.size;
 
-    memBufClean(&mb);
+    mb.clean();
 
     return clen;
 }
@@ -1178,7 +1178,7 @@ ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData)
             size_t length = lengthToSend(bodyData.range());
             noteSentBodyBytes (length);
 
-            memBufAppend(mb, bodyData.data, length);
+            mb->append(bodyData.data, length);
         } else {
             packRange(bodyData, mb);
         }

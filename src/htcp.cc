@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.59 2005/09/17 04:53:44 wessels Exp $
+ * $Id: htcp.cc,v 1.60 2005/09/17 05:50:08 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -732,7 +732,7 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, struct
 
     if (spec)
     {
-        memBufDefInit(&mb);
+        mb.init();
         packerToMemInit(&p, &mb);
         stuff.S.method = spec->method;
         stuff.S.uri = spec->uri;
@@ -744,7 +744,7 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, struct
         httpHeaderPackInto(&hdr, &p);
         stuff.D.resp_hdrs = xstrdup(mb.buf);
         debug(31, 3) ("htcpTstReply: resp_hdrs = {%s}\n", stuff.D.resp_hdrs);
-        memBufReset(&mb);
+        mb.reset();
         httpHeaderReset(&hdr);
 
         if (e->expires > -1)
@@ -759,7 +759,7 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, struct
 
         debug(31, 3) ("htcpTstReply: entity_hdrs = {%s}\n", stuff.D.entity_hdrs);
 
-        memBufReset(&mb);
+        mb.reset();
 
         httpHeaderReset(&hdr);
 
@@ -776,7 +776,7 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, struct
         httpHeaderPackInto(&hdr, &p);
         stuff.D.cache_hdrs = xstrdup(mb.buf);
         debug(31, 3) ("htcpTstReply: cache_hdrs = {%s}\n", stuff.D.cache_hdrs);
-        memBufClean(&mb);
+        mb.clean();
         httpHeaderClean(&hdr);
         packerClean(&p);
     }
@@ -1221,7 +1221,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
 
     httpBuildRequestHeader(req, req, e, &hdr, flags);
 
-    memBufDefInit(&mb);
+    mb.init();
 
     packerToMemInit(&pa, &mb);
 
@@ -1235,7 +1235,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
 
     pkt = htcpBuildPacket(&stuff, &pktlen);
 
-    memBufClean(&mb);
+    mb.clean();
 
     if (pkt == NULL) {
         debug(31, 0) ("htcpQuery: htcpBuildPacket() failed\n");

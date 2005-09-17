@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.170 2005/09/17 04:53:44 wessels Exp $
+ * $Id: disk.cc,v 1.171 2005/09/17 05:50:08 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -421,7 +421,7 @@ file_write(int fd,
 void
 file_write_mbuf(int fd, off_t off, MemBuf mb, DWCB * handler, void *handler_data)
 {
-    file_write(fd, off, mb.buf, mb.size, handler, handler_data, memBufFreeFunc(&mb));
+    file_write(fd, off, mb.buf, mb.size, handler, handler_data, mb.freeFunc());
 }
 
 /* Read from FD */

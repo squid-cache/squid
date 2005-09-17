@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.104 2005/09/17 04:53:44 wessels Exp $
+ * $Id: access_log.cc,v 1.105 2005/09/17 05:50:07 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -509,7 +509,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
     char tmp[1024];
     String sb;
 
-    memBufReset(&mb);
+    mb.reset();
 
     lf = log->logFormat;
     logfile = log->logfile;
@@ -728,7 +728,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
         case LFT_SQUID_HIERARCHY:
             if (al->hier.ping.timedout)
-                memBufAppend(&mb, "TIMEOUT_", 8);
+                mb.append("TIMEOUT_", 8);
 
             out = hier_strings[al->hier.code];
 
@@ -856,17 +856,17 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
             if (fmt->width) {
                 if (fmt->left)
-                    memBufPrintf(&mb, "%-*s", (int) fmt->width, out);
+                    mb.Printf("%-*s", (int) fmt->width, out);
                 else
-                    memBufPrintf(&mb, "%*s", (int) fmt->width, out);
+                    mb.Printf("%*s", (int) fmt->width, out);
             } else
-                memBufAppend(&mb, out, strlen(out));
+                mb.append(out, strlen(out));
         } else {
-            memBufAppend(&mb, "-", 1);
+            mb.append("-", 1);
         }
 
         if (fmt->space)
-            memBufAppend(&mb, " ", 1);
+            mb.append(" ", 1);
 
         sb.clean();
 

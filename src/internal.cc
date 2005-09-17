@@ -1,6 +1,6 @@
 
 /*
- * $Id: internal.cc,v 1.32 2005/09/17 04:53:44 wessels Exp $
+ * $Id: internal.cc,v 1.33 2005/09/17 05:50:08 wessels Exp $
  *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
@@ -118,18 +118,18 @@ internalRemoteUri(const char *host, u_short port, const char *dir, const char *n
     /* build uri in mb */
     static MemBuf mb;
 
-    memBufReset(&mb);
+    mb.reset();
 
-    memBufPrintf(&mb, "http://%s", lc_host);
+    mb.Printf("http://%s", lc_host);
 
     /* append port if not default */
     if (port && port != urlDefaultPort(PROTO_HTTP))
-        memBufPrintf(&mb, ":%d", port);
+        mb.Printf(":%d", port);
 
     if (dir)
-        memBufPrintf(&mb, "%s", dir);
+        mb.Printf("%s", dir);
 
-    memBufPrintf(&mb, "%s", name);
+    mb.Printf("%s", name);
 
     /* return a pointer to a local static buffer */
     return mb.buf;

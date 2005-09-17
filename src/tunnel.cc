@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.153 2005/09/17 04:53:45 wessels Exp $
+ * $Id: tunnel.cc,v 1.154 2005/09/17 05:50:08 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -688,8 +688,8 @@ sslProxyConnected(int fd, void *data)
     memset(&flags, '\0', sizeof(flags));
     flags.proxying = sslState->request->flags.proxying;
     MemBuf mb;
-    memBufDefInit(&mb);
-    memBufPrintf(&mb, "CONNECT %s HTTP/1.0\r\n", sslState->url);
+    mb.init();
+    mb.Printf("CONNECT %s HTTP/1.0\r\n", sslState->url);
     httpBuildRequestHeader(sslState->request,
                            sslState->request,
                            NULL,			/* StoreEntry */
@@ -699,7 +699,7 @@ sslProxyConnected(int fd, void *data)
     httpHeaderPackInto(&hdr_out, &p);
     httpHeaderClean(&hdr_out);
     packerClean(&p);
-    memBufAppend(&mb, "\r\n", 2);
+    mb.append("\r\n", 2);
 
     comm_old_write_mbuf(sslState->server.fd(), &mb, sslProxyConnectedWriteDone, sslState);
 

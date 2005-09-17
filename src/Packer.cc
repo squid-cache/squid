@@ -1,6 +1,6 @@
 
 /*
- * $Id: Packer.cc,v 1.18 2005/09/17 04:53:44 wessels Exp $
+ * $Id: Packer.cc,v 1.19 2005/09/17 05:50:07 wessels Exp $
  *
  * DEBUG: section 60    Packer: A uniform interface to store-like modules
  * AUTHOR: Alex Rousskov
@@ -92,6 +92,19 @@
  * real functions. If real prototypes change, these constants will produce a
  * warning (e.g., "warning: assignment from incompatible pointer type").
  */
+
+static void
+memBufAppend(MemBuf *mb, const char *buf, mb_size_t len)
+{
+    mb->append(buf, len);
+}
+
+static void
+memBufVPrintf(MemBuf * mb, const char *fmt, va_list vargs)
+{
+    mb->vPrintf(fmt, vargs);
+}
+
 
 /* append()'s */
 static void (*const store_append) (StoreEntry *, const char *, int) = &storeAppend;

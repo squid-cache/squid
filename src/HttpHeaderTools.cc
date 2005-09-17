@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.49 2005/09/17 04:53:44 wessels Exp $
+ * $Id: HttpHeaderTools.cc,v 1.50 2005/09/17 05:50:07 wessels Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -136,10 +136,10 @@ static void
 httpHeaderPutStrvf(HttpHeader * hdr, http_hdr_type id, const char *fmt, va_list vargs)
 {
     MemBuf mb;
-    memBufDefInit(&mb);
-    memBufVPrintf(&mb, fmt, vargs);
+    mb.init();
+    mb.vPrintf(fmt, vargs);
     httpHeaderPutStr(hdr, id, mb.buf);
-    memBufClean(&mb);
+    mb.clean();
 }
 
 
@@ -441,7 +441,7 @@ httpHeaderTestParser(const char *hstr)
     }
 
     /* we think that we parsed it, veryfy */
-    memBufDefInit(&mb);
+    mb.init();
 
     packerToMemInit(&p, &mb);
 
@@ -455,7 +455,7 @@ httpHeaderTestParser(const char *hstr)
 
     httpHeaderClean(&hdr);
     packerClean(&p);
-    memBufClean(&mb);
+    mb.clean();
 }
 
 #endif

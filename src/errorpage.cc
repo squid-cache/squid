@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.203 2005/09/17 04:53:44 wessels Exp $
+ * $Id: errorpage.cc,v 1.204 2005/09/17 05:50:08 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -225,10 +225,10 @@ errorTryLoadText(const char *page_name, const char *dir)
         return NULL;
     }
 
-    memBufDefInit(&textbuf);
+    textbuf.init();
 
     while((len = FD_READ_METHOD(fd, buf, sizeof(buf))) > 0) {
-        memBufAppend(&textbuf, buf, len);
+        textbuf.append(buf, len);
     }
 
     if (len < 0) {
@@ -239,14 +239,14 @@ errorTryLoadText(const char *page_name, const char *dir)
     file_close(fd);
 
     if (strstr(textbuf.buf, "%s") == NULL)
-        memBufAppend(&textbuf, "%S", 2);	/* add signature */
+        textbuf.append("%S", 2);	/* add signature */
 
     /* Shrink memory size down to exact size. MemBuf has a tencendy
      * to be rather large..
      */
     text = xstrdup(textbuf.buf);
 
-    memBufClean(&textbuf);
+    textbuf.clean();
 
     return text;
 }
@@ -486,49 +486,49 @@ errorDump(ErrorState * err, MemBuf * mb)
     HttpRequest *r = err->request;
     MemBuf str;
     const char *p = NULL;	/* takes priority over mb if set */
-    memBufReset(&str);
+    str.reset();
     /* email subject line */
-    memBufPrintf(&str, "CacheErrorInfo - %s", errorPageName(err->type));
-    memBufPrintf(mb, "?subject=%s", rfc1738_escape_part(str.buf));
-    memBufReset(&str);
+    str.Printf("CacheErrorInfo - %s", errorPageName(err->type));
+    mb->Printf("?subject=%s", rfc1738_escape_part(str.buf));
+    str.reset();
     /* email body */
-    memBufPrintf(&str, "CacheHost: %s\r\n", getMyHostname());
+    str.Printf("CacheHost: %s\r\n", getMyHostname());
     /* - Err Msgs */
-    memBufPrintf(&str, "ErrPage: %s\r\n", errorPageName(err->type));
+    str.Printf("ErrPage: %s\r\n", errorPageName(err->type));
 
     if (err->xerrno) {
-        memBufPrintf(&str, "Err: (%d) %s\r\n", err->xerrno, strerror(err->xerrno));
+        str.Printf("Err: (%d) %s\r\n", err->xerrno, strerror(err->xerrno));
     } else {
-        memBufPrintf(&str, "Err: [none]\r\n");
+        str.Printf("Err: [none]\r\n");
     }
 
     if (err->auth_user_request->denyMessage())
-        memBufPrintf(&str, "Auth ErrMsg: %s\r\n", err->auth_user_request->denyMessage());
+        str.Printf("Auth ErrMsg: %s\r\n", err->auth_user_request->denyMessage());
 
     if (err->dnsserver_msg) {
-        memBufPrintf(&str, "DNS Server ErrMsg: %s\r\n", err->dnsserver_msg);
+        str.Printf("DNS Server ErrMsg: %s\r\n", err->dnsserver_msg);
     }
 
     /* - TimeStamp */
-    memBufPrintf(&str, "TimeStamp: %s\r\n\r\n", mkrfc1123(squid_curtime));
+    str.Printf("TimeStamp: %s\r\n\r\n", mkrfc1123(squid_curtime));
 
     /* - IP stuff */
-    memBufPrintf(&str, "ClientIP: %s\r\n", inet_ntoa(err->src_addr));
+    str.Printf("ClientIP: %s\r\n", inet_ntoa(err->src_addr));
 
     if (err->host) {
-        memBufPrintf(&str, "ServerIP: %s\r\n", err->host);
+        str.Printf("ServerIP: %s\r\n", err->host);
     }
 
-    memBufPrintf(&str, "\r\n");
+    str.Printf("\r\n");
     /* - HTTP stuff */
-    memBufPrintf(&str, "HTTP Request:\r\n");
+    str.Printf("HTTP Request:\r\n");
 
     if (NULL != r) {
         Packer p;
-        memBufPrintf(&str, "%s %s HTTP/%d.%d\n",
-                     RequestMethodStr[r->method],
-                     r->urlpath.size() ? r->urlpath.buf() : "/",
-                     r->http_ver.major, r->http_ver.minor);
+        str.Printf("%s %s HTTP/%d.%d\n",
+                   RequestMethodStr[r->method],
+                   r->urlpath.size() ? r->urlpath.buf() : "/",
+                   r->http_ver.major, r->http_ver.minor);
         packerToMemInit(&p, &str);
         httpHeaderPackInto(&r->header, &p);
         packerClean(&p);
@@ -538,20 +538,20 @@ errorDump(ErrorState * err, MemBuf * mb)
         p = "[none]";
     }
 
-    memBufPrintf(&str, "\r\n");
+    str.Printf("\r\n");
     /* - FTP stuff */
 
     if (err->ftp.request) {
-        memBufPrintf(&str, "FTP Request: %s\r\n", err->ftp.request);
-        memBufPrintf(&str, "FTP Reply: %s\r\n", err->ftp.reply);
-        memBufPrintf(&str, "FTP Msg: ");
+        str.Printf("FTP Request: %s\r\n", err->ftp.request);
+        str.Printf("FTP Reply: %s\r\n", err->ftp.reply);
+        str.Printf("FTP Msg: ");
         wordlistCat(err->ftp.server_msg, &str);
-        memBufPrintf(&str, "\r\n");
+        str.Printf("\r\n");
     }
 
-    memBufPrintf(&str, "\r\n");
-    memBufPrintf(mb, "&body=%s", rfc1738_escape_part(str.buf));
-    memBufClean(&str);
+    str.Printf("\r\n");
+    mb->Printf("&body=%s", rfc1738_escape_part(str.buf));
+    str.clean();
     return 0;
 }
 
@@ -598,7 +598,7 @@ errorConvert(char token, ErrorState * err)
     const char *p = NULL;	/* takes priority over mb if set */
     int do_quote = 1;
 
-    memBufReset(&mb);
+    mb.reset();
 
     switch (token) {
 
@@ -623,16 +623,16 @@ errorConvert(char token, ErrorState * err)
         break;
 
     case 'e':
-        memBufPrintf(&mb, "%d", err->xerrno);
+        mb.Printf("%d", err->xerrno);
 
         break;
 
     case 'E':
 
         if (err->xerrno)
-            memBufPrintf(&mb, "(%d) %s", err->xerrno, strerror(err->xerrno));
+            mb.Printf("(%d) %s", err->xerrno, strerror(err->xerrno));
         else
-            memBufPrintf(&mb, "[No Error]");
+            mb.Printf("[No Error]");
 
         break;
 
@@ -661,7 +661,7 @@ errorConvert(char token, ErrorState * err)
         break;
 
     case 'h':
-        memBufPrintf(&mb, "%s", getMyHostname());
+        mb.Printf("%s", getMyHostname());
 
         break;
 
@@ -671,13 +671,13 @@ errorConvert(char token, ErrorState * err)
         break;
 
     case 'i':
-        memBufPrintf(&mb, "%s", inet_ntoa(err->src_addr));
+        mb.Printf("%s", inet_ntoa(err->src_addr));
 
         break;
 
     case 'I':
         if (err->host) {
-            memBufPrintf(&mb, "%s", err->host);
+            mb.Printf("%s", err->host);
         } else
             p = "[unknown]";
 
@@ -685,7 +685,7 @@ errorConvert(char token, ErrorState * err)
 
     case 'L':
         if (Config.errHtmlText) {
-            memBufPrintf(&mb, "%s", Config.errHtmlText);
+            mb.Printf("%s", Config.errHtmlText);
             do_quote = 0;
         } else
             p = "[not available]";
@@ -709,7 +709,7 @@ errorConvert(char token, ErrorState * err)
 
     case 'p':
         if (r) {
-            memBufPrintf(&mb, "%d", (int) r->port);
+            mb.Printf("%d", (int) r->port);
         } else {
             p = "[unknown port]";
         }
@@ -724,10 +724,10 @@ errorConvert(char token, ErrorState * err)
 
         if (NULL != r) {
             Packer p;
-            memBufPrintf(&mb, "%s %s HTTP/%d.%d\n",
-                         RequestMethodStr[r->method],
-                         r->urlpath.size() ? r->urlpath.buf() : "/",
-                         r->http_ver.major, r->http_ver.minor);
+            mb.Printf("%s %s HTTP/%d.%d\n",
+                      RequestMethodStr[r->method],
+                      r->urlpath.size() ? r->urlpath.buf() : "/",
+                      r->http_ver.major, r->http_ver.minor);
             packerToMemInit(&p, &mb);
             httpHeaderPackInto(&r->header, &p);
             packerClean(&p);
@@ -750,8 +750,8 @@ errorConvert(char token, ErrorState * err)
             const int saved_id = err->page_id;
             err->page_id = ERR_SQUID_SIGNATURE;
             MemBuf *sign_mb = errorBuildContent(err);
-            memBufPrintf(&mb, "%s", sign_mb->content());
-            memBufClean(sign_mb);
+            mb.Printf("%s", sign_mb->content());
+            sign_mb->clean();
             delete sign_mb;
             err->page_id = saved_id;
             do_quote = 0;
@@ -763,11 +763,11 @@ errorConvert(char token, ErrorState * err)
         break;
 
     case 't':
-        memBufPrintf(&mb, "%s", mkhttpdlogtime(&squid_curtime));
+        mb.Printf("%s", mkhttpdlogtime(&squid_curtime));
         break;
 
     case 'T':
-        memBufPrintf(&mb, "%s", mkrfc1123(squid_curtime));
+        mb.Printf("%s", mkrfc1123(squid_curtime));
         break;
 
     case 'U':
@@ -781,7 +781,7 @@ errorConvert(char token, ErrorState * err)
     case 'w':
 
         if (Config.adminEmail)
-            memBufPrintf(&mb, "%s", Config.adminEmail);
+            mb.Printf("%s", Config.adminEmail);
         else
             p = "[unknown]";
 
@@ -815,7 +815,7 @@ errorConvert(char token, ErrorState * err)
         break;
 
     default:
-        memBufPrintf(&mb, "%%%c", token);
+        mb.Printf("%%%c", token);
 
         do_quote = 0;
 
@@ -883,19 +883,19 @@ errorBuildContent(ErrorState * err)
     const char *t;
     assert(err != NULL);
     assert(err->page_id > ERR_NONE && err->page_id < error_page_count);
-    memBufDefInit(content);
+    content->init();
     m = error_text[err->page_id];
     assert(m);
 
     while ((p = strchr(m, '%'))) {
-        memBufAppend(content, m, p - m);	/* copy */
+        content->append(m, p - m);	/* copy */
         t = errorConvert(*++p, err);	/* convert */
-        memBufPrintf(content, "%s", t);	/* copy */
+        content->Printf("%s", t);	/* copy */
         m = p + 1;		/* advance */
     }
 
     if (*m)
-        memBufPrintf(content, "%s", m);	/* copy tail */
+        content->Printf("%s", m);	/* copy tail */
 
     assert((size_t)content->contentSize() == strlen(content->content()));
 

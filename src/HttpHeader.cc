@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.107 2005/09/17 04:53:44 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.108 2005/09/17 05:50:07 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -1012,14 +1012,14 @@ httpHeaderPutCc(HttpHeader * hdr, const HttpHdrCc * cc)
     /* remove old directives if any */
     httpHeaderDelById(hdr, HDR_CACHE_CONTROL);
     /* pack into mb */
-    memBufDefInit(&mb);
+    mb.init();
     packerToMemInit(&p, &mb);
     httpHdrCcPackInto(cc, &p);
     /* put */
     httpHeaderAddEntry(hdr, httpHeaderEntryCreate(HDR_CACHE_CONTROL, NULL, mb.buf));
     /* cleanup */
     packerClean(&p);
-    memBufClean(&mb);
+    mb.clean();
 }
 
 void
@@ -1031,14 +1031,14 @@ httpHeaderPutContRange(HttpHeader * hdr, const HttpHdrContRange * cr)
     /* remove old directives if any */
     httpHeaderDelById(hdr, HDR_CONTENT_RANGE);
     /* pack into mb */
-    memBufDefInit(&mb);
+    mb.init();
     packerToMemInit(&p, &mb);
     httpHdrContRangePackInto(cr, &p);
     /* put */
     httpHeaderAddEntry(hdr, httpHeaderEntryCreate(HDR_CONTENT_RANGE, NULL, mb.buf));
     /* cleanup */
     packerClean(&p);
-    memBufClean(&mb);
+    mb.clean();
 }
 
 void
@@ -1050,14 +1050,14 @@ httpHeaderPutRange(HttpHeader * hdr, const HttpHdrRange * range)
     /* remove old directives if any */
     httpHeaderDelById(hdr, HDR_RANGE);
     /* pack into mb */
-    memBufDefInit(&mb);
+    mb.init();
     packerToMemInit(&p, &mb);
     range->packInto(&p);
     /* put */
     httpHeaderAddEntry(hdr, httpHeaderEntryCreate(HDR_RANGE, NULL, mb.buf));
     /* cleanup */
     packerClean(&p);
-    memBufClean(&mb);
+    mb.clean();
 }
 
 void
@@ -1069,14 +1069,14 @@ httpHeaderPutSc(HttpHeader *hdr, const HttpHdrSc *sc)
     /* remove old directives if any */
     httpHeaderDelById(hdr, HDR_RANGE);
     /* pack into mb */
-    memBufDefInit(&mb);
+    mb.init();
     packerToMemInit(&p, &mb);
     httpHdrScPackInto(sc, &p);
     /* put */
     httpHeaderAddEntry(hdr, httpHeaderEntryCreate(HDR_SURROGATE_CONTROL, NULL, mb.buf));
     /* cleanup */
     packerClean(&p);
-    memBufClean(&mb);
+    mb.clean();
 }
 
 /* add extension header (these fields are not parsed/analyzed/joined, etc.) */
