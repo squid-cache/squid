@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpBody.cc,v 1.21 2005/08/31 19:15:35 wessels Exp $
+ * $Id: HttpBody.cc,v 1.22 2005/09/17 03:38:36 wessels Exp $
  *
  * DEBUG: section 56    HTTP Message Body
  * AUTHOR: Alex Rousskov
@@ -49,6 +49,10 @@ httpBodyClean(HttpBody * body)
 
     if (!memBufIsNull(body->mb))
         memBufClean(body->mb);
+
+    delete body->mb;
+
+    body->mb = NULL;
 }
 
 /* set body by absorbing mb */
@@ -57,6 +61,7 @@ httpBodySet(HttpBody * body, MemBuf * mb)
 {
     assert(body);
     assert(memBufIsNull(body->mb));
+    delete body->mb;
     body->mb = mb;		/* absorb */
 }
 
