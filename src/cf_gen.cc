@@ -1,6 +1,6 @@
 
 /*
- * $Id: cf_gen.cc,v 1.54 2004/12/20 16:30:35 robertc Exp $
+ * $Id: cf_gen.cc,v 1.55 2005/09/17 03:42:20 wessels Exp $
  *
  * DEBUG: none          Generate squid.conf.default and cf_parser.h
  * AUTHOR: Max Okumoto
@@ -212,11 +212,11 @@ main(int argc, char *argv[])
                     exit(1);
                 }
 
-                curr = (Entry *)calloc(1, sizeof(Entry));
+                curr = (Entry *)xcalloc(1, sizeof(Entry));
                 curr->name = xstrdup(name);
 
                 while ((aliasname = strtok(NULL, WS)) != NULL) {
-                    EntryAlias *alias = (EntryAlias *)calloc(1, sizeof(EntryAlias));
+                    EntryAlias *alias = (EntryAlias *)xcalloc(1, sizeof(EntryAlias));
                     alias->next = curr->alias;
                     alias->name = xstrdup(aliasname);
                     curr->alias = alias;
@@ -226,7 +226,7 @@ main(int argc, char *argv[])
             } else if (!strcmp(buff, "EOF")) {
                 state = sEXIT;
             } else if (!strcmp(buff, "COMMENT_START")) {
-                curr = (Entry *)calloc(1, sizeof(Entry));
+                curr = (Entry *)xcalloc(1, sizeof(Entry));
                 curr->name = xstrdup("comment");
                 curr->loc = xstrdup("none");
                 state = sDOC;
@@ -328,7 +328,7 @@ main(int argc, char *argv[])
             } else if (!strcmp(buff, "NOCOMMENT_START")) {
                 state = sNOCOMMENT;
             } else {
-                Line *line = (Line *)calloc(1, sizeof(Line));
+                Line *line = (Line *)xcalloc(1, sizeof(Line));
                 line->data = xstrdup(buff);
                 line->next = curr->doc;
                 curr->doc = line;
@@ -354,7 +354,7 @@ main(int argc, char *argv[])
                 curr->nocomment = head;
                 state = sDOC;
             } else {
-                Line *line = (Line *)calloc(1, sizeof(Line));
+                Line *line = (Line *)xcalloc(1, sizeof(Line));
                 line->data = xstrdup(buff);
                 line->next = curr->nocomment;
                 curr->nocomment = line;
