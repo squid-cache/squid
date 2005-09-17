@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemBuf.cc,v 1.39 2005/09/17 04:53:44 wessels Exp $
+ * $Id: MemBuf.cc,v 1.40 2005/09/17 05:05:08 wessels Exp $
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov
@@ -124,6 +124,7 @@
 /* local routines */
 static void memBufGrow(MemBuf * mb, mb_size_t min_cap);
 
+CBDATA_CLASS_INIT(MemBuf);
 
 /* init with defaults */
 void
