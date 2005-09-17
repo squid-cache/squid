@@ -1,5 +1,5 @@
 /*
- * $Id: MemBuf.h,v 1.3 2005/08/31 19:15:35 wessels Exp $
+ * $Id: MemBuf.h,v 1.4 2005/09/17 05:05:08 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -78,6 +78,8 @@ private:
     MemBuf(const MemBuf& m) {assert(false);};
 
     MemBuf& operator= (const MemBuf& m) {assert(false); return *this;};
+
+    CBDATA_CLASS2(MemBuf);
 
 public:
     /* public, read-only, depricated in favor of space*() and content*() */
