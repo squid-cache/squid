@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.47 2005/09/15 19:22:30 wessels Exp $
+ * $Id: client_side_request.cc,v 1.48 2005/09/21 16:12:46 wessels Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -527,7 +527,7 @@ clientHierarchical(ClientHttpRequest * http)
 
     /*
      * This is incorrect: authenticating requests can be sent via a hierarchy
-     * (they can even be cached if the correct headers are set on the reply
+     * (they can even be cached if the correct headers are set on the reply)
      */
     if (request->flags.auth)
         return 0;
