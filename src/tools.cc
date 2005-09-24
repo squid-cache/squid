@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.263 2005/09/17 05:50:08 wessels Exp $
+ * $Id: tools.cc,v 1.264 2005/09/24 13:21:00 serassio Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -709,7 +709,7 @@ leave_suid(void)
 #if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
     /* Set Linux DUMPABLE flag */
     if (Config.coredump_dir && prctl(PR_SET_DUMPABLE, 1) != 0)
-        debug(50, 0) ("ALERT: prctl: %s\n", xstrerror());
+        debug(50, 2) ("ALERT: prctl: %s\n", xstrerror());
 
 #endif
 }
@@ -730,7 +730,7 @@ enter_suid(void)
     /* Set Linux DUMPABLE flag */
 
     if (Config.coredump_dir && prctl(PR_SET_DUMPABLE, 1) != 0)
-        debug(50, 0) ("ALERT: prctl: %s\n", xstrerror());
+        debug(50, 2) ("ALERT: prctl: %s\n", xstrerror());
 
 #endif
 }
@@ -761,7 +761,7 @@ no_suid(void)
 #if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
     /* Set Linux DUMPABLE flag */
     if (Config.coredump_dir && prctl(PR_SET_DUMPABLE, 1) != 0)
-        debug(50, 0) ("ALERT: prctl: %s\n", xstrerror());
+        debug(50, 2) ("ALERT: prctl: %s\n", xstrerror());
 
 #endif
 }
