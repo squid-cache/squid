@@ -65,7 +65,7 @@ ACLDestinationIP::match(ACLChecklist *checklist)
         checklist->changeState (DestinationIPLookup::Instance());
         return 0;
     } else {
-        return ACLIP::match(no_addr);
+        return 0;
     }
 }
 
