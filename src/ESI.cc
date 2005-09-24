@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.17 2005/09/09 17:31:33 wessels Exp $
+ * $Id: ESI.cc,v 1.18 2005/09/24 14:38:35 serassio Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -49,6 +49,7 @@
 #include "ESIAssign.h"
 #include "ESIExpression.h"
 #include "HttpRequest.h"
+#include "MemBuf.h"
 
 /* quick reference on behaviour here.
  * The ESI specification 1.0 requires the ESI processor to be able to 
