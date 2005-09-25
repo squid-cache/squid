@@ -1,6 +1,6 @@
 
 /*
- * $Id: IPInterception.cc,v 1.12 2005/09/12 14:20:02 serassio Exp $
+ * $Id: IPInterception.cc,v 1.13 2005/09/25 12:36:50 serassio Exp $
  *
  * DEBUG: section 89    NAT / IP Interception 
  * AUTHOR: Robert Collins
@@ -92,11 +92,14 @@ clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct s
 #if defined(IPFILTER_VERSION) && (IPFILTER_VERSION >= 4000027)
 
     struct ipfobj obj;
+#else
+
+    static int siocgnatl_cmd = SIOCGNATL & 0xff;
+
 #endif
 
     struct natlookup natLookup;
     static int natfd = -1;
-    static int siocgnatl_cmd = SIOCGNATL & 0xff;
     static time_t last_reported = 0;
     int x;
 
