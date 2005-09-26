@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.347 2005/09/12 23:28:57 wessels Exp $
+#  $Id: Makefile.in,v 1.348 2005/09/26 00:10:46 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -139,14 +139,14 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc ACL.h \
 	ACLBrowser.h ACLData.h ACLDestinationDomain.cc \
 	ACLDestinationDomain.h ACLDestinationIP.cc ACLDestinationIP.h \
 	ACLDomainData.h ACLDomainData.cc ACLExtUser.h ACLExtUser.cc \
-	ACLIntRange.cc ACLIntRange.h ACLIP.cc ACLIP.h \
-	ACLMaxConnection.cc ACLMaxConnection.h ACLMaxUserIP.cc \
-	ACLMaxUserIP.h ACLMethod.cc ACLMethod.h ACLMethodData.cc \
-	ACLMethodData.h ACLMyIP.cc ACLMyIP.h ACLMyPort.cc ACLMyPort.h \
-	ACLProtocol.cc ACLProtocol.h ACLProtocolData.cc \
-	ACLProtocolData.h ACLProxyAuth.cc ACLProxyAuth.h ACLReferer.cc \
-	ACLReferer.h ACLRegexData.cc ACLRegexData.h \
-	ACLReplyHeaderStrategy.h ACLReplyMIMEType.cc \
+	ACLHTTPStatus.h ACLHTTPStatus.cc ACLIntRange.cc ACLIntRange.h \
+	ACLIP.cc ACLIP.h ACLMaxConnection.cc ACLMaxConnection.h \
+	ACLMaxUserIP.cc ACLMaxUserIP.h ACLMethod.cc ACLMethod.h \
+	ACLMethodData.cc ACLMethodData.h ACLMyIP.cc ACLMyIP.h \
+	ACLMyPort.cc ACLMyPort.h ACLProtocol.cc ACLProtocol.h \
+	ACLProtocolData.cc ACLProtocolData.h ACLProxyAuth.cc \
+	ACLProxyAuth.h ACLReferer.cc ACLReferer.h ACLRegexData.cc \
+	ACLRegexData.h ACLReplyHeaderStrategy.h ACLReplyMIMEType.cc \
 	ACLReplyMIMEType.h ACLRequestHeaderStrategy.h \
 	ACLRequestMIMEType.cc ACLRequestMIMEType.h ACLSourceDomain.cc \
 	ACLSourceDomain.h ACLSourceIP.cc ACLSourceIP.h \
@@ -220,7 +220,7 @@ am__objects_1 = ACLARP.$(OBJEXT)
 am__objects_3 = $(am__objects_2) ACLASN.$(OBJEXT) ACLBrowser.$(OBJEXT) \
 	ACLDestinationDomain.$(OBJEXT) ACLDestinationIP.$(OBJEXT) \
 	ACLDomainData.$(OBJEXT) ACLExtUser.$(OBJEXT) \
-	ACLIntRange.$(OBJEXT) ACLIP.$(OBJEXT) \
+	ACLHTTPStatus.$(OBJEXT) ACLIntRange.$(OBJEXT) ACLIP.$(OBJEXT) \
 	ACLMaxConnection.$(OBJEXT) ACLMaxUserIP.$(OBJEXT) \
 	ACLMethod.$(OBJEXT) ACLMethodData.$(OBJEXT) ACLMyIP.$(OBJEXT) \
 	ACLMyPort.$(OBJEXT) ACLProtocol.$(OBJEXT) \
@@ -919,6 +919,8 @@ squid_ACLSOURCES = \
 	ACLDomainData.cc \
 	ACLExtUser.h \
 	ACLExtUser.cc \
+	ACLHTTPStatus.h \
+	ACLHTTPStatus.cc \
 	ACLIntRange.cc \
 	ACLIntRange.h \
 	ACLIP.cc \
@@ -2117,6 +2119,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLDestinationIP.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLDomainData.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLExtUser.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLHTTPStatus.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLIP.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLIdent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLIntRange.Po@am__quote@
