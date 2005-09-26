@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.528 2005/09/17 04:53:44 wessels Exp $
+ * $Id: structs.h,v 1.529 2005/09/25 20:25:56 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -523,11 +523,7 @@ struct _SquidConfig
     struct
     {
         int log_udp;
-#if USE_DNSSERVERS
-
         int res_defnames;
-#endif
-
         int anonymizer;
         int client_db;
         int query_icmp;
