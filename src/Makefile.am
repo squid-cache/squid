@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.110 2005/09/12 23:28:57 wessels Exp $
+#  $Id: Makefile.am,v 1.111 2005/09/25 20:58:23 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -270,6 +270,8 @@ squid_ACLSOURCES = \
 	ACLDomainData.cc \
 	ACLExtUser.h \
 	ACLExtUser.cc \
+	ACLHTTPStatus.h \
+	ACLHTTPStatus.cc \
 	ACLIntRange.cc \
 	ACLIntRange.h \
 	ACLIP.cc \
