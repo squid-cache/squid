@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.396 2005/09/25 20:25:55 hno Exp $
+# $Id: cf.data.pre,v 1.397 2005/09/25 20:58:23 hno Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2494,6 +2494,8 @@ DOC_START
 	  # For dstdomain and dstdom_regex a reverse lookup is tried if a IP
 	  # based URL is used and no match is found. The name "none" is used
 	  # if the reverse lookup fails.
+
+	acl aclname http_status 200 301 500- 400-403 ...     # status code in reply
 
 	acl aclname time     [day-abbrevs]  [h1:m1-h2:m2]
 	    day-abbrevs:
