@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.398 2005/09/26 20:11:31 wessels Exp $
+# $Id: cf.data.pre,v 1.399 2005/09/27 15:16:13 wessels Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -142,7 +142,7 @@ DOC_START
 
 	You may specify multiple socket addresses on multiple lines,
 	each with their own SSL certificate and/or options.
-			 
+
 	Options:
 
 	   defaultsite=	The name of the https site presented on
@@ -485,7 +485,7 @@ DOC_START
 		     sslcipher=...
 		     ssloptions=...
 		     front-end-https[=on|auto]
- 
+
   		     use 'proxy-only' to specify objects fetched
   		     from this cache should not be saved locally.
 
@@ -1143,7 +1143,7 @@ DOC_START
 	you should not change the coss block size after Squid
 	has written some objects to the cache_dir.
 
-	The coss file store has changed from 2.5. Now it uses a file 
+	The coss file store has changed from 2.5. Now it uses a file
 	called 'stripe' in the directory names in the config - and
 	this will be created by squid -z.
 
@@ -2936,7 +2936,7 @@ LOC: Config.EmailFrom
 DOC_START
 	From: email-address for mail sent when the cache dies.
 	The default is to use 'appname@unique_hostname'.
-	Default appname value is "squid", can be changed into 
+	Default appname value is "squid", can be changed into
 	src/globals.h before building squid.
 DOC_END
 
@@ -4522,7 +4522,7 @@ TYPE: onoff
 LOC: Config.onoff.balance_on_multiple_ip
 DEFAULT: on
 DOC_START
-	Some load balancing servers based on round robin DNS have been 
+	Some load balancing servers based on round robin DNS have been
 	found not to preserve user session state across requests
 	to different IP addresses.
 
