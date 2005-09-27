@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.397 2005/09/25 20:58:23 hno Exp $
+# $Id: cf.data.pre,v 1.398 2005/09/26 20:11:31 wessels Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -142,7 +142,7 @@ DOC_START
 
 	You may specify multiple socket addresses on multiple lines,
 	each with their own SSL certificate and/or options.
-			     
+			 
 	Options:
 
 	   defaultsite=	The name of the https site presented on
@@ -601,7 +601,7 @@ DOC_START
 		     use 'htcp' to send HTCP, instead of ICP, queries
 		     to the neighbor.  You probably also want to
 		     set the "icp port" to 4827 instead of 3130.
-		    
+
 		     'originserver' causes this parent peer to be contacted as
 		     a origin server. Meant to be used in accelerator setups.
 
