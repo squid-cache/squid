@@ -1,6 +1,6 @@
 
 /*
- * $Id: SquidString.h,v 1.5 2003/03/10 04:56:36 robertc Exp $
+ * $Id: SquidString.h,v 1.6 2005/09/27 20:37:42 wessels Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -84,6 +84,8 @@ public:
 
     String &operator =(char const *);
     String &operator =(String const &);
+    bool operator ==(String const &) const;
+    bool operator !=(String const &) const;
 
     _SQUID_INLINE_ int size() const;
     _SQUID_INLINE_ char const * buf() const;
@@ -103,6 +105,7 @@ public:
     _SQUID_INLINE_ const char * rpos(char const ch) const;
     _SQUID_INLINE_ int cmp (char const *) const;
     _SQUID_INLINE_ int cmp (char const *, size_t count) const;
+    _SQUID_INLINE_ int cmp (String const &) const;
     _SQUID_INLINE_ int caseCmp (char const *) const;
     _SQUID_INLINE_ int caseCmp (char const *, size_t count) const;
 
