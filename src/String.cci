@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cci,v 1.3 2003/03/06 11:51:55 robertc Exp $
+ * $Id: String.cci,v 1.4 2005/09/27 20:37:42 wessels Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -80,6 +80,12 @@ int
 String::cmp (char const *aString, size_t count) const
 {
     return strncmp(buf(), aString, count);
+}
+
+int
+String::cmp (String const &aString) const
+{
+    return strcmp(buf(), aString.buf());
 }
 
 int

@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cc,v 1.19 2005/01/03 16:08:25 robertc Exp $
+ * $Id: String.cc,v 1.20 2005/09/27 20:37:42 wessels Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -81,6 +81,24 @@ String::operator = (String const &old)
         limitInit (old.buf(), old.len_);
 
     return *this;
+}
+
+bool
+String::operator == (String const &that) const
+{
+    if (0 == this->cmp(that))
+        return true;
+
+    return false;
+}
+
+bool
+String::operator != (String const &that) const
+{
+    if (0 == this->cmp(that))
+        return false;
+
+    return true;
 }
 
 void
