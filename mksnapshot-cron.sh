@@ -42,7 +42,9 @@ make_snapshot()
     ln -s $file $dst/squid-$ver.snapshot$type
 
     # cleanup old snapshots
-    ls $dst/*-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]$type | sort -r -t- +2 | tail +$save | xargs rm -f
+    ls $dst/*-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]$type | sed -e 's/.*\(-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'$type'\)/\1/' | sort -r | tail +$save | while read f; do
+	rm -f *-$f
+    done
   done
 
   # update web page
