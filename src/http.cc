@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.460 2005/09/28 19:52:52 wessels Exp $
+ * $Id: http.cc,v 1.461 2005/09/28 20:26:27 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -81,14 +81,14 @@ httpStateFree(int fd, void *data)
     if (httpState == NULL)
         return;
 
-    if (httpState->body_buf) {
+    if (httpState->request_body_buf) {
         if (httpState->orig_request->body_connection.getRaw()) {
             clientAbortBody(httpState->orig_request);
         }
 
-        if (httpState->body_buf) {
-            memFree(httpState->body_buf, MEM_8K_BUF);
-            httpState->body_buf = NULL;
+        if (httpState->request_body_buf) {
+            memFree(httpState->request_body_buf, MEM_8K_BUF);
+            httpState->request_body_buf = NULL;
         }
     }
 
@@ -1817,7 +1817,7 @@ static void
 httpRequestBodyHandler(char *buf, ssize_t size, void *data)
 {
     HttpStateData *httpState = (HttpStateData *) data;
-    httpState->body_buf = NULL;
+    httpState->request_body_buf = NULL;
 
     if (size > 0) {
         if (httpState->flags.headers_parsed && !httpState->flags.abuse_detected) {
@@ -1876,8 +1876,8 @@ httpSendRequestEntity(int fd, char *bufnotused, size_t size, comm_err_t errflag,
         return;
     }
 
-    httpState->body_buf = (char *)memAllocate(MEM_8K_BUF);
-    clientReadBody(httpState->orig_request, httpState->body_buf, 8192, httpRequestBodyHandler, httpState);
+    httpState->request_body_buf = (char *)memAllocate(MEM_8K_BUF);
+    clientReadBody(httpState->orig_request, httpState->request_body_buf, 8192, httpRequestBodyHandler, httpState);
 }
 
 void
