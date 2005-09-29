@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.459 2005/09/17 05:50:08 wessels Exp $
+ * $Id: http.cc,v 1.460 2005/09/28 19:52:52 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -655,7 +655,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
      */
     HttpReply *reply = httpReplyCreate();
     Ctx ctx = ctx_enter(entry->mem_obj->url);
-    debug(11, 3) ("httpProcessReplyHeader: key '%s'\n",
+    debug(11, 3) ("processReplyHeader: key '%s'\n",
                   entry->getMD5Text());
 
     if (reply_hdr.isNull())
@@ -668,7 +668,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
     hdr_len = reply_hdr.size;
 
     if (hdr_len > 4 && strncmp(reply_hdr.buf, "HTTP/", 5)) {
-        debugs(11, 3, "httpProcessReplyHeader: Non-HTTP-compliant header: '" <<  reply_hdr.buf << "'");
+        debugs(11, 3, "processReplyHeader: Non-HTTP-compliant header: '" <<  reply_hdr.buf << "'");
         flags.headers_parsed = 1;
         reply_hdr.clean();
         failReply (reply, HTTP_INVALID_HEADER);
@@ -682,7 +682,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
         hdr_len = hdr_size;
 
     if (hdr_len > Config.maxReplyHeaderSize) {
-        debugs(11, 1, "httpProcessReplyHeader: Too large reply header");
+        debugs(11, 1, "processReplyHeader: Too large reply header");
 
         if (!reply_hdr.isNull())
             reply_hdr.clean();
@@ -722,7 +722,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
     httpReplyParse(reply, reply_hdr.buf, hdr_size);
 
     if (reply->sline.status >= HTTP_INVALID_HEADER) {
-        debugs(11, 3, "httpProcessReplyHeader: Non-HTTP-compliant header: '" << reply_hdr.buf << "'");
+        debugs(11, 3, "processReplyHeader: Non-HTTP-compliant header: '" << reply_hdr.buf << "'");
         failReply (reply, HTTP_INVALID_HEADER);
         ctx_exit(ctx);
         return;
@@ -748,7 +748,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
     storeTimestampsSet(entry);
 
     /* Check if object is cacheable or not based on reply code */
-    debug(11, 3) ("httpProcessReplyHeader: HTTP CODE: %d\n", entry->getReply()->sline.status);
+    debug(11, 3) ("processReplyHeader: HTTP CODE: %d\n", entry->getReply()->sline.status);
 
     if (neighbors_do_private_keys)
         httpMaybeRemovePublic(entry, entry->getReply()->sline.status);
@@ -812,7 +812,7 @@ no_cache:
             _peer->stats.n_keepalives_recv++;
 
         if (Config.onoff.detect_broken_server_pconns && httpReplyBodySize(request->method, reply) == -1) {
-            debug(11, 1) ("httpProcessReplyHeader: Impossible keep-alive header from '%s'\n", storeUrl(entry));
+            debug(11, 1) ("processReplyHeader: Impossible keep-alive header from '%s'\n", storeUrl(entry));
             debug(11, 2) ("GOT HTTP REPLY HDR:\n---------\n%s\n----------\n", reply_hdr.buf);
             flags.keepalive_broken = 1;
         }
@@ -1023,7 +1023,7 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
 
         if (!flags.headers_parsed)
             /*
-            * When we called httpProcessReplyHeader() before, we
+            * When we called processReplyHeader() before, we
             * didn't find the end of headers, but now we are
             * definately at EOF, so we want to process the reply
             * headers.
