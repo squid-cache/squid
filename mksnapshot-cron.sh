@@ -43,7 +43,7 @@ make_snapshot()
 
     # cleanup old snapshots
     ls $dst/*-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]$type | sed -e 's/.*\(-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'$type'\)/\1/' | sort -r | tail +$save | while read f; do
-	rm -f *-$f
+	rm -f $dst/*-$f
     done
   done
 
