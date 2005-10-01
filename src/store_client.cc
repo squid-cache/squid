@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.141 2005/09/17 05:50:08 wessels Exp $
+ * $Id: store_client.cc,v 1.142 2005/09/30 22:24:21 wessels Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -227,7 +227,7 @@ store_client::copy(StoreEntry * anEntry,
     assert (callback_fn);
     assert (data);
     assert(!EBIT_TEST(entry->flags, ENTRY_ABORTED));
-    debug(90, 3)("store_client::copy: %s, from %lu, for length %d, cb %p, cbdata %p",
+    debug(90, 3)("store_client::copy: %s, from %lu, for length %d, cb %p, cbdata %p\n",
                  entry->getMD5Text(),
                  (unsigned long) copyRequest.offset,
                  (int) copyRequest.length,
