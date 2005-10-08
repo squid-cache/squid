@@ -1,6 +1,6 @@
 
 /*
- * $Id: IPInterception.cc,v 1.13 2005/09/25 12:36:50 serassio Exp $
+ * $Id: IPInterception.cc,v 1.14 2005/10/08 08:39:42 serassio Exp $
  *
  * DEBUG: section 89    NAT / IP Interception 
  * AUTHOR: Robert Collins
@@ -199,7 +199,7 @@ int
 clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct sockaddr_in *dst)
 {
     static time_t last_reported = 0;
-    size_t sock_sz = sizeof(*dst);
+    socklen_t sock_sz = sizeof(*dst);
     memcpy(dst, &me, sizeof(*dst));
 
     if (getsockopt(fd, SOL_IP, SO_ORIGINAL_DST, dst, &sock_sz) != 0)
