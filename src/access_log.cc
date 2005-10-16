@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.105 2005/09/17 05:50:07 wessels Exp $
+ * $Id: access_log.cc,v 1.106 2005/10/16 14:31:25 serassio Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -461,6 +461,7 @@ struct logformat_token_table_entry logformat_token_table[] =
         /*{ "ur", LFT_USER_REALM }, */
         /*{ "us", LFT_USER_SCHEME }, */
         {"ui", LFT_USER_IDENT},
+        {"ue", LFT_USER_EXTERNAL},
 
         {"Hs", LFT_HTTP_CODE},
         /*{ "Ht", LFT_HTTP_STATUS }, */
