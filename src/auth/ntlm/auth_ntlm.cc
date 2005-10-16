@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.48 2005/09/14 17:10:39 serassio Exp $
+ * $Id: auth_ntlm.cc,v 1.49 2005/10/16 16:47:02 serassio Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins
@@ -1046,12 +1046,7 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointer 
          * challenge - release the helper and use the existing auth_user 
          * details. */
 
-        if (strncmp("NTLM ", proxy_auth, 5) == 0) {
-            ntlm_request->ntlmauthenticate = xstrdup(proxy_auth);
-        } else {
-            fatal("Incorrect scheme in auth header\n");
-            /* TODO: more fault tolerance.. reset the auth scheme here */
-        }
+        ntlm_request->ntlmauthenticate = xstrdup(proxy_auth);
 
         /* cache entries have authenticateauthheaderchallengestring */
         snprintf(ntlmhash, sizeof(ntlmhash) - 1, "%s%s",

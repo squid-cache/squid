@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.cc,v 1.4 2005/05/06 01:57:55 hno Exp $
+ * $Id: AuthUserRequest.cc,v 1.5 2005/10/16 16:47:02 serassio Exp $
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 6803fde1-d5a2-4c29-9034-1c0c9f650eb4
@@ -476,6 +476,18 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
     {
         debug(28, 9) ("authenticateAuthenticate: This is a new checklist test on FD:%d\n",
                       conn.getRaw() != NULL ? conn->fd : -1);
+
+        if (proxy_auth && !request->auth_user_request && conn.getRaw() && conn->auth_user_request) {
+            AuthScheme * id = AuthScheme::Find(proxy_auth);
+
+            if (!conn->auth_user_request->user() || AuthScheme::Find(conn->auth_user_request->user()->config->type()) != id) {
+                debug(28, 1) ("authenticateAuthenticate: Unexpected change of authentication scheme from '%s' to '%s' (client %s)\n",
+                              conn->auth_user_request->user()->config->type(), proxy_auth, inet_ntoa(src_addr));
+                conn->auth_user_request->unlock();
+                conn->auth_user_request = NULL;
+                conn->auth_type = AUTH_UNKNOWN;
+            }
+        }
 
         if ((!request->auth_user_request)
                 && (conn.getRaw() == NULL || conn->auth_type == AUTH_UNKNOWN)) {
