@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.26 2005/04/18 21:52:41 hno Exp $
+ * $Id: ACLChecklist.cc,v 1.27 2005/10/16 14:52:52 serassio Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -69,11 +69,6 @@ ACLChecklist::authenticated()
         return 0;
 
     case AUTH_AUTHENTICATED:
-
-        if (auth_user_request) {
-            auth_user_request->unlock();
-            auth_user_request = NULL;
-        }
 
         return 1;
         break;
