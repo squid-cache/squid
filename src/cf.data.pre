@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.399 2005/09/27 15:16:13 wessels Exp $
+# $Id: cf.data.pre,v 1.400 2005/10/16 19:57:41 serassio Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -121,7 +121,7 @@ DOC_START
 	visible on the internal address.
 NOCOMMENT_START
 # Squid normally listens to port 3128
-http_port 3128
+http_port @DEFAULT_HTTP_PORT@
 NOCOMMENT_END
 DOC_END
 
@@ -345,7 +345,7 @@ DOC_START
 	and from neighbor caches.  The standard UDP port for ICP is 3130.
 	Default is disabled (0).
 NOCOMMENT_START
-icp_port 3130
+icp_port @DEFAULT_ICP_PORT@
 NOCOMMENT_END
 DOC_END
 
