@@ -16,7 +16,7 @@
 
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.56 2005/08/16 00:11:25 hno Exp $
+#  $Id: Makefile.in,v 1.57 2005/10/17 00:11:27 hno Exp $
 #
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -77,6 +77,8 @@ AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 BASIC_AUTH_HELPERS = @BASIC_AUTH_HELPERS@
+CACHE_HTTP_PORT = @CACHE_HTTP_PORT@
+CACHE_ICP_PORT = @CACHE_ICP_PORT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@

@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.348 2005/09/26 00:10:46 hno Exp $
+#  $Id: Makefile.in,v 1.349 2005/10/17 00:11:34 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -570,6 +570,8 @@ AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 BASIC_AUTH_HELPERS = @BASIC_AUTH_HELPERS@
+CACHE_HTTP_PORT = @CACHE_HTTP_PORT@
+CACHE_ICP_PORT = @CACHE_ICP_PORT@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -1459,6 +1461,8 @@ libDiskThreads_a_SOURCES = \
 
 DiskIO_DiskDaemon_diskd_SOURCES = DiskIO/DiskDaemon/diskd.cc 
 DiskIO_DiskDaemon_diskd_LDADD = $(top_builddir)/lib/libmiscutil.a @XTRA_LIBS@
+DEFAULT_HTTP_PORT = @CACHE_HTTP_PORT@
+DEFAULT_ICP_PORT = @CACHE_ICP_PORT@
 DEFAULT_PREFIX = $(prefix)
 DEFAULT_CONFIG_FILE = $(sysconfdir)/squid.conf
 DEFAULT_CACHEMGR_CONFIG = $(sysconfdir)/cachemgr.conf
@@ -2902,6 +2906,8 @@ cf_gen_defines.h: $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre
 
 cf.data: cf.data.pre Makefile
 	sed "\
+	s%@DEFAULT_HTTP_PORT@%$(DEFAULT_HTTP_PORT)%g;\
+	s%@DEFAULT_ICP_PORT@%$(DEFAULT_ICP_PORT)%g;\
 	s%@DEFAULT_MIME_TABLE@%$(DEFAULT_MIME_TABLE)%g;\
 	s%@DEFAULT_DNSSERVER@%$(DEFAULT_DNSSERVER)%g;\
 	s%@DEFAULT_UNLINKD@%$(DEFAULT_UNLINKD)%g;\
