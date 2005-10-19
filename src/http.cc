@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.461 2005/09/28 20:26:27 wessels Exp $
+ * $Id: http.cc,v 1.462 2005/10/18 19:55:28 serassio Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1253,7 +1253,7 @@ httpBuildRequestHeader(HttpRequest * request,
     assert (hdr_out->owner == hoRequest);
     /* append our IMS header */
 
-    if (request->lastmod > -1 && request->method == METHOD_GET)
+    if (request->lastmod > -1)
         httpHeaderPutTime(hdr_out, HDR_IF_MODIFIED_SINCE, request->lastmod);
 
     bool we_do_ranges = decideIfWeDoRanges (orig_request);
