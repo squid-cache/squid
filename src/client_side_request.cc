@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.48 2005/09/21 16:12:46 wessels Exp $
+ * $Id: client_side_request.cc,v 1.49 2005/10/18 20:17:21 serassio Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -757,9 +757,7 @@ clientRedirectDone(void *data, char *result)
             } else {
                 debug(85, 1) ("clientRedirectDone: bad input: %s\n", result);
             }
-        }
-
-        if (strcmp(result, http->uri))
+        } else if (strcmp(result, http->uri))
             new_request = urlParse(old_request->method, result);
     }
 
@@ -865,7 +863,7 @@ ClientHttpRequest::processRequest()
     debug(85, 4) ("clientProcessRequest: %s '%s'\n",
                   RequestMethodStr[request->method], uri);
 
-    if (request->method == METHOD_CONNECT) {
+    if (request->method == METHOD_CONNECT && !redirect.status) {
         logType = LOG_TCP_MISS;
         sslStart(this, &out.size, &al.http.code);
         return;
