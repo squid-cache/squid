@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.349 2005/10/17 00:11:34 hno Exp $
+#  $Id: Makefile.in,v 1.350 2005/10/23 13:22:24 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -880,7 +880,9 @@ all_AUTHMODULES = \
 	auth/digest/digestScheme.cc \
 	auth/digest/digestScheme.h \
 	auth/ntlm/ntlmScheme.cc \
-	auth/ntlm/ntlmScheme.h 
+	auth/ntlm/ntlmScheme.h \
+	auth/negotiate/negotiateScheme.cc \
+	auth/negotiate/negotiateScheme.h 
 
 EXTRA_squid_SOURCES = \
 	$(all_FSMODULES) \
@@ -1959,6 +1961,15 @@ auth/ntlm/$(DEPDIR)/$(am__dirstamp):
 	@: > auth/ntlm/$(DEPDIR)/$(am__dirstamp)
 auth/ntlm/ntlmScheme.$(OBJEXT): auth/ntlm/$(am__dirstamp) \
 	auth/ntlm/$(DEPDIR)/$(am__dirstamp)
+auth/negotiate/$(am__dirstamp):
+	@$(mkdir_p) auth/negotiate
+	@: > auth/negotiate/$(am__dirstamp)
+auth/negotiate/$(DEPDIR)/$(am__dirstamp):
+	@$(mkdir_p) auth/negotiate/$(DEPDIR)
+	@: > auth/negotiate/$(DEPDIR)/$(am__dirstamp)
+auth/negotiate/negotiateScheme.$(OBJEXT):  \
+	auth/negotiate/$(am__dirstamp) \
+	auth/negotiate/$(DEPDIR)/$(am__dirstamp)
 squid$(EXEEXT): $(squid_OBJECTS) $(squid_DEPENDENCIES) 
 	@rm -f squid$(EXEEXT)
 	$(CXXLINK) $(squid_LDFLAGS) $(squid_OBJECTS) $(squid_LDADD) $(LIBS)
@@ -2076,6 +2087,7 @@ mostlyclean-compile:
 	-rm -f DiskIO/WriteRequest.$(OBJEXT)
 	-rm -f auth/basic/basicScheme.$(OBJEXT)
 	-rm -f auth/digest/digestScheme.$(OBJEXT)
+	-rm -f auth/negotiate/negotiateScheme.$(OBJEXT)
 	-rm -f auth/ntlm/ntlmScheme.$(OBJEXT)
 	-rm -f fs/aufs/StoreFSaufs.$(OBJEXT)
 	-rm -f fs/coss/StoreFScoss.$(OBJEXT)
@@ -2329,6 +2341,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@DiskIO/DiskThreads/$(DEPDIR)/async_io.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@auth/basic/$(DEPDIR)/basicScheme.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@auth/digest/$(DEPDIR)/digestScheme.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@auth/negotiate/$(DEPDIR)/negotiateScheme.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@auth/ntlm/$(DEPDIR)/ntlmScheme.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@fs/aufs/$(DEPDIR)/StoreFSaufs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@fs/coss/$(DEPDIR)/StoreFScoss.Po@am__quote@
@@ -2777,6 +2790,8 @@ distclean-generic:
 	-rm -f auth/basic/$(am__dirstamp)
 	-rm -f auth/digest/$(DEPDIR)/$(am__dirstamp)
 	-rm -f auth/digest/$(am__dirstamp)
+	-rm -f auth/negotiate/$(DEPDIR)/$(am__dirstamp)
+	-rm -f auth/negotiate/$(am__dirstamp)
 	-rm -f auth/ntlm/$(DEPDIR)/$(am__dirstamp)
 	-rm -f auth/ntlm/$(am__dirstamp)
 	-rm -f fs/aufs/$(DEPDIR)/$(am__dirstamp)
@@ -2804,7 +2819,7 @@ clean-am: clean-binPROGRAMS clean-checkPROGRAMS clean-generic \
 	clean-noinstPROGRAMS clean-sbinPROGRAMS mostlyclean-am
 
 distclean: distclean-recursive
-	-rm -rf ../test-suite/$(DEPDIR) ./$(DEPDIR) DiskIO/$(DEPDIR) DiskIO/AIO/$(DEPDIR) DiskIO/Blocking/$(DEPDIR) DiskIO/DiskDaemon/$(DEPDIR) DiskIO/DiskThreads/$(DEPDIR) auth/basic/$(DEPDIR) auth/digest/$(DEPDIR) auth/ntlm/$(DEPDIR) fs/aufs/$(DEPDIR) fs/coss/$(DEPDIR) fs/diskd/$(DEPDIR) fs/null/$(DEPDIR) fs/ufs/$(DEPDIR) tests/$(DEPDIR)
+	-rm -rf ../test-suite/$(DEPDIR) ./$(DEPDIR) DiskIO/$(DEPDIR) DiskIO/AIO/$(DEPDIR) DiskIO/Blocking/$(DEPDIR) DiskIO/DiskDaemon/$(DEPDIR) DiskIO/DiskThreads/$(DEPDIR) auth/basic/$(DEPDIR) auth/digest/$(DEPDIR) auth/negotiate/$(DEPDIR) auth/ntlm/$(DEPDIR) fs/aufs/$(DEPDIR) fs/coss/$(DEPDIR) fs/diskd/$(DEPDIR) fs/null/$(DEPDIR) fs/ufs/$(DEPDIR) tests/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-libtool distclean-tags
@@ -2831,7 +2846,7 @@ install-man:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-	-rm -rf ../test-suite/$(DEPDIR) ./$(DEPDIR) DiskIO/$(DEPDIR) DiskIO/AIO/$(DEPDIR) DiskIO/Blocking/$(DEPDIR) DiskIO/DiskDaemon/$(DEPDIR) DiskIO/DiskThreads/$(DEPDIR) auth/basic/$(DEPDIR) auth/digest/$(DEPDIR) auth/ntlm/$(DEPDIR) fs/aufs/$(DEPDIR) fs/coss/$(DEPDIR) fs/diskd/$(DEPDIR) fs/null/$(DEPDIR) fs/ufs/$(DEPDIR) tests/$(DEPDIR)
+	-rm -rf ../test-suite/$(DEPDIR) ./$(DEPDIR) DiskIO/$(DEPDIR) DiskIO/AIO/$(DEPDIR) DiskIO/Blocking/$(DEPDIR) DiskIO/DiskDaemon/$(DEPDIR) DiskIO/DiskThreads/$(DEPDIR) auth/basic/$(DEPDIR) auth/digest/$(DEPDIR) auth/negotiate/$(DEPDIR) auth/ntlm/$(DEPDIR) fs/aufs/$(DEPDIR) fs/coss/$(DEPDIR) fs/diskd/$(DEPDIR) fs/null/$(DEPDIR) fs/ufs/$(DEPDIR) tests/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
