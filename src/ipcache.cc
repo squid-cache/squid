@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.251 2005/04/18 21:52:42 hno Exp $
+ * $Id: ipcache.cc,v 1.252 2005/10/23 14:10:45 serassio Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -420,23 +420,24 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
     i->addrs.bad_mask = (unsigned char *)xcalloc(na, sizeof(unsigned char));
 
     for (j = 0, k = 0; k < nr; k++) {
-        if (answers[k].type != RFC1035_TYPE_A)
-            continue;
-
         if (answers[k]._class != RFC1035_CLASS_IN)
             continue;
 
-        if (answers[k].rdlength != 4)
+        if (answers[k].type == RFC1035_TYPE_A) {
+            if (answers[k].rdlength != 4)
+                continue;
+
+            xmemcpy(&i->addrs.in_addrs[j++], answers[k].rdata, 4);
+
+            debug(14, 3) ("ipcacheParse: #%d %s\n",
+                          j - 1,
+                          inet_ntoa(i->addrs.in_addrs[j - 1]));
+        } else if (answers[k].type != RFC1035_TYPE_CNAME)
             continue;
 
         if (ttl == 0 || (int) answers[k].ttl < ttl)
             ttl = answers[k].ttl;
 
-        xmemcpy(&i->addrs.in_addrs[j++], answers[k].rdata, 4);
-
-        debug(14, 3) ("ipcacheParse: #%d %s\n",
-                      j - 1,
-                      inet_ntoa(i->addrs.in_addrs[j - 1]));
     }
 
     assert(j == na);
