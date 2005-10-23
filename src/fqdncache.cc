@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.164 2005/04/18 21:52:42 hno Exp $
+ * $Id: fqdncache.cc,v 1.165 2005/10/23 14:10:45 serassio Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -362,16 +362,23 @@ fqdncacheParse(fqdncache_entry *f, rfc1035_rr * answers, int nr, const char *err
     assert(answers);
 
     for (k = 0; k < nr; k++) {
-        if (answers[k].type != RFC1035_TYPE_PTR)
-            continue;
-
         if (answers[k]._class != RFC1035_CLASS_IN)
             continue;
 
-        if (!answers[k].rdata[0])
-            continue;
+        if (answers[k].type == RFC1035_TYPE_PTR) {
+            if (!answers[k].rdata[0]) {
+                debug(35, 2) ("fqdncacheParse: blank PTR record for '%s'\n", name);
+                continue;
+            }
 
-        f->names[f->name_count++] = xstrdup(answers[k].rdata);
+            if (strchr(answers[k].rdata, ' ')) {
+                debug(35, 2) ("fqdncacheParse: invalid PTR record '%s' for '%s'\n", answers[k].rdata, name);
+                continue;
+            }
+
+            f->names[f->name_count++] = xstrdup(answers[k].rdata);
+        } else if (answers[k].type != RFC1035_TYPE_CNAME)
+            continue;
 
         if (ttl == 0 || (int) answers[k].ttl < ttl)
             ttl = answers[k].ttl;
@@ -381,8 +388,7 @@ fqdncacheParse(fqdncache_entry *f, rfc1035_rr * answers, int nr, const char *err
     }
 
     if (f->name_count == 0) {
-        debug(35, 1) ("fqdncacheParse: No PTR record\n");
-        f->error_message = xstrdup("No PTR record");
+        debug(35, 1) ("fqdncacheParse: No PTR record for '%s'\n", name);
         return 0;
     }
 

@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1035.h,v 1.15 2005/05/10 10:39:56 hno Exp $
+ * $Id: rfc1035.h,v 1.16 2005/10/23 14:10:45 serassio Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -100,6 +100,7 @@ SQUIDCEXTERN int rfc1035_errno;
 SQUIDCEXTERN const char *rfc1035_error_message;
 
 #define RFC1035_TYPE_A 1
+#define RFC1035_TYPE_CNAME 5
 #define RFC1035_TYPE_PTR 12
 #define RFC1035_CLASS_IN 1
 
