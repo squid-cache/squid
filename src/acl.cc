@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.315 2005/05/06 01:57:55 hno Exp $
+ * $Id: acl.cc,v 1.316 2005/10/23 11:55:32 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -56,10 +56,13 @@ ACL *
 ACL::FindByName(const char *name)
 {
     ACL *a;
+    debug(28, 9) ("ACL::FindByName '%s'\n",name);
 
     for (a = Config.aclList; a; a = a->next)
         if (!strcasecmp(a->name, name))
             return a;
+
+    debug(28,9) ("ACL::FindByName found no match\n");
 
     return NULL;
 }
@@ -173,20 +176,29 @@ aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name)
     acl_deny_info_list *A = NULL;
     acl_name_list *L = NULL;
 
+    debug(28,9)("aclGetDenyInfoPage: got called for %s\n",name);
+
     A = *head;
 
-    if (NULL == *head)		/* empty list */
+    if (NULL == *head) {		/* empty list */
+        debug(28,9)("aclGetDenyInfoPage: called for an empty list\n");
         return ERR_NONE;
+    }
 
     while (A) {
         L = A->acl_list;
 
-        if (NULL == L)		/* empty list should never happen, but in case */
+        if (NULL == L) {		/* empty list should never happen, but in case */
+            debug(28,3)("aclGetDenyInfoPage: "
+                        "WARNING, unexpected codepath taken\n");
             continue;
+        }
 
         while (L) {
-            if (!strcmp(name, L->name))
+            if (!strcmp(name, L->name)) {
+                debug(28,8)("aclGetDenyInfoPage: match on %s\n",name);
                 return A->err_page_id;
+            }
 
             L = L->next;
         }
@@ -194,6 +206,7 @@ aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name)
         A = A->next;
     }
 
+    debug(28,8)("aclGetDenyInfoPage: no match\n");
     return ERR_NONE;
 }
 
@@ -201,14 +214,19 @@ aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name)
 int
 aclIsProxyAuth(const char *name)
 {
+    debug(28,5)("aclIsProxyAuth: called for %s\n",name);
+
     if (NULL == name)
         return false;
 
     ACL *a;
 
-    if ((a = ACL::FindByName(name)))
+    if ((a = ACL::FindByName(name))) {
+        debug(28,5)("aclIsProxyAuth: returning %d\n",a->isProxyAuth());
         return a->isProxyAuth();
+    }
 
+    debug(28,3)("aclIsProxyAuth: WARNING, called for nonexistent ACL\n");
     return false;
 }
 
@@ -240,7 +258,7 @@ aclParseDenyInfoLine(acl_deny_info_list ** head)
     /* first expect a page name */
 
     if ((t = strtok(NULL, w_space)) == NULL) {
-        debug(28, 0) ("%s line %d: %s\n",
+        debug(28, 0) ("aclParseDenyInfoLine: %s line %d: %s\n",
                       cfg_filename, config_lineno, config_input_line);
         debug(28, 0) ("aclParseDenyInfoLine: missing 'error page' parameter.\n");
         return;
@@ -261,7 +279,7 @@ aclParseDenyInfoLine(acl_deny_info_list ** head)
     }
 
     if (A->acl_list == NULL) {
-        debug(28, 0) ("%s line %d: %s\n",
+        debug(28, 0) ("aclParseDenyInfoLine: %s line %d: %s\n",
                       cfg_filename, config_lineno, config_input_line);
         debug(28, 0) ("aclParseDenyInfoLine: deny_info line contains no ACL's, skipping\n");
         memFree(A, MEM_ACL_DENY_INFO_LIST);
@@ -285,7 +303,7 @@ aclParseAccessLine(acl_access ** head)
     /* first expect either 'allow' or 'deny' */
 
     if ((t = strtok(NULL, w_space)) == NULL) {
-        debug(28, 0) ("%s line %d: %s\n",
+        debug(28, 0) ("aclParseAccessLine: %s line %d: %s\n",
                       cfg_filename, config_lineno, config_input_line);
         debug(28, 0) ("aclParseAccessLine: missing 'allow' or 'deny'.\n");
         return;
@@ -298,7 +316,7 @@ aclParseAccessLine(acl_access ** head)
     else if (!strcmp(t, "deny"))
         A->allow = ACCESS_DENIED;
     else {
-        debug(28, 0) ("%s line %d: %s\n",
+        debug(28, 0) ("aclParseAccessLine: %s line %d: %s\n",
                       cfg_filename, config_lineno, config_input_line);
         debug(28, 0) ("aclParseAccessLine: expecting 'allow' or 'deny', got '%s'.\n", t);
         delete A;
@@ -388,8 +406,9 @@ ACL::matchForCache(ACLChecklist *checklist)
  * checked we check it and cache the result. This function is a template
  * method to support caching of multiple acl types.
  * Note that caching of time based acl's is not
- * wise in long lived caches (i.e. the auth_user proxy match cache.
+ * wise in long lived caches (i.e. the auth_user proxy match cache)
  * RBC
+ * TODO: does a dlink_list perform well enough? Kinkie
  */
 int
 ACL::cacheMatchAcl(dlink_list * cache, ACLChecklist *checklist)
@@ -402,7 +421,7 @@ ACL::cacheMatchAcl(dlink_list * cache, ACLChecklist *checklist)
         auth_match = (acl_proxy_auth_match_cache *)link->data;
 
         if (auth_match->acl_data == this) {
-            debug(28, 4) ("ACL::cacheMatchAcl: cache hit on acl '%p'\n", this);
+            debug(28, 4) ("ACL::cacheMatchAcl: cache hit on acl '%s' (%p)\n", name, this);
             return auth_match->matchrv;
         }
 
@@ -414,6 +433,7 @@ ACL::cacheMatchAcl(dlink_list * cache, ACLChecklist *checklist)
     auth_match->matchrv = matchForCache (checklist);
     auth_match->acl_data = this;
     dlinkAddTail(auth_match, &auth_match->link, cache);
+    debug(28,4)("ACL::cacheMatchAcl: miss for '%s'. Adding result %d\n",name,auth_match->matchrv);
     return auth_match->matchrv;
 }
 
@@ -423,6 +443,8 @@ aclCacheMatchFlush(dlink_list * cache)
     acl_proxy_auth_match_cache *auth_match;
     dlink_node *link, *tmplink;
     link = cache->head;
+
+    debug(28,8)("aclCacheMatchFlush called for cache %p\n",cache);
 
     while (link) {
         auth_match = (acl_proxy_auth_match_cache *)link->data;
@@ -448,20 +470,26 @@ ACL::requiresRequest() const
 int
 ACL::checklistMatches(ACLChecklist *checklist)
 {
+    int rv;
+
     if (NULL == checklist->request && requiresRequest()) {
-        debug(28, 1) ("WARNING: '%s' ACL is used but there is no"
-                      " HTTP request -- not matching.\n", name);
+        debug(28, 1) ( "ACL::checklistMatches "
+                       "WARNING: '%s' ACL is used but there is no"
+                       " HTTP request -- not matching.\n", name);
         return 0;
     }
 
     if (NULL == checklist->reply && requiresReply()) {
-        debug(28, 1) ("WARNING: '%s' ACL is used but there is no"
-                      " HTTP reply -- not matching.\n", name);
+        debug(28, 1) ( "ACL::checklistMatches "
+                       "WARNING: '%s' ACL is used but there is no"
+                       " HTTP reply -- not matching.\n", name);
         return 0;
     }
 
-    debug(28, 3) ("aclMatchAcl: checking '%s'\n", cfgline);
-    return match(checklist);
+    debug(28, 3) ("ACL::checklistMatches: checking '%s'\n", name);
+    rv= match(checklist);
+    debug(28,3) ("ACL::ChecklistMatches: result for '%s' is %d\n",name,rv);
+    return rv;
 }
 
 bool
@@ -473,9 +501,11 @@ ACLList::matches (ACLChecklist *checklist) const
                   op ? null_string : "!", _acl->name);
 
     if (_acl->checklistMatches(checklist) != op) {
+        debug(28,4)("ACLList::matches: result is false\n");
         return false;
     }
 
+    debug(28,4)("ACLList::matches: result is true\n");
     return true;
 }
 
@@ -489,6 +519,8 @@ aclDestroyAcls(ACL ** head)
 {
     ACL *next = NULL;
 
+    debug(28,8)("aclDestroyACLs: invoked\n");
+
     for (ACL *a = *head; a; a = next) {
         next = a->next;
         delete a;
@@ -499,7 +531,7 @@ aclDestroyAcls(ACL ** head)
 
 ACL::~ACL()
 {
-    debug(28, 3) ("aclDestroyAcls: '%s'\n", cfgline);
+    debug(28, 3) ("ACL::~ACL: '%s'\n", cfgline);
     safe_free(cfgline);
 }
 
@@ -507,6 +539,7 @@ void
 aclDestroyAclList(acl_list ** head)
 {
     acl_list *l;
+    debug(28,8)("aclDestroyAclList: invoked\n");
 
     for (l = *head; l; l = *head) {
         *head = l->next;
@@ -542,6 +575,8 @@ aclDestroyDenyInfoList(acl_deny_info_list ** list)
     acl_name_list *l = NULL;
     acl_name_list *l_next = NULL;
 
+    debug(28,8)("aclDestroyDenyInfoList: invoked\n");
+
     for (a = *list; a; a = a_next) {
         for (l = a->acl_list; l; l = l_next) {
             l_next = l->next;
@@ -554,13 +589,6 @@ aclDestroyDenyInfoList(acl_deny_info_list ** list)
     }
 
     *list = NULL;
-}
-
-wordlist *
-ACL::dumpGeneric () const
-{
-    debug(28, 3) ("ACL::dumpGeneric: %s type %s\n", name, typeString());
-    return dump();
 }
 
 /*
@@ -583,18 +611,25 @@ acl_access::containsPURGE() const
     acl_access const *a = this;
     acl_list *b;
 
+    debug(28,6)("acl_access::containsPURGE: invoked for '%s'\n",cfgline);
+
     for (; a; a = a->next) {
         for (b = a->aclList; b; b = b->next) {
             ACLStrategised<method_t> *tempAcl = dynamic_cast<ACLStrategised<method_t> *>(b->_acl);
 
-            if (!tempAcl)
+            if (!tempAcl) {
+                debug(28,7)("acl_access::containsPURGE: can't create tempAcl\n");
                 continue;
+            }
 
-            if (tempAcl->match(METHOD_PURGE))
+            if (tempAcl->match(METHOD_PURGE)) {
+                debug(28,6)("acl_access::containsPURGE:   returning true\n");
                 return true;
+            }
         }
     }
 
+    debug(28,6)("acl_access::containsPURGE:   returning false\n");
     return false;
 }
 
@@ -630,10 +665,15 @@ void *ACL::Prototype::Initialized;
 bool
 ACL::Prototype::Registered(char const *aType)
 {
-    for (iterator i = Registry->begin(); i != Registry->end(); ++i)
-        if (!strcmp (aType, (*i)->typeString))
-            return true;
+    debug(28,7)("ACL::Prototype::Registered: invoked for type %s\n",aType);
 
+    for (iterator i = Registry->begin(); i != Registry->end(); ++i)
+        if (!strcmp (aType, (*i)->typeString)) {
+            debug(28,7)("ACL::Prototype::Registered:    yes\n");
+            return true;
+        }
+
+    debug(28,7)("ACL::Prototype::Registered:    no\n");
     return false;
 }
 
@@ -661,9 +701,13 @@ ACL::Prototype::~Prototype()
 ACL *
 ACL::Prototype::Factory (char const *typeToClone)
 {
+    debug(28,4)("ACL::Prototype::Factory: cloning an object for type '%s'\n",typeToClone);
+
     for (iterator i = Registry->begin(); i != Registry->end(); ++i)
         if (!strcmp (typeToClone, (*i)->typeString))
             return (*i)->prototype->clone();
+
+    debug(28,4)("ACL::Prototype::Factory: cloning failed, no type '%s' available\n",typeToClone);
 
     return NULL;
 }

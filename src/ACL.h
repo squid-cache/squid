@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACL.h,v 1.13 2005/05/06 01:57:55 hno Exp $
+ * $Id: ACL.h,v 1.14 2005/10/23 11:55:31 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -76,7 +76,6 @@ public:
     virtual bool requiresRequest() const;
     virtual bool requiresReply() const;
     virtual int match(ACLChecklist * checklist) = 0;
-    virtual wordlist *dumpGeneric() const;
     virtual wordlist *dump() const = 0;
     virtual bool empty () const = 0;
     virtual bool valid () const;

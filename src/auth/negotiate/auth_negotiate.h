@@ -1,10 +1,10 @@
 /*
- * auth_ntlm.h
- * Internal declarations for the ntlm auth module
+ * auth_negotiate.h
+ * Internal declarations for the negotiate auth module
  */
 
-#ifndef __AUTH_NTLM_H__
-#define __AUTH_NTLM_H__
+#ifndef __AUTH_NEGOTIATE_H__
+#define __AUTH_NEGOTIATE_H__
 #include "authenticate.h"
 #include "AuthUser.h"
 #include "AuthUserRequest.h"
@@ -32,29 +32,29 @@ typedef struct
 
 authenticateStateData;
 
-class NTLMUser : public AuthUser
+class NegotiateUser : public AuthUser
 {
 
 public:
-    MEMPROXY_CLASS(NTLMUser);
+    MEMPROXY_CLASS(NegotiateUser);
     virtual void deleteSelf() const;
-    NTLMUser(AuthConfig *);
-    ~NTLMUser();
+    NegotiateUser(AuthConfig *);
+    ~NegotiateUser();
     dlink_list proxy_auth_list;
 };
 
-MEMPROXY_CLASS_INLINE(NTLMUser)
+MEMPROXY_CLASS_INLINE(NegotiateUser)
 
-typedef class NTLMUser ntlm_user_t;
+typedef class NegotiateUser negotiate_user_t;
 
-class AuthNTLMUserRequest : public AuthUserRequest
+class AuthNegotiateUserRequest : public AuthUserRequest
 {
 
 public:
-    MEMPROXY_CLASS(AuthNTLMUserRequest);
+    MEMPROXY_CLASS(AuthNegotiateUserRequest);
 
-    AuthNTLMUserRequest();
-    virtual ~AuthNTLMUserRequest();
+    AuthNegotiateUserRequest();
+    virtual ~AuthNegotiateUserRequest();
     virtual int authenticated() const;
     virtual void authenticate(HttpRequest * request, ConnStateData::Pointer conn, http_hdr_type type);
     virtual int module_direction();
@@ -64,7 +64,9 @@ public:
 
     virtual const AuthUser *user() const {return _theUser;}
 
-    virtual void user (AuthUser *aUser) {_theUser=dynamic_cast<NTLMUser *>(aUser);}
+    virtual void addHeader(HttpReply * rep, int accel);
+
+    virtual void user (AuthUser *aUser) {_theUser=dynamic_cast<NegotiateUser *>(aUser);}
 
     virtual const char * connLastHeader();
 
@@ -86,18 +88,18 @@ public:
 
 private:
     /* the user */
-    NTLMUser * _theUser;
+    NegotiateUser * _theUser;
 };
 
-MEMPROXY_CLASS_INLINE(AuthNTLMUserRequest)
+MEMPROXY_CLASS_INLINE(AuthNegotiateUserRequest)
 
 /* configuration runtime data */
 
-class AuthNTLMConfig : public AuthConfig
+class AuthNegotiateConfig : public AuthConfig
 {
 
 public:
-    AuthNTLMConfig::AuthNTLMConfig();
+    AuthNegotiateConfig::AuthNegotiateConfig();
     virtual bool active() const;
     virtual bool configured() const;
     virtual AuthUserRequest *decode(char const *proxy_auth);
@@ -112,6 +114,6 @@ public:
     wordlist *authenticate;
 };
 
-typedef class AuthNTLMConfig auth_ntlm_config;
+typedef class AuthNegotiateConfig auth_negotiate_config;
 
 #endif

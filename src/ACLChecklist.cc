@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.27 2005/10/16 14:52:52 serassio Exp $
+ * $Id: ACLChecklist.cc,v 1.28 2005/10/23 11:55:31 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -61,7 +61,7 @@ ACLChecklist::authenticated()
     }
 
     /* get authed here */
-    /* Note: this fills in auth_user_request when applicable (auth incomplete)*/
+    /* Note: this fills in auth_user_request when applicable */
     switch (AuthUserRequest::tryToAuthenticateAndSetAuthUser (&auth_user_request, headertype, request, conn(), src_addr)) {
 
     case AUTH_ACL_CANNOT_AUTHENTICATE:
@@ -221,6 +221,18 @@ ACLChecklist::checkCallback(allow_t answer)
     PF *callback_;
     void *cbdata_;
     debug(28, 3) ("ACLChecklist::checkCallback: %p answer=%d\n", this, answer);
+    /* During reconfigure, we can end up not finishing call
+     * sequences into the auth code */
+
+    if (auth_user_request) {
+        /* the checklist lock */
+        auth_user_request->unlock();
+        /* it might have been connection based */
+        assert(conn().getRaw() != NULL);
+        conn()->auth_user_request = NULL;
+        conn()->auth_type = AUTH_BROKEN;
+        auth_user_request = NULL;
+    }
 
     callback_ = callback;
     callback = NULL;
@@ -310,21 +322,6 @@ ACLChecklist::~ACLChecklist()
 
     if (extacl_entry)
         cbdataReferenceDone(extacl_entry);
-
-    /* During reconfigure or if authentication is used in aclCheckFast without
-     * first being authenticated in http_access we can end up not finishing call
-     * sequences into the auth code. In such case we must make sure to forget
-     * the authentication state completely
-     */
-    if (auth_user_request) {
-        /* the checklist lock */
-        auth_user_request->unlock();
-        /* it might have been connection based */
-        assert(conn().getRaw() != NULL);
-        conn()->auth_user_request = NULL;
-        conn()->auth_type = AUTH_BROKEN;
-        auth_user_request = NULL;
-    }
 
     if (request)
         requestUnlink(request);

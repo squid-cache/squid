@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.h,v 1.3 2005/05/06 01:57:55 hno Exp $
+ * $Id: AuthUserRequest.h,v 1.4 2005/10/23 11:55:31 hno Exp $
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 674533af-8b21-4641-b71a-74c4639072a0
@@ -70,7 +70,6 @@ public:
     virtual void addHeader(HttpReply * rep, int accel);
     virtual void addTrailer(HttpReply * rep, int accel);
     virtual void onConnectionClose(ConnStateData *);
-    virtual const char *connLastHeader();
     /* template method */
     virtual void module_start(RH *, void *) = 0;
     virtual AuthUser *user() {return _auth_user;}
@@ -78,8 +77,6 @@ public:
     virtual const AuthUser *user() const {return _auth_user;}
 
     virtual void user (AuthUser *aUser) {_auth_user=aUser;}
-
-public:
 
     static auth_acl_t tryToAuthenticateAndSetAuthUser(auth_user_request_t **, http_hdr_type, HttpRequest *, ConnStateData::Pointer, struct IN_ADDR);
     static void addReplyAuthHeader(HttpReply * rep, auth_user_request_t * auth_user_request, HttpRequest * request, int accelerated, int internal);
@@ -96,7 +93,6 @@ public:
     void setDenyMessage (char const *);
     char const * getDenyMessage ();
 
-
     size_t refCount() const;
 
     void lock ()
@@ -107,6 +103,8 @@ public:
     char const *username() const;
 
     AuthScheme *scheme() const;
+
+    virtual const char * connLastHeader();
 
 private:
 

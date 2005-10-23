@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.481 2005/10/02 14:28:47 serassio Exp $
+ * $Id: cache_cf.cc,v 1.482 2005/10/23 11:55:33 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -813,7 +813,7 @@ dump_acl(StoreEntry * entry, const char *name, ACL * ae)
                           name,
                           ae->name,
                           ae->typeString());
-        v = w = ae->dumpGeneric();
+        v = w = ae->dump();
 
         while (v != NULL) {
             debug(3, 3) ("dump_acl: %s %s %s\n", name, ae->name, v->key);

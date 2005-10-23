@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.69 2005/09/17 05:50:08 wessels Exp $
+ * $Id: helper.cc,v 1.70 2005/10/23 11:55:37 hno Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -935,6 +935,10 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
         char *msg = srv->rbuf;
         int i = 0;
         debug(84, 3) ("helperHandleRead: end of reply found\n");
+
+        if (t > srv->rbuf && t[-1] == '\r')
+            t[-1] = '\0';
+
         *t++ = '\0';
 
         if (hlp->concurrency) {
@@ -1029,6 +1033,10 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
     if ((t = strchr(srv->rbuf, '\n'))) {
         /* end of reply found */
         debug(84, 3) ("helperStatefulHandleRead: end of reply found\n");
+
+        if (t > srv->rbuf && t[-1] == '\r')
+            t[-1] = '\0';
+
         *t = '\0';
 
         if (cbdataReferenceValid(r->data)) {

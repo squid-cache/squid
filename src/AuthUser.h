@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUser.h,v 1.1 2004/08/30 03:28:56 robertc Exp $
+ * $Id: AuthUser.h,v 1.2 2005/10/23 11:55:31 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -62,7 +62,6 @@ public:
      * but how many requests will a single username have in parallel? */
     dlink_list requests;
 
-public:
     static void cacheInit ();
     static void CachedACLsReset();
 
