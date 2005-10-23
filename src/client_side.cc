@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.699 2005/10/23 11:55:36 hno Exp $
+ * $Id: client_side.cc,v 1.700 2005/10/23 15:50:01 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2951,7 +2951,12 @@ clientNegotiateSSL(int fd, void *data)
             /* Write out the SSL session details.. actually the call below, but
              * OpenSSL headers do strange typecasts confusing GCC.. */
             /* PEM_write_SSL_SESSION(debug_log, SSL_get_session(ssl)); */
+#if defined(OPENSSL_VERSION_NUMBER) && OPENSSL_VERSION_NUMBER >= 0x0090708FL
+            PEM_ASN1_write((id2_of_void *)i2d_SSL_SESSION, PEM_STRING_SSL_SESSION, debug_log, (char *)SSL_get_session(ssl), NULL,NULL,0,NULL,NULL);
+#else
+
             PEM_ASN1_write((int(*)())i2d_SSL_SESSION, PEM_STRING_SSL_SESSION, debug_log, (char *)SSL_get_session(ssl), NULL,NULL,0,NULL,NULL);
+#endif
             /* Note: This does not automatically fflush the log file.. */
         }
 
