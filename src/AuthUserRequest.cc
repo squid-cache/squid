@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.cc,v 1.5 2005/10/16 16:47:02 serassio Exp $
+ * $Id: AuthUserRequest.cc,v 1.6 2005/10/23 11:55:31 hno Exp $
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 6803fde1-d5a2-4c29-9034-1c0c9f650eb4
@@ -449,6 +449,7 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
      */
     if (proxy_auth && conn.getRaw() != NULL && conn->auth_user_request &&
             authenticateUserAuthenticated(conn->auth_user_request) &&
+            conn->auth_user_request->connLastHeader() != NULL &&
             strcmp(proxy_auth, conn->auth_user_request->connLastHeader()))
     {
         debug(28, 2) ("authenticateAuthenticate: DUPLICATE AUTH - authentication header on already authenticated connection!. AU %p, Current user '%s' proxy_auth %s\n", conn->auth_user_request, conn->auth_user_request->username(), proxy_auth);
@@ -478,9 +479,9 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
                       conn.getRaw() != NULL ? conn->fd : -1);
 
         if (proxy_auth && !request->auth_user_request && conn.getRaw() && conn->auth_user_request) {
-            AuthScheme * id = AuthScheme::Find(proxy_auth);
+            AuthConfig * scheme = AuthConfig::Find(proxy_auth);
 
-            if (!conn->auth_user_request->user() || AuthScheme::Find(conn->auth_user_request->user()->config->type()) != id) {
+            if (!conn->auth_user_request->user() || conn->auth_user_request->user()->config != scheme) {
                 debug(28, 1) ("authenticateAuthenticate: Unexpected change of authentication scheme from '%s' to '%s' (client %s)\n",
                               conn->auth_user_request->user()->config->type(), proxy_auth, inet_ntoa(src_addr));
                 conn->auth_user_request->unlock();
@@ -636,22 +637,8 @@ AuthUserRequest::tryToAuthenticateAndSetAuthUser(auth_user_request_t ** auth_use
     if (t && t->lastReply != AUTH_ACL_CANNOT_AUTHENTICATE
             && t->lastReply != AUTH_ACL_HELPER)
     {
-        if (!*auth_user_request) {
+        if (!*auth_user_request)
             *auth_user_request = t;
-
-            (*auth_user_request)->lock()
-
-            ;
-            //TODO: check if needed. If there's a leak, it is not
-        }
-
-        if (!request->auth_user_request) {
-            request->auth_user_request=t;
-
-            request->auth_user_request->lock()
-
-            ;
-        }
 
         return t->lastReply;
     }
@@ -765,16 +752,15 @@ void
 
 AuthUserRequest::lock()
 {
-    debug(29, 9) ("AuthUserRequest::lock: auth_user request '%p'.\n", this);
-    assert(this != NULL);
+    debug(29, 9) ("AuthUserRequest::lock: auth_user request '%p' (%ld references).\n", this, (long int) references);
+    assert(this);
     ++references;
-    debug(29, 9) ("AuthUserRequest::lock: auth_user request '%p' now at '%ld'.\n", this, (long int) references);
 }
 
 void
 AuthUserRequest::unlock()
 {
-    debug(29, 9) ("AuthUserRequest::unlock: auth_user request '%p'.\n", this);
+    debug(29, 9) ("AuthUserRequest::unlock: auth_user request '%p' (%ld references) .\n", this, (long int) references);
     assert(this != NULL);
 
     if (references > 0) {
@@ -783,11 +769,11 @@ AuthUserRequest::unlock()
         debug(29, 1) ("Attempt to lower Auth User request %p refcount below 0!\n", this);
     }
 
-    debug(29, 9) ("AuthUserRequest::unlock: auth_user_request '%p' now at '%ld'.\n", this, (long int) references);
-
-    if (references == 0)
+    if (references == 0) {
+        debug(29, 9) ("AuthUserRequest::unlock: deleting auth_user_request '%p'.\n", this);
         /* not locked anymore */
         delete this;
+    }
 }
 
 AuthScheme *

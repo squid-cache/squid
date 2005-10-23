@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.698 2005/09/17 05:50:08 wessels Exp $
+ * $Id: client_side.cc,v 1.699 2005/10/23 11:55:36 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -598,8 +598,11 @@ ConnStateData::close()
     assert(areAllContextsForThisConnection());
     freeAllContexts();
 
-    if (auth_user_request != NULL)
+    if (auth_user_request != NULL) {
+        debug(33,4)("ConnStateData::close: freeing auth_user_request '%p' (this is '%p')\n",
+                    auth_user_request,this);
         auth_user_request->onConnectionClose(this);
+    }
 }
 
 bool

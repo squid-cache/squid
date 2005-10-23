@@ -1,5 +1,5 @@
 /*
- * $Id: ACLARP.cc,v 1.18 2005/05/08 22:35:03 hno Exp $
+ * $Id: ACLARP.cc,v 1.19 2005/10/23 11:55:31 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -605,7 +605,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
 
 #else
 
-    WRITE ME;
+#error "ARP type ACL not supported on this operating system."
 
 #endif
     /*
