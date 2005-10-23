@@ -57,6 +57,11 @@ libdigest_a_AR = $(AR) $(ARFLAGS)
 libdigest_a_LIBADD =
 am_libdigest_a_OBJECTS = digest/auth_digest.$(OBJEXT)
 libdigest_a_OBJECTS = $(am_libdigest_a_OBJECTS)
+libnegotiate_a_AR = $(AR) $(ARFLAGS)
+libnegotiate_a_LIBADD =
+am_libnegotiate_a_OBJECTS = negotiate/auth_negotiate.$(OBJEXT) \
+	negotiate/negotiateScheme.$(OBJEXT)
+libnegotiate_a_OBJECTS = $(am_libnegotiate_a_OBJECTS)
 libntlm_a_AR = $(AR) $(ARFLAGS)
 libntlm_a_LIBADD =
 am_libntlm_a_OBJECTS = ntlm/auth_ntlm.$(OBJEXT)
@@ -81,9 +86,9 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(libbasic_a_SOURCES) $(libdigest_a_SOURCES) \
-	$(libntlm_a_SOURCES)
+	$(libnegotiate_a_SOURCES) $(libntlm_a_SOURCES)
 DIST_SOURCES = $(libbasic_a_SOURCES) $(libdigest_a_SOURCES) \
-	$(libntlm_a_SOURCES)
+	$(libnegotiate_a_SOURCES) $(libntlm_a_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -274,16 +279,17 @@ target_alias = @target_alias@
 
 #  Makefile for authentication modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.56 2005/10/17 00:11:35 hno Exp $
+#  $Id: Makefile.in,v 1.57 2005/10/23 13:22:25 hno Exp $
 #
 AUTOMAKE_OPTIONS = subdir-objects
 AM_CFLAGS = @SQUID_CFLAGS@
 AM_CXXFLAGS = @SQUID_CXXFLAGS@
-EXTRA_LIBRARIES = libbasic.a libdigest.a libntlm.a
+EXTRA_LIBRARIES = libbasic.a libdigest.a libntlm.a libnegotiate.a
 noinst_LIBRARIES = @AUTH_LIBS@
 libbasic_a_SOURCES = basic/auth_basic.cc basic/auth_basic.h
 libdigest_a_SOURCES = digest/auth_digest.cc digest/auth_digest.h
 libntlm_a_SOURCES = ntlm/auth_ntlm.cc ntlm/auth_ntlm.h
+libnegotiate_a_SOURCES = negotiate/auth_negotiate.cc negotiate/auth_negotiate.h negotiate/negotiateScheme.cc negotiate/negotiateScheme.h
 INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
 	-I$(top_srcdir)/src
 
@@ -347,6 +353,20 @@ libdigest.a: $(libdigest_a_OBJECTS) $(libdigest_a_DEPENDENCIES)
 	-rm -f libdigest.a
 	$(libdigest_a_AR) libdigest.a $(libdigest_a_OBJECTS) $(libdigest_a_LIBADD)
 	$(RANLIB) libdigest.a
+negotiate/$(am__dirstamp):
+	@$(mkdir_p) negotiate
+	@: > negotiate/$(am__dirstamp)
+negotiate/$(DEPDIR)/$(am__dirstamp):
+	@$(mkdir_p) negotiate/$(DEPDIR)
+	@: > negotiate/$(DEPDIR)/$(am__dirstamp)
+negotiate/auth_negotiate.$(OBJEXT): negotiate/$(am__dirstamp) \
+	negotiate/$(DEPDIR)/$(am__dirstamp)
+negotiate/negotiateScheme.$(OBJEXT): negotiate/$(am__dirstamp) \
+	negotiate/$(DEPDIR)/$(am__dirstamp)
+libnegotiate.a: $(libnegotiate_a_OBJECTS) $(libnegotiate_a_DEPENDENCIES) 
+	-rm -f libnegotiate.a
+	$(libnegotiate_a_AR) libnegotiate.a $(libnegotiate_a_OBJECTS) $(libnegotiate_a_LIBADD)
+	$(RANLIB) libnegotiate.a
 ntlm/$(am__dirstamp):
 	@$(mkdir_p) ntlm
 	@: > ntlm/$(am__dirstamp)
@@ -364,6 +384,8 @@ mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 	-rm -f basic/auth_basic.$(OBJEXT)
 	-rm -f digest/auth_digest.$(OBJEXT)
+	-rm -f negotiate/auth_negotiate.$(OBJEXT)
+	-rm -f negotiate/negotiateScheme.$(OBJEXT)
 	-rm -f ntlm/auth_ntlm.$(OBJEXT)
 
 distclean-compile:
@@ -371,6 +393,8 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@basic/$(DEPDIR)/auth_basic.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@digest/$(DEPDIR)/auth_digest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@negotiate/$(DEPDIR)/auth_negotiate.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@negotiate/$(DEPDIR)/negotiateScheme.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ntlm/$(DEPDIR)/auth_ntlm.Po@am__quote@
 
 .cc.o:
@@ -510,6 +534,8 @@ distclean-generic:
 	-rm -f basic/$(am__dirstamp)
 	-rm -f digest/$(DEPDIR)/$(am__dirstamp)
 	-rm -f digest/$(am__dirstamp)
+	-rm -f negotiate/$(DEPDIR)/$(am__dirstamp)
+	-rm -f negotiate/$(am__dirstamp)
 	-rm -f ntlm/$(DEPDIR)/$(am__dirstamp)
 	-rm -f ntlm/$(am__dirstamp)
 
@@ -522,7 +548,7 @@ clean-am: clean-generic clean-libtool clean-noinstLIBRARIES \
 	mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf basic/$(DEPDIR) digest/$(DEPDIR) ntlm/$(DEPDIR)
+	-rm -rf basic/$(DEPDIR) digest/$(DEPDIR) negotiate/$(DEPDIR) ntlm/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-libtool distclean-tags
@@ -548,7 +574,7 @@ install-man:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf basic/$(DEPDIR) digest/$(DEPDIR) ntlm/$(DEPDIR)
+	-rm -rf basic/$(DEPDIR) digest/$(DEPDIR) negotiate/$(DEPDIR) ntlm/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
