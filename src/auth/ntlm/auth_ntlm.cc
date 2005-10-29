@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.50 2005/10/23 11:55:38 hno Exp $
+ * $Id: auth_ntlm.cc,v 1.51 2005/10/28 18:32:17 serassio Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -479,8 +479,7 @@ AuthNTLMUserRequest::module_start(RH * handler, void *data)
 
     r = cbdataAlloc(authenticateStateData);
     r->handler = handler;
-    cbdataReference(data);
-    r->data = data;
+    r->data = cbdataReference(data);
     r->auth_user_request = this;
 
     lock()
