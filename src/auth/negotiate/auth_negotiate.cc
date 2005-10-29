@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_negotiate.cc,v 1.1 2005/10/23 11:55:38 hno Exp $
+ * $Id: auth_negotiate.cc,v 1.2 2005/10/28 18:19:57 serassio Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -440,7 +440,7 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
 
         negotiate_request->auth_state = AUTHENTICATE_STATE_IN_PROGRESS;
 
-        auth_user_request->denyMessage("Authenication in progress");
+        auth_user_request->denyMessage("Authentication in progress");
 
         debug(29, 4) ("authenticateNegotiateHandleReply: Need to challenge the client with a server blob '%s'\n", blob);
 
