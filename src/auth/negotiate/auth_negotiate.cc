@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_negotiate.cc,v 1.2 2005/10/28 18:19:57 serassio Exp $
+ * $Id: auth_negotiate.cc,v 1.3 2005/10/28 18:32:17 serassio Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -543,8 +543,7 @@ AuthNegotiateUserRequest::module_start(RH * handler, void *data)
 
     r = cbdataAlloc(authenticateStateData);
     r->handler = handler;
-    cbdataReference(data);
-    r->data = data;
+    r->data = cbdataReference(data);
     r->auth_user_request = this;
 
     lock()
