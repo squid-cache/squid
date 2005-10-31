@@ -152,6 +152,7 @@ NEED_OWN_MD5_FALSE = @NEED_OWN_MD5_FALSE@
 NEED_OWN_MD5_TRUE = @NEED_OWN_MD5_TRUE@
 NEED_OWN_SNPRINTF_FALSE = @NEED_OWN_SNPRINTF_FALSE@
 NEED_OWN_SNPRINTF_TRUE = @NEED_OWN_SNPRINTF_TRUE@
+NEGOTIATE_AUTH_HELPERS = @NEGOTIATE_AUTH_HELPERS@
 NTLM_AUTH_HELPERS = @NTLM_AUTH_HELPERS@
 OBJEXT = @OBJEXT@
 OPT_DEFAULT_HOSTS = @OPT_DEFAULT_HOSTS@
@@ -241,7 +242,7 @@ sharedstatedir = @sharedstatedir@
 subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-SUBDIRS = basic_auth ntlm_auth digest_auth external_acl
+SUBDIRS = basic_auth ntlm_auth digest_auth negotiate_auth external_acl
 all: all-recursive
 
 .SUFFIXES:

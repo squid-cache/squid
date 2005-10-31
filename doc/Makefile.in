@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.52 2005/10/17 00:10:52 hno Exp $
+#  $Id: Makefile.in,v 1.53 2005/10/31 01:10:43 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -155,6 +155,7 @@ NEED_OWN_MD5_FALSE = @NEED_OWN_MD5_FALSE@
 NEED_OWN_MD5_TRUE = @NEED_OWN_MD5_TRUE@
 NEED_OWN_SNPRINTF_FALSE = @NEED_OWN_SNPRINTF_FALSE@
 NEED_OWN_SNPRINTF_TRUE = @NEED_OWN_SNPRINTF_TRUE@
+NEGOTIATE_AUTH_HELPERS = @NEGOTIATE_AUTH_HELPERS@
 NTLM_AUTH_HELPERS = @NTLM_AUTH_HELPERS@
 OBJEXT = @OBJEXT@
 OPT_DEFAULT_HOSTS = @OPT_DEFAULT_HOSTS@

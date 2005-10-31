@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-#  $Id: Makefile.in,v 1.108 2005/10/17 00:11:30 hno Exp $
+#  $Id: Makefile.in,v 1.109 2005/10/31 01:11:19 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -84,6 +84,10 @@ libregex_a_AR = $(AR) $(ARFLAGS)
 libregex_a_LIBADD =
 am_libregex_a_OBJECTS = GNUregex.$(OBJEXT)
 libregex_a_OBJECTS = $(am_libregex_a_OBJECTS)
+libsspwin32_a_AR = $(AR) $(ARFLAGS)
+libsspwin32_a_LIBADD =
+am_libsspwin32_a_OBJECTS = sspwin32.$(OBJEXT)
+libsspwin32_a_OBJECTS = $(am_libsspwin32_a_OBJECTS)
 am__tests_testAll_SOURCES_DIST = tests/testArray.cc tests/testMain.cc \
 	tests/testArray.h Profiler.c util.c
 am_tests_testAll_OBJECTS = testArray.$(OBJEXT) testMain.$(OBJEXT) \
@@ -112,11 +116,13 @@ CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(libdlmalloc_a_SOURCES) $(libmiscutil_a_SOURCES) \
 	$(EXTRA_libmiscutil_a_SOURCES) $(libntlmauth_a_SOURCES) \
-	$(libregex_a_SOURCES) $(tests_testAll_SOURCES)
+	$(libregex_a_SOURCES) $(libsspwin32_a_SOURCES) \
+	$(tests_testAll_SOURCES)
 DIST_SOURCES = $(libdlmalloc_a_SOURCES) \
 	$(am__libmiscutil_a_SOURCES_DIST) \
 	$(EXTRA_libmiscutil_a_SOURCES) $(libntlmauth_a_SOURCES) \
-	$(libregex_a_SOURCES) $(am__tests_testAll_SOURCES_DIST)
+	$(libregex_a_SOURCES) $(libsspwin32_a_SOURCES) \
+	$(am__tests_testAll_SOURCES_DIST)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-exec-recursive install-info-recursive \
@@ -221,6 +227,7 @@ NEED_OWN_MD5_FALSE = @NEED_OWN_MD5_FALSE@
 NEED_OWN_MD5_TRUE = @NEED_OWN_MD5_TRUE@
 NEED_OWN_SNPRINTF_FALSE = @NEED_OWN_SNPRINTF_FALSE@
 NEED_OWN_SNPRINTF_TRUE = @NEED_OWN_SNPRINTF_TRUE@
+NEGOTIATE_AUTH_HELPERS = @NEGOTIATE_AUTH_HELPERS@
 NTLM_AUTH_HELPERS = @NTLM_AUTH_HELPERS@
 OBJEXT = @OBJEXT@
 OPT_DEFAULT_HOSTS = @OPT_DEFAULT_HOSTS@
@@ -320,14 +327,18 @@ AM_CXXFLAGS = @SQUID_CXXFLAGS@
 @NEED_OWN_SNPRINTF_TRUE@SNPRINTFSOURCE = snprintf.c
 @NEED_OWN_MD5_FALSE@MD5SOURCE = 
 @NEED_OWN_MD5_TRUE@MD5SOURCE = md5.c
+@ENABLE_WIN32SPECIFIC_FALSE@LIBSSPWIN32 = 
+@ENABLE_WIN32SPECIFIC_TRUE@LIBSSPWIN32 = libsspwin32.a
 EXTRA_LIBRARIES = \
 	libdlmalloc.a \
-	libregex.a
+	libregex.a \
+	libsspwin32.a
 
 noinst_LIBRARIES = \
 	@LIBDLMALLOC@ \
 	libmiscutil.a \
 	libntlmauth.a \
+	$(LIBSSPWIN32) \
 	@LIBREGEX@
 
 EXTRA_libmiscutil_a_SOURCES = \
@@ -374,6 +385,9 @@ libntlmauth_a_SOURCES = \
 
 libntlmauth_a_LIBADD = \
 	@LIBOBJS@
+
+libsspwin32_a_SOURCES = \
+	sspwin32.c
 
 INCLUDES = -I$(top_builddir)/include -I$(top_srcdir)/include @SQUID_CPPUNIT_INC@
 TESTS = $(check_PROGRAMS)
@@ -435,6 +449,10 @@ libregex.a: $(libregex_a_OBJECTS) $(libregex_a_DEPENDENCIES)
 	-rm -f libregex.a
 	$(libregex_a_AR) libregex.a $(libregex_a_OBJECTS) $(libregex_a_LIBADD)
 	$(RANLIB) libregex.a
+libsspwin32.a: $(libsspwin32_a_OBJECTS) $(libsspwin32_a_DEPENDENCIES) 
+	-rm -f libsspwin32.a
+	$(libsspwin32_a_AR) libsspwin32.a $(libsspwin32_a_OBJECTS) $(libsspwin32_a_LIBADD)
+	$(RANLIB) libsspwin32.a
 
 clean-checkPROGRAMS:
 	@list='$(check_PROGRAMS)'; for p in $$list; do \
@@ -480,6 +498,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rfc2617.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/safe_inet_addr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/snprintf.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sspwin32.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stub_memaccount.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testArray.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testMain.Po@am__quote@
