@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-#  $Id: Makefile.am,v 1.17 2004/12/22 11:23:16 hno Exp $
+#  $Id: Makefile.am,v 1.18 2005/10/30 21:48:22 serassio Exp $
 #
 
 DIST_SUBDIRS = libTrie cppunit-1.10.0
@@ -29,13 +29,21 @@ else
 MD5SOURCE=
 endif
 
+if ENABLE_WIN32SPECIFIC
+LIBSSPWIN32=libsspwin32.a
+else
+LIBSSPWIN32=
+endif
+
 EXTRA_LIBRARIES = \
 	libdlmalloc.a \
-	libregex.a
+	libregex.a \
+	libsspwin32.a
 noinst_LIBRARIES = \
 	@LIBDLMALLOC@ \
 	libmiscutil.a \
 	libntlmauth.a \
+	$(LIBSSPWIN32) \
 	@LIBREGEX@
 EXTRA_libmiscutil_a_SOURCES = \
 	md5.c \
@@ -75,6 +83,8 @@ libntlmauth_a_SOURCES = \
 	ntlmauth.c
 libntlmauth_a_LIBADD = \
 	@LIBOBJS@
+libsspwin32_a_SOURCES = \
+	sspwin32.c
 
 INCLUDES	= -I$(top_builddir)/include -I$(top_srcdir)/include @SQUID_CPPUNIT_INC@
 ##FIXME - set these in configure.in and reuse
