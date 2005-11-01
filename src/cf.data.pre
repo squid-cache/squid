@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.401 2005/10/23 11:55:33 hno Exp $
+# $Id: cf.data.pre,v 1.402 2005/11/01 11:41:21 serassio Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1606,7 +1606,7 @@ DOC_START
 	- Un*X & Linux:    /etc/hosts
 	- Windows NT/2000: %SystemRoot%\system32\drivers\etc\hosts
 	                   (%SystemRoot% value install default is c:\winnt)
-	- Windows XP:      %SystemRoot%\system32\drivers\etc\hosts
+	- Windows XP/2003: %SystemRoot%\system32\drivers\etc\hosts
 	                   (%SystemRoot% value install default is c:\windows)
 	- Windows 9x/Me:   %windir%\hosts
 	                   (%windir% value is usually c:\windows)
