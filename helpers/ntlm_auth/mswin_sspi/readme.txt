@@ -32,25 +32,15 @@ Local Groups, not Domain Local Groups.
 Better group checking is available with External Acl, see mswin_check_group
 documentation.
 
-The use of NTLM NEGOTIATE packet allow full NTLM/NTLMv2 support, but
-Squid too must be configured to use NTLM NEGOTIATE, see squid.conf.
-
 Squid.conf typical minimal required changes:
 
 auth_param ntlm program c:/squid/libexec/mswin_ntlm_auth.exe
 auth_param ntlm children 5
-auth_param ntlm max_challenge_reuses 0
-auth_param ntlm max_challenge_lifetime 2 minutes
-auth_param ntlm use_ntlm_negotiate on
 
 acl password proxy_auth REQUIRED
 
 http_access allow password
 http_access deny all
-
-When using "use_ntlm_negotiate on" 
-max_challenge_reuses and max_challenge_lifetime parameters must be specified
-but they are are ignored.
 
 Refer to Squid documentation for more details.
 
