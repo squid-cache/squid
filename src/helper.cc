@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.70 2005/10/23 11:55:37 hno Exp $
+ * $Id: helper.cc,v 1.71 2005/11/01 14:04:25 serassio Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -550,6 +550,8 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp)
     helper_stateful_server *srv;
     dlink_node *link;
     double tt;
+    storeAppendPrintf(sentry, "program: %s\n",
+                      hlp->cmdline->key);
     storeAppendPrintf(sentry, "number running: %d of %d\n",
                       hlp->n_running, hlp->n_to_start);
     storeAppendPrintf(sentry, "requests sent: %d\n",
