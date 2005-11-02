@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.403 2005/11/01 17:47:43 serassio Exp $
+# $Id: cf.data.pre,v 1.404 2005/11/01 19:26:36 serassio Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1908,7 +1908,7 @@ DOC_START
 	of type proxy_auth active.  By default, the negotiate authenticator_program
 	is not used.
 	The only supported program for this role is the ntlm_auth
-	program distributed as part of Samba, version 3 or later.
+	program distributed as part of Samba, version 4 or later.
 
 	auth_param negotiate program @DEFAULT_PREFIX@/bin/ntlm_auth --helper-protocol=gss-spnego
 
@@ -1932,12 +1932,12 @@ DOC_START
 
 NOCOMMENT_START
 #Recommended minimum configuration:
-#auth_param ntlm program <uncomment and complete this line to activate>
-#auth_param ntlm children 5
-#auth_param ntlm keep_alive on
 #auth_param negotiate program <uncomment and complete this line to activate>
 #auth_param negotiate children 5
 #auth_param negotiate keep_alive on
+#auth_param ntlm program <uncomment and complete this line to activate>
+#auth_param ntlm children 5
+#auth_param ntlm keep_alive on
 #auth_param digest program <uncomment and complete this line>
 #auth_param digest children 5
 #auth_param digest realm Squid proxy-caching web server
