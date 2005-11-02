@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.83 2005/09/25 20:25:56 hno Exp $
+ * $Id: dns_internal.cc,v 1.84 2005/11/01 21:05:16 serassio Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -156,7 +156,9 @@ static hash_table *idns_lookup_hash = NULL;
 
 static OBJH idnsStats;
 static void idnsAddNameserver(const char *buf);
+#ifndef _SQUID_MSWIN_
 static void idnsAddPathComponent(const char *buf);
+#endif
 static void idnsFreeNameservers(void);
 static void idnsFreeSearchpath(void);
 static void idnsParseNameservers(void);
@@ -222,6 +224,7 @@ idnsAddNameserver(const char *buf)
     nns++;
 }
 
+#ifndef _SQUID_MSWIN_
 static void
 idnsAddPathComponent(const char *buf)
 {
@@ -249,6 +252,8 @@ idnsAddPathComponent(const char *buf)
                   npc, searchpath[npc].domain);
     npc++;
 }
+
+#endif
 
 static void
 idnsFreeNameservers(void)
