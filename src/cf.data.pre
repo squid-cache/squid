@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.402 2005/11/01 11:41:21 serassio Exp $
+# $Id: cf.data.pre,v 1.403 2005/11/01 17:47:43 serassio Exp $
 #
 #
 # SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1865,7 +1865,6 @@ DOC_START
 	an incorrect request digest in POST requests when reusing
 	the same nonce as acquired earlier on a GET request.
 
-
 	=== NTLM scheme options follow ===
 
 	"program" cmdline
@@ -1885,7 +1884,17 @@ DOC_START
 	down. When credential verifications are done via a (slow)
 	network you are likely to need lots of authenticator
 	processes.
+
 	auth_param ntlm children 5
+
+	"keep_alive" on|off
+	If you experience problems with PUT/POST requests when using the
+	Negotiate authentication scheme then you can try setting this to
+	off. This will cause Squid to forcibly close the connection on
+	the initial requests where the browser asks which schemes are
+	supported by the proxy.
+
+	auth_param ntlm keep_alive on
 
 	=== Options for configuring the NEGOTIATE auth-scheme follow ===
 
@@ -1925,6 +1934,7 @@ NOCOMMENT_START
 #Recommended minimum configuration:
 #auth_param ntlm program <uncomment and complete this line to activate>
 #auth_param ntlm children 5
+#auth_param ntlm keep_alive on
 #auth_param negotiate program <uncomment and complete this line to activate>
 #auth_param negotiate children 5
 #auth_param negotiate keep_alive on
