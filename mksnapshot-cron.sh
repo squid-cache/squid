@@ -73,7 +73,7 @@ mv -f /server/httpd/htdocs/squid-cache.org/SPONSORS.new /server/httpd/htdocs/squ
 #make_snapshot ../commit/squid/mksnapshot.sh SQUID_3_0 v3 3.0 3
 make_snapshot ../commit/squid/mksnapshot.sh HEAD v3 3.0 3
 
-#../commit/bootstrap squid-2
+../commit/bootstrap squid-2
 #make_snapshot ../commit/squid-2/mksnapshot.sh HEAD v2 2.6 6
 
 ../commit/bootstrap squid-2.5
