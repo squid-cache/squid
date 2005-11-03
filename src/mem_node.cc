@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_node.cc,v 1.7 2005/09/14 18:23:21 wessels Exp $
+ * $Id: mem_node.cc,v 1.8 2005/11/02 22:19:22 serassio Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -49,7 +49,7 @@ static int
 makeMemNodeDataOffset()
 {
     mem_node *p = 0L;
-    return int(&p->data);
+    return int(ptrdiff_t(&p->data));
 }
 
 /*
