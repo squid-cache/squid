@@ -1,6 +1,6 @@
 
 /*
- * $Id: cf_gen.cc,v 1.55 2005/09/17 03:42:20 wessels Exp $
+ * $Id: cf_gen.cc,v 1.56 2005/11/02 23:14:42 hno Exp $
  *
  * DEBUG: none          Generate squid.conf.default and cf_parser.h
  * AUTHOR: Max Okumoto
@@ -48,32 +48,8 @@
  *			 administrator.
  *****************************************************************************/
 
-#include "config.h"
+#include "squid.h"
 #include "cf_gen_defines.h"
-
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
-#ifdef _SQUID_WIN32_
-#include <io.h>
-#endif
-#if HAVE_FCNTL_H
-#include <fcntl.h>
-#endif
-
-#include "util.h"
 
 #define MAX_LINE	1024	/* longest configuration line */
 #define _PATH_PARSER		"cf_parser.h"
@@ -760,13 +736,13 @@ gen_conf(Entry * head, FILE * fp)
         }
 
         if (entry->default_value && strcmp(entry->default_value, "none") != 0) {
-            sprintf(buf, "%s %s", entry->name, entry->default_value);
+            snprintf(buf, sizeof(buf), "%s %s", entry->name, entry->default_value);
             lineAdd(&def, buf);
         }
 
         if (entry->default_if_none) {
             for (line = entry->default_if_none; line; line = line->next) {
-                sprintf(buf, "%s %s", entry->name, line->data);
+                snprintf(buf, sizeof(buf), "%s %s", entry->name, line->data);
                 lineAdd(&def, buf);
             }
         }
