@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.114 2005/11/02 23:14:41 hno Exp $
+#  $Id: Makefile.am,v 1.115 2005/11/03 20:03:29 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -191,7 +191,7 @@ libexec_PROGRAMS = \
 	$(UNLINKD) \
 	cachemgr$(CGIEXT)
 
-cf_gen_SOURCES = cf_gen.cc defines.h debug.c
+cf_gen_SOURCES = cf_gen.cc defines.h debug.cc
 nodist_cf_gen_SOURCES = globals.cc
 nodist_cf_gen_HEADER = cf_gen_defines.h
 cf_gen.$(OBJEXT): cf_gen_defines.h
