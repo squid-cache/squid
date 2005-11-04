@@ -1,6 +1,6 @@
 
 /*
- * $Id: cf_gen.cc,v 1.56 2005/11/02 23:14:42 hno Exp $
+ * $Id: cf_gen.cc,v 1.57 2005/11/03 20:21:57 serassio Exp $
  *
  * DEBUG: none          Generate squid.conf.default and cf_parser.h
  * AUTHOR: Max Okumoto
@@ -110,6 +110,19 @@ static void gen_dump(Entry *, FILE *);
 static void gen_free(Entry *, FILE *);
 static void gen_conf(Entry *, FILE *);
 static void gen_default_if_none(Entry *, FILE *);
+
+time_t
+getCurrentTime(void)
+{
+#if GETTIMEOFDAY_NO_TZP
+    gettimeofday(&current_time);
+#else
+
+    gettimeofday(&current_time, NULL);
+#endif
+
+    return squid_curtime = current_time.tv_sec;
+}
 
 static void
 lineAdd(Line ** L, const char *str)
