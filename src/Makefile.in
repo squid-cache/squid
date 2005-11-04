@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.351 2005/10/31 01:11:24 hno Exp $
+#  $Id: Makefile.in,v 1.352 2005/11/03 20:06:31 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -115,8 +115,9 @@ am_cachemgr__CGIEXT__OBJECTS = cachemgr.$(OBJEXT)
 cachemgr__CGIEXT__OBJECTS = $(am_cachemgr__CGIEXT__OBJECTS)
 cachemgr__CGIEXT__LDADD = $(LDADD)
 cachemgr__CGIEXT__DEPENDENCIES =
-am_cf_gen_OBJECTS = cf_gen.$(OBJEXT)
-cf_gen_OBJECTS = $(am_cf_gen_OBJECTS)
+am_cf_gen_OBJECTS = cf_gen.$(OBJEXT) debug.$(OBJEXT)
+nodist_cf_gen_OBJECTS = globals.$(OBJEXT)
+cf_gen_OBJECTS = $(am_cf_gen_OBJECTS) $(nodist_cf_gen_OBJECTS)
 cf_gen_LDADD = $(LDADD)
 cf_gen_DEPENDENCIES =
 am_dnsserver_OBJECTS = dnsserver.$(OBJEXT) SquidNew.$(OBJEXT)
@@ -515,14 +516,15 @@ SOURCES = $(libAIO_a_SOURCES) $(libBlocking_a_SOURCES) \
 	$(libDiskDaemon_a_SOURCES) $(libDiskThreads_a_SOURCES) \
 	$(DiskIO_DiskDaemon_diskd_SOURCES) \
 	$(cachemgr__CGIEXT__SOURCES) $(cf_gen_SOURCES) \
-	$(dnsserver_SOURCES) $(pinger_SOURCES) \
-	$(nodist_pinger_SOURCES) $(recv_announce_SOURCES) \
-	$(squid_SOURCES) $(EXTRA_squid_SOURCES) \
-	$(nodist_squid_SOURCES) $(squidclient_SOURCES) \
-	$(tests_testAuth_SOURCES) $(tests_testCoss_SOURCES) \
-	$(tests_testNull_SOURCES) $(tests_testStore_SOURCES) \
-	$(tests_testUfs_SOURCES) $(ufsdump_SOURCES) \
-	$(nodist_ufsdump_SOURCES) $(unlinkd_SOURCES)
+	$(nodist_cf_gen_SOURCES) $(dnsserver_SOURCES) \
+	$(pinger_SOURCES) $(nodist_pinger_SOURCES) \
+	$(recv_announce_SOURCES) $(squid_SOURCES) \
+	$(EXTRA_squid_SOURCES) $(nodist_squid_SOURCES) \
+	$(squidclient_SOURCES) $(tests_testAuth_SOURCES) \
+	$(tests_testCoss_SOURCES) $(tests_testNull_SOURCES) \
+	$(tests_testStore_SOURCES) $(tests_testUfs_SOURCES) \
+	$(ufsdump_SOURCES) $(nodist_ufsdump_SOURCES) \
+	$(unlinkd_SOURCES)
 DIST_SOURCES = $(libAIO_a_SOURCES) $(libBlocking_a_SOURCES) \
 	$(libDiskDaemon_a_SOURCES) $(libDiskThreads_a_SOURCES) \
 	$(DiskIO_DiskDaemon_diskd_SOURCES) \
@@ -845,7 +847,8 @@ noinst_LIBRARIES = @DISK_LIBS@
 INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include \
 	-I$(top_srcdir)/include -I$(top_srcdir)/lib/libTrie/include \
 	@SQUID_CPPUNIT_INC@ $(am__empty)
-cf_gen_SOURCES = cf_gen.cc defines.h
+cf_gen_SOURCES = cf_gen.cc defines.h debug.cc
+nodist_cf_gen_SOURCES = globals.cc
 nodist_cf_gen_HEADER = cf_gen_defines.h
 squidclient_SOURCES = client.cc
 cachemgr__CGIEXT__SOURCES = cachemgr.cc
