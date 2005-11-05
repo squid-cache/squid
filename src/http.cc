@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.462 2005/10/18 19:55:28 serassio Exp $
+ * $Id: http.cc,v 1.463 2005/11/04 20:23:18 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1448,7 +1448,8 @@ httpBuildRequestHeader(HttpRequest * request,
     }
 
     /* Now mangle the headers. */
-    httpHdrMangleList(hdr_out, request, ROR_REQUEST);
+    if (Config2.onoff.mangle_headers)
+        httpHdrMangleList(hdr_out, request, ROR_REQUEST);
 
     strConnection.clean();
 }
