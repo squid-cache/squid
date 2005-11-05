@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.50 2005/09/17 05:50:07 wessels Exp $
+ * $Id: HttpHeaderTools.cc,v 1.51 2005/11/04 20:23:18 wessels Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -554,4 +554,19 @@ httpHdrMangleList(HttpHeader * l, HttpRequest * request, int req_or_rep)
     while ((e = httpHeaderGetEntry(l, &p)))
         if (0 == httpHdrMangle(e, request, req_or_rep))
             httpHeaderDelAt(l, p);
+}
+
+/*
+ * return 1 if manglers are configured.  Used to set a flag
+ * for optimization during request forwarding.
+ */
+int
+httpHdrManglersConfigured()
+{
+    for (int i = 0; i < HDR_ENUM_END; i++) {
+        if (NULL != Config.request_header_access[i].access_list)
+            return 1;
+    }
+
+    return 0;
 }
