@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.51 2005/11/04 20:23:18 wessels Exp $
+ * $Id: HttpHeaderTools.cc,v 1.52 2005/11/04 20:27:31 wessels Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -561,7 +561,7 @@ httpHdrMangleList(HttpHeader * l, HttpRequest * request, int req_or_rep)
  * for optimization during request forwarding.
  */
 int
-httpHdrManglersConfigured()
+httpReqHdrManglersConfigured()
 {
     for (int i = 0; i < HDR_ENUM_END; i++) {
         if (NULL != Config.request_header_access[i].access_list)

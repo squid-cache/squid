@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.484 2005/11/04 20:23:18 wessels Exp $
+ * $Id: cache_cf.cc,v 1.485 2005/11/04 20:27:31 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -601,7 +601,7 @@ configDoConfigure(void)
     if (aclPurgeMethodInUse(Config.accessList.http))
         Config2.onoff.enable_purge = 1;
 
-    Config2.onoff.mangle_headers = httpHdrManglersConfigured();
+    Config2.onoff.mangle_request_headers = httpReqHdrManglersConfigured();
 
     if (geteuid() == 0) {
         if (NULL != Config.effectiveUser) {
