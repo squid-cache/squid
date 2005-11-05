@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.464 2005/11/04 20:27:31 wessels Exp $
+ * $Id: http.cc,v 1.465 2005/11/05 00:08:32 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -653,7 +653,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
     /* Creates a blank header. If this routine is made incremental, this will
      * not do 
      */
-    HttpReply *reply = httpReplyCreate();
+    HttpReply *reply = new HttpReply;
     Ctx ctx = ctx_enter(entry->mem_obj->url);
     debug(11, 3) ("processReplyHeader: key '%s'\n",
                   entry->getMD5Text());
@@ -701,7 +701,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
         if (eof)
             hdr_size = hdr_len;
         else {
-            httpReplyDestroy(reply);
+            delete reply;
             ctx_exit(ctx);
             return;		/* headers not complete */
         }
@@ -719,7 +719,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
 
     /* Parse headers into reply structure */
     /* what happens if we fail to parse here? */
-    httpReplyParse(reply, reply_hdr.buf, hdr_size);
+    reply->parse(reply_hdr.buf, hdr_size);
 
     if (reply->sline.status >= HTTP_INVALID_HEADER) {
         debugs(11, 3, "processReplyHeader: Non-HTTP-compliant header: '" << reply_hdr.buf << "'");
@@ -811,7 +811,7 @@ no_cache:
         if (_peer)
             _peer->stats.n_keepalives_recv++;
 
-        if (Config.onoff.detect_broken_server_pconns && httpReplyBodySize(request->method, reply) == -1) {
+        if (Config.onoff.detect_broken_server_pconns && reply->bodySize(request->method) == -1) {
             debug(11, 1) ("processReplyHeader: Impossible keep-alive header from '%s'\n", storeUrl(entry));
             debug(11, 2) ("GOT HTTP REPLY HDR:\n---------\n%s\n----------\n", reply_hdr.buf);
             flags.keepalive_broken = 1;
@@ -896,7 +896,7 @@ HttpStateData::persistentConnStatus() const
     if (!flags.headers_parsed)
         return INCOMPLETE_MSG;
 
-    clen = httpReplyBodySize(request->method, reply);
+    clen = reply->bodySize(request->method);
 
     /* If there is no message body, we can be persistent */
     if (0 == clen)

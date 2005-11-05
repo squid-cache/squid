@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.142 2005/09/30 22:24:21 wessels Exp $
+ * $Id: store_client.cc,v 1.143 2005/11/05 00:08:33 wessels Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -477,11 +477,14 @@ storeClientReadBody(void *data, const char *buf, ssize_t len)
     assert(sc->_callback.pending());
     debug(90, 3)("storeClientReadBody: len %d", (int) len);
 
-    if (sc->copyInto.offset == 0 && len > 0 && sc->entry->getReply()->sline.status == 0)
+    if (sc->copyInto.offset == 0 && len > 0 && sc->entry->getReply()->sline.status == 0) {
         /* Our structure ! */
-        if (!httpReplyParse((HttpReply *)sc->entry->getReply(), sc->copyInto.data, headersEnd(sc->copyInto.data, len))) {
+        HttpReply *rep = (HttpReply *) sc->entry->getReply(); // bypass const
+
+        if (!rep->parse(sc->copyInto.data, headersEnd(sc->copyInto.data, len))) {
             debug (90,0)("Could not parse headers from on disk object\n");
         }
+    }
 
     sc->callback(len);
 }
@@ -585,12 +588,14 @@ store_client::readHeader(char const *buf, ssize_t len)
                       (int) copy_sz);
         xmemmove(copyInto.data, copyInto.data + mem->swap_hdr_sz, copy_sz);
 
-        if (copyInto.offset == 0 && len > 0 && entry->getReply()->sline.status == 0)
+        if (copyInto.offset == 0 && len > 0 && entry->getReply()->sline.status == 0) {
             /* Our structure ! */
-            if (!httpReplyParse((HttpReply *)entry->getReply(), copyInto.data,
-                                headersEnd(copyInto.data, copy_sz))) {
+            HttpReply *rep = (HttpReply *) entry->getReply(); // bypass const
+
+            if (!rep->parse(copyInto.data, headersEnd(copyInto.data, copy_sz))) {
                 debug (90,0)("could not parse headers from on disk structure!\n");
             }
+        }
 
         callback(copy_sz);
         return;

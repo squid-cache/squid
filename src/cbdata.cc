@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.64 2004/08/30 05:12:31 robertc Exp $
+ * $Id: cbdata.cc,v 1.65 2005/11/05 00:08:32 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -115,7 +115,7 @@ public:
     /* TODO: examine making cbdata templated on this - so we get type
      * safe access to data - RBC 20030902 */
     void *data;
-void check() const { assert(cookie == ((long)this ^ Cookie));}
+void check(int line) const {assert(cookie == ((long)this ^ Cookie));}
 
     size_t dataSize() const { return sizeof(data);}
 
@@ -298,7 +298,7 @@ cbdataInternalFree(void *p)
     debug(45, 3) ("cbdataFree: %p\n", p);
 #endif
 
-    c->check();
+    c->check(__LINE__);
     assert(c->valid);
     c->valid = 0;
 #if CBDATA_DEBUG
@@ -362,7 +362,7 @@ cbdataInternalLock(const void *p)
 
 #endif
 
-    c->check();
+    c->check(__LINE__);
 
     assert(c->locks < 65535);
 
@@ -395,7 +395,7 @@ cbdataInternalUnlock(const void *p)
 
 #endif
 
-    c->check();
+    c->check(__LINE__);
 
     assert(c != NULL);
 
@@ -445,7 +445,7 @@ cbdataReferenceValid(const void *p)
 
     c = (cbdata *) (((char *) p) - cbdata::Offset);
 
-    c->check();
+    c->check(__LINE__);
 
     assert(c->locks > 0);
 

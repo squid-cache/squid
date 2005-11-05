@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.88 2005/09/15 19:22:30 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.89 2005/11/05 00:08:32 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -315,8 +315,7 @@ clientReplyContext::clientGetsOldEntry()const
     /* This is a duplicate call through the HandleIMS code path.
      * Can we guarantee we don't need it elsewhere?
      */
-    if (!httpReplyValidatorsMatch(http->storeEntry()->getReply(),
-                                  old_entry->getReply())) {
+    if (!http->storeEntry()->getReply()->validatorsMatch(old_entry->getReply())) {
         debug(88, 5) ("clientGetsOldEntry: NO, Old object has been invalidated"
                       "by the new one\n");
         return false;
@@ -414,8 +413,7 @@ clientReplyContext::handleIMSGiveClientUpdatedOldEntry()
      * headers have been loaded from disk. */
     http->logType = LOG_TCP_REFRESH_HIT;
 
-    if (httpReplyValidatorsMatch(http->storeEntry()->getReply(),
-                                 old_entry->getReply())) {
+    if (http->storeEntry()->getReply()->validatorsMatch(old_entry->getReply())) {
         int unlink_request = 0;
 
         if (old_entry->mem_obj->request == NULL) {
@@ -429,7 +427,7 @@ clientReplyContext::handleIMSGiveClientUpdatedOldEntry()
          * not the body they refer to.  */
         HttpReply *old_rep = (HttpReply *) old_entry->getReply();
 
-        old_rep->httpReplyUpdateOnNotModified(http->storeEntry()->getReply());
+        old_rep->updateOnNotModified(http->storeEntry()->getReply());
 
         storeTimestampsSet(old_entry);
 
@@ -461,8 +459,7 @@ clientReplyContext::handleIMSGiveClientNewEntry()
          * Send the IMS reply to the client.
          */
         sendClientUpstreamResponse();
-    } else if (httpReplyValidatorsMatch (http->storeEntry()->getReply(),
-                                         old_entry->getReply())) {
+    } else if (http->storeEntry()->getReply()->validatorsMatch(old_entry->getReply())) {
         /* Our object is usable once updated */
         /* the client did not ask for IMS, send the whole object
          */
@@ -472,7 +469,7 @@ clientReplyContext::handleIMSGiveClientNewEntry()
 
         if (HTTP_NOT_MODIFIED == http->storeEntry()->getReply()->sline.status) {
             HttpReply *old_rep = (HttpReply *) old_entry->getReply();
-            old_rep->httpReplyUpdateOnNotModified(http->storeEntry()->getReply());
+            old_rep->updateOnNotModified(http->storeEntry()->getReply());
             storeTimestampsSet(old_entry);
             http->logType = LOG_TCP_REFRESH_HIT;
         }
@@ -728,7 +725,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
             sendMoreData(result);
         } else {
             time_t const timestamp = e->timestamp;
-            HttpReply *temprep = httpReplyMake304 (e->getReply());
+            HttpReply *temprep = e->getReply()->make304();
             http->logType = LOG_TCP_IMS_HIT;
             removeClientStoreReference(&sc, http);
             createStoreEntry(http->request->method,
@@ -739,7 +736,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
              * reply has a meaningful Age: header.
              */
             e->timestamp = timestamp;
-            httpReplySwapOut (temprep, e);
+            temprep->swapOut(e);
             e->complete();
             /* TODO: why put this in the store and then serialise it and then parse it again.
              * Simply mark the request complete in our context and
@@ -818,16 +815,15 @@ clientReplyContext::processMiss()
         triggerInitialStoreRead();
 
         if (http->redirect.status) {
-            HttpReply *rep = httpReplyCreate();
+            HttpReply *rep = new HttpReply;
 #if LOG_TCP_REDIRECTS
 
             http->logType = LOG_TCP_REDIRECT;
 #endif
 
             storeReleaseRequest(http->storeEntry());
-            httpRedirectReply(rep, http->redirect.status,
-                              http->redirect.location);
-            httpReplySwapOut(rep, http->storeEntry());
+            rep->redirect(http->redirect.status, http->redirect.location);
+            rep->swapOut(http->storeEntry());
             http->storeEntry()->complete();
             return;
         }
@@ -1026,13 +1022,13 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 
     triggerInitialStoreRead();
 
-    r = httpReplyCreate();
+    r = new HttpReply;
 
     HttpVersion version(1,0);
 
-    httpReplySetHeaders(r, version, purgeStatus, NULL, NULL, 0, 0, -1);
+    r->setHeaders(version, purgeStatus, NULL, NULL, 0, 0, -1);
 
-    httpReplySwapOut(r, http->storeEntry());
+    r->swapOut(http->storeEntry());
 
     http->storeEntry()->complete();
 }
@@ -1052,11 +1048,11 @@ clientReplyContext::traceReply(clientStreamNode * node)
                     tempBuffer, SendMoreData, this);
     storeReleaseRequest(http->storeEntry());
     storeBuffer(http->storeEntry());
-    rep = httpReplyCreate();
+    rep = new HttpReply;
     HttpVersion version(1,0);
-    httpReplySetHeaders(rep, version, HTTP_OK, NULL, "text/plain",
-                        httpRequestPrefixLen(http->request), 0, squid_curtime);
-    httpReplySwapOut(rep, http->storeEntry());
+    rep->setHeaders(version, HTTP_OK, NULL, "text/plain",
+                    httpRequestPrefixLen(http->request), 0, squid_curtime);
+    rep->swapOut(http->storeEntry());
     httpRequestSwapOut(http->request, http->storeEntry());
     http->storeEntry()->complete();
 }
@@ -1217,8 +1213,7 @@ clientReplyContext::replyStatus()
         debug(88, 5) ("clientReplyStatus: transfer is DONE\n");
         /* Ok we're finished, but how? */
 
-        if (httpReplyBodySize(http->request->method,
-                              http->storeEntry()->getReply()) < 0) {
+        if (http->storeEntry()->getReply()->bodySize(http->request->method) < 0) {
             debug(88, 5) ("clientReplyStatus: closing, content_length < 0\n");
             return STREAM_FAILED;
         }
@@ -1412,7 +1407,7 @@ clientReplyContext::buildReplyHeader()
 
 #endif
 
-    if (httpReplyBodySize(request->method, holdingReply) < 0) {
+    if (holdingReply->bodySize(request->method) < 0) {
         debug(88,
               3)
         ("clientBuildReplyHeader: can't keep-alive, unknown body size\n");
@@ -1469,13 +1464,13 @@ clientReplyContext::buildReply(const char *buf, size_t size)
     if (!k)
         return;
 
-    holdReply(httpReplyCreate());
+    holdReply(new HttpReply);
 
-    if (!httpReplyParse(holdingReply, buf, k)) {
+    if (!holdingReply->parse(buf, k)) {
         /* parsing failure, get rid of the invalid reply */
-        httpReplyDestroy(holdingReply);
+        delete holdingReply;
         holdReply (NULL);
-        /* This is wrong. httpReplyDestroy should to the rep
+        /* This is wrong. ~HttpReply() should to the rep
          * for us, and we can destroy our own range info
          */
 
@@ -1868,7 +1863,7 @@ clientReplyContext::processReplyAccess ()
                              http->request);
         removeClientStoreReference(&sc, http);
         startError(err);
-        httpReplyDestroy(rep);
+        delete rep;
         return;
     }
 
@@ -1918,7 +1913,7 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
 
         startError(err);
 
-        httpReplyDestroy(rep);
+        delete rep;
 
         http->logType = LOG_TCP_DENIED_REPLY;
 

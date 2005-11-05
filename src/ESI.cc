@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.18 2005/09/24 14:38:35 serassio Exp $
+ * $Id: ESI.cc,v 1.19 2005/11/05 00:08:32 wessels Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -1423,7 +1423,7 @@ ESIContext::freeResources ()
     debug (86,5)("ESIContext::freeResources: Freeing for this=%p\n",this);
 
     if (rep) {
-        httpReplyDestroy(rep);
+        delete rep;
         rep = NULL;
     }
 

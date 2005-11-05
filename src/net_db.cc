@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.177 2005/07/03 15:25:08 serassio Exp $
+ * $Id: net_db.cc,v 1.178 2005/11/05 00:08:32 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -1197,7 +1197,7 @@ netdbDeleteAddrNetwork(struct IN_ADDR addr)
 void
 netdbBinaryExchange(StoreEntry * s)
 {
-    HttpReply *reply = httpReplyCreate();
+    HttpReply *reply = new HttpReply;
 #if USE_ICMP
 
     netdbEntry *n;
@@ -1209,9 +1209,8 @@ netdbBinaryExchange(StoreEntry * s)
     struct IN_ADDR addr;
     storeBuffer(s);
     HttpVersion version(1, 0);
-    httpReplySetHeaders(reply, version, HTTP_OK, "OK",
-                        NULL, -1, squid_curtime, -2);
-    httpReplySwapOut(reply, s);
+    reply->setHeaders(version, HTTP_OK, "OK", NULL, -1, squid_curtime, -2);
+    reply->SwapOut(s);
     rec_sz = 0;
     rec_sz += 1 + sizeof(addr.s_addr);
     rec_sz += 1 + sizeof(int);
@@ -1269,9 +1268,9 @@ netdbBinaryExchange(StoreEntry * s)
 #else
 
     HttpVersion version(1,0);
-    httpReplySetHeaders(reply, version, HTTP_BAD_REQUEST, "Bad Request",
-                        NULL, -1, squid_curtime, -2);
-    httpReplySwapOut(reply, s);
+    reply->setHeaders(version, HTTP_BAD_REQUEST, "Bad Request",
+                      NULL, -1, squid_curtime, -2);
+    reply->swapOut(s);
     storeAppendPrintf(s, "NETDB support not compiled into this Squid cache.\n");
 #endif
 

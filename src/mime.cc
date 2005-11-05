@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.119 2005/09/17 05:50:08 wessels Exp $
+ * $Id: mime.cc,v 1.120 2005/11/05 00:08:32 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -607,12 +607,12 @@ MimeIcon::created (StoreEntry *newEntry)
 
     e->mem_obj->request = requestLink(r);
 
-    HttpReply *reply = httpReplyCreate();
+    HttpReply *reply = new HttpReply;
 
     HttpVersion version(1, 0);
 
-    httpReplySetHeaders(reply, version, HTTP_OK, NULL,
-                        mimeGetContentType(icon), (int) sb.st_size, sb.st_mtime, -1);
+    reply->setHeaders(version, HTTP_OK, NULL,
+                      mimeGetContentType(icon), (int) sb.st_size, sb.st_mtime, -1);
 
     reply->cache_control = httpHdrCcCreate();
 
@@ -620,7 +620,7 @@ MimeIcon::created (StoreEntry *newEntry)
 
     httpHeaderPutCc(&reply->header, reply->cache_control);
 
-    httpReplySwapOut(reply, e);
+    reply->swapOut(e);
 
     /* read the file into the buffer and append it to store */
     buf = (char *)memAllocate(MEM_4K_BUF);
