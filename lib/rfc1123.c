@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1123.c,v 1.35 2005/07/03 15:25:07 serassio Exp $
+ * $Id: rfc1123.c,v 1.36 2005/11/04 21:02:15 wessels Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -161,7 +161,7 @@ static struct tm *
 parse_date(const char *str)
 {
     struct tm *tm;
-    char *tmp = xstrdup(str);
+    static char tmp[64];
     char *t;
     char *wday = NULL;
     char *day = NULL;
@@ -169,6 +169,8 @@ parse_date(const char *str)
     char *year = NULL;
     char *time = NULL;
     char *zone = NULL;
+
+    xstrncpy(tmp, str, 64);
 
     for (t = strtok(tmp, ", "); t; t = strtok(NULL, ", ")) {
 	if (xisdigit(*t)) {
@@ -197,7 +199,6 @@ parse_date(const char *str)
     }
     tm = parse_date_elements(day, month, year, time, zone);
 
-    xfree(tmp);
     return tm;
 }
 
