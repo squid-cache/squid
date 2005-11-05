@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.372 2005/10/18 19:10:29 serassio Exp $
+ * $Id: ftp.cc,v 1.373 2005/11/05 00:08:32 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1431,14 +1431,14 @@ ftpStart(FwdState * fwd)
         }
 
         /* create reply */
-        reply = httpReplyCreate ();
+        reply = new HttpReply;
 
         assert(reply != NULL);
 
         /* create appropriate reply */
         ftpAuthRequired(reply, request, realm);
 
-        httpReplySwapOut(reply, entry);
+        reply->swapOut(entry);
 
         fwdComplete(ftpState->fwd);
 
@@ -3061,7 +3061,7 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
     const char *filename = NULL;
     const char *t = NULL;
     StoreEntry *e = ftpState->entry;
-    HttpReply *reply = httpReplyCreate ();
+    HttpReply *reply = new HttpReply;
 
     if (ftpState->flags.http_header_sent)
         return;
@@ -3097,7 +3097,6 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
         }
     }
 
-    reply = httpReplyCreate();
     /* set standard stuff */
 
     if (ftpState->restarted_offset) {
@@ -3106,21 +3105,21 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
         range_spec.offset = ftpState->restarted_offset;
         range_spec.length = ftpState->size - ftpState->restarted_offset;
         HttpVersion version(1, 0);
-        httpReplySetHeaders(reply, version, HTTP_PARTIAL_CONTENT, "Gatewaying",
-                            mime_type, ftpState->size - ftpState->restarted_offset, ftpState->mdtm, -2);
+        reply->setHeaders(version, HTTP_PARTIAL_CONTENT, "Gatewaying",
+                          mime_type, ftpState->size - ftpState->restarted_offset, ftpState->mdtm, -2);
         httpHeaderAddContRange(&reply->header, range_spec, ftpState->size);
     } else {
         /* Full reply */
         HttpVersion version(1, 0);
-        httpReplySetHeaders(reply, version, HTTP_OK, "Gatewaying",
-                            mime_type, ftpState->size, ftpState->mdtm, -2);
+        reply->setHeaders(version, HTTP_OK, "Gatewaying",
+                          mime_type, ftpState->size, ftpState->mdtm, -2);
     }
 
     /* additional info */
     if (mime_enc)
         httpHeaderPutStr(&reply->header, HDR_CONTENT_ENCODING, mime_enc);
 
-    httpReplySwapOut(reply, e);
+    reply->swapOut(e);
 
     storeTimestampsSet(e);
 
@@ -3147,7 +3146,7 @@ ftpAuthRequired(HttpReply * old_reply, HttpRequest * request, const char *realm)
     /* add Authenticate header */
     httpHeaderPutAuth(&rep->header, "Basic", realm);
     /* move new reply to the old one */
-    httpReplyAbsorb(old_reply, rep);
+    old_reply->absorb(rep);
 }
 
 char *

@@ -1,6 +1,6 @@
 
 /*
- * $Id: internal.cc,v 1.33 2005/09/17 05:50:08 wessels Exp $
+ * $Id: internal.cc,v 1.34 2005/11/05 00:08:32 wessels Exp $
  *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
@@ -62,16 +62,15 @@ internalStart(HttpRequest * request, StoreEntry * entry)
 #endif
 
         HttpVersion version(1, 0);
-        HttpReply *reply = httpReplyCreate ();
-        httpReplySetHeaders(reply,
-                            version,
-                            HTTP_NOT_FOUND,
-                            "Not Found",
-                            "text/plain",
-                            strlen(msgbuf),
-                            squid_curtime,
-                            -2);
-        httpReplySwapOut(reply, entry);
+        HttpReply *reply = new HttpReply;
+        reply->setHeaders(version,
+                          HTTP_NOT_FOUND,
+                          "Not Found",
+                          "text/plain",
+                          strlen(msgbuf),
+                          squid_curtime,
+                          -2);
+        reply->swapOut(entry);
         storeAppend(entry, msgbuf, strlen(msgbuf));
         entry->complete();
     } else {

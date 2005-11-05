@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.104 2005/09/15 19:22:30 wessels Exp $
+ * $Id: peer_digest.cc,v 1.105 2005/11/05 00:08:32 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -545,7 +545,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 
             HttpReply *old_rep = (HttpReply *) fetch->old_entry->getReply();
 
-            old_rep->httpReplyUpdateOnNotModified(reply);
+            old_rep->updateOnNotModified(reply);
 
             storeTimestampsSet(fetch->old_entry);
 

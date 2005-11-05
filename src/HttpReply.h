@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.h,v 1.11 2005/09/15 20:19:41 wessels Exp $
+ * $Id: HttpReply.h,v 1.12 2005/11/05 00:08:32 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,43 +37,9 @@
 #include "HttpMsg.h"
 #include "HttpStatusLine.h"
 
-/* Http Reply */
 extern void httpReplyInitModule(void);
-/* create/destroy */
-extern HttpReply *httpReplyCreate(void);
-extern void httpReplyDestroy(HttpReply * rep);
-/* reset: clean, then init */
-extern void httpReplyReset(HttpReply * rep);
-/* absorb: copy the contents of a new reply to the old one, destroy new one */
-extern void httpReplyAbsorb(HttpReply * rep, HttpReply * new_rep);
-/* parse returns true on success */
-extern bool httpReplyParse(HttpReply * rep, const char *buf, ssize_t);
-extern void httpReplyPackHeadersInto(const HttpReply * rep, Packer * p);
-extern void httpReplyPackInto(const HttpReply * rep, Packer * p);
-/* ez-routines */
-/* mem-pack: returns a ready to use mem buffer with a packed reply */
-extern MemBuf *httpReplyPack(const HttpReply * rep);
-/* swap: create swap-based packer, pack, destroy packer */
-extern void httpReplySwapOut(HttpReply * rep, StoreEntry * e);
-/* set commonly used info with one call */
-extern void httpReplySetHeaders(HttpReply * rep, HttpVersion ver, http_status status,
-                                    const char *reason, const char *ctype, int clen, time_t lmt, time_t expires);
 /* do everything in one call: init, set, pack, clean, return MemBuf */
-extern MemBuf *httpPackedReply(HttpVersion ver, http_status status, const char *ctype,
-                                   int clen, time_t lmt, time_t expires);
-/* construct 304 reply and pack it into MemBuf, return MemBuf */
-extern MemBuf *httpPacked304Reply(const HttpReply * rep);
-/* construct a 304 reply and return it */
-extern HttpReply *httpReplyMake304(const HttpReply *rep);
-/* header manipulation */
-extern int httpReplyContentLen(const HttpReply * rep);
-extern const char *httpReplyContentType(const HttpReply * rep);
-extern time_t httpReplyExpires(const HttpReply * rep);
-extern int httpReplyHasCc(const HttpReply * rep, http_hdr_cc_type type);
-extern void httpRedirectReply(HttpReply *, http_status, const char *);
-extern int httpReplyBodySize(method_t, HttpReply const *);
-extern int httpReplyValidatorsMatch (HttpReply const *, HttpReply const *);
-
+extern MemBuf *httpPackedReply(HttpVersion ver, http_status status, const char *ctype, int clen, time_t lmt, time_t expires);
 
 /* Sync changes here with HttpReply.cc */
 
@@ -85,6 +51,7 @@ class HttpReply: public HttpMsg
 public:
     MEMPROXY_CLASS(HttpReply);
     HttpReply();
+    ~HttpReply();
 
     virtual void reset();
 
@@ -107,9 +74,40 @@ public:
     HttpBody body;		/* for small constant memory-resident text bodies only */
 
     String protoPrefix;       // e.g., "HTTP/"
+    bool do_clean;
 
 public:
-    void httpReplyUpdateOnNotModified(HttpReply const *other);
+    void updateOnNotModified(HttpReply const *other);
+    /* parse returns true on success */
+    bool parse(const char *buf, ssize_t);
+    /* absorb: copy the contents of a new reply to the old one, destroy new one */
+    void absorb(HttpReply * new_rep);
+    /* set commonly used info with one call */
+    void setHeaders(HttpVersion ver, http_status status,
+                    const char *reason, const char *ctype, int clen, time_t lmt, time_t expires);
+    /* mem-pack: returns a ready to use mem buffer with a packed reply */
+    MemBuf *pack();
+    /* swap: create swap-based packer, pack, destroy packer */
+    void swapOut(StoreEntry * e);
+    /* construct a 304 reply and return it */
+    HttpReply *make304() const;
+
+    void redirect(http_status, const char *);
+    int bodySize(method_t) const;
+    int validatorsMatch (HttpReply const *other) const;
+    void packHeadersInto(Packer * p) const;
+
+private:
+    /* initialize */
+    void init();
+    void clean();
+    void hdrCacheClean();
+    void packInto(Packer * p);
+    /* ez-routines */
+    /* construct 304 reply and pack it into MemBuf, return MemBuf */
+    MemBuf *packed304Reply();
+    /* header manipulation */
+    time_t hdrExpirationTime();
 
 protected:
     virtual void packFirstLineInto(Packer * p, bool) const;

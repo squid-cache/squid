@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.579 2005/09/10 19:31:31 serassio Exp $
+ * $Id: store.cc,v 1.580 2005/11/05 00:08:32 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -667,7 +667,8 @@ storeSetPublicKey(StoreEntry * e)
             pe = storeCreateEntry(mem->url, mem->log_url, request->flags, request->method);
             HttpVersion version(1, 0);
             /* We are allowed to do this typecast */
-            httpReplySetHeaders((HttpReply *)pe->getReply(), version, HTTP_OK, "Internal marker object", "x-squid-internal/vary", -1, -1, squid_curtime + 100000);
+            HttpReply *rep = (HttpReply *) pe->getReply();	// bypass const
+            rep->setHeaders(version, HTTP_OK, "Internal marker object", "x-squid-internal/vary", -1, -1, squid_curtime + 100000);
             vary = httpHeaderGetList(&mem->getReply()->header, HDR_VARY);
 
             if (vary.size()) {
@@ -694,7 +695,7 @@ storeSetPublicKey(StoreEntry * e)
             {
                 Packer p;
                 packerToStoreInit(&p, pe);
-                httpReplyPackHeadersInto(pe->getReply(), &p);
+                pe->getReply()->packHeadersInto(&p);
                 packerClean(&p);
             }
 
@@ -1668,7 +1669,8 @@ storeEntryReset(StoreEntry * e)
     assert (mem);
     debug(20, 3) ("storeEntryReset: %s\n", storeUrl(e));
     mem->reset();
-    httpReplyReset((HttpReply *)e->getReply());
+    HttpReply *rep = (HttpReply *) e->getReply();	// bypass const
+    rep->reset();
     e->expires = e->lastmod = e->timestamp = -1;
 }
 
@@ -1769,7 +1771,7 @@ storeEntryReplaceObject(StoreEntry * e, HttpReply * rep)
     myrep = (HttpReply *)e->getReply(); /* we are allowed to do this */
 
     /* move info to the mem_obj->reply */
-    httpReplyAbsorb(myrep, rep);
+    myrep->absorb(rep);
 
     /* TODO: when we store headers serparately remove the header portion */
     /* TODO: mark the length of the headers ? */
@@ -1778,7 +1780,7 @@ storeEntryReplaceObject(StoreEntry * e, HttpReply * rep)
 
     assert (e->isEmpty());
 
-    httpReplyPackHeadersInto(e->getReply(), &p);
+    e->getReply()->packHeadersInto(&p);
 
     myrep->hdr_sz = e->mem_obj->endOffset();
 

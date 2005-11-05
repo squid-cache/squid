@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.204 2005/09/17 05:50:08 wessels Exp $
+ * $Id: errorpage.cc,v 1.205 2005/11/05 00:08:32 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -376,7 +376,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
      * on 407/401 responses, and do not check the accel state on 401/407 responses 
      */
     authenticateFixHeader(rep, err->auth_user_request, err->request, 0, 1);
-    httpReplySwapOut(rep, entry);
+    rep->swapOut(entry);
     EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
     storeBufferFlush(entry);
     entry->complete();
@@ -424,9 +424,9 @@ errorSend(int fd, ErrorState * err)
 
     rep = errorBuildReply(err);
 
-    comm_old_write_mbuf(fd, httpReplyPack(rep), errorSendComplete, err);
+    comm_old_write_mbuf(fd, rep->pack(), errorSendComplete, err);
 
-    httpReplyDestroy(rep);
+    delete rep;
 }
 
 /*
@@ -839,14 +839,14 @@ errorConvert(char token, ErrorState * err)
 HttpReply *
 errorBuildReply(ErrorState * err)
 {
-    HttpReply *rep = httpReplyCreate();
+    HttpReply *rep = new HttpReply;
     const char *name = errorPageName(err->page_id);
     /* no LMT for error pages; error pages expire immediately */
     HttpVersion version(1, 0);
 
     if (strchr(name, ':')) {
         /* Redirection */
-        httpReplySetHeaders(rep, version, HTTP_MOVED_TEMPORARILY, NULL, "text/html", 0, 0, squid_curtime);
+        rep->setHeaders(version, HTTP_MOVED_TEMPORARILY, NULL, "text/html", 0, 0, squid_curtime);
 
         if (err->request) {
             char *quoted_url = rfc1738_escape_part(urlCanonical(err->request));
@@ -856,7 +856,7 @@ errorBuildReply(ErrorState * err)
         httpHeaderPutStrf(&rep->header, HDR_X_SQUID_ERROR, "%d %s\n", err->httpStatus, "Access Denied");
     } else {
         MemBuf *content = errorBuildContent(err);
-        httpReplySetHeaders(rep, version, err->httpStatus, NULL, "text/html", content->contentSize(), 0, squid_curtime);
+        rep->setHeaders(version, err->httpStatus, NULL, "text/html", content->contentSize(), 0, squid_curtime);
         /*
          * include some information for downstream caches. Implicit
          * replaceable content. This isn't quite sufficient. xerrno is not

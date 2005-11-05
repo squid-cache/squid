@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.701 2005/10/23 15:52:17 hno Exp $
+ * $Id: client_side.cc,v 1.702 2005/11/05 00:08:32 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1168,7 +1168,7 @@ ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData)
 {
     prepareReply(rep);
     assert (rep);
-    MemBuf *mb = httpReplyPack(rep);
+    MemBuf *mb = rep->pack();
     /* Save length of headers for persistent conn checks */
     http->out.headers_sz = mb->contentSize();
 #if HEADERS_LOG
