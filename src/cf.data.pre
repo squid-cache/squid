@@ -1,9 +1,9 @@
 
 #
-# $Id: cf.data.pre,v 1.404 2005/11/01 19:26:36 serassio Exp $
+# $Id: cf.data.pre,v 1.405 2005/11/04 22:59:08 hno Exp $
 #
 #
-# SQUID Web Proxy Cache          http://www.squid-cache.org/
+# SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
 #
 #  Squid is the result of efforts by numerous individuals from
@@ -101,11 +101,11 @@ DOC_START
 			Defaults to http
 
 	   disable-pmtu-discovery=
-                        Control Path-MTU discovery usage:
-                            off         lets OS decide on what to do (default).
-                            transparent disable PMTU discovery when transparent
-                                        support is enabled.
-                            always      disable always PMTU discovery.
+			Control Path-MTU discovery usage:
+			    off		lets OS decide on what to do (default).
+			    transparent	disable PMTU discovery when transparent
+					support is enabled.
+			    always	disable always PMTU discovery.
 
 	In many setups of transparently intercepting proxies Path-MTU
  	discovery can not work on traffic towards the clients. This is
@@ -131,14 +131,14 @@ TYPE: https_port_list
 DEFAULT: none
 LOC: Config.Sockaddr.https
 DOC_START
-        Usage:  [ip:]port cert=certificate.pem [key=key.pem] [options...]
+	Usage:  [ip:]port cert=certificate.pem [key=key.pem] [options...]
 
-        The socket address where Squid will listen for HTTPS client
-        requests.
+	The socket address where Squid will listen for HTTPS client
+	requests.
 
-        This is really only useful for situations where you are running
-        squid in accelerator mode and you want to do the SSL work at the
-        accelerator level.
+	This is really only useful for situations where you are running
+	squid in accelerator mode and you want to do the SSL work at the
+	accelerator level.
 
 	You may specify multiple socket addresses on multiple lines,
 	each with their own SSL certificate and/or options.
@@ -961,10 +961,10 @@ TYPE: b_size_t
 DEFAULT: 8 KB
 LOC: Config.Store.maxInMemObjSize
 DOC_START
-        Objects greater than this size will not be attempted to kept in
-        the memory cache. This should be set high enough to keep objects
-        accessed frequently in memory to improve performance whilst low
-        enough to keep larger objects from hoarding cache_mem .
+	Objects greater than this size will not be attempted to kept in
+	the memory cache. This should be set high enough to keep objects
+	accessed frequently in memory to improve performance whilst low
+	enough to keep larger objects from hoarding cache_mem .
 DOC_END
 
 NAME: ipcache_size
@@ -1230,7 +1230,7 @@ DOC_START
 		et	Tag returned by external acl
 		ea	Log string returned by external acl
 		<st	Reply size including HTTP headers
-		<sH     Reply high offset sent
+		<sH	Reply high offset sent
 		<sS	Upstream object size
 		%	a literal % character
 
@@ -1605,12 +1605,12 @@ DOC_START
 	default locations:
 	- Un*X & Linux:    /etc/hosts
 	- Windows NT/2000: %SystemRoot%\system32\drivers\etc\hosts
-	                   (%SystemRoot% value install default is c:\winnt)
+			   (%SystemRoot% value install default is c:\winnt)
 	- Windows XP/2003: %SystemRoot%\system32\drivers\etc\hosts
-	                   (%SystemRoot% value install default is c:\windows)
+			   (%SystemRoot% value install default is c:\windows)
 	- Windows 9x/Me:   %windir%\hosts
-	                   (%windir% value is usually c:\windows)
-	- Cygwin:          /etc/hosts
+			   (%windir% value is usually c:\windows)
+	- Cygwin:	   /etc/hosts
 
 	The file contains newline-separated definitions, in the
 	form ip_address_in_dotted_form name [name ...] names are
@@ -1747,14 +1747,14 @@ DOC_START
 	is specified.
 
 	If you want to use the traditional proxy authentication,
-	jump over to the ../auth_modules/NCSA directory and
+	jump over to the ../helpers/basic_auth/NCSA directory and
 	type:
 		% make
 		% make install
 
 	Then, set this line to something like
 
-	auth_param basic program @DEFAULT_PREFIX@/bin/ncsa_auth @DEFAULT_PREFIX@/etc/passwd
+	auth_param basic program @DEFAULT_PREFIX@/libexec/ncsa_auth @DEFAULT_PREFIX@/etc/passwd
 
 	"children" numberofchildren
 	The number of authenticator processes to spawn (no default).
@@ -1789,12 +1789,12 @@ DOC_START
 	you will be vulnerable to replay attacks unless you also
 	use the max_user_ip ACL in an http_access rule.
 
-    "casesensitive" on|off
-    Specifies if usernames are case sensitive. Most user databases are
-    case insensitive allowing the same username to be spelled using both
-    lower and upper case letters, but some are case sensitive. This
-    makes a big difference for user_max_ip ACL processing and similar.
-    auth_param basic casesensitive off
+	"casesensitive" on|off
+	Specifies if usernames are case sensitive. Most user databases are
+	case insensitive allowing the same username to be spelled using both
+	lower and upper case letters, but some are case sensitive. This
+	makes a big difference for user_max_ip ACL processing and similar.
+	auth_param basic casesensitive off
 
 	=== Parameters for the digest scheme follow ===
 
@@ -1811,10 +1811,10 @@ DOC_START
 	program is specified.
 
 	If you want to use a digest authenticator, jump over to the
-        helpers/digest_auth/ directory and choose the authenticator
+	helpers/digest_auth/ directory and choose the authenticator
 	to use. In it's directory type
-        	% make
-	        % make install
+		% make
+		% make install
 
 	Then, set this line to something like
 
@@ -1931,7 +1931,7 @@ DOC_START
 	auth_param negotiate keep_alive on
 
 NOCOMMENT_START
-#Recommended minimum configuration:
+#Recommended minimum configuration per scheme:
 #auth_param negotiate program <uncomment and complete this line to activate>
 #auth_param negotiate children 5
 #auth_param negotiate keep_alive on
@@ -1945,9 +1945,9 @@ NOCOMMENT_START
 #auth_param digest nonce_max_duration 30 minutes
 #auth_param digest nonce_max_count 50
 #auth_param basic program <uncomment and complete this line>
-auth_param basic children 5
-auth_param basic realm Squid proxy-caching web server
-auth_param basic credentialsttl 2 hours
+#auth_param basic children 5
+#auth_param basic realm Squid proxy-caching web server
+#auth_param basic credentialsttl 2 hours
 NOCOMMENT_END
 DOC_END
 
@@ -2150,7 +2150,7 @@ DOC_START
 		 ignore-no-store
 		 ignore-private
 		 ignore-auth
-                 refresh-ims
+		 refresh-ims
 
 		override-expire enforces min age even if the server
 		sent a Expires: header. Doing this VIOLATES the HTTP
@@ -2170,27 +2170,27 @@ DOC_START
 		this feature could make you liable for problems which
 		it causes.
 
-                ignore-no-cache ignores any ``Pragma: no-cache'' and
-                ``Cache-control: no-cache'' headers received from a server.
-                The HTTP RFC never allows the use of this (Pragma) header
-                from a server, only a client, though plenty of servers
-                send it anyway.
+		ignore-no-cache ignores any ``Pragma: no-cache'' and
+		``Cache-control: no-cache'' headers received from a server.
+		The HTTP RFC never allows the use of this (Pragma) header
+		from a server, only a client, though plenty of servers
+		send it anyway.
 
-                ignore-no-store ignores any ``Cache-control: no-store''
-                headers received from a server. Doing this VIOLATES
-                the HTTP standard. Enabling this feature could make you
-                liable for problems which it causes.
+		ignore-no-store ignores any ``Cache-control: no-store''
+		headers received from a server. Doing this VIOLATES
+		the HTTP standard. Enabling this feature could make you
+		liable for problems which it causes.
 
-                ignore-private ignores any ``Cache-control: private''
-                headers received from a server. Doing this VIOLATES
-                the HTTP standard. Enabling this feature could make you
-                liable for problems which it causes.
+		ignore-private ignores any ``Cache-control: private''
+		headers received from a server. Doing this VIOLATES
+		the HTTP standard. Enabling this feature could make you
+		liable for problems which it causes.
 
-                ignore-auth caches responses to requests with authorization,
-                irrespective of ``Cache-control'' headers received from
-                a server. Doing this VIOLATES the HTTP standard. Enabling
-                this feature could make you liable for problems which
-                it causes.
+		ignore-auth caches responses to requests with authorization,
+		irrespective of ``Cache-control'' headers received from
+		a server. Doing this VIOLATES the HTTP standard. Enabling
+		this feature could make you liable for problems which
+		it causes.
 
 		refresh-ims causes squid to contact the origin server
 		when a client issues an If-Modified-Since request. This
@@ -2348,8 +2348,8 @@ TYPE: time_t
 LOC: Config.Timeout.forward
 DEFAULT: 4 minutes
 DOC_START
-    This parameter specifies how long Squid should at most attempt in
-    finding a forwarding path for the request before giving up.
+	This parameter specifies how long Squid should at most attempt in
+	finding a forwarding path for the request before giving up.
 DOC_END
 
 NAME: connect_timeout
@@ -2358,9 +2358,9 @@ TYPE: time_t
 LOC: Config.Timeout.connect
 DEFAULT: 1 minute
 DOC_START
-    This parameter specifies how long to wait for the TCP connect to
-    the requested server or peer to complete before Squid should
-    attempt to find another path where to forward the request.
+	This parameter specifies how long to wait for the TCP connect to
+	the requested server or peer to complete before Squid should
+	attempt to find another path where to forward the request.
 DOC_END
 
 NAME: peer_connect_timeout
@@ -2547,9 +2547,9 @@ DOC_START
 	acl aclname method   GET POST ...
 	acl aclname browser  [-i] regexp ...
 	  # pattern match on User-Agent header
-        acl aclname referer_regex  [-i] regexp ...
-          # pattern match on Referer header
-          # Referer is highly unreliable, so use with care
+	acl aclname referer_regex  [-i] regexp ...
+	  # pattern match on Referer header
+	  # Referer is highly unreliable, so use with care
 	acl aclname ident    username ...
 	acl aclname ident_regex [-i] pattern ...
 	  # string match on ident output.
@@ -2722,16 +2722,16 @@ LOC: Config.accessList.reply
 DEFAULT: none
 DEFAULT_IF_NONE: allow all
 DOC_START
-        Allow replies to client requests. This is complementary to http_access.
+	Allow replies to client requests. This is complementary to http_access.
 
-        http_reply_access allow|deny [!] aclname ...
+	http_reply_access allow|deny [!] aclname ...
 
-        NOTE: if there are no access lines present, the default is to allow
+	NOTE: if there are no access lines present, the default is to allow
 	all replies
 
-        If none of the access lines cause a match the opposite of the
-        last line will apply. Thus it is good practice to end the rules
-        with an "allow all" or "deny all" entry.
+	If none of the access lines cause a match the opposite of the
+	last line will apply. Thus it is good practice to end the rules
+	with an "allow all" or "deny all" entry.
 
 NOCOMMENT_START
 #Recommended minimum configuration:
@@ -2905,7 +2905,7 @@ TYPE: acl_b_size_t
 DEFAULT: none
 LOC: Config.ReplyBodySize
 DOC_START
-        This option specifies the maximum size of a reply body. It can be
+	This option specifies the maximum size of a reply body. It can be
 	used to prevent users from downloading very large files, such as
 	MP3's and movies. When the reply headers are received, the
 	reply_body_max_size lines are processed, and the first line where
@@ -2940,7 +2940,7 @@ LOC: Config.accessList.log
 DEFAULT: none
 COMMENT: allow|deny acl acl...
 DOC_START
-        This options allows you to control which requests gets logged
+	This options allows you to control which requests gets logged
 	to access.log (see access_log directive). Requests denied for
 	logging will also not be accounted for in performance counters.
 DOC_END
@@ -4009,7 +4009,7 @@ LOC: Config.Wccp.outgoing
 DEFAULT: 255.255.255.255
 IFDEF: USE_WCCP
 DOC_START
-        wccp_incoming_address   Use this option if you require WCCP
+	wccp_incoming_address   Use this option if you require WCCP
 				messages to be received on only one
 				interface.  Do NOT use this option if
 				you're unsure how many interfaces you
@@ -4023,10 +4023,10 @@ DOC_START
 				have, or if you know you have only one
 				interface.
 
-        The default behavior is to not bind to any specific address.
+	The default behavior is to not bind to any specific address.
 
-        NOTE, wccp_incoming_address and wccp_outgoing_address can not have
-        the same value since they both use port 2048.
+	NOTE, wccp_incoming_address and wccp_outgoing_address can not have
+	the same value since they both use port 2048.
 DOC_END
 
 
@@ -4723,12 +4723,12 @@ TYPE: time_t
 LOC: Config.minimum_expiry_time
 DEFAULT: 60 seconds
 DOC_START
-        The minimum caching time according to (Expires - Date)
-        Headers Squid honors if the object can't be revalidated
-        defaults to 60 seconds. In reverse proxy enorinments it
-        might be desirable to honor shorter object lifetimes. It
-        is most likely better to make your server return a
-        meaningful Last-Modified header however. In ESI environments
+	The minimum caching time according to (Expires - Date)
+	Headers Squid honors if the object can't be revalidated
+	defaults to 60 seconds. In reverse proxy enorinments it
+	might be desirable to honor shorter object lifetimes. It
+	is most likely better to make your server return a
+	meaningful Last-Modified header however. In ESI environments
 	where page fragments often have short lifetimes, this will
 	often be best set to 0.
 DOC_END
