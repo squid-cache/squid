@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.530 2005/11/04 20:23:18 wessels Exp $
+ * $Id: structs.h,v 1.531 2005/11/04 20:27:31 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -762,7 +762,7 @@ struct _SquidConfig2
     struct
     {
         int enable_purge;
-        int mangle_headers;
+        int mangle_request_headers;
     }
 
     onoff;
