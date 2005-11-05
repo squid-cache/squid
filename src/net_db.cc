@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.178 2005/11/05 00:08:32 wessels Exp $
+ * $Id: net_db.cc,v 1.179 2005/11/05 08:57:00 serassio Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -1210,7 +1210,7 @@ netdbBinaryExchange(StoreEntry * s)
     storeBuffer(s);
     HttpVersion version(1, 0);
     reply->setHeaders(version, HTTP_OK, "OK", NULL, -1, squid_curtime, -2);
-    reply->SwapOut(s);
+    reply->swapOut(s);
     rec_sz = 0;
     rec_sz += 1 + sizeof(addr.s_addr);
     rec_sz += 1 + sizeof(int);
