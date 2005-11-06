@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.513 2005/11/04 20:27:31 wessels Exp $
+ * $Id: protos.h,v 1.514 2005/11/06 16:54:30 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1001,18 +1001,31 @@ SQUIDCEXTERN void WIN32_RemoveService(void);
 #endif /* _SQUID_WIN32_ */
 #ifdef _SQUID_MSWIN_
 
+SQUIDCEXTERN int WIN32_pipe(int[2]);
+
 SQUIDCEXTERN int WIN32_getrusage(int, struct rusage *);
 SQUIDCEXTERN void WIN32_ExceptionHandlerInit(void);
+
+SQUIDCEXTERN int Win32__WSAFDIsSet(int fd, fd_set* set
+                                      );
+
 #endif
 
 /* external_acl.c */
 SQUIDCEXTERN void parse_externalAclHelper(external_acl **);
+
 SQUIDCEXTERN void dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl *);
+
 SQUIDCEXTERN void free_externalAclHelper(external_acl **);
+
 typedef void EAH(void *data, void *result);
+
 SQUIDCEXTERN void externalAclLookup(ACLChecklist * ch, void *acl_data, EAH * handler, void *data);
+
 SQUIDCEXTERN void externalAclInit(void);
+
 SQUIDCEXTERN void externalAclShutdown(void);
+
 SQUIDCEXTERN char *strtokFile(void);
 
 #endif /* SQUID_PROTOS_H */
