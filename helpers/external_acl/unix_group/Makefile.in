@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid LDAP authentication helper
 #
-#  $Id: Makefile.in,v 1.46 2005/10/31 01:10:59 hno Exp $
+#  $Id: Makefile.in,v 1.47 2005/11/06 01:11:31 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -170,6 +170,7 @@ MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 MAKE_LEAKFINDER_FALSE = @MAKE_LEAKFINDER_FALSE@
 MAKE_LEAKFINDER_TRUE = @MAKE_LEAKFINDER_TRUE@
+MINGW_LIBS = @MINGW_LIBS@
 MKDIR = @MKDIR@
 MV = @MV@
 NEED_OWN_MD5_FALSE = @NEED_OWN_MD5_FALSE@
