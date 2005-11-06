@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.51 2005/10/28 18:32:17 serassio Exp $
+ * $Id: auth_ntlm.cc,v 1.52 2005/11/06 12:59:07 hno Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -352,7 +352,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
     AuthNTLMUserRequest *ntlm_request;
 
     debug(29, 8) ("authenticateNTLMHandleReply: helper: '%p' sent us '%s'\n", lastserver, reply ? reply : "<NULL>");
-    valid = cbdataReferenceValid(data);
+    valid = cbdataReferenceValid(r->data);
 
     if (!valid) {
         debug(29, 1) ("authenticateNTLMHandleReply: invalid callback data. Releasing helper '%p'.\n", lastserver);
