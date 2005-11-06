@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_negotiate.cc,v 1.3 2005/10/28 18:32:17 serassio Exp $
+ * $Id: auth_negotiate.cc,v 1.4 2005/11/06 12:59:06 hno Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -384,7 +384,7 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
     AuthNegotiateUserRequest *negotiate_request;
 
     debug(29, 8) ("authenticateNegotiateHandleReply: helper: '%p' sent us '%s'\n", lastserver, reply ? reply : "<NULL>");
-    valid = cbdataReferenceValid(data);
+    valid = cbdataReferenceValid(r->data);
 
     if (!valid) {
         debug(29, 1) ("authenticateNegotiateHandleReply: invalid callback data. Releasing helper '%p'.\n", lastserver);
