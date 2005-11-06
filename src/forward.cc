@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.129 2005/09/10 16:03:52 serassio Exp $
+ * $Id: forward.cc,v 1.130 2005/11/06 11:14:27 serassio Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -597,7 +597,7 @@ fwdConnectStart(void *data)
             return;
         } else {
             /* Discard the persistent connection to not cause
-             * a imbalance in number of conenctions open if there
+             * an imbalance in number of connections open if there
              * is a lot of POST requests
              */
             comm_close(fd);
