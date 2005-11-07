@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_negotiate.cc,v 1.4 2005/11/06 12:59:06 hno Exp $
+ * $Id: auth_negotiate.cc,v 1.5 2005/11/06 21:50:14 hno Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -395,11 +395,8 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
     }
 
     if (!reply) {
-        /*
-         * TODO: this occurs when a helper crashes. We should clean
-         * up that helpers resources and queued requests.
-         */
-        fatal("authenticateNegotiateHandleReply: called with no result string\n");
+        debug(29, 1) ("authenticateNegotiateHandleReply: Helper '%p' crashed!.\n", lastserver);
+        reply = "BH Internal error";
     }
 
     auth_user_request = r->auth_user_request;
@@ -423,7 +420,7 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
     /* seperate out the useful data */
     blob = strchr(reply, ' ');
 
-    while (xisspace(*blob)) {    // trim leading spaces in blob
+    while (blob && xisspace(*blob)) {    // trim leading spaces in blob
         blob++;
         arg = strchr(blob + 1, ' ');
     }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.52 2005/11/06 12:59:07 hno Exp $
+ * $Id: auth_ntlm.cc,v 1.53 2005/11/06 21:50:14 hno Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -363,11 +363,8 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
     }
 
     if (!reply) {
-        /*
-         * TODO: this occurs when a helper crashes. We should clean
-         * up that helpers resources and queued requests.
-         */
-        fatal("authenticateNTLMHandleReply: called with no result string\n");
+        debug(29, 1) ("authenticateNTLMHandleReply: Helper '%p' crashed!.\n", lastserver);
+        reply = "BH Internal error";
     }
 
     auth_user_request = r->auth_user_request;
@@ -391,7 +388,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
     /* seperate out the useful data */
     blob = strchr(reply, ' ');
 
-    while (xisspace(*blob)) {    // trim leading spaces in blob
+    while (blob && xisspace(*blob)) {    // trim leading spaces in blob
         blob++;
     }
 
