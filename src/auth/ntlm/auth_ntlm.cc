@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.53 2005/11/06 21:50:14 hno Exp $
+ * $Id: auth_ntlm.cc,v 1.54 2005/11/06 22:50:25 hno Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -364,7 +364,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 
     if (!reply) {
         debug(29, 1) ("authenticateNTLMHandleReply: Helper '%p' crashed!.\n", lastserver);
-        reply = "BH Internal error";
+        reply = (char *)"BH Internal error";
     }
 
     auth_user_request = r->auth_user_request;
@@ -388,11 +388,10 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
     /* seperate out the useful data */
     blob = strchr(reply, ' ');
 
-    while (blob && xisspace(*blob)) {    // trim leading spaces in blob
+    if (blob)
         blob++;
-    }
 
-    if (strncasecmp(reply, "TT ", 3) == 0 && blob != NULL) {
+    if (strncasecmp(reply, "TT ", 3) == 0) {
         /* we have been given a blob to send to the client */
         safe_free(ntlm_request->server_blob);
         ntlm_request->server_blob = xstrdup(blob);
@@ -400,7 +399,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
         auth_user_request->denyMessage("Authenication in progress");
         debug(29, 4) ("authenticateNTLMHandleReply: Need to challenge the client with a server blob '%s'\n", blob);
         result = S_HELPER_RESERVE;
-    } else if (strncasecmp(reply, "AF ", 3) == 0 && blob != NULL) {
+    } else if (strncasecmp(reply, "AF ", 3) == 0) {
         /* we're finished, release the helper */
         ntlm_user->username(blob);
         auth_user_request->denyMessage("Login successful");
@@ -410,7 +409,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 
         result = S_HELPER_RELEASE;
         debug(29, 4) ("authenticateNTLMHandleReply: Successfully validated user via NTLM. Username '%s'\n", blob);
-    } else if (strncasecmp(reply, "NA ", 3) == 0 && blob != NULL) {
+    } else if (strncasecmp(reply, "NA ", 3) == 0) {
         /* authentication failure (wrong password, etc.) */
         auth_user_request->denyMessage(blob);
         ntlm_request->auth_state = AUTHENTICATE_STATE_FAILED;
@@ -610,9 +609,16 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointer 
     /* get header */
     proxy_auth = httpHeaderGetStr(&request->header, type);
 
-    blob = proxy_auth + strlen("NTLM");
+    /* locate second word */
+    blob = proxy_auth;
 
-    while (xisspace(*blob))     // trim leading spaces in blob
+    while (xisspace(*blob) && *blob)
+        blob++;
+
+    while (!xisspace(*blob) && *blob)
+        blob++;
+
+    while (xisspace(*blob) && *blob)
         blob++;
 
     switch (auth_state) {
