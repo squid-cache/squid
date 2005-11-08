@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.91 2005/11/05 00:08:33 wessels Exp $
+ * $Id: urn.cc,v 1.92 2005/11/07 22:00:38 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -368,7 +368,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
     s = buf + k;
     assert(urlres_e->getReply());
     rep = new HttpReply;
-    rep->parse(buf, k);
+    rep->parseCharBuf(buf, k);
     debug(52, 3) ("reply exists, code=%d.\n",
                   rep->sline.status);
 

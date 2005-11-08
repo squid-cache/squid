@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.h,v 1.3 2005/09/15 20:19:41 wessels Exp $
+ * $Id: HttpMsg.h,v 1.4 2005/11/07 22:00:38 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -72,6 +72,7 @@ public:
 
     HttpMsgParseState pstate;	/* the current parsing state */
     bool parse(MemBuf *buf, bool eol, http_status *error);
+    bool parseCharBuf(const char *buf, ssize_t end);
     int httpMsgParseStep(const char *buf, int atEnd);
     int httpMsgParseError();
 

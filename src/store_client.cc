@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.143 2005/11/05 00:08:33 wessels Exp $
+ * $Id: store_client.cc,v 1.144 2005/11/07 22:00:38 wessels Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -481,7 +481,7 @@ storeClientReadBody(void *data, const char *buf, ssize_t len)
         /* Our structure ! */
         HttpReply *rep = (HttpReply *) sc->entry->getReply(); // bypass const
 
-        if (!rep->parse(sc->copyInto.data, headersEnd(sc->copyInto.data, len))) {
+        if (!rep->parseCharBuf(sc->copyInto.data, headersEnd(sc->copyInto.data, len))) {
             debug (90,0)("Could not parse headers from on disk object\n");
         }
     }
@@ -592,7 +592,7 @@ store_client::readHeader(char const *buf, ssize_t len)
             /* Our structure ! */
             HttpReply *rep = (HttpReply *) entry->getReply(); // bypass const
 
-            if (!rep->parse(copyInto.data, headersEnd(copyInto.data, copy_sz))) {
+            if (!rep->parseCharBuf(copyInto.data, headersEnd(copyInto.data, copy_sz))) {
                 debug (90,0)("could not parse headers from on disk structure!\n");
             }
         }

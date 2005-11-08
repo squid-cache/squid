@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.h,v 1.12 2005/11/05 00:08:32 wessels Exp $
+ * $Id: HttpReply.h,v 1.13 2005/11/07 22:00:38 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -78,8 +78,6 @@ public:
 
 public:
     void updateOnNotModified(HttpReply const *other);
-    /* parse returns true on success */
-    bool parse(const char *buf, ssize_t);
     /* absorb: copy the contents of a new reply to the old one, destroy new one */
     void absorb(HttpReply * new_rep);
     /* set commonly used info with one call */
