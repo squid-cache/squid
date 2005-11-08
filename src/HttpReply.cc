@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.78 2005/11/05 00:08:32 wessels Exp $
+ * $Id: HttpReply.cc,v 1.79 2005/11/07 22:00:38 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -116,37 +116,6 @@ HttpReply::absorb(HttpReply * new_rep)
     new_rep->do_clean = false;
     new_rep->cache_control = NULL;	// helps with debugging
     delete new_rep;
-}
-
-/*
- * parse() takes character buffer of HTTP headers (buf),
- * which may not be NULL-terminated, and fills in an HttpReply
- * structure (rep).  The parameter 'end' specifies the offset to
- * the end of the reply headers.  The caller may know where the
- * end is, but is unable to NULL-terminate the buffer.  This function
- * returns true on success.
- */
-bool
-HttpReply::parse(const char *buf, ssize_t end)
-{
-    /*
-     * this extra buffer/copy will be eliminated when headers become
-     * meta-data in store. Currently we have to xstrncpy the buffer
-     * becuase somebody may feed a non NULL-terminated buffer to
-     * us.
-     */
-    MemBuf mb;
-    int success;
-    /* reset current state, because we are not used in incremental fashion */
-    reset();
-    /* put a string terminator.  s is how many bytes to touch in
-     * 'buf' including the terminating NULL. */
-    mb.init();
-    mb.append(buf, end);
-    mb.terminate();
-    success = httpMsgParseStep(mb.buf, 0);
-    mb.clean();
-    return success == 1;
 }
 
 void

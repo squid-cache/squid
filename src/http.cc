@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.465 2005/11/05 00:08:32 wessels Exp $
+ * $Id: http.cc,v 1.466 2005/11/07 22:00:38 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -719,7 +719,7 @@ HttpStateData::processReplyHeader(const char *buf, int size)
 
     /* Parse headers into reply structure */
     /* what happens if we fail to parse here? */
-    reply->parse(reply_hdr.buf, hdr_size);
+    reply->parseCharBuf(reply_hdr.buf, hdr_size);
 
     if (reply->sline.status >= HTTP_INVALID_HEADER) {
         debugs(11, 3, "processReplyHeader: Non-HTTP-compliant header: '" << reply_hdr.buf << "'");

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.89 2005/11/05 00:08:32 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.90 2005/11/07 22:00:38 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1466,7 +1466,7 @@ clientReplyContext::buildReply(const char *buf, size_t size)
 
     holdReply(new HttpReply);
 
-    if (!holdingReply->parse(buf, k)) {
+    if (!holdingReply->parseCharBuf(buf, k)) {
         /* parsing failure, get rid of the invalid reply */
         delete holdingReply;
         holdReply (NULL);

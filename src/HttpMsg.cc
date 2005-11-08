@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.18 2005/09/17 04:53:44 wessels Exp $
+ * $Id: HttpMsg.cc,v 1.19 2005/11/07 22:00:38 wessels Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -201,7 +201,28 @@ bool HttpMsg::parse(MemBuf *buf, bool eof, http_status *error)
     return true;
 }
 
-
+/*
+ * parse() takes character buffer of HTTP headers (buf),
+ * which may not be NULL-terminated, and fills in an HttpMsg
+ * structure.  The parameter 'end' specifies the offset to
+ * the end of the reply headers.  The caller may know where the
+ * end is, but is unable to NULL-terminate the buffer.  This function
+ * returns true on success.
+ */
+bool
+HttpMsg::parseCharBuf(const char *buf, ssize_t end)
+{
+    MemBuf mb;
+    int success;
+    /* reset current state, because we are not used in incremental fashion */
+    reset();
+    mb.init();
+    mb.append(buf, end);
+    mb.terminate();
+    success = httpMsgParseStep(mb.buf, 0);
+    mb.clean();
+    return success == 1;
+}
 
 /*
  * parses a 0-terminating buffer into HttpMsg.
