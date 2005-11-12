@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.147 2005/09/14 21:09:38 wessels Exp $
+ * $Id: url.cc,v 1.148 2005/11/11 17:45:15 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -64,6 +64,7 @@ const char *RequestMethodStr[] =
         "SUBSCRIBE",
         "UNSUBSCRIBE",
         "POLL",
+        "REPORT",
         "%EXT00",
         "%EXT01",
         "%EXT02",
