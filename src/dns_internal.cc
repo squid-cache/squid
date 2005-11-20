@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.84 2005/11/01 21:05:16 serassio Exp $
+ * $Id: dns_internal.cc,v 1.85 2005/11/19 21:35:09 serassio Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -156,9 +156,7 @@ static hash_table *idns_lookup_hash = NULL;
 
 static OBJH idnsStats;
 static void idnsAddNameserver(const char *buf);
-#ifndef _SQUID_MSWIN_
 static void idnsAddPathComponent(const char *buf);
-#endif
 static void idnsFreeNameservers(void);
 static void idnsFreeSearchpath(void);
 static void idnsParseNameservers(void);
@@ -167,6 +165,7 @@ static void idnsParseResolvConf(void);
 #endif
 #ifdef _SQUID_WIN32_
 static void idnsParseWIN32Registry(void);
+static void idnsParseWIN32SearchList(char *);
 #endif
 static void idnsCacheQuery(idns_query * q);
 static void idnsSendQuery(idns_query * q);
@@ -224,7 +223,6 @@ idnsAddNameserver(const char *buf)
     nns++;
 }
 
-#ifndef _SQUID_MSWIN_
 static void
 idnsAddPathComponent(const char *buf)
 {
@@ -253,7 +251,6 @@ idnsAddPathComponent(const char *buf)
     npc++;
 }
 
-#endif
 
 static void
 idnsFreeNameservers(void)
@@ -352,6 +349,40 @@ idnsParseResolvConf(void)
 
 #ifdef _SQUID_WIN32_
 static void
+idnsParseWIN32SearchList(char * Separator)
+{
+    BYTE *t;
+    char *token;
+    HKEY hndKey;
+
+    if (RegOpenKey(HKEY_LOCAL_MACHINE,
+                   "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
+                   &hndKey) == ERROR_SUCCESS) {
+        DWORD Type = 0;
+        DWORD Size = 0;
+        LONG Result;
+        Result =
+            RegQueryValueEx(hndKey, "SearchList", NULL, &Type, NULL,
+                            &Size);
+
+        if (Result == ERROR_SUCCESS && Size) {
+            t = (unsigned char *) xmalloc(Size);
+            RegQueryValueEx(hndKey, "SearchList", NULL, &Type, t,
+                            &Size);
+            token = strtok((char *) t, Separator);
+
+            while (token) {
+                idnsAddPathComponent(token);
+                debugs(78, 1, "Adding domain " << token << " from Registry");
+                token = strtok(NULL, Separator);
+            }
+        }
+
+        RegCloseKey(hndKey);
+    }
+}
+
+static void
 idnsParseWIN32Registry(void)
 {
     BYTE *t;
@@ -383,9 +414,8 @@ idnsParseWIN32Registry(void)
 
                 while (token) {
                     idnsAddNameserver(token);
-                    debug(78, 1) ("Adding DHCP nameserver %s from Registry\n",
-                                  token);
-                    token = strtok(NULL, ", ");
+                    debugs(78, 1, "Adding DHCP nameserver " << token << " from Registry");
+                    token = strtok(NULL, ",");
                 }
             }
 
@@ -398,8 +428,7 @@ idnsParseWIN32Registry(void)
                 token = strtok((char *) t, ", ");
 
                 while (token) {
-                    debug(78, 1) ("Adding nameserver %s from Registry\n",
-                                  token);
+                    debugs(78, 1, "Adding nameserver " << token << " from Registry");
                     idnsAddNameserver(token);
                     token = strtok(NULL, ", ");
                 }
@@ -407,6 +436,8 @@ idnsParseWIN32Registry(void)
 
             RegCloseKey(hndKey);
         }
+
+        idnsParseWIN32SearchList(" ");
 
         break;
 
@@ -450,9 +481,7 @@ idnsParseWIN32Registry(void)
                             token = strtok((char *) t, ", ");
 
                             while (token) {
-                                debug(78, 1)
-                                ("Adding DHCP nameserver %s from Registry\n",
-                                 token);
+                                debugs(78, 1, "Adding DHCP nameserver " << token << " from Registry");
                                 idnsAddNameserver(token);
                                 token = strtok(NULL, ", ");
                             }
@@ -469,9 +498,7 @@ idnsParseWIN32Registry(void)
                             token = strtok((char *) t, ", ");
 
                             while (token) {
-                                debug(78,
-                                      1) ("Adding nameserver %s from Registry\n",
-                                          token);
+                                debugs(78, 1, "Adding nameserver " << token << " from Registry");
                                 idnsAddNameserver(token);
                                 token = strtok(NULL, ", ");
                             }
@@ -484,6 +511,8 @@ idnsParseWIN32Registry(void)
 
             RegCloseKey(hndKey);
         }
+
+        idnsParseWIN32SearchList(", ");
 
         break;
 
@@ -509,8 +538,7 @@ idnsParseWIN32Registry(void)
                 token = strtok((char *) t, ", ");
 
                 while (token) {
-                    debug(78, 1) ("Adding nameserver %s from Registry\n",
-                                  token);
+                    debugs(78, 1, "Adding nameserver " << token << " from Registry");
                     idnsAddNameserver(token);
                     token = strtok(NULL, ", ");
                 }
@@ -522,8 +550,7 @@ idnsParseWIN32Registry(void)
         break;
 
     default:
-        debug(78, 1)
-        ("Failed to read nameserver from Registry: Unknown System Type.\n");
+        debugs(78, 1, "Failed to read nameserver from Registry: Unknown System Type.");
         return;
     }
 }
@@ -575,6 +602,15 @@ idnsStats(StoreEntry * sentry)
 
         for (i = 0; i < MAX_ATTEMPT; i++)
             storeAppendPrintf(sentry, " %8d", RcodeMatrix[j][i]);
+
+        storeAppendPrintf(sentry, "\n");
+    }
+
+    if (npc) {
+        storeAppendPrintf(sentry, "\nSearch list:\n");
+
+        for (i=0; i < npc; i++)
+            storeAppendPrintf(sentry, "%s\n", searchpath[i].domain);
 
         storeAppendPrintf(sentry, "\n");
     }
