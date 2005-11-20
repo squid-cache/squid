@@ -1,6 +1,6 @@
 .deps
+.libs
 Makefile
-auth_modules.cc
 cachemgr.cgi
 cf.data
 cf_gen
@@ -14,5 +14,5 @@ squid
 squid.conf.default
 squidclient
 string_arrays.c
+ufsdump
 unlinkd
-.libs
