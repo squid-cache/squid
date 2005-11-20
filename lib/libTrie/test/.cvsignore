@@ -1,2 +1,4 @@
 .deps
 Makefile
+trie
+trie-c
