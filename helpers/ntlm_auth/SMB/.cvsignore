@@ -1,3 +1,4 @@
 .deps
+.libs
 Makefile
 ntlm_auth

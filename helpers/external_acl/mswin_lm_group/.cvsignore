@@ -1,1 +1,4 @@
+.deps
+.libs
 Makefile
+mswin_check_lm_group.exe

@@ -1,3 +1,4 @@
 .deps
+.libs
 Makefile
 pam_auth
