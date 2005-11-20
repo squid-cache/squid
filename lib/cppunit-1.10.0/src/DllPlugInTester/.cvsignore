@@ -1,4 +1,5 @@
 .deps
 .libs
 DllPlugInTester
+DllPlugInTesterTest
 Makefile
