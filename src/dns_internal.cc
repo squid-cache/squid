@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.85 2005/11/19 21:35:09 serassio Exp $
+ * $Id: dns_internal.cc,v 1.86 2005/11/20 18:39:22 serassio Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -165,7 +165,7 @@ static void idnsParseResolvConf(void);
 #endif
 #ifdef _SQUID_WIN32_
 static void idnsParseWIN32Registry(void);
-static void idnsParseWIN32SearchList(char *);
+static void idnsParseWIN32SearchList(const char *);
 #endif
 static void idnsCacheQuery(idns_query * q);
 static void idnsSendQuery(idns_query * q);
@@ -349,7 +349,7 @@ idnsParseResolvConf(void)
 
 #ifdef _SQUID_WIN32_
 static void
-idnsParseWIN32SearchList(char * Separator)
+idnsParseWIN32SearchList(const char * Separator)
 {
     BYTE *t;
     char *token;
