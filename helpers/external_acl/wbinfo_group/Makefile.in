@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid LDAP authentication helper
 #
-#  $Id: Makefile.in,v 1.45 2005/11/06 01:11:31 hno Exp $
+#  $Id: Makefile.in,v 1.46 2005/11/21 23:55:17 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -195,6 +195,8 @@ USE_DNSSERVER_FALSE = @USE_DNSSERVER_FALSE@
 USE_DNSSERVER_TRUE = @USE_DNSSERVER_TRUE@
 USE_ESI_FALSE = @USE_ESI_FALSE@
 USE_ESI_TRUE = @USE_ESI_TRUE@
+USE_ICAP_CLIENT_FALSE = @USE_ICAP_CLIENT_FALSE@
+USE_ICAP_CLIENT_TRUE = @USE_ICAP_CLIENT_TRUE@
 USE_SNMP_FALSE = @USE_SNMP_FALSE@
 USE_SNMP_TRUE = @USE_SNMP_TRUE@
 VERSION = @VERSION@

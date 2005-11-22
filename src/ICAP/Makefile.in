@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.1 2005/11/21 23:32:59 wessels Exp $
+#  $Id: Makefile.in,v 1.2 2005/11/21 23:55:25 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -44,28 +44,29 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-subdir = src/icapclient
+subdir = src/ICAP
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 	$(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-mkinstalldirs = $(install_sh) -d
+mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/include/autoconf.h
 CONFIG_CLEAN_FILES =
 LIBRARIES = $(noinst_LIBRARIES)
 ARFLAGS = cru
-libicapclient_a_AR = $(AR) $(ARFLAGS)
-libicapclient_a_LIBADD =
-am_libicapclient_a_OBJECTS = ChunkedCodingParser.$(OBJEXT) \
-	ICAPAnchor.$(OBJEXT) ICAPClientSideHook.$(OBJEXT) \
-	ICAPClient.$(OBJEXT) ICAPElements.$(OBJEXT) \
-	ICAPXaction.$(OBJEXT) ICAPOptXact.$(OBJEXT) \
-	ICAPModXact.$(OBJEXT) ICAPServiceRep.$(OBJEXT) \
-	ICAPConfig.$(OBJEXT) ICAPOptions.$(OBJEXT) \
-	TextException.$(OBJEXT) MsgPipe.$(OBJEXT)
-libicapclient_a_OBJECTS = $(am_libicapclient_a_OBJECTS)
+libicap_a_AR = $(AR) $(ARFLAGS)
+libicap_a_LIBADD =
+am_libicap_a_OBJECTS = ChunkedCodingParser.$(OBJEXT) \
+	ICAPClientRespmodPrecache.$(OBJEXT) \
+	ICAPClientReqmodPrecache.$(OBJEXT) ICAPClient.$(OBJEXT) \
+	ICAPElements.$(OBJEXT) ICAPXaction.$(OBJEXT) \
+	ICAPOptXact.$(OBJEXT) ICAPModXact.$(OBJEXT) \
+	ICAPServiceRep.$(OBJEXT) ICAPConfig.$(OBJEXT) \
+	ICAPOptions.$(OBJEXT) TextException.$(OBJEXT) \
+	MsgPipe.$(OBJEXT)
+libicap_a_OBJECTS = $(am_libicap_a_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
 am__depfiles_maybe = depfiles
@@ -77,8 +78,8 @@ LTCXXCOMPILE = $(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) \
 CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libicapclient_a_SOURCES)
-DIST_SOURCES = $(libicapclient_a_SOURCES)
+SOURCES = $(libicap_a_SOURCES)
+DIST_SOURCES = $(libicap_a_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-exec-recursive install-info-recursive \
@@ -281,15 +282,15 @@ AM_CFLAGS = @SQUID_CFLAGS@
 AM_CXXFLAGS = @SQUID_CXXFLAGS@
 SUBDIRS = 
 EXTRA_LIBRARIES = \
-	libicapclient.a
+	libicap.a
 
 noinst_LIBRARIES = \
-	libicapclient.a
+	libicap.a
 
-libicapclient_a_SOURCES = \
+libicap_a_SOURCES = \
  	ChunkedCodingParser.cc \
-	ICAPAnchor.cc \
-	ICAPClientSideHook.cc \
+	ICAPClientRespmodPrecache.cc \
+	ICAPClientReqmodPrecache.cc \
 	ICAPClient.cc \
 	ICAPElements.cc \
 	ICAPXaction.cc \
@@ -315,9 +316,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/icapclient/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/ICAP/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  src/icapclient/Makefile
+	  $(AUTOMAKE) --foreign  src/ICAP/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -338,10 +339,10 @@ $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 
 clean-noinstLIBRARIES:
 	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
-libicapclient.a: $(libicapclient_a_OBJECTS) $(libicapclient_a_DEPENDENCIES) 
-	-rm -f libicapclient.a
-	$(libicapclient_a_AR) libicapclient.a $(libicapclient_a_OBJECTS) $(libicapclient_a_LIBADD)
-	$(RANLIB) libicapclient.a
+libicap.a: $(libicap_a_OBJECTS) $(libicap_a_DEPENDENCIES) 
+	-rm -f libicap.a
+	$(libicap_a_AR) libicap.a $(libicap_a_OBJECTS) $(libicap_a_LIBADD)
+	$(RANLIB) libicap.a
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -350,9 +351,9 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ChunkedCodingParser.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ICAPAnchor.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ICAPClient.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ICAPClientSideHook.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ICAPClientReqmodPrecache.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ICAPClientRespmodPrecache.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ICAPConfig.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ICAPElements.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ICAPModXact.Po@am__quote@
