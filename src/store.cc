@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.580 2005/11/05 00:08:32 wessels Exp $
+ * $Id: store.cc,v 1.581 2005/11/21 22:20:12 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -827,6 +827,10 @@ storeAppend(StoreEntry * e, const char *buf, int len)
     StoreIOBuffer tempBuffer;
     tempBuffer.data = (char *)buf;
     tempBuffer.length = len;
+    /*
+     * XXX sigh, offset might be < 0 here, but it gets "corrected"
+     * later.  This offset crap is such a mess.
+     */
     tempBuffer.offset = mem->endOffset() - (e->getReply() ? e->getReply()->hdr_sz : 0);
     e->write(tempBuffer);
 }
@@ -1897,6 +1901,22 @@ void
 StoreEntry::unlink()
 {
     store()->unlink(*this);
+}
+
+/*
+ * return true if the entry is in a state where
+ * it can accept more data (ie with write() method)
+ */
+bool
+StoreEntry::isAccepting() const
+{
+    if (STORE_PENDING != store_status)
+        return false;
+
+    if (EBIT_TEST(flags, ENTRY_ABORTED))
+        return false;
+
+    return true;
 }
 
 /* NullStoreEntry */
