@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.79 2005/11/07 22:00:38 wessels Exp $
+ * $Id: HttpReply.cc,v 1.80 2005/11/21 22:49:04 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -51,7 +51,6 @@ static http_hdr_type Denied304HeadersArr[] =
         HDR_OTHER
     };
 
-
 /* module initialization */
 void
 httpReplyInitModule(void)
@@ -60,7 +59,6 @@ httpReplyInitModule(void)
     httpHeaderMaskInit(&Denied304HeadersMask, 0);
     httpHeaderCalcMask(&Denied304HeadersMask, (const int *) Denied304HeadersArr, countof(Denied304HeadersArr));
 }
-
 
 HttpReply::HttpReply() : HttpMsg(hoReply), date (0), last_modified (0), expires (0), surrogate_control (NULL), content_range (NULL), keep_alive (0), protoPrefix("HTTP/")
 {
@@ -307,7 +305,6 @@ HttpReply::validatorsMatch(HttpReply const * otherRep) const
     return 1;
 }
 
-
 void
 HttpReply::updateOnNotModified(HttpReply const * freshRep)
 {
@@ -322,7 +319,6 @@ HttpReply::updateOnNotModified(HttpReply const * freshRep)
     /* init cache */
     hdrCacheInit();
 }
-
 
 /* internal routines */
 
@@ -460,4 +456,36 @@ void HttpReply::packFirstLineInto(Packer *p, bool unused) const
 bool HttpReply::parseFirstLine(const char *blk_start, const char *blk_end)
 {
     return httpStatusLineParse(&sline, protoPrefix, blk_start, blk_end);
+}
+
+/*
+ * Indicate whether or not we would usually expect an entity-body
+ * along with this response
+ */
+bool
+HttpReply::expectingBody(method_t req_method, ssize_t& theSize) const
+{
+    bool expectBody = true;
+
+    if (req_method == METHOD_HEAD)
+        expectBody = false;
+    else if (sline.status == HTTP_NO_CONTENT)
+        expectBody = false;
+    else if (sline.status == HTTP_NOT_MODIFIED)
+        expectBody = false;
+    else if (sline.status < HTTP_OK)
+        expectBody = false;
+    else
+        expectBody = true;
+
+    if (expectBody) {
+        if (httpHeaderHasListMember(&header, HDR_TRANSFER_ENCODING, "chunked", ','))
+            theSize = -1;
+        else if (content_length >= 0)
+            theSize = content_length;
+        else
+            theSize = -1;
+    }
+
+    return expectBody;
 }

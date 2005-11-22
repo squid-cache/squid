@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.h,v 1.13 2005/11/07 22:00:38 wessels Exp $
+ * $Id: HttpReply.h,v 1.14 2005/11/21 22:49:04 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -77,6 +77,7 @@ public:
     bool do_clean;
 
 public:
+    virtual bool expectingBody(method_t, ssize_t&) const;
     void updateOnNotModified(HttpReply const *other);
     /* absorb: copy the contents of a new reply to the old one, destroy new one */
     void absorb(HttpReply * new_rep);
