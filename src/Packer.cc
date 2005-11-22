@@ -1,6 +1,6 @@
 
 /*
- * $Id: Packer.cc,v 1.19 2005/09/17 05:50:07 wessels Exp $
+ * $Id: Packer.cc,v 1.20 2005/11/21 22:55:53 wessels Exp $
  *
  * DEBUG: section 60    Packer: A uniform interface to store-like modules
  * AUTHOR: Alex Rousskov
@@ -125,6 +125,7 @@ packerToStoreInit(Packer * p, StoreEntry * e)
     p->append = (append_f) store_append;
     p->packer_vprintf = (vprintf_f) store_vprintf;
     p->real_handler = e;
+    storeBuffer(e);
 }
 
 /* init with this to accumulate data in MemBuf */
@@ -142,6 +143,10 @@ void
 packerClean(Packer * p)
 {
     assert(p);
+
+    if (p->append == (append_f) store_append && p->real_handler)
+        storeBufferFlush(static_cast<StoreEntry*>(p->real_handler));
+
     /* it is not really necessary to do this, but, just in case... */
     p->append = NULL;
     p->packer_vprintf = NULL;
