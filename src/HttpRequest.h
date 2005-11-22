@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.14 2005/09/15 20:19:41 wessels Exp $
+ * $Id: HttpRequest.h,v 1.15 2005/11/21 22:50:16 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -97,6 +97,7 @@ public:
 public:
     bool parseFirstLine(const char *start, const char *end);
     int parseHeader(const char *parse_start);
+    virtual bool expectingBody(method_t unused, ssize_t&) const;
 
 private:
     const char *packableURI(bool full_uri) const;
