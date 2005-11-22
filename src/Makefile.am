@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.117 2005/11/21 22:41:45 wessels Exp $
+#  $Id: Makefile.am,v 1.118 2005/11/21 23:18:57 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -24,6 +24,8 @@ endif
 
 TESTS=$(check_PROGRAMS)
 check_PROGRAMS=
+
+SUBDIRS		= fs repl auth
 
 DELAY_POOL_ALL_SOURCE = \
 	CommonPool.h \
@@ -92,6 +94,13 @@ else
   ESI_SOURCE = 
 endif
 
+if USE_ICAP_CLIENT
+  ICAP_LIBS = ICAP/libicap.a
+  SUBDIRS += ICAP
+else
+  ICAP_LIBS = 
+endif
+
 if ENABLE_XPROF_STATS
 XPROF_STATS_SOURCE = ProfStats.cc
 else
@@ -157,8 +166,6 @@ endif
 
 AM_CFLAGS = @SQUID_CFLAGS@
 AM_CXXFLAGS = @SQUID_CXXFLAGS@
-
-SUBDIRS		= fs repl auth
 
 EXTRA_LIBRARIES = libAIO.a libBlocking.a libDiskDaemon.a libDiskThreads.a
 noinst_LIBRARIES = @DISK_LIBS@
@@ -551,6 +558,7 @@ squid_LDADD = \
 	@CRYPTLIB@ \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
+	${ICAP_LIBS} \
 	@LIB_MALLOC@ \
 	@SSLLIB@ \
 	-lmiscutil \
