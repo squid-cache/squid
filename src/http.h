@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.14 2005/09/28 20:26:27 wessels Exp $
+ * $Id: http.h,v 1.15 2005/11/21 23:29:08 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,21 +37,39 @@
 #include "StoreIOBuffer.h"
 #include "comm.h"
 
+#if ICAP_CLIENT
+#include "ICAP/ICAPServiceRep.h"
+
+class ICAPClientRespmodPrecache;
+
+class ICAPAccessCheck;
+#endif
+
 class HttpStateData
 {
 
 public:
+    HttpStateData();
+    ~HttpStateData();
+
     static CWCB SendComplete;
     /* should be private */
-    void processReplyHeader(const char *buf, int size);
-    void processReplyData(const char *, size_t);
-    IOCB readReply;
+    void processReplyHeader();
+    void processReplyBody();
+    void readReply(size_t len, comm_err_t flag, int xerrno);
     void maybeReadData();
     int cacheableReply();
+#if ICAP_CLIENT
+
+    void takeAdaptedHeaders(HttpReply *);
+    void takeAdaptedBody(MemBuf *);
+    void doneAdapting();
+    void abortAdapting();
+    void icapSpaceAvailable();
+#endif
 
     StoreEntry *entry;
     HttpRequest *request;
-    MemBuf reply_hdr;
     peer *_peer;		/* peer request made to */
     int eof;			/* reached end-of-object? */
     HttpRequest *orig_request;
@@ -61,12 +79,32 @@ public:
     char *request_body_buf;
     off_t currentOffset;
     size_t read_sz;
-    char buf[SQUID_TCP_SO_RCVBUF];
+    int body_bytes_read;	/* to find end of response, independent of StoreEntry */
+    MemBuf *readBuf;
     bool ignoreCacheControl;
     bool surrogateNoStore;
     void processSurrogateControl(HttpReply *);
+#if ICAP_CLIENT
+
+    ICAPClientRespmodPrecache *icap;
+    void icapAclCheckDone(ICAPServiceRep::Pointer);
+    bool icapAccessCheckPending;
+#endif
+
+    /*
+     * getReply() public only because it is called from a static function
+     * as httpState->getReply()
+     */
+const HttpReply * getReply() const { return reply ? reply : entry->getReply(); }
 
 private:
+    /*
+     * This HttpReply will be owned by HttpStateData until it is given to the
+     * StoreEntry.  This is necessary/usefulr for ESI/ICAP.  Use this class' getReply()
+     * method to get the reply either directly from this class or from the StoreEntry
+     */
+    HttpReply *reply;
+
     enum ConnectionStatus {
         INCOMPLETE_MSG,
         COMPLETE_PERSISTENT_MSG,
@@ -75,6 +113,18 @@ private:
     ConnectionStatus statusIfComplete() const;
     ConnectionStatus persistentConnStatus() const;
     void failReply (HttpReply *reply, http_status const &status);
+    void keepaliveAccounting(HttpReply *);
+    void checkDateSkew(HttpReply *);
+    void haveParsedReplyHeaders();
+    void transactionComplete();
+    void writeReplyBody(const char *data, int len);
+#if ICAP_CLIENT
+
+    int doIcap(ICAPServiceRep::Pointer);
+#endif
+
+private:
+    CBDATA_CLASS2(HttpStateData);
 };
 
 #endif /* SQUID_HTTP_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.466 2005/11/07 22:00:38 wessels Exp $
+ * $Id: http.cc,v 1.467 2005/11/21 23:29:08 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -52,9 +52,12 @@
 #if DELAY_POOLS
 #include "DelayPools.h"
 #endif
+#if ICAP_CLIENT
+#include "ICAP/ICAPClientRespmodPrecache.h"
+#include "ICAP/ICAPConfig.h"
+#endif
 
-CBDATA_TYPE(HttpStateData);
-
+CBDATA_CLASS_INIT(HttpStateData);
 
 static const char *const crlf = "\r\n";
 
@@ -71,38 +74,62 @@ static void httpMaybeRemovePublic(StoreEntry *, http_status);
 static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, String strConnection, HttpRequest * request, HttpRequest * orig_request,
         HttpHeader * hdr_out, int we_do_ranges, http_state_flags);
 static int decideIfWeDoRanges (HttpRequest * orig_request);
+#if ICAP_CLIENT
+static void icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data);
+#endif
 
+HttpStateData::HttpStateData()
+{}
+
+HttpStateData::~HttpStateData()
+{
+    if (request_body_buf) {
+        if (orig_request->body_connection.getRaw()) {
+            clientAbortBody(orig_request);
+        }
+
+        if (request_body_buf) {
+            memFree(request_body_buf, MEM_8K_BUF);
+            request_body_buf = NULL;
+        }
+    }
+
+    storeUnlockObject(entry);
+
+    if (!readBuf->isNull())
+        readBuf->clean();
+
+    delete readBuf;
+
+    requestUnlink(request);
+
+    requestUnlink(orig_request);
+
+    request = NULL;
+
+    orig_request = NULL;
+
+    if (reply)
+        delete reply;
+
+#if ICAP_CLIENT
+
+    if (icap) {
+        delete icap;
+        cbdataReferenceDone(icap);
+    }
+
+#endif
+}
 
 static void
 httpStateFree(int fd, void *data)
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
+    debug(11,5)("httpStateFree: FD %d, httpState=%p\n", fd, data);
 
-    if (httpState == NULL)
-        return;
-
-    if (httpState->request_body_buf) {
-        if (httpState->orig_request->body_connection.getRaw()) {
-            clientAbortBody(httpState->orig_request);
-        }
-
-        if (httpState->request_body_buf) {
-            memFree(httpState->request_body_buf, MEM_8K_BUF);
-            httpState->request_body_buf = NULL;
-        }
-    }
-
-    storeUnlockObject(httpState->entry);
-
-    if (!httpState->reply_hdr.isNull()) {
-        httpState->reply_hdr.clean();
-    }
-
-    requestUnlink(httpState->request);
-    requestUnlink(httpState->orig_request);
-    httpState->request = NULL;
-    httpState->orig_request = NULL;
-    cbdataFree(httpState);
+    if (httpState)
+        delete httpState;
 }
 
 int
@@ -342,7 +369,7 @@ HttpStateData::processSurrogateControl(HttpReply *reply)
 int
 HttpStateData::cacheableReply()
 {
-    HttpReply const *rep = entry->getReply();
+    HttpReply const *rep = getReply();
     HttpHeader const *hdr = &rep->header;
     const int cc_mask = (rep->cache_control) ? rep->cache_control->mask : 0;
     const char *v;
@@ -441,7 +468,7 @@ HttpStateData::cacheableReply()
         if (!strncasecmp(v, "multipart/x-mixed-replace", 25))
             return 0;
 
-    switch (entry->getReply()->sline.status) {
+    switch (getReply()->sline.status) {
         /* Responses that are cacheable */
 
     case HTTP_OK:
@@ -634,131 +661,152 @@ HttpStateData::failReply(HttpReply *reply, http_status const & status)
     storeEntryReplaceObject (entry, reply);
 
     if (eof == 1) {
-        fwdComplete(fwd);
-        comm_close(fd);
+        transactionComplete();
     }
 }
 
-/* rewrite this later using new interfaces @?@
+void
+HttpStateData::keepaliveAccounting(HttpReply *reply)
+{
+    if (flags.keepalive)
+        if (_peer)
+            _peer->stats.n_keepalives_sent++;
+
+    if (reply->keep_alive) {
+        if (_peer)
+            _peer->stats.n_keepalives_recv++;
+
+        if (Config.onoff.detect_broken_server_pconns && reply->bodySize(request->method) == -1) {
+            debug(11, 1) ("keepaliveAccounting: Impossible keep-alive header from '%s'\n", storeUrl(entry));
+            // debug(11, 2) ("GOT HTTP REPLY HDR:\n---------\n%s\n----------\n", readBuf->content());
+            flags.keepalive_broken = 1;
+        }
+    }
+}
+
+void
+HttpStateData::checkDateSkew(HttpReply *reply)
+{
+    if (reply->date > -1 && !_peer) {
+        int skew = abs((int)(reply->date - squid_curtime));
+
+        if (skew > 86400)
+            debug(11, 3) ("%s's clock is skewed by %d seconds!\n",
+                          request->host, skew);
+    }
+}
+
+/*
  * This creates the error page itself.. its likely
  * that the forward ported reply header max size patch
  * generates non http conformant error pages - in which
  * case the errors where should be 'BAD_GATEWAY' etc
  */
 void
-HttpStateData::processReplyHeader(const char *buf, int size)
+HttpStateData::processReplyHeader()
 {
-    size_t hdr_len;
-    size_t hdr_size;
     /* Creates a blank header. If this routine is made incremental, this will
      * not do 
      */
-    HttpReply *reply = new HttpReply;
+    reply = new HttpReply;
     Ctx ctx = ctx_enter(entry->mem_obj->url);
-    debug(11, 3) ("processReplyHeader: key '%s'\n",
-                  entry->getMD5Text());
-
-    if (reply_hdr.isNull())
-        reply_hdr.init();
+    debug(11, 3) ("processReplyHeader: key '%s'\n", entry->getMD5Text());
 
     assert(!flags.headers_parsed);
 
-    reply_hdr.append(buf, size);
+    http_status error = HTTP_STATUS_NONE;
 
-    hdr_len = reply_hdr.size;
+    const bool parsed = reply->parse(readBuf, eof, &error);
 
-    if (hdr_len > 4 && strncmp(reply_hdr.buf, "HTTP/", 5)) {
-        debugs(11, 3, "processReplyHeader: Non-HTTP-compliant header: '" <<  reply_hdr.buf << "'");
+    if (!parsed && error > 0) { // unrecoverable parsing error
+        debugs(11, 3, "processReplyHeader: Non-HTTP-compliant header: '" <<  readBuf->content() << "'");
         flags.headers_parsed = 1;
-        reply_hdr.clean();
-        failReply (reply, HTTP_INVALID_HEADER);
+        // negated result yields http_status
+        failReply (reply, error);	// consumes reply
+        reply = NULL;
         ctx_exit(ctx);
         return;
     }
 
-    hdr_size = headersEnd(reply_hdr.buf, hdr_len);
-
-    if (hdr_size)
-        hdr_len = hdr_size;
-
-    if (hdr_len > Config.maxReplyHeaderSize) {
-        debugs(11, 1, "processReplyHeader: Too large reply header");
-
-        if (!reply_hdr.isNull())
-            reply_hdr.clean();
-
-        failReply (reply, HTTP_HEADER_TOO_LARGE);
-
-        flags.headers_parsed = 1;
-
+    if (!parsed) { // need more data
+        assert(!error);
+        assert(!eof);
+        delete reply;
+        reply = NULL;
         ctx_exit(ctx);
-
         return;
     }
 
-    /* headers can be incomplete only if object still arriving */
-    if (!hdr_size) {
-        if (eof)
-            hdr_size = hdr_len;
-        else {
-            delete reply;
-            ctx_exit(ctx);
-            return;		/* headers not complete */
-        }
-    }
-
-    /* Cut away any excess body data (only needed for debug?) */
-    reply_hdr.append("\0", 1);
-
-    reply_hdr.buf[hdr_size] = '\0';
-
+    readBuf->consume(headersEnd(readBuf->content(), readBuf->contentSize()));
     flags.headers_parsed = 1;
 
     debug(11, 9) ("GOT HTTP REPLY HDR:\n---------\n%s\n----------\n",
-                  reply_hdr.buf);
+                  readBuf->content());
 
-    /* Parse headers into reply structure */
-    /* what happens if we fail to parse here? */
-    reply->parseCharBuf(reply_hdr.buf, hdr_size);
+    keepaliveAccounting(reply);
 
-    if (reply->sline.status >= HTTP_INVALID_HEADER) {
-        debugs(11, 3, "processReplyHeader: Non-HTTP-compliant header: '" << reply_hdr.buf << "'");
-        failReply (reply, HTTP_INVALID_HEADER);
-        ctx_exit(ctx);
-        return;
-    }
+    checkDateSkew(reply);
 
     processSurrogateControl (reply);
-    /* TODO: we need our own reply * in the httpState, as we probably don't want to replace
-     * the storeEntry with interim headers
-     */
 
     /* TODO: IF the reply is a 1.0 reply, AND it has a Connection: Header
      * Parse the header and remove all referenced headers
      */
 
+#if ICAP_CLIENT
+
+    {
+        ICAPAccessCheck *icap_access_check =
+            new ICAPAccessCheck(ICAP::methodRespmod, ICAP::pointPreCache, request, reply, icapAclCheckDoneWrapper, this);
+
+        icapAccessCheckPending = true;
+        icap_access_check->check(); // will eventually delete self
+        ctx_exit(ctx);
+        return;
+    }
+#endif
+
     storeEntryReplaceObject(entry, reply);
-    /* DO NOT USE reply now */
+
+    /* Note storeEntryReplaceObject() consumes reply, so we cannot use it */
     reply = NULL;
 
-    if (entry->getReply()->sline.status == HTTP_PARTIAL_CONTENT &&
-            entry->getReply()->content_range)
-        currentOffset = entry->getReply()->content_range->spec.offset;
+    haveParsedReplyHeaders();
+
+    if (eof == 1) {
+        transactionComplete();
+    }
+
+    ctx_exit(ctx);
+}
+
+/*
+ * This function used to be joined with processReplyHeader(), but
+ * we split it for ICAP.
+ */
+void
+HttpStateData::haveParsedReplyHeaders()
+{
+    Ctx ctx = ctx_enter(entry->mem_obj->url);
+
+    if (getReply()->sline.status == HTTP_PARTIAL_CONTENT &&
+            getReply()->content_range)
+        currentOffset = getReply()->content_range->spec.offset;
 
     storeTimestampsSet(entry);
 
     /* Check if object is cacheable or not based on reply code */
-    debug(11, 3) ("processReplyHeader: HTTP CODE: %d\n", entry->getReply()->sline.status);
+    debug(11, 3) ("haveParsedReplyHeaders: HTTP CODE: %d\n", getReply()->sline.status);
 
     if (neighbors_do_private_keys)
-        httpMaybeRemovePublic(entry, entry->getReply()->sline.status);
+        httpMaybeRemovePublic(entry, getReply()->sline.status);
 
-    if (httpHeaderHas(&entry->getReply()->header, HDR_VARY)
+    if (httpHeaderHas(&getReply()->header, HDR_VARY)
 #if X_ACCELERATOR_VARY
-            || httpHeaderHas(&entry->getReply()->header, HDR_X_ACCELERATOR_VARY)
+            || httpHeaderHas(&getReply()->header, HDR_X_ACCELERATOR_VARY)
 #endif
        ) {
-        const char *vary = httpMakeVaryMark(orig_request, entry->getReply());
+        const char *vary = httpMakeVaryMark(orig_request, getReply());
 
         if (!vary) {
             httpMakePrivate(entry);
@@ -768,6 +816,17 @@ HttpStateData::processReplyHeader(const char *buf, int size)
 
         entry->mem_obj->vary_headers = xstrdup(vary);
     }
+
+#if WIP_FWD_LOG
+    fwdStatus(fwd, s);
+
+#endif
+    /*
+     * If its not a reply that we will re-forward, then
+     * allow the client to get it.
+     */
+    if (!fwdReforwardableStatus(getReply()->sline.status))
+        EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
 
     switch (cacheableReply()) {
 
@@ -796,55 +855,27 @@ HttpStateData::processReplyHeader(const char *buf, int size)
 
 no_cache:
 
-    if (!ignoreCacheControl && entry->getReply()->cache_control) {
-        if (EBIT_TEST(entry->getReply()->cache_control->mask, CC_PROXY_REVALIDATE))
+    if (!ignoreCacheControl && getReply()->cache_control) {
+        if (EBIT_TEST(getReply()->cache_control->mask, CC_PROXY_REVALIDATE))
             EBIT_SET(entry->flags, ENTRY_REVALIDATE);
-        else if (EBIT_TEST(entry->getReply()->cache_control->mask, CC_MUST_REVALIDATE))
+        else if (EBIT_TEST(getReply()->cache_control->mask, CC_MUST_REVALIDATE))
             EBIT_SET(entry->flags, ENTRY_REVALIDATE);
-    }
-
-    if (flags.keepalive)
-        if (_peer)
-            _peer->stats.n_keepalives_sent++;
-
-    if (entry->getReply()->keep_alive) {
-        if (_peer)
-            _peer->stats.n_keepalives_recv++;
-
-        if (Config.onoff.detect_broken_server_pconns && reply->bodySize(request->method) == -1) {
-            debug(11, 1) ("processReplyHeader: Impossible keep-alive header from '%s'\n", storeUrl(entry));
-            debug(11, 2) ("GOT HTTP REPLY HDR:\n---------\n%s\n----------\n", reply_hdr.buf);
-            flags.keepalive_broken = 1;
-        }
-    }
-
-    if (entry->getReply()->date > -1 && !_peer) {
-        int skew = abs((int)(entry->getReply()->date - squid_curtime));
-
-        if (skew > 86400)
-            debug(11, 3) ("%s's clock is skewed by %d seconds!\n",
-                          request->host, skew);
     }
 
     ctx_exit(ctx);
 #if HEADERS_LOG
 
-    headersLog(1, 0, request->method, entry->getReply());
+    headersLog(1, 0, request->method, getReply());
 #endif
-
-    if (eof == 1) {
-        fwdComplete(fwd);
-        comm_close(fd);
-    }
 }
 
 HttpStateData::ConnectionStatus
 HttpStateData::statusIfComplete() const
 {
-    HttpReply const *reply = entry->getReply();
+    HttpReply const *rep = getReply();
     /* If the reply wants to close the connection, it takes precedence */
 
-    if (httpHeaderHasConnDir(&reply->header, "close"))
+    if (httpHeaderHasConnDir(&rep->header, "close"))
         return COMPLETE_NONPERSISTENT_MSG;
 
     /* If we didn't send a keep-alive request header, then this
@@ -876,7 +907,7 @@ HttpStateData::statusIfComplete() const
      * and an error status code, and we might have to wait until
      * the server times out the socket.
      */
-    if (!reply->keep_alive)
+    if (!rep->keep_alive)
         return COMPLETE_NONPERSISTENT_MSG;
 
     return COMPLETE_PERSISTENT_MSG;
@@ -885,18 +916,22 @@ HttpStateData::statusIfComplete() const
 HttpStateData::ConnectionStatus
 HttpStateData::persistentConnStatus() const
 {
-    HttpReply const *reply = entry->getReply();
+    HttpReply const *reply = getReply();
     int clen;
-    debug(11, 3) ("httpPconnTransferDone: FD %d\n", fd);
+    debug(11, 3) ("persistentConnStatus: FD %d\n", fd);
     ConnectionStatus result = statusIfComplete();
-    debug(11, 5) ("httpPconnTransferDone: content_length=%d\n",
+    debug(11, 5) ("persistentConnStatus: content_length=%d\n",
                   reply->content_length);
     /* If we haven't seen the end of reply headers, we are not done */
+
+    debug(11,5)("persistentConnStatus: flags.headers_parsed=%d\n", flags.headers_parsed);
 
     if (!flags.headers_parsed)
         return INCOMPLETE_MSG;
 
     clen = reply->bodySize(request->method);
+
+    debug(11,5)("persistentConnStatus: clen=%d\n", clen);
 
     /* If there is no message body, we can be persistent */
     if (0 == clen)
@@ -907,38 +942,43 @@ HttpStateData::persistentConnStatus() const
         return INCOMPLETE_MSG;
 
     /* If the body size is known, we must wait until we've gotten all of it.  */
-    if (entry->mem_obj->endOffset() < reply->content_length + reply->hdr_sz)
+    /* old technique:
+     * if (entry->mem_obj->endOffset() < reply->content_length + reply->hdr_sz) */
+    debug(11,5)("persistentConnStatus: body_bytes_read=%d, content_length=%d\n",
+                body_bytes_read, reply->content_length);
+
+    if (body_bytes_read < reply->content_length)
         return INCOMPLETE_MSG;
 
     /* We got it all */
     return result;
 }
 
+/*
+ * This is the callback after some data has been read from the network
+ */
 static void
-httpReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno,void *data)
+httpReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
     assert (fd == httpState->fd);
+    // assert(buf == readBuf->content());
     PROF_start(HttpStateData_readReply);
-    httpState->readReply (fd, buf, len, flag, xerrno, data);
+    httpState->readReply (len, flag, xerrno);
     PROF_stop(HttpStateData_readReply);
 }
 
-/* This will be called when data is ready to be read from fd.  Read until
- * error or connection closed. */
 /* XXX this function is too long! */
 void
-HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, int xerrno,void *data)
+HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
 {
     int bin;
     int clen;
     flags.do_next_read = 0;
 
-
-    assert(buf == readBuf);
-
-    /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us
-    */
+    /*
+     * Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us
+     */
 
     if (flag == COMM_ERR_CLOSING) {
         debug (11,3)("http socket closing\n");
@@ -952,16 +992,14 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
 
     errno = 0;
     /* prepare the read size for the next read (if any) */
-#if DELAY_POOLS
-
-    DelayId delayId = entry->mem_obj->mostBytesAllowed();
-
-#endif
 
     debug(11, 5) ("httpReadReply: FD %d: len %d.\n", fd, (int)len);
 
     if (flag == COMM_OK && len > 0) {
+        readBuf->appended(len);
 #if DELAY_POOLS
+
+        DelayId delayId = entry->mem_obj->mostBytesAllowed();
         delayId.bytesIn(len);
 #endif
 
@@ -1012,7 +1050,7 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
             flags.do_next_read = 0;
             comm_close(fd);
         }
-    } else if (flag == COMM_OK && len == 0 && entry->isEmpty()) {
+    } else if (flag == COMM_OK && len == 0 && !flags.headers_parsed) {
         fwdFail(fwd, errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_BAD_GATEWAY));
         eof = 1;
         flags.do_next_read = 0;
@@ -1028,8 +1066,8 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
             * definately at EOF, so we want to process the reply
             * headers.
              */
-            processReplyHeader(buf, len);
-        else if (entry->getReply()->sline.status == HTTP_INVALID_HEADER && HttpVersion(0,9) != entry->getReply()->sline.version) {
+            processReplyHeader();
+        else if (getReply()->sline.status == HTTP_INVALID_HEADER && HttpVersion(0,9) != getReply()->sline.version) {
             fwdFail(fwd, errorCon(ERR_INVALID_RESP, HTTP_BAD_GATEWAY));
             flags.do_next_read = 0;
         } else {
@@ -1037,20 +1075,19 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
                 storeEntryReset(entry);
                 fwdFail(fwd, errorCon(ERR_TOO_BIG, HTTP_BAD_GATEWAY));
                 fwd->flags.dont_retry = 1;
+                flags.do_next_read = 0;
+                comm_close(fd);
             } else {
-                fwdComplete(fwd);
+                transactionComplete();
             }
-
-            flags.do_next_read = 0;
-            comm_close(fd);
         }
     } else {
         if (!flags.headers_parsed) {
-            processReplyHeader(buf, len);
+            processReplyHeader();
 
             if (flags.headers_parsed) {
-                http_status s = entry->getReply()->sline.status;
-                HttpVersion httpver = entry->getReply()->sline.version;
+                http_status s = getReply()->sline.status;
+                HttpVersion httpver = getReply()->sline.version;
 
                 if (s == HTTP_INVALID_HEADER && httpver != HttpVersion(0,9)) {
                     storeEntryReset(entry);
@@ -1059,29 +1096,45 @@ HttpStateData::readReply (int fd, char *readBuf, size_t len, comm_err_t flag, in
                     return;
                 }
 
-#if WIP_FWD_LOG
-
-                fwdStatus(fwd, s);
-
-#endif
-                /*
-                 * If its not a reply that we will re-forward, then
-                 * allow the client to get it.
-                 */
-
-                if (!fwdReforwardableStatus(s))
-                    EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
             }
         }
 
-        PROF_start(HttpStateData_processReplyData);
-        processReplyData(buf, len);
-        PROF_stop(HttpStateData_processReplyData);
+        PROF_start(HttpStateData_processReplyBody);
+        processReplyBody();
+        PROF_stop(HttpStateData_processReplyBody);
     }
 }
 
+/*
+ * Call this when there is data from the origin server
+ * which should be sent to either StoreEntry, or to ICAP...
+ */
 void
-HttpStateData::processReplyData(const char *buf, size_t len)
+HttpStateData::writeReplyBody(const char *data, int len)
+{
+#if ICAP_CLIENT
+
+    if (icap)  {
+        icap->sendMoreData (StoreIOBuffer(len, 0, (char*)data));
+        return;
+    }
+
+#endif
+
+    entry->write (StoreIOBuffer(len, currentOffset, (char*)data));
+
+    currentOffset += len;
+}
+
+/*
+ * processReplyBody has two purposes:
+ *  1 - take the reply body data, if any, and put it into either
+ *      the StoreEntry, or give it over to ICAP.
+ *  2 - see if we made it to the end of the response (persistent
+ *      connections and such)
+ */
+void
+HttpStateData::processReplyBody()
 {
     if (!flags.headers_parsed) {
         flags.do_next_read = 1;
@@ -1089,36 +1142,26 @@ HttpStateData::processReplyData(const char *buf, size_t len)
         return;
     }
 
-    StoreIOBuffer tempBuffer;
+#if ICAP_CLIENT
+    if (icapAccessCheckPending)
+        return;
 
-    if (!flags.headers_pushed) {
-        /* The first block needs us to skip the headers */
-        /* TODO: make this cleaner. WE should push the headers, NOT the parser */
-        size_t end = headersEnd (buf, len);
-        /* IF len > end, we need to append data after the
-         * out of band update to the store
-         */
+#endif
 
-        if (len > end) {
-            tempBuffer.data = (char *)buf+end;
-            tempBuffer.length = len - end;
-            tempBuffer.offset = currentOffset;
-            currentOffset += tempBuffer.length;
-            entry->write (tempBuffer);
-        }
+    /*
+     * At this point the reply headers have been parsed and consumed.
+     * That means header content has been removed from readBuf and
+     * it contains only body data.
+     */
+    writeReplyBody(readBuf->content(), readBuf->contentSize());
 
-        flags.headers_pushed = 1;
-    } else {
-        tempBuffer.data = (char *)buf;
-        tempBuffer.length = len;
-        tempBuffer.offset = currentOffset;
-        currentOffset += len;
-        entry->write(tempBuffer);
-    }
+    body_bytes_read += readBuf->contentSize();
+
+    readBuf->consume(readBuf->contentSize());
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
         /*
-         * the above entry->write() call could ABORT this entry,
+         * the above writeReplyBody() call could ABORT this entry,
          * in that case, the server FD should already be closed.
          * there's nothing for us to do.
          */
@@ -1127,6 +1170,7 @@ HttpStateData::processReplyData(const char *buf, size_t len)
         switch (persistentConnStatus()) {
 
         case INCOMPLETE_MSG:
+            debug(11,5)("processReplyBody: INCOMPLETE_MSG\n");
             /* Wait for more data or EOF condition */
 
             if (flags.keepalive_broken) {
@@ -1139,6 +1183,7 @@ HttpStateData::processReplyData(const char *buf, size_t len)
             break;
 
         case COMPLETE_PERSISTENT_MSG:
+            debug(11,5)("processReplyBody: COMPLETE_PERSISTENT_MSG\n");
             /* yes we have to clear all these! */
             commSetTimeout(fd, -1, NULL, NULL);
             flags.do_next_read = 0;
@@ -1155,23 +1200,14 @@ HttpStateData::processReplyData(const char *buf, size_t len)
                 pconnPush(fd, request->host, request->port, NULL);
             }
 
-            fwdComplete(fwd);
             fd = -1;
-            httpStateFree(fd, this);
+
+            transactionComplete();
             return;
 
         case COMPLETE_NONPERSISTENT_MSG:
-            /* close the connection ourselves */
-            /* yes - same as for a complete persistent conn here */
-            commSetTimeout(fd, -1, NULL, NULL);
-            commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
-            comm_remove_close_handler(fd, httpStateFree, this);
-            fwdUnregister(fd, fwd);
-            fwdComplete(fwd);
-            /* TODO: check that fd is still open here */
-            comm_close (fd);
-            fd = -1;
-            httpStateFree(fd, this);
+            debug(11,5)("processReplyBody: COMPLETE_NONPERSISTENT_MSG\n");
+            transactionComplete();
             return;
         }
 
@@ -1181,14 +1217,50 @@ HttpStateData::processReplyData(const char *buf, size_t len)
 void
 HttpStateData::maybeReadData()
 {
+    int read_sz = readBuf->spaceSize();
+#if ICAP_CLIENT
+
+    if (icap) {
+        /*
+         * Our ICAP message pipes have a finite size limit.  We
+         * should not read more data from the network than will fit
+         * into the pipe buffer.  If totally full, don't register
+         * the read handler at all.  The ICAP side will call our
+         * icapSpaceAvailable() method when it has free space again.
+         */
+        int icap_space = icap->potentialSpaceSize();
+
+        debugs(11,9, "HttpStateData may read up to min(" << icap_space <<
+               ", " << read_sz << ") bytes");
+
+        if (icap_space < read_sz)
+            read_sz = icap_space;
+    }
+
+#endif
+
+    debugs(11,9, "HttpStateData may read up to " << read_sz << " bytes");
+
+    /*
+     * why <2? Because delayAwareRead() won't actually read if
+     * you ask it to read 1 byte.  The delayed read request
+     * just gets re-queued until the client side drains, then
+     * the I/O thread hangs.  Better to not register any read
+     * handler until we get a notification from someone that
+     * its okay to read again.
+     */
+    if (read_sz < 2)
+        return;
+
     if (flags.do_next_read) {
         flags.do_next_read = 0;
-        entry->delayAwareRead(fd, buf, SQUID_TCP_SO_RCVBUF, httpReadReply, this);
+        entry->delayAwareRead(fd, readBuf->space(), read_sz, httpReadReply, this);
     }
 }
 
-/* This will be called when request write is complete. Schedule read of
- * reply. */
+/*
+ * This will be called when request write is complete.
+ */
 void
 HttpStateData::SendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void *data)
 {
@@ -1216,19 +1288,54 @@ HttpStateData::SendComplete(int fd, char *bufnotused, size_t size, comm_err_t er
         fwdFail(httpState->fwd, err);
         comm_close(fd);
         return;
-    } else {
-        /*
-         * Set the read timeout here because it hasn't been set yet.
-         * We only set the read timeout after the request has been
-         * fully written to the server-side.  If we start the timeout
-         * after connection establishment, then we are likely to hit
-         * the timeout for POST/PUT requests that have very large
-         * request bodies.
-         */
-        commSetTimeout(fd, Config.Timeout.read, httpTimeout, httpState);
     }
 
+    /*
+     * Set the read timeout here because it hasn't been set yet.
+     * We only set the read timeout after the request has been
+     * fully written to the server-side.  If we start the timeout
+     * after connection establishment, then we are likely to hit
+     * the timeout for POST/PUT requests that have very large
+     * request bodies.
+     */
+    commSetTimeout(fd, Config.Timeout.read, httpTimeout, httpState);
+
     httpState->flags.request_sent = 1;
+}
+
+/*
+ * Calling this function marks the end of the HTTP transaction.
+ * i.e., done talking to the HTTP server.  With ICAP, however, that
+ * does not mean that we're done with HttpStateData and the StoreEntry.
+ * We'll be expecting adapted data to come back from the ICAP
+ * routines.
+ */
+void
+HttpStateData::transactionComplete()
+{
+    if (fd >= 0) {
+        fwdUnregister(fd, fwd);
+        comm_remove_close_handler(fd, httpStateFree, this);
+        comm_close(fd);
+        fd = -1;
+    }
+
+#if ICAP_CLIENT
+    if (icap) {
+        icap->doneSending();
+    } else {
+
+#endif
+
+        fwdComplete(fwd);
+
+        httpStateFree(-1, this);
+
+#if ICAP_CLIENT
+
+    }
+
+#endif
 }
 
 /*
@@ -1274,7 +1381,6 @@ httpBuildRequestHeader(HttpRequest * request,
         orig_request->range = NULL;
         orig_request->flags.range = 0;
     }
-
 
     /* append Via */
     if (Config.onoff.via) {
@@ -1454,7 +1560,6 @@ httpBuildRequestHeader(HttpRequest * request,
     strConnection.clean();
 }
 
-
 void
 copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, String strConnection, HttpRequest * request, HttpRequest * orig_request, HttpHeader * hdr_out, int we_do_ranges, http_state_flags flags)
 {
@@ -1607,7 +1712,6 @@ decideIfWeDoRanges (HttpRequest * orig_request)
     return result;
 }
 
-
 /* build request prefix and append it to a given MemBuf;
  * return the length of the prefix */
 mb_size_t
@@ -1652,9 +1756,9 @@ httpSendRequest(HttpStateData * httpState)
     debug(11, 5) ("httpSendRequest: FD %d: httpState %p.\n", fd,
                   httpState);
 
-    /* Schedule read reply. */
     commSetTimeout(fd, Config.Timeout.lifetime, httpTimeout, httpState);
-    entry->delayAwareRead(fd, httpState->buf, SQUID_TCP_SO_RCVBUF, httpReadReply, httpState);
+    httpState->flags.do_next_read = 1;
+    httpState->maybeReadData();
 
     if (httpState->orig_request->body_connection.getRaw() != NULL)
         sendHeaderDone = httpSendRequestEntity;
@@ -1715,14 +1819,15 @@ httpStart(FwdState * fwd)
     debug(11, 3) ("httpStart: \"%s %s\"\n",
                   RequestMethodStr[orig_req->method],
                   storeUrl(fwd->entry));
-    CBDATA_INIT_TYPE(HttpStateData);
-    httpState = cbdataAlloc(HttpStateData);
+    httpState = new HttpStateData;
     httpState->ignoreCacheControl = false;
     httpState->surrogateNoStore = false;
     storeLockObject(fwd->entry);
     httpState->fwd = fwd;
     httpState->entry = fwd->entry;
     httpState->fd = fd;
+    httpState->readBuf = new MemBuf;
+    httpState->readBuf->init(4096, SQUID_TCP_SO_RCVBUF);
 
     if (fwd->servers)
         httpState->_peer = fwd->servers->_peer;		/* might be NULL */
@@ -1827,7 +1932,7 @@ httpRequestBodyHandler(char *buf, ssize_t size, void *data)
                           inet_ntoa(httpState->orig_request->client_addr),
                           storeUrl(httpState->entry));
 
-            if (httpState->entry->getReply()->sline.status == HTTP_INVALID_HEADER) {
+            if (httpState->getReply()->sline.status == HTTP_INVALID_HEADER) {
                 memFree8K(buf);
                 comm_close(httpState->fd);
                 return;
@@ -1887,3 +1992,157 @@ httpBuildVersion(HttpVersion * version, unsigned int major, unsigned int minor)
     version->major = major;
     version->minor = minor;
 }
+
+#if ICAP_CLIENT
+
+static void
+icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data)
+{
+    HttpStateData *http = (HttpStateData *)data;
+    http->icapAclCheckDone(service);
+}
+
+void
+HttpStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
+{
+    icapAccessCheckPending = false;
+
+    if (service == NULL) {
+        // handle case where no service is selected;
+        storeEntryReplaceObject(entry, reply);
+
+        /* Note storeEntryReplaceObject() consumes reply, so we cannot use it */
+        reply = NULL;
+
+        haveParsedReplyHeaders();
+        processReplyBody();
+
+        if (eof == 1)
+            transactionComplete();
+
+        return;
+    }
+
+    if (doIcap(service) < 0) {
+        /*
+         * XXX Maybe instead of an error page we should
+         * handle the reply normally (without ICAP).
+         */
+        ErrorState *err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
+        err->xerrno = errno;
+        err->request = requestLink(orig_request);
+        errorAppendEntry(entry, err);
+        comm_close(fd);
+        return;
+    }
+
+    icap->startRespMod(this, request, reply);
+    processReplyBody();
+}
+
+/*
+ * Initiate an ICAP transaction.  Return 0 if all is well, or -1 upon error.
+ * Caller will handle error condition by generating a Squid error message
+ * or take other action.
+ */
+int
+HttpStateData::doIcap(ICAPServiceRep::Pointer service)
+{
+    debug(11,5)("HttpStateData::doIcap() called\n");
+    assert(NULL == icap);
+    icap = new ICAPClientRespmodPrecache(service);
+    (void) cbdataReference(icap);
+    return 0;
+}
+
+/*
+ * Called by ICAPClientRespmodPrecache when it has space available for us.
+ */
+void
+HttpStateData::icapSpaceAvailable()
+{
+    debug(11,5)("HttpStateData::icapSpaceAvailable() called\n");
+    maybeReadData();
+}
+
+void
+HttpStateData::takeAdaptedHeaders(HttpReply *rep)
+{
+    debug(11,5)("HttpStateData::takeAdaptedHeaders() called\n");
+
+    if (!entry->isAccepting()) {
+        debug(11,5)("\toops, entry is not Accepting!\n");
+        icap->ownerAbort();
+        return;
+    }
+
+    storeEntryReplaceObject(entry, rep);
+
+    /*
+     * After calling storeEntryReplaceObject() we give up control
+     * of the rep and this->reply pointers.
+     */
+    rep = NULL;
+
+    haveParsedReplyHeaders();
+
+    debug(11,5)("HttpStateData::takeAdaptedHeaders() finished\n");
+}
+
+void
+HttpStateData::takeAdaptedBody(MemBuf *buf)
+{
+    debug(11,5)("HttpStateData::takeAdaptedBody() called\n");
+    debug(11,5)("\t%d bytes\n", buf->contentSize());
+    debug(11,5)("\t%d is current offset\n", (int)currentOffset);
+
+    if (!entry->isAccepting()) {
+        debug(11,5)("\toops, entry is not Accepting!\n");
+        icap->ownerAbort();
+        return;
+    }
+
+    entry->write(StoreIOBuffer(buf, currentOffset)); // write everything
+    currentOffset += buf->contentSize();
+    buf->consume(buf->contentSize()); // consume everything written
+}
+
+void
+HttpStateData::doneAdapting()
+{
+    debug(11,5)("HttpStateData::doneAdapting() called\n");
+
+    if (!entry->isAccepting()) {
+        debug(11,5)("\toops, entry is not Accepting!\n");
+        icap->ownerAbort();
+    } else {
+        fwdComplete(fwd);
+    }
+
+    assert(fd == -1);
+    httpStateFree(-1, this);
+}
+
+void
+HttpStateData::abortAdapting()
+{
+    debug(11,5)("HttpStateData::abortAdapting() called\n");
+
+    if (entry->isEmpty()) {
+        ErrorState *err;
+        err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
+        err->request = requestLink((HttpRequest *) request);
+        err->xerrno = errno;
+        fwdFail(fwd, err);
+        flags.do_next_read = 0;
+    }
+
+    fwdComplete(fwd);
+
+    if (fd >= 0)
+        comm_close(fd);
+    else
+        httpStateFree(fd, this);
+}
+
+#endif
