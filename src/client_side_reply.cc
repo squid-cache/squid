@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.90 2005/11/07 22:00:38 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.91 2005/11/21 23:21:21 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -44,6 +44,9 @@
 #include "AuthUserRequest.h"
 #if ESI
 #include "ESI.h"
+#endif
+#if ICAP_CLIENT_RESPMOD_POSTCACHE
+#include "ICAPClient.h"
 #endif
 #include "MemObject.h"
 #include "ACLChecklist.h"
@@ -1942,6 +1945,19 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
     }
 
 #endif
+
+#if ICAP_CLIENT_RESPMOD_POSTCACHE
+
+    debug(88, 0) ("Enabling ICAP processing for %s\n", http->uri);
+
+    clientStreamInsertHead(&http->client_stream, icapclientStreamRead,
+                           icapclientProcessStream,
+                           icapclientStreamDetach,
+                           icapclientStreamStatus,
+                           NULL);
+
+#endif
+
     if (http->request->method == METHOD_HEAD) {
         /* do not forward body for HEAD replies */
         body_size = 0;
