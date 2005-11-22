@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.51 2005/11/21 23:26:45 wessels Exp $
+ * $Id: client_side_request.cc,v 1.52 2005/11/21 23:53:37 wessels Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -466,7 +466,9 @@ ClientRequestContext::icapAccessCheck()
 {
     ICAPAccessCheck *icap_access_check;
 
-    if (icap_access_check = new ICAPAccessCheck(ICAP::methodReqmod, ICAP::pointPreCache, http->request, NULL, icapAclCheckDoneWrapper, this)) {
+    icap_access_check = new ICAPAccessCheck(ICAP::methodReqmod, ICAP::pointPreCache, http->request, NULL, icapAclCheckDoneWrapper, this);
+
+    if (icap_access_check != NULL) {
         icap_access_check->check();
         return;
     }
