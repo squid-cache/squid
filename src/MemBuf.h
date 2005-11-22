@@ -1,5 +1,7 @@
+
+
 /*
- * $Id: MemBuf.h,v 1.5 2005/09/17 05:50:07 wessels Exp $
+ * $Id: MemBuf.h,v 1.6 2005/11/21 23:04:56 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -45,7 +47,9 @@ public:
 
     /* use methods instead of deprecated buf and size members */
 
-    char *content() { return buf; }      // start of the added data
+    char *content() { return buf; }             // start of the added data
+
+    const char *content() const { return buf; } // start of the added data
 
     mb_size_t contentSize() const { return size; } // available data size
 
@@ -69,6 +73,8 @@ public:
     // XXX: convert global memBuf*() functions into methods
 
     void terminate(); // zero-terminates the buffer w/o increasing contentSize
+
+    bool wasStolen() const { return stolen; }
 
     /* init with specific sizes */
     void init(mb_size_t szInit, mb_size_t szMax);
@@ -102,7 +108,6 @@ public:
     /* returns free() function to be used, _freezes_ the object! */
     FREE *freeFunc();
 
-
 private:
     /*
      * private copy constructor and assignment operator generates
@@ -130,6 +135,12 @@ public:
 
 unsigned stolen:
     1;		/* the buffer has been stolen for use by someone else */
+
+#if 0
+
+unsigned valid:
+    1;		/* to be used for debugging only! */
+#endif
 };
 
 #ifdef _USE_INLINE_
