@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.19 2005/11/07 22:00:38 wessels Exp $
+ * $Id: HttpMsg.cc,v 1.20 2005/11/21 22:46:38 wessels Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -44,14 +44,12 @@ HttpMsg::HttpMsg(http_hdr_owner_type owner): header(owner),
         pstate(psReadyToParseStartLine)
 {}
 
-
 HttpMsgParseState &operator++ (HttpMsgParseState &aState)
 {
     int tmp = (int)aState;
     aState = (HttpMsgParseState)(++tmp);
     return aState;
 }
-
 
 /* find end of headers */
 int
@@ -279,7 +277,6 @@ HttpMsg::httpMsgParseStep(const char *buf, int atEnd)
     return 1;
 }
 
-
 /* handy: resets and returns -1 */
 int
 HttpMsg::httpMsgParseError()
@@ -293,14 +290,12 @@ HttpMsg::httpMsgParseError()
     return -1;
 }
 
-
-
 /* returns true if connection should be "persistent"
  * after processing this message */
 int
 httpMsgIsPersistent(HttpVersion const &http_ver, const HttpHeader * hdr)
 {
-#if WHEN_SQUID_IS_NOT_HTTP1_1
+#if WHEN_SQUID_IS_HTTP1_1
 
     if ((http_ver.major >= 1) && (http_ver.minor >= 1)) {
         /*
