@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.354 2005/11/21 22:41:45 wessels Exp $
+#  $Id: Makefile.in,v 1.355 2005/11/21 23:55:25 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -50,6 +50,7 @@ host_triplet = @host@
 check_PROGRAMS = tests/testAuth$(EXEEXT) tests/testStore$(EXEEXT) \
 	tests/testUfs$(EXEEXT) tests/testCoss$(EXEEXT) \
 	tests/testNull$(EXEEXT)
+@USE_ICAP_CLIENT_TRUE@am__append_1 = ICAP
 EXTRA_PROGRAMS = DiskIO/DiskDaemon/diskd$(EXEEXT) unlinkd$(EXEEXT) \
 	pinger$(EXEEXT) dnsserver$(EXEEXT) recv-announce$(EXEEXT) \
 	ufsdump$(EXEEXT)
@@ -313,6 +314,7 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 nodist_squid_OBJECTS = repl_modules.$(OBJEXT) globals.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 squid_OBJECTS = $(am_squid_OBJECTS) $(nodist_squid_OBJECTS)
+@USE_ICAP_CLIENT_TRUE@am__DEPENDENCIES_1 = ICAP/libicap.a
 am_squidclient_OBJECTS = client.$(OBJEXT)
 squidclient_OBJECTS = $(am_squidclient_OBJECTS)
 squidclient_LDADD = $(LDADD)
@@ -371,7 +373,7 @@ am__objects_25 = tests/stub_store_rebuild.$(OBJEXT) \
 am_tests_testCoss_OBJECTS = tests/testCoss.$(OBJEXT) \
 	tests/testMain.$(OBJEXT) $(am__objects_25)
 tests_testCoss_OBJECTS = $(am_tests_testCoss_OBJECTS)
-am__DEPENDENCIES_1 = DiskIO/Blocking/BlockingDiskIOModule.o \
+am__DEPENDENCIES_2 = DiskIO/Blocking/BlockingDiskIOModule.o \
 	repl/lru/store_repl_lru.o
 am_tests_testNull_OBJECTS = tests/testNull.$(OBJEXT) \
 	tests/testMain.$(OBJEXT) $(am__objects_25)
@@ -554,7 +556,7 @@ DATA = $(data_DATA) $(sysconf_DATA)
 HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = $(SUBDIRS)
+DIST_SUBDIRS = fs repl auth ICAP
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ALLOCA = @ALLOCA@
@@ -691,6 +693,8 @@ USE_DNSSERVER_FALSE = @USE_DNSSERVER_FALSE@
 USE_DNSSERVER_TRUE = @USE_DNSSERVER_TRUE@
 USE_ESI_FALSE = @USE_ESI_FALSE@
 USE_ESI_TRUE = @USE_ESI_TRUE@
+USE_ICAP_CLIENT_FALSE = @USE_ICAP_CLIENT_FALSE@
+USE_ICAP_CLIENT_TRUE = @USE_ICAP_CLIENT_TRUE@
 USE_SNMP_FALSE = @USE_SNMP_FALSE@
 USE_SNMP_TRUE = @USE_SNMP_TRUE@
 VERSION = @VERSION@
@@ -750,6 +754,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 @USE_SNMP_FALSE@SNMPSOURCE = 
 @USE_SNMP_TRUE@SNMPSOURCE = snmp_core.cc snmp_agent.cc
 TESTS = $(check_PROGRAMS)
+SUBDIRS = fs repl auth $(am__append_1)
 DELAY_POOL_ALL_SOURCE = \
 	CommonPool.h \
 	CompositePoolNode.h \
@@ -811,6 +816,8 @@ ESI_ALL_SOURCE = \
 
 @USE_ESI_FALSE@ESI_SOURCE = 
 @USE_ESI_TRUE@ESI_SOURCE = $(ESI_ALL_SOURCE)
+@USE_ICAP_CLIENT_FALSE@ICAP_LIBS = 
+@USE_ICAP_CLIENT_TRUE@ICAP_LIBS = ICAP/libicap.a
 @ENABLE_XPROF_STATS_FALSE@XPROF_STATS_SOURCE = 
 @ENABLE_XPROF_STATS_TRUE@XPROF_STATS_SOURCE = ProfStats.cc
 @ENABLE_HTCP_TRUE@HTCPSOURCE = htcp.cc htcp.h
@@ -842,7 +849,6 @@ ARP_ACL_ALL_SOURCE = ACLARP.cc ACLARP.h
 @ENABLE_ARP_ACL_TRUE@ARP_ACL_SOURCE = $(ARP_ACL_ALL_SOURCE)
 AM_CFLAGS = @SQUID_CFLAGS@
 AM_CXXFLAGS = @SQUID_CXXFLAGS@
-SUBDIRS = fs repl auth
 EXTRA_LIBRARIES = libAIO.a libBlocking.a libDiskDaemon.a libDiskThreads.a
 noinst_LIBRARIES = @DISK_LIBS@
 INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include \
@@ -1206,6 +1212,7 @@ squid_LDADD = \
 	@CRYPTLIB@ \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
+	${ICAP_LIBS} \
 	@LIB_MALLOC@ \
 	@SSLLIB@ \
 	-lmiscutil \

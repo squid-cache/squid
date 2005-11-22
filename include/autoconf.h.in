@@ -691,6 +691,9 @@
    behaviour. Setting this to '0' will disable such code. */
 #undef HTTP_VIOLATIONS
 
+/* Enable ICAP client features in Squid */
+#undef ICAP_CLIENT
+
 /* Enable support for Transparent Proxy on systems using IP-Filter address
    redirection. This provides "masquerading" support for non Linux system. */
 #undef IPF_TRANSPARENT
