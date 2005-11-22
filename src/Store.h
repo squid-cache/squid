@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.15 2005/01/06 03:22:22 robertc Exp $
+ * $Id: Store.h,v 1.16 2005/11/21 22:20:12 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -66,6 +66,7 @@ public:
     virtual HttpReply const *getReply() const;
     virtual void write (StoreIOBuffer);
     virtual _SQUID_INLINE_ bool isEmpty() const;
+    virtual bool isAccepting() const;
     virtual size_t bytesWanted(Range<size_t> const) const;
     virtual void complete();
     virtual store_client_t storeClientType() const;
