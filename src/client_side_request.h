@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.21 2005/09/12 22:26:39 wessels Exp $
+ * $Id: client_side_request.h,v 1.22 2005/11/21 23:26:45 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -39,12 +39,22 @@
 #include "client_side.h"
 #include "AccessLogEntry.h"
 
+#if ICAP_CLIENT
+#include "ICAP/ICAPServiceRep.h"
+
+class ICAPClientReqmodPrecache;
+
+class HttpMsg;
+#endif
+
 /* client_side_request.c - client side request related routines (pure logic) */
 extern int clientBeginRequest(method_t, char const *, CSCB *, CSD *, ClientStreamData, HttpHeader const *, char *, size_t);
 
 class MemObject;
 
 class ConnStateData;
+
+class ClientRequestContext;
 
 class ClientHttpRequest
 {
@@ -132,12 +142,27 @@ unsigned int purging:
     void maxReplyBodySize(ssize_t size);
     bool isReplyBodyTooLarge(ssize_t len) const;
 
+    ClientRequestContext *calloutContext;
+    void doCallouts();
+
 private:
     CBDATA_CLASS(ClientHttpRequest);
     ssize_t maxReplyBodySize_;
     StoreEntry *entry_;
     StoreEntry *loggingEntry_;
     ConnStateData::Pointer conn_;
+
+#if ICAP_CLIENT
+
+public:
+    ICAPClientReqmodPrecache *icap;
+    int doIcap(ICAPServiceRep::Pointer);
+    void icapSpaceAvailable();
+    void takeAdaptedHeaders(HttpMsg *);
+    void takeAdaptedBody(MemBuf *);
+    void doneAdapting();
+    void abortAdapting();
+#endif
 };
 
 /* client http based routines */

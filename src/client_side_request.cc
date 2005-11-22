@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.50 2005/11/05 00:08:32 wessels Exp $
+ * $Id: client_side_request.cc,v 1.51 2005/11/21 23:26:45 wessels Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -53,35 +53,20 @@
 #include "Store.h"
 #include "HttpReply.h"
 #include "MemObject.h"
+#include "ClientRequestContext.h"
+
+#if ICAP_CLIENT
+#include "ICAP/ICAPClientReqmodPrecache.h"
+#include "ICAP/ICAPElements.h"
+#include "ICAP/ICAPConfig.h"
+static void icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data);
+#endif
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
 #endif
 
 static const char *const crlf = "\r\n";
-
-class ClientRequestContext : public RefCountable
-{
-
-public:
-    void *operator new(size_t);
-    void operator delete(void *);
-
-    ClientRequestContext();
-    ClientRequestContext(ClientHttpRequest *);
-    ~ClientRequestContext();
-
-    void checkNoCache();
-
-    ACLChecklist *acl_checklist;	/* need ptr back so we can unreg if needed */
-    int redirect_state;
-    ClientHttpRequest *http;
-
-private:
-    CBDATA_CLASS(ClientRequestContext);
-    static void CheckNoCacheDone(int answer, void *data);
-    void checkNoCacheDone(int answer);
-};
 
 CBDATA_CLASS_INIT(ClientRequestContext);
 
@@ -103,12 +88,12 @@ ClientRequestContext::operator delete (void *address)
 
 /* Local functions */
 /* other */
-static void clientAccessCheckDone(int, void *);
+static void clientAccessCheckDoneWrapper(int, void *);
 static int clientCachable(ClientHttpRequest * http);
 static int clientHierarchical(ClientHttpRequest * http);
 static void clientInterpretRequestHeaders(ClientHttpRequest * http);
-static void clientRedirectStart(ClientRequestContext *context);
-static RH clientRedirectDone;
+static RH clientRedirectDoneWrapper;
+static PF checkNoCacheDoneWrapper;
 extern "C" CSR clientGetMoreData;
 extern "C" CSS clientReplyStatus;
 extern "C" CSD clientReplyDetach;
@@ -116,19 +101,23 @@ static void checkFailureRatio(err_type, hier_code);
 
 ClientRequestContext::~ClientRequestContext()
 {
-    if (http)
-        cbdataReferenceDone(http);
+    /*
+     * Note: ClientRequestContext is only deleted by its parent,
+     * ClientHttpRequest.  That can only happen after ClientRequestContext
+     * calls cbdataReferenceDone(http)
+     */
+    assert(NULL == http);
 
     if (acl_checklist)
         delete acl_checklist;
 }
 
-ClientRequestContext::ClientRequestContext() : acl_checklist (NULL), redirect_state (REDIRECT_NONE), http(NULL)
-{}
-
-ClientRequestContext::ClientRequestContext(ClientHttpRequest *newHttp) : acl_checklist (NULL), redirect_state (REDIRECT_NONE), http(cbdataReference(newHttp))
+ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) : http(anHttp), acl_checklist (NULL), redirect_state (REDIRECT_NONE)
 {
-    assert (newHttp != NULL);
+    (void) cbdataReference(http);
+    http_access_done = 0;
+    redirect_done = 0;
+    no_cache_done = 0;
 }
 
 CBDATA_CLASS_INIT(ClientHttpRequest);
@@ -254,6 +243,17 @@ ClientHttpRequest::~ClientHttpRequest()
 
     freeResources();
 
+#if ICAP_CLIENT
+
+    if (icap) {
+        delete icap;
+        cbdataReferenceDone(icap);
+    }
+
+#endif
+    if (calloutContext)
+        delete calloutContext;
+
     /* moving to the next connection is handled by the context free */
     dlinkDelete(&active, &ClientActiveRequests);
 }
@@ -340,35 +340,58 @@ clientBeginRequest(method_t method, char const *url, CSCB * streamcallback,
     http->request = requestLink(request);
 
     /* optional - skip the access check ? */
-    clientAccessCheck(http);
+    http->calloutContext = new ClientRequestContext(http);
+
+    http->calloutContext->http_access_done = 0;
+
+    http->calloutContext->redirect_done = 1;
+
+    http->calloutContext->no_cache_done = 1;
+
+    http->doCallouts();
 
     return 0;
 }
 
+bool
+ClientRequestContext::httpStateIsValid()
+{
+    ClientHttpRequest *http_ = http;
+
+    if (cbdataReferenceValid(http_))
+        return true;
+
+    http = NULL;
+
+    cbdataReferenceDone(http_);
+
+    return false;
+}
+
 /* This is the entry point for external users of the client_side routines */
 void
-clientAccessCheck(ClientHttpRequest *http)
+ClientRequestContext::clientAccessCheck()
 {
-    ClientRequestContext *context = new ClientRequestContext(http);
-    context->acl_checklist =
+    acl_checklist =
         clientAclChecklistCreate(Config.accessList.http, http);
-    context->acl_checklist->nonBlockingCheck(clientAccessCheckDone, context);
+    acl_checklist->nonBlockingCheck(clientAccessCheckDoneWrapper, this);
 }
 
 void
-clientAccessCheckDone(int answer, void *data)
+clientAccessCheckDoneWrapper(int answer, void *data)
 {
-    ClientRequestContext *context = (ClientRequestContext *)data;
+    ClientRequestContext *calloutContext = (ClientRequestContext *) data;
 
-    context->acl_checklist = NULL;
-    ClientHttpRequest *http_ = context->http;
-
-    if (!cbdataReferenceValid (http_)) {
-        delete context;
+    if (!calloutContext->httpStateIsValid())
         return;
-    }
 
-    ClientHttpRequest *http = context->http;
+    calloutContext->clientAccessCheckDone(answer);
+}
+
+void
+ClientRequestContext::clientAccessCheckDone(int answer)
+{
+    acl_checklist = NULL;
     err_type page_id;
     http_status status;
     debug(85, 2) ("The request %s %s is %s, because it matched '%s'\n",
@@ -382,16 +405,8 @@ clientAccessCheckDone(int answer, void *data)
     else if (http->request->auth_user_request != NULL)
         proxy_auth_msg = http->request->auth_user_request->denyMessage("<null>");
 
-    if (answer == ACCESS_ALLOWED) {
-        safe_free(http->uri);
-        http->uri = xstrdup(urlCanonical(http->request));
-        assert(context->redirect_state == REDIRECT_NONE);
-        context->redirect_state = REDIRECT_PENDING;
-        clientRedirectStart(context);
-    } else {
+    if (answer != ACCESS_ALLOWED) {
         /* Send an error */
-        clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
-        delete context;
         debug(85, 5) ("Access Denied: %s\n", http->uri);
         debug(85, 5) ("AclMatchedName = %s\n",
                       AclMatchedName ? AclMatchedName : "<null>");
@@ -424,6 +439,7 @@ clientAccessCheckDone(int answer, void *data)
                 page_id = ERR_ACCESS_DENIED;
         }
 
+        clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         repContext->setReplyToError(page_id, status,
@@ -435,7 +451,69 @@ clientAccessCheckDone(int answer, void *data)
         node = (clientStreamNode *)http->client_stream.tail->data;
         clientStreamRead(node, http, node->readBuffer);
     }
+
+    /* ACCESS_ALLOWED continues here ... */
+    safe_free(http->uri);
+
+    http->uri = xstrdup(urlCanonical(http->request));
+
+    http->doCallouts();
 }
+
+#if ICAP_CLIENT
+void
+ClientRequestContext::icapAccessCheck()
+{
+    ICAPAccessCheck *icap_access_check;
+
+    if (icap_access_check = new ICAPAccessCheck(ICAP::methodReqmod, ICAP::pointPreCache, http->request, NULL, icapAclCheckDoneWrapper, this)) {
+        icap_access_check->check();
+        return;
+    }
+
+    http->doCallouts();
+}
+
+static void
+icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data)
+{
+    ClientRequestContext *calloutContext = (ClientRequestContext *)data;
+
+    if (!calloutContext->httpStateIsValid())
+        return;
+
+    calloutContext->icapAclCheckDone(service);
+}
+
+void
+ClientRequestContext::icapAclCheckDone(ICAPServiceRep::Pointer service)
+{
+    /*
+     * No matching ICAP service in the config file
+     */
+
+    if (service == NULL) {
+        http->doCallouts();
+        return;
+    }
+
+    /*
+     * Setup ICAP state and such.  If successful, just return.
+     * We'll get back to doCallouts() after REQMOD is done.
+     */
+    if (0 == http->doIcap(service))
+        return;
+
+    /*
+     * If doIcap() fails, then we have to either return an error
+     * to the user, or keep going without ICAP.
+     */
+    fatal("Fix this case in ClientRequestContext::icapAclCheckDone()");
+
+    http->doCallouts();
+}
+
+#endif
 
 static void
 clientRedirectAccessCheckDone(int answer, void *data)
@@ -445,27 +523,21 @@ clientRedirectAccessCheckDone(int answer, void *data)
     context->acl_checklist = NULL;
 
     if (answer == ACCESS_ALLOWED)
-        redirectStart(http, clientRedirectDone, context);
+        redirectStart(http, clientRedirectDoneWrapper, context);
     else
-        clientRedirectDone(context, NULL);
+        context->clientRedirectDone(NULL);
 }
 
-static void
-clientRedirectStart(ClientRequestContext *context)
+void
+ClientRequestContext::clientRedirectStart()
 {
-    ClientHttpRequest *http = context->http;
     debug(33, 5) ("clientRedirectStart: '%s'\n", http->uri);
 
-    if (Config.Program.redirect == NULL) {
-        clientRedirectDone(context, NULL);
-        return;
-    }
-
     if (Config.accessList.redirector) {
-        context->acl_checklist = clientAclChecklistCreate(Config.accessList.redirector, http);
-        context->acl_checklist->nonBlockingCheck(clientRedirectAccessCheckDone, context);
+        acl_checklist = clientAclChecklistCreate(Config.accessList.redirector, http);
+        acl_checklist->nonBlockingCheck(clientRedirectAccessCheckDone, this);
     } else
-        redirectStart(http, clientRedirectDone, context);
+        redirectStart(http, clientRedirectDoneWrapper, this);
 }
 
 static int
@@ -724,23 +796,25 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 }
 
 void
-clientRedirectDone(void *data, char *result)
+clientRedirectDoneWrapper(void *data, char *result)
 {
-    ClientRequestContext *context = (ClientRequestContext *)data;
-    ClientHttpRequest *http_ = context->http;
+    ClientRequestContext *calloutContext = (ClientRequestContext *)data;
 
-    if (!cbdataReferenceValid (http_)) {
-        delete context;
+    if (!calloutContext->httpStateIsValid())
         return;
-    }
 
-    ClientHttpRequest *http = context->http;
+    calloutContext->clientRedirectDone(result);
+}
+
+void
+ClientRequestContext::clientRedirectDone(char *result)
+{
     HttpRequest *new_request = NULL;
     HttpRequest *old_request = http->request;
     debug(85, 5) ("clientRedirectDone: '%s' result=%s\n", http->uri,
                   result ? result : "NULL");
-    assert(context->redirect_state == REDIRECT_PENDING);
-    context->redirect_state = REDIRECT_DONE;
+    assert(redirect_state == REDIRECT_PENDING);
+    redirect_state = REDIRECT_DONE;
 
     if (result) {
         http_status status = (http_status) atoi(result);
@@ -794,11 +868,6 @@ clientRedirectDone(void *data, char *result)
         http->request = requestLink(new_request);
     }
 
-    clientInterpretRequestHeaders(http);
-#if HEADERS_LOG
-
-    headersLog(0, 1, request->method, request);
-#endif
     /* FIXME PIPELINE: This is innacurate during pipelining */
 
     if (http->getConn().getRaw() != NULL)
@@ -806,50 +875,33 @@ clientRedirectDone(void *data, char *result)
 
     assert(http->uri);
 
-    context->checkNoCache();
+    http->doCallouts();
 }
 
 void
 ClientRequestContext::checkNoCache()
 {
-    if (Config.accessList.noCache && http->request->flags.cachable) {
-        acl_checklist =
-            clientAclChecklistCreate(Config.accessList.noCache, http);
-        acl_checklist->nonBlockingCheck(CheckNoCacheDone, cbdataReference(this));
-    } else {
-        CheckNoCacheDone(http->request->flags.cachable, cbdataReference(this));
-    }
+    acl_checklist = clientAclChecklistCreate(Config.accessList.noCache, http);
+    acl_checklist->nonBlockingCheck(checkNoCacheDoneWrapper, cbdataReference(this));
 }
 
-void
-ClientRequestContext::CheckNoCacheDone(int answer, void *data)
+static void
+checkNoCacheDoneWrapper(int answer, void *data)
 {
-    void *temp;
-#ifndef PURIFY
+    ClientRequestContext *calloutContext = (ClientRequestContext *) data;
 
-    bool valid =
-#endif
-        cbdataReferenceValidDone(data, &temp);
-    /* acl NB calls cannot invalidate cbdata in the normal course of things */
-    assert (valid);
-    ClientRequestContext *context = (ClientRequestContext *)temp;
-    context->checkNoCacheDone(answer);
+    if (!calloutContext->httpStateIsValid())
+        return;
+
+    calloutContext->checkNoCacheDone(answer);
 }
 
 void
 ClientRequestContext::checkNoCacheDone(int answer)
 {
     acl_checklist = NULL;
-    ClientHttpRequest *http_ = http;
-
-    if (!cbdataReferenceValid (http_)) {
-        delete this;
-        return;
-    }
-
-    delete this;
-    http_->request->flags.cachable = answer;
-    http_->processRequest();
+    http->request->flags.cachable = answer;
+    http->doCallouts();
 }
 
 /*
@@ -941,6 +993,192 @@ ClientHttpRequest::loggingEntry(StoreEntry *newEntry)
         storeLockObject(loggingEntry_);
 }
 
+/*
+ * doCallouts() - This function controls the order of "callout"
+ * executions, including non-blocking access control checks, the
+ * redirector, and ICAP.  Previously, these callouts were chained
+ * together such that "clientAccessCheckDone()" would call
+ * "clientRedirectStart()" and so on.
+ *
+ * The ClientRequestContext (aka calloutContext) class holds certain
+ * state data for the callout/callback operations.  Previously
+ * ClientHttpRequest would sort of hand off control to ClientRequestContext
+ * for a short time.  ClientRequestContext would then delete itself
+ * and pass control back to ClientHttpRequest when all callouts
+ * were finished.
+ *
+ * This caused some problems for ICAP because we want to make the
+ * ICAP callout after checking ACLs, but before checking the no_cache
+ * list.  We can't stuff the ICAP state into the ClientRequestContext
+ * class because we still need the ICAP state after ClientRequestContext
+ * goes away.
+ *
+ * Note that ClientRequestContext is created before the first call
+ * to doCallouts().
+ *
+ * If one of the callouts notices that ClientHttpRequest is no
+ * longer valid, it should call cbdataReferenceDone() so that
+ * ClientHttpRequest's reference count goes to zero and it will get
+ * deleted.  ClientHttpRequest will then delete ClientRequestContext.
+ *
+ * Note that we set the _done flags here before actually starting
+ * the callout.  This is strictly for convenience.
+ */
+
+void
+ClientHttpRequest::doCallouts()
+{
+    assert(calloutContext);
+
+    if (!calloutContext->http_access_done) {
+        calloutContext->http_access_done = 1;
+        calloutContext->clientAccessCheck();
+        return;
+    }
+
+#if ICAP_CLIENT
+    if (!calloutContext->icap_acl_check_done) {
+        calloutContext->icap_acl_check_done = 1;
+        calloutContext->icapAccessCheck();
+        return;
+    }
+
+#endif
+
+    if (!calloutContext->redirect_done) {
+        calloutContext->redirect_done = 1;
+        assert(calloutContext->redirect_state == REDIRECT_NONE);
+
+        if (Config.Program.redirect) {
+            calloutContext->redirect_state = REDIRECT_PENDING;
+            calloutContext->clientRedirectStart();
+            return;
+        }
+    }
+
+    if (!calloutContext->no_cache_done) {
+        calloutContext->no_cache_done = 1;
+
+        if (Config.accessList.noCache && request->flags.cachable) {
+            calloutContext->checkNoCache();
+            return;
+        }
+    }
+
+    cbdataReferenceDone(calloutContext->http);
+    delete calloutContext;
+    calloutContext = NULL;
+    clientInterpretRequestHeaders(this);
+#if HEADERS_LOG
+
+    headersLog(0, 1, request->method, request);
+#endif
+
+    processRequest();
+}
+
 #ifndef _USE_INLINE_
 #include "client_side_request.cci"
+#endif
+
+#if ICAP_CLIENT
+/*
+ * Initiate an ICAP transaction.  Return 0 if all is well, or -1 upon error.
+ * Caller will handle error condition by generating a Squid error message
+ * or take other action.
+ */
+int
+ClientHttpRequest::doIcap(ICAPServiceRep::Pointer service)
+{
+    debug(85,3)("ClientHttpRequest::doIcap() called\n");
+    assert(NULL == icap);
+    icap = new ICAPClientReqmodPrecache(service);
+    (void) cbdataReference(icap);
+    icap->startReqMod(this, request);
+    icap->doneSending();
+    return 0;
+}
+
+/*
+ * Called by ICAPAnchor when it has space available for us.
+ */
+void
+ClientHttpRequest::icapSpaceAvailable()
+{
+    debug(85,3)("ClientHttpRequest::icapSpaceAvailable() called\n");
+}
+
+void
+ClientHttpRequest::takeAdaptedHeaders(HttpMsg *msg)
+{
+    debug(85,3)("ClientHttpRequest::takeAdaptedHeaders() called\n");
+    assert(cbdataReferenceValid(this));		// indicates bug
+
+    HttpRequest *new_req = dynamic_cast<HttpRequest*>(msg);
+    assert(new_req);
+    /*
+     * Replace the old request with the new request.  First,
+     * Move the "body_connection" over, then unlink old and
+     * link new to the http state.
+     */
+    new_req->body_connection = request->body_connection;
+    request->body_connection = NULL;
+    requestUnlink(request);
+    request = requestLink(new_req);
+    /*
+     * Store the new URI for logging
+     */
+    xfree(uri);
+    uri = xstrdup(urlCanonical(request));
+    setLogUri(this, urlCanonicalClean(request));
+    assert(request->method);
+
+    doCallouts();
+
+    debug(85,3)("ClientHttpRequest::takeAdaptedHeaders() finished\n");
+}
+
+void
+ClientHttpRequest::takeAdaptedBody(MemBuf *buf)
+{
+    debug(85,3)("ClientHttpRequest::takeAdaptedBody() called\n");
+}
+
+void
+ClientHttpRequest::doneAdapting()
+{
+    debug(85,3)("ClientHttpRequest::doneAdapting() called\n");
+}
+
+void
+ClientHttpRequest::abortAdapting()
+{
+    debug(85,3)("ClientHttpRequest::abortAdapting() called\n");
+
+    if ((NULL == storeEntry()) || storeEntry()->isEmpty()) {
+        debug(85,3)("WARNING: ICAP REQMOD callout failed, proceeding with original request\n");
+        doCallouts();
+#if ICAP_HARD_ERROR
+
+        clientStreamNode *node = (clientStreamNode *)client_stream.tail->prev->data;
+        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+        assert (repContext);
+        // Note if this code is ever used, clientBuildError() should be modified to
+        // accept an errno arg
+        repContext->setReplyToError(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR,
+                                    request->method, NULL,
+                                    getConn().getRaw() != NULL ? &getConn()->peer.sin_addr : &no_addr, request,
+                                    NULL, getConn().getRaw() != NULL
+                                    && getConn()->auth_user_request ? getConn()->
+                                    auth_user_request : request->auth_user_request, errno);
+        node = (clientStreamNode *)client_stream.tail->data;
+        clientStreamRead(node, this, node->readBuffer);
+#endif
+
+        return;
+    }
+
+    debug(0,0)("write me at %s:%d\n", __FILE__,__LINE__);
+}
+
 #endif
