@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.485 2005/11/04 20:27:31 wessels Exp $
+ * $Id: cache_cf.cc,v 1.486 2005/11/21 23:10:22 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -52,6 +52,22 @@
 #include "ESIParser.h"
 #endif
 
+#if ICAP_CLIENT
+#include "ICAP/ICAPConfig.h"
+extern ICAPConfig TheICAPConfig;	// for cf_parser.h
+
+static void parse_icap_service_type(ICAPConfig *);
+static void dump_icap_service_type(StoreEntry *, const char *, ICAPConfig );
+static void free_icap_service_type(ICAPConfig *);
+static void parse_icap_class_type(ICAPConfig *);
+static void dump_icap_class_type(StoreEntry *, const char *, ICAPConfig );
+static void free_icap_class_type(ICAPConfig *);
+static void parse_icap_access_type(ICAPConfig *);
+static void dump_icap_access_type(StoreEntry *, const char *, ICAPConfig );
+static void free_icap_access_type(ICAPConfig *);
+
+#endif
+
 CBDATA_TYPE(peer);
 
 static const char *const T_SECOND_STR = "second";
@@ -79,9 +95,6 @@ static void dump_logformat(StoreEntry * entry, const char *name, logformat * def
 static void dump_access_log(StoreEntry * entry, const char *name, customlog * definitions);
 static void free_logformat(logformat ** definitions);
 static void free_access_log(customlog ** definitions);
-
-
-
 
 static void update_maxobjsize(void);
 static void configDoConfigure(void);
@@ -1291,7 +1304,6 @@ free_http_header_replace(header_mangler header[])
 
 #endif
 
-
 static void
 dump_cachedir(StoreEntry * entry, const char *name, _SquidConfig::_cacheSwap swap)
 {
@@ -1306,7 +1318,6 @@ dump_cachedir(StoreEntry * entry, const char *name, _SquidConfig::_cacheSwap swa
         storeAppendPrintf(entry, "\n");
     }
 }
-
 
 static int
 check_null_cachedir(_SquidConfig::_cacheSwap swap)
@@ -1399,7 +1410,6 @@ parse_cachedir(_SquidConfig::_cacheSwap * swap)
 
     if ((path_str = strtok(NULL, w_space)) == NULL)
         self_destruct();
-
 
     fs = find_fstype(type_str);
 
@@ -2312,6 +2322,23 @@ parse_string(char **var)
     *var = xstrdup(token);
 }
 
+void
+ConfigParser::ParseString(char **var)
+{
+    parse_string(var);
+}
+
+void
+ConfigParser::ParseString(String *var)
+{
+    char *token = strtok(NULL, w_space);
+
+    if (token == NULL)
+        self_destruct();
+
+    var->reset(token);
+}
+
 static void
 free_string(char **var)
 {
@@ -2449,6 +2476,19 @@ ConfigParser::ParseUShort(u_short *var)
     *var = (u_short) i;
 }
 
+void
+ConfigParser::ParseBool(bool *var)
+{
+    int i = GetInteger();
+
+    if (0 == i)
+        *var = false;
+    else if (1 == i)
+        *var = true;
+    else
+        self_destruct();
+}
+
 static void
 dump_wordlist(StoreEntry * entry, const char *name, wordlist * list)
 {
@@ -2456,6 +2496,12 @@ dump_wordlist(StoreEntry * entry, const char *name, wordlist * list)
         storeAppendPrintf(entry, "%s %s\n", name, list->key);
         list = list->next;
     }
+}
+
+void
+ConfigParser::ParseWordList(wordlist ** list)
+{
+    parse_wordlist(list);
 }
 
 void
@@ -2505,7 +2551,6 @@ parse_uri_whitespace(int *var)
     else
         self_destruct();
 }
-
 
 static void
 dump_uri_whitespace(StoreEntry * entry, const char *name, int var)
@@ -2568,7 +2613,6 @@ dump_removalpolicy(StoreEntry * entry, const char *name, RemovalPolicySettings *
 
     storeAppendPrintf(entry, "\n");
 }
-
 
 #include "cf_parser.h"
 
@@ -2777,7 +2821,6 @@ cbdataFree_http_port(void *data)
 {
     free_generic_http_port_data((http_port_list *)data);
 }
-
 
 static http_port_list *
 create_http_port(char *portspec)
@@ -3310,3 +3353,61 @@ free_access_log(customlog ** definitions)
         xfree(log);
     }
 }
+
+#if ICAP_CLIENT
+
+static void
+parse_icap_service_type(ICAPConfig * cfg)
+{
+    cfg->parseICAPService();
+}
+
+static void
+free_icap_service_type(ICAPConfig * cfg)
+{
+    cfg->freeICAPService();
+}
+
+static void
+dump_icap_service_type(StoreEntry * entry, const char *name, ICAPConfig cfg)
+{
+    cfg.dumpICAPService(entry, name);
+}
+
+static void
+parse_icap_class_type(ICAPConfig * cfg)
+{
+    cfg->parseICAPClass();
+}
+
+static void
+free_icap_class_type(ICAPConfig * cfg)
+{
+    cfg->freeICAPClass();
+}
+
+static void
+dump_icap_class_type(StoreEntry * entry, const char *name, ICAPConfig cfg)
+{
+    cfg.dumpICAPClass(entry, name);
+}
+
+static void
+parse_icap_access_type(ICAPConfig * cfg)
+{
+    cfg->parseICAPAccess();
+}
+
+static void
+free_icap_access_type(ICAPConfig * cfg)
+{
+    cfg->freeICAPAccess();
+}
+
+static void
+dump_icap_access_type(StoreEntry * entry, const char *name, ICAPConfig cfg)
+{
+    cfg.dumpICAPAccess(entry, name);
+}
+
+#endif
