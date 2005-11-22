@@ -1,6 +1,6 @@
 
 /*
- * $Id: leakfinder.cc,v 1.9 2003/02/21 22:50:09 robertc Exp $
+ * $Id: LeakFinder.cc,v 1.1 2005/11/21 22:41:45 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -38,64 +38,49 @@
  */
 
 #include "squid.h"
+#include "LeakFinder.h"
 #include "Store.h"
-
-static hash_table *htable = NULL;
-
-static int leakCount = 0;
-
-typedef struct _ptr
-{
-    hash_link hash;		/* must be first */
-    void *key;
-
-    struct _ptr *next;
-    const char *file;
-    int line;
-    time_t when;
-}
-
-ptr;
-
-static HASHCMP ptr_cmp;
-static HASHHASH ptr_hash;
-static OBJH ptrDump;
 
 /* ========================================================================= */
 
-void
-leakInit(void)
+LeakFinderPtr::LeakFinderPtr(void *p , const char *f, const int l) :
+        file(f), line(l), when(squid_curtime)
 {
-    debug(45, 3) ("ptrInit\n");
-    htable = hash_create(ptr_cmp, 1 << 8, ptr_hash);
+    key = p;
+    next = NULL;
+}
+
+/* ========================================================================= */
+
+LeakFinder::LeakFinder()
+{
+    debug(45, 3) ("LeakFinder constructed\n");
+    table = hash_create(cmp, 1 << 8, hash);
+#if 0
+
     cachemgrRegister("leaks",
                      "Memory Leak Tracking",
-                     ptrDump, 0, 1);
+                     cachemgr_dump, 0, 1);
+#endif
 }
 
 void *
-leakAddFL(void *p, const char *file, int line)
+
+LeakFinder::add
+    (void *p, const char *file, int line)
 {
-    ptr *c;
-    assert(p);
-    assert(htable != NULL);
-    assert(hash_lookup(htable, p) == NULL);
-    c = (ptr *)xcalloc(1, sizeof(*c));
-    c->key = p;
-    c->file = file;
-    c->line = line;
-    c->when = squid_curtime;
-    hash_join(htable, &c->hash);
-    leakCount++;
+    assert(hash_lookup(table, p) == NULL);
+    LeakFinderPtr *c = new LeakFinderPtr(p, file, line);
+    hash_join(table, c);
+    count++;
     return p;
 }
 
 void *
-leakTouchFL(void *p, const char *file, int line)
+LeakFinder::touch(void *p, const char *file, int line)
 {
-    ptr *c = (ptr *) hash_lookup(htable, p);
     assert(p);
-    assert(htable != NULL);
+    LeakFinderPtr *c = (LeakFinderPtr *) hash_lookup(table, p);
     assert(c);
     c->file = file;
     c->line = line;
@@ -104,43 +89,52 @@ leakTouchFL(void *p, const char *file, int line)
 }
 
 void *
-leakFreeFL(void *p, const char *file, int line)
+LeakFinder::free(void *p, const char *file, int line)
 {
-    ptr *c = (ptr *) hash_lookup(htable, p);
     assert(p);
-    assert(c != NULL);
-    hash_remove_link(htable, (hash_link *) c);
-    leakCount--;
-    xfree(c);
+    LeakFinderPtr *c = (LeakFinderPtr *) hash_lookup(table, p);
+    assert(c);
+    hash_remove_link(table, c);
+    count--;
+    delete c;
+    dump();
     return p;
 }
 
 /* ========================================================================= */
 
-static int
-ptr_cmp(const void *p1, const void *p2)
+int
+LeakFinder::cmp(const void *p1, const void *p2)
 {
     return (char *) p1 - (char *) p2;
 }
 
-static unsigned int
-ptr_hash(const void *p, unsigned int mod)
+unsigned int
+LeakFinder::hash(const void *p, unsigned int mod)
 {
     return ((unsigned long) p >> 8) % mod;
 }
 
 
-static void
-ptrDump(StoreEntry * sentry)
+void
+LeakFinder::dump()
 {
-    hash_link *hptr;
-    ptr *c;
-    storeAppendPrintf(sentry, "Tracking %d pointers\n", leakCount);
-    hash_first(htable);
+    if (0 == count)
+        return;
 
-    while ((hptr = (hash_link *)hash_next(htable))) {
-        c = (ptr *) hptr;
-        storeAppendPrintf(sentry, "%20p last used %9d seconds ago by %s:%d\n",
-                          c->key, (int)(squid_curtime - c->when), c->file, c->line);
+    if (squid_curtime == last_dump)
+        return;
+
+    last_dump = squid_curtime;
+
+    debug(45,1)("Tracking %d pointers\n", count);
+
+    hash_first(table);
+
+    LeakFinderPtr *c;
+
+    while ((c = (LeakFinderPtr *)hash_next(table))) {
+        debug(45,1)("%20p last used %9d seconds ago by %s:%d\n",
+                    c->key, (int)(squid_curtime - c->when), c->file, c->line);
     }
 }
