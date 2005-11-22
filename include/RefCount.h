@@ -1,6 +1,6 @@
 
 /*
- * $Id: RefCount.h,v 1.8 2003/08/04 22:14:37 robertc Exp $
+ * $Id: RefCount.h,v 1.9 2005/11/21 22:45:16 wessels Exp $
  *
  * DEBUG: section xx    Refcount allocator
  * AUTHOR:  Robert Collins
@@ -65,6 +65,8 @@ public:
         dereference(newP_);
         return *this;
     }
+
+	bool operator !() const { return !p_; }
 
     C const * operator-> () const {return p_; }
 
