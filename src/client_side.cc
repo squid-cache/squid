@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.702 2005/11/05 00:08:32 wessels Exp $
+ * $Id: client_side.cc,v 1.703 2005/11/21 23:26:45 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -70,6 +70,7 @@
 #include "ACLChecklist.h"
 #include "ConnectionDetail.h"
 #include "client_side_reply.h"
+#include "ClientRequestContext.h"
 #include "MemBuf.h"
 
 #if LINGERING_CLOSE
@@ -158,7 +159,6 @@ static char *skipLeadingSpace(char *aString);
 static void trimTrailingSpaces(char *aString, size_t len);
 #endif
 static ClientSocketContext *parseURIandHTTPVersion(char **url_p, HttpVersion * http_ver_p, ConnStateData::Pointer& conn, char *http_version_str);
-static void setLogUri(ClientHttpRequest * http, char const *uri);
 static int connReadWasError(ConnStateData::Pointer& conn, comm_err_t, int size, int xerrno);
 static int connFinishedWithConn(ConnStateData::Pointer& conn, int size);
 static void connNoteUseOfBuffer(ConnStateData::Pointer & conn, size_t byteCount);
@@ -2310,7 +2310,9 @@ clientProcessRequest(ConnStateData::Pointer &conn, ClientSocketContext *context,
     if (http->request->method == METHOD_CONNECT)
         context->mayUseConnection(true);
 
-    clientAccessCheck(http);
+    http->calloutContext = new ClientRequestContext(http);
+
+    http->doCallouts();
 }
 
 static void
