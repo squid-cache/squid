@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPClientSideHook.h,v 1.1 2005/11/21 23:32:59 wessels Exp $
+ * $Id: ICAPClientRespmodPrecache.h,v 1.1 2005/11/21 23:46:27 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -31,34 +31,35 @@
  *
  */
 
-#ifndef SQUID_ICAPCLIENTSIDEHOOK_H
-#define SQUID_ICAPCLIENTSIDEHOOK_H
+#ifndef SQUID_ICAPANCHOR_H
+#define SQUID_ICAPANCHOR_H
 
 #include "MsgPipe.h"
 #include "MsgPipeSource.h"
 #include "MsgPipeSink.h"
+#include "ICAPServiceRep.h"
 
-/* The ICAP ClientSideHook implements message pipe sink and source interfaces.  It
- * helps client-side to marshall the incoming/virgin HTTP message (being
- * recieved from the HTTP client) to Squid's ICAP client module, using the
+/* The ICAP Anchor implements message pipe sink and source interfaces.  It
+ * helps HttpStateData to marshall the incoming/virgin HTTP message (being
+ * recieved from the HTTP server) to Squid's ICAP client module, using the
  * MsgPipe interface. The same interface is used to get the adapted HTTP
- * message back from the ICAP client. client-side is the "owner" of the
- * ICAPClientSideHook.
+ * message back from the ICAP client. HttpStateData is the "owner" of the
+ * ICAPClientRespmodPrecache.
  */
 
 class HttpRequest;
 
-class ClientRequestContext;
+class HttpReply;
 
-class ICAPClientSideHook: public MsgPipeSource, public MsgPipeSink
+class ICAPClientRespmodPrecache: public MsgPipeSource, public MsgPipeSink
 {
 
 public:
-    ICAPClientSideHook(ICAPServiceRep::Pointer);
-    virtual ~ICAPClientSideHook();
+    ICAPClientRespmodPrecache(ICAPServiceRep::Pointer);
+    virtual ~ICAPClientRespmodPrecache();
 
-    // synchronous calls called by ClientHttpRequest
-    void startReqMod(ClientHttpRequest *, HttpRequest *);
+    // synchronous calls called by HttpStateData
+    void startRespMod(HttpStateData *anHttpState, HttpRequest *request, HttpReply *reply);
     void sendMoreData(StoreIOBuffer buf);
     void doneSending();
     void ownerAbort();
@@ -76,7 +77,7 @@ public:
 
 public:
     ICAPServiceRep::Pointer service;
-    ClientHttpRequest *http;
+    HttpStateData *httpState;
     MsgPipe::Pointer virgin;
     MsgPipe::Pointer adapted;
 
@@ -85,7 +86,7 @@ private:
     void stop(Notify notify);
     void freeVirgin();
     void freeAdapted();
-    CBDATA_CLASS2(ICAPClientSideHook);
+    CBDATA_CLASS2(ICAPClientRespmodPrecache);
 };
 
-#endif /* SQUID_ICAPCLIENTSIDEHOOK_H */
+#endif /* SQUID_ICAPANCHOR_H */

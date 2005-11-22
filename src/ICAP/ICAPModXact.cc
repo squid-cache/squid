@@ -492,7 +492,7 @@ void ICAPModXact::stopSending(bool nicely)
 
     /*
     * Note on adapted->data->header:  we created the header, but allow the
-    * other side (ICAPAnchor) to take control of it.  We won't touch it here
+    * other side (ICAPClientRespmodPrecache) to take control of it.  We won't touch it here
     * and instead rely on the Anchor-side to make sure it is properly freed.
     */
     adapted = NULL; // refcounted
