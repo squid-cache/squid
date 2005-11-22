@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreIOBuffer.h,v 1.4 2003/08/10 03:59:19 robertc Exp $
+ * $Id: StoreIOBuffer.h,v 1.5 2005/11/21 23:14:22 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,6 +37,7 @@
 
 /* TODO: move this and the range() method into a .cci */
 #include "Range.h"
+#include "MemBuf.h"
 
 class StoreIOBuffer
 {
@@ -50,9 +51,25 @@ public:
         flags.error = 0;
     }
 
+    /* Create a StoreIOBuffer from a MemBuf and offset */
+    /* NOTE that MemBuf still "owns" the pointers, StoreIOBuffer is just borrowing them */
+    StoreIOBuffer(MemBuf *aMemBuf, off_t anOffset) :
+            length(aMemBuf->contentSize()),
+            offset (anOffset),
+            data(aMemBuf->content())
+    {
+        flags.error = 0;
+    }
+
     Range<size_t> range() const
     {
         return Range<size_t>(offset, offset + length);
+    }
+
+    void dump() const
+    {
+        fwrite(data, length, 1, stderr);
+        fwrite("\n", 1, 1, stderr);
     }
 
     struct
