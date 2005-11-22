@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.247 2005/07/03 15:25:08 serassio Exp $
+ * $Id: squid.h,v 1.248 2005/11/21 22:41:45 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -300,16 +300,6 @@ SQUIDCEXTERN size_t getpagesize(void);
                 ( local_##name = (type *)xcalloc(size, sizeof(type)) )
 #else
 #define LOCAL_ARRAY(type,name,size) static type name[size]
-#endif
-
-#if USE_LEAKFINDER
-#define leakAdd(p) leakAddFL(p,__FILE__,__LINE__)
-#define leakTouch(p) leakTouchFL(p,__FILE__,__LINE__)
-#define leakFree(p) leakFreeFL(p,__FILE__,__LINE__)
-#else
-#define leakAdd(p) p
-#define leakTouch(p) p
-#define leakFree(p) p
 #endif
 
 #if defined(_SQUID_NEXT_) && !defined(S_ISDIR)

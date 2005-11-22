@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.413 2005/08/25 19:31:22 wessels Exp $
+ * $Id: main.cc,v 1.414 2005/11/21 22:41:45 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -988,12 +988,6 @@ main(int argc, char **argv)
             ConfigFile = xstrdup(DefaultConfigFile);
 
         assert(!configured_once);
-
-#if USE_LEAKFINDER
-
-        leakInit();
-
-#endif
 
         Mem::Init();
 

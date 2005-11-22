@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.353 2005/11/06 01:11:39 hno Exp $
+#  $Id: Makefile.in,v 1.354 2005/11/21 22:41:45 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -194,7 +194,7 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc ACL.h \
 	HttpMsg.cc HttpMsg.h HttpReply.cc HttpReply.h HttpRequest.cc \
 	HttpRequest.h HttpVersion.h icmp.cc ICP.h icp_v2.cc icp_v3.cc \
 	ACLIdent.cc ACLIdent.h ident.cc int.cc internal.cc ipc.cc \
-	ipcache.cc IPInterception.cc IPInterception.h leakfinder.cc \
+	ipcache.cc IPInterception.cc IPInterception.h LeakFinder.cc \
 	list.cc logfile.cc main.cc mem.cc mem_node.cc mem_node.h Mem.h \
 	MemBuf.cc MemObject.cc MemObject.h mime.cc multicast.cc \
 	neighbors.cc net_db.cc Packer.cc Parsing.cc Parsing.h \
@@ -253,7 +253,7 @@ am__objects_8 = ESI.$(OBJEXT) ESIAssign.$(OBJEXT) ESIContext.$(OBJEXT) \
 @ENABLE_HTCP_TRUE@am__objects_10 = htcp.$(OBJEXT)
 am__objects_11 = ACLIdent.$(OBJEXT) ident.$(OBJEXT)
 @ENABLE_IDENT_TRUE@am__objects_12 = $(am__objects_11)
-@MAKE_LEAKFINDER_TRUE@am__objects_13 = leakfinder.$(OBJEXT)
+@MAKE_LEAKFINDER_TRUE@am__objects_13 = LeakFinder.$(OBJEXT)
 @ENABLE_XPROF_STATS_TRUE@am__objects_14 = ProfStats.$(OBJEXT)
 @USE_SNMP_TRUE@am__objects_15 = snmp_core.$(OBJEXT) \
 @USE_SNMP_TRUE@	snmp_agent.$(OBJEXT)
@@ -422,7 +422,7 @@ am__ufsdump_SOURCES_DIST = debug.cc int.cc ufsdump.cc store.cc \
 	HttpBody.cc HttpMsg.cc HttpReply.cc HttpRequest.cc \
 	HttpRequest.h icmp.cc icp_v2.cc icp_v3.cc ACLIdent.cc \
 	ACLIdent.h ident.cc internal.cc ipc.cc ipcache.cc \
-	IPInterception.cc IPInterception.h leakfinder.cc list.cc \
+	IPInterception.cc IPInterception.h LeakFinder.cc list.cc \
 	logfile.cc mem.cc mem_node.cc mem_node.h Mem.h MemBuf.cc \
 	MemObject.cc MemObject.h mime.cc multicast.cc neighbors.cc \
 	net_db.cc Packer.cc Parsing.cc ProfStats.cc pconn.cc \
@@ -815,7 +815,7 @@ ESI_ALL_SOURCE = \
 @ENABLE_XPROF_STATS_TRUE@XPROF_STATS_SOURCE = ProfStats.cc
 @ENABLE_HTCP_TRUE@HTCPSOURCE = htcp.cc htcp.h
 @MAKE_LEAKFINDER_FALSE@LEAKFINDERSOURCE = 
-@MAKE_LEAKFINDER_TRUE@LEAKFINDERSOURCE = leakfinder.cc
+@MAKE_LEAKFINDER_TRUE@LEAKFINDERSOURCE = LeakFinder.cc
 @ENABLE_UNLINKD_FALSE@UNLINKDSOURCE = 
 @ENABLE_UNLINKD_TRUE@UNLINKDSOURCE = unlinkd.cc
 @ENABLE_UNLINKD_FALSE@UNLINKD = 
@@ -904,7 +904,7 @@ EXTRA_squid_SOURCES = \
 	$(IDENT_ALL_SOURCE) \
 	$(ESI_ALL_SOURCE) \
 	ProfStats.cc \
-	leakfinder.cc \
+	LeakFinder.cc \
 	snmp_core.cc \
 	snmp_agent.cc \
 	unlinkd.cc \
@@ -2210,6 +2210,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpRequest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpStatusLine.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/IPInterception.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LeakFinder.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MemBuf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MemObject.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/NullDelayId.Po@am__quote@
@@ -2278,7 +2279,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/internal.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ipc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ipcache.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/leakfinder.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/list.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/logfile.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@

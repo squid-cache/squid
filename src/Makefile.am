@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.116 2005/11/05 21:56:27 serassio Exp $
+#  $Id: Makefile.am,v 1.117 2005/11/21 22:41:45 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -103,7 +103,7 @@ HTCPSOURCE = htcp.cc htcp.h
 endif
 
 if MAKE_LEAKFINDER
-LEAKFINDERSOURCE =  leakfinder.cc
+LEAKFINDERSOURCE =  LeakFinder.cc
 else
 LEAKFINDERSOURCE = 
 endif
@@ -249,7 +249,7 @@ EXTRA_squid_SOURCES = \
 	$(IDENT_ALL_SOURCE) \
 	$(ESI_ALL_SOURCE) \
 	ProfStats.cc \
-	leakfinder.cc \
+	LeakFinder.cc \
 	snmp_core.cc \
 	snmp_agent.cc \
 	unlinkd.cc \
