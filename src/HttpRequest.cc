@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.53 2005/09/19 17:30:23 wessels Exp $
+ * $Id: HttpRequest.cc,v 1.54 2005/11/21 22:50:16 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -206,6 +206,7 @@ bool HttpRequest::parseFirstLine(const char *start, const char *end)
     return true;
 }
 
+
 HttpRequest *
 requestLink(HttpRequest * request)
 {
@@ -373,4 +374,41 @@ void HttpRequest::packFirstLineInto(Packer * p, bool full_uri) const
                  RequestMethodStr[method],
                  packableURI(full_uri),
                  http_ver.major, http_ver.minor);
+}
+
+/*
+ * Indicate whether or not we would usually expect an entity-body
+ * along with this request
+ */
+bool
+HttpRequest::expectingBody(method_t unused, ssize_t& theSize) const
+{
+    bool expectBody = false;
+
+    /*
+     * GET and HEAD don't usually have bodies, but we should be prepared
+     * to accept one if the request_entities directive is set
+     */
+
+    if (method == METHOD_GET || method == METHOD_HEAD)
+        expectBody = Config.onoff.request_entities ? true : false;
+    else if (method == METHOD_PUT || method == METHOD_POST)
+        expectBody = true;
+    else if (httpHeaderHasListMember(&header, HDR_TRANSFER_ENCODING, "chunked", ','))
+        expectBody = true;
+    else if (content_length >= 0)
+        expectBody = true;
+    else
+        expectBody = false;
+
+    if (expectBody) {
+        if (httpHeaderHasListMember(&header, HDR_TRANSFER_ENCODING, "chunked", ','))
+            theSize = -1;
+        else if (content_length >= 0)
+            theSize = content_length;
+        else
+            theSize = -1;
+    }
+
+    return expectBody;
 }
