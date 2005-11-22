@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.405 2005/11/04 22:59:08 hno Exp $
+# $Id: cf.data.pre,v 1.406 2005/11/21 23:11:24 wessels Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -4750,6 +4750,160 @@ DOC_START
 
 	If set to "off" then such HTTP errors will cause the request
 	or response to be rejected.
+DOC_END
+
+COMMENT_START
+ ICAP OPTIONS
+ -----------------------------------------------------------------------------
+COMMENT_END
+
+NAME: icap_enable
+TYPE: onoff
+IFDEF: ICAP_CLIENT
+COMMENT: on|off
+LOC: TheICAPConfig.onoff
+DEFAULT: off
+DOC_START
+    If you want to enable the ICAP module support, set this to on.
+DOC_END
+
+NAME: icap_preview_enable
+TYPE: onoff
+IFDEF: ICAP_CLIENT
+COMMENT: on|off
+LOC: TheICAPConfig.preview_enable
+DEFAULT: off
+DOC_START
+        Set this to 'on' if you want to enable the ICAP preview
+        feature in Squid.
+DOC_END
+
+NAME: icap_preview_size
+TYPE: int
+IFDEF: ICAP_CLIENT
+LOC: TheICAPConfig.preview_size
+DEFAULT: -1
+DOC_START
+        The default size of preview data to be sent to the ICAP server.
+        -1 means no preview. This value might be overwritten on a per server
+        basis by OPTIONS requests.
+DOC_END
+
+NAME: icap_check_interval
+TYPE: int
+IFDEF: ICAP_CLIENT
+LOC: TheICAPConfig.check_interval
+DEFAULT: 300
+DOC_START
+        If an ICAP server does not respond, it gets marked as unreachable. Squid
+        will try again to reach it after this time.
+DOC_END
+
+NAME: icap_send_client_ip
+TYPE: onoff
+IFDEF: ICAP_CLIENT
+COMMENT: on|off
+LOC: TheICAPConfig.send_client_ip
+DEFAULT: off
+DOC_START
+        This adds the header "X-Client-IP" to ICAP requests.
+DOC_END
+
+NAME: icap_send_auth_user
+TYPE: onoff
+IFDEF: ICAP_CLIENT
+COMMENT: on|off
+LOC: TheICAPConfig.auth_user
+DEFAULT: off
+DOC_START
+        This adds the header "X-Authenticated-User" to ICAP requests
+        if proxy access is authentified.
+DOC_END
+
+NAME: icap_auth_scheme
+TYPE: string
+IFDEF: ICAP_CLIENT
+LOC: TheICAPConfig.auth_scheme
+DEFAULT: Local://%u
+DOC_START
+        Authentification scheme to pass to ICAP requests if
+        icap_send_auth_user is enabled. The first occurence of "%u"
+        is replaced by the authentified user name. If no "%u" is found,
+        the username is added at the end of the scheme.
+
+        See http://www.ietf.org/internet-drafts/draft-stecher-icap-subid-00.txt,
+        section 3.4 for details on this.
+
+        Examples:
+
+        icap_auth_scheme Local://%u
+        icap_auth_scheme LDAP://ldap-server/cn=%u,dc=company,dc=com
+        icap_auth_scheme WinNT://nt-domain/%u
+        icap_auth_scheme Radius://radius-server/%u
+DOC_END
+
+NAME: icap_service
+TYPE: icap_service_type
+IFDEF: ICAP_CLIENT
+LOC: TheICAPConfig
+DEFAULT: none
+DOC_START
+        Defines a single ICAP service
+
+        icap_service servicename vectoring_point bypass service_url
+
+        vectoring_point = reqmod_precache|reqmod_postcache|respmod_precache|respmod_postcache
+                This specifies at which point of request processing the ICAP
+                service should be plugged in.
+        bypass = 1|0
+                If set to 1 and the ICAP server cannot be reached, the request will go
+                through without being processed by an ICAP server
+        service_url = icap://servername:port/service
+
+        Note: reqmod_precache and respmod_postcache is not yet implemented
+
+Example:
+icap_service service_1 reqmod_precache 0 icap://icap1.mydomain.net:1344/reqmod
+icap_service service_2 respmod_precache 0 icap://icap2.mydomain.net:1344/respmod
+DOC_END
+
+NAME: icap_class
+TYPE: icap_class_type
+IFDEF: ICAP_CLIENT
+LOC: TheICAPConfig
+DEFAULT: none
+DOC_START
+        Defines an ICAP service chain. If there are multiple services per
+        vectoring point, they are processed in the specified order.
+
+        icap_class classname servicename...
+
+Example:
+icap_class class_1 service_1 service_2
+icap class class_2 service_1 service_3
+DOC_END
+
+NAME: icap_access
+TYPE: icap_access_type
+IFDEF: ICAP_CLIENT
+LOC: TheICAPConfig
+DEFAULT: none
+DOC_START
+        Redirects a request through an ICAP service class, depending
+        on given acls
+
+        icap_access classname allow|deny [!]aclname...
+
+        The icap_access statements are processed in the order they appear in
+        this configuration file. If an access list matches, the processing stops.
+        For an "allow" rule, the specified class is used for the request. A "deny"
+        rule simply stops processing without using the class. You can also use the
+        special classname "None".
+
+        For backward compatibility, it is also possible to use services
+        directly here.
+Example:
+icap_access class_1 allow all
 DOC_END
 
 EOF
