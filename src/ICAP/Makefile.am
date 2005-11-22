@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.1 2005/11/21 23:32:59 wessels Exp $
+#  $Id: Makefile.am,v 1.2 2005/11/21 23:54:12 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -15,15 +15,15 @@ AM_CXXFLAGS = @SQUID_CXXFLAGS@
 SUBDIRS		= 
 
 EXTRA_LIBRARIES	= \
-	libicapclient.a
+	libicap.a
 
 noinst_LIBRARIES = \
-	libicapclient.a
+	libicap.a
 
-libicapclient_a_SOURCES = \
+libicap_a_SOURCES = \
  	ChunkedCodingParser.cc \
-	ICAPAnchor.cc \
-	ICAPClientSideHook.cc \
+	ICAPClientRespmodPrecache.cc \
+	ICAPClientReqmodPrecache.cc \
 	ICAPClient.cc \
 	ICAPElements.cc \
 	ICAPXaction.cc \
