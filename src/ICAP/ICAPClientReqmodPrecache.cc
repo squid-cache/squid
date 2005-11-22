@@ -6,7 +6,7 @@
 #include "MsgPipeSource.h"
 #include "MsgPipeSink.h"
 #include "HttpRequest.h"
-#include "ICAPClientSideHook.h"
+#include "ICAPClientReqmodPrecache.h"
 #include "ICAPServiceRep.h"
 #include "ICAPClient.h"
 
@@ -14,18 +14,18 @@
 
 extern LeakFinder *MsgPipeLeaker;
 
-CBDATA_CLASS_INIT(ICAPClientSideHook);
+CBDATA_CLASS_INIT(ICAPClientReqmodPrecache);
 
-ICAPClientSideHook::ICAPClientSideHook(ICAPServiceRep::Pointer aService): service(aService), http(NULL), virgin(NULL), adapted(NULL)
+ICAPClientReqmodPrecache::ICAPClientReqmodPrecache(ICAPServiceRep::Pointer aService): service(aService), http(NULL), virgin(NULL), adapted(NULL)
 {
-    debug(93,3)("ICAPClientSideHook constructed, this=%p\n", this);
+    debug(93,3)("ICAPClientReqmodPrecache constructed, this=%p\n", this);
 }
 
-ICAPClientSideHook::~ICAPClientSideHook()
+ICAPClientReqmodPrecache::~ICAPClientReqmodPrecache()
 {
     stop(notifyNone);
     cbdataReferenceDone(http);
-    debug(93,3)("ICAPClientSideHook destructed, this=%p\n", this);
+    debug(93,3)("ICAPClientReqmodPrecache destructed, this=%p\n", this);
 
     if (virgin != NULL)
         freeVirgin();
@@ -34,9 +34,9 @@ ICAPClientSideHook::~ICAPClientSideHook()
         freeAdapted();
 }
 
-void ICAPClientSideHook::startReqMod(ClientHttpRequest *aHttp, HttpRequest *request)
+void ICAPClientReqmodPrecache::startReqMod(ClientHttpRequest *aHttp, HttpRequest *request)
 {
-    debug(93,3)("ICAPClientSideHook::startReqMod() called\n");
+    debug(93,3)("ICAPClientReqmodPrecache::startReqMod() called\n");
     http = cbdataReference(aHttp);
 
     virgin = new MsgPipe("virgin"); // this is the place to create a refcount ptr
@@ -58,9 +58,9 @@ void ICAPClientSideHook::startReqMod(ClientHttpRequest *aHttp, HttpRequest *requ
     adapted->sendSinkNeed();   // we want adapted response, eventially
 }
 
-void ICAPClientSideHook::sendMoreData(StoreIOBuffer buf)
+void ICAPClientReqmodPrecache::sendMoreData(StoreIOBuffer buf)
 {
-    debug(93,3)("ICAPClientSideHook::sendMoreData() called\n");
+    debug(93,3)("ICAPClientReqmodPrecache::sendMoreData() called\n");
     //buf.dump();
     /*
      * The caller is responsible for not giving us more data
@@ -73,7 +73,7 @@ void ICAPClientSideHook::sendMoreData(StoreIOBuffer buf)
 }
 
 int
-ICAPClientSideHook::potentialSpaceSize()
+ICAPClientReqmodPrecache::potentialSpaceSize()
 {
     if (virgin == NULL)
         return 0;
@@ -84,25 +84,25 @@ ICAPClientSideHook::potentialSpaceSize()
 }
 
 // ClientHttpRequest says we have the entire HTTP message
-void ICAPClientSideHook::doneSending()
+void ICAPClientReqmodPrecache::doneSending()
 {
-    debug(93,3)("ICAPClientSideHook::doneSending() called\n");
+    debug(93,3)("ICAPClientReqmodPrecache::doneSending() called\n");
     leakTouch(virgin.getRaw(), MsgPipeLeaker);
 
     virgin->sendSourceFinish();
 }
 
 // ClientHttpRequest tells us to abort
-void ICAPClientSideHook::ownerAbort()
+void ICAPClientReqmodPrecache::ownerAbort()
 {
-    debug(93,3)("ICAPClientSideHook::ownerAbort() called\n");
+    debug(93,3)("ICAPClientReqmodPrecache::ownerAbort() called\n");
     stop(notifyIcap);
 }
 
 // ICAP client needs more virgin response data
-void ICAPClientSideHook::noteSinkNeed(MsgPipe *p)
+void ICAPClientReqmodPrecache::noteSinkNeed(MsgPipe *p)
 {
-    debug(93,3)("ICAPClientSideHook::noteSinkNeed() called\n");
+    debug(93,3)("ICAPClientReqmodPrecache::noteSinkNeed() called\n");
 
     leakTouch(virgin.getRaw(), MsgPipeLeaker);
 
@@ -111,26 +111,26 @@ void ICAPClientSideHook::noteSinkNeed(MsgPipe *p)
 }
 
 // ICAP client aborting
-void ICAPClientSideHook::noteSinkAbort(MsgPipe *p)
+void ICAPClientReqmodPrecache::noteSinkAbort(MsgPipe *p)
 {
-    debug(93,3)("ICAPClientSideHook::noteSinkAbort() called\n");
+    debug(93,3)("ICAPClientReqmodPrecache::noteSinkAbort() called\n");
     stop(notifyOwner);
 }
 
 // ICAP client starts sending adapted response
 // ICAP client has received new HTTP headers (if any) at this point
-void ICAPClientSideHook::noteSourceStart(MsgPipe *p)
+void ICAPClientReqmodPrecache::noteSourceStart(MsgPipe *p)
 {
-    debug(93,3)("ICAPClientSideHook::noteSourceStart() called\n");
+    debug(93,3)("ICAPClientReqmodPrecache::noteSourceStart() called\n");
     leakTouch(adapted.getRaw(), MsgPipeLeaker);
     http->takeAdaptedHeaders(adapted->data->header);
     noteSourceProgress(p);
 }
 
 // ICAP client sends more data
-void ICAPClientSideHook::noteSourceProgress(MsgPipe *p)
+void ICAPClientReqmodPrecache::noteSourceProgress(MsgPipe *p)
 {
-    debug(93,3)("ICAPClientSideHook::noteSourceProgress() called\n");
+    debug(93,3)("ICAPClientReqmodPrecache::noteSourceProgress() called\n");
     //tell ClientHttpRequest to store a fresh portion of the adapted response
 
     leakTouch(p, MsgPipeLeaker);
@@ -141,9 +141,9 @@ void ICAPClientSideHook::noteSourceProgress(MsgPipe *p)
 }
 
 // ICAP client is done sending adapted response
-void ICAPClientSideHook::noteSourceFinish(MsgPipe *p)
+void ICAPClientReqmodPrecache::noteSourceFinish(MsgPipe *p)
 {
-    debug(93,3)("ICAPClientSideHook::noteSourceFinish() called\n");
+    debug(93,3)("ICAPClientReqmodPrecache::noteSourceFinish() called\n");
     //tell ClientHttpRequest that we expect no more response data
     leakTouch(p, MsgPipeLeaker);
     http->doneAdapting();
@@ -151,15 +151,15 @@ void ICAPClientSideHook::noteSourceFinish(MsgPipe *p)
 }
 
 // ICAP client is aborting
-void ICAPClientSideHook::noteSourceAbort(MsgPipe *p)
+void ICAPClientReqmodPrecache::noteSourceAbort(MsgPipe *p)
 {
-    debug(93,3)("ICAPClientSideHook::noteSourceAbort() called\n");
+    debug(93,3)("ICAPClientReqmodPrecache::noteSourceAbort() called\n");
     leakTouch(p, MsgPipeLeaker);
     stop(notifyOwner);
 }
 
 // internal cleanup
-void ICAPClientSideHook::stop(Notify notify)
+void ICAPClientReqmodPrecache::stop(Notify notify)
 {
     if (virgin != NULL) {
         leakTouch(virgin.getRaw(), MsgPipeLeaker);
@@ -194,7 +194,7 @@ void ICAPClientSideHook::stop(Notify notify)
     }
 }
 
-void ICAPClientSideHook::freeVirgin()
+void ICAPClientReqmodPrecache::freeVirgin()
 {
     // virgin->data->cause should be NULL;
     requestUnlink(dynamic_cast<HttpRequest*>(virgin->data->header));
@@ -203,7 +203,7 @@ void ICAPClientSideHook::freeVirgin()
     virgin = NULL;	// refcounted
 }
 
-void ICAPClientSideHook::freeAdapted()
+void ICAPClientReqmodPrecache::freeAdapted()
 {
     adapted->data->header = NULL;	// we don't own it
     leakTouch(adapted.getRaw(), MsgPipeLeaker);
