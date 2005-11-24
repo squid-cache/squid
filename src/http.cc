@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.467 2005/11/21 23:29:08 wessels Exp $
+ * $Id: http.cc,v 1.468 2005/11/24 00:54:15 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -2093,7 +2093,7 @@ void
 HttpStateData::takeAdaptedBody(MemBuf *buf)
 {
     debug(11,5)("HttpStateData::takeAdaptedBody() called\n");
-    debug(11,5)("\t%d bytes\n", buf->contentSize());
+    debug(11,5)("\t%d bytes\n", (int) buf->contentSize());
     debug(11,5)("\t%d is current offset\n", (int)currentOffset);
 
     if (!entry->isAccepting()) {

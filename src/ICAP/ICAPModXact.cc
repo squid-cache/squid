@@ -305,7 +305,7 @@ void ICAPModXact::addLastRequestChunk(MemBuf &buf)
 
 void ICAPModXact::openChunk(MemBuf &buf, size_t chunkSize)
 {
-    buf.Printf("%x\r\n", chunkSize);
+    buf.Printf("%x\r\n", (int) chunkSize);
 }
 
 void ICAPModXact::closeChunk(MemBuf &buf, bool ieof)
@@ -892,11 +892,11 @@ void ICAPModXact::makeRequestHeaders(MemBuf &buf)
             encapsulateHead(buf, "res-hdr", httpBuf, prime);
 
     if (!virginBody.expected())
-        buf.Printf("null-body=%d", httpBuf.contentSize());
+        buf.Printf("null-body=%d", (int) httpBuf.contentSize());
     else if (ICAP::methodReqmod == m)
-        buf.Printf("req-body=%d", httpBuf.contentSize());
+        buf.Printf("req-body=%d", (int) httpBuf.contentSize());
     else
-        buf.Printf("res-body=%d", httpBuf.contentSize());
+        buf.Printf("res-body=%d", (int) httpBuf.contentSize());
 
     buf.append(ICAP::crlf, 2); // terminate Encapsulated line
 
@@ -922,7 +922,7 @@ void ICAPModXact::makeRequestHeaders(MemBuf &buf)
 void ICAPModXact::encapsulateHead(MemBuf &icapBuf, const char *section, MemBuf &httpBuf, const HttpMsg *head)
 {
     // update ICAP header
-    icapBuf.Printf("%s=%d,", section, httpBuf.contentSize());
+    icapBuf.Printf("%s=%d,", section, (int) httpBuf.contentSize());
 
     // pack HTTP head
     packHead(httpBuf, head);
@@ -994,7 +994,7 @@ void ICAPModXact::fillPendingStatus(MemBuf &buf) const
 
     if (preview.enabled()) {
         if (!preview.done())
-            buf.Printf("P(%d)", preview.debt());
+            buf.Printf("P(%d)", (int) preview.debt());
     }
 
     if (virginSendClaim.active())
