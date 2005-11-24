@@ -10,10 +10,6 @@
 #include "ICAPServiceRep.h"
 #include "ICAPClient.h"
 
-#include "LeakFinder.h"
-
-extern LeakFinder *MsgPipeLeaker;
-
 CBDATA_CLASS_INIT(ICAPClientReqmodPrecache);
 
 ICAPClientReqmodPrecache::ICAPClientReqmodPrecache(ICAPServiceRep::Pointer aService): service(aService), http(NULL), virgin(NULL), adapted(NULL)
@@ -40,7 +36,6 @@ void ICAPClientReqmodPrecache::startReqMod(ClientHttpRequest *aHttp, HttpRequest
     http = cbdataReference(aHttp);
 
     virgin = new MsgPipe("virgin"); // this is the place to create a refcount ptr
-    leakTouch(virgin.getRaw(), MsgPipeLeaker);
     virgin->source = this;
     virgin->data = new MsgPipeData;
     virgin->data->cause = NULL;
@@ -49,7 +44,6 @@ void ICAPClientReqmodPrecache::startReqMod(ClientHttpRequest *aHttp, HttpRequest
     virgin->data->body->init(ICAP::MsgPipeBufSizeMin, ICAP::MsgPipeBufSizeMax);
 
     adapted = new MsgPipe("adapted");
-    leakTouch(adapted.getRaw(), MsgPipeLeaker);
     adapted->sink = this;
 
     ICAPInitXaction(service, virgin, adapted);
@@ -67,7 +61,6 @@ void ICAPClientReqmodPrecache::sendMoreData(StoreIOBuffer buf)
      * than will fit in body MemBuf.  Caller should use
      * potentialSpaceSize() to find out how much we can hold.
      */
-    leakTouch(virgin.getRaw(), MsgPipeLeaker);
     virgin->data->body->append(buf.data, buf.length);
     virgin->sendSourceProgress();
 }
@@ -78,8 +71,6 @@ ICAPClientReqmodPrecache::potentialSpaceSize()
     if (virgin == NULL)
         return 0;
 
-    leakTouch(virgin.getRaw(), MsgPipeLeaker);
-
     return (int) virgin->data->body->potentialSpaceSize();
 }
 
@@ -87,7 +78,6 @@ ICAPClientReqmodPrecache::potentialSpaceSize()
 void ICAPClientReqmodPrecache::doneSending()
 {
     debug(93,3)("ICAPClientReqmodPrecache::doneSending() called\n");
-    leakTouch(virgin.getRaw(), MsgPipeLeaker);
 
     virgin->sendSourceFinish();
 }
@@ -103,8 +93,6 @@ void ICAPClientReqmodPrecache::ownerAbort()
 void ICAPClientReqmodPrecache::noteSinkNeed(MsgPipe *p)
 {
     debug(93,3)("ICAPClientReqmodPrecache::noteSinkNeed() called\n");
-
-    leakTouch(virgin.getRaw(), MsgPipeLeaker);
 
     if (virgin->data->body->potentialSpaceSize())
         http->icapSpaceAvailable();
@@ -122,7 +110,6 @@ void ICAPClientReqmodPrecache::noteSinkAbort(MsgPipe *p)
 void ICAPClientReqmodPrecache::noteSourceStart(MsgPipe *p)
 {
     debug(93,3)("ICAPClientReqmodPrecache::noteSourceStart() called\n");
-    leakTouch(adapted.getRaw(), MsgPipeLeaker);
     http->takeAdaptedHeaders(adapted->data->header);
     noteSourceProgress(p);
 }
@@ -132,8 +119,6 @@ void ICAPClientReqmodPrecache::noteSourceProgress(MsgPipe *p)
 {
     debug(93,3)("ICAPClientReqmodPrecache::noteSourceProgress() called\n");
     //tell ClientHttpRequest to store a fresh portion of the adapted response
-
-    leakTouch(p, MsgPipeLeaker);
 
     if (p->data->body->hasContent()) {
         http->takeAdaptedBody(p->data->body);
@@ -145,7 +130,6 @@ void ICAPClientReqmodPrecache::noteSourceFinish(MsgPipe *p)
 {
     debug(93,3)("ICAPClientReqmodPrecache::noteSourceFinish() called\n");
     //tell ClientHttpRequest that we expect no more response data
-    leakTouch(p, MsgPipeLeaker);
     http->doneAdapting();
     stop(notifyNone);
 }
@@ -154,7 +138,6 @@ void ICAPClientReqmodPrecache::noteSourceFinish(MsgPipe *p)
 void ICAPClientReqmodPrecache::noteSourceAbort(MsgPipe *p)
 {
     debug(93,3)("ICAPClientReqmodPrecache::noteSourceAbort() called\n");
-    leakTouch(p, MsgPipeLeaker);
     stop(notifyOwner);
 }
 
@@ -162,8 +145,6 @@ void ICAPClientReqmodPrecache::noteSourceAbort(MsgPipe *p)
 void ICAPClientReqmodPrecache::stop(Notify notify)
 {
     if (virgin != NULL) {
-        leakTouch(virgin.getRaw(), MsgPipeLeaker);
-
         if (notify == notifyIcap)
             virgin->sendSourceAbort();
         else
@@ -173,8 +154,6 @@ void ICAPClientReqmodPrecache::stop(Notify notify)
     }
 
     if (adapted != NULL) {
-        leakTouch(adapted.getRaw(), MsgPipeLeaker);
-
         if (notify == notifyIcap)
             adapted->sendSinkAbort();
         else
@@ -199,13 +178,11 @@ void ICAPClientReqmodPrecache::freeVirgin()
     // virgin->data->cause should be NULL;
     requestUnlink(dynamic_cast<HttpRequest*>(virgin->data->header));
     virgin->data->header = NULL;
-    leakTouch(virgin.getRaw(), MsgPipeLeaker);
     virgin = NULL;	// refcounted
 }
 
 void ICAPClientReqmodPrecache::freeAdapted()
 {
     adapted->data->header = NULL;	// we don't own it
-    leakTouch(adapted.getRaw(), MsgPipeLeaker);
     adapted = NULL;	// refcounted
 }
