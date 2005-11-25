@@ -115,7 +115,7 @@ typedef enum {
     XPROF_CommWriteCallbackData_callCallback,
     XPROF_CommFillCallbackData_callCallback,
     XPROF_HttpStateData_readReply,
-    XPROF_HttpStateData_processReplyData,
+    XPROF_HttpStateData_processReplyBody,
     XPROF_StoreEntry_write,
     XPROF_storeGetMemSpace,
     XPROF_MemObject_write,
