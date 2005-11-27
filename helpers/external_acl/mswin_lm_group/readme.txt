@@ -80,7 +80,3 @@ Test that entering no details does not result in an OK or ERR message.
 Test that entering an invalid username and group results in an ERR message.
 Test that entering an valid username and group results in an OK message.
 
---
-Serassio Guido
-squidnt at acmeconsulting dot it
-

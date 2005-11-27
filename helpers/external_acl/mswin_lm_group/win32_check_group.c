@@ -1,5 +1,5 @@
 /*
- * win32_group: lookup group membership in a Windows NT/2000 domain
+ * mswin_check_lm_group: lookup group membership in a Windows NT/2000 domain
  *
  * (C)2002,2005 Guido Serassio - Acme Consulting S.r.l.
  *

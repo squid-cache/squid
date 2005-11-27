@@ -1,7 +1,7 @@
 /*
- * win32_ntlm_auth: helper for NTLM Authentication for Squid Cache
+ * mswin_ntlm_auth: helper for NTLM Authentication for Squid Cache
  *
- * (C)2002,2003 Guido Serassio - Acme Consulting S.r.l.
+ * (C)2002,2005 Guido Serassio - Acme Consulting S.r.l.
  *
  * Authors:
  *  Guido Serassio <guido.serassio@acmeconsulting.it>
@@ -30,6 +30,9 @@
  *
  * History:
  *
+ * Version 1.22
+ * 29-10-2005 Guido Serassio
+ *              Updated for Negotiate auth support.
  * Version 1.21
  * 21-02-2004 Guido Serassio
  *              Removed control of use of NTLM NEGOTIATE packet from
@@ -111,7 +114,6 @@ helperfail(const char *reason)
   options:
   -d enable debugging.
   -v enable verbose NTLM packet debugging.
-  -l if specified, changes behavior on failures to last-ditch.
   -A can specify a Windows Local Group name allowed to authenticate.
   -D can specify a Windows Local Group name not allowed to authenticate.
  */
