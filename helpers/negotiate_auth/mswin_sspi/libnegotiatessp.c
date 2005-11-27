@@ -1,5 +1,5 @@
 /*
- * (C) 2002 Guido Serassio <serassio@libero.it>
+ * (C) 2005 Guido Serassio <guido.serassio@acmeconsulting.it>
  * Based on previous work of Francesco Chemolli and Robert Collins
  * Distributed freely under the terms of the GNU General Public License,
  * version 2. See the file COPYING for licensing details
