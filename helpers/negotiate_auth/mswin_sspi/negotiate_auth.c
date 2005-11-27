@@ -1,5 +1,5 @@
 /*
- * win32_ntlm_auth: helper for NTLM Authentication for Squid Cache
+ * mswin_negotiate_auth: helper for Negotiate Authentication for Squid Cache
  *
  * (C)2005 Guido Serassio - Acme Consulting S.r.l.
  *
@@ -87,7 +87,7 @@ helperfail(const char *reason)
 /*
   options:
   -d enable debugging.
-  -v enable verbose NTLM packet debugging.
+  -v enable verbose Negotiate packet debugging.
  */
 char *my_program_name = NULL;
 
@@ -97,7 +97,7 @@ usage()
     fprintf(stderr,
 	"Usage: %s [-d] [-v] [-h]\n"
 	" -d  enable debugging.\n"
-        " -v  enable verbose NTLM packet debugging.\n"
+        " -v  enable verbose Negotiate packet debugging.\n"
 	" -h  this message\n\n",
 	my_program_name);
 }
