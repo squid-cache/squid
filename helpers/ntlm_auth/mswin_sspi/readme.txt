@@ -50,11 +50,3 @@ internal Squid FTP icons. The following squid.conf ACL works around this:
 acl internal_icons urlpath_regex -i /squid-internal-static/icons/
 
 http_access allow our_networks internal_icons <== BEFORE authentication ACL !!!
-
-
-===============
-Contact details
-===============
-
-To contact the maintainer of this package, e-mail on squidnt@acmeconsulting.it.
-The latest version may be found on http://www.acmeconsulting.it/SquidNT.htm.

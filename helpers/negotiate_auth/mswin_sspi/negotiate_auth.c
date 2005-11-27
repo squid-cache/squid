@@ -12,7 +12,7 @@
  *
  * Based on previous work of Francesco Chemolli and Robert Collins.
  *
- * Dependencies: Windows NT4 SP4 and later.
+ * Dependencies: Windows 2000 and later.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
