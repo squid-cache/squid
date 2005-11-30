@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.703 2005/11/21 23:26:45 wessels Exp $
+ * $Id: client_side.cc,v 1.704 2005/11/29 20:18:20 serassio Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2955,6 +2955,11 @@ clientNegotiateSSL(int fd, void *data)
             /* PEM_write_SSL_SESSION(debug_log, SSL_get_session(ssl)); */
 #if defined(OPENSSL_VERSION_NUMBER) && OPENSSL_VERSION_NUMBER >= 0x0090708FL
             PEM_ASN1_write((i2d_of_void *)i2d_SSL_SESSION, PEM_STRING_SSL_SESSION, debug_log, (char *)SSL_get_session(ssl), NULL,NULL,0,NULL,NULL);
+
+#elif defined(OPENSSL_VERSION_NUMBER) && OPENSSL_VERSION_NUMBER == 0x0090704fL
+
+            PEM_ASN1_write((int(*)(...))i2d_SSL_SESSION, PEM_STRING_SSL_SESSION, debug_log, (char *)SSL_get_session(ssl), NULL,NULL,0,NULL,NULL);
+
 #else
 
             PEM_ASN1_write((int(*)())i2d_SSL_SESSION, PEM_STRING_SSL_SESSION, debug_log, (char *)SSL_get_session(ssl), NULL,NULL,0,NULL,NULL);
