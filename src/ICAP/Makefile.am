@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.2 2005/11/21 23:54:12 wessels Exp $
+#  $Id: Makefile.am,v 1.3 2005/11/29 18:08:10 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -22,17 +22,34 @@ noinst_LIBRARIES = \
 
 libicap_a_SOURCES = \
  	ChunkedCodingParser.cc \
-	ICAPClientRespmodPrecache.cc \
-	ICAPClientReqmodPrecache.cc \
+ 	ChunkedCodingParser.h \
 	ICAPClient.cc \
-	ICAPElements.cc \
-	ICAPXaction.cc \
-	ICAPOptXact.cc \
-	ICAPModXact.cc \
-	ICAPServiceRep.cc \
+	ICAPClient.h \
+	ICAPClientReqmodPrecache.cc \
+	ICAPClientReqmodPrecache.h \
+	ICAPClientRespmodPrecache.cc \
+	ICAPClientRespmodPrecache.h \
 	ICAPConfig.cc \
+	ICAPConfig.h \
+	ICAPElements.cc \
+	ICAPElements.h \
+	ICAPModXact.cc \
+	ICAPModXact.h \
 	ICAPOptions.cc \
+	ICAPOptions.h \
+	ICAPOptXact.cc \
+	ICAPOptXact.h \
+	ICAPServiceRep.cc \
+	ICAPServiceRep.h \
+	ICAPXaction.cc \
+	ICAPXaction.h \
+	MsgPipe.cc \
+	MsgPipe.h \
+	MsgPipeData.h \
+	MsgPipeEnd.h \
+	MsgPipeSink.h \
+	MsgPipeSource.h \
 	TextException.cc \
-	MsgPipe.cc
+	TextException.h
 
 INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/src
