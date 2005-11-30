@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.118 2005/11/21 23:18:57 wessels Exp $
+#  $Id: Makefile.am,v 1.119 2005/11/29 18:08:09 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -257,6 +257,7 @@ EXTRA_squid_SOURCES = \
 	$(ESI_ALL_SOURCE) \
 	ProfStats.cc \
 	LeakFinder.cc \
+	LeakFinder.h \
 	snmp_core.cc \
 	snmp_agent.cc \
 	unlinkd.cc \
@@ -365,6 +366,7 @@ squid_SOURCES = \
 	client_side_reply.h \
 	client_side_request.cc \
 	client_side_request.h \
+	ClientRequestContext.h \
 	clientStream.cc \
 	clientStream.h \
 	comm.cc \
