@@ -38083,9 +38083,6 @@ if test "$no_recursion" != yes; then
   # Add --quiet option if used
   test "$silent" = yes &&
     ac_sub_configure_args="$ac_sub_configure_args --quiet"
-  # Add --quiet option if used
-  test "$silent" = yes &&
-    ac_sub_configure_args="$ac_sub_configure_args --quiet"
   ac_prev=
   for ac_arg in $ac_configure_args; do
     if test -n "$ac_prev"; then
