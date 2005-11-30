@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.355 2005/11/21 23:55:25 wessels Exp $
+#  $Id: Makefile.in,v 1.356 2005/11/29 18:13:59 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -161,19 +161,19 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc ACL.h \
 	AuthUser.cc AuthUserRequest.cc cache_cf.cc CacheDigest.cc \
 	cache_manager.cc carp.cc cbdata.cc client_db.cc client_side.cc \
 	client_side.h client_side_reply.cc client_side_reply.h \
-	client_side_request.cc client_side_request.h clientStream.cc \
-	clientStream.h comm.cc comm.h CommIO.h comm_select.cc \
-	comm_poll.cc comm_epoll.cc comm_kqueue.cc CommRead.h \
-	ConfigOption.cc ConfigParser.h ConnectionDetail.h debug.cc \
-	Debug.h defines.h CommonPool.h CompositePoolNode.h \
-	delay_pools.cc DelayId.cc DelayId.h DelayIdComposite.h \
-	DelayBucket.cc DelayBucket.h DelayConfig.cc DelayConfig.h \
-	DelayPool.cc DelayPool.h DelayPools.h DelaySpec.cc DelaySpec.h \
-	DelayTagged.cc DelayTagged.h DelayUser.cc DelayUser.h \
-	DelayVector.cc DelayVector.h NullDelayId.cc NullDelayId.h \
-	disk.cc DiskIO/DiskIOModule.cc DiskIO/ReadRequest.cc \
-	DiskIO/ReadRequest.h DiskIO/WriteRequest.cc \
-	DiskIO/WriteRequest.h DiskIO/DiskFile.h \
+	client_side_request.cc client_side_request.h \
+	ClientRequestContext.h clientStream.cc clientStream.h comm.cc \
+	comm.h CommIO.h comm_select.cc comm_poll.cc comm_epoll.cc \
+	comm_kqueue.cc CommRead.h ConfigOption.cc ConfigParser.h \
+	ConnectionDetail.h debug.cc Debug.h defines.h CommonPool.h \
+	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
+	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
+	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
+	DelaySpec.cc DelaySpec.h DelayTagged.cc DelayTagged.h \
+	DelayUser.cc DelayUser.h DelayVector.cc DelayVector.h \
+	NullDelayId.cc NullDelayId.h disk.cc DiskIO/DiskIOModule.cc \
+	DiskIO/ReadRequest.cc DiskIO/ReadRequest.h \
+	DiskIO/WriteRequest.cc DiskIO/WriteRequest.h DiskIO/DiskFile.h \
 	DiskIO/DiskIOStrategy.h DiskIO/IORequestor.h \
 	DiskIO/DiskIOModule.h dns_internal.cc dns.cc enums.h \
 	errorpage.cc ElementList.h ESI.cc ESI.h ESIAssign.cc \
@@ -911,6 +911,7 @@ EXTRA_squid_SOURCES = \
 	$(ESI_ALL_SOURCE) \
 	ProfStats.cc \
 	LeakFinder.cc \
+	LeakFinder.h \
 	snmp_core.cc \
 	snmp_agent.cc \
 	unlinkd.cc \
@@ -1019,6 +1020,7 @@ squid_SOURCES = \
 	client_side_reply.h \
 	client_side_request.cc \
 	client_side_request.h \
+	ClientRequestContext.h \
 	clientStream.cc \
 	clientStream.h \
 	comm.cc \
