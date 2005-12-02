@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.20 2005/11/21 22:46:38 wessels Exp $
+ * $Id: HttpMsg.cc,v 1.21 2005/12/01 18:15:51 wessels Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -200,7 +200,7 @@ bool HttpMsg::parse(MemBuf *buf, bool eof, http_status *error)
 }
 
 /*
- * parse() takes character buffer of HTTP headers (buf),
+ * parseCharBuf() takes character buffer of HTTP headers (buf),
  * which may not be NULL-terminated, and fills in an HttpMsg
  * structure.  The parameter 'end' specifies the offset to
  * the end of the reply headers.  The caller may know where the
