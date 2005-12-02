@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.407 2005/12/01 23:19:22 wessels Exp $
+# $Id: cf.data.pre,v 1.408 2005/12/01 23:23:59 wessels Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -4789,6 +4789,17 @@ DOC_START
         basis by OPTIONS requests.
 DOC_END
 
+NAME: icap_persistent_connections
+TYPE: onoff
+IFDEF: ICAP_CLIENT
+COMMENT: on|off
+LOC: TheICAPConfig.reuse_connections
+DEFAULT: on
+DOC_START
+	Whether or not Squid should use persistent connections to
+	an ICAP server.
+DOC_END
+
 NAME: icap_send_client_ip
 TYPE: onoff
 IFDEF: ICAP_CLIENT
@@ -4799,37 +4810,15 @@ DOC_START
         This adds the header "X-Client-IP" to ICAP requests.
 DOC_END
 
-NAME: icap_send_auth_user
+NAME: icap_send_client_username
 TYPE: onoff
 IFDEF: ICAP_CLIENT
 COMMENT: on|off
-LOC: TheICAPConfig.auth_user
+LOC: TheICAPConfig.send_client_username
 DEFAULT: off
 DOC_START
-        This adds the header "X-Authenticated-User" to ICAP requests
+        This adds the header "X-Client-Username" to ICAP requests
         if proxy access is authentified.
-DOC_END
-
-NAME: icap_auth_scheme
-TYPE: string
-IFDEF: ICAP_CLIENT
-LOC: TheICAPConfig.auth_scheme
-DEFAULT: Local://%u
-DOC_START
-        Authentification scheme to pass to ICAP requests if
-        icap_send_auth_user is enabled. The first occurence of "%u"
-        is replaced by the authentified user name. If no "%u" is found,
-        the username is added at the end of the scheme.
-
-        See http://www.ietf.org/internet-drafts/draft-stecher-icap-subid-00.txt,
-        section 3.4 for details on this.
-
-        Examples:
-
-        icap_auth_scheme Local://%u
-        icap_auth_scheme LDAP://ldap-server/cn=%u,dc=company,dc=com
-        icap_auth_scheme WinNT://nt-domain/%u
-        icap_auth_scheme Radius://radius-server/%u
 DOC_END
 
 NAME: icap_service
