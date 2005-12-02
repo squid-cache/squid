@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.406 2005/11/21 23:11:24 wessels Exp $
+# $Id: cf.data.pre,v 1.407 2005/12/01 23:19:22 wessels Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -4787,16 +4787,6 @@ DOC_START
         The default size of preview data to be sent to the ICAP server.
         -1 means no preview. This value might be overwritten on a per server
         basis by OPTIONS requests.
-DOC_END
-
-NAME: icap_check_interval
-TYPE: int
-IFDEF: ICAP_CLIENT
-LOC: TheICAPConfig.check_interval
-DEFAULT: 300
-DOC_START
-        If an ICAP server does not respond, it gets marked as unreachable. Squid
-        will try again to reach it after this time.
 DOC_END
 
 NAME: icap_send_client_ip
