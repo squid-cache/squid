@@ -97,7 +97,7 @@ class AuthNTLMConfig : public AuthConfig
 {
 
 public:
-    AuthNTLMConfig::AuthNTLMConfig();
+    AuthNTLMConfig();
     virtual bool active() const;
     virtual bool configured() const;
     virtual AuthUserRequest *decode(char const *proxy_auth);

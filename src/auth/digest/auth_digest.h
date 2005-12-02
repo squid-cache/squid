@@ -156,7 +156,7 @@ class AuthDigestConfig : public AuthConfig
 {
 
 public:
-    AuthDigestConfig::AuthDigestConfig();
+    AuthDigestConfig();
     virtual bool active() const;
     virtual bool configured() const;
     virtual AuthUserRequest *decode(char const *proxy_auth);
