@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.cc,v 1.2 2005/11/21 23:46:27 wessels Exp $
+ * $Id: ICAPConfig.cc,v 1.3 2005/12/01 22:39:46 wessels Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -159,7 +159,14 @@ ICAPAccessCheck::check()
 
             candidateClasses += theClass->key;
 
+            /*
+             * Break here because we only need one matching service
+             * to justify ACL-checking a class.  We might use other
+             * services belonging to the class if the first service
+             * is unavailable, etc.
+             */
             break;
+
         }
     }
 
