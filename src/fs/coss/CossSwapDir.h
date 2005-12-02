@@ -83,8 +83,8 @@ private:
     void changeIO(DiskIOModule *module);
     bool optionIOParse(char const *option, const char *value, int reconfiguring);
     void optionIODump(StoreEntry * e) const;
-    void CossSwapDir::optionBlockSizeDump(StoreEntry *) const;
-    bool CossSwapDir::optionBlockSizeParse(const char *, const char *, int);
+    void optionBlockSizeDump(StoreEntry *) const;
+    bool optionBlockSizeParse(const char *, const char *, int);
     char const *stripePath() const;
     ConfigOption * getOptionTree() const;
     const char *ioModule;

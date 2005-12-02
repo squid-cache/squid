@@ -99,7 +99,7 @@ class AuthNegotiateConfig : public AuthConfig
 {
 
 public:
-    AuthNegotiateConfig::AuthNegotiateConfig();
+    AuthNegotiateConfig();
     virtual bool active() const;
     virtual bool configured() const;
     virtual AuthUserRequest *decode(char const *proxy_auth);

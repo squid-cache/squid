@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.154 2005/09/17 05:50:08 wessels Exp $
+ * $Id: tunnel.cc,v 1.155 2005/12/01 21:35:40 serassio Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -83,7 +83,7 @@ public:
 #endif
 
         void error(int const xerrno);
-        int Connection::debugLevelForError(int const xerrno) const;
+        int debugLevelForError(int const xerrno) const;
         void closeIfOpen();
         void dataSent (size_t amount);
         int len;
