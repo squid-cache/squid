@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.h,v 1.2 2005/11/21 23:46:27 wessels Exp $
+ * $Id: ICAPConfig.h,v 1.3 2005/12/01 19:06:46 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -51,7 +51,7 @@ public:
 
     Vector<ICAPServiceRep::Pointer> services;
 
-    ICAPClass() : key(NULL) {};
+    ICAPClass() : key(NULL), accessList(NULL) {};
 
     int prepare();
 };
