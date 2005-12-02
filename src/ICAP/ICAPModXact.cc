@@ -14,6 +14,7 @@
 #include "ChunkedCodingParser.h"
 #include "TextException.h"
 #include "AuthUserRequest.h"
+#include "ICAPConfig.h"
 
 // flow and terminology:
 //     HTTP| --> receive --> encode --> write --> |network
@@ -27,6 +28,8 @@
 CBDATA_CLASS_INIT(ICAPModXact);
 
 static const size_t TheBackupLimit = ICAP::MsgPipeBufSizeMax;
+
+extern ICAPConfig TheICAPConfig;
 
 
 ICAPModXact::State::State()
@@ -872,12 +875,21 @@ void ICAPModXact::doStop()
 
 void ICAPModXact::makeRequestHeaders(MemBuf &buf)
 {
+    /*
+     * XXX These should use HttpHdr interfaces instead of Printfs
+     */
     const ICAPServiceRep &s = service();
     buf.Printf("%s %s ICAP/1.0\r\n", s.methodStr(), s.uri.buf());
     buf.Printf("Host: %s:%d\r\n", s.host.buf(), s.port);
+    buf.Printf("Date: %s\r\n", mkrfc1123(squid_curtime));
+
+    if (!TheICAPConfig.reuse_connections)
+        buf.Printf("Connection: close\r\n");
+
     buf.Printf("Encapsulated: ");
 
     MemBuf httpBuf;
+
     httpBuf.init();
 
     // build HTTP request header, if any
@@ -916,12 +928,14 @@ void ICAPModXact::makeRequestHeaders(MemBuf &buf)
                                  virgin->data->cause :
                                  dynamic_cast<const HttpRequest*>(virgin->data->header);
 
-    if (request->client_addr.s_addr != any_addr.s_addr)
-        buf.Printf("X-Client-IP: %s\r\n", inet_ntoa(request->client_addr));
+    if (TheICAPConfig.send_client_ip)
+        if (request->client_addr.s_addr != any_addr.s_addr)
+            buf.Printf("X-Client-IP: %s\r\n", inet_ntoa(request->client_addr));
 
-    if (request->auth_user_request)
-        if (request->auth_user_request->username())
-            buf.Printf("X-Client-Username: %s\r\n", request->auth_user_request->username());
+    if (TheICAPConfig.send_client_username)
+        if (request->auth_user_request)
+            if (request->auth_user_request->username())
+                buf.Printf("X-Client-Username: %s\r\n", request->auth_user_request->username());
 
     fprintf(stderr, "%s\n", buf.content());
 
