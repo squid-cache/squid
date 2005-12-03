@@ -1,6 +1,6 @@
 
 /*
- * $Id: LeakFinder.cc,v 1.1 2005/11/21 22:41:45 wessels Exp $
+ * $Id: LeakFinder.cc,v 1.2 2005/12/03 15:13:51 serassio Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -41,6 +41,7 @@
 #include "LeakFinder.h"
 #include "Store.h"
 
+#if USE_LEAKFINDER
 /* ========================================================================= */
 
 LeakFinderPtr::LeakFinderPtr(void *p , const char *f, const int l) :
@@ -138,3 +139,5 @@ LeakFinder::dump()
                     c->key, (int)(squid_curtime - c->when), c->file, c->line);
     }
 }
+
+#endif /* USE_LEAKFINDER */
