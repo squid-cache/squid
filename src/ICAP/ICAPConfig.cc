@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.cc,v 1.3 2005/12/01 22:39:46 wessels Exp $
+ * $Id: ICAPConfig.cc,v 1.4 2005/12/02 19:43:38 wessels Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -155,7 +155,7 @@ ICAPAccessCheck::check()
             if (point != theService->point)
                 continue;
 
-            debug(93,1)("ICAPAccessCheck::check: class '%s' has candidate service '%s'\n", theClass->key.buf(), theService->key.buf());
+            debug(93,3)("ICAPAccessCheck::check: class '%s' has candidate service '%s'\n", theClass->key.buf(), theService->key.buf());
 
             candidateClasses += theClass->key;
 
@@ -197,7 +197,7 @@ ICAPAccessCheck::checkCandidates()
      * when there are no canidates, set matchedClass to NULL string
      * and call the wrapper with answer = 1
      */
-    debug(93,1)("ICAPAccessCheck::check: NO candidates or matches found\n");
+    debug(93,3)("ICAPAccessCheck::check: NO candidates or matches found\n");
 
     matchedClass.clean();
 

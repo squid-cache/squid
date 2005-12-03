@@ -57,6 +57,7 @@ ICAPXaction::ICAPXaction(const char *aTypeName):
         connection(-1),
         commBuf(NULL), commBufSize(0),
         commEof(false),
+        reuseConnection(true),
         connector(NULL), reader(NULL), writer(NULL), closer(NULL),
         typeName(aTypeName),
         theService(NULL),
@@ -82,6 +83,17 @@ void ICAPXaction::openConnection()
     // TODO: check whether NULL domain is appropriate here
     connection = pconnPop(s.host.buf(), s.port, NULL);
 
+    if (connection >= 0) {
+        debug(93,3)("%s(%d) reused pconn FD %d\n", __FILE__, __LINE__, connection);
+        eventAdd("ICAPXaction::reusedConnection",
+                 reusedConnection,
+                 this,
+                 0.0,
+                 0,
+                 true);
+        return;
+    }
+
     if (connection < 0) {
         connection = comm_open(SOCK_STREAM, 0, getOutgoingAddr(NULL), 0,
                                COMM_NONBLOCKING, s.uri.buf());
@@ -102,6 +114,22 @@ void ICAPXaction::openConnection()
     commConnectStart(connection, s.host.buf(), s.port, connector, this);
 }
 
+/*
+ * This event handler is necessary to work around the no-rentry policy
+ * of ICAPXaction::callStart()
+ */
+void
+ICAPXaction::reusedConnection(void *data)
+{
+    debug(93,5)("ICAPXaction::reusedConnection\n");
+    ICAPXaction *x = (ICAPXaction*)data;
+    /*
+     * XXX noteCommConnected Must()s that connector is set to something;
+     */
+    x->connector = &ICAPXaction_noteCommConnected;
+    x->noteCommConnected(COMM_OK);
+}
+
 void ICAPXaction::closeConnection()
 {
     if (connection >= 0) {
@@ -114,7 +142,13 @@ void ICAPXaction::closeConnection()
 
         cancelRead();
 
-        comm_close(connection);
+        if (reuseConnection) {
+            debug(93,3)("%s(%d) pushing pconn %d\n", __FILE__,__LINE__,connection);
+            pconnPush(connection, theService->host.buf(), theService->port, NULL);
+        } else {
+            debug(93,3)("%s(%d) closing pconn %d\n", __FILE__,__LINE__,connection);
+            comm_close(connection);
+        }
 
         connector = NULL;
         connection = -1;
