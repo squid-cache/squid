@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.119 2005/11/29 18:08:09 serassio Exp $
+#  $Id: Makefile.am,v 1.120 2005/12/02 17:06:10 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -572,7 +572,8 @@ squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a @STORE_OBJS@ @STORE_LINKO
 	@DISK_LINKOBJS@ \
 	@REPL_OBJS@ \
 	@AUTH_LINKOBJS@ \
-	@AUTH_OBJS@
+	@AUTH_OBJS@ \
+	${ICAP_LIBS}
 
 unlinkd_SOURCES = unlinkd.cc SquidNew.cc
 unlinkd_CXXFLAGS = -DUNLINK_DAEMON
