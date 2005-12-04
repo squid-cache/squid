@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.52 2005/11/21 23:53:37 wessels Exp $
+ * $Id: client_side_request.cc,v 1.53 2005/12/03 18:00:28 wessels Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -60,6 +60,7 @@
 #include "ICAP/ICAPElements.h"
 #include "ICAP/ICAPConfig.h"
 static void icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data);
+extern ICAPConfig TheICAPConfig;
 #endif
 
 #if LINGERING_CLOSE
@@ -1039,7 +1040,7 @@ ClientHttpRequest::doCallouts()
     }
 
 #if ICAP_CLIENT
-    if (!calloutContext->icap_acl_check_done) {
+    if (TheICAPConfig.onoff && !calloutContext->icap_acl_check_done) {
         calloutContext->icap_acl_check_done = 1;
         calloutContext->icapAccessCheck();
         return;
