@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.468 2005/11/24 00:54:15 wessels Exp $
+ * $Id: http.cc,v 1.469 2005/12/03 18:00:28 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -55,6 +55,7 @@
 #if ICAP_CLIENT
 #include "ICAP/ICAPClientRespmodPrecache.h"
 #include "ICAP/ICAPConfig.h"
+extern ICAPConfig TheICAPConfig;
 #endif
 
 CBDATA_CLASS_INIT(HttpStateData);
@@ -755,7 +756,7 @@ HttpStateData::processReplyHeader()
 
 #if ICAP_CLIENT
 
-    {
+    if (TheICAPConfig.onoff) {
         ICAPAccessCheck *icap_access_check =
             new ICAPAccessCheck(ICAP::methodRespmod, ICAP::pointPreCache, request, reply, icapAclCheckDoneWrapper, this);
 
@@ -764,6 +765,7 @@ HttpStateData::processReplyHeader()
         ctx_exit(ctx);
         return;
     }
+
 #endif
 
     storeEntryReplaceObject(entry, reply);
