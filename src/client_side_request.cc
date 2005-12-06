@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.53 2005/12/03 18:00:28 wessels Exp $
+ * $Id: client_side_request.cc,v 1.54 2005/12/06 00:01:23 wessels Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -103,11 +103,12 @@ static void checkFailureRatio(err_type, hier_code);
 ClientRequestContext::~ClientRequestContext()
 {
     /*
-     * Note: ClientRequestContext is only deleted by its parent,
-     * ClientHttpRequest.  That can only happen after ClientRequestContext
-     * calls cbdataReferenceDone(http)
+     * Release our "lock" on our parent, ClientHttpRequest, if we
+     * still have one
      */
-    assert(NULL == http);
+
+    if (http)
+        cbdataReferenceDone(http);
 
     if (acl_checklist)
         delete acl_checklist;
@@ -451,6 +452,7 @@ ClientRequestContext::clientAccessCheckDone(int answer)
                                     auth_user_request : http->request->auth_user_request);
         node = (clientStreamNode *)http->client_stream.tail->data;
         clientStreamRead(node, http, node->readBuffer);
+        return;
     }
 
     /* ACCESS_ALLOWED continues here ... */
