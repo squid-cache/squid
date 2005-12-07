@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.704 2005/11/29 20:18:20 serassio Exp $
+ * $Id: client_side.cc,v 1.705 2005/12/06 23:03:34 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -623,8 +623,6 @@ ConnStateData::~ConnStateData()
         auth_user_request->unlock();
 
     auth_user_request = NULL;
-
-    pconnHistCount(0, nrequests);
 
     cbdataReferenceDone(port);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.411 2005/09/17 05:50:08 wessels Exp $
+ * $Id: comm.cc,v 1.412 2005/12/06 23:03:34 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -42,6 +42,7 @@
 #include "CommIO.h"
 #include "ConnectionDetail.h"
 #include "MemBuf.h"
+#include "pconn.h"
 
 #if defined(_SQUID_CYGWIN_)
 #include <sys/ioctl.h>
@@ -1786,8 +1787,8 @@ _comm_close(int fd, char const *file, int line)
 
     commCallCloseHandlers(fd);
 
-    if (F->uses)		/* assume persistent connect count */
-        pconnHistCount(1, F->uses);
+    if (F->pconn.uses)
+        F->pconn.pool->count(F->pconn.uses);
 
     comm_empty_os_read_buffers(fd);
 

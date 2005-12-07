@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.130 2005/11/06 11:14:27 serassio Exp $
+ * $Id: forward.cc,v 1.131 2005/12/06 23:03:34 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -42,6 +42,7 @@
 #include "ACLChecklist.h"
 #include "ACL.h"
 #include "HttpReply.h"
+#include "pconn.h"
 
 static PSC fwdStartComplete;
 static void fwdDispatch(FwdState *);
@@ -66,6 +67,8 @@ static int FwdReplyCodes[MAX_FWD_STATS_IDX + 1][HTTP_INVALID_HEADER + 1];
 static void fwdLog(FwdState * fwdState);
 static Logfile *logfile = NULL;
 #endif
+
+static PconnPool *fwdPconnPool = new PconnPool("server-side");
 
 static peer *
 fwdStateServerPeer(FwdState * fwdState)
@@ -581,7 +584,7 @@ fwdConnectStart(void *data)
     if (ftimeout < ctimeout)
         ctimeout = ftimeout;
 
-    if ((fd = pconnPop(host, port, domain)) >= 0) {
+    if ((fd = fwdPconnPool->pop(host, port, domain)) >= 0) {
         if (fwdCheckRetriable(fwdState)) {
             debug(17, 3) ("fwdConnectStart: reusing pconn FD %d\n", fd);
             fwdState->server_fd = fd;
@@ -715,7 +718,7 @@ fwdDispatch(FwdState * fwdState)
 
     fd_note(server_fd, storeUrl(fwdState->entry));
 
-    fd_table[server_fd].uses++;
+    fd_table[server_fd].noteUse(fwdPconnPool);
 
     /*assert(!EBIT_TEST(entry->flags, ENTRY_DISPATCHED)); */
     assert(entry->ping_status != PING_WAITING);
@@ -1038,6 +1041,12 @@ fwdComplete(FwdState * fwdState)
         if (fwdState->server_fd < 0)
             fwdStateFree(fwdState);
     }
+}
+
+void
+fwdPconnPush(int fd, const char *host, int port, const char *domain)
+{
+    fwdPconnPool->push(fd, host, port, domain);
 }
 
 void

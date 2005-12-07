@@ -707,7 +707,7 @@ bool ICAPModXact::parseHead(HttpMsg *head)
     }
 
     if (httpHeaderHasConnDir(&head->header, "close")) {
-        debug(0,0)("%s(%d) found connection close!\n", __FILE__,__LINE__);
+        debug(93,5)("%s(%d) found connection close\n", __FILE__,__LINE__);
         reuseConnection = false;
     }
 

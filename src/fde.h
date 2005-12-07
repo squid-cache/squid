@@ -1,6 +1,6 @@
 
 /*
- * $Id: fde.h,v 1.9 2005/08/27 18:40:20 serassio Exp $
+ * $Id: fde.h,v 1.10 2005/12/06 23:03:34 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,6 +35,8 @@
 #define SQUID_FDE_H
 #include "comm.h"
 
+class PconnPool;
+
 class fde
 {
 
@@ -45,6 +47,7 @@ public:
     char const *remoteAddr() const;
     void dumpStats (StoreEntry &, int);
     bool readPending(int);
+    void noteUse(PconnPool *);
 
     unsigned int type;
     u_short local_port;
@@ -101,7 +104,14 @@ unsigned int write_pending:
     flags;
     int bytes_read;
     int bytes_written;
-    int uses;                   /* ie # req's over persistent conn */
+
+    struct
+    {
+        int uses;                   /* ie # req's over persistent conn */
+        PconnPool *pool;
+    }
+
+    pconn;
     unsigned epoll_state;
 
     struct _fde_disk disk;

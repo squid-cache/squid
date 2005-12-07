@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.514 2005/11/06 16:54:30 serassio Exp $
+ * $Id: protos.h,v 1.515 2005/12/06 23:03:34 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -598,6 +598,7 @@ SQUIDCEXTERN void fwdComplete(FwdState * fwdState);
 SQUIDCEXTERN void fwdInit(void);
 SQUIDCEXTERN int fwdReforwardableStatus(http_status s);
 SQUIDCEXTERN void fwdServersFree(FwdServer ** FSVR);
+SQUIDCEXTERN void fwdPconnPush(int, const char *, int, const char *);
 #if WIP_FWD_LOG
 SQUIDCEXTERN void fwdUninit(void);
 SQUIDCEXTERN void fwdLogRotate(void);
@@ -851,10 +852,6 @@ SQUIDCEXTERN void errorAppendEntry(StoreEntry *, ErrorState *);
 SQUIDCEXTERN void errorStateFree(ErrorState * err);
 SQUIDCEXTERN err_type errorReservePageId(const char *page_name);
 SQUIDCEXTERN ErrorState *errorCon(err_type type, http_status);
-
-SQUIDCEXTERN void pconnPush(int, const char *host, u_short port, const char *domain);
-SQUIDCEXTERN int pconnPop(const char *host, u_short port, const char *domain);
-SQUIDCEXTERN void pconnInit(void);
 
 /* tools.c */
 SQUIDCEXTERN void dlinkAdd(void *data, dlink_node *, dlink_list *);

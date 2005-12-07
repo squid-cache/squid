@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.414 2005/11/21 22:41:45 wessels Exp $
+ * $Id: main.cc,v 1.415 2005/12/06 23:03:34 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -787,7 +787,6 @@ mainInitialize(void)
         /* after this point we want to see the mallinfo() output */
         do_mallinfo = 1;
         mimeInit(Config.mimeTablePathname);
-        pconnInit();
         refreshInit();
 #if DELAY_POOLS
 
