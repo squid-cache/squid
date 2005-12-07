@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.469 2005/12/03 18:00:28 wessels Exp $
+ * $Id: http.cc,v 1.470 2005/12/06 23:03:34 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1195,11 +1195,11 @@ HttpStateData::processReplyBody()
 
             if (_peer) {
                 if (_peer->options.originserver)
-                    pconnPush(fd, _peer->name, orig_request->port, orig_request->host);
+                    fwdPconnPush(fd, _peer->name, orig_request->port, orig_request->host);
                 else
-                    pconnPush(fd, _peer->name, _peer->http_port, NULL);
+                    fwdPconnPush(fd, _peer->name, _peer->http_port, NULL);
             } else {
-                pconnPush(fd, request->host, request->port, NULL);
+                fwdPconnPush(fd, request->host, request->port, NULL);
             }
 
             fd = -1;

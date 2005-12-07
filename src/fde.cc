@@ -1,6 +1,6 @@
 
 /*
- * $Id: fde.cc,v 1.2 2003/02/21 22:50:08 robertc Exp $
+ * $Id: fde.cc,v 1.3 2005/12/06 23:03:34 wessels Exp $
  *
  * DEBUG: section ??	FDE
  * AUTHOR: Robert Collins
@@ -98,3 +98,9 @@ fde::remoteAddr() const
     return buf;
 }
 
+void
+fde::noteUse(PconnPool *pool)
+{
+    pconn.uses++;
+    pconn.pool = pool;
+}

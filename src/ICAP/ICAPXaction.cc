@@ -8,6 +8,10 @@
 #include "ICAPXaction.h"
 #include "ICAPClient.h"
 #include "TextException.h"
+#include "pconn.h"
+#include "fde.h"
+
+static PconnPool *icapPconnPool = new PconnPool("ICAP Servers");
 
 /* comm module handlers (wrappers around corresponding ICAPXaction methods */
 
@@ -81,7 +85,7 @@ void ICAPXaction::openConnection()
 {
     const ICAPServiceRep &s = service();
     // TODO: check whether NULL domain is appropriate here
-    connection = pconnPop(s.host.buf(), s.port, NULL);
+    connection = icapPconnPool->pop(s.host.buf(), s.port, NULL);
 
     if (connection >= 0) {
         debug(93,3)("%s(%d) reused pconn FD %d\n", __FILE__, __LINE__, connection);
@@ -144,7 +148,7 @@ void ICAPXaction::closeConnection()
 
         if (reuseConnection) {
             debug(93,3)("%s(%d) pushing pconn %d\n", __FILE__,__LINE__,connection);
-            pconnPush(connection, theService->host.buf(), theService->port, NULL);
+            icapPconnPool->push(connection, theService->host.buf(), theService->port, NULL);
         } else {
             debug(93,3)("%s(%d) closing pconn %d\n", __FILE__,__LINE__,connection);
             comm_close(connection);
@@ -174,6 +178,7 @@ void ICAPXaction::scheduleWrite(MemBuf &buf)
     // comm module will free the buffer
     writer = &ICAPXaction_noteCommWrote;
     comm_old_write_mbuf(connection, &buf, writer, this);
+    fd_table[connection].noteUse(icapPconnPool);
 }
 
 void ICAPXaction::noteCommWrote(comm_err_t commStatus, size_t size)
