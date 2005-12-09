@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.470 2005/12/06 23:03:34 wessels Exp $
+ * $Id: http.cc,v 1.471 2005/12/08 20:08:46 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1907,6 +1907,8 @@ httpSendRequestEntityDone(int fd, void *data)
     if (Config.accessList.brokenPosts)
         ch.accessList = cbdataReference(Config.accessList.brokenPosts);
 
+    /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
+
     if (!Config.accessList.brokenPosts) {
         debug(11, 5) ("httpSendRequestEntityDone: No brokenPosts list\n");
         HttpStateData::SendComplete(fd, NULL, 0, COMM_OK, data);
@@ -1917,8 +1919,6 @@ httpSendRequestEntityDone(int fd, void *data)
         debug(11, 2) ("httpSendRequestEntityDone: matched brokenPosts\n");
         comm_old_write(fd, "\r\n", 2, HttpStateData::SendComplete, data, NULL);
     }
-
-    ch.accessList = NULL;
 }
 
 static void

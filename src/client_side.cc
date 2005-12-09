@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.705 2005/12/06 23:03:34 wessels Exp $
+ * $Id: client_side.cc,v 1.706 2005/12/08 20:08:46 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2869,12 +2869,11 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 
     identChecklist.accessList = cbdataReference(Config.accessList.identLookup);
 
+    /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
+
     if (identChecklist.fastCheck())
         identStart(&details->me, &details->peer, clientIdentDone, connState);
 
-    cbdataReferenceDone(identChecklist.accessList);
-
-    identChecklist.accessList = NULL;
 
 #endif
 
@@ -3052,10 +3051,10 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
 
     identChecklist.accessList = cbdataReference(Config.accessList.identLookup);
 
+    /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
+
     if (identChecklist.fastCheck())
         identStart(&details->me, &details->peer, clientIdentDone, connState);
-
-    identChecklist.accessList = NULL;
 
 #endif
 

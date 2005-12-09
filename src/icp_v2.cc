@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.87 2005/06/09 16:04:30 serassio Exp $
+ * $Id: icp_v2.cc,v 1.88 2005/12/08 20:08:47 wessels Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -399,8 +399,8 @@ icpAccessAllowed(struct sockaddr_in *from, HttpRequest * icp_request)
     checklist.my_addr = no_addr;
     checklist.request = requestLink(icp_request);
     checklist.accessList = cbdataReference(Config.accessList.icp);
+    /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
     int result = checklist.fastCheck();
-    checklist.accessList = NULL;
     return result;
 }
 

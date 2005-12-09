@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.155 2005/12/01 21:35:40 serassio Exp $
+ * $Id: tunnel.cc,v 1.156 2005/12/08 20:08:47 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -604,8 +604,8 @@ sslStart(ClientHttpRequest * http, size_t * size_ptr, int *status_ptr)
         ch.my_port = request->my_port;
         ch.request = requestLink(request);
         ch.accessList = cbdataReference(Config.accessList.miss);
+        /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
         answer = ch.fastCheck();
-        ch.accessList = NULL;
 
         if (answer == 0) {
             err = errorCon(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN);

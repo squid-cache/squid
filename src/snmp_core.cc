@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.70 2005/12/08 18:33:55 wessels Exp $
+ * $Id: snmp_core.cc,v 1.71 2005/12/08 20:08:47 wessels Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -536,14 +536,14 @@ snmpDecodePacket(snmp_request_t * rq)
     PDU = snmp_pdu_create(0);
     rq->session.Version = SNMP_VERSION_1;
     Community = snmp_parse(&rq->session, PDU, buf, len);
-    ACLChecklist checklist;
     checklist.src_addr = rq->from.sin_addr;
     checklist.snmp_community = (char *) Community;
 
     if (Community) {
+        ACLChecklist checklist;
         checklist.accessList = cbdataReference(Config.accessList.snmp);
+        /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
         allow = checklist.fastCheck();
-        checklist.accessList = NULL;
     }
 
     if ((snmp_coexist_V2toV1(PDU)) && (Community) && (allow)) {
