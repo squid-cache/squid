@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.66 2005/12/08 20:08:46 wessels Exp $
+ * $Id: cbdata.cc,v 1.67 2005/12/09 16:03:23 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -364,7 +364,7 @@ cbdataInternalLock(const void *p)
 
     c->check(__LINE__);
 
-    assert(c->locks < 655);
+    assert(c->locks < 65535);
 
     c->locks++;
 }
