@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.28 2005/10/23 11:55:31 hno Exp $
+ * $Id: ACLChecklist.cc,v 1.29 2005/12/08 20:08:46 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -409,6 +409,7 @@ ACLChecklist::fastCheck()
 
         if (finished()) {
             PROF_stop(aclCheckFast);
+            cbdataReferenceDone(accessList);
             return currentAnswer() == ACCESS_ALLOWED;
         }
 

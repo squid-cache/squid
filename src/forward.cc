@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.131 2005/12/06 23:03:34 wessels Exp $
+ * $Id: forward.cc,v 1.132 2005/12/08 20:08:46 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -876,8 +876,8 @@ fwdStart(int fd, StoreEntry * e, HttpRequest * r)
         ch.my_port = r->my_port;
         ch.request = requestLink(r);
         ch.accessList = cbdataReference(Config.accessList.miss);
+        /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
         answer = ch.fastCheck();
-        ch.accessList = NULL;
 
         if (answer == 0) {
             err_type page_id;
