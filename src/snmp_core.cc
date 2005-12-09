@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.69 2005/08/30 20:44:00 serassio Exp $
+ * $Id: snmp_core.cc,v 1.70 2005/12/08 18:33:55 wessels Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -1195,7 +1195,6 @@ int
 ACLSNMPCommunityStrategy::match (ACLData<MatchType> * &data, ACLChecklist *checklist)
 {
     return data->match (checklist->snmp_community);
-    ;
 }
 
 ACLSNMPCommunityStrategy *
