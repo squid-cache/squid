@@ -1,7 +1,5 @@
-#include "config.h"
-
-#include "testStore.h"
 #include "squid.h"
+#include "testStore.h"
 #include "Store.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testStore );
