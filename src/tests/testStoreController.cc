@@ -1,7 +1,6 @@
-#include "config.h"
+#include "squid.h"
 
 #include "testStoreController.h"
-#include "squid.h"
 #include "Store.h"
 #include "SwapDir.h"
 #include "TestSwapDir.h"

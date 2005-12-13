@@ -1,8 +1,7 @@
-#include "config.h"
+#include "squid.h"
 #include <stdexcept>
 
 #include "testUfs.h"
-#include "squid.h"
 #include "Store.h"
 #include "SwapDir.h"
 #include "DiskIO/DiskIOModule.h"
