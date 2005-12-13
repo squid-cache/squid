@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.87 2005/09/17 04:53:44 wessels Exp $
+ * $Id: mem.cc,v 1.88 2005/12/12 18:28:12 wessels Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -348,7 +348,13 @@ Mem::Init(void)
 {
     int i;
 
-    debug(13, 1) ("Memory pools are '%s'; limit: %.2f MB\n",
+    /*
+     * NOTE: Mem::Init() is called before the config file is parsed
+     * and before the debugging module has been initialized.  Any
+     * debug messages here at level 0 or 1 will always be printed
+     * on stderr.
+     */
+    debug(13, 3) ("Memory pools are '%s'; limit: %.2f MB\n",
                   (Config.onoff.mem_pools ? "on" : "off"), toMB(MemPools::GetInstance().idleLimit()));
 
     /* set all pointers to null */
