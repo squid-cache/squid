@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.72 2005/09/17 05:50:08 wessels Exp $
+ * $Id: ident.cc,v 1.73 2005/12/12 17:51:23 wessels Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -99,6 +99,7 @@ identClose(int fdnotused, void *data)
     identCallback(state, NULL);
     comm_close(state->fd);
     hash_remove_link(ident_hash, (hash_link *) state);
+    xfree(state->hash.key);
     cbdataFree(state);
 }
 
