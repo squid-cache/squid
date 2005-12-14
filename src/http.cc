@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.471 2005/12/08 20:08:46 wessels Exp $
+ * $Id: http.cc,v 1.472 2005/12/13 23:37:39 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1325,19 +1325,14 @@ HttpStateData::transactionComplete()
 #if ICAP_CLIENT
     if (icap) {
         icap->doneSending();
-    } else {
-
-#endif
-
-        fwdComplete(fwd);
-
-        httpStateFree(-1, this);
-
-#if ICAP_CLIENT
-
+        return;
     }
 
 #endif
+
+    fwdComplete(fwd);
+
+    httpStateFree(-1, this);
 }
 
 /*
