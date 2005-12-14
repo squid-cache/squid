@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.408 2005/12/01 23:23:59 wessels Exp $
+# $Id: cf.data.pre,v 1.409 2005/12/13 22:17:02 wessels Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -4787,6 +4787,16 @@ DOC_START
         The default size of preview data to be sent to the ICAP server.
         -1 means no preview. This value might be overwritten on a per server
         basis by OPTIONS requests.
+DOC_END
+
+NAME: icap_default_options_ttl
+TYPE: int
+IFDEF: ICAP_CLIENT
+LOC: TheICAPConfig.default_options_ttl
+DEFAULT: 60
+DOC_START
+        The default TTL value for ICAP OPTIONS responses that don't have
+	an Options-TTL header.
 DOC_END
 
 NAME: icap_persistent_connections

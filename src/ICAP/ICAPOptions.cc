@@ -2,6 +2,9 @@
 #include "HttpReply.h"
 #include "ICAPOptions.h"
 #include "TextException.h"
+#include "ICAPConfig.h"
+
+extern ICAPConfig TheICAPConfig;
 
 ICAPOptions::ICAPOptions(): error("unconfigured"), method(ICAP::methodNone),
         max_connections(-1), allow204(false),
@@ -149,6 +152,9 @@ void ICAPOptions::configure(const HttpReply *reply)
     cfgIntHeader(h, "Max-Connections", max_connections);
 
     cfgIntHeader(h, "Options-TTL", theTTL);
+
+    if (theTTL < 0)
+        theTTL = TheICAPConfig.default_options_ttl;
 
     theTimestamp = httpHeaderGetTime(h, HDR_DATE);
 
