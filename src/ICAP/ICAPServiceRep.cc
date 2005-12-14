@@ -278,6 +278,16 @@ void ICAPServiceRep::changeOptions(ICAPOptions *newOptions)
            newOptions);
     delete theOptions;
     theOptions = newOptions;
+
+    /*
+     * Maybe it would be better if squid.conf just listed the URI and
+     * then discovered the method via OPTIONS
+     */
+
+    if (theOptions->method != method)
+        debugs(93,1, "WARNING: Squid is configured to use ICAP method " << ICAP::methodStr(method) <<
+               "for service " << uri.buf() <<
+               "but OPTIONS response declares the method is " << ICAP::methodStr(theOptions->method));
 }
 
 static
