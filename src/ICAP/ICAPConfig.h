@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.h,v 1.5 2005/12/01 23:24:00 wessels Exp $
+ * $Id: ICAPConfig.h,v 1.6 2005/12/13 22:17:03 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -94,6 +94,7 @@ public:
     int onoff;
     int preview_enable;
     int preview_size;
+    int default_options_ttl;
     int send_client_ip;
     int send_client_username;
     int reuse_connections;
