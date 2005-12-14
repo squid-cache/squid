@@ -5,7 +5,7 @@
 
 ICAPOptions::ICAPOptions(): error("unconfigured"), method(ICAP::methodNone),
         max_connections(-1), allow204(false),
-        preview(-1), ttl(-1), transfer_ext(NULL)
+        preview(-1), theTTL(-1), transfer_ext(NULL)
 {
     transfers.preview = transfers.ignore = transfers.complete = NULL;
     transfers.other = TRANSFER_NONE;
@@ -104,7 +104,7 @@ bool ICAPOptions::fresh() const
 time_t ICAPOptions::expire() const
 {
     Must(valid());
-    return ttl >= 0 ? timestamp + ttl : -1;
+    return theTTL >= 0 ? theTimestamp + theTTL : -1;
 }
 
 void ICAPOptions::configure(const HttpReply *reply)
@@ -134,12 +134,12 @@ void ICAPOptions::configure(const HttpReply *reply)
 
     cfgIntHeader(h, "Max-Connections", max_connections);
 
-    cfgIntHeader(h, "Options-TTL", ttl);
+    cfgIntHeader(h, "Options-TTL", theTTL);
 
-    timestamp = httpHeaderGetTime(h, HDR_DATE);
+    theTimestamp = httpHeaderGetTime(h, HDR_DATE);
 
-    if (timestamp < 0)
-        timestamp = squid_curtime;
+    if (theTimestamp < 0)
+        theTimestamp = squid_curtime;
 
     if (httpHeaderGetByNameListMember(h, "Allow", "204", ',').size())
         allow204 = true;

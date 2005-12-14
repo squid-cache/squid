@@ -288,6 +288,16 @@ void ICAPServiceRep::changeOptions(ICAPOptions *newOptions)
         debugs(93,1, "WARNING: Squid is configured to use ICAP method " << ICAP::methodStr(method) <<
                "for service " << uri.buf() <<
                "but OPTIONS response declares the method is " << ICAP::methodStr(theOptions->method));
+
+
+    /*
+     *  Check the ICAP server's date header for clock skew
+     */
+    int skew = abs((int)(theOptions->timestamp() - squid_curtime));
+
+    if (skew > theOptions->ttl())
+        debugs(93, 1, host.buf() << "'s clock is skewed by " << skew << " seconds!");
+
 }
 
 static

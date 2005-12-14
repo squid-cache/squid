@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPOptions.h,v 1.2 2005/11/21 23:46:27 wessels Exp $
+ * $Id: ICAPOptions.h,v 1.3 2005/12/13 18:38:05 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -57,6 +57,9 @@ public:
     bool valid() const;
     bool fresh() const;
     time_t expire() const;
+    time_t timestamp() const { return theTimestamp; };
+
+    int ttl() const { return theTTL; };
 
     typedef enum { TRANSFER_NONE, TRANSFER_PREVIEW, TRANSFER_IGNORE, TRANSFER_COMPLETE } transfer_type;
     transfer_type getTransferExt(const char *);
@@ -88,8 +91,8 @@ public:
     transfers;
 
 protected:
-    int ttl;
-    time_t timestamp;
+    int theTTL;
+    time_t theTimestamp;
 
     //  The list of pairs "file extension <-> transfer type"
 
