@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPOptions.h,v 1.3 2005/12/13 18:38:05 wessels Exp $
+ * $Id: ICAPOptions.h,v 1.4 2005/12/13 21:41:58 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -107,6 +107,9 @@ protected:
 private:
     void cfgMethod(ICAP::Method m);
     void cfgIntHeader(const HttpHeader *h, const char *fname, int &value);
+    void insertTransferExt(const char *t, transfer_type t_type);
+    void cfgTransferListHeader(const HttpHeader *h, const char *fname, transfer_type type);
+    List<String> *ICAPOptions::parseExtFileList(const char *start, const char *end, transfer_type t_type);
 };
 
 

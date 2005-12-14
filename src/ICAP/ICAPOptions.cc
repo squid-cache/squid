@@ -37,7 +37,6 @@ ICAPOptions::transfer_type ICAPOptions::getTransferExt(const char *s)
     return TRANSFER_NONE;
 }
 
-#if UNUSED_CODE
 void ICAPOptions::insertTransferExt(const char *t, transfer_type t_type)
 {
     List<TransferPair> **Tail;
@@ -62,9 +61,26 @@ void ICAPOptions::insertTransferExt(const char *t, transfer_type t_type)
 
 };
 
+void ICAPOptions::cfgTransferListHeader(const HttpHeader *h, const char *fname, transfer_type t_type)
+{
+    const String s = httpHeaderGetByName(h, fname);
+
+    if (!s.size())
+        return;
+
+    if (t_type == TRANSFER_PREVIEW)
+        transfers.preview = parseExtFileList(s.buf(), s.buf() + s.size(), t_type);
+    else if (t_type == TRANSFER_IGNORE)
+        transfers.ignore = parseExtFileList(s.buf(), s.buf() + s.size(), t_type);
+    else if (t_type == TRANSFER_COMPLETE)
+        transfers.complete = parseExtFileList(s.buf(), s.buf() + s.size(), t_type);
+    else
+        fatalf("Unexpected transfer_type at %s:%d", __FILE__,__LINE__);
+}
+
 List<String> *ICAPOptions::parseExtFileList(const char *start, const char *end, transfer_type t_type)
 {
-    const String s = xstrndup(start, end - start - 1);
+    const String s = xstrndup(start, end - start + 1);
     const char *item;
     const char *pos = NULL;
     char *fext = NULL;
@@ -88,8 +104,6 @@ List<String> *ICAPOptions::parseExtFileList(const char *start, const char *end, 
 
     return H;
 }
-
-#endif
 
 bool ICAPOptions::valid() const
 {
@@ -117,10 +131,10 @@ void ICAPOptions::configure(const HttpReply *reply)
         error = "unsupported status code of OPTIONS response";
 
     // Methods
-    if (httpHeaderGetByNameListMember(h, "Methods", "REQMOD", ',').size())
+    if (httpHeaderHasByNameListMember(h, "Methods", "REQMOD", ','))
         cfgMethod(ICAP::methodReqmod);
 
-    if (httpHeaderGetByNameListMember(h, "Methods", "RESPMOD", ',').size())
+    if (httpHeaderHasByNameListMember(h, "Methods", "RESPMOD", ','))
         cfgMethod(ICAP::methodRespmod);
 
     service = httpHeaderGetByName(h, "Service");
@@ -141,23 +155,16 @@ void ICAPOptions::configure(const HttpReply *reply)
     if (theTimestamp < 0)
         theTimestamp = squid_curtime;
 
-    if (httpHeaderGetByNameListMember(h, "Allow", "204", ',').size())
+    if (httpHeaderHasListMember(h, HDR_ALLOW, "204", ','))
         allow204 = true;
 
     cfgIntHeader(h, "Preview", preview);
 
-#if 0
+    cfgTransferListHeader(h, "Transfer-Preview", TRANSFER_PREVIEW);
 
-    if (!strncasecmp("Transfer-Preview", start, 16))
-        headers->transfer_preview = parseExtFileList(value_start, end, TRANSFER_PREVIEW);
+    cfgTransferListHeader(h, "Transfer-Ignore", TRANSFER_IGNORE);
 
-    if (!strncasecmp("Transfer-Ignore", start, 15))
-        headers->transfer_ignore = parseExtFileList(value_start, end, TRANSFER_IGNORE);
-
-    if (!strncasecmp("Transfer-Complete", start, 17))
-        headers->transfer_complete = parseExtFileList(value_start, end, TRANSFER_COMPLETE);
-
-#endif
+    cfgTransferListHeader(h, "Transfer-Complete", TRANSFER_COMPLETE);
 }
 
 void ICAPOptions::cfgMethod(ICAP::Method m)

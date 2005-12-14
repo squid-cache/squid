@@ -279,6 +279,9 @@ void ICAPServiceRep::changeOptions(ICAPOptions *newOptions)
     delete theOptions;
     theOptions = newOptions;
 
+    if (theOptions == NULL)
+        return;
+
     /*
      * Maybe it would be better if squid.conf just listed the URI and
      * then discovered the method via OPTIONS
@@ -286,8 +289,8 @@ void ICAPServiceRep::changeOptions(ICAPOptions *newOptions)
 
     if (theOptions->method != method)
         debugs(93,1, "WARNING: Squid is configured to use ICAP method " << ICAP::methodStr(method) <<
-               "for service " << uri.buf() <<
-               "but OPTIONS response declares the method is " << ICAP::methodStr(theOptions->method));
+               " for service " << uri.buf() <<
+               " but OPTIONS response declares the method is " << ICAP::methodStr(theOptions->method));
 
 
     /*
@@ -298,6 +301,20 @@ void ICAPServiceRep::changeOptions(ICAPOptions *newOptions)
     if (skew > theOptions->ttl())
         debugs(93, 1, host.buf() << "'s clock is skewed by " << skew << " seconds!");
 
+#if 0
+
+    List<String> *tmp;
+
+    for (tmp = theOptions->transfers.preview; tmp; tmp=tmp->next)
+        debugs(93,1,"Transfer-Preview: " << tmp->element.buf());
+
+    for (tmp = theOptions->transfers.ignore; tmp; tmp=tmp->next)
+        debugs(93,1,"Transfer-Ignore: " << tmp->element.buf());
+
+    for (tmp = theOptions->transfers.complete; tmp; tmp=tmp->next)
+        debugs(93,1,"Transfer-Complete: " << tmp->element.buf());
+
+#endif
 }
 
 static
