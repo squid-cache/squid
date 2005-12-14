@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.108 2005/09/17 05:50:07 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.109 2005/12/13 21:41:57 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -1632,6 +1632,31 @@ httpHeaderHasListMember(const HttpHeader * hdr, http_hdr_type id, const char *me
     assert(id >= 0);
 
     String header (httpHeaderGetStrOrList(hdr, id));
+
+    while (strListGetItem(&header, separator, &item, &ilen, &pos)) {
+        if (strncmp(item, member, mlen) == 0
+                && (item[mlen] == '=' || item[mlen] == separator || item[mlen] == ';' || item[mlen] == '\0')) {
+            result = 1;
+            break;
+        }
+    }
+
+    return result;
+}
+
+int
+httpHeaderHasByNameListMember(const HttpHeader * hdr, const char *name, const char *member, const char separator)
+{
+    int result = 0;
+    const char *pos = NULL;
+    const char *item;
+    int ilen;
+    int mlen = strlen(member);
+
+    assert(hdr);
+    assert(name);
+
+    String header (httpHeaderGetByName(hdr, name));
 
     while (strListGetItem(&header, separator, &item, &ilen, &pos)) {
         if (strncmp(item, member, mlen) == 0

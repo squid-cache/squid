@@ -110,6 +110,7 @@ void ICAPClientReqmodPrecache::noteSinkAbort(MsgPipe *p)
 void ICAPClientReqmodPrecache::noteSourceStart(MsgPipe *p)
 {
     debug(93,3)("ICAPClientReqmodPrecache::noteSourceStart() called\n");
+    assert(adapted->data->header);	// What should happen instead?
     http->takeAdaptedHeaders(adapted->data->header);
     noteSourceProgress(p);
 }
