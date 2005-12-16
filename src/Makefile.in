@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.357 2005/12/02 17:06:10 wessels Exp $
+#  $Id: Makefile.in,v 1.358 2005/12/16 01:10:45 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -199,7 +199,7 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc ACL.h \
 	list.cc logfile.cc main.cc mem.cc mem_node.cc mem_node.h Mem.h \
 	MemBuf.cc MemObject.cc MemObject.h mime.cc multicast.cc \
 	neighbors.cc net_db.cc Packer.cc Parsing.cc Parsing.h \
-	ProfStats.cc pconn.cc peer_digest.cc peer_select.cc \
+	ProfStats.cc pconn.cc pconn.h peer_digest.cc peer_select.cc \
 	PeerSelectState.h PingData.h protos.h redirect.cc referer.cc \
 	refresh.cc send-announce.cc snmp_core.cc snmp_agent.cc squid.h \
 	SquidNew.cc tunnel.cc ACLCertificateData.cc \
@@ -1117,6 +1117,7 @@ squid_SOURCES = \
 	Parsing.h \
 	$(XPROF_STATS_SOURCE) \
 	pconn.cc \
+	pconn.h \
 	peer_digest.cc \
 	peer_select.cc \
 	PeerSelectState.h \
