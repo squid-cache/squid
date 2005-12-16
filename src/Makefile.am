@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.120 2005/12/02 17:06:10 wessels Exp $
+#  $Id: Makefile.am,v 1.121 2005/12/15 22:25:24 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -463,6 +463,7 @@ squid_SOURCES = \
 	Parsing.h \
 	$(XPROF_STATS_SOURCE) \
 	pconn.cc \
+	pconn.h \
 	peer_digest.cc \
 	peer_select.cc \
 	PeerSelectState.h \
