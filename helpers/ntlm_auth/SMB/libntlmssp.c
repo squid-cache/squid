@@ -155,7 +155,7 @@ make_challenge(char *domain, char *domain_controller)
     if (init_challenge(my_domain, my_domain_controller) > 0) {
 	return NULL;
     }
-    return ntlm_make_challenge(my_domain, my_domain_controller, challenge, NONCE_LEN);
+    return ntlm_make_challenge(my_domain, my_domain_controller, (char *)challenge, NONCE_LEN);
 }
 
 #define min(A,B) (A<B?A:B)
