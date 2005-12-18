@@ -87,5 +87,19 @@ protected:
     void username();
 };
 
+class testAuthNegotiateUserRequest : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE( testAuthNegotiateUserRequest );
+    CPPUNIT_TEST( construction );
+    CPPUNIT_TEST( username );
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+
+protected:
+    void construction();
+    void username();
+};
+
 #endif
 

@@ -1,5 +1,5 @@
 /*
- * $Id: stub_HttpReply.cc,v 1.1 2005/01/03 16:08:27 robertc Exp $
+ * $Id: stub_HttpReply.cc,v 1.2 2005/12/18 09:23:40 serassio Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins
@@ -36,26 +36,25 @@
 #include "HttpReply.h"
 
 void
-httpReplyAbsorb(HttpReply * rep, HttpReply * new_rep)
+HttpReply::absorb(HttpReply * new_rep)
 {
     fatal ("Not implemented");
 }
 
 void
-httpReplySetHeaders(HttpReply * rep, HttpVersion ver, http_status status,
-                    const char *reason, const char *ctype, int clen, time_t lmt, time_t expires)
+HttpReply::setHeaders(HttpVersion ver, http_status status, const char *reason,
+                      const char *ctype, int clen, time_t lmt, time_t expires)
 {
     fatal ("Not implemented");
 }
 
 void
-httpReplyPackHeadersInto(const HttpReply * rep, Packer * p)
+HttpReply::packHeadersInto(Packer * p) const
 {
     fatal ("Not implemented");
 }
 
-void
-httpReplyReset(HttpReply * rep)
+void HttpReply::reset()
 {
     fatal ("Not implemented");
 }
