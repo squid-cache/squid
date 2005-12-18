@@ -52,6 +52,8 @@ testCoss::commonInit()
     /* garh garh */
     storeReplAdd("lru", createRemovalPolicy_lru);
 
+    visible_appname_string = xstrdup(PACKAGE "/" VERSION);
+
     Mem::Init();
 
     cbdataInit();
