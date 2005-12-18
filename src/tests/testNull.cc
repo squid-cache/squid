@@ -157,7 +157,8 @@ testNull::testNullSearch()
         StoreEntry *pe = storeCreateEntry("dummy url", "dummy log url", flags, METHOD_GET);
         HttpVersion version(1, 0);
         /* We are allowed to do this typecast */
-        httpReplySetHeaders((HttpReply *)pe->getReply(), version, HTTP_OK, "dummy test object", "x-squid-internal/test", -1, -1, squid_curtime + 100000);
+        HttpReply *rep = (HttpReply *) pe->getReply();	// bypass const
+        rep->setHeaders(version, HTTP_OK, "dummy test object", "x-squid-internal/test", -1, -1, squid_curtime + 100000);
 
         storeSetPublicKey(pe);
 
@@ -166,7 +167,7 @@ testNull::testNullSearch()
         {
             Packer p;
             packerToStoreInit(&p, pe);
-            httpReplyPackHeadersInto(pe->getReply(), &p);
+            pe->getReply()->packHeadersInto(&p);
             packerClean(&p);
         }
 

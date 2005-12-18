@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.121 2005/12/15 22:25:24 hno Exp $
+#  $Id: Makefile.am,v 1.122 2005/12/18 09:23:39 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -1045,7 +1045,8 @@ tests_testStore_SOURCES= tests/testStore.cc \
 
 tests_testStore_LDADD= \
 	-L../lib -lmiscutil \
-	@SQUID_CPPUNIT_LA@
+	@SQUID_CPPUNIT_LA@ \
+	@SSLLIB@
 tests_testStore_LDFLAGS = $(LIBADD_DL)
 tests_testStore_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@SQUID_CPPUNIT_LA@
@@ -1105,7 +1106,8 @@ tests_testUfs_SOURCES= tests/testUfs.cc \
 	tests/testUfs.h \
 	$(SWAP_TEST_SOURCES)
 tests_testUfs_LDADD= \
-	$(SWAP_TEST_LDADD)
+	$(SWAP_TEST_LDADD) \
+	@SSLLIB@
 tests_testUfs_LDFLAGS = $(LIBADD_DL)
 tests_testUfs_DEPENDENCIES = \
 	$(SWAP_TEST_DS)
@@ -1115,7 +1117,8 @@ tests_testCoss_SOURCES= tests/testCoss.cc \
 	tests/testCoss.h \
 	$(SWAP_TEST_SOURCES)
 tests_testCoss_LDADD= \
-	$(SWAP_TEST_LDADD)
+	$(SWAP_TEST_LDADD) \
+	@SSLLIB@
 tests_testCoss_LDFLAGS = $(LIBADD_DL)
 tests_testCoss_DEPENDENCIES = \
 	$(SWAP_TEST_DS)
@@ -1125,7 +1128,8 @@ tests_testNull_SOURCES= tests/testNull.cc \
 	tests/testNull.h \
 	$(SWAP_TEST_SOURCES)
 tests_testNull_LDADD= \
-	$(SWAP_TEST_LDADD)
+	$(SWAP_TEST_LDADD) \
+	@SSLLIB@
 tests_testNull_LDFLAGS = $(LIBADD_DL)
 tests_testNull_DEPENDENCIES = \
 	$(SWAP_TEST_DS)

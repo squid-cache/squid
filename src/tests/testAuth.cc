@@ -14,6 +14,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION( testAuthUserRequest );
 CPPUNIT_TEST_SUITE_REGISTRATION( testAuthBasicUserRequest );
 CPPUNIT_TEST_SUITE_REGISTRATION( testAuthDigestUserRequest );
 CPPUNIT_TEST_SUITE_REGISTRATION( testAuthNTLMUserRequest );
+CPPUNIT_TEST_SUITE_REGISTRATION( testAuthNegotiateUserRequest );
 
 /* Instantiate all auth framework types */
 void
@@ -34,10 +35,11 @@ find_proxy_auth(char const *type)
     char const * proxy_auths[][2]= { {"basic","Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ=="},
 
                                      {"digest", "Digest username=\"robertdig\", realm=\"Squid proxy-caching web server\", nonce=\"yy8rQXjEWwixXVBj\", uri=\"/images/bg8.gif\", response=\"f75a7d3edd48d93c681c75dc4fb58700\", qop=auth, nc=00000012, cnonce=\"e2216641961e228e\" "},
-                                     {"ntlm", "NTLM "}
+                                     {"ntlm", "NTLM "},
+                                     {"negotiate", "Negotiate "}
                                    };
 
-    for (unsigned count = 0; count < 3 ; count++) {
+    for (unsigned count = 0; count < 4 ; count++) {
         if (strcasecmp(type, proxy_auths[count][0]) == 0)
             return proxy_auths[count][1];
     }
@@ -109,6 +111,8 @@ fake_auth_setup()
 
     char const *ntlm_parms[]= {"program /home/robertc/install/squid/libexec/digest_pw_auth /home/robertc/install/squid/etc/digest.pwd"};
 
+    char const *negotiate_parms[]= {"program /home/robertc/install/squid/libexec/digest_pw_auth /home/robertc/install/squid/etc/digest.pwd"};
+
     struct _scheme_params {
         char const *name;
         char const **params;
@@ -117,9 +121,10 @@ fake_auth_setup()
 
     params[]={ {"digest", digest_parms, 2},
                {"basic", basic_parms, 2},
-               {"ntlm", ntlm_parms, 1}};
+               {"ntlm", ntlm_parms, 1},
+               {"negotiate", negotiate_parms, 1}};
 
-    for (unsigned scheme=0; scheme < 3; scheme++)
+    for (unsigned scheme=0; scheme < 4; scheme++)
         setup_scheme(getConfig(params[scheme].name), params[scheme].params, params[scheme].paramlength);
 
     authenticateInit(&config);
@@ -226,6 +231,30 @@ testAuthNTLMUserRequest::username()
     AuthNTLMUserRequest();
     AuthNTLMUserRequest *temp=new AuthNTLMUserRequest();
     NTLMUser *user=new NTLMUser(AuthConfig::Find("ntlm"));
+    user->username("John");
+    temp->user(user);
+    user->addRequest(temp);
+    CPPUNIT_ASSERT_EQUAL(0, strcmp("John", temp->username()));
+    delete temp;
+}
+
+#include "auth/negotiate/auth_negotiate.h"
+/* AuthNegotiateUserRequest::AuthNegotiateUserRequest works
+ */
+void
+testAuthNegotiateUserRequest::construction()
+{
+    AuthNegotiateUserRequest();
+    AuthNegotiateUserRequest *temp=new AuthNegotiateUserRequest();
+    delete temp;
+}
+
+void
+testAuthNegotiateUserRequest::username()
+{
+    AuthNegotiateUserRequest();
+    AuthNegotiateUserRequest *temp=new AuthNegotiateUserRequest();
+    NegotiateUser *user=new NegotiateUser(AuthConfig::Find("negotiate"));
     user->username("John");
     temp->user(user);
     user->addRequest(temp);

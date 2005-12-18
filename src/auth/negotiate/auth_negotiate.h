@@ -12,6 +12,8 @@
 
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */
 
+#ifndef __AUTH_AUTHENTICATE_STATE_T__
+#define __AUTH_AUTHENTICATE_STATE_T__
 typedef enum {
     AUTHENTICATE_STATE_NONE,
     AUTHENTICATE_STATE_INITIAL,
@@ -31,6 +33,7 @@ typedef struct
 }
 
 authenticateStateData;
+#endif
 
 class NegotiateUser : public AuthUser
 {
