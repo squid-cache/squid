@@ -89,6 +89,8 @@ testUfs::testUfsSearch()
 
     char *config_line=xstrdup("foo 100 1 1");
 
+    visible_appname_string = xstrdup(PACKAGE "/" VERSION);
+
     strtok(config_line, w_space);
 
     aStore->parse(0, path);
