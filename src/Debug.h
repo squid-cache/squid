@@ -1,6 +1,6 @@
 
 /*
- * $Id: Debug.h,v 1.7 2003/08/31 21:20:08 robertc Exp $
+ * $Id: Debug.h,v 1.8 2005/12/19 22:00:47 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -74,5 +74,12 @@ private:
                 Debug::finishDebug(); \
         } \
    } while (/*CONSTCOND*/ 0)
+
+/*
+ * HERE is a macro that you can use like this:
+ *
+ * debugs(1,1, HERE << "some message");
+ */
+#define HERE __FILE__<<"("<<__LINE__<<") "
 
 #endif /* SQUID_DEBUG */

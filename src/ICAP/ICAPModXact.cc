@@ -694,7 +694,7 @@ void ICAPModXact::parseHttpHead()
 bool ICAPModXact::parseHead(HttpMsg *head)
 {
     assert(head);
-    debugs(93, 5, "have " << readBuf.contentSize() << " head bytes to parse" <<
+    debugs(93, 5, HERE << "have " << readBuf.contentSize() << " head bytes to parse" <<
            "; state: " << state.parsing);
 
     http_status error = HTTP_STATUS_NONE;

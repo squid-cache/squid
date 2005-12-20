@@ -88,7 +88,7 @@ void ICAPXaction::openConnection()
     connection = icapPconnPool->pop(s.host.buf(), s.port, NULL);
 
     if (connection >= 0) {
-        debug(93,3)("%s(%d) reused pconn FD %d\n", __FILE__, __LINE__, connection);
+        debugs(93,3, HERE << "reused pconn FD " << connection);
         eventAdd("ICAPXaction::reusedConnection",
                  reusedConnection,
                  this,
@@ -147,10 +147,10 @@ void ICAPXaction::closeConnection()
         cancelRead();
 
         if (reuseConnection) {
-            debug(93,3)("%s(%d) pushing pconn %d\n", __FILE__,__LINE__,connection);
+            debugs(93,3, HERE << "pushing pconn " << connection);
             icapPconnPool->push(connection, theService->host.buf(), theService->port, NULL);
         } else {
-            debug(93,3)("%s(%d) closing pconn %d\n", __FILE__,__LINE__,connection);
+            debugs(93,3, HERE << "closing pconn " << connection);
             comm_close(connection);
         }
 
@@ -265,7 +265,7 @@ void ICAPXaction::noteCommRead(comm_err_t commStatus, size_t sz)
     Must(commStatus == COMM_OK);
     Must(sz >= 0);
 
-    debugs(93, 5, "read " << sz << " bytes");
+    debugs(93, 5, HERE << "read " << sz << " bytes");
 
     /*
      * See comments in ICAPXaction.h about why we use commBuf
@@ -300,7 +300,7 @@ void ICAPXaction::cancelRead()
 
 bool ICAPXaction::parseHttpMsg(HttpMsg *msg)
 {
-    debugs(93, 5, "have " << readBuf.contentSize() << " head bytes to parse");
+    debugs(93, 5, HERE << "have " << readBuf.contentSize() << " head bytes to parse");
 
     http_status error = HTTP_STATUS_NONE;
     const bool parsed = msg->parse(&readBuf, commEof, &error);
