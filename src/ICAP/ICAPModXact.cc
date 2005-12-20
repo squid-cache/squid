@@ -522,7 +522,7 @@ void ICAPModXact::stopReceiving()
 
 void ICAPModXact::parseMore()
 {
-    debugs(93, 5, "have " << readBuf.contentSize() << " bytes to parse" <<
+    debugs(93, 5, HERE << "have " << readBuf.contentSize() << " bytes to parse" <<
            status());
 
     if (state.parsingHeaders())
@@ -719,7 +719,7 @@ void ICAPModXact::parseBody()
 {
     Must(state.parsing == State::psBody);
 
-    debugs(93, 5, "have " << readBuf.contentSize() << " body bytes to parse");
+    debugs(93, 5, HERE << "have " << readBuf.contentSize() << " body bytes to parse");
 
     if (gotEncapsulated("res-body")) {
         if (!parsePresentBody()) // need more body data
@@ -743,7 +743,7 @@ bool ICAPModXact::parsePresentBody()
 
     adapted->sendSourceProgress(); // TODO: do not send if parsed nothing
 
-    debugs(93, 5, "have " << readBuf.contentSize() << " body bytes after " <<
+    debugs(93, 5, HERE << "have " << readBuf.contentSize() << " body bytes after " <<
            "parse; parsed all: " << parsed);
 
     if (parsed)
