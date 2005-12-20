@@ -574,6 +574,11 @@ void ICAPModXact::parseIcapHead()
     if (!parseHead(icapReply))
         return;
 
+    if (httpHeaderHasConnDir(&icapReply->header, "close")) {
+        debugs(93, 5, HERE << "found connection close");
+        reuseConnection = false;
+    }
+
     switch (icapReply->sline.status) {
 
     case 100:
@@ -691,6 +696,9 @@ void ICAPModXact::parseHttpHead()
     state.parsing = State::psBody;
 }
 
+/*
+ * Common routine used to parse both HTTP and ICAP headers
+ */
 bool ICAPModXact::parseHead(HttpMsg *head)
 {
     assert(head);
@@ -704,11 +712,6 @@ bool ICAPModXact::parseHead(HttpMsg *head)
     if (!parsed) {	// need more data
         head->reset();
         return false;
-    }
-
-    if (httpHeaderHasConnDir(&head->header, "close")) {
-        debug(93,5)("%s(%d) found connection close\n", __FILE__,__LINE__);
-        reuseConnection = false;
     }
 
     readBuf.consume(head->hdr_sz);
