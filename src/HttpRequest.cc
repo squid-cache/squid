@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.54 2005/11/21 22:50:16 wessels Exp $
+ * $Id: HttpRequest.cc,v 1.55 2005/12/20 05:15:10 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -42,36 +42,33 @@
 
 HttpRequest::HttpRequest()  : HttpMsg(hoRequest)
 {
-    /* We should initialise these ... */
-#if 0
-    method_t method;
-    char login[MAX_LOGIN_SZ];
-    char host[SQUIDHOSTNAMELEN + 1];
-    auth_user_request_t *auth_user_request;
-    u_short port;
-    String urlpath;
-    char *canonical;
-    int link_count;		/* free when zero */
-    request_flags flags;
-    HttpHdrRange *range;
-    time_t ims;
-    int imslen;
-    int max_forwards;
-    /* these in_addr's could probably be sockaddr_in's */
-
-    struct IN_ADDR client_addr;
-
-    struct IN_ADDR my_addr;
-    unsigned short my_port;
-    unsigned short client_port;
-    ConnStateData::Pointer body_connection;	/* used by clientReadBody() */
-    HierarchyLogEntry hier;
-    err_type errType;
-    char *peer_login;		/* Configured peer login:password */
-    time_t lastmod;		/* Used on refreshes */
-    const char *vary_headers;	/* Used when varying entities are detected. Changes how the store key is calculated */
-    char *peer_domain;		/* Configured peer forceddomain */
-#endif
+    method = METHOD_NONE;
+    login[0] = '\0';
+    host[0] = '\0';
+    auth_user_request = NULL;
+    port = 0;
+    canonical = NULL;
+    link_count = 0;
+    memset(&flags, '\0', sizeof(flags));
+    range = NULL;
+    ims = -1;
+    imslen = 0;
+    max_forwards = 0;
+    client_addr.s_addr = no_addr.s_addr;
+    my_addr.s_addr = no_addr.s_addr;
+    my_port = 0;
+    client_port = 0;
+    body_connection = NULL;
+    // hier
+    errType = ERR_NONE;
+    peer_login = NULL;
+    lastmod = -1;
+    vary_headers = NULL;
+    peer_domain = NULL;
+    tag = "";
+    extacl_user = "";
+    extacl_passwd = "";
+    extacl_log = "";
 }
 
 HttpRequest *
