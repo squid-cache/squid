@@ -106,6 +106,10 @@ bool ICAPOptXact::parseResponse()
 
     options->configure(r);
 
+    if (httpHeaderHasConnDir(&r->header, "close"))
+        reuseConnection = false;
+
     delete r;
+
     return true;
 }
