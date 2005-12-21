@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.54 2005/12/06 00:01:23 wessels Exp $
+ * $Id: client_side_request.cc,v 1.55 2005/12/20 23:22:29 wessels Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1120,23 +1120,32 @@ ClientHttpRequest::takeAdaptedHeaders(HttpMsg *msg)
     assert(cbdataReferenceValid(this));		// indicates bug
 
     HttpRequest *new_req = dynamic_cast<HttpRequest*>(msg);
-    assert(new_req);
+
     /*
-     * Replace the old request with the new request.  First,
-     * Move the "body_connection" over, then unlink old and
-     * link new to the http state.
+     * new_req will be NULL if the ICAP response doesn't have new
+     * request headers for us.  Unfortunately, it will also be NULL
+     * if someone passes us an HttpReply as an HttpMsg, which would
+     * be a bug.
      */
-    new_req->body_connection = request->body_connection;
-    request->body_connection = NULL;
-    requestUnlink(request);
-    request = requestLink(new_req);
-    /*
-     * Store the new URI for logging
-     */
-    xfree(uri);
-    uri = xstrdup(urlCanonical(request));
-    setLogUri(this, urlCanonicalClean(request));
-    assert(request->method);
+
+    if (new_req) {
+        /*
+         * Replace the old request with the new request.  First,
+         * Move the "body_connection" over, then unlink old and
+         * link new to the http state.
+         */
+        new_req->body_connection = request->body_connection;
+        request->body_connection = NULL;
+        requestUnlink(request);
+        request = requestLink(new_req);
+        /*
+         * Store the new URI for logging
+         */
+        xfree(uri);
+        uri = xstrdup(urlCanonical(request));
+        setLogUri(this, urlCanonicalClean(request));
+        assert(request->method);
+    }
 
     doCallouts();
 

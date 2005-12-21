@@ -690,7 +690,7 @@ void ICAPModXact::parseHttpHead()
         maybeAllocateHttpMsg();
 
         if (!parseHead(adapted->data->header))
-            return;
+            return;	// need more header data
     }
 
     state.parsing = State::psBody;
@@ -724,7 +724,7 @@ void ICAPModXact::parseBody()
 
     debugs(93, 5, HERE << "have " << readBuf.contentSize() << " body bytes to parse");
 
-    if (gotEncapsulated("res-body")) {
+    if (gotEncapsulated("res-body") || gotEncapsulated("req-body")) {
         if (!parsePresentBody()) // need more body data
             return;
     } else {

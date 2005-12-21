@@ -110,7 +110,12 @@ void ICAPClientReqmodPrecache::noteSinkAbort(MsgPipe *p)
 void ICAPClientReqmodPrecache::noteSourceStart(MsgPipe *p)
 {
     debug(93,3)("ICAPClientReqmodPrecache::noteSourceStart() called\n");
-    assert(adapted->data->header);	// What should happen instead?
+    /*
+     * If adapted->data->header is NULL then the ICAP response did
+     * not have a req/res-hdr section.  Send the NULL pointer to
+     * tell the other side to use the original request/response
+     * headers.
+     */
     http->takeAdaptedHeaders(adapted->data->header);
     noteSourceProgress(p);
 }
