@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPClientReqmodPrecache.h,v 1.1 2005/11/21 23:46:27 wessels Exp $
+ * $Id: ICAPClientReqmodPrecache.h,v 1.2 2005/12/22 22:26:31 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -13,7 +13,7 @@
  *  Copyrighted (C) 2001 by the Regents of the University of
  *  California; see the COPYRIGHT file for full details.  Squid
  *  incorporates software developed and/or copyrighted by other
- *  sinks; see the CREDITS file for full details.
+ *  sources; see the CREDITS file for full details.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
