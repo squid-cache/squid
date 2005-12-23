@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPXaction.h,v 1.4 2005/12/22 22:26:31 wessels Exp $
+ * $Id: ICAPXaction.h,v 1.5 2005/12/22 23:40:26 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -137,7 +137,7 @@ private:
 
     const char *inCall; // name of the asynchronous call being executed, if any
 
-    static void ICAPXaction::reusedConnection(void *data);
+    static void reusedConnection(void *data);
 
     //CBDATA_CLASS2(ICAPXaction);
 };
