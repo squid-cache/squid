@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPModXact.h,v 1.3 2005/12/22 22:26:31 wessels Exp $
+ * $Id: ICAPModXact.h,v 1.4 2005/12/22 23:09:09 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -194,6 +194,7 @@ private:
     void maybeAllocateHttpMsg();
 
     void handle100Continue();
+    bool validate200Ok();
     void handle200Ok();
     void handle204NoContent();
     void handleUnknownScode();
