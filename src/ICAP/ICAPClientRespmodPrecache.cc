@@ -128,6 +128,11 @@ void ICAPClientRespmodPrecache::noteSourceStart(MsgPipe *p)
     debug(93,5)("ICAPClientRespmodPrecache::noteSourceStart() called\n");
 
     HttpReply *reply = dynamic_cast<HttpReply*>(adapted->data->header);
+    /*
+     *	The ICAP reply MUST have a new HTTP reply header, or else
+     *	it is an invalid ICAP message.  Invalid ICAP messages should
+     *	be handled prior to this point.
+     */
     assert(reply); // check that ICAP xaction created the right object
     httpState->takeAdaptedHeaders(reply);
 

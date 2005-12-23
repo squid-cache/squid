@@ -586,7 +586,13 @@ void ICAPModXact::parseIcapHead()
         break;
 
     case 200:
-        handle200Ok();
+
+        if (!validate200Ok()) {
+            throw TexcHere("Invalid ICAP Response");
+        } else {
+            handle200Ok();
+        }
+
         break;
 
     case 204:
@@ -594,6 +600,7 @@ void ICAPModXact::parseIcapHead()
         break;
 
     default:
+        debugs(93, 5, HERE << "ICAP status " << icapReply->sline.status);
         handleUnknownScode();
         break;
     }
@@ -604,6 +611,25 @@ void ICAPModXact::parseIcapHead()
         stopWriting();
 
     // TODO: Consider applying a Squid 2.5 patch to recognize 201 responses
+}
+
+bool ICAPModXact::validate200Ok()
+{
+    if (ICAP::methodRespmod == service().method) {
+        if (!gotEncapsulated("res-hdr"))
+            return false;
+
+        return true;
+    }
+
+    if (ICAP::methodReqmod == service().method) {
+        if (!gotEncapsulated("res-hdr") && !gotEncapsulated("req-hdr"))
+            return false;
+
+        return true;
+    }
+
+    return false;
 }
 
 void ICAPModXact::handle100Continue()
@@ -728,7 +754,7 @@ void ICAPModXact::parseBody()
         if (!parsePresentBody()) // need more body data
             return;
     } else {
-        debugs(93, 5, "not expecting a body");
+        debugs(93, 5, HERE << "not expecting a body");
     }
 
     stopParsing();

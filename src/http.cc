@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.472 2005/12/13 23:37:39 wessels Exp $
+ * $Id: http.cc,v 1.473 2005/12/22 23:09:09 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -2073,6 +2073,7 @@ HttpStateData::takeAdaptedHeaders(HttpReply *rep)
         return;
     }
 
+    assert (rep);
     storeEntryReplaceObject(entry, rep);
 
     /*
@@ -2109,6 +2110,12 @@ HttpStateData::doneAdapting()
 {
     debug(11,5)("HttpStateData::doneAdapting() called\n");
 
+    /*
+     * ICAP is done, so we don't need this any more.
+     */
+    delete icap;
+    cbdataReferenceDone(icap);
+
     if (!entry->isAccepting()) {
         debug(11,5)("\toops, entry is not Accepting!\n");
         icap->ownerAbort();
@@ -2116,8 +2123,10 @@ HttpStateData::doneAdapting()
         fwdComplete(fwd);
     }
 
-    assert(fd == -1);
-    httpStateFree(-1, this);
+    if (fd >= 0)
+        comm_close(fd);
+    else
+        httpStateFree(fd, this);
 }
 
 void
@@ -2125,21 +2134,32 @@ HttpStateData::abortAdapting()
 {
     debug(11,5)("HttpStateData::abortAdapting() called\n");
 
+    /*
+     * ICAP has given up, we're done with it too
+     */
+    delete icap;
+    cbdataReferenceDone(icap);
+
     if (entry->isEmpty()) {
         ErrorState *err;
         err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
         err->request = requestLink((HttpRequest *) request);
         err->xerrno = errno;
         fwdFail(fwd, err);
+        fwd->flags.dont_retry = 1;
         flags.do_next_read = 0;
+
+        if (fd >= 0) {
+            comm_close(fd);
+        } else {
+            fwdComplete(fwd);
+            httpStateFree(-1, this);	// deletes this
+        }
+
+        return;
     }
 
-    fwdComplete(fwd);
 
-    if (fd >= 0)
-        comm_close(fd);
-    else
-        httpStateFree(fd, this);
 }
 
 #endif
