@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPOptions.h,v 1.5 2005/12/22 22:26:31 wessels Exp $
+ * $Id: ICAPOptions.h,v 1.6 2005/12/23 17:36:19 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -109,7 +109,7 @@ private:
     void cfgIntHeader(const HttpHeader *h, const char *fname, int &value);
     void insertTransferExt(const char *t, transfer_type t_type);
     void cfgTransferListHeader(const HttpHeader *h, const char *fname, transfer_type type);
-    List<String> *ICAPOptions::parseExtFileList(const char *start, const char *end, transfer_type t_type);
+    List<String> *parseExtFileList(const char *start, const char *end, transfer_type t_type);
 };
 
 
