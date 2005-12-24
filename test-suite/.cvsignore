@@ -1,3 +1,16 @@
 .deps
 .dirstamp
+.libs
+ESIExpressions
 Makefile
+MemPoolTest
+StackTest
+VirtualDeleteOperator
+debug
+http_range_test
+mem_hdr_test
+mem_node_test
+refcount
+rfc1738
+splay
+syntheticoperators
