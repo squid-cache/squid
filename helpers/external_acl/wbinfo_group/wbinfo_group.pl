@@ -12,13 +12,17 @@
 #   Jerry Murdock <jmurdock@itraktech.com>
 #
 # Version history:
+#   2005-12-24 Guido Serassio <guido.serassio@acmeconsulting.it>
+#               Fix for wbinfo from Samba 3.0.21
+#
 #   2004-08-15 Henrik Nordstrom <hno@squid-cache.org>
 #		Helper protocol changed to URL escaped in Squid-3.0
-#   2002-07-05 Jerry Murdock <jmurdock@itraktech.com>
-#		Initial release
 #
 #   2005-06-28 Arno Streuli <astreuli@gmail.com>
 #               Add multi group check
+#
+#   2002-07-05 Jerry Murdock <jmurdock@itraktech.com>
+#		Initial release
 
 
 # Disable output buffering
@@ -34,7 +38,7 @@ sub debug {
 #
 sub check {
         local($user, $group) = @_;
-        $groupSID = `wbinfo -n "$group"`;
+        $groupSID = `wbinfo -n "$group" | cut -d" " -f1`;
         chop  $groupSID;
         $groupGID = `wbinfo -Y $groupSID`;
         chop $groupGID;
@@ -57,7 +61,6 @@ while (<STDIN>) {
  		$ans = &check($user, $group);
  		last if $ans eq "OK";
  	}
-	$ans = &check($user, $group);
 	&debug ("Sending $ans to squid");
 	print "$ans\n";
 }
