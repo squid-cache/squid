@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.123 2005/12/26 10:16:04 serassio Exp $
+#  $Id: Makefile.am,v 1.124 2005/12/26 10:47:48 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -16,10 +16,13 @@ DNSSOURCE = dns_internal.cc
 DNSSERVER =
 endif
 
+SNMP_ALL_SOURCE = \
+	snmp_core.cc \
+	snmp_agent.cc
 if USE_SNMP
-SNMPSOURCE = snmp_core.cc snmp_agent.cc
+SNMP_SOURCE = $(SNMP_ALL_SOURCE)
 else
-SNMPSOURCE = 
+SNMP_SOURCE = 
 endif
 
 TESTS=$(check_PROGRAMS)
@@ -144,10 +147,11 @@ else
 SSL_SOURCE = 
 endif
 
+WIN32_ALL_SOURCE = win32.cc
 if ENABLE_WIN32SPECIFIC
-WIN32SOURCE = win32.cc
+WIN32_SOURCE = $(WIN32_ALL_SOURCE)
 else
-WIN32SOURCE = 
+WIN32_SOURCE = 
 endif
 
 IDENT_ALL_SOURCE = ACLIdent.cc ACLIdent.h ident.cc
@@ -258,11 +262,10 @@ EXTRA_squid_SOURCES = \
 	ProfStats.cc \
 	LeakFinder.cc \
 	LeakFinder.h \
-	snmp_core.cc \
-	snmp_agent.cc \
+	$(SNMP_ALL_SOURCE) \
 	unlinkd.cc \
 	$(SSL_ALL_SOURCE) \
-	win32.cc
+	$(WIN32_ALL_SOURCE)
 
 squid_ACLSOURCES = \
 	$(ARP_ACL_SOURCE) \
@@ -473,7 +476,7 @@ squid_SOURCES = \
 	referer.cc \
 	refresh.cc \
 	send-announce.cc \
-	$(SNMPSOURCE) \
+	$(SNMP_SOURCE) \
 	squid.h \
 	SquidNew.cc \
 	tunnel.cc \
@@ -529,7 +532,7 @@ squid_SOURCES = \
 	wais.cc \
 	wccp.cc \
 	whois.cc \
-	$(WIN32SOURCE)
+	$(WIN32_SOURCE)
 
 noinst_HEADERS = ACLChecklist.cci \
 	AuthUser.cci \
@@ -721,7 +724,7 @@ ufsdump_SOURCES = debug.cc \
 	referer.cc \
 	refresh.cc \
 	send-announce.cc \
-	$(SNMPSOURCE) \
+	$(SNMP_SOURCE) \
 	squid.h \
 	$(SSL_SOURCE) \
 	tunnel.cc \
@@ -754,7 +757,7 @@ ufsdump_SOURCES = debug.cc \
 	wais.cc \
 	wccp.cc \
 	whois.cc \
-	$(WIN32SOURCE)
+	$(WIN32_SOURCE)
 ufsdump_LDADD = \
 	-L../lib \
 	@XTRA_OBJS@ \
