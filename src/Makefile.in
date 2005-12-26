@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.359 2005/12/18 09:23:39 serassio Exp $
+#  $Id: Makefile.in,v 1.360 2005/12/26 10:51:20 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -256,13 +256,14 @@ am__objects_11 = ACLIdent.$(OBJEXT) ident.$(OBJEXT)
 @ENABLE_IDENT_TRUE@am__objects_12 = $(am__objects_11)
 @MAKE_LEAKFINDER_TRUE@am__objects_13 = LeakFinder.$(OBJEXT)
 @ENABLE_XPROF_STATS_TRUE@am__objects_14 = ProfStats.$(OBJEXT)
-@USE_SNMP_TRUE@am__objects_15 = snmp_core.$(OBJEXT) \
-@USE_SNMP_TRUE@	snmp_agent.$(OBJEXT)
-am__objects_16 = ACLCertificateData.$(OBJEXT) ACLCertificate.$(OBJEXT) \
+am__objects_15 = snmp_core.$(OBJEXT) snmp_agent.$(OBJEXT)
+@USE_SNMP_TRUE@am__objects_16 = $(am__objects_15)
+am__objects_17 = ACLCertificateData.$(OBJEXT) ACLCertificate.$(OBJEXT) \
 	ssl_support.$(OBJEXT)
-@ENABLE_SSL_TRUE@am__objects_17 = $(am__objects_16)
-@ENABLE_UNLINKD_TRUE@am__objects_18 = unlinkd.$(OBJEXT)
-@ENABLE_WIN32SPECIFIC_TRUE@am__objects_19 = win32.$(OBJEXT)
+@ENABLE_SSL_TRUE@am__objects_18 = $(am__objects_17)
+@ENABLE_UNLINKD_TRUE@am__objects_19 = unlinkd.$(OBJEXT)
+am__objects_20 = win32.$(OBJEXT)
+@ENABLE_WIN32SPECIFIC_TRUE@am__objects_21 = $(am__objects_20)
 am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	ACLChecklist.$(OBJEXT) $(am__objects_3) asn.$(OBJEXT) \
 	authenticate.$(OBJEXT) AuthConfig.$(OBJEXT) \
@@ -295,8 +296,8 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	net_db.$(OBJEXT) Packer.$(OBJEXT) Parsing.$(OBJEXT) \
 	$(am__objects_14) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
 	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
-	refresh.$(OBJEXT) send-announce.$(OBJEXT) $(am__objects_15) \
-	SquidNew.$(OBJEXT) tunnel.$(OBJEXT) $(am__objects_17) \
+	refresh.$(OBJEXT) send-announce.$(OBJEXT) $(am__objects_16) \
+	SquidNew.$(OBJEXT) tunnel.$(OBJEXT) $(am__objects_18) \
 	stat.$(OBJEXT) StatHist.$(OBJEXT) String.$(OBJEXT) \
 	stmem.$(OBJEXT) store.$(OBJEXT) StoreFileSystem.$(OBJEXT) \
 	store_io.$(OBJEXT) StoreIOState.$(OBJEXT) \
@@ -308,9 +309,9 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	StoreMetaMD5.$(OBJEXT) StoreMetaSTD.$(OBJEXT) \
 	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
 	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
-	SwapDir.$(OBJEXT) tools.$(OBJEXT) $(am__objects_18) \
+	SwapDir.$(OBJEXT) tools.$(OBJEXT) $(am__objects_19) \
 	url.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) wais.$(OBJEXT) \
-	wccp.$(OBJEXT) whois.$(OBJEXT) $(am__objects_19)
+	wccp.$(OBJEXT) whois.$(OBJEXT) $(am__objects_21)
 nodist_squid_OBJECTS = repl_modules.$(OBJEXT) globals.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 squid_OBJECTS = $(am_squid_OBJECTS) $(nodist_squid_OBJECTS)
@@ -319,9 +320,9 @@ am_squidclient_OBJECTS = client.$(OBJEXT)
 squidclient_OBJECTS = $(am_squidclient_OBJECTS)
 squidclient_LDADD = $(LDADD)
 squidclient_DEPENDENCIES =
-am__objects_23 = ../test-suite/test_tools.$(OBJEXT)
+am__objects_25 = ../test-suite/test_tools.$(OBJEXT)
 am_tests_testAuth_OBJECTS = tests/testAuth.$(OBJEXT) \
-	tests/testMain.$(OBJEXT) $(am__objects_23) \
+	tests/testMain.$(OBJEXT) $(am__objects_25) \
 	AuthScheme.$(OBJEXT) globals.$(OBJEXT) authenticate.$(OBJEXT) \
 	AuthUser.$(OBJEXT) AuthUserRequest.$(OBJEXT) \
 	AuthConfig.$(OBJEXT) tests/stub_acl.$(OBJEXT) \
@@ -338,9 +339,43 @@ am_tests_testAuth_OBJECTS = tests/testAuth.$(OBJEXT) \
 	tests/stub_errorpage.$(OBJEXT) \
 	tests/stub_HttpRequest.$(OBJEXT)
 tests_testAuth_OBJECTS = $(am_tests_testAuth_OBJECTS)
-am__objects_24 = $(am__objects_23) CacheDigest.$(OBJEXT) \
-	store_dir.$(OBJEXT) store.$(OBJEXT) store_key_md5.$(OBJEXT) \
-	globals.$(OBJEXT) string_arrays.$(OBJEXT) Parsing.$(OBJEXT) \
+am__tests_testCoss_SOURCES_DIST = tests/testCoss.cc tests/testMain.cc \
+	tests/testCoss.h tests/stub_store_rebuild.cc \
+	tests/stub_internal.cc fd.cc disk.cc filemap.cc HttpBody.cc \
+	HttpMsg.cc HttpReply.cc HttpStatusLine.cc int.cc list.cc \
+	MemObject.cc mime.cc StoreSwapLogData.cc StoreIOState.cc \
+	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
+	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
+	StoreFileSystem.cc store_io.cc store_swapout.cc \
+	store_swapmeta.cc unlinkd.cc ../test-suite/test_tools.cc \
+	CommonPool.h CompositePoolNode.h delay_pools.cc DelayId.cc \
+	DelayId.h DelayIdComposite.h DelayBucket.cc DelayBucket.h \
+	DelayConfig.cc DelayConfig.h DelayPool.cc DelayPool.h \
+	DelayPools.h DelaySpec.cc DelaySpec.h DelayTagged.cc \
+	DelayTagged.h DelayUser.cc DelayUser.h DelayVector.cc \
+	DelayVector.h NullDelayId.cc NullDelayId.h CacheDigest.cc \
+	store_dir.cc store.cc store_key_md5.cc globals.cc \
+	string_arrays.c Parsing.cc ConfigOption.cc SwapDir.cc \
+	AuthScheme.cc authenticate.cc AuthUser.cc AuthUserRequest.cc \
+	AuthConfig.cc tests/stub_acl.cc tests/stub_cache_cf.cc \
+	tests/stub_helper.cc cbdata.cc String.cc \
+	tests/stub_cache_manager.cc tests/stub_comm.cc \
+	tests/stub_http.cc mem_node.cc stmem.cc \
+	tests/stub_store_client.cc tests/stub_tools.cc \
+	HttpHeaderTools.cc HttpHeader.cc acl.cc event.cc mem.cc \
+	MemBuf.cc HttpHdrContRange.cc Packer.cc ACLChecklist.cc \
+	HttpHdrCc.cc HttpHdrSc.cc HttpHdrScTarget.cc url.cc \
+	ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc StatHist.cc \
+	HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
+	tests/stub_HttpRequest.cc DiskIO/DiskIOModule.cc \
+	DiskIO/ReadRequest.cc DiskIO/ReadRequest.h \
+	DiskIO/WriteRequest.cc DiskIO/WriteRequest.h DiskIO/DiskFile.h \
+	DiskIO/DiskIOStrategy.h DiskIO/IORequestor.h \
+	DiskIO/DiskIOModule.h
+am__objects_26 = $(am__objects_25) $(am__objects_5) \
+	CacheDigest.$(OBJEXT) store_dir.$(OBJEXT) store.$(OBJEXT) \
+	store_key_md5.$(OBJEXT) globals.$(OBJEXT) \
+	string_arrays.$(OBJEXT) Parsing.$(OBJEXT) \
 	ConfigOption.$(OBJEXT) SwapDir.$(OBJEXT) AuthScheme.$(OBJEXT) \
 	authenticate.$(OBJEXT) AuthUser.$(OBJEXT) \
 	AuthUserRequest.$(OBJEXT) AuthConfig.$(OBJEXT) \
@@ -358,7 +393,7 @@ am__objects_24 = $(am__objects_23) CacheDigest.$(OBJEXT) \
 	StatHist.$(OBJEXT) HttpHdrRange.$(OBJEXT) ETag.$(OBJEXT) \
 	tests/stub_errorpage.$(OBJEXT) \
 	tests/stub_HttpRequest.$(OBJEXT)
-am__objects_25 = tests/stub_store_rebuild.$(OBJEXT) \
+am__objects_27 = tests/stub_store_rebuild.$(OBJEXT) \
 	tests/stub_internal.$(OBJEXT) fd.$(OBJEXT) disk.$(OBJEXT) \
 	filemap.$(OBJEXT) HttpBody.$(OBJEXT) HttpMsg.$(OBJEXT) \
 	HttpReply.$(OBJEXT) HttpStatusLine.$(OBJEXT) int.$(OBJEXT) \
@@ -369,24 +404,117 @@ am__objects_25 = tests/stub_store_rebuild.$(OBJEXT) \
 	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
 	StoreFileSystem.$(OBJEXT) store_io.$(OBJEXT) \
 	store_swapout.$(OBJEXT) store_swapmeta.$(OBJEXT) \
-	unlinkd.$(OBJEXT) $(am__objects_24) $(am__objects_6)
+	unlinkd.$(OBJEXT) $(am__objects_26) $(am__objects_6)
 am_tests_testCoss_OBJECTS = tests/testCoss.$(OBJEXT) \
-	tests/testMain.$(OBJEXT) $(am__objects_25)
+	tests/testMain.$(OBJEXT) $(am__objects_27)
 tests_testCoss_OBJECTS = $(am_tests_testCoss_OBJECTS)
 am__DEPENDENCIES_2 = DiskIO/Blocking/BlockingDiskIOModule.o \
 	repl/lru/store_repl_lru.o
+am__tests_testNull_SOURCES_DIST = tests/testNull.cc tests/testMain.cc \
+	tests/testNull.h tests/stub_store_rebuild.cc \
+	tests/stub_internal.cc fd.cc disk.cc filemap.cc HttpBody.cc \
+	HttpMsg.cc HttpReply.cc HttpStatusLine.cc int.cc list.cc \
+	MemObject.cc mime.cc StoreSwapLogData.cc StoreIOState.cc \
+	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
+	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
+	StoreFileSystem.cc store_io.cc store_swapout.cc \
+	store_swapmeta.cc unlinkd.cc ../test-suite/test_tools.cc \
+	CommonPool.h CompositePoolNode.h delay_pools.cc DelayId.cc \
+	DelayId.h DelayIdComposite.h DelayBucket.cc DelayBucket.h \
+	DelayConfig.cc DelayConfig.h DelayPool.cc DelayPool.h \
+	DelayPools.h DelaySpec.cc DelaySpec.h DelayTagged.cc \
+	DelayTagged.h DelayUser.cc DelayUser.h DelayVector.cc \
+	DelayVector.h NullDelayId.cc NullDelayId.h CacheDigest.cc \
+	store_dir.cc store.cc store_key_md5.cc globals.cc \
+	string_arrays.c Parsing.cc ConfigOption.cc SwapDir.cc \
+	AuthScheme.cc authenticate.cc AuthUser.cc AuthUserRequest.cc \
+	AuthConfig.cc tests/stub_acl.cc tests/stub_cache_cf.cc \
+	tests/stub_helper.cc cbdata.cc String.cc \
+	tests/stub_cache_manager.cc tests/stub_comm.cc \
+	tests/stub_http.cc mem_node.cc stmem.cc \
+	tests/stub_store_client.cc tests/stub_tools.cc \
+	HttpHeaderTools.cc HttpHeader.cc acl.cc event.cc mem.cc \
+	MemBuf.cc HttpHdrContRange.cc Packer.cc ACLChecklist.cc \
+	HttpHdrCc.cc HttpHdrSc.cc HttpHdrScTarget.cc url.cc \
+	ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc StatHist.cc \
+	HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
+	tests/stub_HttpRequest.cc DiskIO/DiskIOModule.cc \
+	DiskIO/ReadRequest.cc DiskIO/ReadRequest.h \
+	DiskIO/WriteRequest.cc DiskIO/WriteRequest.h DiskIO/DiskFile.h \
+	DiskIO/DiskIOStrategy.h DiskIO/IORequestor.h \
+	DiskIO/DiskIOModule.h
 am_tests_testNull_OBJECTS = tests/testNull.$(OBJEXT) \
-	tests/testMain.$(OBJEXT) $(am__objects_25)
+	tests/testMain.$(OBJEXT) $(am__objects_27)
 tests_testNull_OBJECTS = $(am_tests_testNull_OBJECTS)
+am__tests_testStore_SOURCES_DIST = tests/testStore.cc \
+	tests/testStoreController.cc tests/testStoreHashIndex.cc \
+	tests/testMain.cc tests/testStore.h \
+	tests/testStoreController.h tests/testStoreHashIndex.h \
+	tests/TestSwapDir.cc tests/TestSwapDir.h \
+	tests/stub_store_swapout.cc tests/stub_fd.cc \
+	tests/stub_HttpReply.cc tests/stub_MemObject.cc \
+	../test-suite/test_tools.cc CommonPool.h CompositePoolNode.h \
+	delay_pools.cc DelayId.cc DelayId.h DelayIdComposite.h \
+	DelayBucket.cc DelayBucket.h DelayConfig.cc DelayConfig.h \
+	DelayPool.cc DelayPool.h DelayPools.h DelaySpec.cc DelaySpec.h \
+	DelayTagged.cc DelayTagged.h DelayUser.cc DelayUser.h \
+	DelayVector.cc DelayVector.h NullDelayId.cc NullDelayId.h \
+	CacheDigest.cc store_dir.cc store.cc store_key_md5.cc \
+	globals.cc string_arrays.c Parsing.cc ConfigOption.cc \
+	SwapDir.cc AuthScheme.cc authenticate.cc AuthUser.cc \
+	AuthUserRequest.cc AuthConfig.cc tests/stub_acl.cc \
+	tests/stub_cache_cf.cc tests/stub_helper.cc cbdata.cc \
+	String.cc tests/stub_cache_manager.cc tests/stub_comm.cc \
+	tests/stub_http.cc mem_node.cc stmem.cc \
+	tests/stub_store_client.cc tests/stub_tools.cc \
+	HttpHeaderTools.cc HttpHeader.cc acl.cc event.cc mem.cc \
+	MemBuf.cc HttpHdrContRange.cc Packer.cc ACLChecklist.cc \
+	HttpHdrCc.cc HttpHdrSc.cc HttpHdrScTarget.cc url.cc \
+	ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc StatHist.cc \
+	HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
+	tests/stub_HttpRequest.cc
 am_tests_testStore_OBJECTS = tests/testStore.$(OBJEXT) \
 	tests/testStoreController.$(OBJEXT) \
 	tests/testStoreHashIndex.$(OBJEXT) tests/testMain.$(OBJEXT) \
 	tests/TestSwapDir.$(OBJEXT) tests/stub_store_swapout.$(OBJEXT) \
 	tests/stub_fd.$(OBJEXT) tests/stub_HttpReply.$(OBJEXT) \
-	tests/stub_MemObject.$(OBJEXT) $(am__objects_24)
+	tests/stub_MemObject.$(OBJEXT) $(am__objects_26)
 tests_testStore_OBJECTS = $(am_tests_testStore_OBJECTS)
+am__tests_testUfs_SOURCES_DIST = tests/testUfs.cc tests/testMain.cc \
+	tests/testUfs.h tests/stub_store_rebuild.cc \
+	tests/stub_internal.cc fd.cc disk.cc filemap.cc HttpBody.cc \
+	HttpMsg.cc HttpReply.cc HttpStatusLine.cc int.cc list.cc \
+	MemObject.cc mime.cc StoreSwapLogData.cc StoreIOState.cc \
+	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
+	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
+	StoreFileSystem.cc store_io.cc store_swapout.cc \
+	store_swapmeta.cc unlinkd.cc ../test-suite/test_tools.cc \
+	CommonPool.h CompositePoolNode.h delay_pools.cc DelayId.cc \
+	DelayId.h DelayIdComposite.h DelayBucket.cc DelayBucket.h \
+	DelayConfig.cc DelayConfig.h DelayPool.cc DelayPool.h \
+	DelayPools.h DelaySpec.cc DelaySpec.h DelayTagged.cc \
+	DelayTagged.h DelayUser.cc DelayUser.h DelayVector.cc \
+	DelayVector.h NullDelayId.cc NullDelayId.h CacheDigest.cc \
+	store_dir.cc store.cc store_key_md5.cc globals.cc \
+	string_arrays.c Parsing.cc ConfigOption.cc SwapDir.cc \
+	AuthScheme.cc authenticate.cc AuthUser.cc AuthUserRequest.cc \
+	AuthConfig.cc tests/stub_acl.cc tests/stub_cache_cf.cc \
+	tests/stub_helper.cc cbdata.cc String.cc \
+	tests/stub_cache_manager.cc tests/stub_comm.cc \
+	tests/stub_http.cc mem_node.cc stmem.cc \
+	tests/stub_store_client.cc tests/stub_tools.cc \
+	HttpHeaderTools.cc HttpHeader.cc acl.cc event.cc mem.cc \
+	MemBuf.cc HttpHdrContRange.cc Packer.cc ACLChecklist.cc \
+	HttpHdrCc.cc HttpHdrSc.cc HttpHdrScTarget.cc url.cc \
+	ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc StatHist.cc \
+	HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
+	tests/stub_HttpRequest.cc DiskIO/DiskIOModule.cc \
+	DiskIO/ReadRequest.cc DiskIO/ReadRequest.h \
+	DiskIO/WriteRequest.cc DiskIO/WriteRequest.h DiskIO/DiskFile.h \
+	DiskIO/DiskIOStrategy.h DiskIO/IORequestor.h \
+	DiskIO/DiskIOModule.h
 am_tests_testUfs_OBJECTS = tests/testUfs.$(OBJEXT) \
-	tests/testMain.$(OBJEXT) $(am__objects_25)
+	tests/testMain.$(OBJEXT) $(am__objects_27)
 tests_testUfs_OBJECTS = $(am_tests_testUfs_OBJECTS)
 am__ufsdump_SOURCES_DIST = debug.cc int.cc ufsdump.cc store.cc \
 	StoreFileSystem.cc StoreMeta.cc StoreMeta.h StoreMetaMD5.cc \
@@ -476,7 +604,7 @@ am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) ufsdump.$(OBJEXT) \
 	Parsing.$(OBJEXT) $(am__objects_14) pconn.$(OBJEXT) \
 	peer_digest.$(OBJEXT) peer_select.$(OBJEXT) redirect.$(OBJEXT) \
 	referer.$(OBJEXT) refresh.$(OBJEXT) send-announce.$(OBJEXT) \
-	$(am__objects_15) $(am__objects_17) tunnel.$(OBJEXT) \
+	$(am__objects_16) $(am__objects_18) tunnel.$(OBJEXT) \
 	SquidNew.$(OBJEXT) stat.$(OBJEXT) StatHist.$(OBJEXT) \
 	String.$(OBJEXT) stmem.$(OBJEXT) store_io.$(OBJEXT) \
 	StoreIOState.$(OBJEXT) store_client.$(OBJEXT) \
@@ -484,9 +612,9 @@ am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) ufsdump.$(OBJEXT) \
 	store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
 	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
 	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
-	SwapDir.$(OBJEXT) tools.$(OBJEXT) $(am__objects_18) \
+	SwapDir.$(OBJEXT) tools.$(OBJEXT) $(am__objects_19) \
 	url.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) wais.$(OBJEXT) \
-	wccp.$(OBJEXT) whois.$(OBJEXT) $(am__objects_19)
+	wccp.$(OBJEXT) whois.$(OBJEXT) $(am__objects_21)
 nodist_ufsdump_OBJECTS = repl_modules.$(OBJEXT) globals.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 ufsdump_OBJECTS = $(am_ufsdump_OBJECTS) $(nodist_ufsdump_OBJECTS)
@@ -534,9 +662,10 @@ DIST_SOURCES = $(libAIO_a_SOURCES) $(libBlocking_a_SOURCES) \
 	$(dnsserver_SOURCES) $(pinger_SOURCES) \
 	$(recv_announce_SOURCES) $(am__squid_SOURCES_DIST) \
 	$(EXTRA_squid_SOURCES) $(squidclient_SOURCES) \
-	$(tests_testAuth_SOURCES) $(tests_testCoss_SOURCES) \
-	$(tests_testNull_SOURCES) $(tests_testStore_SOURCES) \
-	$(tests_testUfs_SOURCES) $(am__ufsdump_SOURCES_DIST) \
+	$(tests_testAuth_SOURCES) $(am__tests_testCoss_SOURCES_DIST) \
+	$(am__tests_testNull_SOURCES_DIST) \
+	$(am__tests_testStore_SOURCES_DIST) \
+	$(am__tests_testUfs_SOURCES_DIST) $(am__ufsdump_SOURCES_DIST) \
 	$(unlinkd_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
@@ -751,8 +880,12 @@ AUTOMAKE_OPTIONS = subdir-objects
 @USE_DNSSERVER_TRUE@DNSSOURCE = dns.cc
 @USE_DNSSERVER_FALSE@DNSSERVER = 
 @USE_DNSSERVER_TRUE@DNSSERVER = dnsserver
-@USE_SNMP_FALSE@SNMPSOURCE = 
-@USE_SNMP_TRUE@SNMPSOURCE = snmp_core.cc snmp_agent.cc
+SNMP_ALL_SOURCE = \
+	snmp_core.cc \
+	snmp_agent.cc
+
+@USE_SNMP_FALSE@SNMP_SOURCE = 
+@USE_SNMP_TRUE@SNMP_SOURCE = $(SNMP_ALL_SOURCE)
 TESTS = $(check_PROGRAMS)
 SUBDIRS = fs repl auth $(am__append_1)
 DELAY_POOL_ALL_SOURCE = \
@@ -839,8 +972,9 @@ SSL_ALL_SOURCE = \
 
 @ENABLE_SSL_FALSE@SSL_SOURCE = 
 @ENABLE_SSL_TRUE@SSL_SOURCE = $(SSL_ALL_SOURCE)
-@ENABLE_WIN32SPECIFIC_FALSE@WIN32SOURCE = 
-@ENABLE_WIN32SPECIFIC_TRUE@WIN32SOURCE = win32.cc
+WIN32_ALL_SOURCE = win32.cc
+@ENABLE_WIN32SPECIFIC_FALSE@WIN32_SOURCE = 
+@ENABLE_WIN32SPECIFIC_TRUE@WIN32_SOURCE = $(WIN32_ALL_SOURCE)
 IDENT_ALL_SOURCE = ACLIdent.cc ACLIdent.h ident.cc
 @ENABLE_IDENT_FALSE@IDENT_SOURCE = 
 @ENABLE_IDENT_TRUE@IDENT_SOURCE = $(IDENT_ALL_SOURCE)
@@ -912,11 +1046,10 @@ EXTRA_squid_SOURCES = \
 	ProfStats.cc \
 	LeakFinder.cc \
 	LeakFinder.h \
-	snmp_core.cc \
-	snmp_agent.cc \
+	$(SNMP_ALL_SOURCE) \
 	unlinkd.cc \
 	$(SSL_ALL_SOURCE) \
-	win32.cc
+	$(WIN32_ALL_SOURCE)
 
 squid_ACLSOURCES = \
 	$(ARP_ACL_SOURCE) \
@@ -1127,7 +1260,7 @@ squid_SOURCES = \
 	referer.cc \
 	refresh.cc \
 	send-announce.cc \
-	$(SNMPSOURCE) \
+	$(SNMP_SOURCE) \
 	squid.h \
 	SquidNew.cc \
 	tunnel.cc \
@@ -1183,7 +1316,7 @@ squid_SOURCES = \
 	wais.cc \
 	wccp.cc \
 	whois.cc \
-	$(WIN32SOURCE)
+	$(WIN32_SOURCE)
 
 noinst_HEADERS = ACLChecklist.cci \
 	AuthUser.cci \
@@ -1360,7 +1493,7 @@ ufsdump_SOURCES = debug.cc \
 	referer.cc \
 	refresh.cc \
 	send-announce.cc \
-	$(SNMPSOURCE) \
+	$(SNMP_SOURCE) \
 	squid.h \
 	$(SSL_SOURCE) \
 	tunnel.cc \
@@ -1393,7 +1526,7 @@ ufsdump_SOURCES = debug.cc \
 	wais.cc \
 	wccp.cc \
 	whois.cc \
-	$(WIN32SOURCE)
+	$(WIN32_SOURCE)
 
 ufsdump_LDADD = \
 	-L../lib \
@@ -1535,6 +1668,7 @@ tests_testAuth_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 
 STORE_TEST_SOURCES = \
 	$(TESTSOURCES) \
+	$(DELAY_POOL_SOURCE) \
 	CacheDigest.cc \
 	store_dir.cc \
 	store.cc \
