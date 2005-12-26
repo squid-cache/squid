@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.515 2005/12/06 23:03:34 wessels Exp $
+ * $Id: protos.h,v 1.516 2005/12/26 11:35:22 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -360,7 +360,7 @@ SQUIDCEXTERN http_hdr_type httpHeaderIdByName(const char *name, int name_len, co
 SQUIDCEXTERN http_hdr_type httpHeaderIdByNameDef(const char *name, int name_len);
 SQUIDCEXTERN const char *httpHeaderNameById(int id);
 SQUIDCEXTERN void httpHeaderMaskInit(HttpHeaderMask * mask, int value);
-SQUIDCEXTERN void httpHeaderCalcMask(HttpHeaderMask * mask, const int *enums, size_t count);
+SQUIDCEXTERN void httpHeaderCalcMask(HttpHeaderMask * mask, http_hdr_type http_hdr_type_enums[], size_t count);
 SQUIDCEXTERN int httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive);
 SQUIDCEXTERN void strListAdd(String * str, const char *item, char del);
 SQUIDCEXTERN int strListIsMember(const String * str, const char *item, char del);

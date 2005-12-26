@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.72 2005/12/09 01:02:24 wessels Exp $
+ * $Id: snmp_core.cc,v 1.73 2005/12/26 11:35:22 serassio Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -632,7 +632,9 @@ static struct snmp_pdu *
                         xfree(NextOidName);
                     }
 
-                    VarNew = (*ParseFn) (VarPtr, (snint *) & (Answer->errstat));
+                    int * errstatTmp =  &(Answer->errstat);
+
+                    VarNew = (*ParseFn) (VarPtr, (snint *) errstatTmp);
 
                     if (get_next)
                         snmp_var_free(VarPtr);

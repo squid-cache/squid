@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.105 2005/11/05 00:08:32 wessels Exp $
+ * $Id: peer_digest.cc,v 1.106 2005/12/26 11:35:22 serassio Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -140,13 +140,14 @@ peerDigestCreate(peer * p)
 static void
 peerDigestDestroy(PeerDigest * pd)
 {
-    peer *p;
+    void *p;
     assert(pd);
+    void * peerTmp = pd->peer;
 
     /* inform peer (if any) that we are gone */
 
-    if (cbdataReferenceValidDone(pd->peer, (void **) &p))
-        peerNoteDigestGone(p);
+    if (cbdataReferenceValidDone(peerTmp, &p))
+        peerNoteDigestGone((peer *)p);
 
     peerDigestClean(pd);
 

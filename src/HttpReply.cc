@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.80 2005/11/21 22:49:04 wessels Exp $
+ * $Id: HttpReply.cc,v 1.81 2005/12/26 11:35:22 serassio Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -57,7 +57,7 @@ httpReplyInitModule(void)
 {
     assert(HTTP_STATUS_NONE == 0); // HttpReply::parse() interface assumes that
     httpHeaderMaskInit(&Denied304HeadersMask, 0);
-    httpHeaderCalcMask(&Denied304HeadersMask, (const int *) Denied304HeadersArr, countof(Denied304HeadersArr));
+    httpHeaderCalcMask(&Denied304HeadersMask, Denied304HeadersArr, countof(Denied304HeadersArr));
 }
 
 HttpReply::HttpReply() : HttpMsg(hoReply), date (0), last_modified (0), expires (0), surrogate_control (NULL), content_range (NULL), keep_alive (0), protoPrefix("HTTP/")

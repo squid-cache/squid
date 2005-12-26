@@ -1,6 +1,6 @@
 
 /*
- * $Id: AIODiskIOStrategy.cc,v 1.2 2005/03/10 21:49:20 serassio Exp $
+ * $Id: AIODiskIOStrategy.cc,v 1.3 2005/12/26 11:35:22 serassio Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -153,7 +153,8 @@ AIODiskIOStrategy::callback()
                 callback_valid = cbdataReferenceValidDone(aqe->aq_e_callback_data, &cbdata);
                 AIODiskFile * theFile = NULL;
                 void *theFileVoid = NULL;
-                bool fileOk = cbdataReferenceValidDone(aqe->theFile, &theFileVoid);
+                void *theTmpFile = aqe->theFile;
+                bool fileOk = cbdataReferenceValidDone(theTmpFile, &theFileVoid);
 
                 if (fileOk) {
                     theFile = static_cast<AIODiskFile *>(theFileVoid);
