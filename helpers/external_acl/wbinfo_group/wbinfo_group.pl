@@ -12,6 +12,9 @@
 #   Jerry Murdock <jmurdock@itraktech.com>
 #
 # Version history:
+#   2005-12-26 Guido Serassio <guido.serassio@acmeconsulting.it>
+#               Add '-d' command line debugging option
+#
 #   2005-12-24 Guido Serassio <guido.serassio@acmeconsulting.it>
 #               Fix for wbinfo from Samba 3.0.21
 #
@@ -25,12 +28,16 @@
 #		Initial release
 
 
+#
+# Globals
+#
+use vars qw/ %opt /;
+
 # Disable output buffering
 $|=1;           
 
 sub debug {
-	# Uncomment this to enable debugging
-	#print STDERR "@_\n";
+	print STDERR "@_\n" if $opt{d};
 }
 
 #
@@ -46,6 +53,31 @@ sub check {
         return 'OK' if(`wbinfo -r \Q$user\E` =~ /^$groupGID$/m);
         return 'ERR';
 }
+
+#
+# Command line options processing
+#
+sub init()
+{
+    use Getopt::Std;
+    my $opt_string = 'hd';
+    getopts( "$opt_string", \%opt ) or usage();
+    usage() if $opt{h};
+}
+
+#
+# Message about this program and how to use it
+#
+sub usage()
+{
+	print "Usage: wbinfo_group.pl -dh\n";
+	print "\t-d enable debugging\n";
+	print "\t-h print the help\n";
+	exit;
+}
+
+init();
+print STDERR "Debugging mode ON.\n" if $opt{d};
 
 #
 # Main loop
