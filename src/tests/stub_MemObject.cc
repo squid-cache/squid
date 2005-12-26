@@ -1,5 +1,5 @@
 /*
- * $Id: stub_MemObject.cc,v 1.1 2005/01/03 16:08:27 robertc Exp $
+ * $Id: stub_MemObject.cc,v 1.2 2005/12/26 10:16:05 serassio Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins
@@ -35,6 +35,9 @@
 #include "squid.h"
 #include "MemObject.h"
 #include "HttpReply.h"
+#if DELAY_POOLS
+#include "DelayPools.h"
+#endif
 
 off_t
 MemObject::endOffset () const
@@ -106,6 +109,17 @@ MemObject::mostBytesWanted(int max) const
     fatal ("Not implemented");
     return -1;
 }
+
+#if DELAY_POOLS
+DelayId
+MemObject::mostBytesAllowed() const
+{
+    DelayId result;
+    fatal ("Not implemented");
+    return result;
+}
+
+#endif
 
 void
 MemObject::unlinkRequest()

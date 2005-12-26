@@ -1,5 +1,5 @@
 /*
- * $Id: stub_cache_cf.cc,v 1.1 2004/08/30 03:29:02 robertc Exp $
+ * $Id: stub_cache_cf.cc,v 1.2 2005/12/26 10:16:05 serassio Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Robert Collins
@@ -33,6 +33,7 @@
  */
 
 #include "squid.h"
+#include "ConfigParser.h"
 
 void
 self_destruct(void)
@@ -120,6 +121,18 @@ strtokFile(void)
 {
     fatal("not implemented 9");
     return NULL;
+}
+
+void
+ConfigParser::ParseUShort(u_short *var)
+{
+    fatal("not implemented 10");
+}
+
+void
+dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
+{
+    fatal("not implemented 11");
 }
 
 /*

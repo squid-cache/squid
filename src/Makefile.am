@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.122 2005/12/18 09:23:39 serassio Exp $
+#  $Id: Makefile.am,v 1.123 2005/12/26 10:16:04 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -1002,6 +1002,7 @@ tests_testAuth_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 
 STORE_TEST_SOURCES=\
 	$(TESTSOURCES) \
+	$(DELAY_POOL_SOURCE) \
 	CacheDigest.cc \
 	store_dir.cc \
 	store.cc \
