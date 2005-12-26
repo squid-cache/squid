@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.52 2005/11/04 20:27:31 wessels Exp $
+ * $Id: HttpHeaderTools.cc,v 1.53 2005/12/26 11:35:22 serassio Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -91,9 +91,10 @@ httpHeaderMaskInit(HttpHeaderMask * mask, int value)
 
 /* calculates a bit mask of a given array; does not reset mask! */
 void
-httpHeaderCalcMask(HttpHeaderMask * mask, const int *enums, size_t count)
+httpHeaderCalcMask(HttpHeaderMask * mask, http_hdr_type http_hdr_type_enums[], size_t count)
 {
     size_t i;
+    const int * enums = (const int *) http_hdr_type_enums;
     assert(mask && enums);
     assert(count < sizeof(*mask) * 8);	/* check for overflow */
 

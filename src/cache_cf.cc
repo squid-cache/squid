@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.486 2005/11/21 23:10:22 wessels Exp $
+ * $Id: cache_cf.cc,v 1.487 2005/12/26 11:35:22 serassio Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -3004,8 +3004,10 @@ parse_https_port_list(https_port_list ** head)
         }
     }
 
-    while (*head)
-        head = (https_port_list **)&(*head)->http.next;
+    while (*head) {
+        http_port_list ** headTmp = &(*head)->http.next;
+        head = (https_port_list **)headTmp;
+    }
 
     *head = s;
 }
