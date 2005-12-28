@@ -524,6 +524,7 @@ void ICAPModXact::parseMore()
 {
     debugs(93, 5, HERE << "have " << readBuf.contentSize() << " bytes to parse" <<
            status());
+    debugs(93, 5, HERE << readBuf.content());
 
     if (state.parsingHeaders())
         parseHeaders();
@@ -1002,6 +1003,11 @@ void ICAPModXact::packHead(MemBuf &httpBuf, const HttpMsg *head)
 bool ICAPModXact::shouldPreview()
 {
     size_t wantedSize;
+
+    if (!TheICAPConfig.preview_enable) {
+        debugs(93, 5, HERE << "preview disabled by squid.conf");
+        return false;
+    }
 
     if (!service().wantsPreview(wantedSize)) {
         debugs(93, 5, "ICAPModXact should not offer preview");
