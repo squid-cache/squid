@@ -31,9 +31,8 @@
  */
 
 #include "digest_common.h"
-#include "ldap_backend.h"
+#include "text_backend.h"
 #define PROGRAM_NAME "digest_pw_auth"
-char *backend;
 
 
 void
@@ -47,10 +46,7 @@ usage()
 void
 GetHHA1(RequestData * requestData)
 {
-    if (strcmp(backend, "LDAP") == 0)
-	LDAPHHA1(requestData);
-    else if (strcmp(backend, "file") == 0)
-	TextHHA1(requestData);
+    TextHHA1(requestData);
 }
 
 static void
