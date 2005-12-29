@@ -1,0 +1,5 @@
+#!/bin/sh
+if [ -x ${SAMBAPREFIX:-/usr/local/samba}/bin/wbinfo -a -x /usr/bin/perl ]; then
+	exit 0
+fi
+exit 1

@@ -1,0 +1,5 @@
+#!/bin/sh
+if [ -x ${SAMBAPREFIX:-/usr/local/samba}/bin/smbclient ]; then
+	exit 0
+fi
+exit 1
