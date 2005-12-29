@@ -248,7 +248,7 @@ void ICAPModXact::writePrimeBody()
 void ICAPModXact::writeSomeBody(const char *label, size_t size)
 {
     Must(!writer && !state.doneWriting());
-    debugs(93, 8, "ICAPModXact will write up to " << size << " bytes of " <<
+    debugs(93, 8, HERE << "will write up to " << size << " bytes of " <<
            label);
 
     MemBuf writeBuf; // TODO: suggest a min size based on size and lastChunk
@@ -259,7 +259,7 @@ void ICAPModXact::writeSomeBody(const char *label, size_t size)
     const size_t chunkSize = XMIN(writeableSize, size);
 
     if (chunkSize) {
-        debugs(93, 7, "ICAPModXact will write " << chunkSize <<
+        debugs(93, 7, HERE << "will write " << chunkSize <<
                "-byte chunk of " << label);
     } else {
         debugs(93, 7, "ICAPModXact has no writeable " << label << " content");
@@ -272,11 +272,11 @@ void ICAPModXact::writeSomeBody(const char *label, size_t size)
         (state.doneReceiving && claimSize(virginWriteClaim) <= 0);
 
     if (lastChunk && virginBody.expected()) {
-        debugs(93, 8, "ICAPModXact will write last-chunk of " << label);
+        debugs(93, 8, HERE << "will write last-chunk of " << label);
         addLastRequestChunk(writeBuf);
     }
 
-    debugs(93, 7, "ICAPModXact will write " << writeBuf.contentSize()
+    debugs(93, 7, HERE << "will write " << writeBuf.contentSize()
            << " raw bytes of " << label);
 
     if (writeBuf.hasContent()) {
