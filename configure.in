@@ -3,7 +3,7 @@ dnl  Configuration input file for Squid
 dnl
 dnl  Duane Wessels, wessels@nlanr.net, February 1996 (autoconf v2.9)
 dnl
-dnl  $Id: configure.in,v 1.394 2005/12/29 02:21:46 hno Exp $
+dnl  $Id: configure.in,v 1.395 2005/12/29 02:41:28 hno Exp $
 dnl
 dnl
 dnl
@@ -13,7 +13,7 @@ AC_CONFIG_SRCDIR([src/main.cc])
 AC_CONFIG_AUX_DIR(cfgaux)
 AM_INIT_AUTOMAKE(squid, 3.0-PRE3-CVS)
 AM_CONFIG_HEADER(include/autoconf.h)
-AC_REVISION($Revision: 1.394 $)dnl
+AC_REVISION($Revision: 1.395 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -1274,6 +1274,7 @@ if test -n "$AUTH_MODULES"; then
 	    echo "ERROR: Auth scheme $module does not exists"
 	    exit 1
 	fi
+	eval AUTH_MODULE_${module}=yes
     done
     echo "Auth scheme modules built: $AUTH_MODULES"
     AUTH_OBJS="auth/lib`echo $AUTH_MODULES|sed -e 's% %.a auth/lib%g'`.a"
@@ -1289,7 +1290,9 @@ AC_SUBST(AUTH_LINKOBJS)
 AC_SUBST(AUTH_OBJS)
 
 dnl Select basic auth scheme helpers to build
-BASIC_AUTH_HELPERS=""
+if test -n "$AUTH_MODULE_basic"; then
+	BASIC_AUTH_HELPERS="all"
+fi
 AC_ARG_ENABLE(basic-auth-helpers,
 [  --enable-basic-auth-helpers=\"list of helpers\"
                           This option selects which basic scheme proxy_auth
@@ -1297,21 +1300,30 @@ AC_ARG_ENABLE(basic-auth-helpers,
                           build process. For a list of available
                           helpers see the helpers/basic_auth directory.],
 [ case "$enableval" in
-  yes) 
+  yes)
+	BASIC_AUTH_HELPERS="all"
+	;;
+  no)
+	BASIC_AUTH_HELPERS=""
+	;;
+  *)
+	if test -z "$AUTH_MODULE_basic"; then
+		echo "WARNING: Basic auth helpers selected without the basic scheme enabled"
+		sleep 15
+	fi
+	BASIC_AUTH_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
+	;;
+  esac
+])
+if test "$BASIC_AUTH_HELPERS" = "all" ; then
+	BASIC_AUTH_HELPERS=""
 	for dir in $srcdir/helpers/basic_auth/*; do
 	    helper="`basename $dir`"
 	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
 		BASIC_AUTH_HELPERS="$BASIC_AUTH_HELPERS $helper"
 	    fi
 	done
-	;;
-  no)
-	;;
-  *)
-	BASIC_AUTH_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
-	;;
-  esac
-])
+fi
 if test -n "$BASIC_AUTH_HELPERS"; then
     for helper in $BASIC_AUTH_HELPERS; do
 	if test -d $srcdir/helpers/basic_auth/$helper; then
@@ -1330,7 +1342,9 @@ fi
 AC_SUBST(BASIC_AUTH_HELPERS)
 
 dnl Select ntlm auth helpers to build
-NTLM_AUTH_HELPERS=
+if test -n "$AUTH_MODULE_ntlm"; then
+	NTLM_AUTH_HELPERS="all"
+fi
 AC_ARG_ENABLE(ntlm-auth-helpers,
 [  --enable-ntlm-auth-helpers=\"list of helpers\"
                           This option selects which proxy_auth ntlm helpers
@@ -1339,20 +1353,25 @@ AC_ARG_ENABLE(ntlm-auth-helpers,
                           the helpers/ntlm_auth directory.],
 [ case "$enableval" in
   yes) 
-	for dir in $srcdir/helpers/ntlm_auth/*; do
-	    helper="`basename $dir`"
-	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
-		NTLM_AUTH_HELPERS="$NTLM_AUTH_HELPERS $helper"
-	    fi
-	done
+	NTLM_AUTH_HELPERS="all"
 	;;
   no)
+	NTLM_AUTH_HELPERS=""
 	;;
   *)
 	NTLM_AUTH_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
 	;;
   esac
 ])
+if test "$NTLM_AUTH_HELPERS" = "all" ; then
+	NTLM_AUTH_HELPERS=""
+	for dir in $srcdir/helpers/ntlm_auth/*; do
+	    helper="`basename $dir`"
+	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
+		NTLM_AUTH_HELPERS="$NTLM_AUTH_HELPERS $helper"
+	    fi
+	done
+fi
 if test -n "$NTLM_AUTH_HELPERS"; then
     for helper in $NTLM_AUTH_HELPERS; do
 	if test -d $srcdir/helpers/ntlm_auth/$helper; then
@@ -1367,7 +1386,9 @@ fi
 AC_SUBST(NTLM_AUTH_HELPERS)
 
 dnl Select negotiate auth helpers to build
-NEGOTIATE_AUTH_HELPERS=
+if test -n "$AUTH_MODULE_negotiate"; then
+	NEGOTIATE_AUTH_HELPERS="all"
+fi
 AC_ARG_ENABLE(negotiate-auth-helpers,
 [  --enable-negotiate-auth-helpers=\"list of helpers\"
                           This option selects which proxy_auth negotiate helpers
@@ -1376,20 +1397,25 @@ AC_ARG_ENABLE(negotiate-auth-helpers,
                           the helpers/negotiate_auth directory.],
 [ case "$enableval" in
   yes) 
-	for dir in $srcdir/helpers/negotiate_auth/*; do
-	    helper="`basename $dir`"
-	    if test -f $dir/config.test && sh $dir/config.test "$@";  then
-		NEGOTIATE_AUTH_HELPERS="$NEGOTIATE_AUTH_HELPERS $helper"
-	    fi
-	done
+	NEGOTIATE_AUTH_HELPERS="all"
 	;;
   no)
+	NEGOTIATE_AUTH_HELPERS=""
 	;;
   *)
 	NEGOTIATE_AUTH_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
 	;;
   esac
 ])
+if test "$NEGOTIATE_AUTH_HELPERS" = "all" ; then
+	NEGOTIATE_AUTH_HELPERS=""
+	for dir in $srcdir/helpers/negotiate_auth/*; do
+	    helper="`basename $dir`"
+	    if test -f $dir/config.test && sh $dir/config.test "$@";  then
+		NEGOTIATE_AUTH_HELPERS="$NEGOTIATE_AUTH_HELPERS $helper"
+	    fi
+	done
+fi
 if test -n "$NEGOTIATE_AUTH_HELPERS"; then
     for helper in $NEGOTIATE_AUTH_HELPERS; do
 	if test -d $srcdir/helpers/negotiate_auth/$helper; then
@@ -1404,7 +1430,9 @@ fi
 AC_SUBST(NEGOTIATE_AUTH_HELPERS)
 
 dnl Select digest auth scheme helpers to build
-DIGEST_AUTH_HELPERS=
+if test -n "$AUTH_MODULE_digest"; then
+	DIGEST_AUTH_HELPERS=all
+fi
 AC_ARG_ENABLE(digest-auth-helpers,
 [  --enable-digest-auth-helpers=\"list of helpers\"
                           This option selects which digest scheme authentication
@@ -1413,20 +1441,25 @@ AC_ARG_ENABLE(digest-auth-helpers,
                           helpers/digest_auth directory.],
 [ case "$enableval" in
   yes)
-	for dir in $srcdir/helpers/digest_auth/*; do
-	    helper="`basename $dir`"
-	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
-		DIGEST_AUTH_HELPERS="$DIGEST_AUTH_HELPERS $helper"
-	    fi
-	done
+	DIGEST_AUTH_HELPERS="all"
 	;;
   no)
+	DIGEST_AUTH_HELPERS=""
 	;;
   *)
 	DIGEST_AUTH_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
 	;;
   esac
 ])
+if test "$DIGEST_AUTH_HELPERS" = "all" ; then
+	DIGEST_AUTH_HELPERS=""
+	for dir in $srcdir/helpers/digest_auth/*; do
+	    helper="`basename $dir`"
+	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
+		DIGEST_AUTH_HELPERS="$DIGEST_AUTH_HELPERS $helper"
+	    fi
+	done
+fi
 if test -n "$DIGEST_AUTH_HELPERS"; then
     for helper in $DIGEST_AUTH_HELPERS; do
 	if test -f $srcdir/helpers/digest_auth/$helper/Makefile.in; then
@@ -1451,7 +1484,7 @@ AC_ARG_ENABLE(ntlm-fail-open,
 ])
 
 dnl Select external_acl helpers to build
-EXTERNAL_ACL_HELPERS=
+EXTERNAL_ACL_HELPERS=all
 AC_ARG_ENABLE(external-acl-helpers,
 [  --enable-external-acl-helpers=\"list of helpers\"
                           This option selects which external_acl helpers to
@@ -1460,20 +1493,24 @@ AC_ARG_ENABLE(external-acl-helpers,
                           helpers/external_acl directory.],
 [ case "$enableval" in
   yes)
-	for dir in $srcdir/helpers/external_acl/*; do
-	    helper="`basename $dir`"
-	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
-		EXTERNAL_ACL_HELPERS="$EXTERNAL_ACL_HELPERS $helper"
-	    fi
-	done
+	EXTERNAL_ACL_HELPERS=all
 	;;
   no)
+	EXTERNAL_ACL_HELPERS=""
 	;;
   *)
  	EXTERNAL_ACL_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
 	;;
   esac
 ])
+if test "$EXTERNAL_ACL_HELPERS" = "all" ; then
+	for dir in $srcdir/helpers/external_acl/*; do
+	    helper="`basename $dir`"
+	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
+		EXTERNAL_ACL_HELPERS="$EXTERNAL_ACL_HELPERS $helper"
+	    fi
+	done
+fi
 if test -n "$EXTERNAL_ACL_HELPERS"; then
     for helper in $EXTERNAL_ACL_HELPERS; do
 	if test -f $srcdir/helpers/external_acl/$helper/Makefile.in; then
