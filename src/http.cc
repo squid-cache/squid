@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.473 2005/12/22 23:09:09 wessels Exp $
+ * $Id: http.cc,v 1.474 2005/12/28 21:43:13 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -738,11 +738,11 @@ HttpStateData::processReplyHeader()
         return;
     }
 
-    readBuf->consume(headersEnd(readBuf->content(), readBuf->contentSize()));
-    flags.headers_parsed = 1;
-
     debug(11, 9) ("GOT HTTP REPLY HDR:\n---------\n%s\n----------\n",
                   readBuf->content());
+
+    readBuf->consume(headersEnd(readBuf->content(), readBuf->contentSize()));
+    flags.headers_parsed = 1;
 
     keepaliveAccounting(reply);
 
@@ -2110,18 +2110,19 @@ HttpStateData::doneAdapting()
 {
     debug(11,5)("HttpStateData::doneAdapting() called\n");
 
-    /*
-     * ICAP is done, so we don't need this any more.
-     */
-    delete icap;
-    cbdataReferenceDone(icap);
-
     if (!entry->isAccepting()) {
         debug(11,5)("\toops, entry is not Accepting!\n");
         icap->ownerAbort();
     } else {
         fwdComplete(fwd);
     }
+
+    /*
+     * ICAP is done, so we don't need this any more.
+     */
+    delete icap;
+
+    cbdataReferenceDone(icap);
 
     if (fd >= 0)
         comm_close(fd);
