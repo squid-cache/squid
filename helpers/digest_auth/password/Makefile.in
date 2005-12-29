@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.61 2005/11/21 23:55:14 wessels Exp $
+#  $Id: Makefile.in,v 1.62 2005/12/29 02:20:17 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -59,7 +59,7 @@ am__installdirs = "$(DESTDIR)$(libexecdir)"
 libexecPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(libexec_PROGRAMS)
 am_digest_pw_auth_OBJECTS = digest_pw_auth.$(OBJEXT) \
-	text_backend.$(OBJEXT) ldap_backend.$(OBJEXT)
+	text_backend.$(OBJEXT)
 digest_pw_auth_OBJECTS = $(am_digest_pw_auth_OBJECTS)
 digest_pw_auth_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
@@ -273,9 +273,7 @@ target_alias = @target_alias@
 digest_pw_auth_SOURCES = digest_pw_auth.c \
 	digest_common.h \
 	text_backend.c \
-	text_backend.h \
-	ldap_backend.c \
-	ldap_backend.h
+	text_backend.h
 
 INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
 		-I$(top_srcdir)/src/
@@ -353,7 +351,6 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/digest_pw_auth.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ldap_backend.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/text_backend.Po@am__quote@
 
 .c.o:
