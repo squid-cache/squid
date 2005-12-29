@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.1 2005/12/29 02:11:00 hno Exp $
+#  $Id: Makefile.in,v 1.2 2005/12/29 02:22:27 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -44,8 +44,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-libexec_PROGRAMS = digest_pw_auth$(EXEEXT)
-subdir = helpers/digest_auth/password
+libexec_PROGRAMS = digest_ldap_auth$(EXEEXT)
+subdir = helpers/digest_auth/ldap
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
@@ -58,12 +58,11 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(libexecdir)"
 libexecPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(libexec_PROGRAMS)
-am_digest_pw_auth_OBJECTS = digest_pw_auth.$(OBJEXT) \
-	text_backend.$(OBJEXT) ldap_backend.$(OBJEXT)
-digest_pw_auth_OBJECTS = $(am_digest_pw_auth_OBJECTS)
-digest_pw_auth_LDADD = $(LDADD)
+digest_ldap_auth_SOURCES = digest_ldap_auth.c
+digest_ldap_auth_OBJECTS = digest_ldap_auth.$(OBJEXT)
+digest_ldap_auth_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
-digest_pw_auth_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+digest_ldap_auth_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
@@ -77,8 +76,8 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(digest_pw_auth_SOURCES)
-DIST_SOURCES = $(digest_pw_auth_SOURCES)
+SOURCES = digest_ldap_auth.c
+DIST_SOURCES = digest_ldap_auth.c
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -272,8 +271,6 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 digest_pw_auth_SOURCES = digest_pw_auth.c \
 	digest_common.h \
-	text_backend.c \
-	text_backend.h \
 	ldap_backend.c \
 	ldap_backend.h
 
@@ -294,9 +291,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  helpers/digest_auth/password/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  helpers/digest_auth/ldap/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  helpers/digest_auth/password/Makefile
+	  $(AUTOMAKE) --foreign  helpers/digest_auth/ldap/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -342,9 +339,9 @@ clean-libexecPROGRAMS:
 	  echo " rm -f $$p $$f"; \
 	  rm -f $$p $$f ; \
 	done
-digest_pw_auth$(EXEEXT): $(digest_pw_auth_OBJECTS) $(digest_pw_auth_DEPENDENCIES) 
-	@rm -f digest_pw_auth$(EXEEXT)
-	$(LINK) $(digest_pw_auth_LDFLAGS) $(digest_pw_auth_OBJECTS) $(digest_pw_auth_LDADD) $(LIBS)
+digest_ldap_auth$(EXEEXT): $(digest_ldap_auth_OBJECTS) $(digest_ldap_auth_DEPENDENCIES) 
+	@rm -f digest_ldap_auth$(EXEEXT)
+	$(LINK) $(digest_ldap_auth_LDFLAGS) $(digest_ldap_auth_OBJECTS) $(digest_ldap_auth_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -352,9 +349,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/digest_pw_auth.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ldap_backend.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/text_backend.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/digest_ldap_auth.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
