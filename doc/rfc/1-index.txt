@@ -1,3 +1,8 @@
+draft-ietf-radext-digest-auth-06.txt
+	RADIUS Extension for Digest Authentication
+	A proposed extension to Radius for Digest authentication
+	via RADIUS servers.
+	
 draft-jaganathan-kerberos-http-01.txt
 	HTTP Authentication: Kerberos Authentication
 	Microsoft Negotiate "HTTP" authentication scheme
