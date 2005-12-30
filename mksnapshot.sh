@@ -37,7 +37,7 @@ EOS
 ./configure --silent
 make -s dist-all
 
-basetarball=/server/httpd/htdocs/squid-cache.org/Versions/v`echo $VERSION | cut -d. -f1`/`echo $VERSION | cut -d. -f-2`/${PACKAGE}-${VERSION}.tar.bz2
+basetarball=/server/httpd/htdocs/squid-cache.org/Versions/v`echo $VERSION | cut -d. -f1`/`echo $VERSION | cut -d. -f-2|cut -d- -f1`/${PACKAGE}-${VERSION}.tar.bz2
 if (echo $VERSION | grep PRE) || (echo $VERSION | grep STABLE); then
 	echo "Differences from ${PACKAGE}-${VERSION} to ${PACKAGE}-${VERSION}-${date}" >${PACKAGE}-${VERSION}-${date}.diff
 	if [ -f $basetarball ]; then
