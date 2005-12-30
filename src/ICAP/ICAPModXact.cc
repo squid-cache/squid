@@ -524,7 +524,7 @@ void ICAPModXact::parseMore()
 {
     debugs(93, 5, HERE << "have " << readBuf.contentSize() << " bytes to parse" <<
            status());
-    debugs(93, 5, HERE << readBuf.content());
+    debugs(93, 5, HERE << "\n" << readBuf.content());
 
     if (state.parsingHeaders())
         parseHeaders();
@@ -737,6 +737,7 @@ bool ICAPModXact::parseHead(HttpMsg *head)
     Must(parsed || !error); // success or need more data
 
     if (!parsed) {	// need more data
+        debugs(93, 5, HERE << "parse failed, need more data");
         head->reset();
         return false;
     }
