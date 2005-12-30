@@ -26,22 +26,38 @@ cd $tmpdir
 eval `grep "^ *VERSION=" configure | sed -e 's/-CVS//'`
 eval `grep "^ *PACKAGE=" configure`
 ed -s configure.in <<EOS
-g/VERSION=${VERSION}-CVS/ s//VERSION=${VERSION}-${date}/
+g/${VERSION}-CVS/ s//${VERSION}-${date}/
 w
 EOS
 ed -s configure <<EOS
-g/VERSION=${VERSION}-CVS/ s//VERSION=${VERSION}-${date}/
+g/${VERSION}-CVS/ s//${VERSION}-${date}/
 w
 EOS
 
 ./configure --silent
 make -s dist-all
 
+basetarball=/server/httpd/htdocs/squid-cache.org/Versions/v3/3.0/`echo $VERSION | cut -d. -f-2`/${PACKAGE}-${VERSION}.tar.bz2
+if (echo $VERSION | grep PRE) || (echo $VERSION | grep STABLE); then
+	echo "Differences from ${PACKAGE}-${VERSION} to ${PACKAGE}-${VERSION}-${date}" >${PACKAGE}-${VERSION}-${date}.diff
+	if [ -f $basetarball ]; then
+		tar jxf ${PACKAGE}-${VERSION}-${date}.tar.bz2
+		tar jxf $basetarball
+		diff -ruN ${PACKAGE}-${VERSION} ${PACKAGE}-${VERSION}-${date} >>${PACKAGE}-${VERSION}-${date}.diff || true
+	else
+		cvs -q rdiff -u -r SQUID_`echo $VERSION | tr .- __` -r $tag $module >>${PACKAGE}-${VERSION}-${date}.diff
+	fi
+fi
+
 cd $startdir
 cp -p $tmpdir/${PACKAGE}-${VERSION}-${date}.tar.gz .
 echo ${PACKAGE}-${VERSION}-${date}.tar.gz >>${tag}.out
 cp -p $tmpdir/${PACKAGE}-${VERSION}-${date}.tar.bz2 .
 echo ${PACKAGE}-${VERSION}-${date}.tar.bz2 >>${tag}.out
+if [ -f $tmpdir/${PACKAGE}-${VERSION}-${date}.diff ]; then
+    cp -p $tmpdir/${PACKAGE}-${VERSION}-${date}.diff .
+    echo ${PACKAGE}-${VERSION}-${date}.diff >>${tag}.out
+fi
 
 relnotes=$tmpdir/doc/release-notes/release-`echo $VERSION | cut -d. -f1,2 | cut -d- -f1`.html
 if [ -f $relnotes ]; then
@@ -54,9 +70,3 @@ EOF
 fi
 cp -p $tmpdir/ChangeLog ${PACKAGE}-${VERSION}-${date}-ChangeLog.txt
 echo ${PACKAGE}-${VERSION}-${date}-ChangeLog.txt >>${tag}.out
-
-if (echo $VERSION | grep PRE) || (echo $VERSION | grep STABLE); then
-  echo "Differences from ${PACKAGE}-${VERSION} to ${PACKAGE}-${VERSION}-${date}" >${PACKAGE}-${VERSION}-${date}.diff
-  cvs -q rdiff -u -r SQUID_`echo $VERSION | tr .- __` -r $tag $module >>${PACKAGE}-${VERSION}-${date}.diff
-  echo ${PACKAGE}-${VERSION}-${date}.diff >>${tag}.out
-fi
