@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.21 2005/12/01 18:15:51 wessels Exp $
+ * $Id: HttpMsg.cc,v 1.22 2005/12/29 18:04:41 wessels Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -168,8 +168,11 @@ bool HttpMsg::parse(MemBuf *buf, bool eof, http_status *error)
         return false;
     }
 
-    if (!sanityCheckStartLine(buf, error))	// redundant; could be remvoed
+    if (!sanityCheckStartLine(buf, error)) {
+        debugs(58,1, HERE << "first line of HTTP message is invalid");
+        *error = HTTP_INVALID_HEADER;
         return false;
+    }
 
     const int res = httpMsgParseStep(buf->content(), eof);
 
