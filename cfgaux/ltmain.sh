@@ -1491,7 +1491,6 @@ EOF
 	esac
 	compile_command="$compile_command $arg"
 	finalize_command="$finalize_command $arg"
-	deplibs="$deplibs $arg"
 	continue
 	;;
 
@@ -1605,6 +1604,7 @@ EOF
 	compiler_flags="$compiler_flags $arg"
 	compile_command="$compile_command $arg"
 	finalize_command="$finalize_command $arg"
+	deplibs="$deplibs $arg"
 	continue
 	;;
 
