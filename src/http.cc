@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.475 2006/01/03 17:22:31 wessels Exp $
+ * $Id: http.cc,v 1.476 2006/01/03 21:54:46 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -2152,7 +2152,6 @@ HttpStateData::abortAdapting()
         if (fd >= 0) {
             comm_close(fd);
         } else {
-            fwd->complete();
             httpStateFree(-1, this);	// deletes this
         }
 
