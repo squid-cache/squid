@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.516 2005/12/26 11:35:22 serassio Exp $
+ * $Id: protos.h,v 1.517 2006/01/03 17:22:31 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -272,6 +272,7 @@ SQUIDCEXTERN void fqdncache_restart(void);
 SQUIDCEXTERN EVH fqdncache_purgelru;
 SQUIDCEXTERN void fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames);
 
+class FwdState;
 SQUIDCEXTERN void ftpStart(FwdState *);
 SQUIDCEXTERN char *ftpUrlWith2f(const HttpRequest *);
 
@@ -589,21 +590,6 @@ SQUIDCEXTERN PeerDigest *peerDigestCreate(peer * p);
 SQUIDCEXTERN void peerDigestNeeded(PeerDigest * pd);
 SQUIDCEXTERN void peerDigestNotePeerGone(PeerDigest * pd);
 SQUIDCEXTERN void peerDigestStatsReport(const PeerDigest * pd, StoreEntry * e);
-
-/* forward.c */
-SQUIDCEXTERN void fwdStart(int, StoreEntry *, HttpRequest *);
-SQUIDCEXTERN void fwdFail(FwdState *, ErrorState *);
-SQUIDCEXTERN void fwdUnregister(int fd, FwdState *);
-SQUIDCEXTERN void fwdComplete(FwdState * fwdState);
-SQUIDCEXTERN void fwdInit(void);
-SQUIDCEXTERN int fwdReforwardableStatus(http_status s);
-SQUIDCEXTERN void fwdServersFree(FwdServer ** FSVR);
-SQUIDCEXTERN void fwdPconnPush(int, const char *, int, const char *);
-#if WIP_FWD_LOG
-SQUIDCEXTERN void fwdUninit(void);
-SQUIDCEXTERN void fwdLogRotate(void);
-SQUIDCEXTERN void fwdStatus(FwdState *, http_status);
-#endif
 
 SQUIDCEXTERN struct IN_ADDR getOutgoingAddr(HttpRequest * request);
 unsigned long getOutgoingTOS(HttpRequest * request);

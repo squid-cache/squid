@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.156 2005/12/08 20:08:47 wessels Exp $
+ * $Id: tunnel.cc,v 1.157 2006/01/03 17:22:31 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -44,6 +44,7 @@
 #endif
 #include "client_side.h"
 #include "MemBuf.h"
+#include "forward.h"
 
 class SslStateData
 {
@@ -155,7 +156,7 @@ sslStateFree(SslStateData * sslState)
     assert(sslState != NULL);
     assert(sslState->noConnections());
     safe_free(sslState->url);
-    fwdServersFree(&sslState->servers);
+    FwdState::serversFree(&sslState->servers);
     sslState->host = NULL;
     requestUnlink(sslState->request);
     sslState->request = NULL;

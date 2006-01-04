@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.532 2005/11/21 23:29:08 wessels Exp $
+ * $Id: structs.h,v 1.533 2006/01/03 17:22:31 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1887,42 +1887,6 @@ struct _CacheDigest
     int bits_per_entry;		/* number of bits allocated for each entry from capacity */
     int count;			/* number of digested entries */
     int del_count;		/* number of deletions performed so far */
-};
-
-struct _FwdServer
-{
-    peer *_peer;		/* NULL --> origin server */
-    hier_code code;
-    FwdServer *next;
-};
-
-struct _FwdState
-{
-    int client_fd;
-    StoreEntry *entry;
-    HttpRequest *request;
-    FwdServer *servers;
-    int server_fd;
-    ErrorState *err;
-    time_t start;
-    int n_tries;
-    int origin_tries;
-#if WIP_FWD_LOG
-
-    http_status last_status;
-#endif
-
-    struct
-    {
-
-unsigned int dont_retry:
-        1;
-
-unsigned int ftp_pasv_failed:
-        1;
-    }
-
-    flags;
 };
 
 class helper_request;

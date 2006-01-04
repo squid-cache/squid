@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.92 2005/11/07 22:00:38 wessels Exp $
+ * $Id: urn.cc,v 1.93 2006/01/03 17:22:31 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -39,6 +39,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
+#include "forward.h"
 
 #define	URN_REQBUF_SZ	4096
 
@@ -260,7 +261,7 @@ UrnState::created(StoreEntry *newEntry)
     if (urlres_e->isNull()) {
         urlres_e = storeCreateEntry(urlres, urlres, request_flags(), METHOD_GET);
         sc = storeClientListAdd(urlres_e, this);
-        fwdStart(-1, urlres_e, urlres_r);
+        FwdState::fwdStart(-1, urlres_e, urlres_r);
     } else {
         storeLockObject(urlres_e);
         sc = storeClientListAdd(urlres_e, this);

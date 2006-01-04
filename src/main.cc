@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.415 2005/12/06 23:03:34 wessels Exp $
+ * $Id: main.cc,v 1.416 2006/01/03 17:22:31 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -47,6 +47,7 @@
 #include "DiskIO/DiskIOModule.h"
 #include "comm.h"
 #include "SwapDir.h"
+#include "forward.h"
 
 #if USE_WIN32_SERVICE
 
@@ -793,7 +794,7 @@ mainInitialize(void)
         DelayPools::Init();
 #endif
 
-        fwdInit();
+        FwdState::initModule();
     }
 
 #if USE_WCCP
