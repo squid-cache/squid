@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.106 2005/12/26 11:35:22 serassio Exp $
+ * $Id: peer_digest.cc,v 1.107 2006/01/03 21:09:00 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -41,6 +41,7 @@
 #include "HttpReply.h"
 #include "MemObject.h"
 #include "StoreClient.h"
+#include "forward.h"
 
 /* local types */
 
@@ -376,7 +377,7 @@ peerDigestRequest(PeerDigest * pd)
     /* push towards peer cache */
     debug(72, 3) ("peerDigestRequest: forwarding to fwdStart...\n");
 
-    fwdStart(-1, e, req);
+    FwdState::fwdStart(-1, e, req);
 
     tempBuffer.offset = 0;
 
