@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.476 2006/01/03 21:54:46 wessels Exp $
+ * $Id: http.cc,v 1.477 2006/01/03 23:11:54 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -62,10 +62,7 @@ CBDATA_CLASS_INIT(HttpStateData);
 
 static const char *const crlf = "\r\n";
 
-static CWCB httpSendRequestEntity;
-
 static IOCB httpReadReply;
-static void httpSendRequest(HttpStateData *);
 static PF httpStateFree;
 static PF httpTimeout;
 static void httpCacheNegatively(StoreEntry *);
@@ -80,7 +77,9 @@ static void icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data)
 #endif
 
 HttpStateData::HttpStateData()
-{}
+{
+    debugs(11,5,HERE << "HttpStateData " << this << " created");
+}
 
 HttpStateData::~HttpStateData()
 {
@@ -123,6 +122,7 @@ HttpStateData::~HttpStateData()
     }
 
 #endif
+    debugs(11,5,HERE << "HttpStateData " << this << " destroyed");
 }
 
 static void
@@ -1316,6 +1316,8 @@ HttpStateData::SendComplete(int fd, char *bufnotused, size_t size, comm_err_t er
 void
 HttpStateData::transactionComplete()
 {
+    debugs(11,5,HERE << "transactionComplete FD " << fd << " this " << this);
+
     if (fd >= 0) {
         fwd->unregister(fd);
         comm_remove_close_handler(fd, httpStateFree, this);
@@ -1741,70 +1743,61 @@ httpBuildRequestPrefix(HttpRequest * request,
 }
 
 /* This will be called when connect completes. Write request. */
-static void
-httpSendRequest(HttpStateData * httpState)
+void
+HttpStateData::sendRequest()
 {
     MemBuf mb;
-    HttpRequest *req = httpState->request;
-    StoreEntry *entry = httpState->entry;
-    peer *p = httpState->_peer;
     CWCB *sendHeaderDone;
-    int fd = httpState->fd;
 
-    debug(11, 5) ("httpSendRequest: FD %d: httpState %p.\n", fd,
-                  httpState);
+    debug(11, 5) ("httpSendRequest: FD %d: this %p.\n", fd, this);
 
-    commSetTimeout(fd, Config.Timeout.lifetime, httpTimeout, httpState);
-    httpState->flags.do_next_read = 1;
-    httpState->maybeReadData();
+    commSetTimeout(fd, Config.Timeout.lifetime, httpTimeout, this);
+    flags.do_next_read = 1;
+    maybeReadData();
 
-    if (httpState->orig_request->body_connection.getRaw() != NULL)
-        sendHeaderDone = httpSendRequestEntity;
+    if (orig_request->body_connection.getRaw() != NULL)
+        sendHeaderDone = HttpStateData::SendRequestEntityWrapper;
     else
         sendHeaderDone = HttpStateData::SendComplete;
 
-    if (p != NULL) {
-        if (p->options.originserver) {
-            httpState->flags.proxying = 0;
-            httpState->flags.originpeer = 1;
+    if (_peer != NULL) {
+        if (_peer->options.originserver) {
+            flags.proxying = 0;
+            flags.originpeer = 1;
         } else {
-            httpState->flags.proxying = 1;
-            httpState->flags.originpeer = 0;
+            flags.proxying = 1;
+            flags.originpeer = 0;
         }
     } else {
-        httpState->flags.proxying = 0;
-        httpState->flags.originpeer = 0;
+        flags.proxying = 0;
+        flags.originpeer = 0;
     }
 
     /*
      * Is keep-alive okay for all request methods?
      */
     if (!Config.onoff.server_pconns)
-        httpState->flags.keepalive = 0;
-    else if (p == NULL)
-        httpState->flags.keepalive = 1;
-    else if (p->stats.n_keepalives_sent < 10)
-        httpState->flags.keepalive = 1;
-    else if ((double) p->stats.n_keepalives_recv /
-             (double) p->stats.n_keepalives_sent > 0.50)
-        httpState->flags.keepalive = 1;
+        flags.keepalive = 0;
+    else if (_peer == NULL)
+        flags.keepalive = 1;
+    else if (_peer->stats.n_keepalives_sent < 10)
+        flags.keepalive = 1;
+    else if ((double) _peer->stats.n_keepalives_recv /
+             (double) _peer->stats.n_keepalives_sent > 0.50)
+        flags.keepalive = 1;
 
-    if (httpState->_peer) {
-        if (neighborType(httpState->_peer, httpState->request) == PEER_SIBLING &&
-                !httpState->_peer->options.allow_miss)
-            httpState->flags.only_if_cached = 1;
+    if (_peer) {
+        if (neighborType(_peer, request) == PEER_SIBLING &&
+                !_peer->options.allow_miss)
+            flags.only_if_cached = 1;
 
-        httpState->flags.front_end_https = httpState->_peer->front_end_https;
+        flags.front_end_https = _peer->front_end_https;
     }
 
     mb.init();
-    httpBuildRequestPrefix(req,
-                           httpState->orig_request,
-                           entry,
-                           &mb,
-                           httpState->flags);
+    httpBuildRequestPrefix(request, orig_request, entry, &mb, flags);
     debug(11, 6) ("httpSendRequest: FD %d:\n%s\n", fd, mb.buf);
-    comm_old_write_mbuf(fd, &mb, sendHeaderDone, httpState);
+    comm_old_write_mbuf(fd, &mb, sendHeaderDone, this);
 }
 
 void
@@ -1881,7 +1874,7 @@ httpStart(FwdState *fwd)
 
     statCounter.server.http.requests++;
 
-    httpSendRequest(httpState);
+    httpState->sendRequest();
 
     /*
      * We used to set the read timeout here, but not any more.
@@ -1890,13 +1883,19 @@ httpStart(FwdState *fwd)
      */
 }
 
-static void
-httpSendRequestEntityDone(int fd, void *data)
+void
+HttpStateData::SendRequestEntityDoneWrapper(int fd, void *data)
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
+    httpState->sendRequestEntityDone(fd);
+}
+
+void
+HttpStateData::sendRequestEntityDone(int fd)
+{
     ACLChecklist ch;
     debug(11, 5) ("httpSendRequestEntityDone: FD %d\n", fd);
-    ch.request = requestLink(httpState->request);
+    ch.request = requestLink(request);
 
     if (Config.accessList.brokenPosts)
         ch.accessList = cbdataReference(Config.accessList.brokenPosts);
@@ -1905,53 +1904,70 @@ httpSendRequestEntityDone(int fd, void *data)
 
     if (!Config.accessList.brokenPosts) {
         debug(11, 5) ("httpSendRequestEntityDone: No brokenPosts list\n");
-        HttpStateData::SendComplete(fd, NULL, 0, COMM_OK, data);
+        HttpStateData::SendComplete(fd, NULL, 0, COMM_OK, this);
     } else if (!ch.fastCheck()) {
         debug(11, 5) ("httpSendRequestEntityDone: didn't match brokenPosts\n");
-        HttpStateData::SendComplete(fd, NULL, 0, COMM_OK, data);
+        HttpStateData::SendComplete(fd, NULL, 0, COMM_OK, this);
     } else {
         debug(11, 2) ("httpSendRequestEntityDone: matched brokenPosts\n");
-        comm_old_write(fd, "\r\n", 2, HttpStateData::SendComplete, data, NULL);
+        comm_old_write(fd, "\r\n", 2, HttpStateData::SendComplete, this, NULL);
     }
 }
 
-static void
-httpRequestBodyHandler(char *buf, ssize_t size, void *data)
+void
+HttpStateData::RequestBodyHandlerWrapper(char *buf, ssize_t size, void *data)
 {
     HttpStateData *httpState = (HttpStateData *) data;
-    httpState->request_body_buf = NULL;
+    httpState->requestBodyHandler(buf, size);
+}
+
+void
+HttpStateData::requestBodyHandler(char *buf, ssize_t size)
+{
+    request_body_buf = NULL;
+
+    if (eof || fd < 0) {
+        debugs(11, 1, HERE << "Transaction aborted while reading HTTP body");
+        memFree8K(buf);
+        return;
+    }
 
     if (size > 0) {
-        if (httpState->flags.headers_parsed && !httpState->flags.abuse_detected) {
-            httpState->flags.abuse_detected = 1;
+        if (flags.headers_parsed && !flags.abuse_detected) {
+            flags.abuse_detected = 1;
             debug(11, 1) ("httpSendRequestEntryDone: Likely proxy abuse detected '%s' -> '%s'\n",
-                          inet_ntoa(httpState->orig_request->client_addr),
-                          storeUrl(httpState->entry));
+                          inet_ntoa(orig_request->client_addr),
+                          storeUrl(entry));
 
-            if (httpState->getReply()->sline.status == HTTP_INVALID_HEADER) {
+            if (getReply()->sline.status == HTTP_INVALID_HEADER) {
                 memFree8K(buf);
-                comm_close(httpState->fd);
+                comm_close(fd);
                 return;
             }
         }
 
-        comm_old_write(httpState->fd, buf, size, httpSendRequestEntity, data, memFree8K);
+        comm_old_write(fd, buf, size, SendRequestEntityWrapper, this, memFree8K);
     } else if (size == 0) {
         /* End of body */
         memFree8K(buf);
-        httpSendRequestEntityDone(httpState->fd, data);
+        sendRequestEntityDone(fd);
     } else {
         /* Failed to get whole body, probably aborted */
         memFree8K(buf);
-        HttpStateData::SendComplete(httpState->fd, NULL, 0, COMM_ERR_CLOSING, data);
+        HttpStateData::SendComplete(fd, NULL, 0, COMM_ERR_CLOSING, this);
     }
 }
 
-static void
-httpSendRequestEntity(int fd, char *bufnotused, size_t size, comm_err_t errflag, void *data)
+void
+HttpStateData::SendRequestEntityWrapper(int fd, char *bufnotused, size_t size, comm_err_t errflag, void *data)
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
-    StoreEntry *entry = httpState->entry;
+    httpState->sendRequestEntity(fd, size, errflag);
+}
+
+void
+HttpStateData::sendRequestEntity(int fd, size_t size, comm_err_t errflag)
+{
     debug(11, 5) ("httpSendRequestEntity: FD %d: size %d: errflag %d.\n",
                   fd, (int) size, errflag);
 
@@ -1968,7 +1984,7 @@ httpSendRequestEntity(int fd, char *bufnotused, size_t size, comm_err_t errflag,
         ErrorState *err;
         err = errorCon(ERR_WRITE_ERROR, HTTP_BAD_GATEWAY);
         err->xerrno = errno;
-        httpState->fwd->fail(err);
+        fwd->fail(err);
         comm_close(fd);
         return;
     }
@@ -1978,8 +1994,8 @@ httpSendRequestEntity(int fd, char *bufnotused, size_t size, comm_err_t errflag,
         return;
     }
 
-    httpState->request_body_buf = (char *)memAllocate(MEM_8K_BUF);
-    clientReadBody(httpState->orig_request, httpState->request_body_buf, 8192, httpRequestBodyHandler, httpState);
+    request_body_buf = (char *)memAllocate(MEM_8K_BUF);
+    clientReadBody(orig_request, request_body_buf, 8192, RequestBodyHandlerWrapper, this);
 }
 
 void
