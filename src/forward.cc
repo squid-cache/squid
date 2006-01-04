@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.133 2006/01/03 17:22:31 wessels Exp $
+ * $Id: forward.cc,v 1.134 2006/01/03 18:54:32 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -122,11 +122,13 @@ FwdState::~FwdState()
 
     entry = NULL;
 
-    if (server_fd > -1) {
-        comm_remove_close_handler(server_fd, fwdServerClosedWrapper, this);
+    int fd = server_fd;
+
+    if (fd > -1) {
         server_fd = -1;
-        debug(17, 3) ("fwdStateFree: closing FD %d\n", server_fd);
-        comm_close(server_fd);
+        comm_remove_close_handler(fd, fwdServerClosedWrapper, this);
+        debug(17, 3) ("fwdStateFree: closing FD %d\n", fd);
+        comm_close(fd);
     }
 
     debugs(17, 3, HERE << "FwdState destructor done");
