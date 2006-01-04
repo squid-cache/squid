@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.16 2006/01/03 17:22:31 wessels Exp $
+ * $Id: http.h,v 1.17 2006/01/03 23:27:34 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -54,7 +54,17 @@ public:
     ~HttpStateData();
 
     static CWCB SendComplete;
+    static CWCB SendRequestEntityWrapper;
+    static IOCB ReadReplyWrapper;
+    static PF SendRequestEntityDoneWrapper;
+    static CBCB RequestBodyHandlerWrapper;
+    static void httpBuildRequestHeader(HttpRequest * request,
+                                       HttpRequest * orig_request,
+                                       StoreEntry * entry,
+                                       HttpHeader * hdr_out,
+                                       http_state_flags flags);
     /* should be private */
+    void sendRequest();
     void processReplyHeader();
     void processReplyBody();
     void readReply(size_t len, comm_err_t flag, int xerrno);
@@ -119,6 +129,15 @@ private:
     void haveParsedReplyHeaders();
     void transactionComplete();
     void writeReplyBody(const char *data, int len);
+    void sendRequestEntityDone(int fd);
+    void requestBodyHandler(char *buf, ssize_t size);
+    void sendRequestEntity(int fd, size_t size, comm_err_t errflag);
+    mb_size_t buildRequestPrefix(HttpRequest * request,
+                                 HttpRequest * orig_request,
+                                 StoreEntry * entry,
+                                 MemBuf * mb,
+                                 http_state_flags flags);
+    static bool decideIfWeDoRanges (HttpRequest * orig_request);
 #if ICAP_CLIENT
 
     int doIcap(ICAPServiceRep::Pointer);
