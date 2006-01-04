@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.179 2005/11/05 08:57:00 serassio Exp $
+ * $Id: net_db.cc,v 1.180 2006/01/03 21:13:27 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -48,7 +48,7 @@
 #include "HttpReply.h"
 #include "MemObject.h"
 #include "fde.h"
-
+#include "forward.h"
 
 #if USE_ICMP
 #include "StoreClient.h"
@@ -1320,7 +1320,7 @@ netdbExchangeStart(void *data)
     if (p->login)
         xstrncpy(ex->r->login, p->login, MAX_LOGIN_SZ);
 
-    fwdStart(-1, ex->e, ex->r);
+    FwdState::fwdStart(-1, ex->e, ex->r);
 
 #endif
 }
