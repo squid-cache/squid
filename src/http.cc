@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.477 2006/01/03 23:11:54 wessels Exp $
+ * $Id: http.cc,v 1.478 2006/01/03 23:26:20 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -62,7 +62,6 @@ CBDATA_CLASS_INIT(HttpStateData);
 
 static const char *const crlf = "\r\n";
 
-static IOCB httpReadReply;
 static PF httpStateFree;
 static PF httpTimeout;
 static void httpCacheNegatively(StoreEntry *);
@@ -71,7 +70,6 @@ static void httpMakePublic(StoreEntry *);
 static void httpMaybeRemovePublic(StoreEntry *, http_status);
 static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, String strConnection, HttpRequest * request, HttpRequest * orig_request,
         HttpHeader * hdr_out, int we_do_ranges, http_state_flags);
-static int decideIfWeDoRanges (HttpRequest * orig_request);
 #if ICAP_CLIENT
 static void icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data);
 #endif
@@ -960,8 +958,8 @@ HttpStateData::persistentConnStatus() const
 /*
  * This is the callback after some data has been read from the network
  */
-static void
-httpReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+void
+HttpStateData::ReadReplyWrapper(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
     assert (fd == httpState->fd);
@@ -1257,7 +1255,7 @@ HttpStateData::maybeReadData()
 
     if (flags.do_next_read) {
         flags.do_next_read = 0;
-        entry->delayAwareRead(fd, readBuf->space(), read_sz, httpReadReply, this);
+        entry->delayAwareRead(fd, readBuf->space(), read_sz, ReadReplyWrapper, this);
     }
 }
 
@@ -1340,15 +1338,15 @@ HttpStateData::transactionComplete()
 
 /*
  * build request headers and append them to a given MemBuf 
- * used by httpBuildRequestPrefix()
+ * used by buildRequestPrefix()
  * note: initialised the HttpHeader, the caller is responsible for Clean()-ing
  */
 void
-httpBuildRequestHeader(HttpRequest * request,
-                       HttpRequest * orig_request,
-                       StoreEntry * entry,
-                       HttpHeader * hdr_out,
-                       http_state_flags flags)
+HttpStateData::httpBuildRequestHeader(HttpRequest * request,
+                                      HttpRequest * orig_request,
+                                      StoreEntry * entry,
+                                      HttpHeader * hdr_out,
+                                      http_state_flags flags)
 {
     /* building buffer for complex strings */
 #define BBUF_SZ (MAX_URL+32)
@@ -1687,10 +1685,10 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
     }
 }
 
-int
-decideIfWeDoRanges (HttpRequest * orig_request)
+bool
+HttpStateData::decideIfWeDoRanges (HttpRequest * orig_request)
 {
-    int result = 1;
+    bool result = true;
     /* decide if we want to do Ranges ourselves
      * and fetch the whole object now)
      * We want to handle Ranges ourselves iff
@@ -1704,7 +1702,7 @@ decideIfWeDoRanges (HttpRequest * orig_request)
 
     if (NULL == orig_request->range || !orig_request->flags.cachable
             || orig_request->range->offsetLimitExceeded())
-        result = 0;
+        result = false;
 
     debug(11, 8) ("decideIfWeDoRanges: range specs: %p, cachable: %d; we_do_ranges: %d\n",
                   orig_request->range, orig_request->flags.cachable, result);
@@ -1715,11 +1713,11 @@ decideIfWeDoRanges (HttpRequest * orig_request)
 /* build request prefix and append it to a given MemBuf;
  * return the length of the prefix */
 mb_size_t
-httpBuildRequestPrefix(HttpRequest * request,
-                       HttpRequest * orig_request,
-                       StoreEntry * entry,
-                       MemBuf * mb,
-                       http_state_flags flags)
+HttpStateData::buildRequestPrefix(HttpRequest * request,
+                                  HttpRequest * orig_request,
+                                  StoreEntry * entry,
+                                  MemBuf * mb,
+                                  http_state_flags flags)
 {
     const int offset = mb->size;
     HttpVersion httpver(1, 0);
@@ -1795,7 +1793,7 @@ HttpStateData::sendRequest()
     }
 
     mb.init();
-    httpBuildRequestPrefix(request, orig_request, entry, &mb, flags);
+    buildRequestPrefix(request, orig_request, entry, &mb, flags);
     debug(11, 6) ("httpSendRequest: FD %d:\n%s\n", fd, mb.buf);
     comm_old_write_mbuf(fd, &mb, sendHeaderDone, this);
 }
