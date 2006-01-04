@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.154 2005/09/17 05:50:08 wessels Exp $
+ * $Id: wais.cc,v 1.155 2006/01/03 17:22:31 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -42,6 +42,7 @@
 #endif
 #include "comm.h"
 #include "MemBuf.h"
+#include "forward.h"
 
 class WaisStateData
 {
@@ -53,7 +54,7 @@ public:
     const HttpHeader *request_hdr;
     char url[MAX_URL];
     HttpRequest *request;
-    FwdState *fwd;
+    FwdState::Pointer fwd;
     char buf[BUFSIZ];
     bool dataWritten;
 };
@@ -76,6 +77,8 @@ waisStateFree(int fdnotused, void *data)
 
     requestUnlink(waisState->request);
 
+    waisState->fwd = NULL;	// refcounted
+
     cbdataFree(waisState);
 }
 
@@ -88,8 +91,7 @@ waisTimeout(int fd, void *data)
     debug(24, 4) ("waisTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
 
     if (entry->store_status == STORE_PENDING) {
-        fwdFail(waisState->fwd,
-                errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
+        waisState->fwd->fail(errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
     }
 
     comm_close(fd);
@@ -162,16 +164,16 @@ waisReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *
             ErrorState *err;
             err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
             err->xerrno = errno;
-            fwdFail(waisState->fwd, err);
+            waisState->fwd->fail(err);
             comm_close(fd);
         }
     } else if (flag == COMM_OK && len == 0 && !waisState->dataWritten) {
-        fwdFail(waisState->fwd, errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE));
+        waisState->fwd->fail(errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE));
         comm_close(fd);
     } else if (flag == COMM_OK && len == 0) {
         /* Connection closed; retrieval done. */
         entry->expires = squid_curtime;
-        fwdComplete(waisState->fwd);
+        waisState->fwd->complete();
         comm_close(fd);
     } else {
         waisState->dataWritten = 1;
@@ -203,7 +205,7 @@ waisSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void
         ErrorState *err;
         err = errorCon(ERR_WRITE_ERROR, HTTP_SERVICE_UNAVAILABLE);
         err->xerrno = errno;
-        fwdFail(waisState->fwd, err);
+        waisState->fwd->fail(err);
         comm_close(fd);
     } else {
         /* Schedule read reply. */

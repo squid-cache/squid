@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.177 2005/01/03 16:08:26 robertc Exp $
+ * $Id: typedefs.h,v 1.178 2006/01/03 17:22:31 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -221,10 +221,6 @@ typedef struct _CacheDigest CacheDigest;
 
 typedef struct _Version Version;
 
-typedef struct _FwdState FwdState;
-
-typedef struct _FwdServer FwdServer;
-
 typedef struct _helper helper;
 
 typedef struct _helper_stateful statefulhelper;
@@ -287,6 +283,8 @@ typedef void FQDNH(const char *, void *);
 typedef void IDCB(const char *ident, void *data);
 typedef void IPH(const ipcache_addrs *, void *);
 typedef void IRCB(peer *, peer_t, protocol_t, void *, void *data);
+
+class FwdServer;
 typedef void PSC(FwdServer *, void *);
 typedef void RH(void *data, char *);
 typedef void UH(void *data, wordlist *);

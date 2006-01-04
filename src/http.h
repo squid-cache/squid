@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.15 2005/11/21 23:29:08 wessels Exp $
+ * $Id: http.h,v 1.16 2006/01/03 17:22:31 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,6 +36,7 @@
 
 #include "StoreIOBuffer.h"
 #include "comm.h"
+#include "forward.h"
 
 #if ICAP_CLIENT
 #include "ICAP/ICAPServiceRep.h"
@@ -75,7 +76,7 @@ public:
     HttpRequest *orig_request;
     int fd;
     http_state_flags flags;
-    FwdState *fwd;
+    FwdState::Pointer fwd;
     char *request_body_buf;
     off_t currentOffset;
     size_t read_sz;

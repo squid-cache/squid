@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.474 2005/12/28 21:43:13 wessels Exp $
+ * $Id: http.cc,v 1.475 2006/01/03 17:22:31 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -110,6 +110,8 @@ HttpStateData::~HttpStateData()
 
     orig_request = NULL;
 
+    fwd = NULL;	// refcounted
+
     if (reply)
         delete reply;
 
@@ -153,8 +155,7 @@ httpTimeout(int fd, void *data)
     debug(11, 4) ("httpTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
 
     if (entry->store_status == STORE_PENDING) {
-        fwdFail(httpState->fwd,
-                errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
+        httpState->fwd->fail(errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
     }
 
     comm_close(fd);
@@ -827,7 +828,7 @@ HttpStateData::haveParsedReplyHeaders()
      * If its not a reply that we will re-forward, then
      * allow the client to get it.
      */
-    if (!fwdReforwardableStatus(getReply()->sline.status))
+    if (!fwd->reforwardableStatus(getReply()->sline.status))
         EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
 
     switch (cacheableReply()) {
@@ -1048,12 +1049,12 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
             ErrorState *err;
             err = errorCon(ERR_READ_ERROR, HTTP_BAD_GATEWAY);
             err->xerrno = errno;
-            fwdFail(fwd, err);
+            fwd->fail(err);
             flags.do_next_read = 0;
             comm_close(fd);
         }
     } else if (flag == COMM_OK && len == 0 && !flags.headers_parsed) {
-        fwdFail(fwd, errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_BAD_GATEWAY));
+        fwd->fail(errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_BAD_GATEWAY));
         eof = 1;
         flags.do_next_read = 0;
         comm_close(fd);
@@ -1070,13 +1071,13 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
              */
             processReplyHeader();
         else if (getReply()->sline.status == HTTP_INVALID_HEADER && HttpVersion(0,9) != getReply()->sline.version) {
-            fwdFail(fwd, errorCon(ERR_INVALID_RESP, HTTP_BAD_GATEWAY));
+            fwd->fail(errorCon(ERR_INVALID_RESP, HTTP_BAD_GATEWAY));
             flags.do_next_read = 0;
         } else {
             if (entry->mem_obj->getReply()->sline.status == HTTP_HEADER_TOO_LARGE) {
                 storeEntryReset(entry);
-                fwdFail(fwd, errorCon(ERR_TOO_BIG, HTTP_BAD_GATEWAY));
-                fwd->flags.dont_retry = 1;
+                fwd->fail( errorCon(ERR_TOO_BIG, HTTP_BAD_GATEWAY));
+                fwd->dontRetry(true);
                 flags.do_next_read = 0;
                 comm_close(fd);
             } else {
@@ -1093,7 +1094,7 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
 
                 if (s == HTTP_INVALID_HEADER && httpver != HttpVersion(0,9)) {
                     storeEntryReset(entry);
-                    fwdFail(fwd, errorCon(ERR_INVALID_RESP, HTTP_BAD_GATEWAY));
+                    fwd->fail( errorCon(ERR_INVALID_RESP, HTTP_BAD_GATEWAY));
                     comm_close(fd);
                     return;
                 }
@@ -1191,15 +1192,15 @@ HttpStateData::processReplyBody()
             flags.do_next_read = 0;
 
             comm_remove_close_handler(fd, httpStateFree, this);
-            fwdUnregister(fd, fwd);
+            fwd->unregister(fd);
 
             if (_peer) {
                 if (_peer->options.originserver)
-                    fwdPconnPush(fd, _peer->name, orig_request->port, orig_request->host);
+                    fwd->pconnPush(fd, _peer->name, orig_request->port, orig_request->host);
                 else
-                    fwdPconnPush(fd, _peer->name, _peer->http_port, NULL);
+                    fwd->pconnPush(fd, _peer->name, _peer->http_port, NULL);
             } else {
-                fwdPconnPush(fd, request->host, request->port, NULL);
+                fwd->pconnPush(fd, request->host, request->port, NULL);
             }
 
             fd = -1;
@@ -1287,7 +1288,7 @@ HttpStateData::SendComplete(int fd, char *bufnotused, size_t size, comm_err_t er
         ErrorState *err;
         err = errorCon(ERR_WRITE_ERROR, HTTP_BAD_GATEWAY);
         err->xerrno = errno;
-        fwdFail(httpState->fwd, err);
+        httpState->fwd->fail(err);
         comm_close(fd);
         return;
     }
@@ -1316,7 +1317,7 @@ void
 HttpStateData::transactionComplete()
 {
     if (fd >= 0) {
-        fwdUnregister(fd, fwd);
+        fwd->unregister(fd);
         comm_remove_close_handler(fd, httpStateFree, this);
         comm_close(fd);
         fd = -1;
@@ -1330,7 +1331,7 @@ HttpStateData::transactionComplete()
 
 #endif
 
-    fwdComplete(fwd);
+    fwd->complete();
 
     httpStateFree(-1, this);
 }
@@ -1807,22 +1808,20 @@ httpSendRequest(HttpStateData * httpState)
 }
 
 void
-httpStart(FwdState * fwd)
+httpStart(FwdState *fwd)
 {
-    int fd = fwd->server_fd;
-    HttpStateData *httpState;
     HttpRequest *proxy_req;
     HttpRequest *orig_req = fwd->request;
     debug(11, 3) ("httpStart: \"%s %s\"\n",
                   RequestMethodStr[orig_req->method],
                   storeUrl(fwd->entry));
-    httpState = new HttpStateData;
+    HttpStateData *httpState = new HttpStateData;
     httpState->ignoreCacheControl = false;
     httpState->surrogateNoStore = false;
     storeLockObject(fwd->entry);
     httpState->fwd = fwd;
     httpState->entry = fwd->entry;
-    httpState->fd = fd;
+    httpState->fd = fwd->server_fd;
     httpState->readBuf = new MemBuf;
     httpState->readBuf->init(4096, SQUID_TCP_SO_RCVBUF);
 
@@ -1876,7 +1875,7 @@ httpStart(FwdState * fwd)
     /*
      * register the handler to free HTTP state data when the FD closes
      */
-    comm_add_close_handler(fd, httpStateFree, httpState);
+    comm_add_close_handler(httpState->fd, httpStateFree, httpState);
 
     statCounter.server.all.requests++;
 
@@ -1969,7 +1968,7 @@ httpSendRequestEntity(int fd, char *bufnotused, size_t size, comm_err_t errflag,
         ErrorState *err;
         err = errorCon(ERR_WRITE_ERROR, HTTP_BAD_GATEWAY);
         err->xerrno = errno;
-        fwdFail(httpState->fwd, err);
+        httpState->fwd->fail(err);
         comm_close(fd);
         return;
     }
@@ -2114,7 +2113,7 @@ HttpStateData::doneAdapting()
         debug(11,5)("\toops, entry is not Accepting!\n");
         icap->ownerAbort();
     } else {
-        fwdComplete(fwd);
+        fwd->complete();
     }
 
     /*
@@ -2146,14 +2145,14 @@ HttpStateData::abortAdapting()
         err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
         err->request = requestLink((HttpRequest *) request);
         err->xerrno = errno;
-        fwdFail(fwd, err);
-        fwd->flags.dont_retry = 1;
+        fwd->fail( err);
+        fwd->dontRetry(true);
         flags.do_next_read = 0;
 
         if (fd >= 0) {
             comm_close(fd);
         } else {
-            fwdComplete(fwd);
+            fwd->complete();
             httpStateFree(-1, this);	// deletes this
         }
 

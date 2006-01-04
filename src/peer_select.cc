@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.136 2005/03/18 15:12:36 hno Exp $
+ * $Id: peer_select.cc,v 1.137 2006/01/03 17:22:31 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -40,6 +40,7 @@
 #include "HttpRequest.h"
 #include "ACLChecklist.h"
 #include "htcp.h"
+#include "forward.h"
 
 const char *hier_strings[] =
     {

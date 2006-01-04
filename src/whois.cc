@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.31 2005/11/05 00:08:33 wessels Exp $
+ * $Id: whois.cc,v 1.32 2006/01/03 17:22:31 wessels Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -39,6 +39,7 @@
 #include "HttpRequest.h"
 #include "comm.h"
 #include "HttpRequest.h"
+#include "forward.h"
 
 #define WHOIS_PORT 43
 
@@ -46,11 +47,12 @@ class WhoisState
 {
 
 public:
+    ~WhoisState();
     void readReply (int fd, char *buf, size_t len, comm_err_t flag, int xerrno);
     void setReplyToOK(StoreEntry *entry);
     StoreEntry *entry;
     HttpRequest *request;
-    FwdState *fwd;
+    FwdState::Pointer fwd;
     char buf[BUFSIZ];
     bool dataWritten;
 };
@@ -62,6 +64,11 @@ static IOCB whoisReadReply;
 /* PUBLIC */
 
 CBDATA_TYPE(WhoisState);
+
+WhoisState::~WhoisState()
+{
+    fwd = NULL;	// refcounted
+}
 
 static void
 whoisWriteComplete(int fd, char *buf, size_t size, comm_err_t flag, int xerrno, void *data)
@@ -160,7 +167,7 @@ WhoisState::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xerrn
             ErrorState *err;
             err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
             err->xerrno = errno;
-            fwdFail(fwd, err);
+            fwd->fail(err);
             comm_close(fd);
             do_next_read = 0;
         }
@@ -171,7 +178,7 @@ WhoisState::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xerrn
         if (!EBIT_TEST(entry->flags, RELEASE_REQUEST))
             storeSetPublicKey(entry);
 
-        fwdComplete(fwd);
+        fwd->complete();
 
         debug(75, 3) ("whoisReadReply: Done: %s\n", storeUrl(entry));
 

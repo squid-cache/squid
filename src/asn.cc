@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.101 2005/05/08 09:15:39 serassio Exp $
+ * $Id: asn.cc,v 1.102 2006/01/03 17:22:30 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -44,6 +44,7 @@
 #include "ACLDestinationASN.h"
 #include "ACLDestinationIP.h"
 #include "HttpReply.h"
+#include "forward.h"
 
 #define WHOIS_PORT 43
 #define	AS_REQBUF_SZ	4096
@@ -240,7 +241,7 @@ asnCacheStart(int as)
     if ((e = storeGetPublic(asres, METHOD_GET)) == NULL) {
         e = storeCreateEntry(asres, asres, request_flags(), METHOD_GET);
         asState->sc = storeClientListAdd(e, asState);
-        fwdStart(-1, e, asState->request);
+        FwdState::fwdStart(-1, e, asState->request);
     } else {
         storeLockObject(e);
         asState->sc = storeClientListAdd(e, asState);

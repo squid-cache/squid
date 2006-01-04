@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.373 2005/11/05 00:08:32 wessels Exp $
+ * $Id: ftp.cc,v 1.374 2006/01/03 17:22:31 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -47,6 +47,7 @@
 #include "MemObject.h"
 #endif
 #include "ConnectionDetail.h"
+#include "forward.h"
 
 static const char *const crlf = "\r\n";
 static char cbuf[1024];
@@ -193,7 +194,7 @@ public:
     data;
 
     struct _ftp_flags flags;
-    FwdState *fwd;
+    FwdState::Pointer fwd;
 
 private:
     CBDATA_CLASS(FtpStateData);
@@ -421,6 +422,8 @@ FtpStateData::~FtpStateData()
     safe_free(ftpState->filepath);
 
     safe_free(ftpState->data.host);
+
+    fwd = NULL;	// refcounted
 }
 
 static void
@@ -460,8 +463,8 @@ ftpTimeout(int fd, void *data)
 
     if (SENT_PASV == ftpState->state && fd == ftpState->data.fd) {
         /* stupid ftp.netscape.com */
-        ftpState->fwd->flags.dont_retry = 0;
-        ftpState->fwd->flags.ftp_pasv_failed = 1;
+        ftpState->fwd->dontRetry(false);
+        ftpState->fwd->ftpPasvFailed(true);
         debug(9, 1) ("ftpTimeout: timeout in SENT_PASV state\n");
     }
 
@@ -1231,9 +1234,9 @@ ftpDataRead(int fd, char *buf, size_t len, comm_err_t errflag, int xerrno, void 
 
             comm_read(fd, ftpState->data.buf + ftpState->data.offset, read_sz, ftpDataRead, data);
         } else {
-            if (!ftpState->flags.http_header_sent && !ftpState->fwd->flags.ftp_pasv_failed && ftpState->flags.pasv_supported) {
-                ftpState->fwd->flags.dont_retry = 0;	/* this is a retryable error */
-                ftpState->fwd->flags.ftp_pasv_failed = 1;
+            if (!ftpState->flags.http_header_sent && !ftpState->fwd->ftpPasvFailed() && ftpState->flags.pasv_supported) {
+                ftpState->fwd->dontRetry(false);	/* this is a retryable error */
+                ftpState->fwd->ftpPasvFailed(true);
             }
 
             ftpFailed(ftpState, ERR_READ_ERROR, 0);
@@ -1408,7 +1411,7 @@ ftpStart(FwdState * fwd)
     ftpState->size = -1;
     ftpState->mdtm = -1;
 
-    if (Config.Ftp.passive && !fwd->flags.ftp_pasv_failed)
+    if (Config.Ftp.passive && !fwd->ftpPasvFailed())
         ftpState->flags.pasv_supported = 1;
 
     ftpState->flags.rest_supported = 1;
@@ -1440,7 +1443,7 @@ ftpStart(FwdState * fwd)
 
         reply->swapOut(entry);
 
-        fwdComplete(ftpState->fwd);
+        ftpState->fwd->complete();
 
         comm_close(fd);
 
@@ -1770,7 +1773,7 @@ ftpReadWelcome(FtpStateData * ftpState)
         ftpState->login_att++;
 
     /* Dont retry if the FTP server accepted the connection */
-    ftpState->fwd->flags.dont_retry = 1;
+    ftpState->fwd->dontRetry(true);
 
     if (code == 220) {
         if (ftpState->ctrl.message) {
@@ -2148,7 +2151,7 @@ ftpSendPasv(FtpStateData * ftpState)
          */
 
         if (!EBIT_TEST(ftpState->entry->flags, ENTRY_ABORTED))
-            fwdComplete(ftpState->fwd);
+            ftpState->fwd->complete();
 
         ftpSendQuit(ftpState);
 
@@ -2298,8 +2301,8 @@ ftpPasvCallback(int fd, comm_err_t status, int xerrno, void *data)
 
     if (status != COMM_OK) {
         debug(9, 2) ("ftpPasvCallback: failed to connect. Retrying without PASV.\n");
-        ftpState->fwd->flags.dont_retry = 0;	/* this is a retryable error */
-        ftpState->fwd->flags.ftp_pasv_failed = 1;
+        ftpState->fwd->dontRetry(false);	/* this is a retryable error */
+        ftpState->fwd->ftpPasvFailed(true);
         ftpFailed(ftpState, ERR_NONE, 0);
         /* ftpFailed closes ctrl.fd and frees ftpState */
         return;
@@ -2731,9 +2734,9 @@ ftpReadTransferDone(FtpStateData * ftpState)
         if (ftpState->flags.html_header_sent)
             ftpListingFinish(ftpState);
 
-        fwdUnregister(ftpState->ctrl.fd, ftpState->fwd);
+        ftpState->fwd->unregister(ftpState->ctrl.fd);
 
-        fwdComplete(ftpState->fwd);
+        ftpState->fwd->complete();
 
         ftpSendQuit(ftpState);
     } else {			/* != 226 */
@@ -3005,7 +3008,7 @@ ftpFailedErrorMessage(FtpStateData * ftpState, err_type error, int xerrno)
     if (reply)
         err->ftp.reply = xstrdup(reply);
 
-    fwdFail(ftpState->fwd, err);
+    ftpState->fwd->fail(err);
 }
 
 static void

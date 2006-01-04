@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.91 2005/11/21 23:21:21 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.92 2006/01/03 17:22:30 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -39,6 +39,7 @@
 #include "Store.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "forward.h"
 
 #include "clientStream.h"
 #include "AuthUserRequest.h"
@@ -265,7 +266,9 @@ clientReplyContext::processExpired()
                  (long int) entry->lastmod);
     http->storeEntry(entry);
     assert(http->out.offset == 0);
-    fwdStart(http->getConn().getRaw() != NULL ? http->getConn()->fd : -1, http->storeEntry(), http->request);
+    FwdState::fwdStart(http->getConn().getRaw() != NULL ? http->getConn()->fd : -1,
+                       http->storeEntry(),
+                       http->request);
     /* Register with storage manager to receive updates when data comes in. */
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
@@ -834,7 +837,9 @@ clientReplyContext::processMiss()
         if (http->flags.internal)
             r->protocol = PROTO_INTERNAL;
 
-        fwdStart(http->getConn().getRaw() != NULL ? http->getConn()->fd : -1, http->storeEntry(), r);
+        FwdState::fwdStart(http->getConn().getRaw() != NULL ? http->getConn()->fd : -1,
+                           http->storeEntry(),
+                           r);
     }
 }
 
