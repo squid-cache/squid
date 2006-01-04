@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.706 2005/12/08 20:08:46 wessels Exp $
+ * $Id: client_side.cc,v 1.707 2006/01/03 21:47:59 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2517,7 +2517,7 @@ clientReadBody(HttpRequest * request, char *buf, size_t size, CBCB * callback,
         return;
     }
 
-    debug(33, 2) ("clientReadBody: start fd=%d body_size=%lu in.notYetUsed=%ld cb=%p req=%p\n",
+    debug(33, 2) ("clientReadBody: start FD %d body_size=%lu in.notYetUsed=%ld cb=%p req=%p\n",
                   conn->fd, (unsigned long int) conn->body.size_left,
                   (unsigned long int) conn->in.notYetUsed, callback, request);
     conn->body.callback = callback;
@@ -2538,7 +2538,7 @@ ClientBody::preProcessing()
     callback = conn->body.callback;
     request = conn->body.request;
     /* Note: request is null while eating "aborted" transfers */
-    debug(33, 2) ("clientBody::process: start fd=%d body_size=%lu in.notYetUsed=%lu cb=%p req=%p\n",
+    debug(33, 2) ("clientBody::process: start FD %d body_size=%lu in.notYetUsed=%lu cb=%p req=%p\n",
                   conn->fd, (unsigned long int) conn->body.size_left,
                   (unsigned long int) conn->in.notYetUsed, callback, request);
 }
@@ -2613,7 +2613,7 @@ ClientBody::processBuffer()
         requestUnlink(request);	/* Linked in clientReadBody */
     }
 
-    debug(33, 2) ("ClientBody::process: end fd=%d size=%lu body_size=%lu in.notYetUsed=%lu cb=%p req=%p\n",
+    debug(33, 2) ("ClientBody::process: end FD %d size=%lu body_size=%lu in.notYetUsed=%lu cb=%p req=%p\n",
                   conn->fd, (unsigned long int)size, (unsigned long int) conn->body.size_left,
                   (unsigned long) conn->in.notYetUsed, callback, request);
 }
@@ -2624,12 +2624,12 @@ clientReadBodyAbortHandler(char *buf, ssize_t size, void *data)
 {
     static char bodyAbortBuf[SQUID_TCP_SO_RCVBUF];
     ConnStateData *conn = (ConnStateData *) data;
-    debug(33, 2) ("clientReadBodyAbortHandler: fd=%d body_size=%lu in.notYetUsed=%lu\n",
+    debug(33, 2) ("clientReadBodyAbortHandler: FD %d body_size=%lu in.notYetUsed=%lu\n",
                   conn->fd, (unsigned long int) conn->body.size_left,
                   (unsigned long) conn->in.notYetUsed);
 
     if (size != 0 && conn->body.size_left != 0) {
-        debug(33, 3) ("clientReadBodyAbortHandler: fd=%d shedule next read\n",
+        debug(33, 3) ("clientReadBodyAbortHandler: FD %d shedule next read\n",
                       conn->fd);
         conn->body.callback = clientReadBodyAbortHandler;
         conn->body.buf = bodyAbortBuf;
