@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.478 2006/01/03 23:26:20 wessels Exp $
+ * $Id: http.cc,v 1.479 2006/01/04 17:54:22 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -74,9 +74,67 @@ static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeader
 static void icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data);
 #endif
 
-HttpStateData::HttpStateData()
+HttpStateData::HttpStateData(FwdState *theFwdState)
 {
     debugs(11,5,HERE << "HttpStateData " << this << " created");
+    ignoreCacheControl = false;
+    surrogateNoStore = false;
+    fwd = theFwdState;
+    entry = fwd->entry;
+    storeLockObject(entry);
+    fd = fwd->server_fd;
+    readBuf = new MemBuf;
+    readBuf->init(4096, SQUID_TCP_SO_RCVBUF);
+    orig_request = requestLink(fwd->request);
+
+    if (fwd->servers)
+        _peer = fwd->servers->_peer;         /* might be NULL */
+
+    if (_peer) {
+        const char *url;
+
+        if (_peer->options.originserver)
+            url = orig_request->urlpath.buf();
+        else
+            url = storeUrl(entry);
+
+        HttpRequest * proxy_req = requestCreate(orig_request->method,
+                                                orig_request->protocol, url);
+
+        xstrncpy(proxy_req->host, _peer->host, SQUIDHOSTNAMELEN);
+
+        proxy_req->port = _peer->http_port;
+
+        proxy_req->flags = orig_request->flags;
+
+        proxy_req->lastmod = orig_request->lastmod;
+
+        proxy_req->flags.proxying = 1;
+
+        request = requestLink(proxy_req);
+
+        /*
+         * This NEIGHBOR_PROXY_ONLY check probably shouldn't be here.
+         * We might end up getting the object from somewhere else if,
+         * for example, the request to this neighbor fails.
+         */
+        if (_peer->options.proxy_only)
+            storeReleaseRequest(entry);
+
+#if DELAY_POOLS
+
+        entry->setNoDelay(_peer->options.no_delay);
+
+#endif
+
+    } else {
+        request = requestLink(orig_request);
+    }
+
+    /*
+     * register the handler to free HTTP state data when the FD closes
+     */
+    comm_add_close_handler(fd, httpStateFree, this);
 }
 
 HttpStateData::~HttpStateData()
@@ -1801,72 +1859,10 @@ HttpStateData::sendRequest()
 void
 httpStart(FwdState *fwd)
 {
-    HttpRequest *proxy_req;
-    HttpRequest *orig_req = fwd->request;
     debug(11, 3) ("httpStart: \"%s %s\"\n",
-                  RequestMethodStr[orig_req->method],
+                  RequestMethodStr[fwd->request->method],
                   storeUrl(fwd->entry));
-    HttpStateData *httpState = new HttpStateData;
-    httpState->ignoreCacheControl = false;
-    httpState->surrogateNoStore = false;
-    storeLockObject(fwd->entry);
-    httpState->fwd = fwd;
-    httpState->entry = fwd->entry;
-    httpState->fd = fwd->server_fd;
-    httpState->readBuf = new MemBuf;
-    httpState->readBuf->init(4096, SQUID_TCP_SO_RCVBUF);
-
-    if (fwd->servers)
-        httpState->_peer = fwd->servers->_peer;		/* might be NULL */
-
-    if (httpState->_peer) {
-        const char *url;
-
-        if (httpState->_peer->options.originserver)
-            url = orig_req->urlpath.buf();
-        else
-            url = storeUrl(httpState->entry);
-
-        proxy_req = requestCreate(orig_req->method,
-                                  orig_req->protocol, url);
-
-        xstrncpy(proxy_req->host, httpState->_peer->host, SQUIDHOSTNAMELEN);
-
-        proxy_req->port = httpState->_peer->http_port;
-
-        proxy_req->flags = orig_req->flags;
-
-        proxy_req->lastmod = orig_req->lastmod;
-
-        httpState->request = requestLink(proxy_req);
-
-        httpState->orig_request = requestLink(orig_req);
-
-        proxy_req->flags.proxying = 1;
-
-        /*
-         * This NEIGHBOR_PROXY_ONLY check probably shouldn't be here.
-         * We might end up getting the object from somewhere else if,
-         * for example, the request to this neighbor fails.
-         */
-        if (httpState->_peer->options.proxy_only)
-            storeReleaseRequest(httpState->entry);
-
-#if DELAY_POOLS
-
-        httpState->entry->setNoDelay(httpState->_peer->options.no_delay);
-
-#endif
-
-    } else {
-        httpState->request = requestLink(orig_req);
-        httpState->orig_request = requestLink(orig_req);
-    }
-
-    /*
-     * register the handler to free HTTP state data when the FD closes
-     */
-    comm_add_close_handler(httpState->fd, httpStateFree, httpState);
+    HttpStateData *httpState = new HttpStateData(fwd);
 
     statCounter.server.all.requests++;
 
