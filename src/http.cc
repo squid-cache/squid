@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.479 2006/01/04 17:54:22 wessels Exp $
+ * $Id: http.cc,v 1.480 2006/01/04 18:00:18 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1911,7 +1911,7 @@ HttpStateData::sendRequestEntityDone(int fd)
 void
 HttpStateData::RequestBodyHandlerWrapper(char *buf, ssize_t size, void *data)
 {
-    HttpStateData *httpState = (HttpStateData *) data;
+    HttpStateData *httpState = static_cast<HttpStateData *>(data);
     httpState->requestBodyHandler(buf, size);
 }
 
