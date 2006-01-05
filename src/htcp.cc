@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.60 2005/09/17 05:50:08 wessels Exp $
+ * $Id: htcp.cc,v 1.61 2006/01/04 17:19:41 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -40,6 +40,7 @@
 #include "HttpRequest.h"
 #include "comm.h"
 #include "MemBuf.h"
+#include "http.h"
 
 typedef struct _Countstr Countstr;
 
@@ -1219,7 +1220,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
 
     stuff.S.version = vbuf;
 
-    httpBuildRequestHeader(req, req, e, &hdr, flags);
+    HttpStateData::httpBuildRequestHeader(req, req, e, &hdr, flags);
 
     mb.init();
 
