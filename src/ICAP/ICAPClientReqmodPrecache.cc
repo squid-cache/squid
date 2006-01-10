@@ -182,13 +182,21 @@ void ICAPClientReqmodPrecache::stop(Notify notify)
 void ICAPClientReqmodPrecache::freeVirgin()
 {
     // virgin->data->cause should be NULL;
-    requestUnlink(dynamic_cast<HttpRequest*>(virgin->data->header));
-    virgin->data->header = NULL;
+
+    if (virgin->data->header) {
+        requestUnlink(dynamic_cast<HttpRequest*>(virgin->data->header));
+        virgin->data->header = NULL;
+    }
+
     virgin = NULL;	// refcounted
 }
 
 void ICAPClientReqmodPrecache::freeAdapted()
 {
-    adapted->data->header = NULL;	// we don't own it
+    if (adapted->data->header) {
+        requestUnlink(dynamic_cast<HttpRequest*>(adapted->data->header));
+        adapted->data->header = NULL;
+    }
+
     adapted = NULL;	// refcounted
 }
