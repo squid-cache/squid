@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.55 2005/12/20 05:15:10 wessels Exp $
+ * $Id: HttpRequest.cc,v 1.56 2006/01/09 19:59:37 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -94,8 +94,10 @@ requestCreate(method_t method, protocol_t protocol, const char *aUrlpath)
 
 void HttpRequest::reset()
 {
+    int lc = link_count;
     clean();
     *this = HttpRequest(); // XXX: ugly; merge with clean()
+    link_count = lc;
 }
 
 void
