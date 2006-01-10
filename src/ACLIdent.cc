@@ -125,10 +125,9 @@ IdentLookup::Instance()
 void
 IdentLookup::checkForAsync(ACLChecklist *checklist)const
 {
-    checklist->asyncInProgress(true);
-    debug(28, 3) ("IdentLookup::checkForAsync: Doing ident lookup\n");
-
     if (checklist->conn().getRaw() != NULL) {
+        debug(28, 3) ("IdentLookup::checkForAsync: Doing ident lookup\n");
+        checklist->asyncInProgress(true);
         identStart(&checklist->conn()->me, &checklist->conn()->peer,
                    LookupDone, checklist);
     } else {
