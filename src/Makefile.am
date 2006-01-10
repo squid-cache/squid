@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.124 2005/12/26 10:47:48 serassio Exp $
+#  $Id: Makefile.am,v 1.125 2006/01/09 18:02:12 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -404,6 +404,7 @@ squid_SOURCES = \
 	fde.h \
 	filemap.cc \
 	forward.cc \
+	forward.h \
 	fqdncache.cc \
 	ftp.cc \
 	Generic.h \
@@ -671,6 +672,7 @@ ufsdump_SOURCES = debug.cc \
 	fde.h \
 	filemap.cc \
 	forward.cc \
+	forward.h \
 	fqdncache.cc \
 	ftp.cc \
 	gopher.cc \
