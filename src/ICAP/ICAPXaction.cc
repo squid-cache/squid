@@ -179,6 +179,7 @@ void ICAPXaction::scheduleWrite(MemBuf &buf)
     writer = &ICAPXaction_noteCommWrote;
     comm_old_write_mbuf(connection, &buf, writer, this);
     fd_table[connection].noteUse(icapPconnPool);
+    commSetTimeout(connection, 61, &ICAPXaction_noteCommTimedout, this);
 }
 
 void ICAPXaction::noteCommWrote(comm_err_t commStatus, size_t size)
@@ -207,6 +208,14 @@ void ICAPXaction::noteCommTimedout()
 
 void ICAPXaction::handleCommTimedout()
 {
+    debugs(93, 0, HERE << "ICAP FD " << connection << " timeout to " << theService->methodStr() << " " << theService->uri.buf());
+    MemBuf mb;
+    mb.init();
+
+    if (fillVirginHttpHeader(mb)) {
+        debugs(93, 0, HERE << "\tfor " << mb.content());
+    }
+
     mustStop("connection with ICAP service timed out");
 }
 
@@ -252,6 +261,7 @@ void ICAPXaction::scheduleRead()
      */
 
     comm_read(connection, commBuf, readBuf.spaceSize(), reader, this);
+    commSetTimeout(connection, 61, &ICAPXaction_noteCommTimedout, this);
 }
 
 // comm module read a portion of the ICAP response for us
@@ -436,4 +446,9 @@ void ICAPXaction::fillDoneStatus(MemBuf &buf) const
 
     if (stopReason != NULL)
         buf.Printf("Stopped");
+}
+
+bool ICAPXaction::fillVirginHttpHeader(MemBuf &buf) const
+{
+    return false;
 }
