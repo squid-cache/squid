@@ -495,10 +495,14 @@ void ICAPModXact::stopSending(bool nicely)
     state.sending = State::sendingDone;
 
     /*
-    * Note on adapted->data->header:  we created the header, but allow the
-    * other side (ICAPClientRespmodPrecache) to take control of it.  We won't touch it here
-    * and instead rely on the Anchor-side to make sure it is properly freed.
-    */
+     * adapted->data->header should be a link_count'ed HttpRequest
+     */
+
+    if (adapted->data->header) {
+        requestUnlink(dynamic_cast<HttpRequest*>(adapted->data->header));
+        adapted->data->header = NULL;
+    }
+
     adapted = NULL; // refcounted
 }
 
@@ -542,7 +546,7 @@ void ICAPModXact::maybeAllocateHttpMsg()
     if (gotEncapsulated("res-hdr")) {
         adapted->data->header = new HttpReply;
     } else if (gotEncapsulated("req-hdr")) {
-        adapted->data->header = new HttpRequest;
+        adapted->data->header = requestLink(new HttpRequest);
     } else
         throw TexcHere("Neither res-hdr nor req-hdr in maybeAllocateHttpMsg()");
 }
