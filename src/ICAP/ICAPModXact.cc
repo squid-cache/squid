@@ -1272,3 +1272,18 @@ void ICAPPreview::wrote(size_t size, bool sawEof)
             theState = stIeof;
 }
 
+bool ICAPModXact::fillVirginHttpHeader(MemBuf &mb) const
+{
+    if (virgin == NULL)
+        return false;
+
+    if (virgin->data == NULL)
+        return false;
+
+    if (virgin->data->header == NULL)
+        return false;
+
+    virgin->data->header->firstLineBuf(mb);
+
+    return true;
+}

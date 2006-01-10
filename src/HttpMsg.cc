@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.22 2005/12/29 18:04:41 wessels Exp $
+ * $Id: HttpMsg.cc,v 1.23 2006/01/09 20:38:44 wessels Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -342,4 +342,15 @@ void HttpMsg::hdrCacheInit()
     content_length = httpHeaderGetInt(&header, HDR_CONTENT_LENGTH);
     assert(NULL == cache_control);
     cache_control = httpHeaderGetCc(&header);
+}
+
+/*
+ * useful for debugging
+ */
+void HttpMsg::firstLineBuf(MemBuf& mb)
+{
+    Packer p;
+    packerToMemInit(&p, &mb);
+    packFirstLineInto(&p, true);
+    packerClean(&p);
 }

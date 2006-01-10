@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPXaction.h,v 1.5 2005/12/22 23:40:26 wessels Exp $
+ * $Id: ICAPXaction.h,v 1.6 2006/01/09 20:38:44 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -96,6 +96,9 @@ protected:
     const char *status() const;
     virtual void fillPendingStatus(MemBuf &buf) const;
     virtual void fillDoneStatus(MemBuf &buf) const;
+
+    // useful for debugging
+    virtual bool fillVirginHttpHeader(MemBuf&) const;
 
 protected:
     int connection;     // FD of the ICAP server connection

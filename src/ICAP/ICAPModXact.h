@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPModXact.h,v 1.4 2005/12/22 23:09:09 wessels Exp $
+ * $Id: ICAPModXact.h,v 1.5 2006/01/09 20:38:44 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -212,6 +212,7 @@ private:
 
     virtual void fillPendingStatus(MemBuf &buf) const;
     virtual void fillDoneStatus(MemBuf &buf) const;
+    virtual bool fillVirginHttpHeader(MemBuf&) const;
 
 private:
     void packHead(MemBuf &httpBuf, const HttpMsg *head);
