@@ -157,8 +157,10 @@ void ICAPModXact::handleCommConnected()
     scheduleWrite(requestBuf);
 }
 
-void ICAPModXact::handleCommWrote(size_t)
+void ICAPModXact::handleCommWrote(size_t sz)
 {
+    debugs(93, 5, HERE << "Wrote " << sz << " bytes");
+
     if (state.writing == State::writingHeaders)
         handleCommWroteHeaders();
     else
@@ -170,11 +172,13 @@ void ICAPModXact::handleCommWroteHeaders()
     Must(state.writing == State::writingHeaders);
 
     if (virginBody.expected()) {
+        debugs(98, 5, HERE);
         state.writing = preview.enabled() ?
                         State::writingPreview : State::writingPrime;
         virginWriteClaim.protectAll();
         writeMore();
     } else {
+        debugs(98, 5, HERE);
         stopWriting();
     }
 }
@@ -241,8 +245,10 @@ void ICAPModXact::writePrimeBody()
     const size_t size = body->contentSize();
     writeSomeBody("prime virgin body", size);
 
-    if (state.doneReceiving)
+    if (state.doneReceiving) {
+        debugs(98, 5, HERE << "state.doneReceiving is set");
         stopWriting();
+    }
 }
 
 void ICAPModXact::writeSomeBody(const char *label, size_t size)
@@ -353,7 +359,7 @@ void ICAPModXact::virginConsume()
     Must(virginConsumed <= offset && offset <= end);
 
     if (const size_t size = offset - virginConsumed) {
-        debugs(93, 8, "ICAPModXact consumes " << size << " out of " << have <<
+        debugs(93, 8, HERE << "consuming " << size << " out of " << have <<
                " virgin body bytes");
         buf.consume(size);
         virginConsumed += size;
@@ -373,7 +379,7 @@ void ICAPModXact::stopWriting()
     if (state.writing == State::writingDone)
         return;
 
-    debugs(93, 7, "ICAPModXact will no longer write " << status());
+    debugs(93, 7, HERE << "will no longer write " << status());
 
     state.writing = State::writingDone;
 
@@ -555,11 +561,15 @@ void ICAPModXact::parseHeaders()
 {
     Must(state.parsingHeaders());
 
-    if (state.parsing == State::psIcapHeader)
+    if (state.parsing == State::psIcapHeader) {
+        debugs(93, 5, HERE << "parse ICAP headers");
         parseIcapHead();
+    }
 
-    if (state.parsing == State::psHttpHeader)
+    if (state.parsing == State::psHttpHeader) {
+        debugs(93, 5, HERE << "parse HTTP headers");
         parseHttpHead();
+    }
 
     if (state.parsingHeaders()) { // need more data
         Must(mayReadMore());
@@ -741,11 +751,12 @@ bool ICAPModXact::parseHead(HttpMsg *head)
     Must(parsed || !error); // success or need more data
 
     if (!parsed) {	// need more data
-        debugs(93, 5, HERE << "parse failed, need more data");
+        debugs(93, 5, HERE << "parse failed, need more data, return false");
         head->reset();
         return false;
     }
 
+    debugs(93, 5, HERE << "parse success, consume " << head->hdr_sz << " bytes, return true");
     readBuf.consume(head->hdr_sz);
     return true;
 }
@@ -882,6 +893,7 @@ void ICAPModXact::noteSinkAbort(MsgPipe *p)
 // internal cleanup
 void ICAPModXact::doStop()
 {
+    debugs(98, 5, HERE << "doStop() called");
     ICAPXaction::doStop();
 
     stopWriting();
