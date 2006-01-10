@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.360 2005/12/26 10:51:20 serassio Exp $
+#  $Id: Makefile.in,v 1.361 2006/01/09 18:06:03 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -186,9 +186,9 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc ACL.h \
 	ESISequence.h ESIVar.h ESIVarState.cc ESIVarState.h ETag.cc \
 	event.cc external_acl.cc ExternalACL.h ExternalACLEntry.cc \
 	ExternalACLEntry.h fd.cc fde.cc fde.h filemap.cc forward.cc \
-	fqdncache.cc ftp.cc Generic.h globals.h gopher.cc helper.cc \
-	helper.h HierarchyLogEntry.h htcp.cc htcp.h http.cc http.h \
-	HttpStatusLine.cc HttpStatusLine.h HttpHdrCc.cc \
+	forward.h fqdncache.cc ftp.cc Generic.h globals.h gopher.cc \
+	helper.cc helper.h HierarchyLogEntry.h htcp.cc htcp.h http.cc \
+	http.h HttpStatusLine.cc HttpStatusLine.h HttpHdrCc.cc \
 	HttpHdrRange.cc HttpHdrSc.cc HttpHdrScTarget.cc \
 	HttpHdrContRange.cc HttpHdrContRange.h HttpHeader.cc \
 	HttpHeader.h HttpHeaderRange.h HttpHeaderTools.cc HttpBody.cc \
@@ -545,8 +545,8 @@ am__ufsdump_SOURCES_DIST = debug.cc int.cc ufsdump.cc store.cc \
 	ESIParser.h ESISegment.cc ESISegment.h ESISequence.cc \
 	ESISequence.h ESIVar.h ESIVarState.cc ESIVarState.h ETag.cc \
 	event.cc external_acl.cc ExternalACLEntry.cc fd.cc fde.cc \
-	fde.h filemap.cc forward.cc fqdncache.cc ftp.cc gopher.cc \
-	helper.cc htcp.cc htcp.h http.cc HttpStatusLine.cc \
+	fde.h filemap.cc forward.cc forward.h fqdncache.cc ftp.cc \
+	gopher.cc helper.cc htcp.cc htcp.h http.cc HttpStatusLine.cc \
 	HttpHdrCc.cc HttpHdrRange.cc HttpHdrSc.cc HttpHdrScTarget.cc \
 	HttpHdrContRange.cc HttpHeader.cc HttpHeaderTools.cc \
 	HttpBody.cc HttpMsg.cc HttpReply.cc HttpRequest.cc \
@@ -1188,6 +1188,7 @@ squid_SOURCES = \
 	fde.h \
 	filemap.cc \
 	forward.cc \
+	forward.h \
 	fqdncache.cc \
 	ftp.cc \
 	Generic.h \
@@ -1440,6 +1441,7 @@ ufsdump_SOURCES = debug.cc \
 	fde.h \
 	filemap.cc \
 	forward.cc \
+	forward.h \
 	fqdncache.cc \
 	ftp.cc \
 	gopher.cc \
