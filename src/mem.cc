@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.89 2006/01/03 17:22:31 wessels Exp $
+ * $Id: mem.cc,v 1.90 2006/01/09 20:22:31 wessels Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -578,7 +578,7 @@ Mem::PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, Store
 
     storeAppendPrintf(e,
                       "%d\t %ld\t %ld\t %.2f\t %.1f\t"	/* alloc */
-                      "%d\t %ld\t %ld\t %.1f\t"	/* in use */
+                      "%d\t %ld\t %ld\t %.2f\t %.1f\t"	/* in use */
                       "%d\t %ld\t %ld\t"	/* idle */
                       "%.0f\t %.1f\t %.1f\t %.1f\n",	/* saved */
                       /* alloc */
@@ -591,6 +591,7 @@ Mem::PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, Store
                       mp_st->items_inuse,
                       (long) toKB(mp_st->obj_size * pm->inuse.level),
                       (long) toKB(mp_st->obj_size * pm->inuse.hwater_level),
+                      (double) ((squid_curtime - pm->inuse.hwater_stamp) / 3600.),
                       xpercent(pm->inuse.level, pm->alloc.level),
                       /* idle */
                       mp_st->items_idle,
@@ -602,6 +603,37 @@ Mem::PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, Store
                       xpercent(pm->gb_saved.bytes, AllMeter->gb_saved.bytes),
                       xdiv(pm->gb_saved.count - pm->gb_osaved.count, xm_deltat));
     pm->gb_osaved.count = pm->gb_saved.count;
+}
+
+static int
+MemPoolReportSorter(const void *a, const void *b)
+{
+    const MemPoolStats *A =  (MemPoolStats *) a;
+    const MemPoolStats *B =  (MemPoolStats *) b;
+
+    // use this to sort on %Total Allocated
+    //
+    double pa = (double) A->obj_size * A->meter->alloc.level;
+    double pb = (double) B->obj_size * B->meter->alloc.level;
+
+    if (pa > pb)
+        return -1;
+
+    if (pb > pa)
+        return 1;
+
+#if 0
+    // use this to sort on In Use high(hrs)
+    //
+    if (A->meter->inuse.hwater_stamp > B->meter->inuse.hwater_stamp)
+        return -1;
+
+    if (B->meter->inuse.hwater_stamp > A->meter->inuse.hwater_stamp)
+        return 1;
+
+#endif
+
+    return 0;
 }
 
 void
@@ -621,7 +653,7 @@ Mem::Report(StoreEntry * e)
                       "Pool\t Obj Size\t"
                       "Chunks\t\t\t\t\t\t\t"
                       "Allocated\t\t\t\t\t"
-                      "In Use\t\t\t\t"
+                      "In Use\t\t\t\t\t"
                       "Idle\t\t\t"
                       "Allocations Saved\t\t\t"
                       "Hit Rate\t"
@@ -630,7 +662,7 @@ Mem::Report(StoreEntry * e)
                       "KB/ch\t obj/ch\t"
                       "(#)\t used\t free\t part\t %%Frag\t "
                       "(#)\t (KB)\t high (KB)\t high (hrs)\t %%Tot\t"
-                      "(#)\t (KB)\t high (KB)\t %%alloc\t"
+                      "(#)\t (KB)\t high (KB)\t high (hrs)\t %%alloc\t"
                       "(#)\t (KB)\t high (KB)\t"
                       "(#)\t %%cnt\t %%vol\t"
                       "(#) / sec\t"
@@ -640,6 +672,9 @@ Mem::Report(StoreEntry * e)
 
     /* Get stats for Totals report line */
     memPoolGetGlobalStats(&mp_total);
+
+    MemPoolStats *sortme = (MemPoolStats *) xcalloc(mp_total.tot_pools_alloc ,sizeof(*sortme));
+    int npools = 0;
 
     /* main table */
     iter = memPoolIterate();
@@ -651,12 +686,20 @@ Mem::Report(StoreEntry * e)
             continue;
 
         if (mp_stats.pool->getMeter().gb_saved.count > 0)	/* this pool has been used */
-            PoolReport(&mp_stats, mp_total.TheMeter, e);
+            sortme[npools++] = mp_stats;
         else
             not_used++;
     }
 
     memPoolIterateDone(&iter);
+
+    qsort(sortme, npools, sizeof(*sortme), MemPoolReportSorter);
+
+    for (int i = 0; i< npools; i++) {
+        PoolReport(&sortme[i], mp_total.TheMeter, e);
+    }
+
+    xfree(sortme);
 
     mp_stats.pool = NULL;
     mp_stats.label = "Total";
