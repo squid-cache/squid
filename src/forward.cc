@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.134 2006/01/03 18:54:32 wessels Exp $
+ * $Id: forward.cc,v 1.135 2006/01/09 20:44:36 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -181,6 +181,10 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
     }
 
     debug(17, 3) ("FwdState::start() '%s'\n", storeUrl(entry));
+    /*
+     * This seems like an odd place to bind mem_obj and request.
+     * Might want to assert that request is NULL at this point
+     */
     entry->mem_obj->request = requestLink(request);
 #if URL_CHECKSUM_DEBUG
 
