@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.412 2005/12/06 23:03:34 wessels Exp $
+ * $Id: comm.cc,v 1.413 2006/01/10 17:20:22 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -667,7 +667,7 @@ comm_empty_os_read_buffers(int fd)
 #endif
 }
 
-void
+static void
 requireOpenAndActive(int const fd)
 {
     assert(fd_table[fd].flags.open == 1);
