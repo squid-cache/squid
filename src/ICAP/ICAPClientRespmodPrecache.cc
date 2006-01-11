@@ -127,6 +127,10 @@ void ICAPClientRespmodPrecache::noteSourceStart(MsgPipe *p)
 {
     debug(93,5)("ICAPClientRespmodPrecache::noteSourceStart() called\n");
 
+    /*
+     * May want to assert that adapted != NULL here
+     */
+
     HttpReply *reply = dynamic_cast<HttpReply*>(adapted->data->header);
     /*
      *	The ICAP reply MUST have a new HTTP reply header, or else
@@ -134,12 +138,28 @@ void ICAPClientRespmodPrecache::noteSourceStart(MsgPipe *p)
      *	be handled prior to this point.
      */
     assert(reply); // check that ICAP xaction created the right object
-    httpState->takeAdaptedHeaders(reply);
-
     assert(reply == adapted->data->header);
-    adapted->data->header = NULL;
 
-    noteSourceProgress(p);
+    /*
+     * Examine the HTTP reply headers to find out if there is an associated
+     * body.  We should probably check the ICAP Encapsulated header values
+     * as well.
+     */
+    ssize_t dummy;
+    bool expect_body = reply->expectingBody(virgin->data->cause->method, dummy);
+
+    /*
+     * When we call takeAdaptedHeaders() we give up any control over
+     * adapted->data->header
+     */
+    httpState->takeAdaptedHeaders(reply);
+    adapted->data->header = NULL;
+    reply = NULL;
+
+    if (expect_body)
+        noteSourceProgress(p);
+    else
+        noteSourceFinish(p);
 }
 
 // ICAP client sends more data
