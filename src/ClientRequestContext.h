@@ -36,7 +36,7 @@ public:
 #endif
 
     bool redirect_done;
-    bool int no_cache_done;
+    bool no_cache_done;
     bool interpreted_req_hdrs;
 
 private:
