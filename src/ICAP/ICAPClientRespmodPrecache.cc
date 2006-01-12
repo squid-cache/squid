@@ -39,8 +39,8 @@ void ICAPClientRespmodPrecache::startRespMod(HttpStateData *anHttpState, HttpReq
     virgin = new MsgPipe("virgin"); // this is the place to create a refcount ptr
     virgin->source = this;
     virgin->data = new MsgPipeData;
-    virgin->data->cause = requestLink(request);
-    virgin->data->header = reply;
+    virgin->data->setCause(request);
+    virgin->data->setHeader(reply);
     virgin->data->body = new MemBuf;
     virgin->data->body->init(ICAP::MsgPipeBufSizeMin, ICAP::MsgPipeBufSizeMax);
 
@@ -49,7 +49,7 @@ void ICAPClientRespmodPrecache::startRespMod(HttpStateData *anHttpState, HttpReq
 #if ICAP_ANCHOR_LOOPBACK
 
     adapted->data = new MsgPipeData;
-    adapted->data->cause = request; // should not hurt
+    adapted->data->setCause(request); // should not hurt
 #else
 
     ICAPInitXaction(service, virgin, adapted);
@@ -88,7 +88,7 @@ void ICAPClientRespmodPrecache::doneSending()
 
 #if ICAP_ANCHOR_LOOPBACK
     /* simple assignments are not the right way to do this */
-    adapted->data->header = virgin->data->header;
+    adapted->data->setHeader(virgin->data->header);
     adapted->data->body = virgin->data->body;
     noteSourceFinish(adapted);
     return;
@@ -125,11 +125,7 @@ void ICAPClientRespmodPrecache::noteSinkAbort(MsgPipe *p)
 // ICAP client has received new HTTP headers (if any) at this point
 void ICAPClientRespmodPrecache::noteSourceStart(MsgPipe *p)
 {
-    debug(93,5)("ICAPClientRespmodPrecache::noteSourceStart() called\n");
-
-    /*
-     * May want to assert that adapted != NULL here
-     */
+    debugs(93,5, HERE << "ICAPClientRespmodPrecache::noteSourceStart() called");
 
     HttpReply *reply = dynamic_cast<HttpReply*>(adapted->data->header);
     /*
@@ -223,26 +219,10 @@ void ICAPClientRespmodPrecache::stop(Notify notify)
 
 void ICAPClientRespmodPrecache::freeVirgin()
 {
-    requestUnlink(virgin->data->cause);
-    virgin->data->cause = NULL;
-    virgin->data->header = NULL;
     virgin = NULL;	// refcounted
 }
 
 void ICAPClientRespmodPrecache::freeAdapted()
 {
-    /*
-     * Note on adapted->data->header.  ICAPXaction-side created it
-     * but gave control of it to us.  Normally we give it to
-     * HttpStateData::takeAdaptedHeader.  If not, we have to
-     * make sure it gets deleted;
-     */
-
-    if (adapted->data->header != NULL) {
-        debug(93,3)("hey, adapted->data->header is still set!\n");
-        delete adapted->data->header;
-        adapted->data->header = NULL;
-    }
-
     adapted = NULL;	// refcounted
 }
