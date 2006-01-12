@@ -29,19 +29,15 @@ public:
     ACLChecklist *acl_checklist;        /* need ptr back so we can unreg if needed */
     int redirect_state;
 
-int http_access_done:
-    1;
+    bool http_access_done;
 #if ICAP_CLIENT
 
-int icap_acl_check_done:
-    1;
+    bool icap_acl_check_done;
 #endif
 
-int redirect_done:
-    1;
-
-int no_cache_done:
-    1;
+    bool redirect_done;
+    bool int no_cache_done;
+    bool interpreted_req_hdrs;
 
 private:
     CBDATA_CLASS(ClientRequestContext);

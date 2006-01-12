@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.55 2005/12/20 23:22:29 wessels Exp $
+ * $Id: client_side_request.cc,v 1.56 2006/01/11 21:05:50 wessels Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -117,9 +117,10 @@ ClientRequestContext::~ClientRequestContext()
 ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) : http(anHttp), acl_checklist (NULL), redirect_state (REDIRECT_NONE)
 {
     (void) cbdataReference(http);
-    http_access_done = 0;
-    redirect_done = 0;
-    no_cache_done = 0;
+    http_access_done = false;
+    redirect_done = false;
+    no_cache_done = false;
+    interpreted_req_hdrs = false;
 }
 
 CBDATA_CLASS_INIT(ClientHttpRequest);
@@ -344,11 +345,11 @@ clientBeginRequest(method_t method, char const *url, CSCB * streamcallback,
     /* optional - skip the access check ? */
     http->calloutContext = new ClientRequestContext(http);
 
-    http->calloutContext->http_access_done = 0;
+    http->calloutContext->http_access_done = false;
 
-    http->calloutContext->redirect_done = 1;
+    http->calloutContext->redirect_done = true;
 
-    http->calloutContext->no_cache_done = 1;
+    http->calloutContext->no_cache_done = true;
 
     http->doCallouts();
 
@@ -887,7 +888,7 @@ void
 ClientRequestContext::checkNoCache()
 {
     acl_checklist = clientAclChecklistCreate(Config.accessList.noCache, http);
-    acl_checklist->nonBlockingCheck(checkNoCacheDoneWrapper, cbdataReference(this));
+    acl_checklist->nonBlockingCheck(checkNoCacheDoneWrapper, this);
 }
 
 static void
@@ -1036,14 +1037,14 @@ ClientHttpRequest::doCallouts()
     assert(calloutContext);
 
     if (!calloutContext->http_access_done) {
-        calloutContext->http_access_done = 1;
+        calloutContext->http_access_done = true;
         calloutContext->clientAccessCheck();
         return;
     }
 
 #if ICAP_CLIENT
     if (TheICAPConfig.onoff && !calloutContext->icap_acl_check_done) {
-        calloutContext->icap_acl_check_done = 1;
+        calloutContext->icap_acl_check_done = true;
         calloutContext->icapAccessCheck();
         return;
     }
@@ -1051,7 +1052,7 @@ ClientHttpRequest::doCallouts()
 #endif
 
     if (!calloutContext->redirect_done) {
-        calloutContext->redirect_done = 1;
+        calloutContext->redirect_done = true;
         assert(calloutContext->redirect_state == REDIRECT_NONE);
 
         if (Config.Program.redirect) {
@@ -1061,8 +1062,13 @@ ClientHttpRequest::doCallouts()
         }
     }
 
+    if (!calloutContext->interpreted_req_hdrs) {
+        calloutContext->interpreted_req_hdrs = 1;
+        clientInterpretRequestHeaders(this);
+    }
+
     if (!calloutContext->no_cache_done) {
-        calloutContext->no_cache_done = 1;
+        calloutContext->no_cache_done = true;
 
         if (Config.accessList.noCache && request->flags.cachable) {
             calloutContext->checkNoCache();
@@ -1073,7 +1079,6 @@ ClientHttpRequest::doCallouts()
     cbdataReferenceDone(calloutContext->http);
     delete calloutContext;
     calloutContext = NULL;
-    clientInterpretRequestHeaders(this);
 #if HEADERS_LOG
 
     headersLog(0, 1, request->method, request);
