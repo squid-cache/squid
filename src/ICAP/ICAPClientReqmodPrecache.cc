@@ -39,7 +39,7 @@ void ICAPClientReqmodPrecache::startReqMod(ClientHttpRequest *aHttp, HttpRequest
     virgin->source = this;
     virgin->data = new MsgPipeData;
     virgin->data->cause = NULL;
-    virgin->data->header = requestLink(request);
+    virgin->data->setHeader(request);
     virgin->data->body = new MemBuf;
     virgin->data->body->init(ICAP::MsgPipeBufSizeMin, ICAP::MsgPipeBufSizeMax);
 
@@ -182,21 +182,10 @@ void ICAPClientReqmodPrecache::stop(Notify notify)
 void ICAPClientReqmodPrecache::freeVirgin()
 {
     // virgin->data->cause should be NULL;
-
-    if (virgin->data->header) {
-        requestUnlink(dynamic_cast<HttpRequest*>(virgin->data->header));
-        virgin->data->header = NULL;
-    }
-
     virgin = NULL;	// refcounted
 }
 
 void ICAPClientReqmodPrecache::freeAdapted()
 {
-    if (adapted->data->header) {
-        requestUnlink(dynamic_cast<HttpRequest*>(adapted->data->header));
-        adapted->data->header = NULL;
-    }
-
     adapted = NULL;	// refcounted
 }

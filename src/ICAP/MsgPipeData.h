@@ -1,6 +1,6 @@
 
 /*
- * $Id: MsgPipeData.h,v 1.3 2005/12/22 22:26:31 wessels Exp $
+ * $Id: MsgPipeData.h,v 1.4 2006/01/11 22:40:39 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,6 +35,8 @@
 #define SQUID_MSGPIPEDATA_H
 
 #include "HttpMsg.h"
+#include "HttpRequest.h"
+#include "HttpReply.h"
 #include "MemBuf.h"
 
 // MsgPipeData contains information about the HTTP message being sent
@@ -52,13 +54,28 @@ public:
 
     ~MsgPipeData()
     {
-        assert(NULL == cause);
-        assert(NULL == header);
+        clearCause();
+        clearHeader();
 
         if (body) {
             body->clean();
             delete body;
         }
+    };
+
+    void setCause(HttpRequest *r)
+    {
+        cause = requestLink(r);
+    };
+
+    void setHeader(HttpMsg *msg)
+    {
+        clearHeader();
+
+        if (HttpRequest *req = dynamic_cast<HttpRequest*>(msg))
+            header = requestLink(req);
+        else if (HttpReply *rep = dynamic_cast<HttpReply*>(msg))
+            header = rep;
     };
 
 public:
@@ -71,6 +88,23 @@ public:
 
     // HTTP request header for piped responses (the cause of the response)
     HttpRequest *cause;
+
+private:
+
+    void clearCause()
+    {
+        requestUnlink(cause);
+        cause = NULL;
+    };
+
+    void clearHeader()
+    {
+        if (HttpRequest *req = dynamic_cast<HttpRequest*>(header))
+            requestUnlink(req);
+
+        header = NULL;
+    };
+
 };
 
 #endif /* SQUID_MSGPIPEDATA_H */

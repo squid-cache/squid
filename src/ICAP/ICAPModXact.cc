@@ -500,15 +500,6 @@ void ICAPModXact::stopSending(bool nicely)
 
     state.sending = State::sendingDone;
 
-    /*
-     * adapted->data->header should be a link_count'ed HttpRequest
-     */
-
-    if (adapted->data->header) {
-        requestUnlink(dynamic_cast<HttpRequest*>(adapted->data->header));
-        adapted->data->header = NULL;
-    }
-
     adapted = NULL; // refcounted
 }
 
@@ -550,9 +541,9 @@ void ICAPModXact::maybeAllocateHttpMsg()
         return;
 
     if (gotEncapsulated("res-hdr")) {
-        adapted->data->header = new HttpReply;
+        adapted->data->setHeader(new HttpReply);
     } else if (gotEncapsulated("req-hdr")) {
-        adapted->data->header = requestLink(new HttpRequest);
+        adapted->data->setHeader(new HttpRequest);
     } else
         throw TexcHere("Neither res-hdr nor req-hdr in maybeAllocateHttpMsg()");
 }
