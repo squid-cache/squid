@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.19 2006/01/11 20:59:58 wessels Exp $
+ * $Id: MemObject.cc,v 1.20 2006/01/11 22:24:40 wessels Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -75,7 +75,7 @@ MemObject::inUseCount()
 
 MemObject::MemObject(char const *aUrl, char const *aLog_url)
 {
-    debugs(20, 0, HERE << "new MemObject " << this);
+    debugs(20, 3, HERE << "new MemObject " << this);
     _reply  = new HttpReply;
     url = xstrdup(aUrl);
 #if URL_CHECKSUM_DEBUG
@@ -90,7 +90,7 @@ MemObject::MemObject(char const *aUrl, char const *aLog_url)
 
 MemObject::~MemObject()
 {
-    debugs(20, 0, HERE << "del MemObject " << this);
+    debugs(20, 3, HERE << "del MemObject " << this);
     const Ctx ctx = ctx_enter(url);
 #if URL_CHECKSUM_DEBUG
 
