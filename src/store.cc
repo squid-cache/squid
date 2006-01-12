@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.581 2005/11/21 22:20:12 wessels Exp $
+ * $Id: store.cc,v 1.582 2006/01/11 21:10:56 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -323,9 +323,8 @@ StoreEntry::storeClientType() const
 
 StoreEntry::StoreEntry()
 {
+    debugs(20, 3, HERE << "new StoreEntry " << this);
     mem_obj = NULL;
-
-    debugs(20, 3, "newStoreEntry: returning " << this);
 
     expires = lastmod = lastref = timestamp = -1;
 
@@ -335,9 +334,8 @@ StoreEntry::StoreEntry()
 
 StoreEntry::StoreEntry(const char *url, const char *log_url)
 {
+    debugs(20, 3, HERE << "new StoreEntry " << this);
     mem_obj = new MemObject(url, log_url);
-
-    debugs(20, 3, "newStoreEntry: returning " << this);
 
     expires = lastmod = lastref = timestamp = -1;
 
@@ -348,6 +346,7 @@ StoreEntry::StoreEntry(const char *url, const char *log_url)
 static void
 destroy_MemObject(StoreEntry * e)
 {
+    debugs(20, 3, HERE << "destroy mem_obj" << e->mem_obj);
     storeSetMemStatus(e, NOT_IN_MEMORY);
     MemObject *mem = e->mem_obj;
     e->mem_obj = NULL;
@@ -357,8 +356,8 @@ destroy_MemObject(StoreEntry * e)
 void
 destroyStoreEntry(void *data)
 {
+    debugs(20, 3, HERE << "destroyStoreEntry: destroying " <<  data);
     StoreEntry *e = static_cast<StoreEntry *>(static_cast<hash_link *>(data));
-    debug(20, 3) ("destroyStoreEntry: destroying %p\n", e);
     assert(e != NULL);
 
     if (e == NullStoreEntry::getInstance())
