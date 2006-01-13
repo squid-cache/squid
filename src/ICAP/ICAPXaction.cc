@@ -209,6 +209,7 @@ void ICAPXaction::noteCommTimedout()
 void ICAPXaction::handleCommTimedout()
 {
     debugs(93, 0, HERE << "ICAP FD " << connection << " timeout to " << theService->methodStr() << " " << theService->uri.buf());
+    reuseConnection = false;
     MemBuf mb;
     mb.init();
 
