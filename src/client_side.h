@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.h,v 1.12 2005/11/21 23:26:45 wessels Exp $
+ * $Id: client_side.h,v 1.13 2006/01/14 00:06:19 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -42,6 +42,9 @@ class ConnStateData;
 class ClientHttpRequest;
 
 class clientStreamNode;
+
+class ClientBody;
+;
 
 template <class T>
 
@@ -160,17 +163,9 @@ public:
 
     in;
 
-    struct
-    {
-        size_t size_left;	/* How much body left to process */
-        HttpRequest *request;	/* Parameters passed to clientReadBody */
-        char *buf;
-        size_t bufsize;
-        CBCB *callback;
-        void *cbdata;
-    }
+    ClientBody *body;
+    size_t body_size_left;
 
-    body;
     auth_type_t auth_type;	/* Is this connection based authentication? if so what type it is. */
     /* note this is ONLY connection based because NTLM is against HTTP spec */
     /* the user details for connection based authentication */
@@ -213,22 +208,6 @@ private:
 
 /* convenience class while splitting up body handling */
 /* temporary existence only - on stack use expected */
-
-class ClientBody
-{
-
-public:
-    ClientBody (ConnStateData::Pointer &);
-    void process();
-    void preProcessing();
-    void processBuffer();
-
-private:
-    ConnStateData::Pointer conn;
-    char *buf;
-    CBCB *callback;
-    HttpRequest *request;
-};
 
 void setLogUri(ClientHttpRequest * http, char const *uri);
 

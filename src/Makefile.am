@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.125 2006/01/09 18:02:12 serassio Exp $
+#  $Id: Makefile.am,v 1.126 2006/01/14 00:06:19 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -369,6 +369,8 @@ squid_SOURCES = \
 	client_side_reply.h \
 	client_side_request.cc \
 	client_side_request.h \
+	ClientBody.h \
+	ClientBody.cc \
 	ClientRequestContext.h \
 	clientStream.cc \
 	clientStream.h \
