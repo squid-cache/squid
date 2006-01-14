@@ -1,5 +1,5 @@
 #ifndef SQUID_CLIENTBODY_H
-#define SQUID_CLIETNBODY_H
+#define SQUID_CLIENTBODY_H
 
 class ClientBody
 {
