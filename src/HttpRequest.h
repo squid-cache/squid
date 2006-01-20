@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.15 2005/11/21 22:50:16 wessels Exp $
+ * $Id: HttpRequest.h,v 1.16 2006/01/19 18:40:28 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -39,15 +39,12 @@
 #include "HierarchyLogEntry.h"
 
 /*  Http Request */
-extern HttpRequest *requestCreate(method_t, protocol_t, const char *urlpath);
-extern void requestDestroy(HttpRequest *);
 extern HttpRequest *requestLink(HttpRequest *);
 extern void requestUnlink(HttpRequest *);
-extern void httpRequestSwapOut(const HttpRequest * req, StoreEntry * e);
-extern void httpRequestPack(const HttpRequest * req, Packer * p);
-extern int httpRequestPrefixLen(const HttpRequest * req);
 extern int httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConnection);
 extern int httpRequestHdrAllowedByName(http_hdr_type id);
+extern void httpRequestPack(void *obj, Packer *p);
+
 
 class HttpHdrRange;
 
@@ -57,11 +54,19 @@ class HttpRequest: public HttpMsg
 public:
     MEMPROXY_CLASS(HttpRequest);
     HttpRequest();
-
+    HttpRequest(method_t aMethod, protocol_t aProtocol, const char *aUrlpath);
+    ~HttpRequest();
     virtual void reset();
 
-    bool multipartRangeRequest() const;
+protected:
+    void initXX(method_t aMethod, protocol_t aProtocol, const char *aUrlpath);
+    void clean();
+    void init();
 
+public:
+    int link_count;		/* free when zero */
+
+public:
     method_t method;
     char login[MAX_LOGIN_SZ];
     char host[SQUIDHOSTNAMELEN + 1];
@@ -69,7 +74,6 @@ public:
     u_short port;
     String urlpath;
     char *canonical;
-    int link_count;		/* free when zero */
     request_flags flags;
     HttpHdrRange *range;
     time_t ims;
@@ -95,9 +99,14 @@ public:
     String extacl_log;		/* String to be used for access.log purposes */
 
 public:
+    bool multipartRangeRequest() const;
     bool parseFirstLine(const char *start, const char *end);
     int parseHeader(const char *parse_start);
     virtual bool expectingBody(method_t unused, ssize_t&) const;
+    int prefixLen();
+    void swapOut(StoreEntry * e);
+    void pack(Packer * p);
+    static void httpRequestPack(void *obj, Packer *p);
 
 private:
     const char *packableURI(bool full_uri) const;
@@ -107,8 +116,6 @@ protected:
     virtual bool sanityCheckStartLine(MemBuf *buf, http_status *error);
     virtual void hdrCacheInit();
 
-public: // should be private
-    void clean(); // low-level; treat as private
 };
 
 MEMPROXY_CLASS_INLINE(HttpRequest)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.92 2006/01/03 17:22:30 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.93 2006/01/19 18:40:28 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1059,9 +1059,9 @@ clientReplyContext::traceReply(clientStreamNode * node)
     rep = new HttpReply;
     HttpVersion version(1,0);
     rep->setHeaders(version, HTTP_OK, NULL, "text/plain",
-                    httpRequestPrefixLen(http->request), 0, squid_curtime);
+                    http->request->prefixLen(), 0, squid_curtime);
     rep->swapOut(http->storeEntry());
-    httpRequestSwapOut(http->request, http->storeEntry());
+    http->request->swapOut(http->storeEntry());
     http->storeEntry()->complete();
 }
 
@@ -2158,7 +2158,7 @@ clientReplyContext::createStoreEntry(method_t m, request_flags flags)
      */
 
     if (http->request == NULL)
-        http->request = requestLink(requestCreate(m, PROTO_NONE, null_string));
+        http->request = requestLink(new HttpRequest(m, PROTO_NONE, null_string));
 
     StoreEntry *e = storeCreateEntry(http->uri, http->log_uri, flags, m);
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v3.cc,v 1.39 2003/08/10 11:00:43 robertc Exp $
+ * $Id: icp_v3.cc,v 1.40 2006/01/19 18:40:28 wessels Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -62,7 +62,7 @@ doV3Query(int fd, struct sockaddr_in from, char *buf, icp_common_t header)
     if (!icpAccessAllowed(&from, icp_request))
     {
         icpDenyAccess (&from, url, header.reqnum, fd);
-        requestDestroy(icp_request);
+        delete icp_request;
         return;
     }
 
