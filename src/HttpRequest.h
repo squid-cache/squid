@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.16 2006/01/19 18:40:28 wessels Exp $
+ * $Id: HttpRequest.h,v 1.17 2006/01/19 18:50:36 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -57,9 +57,9 @@ public:
     HttpRequest(method_t aMethod, protocol_t aProtocol, const char *aUrlpath);
     ~HttpRequest();
     virtual void reset();
+    void initHTTP(method_t aMethod, protocol_t aProtocol, const char *aUrlpath);
 
 protected:
-    void initXX(method_t aMethod, protocol_t aProtocol, const char *aUrlpath);
     void clean();
     void init();
 

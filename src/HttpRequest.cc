@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.57 2006/01/19 18:40:28 wessels Exp $
+ * $Id: HttpRequest.cc,v 1.58 2006/01/19 18:50:36 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -48,7 +48,7 @@ HttpRequest::HttpRequest() : HttpMsg(hoRequest), link_count(0)
 HttpRequest::HttpRequest(method_t aMethod, protocol_t aProtocol, const char *aUrlpath) : HttpMsg(hoRequest),link_count(0)
 {
     init();
-    initXX(aMethod, aProtocol, aUrlpath);
+    initHTTP(aMethod, aProtocol, aUrlpath);
 }
 
 HttpRequest::~HttpRequest()
@@ -58,7 +58,7 @@ HttpRequest::~HttpRequest()
 }
 
 void
-HttpRequest::initXX(method_t aMethod, protocol_t aProtocol, const char *aUrlpath)
+HttpRequest::initHTTP(method_t aMethod, protocol_t aProtocol, const char *aUrlpath)
 {
     method = aMethod;
     protocol = aProtocol;

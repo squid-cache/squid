@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.149 2006/01/19 18:40:28 wessels Exp $
+ * $Id: url.cc,v 1.150 2006/01/19 18:50:36 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -461,9 +461,7 @@ urlParse(method_t method, char *url, HttpRequest *request)
     if (NULL == request)
         request = new HttpRequest(method, protocol, urlpath);
     else {
-        request->method = method;
-        request->protocol = protocol;
-        request->urlpath = urlpath;
+        request->initHTTP(method, protocol, urlpath);
     }
 
     xstrncpy(request->host, host, SQUIDHOSTNAMELEN);
