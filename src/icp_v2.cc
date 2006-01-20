@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.88 2005/12/08 20:08:47 wessels Exp $
+ * $Id: icp_v2.cc,v 1.89 2006/01/19 18:40:28 wessels Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -98,7 +98,7 @@ ICPState::~ICPState()
     safe_free(url);
 
     if (request)
-        requestDestroy(request);
+        delete request;
 }
 
 

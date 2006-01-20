@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.148 2005/11/11 17:45:15 wessels Exp $
+ * $Id: url.cc,v 1.149 2006/01/19 18:40:28 wessels Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -459,7 +459,7 @@ urlParse(method_t method, char *url, HttpRequest *request)
     }
 
     if (NULL == request)
-        request = requestCreate(method, protocol, urlpath);
+        request = new HttpRequest(method, protocol, urlpath);
     else {
         request->method = method;
         request->protocol = protocol;
@@ -476,7 +476,7 @@ static HttpRequest *
 urnParse(method_t method, char *urn)
 {
     debug(50, 5) ("urnParse: %s\n", urn);
-    return requestCreate(method, PROTO_URN, urn + 4);
+    return new HttpRequest(method, PROTO_URN, urn + 4);
 }
 
 const char *

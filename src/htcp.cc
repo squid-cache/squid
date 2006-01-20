@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.61 2006/01/04 17:19:41 wessels Exp $
+ * $Id: htcp.cc,v 1.62 2006/01/19 18:40:28 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -818,7 +818,7 @@ htcpSpecifier::checkHit()
 
     if (!httpHeaderParse(&checkHitRequest->header, req_hdrs, blk_end)) {
         debug(31, 3) ("htcpCheckHit: NO; failed to parse request headers\n");
-        requestDestroy(checkHitRequest);
+        delete checkHitRequest;
         checkHitRequest = NULL;
         checkedHit(NullStoreEntry::getInstance());
         return;
@@ -852,7 +852,7 @@ htcpSpecifier::created (StoreEntry *e)
     hit = e;
 
 miss:
-    requestDestroy(checkHitRequest);
+    delete checkHitRequest;
     checkedHit (hit);
 }
 

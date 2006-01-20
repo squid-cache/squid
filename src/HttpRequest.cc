@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.56 2006/01/09 19:59:37 wessels Exp $
+ * $Id: HttpRequest.cc,v 1.57 2006/01/19 18:40:28 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -40,83 +40,81 @@
 #include "HttpHeaderRange.h"
 #include "MemBuf.h"
 
-HttpRequest::HttpRequest()  : HttpMsg(hoRequest)
+HttpRequest::HttpRequest() : HttpMsg(hoRequest), link_count(0)
 {
+    init();
+}
+
+HttpRequest::HttpRequest(method_t aMethod, protocol_t aProtocol, const char *aUrlpath) : HttpMsg(hoRequest),link_count(0)
+{
+    init();
+    initXX(aMethod, aProtocol, aUrlpath);
+}
+
+HttpRequest::~HttpRequest()
+{
+    assert(link_count == 0);
+    clean();
+}
+
+void
+HttpRequest::initXX(method_t aMethod, protocol_t aProtocol, const char *aUrlpath)
+{
+    method = aMethod;
+    protocol = aProtocol;
+    urlpath = aUrlpath;
+}
+
+void
+HttpRequest::init()
+{
+    /*
+     * NOTE: init() and clean() do NOT touch link_count!
+     */
     method = METHOD_NONE;
+    protocol = PROTO_NONE;
+    urlpath = NULL;
     login[0] = '\0';
     host[0] = '\0';
     auth_user_request = NULL;
     port = 0;
     canonical = NULL;
-    link_count = 0;
     memset(&flags, '\0', sizeof(flags));
     range = NULL;
     ims = -1;
     imslen = 0;
-    max_forwards = 0;
-    client_addr.s_addr = no_addr.s_addr;
-    my_addr.s_addr = no_addr.s_addr;
+    lastmod = -1;
+    max_forwards = -1;
+    client_addr = no_addr;
+    my_addr = no_addr;
     my_port = 0;
     client_port = 0;
     body_connection = NULL;
     // hier
     errType = ERR_NONE;
-    peer_login = NULL;
-    lastmod = -1;
+    peer_login = NULL;		// not allocated/deallocated by this class
+    peer_domain = NULL;		// not allocated/deallocated by this class
     vary_headers = NULL;
-    peer_domain = NULL;
-    tag = "";
-    extacl_user = "";
-    extacl_passwd = "";
-    extacl_log = "";
-}
-
-HttpRequest *
-requestCreate(method_t method, protocol_t protocol, const char *aUrlpath)
-{
-    HttpRequest *req = new HttpRequest;
-    req->method = method;
-    req->protocol = protocol;
-
-    if (aUrlpath)
-        req->urlpath = aUrlpath;
-
-    req->max_forwards = -1;
-
-    req->lastmod = -1;
-
-    req->client_addr = no_addr;
-
-    req->my_addr = no_addr;
-
-    return req;
-}
-
-void HttpRequest::reset()
-{
-    int lc = link_count;
-    clean();
-    *this = HttpRequest(); // XXX: ugly; merge with clean()
-    link_count = lc;
+    tag = null_string;
+    extacl_user = null_string;
+    extacl_passwd = null_string;
+    extacl_log = null_string;
 }
 
 void
-requestDestroy(HttpRequest * req)
+HttpRequest::clean()
 {
-    assert(req);
-    req->clean();
-    delete req;
-}
+    /*
+     * NOTE: init() and clean() do NOT touch link_count!
+     */
 
-// note: this is a very low-level method that leaves us in inconsistent state
-// suitable for deletion or assignment only; XXX: should be merged with reset()
-void HttpRequest::clean()
-{
     if (body_connection.getRaw() != NULL)
         fatal ("request being destroyed with body connection intact\n");
 
-    if (auth_user_request)
+    if (auth_user_request) {
         auth_user_request->unlock();
+        auth_user_request = NULL;
+    }
 
     safe_free(canonical);
 
@@ -131,8 +129,10 @@ void HttpRequest::clean()
         cache_control = NULL;
     }
 
-    if (range)
+    if (range) {
         delete range;
+        range = NULL;
+    }
 
     tag.clean();
 
@@ -141,6 +141,13 @@ void HttpRequest::clean()
     extacl_passwd.clean();
 
     extacl_log.clean();
+}
+
+void
+HttpRequest::reset()
+{
+    clean();
+    init();
 }
 
 bool HttpRequest::sanityCheckStartLine(MemBuf *buf, http_status *error)
@@ -205,7 +212,6 @@ bool HttpRequest::parseFirstLine(const char *start, const char *end)
     return true;
 }
 
-
 HttpRequest *
 requestLink(HttpRequest * request)
 {
@@ -225,7 +231,7 @@ requestUnlink(HttpRequest * request)
     if (--request->link_count > 0)
         return;
 
-    requestDestroy(request);
+    delete request;
 }
 
 int
@@ -246,49 +252,47 @@ HttpRequest::parseHeader(const char *parse_start)
 
 /* swaps out request using httpRequestPack */
 void
-httpRequestSwapOut(const HttpRequest * req, StoreEntry * e)
+HttpRequest::swapOut(StoreEntry * e)
 {
     Packer p;
-    assert(req && e);
+    assert(e);
     packerToStoreInit(&p, e);
-    httpRequestPack(req, &p);
+    pack(&p);
     packerClean(&p);
 }
 
 /* packs request-line and headers, appends <crlf> terminator */
 void
-httpRequestPack(const HttpRequest * req, Packer * p)
+HttpRequest::pack(Packer * p)
 {
-    assert(req && p);
+    assert(p);
     /* pack request-line */
     packerPrintf(p, "%s %s HTTP/1.0\r\n",
-                 RequestMethodStr[req->method], req->urlpath.buf());
+                 RequestMethodStr[method], urlpath.buf());
     /* headers */
-    httpHeaderPackInto(&req->header, p);
+    httpHeaderPackInto(&header, p);
     /* trailer */
     packerAppend(p, "\r\n", 2);
 }
 
-#if UNUSED_CODE
+/*
+ * A wrapper for debugObj()
+ */
 void
-httpRequestSetHeaders(HttpRequest * req, method_t method, const char *uri, const char *header_str)
+httpRequestPack(void *obj, Packer *p)
 {
-    assert(req && uri && header_str);
-    assert(!req->header.len);
-    httpHeaderParse(&req->header, header_str, header_str + strlen(header_str));
+    HttpRequest *request = static_cast<HttpRequest*>(obj);
+    request->pack(p);
 }
-
-#endif
 
 /* returns the length of request line + headers + crlf */
 int
-httpRequestPrefixLen(const HttpRequest * req)
+HttpRequest::prefixLen()
 {
-    assert(req);
-    return strlen(RequestMethodStr[req->method]) + 1 +
-           req->urlpath.size() + 1 +
+    return strlen(RequestMethodStr[method]) + 1 +
+           urlpath.size() + 1 +
            4 + 1 + 3 + 2 +
-           req->header.len + 2;
+           header.len + 2;
 }
 
 /*

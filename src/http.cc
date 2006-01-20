@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.481 2006/01/09 20:42:35 wessels Exp $
+ * $Id: http.cc,v 1.482 2006/01/19 18:40:28 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -98,8 +98,8 @@ HttpStateData::HttpStateData(FwdState *theFwdState)
         else
             url = storeUrl(entry);
 
-        HttpRequest * proxy_req = requestCreate(orig_request->method,
-                                                orig_request->protocol, url);
+        HttpRequest * proxy_req = new HttpRequest(orig_request->method,
+                                  orig_request->protocol, url);
 
         xstrncpy(proxy_req->host, _peer->host, SQUIDHOSTNAMELEN);
 
