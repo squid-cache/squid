@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.708 2006/01/14 00:06:19 wessels Exp $
+ * $Id: client_side.cc,v 1.709 2006/01/19 22:15:18 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -603,6 +603,18 @@ ConnStateData::close()
         debug(33,4)("ConnStateData::close: freeing auth_user_request '%p' (this is '%p')\n",
                     auth_user_request,this);
         auth_user_request->onConnectionClose(this);
+    }
+
+    /*
+     * This is awkward: body has a RefCount::Pointer to this.  We must
+     * destroy body so that our own reference count will go to zero.
+     * Furthermore, there currently exists a potential loop because
+     * ~ConnStateData() will delete body if it is not NULL.
+     */
+    if (body) {
+        ClientBody *tmp = body;
+        body = NULL;
+        delete tmp;
     }
 }
 

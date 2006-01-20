@@ -11,9 +11,12 @@ ClientBody::ClientBody(ConnStateData::Pointer & aConn, HttpRequest *Request) : c
 
 ClientBody::~ClientBody()
 {
-    assert(callback == NULL);
-    assert(buf == NULL);
+    if (cbdata)
+        cbdataReferenceDone(cbdata);
+
     requestUnlink(request);
+
+    conn = NULL; 	// refcounted
 }
 
 /* Called by clientReadRequest to process body content */
