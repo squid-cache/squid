@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.107 2006/01/03 21:09:00 wessels Exp $
+ * $Id: peer_digest.cc,v 1.108 2006/01/19 22:10:55 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -945,7 +945,7 @@ peerDigestFetchSetStats(DigestFetchState * fetch)
 
     /* XXX: outgoing numbers are not precise */
     /* XXX: we must distinguish between 304 hits and misses here */
-    fetch->sent.bytes = httpRequestPrefixLen(fetch->request);
+    fetch->sent.bytes = fetch->request->prefixLen();
     /* XXX: this is slightly wrong: we don't KNOW that the entire memobject
      * was fetched. We only know how big it is
      */
