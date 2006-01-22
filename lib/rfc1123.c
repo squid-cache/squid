@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1123.c,v 1.36 2005/11/04 21:02:15 wessels Exp $
+ * $Id: rfc1123.c,v 1.37 2006/01/22 16:10:00 serassio Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -68,8 +68,6 @@
 
 #define RFC850_STRFTIME "%A, %d-%b-%y %H:%M:%S GMT"
 #define RFC1123_STRFTIME "%a, %d %b %Y %H:%M:%S GMT"
-
-static const char *const w_space = " \t\r\n";
 
 static int make_month(const char *s);
 static int make_num(const char *s);
