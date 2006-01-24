@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.205 2005/11/05 00:08:32 wessels Exp $
+ * $Id: errorpage.cc,v 1.206 2006/01/23 20:04:24 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -376,7 +376,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
      * on 407/401 responses, and do not check the accel state on 401/407 responses 
      */
     authenticateFixHeader(rep, err->auth_user_request, err->request, 0, 1);
-    rep->swapOut(entry);
+    storeEntryReplaceObject(entry, rep);
     EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
     storeBufferFlush(entry);
     entry->complete();

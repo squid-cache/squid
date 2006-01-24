@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.h,v 1.6 2006/01/09 20:38:44 wessels Exp $
+ * $Id: HttpMsg.h,v 1.7 2006/01/23 20:04:24 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -45,14 +45,20 @@ class HttpMsg
 
 public:
     HttpMsg(http_hdr_owner_type owner);
-    virtual ~HttpMsg() {};
+    virtual ~HttpMsg();
 
     virtual void reset() = 0; // will have body when http*Clean()s are gone
 
     void packInto(Packer * p, bool full_uri) const;
 
+    virtual HttpMsg *lock()
+
+    ;
+    virtual void unlock();
+
 public:
     HttpVersion http_ver;
+
     HttpHeader header;
 
     HttpHdrCc *cache_control;
@@ -63,28 +69,37 @@ public:
     int hdr_sz;
 
     int content_length;
+
     protocol_t protocol;
 
     HttpMsgParseState pstate;   /* the current parsing state */
+
     // returns true and sets hdr_sz on success
     // returns false and sets *error to zero when needs more data
     // returns false and sets *error to a positive http_status code on error
     bool parse(MemBuf *buf, bool eol, http_status *error);
+
     bool parseCharBuf(const char *buf, ssize_t end);
+
     int httpMsgParseStep(const char *buf, int atEnd);
+
     int httpMsgParseError();
+
     virtual bool expectingBody(method_t, ssize_t&) const = 0;
 
+    void firstLineBuf(MemBuf&);
 
 protected:
     virtual bool sanityCheckStartLine(MemBuf *buf, http_status *error) = 0;
+
     virtual void packFirstLineInto(Packer * p, bool full_uri) const = 0;
+
     virtual bool parseFirstLine(const char *blk_start, const char *blk_end) = 0;
+
     virtual void hdrCacheInit();
 
-public:
+    int lock_count;
 
-    void firstLineBuf(MemBuf&);
 };
 
 

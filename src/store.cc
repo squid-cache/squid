@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.582 2006/01/11 21:10:56 wessels Exp $
+ * $Id: store.cc,v 1.583 2006/01/23 20:04:24 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -1754,40 +1754,49 @@ storeSwapFileNumberSet(StoreEntry * e, sfileno filn)
 
 #endif
 
+
 /* Replace a store entry with
  * a new reply. This eats the reply.
  */
 void
 storeEntryReplaceObject(StoreEntry * e, HttpReply * rep)
 {
-    MemObject * const mem = e->mem_obj;
-    HttpReply *myrep;
-    Packer p;
-    debug(20, 3) ("storeEntryReplaceObject: %s\n", storeUrl(e));
+    e->replaceHttpReply(rep);
+}
 
-    if (!mem) {
+void
+StoreEntry::replaceHttpReply(HttpReply *rep)
+{
+    debug(20, 3) ("storeEntryReplaceObject: %s\n", storeUrl(this));
+    Packer p;
+
+    if (!mem_obj) {
         debug (20,0)("Attempt to replace object with no in-memory representation\n");
         return;
     }
 
+    mem_obj->replaceHttpReply(rep);
+
+#if OLD
     /* TODO: check that there is at most 1 store client ? */
-    myrep = (HttpReply *)e->getReply(); /* we are allowed to do this */
+    HttpReply *myrep = (HttpReply *)e->getReply(); /* we are allowed to do this */
 
     /* move info to the mem_obj->reply */
     myrep->absorb(rep);
+#endif
 
     /* TODO: when we store headers serparately remove the header portion */
     /* TODO: mark the length of the headers ? */
     /* We ONLY want the headers */
-    packerToStoreInit(&p, e);
+    packerToStoreInit(&p, this);
 
-    assert (e->isEmpty());
+    assert (isEmpty());
 
-    e->getReply()->packHeadersInto(&p);
+    getReply()->packHeadersInto(&p);
 
-    myrep->hdr_sz = e->mem_obj->endOffset();
+    rep->hdr_sz = mem_obj->endOffset();
 
-    httpBodyPackInto(&e->getReply()->body, &p);
+    httpBodyPackInto(&getReply()->body, &p);
 
     packerClean(&p);
 }

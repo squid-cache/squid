@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.93 2006/01/03 17:22:31 wessels Exp $
+ * $Id: urn.cc,v 1.94 2006/01/23 20:04:24 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -370,8 +370,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
     assert(urlres_e->getReply());
     rep = new HttpReply;
     rep->parseCharBuf(buf, k);
-    debug(52, 3) ("reply exists, code=%d.\n",
-                  rep->sline.status);
+    debug(52, 3) ("reply exists, code=%d.\n", rep->sline.status);
 
     if (rep->sline.status != HTTP_OK) {
         debug(52, 3) ("urnHandleReply: failed.\n");
@@ -449,7 +448,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     httpBodySet(&rep->body, mb);
     /* don't clean or delete mb; rep->body owns it now */
-    rep->swapOut(e);
+    storeEntryReplaceObject(e, rep);
     e->complete();
 
     for (i = 0; i < urlcnt; i++) {

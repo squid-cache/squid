@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.h,v 1.14 2005/11/21 22:49:04 wessels Exp $
+ * $Id: HttpReply.h,v 1.15 2006/01/23 20:04:24 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -55,6 +55,17 @@ public:
 
     virtual void reset();
 
+    virtual HttpReply *lock()
+
+    {
+
+        return static_cast<HttpReply*>(HttpMsg::lock())
+
+                   ;
+    } ;
+
+    //virtual void unlock();  // only needed for debugging
+
     // returns true on success
     // returns false and sets *error to zero when needs more data
     // returns false and sets *error to a positive http_status code on error
@@ -62,55 +73,76 @@ public:
 
     /* public, readable; never update these or their .hdr equivalents directly */
     time_t date;
+
     time_t last_modified;
+
     time_t expires;
+
     String content_type;
+
     HttpHdrSc *surrogate_control;
+
     HttpHdrContRange *content_range;
+
     short int keep_alive;
 
     /* public, writable, but use httpReply* interfaces when possible */
     HttpStatusLine sline;
+
     HttpBody body;		/* for small constant memory-resident text bodies only */
 
     String protoPrefix;       // e.g., "HTTP/"
+
     bool do_clean;
 
 public:
     virtual bool expectingBody(method_t, ssize_t&) const;
+
     void updateOnNotModified(HttpReply const *other);
+
     /* absorb: copy the contents of a new reply to the old one, destroy new one */
     void absorb(HttpReply * new_rep);
+
     /* set commonly used info with one call */
     void setHeaders(HttpVersion ver, http_status status,
                     const char *reason, const char *ctype, int clen, time_t lmt, time_t expires);
+
     /* mem-pack: returns a ready to use mem buffer with a packed reply */
     MemBuf *pack();
-    /* swap: create swap-based packer, pack, destroy packer */
-    void swapOut(StoreEntry * e);
+
     /* construct a 304 reply and return it */
     HttpReply *make304() const;
 
     void redirect(http_status, const char *);
+
     int bodySize(method_t) const;
+
     int validatorsMatch (HttpReply const *other) const;
+
     void packHeadersInto(Packer * p) const;
 
 private:
     /* initialize */
     void init();
+
     void clean();
+
     void hdrCacheClean();
+
     void packInto(Packer * p);
+
     /* ez-routines */
     /* construct 304 reply and pack it into MemBuf, return MemBuf */
     MemBuf *packed304Reply();
+
     /* header manipulation */
     time_t hdrExpirationTime();
 
 protected:
     virtual void packFirstLineInto(Packer * p, bool) const;
+
     virtual bool parseFirstLine(const char *start, const char *end);
+
     virtual void hdrCacheInit();
 };
 

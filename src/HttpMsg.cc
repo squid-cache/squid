@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.23 2006/01/09 20:38:44 wessels Exp $
+ * $Id: HttpMsg.cc,v 1.24 2006/01/23 20:04:24 wessels Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -41,8 +41,13 @@
 
 HttpMsg::HttpMsg(http_hdr_owner_type owner): header(owner),
         cache_control(NULL), hdr_sz(0), content_length(0), protocol(PROTO_NONE),
-        pstate(psReadyToParseStartLine)
+        pstate(psReadyToParseStartLine), lock_count(0)
 {}
+
+HttpMsg::~HttpMsg()
+{
+    assert(lock_count == 0);
+}
 
 HttpMsgParseState &operator++ (HttpMsgParseState &aState)
 {
@@ -353,4 +358,22 @@ void HttpMsg::firstLineBuf(MemBuf& mb)
     packerToMemInit(&p, &mb);
     packFirstLineInto(&p, true);
     packerClean(&p);
+}
+
+HttpMsg *
+
+HttpMsg::lock()
+{
+    lock_count++;
+    return this;
+}
+
+void
+HttpMsg::unlock()
+{
+    assert(lock_count > 0);
+    --lock_count;
+
+    if (0 == lock_count)
+        delete this;
 }
