@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.17 2006/01/19 18:50:36 wessels Exp $
+ * $Id: HttpRequest.h,v 1.18 2006/01/23 20:04:24 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -57,55 +57,95 @@ public:
     HttpRequest(method_t aMethod, protocol_t aProtocol, const char *aUrlpath);
     ~HttpRequest();
     virtual void reset();
+
+    virtual HttpRequest *lock()
+
+    {
+
+        return static_cast<HttpRequest*>(HttpMsg::lock())
+
+                   ;
+    };
+
     void initHTTP(method_t aMethod, protocol_t aProtocol, const char *aUrlpath);
 
 protected:
     void clean();
+
     void init();
 
 public:
-    int link_count;		/* free when zero */
-
-public:
     method_t method;
+
     char login[MAX_LOGIN_SZ];
+
     char host[SQUIDHOSTNAMELEN + 1];
+
     auth_user_request_t *auth_user_request;
+
     u_short port;
+
     String urlpath;
+
     char *canonical;
+
     request_flags flags;
+
     HttpHdrRange *range;
+
     time_t ims;
+
     int imslen;
+
     int max_forwards;
+
     /* these in_addr's could probably be sockaddr_in's */
 
     struct IN_ADDR client_addr;
 
     struct IN_ADDR my_addr;
+
     unsigned short my_port;
+
     unsigned short client_port;
+
     ConnStateData::Pointer body_connection;	/* used by clientReadBody() */
+
     HierarchyLogEntry hier;
+
     err_type errType;
+
     char *peer_login;		/* Configured peer login:password */
+
     time_t lastmod;		/* Used on refreshes */
+
     const char *vary_headers;	/* Used when varying entities are detected. Changes how the store key is calculated */
+
     char *peer_domain;		/* Configured peer forceddomain */
+
     String tag;			/* Internal tag for this request */
+
     String extacl_user;		/* User name returned by extacl lookup */
+
     String extacl_passwd;	/* Password returned by extacl lookup */
+
     String extacl_log;		/* String to be used for access.log purposes */
 
 public:
     bool multipartRangeRequest() const;
+
     bool parseFirstLine(const char *start, const char *end);
+
     int parseHeader(const char *parse_start);
+
     virtual bool expectingBody(method_t unused, ssize_t&) const;
+
     int prefixLen();
+
     void swapOut(StoreEntry * e);
+
     void pack(Packer * p);
+
     static void httpRequestPack(void *obj, Packer *p);
 
 private:
@@ -113,7 +153,9 @@ private:
 
 protected:
     virtual void packFirstLineInto(Packer * p, bool full_uri) const;
+
     virtual bool sanityCheckStartLine(MemBuf *buf, http_status *error);
+
     virtual void hdrCacheInit();
 
 };

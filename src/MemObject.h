@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.h,v 1.10 2004/12/27 11:04:36 serassio Exp $
+ * $Id: MemObject.h,v 1.11 2006/01/23 20:04:24 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -59,6 +59,7 @@ public:
     void write(StoreIOBuffer, STMCB *, void *);
     void unlinkRequest();
     HttpReply const *getReply() const;
+    void replaceHttpReply(HttpReply *newrep);
     void stat (MemBuf * mb) const;
     off_t endOffset () const;
     size_t size() const;
@@ -140,9 +141,15 @@ public:
     void kickReads();
 
 private:
+#if OLD
     /* Read only - this reply must be preserved by store clients */
     /* The original reply. possibly with updated metadata. */
     HttpReply const *_reply;
+#else
+
+    HttpReply *_reply;
+#endif
+
     DeferredReadManager deferredReads;
 };
 

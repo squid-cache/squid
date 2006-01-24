@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.18 2006/01/04 20:29:15 wessels Exp $
+ * $Id: http.h,v 1.19 2006/01/23 20:04:24 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -106,13 +106,18 @@ public:
      * getReply() public only because it is called from a static function
      * as httpState->getReply()
      */
+#if OLD
 const HttpReply * getReply() const { return reply ? reply : entry->getReply(); }
+
+#else
+    const HttpReply * getReply() const { assert(reply); return reply; }
+
+#endif
 
 private:
     /*
-     * This HttpReply will be owned by HttpStateData until it is given to the
-     * StoreEntry.  This is necessary/usefulr for ESI/ICAP.  Use this class' getReply()
-     * method to get the reply either directly from this class or from the StoreEntry
+     * HttpReply is now shared (locked) among multiple classes,
+     * including HttpStateData, StoreEntry, and ICAP.
      */
     HttpReply *reply;
 

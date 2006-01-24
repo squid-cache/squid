@@ -1,6 +1,6 @@
 
 /*
- * $Id: internal.cc,v 1.34 2005/11/05 00:08:32 wessels Exp $
+ * $Id: internal.cc,v 1.35 2006/01/23 20:04:24 wessels Exp $
  *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
@@ -70,7 +70,7 @@ internalStart(HttpRequest * request, StoreEntry * entry)
                           strlen(msgbuf),
                           squid_curtime,
                           -2);
-        reply->swapOut(entry);
+        storeEntryReplaceObject(entry, reply);
         storeAppend(entry, msgbuf, strlen(msgbuf));
         entry->complete();
     } else {

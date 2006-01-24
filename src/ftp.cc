@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.374 2006/01/03 17:22:31 wessels Exp $
+ * $Id: ftp.cc,v 1.375 2006/01/23 20:04:24 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -247,7 +247,7 @@ static void ftpLoginParser(const char *, FtpStateData *, int escaped);
 static wordlist *ftpParseControlReply(char *, size_t, int *, int *);
 static int ftpRestartable(FtpStateData * ftpState);
 static void ftpAppendSuccessHeader(FtpStateData * ftpState);
-static void ftpAuthRequired(HttpReply * reply, HttpRequest * request, const char *realm);
+static HttpReply *ftpAuthRequired(HttpRequest * request, const char *realm);
 static void ftpHackShortcut(FtpStateData * ftpState, FTPSM * nextState);
 static void ftpUnhack(FtpStateData * ftpState);
 static void ftpScheduleReadControlReply(FtpStateData *, int);
@@ -1397,7 +1397,6 @@ ftpStart(FwdState * fwd)
     LOCAL_ARRAY(char, realm, 8192);
     const char *url = storeUrl(entry);
     FtpStateData *ftpState;
-    HttpReply *reply;
 
     ftpState = new FtpStateData;
     debug(9, 3) ("ftpStart: '%s'\n", url);
@@ -1433,15 +1432,10 @@ ftpStart(FwdState * fwd)
                      ftpState->user, request->port);
         }
 
-        /* create reply */
-        reply = new HttpReply;
-
-        assert(reply != NULL);
-
         /* create appropriate reply */
-        ftpAuthRequired(reply, request, realm);
+        HttpReply *reply = ftpAuthRequired(request, realm);
 
-        reply->swapOut(entry);
+        storeEntryReplaceObject(entry, reply);
 
         ftpState->fwd->complete();
 
@@ -3122,7 +3116,7 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
     if (mime_enc)
         httpHeaderPutStr(&reply->header, HDR_CONTENT_ENCODING, mime_enc);
 
-    reply->swapOut(e);
+    storeEntryReplaceObject(e, reply);
 
     storeTimestampsSet(e);
 
@@ -3138,18 +3132,16 @@ ftpAppendSuccessHeader(FtpStateData * ftpState)
     }
 }
 
-static void
-ftpAuthRequired(HttpReply * old_reply, HttpRequest * request, const char *realm)
+static HttpReply *
+ftpAuthRequired(HttpRequest * request, const char *realm)
 {
     ErrorState *err = errorCon(ERR_CACHE_ACCESS_DENIED, HTTP_UNAUTHORIZED);
-    HttpReply *rep;
     err->request = requestLink(request);
-    rep = errorBuildReply(err);
+    HttpReply *newrep = errorBuildReply(err);
     errorStateFree(err);
     /* add Authenticate header */
-    httpHeaderPutAuth(&rep->header, "Basic", realm);
-    /* move new reply to the old one */
-    old_reply->absorb(rep);
+    httpHeaderPutAuth(&newrep->header, "Basic", realm);
+    return newrep;
 }
 
 char *

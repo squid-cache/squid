@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.81 2005/12/26 11:35:22 serassio Exp $
+ * $Id: HttpReply.cc,v 1.82 2006/01/23 20:04:24 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -102,6 +102,7 @@ HttpReply::clean()
     httpStatusLineClean(&sline);
 }
 
+#if OLD
 /* absorb: copy the contents of a new reply to the old one, destroy new one */
 void
 HttpReply::absorb(HttpReply * new_rep)
@@ -115,6 +116,8 @@ HttpReply::absorb(HttpReply * new_rep)
     new_rep->cache_control = NULL;	// helps with debugging
     delete new_rep;
 }
+
+#endif
 
 void
 HttpReply::packHeadersInto(Packer * p) const
@@ -143,18 +146,6 @@ HttpReply::pack()
     packInto(&p);
     packerClean(&p);
     return mb;
-}
-
-/*
- * swap: create swap-based packer, pack, destroy packer
- * This eats the reply.
- */
-void
-HttpReply::swapOut(StoreEntry * e)
-{
-    assert(e);
-
-    storeEntryReplaceObject(e, this);
 }
 
 MemBuf *

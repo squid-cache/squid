@@ -1,6 +1,6 @@
 
 /*
- * $Id: MsgPipeData.h,v 1.4 2006/01/11 22:40:39 wessels Exp $
+ * $Id: MsgPipeData.h,v 1.5 2006/01/23 20:04:25 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -65,17 +65,19 @@ public:
 
     void setCause(HttpRequest *r)
     {
-        cause = requestLink(r);
+
+        cause = r->lock()
+
+                ;
     };
 
     void setHeader(HttpMsg *msg)
     {
         clearHeader();
 
-        if (HttpRequest *req = dynamic_cast<HttpRequest*>(msg))
-            header = requestLink(req);
-        else if (HttpReply *rep = dynamic_cast<HttpReply*>(msg))
-            header = rep;
+        header = msg->lock()
+
+                 ;
     };
 
 public:
@@ -91,20 +93,9 @@ public:
 
 private:
 
-    void clearCause()
-    {
-        requestUnlink(cause);
-        cause = NULL;
-    };
+    void clearCause() { cause->unlock(); cause = NULL; };
 
-    void clearHeader()
-    {
-        if (HttpRequest *req = dynamic_cast<HttpRequest*>(header))
-            requestUnlink(req);
-
-        header = NULL;
-    };
-
+    void clearHeader() { header->unlock(); header = NULL; };
 };
 
 #endif /* SQUID_MSGPIPEDATA_H */

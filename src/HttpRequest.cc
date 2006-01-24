@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.58 2006/01/19 18:50:36 wessels Exp $
+ * $Id: HttpRequest.cc,v 1.59 2006/01/23 20:04:24 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -40,12 +40,12 @@
 #include "HttpHeaderRange.h"
 #include "MemBuf.h"
 
-HttpRequest::HttpRequest() : HttpMsg(hoRequest), link_count(0)
+HttpRequest::HttpRequest() : HttpMsg(hoRequest)
 {
     init();
 }
 
-HttpRequest::HttpRequest(method_t aMethod, protocol_t aProtocol, const char *aUrlpath) : HttpMsg(hoRequest),link_count(0)
+HttpRequest::HttpRequest(method_t aMethod, protocol_t aProtocol, const char *aUrlpath) : HttpMsg(hoRequest)
 {
     init();
     initHTTP(aMethod, aProtocol, aUrlpath);
@@ -53,7 +53,6 @@ HttpRequest::HttpRequest(method_t aMethod, protocol_t aProtocol, const char *aUr
 
 HttpRequest::~HttpRequest()
 {
-    assert(link_count == 0);
     clean();
 }
 
@@ -68,9 +67,6 @@ HttpRequest::initHTTP(method_t aMethod, protocol_t aProtocol, const char *aUrlpa
 void
 HttpRequest::init()
 {
-    /*
-     * NOTE: init() and clean() do NOT touch link_count!
-     */
     method = METHOD_NONE;
     protocol = PROTO_NONE;
     urlpath = NULL;
@@ -104,10 +100,6 @@ HttpRequest::init()
 void
 HttpRequest::clean()
 {
-    /*
-     * NOTE: init() and clean() do NOT touch link_count!
-     */
-
     if (body_connection.getRaw() != NULL)
         fatal ("request being destroyed with body connection intact\n");
 
@@ -216,8 +208,10 @@ HttpRequest *
 requestLink(HttpRequest * request)
 {
     assert(request);
-    request->link_count++;
-    return request;
+
+    return request->lock()
+
+           ;
 }
 
 void
@@ -226,12 +220,7 @@ requestUnlink(HttpRequest * request)
     if (!request)
         return;
 
-    assert(request->link_count > 0);
-
-    if (--request->link_count > 0)
-        return;
-
-    delete request;
+    request->unlock();
 }
 
 int

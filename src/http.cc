@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.482 2006/01/19 18:40:28 wessels Exp $
+ * $Id: http.cc,v 1.483 2006/01/23 20:04:24 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -168,7 +168,7 @@ HttpStateData::~HttpStateData()
     fwd = NULL;	// refcounted
 
     if (reply)
-        delete reply;
+        reply->unlock();
 
 #if ICAP_CLIENT
 
@@ -766,7 +766,7 @@ HttpStateData::processReplyHeader()
     /* Creates a blank header. If this routine is made incremental, this will
      * not do 
      */
-    reply = new HttpReply;
+    HttpReply *newrep = new HttpReply;
     Ctx ctx = ctx_enter(entry->mem_obj->url);
     debug(11, 3) ("processReplyHeader: key '%s'\n", entry->getMD5Text());
 
@@ -774,14 +774,13 @@ HttpStateData::processReplyHeader()
 
     http_status error = HTTP_STATUS_NONE;
 
-    const bool parsed = reply->parse(readBuf, eof, &error);
+    const bool parsed = newrep->parse(readBuf, eof, &error);
 
     if (!parsed && error > 0) { // unrecoverable parsing error
         debugs(11, 3, "processReplyHeader: Non-HTTP-compliant header: '" <<  readBuf->content() << "'");
         flags.headers_parsed = 1;
         // negated result yields http_status
-        failReply (reply, error);	// consumes reply
-        reply = NULL;
+        failReply (newrep, error);
         ctx_exit(ctx);
         return;
     }
@@ -789,16 +788,20 @@ HttpStateData::processReplyHeader()
     if (!parsed) { // need more data
         assert(!error);
         assert(!eof);
-        delete reply;
-        reply = NULL;
+        delete newrep;
         ctx_exit(ctx);
         return;
     }
+
+    reply = newrep->lock()
+
+            ;
 
     debug(11, 9) ("GOT HTTP REPLY HDR:\n---------\n%s\n----------\n",
                   readBuf->content());
 
     readBuf->consume(headersEnd(readBuf->content(), readBuf->contentSize()));
+
     flags.headers_parsed = 1;
 
     keepaliveAccounting(reply);
@@ -826,9 +829,6 @@ HttpStateData::processReplyHeader()
 #endif
 
     storeEntryReplaceObject(entry, reply);
-
-    /* Note storeEntryReplaceObject() consumes reply, so we cannot use it */
-    reply = NULL;
 
     haveParsedReplyHeaders();
 
@@ -975,7 +975,6 @@ HttpStateData::statusIfComplete() const
 HttpStateData::ConnectionStatus
 HttpStateData::persistentConnStatus() const
 {
-    HttpReply const *reply = getReply();
     int clen;
     debug(11, 3) ("persistentConnStatus: FD %d\n", fd);
     ConnectionStatus result = statusIfComplete();
@@ -2017,9 +2016,6 @@ HttpStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
         // handle case where no service is selected;
         storeEntryReplaceObject(entry, reply);
 
-        /* Note storeEntryReplaceObject() consumes reply, so we cannot use it */
-        reply = NULL;
-
         haveParsedReplyHeaders();
         processReplyBody();
 
@@ -2084,12 +2080,11 @@ HttpStateData::takeAdaptedHeaders(HttpReply *rep)
 
     assert (rep);
     storeEntryReplaceObject(entry, rep);
+    reply->unlock();
 
-    /*
-     * After calling storeEntryReplaceObject() we give up control
-     * of the rep and this->reply pointers.
-     */
-    rep = NULL;
+    reply = rep->lock()
+
+            ;
 
     haveParsedReplyHeaders();
 
