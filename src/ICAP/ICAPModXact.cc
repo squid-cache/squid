@@ -683,8 +683,8 @@ void ICAPModXact::handle204NoContent()
     packHead(httpBuf, oldHead);
 
     // allocate the adapted message
-    HttpMsg *&newHead = adapted->data->header;
-    Must(!newHead);
+    Must(!adapted->data->header);
+    HttpMsg *newHead = NULL;
 
     if (dynamic_cast<const HttpRequest*>(oldHead))
         newHead = new HttpRequest;
@@ -693,6 +693,8 @@ void ICAPModXact::handle204NoContent()
             newHead = new HttpReply;
 
     Must(newHead);
+
+    adapted->data->setHeader(newHead);
 
     // parse the buffer back
     http_status error = HTTP_STATUS_NONE;
