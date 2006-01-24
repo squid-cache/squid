@@ -144,13 +144,7 @@ void ICAPClientRespmodPrecache::noteSourceStart(MsgPipe *p)
     ssize_t dummy;
     bool expect_body = reply->expectingBody(virgin->data->cause->method, dummy);
 
-    /*
-     * When we call takeAdaptedHeaders() we give up any control over
-     * adapted->data->header
-     */
     httpState->takeAdaptedHeaders(reply);
-    adapted->data->header = NULL;
-    reply = NULL;
 
     if (expect_body)
         noteSourceProgress(p);
