@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_poll.cc,v 1.13 2003/07/06 14:16:57 hno Exp $
+ * $Id: comm_poll.cc,v 1.14 2006/01/24 15:32:02 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -56,13 +56,6 @@ static int fdIsDns(int fd);
 static OBJH commIncomingStats;
 static int comm_check_incoming_poll_handlers(int nfds, int *fds);
 static void comm_poll_dns_incoming(void);
-static void commUpdateReadBits(int fd, PF * handler);
-static void commUpdateWriteBits(int fd, PF * handler);
-
-static fd_set global_readfds;
-static fd_set global_writefds;
-static int nreadfds;
-static int nwritefds;
 
 /*
  * Automatic tuning for incoming requests:
@@ -138,13 +131,11 @@ commSetSelect(int fd, unsigned int type, PF * handler, void *client_data,
     if (type & COMM_SELECT_READ) {
         F->read_handler = handler;
         F->read_data = client_data;
-        commUpdateReadBits(fd, handler);
     }
 
     if (type & COMM_SELECT_WRITE) {
         F->write_handler = handler;
         F->write_data = client_data;
-        commUpdateWriteBits(fd, handler);
     }
 
     if (timeout)
@@ -683,9 +674,6 @@ comm_select_init(void)
     cachemgrRegister("comm_incoming",
                      "comm_incoming() stats",
                      commIncomingStats, 0, 1);
-    FD_ZERO(&global_readfds);
-    FD_ZERO(&global_writefds);
-    nreadfds = nwritefds = 0;
 }
 
 
@@ -707,30 +695,6 @@ commIncomingStats(StoreEntry * sentry)
     statHistDump(&f->comm_dns_incoming, sentry, statHistIntDumper);
     storeAppendPrintf(sentry, "HTTP Messages handled per comm_poll_http_incoming() call:\n");
     statHistDump(&f->comm_http_incoming, sentry, statHistIntDumper);
-}
-
-void
-commUpdateReadBits(int fd, PF * handler)
-{
-    if (handler && !FD_ISSET(fd, &global_readfds)) {
-        FD_SET(fd, &global_readfds);
-        nreadfds++;
-    } else if (!handler && FD_ISSET(fd, &global_readfds)) {
-        FD_CLR(fd, &global_readfds);
-        nreadfds--;
-    }
-}
-
-void
-commUpdateWriteBits(int fd, PF * handler)
-{
-    if (handler && !FD_ISSET(fd, &global_writefds)) {
-        FD_SET(fd, &global_writefds);
-        nwritefds++;
-    } else if (!handler && FD_ISSET(fd, &global_writefds)) {
-        FD_CLR(fd, &global_writefds);
-        nwritefds--;
-    }
 }
 
 /* Called by async-io or diskd to speed up the polling */
