@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.376 2006/01/24 05:46:02 wessels Exp $
+ * $Id: ftp.cc,v 1.377 2006/01/24 05:54:39 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -366,36 +366,33 @@ FtpStateData::ftpSocketClosed(int fdnotused, void *data)
     delete ftpState;
 }
 
-FtpStateData::FtpStateData(FwdState *fwd)
+FtpStateData::FtpStateData(FwdState *theFwdState)
 {
-    HttpRequest *request = fwd->request;
-    StoreEntry *entry = fwd->entry;
+    request = theFwdState->request;
+    entry = theFwdState->entry;
+    fwd = theFwdState;
     const char *url = storeUrl(entry);
-    FtpStateData *ftpState;
 
-    ftpState = new FtpStateData(fwd);
     debug(9, 3) ("ftpStart: '%s'\n", url);
     statCounter.server.all.requests++;
     statCounter.server.ftp.requests++;
     storeLockObject(entry);
-    ftpState->entry = entry;
-    ftpState->request = requestLink(request);
-    ftpState->ctrl.fd = fwd->server_fd;
-    ftpState->data.fd = -1;
-    ftpState->size = -1;
-    ftpState->mdtm = -1;
+    entry = entry;
+    request = requestLink(request);
+    ctrl.fd = theFwdState->server_fd;
+    data.fd = -1;
+    size = -1;
+    mdtm = -1;
 
-    if (Config.Ftp.passive && !fwd->ftpPasvFailed())
-        ftpState->flags.pasv_supported = 1;
+    if (Config.Ftp.passive && !theFwdState->ftpPasvFailed())
+        flags.pasv_supported = 1;
 
-    ftpState->flags.rest_supported = 1;
+    flags.rest_supported = 1;
 
-    ftpState->fwd = fwd;
+    comm_add_close_handler(ctrl.fd, ftpSocketClosed, this);
 
-    comm_add_close_handler(ftpState->ctrl.fd, ftpSocketClosed, ftpState);
-
-    if (ftpState->request->method == METHOD_PUT)
-        ftpState->flags.put = 1;
+    if (request->method == METHOD_PUT)
+        flags.put = 1;
 }
 
 FtpStateData::~FtpStateData()
