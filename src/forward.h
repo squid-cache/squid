@@ -1,3 +1,5 @@
+#ifndef SQUID_FORWARD_H
+#define SQUID_FORWARD_H
 
 class FwdServer
 {
@@ -88,3 +90,5 @@ unsigned int ftp_pasv_failed:
     flags;
 
 };
+
+#endif
