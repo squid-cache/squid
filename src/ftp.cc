@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.377 2006/01/24 05:54:39 wessels Exp $
+ * $Id: ftp.cc,v 1.378 2006/01/24 05:58:42 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -370,14 +370,13 @@ FtpStateData::FtpStateData(FwdState *theFwdState)
 {
     request = theFwdState->request;
     entry = theFwdState->entry;
+    storeLockObject(entry);
     fwd = theFwdState;
     const char *url = storeUrl(entry);
 
     debug(9, 3) ("ftpStart: '%s'\n", url);
     statCounter.server.all.requests++;
     statCounter.server.ftp.requests++;
-    storeLockObject(entry);
-    entry = entry;
     request = requestLink(request);
     ctrl.fd = theFwdState->server_fd;
     data.fd = -1;
