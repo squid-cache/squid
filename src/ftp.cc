@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.378 2006/01/24 05:58:42 wessels Exp $
+ * $Id: ftp.cc,v 1.379 2006/01/24 06:35:54 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -217,18 +217,24 @@ public:
     void scheduleReadControlReply(int);
     void handleControlReply();
     char *htmlifyListEntry(const char *line);
+    void parseListing();
+    void dataComplete();
+    void dataRead(int fd, char *buf, size_t len, comm_err_t errflag, int xerrno);
+    int checkAuth(const HttpHeader * req_hdr);
+    void checkUrlpath();
+    void buildTitleUrl();
 
     static PF ftpSocketClosed;
     static CNCB ftpPasvCallback;
-    static IOCB ftpDataRead;
+    static IOCB dataReadWrapper;
     static PF ftpDataWrite;
     static IOWCB ftpDataWriteCallback;
     static PF ftpTimeout;
     static IOCB ftpReadControlReply;
     static IOWCB ftpWriteCommandCallback;
-    static wordlist *ftpParseControlReply(char *, size_t, int *, int *);
     static HttpReply *ftpAuthRequired(HttpRequest * request, const char *realm);
     static void ftpRequestBody(char *buf, ssize_t size, void *data);
+    static wordlist *ftpParseControlReply(char *, size_t, int *, int *);
 };
 
 CBDATA_CLASS_INIT(FtpStateData);
@@ -1088,10 +1094,10 @@ FtpStateData::htmlifyListEntry(const char *line)
     return html;
 }
 
-static void
-ftpParseListing(FtpStateData * ftpState)
+void
+FtpStateData::parseListing()
 {
-    char *buf = ftpState->data.buf;
+    char *buf = data.buf;
     char *sbuf;			/* NULL-terminated copy of buf */
     char *end;
     char *line;
@@ -1099,8 +1105,8 @@ ftpParseListing(FtpStateData * ftpState)
     char *t;
     size_t linelen;
     size_t usable;
-    StoreEntry *e = ftpState->entry;
-    size_t len = ftpState->data.offset;
+    StoreEntry *e = entry;
+    size_t len = data.offset;
     /*
      * We need a NULL-terminated buffer for scanning, ick
      */
@@ -1145,7 +1151,7 @@ ftpParseListing(FtpStateData * ftpState)
         if (!strncmp(line, "total", 5))
             continue;
 
-        t = ftpState->htmlifyListEntry(line);
+        t = htmlifyListEntry(line);
 
         assert(t != NULL);
 
@@ -1163,41 +1169,46 @@ ftpParseListing(FtpStateData * ftpState)
 
         xstrncpy(line, end, linelen);
 
-        xstrncpy(ftpState->data.buf, line, ftpState->data.size);
+        xstrncpy(data.buf, line, data.size);
 
-        ftpState->data.offset = strlen(ftpState->data.buf);
+        data.offset = strlen(data.buf);
     }
 
     memFree(line, MEM_4K_BUF);
     xfree(sbuf);
 }
 
-static void
-ftpDataComplete(FtpStateData * ftpState)
+void
+FtpStateData::dataComplete()
 {
     debug(9, 3) ("ftpDataComplete\n");
     /* Connection closed; transfer done. */
 
-    if (ftpState->data.fd > -1) {
+    if (data.fd > -1) {
         /*
          * close data socket so it does not occupy resources while
          * we wait
          */
-        comm_close(ftpState->data.fd);
-        ftpState->data.fd = -1;
+        comm_close(data.fd);
+        data.fd = -1;
     }
 
     /* expect the "transfer complete" message on the control socket */
-    ftpState->scheduleReadControlReply(1);
+    scheduleReadControlReply(1);
 }
 
-static void
-ftpDataRead(int fd, char *buf, size_t len, comm_err_t errflag, int xerrno, void *data)
+void
+FtpStateData::dataReadWrapper(int fd, char *buf, size_t len, comm_err_t errflag, int xerrno, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *)data;
+    ftpState->dataRead(fd, buf, len, errflag, xerrno);
+}
+
+void
+FtpStateData::dataRead(int fd, char *buf, size_t len, comm_err_t errflag, int xerrno)
+{
     int j;
     int bin;
-    StoreEntry *entry = ftpState->entry;
     size_t read_sz;
 
     debug(9, 5) ("ftpDataRead: FD %d, Read %d bytes\n", fd, (unsigned int)len);
@@ -1210,7 +1221,7 @@ ftpDataRead(int fd, char *buf, size_t len, comm_err_t errflag, int xerrno, void 
     if (errflag == COMM_ERR_CLOSING)
         return;
 
-    assert(fd == ftpState->data.fd);
+    assert(fd == data.fd);
 
 #if DELAY_POOLS
 
@@ -1219,7 +1230,7 @@ ftpDataRead(int fd, char *buf, size_t len, comm_err_t errflag, int xerrno, void 
 #endif
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        comm_close(ftpState->ctrl.fd);
+        comm_close(ctrl.fd);
         return;
     }
 
@@ -1228,7 +1239,7 @@ ftpDataRead(int fd, char *buf, size_t len, comm_err_t errflag, int xerrno, void 
         delayId.bytesIn(len);
 #endif
 
-        ftpState->data.offset += len;
+        data.offset += len;
     }
 
 
@@ -1241,11 +1252,11 @@ ftpDataRead(int fd, char *buf, size_t len, comm_err_t errflag, int xerrno, void 
         IOStats.Ftp.read_hist[bin]++;
     }
 
-    if (!ftpState->flags.http_header_sent && len >= 0) {
-        ftpState->appendSuccessHeader();
+    if (!flags.http_header_sent && len >= 0) {
+        appendSuccessHeader();
 
-        if (ftpState->flags.isdir)
-            ftpState->listingStart();
+        if (flags.isdir)
+            listingStart();
     }
 
     if (errflag != COMM_OK || len < 0) {
@@ -1253,37 +1264,37 @@ ftpDataRead(int fd, char *buf, size_t len, comm_err_t errflag, int xerrno, void 
 
         if (ignoreErrno(xerrno)) {
             /* XXX what about Config.Timeout.read? */
-            read_sz = ftpState->data.size - ftpState->data.offset;
+            read_sz = data.size - data.offset;
 #if DELAY_POOLS
 
             read_sz = delayId.bytesWanted(1, read_sz);
 #endif
 
-            comm_read(fd, ftpState->data.buf + ftpState->data.offset, read_sz, ftpDataRead, data);
+            comm_read(fd, data.buf + data.offset, read_sz, dataReadWrapper, this);
         } else {
-            if (!ftpState->flags.http_header_sent && !ftpState->fwd->ftpPasvFailed() && ftpState->flags.pasv_supported) {
-                ftpState->fwd->dontRetry(false);	/* this is a retryable error */
-                ftpState->fwd->ftpPasvFailed(true);
+            if (!flags.http_header_sent && !fwd->ftpPasvFailed() && flags.pasv_supported) {
+                fwd->dontRetry(false);	/* this is a retryable error */
+                fwd->ftpPasvFailed(true);
             }
 
-            ftpState->failed(ERR_READ_ERROR, 0);
+            failed(ERR_READ_ERROR, 0);
             /* failed closes ctrl.fd and frees ftpState */
             return;
         }
     } else if (len == 0) {
-        ftpDataComplete(ftpState);
+        dataComplete();
     } else {
-        if (ftpState->flags.isdir) {
-            ftpParseListing(ftpState);
+        if (flags.isdir) {
+            parseListing();
         } else {
-            storeAppend(entry, ftpState->data.buf, len);
-            ftpState->data.offset = 0;
+            storeAppend(entry, data.buf, len);
+            data.offset = 0;
         }
 
         storeBufferFlush(entry);
 
         /* XXX what about Config.Timeout.read? */
-        read_sz = ftpState->data.size - ftpState->data.offset;
+        read_sz = data.size - data.offset;
 
 #if DELAY_POOLS
 
@@ -1291,7 +1302,7 @@ ftpDataRead(int fd, char *buf, size_t len, comm_err_t errflag, int xerrno, void 
 
 #endif
 
-        comm_read(fd, ftpState->data.buf + ftpState->data.offset, read_sz, ftpDataRead, data);
+        comm_read(fd, data.buf + data.offset, read_sz, dataReadWrapper, this);
     }
 }
 
@@ -1301,49 +1312,48 @@ ftpDataRead(int fd, char *buf, size_t len, comm_err_t errflag, int xerrno, void 
  * Return 1 if we have everything needed to complete this request.
  * Return 0 if something is missing.
  */
-static int
-ftpCheckAuth(FtpStateData * ftpState, const HttpHeader * req_hdr)
+int
+FtpStateData::checkAuth(const HttpHeader * req_hdr)
 {
     char *orig_user;
     const char *auth;
-    ftpState->loginParser(ftpState->request->login, FTP_LOGIN_ESCAPED);
+    loginParser(request->login, FTP_LOGIN_ESCAPED);
 
-    if (!ftpState->user[0])
+    if (!user[0])
         return 1;		/* no name */
 
-    if (ftpState->password_url || ftpState->password[0])
+    if (password_url || password[0])
         return 1;		/* passwd provided in URL */
 
     /* URL has name, but no passwd */
     if (!(auth = httpHeaderGetAuth(req_hdr, HDR_AUTHORIZATION, "Basic")))
         return 0;		/* need auth header */
 
-    ftpState->flags.authenticated = 1;
+    flags.authenticated = 1;
 
-    orig_user = xstrdup(ftpState->user);
+    orig_user = xstrdup(user);
 
-    ftpState->loginParser(auth, FTP_LOGIN_NOT_ESCAPED);
+    loginParser(auth, FTP_LOGIN_NOT_ESCAPED);
 
-    if (strcmp(orig_user, ftpState->user) == 0) {
+    if (strcmp(orig_user, user) == 0) {
         xfree(orig_user);
         return 1;		/* same username */
     }
 
-    xstrncpy(ftpState->user, orig_user, sizeof(ftpState->user));
+    xstrncpy(user, orig_user, sizeof(user));
     xfree(orig_user);
     return 0;			/* different username */
 }
 
-static void
-ftpCheckUrlpath(FtpStateData * ftpState)
+void
+FtpStateData::checkUrlpath()
 {
-    HttpRequest *request = ftpState->request;
     int l;
     const char *t;
 
     if ((t = request->urlpath.rpos(';')) != NULL) {
         if (strncasecmp(t + 1, "type=", 5) == 0) {
-            ftpState->typecode = (char) toupper((int) *(t + 6));
+            typecode = (char) toupper((int) *(t + 6));
             request->urlpath.cutPointer(t);
         }
     }
@@ -1352,67 +1362,65 @@ ftpCheckUrlpath(FtpStateData * ftpState)
     /* check for null path */
 
     if (!l) {
-        ftpState->flags.isdir = 1;
-        ftpState->flags.root_dir = 1;
-        ftpState->flags.need_base_href = 1;	/* Work around broken browsers */
+        flags.isdir = 1;
+        flags.root_dir = 1;
+        flags.need_base_href = 1;	/* Work around broken browsers */
     } else if (!request->urlpath.cmp("/%2f/")) {
         /* UNIX root directory */
-        ftpState->flags.isdir = 1;
-        ftpState->flags.root_dir = 1;
+        flags.isdir = 1;
+        flags.root_dir = 1;
     } else if ((l >= 1) && (*(request->urlpath.buf() + l - 1) == '/')) {
         /* Directory URL, ending in / */
-        ftpState->flags.isdir = 1;
+        flags.isdir = 1;
 
         if (l == 1)
-            ftpState->flags.root_dir = 1;
+            flags.root_dir = 1;
     } else {
-        ftpState->flags.dir_slash = 1;
+        flags.dir_slash = 1;
     }
 }
 
-static void
-ftpBuildTitleUrl(FtpStateData * ftpState)
+void
+FtpStateData::buildTitleUrl()
 {
-    HttpRequest *request = ftpState->request;
+    title_url = "ftp://";
 
-    ftpState->title_url = "ftp://";
-
-    if (strcmp(ftpState->user, "anonymous")) {
-        ftpState->title_url.append(ftpState->user);
-        ftpState->title_url.append("@");
+    if (strcmp(user, "anonymous")) {
+        title_url.append(user);
+        title_url.append("@");
     }
 
-    ftpState->title_url.append(request->host);
+    title_url.append(request->host);
 
     if (request->port != urlDefaultPort(PROTO_FTP)) {
-        ftpState->title_url.append(":");
-        ftpState->title_url.append(xitoa(request->port));
+        title_url.append(":");
+        title_url.append(xitoa(request->port));
     }
 
-    ftpState->title_url.append (request->urlpath);
+    title_url.append (request->urlpath);
 
-    ftpState->base_href = "ftp://";
+    base_href = "ftp://";
 
-    if (strcmp(ftpState->user, "anonymous") != 0) {
-        ftpState->base_href.append(rfc1738_escape_part(ftpState->user));
+    if (strcmp(user, "anonymous") != 0) {
+        base_href.append(rfc1738_escape_part(user));
 
-        if (ftpState->password_url) {
-            ftpState->base_href.append (":");
-            ftpState->base_href.append(rfc1738_escape_part(ftpState->password));
+        if (password_url) {
+            base_href.append (":");
+            base_href.append(rfc1738_escape_part(password));
         }
 
-        ftpState->base_href.append("@");
+        base_href.append("@");
     }
 
-    ftpState->base_href.append(request->host);
+    base_href.append(request->host);
 
     if (request->port != urlDefaultPort(PROTO_FTP)) {
-        ftpState->base_href.append(":");
-        ftpState->base_href.append(xitoa(request->port));
+        base_href.append(":");
+        base_href.append(xitoa(request->port));
     }
 
-    ftpState->base_href.append(request->urlpath);
-    ftpState->base_href.append("/");
+    base_href.append(request->urlpath);
+    base_href.append("/");
 }
 
 void
@@ -1425,7 +1433,7 @@ ftpStart(FwdState * fwd)
 void
 FtpStateData::start()
 {
-    if (!ftpCheckAuth(this, &request->header)) {
+    if (!checkAuth(&request->header)) {
         static char realm[8192];
         /* This request is not fully authenticated */
 
@@ -1448,8 +1456,8 @@ FtpStateData::start()
         return;
     }
 
-    ftpCheckUrlpath(this);
-    ftpBuildTitleUrl(this);
+    checkUrlpath();
+    buildTitleUrl();
     debug(9, 5) ("ftpStart: host=%s, path=%s, user=%s, passwd=%s\n",
                  request->host, request->urlpath.buf(),
                  user, password);
@@ -2640,7 +2648,7 @@ ftpReadList(FtpStateData * ftpState)
         /* Begin data transfer */
         /* XXX what about Config.Timeout.read? */
         assert(ftpState->data.offset == 0);
-        ftpState->entry->delayAwareRead(ftpState->data.fd, ftpState->data.buf, ftpState->data.size, ftpDataRead, ftpState);
+        ftpState->entry->delayAwareRead(ftpState->data.fd, ftpState->data.buf, ftpState->data.size, FtpStateData::dataReadWrapper, ftpState);
         ftpState->state = READING_DATA;
         /*
          * Cancel the timeout on the Control socket and establish one
@@ -2688,7 +2696,7 @@ ftpReadRetr(FtpStateData * ftpState)
         /* XXX what about Config.Timeout.read? */
         size_t read_sz = ftpState->data.size - ftpState->data.offset;
 
-        ftpState->entry->delayAwareRead(ftpState->data.fd, ftpState->data.buf + ftpState->data.offset, read_sz, ftpDataRead, ftpState);
+        ftpState->entry->delayAwareRead(ftpState->data.fd, ftpState->data.buf + ftpState->data.offset, read_sz, FtpStateData::dataReadWrapper, ftpState);
 
         ftpState->state = READING_DATA;
         /*
@@ -2763,7 +2771,7 @@ FtpStateData::ftpRequestBody(char *buf, ssize_t size, void *data)
         ftpState->failed( ERR_READ_ERROR, 0);
     } else if (size == 0) {
         /* End of transfer */
-        ftpDataComplete(ftpState);
+        ftpState->dataComplete();
     }
 }
 
