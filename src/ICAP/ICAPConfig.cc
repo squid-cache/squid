@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.cc,v 1.4 2005/12/02 19:43:38 wessels Exp $
+ * $Id: ICAPConfig.cc,v 1.5 2006/01/23 21:36:07 wessels Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -41,6 +41,7 @@
 #include "ICAPConfig.h"
 #include "ICAPServiceRep.h"
 #include "HttpRequest.h"
+#include "HttpReply.h"
 #include "ACLChecklist.h"
 
 ICAPConfig TheICAPConfig;
@@ -113,13 +114,23 @@ ICAPAccessCheck::ICAPAccessCheck(ICAP::Method aMethod,
 {
     method = aMethod;
     point = aPoint;
-    req = requestLink(aReq);
-    rep = aRep;
+
+    req = aReq->lock()
+
+          ;
+    rep = aRep ? aRep->lock()
+          : NULL;
+
     callback = aCallback;
+
     callback_data = aCallbackData;
+
     candidateClasses.clean();
+
     matchedClass.clean();
+
     acl_checklist = NULL;
+
     debug(93,5)("ICAPAccessCheck constructed for %s %s\n",
                 ICAP::methodStr(method),
                 ICAP::vectPointStr(point));
@@ -127,7 +138,11 @@ ICAPAccessCheck::ICAPAccessCheck(ICAP::Method aMethod,
 
 ICAPAccessCheck::~ICAPAccessCheck()
 {
-    requestUnlink(req);
+    if (req)
+        req->unlock();
+
+    if (rep)
+        rep->unlock();
 }
 
 /*
