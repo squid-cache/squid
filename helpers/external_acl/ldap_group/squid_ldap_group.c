@@ -33,6 +33,8 @@
  * or (at your option) any later version.
  */
 
+#define LDAP_DEPRECATED 1
+
 #include "util.h"
 
 #include <stdio.h>
