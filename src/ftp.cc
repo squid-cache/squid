@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.380 2006/01/24 17:38:12 wessels Exp $
+ * $Id: ftp.cc,v 1.381 2006/01/24 17:40:11 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -75,60 +75,24 @@ typedef enum {
 
 struct _ftp_flags
 {
-
-unsigned int isdir:
-    1;
-
-unsigned int pasv_supported:
-    1;
-
-unsigned int skip_whitespace:
-    1;
-
-unsigned int rest_supported:
-    1;
-
-unsigned int pasv_only:
-    1;
-
-unsigned int authenticated:
-    1;
-
-unsigned int http_header_sent:
-    1;
-
-unsigned int tried_nlst:
-    1;
-
-unsigned int need_base_href:
-    1;
-
-unsigned int dir_slash:
-    1;
-
-unsigned int root_dir:
-    1;
-
-unsigned int no_dotdot:
-    1;
-
-unsigned int html_header_sent:
-    1;
-
-unsigned int binary:
-    1;
-
-unsigned int try_slash_hack:
-    1;
-
-unsigned int put:
-    1;
-
-unsigned int put_mkdir:
-    1;
-
-unsigned int listformat_unknown:
-    1;
+    bool isdir;
+    bool pasv_supported;
+    bool skip_whitespace;
+    bool rest_supported;
+    bool pasv_only;
+    bool authenticated;
+    bool http_header_sent;
+    bool tried_nlst;
+    bool need_base_href;
+    bool dir_slash;
+    bool root_dir;
+    bool no_dotdot;
+    bool html_header_sent;
+    bool binary;
+    bool try_slash_hack;
+    bool put;
+    bool put_mkdir;
+    bool listformat_unknown;
 };
 
 class FtpStateData;
