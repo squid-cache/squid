@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.379 2006/01/24 06:35:54 wessels Exp $
+ * $Id: ftp.cc,v 1.380 2006/01/24 17:38:12 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1541,7 +1541,7 @@ FtpStateData::ftpWriteCommandCallback(int fd, char *buf, size_t size, comm_err_t
 
     if (errflag) {
         debug(9, 1) ("ftpWriteCommandCallback: FD %d: %s\n", fd, xstrerr(xerrno));
-        ftpState->failed( ERR_WRITE_ERROR, xerrno);
+        ftpState->failed(ERR_WRITE_ERROR, xerrno);
         /* failed closes ctrl.fd and frees ftpState */
         return;
     }
@@ -1692,7 +1692,7 @@ FtpStateData::ftpReadControlReply(int fd, char *buf, size_t len, comm_err_t errf
         if (ignoreErrno(xerrno)) {
             ftpState->scheduleReadControlReply(0);
         } else {
-            ftpState->failed( ERR_READ_ERROR, xerrno);
+            ftpState->failed(ERR_READ_ERROR, xerrno);
             /* failed closes ctrl.fd and frees ftpState */
             return;
         }
@@ -1702,7 +1702,7 @@ FtpStateData::ftpReadControlReply(int fd, char *buf, size_t len, comm_err_t errf
 
     if (len == 0) {
         if (entry->store_status == STORE_PENDING) {
-            ftpState->failed( ERR_FTP_FAILURE, 0);
+            ftpState->failed(ERR_FTP_FAILURE, 0);
             /* failed closes ctrl.fd and frees ftpState */
             return;
         }
@@ -2309,7 +2309,7 @@ FtpStateData::ftpPasvCallback(int fd, comm_err_t status, int xerrno, void *data)
         debug(9, 2) ("ftpPasvCallback: failed to connect. Retrying without PASV.\n");
         ftpState->fwd->dontRetry(false);	/* this is a retryable error */
         ftpState->fwd->ftpPasvFailed(true);
-        ftpState->failed( ERR_NONE, 0);
+        ftpState->failed(ERR_NONE, 0);
         /* failed closes ctrl.fd and frees ftpState */
         return;
     }
@@ -2748,7 +2748,7 @@ ftpReadTransferDone(FtpStateData * ftpState)
     } else {			/* != 226 */
         debug(9, 1) ("ftpReadTransferDone: Got code %d after reading data\n",
                      code);
-        ftpState->failed( ERR_FTP_FAILURE, 0);
+        ftpState->failed(ERR_FTP_FAILURE, 0);
         /* failed closes ctrl.fd and frees ftpState */
         return;
     }
@@ -2768,7 +2768,7 @@ FtpStateData::ftpRequestBody(char *buf, ssize_t size, void *data)
     } else if (size < 0) {
         /* Error */
         debug(9, 1) ("ftpRequestBody: request aborted");
-        ftpState->failed( ERR_READ_ERROR, 0);
+        ftpState->failed(ERR_READ_ERROR, 0);
     } else if (size == 0) {
         /* End of transfer */
         ftpState->dataComplete();
@@ -2789,7 +2789,7 @@ FtpStateData::ftpDataWriteCallback(int fd, char *buf, size_t size, comm_err_t er
         clientReadBody(ftpState->request, ftpState->data.buf, ftpState->data.size, ftpRequestBody, ftpState);
     } else {
         debug(9, 1) ("ftpDataWriteCallback: write error: %s\n", xstrerr(xerrno));
-        ftpState->failed( ERR_WRITE_ERROR, xerrno);
+        ftpState->failed(ERR_WRITE_ERROR, xerrno);
     }
 }
 
@@ -2811,7 +2811,7 @@ ftpWriteTransferDone(FtpStateData * ftpState)
     if (!(code == 226 || code == 250)) {
         debug(9, 1) ("ftpReadTransferDone: Got code %d after sending data\n",
                      code);
-        ftpState->failed( ERR_FTP_PUT_ERROR, 0);
+        ftpState->failed(ERR_FTP_PUT_ERROR, 0);
         return;
     }
 
