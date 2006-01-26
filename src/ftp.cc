@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.382 2006/01/25 17:41:23 wessels Exp $
+ * $Id: ftp.cc,v 1.383 2006/01/26 00:22:18 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -199,6 +199,7 @@ public:
     void maybeReadData();
     void transactionComplete();
     void processReplyBody();
+    void FtpStateData::writeCommand(const char *buf);
 
     static PF ftpSocketClosed;
     static CNCB ftpPasvCallback;
@@ -1519,8 +1520,8 @@ escapeIAC(const char *buf)
     return ret;
 }
 
-static void
-ftpWriteCommand(const char *buf, FtpStateData * ftpState)
+void
+FtpStateData::writeCommand(const char *buf)
 {
     char *ebuf;
     debug(9, 5) ("ftpWriteCommand: %s\n", buf);
@@ -1530,19 +1531,19 @@ ftpWriteCommand(const char *buf, FtpStateData * ftpState)
     else
         ebuf = xstrdup(buf);
 
-    safe_free(ftpState->ctrl.last_command);
+    safe_free(ctrl.last_command);
 
-    safe_free(ftpState->ctrl.last_reply);
+    safe_free(ctrl.last_reply);
 
-    ftpState->ctrl.last_command = ebuf;
+    ctrl.last_command = ebuf;
 
-    comm_write(ftpState->ctrl.fd,
-               ftpState->ctrl.last_command,
-               strlen(ftpState->ctrl.last_command),
+    comm_write(ctrl.fd,
+               ctrl.last_command,
+               strlen(ctrl.last_command),
                FtpStateData::ftpWriteCommandCallback,
-               ftpState);
+               this);
 
-    ftpState->scheduleReadControlReply(0);
+    scheduleReadControlReply(0);
 }
 
 void
@@ -1831,7 +1832,7 @@ ftpSendUser(FtpStateData * ftpState)
     else
         snprintf(cbuf, 1024, "USER %s\r\n", ftpState->user);
 
-    ftpWriteCommand(cbuf, ftpState);
+    ftpState->writeCommand(cbuf);
 
     ftpState->state = SENT_USER;
 }
@@ -1855,7 +1856,7 @@ static void
 ftpSendPass(FtpStateData * ftpState)
 {
     snprintf(cbuf, 1024, "PASS %s\r\n", ftpState->password);
-    ftpWriteCommand(cbuf, ftpState);
+    ftpState->writeCommand(cbuf);
     ftpState->state = SENT_PASS;
 }
 
@@ -1914,7 +1915,7 @@ ftpSendType(FtpStateData * ftpState)
 
     snprintf(cbuf, 1024, "TYPE %c\r\n", mode);
 
-    ftpWriteCommand(cbuf, ftpState);
+    ftpState->writeCommand(cbuf);
 
     ftpState->state = SENT_TYPE;
 }
@@ -2009,7 +2010,7 @@ ftpSendCwd(FtpStateData * ftpState)
 
     snprintf(cbuf, 1024, "CWD %s\r\n", path);
 
-    ftpWriteCommand(cbuf, ftpState);
+    ftpState->writeCommand(cbuf);
 
     ftpState->state = SENT_CWD;
 }
@@ -2050,7 +2051,7 @@ ftpSendMkdir(FtpStateData * ftpState)
     char *path = ftpState->filepath;
     debug(9, 3) ("ftpSendMkdir: with path=%s\n", path);
     snprintf(cbuf, 1024, "MKD %s\r\n", path);
-    ftpWriteCommand(cbuf, ftpState);
+    ftpState->writeCommand(cbuf);
     ftpState->state = SENT_MKDIR;
 }
 
@@ -2100,7 +2101,7 @@ ftpSendMdtm(FtpStateData * ftpState)
 {
     assert(*ftpState->filepath != '\0');
     snprintf(cbuf, 1024, "MDTM %s\r\n", ftpState->filepath);
-    ftpWriteCommand(cbuf, ftpState);
+    ftpState->writeCommand(cbuf);
     ftpState->state = SENT_MDTM;
 }
 
@@ -2130,7 +2131,7 @@ ftpSendSize(FtpStateData * ftpState)
         assert(ftpState->filepath != NULL);
         assert(*ftpState->filepath != '\0');
         snprintf(cbuf, 1024, "SIZE %s\r\n", ftpState->filepath);
-        ftpWriteCommand(cbuf, ftpState);
+        ftpState->writeCommand(cbuf);
         ftpState->state = SENT_SIZE;
     } else
         /* Skip to next state no non-binary transfers */
@@ -2235,7 +2236,7 @@ ftpSendPasv(FtpStateData * ftpState)
 
     snprintf(cbuf, 1024, "PASV\r\n");
 
-    ftpWriteCommand(cbuf, ftpState);
+    ftpState->writeCommand(cbuf);
 
     ftpState->state = SENT_PASV;
 
@@ -2429,7 +2430,7 @@ ftpSendPort(FtpStateData * ftpState)
     snprintf(cbuf, 1024, "PORT %d,%d,%d,%d,%d,%d\r\n",
              addrptr[0], addrptr[1], addrptr[2], addrptr[3],
              portptr[0], portptr[1]);
-    ftpWriteCommand(cbuf, ftpState);
+    ftpState->writeCommand(cbuf);
     ftpState->state = SENT_PORT;
 }
 
@@ -2536,12 +2537,12 @@ ftpSendStor(FtpStateData * ftpState)
     if (ftpState->filepath != NULL) {
         /* Plain file upload */
         snprintf(cbuf, 1024, "STOR %s\r\n", ftpState->filepath);
-        ftpWriteCommand(cbuf, ftpState);
+        ftpState->writeCommand(cbuf);
         ftpState->state = SENT_STOR;
     } else if (httpHeaderGetInt(&ftpState->request->header, HDR_CONTENT_LENGTH) > 0) {
         /* File upload without a filename. use STOU to generate one */
         snprintf(cbuf, 1024, "STOU\r\n");
-        ftpWriteCommand(cbuf, ftpState);
+        ftpState->writeCommand(cbuf);
         ftpState->state = SENT_STOR;
     } else {
         /* No file to transfer. Only create directories if needed */
@@ -2586,7 +2587,7 @@ static void
 ftpSendRest(FtpStateData * ftpState)
 {
     snprintf(cbuf, 1024, "REST %d\r\n", ftpState->restart_offset);
-    ftpWriteCommand(cbuf, ftpState);
+    ftpState->writeCommand(cbuf);
     ftpState->state = SENT_REST;
 }
 
@@ -2641,7 +2642,7 @@ ftpSendList(FtpStateData * ftpState)
         snprintf(cbuf, 1024, "LIST\r\n");
     }
 
-    ftpWriteCommand(cbuf, ftpState);
+    ftpState->writeCommand(cbuf);
     ftpState->state = SENT_LIST;
 }
 
@@ -2656,7 +2657,7 @@ ftpSendNlst(FtpStateData * ftpState)
         snprintf(cbuf, 1024, "NLST\r\n");
     }
 
-    ftpWriteCommand(cbuf, ftpState);
+    ftpState->writeCommand(cbuf);
     ftpState->state = SENT_NLST;
 }
 
@@ -2701,7 +2702,7 @@ ftpSendRetr(FtpStateData * ftpState)
 {
     assert(ftpState->filepath != NULL);
     snprintf(cbuf, 1024, "RETR %s\r\n", ftpState->filepath);
-    ftpWriteCommand(cbuf, ftpState);
+    ftpState->writeCommand(cbuf);
     ftpState->state = SENT_RETR;
 }
 
@@ -2845,7 +2846,7 @@ ftpSendQuit(FtpStateData * ftpState)
 {
     assert(ftpState->ctrl.fd > -1);
     snprintf(cbuf, 1024, "QUIT\r\n");
-    ftpWriteCommand(cbuf, ftpState);
+    ftpState->writeCommand(cbuf);
     ftpState->state = SENT_QUIT;
 }
 
