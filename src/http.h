@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.20 2006/01/25 17:41:23 wessels Exp $
+ * $Id: http.h,v 1.21 2006/01/25 23:59:46 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -95,7 +95,6 @@ public:
     void processSurrogateControl(HttpReply *);
 #if ICAP_CLIENT
 
-    ICAPClientRespmodPrecache *icap;
     void icapAclCheckDone(ICAPServiceRep::Pointer);
     bool icapAccessCheckPending;
 #endif
