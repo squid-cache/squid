@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPClientRespmodPrecache.h,v 1.2 2005/12/22 22:26:31 wessels Exp $
+ * $Id: ICAPClientRespmodPrecache.h,v 1.3 2006/01/25 17:41:23 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -40,10 +40,10 @@
 #include "ICAPServiceRep.h"
 
 /* The ICAP Anchor implements message pipe sink and source interfaces.  It
- * helps HttpStateData to marshall the incoming/virgin HTTP message (being
+ * helps ServerStateData to marshall the incoming/virgin HTTP message (being
  * recieved from the HTTP server) to Squid's ICAP client module, using the
  * MsgPipe interface. The same interface is used to get the adapted HTTP
- * message back from the ICAP client. HttpStateData is the "owner" of the
+ * message back from the ICAP client. ServerStateData is the "owner" of the
  * ICAPClientRespmodPrecache.
  */
 
@@ -58,8 +58,8 @@ public:
     ICAPClientRespmodPrecache(ICAPServiceRep::Pointer);
     virtual ~ICAPClientRespmodPrecache();
 
-    // synchronous calls called by HttpStateData
-    void startRespMod(HttpStateData *anHttpState, HttpRequest *request, HttpReply *reply);
+    // synchronous calls called by ServerStateData
+    void startRespMod(ServerStateData *anServerState, HttpRequest *request, HttpReply *reply);
     void sendMoreData(StoreIOBuffer buf);
     void doneSending();
     void ownerAbort();
@@ -77,7 +77,7 @@ public:
 
 public:
     ICAPServiceRep::Pointer service;
-    HttpStateData *httpState;
+    ServerStateData *serverState;
     MsgPipe::Pointer virgin;
     MsgPipe::Pointer adapted;
 

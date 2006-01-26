@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.483 2006/01/23 20:04:24 wessels Exp $
+ * $Id: http.cc,v 1.484 2006/01/25 17:41:23 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -74,14 +74,11 @@ static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeader
 static void icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data);
 #endif
 
-HttpStateData::HttpStateData(FwdState *theFwdState)
+HttpStateData::HttpStateData(FwdState *theFwdState) : ServerStateData(theFwdState)
 {
     debugs(11,5,HERE << "HttpStateData " << this << " created");
     ignoreCacheControl = false;
     surrogateNoStore = false;
-    fwd = theFwdState;
-    entry = fwd->entry;
-    storeLockObject(entry);
     fd = fwd->server_fd;
     readBuf = new MemBuf;
     readBuf->init(4096, SQUID_TCP_SO_RCVBUF);
@@ -111,6 +108,8 @@ HttpStateData::HttpStateData(FwdState *theFwdState)
 
         proxy_req->flags.proxying = 1;
 
+        requestUnlink(request);
+
         request = requestLink(proxy_req);
 
         /*
@@ -127,8 +126,6 @@ HttpStateData::HttpStateData(FwdState *theFwdState)
 
 #endif
 
-    } else {
-        request = requestLink(orig_request);
     }
 
     /*
@@ -139,6 +136,10 @@ HttpStateData::HttpStateData(FwdState *theFwdState)
 
 HttpStateData::~HttpStateData()
 {
+    /*
+     * don't forget about ~ServerStateData()
+     */
+
     if (request_body_buf) {
         if (orig_request->body_connection.getRaw()) {
             clientAbortBody(orig_request);
@@ -150,34 +151,15 @@ HttpStateData::~HttpStateData()
         }
     }
 
-    storeUnlockObject(entry);
-
     if (!readBuf->isNull())
         readBuf->clean();
 
     delete readBuf;
 
-    requestUnlink(request);
-
     requestUnlink(orig_request);
-
-    request = NULL;
 
     orig_request = NULL;
 
-    fwd = NULL;	// refcounted
-
-    if (reply)
-        reply->unlock();
-
-#if ICAP_CLIENT
-
-    if (icap) {
-        delete icap;
-        cbdataReferenceDone(icap);
-    }
-
-#endif
     debugs(11,5,HERE << "HttpStateData " << this << " destroyed");
 }
 
@@ -2040,21 +2022,6 @@ HttpStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
 
     icap->startRespMod(this, request, reply);
     processReplyBody();
-}
-
-/*
- * Initiate an ICAP transaction.  Return 0 if all is well, or -1 upon error.
- * Caller will handle error condition by generating a Squid error message
- * or take other action.
- */
-int
-HttpStateData::doIcap(ICAPServiceRep::Pointer service)
-{
-    debug(11,5)("HttpStateData::doIcap() called\n");
-    assert(NULL == icap);
-    icap = new ICAPClientRespmodPrecache(service);
-    (void) cbdataReference(icap);
-    return 0;
 }
 
 /*
