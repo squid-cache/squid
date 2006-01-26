@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.362 2006/01/14 00:08:16 wessels Exp $
+#  $Id: Makefile.in,v 1.363 2006/01/25 17:45:34 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -215,9 +215,9 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc ACL.h \
 	StoreMetaMD5.h StoreMetaSTD.cc StoreMetaSTD.h \
 	StoreMetaUnpacker.cc StoreMetaUnpacker.h StoreMetaURL.cc \
 	StoreMetaURL.h StoreMetaVary.cc StoreMetaVary.h StoreSearch.h \
-	StoreSwapLogData.cc StoreSwapLogData.h structs.h SwapDir.cc \
-	SwapDir.h tools.cc typedefs.h unlinkd.cc url.cc urn.cc \
-	useragent.cc wais.cc wccp.cc whois.cc win32.cc
+	StoreSwapLogData.cc StoreSwapLogData.h Server.h Server.cc \
+	structs.h SwapDir.cc SwapDir.h tools.cc typedefs.h unlinkd.cc \
+	url.cc urn.cc useragent.cc wais.cc wccp.cc whois.cc win32.cc
 am__objects_1 = ACLARP.$(OBJEXT)
 @ENABLE_ARP_ACL_TRUE@am__objects_2 = $(am__objects_1)
 am__objects_3 = $(am__objects_2) ACLASN.$(OBJEXT) ACLBrowser.$(OBJEXT) \
@@ -310,9 +310,10 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	StoreMetaMD5.$(OBJEXT) StoreMetaSTD.$(OBJEXT) \
 	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
 	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
-	SwapDir.$(OBJEXT) tools.$(OBJEXT) $(am__objects_19) \
-	url.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) wais.$(OBJEXT) \
-	wccp.$(OBJEXT) whois.$(OBJEXT) $(am__objects_21)
+	Server.$(OBJEXT) SwapDir.$(OBJEXT) tools.$(OBJEXT) \
+	$(am__objects_19) url.$(OBJEXT) urn.$(OBJEXT) \
+	useragent.$(OBJEXT) wais.$(OBJEXT) wccp.$(OBJEXT) \
+	whois.$(OBJEXT) $(am__objects_21)
 nodist_squid_OBJECTS = repl_modules.$(OBJEXT) globals.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 squid_OBJECTS = $(am_squid_OBJECTS) $(nodist_squid_OBJECTS)
@@ -1308,6 +1309,8 @@ squid_SOURCES = \
 	StoreSearch.h \
 	StoreSwapLogData.cc \
 	StoreSwapLogData.h \
+	Server.h \
+	Server.cc \
 	structs.h \
 	SwapDir.cc \
 	SwapDir.h \
@@ -2372,6 +2375,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Packer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Parsing.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ProfStats.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SquidNew.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StatHist.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreFileSystem.Po@am__quote@
