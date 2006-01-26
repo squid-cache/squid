@@ -12,7 +12,7 @@
 
 CBDATA_CLASS_INIT(ICAPClientRespmodPrecache);
 
-ICAPClientRespmodPrecache::ICAPClientRespmodPrecache(ICAPServiceRep::Pointer aService): service(aService), httpState(NULL), virgin(NULL), adapted(NULL)
+ICAPClientRespmodPrecache::ICAPClientRespmodPrecache(ICAPServiceRep::Pointer aService): service(aService), serverState(NULL), virgin(NULL), adapted(NULL)
 {
     debug(93,5)("ICAPClientRespmodPrecache constructed, this=%p\n", this);
 }
@@ -20,7 +20,7 @@ ICAPClientRespmodPrecache::ICAPClientRespmodPrecache(ICAPServiceRep::Pointer aSe
 ICAPClientRespmodPrecache::~ICAPClientRespmodPrecache()
 {
     stop(notifyNone);
-    cbdataReferenceDone(httpState);
+    cbdataReferenceDone(serverState);
     debug(93,5)("ICAPClientRespmodPrecache destructed, this=%p\n", this);
 
     if (virgin != NULL)
@@ -32,9 +32,9 @@ ICAPClientRespmodPrecache::~ICAPClientRespmodPrecache()
     service = NULL;
 }
 
-void ICAPClientRespmodPrecache::startRespMod(HttpStateData *anHttpState, HttpRequest *request, HttpReply *reply)
+void ICAPClientRespmodPrecache::startRespMod(ServerStateData *anServerState, HttpRequest *request, HttpReply *reply)
 {
-    httpState = cbdataReference(anHttpState);
+    serverState = cbdataReference(anServerState);
 
     virgin = new MsgPipe("virgin"); // this is the place to create a refcount ptr
     virgin->source = this;
@@ -62,6 +62,8 @@ void ICAPClientRespmodPrecache::startRespMod(HttpStateData *anHttpState, HttpReq
 void ICAPClientRespmodPrecache::sendMoreData(StoreIOBuffer buf)
 {
     debug(93,5)("ICAPClientRespmodPrecache::sendMoreData() called\n");
+    //debugs(93,0,HERE << "appending " << buf.length << " bytes");
+    //debugs(93,0,HERE << "body.contentSize = " << virgin->data->body->contentSize());
     //buf.dump();
     /*
      * The caller is responsible for not giving us more data
@@ -81,7 +83,7 @@ ICAPClientRespmodPrecache::potentialSpaceSize()
     return (int) virgin->data->body->potentialSpaceSize();
 }
 
-// HttpStateData says we have the entire HTTP message
+// ServerStateData says we have the entire HTTP message
 void ICAPClientRespmodPrecache::doneSending()
 {
     debug(93,5)("ICAPClientRespmodPrecache::doneSending() called\n");
@@ -98,7 +100,7 @@ void ICAPClientRespmodPrecache::doneSending()
 #endif
 }
 
-// HttpStateData tells us to abort
+// ServerStateData tells us to abort
 void ICAPClientRespmodPrecache::ownerAbort()
 {
     debug(93,5)("ICAPClientRespmodPrecache::ownerAbort() called\n");
@@ -111,7 +113,7 @@ void ICAPClientRespmodPrecache::noteSinkNeed(MsgPipe *p)
     debug(93,5)("ICAPClientRespmodPrecache::noteSinkNeed() called\n");
 
     if (virgin->data->body->potentialSpaceSize())
-        httpState->icapSpaceAvailable();
+        serverState->icapSpaceAvailable();
 }
 
 // ICAP client aborting
@@ -144,7 +146,7 @@ void ICAPClientRespmodPrecache::noteSourceStart(MsgPipe *p)
     ssize_t dummy;
     bool expect_body = reply->expectingBody(virgin->data->cause->method, dummy);
 
-    httpState->takeAdaptedHeaders(reply);
+    serverState->takeAdaptedHeaders(reply);
 
     if (expect_body)
         noteSourceProgress(p);
@@ -156,10 +158,12 @@ void ICAPClientRespmodPrecache::noteSourceStart(MsgPipe *p)
 void ICAPClientRespmodPrecache::noteSourceProgress(MsgPipe *p)
 {
     debug(93,5)("ICAPClientRespmodPrecache::noteSourceProgress() called\n");
-    //tell HttpStateData to store a fresh portion of the adapted response
+    //tell ServerStateData to store a fresh portion of the adapted response
+
+    assert(serverState);
 
     if (p->data->body->hasContent()) {
-        httpState->takeAdaptedBody(p->data->body);
+        serverState->takeAdaptedBody(p->data->body);
     }
 }
 
@@ -167,8 +171,8 @@ void ICAPClientRespmodPrecache::noteSourceProgress(MsgPipe *p)
 void ICAPClientRespmodPrecache::noteSourceFinish(MsgPipe *p)
 {
     debug(93,5)("ICAPClientRespmodPrecache::noteSourceFinish() called\n");
-    //tell HttpStateData that we expect no more response data
-    httpState->doneAdapting();
+    //tell ServerStateData that we expect no more response data
+    serverState->doneAdapting();
     stop(notifyNone);
 }
 
@@ -200,14 +204,14 @@ void ICAPClientRespmodPrecache::stop(Notify notify)
         freeAdapted();
     }
 
-    if (httpState) {
+    if (serverState) {
         if (notify == notifyOwner)
-            // tell HttpStateData that we are aborting prematurely
-            httpState->abortAdapting();
+            // tell ServerStateData that we are aborting prematurely
+            serverState->abortAdapting();
 
-        cbdataReferenceDone(httpState);
+        cbdataReferenceDone(serverState);
 
-        // httpState is now NULL, will not call it any more
+        // serverState is now NULL, will not call it any more
     }
 }
 

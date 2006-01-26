@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.19 2006/01/23 20:04:24 wessels Exp $
+ * $Id: http.h,v 1.20 2006/01/25 17:41:23 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,6 +37,7 @@
 #include "StoreIOBuffer.h"
 #include "comm.h"
 #include "forward.h"
+#include "Server.h"
 
 #if ICAP_CLIENT
 #include "ICAP/ICAPServiceRep.h"
@@ -46,7 +47,7 @@ class ICAPClientRespmodPrecache;
 class ICAPAccessCheck;
 #endif
 
-class HttpStateData
+class HttpStateData : public ServerStateData
 {
 
 public:
@@ -79,14 +80,11 @@ public:
     void icapSpaceAvailable();
 #endif
 
-    StoreEntry *entry;
-    HttpRequest *request;
     peer *_peer;		/* peer request made to */
     int eof;			/* reached end-of-object? */
     HttpRequest *orig_request;
     int fd;
     http_state_flags flags;
-    FwdState::Pointer fwd;
     char *request_body_buf;
     off_t currentOffset;
     size_t read_sz;
@@ -115,12 +113,6 @@ const HttpReply * getReply() const { return reply ? reply : entry->getReply(); }
 #endif
 
 private:
-    /*
-     * HttpReply is now shared (locked) among multiple classes,
-     * including HttpStateData, StoreEntry, and ICAP.
-     */
-    HttpReply *reply;
-
     enum ConnectionStatus {
         INCOMPLETE_MSG,
         COMPLETE_PERSISTENT_MSG,
@@ -143,10 +135,6 @@ private:
                                  MemBuf * mb,
                                  http_state_flags flags);
     static bool decideIfWeDoRanges (HttpRequest * orig_request);
-#if ICAP_CLIENT
-
-    int doIcap(ICAPServiceRep::Pointer);
-#endif
 
 private:
     CBDATA_CLASS2(HttpStateData);
