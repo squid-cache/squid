@@ -1,5 +1,5 @@
 /*
- * $Id: Server.cc,v 1.1 2006/01/25 17:47:26 wessels Exp $
+ * $Id: Server.cc,v 1.2 2006/01/25 19:26:14 wessels Exp $
  *
  * DEBUG:
  * AUTHOR: Duane Wessels
@@ -71,6 +71,7 @@ ServerStateData::~ServerStateData()
 #endif
 }
 
+#if ICAP_CLIENT
 /*
  * Initiate an ICAP transaction.  Return 0 if all is well, or -1 upon error.
  * Caller will handle error condition by generating a Squid error message
@@ -85,3 +86,5 @@ ServerStateData::doIcap(ICAPServiceRep::Pointer service)
     (void) cbdataReference(icap);
     return 0;
 }
+
+#endif
