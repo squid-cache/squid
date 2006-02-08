@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.484 2006/01/25 17:41:23 wessels Exp $
+ * $Id: http.cc,v 1.485 2006/02/08 00:16:23 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -2020,7 +2020,7 @@ HttpStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
         return;
     }
 
-    icap->startRespMod(this, request, reply);
+    icap->startRespMod(this, orig_request, reply);
     processReplyBody();
 }
 
