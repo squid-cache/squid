@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPOptions.h,v 1.6 2005/12/23 17:36:19 wessels Exp $
+ * $Id: ICAPOptions.h,v 1.7 2006/02/16 20:44:07 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -68,7 +68,7 @@ public:
     const char *error; // human-readable information; set iff !valid()
 
     // ICAP server MUST supply this info
-    ICAP::Method method;
+    Vector<ICAP::Method> methods;
     String istag;
 
     // ICAP server MAY supply this info. If not, Squid supplies defaults.

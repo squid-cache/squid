@@ -6,7 +6,7 @@
 
 extern ICAPConfig TheICAPConfig;
 
-ICAPOptions::ICAPOptions(): error("unconfigured"), method(ICAP::methodNone),
+ICAPOptions::ICAPOptions(): error("unconfigured"),
         max_connections(-1), allow204(false),
         preview(-1), theTTL(-1), transfer_ext(NULL)
 {
@@ -176,11 +176,7 @@ void ICAPOptions::configure(const HttpReply *reply)
 void ICAPOptions::cfgMethod(ICAP::Method m)
 {
     Must(m != ICAP::methodNone);
-
-    if (method == ICAP::methodNone)
-        method = m;
-    else
-        error = "the service claims to support several request methods";
+    methods += m;
 }
 
 // TODO: HttpHeader should provide a general method for this type of conversion
