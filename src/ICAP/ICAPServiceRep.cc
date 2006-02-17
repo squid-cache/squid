@@ -283,14 +283,39 @@ void ICAPServiceRep::changeOptions(ICAPOptions *newOptions)
         return;
 
     /*
-     * Maybe it would be better if squid.conf just listed the URI and
-     * then discovered the method via OPTIONS
+     * Issue a warning if the ICAP server returned methods in the
+     * options response that don't match the method from squid.conf.
      */
 
-    if (theOptions->method != method && theOptions->method != ICAP::methodNone)
-        debugs(93,1, "WARNING: Squid is configured to use ICAP method " << ICAP::methodStr(method) <<
-               " for service " << uri.buf() <<
-               " but OPTIONS response declares the method is " << ICAP::methodStr(theOptions->method));
+    if (!theOptions->methods.empty()) {
+        bool method_found = false;
+        String method_list;
+        Vector <ICAP::Method>::iterator iter = theOptions->methods.begin();
+        debugs(0,0,HERE);
+
+        while (iter != theOptions->methods.end()) {
+            debugs(0,0,HERE);
+
+            if (*iter == method) {
+                method_found = true;
+                break;
+            }
+
+            method_list.append(ICAP::methodStr(*iter));
+            method_list.append(" ", 1);
+            iter++;
+            debugs(0,0,HERE);
+        }
+
+        debugs(0,0,HERE);
+
+        if (!method_found) {
+            debugs(93,1, "WARNING: Squid is configured to use ICAP method " <<
+                   ICAP::methodStr(method) <<
+                   " for service " << uri.buf() <<
+                   " but OPTIONS response declares the methods are " << method_list.buf());
+        }
+    }
 
 
     /*
