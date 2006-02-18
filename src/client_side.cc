@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.711 2006/02/17 20:59:31 wessels Exp $
+ * $Id: client_side.cc,v 1.712 2006/02/18 00:04:30 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -486,16 +486,25 @@ ClientHttpRequest::logRequest()
         al.url = log_uri;
         debug(33, 9) ("clientLogRequest: al.url='%s'\n", al.url);
 
-        if (loggingEntry() && loggingEntry()->mem_obj) {
+        if (al.reply) {
+            al.http.code = al.reply->sline.status;
+            al.http.content_type = al.reply->content_type.buf();
+        } else if (loggingEntry() && loggingEntry()->mem_obj) {
             al.http.code = loggingEntry()->mem_obj->getReply()->sline.status;
             al.http.content_type = loggingEntry()->mem_obj->getReply()->content_type.buf();
-            al.cache.objectSize = contentLen(loggingEntry());
         }
 
+        if (loggingEntry() && loggingEntry()->mem_obj)
+            al.cache.objectSize = contentLen(loggingEntry());
+
         al.cache.caddr = getConn().getRaw() != NULL ? getConn()->log_addr : no_addr;
+
         al.cache.size = out.size;
+
         al.cache.highOffset = out.offset;
+
         al.cache.code = logType;
+
         al.cache.msec = tvSubMsec(start, current_time);
 
         if (request)
@@ -1247,7 +1256,7 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
     if (!context->startOfOutput())
         context->sendBody(rep, recievedData);
     else {
-        http->al.reply = rep;
+        http->al.reply = HTTPMSGLOCK(rep);
         context->sendStartOfMessage(rep, recievedData);
     }
 }

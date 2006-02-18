@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.108 2006/02/17 18:10:59 wessels Exp $
+ * $Id: access_log.cc,v 1.109 2006/02/18 00:04:30 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -1786,11 +1786,7 @@ accessLogFreeMemory(AccessLogEntry * aLogEntry)
     safe_free(aLogEntry->headers.reply);
     safe_free(aLogEntry->cache.authuser);
 
-    if (aLogEntry->reply) {
-        delete aLogEntry->reply;
-        aLogEntry->reply = NULL;
-    }
-
+    HTTPMSGUNLOCK(aLogEntry->reply);
     HTTPMSGUNLOCK(aLogEntry->request);
 }
 
