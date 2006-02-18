@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.710 2006/02/17 18:10:59 wessels Exp $
+ * $Id: client_side.cc,v 1.711 2006/02/17 20:59:31 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1584,8 +1584,7 @@ parseHttpRequestAbort(ConnStateData::Pointer & conn, const char *uri)
     ClientHttpRequest *http;
     ClientSocketContext *context;
     StoreIOBuffer tempBuffer;
-    http = new ClientHttpRequest;
-    http->setConn(conn);
+    http = new ClientHttpRequest(conn);
     http->req_sz = conn->in.notYetUsed;
     http->uri = xstrdup(uri);
     setLogUri (http, uri);
@@ -1595,7 +1594,6 @@ parseHttpRequestAbort(ConnStateData::Pointer & conn, const char *uri)
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
                      clientReplyStatus, new clientReplyContext(http), clientSocketRecipient,
                      clientSocketDetach, context, tempBuffer);
-    dlinkAdd(http, &http->active, &ClientActiveRequests);
     return context;
 }
 
@@ -1963,9 +1961,7 @@ parseHttpRequest(ConnStateData::Pointer & conn, method_t * method_p,
     assert(prefix_sz <= conn->in.notYetUsed);
 
     /* Ok, all headers are received */
-    http = new ClientHttpRequest;
-
-    http->setConn(conn);
+    http = new ClientHttpRequest(conn);
 
     http->req_sz = prefix_sz;
 
@@ -1988,8 +1984,6 @@ parseHttpRequest(ConnStateData::Pointer & conn, method_t * method_p,
     xmemcpy(*prefix_p, conn->in.buf, prefix_sz);
 
     *(*prefix_p + prefix_sz) = '\0';
-
-    dlinkAdd(http, &http->active, &ClientActiveRequests);
 
     debug(33, 5) ("parseHttpRequest: Request Header is\n%s\n",
                   (*prefix_p) + *req_line_sz_p);
