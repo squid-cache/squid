@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.486 2006/02/17 18:10:59 wessels Exp $
+ * $Id: http.cc,v 1.487 2006/02/17 20:15:35 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -696,7 +696,7 @@ HttpStateData::failReply(HttpReply *reply, http_status const & status)
 {
     reply->sline.version = HttpVersion(1, 0);
     reply->sline.status = status;
-    storeEntryReplaceObject (entry, reply);
+    entry->replaceHttpReply(reply);
 
     if (eof == 1) {
         transactionComplete();
@@ -806,7 +806,7 @@ HttpStateData::processReplyHeader()
 
 #endif
 
-    storeEntryReplaceObject(entry, reply);
+    entry->replaceHttpReply(reply);
 
     haveParsedReplyHeaders();
 
@@ -1992,7 +1992,7 @@ HttpStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
 
     if (service == NULL) {
         // handle case where no service is selected;
-        storeEntryReplaceObject(entry, reply);
+        entry->replaceHttpReply(reply);
 
         haveParsedReplyHeaders();
         processReplyBody();
@@ -2042,7 +2042,7 @@ HttpStateData::takeAdaptedHeaders(HttpReply *rep)
     }
 
     assert (rep);
-    storeEntryReplaceObject(entry, rep);
+    entry->replaceHttpReply(rep);
     HTTPMSGUNLOCK(reply);
 
     reply = HTTPMSGLOCK(rep);

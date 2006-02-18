@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.384 2006/02/17 18:10:59 wessels Exp $
+ * $Id: ftp.cc,v 1.385 2006/02/17 20:15:35 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1469,7 +1469,7 @@ FtpStateData::start()
         /* create appropriate reply */
         HttpReply *reply = ftpAuthRequired(request, realm);
 
-        storeEntryReplaceObject(entry, reply);
+        entry->replaceHttpReply(reply);
 
         fwd->complete();
 
@@ -3167,7 +3167,7 @@ FtpStateData::appendSuccessHeader()
 
 #endif
 
-    storeEntryReplaceObject(e, reply);
+    e->replaceHttpReply(reply);
 
     storeTimestampsSet(e);
 
@@ -3350,7 +3350,7 @@ FtpStateData::takeAdaptedHeaders(HttpReply *rep)
     }
 
     assert (rep);
-    storeEntryReplaceObject(entry, rep);
+    entry->replaceHttpReply(rep);
     HTTPMSGUNLOCK(reply);
 
     reply = HTTPMSGLOCK(rep);

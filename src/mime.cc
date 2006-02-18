@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.122 2006/02/17 18:10:59 wessels Exp $
+ * $Id: mime.cc,v 1.123 2006/02/17 20:15:35 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -620,7 +620,7 @@ MimeIcon::created (StoreEntry *newEntry)
 
     httpHeaderPutCc(&reply->header, reply->cache_control);
 
-    storeEntryReplaceObject(e, reply);
+    e->replaceHttpReply(reply);
 
     /* read the file into the buffer and append it to store */
     buf = (char *)memAllocate(MEM_4K_BUF);
