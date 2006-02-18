@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.57 2006/02/17 18:10:59 wessels Exp $
+ * $Id: client_side_request.cc,v 1.58 2006/02/17 20:59:31 wessels Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -141,10 +141,11 @@ ClientHttpRequest::operator delete (void *address)
     cbdataFree(t);
 }
 
-ClientHttpRequest::ClientHttpRequest() : loggingEntry_(NULL)
+ClientHttpRequest::ClientHttpRequest(ConnStateData::Pointer aConn) : loggingEntry_(NULL)
 {
-    /* reset range iterator */
     start = current_time;
+    setConn(aConn);
+    dlinkAdd(this, &active, &ClientActiveRequests);
 }
 
 /*
@@ -273,10 +274,9 @@ clientBeginRequest(method_t method, char const *url, CSCB * streamcallback,
 {
     size_t url_sz;
     HttpVersion http_ver (1, 0);
-    ClientHttpRequest *http = new ClientHttpRequest;
+    ClientHttpRequest *http = new ClientHttpRequest(NULL);
     HttpRequest *request;
     StoreIOBuffer tempBuffer;
-    http->setConn(NULL);
     http->start = current_time;
     /* this is only used to adjust the connection offset in client_side.c */
     http->req_sz = 0;
@@ -287,7 +287,6 @@ clientBeginRequest(method_t method, char const *url, CSCB * streamcallback,
                      clientReplyStatus, new clientReplyContext(http), streamcallback,
                      streamdetach, streamdata, tempBuffer);
     /* make it visible in the 'current acctive requests list' */
-    dlinkAdd(http, &http->active, &ClientActiveRequests);
     /* Set flags */
     /* internal requests only makes sense in an
      * accelerator today. TODO: accept flags ? */
