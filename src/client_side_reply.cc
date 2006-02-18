@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.95 2006/02/17 18:10:59 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.96 2006/02/17 20:15:35 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -739,7 +739,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
              * reply has a meaningful Age: header.
              */
             e->timestamp = timestamp;
-            storeEntryReplaceObject(e, temprep);
+            e->replaceHttpReply(temprep);
             e->complete();
             /* TODO: why put this in the store and then serialise it and then parse it again.
              * Simply mark the request complete in our context and
@@ -826,7 +826,7 @@ clientReplyContext::processMiss()
 
             storeReleaseRequest(http->storeEntry());
             rep->redirect(http->redirect.status, http->redirect.location);
-            storeEntryReplaceObject(http->storeEntry(), rep);
+            http->storeEntry()->replaceHttpReply(rep);
             http->storeEntry()->complete();
             return;
         }
@@ -1033,7 +1033,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 
     r->setHeaders(version, purgeStatus, NULL, NULL, 0, 0, -1);
 
-    storeEntryReplaceObject(http->storeEntry(), r);
+    http->storeEntry()->replaceHttpReply(r);
 
     http->storeEntry()->complete();
 }
@@ -1057,7 +1057,7 @@ clientReplyContext::traceReply(clientStreamNode * node)
     HttpVersion version(1,0);
     rep->setHeaders(version, HTTP_OK, NULL, "text/plain",
                     http->request->prefixLen(), 0, squid_curtime);
-    storeEntryReplaceObject(http->storeEntry(), rep);
+    http->storeEntry()->replaceHttpReply(rep);
     http->request->swapOut(http->storeEntry());
     http->storeEntry()->complete();
 }

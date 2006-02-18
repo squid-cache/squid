@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.62 2006/02/17 18:10:59 wessels Exp $
+ * $Id: store_digest.cc,v 1.63 2006/02/17 20:15:35 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -431,7 +431,7 @@ storeDigestRewriteResume(void)
     debug(71, 3) ("storeDigestRewrite: entry expires on %ld (%+d)\n",
                   (long int) rep->expires, (int) (rep->expires - squid_curtime));
     storeBuffer(e);
-    storeEntryReplaceObject(e, rep);
+    e->replaceHttpReply(rep);
     storeDigestCBlockSwapOut(e);
     storeBufferFlush(e);
     eventAdd("storeDigestSwapOutStep", storeDigestSwapOutStep, sd_state.rewrite_lock, 0.0, 1);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.95 2006/02/17 18:10:59 wessels Exp $
+ * $Id: urn.cc,v 1.96 2006/02/17 20:15:35 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -448,7 +448,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     httpBodySet(&rep->body, mb);
     /* don't clean or delete mb; rep->body owns it now */
-    storeEntryReplaceObject(e, rep);
+    e->replaceHttpReply(rep);
     e->complete();
 
     for (i = 0; i < urlcnt; i++) {

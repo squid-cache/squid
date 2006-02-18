@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.36 2006/02/17 18:10:59 wessels Exp $
+ * $Id: cache_manager.cc,v 1.37 2006/02/17 20:15:35 wessels Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -295,7 +295,7 @@ cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
         httpHeaderPutAuth(&rep->header, "Basic", mgr->action);
 
         /* store the reply */
-        storeEntryReplaceObject(entry, rep);
+        entry->replaceHttpReply(rep);
 
         entry->expires = squid_curtime;
 
@@ -325,7 +325,7 @@ cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
                         -1,			/* C-Len */
                         squid_curtime,	/* LMT */
                         squid_curtime);
-        storeEntryReplaceObject(entry, rep);
+        entry->replaceHttpReply(rep);
     }
 
     a->handler(entry);

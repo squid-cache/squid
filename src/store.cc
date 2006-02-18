@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.583 2006/01/23 20:04:24 wessels Exp $
+ * $Id: store.cc,v 1.584 2006/02/17 20:15:35 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -1755,19 +1755,14 @@ storeSwapFileNumberSet(StoreEntry * e, sfileno filn)
 #endif
 
 
-/* Replace a store entry with
+/*
+ * Replace a store entry with
  * a new reply. This eats the reply.
  */
 void
-storeEntryReplaceObject(StoreEntry * e, HttpReply * rep)
-{
-    e->replaceHttpReply(rep);
-}
-
-void
 StoreEntry::replaceHttpReply(HttpReply *rep)
 {
-    debug(20, 3) ("storeEntryReplaceObject: %s\n", storeUrl(this));
+    debug(20, 3) ("StoreEntry::replaceHttpReply: %s\n", storeUrl(this));
     Packer p;
 
     if (!mem_obj) {
@@ -1776,14 +1771,6 @@ StoreEntry::replaceHttpReply(HttpReply *rep)
     }
 
     mem_obj->replaceHttpReply(rep);
-
-#if OLD
-    /* TODO: check that there is at most 1 store client ? */
-    HttpReply *myrep = (HttpReply *)e->getReply(); /* we are allowed to do this */
-
-    /* move info to the mem_obj->reply */
-    myrep->absorb(rep);
-#endif
 
     /* TODO: when we store headers serparately remove the header portion */
     /* TODO: mark the length of the headers ? */

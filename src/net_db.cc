@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.182 2006/02/17 18:10:59 wessels Exp $
+ * $Id: net_db.cc,v 1.183 2006/02/17 20:15:35 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -1210,7 +1210,7 @@ netdbBinaryExchange(StoreEntry * s)
     storeBuffer(s);
     HttpVersion version(1, 0);
     reply->setHeaders(version, HTTP_OK, "OK", NULL, -1, squid_curtime, -2);
-    storeEntryReplaceObject(s, reply);
+    s->replaceHttpReply(reply);
     rec_sz = 0;
     rec_sz += 1 + sizeof(addr.s_addr);
     rec_sz += 1 + sizeof(int);
@@ -1270,7 +1270,7 @@ netdbBinaryExchange(StoreEntry * s)
     HttpVersion version(1,0);
     reply->setHeaders(version, HTTP_BAD_REQUEST, "Bad Request",
                       NULL, -1, squid_curtime, -2);
-    storeEntryReplaceObject(s, reply);
+    s->replaceHttpReply(reply);
     storeAppendPrintf(s, "NETDB support not compiled into this Squid cache.\n");
 #endif
 
