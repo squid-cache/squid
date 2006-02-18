@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.332 2005/12/08 20:08:47 wessels Exp $
+ * $Id: neighbors.cc,v 1.333 2006/02/17 18:10:59 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -183,7 +183,7 @@ peerAllowedToUse(const peer * p, HttpRequest * request)
 
     checklist.my_port = request->my_port;
 
-    checklist.request = requestLink(request);
+    checklist.request = HTTPMSGLOCK(request);
 
     checklist.accessList = cbdataReference(p->access);
 
@@ -1479,14 +1479,15 @@ peerCountMcastPeersStart(void *data)
     p->mcast.flags.count_event_pending = 0;
     snprintf(url, MAX_URL, "http://%s/", inet_ntoa(p->in_addr.sin_addr));
     fake = storeCreateEntry(url, url, request_flags(), METHOD_GET);
+    HttpRequest *req = urlParse(METHOD_GET, url);
     psstate = new ps_state;
-    psstate->request = requestLink(urlParse(METHOD_GET, url));
+    psstate->request = HTTPMSGLOCK(req);
     psstate->entry = fake;
     psstate->callback = NULL;
     psstate->callback_data = p;
     psstate->ping.start = current_time;
     mem = fake->mem_obj;
-    mem->request = requestLink(psstate->request);
+    mem->request = HTTPMSGLOCK(psstate->request);
     mem->start_ping = current_time;
     mem->ping_reply_callback = peerCountHandleIcpReply;
     mem->ircb_data = psstate;
@@ -1526,11 +1527,10 @@ peerCountMcastPeersDone(void *data)
                   p->stats.rtt);
     p->mcast.n_replies_expected = (int) p->mcast.avg_n_members;
     EBIT_SET(fake->flags, ENTRY_ABORTED);
-    requestUnlink(fake->mem_obj->request);
-    fake->mem_obj->request = NULL;
+    HTTPMSGUNLOCK(fake->mem_obj->request);
     storeReleaseRequest(fake);
     storeUnlockObject(fake);
-    requestUnlink(psstate->request);
+    HTTPMSGUNLOCK(psstate->request);
     cbdataFree(psstate);
 }
 

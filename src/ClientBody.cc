@@ -6,7 +6,7 @@
 
 ClientBody::ClientBody(ConnStateData::Pointer & aConn, HttpRequest *Request) : conn(aConn), request(NULL), buf (NULL), bufsize(0), callback(NULL), cbdata(NULL)
 {
-    request = requestLink(Request);
+    request = HTTPMSGLOCK(Request);
 }
 
 ClientBody::~ClientBody()
@@ -14,7 +14,7 @@ ClientBody::~ClientBody()
     if (cbdata)
         cbdataReferenceDone(cbdata);
 
-    requestUnlink(request);
+    HTTPMSGUNLOCK(request);
 
     conn = NULL; 	// refcounted
 }

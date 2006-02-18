@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.89 2006/01/19 18:40:28 wessels Exp $
+ * $Id: icp_v2.cc,v 1.90 2006/02/17 18:10:59 wessels Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -397,7 +397,7 @@ icpAccessAllowed(struct sockaddr_in *from, HttpRequest * icp_request)
     ACLChecklist checklist;
     checklist.src_addr = from->sin_addr;
     checklist.my_addr = no_addr;
-    checklist.request = requestLink(icp_request);
+    checklist.request = HTTPMSGLOCK(icp_request);
     checklist.accessList = cbdataReference(Config.accessList.icp);
     /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
     int result = checklist.fastCheck();
@@ -447,12 +447,12 @@ doV2Query(int fd, struct sockaddr_in from, char *buf, icp_common_t header)
     if (!icp_request)
         return;
 
-    requestLink(icp_request);
+    HTTPMSGLOCK(icp_request);
 
     if (!icpAccessAllowed(&from, icp_request))
     {
         icpDenyAccess(&from, url, header.reqnum, fd);
-        requestUnlink(icp_request);
+        HTTPMSGUNLOCK(icp_request);
         return;
     }
 
@@ -483,7 +483,7 @@ doV2Query(int fd, struct sockaddr_in from, char *buf, icp_common_t header)
 
     StoreEntry::getPublic (state, url, METHOD_GET);
 
-    requestUnlink(icp_request);
+    HTTPMSGUNLOCK(icp_request);
 }
 
 void

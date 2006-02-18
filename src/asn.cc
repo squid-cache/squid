@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.102 2006/01/03 17:22:30 wessels Exp $
+ * $Id: asn.cc,v 1.103 2006/02/17 18:10:59 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -236,7 +236,7 @@ asnCacheStart(int as)
     asState->as_number = as;
     req = urlParse(METHOD_GET, asres);
     assert(NULL != req);
-    asState->request = requestLink(req);
+    asState->request = HTTPMSGLOCK(req);
 
     if ((e = storeGetPublic(asres, METHOD_GET)) == NULL) {
         e = storeCreateEntry(asres, asres, request_flags(), METHOD_GET);
@@ -375,7 +375,7 @@ asStateFree(void *data)
     debug(53, 3) ("asnStateFree: %s\n", storeUrl(asState->entry));
     storeUnregister(asState->sc, asState->entry, asState);
     storeUnlockObject(asState->entry);
-    requestUnlink(asState->request);
+    HTTPMSGUNLOCK(asState->request);
     cbdataFree(asState);
 }
 

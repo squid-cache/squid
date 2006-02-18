@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.94 2006/01/23 20:04:24 wessels Exp $
+ * $Id: urn.cc,v 1.95 2006/02/17 18:10:59 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -228,13 +228,13 @@ UrnState::setUriResFromRequest(HttpRequest *r)
         debug(52, 3) ("urnStart: Bad uri-res URL %s\n", urlres);
         ErrorState *err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND);
         err->url = urlres;
-        err->request = requestLink(r);
+        err->request = HTTPMSGLOCK(r);
         urlres = NULL;
         errorAppendEntry(entry, err);
         return;
     }
 
-    requestLink(urlres_r);
+    HTTPMSGLOCK(urlres_r);
     httpHeaderPutStr(&urlres_r->header, HDR_ACCEPT, "text/plain");
 }
 
@@ -243,7 +243,7 @@ UrnState::start(HttpRequest * r, StoreEntry * e)
 {
     debug(52, 3) ("urnStart: '%s'\n", storeUrl(e));
     entry = e;
-    request = requestLink(r);
+    request = HTTPMSGLOCK(r);
     storeLockObject(entry);
     setUriResFromRequest(r);
 
@@ -375,7 +375,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
     if (rep->sline.status != HTTP_OK) {
         debug(52, 3) ("urnHandleReply: failed.\n");
         err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND);
-        err->request = requestLink(urnState->request);
+        err->request = HTTPMSGLOCK(urnState->request);
         err->url = xstrdup(storeUrl(e));
         errorAppendEntry(e, err);
         delete rep;
@@ -397,7 +397,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
     if (urls == NULL) {		/* unkown URN error */
         debug(52, 3) ("urnTranslateDone: unknown URN %s\n", storeUrl(e));
         err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND);
-        err->request = requestLink(urnState->request);
+        err->request = HTTPMSGLOCK(urnState->request);
         err->url = xstrdup(storeUrl(e));
         errorAppendEntry(e, err);
         goto error;
@@ -463,8 +463,8 @@ urnHandleReply(void *data, StoreIOBuffer result)
 error:
     storeUnlockObject(urlres_e);
     storeUnlockObject(urnState->entry);
-    requestUnlink(urnState->request);
-    requestUnlink(urnState->urlres_r);
+    HTTPMSGUNLOCK(urnState->request);
+    HTTPMSGUNLOCK(urnState->urlres_r);
     delete urnState;
 }
 

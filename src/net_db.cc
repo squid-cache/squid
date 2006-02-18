@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.181 2006/01/23 20:04:24 wessels Exp $
+ * $Id: net_db.cc,v 1.182 2006/02/17 18:10:59 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -866,7 +866,7 @@ netdbExchangeDone(void *data)
 {
     netdbExchangeState *ex = (netdbExchangeState *)data;
     debug(38, 3) ("netdbExchangeDone: %s\n", storeUrl(ex->e));
-    requestUnlink(ex->r);
+    HTTPMSGUNLOCK(ex->r);
     storeUnregister(ex->sc, ex->e, ex);
     storeUnlockObject(ex->e);
     cbdataReferenceDone(ex->p);
@@ -1302,7 +1302,7 @@ netdbExchangeStart(void *data)
         return;
     }
 
-    requestLink(ex->r);
+    HTTPMSGLOCK(ex->r);
     assert(NULL != ex->r);
     ex->r->http_ver = HttpVersion(1,0);
     ex->connstate = STATE_HEADER;

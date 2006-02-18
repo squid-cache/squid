@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.135 2006/01/09 20:44:36 wessels Exp $
+ * $Id: forward.cc,v 1.136 2006/02/17 18:10:59 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -75,7 +75,7 @@ FwdState::FwdState(int fd, StoreEntry * e, HttpRequest * r)
     entry = e;
     client_fd = fd;
     server_fd = -1;
-    request = requestLink(r);
+    request = HTTPMSGLOCK(r);
     start_t = squid_curtime;
     storeLockObject(e);
     EBIT_SET(e->flags, ENTRY_FWD_HDR_WAIT);
@@ -111,9 +111,7 @@ FwdState::~FwdState()
 
     serversFree(&servers);
 
-    requestUnlink(request);
-
-    request = NULL;
+    HTTPMSGUNLOCK(request);
 
     if (err)
         errorStateFree(err);
@@ -156,7 +154,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
         ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
         ch.my_port = request->my_port;
-        ch.request = requestLink(request);
+        ch.request = HTTPMSGLOCK(request);
         ch.accessList = cbdataReference(Config.accessList.miss);
         /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
         int answer = ch.fastCheck();
@@ -170,7 +168,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
 
             ErrorState *anErr = errorCon(page_id, HTTP_FORBIDDEN);
 
-            anErr->request = requestLink(request);
+            anErr->request = HTTPMSGLOCK(request);
 
             anErr->src_addr = request->client_addr;
 
@@ -185,7 +183,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
      * This seems like an odd place to bind mem_obj and request.
      * Might want to assert that request is NULL at this point
      */
-    entry->mem_obj->request = requestLink(request);
+    entry->mem_obj->request = HTTPMSGLOCK(request);
 #if URL_CHECKSUM_DEBUG
 
     entry->mem_obj->checkUrlChecksum();
@@ -194,7 +192,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
     if (shutting_down) {
         /* more yuck */
         ErrorState *anErr = errorCon(ERR_SHUTTING_DOWN, HTTP_SERVICE_UNAVAILABLE);
-        anErr->request = requestLink(request);
+        anErr->request = HTTPMSGLOCK(request);
         errorAppendEntry(entry, anErr);	// frees anErr
         return;
     }
@@ -236,7 +234,7 @@ FwdState::fail(ErrorState * errorState)
     err = errorState;
 
     if (!errorState->request)
-        errorState->request = requestLink(request);
+        errorState->request = HTTPMSGLOCK(request);
 }
 
 /*
@@ -458,7 +456,7 @@ FwdState::serverClosed(int fd)
 
     if (!err && shutting_down) {
         ErrorState *anErr = errorCon(ERR_SHUTTING_DOWN, HTTP_SERVICE_UNAVAILABLE);
-        anErr->request = requestLink(request);
+        anErr->request = HTTPMSGLOCK(request);
     }
 
     self = NULL;	// refcounted
@@ -504,7 +502,7 @@ FwdState::negotiateSSL(int fd)
                 anErr->port = request->port;
             }
 
-            anErr->request = requestLink(request);
+            anErr->request = HTTPMSGLOCK(request);
             fail(anErr);
 
             if (fs->_peer) {
@@ -550,7 +548,7 @@ FwdState::initiateSSL()
                       ERR_error_string(ERR_get_error(), NULL));
         ErrorState *anErr = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
         anErr->xerrno = errno;
-        anErr->request = requestLink(request);
+        anErr->request = HTTPMSGLOCK(request);
         fail(anErr);
         self = NULL;		// refcounted
         return;
@@ -1123,7 +1121,7 @@ struct IN_ADDR
         ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
         ch.my_port = request->my_port;
-        ch.request = requestLink(request);
+        ch.request = HTTPMSGLOCK(request);
     }
 
     return aclMapAddr(Config.accessList.outgoing_address, &ch);
@@ -1138,7 +1136,7 @@ getOutgoingTOS(HttpRequest * request)
         ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
         ch.my_port = request->my_port;
-        ch.request = requestLink(request);
+        ch.request = HTTPMSGLOCK(request);
     }
 
     return aclMapTOS(Config.accessList.outgoing_tos, &ch);

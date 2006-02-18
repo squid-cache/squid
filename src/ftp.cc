@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.383 2006/01/26 00:22:18 wessels Exp $
+ * $Id: ftp.cc,v 1.384 2006/02/17 18:10:59 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -3062,7 +3062,7 @@ ftpSendReply(FtpStateData * ftpState)
     }
 
     err = errorCon(err_code, http_code);
-    err->request = requestLink(ftpState->request);
+    err->request = HTTPMSGLOCK(ftpState->request);
 
     if (ftpState->old_request)
         err->ftp.request = xstrdup(ftpState->old_request);
@@ -3092,9 +3092,7 @@ FtpStateData::appendSuccessHeader()
     StoreEntry *e = entry;
     HttpReply *newrep = new HttpReply;
 
-    reply = newrep->lock()
-
-            ;
+    reply = HTTPMSGLOCK(newrep);
 
     if (flags.http_header_sent)
         return;
@@ -3189,7 +3187,7 @@ HttpReply *
 FtpStateData::ftpAuthRequired(HttpRequest * request, const char *realm)
 {
     ErrorState *err = errorCon(ERR_CACHE_ACCESS_DENIED, HTTP_UNAUTHORIZED);
-    err->request = requestLink(request);
+    err->request = HTTPMSGLOCK(request);
     HttpReply *newrep = errorBuildReply(err);
     errorStateFree(err);
     /* add Authenticate header */
@@ -3320,7 +3318,7 @@ FtpStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
          */
         ErrorState *err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
         err->xerrno = errno;
-        err->request = requestLink(request);
+        err->request = HTTPMSGLOCK(request);
         errorAppendEntry(entry, err);
         comm_close(ctrl.fd);
         return;
@@ -3353,11 +3351,9 @@ FtpStateData::takeAdaptedHeaders(HttpReply *rep)
 
     assert (rep);
     storeEntryReplaceObject(entry, rep);
-    reply->unlock();
+    HTTPMSGUNLOCK(reply);
 
-    reply = rep->lock()
-
-            ;
+    reply = HTTPMSGLOCK(rep);
 
     debug(11,5)("FtpStateData::takeAdaptedHeaders() finished\n");
 }
@@ -3417,7 +3413,7 @@ FtpStateData::abortAdapting()
     if (entry->isEmpty()) {
         ErrorState *err;
         err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
-        err->request = requestLink((HttpRequest *) request);
+        err->request = HTTPMSGLOCK((HttpRequest *) request);
         err->xerrno = errno;
         fwd->fail(err);
         fwd->dontRetry(true);

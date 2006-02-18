@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.158 2006/01/03 23:26:20 wessels Exp $
+ * $Id: tunnel.cc,v 1.159 2006/02/17 18:10:59 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -158,8 +158,7 @@ sslStateFree(SslStateData * sslState)
     safe_free(sslState->url);
     FwdState::serversFree(&sslState->servers);
     sslState->host = NULL;
-    requestUnlink(sslState->request);
-    sslState->request = NULL;
+    HTTPMSGUNLOCK(sslState->request);
     delete sslState;
 }
 
@@ -466,7 +465,7 @@ sslConnectTimeout(int fd, void *data)
 
     err->port = sslState->port;
 
-    err->request = requestLink(request);
+    err->request = HTTPMSGLOCK(request);
 
     err->callback = sslErrorComplete;
 
@@ -549,7 +548,7 @@ sslConnectDone(int fdnotused, comm_err_t status, int xerrno, void *data)
         debug(26, 4) ("sslConnect: Unknown host: %s\n", sslState->host);
         err = errorCon(ERR_DNS_FAIL, HTTP_NOT_FOUND);
         *sslState->status_ptr = HTTP_NOT_FOUND;
-        err->request = requestLink(request);
+        err->request = HTTPMSGLOCK(request);
         err->dnsserver_msg = xstrdup(dns_error_message);
         err->callback = sslErrorComplete;
         err->callback_data = sslState;
@@ -560,7 +559,7 @@ sslConnectDone(int fdnotused, comm_err_t status, int xerrno, void *data)
         err->xerrno = xerrno;
         err->host = xstrdup(sslState->host);
         err->port = sslState->port;
-        err->request = requestLink(request);
+        err->request = HTTPMSGLOCK(request);
         err->callback = sslErrorComplete;
         err->callback_data = sslState;
         errorSend(sslState->client.fd(), err);
@@ -603,7 +602,7 @@ sslStart(ClientHttpRequest * http, size_t * size_ptr, int *status_ptr)
         ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
         ch.my_port = request->my_port;
-        ch.request = requestLink(request);
+        ch.request = HTTPMSGLOCK(request);
         ch.accessList = cbdataReference(Config.accessList.miss);
         /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
         answer = ch.fastCheck();
@@ -611,7 +610,7 @@ sslStart(ClientHttpRequest * http, size_t * size_ptr, int *status_ptr)
         if (answer == 0) {
             err = errorCon(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN);
             *status_ptr = HTTP_FORBIDDEN;
-            err->request = requestLink(request);
+            err->request = HTTPMSGLOCK(request);
             err->src_addr = request->client_addr;
             errorSend(fd, err);
             return;
@@ -636,7 +635,7 @@ sslStart(ClientHttpRequest * http, size_t * size_ptr, int *status_ptr)
         err = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
         *status_ptr = HTTP_INTERNAL_SERVER_ERROR;
         err->xerrno = errno;
-        err->request = requestLink(request);
+        err->request = HTTPMSGLOCK(request);
         errorSend(fd, err);
         return;
     }
@@ -648,7 +647,7 @@ sslStart(ClientHttpRequest * http, size_t * size_ptr, int *status_ptr)
 #endif
 
     sslState->url = xstrdup(url);
-    sslState->request = requestLink(request);
+    sslState->request = HTTPMSGLOCK(request);
     sslState->server.size_ptr = size_ptr;
     sslState->status_ptr = status_ptr;
     sslState->client.fd(fd);
@@ -721,7 +720,7 @@ sslPeerSelectComplete(FwdServer * fs, void *data)
         ErrorState *err;
         err = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE);
         *sslState->status_ptr = HTTP_SERVICE_UNAVAILABLE;
-        err->request = requestLink(sslState->request);
+        err->request = HTTPMSGLOCK(sslState->request);
         err->callback = sslErrorComplete;
         err->callback_data = sslState;
         errorSend(sslState->client.fd(), err);

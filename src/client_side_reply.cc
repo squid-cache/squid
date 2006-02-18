@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.94 2006/01/23 20:04:24 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.95 2006/02/17 18:10:59 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -423,7 +423,7 @@ clientReplyContext::handleIMSGiveClientUpdatedOldEntry()
         int unlink_request = 0;
 
         if (old_entry->mem_obj->request == NULL) {
-            old_entry->mem_obj->request = requestLink(http->memObject()->request);
+            old_entry->mem_obj->request = HTTPMSGLOCK(http->memObject()->request);
             unlink_request = 1;
         }
 
@@ -439,10 +439,7 @@ clientReplyContext::handleIMSGiveClientUpdatedOldEntry()
 
         old_entry->timestamp = squid_curtime;
 
-        if (unlink_request) {
-            requestUnlink(old_entry->mem_obj->request);
-            old_entry->mem_obj->request = NULL;
-        }
+        HTTPMSGUNLOCK(old_entry->mem_obj->request);
     }
 
     sendClientOldEntry();
@@ -2158,7 +2155,7 @@ clientReplyContext::createStoreEntry(method_t m, request_flags flags)
      */
 
     if (http->request == NULL)
-        http->request = requestLink(new HttpRequest(m, PROTO_NONE, null_string));
+        http->request = HTTPMSGLOCK(new HttpRequest(m, PROTO_NONE, null_string));
 
     StoreEntry *e = storeCreateEntry(http->uri, http->log_uri, flags, m);
 
@@ -2204,7 +2201,7 @@ clientBuildError(err_type page_id, http_status status, char const *url,
         err->url = xstrdup(url);
 
     if (request)
-        err->request = requestLink(request);
+        err->request = HTTPMSGLOCK(request);
 
     return err;
 }

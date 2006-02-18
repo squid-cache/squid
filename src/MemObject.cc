@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.21 2006/01/23 20:04:24 wessels Exp $
+ * $Id: MemObject.cc,v 1.22 2006/02/17 18:10:59 wessels Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -78,9 +78,7 @@ MemObject::MemObject(char const *aUrl, char const *aLog_url)
     debugs(20, 3, HERE << "new MemObject " << this);
     HttpReply *rep = new HttpReply;
 
-    _reply  = rep->lock()
-
-              ;
+    _reply  = HTTPMSGLOCK(rep);
     url = xstrdup(aUrl);
 
 #if URL_CHECKSUM_DEBUG
@@ -119,11 +117,9 @@ MemObject::~MemObject()
 
 #endif
 
-    _reply->unlock();
+    HTTPMSGUNLOCK(_reply);
 
-    requestUnlink(request);
-
-    request = NULL;
+    HTTPMSGUNLOCK(request);
 
     ctx_exit(ctx);              /* must exit before we free mem->url */
 
@@ -137,9 +133,7 @@ MemObject::~MemObject()
 void
 MemObject::unlinkRequest()
 {
-    /* XXX Should we assert(request)? */
-    requestUnlink(request);
-    request = NULL;
+    HTTPMSGUNLOCK(request);
 }
 
 void
@@ -198,12 +192,8 @@ MemObject::getReply() const
 void
 MemObject::replaceHttpReply(HttpReply *newrep)
 {
-    if (_reply)
-        _reply->unlock();
-
-    _reply = newrep->lock()
-
-             ;
+    HTTPMSGUNLOCK(_reply);
+    _reply = HTTPMSGLOCK(newrep);
 }
 
 struct LowestMemReader : public unary_function<store_client, void>

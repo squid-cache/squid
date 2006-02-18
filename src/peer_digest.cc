@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.108 2006/01/19 22:10:55 wessels Exp $
+ * $Id: peer_digest.cc,v 1.109 2006/02/17 18:10:59 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -337,7 +337,7 @@ peerDigestRequest(PeerDigest * pd)
 
     fetch = cbdataAlloc(DigestFetchState);
 
-    fetch->request = requestLink(req);
+    fetch->request = HTTPMSGLOCK(req);
 
     fetch->pd = cbdataReference(pd);
 
@@ -541,7 +541,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 
             if (!fetch->old_entry->mem_obj->request)
                 fetch->old_entry->mem_obj->request = r =
-                                                         requestLink(fetch->entry->mem_obj->request);
+                                                         HTTPMSGLOCK(fetch->entry->mem_obj->request);
 
             assert(fetch->old_entry->mem_obj->request);
 
@@ -922,11 +922,9 @@ peerDigestFetchFinish(DigestFetchState * fetch, int err)
 
     storeUnlockObject(fetch->entry);
 
-    requestUnlink(fetch->request);
+    HTTPMSGUNLOCK(fetch->request);
 
     fetch->entry = NULL;
-
-    fetch->request = NULL;
 
     assert(fetch->pd == NULL);
 

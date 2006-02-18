@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.h,v 1.15 2006/01/23 20:04:24 wessels Exp $
+ * $Id: HttpReply.h,v 1.16 2006/02/17 18:10:59 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -55,14 +55,11 @@ public:
 
     virtual void reset();
 
-    virtual HttpReply *lock()
-
+    // use HTTPMSGLOCK() instead of calling this directly
+    virtual HttpReply *_lock()
     {
-
-        return static_cast<HttpReply*>(HttpMsg::lock())
-
-                   ;
-    } ;
+        return static_cast<HttpReply*>(HttpMsg::_lock());
+    };
 
     //virtual void unlock();  // only needed for debugging
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.59 2006/01/23 20:04:24 wessels Exp $
+ * $Id: HttpRequest.cc,v 1.60 2006/02/17 18:10:59 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -202,25 +202,6 @@ bool HttpRequest::parseFirstLine(const char *start, const char *end)
         return false;
 
     return true;
-}
-
-HttpRequest *
-requestLink(HttpRequest * request)
-{
-    assert(request);
-
-    return request->lock()
-
-           ;
-}
-
-void
-requestUnlink(HttpRequest * request)
-{
-    if (!request)
-        return;
-
-    request->unlock();
 }
 
 int

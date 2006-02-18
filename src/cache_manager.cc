@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.35 2006/01/23 20:04:24 wessels Exp $
+ * $Id: cache_manager.cc,v 1.36 2006/02/17 18:10:59 wessels Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -251,7 +251,7 @@ cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
     if ((mgr = cachemgrParseUrl(storeUrl(entry))) == NULL) {
         err = errorCon(ERR_INVALID_URL, HTTP_NOT_FOUND);
         err->url = xstrdup(storeUrl(entry));
-        err->request = requestLink(request);
+        err->request = HTTPMSGLOCK(request);
         errorAppendEntry(entry, err);
         entry->expires = squid_curtime;
         return;
@@ -282,7 +282,7 @@ cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
                           mgr->user_name ? mgr->user_name : "<unknown>",
                           fd_table[fd].ipaddr, mgr->action);
 
-        err->request = requestLink(request);
+        err->request = HTTPMSGLOCK(request);
 
         rep = errorBuildReply(err);
 

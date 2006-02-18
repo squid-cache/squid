@@ -1,5 +1,5 @@
 /*
- * $Id: Server.cc,v 1.2 2006/01/25 19:26:14 wessels Exp $
+ * $Id: Server.cc,v 1.3 2006/02/17 18:10:59 wessels Exp $
  *
  * DEBUG:
  * AUTHOR: Duane Wessels
@@ -46,18 +46,15 @@ ServerStateData::ServerStateData(FwdState *theFwdState)
     fwd = theFwdState;
     entry = fwd->entry;
     storeLockObject(entry);
-    request = requestLink(fwd->request);
+    request = HTTPMSGLOCK(fwd->request);
 }
 
 ServerStateData::~ServerStateData()
 {
     storeUnlockObject(entry);
 
-    if (request)
-        request->unlock();
-
-    if (reply)
-        reply->unlock();
+    HTTPMSGUNLOCK(request);
+    HTTPMSGUNLOCK(reply);
 
     fwd = NULL; // refcounted
 
