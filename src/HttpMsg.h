@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.h,v 1.7 2006/01/23 20:04:24 wessels Exp $
+ * $Id: HttpMsg.h,v 1.8 2006/02/17 18:10:59 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -51,10 +51,8 @@ public:
 
     void packInto(Packer * p, bool full_uri) const;
 
-    virtual HttpMsg *lock()
-
-    ;
-    virtual void unlock();
+    virtual HttpMsg *_lock();	// please use HTTPMSGLOCK()
+    virtual void _unlock();	// please use HTTPMSGUNLOCK()
 
 public:
     HttpVersion http_ver;
@@ -104,5 +102,8 @@ protected:
 
 
 SQUIDCEXTERN int httpMsgIsolateHeaders(const char **parse_start, const char **blk_start, const char **blk_end);
+
+#define HTTPMSGUNLOCK(a) if(a){(a)->_unlock();(a)=NULL;}
+#define HTTPMSGLOCK(a) (a)->_lock()
 
 #endif /* SQUID_HTTPMSG_H */

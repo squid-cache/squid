@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.155 2006/01/03 17:22:31 wessels Exp $
+ * $Id: wais.cc,v 1.156 2006/02/17 18:10:59 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -75,7 +75,7 @@ waisStateFree(int fdnotused, void *data)
 
     storeUnlockObject(waisState->entry);
 
-    requestUnlink(waisState->request);
+    HTTPMSGUNLOCK(waisState->request);
 
     waisState->fwd = NULL;	// refcounted
 
@@ -262,7 +262,7 @@ waisStart(FwdState * fwd)
     waisState->entry = entry;
     waisState->dataWritten = 0;
     xstrncpy(waisState->url, url, MAX_URL);
-    waisState->request = requestLink(request);
+    waisState->request = HTTPMSGLOCK(request);
     waisState->fwd = fwd;
     comm_add_close_handler(waisState->fd, waisStateFree, waisState);
     storeLockObject(entry);

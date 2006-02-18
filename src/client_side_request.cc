@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.56 2006/01/11 21:05:50 wessels Exp $
+ * $Id: client_side_request.cc,v 1.57 2006/02/17 18:10:59 wessels Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -340,7 +340,7 @@ clientBeginRequest(method_t method, char const *url, CSCB * streamcallback,
 
     request->http_ver = http_ver;
 
-    http->request = requestLink(request);
+    http->request = HTTPMSGLOCK(request);
 
     /* optional - skip the access check ? */
     http->calloutContext = new ClientRequestContext(http);
@@ -870,8 +870,8 @@ ClientRequestContext::clientRedirectDone(char *result)
         new_request->extacl_user = old_request->extacl_user;
         new_request->extacl_passwd = old_request->extacl_passwd;
         new_request->flags.proxy_keepalive = old_request->flags.proxy_keepalive;
-        requestUnlink(old_request);
-        http->request = requestLink(new_request);
+        HTTPMSGUNLOCK(old_request);
+        http->request = HTTPMSGLOCK(new_request);
     }
 
     /* FIXME PIPELINE: This is innacurate during pipelining */
@@ -1141,8 +1141,8 @@ ClientHttpRequest::takeAdaptedHeaders(HttpMsg *msg)
          */
         new_req->body_connection = request->body_connection;
         request->body_connection = NULL;
-        requestUnlink(request);
-        request = requestLink(new_req);
+        HTTPMSGUNLOCK(request);
+        request = HTTPMSGLOCK(new_req);
         /*
          * Store the new URI for logging
          */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.709 2006/01/19 22:15:18 wessels Exp $
+ * $Id: client_side.cc,v 1.710 2006/02/17 18:10:59 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -516,7 +516,7 @@ ClientHttpRequest::logRequest()
         checklist->reply = al.reply;
 
         if (!Config.accessList.log || checklist->fastCheck()) {
-            al.request = requestLink(request);
+            al.request = HTTPMSGLOCK(request);
             accessLogLog(&al, checklist);
             updateCounters();
 
@@ -537,8 +537,7 @@ ClientHttpRequest::freeResources()
     safe_free(log_uri);
     safe_free(redirect.location);
     range_iter.boundary.clean();
-    requestUnlink(request);
-    request = NULL;
+    HTTPMSGUNLOCK(request);
 
     if (client_stream.tail)
         clientStreamAbort((clientStreamNode *)client_stream.tail->data, this);
@@ -2294,7 +2293,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, ClientSocketContext *context,
         return;
     }
 
-    http->request = requestLink(request);
+    http->request = HTTPMSGLOCK(request);
     clientSetKeepaliveFlag(http);
     /* Do we expect a request-body? */
 

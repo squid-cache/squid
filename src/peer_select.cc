@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.137 2006/01/03 17:22:31 wessels Exp $
+ * $Id: peer_select.cc,v 1.138 2006/02/17 18:10:59 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -110,8 +110,7 @@ peerSelectStateFree(ps_state * psstate)
         delete (psstate->acl_checklist);
     }
 
-    requestUnlink(psstate->request);
-    psstate->request = NULL;
+    HTTPMSGUNLOCK(psstate->request);
 
     if (psstate->entry) {
         assert(psstate->entry->ping_status != PING_WAITING);
@@ -161,7 +160,7 @@ peerSelect(HttpRequest * request,
 
     psstate = new ps_state;
 
-    psstate->request = requestLink(request);
+    psstate->request = HTTPMSGLOCK(request);
 
     psstate->entry = entry;
 

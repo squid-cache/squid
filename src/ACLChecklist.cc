@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.29 2005/12/08 20:08:46 wessels Exp $
+ * $Id: ACLChecklist.cc,v 1.30 2006/02/17 18:10:59 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -323,10 +323,7 @@ ACLChecklist::~ACLChecklist()
     if (extacl_entry)
         cbdataReferenceDone(extacl_entry);
 
-    if (request)
-        requestUnlink(request);
-
-    request = NULL;
+    HTTPMSGUNLOCK(request);
 
     conn_ = NULL;
 
@@ -496,7 +493,7 @@ aclChecklistCreate(const acl_access * A, HttpRequest * request, const char *iden
         checklist->accessList = cbdataReference(A);
 
     if (request != NULL) {
-        checklist->request = requestLink(request);
+        checklist->request = HTTPMSGLOCK(request);
         checklist->src_addr = request->client_addr;
         checklist->my_addr = request->my_addr;
         checklist->my_port = request->my_port;

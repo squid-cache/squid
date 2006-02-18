@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.121 2006/01/23 20:04:24 wessels Exp $
+ * $Id: mime.cc,v 1.122 2006/02/17 18:10:59 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -605,7 +605,7 @@ MimeIcon::created (StoreEntry *newEntry)
     if (NULL == r)
         fatal("mimeLoadIcon: cannot parse internal URL");
 
-    e->mem_obj->request = requestLink(r);
+    e->mem_obj->request = HTTPMSGLOCK(r);
 
     HttpReply *reply = new HttpReply;
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.206 2006/01/23 20:04:24 wessels Exp $
+ * $Id: errorpage.cc,v 1.207 2006/02/17 18:10:59 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -460,7 +460,7 @@ errorSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, voi
 void
 errorStateFree(ErrorState * err)
 {
-    requestUnlink(err->request);
+    HTTPMSGUNLOCK(err->request);
     safe_free(err->redirect_url);
     safe_free(err->url);
     safe_free(err->host);

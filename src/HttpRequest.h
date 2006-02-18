@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.18 2006/01/23 20:04:24 wessels Exp $
+ * $Id: HttpRequest.h,v 1.19 2006/02/17 18:10:59 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -39,8 +39,6 @@
 #include "HierarchyLogEntry.h"
 
 /*  Http Request */
-extern HttpRequest *requestLink(HttpRequest *);
-extern void requestUnlink(HttpRequest *);
 extern int httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConnection);
 extern int httpRequestHdrAllowedByName(http_hdr_type id);
 extern void httpRequestPack(void *obj, Packer *p);
@@ -58,13 +56,10 @@ public:
     ~HttpRequest();
     virtual void reset();
 
-    virtual HttpRequest *lock()
-
+    // use HTTPMSGLOCK() instead of calling this directly
+    virtual HttpRequest *_lock()
     {
-
-        return static_cast<HttpRequest*>(HttpMsg::lock())
-
-                   ;
+        return static_cast<HttpRequest*>(HttpMsg::_lock());
     };
 
     void initHTTP(method_t aMethod, protocol_t aProtocol, const char *aUrlpath);

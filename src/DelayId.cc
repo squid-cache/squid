@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayId.cc,v 1.18 2005/12/08 20:08:46 wessels Exp $
+ * $Id: DelayId.cc,v 1.19 2006/02/17 18:10:59 wessels Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -112,7 +112,7 @@ DelayId::DelayClient(ClientHttpRequest * http)
         if (http->getConn().getRaw() != NULL)
             ch.conn(http->getConn());
 
-        ch.request = requestLink(r);
+        ch.request = HTTPMSGLOCK(r);
 
         ch.accessList = cbdataReference(DelayPools::delay_data[pool].access);
 

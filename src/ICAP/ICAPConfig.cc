@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.cc,v 1.5 2006/01/23 21:36:07 wessels Exp $
+ * $Id: ICAPConfig.cc,v 1.6 2006/02/17 18:11:00 wessels Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -115,11 +115,8 @@ ICAPAccessCheck::ICAPAccessCheck(ICAP::Method aMethod,
     method = aMethod;
     point = aPoint;
 
-    req = aReq->lock()
-
-          ;
-    rep = aRep ? aRep->lock()
-          : NULL;
+    req = HTTPMSGLOCK(aReq);
+    rep = aRep ? HTTPMSGLOCK(aRep) : NULL;
 
     callback = aCallback;
 
@@ -138,11 +135,8 @@ ICAPAccessCheck::ICAPAccessCheck(ICAP::Method aMethod,
 
 ICAPAccessCheck::~ICAPAccessCheck()
 {
-    if (req)
-        req->unlock();
-
-    if (rep)
-        rep->unlock();
+    HTTPMSGUNLOCK(req);
+    HTTPMSGUNLOCK(rep);
 }
 
 /*

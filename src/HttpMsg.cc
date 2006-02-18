@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.24 2006/01/23 20:04:24 wessels Exp $
+ * $Id: HttpMsg.cc,v 1.25 2006/02/17 18:10:59 wessels Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -362,14 +362,16 @@ void HttpMsg::firstLineBuf(MemBuf& mb)
 
 HttpMsg *
 
-HttpMsg::lock()
+// use HTTPMSGLOCK() instead of calling this directly
+HttpMsg::_lock()
 {
     lock_count++;
     return this;
 }
 
+// use HTTPMSGUNLOCK() instead of calling this directly
 void
-HttpMsg::unlock()
+HttpMsg::_unlock()
 {
     assert(lock_count > 0);
     --lock_count;

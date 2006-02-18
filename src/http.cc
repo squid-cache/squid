@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.485 2006/02/08 00:16:23 wessels Exp $
+ * $Id: http.cc,v 1.486 2006/02/17 18:10:59 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -82,7 +82,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : ServerStateData(theFwdStat
     fd = fwd->server_fd;
     readBuf = new MemBuf;
     readBuf->init(4096, SQUID_TCP_SO_RCVBUF);
-    orig_request = requestLink(fwd->request);
+    orig_request = HTTPMSGLOCK(fwd->request);
 
     if (fwd->servers)
         _peer = fwd->servers->_peer;         /* might be NULL */
@@ -108,9 +108,9 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : ServerStateData(theFwdStat
 
         proxy_req->flags.proxying = 1;
 
-        requestUnlink(request);
+        HTTPMSGUNLOCK(request);
 
-        request = requestLink(proxy_req);
+        request = HTTPMSGLOCK(proxy_req);
 
         /*
          * This NEIGHBOR_PROXY_ONLY check probably shouldn't be here.
@@ -156,9 +156,7 @@ HttpStateData::~HttpStateData()
 
     delete readBuf;
 
-    requestUnlink(orig_request);
-
-    orig_request = NULL;
+    HTTPMSGUNLOCK(orig_request);
 
     debugs(11,5,HERE << "HttpStateData " << this << " destroyed");
 }
@@ -775,9 +773,7 @@ HttpStateData::processReplyHeader()
         return;
     }
 
-    reply = newrep->lock()
-
-            ;
+    reply = HTTPMSGLOCK(newrep);
 
     debug(11, 9) ("GOT HTTP REPLY HDR:\n---------\n%s\n----------\n",
                   readBuf->content());
@@ -1870,7 +1866,7 @@ HttpStateData::sendRequestEntityDone(int fd)
 {
     ACLChecklist ch;
     debug(11, 5) ("httpSendRequestEntityDone: FD %d\n", fd);
-    ch.request = requestLink(request);
+    ch.request = HTTPMSGLOCK(request);
 
     if (Config.accessList.brokenPosts)
         ch.accessList = cbdataReference(Config.accessList.brokenPosts);
@@ -2014,7 +2010,7 @@ HttpStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
          */
         ErrorState *err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
         err->xerrno = errno;
-        err->request = requestLink(orig_request);
+        err->request = HTTPMSGLOCK(orig_request);
         errorAppendEntry(entry, err);
         comm_close(fd);
         return;
@@ -2047,11 +2043,9 @@ HttpStateData::takeAdaptedHeaders(HttpReply *rep)
 
     assert (rep);
     storeEntryReplaceObject(entry, rep);
-    reply->unlock();
+    HTTPMSGUNLOCK(reply);
 
-    reply = rep->lock()
-
-            ;
+    reply = HTTPMSGLOCK(rep);
 
     haveParsedReplyHeaders();
 
@@ -2115,7 +2109,7 @@ HttpStateData::abortAdapting()
     if (entry->isEmpty()) {
         ErrorState *err;
         err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
-        err->request = requestLink((HttpRequest *) request);
+        err->request = HTTPMSGLOCK((HttpRequest *) request);
         err->xerrno = errno;
         fwd->fail( err);
         fwd->dontRetry(true);
