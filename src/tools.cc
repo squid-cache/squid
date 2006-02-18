@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.264 2005/09/24 13:21:00 serassio Exp $
+ * $Id: tools.cc,v 1.265 2006/02/18 00:09:35 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -399,7 +399,7 @@ sigusr2_handle(int sig)
 
     if (state == 0) {
 #ifndef MEM_GEN_TRACE
-        Debug::parseOptions("ALL,10");
+        Debug::parseOptions("ALL,7");
 #else
 
         log_trace_done();
