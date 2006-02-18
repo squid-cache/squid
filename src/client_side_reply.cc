@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.96 2006/02/17 20:15:35 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.97 2006/02/18 00:23:43 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -991,8 +991,6 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
         purgeStatus = HTTP_OK;
     }
 
-    HttpReply *r;
-
     /* And for Vary, release the base URI if none of the headers was included in the request */
 
     if (http->request->vary_headers
@@ -1027,13 +1025,13 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 
     triggerInitialStoreRead();
 
-    r = new HttpReply;
+    HttpReply *rep = new HttpReply;
 
     HttpVersion version(1,0);
 
-    r->setHeaders(version, purgeStatus, NULL, NULL, 0, 0, -1);
+    rep->setHeaders(version, purgeStatus, NULL, NULL, 0, 0, -1);
 
-    http->storeEntry()->replaceHttpReply(r);
+    http->storeEntry()->replaceHttpReply(rep);
 
     http->storeEntry()->complete();
 }
@@ -1041,7 +1039,6 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 void
 clientReplyContext::traceReply(clientStreamNode * node)
 {
-    HttpReply *rep;
     clientStreamNode *next = (clientStreamNode *)node->node.next->data;
     StoreIOBuffer tempBuffer;
     assert(http->request->max_forwards == 0);
@@ -1053,7 +1050,7 @@ clientReplyContext::traceReply(clientStreamNode * node)
                     tempBuffer, SendMoreData, this);
     storeReleaseRequest(http->storeEntry());
     storeBuffer(http->storeEntry());
-    rep = new HttpReply;
+    HttpReply *rep = new HttpReply;
     HttpVersion version(1,0);
     rep->setHeaders(version, HTTP_OK, NULL, "text/plain",
                     http->request->prefixLen(), 0, squid_curtime);
@@ -1286,13 +1283,6 @@ clientReplyContext::alwaysAllowResponse(http_status sline) const
     return result;
 }
 
-void
-clientReplyContext::obeyConnectionHeader()
-{
-    HttpHeader *hdr = &holdingReply->header;
-    hdr->removeConnectionHeaderEntries();
-}
-
 /*
  * filters out unwanted entries from original reply header
  * adds extra entries if we have more info than origin server
@@ -1301,7 +1291,7 @@ clientReplyContext::obeyConnectionHeader()
 void
 clientReplyContext::buildReplyHeader()
 {
-    HttpHeader *hdr = &holdingReply->header;
+    HttpHeader *hdr = &reply->header;
     int is_hit = logTypeIsATcpHit(http->logType);
     HttpRequest *request = http->request;
 #if DONT_FILTER_THESE
@@ -1318,10 +1308,13 @@ clientReplyContext::buildReplyHeader()
     if (is_hit)
         httpHeaderDelById(hdr, HDR_SET_COOKIE);
 
-    obeyConnectionHeader();
+    /*
+     * Be sure to obey the Connection header 
+     */
+    reply->header.removeConnectionHeaderEntries();
 
     //    if (request->range)
-    //      clientBuildRangeHeader(http, holdingReply);
+    //      clientBuildRangeHeader(http, reply);
     /*
      * Add a estimated Age header on cache hits.
      */
@@ -1397,7 +1390,7 @@ clientReplyContext::buildReplyHeader()
 
     /* Handle authentication headers */
     if (request->auth_user_request)
-        authenticateFixHeader(holdingReply, request->auth_user_request, request,
+        authenticateFixHeader(reply, request->auth_user_request, request,
                               http->flags.accel, 0);
 
     /* Append X-Cache */
@@ -1412,7 +1405,7 @@ clientReplyContext::buildReplyHeader()
 
 #endif
 
-    if (holdingReply->bodySize(request->method) < 0) {
+    if (reply->bodySize(request->method) < 0) {
         debug(88,
               3)
         ("clientBuildReplyHeader: can't keep-alive, unknown body size\n");
@@ -1432,8 +1425,8 @@ clientReplyContext::buildReplyHeader()
         LOCAL_ARRAY(char, bbuf, MAX_URL + 32);
         String strVia = httpHeaderGetList(hdr, HDR_VIA);
         snprintf(bbuf, sizeof(bbuf), "%d.%d %s",
-                 holdingReply->sline.version.major,
-                 holdingReply->sline.version.minor,
+                 reply->sline.version.major,
+                 reply->sline.version.minor,
                  ThisCache);
         strListAdd(&strVia, bbuf, ',');
         httpHeaderDelById(hdr, HDR_VIA);
@@ -1469,26 +1462,27 @@ clientReplyContext::buildReply(const char *buf, size_t size)
     if (!k)
         return;
 
-    holdReply(new HttpReply);
+    assert(reply == NULL);
 
-    if (!holdingReply->parseCharBuf(buf, k)) {
+    HttpReply *rep = new HttpReply;
+
+    reply = HTTPMSGLOCK(rep);
+
+    if (!reply->parseCharBuf(buf, k)) {
         /* parsing failure, get rid of the invalid reply */
-        delete holdingReply;
-        holdReply (NULL);
-        /* This is wrong. ~HttpReply() should to the rep
-         * for us, and we can destroy our own range info
-         */
+        HTTPMSGUNLOCK(reply);
 
         if (http->request->range) {
+            debugs(0,0,HERE << "look for bug here");
             /* this will fail and destroy request->range */
-            //          clientBuildRangeHeader(http, holdingReply);
+            //          clientBuildRangeHeader(http, reply);
         }
 
         return;
     }
 
     /* enforce 1.0 reply version */
-    holdingReply->sline.version = HttpVersion(1,0);
+    reply->sline.version = HttpVersion(1,0);
 
     /* do header conversions */
     buildReplyHeader();
@@ -1817,13 +1811,6 @@ clientReplyContext::startSendProcess()
                     tempBuffer, SendMoreData, this);
 }
 
-void
-clientReplyContext::holdReply(HttpReply *aReply)
-{
-    assert (!holdingReply || !aReply);
-    holdingReply = aReply;
-}
-
 /*
  * Calculates the maximum size allowed for an HTTP response
  */
@@ -1838,7 +1825,7 @@ clientReplyContext::buildMaxBodySize(HttpReply * reply)
 
     ch = clientAclChecklistCreate(NULL, http);
 
-    ch->reply = reply;
+    ch->reply = HTTPMSGLOCK(reply);
 
     for (l = Config.ReplyBodySize; l; l = l -> next) {
         if (ch->matchAclListFast(l->aclList)) {
@@ -1857,26 +1844,24 @@ clientReplyContext::buildMaxBodySize(HttpReply * reply)
 void
 clientReplyContext::processReplyAccess ()
 {
-    HttpReply *rep = holdingReply;
-    holdReply(NULL);
-    buildMaxBodySize(rep);
+    assert(reply);
+    buildMaxBodySize(reply);
 
-    if (http->isReplyBodyTooLarge(rep->content_length)) {
+    if (http->isReplyBodyTooLarge(reply->content_length)) {
         ErrorState *err =
             clientBuildError(ERR_TOO_BIG, HTTP_FORBIDDEN, NULL,
                              http->getConn().getRaw() != NULL ? &http->getConn()->peer.sin_addr : &no_addr,
                              http->request);
         removeClientStoreReference(&sc, http);
         startError(err);
-        delete rep;
+        HTTPMSGUNLOCK(reply);
         return;
     }
 
-    headers_sz = rep->hdr_sz;
+    headers_sz = reply->hdr_sz;
     ACLChecklist *replyChecklist;
     replyChecklist = clientAclChecklistCreate(Config.accessList.reply, http);
-    replyChecklist->reply = rep;
-    holdReply (rep);
+    replyChecklist->reply = HTTPMSGLOCK(reply);
     replyChecklist->nonBlockingCheck(ProcessReplyAccessResult, this);
 }
 
@@ -1894,11 +1879,9 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
                   RequestMethodStr[http->request->method], http->uri,
                   accessAllowed ? "ALLOWED" : "DENIED",
                   AclMatchedName ? AclMatchedName : "NO ACL's");
-    HttpReply *rep = holdingReply;
-    holdReply (NULL);
 
-    if (!accessAllowed && rep->sline.status != HTTP_FORBIDDEN
-            && !alwaysAllowResponse(rep->sline.status)) {
+    if (!accessAllowed && reply->sline.status != HTTP_FORBIDDEN
+            && !alwaysAllowResponse(reply->sline.status)) {
         /* the if above is slightly broken, but there is no way
          * to tell if this is a squid generated error page, or one from
          *  upstream at this point. */
@@ -1918,7 +1901,7 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
 
         startError(err);
 
-        delete rep;
+        HTTPMSGUNLOCK(reply);
 
         http->logType = LOG_TCP_DENIED_REPLY;
 
@@ -1928,19 +1911,19 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
     /* Ok, the reply is allowed, */
     http->loggingEntry(http->storeEntry());
 
-    ssize_t body_size = reqofs - rep->hdr_sz;
+    ssize_t body_size = reqofs - reply->hdr_sz;
 
     assert(body_size >= 0);
 
     debug(88,3)
     ("clientReplyContext::sendMoreData: Appending %d bytes after %d bytes of headers\n",
-     (int) body_size, rep->hdr_sz);
+     (int) body_size, reply->hdr_sz);
 
 #if ESI
 
-    if (http->flags.accel && rep->sline.status != HTTP_FORBIDDEN &&
-            !alwaysAllowResponse(rep->sline.status) &&
-            esiEnableProcessing(rep)) {
+    if (http->flags.accel && reply->sline.status != HTTP_FORBIDDEN &&
+            !alwaysAllowResponse(reply->sline.status) &&
+            esiEnableProcessing(reply)) {
         debug(88, 2) ("Enabling ESI processing for %s\n", http->uri);
         clientStreamInsertHead(&http->client_stream, esiStreamRead,
                                esiProcessStream, esiStreamDetach, esiStreamStatus, NULL);
@@ -1972,7 +1955,7 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
 
     StoreIOBuffer tempBuffer;
     char *buf = next()->readBuffer.data;
-    char *body_buf = buf + rep->hdr_sz;
+    char *body_buf = buf + reply->hdr_sz;
 
     //Server side may disable ranges under some circumstances.
 
@@ -1995,7 +1978,7 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
 
     /* TODO??: move the data in the buffer back by the request header size */
     clientStreamCallback((clientStreamNode *)http->client_stream.head->data,
-                         http, rep, tempBuffer);
+                         http, reply, tempBuffer);
 
     return;
 }
@@ -2081,7 +2064,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     buildReply(buf, reqofs);
     ssize_t body_size = reqofs;
 
-    if (holdingReply) {
+    if (reply) {
 
         /* handle headers */
 
@@ -2096,7 +2079,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         }
 
         holdingBuffer = result;
-        processReplyAccess ();
+        processReplyAccess();
         return;
 
     } else if (reqofs < HTTP_REQBUF_SZ && entry->store_status == STORE_PENDING) {

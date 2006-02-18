@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.712 2006/02/18 00:04:30 wessels Exp $
+ * $Id: client_side.cc,v 1.713 2006/02/18 00:23:43 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -522,7 +522,7 @@ ClientHttpRequest::logRequest()
 
         ACLChecklist *checklist = clientAclChecklistCreate(Config.accessList.log, this);
 
-        checklist->reply = al.reply;
+        checklist->reply = HTTPMSGLOCK(al.reply);
 
         if (!Config.accessList.log || checklist->fastCheck()) {
             al.request = HTTPMSGLOCK(request);
@@ -1216,8 +1216,9 @@ ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData)
 }
 
 /*
- * Write a chunk of data to a client socket. If the reply is present, send the reply headers down the wire too,
- * and clean them up when finished.
+ * Write a chunk of data to a client socket. If the reply is present,
+ * send the reply headers down the wire too, and clean them up when
+ * finished.
  * Pre-condition: 
  *   The request is one backed by a connection, not an internal request.
  *   data context is not NULL

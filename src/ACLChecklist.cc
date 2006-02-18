@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.30 2006/02/17 18:10:59 wessels Exp $
+ * $Id: ACLChecklist.cc,v 1.31 2006/02/18 00:23:43 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "ACLChecklist.h"
 #include "HttpRequest.h"
+#include "HttpReply.h"
 #include "authenticate.h"
 #include "ACLProxyAuth.h"
 #include "client_side.h"
@@ -324,6 +325,8 @@ ACLChecklist::~ACLChecklist()
         cbdataReferenceDone(extacl_entry);
 
     HTTPMSGUNLOCK(request);
+
+    HTTPMSGUNLOCK(reply);
 
     conn_ = NULL;
 
