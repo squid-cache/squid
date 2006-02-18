@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.110 2005/12/26 11:35:22 serassio Exp $
+ * $Id: HttpHeader.cc,v 1.111 2006/02/18 00:09:35 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -706,7 +706,7 @@ httpHeaderDelByName(HttpHeader * hdr, const char *name)
     HttpHeaderPos pos = HttpHeaderInitPos;
     HttpHeaderEntry *e;
     httpHeaderMaskInit(&hdr->mask, 0);	/* temporal inconsistency */
-    debug(55, 7) ("deleting '%s' fields in hdr %p\n", name, hdr);
+    debug(55, 9) ("deleting '%s' fields in hdr %p\n", name, hdr);
 
     while ((e = httpHeaderGetEntry(hdr, &pos))) {
         if (!e->name.caseCmp(name)) {
@@ -773,7 +773,7 @@ httpHeaderAddEntry(HttpHeader * hdr, HttpHeaderEntry * e)
     assert(hdr && e);
     assert_eid(e->id);
 
-    debugs(55, 7, hdr << " adding entry: " << e->id << " at " <<
+    debugs(55, 9, hdr << " adding entry: " << e->id << " at " <<
            hdr->entries.count);
 
     if (CBIT_TEST(hdr->mask, e->id))
@@ -816,7 +816,7 @@ httpHeaderGetList(const HttpHeader * hdr, http_hdr_type id)
 {
     HttpHeaderEntry *e;
     HttpHeaderPos pos = HttpHeaderInitPos;
-    debug(55, 6) ("%p: joining for id %d\n", hdr, id);
+    debug(55, 9) ("%p: joining for id %d\n", hdr, id);
     /* only fields from ListHeaders array can be "listed" */
     assert(CBIT_TEST(ListHeadersMask, id));
 
@@ -956,7 +956,7 @@ httpHeaderHas(const HttpHeader * hdr, http_hdr_type id)
     assert(hdr);
     assert_eid(id);
     assert(id != HDR_OTHER);
-    debug(55, 7) ("%p lookup for %d\n", hdr, id);
+    debug(55, 9) ("%p lookup for %d\n", hdr, id);
     return CBIT_TEST(hdr->mask, id);
 }
 
