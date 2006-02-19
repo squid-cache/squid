@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.109 2006/02/18 00:04:30 wessels Exp $
+ * $Id: access_log.cc,v 1.110 2006/02/19 11:21:07 serassio Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -1085,7 +1085,7 @@ accessLogParseLogFormat(logformat_token ** fmt, char *def)
     logformat_token *new_lt, *last_lt;
     enum log_quote quote = LOG_QUOTE_NONE;
 
-    debug(46, 1) ("accessLogParseLogFormat: got definition '%s'\n", def);
+    debug(46, 2) ("accessLogParseLogFormat: got definition '%s'\n", def);
 
     /* very inefficent parser, but who cares, this needs to be simple */
     /* First off, let's tokenize, we'll optimize in a second pass.
