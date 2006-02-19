@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.487 2005/12/26 11:35:22 serassio Exp $
+ * $Id: cache_cf.cc,v 1.488 2006/02/19 11:21:07 serassio Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -3195,7 +3195,7 @@ parse_logformat(logformat ** logformat_definitions)
     if ((def = strtok(NULL, "\r\n")) == NULL)
         self_destruct();
 
-    debug(3, 1) ("Logformat for '%s' is '%s'\n", name, def);
+    debug(3, 2) ("Logformat for '%s' is '%s'\n", name, def);
 
     nlf = (logformat *)xcalloc(1, sizeof(logformat));
 
