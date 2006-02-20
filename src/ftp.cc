@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.385 2006/02/17 20:15:35 wessels Exp $
+ * $Id: ftp.cc,v 1.386 2006/02/20 12:45:34 serassio Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -199,7 +199,7 @@ public:
     void maybeReadData();
     void transactionComplete();
     void processReplyBody();
-    void FtpStateData::writeCommand(const char *buf);
+    void writeCommand(const char *buf);
 
     static PF ftpSocketClosed;
     static CNCB ftpPasvCallback;
