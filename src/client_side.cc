@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.713 2006/02/18 00:23:43 wessels Exp $
+ * $Id: client_side.cc,v 1.714 2006/02/20 18:58:17 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -522,7 +522,8 @@ ClientHttpRequest::logRequest()
 
         ACLChecklist *checklist = clientAclChecklistCreate(Config.accessList.log, this);
 
-        checklist->reply = HTTPMSGLOCK(al.reply);
+        if (al.reply)
+            checklist->reply = HTTPMSGLOCK(al.reply);
 
         if (!Config.accessList.log || checklist->fastCheck()) {
             al.request = HTTPMSGLOCK(request);
