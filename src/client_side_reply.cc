@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.97 2006/02/18 00:23:43 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.98 2006/02/20 22:43:06 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -79,6 +79,7 @@ clientReplyContext::~clientReplyContext()
     removeStoreReference(&old_sc, &old_entry);
     safe_free(tempBuffer.data);
     cbdataReferenceDone(http);
+    HTTPMSGUNLOCK(reply);
 }
 
 clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) : http (cbdataReference(clientContext)), old_entry (NULL), old_sc(NULL), deleting(false)
