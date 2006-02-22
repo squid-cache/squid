@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.714 2006/02/20 18:58:17 wessels Exp $
+ * $Id: client_side.cc,v 1.715 2006/02/21 23:54:02 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -172,7 +172,7 @@ int
 ClientSocketContext::fd() const
 {
     assert (http);
-    assert (http->getConn().getRaw() != NULL);
+    assert (http->getConn() != NULL);
     return http->getConn()->fd;
 }
 
@@ -219,8 +219,8 @@ void
 ClientSocketContext::removeFromConnectionList(ConnStateData::Pointer conn)
 {
     ClientSocketContext::Pointer *tempContextPointer;
-    assert(conn.getRaw() != NULL);
-    assert(conn->getCurrentContext().getRaw() != NULL);
+    assert(conn != NULL);
+    assert(conn->getCurrentContext() != NULL);
     /* Unlink us from the connection request list */
     tempContextPointer = & conn->currentobject;
 
@@ -256,7 +256,7 @@ ClientSocketContext::~ClientSocketContext()
     httpRequestFree(http);
 
     /* clean up connection links to us */
-    assert(this != next.getRaw());
+    assert(next != this);
 }
 
 void
@@ -264,7 +264,7 @@ ClientSocketContext::registerWithConn()
 {
     assert (!connRegistered_);
     assert (http);
-    assert (http->getConn().getRaw() != NULL);
+    assert (http->getConn() != NULL);
     connRegistered_ = true;
     http->getConn()->addContextToQueue(this);
 }
@@ -281,7 +281,7 @@ void
 ClientSocketContext::connIsFinished()
 {
     assert (http);
-    assert (http->getConn().getRaw() != NULL);
+    assert (http->getConn() != NULL);
     deRegisterWithConn();
     /* we can't handle any more stream data - detach */
     clientStreamDetach(getTail(), http);
@@ -497,7 +497,7 @@ ClientHttpRequest::logRequest()
         if (loggingEntry() && loggingEntry()->mem_obj)
             al.cache.objectSize = contentLen(loggingEntry());
 
-        al.cache.caddr = getConn().getRaw() != NULL ? getConn()->log_addr : no_addr;
+        al.cache.caddr = getConn() != NULL ? getConn()->log_addr : no_addr;
 
         al.cache.size = out.size;
 
@@ -510,12 +510,12 @@ ClientHttpRequest::logRequest()
         if (request)
             clientPrepareLogWithRequestDetails(request, &al);
 
-        if (getConn().getRaw() != NULL && getConn()->rfc931[0])
+        if (getConn() != NULL && getConn()->rfc931[0])
             al.cache.rfc931 = getConn()->rfc931;
 
 #if USE_SSL
 
-        if (getConn().getRaw() != NULL)
+        if (getConn() != NULL)
             al.cache.ssluser = sslGetUserEmail(fd_table[getConn()->fd].ssl);
 
 #endif
@@ -530,7 +530,7 @@ ClientHttpRequest::logRequest()
             accessLogLog(&al, checklist);
             updateCounters();
 
-            if (getConn().getRaw() != NULL)
+            if (getConn() != NULL)
                 clientdbUpdate(getConn()->peer.sin_addr, logType, PROTO_HTTP, out.size);
         }
 
@@ -582,7 +582,7 @@ ConnStateData::freeAllContexts()
 {
     ClientSocketContext::Pointer context;
 
-    while ((context = getCurrentContext()).getRaw() != NULL) {
+    while ((context = getCurrentContext()) != NULL) {
         assert(getCurrentContext() !=
                getCurrentContext()->next);
         context->connIsFinished();
@@ -630,7 +630,7 @@ ConnStateData::close()
 bool
 ConnStateData::isOpen() const
 {
-    return openReference.getRaw() != NULL;
+    return openReference != NULL;
 }
 
 ConnStateData::~ConnStateData()
@@ -1240,7 +1240,7 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
     assert(cbdataReferenceValid(node));
     assert(node->node.next == NULL);
     ClientSocketContext::Pointer context = dynamic_cast<ClientSocketContext *>(node->data.getRaw());
-    assert(context.getRaw() != NULL);
+    assert(context != NULL);
     assert(connIsUsable(http->getConn()));
     fd = http->getConn()->fd;
     /* TODO: check offset is what we asked for */
@@ -3154,7 +3154,7 @@ clientAclChecklistCreate(const acl_access * acl, ClientHttpRequest * http)
 {
     ACLChecklist *ch;
     ConnStateData::Pointer conn = http->getConn();
-    ch = aclChecklistCreate(acl, http->request, conn.getRaw() != NULL ? conn->rfc931 : dash_str);
+    ch = aclChecklistCreate(acl, http->request, conn != NULL ? conn->rfc931 : dash_str);
 
     /*
      * hack for ident ACL. It needs to get full addresses, and a place to store
@@ -3168,7 +3168,7 @@ clientAclChecklistCreate(const acl_access * acl, ClientHttpRequest * http)
      * the server end.
      */
 
-    if (conn.getRaw() != NULL)
+    if (conn != NULL)
         ch->conn(conn);	/* unreferenced in acl.cc */
 
     return ch;
