@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.386 2006/02/20 12:45:34 serassio Exp $
+ * $Id: ftp.cc,v 1.387 2006/02/21 22:42:24 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1244,7 +1244,7 @@ FtpStateData::dataRead(int fd, char *buf, size_t len, comm_err_t errflag, int xe
 #endif
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        comm_close(ctrl.fd);
+        transactionComplete();
         return;
     }
 
@@ -1471,9 +1471,7 @@ FtpStateData::start()
 
         entry->replaceHttpReply(reply);
 
-        fwd->complete();
-
-        comm_close(ctrl.fd);
+        transactionComplete();
 
         return;
     }
@@ -1698,7 +1696,7 @@ FtpStateData::ftpReadControlReply(int fd, char *buf, size_t len, comm_err_t errf
         return;
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        comm_close(ftpState->ctrl.fd);
+        ftpState->transactionComplete();
         return;
     }
 
@@ -1730,7 +1728,7 @@ FtpStateData::ftpReadControlReply(int fd, char *buf, size_t len, comm_err_t errf
             return;
         }
 
-        comm_close(ftpState->ctrl.fd);
+        ftpState->transactionComplete();
         return;
     }
 
@@ -2189,8 +2187,7 @@ ftpSendPasv(FtpStateData * ftpState)
 
     if (ftpState->data.fd >= 0) {
         /* Close old connection */
-        comm_close(ftpState->data.fd);
-        ftpState->data.fd = -1;
+        ftpState->transactionComplete();
     }
 
     if (!ftpState->flags.pasv_supported) {
@@ -2461,7 +2458,7 @@ ftpAcceptDataConnection(int fd, int newfd, ConnectionDetail *details,
         return;
 
     if (EBIT_TEST(ftpState->entry->flags, ENTRY_ABORTED)) {
-        comm_close(ftpState->ctrl.fd);
+        ftpState->transactionComplete();
         return;
     }
 
@@ -2759,7 +2756,7 @@ ftpReadTransferDone(FtpStateData * ftpState)
         if (ftpState->flags.html_header_sent)
             ftpState->listingFinish();
 
-        ftpState->transactionComplete();
+        ftpSendQuit(ftpState);
     } else {			/* != 226 */
         debug(9, 1) ("ftpReadTransferDone: Got code %d after reading data\n",
                      code);
@@ -2853,7 +2850,7 @@ ftpSendQuit(FtpStateData * ftpState)
 static void
 ftpReadQuit(FtpStateData * ftpState)
 {
-    comm_close(ftpState->ctrl.fd);
+    ftpState->transactionComplete();
 }
 
 static void
@@ -2946,12 +2943,7 @@ FtpStateData::failed(err_type error, int xerrno)
     if (entry->isEmpty())
         failedErrorMessage(error, xerrno);
 
-    if (data.fd > -1) {
-        comm_close(data.fd);
-        data.fd = -1;
-    }
-
-    comm_close(ctrl.fd);
+    transactionComplete();
 }
 
 void
@@ -3268,15 +3260,27 @@ FtpStateData::writeReplyBody(const char *data, int len)
     storeAppend(entry, data, len);
 }
 
-
+/*
+ * Done with the FTP server, so close those sockets.  May not be
+ * done with  ICAP yet though.  Don't free ftpStateData if ICAP is
+ * still around.
+ */
 void
 FtpStateData::transactionComplete()
 {
     debugs(9,5,HERE << "transactionComplete FD " << ctrl.fd << " this " << this);
 
-    fwd->unregister(ctrl.fd);
+    if (ctrl.fd > -1) {
+        fwd->unregister(ctrl.fd);
+        comm_remove_close_handler(ctrl.fd, ftpSocketClosed, this);
+        comm_close(ctrl.fd);
+        ctrl.fd = -1;
+    }
 
-    ftpSendQuit(this);
+    if (data.fd > -1) {
+        comm_close(data.fd);
+        data.fd = -1;
+    }
 
 #if ICAP_CLIENT
 
@@ -3288,6 +3292,8 @@ FtpStateData::transactionComplete()
 #endif
 
     fwd->complete();
+
+    ftpSocketClosed(-1, this);
 }
 
 #if ICAP_CLIENT
