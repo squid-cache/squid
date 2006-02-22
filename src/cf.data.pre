@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.409 2005/12/13 22:17:02 wessels Exp $
+# $Id: cf.data.pre,v 1.410 2006/02/21 22:23:20 hno Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -3702,6 +3702,8 @@ DOC_START
 		request_header_access Allow allow all
 		request_header_access Authorization allow all
 		request_header_access WWW-Authenticate allow all
+		request_header_access Proxy-Authorization allow all
+		request_header_access Proxy-Authenticate allow all
 		request_header_access Cache-Control allow all
 		request_header_access Content-Encoding allow all
 		request_header_access Content-Length allow all
@@ -3776,6 +3778,8 @@ DOC_START
 		reply_header_access Allow allow all
 		reply_header_access Authorization allow all
 		reply_header_access WWW-Authenticate allow all
+		reply_header_access Proxy-Authorization allow all
+		reply_header_access Proxy-Authenticate allow all
 		reply_header_access Cache-Control allow all
 		reply_header_access Content-Encoding allow all
 		reply_header_access Content-Length allow all
