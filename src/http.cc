@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.487 2006/02/17 20:15:35 wessels Exp $
+ * $Id: http.cc,v 1.488 2006/02/21 23:52:08 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -141,7 +141,7 @@ HttpStateData::~HttpStateData()
      */
 
     if (request_body_buf) {
-        if (orig_request->body_connection.getRaw()) {
+        if (orig_request->body_connection != NULL) {
             clientAbortBody(orig_request);
         }
 
@@ -1788,7 +1788,7 @@ HttpStateData::sendRequest()
     flags.do_next_read = 1;
     maybeReadData();
 
-    if (orig_request->body_connection.getRaw() != NULL)
+    if (orig_request->body_connection != NULL)
         sendHeaderDone = HttpStateData::SendRequestEntityWrapper;
     else
         sendHeaderDone = HttpStateData::SendComplete;
