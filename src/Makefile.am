@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.127 2006/01/25 17:41:23 wessels Exp $
+#  $Id: Makefile.am,v 1.128 2006/02/23 15:29:10 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -880,10 +880,10 @@ $(OBJS): $(top_srcdir)/include/version.h ../include/autoconf.h
 snmp_core.o snmp_agent.o: ../snmplib/libsnmp.a $(top_srcdir)/include/cache_snmp.h
 
 globals.cc: globals.h mk-globals-c.pl
-	$(PERL) $(srcdir)/mk-globals-c.pl < $(srcdir)/globals.h > $@
+	awk -f $(srcdir)/mk-globals-c.awk < $(srcdir)/globals.h > $@
 
 string_arrays.c: enums.h mk-string-arrays.pl
-	$(PERL) $(srcdir)/mk-string-arrays.pl < $(srcdir)/enums.h > $@
+	awk -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/enums.h > $@
 
 cache_diff: cache_diff.o debug.o globals.o store_key_md5.o
 	$(CC) -o $@ $(LDFLAGS) $@.o debug.o globals.o store_key_md5.o $(STD_APP_LIBS)
