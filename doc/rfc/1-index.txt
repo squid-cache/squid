@@ -24,6 +24,9 @@ draft-wilson-wrec-wccp-v2-01.txt
 draft-vinod-carp-v1-03.txt
 	Microsoft CARP peering algorithm
 
+rfc0959.txt
+	FTP
+
 rfc1035.txt
 	DNS
 
