@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.363 2006/01/25 17:45:34 wessels Exp $
+#  $Id: Makefile.in,v 1.364 2006/02/24 01:10:43 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -3063,10 +3063,10 @@ $(OBJS): $(top_srcdir)/include/version.h ../include/autoconf.h
 snmp_core.o snmp_agent.o: ../snmplib/libsnmp.a $(top_srcdir)/include/cache_snmp.h
 
 globals.cc: globals.h mk-globals-c.pl
-	$(PERL) $(srcdir)/mk-globals-c.pl < $(srcdir)/globals.h > $@
+	$(AWK) -f $(srcdir)/mk-globals-c.awk < $(srcdir)/globals.h > $@
 
 string_arrays.c: enums.h mk-string-arrays.pl
-	$(PERL) $(srcdir)/mk-string-arrays.pl < $(srcdir)/enums.h > $@
+	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/enums.h > $@
 
 cache_diff: cache_diff.o debug.o globals.o store_key_md5.o
 	$(CC) -o $@ $(LDFLAGS) $@.o debug.o globals.o store_key_md5.o $(STD_APP_LIBS)
@@ -3083,7 +3083,7 @@ cf_parser.h: cf.data cf_gen$(EXEEXT)
 	./cf_gen cf.data 
 
 cf_gen_defines.h: $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre
-	awk -f $(srcdir)/cf_gen_defines <$(srcdir)/cf.data.pre >cf_gen_defines.h
+	$(AWK) -f $(srcdir)/cf_gen_defines <$(srcdir)/cf.data.pre >cf_gen_defines.h
 
 cf.data: cf.data.pre Makefile
 	sed "\
