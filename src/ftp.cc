@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.388 2006/02/26 10:39:32 serassio Exp $
+ * $Id: ftp.cc,v 1.389 2006/02/26 11:27:16 serassio Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -730,7 +730,7 @@ ftpListParseParts(const char *buf, struct _ftp_flags flags)
 
             p->name = xstrdup(copyFrom);
 
-            if ((t = strstr(p->name, " -> "))) {
+            if (p->type == 'l' && (t = strstr(p->name, " -> "))) {
                 *t = '\0';
                 p->link = xstrdup(t + 4);
             }
