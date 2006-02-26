@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.41 2005/06/04 23:57:05 hno Exp $
+ * $Id: ipc.cc,v 1.42 2006/02/26 10:56:29 serassio Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -341,11 +341,12 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
      */
 
     do {
-        x = open(_PATH_DEVNULL, 0, 0444);
+        /* First make sure 0-2 is occupied by something. Gets cleaned up later */
+        x = dup(crfd);
+        assert(x > -1);
+    } while (x < 3 && x > -1);
 
-        if (x > -1)
-            commSetCloseOnExec(x);
-    } while (x < 3);
+    close(x);
 
     t1 = dup(crfd);
 
