@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.43 2005/04/18 21:52:42 hno Exp $
+ * $Id: delay_pools.cc,v 1.44 2006/02/26 14:34:27 serassio Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -555,6 +555,7 @@ DelayPools::InitDelayData()
 void
 DelayPools::FreeDelayData()
 {
+    eventDelete(DelayPools::Update, NULL);
     delete[] DelayPools::delay_data;
     DelayPools::MemoryUsed -= pools() * sizeof(*DelayPools::delay_data);
     pools_ = 0;
