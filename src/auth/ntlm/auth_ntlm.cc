@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.54 2005/11/06 22:50:25 hno Exp $
+ * $Id: auth_ntlm.cc,v 1.55 2006/02/26 15:08:32 serassio Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -274,9 +274,6 @@ void
 AuthNTLMConfig::fixHeader(auth_user_request_t *auth_user_request, HttpReply *rep, http_hdr_type type, HttpRequest * request)
 {
     AuthNTLMUserRequest *ntlm_request;
-
-    if (!request->flags.proxy_keepalive)
-        return;
 
     if (!authenticate)
         return;
