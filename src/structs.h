@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.533 2006/01/03 17:22:31 wessels Exp $
+ * $Id: structs.h,v 1.534 2006/02/26 13:43:05 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -556,6 +556,7 @@ struct _SquidConfig
         int ignore_unknown_nameservers;
         int client_pconns;
         int server_pconns;
+        int error_pconns;
 #if USE_CACHE_DIGESTS
 
         int digest_generation;
