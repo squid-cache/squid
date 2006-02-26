@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.387 2006/02/21 22:42:24 wessels Exp $
+ * $Id: ftp.cc,v 1.388 2006/02/26 10:39:32 serassio Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -699,7 +699,7 @@ ftpListParseParts(const char *buf, struct _ftp_flags flags)
         if (regexec(&scan_ftp_integer, day, 0, NULL, 0) != 0)
             continue;
 
-        if (regexec(&scan_ftp_time, day, 0, NULL, 0) != 0)	/* Yr | hh:mm */
+        if (regexec(&scan_ftp_time, year, 0, NULL, 0) != 0)	/* Yr | hh:mm */
             continue;
 
         snprintf(tbuf, 128, "%s %2s %5s",
