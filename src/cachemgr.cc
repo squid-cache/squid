@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.112 2005/08/19 16:40:15 wessels Exp $
+ * $Id: cachemgr.cc,v 1.113 2006/02/28 18:05:34 serassio Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -677,7 +677,7 @@ read_reply(int s, cachemgr_request * req)
             printf("<HTML><HEAD><TITLE>CacheMgr@%s: %s</TITLE>\n",
                    req->hostname, action);
 
-            printf("<STYLE type=\"text/css\"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}TABLE{background-color:#333333;border:0pt;padding:0pt}TH,TD{background-color:#ffffff}--></STYLE>\n");
+            printf("<STYLE type=\"text/css\"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}TABLE{background-color:#333333;border:0pt;padding:0pt}TH,TD{background-color:#ffffff;white-space:nowrap}--></STYLE>\n");
 
             printf("</HEAD><BODY>\n");
 
