@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.58 2006/02/17 20:59:31 wessels Exp $
+ * $Id: client_side_request.cc,v 1.59 2006/03/02 22:47:07 wessels Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -146,6 +146,10 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData::Pointer aConn) : loggingEntr
     start = current_time;
     setConn(aConn);
     dlinkAdd(this, &active, &ClientActiveRequests);
+#if ICAP_CLIENT
+
+    request_satisfaction_mode = false;
+#endif
 }
 
 /*
@@ -1123,16 +1127,7 @@ ClientHttpRequest::takeAdaptedHeaders(HttpMsg *msg)
     debug(85,3)("ClientHttpRequest::takeAdaptedHeaders() called\n");
     assert(cbdataReferenceValid(this));		// indicates bug
 
-    HttpRequest *new_req = dynamic_cast<HttpRequest*>(msg);
-
-    /*
-     * new_req will be NULL if the ICAP response doesn't have new
-     * request headers for us.  Unfortunately, it will also be NULL
-     * if someone passes us an HttpReply as an HttpMsg, which would
-     * be a bug.
-     */
-
-    if (new_req) {
+    if (HttpRequest *new_req = dynamic_cast<HttpRequest*>(msg)) {
         /*
          * Replace the old request with the new request.  First,
          * Move the "body_connection" over, then unlink old and
@@ -1149,9 +1144,22 @@ ClientHttpRequest::takeAdaptedHeaders(HttpMsg *msg)
         uri = xstrdup(urlCanonical(request));
         setLogUri(this, urlCanonicalClean(request));
         assert(request->method);
+    } else if (HttpReply *new_rep = dynamic_cast<HttpReply*>(msg)) {
+        debugs(85,3,HERE << "REQMOD reply is HTTP reply");
+
+        clientStreamNode *node = (clientStreamNode *)client_stream.tail->prev->data;
+        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+        repContext->createStoreEntry(request->method, request->flags);
+
+        EBIT_CLR(storeEntry()->flags, ENTRY_FWD_HDR_WAIT);
+        request_satisfaction_mode = true;
+        request_satisfaction_offset = 0;
+        storeEntry()->replaceHttpReply(new_rep);
+        clientGetMoreData(node, this);
     }
 
-    doCallouts();
+    if (!request_satisfaction_mode)
+        doCallouts();
 
     debug(85,3)("ClientHttpRequest::takeAdaptedHeaders() finished\n");
 }
@@ -1160,6 +1168,12 @@ void
 ClientHttpRequest::takeAdaptedBody(MemBuf *buf)
 {
     debug(85,3)("ClientHttpRequest::takeAdaptedBody() called\n");
+
+    if (request_satisfaction_mode) {
+        storeEntry()->write(StoreIOBuffer(buf, request_satisfaction_offset));
+        request_satisfaction_offset += buf->contentSize();
+        buf->consume(buf->contentSize()); // consume everything written
+    }
 }
 
 void

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.23 2006/02/17 20:59:31 wessels Exp $
+ * $Id: client_side_request.h,v 1.24 2006/03/02 22:47:07 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -162,6 +162,8 @@ public:
     void takeAdaptedBody(MemBuf *);
     void doneAdapting();
     void abortAdapting();
+    bool request_satisfaction_mode;
+    off_t request_satisfaction_offset;
 #endif
 };
 
