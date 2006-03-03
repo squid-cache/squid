@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.488 2006/02/21 23:52:08 wessels Exp $
+ * $Id: http.cc,v 1.489 2006/03/02 20:46:03 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -64,9 +64,6 @@ static const char *const crlf = "\r\n";
 
 static PF httpStateFree;
 static PF httpTimeout;
-static void httpCacheNegatively(StoreEntry *);
-static void httpMakePrivate(StoreEntry *);
-static void httpMakePublic(StoreEntry *);
 static void httpMaybeRemovePublic(StoreEntry *, http_status);
 static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, String strConnection, HttpRequest * request, HttpRequest * orig_request,
         HttpHeader * hdr_out, int we_do_ranges, http_state_flags);
@@ -195,33 +192,6 @@ httpTimeout(int fd, void *data)
     }
 
     comm_close(fd);
-}
-
-/* This object can be cached for a long time */
-static void
-httpMakePublic(StoreEntry * entry)
-{
-    if (EBIT_TEST(entry->flags, ENTRY_CACHABLE))
-        storeSetPublicKey(entry);
-}
-
-/* This object should never be cached at all */
-static void
-httpMakePrivate(StoreEntry * entry)
-{
-    storeExpireNow(entry);
-    storeReleaseRequest(entry);	/* delete object when not used */
-    /* storeReleaseRequest clears ENTRY_CACHABLE flag */
-}
-
-/* This object may be negatively cached */
-static void
-httpCacheNegatively(StoreEntry * entry)
-{
-    storeNegativeCache(entry);
-
-    if (EBIT_TEST(entry->flags, ENTRY_CACHABLE))
-        storeSetPublicKey(entry);
 }
 
 static void
@@ -377,7 +347,7 @@ HttpStateData::processSurrogateControl(HttpReply *reply)
                     (Config.onoff.surrogate_is_remote
                      && EBIT_TEST(sctusable->mask, SC_NO_STORE_REMOTE))) {
                 surrogateNoStore = true;
-                httpMakePrivate(entry);
+                entry->makePrivate();
             }
 
             /* The HttpHeader logic cannot tell if the header it's parsing is a reply to an
@@ -846,7 +816,7 @@ HttpStateData::haveParsedReplyHeaders()
         const char *vary = httpMakeVaryMark(orig_request, getReply());
 
         if (!vary) {
-            httpMakePrivate(entry);
+            entry->makePrivate();
             goto no_cache;
 
         }
@@ -868,19 +838,19 @@ HttpStateData::haveParsedReplyHeaders()
     switch (cacheableReply()) {
 
     case 1:
-        httpMakePublic(entry);
+        entry->makePublic();
         break;
 
     case 0:
-        httpMakePrivate(entry);
+        entry->makePrivate();
         break;
 
     case -1:
 
         if (Config.negativeTtl > 0)
-            httpCacheNegatively(entry);
+            entry->cacheNegatively();
         else
-            httpMakePrivate(entry);
+            entry->makePrivate();
 
         break;
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.584 2006/02/17 20:15:35 wessels Exp $
+ * $Id: store.cc,v 1.585 2006/03/02 20:46:02 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -165,6 +165,34 @@ void
 StoreEntry::operator delete (void *address)
 {
     pool->free(address);
+}
+
+void
+StoreEntry::makePublic()
+{
+    /* This object can be cached for a long time */
+
+    if (EBIT_TEST(flags, ENTRY_CACHABLE))
+        storeSetPublicKey(this);
+}
+
+void
+StoreEntry::makePrivate()
+{
+    /* This object should never be cached at all */
+    storeExpireNow(this);
+    storeReleaseRequest(this); /* delete object when not used */
+    /* storeReleaseRequest clears ENTRY_CACHABLE flag */
+}
+
+void
+StoreEntry::cacheNegatively()
+{
+    /* This object may be negatively cached */
+    storeNegativeCache(this);
+
+    if (EBIT_TEST(flags, ENTRY_CACHABLE))
+        storeSetPublicKey(this);
 }
 
 size_t

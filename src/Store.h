@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.17 2006/01/23 20:04:24 wessels Exp $
+ * $Id: Store.h,v 1.18 2006/03/02 20:46:03 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -75,6 +75,9 @@ public:
     virtual bool swapoutPossible();
     virtual void trimMemory();
     void unlink();
+    void makePublic();
+    void makePrivate();
+    void cacheNegatively();
 
     void delayAwareRead(int fd, char *buf, int len, IOCB *handler, void *data);
 
