@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.h,v 1.13 2006/01/14 00:06:19 wessels Exp $
+ * $Id: client_side.h,v 1.14 2006/03/04 05:38:34 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -183,9 +183,7 @@ public:
 
     struct
     {
-
-int readMoreRequests:
-        1;
+        bool readMoreRequests;
     }
 
     flags;

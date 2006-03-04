@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.716 2006/02/22 00:02:02 wessels Exp $
+ * $Id: client_side.cc,v 1.717 2006/03/04 05:38:34 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2162,7 +2162,7 @@ static void
 clientMaybeReadData(ConnStateData::Pointer &conn, int do_next_read)
 {
     if (do_next_read) {
-        conn->flags.readMoreRequests = 1;
+        conn->flags.readMoreRequests = true;
         conn->readSomeData();
     }
 }
@@ -2207,7 +2207,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, ClientSocketContext *context,
                                     &conn->peer.sin_addr, NULL, conn->in.buf, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
-        conn->flags.readMoreRequests = 0;
+        conn->flags.readMoreRequests = false;
         return;
     }
 
@@ -2221,7 +2221,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, ClientSocketContext *context,
             &conn->peer.sin_addr, NULL, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
-        conn->flags.readMoreRequests = 0;
+        conn->flags.readMoreRequests = false;
         return;
     }
 
@@ -2237,7 +2237,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, ClientSocketContext *context,
             &conn->peer.sin_addr, NULL, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
-        conn->flags.readMoreRequests = 0;
+        conn->flags.readMoreRequests = false;
         return;
     }
 
@@ -2280,7 +2280,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, ClientSocketContext *context,
                                     &conn->peer.sin_addr, request, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
-        conn->flags.readMoreRequests = 0;
+        conn->flags.readMoreRequests = false;
         return;
     }
 
@@ -2294,7 +2294,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, ClientSocketContext *context,
                                     &conn->peer.sin_addr, request, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
-        conn->flags.readMoreRequests = 0;
+        conn->flags.readMoreRequests = false;
         return;
     }
 
@@ -2318,7 +2318,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, ClientSocketContext *context,
                                         &conn->peer.sin_addr, http->request, NULL, NULL);
             assert(context->http->out.offset == 0);
             context->pullData();
-            conn->flags.readMoreRequests = 0;
+            conn->flags.readMoreRequests = false;
             return;
         }
 
@@ -2421,7 +2421,7 @@ clientParseRequest(ConnStateData::Pointer conn, bool &do_next_read)
             }
 
             if (!conn->flags.readMoreRequests) {
-                conn->flags.readMoreRequests = 1;
+                conn->flags.readMoreRequests = true;
                 break;
             }
 
@@ -2727,7 +2727,7 @@ connStateCreate(struct sockaddr_in *peer, struct sockaddr_in *me, int fd, http_p
 
     }
 
-    result->flags.readMoreRequests = 1;
+    result->flags.readMoreRequests = true;
     return result;
 }
 
