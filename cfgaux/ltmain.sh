@@ -226,6 +226,20 @@ func_win32_libid ()
 # arg is usually of the form 'gcc ...'
 func_infer_tag ()
 {
+    # FreeBSD-specific: where we install compilers with non-standard names
+    tag_compilers_CC="*cc cc* *gcc gcc*"
+    tag_compilers_CXX="*c++ c++* *g++ g++*"
+    base_compiler=`set -- "$@"; echo $1`
+
+    # If $tagname isn't set, then try to infer if the default "CC" tag applies
+    if test -z "$tagname"; then
+      for zp in $tag_compilers_CC; do
+        case $base_compiler in
+	 $zp) tagname="CC"; break;;
+	esac
+      done
+    fi
+
     if test -n "$available_tags" && test -z "$tagname"; then
       CC_quoted=
       for arg in $CC; do
@@ -266,7 +280,22 @@ func_infer_tag ()
 	      break
 	      ;;
 	    esac
-	  fi
+
+	    # FreeBSD-specific: try compilers based on inferred tag
+	    if test -z "$tagname"; then
+	      eval "tag_compilers=\$tag_compilers_${z}"
+	      if test -n "$tag_compilers"; then
+		for zp in $tag_compilers; do
+		  case $base_compiler in   
+		    $zp) tagname=$z; break;;
+		  esac
+		done
+		if test -n "$tagname"; then
+		  break
+		fi
+	      fi
+            fi
+          fi
 	done
 	# If $tagname still isn't set, then no tagged configuration
 	# was found and let the user know that the "--tag" command
@@ -1610,12 +1639,6 @@ EOF
 
       -module)
 	module=yes
-	case $host in
-	*-*-freebsd*)
-	  # Do not build the useless static library
-	  build_old_libs=no
-	  ;;
-	esac
 	continue
 	;;
 
@@ -6028,17 +6051,10 @@ relink_command=\"$relink_command\""
 	fi
 
 	# Install the pseudo-library for information purposes.
-	case $host in
-	*-*-freebsd*)
-	  # Do not install the useless pseudo-library
-	  ;;
-	*)
-	  name=`$echo "X$file" | $Xsed -e 's%^.*/%%'`
-	  instname="$dir/$name"i
-	  $show "$install_prog $instname $destdir/$name"
-	  $run eval "$install_prog $instname $destdir/$name" || exit $?
-	  ;;
-	esac
+	name=`$echo "X$file" | $Xsed -e 's%^.*/%%'`
+	instname="$dir/$name"i
+	$show "$install_prog $instname $destdir/$name"
+	$run eval "$install_prog $instname $destdir/$name" || exit $?
 
 	# Maybe install the static library, too.
 	test -n "$old_library" && staticlibs="$staticlibs $dir/$old_library"
