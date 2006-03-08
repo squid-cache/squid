@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.151 2005/07/03 15:25:09 serassio Exp $
+ * $Id: store_dir.cc,v 1.152 2006/03/08 10:34:04 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -439,8 +439,10 @@ storeDirWriteCleanLogs(int reopen)
         }
     }
 
-    /* This writes all logs in parallel. It seems to me to be more efficient
-     * to write them sequentially. - RBC 20021214
+    /*
+     * This may look inefficient as CPU wise it is more efficient to do this
+     * sequentially, but I/O wise the parallellism helps as it allows more
+     * hdd spindles to be active.
      */
     while (notdone) {
         notdone = 0;
