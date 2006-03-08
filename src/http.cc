@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.490 2006/03/07 18:44:12 wessels Exp $
+ * $Id: http.cc,v 1.491 2006/03/07 18:47:48 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1825,7 +1825,7 @@ httpStart(FwdState *fwd)
 }
 
 void
-HttpStateData::sendRequestEntityDone(int fd)
+HttpStateData::sendRequestEntityDone()
 {
     ACLChecklist ch;
     debug(11, 5) ("httpSendRequestEntityDone: FD %d\n", fd);
@@ -1884,7 +1884,7 @@ HttpStateData::requestBodyHandler(char *buf, ssize_t size)
     } else if (size == 0) {
         /* End of body */
         memFree8K(buf);
-        sendRequestEntityDone(fd);
+        sendRequestEntityDone();
     } else {
         /* Failed to get whole body, probably aborted */
         memFree8K(buf);

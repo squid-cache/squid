@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.22 2006/03/07 18:44:12 wessels Exp $
+ * $Id: http.h,v 1.23 2006/03/07 18:47:48 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -124,7 +124,7 @@ private:
     void haveParsedReplyHeaders();
     void transactionComplete();
     void writeReplyBody(const char *data, int len);
-    void sendRequestEntityDone(int fd);
+    void sendRequestEntityDone();
     void requestBodyHandler(char *buf, ssize_t size);
     void sendRequestEntity(int fd, size_t size, comm_err_t errflag);
     mb_size_t buildRequestPrefix(HttpRequest * request,
