@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.69 2005/02/05 22:02:32 serassio Exp $
+ * $Id: store_dir_ufs.cc,v 1.70 2006/03/08 10:35:58 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -936,25 +936,25 @@ UFSCleanLog::write(StoreEntry const &e)
     s.refcount = e.refcount;
     s.flags = e.flags;
     xmemcpy(&s.key, e.key, MD5_DIGEST_CHARS);
-    UFSCleanLog *state = this;
-    xmemcpy(state->outbuf + state->outbuf_offset, &s, ss);
-    state->outbuf_offset += ss;
+    xmemcpy(outbuf + outbuf_offset, &s, ss);
+    outbuf_offset += ss;
     /* buffered write */
 
-    if (state->outbuf_offset + ss > CLEAN_BUF_SZ) {
-        if (FD_WRITE_METHOD(state->fd, state->outbuf, state->outbuf_offset) < 0) {
+    if (outbuf_offset + ss > CLEAN_BUF_SZ) {
+        if (FD_WRITE_METHOD(fd, outbuf, outbuf_offset) < 0) {
+            /* XXX This error handling should probably move up to the caller */
             debug(50, 0) ("storeDirWriteCleanLogs: %s: write: %s\n",
-                          state->newLog, xstrerror());
+                          newLog, xstrerror());
             debug(50, 0) ("storeDirWriteCleanLogs: Current swap logfile not replaced.\n");
-            file_close(state->fd);
-            state->fd = -1;
-            unlink(state->newLog);
-            delete state;
+            file_close(fd);
+            fd = -1;
+            unlink(newLog);
             sd->cleanLog = NULL;
+            delete this;
             return;
         }
 
-        state->outbuf_offset = 0;
+        outbuf_offset = 0;
     }
 }
 
