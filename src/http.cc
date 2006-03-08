@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.489 2006/03/02 20:46:03 wessels Exp $
+ * $Id: http.cc,v 1.490 2006/03/07 18:44:12 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1822,13 +1822,6 @@ httpStart(FwdState *fwd)
      * Now its set in httpSendComplete() after the full request,
      * including request body, has been written to the server.
      */
-}
-
-void
-HttpStateData::SendRequestEntityDoneWrapper(int fd, void *data)
-{
-    HttpStateData *httpState = static_cast<HttpStateData *>(data);
-    httpState->sendRequestEntityDone(fd);
 }
 
 void
