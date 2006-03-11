@@ -1,0 +1,26 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+<TITLE>SƏHV: Sorğulanan URN ilə əlaqə yaradılmadı</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
+</HEAD><BODY>
+<H1>SƏHV</H1>
+<H2>Sorğulanan URN üçün URL ilə əlaqə yaradılmadı</H2>
+<HR noshade size="1px">
+<P>
+URN ilə əlaqə zamanı:
+<A HREF="%U">%U</A>
+<P>
+Aşağıdakı səhv baş vermişdir:
+<UL>
+<LI>
+<STRONG>
+URN tapılmadı
+<br>
+(Cannot Resolve URN)
+</STRONG>
+</UL>
+
+<P>
+%T texnologiyasından çox şey gözləməyə dəyməz :)
+</P>
+
