@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.129 2006/02/23 15:31:48 hno Exp $
+#  $Id: Makefile.am,v 1.130 2006/03/10 22:39:39 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -809,7 +809,9 @@ EXTRA_DIST = \
 	cf_gen_defines \
 	cf.data.pre \
 	mk-globals-c.pl \
+	mk-globals-c.awk \
 	mk-string-arrays.pl \
+	mk-string-arrays.awk \
 	repl_modules.sh \
 	mib.txt \
 	cachemgr.conf \
