@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMaxUserIP.cc,v 1.8 2005/05/06 01:57:55 hno Exp $
+ * $Id: ACLMaxUserIP.cc,v 1.9 2006/03/10 22:40:24 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -125,6 +125,8 @@ ACLMaxUserIP::match(auth_user_request_t * auth_user_request,
 
     if (authenticateAuthUserRequestIPCount(auth_user_request) <= maximum)
         return 0;
+
+    debug(28, 1) ("aclMatchUserMaxIP: user '%s' tries to use too many IP addresses (max %d allowed)!\n", auth_user_request->username(), maximum);
 
     /* this is a match */
     if (flags.strict)
