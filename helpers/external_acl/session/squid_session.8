@@ -1,0 +1,49 @@
+.TH squid_session 8 "19 March 2006" "Version 1.0"
+.
+.SH NAME
+squid_session - Squid session tracking external acl group helper
+.
+.SH SYNOPSIS
+squid_session [-t idle_timeout] [-b dbpath] [-a]
+.
+.SH DESCRIPTION
+This helper maintains a concept of sessions by monitoring requests
+and timing out sessions if no requests have been seen for the idle timeout
+timer.
+.P
+Intended use is for displaying "terms of use" pages, ad popups etc.
+.
+.TP
+.BI "-t " "idletimeout " "(default 3600)"
+Specifies the session idle timeout timer.
+.
+.TP
+.BI "-b " "dbpath"
+Path to persistent database. If not specified the session details
+will be kept in memory only and all sessions will reset each time
+Squid restarts it's helpers (Squid restart or rotation of logs).
+.
+.TP
+.B "-a"
+Active mode. In this mode sessions are started by evaluating an
+acl with the argument LOGIN, or terminated by the argument LOGOUT.
+.P
+Without this flag the helper automatically starts the session after
+the first request.
+.
+.SH AUTHOR
+This helper and documentation was written by 
+.I Henrik Nordstrom <henrik@henriknordstrom.net>
+.
+.SH QUESTIONS
+Any questions on usage can be sent to 
+.IR "Squid Users <squid-users@squid-cache.org>" .
+.
+.SH REPORTING BUGS
+Report bugs or bug-fixes to
+.I Squid Bugs <squid-bugs@squid-cache.org>
+or ideas for new improvements to 
+.I Squid Developers <squid-dev@squid-cache.org>
+.
+.SH "SEE ALSO"
+.BR squid ( 8 )
