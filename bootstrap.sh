@@ -84,7 +84,7 @@ do
 	    bootstrap autoheader$acver
 	    bootstrap libtoolize$ltver --force --copy --automake
 	    bootstrap automake$amver --foreign --add-missing --copy -f
-	    bootstrap autoconf$acver
+	    bootstrap autoconf$acver --force
 	fi ); then
 	    : # OK
 	else
@@ -96,6 +96,8 @@ done
 # Fixup autoconf recursion using --silent/--quiet option
 # autoconf should inherit this option whe recursing into subdirectories
 # but it currently doesn't for some reason.
+if ! grep  "configure_args --quiet" configure >/dev/null; then
+echo "Fixing configure recursion"
 ed -s configure <<'EOS' >/dev/null || true
 /ac_sub_configure_args=/
 +1
@@ -106,5 +108,6 @@ i
 .
 w
 EOS
+fi
 
 echo "Autotool bootstrapping complete."
