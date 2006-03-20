@@ -18,6 +18,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -27,7 +31,13 @@
 #include <string.h>
 #include <time.h>
 
+#if defined(HAVE_DB_185_H)
 #include <db_185.h>
+#elif defined(HAVE_DB_H)
+#include <db.h>
+#else
+#include <db_185.h>
+#endif
 
 static int session_ttl = 3600;
 char *db_path = NULL;
