@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid SASL authentication helper
 #
-#  $Id: Makefile.in,v 1.61 2006/03/20 23:08:41 hno Exp $
+#  $Id: Makefile.in,v 1.62 2006/03/20 23:39:17 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -150,13 +150,13 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
 LIBADD_DL = @LIBADD_DL@
-LIBDB = @LIBDB@
 LIBDLMALLOC = @LIBDLMALLOC@
 LIBOBJS = @LIBOBJS@
 LIBREGEX = @LIBREGEX@
 LIBS = @LIBS@
 LIBSASL = @LIBSASL@
 LIBTOOL = @LIBTOOL@
+LIB_DB = @LIB_DB@
 LIB_LBER = @LIB_LBER@
 LIB_LDAP = @LIB_LDAP@
 LIB_MALLOC = @LIB_MALLOC@
