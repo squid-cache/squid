@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.365 2006/03/11 01:10:58 hno Exp $
+#  $Id: Makefile.in,v 1.366 2006/03/20 23:04:59 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -719,6 +719,7 @@ CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
+DBLIB = @DBLIB@
 DEFS = @DEFS@ -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"
 DEPDIR = @DEPDIR@
 DIGEST_AUTH_HELPERS = @DIGEST_AUTH_HELPERS@
