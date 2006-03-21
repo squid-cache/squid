@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# $Id: Makefile.in,v 1.73 2005/11/21 23:55:22 wessels Exp $
+# $Id: Makefile.in,v 1.74 2006/03/20 23:04:49 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -91,6 +91,7 @@ CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
+DBLIB = @DBLIB@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DIGEST_AUTH_HELPERS = @DIGEST_AUTH_HELPERS@

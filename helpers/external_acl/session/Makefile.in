@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid LDAP authentication helper
 #
-#  $Id: Makefile.in,v 1.1 2006/03/20 03:24:00 hno Exp $
+#  $Id: Makefile.in,v 1.2 2006/03/20 23:04:35 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -61,7 +61,7 @@ PROGRAMS = $(libexec_PROGRAMS)
 am_squid_session_OBJECTS = squid_session.$(OBJEXT)
 squid_session_OBJECTS = $(am_squid_session_OBJECTS)
 squid_session_LDADD = $(LDADD)
-squid_session_DEPENDENCIES =
+squid_session_DEPENDENCIES = $(LIBDB}
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
 am__depfiles_maybe = depfiles
@@ -111,6 +111,7 @@ CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
+DBLIB = @DBLIB@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DIGEST_AUTH_HELPERS = @DIGEST_AUTH_HELPERS@
@@ -272,7 +273,7 @@ target_alias = @target_alias@
 man_MANS = squid_session.8
 EXTRA_DIST = squid_session.8
 squid_session_SOURCES = squid_session.c
-LDADD = -ldb
+LDADD = $(LIBDB}
 INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include
 all: all-am
 
