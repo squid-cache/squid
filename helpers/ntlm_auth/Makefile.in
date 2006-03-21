@@ -16,7 +16,7 @@
 
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.61 2006/03/20 23:04:42 hno Exp $
+#  $Id: Makefile.in,v 1.62 2006/03/20 23:08:47 hno Exp $
 #
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -91,7 +91,6 @@ CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
-DBLIB = @DBLIB@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DIGEST_AUTH_HELPERS = @DIGEST_AUTH_HELPERS@
@@ -133,6 +132,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
 LIBADD_DL = @LIBADD_DL@
+LIBDB = @LIBDB@
 LIBDLMALLOC = @LIBDLMALLOC@
 LIBOBJS = @LIBOBJS@
 LIBREGEX = @LIBREGEX@
