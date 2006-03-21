@@ -1,9 +1,5 @@
 #!/bin/sh
 
-# Need a little more autoconf magic before enabling this. Some systems
-# have db 1.85 in libc but the makefile currently assumes -ldb is needed..
-exit 1
-
 # Actual intended test
 if [ -f /usr/include/db_185.h ]; then
     exit 0
