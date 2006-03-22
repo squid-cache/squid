@@ -20,7 +20,7 @@ EXTRA_DIST = BUGS INSTALL-unix INSTALL-WIN32.txt CodingGuideLines.txt	\
 	src/CppUnitLibraries.dsw
 
 m4sources = \
-	config/ac_create_prefix_config_h.m4		\
+	config/ax_prefix_config_h.m4			\
 	config/ac_cxx_have_sstream.m4			\
 	config/ac_cxx_have_strstream.m4			\
 	config/ax_cxx_gcc_abi_demangle.m4		\
