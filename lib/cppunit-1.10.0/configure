@@ -20164,9 +20164,15 @@ _ACEOF
 #AC_DEFINE_UNQUOTED(NO_TESTPLUGIN,$testplugin_val,
 #[defined to disable TestPlugIn])
 
-
                                                                                                                                                                                                                                                                     ac_config_files="$ac_config_files Makefile cppunit.spec cppunit-config src/Makefile src/DllPlugInTester/Makefile src/cppunit/Makefile include/Makefile include/cppunit/Makefile include/cppunit/config/Makefile include/cppunit/extensions/Makefile include/cppunit/plugin/Makefile include/cppunit/portability/Makefile include/cppunit/tools/Makefile include/cppunit/ui/Makefile include/cppunit/ui/mfc/Makefile include/cppunit/ui/qt/Makefile include/cppunit/ui/text/Makefile doc/Makefile doc/Doxyfile examples/Makefile examples/simple/Makefile examples/hierarchy/Makefile examples/cppunittest/Makefile examples/ClockerPlugIn/Makefile examples/DumperPlugIn/Makefile examples/money/Makefile"
-          ac_config_commands="$ac_config_commands default"
+
+
+ac_config_headers="$ac_config_headers "
+
+
+          ac_config_commands="$ac_config_commands include/cppunit/config-auto.h"
+
+
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -20727,6 +20733,7 @@ cat >>$CONFIG_STATUS <<_ACEOF
 #
 
 AMDEP_TRUE="$AMDEP_TRUE" ac_aux_dir="$ac_aux_dir"
+PACKAGE="$PACKAGE"
 
 _ACEOF
 
@@ -20764,7 +20771,7 @@ do
   "examples/DumperPlugIn/Makefile" ) CONFIG_FILES="$CONFIG_FILES examples/DumperPlugIn/Makefile" ;;
   "examples/money/Makefile" ) CONFIG_FILES="$CONFIG_FILES examples/money/Makefile" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
-  "default" ) CONFIG_COMMANDS="$CONFIG_COMMANDS default" ;;
+  "include/cppunit/config-auto.h" ) CONFIG_COMMANDS="$CONFIG_COMMANDS include/cppunit/config-auto.h" ;;
   "config/config.h" ) CONFIG_HEADERS="$CONFIG_HEADERS config/config.h" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
@@ -21175,6 +21182,35 @@ s,@INSTALL@,$ac_INSTALL,;t t
     rm -f $tmp/out
   fi
 
+  # Run the commands associated with the file.
+  case $ac_file in
+    Makefile ) chmod a+x cppunit-config ;;
+    cppunit.spec ) chmod a+x cppunit-config ;;
+    cppunit-config ) chmod a+x cppunit-config ;;
+    src/Makefile ) chmod a+x cppunit-config ;;
+    src/DllPlugInTester/Makefile ) chmod a+x cppunit-config ;;
+    src/cppunit/Makefile ) chmod a+x cppunit-config ;;
+    include/Makefile ) chmod a+x cppunit-config ;;
+    include/cppunit/Makefile ) chmod a+x cppunit-config ;;
+    include/cppunit/config/Makefile ) chmod a+x cppunit-config ;;
+    include/cppunit/extensions/Makefile ) chmod a+x cppunit-config ;;
+    include/cppunit/plugin/Makefile ) chmod a+x cppunit-config ;;
+    include/cppunit/portability/Makefile ) chmod a+x cppunit-config ;;
+    include/cppunit/tools/Makefile ) chmod a+x cppunit-config ;;
+    include/cppunit/ui/Makefile ) chmod a+x cppunit-config ;;
+    include/cppunit/ui/mfc/Makefile ) chmod a+x cppunit-config ;;
+    include/cppunit/ui/qt/Makefile ) chmod a+x cppunit-config ;;
+    include/cppunit/ui/text/Makefile ) chmod a+x cppunit-config ;;
+    doc/Makefile ) chmod a+x cppunit-config ;;
+    doc/Doxyfile ) chmod a+x cppunit-config ;;
+    examples/Makefile ) chmod a+x cppunit-config ;;
+    examples/simple/Makefile ) chmod a+x cppunit-config ;;
+    examples/hierarchy/Makefile ) chmod a+x cppunit-config ;;
+    examples/cppunittest/Makefile ) chmod a+x cppunit-config ;;
+    examples/ClockerPlugIn/Makefile ) chmod a+x cppunit-config ;;
+    examples/DumperPlugIn/Makefile ) chmod a+x cppunit-config ;;
+    examples/money/Makefile ) chmod a+x cppunit-config ;;
+  esac
 done
 _ACEOF
 cat >>$CONFIG_STATUS <<\_ACEOF
@@ -21621,7 +21657,113 @@ echo "$as_me: error: cannot create directory $dirpart/$fdir" >&2;}
   done
 done
  ;;
-    default ) chmod a+x cppunit-config ;;
+    include/cppunit/config-auto.h ) ac_prefix_conf_OUT=`printf '%s\n' include/cppunit/config-auto.h`
+ac_prefix_conf_DEF=`printf '%s\n' _$ac_prefix_conf_OUT | sed -e "y:abcdefghijklmnopqrstuvwxyz:ABCDEFGHIJKLMNOPQRSTUVWXYZ:" -e "s/[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]/_/g"`
+ac_prefix_conf_PKG=`printf '%s\n' $PACKAGE`
+ac_prefix_conf_LOW=`printf '%s\n' _$ac_prefix_conf_PKG | sed -e "y:ABCDEFGHIJKLMNOPQRSTUVWXYZ-:abcdefghijklmnopqrstuvwxyz_:"`
+ac_prefix_conf_UPP=`printf '%s\n' $ac_prefix_conf_PKG | sed -e "y:abcdefghijklmnopqrstuvwxyz-:ABCDEFGHIJKLMNOPQRSTUVWXYZ_:"  -e "/^[0123456789]/s/^/_/"`
+ac_prefix_conf_INP=`printf '%s\n' "config/config.h" | sed -e 's/ *//'`
+if test ".$ac_prefix_conf_INP" = "."; then
+   for ac_file in : $CONFIG_HEADERS; do test "_$ac_file" = _: && continue
+     case "$ac_file" in
+        *.h) ac_prefix_conf_INP=$ac_file ;;
+        *)
+     esac
+     test ".$ac_prefix_conf_INP" != "." && break
+   done
+fi
+if test ".$ac_prefix_conf_INP" = "."; then
+   case "$ac_prefix_conf_OUT" in
+      */*) ac_prefix_conf_INP=`basename "$ac_prefix_conf_OUT"`
+      ;;
+      *-*) ac_prefix_conf_INP=`printf '%s\n' "$ac_prefix_conf_OUT" | sed -e "s/[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]*-//"`
+      ;;
+      *) ac_prefix_conf_INP=config.h
+      ;;
+   esac
+fi
+if test -z "$ac_prefix_conf_PKG" ; then
+   { { echo "$as_me:$LINENO: error: no prefix for _PREFIX_PKG_CONFIG_H" >&5
+echo "$as_me: error: no prefix for _PREFIX_PKG_CONFIG_H" >&2;}
+   { (exit 1); exit 1; }; }
+else
+  if test ! -f "$ac_prefix_conf_INP" ; then if test -f "$srcdir/$ac_prefix_conf_INP" ; then
+     ac_prefix_conf_INP="$srcdir/$ac_prefix_conf_INP"
+  fi fi
+  { echo "$as_me:$LINENO: creating $ac_prefix_conf_OUT - prefix $ac_prefix_conf_UPP for $ac_prefix_conf_INP defines" >&5
+echo "$as_me: creating $ac_prefix_conf_OUT - prefix $ac_prefix_conf_UPP for $ac_prefix_conf_INP defines" >&6;}
+  if test -f $ac_prefix_conf_INP ; then
+    printf '%s\n' "s/#undef  *\\([ABCDEFGHIJKLMNOPQRSTUVWXYZ_]\\)/#undef $ac_prefix_conf_UPP""_\\1/" > conftest.prefix
+    printf '%s\n' "s/#undef  *\\([abcdefghijklmnopqrstuvwxyz]\\)/#undef $ac_prefix_conf_LOW""_\\1/" >> conftest.prefix
+    printf '%s\n' "s/#define  *\\([ABCDEFGHIJKLMNOPQRSTUVWXYZ_][abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]*\\)\\(.*\\)/#ifndef $ac_prefix_conf_UPP""_\\1 \\" >> conftest.prefix
+    printf '%s\n' "#define $ac_prefix_conf_UPP""_\\1 \\2 \\" >> conftest.prefix
+    printf '%s\n' "#endif/" >>conftest.prefix
+    printf '%s\n' "s/#define  *\\([abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]*\\)\\(.*\\)/#ifndef $ac_prefix_conf_LOW""_\\1 \\" >> conftest.prefix
+    printf '%s\n' "#define $ac_prefix_conf_LOW""_\\1 \\2 \\" >> conftest.prefix
+    printf '%s\n' "#endif/" >> conftest.prefix
+    # now executing _script on _DEF input to create _OUT output file
+    printf '%s\n' "#ifndef $ac_prefix_conf_DEF"      >$tmp/pconfig.h
+    printf '%s\n' "#define $ac_prefix_conf_DEF 1" >>$tmp/pconfig.h
+    printf '%s\n' ' ' >>$tmp/pconfig.h
+    printf '%s\n' /'*' $ac_prefix_conf_OUT. Generated automatically at end of configure. '*'/ >>$tmp/pconfig.h
+
+    sed -f conftest.prefix $ac_prefix_conf_INP >>$tmp/pconfig.h
+    printf '%s\n' ' ' >>$tmp/pconfig.h
+    printf '%s\n' '/* once:' $ac_prefix_conf_DEF '*/' >>$tmp/pconfig.h
+    printf '%s\n' "#endif" >>$tmp/pconfig.h
+    if cmp -s $ac_prefix_conf_OUT $tmp/pconfig.h 2>/dev/null; then
+      { echo "$as_me:$LINENO: $ac_prefix_conf_OUT is unchanged" >&5
+echo "$as_me: $ac_prefix_conf_OUT is unchanged" >&6;}
+    else
+      ac_dir=`(dirname "$ac_prefix_conf_OUT") 2>/dev/null ||
+$as_expr X"$ac_prefix_conf_OUT" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
+	 X"$ac_prefix_conf_OUT" : 'X\(//\)[^/]' \| \
+	 X"$ac_prefix_conf_OUT" : 'X\(//\)$' \| \
+	 X"$ac_prefix_conf_OUT" : 'X\(/\)' \| \
+	 .     : '\(.\)' 2>/dev/null ||
+echo X"$ac_prefix_conf_OUT" |
+    sed '/^X\(.*[^/]\)\/\/*[^/][^/]*\/*$/{ s//\1/; q; }
+  	  /^X\(\/\/\)[^/].*/{ s//\1/; q; }
+  	  /^X\(\/\/\)$/{ s//\1/; q; }
+  	  /^X\(\/\).*/{ s//\1/; q; }
+  	  s/.*/./; q'`
+      { if $as_mkdir_p; then
+    mkdir -p "$ac_dir"
+  else
+    as_dir="$ac_dir"
+    as_dirs=
+    while test ! -d "$as_dir"; do
+      as_dirs="$as_dir $as_dirs"
+      as_dir=`(dirname "$as_dir") 2>/dev/null ||
+$as_expr X"$as_dir" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
+	 X"$as_dir" : 'X\(//\)[^/]' \| \
+	 X"$as_dir" : 'X\(//\)$' \| \
+	 X"$as_dir" : 'X\(/\)' \| \
+	 .     : '\(.\)' 2>/dev/null ||
+echo X"$as_dir" |
+    sed '/^X\(.*[^/]\)\/\/*[^/][^/]*\/*$/{ s//\1/; q; }
+  	  /^X\(\/\/\)[^/].*/{ s//\1/; q; }
+  	  /^X\(\/\/\)$/{ s//\1/; q; }
+  	  /^X\(\/\).*/{ s//\1/; q; }
+  	  s/.*/./; q'`
+    done
+    test ! -n "$as_dirs" || mkdir $as_dirs
+  fi || { { echo "$as_me:$LINENO: error: cannot create directory \"$ac_dir\"" >&5
+echo "$as_me: error: cannot create directory \"$ac_dir\"" >&2;}
+   { (exit 1); exit 1; }; }; }
+
+      rm -f "$ac_prefix_conf_OUT"
+      mv $tmp/pconfig.h "$ac_prefix_conf_OUT"
+    fi
+    cp conftest.prefix _configs.sed
+  else
+    { { echo "$as_me:$LINENO: error: input file $ac_prefix_conf_INP does not exist - skip generating $ac_prefix_conf_OUT" >&5
+echo "$as_me: error: input file $ac_prefix_conf_INP does not exist - skip generating $ac_prefix_conf_OUT" >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+  rm -f conftest.*
+fi
+ ;;
   esac
 done
 _ACEOF
@@ -21655,64 +21797,3 @@ if test "$no_create" != yes; then
   $ac_cs_success || { (exit 1); exit 1; }
 fi
 
-
-ac_prefix_conf_OUT=`echo include/cppunit/config-auto.h`
-ac_prefix_conf_DEF=`echo _$ac_prefix_conf_OUT | sed -e 'y:abcdefghijklmnopqrstuvwxyz./,-:ABCDEFGHIJKLMNOPQRSTUVWXYZ____:'`
-ac_prefix_conf_PKG=`echo $PACKAGE`
-ac_prefix_conf_LOW=`echo _$ac_prefix_conf_PKG | sed -e 'y:ABCDEFGHIJKLMNOPQRSTUVWXYZ-:abcdefghijklmnopqrstuvwxyz_:'`
-ac_prefix_conf_UPP=`echo $ac_prefix_conf_PKG | sed -e 'y:abcdefghijklmnopqrstuvwxyz-:ABCDEFGHIJKLMNOPQRSTUVWXYZ_:'  -e '/^[0-9]/s/^/_/'`
-ac_prefix_conf_INP=`echo config/config.h`
-if test "$ac_prefix_conf_INP" = "_"; then
-   case $ac_prefix_conf_OUT in
-      */*) ac_prefix_conf_INP=`basename $ac_prefix_conf_OUT`
-      ;;
-      *-*) ac_prefix_conf_INP=`echo $ac_prefix_conf_OUT | sed -e 's/[a-zA-Z0-9_]*-//'`
-      ;;
-      *) ac_prefix_conf_INP=config.h
-      ;;
-   esac
-fi
-if test -z "$ac_prefix_conf_PKG" ; then
-   { { echo "$as_me:$LINENO: error: no prefix for _PREFIX_PKG_CONFIG_H" >&5
-echo "$as_me: error: no prefix for _PREFIX_PKG_CONFIG_H" >&2;}
-   { (exit 1); exit 1; }; }
-else
-  echo "$as_me:$LINENO: result: creating $ac_prefix_conf_OUT - prefix $ac_prefix_conf_UPP for $ac_prefix_conf_INP defines" >&5
-echo "${ECHO_T}creating $ac_prefix_conf_OUT - prefix $ac_prefix_conf_UPP for $ac_prefix_conf_INP defines" >&6
-  if test -f $ac_prefix_conf_INP ; then
-    (dirname /* automatically generated */) 2>/dev/null ||
-$as_expr X/* automatically generated */ : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
-	 X/* automatically generated */ : 'X\(//\)[^/]' \| \
-	 X/* automatically generated */ : 'X\(//\)$' \| \
-	 X/* automatically generated */ : 'X\(/\)' \| \
-	 .     : '\(.\)' 2>/dev/null ||
-echo X/* automatically generated */ |
-    sed '/^X\(.*[^/]\)\/\/*[^/][^/]*\/*$/{ s//\1/; q; }
-  	  /^X\(\/\/\)[^/].*/{ s//\1/; q; }
-  	  /^X\(\/\/\)$/{ s//\1/; q; }
-  	  /^X\(\/\).*/{ s//\1/; q; }
-  	  s/.*/./; q'
-    echo '#ifndef '$ac_prefix_conf_DEF >$ac_prefix_conf_OUT
-    echo '#define '$ac_prefix_conf_DEF' 1' >>$ac_prefix_conf_OUT
-    echo ' ' >>$ac_prefix_conf_OUT
-    echo /'*' $ac_prefix_conf_OUT. Generated automatically at end of configure. '*'/ >>$ac_prefix_conf_OUT
-
-    echo 's/#undef  *\([A-Z_]\)/#undef '$ac_prefix_conf_UPP'_\1/' >conftest.sed
-    echo 's/#undef  *\([a-z]\)/#undef '$ac_prefix_conf_LOW'_\1/' >>conftest.sed
-    echo 's/#define  *\([A-Z_][A-Za-z0-9_]*\)\(.*\)/#ifndef '$ac_prefix_conf_UPP"_\\1 \\" >>conftest.sed
-    echo '#define '$ac_prefix_conf_UPP"_\\1 \\2 \\" >>conftest.sed
-    echo '#endif/' >>conftest.sed
-    echo 's/#define  *\([a-z][A-Za-z0-9_]*\)\(.*\)/#ifndef '$ac_prefix_conf_LOW"_\\1 \\" >>conftest.sed
-    echo '#define '$ac_prefix_conf_LOW"_\\1 \\2 \\" >>conftest.sed
-    echo '#endif/' >>conftest.sed
-    sed -f conftest.sed $ac_prefix_conf_INP >>$ac_prefix_conf_OUT
-    echo ' ' >>$ac_prefix_conf_OUT
-    echo '/*' $ac_prefix_conf_DEF '*/' >>$ac_prefix_conf_OUT
-    echo '#endif' >>$ac_prefix_conf_OUT
-  else
-    { { echo "$as_me:$LINENO: error: input file $ac_prefix_conf_IN does not exist,     skip generating $ac_prefix_conf_OUT" >&5
-echo "$as_me: error: input file $ac_prefix_conf_IN does not exist,     skip generating $ac_prefix_conf_OUT" >&2;}
-   { (exit 1); exit 1; }; }
-  fi
-  rm -f conftest.*
-fi

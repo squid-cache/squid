@@ -7266,7 +7266,6 @@ AC_SUBST([am__tar])
 AC_SUBST([am__untar])
 ]) # _AM_PROG_TAR
 
-m4_include([config/ac_create_prefix_config_h.m4])
 m4_include([config/ac_cxx_have_sstream.m4])
 m4_include([config/ac_cxx_have_strstream.m4])
 m4_include([config/ac_cxx_namespaces.m4])
@@ -7274,4 +7273,5 @@ m4_include([config/ac_cxx_rtti.m4])
 m4_include([config/ac_cxx_string_compare_string_first.m4])
 m4_include([config/ac_dll.m4])
 m4_include([config/ax_cxx_gcc_abi_demangle.m4])
+m4_include([config/ax_prefix_config_h.m4])
 m4_include([config/bb_enable_doxygen.m4])

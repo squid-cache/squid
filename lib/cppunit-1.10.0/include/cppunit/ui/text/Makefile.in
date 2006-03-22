@@ -40,15 +40,14 @@ subdir = include/cppunit/ui/text
 DIST_COMMON = $(libcppunitinclude_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps =  \
-	$(top_srcdir)/config/ac_create_prefix_config_h.m4 \
-	$(top_srcdir)/config/ac_cxx_have_sstream.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/config/ac_cxx_have_sstream.m4 \
 	$(top_srcdir)/config/ac_cxx_have_strstream.m4 \
 	$(top_srcdir)/config/ac_cxx_namespaces.m4 \
 	$(top_srcdir)/config/ac_cxx_rtti.m4 \
 	$(top_srcdir)/config/ac_cxx_string_compare_string_first.m4 \
 	$(top_srcdir)/config/ac_dll.m4 \
 	$(top_srcdir)/config/ax_cxx_gcc_abi_demangle.m4 \
+	$(top_srcdir)/config/ax_prefix_config_h.m4 \
 	$(top_srcdir)/config/bb_enable_doxygen.m4 \
 	$(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
