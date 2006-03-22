@@ -117,8 +117,7 @@ AC_DEFINE_UNQUOTED(USE_TYPEINFO_NAME,$cppunit_val,
 #AC_DEFINE_UNQUOTED(NO_TESTPLUGIN,$testplugin_val,
 #[defined to disable TestPlugIn])
 
-
-AC_OUTPUT([
+AC_CONFIG_FILES([
   Makefile 
   cppunit.spec
   cppunit-config
@@ -147,5 +146,7 @@ AC_OUTPUT([
   examples/money/Makefile
 ],[chmod a+x cppunit-config])
 
-AC_CREATE_PREFIX_CONFIG_H([include/cppunit/config-auto.h], 
+AX_PREFIX_CONFIG_H([include/cppunit/config-auto.h], 
         $PACKAGE, [config/config.h])
+
+AC_OUTPUT
