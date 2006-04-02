@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.136 2006/02/17 18:10:59 wessels Exp $
+ * $Id: forward.cc,v 1.137 2006/04/02 14:32:35 serassio Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -494,14 +494,6 @@ FwdState::negotiateSSL(int fd)
             anErr->xerrno = EACCES;
 #endif
 
-            if (fs->_peer) {
-                anErr->host = xstrdup(fs->_peer->host);
-                anErr->port = fs->_peer->http_port;
-            } else {
-                anErr->host = xstrdup(request->host);
-                anErr->port = request->port;
-            }
-
             anErr->request = HTTPMSGLOCK(request);
             fail(anErr);
 
@@ -591,6 +583,9 @@ FwdState::connectDone(int aServerFD, comm_err_t status, int xerrno)
     FwdServer *fs = servers;
     assert(server_fd == aServerFD);
 
+    if (Config.onoff.log_ip_on_direct && status != COMM_ERR_DNS && fs->code == HIER_DIRECT)
+        hierarchyNote(&request->hier, fs->code, fd_table[server_fd].ipaddr);
+
     if (status == COMM_ERR_DNS) {
         /*
          * Only set the dont_retry flag if the DNS lookup fails on
@@ -615,14 +610,6 @@ FwdState::connectDone(int aServerFD, comm_err_t status, int xerrno)
         assert(fs);
         ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
         anErr->xerrno = xerrno;
-
-        if (fs->_peer) {
-            anErr->host = xstrdup(fs->_peer->host);
-            anErr->port = fs->_peer->http_port;
-        } else {
-            anErr->host = xstrdup(request->host);
-            anErr->port = request->port;
-        }
 
         fail(anErr);
 
@@ -652,8 +639,13 @@ FwdState::connectDone(int aServerFD, comm_err_t status, int xerrno)
 void
 FwdState::connectTimeout(int fd)
 {
+    FwdServer *fs = servers;
+
     debug(17, 2) ("fwdConnectTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
     assert(fd == server_fd);
+
+    if (Config.onoff.log_ip_on_direct && fs->code == HIER_DIRECT && fd_table[fd].ipaddr[0])
+        hierarchyNote(&request->hier, fs->code, fd_table[fd].ipaddr);
 
     if (entry->isEmpty()) {
         ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_GATEWAY_TIMEOUT);
@@ -783,6 +775,11 @@ FwdState::connectStart()
 
     commSetTimeout(fd, ctimeout, fwdConnectTimeoutWrapper, this);
 
+    if (fs->_peer)
+        hierarchyNote(&request->hier, fs->code, fs->_peer->host);
+    else
+        hierarchyNote(&request->hier, fs->code, request->host);
+
     commConnectStart(fd, host, port, fwdConnectDoneWrapper, this);
 }
 
@@ -813,7 +810,6 @@ void
 FwdState::dispatch()
 {
     peer *p = NULL;
-    FwdServer *fs = servers;
     debug(17, 3) ("fwdDispatch: FD %d: Fetching '%s %s'\n",
                   client_fd,
                   RequestMethodStr[request->method],
@@ -824,13 +820,6 @@ FwdState::dispatch()
      * is closed.
      */
     assert(server_fd > -1);
-
-    if (fs->_peer)
-        hierarchyNote(&request->hier, fs->code, fs->_peer->host);
-    else if (Config.onoff.log_ip_on_direct)
-        hierarchyNote(&request->hier, fs->code, fd_table[server_fd].ipaddr);
-    else
-        hierarchyNote(&request->hier, fs->code, request->host);
 
     fd_note(server_fd, storeUrl(entry));
 

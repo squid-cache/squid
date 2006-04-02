@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.159 2006/02/17 18:10:59 wessels Exp $
+ * $Id: tunnel.cc,v 1.160 2006/04/02 14:32:35 serassio Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -461,8 +461,6 @@ sslConnectTimeout(int fd, void *data)
 
     err->xerrno = ETIMEDOUT;
 
-    err->host = xstrdup(sslState->host);
-
     err->port = sslState->port;
 
     err->request = HTTPMSGLOCK(request);
@@ -557,7 +555,6 @@ sslConnectDone(int fdnotused, comm_err_t status, int xerrno, void *data)
         err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
         *sslState->status_ptr = HTTP_SERVICE_UNAVAILABLE;
         err->xerrno = xerrno;
-        err->host = xstrdup(sslState->host);
         err->port = sslState->port;
         err->request = HTTPMSGLOCK(request);
         err->callback = sslErrorComplete;
