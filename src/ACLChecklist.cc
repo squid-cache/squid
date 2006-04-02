@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.31 2006/02/18 00:23:43 wessels Exp $
+ * $Id: ACLChecklist.cc,v 1.32 2006/04/02 11:58:38 serassio Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -180,6 +180,12 @@ ACLChecklist::asyncInProgress(bool const newAsync)
     debug (28,3)("ACLChecklist::asyncInProgress: %p async set to %d\n", this, async_);
 }
 
+void
+ACLChecklist::markDeleteWhenDone()
+{
+    deleteWhenDone = true;
+}
+
 bool
 ACLChecklist::finished() const
 {
@@ -261,7 +267,12 @@ ACLChecklist::matchAclList(const acl_list * head, bool const fast)
         if (!nodeMatched || state_ != NullState::Instance()) {
             debug(28, 3) ("aclmatchAclList: %p returning false (AND list entry failed to match)\n", this);
             checkForAsync();
+
+            if (deleteWhenDone && !asyncInProgress())
+                delete this;
+
             PROF_stop(aclMatchAclList);
+
             return;
         }
 
@@ -303,6 +314,7 @@ ACLChecklist::ACLChecklist() : accessList (NULL), my_port (0), request (NULL),
         conn_(NULL),
         async_(false),
         finished_(false),
+        deleteWhenDone(false),
         allow_(ACCESS_DENIED),
         state_(NullState::Instance()),
         destinationDomainChecked_(false),
