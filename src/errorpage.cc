@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.208 2006/02/17 20:15:35 wessels Exp $
+ * $Id: errorpage.cc,v 1.209 2006/04/02 14:32:35 serassio Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -463,7 +463,6 @@ errorStateFree(ErrorState * err)
     HTTPMSGUNLOCK(err->request);
     safe_free(err->redirect_url);
     safe_free(err->url);
-    safe_free(err->host);
     safe_free(err->dnsserver_msg);
     safe_free(err->request_hdrs);
     wordlistDestroy(&err->ftp.server_msg);
@@ -515,8 +514,8 @@ errorDump(ErrorState * err, MemBuf * mb)
     /* - IP stuff */
     str.Printf("ClientIP: %s\r\n", inet_ntoa(err->src_addr));
 
-    if (err->host) {
-        str.Printf("ServerIP: %s\r\n", err->host);
+    if (r && r->hier.host) {
+        str.Printf("ServerIP: %s\r\n", r->hier.host);
     }
 
     str.Printf("\r\n");
@@ -666,7 +665,13 @@ errorConvert(char token, ErrorState * err)
         break;
 
     case 'H':
-        p = r ? r->host : "[unknown host]";
+        if (r) {
+            if (r->hier.host)
+                p = r->hier.host;
+            else
+                p = r->host;
+        } else
+            p = "[unknown host]";
 
         break;
 
@@ -676,8 +681,8 @@ errorConvert(char token, ErrorState * err)
         break;
 
     case 'I':
-        if (err->host) {
-            mb.Printf("%s", err->host);
+        if (r && r->hier.host) {
+            mb.Printf("%s", r->hier.host);
         } else
             p = "[unknown]";
 
