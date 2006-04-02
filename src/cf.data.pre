@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.411 2006/02/26 13:43:05 serassio Exp $
+# $Id: cf.data.pre,v 1.412 2006/04/02 09:21:21 serassio Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -3184,10 +3184,10 @@ DEFAULT: 10
 LOC: Config.Log.rotateNumber
 DOC_START
 	Specifies the number of logfile rotations to make when you
-	type 'squid -k rotate'.  The default is 10, which will rotate
-	with extensions 0 through 9.  Setting logfile_rotate to 0 will
-	disable the rotation, but the logfiles are still closed and
-	re-opened.  This will enable you to rename the logfiles
+	type 'squid -k rotate'. The default is 10, which will rotate
+	with extensions 0 through 9. Setting logfile_rotate to 0 will
+	disable the file name rotation, but the logfiles are still closed
+	and re-opened. This will enable you to rename the logfiles
 	yourself just before sending the rotate signal.
 
 	Note, the 'squid -k rotate' command normally sends a USR1
