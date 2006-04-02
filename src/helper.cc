@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.71 2005/11/01 14:04:25 serassio Exp $
+ * $Id: helper.cc,v 1.72 2006/04/02 10:15:24 serassio Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -507,8 +507,8 @@ helperStats(StoreEntry * sentry, helper * hlp)
                       hlp->stats.replies);
     storeAppendPrintf(sentry, "queue length: %d\n",
                       hlp->stats.queue_size);
-    storeAppendPrintf(sentry, "avg service time: %.2f msec\n",
-                      (double) hlp->stats.avg_svc_time / 1000.0);
+    storeAppendPrintf(sentry, "avg service time: %d msec\n",
+                      hlp->stats.avg_svc_time);
     storeAppendPrintf(sentry, "\n");
     storeAppendPrintf(sentry, "%7s\t%7s\t%7s\t%11s\t%s\t%7s\t%7s\t%7s\n",
                       "#",
@@ -522,7 +522,7 @@ helperStats(StoreEntry * sentry, helper * hlp)
 
     for (link = hlp->servers.head; link; link = link->next) {
         helper_server *srv = (helper_server*)link->data;
-        double tt = srv->requests[0] ? 0.001 * tvSubMsec(srv->requests[0]->dispatch_time, current_time) : 0.0;
+        double tt = 0.001 * (srv->requests[0] ? tvSubMsec(srv->requests[0]->dispatch_time, current_time) : tvSubMsec(srv->dispatch_time, srv->answer_time));
         storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%c%c%c%c\t%7.3f\t%7d\t%s\n",
                           srv->index + 1,
                           srv->rfd,
@@ -539,7 +539,7 @@ helperStats(StoreEntry * sentry, helper * hlp)
 
     storeAppendPrintf(sentry, "\nFlags key:\n\n");
     storeAppendPrintf(sentry, "   B = BUSY\n");
-    storeAppendPrintf(sentry, "   W = BUSY\n");
+    storeAppendPrintf(sentry, "   W = WRITING\n");
     storeAppendPrintf(sentry, "   C = CLOSING\n");
     storeAppendPrintf(sentry, "   S = SHUTDOWN\n");
 }
@@ -576,7 +576,8 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp)
 
     for (link = hlp->servers.head; link; link = link->next) {
         srv = (helper_stateful_server *)link->data;
-        tt = 0.001 * tvSubMsec(srv->dispatch_time, current_time);
+        tt = 0.001 * tvSubMsec(srv->dispatch_time,
+                               srv->flags.busy ? current_time : srv->answer_time);
         storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%20d\t%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
                           srv->index + 1,
                           srv->rfd,
@@ -967,6 +968,10 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
 
             hlp->stats.replies++;
 
+            srv->answer_time = current_time;
+
+            srv->dispatch_time = r->dispatch_time;
+
             hlp->stats.avg_svc_time =
                 intAverage(hlp->stats.avg_svc_time,
                            tvSubMsec(r->dispatch_time, current_time),
@@ -1099,6 +1104,7 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
         helperStatefulRequestFree(r);
         srv->request = NULL;
         hlp->stats.replies++;
+        srv->answer_time = current_time;
         hlp->stats.avg_svc_time =
             intAverage(hlp->stats.avg_svc_time,
                        tvSubMsec(srv->dispatch_time, current_time),

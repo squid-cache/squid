@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.534 2006/02/26 13:43:05 serassio Exp $
+ * $Id: structs.h,v 1.535 2006/04/02 10:15:24 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1956,6 +1956,10 @@ struct _helper_server
     size_t rbuf_sz;
     off_t roffset;
 
+    struct timeval dispatch_time;
+
+    struct timeval answer_time;
+
     dlink_node link;
     helper *parent;
     helper_request **requests;
@@ -2001,6 +2005,7 @@ struct _helper_stateful_server
     struct timeval dispatch_time;
 
     struct timeval answer_time;
+
     dlink_node link;
     dlink_list queue;
     statefulhelper *parent;
