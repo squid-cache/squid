@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.389 2006/02/26 11:27:16 serassio Exp $
+ * $Id: ftp.cc,v 1.390 2006/04/09 12:21:52 serassio Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2796,12 +2796,12 @@ FtpStateData::ftpDataWriteCallback(int fd, char *buf, size_t size, comm_err_t er
         return;
 
     if (!err) {
-        /* Shedule the rest of the request */
-        clientReadBody(ftpState->request,
-                       ftpState->data.readBuf->content(),
-                       ftpState->data.readBuf->contentSize(),
-                       ftpRequestBody,
-                       ftpState);
+        /* Schedule the rest of the request */
+        commSetSelect(fd,
+                      COMM_SELECT_WRITE,
+                      ftpDataWrite,
+                      ftpState,
+                      Config.Timeout.read);
     } else {
         debug(9, 1) ("ftpDataWriteCallback: write error: %s\n", xstrerr(xerrno));
         ftpState->failed(ERR_WRITE_ERROR, xerrno);
