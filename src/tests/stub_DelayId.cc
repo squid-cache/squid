@@ -1,11 +1,8 @@
-
 /*
- * $Id: DelaySpec.cc,v 1.4 2006/04/18 12:46:10 robertc Exp $
+ * $Id: stub_DelayId.cc,v 1.1 2006/04/18 12:46:13 robertc Exp $
  *
- * DEBUG: section 77    Delay Pools
- * AUTHOR: Robert Collins <robertc@squid-cache.org>
- * Based upon original delay pools code by
- *   David Luyer <david@luyer.net>
+ * DEBUG: section 20    Storage Manager
+ * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -33,59 +30,22 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
- *
- * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
 #include "config.h"
 
-#if DELAY_POOLS
-#include "squid.h"
-#include "DelaySpec.h"
-#include "Store.h"
-#include "Parsing.h"
 
-DelaySpec::DelaySpec() : restore_bps(-1), max_bytes (-1)
+#if DELAY_POOLS
+
+#include "squid.h"
+#include "DelayId.h"
+
+DelayId::DelayId() {}
+
+void
+DelayId::delayRead(DeferredRead const&)
 {}
 
-void
-DelaySpec::stats (StoreEntry * sentry, char const *label) const
-{
-    if (restore_bps == -1) {
-        storeAppendPrintf(sentry, "\t%s:\n\t\tDisabled.\n\n", label);
-        return;
-    }
-
-    storeAppendPrintf(sentry, "\t%s:\n", label);
-    storeAppendPrintf(sentry, "\t\tMax: %d\n", max_bytes);
-    storeAppendPrintf(sentry, "\t\tRestore: %d\n", restore_bps);
-}
-
-void
-DelaySpec::dump (StoreEntry *entry) const
-{
-    storeAppendPrintf(entry, " %d/%d", restore_bps, max_bytes);
-}
-
-void
-DelaySpec::parse()
-{
-    int i;
-    char *token;
-    token = strtok(NULL, "/");
-
-    if (token == NULL)
-        self_destruct();
-
-    if (sscanf(token, "%d", &i) != 1)
-        self_destruct();
-
-    restore_bps = i;
-
-    i = GetInteger();
-
-    max_bytes = i;
-}
+DelayId::~DelayId() {}
 
 #endif
-

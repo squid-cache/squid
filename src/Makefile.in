@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.368 2006/03/20 23:39:38 hno Exp $
+#  $Id: Makefile.in,v 1.369 2006/04/18 12:46:10 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -339,7 +339,11 @@ am_tests_testAuth_OBJECTS = tests/testAuth.$(OBJEXT) \
 	ACLRegexData.$(OBJEXT) ACLUserData.$(OBJEXT) \
 	StatHist.$(OBJEXT) HttpHdrRange.$(OBJEXT) ETag.$(OBJEXT) \
 	tests/stub_errorpage.$(OBJEXT) \
-	tests/stub_HttpRequest.$(OBJEXT)
+	tests/stub_HttpRequest.$(OBJEXT) tests/stub_DelayId.$(OBJEXT) \
+	tests/stub_MemObject.$(OBJEXT) mem_node.$(OBJEXT) \
+	stmem.$(OBJEXT) tests/stub_comm.$(OBJEXT) \
+	tests/stub_http.$(OBJEXT) HttpMsg.$(OBJEXT) \
+	tests/stub_mime.$(OBJEXT) tests/stub_access_log.$(OBJEXT)
 tests_testAuth_OBJECTS = $(am_tests_testAuth_OBJECTS)
 am__tests_testCoss_SOURCES_DIST = tests/testCoss.cc tests/testMain.cc \
 	tests/testCoss.h tests/stub_store_rebuild.cc \
@@ -369,9 +373,10 @@ am__tests_testCoss_SOURCES_DIST = tests/testCoss.cc tests/testMain.cc \
 	HttpHdrCc.cc HttpHdrSc.cc HttpHdrScTarget.cc url.cc \
 	ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc StatHist.cc \
 	HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
-	tests/stub_HttpRequest.cc DiskIO/DiskIOModule.cc \
-	DiskIO/ReadRequest.cc DiskIO/ReadRequest.h \
-	DiskIO/WriteRequest.cc DiskIO/WriteRequest.h DiskIO/DiskFile.h \
+	tests/stub_HttpRequest.cc tests/stub_access_log.cc \
+	DiskIO/DiskIOModule.cc DiskIO/ReadRequest.cc \
+	DiskIO/ReadRequest.h DiskIO/WriteRequest.cc \
+	DiskIO/WriteRequest.h DiskIO/DiskFile.h \
 	DiskIO/DiskIOStrategy.h DiskIO/IORequestor.h \
 	DiskIO/DiskIOModule.h
 am__objects_26 = $(am__objects_25) $(am__objects_5) \
@@ -394,7 +399,8 @@ am__objects_26 = $(am__objects_25) $(am__objects_5) \
 	ACLRegexData.$(OBJEXT) ACLUserData.$(OBJEXT) \
 	StatHist.$(OBJEXT) HttpHdrRange.$(OBJEXT) ETag.$(OBJEXT) \
 	tests/stub_errorpage.$(OBJEXT) \
-	tests/stub_HttpRequest.$(OBJEXT)
+	tests/stub_HttpRequest.$(OBJEXT) \
+	tests/stub_access_log.$(OBJEXT)
 am__objects_27 = tests/stub_store_rebuild.$(OBJEXT) \
 	tests/stub_internal.$(OBJEXT) fd.$(OBJEXT) disk.$(OBJEXT) \
 	filemap.$(OBJEXT) HttpBody.$(OBJEXT) HttpMsg.$(OBJEXT) \
@@ -440,9 +446,10 @@ am__tests_testNull_SOURCES_DIST = tests/testNull.cc tests/testMain.cc \
 	HttpHdrCc.cc HttpHdrSc.cc HttpHdrScTarget.cc url.cc \
 	ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc StatHist.cc \
 	HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
-	tests/stub_HttpRequest.cc DiskIO/DiskIOModule.cc \
-	DiskIO/ReadRequest.cc DiskIO/ReadRequest.h \
-	DiskIO/WriteRequest.cc DiskIO/WriteRequest.h DiskIO/DiskFile.h \
+	tests/stub_HttpRequest.cc tests/stub_access_log.cc \
+	DiskIO/DiskIOModule.cc DiskIO/ReadRequest.cc \
+	DiskIO/ReadRequest.h DiskIO/WriteRequest.cc \
+	DiskIO/WriteRequest.h DiskIO/DiskFile.h \
 	DiskIO/DiskIOStrategy.h DiskIO/IORequestor.h \
 	DiskIO/DiskIOModule.h
 am_tests_testNull_OBJECTS = tests/testNull.$(OBJEXT) \
@@ -474,7 +481,7 @@ am__tests_testStore_SOURCES_DIST = tests/testStore.cc \
 	HttpHdrCc.cc HttpHdrSc.cc HttpHdrScTarget.cc url.cc \
 	ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc StatHist.cc \
 	HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
-	tests/stub_HttpRequest.cc
+	tests/stub_HttpRequest.cc tests/stub_access_log.cc
 am_tests_testStore_OBJECTS = tests/testStore.$(OBJEXT) \
 	tests/testStoreController.$(OBJEXT) \
 	tests/testStoreHashIndex.$(OBJEXT) tests/testMain.$(OBJEXT) \
@@ -510,9 +517,10 @@ am__tests_testUfs_SOURCES_DIST = tests/testUfs.cc tests/testMain.cc \
 	HttpHdrCc.cc HttpHdrSc.cc HttpHdrScTarget.cc url.cc \
 	ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc StatHist.cc \
 	HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
-	tests/stub_HttpRequest.cc DiskIO/DiskIOModule.cc \
-	DiskIO/ReadRequest.cc DiskIO/ReadRequest.h \
-	DiskIO/WriteRequest.cc DiskIO/WriteRequest.h DiskIO/DiskFile.h \
+	tests/stub_HttpRequest.cc tests/stub_access_log.cc \
+	DiskIO/DiskIOModule.cc DiskIO/ReadRequest.cc \
+	DiskIO/ReadRequest.h DiskIO/WriteRequest.cc \
+	DiskIO/WriteRequest.h DiskIO/DiskFile.h \
 	DiskIO/DiskIOStrategy.h DiskIO/IORequestor.h \
 	DiskIO/DiskIOModule.h
 am_tests_testUfs_OBJECTS = tests/testUfs.$(OBJEXT) \
@@ -1663,7 +1671,14 @@ tests_testAuth_SOURCES = tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $
 	MemBuf.cc HttpHdrContRange.cc Packer.cc ACLChecklist.cc HttpHdrCc.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc url.cc ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc \
 	StatHist.cc HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
-	tests/stub_HttpRequest.cc
+	tests/stub_HttpRequest.cc tests/stub_DelayId.cc \
+	tests/stub_MemObject.cc mem_node.cc \
+	stmem.cc \
+	tests/stub_comm.cc \
+	tests/stub_http.cc \
+	HttpMsg.cc \
+	tests/stub_mime.cc \
+	tests/stub_access_log.cc
 
 tests_testAuth_LDADD = \
 	@AUTH_LINKOBJS@ @AUTH_OBJS@ \
@@ -1702,7 +1717,7 @@ STORE_TEST_SOURCES = \
 	MemBuf.cc HttpHdrContRange.cc Packer.cc ACLChecklist.cc HttpHdrCc.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc url.cc ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc \
 	StatHist.cc HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
-	tests/stub_HttpRequest.cc
+	tests/stub_HttpRequest.cc tests/stub_access_log.cc
 
 tests_testStore_SOURCES = tests/testStore.cc \
 	tests/testStoreController.cc \
@@ -2175,6 +2190,18 @@ tests/stub_errorpage.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 tests/stub_HttpRequest.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
+tests/stub_DelayId.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+tests/stub_MemObject.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+tests/stub_comm.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+tests/stub_http.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+tests/stub_mime.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+tests/stub_access_log.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
 tests/testAuth$(EXEEXT): $(tests_testAuth_OBJECTS) $(tests_testAuth_DEPENDENCIES) tests/$(am__dirstamp)
 	@rm -f tests/testAuth$(EXEEXT)
 	$(CXXLINK) $(tests_testAuth_LDFLAGS) $(tests_testAuth_OBJECTS) $(tests_testAuth_LDADD) $(LIBS)
@@ -2183,10 +2210,6 @@ tests/testCoss.$(OBJEXT): tests/$(am__dirstamp) \
 tests/stub_store_rebuild.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 tests/stub_internal.$(OBJEXT): tests/$(am__dirstamp) \
-	tests/$(DEPDIR)/$(am__dirstamp)
-tests/stub_comm.$(OBJEXT): tests/$(am__dirstamp) \
-	tests/$(DEPDIR)/$(am__dirstamp)
-tests/stub_http.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 tests/stub_store_client.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
@@ -2213,8 +2236,6 @@ tests/stub_store_swapout.$(OBJEXT): tests/$(am__dirstamp) \
 tests/stub_fd.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 tests/stub_HttpReply.$(OBJEXT): tests/$(am__dirstamp) \
-	tests/$(DEPDIR)/$(am__dirstamp)
-tests/stub_MemObject.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 tests/testStore$(EXEEXT): $(tests_testStore_OBJECTS) $(tests_testStore_DEPENDENCIES) tests/$(am__dirstamp)
 	@rm -f tests/testStore$(EXEEXT)
@@ -2262,9 +2283,11 @@ mostlyclean-compile:
 	-rm -f fs/null/StoreFSnull.$(OBJEXT)
 	-rm -f fs/ufs/StoreFSufs.$(OBJEXT)
 	-rm -f tests/TestSwapDir.$(OBJEXT)
+	-rm -f tests/stub_DelayId.$(OBJEXT)
 	-rm -f tests/stub_HttpReply.$(OBJEXT)
 	-rm -f tests/stub_HttpRequest.$(OBJEXT)
 	-rm -f tests/stub_MemObject.$(OBJEXT)
+	-rm -f tests/stub_access_log.$(OBJEXT)
 	-rm -f tests/stub_acl.$(OBJEXT)
 	-rm -f tests/stub_cache_cf.$(OBJEXT)
 	-rm -f tests/stub_cache_manager.$(OBJEXT)
@@ -2274,6 +2297,7 @@ mostlyclean-compile:
 	-rm -f tests/stub_helper.$(OBJEXT)
 	-rm -f tests/stub_http.$(OBJEXT)
 	-rm -f tests/stub_internal.$(OBJEXT)
+	-rm -f tests/stub_mime.$(OBJEXT)
 	-rm -f tests/stub_store.$(OBJEXT)
 	-rm -f tests/stub_store_client.$(OBJEXT)
 	-rm -f tests/stub_store_rebuild.$(OBJEXT)
@@ -2518,9 +2542,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@fs/null/$(DEPDIR)/StoreFSnull.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@fs/ufs/$(DEPDIR)/StoreFSufs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/TestSwapDir.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/stub_DelayId.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/stub_HttpReply.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/stub_HttpRequest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/stub_MemObject.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/stub_access_log.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/stub_acl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/stub_cache_cf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/stub_cache_manager.Po@am__quote@
@@ -2530,6 +2556,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/stub_helper.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/stub_http.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/stub_internal.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/stub_mime.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/stub_store.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/stub_store_client.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/stub_store_rebuild.Po@am__quote@

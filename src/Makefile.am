@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.130 2006/03/10 22:39:39 hno Exp $
+#  $Id: Makefile.am,v 1.131 2006/04/18 12:46:10 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -993,7 +993,14 @@ tests_testAuth_SOURCES= tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $(
 	MemBuf.cc HttpHdrContRange.cc Packer.cc ACLChecklist.cc HttpHdrCc.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc url.cc ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc \
 	StatHist.cc HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
-	tests/stub_HttpRequest.cc
+	tests/stub_HttpRequest.cc tests/stub_DelayId.cc \
+	tests/stub_MemObject.cc mem_node.cc \
+	stmem.cc \
+	tests/stub_comm.cc \
+	tests/stub_http.cc \
+	HttpMsg.cc \
+	tests/stub_mime.cc \
+	tests/stub_access_log.cc
 ##	acl.cc cache_cf.cc tools.cc \
 ##	helper.cc String.cc cbdata.cc HttpHeaderTools.cc store.cc cache_manager.cc \
 ##	HttpHeader.cc url.cc event.cc mem.cc HttpRequest.cc Packer.cc access_log.cc \
@@ -1036,7 +1043,7 @@ STORE_TEST_SOURCES=\
 	MemBuf.cc HttpHdrContRange.cc Packer.cc ACLChecklist.cc HttpHdrCc.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc url.cc ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc \
 	StatHist.cc HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
-	tests/stub_HttpRequest.cc
+	tests/stub_HttpRequest.cc tests/stub_access_log.cc
 
 ## why so many sources? well httpHeaderTools requites ACLChecklist & friends.
 ## first line - what we are testing.

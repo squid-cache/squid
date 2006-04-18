@@ -1,11 +1,8 @@
-
 /*
- * $Id: DelaySpec.cc,v 1.4 2006/04/18 12:46:10 robertc Exp $
+ * $Id: stub_access_log.cc,v 1.1 2006/04/18 12:46:13 robertc Exp $
  *
- * DEBUG: section 77    Delay Pools
- * AUTHOR: Robert Collins <robertc@squid-cache.org>
- * Based upon original delay pools code by
- *   David Luyer <david@luyer.net>
+ * DEBUG: section 28    Access Control
+ * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -33,59 +30,28 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
- *
- * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "config.h"
-
-#if DELAY_POOLS
 #include "squid.h"
-#include "DelaySpec.h"
-#include "Store.h"
-#include "Parsing.h"
+#include "HierarchyLogEntry.h"
 
-DelaySpec::DelaySpec() : restore_bps(-1), max_bytes (-1)
-{}
 
-void
-DelaySpec::stats (StoreEntry * sentry, char const *label) const
+HierarchyLogEntry::HierarchyLogEntry()
 {
-    if (restore_bps == -1) {
-        storeAppendPrintf(sentry, "\t%s:\n\t\tDisabled.\n\n", label);
-        return;
-    }
-
-    storeAppendPrintf(sentry, "\t%s:\n", label);
-    storeAppendPrintf(sentry, "\t\tMax: %d\n", max_bytes);
-    storeAppendPrintf(sentry, "\t\tRestore: %d\n", restore_bps);
+    fatal("Not implemented.");
 }
 
-void
-DelaySpec::dump (StoreEntry *entry) const
+ping_data::ping_data() :
+        n_sent(0),
+        n_recv(0),
+        n_replies_expected(0),
+        timeout(0),
+        timedout(0),
+        w_rtt(0),
+        p_rtt(0)
 {
-    storeAppendPrintf(entry, " %d/%d", restore_bps, max_bytes);
+    start.tv_sec = 0;
+    start.tv_usec = 0;
+    stop.tv_sec = 0;
+    stop.tv_usec = 0;
 }
-
-void
-DelaySpec::parse()
-{
-    int i;
-    char *token;
-    token = strtok(NULL, "/");
-
-    if (token == NULL)
-        self_destruct();
-
-    if (sscanf(token, "%d", &i) != 1)
-        self_destruct();
-
-    restore_bps = i;
-
-    i = GetInteger();
-
-    max_bytes = i;
-}
-
-#endif
-
