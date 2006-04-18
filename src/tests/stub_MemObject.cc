@@ -1,5 +1,5 @@
 /*
- * $Id: stub_MemObject.cc,v 1.2 2005/12/26 10:16:05 serassio Exp $
+ * $Id: stub_MemObject.cc,v 1.3 2006/04/18 12:46:13 robertc Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins
@@ -144,4 +144,10 @@ MemObject::write(StoreIOBuffer writeBuffer, STMCB *callback, void *callbackData)
     assert (data_hdr.write (writeBuffer));
     callback (callbackData, writeBuffer);
     PROF_stop(MemObject_write);
+}
+
+void
+MemObject::replaceHttpReply(HttpReply *newrep)
+{
+    fatal ("Not implemented");
 }
