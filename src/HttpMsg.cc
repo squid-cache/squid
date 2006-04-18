@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.25 2006/02/17 18:10:59 wessels Exp $
+ * $Id: HttpMsg.cc,v 1.26 2006/04/18 12:25:50 robertc Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -36,7 +36,6 @@
 #include "squid.h"
 #include "HttpMsg.h"
 #include "HttpRequest.h"
-#include "HttpReply.h"
 #include "MemBuf.h"
 
 HttpMsg::HttpMsg(http_hdr_owner_type owner): header(owner),
@@ -290,11 +289,6 @@ int
 HttpMsg::httpMsgParseError()
 {
     reset();
-    /* indicate an error */
-
-    if (HttpReply *rep = dynamic_cast<HttpReply*>(this))
-        rep->sline.status = HTTP_INVALID_HEADER;
-
     return -1;
 }
 

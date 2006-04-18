@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.82 2006/01/23 20:04:24 wessels Exp $
+ * $Id: HttpReply.cc,v 1.83 2006/04/18 12:25:50 robertc Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -447,6 +447,16 @@ void HttpReply::packFirstLineInto(Packer *p, bool unused) const
 bool HttpReply::parseFirstLine(const char *blk_start, const char *blk_end)
 {
     return httpStatusLineParse(&sline, protoPrefix, blk_start, blk_end);
+}
+
+/* handy: resets and returns -1 */
+int
+HttpReply::httpMsgParseError()
+{
+    int result(HttpMsg::httpMsgParseError());
+    /* indicate an error in the status line */
+    sline.status = HTTP_INVALID_HEADER;
+    return result;
 }
 
 /*

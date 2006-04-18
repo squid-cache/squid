@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.h,v 1.16 2006/02/17 18:10:59 wessels Exp $
+ * $Id: HttpReply.h,v 1.17 2006/04/18 12:25:50 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -93,6 +93,8 @@ public:
     bool do_clean;
 
 public:
+    virtual int httpMsgParseError();
+
     virtual bool expectingBody(method_t, ssize_t&) const;
 
     void updateOnNotModified(HttpReply const *other);
