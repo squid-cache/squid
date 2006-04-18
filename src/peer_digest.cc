@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.109 2006/02/17 18:10:59 wessels Exp $
+ * $Id: peer_digest.cc,v 1.110 2006/04/18 12:28:40 robertc Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -638,6 +638,7 @@ peerDigestSwapInHeaders(void *data, char *buf, ssize_t size)
     }
 
     fatal("peerDigestSwapInHeaders() - shouldn't get here!\n");
+    return 0; /* keep gcc happy */
 }
 
 int
@@ -678,6 +679,7 @@ peerDigestSwapInCBlock(void *data, char *buf, ssize_t size)
     }
 
     fatal("peerDigestSwapInCBlock(): shouldn't get here!\n");
+    return 0; /* keep gcc happy */
 }
 
 int
@@ -714,6 +716,7 @@ peerDigestSwapInMask(void *data, char *buf, ssize_t size)
     }
 
     fatal("peerDigestSwapInMask(): shouldn't get here!\n");
+    return 0; /* keep gcc happy */
 }
 
 static int
