@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.h,v 1.8 2006/02/17 18:10:59 wessels Exp $
+ * $Id: HttpMsg.h,v 1.9 2006/04/18 12:25:50 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -81,7 +81,7 @@ public:
 
     int httpMsgParseStep(const char *buf, int atEnd);
 
-    int httpMsgParseError();
+    virtual int httpMsgParseError();
 
     virtual bool expectingBody(method_t, ssize_t&) const = 0;
 
