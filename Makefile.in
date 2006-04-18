@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.83 2006/03/20 23:39:10 hno Exp $
+# $Id: Makefile.in,v 1.84 2006/04/18 00:10:54 hno Exp $
 #
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -266,7 +266,7 @@ sharedstatedir = @sharedstatedir@
 subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects 1.5
+AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects 1.5 foreign
 DIST_SUBDIRS = lib snmplib scripts src icons errors contrib doc helpers test-suite
 SUBDIRS = lib @makesnmplib@ scripts src icons errors doc helpers test-suite
 DISTCLEANFILES = include/stamp-h include/stamp-h[0-9]*
