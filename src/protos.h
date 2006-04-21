@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.518 2006/01/03 23:26:20 wessels Exp $
+ * $Id: protos.h,v 1.519 2006/04/21 13:57:41 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -206,19 +206,6 @@ SQUIDCEXTERN void file_write(int, off_t, void const *, int len, DWCB *, void *, 
 SQUIDCEXTERN void file_write_mbuf(int fd, off_t, MemBuf mb, DWCB * handler, void *handler_data);
 SQUIDCEXTERN void file_read(int, char *, int, off_t, DRCB *, void *);
 SQUIDCEXTERN void disk_init(void);
-
-/* diskd.c */
-SQUIDCEXTERN diskd_queue *afile_create_queue(void);
-SQUIDCEXTERN void afile_destroy_queue(diskd_queue *);
-SQUIDCEXTERN void afile_sync_queue(diskd_queue *);
-SQUIDCEXTERN void afile_sync(void);
-SQUIDCEXTERN void afile_open(const char *path, int mode, DOCB *, void *);
-SQUIDCEXTERN void afile_close(int fd, DCCB * callback, void *data);
-SQUIDCEXTERN void afile_write(int, off_t, void *, int len, DWCB *, void *, FREE *);
-SQUIDCEXTERN void afile_write_mbuf(int fd, off_t, MemBuf, DWCB *, void *);
-SQUIDCEXTERN void afile_read(int, char *, int, off_t, DRCB *, void *);
-SQUIDCEXTERN void afile_unlink(const char *path, DUCB *, void *);
-SQUIDCEXTERN void afile_truncate(const char *path, DTCB *, void *);
 
 SQUIDCEXTERN void dnsShutdown(void);
 SQUIDCEXTERN void dnsInit(void);

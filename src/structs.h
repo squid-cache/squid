@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.536 2006/04/02 14:32:35 serassio Exp $
+ * $Id: structs.h,v 1.537 2006/04/21 13:57:41 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2074,29 +2074,6 @@ struct _storerepl_entry
     REMOVALPOLICYCREATE *create;
 };
 
-/*
- * Async disk IO - this defines a async disk io queue
- */
-
-struct _diskd_queue
-{
-    int smsgid;			/* send sysvmsg id */
-    int rmsgid;			/* recv sysvmsg id */
-    int wfd;			/* queue file descriptor ? */
-    int away;			/* number of requests away */
-    int sent_count;		/* number of messages sent */
-    int recv_count;		/* number of messages received */
-
-    struct
-    {
-        char *buf;		/* shm buffer */
-        link_list *stack;
-        int id;			/* sysvshm id */
-    }
-
-    shm;
-};
-
 struct _Logfile
 {
     int fd;
@@ -2131,13 +2108,6 @@ struct _customlog
     Logfile *logfile;
     customlog *next;
     customlog_type type;
-};
-
-struct cache_dir_option
-{
-    const char *name;
-    void (*parse) (SwapDir * sd, const char *option, const char *value, int reconfiguring);
-    void (*dump) (StoreEntry * e, const char *option, SwapDir const * sd);
 };
 
 #endif /* SQUID_STRUCTS_H */
