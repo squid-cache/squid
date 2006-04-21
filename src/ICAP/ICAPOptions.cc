@@ -90,8 +90,8 @@ List<String> *ICAPOptions::parseExtFileList(const char *start, const char *end, 
     int ilen;
     String t = NULL;
 
-    List<String> **Tail;
-    List<String> *H;
+    List<String> **Tail = NULL;
+    List<String> *H = NULL;
 
     for (Tail = &H; *Tail; Tail = &((*Tail)->next))
 
