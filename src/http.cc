@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.491 2006/03/07 18:47:48 wessels Exp $
+ * $Id: http.cc,v 1.492 2006/04/22 09:02:44 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -47,6 +47,8 @@
 #include "HttpRequest.h"
 #include "MemObject.h"
 #include "HttpHdrContRange.h"
+#include "HttpHdrSc.h"
+#include "HttpHdrScTarget.h"
 #include "ACLChecklist.h"
 #include "fde.h"
 #if DELAY_POOLS
