@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.488 2006/02/19 11:21:07 serassio Exp $
+ * $Id: cache_cf.cc,v 1.489 2006/04/22 01:53:52 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -2301,6 +2301,8 @@ free_refreshpattern(refresh_t ** head)
         regfree(&t->compiled_pattern);
         safe_free(t);
     }
+
+    refresh_nocache_hack = 0;
 }
 
 static void
