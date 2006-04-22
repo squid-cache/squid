@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.19 2005/11/05 00:08:32 wessels Exp $
+ * $Id: ESI.cc,v 1.20 2006/04/22 09:02:44 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -41,6 +41,8 @@
 #include "ESISegment.h"
 #include "ESIElement.h"
 #include "ESIContext.h"
+#include "HttpHdrSc.h"
+#include "HttpHdrScTarget.h"
 #include "HttpReply.h"
 #include "ESIAttempt.h"
 #include "ESIExcept.h"
