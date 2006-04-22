@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.316 2005/10/23 11:55:32 hno Exp $
+ * $Id: acl.cc,v 1.317 2006/04/22 13:53:21 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -428,8 +428,7 @@ ACL::cacheMatchAcl(dlink_list * cache, ACLChecklist *checklist)
         link = link->next;
     }
 
-    auth_match = NULL;
-    auth_match = (acl_proxy_auth_match_cache *)memAllocate(MEM_ACL_PROXY_AUTH_MATCH);
+    auth_match = new acl_proxy_auth_match_cache();
     auth_match->matchrv = matchForCache (checklist);
     auth_match->acl_data = this;
     dlinkAddTail(auth_match, &auth_match->link, cache);
@@ -451,7 +450,7 @@ aclCacheMatchFlush(dlink_list * cache)
         tmplink = link;
         link = link->next;
         dlinkDelete(tmplink, cache);
-        memFree(auth_match, MEM_ACL_PROXY_AUTH_MATCH);
+        delete auth_match;
     }
 }
 

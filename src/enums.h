@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.247 2006/04/22 05:29:19 robertc Exp $
+ * $Id: enums.h,v 1.248 2006/04/22 13:53:21 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -455,7 +455,6 @@ typedef enum {
     MEM_64K_BUF,
     MEM_ACL_DENY_INFO_LIST,
     MEM_ACL_NAME_LIST,
-    MEM_ACL_PROXY_AUTH_MATCH,
 #if USE_CACHE_DIGESTS
     MEM_CACHE_DIGEST,
 #endif
