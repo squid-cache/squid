@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.111 2006/02/18 00:09:35 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.112 2006/04/22 05:29:18 robertc Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -37,6 +37,7 @@
 #include "Store.h"
 #include "HttpHeader.h"
 #include "HttpHdrContRange.h"
+#include "HttpHdrSc.h"
 #include "MemBuf.h"
 
 /*

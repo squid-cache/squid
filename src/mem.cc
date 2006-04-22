@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.90 2006/01/09 20:22:31 wessels Exp $
+ * $Id: mem.cc,v 1.91 2006/04/22 05:29:19 robertc Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -374,8 +374,6 @@ Mem::Init(void)
     memDataInit(MEM_ACL_DENY_INFO_LIST, "acl_deny_info_list",
                 sizeof(acl_deny_info_list), 0);
     memDataInit(MEM_ACL_NAME_LIST, "acl_name_list", sizeof(acl_name_list), 0);
-    memDataInit(MEM_ACL_PROXY_AUTH_MATCH, "acl_proxy_auth_match_cache",
-                sizeof(acl_proxy_auth_match_cache), 0);
 #if USE_CACHE_DIGESTS
 
     memDataInit(MEM_CACHE_DIGEST, "CacheDigest", sizeof(CacheDigest), 0);
@@ -386,8 +384,6 @@ Mem::Init(void)
     memDataInit(MEM_DREAD_CTRL, "dread_ctrl", sizeof(dread_ctrl), 0);
     memDataInit(MEM_DWRITE_Q, "dwrite_q", sizeof(dwrite_q), 0);
     memDataInit(MEM_HTTP_HDR_CC, "HttpHdrCc", sizeof(HttpHdrCc), 0);
-    memDataInit(MEM_HTTP_HDR_SC, "HttpHdrSc", sizeof(HttpHdrSc), 0);
-    memDataInit(MEM_HTTP_HDR_SCTARGET, "HttpHdrScTarget", sizeof(HttpHdrScTarget), 0);
     memDataInit(MEM_HTTP_HDR_CONTENT_RANGE, "HttpHdrContRange", sizeof(HttpHdrContRange), 0);
     memDataInit(MEM_NETDBENTRY, "netdbEntry", sizeof(netdbEntry), 0);
     memDataInit(MEM_NET_DB_NAME, "net_db_name", sizeof(net_db_name), 0);

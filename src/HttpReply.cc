@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.83 2006/04/18 12:25:50 robertc Exp $
+ * $Id: HttpReply.cc,v 1.84 2006/04/22 05:29:18 robertc Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -37,6 +37,7 @@
 #include "Store.h"
 #include "HttpReply.h"
 #include "HttpHdrContRange.h"
+#include "HttpHdrSc.h"
 #include "ACLChecklist.h"
 #include "MemBuf.h"
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrScTarget.cc,v 1.1 2003/03/10 04:56:36 robertc Exp $
+ * $Id: HttpHdrScTarget.cc,v 1.2 2006/04/22 05:29:18 robertc Exp $
  *
  * DEBUG: section 90    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
@@ -36,6 +36,7 @@
  */
 
 #include "squid.h"
+#include "HttpHdrSc.h"
 
 /* local prototypes */
 
@@ -46,7 +47,7 @@
 HttpHdrScTarget *
 httpHdrScTargetCreate(char const *target)
 {
-    HttpHdrScTarget *sc = (HttpHdrScTarget *)memAllocate(MEM_HTTP_HDR_SCTARGET);
+    HttpHdrScTarget *sc = new HttpHdrScTarget();
     sc->max_age = -1;
     /* max_stale is specified as 0 if not specified in the header */
     sc->target = target;
@@ -59,7 +60,7 @@ httpHdrScTargetDestroy(HttpHdrScTarget * sc)
     assert(sc);
     sc->target.clean();
     sc->content.clean();
-    memFree(sc, MEM_HTTP_HDR_SCTARGET);
+    delete sc;
 }
 
 HttpHdrScTarget *

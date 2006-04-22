@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.131 2006/04/18 12:46:10 robertc Exp $
+#  $Id: Makefile.am,v 1.132 2006/04/22 05:29:18 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -391,6 +391,7 @@ squid_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
 	$(DISKIO_SOURCE) \
+	dlink.h \
 	$(DNSSOURCE) \
 	enums.h \
 	errorpage.cc \
@@ -423,11 +424,14 @@ squid_SOURCES = \
 	HttpHdrCc.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
+	HttpHdrSc.h \
 	HttpHdrScTarget.cc \
+	HttpHdrScTarget.h \
 	HttpHdrContRange.cc \
 	HttpHdrContRange.h \
 	HttpHeader.cc \
 	HttpHeader.h \
+	HttpHeaderMask.h \
 	HttpHeaderRange.h \
 	HttpHeaderTools.cc \
 	HttpBody.cc \
@@ -465,6 +469,7 @@ squid_SOURCES = \
 	neighbors.cc \
 	net_db.cc \
 	Packer.cc \
+	Packer.h \
 	Parsing.cc \
 	Parsing.h \
 	$(XPROF_STATS_SOURCE) \
@@ -982,11 +987,24 @@ DISTCLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default \
 ##		$(RM) -f $(libexecdir)/-$$f; \
 ##	fi
 
-TESTSOURCES=../test-suite/test_tools.cc
+# stock tools for unit tests - library independent versions of dlink_list 
+# etc.
+# globals.cc is needed by test_tools.cc
+TESTSOURCES= \
+	../test-suite/test_tools.cc \
+	globals.cc
 
-check_PROGRAMS+=tests/testAuth tests/testStore tests/testUfs tests/testCoss tests/testNull
+check_PROGRAMS+= \
+	tests/testAuth \
+	tests/testBoilerplate \
+	tests/testCoss \
+	tests/testHeaders \
+	tests/testNull \
+	tests/testStore \
+	tests/testUfs
+
 tests_testAuth_SOURCES= tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $(TESTSOURCES) \
-	AuthScheme.cc globals.cc authenticate.cc AuthUser.cc AuthUserRequest.cc AuthConfig.cc \
+	AuthScheme.cc authenticate.cc AuthUser.cc AuthUserRequest.cc AuthConfig.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
 	tests/stub_helper.cc cbdata.cc String.cc tests/stub_cache_manager.cc \
 	tests/stub_store.cc HttpHeaderTools.cc HttpHeader.cc acl.cc event.cc mem.cc \
@@ -1016,16 +1034,48 @@ tests_testAuth_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@AUTH_LINKOBJS@ \
 	@AUTH_OBJS@ \
 	@SQUID_CPPUNIT_LA@
-	
 
+## a demonstration test that does nothing but shows the salient points
+## involved in writing tests.
+tests_testBoilerplate_SOURCES= tests/testBoilerplate.cc tests/testMain.cc tests/testBoilerplate.h $(TESTSOURCES)
+tests_testBoilerplate_LDADD= \
+	-L../lib -lmiscutil \
+	@SQUID_CPPUNIT_LA@ \
+	@SSLLIB@
+tests_testBoilerplate_LDFLAGS = $(LIBADD_DL)
+tests_testBoilerplate_DEPENDENCIES = \
+	@SQUID_CPPUNIT_LA@
+
+## test headers checks that individual headers can be parsed with no dependencies.
+## as such, it needs a new .cc file for each header it parses, so that they
+## can be #included with no baggage. If the binary links, the test passed.
+## We could write a script to pull out the compiler configuration from autoconf,
+## but this is easier to understand and more robust against changes in autoconf.
+## RBC 20060422.
+HEADERS_TO_TEST = \
+	tests/testHeader_ACL.cc \
+	tests/testHeader_dlink.cc \
+	tests/testHeader_HttpHeader.cc \
+	tests/testHeader_HttpHeaderRange.cc \
+	tests/testHeader_HttpReply.cc
+tests_testHeaders_SOURCES= tests/testMain.cc $(HEADERS_TO_TEST)
+tests_testHeaders_LDADD= \
+	@SQUID_CPPUNIT_LA@ \
+	@SSLLIB@
+tests_testHeaders_LDFLAGS = $(LIBADD_DL)
+tests_testHeaders_DEPENDENCIES = \
+	@SQUID_CPPUNIT_LA@
+
+
+# TODO:mime.cc drags in HttpReply.cc
 STORE_TEST_SOURCES=\
 	$(TESTSOURCES) \
 	$(DELAY_POOL_SOURCE) \
 	CacheDigest.cc \
+	HttpMsg.cc \
 	store_dir.cc \
 	store.cc \
 	store_key_md5.cc \
-	globals.cc \
 	string_arrays.c \
 	Parsing.cc \
 	ConfigOption.cc \
@@ -1037,6 +1087,7 @@ STORE_TEST_SOURCES=\
 	tests/stub_http.cc \
 	mem_node.cc \
 	stmem.cc \
+	tests/stub_mime.cc \
 	tests/stub_store_client.cc \
 	tests/stub_tools.cc \
 	HttpHeaderTools.cc HttpHeader.cc acl.cc event.cc mem.cc \
@@ -1077,13 +1128,11 @@ SWAP_TEST_SOURCES=\
 	disk.cc \
 	filemap.cc \
 	HttpBody.cc \
-	HttpMsg.cc \
 	HttpReply.cc \
 	HttpStatusLine.cc \
 	int.cc \
 	list.cc \
 	MemObject.cc \
-	mime.cc \
 	StoreSwapLogData.cc \
 	StoreIOState.cc \
 	StoreMeta.cc \

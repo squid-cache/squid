@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACL.h,v 1.14 2005/10/23 11:55:31 hno Exp $
+ * $Id: ACL.h,v 1.15 2006/04/22 05:29:16 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,6 +36,11 @@
 #ifndef SQUID_ACL_H
 #define SQUID_ACL_H
 #include "Array.h"
+#include "dlink.h"
+/* FIXME: finish splitting out the dependencies here
+ * - typedefs should not be needed to parse this.
+ */
+#include "typedefs.h"
 
 /* acl.c */
 SQUIDCEXTERN void aclDestroyAccessList(acl_access **list);
@@ -148,4 +153,17 @@ public:
 MEMPROXY_CLASS_INLINE(ACLList)
 
 typedef ACLList acl_list;
+
+class acl_proxy_auth_match_cache
+{
+
+public:
+    MEMPROXY_CLASS(acl_proxy_auth_match_cache);
+    dlink_node link;
+    int matchrv;
+    void *acl_data;
+};
+
+MEMPROXY_CLASS_INLINE(acl_proxy_auth_match_cache);
+
 #endif /* SQUID_ACL_H */

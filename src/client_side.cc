@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.717 2006/03/04 05:38:34 wessels Exp $
+ * $Id: client_side.cc,v 1.718 2006/04/22 05:29:19 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -62,6 +62,7 @@
 #include "AuthUserRequest.h"
 #include "Store.h"
 #include "comm.h"
+#include "HttpHdrContRange.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemObject.h"

@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.18 2006/03/02 20:46:03 wessels Exp $
+ * $Id: Store.h,v 1.19 2006/04/22 05:29:19 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,6 +38,7 @@
 #include "Range.h"
 #include "RefCount.h"
 #include "CommRead.h"
+#include "Packer.h"
 
 #if ESI
 #include "ESIElement.h"
@@ -303,6 +304,9 @@ SQUIDCEXTERN void storeFsInit(void);
 SQUIDCEXTERN void storeFsDone(void);
 SQUIDCEXTERN void storeReplAdd(const char *, REMOVALPOLICYCREATE *);
 extern FREE destroyStoreEntry;
+
+/* should be a subclass of Packer perhaps ? */
+SQUIDCEXTERN void packerToStoreInit(Packer * p, StoreEntry * e);
 
 #ifdef _USE_INLINE_
 #include "Store.cci"

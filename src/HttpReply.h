@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.h,v 1.17 2006/04/18 12:25:50 robertc Exp $
+ * $Id: HttpReply.h,v 1.18 2006/04/22 05:29:18 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -44,6 +44,8 @@ extern MemBuf *httpPackedReply(HttpVersion ver, http_status status, const char *
 /* Sync changes here with HttpReply.cc */
 
 class HttpHdrContRange;
+
+class HttpHdrSc;
 
 class HttpReply: public HttpMsg
 {

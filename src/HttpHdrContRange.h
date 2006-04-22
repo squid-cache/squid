@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrContRange.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
+ * $Id: HttpHdrContRange.h,v 1.3 2006/04/22 05:29:17 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -57,4 +57,7 @@ SQUIDCEXTERN void httpHdrContRangePackInto(const HttpHdrContRange * crange, Pack
 /* inits with given spec */
 SQUIDCEXTERN void httpHdrContRangeSet(HttpHdrContRange *, HttpHdrRangeSpec, ssize_t);
 ;
+SQUIDCEXTERN void httpHeaderAddContRange(HttpHeader *, HttpHdrRangeSpec, ssize_t);
+
+
 #endif /* SQUID_HTTPHDRCONTRANGE_H */

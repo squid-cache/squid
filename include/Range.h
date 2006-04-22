@@ -1,6 +1,6 @@
 
 /*
- * $Id: Range.h,v 1.6 2005/05/08 23:28:06 hno Exp $
+ * $Id: Range.h,v 1.7 2006/04/22 05:28:55 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,6 +35,7 @@
 #define SQUID_RANGE_H
 
 #include <iosfwd>
+#include <ostream>
 
 /* represents [start, end) */
 
