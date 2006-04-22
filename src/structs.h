@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.537 2006/04/21 13:57:41 robertc Exp $
+ * $Id: structs.h,v 1.538 2006/04/22 05:29:20 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,34 +37,15 @@
 #include "config.h"
 #include "RefCount.h"
 
-class dlink_node
-{
-
-public:
-    dlink_node() : data(NULL), prev(NULL), next(NULL){}
-
-    void *data;
-    dlink_node *prev;
-    dlink_node *next;
-};
-
-struct _dlink_list
-{
-    dlink_node *head;
-    dlink_node *tail;
-};
+/* needed for various structures still in structs.h */
+#include "dlink.h"
+/* needed for the global config */
+#include "HttpHeader.h"
 
 struct _acl_name_list
 {
     char name[ACL_NAME_SZ];
     acl_name_list *next;
-};
-
-struct _acl_proxy_auth_match_cache
-{
-    dlink_node link;
-    int matchrv;
-    void *acl_data;
 };
 
 struct _acl_deny_info_list
@@ -83,14 +64,6 @@ struct _header_mangler
     acl_access *access_list;
     char *replacement;
 };
-
-struct _body_size
-{
-    dlink_node node;
-    acl_access *access_list;
-    size_t maxsize;
-};
-
 
 #if SQUID_SNMP
 
@@ -695,7 +668,9 @@ struct _SquidConfig
     mcast_miss;
 #endif
 
+    /* one access list per header type we know of */
     header_mangler request_header_access[HDR_ENUM_END];
+    /* one access list per header type we know of */
     header_mangler reply_header_access[HDR_ENUM_END];
     char *coredump_dir;
     char *chroot_dir;
@@ -843,17 +818,6 @@ struct _fileMap
     unsigned long *file_map;
 };
 
-/* see Packer.c for description */
-
-struct _Packer
-{
-    /* protected, use interface functions instead */
-    append_f append;
-    vprintf_f packer_vprintf;
-    void *real_handler;		/* first parameter to real append and vprintf */
-};
-
-
 /*
  * Note: HttpBody is used only for messages with a small content that is
  * known a priory (e.g., error messages).
@@ -940,22 +904,6 @@ public:
  */
 MEMPROXY_CLASS_INLINE(HttpHeaderEntry)
 
-/* http surogate control header field */
-
-struct _HttpHdrScTarget
-{
-    dlink_node node;
-    int mask;
-    int max_age;
-    int max_stale;
-    String content;
-    String target;
-};
-
-struct _HttpHdrSc
-{
-    dlink_list targets;
-};
 
 struct _http_state_flags
 {
@@ -2062,16 +2010,6 @@ struct _store_rebuild_data
     int badflags;		/* # bad e->flags */
     int bad_log_op;
     int zero_object_sz;
-};
-
-/*
- * This defines an repl type
- */
-
-struct _storerepl_entry
-{
-    const char *typestr;
-    REMOVALPOLICYCREATE *create;
 };
 
 struct _Logfile

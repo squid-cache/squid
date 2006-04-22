@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.585 2006/03/02 20:46:02 wessels Exp $
+ * $Id: store.cc,v 1.586 2006/04/22 05:29:20 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -90,6 +90,22 @@ typedef struct lock_ctrl_t
 lock_ctrl_t;
 
 extern OBJH storeIOStats;
+
+
+/*
+ * This defines an repl type
+ */
+
+typedef struct _storerepl_entry storerepl_entry_t;
+
+struct _storerepl_entry
+{
+    const char *typestr;
+    REMOVALPOLICYCREATE *create;
+};
+
+static storerepl_entry_t *storerepl_list = NULL;
+
 
 /*
  * local function prototypes

@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.133 2005/07/09 20:02:49 serassio Exp $
+ * $Id: globals.h,v 1.134 2006/04/22 05:29:19 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -148,7 +148,6 @@ extern int refresh_nocache_hack;	/* 0 */
 #endif
 extern int store_open_disk_fd;	/* 0 */
 extern const char *SwapDirType[];
-extern storerepl_entry_t *storerepl_list;	/* NULL */
 extern int store_swap_low;	/* 0 */
 extern int store_swap_high;	/* 0 */
 extern size_t store_pages_max;	/* 0 */

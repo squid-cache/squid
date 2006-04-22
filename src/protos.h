@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.519 2006/04/21 13:57:41 robertc Exp $
+ * $Id: protos.h,v 1.520 2006/04/22 05:29:19 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,6 +33,11 @@
 
 #ifndef SQUID_PROTOS_H
 #define SQUID_PROTOS_H
+
+/* included for routines that have not moved out to their proper homes
+ * yet.
+ */
+#include "Packer.h"
 
 #if FORW_VIA_DB
 SQUIDCEXTERN void fvdbCountVia(const char *key);
@@ -158,17 +163,6 @@ SQUIDCEXTERN void checkTimeouts(void);
 SQUIDCEXTERN void comm_select_init(void);
 SQUIDCEXTERN comm_err_t comm_select(int);
 SQUIDCEXTERN void comm_quick_poll_required(void);
-
-SQUIDCEXTERN void packerToStoreInit(Packer * p, StoreEntry * e);
-SQUIDCEXTERN void packerToMemInit(Packer * p, MemBuf * mb);
-SQUIDCEXTERN void packerClean(Packer * p);
-SQUIDCEXTERN void packerAppend(Packer * p, const char *buf, int size);
-#if STDC_HEADERS
-SQUIDCEXTERN void
-packerPrintf(Packer * p, const char *fmt,...) PRINTF_FORMAT_ARG2;
-#else
-SQUIDCEXTERN void packerPrintf();
-#endif
 
 
 /* see debug.c for info on context-based debugging */
@@ -313,41 +307,12 @@ SQUIDCEXTERN void httpHdrCcSetSMaxAge(HttpHdrCc * cc, int s_maxage);
 SQUIDCEXTERN void httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist);
 SQUIDCEXTERN void httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
 
-/* Http Surrogate Control Header Field */
-extern void httpHdrScStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
-extern void httpHdrScInitModule (void);
-extern void httpHdrScCleanModule (void);
-extern HttpHdrSc *httpHdrScCreate(void);
-extern HttpHdrSc *httpHdrScParseCreate(String const *);
-extern void httpHdrScDestroy(HttpHdrSc * sc);
-extern HttpHdrSc *httpHdrScDup(const HttpHdrSc * sc);
-extern void httpHdrScPackInto(const HttpHdrSc * sc, Packer * p);
-extern void httpHdrScJoinWith(HttpHdrSc *, const HttpHdrSc *);
-extern void httpHdrScSetMaxAge(HttpHdrSc *, char const *, int);
-extern void httpHdrScUpdateStats(const HttpHdrSc *, StatHist *);
-extern HttpHdrScTarget * httpHdrScFindTarget (HttpHdrSc *sc, const char *target);
-extern HttpHdrScTarget * httpHdrScGetMergedTarget (HttpHdrSc *sc, const char *ourtarget);
-
-/* Http Surrogate control header field 'targets' */
-extern HttpHdrScTarget * httpHdrScTargetCreate (const char *);
-extern void httpHdrScTargetDestroy(HttpHdrScTarget *);
-extern HttpHdrScTarget *httpHdrScTargetDup(const HttpHdrScTarget *);
-extern void httpHdrScTargetPackInto(const HttpHdrScTarget *, Packer *);
-extern void httpHdrScTargetSetMaxAge(HttpHdrScTarget *, int);
-extern void httpHdrScTargetUpdateStats(const HttpHdrScTarget *, StatHist *);
-extern void httpHdrScTargetJoinWith(HttpHdrScTarget *, const HttpHdrScTarget *);
-extern void httpHdrScTargetMergeWith(HttpHdrScTarget *, const HttpHdrScTarget *);
-extern void httpHdrScTargetStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
-
-
 /* Http Header Tools */
 SQUIDCEXTERN HttpHeaderFieldInfo *httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count);
 SQUIDCEXTERN void httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo * info, int count);
 SQUIDCEXTERN http_hdr_type httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo * attrs, int end);
 SQUIDCEXTERN http_hdr_type httpHeaderIdByNameDef(const char *name, int name_len);
 SQUIDCEXTERN const char *httpHeaderNameById(int id);
-SQUIDCEXTERN void httpHeaderMaskInit(HttpHeaderMask * mask, int value);
-SQUIDCEXTERN void httpHeaderCalcMask(HttpHeaderMask * mask, http_hdr_type http_hdr_type_enums[], size_t count);
 SQUIDCEXTERN int httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive);
 SQUIDCEXTERN void strListAdd(String * str, const char *item, char del);
 SQUIDCEXTERN int strListIsMember(const String * str, const char *item, char del);

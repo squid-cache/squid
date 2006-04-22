@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: MemBuf.h,v 1.6 2005/11/21 23:04:56 wessels Exp $
+ * $Id: MemBuf.h,v 1.7 2006/04/22 05:29:19 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,6 +34,8 @@
 
 #ifndef SQUID_MEMBUF_H
 #define SQUID_MEMBUF_H
+
+#include "Packer.h"
 
 /* auto-growing memory-resident buffer with printf interface */
 /* note: when updating this struct, update MemBufNULL #define */
@@ -149,5 +151,7 @@ unsigned valid:
 
 /* returns free() function to be used, _freezes_ the object! */
 SQUIDCEXTERN void memBufReport(MemBuf * mb);
+/* pack content into a mem buf. */
+SQUIDCEXTERN void packerToMemInit(Packer * p, MemBuf * mb);
 
 #endif /* SQUID_MEM_H */

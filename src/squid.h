@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.248 2005/11/21 22:41:45 wessels Exp $
+ * $Id: squid.h,v 1.249 2006/04/22 05:29:20 robertc Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -350,9 +350,6 @@ extern "C"
 #include "util.h"
 #include "profiling.h"
 #include "MemPool.h"
-#include "structs.h"
-#include "protos.h"
-#include "globals.h"
 
 #if !HAVE_TEMPNAM
 #include "tempnam.h"
@@ -395,6 +392,10 @@ max(A const & lhs, A const & rhs)
 #endif
 
 #define XMAX(a,b) (max (a,b))
+
+#include "structs.h"
+#include "protos.h"
+#include "globals.h"
 
 /*
  * Squid source files should not call these functions directly.

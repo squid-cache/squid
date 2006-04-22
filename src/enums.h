@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.246 2005/11/21 22:59:25 wessels Exp $
+ * $Id: enums.h,v 1.247 2006/04/22 05:29:19 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -127,79 +127,6 @@ typedef enum {
     LOOKUP_MISS
 } lookup_t;
 
-/* recognized or "known" header fields; @?@ add more! */
-typedef enum {
-    HDR_BAD_HDR = -1,
-    HDR_ACCEPT = 0,
-    HDR_ACCEPT_CHARSET,
-    HDR_ACCEPT_ENCODING,
-    HDR_ACCEPT_LANGUAGE,
-    HDR_ACCEPT_RANGES,
-    HDR_AGE,
-    HDR_ALLOW,
-    HDR_AUTHORIZATION,
-    HDR_CACHE_CONTROL,
-    HDR_CONNECTION,
-    HDR_CONTENT_BASE,
-    HDR_CONTENT_ENCODING,
-    HDR_CONTENT_LANGUAGE,
-    HDR_CONTENT_LENGTH,
-    HDR_CONTENT_LOCATION,
-    HDR_CONTENT_MD5,
-    HDR_CONTENT_RANGE,
-    HDR_CONTENT_TYPE,
-    HDR_COOKIE,
-    HDR_DATE,
-    HDR_ETAG,
-    HDR_EXPIRES,
-    HDR_FROM,
-    HDR_HOST,
-    HDR_IF_MATCH,
-    HDR_IF_MODIFIED_SINCE,
-    HDR_IF_NONE_MATCH,
-    HDR_IF_RANGE,
-    HDR_LAST_MODIFIED,
-    HDR_LINK,
-    HDR_LOCATION,
-    HDR_MAX_FORWARDS,
-    HDR_MIME_VERSION,
-    HDR_PRAGMA,
-    HDR_PROXY_AUTHENTICATE,
-    HDR_PROXY_AUTHENTICATION_INFO,
-    HDR_PROXY_AUTHORIZATION,
-    HDR_PROXY_CONNECTION,
-    HDR_PUBLIC,
-    HDR_RANGE,
-    HDR_REQUEST_RANGE,		/* some clients use this, sigh */
-    HDR_REFERER,
-    HDR_RETRY_AFTER,
-    HDR_SERVER,
-    HDR_SET_COOKIE,
-    HDR_TITLE,
-    HDR_TRANSFER_ENCODING,
-    HDR_UPGRADE,
-    HDR_USER_AGENT,
-    HDR_VARY,
-    HDR_VIA,
-    HDR_WARNING,
-    HDR_WWW_AUTHENTICATE,
-    HDR_AUTHENTICATION_INFO,
-    HDR_X_CACHE,
-    HDR_X_CACHE_LOOKUP,		/* tmp hack, remove later */
-    HDR_X_FORWARDED_FOR,
-    HDR_X_REQUEST_URI,		/* appended if ADD_X_REQUEST_URI is #defined */
-    HDR_X_SQUID_ERROR,
-    HDR_NEGOTIATE,
-#if X_ACCELERATOR_VARY
-    HDR_X_ACCELERATOR_VARY,
-#endif
-    HDR_SURROGATE_CAPABILITY,
-    HDR_SURROGATE_CONTROL,
-    HDR_FRONT_END_HTTPS,
-    HDR_OTHER,
-    HDR_ENUM_END
-} http_hdr_type;
-
 typedef enum {
     CC_BADHDR = -1,
     CC_PUBLIC = 0,
@@ -225,30 +152,6 @@ typedef enum {
     SC_OTHER,
     SC_ENUM_END
 } http_hdr_sc_type;
-
-/* possible types for http header fields */
-typedef enum {
-    ftInvalid = HDR_ENUM_END,	/* to catch nasty errors with hdr_id<->fld_type clashes */
-    ftInt,
-    ftStr,
-    ftDate_1123,
-    ftETag,
-    ftPCc,
-    ftPContRange,
-    ftPRange,
-    ftPSc,
-    ftDate_1123_or_ETag
-} field_type;
-
-/* possible owners of http header */
-typedef enum {
-    hoNone,
-#if USE_HTCP
-    hoHtcpReply,
-#endif
-    hoRequest,
-    hoReply
-} http_hdr_owner_type;
 
 typedef enum {
     HIER_NONE,
@@ -566,8 +469,6 @@ typedef enum {
     MEM_FWD_SERVER,
     MEM_HTTP_HDR_CC,
     MEM_HTTP_HDR_CONTENT_RANGE,
-    MEM_HTTP_HDR_SC,
-    MEM_HTTP_HDR_SCTARGET,
     MEM_IPCACHE_ENTRY,
     MEM_MD5_DIGEST,
     MEM_NETDBENTRY,

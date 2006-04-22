@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrSc.cc,v 1.2 2003/06/09 05:27:03 robertc Exp $
+ * $Id: HttpHdrSc.cc,v 1.3 2006/04/22 05:29:17 robertc Exp $
  *
  * DEBUG: section 90    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
@@ -38,6 +38,7 @@
 #include "squid.h"
 #include "Store.h"
 #include "HttpHeader.h"
+#include "HttpHdrSc.h"
 
 /* this table is used for parsing surrogate control header */
 static const HttpHeaderFieldAttrs ScAttrs[SC_ENUM_END] =
@@ -88,8 +89,7 @@ httpHdrScCleanModule(void)
 HttpHdrSc *
 httpHdrScCreate(void)
 {
-    HttpHdrSc *sc = (HttpHdrSc *)memAllocate(MEM_HTTP_HDR_SC);
-    return sc;
+    return new HttpHdrSc();
 }
 
 /* creates an sc object from a 0-terminating string */
@@ -225,7 +225,7 @@ httpHdrScDestroy(HttpHdrSc * sc)
         }
     }
 
-    memFree(sc, MEM_HTTP_HDR_SC);
+    delete sc;
 }
 
 HttpHdrSc *

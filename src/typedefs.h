@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.179 2006/04/21 13:57:41 robertc Exp $
+ * $Id: typedefs.h,v 1.180 2006/04/22 05:29:21 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -65,8 +65,6 @@ typedef struct AuthUserHashPointer auth_user_hash_pointer;
 
 typedef struct AuthUserIP auth_user_ip_t;
 
-typedef struct _acl_proxy_auth_match_cache acl_proxy_auth_match_cache;
-
 /* temporary: once Config is fully hidden, this shouldn't be needed */
 #include "Array.h"
 
@@ -123,10 +121,6 @@ class HttpHeader;
 
 typedef struct _HttpHdrCc HttpHdrCc;
 
-typedef struct _HttpHdrSc HttpHdrSc;
-
-typedef struct _HttpHdrScTarget HttpHdrScTarget;
-
 typedef struct _TimeOrTag TimeOrTag;
 
 class HttpHeaderEntry;
@@ -148,8 +142,6 @@ typedef struct _domain_ping domain_ping;
 typedef struct _domain_type domain_type;
 
 typedef struct _DynPool DynPool;
-
-typedef struct _Packer Packer;
 
 typedef struct _StoreDigestCBlock StoreDigestCBlock;
 
@@ -203,10 +195,6 @@ typedef struct _CommWriteStateData CommWriteStateData;
 
 typedef struct _ErrorState ErrorState;
 
-class dlink_node;
-
-typedef struct _dlink_list dlink_list;
-
 typedef struct _StatCounters StatCounters;
 
 typedef struct _storeSwapLogData storeSwapLogData;
@@ -234,8 +222,6 @@ typedef struct _generic_cbdata generic_cbdata;
 class storeIOState;
 
 typedef struct _link_list link_list;
-
-typedef struct _storerepl_entry storerepl_entry_t;
 
 typedef struct _Logfile Logfile;
 
@@ -311,14 +297,6 @@ typedef void IDNSCB(void *, rfc1035_rr *, int, const char *);
 typedef double hbase_f(double);
 typedef void StatHistBinDumper(StoreEntry *, int idx, double val, double size, int count);
 
-/* append/vprintf's for Packer */
-typedef void (*append_f) (void *, const char *buf, int size);
-#if STDC_HEADERS
-typedef void (*vprintf_f) (void *, const char *fmt, va_list args);
-#else
-typedef void (*vprintf_f) ();
-#endif
-
 /* MD5 cache keys */
 typedef unsigned char cache_key;
 
@@ -330,12 +308,6 @@ typedef ssize_t mb_size_t;
 
 /*iteration for headers; use HttpHeaderPos as opaque type, do not interpret */
 typedef ssize_t HttpHeaderPos;
-
-/* big mask for http headers */
-typedef char HttpHeaderMask[12];
-
-/* a common objPackInto interface; used by debugObj */
-typedef void (*ObjPackMethod) (void *obj, Packer * p);
 
 typedef RemovalPolicy *REMOVALPOLICYCREATE(wordlist * args);
 

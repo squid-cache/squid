@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Squid Developers</author>
-<date>$Id: prog-guide.sgml,v 1.58 2005/04/18 21:52:40 hno Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.59 2006/04/22 05:28:26 robertc Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -85,6 +85,18 @@ or improve it.
 	<item>int64_t   - 64 bit signed.
 	<item>u_int64_t - 64 bit unsigned.
 	</enum>
+
+<sect2>Unit tests
+	<P>
+	It is preferrable to automated tests for units of functionality. There
+	is a boilerplate for tests in "src/tests/testBoilerplate.[cc|h]". New
+	tests need to be added to src/Makefile.am to build and run them during
+	"make check". To add a new test script, just copy the references to
+	testBoilerplate in Makefile.am adjusting the name, and likewise copy the
+	source files. If you are testing an already tested area you may be able
+	to just add new test cases to an existing script. I.e. to test the store
+	some more just edit tests/testStore.h and add a new unit test method 
+	name,
 
 <sect>Overview of Squid Components
 
