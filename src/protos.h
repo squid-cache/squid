@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.520 2006/04/22 05:29:19 robertc Exp $
+ * $Id: protos.h,v 1.521 2006/04/22 06:03:42 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -452,7 +452,6 @@ SQUIDCEXTERN int ipcacheAddEntryFromHosts(const char *name, const char *ipaddr);
 SQUIDCEXTERN char *mime_get_header(const char *mime, const char *header);
 SQUIDCEXTERN char *mime_get_header_field(const char *mime, const char *name, const char *prefix);
 SQUIDCEXTERN size_t headersEnd(const char *, size_t);
-SQUIDCEXTERN const char *mime_get_auth(const char *hdr, const char *auth_scheme, const char **auth_field);
 
 SQUIDCEXTERN void mimeInit(char *filename);
 SQUIDCEXTERN void mimeFreeMemory(void);
