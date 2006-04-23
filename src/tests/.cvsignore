@@ -1,7 +1,9 @@
 .deps
 .dirstamp
 .libs
+testACLMaxUserIP
 testAuth
+testBoilerplate
 testCoss
 testNull
 testStore
