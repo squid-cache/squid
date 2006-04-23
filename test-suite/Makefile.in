@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.58 2006/04/22 05:29:25 robertc Exp $
+#  $Id: Makefile.in,v 1.59 2006/04/23 09:22:44 serassio Exp $
 #
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -286,6 +286,7 @@ SSLLIB = @SSLLIB@
 STORE_LIBS = @STORE_LIBS@
 STORE_LINKOBJS = @STORE_LINKOBJS@
 STORE_OBJS = @STORE_OBJS@
+STORE_TESTS = @STORE_TESTS@
 STRIP = @STRIP@
 TRUE = @TRUE@
 USE_DELAY_POOLS_FALSE = @USE_DELAY_POOLS_FALSE@

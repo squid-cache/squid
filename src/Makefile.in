@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.370 2006/04/22 05:29:19 robertc Exp $
+#  $Id: Makefile.in,v 1.371 2006/04/23 09:22:41 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -48,13 +48,13 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 check_PROGRAMS = tests/testAuth$(EXEEXT) \
-	tests/testBoilerplate$(EXEEXT) tests/testCoss$(EXEEXT) \
-	tests/testHeaders$(EXEEXT) tests/testNull$(EXEEXT) \
-	tests/testStore$(EXEEXT) tests/testUfs$(EXEEXT)
+	tests/testBoilerplate$(EXEEXT) tests/testHeaders$(EXEEXT) \
+	tests/testStore$(EXEEXT) @STORE_TESTS@
 @USE_ICAP_CLIENT_TRUE@am__append_1 = ICAP
 EXTRA_PROGRAMS = DiskIO/DiskDaemon/diskd$(EXEEXT) unlinkd$(EXEEXT) \
 	pinger$(EXEEXT) dnsserver$(EXEEXT) recv-announce$(EXEEXT) \
-	ufsdump$(EXEEXT)
+	ufsdump$(EXEEXT) tests/testUfs$(EXEEXT) \
+	tests/testCoss$(EXEEXT) tests/testNull$(EXEEXT)
 noinst_PROGRAMS = cf_gen$(EXEEXT)
 sbin_PROGRAMS = squid$(EXEEXT)
 bin_PROGRAMS = squidclient$(EXEEXT)
@@ -838,6 +838,7 @@ SSLLIB = @SSLLIB@
 STORE_LIBS = @STORE_LIBS@
 STORE_LINKOBJS = @STORE_LINKOBJS@
 STORE_OBJS = @STORE_OBJS@
+STORE_TESTS = @STORE_TESTS@
 STRIP = @STRIP@
 TRUE = @TRUE@
 USE_DELAY_POOLS_FALSE = @USE_DELAY_POOLS_FALSE@
