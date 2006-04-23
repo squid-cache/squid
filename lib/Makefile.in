@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-#  $Id: Makefile.in,v 1.115 2006/04/22 05:28:55 robertc Exp $
+#  $Id: Makefile.in,v 1.116 2006/04/23 09:22:39 serassio Exp $
 #
 
 srcdir = @srcdir@
@@ -260,6 +260,7 @@ SSLLIB = @SSLLIB@
 STORE_LIBS = @STORE_LIBS@
 STORE_LINKOBJS = @STORE_LINKOBJS@
 STORE_OBJS = @STORE_OBJS@
+STORE_TESTS = @STORE_TESTS@
 STRIP = @STRIP@
 TRUE = @TRUE@
 USE_DELAY_POOLS_FALSE = @USE_DELAY_POOLS_FALSE@
