@@ -1,5 +1,5 @@
 /*
- * $Id: ACLARP.cc,v 1.19 2005/10/23 11:55:31 hno Exp $
+ * $Id: ACLARP.cc,v 1.20 2006/04/23 14:14:18 serassio Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -76,6 +76,7 @@ struct arpreq
 #endif
 
 #include "ACLARP.h"
+#include "wordlist.h"
 
 #if !USE_ARP_ACL
 #error USE_ARP_ACL Not defined

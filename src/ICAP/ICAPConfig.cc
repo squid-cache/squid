@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.cc,v 1.6 2006/02/17 18:11:00 wessels Exp $
+ * $Id: ICAPConfig.cc,v 1.7 2006/04/23 14:14:18 serassio Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -43,6 +43,7 @@
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "ACLChecklist.h"
+#include "wordlist.h"
 
 ICAPConfig TheICAPConfig;
 
