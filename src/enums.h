@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.248 2006/04/22 13:53:21 robertc Exp $
+ * $Id: enums.h,v 1.249 2006/04/23 11:10:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -473,7 +473,6 @@ typedef enum {
     MEM_NETDBENTRY,
     MEM_NET_DB_NAME,
     MEM_RELIST,
-    MEM_WORDLIST,
 #if !USE_DNSSERVERS
     MEM_IDNS_QUERY,
 #endif

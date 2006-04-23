@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.317 2006/04/22 13:53:21 robertc Exp $
+ * $Id: acl.cc,v 1.318 2006/04/23 11:10:31 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -36,6 +36,7 @@
 #include "ACL.h"
 #include "ACLChecklist.h"
 #include "HttpRequest.h"
+#include "ConfigParser.h"
 
 const char *AclMatchedName = NULL;
 
@@ -78,7 +79,7 @@ ACL::Factory (char const *type)
     return result;
 }
 
-ACL::ACL () {}
+ACL::ACL () :cfgline(NULL) {}
 
 bool ACL::valid () const
 {
@@ -98,7 +99,7 @@ ACL::ParseAclLine(ACL ** head)
 
     if ((t = strtok(NULL, w_space)) == NULL) {
         debug(28, 0) ("aclParseAclLine: missing ACL name.\n");
-        self_destruct();
+        ConfigParser::Destruct();
         return;
     }
 
@@ -108,13 +109,13 @@ ACL::ParseAclLine(ACL ** head)
 
     if ((theType = strtok(NULL, w_space)) == NULL) {
         debug(28, 0) ("aclParseAclLine: missing ACL type.\n");
-        self_destruct();
+        ConfigParser::Destruct();
         return;
     }
 
     if (!Prototype::Registered (theType)) {
         debug(28, 0) ("aclParseAclLine: Invalid ACL type '%s'\n", theType);
-        self_destruct();
+        ConfigParser::Destruct();
         return;
     }
 
@@ -127,7 +128,7 @@ ACL::ParseAclLine(ACL ** head)
     } else {
         if (strcmp (A->typeString(),theType) ) {
             debug(28, 0) ("aclParseAclLine: ACL '%s' already exists with different type.\n", A->name);
-            self_destruct();
+            ConfigParser::Destruct();
             return;
         }
 
@@ -169,180 +170,12 @@ ACL::ParseAclLine(ACL ** head)
     *head = A;
 }
 
-/* does name lookup, returns page_id */
-err_type
-aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name)
-{
-    acl_deny_info_list *A = NULL;
-    acl_name_list *L = NULL;
-
-    debug(28,9)("aclGetDenyInfoPage: got called for %s\n",name);
-
-    A = *head;
-
-    if (NULL == *head) {		/* empty list */
-        debug(28,9)("aclGetDenyInfoPage: called for an empty list\n");
-        return ERR_NONE;
-    }
-
-    while (A) {
-        L = A->acl_list;
-
-        if (NULL == L) {		/* empty list should never happen, but in case */
-            debug(28,3)("aclGetDenyInfoPage: "
-                        "WARNING, unexpected codepath taken\n");
-            continue;
-        }
-
-        while (L) {
-            if (!strcmp(name, L->name)) {
-                debug(28,8)("aclGetDenyInfoPage: match on %s\n",name);
-                return A->err_page_id;
-            }
-
-            L = L->next;
-        }
-
-        A = A->next;
-    }
-
-    debug(28,8)("aclGetDenyInfoPage: no match\n");
-    return ERR_NONE;
-}
-
-/* does name lookup, returns if it is a proxy_auth acl */
-int
-aclIsProxyAuth(const char *name)
-{
-    debug(28,5)("aclIsProxyAuth: called for %s\n",name);
-
-    if (NULL == name)
-        return false;
-
-    ACL *a;
-
-    if ((a = ACL::FindByName(name))) {
-        debug(28,5)("aclIsProxyAuth: returning %d\n",a->isProxyAuth());
-        return a->isProxyAuth();
-    }
-
-    debug(28,3)("aclIsProxyAuth: WARNING, called for nonexistent ACL\n");
-    return false;
-}
-
 bool
 ACL::isProxyAuth() const
 {
     return false;
 }
 
-/* maex@space.net (05.09.96)
- *    get the info for redirecting "access denied" to info pages
- *      TODO (probably ;-)
- *      currently there is no optimization for
- *      - more than one deny_info line with the same url
- *      - a check, whether the given acl really is defined
- *      - a check, whether an acl is added more than once for the same url
- */
-
-void
-aclParseDenyInfoLine(acl_deny_info_list ** head)
-{
-    char *t = NULL;
-    acl_deny_info_list *A = NULL;
-    acl_deny_info_list *B = NULL;
-    acl_deny_info_list **T = NULL;
-    acl_name_list *L = NULL;
-    acl_name_list **Tail = NULL;
-
-    /* first expect a page name */
-
-    if ((t = strtok(NULL, w_space)) == NULL) {
-        debug(28, 0) ("aclParseDenyInfoLine: %s line %d: %s\n",
-                      cfg_filename, config_lineno, config_input_line);
-        debug(28, 0) ("aclParseDenyInfoLine: missing 'error page' parameter.\n");
-        return;
-    }
-
-    A = (acl_deny_info_list *)memAllocate(MEM_ACL_DENY_INFO_LIST);
-    A->err_page_id = errorReservePageId(t);
-    A->err_page_name = xstrdup(t);
-    A->next = (acl_deny_info_list *) NULL;
-    /* next expect a list of ACL names */
-    Tail = &A->acl_list;
-
-    while ((t = strtok(NULL, w_space))) {
-        L = (acl_name_list *)memAllocate(MEM_ACL_NAME_LIST);
-        xstrncpy(L->name, t, ACL_NAME_SZ);
-        *Tail = L;
-        Tail = &L->next;
-    }
-
-    if (A->acl_list == NULL) {
-        debug(28, 0) ("aclParseDenyInfoLine: %s line %d: %s\n",
-                      cfg_filename, config_lineno, config_input_line);
-        debug(28, 0) ("aclParseDenyInfoLine: deny_info line contains no ACL's, skipping\n");
-        memFree(A, MEM_ACL_DENY_INFO_LIST);
-        return;
-    }
-
-    for (B = *head, T = head; B; T = &B->next, B = B->next)
-
-        ;	/* find the tail */
-    *T = A;
-}
-
-void
-aclParseAccessLine(acl_access ** head)
-{
-    char *t = NULL;
-    acl_access *A = NULL;
-    acl_access *B = NULL;
-    acl_access **T = NULL;
-
-    /* first expect either 'allow' or 'deny' */
-
-    if ((t = strtok(NULL, w_space)) == NULL) {
-        debug(28, 0) ("aclParseAccessLine: %s line %d: %s\n",
-                      cfg_filename, config_lineno, config_input_line);
-        debug(28, 0) ("aclParseAccessLine: missing 'allow' or 'deny'.\n");
-        return;
-    }
-
-    A = new acl_access;
-
-    if (!strcmp(t, "allow"))
-        A->allow = ACCESS_ALLOWED;
-    else if (!strcmp(t, "deny"))
-        A->allow = ACCESS_DENIED;
-    else {
-        debug(28, 0) ("aclParseAccessLine: %s line %d: %s\n",
-                      cfg_filename, config_lineno, config_input_line);
-        debug(28, 0) ("aclParseAccessLine: expecting 'allow' or 'deny', got '%s'.\n", t);
-        delete A;
-        return;
-    }
-
-    aclParseAclList(&A->aclList);
-
-    if (A->aclList == NULL) {
-        debug(28, 0) ("%s line %d: %s\n",
-                      cfg_filename, config_lineno, config_input_line);
-        debug(28, 0) ("aclParseAccessLine: Access line contains no ACL's, skipping\n");
-        delete A;
-        return;
-    }
-
-    A->cfgline = xstrdup(config_input_line);
-    /* Append to the end of this list */
-
-    for (B = *head, T = head; B; T = &B->next, B = B->next)
-
-        ;
-    *T = A;
-
-    /* We lock _acl_access structures in ACLChecklist::check() */
-}
 
 ACLList::ACLList() : op (1), _acl (NULL), next (NULL)
 {}
@@ -354,40 +187,6 @@ ACLList::negated(bool isNegated)
         op = 0;
     else
         op = 1;
-}
-
-void
-aclParseAclList(acl_list ** head)
-{
-    acl_list **Tail = head;	/* sane name in the use below */
-    ACL *a = NULL;
-    char *t;
-
-    /* next expect a list of ACL names, possibly preceeded
-     * by '!' for negation */
-
-    while ((t = strtok(NULL, w_space))) {
-        acl_list *L = new ACLList;
-
-        if (*t == '!') {
-            L->negated (true);
-            t++;
-        }
-
-        debug(28, 3) ("aclParseAccessLine: looking for ACL name '%s'\n", t);
-        a = ACL::FindByName(t);
-
-        if (a == NULL) {
-            debug(28, 0) ("aclParseAccessLine: ACL name '%s' not found.\n", t);
-            delete L;
-            self_destruct();
-            continue;
-        }
-
-        L->_acl = a;
-        *Tail = L;
-        Tail = &L->next;
-    }
 }
 
 /* ACL result caching routines */
@@ -513,94 +312,10 @@ ACLList::matches (ACLChecklist *checklist) const
 /* Destroy functions */
 /*********************/
 
-void
-aclDestroyAcls(ACL ** head)
-{
-    ACL *next = NULL;
-
-    debug(28,8)("aclDestroyACLs: invoked\n");
-
-    for (ACL *a = *head; a; a = next) {
-        next = a->next;
-        delete a;
-    }
-
-    *head = NULL;
-}
-
 ACL::~ACL()
 {
     debug(28, 3) ("ACL::~ACL: '%s'\n", cfgline);
     safe_free(cfgline);
-}
-
-void
-aclDestroyAclList(acl_list ** head)
-{
-    acl_list *l;
-    debug(28,8)("aclDestroyAclList: invoked\n");
-
-    for (l = *head; l; l = *head) {
-        *head = l->next;
-        delete l;
-    }
-}
-
-void
-aclDestroyAccessList(acl_access ** list)
-{
-    acl_access *l = NULL;
-    acl_access *next = NULL;
-
-    for (l = *list; l; l = next) {
-        debug(28, 3) ("aclDestroyAccessList: '%s'\n", l->cfgline);
-        next = l->next;
-        aclDestroyAclList(&l->aclList);
-        safe_free(l->cfgline);
-        cbdataFree(l);
-    }
-
-    *list = NULL;
-}
-
-/* maex@space.net (06.09.1996)
- *    destroy an _acl_deny_info_list */
-
-void
-aclDestroyDenyInfoList(acl_deny_info_list ** list)
-{
-    acl_deny_info_list *a = NULL;
-    acl_deny_info_list *a_next = NULL;
-    acl_name_list *l = NULL;
-    acl_name_list *l_next = NULL;
-
-    debug(28,8)("aclDestroyDenyInfoList: invoked\n");
-
-    for (a = *list; a; a = a_next) {
-        for (l = a->acl_list; l; l = l_next) {
-            l_next = l->next;
-            safe_free(l);
-        }
-
-        a_next = a->next;
-        xfree(a->err_page_name);
-        memFree(a, MEM_ACL_DENY_INFO_LIST);
-    }
-
-    *list = NULL;
-}
-
-/*
- * This function traverses all ACL elements referenced
- * by an access list (presumably 'http_access').   If 
- * it finds a PURGE method ACL, then it returns TRUE,
- * otherwise FALSE.
- */
-/* XXX: refactor this more sensibly. perhaps have the parser detect it ? */
-int
-aclPurgeMethodInUse(acl_access * a)
-{
-    return a->containsPURGE();
 }
 
 #include "ACLStrategised.h"

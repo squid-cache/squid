@@ -1,8 +1,9 @@
+
 /*
- * $Id: ACLMethodData.cc,v 1.8 2006/04/23 11:10:31 robertc Exp $
+ * $Id: wordlist.cc,v 1.1 2006/04/23 11:10:32 robertc Exp $
  *
- * DEBUG: section 28    Access Control
- * AUTHOR: Duane Wessels
+ * DEBUG: section 3     Configuration File Parsing
+ * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -30,79 +31,82 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
- *
- * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid.h"
-#include "ACLMethodData.h"
-#include "ACLChecklist.h"
 #include "wordlist.h"
+#include "MemBuf.h"
 
-ACLMethodData::ACLMethodData() : values (NULL)
-{}
-
-ACLMethodData::ACLMethodData(ACLMethodData const &old) : values (NULL)
+void
+wordlistDestroy(wordlist ** list)
 {
-    assert (!old.values);
-}
+    wordlist *w = NULL;
 
-ACLMethodData::~ACLMethodData()
-{
-    if (values)
-        delete values;
-}
-
-bool
-ACLMethodData::match(method_t toFind)
-{
-    return values->findAndTune (toFind);
-}
-
-/* explicit instantiation required for some systems */
-
-template cbdata_type List<method_t>
-::CBDATA_List;
-
-wordlist *
-ACLMethodData::dump()
-{
-    wordlist *W = NULL;
-    List<method_t> *data = values;
-
-    while (data != NULL) {
-        wordlistAdd(&W, RequestMethodStr[data->element]);
-        data = data->next;
+    while ((w = *list) != NULL) {
+        *list = w->next;
+        safe_free(w->key);
+        delete w;
     }
 
-    return W;
+    *list = NULL;
+}
+
+const char *
+wordlistAdd(wordlist ** list, const char *key)
+{
+    while (*list)
+        list = &(*list)->next;
+
+    *list = new wordlist;
+
+    (*list)->key = xstrdup(key);
+
+    (*list)->next = NULL;
+
+    return (*list)->key;
 }
 
 void
-ACLMethodData::parse()
+wordlistJoin(wordlist ** list, wordlist ** wl)
 {
-    List<method_t> **Tail;
-    char *t = NULL;
+    while (*list)
+        list = &(*list)->next;
 
-    for (Tail = &values; *Tail; Tail = &((*Tail)->next))
+    *list = *wl;
 
-        ;
-    while ((t = strtokFile())) {
-        List<method_t> *q = new List<method_t> (urlParseMethod(t));
-        *(Tail) = q;
-        Tail = &q->next;
+    *wl = NULL;
+}
+
+void
+wordlistAddWl(wordlist ** list, wordlist * wl)
+{
+    while (*list)
+        list = &(*list)->next;
+
+    for (; wl; wl = wl->next, list = &(*list)->next) {
+        *list = new wordlist();
+        (*list)->key = xstrdup(wl->key);
+        (*list)->next = NULL;
     }
 }
 
-bool
-ACLMethodData::empty() const
+void
+wordlistCat(const wordlist * w, MemBuf * mb)
 {
-    return values == NULL;
+    while (NULL != w) {
+        mb->Printf("%s\n", w->key);
+        w = w->next;
+    }
 }
 
-ACLData<method_t> *
-ACLMethodData::clone() const
+wordlist *
+wordlistDup(const wordlist * w)
 {
-    assert (!values);
-    return new ACLMethodData(*this);
+    wordlist *D = NULL;
+
+    while (NULL != w) {
+        wordlistAdd(&D, w->key);
+        w = w->next;
+    }
+
+    return D;
 }

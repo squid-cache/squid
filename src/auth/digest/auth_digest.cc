@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.43 2005/04/24 14:00:52 serassio Exp $
+ * $Id: auth_digest.cc,v 1.44 2006/04/23 11:10:33 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -45,6 +45,7 @@
 #include "Store.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
+#include "wordlist.h"
 /* TODO don't include this */
 #include "digestScheme.h"
 

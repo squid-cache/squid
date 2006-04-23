@@ -1,5 +1,5 @@
 /*
- * $Id: ACLProtocolData.cc,v 1.6 2005/05/08 06:36:45 hno Exp $
+ * $Id: ACLProtocolData.cc,v 1.7 2006/04/23 11:10:31 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -37,6 +37,7 @@
 #include "squid.h"
 #include "ACLProtocolData.h"
 #include "ACLChecklist.h"
+#include "wordlist.h"
 
 ACLProtocolData::ACLProtocolData() : values (NULL)
 {}

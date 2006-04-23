@@ -38,6 +38,8 @@
 #include "ACLUserData.h"
 #include "authenticate.h"
 #include "ACLChecklist.h"
+#include "wordlist.h"
+#include "ConfigParser.h"
 
 template<class T>
 inline void
@@ -129,7 +131,7 @@ ACLUserData::parse()
     debug(28, 2) ("aclParseUserList: parsing user list\n");
     char *t = NULL;
 
-    if ((t = strtokFile())) {
+    if ((t = ConfigParser::strtokFile())) {
         debug(28, 5) ("aclParseUserList: First token is %s\n", t);
 
         if (strcmp("-i", t) == 0) {
@@ -152,7 +154,7 @@ ACLUserData::parse()
 
     debug(28, 4) ("aclParseUserList: parsing user list\n");
 
-    while ((t = strtokFile())) {
+    while ((t = ConfigParser::strtokFile())) {
         debug(28, 6) ("aclParseUserList: Got token: %s\n", t);
 
         if (flags.case_insensitive)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.72 2006/04/02 10:15:24 serassio Exp $
+ * $Id: helper.cc,v 1.73 2006/04/23 11:10:31 robertc Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -38,6 +38,7 @@
 #include "Store.h"
 #include "comm.h"
 #include "MemBuf.h"
+#include "wordlist.h"
 
 #define HELPER_MAX_ARGS 64
 

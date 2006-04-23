@@ -1,5 +1,5 @@
 /*
- * $Id: ACLHTTPStatus.cc,v 1.1 2005/09/25 20:58:23 hno Exp $
+ * $Id: ACLHTTPStatus.cc,v 1.2 2006/04/23 11:10:31 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -42,6 +42,7 @@
 
 #include "ACLHTTPStatus.h"
 #include "HttpReply.h"
+#include "wordlist.h"
 
 static void aclParseHTTPStatusList(SplayNode<acl_httpstatus_data *> **curlist);
 static int aclHTTPStatusCompare(acl_httpstatus_data * const &a, acl_httpstatus_data * const &b);

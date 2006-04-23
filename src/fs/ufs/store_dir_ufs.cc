@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.70 2006/03/08 10:35:58 hno Exp $
+ * $Id: store_dir_ufs.cc,v 1.71 2006/04/23 11:10:34 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -213,7 +213,8 @@ UFSSwapDir::getOptionTree() const
 void
 UFSSwapDir::init()
 {
-    /* Parsing is finished - force to NULL, don't delete */
+    debugs(47, 3, "Initialising UFS SwapDir engine.");
+    /* Parsing must be finished by now - force to NULL, don't delete */
     currentIOOptions = NULL;
     static int started_clean_event = 0;
     static const char *errmsg =
@@ -241,7 +242,7 @@ UFSSwapDir::init()
 void
 UFSSwapDir::create()
 {
-    debug(47, 3) ("Creating swap space in %s\n", path);
+    debugs(47, 3, "Creating swap space in " << path);
     createDirectory(path, 0);
     createSwapSubDirs();
 }

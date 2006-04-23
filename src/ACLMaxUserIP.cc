@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMaxUserIP.cc,v 1.9 2006/03/10 22:40:24 hno Exp $
+ * $Id: ACLMaxUserIP.cc,v 1.10 2006/04/23 11:10:31 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -38,6 +38,8 @@
 #include "ACLMaxUserIP.h"
 #include "AuthUserRequest.h"
 #include "authenticate.h"
+#include "wordlist.h"
+#include "ConfigParser.h"
 
 ACL::Prototype ACLMaxUserIP::RegistryProtoype(&ACLMaxUserIP::RegistryEntry_, "max_user_ip");
 
@@ -49,7 +51,7 @@ ACLMaxUserIP::clone() const
     return new ACLMaxUserIP(*this);
 }
 
-ACLMaxUserIP::ACLMaxUserIP (char const *theClass) : class_ (theClass), maximum(-1)
+ACLMaxUserIP::ACLMaxUserIP (char const *theClass) : class_ (theClass), maximum(0)
 {}
 
 ACLMaxUserIP::ACLMaxUserIP (ACLMaxUserIP const & old) :class_ (old.class_), maximum (old.maximum), flags (old.flags)
@@ -84,7 +86,7 @@ ACLMaxUserIP::parse()
         return;
     }
 
-    char *t = strtokFile();
+    char *t = ConfigParser::strtokFile();
 
     if (!t)
         return;
@@ -94,7 +96,7 @@ ACLMaxUserIP::parse()
     if (strcmp("-s", t) == 0) {
         debug(28, 5) ("aclParseUserMaxIP: Going strict\n");
         flags.strict = 1;
-        t = strtokFile();
+        t = ConfigParser::strtokFile();
     }
 
     if (!t)

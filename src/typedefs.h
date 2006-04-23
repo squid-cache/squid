@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.180 2006/04/22 05:29:21 robertc Exp $
+ * $Id: typedefs.h,v 1.181 2006/04/23 11:10:32 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -82,8 +82,6 @@ typedef struct _acl_tos acl_tos;
 typedef struct _acl_size_t acl_size_t;
 
 class ACLChecklist;
-
-typedef struct _wordlist wordlist;
 
 typedef struct _ushortlist ushortlist;
 
@@ -271,6 +269,9 @@ typedef void IRCB(peer *, peer_t, protocol_t, void *, void *data);
 class FwdServer;
 typedef void PSC(FwdServer *, void *);
 typedef void RH(void *data, char *);
+/* in wordlist.h */
+
+class wordlist;
 typedef void UH(void *data, wordlist *);
 typedef int READ_HANDLER(int, char *, int);
 typedef int WRITE_HANDLER(int, const char *, int);

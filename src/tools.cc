@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.265 2006/02/18 00:09:35 wessels Exp $
+ * $Id: tools.cc,v 1.266 2006/04/23 11:10:32 robertc Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -37,6 +37,7 @@
 #include "SwapDir.h"
 #include "fde.h"
 #include "MemBuf.h"
+#include "wordlist.h"
 
 #if HAVE_SYS_PRCTL_H
 #include <sys/prctl.h>

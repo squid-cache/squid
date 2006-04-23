@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.86 2005/11/20 18:39:22 serassio Exp $
+ * $Id: dns_internal.cc,v 1.87 2006/04/23 11:10:31 robertc Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -33,12 +33,13 @@
  *
  */
 
+#include "config.h"
 #include "squid.h"
 #include "Store.h"
 #include "comm.h"
 #include "MemBuf.h"
 
-#include "config.h"
+#include "wordlist.h"
 
 #if HAVE_ARPA_NAMESER_H
 #include <arpa/nameser.h>

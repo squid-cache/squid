@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.390 2006/04/09 12:21:52 serassio Exp $
+ * $Id: ftp.cc,v 1.391 2006/04/23 11:10:31 robertc Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -50,6 +50,7 @@
 #include "forward.h"
 #include "Server.h"
 #include "MemBuf.h"
+#include "wordlist.h"
 
 #if ICAP_CLIENT
 #include "ICAP/ICAPClientRespmodPrecache.h"
@@ -1631,7 +1632,7 @@ FtpStateData::ftpParseControlReply(char *buf, size_t len, int *codep, int *used)
             if (*s >= '0' && *s <= '9' && (*(s + 3) == '-' || *(s + 3) == ' '))
                 offset = 4;
 
-        list = (wordlist *)memAllocate(MEM_WORDLIST);
+        list = new wordlist();
 
         list->key = (char *)xmalloc(linelen - offset);
 
@@ -1982,7 +1983,7 @@ ftpTraverseDirectory(FtpStateData * ftpState)
 
     ftpState->pathcomps = w->next;
 
-    memFree(w, MEM_WORDLIST);
+    delete w;
 
     /* Check if we are to CWD or RETR */
     if (ftpState->pathcomps != NULL || ftpState->flags.isdir) {

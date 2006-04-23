@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMaxConnection.cc,v 1.5 2005/05/06 01:57:55 hno Exp $
+ * $Id: ACLMaxConnection.cc,v 1.6 2006/04/23 11:10:31 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -36,6 +36,7 @@
 
 #include "squid.h"
 #include "ACLMaxConnection.h"
+#include "wordlist.h"
 
 ACL::Prototype ACLMaxConnection::RegistryProtoype(&ACLMaxConnection::RegistryEntry_, "maxconn");
 

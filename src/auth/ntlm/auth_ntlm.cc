@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.55 2006/02/26 15:08:32 serassio Exp $
+ * $Id: auth_ntlm.cc,v 1.56 2006/04/23 11:10:34 robertc Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -47,6 +47,7 @@
 #include "HttpRequest.h"
 /* TODO remove this include */
 #include "ntlmScheme.h"
+#include "wordlist.h"
 
 static void
 authenticateNTLMReleaseServer(auth_user_request_t * auth_user_request);

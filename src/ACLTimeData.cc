@@ -1,5 +1,5 @@
 /*
- * $Id: ACLTimeData.cc,v 1.10 2005/05/08 06:36:45 hno Exp $
+ * $Id: ACLTimeData.cc,v 1.11 2006/04/23 11:10:31 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -38,6 +38,7 @@
 #include "ACLTimeData.h"
 #include "authenticate.h"
 #include "ACLChecklist.h"
+#include "wordlist.h"
 
 ACLTimeData::ACLTimeData () : weekbits (0), start (0), stop (0), next (NULL) {}
 
