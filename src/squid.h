@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.249 2006/04/22 05:29:20 robertc Exp $
+ * $Id: squid.h,v 1.250 2006/04/23 09:02:13 serassio Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -224,11 +224,7 @@ extern void xassert(const char *, const char *, int);
 #include <math.h>
 #endif
 
-#if !defined(MAXHOSTNAMELEN) || (MAXHOSTNAMELEN < 128)
-#define SQUIDHOSTNAMELEN 128
-#else
-#define SQUIDHOSTNAMELEN MAXHOSTNAMELEN
-#endif
+#define SQUIDHOSTNAMELEN 256
 
 #define SQUID_MAXPATHLEN 256
 #ifndef MAXPATHLEN

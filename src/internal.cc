@@ -1,6 +1,6 @@
 
 /*
- * $Id: internal.cc,v 1.37 2006/02/17 20:15:35 wessels Exp $
+ * $Id: internal.cc,v 1.38 2006/04/23 09:02:13 serassio Exp $
  *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
@@ -103,7 +103,7 @@ internalRemoteUri(const char *host, u_short port, const char *dir, const char *n
     static char lc_host[SQUIDHOSTNAMELEN];
     assert(host && name);
     /* convert host name to lower case */
-    xstrncpy(lc_host, host, SQUIDHOSTNAMELEN - 1);
+    xstrncpy(lc_host, host, SQUIDHOSTNAMELEN);
     Tolower(lc_host);
     /*
      * append the domain in order to mirror the requests with appended

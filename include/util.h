@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.72 2005/04/18 21:52:40 hno Exp $
+ * $Id: util.h,v 1.73 2006/04/23 09:02:13 serassio Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -45,20 +45,7 @@
 #endif
 
 #if !defined(SQUIDHOSTNAMELEN)
-#if HAVE_SYS_PARAM_H
-#include <sys/param.h>
-#endif
-#ifndef _SQUID_MSWIN_
-#ifndef _SQUID_NETDB_H_		/* need protection on NEXTSTEP */
-#define _SQUID_NETDB_H_
-#include <netdb.h>
-#endif
-#endif
-#if !defined(MAXHOSTNAMELEN) || (MAXHOSTNAMELEN < 128)
-#define SQUIDHOSTNAMELEN 128
-#else
-#define SQUIDHOSTNAMELEN MAXHOSTNAMELEN
-#endif
+#define SQUIDHOSTNAMELEN 256
 #endif
 
 #if defined(_SQUID_FREEBSD_)
