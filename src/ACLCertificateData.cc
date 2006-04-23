@@ -1,5 +1,5 @@
 /*
- * $Id: ACLCertificateData.cc,v 1.8 2005/05/08 06:36:45 hno Exp $
+ * $Id: ACLCertificateData.cc,v 1.9 2006/04/23 14:28:06 serassio Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -38,6 +38,7 @@
 #include "ACLCertificateData.h"
 #include "authenticate.h"
 #include "ACLChecklist.h"
+#include "wordlist.h"
 
 ACLCertificateData::ACLCertificateData(SSLGETATTRIBUTE *sslStrategy) : attribute (NULL), values (), sslAttributeCall (sslStrategy)
 {}
