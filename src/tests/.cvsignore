@@ -1,10 +1,11 @@
 .deps
 .dirstamp
 .libs
-testACLMaxUserIP
 testAuth
+testACLMaxUserIP
 testBoilerplate
 testCoss
+testHeaders
 testNull
 testStore
 testUfs
