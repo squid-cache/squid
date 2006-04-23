@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.132 2006/04/22 05:29:18 robertc Exp $
+#  $Id: Makefile.am,v 1.133 2006/04/23 09:18:30 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -183,7 +183,10 @@ EXTRA_PROGRAMS = \
 	pinger \
 	dnsserver \
 	recv-announce \
-	ufsdump 
+	ufsdump \
+	tests/testUfs \
+	tests/testCoss \
+	tests/testNull
 
 noinst_PROGRAMS = \
 	cf_gen
@@ -997,11 +1000,9 @@ TESTSOURCES= \
 check_PROGRAMS+= \
 	tests/testAuth \
 	tests/testBoilerplate \
-	tests/testCoss \
 	tests/testHeaders \
-	tests/testNull \
 	tests/testStore \
-	tests/testUfs
+	@STORE_TESTS@
 
 tests_testAuth_SOURCES= tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $(TESTSOURCES) \
 	AuthScheme.cc authenticate.cc AuthUser.cc AuthUserRequest.cc AuthConfig.cc \
