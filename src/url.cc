@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.151 2006/04/23 09:02:13 serassio Exp $
+ * $Id: url.cc,v 1.152 2006/04/23 11:10:32 robertc Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "HttpRequest.h"
+#include "wordlist.h"
 
 const char *RequestMethodStr[] =
     {

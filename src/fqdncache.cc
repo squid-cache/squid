@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.165 2005/10/23 14:10:45 serassio Exp $
+ * $Id: fqdncache.cc,v 1.166 2006/04/23 11:10:31 robertc Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "wordlist.h"
 
 #define FQDN_LOW_WATER       90
 #define FQDN_HIGH_WATER      95

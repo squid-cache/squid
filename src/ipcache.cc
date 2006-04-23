@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.252 2005/10/23 14:10:45 serassio Exp $
+ * $Id: ipcache.cc,v 1.253 2006/04/23 11:10:31 robertc Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "wordlist.h"
 
 typedef struct _ipcache_entry ipcache_entry;
 

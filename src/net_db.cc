@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.184 2006/04/18 12:34:22 robertc Exp $
+ * $Id: net_db.cc,v 1.185 2006/04/23 11:10:31 robertc Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -49,6 +49,7 @@
 #include "MemObject.h"
 #include "fde.h"
 #include "forward.h"
+#include "wordlist.h"
 
 #if USE_ICMP
 #include "StoreClient.h"

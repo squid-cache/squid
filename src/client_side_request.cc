@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.60 2006/04/02 11:58:38 serassio Exp $
+ * $Id: client_side_request.cc,v 1.61 2006/04/23 11:10:31 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -54,6 +54,7 @@
 #include "HttpReply.h"
 #include "MemObject.h"
 #include "ClientRequestContext.h"
+#include "wordlist.h"
 
 #if ICAP_CLIENT
 #include "ICAP/ICAPClientReqmodPrecache.h"

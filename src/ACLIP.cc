@@ -37,6 +37,7 @@
 #include "ACLIP.h"
 #include "ACLChecklist.h"
 #include "MemBuf.h"
+#include "wordlist.h"
 
 void *
 ACLIP::operator new (size_t byteCount)

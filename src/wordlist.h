@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLMaxUserIP.h,v 1.8 2006/04/23 11:10:31 robertc Exp $
+ * $Id: wordlist.h,v 1.1 2006/04/23 11:10:32 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -29,58 +29,29 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
- *
- * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLMAXUSERIP_H
-#define SQUID_ACLMAXUSERIP_H
-#include "ACL.h"
-#include "ACLChecklist.h"
+#ifndef SQUID_WORDLIST_H
+#define SQUID_WORDLIST_H
 
-class ACLMaxUserIP : public ACL
+#include "squid.h"
+#include "MemPool.h"
+
+class wordlist
 {
 
 public:
-    MEMPROXY_CLASS(ACLMaxUserIP);
-
-    ACLMaxUserIP(char const *);
-    ACLMaxUserIP(ACLMaxUserIP const &);
-    ~ACLMaxUserIP();
-    ACLMaxUserIP&operator=(ACLMaxUserIP const &);
-
-    virtual ACL *clone()const;
-    virtual char const *typeString() const;
-    virtual void parse();
-    virtual int match(ACLChecklist *checklist);
-    virtual wordlist *dump() const;
-    virtual bool empty () const;
-    virtual bool valid () const;
-    virtual bool requiresRequest() const {return true;}
-
-    int getMaximum() const {return maximum;}
-
-    int getStrict() const {return flags.strict;}
-
-private:
-    static Prototype RegistryProtoype;
-    static ACLMaxUserIP RegistryEntry_;
-
-    int match(auth_user_request_t *, struct IN_ADDR const &);
-    char const *class_;
-    int maximum;
-
-    struct Flags
-    {
-        Flags() : strict(0){}
-
-unsigned int strict:
-        1;
-    }
-
-    flags;
+    MEMPROXY_CLASS(wordlist);
+    char *key;
+    wordlist *next;
 };
 
-MEMPROXY_CLASS_INLINE(ACLMaxUserIP)
+MEMPROXY_CLASS_INLINE(wordlist);
 
-#endif /* SQUID_ACLMAXUSERIP_H */
+SQUIDCEXTERN const char *wordlistAdd(wordlist **, const char *);
+SQUIDCEXTERN void wordlistAddWl(wordlist **, wordlist *);
+SQUIDCEXTERN void wordlistJoin(wordlist **, wordlist **);
+SQUIDCEXTERN wordlist *wordlistDup(const wordlist *);
+SQUIDCEXTERN void wordlistDestroy(wordlist **);
+
+#endif /* SQUID_WORDLIST_H */

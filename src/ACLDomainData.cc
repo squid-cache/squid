@@ -1,5 +1,5 @@
 /*
- * $Id: ACLDomainData.cc,v 1.11 2005/05/08 22:35:03 hno Exp $
+ * $Id: ACLDomainData.cc,v 1.12 2006/04/23 11:10:31 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -38,6 +38,7 @@
 #include "ACLDomainData.h"
 #include "authenticate.h"
 #include "ACLChecklist.h"
+#include "wordlist.h"
 
 template<class T>
 inline void

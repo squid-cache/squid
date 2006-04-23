@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_negotiate.cc,v 1.6 2005/11/06 22:50:25 hno Exp $
+ * $Id: auth_negotiate.cc,v 1.7 2006/04/23 11:10:33 robertc Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -47,6 +47,7 @@
 #include "HttpRequest.h"
 /* TODO remove this include */
 #include "negotiateScheme.h"
+#include "wordlist.h"
 
 static void
 authenticateNegotiateReleaseServer(auth_user_request_t * auth_user_request);

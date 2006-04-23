@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.521 2006/04/22 06:03:42 robertc Exp $
+ * $Id: protos.h,v 1.522 2006/04/23 11:10:32 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -53,11 +53,6 @@ SQUIDCEXTERN int logTypeIsATcpHit(log_type);
  * cache_cf.c
  */
 SQUIDCEXTERN int parseConfigFile(const char *file_name);
-SQUIDCEXTERN const char *wordlistAdd(wordlist **, const char *);
-SQUIDCEXTERN void wordlistAddWl(wordlist **, wordlist *);
-SQUIDCEXTERN void wordlistJoin(wordlist **, wordlist **);
-SQUIDCEXTERN wordlist *wordlistDup(const wordlist *);
-SQUIDCEXTERN void wordlistDestroy(wordlist **);
 SQUIDCEXTERN void configFreeMemory(void);
 SQUIDCEXTERN void wordlistCat(const wordlist *, MemBuf * mb);
 SQUIDCEXTERN void self_destruct(void);

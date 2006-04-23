@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.489 2006/04/22 01:53:52 hno Exp $
+ * $Id: cache_cf.cc,v 1.490 2006/04/23 11:10:31 robertc Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -44,6 +44,7 @@
 #include "StoreFileSystem.h"
 #include "Parsing.h"
 #include "MemBuf.h"
+#include "wordlist.h"
 
 #if SQUID_SNMP
 #include "snmp.h"
@@ -147,84 +148,7 @@ static void parse_b_size_t(size_t * var);
 void
 self_destruct(void)
 {
-    shutting_down = 1;
-    fatalf("Bungled %s line %d: %s",
-           cfg_filename, config_lineno, config_input_line);
-}
-
-void
-wordlistDestroy(wordlist ** list)
-{
-    wordlist *w = NULL;
-
-    while ((w = *list) != NULL) {
-        *list = w->next;
-        safe_free(w->key);
-        memFree(w, MEM_WORDLIST);
-    }
-
-    *list = NULL;
-}
-
-const char *
-wordlistAdd(wordlist ** list, const char *key)
-{
-    while (*list)
-        list = &(*list)->next;
-
-    *list = static_cast<wordlist *>(memAllocate(MEM_WORDLIST));
-
-    (*list)->key = xstrdup(key);
-
-    (*list)->next = NULL;
-
-    return (*list)->key;
-}
-
-void
-wordlistJoin(wordlist ** list, wordlist ** wl)
-{
-    while (*list)
-        list = &(*list)->next;
-
-    *list = *wl;
-
-    *wl = NULL;
-}
-
-void
-wordlistAddWl(wordlist ** list, wordlist * wl)
-{
-    while (*list)
-        list = &(*list)->next;
-
-    for (; wl; wl = wl->next, list = &(*list)->next) {
-        *list = static_cast<wordlist *>(memAllocate(MEM_WORDLIST));
-        (*list)->key = xstrdup(wl->key);
-        (*list)->next = NULL;
-    }
-}
-
-void
-wordlistCat(const wordlist * w, MemBuf * mb)
-{
-    while (NULL != w) {
-        mb->Printf("%s\n", w->key);
-        w = w->next;
-    }
-}
-
-wordlist *
-wordlistDup(const wordlist * w)
-{
-    wordlist *D = NULL;
-
-    while (NULL != w) {
-        wordlistAdd(&D, w->key);
-        w = w->next;
-    }
-
-    return D;
+    ConfigParser::Destruct();
 }
 
 /*
@@ -3111,76 +3035,7 @@ requirePathnameExists(const char *name, const char *path)
 char *
 strtokFile(void)
 {
-    static int fromFile = 0;
-    static FILE *wordFile = NULL;
-
-    char *t, *fn;
-    LOCAL_ARRAY(char, buf, 256);
-
-strtok_again:
-
-    if (!fromFile) {
-        t = (strtok(NULL, w_space));
-
-        if (!t || *t == '#') {
-            return NULL;
-        } else if (*t == '\"' || *t == '\'') {
-            /* quote found, start reading from file */
-            fn = ++t;
-
-            while (*t && *t != '\"' && *t != '\'')
-                t++;
-
-            *t = '\0';
-
-            if ((wordFile = fopen(fn, "r")) == NULL) {
-                debug(28, 0) ("strtokFile: %s not found\n", fn);
-                return (NULL);
-            }
-
-#ifdef _SQUID_WIN32_
-            setmode(fileno(wordFile), O_TEXT);
-
-#endif
-
-            fromFile = 1;
-        } else {
-            return t;
-        }
-    }
-
-    /* fromFile */
-    if (fgets(buf, 256, wordFile) == NULL) {
-        /* stop reading from file */
-        fclose(wordFile);
-        wordFile = NULL;
-        fromFile = 0;
-        goto strtok_again;
-    } else {
-        char *t2, *t3;
-        t = buf;
-        /* skip leading and trailing white space */
-        t += strspn(buf, w_space);
-        t2 = t + strcspn(t, w_space);
-        t3 = t2 + strspn(t2, w_space);
-
-        while (*t3 && *t3 != '#') {
-            t2 = t3 + strcspn(t3, w_space);
-            t3 = t2 + strspn(t2, w_space);
-        }
-
-        *t2 = '\0';
-        /* skip comments */
-
-        if (*t == '#')
-            goto strtok_again;
-
-        /* skip blank lines */
-        if (!*t)
-            goto strtok_again;
-
-        return t;
-    }
+    return ConfigParser::strtokFile();
 }
 
 #include "AccessLogEntry.h"

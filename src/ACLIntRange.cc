@@ -1,5 +1,5 @@
 /*
- * $Id: ACLIntRange.cc,v 1.6 2005/05/08 23:31:06 hno Exp $
+ * $Id: ACLIntRange.cc,v 1.7 2006/04/23 11:10:31 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Robert Collins
@@ -36,6 +36,7 @@
 
 #include "squid.h"
 #include "ACLIntRange.h"
+#include "wordlist.h"
 
 /* explicit instantiation required for some systems */
 

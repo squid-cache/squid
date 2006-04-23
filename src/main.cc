@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.416 2006/01/03 17:22:31 wessels Exp $
+ * $Id: main.cc,v 1.417 2006/04/23 11:10:31 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -1141,7 +1141,9 @@ main(int argc, char **argv)
 
         eventRun();
 
-        /* Attempt any pending storedir IO */
+        /* Attempt any pending storedir IO
+        * Note: the storedir is roughly a reactor of its own.
+        */
         Store::Root().callback();
 
         comm_calliocallback();

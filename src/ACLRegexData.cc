@@ -1,5 +1,5 @@
 /*
- * $Id: ACLRegexData.cc,v 1.8 2005/05/08 06:36:45 hno Exp $
+ * $Id: ACLRegexData.cc,v 1.9 2006/04/23 11:10:31 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -39,6 +39,8 @@
 #include "authenticate.h"
 #include "ACLChecklist.h"
 #include "ACL.h"
+#include "wordlist.h"
+#include "ConfigParser.h"
 
 static void aclDestroyRegexList(relist * data);
 void
@@ -125,7 +127,7 @@ aclParseRegexList(relist **curlist)
     for (Tail = (relist **)curlist; *Tail; Tail = &((*Tail)->next))
 
         ;
-    while ((t = strtokFile())) {
+    while ((t = ConfigParser::strtokFile())) {
         if (strcmp(t, "-i") == 0) {
             flags |= REG_ICASE;
             continue;

@@ -1,5 +1,5 @@
 /*
- * $Id: ACLStringData.cc,v 1.7 2005/05/08 22:35:03 hno Exp $
+ * $Id: ACLStringData.cc,v 1.8 2006/04/23 11:10:31 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -37,6 +37,7 @@
 #include "squid.h"
 #include "ACLStringData.h"
 #include "ACLChecklist.h"
+#include "wordlist.h"
 
 
 ACLStringData::ACLStringData() : values (NULL)

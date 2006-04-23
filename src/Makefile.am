@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.133 2006/04/23 09:18:30 serassio Exp $
+#  $Id: Makefile.am,v 1.134 2006/04/23 11:10:31 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -347,6 +347,7 @@ squid_SOURCES = \
 	access_log.cc \
 	AccessLogEntry.h \
 	acl.cc \
+	acl_noncore.cc \
 	ACL.h \
 	ACLChecklist.cc \
 	ACLChecklist.h \
@@ -386,6 +387,7 @@ squid_SOURCES = \
 	comm_kqueue.cc \
 	CommRead.h \
 	ConfigOption.cc \
+	ConfigParser.cc \
 	ConfigParser.h \
 	ConnectionDetail.h \
 	debug.cc \
@@ -545,6 +547,8 @@ squid_SOURCES = \
 	wais.cc \
 	wccp.cc \
 	whois.cc \
+	wordlist.cc \
+	wordlist.h \
 	$(WIN32_SOURCE)
 
 noinst_HEADERS = ACLChecklist.cci \
@@ -999,6 +1003,7 @@ TESTSOURCES= \
 
 check_PROGRAMS+= \
 	tests/testAuth \
+	tests/testACLMaxUserIP \
 	tests/testBoilerplate \
 	tests/testHeaders \
 	tests/testStore \
@@ -1006,6 +1011,7 @@ check_PROGRAMS+= \
 
 tests_testAuth_SOURCES= tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $(TESTSOURCES) \
 	AuthScheme.cc authenticate.cc AuthUser.cc AuthUserRequest.cc AuthConfig.cc \
+	ConfigParser.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
 	tests/stub_helper.cc cbdata.cc String.cc tests/stub_cache_manager.cc \
 	tests/stub_store.cc HttpHeaderTools.cc HttpHeader.cc acl.cc event.cc mem.cc \
@@ -1019,10 +1025,11 @@ tests_testAuth_SOURCES= tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $(
 	tests/stub_http.cc \
 	HttpMsg.cc \
 	tests/stub_mime.cc \
-	tests/stub_access_log.cc
+	tests/stub_access_log.cc \
+	wordlist.cc
 ##	acl.cc cache_cf.cc tools.cc \
 ##	helper.cc String.cc cbdata.cc HttpHeaderTools.cc store.cc cache_manager.cc \
-##	HttpHeader.cc url.cc event.cc mem.cc HttpRequest.cc Packer.cc access_log.cc \
+##	HttpHeader.cc url.cc mem.cc HttpRequest.cc Packer.cc access_log.cc \
 ##	MemBuf.cc StatHist.cc logfile.cc
 
 tests_testAuth_LDADD= \
@@ -1034,6 +1041,68 @@ tests_testAuth_LDFLAGS = $(LIBADD_DL)
 tests_testAuth_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@AUTH_LINKOBJS@ \
 	@AUTH_OBJS@ \
+	@SQUID_CPPUNIT_LA@
+
+## Tests for the ACLMaxUserIP class
+## acl needs wordlist. wordlist needs MemBug
+## MemBuf needs mem, MemBuf needs event,
+## event needs cbdata.
+## ACLMaxUserUP needs authenticate.cc
+## authenticate.cc needs AuthUser, AuthScheme, AuthUserRequest, AuthConfig
+## ACLMaxUserIP needs ACLChecklist
+## AuthUser request needs HttpHeader, which brings in 
+##	ETag.cc \
+##	HttpHeader.cc \
+##	HttpHeaderTools.cc \
+##	HttpHdrContRange.cc \
+##	HttpHdrCc.cc \
+##	HttpHdrRange.cc \
+##	HttpHdrSc.cc \
+##	HttpHdrScTarget.cc \
+##	Packer.cc \
+##	StatHist.cc \
+##	String.cc \
+tests_testACLMaxUserIP_SOURCES= \
+	acl.cc \
+	ACLChecklist.cc \
+	ACLMaxUserIP.cc \
+	ACLProxyAuth.cc \
+	ACLRegexData.cc \
+	ACLUserData.cc \
+	authenticate.cc \
+	AuthConfig.cc \
+	AuthUser.cc \
+	AuthUserRequest.cc \
+	AuthScheme.cc \
+	cbdata.cc \
+	ConfigParser.cc \
+	event.cc \
+	ETag.cc \
+	HttpHeader.cc \
+	HttpHeaderTools.cc \
+	HttpHdrContRange.cc \
+	HttpHdrRange.cc \
+	HttpHdrCc.cc \
+	HttpHdrSc.cc \
+	HttpHdrScTarget.cc \
+	Packer.cc \
+	StatHist.cc \
+	String.cc \
+	tests/stub_cache_manager.cc \
+	tests/stub_store.cc \
+	tests/testACLMaxUserIP.cc \
+	tests/testACLMaxUserIP.h \
+	tests/testMain.cc \
+	mem.cc \
+	MemBuf.cc \
+	wordlist.cc \
+	$(TESTSOURCES)
+tests_testACLMaxUserIP_LDADD= \
+	-L../lib -lmiscutil \
+	@SQUID_CPPUNIT_LA@ \
+	@SSLLIB@
+tests_testACLMaxUserIP_LDFLAGS = $(LIBADD_DL)
+tests_testACLMaxUserIP_DEPENDENCIES = \
 	@SQUID_CPPUNIT_LA@
 
 ## a demonstration test that does nothing but shows the salient points
@@ -1055,10 +1124,12 @@ tests_testBoilerplate_DEPENDENCIES = \
 ## RBC 20060422.
 HEADERS_TO_TEST = \
 	tests/testHeader_ACL.cc \
+	tests/testHeader_ConfigParser.cc \
 	tests/testHeader_dlink.cc \
 	tests/testHeader_HttpHeader.cc \
 	tests/testHeader_HttpHeaderRange.cc \
-	tests/testHeader_HttpReply.cc
+	tests/testHeader_HttpReply.cc \
+	tests/testHeader_wordlist.cc
 tests_testHeaders_SOURCES= tests/testMain.cc $(HEADERS_TO_TEST)
 tests_testHeaders_LDADD= \
 	@SQUID_CPPUNIT_LA@ \
@@ -1073,6 +1144,7 @@ STORE_TEST_SOURCES=\
 	$(TESTSOURCES) \
 	$(DELAY_POOL_SOURCE) \
 	CacheDigest.cc \
+	ConfigParser.cc \
 	HttpMsg.cc \
 	store_dir.cc \
 	store.cc \
@@ -1092,10 +1164,12 @@ STORE_TEST_SOURCES=\
 	tests/stub_store_client.cc \
 	tests/stub_tools.cc \
 	HttpHeaderTools.cc HttpHeader.cc acl.cc event.cc mem.cc \
+	acl_noncore.cc \
 	MemBuf.cc HttpHdrContRange.cc Packer.cc ACLChecklist.cc HttpHdrCc.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc url.cc ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc \
 	StatHist.cc HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
-	tests/stub_HttpRequest.cc tests/stub_access_log.cc
+	tests/stub_HttpRequest.cc tests/stub_access_log.cc \
+	wordlist.cc
 
 ## why so many sources? well httpHeaderTools requites ACLChecklist & friends.
 ## first line - what we are testing.
@@ -1122,7 +1196,7 @@ tests_testStore_LDFLAGS = $(LIBADD_DL)
 tests_testStore_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@SQUID_CPPUNIT_LA@
 
-SWAP_TEST_SOURCES=\
+SWAP_TEST_SOURCES = \
 	tests/stub_store_rebuild.cc \
 	tests/stub_internal.cc \
 	fd.cc \

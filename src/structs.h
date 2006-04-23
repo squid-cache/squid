@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.538 2006/04/22 05:29:20 robertc Exp $
+ * $Id: structs.h,v 1.539 2006/04/23 11:10:32 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -108,12 +108,6 @@ struct _acl_size_t
     acl_size_t *next;
     acl_list *aclList;
     size_t size;
-};
-
-struct _wordlist
-{
-    char *key;
-    wordlist *next;
 };
 
 struct _ushortlist

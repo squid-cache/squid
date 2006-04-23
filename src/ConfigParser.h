@@ -1,6 +1,6 @@
 
 /*
- * $Id: ConfigParser.h,v 1.2 2005/11/21 23:10:22 wessels Exp $
+ * $Id: ConfigParser.h,v 1.3 2006/04/23 11:10:31 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,18 +33,22 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_CONFIGPARSER_H_
-#define SQUID_CONFIGPARSER_H_
+#ifndef SQUID_CONFIGPARSER_H
+#define SQUID_CONFIGPARSER_H
+
+#include "squid.h"
 
 class ConfigParser
 {
 
 public:
+    static void Destruct();
     static void ParseUShort(u_short *var);
     static void ParseBool(bool *var);
     static void ParseString(char **var);
     static void ParseString(String *var);
     static void ParseWordList(wordlist **list);
+    static char * strtokFile();
 };
 
-#endif /* SQUID_CONFIGPARSER_H_ */
+#endif /* SQUID_CONFIGPARSER_H */

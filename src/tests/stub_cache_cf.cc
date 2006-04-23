@@ -1,5 +1,5 @@
 /*
- * $Id: stub_cache_cf.cc,v 1.2 2005/12/26 10:16:05 serassio Exp $
+ * $Id: stub_cache_cf.cc,v 1.3 2006/04/23 11:10:35 robertc Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Robert Collins
@@ -34,6 +34,7 @@
 
 #include "squid.h"
 #include "ConfigParser.h"
+#include "wordlist.h"
 
 void
 self_destruct(void)
@@ -93,27 +94,6 @@ void
 parse_time_t(time_t * var)
 {
     fatal("not implemented 6");
-}
-
-const char *
-wordlistAdd(wordlist ** list, const char *key)
-{
-    while (*list)
-        list = &(*list)->next;
-
-    *list = static_cast<wordlist *>(memAllocate(MEM_WORDLIST));
-
-    (*list)->key = xstrdup(key);
-
-    (*list)->next = NULL;
-
-    return (*list)->key;
-}
-
-void
-wordlistDestroy(wordlist ** list)
-{
-    fatal("not implemented 8");
 }
 
 char *
