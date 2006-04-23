@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.150 2006/01/19 18:50:36 wessels Exp $
+ * $Id: url.cc,v 1.151 2006/04/23 09:02:13 serassio Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -406,7 +406,7 @@ urlParse(method_t method, char *url, HttpRequest *request)
 #endif
 
     if (Config.appendDomain && !strchr(host, '.'))
-        strncat(host, Config.appendDomain, SQUIDHOSTNAMELEN);
+        strncat(host, Config.appendDomain, SQUIDHOSTNAMELEN - strlen(host) - 1);
 
     if (port < 1 || port > 65535) {
         debug(23, 3) ("urlParse: Invalid port '%d'\n", port);
