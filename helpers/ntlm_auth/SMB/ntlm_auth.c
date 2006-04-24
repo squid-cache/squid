@@ -24,7 +24,6 @@
 #include "smbval/rfcnb-error.h"
 
 #include <signal.h>
-#include <unistd.h>
 
 /* these are part of rfcnb-priv.h and smblib-priv.h */
 extern int SMB_Get_Error_Msg(int msg, char *msgbuf, int len);
