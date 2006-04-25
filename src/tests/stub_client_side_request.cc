@@ -1,7 +1,6 @@
 /*
- * $Id: stub_store.cc,v 1.2 2006/04/25 07:13:34 robertc Exp $
+ * $Id: stub_client_side_request.cc,v 1.1 2006/04/25 07:13:34 robertc Exp $
  *
- * DEBUG: section 20    Storage Manager
  * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -32,46 +31,10 @@
  *
  */
 
-#include "squid.h"
+#include "client_side_request.h"
 #include "Store.h"
 
-StorePointer Store::CurrentRoot = NULL;
-
-extern "C" void
-#if STDC_HEADERS
-    storeAppendPrintf(StoreEntry * e, const char *fmt,...)
-#else
-    storeAppendPrintf(va_alist)
-    va_dcl
-#endif
-{
-    fatal("Not implemented");
-}
-
-extern "C" void
-    storeAppendVPrintf(StoreEntry * e, const char *fmt, va_list vargs)
-{
-    fatal("Not implemented");
-}
-
-extern "C" void
-    storeBuffer(StoreEntry * e)
-{
-    fatal("Not implemented");
-}
-
-extern "C" void
-    storeBufferFlush(StoreEntry * e)
-{
-    fatal("Not implemented");
-}
-
-extern "C" void
-    storeAppend(StoreEntry * e, const char *buf, int len)
-{
-    fatal("Not implemented");
-}
-
 #ifndef _USE_INLINE_
-#include "Store.cci"
+#include "client_side_request.cci"
 #endif
+

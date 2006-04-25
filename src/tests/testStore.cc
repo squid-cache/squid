@@ -4,6 +4,10 @@
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testStore );
 
+/* subclass of Store to allow testing of methods without having all the
+ * other components live
+ */
+
 class TestStore : public Store
 {
 
