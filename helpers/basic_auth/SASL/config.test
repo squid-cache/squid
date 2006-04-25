@@ -2,7 +2,4 @@
 if [ -f /usr/include/sasl.h -o -f /usr/include/sasl/sasl.h ]; then
 	exit 0
 fi
-if [ -f /usr/local/include/sasl.h -o -f /usr/local/include/sasl/sasl.h ]; then
-	exit 0
-fi
 exit 1
