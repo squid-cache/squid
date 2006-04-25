@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.68 2004/12/23 22:17:22 hno Exp $
+ * $Id: refresh.cc,v 1.69 2006/04/24 22:30:52 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -58,16 +58,10 @@ typedef enum {
 
 typedef struct
 {
-
-unsigned int expires:
-    1;
-
-unsigned int min:
-    1;
-
-unsigned int lmfactor:
-    1;
-    unsigned int max;
+    bool expires;
+    bool min;
+    bool lmfactor;
+    bool max;
 }
 
 stale_flags;
@@ -169,7 +163,7 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, time_t age, const 
      */
 
     if (entry->expires > -1) {
-        sf->expires = 1;
+        sf->expires = true;
 
         if (entry->expires > check_time) {
             debug(22, 3) ("FRESH: expires %d >= check_time %d \n",
@@ -190,7 +184,7 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, time_t age, const 
 
     if (age > R->max) {
         debug(22, 3) ("STALE: age %d > max %d \n", (int) age, (int) R->max);
-        sf->max = 1;
+        sf->max = true;
         return (age - R->max);
     }
 
@@ -203,7 +197,7 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, time_t age, const 
          * stale according to the last-modified factor algorithm.
          */
         time_t stale_age = static_cast<time_t>((entry->timestamp - entry->lastmod) * R->pct);
-        sf->lmfactor = 1;
+        sf->lmfactor = true;
 
         if (age >= stale_age) {
             debug(22, 3) ("STALE: age %d > stale_age %d\n",
@@ -222,7 +216,7 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, time_t age, const 
      */
     if (age <= R->min) {
         debug(22, 3) ("FRESH: age %d <= min %d\n", (int) age, (int) R->min);
-        sf->min = 1;
+        sf->min = true;
         return -1;
     }
 
