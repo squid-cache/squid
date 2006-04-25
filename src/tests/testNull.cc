@@ -12,6 +12,8 @@
 #include "HttpReply.h"
 #include "StoreFileSystem.h"
 
+#define TESTDIR "testNull__testNullSearch"
+
 CPPUNIT_TEST_SUITE_REGISTRATION( testNull );
 
 typedef RefCount<NullSwapDir> SwapDirPointer;
@@ -81,7 +83,7 @@ testNull::testNullCreate()
 
     commonInit();
 
-    char *path=xstrdup("testNull::testNullSearch");
+    char *path=xstrdup(TESTDIR);
     char *config_line=xstrdup("foo");
     strtok(config_line, w_space);
     aStore->parse(0, path);
@@ -126,7 +128,7 @@ testNull::testNullSearch()
 
     commonInit();
 
-    char *path=xstrdup("testNull::testNullSearch");
+    char *path=xstrdup(TESTDIR);
     char *config_line=xstrdup("foo");
     strtok(config_line, w_space);
     aStore->parse(0, path);

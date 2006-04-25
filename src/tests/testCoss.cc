@@ -12,6 +12,8 @@
 #include "HttpReply.h"
 #include "StoreFileSystem.h"
 
+#define TESTDIR "testCoss__testCossSearch"
+
 CPPUNIT_TEST_SUITE_REGISTRATION( testCoss );
 
 typedef RefCount<CossSwapDir> SwapDirPointer;
@@ -74,7 +76,7 @@ testCoss::commonInit()
 void
 testCoss::testCossCreate()
 {
-    if (0 > system ("rm -rf testCoss::testCossSearch"))
+    if (0 > system ("rm -rf " TESTDIR))
         throw std::runtime_error("Failed to clean test work directory");
 
     StorePointer aRoot (new StoreController);
@@ -87,7 +89,7 @@ testCoss::testCossCreate()
 
     commonInit();
 
-    char *path=xstrdup("testCoss::testCossSearch");
+    char *path=xstrdup(TESTDIR);
 
     char *config_line=xstrdup("foo 100 max-size=102400 block-size=512 IOEngine=Blocking");
 
@@ -104,7 +106,7 @@ testCoss::testCossCreate()
 
     struct stat sb;
 
-    CPPUNIT_ASSERT(::stat("testCoss::testCossSearch", &sb) == 0);
+    CPPUNIT_ASSERT(::stat(TESTDIR, &sb) == 0);
 
     /* TODO: check the size */
 
@@ -116,7 +118,7 @@ testCoss::testCossCreate()
 
     //    safe_free(Config.replPolicy->type);
     //    delete Config.replPolicy;
-    if (0 > system ("rm -rf testCoss::testCossSearch"))
+    if (0 > system ("rm -rf " TESTDIR))
         throw std::runtime_error("Failed to clean test work directory");
 }
 
@@ -140,7 +142,7 @@ testCoss::testCossSearch()
      * check the entries we find are what we want
      */
 
-    if (0 > system ("rm -rf testCoss::testCossSearch"))
+    if (0 > system ("rm -rf " TESTDIR))
         throw std::runtime_error("Failed to clean test work directory");
 
     StorePointer aRoot (new StoreController);
@@ -153,7 +155,7 @@ testCoss::testCossSearch()
 
     commonInit();
 
-    char *path=xstrdup("testCoss::testCossSearch");
+    char *path=xstrdup(TESTDIR);
 
     char *config_line=xstrdup("foo 100 max-size=102400 block-size=512 IOEngine=Blocking");
 
@@ -260,6 +262,6 @@ testCoss::testCossSearch()
     //TODO: do this once, or each time.    safe_free(Config.replPolicy->type);
     //    delete Config.replPolicy;
 
-    if (0 > system ("rm -rf testCoss::testCossSearch"))
+    if (0 > system ("rm -rf " TESTDIR))
         throw std::runtime_error("Failed to clean test work directory");
 }
