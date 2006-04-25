@@ -1,6 +1,6 @@
 
 /*
- * $Id: ConfigParser.h,v 1.3 2006/04/23 11:10:31 robertc Exp $
+ * $Id: ConfigParser.h,v 1.4 2006/04/25 12:00:29 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,11 +38,17 @@
 
 #include "squid.h"
 
+/**
+ * A configuration file Parser. Instances of this class track
+ * parsing state and perform tokenisation. Syntax is currently
+ * taken care of outside this class.
+ */
+
 class ConfigParser
 {
 
 public:
-    static void Destruct();
+    void destruct();
     static void ParseUShort(u_short *var);
     static void ParseBool(bool *var);
     static void ParseString(char **var);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayConfig.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
+ * $Id: DelayConfig.h,v 1.3 2006/04/25 12:00:29 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,6 +36,8 @@
 #ifndef SQUID_DELAYCONFIG_H
 #define SQUID_DELAYCONFIG_H
 
+class ConfigParser;
+
 class DelayConfig
 {
 
@@ -45,8 +47,9 @@ public:
     void parsePoolCount();
     void parsePoolClass();
     void parsePoolRates();
-    void parsePoolAccess();
+    void parsePoolAccess(ConfigParser &parser);
     unsigned short initial;
+
 };
 
 #endif /* SQUID_DELAYCONFIG_H */

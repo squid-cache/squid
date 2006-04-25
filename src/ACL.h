@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACL.h,v 1.15 2006/04/22 05:29:16 robertc Exp $
+ * $Id: ACL.h,v 1.16 2006/04/25 12:00:29 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -42,12 +42,14 @@
  */
 #include "typedefs.h"
 
+class ConfigParser;
+
 /* acl.c */
 SQUIDCEXTERN void aclDestroyAccessList(acl_access **list);
 SQUIDCEXTERN void aclDestroyAcls(ACL **);
 SQUIDCEXTERN void aclDestroyAclList(acl_list **);
-SQUIDCEXTERN void aclParseAccessLine(acl_access **);
-SQUIDCEXTERN void aclParseAclList(acl_list **);
+SQUIDCEXTERN void aclParseAccessLine(ConfigParser &parser, acl_access **);
+SQUIDCEXTERN void aclParseAclList(ConfigParser &parser, acl_list **);
 SQUIDCEXTERN int aclIsProxyAuth(const char *name);
 SQUIDCEXTERN err_type aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name);
 
@@ -68,7 +70,7 @@ public:
     void operator delete(void *);
 
     static ACL *Factory (char const *);
-    static void ParseAclLine(ACL ** head);
+    static void ParseAclLine(ConfigParser &parser, ACL ** head);
     static void Initialize();
     static ACL* FindByName(const char *name);
 

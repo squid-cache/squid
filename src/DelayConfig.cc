@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayConfig.cc,v 1.6 2003/05/20 12:17:38 robertc Exp $
+ * $Id: DelayConfig.cc,v 1.7 2006/04/25 12:00:29 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -103,7 +103,7 @@ DelayConfig::parsePoolRates()
 }
 
 void
-DelayConfig::parsePoolAccess()
+DelayConfig::parsePoolAccess(ConfigParser &parser)
 {
     ushort pool;
 
@@ -115,7 +115,7 @@ DelayConfig::parsePoolAccess()
     }
 
     --pool;
-    aclParseAccessLine(&DelayPools::delay_data[pool].access);
+    aclParseAccessLine(parser, &DelayPools::delay_data[pool].access);
 }
 
 void

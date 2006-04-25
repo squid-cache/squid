@@ -1,5 +1,5 @@
 /*
- * $Id: acl_noncore.cc,v 1.1 2006/04/23 11:10:31 robertc Exp $
+ * $Id: acl_noncore.cc,v 1.2 2006/04/25 12:00:29 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -41,8 +41,8 @@
 #include "squid.h"
 #include "ACL.h"
 #include "ACLChecklist.h"
-#include "HttpRequest.h"
 #include "ConfigParser.h"
+#include "HttpRequest.h"
 
 
 /* does name lookup, returns page_id */
@@ -164,7 +164,7 @@ aclParseDenyInfoLine(acl_deny_info_list ** head)
 }
 
 void
-aclParseAccessLine(acl_access ** head)
+aclParseAccessLine(ConfigParser &parser, acl_access ** head)
 {
     char *t = NULL;
     acl_access *A = NULL;
@@ -194,7 +194,7 @@ aclParseAccessLine(acl_access ** head)
         return;
     }
 
-    aclParseAclList(&A->aclList);
+    aclParseAclList(parser, &A->aclList);
 
     if (A->aclList == NULL) {
         debug(28, 0) ("%s line %d: %s\n",
@@ -216,7 +216,7 @@ aclParseAccessLine(acl_access ** head)
 }
 
 void
-aclParseAclList(acl_list ** head)
+aclParseAclList(ConfigParser &parser, acl_list ** head)
 {
     acl_list **Tail = head;	/* sane name in the use below */
     ACL *a = NULL;
@@ -239,7 +239,7 @@ aclParseAclList(acl_list ** head)
         if (a == NULL) {
             debug(28, 0) ("aclParseAccessLine: ACL name '%s' not found.\n", t);
             delete L;
-            ConfigParser::Destruct();
+            parser.destruct();
             continue;
         }
 

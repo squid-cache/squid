@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.490 2006/04/23 11:10:31 robertc Exp $
+ * $Id: cache_cf.cc,v 1.491 2006/04/25 12:00:29 robertc Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -145,10 +145,13 @@ static int check_null_https_port_list(const https_port_list *);
 #endif /* USE_SSL */
 static void parse_b_size_t(size_t * var);
 
+/* a parser for legacy code that uses the global approach */
+static ConfigParser LegacyParser = ConfigParser();
+
 void
 self_destruct(void)
 {
-    ConfigParser::Destruct();
+    LegacyParser.destruct();
 }
 
 /*
@@ -778,7 +781,7 @@ dump_acl(StoreEntry * entry, const char *name, ACL * ae)
 static void
 parse_acl(ACL ** ae)
 {
-    ACL::ParseAclLine(ae);
+    ACL::ParseAclLine(LegacyParser, ae);
 }
 
 static void
@@ -816,7 +819,7 @@ dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
 static void
 parse_acl_access(acl_access ** head)
 {
-    aclParseAccessLine(head);
+    aclParseAccessLine(LegacyParser, head);
 }
 
 static void
@@ -893,7 +896,7 @@ parse_acl_address(acl_address ** head)
     CBDATA_INIT_TYPE_FREECB(acl_address, freed_acl_address);
     l = cbdataAlloc(acl_address);
     parse_address(&l->addr);
-    aclParseAclList(&l->aclList);
+    aclParseAclList(LegacyParser, &l->aclList);
 
     while (*tail)
         tail = &(*tail)->next;
@@ -961,7 +964,7 @@ parse_acl_tos(acl_tos ** head)
 
     l->tos = tos;
 
-    aclParseAclList(&l->aclList);
+    aclParseAclList(LegacyParser, &l->aclList);
 
     while (*tail)
         tail = &(*tail)->next;
@@ -1018,7 +1021,7 @@ parse_acl_b_size_t(acl_size_t ** head)
 
     parse_b_size_t(&l->size);
 
-    aclParseAclList(&l->aclList);
+    aclParseAclList(LegacyParser, &l->aclList);
 
     while (*tail)
         tail = &(*tail)->next;
@@ -1084,7 +1087,7 @@ parse_delay_pool_rates(DelayConfig * cfg)
 static void
 parse_delay_pool_access(DelayConfig * cfg)
 {
-    cfg->parsePoolAccess();
+    cfg->parsePoolAccess(LegacyParser);
 }
 
 #endif
@@ -1800,7 +1803,7 @@ parse_peer_access(void)
         return;
     }
 
-    aclParseAccessLine(&p->access);
+    aclParseAccessLine(LegacyParser, &p->access);
 }
 
 static void
@@ -3117,7 +3120,7 @@ parse_access_log(customlog ** logs)
     }
 
 done:
-    aclParseAclList(&cl->aclList);
+    aclParseAclList(LegacyParser, &cl->aclList);
 
     while (*logs)
         logs = &(*logs)->next;
