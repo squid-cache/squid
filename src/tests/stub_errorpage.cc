@@ -1,5 +1,5 @@
 /*
- * $Id: stub_errorpage.cc,v 1.1 2004/08/30 03:29:02 robertc Exp $
+ * $Id: stub_errorpage.cc,v 1.2 2006/04/25 07:13:34 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Robert Collins
@@ -39,6 +39,12 @@ errorReservePageId(const char *page_name)
 {
     fatal("Not implemented");
     return err_type();
+}
+
+void
+errorAppendEntry(StoreEntry * entry, ErrorState * err)
+{
+    fatal("Not implemented");
 }
 
 /*

@@ -1,5 +1,5 @@
 /*
- * $Id: stub_store_swapout.cc,v 1.1 2005/01/03 16:08:27 robertc Exp $
+ * $Id: stub_store_swapout.cc,v 1.2 2006/04/25 07:13:34 robertc Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins
@@ -45,6 +45,12 @@ storeSwapOutAble(const StoreEntry * e)
 {
     fatal ("Not implemented");
     return -1;
+}
+
+void
+storeSwapOut(StoreEntry * e)
+{
+    fatal ("Not implemented");
 }
 
 /* wrong stub file... */

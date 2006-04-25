@@ -1,5 +1,5 @@
 /*
- * $Id: stub_MemObject.cc,v 1.3 2006/04/18 12:46:13 robertc Exp $
+ * $Id: stub_MemObject.cc,v 1.4 2006/04/25 07:13:33 robertc Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins
@@ -148,6 +148,19 @@ MemObject::write(StoreIOBuffer writeBuffer, STMCB *callback, void *callbackData)
 
 void
 MemObject::replaceHttpReply(HttpReply *newrep)
+{
+    fatal ("Not implemented");
+}
+
+off_t
+MemObject::lowestMemReaderOffset() const
+{
+    fatal ("Not implemented");
+    return 0;
+}
+
+void
+MemObject::kickReads()
 {
     fatal ("Not implemented");
 }

@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.135 2006/04/24 21:45:24 serassio Exp $
+#  $Id: Makefile.am,v 1.136 2006/04/25 07:13:33 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -1086,10 +1086,15 @@ tests_testACLMaxUserIP_SOURCES= \
 	HttpHdrCc.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
+	mem_node.cc \
 	Packer.cc \
 	StatHist.cc \
+	stmem.cc \
 	String.cc \
 	tests/stub_cache_manager.cc \
+	tests/stub_comm.cc \
+	tests/stub_DelayId.cc \
+	tests/stub_MemObject.cc \
 	tests/stub_store.cc \
 	tests/testACLMaxUserIP.cc \
 	tests/testACLMaxUserIP.h \
@@ -1127,6 +1132,7 @@ tests_testBoilerplate_DEPENDENCIES = \
 HEADERS_TO_TEST = \
 	tests/testHeader_ACL.cc \
 	tests/testHeader_ConfigParser.cc \
+	tests/testHeader_client_side_request.cc \
 	tests/testHeader_dlink.cc \
 	tests/testHeader_HttpHeader.cc \
 	tests/testHeader_HttpHeaderRange.cc \
@@ -1142,6 +1148,7 @@ tests_testHeaders_DEPENDENCIES = \
 
 
 # TODO:mime.cc drags in HttpReply.cc
+# delay pools need client_side_request.cc
 STORE_TEST_SOURCES=\
 	$(TESTSOURCES) \
 	$(DELAY_POOL_SOURCE) \
@@ -1159,35 +1166,38 @@ STORE_TEST_SOURCES=\
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
 	tests/stub_helper.cc cbdata.cc String.cc tests/stub_cache_manager.cc \
 	tests/stub_comm.cc \
+	tests/stub_client_side_request.cc \
 	tests/stub_http.cc \
 	mem_node.cc \
 	stmem.cc \
 	tests/stub_mime.cc \
-	tests/stub_store_client.cc \
-	tests/stub_tools.cc \
 	HttpHeaderTools.cc HttpHeader.cc acl.cc event.cc mem.cc \
 	acl_noncore.cc \
 	MemBuf.cc HttpHdrContRange.cc Packer.cc ACLChecklist.cc HttpHdrCc.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc url.cc ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc \
 	StatHist.cc HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
 	tests/stub_HttpRequest.cc tests/stub_access_log.cc \
+	refresh.cc \
+	tests/stub_store_client.cc \
+	tests/stub_tools.cc \
 	wordlist.cc
 
 ## why so many sources? well httpHeaderTools requites ACLChecklist & friends.
 ## first line - what we are testing.
-tests_testStore_SOURCES= tests/testStore.cc \
-	tests/testStoreController.cc \
-	tests/testStoreHashIndex.cc \
+tests_testStore_SOURCES= \
+	tests/stub_store_swapout.cc \
 	tests/testMain.cc \
+	tests/stub_MemObject.cc \
+	tests/testStore.cc \
 	tests/testStore.h \
+	tests/testStoreController.cc \
 	tests/testStoreController.h \
+	tests/testStoreHashIndex.cc \
 	tests/testStoreHashIndex.h \
 	tests/TestSwapDir.cc \
 	tests/TestSwapDir.h \
-	tests/stub_store_swapout.cc \
 	tests/stub_fd.cc \
 	tests/stub_HttpReply.cc \
-	tests/stub_MemObject.cc \
 	$(STORE_TEST_SOURCES)
 
 tests_testStore_LDADD= \

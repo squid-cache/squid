@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.24 2006/03/02 22:47:07 wessels Exp $
+ * $Id: client_side_request.h,v 1.25 2006/04/25 07:13:33 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -31,13 +31,16 @@
  *
  */
 
+
 #ifndef SQUID_CLIENTSIDEREQUEST_H
 #define SQUID_CLIENTSIDEREQUEST_H
 
+#include "squid.h"
 #include "HttpHeader.h"
 #include "clientStream.h"
 #include "client_side.h"
 #include "AccessLogEntry.h"
+#include "dlink.h"
 
 #if ICAP_CLIENT
 #include "ICAP/ICAPServiceRep.h"
