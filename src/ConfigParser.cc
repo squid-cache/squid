@@ -1,6 +1,6 @@
 
 /*
- * $Id: ConfigParser.cc,v 1.1 2006/04/23 11:10:31 robertc Exp $
+ * $Id: ConfigParser.cc,v 1.2 2006/04/25 12:00:29 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,7 +37,7 @@
 #include "globals.h"
 
 void
-ConfigParser::Destruct()
+ConfigParser::destruct()
 {
     shutting_down = 1;
     fatalf("Bungled %s line %d: %s",

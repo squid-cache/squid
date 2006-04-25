@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.318 2006/04/23 11:10:31 robertc Exp $
+ * $Id: acl.cc,v 1.319 2006/04/25 12:00:29 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -35,8 +35,8 @@
 #include "squid.h"
 #include "ACL.h"
 #include "ACLChecklist.h"
-#include "HttpRequest.h"
 #include "ConfigParser.h"
+#include "HttpRequest.h"
 
 const char *AclMatchedName = NULL;
 
@@ -87,7 +87,7 @@ bool ACL::valid () const
 }
 
 void
-ACL::ParseAclLine(ACL ** head)
+ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
 {
     /* we're already using strtok() to grok the line */
     char *t = NULL;
@@ -99,7 +99,7 @@ ACL::ParseAclLine(ACL ** head)
 
     if ((t = strtok(NULL, w_space)) == NULL) {
         debug(28, 0) ("aclParseAclLine: missing ACL name.\n");
-        ConfigParser::Destruct();
+        parser.destruct();
         return;
     }
 
@@ -109,13 +109,13 @@ ACL::ParseAclLine(ACL ** head)
 
     if ((theType = strtok(NULL, w_space)) == NULL) {
         debug(28, 0) ("aclParseAclLine: missing ACL type.\n");
-        ConfigParser::Destruct();
+        parser.destruct();
         return;
     }
 
     if (!Prototype::Registered (theType)) {
         debug(28, 0) ("aclParseAclLine: Invalid ACL type '%s'\n", theType);
-        ConfigParser::Destruct();
+        parser.destruct();
         return;
     }
 
@@ -128,7 +128,7 @@ ACL::ParseAclLine(ACL ** head)
     } else {
         if (strcmp (A->typeString(),theType) ) {
             debug(28, 0) ("aclParseAclLine: ACL '%s' already exists with different type.\n", A->name);
-            ConfigParser::Destruct();
+            parser.destruct();
             return;
         }
 
