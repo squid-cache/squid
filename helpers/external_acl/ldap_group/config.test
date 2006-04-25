@@ -5,4 +5,7 @@ fi
 if [ -f /usr/local/include/ldap.h ]; then
 	exit 0
 fi
+if [ -f /usr/include/winldap.h ]; then
+	exit 0
+fi
 exit 1
