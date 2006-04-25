@@ -1,5 +1,5 @@
 /*
- * $Id: splay.cc,v 1.7 2004/08/30 05:12:33 robertc Exp $
+ * $Id: splay.cc,v 1.8 2006/04/25 10:40:29 serassio Exp $
  *
  * based on ftp://ftp.cs.cmu.edu/user/sleator/splaying/top-down-splay.c
  * http://bobo.link.cs.cmu.edu/cgi-bin/splay/splay-cgi.pl
@@ -136,11 +136,11 @@ main(int argc, char *argv[])
         intnode *I;
         /* test void * splay containers */
         splayNode *top = NULL;
-        srandom(time(NULL));
+        squid_srandom(time(NULL));
 
         for (i = 0; i < 100; i++) {
             I = (intnode *)xcalloc(sizeof(intnode), 1);
-            I->i = random();
+            I->i = squid_random();
             top = top->insert(I, compareintvoid);
         }
 
@@ -164,7 +164,7 @@ main(int argc, char *argv[])
         {
             intnode *I;
             I = new intnode;
-            I->i = random();
+            I->i = squid_random();
             safeTop = safeTop->insert(I, compareint);
         }
 
@@ -183,7 +183,7 @@ main(int argc, char *argv[])
         for (int i = 0; i < 100; i++)
         {
             intnode I;
-            I.i = random();
+            I.i = squid_random();
             safeTop = safeTop->insert(I, compareintref);
         }
 
@@ -219,7 +219,7 @@ main(int argc, char *argv[])
 
         for (int i = 0; i < 100; i++) {
             intnode I;
-            I.i = random();
+            I.i = squid_random();
 
             if (I.i > 50 && I.i < 10000000)
                 safeTop = safeTop->insert(I, compareintref);
