@@ -1,2 +1,9 @@
 #!/bin/sh
+# Don't build on Windows
+if [ -f /usr/include/w32api/windows.h ]; then
+	exit 1
+fi
+if [ -f /usr/include/windows.h ]; then
+	exit 1
+fi
 exit 0
