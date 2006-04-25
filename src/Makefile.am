@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.136 2006/04/25 07:13:33 robertc Exp $
+#  $Id: Makefile.am,v 1.137 2006/04/25 09:21:06 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -183,13 +183,16 @@ EXTRA_PROGRAMS = \
 	pinger \
 	dnsserver \
 	recv-announce \
-	ufsdump \
 	tests/testUfs \
 	tests/testCoss \
 	tests/testNull
 
+## cfgen is used when building squid
+## ufsdump is a debug utility, it is possibly useful for end users with cache
+## corruption, but at this point we do not install it.
 noinst_PROGRAMS = \
-	cf_gen
+	cf_gen \
+	ufsdump
 
 sbin_PROGRAMS = \
 	squid
@@ -373,8 +376,8 @@ squid_SOURCES = \
 	client_side_reply.h \
 	client_side_request.cc \
 	client_side_request.h \
-	ClientBody.h \
 	ClientBody.cc \
+	ClientBody.h \
 	ClientRequestContext.h \
 	clientStream.cc \
 	clientStream.h \
@@ -533,8 +536,8 @@ squid_SOURCES = \
 	StoreSearch.h \
 	StoreSwapLogData.cc \
 	StoreSwapLogData.h \
-	Server.h \
 	Server.cc \
+	Server.h \
 	structs.h \
 	SwapDir.cc \
 	SwapDir.h \
@@ -621,7 +624,10 @@ recv_announce_SOURCES = recv-announce.cc SquidNew.cc
 ## snmp_core wants ACLStringData
 ## SwapDir wants ConfigOption
 
-ufsdump_SOURCES = debug.cc \
+ufsdump_SOURCES = \
+	ClientBody.cc \
+	ConfigParser.cc \
+	debug.cc \
 	int.cc \
 	ufsdump.cc \
 	store.cc \
@@ -642,6 +648,7 @@ ufsdump_SOURCES = debug.cc \
 	StoreSwapLogData.h \
 	access_log.cc \
 	acl.cc \
+	acl_noncore.cc \
 	ACLChecklist.cc \
 	ACLProxyAuth.cc \
 	ACLUserData.cc \
@@ -746,6 +753,7 @@ ufsdump_SOURCES = debug.cc \
 	squid.h \
 	$(SSL_SOURCE) \
 	tunnel.cc \
+	Server.cc \
 	SquidNew.cc \
 	stat.cc \
 	StatHist.cc \
@@ -775,6 +783,7 @@ ufsdump_SOURCES = debug.cc \
 	wais.cc \
 	wccp.cc \
 	whois.cc \
+	wordlist.cc \
 	$(WIN32_SOURCE)
 ufsdump_LDADD = \
 	-L../lib \
