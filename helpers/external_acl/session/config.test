@@ -7,10 +7,4 @@ fi
 if [ -f /usr/include/db.h ]; then
     exit 0
 fi
-if [ -f /usr/local/include/db_185.h ]; then
-    exit 0
-fi
-if [ -f /usr/local/include/db.h ]; then
-    exit 0
-fi
 exit 1
