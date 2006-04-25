@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.134 2006/04/23 11:10:31 robertc Exp $
+#  $Id: Makefile.am,v 1.135 2006/04/24 21:45:24 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -1035,6 +1035,7 @@ tests_testAuth_SOURCES= tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $(
 tests_testAuth_LDADD= \
 	@AUTH_LINKOBJS@ @AUTH_OBJS@ \
 	-L../lib -lmiscutil \
+	@REGEXLIB@ \
 	@SQUID_CPPUNIT_LA@ \
 	@SSLLIB@
 tests_testAuth_LDFLAGS = $(LIBADD_DL)
@@ -1099,6 +1100,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	$(TESTSOURCES)
 tests_testACLMaxUserIP_LDADD= \
 	-L../lib -lmiscutil \
+	@REGEXLIB@ \
 	@SQUID_CPPUNIT_LA@ \
 	@SSLLIB@
 tests_testACLMaxUserIP_LDFLAGS = $(LIBADD_DL)
@@ -1190,6 +1192,7 @@ tests_testStore_SOURCES= tests/testStore.cc \
 
 tests_testStore_LDADD= \
 	-L../lib -lmiscutil \
+	@REGEXLIB@ \
 	@SQUID_CPPUNIT_LA@ \
 	@SSLLIB@
 tests_testStore_LDFLAGS = $(LIBADD_DL)
@@ -1227,6 +1230,7 @@ SWAP_TEST_SOURCES = \
 SWAP_TEST_LDADD = \
 	DiskIO/Blocking/BlockingDiskIOModule.o \
 	repl/lru/store_repl_lru.o \
+	@REGEXLIB@ \
 	@STORE_LINKOBJS@ \
 	@STORE_OBJS@ \
 	@REPL_OBJS@ \
