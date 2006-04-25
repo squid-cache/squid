@@ -10,6 +10,8 @@
 #include "HttpHeader.h"
 #include "HttpReply.h"
 
+#define TESTDIR "testUfs__testUfsSearch"
+
 CPPUNIT_TEST_SUITE_REGISTRATION( testUfs );
 
 typedef RefCount<UFSSwapDir> SwapDirPointer;
@@ -43,7 +45,7 @@ testUfs::testUfsSearch()
      * check the entries we find are what we want
      */
 
-    if (0 > system ("rm -rf testUfs::testUfsSearch"))
+    if (0 > system ("rm -rf " TESTDIR))
         throw std::runtime_error("Failed to clean test work directory");
 
     StorePointer aRoot (new StoreController);
@@ -85,7 +87,7 @@ testUfs::testUfsSearch()
 
     mem_policy = createRemovalPolicy(Config.replPolicy);
 
-    char *path=xstrdup("testUfs::testUfsSearch");
+    char *path=xstrdup(TESTDIR);
 
     char *config_line=xstrdup("foo 100 1 1");
 
@@ -192,6 +194,6 @@ testUfs::testUfsSearch()
     safe_free(Config.replPolicy->type);
     delete Config.replPolicy;
 
-    if (0 > system ("rm -rf testUfs::testUfsSearch"))
+    if (0 > system ("rm -rf " TESTDIR))
         throw std::runtime_error("Failed to clean test work directory");
 }
