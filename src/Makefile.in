@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.374 2006/04/25 12:00:29 robertc Exp $
+#  $Id: Makefile.in,v 1.375 2006/04/26 00:10:48 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -373,29 +373,26 @@ am_tests_testBoilerplate_OBJECTS = tests/testBoilerplate.$(OBJEXT) \
 	tests/testMain.$(OBJEXT) $(am__objects_25)
 tests_testBoilerplate_OBJECTS = $(am_tests_testBoilerplate_OBJECTS)
 am__tests_testCoss_SOURCES_DIST = tests/testCoss.cc tests/testMain.cc \
-	tests/testCoss.h CommonPool.h CompositePoolNode.h \
-	delay_pools.cc DelayId.cc DelayId.h DelayIdComposite.h \
-	DelayBucket.cc DelayBucket.h DelayConfig.cc DelayConfig.h \
-	DelayPool.cc DelayPool.h DelayPools.h DelaySpec.cc DelaySpec.h \
-	DelayTagged.cc DelayTagged.h DelayUser.cc DelayUser.h \
-	DelayVector.cc DelayVector.h NullDelayId.cc NullDelayId.h \
-	tests/stub_store_rebuild.cc tests/stub_internal.cc fd.cc \
-	disk.cc filemap.cc HttpBody.cc HttpReply.cc HttpStatusLine.cc \
-	int.cc list.cc MemObject.cc StoreSwapLogData.cc \
-	StoreIOState.cc StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
-	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
-	StoreFileSystem.cc store_io.cc store_swapout.cc \
-	store_swapmeta.cc unlinkd.cc DiskIO/DiskIOModule.cc \
-	DiskIO/ReadRequest.cc DiskIO/ReadRequest.h \
-	DiskIO/WriteRequest.cc DiskIO/WriteRequest.h DiskIO/DiskFile.h \
-	DiskIO/DiskIOStrategy.h DiskIO/IORequestor.h \
-	DiskIO/DiskIOModule.h ../test-suite/test_tools.cc globals.cc \
-	CacheDigest.cc ConfigParser.cc HttpMsg.cc store_dir.cc \
-	store.cc store_key_md5.cc string_arrays.c Parsing.cc \
-	ConfigOption.cc SwapDir.cc AuthScheme.cc authenticate.cc \
-	AuthUser.cc AuthUserRequest.cc AuthConfig.cc tests/stub_acl.cc \
-	tests/stub_cache_cf.cc tests/stub_helper.cc cbdata.cc \
-	String.cc tests/stub_cache_manager.cc tests/stub_comm.cc \
+	tests/testCoss.h tests/stub_store_rebuild.cc \
+	tests/stub_internal.cc fd.cc disk.cc filemap.cc HttpBody.cc \
+	HttpReply.cc HttpStatusLine.cc int.cc list.cc MemObject.cc \
+	StoreSwapLogData.cc StoreIOState.cc StoreMeta.cc \
+	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaUnpacker.cc \
+	StoreMetaURL.cc StoreMetaVary.cc StoreFileSystem.cc \
+	store_io.cc store_swapout.cc store_swapmeta.cc unlinkd.cc \
+	../test-suite/test_tools.cc globals.cc CommonPool.h \
+	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
+	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
+	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
+	DelaySpec.cc DelaySpec.h DelayTagged.cc DelayTagged.h \
+	DelayUser.cc DelayUser.h DelayVector.cc DelayVector.h \
+	NullDelayId.cc NullDelayId.h CacheDigest.cc ConfigParser.cc \
+	HttpMsg.cc store_dir.cc store.cc store_key_md5.cc \
+	string_arrays.c Parsing.cc ConfigOption.cc SwapDir.cc \
+	AuthScheme.cc authenticate.cc AuthUser.cc AuthUserRequest.cc \
+	AuthConfig.cc tests/stub_acl.cc tests/stub_cache_cf.cc \
+	tests/stub_helper.cc cbdata.cc String.cc \
+	tests/stub_cache_manager.cc tests/stub_comm.cc \
 	tests/stub_client_side_request.cc tests/stub_http.cc \
 	mem_node.cc stmem.cc tests/stub_mime.cc HttpHeaderTools.cc \
 	HttpHeader.cc acl.cc event.cc mem.cc acl_noncore.cc MemBuf.cc \
@@ -404,23 +401,17 @@ am__tests_testCoss_SOURCES_DIST = tests/testCoss.cc tests/testMain.cc \
 	ACLRegexData.cc ACLUserData.cc StatHist.cc HttpHdrRange.cc \
 	ETag.cc tests/stub_errorpage.cc tests/stub_HttpRequest.cc \
 	tests/stub_access_log.cc refresh.cc tests/stub_store_client.cc \
-	tests/stub_tools.cc wordlist.cc
-am__objects_26 = $(am__objects_5) tests/stub_store_rebuild.$(OBJEXT) \
-	tests/stub_internal.$(OBJEXT) fd.$(OBJEXT) disk.$(OBJEXT) \
-	filemap.$(OBJEXT) HttpBody.$(OBJEXT) HttpReply.$(OBJEXT) \
-	HttpStatusLine.$(OBJEXT) int.$(OBJEXT) list.$(OBJEXT) \
-	MemObject.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
-	StoreIOState.$(OBJEXT) StoreMeta.$(OBJEXT) \
-	StoreMetaMD5.$(OBJEXT) StoreMetaSTD.$(OBJEXT) \
-	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
-	StoreMetaVary.$(OBJEXT) StoreFileSystem.$(OBJEXT) \
-	store_io.$(OBJEXT) store_swapout.$(OBJEXT) \
-	store_swapmeta.$(OBJEXT) unlinkd.$(OBJEXT) $(am__objects_6) \
-	$(am__objects_25) CacheDigest.$(OBJEXT) ConfigParser.$(OBJEXT) \
-	HttpMsg.$(OBJEXT) store_dir.$(OBJEXT) store.$(OBJEXT) \
-	store_key_md5.$(OBJEXT) string_arrays.$(OBJEXT) \
-	Parsing.$(OBJEXT) ConfigOption.$(OBJEXT) SwapDir.$(OBJEXT) \
-	AuthScheme.$(OBJEXT) authenticate.$(OBJEXT) AuthUser.$(OBJEXT) \
+	tests/stub_tools.cc wordlist.cc DiskIO/DiskIOModule.cc \
+	DiskIO/ReadRequest.cc DiskIO/ReadRequest.h \
+	DiskIO/WriteRequest.cc DiskIO/WriteRequest.h DiskIO/DiskFile.h \
+	DiskIO/DiskIOStrategy.h DiskIO/IORequestor.h \
+	DiskIO/DiskIOModule.h
+am__objects_26 = $(am__objects_25) $(am__objects_5) \
+	CacheDigest.$(OBJEXT) ConfigParser.$(OBJEXT) HttpMsg.$(OBJEXT) \
+	store_dir.$(OBJEXT) store.$(OBJEXT) store_key_md5.$(OBJEXT) \
+	string_arrays.$(OBJEXT) Parsing.$(OBJEXT) \
+	ConfigOption.$(OBJEXT) SwapDir.$(OBJEXT) AuthScheme.$(OBJEXT) \
+	authenticate.$(OBJEXT) AuthUser.$(OBJEXT) \
 	AuthUserRequest.$(OBJEXT) AuthConfig.$(OBJEXT) \
 	tests/stub_acl.$(OBJEXT) tests/stub_cache_cf.$(OBJEXT) \
 	tests/stub_helper.$(OBJEXT) cbdata.$(OBJEXT) String.$(OBJEXT) \
@@ -440,12 +431,24 @@ am__objects_26 = $(am__objects_5) tests/stub_store_rebuild.$(OBJEXT) \
 	tests/stub_access_log.$(OBJEXT) refresh.$(OBJEXT) \
 	tests/stub_store_client.$(OBJEXT) tests/stub_tools.$(OBJEXT) \
 	wordlist.$(OBJEXT)
+am__objects_27 = tests/stub_store_rebuild.$(OBJEXT) \
+	tests/stub_internal.$(OBJEXT) fd.$(OBJEXT) disk.$(OBJEXT) \
+	filemap.$(OBJEXT) HttpBody.$(OBJEXT) HttpReply.$(OBJEXT) \
+	HttpStatusLine.$(OBJEXT) int.$(OBJEXT) list.$(OBJEXT) \
+	MemObject.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
+	StoreIOState.$(OBJEXT) StoreMeta.$(OBJEXT) \
+	StoreMetaMD5.$(OBJEXT) StoreMetaSTD.$(OBJEXT) \
+	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
+	StoreMetaVary.$(OBJEXT) StoreFileSystem.$(OBJEXT) \
+	store_io.$(OBJEXT) store_swapout.$(OBJEXT) \
+	store_swapmeta.$(OBJEXT) unlinkd.$(OBJEXT) $(am__objects_26) \
+	$(am__objects_6)
 am_tests_testCoss_OBJECTS = tests/testCoss.$(OBJEXT) \
-	tests/testMain.$(OBJEXT) $(am__objects_26)
+	tests/testMain.$(OBJEXT) $(am__objects_27)
 tests_testCoss_OBJECTS = $(am_tests_testCoss_OBJECTS)
 am__DEPENDENCIES_2 = DiskIO/Blocking/BlockingDiskIOModule.o \
 	repl/lru/store_repl_lru.o
-am__objects_27 = tests/testHeader_ACL.$(OBJEXT) \
+am__objects_28 = tests/testHeader_ACL.$(OBJEXT) \
 	tests/testHeader_ConfigParser.$(OBJEXT) \
 	tests/testHeader_client_side_request.$(OBJEXT) \
 	tests/testHeader_dlink.$(OBJEXT) \
@@ -454,32 +457,29 @@ am__objects_27 = tests/testHeader_ACL.$(OBJEXT) \
 	tests/testHeader_HttpReply.$(OBJEXT) \
 	tests/testHeader_wordlist.$(OBJEXT)
 am_tests_testHeaders_OBJECTS = tests/testMain.$(OBJEXT) \
-	$(am__objects_27)
+	$(am__objects_28)
 tests_testHeaders_OBJECTS = $(am_tests_testHeaders_OBJECTS)
 am__tests_testNull_SOURCES_DIST = tests/testNull.cc tests/testMain.cc \
-	tests/testNull.h CommonPool.h CompositePoolNode.h \
-	delay_pools.cc DelayId.cc DelayId.h DelayIdComposite.h \
-	DelayBucket.cc DelayBucket.h DelayConfig.cc DelayConfig.h \
-	DelayPool.cc DelayPool.h DelayPools.h DelaySpec.cc DelaySpec.h \
-	DelayTagged.cc DelayTagged.h DelayUser.cc DelayUser.h \
-	DelayVector.cc DelayVector.h NullDelayId.cc NullDelayId.h \
-	tests/stub_store_rebuild.cc tests/stub_internal.cc fd.cc \
-	disk.cc filemap.cc HttpBody.cc HttpReply.cc HttpStatusLine.cc \
-	int.cc list.cc MemObject.cc StoreSwapLogData.cc \
-	StoreIOState.cc StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
-	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
-	StoreFileSystem.cc store_io.cc store_swapout.cc \
-	store_swapmeta.cc unlinkd.cc DiskIO/DiskIOModule.cc \
-	DiskIO/ReadRequest.cc DiskIO/ReadRequest.h \
-	DiskIO/WriteRequest.cc DiskIO/WriteRequest.h DiskIO/DiskFile.h \
-	DiskIO/DiskIOStrategy.h DiskIO/IORequestor.h \
-	DiskIO/DiskIOModule.h ../test-suite/test_tools.cc globals.cc \
-	CacheDigest.cc ConfigParser.cc HttpMsg.cc store_dir.cc \
-	store.cc store_key_md5.cc string_arrays.c Parsing.cc \
-	ConfigOption.cc SwapDir.cc AuthScheme.cc authenticate.cc \
-	AuthUser.cc AuthUserRequest.cc AuthConfig.cc tests/stub_acl.cc \
-	tests/stub_cache_cf.cc tests/stub_helper.cc cbdata.cc \
-	String.cc tests/stub_cache_manager.cc tests/stub_comm.cc \
+	tests/testNull.h tests/stub_store_rebuild.cc \
+	tests/stub_internal.cc fd.cc disk.cc filemap.cc HttpBody.cc \
+	HttpReply.cc HttpStatusLine.cc int.cc list.cc MemObject.cc \
+	StoreSwapLogData.cc StoreIOState.cc StoreMeta.cc \
+	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaUnpacker.cc \
+	StoreMetaURL.cc StoreMetaVary.cc StoreFileSystem.cc \
+	store_io.cc store_swapout.cc store_swapmeta.cc unlinkd.cc \
+	../test-suite/test_tools.cc globals.cc CommonPool.h \
+	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
+	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
+	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
+	DelaySpec.cc DelaySpec.h DelayTagged.cc DelayTagged.h \
+	DelayUser.cc DelayUser.h DelayVector.cc DelayVector.h \
+	NullDelayId.cc NullDelayId.h CacheDigest.cc ConfigParser.cc \
+	HttpMsg.cc store_dir.cc store.cc store_key_md5.cc \
+	string_arrays.c Parsing.cc ConfigOption.cc SwapDir.cc \
+	AuthScheme.cc authenticate.cc AuthUser.cc AuthUserRequest.cc \
+	AuthConfig.cc tests/stub_acl.cc tests/stub_cache_cf.cc \
+	tests/stub_helper.cc cbdata.cc String.cc \
+	tests/stub_cache_manager.cc tests/stub_comm.cc \
 	tests/stub_client_side_request.cc tests/stub_http.cc \
 	mem_node.cc stmem.cc tests/stub_mime.cc HttpHeaderTools.cc \
 	HttpHeader.cc acl.cc event.cc mem.cc acl_noncore.cc MemBuf.cc \
@@ -488,9 +488,13 @@ am__tests_testNull_SOURCES_DIST = tests/testNull.cc tests/testMain.cc \
 	ACLRegexData.cc ACLUserData.cc StatHist.cc HttpHdrRange.cc \
 	ETag.cc tests/stub_errorpage.cc tests/stub_HttpRequest.cc \
 	tests/stub_access_log.cc refresh.cc tests/stub_store_client.cc \
-	tests/stub_tools.cc wordlist.cc
+	tests/stub_tools.cc wordlist.cc DiskIO/DiskIOModule.cc \
+	DiskIO/ReadRequest.cc DiskIO/ReadRequest.h \
+	DiskIO/WriteRequest.cc DiskIO/WriteRequest.h DiskIO/DiskFile.h \
+	DiskIO/DiskIOStrategy.h DiskIO/IORequestor.h \
+	DiskIO/DiskIOModule.h
 am_tests_testNull_OBJECTS = tests/testNull.$(OBJEXT) \
-	tests/testMain.$(OBJEXT) $(am__objects_26)
+	tests/testMain.$(OBJEXT) $(am__objects_27)
 tests_testNull_OBJECTS = $(am_tests_testNull_OBJECTS)
 am__tests_testStore_SOURCES_DIST = tests/stub_store_swapout.cc \
 	tests/testMain.cc tests/stub_MemObject.cc tests/testStore.cc \
@@ -520,62 +524,34 @@ am__tests_testStore_SOURCES_DIST = tests/stub_store_swapout.cc \
 	ETag.cc tests/stub_errorpage.cc tests/stub_HttpRequest.cc \
 	tests/stub_access_log.cc refresh.cc tests/stub_store_client.cc \
 	tests/stub_tools.cc wordlist.cc
-am__objects_28 = $(am__objects_25) $(am__objects_5) \
-	CacheDigest.$(OBJEXT) ConfigParser.$(OBJEXT) HttpMsg.$(OBJEXT) \
-	store_dir.$(OBJEXT) store.$(OBJEXT) store_key_md5.$(OBJEXT) \
-	string_arrays.$(OBJEXT) Parsing.$(OBJEXT) \
-	ConfigOption.$(OBJEXT) SwapDir.$(OBJEXT) AuthScheme.$(OBJEXT) \
-	authenticate.$(OBJEXT) AuthUser.$(OBJEXT) \
-	AuthUserRequest.$(OBJEXT) AuthConfig.$(OBJEXT) \
-	tests/stub_acl.$(OBJEXT) tests/stub_cache_cf.$(OBJEXT) \
-	tests/stub_helper.$(OBJEXT) cbdata.$(OBJEXT) String.$(OBJEXT) \
-	tests/stub_cache_manager.$(OBJEXT) tests/stub_comm.$(OBJEXT) \
-	tests/stub_client_side_request.$(OBJEXT) \
-	tests/stub_http.$(OBJEXT) mem_node.$(OBJEXT) stmem.$(OBJEXT) \
-	tests/stub_mime.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
-	HttpHeader.$(OBJEXT) acl.$(OBJEXT) event.$(OBJEXT) \
-	mem.$(OBJEXT) acl_noncore.$(OBJEXT) MemBuf.$(OBJEXT) \
-	HttpHdrContRange.$(OBJEXT) Packer.$(OBJEXT) \
-	ACLChecklist.$(OBJEXT) HttpHdrCc.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
-	HttpHdrScTarget.$(OBJEXT) url.$(OBJEXT) ACLProxyAuth.$(OBJEXT) \
-	ACLRegexData.$(OBJEXT) ACLUserData.$(OBJEXT) \
-	StatHist.$(OBJEXT) HttpHdrRange.$(OBJEXT) ETag.$(OBJEXT) \
-	tests/stub_errorpage.$(OBJEXT) \
-	tests/stub_HttpRequest.$(OBJEXT) \
-	tests/stub_access_log.$(OBJEXT) refresh.$(OBJEXT) \
-	tests/stub_store_client.$(OBJEXT) tests/stub_tools.$(OBJEXT) \
-	wordlist.$(OBJEXT)
 am_tests_testStore_OBJECTS = tests/stub_store_swapout.$(OBJEXT) \
 	tests/testMain.$(OBJEXT) tests/stub_MemObject.$(OBJEXT) \
 	tests/testStore.$(OBJEXT) tests/testStoreController.$(OBJEXT) \
 	tests/testStoreHashIndex.$(OBJEXT) tests/TestSwapDir.$(OBJEXT) \
 	tests/stub_fd.$(OBJEXT) tests/stub_HttpReply.$(OBJEXT) \
-	$(am__objects_28)
+	$(am__objects_26)
 tests_testStore_OBJECTS = $(am_tests_testStore_OBJECTS)
 am__tests_testUfs_SOURCES_DIST = tests/testUfs.cc tests/testMain.cc \
-	tests/testUfs.h CommonPool.h CompositePoolNode.h \
-	delay_pools.cc DelayId.cc DelayId.h DelayIdComposite.h \
-	DelayBucket.cc DelayBucket.h DelayConfig.cc DelayConfig.h \
-	DelayPool.cc DelayPool.h DelayPools.h DelaySpec.cc DelaySpec.h \
-	DelayTagged.cc DelayTagged.h DelayUser.cc DelayUser.h \
-	DelayVector.cc DelayVector.h NullDelayId.cc NullDelayId.h \
-	tests/stub_store_rebuild.cc tests/stub_internal.cc fd.cc \
-	disk.cc filemap.cc HttpBody.cc HttpReply.cc HttpStatusLine.cc \
-	int.cc list.cc MemObject.cc StoreSwapLogData.cc \
-	StoreIOState.cc StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
-	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
-	StoreFileSystem.cc store_io.cc store_swapout.cc \
-	store_swapmeta.cc unlinkd.cc DiskIO/DiskIOModule.cc \
-	DiskIO/ReadRequest.cc DiskIO/ReadRequest.h \
-	DiskIO/WriteRequest.cc DiskIO/WriteRequest.h DiskIO/DiskFile.h \
-	DiskIO/DiskIOStrategy.h DiskIO/IORequestor.h \
-	DiskIO/DiskIOModule.h ../test-suite/test_tools.cc globals.cc \
-	CacheDigest.cc ConfigParser.cc HttpMsg.cc store_dir.cc \
-	store.cc store_key_md5.cc string_arrays.c Parsing.cc \
-	ConfigOption.cc SwapDir.cc AuthScheme.cc authenticate.cc \
-	AuthUser.cc AuthUserRequest.cc AuthConfig.cc tests/stub_acl.cc \
-	tests/stub_cache_cf.cc tests/stub_helper.cc cbdata.cc \
-	String.cc tests/stub_cache_manager.cc tests/stub_comm.cc \
+	tests/testUfs.h tests/stub_store_rebuild.cc \
+	tests/stub_internal.cc fd.cc disk.cc filemap.cc HttpBody.cc \
+	HttpReply.cc HttpStatusLine.cc int.cc list.cc MemObject.cc \
+	StoreSwapLogData.cc StoreIOState.cc StoreMeta.cc \
+	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaUnpacker.cc \
+	StoreMetaURL.cc StoreMetaVary.cc StoreFileSystem.cc \
+	store_io.cc store_swapout.cc store_swapmeta.cc unlinkd.cc \
+	../test-suite/test_tools.cc globals.cc CommonPool.h \
+	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
+	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
+	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
+	DelaySpec.cc DelaySpec.h DelayTagged.cc DelayTagged.h \
+	DelayUser.cc DelayUser.h DelayVector.cc DelayVector.h \
+	NullDelayId.cc NullDelayId.h CacheDigest.cc ConfigParser.cc \
+	HttpMsg.cc store_dir.cc store.cc store_key_md5.cc \
+	string_arrays.c Parsing.cc ConfigOption.cc SwapDir.cc \
+	AuthScheme.cc authenticate.cc AuthUser.cc AuthUserRequest.cc \
+	AuthConfig.cc tests/stub_acl.cc tests/stub_cache_cf.cc \
+	tests/stub_helper.cc cbdata.cc String.cc \
+	tests/stub_cache_manager.cc tests/stub_comm.cc \
 	tests/stub_client_side_request.cc tests/stub_http.cc \
 	mem_node.cc stmem.cc tests/stub_mime.cc HttpHeaderTools.cc \
 	HttpHeader.cc acl.cc event.cc mem.cc acl_noncore.cc MemBuf.cc \
@@ -584,9 +560,13 @@ am__tests_testUfs_SOURCES_DIST = tests/testUfs.cc tests/testMain.cc \
 	ACLRegexData.cc ACLUserData.cc StatHist.cc HttpHdrRange.cc \
 	ETag.cc tests/stub_errorpage.cc tests/stub_HttpRequest.cc \
 	tests/stub_access_log.cc refresh.cc tests/stub_store_client.cc \
-	tests/stub_tools.cc wordlist.cc
+	tests/stub_tools.cc wordlist.cc DiskIO/DiskIOModule.cc \
+	DiskIO/ReadRequest.cc DiskIO/ReadRequest.h \
+	DiskIO/WriteRequest.cc DiskIO/WriteRequest.h DiskIO/DiskFile.h \
+	DiskIO/DiskIOStrategy.h DiskIO/IORequestor.h \
+	DiskIO/DiskIOModule.h
 am_tests_testUfs_OBJECTS = tests/testUfs.$(OBJEXT) \
-	tests/testMain.$(OBJEXT) $(am__objects_26)
+	tests/testMain.$(OBJEXT) $(am__objects_27)
 tests_testUfs_OBJECTS = $(am_tests_testUfs_OBJECTS)
 am__ufsdump_SOURCES_DIST = ClientBody.cc ConfigParser.cc debug.cc \
 	int.cc ufsdump.cc store.cc StoreFileSystem.cc StoreMeta.cc \
@@ -1929,11 +1909,7 @@ tests_testStore_LDFLAGS = $(LIBADD_DL)
 tests_testStore_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@SQUID_CPPUNIT_LA@
 
-
-# store depends on delay pools - linked in by 
-#$(STORE_TEST_SOURCES)
 SWAP_TEST_SOURCES = \
-	$(DELAY_POOL_SOURCE) \
 	tests/stub_store_rebuild.cc \
 	tests/stub_internal.cc \
 	fd.cc \
@@ -1958,37 +1934,8 @@ SWAP_TEST_SOURCES = \
 	store_swapout.cc \
 	store_swapmeta.cc \
 	unlinkd.cc \
-	$(DISKIO_SOURCE) \
-	$(TESTSOURCES) \
-	CacheDigest.cc \
-	ConfigParser.cc \
-	HttpMsg.cc \
-	store_dir.cc \
-	store.cc \
-	store_key_md5.cc \
-	string_arrays.c \
-	Parsing.cc \
-	ConfigOption.cc \
-	SwapDir.cc \
-	AuthScheme.cc authenticate.cc AuthUser.cc AuthUserRequest.cc AuthConfig.cc \
-	tests/stub_acl.cc tests/stub_cache_cf.cc \
-	tests/stub_helper.cc cbdata.cc String.cc tests/stub_cache_manager.cc \
-	tests/stub_comm.cc \
-	tests/stub_client_side_request.cc \
-	tests/stub_http.cc \
-	mem_node.cc \
-	stmem.cc \
-	tests/stub_mime.cc \
-	HttpHeaderTools.cc HttpHeader.cc acl.cc event.cc mem.cc \
-	acl_noncore.cc \
-	MemBuf.cc HttpHdrContRange.cc Packer.cc ACLChecklist.cc HttpHdrCc.cc HttpHdrSc.cc \
-	HttpHdrScTarget.cc url.cc ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc \
-	StatHist.cc HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
-	tests/stub_HttpRequest.cc tests/stub_access_log.cc \
-	refresh.cc \
-	tests/stub_store_client.cc \
-	tests/stub_tools.cc \
-	wordlist.cc
+	$(STORE_TEST_SOURCES) \
+	$(DISKIO_SOURCE)
 
 SWAP_TEST_LDADD = \
 	DiskIO/Blocking/BlockingDiskIOModule.o \
