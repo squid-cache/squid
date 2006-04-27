@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.99 2006/02/26 13:43:05 serassio Exp $
+ * $Id: client_side_reply.cc,v 1.100 2006/04/27 16:54:16 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -440,7 +440,8 @@ clientReplyContext::handleIMSGiveClientUpdatedOldEntry()
 
         old_entry->timestamp = squid_curtime;
 
-        HTTPMSGUNLOCK(old_entry->mem_obj->request);
+        if (unlink_request)
+            HTTPMSGUNLOCK(old_entry->mem_obj->request);
     }
 
     sendClientOldEntry();
