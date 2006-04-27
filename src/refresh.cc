@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.69 2006/04/24 22:30:52 wessels Exp $
+ * $Id: refresh.cc,v 1.70 2006/04/27 17:26:20 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -399,7 +399,7 @@ refreshIsCachable(const StoreEntry * entry)
     refreshCounts[rcStore].total++;
     refreshCounts[rcStore].status[reason]++;
 
-    if (reason < 200)
+    if (reason < STALE_MUST_REVALIDATE)
         /* Does not need refresh. This is certainly cachable */
         return 1;
 
