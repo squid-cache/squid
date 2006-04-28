@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.61 2006/04/22 05:29:18 robertc Exp $
+ * $Id: HttpRequest.cc,v 1.62 2006/04/27 19:27:37 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -86,7 +86,7 @@ HttpRequest::init()
     my_addr = no_addr;
     my_port = 0;
     client_port = 0;
-    body_connection = NULL;
+    body_reader = NULL;
     // hier
     errType = ERR_NONE;
     peer_login = NULL;		// not allocated/deallocated by this class
@@ -101,8 +101,8 @@ HttpRequest::init()
 void
 HttpRequest::clean()
 {
-    if (body_connection.getRaw() != NULL)
-        fatal ("request being destroyed with body connection intact\n");
+    if (body_reader != NULL)
+        fatal ("request being destroyed with body reader intact\n");
 
     if (auth_user_request) {
         auth_user_request->unlock();

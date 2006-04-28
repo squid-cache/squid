@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.391 2006/04/23 11:10:31 robertc Exp $
+ * $Id: ftp.cc,v 1.392 2006/04/27 19:27:37 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -211,7 +211,7 @@ public:
     static IOCB ftpReadControlReply;
     static IOWCB ftpWriteCommandCallback;
     static HttpReply *ftpAuthRequired(HttpRequest * request, const char *realm);
-    static void ftpRequestBody(char *buf, ssize_t size, void *data);
+    static CBCB ftpRequestBody;
     static wordlist *ftpParseControlReply(char *, size_t, int *, int *);
 
 #if ICAP_CLIENT
@@ -2769,19 +2769,19 @@ ftpReadTransferDone(FtpStateData * ftpState)
 
 /* This will be called when there is data available to put */
 void
-FtpStateData::ftpRequestBody(char *buf, ssize_t size, void *data)
+FtpStateData::ftpRequestBody(MemBuf &mb, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *) data;
-    debug(9, 3) ("ftpRequestBody: buf=%p size=%d ftpState=%p\n", buf, (int) size, data);
+    debugs(9, 3, HERE << "ftpRequestBody: size=" << mb.contentSize() << " ftpState=%p" << data);
 
-    if (size > 0) {
+    if (mb.contentSize() > 0) {
         /* DataWrite */
-        comm_write(ftpState->data.fd, buf, size, FtpStateData::ftpDataWriteCallback, ftpState);
-    } else if (size < 0) {
+        comm_write(ftpState->data.fd, mb.content(), mb.contentSize(), FtpStateData::ftpDataWriteCallback, ftpState);
+    } else if (mb.contentSize() < 0) {
         /* Error */
         debug(9, 1) ("ftpRequestBody: request aborted");
         ftpState->failed(ERR_READ_ERROR, 0);
-    } else if (size == 0) {
+    } else if (mb.contentSize() == 0) {
         /* End of transfer */
         ftpState->dataComplete();
     }
@@ -2815,11 +2815,7 @@ FtpStateData::ftpDataWrite(int ftp, void *data)
     FtpStateData *ftpState = (FtpStateData *) data;
     debug(9, 3) ("ftpDataWrite\n");
     /* This starts the body transfer */
-    clientReadBody(ftpState->request,
-                   ftpState->data.readBuf->content(),
-                   ftpState->data.readBuf->contentSize(),
-                   ftpRequestBody,
-                   ftpState);
+    ftpState->request->body_reader->read(ftpRequestBody, ftpState);
 }
 
 static void

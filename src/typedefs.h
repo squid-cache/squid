@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.181 2006/04/23 11:10:32 robertc Exp $
+ * $Id: typedefs.h,v 1.182 2006/04/27 19:27:37 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -275,7 +275,6 @@ class wordlist;
 typedef void UH(void *data, wordlist *);
 typedef int READ_HANDLER(int, char *, int);
 typedef int WRITE_HANDLER(int, const char *, int);
-typedef void CBCB(char *buf, ssize_t size, void *data);
 
 typedef void STIOCB(void *their_data, int errflag, storeIOState *);
 typedef void STFNCB(void *their_data, int errflag, storeIOState *);

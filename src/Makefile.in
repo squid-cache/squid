@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.376 2006/04/27 19:04:15 wessels Exp $
+#  $Id: Makefile.in,v 1.377 2006/04/27 19:27:37 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -163,8 +163,8 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc \
 	AuthUser.cc AuthUserRequest.cc cache_cf.cc CacheDigest.cc \
 	cache_manager.cc carp.cc cbdata.cc client_db.cc client_side.cc \
 	client_side.h client_side_reply.cc client_side_reply.h \
-	client_side_request.cc client_side_request.h ClientBody.cc \
-	ClientBody.h ClientRequestContext.h clientStream.cc \
+	client_side_request.cc client_side_request.h BodyReader.cc \
+	BodyReader.h ClientRequestContext.h clientStream.cc \
 	clientStream.h comm.cc comm.h CommIO.h comm_select.cc \
 	comm_poll.cc comm_epoll.cc comm_kqueue.cc CommRead.h \
 	ConfigOption.cc ConfigParser.cc ConfigParser.h \
@@ -277,7 +277,7 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	CacheDigest.$(OBJEXT) cache_manager.$(OBJEXT) carp.$(OBJEXT) \
 	cbdata.$(OBJEXT) client_db.$(OBJEXT) client_side.$(OBJEXT) \
 	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
-	ClientBody.$(OBJEXT) clientStream.$(OBJEXT) comm.$(OBJEXT) \
+	BodyReader.$(OBJEXT) clientStream.$(OBJEXT) comm.$(OBJEXT) \
 	comm_select.$(OBJEXT) comm_poll.$(OBJEXT) comm_epoll.$(OBJEXT) \
 	comm_kqueue.$(OBJEXT) ConfigOption.$(OBJEXT) \
 	ConfigParser.$(OBJEXT) debug.$(OBJEXT) $(am__objects_5) \
@@ -568,7 +568,7 @@ am__tests_testUfs_SOURCES_DIST = tests/testUfs.cc tests/testMain.cc \
 am_tests_testUfs_OBJECTS = tests/testUfs.$(OBJEXT) \
 	tests/testMain.$(OBJEXT) $(am__objects_27)
 tests_testUfs_OBJECTS = $(am_tests_testUfs_OBJECTS)
-am__ufsdump_SOURCES_DIST = ClientBody.cc ConfigParser.cc debug.cc \
+am__ufsdump_SOURCES_DIST = BodyReader.cc ConfigParser.cc debug.cc \
 	int.cc ufsdump.cc store.cc StoreFileSystem.cc StoreMeta.cc \
 	StoreMeta.h StoreMetaMD5.cc StoreMetaMD5.h StoreMetaSTD.cc \
 	StoreMetaSTD.h StoreMetaUnpacker.cc StoreMetaUnpacker.h \
@@ -620,7 +620,7 @@ am__ufsdump_SOURCES_DIST = ClientBody.cc ConfigParser.cc debug.cc \
 	store_swapmeta.cc store_swapout.cc structs.h SwapDir.cc \
 	tools.cc typedefs.h unlinkd.cc url.cc urn.cc useragent.cc \
 	wais.cc wccp.cc whois.cc wordlist.cc win32.cc
-am_ufsdump_OBJECTS = ClientBody.$(OBJEXT) ConfigParser.$(OBJEXT) \
+am_ufsdump_OBJECTS = BodyReader.$(OBJEXT) ConfigParser.$(OBJEXT) \
 	debug.$(OBJEXT) int.$(OBJEXT) ufsdump.$(OBJEXT) \
 	store.$(OBJEXT) StoreFileSystem.$(OBJEXT) StoreMeta.$(OBJEXT) \
 	StoreMetaMD5.$(OBJEXT) StoreMetaSTD.$(OBJEXT) \
@@ -1215,8 +1215,8 @@ squid_SOURCES = \
 	client_side_reply.h \
 	client_side_request.cc \
 	client_side_request.h \
-	ClientBody.cc \
-	ClientBody.h \
+	BodyReader.cc \
+	BodyReader.h \
 	ClientRequestContext.h \
 	clientStream.cc \
 	clientStream.h \
@@ -1449,7 +1449,7 @@ pinger_SOURCES = \
 dnsserver_SOURCES = dnsserver.cc SquidNew.cc
 recv_announce_SOURCES = recv-announce.cc SquidNew.cc
 ufsdump_SOURCES = \
-	ClientBody.cc \
+	BodyReader.cc \
 	ConfigParser.cc \
 	debug.cc \
 	int.cc \
@@ -2566,7 +2566,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AuthUser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AuthUserRequest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CacheDigest.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ClientBody.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BodyReader.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ConfigOption.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ConfigParser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DelayBucket.Po@am__quote@

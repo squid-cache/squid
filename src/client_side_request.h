@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.25 2006/04/25 07:13:33 robertc Exp $
+ * $Id: client_side_request.h,v 1.26 2006/04/27 19:27:37 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -160,6 +160,8 @@ private:
 public:
     ICAPClientReqmodPrecache *icap;
     int doIcap(ICAPServiceRep::Pointer);
+    void icapSendRequestBody(MemBuf&);
+    static void icapSendRequestBodyWrapper(MemBuf&, void*);
     void icapSpaceAvailable();
     void takeAdaptedHeaders(HttpMsg *);
     void takeAdaptedBody(MemBuf *);
