@@ -32,8 +32,8 @@ MsgPipe::MsgPipe(const char *aName): name(aName),
 MsgPipe::~MsgPipe()
 {
     delete data;
-    delete source;
-    delete sink;
+    assert(source == NULL);
+    assert(sink == NULL);
 };
 
 void MsgPipe::sendSourceStart()

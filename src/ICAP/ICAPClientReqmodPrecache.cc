@@ -26,8 +26,17 @@ ICAPClientReqmodPrecache::~ICAPClientReqmodPrecache()
     if (virgin != NULL)
         freeVirgin();
 
-    if (adapted != NULL)
+    if (adapted != NULL) {
+        /*
+         * adapted->sink is equal to this.  Remove the pointer since
+         * we are deleting this.
+         */
+
+        if (adapted->sink)
+            adapted->sink = NULL;
+
         freeAdapted();
+    }
 }
 
 void ICAPClientReqmodPrecache::startReqMod(ClientHttpRequest *aHttp, HttpRequest *request)
@@ -116,18 +125,33 @@ void ICAPClientReqmodPrecache::noteSourceStart(MsgPipe *p)
      * tell the other side to use the original request/response
      * headers.
      */
+    HttpRequest *req = dynamic_cast<HttpRequest*>(adapted->data->header);
+
+    if (req && req->content_length > 0) {
+        assert(req->body_reader == NULL);
+        req->body_reader = new BodyReader(req->content_length, readBody, abortBody, kickBody, this);
+    }
+
     http->takeAdaptedHeaders(adapted->data->header);
     noteSourceProgress(p);
 }
 
-// ICAP client sends more data
+/*
+ * This is where we receive a notification from the other
+ * side of the MsgPipe that new adapted data is available.
+ * We, in turn, tell whoever is reading from the request's
+ * body_reader about the new data.
+ */
 void ICAPClientReqmodPrecache::noteSourceProgress(MsgPipe *p)
 {
     debug(93,3)("ICAPClientReqmodPrecache::noteSourceProgress() called\n");
     //tell ClientHttpRequest to store a fresh portion of the adapted response
 
     if (p->data->body->hasContent()) {
-        http->takeAdaptedBody(p->data->body);
+        HttpRequest *req = dynamic_cast<HttpRequest*>(adapted->data->header);
+        assert(req);
+        debugs(32,3,HERE << "notifying body_reader, contentSize() = " << p->data->body->contentSize());
+        req->body_reader->notify(p->data->body->contentSize());
     }
 }
 
@@ -159,6 +183,12 @@ void ICAPClientReqmodPrecache::stop(Notify notify)
         freeVirgin();
     }
 
+#if DONT_FREE_ADAPTED
+    /*
+     * NOTE: We do not clean up "adapted->sink" here because it may
+     * have an HTTP message body that needs to stay around a little
+     * while longer so that the HTTP server-side can forward it on.
+     */
     if (adapted != NULL) {
         if (notify == notifyIcap)
             adapted->sendSinkAbort();
@@ -167,6 +197,8 @@ void ICAPClientReqmodPrecache::stop(Notify notify)
 
         freeAdapted();
     }
+
+#endif
 
     if (http) {
         if (notify == notifyOwner)
@@ -188,4 +220,61 @@ void ICAPClientReqmodPrecache::freeVirgin()
 void ICAPClientReqmodPrecache::freeAdapted()
 {
     adapted = NULL;	// refcounted
+}
+
+/*
+ * Something that needs to read the adapated request body
+ * calls this function, via the BodyReader class.  We copy
+ * the body data from our bodybuf object to the BodyReader
+ * MemBuf, which was passed as a reference to this function.
+ */
+size_t
+ICAPClientReqmodPrecache::readBody(void *data, MemBuf &mb, size_t size)
+{
+    ICAPClientReqmodPrecache *icap = static_cast<ICAPClientReqmodPrecache *>(data);
+    assert(icap != NULL);
+    assert(icap->adapted != NULL);
+    assert(icap->adapted->data != NULL);
+    MemBuf *bodybuf = icap->adapted->data->body;
+    assert(bodybuf != NULL);
+    debugs(32,3,HERE << "readBody requested size " << size);
+    debugs(32,3,HERE << "readBody bodybuf size " << bodybuf->contentSize());
+
+    if ((mb_size_t) size > bodybuf->contentSize())
+        size = bodybuf->contentSize();
+
+    debugs(32,3,HERE << "readBody actual size " << size);
+
+    assert(size);
+
+    mb.append(bodybuf->content(), size);
+
+    bodybuf->consume(size);
+
+    return size;
+}
+
+void
+ICAPClientReqmodPrecache::abortBody(void *data, size_t remaining)
+{
+    if (remaining >= 0) {
+        debugs(0,0,HERE << "ICAPClientReqmodPrecache::abortBody size " << remaining);
+        // more?
+    }
+
+    ICAPClientReqmodPrecache *icap = static_cast<ICAPClientReqmodPrecache *>(data);
+    icap->stop(notifyIcap);
+}
+
+/*
+ * Restart reading the adapted response from the ICAP server in case
+ * the body buffer became full and we stopped reading.
+ */
+void
+ICAPClientReqmodPrecache::kickBody(void *data)
+{
+    debugs(32,3,HERE << "ICAPClientReqmodPrecache::kickBody");
+    ICAPClientReqmodPrecache *icap = static_cast<ICAPClientReqmodPrecache *>(data);
+    assert(icap->adapted != NULL);
+    icap->adapted->sendSinkNeed();
 }

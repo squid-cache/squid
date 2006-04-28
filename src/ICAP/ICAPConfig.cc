@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.cc,v 1.8 2006/04/27 19:07:16 wessels Exp $
+ * $Id: ICAPConfig.cc,v 1.9 2006/04/27 19:27:37 wessels Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -47,6 +47,7 @@
 
 extern ConfigParser LegacyParser;	// from cache_cf.cc
 ICAPConfig TheICAPConfig;
+extern ConfigParser LegacyParser;	// found in cache_cf.cc
 
 ICAPServiceRep::Pointer
 ICAPConfig::findService(const String& key)

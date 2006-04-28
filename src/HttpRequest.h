@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.19 2006/02/17 18:10:59 wessels Exp $
+ * $Id: HttpRequest.h,v 1.20 2006/04/27 19:27:37 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,6 +37,7 @@
 #include "HttpMsg.h"
 #include "client_side.h"
 #include "HierarchyLogEntry.h"
+#include "BodyReader.h"
 
 /*  Http Request */
 extern int httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConnection);
@@ -104,7 +105,7 @@ public:
 
     unsigned short client_port;
 
-    ConnStateData::Pointer body_connection;	/* used by clientReadBody() */
+    BodyReader::Pointer body_reader;
 
     HierarchyLogEntry hier;
 

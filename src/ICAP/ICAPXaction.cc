@@ -54,6 +54,7 @@ void ICAPXaction_noteCommWrote(int, char *, size_t size, comm_err_t status, void
 static
 void ICAPXaction_noteCommRead(int, char *, size_t size, comm_err_t status, int xerrno, void *data)
 {
+    debugs(93,3,HERE << data << " read returned " << size);
     ICAPXaction_fromData(data).noteCommRead(status, size);
 }
 
@@ -238,8 +239,10 @@ void ICAPXaction::handleCommClosed()
 
 bool ICAPXaction::done() const
 {
-    if (stopReason != NULL) // mustStop() has been called
+    if (stopReason != NULL) { // mustStop() has been called
+        debugs(93,1,HERE << "ICAPXaction is done() because " << stopReason);
         return true;
+    }
 
     return doneAll();
 }
@@ -276,7 +279,7 @@ void ICAPXaction::noteCommRead(comm_err_t commStatus, size_t sz)
     Must(commStatus == COMM_OK);
     Must(sz >= 0);
 
-    debugs(93, 5, HERE << "read " << sz << " bytes");
+    debugs(93, 3, HERE << "read " << sz << " bytes");
 
     /*
      * See comments in ICAPXaction.h about why we use commBuf
@@ -396,7 +399,7 @@ void ICAPXaction::callException(const TextException &e)
 void ICAPXaction::callEnd()
 {
     if (done()) {
-        debugs(93, 5, "ICAPXaction::" << inCall << " ends xaction " <<
+        debugs(93, 5, HERE << "ICAPXaction::" << inCall << " ends xaction " <<
                status());
         doStop(); // may delete us
         return;

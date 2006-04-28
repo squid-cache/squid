@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.138 2006/04/27 19:04:15 wessels Exp $
+#  $Id: Makefile.am,v 1.139 2006/04/27 19:27:37 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -376,8 +376,8 @@ squid_SOURCES = \
 	client_side_reply.h \
 	client_side_request.cc \
 	client_side_request.h \
-	ClientBody.cc \
-	ClientBody.h \
+	BodyReader.cc \
+	BodyReader.h \
 	ClientRequestContext.h \
 	clientStream.cc \
 	clientStream.h \
@@ -625,7 +625,7 @@ recv_announce_SOURCES = recv-announce.cc SquidNew.cc
 ## SwapDir wants ConfigOption
 
 ufsdump_SOURCES = \
-	ClientBody.cc \
+	BodyReader.cc \
 	ConfigParser.cc \
 	debug.cc \
 	int.cc \

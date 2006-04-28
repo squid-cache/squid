@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.23 2006/03/07 18:47:48 wessels Exp $
+ * $Id: http.h,v 1.24 2006/04/27 19:27:37 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,6 +38,7 @@
 #include "comm.h"
 #include "forward.h"
 #include "Server.h"
+#include "BodyReader.h"
 
 #if ICAP_CLIENT
 #include "ICAP/ICAPServiceRep.h"
@@ -84,7 +85,6 @@ public:
     HttpRequest *orig_request;
     int fd;
     http_state_flags flags;
-    char *request_body_buf;
     off_t currentOffset;
     size_t read_sz;
     int body_bytes_read;	/* to find end of response, independent of StoreEntry */
@@ -125,7 +125,7 @@ private:
     void transactionComplete();
     void writeReplyBody(const char *data, int len);
     void sendRequestEntityDone();
-    void requestBodyHandler(char *buf, ssize_t size);
+    void requestBodyHandler(MemBuf &);
     void sendRequestEntity(int fd, size_t size, comm_err_t errflag);
     mb_size_t buildRequestPrefix(HttpRequest * request,
                                  HttpRequest * orig_request,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.h,v 1.14 2006/03/04 05:38:34 wessels Exp $
+ * $Id: client_side.h,v 1.15 2006/04/27 19:27:37 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,6 +35,7 @@
 #define SQUID_CLIENTSIDE_H
 
 #include "StoreIOBuffer.h"
+#include "BodyReader.h"
 #include "RefCount.h"
 
 class ConnStateData;
@@ -42,9 +43,6 @@ class ConnStateData;
 class ClientHttpRequest;
 
 class clientStreamNode;
-
-class ClientBody;
-;
 
 template <class T>
 
@@ -159,19 +157,37 @@ public:
         char *buf;
         size_t notYetUsed;
         size_t allocatedSize;
+        /*
+         * abortedSize is the amount of data that should be read
+         * from the socket and immediately discarded.  It may be
+         * set when there is a request body and that transaction
+         * gets aborted.  The client side should read the remaining
+         * body content and just discard it, if the connection
+         * will be staying open.
+         */
+        size_t abortedSize;
     }
 
     in;
 
-    ClientBody *body;
-    size_t body_size_left;
+    BodyReader::Pointer body_reader;
+    ssize_t bodySizeLeft();
 
-    auth_type_t auth_type;	/* Is this connection based authentication? if so what type it is. */
-    /* note this is ONLY connection based because NTLM is against HTTP spec */
-    /* the user details for connection based authentication */
+    /*
+     * Is this connection based authentication? if so what type it
+     * is.
+     */
+    auth_type_t auth_type;
+    /*
+     * note this is ONLY connection based because NTLM is against HTTP spec.
+     * the user details for connection based authentication
+     */
     auth_user_request_t *auth_user_request;
-    /* TODO: generalise the connection owner concept */
-    ClientSocketContext::Pointer currentobject;	/* used by the owner of the connection. Opaque otherwise */
+    /*
+     * used by the owner of the connection, opaque otherwise
+     * TODO: generalise the connection owner concept.
+     */
+    ClientSocketContext::Pointer currentobject;
 
     struct sockaddr_in peer;
 

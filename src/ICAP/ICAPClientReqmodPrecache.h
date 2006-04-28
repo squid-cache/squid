@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPClientReqmodPrecache.h,v 1.2 2005/12/22 22:26:31 wessels Exp $
+ * $Id: ICAPClientReqmodPrecache.h,v 1.3 2006/04/27 19:27:37 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -79,6 +79,7 @@ public:
     ClientHttpRequest *http;
     MsgPipe::Pointer virgin;
     MsgPipe::Pointer adapted;
+    BodyReader::Pointer body_reader;
 
 private:
     typedef enum { notifyNone, notifyOwner, notifyIcap } Notify;
@@ -86,6 +87,12 @@ private:
     void freeVirgin();
     void freeAdapted();
     CBDATA_CLASS2(ICAPClientReqmodPrecache);
+
+    // Hooks to BodyReader so HttpStateData can get the
+    // adapted request body
+    static BodyReadFunc readBody;
+    static BodyAbortFunc abortBody;
+    static BodyKickFunc kickBody;
 };
 
 #endif /* SQUID_ICAPCLIENTSIDEHOOK_H */

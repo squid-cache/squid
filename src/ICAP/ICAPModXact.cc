@@ -149,12 +149,13 @@ void ICAPModXact::handleCommConnected()
     requestBuf.init();
 
     makeRequestHeaders(requestBuf);
-    debugs(93, 9, "ICAPModXact ICAP request prefix " << status() << ":\n" <<
+    debugs(93, 9, "ICAPModXact ICAP status " << status() << " will write:\n" <<
            (requestBuf.terminate(), requestBuf.content()));
 
     // write headers
     state.writing = State::writingHeaders;
     scheduleWrite(requestBuf);
+    virgin->sendSinkNeed();
 }
 
 void ICAPModXact::handleCommWrote(size_t sz)
@@ -172,13 +173,11 @@ void ICAPModXact::handleCommWroteHeaders()
     Must(state.writing == State::writingHeaders);
 
     if (virginBody.expected()) {
-        debugs(98, 5, HERE);
         state.writing = preview.enabled() ?
                         State::writingPreview : State::writingPrime;
         virginWriteClaim.protectAll();
         writeMore();
     } else {
-        debugs(98, 5, HERE);
         stopWriting();
     }
 }
@@ -425,15 +424,21 @@ void ICAPModXact::startReading()
 
 void ICAPModXact::readMore()
 {
-    if (reader || doneReading())
+    if (reader || doneReading()) {
+        debugs(32,3,HERE << "returning from readMore because reader or doneReading()");
         return;
+    }
 
     // do not fill readBuf if we have no space to store the result
-    if (!adapted->data->body->hasPotentialSpace())
+    if (!adapted->data->body->hasPotentialSpace()) {
+        debugs(93,1,HERE << "Not reading because ICAP reply buffer is full");
         return;
+    }
 
     if (readBuf.hasSpace())
         scheduleRead();
+    else
+        debugs(93,1,HERE << "nothing to do because !readBuf.hasSpace()");
 }
 
 // comm module read a portion of the ICAP response for us
@@ -788,8 +793,13 @@ bool ICAPModXact::parsePresentBody()
     if (parsed)
         return true;
 
-    if (bodyParser->needsMoreData())
+    debugs(32,3,HERE << this << " needsMoreData = " << bodyParser->needsMoreData());
+
+    if (bodyParser->needsMoreData()) {
+        debugs(32,3,HERE << this);
         Must(mayReadMore());
+        readMore();
+    }
 
     if (bodyParser->needsMoreSpace()) {
         Must(!doneSending()); // can hope for more space
@@ -864,11 +874,10 @@ void ICAPModXact::noteSinkNeed(MsgPipe *p)
 
     if (state.sending == State::sendingVirgin)
         echoMore();
+    else if (state.sending == State::sendingAdapted)
+        parseMore();
     else
-        if (state.sending == State::sendingAdapted)
-            parseMore();
-        else
-            Must(state.sending == State::sendingUndecided);
+        Must(state.sending == State::sendingUndecided);
 
     ICAPXaction_Exit();
 }

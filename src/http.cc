@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.492 2006/04/22 09:02:44 robertc Exp $
+ * $Id: http.cc,v 1.493 2006/04/27 19:27:37 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -136,18 +136,12 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : ServerStateData(theFwdStat
 HttpStateData::~HttpStateData()
 {
     /*
-     * don't forget about ~ServerStateData()
+     * don't forget that ~ServerStateData() gets called automatically
      */
 
-    if (request_body_buf) {
-        if (orig_request->body_connection != NULL) {
-            clientAbortBody(orig_request);
-        }
-
-        if (request_body_buf) {
-            memFree(request_body_buf, MEM_8K_BUF);
-            request_body_buf = NULL;
-        }
+    if (orig_request->body_reader != NULL) {
+        orig_request->body_reader = NULL;
+        debugs(32,3,HERE << "setting body_reader = NULL for request " << orig_request);
     }
 
     if (!readBuf->isNull())
@@ -1760,7 +1754,9 @@ HttpStateData::sendRequest()
     flags.do_next_read = 1;
     maybeReadData();
 
-    if (orig_request->body_connection != NULL)
+    debugs(32,3,HERE<< "request " << request << " body_reader = " << orig_request->body_reader.getRaw());
+
+    if (orig_request->body_reader != NULL)
         sendHeaderDone = HttpStateData::SendRequestEntityWrapper;
     else
         sendHeaderDone = HttpStateData::SendComplete;
@@ -1850,25 +1846,28 @@ HttpStateData::sendRequestEntityDone()
     }
 }
 
+/*
+ * RequestBodyHandlerWrapper
+ *
+ * BodyReader calls this when it has some body data for us.
+ * It is of type CBCB.
+ */
 void
-HttpStateData::RequestBodyHandlerWrapper(char *buf, ssize_t size, void *data)
+HttpStateData::RequestBodyHandlerWrapper(MemBuf &mb, void *data)
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
-    httpState->requestBodyHandler(buf, size);
+    httpState->requestBodyHandler(mb);
 }
 
 void
-HttpStateData::requestBodyHandler(char *buf, ssize_t size)
+HttpStateData::requestBodyHandler(MemBuf &mb)
 {
-    request_body_buf = NULL;
-
     if (eof || fd < 0) {
         debugs(11, 1, HERE << "Transaction aborted while reading HTTP body");
-        memFree8K(buf);
         return;
     }
 
-    if (size > 0) {
+    if (mb.contentSize() > 0) {
         if (flags.headers_parsed && !flags.abuse_detected) {
             flags.abuse_detected = 1;
             debug(11, 1) ("httpSendRequestEntryDone: Likely proxy abuse detected '%s' -> '%s'\n",
@@ -1876,21 +1875,27 @@ HttpStateData::requestBodyHandler(char *buf, ssize_t size)
                           storeUrl(entry));
 
             if (getReply()->sline.status == HTTP_INVALID_HEADER) {
-                memFree8K(buf);
                 comm_close(fd);
                 return;
             }
         }
 
-        comm_old_write(fd, buf, size, SendRequestEntityWrapper, this, memFree8K);
-    } else if (size == 0) {
+        /*
+         * mb's content will be consumed in the SendRequestEntityWrapper
+         * callback after comm_write is done.
+         */
+        flags.consume_body_data = 1;
+
+        comm_old_write(fd, mb.content(), mb.contentSize(), SendRequestEntityWrapper, this, NULL);
+    } else if (orig_request->body_reader == NULL) {
+        /* Failed to get whole body, probably aborted */
+        SendComplete(fd, NULL, 0, COMM_ERR_CLOSING, this);
+    } else if (orig_request->body_reader->remaining() == 0) {
         /* End of body */
-        memFree8K(buf);
         sendRequestEntityDone();
     } else {
         /* Failed to get whole body, probably aborted */
-        memFree8K(buf);
-        HttpStateData::SendComplete(fd, NULL, 0, COMM_ERR_CLOSING, this);
+        SendComplete(fd, NULL, 0, COMM_ERR_CLOSING, this);
     }
 }
 
@@ -1906,11 +1911,19 @@ HttpStateData::sendRequestEntity(int fd, size_t size, comm_err_t errflag)
 {
     debug(11, 5) ("httpSendRequestEntity: FD %d: size %d: errflag %d.\n",
                   fd, (int) size, errflag);
+    debugs(32,3,HERE << "httpSendRequestEntity called");
+    assert(orig_request->body_reader != NULL);
 
     if (size > 0) {
         fd_bytes(fd, size, FD_WRITE);
         kb_incr(&statCounter.server.all.kbytes_out, size);
         kb_incr(&statCounter.server.http.kbytes_out, size);
+
+        if (flags.consume_body_data) {
+            orig_request->body_reader->consume(size);
+            orig_request->body_reader->bytes_read += size;
+            debugs(32,3," HTTP server body bytes_read=" << orig_request->body_reader->bytes_read);
+        }
     }
 
     if (errflag == COMM_ERR_CLOSING)
@@ -1930,8 +1943,16 @@ HttpStateData::sendRequestEntity(int fd, size_t size, comm_err_t errflag)
         return;
     }
 
-    request_body_buf = (char *)memAllocate(MEM_8K_BUF);
-    clientReadBody(orig_request, request_body_buf, 8192, RequestBodyHandlerWrapper, this);
+    size_t r = orig_request->body_reader->remaining();
+    debugs(32,3,HERE << "body remaining = " << r);
+
+    if (r) {
+        debugs(32,3,HERE << "reading more body data");
+        orig_request->body_reader->read(RequestBodyHandlerWrapper, this);
+    } else {
+        debugs(32,3,HERE << "done reading body data");
+        sendRequestEntityDone();
+    }
 }
 
 void
