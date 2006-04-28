@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.491 2006/04/25 12:00:29 robertc Exp $
+ * $Id: cache_cf.cc,v 1.492 2006/04/27 19:07:16 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -146,7 +146,7 @@ static int check_null_https_port_list(const https_port_list *);
 static void parse_b_size_t(size_t * var);
 
 /* a parser for legacy code that uses the global approach */
-static ConfigParser LegacyParser = ConfigParser();
+ConfigParser LegacyParser = ConfigParser();
 
 void
 self_destruct(void)
