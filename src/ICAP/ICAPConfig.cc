@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.cc,v 1.7 2006/04/23 14:14:18 serassio Exp $
+ * $Id: ICAPConfig.cc,v 1.8 2006/04/27 19:07:16 wessels Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -45,6 +45,7 @@
 #include "ACLChecklist.h"
 #include "wordlist.h"
 
+extern ConfigParser LegacyParser;	// from cache_cf.cc
 ICAPConfig TheICAPConfig;
 
 ICAPServiceRep::Pointer
@@ -360,7 +361,7 @@ ICAPConfig::parseICAPAccess()
         fatalf("Did not find ICAP class '%s' referenced on line %d\n",
                aKey.buf(), config_lineno);
 
-    aclParseAccessLine(&theClass->accessList);
+    aclParseAccessLine(LegacyParser, &theClass->accessList);
 };
 
 void
