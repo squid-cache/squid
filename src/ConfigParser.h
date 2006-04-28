@@ -1,6 +1,6 @@
 
 /*
- * $Id: ConfigParser.h,v 1.4 2006/04/25 12:00:29 robertc Exp $
+ * $Id: ConfigParser.h,v 1.5 2006/04/28 05:13:20 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,10 +38,15 @@
 
 #include "squid.h"
 
-/**
+/*
  * A configuration file Parser. Instances of this class track
  * parsing state and perform tokenisation. Syntax is currently
  * taken care of outside this class.
+ *
+ * One reason for this class is to allow testing of configuration
+ * using modules without linking cache_cf.o in - because that drags
+ * in all of squid by reference. Instead the tokeniser only is
+ * brought in.
  */
 
 class ConfigParser
