@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.375 2006/04/26 00:10:48 hno Exp $
+#  $Id: Makefile.in,v 1.376 2006/04/27 19:04:15 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -1619,6 +1619,7 @@ ufsdump_LDADD = \
 	@CRYPTLIB@ \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
+	${ICAP_LIBS} \
 	@LIB_MALLOC@ \
 	@SSLLIB@ \
 	-lmiscutil \
