@@ -48,7 +48,7 @@ BodyReader::read(CBCB *callback, void *cbdata)
         return;
     }
 
-    debugs(32,3,HERE << this << " " << "read_func=" << (int) read_func);
+    debugs(32,3,HERE << this << " " << "read_func=" << read_func);
     debugs(32,3,HERE << this << " " << "data=" << read_func_data);
     size_t size = theBuf.potentialSpaceSize();
 
