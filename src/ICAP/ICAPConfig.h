@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.h,v 1.7 2005/12/22 23:52:28 wessels Exp $
+ * $Id: ICAPConfig.h,v 1.8 2006/04/28 05:05:47 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -39,6 +39,8 @@
 #include "ICAPServiceRep.h"
 
 class acl_access;
+
+class ConfigParser;
 
 class ICAPConfig;
 
@@ -116,7 +118,7 @@ public:
     void freeICAPClass(void);
     void dumpICAPClass(StoreEntry *, const char *);
 
-    void parseICAPAccess(void);
+    void parseICAPAccess(ConfigParser &parser);
     void freeICAPAccess(void);
     void dumpICAPAccess(StoreEntry *, const char *);
 

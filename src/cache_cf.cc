@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.493 2006/04/27 20:36:29 hno Exp $
+ * $Id: cache_cf.cc,v 1.494 2006/04/28 05:05:43 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -145,8 +145,13 @@ static int check_null_https_port_list(const https_port_list *);
 #endif /* USE_SSL */
 static void parse_b_size_t(size_t * var);
 
-/* a parser for legacy code that uses the global approach */
-ConfigParser LegacyParser = ConfigParser();
+/*
+ * LegacyParser is a parser for legacy code that uses the global
+ * approach.  This is static so that it is only exposed to cache_cf.
+ * Other modules needing access to a ConfigParser should have it
+ * provided to them in their parserFOO methods.
+ */
+static ConfigParser LegacyParser = ConfigParser();
 
 void
 self_destruct(void)
@@ -3260,7 +3265,7 @@ dump_icap_class_type(StoreEntry * entry, const char *name, ICAPConfig cfg)
 static void
 parse_icap_access_type(ICAPConfig * cfg)
 {
-    cfg->parseICAPAccess();
+    cfg->parseICAPAccess(LegacyParser);
 }
 
 static void
