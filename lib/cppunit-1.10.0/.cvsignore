@@ -5,3 +5,4 @@ cppunit-config
 libtool
 autom4te.cache
 configure.lineno
+_configs.sed
