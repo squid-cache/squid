@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.93 2004/04/10 13:10:17 hno Exp $
+ * $Id: dns.cc,v 1.94 2006/04/27 21:01:44 wessels Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "wordlist.h"
 
 /* MS VisualStudio Projects are monolitich, so we need the following
    #if to include the external DNS code in compile process when
