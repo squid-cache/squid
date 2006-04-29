@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufsdump.cc,v 1.3 2003/07/15 13:15:04 robertc Exp $
+ * $Id: ufsdump.cc,v 1.4 2006/04/29 13:33:03 serassio Exp $
  *
  * DEBUG: section 0     UFS Store Dump
  * AUTHOR: Robert Collins
@@ -38,7 +38,6 @@
 #include "StoreMetaUnpacker.h"
 #include "Store.h"
 #include "Generic.h"
-#undef assert
 #undef malloc
 #undef free
 #include <stdexcept>
