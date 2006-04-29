@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufsdump.cc,v 1.4 2006/04/29 13:33:03 serassio Exp $
+ * $Id: ufsdump.cc,v 1.5 2006/04/29 13:57:39 serassio Exp $
  *
  * DEBUG: section 0     UFS Store Dump
  * AUTHOR: Robert Collins
@@ -73,13 +73,24 @@ struct DumpStoreMeta : public unary_function<StoreMeta, void>
     }
 };
 
+#if USE_WIN32_SERVICE
+/* When USE_WIN32_SERVICE is defined, the main function is placed in win32.cc */
+extern "C" void WINAPI
+    SquidWinSvcMain(int, char **)
+{}
+
+int
+SquidMain(int argc, char *argv[])
+#else
 int
 main(int argc, char *argv[])
+#endif
 {
     int fd = -1;
     StoreMeta *metadata = NULL;
 
-    try {
+    try
+    {
         if (argc != 2)
             throw std::runtime_error("No filename provided");
 
@@ -119,7 +130,8 @@ main(int argc, char *argv[])
 
 
         return 0;
-    } catch (std::runtime_error error) {
+    } catch (std::runtime_error error)
+    {
         std::cout << "Failed : " << error.what() << std::endl;
 
         if (fd >= 0)
