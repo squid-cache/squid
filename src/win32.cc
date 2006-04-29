@@ -1,6 +1,6 @@
 
 /*
- * $Id: win32.cc,v 1.18 2005/11/06 16:54:30 serassio Exp $
+ * $Id: win32.cc,v 1.19 2006/04/29 13:53:16 serassio Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -63,7 +63,7 @@ static int WIN32_StoreKey(const char *, DWORD, unsigned char *, int);
 static int WIN32_create_key(void);
 static void WIN32_build_argv (char *);
 #endif
-extern "C" void WINAPI SquidMain(DWORD, char **);
+extern "C" void WINAPI SquidWinSvcMain(DWORD, char **);
 
 #if defined(_SQUID_MSWIN_)
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
@@ -419,12 +419,7 @@ WIN32_Exit()
     _exit(0);
 }
 
-#if USE_WIN32_SERVICE
 int WIN32_Subsystem_Init(int * argc, char *** argv)
-#else
-int
-WIN32_Subsystem_Init()
-#endif
 {
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
     _invalid_parameter_handler oldHandler, newHandler;
@@ -449,8 +444,7 @@ WIN32_Subsystem_Init()
 #endif
 #if USE_WIN32_SERVICE
 
-    if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE)
-    {
+    if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
         char path[512];
         HKEY hndKey;
 
@@ -874,7 +868,7 @@ WIN32_sendSignal(int WIN32_signal)
 int main(int argc, char **argv)
 {
     SERVICE_TABLE_ENTRY DispatchTable[] = {
-                                              {NULL, SquidMain},
+                                              {NULL, SquidWinSvcMain},
                                               {NULL, NULL}
                                           };
     char *c;
@@ -900,7 +894,7 @@ int main(int argc, char **argv)
         }
     } else {
         WIN32_run_mode = _WIN_SQUID_RUN_MODE_INTERACTIVE;
-        SquidMain(argc, argv);
+        return SquidMain(argc, argv);
     }
 
     return 0;

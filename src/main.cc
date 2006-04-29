@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.417 2006/04/23 11:10:31 robertc Exp $
+ * $Id: main.cc,v 1.418 2006/04/29 13:53:16 serassio Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -864,7 +864,13 @@ mainInitialize(void)
 #if USE_WIN32_SERVICE
 /* When USE_WIN32_SERVICE is defined, the main function is placed in win32.cc */
 extern "C" void WINAPI
-    SquidMain(int argc, char **argv)
+    SquidWinSvcMain(int argc, char **argv)
+{
+    SquidMain(argc, argv);
+}
+
+int
+SquidMain(int argc, char **argv)
 #else
 int
 main(int argc, char **argv)
@@ -872,6 +878,10 @@ main(int argc, char **argv)
 {
     int errcount = 0;
     mode_t oldmask;
+#ifdef _SQUID_WIN32_
+
+    int WIN32_init_err;
+#endif
 
 #if HAVE_SBRK
 
@@ -885,20 +895,9 @@ main(int argc, char **argv)
         Squid_MaxFD = FD_SETSIZE;
 
 #ifdef _SQUID_WIN32_
-#ifdef USE_WIN32_SERVICE
 
-    if (WIN32_Subsystem_Init(&argc, &argv))
-        return;
-
-#else
-
-    {
-        int WIN32_init_err;
-
-        if ((WIN32_init_err = WIN32_Subsystem_Init()))
-            return WIN32_init_err;
-    }
-#endif
+    if ((WIN32_init_err = WIN32_Subsystem_Init(&argc, &argv)))
+        return WIN32_init_err;
 
 #endif
 
@@ -962,19 +961,22 @@ main(int argc, char **argv)
 
 #if USE_WIN32_SERVICE
 
-    if (opt_install_service) {
+    if (opt_install_service)
+    {
         WIN32_InstallService();
-        return;
+        return 0;
     }
 
-    if (opt_remove_service) {
+    if (opt_remove_service)
+    {
         WIN32_RemoveService();
-        return;
+        return 0;
     }
 
-    if (opt_command_line) {
+    if (opt_command_line)
+    {
         WIN32_SetServiceCommandLine();
-        return;
+        return 0;
     }
 
 #endif
@@ -1009,16 +1011,8 @@ main(int argc, char **argv)
         parse_err = parseConfigFile(ConfigFile);
 
         if (opt_parse_cfg_only)
-#if USE_WIN32_SERVICE
-
-            return;
-
-#else
 
             return parse_err;
-
-#endif
-
     }
     if (-1 == opt_send_signal)
         if (checkRunningPid())
@@ -1039,7 +1033,8 @@ main(int argc, char **argv)
 #endif
 
     /* send signal to running copy and exit */
-    if (opt_send_signal != -1) {
+    if (opt_send_signal != -1)
+    {
         /* chroot if configured to run inside chroot */
 
         if (Config.chroot_dir) {
@@ -1055,7 +1050,8 @@ main(int argc, char **argv)
         /* NOTREACHED */
     }
 
-    if (opt_create_swap_dirs) {
+    if (opt_create_swap_dirs)
+    {
         /* chroot if configured to run inside chroot */
 
         if (Config.chroot_dir && chroot(Config.chroot_dir)) {
@@ -1065,14 +1061,8 @@ main(int argc, char **argv)
         setEffectiveUser();
         debug(0, 0) ("Creating Swap Directories\n");
         Store::Root().create();
-#if USE_WIN32_SERVICE
-
-        return;
-#else
 
         return 0;
-#endif
-
     }
 
     if (!opt_no_daemon)
@@ -1085,7 +1075,8 @@ main(int argc, char **argv)
 
     comm_select_init();
 
-    if (opt_no_daemon) {
+    if (opt_no_daemon)
+    {
         /* we have to init fdstat here. */
         fd_open(0, FD_LOG, "stdin");
         fd_open(1, FD_LOG, "stdout");
@@ -1108,7 +1099,8 @@ main(int argc, char **argv)
 
     /* main loop */
 
-    for (;;) {
+    for (;;)
+    {
         if (do_reconfigure) {
             mainReconfigure();
             do_reconfigure = 0;
@@ -1192,15 +1184,7 @@ main(int argc, char **argv)
     }
 
     /* NOTREACHED */
-#if USE_WIN32_SERVICE
-    return;
-
-#else
-
     return 0;
-
-#endif
-
 }
 
 static void
