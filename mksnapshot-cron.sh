@@ -1,6 +1,5 @@
 #!/bin/sh -e
 # Nightly cron job to generate snapshot releases
-cd `dirname $0`
 top=$PWD
 versions=/server/httpd/htdocs/squid-cache.org/Versions/
 TMPDIR=/tmp/hno.cron
