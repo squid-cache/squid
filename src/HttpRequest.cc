@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.62 2006/04/27 19:27:37 wessels Exp $
+ * $Id: HttpRequest.cc,v 1.63 2006/05/03 14:04:44 robertc Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -143,7 +143,8 @@ HttpRequest::reset()
     init();
 }
 
-bool HttpRequest::sanityCheckStartLine(MemBuf *buf, http_status *error)
+bool
+HttpRequest::sanityCheckStartLine(MemBuf *buf, http_status *error)
 {
     /*
      * Just see if the request buffer starts with a known
@@ -159,7 +160,8 @@ bool HttpRequest::sanityCheckStartLine(MemBuf *buf, http_status *error)
     return true;
 }
 
-bool HttpRequest::parseFirstLine(const char *start, const char *end)
+bool
+HttpRequest::parseFirstLine(const char *start, const char *end)
 {
     const char *t = start + strcspn(start, w_space);
     method = urlParseMethod(start, t);
@@ -385,4 +387,27 @@ HttpRequest::expectingBody(method_t unused, ssize_t& theSize) const
     }
 
     return expectBody;
+}
+
+/*
+ * Create a Request from a URL and METHOD.
+ *
+ * If the METHOD is CONNECT, then a host:port pair is looked for instead of a URL.
+ * If the request cannot be created cleanly, NULL is returned
+ */
+HttpRequest *
+HttpRequest::CreateFromUrlAndMethod(char * url, method_t method)
+{
+    return urlParse(method, url, NULL);
+}
+
+/*
+ * Create a Request from a URL.
+ *
+ * If the request cannot be created cleanly, NULL is returned
+ */
+HttpRequest *
+HttpRequest::CreateFromUrl(char * url)
+{
+    return urlParse(METHOD_GET, url, NULL);
 }

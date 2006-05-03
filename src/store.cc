@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.586 2006/04/22 05:29:20 robertc Exp $
+ * $Id: store.cc,v 1.587 2006/05/03 14:04:44 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -52,7 +52,7 @@ static STMCB storeWriteComplete;
 
 #define REBUILD_TIMESTAMP_DELTA_MAX 2
 
-#define STORE_IN_MEM_BUCKETS		(229)
+#define STORE_IN_MEM_BUCKETS            (229)
 
 const char *memStatusStr[] =
     {
@@ -454,6 +454,16 @@ storePurgeMem(StoreEntry * e)
         storeRelease(e);
 }
 
+/* DEPRECATED: please use e->lock(); */
+void
+storeLockObject(StoreEntry * e)
+{
+
+    e->lock()
+
+    ;
+}
+
 /* RBC 20050104 this is wrong- memory ref counting
  * is not at all equivalent to the store 'usage' concept
  * which the replacement policies should be acting upon.
@@ -462,13 +472,14 @@ storePurgeMem(StoreEntry * e)
  * but this should not influence store replacement.
  */
 void
-storeLockObject(StoreEntry * e)
+
+StoreEntry::lock()
 {
-    e->lock_count++;
-    debug(20, 3) ("storeLockObject: key '%s' count=%d\n",
-                  e->getMD5Text(), (int) e->lock_count);
-    e->lastref = squid_curtime;
-    Store::Root().reference(*e);
+    lock_count++;
+    debugs(20, 3, "storeLockObject: key '" << getMD5Text() <<"' count=" <<
+           lock_count << "\n");
+    lastref = squid_curtime;
+    Store::Root().reference(*this);
 }
 
 void
@@ -500,37 +511,44 @@ storeReleaseRequest(StoreEntry * e)
     storeSetPrivateKey(e);
 }
 
-/* unlock object, return -1 if object get released after unlock
- * otherwise lock_count */
+/* DEPRECATED: please use e->unlock() */
 int
 storeUnlockObject(StoreEntry * e)
 {
-    e->lock_count--;
+    return e->unlock();
+}
+
+/* unlock object, return -1 if object get released after unlock
+ * otherwise lock_count */
+int
+StoreEntry::unlock()
+{
+    lock_count--;
     debug(20, 3) ("storeUnlockObject: key '%s' count=%d\n",
-                  e->getMD5Text(), e->lock_count);
+                  getMD5Text(), lock_count);
 
-    if (e->lock_count)
-        return (int) e->lock_count;
+    if (lock_count)
+        return (int) lock_count;
 
-    if (e->store_status == STORE_PENDING)
-        e->setReleaseFlag();
+    if (store_status == STORE_PENDING)
+        setReleaseFlag();
 
-    assert(storePendingNClients(e) == 0);
+    assert(storePendingNClients(this) == 0);
 
-    if (EBIT_TEST(e->flags, RELEASE_REQUEST))
-        storeRelease(e);
-    else if (storeKeepInMemory(e)) {
-        Store::Root().dereference(*e);
-        storeSetMemStatus(e, IN_MEMORY);
-        e->mem_obj->unlinkRequest();
+    if (EBIT_TEST(flags, RELEASE_REQUEST))
+        storeRelease(this);
+    else if (storeKeepInMemory(this)) {
+        Store::Root().dereference(*this);
+        storeSetMemStatus(this, IN_MEMORY);
+        mem_obj->unlinkRequest();
     } else {
-        Store::Root().dereference(*e);
+        Store::Root().dereference(*this);
 
-        if (EBIT_TEST(e->flags, KEY_PRIVATE))
+        if (EBIT_TEST(flags, KEY_PRIVATE))
             debug(20, 1) ("WARNING: %s:%d: found KEY_PRIVATE\n", __FILE__, __LINE__);
 
         /* storePurgeMem may free e */
-        storePurgeMem(e);
+        storePurgeMem(this);
     }
 
     return 0;
@@ -623,7 +641,7 @@ storeSetPrivateKey(StoreEntry * e)
     MemObject *mem = e->mem_obj;
 
     if (e->key && EBIT_TEST(e->flags, KEY_PRIVATE))
-        return;			/* is already private */
+        return;                 /* is already private */
 
     if (e->key) {
         if (e->swap_filen > -1)
@@ -652,7 +670,7 @@ storeSetPublicKey(StoreEntry * e)
     MemObject *mem = e->mem_obj;
 
     if (e->key && !EBIT_TEST(e->flags, KEY_PRIVATE))
-        return;			/* is already public */
+        return;                 /* is already public */
 
     assert(mem);
 
@@ -688,7 +706,7 @@ storeSetPublicKey(StoreEntry * e)
                 /* Oops.. the variance has changed. Kill the base object
                  * to record the new variance key
                  */
-                safe_free(request->vary_headers);	/* free old "bad" variance key */
+                safe_free(request->vary_headers);       /* free old "bad" variance key */
                 pe = storeGetPublic(mem->url, mem->method);
 
                 if (pe)
@@ -710,7 +728,7 @@ storeSetPublicKey(StoreEntry * e)
             pe = storeCreateEntry(mem->url, mem->log_url, request->flags, request->method);
             HttpVersion version(1, 0);
             /* We are allowed to do this typecast */
-            HttpReply *rep = (HttpReply *) pe->getReply();	// bypass const
+            HttpReply *rep = (HttpReply *) pe->getReply();      // bypass const
             rep->setHeaders(version, HTTP_OK, "Internal marker object", "x-squid-internal/vary", -1, -1, squid_curtime + 100000);
             vary = httpHeaderGetList(&mem->getReply()->header, HDR_VARY);
 
@@ -782,7 +800,7 @@ storeCreateEntry(const char *url, const char *log_url, request_flags flags, meth
     debug(20, 3) ("storeCreateEntry: '%s'\n", url);
 
     e = new StoreEntry(url, log_url);
-    e->lock_count = 1;		/* Note lock here w/o calling storeLock() */
+    e->lock_count = 1;          /* Note lock here w/o calling storeLock() */
     mem = e->mem_obj;
     mem->method = method;
 
@@ -806,7 +824,7 @@ storeCreateEntry(const char *url, const char *log_url, request_flags flags, meth
     e->swap_dirn = -1;
     e->refcount = 0;
     e->lastref = squid_curtime;
-    e->timestamp = -1;		/* set in storeTimestampsSet() */
+    e->timestamp = -1;          /* set in storeTimestampsSet() */
     e->ping_status = PING_NONE;
     EBIT_SET(e->flags, ENTRY_VALIDATED);
     return e;
@@ -858,14 +876,20 @@ StoreEntry::write (StoreIOBuffer writeBuffer)
     PROF_stop(StoreEntry_write);
 }
 
-/* Append incoming data from a primary server to an entry. */
+/* Legacy call for appending data to a store entry */
 void
 storeAppend(StoreEntry * e, const char *buf, int len)
 {
-    MemObject *mem = e->mem_obj;
-    assert(mem != NULL);
+    e->append(buf, len);
+}
+
+/* Append incoming data from a primary server to an entry. */
+void
+StoreEntry::append(char const *buf, int len)
+{
+    assert(mem_obj != NULL);
     assert(len >= 0);
-    assert(e->store_status == STORE_PENDING);
+    assert(store_status == STORE_PENDING);
 
     StoreIOBuffer tempBuffer;
     tempBuffer.data = (char *)buf;
@@ -874,9 +898,10 @@ storeAppend(StoreEntry * e, const char *buf, int len)
      * XXX sigh, offset might be < 0 here, but it gets "corrected"
      * later.  This offset crap is such a mess.
      */
-    tempBuffer.offset = mem->endOffset() - (e->getReply() ? e->getReply()->hdr_sz : 0);
-    e->write(tempBuffer);
+    tempBuffer.offset = mem_obj->endOffset() - (getReply() ? getReply()->hdr_sz : 0);
+    write(tempBuffer);
 }
+
 
 void
 #if STDC_HEADERS
@@ -993,7 +1018,7 @@ storeCheckCachable(StoreEntry * e)
         } else if (EBIT_TEST(e->flags, ENTRY_NEGCACHED)) {
             debug(20, 3) ("storeCheckCachable: NO: negative cached\n");
             store_check_cachable_hist.no.negative_cached++;
-            return 0;		/* avoid release call below */
+            return 0;           /* avoid release call below */
         } else if ((e->getReply()->content_length > 0 &&
                     static_cast<size_t>(e->getReply()->content_length)
                     > Config.Store.maxObjectSize) ||
@@ -1124,7 +1149,7 @@ storeAbort(StoreEntry * e)
     assert(e->store_status == STORE_PENDING);
     assert(mem != NULL);
     debug(20, 6) ("storeAbort: %s\n", e->getMD5Text());
-    storeLockObject(e);		/* lock while aborting */
+    storeLockObject(e);         /* lock while aborting */
     storeNegativeCache(e);
     storeReleaseRequest(e);
     EBIT_SET(e->flags, ENTRY_ABORTED);
@@ -1160,7 +1185,7 @@ storeAbort(StoreEntry * e)
     /* Close any swapout file */
     storeSwapOutFileClose(e);
 
-    storeUnlockObject(e);	/* unlock */
+    storeUnlockObject(e);       /* unlock */
 }
 
 /* Clear Memory storage to accommodate the given object len */
@@ -1226,8 +1251,8 @@ Store::Maintain(void *notused)
 }
 
 /* The maximum objects to scan for maintain storage space */
-#define MAINTAIN_MAX_SCAN	1024
-#define MAINTAIN_MAX_REMOVE	64
+#define MAINTAIN_MAX_SCAN       1024
+#define MAINTAIN_MAX_REMOVE     64
 
 /*
  * This routine is to be called by main loop in main.c.
@@ -1507,7 +1532,7 @@ storeFreeMemory(void)
 int
 expiresMoreThan(time_t expires, time_t when)
 {
-    if (expires < 0)		/* No Expires given */
+    if (expires < 0)            /* No Expires given */
         return 1;
 
     return (expires > (squid_curtime + when));
@@ -1667,20 +1692,33 @@ storeCreateMemObject(StoreEntry * e, const char *url, const char *log_url)
     e->mem_obj = new MemObject(url, log_url);
 }
 
-/* this just sets DELAY_SENDING */
+/* DEPRECATED: please use entry->buffer() */
 void
 storeBuffer(StoreEntry * e)
 {
-    EBIT_SET(e->flags, DELAY_SENDING);
+    e->buffer();
+}
+
+/* this just sets DELAY_SENDING */
+void
+StoreEntry::buffer()
+{
+    EBIT_SET(flags, DELAY_SENDING);
+}
+
+/* DEPRECATED - please use e->flush(); */
+void storeBufferFlush(StoreEntry * e)
+{
+    e->flush();
 }
 
 /* this just clears DELAY_SENDING and Invokes the handlers */
 void
-storeBufferFlush(StoreEntry * e)
+StoreEntry::flush()
 {
-    if (EBIT_TEST(e->flags, DELAY_SENDING)) {
-        EBIT_CLR(e->flags, DELAY_SENDING);
-        InvokeHandlers(e);
+    if (EBIT_TEST(flags, DELAY_SENDING)) {
+        EBIT_CLR(flags, DELAY_SENDING);
+        InvokeHandlers(this);
     }
 }
 
@@ -1716,7 +1754,7 @@ storeEntryReset(StoreEntry * e)
     assert (mem);
     debug(20, 3) ("storeEntryReset: %s\n", storeUrl(e));
     mem->reset();
-    HttpReply *rep = (HttpReply *) e->getReply();	// bypass const
+    HttpReply *rep = (HttpReply *) e->getReply();       // bypass const
     rep->reset();
     e->expires = e->lastmod = e->timestamp = -1;
 }
@@ -1774,7 +1812,7 @@ createRemovalPolicy(RemovalPolicySettings * settings)
     debug(20, 1) ("ERROR: Be sure to have set cache_replacement_policy\n");
     debug(20, 1) ("ERROR:   and memory_replacement_policy in squid.conf!\n");
     fatalf("ERROR: Unknown policy %s\n", settings->type);
-    return NULL;		/* NOTREACHED */
+    return NULL;                /* NOTREACHED */
 }
 
 #if 0

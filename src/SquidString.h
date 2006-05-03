@@ -1,6 +1,6 @@
 
 /*
- * $Id: SquidString.h,v 1.6 2005/09/27 20:37:42 wessels Exp $
+ * $Id: SquidString.h,v 1.7 2006/05/03 14:04:44 robertc Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -130,6 +130,8 @@ private:
 
     char *buf_;
 };
+
+_SQUID_INLINE_ std::ostream & operator<<(std::ostream& os, String const &aString);
 
 #ifdef _USE_INLINE_
 #include "String.cci"

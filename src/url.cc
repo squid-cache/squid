@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.152 2006/04/23 11:10:32 robertc Exp $
+ * $Id: url.cc,v 1.153 2006/05/03 14:04:44 robertc Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -317,6 +317,13 @@ urlDefaultPort(protocol_t p)
  *
  * If the 'request' arg is non-NULL, put parsed values there instead
  * of allocating a new HttpRequest.
+ *
+ * This abuses HttpRequest as a way of representing the parsed url 
+ * and its components.
+ * method is used to switch parsers and to init the HttpRequest.
+ * If method is METHOD_CONNECT, then rather than a URL a hostname:port is
+ * looked for.
+ * The url is non const so that if its too long we can NULL-terminate it in place.
  */
 HttpRequest *
 urlParse(method_t method, char *url, HttpRequest *request)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.124 2006/04/22 06:03:42 robertc Exp $
+ * $Id: mime.cc,v 1.125 2006/05/03 14:04:44 robertc Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -571,7 +571,7 @@ MimeIcon::created (StoreEntry *newEntry)
     EBIT_SET(e->flags, ENTRY_SPECIAL);
     storeSetPublicKey(e);
     storeBuffer(e);
-    HttpRequest *r = urlParse(METHOD_GET, url);
+    HttpRequest *r = HttpRequest::CreateFromUrl(url);
 
     if (NULL == r)
         fatal("mimeLoadIcon: cannot parse internal URL");

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufsdump.cc,v 1.5 2006/04/29 13:57:39 serassio Exp $
+ * $Id: ufsdump.cc,v 1.6 2006/05/03 14:04:44 robertc Exp $
  *
  * DEBUG: section 0     UFS Store Dump
  * AUTHOR: Robert Collins
@@ -44,9 +44,21 @@
 #include <iostream>
 #include <cassert>
 
+/* stub functions for parts of squid not factored to be dynamic yet */
 void shut_down(int)
 {}
 
+#if WHENITMINIMAL
+void
+eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata)
+{}
+
+void
+cachemgrRegister(const char *action, const char *desc, OBJH * handler, int pw_req_flag, int atomic)
+{}
+
+#endif
+/* end stub functions */
 
 struct DumpStoreMeta : public unary_function<StoreMeta, void>
 {
@@ -116,13 +128,9 @@ main(int argc, char *argv[])
 
         metadata = aBuilder.createStoreMeta ();
 
-        StoreEntry anEntry;
-
         cache_key key[MD5_DIGEST_CHARS];
 
         memset(key, '\0', MD5_DIGEST_CHARS);
-
-        memset(&anEntry, '\0', sizeof(StoreEntry));
 
         DumpStoreMeta dumper;
 

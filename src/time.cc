@@ -1,7 +1,9 @@
 
 /*
- * $Id: Packer.h,v 1.2 2006/05/03 14:04:44 robertc Exp $
+ * $Id: time.cc,v 1.1 2006/05/03 14:04:44 robertc Exp $
  *
+ * DEBUG: section 21    Time Functions
+ * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -31,45 +33,20 @@
  *
  */
 
-#ifndef SQUID_PACKER_H
-#define SQUID_PACKER_H
-
-#include "config.h"
-
-/* see Packer.cc for description */
-
-class Packer;
-
-/* a common objPackInto interface; used by debugObj */
-typedef void (*ObjPackMethod) (void *obj, Packer * p);
-
-/* append/vprintf's for Packer */
-typedef void (*append_f) (void *, const char *buf, int size);
-#if STDC_HEADERS
-typedef void (*vprintf_f) (void *, const char *fmt, va_list args);
-#else
-typedef void (*vprintf_f) ();
-#endif
+#include "squid.h"
 
 
-class Packer
+time_t
+getCurrentTime(void)
 {
-
-public:
-    /* protected, use interface functions instead */
-    append_f append;
-    vprintf_f packer_vprintf;
-    void *real_handler;		/* first parameter to real append and vprintf */
-};
-
-SQUIDCEXTERN void packerClean(Packer * p);
-SQUIDCEXTERN void packerAppend(Packer * p, const char *buf, int size);
-#if STDC_HEADERS
-SQUIDCEXTERN void
-packerPrintf(Packer * p, const char *fmt,...) PRINTF_FORMAT_ARG2;
+#if GETTIMEOFDAY_NO_TZP
+    gettimeofday(&current_time);
 #else
-SQUIDCEXTERN void packerPrintf();
+
+    gettimeofday(&current_time, NULL);
 #endif
 
-
-#endif /* SQUID_PACKER_H */
+    current_dtime = (double) current_time.tv_sec +
+                    (double) current_time.tv_usec / 1000000.0;
+    return squid_curtime = current_time.tv_sec;
+}

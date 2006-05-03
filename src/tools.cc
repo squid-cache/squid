@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.266 2006/04/23 11:10:32 robertc Exp $
+ * $Id: tools.cc,v 1.267 2006/05/03 14:04:44 robertc Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -922,21 +922,6 @@ setMaxFD(void)
     }
 
 #endif /* RLIMIT_VMEM */
-}
-
-time_t
-getCurrentTime(void)
-{
-#if GETTIMEOFDAY_NO_TZP
-    gettimeofday(&current_time);
-#else
-
-    gettimeofday(&current_time, NULL);
-#endif
-
-    current_dtime = (double) current_time.tv_sec +
-                    (double) current_time.tv_usec / 1000000.0;
-    return squid_curtime = current_time.tv_sec;
 }
 
 int

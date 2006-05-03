@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.96 2006/02/17 20:15:35 wessels Exp $
+ * $Id: urn.cc,v 1.97 2006/05/03 14:04:44 robertc Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -211,7 +211,7 @@ UrnState::createUriResRequest (String &uri)
     safe_free (host);
     safe_free (urlres);
     urlres = xstrdup (local_urlres);
-    urlres_r = urlParse(METHOD_GET, urlres);
+    urlres_r = HttpRequest::CreateFromUrl(urlres);
 }
 
 void
