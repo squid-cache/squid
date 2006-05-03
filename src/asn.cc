@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.104 2006/04/23 11:10:31 robertc Exp $
+ * $Id: asn.cc,v 1.105 2006/05/03 14:04:44 robertc Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -235,7 +235,7 @@ asnCacheStart(int as)
     debug(53, 3) ("asnCacheStart: AS %d\n", as);
     snprintf(asres, 4096, "whois://%s/!gAS%d", Config.as_whois_server, as);
     asState->as_number = as;
-    req = urlParse(METHOD_GET, asres);
+    req = HttpRequest::CreateFromUrl(asres);
     assert(NULL != req);
     asState->request = HTTPMSGLOCK(req);
 

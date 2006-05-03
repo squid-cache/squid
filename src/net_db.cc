@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.185 2006/04/23 11:10:31 robertc Exp $
+ * $Id: net_db.cc,v 1.186 2006/05/03 14:04:44 robertc Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -1297,7 +1297,7 @@ netdbExchangeStart(void *data)
     uri = internalRemoteUri(p->host, p->http_port, "/squid-internal-dynamic/", "netdb");
     debug(38, 3) ("netdbExchangeStart: Requesting '%s'\n", uri);
     assert(NULL != uri);
-    ex->r = urlParse(METHOD_GET, uri);
+    ex->r = HttpRequest::CreateFromUrl(uri);
 
     if (NULL == ex->r) {
         debug(38, 1) ("netdbExchangeStart: Bad URI %s\n", uri);

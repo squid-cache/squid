@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cci,v 1.4 2005/09/27 20:37:42 wessels Exp $
+ * $Id: String.cci,v 1.5 2006/05/03 14:04:44 robertc Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -73,18 +73,54 @@ String::rpos(char const ch) const
 int
 String::cmp (char const *aString) const
 {
+    /* strcmp fails on NULLS */
+
+    if (size() == 0 && (aString == NULL || aString[0] == '\0'))
+        return 0;
+
+    if (size() == 0)
+        return -1;
+
+    if (aString == NULL || aString[0] == '\0')
+        return 1;
+
     return strcmp(buf(), aString);
 }
 
 int
 String::cmp (char const *aString, size_t count) const
 {
+    /* always the same at length 0 */
+
+    if (count == 0)
+        return 0;
+
+    if (size() == 0 && (aString == NULL || aString[0] == '\0'))
+        return 0;
+
+    if (size() == 0)
+        return -1;
+
+    if (aString == NULL || aString[0] == '\0')
+        return 1;
+
     return strncmp(buf(), aString, count);
 }
 
 int
 String::cmp (String const &aString) const
 {
+    /* strcmp fails on NULLS */
+
+    if (size() == 0 && aString.size() == 0)
+        return 0;
+
+    if (size() == 0)
+        return -1;
+
+    if (aString.size() == 0)
+        return 1;
+
     return strcmp(buf(), aString.buf());
 }
 
@@ -121,4 +157,12 @@ String::cutPointer (char const *loc)
     len_ = loc-buf_;
     buf_[len_] = '\0';
 }
+
+std::ostream &
+operator<<(std::ostream& os, String const &aString)
+{
+    os << aString.buf();
+    return os;
+}
+
 

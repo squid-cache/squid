@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.62 2006/01/19 18:40:28 wessels Exp $
+ * $Id: htcp.cc,v 1.63 2006/05/03 14:04:44 robertc Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -806,7 +806,7 @@ htcpSpecifier::checkHit()
 {
     method_t m = urlParseMethod(method);
     char *blk_end;
-    checkHitRequest = urlParse(m, uri);
+    checkHitRequest = HttpRequest::CreateFromUrlAndMethod(uri, m);
 
     if (NULL == checkHitRequest) {
         debug(31, 3) ("htcpCheckHit: NO; failed to parse URL\n");

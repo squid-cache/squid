@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.92 2006/04/23 11:10:31 robertc Exp $
+ * $Id: mem.cc,v 1.93 2006/05/03 14:04:44 robertc Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -34,15 +34,20 @@
  */
 
 #include "squid.h"
+
+#include <iomanip>
+#include <ostream>
+
 #include "Mem.h"
 #include "memMeter.h"
 #include "Store.h"
+#include "StoreEntryStream.h"
 #include "MemBuf.h"
 
 /* module globals */
 
 /* local prototypes */
-static void memStringStats(StoreEntry * sentry);
+static void memStringStats(std::ostream &);
 
 /* module locals */
 static MemImplementingAllocator *MemPools[MEM_MAX];
@@ -86,54 +91,51 @@ static MemMeter HugeBufVolumeMeter;
 /* local routines */
 
 static void
-memStringStats(StoreEntry * sentry)
+memStringStats(std::ostream &stream)
 {
-    const char *pfmt = "%-20s\t %d\t %d\n";
     int i;
     int pooled_count = 0;
     size_t pooled_volume = 0;
     /* heading */
-    storeAppendPrintf(sentry,
-                      "String Pool\t Impact\t\t\n"
-                      " \t (%%strings)\t (%%volume)\n");
+    stream << "String Pool\t Impact\t\t\n \t (%%strings)\t (%%volume)\n";
     /* table body */
 
     for (i = 0; i < mem_str_pool_count; i++) {
         const MemAllocator *pool = StrPools[i].pool;
         const int plevel = pool->getMeter().inuse.level;
-        storeAppendPrintf(sentry, pfmt,
-                          pool->objectType(),
-                          xpercentInt(plevel, StrCountMeter.level),
-                          xpercentInt(plevel * pool->objectSize(), StrVolumeMeter.level));
+        stream << std::setw(20) << std::left << pool->objectType();
+        stream << std::right << "\t " << xpercentInt(plevel, StrCountMeter.level);
+        stream << "\t " << xpercentInt(plevel * pool->objectSize(), StrVolumeMeter.level) << "\n";
         pooled_count += plevel;
         pooled_volume += plevel * pool->objectSize();
     }
 
     /* malloc strings */
-    storeAppendPrintf(sentry, pfmt,
-                      "Other Strings",
-                      xpercentInt(StrCountMeter.level - pooled_count, StrCountMeter.level),
-                      xpercentInt(StrVolumeMeter.level - pooled_volume, StrVolumeMeter.level));
+    stream << std::setw(20) << std::left << "Other Strings";
 
-    storeAppendPrintf(sentry, "\n");
+    stream << std::right << "\t ";
+
+    stream << xpercentInt(StrCountMeter.level - pooled_count, StrCountMeter.level) << "\t ";
+
+    stream << xpercentInt(StrVolumeMeter.level - pooled_volume, StrVolumeMeter.level) << "\n\n";
 }
 
 static void
-memBufStats(StoreEntry * sentry)
+memBufStats(std::ostream & stream)
 {
-    storeAppendPrintf(sentry, "Large buffers: %ld (%ld KB)\n",
-                      (long int) HugeBufCountMeter.level,
-                      (long int) HugeBufVolumeMeter.level / 1024);
+    stream << "Large buffers: " <<
+    HugeBufCountMeter.level << " (" <<
+    HugeBufVolumeMeter.level / 1024 << " KB)\n";
 }
 
 void
 Mem::Stats(StoreEntry * sentry)
 {
-    storeBuffer(sentry);
-    Report(sentry);
-    memStringStats(sentry);
-    memBufStats(sentry);
-    storeBufferFlush(sentry);
+    StoreEntryStream stream(sentry);
+    Report(stream);
+    memStringStats(stream);
+    memBufStats(stream);
+    stream.flush();
 }
 
 /*
@@ -537,18 +539,21 @@ memFreeBufFunc(size_t size)
 /* MemPoolMeter */
 
 void
-Mem::PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, StoreEntry * e)
+Mem::PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, std::ostream &stream)
 {
     int excess = 0;
     int needed = 0;
     MemPoolMeter *pm = mp_st->meter;
 
-    storeAppendPrintf(e, "%-20s\t %4d\t ",
-                      mp_st->label, mp_st->obj_size);
+    stream << std::setw(20) << std::left << mp_st->label;
+    stream << "\t " << std::setw(4) << std::right;
+    stream << mp_st->obj_size;
 
     /* Chunks */
-    storeAppendPrintf(e, "%4d\t %4d\t ",
-                      toKB(mp_st->obj_size * mp_st->chunk_capacity), mp_st->chunk_capacity);
+    stream << "\t " << std::setw(4);
+    stream << toKB(mp_st->obj_size * mp_st->chunk_capacity);
+    stream << "\t " << std::setw(4) << mp_st->chunk_capacity;
+    stream << "\t ";
 
     if (mp_st->chunk_capacity) {
         needed = mp_st->items_inuse / mp_st->chunk_capacity;
@@ -559,9 +564,11 @@ Mem::PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, Store
         excess = mp_st->chunks_inuse - needed;
     }
 
-    storeAppendPrintf(e, "%4d\t %4d\t %4d\t %4d\t %.1f\t ",
-                      mp_st->chunks_alloc, mp_st->chunks_inuse, mp_st->chunks_free, mp_st->chunks_partial,
-                      xpercent(excess, needed));
+    stream << std::setw(4) << mp_st->chunks_alloc << "\t ";
+    stream << std::setw(4) << mp_st->chunks_inuse << "\t ";
+    stream << std::setw(4) << mp_st->chunks_free << "\t ";
+    stream << std::setw(4) << mp_st->chunks_partial << "\t ";
+    stream << std::setprecision(1) << xpercent(excess, needed) << "\t ";
     /*
      *  Fragmentation calculation:
      *    needed = inuse.level / chunk_capacity
@@ -570,33 +577,26 @@ Mem::PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, Store
      *
      *    Fragm = (alloced - (inuse / obj_ch) ) / alloced
      */
-
-    storeAppendPrintf(e,
-                      "%d\t %ld\t %ld\t %.2f\t %.1f\t"	/* alloc */
-                      "%d\t %ld\t %ld\t %.2f\t %.1f\t"	/* in use */
-                      "%d\t %ld\t %ld\t"	/* idle */
-                      "%.0f\t %.1f\t %.1f\t %.1f\n",	/* saved */
-                      /* alloc */
-                      mp_st->items_alloc,
-                      (long) toKB(mp_st->obj_size * pm->alloc.level),
-                      (long) toKB(mp_st->obj_size * pm->alloc.hwater_level),
-                      (double) ((squid_curtime - pm->alloc.hwater_stamp) / 3600.),
-                      xpercent(mp_st->obj_size * pm->alloc.level, AllMeter->alloc.level),
-                      /* in use */
-                      mp_st->items_inuse,
-                      (long) toKB(mp_st->obj_size * pm->inuse.level),
-                      (long) toKB(mp_st->obj_size * pm->inuse.hwater_level),
-                      (double) ((squid_curtime - pm->inuse.hwater_stamp) / 3600.),
-                      xpercent(pm->inuse.level, pm->alloc.level),
-                      /* idle */
-                      mp_st->items_idle,
-                      (long) toKB(mp_st->obj_size * pm->idle.level),
-                      (long) toKB(mp_st->obj_size * pm->idle.hwater_level),
-                      /* saved */
-                      pm->gb_saved.count,
-                      xpercent(pm->gb_saved.count, AllMeter->gb_saved.count),
-                      xpercent(pm->gb_saved.bytes, AllMeter->gb_saved.bytes),
-                      xdiv(pm->gb_saved.count - pm->gb_osaved.count, xm_deltat));
+    /* allocated */
+    stream << mp_st->items_alloc << "\t ";
+    stream << toKB(mp_st->obj_size * pm->alloc.level) << "\t ";
+    stream << toKB(mp_st->obj_size * pm->alloc.hwater_level) << "\t ";
+    stream << std::setprecision(2) << ((squid_curtime - pm->alloc.hwater_stamp) / 3600.);
+    stream << "\t " << std::setprecision(1) << xpercent(mp_st->obj_size * pm->alloc.level, AllMeter->alloc.level);
+    /* in use */
+    stream << "\t" << mp_st->items_inuse << "\t ";
+    stream << toKB(mp_st->obj_size * pm->inuse.level) << "\t ";
+    stream << toKB(mp_st->obj_size * pm->inuse.hwater_level) << "\t ";
+    stream << std::setprecision(2) << ((squid_curtime - pm->inuse.hwater_stamp) / 3600.);
+    stream << "\t " << std::setprecision(1) << xpercent(pm->inuse.level, pm->alloc.level);
+    /* idle */
+    stream << "\t" << mp_st->items_idle << "\t " << toKB(mp_st->obj_size * pm->idle.level);
+    stream << "\t " << toKB(mp_st->obj_size * pm->idle.hwater_level) << "\t";
+    /* saved */
+    stream << std::setprecision(0) << pm->gb_saved.count << "\t ";
+    stream << std::setprecision(1) << xpercent(pm->gb_saved.count, AllMeter->gb_saved.count);
+    stream << "\t " << xpercent(pm->gb_saved.bytes, AllMeter->gb_saved.bytes) << "\t ";
+    stream << xdiv(pm->gb_saved.count - pm->gb_osaved.count, xm_deltat) << "\n";
     pm->gb_osaved.count = pm->gb_saved.count;
 }
 
@@ -632,7 +632,7 @@ MemPoolReportSorter(const void *a, const void *b)
 }
 
 void
-Mem::Report(StoreEntry * e)
+Mem::Report(std::ostream &stream)
 {
     static char buf[64];
     static MemPoolStats mp_stats;
@@ -642,26 +642,25 @@ Mem::Report(StoreEntry * e)
     MemAllocator *pool;
 
     /* caption */
-    storeAppendPrintf(e, "Current memory usage:\n");
+    stream << "Current memory usage:\n";
     /* heading */
-    storeAppendPrintf(e,
-                      "Pool\t Obj Size\t"
-                      "Chunks\t\t\t\t\t\t\t"
-                      "Allocated\t\t\t\t\t"
-                      "In Use\t\t\t\t\t"
-                      "Idle\t\t\t"
-                      "Allocations Saved\t\t\t"
-                      "Hit Rate\t"
-                      "\n"
-                      " \t (bytes)\t"
-                      "KB/ch\t obj/ch\t"
-                      "(#)\t used\t free\t part\t %%Frag\t "
-                      "(#)\t (KB)\t high (KB)\t high (hrs)\t %%Tot\t"
-                      "(#)\t (KB)\t high (KB)\t high (hrs)\t %%alloc\t"
-                      "(#)\t (KB)\t high (KB)\t"
-                      "(#)\t %%cnt\t %%vol\t"
-                      "(#) / sec\t"
-                      "\n");
+    stream << "Pool\t Obj Size\t"
+    "Chunks\t\t\t\t\t\t\t"
+    "Allocated\t\t\t\t\t"
+    "In Use\t\t\t\t\t"
+    "Idle\t\t\t"
+    "Allocations Saved\t\t\t"
+    "Hit Rate\t"
+    "\n"
+    " \t (bytes)\t"
+    "KB/ch\t obj/ch\t"
+    "(#)\t used\t free\t part\t %%Frag\t "
+    "(#)\t (KB)\t high (KB)\t high (hrs)\t %%Tot\t"
+    "(#)\t (KB)\t high (KB)\t high (hrs)\t %%alloc\t"
+    "(#)\t (KB)\t high (KB)\t"
+    "(#)\t %%cnt\t %%vol\t"
+    "(#) / sec\t"
+    "\n";
     xm_deltat = current_dtime - xm_time;
     xm_time = current_dtime;
 
@@ -691,7 +690,7 @@ Mem::Report(StoreEntry * e)
     qsort(sortme, npools, sizeof(*sortme), MemPoolReportSorter);
 
     for (int i = 0; i< npools; i++) {
-        PoolReport(&sortme[i], mp_total.TheMeter, e);
+        PoolReport(&sortme[i], mp_total.TheMeter, stream);
     }
 
     xfree(sortme);
@@ -711,17 +710,17 @@ Mem::Report(StoreEntry * e)
     mp_stats.items_idle = mp_total.tot_items_idle;
     mp_stats.overhead = mp_total.tot_overhead;
 
-    PoolReport(&mp_stats, mp_total.TheMeter, e);
+    PoolReport(&mp_stats, mp_total.TheMeter, stream);
 
     /* Cumulative */
-    storeAppendPrintf(e, "Cumulative allocated volume: %s\n", double_to_str(buf, 64, mp_total.TheMeter->gb_saved.bytes));
+    stream << "Cumulative allocated volume: "<< double_to_str(buf, 64, mp_total.TheMeter->gb_saved.bytes) << "\n";
     /* overhead */
-    storeAppendPrintf(e, "Current overhead: %d bytes (%.3f%%)\n",
-                      mp_total.tot_overhead, xpercent(mp_total.tot_overhead, mp_total.TheMeter->inuse.level));
+    stream << "Current overhead: " << mp_total.tot_overhead << " bytes (" <<
+    std::setprecision(3) << xpercent(mp_total.tot_overhead, mp_total.TheMeter->inuse.level) << "%%)\n";
     /* limits */
-    storeAppendPrintf(e, "Idle pool limit: %.2f MB\n", toMB(mp_total.mem_idle_limit));
+    stream << "Idle pool limit: " << std::setprecision(2) << toMB(mp_total.mem_idle_limit) << " MB\n";
     /* limits */
-    storeAppendPrintf(e, "Total Pools created: %d\n", mp_total.tot_pools_alloc);
-    storeAppendPrintf(e, "Pools ever used:     %d (shown above)\n", mp_total.tot_pools_alloc - not_used);
-    storeAppendPrintf(e, "Currently in use:    %d\n", mp_total.tot_pools_inuse);
+    stream << "Total Pools created: " << mp_total.tot_pools_alloc << "\n";
+    stream << "Pools ever used:     " << mp_total.tot_pools_alloc - not_used << " (shown above)\n";
+    stream << "Currently in use:    " << mp_total.tot_pools_inuse << "\n";
 }

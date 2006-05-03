@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.62 2006/04/27 19:27:37 wessels Exp $
+ * $Id: client_side_request.cc,v 1.63 2006/05/03 14:04:44 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -306,7 +306,7 @@ clientBeginRequest(method_t method, char const *url, CSCB * streamcallback,
     http->uri = (char *)xcalloc(url_sz, 1);
     strcpy(http->uri, url);
 
-    if ((request = urlParse(method, http->uri)) == NULL) {
+    if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, method)) == NULL) {
         debug(85, 5) ("Invalid URL: %s\n", http->uri);
         return -1;
     }
@@ -847,7 +847,7 @@ ClientRequestContext::clientRedirectDone(char *result)
                 debug(85, 1) ("clientRedirectDone: bad input: %s\n", result);
             }
         } else if (strcmp(result, http->uri))
-            new_request = urlParse(old_request->method, result);
+            new_request = HttpRequest::CreateFromUrlAndMethod(result, old_request->method);
     }
 
     if (new_request) {

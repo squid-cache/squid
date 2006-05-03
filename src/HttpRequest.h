@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.20 2006/04/27 19:27:37 wessels Exp $
+ * $Id: HttpRequest.h,v 1.21 2006/05/03 14:04:44 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -143,6 +143,10 @@ public:
     void pack(Packer * p);
 
     static void httpRequestPack(void *obj, Packer *p);
+
+    static HttpRequest * CreateFromUrlAndMethod(char * url, method_t method);
+
+    static HttpRequest * CreateFromUrl(char * url);
 
 private:
     const char *packableURI(bool full_uri) const;

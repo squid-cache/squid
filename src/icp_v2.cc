@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.91 2006/04/23 11:10:31 robertc Exp $
+ * $Id: icp_v2.cc,v 1.92 2006/05/03 14:04:44 robertc Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -427,7 +427,7 @@ icpGetRequest(char *url, int reqnum, int fd, struct sockaddr_in * from)
 
     HttpRequest *result;
 
-    if ((result = urlParse(METHOD_GET, url)) == NULL)
+    if ((result = HttpRequest::CreateFromUrl(url)) == NULL)
         icpCreateAndSend(ICP_ERR, 0, url, reqnum, 0, fd, from);
 
     return result;

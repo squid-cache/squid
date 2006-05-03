@@ -4,47 +4,6 @@
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testStore );
 
-/* subclass of Store to allow testing of methods without having all the
- * other components live
- */
-
-class TestStore : public Store
-{
-
-public:
-    TestStore() : statsCalled (false) {}
-
-    bool statsCalled;
-
-    virtual int callback();
-
-    virtual StoreEntry* get
-        (const cache_key*);
-
-    virtual void get
-        (String, void (*)(StoreEntry*, void*), void*);
-
-    virtual void init();
-
-virtual void maintain() {};
-
-    virtual size_t maxSize() const;
-
-    virtual size_t minSize() const;
-
-    virtual void stat(StoreEntry &) const; /* output stats to the provided store entry */
-
-    virtual void reference(StoreEntry &){}	/* Reference this object */
-
-    virtual void dereference(StoreEntry &){}	/* Unreference this object */
-
-    virtual void updateSize(size_t size, int sign) {}
-
-    virtual StoreSearch *search(String const url, HttpRequest *);
-};
-
-typedef RefCount<TestStore> TestStorePointer;
-
 int
 TestStore::callback()
 {

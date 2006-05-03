@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.19 2006/04/22 05:29:19 robertc Exp $
+ * $Id: Store.h,v 1.20 2006/05/03 14:04:44 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,6 +33,10 @@
 
 #ifndef SQUID_STORE_H
 #define SQUID_STORE_H
+
+#include "squid.h"
+
+#include <ostream>
 
 #include "StoreIOBuffer.h"
 #include "Range.h"
@@ -136,6 +140,19 @@ public:
 
     ESIElement::Pointer cachedESITree;
 #endif
+    /* append bytes to the buffer */
+    virtual void append(char const *, int len);
+    /* disable sending content to the clients */
+    virtual void buffer();
+    /* flush any buffered content */
+    virtual void flush();
+    /* reduce the memory lock count on the entry */
+    virtual int unlock();
+    /* increate the memory lock count on the entry */
+
+    virtual void lock()
+
+        ;
 
 private:
     static MemImplementingAllocator *pool;
@@ -177,6 +194,7 @@ private:
 };
 
 typedef void (*STOREGETCLIENT) (StoreEntry *, void *cbdata);
+
 
 /* Abstract base class that will replace the whole store and swapdir interface. */
 

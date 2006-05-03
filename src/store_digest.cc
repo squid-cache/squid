@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.63 2006/02/17 20:15:35 wessels Exp $
+ * $Id: store_digest.cc,v 1.64 2006/05/03 14:04:44 robertc Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -398,7 +398,7 @@ storeDigestRewriteStart(void *datanotused)
     sd_state.rewrite_lock = cbdataAlloc(generic_cbdata);
     sd_state.rewrite_lock->data = e;
     debug(71, 3) ("storeDigestRewrite: url: %s key: %s\n", url, e->getMD5Text());
-    HttpRequest *req = urlParse(METHOD_GET, url);
+    HttpRequest *req = HttpRequest::CreateFromUrl(url);
     e->mem_obj->request = HTTPMSGLOCK(req);
     /* wait for rebuild (if any) to finish */
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.719 2006/04/27 19:27:37 wessels Exp $
+ * $Id: client_side.cc,v 1.720 2006/05/03 14:04:44 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2210,7 +2210,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, ClientSocketContext *context,
         return;
     }
 
-    if ((request = urlParse(method, http->uri)) == NULL) {
+    if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, method)) == NULL) {
         clientStreamNode *node = context->getClientReplyContext();
         debug(33, 5) ("Invalid URL: %s\n", http->uri);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
