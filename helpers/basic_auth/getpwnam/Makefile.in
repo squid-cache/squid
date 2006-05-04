@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.65 2006/04/23 09:22:33 serassio Exp $
+#  $Id: Makefile.in,v 1.66 2006/05/04 00:10:53 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -145,6 +145,7 @@ EXTERNAL_ACL_HELPERS = @EXTERNAL_ACL_HELPERS@
 F77 = @F77@
 FALSE = @FALSE@
 FFLAGS = @FFLAGS@
+ICAP_LIBS = @ICAP_LIBS@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
