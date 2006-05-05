@@ -1,5 +1,5 @@
 /*
- * $Id: check_group.c,v 1.5 2005/07/02 18:34:03 serassio Exp $
+ * $Id: check_group.c,v 1.6 2006/05/05 12:44:26 robertc Exp $
  *
  * This is a helper for the external ACL interface for Squid Cache
  * Copyright (C) 2002 Rodrigo Albani de Campos (rodrigo@geekbunker.org)
@@ -119,7 +119,7 @@ validate_user_gr(char *username, char *groupname)
 static void
 usage(char *program)
 {
-    fprintf(stderr, "Usage: %s -g group1 [-g group2 ...] [-p]\n\n",
+    fprintf(stderr, "Usage: %s -g group1 [-g group2 ...] [-p] [-s]\n\n",
 	program);
     fprintf(stderr, "-g group\n");
     fprintf(stderr,
@@ -128,23 +128,28 @@ usage(char *program)
 	"			be allowed to authenticate.\n");
     fprintf(stderr,
 	"-p			Verify primary user group as well\n");
+    fprintf(stderr,
+	"-s			Strip NT domain from usernames\n");
 }
 
 
 int
 main(int argc, char *argv[])
 {
-    char *user, *p;
+    char *user, *suser, *p;
     char buf[BUFSIZE];
     char *grents[MAX_GROUP];
-    int check_pw = 0, ch, i = 0, j = 0;
+    int check_pw = 0, ch, i = 0, j = 0, strip_dm = 0;
 
     /* make standard output line buffered */
     setvbuf(stdout, NULL, _IOLBF, 0);
 
     /* get user options */
-    while ((ch = getopt(argc, argv, "pg:")) != -1) {
-	switch (ch) {
+    while ((ch = getopt(argc, argv, "spg:")) != -1) {
+  	switch (ch) {
+	case 's':
+	    strip_dm = 1;
+	    break;
 	case 'p':
 	    check_pw = 1;
 	    break;
@@ -195,6 +200,11 @@ main(int argc, char *argv[])
 	} else {
 	    user = p;
 	    rfc1738_unescape(user);
+	    if (user && strip_dm) {
+		suser = strchr(user, '\\');
+		if (!suser) suser = strchr(user, '/');
+		if (suser && suser[1]) user = suser + 1;
+	    }
 	    /* check groups supplied by Squid */
 	    while ((p = strtok(NULL, " ")) != NULL) {
 		rfc1738_unescape(p);
