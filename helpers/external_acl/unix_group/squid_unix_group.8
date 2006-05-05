@@ -4,7 +4,7 @@
 squid_unix_group - Squid UNIX Group external_acl helper
 .
 .SH SYNOPSIS
-squid_unix_group [-g groupname] [-g groupname...] [-p]
+squid_unix_group [-g groupname] [-g groupname...] [-p] [-s]
 .
 .SH DESCRIPTION
 This helper allows Squid to base access controls on users
@@ -17,6 +17,10 @@ Specifies a group name to match.
 .TP
 .BI "-p"
 Also match the users primary group from /etc/passwd
+.
+.TP
+.BI "-s"
+Strip NT domain name component from user names (/ or \\ separated)
 .
 .SH EXAMPLES
 .
