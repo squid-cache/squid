@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.h,v 1.10 2006/02/18 00:23:43 wessels Exp $
+ * $Id: client_side_reply.h,v 1.11 2006/05/05 21:33:56 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -40,6 +40,15 @@
 #include "clientStream.h"
 #include "StoreClient.h"
 #include "client_side_request.h"
+
+/*
+ * The clientReplyContext class now keeps a refcounted pointer to
+ * FwdState.  This was done so that FwdState refcount doesn't go
+ * to zero during a "reforward" between the time when the initial
+ * ServerSide gets destroyed and before the second attempt ServerSide
+ * gets created.
+ */
+#include "forward.h"
 
 /* XXX make static method */
 
@@ -129,6 +138,7 @@ private:
     void startSendProcess();
     StoreIOBuffer holdingBuffer;
     HttpReply *reply;
+    FwdState::Pointer fwd;
     void processReplyAccess();
     static PF ProcessReplyAccessResult;
     void processReplyAccessResult(bool accessAllowed);
