@@ -19,7 +19,7 @@ public:
     ~FwdState();
     static void initModule();
 
-    static void fwdStart(int fd, StoreEntry *, HttpRequest *);
+    static FwdState * fwdStart(int fd, StoreEntry *, HttpRequest *);
     void startComplete(FwdServer *);
     void startFail();
     void fail(ErrorState *err);

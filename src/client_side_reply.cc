@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.100 2006/04/27 16:54:16 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.101 2006/05/05 21:33:56 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -80,6 +80,7 @@ clientReplyContext::~clientReplyContext()
     safe_free(tempBuffer.data);
     cbdataReferenceDone(http);
     HTTPMSGUNLOCK(reply);
+    fwd = NULL;		// refcounted
 }
 
 clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) : http (cbdataReference(clientContext)), old_entry (NULL), old_sc(NULL), deleting(false)
@@ -267,9 +268,14 @@ clientReplyContext::processExpired()
                  (long int) entry->lastmod);
     http->storeEntry(entry);
     assert(http->out.offset == 0);
-    FwdState::fwdStart(http->getConn().getRaw() != NULL ? http->getConn()->fd : -1,
-                       http->storeEntry(),
-                       http->request);
+
+    /*
+     * A refcounted pointer so that FwdState stays around as long as
+     * this clientReplyContext does
+     */
+    fwd = FwdState::fwdStart(http->getConn().getRaw() != NULL ? http->getConn()->fd : -1,
+                             http->storeEntry(),
+                             http->request);
     /* Register with storage manager to receive updates when data comes in. */
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
