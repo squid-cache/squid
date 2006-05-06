@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreEntryStream.h,v 1.1 2006/05/03 14:04:44 robertc Exp $
+ * $Id: StoreEntryStream.h,v 1.2 2006/05/06 01:30:45 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -118,7 +118,7 @@ class StoreEntryStream : public std::ostream
 
 public:
     /* create a stream for writing text etc into anEntry */
-    StoreEntryStream(StoreEntry *anEntry) : _buffer(anEntry) { this->init(&_buffer);}
+    StoreEntryStream(StoreEntry *anEntry) : std::ostream(&_buffer), _buffer(anEntry) { this->init(&_buffer);}
 
 private:
     StoreEntryStreamBuf _buffer;
