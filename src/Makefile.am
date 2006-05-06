@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.140 2006/05/03 14:04:44 robertc Exp $
+#  $Id: Makefile.am,v 1.141 2006/05/06 12:38:01 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -1272,6 +1272,7 @@ tests_testHttpRequest_SOURCES = \
 	peer_digest.cc \
 	peer_select.cc \
 	redirect.cc \
+	referer.cc \
 	refresh.cc \
 	Server.cc \
 	$(SNMP_SOURCE) \
@@ -1306,6 +1307,7 @@ tests_testHttpRequest_SOURCES = \
 	SwapDir.cc \
 	url.cc \
 	urn.cc \
+	useragent.cc \
 	tests/testHttpRequest.cc \
 	tests/testMain.cc \
 	wais.cc \
@@ -1317,6 +1319,7 @@ nodist_tests_testHttpRequest_SOURCES = \
 tests_testHttpRequest_LDADD = \
 	@REPL_OBJS@ \
 	@ICAP_LIBS@ \
+	@REGEXLIB@ \
 	@SSLLIB@ \
 	-L../lib -lmiscutil \
 	@XTRA_LIBS@ \
