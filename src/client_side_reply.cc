@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.101 2006/05/05 21:33:56 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.102 2006/05/05 23:36:40 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -842,9 +842,9 @@ clientReplyContext::processMiss()
         if (http->flags.internal)
             r->protocol = PROTO_INTERNAL;
 
-        FwdState::fwdStart(http->getConn().getRaw() != NULL ? http->getConn()->fd : -1,
-                           http->storeEntry(),
-                           r);
+        fwd = FwdState::fwdStart(http->getConn().getRaw() != NULL ? http->getConn()->fd : -1,
+                                 http->storeEntry(),
+                                 r);
     }
 }
 
