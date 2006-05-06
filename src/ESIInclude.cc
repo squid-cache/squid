@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIInclude.cc,v 1.8 2005/11/05 00:08:32 wessels Exp $
+ * $Id: ESIInclude.cc,v 1.9 2006/05/05 23:57:40 wessels Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -335,7 +335,7 @@ ESIInclude::Start (ESIStreamContext::Pointer stream, char const *url, ESIVarStat
         debug (86,0) ("starting new ESI subrequest failed\n");
     }
 
-    httpHeaderClean (&tempheaders);
+    tempheaders.clean();
 }
 
 ESIInclude::ESIInclude (esiTreeParentPtr aParent, int attrcount, char const **attr, ESIContext *aContext) : parent (aParent), started (false), sent (false)

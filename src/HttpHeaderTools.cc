@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.53 2005/12/26 11:35:22 serassio Exp $
+ * $Id: HttpHeaderTools.cc,v 1.54 2006/05/05 23:57:40 wessels Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -454,7 +454,7 @@ httpHeaderTestParser(const char *hstr)
                       bug_count, pos, hstr + pos, hstr, mb.buf);
     }
 
-    httpHeaderClean(&hdr);
+    hdr.clean();
     packerClean(&p);
     mb.clean();
 }

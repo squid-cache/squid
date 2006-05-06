@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.63 2006/05/03 14:04:44 robertc Exp $
+ * $Id: HttpRequest.cc,v 1.64 2006/05/05 23:57:40 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -115,7 +115,7 @@ HttpRequest::clean()
 
     urlpath.clean();
 
-    httpHeaderClean(&header);
+    header.clean();
 
     if (cache_control) {
         httpHdrCcDestroy(cache_control);

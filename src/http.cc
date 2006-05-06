@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.493 2006/04/27 19:27:37 wessels Exp $
+ * $Id: http.cc,v 1.494 2006/05/05 23:57:40 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1733,7 +1733,7 @@ HttpStateData::buildRequestPrefix(HttpRequest * request,
         httpBuildRequestHeader(request, orig_request, entry, &hdr, flags);
         packerToMemInit(&p, mb);
         httpHeaderPackInto(&hdr, &p);
-        httpHeaderClean(&hdr);
+        hdr.clean();
         packerClean(&p);
     }
     /* append header terminator */

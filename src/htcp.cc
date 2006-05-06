@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.63 2006/05/03 14:04:44 robertc Exp $
+ * $Id: htcp.cc,v 1.64 2006/05/05 23:57:40 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -778,7 +778,7 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, struct
         stuff.D.cache_hdrs = xstrdup(mb.buf);
         debug(31, 3) ("htcpTstReply: cache_hdrs = {%s}\n", stuff.D.cache_hdrs);
         mb.clean();
-        httpHeaderClean(&hdr);
+        hdr.clean();
         packerClean(&p);
     }
 
@@ -916,7 +916,7 @@ htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_i
     key = queried_keys[htcpReply.msg_id % N_QUERIED_KEYS];
     debug(31, 3) ("htcpHandleTstResponse: key (%p) %s\n", key, storeKeyText(key));
     neighborsHtcpReply(key, &htcpReply, from);
-    httpHeaderClean(&htcpReply.hdr);
+    htcpReply.hdr.clean();
 
     if (d)
         htcpFreeDetail(d);
@@ -1228,7 +1228,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
 
     httpHeaderPackInto(&hdr, &pa);
 
-    httpHeaderClean(&hdr);
+    hdr.clean();
 
     packerClean(&pa);
 

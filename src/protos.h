@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.526 2006/05/05 19:57:32 wessels Exp $
+ * $Id: protos.h,v 1.527 2006/05/05 23:57:40 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -326,8 +326,6 @@ SQUIDCEXTERN void httpHeaderPutStrf();
 /* Http Header */
 SQUIDCEXTERN void httpHeaderInitModule(void);
 SQUIDCEXTERN void httpHeaderCleanModule(void);
-/* init/clean */
-SQUIDCEXTERN void httpHeaderClean(HttpHeader * hdr);
 /* append/update */
 SQUIDCEXTERN void httpHeaderAppend(HttpHeader * dest, const HttpHeader * src);
 /* parse/pack */
