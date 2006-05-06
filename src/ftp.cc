@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.392 2006/04/27 19:27:37 wessels Exp $
+ * $Id: ftp.cc,v 1.393 2006/05/05 23:12:11 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2163,10 +2163,11 @@ ftpReadSize(FtpStateData * ftpState)
 static void
 ftpSendPasv(FtpStateData * ftpState)
 {
-    int fd;
 
     struct sockaddr_in addr;
     socklen_t addr_len;
+
+    debugs(9, 1, HERE << "ftpSendPasv");
 
     if (ftpState->request->method == METHOD_HEAD) {
         /* Terminate here for HEAD requests */
@@ -2188,7 +2189,8 @@ ftpSendPasv(FtpStateData * ftpState)
 
     if (ftpState->data.fd >= 0) {
         /* Close old connection */
-        ftpState->transactionComplete();
+        comm_close(ftpState->data.fd);
+        ftpState->data.fd = -1;
     }
 
     if (!ftpState->flags.pasv_supported) {
@@ -2198,6 +2200,8 @@ ftpSendPasv(FtpStateData * ftpState)
 
     addr_len = sizeof(addr);
 
+    debugs(9, 1, HERE << "ftpSendPasv");
+
     if (getsockname(ftpState->ctrl.fd, (struct sockaddr *) &addr, &addr_len)) {
         debug(9, 0) ("ftpSendPasv: getsockname(%d,..): %s\n",
                      ftpState->ctrl.fd, xstrerror());
@@ -2206,12 +2210,12 @@ ftpSendPasv(FtpStateData * ftpState)
     }
 
     /* Open data channel with the same local address as control channel */
-    fd = comm_open(SOCK_STREAM,
-                   IPPROTO_TCP,
-                   addr.sin_addr,
-                   0,
-                   COMM_NONBLOCKING,
-                   storeUrl(ftpState->entry));
+    int fd = comm_open(SOCK_STREAM,
+                       IPPROTO_TCP,
+                       addr.sin_addr,
+                       0,
+                       COMM_NONBLOCKING,
+                       storeUrl(ftpState->entry));
 
     debug(9, 3) ("ftpSendPasv: Unconnected data socket created on FD %d\n", fd);
 
@@ -3081,6 +3085,8 @@ FtpStateData::appendSuccessHeader()
     StoreEntry *e = entry;
     HttpReply *newrep = new HttpReply;
 
+    debugs(0,0,HERE << "FtpStateData::appendSuccessHeader");
+
     reply = HTTPMSGLOCK(newrep);
 
     if (flags.http_header_sent)
@@ -3254,6 +3260,8 @@ FtpStateData::writeReplyBody(const char *data, int len)
 
     debugs(9,5,HERE << "writing " << len << " bytes to StoreEntry");
 
+    //debugs(9,5,HERE << data);
+
     storeAppend(entry, data, len);
 }
 
@@ -3309,7 +3317,7 @@ FtpStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
 
     if (service == NULL) {
         // handle case where no service is selected;
-        debugs(0,0,HERE  << "write me");
+        entry->replaceHttpReply(reply);
         processReplyBody();
         return;
     }
