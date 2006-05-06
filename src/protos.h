@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.524 2006/04/29 13:53:16 serassio Exp $
+ * $Id: protos.h,v 1.525 2006/05/05 18:16:26 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -349,6 +349,7 @@ class HttpHdrRange;
 SQUIDCEXTERN void httpHeaderPutRange(HttpHeader * hdr, const HttpHdrRange * range);
 SQUIDCEXTERN void httpHeaderPutExt(HttpHeader * hdr, const char *name, const char *value);
 SQUIDCEXTERN int httpHeaderGetInt(const HttpHeader * hdr, http_hdr_type id);
+SQUIDCEXTERN int httpHeaderGetSize(const HttpHeader * hdr, http_hdr_type id);
 SQUIDCEXTERN time_t httpHeaderGetTime(const HttpHeader * hdr, http_hdr_type id);
 SQUIDCEXTERN TimeOrTag httpHeaderGetTimeOrTag(const HttpHeader * hdr, http_hdr_type id);
 SQUIDCEXTERN HttpHdrCc *httpHeaderGetCc(const HttpHeader * hdr);

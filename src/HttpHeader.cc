@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.112 2006/04/22 05:29:18 robertc Exp $
+ * $Id: HttpHeader.cc,v 1.113 2006/05/05 18:16:26 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -1116,6 +1116,27 @@ httpHeaderGetInt(const HttpHeader * hdr, http_hdr_type id)
         return httpHeaderEntryGetInt (e);
 
     return -1;
+}
+
+/*
+ * This is copied from Squid-2 code, which uses squid_off_t instead
+ * of int, and ftSize instead of ftInt
+ */
+int
+httpHeaderGetSize(const HttpHeader * hdr, http_hdr_type id)
+{
+    HttpHeaderEntry *e;
+    int value = -1;
+    int ok;
+    assert_eid(id);
+    assert(Headers[id].type == ftInt);         /* must be of an appropriate type */
+
+    if ((e = httpHeaderFindEntry(hdr, id))) {
+        ok = httpHeaderParseSize(e->value.buf(), &value);
+        httpHeaderNoteParsedEntry(e->id, e->value, !ok);
+    }
+
+    return value;
 }
 
 time_t
