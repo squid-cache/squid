@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.114 2006/05/05 19:57:32 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.115 2006/05/05 20:13:04 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -408,6 +408,7 @@ httpHeaderClean(HttpHeader * hdr)
     }
 
     hdr->entries.clean();
+    httpHeaderMaskInit(&hdr->mask, 0);
 }
 
 /* append entries (also see httpHeaderUpdate) */
