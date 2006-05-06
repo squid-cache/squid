@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.84 2006/04/22 05:29:18 robertc Exp $
+ * $Id: HttpReply.cc,v 1.85 2006/05/05 23:57:40 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -99,7 +99,7 @@ HttpReply::clean()
 {
     httpBodyClean(&body);
     hdrCacheClean();
-    httpHeaderClean(&header);
+    header.clean();
     httpStatusLineClean(&sline);
 }
 

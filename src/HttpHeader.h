@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.h,v 1.9 2006/04/22 05:29:18 robertc Exp $
+ * $Id: HttpHeader.h,v 1.10 2006/05/05 23:57:40 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -158,6 +158,7 @@ public:
     ~HttpHeader();
     /* Interface functions */
     void update (HttpHeader const *fresh, HttpHeaderMask const *denied_mask);
+    void clean();
     void removeConnectionHeaderEntries();
     /* protected, do not use these, use interface functions instead */
     Vector<HttpHeaderEntry *> entries;		/* parsed fields in raw format */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIVarState.cc,v 1.5 2005/07/03 15:25:08 serassio Exp $
+ * $Id: ESIVarState.cc,v 1.6 2006/05/05 23:57:40 wessels Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -183,7 +183,7 @@ ESIVarState::freeResources()
 {
     input = NULL;
     ESISegmentFreeList (output);
-    httpHeaderClean (&hdr);
+    hdr.clean();
 }
 
 void *

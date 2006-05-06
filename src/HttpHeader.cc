@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.115 2006/05/05 20:13:04 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.116 2006/05/05 23:57:40 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -363,21 +363,20 @@ HttpHeader::HttpHeader(http_hdr_owner_type const &anOwner) : owner (anOwner), le
 
 HttpHeader::~HttpHeader()
 {
-    httpHeaderClean (this);
+    clean();
 }
 
 void
-httpHeaderClean(HttpHeader * hdr)
+HttpHeader::clean()
 {
     HttpHeaderPos pos = HttpHeaderInitPos;
     HttpHeaderEntry *e;
 
-    assert(hdr);
-    assert(hdr->owner > hoNone && hdr->owner <= hoReply);
-    debug(55, 7) ("cleaning hdr: %p owner: %d\n", hdr, hdr->owner);
+    assert(owner > hoNone && owner <= hoReply);
+    debug(55, 7) ("cleaning hdr: %p owner: %d\n", this, owner);
 
     /*
-     * An unfortunate bug.  The hdr->entries array is initialized
+     * An unfortunate bug.  The entries array is initialized
      * such that count is set to zero.  httpHeaderClean() seems to
      * be called both when 'hdr' is created, and destroyed.  Thus,
      * we accumulate a large number of zero counts for 'hdr' before
@@ -387,28 +386,28 @@ httpHeaderClean(HttpHeader * hdr)
      * arrays.
      */
 
-    if (0 != hdr->entries.count)
-        statHistCount(&HttpHeaderStats[hdr->owner].hdrUCountDistr, hdr->entries.count);
+    if (0 != entries.count)
+        statHistCount(&HttpHeaderStats[owner].hdrUCountDistr, entries.count);
 
-    HttpHeaderStats[hdr->owner].destroyedCount++;
+    HttpHeaderStats[owner].destroyedCount++;
 
-    HttpHeaderStats[hdr->owner].busyDestroyedCount += hdr->entries.count > 0;
+    HttpHeaderStats[owner].busyDestroyedCount += entries.count > 0;
 
-    while ((e = httpHeaderGetEntry(hdr, &pos))) {
+    while ((e = httpHeaderGetEntry(this, &pos))) {
         /* tmp hack to try to avoid coredumps */
 
         if (e->id < 0 || e->id >= HDR_ENUM_END) {
             debug(55, 0) ("httpHeaderClean BUG: entry[%d] is invalid (%d). Ignored.\n",
                           (int) pos, e->id);
         } else {
-            statHistCount(&HttpHeaderStats[hdr->owner].fieldTypeDistr, e->id);
+            statHistCount(&HttpHeaderStats[owner].fieldTypeDistr, e->id);
             /* yes, this destroy() leaves us in an inconsistent state */
             httpHeaderEntryDestroy(e);
         }
     }
 
-    hdr->entries.clean();
-    httpHeaderMaskInit(&hdr->mask, 0);
+    entries.clean();
+    httpHeaderMaskInit(&mask, 0);
 }
 
 /* append entries (also see httpHeaderUpdate) */
@@ -462,7 +461,7 @@ httpHeaderReset(HttpHeader * hdr)
     http_hdr_owner_type ho;
     assert(hdr);
     ho = hdr->owner;
-    httpHeaderClean(hdr);
+    hdr->clean();
     *hdr = HttpHeader(ho);
     return 0;
 }
