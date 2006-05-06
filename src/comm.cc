@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.413 2006/01/10 17:20:22 wessels Exp $
+ * $Id: comm.cc,v 1.414 2006/05/05 21:00:28 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -75,6 +75,8 @@ public:
     int connstart;
 
 private:
+    int commResetFD();
+    int commRetryConnect();
     CBDATA_CLASS(ConnectStateData);
 };
 
@@ -91,8 +93,6 @@ static void commSetTcpRcvbuf(int, int);
 static PF commConnectFree;
 static PF commHandleWrite;
 static IPH commConnectDnsHandle;
-static int commResetFD(ConnectStateData * cs);
-static int commRetryConnect(ConnectStateData * cs);
 static void requireOpenAndActive(int const fd);
 
 static PF comm_accept_try;
@@ -1291,10 +1291,10 @@ copyFDFlags(int to, fde *F)
 }
 
 /* Reset FD so that we can connect() again */
-static int
-commResetFD(ConnectStateData * cs)
+int
+ConnectStateData::commResetFD()
 {
-    if (!cbdataReferenceValid(cs->callback.data))
+    if (!cbdataReferenceValid(callback.data))
         return 0;
 
     statCounter.syscalls.sock.sockets++;
@@ -1314,11 +1314,11 @@ commResetFD(ConnectStateData * cs)
 
     /* On Windows dup2() can't work correctly on Sockets, the          */
     /* workaround is to close the destination Socket before call them. */
-    close(cs->fd);
+    close(fd);
 
 #endif
 
-    if (dup2(fd2, cs->fd) < 0) {
+    if (dup2(fd2, fd) < 0) {
         debug(5, 0) ("commResetFD: dup2: %s\n", xstrerror());
 
         if (ENFILE == errno || EMFILE == errno)
@@ -1330,47 +1330,47 @@ commResetFD(ConnectStateData * cs)
     }
 
     close(fd2);
-    fde *F = &fd_table[cs->fd];
-    fd_table[cs->fd].flags.called_connect = 0;
+    fde *F = &fd_table[fd];
+    fd_table[fd].flags.called_connect = 0;
     /*
      * yuck, this has assumptions about comm_open() arguments for
      * the original socket
      */
 
-    if (commBind(cs->fd, F->local_addr, F->local_port) != COMM_OK) {
+    if (commBind(fd, F->local_addr, F->local_port) != COMM_OK) {
         debug(5, 0) ("commResetFD: bind: %s\n", xstrerror());
         return 0;
     }
 
 #ifdef IP_TOS
     if (F->tos) {
-        if (setsockopt(cs->fd, IPPROTO_IP, IP_TOS, (char *) &F->tos, sizeof(int)) < 0)
-            debug(50, 1) ("commResetFD: setsockopt(IP_TOS) on FD %d: %s\n", cs->fd, xstrerror());
+        if (setsockopt(fd, IPPROTO_IP, IP_TOS, (char *) &F->tos, sizeof(int)) < 0)
+            debug(50, 1) ("commResetFD: setsockopt(IP_TOS) on FD %d: %s\n", fd, xstrerror());
     }
 
 #endif
-    copyFDFlags (cs->fd, F);
+    copyFDFlags (fd, F);
 
     return 1;
 }
 
-static int
-commRetryConnect(ConnectStateData * cs)
+int
+ConnectStateData::commRetryConnect()
 {
-    assert(cs->addrcount > 0);
+    assert(addrcount > 0);
 
-    if (cs->addrcount == 1) {
-        if (cs->tries >= Config.retry.maxtries)
+    if (addrcount == 1) {
+        if (tries >= Config.retry.maxtries)
             return 0;
 
-        if (squid_curtime - cs->connstart > Config.Timeout.connect)
+        if (squid_curtime - connstart > Config.Timeout.connect)
             return 0;
     } else {
-        if (cs->tries > cs->addrcount)
+        if (tries > addrcount)
             return 0;
     }
 
-    return commResetFD(cs);
+    return commResetFD();
 }
 
 static void
@@ -1406,7 +1406,7 @@ ConnectStateData::connect()
     switch (comm_connect_addr(fd, &S)) {
 
     case COMM_INPROGRESS:
-        debug(5, 5) ("commConnectHandle: FD %d: COMM_INPROGRESS\n", fd);
+        debug(5, 5) ("ConnectStateData::connect: FD %d: COMM_INPROGRESS\n", fd);
         commSetSelect(fd, COMM_SELECT_WRITE, ConnectStateData::Connect, this, 0);
         break;
 
@@ -1422,7 +1422,7 @@ ConnectStateData::connect()
         if (Config.onoff.test_reachability)
             netdbDeleteAddrNetwork(S.sin_addr);
 
-        if (commRetryConnect(this)) {
+        if (commRetryConnect()) {
             eventAdd("commReconnect", commReconnect, this, this->addrcount == 1 ? 0.05 : 0.0, 0);
         } else {
             callCallback(COMM_ERR_CONNECT, errno);
