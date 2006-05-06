@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.418 2006/04/29 13:53:16 serassio Exp $
+ * $Id: main.cc,v 1.419 2006/05/05 23:33:21 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -76,6 +76,7 @@ static int malloc_debug_level = 0;
 static volatile int do_reconfigure = 0;
 static volatile int do_rotate = 0;
 static volatile int do_shutdown = 0;
+static volatile int shutdown_status = 0;
 
 static void mainRotate(void);
 static void mainReconfigure(void);
@@ -292,6 +293,14 @@ mainParseOptions(int argc, char *argv[])
                 opt_send_signal = SIGINT;
             else if (!strncmp(optarg, "kill", strlen(optarg)))
                 opt_send_signal = SIGKILL;
+
+#ifdef SIGTTIN
+
+            else if (!strncmp(optarg, "restart", strlen(optarg)))
+                opt_send_signal = SIGTTIN;      /* exit and restart by parent */
+
+#endif
+
             else if (!strncmp(optarg, "check", strlen(optarg)))
                 opt_send_signal = 0;	/* SIGNULL */
             else if (!strncmp(optarg, "parse", strlen(optarg)))
@@ -427,6 +436,12 @@ void
 shut_down(int sig)
 {
     do_shutdown = sig == SIGINT ? -1 : 1;
+#ifdef SIGTTIN
+
+    if (SIGTTIN == sig)
+        shutdown_status = 1;
+
+#endif
 #ifndef _SQUID_MSWIN_
 #ifdef KILL_PARENT_OPT
 
@@ -832,6 +847,12 @@ mainInitialize(void)
     squid_signal(SIGTERM, shut_down, SA_NODEFER | SA_RESETHAND | SA_RESTART);
 
     squid_signal(SIGINT, shut_down, SA_NODEFER | SA_RESETHAND | SA_RESTART);
+
+#ifdef SIGTTIN
+
+    squid_signal(SIGTTIN, shut_down, SA_NODEFER | SA_RESETHAND | SA_RESTART);
+
+#endif
 
     memCheckInit();
 
@@ -1571,5 +1592,5 @@ SquidShutdown(void *unused)
     if (debug_log)
         fclose(debug_log);
 
-    exit(0);
+    exit(shutdown_status);
 }
