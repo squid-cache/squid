@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.85 2005/04/18 21:52:42 hno Exp $
+ * $Id: icmp.cc,v 1.86 2006/05/05 21:52:20 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -92,7 +92,13 @@ icmpRecv(int unused1, void *unused2)
     if (n < 0 && EAGAIN != errno) {
         debug(37, 1) ("icmpRecv: recv: %s\n", xstrerror());
 
-        if (++fail_count == 10 || errno == ECONNREFUSED)
+        if (errno == ECONNREFUSED)
+            icmpClose();
+
+        if (errno == ECONNRESET)
+            icmpClose();
+
+        if (++fail_count == 10)
             icmpClose();
 
         return;
