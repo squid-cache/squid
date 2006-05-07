@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.20 2006/04/22 09:02:44 robertc Exp $
+ * $Id: ESI.cc,v 1.21 2006/05/06 22:23:44 wessels Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -902,10 +902,10 @@ ESIContextNew (HttpReply *rep, clientStreamNode *thisNode, ClientHttpRequest *ht
         /* remove specific headers for ESI to prevent
          * downstream cache confusion */
         HttpHeader *hdr = &rep->header;
-        httpHeaderDelById(hdr, HDR_ACCEPT_RANGES);
-        httpHeaderDelById(hdr, HDR_ETAG);
-        httpHeaderDelById(hdr, HDR_CONTENT_LENGTH);
-        httpHeaderDelById(hdr, HDR_CONTENT_MD5);
+        hdr->delById(HDR_ACCEPT_RANGES);
+        hdr->delById(HDR_ETAG);
+        hdr->delById(HDR_CONTENT_LENGTH);
+        hdr->delById(HDR_CONTENT_MD5);
         rv->tree = new esiSequence (rv, true);
         rv->thisNode = thisNode;
         rv->http = http;
@@ -2430,7 +2430,7 @@ esiEnableProcessing (HttpReply *rep)
 {
     int rv = 0;
 
-    if (httpHeaderHas(&rep->header, HDR_SURROGATE_CONTROL)) {
+    if (rep->header.has(HDR_SURROGATE_CONTROL)) {
         HttpHdrScTarget *sctusable = httpHdrScGetMergedTarget (rep->surrogate_control,
                                      Config.Accel.surrogate_id);
 
