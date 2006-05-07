@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.379 2006/05/04 00:11:44 hno Exp $
+#  $Id: Makefile.in,v 1.380 2006/05/07 00:10:47 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -505,7 +505,7 @@ am__tests_testHttpRequest_SOURCES_DIST = access_log.cc acl.cc \
 	logfile.cc multicast.cc mem.cc mem_node.cc MemBuf.cc \
 	MemObject.cc mime.cc neighbors.cc net_db.cc Packer.cc \
 	Parsing.cc pconn.cc peer_digest.cc peer_select.cc redirect.cc \
-	refresh.cc Server.cc snmp_core.cc snmp_agent.cc \
+	referer.cc refresh.cc Server.cc snmp_core.cc snmp_agent.cc \
 	ACLCertificateData.cc ACLCertificateData.h ACLCertificate.cc \
 	ACLCertificate.h ssl_support.cc ssl_support.h stat.cc \
 	StatHist.cc stmem.cc store.cc store_client.cc store_digest.cc \
@@ -515,7 +515,7 @@ am__tests_testHttpRequest_SOURCES_DIST = access_log.cc acl.cc \
 	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
 	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
 	StoreSwapLogData.cc String.cc time.cc tools.cc tunnel.cc \
-	SwapDir.cc url.cc urn.cc tests/testHttpRequest.cc \
+	SwapDir.cc url.cc urn.cc useragent.cc tests/testHttpRequest.cc \
 	tests/testMain.cc wais.cc whois.cc wordlist.cc
 am_tests_testHttpRequest_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	acl_noncore.$(OBJEXT) ACLChecklist.$(OBJEXT) \
@@ -550,20 +550,21 @@ am_tests_testHttpRequest_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	MemBuf.$(OBJEXT) MemObject.$(OBJEXT) mime.$(OBJEXT) \
 	neighbors.$(OBJEXT) net_db.$(OBJEXT) Packer.$(OBJEXT) \
 	Parsing.$(OBJEXT) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
-	peer_select.$(OBJEXT) redirect.$(OBJEXT) refresh.$(OBJEXT) \
-	Server.$(OBJEXT) $(am__objects_16) $(am__objects_18) \
-	stat.$(OBJEXT) StatHist.$(OBJEXT) stmem.$(OBJEXT) \
-	store.$(OBJEXT) store_client.$(OBJEXT) store_digest.$(OBJEXT) \
-	store_dir.$(OBJEXT) store_io.$(OBJEXT) store_key_md5.$(OBJEXT) \
-	store_log.$(OBJEXT) store_rebuild.$(OBJEXT) \
-	store_swapin.$(OBJEXT) store_swapmeta.$(OBJEXT) \
-	store_swapout.$(OBJEXT) StoreFileSystem.$(OBJEXT) \
-	StoreIOState.$(OBJEXT) StoreMeta.$(OBJEXT) \
-	StoreMetaMD5.$(OBJEXT) StoreMetaSTD.$(OBJEXT) \
-	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
-	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
-	String.$(OBJEXT) time.$(OBJEXT) tools.$(OBJEXT) \
-	tunnel.$(OBJEXT) SwapDir.$(OBJEXT) url.$(OBJEXT) urn.$(OBJEXT) \
+	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
+	refresh.$(OBJEXT) Server.$(OBJEXT) $(am__objects_16) \
+	$(am__objects_18) stat.$(OBJEXT) StatHist.$(OBJEXT) \
+	stmem.$(OBJEXT) store.$(OBJEXT) store_client.$(OBJEXT) \
+	store_digest.$(OBJEXT) store_dir.$(OBJEXT) store_io.$(OBJEXT) \
+	store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
+	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
+	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
+	StoreFileSystem.$(OBJEXT) StoreIOState.$(OBJEXT) \
+	StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
+	StoreMetaSTD.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
+	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
+	StoreSwapLogData.$(OBJEXT) String.$(OBJEXT) time.$(OBJEXT) \
+	tools.$(OBJEXT) tunnel.$(OBJEXT) SwapDir.$(OBJEXT) \
+	url.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) \
 	tests/testHttpRequest.$(OBJEXT) tests/testMain.$(OBJEXT) \
 	wais.$(OBJEXT) whois.$(OBJEXT) wordlist.$(OBJEXT)
 nodist_tests_testHttpRequest_OBJECTS = repl_modules.$(OBJEXT) \
@@ -2086,6 +2087,7 @@ tests_testHttpRequest_SOURCES = \
 	peer_digest.cc \
 	peer_select.cc \
 	redirect.cc \
+	referer.cc \
 	refresh.cc \
 	Server.cc \
 	$(SNMP_SOURCE) \
@@ -2120,6 +2122,7 @@ tests_testHttpRequest_SOURCES = \
 	SwapDir.cc \
 	url.cc \
 	urn.cc \
+	useragent.cc \
 	tests/testHttpRequest.cc \
 	tests/testMain.cc \
 	wais.cc \
@@ -2133,6 +2136,7 @@ nodist_tests_testHttpRequest_SOURCES = \
 tests_testHttpRequest_LDADD = \
 	@REPL_OBJS@ \
 	@ICAP_LIBS@ \
+	@REGEXLIB@ \
 	@SSLLIB@ \
 	-L../lib -lmiscutil \
 	@XTRA_LIBS@ \
