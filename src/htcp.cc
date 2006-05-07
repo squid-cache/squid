@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.64 2006/05/05 23:57:40 wessels Exp $
+ * $Id: htcp.cc,v 1.65 2006/05/06 22:38:13 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -739,22 +739,22 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, struct
         stuff.S.uri = spec->uri;
         stuff.S.version = spec->version;
         stuff.S.req_hdrs = spec->req_hdrs;
-        httpHeaderPutInt(&hdr, HDR_AGE,
-                         e->timestamp <= squid_curtime ?
-                         squid_curtime - e->timestamp : 0);
-        httpHeaderPackInto(&hdr, &p);
+        hdr.putInt(HDR_AGE,
+                   e->timestamp <= squid_curtime ?
+                   squid_curtime - e->timestamp : 0);
+        hdr.packInto(&p);
         stuff.D.resp_hdrs = xstrdup(mb.buf);
         debug(31, 3) ("htcpTstReply: resp_hdrs = {%s}\n", stuff.D.resp_hdrs);
         mb.reset();
-        httpHeaderReset(&hdr);
+        hdr.reset();
 
         if (e->expires > -1)
-            httpHeaderPutTime(&hdr, HDR_EXPIRES, e->expires);
+            hdr.putTime(HDR_EXPIRES, e->expires);
 
         if (e->lastmod > -1)
-            httpHeaderPutTime(&hdr, HDR_LAST_MODIFIED, e->lastmod);
+            hdr.putTime(HDR_LAST_MODIFIED, e->lastmod);
 
-        httpHeaderPackInto(&hdr, &p);
+        hdr.packInto(&p);
 
         stuff.D.entity_hdrs = xstrdup(mb.buf);
 
@@ -762,7 +762,7 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, struct
 
         mb.reset();
 
-        httpHeaderReset(&hdr);
+        hdr.reset();
 
         if ((host = urlHostname(spec->uri))) {
             netdbHostData(host, &samp, &rtt, &hops);
@@ -770,11 +770,11 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, struct
             if (rtt || hops) {
                 snprintf(cto_buf, 128, "%s %d %f %d",
                          host, samp, 0.001 * rtt, hops);
-                httpHeaderPutExt(&hdr, "Cache-to-Origin", cto_buf);
+                hdr.putExt("Cache-to-Origin", cto_buf);
             }
         }
 
-        httpHeaderPackInto(&hdr, &p);
+        hdr.packInto(&p);
         stuff.D.cache_hdrs = xstrdup(mb.buf);
         debug(31, 3) ("htcpTstReply: cache_hdrs = {%s}\n", stuff.D.cache_hdrs);
         mb.clean();
@@ -816,7 +816,7 @@ htcpSpecifier::checkHit()
 
     blk_end = req_hdrs + strlen(req_hdrs);
 
-    if (!httpHeaderParse(&checkHitRequest->header, req_hdrs, blk_end)) {
+    if (!checkHitRequest->header.parse(req_hdrs, blk_end)) {
         debug(31, 3) ("htcpCheckHit: NO; failed to parse request headers\n");
         delete checkHitRequest;
         checkHitRequest = NULL;
@@ -904,13 +904,13 @@ htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_i
         }
 
         if ((t = d->resp_hdrs))
-            httpHeaderParse(&htcpReply.hdr, t, t + strlen(t));
+            htcpReply.hdr.parse(t, t + strlen(t));
 
         if ((t = d->entity_hdrs))
-            httpHeaderParse(&htcpReply.hdr, t, t + strlen(t));
+            htcpReply.hdr.parse(t, t + strlen(t));
 
         if ((t = d->cache_hdrs))
-            httpHeaderParse(&htcpReply.hdr, t, t + strlen(t));
+            htcpReply.hdr.parse(t, t + strlen(t));
     }
 
     key = queried_keys[htcpReply.msg_id % N_QUERIED_KEYS];
@@ -1226,7 +1226,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
 
     packerToMemInit(&pa, &mb);
 
-    httpHeaderPackInto(&hdr, &pa);
+    hdr.packInto(&pa);
 
     hdr.clean();
 
