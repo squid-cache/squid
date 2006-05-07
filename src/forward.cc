@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.139 2006/05/05 21:33:56 wessels Exp $
+ * $Id: forward.cc,v 1.140 2006/05/07 15:13:24 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -137,7 +137,7 @@ FwdState::~FwdState()
  * a transaction.  It is a static method that may or may not
  * allocate a FwdState.
  */
-FwdState *
+void
 FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
 {
     /*
@@ -174,7 +174,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
 
             errorAppendEntry(entry, anErr);	// frees anErr
 
-            return NULL;
+            return;
         }
     }
 
@@ -194,27 +194,27 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
         ErrorState *anErr = errorCon(ERR_SHUTTING_DOWN, HTTP_SERVICE_UNAVAILABLE);
         anErr->request = HTTPMSGLOCK(request);
         errorAppendEntry(entry, anErr);	// frees anErr
-        return NULL;
+        return;
     }
 
     switch (request->protocol) {
 
     case PROTO_INTERNAL:
         internalStart(request, entry);
-        return NULL;
+        return;
 
     case PROTO_CACHEOBJ:
         cachemgrStart(client_fd, request, entry);
-        return NULL;
+        return;
 
     case PROTO_URN:
         urnStart(request, entry);
-        return NULL;
+        return;
 
     default:
         FwdState *fwd = new FwdState(client_fd, entry, request);
         peerSelect(request, entry, fwdStartCompleteWrapper, fwd);
-        return fwd;
+        return;
     }
 
     /* NOTREACHED */
