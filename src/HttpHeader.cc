@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.116 2006/05/05 23:57:40 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.117 2006/05/06 22:13:18 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -355,7 +355,6 @@ HttpHeader::HttpHeader() : owner (hoNone), len (0)
 
 HttpHeader::HttpHeader(http_hdr_owner_type const &anOwner) : owner (anOwner), len (0)
 {
-    assert(this);
     assert(anOwner > hoNone && anOwner <= hoReply);
     debug(55, 7) ("init-ing hdr: %p owner: %d\n", this, owner);
     httpHeaderMaskInit(&mask, 0);
@@ -393,7 +392,7 @@ HttpHeader::clean()
 
     HttpHeaderStats[owner].busyDestroyedCount += entries.count > 0;
 
-    while ((e = httpHeaderGetEntry(this, &pos))) {
+    while ((e = getEntry(&pos))) {
         /* tmp hack to try to avoid coredumps */
 
         if (e->id < 0 || e->id >= HDR_ENUM_END) {
@@ -412,16 +411,16 @@ HttpHeader::clean()
 
 /* append entries (also see httpHeaderUpdate) */
 void
-httpHeaderAppend(HttpHeader * dest, const HttpHeader * src)
+HttpHeader::append(const HttpHeader * src)
 {
     const HttpHeaderEntry *e;
     HttpHeaderPos pos = HttpHeaderInitPos;
-    assert(src && dest);
-    assert(src != dest);
-    debug(55, 7) ("appending hdr: %p += %p\n", dest, src);
+    assert(src);
+    assert(src != this);
+    debug(55, 7) ("appending hdr: %p += %p\n", this, src);
 
-    while ((e = httpHeaderGetEntry(src, &pos))) {
-        httpHeaderAddEntry(dest, httpHeaderEntryClone(e));
+    while ((e = src->getEntry(&pos))) {
+        addEntry(httpHeaderEntryClone(e));
     }
 }
 
@@ -438,49 +437,47 @@ HttpHeader::update (HttpHeader const *fresh, HttpHeaderMask const *denied_mask)
 {
     const HttpHeaderEntry *e;
     HttpHeaderPos pos = HttpHeaderInitPos;
-    assert(this && fresh);
+    assert(fresh);
     assert(this != fresh);
     debug(55, 7) ("updating hdr: %p <- %p\n", this, fresh);
 
-    while ((e = httpHeaderGetEntry(fresh, &pos))) {
+    while ((e = fresh->getEntry(&pos))) {
         /* deny bad guys (ok to check for HDR_OTHER) here */
 
         if (denied_mask && CBIT_TEST(*denied_mask, e->id))
             continue;
 
-        httpHeaderDelByName(this, e->name.buf());
+        delByName(e->name.buf());
 
-        httpHeaderAddEntry(this, httpHeaderEntryClone(e));
+        addEntry(httpHeaderEntryClone(e));
     }
 }
 
 /* just handy in parsing: resets and returns false */
 int
-httpHeaderReset(HttpHeader * hdr)
+HttpHeader::reset()
 {
     http_hdr_owner_type ho;
-    assert(hdr);
-    ho = hdr->owner;
-    hdr->clean();
-    *hdr = HttpHeader(ho);
+    ho = owner;
+    clean();
+    *this = HttpHeader(ho);
     return 0;
 }
 
 int
-httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_end)
+HttpHeader::parse(const char *header_start, const char *header_end)
 {
     const char *field_ptr = header_start;
     HttpHeaderEntry *e, *e2;
 
-    assert(hdr);
     assert(header_start && header_end);
-    debug(55, 7) ("parsing hdr: (%p)\n%s\n", hdr, getStringPrefix(header_start, header_end));
-    HttpHeaderStats[hdr->owner].parsedCount++;
+    debug(55, 7) ("parsing hdr: (%p)\n%s\n", this, getStringPrefix(header_start, header_end));
+    HttpHeaderStats[owner].parsedCount++;
 
     if (memchr(header_start, '\0', header_end - header_start)) {
         debug(55, 1) ("WARNING: HTTP header contains NULL characters {%s}\n",
                       getStringPrefix(header_start, header_end));
-        return httpHeaderReset(hdr);
+        return reset();
     }
 
     /* common format headers are "<name>:[ws]<value>" lines delimited by <CRLF>.
@@ -494,7 +491,7 @@ httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_e
             field_ptr = (const char *)memchr(field_ptr, '\n', header_end - field_ptr);
 
             if (!field_ptr)
-                return httpHeaderReset(hdr);	/* missing <LF> */
+                return reset();	/* missing <LF> */
 
             field_end = field_ptr;
 
@@ -522,13 +519,13 @@ httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_e
                     while ((p = (char *)memchr(p, '\r', field_end - p)) != NULL)
                         *p++ = ' ';
                 } else
-                    return httpHeaderReset(hdr);
+                    return reset();
             }
 
             if (this_line + 1 == field_end && this_line > field_start) {
                 debug(55, 1) ("WARNING: Blank continuation line in HTTP header {%s}\n",
                               getStringPrefix(header_start, header_end));
-                return httpHeaderReset(hdr);
+                return reset();
             }
         } while (field_ptr < header_end && (*field_ptr == ' ' || *field_ptr == '\t'));
 
@@ -536,7 +533,7 @@ httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_e
             if (field_ptr < header_end) {
                 debug(55, 1) ("WARNING: unparseable HTTP header field near {%s}\n",
                               getStringPrefix(field_start, header_end));
-                return httpHeaderReset(hdr);
+                return reset();
             }
 
             break;		/* terminating blank line */
@@ -553,17 +550,17 @@ httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_e
             if (Config.onoff.relaxed_header_parser)
                 continue;
             else
-                return httpHeaderReset(hdr);
+                return reset();
         }
 
-        if (e->id == HDR_CONTENT_LENGTH && (e2 = httpHeaderFindEntry(hdr, e->id)) != NULL) {
+        if (e->id == HDR_CONTENT_LENGTH && (e2 = findEntry(e->id)) != NULL) {
             if (e->value.cmp(e2->value.buf()) != 0) {
                 ssize_t l1, l2;
                 debug(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2) ("WARNING: found two conflicting content-length headers in {%s}\n", getStringPrefix(header_start, header_end));
 
                 if (!Config.onoff.relaxed_header_parser) {
                     httpHeaderEntryDestroy(e);
-                    return httpHeaderReset(hdr);
+                    return reset();
                 }
 
                 if (!httpHeaderParseSize(e->value.buf(), &l1)) {
@@ -572,9 +569,9 @@ httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_e
                     continue;
                 } else if (!httpHeaderParseSize(e2->value.buf(), &l2)) {
                     debug(55, 1)("WARNING: Unparseable content-length '%s'\n", e2->value.buf());
-                    httpHeaderDelById(hdr, e2->id);
+                    delById(e2->id);
                 } else if (l1 > l2) {
-                    httpHeaderDelById(hdr, e2->id);
+                    delById(e2->id);
                 } else {
                     httpHeaderEntryDestroy(e);
                     continue;
@@ -588,7 +585,7 @@ httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_e
                     continue;
                 } else {
                     httpHeaderEntryDestroy(e);
-                    return httpHeaderReset(hdr);
+                    return reset();
                 }
             }
         }
@@ -599,11 +596,11 @@ httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_e
 
             if (!Config.onoff.relaxed_header_parser) {
                 httpHeaderEntryDestroy(e);
-                return httpHeaderReset(hdr);
+                return reset();
             }
         }
 
-        httpHeaderAddEntry(hdr, e);
+        addEntry(e);
     }
 
     return 1;			/* even if no fields where found, it is a valid header */
@@ -611,28 +608,28 @@ httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_e
 
 /* packs all the entries using supplied packer */
 void
-httpHeaderPackInto(const HttpHeader * hdr, Packer * p)
+HttpHeader::packInto(Packer * p) const
 {
     HttpHeaderPos pos = HttpHeaderInitPos;
     const HttpHeaderEntry *e;
-    assert(hdr && p);
-    debug(55, 7) ("packing hdr: (%p)\n", hdr);
+    assert(p);
+    debug(55, 7) ("packing hdr: (%p)\n", this);
     /* pack all entries one by one */
 
-    while ((e = httpHeaderGetEntry(hdr, &pos)))
+    while ((e = getEntry(&pos)))
         httpHeaderEntryPackInto(e, p);
 }
 
 /* returns next valid entry */
 HttpHeaderEntry *
-httpHeaderGetEntry(const HttpHeader * hdr, HttpHeaderPos * pos)
+HttpHeader::getEntry(HttpHeaderPos * pos) const
 {
-    assert(hdr && pos);
-    assert(*pos >= HttpHeaderInitPos && *pos < (ssize_t)hdr->entries.count);
+    assert(pos);
+    assert(*pos >= HttpHeaderInitPos && *pos < (ssize_t)entries.count);
 
-    for ((*pos)++; *pos < (ssize_t)hdr->entries.count; (*pos)++) {
-        if (hdr->entries.items[*pos])
-            return (HttpHeaderEntry*)hdr->entries.items[*pos];
+    for ((*pos)++; *pos < (ssize_t)entries.count; (*pos)++) {
+        if (entries.items[*pos])
+            return (HttpHeaderEntry*)entries.items[*pos];
     }
 
     return NULL;
@@ -644,21 +641,20 @@ httpHeaderGetEntry(const HttpHeader * hdr, HttpHeaderPos * pos)
  * "list" headers
  */
 HttpHeaderEntry *
-httpHeaderFindEntry(const HttpHeader * hdr, http_hdr_type id)
+HttpHeader::findEntry(http_hdr_type id) const
 {
     HttpHeaderPos pos = HttpHeaderInitPos;
     HttpHeaderEntry *e;
-    assert(hdr);
     assert_eid(id);
     assert(!CBIT_TEST(ListHeadersMask, id));
 
     /* check mask first */
 
-    if (!CBIT_TEST(hdr->mask, id))
+    if (!CBIT_TEST(mask, id))
         return NULL;
 
     /* looks like we must have it, do linear search */
-    while ((e = httpHeaderGetEntry(hdr, &pos))) {
+    while ((e = getEntry(&pos))) {
         if (e->id == id)
             return e;
     }
@@ -672,23 +668,22 @@ httpHeaderFindEntry(const HttpHeader * hdr, http_hdr_type id)
 /*
  * same as httpHeaderFindEntry
  */
-static HttpHeaderEntry *
-httpHeaderFindLastEntry(const HttpHeader * hdr, http_hdr_type id)
+HttpHeaderEntry *
+HttpHeader::findLastEntry(http_hdr_type id) const
 {
     HttpHeaderPos pos = HttpHeaderInitPos;
     HttpHeaderEntry *e;
     HttpHeaderEntry *result = NULL;
-    assert(hdr);
     assert_eid(id);
     assert(!CBIT_TEST(ListHeadersMask, id));
 
     /* check mask first */
 
-    if (!CBIT_TEST(hdr->mask, id))
+    if (!CBIT_TEST(mask, id))
         return NULL;
 
     /* looks like we must have it, do linear search */
-    while ((e = httpHeaderGetEntry(hdr, &pos))) {
+    while ((e = getEntry(&pos))) {
         if (e->id == id)
             result = e;
     }
@@ -701,20 +696,20 @@ httpHeaderFindLastEntry(const HttpHeader * hdr, http_hdr_type id)
  * deletes all fields with a given name if any, returns #fields deleted; 
  */
 int
-httpHeaderDelByName(HttpHeader * hdr, const char *name)
+HttpHeader::delByName(const char *name)
 {
     int count = 0;
     HttpHeaderPos pos = HttpHeaderInitPos;
     HttpHeaderEntry *e;
-    httpHeaderMaskInit(&hdr->mask, 0);	/* temporal inconsistency */
-    debug(55, 9) ("deleting '%s' fields in hdr %p\n", name, hdr);
+    httpHeaderMaskInit(&mask, 0);	/* temporal inconsistency */
+    debug(55, 9) ("deleting '%s' fields in hdr %p\n", name, this);
 
-    while ((e = httpHeaderGetEntry(hdr, &pos))) {
+    while ((e = getEntry(&pos))) {
         if (!e->name.caseCmp(name)) {
-            httpHeaderDelAt(hdr, pos);
+            delAt(pos);
             count++;
         } else
-            CBIT_SET(hdr->mask, e->id);
+            CBIT_SET(mask, e->id);
     }
 
     return count;
@@ -722,27 +717,26 @@ httpHeaderDelByName(HttpHeader * hdr, const char *name)
 
 /* deletes all entries with a given id, returns the #entries deleted */
 int
-httpHeaderDelById(HttpHeader * hdr, http_hdr_type id)
+HttpHeader::delById(http_hdr_type id)
 {
     int count = 0;
     HttpHeaderPos pos = HttpHeaderInitPos;
     HttpHeaderEntry *e;
-    debug(55, 8) ("%p del-by-id %d\n", hdr, id);
-    assert(hdr);
+    debug(55, 8) ("%p del-by-id %d\n", this, id);
     assert_eid(id);
     assert(id != HDR_OTHER);		/* does not make sense */
 
-    if (!CBIT_TEST(hdr->mask, id))
+    if (!CBIT_TEST(mask, id))
         return 0;
 
-    while ((e = httpHeaderGetEntry(hdr, &pos))) {
+    while ((e = getEntry(&pos))) {
         if (e->id == id) {
-            httpHeaderDelAt(hdr, pos);
+            delAt(pos);
             count++;
         }
     }
 
-    CBIT_CLR(hdr->mask, id);
+    CBIT_CLR(mask, id);
     assert(count);
     return count;
 }
@@ -752,15 +746,15 @@ httpHeaderDelById(HttpHeader * hdr, http_hdr_type id)
  * possible to iterate(search) and delete fields at the same time
  */
 void
-httpHeaderDelAt(HttpHeader * hdr, HttpHeaderPos pos)
+HttpHeader::delAt(HttpHeaderPos pos)
 {
     HttpHeaderEntry *e;
-    assert(pos >= HttpHeaderInitPos && pos < (ssize_t)hdr->entries.count);
-    e = (HttpHeaderEntry*)hdr->entries.items[pos];
-    hdr->entries.items[pos] = NULL;
+    assert(pos >= HttpHeaderInitPos && pos < (ssize_t)entries.count);
+    e = (HttpHeaderEntry*)entries.items[pos];
+    entries.items[pos] = NULL;
     /* decrement header length, allow for ": " and crlf */
-    hdr->len -= e->name.size() + 2 + e->value.size() + 2;
-    assert(hdr->len >= 0);
+    len -= e->name.size() + 2 + e->value.size() + 2;
+    assert(len >= 0);
     httpHeaderEntryDestroy(e);
 }
 
@@ -769,64 +763,64 @@ httpHeaderDelAt(HttpHeader * hdr, HttpHeaderPos pos)
  * does not call httpHeaderEntryClone() so one should not reuse "*e"
  */
 void
-httpHeaderAddEntry(HttpHeader * hdr, HttpHeaderEntry * e)
+HttpHeader::addEntry(HttpHeaderEntry * e)
 {
-    assert(hdr && e);
+    assert(e);
     assert_eid(e->id);
 
-    debugs(55, 9, hdr << " adding entry: " << e->id << " at " <<
-           hdr->entries.count);
+    debugs(55, 9, this << " adding entry: " << e->id << " at " <<
+           entries.count);
 
-    if (CBIT_TEST(hdr->mask, e->id))
+    if (CBIT_TEST(mask, e->id))
         Headers[e->id].stat.repCount++;
     else
-        CBIT_SET(hdr->mask, e->id);
+        CBIT_SET(mask, e->id);
 
-    hdr->entries.push_back(e);
+    entries.push_back(e);
 
     /* increment header length, allow for ": " and crlf */
-    hdr->len += e->name.size() + 2 + e->value.size() + 2;
+    len += e->name.size() + 2 + e->value.size() + 2;
 }
 
 /* inserts an entry;
  * does not call httpHeaderEntryClone() so one should not reuse "*e"
  */
 void
-httpHeaderInsertEntry(HttpHeader * hdr, HttpHeaderEntry * e)
+HttpHeader::insertEntry(HttpHeaderEntry * e)
 {
-    assert(hdr && e);
+    assert(e);
     assert_eid(e->id);
 
-    debugs(55, 7, hdr << " adding entry: " << e->id << " at " <<
-           hdr->entries.count);
+    debugs(55, 7, this << " adding entry: " << e->id << " at " <<
+           entries.count);
 
-    if (CBIT_TEST(hdr->mask, e->id))
+    if (CBIT_TEST(mask, e->id))
         Headers[e->id].stat.repCount++;
     else
-        CBIT_SET(hdr->mask, e->id);
+        CBIT_SET(mask, e->id);
 
-    hdr->entries.insert(e);
+    entries.insert(e);
 
     /* increment header length, allow for ": " and crlf */
-    hdr->len += e->name.size() + 2 + e->value.size() + 2;
+    len += e->name.size() + 2 + e->value.size() + 2;
 }
 
 /* return a list of entries with the same id separated by ',' and ws */
 String
-httpHeaderGetList(const HttpHeader * hdr, http_hdr_type id)
+HttpHeader::getList(http_hdr_type id) const
 {
     HttpHeaderEntry *e;
     HttpHeaderPos pos = HttpHeaderInitPos;
-    debug(55, 9) ("%p: joining for id %d\n", hdr, id);
+    debug(55, 9) ("%p: joining for id %d\n", this, id);
     /* only fields from ListHeaders array can be "listed" */
     assert(CBIT_TEST(ListHeadersMask, id));
 
-    if (!CBIT_TEST(hdr->mask, id))
+    if (!CBIT_TEST(mask, id))
         return String();
 
     String s;
 
-    while ((e = httpHeaderGetEntry(hdr, &pos))) {
+    while ((e = getEntry(&pos))) {
         if (e->id == id)
             strListAdd(&s, e->value.buf(), ',');
     }
@@ -841,21 +835,21 @@ httpHeaderGetList(const HttpHeader * hdr, http_hdr_type id)
     if (!s.size())
         debug(55, 3) ("empty list header: %s (%d)\n", Headers[id].name.buf(), id);
 
-    debug(55, 6) ("%p: joined for id %d: %s\n", hdr, id, s.buf());
+    debug(55, 6) ("%p: joined for id %d: %s\n", this, id, s.buf());
 
     return s;
 }
 
 /* return a string or list of entries with the same id separated by ',' and ws */
 String
-httpHeaderGetStrOrList(const HttpHeader * hdr, http_hdr_type id)
+HttpHeader::getStrOrList(http_hdr_type id) const
 {
     HttpHeaderEntry *e;
 
     if (CBIT_TEST(ListHeadersMask, id))
-        return httpHeaderGetList(hdr, id);
+        return getList(id);
 
-    if ((e = httpHeaderFindEntry(hdr, id)))
+    if ((e = findEntry(id)))
         return e->value;
 
     return String();
@@ -865,25 +859,24 @@ httpHeaderGetStrOrList(const HttpHeader * hdr, http_hdr_type id)
  * Returns the value of the specified header.
  */
 String
-httpHeaderGetByName(const HttpHeader * hdr, const char *name)
+HttpHeader::getByName(const char *name) const
 {
     http_hdr_type id;
     HttpHeaderPos pos = HttpHeaderInitPos;
     HttpHeaderEntry *e;
 
-    assert(hdr);
     assert(name);
 
     /* First try the quick path */
     id = httpHeaderIdByNameDef(name, strlen(name));
 
     if (id != -1)
-        return httpHeaderGetStrOrList(hdr, id);
+        return getStrOrList(id);
 
     String result;
 
     /* Sorry, an unknown header name. Do linear search */
-    while ((e = httpHeaderGetEntry(hdr, &pos))) {
+    while ((e = getEntry(&pos))) {
         if (e->id == HDR_OTHER && e->name.caseCmp(name) == 0) {
             strListAdd(&result, e->value.buf(), ',');
         }
@@ -896,7 +889,7 @@ httpHeaderGetByName(const HttpHeader * hdr, const char *name)
  * Returns a the value of the specified list member, if any.
  */
 String
-httpHeaderGetByNameListMember(const HttpHeader * hdr, const char *name, const char *member, const char separator)
+HttpHeader::getByNameListMember(const char *name, const char *member, const char separator) const
 {
     String header;
     const char *pos = NULL;
@@ -904,10 +897,9 @@ httpHeaderGetByNameListMember(const HttpHeader * hdr, const char *name, const ch
     int ilen;
     int mlen = strlen(member);
 
-    assert(hdr);
     assert(name);
 
-    header = httpHeaderGetByName(hdr, name);
+    header = getByName(name);
 
     String result;
 
@@ -925,7 +917,7 @@ httpHeaderGetByNameListMember(const HttpHeader * hdr, const char *name, const ch
  * returns a the value of the specified list member, if any.
  */
 String
-httpHeaderGetListMember(const HttpHeader * hdr, http_hdr_type id, const char *member, const char separator)
+HttpHeader::getListMember(http_hdr_type id, const char *member, const char separator) const
 {
     String header;
     const char *pos = NULL;
@@ -933,10 +925,9 @@ httpHeaderGetListMember(const HttpHeader * hdr, http_hdr_type id, const char *me
     int ilen;
     int mlen = strlen(member);
 
-    assert(hdr);
     assert(id >= 0);
 
-    header = httpHeaderGetStrOrList(hdr, id);
+    header = getStrOrList(id);
     String result;
 
     while (strListGetItem(&header, separator, &item, &ilen, &pos)) {
@@ -952,129 +943,128 @@ httpHeaderGetListMember(const HttpHeader * hdr, http_hdr_type id, const char *me
 
 /* test if a field is present */
 int
-httpHeaderHas(const HttpHeader * hdr, http_hdr_type id)
+HttpHeader::has(http_hdr_type id) const
 {
-    assert(hdr);
     assert_eid(id);
     assert(id != HDR_OTHER);
-    debug(55, 9) ("%p lookup for %d\n", hdr, id);
-    return CBIT_TEST(hdr->mask, id);
+    debug(55, 9) ("%p lookup for %d\n", this, id);
+    return CBIT_TEST(mask, id);
 }
 
 void
-httpHeaderPutInt(HttpHeader * hdr, http_hdr_type id, int number)
+HttpHeader::putInt(http_hdr_type id, int number)
 {
     assert_eid(id);
     assert(Headers[id].type == ftInt);	/* must be of an appropriate type */
     assert(number >= 0);
-    httpHeaderAddEntry(hdr, httpHeaderEntryCreate(id, NULL, xitoa(number)));
+    addEntry(httpHeaderEntryCreate(id, NULL, xitoa(number)));
 }
 
 void
-httpHeaderPutTime(HttpHeader * hdr, http_hdr_type id, time_t htime)
+HttpHeader::putTime(http_hdr_type id, time_t htime)
 {
     assert_eid(id);
     assert(Headers[id].type == ftDate_1123);	/* must be of an appropriate type */
     assert(htime >= 0);
-    httpHeaderAddEntry(hdr, httpHeaderEntryCreate(id, NULL, mkrfc1123(htime)));
+    addEntry(httpHeaderEntryCreate(id, NULL, mkrfc1123(htime)));
 }
 
 void
-httpHeaderInsertTime(HttpHeader * hdr, http_hdr_type id, time_t htime)
+HttpHeader::insertTime(http_hdr_type id, time_t htime)
 {
     assert_eid(id);
     assert(Headers[id].type == ftDate_1123);	/* must be of an appropriate type */
     assert(htime >= 0);
-    httpHeaderInsertEntry(hdr, httpHeaderEntryCreate(id, NULL, mkrfc1123(htime)));
+    insertEntry(httpHeaderEntryCreate(id, NULL, mkrfc1123(htime)));
 }
 
 void
-httpHeaderPutStr(HttpHeader * hdr, http_hdr_type id, const char *str)
+HttpHeader::putStr(http_hdr_type id, const char *str)
 {
     assert_eid(id);
     assert(Headers[id].type == ftStr);	/* must be of an appropriate type */
     assert(str);
-    httpHeaderAddEntry(hdr, httpHeaderEntryCreate(id, NULL, str));
+    addEntry(httpHeaderEntryCreate(id, NULL, str));
 }
 
 void
-httpHeaderPutAuth(HttpHeader * hdr, const char *auth_scheme, const char *realm)
+HttpHeader::putAuth(const char *auth_scheme, const char *realm)
 {
-    assert(hdr && auth_scheme && realm);
-    httpHeaderPutStrf(hdr, HDR_WWW_AUTHENTICATE, "%s realm=\"%s\"", auth_scheme, realm);
+    assert(auth_scheme && realm);
+    httpHeaderPutStrf(this, HDR_WWW_AUTHENTICATE, "%s realm=\"%s\"", auth_scheme, realm);
 }
 
 void
-httpHeaderPutCc(HttpHeader * hdr, const HttpHdrCc * cc)
+HttpHeader::putCc(const HttpHdrCc * cc)
 {
     MemBuf mb;
     Packer p;
-    assert(hdr && cc);
+    assert(cc);
     /* remove old directives if any */
-    httpHeaderDelById(hdr, HDR_CACHE_CONTROL);
+    delById(HDR_CACHE_CONTROL);
     /* pack into mb */
     mb.init();
     packerToMemInit(&p, &mb);
     httpHdrCcPackInto(cc, &p);
     /* put */
-    httpHeaderAddEntry(hdr, httpHeaderEntryCreate(HDR_CACHE_CONTROL, NULL, mb.buf));
+    addEntry(httpHeaderEntryCreate(HDR_CACHE_CONTROL, NULL, mb.buf));
     /* cleanup */
     packerClean(&p);
     mb.clean();
 }
 
 void
-httpHeaderPutContRange(HttpHeader * hdr, const HttpHdrContRange * cr)
+HttpHeader::putContRange(const HttpHdrContRange * cr)
 {
     MemBuf mb;
     Packer p;
-    assert(hdr && cr);
+    assert(cr);
     /* remove old directives if any */
-    httpHeaderDelById(hdr, HDR_CONTENT_RANGE);
+    delById(HDR_CONTENT_RANGE);
     /* pack into mb */
     mb.init();
     packerToMemInit(&p, &mb);
     httpHdrContRangePackInto(cr, &p);
     /* put */
-    httpHeaderAddEntry(hdr, httpHeaderEntryCreate(HDR_CONTENT_RANGE, NULL, mb.buf));
+    addEntry(httpHeaderEntryCreate(HDR_CONTENT_RANGE, NULL, mb.buf));
     /* cleanup */
     packerClean(&p);
     mb.clean();
 }
 
 void
-httpHeaderPutRange(HttpHeader * hdr, const HttpHdrRange * range)
+HttpHeader::putRange(const HttpHdrRange * range)
 {
     MemBuf mb;
     Packer p;
-    assert(hdr && range);
+    assert(range);
     /* remove old directives if any */
-    httpHeaderDelById(hdr, HDR_RANGE);
+    delById(HDR_RANGE);
     /* pack into mb */
     mb.init();
     packerToMemInit(&p, &mb);
     range->packInto(&p);
     /* put */
-    httpHeaderAddEntry(hdr, httpHeaderEntryCreate(HDR_RANGE, NULL, mb.buf));
+    addEntry(httpHeaderEntryCreate(HDR_RANGE, NULL, mb.buf));
     /* cleanup */
     packerClean(&p);
     mb.clean();
 }
 
 void
-httpHeaderPutSc(HttpHeader *hdr, const HttpHdrSc *sc)
+HttpHeader::putSc(HttpHdrSc *sc)
 {
     MemBuf mb;
     Packer p;
-    assert(hdr && sc);
+    assert(sc);
     /* remove old directives if any */
-    httpHeaderDelById(hdr, HDR_RANGE);
+    delById(HDR_RANGE);
     /* pack into mb */
     mb.init();
     packerToMemInit(&p, &mb);
     httpHdrScPackInto(sc, &p);
     /* put */
-    httpHeaderAddEntry(hdr, httpHeaderEntryCreate(HDR_SURROGATE_CONTROL, NULL, mb.buf));
+    addEntry(httpHeaderEntryCreate(HDR_SURROGATE_CONTROL, NULL, mb.buf));
     /* cleanup */
     packerClean(&p);
     mb.clean();
@@ -1082,11 +1072,11 @@ httpHeaderPutSc(HttpHeader *hdr, const HttpHdrSc *sc)
 
 /* add extension header (these fields are not parsed/analyzed/joined, etc.) */
 void
-httpHeaderPutExt(HttpHeader * hdr, const char *name, const char *value)
+HttpHeader::putExt(const char *name, const char *value)
 {
     assert(name && value);
-    debug(55, 8) ("%p adds ext entry '%s: %s'\n", hdr, name, value);
-    httpHeaderAddEntry(hdr, httpHeaderEntryCreate(HDR_OTHER, name, value));
+    debug(55, 8) ("%p adds ext entry '%s: %s'\n", this, name, value);
+    addEntry(httpHeaderEntryCreate(HDR_OTHER, name, value));
 }
 
 int
@@ -1106,27 +1096,27 @@ httpHeaderEntryGetInt (const HttpHeaderEntry * e)
 }
 
 int
-httpHeaderGetInt(const HttpHeader * hdr, http_hdr_type id)
+HttpHeader::getInt(http_hdr_type id) const
 {
     assert_eid(id);
     assert(Headers[id].type == ftInt);	/* must be of an appropriate type */
     HttpHeaderEntry *e;
 
-    if ((e = httpHeaderFindEntry(hdr, id)))
+    if ((e = findEntry(id)))
         return httpHeaderEntryGetInt (e);
 
     return -1;
 }
 
 time_t
-httpHeaderGetTime(const HttpHeader * hdr, http_hdr_type id)
+HttpHeader::getTime(http_hdr_type id) const
 {
     HttpHeaderEntry *e;
     time_t value = -1;
     assert_eid(id);
     assert(Headers[id].type == ftDate_1123);	/* must be of an appropriate type */
 
-    if ((e = httpHeaderFindEntry(hdr, id))) {
+    if ((e = findEntry(id))) {
         value = parse_rfc1123(e->value.buf());
         httpHeaderNoteParsedEntry(e->id, e->value, value < 0);
     }
@@ -1136,13 +1126,13 @@ httpHeaderGetTime(const HttpHeader * hdr, http_hdr_type id)
 
 /* sync with httpHeaderGetLastStr */
 const char *
-httpHeaderGetStr(const HttpHeader * hdr, http_hdr_type id)
+HttpHeader::getStr(http_hdr_type id) const
 {
     HttpHeaderEntry *e;
     assert_eid(id);
     assert(Headers[id].type == ftStr);	/* must be of an appropriate type */
 
-    if ((e = httpHeaderFindEntry(hdr, id))) {
+    if ((e = findEntry(id))) {
         httpHeaderNoteParsedEntry(e->id, e->value, 0);	/* no errors are possible */
         return e->value.buf();
     }
@@ -1152,13 +1142,13 @@ httpHeaderGetStr(const HttpHeader * hdr, http_hdr_type id)
 
 /* unusual */
 const char *
-httpHeaderGetLastStr(const HttpHeader * hdr, http_hdr_type id)
+HttpHeader::getLastStr(http_hdr_type id) const
 {
     HttpHeaderEntry *e;
     assert_eid(id);
     assert(Headers[id].type == ftStr);	/* must be of an appropriate type */
 
-    if ((e = httpHeaderFindLastEntry(hdr, id))) {
+    if ((e = findLastEntry(id))) {
         httpHeaderNoteParsedEntry(e->id, e->value, 0);	/* no errors are possible */
         return e->value.buf();
     }
@@ -1167,22 +1157,22 @@ httpHeaderGetLastStr(const HttpHeader * hdr, http_hdr_type id)
 }
 
 HttpHdrCc *
-httpHeaderGetCc(const HttpHeader * hdr)
+HttpHeader::getCc() const
 {
     HttpHdrCc *cc;
     String s;
 
-    if (!CBIT_TEST(hdr->mask, HDR_CACHE_CONTROL))
+    if (!CBIT_TEST(mask, HDR_CACHE_CONTROL))
         return NULL;
 
-    s = httpHeaderGetList(hdr, HDR_CACHE_CONTROL);
+    s = getList(HDR_CACHE_CONTROL);
 
     cc = httpHdrCcParseCreate(&s);
 
-    HttpHeaderStats[hdr->owner].ccParsedCount++;
+    HttpHeaderStats[owner].ccParsedCount++;
 
     if (cc)
-        httpHdrCcUpdateStats(cc, &HttpHeaderStats[hdr->owner].ccTypeDistr);
+        httpHdrCcUpdateStats(cc, &HttpHeaderStats[owner].ccTypeDistr);
 
     httpHeaderNoteParsedEntry(HDR_CACHE_CONTROL, s, !cc);
 
@@ -1192,7 +1182,7 @@ httpHeaderGetCc(const HttpHeader * hdr)
 }
 
 HttpHdrRange *
-httpHeaderGetRange(const HttpHeader * hdr)
+HttpHeader::getRange() const
 {
     HttpHdrRange *r = NULL;
     HttpHeaderEntry *e;
@@ -1201,8 +1191,8 @@ httpHeaderGetRange(const HttpHeader * hdr)
      * this "if" should work correctly in both cases;
      * hopefully no clients send mismatched headers! */
 
-    if ((e = httpHeaderFindEntry(hdr, HDR_RANGE)) ||
-            (e = httpHeaderFindEntry(hdr, HDR_REQUEST_RANGE))) {
+    if ((e = findEntry(HDR_RANGE)) ||
+            (e = findEntry(HDR_REQUEST_RANGE))) {
         r = HttpHdrRange::ParseCreate(&e->value);
         httpHeaderNoteParsedEntry(e->id, e->value, !r);
     }
@@ -1211,19 +1201,19 @@ httpHeaderGetRange(const HttpHeader * hdr)
 }
 
 HttpHdrSc *
-httpHeaderGetSc(const HttpHeader *hdr)
+HttpHeader::getSc() const
 {
-    if (!CBIT_TEST(hdr->mask, HDR_SURROGATE_CONTROL))
+    if (!CBIT_TEST(mask, HDR_SURROGATE_CONTROL))
         return NULL;
 
-    String s (httpHeaderGetList(hdr, HDR_SURROGATE_CONTROL));
+    String s (getList(HDR_SURROGATE_CONTROL));
 
     HttpHdrSc *sc = httpHdrScParseCreate(&s);
 
-    HttpHeaderStats[hdr->owner].ccParsedCount++;
+    HttpHeaderStats[owner].ccParsedCount++;
 
     if (sc)
-        httpHdrScUpdateStats(sc, &HttpHeaderStats[hdr->owner].scTypeDistr);
+        httpHdrScUpdateStats(sc, &HttpHeaderStats[owner].scTypeDistr);
 
     httpHeaderNoteParsedEntry(HDR_SURROGATE_CONTROL, s, !sc);
 
@@ -1231,12 +1221,12 @@ httpHeaderGetSc(const HttpHeader *hdr)
 }
 
 HttpHdrContRange *
-httpHeaderGetContRange(const HttpHeader * hdr)
+HttpHeader::getContRange() const
 {
     HttpHdrContRange *cr = NULL;
     HttpHeaderEntry *e;
 
-    if ((e = httpHeaderFindEntry(hdr, HDR_CONTENT_RANGE))) {
+    if ((e = findEntry(HDR_CONTENT_RANGE))) {
         cr = httpHdrContRangeParseCreate(e->value.buf());
         httpHeaderNoteParsedEntry(e->id, e->value, !cr);
     }
@@ -1245,12 +1235,12 @@ httpHeaderGetContRange(const HttpHeader * hdr)
 }
 
 const char *
-httpHeaderGetAuth(const HttpHeader * hdr, http_hdr_type id, const char *auth_scheme)
+HttpHeader::getAuth(http_hdr_type id, const char *auth_scheme) const
 {
     const char *field;
     int l;
-    assert(hdr && auth_scheme);
-    field = httpHeaderGetStr(hdr, id);
+    assert(auth_scheme);
+    field = getStr(id);
 
     if (!field)			/* no authorization field */
         return NULL;
@@ -1275,28 +1265,28 @@ httpHeaderGetAuth(const HttpHeader * hdr, http_hdr_type id, const char *auth_sch
 }
 
 ETag
-httpHeaderGetETag(const HttpHeader * hdr, http_hdr_type id)
+HttpHeader::getETag(http_hdr_type id) const
 {
     ETag etag =
         {NULL, -1};
     HttpHeaderEntry *e;
     assert(Headers[id].type == ftETag);		/* must be of an appropriate type */
 
-    if ((e = httpHeaderFindEntry(hdr, id)))
+    if ((e = findEntry(id)))
         etagParseInit(&etag, e->value.buf());
 
     return etag;
 }
 
 TimeOrTag
-httpHeaderGetTimeOrTag(const HttpHeader * hdr, http_hdr_type id)
+HttpHeader::getTimeOrTag(http_hdr_type id) const
 {
     TimeOrTag tot;
     HttpHeaderEntry *e;
     assert(Headers[id].type == ftDate_1123_or_ETag);	/* must be of an appropriate type */
     memset(&tot, 0, sizeof(tot));
 
-    if ((e = httpHeaderFindEntry(hdr, id))) {
+    if ((e = findEntry(id))) {
         const char *str = e->value.buf();
         /* try as an ETag */
 
@@ -1621,7 +1611,7 @@ httpHeaderNameById(int id)
 }
 
 int
-httpHeaderHasListMember(const HttpHeader * hdr, http_hdr_type id, const char *member, const char separator)
+HttpHeader::hasListMember(http_hdr_type id, const char *member, const char separator) const
 {
     int result = 0;
     const char *pos = NULL;
@@ -1629,10 +1619,9 @@ httpHeaderHasListMember(const HttpHeader * hdr, http_hdr_type id, const char *me
     int ilen;
     int mlen = strlen(member);
 
-    assert(hdr);
     assert(id >= 0);
 
-    String header (httpHeaderGetStrOrList(hdr, id));
+    String header (getStrOrList(id));
 
     while (strListGetItem(&header, separator, &item, &ilen, &pos)) {
         if (strncmp(item, member, mlen) == 0
@@ -1646,7 +1635,7 @@ httpHeaderHasListMember(const HttpHeader * hdr, http_hdr_type id, const char *me
 }
 
 int
-httpHeaderHasByNameListMember(const HttpHeader * hdr, const char *name, const char *member, const char separator)
+HttpHeader::hasByNameListMember(const char *name, const char *member, const char separator) const
 {
     int result = 0;
     const char *pos = NULL;
@@ -1654,10 +1643,9 @@ httpHeaderHasByNameListMember(const HttpHeader * hdr, const char *name, const ch
     int ilen;
     int mlen = strlen(member);
 
-    assert(hdr);
     assert(name);
 
-    String header (httpHeaderGetByName(hdr, name));
+    String header (getByName(name));
 
     while (strListGetItem(&header, separator, &item, &ilen, &pos)) {
         if (strncmp(item, member, mlen) == 0
@@ -1673,9 +1661,9 @@ httpHeaderHasByNameListMember(const HttpHeader * hdr, const char *name, const ch
 void
 HttpHeader::removeConnectionHeaderEntries()
 {
-    if (httpHeaderHas(this, HDR_CONNECTION)) {
+    if (has(HDR_CONNECTION)) {
         /* anything that matches Connection list member will be deleted */
-        String strConnection = httpHeaderGetList(this, HDR_CONNECTION);
+        String strConnection = getList(HDR_CONNECTION);
         const HttpHeaderEntry *e;
         HttpHeaderPos pos = HttpHeaderInitPos;
         /*
@@ -1687,12 +1675,12 @@ HttpHeader::removeConnectionHeaderEntries()
          * from strConnection first?
          */
 
-        while ((e = httpHeaderGetEntry(this, &pos))) {
+        while ((e = getEntry(&pos))) {
             if (strListIsMember(&strConnection, e->name.buf(), ','))
-                httpHeaderDelAt(this, pos);
+                delAt(pos);
         }
 
-        httpHeaderDelById(this, HDR_CONNECTION);
+        delById(HDR_CONNECTION);
         strConnection.clean();
     }
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.63 2006/05/03 14:04:44 robertc Exp $
+ * $Id: client_side_request.cc,v 1.64 2006/05/06 22:13:18 wessels Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -317,7 +317,7 @@ clientBeginRequest(method_t method, char const *url, CSCB * streamcallback,
      * correctness.
      */
     if (header)
-        httpHeaderUpdate(&request->header, header, NULL);
+        request->header.update(header, NULL);
 
     http->log_uri = xstrdup(urlCanonicalClean(request));
 
@@ -661,7 +661,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 #endif
 
     request->imslen = -1;
-    request->ims = httpHeaderGetTime(req_hdr, HDR_IF_MODIFIED_SINCE);
+    request->ims = req_hdr->getTime(HDR_IF_MODIFIED_SINCE);
 
     if (request->ims > 0)
         request->flags.ims = 1;
@@ -673,8 +673,8 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
      */
 #else
 
-    if (httpHeaderHas(req_hdr, HDR_PRAGMA)) {
-        String s = httpHeaderGetList(req_hdr, HDR_PRAGMA);
+    if (req_hdr->has(HDR_PRAGMA)) {
+        String s = req_hdr->getList(HDR_PRAGMA);
 
         if (strListIsMember(&s, "no-cache", ','))
             no_cache++;
@@ -695,7 +695,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     */
     if (Config.onoff.ie_refresh) {
         if (http->flags.accel && request->flags.ims) {
-            if ((str = httpHeaderGetStr(req_hdr, HDR_USER_AGENT))) {
+            if ((str = req_hdr->getStr(HDR_USER_AGENT))) {
                 if (strstr(str, "MSIE 5.01") != NULL)
                     no_cache++;
                 else if (strstr(str, "MSIE 5.0") != NULL)
@@ -724,7 +724,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 
     /* ignore range header in non-GETs */
     if (request->method == METHOD_GET) {
-        request->range = httpHeaderGetRange(req_hdr);
+        request->range = req_hdr->getRange();
 
         if (request->range) {
             request->flags.range = 1;
@@ -742,14 +742,14 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         }
     }
 
-    if (httpHeaderHas(req_hdr, HDR_AUTHORIZATION))
+    if (req_hdr->has(HDR_AUTHORIZATION))
         request->flags.auth = 1;
 
     if (request->login[0] != '\0')
         request->flags.auth = 1;
 
-    if (httpHeaderHas(req_hdr, HDR_VIA)) {
-        String s = httpHeaderGetList(req_hdr, HDR_VIA);
+    if (req_hdr->has(HDR_VIA)) {
+        String s = req_hdr->getList(HDR_VIA);
         /*
          * ThisCache cannot be a member of Via header, "1.0 ThisCache" can.
          * Note ThisCache2 has a space prepended to the hostname so we don't
@@ -771,27 +771,27 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     }
 
 #if USE_USERAGENT_LOG
-    if ((str = httpHeaderGetStr(req_hdr, HDR_USER_AGENT)))
+    if ((str = req_hdr->getStr(HDR_USER_AGENT)))
         logUserAgent(fqdnFromAddr(http->getConn().getRaw() ? http->getConn()->log_addr : no_addr), str);
 
 #endif
 #if USE_REFERER_LOG
 
-    if ((str = httpHeaderGetStr(req_hdr, HDR_REFERER)))
+    if ((str = req_hdr->getStr(HDR_REFERER)))
         logReferer(fqdnFromAddr(http->getConn().getRaw() ? http->getConn()->log_addr : no_addr), str, http->log_uri);
 
 #endif
 #if FORW_VIA_DB
 
-    if (httpHeaderHas(req_hdr, HDR_X_FORWARDED_FOR)) {
-        String s = httpHeaderGetList(req_hdr, HDR_X_FORWARDED_FOR);
+    if (req_hdr->has(HDR_X_FORWARDED_FOR)) {
+        String s = req_hdr->getList(HDR_X_FORWARDED_FOR);
         fvdbCountForw(s.buf());
         s.clean();
     }
 
 #endif
     if (request->method == METHOD_TRACE) {
-        request->max_forwards = httpHeaderGetInt(req_hdr, HDR_MAX_FORWARDS);
+        request->max_forwards = req_hdr->getInt(HDR_MAX_FORWARDS);
     }
 
     if (clientCachable(http))
@@ -854,7 +854,7 @@ ClientRequestContext::clientRedirectDone(char *result)
         safe_free(http->uri);
         http->uri = xstrdup(urlCanonical(new_request));
         new_request->http_ver = old_request->http_ver;
-        httpHeaderAppend(&new_request->header, &old_request->header);
+        new_request->header.append(&old_request->header);
         new_request->client_addr = old_request->client_addr;
         new_request->client_port = old_request->client_port;
         new_request->my_addr = old_request->my_addr;

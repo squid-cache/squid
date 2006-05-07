@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_negotiate.cc,v 1.7 2006/04/23 11:10:33 robertc Exp $
+ * $Id: auth_negotiate.cc,v 1.8 2006/05/06 22:13:19 wessels Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -311,7 +311,7 @@ AuthNegotiateConfig::fixHeader(auth_user_request_t *auth_user_request, HttpReply
 
         if (!keep_alive) {
             /* drop the connection */
-            httpHeaderDelByName(&rep->header, "keep-alive");
+            rep->header.delByName("keep-alive");
             request->flags.proxy_keepalive = 0;
         }
     } else {
@@ -322,7 +322,7 @@ AuthNegotiateConfig::fixHeader(auth_user_request_t *auth_user_request, HttpReply
         case AUTHENTICATE_STATE_FAILED:
             /* here it makes sense to drop the connection, as auth is
              * tied to it, even if MAYBE the client could handle it - Kinkie */
-            httpHeaderDelByName(&rep->header, "keep-alive");
+            rep->header.delByName("keep-alive");
             request->flags.proxy_keepalive = 0;
             /* fall through */
 
@@ -675,7 +675,7 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * request, ConnStateData::Poi
     }
 
     /* get header */
-    proxy_auth = httpHeaderGetStr(&request->header, type);
+    proxy_auth = request->header.getStr(type);
 
     /* locate second word */
     blob = proxy_auth;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.54 2006/05/05 23:57:40 wessels Exp $
+ * $Id: HttpHeaderTools.cc,v 1.55 2006/05/06 22:13:18 wessels Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -139,7 +139,7 @@ httpHeaderPutStrvf(HttpHeader * hdr, http_hdr_type id, const char *fmt, va_list 
     MemBuf mb;
     mb.init();
     mb.vPrintf(fmt, vargs);
-    httpHeaderPutStr(hdr, id, mb.buf);
+    hdr->putStr(id, mb.buf);
     mb.clean();
 }
 
@@ -151,7 +151,7 @@ httpHeaderAddContRange(HttpHeader * hdr, HttpHdrRangeSpec spec, ssize_t ent_len)
     HttpHdrContRange *cr = httpHdrContRangeCreate();
     assert(hdr && ent_len >= 0);
     httpHdrContRangeSet(cr, spec, ent_len);
-    httpHeaderPutContRange(hdr, cr);
+    hdr->putContRange(cr);
     httpHdrContRangeDestroy(cr);
 }
 
@@ -169,14 +169,14 @@ httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive)
     int res;
     /* what type of header do we have? */
 
-    if (httpHeaderHas(hdr, HDR_PROXY_CONNECTION))
+    if (hdr->has(HDR_PROXY_CONNECTION))
         ht = HDR_PROXY_CONNECTION;
-    else if (httpHeaderHas(hdr, HDR_CONNECTION))
+    else if (hdr->has(HDR_CONNECTION))
         ht = HDR_CONNECTION;
     else
         return 0;
 
-    list = httpHeaderGetList(hdr, ht);
+    list = hdr->getList(ht);
 
     res = strListIsMember(&list, directive, ',');
 
@@ -552,9 +552,9 @@ httpHdrMangleList(HttpHeader * l, HttpRequest * request, int req_or_rep)
     HttpHeaderEntry *e;
     HttpHeaderPos p = HttpHeaderInitPos;
 
-    while ((e = httpHeaderGetEntry(l, &p)))
+    while ((e = l->getEntry(&p)))
         if (0 == httpHdrMangle(e, request, req_or_rep))
-            httpHeaderDelAt(l, p);
+            l->delAt(p);
 }
 
 /*

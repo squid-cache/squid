@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.44 2006/04/23 11:10:33 robertc Exp $
+ * $Id: auth_digest.cc,v 1.45 2006/05/06 22:13:19 wessels Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -639,7 +639,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointe
                 digest_request->setDenyMessage("Incorrect password");
                 return;
             } else {
-                const char *useragent = httpHeaderGetStr(&request->header, HDR_USER_AGENT);
+                const char *useragent = request->header.getStr(HDR_USER_AGENT);
 
                 static struct IN_ADDR last_broken_addr;
                 static int seen_broken_client = 0;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.161 2006/05/05 23:57:40 wessels Exp $
+ * $Id: tunnel.cc,v 1.162 2006/05/06 22:13:18 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -693,7 +693,7 @@ sslProxyConnected(int fd, void *data)
                                           &hdr_out,
                                           flags);			/* flags */
     packerToMemInit(&p, &mb);
-    httpHeaderPackInto(&hdr_out, &p);
+    hdr_out.packInto(&p);
     hdr_out.clean();
     packerClean(&p);
     mb.append("\r\n", 2);

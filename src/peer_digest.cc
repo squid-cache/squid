@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.111 2006/05/03 14:04:44 robertc Exp $
+ * $Id: peer_digest.cc,v 1.112 2006/05/06 22:13:18 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -325,9 +325,9 @@ peerDigestRequest(PeerDigest * pd)
     /* add custom headers */
     assert(!req->header.len);
 
-    httpHeaderPutStr(&req->header, HDR_ACCEPT, StoreDigestMimeStr);
+    req->header.putStr(HDR_ACCEPT, StoreDigestMimeStr);
 
-    httpHeaderPutStr(&req->header, HDR_ACCEPT, "text/html");
+    req->header.putStr(HDR_ACCEPT, "text/html");
 
     if (p->login)
         xstrncpy(req->login, p->login, MAX_LOGIN_SZ);

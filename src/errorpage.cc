@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.210 2006/04/23 11:10:31 robertc Exp $
+ * $Id: errorpage.cc,v 1.211 2006/05/06 22:13:18 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -530,7 +530,7 @@ errorDump(ErrorState * err, MemBuf * mb)
                    r->urlpath.size() ? r->urlpath.buf() : "/",
                    r->http_ver.major, r->http_ver.minor);
         packerToMemInit(&p, &str);
-        httpHeaderPackInto(&r->header, &p);
+        r->header.packInto(&p);
         packerClean(&p);
     } else if (err->request_hdrs) {
         p = err->request_hdrs;
@@ -735,7 +735,7 @@ errorConvert(char token, ErrorState * err)
                       r->urlpath.size() ? r->urlpath.buf() : "/",
                       r->http_ver.major, r->http_ver.minor);
             packerToMemInit(&p, &mb);
-            httpHeaderPackInto(&r->header, &p);
+            r->header.packInto(&p);
             packerClean(&p);
         } else if (err->request_hdrs) {
             p = err->request_hdrs;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.110 2006/02/19 11:21:07 serassio Exp $
+ * $Id: access_log.cc,v 1.111 2006/05/06 22:13:18 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -611,7 +611,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
         case LFT_REQUEST_HEADER:
 
             if (al->request)
-                sb = httpHeaderGetByName(&al->request->header, fmt->data.header.header);
+                sb = al->request->header.getByName(fmt->data.header.header);
 
             out = sb.buf();
 
@@ -621,7 +621,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
         case LFT_REPLY_HEADER:
             if (al->reply)
-                sb = httpHeaderGetByName(&al->reply->header, fmt->data.header.header);
+                sb = al->request->header.getByName(fmt->data.header.header);
 
             out = sb.buf();
 
@@ -631,7 +631,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
         case LFT_REQUEST_HEADER_ELEM:
             if (al->request)
-                sb = httpHeaderGetByNameListMember(&al->request->header, fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
+                sb = al->request->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
 
             out = sb.buf();
 
@@ -641,7 +641,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
         case LFT_REPLY_HEADER_ELEM:
             if (al->reply)
-                sb = httpHeaderGetByNameListMember(&al->reply->header, fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
+                sb = al->request->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
 
             out = sb.buf();
 

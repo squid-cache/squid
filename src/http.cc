@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.494 2006/05/05 23:57:40 wessels Exp $
+ * $Id: http.cc,v 1.495 2006/05/06 22:13:18 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -445,8 +445,8 @@ HttpStateData::cacheableReply()
 
     /* Pragma: no-cache in _replies_ is not documented in HTTP,
      * but servers like "Active Imaging Webcast/2.0" sure do use it */
-    if (httpHeaderHas(hdr, HDR_PRAGMA)) {
-        String s = httpHeaderGetList(hdr, HDR_PRAGMA);
+    if (hdr->has(HDR_PRAGMA)) {
+        String s = hdr->getList(HDR_PRAGMA);
         const int no_cache = strListIsMember(&s, "no-cache", ',');
         s.clean();
 
@@ -468,7 +468,7 @@ HttpStateData::cacheableReply()
      * continuous push replies.  These are generally dynamic and
      * probably should not be cachable
      */
-    if ((v = httpHeaderGetStr(hdr, HDR_CONTENT_TYPE)))
+    if ((v = hdr->getStr(HDR_CONTENT_TYPE)))
         if (!strncasecmp(v, "multipart/x-mixed-replace", 25))
             return 0;
 
@@ -596,7 +596,7 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
     static String vstr;
 
     vstr.clean();
-    vary = httpHeaderGetList(&reply->header, HDR_VARY);
+    vary = reply->header.getList(HDR_VARY);
 
     while (strListGetItem(&vary, ',', &item, &ilen, &pos)) {
         char *name = (char *)xmalloc(ilen + 1);
@@ -611,7 +611,7 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
         }
 
         strListAdd(&vstr, name, ',');
-        hdr = httpHeaderGetByName(&request->header, name);
+        hdr = request->header.getByName(name);
         safe_free(name);
         value = hdr.buf();
 
@@ -629,14 +629,14 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
 #if X_ACCELERATOR_VARY
 
     pos = NULL;
-    vary = httpHeaderGetList(&reply->header, HDR_X_ACCELERATOR_VARY);
+    vary = reply->header.getList(HDR_X_ACCELERATOR_VARY);
 
     while (strListGetItem(&vary, ',', &item, &ilen, &pos)) {
         char *name = (char *)xmalloc(ilen + 1);
         xstrncpy(name, item, ilen + 1);
         Tolower(name);
         strListAdd(&vstr, name, ',');
-        hdr = httpHeaderGetByName(&request->header, name);
+        hdr = request->header.getByName(name);
         safe_free(name);
         value = hdr.buf();
 
@@ -804,9 +804,9 @@ HttpStateData::haveParsedReplyHeaders()
     if (neighbors_do_private_keys)
         httpMaybeRemovePublic(entry, getReply()->sline.status);
 
-    if (httpHeaderHas(&getReply()->header, HDR_VARY)
+    if (getReply()->header.has(HDR_VARY)
 #if X_ACCELERATOR_VARY
-            || httpHeaderHas(&getReply()->header, HDR_X_ACCELERATOR_VARY)
+            || getReply()->header.has(HDR_X_ACCELERATOR_VARY)
 #endif
        ) {
         const char *vary = httpMakeVaryMark(orig_request, getReply());
@@ -1360,13 +1360,13 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     /* append our IMS header */
 
     if (request->lastmod > -1)
-        httpHeaderPutTime(hdr_out, HDR_IF_MODIFIED_SINCE, request->lastmod);
+        hdr_out->putTime(HDR_IF_MODIFIED_SINCE, request->lastmod);
 
     bool we_do_ranges = decideIfWeDoRanges (orig_request);
 
-    String strConnection (httpHeaderGetList(hdr_in, HDR_CONNECTION));
+    String strConnection (hdr_in->getList(HDR_CONNECTION));
 
-    while ((e = httpHeaderGetEntry(hdr_in, &pos)))
+    while ((e = hdr_in->getEntry(&pos)))
         copyOneHeaderFromClientsideRequestToUpstreamRequest(e, strConnection, request, orig_request, hdr_out, we_do_ranges, flags);
 
     /* Abstraction break: We should interpret multipart/byterange responses
@@ -1384,45 +1384,45 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     /* append Via */
     if (Config.onoff.via) {
         String strVia;
-        strVia = httpHeaderGetList(hdr_in, HDR_VIA);
+        strVia = hdr_in->getList(HDR_VIA);
         snprintf(bbuf, BBUF_SZ, "%d.%d %s",
                  orig_request->http_ver.major,
                  orig_request->http_ver.minor, ThisCache);
         strListAdd(&strVia, bbuf, ',');
-        httpHeaderPutStr(hdr_out, HDR_VIA, strVia.buf());
+        hdr_out->putStr(HDR_VIA, strVia.buf());
         strVia.clean();
     }
 
 #if ESI
     {
         /* Append Surrogate-Capabilities */
-        String strSurrogate (httpHeaderGetList(hdr_in, HDR_SURROGATE_CAPABILITY));
+        String strSurrogate (hdr_in->getList(HDR_SURROGATE_CAPABILITY));
         snprintf(bbuf, BBUF_SZ, "%s=\"Surrogate/1.0 ESI/1.0\"",
                  Config.Accel.surrogate_id);
         strListAdd(&strSurrogate, bbuf, ',');
-        httpHeaderPutStr(hdr_out, HDR_SURROGATE_CAPABILITY, strSurrogate.buf());
+        hdr_out->putStr(HDR_SURROGATE_CAPABILITY, strSurrogate.buf());
     }
 #endif
 
     /* append X-Forwarded-For */
-    strFwd = httpHeaderGetList(hdr_in, HDR_X_FORWARDED_FOR);
+    strFwd = hdr_in->getList(HDR_X_FORWARDED_FOR);
 
     if (opt_forwarded_for && orig_request->client_addr.s_addr != no_addr.s_addr)
         strListAdd(&strFwd, inet_ntoa(orig_request->client_addr), ',');
     else
         strListAdd(&strFwd, "unknown", ',');
 
-    httpHeaderPutStr(hdr_out, HDR_X_FORWARDED_FOR, strFwd.buf());
+    hdr_out->putStr(HDR_X_FORWARDED_FOR, strFwd.buf());
 
     strFwd.clean();
 
     /* append Host if not there already */
-    if (!httpHeaderHas(hdr_out, HDR_HOST)) {
+    if (!hdr_out->has(HDR_HOST)) {
         if (orig_request->peer_domain) {
-            httpHeaderPutStr(hdr_out, HDR_HOST, orig_request->peer_domain);
+            hdr_out->putStr(HDR_HOST, orig_request->peer_domain);
         } else if (orig_request->port == urlDefaultPort(orig_request->protocol)) {
             /* use port# only if not default */
-            httpHeaderPutStr(hdr_out, HDR_HOST, orig_request->host);
+            hdr_out->putStr(HDR_HOST, orig_request->host);
         } else {
             httpHeaderPutStrf(hdr_out, HDR_HOST, "%s:%d",
                               orig_request->host, (int) orig_request->port);
@@ -1430,7 +1430,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     }
 
     /* append Authorization if known in URL, not in header and going direct */
-    if (!httpHeaderHas(hdr_out, HDR_AUTHORIZATION)) {
+    if (!hdr_out->has(HDR_AUTHORIZATION)) {
         if (!request->flags.proxying && *request->login) {
             httpHeaderPutStrf(hdr_out, HDR_AUTHORIZATION, "Basic %s",
                               base64_encode(request->login));
@@ -1439,7 +1439,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
     /* append Proxy-Authorization if configured for peer, and proxying */
     if (request->flags.proxying && orig_request->peer_login &&
-            !httpHeaderHas(hdr_out, HDR_PROXY_AUTHORIZATION)) {
+            !hdr_out->has(HDR_PROXY_AUTHORIZATION)) {
         if (*orig_request->peer_login == '*') {
             /* Special mode, to pass the username to the upstream cache */
             char loginbuf[256];
@@ -1471,17 +1471,17 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
     /* append WWW-Authorization if configured for peer */
     if (flags.originpeer && orig_request->peer_login &&
-            !httpHeaderHas(hdr_out, HDR_AUTHORIZATION)) {
+            !hdr_out->has(HDR_AUTHORIZATION)) {
         if (strcmp(orig_request->peer_login, "PASS") == 0) {
             /* No credentials to forward.. (should have been done above if available) */
         } else if (strcmp(orig_request->peer_login, "PROXYPASS") == 0) {
             /* Special mode, convert proxy authentication to WWW authentication
             * (also applies to authentication provided by external acl)
              */
-            const char *auth = httpHeaderGetStr(hdr_in, HDR_PROXY_AUTHORIZATION);
+            const char *auth = hdr_in->getStr(HDR_PROXY_AUTHORIZATION);
 
             if (auth && strncasecmp(auth, "basic ", 6) == 0) {
-                httpHeaderPutStr(hdr_out, HDR_AUTHORIZATION, auth);
+                hdr_out->putStr(HDR_AUTHORIZATION, auth);
             } else if (orig_request->extacl_user.size() && orig_request->extacl_passwd.size()) {
                 char loginbuf[256];
                 snprintf(loginbuf, sizeof(loginbuf), "%s:%s", orig_request->extacl_user.buf(), orig_request->extacl_passwd.buf());
@@ -1510,7 +1510,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     }
 
     /* append Cache-Control, add max-age if not there already */ {
-        HttpHdrCc *cc = httpHeaderGetCc(hdr_in);
+        HttpHdrCc *cc = hdr_in->getCc();
 
         if (!cc)
             cc = httpHdrCcCreate();
@@ -1525,14 +1525,14 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         }
 
         /* Set no-cache if determined needed but not found */
-        if (orig_request->flags.nocache && !httpHeaderHas(hdr_in, HDR_PRAGMA))
+        if (orig_request->flags.nocache && !hdr_in->has(HDR_PRAGMA))
             EBIT_SET(cc->mask, CC_NO_CACHE);
 
         /* Enforce sibling relations */
         if (flags.only_if_cached)
             EBIT_SET(cc->mask, CC_ONLY_IF_CACHED);
 
-        httpHeaderPutCc(hdr_out, cc);
+        hdr_out->putCc(cc);
 
         httpHdrCcDestroy(cc);
     }
@@ -1540,16 +1540,16 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     /* maybe append Connection: keep-alive */
     if (flags.keepalive) {
         if (flags.proxying) {
-            httpHeaderPutStr(hdr_out, HDR_PROXY_CONNECTION, "keep-alive");
+            hdr_out->putStr(HDR_PROXY_CONNECTION, "keep-alive");
         } else {
-            httpHeaderPutStr(hdr_out, HDR_CONNECTION, "keep-alive");
+            hdr_out->putStr(HDR_CONNECTION, "keep-alive");
         }
     }
 
     /* append Front-End-Https */
     if (flags.front_end_https) {
         if (flags.front_end_https == 1 || request->protocol == PROTO_HTTPS)
-            httpHeaderPutStr(hdr_out, HDR_FRONT_END_HTTPS, "On");
+            hdr_out->putStr(HDR_FRONT_END_HTTPS, "On");
     }
 
     /* Now mangle the headers. */
@@ -1580,7 +1580,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
         if (flags.proxying && orig_request->peer_login &&
                 (strcmp(orig_request->peer_login, "PASS") == 0 ||
                  strcmp(orig_request->peer_login, "PROXYPASS") == 0)) {
-            httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
+            hdr_out->addEntry(httpHeaderEntryClone(e));
         }
 
         break;
@@ -1589,7 +1589,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
         /* Pass on WWW authentication */
 
         if (!flags.originpeer) {
-            httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
+            hdr_out->addEntry(httpHeaderEntryClone(e));
         } else {
             /* In accelerators, only forward authentication if enabled
              * (see also below for proxy->server authentication)
@@ -1598,7 +1598,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
             if (orig_request->peer_login &&
                     (strcmp(orig_request->peer_login, "PASS") == 0 ||
                      strcmp(orig_request->peer_login, "PROXYPASS") == 0)) {
-                httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
+                hdr_out->addEntry(httpHeaderEntryClone(e));
             }
         }
 
@@ -1613,12 +1613,12 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
          */
 
         if (request->flags.redirected && !Config.onoff.redir_rewrites_host)
-            httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
+            hdr_out->addEntry(httpHeaderEntryClone(e));
         else {
             /* use port# only if not default */
 
             if (orig_request->port == urlDefaultPort(orig_request->protocol)) {
-                httpHeaderPutStr(hdr_out, HDR_HOST, orig_request->host);
+                hdr_out->putStr(HDR_HOST, orig_request->host);
             } else {
                 httpHeaderPutStrf(hdr_out, HDR_HOST, "%s:%d",
                                   orig_request->host, (int) orig_request->port);
@@ -1631,8 +1631,8 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
         /* append unless we added our own;
          * note: at most one client's ims header can pass through */
 
-        if (!httpHeaderHas(hdr_out, HDR_IF_MODIFIED_SINCE))
-            httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
+        if (!hdr_out->has(HDR_IF_MODIFIED_SINCE))
+            hdr_out->addEntry(httpHeaderEntryClone(e));
 
         break;
 
@@ -1641,7 +1641,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
             const int hops = httpHeaderEntryGetInt(e);
 
             if (hops > 0)
-                httpHeaderPutInt(hdr_out, HDR_MAX_FORWARDS, hops - 1);
+                hdr_out->putInt(HDR_MAX_FORWARDS, hops - 1);
         }
 
         break;
@@ -1650,7 +1650,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
         /* If Via is disabled then forward any received header as-is */
 
         if (!Config.onoff.via)
-            httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
+            hdr_out->addEntry(httpHeaderEntryClone(e));
 
         break;
 
@@ -1660,7 +1660,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
 
     case HDR_REQUEST_RANGE:
         if (!we_do_ranges)
-            httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
+            hdr_out->addEntry(httpHeaderEntryClone(e));
 
         break;
 
@@ -1676,13 +1676,13 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
 
     case HDR_FRONT_END_HTTPS:
         if (!flags.front_end_https)
-            httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
+            hdr_out->addEntry(httpHeaderEntryClone(e));
 
         break;
 
     default:
         /* pass on all other header fields */
-        httpHeaderAddEntry(hdr_out, httpHeaderEntryClone(e));
+        hdr_out->addEntry(httpHeaderEntryClone(e));
     }
 }
 
@@ -1732,7 +1732,7 @@ HttpStateData::buildRequestPrefix(HttpRequest * request,
         Packer p;
         httpBuildRequestHeader(request, orig_request, entry, &hdr, flags);
         packerToMemInit(&p, mb);
-        httpHeaderPackInto(&hdr, &p);
+        hdr.packInto(&p);
         hdr.clean();
         packerClean(&p);
     }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLRequestMIMEType.h,v 1.3 2005/04/30 19:32:01 serassio Exp $
+ * $Id: ACLRequestMIMEType.h,v 1.4 2006/05/06 22:13:18 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -55,7 +55,7 @@ template <>
 int
 ACLRequestHeaderStrategy<HDR_CONTENT_TYPE>::match (ACLData<char const *> * &data, ACLChecklist *checklist)
 {
-    char const *theHeader = httpHeaderGetStr(&checklist->request->header, HDR_CONTENT_TYPE);
+    char const *theHeader = checklist->request->header.getStr(HDR_CONTENT_TYPE);
 
     if (NULL == theHeader)
         theHeader = "";

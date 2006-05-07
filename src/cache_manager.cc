@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.38 2006/04/23 11:10:31 robertc Exp $
+ * $Id: cache_manager.cc,v 1.39 2006/05/06 22:13:18 wessels Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -181,7 +181,7 @@ cachemgrParseHeaders(cachemgrStateData * mgr, const HttpRequest * request)
     const char *basic_cookie;	/* base 64 _decoded_ user:passwd pair */
     const char *passwd_del;
     assert(mgr && request);
-    basic_cookie = httpHeaderGetAuth(&request->header, HDR_AUTHORIZATION, "Basic");
+    basic_cookie = request->header.getAuth(HDR_AUTHORIZATION, "Basic");
 
     if (!basic_cookie)
         return;
@@ -293,7 +293,7 @@ cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
          * add Authenticate header, use 'action' as a realm because
          * password depends on action
          */
-        httpHeaderPutAuth(&rep->header, "Basic", mgr->action);
+        rep->header.putAuth("Basic", mgr->action);
 
         /* store the reply */
         entry->replaceHttpReply(rep);

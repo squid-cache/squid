@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.125 2006/05/03 14:04:44 robertc Exp $
+ * $Id: mime.cc,v 1.126 2006/05/06 22:13:18 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -589,7 +589,7 @@ MimeIcon::created (StoreEntry *newEntry)
 
     httpHdrCcSetMaxAge(reply->cache_control, 86400);
 
-    httpHeaderPutCc(&reply->header, reply->cache_control);
+    reply->header.putCc(reply->cache_control);
 
     e->replaceHttpReply(reply);
 
