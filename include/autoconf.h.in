@@ -757,6 +757,15 @@
 /* The size of a `int', as computed by sizeof. */
 #undef SIZEOF_INT
 
+/* The size of a `int16_t', as computed by sizeof. */
+#undef SIZEOF_INT16_T
+
+/* The size of a `int32_t', as computed by sizeof. */
+#undef SIZEOF_INT32_T
+
+/* The size of a `int64_t', as computed by sizeof. */
+#undef SIZEOF_INT64_T
+
 /* The size of a `long', as computed by sizeof. */
 #undef SIZEOF_LONG
 
@@ -772,8 +781,29 @@
 /* The size of a `size_t', as computed by sizeof. */
 #undef SIZEOF_SIZE_T
 
+/* The size of a `uint16_t', as computed by sizeof. */
+#undef SIZEOF_UINT16_T
+
+/* The size of a `uint32_t', as computed by sizeof. */
+#undef SIZEOF_UINT32_T
+
+/* The size of a `uint64_t', as computed by sizeof. */
+#undef SIZEOF_UINT64_T
+
+/* The size of a `u_int16_t', as computed by sizeof. */
+#undef SIZEOF_U_INT16_T
+
+/* The size of a `u_int32_t', as computed by sizeof. */
+#undef SIZEOF_U_INT32_T
+
+/* The size of a `u_int64_t', as computed by sizeof. */
+#undef SIZEOF_U_INT64_T
+
 /* The size of a `void *', as computed by sizeof. */
 #undef SIZEOF_VOID_P
+
+/* The size of a `__int64', as computed by sizeof. */
+#undef SIZEOF___INT64
 
 /* configure command line used to configure Squid */
 #undef SQUID_CONFIGURE_OPTIONS
