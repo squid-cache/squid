@@ -3,7 +3,7 @@ dnl  Configuration input file for Squid
 dnl
 dnl  Duane Wessels, wessels@nlanr.net, February 1996 (autoconf v2.9)
 dnl
-dnl  $Id: configure.in,v 1.409 2006/05/07 10:20:43 serassio Exp $
+dnl  $Id: configure.in,v 1.410 2006/05/07 14:04:39 serassio Exp $
 dnl
 dnl
 dnl
@@ -13,7 +13,7 @@ AC_CONFIG_SRCDIR([src/main.cc])
 AC_CONFIG_AUX_DIR(cfgaux)
 AM_INIT_AUTOMAKE([tar-ustar])
 AM_CONFIG_HEADER(include/autoconf.h)
-AC_REVISION($Revision: 1.409 $)dnl
+AC_REVISION($Revision: 1.410 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -1179,6 +1179,7 @@ if test $needlargefiles && test -z "$buildmodel"; then
 		echo "WARNING: No suitable build environment found for large files. Trying to use _FILE_OFFSET_BITS=64"
 		sleep 1
 		CFLAGS="-D_FILE_OFFSET_BITS=64 $CFLAGS"
+		CXXFLAGS="-D_FILE_OFFSET_BITS=64 $CXXFLAGS"
 	fi
 fi
 if test -n "$buildmodel" && test "$buildmodel" != "default"; then
@@ -1190,6 +1191,7 @@ if test -n "$buildmodel" && test "$buildmodel" != "default"; then
 	    exit 1
 	fi
 	CFLAGS="`getconf ${buildmodel}_CFLAGS` $CFLAGS"
+	CXXFLAGS="`getconf ${buildmodel}_CFLAGS` $CXXFLAGS"
 	LIBS="`getconf ${buildmodel}_LIBS` $LIBS"
 	LDFLAGS="`getconf ${buildmodel}_LDFLAGS` $LDFLAGS"
 dnl
@@ -1201,9 +1203,11 @@ dnl   The 'sun' define is needed by ipfilter includes, so we must remove -Usun
     		if test "$GCC" = "yes"; then
 		    echo "Removing -Xa for gcc on $host"
 		    CFLAGS="`echo $CFLAGS | sed -e 's/-Xa//'`"
+		    CXXFLAGS="`echo $CXXFLAGS | sed -e 's/-Xa//'`"
 		fi
    	        echo "Removing -Usun for gcc on $host"
 		CFLAGS="`echo $CFLAGS | sed -e 's/-Usun//'`"
+		CXXFLAGS="`echo $CXXFLAGS | sed -e 's/-Usun//'`"
 		;;
 	    *)
 	        ;;
