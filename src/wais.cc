@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.156 2006/02/17 18:10:59 wessels Exp $
+ * $Id: wais.cc,v 1.157 2006/05/06 22:13:18 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -227,7 +227,7 @@ waisSendRequest(int fd, void *data)
     if (waisState->request_hdr) {
         Packer p;
         packerToMemInit(&p, &mb);
-        httpHeaderPackInto(waisState->request_hdr, &p);
+        waisState->request_hdr->packInto(&p);
         packerClean(&p);
     }
 

@@ -1119,8 +1119,8 @@ void ICAPModXact::fillDoneStatus(MemBuf &buf) const
 
 bool ICAPModXact::gotEncapsulated(const char *section) const
 {
-    return httpHeaderGetByNameListMember(&icapReply->header, "Encapsulated",
-                                         section, ',').size() > 0;
+    return icapReply->header.getByNameListMember("Encapsulated",
+            section, ',').size() > 0;
 }
 
 // calculate whether there is a virgin HTTP body and

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.102 2006/05/05 23:36:40 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.103 2006/05/06 22:13:18 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1304,17 +1304,17 @@ clientReplyContext::buildReplyHeader()
     HttpRequest *request = http->request;
 #if DONT_FILTER_THESE
     /* but you might want to if you run Squid as an HTTP accelerator */
-    /* httpHeaderDelById(hdr, HDR_ACCEPT_RANGES); */
-    httpHeaderDelById(hdr, HDR_ETAG);
+    /* hdr->delById(HDR_ACCEPT_RANGES); */
+    hdr->delById(HDR_ETAG);
 #endif
 
-    httpHeaderDelById(hdr, HDR_PROXY_CONNECTION);
+    hdr->delById(HDR_PROXY_CONNECTION);
     /* here: Keep-Alive is a field-name, not a connection directive! */
-    httpHeaderDelByName(hdr, "Keep-Alive");
+    hdr->delByName("Keep-Alive");
     /* remove Set-Cookie if a hit */
 
     if (is_hit)
-        httpHeaderDelById(hdr, HDR_SET_COOKIE);
+        hdr->delById(HDR_SET_COOKIE);
 
     /*
      * Be sure to obey the Connection header 
@@ -1332,7 +1332,7 @@ clientReplyContext::buildReplyHeader()
          * (note that the existing header is passed along unmodified
          * on cache misses)
          */
-        httpHeaderDelById(hdr, HDR_AGE);
+        hdr->delById(HDR_AGE);
         /*
          * This adds the calculated object age. Note that the details of the
          * age calculation is performed by adjusting the timestamp in
@@ -1351,11 +1351,11 @@ clientReplyContext::buildReplyHeader()
             (void) 0;
 
         if (EBIT_TEST(http->storeEntry()->flags, ENTRY_SPECIAL)) {
-            httpHeaderDelById(hdr, HDR_DATE);
-            httpHeaderInsertTime(hdr, HDR_DATE, squid_curtime);
+            hdr->delById(HDR_DATE);
+            hdr->insertTime(HDR_DATE, squid_curtime);
         } else if (http->storeEntry()->timestamp < squid_curtime) {
-            httpHeaderPutInt(hdr, HDR_AGE,
-                             squid_curtime - http->storeEntry()->timestamp);
+            hdr->putInt(HDR_AGE,
+                        squid_curtime - http->storeEntry()->timestamp);
             /* Signal old objects.  NB: rfc 2616 is not clear,
              * by implication, on whether we should do this to all
              * responses, or only cache hits.
@@ -1370,7 +1370,7 @@ clientReplyContext::buildReplyHeader()
                 snprintf (tempbuf, sizeof(tempbuf), "%s %s %s",
                           "113", ThisCache,
                           "This cache hit is still fresh and more than 1 day old");
-                httpHeaderPutStr(hdr, HDR_WARNING, tempbuf);
+                hdr->putStr(HDR_WARNING, tempbuf);
             }
         }
 
@@ -1378,11 +1378,11 @@ clientReplyContext::buildReplyHeader()
 
     /* Filter unproxyable authentication types */
     if (http->logType != LOG_TCP_DENIED &&
-            (httpHeaderHas(hdr, HDR_WWW_AUTHENTICATE) || httpHeaderHas(hdr, HDR_PROXY_AUTHENTICATE))) {
+            (hdr->has(HDR_WWW_AUTHENTICATE) || hdr->has(HDR_PROXY_AUTHENTICATE))) {
         HttpHeaderPos pos = HttpHeaderInitPos;
         HttpHeaderEntry *e;
 
-        while ((e = httpHeaderGetEntry(hdr, &pos))) {
+        while ((e = hdr->getEntry(&pos))) {
             if (e->id == HDR_WWW_AUTHENTICATE || e->id == HDR_PROXY_AUTHENTICATE) {
                 const char *value = e->value.buf();
 
@@ -1391,7 +1391,7 @@ clientReplyContext::buildReplyHeader()
                         ||
                         (strncasecmp(value, "Negotiate", 9) == 0 &&
                          (value[9] == '\0' || value[9] == ' ')))
-                    httpHeaderDelAt(hdr, pos);
+                    hdr->delAt(pos);
             }
         }
     }
@@ -1436,20 +1436,19 @@ clientReplyContext::buildReplyHeader()
     /* Append VIA */
     {
         LOCAL_ARRAY(char, bbuf, MAX_URL + 32);
-        String strVia = httpHeaderGetList(hdr, HDR_VIA);
+        String strVia = hdr->getList(HDR_VIA);
         snprintf(bbuf, sizeof(bbuf), "%d.%d %s",
                  reply->sline.version.major,
                  reply->sline.version.minor,
                  ThisCache);
         strListAdd(&strVia, bbuf, ',');
-        httpHeaderDelById(hdr, HDR_VIA);
-        httpHeaderPutStr(hdr, HDR_VIA, strVia.buf());
+        hdr->delById(HDR_VIA);
+        hdr->putStr(HDR_VIA, strVia.buf());
         strVia.clean();
     }
     /* Signal keep-alive if needed */
-    httpHeaderPutStr(hdr,
-                     http->flags.accel ? HDR_CONNECTION : HDR_PROXY_CONNECTION,
-                     request->flags.proxy_keepalive ? "keep-alive" : "close");
+    hdr->putStr(http->flags.accel ? HDR_CONNECTION : HDR_PROXY_CONNECTION,
+                request->flags.proxy_keepalive ? "keep-alive" : "close");
 
 #if ADD_X_REQUEST_URI
     /*
@@ -1458,8 +1457,8 @@ clientReplyContext::buildReplyHeader()
      * but X-Request-URI is likely to be the very last header to ease use from a
      * debugger [hdr->entries.count-1].
      */
-    httpHeaderPutStr(hdr, HDR_X_REQUEST_URI,
-                     http->memOjbect()->url ? http->memObject()->url : http->uri);
+    hdr->putStr(HDR_X_REQUEST_URI,
+                http->memOjbect()->url ? http->memObject()->url : http->uri);
 
 #endif
 

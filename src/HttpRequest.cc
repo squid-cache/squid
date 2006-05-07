@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.64 2006/05/05 23:57:40 wessels Exp $
+ * $Id: HttpRequest.cc,v 1.65 2006/05/06 22:13:18 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -215,7 +215,7 @@ HttpRequest::parseHeader(const char *parse_start)
     if (!httpMsgIsolateHeaders(&parse_start, &blk_start, &blk_end))
         return 0;
 
-    int result = httpHeaderParse(&header, blk_start, blk_end);
+    int result = header.parse(blk_start, blk_end);
 
     if (result)
         hdrCacheInit();
@@ -243,7 +243,7 @@ HttpRequest::pack(Packer * p)
     packerPrintf(p, "%s %s HTTP/1.0\r\n",
                  RequestMethodStr[method], urlpath.buf());
     /* headers */
-    httpHeaderPackInto(&header, p);
+    header.packInto(p);
     /* trailer */
     packerAppend(p, "\r\n", 2);
 }
@@ -290,7 +290,7 @@ HttpRequest::hdrCacheInit()
 {
     HttpMsg::hdrCacheInit();
 
-    range = httpHeaderGetRange(&header);
+    range = header.getRange();
 }
 
 /* request_flags */
@@ -370,7 +370,7 @@ HttpRequest::expectingBody(method_t unused, ssize_t& theSize) const
         expectBody = Config.onoff.request_entities ? true : false;
     else if (method == METHOD_PUT || method == METHOD_POST)
         expectBody = true;
-    else if (httpHeaderHasListMember(&header, HDR_TRANSFER_ENCODING, "chunked", ','))
+    else if (header.hasListMember(HDR_TRANSFER_ENCODING, "chunked", ','))
         expectBody = true;
     else if (content_length >= 0)
         expectBody = true;
@@ -378,7 +378,7 @@ HttpRequest::expectingBody(method_t unused, ssize_t& theSize) const
         expectBody = false;
 
     if (expectBody) {
-        if (httpHeaderHasListMember(&header, HDR_TRANSFER_ENCODING, "chunked", ','))
+        if (header.hasListMember(HDR_TRANSFER_ENCODING, "chunked", ','))
             theSize = -1;
         else if (content_length >= 0)
             theSize = content_length;

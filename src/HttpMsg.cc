@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.28 2006/05/05 19:57:32 wessels Exp $
+ * $Id: HttpMsg.cc,v 1.29 2006/05/06 22:13:18 wessels Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -269,7 +269,7 @@ HttpMsg::httpMsgParseStep(const char *buf, int atEnd)
                 return 0;
         }
 
-        if (!httpHeaderParse(&header, blk_start, blk_end))
+        if (!header.parse(blk_start, blk_end))
             return httpMsgParseError();
 
         hdrCacheInit();
@@ -314,9 +314,9 @@ httpMsgIsPersistent(HttpVersion const &http_ver, const HttpHeader * hdr)
          * return false if it is a browser connection.  If there is a
          * VIA header, then we assume this is NOT a browser connection.
          */
-        const char *agent = httpHeaderGetStr(hdr, HDR_USER_AGENT);
+        const char *agent = hdr->getStr(HDR_USER_AGENT);
 
-    if (agent && !httpHeaderHas(hdr, HDR_VIA)) {
+    if (agent && !hdr->has(HDR_VIA)) {
         if (!strncasecmp(agent, "Mozilla/3.", 10))
             return 0;
 
@@ -332,15 +332,15 @@ httpMsgIsPersistent(HttpVersion const &http_ver, const HttpHeader * hdr)
 void HttpMsg::packInto(Packer *p, bool full_uri) const
 {
     packFirstLineInto(p, full_uri);
-    httpHeaderPackInto(&header, p);
+    header.packInto(p);
     packerAppend(p, "\r\n", 2);
 }
 
 void HttpMsg::hdrCacheInit()
 {
-    content_length = httpHeaderGetInt(&header, HDR_CONTENT_LENGTH);
+    content_length = header.getInt(HDR_CONTENT_LENGTH);
     assert(NULL == cache_control);
-    cache_control = httpHeaderGetCc(&header);
+    cache_control = header.getCc();
 }
 
 /*

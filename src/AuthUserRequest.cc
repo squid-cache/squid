@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.cc,v 1.6 2005/10/23 11:55:31 hno Exp $
+ * $Id: AuthUserRequest.cc,v 1.7 2006/05/06 22:13:18 wessels Exp $
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 6803fde1-d5a2-4c29-9034-1c0c9f650eb4
@@ -408,7 +408,7 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
     const char *proxy_auth;
     assert(headertype != 0);
 
-    proxy_auth = httpHeaderGetStr(&request->header, headertype);
+    proxy_auth = request->header.getStr(headertype);
 
     /*
      * a note on proxy_auth logix here:

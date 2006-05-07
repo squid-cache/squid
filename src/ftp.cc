@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.393 2006/05/05 23:12:11 wessels Exp $
+ * $Id: ftp.cc,v 1.394 2006/05/06 22:13:18 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1349,7 +1349,7 @@ FtpStateData::checkAuth(const HttpHeader * req_hdr)
         return 1;		/* passwd provided in URL */
 
     /* URL has name, but no passwd */
-    if (!(auth = httpHeaderGetAuth(req_hdr, HDR_AUTHORIZATION, "Basic")))
+    if (!(auth = req_hdr->getAuth(HDR_AUTHORIZATION, "Basic")))
         return 0;		/* need auth header */
 
     flags.authenticated = 1;
@@ -2541,7 +2541,7 @@ ftpSendStor(FtpStateData * ftpState)
         snprintf(cbuf, 1024, "STOR %s\r\n", ftpState->filepath);
         ftpState->writeCommand(cbuf);
         ftpState->state = SENT_STOR;
-    } else if (httpHeaderGetInt(&ftpState->request->header, HDR_CONTENT_LENGTH) > 0) {
+    } else if (ftpState->request->header.getInt(HDR_CONTENT_LENGTH) > 0) {
         /* File upload without a filename. use STOU to generate one */
         snprintf(cbuf, 1024, "STOU\r\n");
         ftpState->writeCommand(cbuf);
@@ -3143,7 +3143,7 @@ FtpStateData::appendSuccessHeader()
 
     /* additional info */
     if (mime_enc)
-        httpHeaderPutStr(&reply->header, HDR_CONTENT_ENCODING, mime_enc);
+        reply->header.putStr(HDR_CONTENT_ENCODING, mime_enc);
 
 #if ICAP_CLIENT
 
@@ -3186,7 +3186,7 @@ FtpStateData::ftpAuthRequired(HttpRequest * request, const char *realm)
     HttpReply *newrep = errorBuildReply(err);
     errorStateFree(err);
     /* add Authenticate header */
-    httpHeaderPutAuth(&newrep->header, "Basic", realm);
+    newrep->header.putAuth("Basic", realm);
     return newrep;
 }
 

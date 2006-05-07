@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.68 2006/04/23 11:10:31 robertc Exp $
+ * $Id: external_acl.cc,v 1.69 2006/05/06 22:13:18 wessels Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -807,22 +807,22 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
             break;
 
         case _external_acl_format::EXT_ACL_HEADER:
-            sb = httpHeaderGetByName(&request->header, format->header);
+            sb = request->header.getByName(format->header);
             str = sb.buf();
             break;
 
         case _external_acl_format::EXT_ACL_HEADER_ID:
-            sb = httpHeaderGetStrOrList(&request->header, format->header_id);
+            sb = request->header.getStrOrList(format->header_id);
             str = sb.buf();
             break;
 
         case _external_acl_format::EXT_ACL_HEADER_MEMBER:
-            sb = httpHeaderGetByNameListMember(&request->header, format->header, format->member, format->separator);
+            sb = request->header.getByNameListMember(format->header, format->member, format->separator);
             str = sb.buf();
             break;
 
         case _external_acl_format::EXT_ACL_HEADER_ID_MEMBER:
-            sb = httpHeaderGetListMember(&request->header, format->header_id, format->member, format->separator);
+            sb = request->header.getListMember(format->header_id, format->member, format->separator);
             str = sb.buf();
             break;
 #if USE_SSL

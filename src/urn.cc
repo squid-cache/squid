@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.97 2006/05/03 14:04:44 robertc Exp $
+ * $Id: urn.cc,v 1.98 2006/05/06 22:13:18 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -235,7 +235,7 @@ UrnState::setUriResFromRequest(HttpRequest *r)
     }
 
     HTTPMSGLOCK(urlres_r);
-    httpHeaderPutStr(&urlres_r->header, HDR_ACCEPT, "text/plain");
+    urlres_r->header.putStr(HDR_ACCEPT, "text/plain");
 }
 
 void
@@ -443,7 +443,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
     if (urnState->flags.force_menu) {
         debug(51, 3) ("urnHandleReply: forcing menu\n");
     } else if (min_u) {
-        httpHeaderPutStr(&rep->header, HDR_LOCATION, min_u->url);
+        rep->header.putStr(HDR_LOCATION, min_u->url);
     }
 
     httpBodySet(&rep->body, mb);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.587 2006/05/03 14:04:44 robertc Exp $
+ * $Id: store.cc,v 1.588 2006/05/06 22:13:18 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -730,20 +730,20 @@ storeSetPublicKey(StoreEntry * e)
             /* We are allowed to do this typecast */
             HttpReply *rep = (HttpReply *) pe->getReply();      // bypass const
             rep->setHeaders(version, HTTP_OK, "Internal marker object", "x-squid-internal/vary", -1, -1, squid_curtime + 100000);
-            vary = httpHeaderGetList(&mem->getReply()->header, HDR_VARY);
+            vary = mem->getReply()->header.getList(HDR_VARY);
 
             if (vary.size()) {
                 /* Again, we own this structure layout */
-                httpHeaderPutStr((HttpHeader *)&pe->getReply()->header, HDR_VARY, vary.buf());
+                ((HttpHeader) pe->getReply()->header).putStr(HDR_VARY, vary.buf());
                 vary.clean();
             }
 
 #if X_ACCELERATOR_VARY
-            vary = httpHeaderGetList(&mem->getReply()->header, HDR_X_ACCELERATOR_VARY);
+            vary = mem->getReply()->header.getList(HDR_X_ACCELERATOR_VARY);
 
             if (vary.buf()) {
                 /* Again, we own this structure layout */
-                httpHeaderPutStr((HttpHeader *)&pe->getReply()->header, HDR_X_ACCELERATOR_VARY, vary.buf());
+                ((HttpHeader) pe->getReply()->header).putStr(HDR_X_ACCELERATOR_VARY, vary.buf());
                 vary.clean();
             }
 
@@ -1559,7 +1559,7 @@ storeTimestampsSet(StoreEntry * entry)
 {
     const HttpReply *reply = entry->getReply();
     time_t served_date = reply->date;
-    int age = httpHeaderGetInt(&reply->header, HDR_AGE);
+    int age = reply->header.getInt(HDR_AGE);
     /*
      * The timestamp calculations below tries to mimic the properties
      * of the age calculation in RFC2616 section 13.2.3. The implementaion

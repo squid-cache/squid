@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.56 2006/04/23 11:10:34 robertc Exp $
+ * $Id: auth_ntlm.cc,v 1.57 2006/05/06 22:13:19 wessels Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -286,7 +286,7 @@ AuthNTLMConfig::fixHeader(auth_user_request_t *auth_user_request, HttpReply *rep
 
         if (!keep_alive) {
             /* drop the connection */
-            httpHeaderDelByName(&rep->header, "keep-alive");
+            rep->header.delByName("keep-alive");
             request->flags.proxy_keepalive = 0;
         }
     } else {
@@ -297,7 +297,7 @@ AuthNTLMConfig::fixHeader(auth_user_request_t *auth_user_request, HttpReply *rep
         case AUTHENTICATE_STATE_FAILED:
             /* here it makes sense to drop the connection, as auth is
              * tied to it, even if MAYBE the client could handle it - Kinkie */
-            httpHeaderDelByName(&rep->header, "keep-alive");
+            rep->header.delByName("keep-alive");
             request->flags.proxy_keepalive = 0;
             /* fall through */
 
@@ -605,7 +605,7 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointer 
     }
 
     /* get header */
-    proxy_auth = httpHeaderGetStr(&request->header, type);
+    proxy_auth = request->header.getStr(type);
 
     /* locate second word */
     blob = proxy_auth;

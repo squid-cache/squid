@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.527 2006/05/05 23:57:40 wessels Exp $
+ * $Id: protos.h,v 1.528 2006/05/06 22:13:18 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -314,7 +314,6 @@ SQUIDCEXTERN int strListGetItem(const String * str, char del, const char **item,
 SQUIDCEXTERN const char *getStringPrefix(const char *str, const char *end);
 SQUIDCEXTERN int httpHeaderParseInt(const char *start, int *val);
 SQUIDCEXTERN int httpHeaderParseSize(const char *start, ssize_t * sz);
-SQUIDCEXTERN int httpHeaderReset(HttpHeader * hdr);
 #if STDC_HEADERS
 SQUIDCEXTERN void
 httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt,...) PRINTF_FORMAT_ARG3;
@@ -326,50 +325,9 @@ SQUIDCEXTERN void httpHeaderPutStrf();
 /* Http Header */
 SQUIDCEXTERN void httpHeaderInitModule(void);
 SQUIDCEXTERN void httpHeaderCleanModule(void);
-/* append/update */
-SQUIDCEXTERN void httpHeaderAppend(HttpHeader * dest, const HttpHeader * src);
-/* parse/pack */
-SQUIDCEXTERN int httpHeaderParse(HttpHeader * hdr, const char *header_start, const char *header_end);
-SQUIDCEXTERN void httpHeaderPackInto(const HttpHeader * hdr, Packer * p);
-/* field manipulation */
-SQUIDCEXTERN int httpHeaderHas(const HttpHeader * hdr, http_hdr_type type);
-SQUIDCEXTERN void httpHeaderPutInt(HttpHeader * hdr, http_hdr_type type, int number);
-SQUIDCEXTERN void httpHeaderPutTime(HttpHeader * hdr, http_hdr_type type, time_t htime);
-SQUIDCEXTERN void httpHeaderInsertTime(HttpHeader * hdr, http_hdr_type type, time_t htime);
-SQUIDCEXTERN void httpHeaderPutStr(HttpHeader * hdr, http_hdr_type type, const char *str);
-SQUIDCEXTERN void httpHeaderPutAuth(HttpHeader * hdr, const char *auth_scheme, const char *realm);
-SQUIDCEXTERN void httpHeaderPutCc(HttpHeader * hdr, const HttpHdrCc * cc);
 
-class HttpHdrContRange;
-SQUIDCEXTERN void httpHeaderPutContRange(HttpHeader * hdr, const HttpHdrContRange * cr);
-
-class HttpHdrRange;
-SQUIDCEXTERN void httpHeaderPutRange(HttpHeader * hdr, const HttpHdrRange * range);
-SQUIDCEXTERN void httpHeaderPutExt(HttpHeader * hdr, const char *name, const char *value);
-SQUIDCEXTERN int httpHeaderGetInt(const HttpHeader * hdr, http_hdr_type id);
-SQUIDCEXTERN time_t httpHeaderGetTime(const HttpHeader * hdr, http_hdr_type id);
-SQUIDCEXTERN TimeOrTag httpHeaderGetTimeOrTag(const HttpHeader * hdr, http_hdr_type id);
-SQUIDCEXTERN HttpHdrCc *httpHeaderGetCc(const HttpHeader * hdr);
-SQUIDCEXTERN ETag httpHeaderGetETag(const HttpHeader * hdr, http_hdr_type id);
-SQUIDCEXTERN HttpHdrRange *httpHeaderGetRange(const HttpHeader * hdr);
-SQUIDCEXTERN HttpHdrContRange *httpHeaderGetContRange(const HttpHeader * hdr);
-SQUIDCEXTERN const char *httpHeaderGetStr(const HttpHeader * hdr, http_hdr_type id);
-SQUIDCEXTERN const char *httpHeaderGetLastStr(const HttpHeader * hdr, http_hdr_type id);
-SQUIDCEXTERN const char *httpHeaderGetAuth(const HttpHeader * hdr, http_hdr_type id, const char *auth_scheme);
-extern String httpHeaderGetList(const HttpHeader * hdr, http_hdr_type id);
-extern String httpHeaderGetStrOrList(const HttpHeader * hdr, http_hdr_type id);
-extern String httpHeaderGetByName(const HttpHeader * hdr, const char *name);
-extern String httpHeaderGetListMember(const HttpHeader * hdr, http_hdr_type id, const char *member, const char separator);
-extern String httpHeaderGetByNameListMember(const HttpHeader * hdr, const char *name, const char *member, const char separator);
-SQUIDCEXTERN int httpHeaderDelByName(HttpHeader * hdr, const char *name);
-SQUIDCEXTERN int httpHeaderDelById(HttpHeader * hdr, http_hdr_type id);
-SQUIDCEXTERN void httpHeaderDelAt(HttpHeader * hdr, HttpHeaderPos pos);
 extern int httpHeaderEntryGetInt(const HttpHeaderEntry * e);
 /* avoid using these low level routines */
-SQUIDCEXTERN HttpHeaderEntry *httpHeaderGetEntry(const HttpHeader * hdr, HttpHeaderPos * pos);
-SQUIDCEXTERN HttpHeaderEntry *httpHeaderFindEntry(const HttpHeader * hdr, http_hdr_type id);
-SQUIDCEXTERN void httpHeaderAddEntry(HttpHeader * hdr, HttpHeaderEntry * e);
-SQUIDCEXTERN void httpHeaderInsertEntry(HttpHeader * hdr, HttpHeaderEntry * e);
 SQUIDCEXTERN HttpHeaderEntry *httpHeaderEntryClone(const HttpHeaderEntry * e);
 SQUIDCEXTERN void httpHeaderEntryPackInto(const HttpHeaderEntry * e, Packer * p);
 /* store report about current header usage and other stats */

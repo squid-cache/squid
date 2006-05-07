@@ -66,7 +66,7 @@ void ICAPOptions::insertTransferExt(const char *t, transfer_type t_type)
 
 void ICAPOptions::cfgTransferListHeader(const HttpHeader *h, const char *fname, transfer_type t_type)
 {
-    const String s = httpHeaderGetByName(h, fname);
+    const String s = h->getByName(fname);
 
     if (!s.size())
         return;
@@ -134,19 +134,19 @@ void ICAPOptions::configure(const HttpReply *reply)
         error = "unsupported status code of OPTIONS response";
 
     // Methods
-    if (httpHeaderHasByNameListMember(h, "Methods", "REQMOD", ','))
+    if (h->hasByNameListMember("Methods", "REQMOD", ','))
         cfgMethod(ICAP::methodReqmod);
 
-    if (httpHeaderHasByNameListMember(h, "Methods", "RESPMOD", ','))
+    if (h->hasByNameListMember("Methods", "RESPMOD", ','))
         cfgMethod(ICAP::methodRespmod);
 
-    service = httpHeaderGetByName(h, "Service");
+    service = h->getByName("Service");
 
-    serviceId = httpHeaderGetByName(h, "ServiceId");
+    serviceId = h->getByName("ServiceId");
 
-    istag = httpHeaderGetByName(h, "ISTag");
+    istag = h->getByName("ISTag");
 
-    if (httpHeaderGetByName(h, "Opt-body-type").size())
+    if (h->getByName("Opt-body-type").size())
         error = "ICAP service returns unsupported OPTIONS body";
 
     cfgIntHeader(h, "Max-Connections", max_connections);
@@ -156,12 +156,12 @@ void ICAPOptions::configure(const HttpReply *reply)
     if (theTTL < 0)
         theTTL = TheICAPConfig.default_options_ttl;
 
-    theTimestamp = httpHeaderGetTime(h, HDR_DATE);
+    theTimestamp = h->getTime(HDR_DATE);
 
     if (theTimestamp < 0)
         theTimestamp = squid_curtime;
 
-    if (httpHeaderHasListMember(h, HDR_ALLOW, "204", ','))
+    if (h->hasListMember(HDR_ALLOW, "204", ','))
         allow204 = true;
 
     cfgIntHeader(h, "Preview", preview);
@@ -182,7 +182,7 @@ void ICAPOptions::cfgMethod(ICAP::Method m)
 // TODO: HttpHeader should provide a general method for this type of conversion
 void ICAPOptions::cfgIntHeader(const HttpHeader *h, const char *fname, int &value)
 {
-    const String s = httpHeaderGetByName(h, fname);
+    const String s = h->getByName(fname);
 
     if (s.size() && xisdigit(*s.buf()))
         value = atoi(s.buf());
