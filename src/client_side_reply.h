@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.h,v 1.11 2006/05/05 21:33:56 wessels Exp $
+ * $Id: client_side_reply.h,v 1.12 2006/05/07 15:13:24 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -138,7 +138,6 @@ private:
     void startSendProcess();
     StoreIOBuffer holdingBuffer;
     HttpReply *reply;
-    FwdState::Pointer fwd;
     void processReplyAccess();
     static PF ProcessReplyAccessResult;
     void processReplyAccessResult(bool accessAllowed);
