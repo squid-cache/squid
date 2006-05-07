@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIVarState.cc,v 1.6 2006/05/05 23:57:40 wessels Exp $
+ * $Id: ESIVarState.cc,v 1.7 2006/05/06 22:23:44 wessels Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -302,7 +302,7 @@ ESIVarState::ESIVarState (HttpHeader const *aHeader, char const *uri)
     /* TODO: only grab the needed headers */
     /* Note that as we pass these through to included requests, we
      * cannot trim them */
-    httpHeaderAppend (&hdr, aHeader);
+    hdr.append(aHeader);
 
     /* populate our variables trie with the available variables.
      * Additional ones can be added during the parsing.
@@ -373,8 +373,8 @@ ESIVariableUserAgent::ESIVariableUserAgent(ESIVarState &state)
      * In future, this may be better implemented as a regexp.
      */
 
-    if (httpHeaderHas(&state.header(), HDR_USER_AGENT)) {
-        char const *s = httpHeaderGetStr (&state.header(), HDR_USER_AGENT);
+    if (state.header().has(HDR_USER_AGENT)) {
+        char const *s = state.header().getStr(HDR_USER_AGENT);
         UserOs = identifyOs(s);
         char const *t, *t1;
 
@@ -430,11 +430,11 @@ ESIVariableCookie::eval (ESIVarState &state, char const *subref, char const *fou
     const char *s = NULL;
     state.cookieUsed();
 
-    if (httpHeaderHas(&state.header(), HDR_COOKIE)) {
+    if (state.header().has(HDR_COOKIE)) {
         if (!subref)
-            s = httpHeaderGetStr (&state.header(), HDR_COOKIE);
+            s = state.header().getStr (HDR_COOKIE);
         else {
-            String S = httpHeaderGetListMember (&state.header(), HDR_COOKIE, subref, ';');
+            String S = state.header().getListMember (HDR_COOKIE, subref, ';');
 
             if (S.size())
                 ESISegment::ListAppend (state.getOutput(), S.buf(), S.size());
@@ -454,8 +454,8 @@ ESIVariableHost::eval (ESIVarState &state, char const *subref, char const *found
     const char *s = NULL;
     state.hostUsed();
 
-    if (!subref && httpHeaderHas(&state.header(),HDR_HOST)) {
-        s = httpHeaderGetStr (&state.header(), HDR_HOST);
+    if (!subref && state.header().has(HDR_HOST)) {
+        s = state.header().getStr (HDR_HOST);
     } else
         s = found_default;
 
@@ -468,12 +468,12 @@ ESIVariableLanguage::eval (ESIVarState &state, char const *subref, char const *f
     char const *s = NULL;
     state.languageUsed();
 
-    if (httpHeaderHas(&state.header(), HDR_ACCEPT_LANGUAGE)) {
+    if (state.header().has(HDR_ACCEPT_LANGUAGE)) {
         if (!subref) {
-            String S (httpHeaderGetList (&state.header(), HDR_ACCEPT_LANGUAGE));
+            String S (state.header().getList (HDR_ACCEPT_LANGUAGE));
             ESISegment::ListAppend (state.getOutput(), S.buf(), S.size());
         } else {
-            if (httpHeaderHasListMember (&state.header(), HDR_ACCEPT_LANGUAGE, subref, ',')) {
+            if (state.header().hasListMember (HDR_ACCEPT_LANGUAGE, subref, ',')) {
                 s = "true";
             } else {
                 s = "false";
@@ -517,8 +517,8 @@ ESIVariableReferer::eval (ESIVarState &state, char const *subref, char const *fo
     const char *s = NULL;
     state.refererUsed();
 
-    if (!subref && httpHeaderHas(&state.header(), HDR_REFERER))
-        s = httpHeaderGetStr (&state.header(), HDR_REFERER);
+    if (!subref && state.header().has(HDR_REFERER))
+        s = state.header().getStr (HDR_REFERER);
     else
         s = found_default;
 
@@ -531,9 +531,9 @@ ESIVariableUserAgent::eval (ESIVarState &state, char const *subref, char const *
     char const *s = NULL;
     state.useragentUsed();
 
-    if (httpHeaderHas(&state.header(), HDR_USER_AGENT)) {
+    if (state.header().has(HDR_USER_AGENT)) {
         if (!subref)
-            s = httpHeaderGetStr (&state.header(), HDR_USER_AGENT);
+            s = state.header().getStr (HDR_USER_AGENT);
         else {
             if (!strcmp (subref, "os")) {
                 s = esiUserOs[UserOs];
@@ -885,10 +885,10 @@ ESIVarState::buildVary (HttpReply *rep)
     if (!tempstr[0])
         return;
 
-    String strVary (httpHeaderGetList (&rep->header, HDR_VARY));
+    String strVary (rep->header.getList (HDR_VARY));
 
     if (!strVary.size() || strVary.buf()[0] != '*') {
-        httpHeaderPutStr (&rep->header, HDR_VARY, tempstr);
+        rep->header.putStr (HDR_VARY, tempstr);
     }
 }
 
