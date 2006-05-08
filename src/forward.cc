@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.140 2006/05/07 15:13:24 wessels Exp $
+ * $Id: forward.cc,v 1.141 2006/05/08 17:37:34 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -279,6 +279,14 @@ FwdState::complete()
             unregister(server_fd);
 
         storeEntryReset(e);
+
+        /*
+         * Need to re-establish the self-reference here since we'll
+         * be trying to forward the request again.  Otherwise the
+         * ref count could go to zero before a connection is
+         * established.
+         */
+        self = this;	// refcounted
 
         startComplete(servers);
     } else {
