@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskdIOStrategy.cc,v 1.2 2005/01/03 16:08:26 robertc Exp $
+ * $Id: DiskdIOStrategy.cc,v 1.3 2006/05/08 19:57:30 wessels Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -402,10 +402,10 @@ DiskdIOStrategy::send(int mtype, int id, DiskdFile *theFile, int size, int offse
      * we're "blocking" on this SD we can also handle callbacks
      * from other SDs that might be ready.
      */
+
+    struct timeval delay = {0, 1};
+
     while (away > magic2) {
-
-        struct timeval delay = {0, 1};
-
         select(0, NULL, NULL, NULL, &delay);
         Store::Root().callback();
 
@@ -461,10 +461,10 @@ DiskdIOStrategy::send(int mtype, int id, StoreIOState::Pointer sio, int size, in
      * we're "blocking" on this SD we can also handle callbacks
      * from other SDs that might be ready.
      */
+
+    struct timeval delay = {0, 1};
+
     while (away > magic2) {
-
-        struct timeval delay = {0, 1};
-
         select(0, NULL, NULL, NULL, &delay);
         Store::Root().callback();
 
