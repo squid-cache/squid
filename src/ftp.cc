@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.394 2006/05/06 22:13:18 wessels Exp $
+ * $Id: ftp.cc,v 1.395 2006/05/08 18:22:03 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2167,7 +2167,7 @@ ftpSendPasv(FtpStateData * ftpState)
     struct sockaddr_in addr;
     socklen_t addr_len;
 
-    debugs(9, 1, HERE << "ftpSendPasv");
+    debugs(9, 3, HERE << "ftpSendPasv started");
 
     if (ftpState->request->method == METHOD_HEAD) {
         /* Terminate here for HEAD requests */
@@ -2199,8 +2199,6 @@ ftpSendPasv(FtpStateData * ftpState)
     }
 
     addr_len = sizeof(addr);
-
-    debugs(9, 1, HERE << "ftpSendPasv");
 
     if (getsockname(ftpState->ctrl.fd, (struct sockaddr *) &addr, &addr_len)) {
         debug(9, 0) ("ftpSendPasv: getsockname(%d,..): %s\n",
@@ -3085,7 +3083,7 @@ FtpStateData::appendSuccessHeader()
     StoreEntry *e = entry;
     HttpReply *newrep = new HttpReply;
 
-    debugs(0,0,HERE << "FtpStateData::appendSuccessHeader");
+    debugs(9, 3, HERE << "FtpStateData::appendSuccessHeader starting");
 
     reply = HTTPMSGLOCK(newrep);
 
