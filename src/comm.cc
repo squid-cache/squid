@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.414 2006/05/05 21:00:28 wessels Exp $
+ * $Id: comm.cc,v 1.415 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -43,6 +43,7 @@
 #include "ConnectionDetail.h"
 #include "MemBuf.h"
 #include "pconn.h"
+#include "SquidTime.h"
 
 #if defined(_SQUID_CYGWIN_)
 #include <sys/ioctl.h>

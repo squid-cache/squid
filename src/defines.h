@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.118 2005/08/27 18:34:31 serassio Exp $
+ * $Id: defines.h,v 1.119 2006/05/08 23:38:33 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -220,9 +220,6 @@
 #ifndef DEFAULT_SQUID_ERROR_DIR
 #define DEFAULT_SQUID_ERROR_DIR "/usr/local/squid/etc/errors"
 #endif
-
-/* use this and only this to initialize HttpHeaderPos */
-#define HttpHeaderInitPos (-1)
 
 /* handy to determine the #elements in a static array */
 #define countof(arr) (sizeof(arr)/sizeof(*arr))

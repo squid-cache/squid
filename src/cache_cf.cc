@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.494 2006/04/28 05:05:43 wessels Exp $
+ * $Id: cache_cf.cc,v 1.495 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -598,7 +598,7 @@ configDoConfigure(void)
         Config2.effectiveGroupID = grp->gr_gid;
     }
 
-    urlExtMethodConfigure();
+    HttpRequestMethod::Configure(Config);
 #if USE_SSL
 
     debug(3, 1) ("Initializing https proxy context\n");

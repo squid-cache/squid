@@ -1,6 +1,6 @@
 
 /*
- * $Id: fde.cc,v 1.3 2005/12/06 23:03:34 wessels Exp $
+ * $Id: fde.cc,v 1.4 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section ??	FDE
  * AUTHOR: Robert Collins
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "fde.h"
+#include "SquidTime.h"
 #include "Store.h"
 #include "comm.h"
 

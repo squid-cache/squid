@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.65 2006/05/06 22:13:18 wessels Exp $
+ * $Id: HttpRequest.cc,v 1.66 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -152,7 +152,7 @@ HttpRequest::sanityCheckStartLine(MemBuf *buf, http_status *error)
      * superfluous and could just go away.
      */
 
-    if (METHOD_NONE == urlParseMethod(buf->content())) {
+    if (METHOD_NONE == HttpRequestMethod(buf->content())) {
         debug(73, 3)("HttpRequest::sanityCheckStartLine: did not find HTTP request method\n");
         return false;
     }
@@ -164,7 +164,7 @@ bool
 HttpRequest::parseFirstLine(const char *start, const char *end)
 {
     const char *t = start + strcspn(start, w_space);
-    method = urlParseMethod(start, t);
+    method = HttpRequestMethod(start, t);
 
     if (METHOD_NONE == method)
         return false;

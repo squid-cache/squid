@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.97 2005/04/06 18:44:25 serassio Exp $
+ * $Id: debug.cc,v 1.98 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "Debug.h"
+#include "SquidTime.h"
 #include <sstream>
 
 int Debug::Levels[MAX_DEBUG_SECTIONS];

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.71 2006/04/23 11:10:34 robertc Exp $
+ * $Id: store_dir_ufs.cc,v 1.72 2006/05/08 23:38:35 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -42,6 +42,7 @@
 #include "DiskIO/DiskIOStrategy.h"
 #include "DiskIO/DiskIOModule.h"
 #include "Parsing.h"
+#include "SquidTime.h"
 
 #include "SwapDir.h"
 int UFSSwapDir::NumberOfUFSDirs = 0;

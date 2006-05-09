@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.141 2006/05/06 12:38:01 serassio Exp $
+#  $Id: Makefile.am,v 1.142 2006/05/08 23:38:33 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -201,7 +201,7 @@ libexec_PROGRAMS = \
 	$(UNLINKD) \
 	cachemgr$(CGIEXT)
 
-cf_gen_SOURCES = cf_gen.cc defines.h debug.cc
+cf_gen_SOURCES = cf_gen.cc defines.h debug.cc time.cc
 nodist_cf_gen_SOURCES = globals.cc
 nodist_cf_gen_HEADER = cf_gen_defines.h
 cf_gen.$(OBJEXT): cf_gen_defines.h
@@ -442,6 +442,8 @@ squid_SOURCES = \
 	HttpReply.h \
 	HttpRequest.cc \
 	HttpRequest.h \
+	HttpRequestMethod.cc \
+	HttpRequestMethod.h \
 	HttpVersion.h \
 	icmp.cc \
 	ICP.h \
@@ -539,6 +541,9 @@ squid_SOURCES = \
 	typedefs.h \
 	$(UNLINKDSOURCE) \
 	url.cc \
+	URL.h \
+	URLScheme.cc \
+	URLScheme.h \
 	urn.cc \
 	useragent.cc \
 	wais.cc \
@@ -633,6 +638,7 @@ unlinkd_CXXFLAGS = -DUNLINK_DAEMON
 pinger_SOURCES = \
 	pinger.cc \
 	debug.cc \
+	time.cc \
 	SquidNew.cc 
 
 dnsserver_SOURCES = dnsserver.cc SquidNew.cc
@@ -740,7 +746,7 @@ ufsdump_SOURCES = \
 	HttpMsg.cc \
 	HttpReply.cc \
 	HttpRequest.cc \
-	HttpRequest.h \
+	HttpRequestMethod.cc \
 	icmp.cc \
 	icp_v2.cc \
 	icp_v3.cc \
@@ -800,6 +806,7 @@ ufsdump_SOURCES = \
 	tools.cc \
 	typedefs.h \
 	$(UNLINKDSOURCE) \
+	URLScheme.cc \
 	urn.cc \
 	useragent.cc \
 	wais.cc \
@@ -1041,6 +1048,7 @@ check_PROGRAMS+= \
 	tests/testHttpRequest \
 	tests/testStore \
 	tests/testString \
+	tests/testURL \
 	@STORE_TESTS@
 
 tests_testAuth_SOURCES= tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $(TESTSOURCES) \
@@ -1058,8 +1066,11 @@ tests_testAuth_SOURCES= tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $(
 	tests/stub_comm.cc \
 	tests/stub_http.cc \
 	HttpMsg.cc \
+	HttpRequestMethod.cc \
 	tests/stub_mime.cc \
 	tests/stub_access_log.cc \
+	time.cc \
+	URLScheme.cc \
 	wordlist.cc
 ##	acl.cc cache_cf.cc tools.cc \
 ##	helper.cc String.cc cbdata.cc HttpHeaderTools.cc store.cc cache_manager.cc \
@@ -1133,6 +1144,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/testACLMaxUserIP.cc \
 	tests/testACLMaxUserIP.h \
 	tests/testMain.cc \
+	time.cc \
 	mem.cc \
 	MemBuf.cc \
 	wordlist.cc \
@@ -1148,7 +1160,12 @@ tests_testACLMaxUserIP_DEPENDENCIES = \
 
 ## a demonstration test that does nothing but shows the salient points
 ## involved in writing tests.
-tests_testBoilerplate_SOURCES= tests/testBoilerplate.cc tests/testMain.cc tests/testBoilerplate.h $(TESTSOURCES)
+tests_testBoilerplate_SOURCES = \
+	tests/testBoilerplate.cc \
+	tests/testMain.cc \
+	tests/testBoilerplate.h \
+	$(TESTSOURCES) \
+	time.cc
 tests_testBoilerplate_LDADD= \
 	-L../lib -lmiscutil \
 	@SQUID_CPPUNIT_LA@ \
@@ -1171,7 +1188,10 @@ HEADERS_TO_TEST = \
 	tests/testHeader_HttpHeader.cc \
 	tests/testHeader_HttpHeaderRange.cc \
 	tests/testHeader_HttpReply.cc \
+	tests/testHeader_HttpRequestMethod.cc \
 	tests/testHeader_StoreEntryStream.cc \
+	tests/testHeader_URL.cc \
+	tests/testHeader_URLScheme.cc \
 	tests/testHeader_wordlist.cc
 tests_testHeaders_SOURCES= tests/testMain.cc $(HEADERS_TO_TEST)
 tests_testHeaders_LDADD= \
@@ -1184,6 +1204,16 @@ tests_testHeaders_DEPENDENCIES = \
 
 ## Tests of the HttpRequest module.
 tests_testHttpRequest_SOURCES = \
+	debug.cc \
+	globals.cc \
+	HttpRequest.cc \
+	HttpRequestMethod.cc \
+	mem.cc \
+	String.cc \
+	tests/testHttpRequest.cc \
+	tests/testHttpRequestMethod.cc \
+	tests/testMain.cc \
+	time.cc \
 	access_log.cc \
 	acl.cc \
 	acl_noncore.cc \
@@ -1216,7 +1246,6 @@ tests_testHttpRequest_SOURCES = \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	$(DELAY_POOL_SOURCE) \
-	debug.cc \
 	disk.cc \
 	$(DNSSOURCE) \
 	event.cc \
@@ -1230,7 +1259,6 @@ tests_testHttpRequest_SOURCES = \
 	forward.cc \
 	fqdncache.cc \
 	ftp.cc \
-	globals.cc \
 	gopher.cc \
 	helper.cc \
 	htcp.cc \
@@ -1244,7 +1272,6 @@ tests_testHttpRequest_SOURCES = \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	HttpMsg.cc \
-	HttpRequest.cc \
 	HttpReply.cc \
 	HttpStatusLine.cc \
 	icmp.cc \
@@ -1259,7 +1286,6 @@ tests_testHttpRequest_SOURCES = \
 	list.cc \
 	logfile.cc \
 	multicast.cc \
-	mem.cc \
 	mem_node.cc \
 	MemBuf.cc \
 	MemObject.cc \
@@ -1300,16 +1326,13 @@ tests_testHttpRequest_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
-	String.cc \
-	time.cc \
 	tools.cc \
 	tunnel.cc \
 	SwapDir.cc \
 	url.cc \
+	URLScheme.cc \
 	urn.cc \
 	useragent.cc \
-	tests/testHttpRequest.cc \
-	tests/testMain.cc \
 	wais.cc \
 	whois.cc \
 	wordlist.cc
@@ -1334,6 +1357,7 @@ tests_testHttpRequest_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 
 # TODO:mime.cc drags in HttpReply.cc
 # delay pools need client_side_request.cc
+# store_key_md5 wants the method.
 STORE_TEST_SOURCES=\
 	$(TESTSOURCES) \
 	$(DELAY_POOL_SOURCE) \
@@ -1342,6 +1366,7 @@ STORE_TEST_SOURCES=\
 	HttpMsg.cc \
 	store_dir.cc \
 	store.cc \
+	HttpRequestMethod.cc \
 	store_key_md5.cc \
 	string_arrays.c \
 	Parsing.cc \
@@ -1365,6 +1390,8 @@ STORE_TEST_SOURCES=\
 	refresh.cc \
 	tests/stub_store_client.cc \
 	tests/stub_tools.cc \
+	time.cc \
+	URLScheme.cc \
 	wordlist.cc
 
 ## why so many sources? well httpHeaderTools requites ACLChecklist & friends.
@@ -1404,7 +1431,8 @@ tests_testString_SOURCES= \
 	tests/testMain.cc \
 	tests/testString.cc \
 	tests/testString.h \
-	$(TESTSOURCES)
+	$(TESTSOURCES) \
+	time.cc 
 
 tests_testString_LDADD= \
 	-L../lib -lmiscutil \
@@ -1496,3 +1524,155 @@ tests_testNull_LDADD= \
 tests_testNull_LDFLAGS = $(LIBADD_DL)
 tests_testNull_DEPENDENCIES = \
 	$(SWAP_TEST_DS)
+
+## Tests of the URL module.
+## TODO: Trim this down once the insanity is over.
+tests_testURL_SOURCES = \
+	debug.cc \
+	url.cc \
+	URLScheme.cc \
+	globals.cc \
+	HttpRequest.cc \
+	HttpRequestMethod.cc \
+	mem.cc \
+	String.cc \
+	tests/testURL.cc \
+	tests/testURL.h \
+	tests/testURLScheme.cc \
+	tests/testURLScheme.h \
+	tests/testMain.cc \
+	time.cc \
+	access_log.cc \
+	acl.cc \
+	acl_noncore.cc \
+	ACLChecklist.cc \
+	ACLProxyAuth.cc \
+	ACLStringData.cc \
+	ACLRegexData.cc \
+	ACLUserData.cc \
+	AuthConfig.cc \
+	authenticate.cc \
+	AuthUser.cc \
+	AuthUserRequest.cc \
+	AuthScheme.cc \
+	BodyReader.cc \
+	cache_manager.cc \
+	cache_cf.cc \
+	CacheDigest.cc \
+	carp.cc \
+	cbdata.cc \
+	client_db.cc \
+	client_side.cc \
+	client_side_reply.cc \
+	client_side_request.cc \
+	clientStream.cc \
+	comm.cc \
+	comm_select.cc \
+	comm_poll.cc \
+        comm_epoll.cc \
+	comm_kqueue.cc \
+	ConfigOption.cc \
+	ConfigParser.cc \
+	$(DELAY_POOL_SOURCE) \
+	disk.cc \
+	$(DNSSOURCE) \
+	event.cc \
+	errorpage.cc \
+	$(ESI_SOURCE) \
+	ETag.cc \
+	external_acl.cc \
+	ExternalACLEntry.cc \
+	fd.cc \
+	fde.cc \
+	forward.cc \
+	fqdncache.cc \
+	ftp.cc \
+	gopher.cc \
+	helper.cc \
+	htcp.cc \
+	http.cc \
+	HttpBody.cc \
+	HttpHeader.cc \
+	HttpHeaderTools.cc \
+	HttpHdrCc.cc \
+	HttpHdrContRange.cc \
+	HttpHdrRange.cc \
+	HttpHdrSc.cc \
+	HttpHdrScTarget.cc \
+	HttpMsg.cc \
+	HttpReply.cc \
+	HttpStatusLine.cc \
+	icmp.cc \
+	icp_v2.cc \
+	icp_v3.cc \
+	$(IDENT_SOURCE) \
+	ipc.cc \
+	ipcache.cc \
+	IPInterception.cc \
+	int.cc \
+	internal.cc \
+	list.cc \
+	logfile.cc \
+	multicast.cc \
+	mem_node.cc \
+	MemBuf.cc \
+	MemObject.cc \
+	mime.cc \
+	neighbors.cc \
+	net_db.cc \
+	Packer.cc \
+	Parsing.cc \
+	pconn.cc \
+	peer_digest.cc \
+	peer_select.cc \
+	redirect.cc \
+	refresh.cc \
+	Server.cc \
+	$(SNMP_SOURCE) \
+	$(SSL_SOURCE) \
+	stat.cc \
+	StatHist.cc \
+	stmem.cc \
+	store.cc \
+	store_client.cc \
+	store_digest.cc \
+	store_dir.cc \
+	store_io.cc \
+	store_key_md5.cc \
+	store_log.cc \
+	store_rebuild.cc \
+	store_swapin.cc \
+	store_swapmeta.cc \
+	store_swapout.cc \
+	StoreFileSystem.cc \
+	StoreIOState.cc \
+	StoreMeta.cc \
+	StoreMetaMD5.cc \
+	StoreMetaSTD.cc \
+	StoreMetaUnpacker.cc \
+	StoreMetaURL.cc \
+	StoreMetaVary.cc \
+	StoreSwapLogData.cc \
+	tools.cc \
+	tunnel.cc \
+	SwapDir.cc \
+	urn.cc \
+	wais.cc \
+	whois.cc \
+	wordlist.cc
+nodist_tests_testURL_SOURCES = \
+	repl_modules.cc \
+	string_arrays.c
+tests_testURL_LDADD = \
+	@REPL_OBJS@ \
+	@ICAP_LIBS@ \
+	@SSLLIB@ \
+	-L../lib -lmiscutil \
+	@XTRA_LIBS@ \
+	@SQUID_CPPUNIT_LA@ \
+	@SNMPLIB@ 
+tests_testURL_LDFLAGS = $(LIBADD_DL)
+tests_testURL_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
+	@REPL_OBJS@ \
+	@SQUID_CPPUNIT_LA@ \
+	@ICAP_LIBS@

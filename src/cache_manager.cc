@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.39 2006/05/06 22:13:18 wessels Exp $
+ * $Id: cache_manager.cc,v 1.40 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -38,6 +38,7 @@
 #include "HttpRequest.h"
 #include "Store.h"
 #include "fde.h"
+#include "SquidTime.h"
 #include "wordlist.h"
 
 #define MGR_PASSWD_SZ 128

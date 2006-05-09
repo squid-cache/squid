@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.722 2006/05/06 22:13:18 wessels Exp $
+ * $Id: client_side.cc,v 1.723 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -73,6 +73,7 @@
 #include "client_side_reply.h"
 #include "ClientRequestContext.h"
 #include "MemBuf.h"
+#include "SquidTime.h"
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
@@ -1616,7 +1617,7 @@ clientParseRequestMethod(char *inbuf, method_t * method_p, ConnStateData::Pointe
         return parseHttpRequestAbort(conn, "error:invalid-request");
     }
 
-    *method_p = urlParseMethod(mstr);
+    *method_p = HttpRequestMethod(mstr);
 
     if (*method_p == METHOD_NONE) {
         debug(33, 1) ("clientParseRequestMethod: Unsupported method '%s'\n", mstr);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.267 2006/05/03 14:04:44 robertc Exp $
+ * $Id: tools.cc,v 1.268 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -38,6 +38,7 @@
 #include "fde.h"
 #include "MemBuf.h"
 #include "wordlist.h"
+#include "SquidTime.h"
 
 #if HAVE_SYS_PRCTL_H
 #include <sys/prctl.h>

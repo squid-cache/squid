@@ -1,5 +1,5 @@
 /*
- * $Id: stub_tools.cc,v 1.1 2005/01/03 16:08:27 robertc Exp $
+ * $Id: stub_tools.cc,v 1.2 2006/05/08 23:38:35 robertc Exp $
  *
  * AUTHOR: Robert Collins
  *
@@ -32,21 +32,6 @@
  */
 
 #include "squid.h"
-
-time_t
-getCurrentTime(void)
-{
-#if GETTIMEOFDAY_NO_TZP
-    gettimeofday(&current_time);
-#else
-
-    gettimeofday(&current_time, NULL);
-#endif
-
-    current_dtime = (double) current_time.tv_sec +
-                    (double) current_time.tv_usec / 1000000.0;
-    return squid_curtime = current_time.tv_sec;
-}
 
 int
 percent(int a, int b)

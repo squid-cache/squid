@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.194 2006/04/02 14:32:35 serassio Exp $
+ * $Id: gopher.cc,v 1.195 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -43,6 +43,7 @@
 #endif
 #include "MemBuf.h"
 #include "forward.h"
+#include "SquidTime.h"
 
 /* gopher type code from rfc. Anawat. */
 #define GOPHER_FILE         '0'

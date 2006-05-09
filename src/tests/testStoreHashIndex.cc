@@ -7,6 +7,7 @@
 #include "StoreHashIndex.h"
 #include "Mem.h"
 #include "StoreSearch.h"
+#include "SquidTime.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testStoreHashIndex );
 

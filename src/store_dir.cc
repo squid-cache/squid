@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.152 2006/03/08 10:34:04 hno Exp $
+ * $Id: store_dir.cc,v 1.153 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "Store.h"
 #include "MemObject.h"
+#include "SquidTime.h"
 #include "SwapDir.h"
 
 #if HAVE_STATVFS

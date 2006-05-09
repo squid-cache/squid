@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_heap_replacement.cc,v 1.13 2003/09/29 10:24:00 robertc Exp $
+ * $Id: store_heap_replacement.cc,v 1.14 2006/05/08 23:38:35 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Heap-based replacement
  * AUTHOR: John Dilley
@@ -46,6 +46,7 @@
 #include "store_heap_replacement.h"
 #include "Store.h"
 #include "MemObject.h"
+#include "SquidTime.h"
 
 /*
  * Key generation function to implement the LFU-DA policy (Least

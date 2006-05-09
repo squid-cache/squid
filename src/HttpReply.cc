@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.87 2006/05/08 20:59:28 wessels Exp $
+ * $Id: HttpReply.cc,v 1.88 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "SquidTime.h"
 #include "Store.h"
 #include "HttpReply.h"
 #include "HttpHdrContRange.h"

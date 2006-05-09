@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.40 2006/04/23 11:10:32 robertc Exp $
+ * $Id: auth_basic.cc,v 1.41 2006/05/08 23:38:35 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -44,6 +44,7 @@
 #include "HttpReply.h"
 #include "basicScheme.h"
 #include "wordlist.h"
+#include "SquidTime.h"
 
 static void
 authenticateStateFree(AuthenticateStateData * r)

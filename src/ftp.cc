@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.395 2006/05/08 18:22:03 wessels Exp $
+ * $Id: ftp.cc,v 1.396 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -51,6 +51,8 @@
 #include "Server.h"
 #include "MemBuf.h"
 #include "wordlist.h"
+#include "SquidTime.h"
+#include "URLScheme.h"
 
 #if ICAP_CLIENT
 #include "ICAP/ICAPClientRespmodPrecache.h"

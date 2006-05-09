@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.65 2006/05/06 22:38:13 wessels Exp $
+ * $Id: htcp.cc,v 1.66 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "htcp.h"
+#include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"
 #include "HttpRequest.h"
@@ -804,7 +805,7 @@ htcpHandleNop(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
 void
 htcpSpecifier::checkHit()
 {
-    method_t m = urlParseMethod(method);
+    method_t m = HttpRequestMethod(method);
     char *blk_end;
     checkHitRequest = HttpRequest::CreateFromUrlAndMethod(uri, m);
 

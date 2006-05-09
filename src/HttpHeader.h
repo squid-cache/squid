@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.h,v 1.12 2006/05/08 20:59:28 wessels Exp $
+ * $Id: HttpHeader.h,v 1.13 2006/05/08 23:38:33 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -149,7 +149,21 @@ class HttpVersion;
 
 class HttpHdrContRange;
 
+class HttpHdrCc;
+
 class HttpHdrSc;
+
+/*iteration for headers; use HttpHeaderPos as opaque type, do not interpret */
+typedef ssize_t HttpHeaderPos;
+
+/* use this and only this to initialize HttpHeaderPos */
+#define HttpHeaderInitPos (-1)
+
+/* these two are defined in  structs.h */
+
+typedef struct _TimeOrTag TimeOrTag;
+
+typedef struct _ETag ETag;
 
 class HttpHeaderEntry
 {

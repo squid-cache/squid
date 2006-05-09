@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.529 2006/05/08 20:59:28 wessels Exp $
+ * $Id: protos.h,v 1.530 2006/05/08 23:38:33 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,6 +38,10 @@
  * yet.
  */
 #include "Packer.h"
+/* for routines that have not moved out their proper homes yet.
+ * grep for method_t in this file - if none found remove this include.
+ */
+#include "HttpRequestMethod.h"
 
 #if FORW_VIA_DB
 SQUIDCEXTERN void fvdbCountVia(const char *key);
@@ -669,7 +673,6 @@ SQUIDCEXTERN void no_suid(void);
 SQUIDCEXTERN void writePidFile(void);
 SQUIDCEXTERN void setSocketShutdownLifetimes(int);
 SQUIDCEXTERN void setMaxFD(void);
-SQUIDCEXTERN time_t getCurrentTime(void);
 SQUIDCEXTERN int percent(int, int);
 SQUIDCEXTERN double dpercent(double, double);
 SQUIDCEXTERN void squid_signal(int sig, SIGHDLR *, int flags);
@@ -702,7 +705,6 @@ SQUIDCEXTERN void unlinkdUnlink(const char *);
 SQUIDCEXTERN char *url_convert_hex(char *org_url, int allocate);
 SQUIDCEXTERN char *url_escape(const char *url);
 SQUIDCEXTERN protocol_t urlParseProtocol(const char *, const char *e = NULL);
-SQUIDCEXTERN method_t urlParseMethod(const char *, const char *e = NULL);
 SQUIDCEXTERN void urlInitialize(void);
 SQUIDCEXTERN HttpRequest *urlParse(method_t, char *, HttpRequest *request = NULL);
 SQUIDCEXTERN const char *urlCanonical(HttpRequest *);

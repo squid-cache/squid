@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.153 2006/05/03 14:04:44 robertc Exp $
+ * $Id: url.cc,v 1.154 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -33,80 +33,9 @@
  *
  */
 
-#include "squid.h"
+#include "URL.h"
 #include "HttpRequest.h"
-#include "wordlist.h"
-
-const char *RequestMethodStr[] =
-    {
-        "NONE",
-        "GET",
-        "POST",
-        "PUT",
-        "HEAD",
-        "CONNECT",
-        "TRACE",
-        "PURGE",
-        "OPTIONS",
-        "DELETE",
-        "PROPFIND",
-        "PROPPATCH",
-        "MKCOL",
-        "COPY",
-        "MOVE",
-        "LOCK",
-        "UNLOCK",
-        "BMOVE",
-        "BDELETE",
-        "BPROPFIND",
-        "BPROPPATCH",
-        "BCOPY",
-        "SEARCH",
-        "SUBSCRIBE",
-        "UNSUBSCRIBE",
-        "POLL",
-        "REPORT",
-        "%EXT00",
-        "%EXT01",
-        "%EXT02",
-        "%EXT03",
-        "%EXT04",
-        "%EXT05",
-        "%EXT06",
-        "%EXT07",
-        "%EXT08",
-        "%EXT09",
-        "%EXT10",
-        "%EXT11",
-        "%EXT12",
-        "%EXT13",
-        "%EXT14",
-        "%EXT15",
-        "%EXT16",
-        "%EXT17",
-        "%EXT18",
-        "%EXT19",
-        "ERROR"
-    };
-
-const char *ProtocolStr[] =
-    {
-        "NONE",
-        "http",
-        "ftp",
-        "gopher",
-        "wais",
-        "cache_object",
-        "icp",
-#if USE_HTCP
-        "htcp",
-#endif
-        "urn",
-        "whois",
-        "internal",
-        "https",
-        "TOTAL"
-    };
+#include "URLScheme.h"
 
 static HttpRequest *urnParse(method_t method, char *urn);
 #if CHECK_HOSTNAMES
@@ -159,7 +88,10 @@ void
 urlInitialize(void)
 {
     debug(23, 5) ("urlInitialize: Initializing...\n");
-    assert(sizeof(ProtocolStr) == (PROTO_MAX + 1) * sizeof(char *));
+    /* this ensures that the number of protocol strings is the same as
+     * the enum slots allocated because the last enum is always 'TOTAL'.
+     */
+    assert(strcmp(ProtocolStr[PROTO_MAX], "TOTAL") == 0);
     /*
      * These test that our matchDomainName() function works the
      * way we expect it to.
@@ -182,47 +114,6 @@ urlInitialize(void)
     assert(0 > matchDomainName("afoo.com", "bfoo.com"));
     assert(0 < matchDomainName("x-foo.com", ".foo.com"));
     /* more cases? */
-}
-
-method_t &operator++ (method_t &aMethod)
-{
-    int tmp = (int)aMethod;
-    aMethod = (method_t)(++tmp);
-    return aMethod;
-}
-
-/*
- * urlParseMethod() takes begin and end pointers, but for backwards
- * compatibility, end defaults to NULL, in which case we assume begin
- * is NULL-terminated.
- */
-method_t
-urlParseMethod(const char *b, const char *e)
-{
-    method_t method = METHOD_NONE;
-    /*
-     * This check for '%' makes sure that we don't
-     * match one of the extension method placeholders,
-     * which have the form %EXT[0-9][0-9]
-     */
-
-    if (*b == '%')
-        return METHOD_NONE;
-
-    /*
-     * if e is NULL, b must be NULL terminated and we
-     * make e point to the first whitespace character
-     * after b.
-     */
-    if (NULL == e)
-        e = b + strcspn(b, w_space);
-
-    for (++method; method < METHOD_ENUM_END; ++method) {
-        if (0 == strncasecmp(b, RequestMethodStr[method], e-b))
-            return method;
-    }
-
-    return METHOD_NONE;
 }
 
 /*
@@ -676,6 +567,10 @@ matchDomainName(const char *h, const char *d)
     return (xtolower(h[hl]) - xtolower(d[dl]));
 }
 
+
+/*
+ * what does the return code of this mean ?
+ */
 int
 urlCheckRequest(const HttpRequest * r)
 {
@@ -836,44 +731,8 @@ URLHostName::extract(char const *aUrl)
     return Host;
 }
 
-static void
-urlExtMethodAdd(const char *mstr)
-{
-    method_t method = METHOD_NONE;
+URL::URL() : scheme()
+{}
 
-    for (++method; method < METHOD_ENUM_END; ++method) {
-        if (0 == strcmp(mstr, RequestMethodStr[method])) {
-            debug(23, 2) ("Extension method '%s' already exists\n", mstr);
-            return;
-        }
-
-        if (0 != strncmp("%EXT", RequestMethodStr[method], 4))
-            continue;
-
-        /* Don't free statically allocated "%EXTnn" string */
-        RequestMethodStr[method] = xstrdup(mstr);
-
-        debug(23, 1) ("Extension method '%s' added, enum=%d\n", mstr, (int) method);
-
-        return;
-    }
-
-    debug(23, 1) ("WARNING: Could not add new extension method '%s' due to lack of array space\n", mstr);
-}
-
-void
-urlExtMethodConfigure(void)
-{
-    wordlist *w = Config.ext_methods;
-
-    while (w) {
-        char *s;
-
-        for (s = w->key; *s; s++)
-            *s = xtoupper(*s);
-
-        urlExtMethodAdd(w->key);
-
-        w = w->next;
-    }
-}
+URL::URL(URLScheme const &aScheme): scheme(aScheme)
+{}

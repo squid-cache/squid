@@ -3,6 +3,7 @@
 #include "ICAPOptions.h"
 #include "TextException.h"
 #include "ICAPConfig.h"
+#include "SquidTime.h"
 
 extern ICAPConfig TheICAPConfig;
 

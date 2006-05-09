@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMethodData.cc,v 1.8 2006/04/23 11:10:31 robertc Exp $
+ * $Id: ACLMethodData.cc,v 1.9 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -37,6 +37,7 @@
 #include "squid.h"
 #include "ACLMethodData.h"
 #include "ACLChecklist.h"
+#include "HttpRequestMethod.h"
 #include "wordlist.h"
 
 ACLMethodData::ACLMethodData() : values (NULL)
@@ -88,7 +89,7 @@ ACLMethodData::parse()
 
         ;
     while ((t = strtokFile())) {
-        List<method_t> *q = new List<method_t> (urlParseMethod(t));
+        List<method_t> *q = new List<method_t> (HttpRequestMethod(t));
         *(Tail) = q;
         Tail = &q->next;
     }

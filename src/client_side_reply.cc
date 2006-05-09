@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.104 2006/05/07 15:13:24 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.105 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -56,6 +56,7 @@
 #include "DelayPools.h"
 #endif
 #include "client_side.h"
+#include "SquidTime.h"
 
 CBDATA_CLASS_INIT(clientReplyContext);
 

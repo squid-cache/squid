@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.541 2006/05/08 20:59:28 wessels Exp $
+ * $Id: structs.h,v 1.542 2006/05/08 23:38:33 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -836,8 +836,10 @@ class HttpHdrExtField
 
 /* http cache control header field */
 
-struct _HttpHdrCc
+class HttpHdrCc
 {
+
+public:
     int mask;
     int max_age;
     int s_maxage;

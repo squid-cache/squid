@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.111 2006/05/06 22:13:18 wessels Exp $
+ * $Id: access_log.cc,v 1.112 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -45,6 +45,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
+#include "SquidTime.h"
 
 static void accessLogSquid(AccessLogEntry * al, Logfile * logfile);
 static void accessLogCommon(AccessLogEntry * al, Logfile * logfile);
@@ -1718,7 +1719,7 @@ mcast_encode(unsigned int *ibuf, size_t isize, const unsigned int *key)
 
 #if HEADERS_LOG
 void
-headersLog(int cs, int pq, method_t m, void *data)
+headersLog(int cs, int pq, method_t method, void *data)
 {
     HttpReply *rep;
     HttpRequest *req;

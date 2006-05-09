@@ -15,6 +15,7 @@
 #include "TextException.h"
 #include "AuthUserRequest.h"
 #include "ICAPConfig.h"
+#include "SquidTime.h"
 
 // flow and terminology:
 //     HTTP| --> receive --> encode --> write --> |network

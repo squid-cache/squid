@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.112 2006/05/06 22:13:18 wessels Exp $
+ * $Id: peer_digest.cc,v 1.113 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -40,6 +40,7 @@
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "MemObject.h"
+#include "SquidTime.h"
 #include "StoreClient.h"
 #include "forward.h"
 

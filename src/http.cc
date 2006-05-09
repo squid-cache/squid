@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.496 2006/05/08 20:59:28 wessels Exp $
+ * $Id: http.cc,v 1.497 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -59,6 +59,7 @@
 #include "ICAP/ICAPConfig.h"
 extern ICAPConfig TheICAPConfig;
 #endif
+#include "SquidTime.h"
 
 CBDATA_CLASS_INIT(HttpStateData);
 

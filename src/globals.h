@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.134 2006/04/22 05:29:19 robertc Exp $
+ * $Id: globals.h,v 1.135 2006/05/08 23:38:33 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -47,8 +47,6 @@ extern char ThisCache[SQUIDHOSTNAMELEN << 1];
 extern char ThisCache2[SQUIDHOSTNAMELEN << 1];
 extern char config_input_line[BUFSIZ];
 extern const char *DefaultConfigFile;	/* DEFAULT_CONFIG_FILE */
-extern const char *RequestMethodStr[];
-extern const char *ProtocolStr[];
 extern const char *cfg_filename;	/* NULL */
 extern const char *const appname;	/* "squid" */
 extern const char *const dash_str;	/* "-" */
@@ -118,7 +116,6 @@ extern struct IN_ADDR theOutSNMPAddr;
 extern struct timeval current_time;
 
 extern struct timeval squid_start;
-extern time_t squid_curtime;	/* 0 */
 extern int shutting_down;	/* 0 */
 extern int reconfiguring;	/* 0 */
 extern int store_dirs_rebuilding;	/* 1 */
