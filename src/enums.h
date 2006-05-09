@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.249 2006/04/23 11:10:31 robertc Exp $
+ * $Id: enums.h,v 1.250 2006/05/08 23:38:33 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -234,57 +234,6 @@ typedef enum {
     STORE_MEM_CLIENT,
     STORE_DISK_CLIENT
 } store_client_t;
-
-typedef enum {
-    METHOD_NONE,		/* 000 */
-    METHOD_GET,			/* 001 */
-    METHOD_POST,		/* 010 */
-    METHOD_PUT,			/* 011 */
-    METHOD_HEAD,		/* 100 */
-    METHOD_CONNECT,		/* 101 */
-    METHOD_TRACE,		/* 110 */
-    METHOD_PURGE,		/* 111 */
-    METHOD_OPTIONS,
-    METHOD_DELETE,		/* RFC2616 section 9.7 */
-    METHOD_PROPFIND,
-    METHOD_PROPPATCH,
-    METHOD_MKCOL,
-    METHOD_COPY,
-    METHOD_MOVE,
-    METHOD_LOCK,
-    METHOD_UNLOCK,
-    METHOD_BMOVE,
-    METHOD_BDELETE,
-    METHOD_BPROPFIND,
-    METHOD_BPROPPATCH,
-    METHOD_BCOPY,
-    METHOD_SEARCH,
-    METHOD_SUBSCRIBE,
-    METHOD_UNSUBSCRIBE,
-    METHOD_POLL,
-    METHOD_REPORT,
-    METHOD_EXT00,
-    METHOD_EXT01,
-    METHOD_EXT02,
-    METHOD_EXT03,
-    METHOD_EXT04,
-    METHOD_EXT05,
-    METHOD_EXT06,
-    METHOD_EXT07,
-    METHOD_EXT08,
-    METHOD_EXT09,
-    METHOD_EXT10,
-    METHOD_EXT11,
-    METHOD_EXT12,
-    METHOD_EXT13,
-    METHOD_EXT14,
-    METHOD_EXT15,
-    METHOD_EXT16,
-    METHOD_EXT17,
-    METHOD_EXT18,
-    METHOD_EXT19,
-    METHOD_ENUM_END
-} method_t;
 
 typedef enum {
     PROTO_NONE,

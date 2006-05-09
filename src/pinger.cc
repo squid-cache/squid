@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.54 2005/04/18 21:52:42 hno Exp $
+ * $Id: pinger.cc,v 1.55 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "SquidTime.h"
 
 #if USE_ICMP
 
@@ -581,20 +582,6 @@ pingerSendtoSquid(pingerReplyData * preply)
         exit(1);
     }
 }
-
-time_t
-getCurrentTime(void)
-{
-#if GETTIMEOFDAY_NO_TZP
-    gettimeofday(&current_time);
-#else
-
-    gettimeofday(&current_time, NULL);
-#endif
-
-    return squid_curtime = current_time.tv_sec;
-}
-
 
 int
 main(int argc, char *argv[])

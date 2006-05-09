@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskdIOStrategy.cc,v 1.3 2006/05/08 19:57:30 wessels Exp $
+ * $Id: DiskdIOStrategy.cc,v 1.4 2006/05/08 23:38:34 robertc Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -46,6 +46,7 @@
 #include "diomsg.h"
 /* for statfs */
 #include "Store.h"
+#include "SquidTime.h"
 
 diskd_stats_t diskd_stats;
 

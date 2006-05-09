@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.64 2005/09/03 10:05:46 serassio Exp $
+ * $Id: client_db.cc,v 1.65 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "SquidTime.h"
 #include "Store.h"
 
 

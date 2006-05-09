@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.588 2006/05/06 22:13:18 wessels Exp $
+ * $Id: store.cc,v 1.589 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -47,6 +47,7 @@
 #include "DelayPools.h"
 #endif
 #include "Stack.h"
+#include "SquidTime.h"
 
 static STMCB storeWriteComplete;
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.65 2003/02/21 22:50:10 robertc Exp $
+ * $Id: send-announce.cc,v 1.66 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "fde.h"
+#include "SquidTime.h"
 
 static IPH send_announce;
 

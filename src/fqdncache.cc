@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.166 2006/04/23 11:10:31 robertc Exp $
+ * $Id: fqdncache.cc,v 1.167 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "SquidTime.h"
 #include "Store.h"
 #include "wordlist.h"
 

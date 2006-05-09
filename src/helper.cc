@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.73 2006/04/23 11:10:31 robertc Exp $
+ * $Id: helper.cc,v 1.74 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "helper.h"
+#include "SquidTime.h"
 #include "Store.h"
 #include "comm.h"
 #include "MemBuf.h"

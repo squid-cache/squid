@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.419 2006/05/05 23:33:21 wessels Exp $
+ * $Id: main.cc,v 1.420 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -46,6 +46,7 @@
 #include "StoreFileSystem.h"
 #include "DiskIO/DiskIOModule.h"
 #include "comm.h"
+#include "SquidTime.h"
 #include "SwapDir.h"
 #include "forward.h"
 

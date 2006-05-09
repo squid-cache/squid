@@ -1,6 +1,6 @@
 
 /*
- * $Id: time.cc,v 1.1 2006/05/03 14:04:44 robertc Exp $
+ * $Id: time.cc,v 1.2 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 21    Time Functions
  * AUTHOR: Harvest Derived
@@ -33,8 +33,9 @@
  *
  */
 
-#include "squid.h"
+#include "SquidTime.h"
 
+time_t squid_curtime = 0;
 
 time_t
 getCurrentTime(void)

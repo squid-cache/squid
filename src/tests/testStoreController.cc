@@ -5,6 +5,7 @@
 #include "SwapDir.h"
 #include "TestSwapDir.h"
 #include "Mem.h"
+#include "SquidTime.h"
 #include "StoreSearch.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testStoreController );

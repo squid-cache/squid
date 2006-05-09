@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.53 2005/08/27 18:40:20 serassio Exp $
+ * $Id: fd.cc,v 1.54 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "fde.h"
+#include "SquidTime.h"
 
 int default_read_method(int, char *, int);
 int default_write_method(int, const char *, int);

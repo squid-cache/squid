@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_poll.cc,v 1.14 2006/01/24 15:32:02 hno Exp $
+ * $Id: comm_poll.cc,v 1.15 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -33,6 +33,7 @@
  */
 
 #include "squid.h"
+#include "SquidTime.h"
 #include "Store.h"
 #include "fde.h"
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.21 2006/05/03 14:04:44 robertc Exp $
+ * $Id: HttpRequest.h,v 1.22 2006/05/08 23:38:33 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,6 +38,7 @@
 #include "client_side.h"
 #include "HierarchyLogEntry.h"
 #include "BodyReader.h"
+#include "HttpRequestMethod.h"
 
 /*  Http Request */
 extern int httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConnection);

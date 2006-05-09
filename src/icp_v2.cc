@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.92 2006/05/03 14:04:44 robertc Exp $
+ * $Id: icp_v2.cc,v 1.93 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -42,6 +42,7 @@
 #include "ACL.h"
 #include "AccessLogEntry.h"
 #include "wordlist.h"
+#include "SquidTime.h"
 
 static void icpLogIcp(struct IN_ADDR, log_type, int, const char *, int);
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_lru.cc,v 1.16 2004/08/30 05:12:33 robertc Exp $
+ * $Id: store_repl_lru.cc,v 1.17 2006/05/08 23:38:35 robertc Exp $
  *
  * DEBUG: section ?     LRU Removal policy
  * AUTHOR: Henrik Nordstrom
@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "Store.h"
 #include "MemObject.h"
+#include "SquidTime.h"
 
 REMOVALPOLICYCREATE createRemovalPolicy_lru;
 

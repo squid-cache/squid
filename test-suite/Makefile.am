@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.17 2004/08/30 03:29:03 robertc Exp $
+#  $Id: Makefile.am,v 1.18 2006/05/08 23:38:36 robertc Exp $
 #
 
 AUTOMAKE_OPTIONS = subdir-objects
@@ -50,7 +50,7 @@ check_PROGRAMS= debug \
 		syntheticoperators \
 		VirtualDeleteOperator
 
-LDADD =$(top_builddir)/src/globals.o -L$(top_builddir)/lib -lmiscutil
+LDADD =$(top_builddir)/src/globals.o $(top_builddir)/src/time.o -L$(top_builddir)/lib -lmiscutil
 DEBUG_SOURCE = test_tools.cc
 debug_SOURCES = debug.cc $(DEBUG_SOURCE)
 ESIExpressions_SOURCES = ESIExpressions.cc $(DEBUG_SOURCE)

@@ -11,6 +11,7 @@
 #include "HttpHeader.h"
 #include "HttpReply.h"
 #include "StoreFileSystem.h"
+#include "SquidTime.h"
 
 #define TESTDIR "testNull__testNullSearch"
 

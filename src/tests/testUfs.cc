@@ -9,6 +9,7 @@
 #include "Mem.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
+#include "SquidTime.h"
 
 #define TESTDIR "testUfs__testUfsSearch"
 

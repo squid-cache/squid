@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.157 2006/05/06 22:13:18 wessels Exp $
+ * $Id: wais.cc,v 1.158 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -43,6 +43,7 @@
 #include "comm.h"
 #include "MemBuf.h"
 #include "forward.h"
+#include "SquidTime.h"
 
 class WaisStateData
 {

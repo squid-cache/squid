@@ -8,6 +8,7 @@
 #include "ICAPOptions.h"
 #include "ICAPOptXact.h"
 #include "ConfigParser.h"
+#include "SquidTime.h"
 
 CBDATA_CLASS_INIT(ICAPServiceRep);
 

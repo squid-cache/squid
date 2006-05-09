@@ -1,6 +1,6 @@
 
 /*
- * $Id: cf_gen.cc,v 1.57 2005/11/03 20:21:57 serassio Exp $
+ * $Id: cf_gen.cc,v 1.58 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: none          Generate squid.conf.default and cf_parser.h
  * AUTHOR: Max Okumoto
@@ -49,6 +49,7 @@
  *****************************************************************************/
 
 #include "squid.h"
+#include "SquidTime.h"
 #include "cf_gen_defines.h"
 
 #define MAX_LINE	1024	/* longest configuration line */
@@ -111,18 +112,6 @@ static void gen_free(Entry *, FILE *);
 static void gen_conf(Entry *, FILE *);
 static void gen_default_if_none(Entry *, FILE *);
 
-time_t
-getCurrentTime(void)
-{
-#if GETTIMEOFDAY_NO_TZP
-    gettimeofday(&current_time);
-#else
-
-    gettimeofday(&current_time, NULL);
-#endif
-
-    return squid_curtime = current_time.tv_sec;
-}
 
 static void
 lineAdd(Line ** L, const char *str)

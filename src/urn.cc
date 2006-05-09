@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.98 2006/05/06 22:13:18 wessels Exp $
+ * $Id: urn.cc,v 1.99 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -40,6 +40,7 @@
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "forward.h"
+#include "SquidTime.h"
 
 #define	URN_REQBUF_SZ	4096
 

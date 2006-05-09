@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.64 2006/05/03 14:04:44 robertc Exp $
+ * $Id: store_digest.cc,v 1.65 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -47,6 +47,7 @@
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "MemObject.h"
+#include "SquidTime.h"
 #include "StoreSearch.h"
 
 /*

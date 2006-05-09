@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.cc,v 1.7 2006/05/06 22:13:18 wessels Exp $
+ * $Id: AuthUserRequest.cc,v 1.8 2006/05/08 23:38:33 robertc Exp $
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 6803fde1-d5a2-4c29-9034-1c0c9f650eb4
@@ -51,6 +51,7 @@
 #include "AuthScheme.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "SquidTime.h"
 
 CBDATA_TYPE(auth_user_ip_t);
 

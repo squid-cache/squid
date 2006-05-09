@@ -1,5 +1,5 @@
 /*
- * $Id: ACLTime.cc,v 1.1 2003/02/17 07:01:34 robertc Exp $
+ * $Id: ACLTime.cc,v 1.2 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -37,6 +37,7 @@
 #include "squid.h"
 #include "ACLTime.h"
 #include "ACLTimeData.h"
+#include "SquidTime.h"
 
 ACL::Prototype ACLTime::RegistryProtoype(&ACLTime::RegistryEntry_, "time");
 ACLStrategised<time_t> ACLTime::RegistryEntry_(new ACLTimeData, ACLTimeStrategy::Instance(), "time");

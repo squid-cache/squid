@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.93 2006/05/03 14:04:44 robertc Exp $
+ * $Id: mem.cc,v 1.94 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -43,6 +43,7 @@
 #include "Store.h"
 #include "StoreEntryStream.h"
 #include "MemBuf.h"
+#include "SquidTime.h"
 
 /* module globals */
 

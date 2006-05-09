@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.211 2006/05/06 22:13:18 wessels Exp $
+ * $Id: errorpage.cc,v 1.212 2006/05/08 23:38:33 robertc Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -42,12 +42,14 @@
 
 #include "squid.h"
 #include "AuthUserRequest.h"
+#include "SquidTime.h"
 #include "Store.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemObject.h"
 #include "fde.h"
 #include "MemBuf.h"
+#include "URLScheme.h"
 #include "wordlist.h"
 
 /* local types */
@@ -704,7 +706,7 @@ errorConvert(char token, ErrorState * err)
         break;
 
     case 'M':
-        p = r ? RequestMethodStr[r->method] : "[unkown method]";
+        p = r ? RequestMethodStr[r->method] : "[unknown method]";
 
         break;
 
@@ -723,7 +725,7 @@ errorConvert(char token, ErrorState * err)
         break;
 
     case 'P':
-        p = r ? ProtocolStr[r->protocol] : "[unkown protocol]";
+        p = r ? ProtocolStr[r->protocol] : "[unknown protocol]";
         break;
 
     case 'R':

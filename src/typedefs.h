@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.183 2006/05/08 20:59:28 wessels Exp $
+ * $Id: typedefs.h,v 1.184 2006/05/08 23:38:33 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -117,7 +117,7 @@ class HttpHeaderFieldInfo;
 
 class HttpHeader;
 
-typedef struct _HttpHdrCc HttpHdrCc;
+class HttpHdrCc;
 
 typedef struct _TimeOrTag TimeOrTag;
 
@@ -303,9 +303,6 @@ typedef int Ctx;
 
 /* in case we want to change it later */
 typedef ssize_t mb_size_t;
-
-/*iteration for headers; use HttpHeaderPos as opaque type, do not interpret */
-typedef ssize_t HttpHeaderPos;
 
 typedef RemovalPolicy *REMOVALPOLICYCREATE(wordlist * args);
 
