@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.86 2006/05/06 22:13:18 wessels Exp $
+ * $Id: HttpReply.cc,v 1.87 2006/05/08 20:59:28 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -183,7 +183,7 @@ HttpReply::make304 () const
 
     for (t = 0; ImsEntries[t] != HDR_OTHER; ++t)
         if ((e = header.findEntry(ImsEntries[t])))
-            rv->header.addEntry(httpHeaderEntryClone(e));
+            rv->header.addEntry(e->clone());
 
     /* rv->body */
     return rv;

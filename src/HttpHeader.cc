@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.117 2006/05/06 22:13:18 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.118 2006/05/08 20:59:28 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -252,9 +252,6 @@ static int HeaderEntryParsedCount = 0;
 
 #define assert_eid(id) assert((id) >= 0 && (id) < HDR_ENUM_END)
 
-static HttpHeaderEntry *httpHeaderEntryCreate(http_hdr_type id, const char *name, const char *value);
-static void httpHeaderEntryDestroy(HttpHeaderEntry * e);
-static HttpHeaderEntry *httpHeaderEntryParseCreate(const char *field_start, const char *field_end);
 static void httpHeaderNoteParsedEntry(http_hdr_type id, String value, int error);
 
 static void httpHeaderStatInit(HttpHeaderStat * hs, const char *label);
@@ -396,12 +393,12 @@ HttpHeader::clean()
         /* tmp hack to try to avoid coredumps */
 
         if (e->id < 0 || e->id >= HDR_ENUM_END) {
-            debug(55, 0) ("httpHeaderClean BUG: entry[%d] is invalid (%d). Ignored.\n",
+            debug(55, 0) ("HttpHeader::clean BUG: entry[%d] is invalid (%d). Ignored.\n",
                           (int) pos, e->id);
         } else {
             statHistCount(&HttpHeaderStats[owner].fieldTypeDistr, e->id);
-            /* yes, this destroy() leaves us in an inconsistent state */
-            httpHeaderEntryDestroy(e);
+            /* yes, this deletion leaves us in an inconsistent state */
+            delete e;
         }
     }
 
@@ -420,7 +417,7 @@ HttpHeader::append(const HttpHeader * src)
     debug(55, 7) ("appending hdr: %p += %p\n", this, src);
 
     while ((e = src->getEntry(&pos))) {
-        addEntry(httpHeaderEntryClone(e));
+        addEntry(e->clone());
     }
 }
 
@@ -449,7 +446,7 @@ HttpHeader::update (HttpHeader const *fresh, HttpHeaderMask const *denied_mask)
 
         delByName(e->name.buf());
 
-        addEntry(httpHeaderEntryClone(e));
+        addEntry(e->clone());
     }
 }
 
@@ -539,9 +536,10 @@ HttpHeader::parse(const char *header_start, const char *header_end)
             break;		/* terminating blank line */
         }
 
-        e = httpHeaderEntryParseCreate(field_start, field_end);
+        e = new HttpHeaderEntry;
 
-        if (NULL == e) {
+        if (!e->parse(field_start, field_end)) {
+            delete e;
             debug(55, 1) ("WARNING: unparseable HTTP header field {%s}\n",
                           getStringPrefix(field_start, field_end));
             debug(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2)
@@ -559,13 +557,13 @@ HttpHeader::parse(const char *header_start, const char *header_end)
                 debug(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2) ("WARNING: found two conflicting content-length headers in {%s}\n", getStringPrefix(header_start, header_end));
 
                 if (!Config.onoff.relaxed_header_parser) {
-                    httpHeaderEntryDestroy(e);
+                    delete e;
                     return reset();
                 }
 
                 if (!httpHeaderParseSize(e->value.buf(), &l1)) {
                     debug(55, 1)("WARNING: Unparseable content-length '%s'\n", e->value.buf());
-                    httpHeaderEntryDestroy(e);
+                    delete e;
                     continue;
                 } else if (!httpHeaderParseSize(e2->value.buf(), &l2)) {
                     debug(55, 1)("WARNING: Unparseable content-length '%s'\n", e2->value.buf());
@@ -573,7 +571,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
                 } else if (l1 > l2) {
                     delById(e2->id);
                 } else {
-                    httpHeaderEntryDestroy(e);
+                    delete e;
                     continue;
                 }
             } else {
@@ -581,10 +579,10 @@ HttpHeader::parse(const char *header_start, const char *header_end)
                 ("NOTICE: found double content-length header\n");
 
                 if (Config.onoff.relaxed_header_parser) {
-                    httpHeaderEntryDestroy(e);
+                    delete e;
                     continue;
                 } else {
-                    httpHeaderEntryDestroy(e);
+                    delete e;
                     return reset();
                 }
             }
@@ -595,7 +593,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
             ("WARNING: found whitespace in HTTP header name {%s}\n", getStringPrefix(field_start, field_end));
 
             if (!Config.onoff.relaxed_header_parser) {
-                httpHeaderEntryDestroy(e);
+                delete e;
                 return reset();
             }
         }
@@ -617,7 +615,7 @@ HttpHeader::packInto(Packer * p) const
     /* pack all entries one by one */
 
     while ((e = getEntry(&pos)))
-        httpHeaderEntryPackInto(e, p);
+        e->packInto(p);
 }
 
 /* returns next valid entry */
@@ -755,12 +753,12 @@ HttpHeader::delAt(HttpHeaderPos pos)
     /* decrement header length, allow for ": " and crlf */
     len -= e->name.size() + 2 + e->value.size() + 2;
     assert(len >= 0);
-    httpHeaderEntryDestroy(e);
+    delete e;
 }
 
 
 /* appends an entry;
- * does not call httpHeaderEntryClone() so one should not reuse "*e"
+ * does not call e->clone() so one should not reuse "*e"
  */
 void
 HttpHeader::addEntry(HttpHeaderEntry * e)
@@ -783,7 +781,7 @@ HttpHeader::addEntry(HttpHeaderEntry * e)
 }
 
 /* inserts an entry;
- * does not call httpHeaderEntryClone() so one should not reuse "*e"
+ * does not call e->clone() so one should not reuse "*e"
  */
 void
 HttpHeader::insertEntry(HttpHeaderEntry * e)
@@ -957,7 +955,7 @@ HttpHeader::putInt(http_hdr_type id, int number)
     assert_eid(id);
     assert(Headers[id].type == ftInt);	/* must be of an appropriate type */
     assert(number >= 0);
-    addEntry(httpHeaderEntryCreate(id, NULL, xitoa(number)));
+    addEntry(new HttpHeaderEntry(id, NULL, xitoa(number)));
 }
 
 void
@@ -966,7 +964,7 @@ HttpHeader::putTime(http_hdr_type id, time_t htime)
     assert_eid(id);
     assert(Headers[id].type == ftDate_1123);	/* must be of an appropriate type */
     assert(htime >= 0);
-    addEntry(httpHeaderEntryCreate(id, NULL, mkrfc1123(htime)));
+    addEntry(new HttpHeaderEntry(id, NULL, mkrfc1123(htime)));
 }
 
 void
@@ -975,7 +973,7 @@ HttpHeader::insertTime(http_hdr_type id, time_t htime)
     assert_eid(id);
     assert(Headers[id].type == ftDate_1123);	/* must be of an appropriate type */
     assert(htime >= 0);
-    insertEntry(httpHeaderEntryCreate(id, NULL, mkrfc1123(htime)));
+    insertEntry(new HttpHeaderEntry(id, NULL, mkrfc1123(htime)));
 }
 
 void
@@ -984,7 +982,7 @@ HttpHeader::putStr(http_hdr_type id, const char *str)
     assert_eid(id);
     assert(Headers[id].type == ftStr);	/* must be of an appropriate type */
     assert(str);
-    addEntry(httpHeaderEntryCreate(id, NULL, str));
+    addEntry(new HttpHeaderEntry(id, NULL, str));
 }
 
 void
@@ -1007,7 +1005,7 @@ HttpHeader::putCc(const HttpHdrCc * cc)
     packerToMemInit(&p, &mb);
     httpHdrCcPackInto(cc, &p);
     /* put */
-    addEntry(httpHeaderEntryCreate(HDR_CACHE_CONTROL, NULL, mb.buf));
+    addEntry(new HttpHeaderEntry(HDR_CACHE_CONTROL, NULL, mb.buf));
     /* cleanup */
     packerClean(&p);
     mb.clean();
@@ -1026,7 +1024,7 @@ HttpHeader::putContRange(const HttpHdrContRange * cr)
     packerToMemInit(&p, &mb);
     httpHdrContRangePackInto(cr, &p);
     /* put */
-    addEntry(httpHeaderEntryCreate(HDR_CONTENT_RANGE, NULL, mb.buf));
+    addEntry(new HttpHeaderEntry(HDR_CONTENT_RANGE, NULL, mb.buf));
     /* cleanup */
     packerClean(&p);
     mb.clean();
@@ -1045,7 +1043,7 @@ HttpHeader::putRange(const HttpHdrRange * range)
     packerToMemInit(&p, &mb);
     range->packInto(&p);
     /* put */
-    addEntry(httpHeaderEntryCreate(HDR_RANGE, NULL, mb.buf));
+    addEntry(new HttpHeaderEntry(HDR_RANGE, NULL, mb.buf));
     /* cleanup */
     packerClean(&p);
     mb.clean();
@@ -1064,7 +1062,7 @@ HttpHeader::putSc(HttpHdrSc *sc)
     packerToMemInit(&p, &mb);
     httpHdrScPackInto(sc, &p);
     /* put */
-    addEntry(httpHeaderEntryCreate(HDR_SURROGATE_CONTROL, NULL, mb.buf));
+    addEntry(new HttpHeaderEntry(HDR_SURROGATE_CONTROL, NULL, mb.buf));
     /* cleanup */
     packerClean(&p);
     mb.clean();
@@ -1076,23 +1074,7 @@ HttpHeader::putExt(const char *name, const char *value)
 {
     assert(name && value);
     debug(55, 8) ("%p adds ext entry '%s: %s'\n", this, name, value);
-    addEntry(httpHeaderEntryCreate(HDR_OTHER, name, value));
-}
-
-int
-httpHeaderEntryGetInt (const HttpHeaderEntry * e)
-{
-    int value = -1;
-    int ok;
-    assert (e);
-    assert_eid (e->id);
-    assert (Headers[e->id].type == ftInt);
-    ok = httpHeaderParseInt(e->value.buf(), &value);
-    httpHeaderNoteParsedEntry(e->id, e->value, !ok);
-    /* XXX: Should we check ok - ie
-     * return ok ? -1 : value;
-     */
-    return value;
+    addEntry(new HttpHeaderEntry(HDR_OTHER, name, value));
 }
 
 int
@@ -1103,7 +1085,7 @@ HttpHeader::getInt(http_hdr_type id) const
     HttpHeaderEntry *e;
 
     if ((e = findEntry(id)))
-        return httpHeaderEntryGetInt (e);
+        return e->getInt();
 
     return -1;
 }
@@ -1309,56 +1291,54 @@ HttpHeader::getTimeOrTag(http_hdr_type id) const
  * HttpHeaderEntry
  */
 
-static HttpHeaderEntry *
-httpHeaderEntryCreate(http_hdr_type id, const char *name, const char *value)
+HttpHeaderEntry::HttpHeaderEntry(http_hdr_type anId, const char *aName, const char *aValue)
 {
-    HttpHeaderEntry *e;
-    assert_eid(id);
-    e = new HttpHeaderEntry;
-    e->id = id;
+    assert_eid(anId);
+    id = anId;
 
     if (id != HDR_OTHER)
-        e->name = Headers[id].name;
+        name = Headers[id].name;
     else
-        e->name = name;
+        name = aName;
 
-    e->value = value;
+    value = aValue;
 
     Headers[id].stat.aliveCount++;
 
-    debug(55, 9) ("created entry %p: '%s: %s'\n", e, e->name.buf(), e->value.buf());
-
-    return e;
+    debug(55, 9) ("created HttpHeaderEntry %p: '%s: %s'\n", this, name.buf(), value.buf());
 }
 
-static void
-httpHeaderEntryDestroy(HttpHeaderEntry * e)
+/*
+ * Construct a "blank" object.  Should call parse() after creating one of these
+ *
+ */
+HttpHeaderEntry::HttpHeaderEntry() : id(HDR_BAD_HDR), name(NULL), value(NULL)
 {
-    assert(e);
-    assert_eid(e->id);
-    debug(55, 9) ("destroying entry %p: '%s: %s'\n", e, e->name.buf(), e->value.buf());
+    debug(55, 9) ("created blank HttpHeaderEntry %p\n", this);
+}
+
+HttpHeaderEntry::~HttpHeaderEntry()
+{
+    assert_eid(id);
+    debug(55, 9) ("destroying entry %p: '%s: %s'\n", this, name.buf(), value.buf());
     /* clean name if needed */
 
-    if (e->id == HDR_OTHER)
-        e->name.clean();
+    if (id == HDR_OTHER)
+        name.clean();
 
-    e->value.clean();
+    value.clean();
 
-    assert(Headers[e->id].stat.aliveCount);
+    assert(Headers[id].stat.aliveCount);
 
-    Headers[e->id].stat.aliveCount--;
+    Headers[id].stat.aliveCount--;
 
-    e->id = HDR_BAD_HDR;
-
-    delete e;
+    id = HDR_BAD_HDR;
 }
 
-/* parses and inits header entry, returns new entry on success */
-static HttpHeaderEntry *
-httpHeaderEntryParseCreate(const char *field_start, const char *field_end)
+/* parses and inits header entry, returns true/false */
+bool
+HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 {
-    HttpHeaderEntry *e;
-    http_hdr_type id;
     /* note: name_start == field_start */
     const char *name_end = (const char *)memchr(field_start, ':', field_end - field_start);
     int name_len = name_end ? name_end - field_start : 0;
@@ -1370,12 +1350,12 @@ httpHeaderEntryParseCreate(const char *field_start, const char *field_end)
     /* do we have a valid field name within this field? */
 
     if (!name_len || name_end > field_end)
-        return NULL;
+        return false;
 
     if (name_len > 65534) {
         /* String must be LESS THAN 64K and it adds a terminating NULL */
         debug(55, 1) ("WARNING: ignoring header name of %d bytes\n", name_len);
-        return NULL;
+        return false;
     }
 
     if (Config.onoff.relaxed_header_parser && xisspace(field_start[name_len - 1])) {
@@ -1386,13 +1366,12 @@ httpHeaderEntryParseCreate(const char *field_start, const char *field_end)
             name_len--;
 
         if (!name_len)
-            return NULL;
+            return false;
     }
 
     /* now we know we can parse it */
-    e = new HttpHeaderEntry;
 
-    debug(55, 9) ("creating entry %p: near '%s'\n", e, getStringPrefix(field_start, field_end));
+    debug(55, 9) ("parsing HttpHeaderEntry %p: near '%s'\n", this, getStringPrefix(field_start, field_end));
 
     /* is it a "known" field? */
     id = httpHeaderIdByName(field_start, name_len, Headers, HDR_ENUM_END);
@@ -1402,13 +1381,11 @@ httpHeaderEntryParseCreate(const char *field_start, const char *field_end)
 
     assert_eid(id);
 
-    e->id = id;
-
     /* set field name */
     if (id == HDR_OTHER)
-        e->name.limitInit(field_start, name_len);
+        name.limitInit(field_start, name_len);
     else
-        e->name = Headers[id].name;
+        name = Headers[id].name;
 
     /* trim field value */
     while (value_start < field_end && xisspace(*value_start))
@@ -1420,42 +1397,54 @@ httpHeaderEntryParseCreate(const char *field_start, const char *field_end)
     if (field_end - value_start > 65534) {
         /* String must be LESS THAN 64K and it adds a terminating NULL */
         debug(55, 1) ("WARNING: ignoring '%s' header of %d bytes\n",
-                      e->name.buf(), (int) (field_end - value_start));
+                      name.buf(), (int) (field_end - value_start));
 
-        if (e->id == HDR_OTHER)
-            e->name.clean();
+        if (id == HDR_OTHER)
+            name.clean();
 
-        delete e;
-
-        return NULL;
+        return false;
     }
 
     /* set field value */
-    e->value.limitInit(value_start, field_end - value_start);
+    value.limitInit(value_start, field_end - value_start);
 
     Headers[id].stat.seenCount++;
 
     Headers[id].stat.aliveCount++;
 
-    debug(55, 9) ("created entry %p: '%s: %s'\n", e, e->name.buf(), e->value.buf());
+    debug(55, 9) ("parsed HttpHeaderEntry %p: '%s: %s'\n", this, name.buf(), value.buf());
 
-    return e;
+    return true;
 }
 
 HttpHeaderEntry *
-httpHeaderEntryClone(const HttpHeaderEntry * e)
+HttpHeaderEntry::clone() const
 {
-    return httpHeaderEntryCreate(e->id, e->name.buf(), e->value.buf());
+    return new HttpHeaderEntry(id, name.buf(), value.buf());
 }
 
 void
-httpHeaderEntryPackInto(const HttpHeaderEntry * e, Packer * p)
+HttpHeaderEntry::packInto(Packer * p) const
 {
-    assert(e && p);
-    packerAppend(p, e->name.buf(), e->name.size());
+    assert(p);
+    packerAppend(p, name.buf(), name.size());
     packerAppend(p, ": ", 2);
-    packerAppend(p, e->value.buf(), e->value.size());
+    packerAppend(p, value.buf(), value.size());
     packerAppend(p, "\r\n", 2);
+}
+
+int
+HttpHeaderEntry::getInt() const
+{
+    assert_eid (id);
+    assert (Headers[id].type == ftInt);
+    int val = -1;
+    int ok = httpHeaderParseInt(value.buf(), &val);
+    httpHeaderNoteParsedEntry(id, value, !ok);
+    /* XXX: Should we check ok - ie
+     * return ok ? -1 : value;
+     */
+    return val;
 }
 
 static void

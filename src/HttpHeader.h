@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.h,v 1.11 2006/05/06 22:13:18 wessels Exp $
+ * $Id: HttpHeader.h,v 1.12 2006/05/08 20:59:28 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -147,11 +147,28 @@ struct _HttpHeaderFieldAttrs
 
 class HttpVersion;
 
-class HttpHeaderEntry;
-
 class HttpHdrContRange;
 
 class HttpHdrSc;
+
+class HttpHeaderEntry
+{
+
+public:
+    HttpHeaderEntry();
+    HttpHeaderEntry(http_hdr_type id, const char *name, const char *value);
+    ~HttpHeaderEntry();
+    bool parse(const char *field_start, const char *field_end);
+    HttpHeaderEntry *clone() const;
+    void packInto(Packer *p) const;
+    int getInt() const;
+    MEMPROXY_CLASS(HttpHeaderEntry);
+    http_hdr_type id;
+    String name;
+    String value;
+};
+
+MEMPROXY_CLASS_INLINE(HttpHeaderEntry)
 
 class HttpHeader
 {
