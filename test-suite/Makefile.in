@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.60 2006/05/04 00:11:46 hno Exp $
+#  $Id: Makefile.in,v 1.61 2006/05/08 23:49:28 wessels Exp $
 #
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -63,26 +63,31 @@ am__EXEEXT_1 = ESIExpressions$(EXEEXT)
 am__objects_1 = test_tools.$(OBJEXT)
 am_ESIExpressions_OBJECTS = ESIExpressions.$(OBJEXT) $(am__objects_1)
 ESIExpressions_OBJECTS = $(am_ESIExpressions_OBJECTS)
-am__DEPENDENCIES_1 = $(top_builddir)/src/globals.o
+am__DEPENDENCIES_1 = $(top_builddir)/src/globals.o \
+	$(top_builddir)/src/time.o
 ESIExpressions_DEPENDENCIES = $(top_builddir)/src/ESIExpression.o \
 	$(am__DEPENDENCIES_1)
 am_MemPoolTest_OBJECTS = MemPoolTest.$(OBJEXT)
 MemPoolTest_OBJECTS = $(am_MemPoolTest_OBJECTS)
 MemPoolTest_LDADD = $(LDADD)
-MemPoolTest_DEPENDENCIES = $(top_builddir)/src/globals.o
+MemPoolTest_DEPENDENCIES = $(top_builddir)/src/globals.o \
+	$(top_builddir)/src/time.o
 am_StackTest_OBJECTS = StackTest.$(OBJEXT) $(am__objects_1)
 StackTest_OBJECTS = $(am_StackTest_OBJECTS)
 StackTest_LDADD = $(LDADD)
-StackTest_DEPENDENCIES = $(top_builddir)/src/globals.o
+StackTest_DEPENDENCIES = $(top_builddir)/src/globals.o \
+	$(top_builddir)/src/time.o
 am_VirtualDeleteOperator_OBJECTS = VirtualDeleteOperator.$(OBJEXT) \
 	$(am__objects_1)
 VirtualDeleteOperator_OBJECTS = $(am_VirtualDeleteOperator_OBJECTS)
 VirtualDeleteOperator_LDADD = $(LDADD)
-VirtualDeleteOperator_DEPENDENCIES = $(top_builddir)/src/globals.o
+VirtualDeleteOperator_DEPENDENCIES = $(top_builddir)/src/globals.o \
+	$(top_builddir)/src/time.o
 am_debug_OBJECTS = debug.$(OBJEXT) $(am__objects_1)
 debug_OBJECTS = $(am_debug_OBJECTS)
 debug_LDADD = $(LDADD)
-debug_DEPENDENCIES = $(top_builddir)/src/globals.o
+debug_DEPENDENCIES = $(top_builddir)/src/globals.o \
+	$(top_builddir)/src/time.o
 am_http_range_test_OBJECTS = http_range_test.$(OBJEXT) \
 	$(am__objects_1)
 http_range_test_OBJECTS = $(am_http_range_test_OBJECTS)
@@ -102,28 +107,34 @@ mem_node_test_DEPENDENCIES = $(top_builddir)/src/mem_node.o \
 membanger_SOURCES = membanger.c
 membanger_OBJECTS = membanger.$(OBJEXT)
 membanger_LDADD = $(LDADD)
-membanger_DEPENDENCIES = $(top_builddir)/src/globals.o
+membanger_DEPENDENCIES = $(top_builddir)/src/globals.o \
+	$(top_builddir)/src/time.o
 am_refcount_OBJECTS = refcount.$(OBJEXT)
 refcount_OBJECTS = $(am_refcount_OBJECTS)
 refcount_LDADD = $(LDADD)
-refcount_DEPENDENCIES = $(top_builddir)/src/globals.o
+refcount_DEPENDENCIES = $(top_builddir)/src/globals.o \
+	$(top_builddir)/src/time.o
 am_rfc1738_OBJECTS = rfc1738.$(OBJEXT)
 rfc1738_OBJECTS = $(am_rfc1738_OBJECTS)
 rfc1738_LDADD = $(LDADD)
-rfc1738_DEPENDENCIES = $(top_builddir)/src/globals.o
+rfc1738_DEPENDENCIES = $(top_builddir)/src/globals.o \
+	$(top_builddir)/src/time.o
 am_splay_OBJECTS = splay.$(OBJEXT)
 splay_OBJECTS = $(am_splay_OBJECTS)
 splay_LDADD = $(LDADD)
-splay_DEPENDENCIES = $(top_builddir)/src/globals.o
+splay_DEPENDENCIES = $(top_builddir)/src/globals.o \
+	$(top_builddir)/src/time.o
 am_syntheticoperators_OBJECTS = syntheticoperators.$(OBJEXT) \
 	$(am__objects_1)
 syntheticoperators_OBJECTS = $(am_syntheticoperators_OBJECTS)
 syntheticoperators_LDADD = $(LDADD)
-syntheticoperators_DEPENDENCIES = $(top_builddir)/src/globals.o
+syntheticoperators_DEPENDENCIES = $(top_builddir)/src/globals.o \
+	$(top_builddir)/src/time.o
 tcp_banger2_SOURCES = tcp-banger2.c
 tcp_banger2_OBJECTS = tcp-banger2.$(OBJEXT)
 tcp_banger2_LDADD = $(LDADD)
-tcp_banger2_DEPENDENCIES = $(top_builddir)/src/globals.o
+tcp_banger2_DEPENDENCIES = $(top_builddir)/src/globals.o \
+	$(top_builddir)/src/time.o
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
 am__depfiles_maybe = depfiles
@@ -371,7 +382,7 @@ TESTS = debug \
 	http_range_test \
 	$(ESI_TESTS)
 
-LDADD = $(top_builddir)/src/globals.o -L$(top_builddir)/lib -lmiscutil
+LDADD = $(top_builddir)/src/globals.o $(top_builddir)/src/time.o -L$(top_builddir)/lib -lmiscutil
 DEBUG_SOURCE = test_tools.cc
 debug_SOURCES = debug.cc $(DEBUG_SOURCE)
 ESIExpressions_SOURCES = ESIExpressions.cc $(DEBUG_SOURCE)
