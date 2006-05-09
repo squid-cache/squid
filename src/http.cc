@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.495 2006/05/06 22:13:18 wessels Exp $
+ * $Id: http.cc,v 1.496 2006/05/08 20:59:28 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1580,7 +1580,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
         if (flags.proxying && orig_request->peer_login &&
                 (strcmp(orig_request->peer_login, "PASS") == 0 ||
                  strcmp(orig_request->peer_login, "PROXYPASS") == 0)) {
-            hdr_out->addEntry(httpHeaderEntryClone(e));
+            hdr_out->addEntry(e->clone());
         }
 
         break;
@@ -1589,7 +1589,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
         /* Pass on WWW authentication */
 
         if (!flags.originpeer) {
-            hdr_out->addEntry(httpHeaderEntryClone(e));
+            hdr_out->addEntry(e->clone());
         } else {
             /* In accelerators, only forward authentication if enabled
              * (see also below for proxy->server authentication)
@@ -1598,7 +1598,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
             if (orig_request->peer_login &&
                     (strcmp(orig_request->peer_login, "PASS") == 0 ||
                      strcmp(orig_request->peer_login, "PROXYPASS") == 0)) {
-                hdr_out->addEntry(httpHeaderEntryClone(e));
+                hdr_out->addEntry(e->clone());
             }
         }
 
@@ -1613,7 +1613,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
          */
 
         if (request->flags.redirected && !Config.onoff.redir_rewrites_host)
-            hdr_out->addEntry(httpHeaderEntryClone(e));
+            hdr_out->addEntry(e->clone());
         else {
             /* use port# only if not default */
 
@@ -1632,13 +1632,13 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
          * note: at most one client's ims header can pass through */
 
         if (!hdr_out->has(HDR_IF_MODIFIED_SINCE))
-            hdr_out->addEntry(httpHeaderEntryClone(e));
+            hdr_out->addEntry(e->clone());
 
         break;
 
     case HDR_MAX_FORWARDS:
         if (orig_request->method == METHOD_TRACE) {
-            const int hops = httpHeaderEntryGetInt(e);
+            const int hops = e->getInt();
 
             if (hops > 0)
                 hdr_out->putInt(HDR_MAX_FORWARDS, hops - 1);
@@ -1650,7 +1650,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
         /* If Via is disabled then forward any received header as-is */
 
         if (!Config.onoff.via)
-            hdr_out->addEntry(httpHeaderEntryClone(e));
+            hdr_out->addEntry(e->clone());
 
         break;
 
@@ -1660,7 +1660,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
 
     case HDR_REQUEST_RANGE:
         if (!we_do_ranges)
-            hdr_out->addEntry(httpHeaderEntryClone(e));
+            hdr_out->addEntry(e->clone());
 
         break;
 
@@ -1676,13 +1676,13 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
 
     case HDR_FRONT_END_HTTPS:
         if (!flags.front_end_https)
-            hdr_out->addEntry(httpHeaderEntryClone(e));
+            hdr_out->addEntry(e->clone());
 
         break;
 
     default:
         /* pass on all other header fields */
-        hdr_out->addEntry(httpHeaderEntryClone(e));
+        hdr_out->addEntry(e->clone());
     }
 }
 

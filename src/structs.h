@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.540 2006/04/27 19:27:37 wessels Exp $
+ * $Id: structs.h,v 1.541 2006/05/08 20:59:28 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -882,22 +882,6 @@ public:
     field_type type;
     HttpHeaderFieldStat stat;
 };
-
-class HttpHeaderEntry
-{
-
-public:
-    MEMPROXY_CLASS(HttpHeaderEntry);
-    http_hdr_type id;
-    String name;
-    String value;
-};
-
-/* bah. remove this when HttpHeaderEntry is moved
- * out
- */
-MEMPROXY_CLASS_INLINE(HttpHeaderEntry)
-
 
 struct _http_state_flags
 {
