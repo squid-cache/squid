@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.118 2006/05/08 20:59:28 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.119 2006/05/09 17:44:23 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -1312,7 +1312,7 @@ HttpHeaderEntry::HttpHeaderEntry(http_hdr_type anId, const char *aName, const ch
  * Construct a "blank" object.  Should call parse() after creating one of these
  *
  */
-HttpHeaderEntry::HttpHeaderEntry() : id(HDR_BAD_HDR), name(NULL), value(NULL)
+HttpHeaderEntry::HttpHeaderEntry() : id(HDR_OTHER), name(NULL), value(NULL)
 {
     debug(55, 9) ("created blank HttpHeaderEntry %p\n", this);
 }
