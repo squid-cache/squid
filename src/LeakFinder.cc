@@ -1,6 +1,6 @@
 
 /*
- * $Id: LeakFinder.cc,v 1.2 2005/12/03 15:13:51 serassio Exp $
+ * $Id: LeakFinder.cc,v 1.3 2006/05/09 15:47:45 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -40,6 +40,7 @@
 #include "squid.h"
 #include "LeakFinder.h"
 #include "Store.h"
+#include "SquidTime.h"
 
 #if USE_LEAKFINDER
 /* ========================================================================= */

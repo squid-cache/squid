@@ -1,6 +1,6 @@
 
 /*
- * $Id: useragent.cc,v 1.28 2003/02/21 22:50:13 robertc Exp $
+ * $Id: useragent.cc,v 1.29 2006/05/09 15:47:45 wessels Exp $
  *
  * DEBUG: section 40    User-Agent logging
  * AUTHOR: Joe Ramey <ramey@csc.ti.com>
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "SquidTime.h"
 
 #if USE_USERAGENT_LOG
 static Logfile *useragentlog = NULL;
