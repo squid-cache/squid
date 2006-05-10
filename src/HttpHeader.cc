@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.119 2006/05/09 17:44:23 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.120 2006/05/09 21:48:51 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -536,10 +536,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
             break;		/* terminating blank line */
         }
 
-        e = new HttpHeaderEntry;
-
-        if (!e->parse(field_start, field_end)) {
-            delete e;
+        if ((e = HttpHeaderEntry::parse(field_start, field_end)) == NULL) {
             debug(55, 1) ("WARNING: unparseable HTTP header field {%s}\n",
                           getStringPrefix(field_start, field_end));
             debug(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2)
@@ -1308,15 +1305,6 @@ HttpHeaderEntry::HttpHeaderEntry(http_hdr_type anId, const char *aName, const ch
     debug(55, 9) ("created HttpHeaderEntry %p: '%s: %s'\n", this, name.buf(), value.buf());
 }
 
-/*
- * Construct a "blank" object.  Should call parse() after creating one of these
- *
- */
-HttpHeaderEntry::HttpHeaderEntry() : id(HDR_OTHER), name(NULL), value(NULL)
-{
-    debug(55, 9) ("created blank HttpHeaderEntry %p\n", this);
-}
-
 HttpHeaderEntry::~HttpHeaderEntry()
 {
     assert_eid(id);
@@ -1336,7 +1324,7 @@ HttpHeaderEntry::~HttpHeaderEntry()
 }
 
 /* parses and inits header entry, returns true/false */
-bool
+HttpHeaderEntry *
 HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 {
     /* note: name_start == field_start */
@@ -1350,12 +1338,12 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
     /* do we have a valid field name within this field? */
 
     if (!name_len || name_end > field_end)
-        return false;
+        return NULL;
 
     if (name_len > 65534) {
         /* String must be LESS THAN 64K and it adds a terminating NULL */
         debug(55, 1) ("WARNING: ignoring header name of %d bytes\n", name_len);
-        return false;
+        return NULL;
     }
 
     if (Config.onoff.relaxed_header_parser && xisspace(field_start[name_len - 1])) {
@@ -1366,15 +1354,19 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
             name_len--;
 
         if (!name_len)
-            return false;
+            return NULL;
     }
 
     /* now we know we can parse it */
 
-    debug(55, 9) ("parsing HttpHeaderEntry %p: near '%s'\n", this, getStringPrefix(field_start, field_end));
+    debug(55, 9) ("parsing HttpHeaderEntry: near '%s'\n", getStringPrefix(field_start, field_end));
 
     /* is it a "known" field? */
-    id = httpHeaderIdByName(field_start, name_len, Headers, HDR_ENUM_END);
+    http_hdr_type id = httpHeaderIdByName(field_start, name_len, Headers, HDR_ENUM_END);
+
+    String name;
+
+    String value;
 
     if (id < 0)
         id = HDR_OTHER;
@@ -1402,7 +1394,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
         if (id == HDR_OTHER)
             name.clean();
 
-        return false;
+        return NULL;
     }
 
     /* set field value */
@@ -1412,9 +1404,9 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 
     Headers[id].stat.aliveCount++;
 
-    debug(55, 9) ("parsed HttpHeaderEntry %p: '%s: %s'\n", this, name.buf(), value.buf());
+    debug(55, 9) ("parsed HttpHeaderEntry: '%s: %s'\n", name.buf(), value.buf());
 
-    return true;
+    return new HttpHeaderEntry(id, name.buf(), value.buf());
 }
 
 HttpHeaderEntry *
