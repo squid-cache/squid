@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.723 2006/05/08 23:38:33 robertc Exp $
+ * $Id: client_side.cc,v 1.724 2006/05/10 20:34:18 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2531,6 +2531,9 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
             /* Continue to process previously read data */
         }
     }
+
+    if (!conn->isOpen())
+        return;
 
     /* Process next request */
     if (conn->getConcurrentRequestCount() == 0)
