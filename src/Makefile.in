@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.381 2006/05/08 23:49:25 wessels Exp $
+#  $Id: Makefile.in,v 1.382 2006/05/10 22:59:14 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -507,7 +507,7 @@ am__tests_testHttpRequest_SOURCES_DIST = debug.cc globals.cc \
 	ESISegment.h ESISequence.cc ESISequence.h ESIVar.h \
 	ESIVarState.cc ESIVarState.h ETag.cc external_acl.cc \
 	ExternalACLEntry.cc fd.cc fde.cc forward.cc fqdncache.cc \
-	ftp.cc gopher.cc helper.cc htcp.cc http.cc HttpBody.cc \
+	ftp.cc gopher.cc helper.cc htcp.cc htcp.h http.cc HttpBody.cc \
 	HttpHeader.cc HttpHeaderTools.cc HttpHdrCc.cc \
 	HttpHdrContRange.cc HttpHdrRange.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc HttpMsg.cc HttpReply.cc HttpStatusLine.cc \
@@ -548,36 +548,36 @@ am_tests_testHttpRequest_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	errorpage.$(OBJEXT) $(am__objects_9) ETag.$(OBJEXT) \
 	external_acl.$(OBJEXT) ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) \
 	fde.$(OBJEXT) forward.$(OBJEXT) fqdncache.$(OBJEXT) \
-	ftp.$(OBJEXT) gopher.$(OBJEXT) helper.$(OBJEXT) htcp.$(OBJEXT) \
-	http.$(OBJEXT) HttpBody.$(OBJEXT) HttpHeader.$(OBJEXT) \
-	HttpHeaderTools.$(OBJEXT) HttpHdrCc.$(OBJEXT) \
-	HttpHdrContRange.$(OBJEXT) HttpHdrRange.$(OBJEXT) \
-	HttpHdrSc.$(OBJEXT) HttpHdrScTarget.$(OBJEXT) \
-	HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) HttpStatusLine.$(OBJEXT) \
-	icmp.$(OBJEXT) icp_v2.$(OBJEXT) icp_v3.$(OBJEXT) \
-	$(am__objects_12) ipc.$(OBJEXT) ipcache.$(OBJEXT) \
-	IPInterception.$(OBJEXT) int.$(OBJEXT) internal.$(OBJEXT) \
-	list.$(OBJEXT) logfile.$(OBJEXT) multicast.$(OBJEXT) \
-	mem_node.$(OBJEXT) MemBuf.$(OBJEXT) MemObject.$(OBJEXT) \
-	mime.$(OBJEXT) neighbors.$(OBJEXT) net_db.$(OBJEXT) \
-	Packer.$(OBJEXT) Parsing.$(OBJEXT) pconn.$(OBJEXT) \
-	peer_digest.$(OBJEXT) peer_select.$(OBJEXT) redirect.$(OBJEXT) \
-	referer.$(OBJEXT) refresh.$(OBJEXT) Server.$(OBJEXT) \
-	$(am__objects_16) $(am__objects_18) stat.$(OBJEXT) \
-	StatHist.$(OBJEXT) stmem.$(OBJEXT) store.$(OBJEXT) \
-	store_client.$(OBJEXT) store_digest.$(OBJEXT) \
-	store_dir.$(OBJEXT) store_io.$(OBJEXT) store_key_md5.$(OBJEXT) \
-	store_log.$(OBJEXT) store_rebuild.$(OBJEXT) \
-	store_swapin.$(OBJEXT) store_swapmeta.$(OBJEXT) \
-	store_swapout.$(OBJEXT) StoreFileSystem.$(OBJEXT) \
-	StoreIOState.$(OBJEXT) StoreMeta.$(OBJEXT) \
-	StoreMetaMD5.$(OBJEXT) StoreMetaSTD.$(OBJEXT) \
-	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
-	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
-	tools.$(OBJEXT) tunnel.$(OBJEXT) SwapDir.$(OBJEXT) \
-	url.$(OBJEXT) URLScheme.$(OBJEXT) urn.$(OBJEXT) \
-	useragent.$(OBJEXT) wais.$(OBJEXT) whois.$(OBJEXT) \
-	wordlist.$(OBJEXT)
+	ftp.$(OBJEXT) gopher.$(OBJEXT) helper.$(OBJEXT) \
+	$(am__objects_10) http.$(OBJEXT) HttpBody.$(OBJEXT) \
+	HttpHeader.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
+	HttpHdrCc.$(OBJEXT) HttpHdrContRange.$(OBJEXT) \
+	HttpHdrRange.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
+	HttpHdrScTarget.$(OBJEXT) HttpMsg.$(OBJEXT) \
+	HttpReply.$(OBJEXT) HttpStatusLine.$(OBJEXT) icmp.$(OBJEXT) \
+	icp_v2.$(OBJEXT) icp_v3.$(OBJEXT) $(am__objects_12) \
+	ipc.$(OBJEXT) ipcache.$(OBJEXT) IPInterception.$(OBJEXT) \
+	int.$(OBJEXT) internal.$(OBJEXT) list.$(OBJEXT) \
+	logfile.$(OBJEXT) multicast.$(OBJEXT) mem_node.$(OBJEXT) \
+	MemBuf.$(OBJEXT) MemObject.$(OBJEXT) mime.$(OBJEXT) \
+	neighbors.$(OBJEXT) net_db.$(OBJEXT) Packer.$(OBJEXT) \
+	Parsing.$(OBJEXT) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
+	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
+	refresh.$(OBJEXT) Server.$(OBJEXT) $(am__objects_16) \
+	$(am__objects_18) stat.$(OBJEXT) StatHist.$(OBJEXT) \
+	stmem.$(OBJEXT) store.$(OBJEXT) store_client.$(OBJEXT) \
+	store_digest.$(OBJEXT) store_dir.$(OBJEXT) store_io.$(OBJEXT) \
+	store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
+	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
+	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
+	StoreFileSystem.$(OBJEXT) StoreIOState.$(OBJEXT) \
+	StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
+	StoreMetaSTD.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
+	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
+	StoreSwapLogData.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
+	SwapDir.$(OBJEXT) url.$(OBJEXT) URLScheme.$(OBJEXT) \
+	urn.$(OBJEXT) useragent.$(OBJEXT) wais.$(OBJEXT) \
+	whois.$(OBJEXT) wordlist.$(OBJEXT)
 nodist_tests_testHttpRequest_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testHttpRequest_OBJECTS = $(am_tests_testHttpRequest_OBJECTS) \
@@ -689,7 +689,7 @@ am__tests_testURL_SOURCES_DIST = debug.cc url.cc URLScheme.cc \
 	ESISegment.h ESISequence.cc ESISequence.h ESIVar.h \
 	ESIVarState.cc ESIVarState.h ETag.cc external_acl.cc \
 	ExternalACLEntry.cc fd.cc fde.cc forward.cc fqdncache.cc \
-	ftp.cc gopher.cc helper.cc htcp.cc http.cc HttpBody.cc \
+	ftp.cc gopher.cc helper.cc htcp.cc htcp.h http.cc HttpBody.cc \
 	HttpHeader.cc HttpHeaderTools.cc HttpHdrCc.cc \
 	HttpHdrContRange.cc HttpHdrRange.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc HttpMsg.cc HttpReply.cc HttpStatusLine.cc \
@@ -729,33 +729,34 @@ am_tests_testURL_OBJECTS = debug.$(OBJEXT) url.$(OBJEXT) \
 	errorpage.$(OBJEXT) $(am__objects_9) ETag.$(OBJEXT) \
 	external_acl.$(OBJEXT) ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) \
 	fde.$(OBJEXT) forward.$(OBJEXT) fqdncache.$(OBJEXT) \
-	ftp.$(OBJEXT) gopher.$(OBJEXT) helper.$(OBJEXT) htcp.$(OBJEXT) \
-	http.$(OBJEXT) HttpBody.$(OBJEXT) HttpHeader.$(OBJEXT) \
-	HttpHeaderTools.$(OBJEXT) HttpHdrCc.$(OBJEXT) \
-	HttpHdrContRange.$(OBJEXT) HttpHdrRange.$(OBJEXT) \
-	HttpHdrSc.$(OBJEXT) HttpHdrScTarget.$(OBJEXT) \
-	HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) HttpStatusLine.$(OBJEXT) \
-	icmp.$(OBJEXT) icp_v2.$(OBJEXT) icp_v3.$(OBJEXT) \
-	$(am__objects_12) ipc.$(OBJEXT) ipcache.$(OBJEXT) \
-	IPInterception.$(OBJEXT) int.$(OBJEXT) internal.$(OBJEXT) \
-	list.$(OBJEXT) logfile.$(OBJEXT) multicast.$(OBJEXT) \
-	mem_node.$(OBJEXT) MemBuf.$(OBJEXT) MemObject.$(OBJEXT) \
-	mime.$(OBJEXT) neighbors.$(OBJEXT) net_db.$(OBJEXT) \
-	Packer.$(OBJEXT) Parsing.$(OBJEXT) pconn.$(OBJEXT) \
-	peer_digest.$(OBJEXT) peer_select.$(OBJEXT) redirect.$(OBJEXT) \
-	refresh.$(OBJEXT) Server.$(OBJEXT) $(am__objects_16) \
-	$(am__objects_18) stat.$(OBJEXT) StatHist.$(OBJEXT) \
-	stmem.$(OBJEXT) store.$(OBJEXT) store_client.$(OBJEXT) \
-	store_digest.$(OBJEXT) store_dir.$(OBJEXT) store_io.$(OBJEXT) \
-	store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
-	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
-	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
-	StoreFileSystem.$(OBJEXT) StoreIOState.$(OBJEXT) \
-	StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
-	StoreMetaSTD.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
-	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
-	StoreSwapLogData.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
-	SwapDir.$(OBJEXT) urn.$(OBJEXT) wais.$(OBJEXT) whois.$(OBJEXT) \
+	ftp.$(OBJEXT) gopher.$(OBJEXT) helper.$(OBJEXT) \
+	$(am__objects_10) http.$(OBJEXT) HttpBody.$(OBJEXT) \
+	HttpHeader.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
+	HttpHdrCc.$(OBJEXT) HttpHdrContRange.$(OBJEXT) \
+	HttpHdrRange.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
+	HttpHdrScTarget.$(OBJEXT) HttpMsg.$(OBJEXT) \
+	HttpReply.$(OBJEXT) HttpStatusLine.$(OBJEXT) icmp.$(OBJEXT) \
+	icp_v2.$(OBJEXT) icp_v3.$(OBJEXT) $(am__objects_12) \
+	ipc.$(OBJEXT) ipcache.$(OBJEXT) IPInterception.$(OBJEXT) \
+	int.$(OBJEXT) internal.$(OBJEXT) list.$(OBJEXT) \
+	logfile.$(OBJEXT) multicast.$(OBJEXT) mem_node.$(OBJEXT) \
+	MemBuf.$(OBJEXT) MemObject.$(OBJEXT) mime.$(OBJEXT) \
+	neighbors.$(OBJEXT) net_db.$(OBJEXT) Packer.$(OBJEXT) \
+	Parsing.$(OBJEXT) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
+	peer_select.$(OBJEXT) redirect.$(OBJEXT) refresh.$(OBJEXT) \
+	Server.$(OBJEXT) $(am__objects_16) $(am__objects_18) \
+	stat.$(OBJEXT) StatHist.$(OBJEXT) stmem.$(OBJEXT) \
+	store.$(OBJEXT) store_client.$(OBJEXT) store_digest.$(OBJEXT) \
+	store_dir.$(OBJEXT) store_io.$(OBJEXT) store_key_md5.$(OBJEXT) \
+	store_log.$(OBJEXT) store_rebuild.$(OBJEXT) \
+	store_swapin.$(OBJEXT) store_swapmeta.$(OBJEXT) \
+	store_swapout.$(OBJEXT) StoreFileSystem.$(OBJEXT) \
+	StoreIOState.$(OBJEXT) StoreMeta.$(OBJEXT) \
+	StoreMetaMD5.$(OBJEXT) StoreMetaSTD.$(OBJEXT) \
+	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
+	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
+	tools.$(OBJEXT) tunnel.$(OBJEXT) SwapDir.$(OBJEXT) \
+	urn.$(OBJEXT) wais.$(OBJEXT) whois.$(OBJEXT) \
 	wordlist.$(OBJEXT)
 nodist_tests_testURL_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
@@ -2192,7 +2193,7 @@ tests_testHttpRequest_SOURCES = \
 	ftp.cc \
 	gopher.cc \
 	helper.cc \
-	htcp.cc \
+	$(HTCPSOURCE) \
 	http.cc \
 	HttpBody.cc \
 	HttpHeader.cc \
@@ -2529,7 +2530,7 @@ tests_testURL_SOURCES = \
 	ftp.cc \
 	gopher.cc \
 	helper.cc \
-	htcp.cc \
+	$(HTCPSOURCE) \
 	http.cc \
 	HttpBody.cc \
 	HttpHeader.cc \
