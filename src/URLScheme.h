@@ -1,6 +1,6 @@
 
 /*
- * $Id: URLScheme.h,v 1.1 2006/05/08 23:38:33 robertc Exp $
+ * $Id: URLScheme.h,v 1.2 2006/05/10 23:40:38 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,10 +34,10 @@
 #ifndef SQUID_URLSCHEME_H
 #define SQUID_URLSCHEME_H
 
-#include <iosfwd>
-
 /* For the definition of NULL and protocol_t */
 #include "squid.h"
+
+#include <iosfwd>
 
 extern const char *ProtocolStr[];
 
