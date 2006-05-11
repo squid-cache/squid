@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequestMethod.h,v 1.2 2006/05/10 20:39:35 hno Exp $
+ * $Id: HttpRequestMethod.h,v 1.3 2006/05/10 21:03:04 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,9 +33,6 @@
 
 #ifndef SQUID_HTTPREQUESTMETHOD_H
 #define SQUID_HTTPREQUESTMETHOD_H
-
-/* For the definition of NULL. Needs to go before any other includes */
-#include "squid.h"
 
 #include <iosfwd>
 
@@ -115,7 +112,7 @@ public:
 
     HttpRequestMethod(method_t const aMethod) : theMethod(aMethod) {}
 
-    HttpRequestMethod(char const * begin, char const * end=NULL);
+    HttpRequestMethod(char const * begin, char const * end=0);
 
     operator method_t() const {return theMethod; }
 
