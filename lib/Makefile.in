@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-#  $Id: Makefile.in,v 1.118 2006/05/10 22:06:42 hno Exp $
+#  $Id: Makefile.in,v 1.119 2006/05/10 22:29:21 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -91,9 +91,9 @@ libsspwin32_a_LIBADD =
 am_libsspwin32_a_OBJECTS = sspwin32.$(OBJEXT)
 libsspwin32_a_OBJECTS = $(am_libsspwin32_a_OBJECTS)
 am__tests_testAll_SOURCES_DIST = tests/testArray.cc tests/testMain.cc \
-	tests/testArray.h Profiler.c util.c
+	tests/testArray.h Profiler.c util.c assert.c
 am_tests_testAll_OBJECTS = testArray.$(OBJEXT) testMain.$(OBJEXT) \
-	$(am__objects_3) util.$(OBJEXT)
+	$(am__objects_3) util.$(OBJEXT) assert.$(OBJEXT)
 tests_testAll_OBJECTS = $(am_tests_testAll_OBJECTS)
 tests_testAll_DEPENDENCIES =
 am__dirstamp = $(am__leading_dot)dirstamp
@@ -402,7 +402,7 @@ INCLUDES = -I$(top_builddir)/include -I$(top_srcdir)/include @SQUID_CPPUNIT_INC@
 TESTS = $(check_PROGRAMS)
 tests_testAll_SOURCES = tests/testArray.cc tests/testMain.cc  tests/testArray.h \
 	$(XPROF_STATS_SOURCE) \
-	util.c
+	util.c assert.c
 
 tests_testAll_LDADD = @SQUID_CPPUNIT_LA@
 tests_testAll_LDFLAGS = $(LIBADD_DL)
