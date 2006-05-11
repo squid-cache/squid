@@ -1,8 +1,8 @@
 
 /*
- * $Id: assert.h,v 1.2 2006/05/10 22:03:07 hno Exp $
+ * $Id: assert.c,v 1.1 2006/05/10 22:03:07 hno Exp $
  *
- * AUTHOR: Duane Wessels
+ * AUTHOR: Henrik Nordstrom
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -32,20 +32,12 @@
  *
  */
 
-#ifndef SQUID_ASSERT_H
-#define SQUID_ASSERT_H
+#include <stdio.h>
+#include <stdlib.h>
 
-#include "config.h"
+#include "assert.h"
 
-#if PURIFY
-#define assert(EX) ((void)0)
-#elif defined(NODEBUG)
-#define assert(EX) ((void)0)
-#elif STDC_HEADERS
-#define assert(EX)  ((EX)?((void)0):xassert( # EX , __FILE__, __LINE__))
-#else
-#define assert(EX)  ((EX)?((void)0):xassert("EX", __FILE__, __LINE__))
-#endif
-SQUIDCEXTERN void xassert(const char *, const char *, int);
-
-#endif
+void xassert(const char *expr, const char *file, int line) {
+    fprintf(stderr, "assertion failed: %s:%d: \"%s\"\n", file, line, expr);
+    abort();
+}

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.113 2006/02/28 18:05:34 serassio Exp $
+ * $Id: cachemgr.cc,v 1.114 2006/05/10 22:03:07 hno Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -133,7 +133,7 @@ extern "C"
 
 #endif
 
-#include <assert.h>
+#include "assert.h"
 
 #include "util.h"
 #include "snprintf.h"
