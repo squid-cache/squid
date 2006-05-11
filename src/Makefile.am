@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.143 2006/05/10 22:56:59 hno Exp $
+#  $Id: Makefile.am,v 1.144 2006/05/11 01:36:57 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -190,24 +190,19 @@ noinst_PROGRAMS = \
 sbin_PROGRAMS = \
 	squid
 
-bin_PROGRAMS = \
-	squidclient
+bin_PROGRAMS = 
 
 
 libexec_PROGRAMS = \
 	$(PINGER) \
 	$(DNSSERVER) \
 	@DISK_PROGRAMS@ \
-	$(UNLINKD) \
-	cachemgr$(CGIEXT)
+	$(UNLINKD)
 
 cf_gen_SOURCES = cf_gen.cc defines.h debug.cc time.cc
 nodist_cf_gen_SOURCES = globals.cc
 nodist_cf_gen_HEADER = cf_gen_defines.h
 cf_gen.$(OBJEXT): cf_gen_defines.h
-squidclient_SOURCES = client.cc
-cachemgr__CGIEXT__SOURCES = cachemgr.cc
-cachemgr__CGIEXT__CFLAGS = -DDEFAULT_CACHEMGR_CONFIG=\"$(DEFAULT_CACHEMGR_CONFIG)\" $(AM_CFLAGS)
 
 all_FSMODULES = \
 	fs/aufs/StoreFSaufs.cc \
@@ -865,7 +860,6 @@ EXTRA_DIST = \
 	mk-string-arrays.awk \
 	repl_modules.sh \
 	mib.txt \
-	cachemgr.conf \
 	mime.conf.default
 
 libAIO_a_SOURCES = \
@@ -909,7 +903,6 @@ DEFAULT_HTTP_PORT	= @CACHE_HTTP_PORT@
 DEFAULT_ICP_PORT	= @CACHE_ICP_PORT@
 DEFAULT_PREFIX		= $(prefix)
 DEFAULT_CONFIG_FILE     = $(sysconfdir)/squid.conf
-DEFAULT_CACHEMGR_CONFIG = $(sysconfdir)/cachemgr.conf
 DEFAULT_MIME_TABLE	= $(sysconfdir)/mime.conf
 DEFAULT_DNSSERVER       = $(libexecdir)/`echo dnsserver | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_LOG_PREFIX	= $(localstatedir)/logs
@@ -996,12 +989,6 @@ install-data-local: install-sysconfDATA install-dataDATA
 	else \
 	        echo "$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE)"; \
 	        $(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE); \
-	fi
-	@if test -f $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG) ; then \
-	        echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG)" ; \
-	else \
-	        echo "$(INSTALL_DATA) $(srcdir)/cachemgr.conf $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG)"; \
-	        $(INSTALL_DATA) $(srcdir)/cachemgr.conf $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG); \
 	fi
 	$(mkinstalldirs) $(DESTDIR)$(DEFAULT_LOG_PREFIX)
 
