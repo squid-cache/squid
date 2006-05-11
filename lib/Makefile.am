@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-#  $Id: Makefile.am,v 1.18 2005/10/30 21:48:22 serassio Exp $
+#  $Id: Makefile.am,v 1.19 2006/05/10 22:03:07 hno Exp $
 #
 
 DIST_SUBDIRS = libTrie cppunit-1.10.0
@@ -69,6 +69,7 @@ libmiscutil_a_SOURCES = \
 	stub_memaccount.c \
 	util.c \
 	uudecode.c \
+	assert.c \
 	$(XPROF_STATS_SOURCE)
 libmiscutil_a_LIBADD = \
 	libTrie/src/Trie.o \
