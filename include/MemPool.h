@@ -3,6 +3,7 @@
 #define _MEM_POOLS_H_
 
 #include "config.h"
+#include "assert.h"
 #include "util.h"
 
 #include "memMeter.h"
