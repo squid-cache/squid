@@ -1,6 +1,6 @@
 
 /*
- * $Id: IPInterception.cc,v 1.14 2005/10/08 08:39:42 serassio Exp $
+ * $Id: IPInterception.cc,v 1.15 2006/05/10 20:17:12 hno Exp $
  *
  * DEBUG: section 89    NAT / IP Interception 
  * AUTHOR: Robert Collins
@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "clientStream.h"
 #include "IPInterception.h"
+#include "SquidTime.h"
 
 #if IPF_TRANSPARENT
 #if HAVE_SYS_IOCTL_H
