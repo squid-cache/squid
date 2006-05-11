@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.142 2006/05/08 23:38:33 robertc Exp $
+#  $Id: Makefile.am,v 1.143 2006/05/10 22:56:59 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -1261,7 +1261,7 @@ tests_testHttpRequest_SOURCES = \
 	ftp.cc \
 	gopher.cc \
 	helper.cc \
-	htcp.cc \
+	$(HTCPSOURCE) \
 	http.cc \
 	HttpBody.cc \
 	HttpHeader.cc \
@@ -1589,7 +1589,7 @@ tests_testURL_SOURCES = \
 	ftp.cc \
 	gopher.cc \
 	helper.cc \
-	htcp.cc \
+	$(HTCPSOURCE) \
 	http.cc \
 	HttpBody.cc \
 	HttpHeader.cc \
