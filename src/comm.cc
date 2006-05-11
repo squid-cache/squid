@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.415 2006/05/08 23:38:33 robertc Exp $
+ * $Id: comm.cc,v 1.416 2006/05/10 20:22:11 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -2488,9 +2488,7 @@ commMarkHalfClosed(int fd) {
 }
 
 int commIsHalfClosed(int fd) {
-    if (fdc_table[fd].active != 1) {
-        fatal("foo");
-    }
+    assert (fdc_table[fd].active);
 
     return fdc_table[fd].half_closed;
 }
