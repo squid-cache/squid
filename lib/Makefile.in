@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-#  $Id: Makefile.in,v 1.117 2006/05/04 00:11:35 hno Exp $
+#  $Id: Makefile.in,v 1.118 2006/05/10 22:06:42 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -64,7 +64,8 @@ libmiscutil_a_DEPENDENCIES = libTrie/src/Trie.o libTrie/src/TrieNode.o \
 am__libmiscutil_a_SOURCES_DIST = MemPool.cc base64.c getfullhostname.c \
 	hash.c heap.c html_quote.c iso3307.c md5.c radix.c rfc1035.c \
 	rfc1123.c rfc1738.c rfc2617.c safe_inet_addr.c snprintf.c \
-	Splay.cc stub_memaccount.c util.c uudecode.c Profiler.c
+	Splay.cc stub_memaccount.c util.c uudecode.c assert.c \
+	Profiler.c
 @NEED_OWN_MD5_TRUE@am__objects_1 = md5.$(OBJEXT)
 @NEED_OWN_SNPRINTF_TRUE@am__objects_2 = snprintf.$(OBJEXT)
 @ENABLE_XPROF_STATS_TRUE@am__objects_3 = Profiler.$(OBJEXT)
@@ -74,7 +75,8 @@ am_libmiscutil_a_OBJECTS = MemPool.$(OBJEXT) base64.$(OBJEXT) \
 	radix.$(OBJEXT) rfc1035.$(OBJEXT) rfc1123.$(OBJEXT) \
 	rfc1738.$(OBJEXT) rfc2617.$(OBJEXT) safe_inet_addr.$(OBJEXT) \
 	$(am__objects_2) Splay.$(OBJEXT) stub_memaccount.$(OBJEXT) \
-	util.$(OBJEXT) uudecode.$(OBJEXT) $(am__objects_3)
+	util.$(OBJEXT) uudecode.$(OBJEXT) assert.$(OBJEXT) \
+	$(am__objects_3)
 libmiscutil_a_OBJECTS = $(am_libmiscutil_a_OBJECTS)
 libntlmauth_a_AR = $(AR) $(ARFLAGS)
 libntlmauth_a_DEPENDENCIES = @LIBOBJS@
@@ -372,6 +374,7 @@ libmiscutil_a_SOURCES = \
 	stub_memaccount.c \
 	util.c \
 	uudecode.c \
+	assert.c \
 	$(XPROF_STATS_SOURCE)
 
 libmiscutil_a_LIBADD = \
@@ -488,6 +491,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MemPool.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Profiler.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Splay.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assert.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/base64.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dlmalloc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getfullhostname.Po@am__quote@
