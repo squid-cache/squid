@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.530 2006/05/08 23:38:33 robertc Exp $
+ * $Id: protos.h,v 1.531 2006/05/10 21:04:24 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -175,7 +175,6 @@ SQUIDCEXTERN void _db_print(const char *,...) PRINTF_FORMAT_ARG1;
 #else
 SQUIDCEXTERN void _db_print();
 #endif
-extern void xassert(const char *, const char *, int);
 
 /* packs, then prints an object using debug() */
 SQUIDCEXTERN void debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm);
