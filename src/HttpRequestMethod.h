@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequestMethod.h,v 1.1 2006/05/08 23:38:33 robertc Exp $
+ * $Id: HttpRequestMethod.h,v 1.2 2006/05/10 20:39:35 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,6 +33,9 @@
 
 #ifndef SQUID_HTTPREQUESTMETHOD_H
 #define SQUID_HTTPREQUESTMETHOD_H
+
+/* For the definition of NULL. Needs to go before any other includes */
+#include "squid.h"
 
 #include <iosfwd>
 
@@ -88,9 +91,6 @@ enum _method_t {
 };
 
 typedef enum _method_t method_t;
-
-/* For the definition of NULL */
-#include "squid.h"
 
 extern const char *RequestMethodStr[];
 
