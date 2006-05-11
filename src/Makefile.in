@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.382 2006/05/10 22:59:14 hno Exp $
+#  $Id: Makefile.in,v 1.383 2006/05/11 01:41:02 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -58,9 +58,9 @@ EXTRA_PROGRAMS = DiskIO/DiskDaemon/diskd$(EXEEXT) unlinkd$(EXEEXT) \
 	tests/testNull$(EXEEXT)
 noinst_PROGRAMS = cf_gen$(EXEEXT) ufsdump$(EXEEXT)
 sbin_PROGRAMS = squid$(EXEEXT)
-bin_PROGRAMS = squidclient$(EXEEXT)
+bin_PROGRAMS =
 libexec_PROGRAMS = $(am__EXEEXT_1) $(am__EXEEXT_2) @DISK_PROGRAMS@ \
-	$(am__EXEEXT_3) cachemgr$(CGIEXT)$(EXEEXT)
+	$(am__EXEEXT_3)
 subdir = src
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
@@ -126,10 +126,6 @@ DiskIO_DiskDaemon_diskd_OBJECTS =  \
 	$(am_DiskIO_DiskDaemon_diskd_OBJECTS)
 DiskIO_DiskDaemon_diskd_DEPENDENCIES =  \
 	$(top_builddir)/lib/libmiscutil.a
-am_cachemgr__CGIEXT__OBJECTS = cachemgr.$(OBJEXT)
-cachemgr__CGIEXT__OBJECTS = $(am_cachemgr__CGIEXT__OBJECTS)
-cachemgr__CGIEXT__LDADD = $(LDADD)
-cachemgr__CGIEXT__DEPENDENCIES =
 am_cf_gen_OBJECTS = cf_gen.$(OBJEXT) debug.$(OBJEXT) time.$(OBJEXT)
 nodist_cf_gen_OBJECTS = globals.$(OBJEXT)
 cf_gen_OBJECTS = $(am_cf_gen_OBJECTS) $(nodist_cf_gen_OBJECTS)
@@ -337,10 +333,6 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 nodist_squid_OBJECTS = repl_modules.$(OBJEXT) globals.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 squid_OBJECTS = $(am_squid_OBJECTS) $(nodist_squid_OBJECTS)
-am_squidclient_OBJECTS = client.$(OBJEXT)
-squidclient_OBJECTS = $(am_squidclient_OBJECTS)
-squidclient_LDADD = $(LDADD)
-squidclient_DEPENDENCIES =
 am__objects_25 = ../test-suite/test_tools.$(OBJEXT) globals.$(OBJEXT)
 am_tests_testACLMaxUserIP_OBJECTS = acl.$(OBJEXT) \
 	ACLChecklist.$(OBJEXT) ACLMaxUserIP.$(OBJEXT) \
@@ -932,12 +924,11 @@ CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 SOURCES = $(ICAP_libicap_a_SOURCES) $(libAIO_a_SOURCES) \
 	$(libBlocking_a_SOURCES) $(libDiskDaemon_a_SOURCES) \
 	$(libDiskThreads_a_SOURCES) $(DiskIO_DiskDaemon_diskd_SOURCES) \
-	$(cachemgr__CGIEXT__SOURCES) $(cf_gen_SOURCES) \
-	$(nodist_cf_gen_SOURCES) $(dnsserver_SOURCES) \
-	$(pinger_SOURCES) $(nodist_pinger_SOURCES) \
-	$(recv_announce_SOURCES) $(squid_SOURCES) \
-	$(EXTRA_squid_SOURCES) $(nodist_squid_SOURCES) \
-	$(squidclient_SOURCES) $(tests_testACLMaxUserIP_SOURCES) \
+	$(cf_gen_SOURCES) $(nodist_cf_gen_SOURCES) \
+	$(dnsserver_SOURCES) $(pinger_SOURCES) \
+	$(nodist_pinger_SOURCES) $(recv_announce_SOURCES) \
+	$(squid_SOURCES) $(EXTRA_squid_SOURCES) \
+	$(nodist_squid_SOURCES) $(tests_testACLMaxUserIP_SOURCES) \
 	$(tests_testAuth_SOURCES) $(tests_testBoilerplate_SOURCES) \
 	$(tests_testCoss_SOURCES) $(tests_testHeaders_SOURCES) \
 	$(tests_testHttpRequest_SOURCES) \
@@ -950,12 +941,10 @@ SOURCES = $(ICAP_libicap_a_SOURCES) $(libAIO_a_SOURCES) \
 DIST_SOURCES = $(ICAP_libicap_a_SOURCES) $(libAIO_a_SOURCES) \
 	$(libBlocking_a_SOURCES) $(libDiskDaemon_a_SOURCES) \
 	$(libDiskThreads_a_SOURCES) $(DiskIO_DiskDaemon_diskd_SOURCES) \
-	$(cachemgr__CGIEXT__SOURCES) $(cf_gen_SOURCES) \
-	$(dnsserver_SOURCES) $(pinger_SOURCES) \
+	$(cf_gen_SOURCES) $(dnsserver_SOURCES) $(pinger_SOURCES) \
 	$(recv_announce_SOURCES) $(am__squid_SOURCES_DIST) \
-	$(EXTRA_squid_SOURCES) $(squidclient_SOURCES) \
-	$(tests_testACLMaxUserIP_SOURCES) $(tests_testAuth_SOURCES) \
-	$(tests_testBoilerplate_SOURCES) \
+	$(EXTRA_squid_SOURCES) $(tests_testACLMaxUserIP_SOURCES) \
+	$(tests_testAuth_SOURCES) $(tests_testBoilerplate_SOURCES) \
 	$(am__tests_testCoss_SOURCES_DIST) \
 	$(tests_testHeaders_SOURCES) \
 	$(am__tests_testHttpRequest_SOURCES_DIST) \
@@ -1289,9 +1278,6 @@ INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include \
 cf_gen_SOURCES = cf_gen.cc defines.h debug.cc time.cc
 nodist_cf_gen_SOURCES = globals.cc
 nodist_cf_gen_HEADER = cf_gen_defines.h
-squidclient_SOURCES = client.cc
-cachemgr__CGIEXT__SOURCES = cachemgr.cc
-cachemgr__CGIEXT__CFLAGS = -DDEFAULT_CACHEMGR_CONFIG=\"$(DEFAULT_CACHEMGR_CONFIG)\" $(AM_CFLAGS)
 all_FSMODULES = \
 	fs/aufs/StoreFSaufs.cc \
 	fs/coss/StoreFScoss.cc \
@@ -1934,7 +1920,6 @@ EXTRA_DIST = \
 	mk-string-arrays.awk \
 	repl_modules.sh \
 	mib.txt \
-	cachemgr.conf \
 	mime.conf.default
 
 libAIO_a_SOURCES = \
@@ -1976,7 +1961,6 @@ DEFAULT_HTTP_PORT = @CACHE_HTTP_PORT@
 DEFAULT_ICP_PORT = @CACHE_ICP_PORT@
 DEFAULT_PREFIX = $(prefix)
 DEFAULT_CONFIG_FILE = $(sysconfdir)/squid.conf
-DEFAULT_CACHEMGR_CONFIG = $(sysconfdir)/cachemgr.conf
 DEFAULT_MIME_TABLE = $(sysconfdir)/mime.conf
 DEFAULT_DNSSERVER = $(libexecdir)/`echo dnsserver | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_LOG_PREFIX = $(localstatedir)/logs
@@ -2865,9 +2849,6 @@ DiskIO/DiskDaemon/diskd.$(OBJEXT): DiskIO/DiskDaemon/$(am__dirstamp) \
 DiskIO/DiskDaemon/diskd$(EXEEXT): $(DiskIO_DiskDaemon_diskd_OBJECTS) $(DiskIO_DiskDaemon_diskd_DEPENDENCIES) DiskIO/DiskDaemon/$(am__dirstamp)
 	@rm -f DiskIO/DiskDaemon/diskd$(EXEEXT)
 	$(CXXLINK) $(DiskIO_DiskDaemon_diskd_LDFLAGS) $(DiskIO_DiskDaemon_diskd_OBJECTS) $(DiskIO_DiskDaemon_diskd_LDADD) $(LIBS)
-cachemgr$(CGIEXT)$(EXEEXT): $(cachemgr__CGIEXT__OBJECTS) $(cachemgr__CGIEXT__DEPENDENCIES) 
-	@rm -f cachemgr$(CGIEXT)$(EXEEXT)
-	$(CXXLINK) $(cachemgr__CGIEXT__LDFLAGS) $(cachemgr__CGIEXT__OBJECTS) $(cachemgr__CGIEXT__LDADD) $(LIBS)
 cf_gen$(EXEEXT): $(cf_gen_OBJECTS) $(cf_gen_DEPENDENCIES) 
 	@rm -f cf_gen$(EXEEXT)
 	$(CXXLINK) $(cf_gen_LDFLAGS) $(cf_gen_OBJECTS) $(cf_gen_LDADD) $(LIBS)
@@ -2979,9 +2960,6 @@ auth/negotiate/negotiateScheme.$(OBJEXT):  \
 squid$(EXEEXT): $(squid_OBJECTS) $(squid_DEPENDENCIES) 
 	@rm -f squid$(EXEEXT)
 	$(CXXLINK) $(squid_LDFLAGS) $(squid_OBJECTS) $(squid_LDADD) $(LIBS)
-squidclient$(EXEEXT): $(squidclient_OBJECTS) $(squidclient_DEPENDENCIES) 
-	@rm -f squidclient$(EXEEXT)
-	$(CXXLINK) $(squidclient_LDFLAGS) $(squidclient_OBJECTS) $(squidclient_LDADD) $(LIBS)
 tests/$(am__dirstamp):
 	@$(mkdir_p) tests
 	@: > tests/$(am__dirstamp)
@@ -3344,11 +3322,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/authenticate.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cache_cf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cache_manager.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cachemgr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/carp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cbdata.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cf_gen.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/client.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clientStream.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/client_db.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/client_side.Po@am__quote@
@@ -4112,12 +4088,6 @@ install-data-local: install-sysconfDATA install-dataDATA
 	else \
 	        echo "$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE)"; \
 	        $(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE); \
-	fi
-	@if test -f $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG) ; then \
-	        echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG)" ; \
-	else \
-	        echo "$(INSTALL_DATA) $(srcdir)/cachemgr.conf $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG)"; \
-	        $(INSTALL_DATA) $(srcdir)/cachemgr.conf $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG); \
 	fi
 	$(mkinstalldirs) $(DESTDIR)$(DEFAULT_LOG_PREFIX)
 
