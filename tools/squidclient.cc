@@ -1,6 +1,6 @@
 
 /*
- * $Id: client.cc,v 1.109 2005/05/26 09:44:30 hno Exp $
+ * $Id: squidclient.cc,v 1.1 2006/05/11 01:36:57 hno Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -33,11 +33,27 @@
  *
  */
 
-#include "squid.h"
+#include "config.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <string.h>
+#include <unistd.h>
+#include <netdb.h>
+#include <signal.h>
+#include <errno.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+#include "util.h"
 
 #ifndef BUFSIZ
 #define BUFSIZ 8192
 #endif
+
+typedef void SIGHDLR(int sig);
 
 /* Local functions */
 static int client_comm_bind(int, const char *);
