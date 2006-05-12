@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.724 2006/05/10 20:34:18 hno Exp $
+ * $Id: client_side.cc,v 1.725 2006/05/11 21:28:29 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2613,8 +2613,12 @@ clientAbortBody(void *data, size_t remaining)
         connNoteUseOfBuffer(conn, to_discard);
     }
 
-    if (conn->closing())
-        comm_close(conn->fd);
+    /*
+     * This assertion exists to make sure that there is never a
+     * case where this function should be responsible for closing
+     * the file descriptor.
+     */
+    assert(!conn->isOpen());
 }
 
 /* general lifetime handler for HTTP requests */
