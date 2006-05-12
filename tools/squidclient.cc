@@ -1,6 +1,6 @@
 
 /*
- * $Id: squidclient.cc,v 1.1 2006/05/11 01:36:57 hno Exp $
+ * $Id: squidclient.cc,v 1.2 2006/05/11 21:41:50 wessels Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -46,6 +46,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <netinet/in.h>
 
 #include "util.h"
 
