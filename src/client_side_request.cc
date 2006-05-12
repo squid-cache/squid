@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.65 2006/05/08 23:38:33 robertc Exp $
+ * $Id: client_side_request.cc,v 1.66 2006/05/11 23:53:13 wessels Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -119,6 +119,8 @@ ClientRequestContext::~ClientRequestContext()
             delete acl_checklist;
         }
     }
+
+    debugs(85,3, HERE << this << " ClientHttpRequest destructed");
 }
 
 ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) : http(anHttp), acl_checklist (NULL), redirect_state (REDIRECT_NONE)
@@ -128,6 +130,7 @@ ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) : http(anH
     redirect_done = false;
     no_cache_done = false;
     interpreted_req_hdrs = false;
+    debugs(85,3, HERE << this << " ClientHttpRequest constructed");
 }
 
 CBDATA_CLASS_INIT(ClientHttpRequest);
@@ -504,6 +507,7 @@ icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data)
 void
 ClientRequestContext::icapAclCheckDone(ICAPServiceRep::Pointer service)
 {
+    debugs(93,3,HERE << this << " icapAclCheckDone called");
     /*
      * No matching ICAP service in the config file
      */
@@ -517,6 +521,8 @@ ClientRequestContext::icapAclCheckDone(ICAPServiceRep::Pointer service)
      * Setup ICAP state and such.  If successful, just return.
      * We'll get back to doCallouts() after REQMOD is done.
      */
+    assert(http);
+
     if (0 == http->doIcap(service))
         return;
 
@@ -1111,7 +1117,7 @@ ClientHttpRequest::doCallouts()
 int
 ClientHttpRequest::doIcap(ICAPServiceRep::Pointer service)
 {
-    debug(85,3)("ClientHttpRequest::doIcap() called\n");
+    debugs(85,3, HERE << this << " ClientHttpRequest::doIcap() called");
     assert(NULL == icap);
     icap = new ICAPClientReqmodPrecache(service);
     (void) cbdataReference(icap);

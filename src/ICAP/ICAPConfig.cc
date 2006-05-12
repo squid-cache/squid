@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.cc,v 1.10 2006/04/28 05:05:47 wessels Exp $
+ * $Id: ICAPConfig.cc,v 1.11 2006/05/11 23:53:13 wessels Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -121,7 +121,7 @@ ICAPAccessCheck::ICAPAccessCheck(ICAP::Method aMethod,
 
     callback = aCallback;
 
-    callback_data = aCallbackData;
+    callback_data = cbdataReference(aCallbackData);
 
     candidateClasses.clean();
 
@@ -270,6 +270,13 @@ ICAPAccessCheck::do_callback()
 
     matchedClass.clean();
 
+    void *validated_cbdata;
+
+    if (!cbdataReferenceValidDone(callback_data, &validated_cbdata)) {
+        debugs(93,3,HERE << "do_callback: callback_data became invalid, skipping");
+        return;
+    }
+
     Vector<ICAPServiceRep::Pointer>::iterator i;
 
     for (i = theClass->services.begin(); i != theClass->services.end(); ++i) {
@@ -281,7 +288,7 @@ ICAPAccessCheck::do_callback()
         if (point != theService->point)
             continue;
 
-        callback(*i, callback_data);
+        callback(*i, validated_cbdata);
 
         return;
     }
