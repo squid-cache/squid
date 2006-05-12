@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.1 2006/05/11 01:36:57 hno Exp $
+ * $Id: cachemgr.cc,v 1.2 2006/05/12 16:05:10 hno Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -626,6 +626,7 @@ read_reply(int s, cachemgr_request * req)
     while ((reply=recv(s, buf , sizeof(buf), 0)) > 0)
         fwrite(buf, 1, reply, fp);
 
+    close(s);
     rewind(fp);
 
 #endif
@@ -745,7 +746,7 @@ read_reply(int s, cachemgr_request * req)
         }
     }
 
-    close(s);
+    fclose(fp);
     return 0;
 }
 
