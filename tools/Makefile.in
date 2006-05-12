@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.1 2006/05/11 01:42:22 hno Exp $
+#  $Id: Makefile.in,v 1.2 2006/05/11 19:28:58 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -808,7 +808,7 @@ uninstall-info: uninstall-info-recursive
 
 $(OBJS): $(top_srcdir)/include/version.h ../include/autoconf.h
 
-install-data-local: install-sysconfDATA install-dataDATA
+install-data-local:
 	@if test -f $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG) ; then \
 	        echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG)" ; \
 	else \
