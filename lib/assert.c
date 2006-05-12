@@ -1,6 +1,6 @@
 
 /*
- * $Id: assert.c,v 1.1 2006/05/10 22:03:07 hno Exp $
+ * $Id: assert.c,v 1.2 2006/05/11 19:59:07 hno Exp $
  *
  * AUTHOR: Henrik Nordstrom
  *
@@ -31,6 +31,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+
+#include "config.h"
 
 #include <stdio.h>
 #include <stdlib.h>
