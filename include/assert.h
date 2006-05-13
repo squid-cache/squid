@@ -1,6 +1,6 @@
 
 /*
- * $Id: assert.h,v 1.2 2006/05/10 22:03:07 hno Exp $
+ * $Id: assert.h,v 1.3 2006/05/12 21:52:24 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -37,9 +37,7 @@
 
 #include "config.h"
 
-#if PURIFY
-#define assert(EX) ((void)0)
-#elif defined(NODEBUG)
+#if defined(NODEBUG)
 #define assert(EX) ((void)0)
 #elif STDC_HEADERS
 #define assert(EX)  ((EX)?((void)0):xassert( # EX , __FILE__, __LINE__))
