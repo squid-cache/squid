@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufsdump.cc,v 1.6 2006/05/03 14:04:44 robertc Exp $
+ * $Id: ufsdump.cc,v 1.7 2006/05/12 19:14:31 serassio Exp $
  *
  * DEBUG: section 0     UFS Store Dump
  * AUTHOR: Robert Collins
@@ -44,9 +44,24 @@
 #include <iostream>
 #include <cassert>
 
+#if USE_WIN32_SERVICE
+#include "squid_windows.h"
+#endif
+
 /* stub functions for parts of squid not factored to be dynamic yet */
 void shut_down(int)
 {}
+
+#if USE_WIN32_SERVICE
+void
+rotate_logs(int)
+{}
+
+void
+reconfigure(int)
+{}
+
+#endif
 
 #if WHENITMINIMAL
 void
