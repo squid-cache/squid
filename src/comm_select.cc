@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.74 2004/12/20 16:30:35 robertc Exp $
+ * $Id: comm_select.cc,v 1.75 2006/05/14 16:42:43 serassio Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -33,6 +33,7 @@
  */
 
 #include "squid.h"
+#include "SquidTime.h"
 
 #ifdef USE_SELECT
 #include "Store.h"
