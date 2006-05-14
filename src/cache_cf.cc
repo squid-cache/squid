@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.495 2006/05/08 23:38:33 robertc Exp $
+ * $Id: cache_cf.cc,v 1.496 2006/05/14 10:19:40 serassio Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -210,7 +210,8 @@ parseConfigFile(const char *file_name)
 {
     FILE *fp = NULL;
     char *token = NULL;
-    char *tmp_line;
+    char *tmp_line = NULL;
+    int tmp_line_len = 0;
     int err_count = 0;
     int is_pipe = 0;
     configFreeMemory();
@@ -289,9 +290,21 @@ parseConfigFile(const char *file_name)
         if (config_input_line[0] == '\0')
             continue;
 
-        debug(3, 5) ("Processing: '%s'\n", config_input_line);
+        size_t config_input_line_len = strlen(config_input_line);
 
-        tmp_line = xstrdup(config_input_line);
+        tmp_line = (char*)xrealloc(tmp_line, tmp_line_len + config_input_line_len + 1);
+
+        strcpy(tmp_line + tmp_line_len, config_input_line);
+
+        tmp_line_len += config_input_line_len;
+
+        if (tmp_line[tmp_line_len-1] == '\\') {
+            debug(3, 5) ("parseConfigFile: tmp_line='%s'\n", tmp_line);
+            tmp_line[--tmp_line_len] = '\0';
+            continue;
+        }
+
+        debug(3, 5) ("Processing: '%s'\n", tmp_line);
 
         if (!parse_line(tmp_line)) {
             debug(3, 0) ("parseConfigFile: '%s' line %d unrecognized: '%s'\n",
@@ -302,6 +315,8 @@ parseConfigFile(const char *file_name)
         }
 
         safe_free(tmp_line);
+        tmp_line_len = 0;
+
     }
 
     if (is_pipe) {
