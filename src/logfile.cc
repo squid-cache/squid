@@ -1,5 +1,5 @@
 /*
- * $Id: logfile.cc,v 1.17 2005/03/06 21:48:55 serassio Exp $
+ * $Id: logfile.cc,v 1.18 2006/05/14 11:52:52 serassio Exp $
  *
  * DEBUG: section 50    Log file handling
  * AUTHOR: Duane Wessels
@@ -38,6 +38,43 @@
 
 static void logfileWriteWrapper(Logfile * lf, const void *buf, size_t len);
 
+struct syslog_symbol_t
+{
+    const char* name;
+    int value;
+};
+
+static int syslog_ntoa (const char* s)
+{
+#define syslog_symbol(a) #a, a
+    static syslog_symbol_t _symbols[] = {
+                                            { syslog_symbol(LOG_AUTHPRIV) },
+                                            { syslog_symbol(LOG_DAEMON) },
+                                            { syslog_symbol(LOG_LOCAL0) },
+                                            { syslog_symbol(LOG_LOCAL1) },
+                                            { syslog_symbol(LOG_LOCAL2) },
+                                            { syslog_symbol(LOG_LOCAL3) },
+                                            { syslog_symbol(LOG_LOCAL4) },
+                                            { syslog_symbol(LOG_LOCAL5) },
+                                            { syslog_symbol(LOG_LOCAL6) },
+                                            { syslog_symbol(LOG_LOCAL7) },
+                                            { syslog_symbol(LOG_USER) },
+                                            { syslog_symbol(LOG_ERR) },
+                                            { syslog_symbol(LOG_WARNING) },
+                                            { syslog_symbol(LOG_NOTICE) },
+                                            { syslog_symbol(LOG_INFO) },
+                                            { syslog_symbol(LOG_DEBUG) },
+                                            { NULL, 0 }
+                                        };
+
+    for (syslog_symbol_t* p = _symbols; p->name != NULL; ++p)
+        if (!strcmp(s, p->name) || !strcmp(s, p->name+4))
+            return p->value;
+
+    return 0;
+}
+
+#define PRIORITY_MASK (LOG_ERR | LOG_WARNING | LOG_NOTICE | LOG_INFO | LOG_DEBUG)
 Logfile *
 logfileOpen(const char *path, size_t bufsz, int fatal_flag)
 {
@@ -48,10 +85,26 @@ logfileOpen(const char *path, size_t bufsz, int fatal_flag)
 
 #if HAVE_SYSLOG
 
-    if (strcmp(path, "syslog") == 0) {
+    if (strncmp(path, "syslog", 6) == 0) {
         lf->flags.syslog = 1;
         lf->syslog_priority = LOG_INFO;
         lf->fd = -1;
+
+        if (path[6] != '\0') {
+            path += 7;
+            char* delim = strchr(path, '|');
+
+            if (delim != NULL)
+                *delim = '\0';
+
+            lf->syslog_priority = syslog_ntoa(path);
+
+            if (delim != NULL)
+                lf->syslog_priority |= syslog_ntoa(delim+1);
+
+            if (0 == lf->syslog_priority & PRIORITY_MASK)
+                lf->syslog_priority |= LOG_INFO;
+        }
     } else
 #endif
     {

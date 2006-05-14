@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.412 2006/04/02 09:21:21 serassio Exp $
+# $Id: cf.data.pre,v 1.413 2006/05/14 11:52:51 serassio Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -1259,7 +1259,14 @@ DOC_START
 	To disable logging of a request use the filepath "none", in which case
 	a logformat name should not be specified.
 
-	To log the request via syslog specify a filepath of "syslog"
+	To log the request via syslog specify a filepath of "syslog":
+
+	access_log syslog[:facility|priority] [format [acl1 [acl2 ....]]]
+	where facility could be any of:
+	LOG_AUTHPRIV, LOG_DAEMON, LOG_LOCAL0 .. LOG_LOCAL7 or LOG_USER.
+
+	And priority could be any of:
+	LOG_ERR, LOG_WARNING, LOG_NOTICE, LOG_INFO, LOG_DEBUG.
 DOC_END
 
 
