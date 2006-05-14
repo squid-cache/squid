@@ -1,5 +1,5 @@
 /*
- * $Id: logfile.cc,v 1.18 2006/05/14 11:52:52 serassio Exp $
+ * $Id: logfile.cc,v 1.19 2006/05/14 16:52:02 serassio Exp $
  *
  * DEBUG: section 50    Log file handling
  * AUTHOR: Duane Wessels
@@ -38,6 +38,8 @@
 
 static void logfileWriteWrapper(Logfile * lf, const void *buf, size_t len);
 
+#if HAVE_SYSLOG
+
 struct syslog_symbol_t
 {
     const char* name;
@@ -75,6 +77,7 @@ static int syslog_ntoa (const char* s)
 }
 
 #define PRIORITY_MASK (LOG_ERR | LOG_WARNING | LOG_NOTICE | LOG_INFO | LOG_DEBUG)
+#endif
 Logfile *
 logfileOpen(const char *path, size_t bufsz, int fatal_flag)
 {
