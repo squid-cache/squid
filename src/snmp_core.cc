@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.73 2005/12/26 11:35:22 serassio Exp $
+ * $Id: snmp_core.cc,v 1.74 2006/05/14 09:22:35 serassio Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -127,7 +127,7 @@ snmpInit(void)
                                                                                                                                 snmpAddNode(snmpCreateOid(LEN_SYS, SQ_SYS, SYS_UPTIME),
                                                                                                                                             LEN_SYS, snmp_sysFn, static_Inst, 0)),
                                                                                                                     snmpAddNode(snmpCreateOid(LEN_SQ_CONF, SQ_CONF),
-                                                                                                                                LEN_SQ_CONF, NULL, NULL, 5,
+                                                                                                                                LEN_SQ_CONF, NULL, NULL, 6,
                                                                                                                                 snmpAddNode(snmpCreateOid(LEN_SYS, SQ_CONF, CONF_ADMIN),
                                                                                                                                             LEN_SYS, snmp_confFn, static_Inst, 0),
                                                                                                                                 snmpAddNode(snmpCreateOid(LEN_SYS, SQ_CONF, CONF_VERSION),
@@ -145,7 +145,9 @@ snmpInit(void)
                                                                                                                                             snmpAddNode(snmpCreateOid(LEN_CONF_ST, SQ_CONF, CONF_STORAGE, CONF_ST_SWHIWM),
                                                                                                                                                         LEN_CONF_ST, snmp_confFn, static_Inst, 0),
                                                                                                                                             snmpAddNode(snmpCreateOid(LEN_CONF_ST, SQ_CONF, CONF_STORAGE, CONF_ST_SWLOWM),
-                                                                                                                                                        LEN_CONF_ST, snmp_confFn, static_Inst, 0))),
+                                                                                                                                                        LEN_CONF_ST, snmp_confFn, static_Inst, 0)),
+                                                                                                                                snmpAddNode(snmpCreateOid(LEN_SYS, SQ_CONF, CONF_UNIQNAME),
+                                                                                                                                            LEN_SYS, snmp_confFn, static_Inst, 0)),
                                                                                                                     snmpAddNode(snmpCreateOid(LEN_SQ_PRF, SQ_PRF),
                                                                                                                                 LEN_SQ_PRF, NULL, NULL, 2,
                                                                                                                                 snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 1, SQ_PRF, PERF_SYS),

@@ -2,7 +2,7 @@
 
 SQUID-MIB DEFINITIONS ::= BEGIN
 --
--- $Id: mib.txt,v 1.28 2003/05/02 09:57:54 hno Exp $
+-- $Id: mib.txt,v 1.29 2006/05/14 09:22:35 serassio Exp $
 --
 
 IMPORTS
@@ -151,6 +151,15 @@ squid MODULE-IDENTITY
         ::= { cacheStorageConfig 4 }
 
 -- end of  cacheStorageConfig group
+
+	cacheUniqName OBJECT-TYPE
+		SYNTAX DisplayString
+		MAX-ACCESS read-only
+                STATUS current
+                DESCRIPTION
+                        " Cache unique host name "
+	::= { cacheConfig 6 }
+
 
 --
 -- performance group { squid 3 }
