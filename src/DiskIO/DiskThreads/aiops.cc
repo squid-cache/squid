@@ -1,5 +1,5 @@
 /*
- * $Id: aiops.cc,v 1.7 2006/05/08 23:38:34 robertc Exp $
+ * $Id: aiops.cc,v 1.8 2006/05/15 13:39:57 hno Exp $
  *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
@@ -290,6 +290,9 @@ squidaio_init(void)
     pthread_attr_setschedparam(&globattr, &globsched);
 
 #endif
+
+    /* Give each thread a smaller 256KB stack, should be more than sufficient */
+    pthread_attr_setstacksize(&globattr, 256 * 1024);
 
     /* Initialize request queue */
     if (pthread_mutex_init(&(request_queue.mutex), NULL))
