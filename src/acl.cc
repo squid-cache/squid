@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.319 2006/04/25 12:00:29 robertc Exp $
+ * $Id: acl.cc,v 1.320 2006/05/16 05:49:44 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -300,11 +300,11 @@ ACLList::matches (ACLChecklist *checklist) const
 
     if (_acl->checklistMatches(checklist) != op) {
         debug(28,4)("ACLList::matches: result is false\n");
-        return false;
+        return checklist->lastACLResult(false);
     }
 
     debug(28,4)("ACLList::matches: result is true\n");
-    return true;
+    return checklist->lastACLResult(true);
 }
 
 

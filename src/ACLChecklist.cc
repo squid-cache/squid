@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.32 2006/04/02 11:58:38 serassio Exp $
+ * $Id: ACLChecklist.cc,v 1.33 2006/05/16 05:49:44 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -266,7 +266,20 @@ ACLChecklist::matchAclList(const acl_list * head, bool const fast)
 
         if (!nodeMatched || state_ != NullState::Instance()) {
             debug(28, 3) ("aclmatchAclList: %p returning false (AND list entry failed to match)\n", this);
+            bool async = state_ != NullState::Instance();
+
             checkForAsync();
+
+            bool async_in_progress = asyncInProgress();
+            debug(28,0)("aclmatchAclList: async=%d nodeMatched=%d async_in_progress=%d lastACLResult() = %d\n",
+                        async ? 1 : 0, nodeMatched ? 1 : 0, async_in_progress ? 1 : 0,
+                        lastACLResult() ? 1 : 0);
+
+            if (async && nodeMatched && !asyncInProgress() && lastACLResult()) {
+                // async acl, but using cached response, and it was a match
+                node = node->next;
+                continue;
+            }
 
             if (deleteWhenDone && !asyncInProgress())
                 delete this;
@@ -318,7 +331,8 @@ ACLChecklist::ACLChecklist() : accessList (NULL), my_port (0), request (NULL),
         allow_(ACCESS_DENIED),
         state_(NullState::Instance()),
         destinationDomainChecked_(false),
-        sourceDomainChecked_(false)
+        sourceDomainChecked_(false),
+        lastACLResult_(false)
 {
 
     memset (&src_addr, '\0', sizeof (struct IN_ADDR));
