@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.70 2006/05/08 23:38:33 robertc Exp $
+ * $Id: external_acl.cc,v 1.71 2006/05/16 05:49:44 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -659,10 +659,17 @@ aclMatchExternal(external_acl_data *acl, ACLChecklist * ch)
 
         if (!entry || external_acl_grace_expired(acl->def, entry)) {
             debug(82, 2) ("aclMatchExternal: %s(\"%s\") = lookup needed\n", acl->def->name, key);
+            debug(82, 2) ("aclMatchExternal: \"%s\": entry=@%p, age=%ld\n", key, entry,
+                          entry ? squid_curtime - entry->date : 0);
 
             if (acl->def->theHelper->stats.queue_size <= acl->def->theHelper->n_running) {
+                debug(82, 2) ("aclMatchExternal: \"%s\": queueing a call.\n", key);
                 ch->changeState (ExternalACLLookup::Instance());
-                return -1;
+
+                if (entry == NULL) {
+                    debug(82, 2) ("aclMatchExternal: \"%s\": return -1.\n", key);
+                    return -1;
+                }
             } else {
                 if (!entry) {
                     debug(82, 1) ("aclMatchExternal: '%s' queue overload. Request rejected '%s'.\n", acl->def->name, key);
@@ -1124,7 +1131,8 @@ ACLExternal::ExternalAclLookup(ACLChecklist * ch, ACLExternal * me, EAH * callba
         /* Make sure the user is authenticated */
 
         if ((ti = ch->authenticated()) != 1) {
-            debug(82, 1) ("externalAclLookup: %s user authentication failure (%d)\n", acl->def->name, ti);
+            debug(82, 1) ("externalAclLookup: %s user authentication failure (%d, ch=%p)\n",
+                          acl->def->name, ti, ch);
             callback(callback_data, NULL);
             return;
         }
@@ -1133,7 +1141,7 @@ ACLExternal::ExternalAclLookup(ACLChecklist * ch, ACLExternal * me, EAH * callba
     const char *key = makeExternalAclKey(ch, acl);
 
     if (!key) {
-        debug(82, 1) ("externalAclLookup: lookup in '%s', prerequisit failure\n", def->name);
+        debug(82, 1) ("externalAclLookup: lookup in '%s', prerequisit failure (ch=%p)\n", def->name, ch);
         callback(callback_data, NULL);
         return;
     }
@@ -1156,16 +1164,21 @@ ACLExternal::ExternalAclLookup(ACLChecklist * ch, ACLExternal * me, EAH * callba
 
     if (entry && external_acl_grace_expired(def, entry)) {
         if (oldstate) {
+            debug(82, 4) ("externalAclLookup: in grace period, but already pending lookup ('%s', ch=%p)\n",
+                          key, ch);
             callback(callback_data, entry);
             return;
         } else {
-            graceful = 1;
+            graceful = 1; // grace expired, (neg)ttl did not, and we must start a new lookup.
         }
     }
 
+    // The entry is in the cache, grace_ttl did not expired.
     if (!graceful && entry && !external_acl_grace_expired(def, entry)) {
         /* Should not really happen, but why not.. */
         callback(callback_data, entry);
+        debug(82, 4) ("externalAclLookup: no lookup pending for '%s', and grace not expired\n", key);
+        debug(82, 4) ("externalAclLookup: (what tha' hell?)\n");
         return;
     }
 
@@ -1189,7 +1202,7 @@ ACLExternal::ExternalAclLookup(ACLChecklist * ch, ACLExternal * me, EAH * callba
         /* Check for queue overload */
 
         if (def->theHelper->stats.queue_size >= def->theHelper->n_running) {
-            debug(82, 1) ("externalAclLookup: '%s' queue overload\n", def->name);
+            debug(82, 1) ("externalAclLookup: '%s' queue overload (ch=%p)\n", def->name, ch);
             cbdataFree(state);
             callback(callback_data, entry);
             return;
@@ -1200,6 +1213,8 @@ ACLExternal::ExternalAclLookup(ACLChecklist * ch, ACLExternal * me, EAH * callba
 
         buf.Printf("%s\n", key);
 
+        debug(82, 4) ("externalAclLookup: looking up for '%s' in '%s'.\n", key, def->name);
+
         helperSubmit(def->theHelper, buf.buf, externalAclHandleReply, state);
 
         dlinkAdd(state, &state->list, &def->queue);
@@ -1209,9 +1224,22 @@ ACLExternal::ExternalAclLookup(ACLChecklist * ch, ACLExternal * me, EAH * callba
 
     if (graceful) {
         /* No need to wait during grace period */
+        debug(82, 4) ("externalAclLookup: no need to wait for the result of '%s' in '%s' (ch=%p).\n",
+                      key, def->name, ch);
+        debug(82, 4) ("externalAclLookup: using cached entry %p\n", entry);
+
+        if (entry != NULL) {
+            debug(82,4) ("externalAclLookup: entry = { date=%lu, result=%d, user=%s tag=%s log=%s }\n",
+                         entry->date, entry->result, entry->user.buf(), entry->tag.buf(),
+                         entry->log.buf());
+        }
+
         callback(callback_data, entry);
         return;
     }
+
+    debug(82, 4) ("externalAclLookup: will wait for the result of '%s' in '%s' (ch=%p).\n",
+                  key, def->name, ch);
 }
 
 static void
@@ -1283,6 +1311,7 @@ ExternalACLLookup::checkForAsync(ACLChecklist *checklist)const
     /* TODO: optimise this - we probably have a pointer to this
      * around somewhere */
     ACL *acl = ACL::FindByName(AclMatchedName);
+    assert(acl);
     ACLExternal *me = dynamic_cast<ACLExternal *> (acl);
     assert (me);
     checklist->asyncInProgress(true);
