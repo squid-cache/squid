@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.396 2006/05/08 23:38:33 robertc Exp $
+ * $Id: ftp.cc,v 1.397 2006/05/16 16:05:08 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1280,7 +1280,7 @@ FtpStateData::dataRead(int fd, char *buf, size_t len, comm_err_t errflag, int xe
         debug(50, ignoreErrno(xerrno) ? 3 : 1) ("ftpDataRead: read error: %s\n", xstrerr(xerrno));
 
         if (ignoreErrno(xerrno)) {
-            /* XXX what about Config.Timeout.read? */
+            commSetTimeout(fd, Config.Timeout.read, ftpTimeout, this);
             maybeReadData();
         } else {
             if (!flags.http_header_sent && !fwd->ftpPasvFailed() && flags.pasv_supported) {
@@ -1327,7 +1327,7 @@ FtpStateData::processReplyBody()
 
     storeBufferFlush(entry);
 
-    /* XXX what about Config.Timeout.read? */
+    commSetTimeout(data.fd, Config.Timeout.read, ftpTimeout, this);
     maybeReadData();
 }
 
