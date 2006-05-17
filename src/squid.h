@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.252 2006/05/10 21:04:24 hno Exp $
+ * $Id: squid.h,v 1.253 2006/05/16 21:06:06 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -181,6 +181,23 @@
 #undef HAVE_POLL
 #endif /* HAVE_POLL_H */
 #endif /* HAVE_POLL */
+
+/*
+ * Filedescriptor limits in the different select loops
+ */
+#if defined(USE_SELECT)
+/* Limited by design */
+#define SQUID_MAXFD_LIMIT FD_SETSIZE
+#elif defined(USE_POLL)
+/* Limited due to delay pools */
+#define SQUID_MAXFD_LIMIT FD_SETSIZE
+#elif defined(USE_KQUEUE) || defined(USE_EPOLL)
+#define fd_set ERROR_FD_SET_USED
+#else
+#error Unknown select loop model!
+#endif
+
+#
 
 #if defined(HAVE_STDARG_H)
 #include <stdarg.h>
