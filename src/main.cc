@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.420 2006/05/08 23:38:33 robertc Exp $
+ * $Id: main.cc,v 1.421 2006/05/16 21:06:06 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -913,8 +913,12 @@ main(int argc, char **argv)
     Debug::parseOptions("ALL,1");
     debug_log = stderr;
 
-    if (FD_SETSIZE < Squid_MaxFD)
-        Squid_MaxFD = FD_SETSIZE;
+#if defined(SQUID_MAXFD_LIMIT)
+
+    if (SQUID_MAXFD_LIMIT < Squid_MaxFD)
+        Squid_MaxFD = SQUID_MAXFD_LIMIT;
+
+#endif
 
 #ifdef _SQUID_WIN32_
 
