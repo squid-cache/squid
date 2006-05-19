@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.71 2006/05/16 05:49:44 hno Exp $
+ * $Id: external_acl.cc,v 1.72 2006/05/18 20:31:12 wessels Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -660,7 +660,7 @@ aclMatchExternal(external_acl_data *acl, ACLChecklist * ch)
         if (!entry || external_acl_grace_expired(acl->def, entry)) {
             debug(82, 2) ("aclMatchExternal: %s(\"%s\") = lookup needed\n", acl->def->name, key);
             debug(82, 2) ("aclMatchExternal: \"%s\": entry=@%p, age=%ld\n", key, entry,
-                          entry ? squid_curtime - entry->date : 0);
+                          entry ? (long int) squid_curtime - entry->date : 0);
 
             if (acl->def->theHelper->stats.queue_size <= acl->def->theHelper->n_running) {
                 debug(82, 2) ("aclMatchExternal: \"%s\": queueing a call.\n", key);
@@ -1230,7 +1230,7 @@ ACLExternal::ExternalAclLookup(ACLChecklist * ch, ACLExternal * me, EAH * callba
 
         if (entry != NULL) {
             debug(82,4) ("externalAclLookup: entry = { date=%lu, result=%d, user=%s tag=%s log=%s }\n",
-                         entry->date, entry->result, entry->user.buf(), entry->tag.buf(),
+                         (long unsigned int) entry->date, entry->result, entry->user.buf(), entry->tag.buf(),
                          entry->log.buf());
         }
 
