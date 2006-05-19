@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.33 2006/05/16 05:49:44 hno Exp $
+ * $Id: ACLChecklist.cc,v 1.34 2006/05/18 21:51:10 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -271,7 +271,7 @@ ACLChecklist::matchAclList(const acl_list * head, bool const fast)
             checkForAsync();
 
             bool async_in_progress = asyncInProgress();
-            debug(28,0)("aclmatchAclList: async=%d nodeMatched=%d async_in_progress=%d lastACLResult() = %d\n",
+            debug(28,3)("aclmatchAclList: async=%d nodeMatched=%d async_in_progress=%d lastACLResult() = %d\n",
                         async ? 1 : 0, nodeMatched ? 1 : 0, async_in_progress ? 1 : 0,
                         lastACLResult() ? 1 : 0);
 
