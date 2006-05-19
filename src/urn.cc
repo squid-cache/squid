@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.99 2006/05/08 23:38:33 robertc Exp $
+ * $Id: urn.cc,v 1.100 2006/05/19 17:05:18 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -462,8 +462,8 @@ urnHandleReply(void *data, StoreIOBuffer result)
     storeUnregister(urnState->sc, urlres_e, urnState);
 
 error:
-    storeUnlockObject(urlres_e);
-    storeUnlockObject(urnState->entry);
+    urlres_e->unlock();
+    urnState->entry->unlock();
     HTTPMSGUNLOCK(urnState->request);
     HTTPMSGUNLOCK(urnState->urlres_r);
     delete urnState;

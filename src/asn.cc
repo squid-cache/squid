@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.105 2006/05/03 14:04:44 robertc Exp $
+ * $Id: asn.cc,v 1.106 2006/05/19 17:05:18 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -375,7 +375,7 @@ asStateFree(void *data)
     ASState *asState = (ASState *)data;
     debug(53, 3) ("asnStateFree: %s\n", storeUrl(asState->entry));
     storeUnregister(asState->sc, asState->entry, asState);
-    storeUnlockObject(asState->entry);
+    asState->entry->unlock();
     HTTPMSGUNLOCK(asState->request);
     cbdataFree(asState);
 }

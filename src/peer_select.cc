@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.138 2006/02/17 18:10:59 wessels Exp $
+ * $Id: peer_select.cc,v 1.139 2006/05/19 17:05:18 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -114,7 +114,7 @@ peerSelectStateFree(ps_state * psstate)
 
     if (psstate->entry) {
         assert(psstate->entry->ping_status != PING_WAITING);
-        storeUnlockObject(psstate->entry);
+        psstate->entry->unlock();
         psstate->entry = NULL;
     }
 

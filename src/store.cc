@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.589 2006/05/08 23:38:33 robertc Exp $
+ * $Id: store.cc,v 1.590 2006/05/19 17:05:18 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -512,20 +512,13 @@ storeReleaseRequest(StoreEntry * e)
     storeSetPrivateKey(e);
 }
 
-/* DEPRECATED: please use e->unlock() */
-int
-storeUnlockObject(StoreEntry * e)
-{
-    return e->unlock();
-}
-
 /* unlock object, return -1 if object get released after unlock
  * otherwise lock_count */
 int
 StoreEntry::unlock()
 {
     lock_count--;
-    debug(20, 3) ("storeUnlockObject: key '%s' count=%d\n",
+    debug(20, 3) ("StoreEntry::unlock: key '%s' count=%d\n",
                   getMD5Text(), lock_count);
 
     if (lock_count)
@@ -764,7 +757,7 @@ storeSetPublicKey(StoreEntry * e)
             storeBufferFlush(pe);
             storeTimestampsSet(pe);
             pe->complete();
-            storeUnlockObject(pe);
+            pe->unlock();
         }
 
         newkey = storeKeyPublicByRequest(mem->request);
@@ -1186,7 +1179,7 @@ storeAbort(StoreEntry * e)
     /* Close any swapout file */
     storeSwapOutFileClose(e);
 
-    storeUnlockObject(e);       /* unlock */
+    e->unlock();       /* unlock */
 }
 
 /* Clear Memory storage to accommodate the given object len */
@@ -1309,7 +1302,7 @@ storeRelease(StoreEntry * e)
         if (e->swap_filen > -1) {
             /*
              * Fake a call to storeLockObject().  When rebuilding is done,
-             * we'll just call storeUnlockObject() on these.
+             * we'll just call e->unlock() on these.
              */
             e->lock_count++;
             e->setReleaseFlag();
@@ -1367,7 +1360,7 @@ storeLateRelease(void *unused)
             return;
         }
 
-        storeUnlockObject(e);
+        e->unlock();
         n++;
     }
 

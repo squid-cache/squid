@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.142 2006/05/08 23:38:33 robertc Exp $
+ * $Id: forward.cc,v 1.143 2006/05/19 17:05:18 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -117,7 +117,7 @@ FwdState::~FwdState()
     if (err)
         errorStateFree(err);
 
-    storeUnlockObject(entry);
+    entry->unlock();
 
     entry = NULL;
 

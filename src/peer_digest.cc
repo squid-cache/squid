@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.113 2006/05/08 23:38:33 robertc Exp $
+ * $Id: peer_digest.cc,v 1.114 2006/05/19 17:05:18 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -555,7 +555,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
             /* get rid of 304 reply */
             storeUnregister(fetch->sc, fetch->entry, fetch);
 
-            storeUnlockObject(fetch->entry);
+            fetch->entry->unlock();
 
             fetch->entry = fetch->old_entry;
 
@@ -571,7 +571,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
                 debug(72, 3) ("peerDigestFetchReply: got new digest, releasing old one\n");
                 storeUnregister(fetch->old_sc, fetch->old_entry, fetch);
                 storeReleaseRequest(fetch->old_entry);
-                storeUnlockObject(fetch->old_entry);
+                fetch->old_entry->unlock();
                 fetch->old_entry = NULL;
             }
         } else {
@@ -908,7 +908,7 @@ peerDigestFetchFinish(DigestFetchState * fetch, int err)
         debug(72, 2) ("peerDigestFetchFinish: deleting old entry\n");
         storeUnregister(fetch->old_sc, fetch->old_entry, fetch);
         storeReleaseRequest(fetch->old_entry);
-        storeUnlockObject(fetch->old_entry);
+        fetch->old_entry->unlock();
         fetch->old_entry = NULL;
     }
 
@@ -924,7 +924,7 @@ peerDigestFetchFinish(DigestFetchState * fetch, int err)
     /* unlock everything */
     storeUnregister(fetch->sc, fetch->entry, fetch);
 
-    storeUnlockObject(fetch->entry);
+    fetch->entry->unlock();
 
     HTTPMSGUNLOCK(fetch->request);
 

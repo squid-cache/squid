@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.105 2006/05/08 23:38:33 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.106 2006/05/19 17:05:18 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -136,7 +136,7 @@ clientReplyContext::removeStoreReference(store_client ** scp,
         *ep = NULL;
         storeUnregister(sc, e, this);
         *scp = NULL;
-        storeUnlockObject(e);
+        e->unlock();
     }
 }
 

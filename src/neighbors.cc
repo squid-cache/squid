@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.335 2006/05/08 23:38:33 robertc Exp $
+ * $Id: neighbors.cc,v 1.336 2006/05/19 17:05:18 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -1530,7 +1530,7 @@ peerCountMcastPeersDone(void *data)
     EBIT_SET(fake->flags, ENTRY_ABORTED);
     HTTPMSGUNLOCK(fake->mem_obj->request);
     storeReleaseRequest(fake);
-    storeUnlockObject(fake);
+    fake->unlock();
     HTTPMSGUNLOCK(psstate->request);
     cbdataFree(psstate);
 }
