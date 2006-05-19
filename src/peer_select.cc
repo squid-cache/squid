@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.139 2006/05/19 17:05:18 wessels Exp $
+ * $Id: peer_select.cc,v 1.140 2006/05/19 17:19:10 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -177,7 +177,9 @@ peerSelect(HttpRequest * request,
 #endif
 
     if (psstate->entry)
-        storeLockObject(psstate->entry);
+        psstate->entry->lock()
+
+        ;
 
     peerSelectFoo(psstate);
 }

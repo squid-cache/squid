@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.393 2006/05/19 17:05:18 wessels Exp $
+ * $Id: stat.cc,v 1.394 2006/05/19 17:19:10 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -386,8 +386,12 @@ statObjectsStart(StoreEntry * sentry, STOBJFLT * filter)
     StatObjectsState *state = new StatObjectsState;
     state->sentry = sentry;
     state->filter = filter;
-    storeLockObject(sentry);
+
+    sentry->lock()
+
+    ;
     state->theSearch = Store::Root().search(NULL, NULL);
+
     eventAdd("statObjects", statObjects, state, 0.0, 1);
 }
 

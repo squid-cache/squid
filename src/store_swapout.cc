@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.102 2006/05/19 17:05:18 wessels Exp $
+ * $Id: store_swapout.cc,v 1.103 2006/05/19 17:19:10 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -76,19 +76,26 @@ storeSwapOutStart(StoreEntry * e)
     mem->swapout.sio = sio;
     /* Don't lock until after create, or the replacement
      * code might get confused */
-    storeLockObject(e);
+
+    e->lock()
+
+    ;
     /* Pick up the file number if it was assigned immediately */
     e->swap_filen = mem->swapout.sio->swap_filen;
+
     e->swap_dirn = mem->swapout.sio->swap_dirn;
+
     /* write out the swap metadata */
     /* TODO: make some sort of data,size refcounted immutable buffer
      * for use by this sort of function.
      */
     char const *buf = e->getSerialisedMetaData ();
+
     /* If we start swapping out with out of band metadata, this assert
      * will catch it - this code needs to be adjusted if that happens
      */
     assert (buf);
+
     storeIOWrite(mem->swapout.sio, buf, mem->swap_hdr_sz, 0, xfree);
 }
 

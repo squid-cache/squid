@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.159 2006/05/19 17:05:18 wessels Exp $
+ * $Id: wais.cc,v 1.160 2006/05/19 17:19:10 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -266,7 +266,11 @@ waisStart(FwdState * fwd)
     waisState->request = HTTPMSGLOCK(request);
     waisState->fwd = fwd;
     comm_add_close_handler(waisState->fd, waisStateFree, waisState);
-    storeLockObject(entry);
+
+    entry->lock()
+
+    ;
     commSetTimeout(fd, Config.Timeout.read, waisTimeout, waisState);
+
     waisSendRequest(fd, waisState);
 }

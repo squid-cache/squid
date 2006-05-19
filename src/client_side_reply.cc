@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.106 2006/05/19 17:05:18 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.107 2006/05/19 17:19:09 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -256,7 +256,7 @@ clientReplyContext::processExpired()
     saveState();
     entry = storeCreateEntry(url,
                              http->log_uri, http->request->flags, http->request->method);
-    /* NOTE, don't call storeLockObject(), storeCreateEntry() does it */
+    /* NOTE, don't call StoreEntry->lock(), storeCreateEntry() does it */
     sc = storeClientListAdd(entry, this);
 #if DELAY_POOLS
     /* delay_id is already set on original store client */
@@ -927,15 +927,26 @@ clientReplyContext::purgeFoundObject(StoreEntry *entry)
     StoreIOBuffer tempBuffer;
     /* Swap in the metadata */
     http->storeEntry(entry);
-    storeLockObject(http->storeEntry());
+
+    http->storeEntry()->lock()
+
+    ;
     storeCreateMemObject(http->storeEntry(), http->uri, http->log_uri);
+
     http->storeEntry()->mem_obj->method = http->request->method;
+
     sc = storeClientListAdd(http->storeEntry(), this);
+
     http->logType = LOG_TCP_HIT;
+
     reqofs = 0;
+
     tempBuffer.offset = http->out.offset;
+
     tempBuffer.length = next()->readBuffer.length;
+
     tempBuffer.data = next()->readBuffer.data;
+
     storeClientCopy(sc, http->storeEntry(),
                     tempBuffer, CacheHit, this);
 }
@@ -1680,7 +1691,10 @@ clientReplyContext::doGetMoreData()
     if (http->storeEntry() != NULL) {
         /* someone found the object in the cache for us */
         StoreIOBuffer tempBuffer;
-        storeLockObject(http->storeEntry());
+
+        http->storeEntry()->lock()
+
+        ;
 
         if (http->storeEntry()->mem_obj == NULL) {
             /*
