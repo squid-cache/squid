@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.66 2006/05/11 23:53:13 wessels Exp $
+ * $Id: client_side_request.cc,v 1.67 2006/05/19 17:05:18 wessels Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1008,7 +1008,7 @@ void
 ClientHttpRequest::loggingEntry(StoreEntry *newEntry)
 {
     if (loggingEntry_)
-        storeUnlockObject(loggingEntry_);
+        loggingEntry_->unlock();
 
     loggingEntry_ = newEntry;
 

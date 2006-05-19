@@ -1,5 +1,5 @@
 /*
- * $Id: Server.cc,v 1.3 2006/02/17 18:10:59 wessels Exp $
+ * $Id: Server.cc,v 1.4 2006/05/19 17:05:18 wessels Exp $
  *
  * DEBUG:
  * AUTHOR: Duane Wessels
@@ -51,7 +51,7 @@ ServerStateData::ServerStateData(FwdState *theFwdState)
 
 ServerStateData::~ServerStateData()
 {
-    storeUnlockObject(entry);
+    entry->unlock();
 
     HTTPMSGUNLOCK(request);
     HTTPMSGUNLOCK(reply);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.195 2006/05/08 23:38:33 robertc Exp $
+ * $Id: gopher.cc,v 1.196 2006/05/19 17:05:18 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -127,7 +127,7 @@ gopherStateFree(int fdnotused, void *data)
         return;
 
     if (gopherState->entry) {
-        storeUnlockObject(gopherState->entry);
+        gopherState->entry->unlock();
     }
 
     HTTPMSGUNLOCK(gopherState->req);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.33 2006/02/17 20:15:35 wessels Exp $
+ * $Id: whois.cc,v 1.34 2006/05/19 17:05:18 wessels Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -196,6 +196,6 @@ whoisClose(int fd, void *data)
 {
     WhoisState *p = (WhoisState *)data;
     debug(75, 3) ("whoisClose: FD %d\n", fd);
-    storeUnlockObject(p->entry);
+    p->entry->unlock();
     cbdataFree(p);
 }

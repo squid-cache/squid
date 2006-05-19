@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.212 2006/05/08 23:38:33 robertc Exp $
+ * $Id: errorpage.cc,v 1.213 2006/05/19 17:05:18 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -385,7 +385,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
     entry->complete();
     storeNegativeCache(entry);
     storeReleaseRequest(entry);
-    storeUnlockObject(entry);
+    entry->unlock();
     errorStateFree(err);
 }
 

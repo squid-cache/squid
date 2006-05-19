@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.65 2006/05/08 23:38:33 robertc Exp $
+ * $Id: store_digest.cc,v 1.66 2006/05/19 17:05:18 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -449,7 +449,7 @@ storeDigestRewriteFinish(StoreEntry * e)
                   (long int) e->expires, (int) (e->expires - squid_curtime));
     /* is this the write order? @?@ */
     e->mem_obj->unlinkRequest();
-    storeUnlockObject(e);
+    e->unlock();
     cbdataFree(sd_state.rewrite_lock);
     sd_state.rewrite_lock = NULL;
     sd_state.rewrite_count++;

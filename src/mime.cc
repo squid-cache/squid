@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.126 2006/05/06 22:13:18 wessels Exp $
+ * $Id: mime.cc,v 1.127 2006/05/19 17:05:18 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -609,7 +609,7 @@ MimeIcon::created (StoreEntry *newEntry)
 
     debug(25, 3) ("Loaded icon %s\n", url);
 
-    storeUnlockObject(e);
+    e->unlock();
 
     memFree(buf, MEM_4K_BUF);
 }

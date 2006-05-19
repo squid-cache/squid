@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.40 2006/05/08 23:38:33 robertc Exp $
+ * $Id: cache_manager.cc,v 1.41 2006/05/19 17:05:18 wessels Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -238,7 +238,7 @@ cachemgrStateFree(cachemgrStateData * mgr)
     safe_free(mgr->action);
     safe_free(mgr->user_name);
     safe_free(mgr->passwd);
-    storeUnlockObject(mgr->entry);
+    mgr->entry->unlock();
     xfree(mgr);
 }
 

@@ -182,7 +182,7 @@ testNull::testNullSearch()
         storeSwapOut(pe);
         /* Null does not accept store entries */
         CPPUNIT_ASSERT(pe->swap_dirn == -1);
-        storeUnlockObject(pe);
+        pe->unlock();
     }
 
     storeDirWriteCleanLogs(0);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.158 2006/05/08 23:38:33 robertc Exp $
+ * $Id: wais.cc,v 1.159 2006/05/19 17:05:18 wessels Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -74,7 +74,7 @@ waisStateFree(int fdnotused, void *data)
     if (waisState == NULL)
         return;
 
-    storeUnlockObject(waisState->entry);
+    waisState->entry->unlock();
 
     HTTPMSGUNLOCK(waisState->request);
 
