@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.196 2006/05/19 17:05:18 wessels Exp $
+ * $Id: gopher.cc,v 1.197 2006/05/19 17:19:09 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -942,15 +942,24 @@ gopherStart(FwdState * fwd)
     CBDATA_INIT_TYPE(GopherStateData);
     gopherState = cbdataAlloc(GopherStateData);
     gopherState->buf = (char *)memAllocate(MEM_4K_BUF);
-    storeLockObject(entry);
+
+    entry->lock()
+
+    ;
     gopherState->entry = entry;
+
     gopherState->fwd = fwd;
+
     debug(10, 3) ("gopherStart: %s\n", storeUrl(entry));
+
     statCounter.server.all.requests++;
+
     statCounter.server.other.requests++;
+
     /* Parse url. */
     gopher_request_parse(fwd->request,
                          &gopherState->type_id, gopherState->request);
+
     comm_add_close_handler(fd, gopherStateFree, gopherState);
 
     if (((gopherState->type_id == GOPHER_INDEX) || (gopherState->type_id == GOPHER_CSO))

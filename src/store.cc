@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.590 2006/05/19 17:05:18 wessels Exp $
+ * $Id: store.cc,v 1.591 2006/05/19 17:19:10 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -455,16 +455,6 @@ storePurgeMem(StoreEntry * e)
         storeRelease(e);
 }
 
-/* DEPRECATED: please use e->lock(); */
-void
-storeLockObject(StoreEntry * e)
-{
-
-    e->lock()
-
-    ;
-}
-
 /* RBC 20050104 this is wrong- memory ref counting
  * is not at all equivalent to the store 'usage' concept
  * which the replacement policies should be acting upon.
@@ -477,7 +467,7 @@ void
 StoreEntry::lock()
 {
     lock_count++;
-    debugs(20, 3, "storeLockObject: key '" << getMD5Text() <<"' count=" <<
+    debugs(20, 3, "StoreEntry::lock: key '" << getMD5Text() <<"' count=" <<
            lock_count << "\n");
     lastref = squid_curtime;
     Store::Root().reference(*this);
@@ -1143,12 +1133,20 @@ storeAbort(StoreEntry * e)
     assert(e->store_status == STORE_PENDING);
     assert(mem != NULL);
     debug(20, 6) ("storeAbort: %s\n", e->getMD5Text());
-    storeLockObject(e);         /* lock while aborting */
+
+    e->lock()
+
+    ;         /* lock while aborting */
     storeNegativeCache(e);
+
     storeReleaseRequest(e);
+
     EBIT_SET(e->flags, ENTRY_ABORTED);
+
     storeSetMemStatus(e, NOT_IN_MEMORY);
+
     e->store_status = STORE_OK;
+
     /*
      * We assign an object length here.  The only other place we assign
      * the object length is in storeComplete()
@@ -1158,6 +1156,7 @@ storeAbort(StoreEntry * e)
      * the object length is inappropriate to set.
      */
     mem->object_sz = mem->endOffset();
+
     /* Notify the server side */
 
     if (mem->abort.callback) {
@@ -1301,8 +1300,8 @@ storeRelease(StoreEntry * e)
 
         if (e->swap_filen > -1) {
             /*
-             * Fake a call to storeLockObject().  When rebuilding is done,
-             * we'll just call e->unlock() on these.
+             * Fake a call to StoreEntry->lock()  When rebuilding is done,
+             * we'll just call StoreEntry->unlock() on these.
              */
             e->lock_count++;
             e->setReleaseFlag();

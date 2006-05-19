@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.114 2006/05/19 17:05:18 wessels Exp $
+ * $Id: peer_digest.cc,v 1.115 2006/05/19 17:19:10 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -362,8 +362,12 @@ peerDigestRequest(PeerDigest * pd)
 
     if (old_e) {
         debug(72, 5) ("peerDigestRequest: found old entry\n");
-        storeLockObject(old_e);
+
+        old_e->lock()
+
+        ;
         storeCreateMemObject(old_e, url, url);
+
         fetch->old_sc = storeClientListAdd(old_e, fetch);
     }
 

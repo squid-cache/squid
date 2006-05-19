@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.106 2006/05/19 17:05:18 wessels Exp $
+ * $Id: asn.cc,v 1.107 2006/05/19 17:19:09 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -244,7 +244,10 @@ asnCacheStart(int as)
         asState->sc = storeClientListAdd(e, asState);
         FwdState::fwdStart(-1, e, asState->request);
     } else {
-        storeLockObject(e);
+
+        e->lock()
+
+        ;
         asState->sc = storeClientListAdd(e, asState);
     }
 

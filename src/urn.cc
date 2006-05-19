@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.100 2006/05/19 17:05:18 wessels Exp $
+ * $Id: urn.cc,v 1.101 2006/05/19 17:19:10 wessels Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -245,7 +245,10 @@ UrnState::start(HttpRequest * r, StoreEntry * e)
     debug(52, 3) ("urnStart: '%s'\n", storeUrl(e));
     entry = e;
     request = HTTPMSGLOCK(r);
-    storeLockObject(entry);
+
+    entry->lock()
+
+    ;
     setUriResFromRequest(r);
 
     if (urlres_r == NULL)
@@ -264,7 +267,10 @@ UrnState::created(StoreEntry *newEntry)
         sc = storeClientListAdd(urlres_e, this);
         FwdState::fwdStart(-1, urlres_e, urlres_r);
     } else {
-        storeLockObject(urlres_e);
+
+        urlres_e->lock()
+
+        ;
         sc = storeClientListAdd(urlres_e, this);
     }
 

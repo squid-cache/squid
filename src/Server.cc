@@ -1,5 +1,5 @@
 /*
- * $Id: Server.cc,v 1.4 2006/05/19 17:05:18 wessels Exp $
+ * $Id: Server.cc,v 1.5 2006/05/19 17:19:09 wessels Exp $
  *
  * DEBUG:
  * AUTHOR: Duane Wessels
@@ -45,7 +45,10 @@ ServerStateData::ServerStateData(FwdState *theFwdState)
 {
     fwd = theFwdState;
     entry = fwd->entry;
-    storeLockObject(entry);
+
+    entry->lock()
+
+    ;
     request = HTTPMSGLOCK(fwd->request);
 }
 

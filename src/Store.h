@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.21 2006/05/19 17:05:18 wessels Exp $
+ * $Id: Store.h,v 1.22 2006/05/19 17:19:09 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -283,7 +283,6 @@ SQUIDCEXTERN void storeCreateMemObject(StoreEntry *, const char *, const char *)
 SQUIDCEXTERN void storeInit(void);
 SQUIDCEXTERN void storeAbort(StoreEntry *);
 SQUIDCEXTERN void storeAppend(StoreEntry *, const char *, int);
-SQUIDCEXTERN void storeLockObject(StoreEntry *);
 SQUIDCEXTERN void storeRelease(StoreEntry *);
 SQUIDCEXTERN void storeExpireNow(StoreEntry *);
 SQUIDCEXTERN void storeReleaseRequest(StoreEntry *);

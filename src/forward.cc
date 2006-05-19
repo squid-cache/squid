@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.143 2006/05/19 17:05:18 wessels Exp $
+ * $Id: forward.cc,v 1.144 2006/05/19 17:19:09 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -78,8 +78,12 @@ FwdState::FwdState(int fd, StoreEntry * e, HttpRequest * r)
     server_fd = -1;
     request = HTTPMSGLOCK(r);
     start_t = squid_curtime;
-    storeLockObject(e);
+
+    e->lock()
+
+    ;
     EBIT_SET(e->flags, ENTRY_FWD_HDR_WAIT);
+
     self = this;	// refcounted
 }
 

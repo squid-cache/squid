@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.41 2006/05/19 17:05:18 wessels Exp $
+ * $Id: cache_manager.cc,v 1.42 2006/05/19 17:19:09 wessels Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -260,12 +260,18 @@ cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
     }
 
     mgr->entry = entry;
-    storeLockObject(entry);
+
+    entry->lock()
+
+    ;
     entry->expires = squid_curtime;
+
     debug(16, 5) ("CACHEMGR: %s requesting '%s'\n",
                   fd_table[fd].ipaddr, mgr->action);
+
     /* get additional info from request headers */
     cachemgrParseHeaders(mgr, request);
+
     /* Check password */
 
     if (cachemgrCheckPassword(mgr) != 0) {
