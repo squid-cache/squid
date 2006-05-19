@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.28 2004/12/20 16:30:45 robertc Exp $
+ * $Id: store_io_ufs.cc,v 1.29 2006/05/19 16:49:13 wessels Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -103,7 +103,7 @@ UFSStoreState::ioCompletedNotification()
 {
     if (opening) {
         opening = false;
-        debug(79, 3) ("storeDiskdOpenDone: dirno %d, fileno %08x status %d\n",
+        debug(79, 3) ("UFSStoreState::ioCompletedNotification: dirno %d, fileno %08x status %d\n",
                       swap_dirn, swap_filen, theFile->error());
         assert (FILE_MODE(mode) == O_RDONLY);
         openDone();
@@ -113,7 +113,7 @@ UFSStoreState::ioCompletedNotification()
 
     if (creating) {
         creating = false;
-        debug(79, 3) ("storeDiskdCreateDone: dirno %d, fileno %08x status %d\n",
+        debug(79, 3) ("UFSStoreState::ioCompletedNotification: dirno %d, fileno %08x status %d\n",
                       swap_dirn, swap_filen, theFile->error());
         openDone();
 
@@ -221,7 +221,7 @@ UFSStoreState::readCompleted(const char *buf, int len, int errflag, RefCount<Rea
 {
     assert (result.getRaw());
     reading = false;
-    debug(79, 3) ("storeDiskdReadDone: dirno %d, fileno %08x len %d\n",
+    debug(79, 3) ("UFSStoreState::readCompleted: dirno %d, fileno %08x len %d\n",
                   swap_dirn, swap_filen, len);
 
     if (len > 0)
