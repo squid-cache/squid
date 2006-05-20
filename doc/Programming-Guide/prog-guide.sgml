@@ -2,7 +2,7 @@
 <article>
 <title>Squid Programmers Guide</title>
 <author>Squid Developers</author>
-<date>$Id: prog-guide.sgml,v 1.59 2006/04/22 05:28:26 robertc Exp $</date>
+<date>$Id: prog-guide.sgml,v 1.60 2006/05/20 13:15:14 hno Exp $</date>
 
 <abstract>
 Squid is a WWW Cache application developed by the National Laboratory
@@ -3605,14 +3605,22 @@ As of Squid-2.3, the following TYPES are defined (from <em/enums.h/):
 	u_short flags;
 </verb>
 
+<tag/STORE_META_STD_LFS/
+	Updated version of STORE_META_STD, with support for
+	>2GB objects. As STORE_META_STD except that the swap_file_sz
+	is a squid_file_sz (64-bit integer) instead of size_t.
+
 <tag/STORE_META_HITMETERING/
 	Reserved for future hit-metering (RFC 2227) stuff.
 
 <tag/STORE_META_VALID/
 	?
 
-<tag/STORE_META_END/
-	Marks the last valid META type.
+<tag/STORE_META_VARY_HEADERS/
+	Information about the Vary header relation on this object
+
+<tag/STORE_META_OBJSIZE/
+	object size, if its known
 
 </descrip>
 
