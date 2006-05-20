@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaUnpacker.cc,v 1.2 2003/02/21 22:50:06 robertc Exp $
+ * $Id: StoreMetaUnpacker.cc,v 1.3 2006/05/20 13:15:14 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Unpacker
  * AUTHOR: Robert Collins
@@ -51,7 +51,7 @@ StoreMetaUnpacker::isBufferSane()
      */
     getBufferLength();
 
-    if (*hdr_len <= MinimumBufferLength)
+    if (*hdr_len < MinimumBufferLength)
         return false;
 
     if (*hdr_len > buflen)
@@ -112,7 +112,7 @@ StoreMetaUnpacker::doOneEntry()
 bool
 StoreMetaUnpacker::moreToProcess() const
 {
-    return *hdr_len - position - MinimumBufferLength > 0;
+    return *hdr_len - position - MinimumBufferLength >= 0;
 }
 
 StoreMeta *

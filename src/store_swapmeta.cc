@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapmeta.cc,v 1.22 2003/08/04 22:14:42 robertc Exp $
+ * $Id: store_swapmeta.cc,v 1.23 2006/05/20 13:15:14 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -119,8 +119,6 @@ storeSwapMetaPack(tlv * tlv_list, int *length)
     for (t = tlv_list; t; t = t->next)
         buflen += sizeof(char) + sizeof(int) + t->length;
 
-    buflen++;			/* STORE_META_END */
-
     buf = (char *)xmalloc(buflen);
 
     buf[j++] = (char) STORE_META_OK;
@@ -137,7 +135,6 @@ storeSwapMetaPack(tlv * tlv_list, int *length)
         j += t->length;
     }
 
-    buf[j++] = (char) STORE_META_END;
     assert((int) j == buflen);
     *length = buflen;
     return buf;
