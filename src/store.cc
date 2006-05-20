@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.592 2006/05/19 20:22:56 wessels Exp $
+ * $Id: store.cc,v 1.593 2006/05/19 23:10:20 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -80,15 +80,6 @@ const char *swapStatusStr[] =
         "SWAPOUT_WRITING",
         "SWAPOUT_DONE"
     };
-
-typedef struct lock_ctrl_t
-{
-    SIH *callback;
-    void *callback_data;
-    StoreEntry *e;
-}
-
-lock_ctrl_t;
 
 extern OBJH storeIOStats;
 
