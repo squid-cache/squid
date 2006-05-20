@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.94 2006/05/08 23:38:33 robertc Exp $
+ * $Id: mem.cc,v 1.95 2006/05/20 00:05:02 wessels Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -98,7 +98,7 @@ memStringStats(std::ostream &stream)
     int pooled_count = 0;
     size_t pooled_volume = 0;
     /* heading */
-    stream << "String Pool\t Impact\t\t\n \t (%%strings)\t (%%volume)\n";
+    stream << "String Pool\t Impact\t\t\n \t (%strings)\t (%volume)\n";
     /* table body */
 
     for (i = 0; i < mem_str_pool_count; i++) {
@@ -569,7 +569,7 @@ Mem::PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, std::
     stream << std::setw(4) << mp_st->chunks_inuse << "\t ";
     stream << std::setw(4) << mp_st->chunks_free << "\t ";
     stream << std::setw(4) << mp_st->chunks_partial << "\t ";
-    stream << std::setprecision(1) << xpercent(excess, needed) << "\t ";
+    stream << std::setprecision(3) << xpercent(excess, needed) << "\t ";
     /*
      *  Fragmentation calculation:
      *    needed = inuse.level / chunk_capacity
@@ -583,21 +583,21 @@ Mem::PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, std::
     stream << toKB(mp_st->obj_size * pm->alloc.level) << "\t ";
     stream << toKB(mp_st->obj_size * pm->alloc.hwater_level) << "\t ";
     stream << std::setprecision(2) << ((squid_curtime - pm->alloc.hwater_stamp) / 3600.);
-    stream << "\t " << std::setprecision(1) << xpercent(mp_st->obj_size * pm->alloc.level, AllMeter->alloc.level);
+    stream << "\t " << std::setprecision(3) << xpercent(mp_st->obj_size * pm->alloc.level, AllMeter->alloc.level);
     /* in use */
     stream << "\t" << mp_st->items_inuse << "\t ";
     stream << toKB(mp_st->obj_size * pm->inuse.level) << "\t ";
     stream << toKB(mp_st->obj_size * pm->inuse.hwater_level) << "\t ";
     stream << std::setprecision(2) << ((squid_curtime - pm->inuse.hwater_stamp) / 3600.);
-    stream << "\t " << std::setprecision(1) << xpercent(pm->inuse.level, pm->alloc.level);
+    stream << "\t " << std::setprecision(3) << xpercent(pm->inuse.level, pm->alloc.level);
     /* idle */
     stream << "\t" << mp_st->items_idle << "\t " << toKB(mp_st->obj_size * pm->idle.level);
     stream << "\t " << toKB(mp_st->obj_size * pm->idle.hwater_level) << "\t";
     /* saved */
-    stream << std::setprecision(0) << pm->gb_saved.count << "\t ";
-    stream << std::setprecision(1) << xpercent(pm->gb_saved.count, AllMeter->gb_saved.count);
-    stream << "\t " << xpercent(pm->gb_saved.bytes, AllMeter->gb_saved.bytes) << "\t ";
-    stream << xdiv(pm->gb_saved.count - pm->gb_osaved.count, xm_deltat) << "\n";
+    stream << (int)pm->gb_saved.count << "\t ";
+    stream << std::setprecision(3) << xpercent(pm->gb_saved.count, AllMeter->gb_saved.count);
+    stream << "\t " << std::setprecision(3) << xpercent(pm->gb_saved.bytes, AllMeter->gb_saved.bytes) << "\t ";
+    stream << std::setprecision(3) << xdiv(pm->gb_saved.count - pm->gb_osaved.count, xm_deltat) << "\n";
     pm->gb_osaved.count = pm->gb_saved.count;
 }
 
@@ -655,11 +655,11 @@ Mem::Report(std::ostream &stream)
     "\n"
     " \t (bytes)\t"
     "KB/ch\t obj/ch\t"
-    "(#)\t used\t free\t part\t %%Frag\t "
-    "(#)\t (KB)\t high (KB)\t high (hrs)\t %%Tot\t"
-    "(#)\t (KB)\t high (KB)\t high (hrs)\t %%alloc\t"
+    "(#)\t used\t free\t part\t %Frag\t "
+    "(#)\t (KB)\t high (KB)\t high (hrs)\t %Tot\t"
+    "(#)\t (KB)\t high (KB)\t high (hrs)\t %alloc\t"
     "(#)\t (KB)\t high (KB)\t"
-    "(#)\t %%cnt\t %%vol\t"
+    "(#)\t %cnt\t %vol\t"
     "(#) / sec\t"
     "\n";
     xm_deltat = current_dtime - xm_time;
@@ -717,7 +717,7 @@ Mem::Report(std::ostream &stream)
     stream << "Cumulative allocated volume: "<< double_to_str(buf, 64, mp_total.TheMeter->gb_saved.bytes) << "\n";
     /* overhead */
     stream << "Current overhead: " << mp_total.tot_overhead << " bytes (" <<
-    std::setprecision(3) << xpercent(mp_total.tot_overhead, mp_total.TheMeter->inuse.level) << "%%)\n";
+    std::setprecision(3) << xpercent(mp_total.tot_overhead, mp_total.TheMeter->inuse.level) << "%)\n";
     /* limits */
     stream << "Idle pool limit: " << std::setprecision(2) << toMB(mp_total.mem_idle_limit) << " MB\n";
     /* limits */
