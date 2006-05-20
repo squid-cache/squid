@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_coss.cc,v 1.26 2004/12/20 16:30:43 robertc Exp $
+ * $Id: store_io_coss.cc,v 1.27 2006/05/19 20:22:56 wessels Exp $
  *
  * DEBUG: section 79    Storage Manager COSS Interface
  * AUTHOR: Eric Stern
@@ -583,7 +583,7 @@ CossSwapDir::createMemBuf(size_t start, sfileno curfn, int *collision)
             *collision = 1;	/* Mark an object alloc collision */
 
         if ((o >= (off_t)newmb->diskstart) && (o < (off_t)newmb->diskend)) {
-            storeRelease(e);
+            e->release();
             numreleased++;
         } else
             break;

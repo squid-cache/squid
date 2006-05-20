@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.397 2006/05/16 16:05:08 hno Exp $
+ * $Id: ftp.cc,v 1.398 2006/05/19 20:22:56 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -3170,11 +3170,11 @@ FtpStateData::appendSuccessHeader()
         /*
          * Authenticated requests can't be cached.
          */
-        storeRelease(e);
+        e->release();
     } else if (EBIT_TEST(e->flags, ENTRY_CACHABLE) && !restarted_offset) {
         storeSetPublicKey(e);
     } else {
-        storeRelease(e);
+        e->release();
     }
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_rebuild.cc,v 1.83 2006/05/08 23:38:33 robertc Exp $
+ * $Id: store_rebuild.cc,v 1.84 2006/05/19 20:22:56 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -85,7 +85,7 @@ storeCleanup(void *datanotused)
             continue;
 
         /*
-         * Calling storeRelease() has no effect because we're
+         * Calling StoreEntry->release() has no effect because we're
          * still in 'store_rebuilding' state
          */
         if (e->swap_filen < 0)

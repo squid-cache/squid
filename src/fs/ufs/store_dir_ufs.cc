@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.72 2006/05/08 23:38:35 robertc Exp $
+ * $Id: store_dir_ufs.cc,v 1.73 2006/05/19 20:22:57 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -392,7 +392,7 @@ UFSSwapDir::maintain()
 
         removed++;
 
-        storeRelease(e);
+        e->release();
     }
 
     walker->Done(walker);
