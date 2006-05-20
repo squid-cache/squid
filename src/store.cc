@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.591 2006/05/19 17:19:10 wessels Exp $
+ * $Id: store.cc,v 1.592 2006/05/19 20:22:56 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -452,7 +452,7 @@ storePurgeMem(StoreEntry * e)
     destroy_MemObject(e);
 
     if (e->swap_status != SWAPOUT_DONE)
-        storeRelease(e);
+        e->release();
 }
 
 /* RBC 20050104 this is wrong- memory ref counting
@@ -520,7 +520,7 @@ StoreEntry::unlock()
     assert(storePendingNClients(this) == 0);
 
     if (EBIT_TEST(flags, RELEASE_REQUEST))
-        storeRelease(this);
+        this->release();
     else if (storeKeepInMemory(this)) {
         Store::Root().dereference(*this);
         storeSetMemStatus(this, IN_MEMORY);
@@ -694,7 +694,7 @@ storeSetPublicKey(StoreEntry * e)
                 pe = storeGetPublic(mem->url, mem->method);
 
                 if (pe)
-                    storeRelease(pe);
+                    pe->release();
             }
 
             /* Make sure the request knows the variance status */
@@ -757,7 +757,7 @@ storeSetPublicKey(StoreEntry * e)
     if ((e2 = (StoreEntry *) hash_lookup(store_table, newkey))) {
         debug(20, 3) ("storeSetPublicKey: Making old '%s' private.\n", mem->url);
         storeSetPrivateKey(e2);
-        storeRelease(e2);
+        e2->release();
 
         if (mem->request)
             newkey = storeKeyPublicByRequest(mem->request);
@@ -1274,67 +1274,66 @@ StoreController::maintain()
     PROF_stop(storeMaintainSwapSpace);
 }
 
-
 /* release an object from a cache */
 void
-storeRelease(StoreEntry * e)
+StoreEntry::release()
 {
     PROF_start(storeRelease);
-    debug(20, 3) ("storeRelease: Releasing: '%s'\n", e->getMD5Text());
+    debug(20, 3) ("storeRelease: Releasing: '%s'\n", getMD5Text());
     /* If, for any reason we can't discard this object because of an
      * outstanding request, mark it for pending release */
 
-    if (storeEntryLocked(e)) {
-        storeExpireNow(e);
+    if (storeEntryLocked(this)) {
+        storeExpireNow(this);
         debug(20, 3) ("storeRelease: Only setting RELEASE_REQUEST bit\n");
-        storeReleaseRequest(e);
+        storeReleaseRequest(this);
         PROF_stop(storeRelease);
         return;
     }
 
-    if (store_dirs_rebuilding && e->swap_filen > -1) {
-        storeSetPrivateKey(e);
+    if (store_dirs_rebuilding && swap_filen > -1) {
+        storeSetPrivateKey(this);
 
-        if (e->mem_obj)
-            destroy_MemObject(e);
+        if (mem_obj)
+            destroy_MemObject(this);
 
-        if (e->swap_filen > -1) {
+        if (swap_filen > -1) {
             /*
              * Fake a call to StoreEntry->lock()  When rebuilding is done,
              * we'll just call StoreEntry->unlock() on these.
              */
-            e->lock_count++;
-            e->setReleaseFlag();
-            LateReleaseStack.push_back(e);
+            lock_count++;
+            setReleaseFlag();
+            LateReleaseStack.push_back(this);
             PROF_stop(storeRelease);
             return;
         } else {
-            destroyStoreEntry(static_cast<hash_link *>(e));
+            destroyStoreEntry(static_cast<hash_link *>(this));
         }
     }
 
-    storeLog(STORE_LOG_RELEASE, e);
+    storeLog(STORE_LOG_RELEASE, this);
 
-    if (e->swap_filen > -1) {
-        e->unlink();
+    if (swap_filen > -1) {
+        unlink();
 
-        if (e->swap_status == SWAPOUT_DONE)
-            if (EBIT_TEST(e->flags, ENTRY_VALIDATED))
-                e->store()->updateSize(e->swap_file_sz, -1);
+        if (swap_status == SWAPOUT_DONE)
+            if (EBIT_TEST(flags, ENTRY_VALIDATED))
+                store()->updateSize(swap_file_sz, -1);
 
-        if (!EBIT_TEST(e->flags, KEY_PRIVATE))
-            storeDirSwapLog(e, SWAP_LOG_DEL);
+        if (!EBIT_TEST(flags, KEY_PRIVATE))
+            storeDirSwapLog(this, SWAP_LOG_DEL);
 
 #if 0
         /* From 2.4. I think we do this in storeUnlink? */
-        storeSwapFileNumberSet(e, -1);
+        storeSwapFileNumberSet(this, -1);
 
 #endif
 
     }
 
-    storeSetMemStatus(e, NOT_IN_MEMORY);
-    destroyStoreEntry(static_cast<hash_link *>(e));
+    storeSetMemStatus(this, NOT_IN_MEMORY);
+    destroyStoreEntry(static_cast<hash_link *>(this));
     PROF_stop(storeRelease);
 }
 

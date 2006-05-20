@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.497 2006/05/08 23:38:33 robertc Exp $
+ * $Id: http.cc,v 1.498 2006/05/19 20:22:56 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -270,7 +270,7 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
 
     if (pe != NULL) {
         assert(e != pe);
-        storeRelease(pe);
+        pe->release();
     }
 
     /*
@@ -284,7 +284,7 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
 
     if (pe != NULL) {
         assert(e != pe);
-        storeRelease(pe);
+        pe->release();
     }
 
     if (forbidden)
@@ -317,7 +317,7 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
 
         if (pe != NULL) {
             assert(e != pe);
-            storeRelease(pe);
+            pe->release();
         }
 
         break;

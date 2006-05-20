@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.61 2005/07/03 20:41:46 serassio Exp $
+ * $Id: store_dir_coss.cc,v 1.62 2006/05/19 20:22:56 wessels Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store COSS Directory Routines
@@ -447,7 +447,7 @@ storeCossRebuildFromSwapLog(void *data)
                     e->swap_filen = -1;
                 }
 
-                storeRelease(e);
+                e->release();
                 /* Fake an unlink here, this is a bad hack :( */
                 storeCossRemove(rb->sd, e);
                 rb->counts.objcount--;

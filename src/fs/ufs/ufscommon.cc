@@ -1,5 +1,5 @@
 /*
- * $Id: ufscommon.cc,v 1.4 2005/01/06 13:16:39 serassio Exp $
+ * $Id: ufscommon.cc,v 1.5 2006/05/19 20:22:57 wessels Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store Directory Routines
@@ -285,7 +285,7 @@ RebuildState::rebuildFromDirectory()
         } else if (NULL != e) {
             /* URL already exists, this swapfile not being used */
             /* junk old, load new */
-            storeRelease(e);	/* release old entry */
+            e->release();	/* release old entry */
             counts.dupcount++;
         }
 
@@ -393,7 +393,7 @@ RebuildState::rebuildFromSwapLog()
                     currentEntry()->swap_dirn = -1;
                 }
 
-                storeRelease(currentEntry());
+                currentEntry()->release();
                 counts.objcount--;
                 counts.cancelcount++;
             }
@@ -509,7 +509,7 @@ RebuildState::rebuildFromSwapLog()
                 currentEntry()->swap_dirn = -1;
             }
 
-            storeRelease(currentEntry());
+            currentEntry()->release();
             counts.dupcount++;
         } else {
             /* URL doesnt exist, swapfile not in use */

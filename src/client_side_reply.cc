@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.107 2006/05/19 17:19:09 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.108 2006/05/19 20:22:56 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -993,7 +993,7 @@ clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
     if (!newEntry->isNull()) {
         /* Release the cached URI */
         debug(88, 4) ("clientPurgeRequest: GET '%s'\n", storeUrl(newEntry));
-        storeRelease(newEntry);
+        newEntry->release();
         purgeStatus = HTTP_OK;
     }
 
@@ -1006,7 +1006,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 {
     if (newEntry && !newEntry->isNull()) {
         debug(88, 4) ("clientPurgeRequest: HEAD '%s'\n", storeUrl(newEntry));
-        storeRelease(newEntry);
+        newEntry->release();
         purgeStatus = HTTP_OK;
     }
 
@@ -1019,7 +1019,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
         if (entry) {
             debug(88, 4) ("clientPurgeRequest: Vary GET '%s'\n",
                           storeUrl(entry));
-            storeRelease(entry);
+            entry->release();
             purgeStatus = HTTP_OK;
         }
 
@@ -1028,7 +1028,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
         if (entry) {
             debug(88, 4) ("clientPurgeRequest: Vary HEAD '%s'\n",
                           storeUrl(entry));
-            storeRelease(entry);
+            entry->release();
             purgeStatus = HTTP_OK;
         }
     }
