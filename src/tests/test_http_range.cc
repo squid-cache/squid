@@ -1,6 +1,6 @@
 
 /*
- * $Id: http_range_test.cc,v 1.11 2003/09/22 02:43:11 robertc Exp $
+ * $Id: test_http_range.cc,v 1.1 2006/05/21 14:35:11 robertc Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -41,8 +41,8 @@
 #include "ACLChecklist.h"
 
 /* Stub routines */
-SQUIDCEXTERN void
-cachemgrRegister(const char *, const char *, OBJH *, int, int)
+void
+shut_down(int)
 {}
 
 SQUIDCEXTERN void httpHeaderPutStr(HttpHeader * hdr, http_hdr_type type, const char *str)
@@ -50,73 +50,7 @@ SQUIDCEXTERN void httpHeaderPutStr(HttpHeader * hdr, http_hdr_type type, const c
     fatal ("dummy function\n");
 }
 
-#if STDC_HEADERS
-SQUIDCEXTERN void
-storeAppendPrintf(StoreEntry *, const char *,...)
-#else
-SQUIDCEXTERN void storeAppendPrintf()
-#endif
-{
-    fatal ("dummy function\n");
-}
-
-extern
-void eventAdd(const char *name, EVH * func, void *arg, double when, int, bool)
-{
-    fatal ("dummy function\n");
-}
-
-SQUIDCEXTERN void
-storeBuffer(StoreEntry * e)
-{
-    fatal ("dummy function\n");
-}
-
-SQUIDCEXTERN void
-storeBufferFlush(StoreEntry * e)
-{
-    fatal ("dummy function\n");
-}
-
-SQUIDCEXTERN void storeAppend(StoreEntry *, const char *, int)
-{
-    fatal ("dummy function\n");
-}
-
-SQUIDCEXTERN void storeAppendVPrintf(StoreEntry *, const char *, va_list ap)
-{
-    fatal ("dummy function\n");
-}
-
-SQUIDCEXTERN void httpHeaderDelAt(HttpHeader * hdr, HttpHeaderPos pos)
-{
-    fatal ("dummy function\n");
-}
-
 SQUIDCEXTERN HttpHeaderEntry *httpHeaderGetEntry(const HttpHeader * hdr, HttpHeaderPos * pos)
-{
-    fatal ("dummy function\n");
-    return NULL;
-}
-
-int
-ACLChecklist::fastCheck()
-{
-    fatal ("dummy function\n");
-    return 0;
-}
-
-void
-ACLChecklist::operator delete (void *address)
-{
-    safe_free( address);
-}
-
-ACLChecklist::~ACLChecklist(){}
-
-SQUIDCEXTERN ACLChecklist *aclChecklistCreate(const acl_access *,
-        HttpRequest *,
-        const char *ident)
 {
     fatal ("dummy function\n");
     return NULL;
@@ -134,25 +68,9 @@ SQUIDCEXTERN int httpHeaderHas(const HttpHeader * hdr, http_hdr_type type)
     return 0;
 }
 
-SQUIDCEXTERN void httpHdrContRangeDestroy(HttpHdrContRange * crange)
-{
-    fatal ("dummy function\n");
-}
-
-SQUIDCEXTERN void httpHdrContRangeSet(HttpHdrContRange *, HttpHdrRangeSpec, ssize_t)
-{
-    fatal ("dummy function\n");
-}
-
 SQUIDCEXTERN void httpHeaderPutContRange(HttpHeader * hdr, const HttpHdrContRange * cr)
 {
     fatal ("dummy function\n");
-}
-
-SQUIDCEXTERN HttpHdrContRange *httpHdrContRangeCreate(void)
-{
-    fatal ("dummy function\n");
-    return NULL;
 }
 
 void
