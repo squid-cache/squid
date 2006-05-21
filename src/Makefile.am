@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.145 2006/05/11 19:21:12 serassio Exp $
+#  $Id: Makefile.am,v 1.146 2006/05/21 14:35:11 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -166,6 +166,7 @@ AM_CXXFLAGS = @SQUID_CXXFLAGS@
 
 EXTRA_LIBRARIES = libAIO.a libBlocking.a libDiskDaemon.a libDiskThreads.a ICAP/libicap.a
 noinst_LIBRARIES = @DISK_LIBS@ @ICAP_LIBS@
+noinst_LTLIBRARIES = libsquid.la libauth.la
 
 INCLUDES        = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/lib/libTrie/include
 INCLUDES	+= @SQUID_CPPUNIT_INC@
@@ -334,6 +335,25 @@ squid_ACLSOURCES = \
 	ACLUserData.cc \
 	ACLUserData.h 
 
+
+# common library for all the binaries and tests. This is kindof a catch all
+# and smaller libraries split from this are encouraged. Using lt convenience
+# libraries, dependencies should not be a problem either.
+libsquid_la_SOURCES = \
+	comm.cc \
+	comm.h \
+	IPInterception.cc \
+	IPInterception.h
+
+# authentication framework
+libauth_la_SOURCES = \
+	AuthConfig.cc \
+	AuthConfig.h \
+	AuthScheme.cc \
+	AuthScheme.h \
+	AuthUser.cc \
+	AuthUserRequest.cc
+
 squid_SOURCES = \
 	access_log.cc \
 	AccessLogEntry.h \
@@ -346,12 +366,6 @@ squid_SOURCES = \
 	asn.cc \
 	authenticate.cc \
 	authenticate.h \
-	AuthConfig.cc \
-	AuthConfig.h \
-	AuthScheme.cc \
-	AuthScheme.h \
-	AuthUser.cc \
-	AuthUserRequest.cc \
 	cache_cf.cc \
 	CacheDigest.cc \
 	cache_manager.cc \
@@ -369,8 +383,6 @@ squid_SOURCES = \
 	ClientRequestContext.h \
 	clientStream.cc \
 	clientStream.h \
-	comm.cc \
-	comm.h \
         CommIO.h \
 	comm_select.cc \
 	comm_poll.cc \
@@ -449,8 +461,6 @@ squid_SOURCES = \
 	internal.cc \
 	ipc.cc \
 	ipcache.cc \
-	IPInterception.cc \
-	IPInterception.h \
 	$(LEAKFINDERSOURCE) \
 	list.cc \
 	logfile.cc \
@@ -568,6 +578,8 @@ nodist_squid_SOURCES = \
 	string_arrays.c
 
 squid_LDADD = \
+	libsquid.la \
+	libauth.la \
 	-L../lib \
 	@XTRA_OBJS@ \
 	@DISK_LINKOBJS@ \
@@ -647,7 +659,7 @@ recv_announce_SOURCES = recv-announce.cc SquidNew.cc
 ## ACLChecklist.cc wants ACLProxyAuth.cc directly
 ## ACLProxyAuth.cc wants ACLUserData
 ## ACLProxyAuth.cc wants ACLRegexData
-## cache_cf.cc wants AuthConfig
+## cache_cf.cc wants libauth.la
 ## cache_cf.cc wants Swapdir
 ## client_side wants client_db
 ## client_db wants SNMP_SOURCE
@@ -683,10 +695,6 @@ ufsdump_SOURCES = \
 	ACLRegexData.cc \
 	ACLStringData.cc \
 	authenticate.cc \
-	AuthUser.cc \
-	AuthUserRequest.cc \
-	AuthScheme.cc \
-	AuthConfig.cc \
 	cache_cf.cc \
 	cache_manager.cc \
 	CacheDigest.cc \
@@ -699,8 +707,6 @@ ufsdump_SOURCES = \
 	client_side_request.h \
 	clientStream.cc \
 	clientStream.h \
-	comm.cc \
-	comm.h \
         CommIO.h \
 	comm_select.cc \
 	comm_poll.cc \
@@ -750,8 +756,6 @@ ufsdump_SOURCES = \
 	internal.cc \
 	ipc.cc \
 	ipcache.cc \
-	IPInterception.cc \
-	IPInterception.h \
 	$(LEAKFINDERSOURCE) \
         list.cc \
 	logfile.cc \
@@ -811,6 +815,8 @@ ufsdump_SOURCES = \
 	wordlist.cc \
 	$(WIN32_SOURCE)
 ufsdump_LDADD = \
+	libsquid.la \
+	libauth.la \
 	-L../lib \
 	@XTRA_OBJS@ \
 	@REPL_OBJS@ \
@@ -850,7 +856,7 @@ sysconf_DATA = \
 data_DATA = \
 	mib.txt
 
-LDADD = -L../lib -lmiscutil @XTRA_LIBS@ @EPOLL_LIBS@ @MINGW_LIBS@
+LDADD = libsquid.la libauth.la -L../lib -lmiscutil @XTRA_LIBS@ @EPOLL_LIBS@ @MINGW_LIBS@
 
 EXTRA_DIST = \
 	cf_gen_defines \
@@ -1033,6 +1039,7 @@ check_PROGRAMS+= \
 	tests/testACLMaxUserIP \
 	tests/testBoilerplate \
 	tests/testHeaders \
+	tests/test_http_range \
 	tests/testHttpRequest \
 	tests/testStore \
 	tests/testString \
@@ -1040,7 +1047,7 @@ check_PROGRAMS+= \
 	@STORE_TESTS@
 
 tests_testAuth_SOURCES= tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $(TESTSOURCES) \
-	AuthScheme.cc authenticate.cc AuthUser.cc AuthUserRequest.cc AuthConfig.cc \
+	authenticate.cc \
 	ConfigParser.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
 	tests/stub_helper.cc cbdata.cc String.cc tests/stub_cache_manager.cc \
@@ -1066,6 +1073,8 @@ tests_testAuth_SOURCES= tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $(
 ##	MemBuf.cc StatHist.cc logfile.cc
 
 tests_testAuth_LDADD= \
+	libsquid.la \
+	libauth.la \
 	@AUTH_LINKOBJS@ @AUTH_OBJS@ \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
@@ -1082,7 +1091,7 @@ tests_testAuth_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 ## MemBuf needs mem, MemBuf needs event,
 ## event needs cbdata.
 ## ACLMaxUserUP needs authenticate.cc
-## authenticate.cc needs AuthUser, AuthScheme, AuthUserRequest, AuthConfig
+## authenticate.cc needs libauth.la
 ## ACLMaxUserIP needs ACLChecklist
 ## AuthUser request needs HttpHeader, which brings in 
 ##	ETag.cc \
@@ -1104,10 +1113,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	ACLRegexData.cc \
 	ACLUserData.cc \
 	authenticate.cc \
-	AuthConfig.cc \
-	AuthUser.cc \
-	AuthUserRequest.cc \
-	AuthScheme.cc \
 	cbdata.cc \
 	ConfigParser.cc \
 	event.cc \
@@ -1138,6 +1143,8 @@ tests_testACLMaxUserIP_SOURCES= \
 	wordlist.cc \
 	$(TESTSOURCES)
 tests_testACLMaxUserIP_LDADD= \
+	libsquid.la \
+	libauth.la \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
 	@SQUID_CPPUNIT_LA@ \
@@ -1189,6 +1196,147 @@ tests_testHeaders_LDFLAGS = $(LIBADD_DL)
 tests_testHeaders_DEPENDENCIES = \
 	@SQUID_CPPUNIT_LA@
 
+tests_test_http_range_SOURCES = \
+	tests/test_http_range.cc \
+	access_log.cc \
+	acl.cc \
+	acl_noncore.cc \
+	ACLChecklist.cc \
+	ACLProxyAuth.cc \
+	ACLStringData.cc \
+	ACLRegexData.cc \
+	ACLUserData.cc \
+	authenticate.cc \
+	BodyReader.cc \
+	cache_cf.cc \
+	cache_manager.cc \
+	CacheDigest.cc \
+	carp.cc \
+	cbdata.cc \
+	client_db.cc \
+	client_side.cc \
+	client_side_reply.cc \
+	client_side_request.cc \
+	clientStream.cc \
+	comm_select.cc \
+	comm_poll.cc \
+        comm_epoll.cc \
+	comm_kqueue.cc \
+	ConfigOption.cc \
+	ConfigParser.cc \
+	debug.cc \
+	$(DELAY_POOL_SOURCE) \
+	disk.cc \
+	$(DNSSOURCE) \
+	event.cc \
+	errorpage.cc \
+	$(ESI_SOURCE) \
+	ETag.cc \
+	external_acl.cc \
+	ExternalACLEntry.cc \
+	fd.cc \
+	fde.cc \
+	forward.cc \
+	fqdncache.cc \
+	ftp.cc \
+	globals.cc \
+	gopher.cc \
+	helper.cc \
+	$(HTCPSOURCE) \
+	http.cc \
+	HttpBody.cc \
+	HttpHdrCc.cc \
+	HttpHdrContRange.cc \
+	HttpHdrRange.cc \
+	HttpHdrSc.cc \
+	HttpHdrScTarget.cc \
+	HttpHeader.cc \
+	HttpHeaderTools.cc \
+	HttpMsg.cc \
+	HttpReply.cc \
+	HttpRequest.cc \
+	HttpRequestMethod.cc \
+	HttpStatusLine.cc \
+	icmp.cc \
+	icp_v2.cc \
+	icp_v3.cc \
+	$(IDENT_SOURCE) \
+	int.cc \
+	internal.cc \
+	ipc.cc \
+	ipcache.cc \
+	list.cc \
+	logfile.cc \
+	mem.cc \
+	mem_node.cc \
+	MemObject.cc \
+	mime.cc \
+	multicast.cc \
+	neighbors.cc \
+	net_db.cc \
+	Parsing.cc \
+	peer_digest.cc \
+	peer_select.cc \
+	pconn.cc \
+	redirect.cc \
+	refresh.cc \
+	Server.cc \
+	$(SNMP_SOURCE) \
+	$(SSL_SOURCE) \
+	stat.cc \
+	StatHist.cc \
+	stmem.cc \
+	store.cc \
+	store_client.cc \
+	store_digest.cc \
+	store_dir.cc \
+	store_key_md5.cc \
+	store_io.cc \
+	store_log.cc \
+	store_rebuild.cc \
+	store_swapin.cc \
+	store_swapmeta.cc \
+	store_swapout.cc \
+	StoreFileSystem.cc \
+	StoreIOState.cc \
+	StoreMeta.cc \
+	StoreMetaMD5.cc \
+	StoreMetaSTD.cc \
+	StoreMetaUnpacker.cc \
+	StoreMetaURL.cc \
+	StoreMetaVary.cc \
+	StoreSwapLogData.cc \
+	String.cc \
+	SwapDir.cc \
+	time.cc \
+	tools.cc \
+	tunnel.cc \
+	url.cc \
+	URLScheme.cc \
+	urn.cc \
+	wais.cc \
+	whois.cc \
+	wordlist.cc \
+	Packer.cc \
+	MemBuf.cc
+nodist_tests_test_http_range_SOURCES = \
+	repl_modules.cc \
+	string_arrays.c
+tests_test_http_range_LDADD = \
+	libsquid.la \
+	libauth.la \
+	@REPL_OBJS@ \
+	@STORE_OBJS@ \
+	@ICAP_LIBS@ \
+	@REGEXLIB@ \
+	@SSLLIB@ \
+	-L../lib -lmiscutil \
+	@XTRA_LIBS@ \
+	@SQUID_CPPUNIT_LA@ \
+	@SNMPLIB@ 
+tests_test_http_range_DEPENDENCIES = \
+	@SQUID_CPPUNIT_LA@
+
 
 ## Tests of the HttpRequest module.
 tests_testHttpRequest_SOURCES = \
@@ -1210,11 +1358,7 @@ tests_testHttpRequest_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
-	AuthConfig.cc \
 	authenticate.cc \
-	AuthUser.cc \
-	AuthUserRequest.cc \
-	AuthScheme.cc \
 	BodyReader.cc \
 	cache_manager.cc \
 	cache_cf.cc \
@@ -1226,7 +1370,6 @@ tests_testHttpRequest_SOURCES = \
 	client_side_reply.cc \
 	client_side_request.cc \
 	clientStream.cc \
-	comm.cc \
 	comm_select.cc \
 	comm_poll.cc \
         comm_epoll.cc \
@@ -1268,7 +1411,6 @@ tests_testHttpRequest_SOURCES = \
 	$(IDENT_SOURCE) \
 	ipc.cc \
 	ipcache.cc \
-	IPInterception.cc \
 	int.cc \
 	internal.cc \
 	list.cc \
@@ -1328,6 +1470,8 @@ nodist_tests_testHttpRequest_SOURCES = \
 	repl_modules.cc \
 	string_arrays.c
 tests_testHttpRequest_LDADD = \
+	libsquid.la \
+	libauth.la \
 	@REPL_OBJS@ \
 	@ICAP_LIBS@ \
 	@REGEXLIB@ \
@@ -1360,7 +1504,7 @@ STORE_TEST_SOURCES=\
 	Parsing.cc \
 	ConfigOption.cc \
 	SwapDir.cc \
-	AuthScheme.cc authenticate.cc AuthUser.cc AuthUserRequest.cc AuthConfig.cc \
+	authenticate.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
 	tests/stub_helper.cc cbdata.cc String.cc tests/stub_cache_manager.cc \
 	tests/stub_comm.cc \
@@ -1403,6 +1547,8 @@ tests_testStore_SOURCES= \
 	$(STORE_TEST_SOURCES)
 
 tests_testStore_LDADD= \
+	libsquid.la \
+	libauth.la \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
 	@SQUID_CPPUNIT_LA@ \
@@ -1460,6 +1606,8 @@ SWAP_TEST_SOURCES = \
 	$(DISKIO_SOURCE)
 
 SWAP_TEST_LDADD = \
+	libsquid.la \
+	libauth.la \
 	DiskIO/Blocking/BlockingDiskIOModule.o \
 	repl/lru/store_repl_lru.o \
 	@REGEXLIB@ \
@@ -1538,11 +1686,7 @@ tests_testURL_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
-	AuthConfig.cc \
 	authenticate.cc \
-	AuthUser.cc \
-	AuthUserRequest.cc \
-	AuthScheme.cc \
 	BodyReader.cc \
 	cache_manager.cc \
 	cache_cf.cc \
@@ -1554,7 +1698,6 @@ tests_testURL_SOURCES = \
 	client_side_reply.cc \
 	client_side_request.cc \
 	clientStream.cc \
-	comm.cc \
 	comm_select.cc \
 	comm_poll.cc \
         comm_epoll.cc \
@@ -1596,7 +1739,6 @@ tests_testURL_SOURCES = \
 	$(IDENT_SOURCE) \
 	ipc.cc \
 	ipcache.cc \
-	IPInterception.cc \
 	int.cc \
 	internal.cc \
 	list.cc \
@@ -1652,6 +1794,8 @@ nodist_tests_testURL_SOURCES = \
 	repl_modules.cc \
 	string_arrays.c
 tests_testURL_LDADD = \
+	libsquid.la \
+	libauth.la \
 	@REPL_OBJS@ \
 	@ICAP_LIBS@ \
 	@SSLLIB@ \

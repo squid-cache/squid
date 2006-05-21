@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.18 2006/05/08 23:38:36 robertc Exp $
+#  $Id: Makefile.am,v 1.19 2006/05/21 14:35:11 robertc Exp $
 #
 
 AUTOMAKE_OPTIONS = subdir-objects
@@ -33,13 +33,11 @@ TESTS = debug \
 	MemPoolTest\
 	mem_node_test\
 	mem_hdr_test\
-	http_range_test \
 	$(ESI_TESTS)
 
 ## Sort by alpha - any build failures are significant.
 check_PROGRAMS= debug \
 		$(ESI_TESTS) \
-		http_range_test \
 		MemPoolTest\
 		mem_node_test\
 		mem_hdr_test \
@@ -63,15 +61,6 @@ mem_hdr_test_LDADD = $(top_builddir)/src/stmem.o \
 		     $(top_builddir)/src/mem_node.o $(LDADD)
 MemPoolTest_SOURCES = MemPoolTest.cc
 refcount_SOURCES = refcount.cc
-
-http_range_test_SOURCES = http_range_test.cc $(DEBUG_SOURCE)
-http_range_test_LDADD = $(top_builddir)/src/HttpHdrRange.o \
-		$(top_builddir)/src/HttpHeaderTools.o \
-		$(top_builddir)/src/MemBuf.o \
-		$(top_builddir)/src/Packer.o \
-		$(top_builddir)/src/String.o \
-		$(top_builddir)/src/mem.o \
-		$(LDADD)
 
 splay_SOURCES = splay.cc
 
