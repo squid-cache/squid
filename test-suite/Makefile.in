@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.61 2006/05/08 23:49:28 wessels Exp $
+#  $Id: Makefile.in,v 1.62 2006/05/22 00:10:59 hno Exp $
 #
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -43,8 +43,7 @@ build_triplet = @build@
 host_triplet = @host@
 EXTRA_PROGRAMS = mem_node_test$(EXEEXT) membanger$(EXEEXT) \
 	splay$(EXEEXT) tcp-banger2$(EXEEXT) rfc1738$(EXEEXT)
-check_PROGRAMS = debug$(EXEEXT) $(am__EXEEXT_2) \
-	http_range_test$(EXEEXT) MemPoolTest$(EXEEXT) \
+check_PROGRAMS = debug$(EXEEXT) $(am__EXEEXT_2) MemPoolTest$(EXEEXT) \
 	mem_node_test$(EXEEXT) mem_hdr_test$(EXEEXT) refcount$(EXEEXT) \
 	rfc1738$(EXEEXT) splay$(EXEEXT) StackTest$(EXEEXT) \
 	syntheticoperators$(EXEEXT) VirtualDeleteOperator$(EXEEXT)
@@ -88,14 +87,6 @@ debug_OBJECTS = $(am_debug_OBJECTS)
 debug_LDADD = $(LDADD)
 debug_DEPENDENCIES = $(top_builddir)/src/globals.o \
 	$(top_builddir)/src/time.o
-am_http_range_test_OBJECTS = http_range_test.$(OBJEXT) \
-	$(am__objects_1)
-http_range_test_OBJECTS = $(am_http_range_test_OBJECTS)
-http_range_test_DEPENDENCIES = $(top_builddir)/src/HttpHdrRange.o \
-	$(top_builddir)/src/HttpHeaderTools.o \
-	$(top_builddir)/src/MemBuf.o $(top_builddir)/src/Packer.o \
-	$(top_builddir)/src/String.o $(top_builddir)/src/mem.o \
-	$(am__DEPENDENCIES_1)
 am_mem_hdr_test_OBJECTS = mem_hdr_test.$(OBJEXT) $(am__objects_1)
 mem_hdr_test_OBJECTS = $(am_mem_hdr_test_OBJECTS)
 mem_hdr_test_DEPENDENCIES = $(top_builddir)/src/stmem.o \
@@ -156,15 +147,15 @@ CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(ESIExpressions_SOURCES) $(MemPoolTest_SOURCES) \
 	$(StackTest_SOURCES) $(VirtualDeleteOperator_SOURCES) \
-	$(debug_SOURCES) $(http_range_test_SOURCES) \
-	$(mem_hdr_test_SOURCES) $(mem_node_test_SOURCES) membanger.c \
-	$(refcount_SOURCES) $(rfc1738_SOURCES) $(splay_SOURCES) \
+	$(debug_SOURCES) $(mem_hdr_test_SOURCES) \
+	$(mem_node_test_SOURCES) membanger.c $(refcount_SOURCES) \
+	$(rfc1738_SOURCES) $(splay_SOURCES) \
 	$(syntheticoperators_SOURCES) tcp-banger2.c
 DIST_SOURCES = $(ESIExpressions_SOURCES) $(MemPoolTest_SOURCES) \
 	$(StackTest_SOURCES) $(VirtualDeleteOperator_SOURCES) \
-	$(debug_SOURCES) $(http_range_test_SOURCES) \
-	$(mem_hdr_test_SOURCES) $(mem_node_test_SOURCES) membanger.c \
-	$(refcount_SOURCES) $(rfc1738_SOURCES) $(splay_SOURCES) \
+	$(debug_SOURCES) $(mem_hdr_test_SOURCES) \
+	$(mem_node_test_SOURCES) membanger.c $(refcount_SOURCES) \
+	$(rfc1738_SOURCES) $(splay_SOURCES) \
 	$(syntheticoperators_SOURCES) tcp-banger2.c
 ETAGS = etags
 CTAGS = ctags
@@ -379,7 +370,6 @@ TESTS = debug \
 	MemPoolTest\
 	mem_node_test\
 	mem_hdr_test\
-	http_range_test \
 	$(ESI_TESTS)
 
 LDADD = $(top_builddir)/src/globals.o $(top_builddir)/src/time.o -L$(top_builddir)/lib -lmiscutil
@@ -397,15 +387,6 @@ mem_hdr_test_LDADD = $(top_builddir)/src/stmem.o \
 
 MemPoolTest_SOURCES = MemPoolTest.cc
 refcount_SOURCES = refcount.cc
-http_range_test_SOURCES = http_range_test.cc $(DEBUG_SOURCE)
-http_range_test_LDADD = $(top_builddir)/src/HttpHdrRange.o \
-		$(top_builddir)/src/HttpHeaderTools.o \
-		$(top_builddir)/src/MemBuf.o \
-		$(top_builddir)/src/Packer.o \
-		$(top_builddir)/src/String.o \
-		$(top_builddir)/src/mem.o \
-		$(LDADD)
-
 splay_SOURCES = splay.cc
 StackTest_SOURCES = StackTest.cc $(DEBUG_SOURCE)
 syntheticoperators_SOURCES = syntheticoperators.cc $(DEBUG_SOURCE)
@@ -466,9 +447,6 @@ VirtualDeleteOperator$(EXEEXT): $(VirtualDeleteOperator_OBJECTS) $(VirtualDelete
 debug$(EXEEXT): $(debug_OBJECTS) $(debug_DEPENDENCIES) 
 	@rm -f debug$(EXEEXT)
 	$(CXXLINK) $(debug_LDFLAGS) $(debug_OBJECTS) $(debug_LDADD) $(LIBS)
-http_range_test$(EXEEXT): $(http_range_test_OBJECTS) $(http_range_test_DEPENDENCIES) 
-	@rm -f http_range_test$(EXEEXT)
-	$(CXXLINK) $(http_range_test_LDFLAGS) $(http_range_test_OBJECTS) $(http_range_test_LDADD) $(LIBS)
 mem_hdr_test$(EXEEXT): $(mem_hdr_test_OBJECTS) $(mem_hdr_test_DEPENDENCIES) 
 	@rm -f mem_hdr_test$(EXEEXT)
 	$(CXXLINK) $(mem_hdr_test_LDFLAGS) $(mem_hdr_test_OBJECTS) $(mem_hdr_test_LDADD) $(LIBS)
@@ -505,7 +483,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StackTest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/VirtualDeleteOperator.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/debug.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/http_range_test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mem_hdr_test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mem_node_test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/membanger.Po@am__quote@
