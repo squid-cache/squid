@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreIOState.h,v 1.8 2006/05/23 00:21:47 wessels Exp $
+ * $Id: StoreIOState.h,v 1.9 2006/05/23 00:30:21 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -48,7 +48,7 @@ public:
      * storeClientReadBody
      * storeClientReadHeader
      */
-    typedef void STRCB(void *their_data, const char *buf, ssize_t len);
+    typedef void STRCB(void *their_data, const char *buf, ssize_t len, StoreIOState::Pointer self);
 
     /*
      * STFNCB is the "store file number callback."  It is called
@@ -60,7 +60,7 @@ public:
      * storeSwapInFileNotify
      * storeSwapOutFileNotify
      */
-    typedef void STFNCB(void *their_data, int errflag);
+    typedef void STFNCB(void *their_data, int errflag, StoreIOState::Pointer self);
 
     /*
      * STIOCB is the "store close callback" for store files.  It
@@ -70,7 +70,7 @@ public:
      * storeSwapOutFileClosed
      * storeSwapInFileClosed
      */
-    typedef void STIOCB(void *their_data, int errflag);
+    typedef void STIOCB(void *their_data, int errflag, StoreIOState::Pointer self);
 
     /* StoreIOState does not get mempooled - it's children do */
     void *operator new (size_t amount);

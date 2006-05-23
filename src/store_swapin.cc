@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapin.cc,v 1.38 2006/05/23 00:21:47 wessels Exp $
+ * $Id: store_swapin.cc,v 1.39 2006/05/23 00:30:21 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapin Functions
  * AUTHOR: Duane Wessels
@@ -72,7 +72,7 @@ storeSwapInStart(store_client * sc)
 }
 
 static void
-storeSwapInFileClosed(void *data, int errflag)
+storeSwapInFileClosed(void *data, int errflag, StoreIOState::Pointer self)
 {
     store_client *sc = (store_client *)data;
     debug(20, 3) ("storeSwapInFileClosed: sio=%p, errflag=%d\n",
@@ -88,7 +88,7 @@ storeSwapInFileClosed(void *data, int errflag)
 }
 
 static void
-storeSwapInFileNotify(void *data, int errflag)
+storeSwapInFileNotify(void *data, int errflag, StoreIOState::Pointer self)
 {
     store_client *sc = (store_client *)data;
     StoreEntry *e = sc->entry;
