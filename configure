@@ -39003,38 +39003,41 @@ esac
 
 
 DBLIB=
-echo "$as_me:$LINENO: checking for dbopen in -ldb" >&5
-echo $ECHO_N "checking for dbopen in -ldb... $ECHO_C" >&6
-if test "${ac_cv_lib_db_dbopen+set}" = set; then
+echo "$as_me:$LINENO: checking if dbopen needs -ldb" >&5
+echo $ECHO_N "checking if dbopen needs -ldb... $ECHO_C" >&6
+if test "${ac_cv_dbopen_libdb+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-ldb  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
+
+  cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 
-/* Override any gcc2 internal prototype to avoid an error.  */
-#ifdef __cplusplus
-extern "C"
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
 #endif
-/* We use char because int might match the return type of a gcc2
-   builtin and then its argument prototype would still apply.  */
-char dbopen ();
+#if HAVE_LIMITS_H
+#include <limits.h>
+#endif
+#if HAVE_DB_185_H
+#include <db_185.h>
+#elif HAVE_DB_H
+#include <db.h>
+#endif
 int
 main ()
 {
-dbopen ();
+dbopen((void *)0L, 0, 0, DB_HASH, (void *)0L)
   ;
   return 0;
 }
 _ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>conftest.er1
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
   ac_status=$?
   grep -v '^ *+' conftest.er1 >conftest.err
   rm -f conftest.er1
@@ -39048,165 +39051,25 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest$ac_exeext'
+	 { ac_try='test -s conftest.$ac_objext'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  ac_cv_lib_db_dbopen=yes
+  LIB_DB="-ldb"
+    ac_cv_dbopen_libdb="yes"
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
-ac_cv_lib_db_dbopen=no
+ac_cv_dbopen_libdb="no"
 fi
-rm -f conftest.err conftest.$ac_objext \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-echo "$as_me:$LINENO: result: $ac_cv_lib_db_dbopen" >&5
-echo "${ECHO_T}$ac_cv_lib_db_dbopen" >&6
-if test $ac_cv_lib_db_dbopen = yes; then
-  LIB_DB="-ldb"
-fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
 
-echo "$as_me:$LINENO: checking for db_open in -ldb" >&5
-echo $ECHO_N "checking for db_open in -ldb... $ECHO_C" >&6
-if test "${ac_cv_lib_db_db_open+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-ldb  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-/* Override any gcc2 internal prototype to avoid an error.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-/* We use char because int might match the return type of a gcc2
-   builtin and then its argument prototype would still apply.  */
-char db_open ();
-int
-main ()
-{
-db_open ();
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_lib_db_db_open=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-ac_cv_lib_db_db_open=no
 fi
-rm -f conftest.err conftest.$ac_objext \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-echo "$as_me:$LINENO: result: $ac_cv_lib_db_db_open" >&5
-echo "${ECHO_T}$ac_cv_lib_db_db_open" >&6
-if test $ac_cv_lib_db_db_open = yes; then
-  LIB_DB="-ldb"
-fi
-
-echo "$as_me:$LINENO: checking for __db185_open in -ldb" >&5
-echo $ECHO_N "checking for __db185_open in -ldb... $ECHO_C" >&6
-if test "${ac_cv_lib_db___db185_open+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-ldb  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-/* Override any gcc2 internal prototype to avoid an error.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-/* We use char because int might match the return type of a gcc2
-   builtin and then its argument prototype would still apply.  */
-char __db185_open ();
-int
-main ()
-{
-__db185_open ();
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_lib_db___db185_open=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-ac_cv_lib_db___db185_open=no
-fi
-rm -f conftest.err conftest.$ac_objext \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-echo "$as_me:$LINENO: result: $ac_cv_lib_db___db185_open" >&5
-echo "${ECHO_T}$ac_cv_lib_db___db185_open" >&6
-if test $ac_cv_lib_db___db185_open = yes; then
-  LIB_DB="-ldb"
-fi
-
+echo "$as_me:$LINENO: result: $ac_cv_dbopen_libdb" >&5
+echo "${ECHO_T}$ac_cv_dbopen_libdb" >&6
 
 
 case "$host" in
