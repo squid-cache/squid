@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.104 2006/05/22 19:58:51 wessels Exp $
+ * $Id: store_swapout.cc,v 1.105 2006/05/23 00:21:47 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -42,8 +42,8 @@
 #include "SwapDir.h"
 
 static void storeSwapOutStart(StoreEntry * e);
-static STIOCB storeSwapOutFileClosed;
-static STFNCB storeSwapOutFileNotify;
+static StoreIOState::STIOCB storeSwapOutFileClosed;
+static StoreIOState::STFNCB storeSwapOutFileNotify;
 
 /* start swapping object to disk */
 static void

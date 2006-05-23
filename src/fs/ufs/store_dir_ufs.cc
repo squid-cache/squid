@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.73 2006/05/19 20:22:57 wessels Exp $
+ * $Id: store_dir_ufs.cc,v 1.74 2006/05/23 00:21:48 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -432,13 +432,13 @@ UFSSwapDir::dereference(StoreEntry & e)
 }
 
 StoreIOState::Pointer
-UFSSwapDir::createStoreIO(StoreEntry &e, STFNCB * file_callback, STIOCB * callback, void *callback_data)
+UFSSwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB * file_callback, StoreIOState::STIOCB * callback, void *callback_data)
 {
     return IO->create (this, &e, file_callback, callback, callback_data);
 }
 
 StoreIOState::Pointer
-UFSSwapDir::openStoreIO(StoreEntry &e, STFNCB * file_callback, STIOCB * callback, void *callback_data)
+UFSSwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB * file_callback, StoreIOState::STIOCB * callback, void *callback_data)
 {
     return IO->open (this, &e, file_callback, callback, callback_data);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapin.cc,v 1.37 2006/05/22 19:58:51 wessels Exp $
+ * $Id: store_swapin.cc,v 1.38 2006/05/23 00:21:47 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapin Functions
  * AUTHOR: Duane Wessels
@@ -37,8 +37,8 @@
 #include "StoreClient.h"
 #include "Store.h"
 
-static STIOCB storeSwapInFileClosed;
-static STFNCB storeSwapInFileNotify;
+static StoreIOState::STIOCB storeSwapInFileClosed;
+static StoreIOState::STFNCB storeSwapInFileNotify;
 
 void
 storeSwapInStart(store_client * sc)

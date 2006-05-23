@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufscommon.h,v 1.4 2006/05/22 19:58:53 wessels Exp $
+ * $Id: ufscommon.h,v 1.5 2006/05/23 00:21:48 wessels Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -70,8 +70,8 @@ public:
     virtual int canStore(StoreEntry const &)const;
     virtual void reference(StoreEntry &);
     virtual void dereference(StoreEntry &);
-    virtual StoreIOState::Pointer createStoreIO(StoreEntry &, STFNCB *, STIOCB *, void *);
-    virtual StoreIOState::Pointer openStoreIO(StoreEntry &, STFNCB *, STIOCB *, void *);
+    virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
+    virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
     virtual void openLog();
     virtual void closeLog();
     virtual int writeCleanStart();
@@ -167,13 +167,13 @@ public:
 
     virtual int load();
 
-    StoreIOState::Pointer createState(SwapDir *SD, StoreEntry *e, STIOCB * callback, void *callback_data) const;
+    StoreIOState::Pointer createState(SwapDir *SD, StoreEntry *e, StoreIOState::STIOCB * callback, void *callback_data) const;
     /* UFS specific */
     virtual RefCount<DiskFile> newFile (char const *path);
-    StoreIOState::Pointer open(SwapDir *, StoreEntry *, STFNCB *,
-                               STIOCB *, void *);
-    StoreIOState::Pointer create(SwapDir *, StoreEntry *, STFNCB *,
-                                 STIOCB *, void *);
+    StoreIOState::Pointer open(SwapDir *, StoreEntry *, StoreIOState::STFNCB *,
+                               StoreIOState::STIOCB *, void *);
+    StoreIOState::Pointer create(SwapDir *, StoreEntry *, StoreIOState::STFNCB *,
+                                 StoreIOState::STIOCB *, void *);
 
     virtual void unlinkFile (char const *);
     virtual void sync();

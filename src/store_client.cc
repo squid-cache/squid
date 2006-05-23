@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.144 2005/11/07 22:00:38 wessels Exp $
+ * $Id: store_client.cc,v 1.145 2006/05/23 00:21:47 wessels Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -55,8 +55,8 @@
  *       'Body' refers to the swapfile body, which is the full
  *        HTTP reply (including HTTP headers and body).
  */
-static STRCB storeClientReadBody;
-static STRCB storeClientReadHeader;
+static StoreIOState::STRCB storeClientReadBody;
+static StoreIOState::STRCB storeClientReadHeader;
 static void storeClientCopy2(StoreEntry * e, store_client * sc);
 static EVH storeClientCopyEvent;
 static int CheckQuickAbort2(StoreEntry * entry);
