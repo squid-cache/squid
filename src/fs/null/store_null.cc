@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_null.cc,v 1.8 2005/01/03 16:08:27 robertc Exp $
+ * $Id: store_null.cc,v 1.9 2006/05/23 00:48:13 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -61,14 +61,14 @@ NullSwapDir::init()
 }
 
 StoreIOState::Pointer
-NullSwapDir::createStoreIO(StoreEntry &, STFNCB *, STIOCB *, void *)
+NullSwapDir::createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *)
 {
     fatal ("Attempt to get a StoreIO from the NULL store!\n");
     return NULL;
 }
 
 StoreIOState::Pointer
-NullSwapDir::openStoreIO(StoreEntry &, STFNCB *, STIOCB *, void *)
+NullSwapDir::openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *)
 {
     fatal ("Attempt to get a StoreIO from the NULL store!\n");
     return NULL;
