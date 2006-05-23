@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.593 2006/05/19 23:10:20 wessels Exp $
+ * $Id: store.cc,v 1.594 2006/05/23 16:22:34 hno Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -709,7 +709,7 @@ storeSetPublicKey(StoreEntry * e)
 
             if (vary.size()) {
                 /* Again, we own this structure layout */
-                ((HttpHeader) pe->getReply()->header).putStr(HDR_VARY, vary.buf());
+                rep->header.putStr(HDR_VARY, vary.buf());
                 vary.clean();
             }
 
@@ -718,7 +718,7 @@ storeSetPublicKey(StoreEntry * e)
 
             if (vary.buf()) {
                 /* Again, we own this structure layout */
-                ((HttpHeader) pe->getReply()->header).putStr(HDR_X_ACCELERATOR_VARY, vary.buf());
+                rep->header.putStr(HDR_X_ACCELERATOR_VARY, vary.buf());
                 vary.clean();
             }
 
