@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.145 2006/05/23 00:21:47 wessels Exp $
+ * $Id: store_client.cc,v 1.146 2006/05/23 00:30:21 wessels Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -469,7 +469,7 @@ store_client::fileRead()
 }
 
 static void
-storeClientReadBody(void *data, const char *buf, ssize_t len)
+storeClientReadBody(void *data, const char *buf, ssize_t len, StoreIOState::Pointer self)
 {
     store_client *sc = (store_client *)data;
     assert(sc->flags.disk_io_pending);
@@ -505,7 +505,7 @@ store_client::fail()
 }
 
 static void
-storeClientReadHeader(void *data, const char *buf, ssize_t len)
+storeClientReadHeader(void *data, const char *buf, ssize_t len, StoreIOState::Pointer self)
 {
     store_client *sc = (store_client *)data;
     sc->readHeader(buf, len);

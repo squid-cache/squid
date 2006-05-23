@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.105 2006/05/23 00:21:47 wessels Exp $
+ * $Id: store_swapout.cc,v 1.106 2006/05/23 00:30:21 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -100,7 +100,7 @@ storeSwapOutStart(StoreEntry * e)
 }
 
 static void
-storeSwapOutFileNotify(void *data, int errflag)
+storeSwapOutFileNotify(void *data, int errflag, StoreIOState::Pointer self)
 {
     generic_cbdata *c = (generic_cbdata *)data;
     StoreEntry *e = (StoreEntry *)c->data;
@@ -316,7 +316,7 @@ storeSwapOutFileClose(StoreEntry * e)
 }
 
 static void
-storeSwapOutFileClosed(void *data, int errflag)
+storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
 {
     generic_cbdata *c = (generic_cbdata *)data;
     StoreEntry *e = (StoreEntry *)c->data;

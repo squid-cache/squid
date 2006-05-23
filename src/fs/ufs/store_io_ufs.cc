@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.31 2006/05/23 00:21:48 wessels Exp $
+ * $Id: store_io_ufs.cc,v 1.32 2006/05/23 00:30:21 wessels Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -251,7 +251,7 @@ UFSStoreState::readCompleted(const char *buf, int len, int errflag, RefCount<Rea
         if (len > 0 && read_buf != buf)
             memcpy(read_buf, buf, len);
 
-        callback(cbdata, read_buf, len);
+        callback(cbdata, read_buf, len, this);
     } else if (closing && theFile.getRaw()!= NULL && !theFile->ioInProgress())
         doCallback(errflag);
 }
@@ -299,7 +299,7 @@ UFSStoreState::doCallback(int errflag)
     void *cbdata;
 
     if (cbdataReferenceValidDone(callback_data, &cbdata) && theCallback)
-        theCallback(cbdata, errflag);
+        theCallback(cbdata, errflag, this);
 
     /* We are finished with the file as this is on close or error only.*/
     /* This must be the last line, as theFile may be the only object holding
