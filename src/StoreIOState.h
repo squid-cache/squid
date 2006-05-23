@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreIOState.h,v 1.7 2006/05/22 19:58:51 wessels Exp $
+ * $Id: StoreIOState.h,v 1.8 2006/05/23 00:21:47 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,35 +34,6 @@
 #ifndef SQUID_STOREIOSTATE_H
 #define SQUID_STOREIOSTATE_H
 
-/*
- * STRCB is the "store read callback".  STRCB functions are passed
- * to storeRead().  Examples of STRCB callbacks are:
- * storeClientReadBody
- * storeClientReadHeader
- */
-typedef void STRCB(void *their_data, const char *buf, ssize_t len);
-
-/*
- * STFNCB is the "store file number callback."  It is called when
- * an underlying storage module has allocated the swap file number
- * and also indicates that the swap file has been opened for reading
- * or writing.  STFNCB functions are passed to storeCreate() and
- * storeOpen().  Examples of STFNCB callbacks are:
- * storeSwapInFileNotify
- * storeSwapOutFileNotify
- */
-typedef void STFNCB(void *their_data, int errflag);
-
-/*
- * STIOCB is the "store close callback" for store files.  It is
- * called when the store file is closed.  STIOCB functions are
- * passed to storeCreate() and storeOpen(). Examples of STIOCB
- * callbacks are:
- * storeSwapOutFileClosed
- * storeSwapInFileClosed
- */
-typedef void STIOCB(void *their_data, int errflag);
-
 #include "RefCount.h"
 
 class StoreIOState : public RefCountable
@@ -70,6 +41,36 @@ class StoreIOState : public RefCountable
 
 public:
     typedef RefCount<StoreIOState> Pointer;
+
+    /*
+     * STRCB is the "store read callback".  STRCB functions are
+     * passed to storeRead().  Examples of STRCB callbacks are:
+     * storeClientReadBody
+     * storeClientReadHeader
+     */
+    typedef void STRCB(void *their_data, const char *buf, ssize_t len);
+
+    /*
+     * STFNCB is the "store file number callback."  It is called
+     * when an underlying storage module has allocated the swap
+     * file number and also indicates that the swap file has been
+     * opened for reading or writing.  STFNCB functions are passed
+     * to storeCreate() and storeOpen().  Examples of STFNCB callbacks
+     * are:
+     * storeSwapInFileNotify
+     * storeSwapOutFileNotify
+     */
+    typedef void STFNCB(void *their_data, int errflag);
+
+    /*
+     * STIOCB is the "store close callback" for store files.  It
+     * is called when the store file is closed.  STIOCB functions
+     * are passed to storeCreate() and storeOpen(). Examples of
+     * STIOCB callbacks are:
+     * storeSwapOutFileClosed
+     * storeSwapInFileClosed
+     */
+    typedef void STIOCB(void *their_data, int errflag);
 
     /* StoreIOState does not get mempooled - it's children do */
     void *operator new (size_t amount);
@@ -111,10 +112,10 @@ unsigned int closing:
     flags;
 };
 
-StoreIOState::Pointer storeCreate(StoreEntry *, STFNCB *, STIOCB *, void *);
-StoreIOState::Pointer storeOpen(StoreEntry *, STFNCB *, STIOCB *, void *);
+StoreIOState::Pointer storeCreate(StoreEntry *, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
+StoreIOState::Pointer storeOpen(StoreEntry *, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
 SQUIDCEXTERN void storeClose(StoreIOState::Pointer);
-SQUIDCEXTERN void storeRead(StoreIOState::Pointer, char *, size_t, off_t, STRCB *, void *);
+SQUIDCEXTERN void storeRead(StoreIOState::Pointer, char *, size_t, off_t, StoreIOState::STRCB *, void *);
 SQUIDCEXTERN void storeIOWrite(StoreIOState::Pointer, char const *, size_t, off_t, FREE *);
 
 #endif /* SQUID_STOREIOSTATE_H */

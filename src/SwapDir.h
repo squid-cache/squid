@@ -1,6 +1,6 @@
 
 /*
- * $Id: SwapDir.h,v 1.8 2005/01/03 16:08:25 robertc Exp $
+ * $Id: SwapDir.h,v 1.9 2006/05/23 00:21:47 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -188,8 +188,8 @@ unsigned int read_only:
     virtual void dereference(StoreEntry &);	/* Unreference this object */
     virtual int callback();	/* Handle pending callbacks */
     virtual void sync();	/* Sync the store prior to shutdown */
-    virtual StoreIOState::Pointer createStoreIO(StoreEntry &, STFNCB *, STIOCB *, void *) = 0;
-    virtual StoreIOState::Pointer openStoreIO(StoreEntry &, STFNCB *, STIOCB *, void *) = 0;
+    virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *) = 0;
+    virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *) = 0;
     virtual void unlink (StoreEntry &);
     bool canLog(StoreEntry const &e)const;
     virtual void openLog();

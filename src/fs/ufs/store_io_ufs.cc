@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.30 2006/05/22 19:58:53 wessels Exp $
+ * $Id: store_io_ufs.cc,v 1.31 2006/05/23 00:21:48 wessels Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -65,7 +65,7 @@ UFSStrategy::~UFSStrategy ()
 }
 
 StoreIOState::Pointer
-UFSStrategy::createState(SwapDir *SD, StoreEntry *e, STIOCB * callback, void *callback_data) const
+UFSStrategy::createState(SwapDir *SD, StoreEntry *e, StoreIOState::STIOCB * callback, void *callback_data) const
 {
     return new UFSStoreState (SD, e, callback, callback_data);
 }
@@ -406,8 +406,8 @@ UFSStoreState::queueWrite(char const *buf, size_t size, off_t offset, FREE * fre
 }
 
 StoreIOState::Pointer
-UFSStrategy::open(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
-                  STIOCB * callback, void *callback_data)
+UFSStrategy::open(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB * file_callback,
+                  StoreIOState::STIOCB * callback, void *callback_data)
 {
     assert (((UFSSwapDir *)SD)->IO == this);
     debug(79, 3) ("UFSStrategy::open: fileno %08X\n", e->swap_filen);
@@ -441,8 +441,8 @@ UFSStrategy::open(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
 }
 
 StoreIOState::Pointer
-UFSStrategy::create(SwapDir * SD, StoreEntry * e, STFNCB * file_callback,
-                    STIOCB * callback, void *callback_data)
+UFSStrategy::create(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB * file_callback,
+                    StoreIOState::STIOCB * callback, void *callback_data)
 {
     assert (((UFSSwapDir *)SD)->IO == this);
     /* Allocate a number */
