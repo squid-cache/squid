@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_null.h,v 1.2 2005/01/03 16:08:27 robertc Exp $
+ * $Id: store_null.h,v 1.3 2006/05/23 00:48:13 wessels Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -45,8 +45,8 @@ public:
     NullSwapDir();
     virtual void init();
     virtual int canStore(StoreEntry const &)const;
-    virtual StoreIOState::Pointer createStoreIO(StoreEntry &, STFNCB *, STIOCB *, void *);
-    virtual StoreIOState::Pointer openStoreIO(StoreEntry &, STFNCB *, STIOCB *, void *);
+    virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
+    virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
     virtual void parse(int, char*);
     virtual void reconfigure (int, char *);
     virtual StoreSearch *search(String const url, HttpRequest *);
