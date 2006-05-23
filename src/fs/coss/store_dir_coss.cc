@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.62 2006/05/19 20:22:56 wessels Exp $
+ * $Id: store_dir_coss.cc,v 1.63 2006/05/23 00:39:32 wessels Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store COSS Directory Routines
@@ -182,7 +182,7 @@ CossSwapDir::readCompleted(const char *buf, int len, int errflag, RefCount<ReadR
     assert (cossRead);
     StoreIOState::Pointer sio =  cossRead->sio;
     void *cbdata;
-    STRCB *callback = sio->read.callback;
+    StoreIOState::STRCB *callback = sio->read.callback;
     char *p;
     CossState *cstate = dynamic_cast<CossState *>(sio.getRaw());
     ssize_t rlen;
@@ -222,7 +222,7 @@ CossSwapDir::readCompleted(const char *buf, int len, int errflag, RefCount<ReadR
     sio->read.callback = NULL;
 
     if (cbdataReferenceValidDone(sio->read.callback_data, &cbdata))
-        callback(cbdata, cstate->requestbuf, rlen);
+        callback(cbdata, cstate->requestbuf, rlen, sio);
 }
 
 void
