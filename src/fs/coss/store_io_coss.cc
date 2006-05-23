@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_coss.cc,v 1.28 2006/05/23 00:17:47 wessels Exp $
+ * $Id: store_io_coss.cc,v 1.29 2006/05/23 00:39:32 wessels Exp $
  *
  * DEBUG: section 79    Storage Manager COSS Interface
  * AUTHOR: Eric Stern
@@ -141,7 +141,7 @@ CossSwapDir::unlink(StoreEntry & e)
 }
 
 StoreIOState::Pointer
-CossSwapDir::createStoreIO(StoreEntry &e, STFNCB * file_callback, STIOCB * callback, void *callback_data)
+CossSwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB * file_callback, StoreIOState::STIOCB * callback, void *callback_data)
 {
     CossState *cstate;
     StoreIOState::Pointer sio = new CossState(this);
@@ -189,8 +189,8 @@ CossSwapDir::createStoreIO(StoreEntry &e, STFNCB * file_callback, STIOCB * callb
 }
 
 StoreIOState::Pointer
-CossSwapDir::openStoreIO(StoreEntry & e, STFNCB * file_callback,
-                         STIOCB * callback, void *callback_data)
+CossSwapDir::openStoreIO(StoreEntry & e, StoreIOState::STFNCB * file_callback,
+                         StoreIOState::STIOCB * callback, void *callback_data)
 {
     char *p;
     CossState *cstate;
@@ -249,7 +249,7 @@ CossSwapDir::openStoreIO(StoreEntry & e, STFNCB * file_callback,
         }
 
         /* Notify the upper levels that we've changed file number */
-        sio->file_callback(sio->callback_data, 0);
+        sio->file_callback(sio->callback_data, 0, sio);
 
         /*
          * lock the buffer so it doesn't get swapped out on us
@@ -427,7 +427,7 @@ CossState::doCallback(int errflag)
     this->callback = NULL;
 
     if (cbdataReferenceValidDone(callback_data, &cbdata))
-        callback(cbdata, errflag);
+        callback(cbdata, errflag, this);
 }
 
 char *
