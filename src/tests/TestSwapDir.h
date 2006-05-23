@@ -18,10 +18,10 @@ public:
     virtual void reconfigure(int, char*);
     virtual void init();
     virtual int canStore(const StoreEntry&) const;
-    virtual RefCount<storeIOState> createStoreIO(StoreEntry&, void
-            (*)(void*, int, storeIOState*), void (*)(void*, int, storeIOState*), void*);
-    virtual RefCount<storeIOState> openStoreIO(StoreEntry&, void
-            (*)(void*, int, storeIOState*), void (*)(void*, int, storeIOState*), void*);
+    virtual RefCount<StoreIOState> createStoreIO(StoreEntry&, void
+            (*)(void*, int), void (*)(void*, int), void*);
+    virtual RefCount<StoreIOState> openStoreIO(StoreEntry&, void
+            (*)(void*, int), void (*)(void*, int), void*);
     virtual void parse(int, char*);
     virtual StoreSearch *search(String, HttpRequest *);
 };

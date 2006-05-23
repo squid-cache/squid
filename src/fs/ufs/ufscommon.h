@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufscommon.h,v 1.3 2005/02/05 22:02:32 serassio Exp $
+ * $Id: ufscommon.h,v 1.4 2006/05/22 19:58:53 wessels Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -196,7 +196,7 @@ protected:
 
 class ReadRequest;
 
-class UFSStoreState : public storeIOState, public IORequestor
+class UFSStoreState : public StoreIOState, public IORequestor
 {
 
 public:

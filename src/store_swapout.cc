@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.103 2006/05/19 17:19:10 wessels Exp $
+ * $Id: store_swapout.cc,v 1.104 2006/05/22 19:58:51 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -43,7 +43,7 @@
 
 static void storeSwapOutStart(StoreEntry * e);
 static STIOCB storeSwapOutFileClosed;
-static STIOCB storeSwapOutFileNotify;
+static STFNCB storeSwapOutFileNotify;
 
 /* start swapping object to disk */
 static void
@@ -100,14 +100,14 @@ storeSwapOutStart(StoreEntry * e)
 }
 
 static void
-storeSwapOutFileNotify(void *data, int errflag, storeIOState * sio)
+storeSwapOutFileNotify(void *data, int errflag)
 {
     generic_cbdata *c = (generic_cbdata *)data;
     StoreEntry *e = (StoreEntry *)c->data;
     MemObject *mem = e->mem_obj;
     assert(e->swap_status == SWAPOUT_WRITING);
     assert(mem);
-    assert(mem->swapout.sio == sio);
+    assert(mem->swapout.sio != NULL);
     assert(errflag == 0);
     e->swap_filen = mem->swapout.sio->swap_filen;
     e->swap_dirn = mem->swapout.sio->swap_dirn;
@@ -316,7 +316,7 @@ storeSwapOutFileClose(StoreEntry * e)
 }
 
 static void
-storeSwapOutFileClosed(void *data, int errflag, storeIOState * sio)
+storeSwapOutFileClosed(void *data, int errflag)
 {
     generic_cbdata *c = (generic_cbdata *)data;
     StoreEntry *e = (StoreEntry *)c->data;

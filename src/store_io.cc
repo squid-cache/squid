@@ -28,7 +28,7 @@ OBJH storeIOStats;
  * to select different polices depending on object size or type.
  */
 StoreIOState::Pointer
-storeCreate(StoreEntry * e, STIOCB * file_callback, STIOCB * close_callback, void *callback_data)
+storeCreate(StoreEntry * e, STFNCB * file_callback, STIOCB * close_callback, void *callback_data)
 {
     assert (e);
     ssize_t objsize;

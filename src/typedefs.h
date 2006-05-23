@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.185 2006/05/19 23:10:21 wessels Exp $
+ * $Id: typedefs.h,v 1.186 2006/05/22 19:58:51 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -215,8 +215,6 @@ typedef struct _helper_stateful_server helper_stateful_server;
 
 typedef struct _generic_cbdata generic_cbdata;
 
-class storeIOState;
-
 typedef struct _link_list link_list;
 
 typedef struct _Logfile Logfile;
@@ -273,10 +271,6 @@ class wordlist;
 typedef void UH(void *data, wordlist *);
 typedef int READ_HANDLER(int, char *, int);
 typedef int WRITE_HANDLER(int, const char *, int);
-
-typedef void STIOCB(void *their_data, int errflag, storeIOState *);
-typedef void STFNCB(void *their_data, int errflag, storeIOState *);
-typedef void STRCB(void *their_data, const char *buf, ssize_t len);
 
 typedef int QS(const void *, const void *);	/* qsort */
 typedef void STABH(void *);

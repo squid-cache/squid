@@ -55,7 +55,7 @@ struct _cossindex
 
 /* Per-storeiostate info */
 
-class CossState : public storeIOState
+class CossState : public StoreIOState
 {
 
 public:
