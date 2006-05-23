@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapin.cc,v 1.36 2003/10/20 12:34:01 robertc Exp $
+ * $Id: store_swapin.cc,v 1.37 2006/05/22 19:58:51 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapin Functions
  * AUTHOR: Duane Wessels
@@ -72,13 +72,12 @@ storeSwapInStart(store_client * sc)
 }
 
 static void
-storeSwapInFileClosed(void *data, int errflag, storeIOState * sio)
+storeSwapInFileClosed(void *data, int errflag)
 {
     store_client *sc = (store_client *)data;
     debug(20, 3) ("storeSwapInFileClosed: sio=%p, errflag=%d\n",
-                  sio, errflag);
+                  sc->swapin_sio.getRaw(), errflag);
     sc->swapin_sio = NULL;
-    /* why this assert */
 
     if (sc->_callback.pending()) {
         assert (errflag <= 0);
@@ -89,13 +88,13 @@ storeSwapInFileClosed(void *data, int errflag, storeIOState * sio)
 }
 
 static void
-storeSwapInFileNotify(void *data, int errflag, storeIOState * sio)
+storeSwapInFileNotify(void *data, int errflag)
 {
     store_client *sc = (store_client *)data;
     StoreEntry *e = sc->entry;
 
-    debug(1, 3) ("storeSwapInFileNotify: changing %d/%d to %d/%d\n", e->swap_filen, e->swap_dirn, sio->swap_filen, sio->swap_dirn);
+    debug(1, 3) ("storeSwapInFileNotify: changing %d/%d to %d/%d\n", e->swap_filen, e->swap_dirn, sc->swapin_sio->swap_filen, sc->swapin_sio->swap_dirn);
 
-    e->swap_filen = sio->swap_filen;
-    e->swap_dirn = sio->swap_dirn;
+    e->swap_filen = sc->swapin_sio->swap_filen;
+    e->swap_dirn = sc->swapin_sio->swap_dirn;
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.531 2006/05/10 21:04:24 hno Exp $
+ * $Id: protos.h,v 1.532 2006/05/22 19:58:51 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -576,14 +576,6 @@ SQUIDCEXTERN void memConfigure(void);
 
 /* repl_modules.c */
 SQUIDCEXTERN void storeReplSetup(void);
-
-/* store_io.c */
-#include "StoreIOState.h"
-extern StoreIOState::Pointer storeCreate(StoreEntry *, STFNCB *, STIOCB *, void *);
-extern StoreIOState::Pointer storeOpen(StoreEntry *, STFNCB *, STIOCB *, void *);
-SQUIDCEXTERN void storeClose(StoreIOState::Pointer);
-SQUIDCEXTERN void storeRead(StoreIOState::Pointer, char *, size_t, off_t, STRCB *, void *);
-SQUIDCEXTERN void storeIOWrite(StoreIOState::Pointer, char const *, size_t, off_t, FREE *);
 
 /*
  * store_log.c

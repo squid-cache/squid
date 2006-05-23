@@ -74,7 +74,7 @@ public:
     DiskIOStrategy *io;
     RefCount<DiskFile> theFile;
     char *storeCossMemPointerFromDiskOffset(size_t offset, CossMemBuf ** mb);
-    void storeCossMemBufUnlock(storeIOState * e);
+    void storeCossMemBufUnlock(StoreIOState::Pointer);
     CossMemBuf *createMemBuf(size_t start, sfileno curfn, int *collision);
     sfileno allocate(const StoreEntry * e, int which);
     void startMembuf();

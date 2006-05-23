@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreIOState.cc,v 1.4 2003/08/31 12:44:30 robertc Exp $
+ * $Id: StoreIOState.cc,v 1.5 2006/05/22 19:58:51 wessels Exp $
  *
  * DEBUG: section ??    Swap Dir base object
  * AUTHOR: Robert Collins
@@ -37,27 +37,27 @@
 #include "StoreIOState.h"
 
 void *
-storeIOState::operator new (size_t amount)
+StoreIOState::operator new (size_t amount)
 {
     assert(0);
     return (void *)1;
 }
 
 void
-storeIOState::operator delete (void *address){assert (0);}
+StoreIOState::operator delete (void *address){assert (0);}
 
-storeIOState::storeIOState()
+StoreIOState::StoreIOState()
 {
     mode = O_BINARY;
 }
 
 off_t
-storeIOState::offset() const
+StoreIOState::offset() const
 {
     return offset_;
 }
 
-storeIOState::~storeIOState()
+StoreIOState::~StoreIOState()
 {
     debugs(20,3, "StoreIOState::~StoreIOState: " << this);
 

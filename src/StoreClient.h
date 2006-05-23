@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreClient.h,v 1.13 2004/12/27 11:04:36 serassio Exp $
+ * $Id: StoreClient.h,v 1.14 2006/05/22 19:58:51 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,6 +35,7 @@
 #define SQUID_STORECLIENT_H
 
 #include "StoreIOBuffer.h"
+#include "StoreIOState.h"
 
 typedef void STCB(void *, StoreIOBuffer);	/* store callback */
 

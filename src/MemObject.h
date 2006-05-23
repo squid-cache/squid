@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.h,v 1.11 2006/01/23 20:04:24 wessels Exp $
+ * $Id: MemObject.h,v 1.12 2006/05/22 19:58:51 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,6 +35,7 @@
 #define SQUID_MEMOBJECT_H
 
 #include "StoreIOBuffer.h"
+#include "StoreIOState.h"
 #include "stmem.h"
 #include "CommRead.h"
 
