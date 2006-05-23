@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.498 2006/05/19 20:22:56 wessels Exp $
+ * $Id: http.cc,v 1.499 2006/05/22 19:45:47 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1913,7 +1913,25 @@ HttpStateData::sendRequestEntity(int fd, size_t size, comm_err_t errflag)
     debug(11, 5) ("httpSendRequestEntity: FD %d: size %d: errflag %d.\n",
                   fd, (int) size, errflag);
     debugs(32,3,HERE << "httpSendRequestEntity called");
-    assert(orig_request->body_reader != NULL);
+
+    /*
+     * This used to be an assertion for body_reader != NULL.
+     * Currently there are cases where body_reader may become NULL
+     * before reaching this point in the code.  This can happen
+     * because body_reader is attached to HttpRequest and other
+     * modules (client_side, ICAP) have access to HttpRequest->body
+     * reader.  An aborted transaction may cause body_reader to
+     * become NULL between the time sendRequestEntity was registered
+     * and actually called.  For now we'll abort the whole transaction,
+     * but this should be fixed so that the client/icap/server sides
+     * are cleaned up independently.
+     */
+
+    if (orig_request->body_reader == NULL) {
+        debugs(32,1,HERE << "sendRequestEntity body_reader became NULL, aborting transaction");
+        comm_close(fd);
+        return;
+    }
 
     if (size > 0) {
         fd_bytes(fd, size, FD_WRITE);
