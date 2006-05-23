@@ -39072,7 +39072,7 @@ LIBS="$SAVED_LIBS"
 fi
 echo "$as_me:$LINENO: result: $ac_cv_dbopen_libdb" >&5
 echo "${ECHO_T}$ac_cv_dbopen_libdb" >&6
-if test ac_cv_dbopen_libdb = yes; then
+if test $ac_cv_dbopen_libdb = yes; then
     LIB_DB="-ldb"
 fi
 
