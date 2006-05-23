@@ -47,7 +47,7 @@ sub check {
         local($user, $group) = @_;
         $groupSID = `wbinfo -n "$group" | cut -d" " -f1`;
         chop  $groupSID;
-        $groupGID = `wbinfo -Y $groupSID`;
+        $groupGID = `wbinfo -Y "$groupSID"`;
         chop $groupGID;
         &debug( "User:  -$user-\nGroup: -$group-\nSID:   -$groupSID-\nGID:   -$groupGID-");
         return 'OK' if(`wbinfo -r \Q$user\E` =~ /^$groupGID$/m);
