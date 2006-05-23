@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.421 2006/05/16 21:06:06 hno Exp $
+ * $Id: main.cc,v 1.422 2006/05/23 16:24:55 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -49,6 +49,7 @@
 #include "SquidTime.h"
 #include "SwapDir.h"
 #include "forward.h"
+#include "MemPool.h"
 
 #if USE_WIN32_SERVICE
 
@@ -313,15 +314,17 @@ mainParseOptions(int argc, char *argv[])
 
         case 'm':
             if (optarg) {
+                if (*optarg == 'c') {
+                    MemPools::GetInstance().setDefaultPoolChunking(0);
+                } else {
 #if MALLOC_DBG
-                malloc_debug_level = atoi(optarg);
-                /* NOTREACHED */
-                break;
+                    malloc_debug_level = atoi(optarg);
 #else
 
-                fatal("Need to add -DMALLOC_DBG when compiling to use -mX option");
-                /* NOTREACHED */
+                    fatal("Need to add -DMALLOC_DBG when compiling to use -mX option");
 #endif
+
+                }
 
             } else {
 #if XMALLOC_TRACE
@@ -332,6 +335,9 @@ mainParseOptions(int argc, char *argv[])
 #endif
 
             }
+
+            break;
+            /* NOTREACHED */
 
 #if USE_WIN32_SERVICE
 
