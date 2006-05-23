@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_coss.cc,v 1.27 2006/05/19 20:22:56 wessels Exp $
+ * $Id: store_io_coss.cc,v 1.28 2006/05/23 00:17:47 wessels Exp $
  *
  * DEBUG: section 79    Storage Manager COSS Interface
  * AUTHOR: Eric Stern
@@ -249,7 +249,7 @@ CossSwapDir::openStoreIO(StoreEntry & e, STFNCB * file_callback,
         }
 
         /* Notify the upper levels that we've changed file number */
-        sio->file_callback(sio->callback_data, 0, sio.getRaw());
+        sio->file_callback(sio->callback_data, 0);
 
         /*
          * lock the buffer so it doesn't get swapped out on us
@@ -427,7 +427,7 @@ CossState::doCallback(int errflag)
     this->callback = NULL;
 
     if (cbdataReferenceValidDone(callback_data, &cbdata))
-        callback(cbdata, errflag, this);
+        callback(cbdata, errflag);
 }
 
 char *
@@ -463,10 +463,10 @@ CossState::lockMemBuf()
 }
 
 void
-CossSwapDir::storeCossMemBufUnlock(storeIOState * sio)
+CossSwapDir::storeCossMemBufUnlock(StoreIOState::Pointer sio)
 {
     CossMemBuf *t = storeCossFilenoToMembuf(sio->swap_filen);
-    CossState *cstate = dynamic_cast<CossState *>(sio);
+    CossState *cstate = dynamic_cast<CossState *>(sio.getRaw());
 
     if (NULL == t)
         return;
