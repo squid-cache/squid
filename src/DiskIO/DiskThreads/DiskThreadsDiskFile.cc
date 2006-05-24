@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsDiskFile.cc,v 1.5 2005/04/01 21:11:28 serassio Exp $
+ * $Id: DiskThreadsDiskFile.cc,v 1.6 2006/05/23 18:24:41 wessels Exp $
  *
  * DEBUG: section 79    Disk IO Routines
  * AUTHOR: Robert Collins
@@ -51,7 +51,11 @@ DiskThreadsDiskFile::operator new (size_t)
 {
     CBDATA_INIT_TYPE(DiskThreadsDiskFile);
     DiskThreadsDiskFile *result = cbdataAlloc(DiskThreadsDiskFile);
-    squidaio_init();
+    /*
+     * We used to call squidaio_init() here, but if the first transaction
+     * is to unlink a file (e.g., if Squid starts up over the disk space
+     * limit) then "squidaio" won't be initialized yet.
+     */
 
     return result;
 }
