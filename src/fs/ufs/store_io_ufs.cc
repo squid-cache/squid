@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.32 2006/05/23 00:30:21 wessels Exp $
+ * $Id: store_io_ufs.cc,v 1.33 2006/05/24 15:25:04 wessels Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -124,14 +124,14 @@ UFSStoreState::ioCompletedNotification()
     debug(79, 3) ("diskd::ioCompleted: dirno %d, fileno %08x status %d\n",                      swap_dirn, swap_filen, theFile->error());
     /* Ok, notification past open means an error has occured */
     assert (theFile->error());
-    doCallback(DISK_ERROR);
+    doCloseCallback(DISK_ERROR);
 }
 
 void
 UFSStoreState::openDone()
 {
     if (theFile->error()) {
-        doCallback(DISK_ERROR);
+        doCloseCallback(DISK_ERROR);
         return;
     }
 
@@ -144,7 +144,7 @@ UFSStoreState::openDone()
     }
 
     if (closing && !theFile->ioInProgress())
-        doCallback(theFile->error() ? -1 : 0);
+        doCloseCallback(theFile->error() ? -1 : 0);
 
     debug(79, 3) ("squidaiostate_t::openDone: exiting\n");
 }
@@ -157,9 +157,9 @@ UFSStoreState::closeCompleted()
                   swap_dirn, swap_filen, theFile->error());
 
     if (theFile->error())
-        doCallback(DISK_ERROR);
+        doCloseCallback(DISK_ERROR);
     else
-        doCallback(DISK_OK);
+        doCloseCallback(DISK_OK);
 
     closing = false;
 }
@@ -253,7 +253,7 @@ UFSStoreState::readCompleted(const char *buf, int len, int errflag, RefCount<Rea
 
         callback(cbdata, read_buf, len, this);
     } else if (closing && theFile.getRaw()!= NULL && !theFile->ioInProgress())
-        doCallback(errflag);
+        doCloseCallback(errflag);
 }
 
 void
@@ -266,7 +266,7 @@ UFSStoreState::writeCompleted(int errflag, size_t len, RefCount<WriteRequest> wr
     offset_ += len;
 
     if (theFile->error()) {
-        doCallback(DISK_ERROR);
+        doCloseCallback(DISK_ERROR);
         return;
     }
 
@@ -285,12 +285,12 @@ UFSStoreState::writeCompleted(int errflag, size_t len, RefCount<WriteRequest> wr
         flags.write_kicking = false;
 
         if (!theFile->ioInProgress() && closing)
-            doCallback(errflag);
+            doCloseCallback(errflag);
     }
 }
 
 void
-UFSStoreState::doCallback(int errflag)
+UFSStoreState::doCloseCallback(int errflag)
 {
     debug(79, 3) ("storeUfsIOCallback: errflag=%d\n", errflag);
     STIOCB *theCallback = callback;
