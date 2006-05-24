@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.594 2006/05/23 16:22:34 hno Exp $
+ * $Id: store.cc,v 1.595 2006/05/23 20:29:04 hno Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -670,7 +670,6 @@ storeSetPublicKey(StoreEntry * e)
     assert(!EBIT_TEST(e->flags, RELEASE_REQUEST));
 
     if (mem->request) {
-        StoreEntry *pe;
         HttpRequest *request = mem->request;
 
         if (!mem->vary_headers) {
@@ -682,7 +681,7 @@ storeSetPublicKey(StoreEntry * e)
                  * to record the new variance key
                  */
                 safe_free(request->vary_headers);       /* free old "bad" variance key */
-                pe = storeGetPublic(mem->url, mem->method);
+                StoreEntry *pe = storeGetPublic(mem->url, mem->method);
 
                 if (pe)
                     pe->release();
@@ -700,10 +699,10 @@ storeSetPublicKey(StoreEntry * e)
         if (mem->vary_headers && !storeGetPublic(mem->url, mem->method)) {
             /* Create "vary" base object */
             String vary;
-            pe = storeCreateEntry(mem->url, mem->log_url, request->flags, request->method);
+            StoreEntry *pe = storeCreateEntry(mem->url, mem->log_url, request->flags, request->method);
             HttpVersion version(1, 0);
             /* We are allowed to do this typecast */
-            HttpReply *rep = (HttpReply *) pe->getReply();      // bypass const
+            HttpReply *rep = new HttpReply;
             rep->setHeaders(version, HTTP_OK, "Internal marker object", "x-squid-internal/vary", -1, -1, squid_curtime + 100000);
             vary = mem->getReply()->header.getList(HDR_VARY);
 
@@ -723,21 +722,14 @@ storeSetPublicKey(StoreEntry * e)
             }
 
 #endif
-            storeSetPublicKey(pe);
+            pe->replaceHttpReply(rep);
 
-            storeBuffer(pe);
-
-            /* TODO: remove this when the metadata is separated */
-            {
-                Packer p;
-                packerToStoreInit(&p, pe);
-                pe->getReply()->packHeadersInto(&p);
-                packerClean(&p);
-            }
-
-            storeBufferFlush(pe);
             storeTimestampsSet(pe);
+
+            pe->makePublic();
+
             pe->complete();
+
             pe->unlock();
         }
 
