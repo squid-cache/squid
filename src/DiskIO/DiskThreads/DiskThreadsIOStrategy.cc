@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsIOStrategy.cc,v 1.4 2005/09/25 21:02:32 hno Exp $
+ * $Id: DiskThreadsIOStrategy.cc,v 1.5 2006/05/23 18:24:41 wessels Exp $
  *
  * DEBUG: section 79    Squid-side Disk I/O functions.
  * AUTHOR: Robert Collins
@@ -56,6 +56,12 @@ DiskThreadsIOStrategy::init(void)
                      aioStats, 0, 1);
 
     initialised = true;
+
+    /*
+     * We'd like to call squidaio_init() here, but the configuration
+     * hasn't been parsed yet and we don't know how many cache_dirs
+     * there are, which means we don't know how many threads to start.
+     */
 }
 
 void

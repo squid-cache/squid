@@ -1,5 +1,5 @@
 /*
- * $Id: aiops.cc,v 1.8 2006/05/15 13:39:57 hno Exp $
+ * $Id: aiops.cc,v 1.9 2006/05/23 18:24:41 wessels Exp $
  *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
@@ -685,6 +685,7 @@ squidaio_cancel(squidaio_result_t * resultp)
 int
 squidaio_open(const char *path, int oflag, mode_t mode, squidaio_result_t * resultp)
 {
+    squidaio_init();
     squidaio_request_t *requestp;
 
     requestp = (squidaio_request_t *)squidaio_request_pool->alloc();
@@ -831,6 +832,7 @@ int
 
 squidaio_stat(const char *path, struct stat *sb, squidaio_result_t * resultp)
 {
+    squidaio_init();
     squidaio_request_t *requestp;
 
     requestp = (squidaio_request_t *)squidaio_request_pool->alloc();
@@ -867,6 +869,7 @@ squidaio_do_stat(squidaio_request_t * requestp)
 int
 squidaio_truncate(const char *path, off_t length, squidaio_result_t * resultp)
 {
+    squidaio_init();
     squidaio_request_t *requestp;
 
     requestp = (squidaio_request_t *)squidaio_request_pool->alloc();
@@ -901,6 +904,7 @@ squidaio_do_truncate(squidaio_request_t * requestp)
 int
 squidaio_unlink(const char *path, squidaio_result_t * resultp)
 {
+    squidaio_init();
     squidaio_request_t *requestp;
 
     requestp = (squidaio_request_t *)squidaio_request_pool->alloc();
