@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.153 2006/05/08 23:38:33 robertc Exp $
+ * $Id: store_dir.cc,v 1.154 2006/05/24 02:13:27 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -779,7 +779,7 @@ StoreHashIndex::init()
      * in-core index, not global */
     size_t buckets = Store::Root().maxSize() / Config.Store.avgObjectSize;
     debugs(20, 1, "Swap maxSize " << Store::Root().maxSize() <<
-           " KB, estimated " << buckets << " objects\n");
+           " KB, estimated " << buckets << " objects");
     buckets /= Config.Store.objectsPerBucket;
     debugs(20, 1, "Target number of buckets: " << buckets);
     /* ideally the full scan period should be configurable, for the
