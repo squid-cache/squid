@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufscommon.h,v 1.5 2006/05/23 00:21:48 wessels Exp $
+ * $Id: ufscommon.h,v 1.6 2006/05/24 15:25:04 wessels Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -220,7 +220,7 @@ public:
     void write(char const *buf, size_t size, off_t offset, FREE * free_func);
 
 protected:
-    virtual void doCallback (int errflag);
+    virtual void doCloseCallback (int errflag);
 
     class _queued_read
     {
