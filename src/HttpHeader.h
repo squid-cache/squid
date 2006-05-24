@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.h,v 1.14 2006/05/09 21:48:51 wessels Exp $
+ * $Id: HttpHeader.h,v 1.15 2006/05/23 20:30:48 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -242,6 +242,10 @@ public:
 
 private:
     HttpHeaderEntry *findLastEntry(http_hdr_type id) const;
+    // Make it non-copyable. Our destructor is a bit nasty...
+    HttpHeader(const HttpHeader &);
+    //assignment is used by the reset method, can't block it..
+    //const HttpHeader operator=(const HttpHeader &);
 };
 
 extern int httpHeaderParseQuotedString (const char *start, String *val);
