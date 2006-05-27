@@ -29,14 +29,14 @@ TestSwapDir::canStore(const StoreEntry&) const
     return true;
 }
 
-RefCount<storeIOState>
-TestSwapDir::createStoreIO(StoreEntry&, void (*)(void*, int, storeIOState*), void (*)(void*, int, storeIOState*), void*)
+StoreIOState::Pointer
+TestSwapDir::createStoreIO(StoreEntry&, StoreIOState::STFNCB, StoreIOState::STIOCB, void*)
 {
     return NULL;
 }
 
-RefCount<storeIOState>
-TestSwapDir::openStoreIO(StoreEntry&, void (*)(void*, int, storeIOState*), void (*)(void*, int, storeIOState*), void*)
+StoreIOState::Pointer
+TestSwapDir::openStoreIO(StoreEntry&, StoreIOState::STFNCB, StoreIOState::STIOCB, void*)
 {
     return NULL;
 }

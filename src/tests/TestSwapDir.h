@@ -18,10 +18,14 @@ public:
     virtual void reconfigure(int, char*);
     virtual void init();
     virtual int canStore(const StoreEntry&) const;
-    virtual RefCount<StoreIOState> createStoreIO(StoreEntry&, void
-            (*)(void*, int), void (*)(void*, int), void*);
-    virtual RefCount<StoreIOState> openStoreIO(StoreEntry&, void
-            (*)(void*, int), void (*)(void*, int), void*);
+    virtual StoreIOState::Pointer createStoreIO(StoreEntry&,
+            StoreIOState::STFNCB,
+            StoreIOState::STIOCB,
+            void*);
+    virtual StoreIOState::Pointer openStoreIO(StoreEntry&,
+            StoreIOState::STFNCB,
+            StoreIOState::STIOCB,
+            void*);
     virtual void parse(int, char*);
     virtual StoreSearch *search(String, HttpRequest *);
 };
