@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.96 2006/05/20 00:11:59 wessels Exp $
+ * $Id: mem.cc,v 1.97 2006/05/26 23:43:07 hno Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -401,7 +401,7 @@ Mem::Init(void)
         StrPools[i].pool = MemPools::GetInstance().create(StrPoolsAttrs[i].name, StrPoolsAttrs[i].obj_size);
 
         if (StrPools[i].pool->objectSize() != StrPoolsAttrs[i].obj_size)
-            debugs(13, 1, "Notice: " << StrPoolsAttrs[i].name << " is " << StrPoolsAttrs[i].obj_size << " bytes instead of requested " << StrPoolsAttrs[i].obj_size << " bytes");
+            debugs(13, 1, "Notice: " << StrPoolsAttrs[i].name << " is " << StrPools[i].pool->objectSize() << " bytes instead of requested " << StrPoolsAttrs[i].obj_size << " bytes");
     }
 
     cachemgrRegister("mem",
