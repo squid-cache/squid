@@ -30,13 +30,13 @@ TestSwapDir::canStore(const StoreEntry&) const
 }
 
 StoreIOState::Pointer
-TestSwapDir::createStoreIO(StoreEntry&, StoreIOState::STFNCB, StoreIOState::STIOCB, void*)
+TestSwapDir::createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *)
 {
     return NULL;
 }
 
 StoreIOState::Pointer
-TestSwapDir::openStoreIO(StoreEntry&, StoreIOState::STFNCB, StoreIOState::STIOCB, void*)
+TestSwapDir::openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *)
 {
     return NULL;
 }

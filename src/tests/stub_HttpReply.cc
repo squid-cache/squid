@@ -1,5 +1,5 @@
 /*
- * $Id: stub_HttpReply.cc,v 1.2 2005/12/18 09:23:40 serassio Exp $
+ * $Id: stub_HttpReply.cc,v 1.3 2006/05/27 00:35:05 robertc Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins
@@ -35,6 +35,16 @@
 #include "squid.h"
 #include "HttpReply.h"
 
+HttpReply::HttpReply() : HttpMsg(hoReply)
+{
+    fatal ("Not implemented.");
+}
+
+HttpReply::~HttpReply()
+{
+    fatal ("Not implemented.");
+}
+
 void
 HttpReply::absorb(HttpReply * new_rep)
 {
@@ -61,6 +71,46 @@ void HttpReply::reset()
 
 void
 httpBodyPackInto(const HttpBody * body, Packer * p)
+{
+    fatal ("Not implemented");
+}
+
+bool
+HttpReply::sanityCheckStartLine(MemBuf *buf, http_status *error)
+{
+    fatal ("Not implemented");
+    return false;
+}
+
+int
+HttpReply::httpMsgParseError()
+{
+    fatal ("Not implemented");
+    return 0;
+}
+
+bool
+HttpReply::expectingBody(method_t, ssize_t&) const
+{
+    fatal ("Not implemented");
+    return false;
+}
+
+void
+HttpReply::packFirstLineInto(Packer * p, bool) const
+{
+    fatal ("Not implemented");
+}
+
+bool
+HttpReply::parseFirstLine(const char *start, const char *end)
+{
+    fatal ("Not implemented");
+    return false;
+}
+
+void
+HttpReply::hdrCacheInit()
 {
     fatal ("Not implemented");
 }
