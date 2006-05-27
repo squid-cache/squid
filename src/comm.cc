@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.417 2006/05/26 19:53:18 wessels Exp $
+ * $Id: comm.cc,v 1.418 2006/05/26 19:58:37 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -945,7 +945,7 @@ comm_accept_check_event(void *data)
     }
 
     if (last_warn + 15 < squid_curtime) {
-        debug(33, 0) ("WARNING! Your cache is running out of filedescriptors\n");
+        debugs(33, 0, HERE << "WARNING! Your cache is running out of filedescriptors");
         last_warn = squid_curtime;
     }
 

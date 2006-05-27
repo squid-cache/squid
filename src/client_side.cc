@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.725 2006/05/11 21:28:29 wessels Exp $
+ * $Id: client_side.cc,v 1.726 2006/05/26 19:58:37 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2715,7 +2715,7 @@ okToAccept()
         return true;
 
     if (last_warn + 15 < squid_curtime) {
-        debug(33, 0) ("WARNING! Your cache is running out of filedescriptors\n");
+        debugs(33, 0, HERE << "WARNING! Your cache is running out of filedescriptors");
         last_warn = squid_curtime;
     }
 
