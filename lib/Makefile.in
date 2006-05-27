@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-#  $Id: Makefile.in,v 1.119 2006/05/10 22:29:21 hno Exp $
+#  $Id: Makefile.in,v 1.120 2006/05/27 00:58:15 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -49,7 +49,7 @@ am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 	$(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
+mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/include/autoconf.h
 CONFIG_CLEAN_FILES =
 LIBRARIES = $(noinst_LIBRARIES)
@@ -158,6 +158,7 @@ CFLAGS = @CFLAGS@
 CGIEXT = @CGIEXT@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CPPUNITCONFIG = @CPPUNITCONFIG@
 CRYPTLIB = @CRYPTLIB@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
@@ -258,6 +259,7 @@ SQUID_CFLAGS = @SQUID_CFLAGS@
 SQUID_CPPUNIT_DIR = @SQUID_CPPUNIT_DIR@
 SQUID_CPPUNIT_INC = @SQUID_CPPUNIT_INC@
 SQUID_CPPUNIT_LA = @SQUID_CPPUNIT_LA@
+SQUID_CPPUNIT_LIBS = @SQUID_CPPUNIT_LIBS@
 SQUID_CXXFLAGS = @SQUID_CXXFLAGS@
 SSLLIB = @SSLLIB@
 STORE_LIBS = @STORE_LIBS@
@@ -404,7 +406,7 @@ tests_testAll_SOURCES = tests/testArray.cc tests/testMain.cc  tests/testArray.h 
 	$(XPROF_STATS_SOURCE) \
 	util.c assert.c
 
-tests_testAll_LDADD = @SQUID_CPPUNIT_LA@
+tests_testAll_LDADD = @SQUID_CPPUNIT_LA@ @SQUID_CPPUNIT_LIBS@
 tests_testAll_LDFLAGS = $(LIBADD_DL)
 all: all-recursive
 
