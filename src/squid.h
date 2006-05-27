@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.253 2006/05/16 21:06:06 hno Exp $
+ * $Id: squid.h,v 1.254 2006/05/26 23:35:44 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -187,14 +187,18 @@
  */
 #if defined(USE_SELECT)
 /* Limited by design */
-#define SQUID_MAXFD_LIMIT FD_SETSIZE
+# define SQUID_MAXFD_LIMIT FD_SETSIZE
 #elif defined(USE_POLL)
 /* Limited due to delay pools */
-#define SQUID_MAXFD_LIMIT FD_SETSIZE
+# define SQUID_MAXFD_LIMIT FD_SETSIZE
 #elif defined(USE_KQUEUE) || defined(USE_EPOLL)
-#define fd_set ERROR_FD_SET_USED
+# if DONT_LIMIT_TO_FD_SETSIZE
+#  define fd_set ERROR_FD_SET_USED */
+# else
+#  define SQUID_MAXFD_LIMIT FD_SETSIZE
+# endif
 #else
-#error Unknown select loop model!
+# error Unknown select loop model!
 #endif
 
 #
