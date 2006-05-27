@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.29 2006/05/06 22:13:18 wessels Exp $
+ * $Id: HttpMsg.cc,v 1.30 2006/05/27 00:35:05 robertc Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -35,7 +35,6 @@
 
 #include "squid.h"
 #include "HttpMsg.h"
-#include "HttpRequest.h"
 #include "MemBuf.h"
 
 HttpMsg::HttpMsg(http_hdr_owner_type owner): header(owner),
