@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.146 2006/05/21 14:35:11 robertc Exp $
+#  $Id: Makefile.am,v 1.147 2006/05/27 00:58:16 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -1078,7 +1078,7 @@ tests_testAuth_LDADD= \
 	@AUTH_LINKOBJS@ @AUTH_OBJS@ \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
-	@SQUID_CPPUNIT_LA@ \
+	@SQUID_CPPUNIT_LIBS@ \
 	@SSLLIB@
 tests_testAuth_LDFLAGS = $(LIBADD_DL)
 tests_testAuth_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
@@ -1147,7 +1147,7 @@ tests_testACLMaxUserIP_LDADD= \
 	libauth.la \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
-	@SQUID_CPPUNIT_LA@ \
+	@SQUID_CPPUNIT_LIBS@ \
 	@SSLLIB@
 tests_testACLMaxUserIP_LDFLAGS = $(LIBADD_DL)
 tests_testACLMaxUserIP_DEPENDENCIES = \
@@ -1163,7 +1163,7 @@ tests_testBoilerplate_SOURCES = \
 	time.cc
 tests_testBoilerplate_LDADD= \
 	-L../lib -lmiscutil \
-	@SQUID_CPPUNIT_LA@ \
+	@SQUID_CPPUNIT_LIBS@ \
 	@SSLLIB@
 tests_testBoilerplate_LDFLAGS = $(LIBADD_DL)
 tests_testBoilerplate_DEPENDENCIES = \
@@ -1190,7 +1190,7 @@ HEADERS_TO_TEST = \
 	tests/testHeader_wordlist.cc
 tests_testHeaders_SOURCES= tests/testMain.cc $(HEADERS_TO_TEST)
 tests_testHeaders_LDADD= \
-	@SQUID_CPPUNIT_LA@ \
+	@SQUID_CPPUNIT_LIBS@ \
 	@SSLLIB@
 tests_testHeaders_LDFLAGS = $(LIBADD_DL)
 tests_testHeaders_DEPENDENCIES = \
@@ -1332,7 +1332,7 @@ tests_test_http_range_LDADD = \
 	@SSLLIB@ \
 	-L../lib -lmiscutil \
 	@XTRA_LIBS@ \
-	@SQUID_CPPUNIT_LA@ \
+	@SQUID_CPPUNIT_LIBS@ \
 	@SNMPLIB@ 
 tests_test_http_range_DEPENDENCIES = \
 	@SQUID_CPPUNIT_LA@
@@ -1478,7 +1478,7 @@ tests_testHttpRequest_LDADD = \
 	@SSLLIB@ \
 	-L../lib -lmiscutil \
 	@XTRA_LIBS@ \
-	@SQUID_CPPUNIT_LA@ \
+	@SQUID_CPPUNIT_LIBS@ \
 	@SNMPLIB@ 
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 tests_testHttpRequest_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
@@ -1551,7 +1551,7 @@ tests_testStore_LDADD= \
 	libauth.la \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
-	@SQUID_CPPUNIT_LA@ \
+	@SQUID_CPPUNIT_LIBS@ \
 	@SSLLIB@
 tests_testStore_LDFLAGS = $(LIBADD_DL)
 tests_testStore_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
@@ -1571,7 +1571,7 @@ tests_testString_SOURCES= \
 tests_testString_LDADD= \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
-	@SQUID_CPPUNIT_LA@ \
+	@SQUID_CPPUNIT_LIBS@ \
 	@SSLLIB@
 tests_testString_LDFLAGS = $(LIBADD_DL)
 tests_testString_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
@@ -1616,7 +1616,7 @@ SWAP_TEST_LDADD = \
 	@REPL_OBJS@ \
 	@DISK_LIBS@ \
 	-L../lib -lmiscutil \
-	@SQUID_CPPUNIT_LA@
+	@SQUID_CPPUNITLIBS@
 SWAP_TEST_DS =\
 	$(top_builddir)/lib/libmiscutil.a \
 	DiskIO/Blocking/BlockingDiskIOModule.o \
@@ -1801,7 +1801,7 @@ tests_testURL_LDADD = \
 	@SSLLIB@ \
 	-L../lib -lmiscutil \
 	@XTRA_LIBS@ \
-	@SQUID_CPPUNIT_LA@ \
+	@SQUID_CPPUNIT_LIBS@ \
 	@SNMPLIB@ 
 tests_testURL_LDFLAGS = $(LIBADD_DL)
 tests_testURL_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
