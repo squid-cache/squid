@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.416 2006/05/10 20:22:11 hno Exp $
+ * $Id: comm.cc,v 1.417 2006/05/26 19:53:18 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -2382,16 +2382,13 @@ comm_accept_try(int fd, void *data) {
  */
 void
 comm_accept(int fd, IOACB *handler, void *handler_data) {
-    fdc_t *Fc;
-
     requireOpenAndActive(fd);
 
     /* make sure we're not pending! */
     assert(fdc_table[fd].accept.accept.callback.handler == NULL);
 
     /* Record our details */
-    Fc = &fdc_table[fd];
-    Fc->accept.accept.callback = CallBack<IOACB> (handler, handler_data);
+    fdc_table[fd].accept.accept.callback = CallBack<IOACB> (handler, handler_data);
 
     /* Kick off the accept */
 #if OPTIMISTIC_IO
