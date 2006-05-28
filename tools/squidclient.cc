@@ -1,6 +1,6 @@
 
 /*
- * $Id: squidclient.cc,v 1.5 2006/05/28 16:04:59 serassio Exp $
+ * $Id: squidclient.cc,v 1.6 2006/05/28 16:11:38 serassio Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -97,10 +97,8 @@ static int Now(struct timeval *);
 static SIGHDLR catchSignal;
 static SIGHDLR pipe_handler;
 static void set_our_signal(void);
-#ifndef _SQUID_MSWIN_
 static ssize_t myread(int fd, void *buf, size_t len);
 static ssize_t mywrite(int fd, void *buf, size_t len);
-#endif
 static int put_fd;
 static char *put_file = NULL;
 
@@ -474,14 +472,7 @@ main(int argc, char *argv[])
         }
 
         /* Send the HTTP request */
-#ifdef _SQUID_MSWIN_
-        bytesWritten = send(conn, (const void *) msg, strlen(msg), 0);
-
-#else
-
         bytesWritten = mywrite(conn, msg, strlen(msg));
-
-#endif
 
         if (bytesWritten < 0) {
             perror("client: ERROR: write");
@@ -497,12 +488,11 @@ main(int argc, char *argv[])
 #ifdef _SQUID_MSWIN_
 
             while ((x = read(put_fd, buf, sizeof(buf))) > 0) {
-                x = write(conn, buf, x);
 #else
 
             while ((x = myread(put_fd, buf, sizeof(buf))) > 0) {
-                x = mywrite(conn, buf, x);
 #endif
+                x = mywrite(conn, buf, x);
 
                 total_bytes += x;
 
@@ -519,11 +509,9 @@ main(int argc, char *argv[])
 #ifdef _SQUID_MSWIN_
         setmode(1, O_BINARY);
 
-        while ((len = recv(conn, (void *) buf, sizeof(buf), 0)) > 0) {
-#else
+#endif
 
         while ((len = myread(conn, buf, sizeof(buf))) > 0) {
-#endif
             fsize += len;
 
             if (to_stdout)
@@ -684,17 +672,24 @@ set_our_signal(void) {
 
 }
 
-#ifndef _SQUID_MSWIN_
 static ssize_t
 myread(int fd, void *buf, size_t len) {
+#ifndef _SQUID_MSWIN_
     alarm(io_timeout);
     return read(fd, buf, len);
+#else
+
+    return recv(fd, buf, len, 0);
+#endif
 }
 
 static ssize_t
 mywrite(int fd, void *buf, size_t len) {
+#ifndef _SQUID_MSWIN_
     alarm(io_timeout);
     return write(fd, buf, len);
-}
+#else
 
+    return send(fd, buf, len, 0);
 #endif
+}
