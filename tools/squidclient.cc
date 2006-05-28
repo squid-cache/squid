@@ -1,6 +1,6 @@
 
 /*
- * $Id: squidclient.cc,v 1.4 2006/05/14 17:07:45 serassio Exp $
+ * $Id: squidclient.cc,v 1.5 2006/05/28 16:04:59 serassio Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -74,6 +74,9 @@
 #endif
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+#if HAVE_GETOPT_H
+#include <getopt.h>
 #endif
 
 #include "util.h"
