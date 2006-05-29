@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.111 2005/09/09 17:31:33 wessels Exp $
+ * $Id: redirect.cc,v 1.112 2006/05/29 00:15:02 robertc Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "AuthUserRequest.h"
+#include "CacheManager.h"
 #include "Store.h"
 #include "client_side_request.h"
 #include "ACLChecklist.h"
@@ -172,12 +173,17 @@ redirectInit(void)
     helperOpenServers(redirectors);
 
     if (!init) {
-        cachemgrRegister("redirector",
-                         "URL Redirector Stats",
-                         redirectStats, 0, 1);
         init = 1;
         CBDATA_INIT_TYPE(redirectStateData);
     }
+}
+
+void
+redirectRegisterWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("redirector",
+                           "URL Redirector Stats",
+                           redirectStats, 0, 1);
 }
 
 void

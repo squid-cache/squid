@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.147 2006/05/27 00:58:16 hno Exp $
+#  $Id: Makefile.am,v 1.148 2006/05/29 00:15:00 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -369,6 +369,7 @@ squid_SOURCES = \
 	cache_cf.cc \
 	CacheDigest.cc \
 	cache_manager.cc \
+	CacheManager.h \
 	carp.cc \
 	cbdata.cc \
 	client_db.cc \
@@ -1038,6 +1039,7 @@ check_PROGRAMS+= \
 	tests/testAuth \
 	tests/testACLMaxUserIP \
 	tests/testBoilerplate \
+	tests/testCacheManager \
 	tests/testHeaders \
 	tests/test_http_range \
 	tests/testHttpRequest \
@@ -1050,7 +1052,7 @@ tests_testAuth_SOURCES= tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $(
 	authenticate.cc \
 	ConfigParser.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
-	tests/stub_helper.cc cbdata.cc String.cc tests/stub_cache_manager.cc \
+	tests/stub_helper.cc cbdata.cc String.cc \
 	tests/stub_store.cc HttpHeaderTools.cc HttpHeader.cc acl.cc event.cc mem.cc \
 	MemBuf.cc HttpHdrContRange.cc Packer.cc ACLChecklist.cc HttpHdrCc.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc url.cc ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc \
@@ -1129,7 +1131,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	StatHist.cc \
 	stmem.cc \
 	String.cc \
-	tests/stub_cache_manager.cc \
 	tests/stub_comm.cc \
 	tests/stub_DelayId.cc \
 	tests/stub_MemObject.cc \
@@ -1168,6 +1169,154 @@ tests_testBoilerplate_LDADD= \
 tests_testBoilerplate_LDFLAGS = $(LIBADD_DL)
 tests_testBoilerplate_DEPENDENCIES = \
 	@SQUID_CPPUNIT_LA@
+
+## Tests of the CacheManager module.
+tests_testCacheManager_SOURCES = \
+	debug.cc \
+	globals.cc \
+	HttpRequest.cc \
+	HttpRequestMethod.cc \
+	mem.cc \
+	String.cc \
+	tests/testCacheManager.cc \
+	tests/testMain.cc \
+	time.cc \
+	access_log.cc \
+	acl.cc \
+	acl_noncore.cc \
+	ACLChecklist.cc \
+	ACLProxyAuth.cc \
+	ACLStringData.cc \
+	ACLRegexData.cc \
+	ACLUserData.cc \
+	authenticate.cc \
+	BodyReader.cc \
+	cache_manager.cc \
+	cache_cf.cc \
+	CacheDigest.cc \
+	carp.cc \
+	cbdata.cc \
+	client_db.cc \
+	client_side.cc \
+	client_side_reply.cc \
+	client_side_request.cc \
+	clientStream.cc \
+	comm_select.cc \
+	comm_poll.cc \
+        comm_epoll.cc \
+	comm_kqueue.cc \
+	ConfigOption.cc \
+	ConfigParser.cc \
+	$(DELAY_POOL_SOURCE) \
+	disk.cc \
+	$(DNSSOURCE) \
+	event.cc \
+	errorpage.cc \
+	$(ESI_SOURCE) \
+	ETag.cc \
+	external_acl.cc \
+	ExternalACLEntry.cc \
+	fd.cc \
+	fde.cc \
+	forward.cc \
+	fqdncache.cc \
+	ftp.cc \
+	gopher.cc \
+	helper.cc \
+	$(HTCPSOURCE) \
+	http.cc \
+	HttpBody.cc \
+	HttpHeader.cc \
+	HttpHeaderTools.cc \
+	HttpHdrCc.cc \
+	HttpHdrContRange.cc \
+	HttpHdrRange.cc \
+	HttpHdrSc.cc \
+	HttpHdrScTarget.cc \
+	HttpMsg.cc \
+	HttpReply.cc \
+	HttpStatusLine.cc \
+	icmp.cc \
+	icp_v2.cc \
+	icp_v3.cc \
+	$(IDENT_SOURCE) \
+	ipc.cc \
+	ipcache.cc \
+	int.cc \
+	internal.cc \
+	list.cc \
+	logfile.cc \
+	multicast.cc \
+	mem_node.cc \
+	MemBuf.cc \
+	MemObject.cc \
+	mime.cc \
+	neighbors.cc \
+	net_db.cc \
+	Packer.cc \
+	Parsing.cc \
+	pconn.cc \
+	peer_digest.cc \
+	peer_select.cc \
+	redirect.cc \
+	referer.cc \
+	refresh.cc \
+	Server.cc \
+	$(SNMP_SOURCE) \
+	$(SSL_SOURCE) \
+	stat.cc \
+	StatHist.cc \
+	stmem.cc \
+	store.cc \
+	store_client.cc \
+	store_digest.cc \
+	store_dir.cc \
+	store_io.cc \
+	store_key_md5.cc \
+	store_log.cc \
+	store_rebuild.cc \
+	store_swapin.cc \
+	store_swapmeta.cc \
+	store_swapout.cc \
+	StoreFileSystem.cc \
+	StoreIOState.cc \
+	StoreMeta.cc \
+	StoreMetaMD5.cc \
+	StoreMetaSTD.cc \
+	StoreMetaUnpacker.cc \
+	StoreMetaURL.cc \
+	StoreMetaVary.cc \
+	StoreSwapLogData.cc \
+	tools.cc \
+	tunnel.cc \
+	SwapDir.cc \
+	url.cc \
+	URLScheme.cc \
+	urn.cc \
+	useragent.cc \
+	wais.cc \
+	whois.cc \
+	wordlist.cc
+nodist_tests_testCacheManager_SOURCES = \
+	repl_modules.cc \
+	string_arrays.c
+tests_testCacheManager_LDADD = \
+	libsquid.la \
+	libauth.la \
+	@REPL_OBJS@ \
+	@ICAP_LIBS@ \
+	@REGEXLIB@ \
+	@SSLLIB@ \
+	-L../lib -lmiscutil \
+	@XTRA_LIBS@ \
+	@SQUID_CPPUNIT_LA@ \
+	@SNMPLIB@ 
+tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
+tests_testCacheManager_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
+	@REPL_OBJS@ \
+	@SQUID_CPPUNIT_LA@ \
+	@ICAP_LIBS@
+
 
 ## test headers checks that individual headers can be parsed with no dependencies.
 ## as such, it needs a new .cc file for each header it parses, so that they
@@ -1506,7 +1655,7 @@ STORE_TEST_SOURCES=\
 	SwapDir.cc \
 	authenticate.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
-	tests/stub_helper.cc cbdata.cc String.cc tests/stub_cache_manager.cc \
+	tests/stub_helper.cc cbdata.cc String.cc \
 	tests/stub_comm.cc \
 	tests/stub_client_side_request.cc \
 	tests/stub_http.cc \
@@ -1557,11 +1706,10 @@ tests_testStore_LDFLAGS = $(LIBADD_DL)
 tests_testStore_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@SQUID_CPPUNIT_LA@
 
-# string needs mem.cc. mem.cc wants cache_manage 
+# string needs mem.cc.
 tests_testString_SOURCES= \
 	mem.cc \
 	String.cc \
-	tests/stub_cache_manager.cc \
 	tests/testMain.cc \
 	tests/testString.cc \
 	tests/testString.h \

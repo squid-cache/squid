@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreFileSystem.h,v 1.1 2003/07/22 15:23:01 robertc Exp $
+ * $Id: StoreFileSystem.h,v 1.2 2006/05/29 00:15:01 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -37,10 +37,15 @@
 #include "squid.h"
 #include "Array.h"
 
+/* forward decls */
+
+class CacheManager;
+
 class StoreFileSystem
 {
 
 public:
+    static void RegisterAllFsWithCacheManager(CacheManager & manager);
     static void SetupAllFs();
     static void FsAdd(StoreFileSystem &);
     static void FreeAllFs();
@@ -54,6 +59,7 @@ public:
     virtual char const *type () const = 0;
     virtual SwapDir *createSwapDir() = 0;
     virtual void done() = 0;
+    virtual void registerWithCacheManager(CacheManager & manager);
     virtual void setup() = 0;
     // Not implemented
     StoreFileSystem(StoreFileSystem const &);

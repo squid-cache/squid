@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskIOModule.h,v 1.1 2004/12/20 16:30:38 robertc Exp $
+ * $Id: DiskIOModule.h,v 1.2 2006/05/29 00:15:03 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -37,12 +37,17 @@
 #include "squid.h"
 #include "Array.h"
 
+/* forward decls */
+
+class CacheManager;
+
 class DiskIOStrategy;
 
 class DiskIOModule
 {
 
 public:
+    static void RegisterAllModulesWithCacheManager(CacheManager & manager);
     static void SetupAllModules();
     static void ModuleAdd(DiskIOModule &);
     static void FreeAllModules();
@@ -54,6 +59,7 @@ public:
     virtual ~DiskIOModule(){}
 
     virtual void init() = 0;
+    virtual void registerWithCacheManager(CacheManager & manager);
     virtual void shutdown() = 0;
     virtual DiskIOStrategy *createStrategy() = 0;
 

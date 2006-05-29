@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthConfig.cc,v 1.1 2004/08/30 03:28:56 robertc Exp $
+ * $Id: AuthConfig.cc,v 1.2 2006/05/29 00:14:59 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -76,3 +76,8 @@ AuthConfig::Find(const char *proxy_auth)
 
     return NULL;
 }
+
+/* Default behaviour is to expose nothing */
+void
+AuthConfig::registerWithCacheManager(CacheManager & manager)
+{}

@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.112 2006/05/08 23:38:33 robertc Exp $
+ * $Id: access_log.cc,v 1.113 2006/05/29 00:15:01 robertc Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -100,7 +100,7 @@ typedef struct
 fvdb_entry;
 static hash_table *via_table = NULL;
 static hash_table *forw_table = NULL;
-static void fvdbInit(void);
+static void fvdbInit(CacheManager *);
 static void fvdbDumpTable(StoreEntry * e, hash_table * hash);
 static void fvdbCount(hash_table * hash, const char *key);
 static OBJH fvdbDumpVia;
@@ -1530,11 +1530,6 @@ accessLogInit(void)
     assert(NULL != headerslog);
 
 #endif
-#if FORW_VIA_DB
-
-    fvdbInit();
-
-#endif
 #if MULTICAST_MISS_STREAM
 
     if (Config.mcast_miss.addr.s_addr != no_addr.s_addr) {
@@ -1560,6 +1555,21 @@ accessLogInit(void)
         if (strlen(Config.mcast_miss.encode_key) < 16)
             fatal("mcast_encode_key is too short, must be 16 characters");
     }
+
+#endif
+#if FORW_VIA_DB
+
+    fvdbInit();
+
+#endif
+}
+
+void
+accessLogRegisterWithCacheManager(CacheManager & manager)
+{
+#if FORW_VIA_DB
+
+    fvdbRegisterWithCacheManager(manager);
 
 #endif
 }
@@ -1589,9 +1599,14 @@ fvdbInit(void)
 {
     via_table = hash_create((HASHCMP *) strcmp, 977, hash4);
     forw_table = hash_create((HASHCMP *) strcmp, 977, hash4);
-    cachemgrRegister("via_headers", "Via Request Headers", fvdbDumpVia, 0, 1);
-    cachemgrRegister("forw_headers", "X-Forwarded-For Request Headers",
-                     fvdbDumpForw, 0, 1);
+}
+
+static void
+fvdbRegisterWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("via_headers", "Via Request Headers", fvdbDumpVia, 0, 1);
+    manager.registerAction("forw_headers", "X-Forwarded-For Request Headers",
+                           fvdbDumpForw, 0, 1);
 }
 
 static void

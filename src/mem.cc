@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.97 2006/05/26 23:43:07 hno Exp $
+ * $Id: mem.cc,v 1.98 2006/05/29 00:15:02 robertc Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -38,6 +38,7 @@
 #include <iomanip>
 #include <ostream>
 
+#include "CacheManager.h"
 #include "Mem.h"
 #include "memMeter.h"
 #include "Store.h"
@@ -403,10 +404,14 @@ Mem::Init(void)
         if (StrPools[i].pool->objectSize() != StrPoolsAttrs[i].obj_size)
             debugs(13, 1, "Notice: " << StrPoolsAttrs[i].name << " is " << StrPools[i].pool->objectSize() << " bytes instead of requested " << StrPoolsAttrs[i].obj_size << " bytes");
     }
+}
 
-    cachemgrRegister("mem",
-                     "Memory Utilization",
-                     Mem::Stats, 0, 1);
+void
+Mem::RegisterWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("mem",
+                           "Memory Utilization",
+                           Mem::Stats, 0, 1);
 }
 
 mem_type &operator++ (mem_type &aMem)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.595 2006/05/23 20:29:04 hno Exp $
+ * $Id: store.cc,v 1.596 2006/05/29 00:15:02 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "CacheManager.h"
 #include "StoreClient.h"
 #include "stmem.h"
 #include "HttpReply.h"
@@ -1433,15 +1434,20 @@ storeInit(void)
     eventAdd("storeLateRelease", storeLateRelease, NULL, 1.0, 1);
     Store::Root().init();
     storeRebuildStart();
-    cachemgrRegister("storedir",
-                     "Store Directory Stats",
-                     Store::Stats, 0, 1);
-    cachemgrRegister("store_check_cachable_stats",
-                     "storeCheckCachable() Stats",
-                     storeCheckCachableStats, 0, 1);
-    cachemgrRegister("store_io",
-                     "Store IO Interface Stats",
-                     storeIOStats, 0, 1);
+}
+
+void
+storeRegisterWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("storedir",
+                           "Store Directory Stats",
+                           Store::Stats, 0, 1);
+    manager.registerAction("store_check_cachable_stats",
+                           "storeCheckCachable() Stats",
+                           storeCheckCachableStats, 0, 1);
+    manager.registerAction("store_io",
+                           "Store IO Interface Stats",
+                           storeIOStats, 0, 1);
 }
 
 void

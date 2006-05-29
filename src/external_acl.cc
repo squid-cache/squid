@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.72 2006/05/18 20:31:12 wessels Exp $
+ * $Id: external_acl.cc,v 1.73 2006/05/29 00:15:02 robertc Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -41,6 +41,7 @@
  */
 
 #include "squid.h"
+#include "CacheManager.h"
 #include "ExternalACL.h"
 #include "ExternalACLEntry.h"
 #include "AuthUserRequest.h"
@@ -1281,11 +1282,16 @@ externalAclInit(void)
 
     if (firstTimeInit) {
         firstTimeInit = 0;
-        cachemgrRegister("external_acl",
-                         "External ACL stats",
-                         externalAclStats, 0, 1);
         CBDATA_INIT_TYPE_FREECB(externalAclState, free_externalAclState);
     }
+}
+
+void
+externalAclRegisterWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("external_acl",
+                           "External ACL stats",
+                           externalAclStats, 0, 1);
 }
 
 void

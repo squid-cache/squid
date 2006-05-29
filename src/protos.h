@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.532 2006/05/22 19:58:51 wessels Exp $
+ * $Id: protos.h,v 1.533 2006/05/29 00:15:02 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -42,6 +42,9 @@
  * grep for method_t in this file - if none found remove this include.
  */
 #include "HttpRequestMethod.h"
+/* for routines still in this file that take CacheManager parameters */
+
+class CacheManager;
 
 #if FORW_VIA_DB
 SQUIDCEXTERN void fvdbCountVia(const char *key);
@@ -56,7 +59,6 @@ SQUIDCEXTERN int logTypeIsATcpHit(log_type);
 /*
  * cache_cf.c
  */
-SQUIDCEXTERN int parseConfigFile(const char *file_name);
 SQUIDCEXTERN void configFreeMemory(void);
 SQUIDCEXTERN void wordlistCat(const wordlist *, MemBuf * mb);
 SQUIDCEXTERN void self_destruct(void);
@@ -80,6 +82,7 @@ SQUIDCEXTERN void parse_sockaddr_in_list_token(sockaddr_in_list **, char *);
  * cbdata.c
  */
 SQUIDCEXTERN void cbdataInit(void);
+SQUIDCEXTERN void cbdataRegisterWithCacheManager(CacheManager & manager);
 #if CBDATA_DEBUG
 SQUIDCEXTERN void *cbdataInternalAllocDbg(cbdata_type type, const char *, int);
 SQUIDCEXTERN void *cbdataInternalFreeDbg(void *p, const char *, int);
@@ -99,6 +102,7 @@ SQUIDCEXTERN cbdata_type cbdataInternalAddType(cbdata_type type, const char *lab
 /* client_side.c - FD related client side routines */
 
 SQUIDCEXTERN void clientdbInit(void);
+extern void clientdbRegisterWithCacheManager(CacheManager & manager);
 
 SQUIDCEXTERN void clientdbUpdate(struct IN_ADDR, log_type, protocol_t, size_t);
 
@@ -199,11 +203,13 @@ SQUIDCEXTERN void disk_init(void);
 
 SQUIDCEXTERN void dnsShutdown(void);
 SQUIDCEXTERN void dnsInit(void);
+extern void dnsRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN void dnsSubmit(const char *lookup, HLPCB * callback, void *data);
 
 /* dns_internal.c */
 SQUIDCEXTERN void idnsInit(void);
 SQUIDCEXTERN void idnsShutdown(void);
+extern void idnsRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN void idnsALookup(const char *, IDNSCB *, void *);
 
 SQUIDCEXTERN void idnsPTRLookup(const struct IN_ADDR, IDNSCB *, void *);
@@ -213,7 +219,7 @@ SQUIDCEXTERN void eventAddIsh(const char *name, EVH * func, void *arg, double de
 SQUIDCEXTERN void eventRun(void);
 SQUIDCEXTERN int eventNextTime(void);
 SQUIDCEXTERN void eventDelete(EVH * func, void *arg);
-SQUIDCEXTERN void eventInit(void);
+SQUIDCEXTERN void eventInit(CacheManager &);
 SQUIDCEXTERN void eventFreeMemory(void);
 SQUIDCEXTERN int eventFind(EVH *, void *);
 
@@ -239,6 +245,7 @@ SQUIDCEXTERN void fqdncache_nbgethostbyaddr(struct IN_ADDR, FQDNH *, void *);
 
 SQUIDCEXTERN const char *fqdncache_gethostbyaddr(struct IN_ADDR, int flags);
 SQUIDCEXTERN void fqdncache_init(void);
+extern void fqdncacheRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN void fqdnStats(StoreEntry *);
 SQUIDCEXTERN void fqdncacheReleaseInvalid(const char *);
 
@@ -386,6 +393,7 @@ SQUIDCEXTERN const ipcache_addrs *ipcache_gethostbyname(const char *, int flags)
 SQUIDCEXTERN void ipcacheInvalidate(const char *);
 SQUIDCEXTERN void ipcacheInvalidateNegative(const char *);
 SQUIDCEXTERN void ipcache_init(void);
+extern void ipcacheRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN void stat_ipcache_get(StoreEntry *);
 SQUIDCEXTERN void ipcacheCycleAddr(const char *name, ipcache_addrs *);
 
@@ -434,6 +442,7 @@ SQUIDCEXTERN void neighborAddAcl(const char *, const char *);
 SQUIDCEXTERN void neighborsUdpAck(const cache_key *, icp_common_t *, const struct sockaddr_in *);
 SQUIDCEXTERN void neighborAdd(const char *, const char *, int, int, int, int, int);
 SQUIDCEXTERN void neighbors_init(void);
+extern void neighborsRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN peer *peerFindByName(const char *);
 SQUIDCEXTERN peer *peerFindByNameAndPort(const char *, unsigned short);
 SQUIDCEXTERN peer *getDefaultParent(HttpRequest * request);
@@ -457,6 +466,7 @@ SQUIDCEXTERN int peerHTTPOkay(const peer *, HttpRequest *);
 SQUIDCEXTERN peer *whichPeer(const struct sockaddr_in *from);
 
 SQUIDCEXTERN void netdbInit(void);
+extern void netdbRegisterWitHCacheManager(CacheManager & manager);
 
 SQUIDCEXTERN void netdbHandlePingReply(const struct sockaddr_in *from, int hops, int rtt);
 SQUIDCEXTERN void netdbPingSite(const char *hostname);
@@ -476,10 +486,6 @@ SQUIDCEXTERN void netdbExchangeUpdatePeer(struct IN_ADDR, peer *, double, double
 SQUIDCEXTERN peer *netdbClosestParent(HttpRequest *);
 SQUIDCEXTERN void netdbHostData(const char *host, int *samp, int *rtt, int *hops);
 
-SQUIDCEXTERN void cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry);
-SQUIDCEXTERN void cachemgrRegister(const char *, const char *, OBJH *, int, int);
-SQUIDCEXTERN void cachemgrInit(void);
-
 SQUIDCEXTERN void peerSelect(HttpRequest *, StoreEntry *, PSC *, void *data);
 SQUIDCEXTERN void peerSelectInit(void);
 
@@ -495,6 +501,7 @@ unsigned long getOutgoingTOS(HttpRequest * request);
 SQUIDCEXTERN void urnStart(HttpRequest *, StoreEntry *);
 
 SQUIDCEXTERN void redirectInit(void);
+extern void redirectRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN void redirectShutdown(void);
 
 extern void refreshAddToList(const char *, int, time_t, int, time_t);
@@ -505,6 +512,7 @@ extern int refreshCheckHTCP(const StoreEntry *, HttpRequest *);
 extern int refreshCheckDigest(const StoreEntry *, time_t delta);
 extern time_t getMaxAge(const char *url);
 extern void refreshInit(void);
+extern void refreshRegisterWithCacheManager(CacheManager & manager);
 extern const refresh_t *refreshLimits(const char *url);
 
 extern void serverConnectionsClose(void);
@@ -525,6 +533,7 @@ SQUIDCEXTERN void identInit(void);
 #endif
 
 SQUIDCEXTERN void statInit(void);
+extern void statRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN void statFreeMemory(void);
 SQUIDCEXTERN double median_svc_get(int, int);
 SQUIDCEXTERN void pconnHistCount(int, int);
@@ -608,6 +617,7 @@ SQUIDCEXTERN HASHCMP storeKeyHashCmp;
  * store_digest.c
  */
 SQUIDCEXTERN void storeDigestInit(void);
+extern void storeDigestRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN void storeDigestNoteStoreReady(void);
 SQUIDCEXTERN void storeDigestScheduleRebuild(void);
 SQUIDCEXTERN void storeDigestDel(const StoreEntry * entry);
@@ -785,6 +795,7 @@ SQUIDCEXTERN int internalHostnameIs(const char *);
 
 #if USE_CARP
 SQUIDCEXTERN void carpInit(void);
+extern void carpRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN peer *carpSelectParent(HttpRequest *);
 #endif
 

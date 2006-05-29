@@ -1,6 +1,10 @@
 #ifndef SQUID_FORWARD_H
 #define SQUID_FORWARD_H
 
+/* forward decls */
+
+class CacheManager;
+
 class FwdServer
 {
 
@@ -18,6 +22,7 @@ public:
     FwdState(int fd, StoreEntry *, HttpRequest *);
     ~FwdState();
     static void initModule();
+    static void RegisterWithCacheManager(CacheManager & manager);
 
     static void fwdStart(int fd, StoreEntry *, HttpRequest *);
     void startComplete(FwdServer *);

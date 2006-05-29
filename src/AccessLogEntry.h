@@ -1,6 +1,6 @@
 
 /*
- * $Id: AccessLogEntry.h,v 1.4 2005/04/18 21:52:41 hno Exp $
+ * $Id: AccessLogEntry.h,v 1.5 2006/05/29 00:14:59 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,6 +37,10 @@
 
 #include "HttpVersion.h"
 #include "HierarchyLogEntry.h"
+
+/* forward decls */
+
+class CacheManager;
 
 class AccessLogEntry
 {
@@ -136,14 +140,15 @@ public:
 };
 
 /* Should be in 'AccessLog.h' as the driver */
-SQUIDCEXTERN void accessLogLog(AccessLogEntry *, ACLChecklist * checklist);
-SQUIDCEXTERN void accessLogRotate(void);
-SQUIDCEXTERN void accessLogClose(void);
-SQUIDCEXTERN void accessLogInit(void);
-SQUIDCEXTERN void accessLogFreeMemory(AccessLogEntry * aLogEntry);
-SQUIDCEXTERN const char *accessLogTime(time_t);
-SQUIDCEXTERN int accessLogParseLogFormat(logformat_token ** fmt, char *def);
-SQUIDCEXTERN void accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definitions);
-SQUIDCEXTERN void accessLogFreeLogFormat(logformat_token ** fmt);
+extern void accessLogLog(AccessLogEntry *, ACLChecklist * checklist);
+extern void accessLogRotate(void);
+extern void accessLogClose(void);
+extern void accessLogInit(void);
+extern void accessLogRegisterWithCacheManager(CacheManager & manager);
+extern void accessLogFreeMemory(AccessLogEntry * aLogEntry);
+extern const char *accessLogTime(time_t);
+extern int accessLogParseLogFormat(logformat_token ** fmt, char *def);
+extern void accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definitions);
+extern void accessLogFreeLogFormat(logformat_token ** fmt);
 
 #endif /* SQUID_HTTPACCESSLOGENTRY_H */

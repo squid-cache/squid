@@ -2,10 +2,14 @@
 #ifndef SQUID_PCONN_H
 #define SQUID_PCONN_H
 
-#define MAX_NUM_PCONN_POOLS 10
-#define PCONN_HIST_SZ (1<<16)
+/* forward decls */
+
+class CacheManager;
 
 class PconnPool;
+
+#define MAX_NUM_PCONN_POOLS 10
+#define PCONN_HIST_SZ (1<<16)
 
 class IdleConnList
 {
@@ -64,7 +68,15 @@ class PconnModule
 {
 
 public:
+    /* the module is a singleton until we have instance based cachemanager
+     * management
+     */
+    static PconnModule * GetInstance();
+    /* A thunk to the still C like CacheManager callback api. */
+    static void DumpWrapper(StoreEntry *e);
+
     PconnModule();
+    void registerWithCacheManager(CacheManager & manager);
 
     void add
         (PconnPool *);
@@ -73,6 +85,8 @@ public:
 
 private:
     PconnPool **pools;
+
+    static PconnModule * instance;
 
     int poolCount;
 };

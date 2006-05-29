@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.88 2006/05/08 23:38:33 robertc Exp $
+ * $Id: dns_internal.cc,v 1.89 2006/05/29 00:15:02 robertc Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
 
 #include "config.h"
 #include "squid.h"
+#include "CacheManager.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "comm.h"
@@ -1242,13 +1243,16 @@ idnsInit(void)
 
     if (!init) {
         memDataInit(MEM_IDNS_QUERY, "idns_query", sizeof(idns_query), 0);
-        cachemgrRegister("idns",
-                         "Internal DNS Statistics",
-                         idnsStats, 0, 1);
         memset(RcodeMatrix, '\0', sizeof(RcodeMatrix));
         idns_lookup_hash = hash_create((HASHCMP *) strcmp, 103, hash_string);
         init++;
     }
+}
+
+void
+idnsRegisterWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("idns", "Internal DNS Statistics", idnsStats, 0, 1);
 }
 
 void

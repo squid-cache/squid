@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthConfig.h,v 1.1 2004/08/30 03:28:56 robertc Exp $
+ * $Id: AuthConfig.h,v 1.2 2006/05/29 00:14:59 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -74,6 +74,8 @@ public:
     virtual void fixHeader(auth_user_request_t *, HttpReply *, http_hdr_type, HttpRequest *) = 0;
     /* prepare to handle requests */
     virtual void init(AuthConfig *) = 0;
+    /* expose any/all statistics to a CacheManager */
+    virtual void registerWithCacheManager(CacheManager & manager);
     /* parse config options */
     virtual void parse(AuthConfig *, int, char *) = 0;
     /* the http string id */

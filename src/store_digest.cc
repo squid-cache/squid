@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.66 2006/05/19 17:05:18 wessels Exp $
+ * $Id: store_digest.cc,v 1.67 2006/05/29 00:15:02 robertc Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -43,6 +43,7 @@
 #include "squid.h"
 #if USE_CACHE_DIGESTS
 
+#include "CacheManager.h"
 #include "Store.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
@@ -120,13 +121,18 @@ storeDigestInit(void)
     debug(71, 1) ("Local cache digest enabled; rebuild/rewrite every %d/%d sec\n",
                   (int) Config.digest.rebuild_period, (int) Config.digest.rewrite_period);
     memset(&sd_state, 0, sizeof(sd_state));
-    cachemgrRegister("store_digest", "Store Digest",
-                     storeDigestReport, 0, 1);
 #else
 
     store_digest = NULL;
     debug(71, 3) ("Local cache digest is 'off'\n");
 #endif
+}
+
+void
+storeDigestRegisterWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("store_digest", "Store Digest",
+                           storeDigestReport, 0, 1);
 }
 
 /* called when store_rebuild completes */

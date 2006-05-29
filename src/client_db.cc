@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.65 2006/05/08 23:38:33 robertc Exp $
+ * $Id: client_db.cc,v 1.66 2006/05/29 00:15:01 robertc Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "CacheManager.h"
 #include "SquidTime.h"
 #include "Store.h"
 
@@ -79,11 +80,15 @@ clientdbInit(void)
         return;
 
     client_table = hash_create((HASHCMP *) strcmp, CLIENT_DB_HASH_SIZE, hash_string);
+}
 
-    cachemgrRegister("client_list",
-                     "Cache Client List",
-                     clientdbDump,
-                     0, 1);
+void
+clientdbRegisterWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("client_list",
+                           "Cache Client List",
+                           clientdbDump,
+                           0, 1);
 }
 
 void

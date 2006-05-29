@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreFScoss.cc,v 1.4 2004/12/20 16:30:41 robertc Exp $
+ * $Id: StoreFScoss.cc,v 1.5 2006/05/29 00:15:09 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
@@ -36,6 +36,7 @@
 
 #include "StoreFileSystem.h"
 #include "StoreFScoss.h"
+#include "CacheManager.h"
 #include "Store.h"
 #include "CossSwapDir.h"
 #include "store_coss.h"
@@ -63,7 +64,6 @@ void
 StoreFScoss::done()
 {
     /*  delete coss_index_pool;coss_index_pool = NULL;  XXX Should be here? */
-    cachemgrRegister("coss", "COSS Stats", Stats, 0, 1);
     initialised = false;
 }
 
@@ -81,6 +81,12 @@ StoreFScoss::setup()
 
     coss_index_pool = new MemAllocatorProxy("COSS index data", sizeof(CossIndexNode));
     initialised = true;
+}
+
+void
+StoreFScoss::registerWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("coss", "COSS Stats", Stats, 0, 1);
 }
 
 void

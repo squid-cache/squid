@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.422 2006/05/23 16:24:55 hno Exp $
+ * $Id: main.cc,v 1.423 2006/05/29 00:15:02 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -36,9 +36,13 @@
 #include "squid.h"
 #include "AccessLogEntry.h"
 #include "authenticate.h"
+#include "CacheManager.h"
+#include "ConfigParser.h"
+#include "ExternalACL.h"
 #include "Store.h"
 #include "ICP.h"
 #include "HttpReply.h"
+#include "pconn.h"
 #include "Mem.h"
 #include "ACLASN.h"
 #include "ACL.h"
@@ -46,6 +50,18 @@
 #include "StoreFileSystem.h"
 #include "DiskIO/DiskIOModule.h"
 #include "comm.h"
+#if USE_EPOLL
+#include "comm_epoll.h"
+#endif
+#if USE_KQUEUE
+#include "comm_kqueue.h"
+#endif
+#if USE_POLL
+#include "comm_poll.h"
+#endif
+#if USE_SELECT
+#include "comm_select.h"
+#endif
 #include "SquidTime.h"
 #include "SwapDir.h"
 #include "forward.h"
@@ -96,6 +112,8 @@ extern void log_trace_init(char *);
 static EVH SquidShutdown;
 static void mainSetCwd(void);
 static int checkRunningPid(void);
+
+static CacheManager manager;
 
 #ifndef _SQUID_MSWIN_
 static const char *squid_start_script = "squid_start";
@@ -561,7 +579,7 @@ mainReconfigure(void)
     refererCloseLog();
     errorClean();
     enter_suid();		/* root to read config file */
-    parseConfigFile(ConfigFile);
+    parseConfigFile(ConfigFile, manager);
     setEffectiveUser();
     _db_init(Config.Log.log, Config.debugOptions);
     ipcache_restart();		/* clear stuck entries */
@@ -591,8 +609,10 @@ mainReconfigure(void)
 
     serverConnectionsOpen();
 
-    if (theOutIcpConnection >= 0)
+    if (theOutIcpConnection >= 0) {
         neighbors_init();
+        neighborsRegisterWithCacheManager(manager);
+    }
 
     storeDirOpenSwapLogs();
 
@@ -803,7 +823,6 @@ mainInitialize(void)
 #endif
 
         urlInitialize();
-        cachemgrInit();
         statInit();
         storeInit();
         mainSetCwd();
@@ -817,6 +836,66 @@ mainInitialize(void)
 #endif
 
         FwdState::initModule();
+        /* register the modules in the cache manager menus */
+        accessLogRegisterWithCacheManager(manager);
+        asnRegisterWithCacheManager(manager);
+        authenticateRegisterWithCacheManager(&Config.authConfiguration, manager);
+#if USE_CARP
+
+        carpRegisterWithCacheManager(manager);
+#endif
+
+        cbdataRegisterWithCacheManager(manager);
+        /* These use separate calls so that the comm loops can eventually
+         * coexist.
+         */
+#ifdef USE_EPOLL
+
+        commEPollRegisterWithCacheManager(manager);
+#endif
+#ifdef USE_KQUEUE
+
+        commKQueueRegisterWithCacheManager(manager);
+#endif
+#ifdef USE_POLL
+
+        commPollRegisterWithCacheManager(manager);
+#endif
+#ifdef USE_SELECT
+
+        commSelectRegisterWithCacheManager(manager);
+#endif
+
+        clientdbRegisterWithCacheManager(manager);
+        DelayPools::RegisterWithCacheManager(manager);
+        DiskIOModule::RegisterAllModulesWithCacheManager(manager);
+#if USE_DNSSERVERS
+
+        dnsRegisterWithCacheManager(manager);
+#endif
+
+        eventInit(manager);
+        externalAclRegisterWithCacheManager(manager);
+        fqdncacheRegisterWithCacheManager(manager);
+        FwdState::RegisterWithCacheManager(manager);
+        httpHeaderRegisterWithCacheManager(manager);
+        idnsRegisterWithCacheManager(manager);
+        ipcacheRegisterWithCacheManager(manager);
+        Mem::RegisterWithCacheManager(manager);
+        netdbRegisterWitHCacheManager(manager);
+        PconnModule::GetInstance()->registerWithCacheManager(manager);
+        redirectRegisterWithCacheManager(manager);
+        refreshRegisterWithCacheManager(manager);
+        statRegisterWithCacheManager(manager);
+        storeDigestRegisterWithCacheManager(manager);
+        StoreFileSystem::RegisterAllFsWithCacheManager(manager);
+        storeRegisterWithCacheManager(manager);
+#if DEBUGSTRINGS
+
+        StringRegistry::Instance().registerWithCacheManager(manager);
+#endif
+
+        xprofRegisterWithCacheManager(manager);
     }
 
 #if USE_WCCP
@@ -826,8 +905,10 @@ mainInitialize(void)
 
     serverConnectionsOpen();
 
-    if (theOutIcpConnection >= 0)
+    if (theOutIcpConnection >= 0) {
         neighbors_init();
+        neighborsRegisterWithCacheManager(manager);
+    }
 
     if (Config.chroot_dir)
         no_suid();
@@ -1027,8 +1108,6 @@ main(int argc, char **argv)
 
         cbdataInit();
 
-        eventInit();		/* eventInit() is required for config parsing */
-
         storeFsInit();		/* required for config parsing */
 
         /* May not be needed for parsing, have not audited for such */
@@ -1040,7 +1119,7 @@ main(int argc, char **argv)
         /* we may want the parsing process to set this up in the future */
         Store::Root(new StoreController);
 
-        parse_err = parseConfigFile(ConfigFile);
+        parse_err = parseConfigFile(ConfigFile, manager);
 
         if (opt_parse_cfg_only)
 

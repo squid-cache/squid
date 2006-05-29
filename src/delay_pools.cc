@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.45 2006/05/08 23:38:33 robertc Exp $
+ * $Id: delay_pools.cc,v 1.46 2006/05/29 00:15:02 robertc Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -41,6 +41,7 @@
 
 #if DELAY_POOLS
 #include "squid.h"
+#include "CacheManager.h"
 #include "DelaySpec.h"
 #include "DelayPools.h"
 #include "StoreClient.h"
@@ -537,7 +538,12 @@ void
 DelayPools::Init()
 {
     LastUpdate = getCurrentTime();
-    cachemgrRegister("delay", "Delay Pool Levels", Stats, 0, 1);
+}
+
+void
+DelayPools::RegisterWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("delay", "Delay Pool Levels", Stats, 0, 1);
 }
 
 void

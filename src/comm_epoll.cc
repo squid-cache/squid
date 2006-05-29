@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_epoll.cc,v 1.9 2006/05/11 01:14:58 hno Exp $
+ * $Id: comm_epoll.cc,v 1.10 2006/05/29 00:15:01 robertc Exp $
  *
  * DEBUG: section 5    Socket functions
  *
@@ -53,6 +53,8 @@
  */
 
 #include "squid.h"
+#include "comm_epoll.h"
+#include "CacheManager.h"
 #include "Store.h"
 #include "fde.h"
 #include "SquidTime.h"

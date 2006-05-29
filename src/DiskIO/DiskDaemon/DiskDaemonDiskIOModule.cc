@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskDaemonDiskIOModule.cc,v 1.2 2005/05/01 10:49:03 serassio Exp $
+ * $Id: DiskDaemonDiskIOModule.cc,v 1.3 2006/05/29 00:15:03 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -33,6 +33,7 @@
 
 #include "squid.h"
 #include "DiskDaemonDiskIOModule.h"
+#include "CacheManager.h"
 #include "DiskdIOStrategy.h"
 #include "Store.h"
 
@@ -58,10 +59,14 @@ DiskDaemonDiskIOModule::init()
      */
     assert(!initialised);
     memset(&diskd_stats, '\0', sizeof(diskd_stats));
-    cachemgrRegister("diskd", "DISKD Stats", Stats, 0, 1);
-
-    debug(47, 1) ("diskd started\n");
+    debugs(47, 1, "diskd started");
     initialised = true;
+}
+
+void
+DiskDaemonDiskIOModule::registerWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("diskd", "DISKD Stats", Stats, 0, 1);
 }
 
 void

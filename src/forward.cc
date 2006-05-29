@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.144 2006/05/19 17:19:09 wessels Exp $
+ * $Id: forward.cc,v 1.145 2006/05/29 00:15:02 robertc Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
 
 
 #include "squid.h"
+#include "CacheManager.h"
 #include "forward.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -1030,9 +1031,6 @@ FwdState::pconnPush(int fd, const char *host, int port, const char *domain)
 void
 FwdState::initModule()
 {
-    cachemgrRegister("forward",
-                     "Request Forwarding Statistics",
-                     fwdStats, 0, 1);
     memDataInit(MEM_FWD_SERVER, "FwdServer", sizeof(FwdServer), 0);
 
 #if WIP_FWD_LOG
@@ -1045,6 +1043,14 @@ FwdState::initModule()
         logfile = logfileOpen(Config.Log.forward, 0, 1);
 
 #endif
+}
+
+void
+FwdState::RegisterWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("forward",
+                           "Request Forwarding Statistics",
+                           fwdStats, 0, 1);
 }
 
 void

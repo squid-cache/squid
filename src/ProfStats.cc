@@ -1,6 +1,6 @@
 
 /*
- * $Id: ProfStats.cc,v 1.6 2005/06/03 15:00:55 serassio Exp $
+ * $Id: ProfStats.cc,v 1.7 2006/05/29 00:15:01 robertc Exp $
  *
  * DEBUG: section 81     CPU Profiling Routines
  * AUTHOR: Andres Kroonmaa
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "CacheManager.h"
 
 #ifdef USE_XPROF_STATS
 #include "Store.h"
@@ -273,8 +274,12 @@ xprof_Init(void)
     xprof_delta = xprof_verystart = xprof_start_t = now;
 
     xprof_inited = 1;
+}
 
-    cachemgrRegister("cpu_profile", "CPU Profiling Stats", xprof_summary, 0, 1);
+void
+xprofRegisterWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("cpu_profile", "CPU Profiling Stats", xprof_summary, 0, 1);
 }
 
 void

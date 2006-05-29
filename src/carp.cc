@@ -1,6 +1,6 @@
 
 /*
- * $Id: carp.cc,v 1.24 2003/08/10 11:00:42 robertc Exp $
+ * $Id: carp.cc,v 1.25 2006/05/29 00:15:01 robertc Exp $
  *
  * DEBUG: section 39    Cache Array Routing Protocol
  * AUTHOR: Henrik Nordstrom
@@ -35,6 +35,7 @@
  */
 
 #include "squid.h"
+#include "CacheManager.h"
 #include "Store.h"
 
 #if USE_CARP
@@ -149,8 +150,12 @@ carpInit(void)
         X_last = p->carp.load_multiplier;
         P_last = p->carp.load_factor;
     }
+}
 
-    cachemgrRegister("carp", "CARP information", carpCachemgr, 0, 1);
+void
+carpRegisterWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("carp", "CARP information", carpCachemgr, 0, 1);
 }
 
 peer *

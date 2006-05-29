@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.188 2006/05/19 17:05:18 wessels Exp $
+ * $Id: net_db.cc,v 1.189 2006/05/29 00:15:02 robertc Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -42,6 +42,7 @@
  */
 
 #include "squid.h"
+#include "CacheManager.h"
 #include "Store.h"
 #include "SwapDir.h"
 #include "HttpRequest.h"
@@ -901,9 +902,16 @@ netdbInit(void)
 
     netdbReloadState();
 
-    cachemgrRegister("netdb",
-                     "Network Measurement Database",
-                     netdbDump, 0, 1);
+#endif
+}
+
+void
+netdbRegisterWitHCacheManager(CacheManager & manager)
+{
+#if USE_ICMP
+    manager.registerAction("netdb",
+                           "Network Measurement Database",
+                           netdbDump, 0, 1);
 
 #endif
 }

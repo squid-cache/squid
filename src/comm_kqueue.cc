@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_kqueue.cc,v 1.10 2006/05/09 15:47:45 wessels Exp $
+ * $Id: comm_kqueue.cc,v 1.11 2006/05/29 00:15:02 robertc Exp $
  *
  * DEBUG: section 5    Socket functions
  *
@@ -54,6 +54,8 @@
  */
 
 #include "squid.h"
+#include "comm_kqueue.h"
+#include "CacheManager.h"
 #include "Store.h"
 #include "fde.h"
 #include "SquidTime.h"

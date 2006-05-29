@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_poll.cc,v 1.15 2006/05/08 23:38:33 robertc Exp $
+ * $Id: comm_poll.cc,v 1.16 2006/05/29 00:15:02 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -33,6 +33,8 @@
  */
 
 #include "squid.h"
+#include "comm_poll.h"
+#include "CacheManager.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "fde.h"
@@ -93,7 +95,7 @@ static void comm_poll_dns_incoming(void);
  * a histogram of 'incoming_events' by asking the cache manager
  * for 'comm_incoming', e.g.:
  *
- *      % ./client mgr:comm_incoming
+ *      % ./client mgr:comm_poll_incoming
  *
  * Caveats:
  *
@@ -671,10 +673,14 @@ comm_poll_dns_incoming(void)
 
 void
 comm_select_init(void)
+{}
+
+void
+commPollRegisterWithCacheManager(CacheManager & manager)
 {
-    cachemgrRegister("comm_incoming",
-                     "comm_incoming() stats",
-                     commIncomingStats, 0, 1);
+    manager.registerAction("comm_poll_incoming",
+                           "comm_incoming() stats",
+                           commIncomingStats, 0, 1);
 }
 
 

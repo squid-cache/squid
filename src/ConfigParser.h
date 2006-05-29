@@ -1,6 +1,6 @@
 
 /*
- * $Id: ConfigParser.h,v 1.5 2006/04/28 05:13:20 wessels Exp $
+ * $Id: ConfigParser.h,v 1.6 2006/05/29 00:14:59 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,6 +38,10 @@
 
 #include "squid.h"
 
+/* forward decls */
+
+class CacheManager;
+
 /*
  * A configuration file Parser. Instances of this class track
  * parsing state and perform tokenisation. Syntax is currently
@@ -61,5 +65,7 @@ public:
     static void ParseWordList(wordlist **list);
     static char * strtokFile();
 };
+
+extern int parseConfigFile(const char *file_name, CacheManager & manager);
 
 #endif /* SQUID_CONFIGPARSER_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.57 2006/05/06 22:13:19 wessels Exp $
+ * $Id: auth_ntlm.cc,v 1.58 2006/05/29 00:15:07 robertc Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -41,6 +41,7 @@
 #include "squid.h"
 #include "auth_ntlm.h"
 #include "authenticate.h"
+#include "CacheManager.h"
 #include "Store.h"
 #include "client_side.h"
 #include "HttpReply.h"
@@ -173,8 +174,6 @@ AuthNTLMConfig::type() const
 void
 AuthNTLMConfig::init(AuthConfig * scheme)
 {
-    static unsigned char ntlm_was_already_initialised = 0;
-
     if (authenticate) {
 #if PLACEHOLDER
 
@@ -202,15 +201,16 @@ AuthNTLMConfig::init(AuthConfig * scheme)
 
         helperStatefulOpenServers(ntlmauthenticators);
 
-        if (!ntlm_was_already_initialised) {
-            cachemgrRegister("ntlmauthenticator",
-                             "NTLM User Authenticator Stats",
-                             authenticateNTLMStats, 0, 1);
-            ntlm_was_already_initialised++;
-        }
-
         CBDATA_INIT_TYPE(authenticateStateData);
     }
+}
+
+void
+AuthNTLMConfig::registerWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("ntlmauthenticator",
+                           "NTLM User Authenticator Stats",
+                           authenticateNTLMStats, 0, 1);
 }
 
 bool

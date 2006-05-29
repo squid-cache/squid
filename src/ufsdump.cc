@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufsdump.cc,v 1.7 2006/05/12 19:14:31 serassio Exp $
+ * $Id: ufsdump.cc,v 1.8 2006/05/29 00:15:02 robertc Exp $
  *
  * DEBUG: section 0     UFS Store Dump
  * AUTHOR: Robert Collins
@@ -66,10 +66,6 @@ reconfigure(int)
 #if WHENITMINIMAL
 void
 eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata)
-{}
-
-void
-cachemgrRegister(const char *action, const char *desc, OBJH * handler, int pw_req_flag, int atomic)
 {}
 
 #endif
