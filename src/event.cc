@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.38 2003/06/24 12:42:25 robertc Exp $
+ * $Id: event.cc,v 1.39 2006/05/29 00:15:02 robertc Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -34,12 +34,16 @@
  */
 
 #include "squid.h"
+#include "CacheManager.h"
 #include "Store.h"
 
 /* The list of event processes */
 
-struct ev_entry
+class ev_entry
 {
+
+public:
+    MEMPROXY_CLASS(ev_entry);
     EVH *func;
     void *arg;
     const char *name;
@@ -51,6 +55,8 @@ struct ev_entry
     bool cbdata;
 };
 
+MEMPROXY_CLASS_INLINE(ev_entry);
+
 static struct ev_entry *tasks = NULL;
 static OBJH eventDump;
 static int run_id = 0;
@@ -60,7 +66,7 @@ void
 eventAdd(const char *name, EVH * func, void *arg, double when, int weight, bool cbdata)
 {
 
-    struct ev_entry *event = (ev_entry *)memAllocate(MEM_EVENT);
+    struct ev_entry *event = new ev_entry;
 
     struct ev_entry **E;
     event->func = func;
@@ -118,7 +124,7 @@ eventDelete(EVH * func, void *arg)
         if (event->cbdata)
             cbdataReferenceDone(event->arg);
 
-        memFree(event, MEM_EVENT);
+        delete event;
 
         return;
     }
@@ -173,7 +179,7 @@ eventRun(void)
             callback(cbdata);
         }
 
-        memFree(event, MEM_EVENT);
+        delete event;
     }
 
     PROF_stop(eventRun);
@@ -189,13 +195,9 @@ eventNextTime(void)
 }
 
 void
-eventInit(void)
+eventInit(CacheManager &manager)
 {
-
-    memDataInit(MEM_EVENT, "event", sizeof(struct ev_entry), 0);
-    cachemgrRegister("events",
-                     "Event Queue",
-                     eventDump, 0, 1);
+    manager.registerAction("events", "Event Queue", eventDump, 0, 1);
 }
 
 static void
@@ -233,7 +235,7 @@ eventFreeMemory(void)
         if (event->cbdata)
             cbdataReferenceDone(event->arg);
 
-        memFree(event, MEM_EVENT);
+        delete event;
     }
 
     tasks = NULL;

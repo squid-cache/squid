@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.41 2006/05/08 23:38:35 robertc Exp $
+ * $Id: auth_basic.cc,v 1.42 2006/05/29 00:15:03 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -40,6 +40,7 @@
 #include "squid.h"
 #include "auth_basic.h"
 #include "authenticate.h"
+#include "CacheManager.h"
 #include "Store.h"
 #include "HttpReply.h"
 #include "basicScheme.h"
@@ -584,8 +585,6 @@ AuthBasicConfig::decode(char const *proxy_auth)
 void
 AuthBasicConfig::init(AuthConfig * scheme)
 {
-    static int init = 0;
-
     if (authenticate) {
         authbasic_initialised = 1;
 
@@ -602,15 +601,16 @@ AuthBasicConfig::init(AuthConfig * scheme)
 
         helperOpenServers(basicauthenticators);
 
-        if (!init) {
-            cachemgrRegister("basicauthenticator",
-                             "Basic User Authenticator Stats",
-                             authenticateBasicStats, 0, 1);
-            init++;
-        }
-
         CBDATA_INIT_TYPE(AuthenticateStateData);
     }
+}
+
+void
+AuthBasicConfig::registerWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("basicauthenticator",
+                           "Basic User Authenticator Stats",
+                           authenticateBasicStats, 0, 1);
 }
 
 void

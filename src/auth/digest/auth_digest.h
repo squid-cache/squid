@@ -165,6 +165,7 @@ public:
     virtual void fixHeader(auth_user_request_t *, HttpReply *, http_hdr_type, HttpRequest *);
     virtual void init(AuthConfig *);
     virtual void parse(AuthConfig *, int, char *);
+    virtual void registerWithCacheManager(CacheManager & manager);
     virtual const char * type() const;
     int authenticateChildren;
     char *digestAuthRealm;

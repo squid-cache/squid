@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreFileSystem.cc,v 1.1 2003/07/22 15:23:01 robertc Exp $
+ * $Id: StoreFileSystem.cc,v 1.2 2006/05/29 00:15:01 robertc Exp $
  *
  * DEBUG: section 92    Storage File System
  * AUTHOR: Robert Collins
@@ -38,6 +38,13 @@
 #include "StoreFileSystem.h"
 
 Vector<StoreFileSystem*> *StoreFileSystem::_FileSystems = NULL;
+
+void
+StoreFileSystem::RegisterAllFsWithCacheManager(CacheManager & manager)
+{
+    for (iterator i = GetFileSystems().begin(); i != GetFileSystems().end(); ++i)
+        (*i)->registerWithCacheManager(manager);
+}
 
 void
 StoreFileSystem::SetupAllFs()
@@ -89,3 +96,7 @@ StoreFileSystem::FreeAllFs()
     }
 }
 
+/* no filesystem is required to export statistics */
+void
+StoreFileSystem::registerWithCacheManager(CacheManager & manager)
+{}

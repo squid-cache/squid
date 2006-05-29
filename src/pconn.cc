@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.45 2005/12/06 23:03:34 wessels Exp $
+ * $Id: pconn.cc,v 1.46 2006/05/29 00:15:02 robertc Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "CacheManager.h"
 #include "Store.h"
 #include "comm.h"
 #include "pconn.h"
@@ -41,9 +42,8 @@
 
 #define PCONN_FDS_SZ	8	/* pconn set size, increase for better memcache hit rate */
 
-static PconnModule *ThePconnModule = NULL;
 static MemAllocator *pconn_fds_pool = NULL;
-static OBJH PconnModuleDumpWrapper;
+PconnModule * PconnModule::instance = NULL;
 CBDATA_CLASS_INIT(IdleConnList);
 
 /* ========== IdleConnList ============================================ */
@@ -217,10 +217,7 @@ PconnPool::PconnPool(const char *aDescr) : table(NULL), descr(aDescr)
     for (i = 0; i < PCONN_HIST_SZ; i++)
         hist[i] = 0;
 
-    if (ThePconnModule == NULL)
-        ThePconnModule = new PconnModule;
-
-    ThePconnModule->add
+    PconnModule::GetInstance()->add
     (this);
 }
 
@@ -306,11 +303,25 @@ PconnPool::count(int uses)
 PconnModule::PconnModule() : pools(NULL), poolCount(0)
 {
     pools = (PconnPool **) xcalloc(MAX_NUM_PCONN_POOLS, sizeof(*pools));
-    cachemgrRegister("pconn",
-                     "Persistent Connection Utilization Histograms",
-                     PconnModuleDumpWrapper, 0, 1);
     pconn_fds_pool = MemPools::GetInstance().create("pconn_fds", PCONN_FDS_SZ * sizeof(int));
     debug(48, 0) ("persistent connection module initialized\n");
+}
+
+PconnModule *
+PconnModule::GetInstance()
+{
+    if (instance == NULL)
+        instance = new PconnModule;
+
+    return instance;
+}
+
+void
+PconnModule::registerWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("pconn",
+                           "Persistent Connection Utilization Histograms",
+                           DumpWrapper, 0, 1);
 }
 
 void
@@ -333,8 +344,8 @@ PconnModule::dump(StoreEntry *e)
     }
 }
 
-static void
-PconnModuleDumpWrapper(StoreEntry *e)
+void
+PconnModule::DumpWrapper(StoreEntry *e)
 {
-    ThePconnModule->dump(e);
+    PconnModule::GetInstance()->dump(e);
 }

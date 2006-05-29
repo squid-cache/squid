@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.107 2006/05/19 17:19:09 wessels Exp $
+ * $Id: asn.cc,v 1.108 2006/05/29 00:15:01 robertc Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "CacheManager.h"
 #include "radix.h"
 #include "HttpRequest.h"
 #include "StoreClient.h"
@@ -201,8 +202,12 @@ asnInit(void)
         squid_rn_init();
 
     squid_rn_inithead(&AS_tree_head, 8);
+}
 
-    cachemgrRegister("asndb", "AS Number Database", asnStats, 0, 1);
+void
+asnRegisterWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("asndb", "AS Number Database", asnStats, 0, 1);
 }
 
 void

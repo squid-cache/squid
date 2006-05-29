@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.71 2006/05/08 23:38:33 robertc Exp $
+ * $Id: refresh.cc,v 1.72 2006/05/29 00:15:02 robertc Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -38,6 +38,7 @@
 #endif
 
 #include "squid.h"
+#include "CacheManager.h"
 #include "Store.h"
 #include "MemObject.h"
 #include "HttpRequest.h"
@@ -583,14 +584,19 @@ refreshInit(void)
     refreshCounts[rcCDigest].proto = "Cache Digests";
 #endif
 
-    cachemgrRegister("refresh",
-                     "Refresh Algorithm Statistics",
-                     refreshStats,
-                     0,
-                     1);
     memset(&DefaultRefresh, '\0', sizeof(DefaultRefresh));
     DefaultRefresh.pattern = "<none>";
     DefaultRefresh.min = REFRESH_DEFAULT_MIN;
     DefaultRefresh.pct = REFRESH_DEFAULT_PCT;
     DefaultRefresh.max = REFRESH_DEFAULT_MAX;
+}
+
+void
+refreshRegisterWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("refresh",
+                           "Refresh Algorithm Statistics",
+                           refreshStats,
+                           0,
+                           1);
 }

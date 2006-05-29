@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.336 2006/05/19 17:05:18 wessels Exp $
+ * $Id: neighbors.cc,v 1.337 2006/05/29 00:15:02 robertc Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "CacheManager.h"
 #include "Store.h"
 #include "ICP.h"
 #include "HttpRequest.h"
@@ -568,15 +569,28 @@ neighbors_init(void)
     }
 
     first_ping = Config.peers;
-    cachemgrRegister("server_list",
-                     "Peer Cache Statistics",
-                     neighborDumpPeers, 0, 1);
+}
+
+void
+neighborsRegisterWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("server_list",
+                           "Peer Cache Statistics",
+                           neighborDumpPeers, 0, 1);
 
     if (theInIcpConnection >= 0) {
-        cachemgrRegister("non_peers",
-                         "List of Unknown sites sending ICP messages",
-                         neighborDumpNonPeers, 0, 1);
+        manager.registerAction("non_peers",
+                               "List of Unknown sites sending ICP messages",
+                               neighborDumpNonPeers, 0, 1);
     }
+
+    /* XXX FIXME: unregister if we were registered. Something like:
+     * else {
+     *   CacheManagerAction * action = manager.findAction("non_peers");
+     *   if (action != NULL)
+     *       manager.unregisterAction(action);
+     *  }
+     */
 }
 
 int

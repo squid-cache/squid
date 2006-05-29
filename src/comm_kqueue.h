@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.h,v 1.16 2006/05/29 00:15:01 robertc Exp $
+ * $Id: comm_kqueue.h,v 1.1 2006/05/29 00:15:02 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -31,52 +31,13 @@
  *
  */
 
-#ifndef SQUID_AUTHENTICATE_H
-#define SQUID_AUTHENTICATE_H
+#ifndef SQUID_COMM_KQUEUE_H
+#define SQUID_COMM_KQUEUE_H
 
-#include "client_side.h"
+/* forward decls */
 
-class AuthUser;
+class CacheManager;
 
-struct AuthUserHashPointer : public hash_link
-{
-    /* first two items must be same as hash_link */
+extern void commKQueueRegisterWithCacheManager(CacheManager & manager);
 
-public:
-    static void removeFromCache (void *anAuthUserHashPointer);
-    MEMPROXY_CLASS(AuthUserHashPointer);
-
-    AuthUserHashPointer (AuthUser *);
-
-    AuthUser *user() const;
-
-private:
-    AuthUser *auth_user;
-};
-
-MEMPROXY_CLASS_INLINE(AuthUserHashPointer)
-
-class ConnStateData;
-
-class AuthScheme;
-
-/* authenticate.c authenticate scheme routines typedefs */
-/* TODO: this should be a generic cachemgr API type ? */
-typedef void AUTHSSTATS(StoreEntry *);
-
-/* subsumed by the C++ interface */
-extern void authenticateAuthUserMerge(auth_user_t *, auth_user_t *);
-
-extern void authenticateInit(authConfig *);
-extern void authenticateRegisterWithCacheManager(authConfig * config, CacheManager & manager);
-extern void authenticateShutdown(void);
-extern int authenticateAuthUserInuse(auth_user_t * auth_user);
-
-extern void authenticateFreeProxyAuthUserACLResults(void *data);
-extern int authenticateActiveSchemeCount(void);
-extern int authenticateSchemeCount(void);
-
-extern void authenticateUserCacheRestart(void);
-extern void authenticateOnCloseConnection(ConnStateData * conn);
-
-#endif /* SQUID_AUTHENTICATE_H */
+#endif /* SQUID_COMM_KQUEUE_H */

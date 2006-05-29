@@ -97,8 +97,6 @@ fake_auth_setup()
 
     cbdataInit();
 
-    eventInit();
-
     Vector<AuthConfig *> &config = Config.authConfiguration;
 
     char const *digest_parms[]= {"program /home/robertc/install/squid/libexec/digest_pw_auth /home/robertc/install/squid/etc/digest.pwd",

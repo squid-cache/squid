@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.75 2006/05/14 16:42:43 serassio Exp $
+ * $Id: comm_select.cc,v 1.76 2006/05/29 00:15:02 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -33,6 +33,8 @@
  */
 
 #include "squid.h"
+#include "comm_select.h"
+#include "CacheManager.h"
 #include "SquidTime.h"
 
 #ifdef USE_SELECT
@@ -739,12 +741,17 @@ comm_select_init(void)
 {
     zero_tv.tv_sec = 0;
     zero_tv.tv_usec = 0;
-    cachemgrRegister("comm_incoming",
-                     "comm_incoming() stats",
-                     commIncomingStats, 0, 1);
     FD_ZERO(&global_readfds);
     FD_ZERO(&global_writefds);
     nreadfds = nwritefds = 0;
+}
+
+void
+commSelectRegisterWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("comm_select_incoming",
+                           "comm_incoming() stats",
+                           commIncomingStats, 0, 1);
 }
 
 /*

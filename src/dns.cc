@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.95 2006/05/09 15:47:45 wessels Exp $
+ * $Id: dns.cc,v 1.96 2006/05/29 00:15:02 robertc Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -55,7 +55,6 @@ dnsStats(StoreEntry * sentry)
 void
 dnsInit(void)
 {
-    static int init = 0;
     wordlist *w;
 
     if (!Config.Program.dnsserver)
@@ -81,13 +80,14 @@ dnsInit(void)
     }
 
     helperOpenServers(dnsservers);
+}
 
-    if (!init) {
-        cachemgrRegister("dns",
-                         "Dnsserver Statistics",
-                         dnsStats, 0, 1);
-        init = 1;
-    }
+void
+dnsRegisterWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("dns",
+                           "Dnsserver Statistics",
+                           dnsStats, 0, 1);
 }
 
 void

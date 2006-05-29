@@ -1,6 +1,7 @@
 
 /*
- * $Id: StoreFScoss.h,v 1.3 2006/05/29 00:15:09 robertc Exp $
+ * $Id: CacheManager.h,v 1.1 2006/05/29 00:14:59 robertc Exp $
+ *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -28,66 +29,66 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
- * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_STOREFSCOSS_H
-#define SQUID_STOREFSCOSS_H
+#ifndef SQUID_CACHEMANAGER_H
+#define SQUID_CACHEMANAGER_H
 
-#include "StoreFileSystem.h"
+#include "squid.h"
 
-class CossStats
+
+extern void cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry);
+
+/*
+ * A single menu item in the cache manager - an 'action'.
+ */
+
+class CacheManagerAction
 {
 
 public:
-    void stat(StoreEntry * sentry);
-    int stripes;
+    char *action;
+    char *desc;
+    OBJH *handler;
 
     struct
     {
-        int alloc;
-        int realloc;
-        int collisions;
+
+unsigned int pw_req:
+        1;
+
+unsigned int atomic:
+        1;
     }
 
-    alloc;
-    int disk_overflows;
-    int stripe_overflows;
-    int open_mem_hits;
-    int open_mem_misses;
+    flags;
 
-    struct
-    {
-        int ops;
-        int success;
-        int fail;
-    }
-
-    open, create, close, unlink, read, write, stripe_write;
+    CacheManagerAction *next;
 };
 
-class StoreFScoss : public StoreFileSystem
+
+/*
+ * a CacheManager - the menu system for interacting with squid.
+ * This is currently just an adapter to the global cachemgr* routines to
+ * provide looser coupling between modules, but once fully transitioned,
+ * an instance of this class will represent a single independent manager.
+ */
+
+class CacheManager
 {
 
 public:
-    static StoreFScoss &GetInstance();
-    static void Stats(StoreEntry * sentry);
-    StoreFScoss();
-    virtual ~StoreFScoss() {}
+    CacheManager();
+    /* the holy trinity - assignment, copy cons, destructor */
+    /* unimplemented - prevents bugs from synthetic */
+    CacheManager & operator = (CacheManager &);
+    /* unimplemented - prevents bugs from synthetic */
+    CacheManager(CacheManager const &);
+    /* inline so that we dont need to link in cachemgr.cc at all in tests */
+    virtual ~CacheManager() {}
 
-    virtual char const *type() const;
-    virtual SwapDir *createSwapDir();
-    virtual void done();
-    virtual void registerWithCacheManager(CacheManager & manager);
-    virtual void setup();
-    /* Not implemented */
-    StoreFScoss (StoreFScoss const &);
-    StoreFScoss &operator=(StoreFScoss const &);
-    void stat(StoreEntry * sentry);
-    CossStats stats;
-
-private:
-    static StoreFScoss _instance;
+    virtual void registerAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic);
+    virtual CacheManagerAction * findAction(char const * action);
 };
 
-#endif /* SQUID_STOREFSCOSS_H */
+#endif /* SQUID_CACHEMANAGER_H */

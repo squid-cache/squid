@@ -61,8 +61,6 @@ testCoss::commonInit()
 
     cbdataInit();
 
-    eventInit();		/* eventInit() is required for config parsing */
-
     comm_init();
 
     httpHeaderInitModule();	/* must go before any header processing (e.g. the one in errorInitialize) */

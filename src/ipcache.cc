@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.254 2006/05/08 23:38:33 robertc Exp $
+ * $Id: ipcache.cc,v 1.255 2006/05/29 00:15:02 robertc Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "CacheManager.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "wordlist.h"
@@ -582,10 +583,15 @@ ipcache_init(void)
                            (float) Config.ipcache.low) / (float) 100);
     n = hashPrime(ipcache_high / 4);
     ip_table = hash_create((HASHCMP *) strcmp, n, hash4);
-    cachemgrRegister("ipcache",
-                     "IP Cache Stats and Contents",
-                     stat_ipcache_get, 0, 1);
     memDataInit(MEM_IPCACHE_ENTRY, "ipcache_entry", sizeof(ipcache_entry), 0);
+}
+
+void
+ipcacheRegisterWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("ipcache",
+                           "IP Cache Stats and Contents",
+                           stat_ipcache_get, 0, 1);
 }
 
 const ipcache_addrs *

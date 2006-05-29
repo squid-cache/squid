@@ -1,6 +1,6 @@
 
 /*
- * $Id: LeakFinder.cc,v 1.3 2006/05/09 15:47:45 wessels Exp $
+ * $Id: LeakFinder.cc,v 1.4 2006/05/29 00:15:00 robertc Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -59,7 +59,9 @@ LeakFinder::LeakFinder()
     debug(45, 3) ("LeakFinder constructed\n");
     table = hash_create(cmp, 1 << 8, hash);
 #if 0
-
+    /* if this is desired to reinstate, add a
+     * RegisterWithCacheManager method
+     */
     cachemgrRegister("leaks",
                      "Memory Leak Tracking",
                      cachemgr_dump, 0, 1);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsIOStrategy.cc,v 1.5 2006/05/23 18:24:41 wessels Exp $
+ * $Id: DiskThreadsIOStrategy.cc,v 1.6 2006/05/29 00:15:03 robertc Exp $
  *
  * DEBUG: section 79    Squid-side Disk I/O functions.
  * AUTHOR: Robert Collins
@@ -36,6 +36,7 @@
 
 #include "squid.h"
 
+#include "CacheManager.h"
 #include "DiskThreadsIOStrategy.h"
 #include "DiskThreadsDiskFile.h"
 /* for statfs */
@@ -52,9 +53,6 @@ DiskThreadsIOStrategy::init(void)
 
     squidaio_ctrl_pool = new MemAllocatorProxy("aio_ctrl", sizeof(squidaio_ctrl_t));
 
-    cachemgrRegister("squidaio_counts", "Async IO Function Counters",
-                     aioStats, 0, 1);
-
     initialised = true;
 
     /*
@@ -62,6 +60,13 @@ DiskThreadsIOStrategy::init(void)
      * hasn't been parsed yet and we don't know how many cache_dirs
      * there are, which means we don't know how many threads to start.
      */
+}
+
+void
+DiskThreadsIOStrategy::registerWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("squidaio_counts", "Async IO Function Counters",
+                           aioStats, 0, 1);
 }
 
 void

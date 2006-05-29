@@ -1,6 +1,6 @@
 
 /*
- * $Id: Mem.h,v 1.3 2006/05/03 14:04:44 robertc Exp $
+ * $Id: Mem.h,v 1.4 2006/05/29 00:15:01 robertc Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -36,6 +36,10 @@
 #ifndef SQUID_MEM
 #define SQUID_MEM
 
+/* forward decls */
+
+class CacheManager;
+
 #include <iosfwd>
 
 class Mem
@@ -43,6 +47,7 @@ class Mem
 
 public:
     static void Init();
+    static void RegisterWithCacheManager(CacheManager & manager);
     static void Stats(StoreEntry *);
     static void CleanIdlePools(void *unused);
     static void Report(std::ostream &);

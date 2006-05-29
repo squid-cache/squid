@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_negotiate.cc,v 1.8 2006/05/06 22:13:19 wessels Exp $
+ * $Id: auth_negotiate.cc,v 1.9 2006/05/29 00:15:06 robertc Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -41,6 +41,7 @@
 #include "squid.h"
 #include "auth_negotiate.h"
 #include "authenticate.h"
+#include "CacheManager.h"
 #include "Store.h"
 #include "client_side.h"
 #include "HttpReply.h"
@@ -173,8 +174,6 @@ AuthNegotiateConfig::type() const
 void
 AuthNegotiateConfig::init(AuthConfig * scheme)
 {
-    static unsigned char negotiate_was_already_initialised = 0;
-
     if (authenticate) {
 #if PLACEHOLDER
 
@@ -202,15 +201,16 @@ AuthNegotiateConfig::init(AuthConfig * scheme)
 
         helperStatefulOpenServers(negotiateauthenticators);
 
-        if (!negotiate_was_already_initialised) {
-            cachemgrRegister("negotiateauthenticator",
-                             "Negotiate User Authenticator Stats",
-                             authenticateNegotiateStats, 0, 1);
-            negotiate_was_already_initialised++;
-        }
-
         CBDATA_INIT_TYPE(authenticateStateData);
     }
+}
+
+void
+AuthNegotiateConfig::registerWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("negotiateauthenticator",
+                           "Negotiate User Authenticator Stats",
+                           authenticateNegotiateStats, 0, 1);
 }
 
 bool

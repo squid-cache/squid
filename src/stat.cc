@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.394 2006/05/19 17:19:10 wessels Exp $
+ * $Id: stat.cc,v 1.395 2006/05/29 00:15:02 robertc Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -35,6 +35,7 @@
 #include "squid.h"
 #include "StoreClient.h"
 #include "AuthUserRequest.h"
+#include "CacheManager.h"
 #include "Store.h"
 #include "HttpRequest.h"
 #include "MemObject.h"
@@ -983,77 +984,81 @@ statInit(void)
 
     eventAdd("statAvgTick", statAvgTick, NULL, (double) COUNT_INTERVAL, 1);
 
-    cachemgrRegister("info",
-                     "General Runtime Information",
-                     info_get, 0, 1);
-
-    cachemgrRegister("filedescriptors",
-                     "Process Filedescriptor Allocation",
-                     fde::DumpStats, 0, 1);
-
-    cachemgrRegister("objects",
-                     "All Cache Objects",
-                     stat_objects_get, 0, 0);
-
-    cachemgrRegister("vm_objects",
-                     "In-Memory and In-Transit Objects",
-                     stat_vmobjects_get, 0, 0);
-
-#if DEBUG_OPENFD
-
-    cachemgrRegister("openfd_objects",
-                     "Objects with Swapout files open",
-                     statOpenfdObj, 0, 0);
-
-#endif
-
-    cachemgrRegister("io",
-                     "Server-side network read() size histograms",
-                     stat_io_get, 0, 1);
-
-    cachemgrRegister("counters",
-                     "Traffic and Resource Counters",
-                     statCountersDump, 0, 1);
-
-    cachemgrRegister("peer_select",
-                     "Peer Selection Algorithms",
-                     statPeerSelect, 0, 1);
-
-    cachemgrRegister("digest_stats",
-                     "Cache Digest and ICP blob",
-                     statDigestBlob, 0, 1);
-
-    cachemgrRegister("5min",
-                     "5 Minute Average of Counters",
-                     statAvg5min, 0, 1);
-
-    cachemgrRegister("60min",
-                     "60 Minute Average of Counters",
-                     statAvg60min, 0, 1);
-
-    cachemgrRegister("utilization",
-                     "Cache Utilization",
-                     statUtilization, 0, 1);
-
-#if STAT_GRAPHS
-
-    cachemgrRegister("graph_variables",
-                     "Display cache metrics graphically",
-                     statGraphDump, 0, 1);
-
-#endif
-
-    cachemgrRegister("histograms",
-                     "Full Histogram Counts",
-                     statCountersHistograms, 0, 1);
-
     ClientActiveRequests.head = NULL;
 
     ClientActiveRequests.tail = NULL;
+}
 
-    cachemgrRegister("active_requests",
-                     "Client-side Active Requests",
-                     statClientRequests, 0, 1);
+void
+statRegisterWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("info",
+                           "General Runtime Information",
+                           info_get, 0, 1);
+
+    manager.registerAction("filedescriptors",
+                           "Process Filedescriptor Allocation",
+                           fde::DumpStats, 0, 1);
+
+    manager.registerAction("objects",
+                           "All Cache Objects",
+                           stat_objects_get, 0, 0);
+
+    manager.registerAction("vm_objects",
+                           "In-Memory and In-Transit Objects",
+                           stat_vmobjects_get, 0, 0);
+
+#if DEBUG_OPENFD
+
+    manager.registerAction("openfd_objects",
+                           "Objects with Swapout files open",
+                           statOpenfdObj, 0, 0);
+
+#endif
+
+    manager.registerAction("io",
+                           "Server-side network read() size histograms",
+                           stat_io_get, 0, 1);
+
+    manager.registerAction("counters",
+                           "Traffic and Resource Counters",
+                           statCountersDump, 0, 1);
+
+    manager.registerAction("peer_select",
+                           "Peer Selection Algorithms",
+                           statPeerSelect, 0, 1);
+
+    manager.registerAction("digest_stats",
+                           "Cache Digest and ICP blob",
+                           statDigestBlob, 0, 1);
+
+    manager.registerAction("5min",
+                           "5 Minute Average of Counters",
+                           statAvg5min, 0, 1);
+
+    manager.registerAction("60min",
+                           "60 Minute Average of Counters",
+                           statAvg60min, 0, 1);
+
+    manager.registerAction("utilization",
+                           "Cache Utilization",
+                           statUtilization, 0, 1);
+
+#if STAT_GRAPHS
+
+    manager.registerAction("graph_variables",
+                           "Display cache metrics graphically",
+                           statGraphDump, 0, 1);
+
+#endif
+
+    manager.registerAction("histograms",
+                           "Full Histogram Counts",
+                           statCountersHistograms, 0, 1);
+
+    manager.registerAction("active_requests",
+                           "Client-side Active Requests",
+                           statClientRequests, 0, 1);
 }
 
 static void

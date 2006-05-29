@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsIOStrategy.h,v 1.2 2005/04/01 21:11:28 serassio Exp $
+ * $Id: DiskThreadsIOStrategy.h,v 1.3 2006/05/29 00:15:03 robertc Exp $
  *
  * DEBUG: section 79    Squid-side Disk I/O functions.
  * AUTHOR: Robert Collins
@@ -59,6 +59,7 @@ public:
     virtual int callback();
     virtual void sync();
     virtual void init();
+    virtual void registerWithCacheManager(CacheManager & manager);
     void done();
     /* Todo: add access limitations */
     bool initialised;

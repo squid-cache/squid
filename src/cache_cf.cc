@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.496 2006/05/14 10:19:40 serassio Exp $
+ * $Id: cache_cf.cc,v 1.497 2006/05/29 00:15:01 robertc Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -37,6 +37,7 @@
 #include "authenticate.h"
 #include "AuthConfig.h"
 #include "AuthScheme.h"
+#include "CacheManager.h"
 #include "Store.h"
 #include "SwapDir.h"
 #include "ConfigParser.h"
@@ -206,7 +207,7 @@ SetConfigFilename(char const *file_name, bool is_pipe)
 }
 
 int
-parseConfigFile(const char *file_name)
+parseConfigFile(const char *file_name, CacheManager & manager)
 {
     FILE *fp = NULL;
     char *token = NULL;
@@ -339,10 +340,10 @@ parseConfigFile(const char *file_name)
     configDoConfigure();
 
     if (opt_send_signal == -1) {
-        cachemgrRegister("config",
-                         "Current Squid Configuration",
-                         dump_config,
-                         1, 1);
+        manager.registerAction("config",
+                               "Current Squid Configuration",
+                               dump_config,
+                               1, 1);
     }
 
     return err_count;

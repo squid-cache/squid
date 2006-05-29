@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.66 2004/08/30 05:12:31 robertc Exp $
+ * $Id: authenticate.cc,v 1.67 2006/05/29 00:15:01 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -87,6 +87,15 @@ authenticateInit(authConfig * config)
         AuthUser::cacheInit();
     else
         AuthUser::CachedACLsReset();
+}
+
+void
+authenticateRegisterWithCacheManager(authConfig * config, CacheManager & manager)
+{
+    for (authConfig::iterator i = config->begin(); i != config->end(); ++i) {
+        AuthConfig *scheme = *i;
+        scheme->registerWithCacheManager(manager);
+    }
 }
 
 void

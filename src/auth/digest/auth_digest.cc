@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.45 2006/05/06 22:13:19 wessels Exp $
+ * $Id: auth_digest.cc,v 1.46 2006/05/29 00:15:05 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -42,6 +42,7 @@
 #include "rfc2617.h"
 #include "auth_digest.h"
 #include "authenticate.h"
+#include "CacheManager.h"
 #include "Store.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
@@ -861,8 +862,6 @@ authenticateDigestHandleReply(void *data, char *reply)
 void
 AuthDigestConfig::init(AuthConfig * scheme)
 {
-    static int init = 0;
-
     if (authenticate) {
         authenticateDigestNonceSetup();
         authdigest_initialised = 1;
@@ -878,16 +877,17 @@ AuthDigestConfig::init(AuthConfig * scheme)
 
         helperOpenServers(digestauthenticators);
 
-        if (!init) {
-            cachemgrRegister("digestauthenticator", "Digest User Authenticator Stats",
-                             authenticateDigestStats, 0, 1);
-            init++;
-        }
-
         CBDATA_INIT_TYPE(DigestAuthenticateStateData);
     }
 }
 
+void
+AuthDigestConfig::registerWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("digestauthenticator",
+                           "Digest User Authenticator Stats",
+                           authenticateDigestStats, 0, 1);
+}
 
 /* free any allocated configuration details */
 void

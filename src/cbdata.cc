@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.70 2006/02/18 00:09:35 wessels Exp $
+ * $Id: cbdata.cc,v 1.71 2006/05/29 00:15:01 robertc Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -46,6 +46,7 @@
  */
 
 #include "squid.h"
+#include "CacheManager.h"
 #include "Store.h"
 #if CBDATA_DEBUG
 #include "Stack.h"
@@ -224,15 +225,6 @@ void
 cbdataInit(void)
 {
     debug(45, 3) ("cbdataInit\n");
-    cachemgrRegister("cbdata",
-                     "Callback Data Registry Contents",
-                     cbdataDump, 0, 1);
-#if CBDATA_DEBUG
-
-    cachemgrRegister("cbdatahistory",
-                     "Detailed call history for all current cbdata contents",
-                     cbdataDumpHistory, 0, 1);
-#endif
 #define CREATE_CBDATA(type) cbdataInternalInitType(CBDATA_##type, #type, sizeof(type), NULL)
 #define CREATE_CBDATA_FREE(type, free_func) cbdataInternalInitType(CBDATA_##type, #type, sizeof(type), free_func)
     /* XXX
@@ -248,6 +240,20 @@ cbdataInit(void)
     CREATE_CBDATA(RemovalPolicy);
     CREATE_CBDATA(RemovalPolicyWalker);
     CREATE_CBDATA(RemovalPurgeWalker);
+}
+
+void
+cbdataRegisterWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("cbdata",
+                           "Callback Data Registry Contents",
+                           cbdataDump, 0, 1);
+#if CBDATA_DEBUG
+
+    manager.registerAction("cbdatahistory",
+                           "Detailed call history for all current cbdata contents",
+                           cbdataDumpHistory, 0, 1);
+#endif
 }
 
 void *

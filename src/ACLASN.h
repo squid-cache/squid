@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLASN.h,v 1.7 2005/05/08 09:15:39 serassio Exp $
+ * $Id: ACLASN.h,v 1.8 2006/05/29 00:14:59 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -40,8 +40,13 @@
 #include "ACLStrategised.h"
 #include "ACLChecklist.h"
 
+/* forward decls */
+
+class CacheManager;
+
 SQUIDCEXTERN int asnMatchIp(List<int> *, struct IN_ADDR);
 SQUIDCEXTERN void asnInit(void);
+extern void asnRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN void asnFreeMemory(void);
 
 class ACLASN : public ACLData<struct IN_ADDR>

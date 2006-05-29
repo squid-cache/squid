@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsDiskIOModule.h,v 1.1 2004/12/20 16:30:38 robertc Exp $
+ * $Id: DiskThreadsDiskIOModule.h,v 1.2 2006/05/29 00:15:03 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -43,6 +43,7 @@ public:
     static DiskThreadsDiskIOModule &GetInstance();
     DiskThreadsDiskIOModule();
     virtual void init();
+    virtual void registerWithCacheManager(CacheManager & manager);
     virtual void shutdown();
     virtual char const *type () const;
     virtual DiskIOStrategy* createStrategy();

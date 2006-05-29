@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.42 2006/05/19 17:19:09 wessels Exp $
+ * $Id: cache_manager.cc,v 1.43 2006/05/29 00:15:01 robertc Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid.h"
+#include "CacheManager.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "Store.h"
@@ -53,55 +53,44 @@ typedef struct
 
 cachemgrStateData;
 
-typedef struct _action_table
-{
-    char *action;
-    char *desc;
-    OBJH *handler;
 
-    struct
-    {
-
-unsigned int pw_req:
-        1;
-
-unsigned int atomic:
-        1;
-    }
-
-    flags;
-
-    struct _action_table *next;
-}
-
-action_table;
-
-static action_table *cachemgrFindAction(const char *action);
+static CacheManagerAction *cachemgrFindAction(const char *action);
 static cachemgrStateData *cachemgrParseUrl(const char *url);
 static void cachemgrParseHeaders(cachemgrStateData * mgr, const HttpRequest * request);
 static int cachemgrCheckPassword(cachemgrStateData *);
 static void cachemgrStateFree(cachemgrStateData * mgr);
 static char *cachemgrPasswdGet(cachemgr_passwd *, const char *);
-static const char *cachemgrActionProtection(const action_table * at);
+static const char *cachemgrActionProtection(const CacheManagerAction * at);
 static OBJH cachemgrShutdown;
 static OBJH cachemgrMenu;
 static OBJH cachemgrOfflineToggle;
 
-action_table *ActionTable = NULL;
+CacheManagerAction *ActionTable = NULL;
+
+CacheManager::CacheManager()
+{
+    registerAction("menu", "This Cachemanager Menu", cachemgrMenu, 0, 1);
+    registerAction("shutdown",
+                   "Shut Down the Squid Process",
+                   cachemgrShutdown, 1, 1);
+    registerAction("offline_toggle",
+                   "Toggle offline_mode setting",
+                   cachemgrOfflineToggle, 1, 1);
+}
 
 void
-cachemgrRegister(const char *action, const char *desc, OBJH * handler, int pw_req_flag, int atomic)
+CacheManager::registerAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic)
 {
-    action_table *a;
-    action_table **A;
+    CacheManagerAction *a;
+    CacheManagerAction **A;
 
-    if (cachemgrFindAction(action) != NULL) {
-        debug(16, 3) ("cachemgrRegister: Duplicate '%s'\n", action);
+    if (findAction(action) != NULL) {
+        debugs(16, 3, "CacheManager::registerAction: Duplicate '" << action << "'");
         return;
     }
 
     assert (strstr (" ", action) == NULL);
-    a = (action_table *)xcalloc(1, sizeof(action_table));
+    a = (CacheManagerAction *)xcalloc(1, sizeof(CacheManagerAction));
     a->action = xstrdup(action);
     a->desc = xstrdup(desc);
     a->handler = handler;
@@ -113,13 +102,19 @@ cachemgrRegister(const char *action, const char *desc, OBJH * handler, int pw_re
         ;
     *A = a;
 
-    debug(16, 3) ("cachemgrRegister: registered %s\n", action);
+    debugs(16, 3, "CacheManager::registerAction: registered " <<  action);
 }
 
-static action_table *
+CacheManagerAction *
+CacheManager::findAction(char const * action)
+{
+    return cachemgrFindAction(action);
+}
+
+static CacheManagerAction *
 cachemgrFindAction(const char *action)
 {
-    action_table *a;
+    CacheManagerAction *a;
 
     for (a = ActionTable; a != NULL; a = a->next) {
         if (0 == strcmp(a->action, action))
@@ -136,7 +131,7 @@ cachemgrParseUrl(const char *url)
     LOCAL_ARRAY(char, host, MAX_URL);
     LOCAL_ARRAY(char, request, MAX_URL);
     LOCAL_ARRAY(char, password, MAX_URL);
-    action_table *a;
+    CacheManagerAction *a;
     cachemgrStateData *mgr = NULL;
     const char *prot;
     t = sscanf(url, "cache_object://%[^/]/%[^@]@%s", host, request, password);
@@ -214,7 +209,7 @@ static int
 cachemgrCheckPassword(cachemgrStateData * mgr)
 {
     char *pwd = cachemgrPasswdGet(Config.passwd_list, mgr->action);
-    action_table *a = cachemgrFindAction(mgr->action);
+    CacheManagerAction *a = cachemgrFindAction(mgr->action);
     assert(a != NULL);
 
     if (pwd == NULL)
@@ -247,7 +242,7 @@ cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
 {
     cachemgrStateData *mgr = NULL;
     ErrorState *err = NULL;
-    action_table *a;
+    CacheManagerAction *a;
     debug(16, 3) ("objectcacheStart: '%s'\n", storeUrl(entry));
 
     if ((mgr = cachemgrParseUrl(storeUrl(entry))) == NULL) {
@@ -364,7 +359,7 @@ cachemgrOfflineToggle(StoreEntry * sentry)
 }
 
 static const char *
-cachemgrActionProtection(const action_table * at)
+cachemgrActionProtection(const CacheManagerAction * at)
 {
     char *pwd;
     assert(at);
@@ -385,7 +380,7 @@ cachemgrActionProtection(const action_table * at)
 static void
 cachemgrMenu(StoreEntry * sentry)
 {
-    action_table *a;
+    CacheManagerAction *a;
 
     for (a = ActionTable; a != NULL; a = a->next) {
         storeAppendPrintf(sentry, " %-22s\t%s\t%s\n",
@@ -411,18 +406,4 @@ cachemgrPasswdGet(cachemgr_passwd * a, const char *action)
     }
 
     return NULL;
-}
-
-void
-cachemgrInit(void)
-{
-    cachemgrRegister("menu",
-                     "This Cachemanager Menu",
-                     cachemgrMenu, 0, 1);
-    cachemgrRegister("shutdown",
-                     "Shut Down the Squid Process",
-                     cachemgrShutdown, 1, 1);
-    cachemgrRegister("offline_toggle",
-                     "Toggle offline_mode setting",
-                     cachemgrOfflineToggle, 1, 1);
 }

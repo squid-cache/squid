@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayPools.h,v 1.3 2003/03/04 01:40:25 robertc Exp $
+ * $Id: DelayPools.h,v 1.4 2006/05/29 00:14:59 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,6 +36,10 @@
 #ifndef SQUID_DELAYPOOLS_H
 #define SQUID_DELAYPOOLS_H
 
+/* forward decls */
+
+class CacheManager;
+
 #include "Array.h"
 
 class Updateable
@@ -54,6 +58,7 @@ class DelayPools
 
 public:
     static void Init();
+    static void RegisterWithCacheManager(CacheManager & manager);
     static void Update(void *);
     static unsigned short pools();
     static void pools (u_short pools);

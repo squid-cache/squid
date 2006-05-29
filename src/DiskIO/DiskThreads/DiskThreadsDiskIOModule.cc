@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsDiskIOModule.cc,v 1.1 2004/12/20 16:30:38 robertc Exp $
+ * $Id: DiskThreadsDiskIOModule.cc,v 1.2 2006/05/29 00:15:03 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -51,6 +51,12 @@ void
 DiskThreadsDiskIOModule::init()
 {
     DiskThreadsIOStrategy::Instance.init();
+}
+
+void
+DiskThreadsDiskIOModule::registerWithCacheManager(CacheManager & manager)
+{
+    DiskThreadsIOStrategy::Instance.registerWithCacheManager(manager);
 }
 
 void

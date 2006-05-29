@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.h,v 1.15 2006/05/23 20:30:48 hno Exp $
+ * $Id: HttpHeader.h,v 1.16 2006/05/29 00:15:00 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,6 +34,9 @@
 #ifndef SQUID_HTTPHEADER_H
 #define SQUID_HTTPHEADER_H
 
+/* forward decls */
+
+class CacheManager;
 /* because we pass a spec by value */
 #include "HttpHeaderRange.h"
 /* HttpHeader holds a HttpHeaderMask */
@@ -248,6 +251,8 @@ private:
     //const HttpHeader operator=(const HttpHeader &);
 };
 
+
+extern void httpHeaderRegisterWithCacheManager(CacheManager & manager);
 extern int httpHeaderParseQuotedString (const char *start, String *val);
 SQUIDCEXTERN int httpHeaderHasByNameListMember(const HttpHeader * hdr, const char *name, const char *member, const char separator);
 SQUIDCEXTERN void httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask * denied_mask);

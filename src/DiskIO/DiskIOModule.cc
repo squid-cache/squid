@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskIOModule.cc,v 1.1 2004/12/20 16:30:38 robertc Exp $
+ * $Id: DiskIOModule.cc,v 1.2 2006/05/29 00:15:03 robertc Exp $
  *
  * DEBUG: section 92    Storage File System
  * AUTHOR: Robert Collins
@@ -46,6 +46,13 @@ DiskIOModule::DiskIOModule()
      * ModuleAdd(*this);
      * here as the virtual methods are not yet available
      */
+}
+
+void
+DiskIOModule::RegisterAllModulesWithCacheManager(CacheManager & manager)
+{
+    for (iterator i = GetModules().begin(); i != GetModules().end(); ++i)
+        (*i)->registerWithCacheManager(manager);
 }
 
 void
@@ -107,3 +114,8 @@ DiskIOModule::Find(char const *type)
 
     return NULL;
 }
+
+/* disk modules dont export anything by default */
+void
+DiskIOModule::registerWithCacheManager(CacheManager & manager)
+{}

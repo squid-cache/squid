@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.167 2006/05/08 23:38:33 robertc Exp $
+ * $Id: fqdncache.cc,v 1.168 2006/05/29 00:15:02 robertc Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "CacheManager.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "wordlist.h"
@@ -529,12 +530,17 @@ fqdncache_init(void)
 
     fqdn_table = hash_create((HASHCMP *) strcmp, n, hash4);
 
-    cachemgrRegister("fqdncache",
-                     "FQDN Cache Stats and Contents",
-                     fqdnStats, 0, 1);
-
     memDataInit(MEM_FQDNCACHE_ENTRY, "fqdncache_entry",
                 sizeof(fqdncache_entry), 0);
+}
+
+void
+fqdncacheRegisterWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("fqdncache",
+                           "FQDN Cache Stats and Contents",
+                           fqdnStats, 0, 1);
+
 }
 
 const char *

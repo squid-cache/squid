@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cc,v 1.20 2005/09/27 20:37:42 wessels Exp $
+ * $Id: String.cc,v 1.21 2006/05/29 00:15:01 robertc Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -239,11 +239,10 @@ ptrcmp(C const &lhs, C const &rhs)
 }
 
 void
-StringRegistry::registerMe()
+StringRegistry::registerWithCacheManager(CacheManager & manager)
 {
-    registered = true;
-    cachemgrRegister("strings",
-                     "Strings in use in squid", Stat, 0, 1);
+    manager.registerAction("strings",
+                           "Strings in use in squid", Stat, 0, 1);
 }
 
 void
@@ -251,9 +250,6 @@ void
 StringRegistry::add
     (String const *entry)
 {
-    if (!registered)
-        registerMe();
-
     entries.insert(entry, ptrcmp);
 }
 

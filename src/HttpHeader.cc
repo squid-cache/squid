@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.120 2006/05/09 21:48:51 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.121 2006/05/29 00:15:00 robertc Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "CacheManager.h"
 #include "Store.h"
 #include "HttpHeader.h"
 #include "HttpHdrContRange.h"
@@ -313,10 +314,15 @@ httpHeaderInitModule(void)
     httpHdrCcInitModule();
 
     httpHdrScInitModule();
+}
 
+void
+httpHeaderRegisterWithCacheManager(CacheManager & manager)
+{
     /* register with cache manager */
-    cachemgrRegister("http_headers",
-                     "HTTP Header Statistics", httpHeaderStoreReport, 0, 1);
+    manager.registerAction("http_headers",
+                           "HTTP Header Statistics",
+                           httpHeaderStoreReport, 0, 1);
 }
 
 void

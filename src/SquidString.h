@@ -1,6 +1,6 @@
 
 /*
- * $Id: SquidString.h,v 1.7 2006/05/03 14:04:44 robertc Exp $
+ * $Id: SquidString.h,v 1.8 2006/05/29 00:15:01 robertc Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -36,6 +36,10 @@
 #ifndef SQUID_STRING_H
 #define SQUID_STRING_H
 
+/* forward decls */
+
+class CacheManager;
+
 #define DEBUGSTRINGS 0
 #if DEBUGSTRINGS
 #include "splay.h"
@@ -46,12 +50,12 @@ class StringRegistry
 {
 
 public:
-    StringRegistry() : registered(false) {}
-
     static StringRegistry &Instance();
 
     void add
         (String const *);
+
+    void registerWithCacheManager(CacheManager & manager);
 
     void remove
         (String const *);
@@ -67,7 +71,6 @@ private:
 
     bool registered;
 
-    void registerMe();
 };
 
 class StoreEntry;
