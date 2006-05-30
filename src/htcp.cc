@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.67 2006/05/12 19:27:11 serassio Exp $
+ * $Id: htcp.cc,v 1.68 2006/05/30 17:31:23 hno Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -49,6 +49,8 @@ typedef struct _htcpHeader htcpHeader;
 
 typedef struct _htcpDataHeader htcpDataHeader;
 
+typedef struct _htcpDataHeaderSquid htcpDataHeaderSquid;
+
 typedef struct _htcpAuthHeader htcpAuthHeader;
 
 typedef struct _htcpStuff htcpStuff;
@@ -69,6 +71,49 @@ struct _htcpHeader
 };
 
 struct _htcpDataHeader
+{
+    u_int16_t length;
+#if WORDS_BIGENDIAN
+
+u_int8_t opcode:
+    4;
+
+u_int8_t response:
+    4;
+#else
+
+u_int8_t response:
+    4;
+
+u_int8_t opcode:
+    4;
+#endif
+#if WORDS_BIGENDIAN
+
+u_int8_t reserved:
+    6;
+
+u_int8_t F1:
+    1;
+
+u_int8_t RR:
+    1;
+#else
+
+u_int8_t RR:
+    1;
+
+u_int8_t F1:
+    1;
+
+u_int8_t reserved:
+    6;
+#endif
+
+    u_int32_t msg_id;
+};
+
+struct _htcpDataHeaderSquid
 {
     u_int16_t length;
 #if !WORDS_BIGENDIAN
@@ -214,6 +259,8 @@ static int htcpOutSocket = -1;
 #define N_QUERIED_KEYS 256
 static cache_key queried_keys[N_QUERIED_KEYS][MD5_DIGEST_CHARS];
 static MemAllocator *htcpDetailPool = NULL;
+
+static int old_squid_format = 0;
 
 
 static char *htcpBuildPacket(htcpStuff * stuff, ssize_t * len);
@@ -481,7 +528,18 @@ htcpBuildData(char *buf, size_t buflen, htcpStuff * stuff)
 
     hdr.msg_id = htonl(hdr.msg_id);
 
-    xmemcpy(buf, &hdr, hdr_sz);
+    if (!old_squid_format) {
+        xmemcpy(buf, &hdr, hdr_sz);
+    } else {
+        htcpDataHeaderSquid hdrSquid;
+        memset(&hdrSquid, 0, sizeof(hdrSquid));
+        hdrSquid.length = hdr.length;
+        hdrSquid.opcode = hdr.opcode;
+        hdrSquid.response = hdr.response;
+        hdrSquid.F1 = hdr.F1;
+        hdrSquid.RR = hdr.RR;
+        xmemcpy(buf, &hdrSquid, hdr_sz);
+    }
 
     debug(31, 3) ("htcpBuildData: size %d\n", (int) off);
 
@@ -523,10 +581,18 @@ htcpBuildPacket(htcpStuff * stuff, ssize_t * len)
     off += s;
     hdr.length = htons((u_int16_t) off);
     hdr.major = 0;
-    hdr.minor = 0;
+
+    if (old_squid_format)
+        hdr.minor = 0;
+    else
+        hdr.minor = 1;
+
     xmemcpy(buf, &hdr, hdr_sz);
+
     *len = off;
+
     debug(31, 3) ("htcpBuildPacket: size %d\n", (int) off);
+
     return buf;
 }
 
@@ -1002,7 +1068,21 @@ htcpHandleData(char *buf, int sz, struct sockaddr_in *from)
         return;
     }
 
-    xmemcpy(&hdr, buf, sizeof(htcpDataHeader));
+    if (!old_squid_format)
+    {
+        xmemcpy(&hdr, buf, sizeof(htcpDataHeader));
+    } else
+    {
+        htcpDataHeaderSquid hdrSquid;
+        xmemcpy(&hdrSquid, buf, sizeof(hdrSquid));
+        hdr.opcode = hdrSquid.opcode;
+        hdr.response = hdrSquid.response;
+        hdr.F1 = hdrSquid.F1;
+        hdr.RR = hdrSquid.RR;
+        hdr.reserved = 0;
+        hdr.msg_id = hdrSquid.msg_id;
+    }
+
     hdr.length = ntohs(hdr.length);
     hdr.msg_id = ntohl(hdr.msg_id);
     debug(31, 3) ("htcpHandleData: sz = %d\n", sz);
@@ -1025,7 +1105,13 @@ htcpHandleData(char *buf, int sz, struct sockaddr_in *from)
 
     if (sz < hdr.length)
     {
-        debug(31, 0) ("htcpHandle: sz < hdr.length\n");
+        debug(31, 1) ("htcpHandle: sz < hdr.length\n");
+        return;
+    }
+
+    if (hdr.length + sizeof(htcpDataHeader) > (size_t)sz)
+    {
+        debug(31, 1) ("htcpHandleData: Invalid HTCP packet from %s\n", inet_ntoa(from->sin_addr));
         return;
     }
 
@@ -1089,14 +1175,30 @@ htcpHandle(char *buf, int sz, struct sockaddr_in *from)
     htcpHexdump("htcpHandle", buf, sz);
     xmemcpy(&htcpHdr, buf, sizeof(htcpHeader));
     htcpHdr.length = ntohs(htcpHdr.length);
+
+    if (htcpHdr.minor == 0)
+        old_squid_format = 1;
+    else
+        old_squid_format = 0;
+
     debug(31, 3) ("htcpHandle: htcpHdr.length = %d\n", (int) htcpHdr.length);
+
     debug(31, 3) ("htcpHandle: htcpHdr.major = %d\n", (int) htcpHdr.major);
+
     debug(31, 3) ("htcpHandle: htcpHdr.minor = %d\n", (int) htcpHdr.minor);
 
     if (sz != htcpHdr.length)
     {
         debug(31, 1) ("htcpHandle: sz/%d != htcpHdr.length/%d from %s:%d\n",
                       sz, htcpHdr.length,
+                      inet_ntoa(from->sin_addr), (int) ntohs(from->sin_port));
+        return;
+    }
+
+    if (htcpHdr.major != 0)
+    {
+        debug(31, 1) ("htcpHandle: Unknown major version %d from %s:%d\n",
+                      htcpHdr.major,
                       inet_ntoa(from->sin_addr), (int) ntohs(from->sin_port));
         return;
     }
@@ -1203,6 +1305,8 @@ htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
 
     if (htcpInSocket < 0)
         return;
+
+    old_squid_format = p->options.htcp_oldsquid;
 
     memset(&flags, '\0', sizeof(flags));
 

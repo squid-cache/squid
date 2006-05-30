@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.542 2006/05/08 23:38:33 robertc Exp $
+ * $Id: structs.h,v 1.543 2006/05/30 17:31:23 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1156,6 +1156,9 @@ unsigned int closest_only:
 #if USE_HTCP
 
 unsigned int htcp:
+        1;
+
+unsigned int htcp_oldsquid:
         1;
 #endif
 
