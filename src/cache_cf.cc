@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.497 2006/05/29 00:15:01 robertc Exp $
+ * $Id: cache_cf.cc,v 1.498 2006/05/30 17:31:23 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1546,6 +1546,9 @@ parse_peer(peer ** head)
 
         } else if (!strcasecmp(token, "htcp")) {
             p->options.htcp = 1;
+        } else if (!strcasecmp(token, "htcp-oldsquid")) {
+            p->options.htcp = 1;
+            p->options.htcp_oldsquid = 1;
 #endif
 
         } else if (!strcasecmp(token, "no-netdb-exchange")) {
