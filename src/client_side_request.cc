@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.68 2006/05/19 17:19:09 wessels Exp $
+ * $Id: client_side_request.cc,v 1.69 2006/05/29 21:44:18 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -92,7 +92,6 @@ ClientRequestContext::operator delete (void *address)
 /* Local functions */
 /* other */
 static void clientAccessCheckDoneWrapper(int, void *);
-static int clientCachable(ClientHttpRequest * http);
 static int clientHierarchical(ClientHttpRequest * http);
 static void clientInterpretRequestHeaders(ClientHttpRequest * http);
 static RH clientRedirectDoneWrapper;
@@ -563,47 +562,6 @@ ClientRequestContext::clientRedirectStart()
 }
 
 static int
-clientCachable(ClientHttpRequest * http)
-{
-    HttpRequest *req = http->request;
-    method_t method = req->method;
-
-    if (req->protocol == PROTO_HTTP)
-        return httpCachable(method);
-
-    /* FTP is always cachable */
-    if (req->protocol == PROTO_WAIS)
-        return 0;
-
-    /*
-     * The below looks questionable: what non HTTP protocols use connect,
-     * trace, put and post? RC
-     */
-    if (method == METHOD_CONNECT)
-        return 0;
-
-    if (method == METHOD_TRACE)
-        return 0;
-
-    if (method == METHOD_PUT)
-        return 0;
-
-    if (method == METHOD_POST)
-        return 0;
-
-    /* XXX POST may be cached sometimes.. ignored
-            		 
-            		        				 * for now */
-    if (req->protocol == PROTO_GOPHER)
-        return gopherCachable(req);
-
-    if (req->protocol == PROTO_CACHEOBJ)
-        return 0;
-
-    return 1;
-}
-
-static int
 clientHierarchical(ClientHttpRequest * http)
 {
     const char *url = http->uri;
@@ -801,8 +759,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         request->max_forwards = req_hdr->getInt(HDR_MAX_FORWARDS);
     }
 
-    if (clientCachable(http))
-        request->flags.cachable = 1;
+    request->flags.cachable = http->request->cacheable();
 
     if (clientHierarchical(http))
         request->flags.hierarchical = 1;
