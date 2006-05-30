@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.67 2006/05/29 00:15:02 robertc Exp $
+ * $Id: store_digest.cc,v 1.68 2006/05/29 21:44:18 robertc Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -41,9 +41,9 @@
  */
 
 #include "squid.h"
+#include "CacheManager.h"
 #if USE_CACHE_DIGESTS
 
-#include "CacheManager.h"
 #include "Store.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"

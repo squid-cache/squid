@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.148 2006/05/29 00:15:00 robertc Exp $
+#  $Id: Makefile.am,v 1.149 2006/05/29 21:44:18 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -1309,6 +1309,7 @@ tests_testCacheManager_LDADD = \
 	@SSLLIB@ \
 	-L../lib -lmiscutil \
 	@XTRA_LIBS@ \
+	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
 	@SNMPLIB@ 
 tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
@@ -1764,7 +1765,7 @@ SWAP_TEST_LDADD = \
 	@REPL_OBJS@ \
 	@DISK_LIBS@ \
 	-L../lib -lmiscutil \
-	@SQUID_CPPUNITLIBS@
+	@SQUID_CPPUNIT_LIBS@
 SWAP_TEST_DS =\
 	$(top_builddir)/lib/libmiscutil.a \
 	DiskIO/Blocking/BlockingDiskIOModule.o \

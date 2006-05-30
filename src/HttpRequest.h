@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.22 2006/05/08 23:38:33 robertc Exp $
+ * $Id: HttpRequest.h,v 1.23 2006/05/29 21:44:18 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -65,6 +65,9 @@ public:
     };
 
     void initHTTP(method_t aMethod, protocol_t aProtocol, const char *aUrlpath);
+
+    /* are responses to this request potentially cachable */
+    bool cacheable() const;
 
 protected:
     void clean();

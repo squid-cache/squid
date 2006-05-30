@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.66 2006/05/08 23:38:33 robertc Exp $
+ * $Id: HttpRequest.cc,v 1.67 2006/05/29 21:44:18 robertc Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -410,4 +410,49 @@ HttpRequest *
 HttpRequest::CreateFromUrl(char * url)
 {
     return urlParse(METHOD_GET, url, NULL);
+}
+
+/*
+ * Are responses to this request possible cacheable ?
+ * If false then no matter what the response must not be cached.
+ */
+bool
+HttpRequest::cacheable() const
+{
+    if (protocol == PROTO_HTTP)
+        return httpCachable(method);
+
+    /* FTP is always cachable */
+
+    /* WAIS is never cachable */
+    if (protocol == PROTO_WAIS)
+        return 0;
+
+    /*
+     * The below looks questionable: what non HTTP protocols use connect,
+     * trace, put and post? RC
+     */
+    if (method == METHOD_CONNECT)
+        return 0;
+
+    if (method == METHOD_TRACE)
+        return 0;
+
+    if (method == METHOD_PUT)
+        return 0;
+
+    if (method == METHOD_POST)
+        return 0;
+
+    /*
+     * XXX POST may be cached sometimes.. ignored
+     * for now
+     */
+    if (protocol == PROTO_GOPHER)
+        return gopherCachable(this);
+
+    if (protocol == PROTO_CACHEOBJ)
+        return 0;
+
+    return 1;
 }

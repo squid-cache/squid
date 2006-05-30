@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.423 2006/05/29 00:15:02 robertc Exp $
+ * $Id: main.cc,v 1.424 2006/05/29 21:44:18 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -867,7 +867,11 @@ mainInitialize(void)
 #endif
 
         clientdbRegisterWithCacheManager(manager);
+#if DELAY_POOLS
+
         DelayPools::RegisterWithCacheManager(manager);
+#endif
+
         DiskIOModule::RegisterAllModulesWithCacheManager(manager);
 #if USE_DNSSERVERS
 
@@ -895,7 +899,11 @@ mainInitialize(void)
         StringRegistry::Instance().registerWithCacheManager(manager);
 #endif
 
+#if	USE_XPROF_STATS
+
         xprofRegisterWithCacheManager(manager);
+#endif
+
     }
 
 #if USE_WCCP

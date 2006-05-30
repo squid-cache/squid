@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.154 2006/05/08 23:38:33 robertc Exp $
+ * $Id: url.cc,v 1.155 2006/05/29 21:44:18 robertc Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -569,13 +569,22 @@ matchDomainName(const char *h, const char *d)
 
 
 /*
- * what does the return code of this mean ?
+ * return true if we can serve requests for this method.
  */
 int
 urlCheckRequest(const HttpRequest * r)
 {
     int rc = 0;
-    /* protocol "independent" methods */
+    /* protocol "independent" methods
+     *
+     * actually these methods are specific to HTTP:
+     * they are methods we recieve on our HTTP port,
+     * and if we had a FTP listener would not be relevant
+     * there.
+     *
+     * So, we should delegate them to HTTP. The problem is that we
+     * do not have a default protocol from the client side of HTTP.
+     */
 
     if (r->method == METHOD_CONNECT)
         return 1;
