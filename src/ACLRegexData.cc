@@ -1,5 +1,5 @@
 /*
- * $Id: ACLRegexData.cc,v 1.9 2006/04/23 11:10:31 robertc Exp $
+ * $Id: ACLRegexData.cc,v 1.10 2006/05/29 19:05:26 serassio Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -89,6 +89,7 @@ ACLRegexData::match(char const *word)
                 first->next = current;
             }
 
+            debug(28, 2) ("aclRegexData::match: match '%s' found in '%s'\n", current->pattern, word);
             return 1;
         }
 
