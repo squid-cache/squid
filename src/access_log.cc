@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.113 2006/05/29 00:15:01 robertc Exp $
+ * $Id: access_log.cc,v 1.114 2006/05/31 16:34:36 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -46,6 +46,7 @@
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "SquidTime.h"
+#include "CacheManager.h"
 
 static void accessLogSquid(AccessLogEntry * al, Logfile * logfile);
 static void accessLogCommon(AccessLogEntry * al, Logfile * logfile);
@@ -100,13 +101,14 @@ typedef struct
 fvdb_entry;
 static hash_table *via_table = NULL;
 static hash_table *forw_table = NULL;
-static void fvdbInit(CacheManager *);
+static void fvdbInit();
 static void fvdbDumpTable(StoreEntry * e, hash_table * hash);
 static void fvdbCount(hash_table * hash, const char *key);
 static OBJH fvdbDumpVia;
 static OBJH fvdbDumpForw;
 static FREE fvdbFreeEntry;
 static void fvdbClear(void);
+static void fvdbRegisterWithCacheManager(CacheManager & manager);
 #endif
 
 static int LogfileStatus = LOG_DISABLE;
