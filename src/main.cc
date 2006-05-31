@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.424 2006/05/29 21:44:18 robertc Exp $
+ * $Id: main.cc,v 1.425 2006/05/31 17:29:00 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -883,7 +883,11 @@ mainInitialize(void)
         fqdncacheRegisterWithCacheManager(manager);
         FwdState::RegisterWithCacheManager(manager);
         httpHeaderRegisterWithCacheManager(manager);
+#if !USE_DNSSERVERS
+
         idnsRegisterWithCacheManager(manager);
+#endif
+
         ipcacheRegisterWithCacheManager(manager);
         Mem::RegisterWithCacheManager(manager);
         netdbRegisterWitHCacheManager(manager);
