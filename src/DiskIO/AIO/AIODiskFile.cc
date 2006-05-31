@@ -1,6 +1,6 @@
 
 /*
- * $Id: AIODiskFile.cc,v 1.1 2004/12/20 16:30:38 robertc Exp $
+ * $Id: AIODiskFile.cc,v 1.2 2006/05/31 17:23:02 wessels Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -228,7 +228,7 @@ AIODiskFile::close ()
     file_close(fd);
     fd = -1;
     closed = true;
-    assert (ioRequestor.getRaw());
+    assert (ioRequestor != NULL);
     ioRequestor->closeCompleted();
 }
 
