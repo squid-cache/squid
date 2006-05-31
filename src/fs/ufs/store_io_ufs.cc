@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.33 2006/05/24 15:25:04 wessels Exp $
+ * $Id: store_io_ufs.cc,v 1.34 2006/05/31 17:47:53 wessels Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -124,29 +124,32 @@ UFSStoreState::ioCompletedNotification()
     debug(79, 3) ("diskd::ioCompleted: dirno %d, fileno %08x status %d\n",                      swap_dirn, swap_filen, theFile->error());
     /* Ok, notification past open means an error has occured */
     assert (theFile->error());
-    doCloseCallback(DISK_ERROR);
+    tryClosing();
 }
 
 void
 UFSStoreState::openDone()
 {
+    if (closing)
+        debugs(0,0,HERE << "already closing in openDone()!?");
+
     if (theFile->error()) {
-        doCloseCallback(DISK_ERROR);
+        tryClosing();
         return;
     }
 
     if (FILE_MODE(mode) == O_WRONLY) {
-        if (kickWriteQueue())
-            return;
+        drainWriteQueue();
+
     } else if ((FILE_MODE(mode) == O_RDONLY) && !closing) {
         if (kickReadQueue())
             return;
     }
 
-    if (closing && !theFile->ioInProgress())
-        doCloseCallback(theFile->error() ? -1 : 0);
+    if (flags.try_closing)
+        tryClosing();
 
-    debug(79, 3) ("squidaiostate_t::openDone: exiting\n");
+    debug(79, 3) ("UFSStoreState::openDone: exiting\n");
 }
 
 void
@@ -156,23 +159,31 @@ UFSStoreState::closeCompleted()
     debug(79, 3) ("UFSStoreState::closeCompleted: dirno %d, fileno %08x status %d\n",
                   swap_dirn, swap_filen, theFile->error());
 
-    if (theFile->error())
+    if (theFile->error()) {
+        debugs(79,3,HERE<< "theFile->error() ret " << theFile->error());
         doCloseCallback(DISK_ERROR);
-    else
+    } else {
         doCloseCallback(DISK_OK);
+    }
 
     closing = false;
 }
 
-/* Close */
+/*
+ * DPW 2006-05-24
+ * This close function is called by the higher layer when it has finished
+ * reading/writing everything, or otherwise wants to close the swap
+ * file.  In the case of writing and using aufs storage, close() might
+ * be called before any/all data is written, and even before the open
+ * callback occurs.  Thus, we use our tryClosing() method, which knows
+ * when it is safe to actually signal the lower layer for closing.
+ */
 void
 UFSStoreState::close()
 {
     debug(79, 3) ("UFSStoreState::close: dirno %d, fileno %08X\n", swap_dirn,
                   swap_filen);
-    /* mark the object to be closed on the next io that completes */
-    closing = true;
-    theFile->close();
+    tryClosing();
 }
 
 void
@@ -201,19 +212,77 @@ UFSStoreState::read_(char *buf, size_t size, off_t offset, STRCB * callback, voi
 }
 
 
+/*
+ * DPW 2006-05-24
+ * This, the public write interface, places the write request at the end
+ * of the pending_writes queue to ensure correct ordering of writes.
+ * We could optimize things a little if there are no other pending
+ * writes and just do the write directly.  But for now we'll keep the
+ * code simpler and always go through the pending_writes queue.
+ */
 void
 UFSStoreState::write(char const *buf, size_t size, off_t offset, FREE * free_func)
 {
     debug(79, 3) ("UFSStoreState::write: dirn %d, fileno %08X\n", swap_dirn, swap_filen);
 
-    if (!theFile->canWrite()) {
-        assert(creating || writing);
-        queueWrite(buf, size, offset, free_func);
+    if (theFile->error()) {
+        debugs(79,1,HERE << "avoid write on theFile with error");
+        debugs(79,1,HERE << "calling free_func for " << (void*) buf);
+        free_func((void*)buf);
         return;
     }
 
-    writing = true;
-    theFile->write(new WriteRequest(buf, offset, size, free_func));
+    queueWrite(buf, size, offset, free_func);
+    drainWriteQueue();
+}
+
+
+/*
+ * DPW 2006-05-24
+ * This, the private write method, calls the lower level write for the
+ * first write request in the pending_writes queue.  doWrite() is only
+ * called by drainWriteQueue().
+ */
+void
+UFSStoreState::doWrite()
+{
+    debugs(79, 3, HERE << this << " UFSStoreState::doWrite");
+
+    assert(theFile->canWrite());
+
+    _queued_write *q = (_queued_write *)linklistShift(&pending_writes);
+
+    if (q == NULL) {
+        debugs(79, 3, HERE << this << " UFSStoreState::doWrite queue is empty");
+        return;
+    }
+
+    if (theFile->error()) {
+        debugs(79,1,HERE << "avoid write on theFile with error");
+        debugs(79,3,HERE << "calling free_func for " << (void*) q->buf);
+        /*
+         * DPW 2006-05-24
+         * Note "free_func" is memNodeWriteComplete(), which doesn't
+         * really free the memory.  Instead it clears the node's
+         * write_pending flag.
+         */
+        q->free_func((void*)q->buf);
+        return;
+    }
+
+    /*
+     * DPW 2006-05-24
+     * UFSStoreState has a 'writing' flag that we used to set here,
+     * but it wasn't really used anywhere.  In fact, some lower
+     * layers such as DISKD allow multiple outstanding writes, which
+     * makes the boolean writing flag meaningless.  We would need
+     * a counter to keep track of writes going out and write callbacks
+     * coming in.  For now let's just not use the writing flag at
+     * all.
+     */
+    debugs(79, 3, HERE << this << " calling theFile->write(" << q->size << ")");
+
+    theFile->write(new WriteRequest(q->buf, q->offset, q->size, q->free_func));
 }
 
 void
@@ -243,7 +312,7 @@ UFSStoreState::readCompleted(const char *buf, int len, int errflag, RefCount<Rea
      * aufs performs closes syncronously, so close events must be managed
      * to force strict ordering.
      * The below does this:
-     * closing is set when close() is called, and close only triggers
+     * closing is set when theFile->close() has been called, and close only triggers
      * when no io's are pending.
      * writeCompleted likewise.
      */
@@ -252,40 +321,29 @@ UFSStoreState::readCompleted(const char *buf, int len, int errflag, RefCount<Rea
             memcpy(read_buf, buf, len);
 
         callback(cbdata, read_buf, len, this);
-    } else if (closing && theFile.getRaw()!= NULL && !theFile->ioInProgress())
-        doCloseCallback(errflag);
+    }
+
+    if (theFile != NULL && theFile->error())
+        tryClosing();
 }
 
 void
 UFSStoreState::writeCompleted(int errflag, size_t len, RefCount<WriteRequest> writeRequest)
 {
-    debug(79, 3) ("storeUfsWriteDone: dirno %d, fileno %08X, len %ld\n",
+    debug(79, 3) ("UFSStoreState::writeCompleted: dirno %d, fileno %08X, len %ld\n",
                   swap_dirn, swap_filen, (long int) len);
-    writing = false;
+    /*
+     * DPW 2006-05-24
+     * See doWrites() for why we don't update UFSStoreState::writing
+     * here anymore.
+     */
 
     offset_ += len;
 
     if (theFile->error()) {
-        doCloseCallback(DISK_ERROR);
-        return;
-    }
-
-    if (closing && !theFile->ioInProgress()) {
-        theFile->close();
-        return;
-    }
-
-    if (!flags.write_kicking) {
-        flags.write_kicking = true;
-        /* While we start and complete syncronously io's. */
-
-        while (kickWriteQueue() && !theFile->ioInProgress())
-
-            ;
-        flags.write_kicking = false;
-
-        if (!theFile->ioInProgress() && closing)
-            doCloseCallback(errflag);
+        debugs(79,2,HERE << "UFSStoreState::writeCompleted" <<
+               " detected an error, will try to close");
+        tryClosing();
     }
 }
 
@@ -293,6 +351,14 @@ void
 UFSStoreState::doCloseCallback(int errflag)
 {
     debug(79, 3) ("storeUfsIOCallback: errflag=%d\n", errflag);
+    /*
+     * DPW 2006-05-24
+     * When we signal the higher layer with this callback, it might unlock
+     * the StoreEntry and its associated data.  We must "free" any queued
+     * I/Os (especially writes) now, otherwise the StoreEntry's mem_node's
+     * will have their write_pending flag set, and we'll get an assertion.
+     */
+    freePending();
     STIOCB *theCallback = callback;
     callback = NULL;
 
@@ -301,11 +367,12 @@ UFSStoreState::doCloseCallback(int errflag)
     if (cbdataReferenceValidDone(callback_data, &cbdata) && theCallback)
         theCallback(cbdata, errflag, this);
 
-    /* We are finished with the file as this is on close or error only.*/
-    /* This must be the last line, as theFile may be the only object holding
-     * us in memory 
+    /*
+     * We are finished with theFile since the lower layer signalled
+     * us that the file has been closed.  This must be the last line,
+     * as theFile may be the only object holding us in memory.
      */
-    theFile = NULL;
+    theFile = NULL;	// refcounted
 }
 
 /* ============= THE REAL UFS CODE ================ */
@@ -318,10 +385,18 @@ UFSStoreState::UFSStoreState(SwapDir * SD, StoreEntry * anEntry, STIOCB * callba
     callback = callback_;
     callback_data = cbdataReference(callback_data_);
     e = anEntry;
-    flags.write_kicking = false;
+    flags.write_draining = false;
+    flags.try_closing = false;
 }
 
 UFSStoreState::~UFSStoreState()
+{
+    assert(pending_reads == NULL);
+    assert(pending_writes == NULL);
+}
+
+void
+UFSStoreState::freePending()
 {
     _queued_read *qr;
 
@@ -330,6 +405,8 @@ UFSStoreState::~UFSStoreState()
         delete qr;
     }
 
+    debugs(79,3,HERE << "UFSStoreState::freePending: freed pending reads");
+
     _queued_write *qw;
 
     while ((qw = (_queued_write *)linklistShift(&pending_writes))) {
@@ -337,6 +414,8 @@ UFSStoreState::~UFSStoreState()
             qw->free_func(const_cast<char *>(qw->buf));
         delete qw;
     }
+
+    debugs(79,3,HERE << "UFSStoreState::freePending: freed pending writes");
 }
 
 bool
@@ -375,26 +454,59 @@ UFSStoreState::queueRead(char *buf, size_t size, off_t offset, STRCB *callback, 
     linklistPush(&pending_reads, q);
 }
 
-bool
-UFSStoreState::kickWriteQueue()
+/*
+ * DPW 2006-05-24
+ * drainWriteQueue() is a loop around doWrite().
+ */
+void
+UFSStoreState::drainWriteQueue()
 {
-    _queued_write *q = (_queued_write *)linklistShift(&pending_writes);
+    assert(!flags.write_draining);
 
-    if (NULL == q)
-        return false;
+    if (!theFile->canWrite())
+        return;
 
-    debug(79, 3) ("storeAufsKickWriteQueue: writing queued chunk of %ld bytes\n",
-                  (long int) q->size);
+    flags.write_draining = true;
 
-    write(const_cast<char *>(q->buf), q->size, q->offset, q->free_func);
-    delete q;
-    return true;
+    while (pending_writes != NULL) {
+        doWrite();
+    }
+
+    flags.write_draining = false;
+
+    if (flags.try_closing)
+        tryClosing();
+}
+
+/*
+ * DPW 2006-05-24
+ * This blows.	DiskThreadsDiskFile::close() won't actually do the close
+ * if ioInProgress() is true.  So we have to check it here.  Maybe someday
+ * DiskThreadsDiskFile::close() will be modified to have a return value,
+ * or will remember to do the close for us.
+ */
+void
+UFSStoreState::tryClosing()
+{
+    debugs(79,3,HERE << this << " tryClosing()" <<
+           " closing = " << closing <<
+           " flags.try_closing = " << flags.try_closing <<
+           " ioInProgress = " << theFile->ioInProgress());
+
+    if (theFile->ioInProgress()) {
+        flags.try_closing = true;
+        return;
+    }
+
+    closing = true;
+    flags.try_closing = false;
+    theFile->close();
 }
 
 void
 UFSStoreState::queueWrite(char const *buf, size_t size, off_t offset, FREE * free_func)
 {
-    debug(79, 3) ("UFSStoreState::queueWrite: queuing write\n");
+    debugs(79, 3, HERE << this << " UFSStoreState::queueWrite: queueing write of size " << size);
 
     _queued_write *q;
     q = new _queued_write;

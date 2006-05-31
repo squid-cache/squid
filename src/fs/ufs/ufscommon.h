@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufscommon.h,v 1.6 2006/05/24 15:25:04 wessels Exp $
+ * $Id: ufscommon.h,v 1.7 2006/05/31 17:47:53 wessels Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -251,7 +251,20 @@ protected:
 
     struct
     {
-        bool write_kicking;
+        /*
+         * DPW 2006-05-24
+         * the write_draining flag is used to avoid recursion inside
+         * the UFSStoreState::drainWriteQueue() method.
+         */
+        bool write_draining;
+        /*
+         * DPW 2006-05-24
+         * The try_closing flag is set by UFSStoreState::tryClosing()
+         * when UFSStoreState wants to close the file, but cannot
+         * because of pending I/Os.  If set, UFSStoreState will
+         * try to close again in the I/O callbacks.
+         */
+        bool try_closing;
     }
 
     flags;
@@ -260,12 +273,15 @@ protected:
     void queueRead(char *, size_t, off_t, STRCB *, void *);
     void queueWrite(char const *, size_t, off_t, FREE *);
     bool kickReadQueue();
-    bool kickWriteQueue();
+    void drainWriteQueue();
+    void tryClosing();
     char *read_buf;
 
 private:
     CBDATA_CLASS(UFSStoreState);
     void openDone();
+    void freePending();
+    void doWrite();
 };
 
 MEMPROXY_CLASS_INLINE(UFSStoreState::_queued_read)
