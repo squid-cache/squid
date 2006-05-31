@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsDiskFile.cc,v 1.6 2006/05/23 18:24:41 wessels Exp $
+ * $Id: DiskThreadsDiskFile.cc,v 1.7 2006/05/31 17:25:41 wessels Exp $
  *
  * DEBUG: section 79    Disk IO Routines
  * AUTHOR: Robert Collins
@@ -139,7 +139,7 @@ DiskThreadsDiskFile::create (int flags, mode_t mode, IORequestor::Pointer callba
     int fd = file_open(path_, flags);
 
     if (fd < 0) {
-        debug(79, 3) ("storeAufsCreate: got failure (%d)\n", errno);
+        debug(79, 3) ("DiskThreadsDiskFile::create: got failure (%d)\n", errno);
         errorOccured = true;
         return;
     }
@@ -194,11 +194,11 @@ DiskThreadsDiskFile::openDone(int unused, const char *unused2, int anFD, int err
         fd_open(fd, FD_FILE, path_);
     }
 
-    debug(79, 3) ("DiskThreadsDiskFile::openDone: exiting\n");
-
     IORequestor::Pointer t = ioRequestor;
     --inProgressIOs;
     t->ioCompletedNotification();
+
+    debug(79, 3) ("DiskThreadsDiskFile::openDone: exiting\n");
 }
 
 void DiskThreadsDiskFile::doClose()
@@ -227,8 +227,12 @@ DiskThreadsDiskFile::close ()
 
     if (!ioInProgress()) {
         doClose();
-        assert (ioRequestor.getRaw());
+        assert (ioRequestor != NULL);
         ioRequestor->closeCompleted();
+        return;
+    } else {
+        debugs(79,0,HERE << "DiskThreadsDiskFile::close: " <<
+               "did NOT close because ioInProgress() is true.  now what?");
     }
 }
 
