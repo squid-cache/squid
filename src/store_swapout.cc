@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.106 2006/05/23 00:30:21 wessels Exp $
+ * $Id: store_swapout.cc,v 1.107 2006/05/31 17:24:23 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -107,7 +107,7 @@ storeSwapOutFileNotify(void *data, int errflag, StoreIOState::Pointer self)
     MemObject *mem = e->mem_obj;
     assert(e->swap_status == SWAPOUT_WRITING);
     assert(mem);
-    assert(mem->swapout.sio != NULL);
+    assert(mem->swapout.sio == self);
     assert(errflag == 0);
     e->swap_filen = mem->swapout.sio->swap_filen;
     e->swap_dirn = mem->swapout.sio->swap_dirn;
@@ -155,7 +155,11 @@ doPages(StoreEntry *anEntry)
 
         mem->swapout.queue_offset += swap_buf_len;
 
-        storeIOWrite(mem->swapout.sio, mem->data_hdr.NodeGet(mem->swapout.memnode), swap_buf_len, -1, memNodeWriteComplete);
+        storeIOWrite(mem->swapout.sio,
+                     mem->data_hdr.NodeGet(mem->swapout.memnode),
+                     swap_buf_len,
+                     -1,
+                     memNodeWriteComplete);
 
         /* the storeWrite() call might generate an error */
         if (anEntry->swap_status != SWAPOUT_WRITING)
@@ -321,6 +325,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
     generic_cbdata *c = (generic_cbdata *)data;
     StoreEntry *e = (StoreEntry *)c->data;
     MemObject *mem = e->mem_obj;
+    assert(mem->swapout.sio == self);
     assert(e->swap_status == SWAPOUT_WRITING);
     cbdataFree(c);
 
