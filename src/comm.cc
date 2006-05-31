@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.418 2006/05/26 19:58:37 wessels Exp $
+ * $Id: comm.cc,v 1.419 2006/05/30 21:15:58 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -102,7 +102,7 @@ class AcceptFD
 {
 
 public:
-    AcceptFD() : check_delay(0), count(0), finished_(false){}
+    AcceptFD() : count(0), finished_(false){}
 
     void doCallback(int fd, int newfd, comm_err_t errcode, int xerrno, ConnectionDetail *);
     void nullCallback();
@@ -111,7 +111,6 @@ public:
     size_t acceptCount() const { return count;}
 
     bool finishedAccepting() const;
-    int check_delay;
     CallBack<IOACB> callback;
     bool finished() const;
     void finished(bool);
@@ -173,7 +172,6 @@ public:
     {
 
     public:
-        /* how often (in msec) to re-check if we're out of fds on an accept() */
         AcceptFD accept;
         ConnectionDetail connDetails;
     };
@@ -763,7 +761,7 @@ comm_read_cancel(int fd, IOCB *callback, void *data)
 
 /*
  * Open a filedescriptor, set some sane defaults
- * + accept() poll time is 250ms
+ * XXX DPW 2006-05-30 what is the point of this?
  */
 void
 fdc_open(int fd, unsigned int type, char const *desc)
@@ -772,7 +770,6 @@ fdc_open(int fd, unsigned int type, char const *desc)
 
     fdc_table[fd].active = 1;
     fdc_table[fd].fd = fd;
-    comm_accept_setcheckperiod(fd, 250);
     fd_open(fd, type, desc);
 }
 
@@ -906,54 +903,6 @@ comm_write(int fd, const char *buf, size_t size, IOWCB *handler, void *handler_d
     commSetSelect(fd, COMM_SELECT_WRITE, comm_write_try, NULL, 0);
 #endif
 }
-
-/*
- * New-style accept stuff
- */
-
-/*
- * Set the check delay on accept()ing when we're out of FDs
- *
- * The premise behind this is that we can hit a situation where
- * we've hit our reserved filedescriptor limit and we don't want
- * to accept any more connections until some others have closed.
- *
- * This code will set the period which we register an event to check
- * to see whether we _have_ enough open FDs to re-register for IO.
- */
-void
-comm_accept_setcheckperiod(int fd, int mdelay)
-{
-    assert(fdc_table[fd].active == 1);
-    assert(mdelay != 0);
-    fdc_table[fd].accept.accept.check_delay = mdelay;
-}
-
-/*
- * Our periodic accept() suitability checker..
- */
-static void
-comm_accept_check_event(void *data)
-{
-    static time_t last_warn = 0;
-    int fd = ((fdc_t *)(data))->fd;
-
-    if (fdNFree() < RESERVED_FD) {
-        /* activate accept checking rather than period event based checks */
-        commSetSelect(fd, COMM_SELECT_READ, comm_accept_try, NULL, 0);
-        return;
-    }
-
-    if (last_warn + 15 < squid_curtime) {
-        debugs(33, 0, HERE << "WARNING! Your cache is running out of filedescriptors");
-        last_warn = squid_curtime;
-    }
-
-    eventAdd("comm_accept_check_event", comm_accept_check_event, &fdc_table[fd],
-             1000.0 / (double)(fdc_table[fd].accept.accept.check_delay), 1, false);
-}
-
-
 
 /* Older stuff */
 
@@ -1757,11 +1706,6 @@ _comm_close(int fd, char const *file, int line)
 
     CommWriteStateCallbackAndFree(fd, COMM_ERR_CLOSING);
 
-    /* Delete any accept check */
-    if (eventFind(comm_accept_check_event, &fdc_table[fd])) {
-        eventDelete(comm_accept_check_event, &fdc_table[fd]);
-    }
-
     /* Do callbacks for read/accept/fill routines, if any */
     assert (fd == fdc_table[fd].read.fd);
 
@@ -2306,20 +2250,17 @@ fdc_t::acceptCount() const {
 
 void
 fdc_t::acceptOne(int fd) {
-    /* If we're out of fds, register an event and return now */
-
-    if (fdNFree() < RESERVED_FD) {
-        debug(5, 3) ("comm_accept_try: we're out of fds - deferring io!\n");
-        eventAdd("comm_accept_check_event", comm_accept_check_event, this,
-                 1000.0 / (double)(accept.accept.check_delay), 1, false);
-        accept.accept.finished(true);
-        return;
-    }
+    /*
+     * We don't worry about running low on FDs here.  Instead,
+     * httpAccept() will use AcceptLimiter if we reach the limit
+     * there.
+     */
 
     /* Accept a new connection */
     int newfd = comm_old_accept(fd, accept.connDetails);
 
     /* Check for errors */
+
     if (newfd < 0) {
         if (newfd == COMM_NOMESSAGE) {
             /* register interest again */
