@@ -150,6 +150,7 @@ Error page templates
 .BR pam_auth "(8), "
 .BR squid_ldap_auth "(8), "
 .BR squid_ldap_group "(8), "
+.BR squid_session "(8), "
 .BR squid_unix_group "(8), "
 .br
 .B The Squid FAQ
