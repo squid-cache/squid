@@ -56,7 +56,7 @@ make_snapshot()
 set +e
 
 ../commit/bootstrap squid
-make_snapshot ../commit/squid/mksnapshot.sh HEAD v3 HEAD 6
+#make_snapshot ../commit/squid/mksnapshot.sh HEAD v3 HEAD 6
 
 rm -f /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new
 cp ../commit/squid/CONTRIBUTORS /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new
