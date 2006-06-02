@@ -6,7 +6,7 @@ squid \- proxy caching server
 .SH SYNOPSIS
 .B squid
 [
-.B \-dhsvzCDFNRVYX
+.B \-dhisrvzCDFNRVYX
 ] [
 .BI \-l " facility"
 ] [
@@ -18,6 +18,10 @@ squid \- proxy caching server
 .I port
 ] [
 .B \-k " signal"
+] [
+.BI \-n " service-name"
+] [
+.BI \-O " cmd-line"
 ]
 .SH DESCRIPTION
 .B squid
@@ -75,9 +79,17 @@ configuration before it is being read by Squid. To facilitate this Squid
 also understands the common #line notion to indicate the real source file.
 .IP -h
 Print help message.
+.IP -i
+Install as a Windows Service (see -n option).
 .IP "-k reconfigure | rotate | shutdown | interrupt | kill | debug | check | parse"
 Parse configuration file, then send signal to running copy 
 (except -k parse) and exit.
+.IP "-n name"
+Specify Windows Service name to use for service operations, default is: 
+.BI Squid
+.
+.IP -r
+Remove a Windows Service (see -n option).
 .IP -s
 Enable logging to syslog.
 .IP "-l facility"
@@ -94,6 +106,8 @@ Do not catch fatal signals.
 Disable initial DNS tests.
 .IP -F
 Don't serve any requests until store is rebuilt.
+.IP "-O options"
+Set Windows Service Command line options in Registry.
 .IP -N
 No daemon mode.
 .IP -R
