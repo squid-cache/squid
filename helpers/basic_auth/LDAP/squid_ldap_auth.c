@@ -91,7 +91,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#ifdef _SQUID_MSWIN_ /* Native Windows port and MinGW */
+#ifdef _SQUID_MSWIN_		/* Native Windows port and MinGW */
 
 #define snprintf _snprintf
 #include <windows.h>
@@ -104,15 +104,15 @@
 #define LDAP_OPT_X_TLS 0x6000
 #endif
 /* Some tricks to allow dynamic bind with ldap_start_tls_s entry point at
-   run time.
+ * run time.
  */
 #undef ldap_start_tls_s
 #if LDAP_UNICODE
 #define LDAP_START_TLS_S "ldap_start_tls_sW"
-typedef WINLDAPAPI ULONG (LDAPAPI * PFldap_start_tls_s) (IN PLDAP, OUT PULONG, OUT LDAPMessage **, IN PLDAPControlW *, IN PLDAPControlW *);
+typedef WINLDAPAPI ULONG(LDAPAPI * PFldap_start_tls_s) (IN PLDAP, OUT PULONG, OUT LDAPMessage **, IN PLDAPControlW *, IN PLDAPControlW *);
 #else
 #define LDAP_START_TLS_S "ldap_start_tls_sA"
-typedef WINLDAPAPI ULONG (LDAPAPI * PFldap_start_tls_s) (IN PLDAP, OUT PULONG, OUT LDAPMessage **, IN PLDAPControlA *, IN PLDAPControlA *);
+typedef WINLDAPAPI ULONG(LDAPAPI * PFldap_start_tls_s) (IN PLDAP, OUT PULONG, OUT LDAPMessage **, IN PLDAPControlA *, IN PLDAPControlA *);
 #endif /* LDAP_UNICODE */
 PFldap_start_tls_s Win32_ldap_start_tls_s;
 #define ldap_start_tls_s(l,s,c) Win32_ldap_start_tls_s(l,NULL,NULL,s,c)
@@ -222,7 +222,7 @@ squid_ldap_set_referrals(LDAP * ld, int referrals)
     else
 	ld->ld_options &= ~LDAP_OPT_REFERRALS;
 }
-static void 
+static void
 squid_ldap_set_timelimit(LDAP * ld, int timelimit)
 {
     ld->ld_timelimit = timelimit;
@@ -287,18 +287,17 @@ open_ldap_connection(const char *ldapServer, int port)
     if (version == -1) {
 	version = LDAP_VERSION2;
     }
-    if (ldap_set_option(ld, LDAP_OPT_PROTOCOL_VERSION, &version)
-	!= LDAP_SUCCESS) {
+    if (ldap_set_option(ld, LDAP_OPT_PROTOCOL_VERSION, &version) != LDAP_SUCCESS) {
 	fprintf(stderr, "Could not set LDAP_OPT_PROTOCOL_VERSION %d\n",
 	    version);
 	exit(1);
     }
     if (use_tls) {
 #ifdef LDAP_OPT_X_TLS
-        if (version != LDAP_VERSION3) {
+	if (version != LDAP_VERSION3) {
 	    fprintf(stderr, "TLS requires LDAP version 3\n");
 	    exit(1);
-	} else if(ldap_start_tls_s(ld, NULL, NULL) != LDAP_SUCCESS) {
+	} else if (ldap_start_tls_s(ld, NULL, NULL) != LDAP_SUCCESS) {
 	    fprintf(stderr, "Could not Activate TLS connection\n");
 	    exit(1);
 	}
@@ -318,12 +317,12 @@ open_ldap_connection(const char *ldapServer, int port)
 static int
 validUsername(const char *user)
 {
-    const unsigned char *p = (const unsigned char *)user;
+    const unsigned char *p = (const unsigned char *) user;
 
     /* Leading whitespace? */
     if (isspace(p[0]))
 	return 0;
-    while(p[0] && p[1]) {
+    while (p[0] && p[1]) {
 	if (isspace(p[0])) {
 	    /* More than one consequitive space? */
 	    if (isspace(p[1]))
@@ -550,20 +549,19 @@ main(int argc, char **argv)
 	fprintf(stderr, "\tIf you need to bind as a user to perform searches then use the\n\t-D binddn -w bindpasswd or -D binddn -W secretfile options\n\n");
 	exit(1);
     }
-
 /* On Windows ldap_start_tls_s is available starting from Windows XP, 
-   so we need to bind at run-time with the function entry point
+ * so we need to bind at run-time with the function entry point
  */
 #ifdef _SQUID_MSWIN_
     if (use_tls) {
 
-    	HMODULE WLDAP32Handle;
+	HMODULE WLDAP32Handle;
 
 	WLDAP32Handle = GetModuleHandle("wldap32");
-        if ((Win32_ldap_start_tls_s = (PFldap_start_tls_s) GetProcAddress(WLDAP32Handle, LDAP_START_TLS_S)) == NULL) {
-            fprintf( stderr, PROGRAM_NAME ": ERROR: TLS (-Z) not supported on this platform.\n");
+	if ((Win32_ldap_start_tls_s = (PFldap_start_tls_s) GetProcAddress(WLDAP32Handle, LDAP_START_TLS_S)) == NULL) {
+	    fprintf(stderr, PROGRAM_NAME ": ERROR: TLS (-Z) not supported on this platform.\n");
 	    exit(1);
-        }
+	}
     }
 #endif
 
@@ -634,6 +632,9 @@ ldap_escape_value(char *escaped, int size, const char *src)
     return n;
 }
 
+/* Check the userid & password.
+ * Return 0 on success, 1 on failure
+ */
 static int
 checkLDAP(LDAP * persistent_ld, const char *userid, const char *password, const char *ldapServer, int port)
 {
@@ -645,6 +646,8 @@ checkLDAP(LDAP * persistent_ld, const char *userid, const char *password, const 
 	/* LDAP can't bind with a blank password. Seen as "anonymous"
 	 * and always granted access
 	 */
+	if (debug)
+	    fprintf(stderr, "Blank password given\n");
 	return 1;
     }
     if (searchfilter) {
@@ -679,6 +682,8 @@ checkLDAP(LDAP * persistent_ld, const char *userid, const char *password, const 
 		/* Everything is fine. This is expected when referrals
 		 * are disabled.
 		 */
+		if (debug)
+		    fprintf(stderr, "noreferrals && rc == LDAP_PARTIAL_RESULTS\n");
 	    } else {
 		fprintf(stderr, PROGRAM_NAME ": WARNING, LDAP search error '%s'\n", ldap_err2string(rc));
 #if defined(NETSCAPE_SSL)
@@ -693,6 +698,8 @@ checkLDAP(LDAP * persistent_ld, const char *userid, const char *password, const 
 	}
 	entry = ldap_first_entry(search_ld, res);
 	if (!entry) {
+	    if (debug)
+		fprintf(stderr, "Ldap search returned nothing\n");
 	    ret = 1;
 	    goto search_done;
 	}
@@ -744,7 +751,7 @@ checkLDAP(LDAP * persistent_ld, const char *userid, const char *password, const 
     return ret;
 }
 
-int 
+int
 readSecret(const char *filename)
 {
     char buf[BUFSIZ];
