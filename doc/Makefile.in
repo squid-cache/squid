@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.62 2006/05/28 00:10:52 hno Exp $
+#  $Id: Makefile.in,v 1.63 2006/06/02 16:44:27 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -262,6 +262,7 @@ SUBSTITUTE = sed "\
 	s%@DEFAULT_CACHEMGR_CONFIG@%$(DEFAULT_CACHEMGR_CONFIG)%g;\
 	s%@DEFAULT_ERROR_DIR@%$(DEFAULT_ERROR_DIR)%g;\
 	s%@DEFAULT_MIME_TABLE@%$(DEFAULT_MIME_TABLE)%g;\
+	s%@""PACKAGE_STRING""@%$(PACKAGE_STRING)%g;\
 	"
 
 man_MANS = \
