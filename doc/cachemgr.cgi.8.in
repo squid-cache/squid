@@ -1,4 +1,4 @@
-.TH cachemgr.cgi 8 "squid version 3.0"
+.TH cachemgr.cgi 8 "@PACKAGE_STRING@"
 .\" Copyright and licensing information
 .\" goes here.
 .SH NAME
