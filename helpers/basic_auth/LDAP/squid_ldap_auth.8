@@ -199,7 +199,7 @@ anonymous searches then you must also use the -D and -w flags to specify
 a user DN and password to log in as to perform the searches, as in the
 following complex Active Directory example
 .IP
-squid_ldap_auth -p -R -b "dc=your,dc=domain" -D "cn=squid,cn=users,dc=your,dc=domain" -w "secretsquidpassword" -f "(&(userPrincipalName=%s)(objectClass=Person))" activedirectoryserver
+squid_ldap_auth -P -R -b "dc=your,dc=domain" -D "cn=squid,cn=users,dc=your,dc=domain" -w "secretsquidpassword" -f "(&(userPrincipalName=%s)(objectClass=Person))" activedirectoryserver
 .
 .SH NOTES
 .
