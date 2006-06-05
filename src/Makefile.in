@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.388 2006/05/30 00:10:53 hno Exp $
+#  $Id: Makefile.in,v 1.389 2006/06/04 18:32:40 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -913,7 +913,7 @@ am__tests_test_http_range_SOURCES_DIST = tests/test_http_range.cc \
 	ipc.cc ipcache.cc list.cc logfile.cc mem.cc mem_node.cc \
 	MemObject.cc mime.cc multicast.cc neighbors.cc net_db.cc \
 	Parsing.cc peer_digest.cc peer_select.cc pconn.cc redirect.cc \
-	refresh.cc Server.cc snmp_core.cc snmp_agent.cc \
+	referer.cc refresh.cc Server.cc snmp_core.cc snmp_agent.cc \
 	ACLCertificateData.cc ACLCertificateData.h ACLCertificate.cc \
 	ACLCertificate.h ssl_support.cc ssl_support.h stat.cc \
 	StatHist.cc stmem.cc store.cc store_client.cc store_digest.cc \
@@ -923,8 +923,8 @@ am__tests_test_http_range_SOURCES_DIST = tests/test_http_range.cc \
 	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
 	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
 	StoreSwapLogData.cc String.cc SwapDir.cc time.cc tools.cc \
-	tunnel.cc url.cc URLScheme.cc urn.cc wais.cc whois.cc \
-	wordlist.cc Packer.cc MemBuf.cc
+	tunnel.cc url.cc URLScheme.cc urn.cc useragent.cc wais.cc \
+	whois.cc wordlist.cc Packer.cc MemBuf.cc
 am_tests_test_http_range_OBJECTS = tests/test_http_range.$(OBJEXT) \
 	access_log.$(OBJEXT) acl.$(OBJEXT) acl_noncore.$(OBJEXT) \
 	ACLChecklist.$(OBJEXT) ACLProxyAuth.$(OBJEXT) \
@@ -957,10 +957,10 @@ am_tests_test_http_range_OBJECTS = tests/test_http_range.$(OBJEXT) \
 	MemObject.$(OBJEXT) mime.$(OBJEXT) multicast.$(OBJEXT) \
 	neighbors.$(OBJEXT) net_db.$(OBJEXT) Parsing.$(OBJEXT) \
 	peer_digest.$(OBJEXT) peer_select.$(OBJEXT) pconn.$(OBJEXT) \
-	redirect.$(OBJEXT) refresh.$(OBJEXT) Server.$(OBJEXT) \
-	$(am__objects_16) $(am__objects_18) stat.$(OBJEXT) \
-	StatHist.$(OBJEXT) stmem.$(OBJEXT) store.$(OBJEXT) \
-	store_client.$(OBJEXT) store_digest.$(OBJEXT) \
+	redirect.$(OBJEXT) referer.$(OBJEXT) refresh.$(OBJEXT) \
+	Server.$(OBJEXT) $(am__objects_16) $(am__objects_18) \
+	stat.$(OBJEXT) StatHist.$(OBJEXT) stmem.$(OBJEXT) \
+	store.$(OBJEXT) store_client.$(OBJEXT) store_digest.$(OBJEXT) \
 	store_dir.$(OBJEXT) store_key_md5.$(OBJEXT) store_io.$(OBJEXT) \
 	store_log.$(OBJEXT) store_rebuild.$(OBJEXT) \
 	store_swapin.$(OBJEXT) store_swapmeta.$(OBJEXT) \
@@ -971,9 +971,9 @@ am_tests_test_http_range_OBJECTS = tests/test_http_range.$(OBJEXT) \
 	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
 	String.$(OBJEXT) SwapDir.$(OBJEXT) time.$(OBJEXT) \
 	tools.$(OBJEXT) tunnel.$(OBJEXT) url.$(OBJEXT) \
-	URLScheme.$(OBJEXT) urn.$(OBJEXT) wais.$(OBJEXT) \
-	whois.$(OBJEXT) wordlist.$(OBJEXT) Packer.$(OBJEXT) \
-	MemBuf.$(OBJEXT)
+	URLScheme.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) \
+	wais.$(OBJEXT) whois.$(OBJEXT) wordlist.$(OBJEXT) \
+	Packer.$(OBJEXT) MemBuf.$(OBJEXT)
 nodist_tests_test_http_range_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_test_http_range_OBJECTS = $(am_tests_test_http_range_OBJECTS) \
@@ -2551,6 +2551,7 @@ tests_test_http_range_SOURCES = \
 	peer_select.cc \
 	pconn.cc \
 	redirect.cc \
+	referer.cc \
 	refresh.cc \
 	Server.cc \
 	$(SNMP_SOURCE) \
@@ -2586,6 +2587,7 @@ tests_test_http_range_SOURCES = \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
+	useragent.cc \
 	wais.cc \
 	whois.cc \
 	wordlist.cc \
