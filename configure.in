@@ -3,7 +3,7 @@ dnl  Configuration input file for Squid
 dnl
 dnl  Duane Wessels, wessels@nlanr.net, February 1996 (autoconf v2.9)
 dnl
-dnl  $Id: configure.in,v 1.417 2006/06/04 18:36:34 serassio Exp $
+dnl  $Id: configure.in,v 1.418 2006/06/04 18:43:34 serassio Exp $
 dnl
 dnl
 dnl
@@ -13,16 +13,17 @@ AC_CONFIG_SRCDIR([src/main.cc])
 AC_CONFIG_AUX_DIR(cfgaux)
 AM_INIT_AUTOMAKE([tar-ustar])
 AM_CONFIG_HEADER(include/autoconf.h)
-AC_REVISION($Revision: 1.417 $)dnl
+AC_REVISION($Revision: 1.418 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
+
+PRESET_CFLAGS="$CFLAGS"
+PRESET_LDFLAGS="$LDFLAGS"
 
 dnl Set default LDFLAGS
 if test -z "$LDFLAGS"; then
         LDFLAGS="-g"
 fi
-
-PRESET_CFLAGS="$CFLAGS"
 
 dnl Check for GNU cc
 AC_PROG_CC
@@ -135,22 +136,22 @@ if test -z "$PRESET_CFLAGS"; then
 	    CFLAGS=`echo $CFLAGS | sed -e 's/-O[0-9]/-O/'`
 	    ;;
         *)
-    	    CFLAGS="$CFLAGS -Wall"
+    	    CFLAGS="-Wall $CFLAGS"
     	    ;;
         esac
     else
 	case "$host" in
 	*mips-sgi-irix6.*)
 	    # suggested by Rafael Seidl <rafaels@cthulhu.engr.sgi.com>
-	    CFLAGS="$CFLAGS -n32 -mips3 -O3 -OPT:Olimit=0:space=OFF \
+	    CFLAGS="-O3 -OPT:Olimit=0:space=OFF \
 		-woff 1009,1014,1110,1116,1185,1188,1204,1230,1233 \
 		-Wl,-woff,85,-woff,84,-woff,134 \
-		-nostdinc -I/usr/include -D_BSD_SIGNALS"
+		-nostdinc -I/usr/include -D_BSD_SIGNALS $CFLAGS"
 	    ;;
 	alpha-dec-osf4.*)
 	    # Mogul says DEC compilers take both -g and -O2
 	    CFLAGS=`echo $CFLAGS | sed -e 's/-g/-g3/'`
-	    CFLAGS="$CFLAGS -O2"
+	    CFLAGS="-O2 $CFLAGS"
 	    ;;
 	*)
 	    ;;
@@ -176,15 +177,18 @@ dnl Set LDFLAGS
 if test -z "$PRESET_LDFLAGS"; then
     if test "$GCC" = "yes"; then
         case "$host" in
+	*mips-sgi-irix6.*)
+	    # Silence Linker warnings 84, 85 and 134
+    	    LDFLAGS="-Wl,-woff,85 -Wl,-woff,84 -Wl,-woff,134 $LDFLAGS"
+    	    ;;
         *)
     	    # nothing
 	    ;;
         esac
     else
 	case "$host" in
-	*mips-sgi-irix6.*)
-	    # suggested by Rafael Seidl <rafaels@cthulhu.engr.sgi.com>
-	    LDFLAGS="-n32 -mips3 -nostdlib -L/usr/lib32"
+        *)
+    	    # nothing
 	    ;;
 	esac
     fi
@@ -1192,11 +1196,11 @@ if test -n "$buildmodel" && test "$buildmodel" != "default"; then
 	CXXFLAGS="`getconf ${buildmodel}_CFLAGS` $CXXFLAGS"
 	LIBS="`getconf ${buildmodel}_LIBS` $LIBS"
 	LDFLAGS="`getconf ${buildmodel}_LDFLAGS` $LDFLAGS"
+	case "$host" in
 dnl
 dnl On Solaris getconf returns for CFLAGS -Xa and -Usun options, but:
 dnl   -Xa is supported only by Sun cc, so we need to remove it when using gcc
 dnl   The 'sun' define is needed by ipfilter includes, so we must remove -Usun
-	case "$host" in
 	    *-solaris*)
     		if test "$GCC" = "yes"; then
 		    echo "Removing -Xa for gcc on $host"
@@ -1206,6 +1210,21 @@ dnl   The 'sun' define is needed by ipfilter includes, so we must remove -Usun
 		echo "Removing -Usun on $host"
 		CFLAGS="`echo $CFLAGS | sed -e 's/-Usun//'`"
 		CXXFLAGS="`echo $CXXFLAGS | sed -e 's/-Usun//'`"
+		;;
+dnl		
+dnl On Irix 6.x getconf returns options valid only for the SGI MipsPRO compiler,
+dnl so we must adjust something to avoid gcc errors.
+dnl On Irix 6.x 32/64 bit we must replace "-n32" with "-mabi=n32" in CFLAGS and
+dnl remove "-n32" from LDFLAGS
+dnl On Irix 6.x 64 bit we must replace "-64" with "-mabi=64" in CFLAGS and remove
+dnl "-64" from LDFLAGS
+	    *-sgi-irix6.*)
+    		if test "$GCC" = "yes"; then
+		    CFLAGS="`echo $CFLAGS | sed -e 's/-n32/-mabi=n32/'`"
+		    LDFLAGS="`echo $LDFLAGS | sed -e 's/-n32//'`"
+		    CFLAGS="`echo $CFLAGS | sed -e 's/-64/-mabi=64/'`"
+		    LDFLAGS="`echo $LDFLAGS | sed -e 's/-64//'`"
+		fi
 		;;
 	    *)
 	        ;;
