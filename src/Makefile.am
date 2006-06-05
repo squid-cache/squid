@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.150 2006/06/04 18:31:37 serassio Exp $
+#  $Id: Makefile.am,v 1.151 2006/06/04 18:45:47 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -1907,6 +1907,7 @@ tests_testURL_SOURCES = \
 	peer_digest.cc \
 	peer_select.cc \
 	redirect.cc \
+	referer.cc \
 	refresh.cc \
 	Server.cc \
 	$(SNMP_SOURCE) \
@@ -1938,6 +1939,7 @@ tests_testURL_SOURCES = \
 	tunnel.cc \
 	SwapDir.cc \
 	urn.cc \
+	useragent.cc \
 	wais.cc \
 	whois.cc \
 	wordlist.cc
