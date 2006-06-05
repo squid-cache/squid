@@ -1,7 +1,6 @@
 .deps
 .libs
 Makefile
-cachemgr.cgi
 cf.data
 cf_gen
 cf_gen_defines.h
@@ -12,7 +11,6 @@ pinger
 repl_modules.cc
 squid
 squid.conf.default
-squidclient
 string_arrays.c
 ufsdump
 unlinkd
