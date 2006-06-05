@@ -21484,6 +21484,8 @@ if test -n "$AUTH_MODULES"; then
     echo "Auth scheme modules built: $AUTH_MODULES"
     AUTH_OBJS="auth/lib`echo $AUTH_MODULES|sed -e 's% %.a auth/lib%g'`.a"
     AUTH_LIBS="`echo $AUTH_OBJS|sed -e 's%auth/%%g'`"
+else
+    echo "Auth scheme modules built: None"
 fi
 AUTH_LINKOBJS=
 for module in $AUTH_MODULES; do
