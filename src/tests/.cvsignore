@@ -12,4 +12,5 @@ testNull
 testStore
 testString
 testUfs
+testURL
 test_http_range
