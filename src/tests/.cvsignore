@@ -4,6 +4,7 @@
 testAuth
 testACLMaxUserIP
 testBoilerplate
+testCacheManager
 testCoss
 testHeaders
 testNull
