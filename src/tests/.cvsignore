@@ -7,6 +7,9 @@ testBoilerplate
 testCacheManager
 testCoss
 testHeaders
+testHttpRequest
 testNull
 testStore
+testString
 testUfs
+test_http_range
