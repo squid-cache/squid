@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.69 2006/05/29 21:44:18 robertc Exp $
+ * $Id: client_side_request.cc,v 1.70 2006/06/05 18:57:08 serassio Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -618,7 +618,7 @@ static void
 clientInterpretRequestHeaders(ClientHttpRequest * http)
 {
     HttpRequest *request = http->request;
-    const HttpHeader *req_hdr = &request->header;
+    HttpHeader *req_hdr = &request->header;
     int no_cache = 0;
 #if !(ESI) || defined(USE_USERAGENT_LOG) || defined(USE_REFERER_LOG)
 
@@ -687,8 +687,8 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
             request->flags.nocache = 1;
     }
 
-    /* ignore range header in non-GETs */
-    if (request->method == METHOD_GET) {
+    /* ignore range header in non-GETs or non-HEADs */
+    if (request->method == METHOD_GET || request->method == METHOD_HEAD) {
         request->range = req_hdr->getRange();
 
         if (request->range) {
@@ -705,6 +705,15 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
             http->range_iter.pos = request->range->begin();
             http->range_iter.valid = true;
         }
+    }
+
+    /* Only HEAD and GET requests permit a Range or Request-Range header.
+     * If these headers appear on any other type of request, delete them now.
+     */
+    else {
+        req_hdr->delById(HDR_RANGE);
+        req_hdr->delById(HDR_REQUEST_RANGE);
+        request->range = NULL;
     }
 
     if (req_hdr->has(HDR_AUTHORIZATION))
