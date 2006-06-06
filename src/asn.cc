@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.108 2006/05/29 00:15:01 robertc Exp $
+ * $Id: asn.cc,v 1.109 2006/06/05 18:35:02 serassio Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -395,7 +395,7 @@ asStateFree(void *data)
 static int
 asnAddNet(char *as_string, int as_number)
 {
-    rtentry_t *e = (rtentry_t *)xmalloc(sizeof(rtentry_t));
+    rtentry_t *e;
 
     struct squid_radix_node *rn;
     char dbg1[32], dbg2[32];
@@ -440,6 +440,8 @@ asnAddNet(char *as_string, int as_number)
     /*mask = ntohl(mask); */
     debug(53, 3) ("asnAddNet: called for %s/%s\n", dbg1, dbg2);
 
+    e = (rtentry_t *)xmalloc(sizeof(rtentry_t));
+
     memset(e, '\0', sizeof(rtentry_t));
 
     store_m_int(addr, e->e_addr);
@@ -476,7 +478,9 @@ asnAddNet(char *as_string, int as_number)
         e->e_info = asinfo;
     }
 
-    if (rn == 0) {
+    if (rn == 0) { 		/* assert might expand to nothing */
+        xfree(asinfo);
+        delete q;
         xfree(e);
         debug(53, 3) ("asnAddNet: Could not add entry.\n");
         return 0;
