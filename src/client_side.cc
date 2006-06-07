@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.726 2006/05/26 19:58:37 wessels Exp $
+ * $Id: client_side.cc,v 1.727 2006/06/06 19:22:13 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -290,7 +290,7 @@ ClientSocketContext::connIsFinished()
     clientStreamDetach(getTail(), http);
 }
 
-ClientSocketContext::ClientSocketContext() : http(NULL), next(NULL),
+ClientSocketContext::ClientSocketContext() : http(NULL), reply(NULL), next(NULL),
         writtenToSocket(0),
         mayUseConnection_ (false),
         connRegistered_ (false)
@@ -1114,6 +1114,12 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
         /* XXX: TODO: Review, this unconditional set may be wrong. - TODO: review. */
         httpStatusLineSet(&rep->sline, rep->sline.version,
                           HTTP_PARTIAL_CONTENT, NULL);
+        // web server responded with a valid, but unexpected range.
+        // will (try-to) forward as-is.
+        //TODO: we should cope with multirange request/responses
+        bool replyMatchRequest = rep->content_range != NULL ?
+                                 request->range->contains(rep->content_range->spec) :
+                                 true;
         const int spec_count = http->request->range->specs.count;
         int actual_clen = -1;
 
@@ -1125,20 +1131,30 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
         /* append appropriate header(s) */
 
         if (spec_count == 1) {
-            HttpHdrRange::iterator pos = http->request->range->begin();
-            assert(*pos);
-            /* append Content-Range */
+            if (!replyMatchRequest) {
+                hdr->delById(HDR_CONTENT_RANGE);
+                hdr->putContRange(rep->content_range);
+                actual_clen = rep->content_length;
+                //http->range_iter.pos = rep->content_range->spec.begin();
+                (*http->range_iter.pos)->offset = rep->content_range->spec.offset;
+                (*http->range_iter.pos)->length = rep->content_range->spec.length;
 
-            if (!hdr->has(HDR_CONTENT_RANGE)) {
-                /* No content range, so this was a full object we are
-                 * sending parts of.
-                 */
-                httpHeaderAddContRange(hdr, **pos, rep->content_length);
+            } else {
+                HttpHdrRange::iterator pos = http->request->range->begin();
+                assert(*pos);
+                /* append Content-Range */
+
+                if (!hdr->has(HDR_CONTENT_RANGE)) {
+                    /* No content range, so this was a full object we are
+                     * sending parts of.
+                     */
+                    httpHeaderAddContRange(hdr, **pos, rep->content_length);
+                }
+
+                /* set new Content-Length to the actual number of bytes
+                 * transmitted in the message-body */
+                actual_clen = (*pos)->length;
             }
-
-            /* set new Content-Length to the actual number of bytes
-             * transmitted in the message-body */
-            actual_clen = (*pos)->length;
         } else {
             /* multipart! */
             /* generate boundary string */
@@ -1172,6 +1188,8 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
 void
 ClientSocketContext::prepareReply(HttpReply * rep)
 {
+    reply = rep;
+
     if (http->request->range)
         buildRangeHeader(rep);
 }
@@ -1434,6 +1452,11 @@ ClientSocketContext::getNextRangeOffset() const
             return start;
         }
 
+    } else if (reply && reply->content_range) {
+        /* request does not have ranges, but reply does */
+        //FIXME: should use range_iter_pos on reply, as soon as reply->content_range
+        //       becomes HttpHdrRange rather than HttpHdrRangeSpec.
+        return http->out.offset + reply->content_range->spec.offset;
     }
 
     return http->out.offset;
@@ -1470,6 +1493,16 @@ ClientSocketContext::socketState()
             if (!canPackMoreRanges()) {
                 debug (33,5)("ClientSocketContext::socketState: Range request has hit end of returnable range sequence on FD %d\n", fd());
 
+                if (http->request->flags.proxy_keepalive)
+                    return STREAM_COMPLETE;
+                else
+                    return STREAM_UNPLANNED_COMPLETE;
+            }
+        } else if (reply && reply->content_range) {
+            /* reply has content-range, but request did not */
+
+            if (http->memObject()->endOffset() <=
+                    reply->content_range->spec.offset + reply->content_range->spec.length) {
                 if (http->request->flags.proxy_keepalive)
                     return STREAM_COMPLETE;
                 else
