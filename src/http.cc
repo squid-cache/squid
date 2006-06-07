@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.499 2006/05/22 19:45:47 wessels Exp $
+ * $Id: http.cc,v 1.500 2006/06/07 12:32:56 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -381,6 +381,15 @@ HttpStateData::cacheableReply()
 #if HTTP_VIOLATIONS
 
     const refresh_t *R = NULL;
+
+    /* This strange looking define first looks up the frefresh pattern
+     * and then checks if the specified flag is set. The main purpose
+     * of this is to simplify the refresh pattern lookup and HTTP_VIOLATIONS
+     * condition
+     */
+#define REFRESH_OVERRIDE(flag) \
+	((R = (R ? R : refreshLimits(entry->mem_obj->url))) , \
+	(R && R->flags.flag))
 #endif
 
     if (surrogateNoStore)
@@ -388,38 +397,17 @@ HttpStateData::cacheableReply()
 
     if (!ignoreCacheControl) {
         if (EBIT_TEST(cc_mask, CC_PRIVATE)) {
-#if HTTP_VIOLATIONS
-
-            if (!R)
-                R = refreshLimits(entry->mem_obj->url);
-
-            if (R && !R->flags.ignore_private)
-#endif
-
+            if (!REFRESH_OVERRIDE(ignore_private))
                 return 0;
         }
 
         if (EBIT_TEST(cc_mask, CC_NO_CACHE)) {
-#if HTTP_VIOLATIONS
-
-            if (!R)
-                R = refreshLimits(entry->mem_obj->url);
-
-            if (R && !R->flags.ignore_no_cache)
-#endif
-
+            if (!REFRESH_OVERRIDE(ignore_no_cache))
                 return 0;
         }
 
         if (EBIT_TEST(cc_mask, CC_NO_STORE)) {
-#if HTTP_VIOLATIONS
-
-            if (!R)
-                R = refreshLimits(entry->mem_obj->url);
-
-            if (R && !R->flags.ignore_no_store)
-#endif
-
+            if (!REFRESH_OVERRIDE(ignore_no_store))
                 return 0;
         }
     }
@@ -432,14 +420,7 @@ HttpStateData::cacheableReply()
          */
 
         if (!EBIT_TEST(cc_mask, CC_PUBLIC)) {
-#if HTTP_VIOLATIONS
-
-            if (!R)
-                R = refreshLimits(entry->mem_obj->url);
-
-            if (R && !R->flags.ignore_auth)
-#endif
-
+            if (!REFRESH_OVERRIDE(ignore_auth))
                 return 0;
         }
     }
@@ -452,14 +433,7 @@ HttpStateData::cacheableReply()
         s.clean();
 
         if (no_cache) {
-#if HTTP_VIOLATIONS
-
-            if (!R)
-                R = refreshLimits(entry->mem_obj->url);
-
-            if (R && !R->flags.ignore_no_cache)
-#endif
-
+            if (!REFRESH_OVERRIDE(ignore_no_cache))
                 return 0;
         }
     }
