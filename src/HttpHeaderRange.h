@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderRange.h,v 1.7 2006/04/22 05:29:18 robertc Exp $
+ * $Id: HttpHeaderRange.h,v 1.8 2006/06/06 19:22:13 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -104,6 +104,7 @@ public:
     ssize_t firstOffset() const;
     ssize_t lowestOffset(ssize_t) const;
     bool offsetLimitExceeded() const;
+    bool contains(HttpHdrRangeSpec& r) const;
     Vector<HttpHdrRangeSpec *> specs;
 
 private:

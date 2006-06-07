@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.h,v 1.15 2006/04/27 19:27:37 wessels Exp $
+ * $Id: client_side.h,v 1.16 2006/06/06 19:22:13 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -61,6 +61,7 @@ public:
     void writeComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag);
     void keepaliveNextRequest();
     ClientHttpRequest *http;	/* we own this */
+    HttpReply *reply;
     char reqbuf[HTTP_REQBUF_SZ];
     Pointer next;
 

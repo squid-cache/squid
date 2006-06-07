@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.39 2004/08/30 05:12:31 robertc Exp $
+ * $Id: HttpHdrRange.cc,v 1.40 2006/06/06 19:22:13 hno Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -550,6 +550,23 @@ HttpHdrRange::offsetLimitExceeded() const
         return false;
 
     return true;
+}
+
+bool
+HttpHdrRange::contains(HttpHdrRangeSpec& r) const
+{
+    assert(r.length >= 0);
+    HttpHdrRangeSpec::HttpRange rrange(r.offset, r.offset + r.length);
+
+    for (const_iterator i = begin(); i != end(); ++i) {
+        HttpHdrRangeSpec::HttpRange irange((*i)->offset, (*i)->offset + (*i)->length);
+        HttpHdrRangeSpec::HttpRange intersection = rrange.intersection(irange);
+
+        if (intersection.start == irange.start && intersection.size() == irange.size())
+            return true;
+    }
+
+    return false;
 }
 
 const HttpHdrRangeSpec *
