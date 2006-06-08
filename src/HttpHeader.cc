@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.121 2006/05/29 00:15:00 robertc Exp $
+ * $Id: HttpHeader.cc,v 1.122 2006/06/07 22:39:33 hno Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -101,6 +101,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] =
         {"If-Modified-Since", HDR_IF_MODIFIED_SINCE, ftDate_1123},
         {"If-None-Match", HDR_IF_NONE_MATCH, ftStr},	/* for now */
         {"If-Range", HDR_IF_RANGE, ftDate_1123_or_ETag},
+        {"Keep-Alive", HDR_KEEP_ALIVE, ftStr},
         {"Last-Modified", HDR_LAST_MODIFIED, ftDate_1123},
         {"Link", HDR_LINK, ftStr},
         {"Location", HDR_LOCATION, ftStr},
@@ -118,7 +119,9 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] =
         {"Retry-After", HDR_RETRY_AFTER, ftStr},	/* for now (ftDate_1123 or ftInt!) */
         {"Server", HDR_SERVER, ftStr},
         {"Set-Cookie", HDR_SET_COOKIE, ftStr},
+        {"TE", HDR_TE, ftStr},
         {"Title", HDR_TITLE, ftStr},
+        {"Trailers", HDR_TRAILERS, ftStr},
         {"Transfer-Encoding", HDR_TRANSFER_ENCODING, ftStr},
         {"Upgrade", HDR_UPGRADE, ftStr},	/* for now */
         {"User-Agent", HDR_USER_AGENT, ftStr},
@@ -442,13 +445,14 @@ HttpHeader::update (HttpHeader const *fresh, HttpHeaderMask const *denied_mask)
     HttpHeaderPos pos = HttpHeaderInitPos;
     assert(fresh);
     assert(this != fresh);
-    debug(55, 7) ("updating hdr: %p <- %p\n", this, fresh);
 
     while ((e = fresh->getEntry(&pos))) {
         /* deny bad guys (ok to check for HDR_OTHER) here */
 
         if (denied_mask && CBIT_TEST(*denied_mask, e->id))
             continue;
+
+        debug(55,7) ("Updating header '%s' in cached entry\n", HeadersAttrs[e->id].name);
 
         delByName(e->name.buf());
 

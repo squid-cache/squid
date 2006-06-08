@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.h,v 1.16 2006/05/29 00:15:00 robertc Exp $
+ * $Id: HttpHeader.h,v 1.17 2006/06/07 22:39:33 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -75,6 +75,7 @@ typedef enum {
     HDR_IF_MODIFIED_SINCE,
     HDR_IF_NONE_MATCH,
     HDR_IF_RANGE,
+    HDR_KEEP_ALIVE,
     HDR_LAST_MODIFIED,
     HDR_LINK,
     HDR_LOCATION,
@@ -92,7 +93,9 @@ typedef enum {
     HDR_RETRY_AFTER,
     HDR_SERVER,
     HDR_SET_COOKIE,
+    HDR_TE,
     HDR_TITLE,
+    HDR_TRAILERS,
     HDR_TRANSFER_ENCODING,
     HDR_UPGRADE,
     HDR_USER_AGENT,

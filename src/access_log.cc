@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.114 2006/05/31 16:34:36 wessels Exp $
+ * $Id: access_log.cc,v 1.115 2006/06/07 22:39:33 hno Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -67,9 +67,9 @@ const char *log_tags[] =
         "NONE",
         "TCP_HIT",
         "TCP_MISS",
-        "TCP_REFRESH_HIT",
-        "TCP_REF_FAIL_HIT",
-        "TCP_REFRESH_MISS",
+        "TCP_REFRESH_UNMODIFIED",
+        "TCP_REFRESH_FAIL",
+        "TCP_REFRESH_MODIFIED",
         "TCP_CLIENT_REFRESH_MISS",
         "TCP_IMS_HIT",
         "TCP_SWAPFAIL_MISS",
@@ -1819,10 +1819,10 @@ logTypeIsATcpHit(log_type code)
     if (code == LOG_TCP_IMS_HIT)
         return 1;
 
-    if (code == LOG_TCP_REFRESH_FAIL_HIT)
+    if (code == LOG_TCP_REFRESH_FAIL)
         return 1;
 
-    if (code == LOG_TCP_REFRESH_HIT)
+    if (code == LOG_TCP_REFRESH_UNMODIFIED)
         return 1;
 
     if (code == LOG_TCP_NEGATIVE_HIT)
