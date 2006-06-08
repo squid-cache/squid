@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.h,v 1.13 2006/05/08 17:22:32 wessels Exp $
+ * $Id: client_side_reply.h,v 1.14 2006/06/07 22:39:34 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -78,7 +78,6 @@ public:
     void removeStoreReference(store_client ** scp, StoreEntry ** ep);
     void removeClientStoreReference(store_client **scp, ClientHttpRequest *http);
     void startError(ErrorState * err);
-    bool clientGetsOldEntry() const;
     void processExpired();
     clientStream_status_t replyStatus();
     void processMiss();
@@ -141,10 +140,6 @@ private:
     void handleIMSReply(StoreIOBuffer result);
     void sendMoreData(StoreIOBuffer result);
     void triggerInitialStoreRead();
-    void cleanUpAfterIMSCheck();
-    void handlePartialIMSHeaders();
-    void handleIMSGiveClientUpdatedOldEntry();
-    void handleIMSGiveClientNewEntry();
     void sendClientOldEntry();
     void buildMaxBodySize(HttpReply * reply);
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.88 2006/05/08 23:38:33 robertc Exp $
+ * $Id: HttpReply.cc,v 1.89 2006/06/07 22:39:33 hno Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -44,13 +44,28 @@
 
 /* local constants */
 
-/* these entity-headers must be ignored if a bogus server sends them in 304 */
+/* If we receive a 304 from the origin during a cache revalidation, we must
+ * update the headers of the existing entry. Specifically, we need to update all
+ * end-to-end headers and not any hop-by-hop headers (rfc2616 13.5.3).
+ *
+ * This is not the whole story though: since it is possible for a faulty/malicious
+ * origin server to set headers it should not in a 304, we must explicitly ignore
+ * these too. Specifically all entity-headers except those permitted in a 304
+ * (rfc2616 10.3.5) must be ignored.
+ * 
+ * The list of headers we don't update is made up of:
+ *     all hop-by-hop headers
+ *     all entity-headers except Expires and Content-Location
+ */
 static HttpHeaderMask Denied304HeadersMask;
 static http_hdr_type Denied304HeadersArr[] =
     {
+        // hop-by-hop headers
+        HDR_CONNECTION, HDR_KEEP_ALIVE, HDR_PROXY_AUTHENTICATE, HDR_PROXY_AUTHORIZATION,
+        HDR_TE, HDR_TRAILERS, HDR_TRANSFER_ENCODING, HDR_UPGRADE,
+        // entity headers
         HDR_ALLOW, HDR_CONTENT_ENCODING, HDR_CONTENT_LANGUAGE, HDR_CONTENT_LENGTH,
-        HDR_CONTENT_LOCATION, HDR_CONTENT_RANGE, HDR_LAST_MODIFIED, HDR_LINK,
-        HDR_OTHER
+        HDR_CONTENT_MD5, HDR_CONTENT_RANGE, HDR_CONTENT_TYPE, HDR_LAST_MODIFIED
     };
 
 /* module initialization */
@@ -302,13 +317,13 @@ void
 HttpReply::updateOnNotModified(HttpReply const * freshRep)
 {
     assert(freshRep);
-    /* Can not update modified headers that don't match! */
-    assert (validatorsMatch(freshRep));
+
     /* clean cache */
     hdrCacheClean();
     /* update raw headers */
     header.update(&freshRep->header,
                   (const HttpHeaderMask *) &Denied304HeadersMask);
+
     /* init cache */
     hdrCacheInit();
 }

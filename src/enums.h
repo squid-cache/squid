@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.251 2006/05/29 00:15:02 robertc Exp $
+ * $Id: enums.h,v 1.252 2006/06/07 22:39:34 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,9 +38,9 @@ typedef enum {
     LOG_TAG_NONE,
     LOG_TCP_HIT,
     LOG_TCP_MISS,
-    LOG_TCP_REFRESH_HIT,
-    LOG_TCP_REFRESH_FAIL_HIT,
-    LOG_TCP_REFRESH_MISS,
+    LOG_TCP_REFRESH_UNMODIFIED, // refresh from origin revalidated existing entry
+    LOG_TCP_REFRESH_FAIL,       // refresh from origin failed
+    LOG_TCP_REFRESH_MODIFIED,   // refresh from origin replaced existing entry
     LOG_TCP_CLIENT_REFRESH_MISS,
     LOG_TCP_IMS_HIT,
     LOG_TCP_SWAPFAIL_MISS,

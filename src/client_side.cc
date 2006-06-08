@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.727 2006/06/06 19:22:13 hno Exp $
+ * $Id: client_side.cc,v 1.728 2006/06/07 22:39:34 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -343,13 +343,13 @@ clientUpdateStatHistCounters(log_type logType, int svc_time)
     /*
      * The idea here is not to be complete, but to get service times
      * for only well-defined types.  For example, we don't include
-     * LOG_TCP_REFRESH_FAIL_HIT because its not really a cache hit
+     * LOG_TCP_REFRESH_FAIL because its not really a cache hit
      * (we *tried* to validate it, but failed).
      */
 
     switch (logType) {
 
-    case LOG_TCP_REFRESH_HIT:
+    case LOG_TCP_REFRESH_UNMODIFIED:
         statHistCount(&statCounter.client_http.nh_svc_time, svc_time);
         break;
 

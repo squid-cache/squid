@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.108 2006/05/19 20:22:56 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.109 2006/06/07 22:39:34 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -288,69 +288,11 @@ clientReplyContext::processExpired()
     }
 }
 
-bool
-clientReplyContext::clientGetsOldEntry()const
-{
-    const http_status status = http->storeEntry()->getReply()->sline.status;
-
-    if (0 == status) {
-        debug(88, 5) ("clientGetsOldEntry: YES, broken HTTP reply\n");
-        return true;
-    }
-
-    /* If the reply is a failure then send the old object as a last
-     * resort */
-    if (status >= 500 && status < 600) {
-        debug(88, 3) ("clientGetsOldEntry: YES, failure reply=%d\n", status);
-        return true;
-    }
-
-    /* If the reply is anything but "Not Modified" then
-     * we must forward it to the client */
-    if (HTTP_NOT_MODIFIED != status) {
-        debug(88, 5) ("clientGetsOldEntry: NO, reply=%d\n", status);
-        return false;
-    }
-
-    /* If the client did not send IMS in the request, then it
-     * must get the old object, not this "Not Modified" reply 
-     * REGARDLESS of validation */
-    if (!http->request->flags.ims) {
-        debug(88, 5) ("clientGetsOldEntry: YES, no client IMS\n");
-        return true;
-    }
-
-    /* If key metadata in the reply are not consistent with the
-     * old entry, we must use the new reply.
-     * Note: this means that the server is sending garbage replies 
-     * in that it has sent an IMS that is incompatible with our request!?
-     */
-    /* This is a duplicate call through the HandleIMS code path.
-     * Can we guarantee we don't need it elsewhere?
-     */
-    if (!http->storeEntry()->getReply()->validatorsMatch(old_entry->getReply())) {
-        debug(88, 5) ("clientGetsOldEntry: NO, Old object has been invalidated"
-                      "by the new one\n");
-        return false;
-    }
-
-    /* If the client IMS time is prior to the entry LASTMOD time we
-     * need to send the old object */
-    if (old_entry->modifiedSince(http->request)) {
-        debug(88, 5) ("clientGetsOldEntry: YES, modified since %ld\n",
-                      (long int) http->request->ims);
-        return true;
-    }
-
-    debug(88, 5) ("clientGetsOldEntry: NO, new one is fine\n");
-    return false;
-}
 
 void
 clientReplyContext::sendClientUpstreamResponse()
 {
     StoreIOBuffer tempresult;
-    http->logType = LOG_TCP_REFRESH_MISS;
     removeStoreReference(&old_sc, &old_entry);
     /* here the data to send is the data we just recieved */
     tempBuffer.offset = 0;
@@ -386,142 +328,18 @@ clientReplyContext::sendClientOldEntry()
     sendMoreData(tempresult);
 }
 
-void
-clientReplyContext::cleanUpAfterIMSCheck()
-{
-    debug(88, 3) ("clientHandleIMSReply: ABORTED '%s'\n", storeUrl(http->storeEntry()));
-    /* We have an existing entry, but failed to validate it */
-    /* Its okay to send the old one anyway */
-    http->logType = LOG_TCP_REFRESH_FAIL_HIT;
-    sendClientOldEntry();
-}
-
-void
-clientReplyContext::handlePartialIMSHeaders()
-{
-    /* more headers needed to decide */
-    debug(88, 3) ("clientHandleIMSReply: Incomplete headers for '%s'\n",
-                  storeUrl(http->storeEntry()));
-
-    if (reqsize >= HTTP_REQBUF_SZ) {
-        /* will not get any bigger than that */
-        debug(88, 3)
-        ("clientHandleIMSReply: Reply is too large '%s', using old entry\n",
-         storeUrl(http->storeEntry()));
-        /* use old entry, this repeats the code above */
-        http->logType = LOG_TCP_REFRESH_FAIL_HIT;
-        sendClientOldEntry();
-    } else {
-        reqofs = reqsize;
-        waitForMoreData();
-    }
-}
-
-void
-clientReplyContext::handleIMSGiveClientUpdatedOldEntry()
-{
-    /* We initiated the IMS request and the IMS is compatible with
-     * our object. As the client is not expecting
-     * 304, so put the good one back.  First, make sure the old entry
-     * headers have been loaded from disk. */
-    http->logType = LOG_TCP_REFRESH_HIT;
-
-    if (http->storeEntry()->getReply()->validatorsMatch(old_entry->getReply())) {
-        int unlink_request = 0;
-
-        if (old_entry->mem_obj->request == NULL) {
-            old_entry->mem_obj->request = HTTPMSGLOCK(http->memObject()->request);
-            unlink_request = 1;
-        }
-
-        /* Don't memcpy() the whole reply structure here.  For example,
-         * www.thegist.com (Netscape/1.13) returns a content-length for
-         * 304's which seems to be the length of the 304 HEADERS!!! and
-         * not the body they refer to.  */
-        HttpReply *old_rep = (HttpReply *) old_entry->getReply();
-
-        old_rep->updateOnNotModified(http->storeEntry()->getReply());
-
-        storeTimestampsSet(old_entry);
-
-        old_entry->timestamp = squid_curtime;
-
-        if (unlink_request)
-            HTTPMSGUNLOCK(old_entry->mem_obj->request);
-    }
-
-    sendClientOldEntry();
-}
-
-void
-clientReplyContext::handleIMSGiveClientNewEntry()
-{
-    /* The client gets the new entry,
-     * either as a 304 (they initiated the IMS) or
-     * as a full request from the upstream
-     * The new entry is *not* a 304 reply, or
-     * is a 304 that is incompatible with our cached entities.
-     */
-
-    if (http->request->flags.ims) {
-        /* The client asked for a IMS, and can deal
-         * with any reply
-         * XXX TODO: invalidate our object if it's not valid any more.
-         * Send the IMS reply to the client.
-         */
-        sendClientUpstreamResponse();
-    } else if (http->storeEntry()->getReply()->validatorsMatch(old_entry->getReply())) {
-        /* Our object is usable once updated */
-        /* the client did not ask for IMS, send the whole object
-         */
-        /* the client needs to get this reply */
-        StoreIOBuffer tempresult;
-        http->logType = LOG_TCP_REFRESH_MISS;
-
-        if (HTTP_NOT_MODIFIED == http->storeEntry()->getReply()->sline.status) {
-            HttpReply *old_rep = (HttpReply *) old_entry->getReply();
-            old_rep->updateOnNotModified(http->storeEntry()->getReply());
-            storeTimestampsSet(old_entry);
-            http->logType = LOG_TCP_REFRESH_HIT;
-        }
-
-        removeStoreReference(&old_sc, &old_entry);
-        /* here the data to send is the data we just recieved */
-        tempBuffer.offset = 0;
-        old_reqsize = 0;
-        /* clientSendMoreData tracks the offset as well.
-         * Force it back to zero */
-        reqofs = 0;
-        assert(!EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED));
-        /* TODO: provide SendMoreData with the ready parsed reply */
-        tempresult.length = reqsize;
-        tempresult.data = tempbuf;
-        sendMoreData(tempresult);
-    } else {
-        /* the client asked for the whole object, and
-         * 1) our object was stale
-         * 2) our internally generated IMS failed to validate
-         * 3) the server sent incompatible headers in it's reply
-         */
-        http->logType = LOG_TCP_REFRESH_MISS;
-        processMiss();
-        /* We start over for everything except IMS because:
-         * 1) HEAD requests will go straight through now
-         * 2) GET requests will go straight through now
-         * 3) IMS requests are a corner case. If the server
-         * decided to give us different data, we should give
-         * that to the client, which means returning our IMS request.
-         */
-    }
-}
-
+/* This is the workhorse of the HandleIMSReply callback.
+ *
+ * It is called when we've got data back from the origin following our
+ * IMS request to revalidate a stale entry.
+ */
 void
 clientReplyContext::handleIMSReply(StoreIOBuffer result)
 {
     if (deleting)
         return;
 
-    debug(88, 3) ("clientHandleIMSReply: %s, %lu bytes\n",
+    debug(88, 3) ("handleIMSReply: %s, %lu bytes\n",
                   storeUrl(http->storeEntry()),
                   (long unsigned) result.length);
 
@@ -534,16 +352,76 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
     /* update size of the request */
     reqsize = result.length + reqofs;
 
-    http_status status = http->storeEntry()->getReply()->sline.status;
+    const http_status status = http->storeEntry()->getReply()->sline.status;
 
-    if (EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED))
-        cleanUpAfterIMSCheck();
-    else if (STORE_PENDING == http->storeEntry()->store_status && 0 == status)
-        handlePartialIMSHeaders();
-    else if (clientGetsOldEntry())
-        handleIMSGiveClientUpdatedOldEntry();
-    else
-        handleIMSGiveClientNewEntry();
+    // request to origin was aborted
+    if (EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED)) {
+        debug(88, 3) ("handleIMSReply: request to origin aborted '%s', sending old entry to client\n", storeUrl(http->storeEntry()));
+        http->logType = LOG_TCP_REFRESH_FAIL;
+        sendClientOldEntry();
+    }
+
+    // we have a partial reply from the origin
+    else if (STORE_PENDING == http->storeEntry()->store_status && 0 == status) {
+        // header is too large, send old entry
+
+        if (reqsize >= HTTP_REQBUF_SZ) {
+            debug(88, 3) ("handleIMSReply: response from origin is too large '%s', sending old entry to client\n", storeUrl(http->storeEntry()));
+            http->logType = LOG_TCP_REFRESH_FAIL;
+            sendClientOldEntry();
+        }
+
+        // everything looks fine, we're just waiting for more data
+        else {
+            debug(88, 3) ("handleIMSReply: incomplete headers for '%s', waiting for more data\n", storeUrl(http->storeEntry()));
+            reqofs = reqsize;
+            waitForMoreData();
+        }
+    }
+
+    // we have a reply from the origin
+    else {
+        HttpReply *old_rep = (HttpReply *) old_entry->getReply();
+
+        // origin replied 304
+
+        if (status == HTTP_NOT_MODIFIED) {
+            http->logType = LOG_TCP_REFRESH_UNMODIFIED;
+
+            // update headers on existing entry
+            HttpReply *old_rep = (HttpReply *) old_entry->getReply();
+            old_rep->updateOnNotModified(http->storeEntry()->getReply());
+            storeTimestampsSet(old_entry);
+
+            // if client sent IMS
+
+            if (http->request->flags.ims) {
+                // forward the 304 from origin
+                debug(88,3) ("handleIMSReply: origin replied 304, revalidating existing entry and forwarding 304 to client\n");
+                sendClientUpstreamResponse();
+            } else {
+                // send existing entry, it's still valid
+                debug(88,3) ("handleIMSReply: origin replied 304, revalidating existing entry and sending %d to client\n", old_rep->sline.status);
+                sendClientOldEntry();
+            }
+        }
+
+        // origin replied with a non-error code
+        else if (status > HTTP_STATUS_NONE && status < HTTP_INTERNAL_SERVER_ERROR) {
+            // forward response from origin
+            http->logType = LOG_TCP_REFRESH_MODIFIED;
+            debug(88,3) ("handleIMSReply: origin replied %d, replacing existing entry and forwarding to client\n", status);
+            sendClientUpstreamResponse();
+        }
+
+        // origin replied with an error
+        else {
+            // ignore and let client have old entry
+            http->logType = LOG_TCP_REFRESH_FAIL;
+            debug(88,3) ("handleIMSReply: origin replied with error %d, sending old entry (%d) to client\n", status, old_rep->sline.status);
+            sendClientOldEntry();
+        }
+    }
 }
 
 extern "C" CSR clientGetMoreData;
@@ -711,7 +589,6 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
              * Object needs to be revalidated
              * XXX This could apply to FTP as well, if Last-Modified is known.
              */
-            http->logType = LOG_TCP_REFRESH_MISS;
             processExpired();
         } else {
             /*
