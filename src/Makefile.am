@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.151 2006/06/04 18:45:47 serassio Exp $
+#  $Id: Makefile.am,v 1.152 2006/06/09 00:33:13 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -1203,8 +1203,11 @@ tests_testCacheManager_SOURCES = \
 	clientStream.cc \
 	comm_select.cc \
 	comm_poll.cc \
+	comm_poll.h \
         comm_epoll.cc \
+        comm_epoll.h \
 	comm_kqueue.cc \
+	comm_kqueue.h \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	$(DELAY_POOL_SOURCE) \
