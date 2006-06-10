@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.390 2006/06/04 18:47:03 serassio Exp $
+#  $Id: Makefile.in,v 1.391 2006/06/10 00:10:50 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -389,8 +389,9 @@ am__tests_testCacheManager_SOURCES_DIST = debug.cc globals.cc \
 	ACLUserData.cc authenticate.cc BodyReader.cc cache_manager.cc \
 	cache_cf.cc CacheDigest.cc carp.cc cbdata.cc client_db.cc \
 	client_side.cc client_side_reply.cc client_side_request.cc \
-	clientStream.cc comm_select.cc comm_poll.cc comm_epoll.cc \
-	comm_kqueue.cc ConfigOption.cc ConfigParser.cc CommonPool.h \
+	clientStream.cc comm_select.cc comm_poll.cc comm_poll.h \
+	comm_epoll.cc comm_epoll.h comm_kqueue.cc comm_kqueue.h \
+	ConfigOption.cc ConfigParser.cc CommonPool.h \
 	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
 	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
 	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
@@ -2328,8 +2329,11 @@ tests_testCacheManager_SOURCES = \
 	clientStream.cc \
 	comm_select.cc \
 	comm_poll.cc \
+	comm_poll.h \
         comm_epoll.cc \
+        comm_epoll.h \
 	comm_kqueue.cc \
+	comm_kqueue.h \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	$(DELAY_POOL_SOURCE) \
