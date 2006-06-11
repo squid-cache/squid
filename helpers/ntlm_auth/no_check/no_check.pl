@@ -15,7 +15,7 @@ die ("Edit $0 to configure a domain!") unless (defined($authdomain));
 
 while(<STDIN>) {
 	chop;
-	if ($_ eq "YR") {
+	if (substr($_, 2) eq "YR") {
 		print "TT ".encode_base64(&make_ntlm_static_challenge);
 		next;
 	}
