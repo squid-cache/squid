@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.416 2006/06/11 10:13:12 hno Exp $
+# $Id: cf.data.pre,v 1.417 2006/06/11 20:48:45 robertc Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -1664,7 +1664,7 @@ DOC_START
 DOC_END
 
 
-NAME: oul_rewrite_program redirect_program
+NAME: url_rewrite_program redirect_program
 TYPE: wordlist
 LOC: Config.Program.redirect
 DEFAULT: none
