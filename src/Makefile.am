@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.153 2006/06/13 10:11:31 serassio Exp $
+#  $Id: Makefile.am,v 1.154 2006/06/13 10:23:57 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -335,6 +335,16 @@ squid_ACLSOURCES = \
 	ACLUserData.cc \
 	ACLUserData.h 
 
+squid_COMMSOURCES = \
+	comm_select.cc \
+	comm_select.h \
+	comm_poll.cc \
+	comm_poll.h \
+    comm_epoll.cc \
+    comm_epoll.h \
+	comm_kqueue.cc \
+	comm_kqueue.h
+
 
 # common library for all the binaries and tests. This is kindof a catch all
 # and smaller libraries split from this are encouraged. Using lt convenience
@@ -385,14 +395,7 @@ squid_SOURCES = \
 	clientStream.cc \
 	clientStream.h \
     CommIO.h \
-	comm_select.cc \
-	comm_select.h \
-	comm_poll.cc \
-	comm_poll.h \
-    comm_epoll.cc \
-    comm_epoll.h \
-	comm_kqueue.cc \
-	comm_kqueue.h \
+	$(squid_COMMSOURCES) \
 	CommRead.h \
 	ConfigOption.cc \
 	ConfigParser.cc \
@@ -712,11 +715,8 @@ ufsdump_SOURCES = \
 	client_side_request.h \
 	clientStream.cc \
 	clientStream.h \
-        CommIO.h \
-	comm_select.cc \
-	comm_poll.cc \
-        comm_epoll.cc \
-	comm_kqueue.cc \
+	CommIO.h \
+	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	defines.h \
 	$(DELAY_POOL_SOURCE) \
@@ -1205,13 +1205,7 @@ tests_testCacheManager_SOURCES = \
 	client_side_reply.cc \
 	client_side_request.cc \
 	clientStream.cc \
-	comm_select.cc \
-	comm_poll.cc \
-	comm_poll.h \
-        comm_epoll.cc \
-        comm_epoll.h \
-	comm_kqueue.cc \
-	comm_kqueue.h \
+	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	$(DELAY_POOL_SOURCE) \
@@ -1375,10 +1369,7 @@ tests_test_http_range_SOURCES = \
 	client_side_reply.cc \
 	client_side_request.cc \
 	clientStream.cc \
-	comm_select.cc \
-	comm_poll.cc \
-        comm_epoll.cc \
-	comm_kqueue.cc \
+	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	debug.cc \
@@ -1529,10 +1520,7 @@ tests_testHttpRequest_SOURCES = \
 	client_side_reply.cc \
 	client_side_request.cc \
 	clientStream.cc \
-	comm_select.cc \
-	comm_poll.cc \
-        comm_epoll.cc \
-	comm_kqueue.cc \
+	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	$(DELAY_POOL_SOURCE) \
@@ -1856,10 +1844,7 @@ tests_testURL_SOURCES = \
 	client_side_reply.cc \
 	client_side_request.cc \
 	clientStream.cc \
-	comm_select.cc \
-	comm_poll.cc \
-        comm_epoll.cc \
-	comm_kqueue.cc \
+	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	$(DELAY_POOL_SOURCE) \
