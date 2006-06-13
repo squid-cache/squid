@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.391 2006/06/10 00:10:50 hno Exp $
+#  $Id: Makefile.in,v 1.392 2006/06/13 10:29:30 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -182,8 +182,9 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc \
 	client_side_reply.cc client_side_reply.h \
 	client_side_request.cc client_side_request.h BodyReader.cc \
 	BodyReader.h ClientRequestContext.h clientStream.cc \
-	clientStream.h CommIO.h comm_select.cc comm_poll.cc \
-	comm_epoll.cc comm_kqueue.cc CommRead.h ConfigOption.cc \
+	clientStream.h CommIO.h comm_select.cc comm_select.h \
+	comm_poll.cc comm_poll.h comm_epoll.cc comm_epoll.h \
+	comm_kqueue.cc comm_kqueue.h CommRead.h ConfigOption.cc \
 	ConfigParser.cc ConfigParser.h ConnectionDetail.h debug.cc \
 	Debug.h defines.h CommonPool.h CompositePoolNode.h \
 	delay_pools.cc DelayId.cc DelayId.h DelayIdComposite.h \
@@ -257,69 +258,69 @@ am__objects_3 = $(am__objects_2) ACLASN.$(OBJEXT) ACLBrowser.$(OBJEXT) \
 	ACLTime.$(OBJEXT) ACLTimeData.$(OBJEXT) ACLUrl.$(OBJEXT) \
 	ACLUrlPath.$(OBJEXT) ACLUrlPort.$(OBJEXT) \
 	ACLUserData.$(OBJEXT)
-am__objects_4 = delay_pools.$(OBJEXT) DelayId.$(OBJEXT) \
+am__objects_4 = comm_select.$(OBJEXT) comm_poll.$(OBJEXT) \
+	comm_epoll.$(OBJEXT) comm_kqueue.$(OBJEXT)
+am__objects_5 = delay_pools.$(OBJEXT) DelayId.$(OBJEXT) \
 	DelayBucket.$(OBJEXT) DelayConfig.$(OBJEXT) \
 	DelayPool.$(OBJEXT) DelaySpec.$(OBJEXT) DelayTagged.$(OBJEXT) \
 	DelayUser.$(OBJEXT) DelayVector.$(OBJEXT) \
 	NullDelayId.$(OBJEXT)
-@USE_DELAY_POOLS_TRUE@am__objects_5 = $(am__objects_4)
-am__objects_6 = DiskIO/DiskIOModule.$(OBJEXT) \
+@USE_DELAY_POOLS_TRUE@am__objects_6 = $(am__objects_5)
+am__objects_7 = DiskIO/DiskIOModule.$(OBJEXT) \
 	DiskIO/ReadRequest.$(OBJEXT) DiskIO/WriteRequest.$(OBJEXT)
-@USE_DNSSERVER_FALSE@am__objects_7 = dns_internal.$(OBJEXT)
-@USE_DNSSERVER_TRUE@am__objects_7 = dns.$(OBJEXT)
-am__objects_8 = ESI.$(OBJEXT) ESIAssign.$(OBJEXT) ESIContext.$(OBJEXT) \
+@USE_DNSSERVER_FALSE@am__objects_8 = dns_internal.$(OBJEXT)
+@USE_DNSSERVER_TRUE@am__objects_8 = dns.$(OBJEXT)
+am__objects_9 = ESI.$(OBJEXT) ESIAssign.$(OBJEXT) ESIContext.$(OBJEXT) \
 	ESICustomParser.$(OBJEXT) ESIExpatParser.$(OBJEXT) \
 	ESIExpression.$(OBJEXT) ESIInclude.$(OBJEXT) \
 	ESILibxml2Parser.$(OBJEXT) ESIParser.$(OBJEXT) \
 	ESISegment.$(OBJEXT) ESISequence.$(OBJEXT) \
 	ESIVarState.$(OBJEXT)
-@USE_ESI_TRUE@am__objects_9 = $(am__objects_8)
-@ENABLE_HTCP_TRUE@am__objects_10 = htcp.$(OBJEXT)
-am__objects_11 = ACLIdent.$(OBJEXT) ident.$(OBJEXT)
-@ENABLE_IDENT_TRUE@am__objects_12 = $(am__objects_11)
-@MAKE_LEAKFINDER_TRUE@am__objects_13 = LeakFinder.$(OBJEXT)
-@ENABLE_XPROF_STATS_TRUE@am__objects_14 = ProfStats.$(OBJEXT)
-am__objects_15 = snmp_core.$(OBJEXT) snmp_agent.$(OBJEXT)
-@USE_SNMP_TRUE@am__objects_16 = $(am__objects_15)
-am__objects_17 = ACLCertificateData.$(OBJEXT) ACLCertificate.$(OBJEXT) \
+@USE_ESI_TRUE@am__objects_10 = $(am__objects_9)
+@ENABLE_HTCP_TRUE@am__objects_11 = htcp.$(OBJEXT)
+am__objects_12 = ACLIdent.$(OBJEXT) ident.$(OBJEXT)
+@ENABLE_IDENT_TRUE@am__objects_13 = $(am__objects_12)
+@MAKE_LEAKFINDER_TRUE@am__objects_14 = LeakFinder.$(OBJEXT)
+@ENABLE_XPROF_STATS_TRUE@am__objects_15 = ProfStats.$(OBJEXT)
+am__objects_16 = snmp_core.$(OBJEXT) snmp_agent.$(OBJEXT)
+@USE_SNMP_TRUE@am__objects_17 = $(am__objects_16)
+am__objects_18 = ACLCertificateData.$(OBJEXT) ACLCertificate.$(OBJEXT) \
 	ssl_support.$(OBJEXT)
-@ENABLE_SSL_TRUE@am__objects_18 = $(am__objects_17)
-@ENABLE_UNLINKD_TRUE@am__objects_19 = unlinkd.$(OBJEXT)
-am__objects_20 = win32.$(OBJEXT)
-@ENABLE_WIN32SPECIFIC_TRUE@am__objects_21 = $(am__objects_20)
+@ENABLE_SSL_TRUE@am__objects_19 = $(am__objects_18)
+@ENABLE_UNLINKD_TRUE@am__objects_20 = unlinkd.$(OBJEXT)
+am__objects_21 = win32.$(OBJEXT)
+@ENABLE_WIN32SPECIFIC_TRUE@am__objects_22 = $(am__objects_21)
 am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	acl_noncore.$(OBJEXT) ACLChecklist.$(OBJEXT) $(am__objects_3) \
 	asn.$(OBJEXT) authenticate.$(OBJEXT) cache_cf.$(OBJEXT) \
 	CacheDigest.$(OBJEXT) cache_manager.$(OBJEXT) carp.$(OBJEXT) \
 	cbdata.$(OBJEXT) client_db.$(OBJEXT) client_side.$(OBJEXT) \
 	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
-	BodyReader.$(OBJEXT) clientStream.$(OBJEXT) \
-	comm_select.$(OBJEXT) comm_poll.$(OBJEXT) comm_epoll.$(OBJEXT) \
-	comm_kqueue.$(OBJEXT) ConfigOption.$(OBJEXT) \
-	ConfigParser.$(OBJEXT) debug.$(OBJEXT) $(am__objects_5) \
-	disk.$(OBJEXT) $(am__objects_6) $(am__objects_7) \
-	errorpage.$(OBJEXT) $(am__objects_9) ETag.$(OBJEXT) \
-	event.$(OBJEXT) external_acl.$(OBJEXT) \
+	BodyReader.$(OBJEXT) clientStream.$(OBJEXT) $(am__objects_4) \
+	ConfigOption.$(OBJEXT) ConfigParser.$(OBJEXT) debug.$(OBJEXT) \
+	$(am__objects_6) disk.$(OBJEXT) $(am__objects_7) \
+	$(am__objects_8) errorpage.$(OBJEXT) $(am__objects_10) \
+	ETag.$(OBJEXT) event.$(OBJEXT) external_acl.$(OBJEXT) \
 	ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) fde.$(OBJEXT) \
 	filemap.$(OBJEXT) forward.$(OBJEXT) fqdncache.$(OBJEXT) \
 	ftp.$(OBJEXT) gopher.$(OBJEXT) helper.$(OBJEXT) \
-	$(am__objects_10) http.$(OBJEXT) HttpStatusLine.$(OBJEXT) \
+	$(am__objects_11) http.$(OBJEXT) HttpStatusLine.$(OBJEXT) \
 	HttpHdrCc.$(OBJEXT) HttpHdrRange.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
 	HttpHdrScTarget.$(OBJEXT) HttpHdrContRange.$(OBJEXT) \
 	HttpHeader.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
 	HttpBody.$(OBJEXT) HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) \
 	HttpRequest.$(OBJEXT) HttpRequestMethod.$(OBJEXT) \
 	icmp.$(OBJEXT) icp_v2.$(OBJEXT) icp_v3.$(OBJEXT) \
-	$(am__objects_12) int.$(OBJEXT) internal.$(OBJEXT) \
-	ipc.$(OBJEXT) ipcache.$(OBJEXT) $(am__objects_13) \
+	$(am__objects_13) int.$(OBJEXT) internal.$(OBJEXT) \
+	ipc.$(OBJEXT) ipcache.$(OBJEXT) $(am__objects_14) \
 	list.$(OBJEXT) logfile.$(OBJEXT) main.$(OBJEXT) mem.$(OBJEXT) \
 	mem_node.$(OBJEXT) MemBuf.$(OBJEXT) MemObject.$(OBJEXT) \
 	mime.$(OBJEXT) multicast.$(OBJEXT) neighbors.$(OBJEXT) \
 	net_db.$(OBJEXT) Packer.$(OBJEXT) Parsing.$(OBJEXT) \
-	$(am__objects_14) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
+	$(am__objects_15) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
 	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
-	refresh.$(OBJEXT) send-announce.$(OBJEXT) $(am__objects_16) \
-	SquidNew.$(OBJEXT) tunnel.$(OBJEXT) $(am__objects_18) \
+	refresh.$(OBJEXT) send-announce.$(OBJEXT) $(am__objects_17) \
+	SquidNew.$(OBJEXT) tunnel.$(OBJEXT) $(am__objects_19) \
 	stat.$(OBJEXT) StatHist.$(OBJEXT) String.$(OBJEXT) \
 	stmem.$(OBJEXT) store.$(OBJEXT) StoreFileSystem.$(OBJEXT) \
 	store_io.$(OBJEXT) StoreIOState.$(OBJEXT) \
@@ -332,14 +333,14 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
 	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
 	Server.$(OBJEXT) SwapDir.$(OBJEXT) time.$(OBJEXT) \
-	tools.$(OBJEXT) $(am__objects_19) url.$(OBJEXT) \
+	tools.$(OBJEXT) $(am__objects_20) url.$(OBJEXT) \
 	URLScheme.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) \
 	wais.$(OBJEXT) wccp.$(OBJEXT) whois.$(OBJEXT) \
-	wordlist.$(OBJEXT) $(am__objects_21)
+	wordlist.$(OBJEXT) $(am__objects_22)
 nodist_squid_OBJECTS = repl_modules.$(OBJEXT) globals.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 squid_OBJECTS = $(am_squid_OBJECTS) $(nodist_squid_OBJECTS)
-am__objects_25 = ../test-suite/test_tools.$(OBJEXT) globals.$(OBJEXT)
+am__objects_26 = ../test-suite/test_tools.$(OBJEXT) globals.$(OBJEXT)
 am_tests_testACLMaxUserIP_OBJECTS = acl.$(OBJEXT) \
 	ACLChecklist.$(OBJEXT) ACLMaxUserIP.$(OBJEXT) \
 	ACLProxyAuth.$(OBJEXT) ACLRegexData.$(OBJEXT) \
@@ -354,10 +355,10 @@ am_tests_testACLMaxUserIP_OBJECTS = acl.$(OBJEXT) \
 	tests/stub_MemObject.$(OBJEXT) tests/stub_store.$(OBJEXT) \
 	tests/testACLMaxUserIP.$(OBJEXT) tests/testMain.$(OBJEXT) \
 	time.$(OBJEXT) mem.$(OBJEXT) MemBuf.$(OBJEXT) \
-	wordlist.$(OBJEXT) $(am__objects_25)
+	wordlist.$(OBJEXT) $(am__objects_26)
 tests_testACLMaxUserIP_OBJECTS = $(am_tests_testACLMaxUserIP_OBJECTS)
 am_tests_testAuth_OBJECTS = tests/testAuth.$(OBJEXT) \
-	tests/testMain.$(OBJEXT) $(am__objects_25) \
+	tests/testMain.$(OBJEXT) $(am__objects_26) \
 	authenticate.$(OBJEXT) ConfigParser.$(OBJEXT) \
 	tests/stub_acl.$(OBJEXT) tests/stub_cache_cf.$(OBJEXT) \
 	tests/stub_helper.$(OBJEXT) cbdata.$(OBJEXT) String.$(OBJEXT) \
@@ -379,7 +380,7 @@ am_tests_testAuth_OBJECTS = tests/testAuth.$(OBJEXT) \
 	URLScheme.$(OBJEXT) wordlist.$(OBJEXT)
 tests_testAuth_OBJECTS = $(am_tests_testAuth_OBJECTS)
 am_tests_testBoilerplate_OBJECTS = tests/testBoilerplate.$(OBJEXT) \
-	tests/testMain.$(OBJEXT) $(am__objects_25) time.$(OBJEXT)
+	tests/testMain.$(OBJEXT) $(am__objects_26) time.$(OBJEXT)
 tests_testBoilerplate_OBJECTS = $(am_tests_testBoilerplate_OBJECTS)
 am__tests_testCacheManager_SOURCES_DIST = debug.cc globals.cc \
 	HttpRequest.cc HttpRequestMethod.cc mem.cc String.cc \
@@ -389,9 +390,9 @@ am__tests_testCacheManager_SOURCES_DIST = debug.cc globals.cc \
 	ACLUserData.cc authenticate.cc BodyReader.cc cache_manager.cc \
 	cache_cf.cc CacheDigest.cc carp.cc cbdata.cc client_db.cc \
 	client_side.cc client_side_reply.cc client_side_request.cc \
-	clientStream.cc comm_select.cc comm_poll.cc comm_poll.h \
-	comm_epoll.cc comm_epoll.h comm_kqueue.cc comm_kqueue.h \
-	ConfigOption.cc ConfigParser.cc CommonPool.h \
+	clientStream.cc comm_select.cc comm_select.h comm_poll.cc \
+	comm_poll.h comm_epoll.cc comm_epoll.h comm_kqueue.cc \
+	comm_kqueue.h ConfigOption.cc ConfigParser.cc CommonPool.h \
 	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
 	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
 	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
@@ -440,43 +441,41 @@ am_tests_testCacheManager_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
 	client_db.$(OBJEXT) client_side.$(OBJEXT) \
 	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
-	clientStream.$(OBJEXT) comm_select.$(OBJEXT) \
-	comm_poll.$(OBJEXT) comm_epoll.$(OBJEXT) comm_kqueue.$(OBJEXT) \
-	ConfigOption.$(OBJEXT) ConfigParser.$(OBJEXT) $(am__objects_5) \
-	disk.$(OBJEXT) $(am__objects_7) event.$(OBJEXT) \
-	errorpage.$(OBJEXT) $(am__objects_9) ETag.$(OBJEXT) \
-	external_acl.$(OBJEXT) ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) \
-	fde.$(OBJEXT) forward.$(OBJEXT) fqdncache.$(OBJEXT) \
-	ftp.$(OBJEXT) gopher.$(OBJEXT) helper.$(OBJEXT) \
-	$(am__objects_10) http.$(OBJEXT) HttpBody.$(OBJEXT) \
-	HttpHeader.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
-	HttpHdrCc.$(OBJEXT) HttpHdrContRange.$(OBJEXT) \
-	HttpHdrRange.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
-	HttpHdrScTarget.$(OBJEXT) HttpMsg.$(OBJEXT) \
-	HttpReply.$(OBJEXT) HttpStatusLine.$(OBJEXT) icmp.$(OBJEXT) \
-	icp_v2.$(OBJEXT) icp_v3.$(OBJEXT) $(am__objects_12) \
-	ipc.$(OBJEXT) ipcache.$(OBJEXT) int.$(OBJEXT) \
-	internal.$(OBJEXT) list.$(OBJEXT) logfile.$(OBJEXT) \
-	multicast.$(OBJEXT) mem_node.$(OBJEXT) MemBuf.$(OBJEXT) \
-	MemObject.$(OBJEXT) mime.$(OBJEXT) neighbors.$(OBJEXT) \
-	net_db.$(OBJEXT) Packer.$(OBJEXT) Parsing.$(OBJEXT) \
-	pconn.$(OBJEXT) peer_digest.$(OBJEXT) peer_select.$(OBJEXT) \
-	redirect.$(OBJEXT) referer.$(OBJEXT) refresh.$(OBJEXT) \
-	Server.$(OBJEXT) $(am__objects_16) $(am__objects_18) \
-	stat.$(OBJEXT) StatHist.$(OBJEXT) stmem.$(OBJEXT) \
-	store.$(OBJEXT) store_client.$(OBJEXT) store_digest.$(OBJEXT) \
-	store_dir.$(OBJEXT) store_io.$(OBJEXT) store_key_md5.$(OBJEXT) \
-	store_log.$(OBJEXT) store_rebuild.$(OBJEXT) \
-	store_swapin.$(OBJEXT) store_swapmeta.$(OBJEXT) \
-	store_swapout.$(OBJEXT) StoreFileSystem.$(OBJEXT) \
-	StoreIOState.$(OBJEXT) StoreMeta.$(OBJEXT) \
-	StoreMetaMD5.$(OBJEXT) StoreMetaSTD.$(OBJEXT) \
-	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
-	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
-	tools.$(OBJEXT) tunnel.$(OBJEXT) SwapDir.$(OBJEXT) \
-	url.$(OBJEXT) URLScheme.$(OBJEXT) urn.$(OBJEXT) \
-	useragent.$(OBJEXT) wais.$(OBJEXT) whois.$(OBJEXT) \
-	wordlist.$(OBJEXT)
+	clientStream.$(OBJEXT) $(am__objects_4) ConfigOption.$(OBJEXT) \
+	ConfigParser.$(OBJEXT) $(am__objects_6) disk.$(OBJEXT) \
+	$(am__objects_8) event.$(OBJEXT) errorpage.$(OBJEXT) \
+	$(am__objects_10) ETag.$(OBJEXT) external_acl.$(OBJEXT) \
+	ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) fde.$(OBJEXT) \
+	forward.$(OBJEXT) fqdncache.$(OBJEXT) ftp.$(OBJEXT) \
+	gopher.$(OBJEXT) helper.$(OBJEXT) $(am__objects_11) \
+	http.$(OBJEXT) HttpBody.$(OBJEXT) HttpHeader.$(OBJEXT) \
+	HttpHeaderTools.$(OBJEXT) HttpHdrCc.$(OBJEXT) \
+	HttpHdrContRange.$(OBJEXT) HttpHdrRange.$(OBJEXT) \
+	HttpHdrSc.$(OBJEXT) HttpHdrScTarget.$(OBJEXT) \
+	HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) HttpStatusLine.$(OBJEXT) \
+	icmp.$(OBJEXT) icp_v2.$(OBJEXT) icp_v3.$(OBJEXT) \
+	$(am__objects_13) ipc.$(OBJEXT) ipcache.$(OBJEXT) \
+	int.$(OBJEXT) internal.$(OBJEXT) list.$(OBJEXT) \
+	logfile.$(OBJEXT) multicast.$(OBJEXT) mem_node.$(OBJEXT) \
+	MemBuf.$(OBJEXT) MemObject.$(OBJEXT) mime.$(OBJEXT) \
+	neighbors.$(OBJEXT) net_db.$(OBJEXT) Packer.$(OBJEXT) \
+	Parsing.$(OBJEXT) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
+	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
+	refresh.$(OBJEXT) Server.$(OBJEXT) $(am__objects_17) \
+	$(am__objects_19) stat.$(OBJEXT) StatHist.$(OBJEXT) \
+	stmem.$(OBJEXT) store.$(OBJEXT) store_client.$(OBJEXT) \
+	store_digest.$(OBJEXT) store_dir.$(OBJEXT) store_io.$(OBJEXT) \
+	store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
+	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
+	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
+	StoreFileSystem.$(OBJEXT) StoreIOState.$(OBJEXT) \
+	StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
+	StoreMetaSTD.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
+	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
+	StoreSwapLogData.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
+	SwapDir.$(OBJEXT) url.$(OBJEXT) URLScheme.$(OBJEXT) \
+	urn.$(OBJEXT) useragent.$(OBJEXT) wais.$(OBJEXT) \
+	whois.$(OBJEXT) wordlist.$(OBJEXT)
 nodist_tests_testCacheManager_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testCacheManager_OBJECTS = $(am_tests_testCacheManager_OBJECTS) \
@@ -514,7 +513,7 @@ am__tests_testCoss_SOURCES_DIST = tests/testCoss.cc tests/testMain.cc \
 	DiskIO/WriteRequest.cc DiskIO/WriteRequest.h DiskIO/DiskFile.h \
 	DiskIO/DiskIOStrategy.h DiskIO/IORequestor.h \
 	DiskIO/DiskIOModule.h
-am__objects_26 = $(am__objects_25) $(am__objects_5) \
+am__objects_27 = $(am__objects_26) $(am__objects_6) \
 	CacheDigest.$(OBJEXT) ConfigParser.$(OBJEXT) HttpMsg.$(OBJEXT) \
 	store_dir.$(OBJEXT) store.$(OBJEXT) \
 	HttpRequestMethod.$(OBJEXT) store_key_md5.$(OBJEXT) \
@@ -538,7 +537,7 @@ am__objects_26 = $(am__objects_25) $(am__objects_5) \
 	tests/stub_access_log.$(OBJEXT) refresh.$(OBJEXT) \
 	tests/stub_store_client.$(OBJEXT) tests/stub_tools.$(OBJEXT) \
 	time.$(OBJEXT) URLScheme.$(OBJEXT) wordlist.$(OBJEXT)
-am__objects_27 = tests/stub_store_rebuild.$(OBJEXT) \
+am__objects_28 = tests/stub_store_rebuild.$(OBJEXT) \
 	tests/stub_internal.$(OBJEXT) fd.$(OBJEXT) disk.$(OBJEXT) \
 	filemap.$(OBJEXT) HttpBody.$(OBJEXT) HttpReply.$(OBJEXT) \
 	HttpStatusLine.$(OBJEXT) int.$(OBJEXT) list.$(OBJEXT) \
@@ -548,15 +547,15 @@ am__objects_27 = tests/stub_store_rebuild.$(OBJEXT) \
 	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
 	StoreMetaVary.$(OBJEXT) StoreFileSystem.$(OBJEXT) \
 	store_io.$(OBJEXT) store_swapout.$(OBJEXT) \
-	store_swapmeta.$(OBJEXT) unlinkd.$(OBJEXT) $(am__objects_26) \
-	$(am__objects_6)
+	store_swapmeta.$(OBJEXT) unlinkd.$(OBJEXT) $(am__objects_27) \
+	$(am__objects_7)
 am_tests_testCoss_OBJECTS = tests/testCoss.$(OBJEXT) \
-	tests/testMain.$(OBJEXT) $(am__objects_27)
+	tests/testMain.$(OBJEXT) $(am__objects_28)
 tests_testCoss_OBJECTS = $(am_tests_testCoss_OBJECTS)
 am__DEPENDENCIES_1 = libsquid.la libauth.la \
 	DiskIO/Blocking/BlockingDiskIOModule.o \
 	repl/lru/store_repl_lru.o
-am__objects_28 = tests/testHeader_ACL.$(OBJEXT) \
+am__objects_29 = tests/testHeader_ACL.$(OBJEXT) \
 	tests/testHeader_ConfigParser.$(OBJEXT) \
 	tests/testHeader_client_side_request.$(OBJEXT) \
 	tests/testHeader_dlink.$(OBJEXT) \
@@ -569,7 +568,7 @@ am__objects_28 = tests/testHeader_ACL.$(OBJEXT) \
 	tests/testHeader_URLScheme.$(OBJEXT) \
 	tests/testHeader_wordlist.$(OBJEXT)
 am_tests_testHeaders_OBJECTS = tests/testMain.$(OBJEXT) \
-	$(am__objects_28)
+	$(am__objects_29)
 tests_testHeaders_OBJECTS = $(am_tests_testHeaders_OBJECTS)
 am__tests_testHttpRequest_SOURCES_DIST = debug.cc globals.cc \
 	HttpRequest.cc HttpRequestMethod.cc mem.cc String.cc \
@@ -580,7 +579,8 @@ am__tests_testHttpRequest_SOURCES_DIST = debug.cc globals.cc \
 	cache_manager.cc cache_cf.cc CacheDigest.cc carp.cc cbdata.cc \
 	client_db.cc client_side.cc client_side_reply.cc \
 	client_side_request.cc clientStream.cc comm_select.cc \
-	comm_poll.cc comm_epoll.cc comm_kqueue.cc ConfigOption.cc \
+	comm_select.h comm_poll.cc comm_poll.h comm_epoll.cc \
+	comm_epoll.h comm_kqueue.cc comm_kqueue.h ConfigOption.cc \
 	ConfigParser.cc CommonPool.h CompositePoolNode.h \
 	delay_pools.cc DelayId.cc DelayId.h DelayIdComposite.h \
 	DelayBucket.cc DelayBucket.h DelayConfig.cc DelayConfig.h \
@@ -630,43 +630,41 @@ am_tests_testHttpRequest_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
 	client_db.$(OBJEXT) client_side.$(OBJEXT) \
 	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
-	clientStream.$(OBJEXT) comm_select.$(OBJEXT) \
-	comm_poll.$(OBJEXT) comm_epoll.$(OBJEXT) comm_kqueue.$(OBJEXT) \
-	ConfigOption.$(OBJEXT) ConfigParser.$(OBJEXT) $(am__objects_5) \
-	disk.$(OBJEXT) $(am__objects_7) event.$(OBJEXT) \
-	errorpage.$(OBJEXT) $(am__objects_9) ETag.$(OBJEXT) \
-	external_acl.$(OBJEXT) ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) \
-	fde.$(OBJEXT) forward.$(OBJEXT) fqdncache.$(OBJEXT) \
-	ftp.$(OBJEXT) gopher.$(OBJEXT) helper.$(OBJEXT) \
-	$(am__objects_10) http.$(OBJEXT) HttpBody.$(OBJEXT) \
-	HttpHeader.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
-	HttpHdrCc.$(OBJEXT) HttpHdrContRange.$(OBJEXT) \
-	HttpHdrRange.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
-	HttpHdrScTarget.$(OBJEXT) HttpMsg.$(OBJEXT) \
-	HttpReply.$(OBJEXT) HttpStatusLine.$(OBJEXT) icmp.$(OBJEXT) \
-	icp_v2.$(OBJEXT) icp_v3.$(OBJEXT) $(am__objects_12) \
-	ipc.$(OBJEXT) ipcache.$(OBJEXT) int.$(OBJEXT) \
-	internal.$(OBJEXT) list.$(OBJEXT) logfile.$(OBJEXT) \
-	multicast.$(OBJEXT) mem_node.$(OBJEXT) MemBuf.$(OBJEXT) \
-	MemObject.$(OBJEXT) mime.$(OBJEXT) neighbors.$(OBJEXT) \
-	net_db.$(OBJEXT) Packer.$(OBJEXT) Parsing.$(OBJEXT) \
-	pconn.$(OBJEXT) peer_digest.$(OBJEXT) peer_select.$(OBJEXT) \
-	redirect.$(OBJEXT) referer.$(OBJEXT) refresh.$(OBJEXT) \
-	Server.$(OBJEXT) $(am__objects_16) $(am__objects_18) \
-	stat.$(OBJEXT) StatHist.$(OBJEXT) stmem.$(OBJEXT) \
-	store.$(OBJEXT) store_client.$(OBJEXT) store_digest.$(OBJEXT) \
-	store_dir.$(OBJEXT) store_io.$(OBJEXT) store_key_md5.$(OBJEXT) \
-	store_log.$(OBJEXT) store_rebuild.$(OBJEXT) \
-	store_swapin.$(OBJEXT) store_swapmeta.$(OBJEXT) \
-	store_swapout.$(OBJEXT) StoreFileSystem.$(OBJEXT) \
-	StoreIOState.$(OBJEXT) StoreMeta.$(OBJEXT) \
-	StoreMetaMD5.$(OBJEXT) StoreMetaSTD.$(OBJEXT) \
-	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
-	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
-	tools.$(OBJEXT) tunnel.$(OBJEXT) SwapDir.$(OBJEXT) \
-	url.$(OBJEXT) URLScheme.$(OBJEXT) urn.$(OBJEXT) \
-	useragent.$(OBJEXT) wais.$(OBJEXT) whois.$(OBJEXT) \
-	wordlist.$(OBJEXT)
+	clientStream.$(OBJEXT) $(am__objects_4) ConfigOption.$(OBJEXT) \
+	ConfigParser.$(OBJEXT) $(am__objects_6) disk.$(OBJEXT) \
+	$(am__objects_8) event.$(OBJEXT) errorpage.$(OBJEXT) \
+	$(am__objects_10) ETag.$(OBJEXT) external_acl.$(OBJEXT) \
+	ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) fde.$(OBJEXT) \
+	forward.$(OBJEXT) fqdncache.$(OBJEXT) ftp.$(OBJEXT) \
+	gopher.$(OBJEXT) helper.$(OBJEXT) $(am__objects_11) \
+	http.$(OBJEXT) HttpBody.$(OBJEXT) HttpHeader.$(OBJEXT) \
+	HttpHeaderTools.$(OBJEXT) HttpHdrCc.$(OBJEXT) \
+	HttpHdrContRange.$(OBJEXT) HttpHdrRange.$(OBJEXT) \
+	HttpHdrSc.$(OBJEXT) HttpHdrScTarget.$(OBJEXT) \
+	HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) HttpStatusLine.$(OBJEXT) \
+	icmp.$(OBJEXT) icp_v2.$(OBJEXT) icp_v3.$(OBJEXT) \
+	$(am__objects_13) ipc.$(OBJEXT) ipcache.$(OBJEXT) \
+	int.$(OBJEXT) internal.$(OBJEXT) list.$(OBJEXT) \
+	logfile.$(OBJEXT) multicast.$(OBJEXT) mem_node.$(OBJEXT) \
+	MemBuf.$(OBJEXT) MemObject.$(OBJEXT) mime.$(OBJEXT) \
+	neighbors.$(OBJEXT) net_db.$(OBJEXT) Packer.$(OBJEXT) \
+	Parsing.$(OBJEXT) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
+	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
+	refresh.$(OBJEXT) Server.$(OBJEXT) $(am__objects_17) \
+	$(am__objects_19) stat.$(OBJEXT) StatHist.$(OBJEXT) \
+	stmem.$(OBJEXT) store.$(OBJEXT) store_client.$(OBJEXT) \
+	store_digest.$(OBJEXT) store_dir.$(OBJEXT) store_io.$(OBJEXT) \
+	store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
+	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
+	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
+	StoreFileSystem.$(OBJEXT) StoreIOState.$(OBJEXT) \
+	StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
+	StoreMetaSTD.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
+	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
+	StoreSwapLogData.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
+	SwapDir.$(OBJEXT) url.$(OBJEXT) URLScheme.$(OBJEXT) \
+	urn.$(OBJEXT) useragent.$(OBJEXT) wais.$(OBJEXT) \
+	whois.$(OBJEXT) wordlist.$(OBJEXT)
 nodist_tests_testHttpRequest_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testHttpRequest_OBJECTS = $(am_tests_testHttpRequest_OBJECTS) \
@@ -705,7 +703,7 @@ am__tests_testNull_SOURCES_DIST = tests/testNull.cc tests/testMain.cc \
 	DiskIO/DiskIOStrategy.h DiskIO/IORequestor.h \
 	DiskIO/DiskIOModule.h
 am_tests_testNull_OBJECTS = tests/testNull.$(OBJEXT) \
-	tests/testMain.$(OBJEXT) $(am__objects_27)
+	tests/testMain.$(OBJEXT) $(am__objects_28)
 tests_testNull_OBJECTS = $(am_tests_testNull_OBJECTS)
 am__tests_testStore_SOURCES_DIST = tests/stub_store_swapout.cc \
 	tests/testMain.cc tests/stub_MemObject.cc tests/testStore.cc \
@@ -741,11 +739,11 @@ am_tests_testStore_OBJECTS = tests/stub_store_swapout.$(OBJEXT) \
 	tests/testStoreController.$(OBJEXT) \
 	tests/testStoreHashIndex.$(OBJEXT) tests/TestSwapDir.$(OBJEXT) \
 	tests/stub_fd.$(OBJEXT) tests/stub_HttpReply.$(OBJEXT) \
-	$(am__objects_26)
+	$(am__objects_27)
 tests_testStore_OBJECTS = $(am_tests_testStore_OBJECTS)
 am_tests_testString_OBJECTS = mem.$(OBJEXT) String.$(OBJEXT) \
 	tests/testMain.$(OBJEXT) tests/testString.$(OBJEXT) \
-	$(am__objects_25) time.$(OBJEXT)
+	$(am__objects_26) time.$(OBJEXT)
 tests_testString_OBJECTS = $(am_tests_testString_OBJECTS)
 am__tests_testURL_SOURCES_DIST = debug.cc url.cc URLScheme.cc \
 	globals.cc HttpRequest.cc HttpRequestMethod.cc mem.cc \
@@ -756,8 +754,9 @@ am__tests_testURL_SOURCES_DIST = debug.cc url.cc URLScheme.cc \
 	ACLUserData.cc authenticate.cc BodyReader.cc cache_manager.cc \
 	cache_cf.cc CacheDigest.cc carp.cc cbdata.cc client_db.cc \
 	client_side.cc client_side_reply.cc client_side_request.cc \
-	clientStream.cc comm_select.cc comm_poll.cc comm_epoll.cc \
-	comm_kqueue.cc ConfigOption.cc ConfigParser.cc CommonPool.h \
+	clientStream.cc comm_select.cc comm_select.h comm_poll.cc \
+	comm_poll.h comm_epoll.cc comm_epoll.h comm_kqueue.cc \
+	comm_kqueue.h ConfigOption.cc ConfigParser.cc CommonPool.h \
 	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
 	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
 	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
@@ -806,42 +805,40 @@ am_tests_testURL_OBJECTS = debug.$(OBJEXT) url.$(OBJEXT) \
 	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
 	client_db.$(OBJEXT) client_side.$(OBJEXT) \
 	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
-	clientStream.$(OBJEXT) comm_select.$(OBJEXT) \
-	comm_poll.$(OBJEXT) comm_epoll.$(OBJEXT) comm_kqueue.$(OBJEXT) \
-	ConfigOption.$(OBJEXT) ConfigParser.$(OBJEXT) $(am__objects_5) \
-	disk.$(OBJEXT) $(am__objects_7) event.$(OBJEXT) \
-	errorpage.$(OBJEXT) $(am__objects_9) ETag.$(OBJEXT) \
-	external_acl.$(OBJEXT) ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) \
-	fde.$(OBJEXT) forward.$(OBJEXT) fqdncache.$(OBJEXT) \
-	ftp.$(OBJEXT) gopher.$(OBJEXT) helper.$(OBJEXT) \
-	$(am__objects_10) http.$(OBJEXT) HttpBody.$(OBJEXT) \
-	HttpHeader.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
-	HttpHdrCc.$(OBJEXT) HttpHdrContRange.$(OBJEXT) \
-	HttpHdrRange.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
-	HttpHdrScTarget.$(OBJEXT) HttpMsg.$(OBJEXT) \
-	HttpReply.$(OBJEXT) HttpStatusLine.$(OBJEXT) icmp.$(OBJEXT) \
-	icp_v2.$(OBJEXT) icp_v3.$(OBJEXT) $(am__objects_12) \
-	ipc.$(OBJEXT) ipcache.$(OBJEXT) int.$(OBJEXT) \
-	internal.$(OBJEXT) list.$(OBJEXT) logfile.$(OBJEXT) \
-	multicast.$(OBJEXT) mem_node.$(OBJEXT) MemBuf.$(OBJEXT) \
-	MemObject.$(OBJEXT) mime.$(OBJEXT) neighbors.$(OBJEXT) \
-	net_db.$(OBJEXT) Packer.$(OBJEXT) Parsing.$(OBJEXT) \
-	pconn.$(OBJEXT) peer_digest.$(OBJEXT) peer_select.$(OBJEXT) \
-	redirect.$(OBJEXT) referer.$(OBJEXT) refresh.$(OBJEXT) \
-	Server.$(OBJEXT) $(am__objects_16) $(am__objects_18) \
-	stat.$(OBJEXT) StatHist.$(OBJEXT) stmem.$(OBJEXT) \
-	store.$(OBJEXT) store_client.$(OBJEXT) store_digest.$(OBJEXT) \
-	store_dir.$(OBJEXT) store_io.$(OBJEXT) store_key_md5.$(OBJEXT) \
-	store_log.$(OBJEXT) store_rebuild.$(OBJEXT) \
-	store_swapin.$(OBJEXT) store_swapmeta.$(OBJEXT) \
-	store_swapout.$(OBJEXT) StoreFileSystem.$(OBJEXT) \
-	StoreIOState.$(OBJEXT) StoreMeta.$(OBJEXT) \
-	StoreMetaMD5.$(OBJEXT) StoreMetaSTD.$(OBJEXT) \
-	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
-	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
-	tools.$(OBJEXT) tunnel.$(OBJEXT) SwapDir.$(OBJEXT) \
-	urn.$(OBJEXT) useragent.$(OBJEXT) wais.$(OBJEXT) \
-	whois.$(OBJEXT) wordlist.$(OBJEXT)
+	clientStream.$(OBJEXT) $(am__objects_4) ConfigOption.$(OBJEXT) \
+	ConfigParser.$(OBJEXT) $(am__objects_6) disk.$(OBJEXT) \
+	$(am__objects_8) event.$(OBJEXT) errorpage.$(OBJEXT) \
+	$(am__objects_10) ETag.$(OBJEXT) external_acl.$(OBJEXT) \
+	ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) fde.$(OBJEXT) \
+	forward.$(OBJEXT) fqdncache.$(OBJEXT) ftp.$(OBJEXT) \
+	gopher.$(OBJEXT) helper.$(OBJEXT) $(am__objects_11) \
+	http.$(OBJEXT) HttpBody.$(OBJEXT) HttpHeader.$(OBJEXT) \
+	HttpHeaderTools.$(OBJEXT) HttpHdrCc.$(OBJEXT) \
+	HttpHdrContRange.$(OBJEXT) HttpHdrRange.$(OBJEXT) \
+	HttpHdrSc.$(OBJEXT) HttpHdrScTarget.$(OBJEXT) \
+	HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) HttpStatusLine.$(OBJEXT) \
+	icmp.$(OBJEXT) icp_v2.$(OBJEXT) icp_v3.$(OBJEXT) \
+	$(am__objects_13) ipc.$(OBJEXT) ipcache.$(OBJEXT) \
+	int.$(OBJEXT) internal.$(OBJEXT) list.$(OBJEXT) \
+	logfile.$(OBJEXT) multicast.$(OBJEXT) mem_node.$(OBJEXT) \
+	MemBuf.$(OBJEXT) MemObject.$(OBJEXT) mime.$(OBJEXT) \
+	neighbors.$(OBJEXT) net_db.$(OBJEXT) Packer.$(OBJEXT) \
+	Parsing.$(OBJEXT) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
+	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
+	refresh.$(OBJEXT) Server.$(OBJEXT) $(am__objects_17) \
+	$(am__objects_19) stat.$(OBJEXT) StatHist.$(OBJEXT) \
+	stmem.$(OBJEXT) store.$(OBJEXT) store_client.$(OBJEXT) \
+	store_digest.$(OBJEXT) store_dir.$(OBJEXT) store_io.$(OBJEXT) \
+	store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
+	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
+	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
+	StoreFileSystem.$(OBJEXT) StoreIOState.$(OBJEXT) \
+	StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
+	StoreMetaSTD.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
+	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
+	StoreSwapLogData.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
+	SwapDir.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) \
+	wais.$(OBJEXT) whois.$(OBJEXT) wordlist.$(OBJEXT)
 nodist_tests_testURL_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testURL_OBJECTS = $(am_tests_testURL_OBJECTS) \
@@ -880,7 +877,7 @@ am__tests_testUfs_SOURCES_DIST = tests/testUfs.cc tests/testMain.cc \
 	DiskIO/DiskIOStrategy.h DiskIO/IORequestor.h \
 	DiskIO/DiskIOModule.h
 am_tests_testUfs_OBJECTS = tests/testUfs.$(OBJEXT) \
-	tests/testMain.$(OBJEXT) $(am__objects_27)
+	tests/testMain.$(OBJEXT) $(am__objects_28)
 tests_testUfs_OBJECTS = $(am_tests_testUfs_OBJECTS)
 am__tests_test_http_range_SOURCES_DIST = tests/test_http_range.cc \
 	access_log.cc acl.cc acl_noncore.cc ACLChecklist.cc \
@@ -888,8 +885,9 @@ am__tests_test_http_range_SOURCES_DIST = tests/test_http_range.cc \
 	ACLUserData.cc authenticate.cc BodyReader.cc cache_cf.cc \
 	cache_manager.cc CacheDigest.cc carp.cc cbdata.cc client_db.cc \
 	client_side.cc client_side_reply.cc client_side_request.cc \
-	clientStream.cc comm_select.cc comm_poll.cc comm_epoll.cc \
-	comm_kqueue.cc ConfigOption.cc ConfigParser.cc debug.cc \
+	clientStream.cc comm_select.cc comm_select.h comm_poll.cc \
+	comm_poll.h comm_epoll.cc comm_epoll.h comm_kqueue.cc \
+	comm_kqueue.h ConfigOption.cc ConfigParser.cc debug.cc \
 	CommonPool.h CompositePoolNode.h delay_pools.cc DelayId.cc \
 	DelayId.h DelayIdComposite.h DelayBucket.cc DelayBucket.h \
 	DelayConfig.cc DelayConfig.h DelayPool.cc DelayPool.h \
@@ -936,31 +934,29 @@ am_tests_test_http_range_OBJECTS = tests/test_http_range.$(OBJEXT) \
 	cache_manager.$(OBJEXT) CacheDigest.$(OBJEXT) carp.$(OBJEXT) \
 	cbdata.$(OBJEXT) client_db.$(OBJEXT) client_side.$(OBJEXT) \
 	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
-	clientStream.$(OBJEXT) comm_select.$(OBJEXT) \
-	comm_poll.$(OBJEXT) comm_epoll.$(OBJEXT) comm_kqueue.$(OBJEXT) \
-	ConfigOption.$(OBJEXT) ConfigParser.$(OBJEXT) debug.$(OBJEXT) \
-	$(am__objects_5) disk.$(OBJEXT) $(am__objects_7) \
-	event.$(OBJEXT) errorpage.$(OBJEXT) $(am__objects_9) \
-	ETag.$(OBJEXT) external_acl.$(OBJEXT) \
-	ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) fde.$(OBJEXT) \
-	forward.$(OBJEXT) fqdncache.$(OBJEXT) ftp.$(OBJEXT) \
-	globals.$(OBJEXT) gopher.$(OBJEXT) helper.$(OBJEXT) \
-	$(am__objects_10) http.$(OBJEXT) HttpBody.$(OBJEXT) \
-	HttpHdrCc.$(OBJEXT) HttpHdrContRange.$(OBJEXT) \
-	HttpHdrRange.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
-	HttpHdrScTarget.$(OBJEXT) HttpHeader.$(OBJEXT) \
-	HttpHeaderTools.$(OBJEXT) HttpMsg.$(OBJEXT) \
-	HttpReply.$(OBJEXT) HttpRequest.$(OBJEXT) \
+	clientStream.$(OBJEXT) $(am__objects_4) ConfigOption.$(OBJEXT) \
+	ConfigParser.$(OBJEXT) debug.$(OBJEXT) $(am__objects_6) \
+	disk.$(OBJEXT) $(am__objects_8) event.$(OBJEXT) \
+	errorpage.$(OBJEXT) $(am__objects_10) ETag.$(OBJEXT) \
+	external_acl.$(OBJEXT) ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) \
+	fde.$(OBJEXT) forward.$(OBJEXT) fqdncache.$(OBJEXT) \
+	ftp.$(OBJEXT) globals.$(OBJEXT) gopher.$(OBJEXT) \
+	helper.$(OBJEXT) $(am__objects_11) http.$(OBJEXT) \
+	HttpBody.$(OBJEXT) HttpHdrCc.$(OBJEXT) \
+	HttpHdrContRange.$(OBJEXT) HttpHdrRange.$(OBJEXT) \
+	HttpHdrSc.$(OBJEXT) HttpHdrScTarget.$(OBJEXT) \
+	HttpHeader.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
+	HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) HttpRequest.$(OBJEXT) \
 	HttpRequestMethod.$(OBJEXT) HttpStatusLine.$(OBJEXT) \
 	icmp.$(OBJEXT) icp_v2.$(OBJEXT) icp_v3.$(OBJEXT) \
-	$(am__objects_12) int.$(OBJEXT) internal.$(OBJEXT) \
+	$(am__objects_13) int.$(OBJEXT) internal.$(OBJEXT) \
 	ipc.$(OBJEXT) ipcache.$(OBJEXT) list.$(OBJEXT) \
 	logfile.$(OBJEXT) mem.$(OBJEXT) mem_node.$(OBJEXT) \
 	MemObject.$(OBJEXT) mime.$(OBJEXT) multicast.$(OBJEXT) \
 	neighbors.$(OBJEXT) net_db.$(OBJEXT) Parsing.$(OBJEXT) \
 	peer_digest.$(OBJEXT) peer_select.$(OBJEXT) pconn.$(OBJEXT) \
 	redirect.$(OBJEXT) referer.$(OBJEXT) refresh.$(OBJEXT) \
-	Server.$(OBJEXT) $(am__objects_16) $(am__objects_18) \
+	Server.$(OBJEXT) $(am__objects_17) $(am__objects_19) \
 	stat.$(OBJEXT) StatHist.$(OBJEXT) stmem.$(OBJEXT) \
 	store.$(OBJEXT) store_client.$(OBJEXT) store_digest.$(OBJEXT) \
 	store_dir.$(OBJEXT) store_key_md5.$(OBJEXT) store_io.$(OBJEXT) \
@@ -991,7 +987,8 @@ am__ufsdump_SOURCES_DIST = debug.cc int.cc mem.cc store_key_md5.cc \
 	cache_manager.cc CacheDigest.cc carp.cc cbdata.cc client_db.cc \
 	client_side.cc client_side_reply.cc client_side_request.cc \
 	client_side_request.h clientStream.cc clientStream.h CommIO.h \
-	comm_select.cc comm_poll.cc comm_epoll.cc comm_kqueue.cc \
+	comm_select.cc comm_select.h comm_poll.cc comm_poll.h \
+	comm_epoll.cc comm_epoll.h comm_kqueue.cc comm_kqueue.h \
 	ConfigOption.cc defines.h CommonPool.h CompositePoolNode.h \
 	delay_pools.cc DelayId.cc DelayId.h DelayIdComposite.h \
 	DelayBucket.cc DelayBucket.h DelayConfig.cc DelayConfig.h \
@@ -1044,40 +1041,39 @@ am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) mem.$(OBJEXT) \
 	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
 	client_db.$(OBJEXT) client_side.$(OBJEXT) \
 	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
-	clientStream.$(OBJEXT) comm_select.$(OBJEXT) \
-	comm_poll.$(OBJEXT) comm_epoll.$(OBJEXT) comm_kqueue.$(OBJEXT) \
-	ConfigOption.$(OBJEXT) $(am__objects_5) disk.$(OBJEXT) \
-	$(am__objects_7) errorpage.$(OBJEXT) $(am__objects_9) \
-	ETag.$(OBJEXT) event.$(OBJEXT) external_acl.$(OBJEXT) \
+	clientStream.$(OBJEXT) $(am__objects_4) ConfigOption.$(OBJEXT) \
+	$(am__objects_6) disk.$(OBJEXT) $(am__objects_8) \
+	errorpage.$(OBJEXT) $(am__objects_10) ETag.$(OBJEXT) \
+	event.$(OBJEXT) external_acl.$(OBJEXT) \
 	ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) fde.$(OBJEXT) \
 	filemap.$(OBJEXT) forward.$(OBJEXT) fqdncache.$(OBJEXT) \
 	ftp.$(OBJEXT) gopher.$(OBJEXT) helper.$(OBJEXT) \
-	$(am__objects_10) http.$(OBJEXT) HttpStatusLine.$(OBJEXT) \
+	$(am__objects_11) http.$(OBJEXT) HttpStatusLine.$(OBJEXT) \
 	HttpHdrCc.$(OBJEXT) HttpHdrRange.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
 	HttpHdrScTarget.$(OBJEXT) HttpHdrContRange.$(OBJEXT) \
 	HttpHeader.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
 	HttpBody.$(OBJEXT) HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) \
 	HttpRequest.$(OBJEXT) HttpRequestMethod.$(OBJEXT) \
 	icmp.$(OBJEXT) icp_v2.$(OBJEXT) icp_v3.$(OBJEXT) \
-	$(am__objects_12) internal.$(OBJEXT) ipc.$(OBJEXT) \
-	ipcache.$(OBJEXT) $(am__objects_13) list.$(OBJEXT) \
+	$(am__objects_13) internal.$(OBJEXT) ipc.$(OBJEXT) \
+	ipcache.$(OBJEXT) $(am__objects_14) list.$(OBJEXT) \
 	logfile.$(OBJEXT) mem_node.$(OBJEXT) MemBuf.$(OBJEXT) \
 	MemObject.$(OBJEXT) mime.$(OBJEXT) multicast.$(OBJEXT) \
 	neighbors.$(OBJEXT) net_db.$(OBJEXT) Packer.$(OBJEXT) \
-	Parsing.$(OBJEXT) $(am__objects_14) pconn.$(OBJEXT) \
+	Parsing.$(OBJEXT) $(am__objects_15) pconn.$(OBJEXT) \
 	peer_digest.$(OBJEXT) peer_select.$(OBJEXT) redirect.$(OBJEXT) \
 	referer.$(OBJEXT) refresh.$(OBJEXT) send-announce.$(OBJEXT) \
-	$(am__objects_16) $(am__objects_18) tunnel.$(OBJEXT) \
+	$(am__objects_17) $(am__objects_19) tunnel.$(OBJEXT) \
 	Server.$(OBJEXT) SquidNew.$(OBJEXT) stat.$(OBJEXT) \
 	StatHist.$(OBJEXT) stmem.$(OBJEXT) store_io.$(OBJEXT) \
 	StoreIOState.$(OBJEXT) store_client.$(OBJEXT) \
 	store_digest.$(OBJEXT) store_dir.$(OBJEXT) store_log.$(OBJEXT) \
 	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
 	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
-	SwapDir.$(OBJEXT) tools.$(OBJEXT) $(am__objects_19) \
+	SwapDir.$(OBJEXT) tools.$(OBJEXT) $(am__objects_20) \
 	URLScheme.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) \
 	wais.$(OBJEXT) wccp.$(OBJEXT) whois.$(OBJEXT) \
-	wordlist.$(OBJEXT) $(am__objects_21)
+	wordlist.$(OBJEXT) $(am__objects_22)
 nodist_ufsdump_OBJECTS = repl_modules.$(OBJEXT) globals.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 ufsdump_OBJECTS = $(am_ufsdump_OBJECTS) $(nodist_ufsdump_OBJECTS)
@@ -1602,6 +1598,16 @@ squid_ACLSOURCES = \
 	ACLUserData.cc \
 	ACLUserData.h 
 
+squid_COMMSOURCES = \
+	comm_select.cc \
+	comm_select.h \
+	comm_poll.cc \
+	comm_poll.h \
+    comm_epoll.cc \
+    comm_epoll.h \
+	comm_kqueue.cc \
+	comm_kqueue.h
+
 
 # common library for all the binaries and tests. This is kindof a catch all
 # and smaller libraries split from this are encouraged. Using lt convenience
@@ -1652,11 +1658,8 @@ squid_SOURCES = \
 	ClientRequestContext.h \
 	clientStream.cc \
 	clientStream.h \
-        CommIO.h \
-	comm_select.cc \
-	comm_poll.cc \
-        comm_epoll.cc \
-	comm_kqueue.cc \
+    CommIO.h \
+	$(squid_COMMSOURCES) \
 	CommRead.h \
 	ConfigOption.cc \
 	ConfigParser.cc \
@@ -1961,11 +1964,8 @@ ufsdump_SOURCES = \
 	client_side_request.h \
 	clientStream.cc \
 	clientStream.h \
-        CommIO.h \
-	comm_select.cc \
-	comm_poll.cc \
-        comm_epoll.cc \
-	comm_kqueue.cc \
+	CommIO.h \
+	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	defines.h \
 	$(DELAY_POOL_SOURCE) \
@@ -2327,13 +2327,7 @@ tests_testCacheManager_SOURCES = \
 	client_side_reply.cc \
 	client_side_request.cc \
 	clientStream.cc \
-	comm_select.cc \
-	comm_poll.cc \
-	comm_poll.h \
-        comm_epoll.cc \
-        comm_epoll.h \
-	comm_kqueue.cc \
-	comm_kqueue.h \
+	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	$(DELAY_POOL_SOURCE) \
@@ -2495,10 +2489,7 @@ tests_test_http_range_SOURCES = \
 	client_side_reply.cc \
 	client_side_request.cc \
 	clientStream.cc \
-	comm_select.cc \
-	comm_poll.cc \
-        comm_epoll.cc \
-	comm_kqueue.cc \
+	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	debug.cc \
@@ -2650,10 +2641,7 @@ tests_testHttpRequest_SOURCES = \
 	client_side_reply.cc \
 	client_side_request.cc \
 	clientStream.cc \
-	comm_select.cc \
-	comm_poll.cc \
-        comm_epoll.cc \
-	comm_kqueue.cc \
+	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	$(DELAY_POOL_SOURCE) \
@@ -2986,10 +2974,7 @@ tests_testURL_SOURCES = \
 	client_side_reply.cc \
 	client_side_request.cc \
 	clientStream.cc \
-	comm_select.cc \
-	comm_poll.cc \
-        comm_epoll.cc \
-	comm_kqueue.cc \
+	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	$(DELAY_POOL_SOURCE) \
