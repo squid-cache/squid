@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.501 2006/06/11 20:48:45 robertc Exp $
+ * $Id: http.cc,v 1.502 2006/06/13 18:36:52 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -390,6 +390,8 @@ HttpStateData::cacheableReply()
 #define REFRESH_OVERRIDE(flag) \
 	((R = (R ? R : refreshLimits(entry->mem_obj->url))) , \
 	(R && R->flags.flag))
+#else
+#define REFRESH_OVERRIDE(flag) 0
 #endif
 
     if (surrogateNoStore)
