@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.154 2006/06/13 10:23:57 serassio Exp $
+#  $Id: Makefile.am,v 1.155 2006/06/13 20:52:05 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -338,10 +338,11 @@ squid_ACLSOURCES = \
 squid_COMMSOURCES = \
 	comm_select.cc \
 	comm_select.h \
+	comm_select_win32.cc \
 	comm_poll.cc \
 	comm_poll.h \
-    comm_epoll.cc \
-    comm_epoll.h \
+	comm_epoll.cc \
+	comm_epoll.h \
 	comm_kqueue.cc \
 	comm_kqueue.h
 
@@ -394,7 +395,7 @@ squid_SOURCES = \
 	ClientRequestContext.h \
 	clientStream.cc \
 	clientStream.h \
-    CommIO.h \
+	CommIO.h \
 	$(squid_COMMSOURCES) \
 	CommRead.h \
 	ConfigOption.cc \

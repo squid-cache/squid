@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.425 2006/05/31 17:29:00 wessels Exp $
+ * $Id: main.cc,v 1.426 2006/06/13 20:52:05 serassio Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -60,6 +60,9 @@
 #include "comm_poll.h"
 #endif
 #if USE_SELECT
+#include "comm_select.h"
+#endif
+#if USE_SELECT_WIN32
 #include "comm_select.h"
 #endif
 #include "SquidTime.h"
