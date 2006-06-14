@@ -39551,12 +39551,24 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 elif test "$ac_cv_func_select" = "yes" ; then
-        SELECT_TYPE="select"
+	case "$host_os" in
+	mingw|mingw32)
+	        SELECT_TYPE="select_win32"
+
+cat >>confdefs.h <<\_ACEOF
+#define USE_SELECT_WIN32 1
+_ACEOF
+
+		;;
+	*)
+	        SELECT_TYPE="select"
 
 cat >>confdefs.h <<\_ACEOF
 #define USE_SELECT 1
 _ACEOF
 
+		;;
+	esac
 else
         echo "Eep!  Can't find poll, kqueue, epoll, or select!"
         echo "I'll try select and hope for the best."
