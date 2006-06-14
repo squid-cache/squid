@@ -899,6 +899,9 @@
 /* Use select() for the IO loop */
 #undef USE_SELECT
 
+/* Use Winsock select() for the IO loop */
+#undef USE_SELECT_WIN32
+
 /* Define this to include code for SSL encryption. */
 #undef USE_SSL
 
