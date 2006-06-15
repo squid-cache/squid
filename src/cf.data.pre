@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.417 2006/06/11 20:48:45 robertc Exp $
+# $Id: cf.data.pre,v 1.418 2006/06/14 19:18:24 serassio Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -2557,7 +2557,7 @@ DOC_START
 	acl aclname proto    HTTP FTP ...
 	acl aclname method   GET POST ...
 	acl aclname browser  [-i] regexp ...
-	  # pattern match on User-Agent header
+	  # pattern match on User-Agent header (see also req_header below)
 	acl aclname referer_regex  [-i] regexp ...
 	  # pattern match on Referer header
 	  # Referer is highly unreliable, so use with care
@@ -2622,6 +2622,11 @@ DOC_START
 	  # NOTE: This does NOT match the reply. You cannot use this
 	  # to match the returned file type.
 
+	acl aclname req_header header-name [-i] any\.regex\.here
+	  # regex match against any of the known request headers.  May be
+	  # thought of as a superset of "browser", "referer" and "mime-type"
+	  # ACLs.
+
 	acl aclname rep_mime_type mime-type1 ...
 	  # regex match against the mime type of the reply received by
 	  # squid. Can be used to detect file download or some
@@ -2629,6 +2634,11 @@ DOC_START
 	  # NOTE: This has no effect in http_access rules. It only has
 	  # effect in rules that affect the reply data stream such as
 	  # http_reply_access.
+
+	acl aclname req_header header-name [-i] any\.regex\.here
+	  # regex match against any of the known request headers.  May be
+	  # thought of as a superset of "browser", "referer" and "mime-type"
+	  # ACLs.
 
 	acl acl_name external class_name [arguments...]
 	  # external ACL lookup via a helper class defined by the
