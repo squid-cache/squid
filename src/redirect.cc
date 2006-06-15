@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.112 2006/05/29 00:15:02 robertc Exp $
+ * $Id: redirect.cc,v 1.113 2006/06/14 19:29:30 serassio Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -94,6 +94,11 @@ redirectStateFree(redirectStateData * r)
 static void
 redirectStats(StoreEntry * sentry)
 {
+    if (redirectors == NULL) {
+        storeAppendPrintf(sentry, "No redirectors defined\n");
+        return;
+    }
+
     storeAppendPrintf(sentry, "Redirector Statistics:\n");
     helperStats(sentry, redirectors);
 
