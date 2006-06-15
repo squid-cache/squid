@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.498 2006/05/30 17:31:23 hno Exp $
+ * $Id: cache_cf.cc,v 1.499 2006/06/14 19:52:54 serassio Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -206,6 +206,15 @@ SetConfigFilename(char const *file_name, bool is_pipe)
         cfg_filename = token + 1;
 }
 
+static const char*
+skip_ws(const char* s)
+{
+    while (xisspace(*s))
+        ++s;
+
+    return s;
+}
+
 int
 parseConfigFile(const char *file_name, CacheManager & manager)
 {
@@ -291,13 +300,15 @@ parseConfigFile(const char *file_name, CacheManager & manager)
         if (config_input_line[0] == '\0')
             continue;
 
-        size_t config_input_line_len = strlen(config_input_line);
+        const char* append = tmp_line_len ? skip_ws(config_input_line) : config_input_line;
 
-        tmp_line = (char*)xrealloc(tmp_line, tmp_line_len + config_input_line_len + 1);
+        size_t append_len = strlen(append);
 
-        strcpy(tmp_line + tmp_line_len, config_input_line);
+        tmp_line = (char*)xrealloc(tmp_line, tmp_line_len + append_len + 1);
 
-        tmp_line_len += config_input_line_len;
+        strcpy(tmp_line + tmp_line_len, append);
+
+        tmp_line_len += append_len;
 
         if (tmp_line[tmp_line_len-1] == '\\') {
             debug(3, 5) ("parseConfigFile: tmp_line='%s'\n", tmp_line);
