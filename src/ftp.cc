@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.398 2006/05/19 20:22:56 wessels Exp $
+ * $Id: ftp.cc,v 1.399 2006/06/14 19:43:28 serassio Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1217,6 +1217,8 @@ FtpStateData::maybeReadData()
 
     data.read_pending = true;
 
+    commSetTimeout(data.fd, Config.Timeout.read, ftpTimeout, this);
+
     debugs(9,5,HERE << "queueing read on FD " << data.fd);
 
     entry->delayAwareRead(data.fd, data.readBuf->space(), read_sz, dataReadWrapper, this);
@@ -1327,7 +1329,6 @@ FtpStateData::processReplyBody()
 
     storeBufferFlush(entry);
 
-    commSetTimeout(data.fd, Config.Timeout.read, ftpTimeout, this);
     maybeReadData();
 }
 
@@ -2679,7 +2680,6 @@ ftpReadList(FtpStateData * ftpState)
          * on the data socket
          */
         commSetTimeout(ftpState->ctrl.fd, -1, NULL, NULL);
-        commSetTimeout(ftpState->data.fd, Config.Timeout.read, FtpStateData::ftpTimeout, ftpState);
         return;
     } else if (code == 150) {
         /* Accept data channel */
@@ -2725,8 +2725,6 @@ ftpReadRetr(FtpStateData * ftpState)
          * on the data socket
          */
         commSetTimeout(ftpState->ctrl.fd, -1, NULL, NULL);
-        commSetTimeout(ftpState->data.fd, Config.Timeout.read, FtpStateData::ftpTimeout,
-                       ftpState);
     } else if (code == 150) {
         /* Accept data channel */
         comm_accept(ftpState->data.fd, ftpAcceptDataConnection, ftpState);
