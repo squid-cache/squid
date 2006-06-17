@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsIOStrategy.cc,v 1.6 2006/05/29 00:15:03 robertc Exp $
+ * $Id: DiskThreadsIOStrategy.cc,v 1.7 2006/06/17 16:36:15 serassio Exp $
  *
  * DEBUG: section 79    Squid-side Disk I/O functions.
  * AUTHOR: Robert Collins
@@ -240,7 +240,7 @@ DiskThreadsIOStrategy::load()
 
     loadav = ql * 1000 / MAGIC1;
 
-    debug(47, 9) ("storeAufsDirCheckObj: load=%d\n", loadav);
+    debug(47, 9) ("DiskThreadsIOStrategy::load: load=%d\n", loadav);
 
     return loadav;
 }

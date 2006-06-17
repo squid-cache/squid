@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsDiskFile.cc,v 1.7 2006/05/31 17:25:41 wessels Exp $
+ * $Id: DiskThreadsDiskFile.cc,v 1.8 2006/06/17 16:36:15 serassio Exp $
  *
  * DEBUG: section 79    Disk IO Routines
  * AUTHOR: Robert Collins
@@ -246,7 +246,7 @@ DiskThreadsDiskFile::canRead() const
 void
 DiskThreadsDiskFile::write(WriteRequest * writeRequest)
 {
-    debug(79, 3) ("storeAufsWrite: FD %d\n", fd);
+    debug(79, 3) ("DiskThreadsDiskFile::write: FD %d\n", fd);
     statCounter.syscalls.disk.writes++;
     ++inProgressIOs;
 #if ASYNC_WRITE
@@ -354,7 +354,7 @@ DiskThreadsDiskFile::writeDone (int rvfd, int errflag, size_t len, WriteRequest:
 
 #endif
 
-    debug(79, 3) ("storeAufsWriteDone: FD %d, len %ld, err=%d\n",
+    debug(79, 3) ("DiskThreadsDiskFile::writeDone: FD %d, len %ld, err=%d\n",
                   fd, (long int) len, errflag);
 
     assert(++loop_detect < 10);
