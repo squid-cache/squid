@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.115 2006/05/19 17:19:10 wessels Exp $
+ * $Id: peer_digest.cc,v 1.116 2006/06/18 08:56:33 serassio Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -1072,7 +1072,7 @@ peerDigestUseful(const PeerDigest * pd)
 static int
 saneDiff(time_t diff)
 {
-    return abs(diff) > squid_curtime / 2 ? 0 : diff;
+    return abs((int) diff) > squid_curtime / 2 ? 0 : diff;
 }
 
 void
