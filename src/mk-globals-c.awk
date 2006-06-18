@@ -2,7 +2,7 @@
 # drop-in replacement for mk-globals-c.pl.
 # modified to work with Solaris awk (junk).
 # creates "globals.c" (on stdout) from "globals.h".
-# invoke similarly: perl -f mk-globals-c.pl  globals.h
+# invoke similarly:  perl mk-globals-c.pl globals.h
 #		-->  awk -f mk-globals-c.awk globals.h
 #
 # 2006 by Christopher Kerr.
@@ -16,13 +16,18 @@ Copyright != 1			{		 print; next }
 
 # arrays defined elsewhere
 /\[\];/				{			next }
+/^extern \"C\"/			{		 print; next }
 
-/^extern / {				     # process "^extern " input lines.
+#
+# Check exactly for lines beginning with "    extern", generated
+# from astyle (grrrrr ...)
+#
+/^    extern / {			     # process "^extern " input lines.
 					     #		 0 1	  2    #######
     # extern int variable; /* val */   -->   int variable; /* val */   #######
     ##########################################################################
-    len = length($0) - 7				# sub(/extern /, "")
-    str = substr($0, 8, len)				# strip "^extern ".
+    len = length($0) - 11				# sub(/extern /, "")
+    str = substr($0, 12, len)				# strip "^extern ".
 
     pos0 = index(str, ";")				# position of ";".
     pos1 = index(str, "/*")				# position of "/*".

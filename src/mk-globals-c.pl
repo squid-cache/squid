@@ -10,9 +10,25 @@ while (<>) {
 		print;
 		next;
 	}
+	if (/extern \"C\"/) {
+		print;
+		next;
+	}
+	if (/^}/) {
+		print;
+		next;
+	}
+	if (/^{/) {
+		print;
+		next;
+	}
 	next unless (/./);
 	next if (/\[\];$/);
-	die unless (/^extern\s+([^;]+);(.*)$/);
+#
+# Check exactly for lines beginning with "    extern", generated
+# from astyle (grrrrr ...)
+#
+	die unless (/^    extern\s+([^;]+);(.*)$/);
 	$var = $1;
 	$comments = $2;
 	if ($comments =~ m+/\*\s*(.*)\s*\*/+) {
