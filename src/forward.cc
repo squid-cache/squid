@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.145 2006/05/29 00:15:02 robertc Exp $
+ * $Id: forward.cc,v 1.146 2006/06/19 22:49:59 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -70,6 +70,19 @@ static Logfile *logfile = NULL;
 static PconnPool *fwdPconnPool = new PconnPool("server-side");
 CBDATA_CLASS_INIT(FwdState);
 
+void
+FwdState::abort(void* d)
+{
+    FwdState* fwd = (FwdState*)d;
+
+    if (fwd->server_fd >= 0) {
+        comm_close(fwd->server_fd);
+        fwd->server_fd = -1;
+    }
+
+    fwd->self = NULL;
+}
+
 /**** PUBLIC INTERFACE ********************************************************/
 
 FwdState::FwdState(int fd, StoreEntry * e, HttpRequest * r)
@@ -86,6 +99,8 @@ FwdState::FwdState(int fd, StoreEntry * e, HttpRequest * r)
     EBIT_SET(e->flags, ENTRY_FWD_HDR_WAIT);
 
     self = this;	// refcounted
+
+    storeRegisterAbort(e, FwdState::abort, this);
 }
 
 FwdState::~FwdState()
@@ -121,6 +136,8 @@ FwdState::~FwdState()
 
     if (err)
         errorStateFree(err);
+
+    storeUnregisterAbort(entry);
 
     entry->unlock();
 
