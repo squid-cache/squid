@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.0.PRE4 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.0.sgml,v 1.20 2006/06/19 22:45:48 hno Exp $</date>
+<date>$Id: release-3.0.sgml,v 1.21 2006/06/19 22:52:58 hno Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.0 of Squid.
@@ -1060,29 +1060,17 @@ icap_access class_1 allow all
 <descrip>
 	<tag>httpd_accel_host</tag>
 	Replaced by the defaultsite= or vport=0 (in case of virtual) http_port options
-	<verb>
-	</verb>
 	<tag>httpd_accel_port</tag>
-	<verb>
 	Replaced by vport http(s)_port option
-	</verb>
 	<tag>httpd_accel_single_host on|off</tag>
-	<verb>
 	Replaced by cache_peer originserver based request forwarding
 	making this option obsolete.
-	</verb>
 	<tag>httpd_accel_with_proxy on|off</tag>
-	<verb>
 	Obsolete, no longer needed.
-	</verb>
 	<tag>httpd_accel_uses_host_header on|off</tag>
-	<verb>
 	This has been replaced by the vhost http(s)_port option
-	</verb>
 	<tag>httpd_accel_no_pmtu_disc on|off</tag>
-	<verb>
 	This has been replaced by the disable-pmtu-discovery=.. http_port option
-	</verb>
 	<tag>header_access</tag>
 	<p>This has been replaced by request_header_access and reply_header_access
 </descrip>

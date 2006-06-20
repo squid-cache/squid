@@ -7,7 +7,7 @@
 <BODY>
 <H1>Squid 3.0.PRE4 release notes</H1>
 
-<H2>Squid Developers</H2>$Id: release-3.0.html,v 1.3 2006/06/19 22:45:48 hno Exp $
+<H2>Squid Developers</H2>$Id: release-3.0.html,v 1.4 2006/06/19 22:52:58 hno Exp $
 <HR>
 <EM>This document contains the release notes for version 3.0 of Squid.
 Squid is a WWW Cache application developed by the National Laboratory
@@ -1168,42 +1168,13 @@ icap_access class_1 allow all
 
 <P>
 <DL>
-<DT><B>httpd_accel_host</B><DD><P>Replaced by the defaultsite= or vport=0 (in case of virtual) http_port options
-<PRE>
-        
-</PRE>
-</P>
-<DT><B>httpd_accel_port</B><DD><P>
-<PRE>
-        Replaced by vport http(s)_port option
-        
-</PRE>
-</P>
-<DT><B>httpd_accel_single_host on|off</B><DD><P>
-<PRE>
-        Replaced by cache_peer originserver based request forwarding
-        making this option obsolete.
-        
-</PRE>
-</P>
-<DT><B>httpd_accel_with_proxy on|off</B><DD><P>
-<PRE>
-        Obsolete, no longer needed.
-        
-</PRE>
-</P>
-<DT><B>httpd_accel_uses_host_header on|off</B><DD><P>
-<PRE>
-        This has been replaced by the vhost http(s)_port option
-        
-</PRE>
-</P>
-<DT><B>httpd_accel_no_pmtu_disc on|off</B><DD><P>
-<PRE>
-        This has been replaced by the disable-pmtu-discovery=.. http_port option
-        
-</PRE>
-</P>
+<DT><B>httpd_accel_host</B><DD><P>Replaced by the defaultsite= or vport=0 (in case of virtual) http_port options</P>
+<DT><B>httpd_accel_port</B><DD><P>Replaced by vport http(s)_port option</P>
+<DT><B>httpd_accel_single_host on|off</B><DD><P>Replaced by cache_peer originserver based request forwarding
+making this option obsolete.</P>
+<DT><B>httpd_accel_with_proxy on|off</B><DD><P>Obsolete, no longer needed.</P>
+<DT><B>httpd_accel_uses_host_header on|off</B><DD><P>This has been replaced by the vhost http(s)_port option</P>
+<DT><B>httpd_accel_no_pmtu_disc on|off</B><DD><P>This has been replaced by the disable-pmtu-discovery=.. http_port option</P>
 <DT><B>header_access</B><DD><P>This has been replaced by request_header_access and reply_header_access</P>
 </DL>
 </P>
