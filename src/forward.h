@@ -68,6 +68,7 @@ public:
     HttpRequest *request;
     int server_fd;
     FwdServer *servers;
+    static void abort(void*);
 
 private:
     CBDATA_CLASS2(FwdState);
