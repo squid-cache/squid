@@ -35,11 +35,11 @@ if [ ${name} != ${PACKAGE}-${VERSION} ]; then
 fi
 RELEASE=`echo $VERSION | cut -d. -f1,2 | cut -d- -f1`
 ed -s configure.in <<EOS
-g/VERSION=${VERSION}-CVS/ s//VERSION=${VERSION}/
+g/${VERSION}-CVS/ s//${VERSION}/
 w
 EOS
 ed -s configure <<EOS
-g/VERSION=${VERSION}-CVS/ s//VERSION=${VERSION}/
+g/${VERSION}-CVS/ s//${VERSION}/
 w
 EOS
 ed -s include/version.h <<EOS
@@ -51,13 +51,23 @@ EOS
 make dist-all
 
 cd $startdir
-cp -p $tmpdir/${name}.tar.gz	$dst
-cp -p $tmpdir/${name}.tar.bz2	$dst
-cp -p $tmpdir/CONTRIBUTORS	$dst/CONTRIBUTORS.txt
-cp -p $tmpdir/COPYING		$dst/COPYING.txt
-cp -p $tmpdir/COPYRIGHT		$dst/COPYRIGHT.txt
-cp -p $tmpdir/CREDITS		$dst/CREDITS.txt
-cp -p $tmpdir/ChangeLog		$dst/ChangeLog.txt
+inst() {
+rm -f $2
+cp -p $1 $2
+chmod 444 $2
+}
+inst $tmpdir/${name}.tar.gz	$dst/${name}.tar.gz
+inst $tmpdir/${name}.tar.bz2	$dst/${name}.tar.bz2
+inst $tmpdir/CONTRIBUTORS	$dst/CONTRIBUTORS.txt
+inst $tmpdir/COPYING		$dst/COPYING.txt
+inst $tmpdir/COPYRIGHT		$dst/COPYRIGHT.txt
+inst $tmpdir/CREDITS		$dst/CREDITS.txt
+inst $tmpdir/ChangeLog		$dst/ChangeLog.txt
 if [ -f $tmpdir/doc/release-notes/release-$RELEASE.html ]; then
-    cp -p $tmpdir/doc/release-notes/release-$RELEASE.html $dst/RELEASENOTES.html
+    cat $tmpdir/doc/release-notes/release-$RELEASE.html | sed -e '
+	s/"ChangeLog"/"ChangeLog.txt"/g;
+    ' > $tmpdir/RELEASENOTES.html
+    touch -r $tmpdir/doc/release-notes/release-$RELEASE.html $tmpdir/RELEASENOTES.html
+    inst $tmpdir/RELEASENOTES.html $dst/${name}-RELEASENOTES.html
+    ln -sf ${name}-RELEASENOTES.html $dst/RELEASENOTES.html
 fi
