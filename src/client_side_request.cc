@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.70 2006/06/05 18:57:08 serassio Exp $
+ * $Id: client_side_request.cc,v 1.71 2006/06/21 22:37:49 wessels Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1252,6 +1252,9 @@ ClientHttpRequest::takeAdaptedBody(MemBuf *buf)
         storeEntry()->write(StoreIOBuffer(buf, request_satisfaction_offset));
         request_satisfaction_offset += buf->contentSize();
         buf->consume(buf->contentSize()); // consume everything written
+    } else {
+        debug(85,0)("Unexpected call to takeAdaptedBody when "
+                    "not in request_satisfaction_mode");
     }
 }
 
