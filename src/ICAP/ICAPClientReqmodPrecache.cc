@@ -148,10 +148,20 @@ void ICAPClientReqmodPrecache::noteSourceProgress(MsgPipe *p)
     //tell ClientHttpRequest to store a fresh portion of the adapted response
 
     if (p->data->body->hasContent()) {
+        /*
+         * NOTE: req will be NULL if this is a "request satisfaction"
+         * ICAP reply.  In other words, the ICAP REQMOD reply may
+         * contain an HTTP response, in which case we'll have a body, but
+         * adapted->data->header will be an HttpReply, not an HttpRequest.
+         */
         HttpRequest *req = dynamic_cast<HttpRequest*>(adapted->data->header);
-        assert(req);
-        debugs(32,3,HERE << "notifying body_reader, contentSize() = " << p->data->body->contentSize());
-        req->body_reader->notify(p->data->body->contentSize());
+
+        if (req) {
+            debugs(32,3,HERE << "notifying body_reader, contentSize() = " << p->data->body->contentSize());
+            req->body_reader->notify(p->data->body->contentSize());
+        } else {
+            http->takeAdaptedBody(adapted->data->body);
+        }
     }
 }
 
