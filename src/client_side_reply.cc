@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.109 2006/06/07 22:39:34 hno Exp $
+ * $Id: client_side_reply.cc,v 1.110 2006/07/02 10:02:04 serassio Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1756,8 +1756,8 @@ clientReplyContext::processReplyAccess ()
                              http->getConn().getRaw() != NULL ? &http->getConn()->peer.sin_addr : &no_addr,
                              http->request);
         removeClientStoreReference(&sc, http);
-        startError(err);
         HTTPMSGUNLOCK(reply);
+        startError(err);
         return;
     }
 
@@ -1802,9 +1802,9 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
 
         removeClientStoreReference(&sc, http);
 
-        startError(err);
-
         HTTPMSGUNLOCK(reply);
+
+        startError(err);
 
         http->logType = LOG_TCP_DENIED_REPLY;
 
