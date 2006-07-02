@@ -919,6 +919,9 @@
 /* Define to enable WCCP */
 #undef USE_WCCP
 
+/* Define to enable WCCP V2 */
+#undef USE_WCCPv2
+
 /* Define Windows NT & Windows 2000 run service mode */
 #undef USE_WIN32_SERVICE
 
