@@ -18,6 +18,7 @@ BEGIN {
 	define["USE_UNLINKD"]="--enable-unlinkd"
 	define["USE_USERAGENT_LOG"]="--enable-useragent-log"
 	define["USE_WCCP"]="--enable-wccp"
+	define["USE_WCCPv2"]="--enable-wccpv2"
 	define["ESI"]="--enable-esi"
 }
 /^IFDEF:/ {

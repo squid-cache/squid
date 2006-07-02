@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.533 2006/05/29 00:15:02 robertc Exp $
+ * $Id: protos.h,v 1.534 2006/07/02 16:53:46 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -381,9 +381,14 @@ SQUIDCEXTERN variable_list *snmp_meshCtblFn(variable_list *, snint *);
 #if USE_WCCP
 SQUIDCEXTERN void wccpInit(void);
 SQUIDCEXTERN void wccpConnectionOpen(void);
-SQUIDCEXTERN void wccpConnectionShutdown(void);
 SQUIDCEXTERN void wccpConnectionClose(void);
 #endif /* USE_WCCP */
+
+#if USE_WCCPv2
+extern void wccp2Init(void);
+extern void wccp2ConnectionOpen(void);
+extern void wccp2ConnectionClose(void);
+#endif /* USE_WCCPv2 */
 
 SQUIDCEXTERN void ipcache_nbgethostbyname(const char *name,
         IPH * handler,
@@ -906,5 +911,22 @@ SQUIDCEXTERN void externalAclInit(void);
 SQUIDCEXTERN void externalAclShutdown(void);
 
 SQUIDCEXTERN char *strtokFile(void);
+
+#if USE_WCCPv2
+SQUIDCEXTERN void parse_wccp2_service(void *v);
+
+SQUIDCEXTERN void free_wccp2_service(void *v);
+
+SQUIDCEXTERN void dump_wccp2_service(StoreEntry * e, const char *label, void *v);
+
+SQUIDCEXTERN int check_null_wccp2_service(void *v);
+
+SQUIDCEXTERN void parse_wccp2_service_info(void *v);
+
+SQUIDCEXTERN void free_wccp2_service_info(void *v);
+
+SQUIDCEXTERN void dump_wccp2_service_info(StoreEntry * e, const char *label, void *v);
+
+#endif
 
 #endif /* SQUID_PROTOS_H */

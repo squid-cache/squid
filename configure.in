@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.424 2006/06/20 20:57:25 hno Exp $
+dnl  $Id: configure.in,v 1.425 2006/07/02 16:53:46 serassio Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.424 $)dnl
+AC_REVISION($Revision: 1.425 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -782,18 +782,28 @@ AC_ARG_ENABLE(referer-log,
   fi
 ])
 
-use_wccp=1
+USE_WCCP=1
 AC_ARG_ENABLE(wccp,  
 [  --disable-wccp          Disable Web Cache Coordination Protocol],
 [ if test "$enableval" = "no" ; then
     echo "Web Cache Coordination Protocol disabled"
-    use_wccp=0
+    USE_WCCP=0
   fi
 ])      
-if test $use_wccp = 1; then
-    AC_DEFINE(USE_WCCP, 1,[Define to enable WCCP])
-else
-    AC_DEFINE(USE_WCCP, 0)
+if test $USE_WCCP = 1; then
+    AC_DEFINE(USE_WCCP, 1, [Define to enable WCCP])
+fi
+
+USE_WCCPv2=1
+AC_ARG_ENABLE(wccpv2,
+[  --disable-wccpv2        Disable Web Cache Coordination V2 Protocol],
+[ if test "$enableval" = "no" ; then
+    echo "Web Cache Coordination V2 Protocol disabled"
+    USE_WCCPv2=0
+  fi
+])
+if test $USE_WCCPv2 = 1; then
+    AC_DEFINE(USE_WCCPv2, 1, [Define to enable WCCP V2])
 fi
 
 AC_ARG_ENABLE(kill-parent-hack,

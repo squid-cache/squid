@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.39 2005/04/18 21:52:43 hno Exp $
+ * $Id: wccp.cc,v 1.40 2006/07/02 16:53:47 serassio Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Glenn Chisholm
@@ -85,8 +85,7 @@ struct wccp_assign_bucket_t
     int number;
 };
 
-static int theInWccpConnection = -1;
-static int theOutWccpConnection = -1;
+static int theWccpConnection = -1;
 
 static struct wccp_here_i_am_t wccp_here_i_am;
 
@@ -143,94 +142,57 @@ wccpConnectionOpen(void)
         return;
     }
 
-    theInWccpConnection = comm_open(SOCK_DGRAM,
-                                    IPPROTO_UDP,
-                                    Config.Wccp.incoming,
-                                    port,
-                                    COMM_NONBLOCKING,
-                                    "WCCP Socket");
+    theWccpConnection = comm_open(SOCK_DGRAM,
+                                  IPPROTO_UDP,
+                                  Config.Wccp.address,
+                                  port,
+                                  COMM_NONBLOCKING,
+                                  "WCCP Socket");
 
-    if (theInWccpConnection < 0)
+    if (theWccpConnection < 0)
         fatal("Cannot open WCCP Port");
 
-    commSetSelect(theInWccpConnection,
+    commSetSelect(theWccpConnection,
                   COMM_SELECT_READ,
                   wccpHandleUdp,
                   NULL,
                   0);
 
     debug(1, 1) ("Accepting WCCP messages on port %d, FD %d.\n",
-                 (int) port, theInWccpConnection);
+                 (int) port, theWccpConnection);
 
-    if (Config.Wccp.outgoing.s_addr != no_addr.s_addr) {
-        theOutWccpConnection = comm_open(SOCK_DGRAM,
-                                         IPPROTO_UDP,
-                                         Config.Wccp.outgoing,
-                                         port,
-                                         COMM_NONBLOCKING,
-                                         "WCCP Socket");
-
-        if (theOutWccpConnection < 0)
-            fatal("Cannot open Outgoing WCCP Port");
-
-        commSetSelect(theOutWccpConnection,
-                      COMM_SELECT_READ,
-                      wccpHandleUdp,
-                      NULL, 0);
-
-        debug(1, 1) ("Outgoing WCCP messages on port %d, FD %d.\n",
-                     (int) port, theOutWccpConnection);
-
-        fd_note(theOutWccpConnection, "Outgoing WCCP socket");
-
-        fd_note(theInWccpConnection, "Incoming WCCP socket");
-    } else {
-        theOutWccpConnection = theInWccpConnection;
-    }
 
     router_len = sizeof(router);
+
     memset(&router, '\0', router_len);
+
     router.sin_family = AF_INET;
+
     router.sin_port = htons(port);
+
     router.sin_addr = Config.Wccp.router;
 
-    if (connect(theOutWccpConnection, (struct sockaddr *) &router, router_len))
+    if (connect(theWccpConnection, (struct sockaddr *) &router, router_len))
         fatal("Unable to connect WCCP out socket");
 
     local_len = sizeof(local);
 
     memset(&local, '\0', local_len);
 
-    if (getsockname(theOutWccpConnection, (struct sockaddr *) &local, &local_len))
+    if (getsockname(theWccpConnection, (struct sockaddr *) &local, &local_len))
         fatal("Unable to getsockname on WCCP out socket");
 
     local_ip.s_addr = local.sin_addr.s_addr;
 }
 
-void
-wccpConnectionShutdown(void)
-{
-    if (theInWccpConnection < 0)
-        return;
-
-    if (theInWccpConnection != theOutWccpConnection) {
-        debug(80, 1) ("FD %d Closing WCCP socket\n", theInWccpConnection);
-        comm_close(theInWccpConnection);
-        theInWccpConnection = -1;
-    }
-
-    assert(theOutWccpConnection > -1);
-    commSetSelect(theOutWccpConnection, COMM_SELECT_READ, NULL, NULL, 0);
-}
 
 void
 wccpConnectionClose(void)
 {
-    wccpConnectionShutdown();
-
-    if (theOutWccpConnection > -1) {
-        debug(80, 1) ("FD %d Closing WCCP socket\n", theOutWccpConnection);
-        comm_close(theOutWccpConnection);
+    if (theWccpConnection > -1) {
+        debug(80, 1) ("FD %d Closing WCCP socket\n", theWccpConnection);
+        comm_close(theWccpConnection);
+        theWccpConnection = -1;
     }
 }
 
@@ -285,7 +247,7 @@ wccpHandleUdp(int sock, void *not_used)
     if (ntohl(wccp_i_see_you.type) != WCCP_I_SEE_YOU)
         return;
 
-    if (ntohl(wccp_i_see_you.number) > WCCP_ACTIVE_CACHES || ntohl(wccp_i_see_you.number) < 0) {
+    if (ntohl(wccp_i_see_you.number) > WCCP_ACTIVE_CACHES) {
         debug(80, 1) ("Ignoring WCCP_I_SEE_YOU from %s with number of caches set to %d\n",
                       inet_ntoa(from.sin_addr), (int) ntohl(wccp_i_see_you.number));
         return;
@@ -349,7 +311,7 @@ wccpHereIam(void *voidnotused)
     debug(80, 6) ("wccpHereIam: Called\n");
 
     wccp_here_i_am.id = last_id;
-    comm_udp_send(theOutWccpConnection,
+    comm_udp_send(theWccpConnection,
                   &wccp_here_i_am,
                   sizeof(wccp_here_i_am),
                   0);
@@ -418,7 +380,7 @@ wccpAssignBuckets(void)
     wccp_assign_bucket->id = wccp_i_see_you.id;
     wccp_assign_bucket->number = wccp_i_see_you.number;
 
-    comm_udp_send(theOutWccpConnection,
+    comm_udp_send(theWccpConnection,
                   buf,
                   wab_len + WCCP_BUCKETS + cache_len,
                   0);

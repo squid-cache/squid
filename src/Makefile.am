@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.156 2006/06/14 19:18:24 serassio Exp $
+#  $Id: Makefile.am,v 1.157 2006/07/02 16:53:46 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -568,6 +568,7 @@ squid_SOURCES = \
 	useragent.cc \
 	wais.cc \
 	wccp.cc \
+	wccp2.cc \
 	whois.cc \
 	wordlist.cc \
 	wordlist.h \
@@ -823,6 +824,7 @@ ufsdump_SOURCES = \
 	useragent.cc \
 	wais.cc \
 	wccp.cc \
+	wccp2.cc \
 	whois.cc \
 	wordlist.cc \
 	$(WIN32_SOURCE)
