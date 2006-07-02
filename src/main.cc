@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.426 2006/06/13 20:52:05 serassio Exp $
+ * $Id: main.cc,v 1.427 2006/07/02 16:53:46 serassio Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -508,6 +508,11 @@ serverConnectionsOpen(void)
     wccpConnectionOpen();
 #endif
 
+#if USE_WCCPv2
+
+    wccp2ConnectionOpen();
+#endif
+
     clientdbInit();
     icmpOpen();
     netdbInit();
@@ -538,7 +543,11 @@ serverConnectionsClose(void)
 #endif
 #if USE_WCCP
 
-    wccpConnectionShutdown();
+    wccpConnectionClose();
+#endif
+#if USE_WCCPv2
+
+    wccp2ConnectionClose();
 #endif
 
     asnFreeMemory();
@@ -559,10 +568,6 @@ mainReconfigure(void)
 #ifdef SQUID_SNMP
 
     snmpConnectionClose();
-#endif
-#if USE_WCCP
-
-    wccpConnectionClose();
 #endif
 #if USE_DNSSERVERS
 
@@ -608,6 +613,10 @@ mainReconfigure(void)
 #if USE_WCCP
 
     wccpInit();
+#endif
+#if USE_WCCPv2
+
+    wccp2Init();
 #endif
 
     serverConnectionsOpen();
@@ -915,6 +924,11 @@ mainInitialize(void)
 
 #if USE_WCCP
     wccpInit();
+
+#endif
+#if USE_WCCPv2
+
+    wccp2Init();
 
 #endif
 
@@ -1605,6 +1619,10 @@ SquidShutdown(void *unused)
 #if USE_WCCP
 
     wccpConnectionClose();
+#endif
+#if USE_WCCPv2
+
+    wccp2ConnectionClose();
 #endif
 
     releaseServerSockets();

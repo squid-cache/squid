@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.418 2006/06/14 19:18:24 serassio Exp $
+# $Id: cf.data.pre,v 1.419 2006/07/02 16:53:46 serassio Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -4005,10 +4005,22 @@ TYPE: address
 LOC: Config.Wccp.router
 DEFAULT: 0.0.0.0
 IFDEF: USE_WCCP
+DOC_NONE
+NAME: wccp2_router
+TYPE: sockaddr_in_list
+LOC: Config.Wccp2.router
+DEFAULT: none
+IFDEF: USE_WCCPv2
 DOC_START
 	Use this option to define your WCCP ``home'' router for
-	Squid.   Setting the 'wccp_router' to 0.0.0.0 (the default)
-	disables WCCP.
+	Squid.
+
+	wccp_router supports a single WCCP(v1) router
+
+	wccp2_router supports multiple WCCPv2 routers
+
+	only one of the two may be used at the same time and defines
+	which version of WCCP to use.
 DOC_END
 
 NAME: wccp_version
@@ -4017,41 +4029,133 @@ LOC: Config.Wccp.version
 DEFAULT: 4
 IFDEF: USE_WCCP
 DOC_START
-	According to some users, Cisco IOS 11.2 only supports WCCP
-	version 3.  If you're using that version of IOS, change
-	this value to 3.
+	This directive is only relevant if you need to set up WCCP(v1)
+	to some very old and end-of-life Cisco routers. In all other
+	setups it must be left unset or at the default setting.
+	It defines an internal version in the WCCP(v1) protocol,
+	with version 4 being the officially documented protocol.
+
+	According to some users, Cisco IOS 11.2 and earlier only
+	support WCCP version 3.  If you're using that or an earlier
+	version of IOS, you may need to change this value to 3, otherwise
+	do not specify this parameter.
 DOC_END
 
-NAME: wccp_incoming_address
+NAME: wccp2_forwarding_method
+TYPE: int
+LOC: Config.Wccp2.forwarding_method
+DEFAULT: 1
+IFDEF: USE_WCCPv2
+DOC_START
+	WCCP2 allows the setting of forwarding methods between the 
+	router/switch and the cache.  Valid values are as follows:
+
+	1 - GRE encapsulation (forward the packet in a GRE/WCCP tunnel)
+	2 - L2 redirect (forward the packet using Layer 2/MAC rewriting)
+
+	Currently (as of IOS 12.4) cisco routers only support GRE.
+	Cisco switches only support the L2 redirect assignment method.
+DOC_END
+
+NAME: wccp2_return_method
+TYPE: int
+LOC: Config.Wccp2.return_method
+DEFAULT: 1
+IFDEF: USE_WCCPv2
+DOC_START
+	WCCP2 allows the setting of return methods between the 
+	router/switch and the cache for packets that the cache
+	decides not to handle.  Valid values are as follows:
+
+	1 - GRE encapsulation (forward the packet in a GRE/WCCP tunnel)
+	2 - L2 redirect (forward the packet using Layer 2/MAC rewriting)
+
+	Currently (as of IOS 12.4) cisco routers only support GRE.
+	Cisco switches only support the L2 redirect assignment.
+
+	If the "ip wccp redirect exclude in" command has been 
+	enabled on the cache interface, then it is still safe for
+	the proxy server to use a l2 redirect method even if this
+	option is set to GRE.
+DOC_END
+
+NAME: wccp2_service
+TYPE: wccp2_service
+LOC: Config.Wccp2.info
+DEFAULT: none
+DEFAULT_IF_NONE: standard 0
+IFDEF: USE_WCCPv2
+DOC_START
+	WCCP2 allows for multiple traffic services. There are two
+	types: "standard" and "dynamic". The standard type defines
+	one service id - http (id 0). The dynamic service ids can be from
+	51 to 255 inclusive.  In order to use a dynamic service id
+	one must define the type of traffic to be redirected; this is done
+	using the wccp2_service_info option.
+
+	The "standard" type does not require a wccp2_service_info option,
+	just specifying the service id will suffice.
+
+	MD5 service authentication can be enabled by adding
+	"password=<password>" to the end of this service declaration.
+
+	Examples:
+
+	wccp2_service standard 0	# for the 'web-cache' standard service
+	wccp2_service dynamic 80	# a dynamic service type which will be
+					# fleshed out with subsequent options.
+	wccp2_service standard 0 password=foo
+
+DOC_END
+
+NAME: wccp2_service_info
+TYPE: wccp2_service_info
+LOC: Config.Wccp2.info
+DEFAULT: none
+IFDEF: USE_WCCPv2
+DOC_START
+	Dynamic WCCPv2 services require further information to define the
+	traffic you wish to have diverted.
+
+	The format is:
+
+	wccp2_service_info <id> protocol=<protocol> flags=<flag>,<flag>..
+	    priority=<priority> ports=<port>,<port>..
+
+	The relevant WCCPv2 flags:
+	+ src_ip_hash, dst_ip_hash
+	+ source_port_hash, dest_port_hash
+	+ src_ip_alt_hash, dst_ip_alt_hash
+	+ src_port_alt_hash, dst_port_alt_hash
+	+ ports_source
+
+	The port list can be one to eight entries.
+
+	Example:
+
+	wccp2_service_info 80 protocol=tcp flags=src_ip_hash,ports_source
+	    priority=240 ports=80
+
+	Note: the service id must have been defined by a previous
+	'wccp2_service dynamic <id>' entry.
+DOC_END
+
+NAME: wccp_address
 TYPE: address
-LOC: Config.Wccp.incoming
+LOC: Config.Wccp.address
 DEFAULT: 0.0.0.0
 IFDEF: USE_WCCP
 DOC_NONE
-NAME: wccp_outgoing_address
+NAME: wccp2_address
 TYPE: address
-LOC: Config.Wccp.outgoing
-DEFAULT: 255.255.255.255
-IFDEF: USE_WCCP
+LOC: Config.Wccp2.address
+DEFAULT: 0.0.0.0
+IFDEF: USE_WCCPv2
 DOC_START
-	wccp_incoming_address   Use this option if you require WCCP
-				messages to be received on only one
-				interface.  Do NOT use this option if
-				you're unsure how many interfaces you
-				have, or if you know you have only one
-				interface.
-
-	wccp_outgoing_address	Use this option if you require WCCP
-				messages to be sent out on only one
-				interface.  Do NOT use this option if
-				you're unsure how many interfaces you
-				have, or if you know you have only one
-				interface.
+	Use this option if you require WCCP to use a specific
+	interface address.
 
 	The default behavior is to not bind to any specific address.
-
-	NOTE, wccp_incoming_address and wccp_outgoing_address can not have
-	the same value since they both use port 2048.
 DOC_END
 
 

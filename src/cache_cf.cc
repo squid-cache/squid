@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.499 2006/06/14 19:52:54 serassio Exp $
+ * $Id: cache_cf.cc,v 1.500 2006/07/02 16:53:46 serassio Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -124,12 +124,14 @@ static void free_http_header_replace(header_mangler * header);
 static void parse_denyinfo(acl_deny_info_list ** var);
 static void dump_denyinfo(StoreEntry * entry, const char *name, acl_deny_info_list * var);
 static void free_denyinfo(acl_deny_info_list ** var);
-#if CURRENTLY_UNUSED
+#if USE_WCCPv2
 static void parse_sockaddr_in_list(sockaddr_in_list **);
 static void dump_sockaddr_in_list(StoreEntry *, const char *, const sockaddr_in_list *);
 static void free_sockaddr_in_list(sockaddr_in_list **);
+#if CURRENTLY_UNUSED
 static int check_null_sockaddr_in_list(const sockaddr_in_list *);
 #endif /* CURRENTLY_UNUSED */
+#endif
 static void parse_http_port_list(http_port_list **);
 static void dump_http_port_list(StoreEntry *, const char *, const http_port_list *);
 static void free_http_port_list(http_port_list **);
@@ -2606,10 +2608,7 @@ parseNeighborType(const char *s)
     return PEER_SIBLING;
 }
 
-#if CURRENTLY_UNUSED
-/* This code was previously used by http_port. Left as it really should
- * be used by icp_port and htcp_port
- */
+#if USE_WCCPv2
 void
 parse_sockaddr_in_list_token(sockaddr_in_list ** head, char *token)
 {
@@ -2688,6 +2687,10 @@ free_sockaddr_in_list(sockaddr_in_list ** head)
     }
 }
 
+#if CURRENTLY_UNUSED
+/* This code was previously used by http_port. Left as it really should
+ * be used by icp_port and htcp_port
+ */
 static int
 check_null_sockaddr_in_list(const sockaddr_in_list * s)
 {
@@ -2695,6 +2698,7 @@ check_null_sockaddr_in_list(const sockaddr_in_list * s)
 }
 
 #endif /* CURRENTLY_UNUSED */
+#endif /* USE_WCCPv2 */
 
 static void
 parse_http_port_specification(http_port_list * s, char *token)
