@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.394 2006/06/14 19:19:23 serassio Exp $
+#  $Id: Makefile.in,v 1.395 2006/07/02 16:55:10 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -242,8 +242,8 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc \
 	StoreSwapLogData.cc StoreSwapLogData.h Server.cc Server.h \
 	structs.h SwapDir.cc SwapDir.h time.cc tools.cc typedefs.h \
 	unlinkd.cc url.cc URL.h URLScheme.cc URLScheme.h urn.cc \
-	useragent.cc wais.cc wccp.cc whois.cc wordlist.cc wordlist.h \
-	win32.cc
+	useragent.cc wais.cc wccp.cc wccp2.cc whois.cc wordlist.cc \
+	wordlist.h win32.cc
 am__objects_1 = ACLARP.$(OBJEXT)
 @ENABLE_ARP_ACL_TRUE@am__objects_2 = $(am__objects_1)
 am__objects_3 = $(am__objects_2) ACLASN.$(OBJEXT) ACLBrowser.$(OBJEXT) \
@@ -340,7 +340,7 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	Server.$(OBJEXT) SwapDir.$(OBJEXT) time.$(OBJEXT) \
 	tools.$(OBJEXT) $(am__objects_20) url.$(OBJEXT) \
 	URLScheme.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) \
-	wais.$(OBJEXT) wccp.$(OBJEXT) whois.$(OBJEXT) \
+	wais.$(OBJEXT) wccp.$(OBJEXT) wccp2.$(OBJEXT) whois.$(OBJEXT) \
 	wordlist.$(OBJEXT) $(am__objects_22)
 nodist_squid_OBJECTS = repl_modules.$(OBJEXT) globals.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
@@ -1032,7 +1032,8 @@ am__ufsdump_SOURCES_DIST = debug.cc int.cc mem.cc store_key_md5.cc \
 	store_dir.cc store_log.cc store_rebuild.cc store_swapin.cc \
 	store_swapmeta.cc store_swapout.cc structs.h SwapDir.cc \
 	tools.cc typedefs.h unlinkd.cc URLScheme.cc urn.cc \
-	useragent.cc wais.cc wccp.cc whois.cc wordlist.cc win32.cc
+	useragent.cc wais.cc wccp.cc wccp2.cc whois.cc wordlist.cc \
+	win32.cc
 am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) mem.$(OBJEXT) \
 	store_key_md5.$(OBJEXT) StoreMeta.$(OBJEXT) \
 	StoreMetaMD5.$(OBJEXT) StoreMetaSTD.$(OBJEXT) \
@@ -1080,7 +1081,7 @@ am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) mem.$(OBJEXT) \
 	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
 	SwapDir.$(OBJEXT) tools.$(OBJEXT) $(am__objects_20) \
 	URLScheme.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) \
-	wais.$(OBJEXT) wccp.$(OBJEXT) whois.$(OBJEXT) \
+	wais.$(OBJEXT) wccp.$(OBJEXT) wccp2.$(OBJEXT) whois.$(OBJEXT) \
 	wordlist.$(OBJEXT) $(am__objects_22)
 nodist_ufsdump_OBJECTS = repl_modules.$(OBJEXT) globals.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
@@ -1840,6 +1841,7 @@ squid_SOURCES = \
 	useragent.cc \
 	wais.cc \
 	wccp.cc \
+	wccp2.cc \
 	whois.cc \
 	wordlist.cc \
 	wordlist.h \
@@ -2080,6 +2082,7 @@ ufsdump_SOURCES = \
 	useragent.cc \
 	wais.cc \
 	wccp.cc \
+	wccp2.cc \
 	whois.cc \
 	wordlist.cc \
 	$(WIN32_SOURCE)
@@ -3934,6 +3937,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/useragent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wais.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wccp.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wccp2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/whois.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/win32.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wordlist.Po@am__quote@
