@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.425 2006/07/02 16:53:46 serassio Exp $
+dnl  $Id: configure.in,v 1.426 2006/07/02 19:27:17 serassio Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.425 $)dnl
+AC_REVISION($Revision: 1.426 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -2512,6 +2512,7 @@ AC_CHECK_FUNCS(\
 	srand48 \
 	srandom \
 	statfs \
+	strsep \
 	sysconf \
 	syslog \
 	timegm \
@@ -2578,6 +2579,11 @@ fi
 AM_CONDITIONAL(NEED_OWN_SNPRINTF, false)
 if test "$ac_cv_func_snprintf" = "no" || test "$ac_cv_func_vsnprintf" = "no" ; then
   AM_CONDITIONAL(NEED_OWN_SNPRINTF, true)
+fi
+
+AM_CONDITIONAL(NEED_OWN_STRSEP, false)
+if test "$ac_cv_func_strsep" = "no" ; then
+  AM_CONDITIONAL(NEED_OWN_STRSEP, true)
 fi
 
 dnl
