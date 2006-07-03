@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.33 2005/08/25 19:30:01 wessels Exp $
+ * $Id: ssl_support.cc,v 1.34 2006/07/02 19:52:49 hno Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
@@ -955,8 +955,6 @@ sslGetUserAttribute(SSL * ssl, const char *attribute_name)
 
     X509_free(cert);
 
-    CRYPTO_free(name);
-
     return ret;
 }
 
@@ -981,15 +979,13 @@ sslGetCAAttribute(SSL * ssl, const char *attribute_name)
 
     X509_free(cert);
 
-    CRYPTO_free(name);
-
     return ret;
 }
 
 const char *
 sslGetUserEmail(SSL * ssl)
 {
-    return sslGetUserAttribute(ssl, "Email");
+    return sslGetUserAttribute(ssl, "emailAddress");
 }
 
 const char *
