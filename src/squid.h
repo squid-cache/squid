@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.254 2006/05/26 23:35:44 hno Exp $
+ * $Id: squid.h,v 1.255 2006/07/02 19:58:34 serassio Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -365,6 +365,10 @@ extern "C"
 
 #if !HAVE_SNPRINTF
 #include "snprintf.h"
+#endif
+
+#if !HAVE_STRSEP
+#include "strsep.h"
 #endif
 
 #if !HAVE_INITGROUPS
