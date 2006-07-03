@@ -543,6 +543,9 @@
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
 
+/* Define to 1 if you have the `strsep' function. */
+#undef HAVE_STRSEP
+
 /* Define to 1 if `ip_hl' is member of `struct iphdr'. */
 #undef HAVE_STRUCT_IPHDR_IP_HL
 
