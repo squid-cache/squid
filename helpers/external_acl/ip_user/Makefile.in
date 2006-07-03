@@ -17,7 +17,7 @@
 #
 #  Makefile for the ip_user external_acl helper by Rodrigo Campos
 #
-#  $Id: Makefile.in,v 1.55 2006/05/28 00:10:57 hno Exp $
+#  $Id: Makefile.in,v 1.56 2006/07/02 19:33:05 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -178,6 +178,8 @@ NEED_OWN_MD5_FALSE = @NEED_OWN_MD5_FALSE@
 NEED_OWN_MD5_TRUE = @NEED_OWN_MD5_TRUE@
 NEED_OWN_SNPRINTF_FALSE = @NEED_OWN_SNPRINTF_FALSE@
 NEED_OWN_SNPRINTF_TRUE = @NEED_OWN_SNPRINTF_TRUE@
+NEED_OWN_STRSEP_FALSE = @NEED_OWN_STRSEP_FALSE@
+NEED_OWN_STRSEP_TRUE = @NEED_OWN_STRSEP_TRUE@
 NEGOTIATE_AUTH_HELPERS = @NEGOTIATE_AUTH_HELPERS@
 NTLM_AUTH_HELPERS = @NTLM_AUTH_HELPERS@
 OBJEXT = @OBJEXT@
