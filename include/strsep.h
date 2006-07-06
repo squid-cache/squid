@@ -46,7 +46,7 @@
 
    See also strtok_r().  */
 
-extern char *strsep (char **stringp, const char *delim);
+SQUIDCEXTERN char *strsep (char **stringp, const char *delim);
 
 #endif
 
