@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.395 2006/05/29 00:15:02 robertc Exp $
+ * $Id: stat.cc,v 1.396 2006/07/08 16:38:07 serassio Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1610,6 +1610,7 @@ statClientRequests(StoreEntry * s)
     int fd;
 
     for (i = ClientActiveRequests.head; i; i = i->next) {
+        const char *p = NULL;
         http = static_cast<ClientHttpRequest *>(i->data);
         assert(http);
         ConnStateData::Pointer conn = http->getConn();
@@ -1650,18 +1651,29 @@ statClientRequests(StoreEntry * s)
                           (int) http->start.tv_usec,
                           tvSubDsec(http->start, current_time));
 
-        if (http->request->auth_user_request) {
-            const char *p;
-
+        if (http->request->auth_user_request)
             p = http->request->auth_user_request->username();
-
-            if (!p)
-                p = "-";
-
-            storeAppendPrintf(s, "username %s\n", p);
+        else if (http->request->extacl_user.buf() != NULL) {
+            p = http->request->extacl_user.buf();
         }
 
+        if (!p && (conn.getRaw() != NULL && conn->rfc931[0]))
+            p = conn->rfc931;
+
+#if USE_SSL
+
+        if (!p && conn.getRaw() != NULL)
+            p = sslGetUserEmail(fd_table[conn->fd].ssl);
+
+#endif
+
+        if (!p)
+            p = dash_str;
+
+        storeAppendPrintf(s, "username %s\n", p);
+
 #if DELAY_POOLS
+
         storeAppendPrintf(s, "delay_pool %d\n", DelayId::DelayClient(http) >> 16);
 
 #endif
