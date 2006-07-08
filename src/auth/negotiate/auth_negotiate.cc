@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_negotiate.cc,v 1.9 2006/05/29 00:15:06 robertc Exp $
+ * $Id: auth_negotiate.cc,v 1.10 2006/07/07 19:10:30 serassio Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -148,7 +148,7 @@ AuthNegotiateConfig::parse(AuthConfig * scheme, int n_configured, char *param_st
     } else if (strcasecmp(param_str, "keep_alive") == 0) {
         parse_onoff(&keep_alive);
     } else {
-        debug(28, 0) ("AuthNegotiateConfig::parse: unrecognised negotiate auth scheme parameter '%s'\n", param_str);
+        debug(29, 0) ("AuthNegotiateConfig::parse: unrecognised negotiate auth scheme parameter '%s'\n", param_str);
     }
 
     /*
