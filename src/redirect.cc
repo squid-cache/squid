@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.113 2006/06/14 19:29:30 serassio Exp $
+ * $Id: redirect.cc,v 1.114 2006/07/08 16:38:47 serassio Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -37,6 +37,7 @@
 #include "AuthUserRequest.h"
 #include "CacheManager.h"
 #include "Store.h"
+#include "fde.h"
 #include "client_side_request.h"
 #include "ACLChecklist.h"
 #include "HttpRequest.h"
@@ -130,17 +131,31 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
     r = cbdataAlloc(redirectStateData);
     r->orig_url = xstrdup(http->uri);
     r->client_addr = conn.getRaw() != NULL ? conn->log_addr : no_addr;
+    r->client_ident = NULL;
 
     if (http->request->auth_user_request)
         r->client_ident = http->request->auth_user_request->username();
-    else if (conn.getRaw() != NULL && conn->rfc931[0]) {
-        r->client_ident = conn->rfc931;
-    } else {
-        r->client_ident = dash_str;
+    else if (http->request->extacl_user.buf() != NULL) {
+        r->client_ident = http->request->extacl_user.buf();
     }
 
+    if (!r->client_ident && (conn.getRaw() != NULL && conn->rfc931[0]))
+        r->client_ident = conn->rfc931;
+
+#if USE_SSL
+
+    if (!r->client_ident && conn.getRaw() != NULL)
+        r->client_ident = sslGetUserEmail(fd_table[conn->fd].ssl);
+
+#endif
+
+    if (!r->client_ident)
+        r->client_ident = dash_str;
+
     r->method_s = RequestMethodStr[http->request->method];
+
     r->handler = handler;
+
     r->data = cbdataReference(data);
 
     if ((fqdn = fqdncache_gethostbyaddr(r->client_addr, 0)) == NULL)
