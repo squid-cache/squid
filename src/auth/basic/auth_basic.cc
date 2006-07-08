@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.42 2006/05/29 00:15:03 robertc Exp $
+ * $Id: auth_basic.cc,v 1.43 2006/07/07 19:10:29 serassio Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -340,7 +340,7 @@ AuthBasicConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
     } else if (strcasecmp(param_str, "casesensitive") == 0) {
         parse_onoff(&casesensitive);
     } else {
-        debug(28, 0) ("unrecognised basic auth scheme parameter '%s'\n", param_str);
+        debug(29, 0) ("unrecognised basic auth scheme parameter '%s'\n", param_str);
     }
 }
 

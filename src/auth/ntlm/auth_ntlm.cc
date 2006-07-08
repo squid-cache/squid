@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.58 2006/05/29 00:15:07 robertc Exp $
+ * $Id: auth_ntlm.cc,v 1.59 2006/07/07 19:10:30 serassio Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -148,7 +148,7 @@ AuthNTLMConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
     } else if (strcasecmp(param_str, "keep_alive") == 0) {
         parse_onoff(&keep_alive);
     } else {
-        debug(28, 0) ("AuthNTLMConfig::parse: unrecognised ntlm auth scheme parameter '%s'\n", param_str);
+        debug(29, 0) ("AuthNTLMConfig::parse: unrecognised ntlm auth scheme parameter '%s'\n", param_str);
     }
 
     /*
