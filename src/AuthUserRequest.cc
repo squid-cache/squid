@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.cc,v 1.8 2006/05/08 23:38:33 robertc Exp $
+ * $Id: AuthUserRequest.cc,v 1.9 2006/07/09 09:09:45 serassio Exp $
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 6803fde1-d5a2-4c29-9034-1c0c9f650eb4
@@ -422,7 +422,7 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
             || (conn.getRaw() != NULL  && conn->auth_type == AUTH_BROKEN))
     {
         /* no header or authentication failed/got corrupted - restart */
-        debug(28, 4) ("authenticateAuthenticate: broken auth or no proxy_auth header. Requesting auth header.\n");
+        debug(29, 4) ("authenticateAuthenticate: broken auth or no proxy_auth header. Requesting auth header.\n");
         /* something wrong with the AUTH credentials. Force a new attempt */
 
         if (conn.getRaw() != NULL) {
@@ -453,7 +453,7 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
             conn->auth_user_request->connLastHeader() != NULL &&
             strcmp(proxy_auth, conn->auth_user_request->connLastHeader()))
     {
-        debug(28, 2) ("authenticateAuthenticate: DUPLICATE AUTH - authentication header on already authenticated connection!. AU %p, Current user '%s' proxy_auth %s\n", conn->auth_user_request, conn->auth_user_request->username(), proxy_auth);
+        debug(29, 2) ("authenticateAuthenticate: DUPLICATE AUTH - authentication header on already authenticated connection!. AU %p, Current user '%s' proxy_auth %s\n", conn->auth_user_request, conn->auth_user_request->username(), proxy_auth);
         /* remove this request struct - the link is already authed and it can't be to
          * reauth.
          */
@@ -472,18 +472,18 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
 
     /* we have a proxy auth header and as far as we know this connection has
      * not had bungled connection oriented authentication happen on it. */
-    debug(28, 9) ("authenticateAuthenticate: header %s.\n", proxy_auth ? proxy_auth : "-");
+    debug(29, 9) ("authenticateAuthenticate: header %s.\n", proxy_auth ? proxy_auth : "-");
 
     if (*auth_user_request == NULL)
     {
-        debug(28, 9) ("authenticateAuthenticate: This is a new checklist test on FD:%d\n",
+        debug(29, 9) ("authenticateAuthenticate: This is a new checklist test on FD:%d\n",
                       conn.getRaw() != NULL ? conn->fd : -1);
 
         if (proxy_auth && !request->auth_user_request && conn.getRaw() && conn->auth_user_request) {
             AuthConfig * scheme = AuthConfig::Find(proxy_auth);
 
             if (!conn->auth_user_request->user() || conn->auth_user_request->user()->config != scheme) {
-                debug(28, 1) ("authenticateAuthenticate: Unexpected change of authentication scheme from '%s' to '%s' (client %s)\n",
+                debug(29, 1) ("authenticateAuthenticate: Unexpected change of authentication scheme from '%s' to '%s' (client %s)\n",
                               conn->auth_user_request->user()->config->type(), proxy_auth, inet_ntoa(src_addr));
                 conn->auth_user_request->unlock();
                 conn->auth_user_request = NULL;
@@ -494,7 +494,7 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
         if ((!request->auth_user_request)
                 && (conn.getRaw() == NULL || conn->auth_type == AUTH_UNKNOWN)) {
             /* beginning of a new request check */
-            debug(28, 4) ("authenticateAuthenticate: no connection authentication type\n");
+            debug(29, 4) ("authenticateAuthenticate: no connection authentication type\n");
 
             if (!authenticateValidateUser(*auth_user_request =
                                               AuthConfig::CreateAuthUser(proxy_auth))) {
@@ -541,7 +541,7 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
                 ;
             } else {
                 /* failed connection based authentication */
-                debug(28, 4) ("authenticateAuthenticate: Auth user request %p conn-auth user request %p conn type %d authentication failed.\n",
+                debug(29, 4) ("authenticateAuthenticate: Auth user request %p conn-auth user request %p conn type %d authentication failed.\n",
                               *auth_user_request, conn->auth_user_request, conn->auth_type);
                 (*auth_user_request)->unlock();
                 *auth_user_request = NULL;
