@@ -44,6 +44,8 @@
 #include "md5.h"
 
 #ifdef WORDS_BIGENDIAN
+void byteSwap(uint32_t *, unsigned);
+
 void
 byteSwap(uint32_t * buf, unsigned words)
 {
