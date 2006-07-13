@@ -17,6 +17,7 @@ Changes to squid-3.0 ():
 	- COSS now uses a file called stripe and the path in squid.conf is the
 	  directory this is placed in. Additionally squid -z will create the
 	  COSS swapfile.
+	- WCCPv2 support
 
 Changes to squid-2.5 ():
 
