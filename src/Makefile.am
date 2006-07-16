@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.157 2006/07/02 16:53:46 serassio Exp $
+#  $Id: Makefile.am,v 1.158 2006/07/15 21:15:19 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -1305,6 +1305,7 @@ tests_testCacheManager_SOURCES = \
 	urn.cc \
 	useragent.cc \
 	wais.cc \
+	wccp2.cc \
 	whois.cc \
 	wordlist.cc
 nodist_tests_testCacheManager_SOURCES = \
@@ -1474,6 +1475,7 @@ tests_test_http_range_SOURCES = \
 	urn.cc \
 	useragent.cc \
 	wais.cc \
+	wccp2.cc \
 	whois.cc \
 	wordlist.cc \
 	Packer.cc \
@@ -1620,6 +1622,7 @@ tests_testHttpRequest_SOURCES = \
 	urn.cc \
 	useragent.cc \
 	wais.cc \
+	wccp2.cc \
 	whois.cc \
 	wordlist.cc
 nodist_tests_testHttpRequest_SOURCES = \
@@ -1942,6 +1945,7 @@ tests_testURL_SOURCES = \
 	urn.cc \
 	useragent.cc \
 	wais.cc \
+	wccp2.cc \
 	whois.cc \
 	wordlist.cc
 nodist_tests_testURL_SOURCES = \
