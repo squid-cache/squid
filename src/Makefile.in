@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.396 2006/07/02 19:33:17 serassio Exp $
+#  $Id: Makefile.in,v 1.397 2006/07/15 21:16:31 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -433,7 +433,8 @@ am__tests_testCacheManager_SOURCES_DIST = debug.cc globals.cc \
 	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
 	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
 	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc url.cc \
-	URLScheme.cc urn.cc useragent.cc wais.cc whois.cc wordlist.cc
+	URLScheme.cc urn.cc useragent.cc wais.cc wccp2.cc whois.cc \
+	wordlist.cc
 am_tests_testCacheManager_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	HttpRequest.$(OBJEXT) HttpRequestMethod.$(OBJEXT) \
 	mem.$(OBJEXT) String.$(OBJEXT) \
@@ -481,7 +482,7 @@ am_tests_testCacheManager_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	StoreSwapLogData.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
 	SwapDir.$(OBJEXT) url.$(OBJEXT) URLScheme.$(OBJEXT) \
 	urn.$(OBJEXT) useragent.$(OBJEXT) wais.$(OBJEXT) \
-	whois.$(OBJEXT) wordlist.$(OBJEXT)
+	wccp2.$(OBJEXT) whois.$(OBJEXT) wordlist.$(OBJEXT)
 nodist_tests_testCacheManager_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testCacheManager_OBJECTS = $(am_tests_testCacheManager_OBJECTS) \
@@ -622,7 +623,8 @@ am__tests_testHttpRequest_SOURCES_DIST = debug.cc globals.cc \
 	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
 	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
 	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc url.cc \
-	URLScheme.cc urn.cc useragent.cc wais.cc whois.cc wordlist.cc
+	URLScheme.cc urn.cc useragent.cc wais.cc wccp2.cc whois.cc \
+	wordlist.cc
 am_tests_testHttpRequest_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	HttpRequest.$(OBJEXT) HttpRequestMethod.$(OBJEXT) \
 	mem.$(OBJEXT) String.$(OBJEXT) tests/testHttpRequest.$(OBJEXT) \
@@ -670,7 +672,7 @@ am_tests_testHttpRequest_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	StoreSwapLogData.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
 	SwapDir.$(OBJEXT) url.$(OBJEXT) URLScheme.$(OBJEXT) \
 	urn.$(OBJEXT) useragent.$(OBJEXT) wais.$(OBJEXT) \
-	whois.$(OBJEXT) wordlist.$(OBJEXT)
+	wccp2.$(OBJEXT) whois.$(OBJEXT) wordlist.$(OBJEXT)
 nodist_tests_testHttpRequest_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testHttpRequest_OBJECTS = $(am_tests_testHttpRequest_OBJECTS) \
@@ -798,7 +800,7 @@ am__tests_testURL_SOURCES_DIST = debug.cc url.cc URLScheme.cc \
 	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
 	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
 	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc urn.cc \
-	useragent.cc wais.cc whois.cc wordlist.cc
+	useragent.cc wais.cc wccp2.cc whois.cc wordlist.cc
 am_tests_testURL_OBJECTS = debug.$(OBJEXT) url.$(OBJEXT) \
 	URLScheme.$(OBJEXT) globals.$(OBJEXT) HttpRequest.$(OBJEXT) \
 	HttpRequestMethod.$(OBJEXT) mem.$(OBJEXT) String.$(OBJEXT) \
@@ -845,7 +847,8 @@ am_tests_testURL_OBJECTS = debug.$(OBJEXT) url.$(OBJEXT) \
 	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
 	StoreSwapLogData.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
 	SwapDir.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) \
-	wais.$(OBJEXT) whois.$(OBJEXT) wordlist.$(OBJEXT)
+	wais.$(OBJEXT) wccp2.$(OBJEXT) whois.$(OBJEXT) \
+	wordlist.$(OBJEXT)
 nodist_tests_testURL_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testURL_OBJECTS = $(am_tests_testURL_OBJECTS) \
@@ -931,7 +934,7 @@ am__tests_test_http_range_SOURCES_DIST = tests/test_http_range.cc \
 	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
 	StoreSwapLogData.cc String.cc SwapDir.cc time.cc tools.cc \
 	tunnel.cc url.cc URLScheme.cc urn.cc useragent.cc wais.cc \
-	whois.cc wordlist.cc Packer.cc MemBuf.cc
+	wccp2.cc whois.cc wordlist.cc Packer.cc MemBuf.cc
 am_tests_test_http_range_OBJECTS = tests/test_http_range.$(OBJEXT) \
 	access_log.$(OBJEXT) acl.$(OBJEXT) acl_noncore.$(OBJEXT) \
 	ACLChecklist.$(OBJEXT) ACLProxyAuth.$(OBJEXT) \
@@ -977,8 +980,8 @@ am_tests_test_http_range_OBJECTS = tests/test_http_range.$(OBJEXT) \
 	String.$(OBJEXT) SwapDir.$(OBJEXT) time.$(OBJEXT) \
 	tools.$(OBJEXT) tunnel.$(OBJEXT) url.$(OBJEXT) \
 	URLScheme.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) \
-	wais.$(OBJEXT) whois.$(OBJEXT) wordlist.$(OBJEXT) \
-	Packer.$(OBJEXT) MemBuf.$(OBJEXT)
+	wais.$(OBJEXT) wccp2.$(OBJEXT) whois.$(OBJEXT) \
+	wordlist.$(OBJEXT) Packer.$(OBJEXT) MemBuf.$(OBJEXT)
 nodist_tests_test_http_range_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_test_http_range_OBJECTS = $(am_tests_test_http_range_OBJECTS) \
@@ -2438,6 +2441,7 @@ tests_testCacheManager_SOURCES = \
 	urn.cc \
 	useragent.cc \
 	wais.cc \
+	wccp2.cc \
 	whois.cc \
 	wordlist.cc
 
@@ -2605,6 +2609,7 @@ tests_test_http_range_SOURCES = \
 	urn.cc \
 	useragent.cc \
 	wais.cc \
+	wccp2.cc \
 	whois.cc \
 	wordlist.cc \
 	Packer.cc \
@@ -2752,6 +2757,7 @@ tests_testHttpRequest_SOURCES = \
 	urn.cc \
 	useragent.cc \
 	wais.cc \
+	wccp2.cc \
 	whois.cc \
 	wordlist.cc
 
@@ -3083,6 +3089,7 @@ tests_testURL_SOURCES = \
 	urn.cc \
 	useragent.cc \
 	wais.cc \
+	wccp2.cc \
 	whois.cc \
 	wordlist.cc
 
