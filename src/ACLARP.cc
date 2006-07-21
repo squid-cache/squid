@@ -1,5 +1,5 @@
 /*
- * $Id: ACLARP.cc,v 1.20 2006/04/23 14:14:18 serassio Exp $
+ * $Id: ACLARP.cc,v 1.21 2006/07/21 15:24:58 serassio Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -557,6 +557,8 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
 
     struct arpreq arpReq;
 
+    memset(&arpReq, '\0', sizeof(arpReq));
+
     /* Get size of Windows ARP table */
     if (GetIpNetTable(NetTable, &ipNetTableLen, FALSE) != ERROR_INSUFFICIENT_BUFFER) {
         debug(28, 0) ("Can't estimate ARP table size!\n");
@@ -580,7 +582,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
     for (i = 0 ; i < NetTable->dwNumEntries ; i++) {
         if ((c.s_addr == NetTable->table[i].dwAddr) && (NetTable->table[i].dwType > 2)) {
             arpReq.arp_ha.sa_family = AF_UNSPEC;
-            memcpy(arpReq.arp_ha.sa_data, NetTable->table[i].bPhysAddr, NetTable[i].table->dwPhysAddrLen);
+            memcpy(arpReq.arp_ha.sa_data, NetTable->table[i].bPhysAddr, NetTable->table[i].dwPhysAddrLen);
         }
     }
 
