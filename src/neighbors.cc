@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.337 2006/05/29 00:15:02 robertc Exp $
+ * $Id: neighbors.cc,v 1.338 2006/07/25 18:22:37 hno Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -1499,7 +1499,7 @@ peerCountMcastPeersStart(void *data)
     psstate->request = HTTPMSGLOCK(req);
     psstate->entry = fake;
     psstate->callback = NULL;
-    psstate->callback_data = p;
+    psstate->callback_data = cbdataReference(p);
     psstate->ping.start = current_time;
     mem = fake->mem_obj;
     mem->request = HTTPMSGLOCK(psstate->request);
@@ -1519,7 +1519,7 @@ peerCountMcastPeersStart(void *data)
     eventAdd("peerCountMcastPeersDone",
              peerCountMcastPeersDone,
              psstate,
-             (double) Config.Timeout.mcast_icp_query, 1);
+             Config.Timeout.mcast_icp_query / 1000.0, 1);
     p->mcast.flags.counting = 1;
     peerCountMcastPeersSchedule(p, MCAST_COUNT_RATE);
 }
@@ -1528,19 +1528,25 @@ static void
 peerCountMcastPeersDone(void *data)
 {
     ps_state *psstate = (ps_state *)data;
-    peer *p = (peer *)psstate->callback_data;
     StoreEntry *fake = psstate->entry;
-    p->mcast.flags.counting = 0;
-    p->mcast.avg_n_members = doubleAverage(p->mcast.avg_n_members,
-                                           (double) psstate->ping.n_recv,
-                                           ++p->mcast.n_times_counted,
-                                           10);
-    debug(15, 1) ("Group %s: %d replies, %4.1f average, RTT %d\n",
-                  p->host,
-                  psstate->ping.n_recv,
-                  p->mcast.avg_n_members,
-                  p->stats.rtt);
-    p->mcast.n_replies_expected = (int) p->mcast.avg_n_members;
+
+    if (cbdataReferenceValid(psstate->callback_data)) {
+        peer *p = (peer *)psstate->callback_data;
+        p->mcast.flags.counting = 0;
+        p->mcast.avg_n_members = doubleAverage(p->mcast.avg_n_members,
+                                               (double) psstate->ping.n_recv,
+                                               ++p->mcast.n_times_counted,
+                                               10);
+        debug(15, 1) ("Group %s: %d replies, %4.1f average, RTT %d\n",
+                      p->host,
+                      psstate->ping.n_recv,
+                      p->mcast.avg_n_members,
+                      p->stats.rtt);
+        p->mcast.n_replies_expected = (int) p->mcast.avg_n_members;
+    }
+
+    cbdataReferenceDone(psstate->callback_data);
+
     EBIT_SET(fake->flags, ENTRY_ABORTED);
     HTTPMSGUNLOCK(fake->mem_obj->request);
     storeReleaseRequest(fake);
