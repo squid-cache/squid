@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.729 2006/07/25 18:04:38 hno Exp $
+ * $Id: client_side.cc,v 1.730 2006/07/25 18:07:15 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2114,16 +2114,16 @@ int
 connReadWasError(ConnStateData::Pointer & conn, comm_err_t flag, int size, int xerrno)
 {
     if (flag != COMM_OK) {
-        debug(50, 2) ("connReadWasError: FD %d: got flag %d\n", conn->fd, flag);
+        debug(33, 2) ("connReadWasError: FD %d: got flag %d\n", conn->fd, flag);
         return 1;
     }
 
     if (size < 0) {
         if (!ignoreErrno(xerrno)) {
-            debug(50, 2) ("connReadWasError: FD %d: %s\n", conn->fd, xstrerr(xerrno));
+            debug(33, 2) ("connReadWasError: FD %d: %s\n", conn->fd, xstrerr(xerrno));
             return 1;
         } else if (conn->in.notYetUsed == 0) {
-            debug(50, 2) ("connReadWasError: FD %d: no data to process (%s)\n",
+            debug(33, 2) ("connReadWasError: FD %d: no data to process (%s)\n",
                           conn->fd, xstrerr(xerrno));
         }
     }
@@ -2604,14 +2604,14 @@ clientReadBody(void *data, MemBuf &mb, size_t size)
 {
     ConnStateData *conn = (ConnStateData *) data;
     assert(conn);
-    debugs(32,3,HERE << "clientReadBody requested size " << size);
-    debugs(32,3,HERE << "clientReadBody FD " << conn->fd);
-    debugs(32,3,HERE << "clientReadBody in.notYetUsed " << conn->in.notYetUsed);
+    debugs(33,3,HERE << "clientReadBody requested size " << size);
+    debugs(33,3,HERE << "clientReadBody FD " << conn->fd);
+    debugs(33,3,HERE << "clientReadBody in.notYetUsed " << conn->in.notYetUsed);
 
     if (size > conn->in.notYetUsed)
         size = conn->in.notYetUsed;
 
-    debugs(32,3,HERE << "clientReadBody actual size " << size);
+    debugs(33,3,HERE << "clientReadBody actual size " << size);
 
     assert(size);
 
@@ -2634,14 +2634,14 @@ static void
 clientAbortBody(void *data, size_t remaining)
 {
     ConnStateData *conn = (ConnStateData *) data;
-    debugs(32,3,HERE << "clientAbortBody FD " << conn->fd);
-    debugs(32,3,HERE << "clientAbortBody in.notYetUsed " << conn->in.notYetUsed);
-    debugs(32,3,HERE << "clientAbortBody remaining " << remaining);
+    debugs(33,3,HERE << "clientAbortBody FD " << conn->fd);
+    debugs(33,3,HERE << "clientAbortBody in.notYetUsed " << conn->in.notYetUsed);
+    debugs(33,3,HERE << "clientAbortBody remaining " << remaining);
     conn->in.abortedSize += remaining;
 
     if (conn->in.notYetUsed) {
         size_t to_discard = XMIN(conn->in.notYetUsed, conn->in.abortedSize);
-        debugs(32,3,HERE << "to_discard " << to_discard);
+        debugs(33,3,HERE << "to_discard " << to_discard);
         conn->in.abortedSize -= to_discard;
         connNoteUseOfBuffer(conn, to_discard);
     }
@@ -2822,7 +2822,7 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
         comm_accept(sock, httpAccept, data);
 
     if (flag != COMM_OK) {
-        debug(50, 1) ("httpAccept: FD %d: accept failure: %s\n",
+        debug(33, 1) ("httpAccept: FD %d: accept failure: %s\n",
                       sock, xstrerr(xerrno));
         return;
     }
@@ -2990,7 +2990,7 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
 
     if (flag != COMM_OK) {
         errno = xerrno;
-        debug(50, 1) ("httpsAccept: FD %d: accept failure: %s\n",
+        debug(33, 1) ("httpsAccept: FD %d: accept failure: %s\n",
                       sock, xstrerr(xerrno));
         return;
     }
@@ -3008,7 +3008,7 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
     fd_table[newfd].read_method = &ssl_read_method;
     fd_table[newfd].write_method = &ssl_write_method;
 
-    debug(50, 5) ("httpsAccept: FD %d accepted, starting SSL negotiation.\n", newfd);
+    debug(33, 5) ("httpsAccept: FD %d accepted, starting SSL negotiation.\n", newfd);
     fd_note(newfd, "client https connect");
     connState = connStateCreate(&details->peer, &details->me, newfd, (http_port_list *)s);
     comm_add_close_handler(newfd, connStateFree, connState);
