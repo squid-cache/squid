@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.728 2006/06/07 22:39:34 hno Exp $
+ * $Id: client_side.cc,v 1.729 2006/07/25 18:04:38 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -3007,11 +3007,10 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
     fd_table[newfd].ssl = ssl;
     fd_table[newfd].read_method = &ssl_read_method;
     fd_table[newfd].write_method = &ssl_write_method;
+
     debug(50, 5) ("httpsAccept: FD %d accepted, starting SSL negotiation.\n", newfd);
     fd_note(newfd, "client https connect");
-
     connState = connStateCreate(&details->peer, &details->me, newfd, (http_port_list *)s);
-    connState->port = (http_port_list *)cbdataReference(s);
     comm_add_close_handler(newfd, connStateFree, connState);
 
     if (Config.onoff.log_fqdn)
