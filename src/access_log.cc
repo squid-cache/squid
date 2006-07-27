@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.115 2006/06/07 22:39:33 hno Exp $
+ * $Id: access_log.cc,v 1.116 2006/07/26 19:55:19 hno Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -457,7 +457,9 @@ struct logformat_token_table_entry logformat_token_table[] =
         {"tr", LFT_TIME_TO_HANDLE_REQUEST},
 
         {">h", LFT_REQUEST_HEADER},
+        {">h", LFT_REQUEST_ALL_HEADERS},
         {"<h", LFT_REPLY_HEADER},
+        {"<h", LFT_REPLY_ALL_HEADERS},
 
         {"un", LFT_USER_NAME},
         {"ul", LFT_USER_LOGIN},
@@ -1222,9 +1224,10 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
                 assert(te->config != NULL);
             }
         }
+
+        storeAppend(entry, "\n", 1);
     }
 
-    storeAppend(entry, "\n", 1);
 }
 
 void
