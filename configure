@@ -20815,6 +20815,8 @@ if test "${enable_arp_acl+set}" = set; then
 	    ;;
 	*-freebsd*)
 	    ;;
+	*-openbsd*)
+	    ;;
 	*-cygwin*)
         LIBS="$LIBS -liphlpapi"
 	    ;;
