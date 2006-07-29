@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.320 2006/05/16 05:49:44 hno Exp $
+ * $Id: acl.cc,v 1.321 2006/07/29 13:46:05 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -99,6 +99,12 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
 
     if ((t = strtok(NULL, w_space)) == NULL) {
         debug(28, 0) ("aclParseAclLine: missing ACL name.\n");
+        parser.destruct();
+        return;
+    }
+
+    if (strlen(t) >= ACL_NAME_SZ) {
+        debug(28, 0) ("aclParseAclLine: aclParseAclLine: ACL name '%s' too long, max %d characters supported\n", t, ACL_NAME_SZ - 1);
         parser.destruct();
         return;
     }
