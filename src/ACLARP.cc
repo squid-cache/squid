@@ -1,5 +1,5 @@
 /*
- * $Id: ACLARP.cc,v 1.21 2006/07/21 15:24:58 serassio Exp $
+ * $Id: ACLARP.cc,v 1.22 2006/07/29 16:17:29 serassio Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -67,7 +67,7 @@ struct arpreq
 #endif
 #include <net/route.h>
 #include <net/if.h>
-#ifdef _SQUID_FREEBSD_
+#if defined(_SQUID_FREEBSD_) || defined(_SQUID_OPENBSD_)
 #include <net/if_arp.h>
 #endif
 #if HAVE_NETINET_IF_ETHER_H
@@ -437,7 +437,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
         return (0 == splayLastResult);
     }
 
-#elif defined(_SQUID_FREEBSD_)
+#elif defined(_SQUID_FREEBSD_) || defined(_SQUID_OPENBSD_)
 
     struct arpreq arpReq;
 
@@ -624,55 +624,6 @@ aclArpCompare(acl_arp_data * const &a, acl_arp_data * const &b)
 {
     return memcmp(a->eth, b->eth, 6);
 }
-
-#if UNUSED_CODE
-/**********************************************************************
-* This is from the pre-splay-tree code for BSD
-* I suspect the Linux approach will work on most O/S and be much
-* better - <luyer@ucs.uwa.edu.au>
-***********************************************************************
-static int
-checkARP(u_long ip, char *eth)
-{
-    int mib[6] =
-    {CTL_NET, PF_ROUTE, 0, AF_INET, NET_RT_FLAGS, RTF_LLINFO};
-    size_t needed;
-    char *buf, *next, *lim;
-    struct rt_msghdr *rtm;
-    struct sockaddr_inarp *sin;
-    struct sockaddr_dl *sdl;
-    if (sysctl(mib, 6, NULL, &needed, NULL, 0) < 0) {
-	debug(28, 0) ("Can't estimate ARP table size!\n");
-	return 0;
-    }
-    if ((buf = xmalloc(needed)) == NULL) {
-	debug(28, 0) ("Can't allocate temporary ARP table!\n");
-	return 0;
-    }
-    if (sysctl(mib, 6, buf, &needed, NULL, 0) < 0) {
-	debug(28, 0) ("Can't retrieve ARP table!\n");
-	xfree(buf);
-	return 0;
-    }
-    lim = buf + needed;
-    for (next = buf; next < lim; next += rtm->rtm_msglen) {
-	rtm = (struct rt_msghdr *) next;
-	sin = (struct sockaddr_inarp *) (rtm + 1);
-	sdl = (struct sockaddr_dl *) (sin + 1);
-	if (sin->sin_addr.s_addr == ip) {
-	    if (sdl->sdl_alen)
-		if (!memcmp(LLADDR(sdl), eth, 6)) {
-		    xfree(buf);
-		    return 1;
-		}
-	    break;
-	}
-    }
-    xfree(buf);
-    return 0;
-}
-**********************************************************************/
-#endif
 
 static void
 aclDumpArpListWalkee(acl_arp_data * const &node, void *state)
