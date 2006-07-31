@@ -17,6 +17,11 @@
  *   + can handle LDAP request
  *   + can handle PAM request
  *
+ * 2006-07: Giancarlo Razzolini <linux-fan@onda.com.br>
+ * 
+ * Added functionality for doing shadow authentication too,
+ * using the getspnam() function on systems that support it.
+ *
  */
 
 #include "config.h"
@@ -39,17 +44,54 @@
 #if HAVE_PWD_H
 #include <pwd.h>
 #endif
+#if HAVE_SHADOW_H
+#include <shadow.h>
+#endif
 
 #include "util.h"
 
 #define ERR    "ERR\n"
 #define OK     "OK\n"
 
+int 
+passwd_auth(char *user, char *passwd)
+{
+    struct passwd *pwd;
+    pwd = getpwnam(user);
+    if (pwd == NULL) {
+	return 0;		/* User does not exist */
+    } else {
+	if (strcmp(pwd->pw_passwd, (char *) crypt(passwd, pwd->pw_passwd))) {
+	    return 2;		/* Wrong password */
+	} else {
+	    return 1;		/* Authentication Sucessful */
+	}
+    }
+}
+
+#if HAVE_SHADOW_H
+int 
+shadow_auth(char *user, char *passwd)
+{
+    struct spwd *pwd;
+    pwd = getspnam(user);
+    if (pwd == NULL) {
+	return passwd_auth(user, passwd);	/* Fall back to passwd_auth */
+    } else {
+	if (strcmp(pwd->sp_pwdp, crypt(passwd, pwd->sp_pwdp))) {
+	    return 2;		/* Wrong password */
+	} else {
+	    return 1;		/* Authentication Sucessful */
+	}
+    }
+}
+#endif
+
 int
 main()
 {
+    int auth = 0;
     char buf[256];
-    struct passwd *pwd;
     char *user, *passwd, *p;
 
     setbuf(stdout, NULL);
@@ -68,11 +110,15 @@ main()
 	}
 	rfc1738_unescape(user);
 	rfc1738_unescape(passwd);
-	pwd = getpwnam(user);
-	if (pwd == NULL) {
+#if HAVE_SHADOW_H
+	auth = shadow_auth(user, passwd);
+#else
+	auth = passwd_auth(user, passwd);
+#endif
+	if (auth == 0) {
 	    printf("ERR No such user\n");
 	} else {
-	    if (strcmp(pwd->pw_passwd, (char *) crypt(passwd, pwd->pw_passwd))) {
+	    if (auth == 2) {
 		printf("ERR Wrong password\n");
 	    } else {
 		printf(OK);
