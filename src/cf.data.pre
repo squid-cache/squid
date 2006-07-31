@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.419 2006/07/02 16:53:46 serassio Exp $
+# $Id: cf.data.pre,v 1.420 2006/07/31 13:17:57 serassio Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -4039,6 +4039,16 @@ DOC_START
 	support WCCP version 3.  If you're using that or an earlier
 	version of IOS, you may need to change this value to 3, otherwise
 	do not specify this parameter.
+DOC_END
+
+NAME: wccp2_rebuild_wait
+TYPE: onoff
+LOC: Config.Wccp2.rebuildwait
+DEFAULT: on
+IFDEF: USE_WCCPv2
+DOC_START
+	If this is enabled Squid will wait for the cache dir rebuild to finish
+	before sending the first wccp2 HereIAm packet
 DOC_END
 
 NAME: wccp2_forwarding_method
