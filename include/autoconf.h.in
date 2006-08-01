@@ -480,6 +480,9 @@
 /* Define to 1 if you have the `setsid' function. */
 #undef HAVE_SETSID
 
+/* Define to 1 if you have the <shadow.h> header file. */
+#undef HAVE_SHADOW_H
+
 /* Define if you have the shl_load function. */
 #undef HAVE_SHL_LOAD
 
