@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.93 2005/07/03 15:25:07 serassio Exp $
+ * $Id: util.c,v 1.94 2006/08/02 22:06:35 hno Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -84,9 +84,10 @@ void
 log_trace_init(char *fn)
 {
     tracefp = fopen(fn, "a+");
+
     if (!tracefp) {
-	perror("log_trace_init");
-	exit(1);
+        perror("log_trace_init");
+        exit(1);
     }
 }
 
@@ -115,10 +116,10 @@ static int
 DBG_INDEX(int sz)
 {
     if (sz >= DBG_MAXSIZE)
-	return DBG_MAXINDEX;
+        return DBG_MAXINDEX;
 
     if (sz <= DBG_SPLIT)
-	return (sz + DBG_GRAIN_SM - 1) / DBG_GRAIN_SM;
+        return (sz + DBG_GRAIN_SM - 1) / DBG_GRAIN_SM;
 
     return (sz + DBG_GRAIN - 1) / DBG_GRAIN + DBG_OFFSET;
 }
@@ -127,8 +128,10 @@ static void
 stat_init(void)
 {
     int i;
+
     for (i = 0; i <= DBG_MAXINDEX; i++)
-	malloc_sizes[i] = malloc_histo[i] = 0;
+        malloc_sizes[i] = malloc_histo[i] = 0;
+
     dbg_stat_init = 1;
 }
 
@@ -136,7 +139,8 @@ static int
 malloc_stat(int sz)
 {
     if (!dbg_stat_init)
-	stat_init();
+        stat_init();
+
     return malloc_sizes[DBG_INDEX(sz)] += 1;
 }
 
@@ -144,13 +148,18 @@ void
 malloc_statistics(void (*func) (int, int, int, void *), void *data)
 {
     int i;
+
     for (i = 0; i <= DBG_SPLIT; i += DBG_GRAIN_SM)
-	func(i, malloc_sizes[DBG_INDEX(i)], malloc_histo[DBG_INDEX(i)], data);
+        func(i, malloc_sizes[DBG_INDEX(i)], malloc_histo[DBG_INDEX(i)], data);
+
     i -= DBG_GRAIN_SM;
+
     for (i = i; i <= DBG_MAXSIZE; i += DBG_GRAIN)
-	func(i, malloc_sizes[DBG_INDEX(i)], malloc_histo[DBG_INDEX(i)], data);
+        func(i, malloc_sizes[DBG_INDEX(i)], malloc_histo[DBG_INDEX(i)], data);
+
     xmemcpy(&malloc_histo, &malloc_sizes, sizeof(malloc_sizes));
 }
+
 #endif /* XMALLOC_STATISTICS */
 
 
@@ -190,17 +199,21 @@ check_init(void)
     int B = 0, I = 0;
     /* calloc the ptrs so that we don't see them when hunting lost memory */
     malloc_ptrs = calloc(DBG_ARRY_BKTS, sizeof(*malloc_ptrs));
+
     for (B = 0; B < DBG_ARRY_BKTS; B++) {
-	for (I = 0; I < DBG_ARRY_SZ; I++) {
-	    malloc_ptrs[B][I] = NULL;
-	    malloc_size[B][I] = 0;
+        for (I = 0; I < DBG_ARRY_SZ; I++) {
+            malloc_ptrs[B][I] = NULL;
+            malloc_size[B][I] = 0;
 #if XMALLOC_TRACE
-	    malloc_file[B][I] = NULL;
-	    malloc_line[B][I] = 0;
-	    malloc_count[B][I] = 0;
+
+            malloc_file[B][I] = NULL;
+            malloc_line[B][I] = 0;
+            malloc_count[B][I] = 0;
 #endif
-	}
+
+        }
     }
+
     dbg_initd = 1;
 }
 
@@ -209,21 +222,31 @@ check_free(void *s)
 {
     int B, I;
     B = DBG_HASH_BUCKET(s);
+
     for (I = 0; I < DBG_ARRY_SZ; I++) {
-	if (malloc_ptrs[B][I] != s)
-	    continue;
-	malloc_ptrs[B][I] = NULL;
-	malloc_size[B][I] = 0;
+        if (malloc_ptrs[B][I] != s)
+            continue;
+
+        malloc_ptrs[B][I] = NULL;
+
+        malloc_size[B][I] = 0;
+
 #if XMALLOC_TRACE
-	malloc_file[B][I] = NULL;
-	malloc_line[B][I] = 0;
-	malloc_count[B][I] = 0;
+
+        malloc_file[B][I] = NULL;
+
+        malloc_line[B][I] = 0;
+
+        malloc_count[B][I] = 0;
+
 #endif
-	break;
+
+        break;
     }
+
     if (I == DBG_ARRY_SZ) {
-	snprintf(msg, 128, "xfree: ERROR: s=%p not found!", s);
-	(*failure_notify) (msg);
+        snprintf(msg, 128, "xfree: ERROR: s=%p not found!", s);
+        (*failure_notify) (msg);
     }
 }
 
@@ -232,34 +255,50 @@ check_malloc(void *p, size_t sz)
 {
     void *P, *Q;
     int B, I;
+
     if (!dbg_initd)
-	check_init();
+        check_init();
+
     B = DBG_HASH_BUCKET(p);
+
     for (I = 0; I < DBG_ARRY_SZ; I++) {
-	if (!(P = malloc_ptrs[B][I]))
-	    continue;
-	Q = P + malloc_size[B][I];
-	if (P <= p && p < Q) {
-	    snprintf(msg, 128, "xmalloc: ERROR: p=%p falls in P=%p+%d",
-		p, P, malloc_size[B][I]);
-	    (*failure_notify) (msg);
-	}
+        if (!(P = malloc_ptrs[B][I]))
+            continue;
+
+        Q = P + malloc_size[B][I];
+
+        if (P <= p && p < Q) {
+            snprintf(msg, 128, "xmalloc: ERROR: p=%p falls in P=%p+%d",
+                     p, P, malloc_size[B][I]);
+            (*failure_notify) (msg);
+        }
     }
+
     for (I = 0; I < DBG_ARRY_SZ; I++) {
-	if (malloc_ptrs[B][I])
-	    continue;
-	malloc_ptrs[B][I] = p;
-	malloc_size[B][I] = (int) sz;
+        if (malloc_ptrs[B][I])
+            continue;
+
+        malloc_ptrs[B][I] = p;
+
+        malloc_size[B][I] = (int) sz;
+
 #if XMALLOC_TRACE
-	malloc_file[B][I] = xmalloc_file;
-	malloc_line[B][I] = xmalloc_line;
-	malloc_count[B][I] = xmalloc_count;
+
+        malloc_file[B][I] = xmalloc_file;
+
+        malloc_line[B][I] = xmalloc_line;
+
+        malloc_count[B][I] = xmalloc_count;
+
 #endif
-	break;
+
+        break;
     }
+
     if (I == DBG_ARRY_SZ)
-	(*failure_notify) ("xmalloc: debug out of array space!");
+        (*failure_notify) ("xmalloc: debug out of array space!");
 }
+
 #endif
 
 #if XMALLOC_TRACE && !HAVE_MALLOCBLKSIZE
@@ -268,12 +307,15 @@ xmallocblksize(void *p)
 {
     int B, I;
     B = DBG_HASH_BUCKET(p);
+
     for (I = 0; I < DBG_ARRY_SZ; I++) {
-	if (malloc_ptrs[B][I] == p)
-	    return malloc_size[B][I];
+        if (malloc_ptrs[B][I] == p)
+            return malloc_size[B][I];
     }
+
     return 0;
 }
+
 #endif
 
 #ifdef XMALLOC_TRACE
@@ -282,34 +324,43 @@ malloc_file_name(void *p)
 {
     int B, I;
     B = DBG_HASH_BUCKET(p);
+
     for (I = 0; I < DBG_ARRY_SZ; I++) {
-	if (malloc_ptrs[B][I] == p)
-	    return malloc_file[B][I];
+        if (malloc_ptrs[B][I] == p)
+            return malloc_file[B][I];
     }
+
     return 0;
 }
+
 int
 malloc_line_number(void *p)
 {
     int B, I;
     B = DBG_HASH_BUCKET(p);
+
     for (I = 0; I < DBG_ARRY_SZ; I++) {
-	if (malloc_ptrs[B][I] == p)
-	    return malloc_line[B][I];
+        if (malloc_ptrs[B][I] == p)
+            return malloc_line[B][I];
     }
+
     return 0;
 }
+
 int
 malloc_number(void *p)
 {
     int B, I;
     B = DBG_HASH_BUCKET(p);
+
     for (I = 0; I < DBG_ARRY_SZ; I++) {
-	if (malloc_ptrs[B][I] == p)
-	    return malloc_count[B][I];
+        if (malloc_ptrs[B][I] == p)
+            return malloc_count[B][I];
     }
+
     return 0;
 }
+
 static void
 xmalloc_show_trace(void *p, int sign)
 {
@@ -319,24 +370,29 @@ xmalloc_show_trace(void *p, int sign)
     size_t mi = 0;
     size_t sz;
 #if HAVE_MALLINFO
+
     struct mallinfo mp = mallinfo();
     mi = mp.uordblks + mp.usmblks + mp.hblkhd;
 #endif
+
     sz = xmallocblksize(p) * sign;
     xmalloc_total += sz;
     xmalloc_count += sign > 0;
+
     if (xmalloc_trace) {
-	fprintf(stderr, "%c%8p size=%5d/%d acc=%5d/%d mallinfo=%5d/%d %s:%d %s",
-	    sign > 0 ? '+' : '-', p,
-	    (int) xmalloc_total - last_total, (int) xmalloc_total,
-	    (int) accounted - last_accounted, (int) accounted,
-	    (int) mi - last_mallinfo, (int) mi,
-	    xmalloc_file, xmalloc_line, xmalloc_func);
-	if (sign < 0)
-	    fprintf(stderr, " (%d %s:%d)\n", malloc_number(p), malloc_file_name(p), malloc_line_number(p));
-	else
-	    fprintf(stderr, " %d\n", xmalloc_count);
+        fprintf(stderr, "%c%8p size=%5d/%d acc=%5d/%d mallinfo=%5d/%d %s:%d %s",
+                sign > 0 ? '+' : '-', p,
+                (int) xmalloc_total - last_total, (int) xmalloc_total,
+                (int) accounted - last_accounted, (int) accounted,
+                (int) mi - last_mallinfo, (int) mi,
+                xmalloc_file, xmalloc_line, xmalloc_func);
+
+        if (sign < 0)
+            fprintf(stderr, " (%d %s:%d)\n", malloc_number(p), malloc_file_name(p), malloc_line_number(p));
+        else
+            fprintf(stderr, " %d\n", xmalloc_count);
     }
+
     last_total = xmalloc_total;
     last_accounted = accounted;
     last_mallinfo = mi;
@@ -351,40 +407,49 @@ xmalloc_scan_region(void *start, int size, int depth)
     char *ptr = start;
     char *end = ptr + size - XMALLOC_LEAK_ALIGN;
     static int sum = 0;
+
     while (ptr <= end) {
-	void *p = *(void **) ptr;
-	if (p && p != start) {
-	    B = DBG_HASH_BUCKET(p);
-	    for (I = 0; I < DBG_ARRY_SZ; I++) {
-		if (malloc_ptrs[B][I] == p) {
-		    if (!malloc_refs[B][I]++) {
-			/* A new reference */
-			fprintf(stderr, "%*s%p %s:%d size %d allocation %d\n",
-			    depth, "",
-			    malloc_ptrs[B][I], malloc_file[B][I],
-			    malloc_line[B][I], malloc_size[B][I],
-			    malloc_count[B][I]);
-			sum += malloc_size[B][I];
-			xmalloc_scan_region(malloc_ptrs[B][I], malloc_size[B][I], depth + 1);
-			if (depth == 0) {
-			    if (sum != malloc_size[B][I])
-				fprintf(stderr, "=== %d bytes\n", sum);
-			    sum = 0;
-			}
+        void *p = *(void **) ptr;
+
+        if (p && p != start) {
+            B = DBG_HASH_BUCKET(p);
+
+            for (I = 0; I < DBG_ARRY_SZ; I++) {
+                if (malloc_ptrs[B][I] == p) {
+                    if (!malloc_refs[B][I]++) {
+                        /* A new reference */
+                        fprintf(stderr, "%*s%p %s:%d size %d allocation %d\n",
+                                depth, "",
+                                malloc_ptrs[B][I], malloc_file[B][I],
+                                malloc_line[B][I], malloc_size[B][I],
+                                malloc_count[B][I]);
+                        sum += malloc_size[B][I];
+                        xmalloc_scan_region(malloc_ptrs[B][I], malloc_size[B][I], depth + 1);
+
+                        if (depth == 0) {
+                            if (sum != malloc_size[B][I])
+                                fprintf(stderr, "=== %d bytes\n", sum);
+
+                            sum = 0;
+                        }
+
 #if XMALLOC_SHOW_ALL_REFERENCES
-		    } else {
-			/* We have already scanned this pointer... */
-			fprintf(stderr, "%*s%p %s:%d size %d allocation %d ... (%d)\n",
-			    depth * 2, "",
-			    malloc_ptrs[B][I], malloc_file[B][I],
-			    malloc_line[B][I], malloc_size[B][I],
-			    malloc_count[B][I], malloc_refs[B][I]);
+
+                    } else {
+                        /* We have already scanned this pointer... */
+                        fprintf(stderr, "%*s%p %s:%d size %d allocation %d ... (%d)\n",
+                                depth * 2, "",
+                                malloc_ptrs[B][I], malloc_file[B][I],
+                                malloc_line[B][I], malloc_size[B][I],
+                                malloc_count[B][I], malloc_refs[B][I]);
 #endif
-		    }
-		}
-	    }
-	}
-	ptr += XMALLOC_LEAK_ALIGN;
+
+                    }
+                }
+            }
+        }
+
+        ptr += XMALLOC_LEAK_ALIGN;
     }
 }
 
@@ -397,26 +462,30 @@ xmalloc_find_leaks(void)
     extern void _etext;
     fprintf(stderr, "----- Memory map ----\n");
     xmalloc_scan_region(&_etext, (void *) sbrk(0) - (void *) &_etext, 0);
+
     for (B = 0; B < DBG_ARRY_BKTS; B++) {
-	for (I = 0; I < DBG_ARRY_SZ; I++) {
-	    if (malloc_ptrs[B][I] && malloc_refs[B][I] == 0) {
-		/* Found a leak... */
-		fprintf(stderr, "Leak found: %p", malloc_ptrs[B][I]);
-		fprintf(stderr, " %s", malloc_file[B][I]);
-		fprintf(stderr, ":%d", malloc_line[B][I]);
-		fprintf(stderr, " size %d", malloc_size[B][I]);
-		fprintf(stderr, " allocation %d\n", malloc_count[B][I]);
-		leak_sum += malloc_size[B][I];
-	    }
-	}
+        for (I = 0; I < DBG_ARRY_SZ; I++) {
+            if (malloc_ptrs[B][I] && malloc_refs[B][I] == 0) {
+                /* Found a leak... */
+                fprintf(stderr, "Leak found: %p", malloc_ptrs[B][I]);
+                fprintf(stderr, " %s", malloc_file[B][I]);
+                fprintf(stderr, ":%d", malloc_line[B][I]);
+                fprintf(stderr, " size %d", malloc_size[B][I]);
+                fprintf(stderr, " allocation %d\n", malloc_count[B][I]);
+                leak_sum += malloc_size[B][I];
+            }
+        }
     }
+
     if (leak_sum) {
-	fprintf(stderr, "Total leaked memory: %d\n", leak_sum);
+        fprintf(stderr, "Total leaked memory: %d\n", leak_sum);
     } else {
-	fprintf(stderr, "No memory leaks detected\n");
+        fprintf(stderr, "No memory leaks detected\n");
     }
+
     fprintf(stderr, "----------------------\n");
 }
+
 #endif /* XMALLOC_TRACE */
 
 /*
@@ -429,36 +498,51 @@ xmalloc(size_t sz)
     void *p;
 
     PROF_start(xmalloc);
+
     if (sz < 1)
-	sz = 1;
+        sz = 1;
 
     PROF_start(malloc);
+
     p = malloc(sz);
+
     PROF_stop(malloc);
+
     if (p == NULL) {
-	if (failure_notify) {
-	    snprintf(msg, 128, "xmalloc: Unable to allocate %d bytes!\n",
-		(int) sz);
-	    (*failure_notify) (msg);
-	} else {
-	    perror("malloc");
-	}
-	exit(1);
+        if (failure_notify) {
+            snprintf(msg, 128, "xmalloc: Unable to allocate %d bytes!\n",
+                     (int) sz);
+            (*failure_notify) (msg);
+        } else {
+            perror("malloc");
+        }
+
+        exit(1);
     }
+
 #if XMALLOC_DEBUG
     check_malloc(p, sz);
+
 #endif
 #if XMALLOC_STATISTICS
+
     malloc_stat(sz);
+
 #endif
 #if XMALLOC_TRACE
+
     xmalloc_show_trace(p, 1);
+
 #endif
 #if MEM_GEN_TRACE
+
     if (tracefp)
-	fprintf(tracefp, "m:%d:%p\n", sz, p);
+        fprintf(tracefp, "m:%d:%p\n", sz, p);
+
 #endif
+
     PROF_stop(xmalloc);
+
     return (p);
 }
 
@@ -470,19 +554,27 @@ xfree(void *s)
 {
     PROF_start(xfree);
 #if XMALLOC_TRACE
+
     xmalloc_show_trace(s, -1);
 #endif
 
 #if XMALLOC_DEBUG
+
     if (s != NULL)
-	check_free(s);
+        check_free(s);
+
 #endif
+
     if (s != NULL)
-	free(s);
+        free(s);
+
 #if MEM_GEN_TRACE
+
     if (tracefp && s)
-	fprintf(tracefp, "f:%p\n", s);
+        fprintf(tracefp, "f:%p\n", s);
+
 #endif
+
     PROF_stop(xfree);
 }
 
@@ -493,16 +585,22 @@ xxfree(const void *s_const)
     void *s = (void *) s_const;
     PROF_start(xxfree);
 #if XMALLOC_TRACE
+
     xmalloc_show_trace(s, -1);
 #endif
 #if XMALLOC_DEBUG
+
     check_free(s);
 #endif
+
     free(s);
 #if MEM_GEN_TRACE
+
     if (tracefp && s)
-	fprintf(tracefp, "f:%p\n", s);
+        fprintf(tracefp, "f:%p\n", s);
+
 #endif
+
     PROF_stop(xxfree);
 }
 
@@ -517,39 +615,55 @@ xrealloc(void *s, size_t sz)
 
     PROF_start(xrealloc);
 #if XMALLOC_TRACE
+
     xmalloc_show_trace(s, -1);
 #endif
 
     if (sz < 1)
-	sz = 1;
+        sz = 1;
+
 #if XMALLOC_DEBUG
+
     if (s != NULL)
-	check_free(s);
+        check_free(s);
+
 #endif
+
     if ((p = realloc(s, sz)) == NULL) {
-	if (failure_notify) {
-	    snprintf(msg, 128, "xrealloc: Unable to reallocate %d bytes!\n",
-		(int) sz);
-	    (*failure_notify) (msg);
-	} else {
-	    perror("realloc");
-	}
-	exit(1);
+        if (failure_notify) {
+            snprintf(msg, 128, "xrealloc: Unable to reallocate %d bytes!\n",
+                     (int) sz);
+            (*failure_notify) (msg);
+        } else {
+            perror("realloc");
+        }
+
+        exit(1);
     }
+
 #if XMALLOC_DEBUG
     check_malloc(p, sz);
+
 #endif
 #if XMALLOC_STATISTICS
+
     malloc_stat(sz);
+
 #endif
 #if XMALLOC_TRACE
+
     xmalloc_show_trace(p, 1);
+
 #endif
 #if MEM_GEN_TRACE
+
     if (tracefp)		/* new ptr, old ptr, new size */
-	fprintf(tracefp, "r:%p:%p:%d\n", p, s, sz);
+        fprintf(tracefp, "r:%p:%p:%d\n", p, s, sz);
+
 #endif
+
     PROF_stop(xrealloc);
+
     return (p);
 }
 
@@ -563,37 +677,54 @@ xcalloc(size_t n, size_t sz)
     void *p;
 
     PROF_start(xcalloc);
+
     if (n < 1)
-	n = 1;
+        n = 1;
+
     if (sz < 1)
-	sz = 1;
+        sz = 1;
+
     PROF_start(calloc);
+
     p = calloc(n, sz);
+
     PROF_stop(calloc);
+
     if (p == NULL) {
-	if (failure_notify) {
-	    snprintf(msg, 128, "xcalloc: Unable to allocate %u blocks of %u bytes!\n",
-		(unsigned int) n, (unsigned int) sz);
-	    (*failure_notify) (msg);
-	} else {
-	    perror("xcalloc");
-	}
-	exit(1);
+        if (failure_notify) {
+            snprintf(msg, 128, "xcalloc: Unable to allocate %u blocks of %u bytes!\n",
+                     (unsigned int) n, (unsigned int) sz);
+            (*failure_notify) (msg);
+        } else {
+            perror("xcalloc");
+        }
+
+        exit(1);
     }
+
 #if XMALLOC_DEBUG
     check_malloc(p, sz * n);
+
 #endif
 #if XMALLOC_STATISTICS
+
     malloc_stat(sz * n);
+
 #endif
 #if XMALLOC_TRACE
+
     xmalloc_show_trace(p, 1);
+
 #endif
 #if MEM_GEN_TRACE
+
     if (tracefp)
-	fprintf(tracefp, "c:%u:%u:%p\n", (unsigned int) n, (unsigned int) sz, p);
+        fprintf(tracefp, "c:%u:%u:%p\n", (unsigned int) n, (unsigned int) sz, p);
+
 #endif
+
     PROF_stop(xcalloc);
+
     return (p);
 }
 
@@ -607,18 +738,24 @@ xstrdup(const char *s)
     size_t sz;
     void *p;
     PROF_start(xstrdup);
+
     if (s == NULL) {
-	if (failure_notify) {
-	    (*failure_notify) ("xstrdup: tried to dup a NULL pointer!\n");
-	} else {
-	    fprintf(stderr, "xstrdup: tried to dup a NULL pointer!\n");
-	}
-	exit(1);
+        if (failure_notify) {
+            (*failure_notify) ("xstrdup: tried to dup a NULL pointer!\n");
+        } else {
+            fprintf(stderr, "xstrdup: tried to dup a NULL pointer!\n");
+        }
+
+        exit(1);
     }
+
     /* copy string, including terminating character */
     sz = strlen(s) + 1;
+
     p = memcpy(xmalloc(sz), s, sz);
+
     PROF_stop(xstrdup);
+
     return p;
 }
 
@@ -634,10 +771,14 @@ xstrndup(const char *s, size_t n)
     assert(s != NULL);
     assert(n);
     sz = strlen(s) + 1;
+
     if (sz > n)
-	sz = n;
+        sz = n;
+
     p = xstrncpy(xmalloc(sz), s, sz);
+
     PROF_stop(xstrndup);
+
     return p;
 }
 
@@ -648,14 +789,15 @@ const char *
 xstrerr(int error)
 {
     static char xstrerror_buf[BUFSIZ];
-    static char strerror_buf[BUFSIZ];
+    const char *errmsg;
 
-    snprintf(strerror_buf, BUFSIZ, "%s", strerror(error));
+    errmsg = strerror(error);
 
-    if (strerror_buf)
-	snprintf(xstrerror_buf, BUFSIZ, "(%d) %s", error, strerror_buf);
-    else
-	snprintf(xstrerror_buf, BUFSIZ, "(%d) Unknown", error);
+    if (!errmsg || !*errmsg)
+        errmsg = "Unknown error";
+
+    snprintf(xstrerror_buf, BUFSIZ, "(%d) %s", error, errmsg);
+
     return xstrerror_buf;
 }
 
@@ -669,31 +811,35 @@ void
 Tolower(char *q)
 {
     char *s = q;
+
     while (*s) {
-	*s = tolower((unsigned char) *s);
-	s++;
+        *s = tolower((unsigned char) *s);
+        s++;
     }
 }
 
 int
+
 tvSubMsec(struct timeval t1, struct timeval t2)
 {
     return (t2.tv_sec - t1.tv_sec) * 1000 +
-	(t2.tv_usec - t1.tv_usec) / 1000;
+           (t2.tv_usec - t1.tv_usec) / 1000;
 }
 
 int
+
 tvSubUsec(struct timeval t1, struct timeval t2)
 {
     return (t2.tv_sec - t1.tv_sec) * 1000000 +
-	(t2.tv_usec - t1.tv_usec);
+           (t2.tv_usec - t1.tv_usec);
 }
 
 double
+
 tvSubDsec(struct timeval t1, struct timeval t2)
 {
     return (double) (t2.tv_sec - t1.tv_sec) +
-	(double) (t2.tv_usec - t1.tv_usec) / 1000000.0;
+           (double) (t2.tv_usec - t1.tv_usec) / 1000000.0;
 }
 
 /*
@@ -706,13 +852,18 @@ xstrncpy(char *dst, const char *src, size_t n)
 {
     char *r = dst;
     PROF_start(xstrncpy);
+
     if (!n || !dst)
-	return dst;
+        return dst;
+
     if (src)
-	while (--n != 0 && *src != '\0')
-	    *dst++ = *src++;
+        while (--n != 0 && *src != '\0')
+            *dst++ = *src++;
+
     *dst = '\0';
+
     PROF_stop(xstrncpy);
+
     return r;
 }
 
@@ -722,12 +873,14 @@ xcountws(const char *str)
 {
     size_t count = 0;
     PROF_start(xcountws);
+
     if (str) {
-	while (xisspace(*str)) {
-	    str++;
-	    count++;
-	}
+        while (xisspace(*str)) {
+            str++;
+            count++;
+        }
     }
+
     PROF_stop(xcountws);
     return count;
 }
@@ -792,12 +945,14 @@ const char *
 double_to_str(char *buf, int buf_size, double value)
 {
     /* select format */
+
     if (value < 1e9)
-	snprintf(buf, buf_size, "%.2f MB", value / 1e6);
+        snprintf(buf, buf_size, "%.2f MB", value / 1e6);
     else if (value < 1e12)
-	snprintf(buf, buf_size, "%.3f GB", value / 1e9);
+        snprintf(buf, buf_size, "%.3f GB", value / 1e9);
     else
-	snprintf(buf, buf_size, "%.4f TB", value / 1e12);
+        snprintf(buf, buf_size, "%.4f TB", value / 1e12);
+
     return buf;
 }
 
@@ -813,14 +968,17 @@ gb_to_str(const gb_t * g)
     static int call_id = 0;
     double value = gb_to_double(g);
     char *buf = bufs[call_id++];
+
     if (call_id >= max_cc_calls)
-	call_id = 0;
+        call_id = 0;
+
     /* select format */
     if (value < 1e9)
-	snprintf(buf, sizeof(GbBuf), "%.2f MB", value / 1e6);
+        snprintf(buf, sizeof(GbBuf), "%.2f MB", value / 1e6);
     else if (value < 1e12)
-	snprintf(buf, sizeof(GbBuf), "%.2f GB", value / 1e9);
+        snprintf(buf, sizeof(GbBuf), "%.2f GB", value / 1e9);
     else
-	snprintf(buf, sizeof(GbBuf), "%.2f TB", value / 1e12);
+        snprintf(buf, sizeof(GbBuf), "%.2f TB", value / 1e12);
+
     return buf;
 }
