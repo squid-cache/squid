@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.420 2006/07/31 13:17:57 serassio Exp $
+# $Id: cf.data.pre,v 1.421 2006/08/05 12:05:35 robertc Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -2615,18 +2615,6 @@ DOC_START
 	  # clients may appear to come from multiple addresses if they are
 	  # going through proxy farms, so a limit of 1 may cause user problems.
 
-	acl aclname req_mime_type mime-type1 ...
-	  # regex match agains the mime type of the request generated
-	  # by the client. Can be used to detect file upload or some
-	  # types HTTP tunneling requests.
-	  # NOTE: This does NOT match the reply. You cannot use this
-	  # to match the returned file type.
-
-	acl aclname req_header header-name [-i] any\.regex\.here
-	  # regex match against any of the known request headers.  May be
-	  # thought of as a superset of "browser", "referer" and "mime-type"
-	  # ACLs.
-
 	acl aclname rep_mime_type mime-type1 ...
 	  # regex match against the mime type of the reply received by
 	  # squid. Can be used to detect file download or some
@@ -2634,6 +2622,18 @@ DOC_START
 	  # NOTE: This has no effect in http_access rules. It only has
 	  # effect in rules that affect the reply data stream such as
 	  # http_reply_access.
+
+	acl aclname rep_header header-name [-i] any\.regex\.here
+	  # regex match against any of the known reply headers.  May be
+	  # thought of as a superset of "browser", "referer" and "mime-type"
+	  # ACLs.
+
+	acl aclname req_mime_type mime-type1 ...
+	  # regex match agains the mime type of the request generated
+	  # by the client. Can be used to detect file upload or some
+	  # types HTTP tunneling requests.
+	  # NOTE: This does NOT match the reply. You cannot use this
+	  # to match the returned file type.
 
 	acl aclname req_header header-name [-i] any\.regex\.here
 	  # regex match against any of the known request headers.  May be

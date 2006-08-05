@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLHTTPHeaderData.h,v 1.1 2006/06/14 19:18:24 serassio Exp $
+ * $Id: ACLHTTPHeaderData.h,v 1.2 2006/08/05 12:05:35 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,8 +33,8 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLREGEXDATA_H
-#define SQUID_ACLREGEXDATA_H
+#ifndef SQUID_ACLHTTPHEADERDATA_H
+#define SQUID_ACLHTTPHEADERDATA_H
 #include "ACLData.h"
 
 class ACLHTTPHeaderData : public ACLData<HttpHeader*>
@@ -43,6 +43,7 @@ class ACLHTTPHeaderData : public ACLData<HttpHeader*>
 public:
     MEMPROXY_CLASS(ACLHTTPHeaderData);
 
+    ACLHTTPHeaderData();
     virtual ~ACLHTTPHeaderData();
     virtual bool match(HttpHeader* hdr);
     virtual wordlist *dump();
@@ -53,9 +54,9 @@ public:
 private:
     http_hdr_type hdrId; // set if header is known
     String hdrName; // always set
-    relist *data;
+    ACLData<char const *> * regex_rule;
 };
 
 MEMPROXY_CLASS_INLINE(ACLHTTPHeaderData)
 
-#endif /* SQUID_ACLREGEXDATA_H */
+#endif /* SQUID_ACLHTTPHEADERDATA_H */
