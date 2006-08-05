@@ -1,5 +1,5 @@
 /*
- * $Id: ACLHTTPHeaderData.cc,v 1.1 2006/06/14 19:18:24 serassio Exp $
+ * $Id: ACLHTTPHeaderData.cc,v 1.2 2006/08/05 12:05:35 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -39,27 +39,22 @@
 #include "authenticate.h"
 #include "ACLChecklist.h"
 #include "ACL.h"
+#include "ACLRegexData.h"
 #include "wordlist.h"
 #include "ConfigParser.h"
 
-//TODO: These should be unified
-static void aclDestroyRegexList(relist * data);
-void
-aclDestroyRegexList(relist * data)
-{
-    relist *next = NULL;
-
-    for (; data; data = next) {
-        next = data->next;
-        regfree(&data->regex);
-        safe_free(data->pattern);
-        memFree(data, MEM_RELIST);
-    }
-}
+/* Construct an ACLHTTPHeaderData that uses an ACLRegex rule with the value of the
+ * selected header from a given request.
+ *
+ * TODO: This can be generalised by making the type of the regex_rule into a 
+ * template parameter - so that we can use different rules types in future.
+ */
+ACLHTTPHeaderData::ACLHTTPHeaderData() : hdrId(HDR_BAD_HDR), regex_rule(new ACLRegexData)
+{}
 
 ACLHTTPHeaderData::~ACLHTTPHeaderData()
 {
-    aclDestroyRegexList(data);
+    delete regex_rule;
 }
 
 bool
@@ -70,98 +65,20 @@ ACLHTTPHeaderData::match(HttpHeader* hdr)
 
     debug(28, 3) ("aclHeaderData::match: checking '%s'\n", hdrName.buf());
 
-    relist *first, *prev;
-
-    first = data;
-
-    prev = NULL;
-
-    relist *current = first;
-
     String value = hdrId != HDR_BAD_HDR ? hdr->getStrOrList(hdrId) : hdr->getByName(hdrName.buf());
 
-    // A header value will not be modified, but may not be present
-    while (value.buf() && current) {
-        debug(28, 3) ("aclHeaderData::match: looking for '%s'\n", current->pattern);
-
-        if (regexec(&current->regex, value.buf(), 0, 0, 0) == 0) {
-            if (prev != NULL) {
-                /* shift the element just found to the second position
-                 * in the list */
-                prev->next = current->next;
-                current->next = first->next;
-                first->next = current;
-            }
-
-            debug(28, 2) ("aclHeaderData::match: match '%s' found in '%s'\n",
-                          current->pattern, value.buf());
-            return 1;
-        }
-
-        prev = current;
-        current = current->next;
-    }
-
-    return 0;
+    return regex_rule->match(value.buf());
 }
 
 wordlist *
 ACLHTTPHeaderData::dump()
 {
     wordlist *W = NULL;
-    relist *temp = data;
-
-    while (temp != NULL) {
-        wordlistAdd(&W, temp->pattern);
-        temp = temp->next;
-    }
-
+    wordlistAdd(&W, hdrName.buf());
+    wordlist * regex_dump = regex_rule->dump();
+    wordlistAddWl(&W, regex_dump);
+    wordlistDestroy(&regex_dump);
     return W;
-}
-
-static void aclParseHeaderList(relist **curlist);
-//TODO: These should be merged...
-void
-aclParseHeaderList(relist **curlist)
-{
-    relist **Tail;
-    relist *q = NULL;
-    char *t = NULL;
-    regex_t comp;
-    int errcode;
-    int flags = REG_EXTENDED | REG_NOSUB;
-
-    for (Tail = (relist **)curlist; *Tail; Tail = &((*Tail)->next))
-
-        ;
-
-    while ((t = ConfigParser::strtokFile())) {
-        if (strcmp(t, "-i") == 0) {
-            flags |= REG_ICASE;
-            continue;
-        }
-
-        if (strcmp(t, "+i") == 0) {
-            flags &= ~REG_ICASE;
-            continue;
-        }
-
-        if ((errcode = regcomp(&comp, t, flags)) != 0) {
-            char errbuf[256];
-            regerror(errcode, &comp, errbuf, sizeof errbuf);
-            debug(28, 0) ("%s line %d: %s\n",
-                          cfg_filename, config_lineno, config_input_line);
-            debug(28, 0) ("aclParseHeaderList: Invalid regular expression '%s': %s\n",
-                          t, errbuf);
-            continue;
-        }
-
-        q = (relist *)memAllocate(MEM_RELIST);
-        q->pattern = xstrdup(t);
-        q->regex = comp;
-        *(Tail) = q;
-        Tail = &q->next;
-    }
 }
 
 void
@@ -171,20 +88,22 @@ ACLHTTPHeaderData::parse()
     assert (t != NULL);
     hdrName = t;
     hdrId = httpHeaderIdByNameDef(hdrName.buf(), strlen(hdrName.buf()));
-    aclParseHeaderList(&data);
+    regex_rule->parse();
 }
 
 bool
 ACLHTTPHeaderData::empty() const
 {
-    return data == NULL;
+    return (hdrId == HDR_BAD_HDR && !hdrName.buf()) || regex_rule->empty();
 }
 
 ACLData<HttpHeader*> *
 ACLHTTPHeaderData::clone() const
 {
     /* Header's don't clone yet. */
-    assert (!data);
-    return new ACLHTTPHeaderData;
+    ACLHTTPHeaderData * result = new ACLHTTPHeaderData;
+    result->regex_rule = regex_rule->clone();
+    result->hdrId = hdrId;
+    result->hdrName = hdrName;
+    return result;
 }
-

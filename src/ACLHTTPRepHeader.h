@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLHTTPRepHeader.h,v 1.1 2006/06/14 19:18:24 serassio Exp $
+ * $Id: ACLHTTPRepHeader.h,v 1.2 2006/08/05 12:05:35 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,8 +33,8 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLMETHOD_H
-#define SQUID_ACLMETHOD_H
+#ifndef SQUID_ACLHTTPREPHEADER_H
+#define SQUID_ACLHTTPREPHEADER_H
 #include "ACLStrategy.h"
 #include "ACLStrategised.h"
 #include "HttpHeader.h"
@@ -67,4 +67,4 @@ private:
     static ACLStrategised<HttpHeader*> RegistryEntry_;
 };
 
-#endif /* SQUID_ACLMETHOD_H */
+#endif /* SQUID_ACLHTTPREPHEADER_H */
