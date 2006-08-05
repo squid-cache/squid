@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.63 2006/05/23 00:39:32 wessels Exp $
+ * $Id: store_dir_coss.cc,v 1.64 2006/08/05 15:37:21 hno Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store COSS Directory Routines
@@ -1106,7 +1106,7 @@ CossSwapDir::reconfigure(int index, char *path)
 void
 CossSwapDir::dump(StoreEntry &entry)const
 {
-    storeAppendPrintf(&entry, " %d", max_size >> 20);
+    storeAppendPrintf(&entry, " %d", max_size >> 10);
     dumpOptions(&entry);
 }
 
