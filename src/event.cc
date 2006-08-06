@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.39 2006/05/29 00:15:02 robertc Exp $
+ * $Id: event.cc,v 1.40 2006/08/06 06:26:27 robertc Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -153,7 +153,7 @@ eventRun(void)
 
     while ((event = tasks)) {
         EVH *callback;
-        void *cbdata;
+        void *cbdata = event->arg;
 
         if (event->when > current_dtime)
             break;
