@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.146 2006/06/19 22:49:59 hno Exp $
+ * $Id: forward.cc,v 1.147 2006/08/07 02:28:22 robertc Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
 
 
 #include "squid.h"
+#include "event.h"
 #include "CacheManager.h"
 #include "forward.h"
 #include "SquidTime.h"

@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.338 2006/07/25 18:22:37 hno Exp $
+ * $Id: neighbors.cc,v 1.339 2006/08/07 02:28:22 robertc Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "event.h"
 #include "CacheManager.h"
 #include "Store.h"
 #include "ICP.h"

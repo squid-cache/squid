@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_rebuild.cc,v 1.84 2006/05/19 20:22:56 wessels Exp $
+ * $Id: store_rebuild.cc,v 1.85 2006/08/07 02:28:22 robertc Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "event.h"
 #include "Store.h"
 #include "SwapDir.h"
 #include "StoreSearch.h"

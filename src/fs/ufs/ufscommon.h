@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufscommon.h,v 1.7 2006/05/31 17:47:53 wessels Exp $
+ * $Id: ufscommon.h,v 1.8 2006/08/07 02:28:26 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -34,6 +34,7 @@
 #define SQUID_UFSCOMMON_H
 
 #include "squid.h"
+#include "event.h"
 
 #define DefaultLevelOneDirs     16
 #define DefaultLevelTwoDirs     256

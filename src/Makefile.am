@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.158 2006/07/15 21:15:19 serassio Exp $
+#  $Id: Makefile.am,v 1.159 2006/08/07 02:28:22 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -402,6 +402,8 @@ squid_SOURCES = \
 	clientStream.cc \
 	clientStream.h \
 	CommIO.h \
+	CompletionDispatcher.cc \
+	CompletionDispatcher.h \
 	$(squid_COMMSOURCES) \
 	CommRead.h \
 	ConfigOption.cc \
@@ -421,6 +423,9 @@ squid_SOURCES = \
 	$(ESI_SOURCE) \
 	ETag.cc \
 	event.cc \
+	event.h \
+	EventLoop.h \
+	EventLoop.cc \
 	external_acl.cc \
 	ExternalACL.h \
 	ExternalACLEntry.cc \
@@ -1053,6 +1058,8 @@ check_PROGRAMS+= \
 	tests/testACLMaxUserIP \
 	tests/testBoilerplate \
 	tests/testCacheManager \
+	tests/testEvent \
+	tests/testEventLoop \
 	tests/testHeaders \
 	tests/test_http_range \
 	tests/testHttpRequest \
@@ -1192,6 +1199,7 @@ tests_testCacheManager_SOURCES = \
 	mem.cc \
 	String.cc \
 	tests/testCacheManager.cc \
+	tests/testCacheManager.h \
 	tests/testMain.cc \
 	time.cc \
 	access_log.cc \
@@ -1329,6 +1337,303 @@ tests_testCacheManager_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@SQUID_CPPUNIT_LA@ \
 	@ICAP_LIBS@
 
+## Tests of the Even module.
+tests_testEvent_SOURCES = \
+	debug.cc \
+	EventLoop.h \
+	EventLoop.cc \
+	globals.cc \
+	HttpRequest.cc \
+	HttpRequestMethod.cc \
+	mem.cc \
+	String.cc \
+	tests/testEvent.cc \
+	tests/testEvent.h \
+	tests/testMain.cc \
+	time.cc \
+	access_log.cc \
+	acl.cc \
+	acl_noncore.cc \
+	ACLChecklist.cc \
+	ACLProxyAuth.cc \
+	ACLStringData.cc \
+	ACLRegexData.cc \
+	ACLUserData.cc \
+	authenticate.cc \
+	BodyReader.cc \
+	cache_manager.cc \
+	cache_cf.cc \
+	CacheDigest.cc \
+	carp.cc \
+	cbdata.cc \
+	client_db.cc \
+	client_side.cc \
+	client_side_reply.cc \
+	client_side_request.cc \
+	clientStream.cc \
+	$(squid_COMMSOURCES) \
+	ConfigOption.cc \
+	ConfigParser.cc \
+	$(DELAY_POOL_SOURCE) \
+	disk.cc \
+	$(DNSSOURCE) \
+	event.cc \
+	errorpage.cc \
+	$(ESI_SOURCE) \
+	ETag.cc \
+	external_acl.cc \
+	ExternalACLEntry.cc \
+	fd.cc \
+	fde.cc \
+	forward.cc \
+	fqdncache.cc \
+	ftp.cc \
+	gopher.cc \
+	helper.cc \
+	$(HTCPSOURCE) \
+	http.cc \
+	HttpBody.cc \
+	HttpHeader.cc \
+	HttpHeaderTools.cc \
+	HttpHdrCc.cc \
+	HttpHdrContRange.cc \
+	HttpHdrRange.cc \
+	HttpHdrSc.cc \
+	HttpHdrScTarget.cc \
+	HttpMsg.cc \
+	HttpReply.cc \
+	HttpStatusLine.cc \
+	icmp.cc \
+	icp_v2.cc \
+	icp_v3.cc \
+	$(IDENT_SOURCE) \
+	ipc.cc \
+	ipcache.cc \
+	int.cc \
+	internal.cc \
+	list.cc \
+	logfile.cc \
+	multicast.cc \
+	mem_node.cc \
+	MemBuf.cc \
+	MemObject.cc \
+	mime.cc \
+	neighbors.cc \
+	net_db.cc \
+	Packer.cc \
+	Parsing.cc \
+	pconn.cc \
+	peer_digest.cc \
+	peer_select.cc \
+	redirect.cc \
+	referer.cc \
+	refresh.cc \
+	Server.cc \
+	$(SNMP_SOURCE) \
+	$(SSL_SOURCE) \
+	stat.cc \
+	StatHist.cc \
+	stmem.cc \
+	store.cc \
+	store_client.cc \
+	store_digest.cc \
+	store_dir.cc \
+	store_io.cc \
+	store_key_md5.cc \
+	store_log.cc \
+	store_rebuild.cc \
+	store_swapin.cc \
+	store_swapmeta.cc \
+	store_swapout.cc \
+	StoreFileSystem.cc \
+	StoreIOState.cc \
+	StoreMeta.cc \
+	StoreMetaMD5.cc \
+	StoreMetaSTD.cc \
+	StoreMetaUnpacker.cc \
+	StoreMetaURL.cc \
+	StoreMetaVary.cc \
+	StoreSwapLogData.cc \
+	tools.cc \
+	tunnel.cc \
+	SwapDir.cc \
+	url.cc \
+	URLScheme.cc \
+	urn.cc \
+	useragent.cc \
+	wais.cc \
+	wccp2.cc \
+	whois.cc \
+	wordlist.cc
+nodist_tests_testEvent_SOURCES = \
+	repl_modules.cc \
+	string_arrays.c
+tests_testEvent_LDADD = \
+	libsquid.la \
+	libauth.la \
+	@REPL_OBJS@ \
+	@ICAP_LIBS@ \
+	@REGEXLIB@ \
+	@SSLLIB@ \
+	-L../lib -lmiscutil \
+	@XTRA_LIBS@ \
+	@SQUID_CPPUNIT_LIBS@ \
+	@SQUID_CPPUNIT_LA@ \
+	@SNMPLIB@ 
+tests_testEvent_LDFLAGS = $(LIBADD_DL)
+tests_testEvent_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
+	@REPL_OBJS@ \
+	@SQUID_CPPUNIT_LA@ \
+	@ICAP_LIBS@
+
+## Tests of the EventLoop module.
+tests_testEventLoop_SOURCES = \
+	debug.cc \
+	EventLoop.h \
+	EventLoop.cc \
+	globals.cc \
+	HttpRequest.cc \
+	HttpRequestMethod.cc \
+	mem.cc \
+	String.cc \
+	tests/testEventLoop.cc \
+	tests/testEventLoop.h \
+	tests/testMain.cc \
+	time.cc \
+	access_log.cc \
+	acl.cc \
+	acl_noncore.cc \
+	ACLChecklist.cc \
+	ACLProxyAuth.cc \
+	ACLStringData.cc \
+	ACLRegexData.cc \
+	ACLUserData.cc \
+	authenticate.cc \
+	BodyReader.cc \
+	cache_manager.cc \
+	cache_cf.cc \
+	CacheDigest.cc \
+	carp.cc \
+	cbdata.cc \
+	client_db.cc \
+	client_side.cc \
+	client_side_reply.cc \
+	client_side_request.cc \
+	clientStream.cc \
+	$(squid_COMMSOURCES) \
+	ConfigOption.cc \
+	ConfigParser.cc \
+	$(DELAY_POOL_SOURCE) \
+	disk.cc \
+	$(DNSSOURCE) \
+	event.cc \
+	errorpage.cc \
+	$(ESI_SOURCE) \
+	ETag.cc \
+	external_acl.cc \
+	ExternalACLEntry.cc \
+	fd.cc \
+	fde.cc \
+	forward.cc \
+	fqdncache.cc \
+	ftp.cc \
+	gopher.cc \
+	helper.cc \
+	$(HTCPSOURCE) \
+	http.cc \
+	HttpBody.cc \
+	HttpHeader.cc \
+	HttpHeaderTools.cc \
+	HttpHdrCc.cc \
+	HttpHdrContRange.cc \
+	HttpHdrRange.cc \
+	HttpHdrSc.cc \
+	HttpHdrScTarget.cc \
+	HttpMsg.cc \
+	HttpReply.cc \
+	HttpStatusLine.cc \
+	icmp.cc \
+	icp_v2.cc \
+	icp_v3.cc \
+	$(IDENT_SOURCE) \
+	ipc.cc \
+	ipcache.cc \
+	int.cc \
+	internal.cc \
+	list.cc \
+	logfile.cc \
+	multicast.cc \
+	mem_node.cc \
+	MemBuf.cc \
+	MemObject.cc \
+	mime.cc \
+	neighbors.cc \
+	net_db.cc \
+	Packer.cc \
+	Parsing.cc \
+	pconn.cc \
+	peer_digest.cc \
+	peer_select.cc \
+	redirect.cc \
+	referer.cc \
+	refresh.cc \
+	Server.cc \
+	$(SNMP_SOURCE) \
+	$(SSL_SOURCE) \
+	stat.cc \
+	StatHist.cc \
+	stmem.cc \
+	store.cc \
+	store_client.cc \
+	store_digest.cc \
+	store_dir.cc \
+	store_io.cc \
+	store_key_md5.cc \
+	store_log.cc \
+	store_rebuild.cc \
+	store_swapin.cc \
+	store_swapmeta.cc \
+	store_swapout.cc \
+	StoreFileSystem.cc \
+	StoreIOState.cc \
+	StoreMeta.cc \
+	StoreMetaMD5.cc \
+	StoreMetaSTD.cc \
+	StoreMetaUnpacker.cc \
+	StoreMetaURL.cc \
+	StoreMetaVary.cc \
+	StoreSwapLogData.cc \
+	tools.cc \
+	tunnel.cc \
+	SwapDir.cc \
+	url.cc \
+	URLScheme.cc \
+	urn.cc \
+	useragent.cc \
+	wais.cc \
+	wccp2.cc \
+	whois.cc \
+	wordlist.cc
+nodist_tests_testEventLoop_SOURCES = \
+	repl_modules.cc \
+	string_arrays.c
+tests_testEventLoop_LDADD = \
+	libsquid.la \
+	libauth.la \
+	@REPL_OBJS@ \
+	@ICAP_LIBS@ \
+	@REGEXLIB@ \
+	@SSLLIB@ \
+	-L../lib -lmiscutil \
+	@XTRA_LIBS@ \
+	@SQUID_CPPUNIT_LIBS@ \
+	@SQUID_CPPUNIT_LA@ \
+	@SNMPLIB@ 
+tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
+tests_testEventLoop_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
+	@REPL_OBJS@ \
+	@SQUID_CPPUNIT_LA@ \
+	@ICAP_LIBS@
 
 ## test headers checks that individual headers can be parsed with no dependencies.
 ## as such, it needs a new .cc file for each header it parses, so that they
@@ -1338,13 +1643,18 @@ tests_testCacheManager_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 ## RBC 20060422.
 HEADERS_TO_TEST = \
 	tests/testHeader_ACL.cc \
+	tests/testHeader_CompletionDispatcher.cc \
 	tests/testHeader_ConfigParser.cc \
 	tests/testHeader_client_side_request.cc \
+	tests/testHeader_comm.cc \
 	tests/testHeader_dlink.cc \
+	tests/testHeader_event.cc \
+	tests/testHeader_EventLoop.cc \
 	tests/testHeader_HttpHeader.cc \
 	tests/testHeader_HttpHeaderRange.cc \
 	tests/testHeader_HttpReply.cc \
 	tests/testHeader_HttpRequestMethod.cc \
+	tests/testHeader_Store.cc \
 	tests/testHeader_StoreEntryStream.cc \
 	tests/testHeader_URL.cc \
 	tests/testHeader_URLScheme.cc \

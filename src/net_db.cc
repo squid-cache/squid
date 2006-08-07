@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.189 2006/05/29 00:15:02 robertc Exp $
+ * $Id: net_db.cc,v 1.190 2006/08/07 02:28:22 robertc Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -42,6 +42,7 @@
  */
 
 #include "squid.h"
+#include "event.h"
 #include "CacheManager.h"
 #include "Store.h"
 #include "SwapDir.h"

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.534 2006/07/02 16:53:46 serassio Exp $
+ * $Id: protos.h,v 1.535 2006/08/07 02:28:22 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -117,55 +117,6 @@ SQUIDCEXTERN void httpRequestFree(void *);
 
 extern void clientAccessCheck(void *);
 
-/* comm.c */
-extern void comm_calliocallback(void);
-extern bool comm_iocallbackpending(void); /* inline candidate */
-
-extern int comm_listen(int fd);
-SQUIDCEXTERN int commSetNonBlocking(int fd);
-SQUIDCEXTERN int commUnsetNonBlocking(int fd);
-SQUIDCEXTERN void commSetCloseOnExec(int fd);
-extern void _comm_close(int fd, char const *file, int line);
-#define comm_close(fd) (_comm_close((fd), __FILE__, __LINE__))
-SQUIDCEXTERN void comm_reset_close(int fd);
-#if LINGERING_CLOSE
-SQUIDCEXTERN void comm_lingering_close(int fd);
-#endif
-SQUIDCEXTERN void commConnectStart(int fd, const char *, u_short, CNCB *, void *);
-
-SQUIDCEXTERN int comm_connect_addr(int sock, const struct sockaddr_in *);
-SQUIDCEXTERN void comm_init(void);
-
-SQUIDCEXTERN int comm_open(int, int, struct IN_ADDR, u_short port, int, const char *note);
-
-SQUIDCEXTERN int comm_openex(int, int, struct IN_ADDR, u_short, int, unsigned char TOS, const char *);
-SQUIDCEXTERN u_short comm_local_port(int fd);
-
-SQUIDCEXTERN void commSetSelect(int, unsigned int, PF *, void *, time_t);
-
-SQUIDCEXTERN int comm_udp_sendto(int, const struct sockaddr_in *, int, const void *, int);
-SQUIDCEXTERN void comm_old_write(int fd,
-                                 const char *buf,
-                                 int size,
-                                 CWCB * handler,
-                                 void *handler_data,
-                                 FREE *);
-SQUIDCEXTERN void comm_old_write_mbuf(int fd, MemBuf *mb, CWCB * handler, void *handler_data);
-SQUIDCEXTERN void commCallCloseHandlers(int fd);
-SQUIDCEXTERN int commSetTimeout(int fd, int, PF *, void *);
-SQUIDCEXTERN int ignoreErrno(int);
-SQUIDCEXTERN void commCloseAllSockets(void);
-SQUIDCEXTERN void checkTimeouts(void);
-
-
-/*
- * comm_select.c
- */
-SQUIDCEXTERN void comm_select_init(void);
-SQUIDCEXTERN comm_err_t comm_select(int);
-SQUIDCEXTERN void comm_quick_poll_required(void);
-
-
 /* see debug.c for info on context-based debugging */
 SQUIDCEXTERN Ctx ctx_enter(const char *descr);
 SQUIDCEXTERN void ctx_exit(Ctx ctx);
@@ -214,15 +165,6 @@ SQUIDCEXTERN void idnsALookup(const char *, IDNSCB *, void *);
 
 SQUIDCEXTERN void idnsPTRLookup(const struct IN_ADDR, IDNSCB *, void *);
 
-extern void eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata=true);
-SQUIDCEXTERN void eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int);
-SQUIDCEXTERN void eventRun(void);
-SQUIDCEXTERN int eventNextTime(void);
-SQUIDCEXTERN void eventDelete(EVH * func, void *arg);
-SQUIDCEXTERN void eventInit(CacheManager &);
-SQUIDCEXTERN void eventFreeMemory(void);
-SQUIDCEXTERN int eventFind(EVH *, void *);
-
 SQUIDCEXTERN void fd_close(int fd);
 SQUIDCEXTERN void fd_open(int fd, unsigned int type, const char *);
 SQUIDCEXTERN void fd_note(int fd, const char *);
@@ -253,7 +195,7 @@ SQUIDCEXTERN const char *fqdnFromAddr(struct IN_ADDR);
 SQUIDCEXTERN int fqdncacheQueueDrain(void);
 SQUIDCEXTERN void fqdncacheFreeMemory(void);
 SQUIDCEXTERN void fqdncache_restart(void);
-SQUIDCEXTERN EVH fqdncache_purgelru;
+SQUIDCEXTERN void fqdncache_purgelru(void *);
 SQUIDCEXTERN void fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames);
 
 class FwdState;
@@ -393,7 +335,7 @@ extern void wccp2ConnectionClose(void);
 SQUIDCEXTERN void ipcache_nbgethostbyname(const char *name,
         IPH * handler,
         void *handlerData);
-SQUIDCEXTERN EVH ipcache_purgelru;
+SQUIDCEXTERN void ipcache_purgelru(void *);
 SQUIDCEXTERN const ipcache_addrs *ipcache_gethostbyname(const char *, int flags);
 SQUIDCEXTERN void ipcacheInvalidate(const char *);
 SQUIDCEXTERN void ipcacheInvalidateNegative(const char *);
@@ -453,7 +395,7 @@ SQUIDCEXTERN peer *peerFindByNameAndPort(const char *, unsigned short);
 SQUIDCEXTERN peer *getDefaultParent(HttpRequest * request);
 SQUIDCEXTERN peer *getRoundRobinParent(HttpRequest * request);
 SQUIDCEXTERN peer *getWeightedRoundRobinParent(HttpRequest * request);
-SQUIDCEXTERN EVH peerClearRR;
+SQUIDCEXTERN void peerClearRR(void *);
 SQUIDCEXTERN peer *getAnyParent(HttpRequest * request);
 SQUIDCEXTERN lookup_t peerDigestLookup(peer * p, HttpRequest * request);
 SQUIDCEXTERN peer *neighborsDigestSelect(HttpRequest * request);
@@ -485,7 +427,7 @@ SQUIDCEXTERN void netdbUpdatePeer(HttpRequest *, peer * e, int rtt, int hops);
 
 SQUIDCEXTERN void netdbDeleteAddrNetwork(struct IN_ADDR addr);
 SQUIDCEXTERN void netdbBinaryExchange(StoreEntry *);
-SQUIDCEXTERN EVH netdbExchangeStart;
+SQUIDCEXTERN void netdbExchangeStart(void *);
 
 SQUIDCEXTERN void netdbExchangeUpdatePeer(struct IN_ADDR, peer *, double, double);
 SQUIDCEXTERN peer *netdbClosestParent(HttpRequest *);

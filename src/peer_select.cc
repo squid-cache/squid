@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.140 2006/05/19 17:19:10 wessels Exp $
+ * $Id: peer_select.cc,v 1.141 2006/08/07 02:28:22 robertc Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "event.h"
 #include "PeerSelectState.h"
 #include "Store.h"
 #include "ICP.h"

@@ -2,6 +2,7 @@
 #include "Mem.h"
 #include "testStore.h"
 #include "testStoreEntryStream.h"
+#include "CapturingStoreEntry.h"
 #include "Store.h"
 #include "StoreEntryStream.h"
 
@@ -10,39 +11,6 @@
 #include <cppunit/TestAssert.h>
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testStoreEntryStream );
-
-/* class that captures various call data for test analysis */
-
-class CapturingStoreEntry : public StoreEntry
-{
-
-public:
-    MEMPROXY_CLASS(CapturingStoreEntry);
-
-    CapturingStoreEntry() : _buffer_calls(0), _flush_calls(0) {}
-
-    String _appended_text;
-    int _buffer_calls;
-    int _flush_calls;
-
-    virtual void buffer()
-    {
-        _buffer_calls += 1;
-    }
-
-    virtual void flush()
-    {
-        _flush_calls += 1;
-    }
-
-    virtual void append(char const * buf, int len)
-    {
-        _appended_text.append(buf, len);
-    }
-};
-
-MEMPROXY_CLASS_INLINE(CapturingStoreEntry);
-
 
 /* init memory pools */
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.252 2006/06/07 22:39:34 hno Exp $
+ * $Id: enums.h,v 1.253 2006/08/07 02:28:22 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -541,18 +541,6 @@ typedef enum {
     DIGEST_READ_MASK,
     DIGEST_READ_DONE
 } digest_read_state_t;
-
-typedef enum {
-    COMM_OK = 0,
-    COMM_ERROR = -1,
-    COMM_NOMESSAGE = -3,
-    COMM_TIMEOUT = -4,
-    COMM_SHUTDOWN = -5,
-    COMM_INPROGRESS = -6,
-    COMM_ERR_CONNECT = -7,
-    COMM_ERR_DNS = -8,
-    COMM_ERR_CLOSING = -9
-} comm_err_t;
 
 /* Distinguish between Request and Reply (for header mangling) */
 enum {

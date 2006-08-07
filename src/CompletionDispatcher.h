@@ -1,6 +1,6 @@
 
 /*
- * $Id: MsgPipe.h,v 1.4 2006/08/07 02:28:24 robertc Exp $
+ * $Id: CompletionDispatcher.h,v 1.1 2006/08/07 02:28:22 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -31,58 +31,25 @@
  *
  */
 
-#ifndef SQUID_MSGPIPE_H
-#define SQUID_MSGPIPE_H
+#ifndef SQUID_COMPLETIONDISPATCHER_H
+#define SQUID_COMPLETIONDISPATCHER_H
 
-#include "event.h"
+#include "squid.h"
 
-// MsgPipe is a unidirectional communication channel for asynchronously
-// transmitting potentially large messages. It aggregates the message
-// being piped and pointers to the message sender and recepient.
-// MsgPipe also provides convenience wrappers for asynchronous calls to
-// recepient's and sender's note*() methods.
 
-class MsgPipeData;
+/* Dispatch code to handle events that have completed. Completed events are queued
+ * with a completion dispatcher by the OS Async engine - i.e. the poll or kqueue or
+ * select loop, or a signal reciever, or the diskd/diskthreads/etc modules.
+ */
 
-class MsgPipeEnd;
-
-class MsgPipeSource;
-
-class MsgPipeSink;
-
-class MsgPipe : public RefCountable
+class CompletionDispatcher
 {
 
 public:
-    typedef RefCount<MsgPipe> Pointer;
 
-    MsgPipe(const char *aName = "anonym");
-    ~MsgPipe();
+    virtual ~CompletionDispatcher() {}
 
-    // the pipe source calls these to notify the sink
-    void sendSourceStart();
-    void sendSourceProgress();
-    void sendSourceFinish();
-    void sendSourceAbort();
-
-    // the pipe sink calls these to notify the source
-    void sendSinkNeed();
-    void sendSinkAbort();
-
-    // private method exposed for the event handler only
-    bool canSend(MsgPipeEnd *destination, const char *callName, bool future);
-
-public:
-    const char *name; // unmanaged pointer used for debugging only
-
-    MsgPipeData *data;
-    MsgPipeSource *source;
-    MsgPipeSink *sink;
-
-private:
-    void sendLater(const char *callName, EVH * handler, MsgPipeEnd *destination);
-
-    CBDATA_CLASS2(MsgPipe);
+    virtual void dispatch() = 0;
 };
 
-#endif /* SQUID_MSGPIPE_H */
+#endif /* SQUID_COMPLETIONDISPATCHER_H */

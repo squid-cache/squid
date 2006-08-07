@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.64 2006/08/05 15:37:21 hno Exp $
+ * $Id: store_dir_coss.cc,v 1.65 2006/08/07 02:28:25 robertc Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store COSS Directory Routines
@@ -39,6 +39,7 @@
 #include "Store.h"
 
 #include "store_coss.h"
+#include "event.h"
 #include "fde.h"
 #include "SwapDir.h"
 #include "StoreSwapLogData.h"

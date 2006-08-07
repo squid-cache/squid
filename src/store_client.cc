@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.146 2006/05/23 00:30:21 wessels Exp $
+ * $Id: store_client.cc,v 1.147 2006/08/07 02:28:22 robertc Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
  */
 
 #include "squid.h"
+#include "event.h"
 #include "StoreClient.h"
 #include "Store.h"
 #include "HttpReply.h"

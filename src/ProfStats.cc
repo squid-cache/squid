@@ -1,6 +1,6 @@
 
 /*
- * $Id: ProfStats.cc,v 1.7 2006/05/29 00:15:01 robertc Exp $
+ * $Id: ProfStats.cc,v 1.8 2006/08/07 02:28:22 robertc Exp $
  *
  * DEBUG: section 81     CPU Profiling Routines
  * AUTHOR: Andres Kroonmaa
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "event.h"
 #include "CacheManager.h"
 
 #ifdef USE_XPROF_STATS

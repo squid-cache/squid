@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.h,v 1.8 2006/04/28 05:05:47 wessels Exp $
+ * $Id: ICAPConfig.h,v 1.9 2006/08/07 02:28:24 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,6 +36,7 @@
 #ifndef SQUID_ICAPCONFIG_H
 #define SQUID_ICAPCONFIG_H
 
+#include "event.h"
 #include "ICAPServiceRep.h"
 
 class acl_access;

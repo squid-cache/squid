@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.396 2006/07/08 16:38:07 serassio Exp $
+ * $Id: stat.cc,v 1.397 2006/08/07 02:28:22 robertc Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -33,6 +33,7 @@
  */
 
 #include "squid.h"
+#include "event.h"
 #include "StoreClient.h"
 #include "AuthUserRequest.h"
 #include "CacheManager.h"

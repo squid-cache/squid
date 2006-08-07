@@ -1,6 +1,6 @@
 
 /*
- * $Id: CommRead.h,v 1.6 2004/02/18 01:58:59 adrian Exp $
+ * $Id: CommRead.h,v 1.7 2006/08/07 02:28:22 robertc Exp $
  *
  * DEBUG: section 5    Comms
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -41,6 +41,7 @@
 #define COMMREAD_H
 
 #include "squid.h"
+#include "comm.h"
 #include "List.h"
 
 template<class C>
