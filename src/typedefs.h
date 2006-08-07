@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.186 2006/05/22 19:58:51 wessels Exp $
+ * $Id: typedefs.h,v 1.187 2006/08/07 02:28:22 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -237,15 +237,9 @@ typedef variable_list *(oid_ParseFn) (variable_list *, snint *);
 typedef struct _snmp_request_t snmp_request_t;
 #endif
 
-typedef void CWCB(int fd, char *, size_t size, comm_err_t flag, void *data);
-typedef void CNCB(int fd, comm_err_t status, int xerrno, void *data);
-
-typedef void IOCB(int fd, char *, size_t size, comm_err_t flag, int xerrno, void *data);
-
 typedef void FREE(void *);
 typedef void CBDUNL(void *);
 typedef void FOCB(void *, int fd, int errcode);
-typedef void EVH(void *);
 typedef void PF(int, void *);
 
 /* disk.c / diskd.c callback typedefs */

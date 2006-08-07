@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.419 2006/05/30 21:15:58 wessels Exp $
+ * $Id: comm.cc,v 1.420 2006/08/07 02:28:22 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -38,8 +38,10 @@
 #include "squid.h"
 #include "StoreIOBuffer.h"
 #include "comm.h"
+#include "event.h"
 #include "fde.h"
 #include "CommIO.h"
+#include "CommRead.h"
 #include "ConnectionDetail.h"
 #include "MemBuf.h"
 #include "pconn.h"

@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp2.cc,v 1.3 2006/07/31 13:17:57 serassio Exp $
+ * $Id: wccp2.cc,v 1.4 2006/08/07 02:28:22 robertc Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Steven WIlton
@@ -34,7 +34,9 @@
  */
 #include "squid.h"
 #include "comm.h"
+#include "event.h"
 #include "Parsing.h"
+#include "Store.h"
 
 #if USE_WCCPv2
 #include <netdb.h>

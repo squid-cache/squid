@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.545 2006/07/31 13:17:57 serassio Exp $
+ * $Id: structs.h,v 1.546 2006/08/07 02:28:22 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1529,16 +1529,6 @@ unsigned int ignore_auth:
     }
 
     flags;
-};
-
-struct _CommWriteStateData
-{
-    char *buf;
-    size_t size;
-    off_t offset;
-    CWCB *handler;
-    void *handler_data;
-    FREE *free_func;
 };
 
 struct _ErrorState

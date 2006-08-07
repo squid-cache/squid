@@ -5,6 +5,8 @@
 
 class CacheManager;
 
+#include "comm.h"
+
 class FwdServer
 {
 

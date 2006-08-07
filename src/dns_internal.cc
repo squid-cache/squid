@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.90 2006/07/24 19:21:26 serassio Exp $
+ * $Id: dns_internal.cc,v 1.91 2006/08/07 02:28:22 robertc Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -35,6 +35,7 @@
 
 #include "config.h"
 #include "squid.h"
+#include "event.h"
 #include "CacheManager.h"
 #include "SquidTime.h"
 #include "Store.h"

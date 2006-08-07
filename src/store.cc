@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.596 2006/05/29 00:15:02 robertc Exp $
+ * $Id: store.cc,v 1.597 2006/08/07 02:28:22 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "event.h"
 #include "Store.h"
 #include "CacheManager.h"
 #include "StoreClient.h"

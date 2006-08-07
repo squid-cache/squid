@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_null.cc,v 1.9 2006/05/23 00:48:13 wessels Exp $
+ * $Id: store_null.cc,v 1.10 2006/08/07 02:28:25 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "event.h"
 #if HAVE_STATVFS
 #if HAVE_SYS_STATVFS_H
 #include <sys/statvfs.h>

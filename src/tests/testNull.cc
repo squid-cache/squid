@@ -140,11 +140,12 @@ testNull::testNullSearch()
     /* ok, ready to use */
     Store::Root().init();
 
-    /* ensure rebuilding finishes */
+    /* ensure rebuilding finishes - run a mini event loop */
 
     while (store_dirs_rebuilding > 1) {
         getCurrentTime();
-        eventRun();
+        EventScheduler::GetInstance()->checkEvents();
+        EventDispatcher::GetInstance()->dispatch();
     }
 
     /* nothing to rebuild */

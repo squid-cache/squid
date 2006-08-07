@@ -1,5 +1,5 @@
 /*
- * $Id: stub_comm.cc,v 1.1 2005/01/03 16:08:27 robertc Exp $
+ * $Id: stub_comm.cc,v 1.2 2006/08/07 02:28:26 robertc Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins
@@ -34,6 +34,7 @@
 
 #include "squid.h"
 #include "comm.h"
+#include "CommRead.h"
 #include "fde.h"
 
 DeferredReadManager::~DeferredReadManager()

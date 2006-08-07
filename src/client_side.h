@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.h,v 1.16 2006/06/06 19:22:13 hno Exp $
+ * $Id: client_side.h,v 1.17 2006/08/07 02:28:22 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,6 +34,7 @@
 #ifndef SQUID_CLIENTSIDE_H
 #define SQUID_CLIENTSIDE_H
 
+#include "comm.h"
 #include "StoreIOBuffer.h"
 #include "BodyReader.h"
 #include "RefCount.h"

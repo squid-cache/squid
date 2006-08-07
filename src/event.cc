@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.40 2006/08/06 06:26:27 robertc Exp $
+ * $Id: event.cc,v 1.41 2006/08/07 02:28:22 robertc Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -33,59 +33,23 @@
  *
  */
 
-#include "squid.h"
+#include "event.h"
 #include "CacheManager.h"
 #include "Store.h"
 
 /* The list of event processes */
 
-class ev_entry
-{
 
-public:
-    MEMPROXY_CLASS(ev_entry);
-    EVH *func;
-    void *arg;
-    const char *name;
-    double when;
-
-    struct ev_entry *next;
-    int weight;
-    int id;
-    bool cbdata;
-};
-
-MEMPROXY_CLASS_INLINE(ev_entry);
-
-static struct ev_entry *tasks = NULL;
 static OBJH eventDump;
-static int run_id = 0;
 static const char *last_event_ran = NULL;
+
+ev_entry::ev_entry(char const * name, EVH * func, void * arg, double when, int weight, bool cbdata) : name(name), func(func), arg(cbdata ? cbdataReference(arg) : arg), when(when), weight(weight), cbdata(cbdata)
+{}
 
 void
 eventAdd(const char *name, EVH * func, void *arg, double when, int weight, bool cbdata)
 {
-
-    struct ev_entry *event = new ev_entry;
-
-    struct ev_entry **E;
-    event->func = func;
-    event->arg = cbdata ? cbdataReference(arg) : arg;
-    event->name = name;
-    event->when = current_dtime + when;
-    event->weight = weight;
-    event->id = run_id;
-    event->cbdata = cbdata;
-    debug(41, 7) ("eventAdd: Adding '%s', in %f seconds\n", name, when);
-    /* Insert after the last event with the same or earlier time */
-
-    for (E = &tasks; *E; E = &(*E)->next) {
-        if ((*E)->when > event->when)
-            break;
-    }
-
-    event->next = *E;
-    *E = event;
+    EventScheduler::GetInstance()->schedule(name, func, arg, when, weight, cbdata);
 }
 
 /* same as eventAdd but adds a random offset within +-1/3 of delta_ish */
@@ -107,10 +71,90 @@ eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int weigh
 void
 eventDelete(EVH * func, void *arg)
 {
+    EventScheduler::GetInstance()->cancel(func, arg);
+}
 
-    struct ev_entry **E;
+void
+eventInit(CacheManager &manager)
+{
+    manager.registerAction("events", "Event Queue", eventDump, 0, 1);
+}
 
-    struct ev_entry *event;
+static void
+eventDump(StoreEntry * sentry)
+{
+    EventScheduler::GetInstance()->dump(sentry);
+}
+
+void
+eventFreeMemory(void)
+{
+    EventScheduler::GetInstance()->clean();
+}
+
+int
+eventFind(EVH * func, void *arg)
+{
+    return EventScheduler::GetInstance()->find(func, arg);
+}
+
+EventDispatcher EventDispatcher::_instance;
+
+EventDispatcher::EventDispatcher()
+{}
+
+void
+
+EventDispatcher::add
+    (ev_entry * event)
+{
+    queue.push_back(event);
+}
+
+void
+EventDispatcher::dispatch()
+{
+    for (Vector<ev_entry *>::iterator i = queue.begin(); i != queue.end(); ++i) {
+        ev_entry * event = *i;
+        EVH *callback;
+        void *cbdata = event->arg;
+        callback = event->func;
+        event->func = NULL;
+
+        if (!event->cbdata || cbdataReferenceValidDone(event->arg, &cbdata)) {
+            /* XXX assumes ->name is static memory! */
+            last_event_ran = event->name;
+            debugs(41, 5, "EventDispatcher::dispatch: Running '" << event->name << "'");
+            callback(cbdata);
+        }
+
+        delete event;
+    }
+
+    queue.clean();
+}
+
+EventDispatcher *
+EventDispatcher::GetInstance()
+{
+    return &_instance;
+}
+
+EventScheduler EventScheduler::_instance(EventDispatcher::GetInstance());
+
+EventScheduler::EventScheduler(EventDispatcher *dispatcher) : dispatcher(dispatcher), tasks(NULL)
+{}
+
+EventScheduler::~EventScheduler()
+{
+    clean();
+}
+
+void
+EventScheduler::cancel(EVH * func, void *arg)
+{
+    ev_entry **E;
+    ev_entry *event;
 
     for (E = &tasks; (event = *E) != NULL; E = &(*E)->next) {
         if (event->func != func)
@@ -132,61 +176,8 @@ eventDelete(EVH * func, void *arg)
     debug_trap("eventDelete: event not found");
 }
 
-void
-eventRun(void)
-{
-
-    struct ev_entry *event = NULL;
-    int weight = 0;
-
-    if (NULL == tasks)
-        return;
-
-    if (tasks->when > current_dtime)
-        return;
-
-    PROF_start(eventRun);
-
-    run_id++;
-
-    debug(41, 5) ("eventRun: RUN ID %d\n", run_id);
-
-    while ((event = tasks)) {
-        EVH *callback;
-        void *cbdata = event->arg;
-
-        if (event->when > current_dtime)
-            break;
-
-        if (event->id == run_id)	/* was added during this run */
-            break;
-
-        if (weight)
-            break;
-
-        tasks = event->next;
-
-        callback = event->func;
-
-        event->func = NULL;
-
-        if (!event->cbdata || cbdataReferenceValidDone(event->arg, &cbdata)) {
-            weight += event->weight;
-            /* XXX assumes ->name is static memory! */
-            last_event_ran = event->name;
-            debug(41, 5) ("eventRun: Running '%s', id %d\n",
-                          event->name, event->id);
-            callback(cbdata);
-        }
-
-        delete event;
-    }
-
-    PROF_stop(eventRun);
-}
-
 int
-eventNextTime(void)
+EventScheduler::checkDelay()
 {
     if (!tasks)
         return (int) 10;
@@ -194,14 +185,59 @@ eventNextTime(void)
     return (int) ((tasks->when - current_dtime) * 1000);
 }
 
-void
-eventInit(CacheManager &manager)
+int
+EventScheduler::checkEvents()
 {
-    manager.registerAction("events", "Event Queue", eventDump, 0, 1);
+
+    struct ev_entry *event = NULL;
+
+    if (NULL == tasks)
+        return checkDelay();
+
+    if (tasks->when > current_dtime)
+        return checkDelay();
+
+    PROF_start(eventRun);
+
+    debugs(41, 5, "eventRun: \n");
+
+    while ((event = tasks)) {
+        if (event->when > current_dtime)
+            break;
+
+        dispatcher->add
+        (event);
+
+        tasks = event->next;
+
+        if (!event->cbdata || cbdataReferenceValid(event->arg))
+            if (event->weight)
+                /* this event is marked as being 'heavy', so dont dequeue any others.
+                 */
+                break;
+    }
+
+    PROF_stop(eventRun);
+    return checkDelay();
 }
 
-static void
-eventDump(StoreEntry * sentry)
+void
+EventScheduler::clean()
+{
+    while (ev_entry * event = tasks) {
+        tasks = event->next;
+
+        if (event->cbdata)
+            cbdataReferenceDone(event->arg);
+
+        delete event;
+    }
+
+    tasks = NULL;
+}
+
+void
+EventScheduler::dump(StoreEntry * sentry)
 {
 
     struct ev_entry *e = tasks;
@@ -223,34 +259,41 @@ eventDump(StoreEntry * sentry)
     }
 }
 
-void
-eventFreeMemory(void)
-{
-
-    struct ev_entry *event;
-
-    while ((event = tasks)) {
-        tasks = event->next;
-
-        if (event->cbdata)
-            cbdataReferenceDone(event->arg);
-
-        delete event;
-    }
-
-    tasks = NULL;
-}
-
-int
-eventFind(EVH * func, void *arg)
+bool
+EventScheduler::find(EVH * func, void * arg)
 {
 
     struct ev_entry *event;
 
     for (event = tasks; event != NULL; event = event->next) {
         if (event->func == func && event->arg == arg)
-            return 1;
+            return true;
     }
 
-    return 0;
+    return false;
+}
+
+EventScheduler *
+EventScheduler::GetInstance()
+{
+    return &_instance;
+}
+
+void
+EventScheduler::schedule(const char *name, EVH * func, void *arg, double when, int weight, bool cbdata)
+{
+
+    struct ev_entry *event = new ev_entry(name, func, arg, current_dtime + when, weight, cbdata);
+
+    struct ev_entry **E;
+    debugs(41, 7, "eventAdd: Adding '" << name << "', in " << when << " seconds");
+    /* Insert after the last event with the same or earlier time */
+
+    for (E = &tasks; *E; E = &(*E)->next) {
+        if ((*E)->when > event->when)
+            break;
+    }
+
+    event->next = *E;
+    *E = event;
 }

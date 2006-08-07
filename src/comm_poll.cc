@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_poll.cc,v 1.16 2006/05/29 00:15:02 robertc Exp $
+ * $Id: comm_poll.cc,v 1.17 2006/08/07 02:28:22 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -424,11 +424,6 @@ comm_select(int msec)
 
         PROF_stop(comm_poll_prep_pfds);
 
-        if (nfds == 0) {
-            assert(shutting_down);
-            return COMM_SHUTDOWN;
-        }
-
         if (comm_iocallbackpending())
             npending++;
 
@@ -437,6 +432,14 @@ comm_select(int msec)
 
         if (msec > MAX_POLL_TIME)
             msec = MAX_POLL_TIME;
+
+        /* nothing to do */
+        if (nfds == 0 && !npending) {
+            if (shutting_down)
+                return COMM_SHUTDOWN;
+            else
+                return COMM_IDLE;
+        }
 
         for (;;) {
             PROF_start(comm_poll_normal);

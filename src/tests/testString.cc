@@ -1,4 +1,5 @@
 #include "squid.h"
+#include "event.h"
 #include "Mem.h"
 #include "SquidString.h"
 #include "testString.h"

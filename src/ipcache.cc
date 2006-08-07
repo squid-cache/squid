@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.255 2006/05/29 00:15:02 robertc Exp $
+ * $Id: ipcache.cc,v 1.256 2006/08/07 02:28:22 robertc Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "event.h"
 #include "CacheManager.h"
 #include "SquidTime.h"
 #include "Store.h"

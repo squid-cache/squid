@@ -1,5 +1,5 @@
 /*
- * $Id: aiops.cc,v 1.9 2006/05/23 18:24:41 wessels Exp $
+ * $Id: aiops.cc,v 1.10 2006/08/07 02:28:22 robertc Exp $
  *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
@@ -52,6 +52,7 @@
 #endif
 #include "CommIO.h"
 #include "SquidTime.h"
+#include "Store.h"
 
 #define RIDICULOUS_LENGTH	4096
 

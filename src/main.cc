@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.427 2006/07/02 16:53:46 serassio Exp $
+ * $Id: main.cc,v 1.428 2006/08/07 02:28:22 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -38,6 +38,8 @@
 #include "authenticate.h"
 #include "CacheManager.h"
 #include "ConfigParser.h"
+#include "event.h"
+#include "EventLoop.h"
 #include "ExternalACL.h"
 #include "Store.h"
 #include "ICP.h"
@@ -125,6 +127,59 @@ static const char *squid_start_script = "squid_start";
 #if TEST_ACCESS
 #include "test_access.c"
 #endif
+
+class SignalDispatcher : public CompletionDispatcher
+{
+
+public:
+    SignalDispatcher(EventLoop &loop) : loop(loop) {}
+
+    void addEventLoop(EventLoop * loop);
+    virtual void dispatch();
+
+private:
+    static void StopEventLoop(void * data)
+    {
+        static_cast<SignalDispatcher *>(data)->loop.stop();
+    }
+
+    EventLoop &loop;
+};
+
+void
+SignalDispatcher::dispatch()
+{
+    if (do_reconfigure) {
+        mainReconfigure();
+        do_reconfigure = 0;
+#if defined(_SQUID_MSWIN_) && defined(_DEBUG)
+
+    } else if (do_debug_trap) {
+        do_debug_trap = 0;
+        __asm int 3;
+#endif
+
+    } else if (do_rotate) {
+        mainRotate();
+        do_rotate = 0;
+    } else if (do_shutdown) {
+        time_t wait = do_shutdown > 0 ? (int) Config.shutdownLifetime : 0;
+        debug(1, 1) ("Preparing for shutdown after %d requests\n",
+                     statCounter.client_http.requests);
+        debug(1, 1) ("Waiting %d seconds for active connections to finish\n",
+                     (int) wait);
+        do_shutdown = 0;
+        shutting_down = 1;
+#if USE_WIN32_SERVICE
+
+        WIN32_svcstatusupdate(SERVICE_STOP_PENDING, (wait + 1) * 1000);
+#endif
+
+        serverConnectionsClose();
+        //eventAdd("SquidShutdown", StopEventLoop, this, (double) (wait + 1), 1, false);
+        eventAdd("SquidShutdown", SquidShutdown, NULL, (double) (wait + 1), 1, false);
+    }
+}
 
 static void
 usage(void)
@@ -1014,7 +1069,6 @@ int
 main(int argc, char **argv)
 #endif
 {
-    int errcount = 0;
     mode_t oldmask;
 #ifdef _SQUID_WIN32_
 
@@ -1238,41 +1292,17 @@ main(int argc, char **argv)
 #endif
 
     /* main loop */
+    EventLoop mainLoop;
+
+    SignalDispatcher signal_dispatcher(mainLoop);
+
+    mainLoop.registerDispatcher(&signal_dispatcher);
+
+    /* TODO: stop requiring the singleton here */
+    mainLoop.registerDispatcher(EventDispatcher::GetInstance());
 
     for (;;)
     {
-        if (do_reconfigure) {
-            mainReconfigure();
-            do_reconfigure = 0;
-#if defined(_SQUID_MSWIN_) && defined(_DEBUG)
-
-        } else if (do_debug_trap) {
-            do_debug_trap = 0;
-            __asm int 3;
-#endif
-
-        } else if (do_rotate) {
-            mainRotate();
-            do_rotate = 0;
-        } else if (do_shutdown) {
-            time_t wait = do_shutdown > 0 ? (int) Config.shutdownLifetime : 0;
-            debug(1, 1) ("Preparing for shutdown after %d requests\n",
-                         statCounter.client_http.requests);
-            debug(1, 1) ("Waiting %d seconds for active connections to finish\n",
-                         (int) wait);
-            do_shutdown = 0;
-            shutting_down = 1;
-#if USE_WIN32_SERVICE
-
-            WIN32_svcstatusupdate(SERVICE_STOP_PENDING, (wait + 1) * 1000);
-#endif
-
-            serverConnectionsClose();
-            eventAdd("SquidShutdown", SquidShutdown, NULL, (double) (wait + 1), 1);
-        }
-
-        eventRun();
-
         /* Attempt any pending storedir IO
         * Note: the storedir is roughly a reactor of its own.
         */
@@ -1288,39 +1318,7 @@ main(int argc, char **argv)
         if (comm_iocallbackpending())
             comm_calliocallback();
 
-        int loop_delay = eventNextTime();
-
-        if (loop_delay < 0)
-            loop_delay = 0;
-
-        switch (comm_select(loop_delay)) {
-
-        case COMM_OK:
-            errcount = 0;	/* reset if successful */
-            break;
-
-        case COMM_ERROR:
-            errcount++;
-            debug(1, 0) ("Select loop Error. Retry %d\n", errcount);
-
-            if (errcount == 10)
-                fatal_dump("Select Loop failed!");
-
-            break;
-
-        case COMM_TIMEOUT:
-            break;
-
-        case COMM_SHUTDOWN:
-            SquidShutdown(NULL);
-
-            break;
-
-        default:
-            fatal_dump("MAIN: Internal error -- this should never happen.");
-
-            break;
-        }
+        mainLoop.runOnce();
     }
 
     /* NOTREACHED */
@@ -1489,7 +1487,6 @@ watch_child(char *argv[])
     }
 
 #endif
-
 
     /*
      * RBCOLLINS - if cygwin stackdumps when squid is run without

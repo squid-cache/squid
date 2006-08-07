@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.98 2006/05/29 00:15:02 robertc Exp $
+ * $Id: mem.cc,v 1.99 2006/08/07 02:28:22 robertc Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -38,6 +38,7 @@
 #include <iomanip>
 #include <ostream>
 
+#include "event.h"
 #include "CacheManager.h"
 #include "Mem.h"
 #include "memMeter.h"

@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUser.cc,v 1.1 2004/08/30 03:28:56 robertc Exp $
+ * $Id: AuthUser.cc,v 1.2 2006/08/07 02:28:22 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -40,6 +40,7 @@
 #include "AuthConfig.h"
 #include "authenticate.h"
 #include "ACL.h"
+#include "event.h"
 
 #ifndef _USE_INLINE_
 #include "AuthUser.cci"

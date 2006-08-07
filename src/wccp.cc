@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.40 2006/07/02 16:53:47 serassio Exp $
+ * $Id: wccp.cc,v 1.41 2006/08/07 02:28:22 robertc Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Glenn Chisholm
@@ -34,6 +34,7 @@
  */
 #include "squid.h"
 #include "comm.h"
+#include "event.h"
 
 #if USE_WCCP
 

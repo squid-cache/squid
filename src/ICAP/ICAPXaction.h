@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPXaction.h,v 1.6 2006/01/09 20:38:44 wessels Exp $
+ * $Id: ICAPXaction.h,v 1.7 2006/08/07 02:28:24 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,6 +34,7 @@
 #ifndef SQUID_ICAPXACTION_H
 #define SQUID_ICAPXACTION_H
 
+#include "comm.h"
 #include "MemBuf.h"
 #include "ICAPServiceRep.h"
 

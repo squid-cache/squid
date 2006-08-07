@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.47 2006/07/07 19:10:29 serassio Exp $
+ * $Id: auth_digest.cc,v 1.48 2006/08/07 02:28:24 robertc Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -42,6 +42,7 @@
 #include "rfc2617.h"
 #include "auth_digest.h"
 #include "authenticate.h"
+#include "event.h"
 #include "CacheManager.h"
 #include "Store.h"
 #include "HttpRequest.h"

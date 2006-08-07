@@ -1,6 +1,6 @@
 
 /*
- * $Id: MsgPipe.h,v 1.4 2006/08/07 02:28:24 robertc Exp $
+ * $Id: EventLoop.h,v 1.1 2006/08/07 02:28:22 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -31,58 +31,48 @@
  *
  */
 
-#ifndef SQUID_MSGPIPE_H
-#define SQUID_MSGPIPE_H
+#ifndef SQUID_EVENTLOOP_H
+#define SQUID_EVENTLOOP_H
 
-#include "event.h"
+#include "squid.h"
+#include "Array.h"
+#include "CompletionDispatcher.h"
 
-// MsgPipe is a unidirectional communication channel for asynchronously
-// transmitting potentially large messages. It aggregates the message
-// being piped and pointers to the message sender and recepient.
-// MsgPipe also provides convenience wrappers for asynchronous calls to
-// recepient's and sender's note*() methods.
+/* An event loop. An event loop is the core inner loop of squid.
+ * The event loop can be run until exit, or once. After it finishes control
+ * returns to the caller. If desired it can be run again.
+ *
+ * The event loop cannot be run once it is running until it has finished.
+ */
 
-class MsgPipeData;
-
-class MsgPipeEnd;
-
-class MsgPipeSource;
-
-class MsgPipeSink;
-
-class MsgPipe : public RefCountable
+class EventLoop
 {
 
 public:
-    typedef RefCount<MsgPipe> Pointer;
-
-    MsgPipe(const char *aName = "anonym");
-    ~MsgPipe();
-
-    // the pipe source calls these to notify the sink
-    void sendSourceStart();
-    void sendSourceProgress();
-    void sendSourceFinish();
-    void sendSourceAbort();
-
-    // the pipe sink calls these to notify the source
-    void sendSinkNeed();
-    void sendSinkAbort();
-
-    // private method exposed for the event handler only
-    bool canSend(MsgPipeEnd *destination, const char *callName, bool future);
-
-public:
-    const char *name; // unmanaged pointer used for debugging only
-
-    MsgPipeData *data;
-    MsgPipeSource *source;
-    MsgPipeSink *sink;
+    EventLoop();
+    /* register an event dispatcher to be invoked on each event loop. */
+    void registerDispatcher(CompletionDispatcher *dispatcher);
+    /* start the event loop running */
+    void run();
+    /* run the loop once. This may not complete all events! It should therefor
+     * be used with care.
+     * TODO: signal in runOnce whether or not the loop is over - IDLE vs OK vs
+     * TIMEOUT?
+     */
+    void runOnce();
+    /* stop the event loop - it will finish the current loop and then return to the
+     * caller of run().
+     */
+    void stop();
 
 private:
-    void sendLater(const char *callName, EVH * handler, MsgPipeEnd *destination);
-
-    CBDATA_CLASS2(MsgPipe);
+    /* setup state variables prior to running */
+    void prepareToRun();
+    int errcount;
+    bool last_loop;
+    typedef Vector<CompletionDispatcher *> dispatcher_vector;
+    dispatcher_vector dispatchers;
 };
 
-#endif /* SQUID_MSGPIPE_H */
+
+#endif /* SQUID_EVENTLOOP_H */
