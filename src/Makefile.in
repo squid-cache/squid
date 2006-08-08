@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.397 2006/07/15 21:16:31 serassio Exp $
+#  $Id: Makefile.in,v 1.398 2006/08/08 00:10:45 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -50,7 +50,8 @@ build_triplet = @build@
 host_triplet = @host@
 check_PROGRAMS = tests/testAuth$(EXEEXT) \
 	tests/testACLMaxUserIP$(EXEEXT) tests/testBoilerplate$(EXEEXT) \
-	tests/testCacheManager$(EXEEXT) tests/testHeaders$(EXEEXT) \
+	tests/testCacheManager$(EXEEXT) tests/testEvent$(EXEEXT) \
+	tests/testEventLoop$(EXEEXT) tests/testHeaders$(EXEEXT) \
 	tests/test_http_range$(EXEEXT) tests/testHttpRequest$(EXEEXT) \
 	tests/testStore$(EXEEXT) tests/testString$(EXEEXT) \
 	tests/testURL$(EXEEXT) @STORE_TESTS@
@@ -185,19 +186,19 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc \
 	client_side_reply.h client_side_request.cc \
 	client_side_request.h BodyReader.cc BodyReader.h \
 	ClientRequestContext.h clientStream.cc clientStream.h CommIO.h \
-	comm_select.cc comm_select.h comm_select_win32.cc comm_poll.cc \
-	comm_poll.h comm_epoll.cc comm_epoll.h comm_kqueue.cc \
-	comm_kqueue.h CommRead.h ConfigOption.cc ConfigParser.cc \
-	ConfigParser.h ConnectionDetail.h debug.cc Debug.h defines.h \
-	CommonPool.h CompositePoolNode.h delay_pools.cc DelayId.cc \
-	DelayId.h DelayIdComposite.h DelayBucket.cc DelayBucket.h \
-	DelayConfig.cc DelayConfig.h DelayPool.cc DelayPool.h \
-	DelayPools.h DelaySpec.cc DelaySpec.h DelayTagged.cc \
-	DelayTagged.h DelayUser.cc DelayUser.h DelayVector.cc \
-	DelayVector.h NullDelayId.cc NullDelayId.h disk.cc \
-	DiskIO/DiskIOModule.cc DiskIO/ReadRequest.cc \
-	DiskIO/ReadRequest.h DiskIO/WriteRequest.cc \
-	DiskIO/WriteRequest.h DiskIO/DiskFile.h \
+	CompletionDispatcher.cc CompletionDispatcher.h comm_select.cc \
+	comm_select.h comm_select_win32.cc comm_poll.cc comm_poll.h \
+	comm_epoll.cc comm_epoll.h comm_kqueue.cc comm_kqueue.h \
+	CommRead.h ConfigOption.cc ConfigParser.cc ConfigParser.h \
+	ConnectionDetail.h debug.cc Debug.h defines.h CommonPool.h \
+	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
+	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
+	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
+	DelaySpec.cc DelaySpec.h DelayTagged.cc DelayTagged.h \
+	DelayUser.cc DelayUser.h DelayVector.cc DelayVector.h \
+	NullDelayId.cc NullDelayId.h disk.cc DiskIO/DiskIOModule.cc \
+	DiskIO/ReadRequest.cc DiskIO/ReadRequest.h \
+	DiskIO/WriteRequest.cc DiskIO/WriteRequest.h DiskIO/DiskFile.h \
 	DiskIO/DiskIOStrategy.h DiskIO/IORequestor.h \
 	DiskIO/DiskIOModule.h dlink.h dns_internal.cc dns.cc enums.h \
 	errorpage.cc ElementList.h ESI.cc ESI.h ESIAssign.cc \
@@ -208,11 +209,12 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc \
 	ESILibxml2Parser.cc ESILibxml2Parser.h ESIParser.cc \
 	ESIParser.h ESISegment.cc ESISegment.h ESISequence.cc \
 	ESISequence.h ESIVar.h ESIVarState.cc ESIVarState.h ETag.cc \
-	event.cc external_acl.cc ExternalACL.h ExternalACLEntry.cc \
-	ExternalACLEntry.h fd.cc fde.cc fde.h filemap.cc forward.cc \
-	forward.h fqdncache.cc ftp.cc Generic.h globals.h gopher.cc \
-	helper.cc helper.h HierarchyLogEntry.h htcp.cc htcp.h http.cc \
-	http.h HttpStatusLine.cc HttpStatusLine.h HttpHdrCc.cc \
+	event.cc event.h EventLoop.h EventLoop.cc external_acl.cc \
+	ExternalACL.h ExternalACLEntry.cc ExternalACLEntry.h fd.cc \
+	fde.cc fde.h filemap.cc forward.cc forward.h fqdncache.cc \
+	ftp.cc Generic.h globals.h gopher.cc helper.cc helper.h \
+	HierarchyLogEntry.h htcp.cc htcp.h http.cc http.h \
+	HttpStatusLine.cc HttpStatusLine.h HttpHdrCc.cc \
 	HttpHdrRange.cc HttpHdrSc.cc HttpHdrSc.h HttpHdrScTarget.cc \
 	HttpHdrScTarget.h HttpHdrContRange.cc HttpHdrContRange.h \
 	HttpHeader.cc HttpHeader.h HttpHeaderMask.h HttpHeaderRange.h \
@@ -301,16 +303,18 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	CacheDigest.$(OBJEXT) cache_manager.$(OBJEXT) carp.$(OBJEXT) \
 	cbdata.$(OBJEXT) client_db.$(OBJEXT) client_side.$(OBJEXT) \
 	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
-	BodyReader.$(OBJEXT) clientStream.$(OBJEXT) $(am__objects_4) \
+	BodyReader.$(OBJEXT) clientStream.$(OBJEXT) \
+	CompletionDispatcher.$(OBJEXT) $(am__objects_4) \
 	ConfigOption.$(OBJEXT) ConfigParser.$(OBJEXT) debug.$(OBJEXT) \
 	$(am__objects_6) disk.$(OBJEXT) $(am__objects_7) \
 	$(am__objects_8) errorpage.$(OBJEXT) $(am__objects_10) \
-	ETag.$(OBJEXT) event.$(OBJEXT) external_acl.$(OBJEXT) \
-	ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) fde.$(OBJEXT) \
-	filemap.$(OBJEXT) forward.$(OBJEXT) fqdncache.$(OBJEXT) \
-	ftp.$(OBJEXT) gopher.$(OBJEXT) helper.$(OBJEXT) \
-	$(am__objects_11) http.$(OBJEXT) HttpStatusLine.$(OBJEXT) \
-	HttpHdrCc.$(OBJEXT) HttpHdrRange.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
+	ETag.$(OBJEXT) event.$(OBJEXT) EventLoop.$(OBJEXT) \
+	external_acl.$(OBJEXT) ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) \
+	fde.$(OBJEXT) filemap.$(OBJEXT) forward.$(OBJEXT) \
+	fqdncache.$(OBJEXT) ftp.$(OBJEXT) gopher.$(OBJEXT) \
+	helper.$(OBJEXT) $(am__objects_11) http.$(OBJEXT) \
+	HttpStatusLine.$(OBJEXT) HttpHdrCc.$(OBJEXT) \
+	HttpHdrRange.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
 	HttpHdrScTarget.$(OBJEXT) HttpHdrContRange.$(OBJEXT) \
 	HttpHeader.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
 	HttpBody.$(OBJEXT) HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) \
@@ -389,33 +393,33 @@ am_tests_testBoilerplate_OBJECTS = tests/testBoilerplate.$(OBJEXT) \
 tests_testBoilerplate_OBJECTS = $(am_tests_testBoilerplate_OBJECTS)
 am__tests_testCacheManager_SOURCES_DIST = debug.cc globals.cc \
 	HttpRequest.cc HttpRequestMethod.cc mem.cc String.cc \
-	tests/testCacheManager.cc tests/testMain.cc time.cc \
-	access_log.cc acl.cc acl_noncore.cc ACLChecklist.cc \
-	ACLProxyAuth.cc ACLStringData.cc ACLRegexData.cc \
-	ACLUserData.cc authenticate.cc BodyReader.cc cache_manager.cc \
-	cache_cf.cc CacheDigest.cc carp.cc cbdata.cc client_db.cc \
-	client_side.cc client_side_reply.cc client_side_request.cc \
-	clientStream.cc comm_select.cc comm_select.h \
-	comm_select_win32.cc comm_poll.cc comm_poll.h comm_epoll.cc \
-	comm_epoll.h comm_kqueue.cc comm_kqueue.h ConfigOption.cc \
-	ConfigParser.cc CommonPool.h CompositePoolNode.h \
-	delay_pools.cc DelayId.cc DelayId.h DelayIdComposite.h \
-	DelayBucket.cc DelayBucket.h DelayConfig.cc DelayConfig.h \
-	DelayPool.cc DelayPool.h DelayPools.h DelaySpec.cc DelaySpec.h \
-	DelayTagged.cc DelayTagged.h DelayUser.cc DelayUser.h \
-	DelayVector.cc DelayVector.h NullDelayId.cc NullDelayId.h \
-	disk.cc dns_internal.cc dns.cc event.cc errorpage.cc \
-	ElementList.h ESI.cc ESI.h ESIAssign.cc ESIAssign.h \
-	ESIAttempt.h ESIContext.cc ESIContext.h ESICustomParser.cc \
-	ESICustomParser.h ESIElement.h ESIExcept.h ESIExpatParser.cc \
-	ESIExpatParser.h ESIExpression.cc ESIExpression.h \
-	ESIInclude.cc ESIInclude.h ESILiteral.h ESILibxml2Parser.cc \
-	ESILibxml2Parser.h ESIParser.cc ESIParser.h ESISegment.cc \
-	ESISegment.h ESISequence.cc ESISequence.h ESIVar.h \
-	ESIVarState.cc ESIVarState.h ETag.cc external_acl.cc \
-	ExternalACLEntry.cc fd.cc fde.cc forward.cc fqdncache.cc \
-	ftp.cc gopher.cc helper.cc htcp.cc htcp.h http.cc HttpBody.cc \
-	HttpHeader.cc HttpHeaderTools.cc HttpHdrCc.cc \
+	tests/testCacheManager.cc tests/testCacheManager.h \
+	tests/testMain.cc time.cc access_log.cc acl.cc acl_noncore.cc \
+	ACLChecklist.cc ACLProxyAuth.cc ACLStringData.cc \
+	ACLRegexData.cc ACLUserData.cc authenticate.cc BodyReader.cc \
+	cache_manager.cc cache_cf.cc CacheDigest.cc carp.cc cbdata.cc \
+	client_db.cc client_side.cc client_side_reply.cc \
+	client_side_request.cc clientStream.cc comm_select.cc \
+	comm_select.h comm_select_win32.cc comm_poll.cc comm_poll.h \
+	comm_epoll.cc comm_epoll.h comm_kqueue.cc comm_kqueue.h \
+	ConfigOption.cc ConfigParser.cc CommonPool.h \
+	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
+	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
+	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
+	DelaySpec.cc DelaySpec.h DelayTagged.cc DelayTagged.h \
+	DelayUser.cc DelayUser.h DelayVector.cc DelayVector.h \
+	NullDelayId.cc NullDelayId.h disk.cc dns_internal.cc dns.cc \
+	event.cc errorpage.cc ElementList.h ESI.cc ESI.h ESIAssign.cc \
+	ESIAssign.h ESIAttempt.h ESIContext.cc ESIContext.h \
+	ESICustomParser.cc ESICustomParser.h ESIElement.h ESIExcept.h \
+	ESIExpatParser.cc ESIExpatParser.h ESIExpression.cc \
+	ESIExpression.h ESIInclude.cc ESIInclude.h ESILiteral.h \
+	ESILibxml2Parser.cc ESILibxml2Parser.h ESIParser.cc \
+	ESIParser.h ESISegment.cc ESISegment.h ESISequence.cc \
+	ESISequence.h ESIVar.h ESIVarState.cc ESIVarState.h ETag.cc \
+	external_acl.cc ExternalACLEntry.cc fd.cc fde.cc forward.cc \
+	fqdncache.cc ftp.cc gopher.cc helper.cc htcp.cc htcp.h http.cc \
+	HttpBody.cc HttpHeader.cc HttpHeaderTools.cc HttpHdrCc.cc \
 	HttpHdrContRange.cc HttpHdrRange.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc HttpMsg.cc HttpReply.cc HttpStatusLine.cc \
 	icmp.cc icp_v2.cc icp_v3.cc ACLIdent.cc ACLIdent.h ident.cc \
@@ -562,14 +566,219 @@ tests_testCoss_OBJECTS = $(am_tests_testCoss_OBJECTS)
 am__DEPENDENCIES_1 = libsquid.la libauth.la \
 	DiskIO/Blocking/BlockingDiskIOModule.o \
 	repl/lru/store_repl_lru.o
+am__tests_testEvent_SOURCES_DIST = debug.cc EventLoop.h EventLoop.cc \
+	globals.cc HttpRequest.cc HttpRequestMethod.cc mem.cc \
+	String.cc tests/testEvent.cc tests/testEvent.h \
+	tests/testMain.cc time.cc access_log.cc acl.cc acl_noncore.cc \
+	ACLChecklist.cc ACLProxyAuth.cc ACLStringData.cc \
+	ACLRegexData.cc ACLUserData.cc authenticate.cc BodyReader.cc \
+	cache_manager.cc cache_cf.cc CacheDigest.cc carp.cc cbdata.cc \
+	client_db.cc client_side.cc client_side_reply.cc \
+	client_side_request.cc clientStream.cc comm_select.cc \
+	comm_select.h comm_select_win32.cc comm_poll.cc comm_poll.h \
+	comm_epoll.cc comm_epoll.h comm_kqueue.cc comm_kqueue.h \
+	ConfigOption.cc ConfigParser.cc CommonPool.h \
+	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
+	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
+	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
+	DelaySpec.cc DelaySpec.h DelayTagged.cc DelayTagged.h \
+	DelayUser.cc DelayUser.h DelayVector.cc DelayVector.h \
+	NullDelayId.cc NullDelayId.h disk.cc dns_internal.cc dns.cc \
+	event.cc errorpage.cc ElementList.h ESI.cc ESI.h ESIAssign.cc \
+	ESIAssign.h ESIAttempt.h ESIContext.cc ESIContext.h \
+	ESICustomParser.cc ESICustomParser.h ESIElement.h ESIExcept.h \
+	ESIExpatParser.cc ESIExpatParser.h ESIExpression.cc \
+	ESIExpression.h ESIInclude.cc ESIInclude.h ESILiteral.h \
+	ESILibxml2Parser.cc ESILibxml2Parser.h ESIParser.cc \
+	ESIParser.h ESISegment.cc ESISegment.h ESISequence.cc \
+	ESISequence.h ESIVar.h ESIVarState.cc ESIVarState.h ETag.cc \
+	external_acl.cc ExternalACLEntry.cc fd.cc fde.cc forward.cc \
+	fqdncache.cc ftp.cc gopher.cc helper.cc htcp.cc htcp.h http.cc \
+	HttpBody.cc HttpHeader.cc HttpHeaderTools.cc HttpHdrCc.cc \
+	HttpHdrContRange.cc HttpHdrRange.cc HttpHdrSc.cc \
+	HttpHdrScTarget.cc HttpMsg.cc HttpReply.cc HttpStatusLine.cc \
+	icmp.cc icp_v2.cc icp_v3.cc ACLIdent.cc ACLIdent.h ident.cc \
+	ipc.cc ipcache.cc int.cc internal.cc list.cc logfile.cc \
+	multicast.cc mem_node.cc MemBuf.cc MemObject.cc mime.cc \
+	neighbors.cc net_db.cc Packer.cc Parsing.cc pconn.cc \
+	peer_digest.cc peer_select.cc redirect.cc referer.cc \
+	refresh.cc Server.cc snmp_core.cc snmp_agent.cc \
+	ACLCertificateData.cc ACLCertificateData.h ACLCertificate.cc \
+	ACLCertificate.h ssl_support.cc ssl_support.h stat.cc \
+	StatHist.cc stmem.cc store.cc store_client.cc store_digest.cc \
+	store_dir.cc store_io.cc store_key_md5.cc store_log.cc \
+	store_rebuild.cc store_swapin.cc store_swapmeta.cc \
+	store_swapout.cc StoreFileSystem.cc StoreIOState.cc \
+	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
+	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
+	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc url.cc \
+	URLScheme.cc urn.cc useragent.cc wais.cc wccp2.cc whois.cc \
+	wordlist.cc
+am_tests_testEvent_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
+	globals.$(OBJEXT) HttpRequest.$(OBJEXT) \
+	HttpRequestMethod.$(OBJEXT) mem.$(OBJEXT) String.$(OBJEXT) \
+	tests/testEvent.$(OBJEXT) tests/testMain.$(OBJEXT) \
+	time.$(OBJEXT) access_log.$(OBJEXT) acl.$(OBJEXT) \
+	acl_noncore.$(OBJEXT) ACLChecklist.$(OBJEXT) \
+	ACLProxyAuth.$(OBJEXT) ACLStringData.$(OBJEXT) \
+	ACLRegexData.$(OBJEXT) ACLUserData.$(OBJEXT) \
+	authenticate.$(OBJEXT) BodyReader.$(OBJEXT) \
+	cache_manager.$(OBJEXT) cache_cf.$(OBJEXT) \
+	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
+	client_db.$(OBJEXT) client_side.$(OBJEXT) \
+	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
+	clientStream.$(OBJEXT) $(am__objects_4) ConfigOption.$(OBJEXT) \
+	ConfigParser.$(OBJEXT) $(am__objects_6) disk.$(OBJEXT) \
+	$(am__objects_8) event.$(OBJEXT) errorpage.$(OBJEXT) \
+	$(am__objects_10) ETag.$(OBJEXT) external_acl.$(OBJEXT) \
+	ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) fde.$(OBJEXT) \
+	forward.$(OBJEXT) fqdncache.$(OBJEXT) ftp.$(OBJEXT) \
+	gopher.$(OBJEXT) helper.$(OBJEXT) $(am__objects_11) \
+	http.$(OBJEXT) HttpBody.$(OBJEXT) HttpHeader.$(OBJEXT) \
+	HttpHeaderTools.$(OBJEXT) HttpHdrCc.$(OBJEXT) \
+	HttpHdrContRange.$(OBJEXT) HttpHdrRange.$(OBJEXT) \
+	HttpHdrSc.$(OBJEXT) HttpHdrScTarget.$(OBJEXT) \
+	HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) HttpStatusLine.$(OBJEXT) \
+	icmp.$(OBJEXT) icp_v2.$(OBJEXT) icp_v3.$(OBJEXT) \
+	$(am__objects_13) ipc.$(OBJEXT) ipcache.$(OBJEXT) \
+	int.$(OBJEXT) internal.$(OBJEXT) list.$(OBJEXT) \
+	logfile.$(OBJEXT) multicast.$(OBJEXT) mem_node.$(OBJEXT) \
+	MemBuf.$(OBJEXT) MemObject.$(OBJEXT) mime.$(OBJEXT) \
+	neighbors.$(OBJEXT) net_db.$(OBJEXT) Packer.$(OBJEXT) \
+	Parsing.$(OBJEXT) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
+	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
+	refresh.$(OBJEXT) Server.$(OBJEXT) $(am__objects_17) \
+	$(am__objects_19) stat.$(OBJEXT) StatHist.$(OBJEXT) \
+	stmem.$(OBJEXT) store.$(OBJEXT) store_client.$(OBJEXT) \
+	store_digest.$(OBJEXT) store_dir.$(OBJEXT) store_io.$(OBJEXT) \
+	store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
+	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
+	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
+	StoreFileSystem.$(OBJEXT) StoreIOState.$(OBJEXT) \
+	StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
+	StoreMetaSTD.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
+	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
+	StoreSwapLogData.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
+	SwapDir.$(OBJEXT) url.$(OBJEXT) URLScheme.$(OBJEXT) \
+	urn.$(OBJEXT) useragent.$(OBJEXT) wais.$(OBJEXT) \
+	wccp2.$(OBJEXT) whois.$(OBJEXT) wordlist.$(OBJEXT)
+nodist_tests_testEvent_OBJECTS = repl_modules.$(OBJEXT) \
+	string_arrays.$(OBJEXT)
+tests_testEvent_OBJECTS = $(am_tests_testEvent_OBJECTS) \
+	$(nodist_tests_testEvent_OBJECTS)
+am__tests_testEventLoop_SOURCES_DIST = debug.cc EventLoop.h \
+	EventLoop.cc globals.cc HttpRequest.cc HttpRequestMethod.cc \
+	mem.cc String.cc tests/testEventLoop.cc tests/testEventLoop.h \
+	tests/testMain.cc time.cc access_log.cc acl.cc acl_noncore.cc \
+	ACLChecklist.cc ACLProxyAuth.cc ACLStringData.cc \
+	ACLRegexData.cc ACLUserData.cc authenticate.cc BodyReader.cc \
+	cache_manager.cc cache_cf.cc CacheDigest.cc carp.cc cbdata.cc \
+	client_db.cc client_side.cc client_side_reply.cc \
+	client_side_request.cc clientStream.cc comm_select.cc \
+	comm_select.h comm_select_win32.cc comm_poll.cc comm_poll.h \
+	comm_epoll.cc comm_epoll.h comm_kqueue.cc comm_kqueue.h \
+	ConfigOption.cc ConfigParser.cc CommonPool.h \
+	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
+	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
+	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
+	DelaySpec.cc DelaySpec.h DelayTagged.cc DelayTagged.h \
+	DelayUser.cc DelayUser.h DelayVector.cc DelayVector.h \
+	NullDelayId.cc NullDelayId.h disk.cc dns_internal.cc dns.cc \
+	event.cc errorpage.cc ElementList.h ESI.cc ESI.h ESIAssign.cc \
+	ESIAssign.h ESIAttempt.h ESIContext.cc ESIContext.h \
+	ESICustomParser.cc ESICustomParser.h ESIElement.h ESIExcept.h \
+	ESIExpatParser.cc ESIExpatParser.h ESIExpression.cc \
+	ESIExpression.h ESIInclude.cc ESIInclude.h ESILiteral.h \
+	ESILibxml2Parser.cc ESILibxml2Parser.h ESIParser.cc \
+	ESIParser.h ESISegment.cc ESISegment.h ESISequence.cc \
+	ESISequence.h ESIVar.h ESIVarState.cc ESIVarState.h ETag.cc \
+	external_acl.cc ExternalACLEntry.cc fd.cc fde.cc forward.cc \
+	fqdncache.cc ftp.cc gopher.cc helper.cc htcp.cc htcp.h http.cc \
+	HttpBody.cc HttpHeader.cc HttpHeaderTools.cc HttpHdrCc.cc \
+	HttpHdrContRange.cc HttpHdrRange.cc HttpHdrSc.cc \
+	HttpHdrScTarget.cc HttpMsg.cc HttpReply.cc HttpStatusLine.cc \
+	icmp.cc icp_v2.cc icp_v3.cc ACLIdent.cc ACLIdent.h ident.cc \
+	ipc.cc ipcache.cc int.cc internal.cc list.cc logfile.cc \
+	multicast.cc mem_node.cc MemBuf.cc MemObject.cc mime.cc \
+	neighbors.cc net_db.cc Packer.cc Parsing.cc pconn.cc \
+	peer_digest.cc peer_select.cc redirect.cc referer.cc \
+	refresh.cc Server.cc snmp_core.cc snmp_agent.cc \
+	ACLCertificateData.cc ACLCertificateData.h ACLCertificate.cc \
+	ACLCertificate.h ssl_support.cc ssl_support.h stat.cc \
+	StatHist.cc stmem.cc store.cc store_client.cc store_digest.cc \
+	store_dir.cc store_io.cc store_key_md5.cc store_log.cc \
+	store_rebuild.cc store_swapin.cc store_swapmeta.cc \
+	store_swapout.cc StoreFileSystem.cc StoreIOState.cc \
+	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
+	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
+	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc url.cc \
+	URLScheme.cc urn.cc useragent.cc wais.cc wccp2.cc whois.cc \
+	wordlist.cc
+am_tests_testEventLoop_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
+	globals.$(OBJEXT) HttpRequest.$(OBJEXT) \
+	HttpRequestMethod.$(OBJEXT) mem.$(OBJEXT) String.$(OBJEXT) \
+	tests/testEventLoop.$(OBJEXT) tests/testMain.$(OBJEXT) \
+	time.$(OBJEXT) access_log.$(OBJEXT) acl.$(OBJEXT) \
+	acl_noncore.$(OBJEXT) ACLChecklist.$(OBJEXT) \
+	ACLProxyAuth.$(OBJEXT) ACLStringData.$(OBJEXT) \
+	ACLRegexData.$(OBJEXT) ACLUserData.$(OBJEXT) \
+	authenticate.$(OBJEXT) BodyReader.$(OBJEXT) \
+	cache_manager.$(OBJEXT) cache_cf.$(OBJEXT) \
+	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
+	client_db.$(OBJEXT) client_side.$(OBJEXT) \
+	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
+	clientStream.$(OBJEXT) $(am__objects_4) ConfigOption.$(OBJEXT) \
+	ConfigParser.$(OBJEXT) $(am__objects_6) disk.$(OBJEXT) \
+	$(am__objects_8) event.$(OBJEXT) errorpage.$(OBJEXT) \
+	$(am__objects_10) ETag.$(OBJEXT) external_acl.$(OBJEXT) \
+	ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) fde.$(OBJEXT) \
+	forward.$(OBJEXT) fqdncache.$(OBJEXT) ftp.$(OBJEXT) \
+	gopher.$(OBJEXT) helper.$(OBJEXT) $(am__objects_11) \
+	http.$(OBJEXT) HttpBody.$(OBJEXT) HttpHeader.$(OBJEXT) \
+	HttpHeaderTools.$(OBJEXT) HttpHdrCc.$(OBJEXT) \
+	HttpHdrContRange.$(OBJEXT) HttpHdrRange.$(OBJEXT) \
+	HttpHdrSc.$(OBJEXT) HttpHdrScTarget.$(OBJEXT) \
+	HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) HttpStatusLine.$(OBJEXT) \
+	icmp.$(OBJEXT) icp_v2.$(OBJEXT) icp_v3.$(OBJEXT) \
+	$(am__objects_13) ipc.$(OBJEXT) ipcache.$(OBJEXT) \
+	int.$(OBJEXT) internal.$(OBJEXT) list.$(OBJEXT) \
+	logfile.$(OBJEXT) multicast.$(OBJEXT) mem_node.$(OBJEXT) \
+	MemBuf.$(OBJEXT) MemObject.$(OBJEXT) mime.$(OBJEXT) \
+	neighbors.$(OBJEXT) net_db.$(OBJEXT) Packer.$(OBJEXT) \
+	Parsing.$(OBJEXT) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
+	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
+	refresh.$(OBJEXT) Server.$(OBJEXT) $(am__objects_17) \
+	$(am__objects_19) stat.$(OBJEXT) StatHist.$(OBJEXT) \
+	stmem.$(OBJEXT) store.$(OBJEXT) store_client.$(OBJEXT) \
+	store_digest.$(OBJEXT) store_dir.$(OBJEXT) store_io.$(OBJEXT) \
+	store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
+	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
+	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
+	StoreFileSystem.$(OBJEXT) StoreIOState.$(OBJEXT) \
+	StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
+	StoreMetaSTD.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
+	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
+	StoreSwapLogData.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
+	SwapDir.$(OBJEXT) url.$(OBJEXT) URLScheme.$(OBJEXT) \
+	urn.$(OBJEXT) useragent.$(OBJEXT) wais.$(OBJEXT) \
+	wccp2.$(OBJEXT) whois.$(OBJEXT) wordlist.$(OBJEXT)
+nodist_tests_testEventLoop_OBJECTS = repl_modules.$(OBJEXT) \
+	string_arrays.$(OBJEXT)
+tests_testEventLoop_OBJECTS = $(am_tests_testEventLoop_OBJECTS) \
+	$(nodist_tests_testEventLoop_OBJECTS)
 am__objects_29 = tests/testHeader_ACL.$(OBJEXT) \
+	tests/testHeader_CompletionDispatcher.$(OBJEXT) \
 	tests/testHeader_ConfigParser.$(OBJEXT) \
 	tests/testHeader_client_side_request.$(OBJEXT) \
+	tests/testHeader_comm.$(OBJEXT) \
 	tests/testHeader_dlink.$(OBJEXT) \
+	tests/testHeader_event.$(OBJEXT) \
+	tests/testHeader_EventLoop.$(OBJEXT) \
 	tests/testHeader_HttpHeader.$(OBJEXT) \
 	tests/testHeader_HttpHeaderRange.$(OBJEXT) \
 	tests/testHeader_HttpReply.$(OBJEXT) \
 	tests/testHeader_HttpRequestMethod.$(OBJEXT) \
+	tests/testHeader_Store.$(OBJEXT) \
 	tests/testHeader_StoreEntryStream.$(OBJEXT) \
 	tests/testHeader_URL.$(OBJEXT) \
 	tests/testHeader_URLScheme.$(OBJEXT) \
@@ -1125,8 +1334,11 @@ SOURCES = $(ICAP_libicap_a_SOURCES) $(libAIO_a_SOURCES) \
 	$(tests_testAuth_SOURCES) $(tests_testBoilerplate_SOURCES) \
 	$(tests_testCacheManager_SOURCES) \
 	$(nodist_tests_testCacheManager_SOURCES) \
-	$(tests_testCoss_SOURCES) $(tests_testHeaders_SOURCES) \
-	$(tests_testHttpRequest_SOURCES) \
+	$(tests_testCoss_SOURCES) $(tests_testEvent_SOURCES) \
+	$(nodist_tests_testEvent_SOURCES) \
+	$(tests_testEventLoop_SOURCES) \
+	$(nodist_tests_testEventLoop_SOURCES) \
+	$(tests_testHeaders_SOURCES) $(tests_testHttpRequest_SOURCES) \
 	$(nodist_tests_testHttpRequest_SOURCES) \
 	$(tests_testNull_SOURCES) $(tests_testStore_SOURCES) \
 	$(tests_testString_SOURCES) $(tests_testURL_SOURCES) \
@@ -1144,6 +1356,8 @@ DIST_SOURCES = $(ICAP_libicap_a_SOURCES) $(libAIO_a_SOURCES) \
 	$(tests_testAuth_SOURCES) $(tests_testBoilerplate_SOURCES) \
 	$(am__tests_testCacheManager_SOURCES_DIST) \
 	$(am__tests_testCoss_SOURCES_DIST) \
+	$(am__tests_testEvent_SOURCES_DIST) \
+	$(am__tests_testEventLoop_SOURCES_DIST) \
 	$(tests_testHeaders_SOURCES) \
 	$(am__tests_testHttpRequest_SOURCES_DIST) \
 	$(am__tests_testNull_SOURCES_DIST) \
@@ -1680,6 +1894,8 @@ squid_SOURCES = \
 	clientStream.cc \
 	clientStream.h \
 	CommIO.h \
+	CompletionDispatcher.cc \
+	CompletionDispatcher.h \
 	$(squid_COMMSOURCES) \
 	CommRead.h \
 	ConfigOption.cc \
@@ -1699,6 +1915,9 @@ squid_SOURCES = \
 	$(ESI_SOURCE) \
 	ETag.cc \
 	event.cc \
+	event.h \
+	EventLoop.h \
+	EventLoop.cc \
 	external_acl.cc \
 	ExternalACL.h \
 	ExternalACLEntry.cc \
@@ -2328,6 +2547,7 @@ tests_testCacheManager_SOURCES = \
 	mem.cc \
 	String.cc \
 	tests/testCacheManager.cc \
+	tests/testCacheManager.h \
 	tests/testMain.cc \
 	time.cc \
 	access_log.cc \
@@ -2468,15 +2688,322 @@ tests_testCacheManager_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@SQUID_CPPUNIT_LA@ \
 	@ICAP_LIBS@
 
+tests_testEvent_SOURCES = \
+	debug.cc \
+	EventLoop.h \
+	EventLoop.cc \
+	globals.cc \
+	HttpRequest.cc \
+	HttpRequestMethod.cc \
+	mem.cc \
+	String.cc \
+	tests/testEvent.cc \
+	tests/testEvent.h \
+	tests/testMain.cc \
+	time.cc \
+	access_log.cc \
+	acl.cc \
+	acl_noncore.cc \
+	ACLChecklist.cc \
+	ACLProxyAuth.cc \
+	ACLStringData.cc \
+	ACLRegexData.cc \
+	ACLUserData.cc \
+	authenticate.cc \
+	BodyReader.cc \
+	cache_manager.cc \
+	cache_cf.cc \
+	CacheDigest.cc \
+	carp.cc \
+	cbdata.cc \
+	client_db.cc \
+	client_side.cc \
+	client_side_reply.cc \
+	client_side_request.cc \
+	clientStream.cc \
+	$(squid_COMMSOURCES) \
+	ConfigOption.cc \
+	ConfigParser.cc \
+	$(DELAY_POOL_SOURCE) \
+	disk.cc \
+	$(DNSSOURCE) \
+	event.cc \
+	errorpage.cc \
+	$(ESI_SOURCE) \
+	ETag.cc \
+	external_acl.cc \
+	ExternalACLEntry.cc \
+	fd.cc \
+	fde.cc \
+	forward.cc \
+	fqdncache.cc \
+	ftp.cc \
+	gopher.cc \
+	helper.cc \
+	$(HTCPSOURCE) \
+	http.cc \
+	HttpBody.cc \
+	HttpHeader.cc \
+	HttpHeaderTools.cc \
+	HttpHdrCc.cc \
+	HttpHdrContRange.cc \
+	HttpHdrRange.cc \
+	HttpHdrSc.cc \
+	HttpHdrScTarget.cc \
+	HttpMsg.cc \
+	HttpReply.cc \
+	HttpStatusLine.cc \
+	icmp.cc \
+	icp_v2.cc \
+	icp_v3.cc \
+	$(IDENT_SOURCE) \
+	ipc.cc \
+	ipcache.cc \
+	int.cc \
+	internal.cc \
+	list.cc \
+	logfile.cc \
+	multicast.cc \
+	mem_node.cc \
+	MemBuf.cc \
+	MemObject.cc \
+	mime.cc \
+	neighbors.cc \
+	net_db.cc \
+	Packer.cc \
+	Parsing.cc \
+	pconn.cc \
+	peer_digest.cc \
+	peer_select.cc \
+	redirect.cc \
+	referer.cc \
+	refresh.cc \
+	Server.cc \
+	$(SNMP_SOURCE) \
+	$(SSL_SOURCE) \
+	stat.cc \
+	StatHist.cc \
+	stmem.cc \
+	store.cc \
+	store_client.cc \
+	store_digest.cc \
+	store_dir.cc \
+	store_io.cc \
+	store_key_md5.cc \
+	store_log.cc \
+	store_rebuild.cc \
+	store_swapin.cc \
+	store_swapmeta.cc \
+	store_swapout.cc \
+	StoreFileSystem.cc \
+	StoreIOState.cc \
+	StoreMeta.cc \
+	StoreMetaMD5.cc \
+	StoreMetaSTD.cc \
+	StoreMetaUnpacker.cc \
+	StoreMetaURL.cc \
+	StoreMetaVary.cc \
+	StoreSwapLogData.cc \
+	tools.cc \
+	tunnel.cc \
+	SwapDir.cc \
+	url.cc \
+	URLScheme.cc \
+	urn.cc \
+	useragent.cc \
+	wais.cc \
+	wccp2.cc \
+	whois.cc \
+	wordlist.cc
+
+nodist_tests_testEvent_SOURCES = \
+	repl_modules.cc \
+	string_arrays.c
+
+tests_testEvent_LDADD = \
+	libsquid.la \
+	libauth.la \
+	@REPL_OBJS@ \
+	@ICAP_LIBS@ \
+	@REGEXLIB@ \
+	@SSLLIB@ \
+	-L../lib -lmiscutil \
+	@XTRA_LIBS@ \
+	@SQUID_CPPUNIT_LIBS@ \
+	@SQUID_CPPUNIT_LA@ \
+	@SNMPLIB@ 
+
+tests_testEvent_LDFLAGS = $(LIBADD_DL)
+tests_testEvent_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
+	@REPL_OBJS@ \
+	@SQUID_CPPUNIT_LA@ \
+	@ICAP_LIBS@
+
+tests_testEventLoop_SOURCES = \
+	debug.cc \
+	EventLoop.h \
+	EventLoop.cc \
+	globals.cc \
+	HttpRequest.cc \
+	HttpRequestMethod.cc \
+	mem.cc \
+	String.cc \
+	tests/testEventLoop.cc \
+	tests/testEventLoop.h \
+	tests/testMain.cc \
+	time.cc \
+	access_log.cc \
+	acl.cc \
+	acl_noncore.cc \
+	ACLChecklist.cc \
+	ACLProxyAuth.cc \
+	ACLStringData.cc \
+	ACLRegexData.cc \
+	ACLUserData.cc \
+	authenticate.cc \
+	BodyReader.cc \
+	cache_manager.cc \
+	cache_cf.cc \
+	CacheDigest.cc \
+	carp.cc \
+	cbdata.cc \
+	client_db.cc \
+	client_side.cc \
+	client_side_reply.cc \
+	client_side_request.cc \
+	clientStream.cc \
+	$(squid_COMMSOURCES) \
+	ConfigOption.cc \
+	ConfigParser.cc \
+	$(DELAY_POOL_SOURCE) \
+	disk.cc \
+	$(DNSSOURCE) \
+	event.cc \
+	errorpage.cc \
+	$(ESI_SOURCE) \
+	ETag.cc \
+	external_acl.cc \
+	ExternalACLEntry.cc \
+	fd.cc \
+	fde.cc \
+	forward.cc \
+	fqdncache.cc \
+	ftp.cc \
+	gopher.cc \
+	helper.cc \
+	$(HTCPSOURCE) \
+	http.cc \
+	HttpBody.cc \
+	HttpHeader.cc \
+	HttpHeaderTools.cc \
+	HttpHdrCc.cc \
+	HttpHdrContRange.cc \
+	HttpHdrRange.cc \
+	HttpHdrSc.cc \
+	HttpHdrScTarget.cc \
+	HttpMsg.cc \
+	HttpReply.cc \
+	HttpStatusLine.cc \
+	icmp.cc \
+	icp_v2.cc \
+	icp_v3.cc \
+	$(IDENT_SOURCE) \
+	ipc.cc \
+	ipcache.cc \
+	int.cc \
+	internal.cc \
+	list.cc \
+	logfile.cc \
+	multicast.cc \
+	mem_node.cc \
+	MemBuf.cc \
+	MemObject.cc \
+	mime.cc \
+	neighbors.cc \
+	net_db.cc \
+	Packer.cc \
+	Parsing.cc \
+	pconn.cc \
+	peer_digest.cc \
+	peer_select.cc \
+	redirect.cc \
+	referer.cc \
+	refresh.cc \
+	Server.cc \
+	$(SNMP_SOURCE) \
+	$(SSL_SOURCE) \
+	stat.cc \
+	StatHist.cc \
+	stmem.cc \
+	store.cc \
+	store_client.cc \
+	store_digest.cc \
+	store_dir.cc \
+	store_io.cc \
+	store_key_md5.cc \
+	store_log.cc \
+	store_rebuild.cc \
+	store_swapin.cc \
+	store_swapmeta.cc \
+	store_swapout.cc \
+	StoreFileSystem.cc \
+	StoreIOState.cc \
+	StoreMeta.cc \
+	StoreMetaMD5.cc \
+	StoreMetaSTD.cc \
+	StoreMetaUnpacker.cc \
+	StoreMetaURL.cc \
+	StoreMetaVary.cc \
+	StoreSwapLogData.cc \
+	tools.cc \
+	tunnel.cc \
+	SwapDir.cc \
+	url.cc \
+	URLScheme.cc \
+	urn.cc \
+	useragent.cc \
+	wais.cc \
+	wccp2.cc \
+	whois.cc \
+	wordlist.cc
+
+nodist_tests_testEventLoop_SOURCES = \
+	repl_modules.cc \
+	string_arrays.c
+
+tests_testEventLoop_LDADD = \
+	libsquid.la \
+	libauth.la \
+	@REPL_OBJS@ \
+	@ICAP_LIBS@ \
+	@REGEXLIB@ \
+	@SSLLIB@ \
+	-L../lib -lmiscutil \
+	@XTRA_LIBS@ \
+	@SQUID_CPPUNIT_LIBS@ \
+	@SQUID_CPPUNIT_LA@ \
+	@SNMPLIB@ 
+
+tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
+tests_testEventLoop_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
+	@REPL_OBJS@ \
+	@SQUID_CPPUNIT_LA@ \
+	@ICAP_LIBS@
+
 HEADERS_TO_TEST = \
 	tests/testHeader_ACL.cc \
+	tests/testHeader_CompletionDispatcher.cc \
 	tests/testHeader_ConfigParser.cc \
 	tests/testHeader_client_side_request.cc \
+	tests/testHeader_comm.cc \
 	tests/testHeader_dlink.cc \
+	tests/testHeader_event.cc \
+	tests/testHeader_EventLoop.cc \
 	tests/testHeader_HttpHeader.cc \
 	tests/testHeader_HttpHeaderRange.cc \
 	tests/testHeader_HttpReply.cc \
 	tests/testHeader_HttpRequestMethod.cc \
+	tests/testHeader_Store.cc \
 	tests/testHeader_StoreEntryStream.cc \
 	tests/testHeader_URL.cc \
 	tests/testHeader_URLScheme.cc \
@@ -3557,13 +4084,31 @@ tests/stub_tools.$(OBJEXT): tests/$(am__dirstamp) \
 tests/testCoss$(EXEEXT): $(tests_testCoss_OBJECTS) $(tests_testCoss_DEPENDENCIES) tests/$(am__dirstamp)
 	@rm -f tests/testCoss$(EXEEXT)
 	$(CXXLINK) $(tests_testCoss_LDFLAGS) $(tests_testCoss_OBJECTS) $(tests_testCoss_LDADD) $(LIBS)
+tests/testEvent.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+tests/testEvent$(EXEEXT): $(tests_testEvent_OBJECTS) $(tests_testEvent_DEPENDENCIES) tests/$(am__dirstamp)
+	@rm -f tests/testEvent$(EXEEXT)
+	$(CXXLINK) $(tests_testEvent_LDFLAGS) $(tests_testEvent_OBJECTS) $(tests_testEvent_LDADD) $(LIBS)
+tests/testEventLoop.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+tests/testEventLoop$(EXEEXT): $(tests_testEventLoop_OBJECTS) $(tests_testEventLoop_DEPENDENCIES) tests/$(am__dirstamp)
+	@rm -f tests/testEventLoop$(EXEEXT)
+	$(CXXLINK) $(tests_testEventLoop_LDFLAGS) $(tests_testEventLoop_OBJECTS) $(tests_testEventLoop_LDADD) $(LIBS)
 tests/testHeader_ACL.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
+tests/testHeader_CompletionDispatcher.$(OBJEXT):  \
+	tests/$(am__dirstamp) tests/$(DEPDIR)/$(am__dirstamp)
 tests/testHeader_ConfigParser.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 tests/testHeader_client_side_request.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
+tests/testHeader_comm.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
 tests/testHeader_dlink.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+tests/testHeader_event.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+tests/testHeader_EventLoop.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 tests/testHeader_HttpHeader.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
@@ -3572,6 +4117,8 @@ tests/testHeader_HttpHeaderRange.$(OBJEXT): tests/$(am__dirstamp) \
 tests/testHeader_HttpReply.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 tests/testHeader_HttpRequestMethod.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+tests/testHeader_Store.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 tests/testHeader_StoreEntryStream.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
@@ -3713,17 +4260,24 @@ mostlyclean-compile:
 	-rm -f tests/testBoilerplate.$(OBJEXT)
 	-rm -f tests/testCacheManager.$(OBJEXT)
 	-rm -f tests/testCoss.$(OBJEXT)
+	-rm -f tests/testEvent.$(OBJEXT)
+	-rm -f tests/testEventLoop.$(OBJEXT)
 	-rm -f tests/testHeader_ACL.$(OBJEXT)
+	-rm -f tests/testHeader_CompletionDispatcher.$(OBJEXT)
 	-rm -f tests/testHeader_ConfigParser.$(OBJEXT)
+	-rm -f tests/testHeader_EventLoop.$(OBJEXT)
 	-rm -f tests/testHeader_HttpHeader.$(OBJEXT)
 	-rm -f tests/testHeader_HttpHeaderRange.$(OBJEXT)
 	-rm -f tests/testHeader_HttpReply.$(OBJEXT)
 	-rm -f tests/testHeader_HttpRequestMethod.$(OBJEXT)
+	-rm -f tests/testHeader_Store.$(OBJEXT)
 	-rm -f tests/testHeader_StoreEntryStream.$(OBJEXT)
 	-rm -f tests/testHeader_URL.$(OBJEXT)
 	-rm -f tests/testHeader_URLScheme.$(OBJEXT)
 	-rm -f tests/testHeader_client_side_request.$(OBJEXT)
+	-rm -f tests/testHeader_comm.$(OBJEXT)
 	-rm -f tests/testHeader_dlink.$(OBJEXT)
+	-rm -f tests/testHeader_event.$(OBJEXT)
 	-rm -f tests/testHeader_wordlist.$(OBJEXT)
 	-rm -f tests/testHttpRequest.$(OBJEXT)
 	-rm -f tests/testHttpRequestMethod.$(OBJEXT)
@@ -3789,6 +4343,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AuthUserRequest.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BodyReader.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CacheDigest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CompletionDispatcher.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ConfigOption.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ConfigParser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DelayBucket.Po@am__quote@
@@ -3812,6 +4367,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ESISequence.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ESIVarState.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ETag.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/EventLoop.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ExternalACLEntry.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpBody.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpHdrCc.Po@am__quote@
@@ -4016,17 +4572,24 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testBoilerplate.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testCacheManager.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testCoss.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testEvent.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testEventLoop.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testHeader_ACL.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testHeader_CompletionDispatcher.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testHeader_ConfigParser.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testHeader_EventLoop.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testHeader_HttpHeader.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testHeader_HttpHeaderRange.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testHeader_HttpReply.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testHeader_HttpRequestMethod.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testHeader_Store.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testHeader_StoreEntryStream.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testHeader_URL.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testHeader_URLScheme.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testHeader_client_side_request.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testHeader_comm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testHeader_dlink.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testHeader_event.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testHeader_wordlist.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testHttpRequest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testHttpRequestMethod.Po@am__quote@
