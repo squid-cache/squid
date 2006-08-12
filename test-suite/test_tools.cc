@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_tools.cc,v 1.7 2005/01/03 16:08:27 robertc Exp $
+ * $Id: test_tools.cc,v 1.8 2006/08/12 01:43:12 robertc Exp $
  *
  * AUTHOR: Robert Collins
  *
@@ -107,11 +107,18 @@ va_dcl
 static void
 _db_print_stderr(const char *format, va_list args) {
     /* FIXME? */
-   // if (opt_debug_stderr < Debug::level)
-   if (1 < Debug::level)
+    // if (opt_debug_stderr < Debug::level)
+
+    if (1 < Debug::level)
         return;
 
     vfprintf(stderr, format, args);
+}
+
+void
+fatal_dump(const char *message) {
+    debug (0,0) ("Fatal: %s",message);
+    exit (1);
 }
 
 void
@@ -131,8 +138,7 @@ fatalvf(const char *fmt, va_list args) {
 /* printf-style interface for fatal */
 #if STDC_HEADERS
 void
-fatalf(const char *fmt,...)
-{
+fatalf(const char *fmt,...) {
     va_list args;
     va_start(args, fmt);
 #else
@@ -156,16 +162,14 @@ debug_trap(const char *message) {
 }
 
 std::ostream &
-Debug::getDebugOut()
-{
+Debug::getDebugOut() {
     assert (CurrentDebug == NULL);
     CurrentDebug = new std::ostringstream();
     return *CurrentDebug;
 }
 
 void
-Debug::finishDebug()
-{
+Debug::finishDebug() {
     _db_print("%s\n", CurrentDebug->str().c_str());
     delete CurrentDebug;
     CurrentDebug = NULL;
@@ -176,8 +180,7 @@ std::ostringstream *Debug::CurrentDebug (NULL);
 MemImplementingAllocator *dlink_node_pool = NULL;
 
 dlink_node *
-dlinkNodeNew()
-{
+dlinkNodeNew() {
     if (dlink_node_pool == NULL)
         dlink_node_pool = MemPools::GetInstance().create("Dlink list nodes", sizeof(dlink_node));
 
@@ -187,8 +190,7 @@ dlinkNodeNew()
 
 /* the node needs to be unlinked FIRST */
 void
-dlinkNodeDelete(dlink_node * m)
-{
+dlinkNodeDelete(dlink_node * m) {
     if (m == NULL)
         return;
 
@@ -196,8 +198,7 @@ dlinkNodeDelete(dlink_node * m)
 }
 
 void
-dlinkAdd(void *data, dlink_node * m, dlink_list * list)
-{
+dlinkAdd(void *data, dlink_node * m, dlink_list * list) {
     m->data = data;
     m->prev = NULL;
     m->next = list->head;
@@ -212,8 +213,7 @@ dlinkAdd(void *data, dlink_node * m, dlink_list * list)
 }
 
 void
-dlinkAddAfter(void *data, dlink_node * m, dlink_node * n, dlink_list * list)
-{
+dlinkAddAfter(void *data, dlink_node * m, dlink_node * n, dlink_list * list) {
     m->data = data;
     m->prev = n;
     m->next = n->next;
@@ -229,8 +229,7 @@ dlinkAddAfter(void *data, dlink_node * m, dlink_node * n, dlink_list * list)
 }
 
 void
-dlinkAddTail(void *data, dlink_node * m, dlink_list * list)
-{
+dlinkAddTail(void *data, dlink_node * m, dlink_list * list) {
     m->data = data;
     m->next = NULL;
     m->prev = list->tail;
@@ -245,8 +244,7 @@ dlinkAddTail(void *data, dlink_node * m, dlink_list * list)
 }
 
 void
-dlinkDelete(dlink_node * m, dlink_list * list)
-{
+dlinkDelete(dlink_node * m, dlink_list * list) {
     if (m->next)
         m->next->prev = m->prev;
 
@@ -268,5 +266,4 @@ ctx_enter(const char *descr) {
 }
 
 void
-ctx_exit(Ctx ctx) {
-}
+ctx_exit(Ctx ctx) {}

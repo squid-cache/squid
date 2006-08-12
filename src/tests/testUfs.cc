@@ -9,7 +9,7 @@
 #include "Mem.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
-#include "SquidTime.h"
+#include "testStoreSupport.h"
 
 #define TESTDIR "testUfs__testUfsSearch"
 
@@ -103,15 +103,13 @@ testUfs::testUfsSearch()
     /* ok, ready to create */
     aStore->create();
 
-    /* ok, ready to use - init store & hash too */
+    /* ok, ready to use - inits store & hash too */
     Store::Root().init();
 
-    /* ensure rebuilding finishes - run a mini event loop */
-    while (store_dirs_rebuilding > 1) {
-        getCurrentTime();
-        EventScheduler::GetInstance()->checkEvents();
-        EventDispatcher::GetInstance()->dispatch();
-    }
+    /* rebuild is a scheduled event */
+    StockEventLoop loop;
+
+    loop.run();
 
     /* nothing to rebuild */
     CPPUNIT_ASSERT(store_dirs_rebuilding == 1);

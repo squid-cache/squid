@@ -14,14 +14,26 @@ class testEventLoop : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testCreate );
     CPPUNIT_TEST( testRunOnce );
     CPPUNIT_TEST( testRegisterDispatcher );
+    CPPUNIT_TEST( testRegisterEngine );
+    CPPUNIT_TEST( testEngineTimeout );
+    CPPUNIT_TEST( testSetTimeService );
+    CPPUNIT_TEST( testStopOnIdle );
     CPPUNIT_TEST_SUITE_END();
 
 public:
 
 protected:
     void testCreate();
+    void testEngineTimeout();
     void testRunOnce();
     void testRegisterDispatcher();
+    void testRegisterEngine();
+    void testSetTimeService();
+    void testStopOnIdle();
+    /* TODO:
+     * test that engine which errors a couple of times, then returns 0, then
+     * errors 10 times in a row triggers a fail on the 10th time around
+     */
 };
 
 #endif

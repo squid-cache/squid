@@ -1,6 +1,6 @@
 
 /*
- * $Id: time.cc,v 1.2 2006/05/08 23:38:33 robertc Exp $
+ * $Id: time.cc,v 1.3 2006/08/12 01:43:11 robertc Exp $
  *
  * DEBUG: section 21    Time Functions
  * AUTHOR: Harvest Derived
@@ -50,4 +50,13 @@ getCurrentTime(void)
     current_dtime = (double) current_time.tv_sec +
                     (double) current_time.tv_usec / 1000000.0;
     return squid_curtime = current_time.tv_sec;
+}
+
+TimeEngine::~TimeEngine()
+{}
+
+void
+TimeEngine::tick()
+{
+    getCurrentTime();
 }
