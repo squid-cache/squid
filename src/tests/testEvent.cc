@@ -62,8 +62,10 @@ testEvent::testDispatch()
     EventDispatcher dispatcher;
     CalledEvent event;
     dispatcher.add(new ev_entry("test event", CalledEvent::Handler, &event, 0, 0, false));
-    dispatcher.dispatch();
-    dispatcher.dispatch();
+    /* return true when an event is dispatched */
+    CPPUNIT_ASSERT_EQUAL(true, dispatcher.dispatch());
+    /* return false when none were dispatched */
+    CPPUNIT_ASSERT_EQUAL(false, dispatcher.dispatch());
     CPPUNIT_ASSERT_EQUAL(1, event.calls);
 }
 
@@ -79,7 +81,7 @@ testEvent::testCancel()
     scheduler.schedule("test event", CalledEvent::Handler, &event, 0, 0, false);
     scheduler.schedule("test event2", CalledEvent::Handler, &event_to_cancel, 0, 0, false);
     scheduler.cancel(CalledEvent::Handler, &event_to_cancel);
-    scheduler.checkEvents();
+    scheduler.checkEvents(0);
     dispatcher.dispatch();
     CPPUNIT_ASSERT_EQUAL(1, event.calls);
     CPPUNIT_ASSERT_EQUAL(0, event_to_cancel.calls);
@@ -97,7 +99,7 @@ testEvent::testDump()
     CapturingStoreEntry * anEntry = new CapturingStoreEntry();
     scheduler.schedule("last event", CalledEvent::Handler, &event, 0, 0, false);
     /* schedule and dispatch to set the last run event */
-    scheduler.checkEvents();
+    scheduler.checkEvents(0);
     dispatcher.dispatch();
     scheduler.schedule("test event", CalledEvent::Handler, &event, 0, 0, false);
     scheduler.schedule("test event2", CalledEvent::Handler, &event2, 0, 0, false);
@@ -133,14 +135,14 @@ testEvent::testCheckEvents()
     EventDispatcher dispatcher;
     EventScheduler scheduler(&dispatcher);
     CalledEvent event;
-    CPPUNIT_ASSERT_EQUAL(10, scheduler.checkEvents());
+    CPPUNIT_ASSERT_EQUAL(10, scheduler.checkEvents(0));
     /* event running now gets sent to the dispatcher and the delay is set to 10ms */
     scheduler.schedule("test event", CalledEvent::Handler, &event, 0, 0, false);
-    CPPUNIT_ASSERT_EQUAL(10, scheduler.checkEvents());
+    CPPUNIT_ASSERT_EQUAL(10, scheduler.checkEvents(0));
     dispatcher.dispatch();
     /* event running later results in  a delay of the time till it runs */
     scheduler.schedule("test event", CalledEvent::Handler, &event, 2, 0, false);
-    CPPUNIT_ASSERT_EQUAL(2000, scheduler.checkEvents());
+    CPPUNIT_ASSERT_EQUAL(2000, scheduler.checkEvents(0));
     dispatcher.dispatch();
     CPPUNIT_ASSERT_EQUAL(1, event.calls);
 }

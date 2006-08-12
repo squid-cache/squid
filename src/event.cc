@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.41 2006/08/07 02:28:22 robertc Exp $
+ * $Id: event.cc,v 1.42 2006/08/12 01:43:11 robertc Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -111,9 +111,11 @@ EventDispatcher::add
     queue.push_back(event);
 }
 
-void
+bool
 EventDispatcher::dispatch()
 {
+    bool result = queue.size() != 0;
+
     for (Vector<ev_entry *>::iterator i = queue.begin(); i != queue.end(); ++i) {
         ev_entry * event = *i;
         EVH *callback;
@@ -132,6 +134,7 @@ EventDispatcher::dispatch()
     }
 
     queue.clean();
+    return result;
 }
 
 EventDispatcher *
@@ -182,11 +185,16 @@ EventScheduler::checkDelay()
     if (!tasks)
         return (int) 10;
 
-    return (int) ((tasks->when - current_dtime) * 1000);
+    int result = (int) ((tasks->when - current_dtime) * 1000);
+
+    if (result < 0)
+        return 0;
+
+    return result;
 }
 
 int
-EventScheduler::checkEvents()
+EventScheduler::checkEvents(int timeout)
 {
 
     struct ev_entry *event = NULL;

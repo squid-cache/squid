@@ -11,7 +11,7 @@
 #include "HttpHeader.h"
 #include "HttpReply.h"
 #include "StoreFileSystem.h"
-#include "SquidTime.h"
+#include "testStoreSupport.h"
 
 #define TESTDIR "testCoss__testCossSearch"
 
@@ -172,12 +172,10 @@ testCoss::testCossSearch()
     /* ok, ready to use */
     Store::Root().init();
 
-    /* ensure rebuilding finishes - run a mini event loop */
-    while (store_dirs_rebuilding > 1) {
-        getCurrentTime();
-        EventScheduler::GetInstance()->checkEvents();
-        EventDispatcher::GetInstance()->dispatch();
-    }
+    /* rebuild is a scheduled event */
+    StockEventLoop loop;
+
+    loop.run();
 
     /* nothing to rebuild */
     CPPUNIT_ASSERT(store_dirs_rebuilding == 1);

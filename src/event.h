@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.h,v 1.1 2006/08/07 02:28:22 robertc Exp $
+ * $Id: event.h,v 1.2 2006/08/12 01:43:11 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,6 +36,7 @@
 
 #include "squid.h"
 #include "Array.h"
+#include "AsyncEngine.h"
 #include "CompletionDispatcher.h"
 
 /* forward decls */
@@ -86,7 +87,7 @@ public:
     void add
         (const char *name, EVH * func, void *arg, double when, int, bool cbdata=true);
 
-    void dispatch();
+    bool dispatch();
 
     static EventDispatcher *GetInstance();
 
@@ -96,12 +97,16 @@ private:
     static EventDispatcher _instance;
 };
 
-class EventScheduler
+class EventScheduler : public AsyncEngine
 {
 
 public:
     /* Create an event scheduler that will hand its ready to run callbacks to
-     * an EventDispatcher */
+     * an EventDispatcher 
+     *
+     * TODO: add should include a dispatcher to use perhaps? then it would be
+     * more decoupled..
+     */
     EventScheduler(EventDispatcher *);
     ~EventScheduler();
     /* cancel a scheduled but not dispatched event */
@@ -116,7 +121,7 @@ public:
     bool find(EVH * func, void * arg);
     /* schedule a callback function to run in when seconds */
     void schedule(const char *name, EVH * func, void *arg, double when, int weight, bool cbdata=true);
-    int checkEvents();
+    int checkEvents(int timeout);
     static EventScheduler *GetInstance();
 
 private:

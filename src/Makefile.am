@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.159 2006/08/07 02:28:22 robertc Exp $
+#  $Id: Makefile.am,v 1.160 2006/08/12 01:43:10 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -381,6 +381,8 @@ squid_SOURCES = \
 	ACLChecklist.h \
 	$(squid_ACLSOURCES) \
 	asn.cc \
+	AsyncEngine.cc \
+	AsyncEngine.h \
 	authenticate.cc \
 	authenticate.h \
 	cache_cf.cc \
@@ -1643,6 +1645,7 @@ tests_testEventLoop_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 ## RBC 20060422.
 HEADERS_TO_TEST = \
 	tests/testHeader_ACL.cc \
+	tests/testHeader_AsyncEngine.cc \
 	tests/testHeader_CompletionDispatcher.cc \
 	tests/testHeader_ConfigParser.cc \
 	tests/testHeader_client_side_request.cc \
@@ -1654,6 +1657,7 @@ HEADERS_TO_TEST = \
 	tests/testHeader_HttpHeaderRange.cc \
 	tests/testHeader_HttpReply.cc \
 	tests/testHeader_HttpRequestMethod.cc \
+	tests/testHeader_SquidTime.cc \
 	tests/testHeader_Store.cc \
 	tests/testHeader_StoreEntryStream.cc \
 	tests/testHeader_URL.cc \
@@ -1964,6 +1968,8 @@ STORE_TEST_SOURCES=\
 	$(DELAY_POOL_SOURCE) \
 	CacheDigest.cc \
 	ConfigParser.cc \
+	EventLoop.cc \
+	event.cc \
 	HttpMsg.cc \
 	store_dir.cc \
 	store.cc \
@@ -1982,7 +1988,7 @@ STORE_TEST_SOURCES=\
 	mem_node.cc \
 	stmem.cc \
 	tests/stub_mime.cc \
-	HttpHeaderTools.cc HttpHeader.cc acl.cc event.cc mem.cc \
+	HttpHeaderTools.cc HttpHeader.cc acl.cc mem.cc \
 	acl_noncore.cc \
 	MemBuf.cc HttpHdrContRange.cc Packer.cc ACLChecklist.cc HttpHdrCc.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc url.cc ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc \
@@ -1991,6 +1997,8 @@ STORE_TEST_SOURCES=\
 	refresh.cc \
 	tests/stub_store_client.cc \
 	tests/stub_tools.cc \
+	tests/testStoreSupport.cc \
+	tests/testStoreSupport.h \
 	time.cc \
 	URLScheme.cc \
 	wordlist.cc

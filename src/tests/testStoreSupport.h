@@ -1,9 +1,7 @@
 
 /*
- * $Id: SquidTime.h,v 1.2 2006/08/12 01:43:11 robertc Exp $
- *
- * DEBUG: section 21    Time Functions
- * AUTHOR: Harvest Derived
+ * DEBUG: 
+ * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -33,25 +31,21 @@
  *
  */
 
-#ifndef   SQUID_TIME_H
-#define   SQUID_TIME_H
+#ifndef   SQUID_TESTSTORESUPPORT_H
+#define   SQUID_TESTSTORESUPPORT_H
 
-#include "squid.h"
+#include "EventLoop.h"
 
-extern time_t squid_curtime;	/* 0 */
+/* construct a stock loop with event dispatching, a time service that advances
+ * 1 second a tick
+ */
 
-time_t getCurrentTime(void);
-
-/* event class for doing synthetic time etc */
-
-class TimeEngine
+class StockEventLoop : public EventLoop
 {
 
 public:
-    virtual ~TimeEngine();
-    /* tick the clock - update from the OS or other time source, */
-    virtual void tick();
+    StockEventLoop();
+    TimeEngine default_time_engine;
 };
 
-
-#endif /* SQUID_TIME_H */
+#endif /* SQUID_TESTSTORESUPPORT_H */

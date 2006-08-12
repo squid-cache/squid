@@ -2,6 +2,8 @@
 #define __COMM_H__
 
 #include "squid.h"
+#include "AsyncEngine.h"
+#include "CompletionDispatcher.h"
 #include "StoreIOBuffer.h"
 #include "Array.h"
 
@@ -177,6 +179,24 @@ private:
     void addCheck (int const);
 
     void removeCheck (int const);
+};
+
+/* a dispatcher for comms events */
+
+class CommDispatcher : public CompletionDispatcher
+{
+
+public:
+    virtual bool dispatch();
+};
+
+/* A comm engine that calls comm_select */
+
+class CommSelectEngine : public AsyncEngine
+{
+
+public:
+    virtual int checkEvents(int timeout);
 };
 
 #endif

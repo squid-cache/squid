@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_poll.cc,v 1.17 2006/08/07 02:28:22 robertc Exp $
+ * $Id: comm_poll.cc,v 1.18 2006/08/12 01:43:11 robertc Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -433,7 +433,11 @@ comm_select(int msec)
         if (msec > MAX_POLL_TIME)
             msec = MAX_POLL_TIME;
 
-        /* nothing to do */
+        /* nothing to do
+         *
+         * Note that this will only ever trigger when there are no log files
+         * and stdout/err/in are all closed too.
+         */
         if (nfds == 0 && !npending) {
             if (shutting_down)
                 return COMM_SHUTDOWN;

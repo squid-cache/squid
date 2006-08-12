@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.428 2006/08/07 02:28:22 robertc Exp $
+ * $Id: main.cc,v 1.429 2006/08/12 01:43:11 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -114,7 +114,7 @@ static void setEffectiveUser(void);
 extern void log_trace_done();
 extern void log_trace_init(char *);
 #endif
-static EVH SquidShutdown;
+static void SquidShutdown(void);
 static void mainSetCwd(void);
 static int checkRunningPid(void);
 
@@ -128,14 +128,27 @@ static const char *squid_start_script = "squid_start";
 #include "test_access.c"
 #endif
 
+/* temporary thunk across to the unrefactored store interface */
+
+class StoreRootEngine : public AsyncEngine
+{
+
+public:
+    int checkEvents(int timeout)
+    {
+        Store::Root().callback();
+        return EVENT_IDLE;
+    };
+};
+
 class SignalDispatcher : public CompletionDispatcher
 {
 
 public:
-    SignalDispatcher(EventLoop &loop) : loop(loop) {}
+    SignalDispatcher(EventLoop &loop) : loop(loop), events_dispatched(false) {}
 
     void addEventLoop(EventLoop * loop);
-    virtual void dispatch();
+    virtual bool dispatch();
 
 private:
     static void StopEventLoop(void * data)
@@ -144,9 +157,10 @@ private:
     }
 
     EventLoop &loop;
+    bool events_dispatched;
 };
 
-void
+bool
 SignalDispatcher::dispatch()
 {
     if (do_reconfigure) {
@@ -176,9 +190,12 @@ SignalDispatcher::dispatch()
 #endif
 
         serverConnectionsClose();
-        //eventAdd("SquidShutdown", StopEventLoop, this, (double) (wait + 1), 1, false);
-        eventAdd("SquidShutdown", SquidShutdown, NULL, (double) (wait + 1), 1, false);
+        eventAdd("SquidShutdown", StopEventLoop, this, (double) (wait + 1), 1, false);
     }
+
+    bool result = events_dispatched;
+    events_dispatched = false;
+    return result;
 }
 
 static void
@@ -1301,25 +1318,36 @@ main(int argc, char **argv)
     /* TODO: stop requiring the singleton here */
     mainLoop.registerDispatcher(EventDispatcher::GetInstance());
 
-    for (;;)
-    {
-        /* Attempt any pending storedir IO
-        * Note: the storedir is roughly a reactor of its own.
-        */
-        Store::Root().callback();
+    /* TODO: stop requiring the singleton here */
+    mainLoop.registerEngine(EventScheduler::GetInstance());
 
-        comm_calliocallback();
+    StoreRootEngine store_engine;
 
-        /* and again to deal with indirectly queued events
-         * resulting from the first call. These are usually
-         * callbacks and should be dealt with immediately.
-         */
+    mainLoop.registerEngine(&store_engine);
 
-        if (comm_iocallbackpending())
-            comm_calliocallback();
+    CommDispatcher comm_dispatcher;
 
-        mainLoop.runOnce();
-    }
+    mainLoop.registerDispatcher(&comm_dispatcher);
+
+    CommSelectEngine comm_engine;
+
+    /* must be last - its the only engine that implements timeouts properly
+     * at the moment.
+     */
+    mainLoop.registerEngine(&comm_engine);
+
+    /* use the standard time service */
+    TimeEngine time_engine;
+
+    mainLoop.setTimeService(&time_engine);
+
+    mainLoop.run();
+
+    if (mainLoop.errcount == 10)
+        fatal_dump("Event loop exited with failure.");
+
+    /* shutdown squid now */
+    SquidShutdown();
 
     /* NOTREACHED */
     return 0;
@@ -1587,7 +1615,7 @@ watch_child(char *argv[])
 }
 
 static void
-SquidShutdown(void *unused)
+SquidShutdown()
 {
 #if USE_WIN32_SERVICE
     WIN32_svcstatusupdate(SERVICE_STOP_PENDING, 10000);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: CompletionDispatcher.h,v 1.1 2006/08/07 02:28:22 robertc Exp $
+ * $Id: CompletionDispatcher.h,v 1.2 2006/08/12 01:43:10 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -49,7 +49,10 @@ public:
 
     virtual ~CompletionDispatcher() {}
 
-    virtual void dispatch() = 0;
+    /* dispatch events. This should return true if there were events dispatched
+     * between the last call to dispatch() returning and this call returning.
+     */
+    virtual bool dispatch() = 0;
 };
 
 #endif /* SQUID_COMPLETIONDISPATCHER_H */

@@ -1,9 +1,7 @@
 
 /*
- * $Id: SquidTime.h,v 1.2 2006/08/12 01:43:11 robertc Exp $
+ * $Id: AsyncEngine.cc,v 1.1 2006/08/12 01:43:10 robertc Exp $
  *
- * DEBUG: section 21    Time Functions
- * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -33,25 +31,4 @@
  *
  */
 
-#ifndef   SQUID_TIME_H
-#define   SQUID_TIME_H
-
-#include "squid.h"
-
-extern time_t squid_curtime;	/* 0 */
-
-time_t getCurrentTime(void);
-
-/* event class for doing synthetic time etc */
-
-class TimeEngine
-{
-
-public:
-    virtual ~TimeEngine();
-    /* tick the clock - update from the OS or other time source, */
-    virtual void tick();
-};
-
-
-#endif /* SQUID_TIME_H */
+#include "AsyncEngine.h"
