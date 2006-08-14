@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.70 2005/04/18 21:52:42 hno Exp $
+ * $Id: dnsserver.cc,v 1.71 2006/08/13 20:21:19 serassio Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -161,14 +161,6 @@ struct hostent *_res_gethostbyname(char *name);
 #endif /* _SQUID_NEXT_ */
 
 static struct IN_ADDR no_addr;
-
-#ifdef _SQUID_OS2_
-
-struct state _res =
-    {0}
-
-    ;				/* it's not in any of the libraries */
-#endif
 
 /* error messages from gethostbyname() */
 static char *
