@@ -16,12 +16,12 @@ O seguinte erro foi encontrado:
 <UL>
 <LI>
 <STRONG>
-Cache incapaz de encaminhar esta requsi&ccedil;&atilde;o neste momento.
+Cache incapaz de encaminhar esta requisi&ccedil;&atilde;o neste momento.
 </STRONG>
 </UL>
 
 <P>
-Esta requsi&ccedil;&atilde;o n&atilde;o pode ser encaminhada para o servidor ou
+Esta requisi&ccedil;&atilde;o n&atilde;o pode ser encaminhada para o servidor ou
 para qualquer outro cache. A causa mais prov&aacute;vel para este erro &eacute;:
 <UL>
 <LI>O administrador do cache n&atilde;o permite que este cache fa&ccedil;a
