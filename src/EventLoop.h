@@ -1,6 +1,6 @@
 
 /*
- * $Id: EventLoop.h,v 1.2 2006/08/12 01:43:10 robertc Exp $
+ * $Id: EventLoop.h,v 1.3 2006/08/19 12:31:21 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -69,6 +69,14 @@ public:
      * TIMEOUT?
      */
     bool runOnce();
+    /* set the primary async engine. The primary async engine recieves the
+     * lowest requested timeout gathered from the other engines each loop.
+     * (There is a default of 10ms if all engines are idle or request higher
+     * delays).
+     * If no primary has been nominated, the last async engine added is 
+     * implicitly the default.
+     */
+    void setPrimaryEngine(AsyncEngine * engine);
     /* set the time service. There can be only one time service set at any
      * time. The time service is invoked on each loop 
      */
@@ -83,12 +91,18 @@ public:
 private:
     /* setup state variables prior to running */
     void prepareToRun();
+    /* check an individual engine */
+    void checkEngine(AsyncEngine * engine, bool const primary);
     bool last_loop;
     typedef Vector<CompletionDispatcher *> dispatcher_vector;
     dispatcher_vector dispatchers;
     typedef Vector<AsyncEngine *> engine_vector;
     engine_vector engines;
     TimeEngine * timeService;
+    AsyncEngine * primaryEngine;
+    int loop_delay; /* the delay to be given to the primary engine */
+    bool error; /* has an error occured in this loop */
+    bool runOnceResult; /* the result from runOnce */
 };
 
 

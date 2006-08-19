@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.74 2006/05/23 00:21:48 wessels Exp $
+ * $Id: store_dir_ufs.cc,v 1.75 2006/08/19 12:31:24 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -352,7 +352,9 @@ UFSSwapDir::maintain()
 {
     /* We can't delete objects while rebuilding swap */
 
-    if (store_dirs_rebuilding)
+    /* XXX FIXME each store should start maintaining as it comes online. */
+
+    if (StoreController::store_dirs_rebuilding)
         return;
 
     StoreEntry *e = NULL;
@@ -745,7 +747,7 @@ UFSSwapDir::addDiskRestore(const cache_key * key,
 void
 UFSSwapDir::rebuild()
 {
-    store_dirs_rebuilding++;
+    ++StoreController::store_dirs_rebuilding;
     eventAdd("storeRebuild", RebuildState::RebuildStep, new RebuildState(this), 0.0, 1);
 }
 
@@ -1005,7 +1007,7 @@ UFSSwapDir::writeCleanDone()
     }
 
     /* touch a timestamp file if we're not still validating */
-    if (store_dirs_rebuilding)
+    if (StoreController::store_dirs_rebuilding)
         (void) 0;
     else if (fd < 0)
         (void) 0;
@@ -1071,7 +1073,7 @@ rev_int_sort(const void *A, const void *B)
 int
 UFSSwapDir::DirClean(int swap_index)
 {
-    DIR *dp = NULL;
+    DIR *dir_pointer = NULL;
 
     struct dirent *de = NULL;
     LOCAL_ARRAY(char, p1, MAXPATHLEN + 1);
@@ -1100,9 +1102,9 @@ UFSSwapDir::DirClean(int swap_index)
     snprintf(p1, SQUID_MAXPATHLEN, "%s/%02X/%02X",
              SD->path, D1, D2);
     debug(36, 3) ("storeDirClean: Cleaning directory %s\n", p1);
-    dp = opendir(p1);
+    dir_pointer = opendir(p1);
 
-    if (dp == NULL) {
+    if (dir_pointer == NULL) {
         if (errno == ENOENT) {
             debug(36, 0) ("storeDirClean: WARNING: Creating %s\n", p1);
 #ifdef _SQUID_MSWIN_
@@ -1121,7 +1123,7 @@ UFSSwapDir::DirClean(int swap_index)
         return 0;
     }
 
-    while ((de = readdir(dp)) != NULL && k < 20) {
+    while ((de = readdir(dir_pointer)) != NULL && k < 20) {
         if (sscanf(de->d_name, "%X", &swapfileno) != 1)
             continue;
 
@@ -1143,7 +1145,7 @@ UFSSwapDir::DirClean(int swap_index)
         files[k++] = swapfileno;
     }
 
-    closedir(dp);
+    closedir(dir_pointer);
 
     if (k == 0)
         return 0;
@@ -1217,7 +1219,8 @@ UFSSwapDir::CleanEvent(void *unused)
         swap_index = (int) (squid_random() % j);
     }
 
-    if (0 == store_dirs_rebuilding) {
+    /* if the rebuild is finished, start cleaning directories. */
+    if (0 == StoreController::store_dirs_rebuilding) {
         n = DirClean(swap_index);
         swap_index++;
     }
@@ -1269,6 +1272,7 @@ UFSSwapDir::FilenoBelongsHere(int fn, int F0, int F1, int F2)
 
     return 1;
 }
+
 
 int
 UFSSwapDir::validFileno(sfileno filn, int flag) const

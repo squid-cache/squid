@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_rebuild.cc,v 1.85 2006/08/07 02:28:22 robertc Exp $
+ * $Id: store_rebuild.cc,v 1.86 2006/08/19 12:31:21 robertc Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -113,8 +113,7 @@ storeCleanup(void *datanotused)
         debugs(20, 1, "  Completed Validation Procedure");
         debugs(20, 1, "  Validated " << validated << " Entries");
         debugs(20, 1, "  store_swap_size = " << store_swap_size);
-        store_dirs_rebuilding--;
-        assert(0 == store_dirs_rebuilding);
+        assert(0 == StoreController::store_dirs_rebuilding);
 
         if (opt_store_doublecheck)
             assert(store_errors == 0);
@@ -144,12 +143,12 @@ storeRebuildComplete(struct _store_rebuild_data *dc)
     counts.bad_log_op += dc->bad_log_op;
     counts.zero_object_sz += dc->zero_object_sz;
     /*
-     * When store_dirs_rebuilding == 1, it means we are done reading
+     * When store_dirs_rebuilding == 0, it means we are done reading
      * or scanning all cache_dirs.  Now report the stats and start
      * the validation (storeCleanup()) thread.
      */
 
-    if (store_dirs_rebuilding > 1)
+    if (StoreController::store_dirs_rebuilding)
         return;
 
     dt = tvSubDsec(rebuild_start, current_time);
@@ -195,10 +194,15 @@ storeRebuildStart(void)
     memset(&counts, '\0', sizeof(counts));
     rebuild_start = current_time;
     /*
-     * Note: store_dirs_rebuilding is initialized to 1 in globals.c.
+     * Note: store_dirs_rebuilding is initialized to 0.
+     *  
+     * When we parse the configuration and construct each swap dir, 
+     * the construction of that raises the rebuild count.
+     *
      * This prevents us from trying to write clean logs until we
-     * finished rebuilding for sure.  The corresponding decrement
-     * occurs in storeCleanup(), when it is finished.
+     * finished rebuilding - including after a reconfiguration that opens an
+     * existing swapdir.  The corresponding decrement * occurs in
+     * storeCleanup(), when it is finished.
      */
     RebuildProgress = (store_rebuild_progress *)xcalloc(Config.cacheSwap.n_configured,
                       sizeof(store_rebuild_progress));

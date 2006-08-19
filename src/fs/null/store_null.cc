@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_null.cc,v 1.10 2006/08/07 02:28:25 robertc Exp $
+ * $Id: store_null.cc,v 1.11 2006/08/19 12:31:21 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -56,7 +56,7 @@ NullSwapDir::reconfigure(int index, char *path)
 void
 NullSwapDir::init()
 {
-    store_dirs_rebuilding++;
+    StoreController::store_dirs_rebuilding++;
     eventAdd("storeNullDirRebuildComplete", storeNullDirRebuildComplete,
              NULL, 0.0, 1);
 }
@@ -81,7 +81,7 @@ storeNullDirRebuildComplete(void *unused)
 
     struct _store_rebuild_data counts;
     memset(&counts, '\0', sizeof(counts));
-    store_dirs_rebuilding--;
+    StoreController::store_dirs_rebuilding--;
     storeRebuildComplete(&counts);
 }
 

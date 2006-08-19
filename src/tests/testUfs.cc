@@ -106,15 +106,21 @@ testUfs::testUfsSearch()
     /* ok, ready to use - inits store & hash too */
     Store::Root().init();
 
+    /* our swapdir must be scheduled to rebuild */
+    CPPUNIT_ASSERT_EQUAL(1, StoreController::store_dirs_rebuilding);
+
     /* rebuild is a scheduled event */
     StockEventLoop loop;
 
-    loop.run();
+    while (StoreController::store_dirs_rebuilding)
+        loop.runOnce();
 
-    /* nothing to rebuild */
-    CPPUNIT_ASSERT(store_dirs_rebuilding == 1);
+    /* cannot use loop.run(); as the loop will never idle: the store-dir
+     * clean() scheduled event prevents it 
+     */
 
-    --store_dirs_rebuilding;
+    /* nothing left to rebuild */
+    CPPUNIT_ASSERT_EQUAL(0, StoreController::store_dirs_rebuilding);
 
     /* add an entry */
     {

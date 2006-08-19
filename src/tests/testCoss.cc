@@ -175,12 +175,18 @@ testCoss::testCossSearch()
     /* rebuild is a scheduled event */
     StockEventLoop loop;
 
-    loop.run();
+    /* our swapdir must be scheduled to rebuild */
+    CPPUNIT_ASSERT_EQUAL(1, StoreController::store_dirs_rebuilding);
 
-    /* nothing to rebuild */
-    CPPUNIT_ASSERT(store_dirs_rebuilding == 1);
+    while (StoreController::store_dirs_rebuilding)
+        loop.runOnce();
 
-    --store_dirs_rebuilding;
+    /* cannot use loop.run(); as the loop will never idle: the store-dir
+     * clean() scheduled event prevents it 
+     */
+
+    /* nothing left to rebuild */
+    CPPUNIT_ASSERT_EQUAL(0, StoreController::store_dirs_rebuilding);
 
     /* add an entry */
     {

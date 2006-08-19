@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.65 2006/08/07 02:28:25 robertc Exp $
+ * $Id: store_dir_coss.cc,v 1.66 2006/08/19 12:31:21 robertc Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store COSS Directory Routines
@@ -387,7 +387,7 @@ storeCossRebuildComplete(void *data)
     RebuildState *rb = (RebuildState *)data;
     CossSwapDir *sd = rb->sd;
     sd->startMembuf();
-    store_dirs_rebuilding--;
+    StoreController::store_dirs_rebuilding--;
     storeCossDirCloseTmpSwapLog(rb->sd);
     storeRebuildComplete(&rb->counts);
     cbdataFree(rb);
@@ -577,7 +577,7 @@ storeCossDirRebuild(CossSwapDir * sd)
     debug(47, 1) ("Rebuilding COSS storage in %s (%s)\n",
                   sd->path, clean ? "CLEAN" : "DIRTY");
     rb->log = fp;
-    store_dirs_rebuilding++;
+    StoreController::store_dirs_rebuilding++;
 
     if (!clean || fp == NULL) {
         /* COSS cannot yet rebuild from a dirty state. If the log
@@ -860,7 +860,7 @@ CossSwapDir::writeCleanDone()
     }
 
     /* touch a timestamp file if we're not still validating */
-    if (store_dirs_rebuilding)
+    if (StoreController::store_dirs_rebuilding)
         (void) 0;
     else if (anfd < 0)
         (void) 0;

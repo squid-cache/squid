@@ -57,11 +57,6 @@ public:
     RecordDispatcher(): calls(0)
     {}
 
-    void dispatch()
-    {
-        ++calls;
-    }
-
     bool dispatch()
     {
         ++calls;
@@ -122,12 +117,6 @@ public:
     int calls;
     ShutdownDispatcher(EventLoop & theLoop):theLoop(theLoop), calls(0)
     {}
-
-    void dispatch()
-    {
-        if (++calls == 2)
-            theLoop.stop();
-    }
 
     bool dispatch()
     {
@@ -225,6 +214,14 @@ testEventLoop::testStopOnIdle()
     theLoop.run();
     /* run resets the error count ... */
     CPPUNIT_ASSERT_EQUAL(11, failing_engine.calls);
+
+    /* an engine that asks for a timeout should not be detected as idle:
+     * use runOnce which should return false
+     */
+    theLoop = EventLoop();
+    RecordingEngine non_idle_engine(1000);
+    theLoop.registerEngine(&non_idle_engine);
+    CPPUNIT_ASSERT_EQUAL(false, theLoop.runOnce());
 }
 
 /* An event loop has a time service which is like an async engine but never
@@ -259,4 +256,30 @@ testEventLoop::testSetTimeService()
     /* it invokes our tick() call again */
     theLoop.runOnce();
     CPPUNIT_ASSERT_EQUAL(2, myTime.calls);
+}
+
+/* one async engine is the primary engine - the engine that is allowed to block.
+ * this defaults to the last added one, but can be explicitly nominated
+ */
+void
+testEventLoop::testSetPrimaryEngine()
+{
+    EventLoop theLoop;
+    RecordingEngine first_engine(10);
+    RecordingEngine second_engine(10);
+    /* one engine - gets a timeout */
+    theLoop.registerEngine(&first_engine);
+    theLoop.runOnce();
+    CPPUNIT_ASSERT_EQUAL(10, first_engine.lasttimeout);
+    /* two engines - the second gets the timeout */
+    theLoop.registerEngine(&second_engine);
+    theLoop.runOnce();
+    CPPUNIT_ASSERT_EQUAL(0, first_engine.lasttimeout);
+    CPPUNIT_ASSERT_EQUAL(10, second_engine.lasttimeout);
+    /* set the first engine to be primary explicitly  and now gets the timeout */
+    theLoop.setPrimaryEngine(&first_engine);
+    theLoop.runOnce();
+    CPPUNIT_ASSERT_EQUAL(10, first_engine.lasttimeout);
+    CPPUNIT_ASSERT_EQUAL(0, second_engine.lasttimeout);
+
 }

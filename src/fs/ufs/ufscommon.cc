@@ -1,5 +1,5 @@
 /*
- * $Id: ufscommon.cc,v 1.5 2006/05/19 20:22:57 wessels Exp $
+ * $Id: ufscommon.cc,v 1.6 2006/08/19 12:31:24 robertc Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store Directory Routines
@@ -91,7 +91,7 @@ RebuildState::RebuildStep(void *data)
     if (!rb->isDone())
         eventAdd("storeRebuild", RebuildStep, rb, 0.0, 1);
     else {
-        store_dirs_rebuilding--;
+        StoreController::store_dirs_rebuilding--;
         storeRebuildComplete(&rb->counts);
         delete rb;
     }

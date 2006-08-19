@@ -17,6 +17,7 @@ class testEventLoop : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testRegisterEngine );
     CPPUNIT_TEST( testEngineTimeout );
     CPPUNIT_TEST( testSetTimeService );
+    CPPUNIT_TEST( testSetPrimaryEngine );
     CPPUNIT_TEST( testStopOnIdle );
     CPPUNIT_TEST_SUITE_END();
 
@@ -29,6 +30,7 @@ protected:
     void testRegisterDispatcher();
     void testRegisterEngine();
     void testSetTimeService();
+    void testSetPrimaryEngine();
     void testStopOnIdle();
     /* TODO:
      * test that engine which errors a couple of times, then returns 0, then

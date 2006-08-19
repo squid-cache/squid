@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.429 2006/08/12 01:43:11 robertc Exp $
+ * $Id: main.cc,v 1.430 2006/08/19 12:31:21 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -1331,10 +1331,9 @@ main(int argc, char **argv)
 
     CommSelectEngine comm_engine;
 
-    /* must be last - its the only engine that implements timeouts properly
-     * at the moment.
-     */
     mainLoop.registerEngine(&comm_engine);
+
+    mainLoop.setPrimaryEngine(&comm_engine);
 
     /* use the standard time service */
     TimeEngine time_engine;
@@ -1742,3 +1741,4 @@ SquidShutdown()
 
     exit(shutdown_status);
 }
+
