@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp2.cc,v 1.4 2006/08/07 02:28:22 robertc Exp $
+ * $Id: wccp2.cc,v 1.5 2006/08/19 12:31:21 robertc Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Steven WIlton
@@ -37,6 +37,7 @@
 #include "event.h"
 #include "Parsing.h"
 #include "Store.h"
+#include "SwapDir.h"
 
 #if USE_WCCPv2
 #include <netdb.h>
@@ -1346,8 +1347,8 @@ wccp2HereIam(void *voidnotused)
         return;
     }
 
-    /* Wait 10 seconds if store dirs are rebuilding */
-    if (store_dirs_rebuilding && Config.Wccp2.rebuildwait) {
+    /* Wait if store dirs are rebuilding */
+    if (StoreController::store_dirs_rebuilding && Config.Wccp2.rebuildwait) {
         eventAdd("wccp2HereIam", wccp2HereIam, NULL, 1.0, 1);
         return;
     }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.268 2006/05/08 23:38:33 robertc Exp $
+ * $Id: tools.cc,v 1.269 2006/08/19 12:31:21 robertc Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -458,7 +458,12 @@ fatal(const char *message)
      * used in early initialization phases, long before we ever
      * get to the store log. */
 
-    if (0 == store_dirs_rebuilding)
+    /* XXX: this should be turned into a callback-on-fatal, or
+     * a mandatory-shutdown-event or something like that.
+     * - RBC 20060819
+     */
+
+    if (0 == StoreController::store_dirs_rebuilding)
         storeDirWriteCleanLogs(0);
 
     fatal_common(message);

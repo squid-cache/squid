@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.597 2006/08/07 02:28:22 robertc Exp $
+ * $Id: store.cc,v 1.598 2006/08/19 12:31:21 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -1276,7 +1276,7 @@ StoreEntry::release()
         return;
     }
 
-    if (store_dirs_rebuilding && swap_filen > -1) {
+    if (StoreController::store_dirs_rebuilding && swap_filen > -1) {
         storeSetPrivateKey(this);
 
         if (mem_obj)
@@ -1329,7 +1329,7 @@ storeLateRelease(void *unused)
     int i;
     static int n = 0;
 
-    if (store_dirs_rebuilding) {
+    if (StoreController::store_dirs_rebuilding) {
         eventAdd("storeLateRelease", storeLateRelease, NULL, 1.0, 1);
         return;
     }

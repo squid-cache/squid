@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.136 2006/06/18 10:05:53 serassio Exp $
+ * $Id: globals.h,v 1.137 2006/08/19 12:31:21 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -127,7 +127,6 @@ extern "C"
     extern struct timeval squid_start;
     extern int shutting_down;	/* 0 */
     extern int reconfiguring;	/* 0 */
-    extern int store_dirs_rebuilding;	/* 1 */
     extern unsigned long store_swap_size;	/* 0 */
     extern time_t hit_only_mode_until;	/* 0 */
     extern StatCounters statCounter;

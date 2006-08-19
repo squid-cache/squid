@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.93 2006/05/08 23:38:33 robertc Exp $
+ * $Id: icp_v2.cc,v 1.94 2006/08/19 12:31:21 robertc Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -43,6 +43,7 @@
 #include "AccessLogEntry.h"
 #include "wordlist.h"
 #include "SquidTime.h"
+#include "SwapDir.h"
 
 static void icpLogIcp(struct IN_ADDR, log_type, int, const char *, int);
 
@@ -327,13 +328,16 @@ icpCheckUdpHit(StoreEntry * e, HttpRequest * request)
     return 1;
 }
 
-/* ICP_ERR means no opcode selected here */
+/* ICP_ERR means no opcode selected here
+ *
+ * This routine selects an ICP opcode for ICP misses.
+ */
 icp_opcode
 icpGetCommonOpcode()
 {
-    /* if store is rebuilding, return a UDP_HIT, but not a MISS */
+    /* if store is rebuilding, return a UDP_MISS_NOFETCH */
 
-    if (store_dirs_rebuilding && opt_reload_hit_only ||
+    if (StoreController::store_dirs_rebuilding && opt_reload_hit_only ||
             hit_only_mode_until > squid_curtime) {
         return ICP_MISS_NOFETCH;
     }

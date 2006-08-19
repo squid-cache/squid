@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.154 2006/05/24 02:13:27 hno Exp $
+ * $Id: store_dir.cc,v 1.155 2006/08/19 12:31:21 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -60,6 +60,8 @@
 
 static STDIRSELECT storeDirSelectSwapDirRoundRobin;
 static STDIRSELECT storeDirSelectSwapDirLeastLoad;
+
+int StoreController::store_dirs_rebuilding = 0;
 
 StoreController::StoreController() : swapDir (new StoreHashIndex())
 {}
@@ -421,7 +423,7 @@ storeDirWriteCleanLogs(int reopen)
     int dirn;
     int notdone = 1;
 
-    if (store_dirs_rebuilding) {
+    if (StoreController::store_dirs_rebuilding) {
         debug(20, 1) ("Not currently OK to rewrite swap log.\n");
         debug(20, 1) ("storeDirWriteCleanLogs: Operation aborted.\n");
         return 0;
@@ -796,7 +798,16 @@ StoreHashIndex::init()
         /* this starts a search of the store dirs, loading their
          * index. under the new Store api this should be
          * driven by the StoreHashIndex, not by each store.
+        *
+        * That is, the HashIndex should perform a search of each dir it is
+        * indexing to do the hash insertions. The search is then able to 
+        * decide 'from-memory', or 'from-clean-log' or 'from-dirty-log' or
+        * 'from-no-log'.
+        *
          * Step 1: make the store rebuilds use a search internally
+        * Step 2: change the search logic to use the four modes described
+        *         above
+        * Step 3: have the hash index walk the searches itself.
          */
         store(i)->init();
 

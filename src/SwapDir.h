@@ -1,6 +1,6 @@
 
 /*
- * $Id: SwapDir.h,v 1.9 2006/05/23 00:21:47 wessels Exp $
+ * $Id: SwapDir.h,v 1.10 2006/08/19 12:31:21 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -78,6 +78,9 @@ public:
     virtual void dereference(StoreEntry &);	/* Unreference this object */
 
     virtual void updateSize(size_t size, int sign);
+
+    /* the number of store dirs being rebuilt. */
+    static int store_dirs_rebuilding;
 
 private:
     void createOneStore(Store &aStore);

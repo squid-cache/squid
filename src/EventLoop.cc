@@ -1,6 +1,6 @@
 
 /*
- * $Id: EventLoop.cc,v 1.2 2006/08/12 01:43:10 robertc Exp $
+ * $Id: EventLoop.cc,v 1.3 2006/08/19 12:31:21 robertc Exp $
  *
  * DEBUG: section 1     Main Loop
  * AUTHOR: Harvest Derived
@@ -35,8 +35,43 @@
 
 #include "EventLoop.h"
 
-EventLoop::EventLoop() : errcount(0), last_loop(false), timeService(NULL)
+EventLoop::EventLoop() : errcount(0), last_loop(false), timeService(NULL),
+        primaryEngine(NULL)
 {}
+
+void
+EventLoop::checkEngine(AsyncEngine * engine, bool const primary)
+{
+    int requested_delay;
+
+    if (!primary)
+        requested_delay = engine->checkEvents(0);
+    else
+        requested_delay = engine->checkEvents(loop_delay);
+
+    if (requested_delay < 0)
+        switch (requested_delay) {
+
+        case AsyncEngine::EVENT_IDLE:
+            debugs(1, 9, "Engine " << engine << " is idle.");
+            break;
+
+        case AsyncEngine::EVENT_ERROR:
+            runOnceResult = false;
+            error = true;
+            break;
+
+        default:
+            fatal_dump("unknown AsyncEngine result");
+        }
+    else {
+        /* not idle or error */
+        runOnceResult = false;
+
+        if (requested_delay < loop_delay)
+            loop_delay = requested_delay;
+    }
+}
 
 void
 EventLoop::prepareToRun()
@@ -70,40 +105,23 @@ EventLoop::run()
 bool
 EventLoop::runOnce()
 {
-    bool result = true;
-    bool error = false;
-    int loop_delay = 10; /* 10 ms default delay */
+    runOnceResult = true;
+    error = false;
+    loop_delay = 10; /* 10 ms default delay */
 
     for (engine_vector::iterator i = engines.begin();
             i != engines.end(); ++i) {
-        int requested_delay;
-        /* special case the last engine */
+        /* check the primary outside the loop */
 
-        if (i - engines.end() != -1)
-            requested_delay = (*i)->checkEvents(0);
-        else /* last engine gets the delay */
-            requested_delay = (*i)->checkEvents(loop_delay);
+        if (*i == primaryEngine)
+            continue;
 
-        if (requested_delay < 0)
-            switch (requested_delay) {
-
-            case AsyncEngine::EVENT_IDLE:
-                debugs(1, 9, "Engine " << *i << " is idle.");
-                break;
-
-            case AsyncEngine::EVENT_ERROR:
-                result = false;
-                error = true;
-                break;
-
-            default:
-                fatal_dump("unknown AsyncEngine result");
-            }
-        else if (requested_delay < loop_delay) {
-            loop_delay = requested_delay;
-            result = false;
-        }
+        /* special case the last engine to be primary */
+        checkEngine(*i, primaryEngine == NULL && (i - engines.end() == -1));
     }
+
+    if (primaryEngine != NULL)
+        checkEngine(primaryEngine, true);
 
     if (timeService != NULL)
         timeService->tick();
@@ -111,7 +129,7 @@ EventLoop::runOnce()
     for (dispatcher_vector::iterator i = dispatchers.begin();
             i != dispatchers.end(); ++i)
         if ((*i)->dispatch())
-            result = false;
+            runOnceResult = false;
 
     if (error) {
         ++errcount;
@@ -125,7 +143,20 @@ EventLoop::runOnce()
     if (last_loop)
         return true;
 
-    return result;
+    return runOnceResult;
+}
+
+void
+EventLoop::setPrimaryEngine(AsyncEngine * engine)
+{
+    for (engine_vector::iterator i = engines.begin();
+            i != engines.end(); ++i)
+        if (*i == engine) {
+            primaryEngine = engine;
+            return;
+        }
+
+    fatal("EventLoop::setPrimaryEngine: No such engine!.");
 }
 
 void
