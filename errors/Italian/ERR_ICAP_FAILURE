@@ -1,33 +1,33 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<HTML><HEAD>
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
-<STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>ERRORE: La URL richiesta non pu&ograve; essere recuperata</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
-<H1>ERROR</H1>
-<H2>The requested URL could not be retrieved</H2>
+<H1>ERRORE</H1>
+<H2>La URL richiesta non pu&ograve; essere recuperata</H2>
 <HR noshade size="1px">
 <P>
-While trying to retrieve the URL:
+Mentre si cercava di recuperare la URL:
 <A HREF="%U">%U</A>
 <P>
-The following error was encountered:
+&Egrave; avvenuto il seguente errore:
 <UL>
 <LI>
 <STRONG>
-ICAP protocol error.
+Errore protocollo ICAP.
 </STRONG>
 </UL>
 
 <P>
-The system returned:
+Il sistema ha risposto:
 <PRE><I>    %E</I></PRE>
 
 <P>
-This means that:
-Some aspect of the ICAP communication failed. Possible problems:
+Ci&ograve; significa che:
+Alcune fasi della comunicazione ICAP sono fallitte. Possibili problemi:
 <UL>
-<LI>ICAP server is not reachable.
-<LI>Illegal response from ICAP server.
+<LI>Il server ICAP non &egrave; raggiungibile.
+<LI>Risposta illegale dal server ICAP.
 </UL>
 </P>
 
