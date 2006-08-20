@@ -386,6 +386,9 @@
 /* pad128_t is defined in system headers */
 #undef HAVE_PAD128_T
 
+/* Define to 1 if you have the <paths.h> header file. */
+#undef HAVE_PATHS_H
+
 /* pid_t is defined by the system headers */
 #undef HAVE_PID_T
 
