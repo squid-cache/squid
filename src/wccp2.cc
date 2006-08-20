@@ -1,9 +1,9 @@
 
 /*
- * $Id: wccp2.cc,v 1.5 2006/08/19 12:31:21 robertc Exp $
+ * $Id: wccp2.cc,v 1.6 2006/08/20 15:51:00 adrian Exp $
  *
  * DEBUG: section 80    WCCP Support
- * AUTHOR: Steven WIlton
+ * AUTHOR: Steven Wilton
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
