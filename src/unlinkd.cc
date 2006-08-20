@@ -1,6 +1,6 @@
 
 /*
- * $Id: unlinkd.cc,v 1.53 2005/11/06 11:16:22 serassio Exp $
+ * $Id: unlinkd.cc,v 1.54 2006/08/20 09:50:05 serassio Exp $
  *
  * DEBUG: section 2     Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -50,10 +50,7 @@ main(int argc, char *argv[])
     setbuf(stdin, NULL);
     setbuf(stdout, NULL);
     close(2);
-#ifndef _SQUID_MSWIN_
-
-    open("/dev/null", O_RDWR);
-#endif
+    open(_PATH_DEVNULL, O_RDWR);
 
     while (fgets(buf, UNLINK_BUF_LEN, stdin)) {
         if ((t = strchr(buf, '\n')))
