@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.430 2006/08/19 12:31:21 robertc Exp $
+ * $Id: main.cc,v 1.431 2006/08/20 09:50:05 serassio Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -1521,10 +1521,10 @@ watch_child(char *argv[])
      * 1.1.3.  execvp had a bit overflow error in a loop..
      */
     /* Connect stdio to /dev/null in daemon mode */
-    nullfd = open("/dev/null", O_RDWR | O_TEXT);
+    nullfd = open(_PATH_DEVNULL, O_RDWR | O_TEXT);
 
     if (nullfd < 0)
-        fatalf("/dev/null: %s\n", xstrerror());
+        fatalf(_PATH_DEVNULL " %s\n", xstrerror());
 
     dup2(nullfd, 0);
 

@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.428 2006/07/31 00:14:48 hno Exp $
+dnl  $Id: configure.in,v 1.429 2006/08/20 09:50:05 serassio Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.428 $)dnl
+AC_REVISION($Revision: 1.429 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -1891,6 +1891,7 @@ AC_CHECK_HEADERS( \
 	openssl/md5.h \
 	openssl/ssl.h \
 	openssl/engine.h \
+	paths.h \
 	poll.h \
 	pwd.h \
 	shadow.h \
