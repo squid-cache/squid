@@ -1,6 +1,6 @@
 
 /*
- * $Id: internal.cc,v 1.41 2006/05/12 19:06:10 serassio Exp $
+ * $Id: internal.cc,v 1.42 2006/08/21 00:50:41 robertc Exp $
  *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "errorpage.h"
 #include "Store.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"

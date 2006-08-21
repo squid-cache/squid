@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.197 2006/05/19 17:19:09 wessels Exp $
+ * $Id: gopher.cc,v 1.198 2006/08/21 00:50:41 robertc Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "errorpage.h"
 #include "Store.h"
 #include "HttpRequest.h"
 #include "comm.h"

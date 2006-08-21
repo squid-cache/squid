@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.214 2006/05/19 17:19:09 wessels Exp $
+ * $Id: errorpage.cc,v 1.215 2006/08/21 00:50:41 robertc Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -40,7 +40,7 @@
  *              Config.errorDirectory)
  */
 
-#include "squid.h"
+#include "errorpage.h"
 #include "AuthUserRequest.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -51,6 +51,8 @@
 #include "MemBuf.h"
 #include "URLScheme.h"
 #include "wordlist.h"
+
+CBDATA_CLASS_INIT(ErrorState);
 
 /* local types */
 
@@ -322,8 +324,7 @@ errorPageName(int pageId)
 ErrorState *
 errorCon(err_type type, http_status status)
 {
-    ErrorState *err;
-    err = cbdataAlloc(ErrorState);
+    ErrorState *err = new ErrorState;
     err->page_id = type;	/* has to be reset manually if needed */
     err->type = type;
     err->httpStatus = status;

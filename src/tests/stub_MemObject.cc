@@ -1,5 +1,5 @@
 /*
- * $Id: stub_MemObject.cc,v 1.4 2006/04/25 07:13:33 robertc Exp $
+ * $Id: stub_MemObject.cc,v 1.5 2006/08/21 00:50:47 robertc Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins
@@ -38,6 +38,8 @@
 #if DELAY_POOLS
 #include "DelayPools.h"
 #endif
+
+RemovalPolicy * mem_policy = NULL;
 
 off_t
 MemObject::endOffset () const

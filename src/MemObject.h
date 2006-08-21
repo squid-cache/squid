@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.h,v 1.12 2006/05/22 19:58:51 wessels Exp $
+ * $Id: MemObject.h,v 1.13 2006/08/21 00:50:41 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,6 +38,7 @@
 #include "StoreIOState.h"
 #include "stmem.h"
 #include "CommRead.h"
+#include "RemovalPolicy.h"
 
 typedef void STMCB (void *data, StoreIOBuffer wroteBuffer);
 
@@ -155,5 +156,8 @@ private:
 };
 
 MEMPROXY_CLASS_INLINE(MemObject)
+
+/* global current memory removal policy */
+extern RemovalPolicy *mem_policy;
 
 #endif /* SQUID_MEMOBJECT_H */

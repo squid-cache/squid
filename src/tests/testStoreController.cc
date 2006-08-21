@@ -49,8 +49,6 @@ commonInit()
 
     Mem::Init();
 
-    cbdataInit();
-
     Config.Store.avgObjectSize = 1024;
 
     Config.Store.objectsPerBucket = 20;

@@ -1,5 +1,5 @@
 /*
- * $Id: acl_noncore.cc,v 1.2 2006/04/25 12:00:29 robertc Exp $
+ * $Id: acl_noncore.cc,v 1.3 2006/08/21 00:50:41 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -42,6 +42,7 @@
 #include "ACL.h"
 #include "ACLChecklist.h"
 #include "ConfigParser.h"
+#include "errorpage.h"
 #include "HttpRequest.h"
 
 

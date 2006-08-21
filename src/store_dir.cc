@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.155 2006/08/19 12:31:21 robertc Exp $
+ * $Id: store_dir.cc,v 1.156 2006/08/21 00:50:41 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -893,6 +893,7 @@ StoreHashIndex::search(String const url, HttpRequest *)
 }
 
 CBDATA_CLASS_INIT(StoreSearchHashIndex);
+
 StoreSearchHashIndex::StoreSearchHashIndex(RefCount<StoreHashIndex> aSwapDir) : sd(aSwapDir), _done (false), bucket (0)
 {}
 

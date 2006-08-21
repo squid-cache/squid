@@ -1,5 +1,5 @@
 /*
- * $Id: stub_helper.cc,v 1.1 2004/08/30 03:29:02 robertc Exp $
+ * $Id: stub_helper.cc,v 1.2 2006/08/21 00:50:47 robertc Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins
@@ -33,6 +33,7 @@
  */
 
 #include "squid.h"
+#include "helper.h"
 
 void
 helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
@@ -58,10 +59,13 @@ helperFree(helper * hlp)
     fatal("Not implemented");
 }
 
+CBDATA_TYPE(helper);
+
 helper *
 helperCreate(const char *name)
 {
     helper *hlp;
+    CBDATA_INIT_TYPE(helper);
     hlp = cbdataAlloc(helper);
     hlp->id_name = name;
     return hlp;
@@ -123,10 +127,13 @@ helperStatefulReleaseServer(helper_stateful_server * srv)
     fatal("Not implemented");
 }
 
+CBDATA_TYPE(statefulhelper);
+
 statefulhelper *
 helperStatefulCreate(const char *name)
 {
     statefulhelper *hlp;
+    CBDATA_INIT_TYPE(statefulhelper);
     hlp = cbdataAlloc(statefulhelper);
     hlp->id_name = name;
     return hlp;

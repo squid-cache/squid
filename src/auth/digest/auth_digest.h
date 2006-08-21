@@ -10,6 +10,8 @@
 #include "AuthUser.h"
 #include "AuthUserRequest.h"
 #include "AuthConfig.h"
+#include "helper.h"
+
 /* Generic */
 
 class DigestAuthenticateStateData

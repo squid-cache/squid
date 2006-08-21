@@ -1,6 +1,6 @@
 
 /*
- * $Id: List.h,v 1.6 2005/05/14 20:00:25 hno Exp $
+ * $Id: List.h,v 1.7 2006/08/21 00:50:40 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,6 +33,8 @@
 
 #ifndef SQUID_LIST_H
 #define SQUID_LIST_H
+
+#include "cbdata.h"
 
 template <class C>
 

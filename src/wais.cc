@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.160 2006/05/19 17:19:10 wessels Exp $
+ * $Id: wais.cc,v 1.161 2006/08/21 00:50:42 robertc Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "errorpage.h"
 #include "Store.h"
 #include "HttpRequest.h"
 #if DELAY_POOLS

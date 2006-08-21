@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.120 2006/08/20 09:50:05 serassio Exp $
+ * $Id: defines.h,v 1.121 2006/08/21 00:50:41 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -270,51 +270,6 @@
 #define _PATH_DEVNULL "/dev/null"
 #endif
 #endif
-
-/* cbdata macros */
-#if CBDATA_DEBUG
-#define cbdataAlloc(type)	((type *)cbdataInternalAllocDbg(CBDATA_##type,__FILE__,__LINE__))
-#define cbdataFree(var)		do {if (var) {cbdataInternalFreeDbg(var,__FILE__,__LINE__); var = NULL;}} while(0)
-#define cbdataInternalLock(a)		cbdataInternalLockDbg(a,__FILE__,__LINE__)
-#define cbdataInternalUnlock(a)		cbdataInternalUnlockDbg(a,__FILE__,__LINE__)
-#define cbdataReferenceValidDone(var, ptr) cbdataInternalReferenceDoneValidDbg((void **)&(var), (ptr), __FILE__,__LINE__)
-#define CBDATA_CLASS2(type)	\
-	static cbdata_type CBDATA_##type; \
-	public: \
-		void *operator new(size_t size) { \
-		  assert(size == sizeof(type)); \
-		  (CBDATA_##type ?  CBDATA_UNKNOWN : (CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), NULL))); \
-		  return cbdataInternalAllocDbg(CBDATA_##type,__FILE__,__LINE__); \
-		} \
-  		void operator delete (void *address) { \
-		  if (address) cbdataInternalFreeDbg(address,__FILE__,__LINE__); \
-		} \
-	private:
-#else
-#define cbdataAlloc(type) ((type *)cbdataInternalAlloc(CBDATA_##type))
-#define cbdataFree(var)		do {if (var) {cbdataInternalFree(var); var = NULL;}} while(0)
-#define cbdataReferenceValidDone(var, ptr) cbdataInternalReferenceDoneValid((void **)&(var), (ptr))
-#define CBDATA_CLASS2(type)	\
-	static cbdata_type CBDATA_##type; \
-	public: \
-		void *operator new(size_t size) { \
-		  assert(size == sizeof(type)); \
-		  (CBDATA_##type ?  CBDATA_UNKNOWN : (CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), NULL))); \
-		  return (type *)cbdataInternalAlloc(CBDATA_##type); \
-		} \
-  		void operator delete (void *address) { \
-		  if (address) cbdataInternalFree(address);\
-		} \
-	private:
-#endif
-#define cbdataReference(var)	(cbdataInternalLock(var), var)
-#define cbdataReferenceDone(var) do {if (var) {cbdataInternalUnlock(var); var = NULL;}} while(0)
-#define CBDATA_CLASS(type)	static cbdata_type CBDATA_##type
-#define CBDATA_CLASS_INIT(type) cbdata_type type::CBDATA_##type = CBDATA_UNKNOWN
-#define CBDATA_TYPE(type)	static cbdata_type CBDATA_##type = CBDATA_UNKNOWN
-#define CBDATA_GLOBAL_TYPE(type)	cbdata_type CBDATA_##type
-#define CBDATA_INIT_TYPE(type)	(CBDATA_##type ?  CBDATA_UNKNOWN : (CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), NULL)))
-#define CBDATA_INIT_TYPE_FREECB(type, free_func)	(CBDATA_##type ?  CBDATA_UNKNOWN : (CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), free_func)))
 
 #ifndef O_TEXT
 #define O_TEXT 0

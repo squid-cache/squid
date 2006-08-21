@@ -9,6 +9,7 @@
 #include "AuthUser.h"
 #include "AuthUserRequest.h"
 #include "AuthConfig.h"
+#include "helper.h"
 
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: WriteRequest.h,v 1.1 2004/12/20 16:30:38 robertc Exp $
+ * $Id: WriteRequest.h,v 1.2 2006/08/21 00:50:43 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -36,6 +36,7 @@
 
 #include "squid.h"
 
+#include "cbdata.h"
 #include "RefCount.h"
 
 class WriteRequest : public RefCountable

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.535 2006/08/07 02:28:22 robertc Exp $
+ * $Id: protos.h,v 1.536 2006/08/21 00:50:41 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -77,27 +77,6 @@ SQUIDCEXTERN void parse_time_t(time_t * var);
 
 SQUIDCEXTERN void parse_sockaddr_in_list_token(sockaddr_in_list **, char *);
 
-
-/*
- * cbdata.c
- */
-SQUIDCEXTERN void cbdataInit(void);
-SQUIDCEXTERN void cbdataRegisterWithCacheManager(CacheManager & manager);
-#if CBDATA_DEBUG
-SQUIDCEXTERN void *cbdataInternalAllocDbg(cbdata_type type, const char *, int);
-SQUIDCEXTERN void *cbdataInternalFreeDbg(void *p, const char *, int);
-SQUIDCEXTERN void cbdataInternalLockDbg(const void *p, const char *, int);
-SQUIDCEXTERN void cbdataInternalUnlockDbg(const void *p, const char *, int);
-SQUIDCEXTERN int cbdataInternalReferenceDoneValidDbg(void **p, void **tp, const char *, int);
-#else
-SQUIDCEXTERN void *cbdataInternalAlloc(cbdata_type type);
-SQUIDCEXTERN void *cbdataInternalFree(void *p);
-SQUIDCEXTERN void cbdataInternalLock(const void *p);
-SQUIDCEXTERN void cbdataInternalUnlock(const void *p);
-SQUIDCEXTERN int cbdataInternalReferenceDoneValid(void **p, void **tp);
-#endif
-SQUIDCEXTERN int cbdataReferenceValid(const void *p);
-SQUIDCEXTERN cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size, FREE * free_func);
 
 /* client_side.c - FD related client side routines */
 
@@ -675,15 +654,6 @@ SQUIDCEXTERN void logReferer(const char *, const char *, const char *);
 SQUIDCEXTERN void refererCloseLog(void);
 SQUIDCEXTERN peer_t parseNeighborType(const char *s);
 
-SQUIDCEXTERN void errorInitialize(void);
-SQUIDCEXTERN void errorClean(void);
-SQUIDCEXTERN HttpReply *errorBuildReply(ErrorState * err);
-SQUIDCEXTERN void errorSend(int fd, ErrorState *);
-SQUIDCEXTERN void errorAppendEntry(StoreEntry *, ErrorState *);
-SQUIDCEXTERN void errorStateFree(ErrorState * err);
-SQUIDCEXTERN err_type errorReservePageId(const char *page_name);
-SQUIDCEXTERN ErrorState *errorCon(err_type type, http_status);
-
 /* tools.c */
 SQUIDCEXTERN void dlinkAdd(void *data, dlink_node *, dlink_list *);
 SQUIDCEXTERN void dlinkAddAfter(void *, dlink_node *, dlink_node *, dlink_list *);
@@ -746,25 +716,6 @@ extern void carpRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN peer *carpSelectParent(HttpRequest *);
 #endif
 
-/* helper.c */
-SQUIDCEXTERN void helperOpenServers(helper * hlp);
-SQUIDCEXTERN void helperStatefulOpenServers(statefulhelper * hlp);
-SQUIDCEXTERN void helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data);
-SQUIDCEXTERN void helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, void *data, helper_stateful_server * lastserver);
-SQUIDCEXTERN void helperStats(StoreEntry * sentry, helper * hlp);
-SQUIDCEXTERN void helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp);
-SQUIDCEXTERN void helperShutdown(helper * hlp);
-SQUIDCEXTERN void helperStatefulShutdown(statefulhelper * hlp);
-SQUIDCEXTERN helper *helperCreate(const char *);
-SQUIDCEXTERN statefulhelper *helperStatefulCreate(const char *);
-SQUIDCEXTERN void helperFree(helper *);
-SQUIDCEXTERN void helperStatefulFree(statefulhelper *);
-SQUIDCEXTERN void helperStatefulReset(helper_stateful_server * srv);
-SQUIDCEXTERN void helperStatefulReleaseServer(helper_stateful_server * srv);
-SQUIDCEXTERN void *helperStatefulServerGetData(helper_stateful_server * srv);
-SQUIDCEXTERN helper_stateful_server *helperStatefulDefer(statefulhelper *);
-
-
 
 #if USE_LEAKFINDER
 SQUIDCEXTERN void leakInit(void);
@@ -785,11 +736,6 @@ logfilePrintf(Logfile * lf, const char *fmt,...) PRINTF_FORMAT_ARG2;
 #else
 SQUIDCEXTERN void logfilePrintf(va_alist);
 #endif
-
-/*
- * Removal Policies
- */
-SQUIDCEXTERN RemovalPolicy *createRemovalPolicy(RemovalPolicySettings * settings);
 
 /*
  * prototypes for system functions missing from system includes

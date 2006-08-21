@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.42 2006/08/12 01:43:11 robertc Exp $
+ * $Id: event.cc,v 1.43 2006/08/21 00:50:41 robertc Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -183,7 +183,7 @@ int
 EventScheduler::checkDelay()
 {
     if (!tasks)
-        return (int) 10;
+        return EVENT_IDLE;
 
     int result = (int) ((tasks->when - current_dtime) * 1000);
 

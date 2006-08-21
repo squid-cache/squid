@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPServiceRep.h,v 1.3 2005/12/22 22:26:31 wessels Exp $
+ * $Id: ICAPServiceRep.h,v 1.4 2006/08/21 00:50:45 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,6 +34,7 @@
 #ifndef SQUID_ICAPSERVICEREP_H
 #define SQUID_ICAPSERVICEREP_H
 
+#include "cbdata.h"
 #include "ICAPElements.h"
 
 class ICAPOptions;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.24 2006/05/29 00:15:01 robertc Exp $
+ * $Id: Store.h,v 1.25 2006/08/21 00:50:41 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -43,6 +43,7 @@
 #include "RefCount.h"
 #include "CommRead.h"
 #include "Packer.h"
+#include "RemovalPolicy.h"
 
 #if ESI
 #include "ESIElement.h"

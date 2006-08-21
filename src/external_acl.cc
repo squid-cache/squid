@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.73 2006/05/29 00:15:02 robertc Exp $
+ * $Id: external_acl.cc,v 1.74 2006/08/21 00:50:41 robertc Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -56,6 +56,7 @@
 #include "client_side.h"
 #include "HttpRequest.h"
 #include "authenticate.h"
+#include "helper.h"
 #include "MemBuf.h"
 #include "URLScheme.h"
 #include "wordlist.h"

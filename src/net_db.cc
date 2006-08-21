@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.190 2006/08/07 02:28:22 robertc Exp $
+ * $Id: net_db.cc,v 1.191 2006/08/21 00:50:41 robertc Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -42,6 +42,7 @@
  */
 
 #include "squid.h"
+#include "cbdata.h"
 #include "event.h"
 #include "CacheManager.h"
 #include "Store.h"
@@ -280,12 +281,12 @@ netdbSendPing(const ipcache_addrs * ia, void *data)
 {
 
     struct IN_ADDR addr;
-    char *hostname = (char *)((generic_cbdata *) data)->data;
+    char *hostname;
+    static_cast<generic_cbdata *>(data)->unwrap(&hostname);
     netdbEntry *n;
     netdbEntry *na;
     net_db_name *x;
     net_db_name **X;
-    cbdataFree(data);
 
     if (ia == NULL) {
         xfree(hostname);
@@ -922,17 +923,13 @@ netdbPingSite(const char *hostname)
 {
 #if USE_ICMP
     netdbEntry *n;
-    generic_cbdata *h;
 
     if ((n = netdbLookupHost(hostname)) != NULL)
         if (n->next_ping_time > squid_curtime)
             return;
 
-    h = cbdataAlloc(generic_cbdata);
-
-    h->data = xstrdup(hostname);
-
-    ipcache_nbgethostbyname(hostname, netdbSendPing, h);
+    ipcache_nbgethostbyname(hostname, netdbSendPing,
+			    new generic_cbdata(xstrdup(hostname)));
 
 #endif
 }

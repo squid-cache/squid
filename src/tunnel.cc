@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.162 2006/05/06 22:13:18 wessels Exp $
+ * $Id: tunnel.cc,v 1.163 2006/08/21 00:50:41 robertc Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "errorpage.h"
 #include "HttpRequest.h"
 #include "fde.h"
 #include "comm.h"

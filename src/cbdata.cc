@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.71 2006/05/29 00:15:01 robertc Exp $
+ * $Id: cbdata.cc,v 1.72 2006/08/21 00:50:41 robertc Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -45,16 +45,13 @@
  * when finished.
  */
 
-#include "squid.h"
+#include "cbdata.h"
 #include "CacheManager.h"
 #include "Store.h"
 #if CBDATA_DEBUG
 #include "Stack.h"
 #endif
 #include "Generic.h"
-
-/* XXX Remove me */
-#include "PeerSelectState.h"
 
 static int cbdataCount = 0;
 #if CBDATA_DEBUG
@@ -186,16 +183,11 @@ static void
 cbdataInternalInitType(cbdata_type type, const char *name, int size, FREE * free_func)
 {
     char *label;
+    assert (type == cbdata_types + 1);
 
-    if (type >= cbdata_types) {
-        cbdata_index = (CBDataIndex *)xrealloc(cbdata_index, (type + 1) * sizeof(*cbdata_index));
-        memset(&cbdata_index[cbdata_types], 0,
-               (type + 1 - cbdata_types) * sizeof(*cbdata_index));
-        cbdata_types = type + 1;
-    }
-
-    if (cbdata_index[type].pool)
-        return;
+    cbdata_index = (CBDataIndex *)xrealloc(cbdata_index, (type + 1) * sizeof(*cbdata_index));
+    memset(&cbdata_index[type], 0, sizeof(*cbdata_index));
+    cbdata_types = type;
 
     label = (char *)xmalloc(strlen(name) + 20);
 
@@ -214,32 +206,11 @@ cbdataInternalAddType(cbdata_type type, const char *name, int size, FREE * free_
     if (type)
         return type;
 
-    type = (cbdata_type)cbdata_types;
+    type = (cbdata_type)(cbdata_types + 1);
 
     cbdataInternalInitType(type, name, size, free_func);
 
     return type;
-}
-
-void
-cbdataInit(void)
-{
-    debug(45, 3) ("cbdataInit\n");
-#define CREATE_CBDATA(type) cbdataInternalInitType(CBDATA_##type, #type, sizeof(type), NULL)
-#define CREATE_CBDATA_FREE(type, free_func) cbdataInternalInitType(CBDATA_##type, #type, sizeof(type), free_func)
-    /* XXX
-     * most of these should be moved out to their respective module.
-     */
-    CREATE_CBDATA(ErrorState);
-    CREATE_CBDATA(generic_cbdata);
-    CREATE_CBDATA(helper);
-    CREATE_CBDATA(helper_server);
-    CREATE_CBDATA(statefulhelper);
-    CREATE_CBDATA(helper_stateful_server);
-    CREATE_CBDATA(ps_state);
-    CREATE_CBDATA(RemovalPolicy);
-    CREATE_CBDATA(RemovalPolicyWalker);
-    CREATE_CBDATA(RemovalPurgeWalker);
 }
 
 void
@@ -264,9 +235,11 @@ cbdataInternalAlloc(cbdata_type type)
 #endif
 {
     cbdata *p;
-    assert(type > 0 && type < cbdata_types);
+    assert(type > 0 && type <= cbdata_types);
+    /* placement new: the pool alloc gives us cbdata + user type memory space
+     * and we init it with cbdata at the start of it
+     */
     p = new (cbdata_index[type].pool->alloc()) cbdata;
-    //    p = (cbdata *)cbdata_index[type].pool->alloc();
 
     p->type = type;
     p->valid = 1;
@@ -337,6 +310,7 @@ cbdataInternalFree(void *p)
      * we could use the normal delete operator
      * and it would Just Work. RBC 20030902
      */
+    assert ( cbdata_index[theType].pool );
     cbdata_index[theType].pool->free(c);
     return NULL;
 }
@@ -534,6 +508,8 @@ cbdataDump(StoreEntry * sentry)
 
     storeAppendPrintf(sentry, "\nsee also \"Memory utilization\" for detailed per type statistics\n");
 }
+
+CBDATA_CLASS_INIT(generic_cbdata);
 
 #if CBDATA_DEBUG
 

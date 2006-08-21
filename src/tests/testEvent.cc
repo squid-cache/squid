@@ -135,10 +135,13 @@ testEvent::testCheckEvents()
     EventDispatcher dispatcher;
     EventScheduler scheduler(&dispatcher);
     CalledEvent event;
-    CPPUNIT_ASSERT_EQUAL(10, scheduler.checkEvents(0));
-    /* event running now gets sent to the dispatcher and the delay is set to 10ms */
+    /* with no events, its an idle engine */
+    CPPUNIT_ASSERT_EQUAL(int(AsyncEngine::EVENT_IDLE), scheduler.checkEvents(0));
+    /* event running now gets will get sent to the dispatcher and the 
+     * engine becomes idle.
+     */
     scheduler.schedule("test event", CalledEvent::Handler, &event, 0, 0, false);
-    CPPUNIT_ASSERT_EQUAL(10, scheduler.checkEvents(0));
+    CPPUNIT_ASSERT_EQUAL(int(AsyncEngine::EVENT_IDLE), scheduler.checkEvents(0));
     dispatcher.dispatch();
     /* event running later results in  a delay of the time till it runs */
     scheduler.schedule("test event", CalledEvent::Handler, &event, 2, 0, false);

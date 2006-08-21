@@ -1,6 +1,6 @@
 
 /*
- * $Id: SwapDir.h,v 1.10 2006/08/19 12:31:21 robertc Exp $
+ * $Id: SwapDir.h,v 1.11 2006/08/21 00:50:41 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,6 +36,9 @@
 
 #include "Store.h"
 #include "StoreIOState.h"
+
+/* forward decls */
+class RemovalPolicy;
 
 /* Store dir configuration routines */
 /* SwapDir *sd, char *path ( + char *opt later when the strtok mess is gone) */

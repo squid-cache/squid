@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.35 2006/05/19 17:19:10 wessels Exp $
+ * $Id: whois.cc,v 1.36 2006/08/21 00:50:42 robertc Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "errorpage.h"
 #include "Store.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"

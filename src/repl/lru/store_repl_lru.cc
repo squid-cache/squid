@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_lru.cc,v 1.17 2006/05/08 23:38:35 robertc Exp $
+ * $Id: store_repl_lru.cc,v 1.18 2006/08/21 00:50:47 robertc Exp $
  *
  * DEBUG: section ?     LRU Removal policy
  * AUTHOR: Henrik Nordstrom
@@ -189,7 +189,7 @@ lru_walkDone(RemovalPolicyWalker * walker)
     assert(lru->nwalkers > 0);
     lru->nwalkers -= 1;
     safe_free(walker->_data);
-    cbdataFree(walker);
+    delete walker;
 }
 
 static RemovalPolicyWalker *
@@ -199,7 +199,7 @@ lru_walkInit(RemovalPolicy * policy)
     RemovalPolicyWalker *walker;
     LruWalkData *lru_walk;
     lru->nwalkers += 1;
-    walker = cbdataAlloc(RemovalPolicyWalker);
+    walker = new RemovalPolicyWalker;
     lru_walk = (LruWalkData *)xcalloc(1, sizeof(*lru_walk));
     walker->_policy = policy;
     walker->_data = lru_walk;
@@ -268,7 +268,7 @@ lru_purgeDone(RemovalPurgeWalker * walker)
     assert(lru->nwalkers > 0);
     lru->nwalkers -= 1;
     safe_free(walker->_data);
-    cbdataFree(walker);
+    delete walker;
 }
 
 static RemovalPurgeWalker *
@@ -278,7 +278,7 @@ lru_purgeInit(RemovalPolicy * policy, int max_scan)
     RemovalPurgeWalker *walker;
     LruPurgeData *lru_walk;
     lru->nwalkers += 1;
-    walker = cbdataAlloc(RemovalPurgeWalker);
+    walker = new RemovalPurgeWalker;
     lru_walk = (LruPurgeData *)xcalloc(1, sizeof(*lru_walk));
     walker->_policy = policy;
     walker->_data = lru_walk;
@@ -320,7 +320,7 @@ lru_free(RemovalPolicy * policy)
     /* Ok, time to destroy this policy */
     safe_free(lru);
     memset(policy, 0, sizeof(*policy));
-    cbdataFree(policy);
+    delete policy;
 }
 
 RemovalPolicy *
@@ -341,7 +341,7 @@ createRemovalPolicy_lru(wordlist * args)
     /* Allocate the needed structures */
     lru_data = (LruPolicyData *)xcalloc(1, sizeof(*lru_data));
 
-    policy = cbdataAlloc(RemovalPolicy);
+    policy = new RemovalPolicy;
 
     /* Initialize the URL data */
     lru_data->policy = policy;

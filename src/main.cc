@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.431 2006/08/20 09:50:05 serassio Exp $
+ * $Id: main.cc,v 1.432 2006/08/21 00:50:41 robertc Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -38,6 +38,7 @@
 #include "authenticate.h"
 #include "CacheManager.h"
 #include "ConfigParser.h"
+#include "errorpage.h"
 #include "event.h"
 #include "EventLoop.h"
 #include "ExternalACL.h"
@@ -1205,8 +1206,6 @@ main(int argc, char **argv)
         assert(!configured_once);
 
         Mem::Init();
-
-        cbdataInit();
 
         storeFsInit();		/* required for config parsing */
 

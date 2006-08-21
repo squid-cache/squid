@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.43 2006/05/29 00:15:01 robertc Exp $
+ * $Id: cache_manager.cc,v 1.44 2006/08/21 00:50:41 robertc Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "CacheManager.h"
+#include "errorpage.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "Store.h"

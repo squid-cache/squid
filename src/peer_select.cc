@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.141 2006/08/07 02:28:22 robertc Exp $
+ * $Id: peer_select.cc,v 1.142 2006/08/21 00:50:41 robertc Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -102,6 +102,8 @@ static void peerGetSomeDirect(ps_state *);
 static void peerGetSomeParent(ps_state *);
 static void peerGetAllParents(ps_state *);
 static void peerAddFwdServer(FwdServer **, peer *, hier_code);
+
+CBDATA_CLASS_INIT(ps_state);
 
 static void
 peerSelectStateFree(ps_state * psstate)
@@ -791,6 +793,7 @@ peerAddFwdServer(FwdServer ** FSVR, peer * p, hier_code code)
 void *
 ps_state::operator new(size_t)
 {
+    CBDATA_INIT_TYPE(ps_state);
     return cbdataAlloc(ps_state);
 }
 

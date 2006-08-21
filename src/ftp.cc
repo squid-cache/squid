@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.399 2006/06/14 19:43:28 serassio Exp $
+ * $Id: ftp.cc,v 1.400 2006/08/21 00:50:41 robertc Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -37,6 +37,7 @@
 #include "Store.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
+#include "errorpage.h"
 #include "fde.h"
 #include "comm.h"
 #include "HttpHeaderRange.h"

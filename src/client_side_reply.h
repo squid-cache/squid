@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.h,v 1.14 2006/06/07 22:39:34 hno Exp $
+ * $Id: client_side_reply.h,v 1.15 2006/08/21 00:50:41 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -40,6 +40,9 @@
 #include "clientStream.h"
 #include "StoreClient.h"
 #include "client_side_request.h"
+
+
+class ErrorState;
 
 /* XXX make static method */
 

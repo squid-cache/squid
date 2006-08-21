@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskdFile.h,v 1.1 2004/12/20 16:30:38 robertc Exp $
+ * $Id: DiskdFile.h,v 1.2 2006/08/21 00:50:45 robertc Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -37,6 +37,7 @@
 #ifndef __STORE_DISKDFILE_H__
 #define __STORE_DISKDFILE_H__
 
+#include "cbdata.h"
 #include "DiskIO/DiskFile.h"
 
 class DiskdIOStrategy;

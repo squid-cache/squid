@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.257 2006/08/20 21:02:53 hno Exp $
+ * $Id: ipcache.cc,v 1.258 2006/08/21 00:50:41 robertc Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "cbdata.h"
 #include "event.h"
 #include "CacheManager.h"
 #include "SquidTime.h"
@@ -473,10 +474,8 @@ ipcacheHandleReply(void *data, char *reply)
 ipcacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error_message)
 #endif
 {
-    generic_cbdata *c = (generic_cbdata *)data;
-    ipcache_entry *i = (ipcache_entry *)c->data;
-    cbdataFree(c);
-    c = NULL;
+    ipcache_entry *i;
+    static_cast<generic_cbdata *>(data)->unwrap(&i);
     IpcacheStats.replies++;
     statHistCount(&statCounter.dns.svc_time,
                   tvSubMsec(i->request_time, current_time));
@@ -548,8 +547,7 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
     i->handler = handler;
     i->handlerData = cbdataReference(handlerData);
     i->request_time = current_time;
-    c = cbdataAlloc(generic_cbdata);
-    c->data = i;
+    c = new generic_cbdata(i);
 #if USE_DNSSERVERS
 
     dnsSubmit(hashKeyStr(&i->hash), ipcacheHandleReply, c);

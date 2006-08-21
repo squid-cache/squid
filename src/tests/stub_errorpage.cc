@@ -1,5 +1,5 @@
 /*
- * $Id: stub_errorpage.cc,v 1.2 2006/04/25 07:13:34 robertc Exp $
+ * $Id: stub_errorpage.cc,v 1.3 2006/08/21 00:50:47 robertc Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Robert Collins
@@ -32,7 +32,7 @@
  *
  */
 
-#include "squid.h"
+#include "errorpage.h"
 
 err_type
 errorReservePageId(const char *page_name)

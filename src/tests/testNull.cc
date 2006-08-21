@@ -8,6 +8,7 @@
 #include "fs/ufs/ufscommon.h"
 #include "fs/null/store_null.h"
 #include "Mem.h"
+#include "MemObject.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
 #include "StoreFileSystem.h"
@@ -58,8 +59,6 @@ testNull::commonInit()
     visible_appname_string = xstrdup(PACKAGE "/" VERSION);
 
     Mem::Init();
-
-    cbdataInit();
 
     comm_init();
 
@@ -148,12 +147,7 @@ testNull::testNullSearch()
      */
     CPPUNIT_ASSERT_EQUAL(1, StoreController::store_dirs_rebuilding);
 
-    while (StoreController::store_dirs_rebuilding)
-        loop.runOnce();
-
-    /* cannot use loop.run(); as the loop will never idle: the store-dir
-     * clean() scheduled event prevents it 
-     */
+    loop.run();
 
     /* nothing left to rebuild */
     CPPUNIT_ASSERT_EQUAL(0, StoreController::store_dirs_rebuilding);
