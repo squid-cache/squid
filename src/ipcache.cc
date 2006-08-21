@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.256 2006/08/07 02:28:22 robertc Exp $
+ * $Id: ipcache.cc,v 1.257 2006/08/20 21:02:53 hno Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -446,7 +446,10 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
 
     assert(j == na);
 
-    i->addrs.count = (unsigned char) na;
+    if (na < 256)
+        i->addrs.count = (unsigned char) na;
+    else
+        i->addrs.count = 255;
 
     if (ttl == 0 || ttl > Config.positiveDnsTtl)
         ttl = Config.positiveDnsTtl;
