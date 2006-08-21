@@ -97,6 +97,9 @@
 /* Define to 1 if you have the <byteswap.h> header file. */
 #undef HAVE_BYTESWAP_H
 
+/* char is defined in system headers */
+#undef HAVE_CHAR
+
 /* Define to 1 if you have the `crypt' function. */
 #undef HAVE_CRYPT
 
@@ -199,6 +202,9 @@
 
 /* int64_t is defined in system headers */
 #undef HAVE_INT64_T
+
+/* int8_t is defined in system headers */
+#undef HAVE_INT8_T
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
@@ -665,6 +671,9 @@
 /* uint64_t is defined in system headers */
 #undef HAVE_UINT64_T
 
+/* uint8_t is defined in system headers */
+#undef HAVE_UINT8_T
+
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
@@ -685,6 +694,9 @@
 
 /* u_int64_t is defined in system headers */
 #undef HAVE_U_INT64_T
+
+/* u_int8_t is defined in system headers */
+#undef HAVE_U_INT8_T
 
 /* Define to 1 if you have the <varargs.h> header file. */
 #undef HAVE_VARARGS_H
@@ -763,6 +775,9 @@
 /* Print stacktraces on fatal errors */
 #undef PRINT_STACK_TRACE
 
+/* The size of a `char', as computed by sizeof. */
+#undef SIZEOF_CHAR
+
 /* The size of a `int', as computed by sizeof. */
 #undef SIZEOF_INT
 
@@ -774,6 +789,9 @@
 
 /* The size of a `int64_t', as computed by sizeof. */
 #undef SIZEOF_INT64_T
+
+/* The size of a `int8_t', as computed by sizeof. */
+#undef SIZEOF_INT8_T
 
 /* The size of a `long', as computed by sizeof. */
 #undef SIZEOF_LONG
@@ -799,6 +817,9 @@
 /* The size of a `uint64_t', as computed by sizeof. */
 #undef SIZEOF_UINT64_T
 
+/* The size of a `uint8_t', as computed by sizeof. */
+#undef SIZEOF_UINT8_T
+
 /* The size of a `u_int16_t', as computed by sizeof. */
 #undef SIZEOF_U_INT16_T
 
@@ -807,6 +828,9 @@
 
 /* The size of a `u_int64_t', as computed by sizeof. */
 #undef SIZEOF_U_INT64_T
+
+/* The size of a `u_int8_t', as computed by sizeof. */
+#undef SIZEOF_U_INT8_T
 
 /* The size of a `void *', as computed by sizeof. */
 #undef SIZEOF_VOID_P
