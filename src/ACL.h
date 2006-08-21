@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACL.h,v 1.16 2006/04/25 12:00:29 robertc Exp $
+ * $Id: ACL.h,v 1.17 2006/08/21 00:50:40 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,6 +36,7 @@
 #ifndef SQUID_ACL_H
 #define SQUID_ACL_H
 #include "Array.h"
+#include "cbdata.h"
 #include "dlink.h"
 /* FIXME: finish splitting out the dependencies here
  * - typedefs should not be needed to parse this.

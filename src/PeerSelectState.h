@@ -1,6 +1,6 @@
 
 /*
- * $Id: PeerSelectState.h,v 1.1 2003/10/16 21:40:16 robertc Exp $
+ * $Id: PeerSelectState.h,v 1.2 2006/08/21 00:50:41 robertc Exp $
  *
  * AUTHOR: Robert Collins
  *
@@ -36,6 +36,7 @@
 #ifndef   SQUID_PEERSELECTSTATE_H
 #define   SQUID_PEERSELECTSTATE_H
 
+#include "cbdata.h"
 #include "PingData.h"
 
 class ps_state
@@ -76,6 +77,8 @@ public:
 
     ping_data ping;
     ACLChecklist *acl_checklist;
+private:
+    CBDATA_CLASS(ps_state);
 };
 
 

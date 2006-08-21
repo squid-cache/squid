@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.74 2006/05/08 23:38:33 robertc Exp $
+ * $Id: helper.cc,v 1.75 2006/08/21 00:50:41 robertc Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -63,6 +63,11 @@ static helper_stateful_request *StatefulServerDequeue(helper_stateful_server * s
 static void StatefulServerEnqueue(helper_stateful_server * srv, helper_stateful_request * r);
 static void helperStatefulServerKickQueue(helper_stateful_server * srv);
 
+CBDATA_TYPE(helper);
+CBDATA_TYPE(helper_server);
+CBDATA_TYPE(statefulhelper);
+CBDATA_TYPE(helper_stateful_server);
+
 void
 helperOpenServers(helper * hlp)
 {
@@ -123,6 +128,7 @@ helperOpenServers(helper * hlp)
 
         hlp->n_running++;
         hlp->n_active++;
+	CBDATA_INIT_TYPE(helper_server);
         srv = cbdataAlloc(helper_server);
         srv->pid = x;
         srv->index = k;
@@ -221,6 +227,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
 
         hlp->n_running++;
         hlp->n_active++;
+	CBDATA_INIT_TYPE(helper_stateful_server);
         srv = cbdataAlloc(helper_stateful_server);
         srv->pid = x;
         srv->flags.reserved = S_HELPER_FREE;
@@ -706,6 +713,7 @@ helper *
 helperCreate(const char *name)
 {
     helper *hlp;
+    CBDATA_INIT_TYPE(helper);
     hlp = cbdataAlloc(helper);
     hlp->id_name = name;
     return hlp;
@@ -715,6 +723,7 @@ statefulhelper *
 helperStatefulCreate(const char *name)
 {
     statefulhelper *hlp;
+    CBDATA_INIT_TYPE(statefulhelper);
     hlp = cbdataAlloc(statefulhelper);
     hlp->id_name = name;
     return hlp;

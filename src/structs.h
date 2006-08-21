@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.546 2006/08/07 02:28:22 robertc Exp $
+ * $Id: structs.h,v 1.547 2006/08/21 00:50:41 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -179,15 +179,9 @@ struct _https_port_list
 #include "DelayConfig.h"
 #endif
 
-class RemovalPolicySettings
-{
+/* forward decl for SquidConfig, see RemovalPolicy.h */
+class RemovalPolicySettings;
 
-public:
-    RemovalPolicySettings() : type(NULL), args(NULL) {};
-
-    char *type;
-    wordlist *args;
-};
 
 class external_acl;
 
@@ -961,53 +955,6 @@ struct _domain_type
 
 #if USE_CACHE_DIGESTS
 
-struct _Version
-{
-    short int current;		/* current version */
-    short int required;		/* minimal version that can safely handle current version */
-};
-
-/* digest control block; used for transmission and storage */
-
-struct _StoreDigestCBlock
-{
-    Version ver;
-    int capacity;
-    int count;
-    int del_count;
-    int mask_size;
-    unsigned char bits_per_entry;
-    unsigned char hash_func_count;
-    short int reserved_short;
-    int reserved[32 - 6];
-};
-
-struct _DigestFetchState
-{
-    PeerDigest *pd;
-    StoreEntry *entry;
-    StoreEntry *old_entry;
-    store_client *sc;
-    store_client *old_sc;
-    HttpRequest *request;
-    int offset;
-    int mask_offset;
-    time_t start_time;
-    time_t resp_time;
-    time_t expires;
-
-    struct
-    {
-        int msg;
-        int bytes;
-    }
-
-    sent, recv;
-    char buf[SM_PAGE_SIZE];
-    ssize_t bufofs;
-    digest_read_state_t state;
-};
-
 /* statistics for cache digests and other hit "predictors" */
 
 struct _cd_guess_stats
@@ -1018,68 +965,6 @@ struct _cd_guess_stats
     int true_misses;
     int false_misses;
     int close_hits;		/* tmp, remove it later */
-};
-
-class PeerDigest
-{
-
-public:
-    void *operator new (size_t);
-    void operator delete(void *);
-
-    struct _peer *peer;			/* pointer back to peer structure, argh */
-    CacheDigest *cd;		/* actual digest structure */
-    String host;		/* copy of peer->host */
-    const char *req_result;	/* text status of the last request */
-
-    struct
-    {
-
-unsigned int needed:
-        1;	/* there were requests for this digest */
-
-unsigned int usable:
-        1;	/* can be used for lookups */
-
-unsigned int requested:
-        1;	/* in process of receiving [fresh] digest */
-    }
-
-    flags;
-
-    struct
-    {
-        /* all times are absolute unless augmented with _delay */
-        time_t initialized;	/* creation */
-        time_t needed;		/* first lookup/use by a peer */
-        time_t next_check;	/* next scheduled check/refresh event */
-        time_t retry_delay;	/* delay before re-checking _invalid_ digest */
-        time_t requested;	/* requested a fresh copy of a digest */
-        time_t req_delay;	/* last request response time */
-        time_t received;	/* received the current copy of a digest */
-        time_t disabled;	/* disabled for good */
-    }
-
-    times;
-
-    struct
-    {
-        cd_guess_stats guess;
-        int used_count;
-
-        struct
-        {
-            int msgs;
-            kb_t kbytes;
-        }
-
-        sent, recv;
-    }
-
-    stats;
-
-private:
-    CBDATA_CLASS(PeerDigest);
 };
 
 #endif
@@ -1343,47 +1228,6 @@ struct _iostats
     Http, Ftp, Gopher, Wais;
 };
 
-/* Removal policies */
-
-class RemovalPolicyNode
-{
-
-public:
-    RemovalPolicyNode() : data(NULL) {}
-
-    void *data;
-};
-
-struct _RemovalPolicy
-{
-    const char *_type;
-    void *_data;
-    void (*Free) (RemovalPolicy * policy);
-    void (*Add) (RemovalPolicy * policy, StoreEntry * entry, RemovalPolicyNode * node);
-    void (*Remove) (RemovalPolicy * policy, StoreEntry * entry, RemovalPolicyNode * node);
-    void (*Referenced) (RemovalPolicy * policy, const StoreEntry * entry, RemovalPolicyNode * node);
-    void (*Dereferenced) (RemovalPolicy * policy, const StoreEntry * entry, RemovalPolicyNode * node);
-    RemovalPolicyWalker *(*WalkInit) (RemovalPolicy * policy);
-    RemovalPurgeWalker *(*PurgeInit) (RemovalPolicy * policy, int max_scan);
-    void (*Stats) (RemovalPolicy * policy, StoreEntry * entry);
-};
-
-struct _RemovalPolicyWalker
-{
-    RemovalPolicy *_policy;
-    void *_data;
-    const StoreEntry *(*Next) (RemovalPolicyWalker * walker);
-    void (*Done) (RemovalPolicyWalker * walker);
-};
-
-struct _RemovalPurgeWalker
-{
-    RemovalPolicy *_policy;
-    void *_data;
-    int scanned, max_scan, locked;
-    StoreEntry *(*Next) (RemovalPurgeWalker * walker);
-    void (*Done) (RemovalPurgeWalker * walker);
-};
 
 struct request_flags
 {
@@ -1529,45 +1373,6 @@ unsigned int ignore_auth:
     }
 
     flags;
-};
-
-struct _ErrorState
-{
-    err_type type;
-    int page_id;
-    http_status httpStatus;
-    auth_user_request_t *auth_user_request;
-    HttpRequest *request;
-    char *url;
-    int xerrno;
-    u_short port;
-    char *dnsserver_msg;
-    time_t ttl;
-
-    struct IN_ADDR src_addr;
-    char *redirect_url;
-    ERCB *callback;
-    void *callback_data;
-
-    struct
-    {
-
-unsigned int flag_cbdata:
-        1;
-    }
-
-    flags;
-
-    struct
-    {
-        wordlist *server_msg;
-        char *request;
-        char *reply;
-    }
-
-    ftp;
-    char *request_hdrs;
-    char *err_msg; /* Preformatted error message from the cache */
 };
 
 /*
@@ -1826,166 +1631,6 @@ struct _CacheDigest
     int del_count;		/* number of deletions performed so far */
 };
 
-class helper_request;
-
-struct _helper
-{
-    wordlist *cmdline;
-    dlink_list servers;
-    dlink_list queue;
-    const char *id_name;
-    int n_to_start;
-    int n_running;
-    int n_active;
-    int ipc_type;
-    unsigned int concurrency;
-    time_t last_queue_warn;
-    time_t last_restart;
-
-    struct
-    {
-        int requests;
-        int replies;
-        int queue_size;
-        int avg_svc_time;
-    }
-
-    stats;
-};
-
-struct _helper_stateful
-{
-    wordlist *cmdline;
-    dlink_list servers;
-    dlink_list queue;
-    const char *id_name;
-    int n_to_start;
-    int n_running;
-    int n_active;
-    int ipc_type;
-    MemAllocatorProxy *datapool;
-    HLPSAVAIL *IsAvailable;
-    HLPSONEQ *OnEmptyQueue;
-    time_t last_queue_warn;
-    time_t last_restart;
-
-    struct
-    {
-        int requests;
-        int replies;
-        int queue_size;
-        int avg_svc_time;
-    }
-
-    stats;
-};
-
-struct _helper_server
-{
-    int index;
-    int pid;
-    int rfd;
-    int wfd;
-    MemBuf *wqueue;
-    MemBuf *writebuf;
-    char *rbuf;
-    size_t rbuf_sz;
-    off_t roffset;
-
-    struct timeval dispatch_time;
-
-    struct timeval answer_time;
-
-    dlink_node link;
-    helper *parent;
-    helper_request **requests;
-
-    struct _helper_flags
-    {
-
-unsigned int writing:
-        1;
-
-unsigned int closing:
-        1;
-
-unsigned int shutdown:
-        1;
-    }
-
-    flags;
-
-    struct
-    {
-        int uses;
-        unsigned int pending;
-    }
-
-    stats;
-};
-
-class helper_stateful_request;
-
-struct _helper_stateful_server
-{
-    int index;
-    int pid;
-    int rfd;
-    int wfd;
-    /* MemBuf wqueue; */
-    /* MemBuf writebuf; */
-    char *rbuf;
-    size_t rbuf_sz;
-    off_t roffset;
-
-    struct timeval dispatch_time;
-
-    struct timeval answer_time;
-
-    dlink_node link;
-    dlink_list queue;
-    statefulhelper *parent;
-    helper_stateful_request *request;
-
-    struct _helper_stateful_flags
-    {
-
-unsigned int busy:
-        1;
-
-unsigned int closing:
-        1;
-
-unsigned int shutdown:
-        1;
-        stateful_helper_reserve_t reserved;
-    }
-
-    flags;
-
-    struct
-    {
-        int uses;
-        int submits;
-        int releases;
-        int deferbyfunc;
-        int deferbycb;
-    }
-
-    stats;
-    int deferred_requests;	/* current number of deferred requests */
-    void *data;			/* State data used by the calling routines */
-};
-
-/*
- * use this when you need to pass callback data to a blocking
- * operation, but you don't want to add that pointer to cbdata
- */
-
-struct _generic_cbdata
-{
-    void *data;
-};
 
 struct _store_rebuild_data
 {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: MsgPipe.h,v 1.4 2006/08/07 02:28:24 robertc Exp $
+ * $Id: MsgPipe.h,v 1.5 2006/08/21 00:50:45 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,6 +34,7 @@
 #ifndef SQUID_MSGPIPE_H
 #define SQUID_MSGPIPE_H
 
+#include "cbdata.h"
 #include "event.h"
 
 // MsgPipe is a unidirectional communication channel for asynchronously

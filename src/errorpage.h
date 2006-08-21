@@ -1,9 +1,7 @@
 
 /*
- * $Id: BlockingFile.h,v 1.2 2006/08/21 00:50:43 robertc Exp $
+ * $Id: errorpage.h,v 1.1 2006/08/21 00:50:41 robertc Exp $
  *
- * DEBUG: section 47    Store Directory Routines
- * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -34,46 +32,62 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_BLOCKINGFILE_H
-#define SQUID_BLOCKINGFILE_H
+#ifndef   SQUID_ERRORPAGE_H
+#define   SQUID_ERRORPAGE_H
 
+#include "squid.h"
 #include "cbdata.h"
-#include "DiskIO/DiskFile.h"
 
-class BlockingFile : public DiskFile
+class ErrorState
 {
+  public:
+    err_type type;
+    int page_id;
+    http_status httpStatus;
+    auth_user_request_t *auth_user_request;
+    HttpRequest *request;
+    char *url;
+    int xerrno;
+    u_short port;
+    char *dnsserver_msg;
+    time_t ttl;
 
-public:
-    void *operator new(size_t);
-    void operator delete(void *);
-    BlockingFile (char const *path);
-    ~BlockingFile();
-    virtual void open (int, mode_t, RefCount<IORequestor>);
-    virtual void create (int, mode_t, RefCount<IORequestor>);
-    virtual void read(ReadRequest *);
-    virtual void write(WriteRequest *);
-    virtual void close ();
-    virtual bool error() const;
-    virtual int getFD() const { return fd;}
+    struct IN_ADDR src_addr;
+    char *redirect_url;
+    ERCB *callback;
+    void *callback_data;
 
-    virtual bool canRead() const;
-    virtual bool ioInProgress()const;
+    struct
+    {
 
-private:
-    static DRCB ReadDone;
-    static DWCB WriteDone;
-    CBDATA_CLASS(BlockingFile);
-    int fd;
-    bool closed;
-    void error (bool const &);
-    bool error_;
-    char const *path_;
-    RefCount<IORequestor> ioRequestor;
-    RefCount<ReadRequest> readRequest;
-    RefCount<WriteRequest> writeRequest;
-    void doClose();
-    void readDone(int fd, const char *buf, int len, int errflag);
-    void writeDone(int fd, int errflag, size_t len);
+unsigned int flag_cbdata:
+        1;
+    }
+
+    flags;
+
+    struct
+    {
+        wordlist *server_msg;
+        char *request;
+        char *reply;
+    }
+
+    ftp;
+    char *request_hdrs;
+    char *err_msg; /* Preformatted error message from the cache */
+  private:
+    CBDATA_CLASS2(ErrorState);
 };
 
-#endif /* SQUID_BLOCKINGFILE_H */
+SQUIDCEXTERN void errorInitialize(void);
+SQUIDCEXTERN void errorClean(void);
+SQUIDCEXTERN HttpReply *errorBuildReply(ErrorState * err);
+SQUIDCEXTERN void errorSend(int fd, ErrorState *);
+SQUIDCEXTERN void errorAppendEntry(StoreEntry *, ErrorState *);
+SQUIDCEXTERN void errorStateFree(ErrorState * err);
+SQUIDCEXTERN err_type errorReservePageId(const char *page_name);
+SQUIDCEXTERN ErrorState *errorCon(err_type type, http_status);
+
+
+#endif /* SQUID_ERRORPAGE_H */

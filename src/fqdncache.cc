@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.169 2006/08/07 02:28:22 robertc Exp $
+ * $Id: fqdncache.cc,v 1.170 2006/08/21 00:50:41 robertc Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "cbdata.h"
 #include "event.h"
 #include "CacheManager.h"
 #include "SquidTime.h"
@@ -411,6 +412,7 @@ fqdncacheParse(fqdncache_entry *f, rfc1035_rr * answers, int nr, const char *err
 
 #endif
 
+
 static void
 #if USE_DNSSERVERS
 fqdncacheHandleReply(void *data, char *reply)
@@ -419,10 +421,8 @@ fqdncacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error
 #endif
 {
     int n;
-    generic_cbdata *c = (generic_cbdata *)data;
-    fqdncache_entry *f = (fqdncache_entry *)c->data;
-    cbdataFree(c);
-    c = NULL;
+    fqdncache_entry *f;
+    static_cast<generic_cbdata *>(data)->unwrap(&f);
     n = ++FqdncacheStats.replies;
     statHistCount(&statCounter.dns.svc_time,
                   tvSubMsec(f->request_time, current_time));
@@ -495,8 +495,7 @@ fqdncache_nbgethostbyaddr(struct IN_ADDR addr, FQDNH * handler, void *handlerDat
     f->handler = handler;
     f->handlerData = cbdataReference(handlerData);
     f->request_time = current_time;
-    c = cbdataAlloc(generic_cbdata);
-    c->data = f;
+    c = new generic_cbdata(f);
 #if USE_DNSSERVERS
 
     dnsSubmit(hashKeyStr(&f->hash), fqdncacheHandleReply, c);

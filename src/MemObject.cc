@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.22 2006/02/17 18:10:59 wessels Exp $
+ * $Id: MemObject.cc,v 1.23 2006/08/21 00:50:41 robertc Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -62,6 +62,8 @@ url_checksum(const char *url)
 }
 
 #endif
+
+RemovalPolicy * mem_policy = NULL;
 
 size_t
 MemObject::inUseCount()

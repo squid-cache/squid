@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.503 2006/06/14 19:39:19 serassio Exp $
+ * $Id: http.cc,v 1.504 2006/08/21 00:50:41 robertc Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -39,6 +39,7 @@
  */
 
 #include "squid.h"
+#include "errorpage.h"
 #include "MemBuf.h"
 #include "http.h"
 #include "AuthUserRequest.h"

@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.137 2006/08/19 12:31:21 robertc Exp $
+ * $Id: globals.h,v 1.138 2006/08/21 00:50:41 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -144,10 +144,6 @@ extern "C"
     extern CacheDigest *store_digest;	/* NULL */
     extern const char *StoreDigestFileName;		/* "store_digest" */
     extern const char *StoreDigestMimeStr;	/* "application/cache-digest" */
-#if USE_CACHE_DIGESTS
-
-    extern const Version CacheDigestVer;	/* { 5, 3 } */
-#endif
 
     extern const char *MultipartMsgBoundaryStr;	/* "Unique-Squid-Separator" */
 #if HTTP_VIOLATIONS
@@ -161,7 +157,6 @@ extern "C"
     extern int store_swap_high;	/* 0 */
     extern size_t store_pages_max;	/* 0 */
     extern ssize_t store_maxobjsize;	/* -1 */
-    extern RemovalPolicy *mem_policy;
     extern hash_table *proxy_auth_username_cache;	/* NULL */
     extern int incoming_sockets_accepted;
 #ifdef _SQUID_MSWIN_

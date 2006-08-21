@@ -7,6 +7,7 @@
 #include "DiskIO/DiskIOModule.h"
 #include "fs/ufs/ufscommon.h"
 #include "Mem.h"
+#include "MemObject.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
 #include "testStoreSupport.h"
@@ -75,8 +76,6 @@ testUfs::testUfsSearch()
     storeReplAdd("lru", createRemovalPolicy_lru);
 
     Mem::Init();
-
-    cbdataInit();
 
     comm_init();
 

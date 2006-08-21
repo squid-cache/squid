@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.21 2006/05/06 22:23:44 wessels Exp $
+ * $Id: ESI.cc,v 1.22 2006/08/21 00:50:40 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -38,6 +38,7 @@
 #include "ESI.h"
 #include "clientStream.h"
 #include "client_side_request.h"
+#include "errorpage.h"
 #include "ESISegment.h"
 #include "ESIElement.h"
 #include "ESIContext.h"

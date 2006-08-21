@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.110 2006/07/02 10:02:04 serassio Exp $
+ * $Id: client_side_reply.cc,v 1.111 2006/08/21 00:50:41 robertc Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "client_side_reply.h"
+#include "errorpage.h"
 #include "StoreClient.h"
 #include "Store.h"
 #include "HttpReply.h"

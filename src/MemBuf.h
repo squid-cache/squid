@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: MemBuf.h,v 1.7 2006/04/22 05:29:19 robertc Exp $
+ * $Id: MemBuf.h,v 1.8 2006/08/21 00:50:41 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,6 +35,7 @@
 #ifndef SQUID_MEMBUF_H
 #define SQUID_MEMBUF_H
 
+#include "cbdata.h"
 #include "Packer.h"
 
 /* auto-growing memory-resident buffer with printf interface */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ExternalACLEntry.h,v 1.5 2003/08/04 22:14:40 robertc Exp $
+ * $Id: ExternalACLEntry.h,v 1.6 2006/08/21 00:50:40 robertc Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -43,6 +43,9 @@
 
 #ifndef SQUID_EXTERNALACLENTRY_H
 #define SQUID_EXTERNALACLENTRY_H
+
+
+#include "cbdata.h"
 
 /******************************************************************
  * ExternalACLEntryData

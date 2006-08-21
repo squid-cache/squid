@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.101 2006/05/19 17:19:10 wessels Exp $
+ * $Id: urn.cc,v 1.102 2006/08/21 00:50:42 robertc Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "errorpage.h"
 #include "StoreClient.h"
 #include "Store.h"
 #include "HttpReply.h"

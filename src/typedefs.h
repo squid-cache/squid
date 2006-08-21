@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.187 2006/08/07 02:28:22 robertc Exp $
+ * $Id: typedefs.h,v 1.188 2006/08/21 00:50:41 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -139,8 +139,6 @@ typedef struct _domain_type domain_type;
 
 typedef struct _DynPool DynPool;
 
-typedef struct _StoreDigestCBlock StoreDigestCBlock;
-
 typedef struct _DigestFetchState DigestFetchState;
 
 class PeerDigest;
@@ -171,10 +169,6 @@ class StoreEntry;
 
 class SwapDir;
 
-typedef struct _helper_flags helper_flags;
-
-typedef struct _helper_stateful_flags helper_stateful_flags;
-
 typedef struct _http_state_flags http_state_flags;
 
 typedef struct _header_mangler header_mangler;
@@ -188,8 +182,6 @@ typedef struct _cachemgr_passwd cachemgr_passwd;
 typedef struct _refresh_t refresh_t;
 
 typedef struct _CommWriteStateData CommWriteStateData;
-
-typedef struct _ErrorState ErrorState;
 
 typedef struct _StatCounters StatCounters;
 
@@ -205,16 +197,6 @@ typedef struct _CacheDigest CacheDigest;
 
 typedef struct _Version Version;
 
-typedef struct _helper helper;
-
-typedef struct _helper_stateful statefulhelper;
-
-typedef struct _helper_server helper_server;
-
-typedef struct _helper_stateful_server helper_stateful_server;
-
-typedef struct _generic_cbdata generic_cbdata;
-
 typedef struct _link_list link_list;
 
 typedef struct _Logfile Logfile;
@@ -224,12 +206,6 @@ typedef struct _logformat_token logformat_token;
 typedef struct _logformat logformat;
 
 typedef struct _customlog customlog;
-
-typedef struct _RemovalPolicy RemovalPolicy;
-
-typedef struct _RemovalPolicyWalker RemovalPolicyWalker;
-
-typedef struct _RemovalPurgeWalker RemovalPurgeWalker;
 
 #if SQUID_SNMP
 typedef variable_list *(oid_ParseFn) (variable_list *, snint *);
@@ -273,7 +249,6 @@ typedef void OBJH(StoreEntry *);
 typedef void SIGHDLR(int sig);
 typedef void STVLDCB(void *, int, int);
 typedef void HLPCB(void *, char *buf);
-typedef stateful_helper_callback_t HLPSCB(void *, void *lastserver, char *buf);
 typedef int HLPSAVAIL(void *);
 typedef void HLPSONEQ(void *);
 typedef void HLPCMDOPTS(int *argc, char **argv);
@@ -290,8 +265,6 @@ typedef int Ctx;
 
 /* in case we want to change it later */
 typedef ssize_t mb_size_t;
-
-typedef RemovalPolicy *REMOVALPOLICYCREATE(wordlist * args);
 
 typedef int STDIRSELECT(const StoreEntry *);
 #endif /* SQUID_TYPEDEFS_H */

@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.160 2006/08/12 01:43:10 robertc Exp $
+#  $Id: Makefile.am,v 1.161 2006/08/21 00:50:41 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -391,6 +391,7 @@ squid_SOURCES = \
 	CacheManager.h \
 	carp.cc \
 	cbdata.cc \
+	cbdata.h \
 	client_db.cc \
 	client_side.cc \
 	client_side.h \
@@ -513,11 +514,12 @@ squid_SOURCES = \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
+	RemovalPolicy.cc \
+	RemovalPolicy.h \
 	send-announce.cc \
 	$(SNMP_SOURCE) \
 	squid.h \
 	SquidNew.cc \
-	tunnel.cc \
 	$(SSL_SOURCE) \
 	stat.cc \
 	StatHist.cc \
@@ -565,6 +567,7 @@ squid_SOURCES = \
 	SwapDir.h \
 	time.cc \
 	tools.cc \
+	tunnel.cc \
 	typedefs.h \
 	$(UNLINKDSOURCE) \
 	url.cc \
@@ -739,6 +742,7 @@ ufsdump_SOURCES = \
 	$(DNSSOURCE) \
 	enums.h \
 	errorpage.cc \
+	errorpage.h \
 	$(ESI_SOURCE) \
 	ETag.cc \
 	event.cc \
@@ -799,6 +803,7 @@ ufsdump_SOURCES = \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
+	RemovalPolicy.cc \
 	send-announce.cc \
 	$(SNMP_SOURCE) \
 	squid.h \
@@ -1281,6 +1286,7 @@ tests_testCacheManager_SOURCES = \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
+	RemovalPolicy.cc \
 	Server.cc \
 	$(SNMP_SOURCE) \
 	$(SSL_SOURCE) \
@@ -1348,6 +1354,7 @@ tests_testEvent_SOURCES = \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	mem.cc \
+	RemovalPolicy.cc \
 	String.cc \
 	tests/testEvent.cc \
 	tests/testEvent.h \
@@ -1497,6 +1504,7 @@ tests_testEventLoop_SOURCES = \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	mem.cc \
+	RemovalPolicy.cc \
 	String.cc \
 	tests/testEventLoop.cc \
 	tests/testEventLoop.h \
@@ -1646,17 +1654,20 @@ tests_testEventLoop_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 HEADERS_TO_TEST = \
 	tests/testHeader_ACL.cc \
 	tests/testHeader_AsyncEngine.cc \
+	tests/testHeader_cbdata.cc \
 	tests/testHeader_CompletionDispatcher.cc \
 	tests/testHeader_ConfigParser.cc \
 	tests/testHeader_client_side_request.cc \
 	tests/testHeader_comm.cc \
 	tests/testHeader_dlink.cc \
+	tests/testHeader_errorpage.cc \
 	tests/testHeader_event.cc \
 	tests/testHeader_EventLoop.cc \
 	tests/testHeader_HttpHeader.cc \
 	tests/testHeader_HttpHeaderRange.cc \
 	tests/testHeader_HttpReply.cc \
 	tests/testHeader_HttpRequestMethod.cc \
+	tests/testHeader_RemovalPolicy.cc \
 	tests/testHeader_SquidTime.cc \
 	tests/testHeader_Store.cc \
 	tests/testHeader_StoreEntryStream.cc \
@@ -1753,6 +1764,7 @@ tests_test_http_range_SOURCES = \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
+	RemovalPolicy.cc \
 	Server.cc \
 	$(SNMP_SOURCE) \
 	$(SSL_SOURCE) \
@@ -1902,6 +1914,7 @@ tests_testHttpRequest_SOURCES = \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
+	RemovalPolicy.cc \
 	Server.cc \
 	$(SNMP_SOURCE) \
 	$(SSL_SOURCE) \
@@ -1971,6 +1984,7 @@ STORE_TEST_SOURCES=\
 	EventLoop.cc \
 	event.cc \
 	HttpMsg.cc \
+	RemovalPolicy.cc \
 	store_dir.cc \
 	store.cc \
 	HttpRequestMethod.cc \
@@ -2147,6 +2161,7 @@ tests_testURL_SOURCES = \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	mem.cc \
+	RemovalPolicy.cc \
 	String.cc \
 	tests/testURL.cc \
 	tests/testURL.h \

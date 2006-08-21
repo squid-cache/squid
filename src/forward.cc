@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.147 2006/08/07 02:28:22 robertc Exp $
+ * $Id: forward.cc,v 1.148 2006/08/21 00:50:41 robertc Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -35,18 +35,19 @@
 
 
 #include "squid.h"
-#include "event.h"
-#include "CacheManager.h"
 #include "forward.h"
-#include "SquidTime.h"
-#include "Store.h"
-#include "HttpRequest.h"
-#include "fde.h"
-#include "MemObject.h"
 #include "ACLChecklist.h"
 #include "ACL.h"
+#include "CacheManager.h"
+#include "event.h"
+#include "errorpage.h"
+#include "fde.h"
 #include "HttpReply.h"
+#include "HttpRequest.h"
+#include "MemObject.h"
 #include "pconn.h"
+#include "SquidTime.h"
+#include "Store.h"
 
 static PSC fwdStartCompleteWrapper;
 static PF fwdServerClosedWrapper;

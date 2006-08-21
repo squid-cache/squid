@@ -8,6 +8,7 @@
 #include "fs/ufs/ufscommon.h"
 #include "fs/coss/CossSwapDir.h"
 #include "Mem.h"
+#include "MemObject.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
 #include "StoreFileSystem.h"
@@ -58,8 +59,6 @@ testCoss::commonInit()
     visible_appname_string = xstrdup(PACKAGE "/" VERSION);
 
     Mem::Init();
-
-    cbdataInit();
 
     comm_init();
 
@@ -178,8 +177,7 @@ testCoss::testCossSearch()
     /* our swapdir must be scheduled to rebuild */
     CPPUNIT_ASSERT_EQUAL(1, StoreController::store_dirs_rebuilding);
 
-    while (StoreController::store_dirs_rebuilding)
-        loop.runOnce();
+    loop.run();
 
     /* cannot use loop.run(); as the loop will never idle: the store-dir
      * clean() scheduled event prevents it 

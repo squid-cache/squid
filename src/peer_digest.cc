@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.117 2006/08/07 02:28:22 robertc Exp $
+ * $Id: peer_digest.cc,v 1.118 2006/08/21 00:50:41 robertc Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -37,13 +37,14 @@
 #if USE_CACHE_DIGESTS
 
 #include "event.h"
+#include "forward.h"
 #include "Store.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "MemObject.h"
+#include "PeerDigest.h"
 #include "SquidTime.h"
 #include "StoreClient.h"
-#include "forward.h"
 
 /* local types */
 
@@ -71,6 +72,7 @@ static int peerDigestUseful(const PeerDigest * pd);
 
 
 /* local constants */
+Version const CacheDigestVer = { 5, 3 };
 
 #define StoreDigestCBlockSize sizeof(StoreDigestCBlock)
 

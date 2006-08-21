@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.107 2006/05/31 17:24:23 wessels Exp $
+ * $Id: store_swapout.cc,v 1.108 2006/08/21 00:50:41 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "cbdata.h"
 #include "StoreClient.h"
 #include "Store.h"
 /* FIXME: Abstract the use of this more */
@@ -62,13 +63,12 @@ storeSwapOutStart(StoreEntry * e)
      * then this code needs changing
      */
     /* Create the swap file */
-    generic_cbdata *c = cbdataAlloc(generic_cbdata);
-    c->data = e;
+    generic_cbdata *c = new generic_cbdata(e);
     sio = storeCreate(e, storeSwapOutFileNotify, storeSwapOutFileClosed, c);
 
     if (NULL == sio.getRaw()) {
         e->swap_status = SWAPOUT_NONE;
-        cbdataFree(c);
+        delete c;
         storeLog(STORE_LOG_SWAPOUTFAIL, e);
         return;
     }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_heap.cc,v 1.20 2006/05/19 17:19:10 wessels Exp $
+ * $Id: store_repl_heap.cc,v 1.21 2006/08/21 00:50:47 robertc Exp $
  *
  * DEBUG: section ?     HEAP based removal policies
  * AUTHOR: Henrik Nordstrom
@@ -184,7 +184,7 @@ heap_walkDone(RemovalPolicyWalker * walker)
     assert(heap->nwalkers > 0);
     heap->nwalkers -= 1;
     safe_free(walker->_data);
-    cbdataFree(walker);
+    delete walker;
 }
 
 static RemovalPolicyWalker *
@@ -194,7 +194,7 @@ heap_walkInit(RemovalPolicy * policy)
     RemovalPolicyWalker *walker;
     HeapWalkData *heap_walk;
     heap->nwalkers += 1;
-    walker = cbdataAlloc(RemovalPolicyWalker);
+    walker = new RemovalPolicyWalker;
     heap_walk = (HeapWalkData *)xcalloc(1, sizeof(*heap_walk));
     heap_walk->current = 0;
     walker->_policy = policy;
@@ -274,7 +274,7 @@ heap_purgeDone(RemovalPurgeWalker * walker)
     }
 
     safe_free(walker->_data);
-    cbdataFree(walker);
+    delete walker;
 }
 
 static RemovalPurgeWalker *
@@ -284,7 +284,7 @@ heap_purgeInit(RemovalPolicy * policy, int max_scan)
     RemovalPurgeWalker *walker;
     HeapPurgeData *heap_walk;
     heap->nwalkers += 1;
-    walker = cbdataAlloc(RemovalPurgeWalker);
+    walker = new RemovalPurgeWalker;
     heap_walk = (HeapPurgeData *)xcalloc(1, sizeof(*heap_walk));
     heap_walk->min_age = 0.0;
     heap_walk->locked_entries = NULL;
@@ -307,7 +307,7 @@ heap_free(RemovalPolicy * policy)
     /* Ok, time to destroy this policy */
     safe_free(heap);
     memset(policy, 0, sizeof(*policy));
-    cbdataFree(policy);
+    delete policy;
 }
 
 RemovalPolicy *
@@ -317,7 +317,7 @@ createRemovalPolicy_heap(wordlist * args)
     HeapPolicyData *heap_data;
     const char *keytype;
     /* Allocate the needed structures */
-    policy = cbdataAlloc(RemovalPolicy);
+    policy = new RemovalPolicy;
     heap_data = (HeapPolicyData *)xcalloc(1, sizeof(*heap_data));
     /* Initialize the policy data */
     heap_data->policy = policy;

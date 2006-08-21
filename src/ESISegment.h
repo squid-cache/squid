@@ -1,5 +1,5 @@
 /*
- * $Id: ESISegment.h,v 1.3 2003/08/04 22:14:40 robertc Exp $
+ * $Id: ESISegment.h,v 1.4 2006/08/21 00:50:40 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,6 +37,7 @@
  * or perhaps use membuffers here?
  */
 
+#include "cbdata.h"
 #include "RefCount.h"
 #include "SquidString.h"
 

@@ -4,6 +4,7 @@
 /* forward decls */
 
 class CacheManager;
+class ErrorState;
 
 #include "comm.h"
 

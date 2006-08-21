@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreIOState.h,v 1.9 2006/05/23 00:30:21 wessels Exp $
+ * $Id: StoreIOState.h,v 1.10 2006/08/21 00:50:41 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,6 +34,7 @@
 #ifndef SQUID_STOREIOSTATE_H
 #define SQUID_STOREIOSTATE_H
 
+#include "cbdata.h"
 #include "RefCount.h"
 
 class StoreIOState : public RefCountable
