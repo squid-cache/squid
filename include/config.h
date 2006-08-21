@@ -1,5 +1,5 @@
 /*
- * $Id: config.h,v 1.19 2005/08/07 12:16:51 serassio Exp $
+ * $Id: config.h,v 1.20 2006/08/20 18:30:28 serassio Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -208,6 +208,24 @@
 /* Typedefs for missing entries on a system */
 
 #include "squid_types.h"
+
+/* int8_t */
+#ifndef HAVE_INT8_T
+#if HAVE_CHAR && SIZEOF_CHAR == 1
+typedef char int8_t;
+#else
+#error NO 8 bit signed type available
+#endif
+#endif
+
+/* u_int8_t */
+#ifndef HAVE_U_INT8_T
+#if HAVE_UINT8_T
+typedef uint8_t u_int8_t;
+#else
+typedef unsigned char u_int8_t;
+#endif
+#endif
 
 /* int16_t */
 #ifndef HAVE_INT16_T

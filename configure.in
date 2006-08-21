@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.429 2006/08/20 09:50:05 serassio Exp $
+dnl  $Id: configure.in,v 1.430 2006/08/20 18:30:28 serassio Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.429 $)dnl
+AC_REVISION($Revision: 1.430 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -2032,7 +2032,34 @@ AC_CHECK_MEMBERS([struct iphdr.ip_hl],,,[
 dnl Check for typedefs
 AC_CHECK_SIZEOF(void *)
 
-dnl 16 bit integers - int16_t and u_int16_t
+dnl 8 bit integers - int8_t
+dnl if this is defined we trust it to be 8 bits
+AC_CHECK_TYPE(int8_t,[
+  AC_CHECK_SIZEOF(int8_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
+  AC_DEFINE(HAVE_INT8_T,1,[int8_t is defined in system headers])
+  ],,SQUID_DEFAULT_INCLUDES)
+
+dnl fallback #1
+AC_CHECK_TYPE(char,[
+  AC_CHECK_SIZEOF(char,,SQUID_DEFAULT_SIZEOF_INCLUDES)
+  AC_DEFINE(HAVE_CHAR,1,[char is defined in system headers])
+  ],,SQUID_DEFAULT_INCLUDES)
+
+dnl unsigned 8 bit ints - u_int8_t
+dnl if this is defined we trust it to be 8 bits
+AC_CHECK_TYPE(u_int8_t,[
+  AC_CHECK_SIZEOF(u_int8_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
+  AC_DEFINE(HAVE_U_INT8_T,1,[u_int8_t is defined in system headers])
+  ],,SQUID_DEFAULT_INCLUDES)
+
+dnl fallback #1
+dnl if this is defined we trust it to be 8 bits
+AC_CHECK_TYPE(uint8_t,[
+  AC_CHECK_SIZEOF(uint8_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
+  AC_DEFINE(HAVE_UINT8_T,1,[uint8_t is defined in system headers])
+  ],,SQUID_DEFAULT_INCLUDES)
+
+dnl 16 bit integers - int16_t
 dnl if this is defined we trust it to be 16 bits
 AC_CHECK_TYPE(int16_t,[
   AC_CHECK_SIZEOF(int16_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
