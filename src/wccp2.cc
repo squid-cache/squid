@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp2.cc,v 1.6 2006/08/20 15:51:00 adrian Exp $
+ * $Id: wccp2.cc,v 1.7 2006/08/20 19:15:32 serassio Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Steven Wilton
@@ -1148,9 +1148,7 @@ wccp2HandleUdp(int sock, void *not_used)
     }
 
     if (ntohl(security_info->security_option) != ntohl(service_list_ptr->security_info->security_option)) {
-        debug(80, 1) ("Invalid security option in WCCPv2 Packet (%d vs %d).\n",
-                      ntohl(security_info->security_option),
-                      ntohl(service_list_ptr->security_info->security_option));
+        debugs(80, 1, "Invalid security option in WCCPv2 Packet (" << ntohl(security_info->security_option) << " vs " << ntohl(service_list_ptr->security_info->security_option) << ").");
         return;
     }
 
@@ -1175,8 +1173,7 @@ wccp2HandleUdp(int sock, void *not_used)
 
     /* Increment the received id in the packet */
     if (ntohl(router_list_ptr->info->received_id) != ntohl(router_identity_info->router_id_element.received_id)) {
-        +	debug(80, 3) ("Incoming WCCP2_I_SEE_YOU Received ID old=%d new=%d.\n",
-                        ntohl(router_list_ptr->info->received_id), ntohl(router_identity_info->router_id_element.received_id));
+        debugs(80, 3, "Incoming WCCP2_I_SEE_YOU Received ID old=" << ntohl(router_list_ptr->info->received_id) << " new=" << ntohl(router_identity_info->router_id_element.received_id) << ".");
         router_list_ptr->info->received_id = router_identity_info->router_id_element.received_id;
     }
 
@@ -1200,7 +1197,7 @@ wccp2HandleUdp(int sock, void *not_used)
             case WCCP2_CAPABILITY_FORWARDING_METHOD:
 
                 if (!(ntohl(router_capability_element->capability_value) & Config.Wccp2.forwarding_method)) {
-                    debug(80, 1) ("wccp2HandleUdp: fatal error - A WCCP router has specified a different forwarding method %d, expected %d\n", ntohl(router_capability_element->capability_value), Config.Wccp2.forwarding_method);
+                    debugs(80, 1, "wccp2HandleUdp: fatal error - A WCCP router has specified a different forwarding method " << ntohl(router_capability_element->capability_value) << ", expected " << Config.Wccp2.forwarding_method);
                     wccp2ConnectionClose();
                     return;
                 }
@@ -1210,7 +1207,7 @@ wccp2HandleUdp(int sock, void *not_used)
             case WCCP2_CAPABILITY_ASSIGNMENT_METHOD:
 
                 if (!(ntohl(router_capability_element->capability_value) & WCCP2_ASSIGNMENT_METHOD_HASH)) {
-                    debug(80, 1) ("wccp2HandleUdp: fatal error - A WCCP router has specified a different assignment method %d, expected %d\n", ntohl(router_capability_element->capability_value), WCCP2_ASSIGNMENT_METHOD_HASH);
+                    debugs(80, 1, "wccp2HandleUdp: fatal error - A WCCP router has specified a different assignment method " << ntohl(router_capability_element->capability_value) << ", expected "<< WCCP2_ASSIGNMENT_METHOD_HASH);
                     wccp2ConnectionClose();
                     return;
                 }
@@ -1220,7 +1217,7 @@ wccp2HandleUdp(int sock, void *not_used)
             case WCCP2_CAPABILITY_RETURN_METHOD:
 
                 if (!(ntohl(router_capability_element->capability_value) & Config.Wccp2.return_method)) {
-                    debug(80, 1) ("wccp2HandleUdp: fatal error - A WCCP router has specified a different return method %d, expected %d\n", ntohl(router_capability_element->capability_value), Config.Wccp2.return_method);
+                    debugs(80, 1, "wccp2HandleUdp: fatal error - A WCCP router has specified a different return method " << ntohl(router_capability_element->capability_value) << ", expected " << Config.Wccp2.return_method);
                     wccp2ConnectionClose();
                     return;
                 }
