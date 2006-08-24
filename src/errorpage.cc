@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.215 2006/08/21 00:50:41 robertc Exp $
+ * $Id: errorpage.cc,v 1.216 2006/08/24 14:59:32 serassio Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -619,7 +619,7 @@ errorConvert(char token, ErrorState * err)
 
     case 'a':
 
-        if (r->auth_user_request)
+        if (r && r->auth_user_request)
             p = r->auth_user_request->username();
 
         if (!p)
