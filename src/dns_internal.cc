@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.91 2006/08/07 02:28:22 robertc Exp $
+ * $Id: dns_internal.cc,v 1.92 2006/08/25 12:42:57 serassio Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -135,7 +135,6 @@ struct _ns
     struct sockaddr_in S;
     int nqueries;
     int nreplies;
-    int large_pkts;
     nsvc *vc;
 };
 
@@ -146,6 +145,7 @@ struct _sp
 };
 
 CBDATA_TYPE(nsvc);
+CBDATA_TYPE(idns_query);
 
 static ns *nameservers = NULL;
 static sp *searchpath = NULL;
@@ -174,6 +174,7 @@ static void idnsParseWIN32SearchList(const char *);
 static void idnsCacheQuery(idns_query * q);
 static void idnsSendQuery(idns_query * q);
 static IOCB idnsReadVCHeader;
+static void idnsDoSendQueryVC(nsvc *vc);
 
 static int idnsFromKnownNameserver(struct sockaddr_in *from);
 static idns_query *idnsFindQuery(unsigned short id);
@@ -634,8 +635,6 @@ idnsTickleQueue(void)
     event_queued = 1;
 }
 
-static void idnsDoSendQueryVC(nsvc *vc);
-
 static void
 idnsSentQueryVC(int fd, char *buf, size_t size, comm_err_t flag, void *data)
 {
@@ -696,8 +695,8 @@ idnsVCClosed(int fd, void *data)
     nsvc * vc = (nsvc *)data;
     delete vc->queue;
     delete vc->msg;
-    // XXX need to free and/or cbdataReferenceDone(vc) ?
     nameservers[vc->ns].vc = NULL;
+    cbdataFree(vc);
 }
 
 static void
@@ -722,7 +721,7 @@ idnsInitVC(int ns)
                        addr,
                        0,
                        COMM_NONBLOCKING,
-                       "DNS Socket");
+                       "DNS TCP Socket");
 
     if (vc->fd < 0)
         fatal("Could not create a DNS socket");
@@ -879,7 +878,7 @@ idnsCallback(idns_query *q, rfc1035_rr *answers, int n, const char *error)
         if (cbdataReferenceValidDone(q2->callback_data, &cbdata))
             callback(cbdata, answers, n, error);
 
-        memFree(q2, MEM_IDNS_QUERY);
+        cbdataFree(q2);
     }
 
     if (q->hash.key) {
@@ -987,7 +986,7 @@ idnsGrokReply(const char *buf, size_t sz)
     idnsCallback(q, message->answer, n, q->error);
     rfc1035MessageDestroy(message);
 
-    memFree(q, MEM_IDNS_QUERY);
+    cbdataFree(q);
 }
 
 static void
@@ -1096,7 +1095,7 @@ idnsCheckQueue(void *unused)
             else
                 idnsCallback(q, NULL, -16, "Timeout");
 
-            memFree(q, MEM_IDNS_QUERY);
+            cbdataFree(q);
         }
     }
 
@@ -1187,6 +1186,7 @@ idnsInit(void)
     static int init = 0;
 
     CBDATA_INIT_TYPE(nsvc);
+    CBDATA_INIT_TYPE(idns_query);
 
     if (DnsSocket < 0) {
         int port;
@@ -1286,7 +1286,7 @@ idnsCachedLookup(const char *key, IDNSCB * callback, void *data)
     if (!old)
         return 0;
 
-    q = (idns_query *)memAllocate(MEM_IDNS_QUERY);
+    q = cbdataAlloc(idns_query);
 
     q->callback = callback;
 
@@ -1316,7 +1316,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
     if (idnsCachedLookup(name, callback, data))
         return;
 
-    q = (idns_query *)memAllocate(MEM_IDNS_QUERY);
+    q = cbdataAlloc(idns_query);
 
     q->id = idnsQueryID();
 
@@ -1347,7 +1347,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
     if (q->sz < 0) {
         /* problem with query data -- query not sent */
         callback(data, NULL, 0, "Internal error");
-        memFree(q, MEM_IDNS_QUERY);
+        cbdataFree(q);
         return;
     }
 
@@ -1376,7 +1376,7 @@ idnsPTRLookup(const struct IN_ADDR addr, IDNSCB * callback, void *data)
     if (idnsCachedLookup(ip, callback, data))
         return;
 
-    q = (idns_query *)memAllocate(MEM_IDNS_QUERY);
+    q = cbdataAlloc(idns_query);
 
     q->id = idnsQueryID();
 
@@ -1386,7 +1386,7 @@ idnsPTRLookup(const struct IN_ADDR addr, IDNSCB * callback, void *data)
     {
         /* problem with query data -- query not sent */
         callback(data, NULL, 0, "Internal error");
-        memFree(q, MEM_IDNS_QUERY);
+        cbdataFree(q);
         return;
     }
 
