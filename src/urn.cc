@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.102 2006/08/21 00:50:42 robertc Exp $
+ * $Id: urn.cc,v 1.103 2006/08/25 15:22:34 serassio Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -228,9 +228,8 @@ UrnState::setUriResFromRequest(HttpRequest *r)
 
     if (urlres_r == NULL) {
         debug(52, 3) ("urnStart: Bad uri-res URL %s\n", urlres);
-        ErrorState *err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND);
+        ErrorState *err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND, r);
         err->url = urlres;
-        err->request = HTTPMSGLOCK(r);
         urlres = NULL;
         errorAppendEntry(entry, err);
         return;
@@ -382,8 +381,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     if (rep->sline.status != HTTP_OK) {
         debug(52, 3) ("urnHandleReply: failed.\n");
-        err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND);
-        err->request = HTTPMSGLOCK(urnState->request);
+        err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND, urnState->request);
         err->url = xstrdup(storeUrl(e));
         errorAppendEntry(e, err);
         delete rep;
@@ -404,8 +402,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     if (urls == NULL) {		/* unkown URN error */
         debug(52, 3) ("urnTranslateDone: unknown URN %s\n", storeUrl(e));
-        err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND);
-        err->request = HTTPMSGLOCK(urnState->request);
+        err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND, urnState->request);
         err->url = xstrdup(storeUrl(e));
         errorAppendEntry(e, err);
         goto error;

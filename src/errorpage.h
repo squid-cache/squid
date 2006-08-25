@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.h,v 1.1 2006/08/21 00:50:41 robertc Exp $
+ * $Id: errorpage.h,v 1.2 2006/08/25 15:22:34 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -40,7 +40,8 @@
 
 class ErrorState
 {
-  public:
+
+public:
     err_type type;
     int page_id;
     http_status httpStatus;
@@ -76,7 +77,8 @@ unsigned int flag_cbdata:
     ftp;
     char *request_hdrs;
     char *err_msg; /* Preformatted error message from the cache */
-  private:
+
+private:
     CBDATA_CLASS2(ErrorState);
 };
 
@@ -87,7 +89,7 @@ SQUIDCEXTERN void errorSend(int fd, ErrorState *);
 SQUIDCEXTERN void errorAppendEntry(StoreEntry *, ErrorState *);
 SQUIDCEXTERN void errorStateFree(ErrorState * err);
 SQUIDCEXTERN err_type errorReservePageId(const char *page_name);
-SQUIDCEXTERN ErrorState *errorCon(err_type type, http_status);
+SQUIDCEXTERN ErrorState *errorCon(err_type type, http_status, HttpRequest * request);
 
 
 #endif /* SQUID_ERRORPAGE_H */

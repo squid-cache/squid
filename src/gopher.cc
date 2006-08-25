@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.198 2006/08/21 00:50:41 robertc Exp $
+ * $Id: gopher.cc,v 1.199 2006/08/25 15:22:34 serassio Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -710,7 +710,7 @@ gopherTimeout(int fd, void *data)
     StoreEntry *entry = gopherState->entry;
     debug(10, 4) ("gopherTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
 
-    gopherState->fwd->fail(errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
+    gopherState->fwd->fail(errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT, gopherState->fwd->request));
 
     comm_close(fd);
 }
@@ -780,14 +780,14 @@ gopherReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void
             do_next_read = 1;
         } else {
             ErrorState *err;
-            err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
+            err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR, gopherState->fwd->request);
             err->xerrno = errno;
             gopherState->fwd->fail(err);
             comm_close(fd);
             do_next_read = 0;
         }
     } else if (len == 0 && entry->isEmpty()) {
-        gopherState->fwd->fail(errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE));
+        gopherState->fwd->fail(errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE, gopherState->fwd->request));
         comm_close(fd);
         do_next_read = 0;
     } else if (len == 0) {
@@ -840,7 +840,7 @@ gopherSendComplete(int fd, char *buf, size_t size, comm_err_t errflag, int xerrn
 
     if (errflag) {
         ErrorState *err;
-        err = errorCon(ERR_WRITE_ERROR, HTTP_SERVICE_UNAVAILABLE);
+        err = errorCon(ERR_WRITE_ERROR, HTTP_SERVICE_UNAVAILABLE, gopherState->fwd->request);
         err->xerrno = errno;
         err->port = gopherState->req->port;
         err->url = xstrdup(storeUrl(entry));

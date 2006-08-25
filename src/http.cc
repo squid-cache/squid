@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.504 2006/08/21 00:50:41 robertc Exp $
+ * $Id: http.cc,v 1.505 2006/08/25 15:22:34 serassio Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -186,7 +186,7 @@ httpTimeout(int fd, void *data)
     debug(11, 4) ("httpTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
 
     if (entry->store_status == STORE_PENDING) {
-        httpState->fwd->fail(errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
+        httpState->fwd->fail(errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT, httpState->fwd->request));
     }
 
     comm_close(fd);
@@ -1024,14 +1024,14 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
             flags.do_next_read = 1;
         } else {
             ErrorState *err;
-            err = errorCon(ERR_READ_ERROR, HTTP_BAD_GATEWAY);
+            err = errorCon(ERR_READ_ERROR, HTTP_BAD_GATEWAY, fwd->request);
             err->xerrno = errno;
             fwd->fail(err);
             flags.do_next_read = 0;
             comm_close(fd);
         }
     } else if (flag == COMM_OK && len == 0 && !flags.headers_parsed) {
-        fwd->fail(errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_BAD_GATEWAY));
+        fwd->fail(errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_BAD_GATEWAY, fwd->request));
         eof = 1;
         flags.do_next_read = 0;
         comm_close(fd);
@@ -1048,12 +1048,12 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
              */
             processReplyHeader();
         else if (getReply()->sline.status == HTTP_INVALID_HEADER && HttpVersion(0,9) != getReply()->sline.version) {
-            fwd->fail(errorCon(ERR_INVALID_RESP, HTTP_BAD_GATEWAY));
+            fwd->fail(errorCon(ERR_INVALID_RESP, HTTP_BAD_GATEWAY, fwd->request));
             flags.do_next_read = 0;
         } else {
             if (entry->mem_obj->getReply()->sline.status == HTTP_HEADER_TOO_LARGE) {
                 storeEntryReset(entry);
-                fwd->fail( errorCon(ERR_TOO_BIG, HTTP_BAD_GATEWAY));
+                fwd->fail( errorCon(ERR_TOO_BIG, HTTP_BAD_GATEWAY, fwd->request));
                 fwd->dontRetry(true);
                 flags.do_next_read = 0;
                 comm_close(fd);
@@ -1076,7 +1076,7 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
 
                 if (fail) {
                     storeEntryReset(entry);
-                    fwd->fail( errorCon(ERR_INVALID_RESP, HTTP_BAD_GATEWAY));
+                    fwd->fail( errorCon(ERR_INVALID_RESP, HTTP_BAD_GATEWAY, fwd->request));
                     comm_close(fd);
                     return;
                 }
@@ -1268,7 +1268,7 @@ HttpStateData::SendComplete(int fd, char *bufnotused, size_t size, comm_err_t er
 
     if (errflag) {
         ErrorState *err;
-        err = errorCon(ERR_WRITE_ERROR, HTTP_BAD_GATEWAY);
+        err = errorCon(ERR_WRITE_ERROR, HTTP_BAD_GATEWAY, httpState->fwd->request);
         err->xerrno = errno;
         httpState->fwd->fail(err);
         comm_close(fd);
@@ -1932,7 +1932,7 @@ HttpStateData::sendRequestEntity(int fd, size_t size, comm_err_t errflag)
 
     if (errflag) {
         ErrorState *err;
-        err = errorCon(ERR_WRITE_ERROR, HTTP_BAD_GATEWAY);
+        err = errorCon(ERR_WRITE_ERROR, HTTP_BAD_GATEWAY, fwd->request);
         err->xerrno = errno;
         fwd->fail(err);
         comm_close(fd);
@@ -1995,9 +1995,8 @@ HttpStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
          * XXX Maybe instead of an error page we should
          * handle the reply normally (without ICAP).
          */
-        ErrorState *err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
+        ErrorState *err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, orig_request);
         err->xerrno = errno;
-        err->request = HTTPMSGLOCK(orig_request);
         errorAppendEntry(entry, err);
         comm_close(fd);
         return;
@@ -2095,8 +2094,7 @@ HttpStateData::abortAdapting()
 
     if (entry->isEmpty()) {
         ErrorState *err;
-        err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
-        err->request = HTTPMSGLOCK((HttpRequest *) request);
+        err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, request);
         err->xerrno = errno;
         fwd->fail( err);
         fwd->dontRetry(true);

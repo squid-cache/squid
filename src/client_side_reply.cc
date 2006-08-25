@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.111 2006/08/21 00:50:41 robertc Exp $
+ * $Id: client_side_reply.cc,v 1.112 2006/08/25 15:22:34 serassio Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -2081,14 +2081,11 @@ clientBuildError(err_type page_id, http_status status, char const *url,
 
                  struct IN_ADDR * src_addr, HttpRequest * request)
 {
-    ErrorState *err = errorCon(page_id, status);
+    ErrorState *err = errorCon(page_id, status, request);
     err->src_addr = *src_addr;
 
     if (url)
         err->url = xstrdup(url);
-
-    if (request)
-        err->request = HTTPMSGLOCK(request);
 
     return err;
 }
