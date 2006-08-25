@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.163 2006/08/21 00:50:41 robertc Exp $
+ * $Id: tunnel.cc,v 1.164 2006/08/25 15:22:34 serassio Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -456,15 +456,13 @@ sslConnectTimeout(int fd, void *data)
 
     comm_close(fd);
 
-    err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
+    err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
 
     *sslState->status_ptr = HTTP_SERVICE_UNAVAILABLE;
 
     err->xerrno = ETIMEDOUT;
 
     err->port = sslState->port;
-
-    err->request = HTTPMSGLOCK(request);
 
     err->callback = sslErrorComplete;
 
@@ -545,19 +543,17 @@ sslConnectDone(int fdnotused, comm_err_t status, int xerrno, void *data)
 
     if (status == COMM_ERR_DNS) {
         debug(26, 4) ("sslConnect: Unknown host: %s\n", sslState->host);
-        err = errorCon(ERR_DNS_FAIL, HTTP_NOT_FOUND);
+        err = errorCon(ERR_DNS_FAIL, HTTP_NOT_FOUND, request);
         *sslState->status_ptr = HTTP_NOT_FOUND;
-        err->request = HTTPMSGLOCK(request);
         err->dnsserver_msg = xstrdup(dns_error_message);
         err->callback = sslErrorComplete;
         err->callback_data = sslState;
         errorSend(sslState->client.fd(), err);
     } else if (status != COMM_OK) {
-        err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
+        err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
         *sslState->status_ptr = HTTP_SERVICE_UNAVAILABLE;
         err->xerrno = xerrno;
         err->port = sslState->port;
-        err->request = HTTPMSGLOCK(request);
         err->callback = sslErrorComplete;
         err->callback_data = sslState;
         errorSend(sslState->client.fd(), err);
@@ -606,10 +602,8 @@ sslStart(ClientHttpRequest * http, size_t * size_ptr, int *status_ptr)
         answer = ch.fastCheck();
 
         if (answer == 0) {
-            err = errorCon(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN);
+            err = errorCon(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN, request);
             *status_ptr = HTTP_FORBIDDEN;
-            err->request = HTTPMSGLOCK(request);
-            err->src_addr = request->client_addr;
             errorSend(fd, err);
             return;
         }
@@ -630,10 +624,9 @@ sslStart(ClientHttpRequest * http, size_t * size_ptr, int *status_ptr)
 
     if (sock == COMM_ERROR) {
         debug(26, 4) ("sslStart: Failed because we're out of sockets.\n");
-        err = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
+        err = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR, request);
         *status_ptr = HTTP_INTERNAL_SERVER_ERROR;
         err->xerrno = errno;
-        err->request = HTTPMSGLOCK(request);
         errorSend(fd, err);
         return;
     }
@@ -716,9 +709,8 @@ sslPeerSelectComplete(FwdServer * fs, void *data)
 
     if (fs == NULL) {
         ErrorState *err;
-        err = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE);
+        err = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE, request);
         *sslState->status_ptr = HTTP_SERVICE_UNAVAILABLE;
-        err->request = HTTPMSGLOCK(sslState->request);
         err->callback = sslErrorComplete;
         err->callback_data = sslState;
         errorSend(sslState->client.fd(), err);

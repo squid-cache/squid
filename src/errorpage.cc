@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.216 2006/08/24 14:59:32 serassio Exp $
+ * $Id: errorpage.cc,v 1.217 2006/08/25 15:22:34 serassio Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -322,12 +322,18 @@ errorPageName(int pageId)
  * Abstract:  This function creates a ErrorState object.
  */
 ErrorState *
-errorCon(err_type type, http_status status)
+errorCon(err_type type, http_status status, HttpRequest * request)
 {
     ErrorState *err = new ErrorState;
     err->page_id = type;	/* has to be reset manually if needed */
     err->type = type;
     err->httpStatus = status;
+
+    if (request != NULL) {
+        err->request = HTTPMSGLOCK(request);
+        err->src_addr = request->client_addr;
+    }
+
     return err;
 }
 

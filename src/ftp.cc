@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.400 2006/08/21 00:50:41 robertc Exp $
+ * $Id: ftp.cc,v 1.401 2006/08/25 15:22:34 serassio Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2966,12 +2966,12 @@ FtpStateData::failedErrorMessage(err_type error, int xerrno)
 
             if (ctrl.replycode > 500)
                 if (password_url)
-                    err = errorCon(ERR_FTP_FORBIDDEN, HTTP_FORBIDDEN);
+                    err = errorCon(ERR_FTP_FORBIDDEN, HTTP_FORBIDDEN, fwd->request);
                 else
-                    err = errorCon(ERR_FTP_FORBIDDEN, HTTP_UNAUTHORIZED);
+                    err = errorCon(ERR_FTP_FORBIDDEN, HTTP_UNAUTHORIZED, fwd->request);
 
             else if (ctrl.replycode == 421)
-                err = errorCon(ERR_FTP_UNAVAILABLE, HTTP_SERVICE_UNAVAILABLE);
+                err = errorCon(ERR_FTP_UNAVAILABLE, HTTP_SERVICE_UNAVAILABLE, fwd->request);
 
             break;
 
@@ -2979,7 +2979,7 @@ FtpStateData::failedErrorMessage(err_type error, int xerrno)
 
         case SENT_RETR:
             if (ctrl.replycode == 550)
-                err = errorCon(ERR_FTP_NOT_FOUND, HTTP_NOT_FOUND);
+                err = errorCon(ERR_FTP_NOT_FOUND, HTTP_NOT_FOUND, fwd->request);
 
             break;
 
@@ -2990,16 +2990,16 @@ FtpStateData::failedErrorMessage(err_type error, int xerrno)
         break;
 
     case ERR_READ_TIMEOUT:
-        err = errorCon(error, HTTP_GATEWAY_TIMEOUT);
+        err = errorCon(error, HTTP_GATEWAY_TIMEOUT, fwd->request);
         break;
 
     default:
-        err = errorCon(error, HTTP_BAD_GATEWAY);
+        err = errorCon(error, HTTP_BAD_GATEWAY, fwd->request);
         break;
     }
 
     if (err == NULL)
-        err = errorCon(ERR_FTP_FAILURE, HTTP_BAD_GATEWAY);
+        err = errorCon(ERR_FTP_FAILURE, HTTP_BAD_GATEWAY, fwd->request);
 
     err->xerrno = xerrno;
 
@@ -3053,8 +3053,7 @@ ftpSendReply(FtpStateData * ftpState)
         http_code = HTTP_INTERNAL_SERVER_ERROR;
     }
 
-    err = errorCon(err_code, http_code);
-    err->request = HTTPMSGLOCK(ftpState->request);
+    err = errorCon(err_code, http_code, ftpState->request);
 
     if (ftpState->old_request)
         err->ftp.request = xstrdup(ftpState->old_request);
@@ -3180,8 +3179,7 @@ FtpStateData::appendSuccessHeader()
 HttpReply *
 FtpStateData::ftpAuthRequired(HttpRequest * request, const char *realm)
 {
-    ErrorState *err = errorCon(ERR_CACHE_ACCESS_DENIED, HTTP_UNAUTHORIZED);
-    err->request = HTTPMSGLOCK(request);
+    ErrorState *err = errorCon(ERR_CACHE_ACCESS_DENIED, HTTP_UNAUTHORIZED, request);
     HttpReply *newrep = errorBuildReply(err);
     errorStateFree(err);
     /* add Authenticate header */
@@ -3326,9 +3324,8 @@ FtpStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
          * XXX Maybe instead of an error page we should
          * handle the reply normally (without ICAP).
          */
-        ErrorState *err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
+        ErrorState *err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, request);
         err->xerrno = errno;
-        err->request = HTTPMSGLOCK(request);
         errorAppendEntry(entry, err);
         comm_close(ctrl.fd);
         return;
@@ -3422,8 +3419,7 @@ FtpStateData::abortAdapting()
 
     if (entry->isEmpty()) {
         ErrorState *err;
-        err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
-        err->request = HTTPMSGLOCK((HttpRequest *) request);
+        err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, request);
         err->xerrno = errno;
         fwd->fail(err);
         fwd->dontRetry(true);

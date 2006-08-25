@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.161 2006/08/21 00:50:42 robertc Exp $
+ * $Id: wais.cc,v 1.162 2006/08/25 15:22:34 serassio Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -93,7 +93,7 @@ waisTimeout(int fd, void *data)
     debug(24, 4) ("waisTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
 
     if (entry->store_status == STORE_PENDING) {
-        waisState->fwd->fail(errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT));
+        waisState->fwd->fail(errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT, waisState->fwd->request));
     }
 
     comm_close(fd);
@@ -164,13 +164,13 @@ waisReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *
             comm_read(fd, waisState->buf, read_sz, waisReadReply, waisState);
         } else {
             ErrorState *err;
-            err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR);
+            err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR, waisState->fwd->request);
             err->xerrno = errno;
             waisState->fwd->fail(err);
             comm_close(fd);
         }
     } else if (flag == COMM_OK && len == 0 && !waisState->dataWritten) {
-        waisState->fwd->fail(errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE));
+        waisState->fwd->fail(errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE, waisState->fwd->request));
         comm_close(fd);
     } else if (flag == COMM_OK && len == 0) {
         /* Connection closed; retrieval done. */
@@ -205,7 +205,7 @@ waisSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void
 
     if (errflag) {
         ErrorState *err;
-        err = errorCon(ERR_WRITE_ERROR, HTTP_SERVICE_UNAVAILABLE);
+        err = errorCon(ERR_WRITE_ERROR, HTTP_SERVICE_UNAVAILABLE, waisState->fwd->request);
         err->xerrno = errno;
         waisState->fwd->fail(err);
         comm_close(fd);

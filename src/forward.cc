@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.148 2006/08/21 00:50:41 robertc Exp $
+ * $Id: forward.cc,v 1.149 2006/08/25 15:22:34 serassio Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -191,11 +191,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
             if (page_id == ERR_NONE)
                 page_id = ERR_FORWARDING_DENIED;
 
-            ErrorState *anErr = errorCon(page_id, HTTP_FORBIDDEN);
-
-            anErr->request = HTTPMSGLOCK(request);
-
-            anErr->src_addr = request->client_addr;
+            ErrorState *anErr = errorCon(page_id, HTTP_FORBIDDEN, request);
 
             errorAppendEntry(entry, anErr);	// frees anErr
 
@@ -216,8 +212,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
 
     if (shutting_down) {
         /* more yuck */
-        ErrorState *anErr = errorCon(ERR_SHUTTING_DOWN, HTTP_SERVICE_UNAVAILABLE);
-        anErr->request = HTTPMSGLOCK(request);
+        ErrorState *anErr = errorCon(ERR_SHUTTING_DOWN, HTTP_SERVICE_UNAVAILABLE, request);
         errorAppendEntry(entry, anErr);	// frees anErr
         return;
     }
@@ -488,8 +483,7 @@ FwdState::serverClosed(int fd)
     }
 
     if (!err && shutting_down) {
-        ErrorState *anErr = errorCon(ERR_SHUTTING_DOWN, HTTP_SERVICE_UNAVAILABLE);
-        anErr->request = HTTPMSGLOCK(request);
+        errorCon(ERR_SHUTTING_DOWN, HTTP_SERVICE_UNAVAILABLE, request);
     }
 
     self = NULL;	// refcounted
@@ -518,7 +512,7 @@ FwdState::negotiateSSL(int fd)
 
         default:
             debug(81, 1) ("fwdNegotiateSSL: Error negotiating SSL connection on FD %d: %s (%d/%d/%d)\n", fd, ERR_error_string(ERR_get_error(), NULL), ssl_error, ret, errno);
-            ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
+            ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
 #ifdef EPROTO
 
             anErr->xerrno = EPROTO;
@@ -527,7 +521,6 @@ FwdState::negotiateSSL(int fd)
             anErr->xerrno = EACCES;
 #endif
 
-            anErr->request = HTTPMSGLOCK(request);
             fail(anErr);
 
             if (fs->_peer) {
@@ -571,9 +564,8 @@ FwdState::initiateSSL()
     if ((ssl = SSL_new(sslContext)) == NULL) {
         debug(83, 1) ("fwdInitiateSSL: Error allocating handle: %s\n",
                       ERR_error_string(ERR_get_error(), NULL));
-        ErrorState *anErr = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
+        ErrorState *anErr = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR, request);
         anErr->xerrno = errno;
-        anErr->request = HTTPMSGLOCK(request);
         fail(anErr);
         self = NULL;		// refcounted
         return;
@@ -632,7 +624,7 @@ FwdState::connectDone(int aServerFD, comm_err_t status, int xerrno)
         debug(17, 4) ("fwdConnectDone: Unknown host: %s\n",
                       request->host);
 
-        ErrorState *anErr = errorCon(ERR_DNS_FAIL, HTTP_SERVICE_UNAVAILABLE);
+        ErrorState *anErr = errorCon(ERR_DNS_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
 
         anErr->dnsserver_msg = xstrdup(dns_error_message);
 
@@ -641,7 +633,7 @@ FwdState::connectDone(int aServerFD, comm_err_t status, int xerrno)
         comm_close(server_fd);
     } else if (status != COMM_OK) {
         assert(fs);
-        ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE);
+        ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
         anErr->xerrno = xerrno;
 
         fail(anErr);
@@ -681,7 +673,7 @@ FwdState::connectTimeout(int fd)
         hierarchyNote(&request->hier, fs->code, fd_table[fd].ipaddr);
 
     if (entry->isEmpty()) {
-        ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_GATEWAY_TIMEOUT);
+        ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_GATEWAY_TIMEOUT, request);
         anErr->xerrno = ETIMEDOUT;
         fail(anErr);
         /*
@@ -779,7 +771,7 @@ FwdState::connectStart()
 
     if (fd < 0) {
         debug(50, 4) ("fwdConnectStart: %s\n", xstrerror());
-        ErrorState *anErr = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR);
+        ErrorState *anErr = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR, request);
         anErr->xerrno = errno;
         fail(anErr);
         self = NULL;	// refcounted
@@ -833,7 +825,7 @@ void
 FwdState::startFail()
 {
     debug(17, 3) ("fwdStartFail: %s\n", storeUrl(entry));
-    ErrorState *anErr = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE);
+    ErrorState *anErr = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE, request);
     anErr->xerrno = errno;
     fail(anErr);
     self = NULL;	// refcounted
@@ -915,7 +907,7 @@ FwdState::dispatch()
         default:
             debug(17, 1) ("fwdDispatch: Cannot retrieve '%s'\n",
                           storeUrl(entry));
-            ErrorState *anErr = errorCon(ERR_UNSUP_REQ, HTTP_BAD_REQUEST);
+            ErrorState *anErr = errorCon(ERR_UNSUP_REQ, HTTP_BAD_REQUEST, request);
             fail(anErr);
             /*
              * Force a persistent connection to be closed because

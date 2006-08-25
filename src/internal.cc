@@ -1,6 +1,6 @@
 
 /*
- * $Id: internal.cc,v 1.42 2006/08/21 00:50:41 robertc Exp $
+ * $Id: internal.cc,v 1.43 2006/08/25 15:22:34 serassio Exp $
  *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
@@ -79,8 +79,7 @@ internalStart(HttpRequest * request, StoreEntry * entry)
     } else {
         debugObj(76, 1, "internalStart: unknown request:\n",
                  request, (ObjPackMethod) & httpRequestPack);
-        err = errorCon(ERR_INVALID_REQ, HTTP_NOT_FOUND);
-        err->request = HTTPMSGLOCK(request);
+        err = errorCon(ERR_INVALID_REQ, HTTP_NOT_FOUND, request);
         errorAppendEntry(entry, err);
     }
 }
