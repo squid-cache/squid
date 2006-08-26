@@ -1,5 +1,5 @@
 /*
- * $Id: ACLIntRange.cc,v 1.7 2006/04/23 11:10:31 robertc Exp $
+ * $Id: ACLIntRange.cc,v 1.8 2006/08/26 11:38:56 serassio Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Robert Collins
@@ -49,16 +49,30 @@ ACLIntRange::parse()
     char *t = NULL;
 
     while ((t = strtokFile())) {
-        RangeType temp (0,0);
-        temp.start = atoi(t);
-        t = strchr(t, '-');
+        int port = atoi(t);
 
-        if (t && *(++t))
-            temp.end = atoi(t) + 1;
-        else
-            temp.end = temp.start+1;
+        if (port > 0 && port < 65536) {
+            RangeType temp (0,0);
+            temp.start = port;
+            t = strchr(t, '-');
 
-        ranges.push_back(temp);
+            if (t && *(++t)) {
+                port = atoi(t);
+
+                if (port > 0 && port < 65536 && port > temp.start) {
+                    temp.end = port+1;
+                } else {
+                    debug(28, 0) ("ACLIntRange::parse: Invalid port range\n");
+                    self_destruct();
+                }
+            } else
+                temp.end = temp.start+1;
+
+            ranges.push_back(temp);
+        } else {
+            debug(28, 0) ("ACLIntRange::parse: Invalid port value\n");
+            self_destruct();
+        }
     }
 }
 
@@ -110,7 +124,7 @@ ACLIntRange::dump ()
         if (element.size() == 1)
             snprintf(buf, sizeof(buf), "%d", element.start);
         else
-            snprintf(buf, sizeof(buf), "%d-%d", element.start, element.end);
+            snprintf(buf, sizeof(buf), "%d-%d", element.start, element.end-1);
 
         wordlistAdd(&W, buf);
     }
