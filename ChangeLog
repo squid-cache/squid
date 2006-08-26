@@ -18,6 +18,8 @@ Changes to squid-3.0 ():
 	  directory this is placed in. Additionally squid -z will create the
 	  COSS swapfile.
 	- WCCPv2 support
+	- HTCP support for access control and the CRL operation for
+	  purgeing of cache content
 
 Changes to squid-2.5 ():
 

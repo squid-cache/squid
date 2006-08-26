@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.68 2006/05/30 17:31:23 hno Exp $
+ * $Id: htcp.cc,v 1.69 2006/08/25 18:53:35 serassio Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -35,6 +35,8 @@
 
 #include "squid.h"
 #include "htcp.h"
+#include "ACLChecklist.h"
+#include "ACL.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"
@@ -68,49 +70,6 @@ struct _htcpHeader
     u_int16_t length;
     u_char major;
     u_char minor;
-};
-
-struct _htcpDataHeader
-{
-    u_int16_t length;
-#if WORDS_BIGENDIAN
-
-u_int8_t opcode:
-    4;
-
-u_int8_t response:
-    4;
-#else
-
-u_int8_t response:
-    4;
-
-u_int8_t opcode:
-    4;
-#endif
-#if WORDS_BIGENDIAN
-
-u_int8_t reserved:
-    6;
-
-u_int8_t F1:
-    1;
-
-u_int8_t RR:
-    1;
-#else
-
-u_int8_t RR:
-    1;
-
-u_int8_t F1:
-    1;
-
-u_int8_t reserved:
-    6;
-#endif
-
-    u_int32_t msg_id;
 };
 
 struct _htcpDataHeaderSquid
@@ -156,6 +115,49 @@ unsigned int reserved:
     u_int32_t msg_id;
 };
 
+struct _htcpDataHeader
+{
+    u_int16_t length;
+#if WORDS_BIGENDIAN
+
+u_int8_t opcode:
+    4;
+
+u_int8_t response:
+    4;
+#else
+
+u_int8_t response:
+    4;
+
+u_int8_t opcode:
+    4;
+#endif
+#if WORDS_BIGENDIAN
+
+u_int8_t reserved:
+    6;
+
+u_int8_t F1:
+    1;
+
+u_int8_t RR:
+    1;
+#else
+
+u_int8_t RR:
+    1;
+
+u_int8_t F1:
+    1;
+
+u_int8_t reserved:
+    6;
+#endif
+
+    u_int32_t msg_id;
+};
+
 /* RR == 0 --> F1 = RESPONSE DESIRED FLAG */
 /* RR == 1 --> F1 = MESSAGE OVERALL FLAG */
 /* RR == 0 --> REQUEST */
@@ -186,6 +188,7 @@ public:
     char *uri;
     char *version;
     char *req_hdrs;
+    HttpRequest *request;
 
 private:
     HttpRequest *checkHitRequest;
@@ -256,17 +259,19 @@ enum {
 static u_int32_t msg_id_counter = 0;
 static int htcpInSocket = -1;
 static int htcpOutSocket = -1;
-#define N_QUERIED_KEYS 256
+#define N_QUERIED_KEYS 8192
+static u_int32_t queried_id[N_QUERIED_KEYS];
 static cache_key queried_keys[N_QUERIED_KEYS][MD5_DIGEST_CHARS];
+
+static struct sockaddr_in queried_addr[N_QUERIED_KEYS];
 static MemAllocator *htcpDetailPool = NULL;
 
 static int old_squid_format = 0;
 
 
-static char *htcpBuildPacket(htcpStuff * stuff, ssize_t * len);
+static ssize_t htcpBuildPacket(char *buf, size_t buflen, htcpStuff * stuff);
 static htcpSpecifier *htcpUnpackSpecifier(char *buf, int sz);
 static htcpDetail *htcpUnpackDetail(char *buf, int sz);
-static int htcpUnpackCountstr(char *buf, int sz, char **str);
 static ssize_t htcpBuildAuth(char *buf, size_t buflen);
 static ssize_t htcpBuildCountstr(char *buf, size_t buflen, const char *s);
 static ssize_t htcpBuildData(char *buf, size_t buflen, htcpStuff * stuff);
@@ -345,7 +350,7 @@ htcpBuildCountstr(char *buf, size_t buflen, const char *s)
 {
     u_int16_t length;
     size_t len;
-    off_t off = 0;
+    int off = 0;
 
     if (buflen - off < 2)
         return -1;
@@ -481,6 +486,10 @@ htcpBuildOpData(char *buf, size_t buflen, htcpStuff * stuff)
         off = htcpBuildTstOpData(buf + off, buflen, stuff);
         break;
 
+    case HTCP_CLR:
+        /* nothing to be done */
+        break;
+
     default:
         assert(0);
         break;
@@ -546,36 +555,35 @@ htcpBuildData(char *buf, size_t buflen, htcpStuff * stuff)
     return off;
 }
 
-static char *
-htcpBuildPacket(htcpStuff * stuff, ssize_t * len)
+/*
+ * Build an HTCP packet into buf, maximum length buflen.
+ * Returns the packet length, or zero on failure.
+ */
+static ssize_t
+htcpBuildPacket(char *buf, size_t buflen, htcpStuff * stuff)
 {
-    size_t buflen = 8192;
-    size_t s;
+    ssize_t s;
     ssize_t off = 0;
     size_t hdr_sz = sizeof(htcpHeader);
     htcpHeader hdr;
-    char *buf = (char *)xcalloc(buflen, 1);
     /* skip the header -- we don't know the overall length */
 
     if (buflen < hdr_sz) {
-        xfree(buf);
-        return NULL;
+        return 0;
     }
 
     off += hdr_sz;
     s = htcpBuildData(buf + off, buflen - off, stuff);
 
     if (s < 0) {
-        xfree(buf);
-        return NULL;
+        return 0;
     }
 
     off += s;
     s = htcpBuildAuth(buf + off, buflen - off);
 
     if (s < 0) {
-        xfree(buf);
-        return NULL;
+        return 0;
     }
 
     off += s;
@@ -589,11 +597,9 @@ htcpBuildPacket(htcpStuff * stuff, ssize_t * len)
 
     xmemcpy(buf, &hdr, hdr_sz);
 
-    *len = off;
-
     debug(31, 3) ("htcpBuildPacket: size %d\n", (int) off);
 
-    return buf;
+    return off;
 }
 
 static void
@@ -601,8 +607,7 @@ static void
 htcpSend(const char *buf, int len, struct sockaddr_in *to)
 {
     int x;
-    debug(31, 3) ("htcpSend: %s/%d\n",
-                  inet_ntoa(to->sin_addr), (int) ntohs(to->sin_port));
+    debugs(31, 3, "htcpSend: " << inet_ntoa(to->sin_addr) << "/" << ntohs(to->sin_port));
     htcpHexdump("htcpSend", buf, len);
     x = comm_udp_sendto(htcpOutSocket,
                         to,
@@ -612,7 +617,7 @@ htcpSend(const char *buf, int len, struct sockaddr_in *to)
                         len);
 
     if (x < 0)
-        debug(31, 0) ("htcpSend: FD %d sendto: %s\n", htcpOutSocket, xstrerror());
+        debug(31, 1) ("htcpSend: FD %d sendto: %s\n", htcpOutSocket, xstrerror());
     else
         statCounter.htcp.pkts_sent++;
 }
@@ -637,142 +642,230 @@ htcpSpecifier::setDataHeader (htcpDataHeader *aDataHeader)
 static void
 htcpFreeSpecifier(htcpSpecifier * s)
 {
-    safe_free(s->method);
-    safe_free(s->uri);
-    safe_free(s->version);
-    safe_free(s->req_hdrs);
+    HTTPMSGUNLOCK(s->request);
+
     delete s;
 }
 
 static void
 htcpFreeDetail(htcpDetail * d)
 {
-    safe_free(d->resp_hdrs);
-    safe_free(d->entity_hdrs);
-    safe_free(d->cache_hdrs);
     htcpDetailPool->free(d);
 }
 
-static int
-htcpUnpackCountstr(char *buf, int sz, char **str)
-{
-    u_int16_t l;
-    debug(31, 3) ("htcpUnpackCountstr: sz = %d\n", sz);
-
-    if (sz < 2) {
-        debug(31, 3) ("htcpUnpackCountstr: sz < 2\n");
-        return -1;
-    }
-
-    htcpHexdump("htcpUnpackCountstr", buf, sz);
-    xmemcpy(&l, buf, 2);
-    l = ntohs(l);
-    buf += 2;
-    sz -= 2;
-    debug(31, 3) ("htcpUnpackCountstr: LENGTH = %d\n", (int) l);
-
-    if (sz < l) {
-        debug(31, 3) ("htcpUnpackCountstr: sz(%d) < l(%d)\n", sz, l);
-        return -1;
-    }
-
-    if (str) {
-        *str = (char *)xmalloc(l + 1);
-        xstrncpy(*str, buf, l + 1);
-        debug(31, 3) ("htcpUnpackCountstr: TEXT = {%s}\n", *str);
-    }
-
-    return (int) l + 2;
-}
-
+/*
+ * Unpack an HTCP SPECIFIER in place
+ * This will overwrite any following AUTH block
+ */
 static htcpSpecifier *
 htcpUnpackSpecifier(char *buf, int sz)
 {
     htcpSpecifier *s = new htcpSpecifier;
-    int o;
-    debug(31, 3) ("htcpUnpackSpecifier: %d bytes\n", (int) sz);
-    o = htcpUnpackCountstr(buf, sz, &s->method);
+    method_t method;
 
-    if (o < 0) {
+    /* Find length of METHOD */
+    u_int16_t l = ntohs(*(u_int16_t *) buf);
+    sz -= 2;
+    buf += 2;
+
+    if (l > sz) {
         debug(31, 1) ("htcpUnpackSpecifier: failed to unpack METHOD\n");
         htcpFreeSpecifier(s);
         return NULL;
     }
 
-    buf += o;
-    sz -= o;
-    o = htcpUnpackCountstr(buf, sz, &s->uri);
+    /* Set METHOD */
+    s->method = buf;
 
-    if (o < 0) {
+    buf += l;
+
+    sz -= l;
+
+    /* Find length of URI */
+    l = ntohs(*(u_int16_t *) buf);
+
+    sz -= 2;
+
+    if (l > sz) {
         debug(31, 1) ("htcpUnpackSpecifier: failed to unpack URI\n");
         htcpFreeSpecifier(s);
         return NULL;
     }
 
-    buf += o;
-    sz -= o;
-    o = htcpUnpackCountstr(buf, sz, &s->version);
+    /* Add terminating null to METHOD */
+    *buf = '\0';
 
-    if (o < 0) {
+    /* Set URI */
+    buf += 2;
+
+    s->uri = buf;
+
+    buf += l;
+
+    sz -= l;
+
+    /* Find length of VERSION */
+    l = ntohs(*(u_int16_t *) buf);
+
+    sz -= 2;
+
+    if (l > sz) {
         debug(31, 1) ("htcpUnpackSpecifier: failed to unpack VERSION\n");
         htcpFreeSpecifier(s);
         return NULL;
     }
 
-    buf += o;
-    sz -= o;
-    o = htcpUnpackCountstr(buf, sz, &s->req_hdrs);
+    /* Add terminating null to URI */
+    *buf = '\0';
 
-    if (o < 0) {
+    /* Set VERSION */
+    buf += 2;
+
+    s->version = buf;
+
+    buf += l;
+
+    sz -= l;
+
+    /* Find length of REQ-HDRS */
+    l = ntohs(*(u_int16_t *) buf);
+
+    sz -= 2;
+
+    if (l > sz) {
         debug(31, 1) ("htcpUnpackSpecifier: failed to unpack REQ-HDRS\n");
         htcpFreeSpecifier(s);
         return NULL;
     }
 
-    buf += o;
-    sz -= o;
+    /* Add terminating null to URI */
+    *buf = '\0';
+
+    /* Set REQ-HDRS */
+    buf += 2;
+
+    s->req_hdrs = buf;
+
+    buf += l;
+
+    sz -= l;
+
     debug(31, 3) ("htcpUnpackSpecifier: %d bytes left\n", sz);
+
+    /*
+     * Add terminating null to REQ-HDRS. This is possible because we allocated 
+     * an extra byte when we received the packet. This will overwrite any following
+     * AUTH block.
+     */
+    *buf = '\0';
+
+    /*
+     * Parse the request
+     */
+    method = HttpRequestMethod(s->method);
+
+    s->request = HttpRequest::CreateFromUrlAndMethod(s->uri, method == METHOD_NONE ? METHOD_GET : method);
+
     return s;
 }
 
+/*
+ * Unpack an HTCP DETAIL in place
+ * This will overwrite any following AUTH block
+ */
 static htcpDetail *
 htcpUnpackDetail(char *buf, int sz)
 {
     htcpDetail *d = static_cast<htcpDetail *>(htcpDetailPool->alloc());
-    int o;
-    debug(31, 3) ("htcpUnpackDetail: %d bytes\n", (int) sz);
-    o = htcpUnpackCountstr(buf, sz, &d->resp_hdrs);
 
-    if (o < 0) {
+    /* Find length of RESP-HDRS */
+    u_int16_t l = ntohs(*(u_int16_t *) buf);
+    sz -= 2;
+    buf += 2;
+
+    if (l > sz) {
         debug(31, 1) ("htcpUnpackDetail: failed to unpack RESP_HDRS\n");
         htcpFreeDetail(d);
         return NULL;
     }
 
-    buf += o;
-    sz -= o;
-    o = htcpUnpackCountstr(buf, sz, &d->entity_hdrs);
+    /* Set RESP-HDRS */
+    d->resp_hdrs = buf;
 
-    if (o < 0) {
+    buf += l;
+
+    sz -= l;
+
+    /* Find length of ENTITY-HDRS */
+    l = ntohs(*(u_int16_t *) buf);
+
+    sz -= 2;
+
+    if (l > sz) {
         debug(31, 1) ("htcpUnpackDetail: failed to unpack ENTITY_HDRS\n");
         htcpFreeDetail(d);
         return NULL;
     }
 
-    buf += o;
-    sz -= o;
-    o = htcpUnpackCountstr(buf, sz, &d->cache_hdrs);
+    /* Add terminating null to RESP-HDRS */
+    *buf = '\0';
 
-    if (o < 0) {
+    /* Set ENTITY-HDRS */
+    buf += 2;
+
+    d->entity_hdrs = buf;
+
+    buf += l;
+
+    sz -= l;
+
+    /* Find length of CACHE-HDRS */
+    l = ntohs(*(u_int16_t *) buf);
+
+    sz -= 2;
+
+    if (l > sz) {
         debug(31, 1) ("htcpUnpackDetail: failed to unpack CACHE_HDRS\n");
         htcpFreeDetail(d);
         return NULL;
     }
 
-    buf += o;
-    sz -= o;
+    /* Add terminating null to ENTITY-HDRS */
+    *buf = '\0';
+
+    /* Set CACHE-HDRS */
+    buf += 2;
+
+    d->cache_hdrs = buf;
+
+    buf += l;
+
+    sz -= l;
+
     debug(31, 3) ("htcpUnpackDetail: %d bytes left\n", sz);
+
+    /*
+     * Add terminating null to CACHE-HDRS. This is possible because we allocated 
+     * an extra byte when we received the packet. This will overwrite any following
+     * AUTH block.
+     */
+    *buf = '\0';
+
     return d;
+}
+
+static int
+
+htcpAccessCheck(acl_access * acl, htcpSpecifier * s, struct sockaddr_in *from)
+{
+    ACLChecklist checklist;
+    checklist.src_addr = from->sin_addr;
+    checklist.my_addr = no_addr;
+    checklist.request = s->request;
+    checklist.accessList = cbdataReference(acl);
+    /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
+    int result = checklist.fastCheck();
+    return result;
 }
 
 static void
@@ -780,7 +873,7 @@ static void
 htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, struct sockaddr_in *from)
 {
     htcpStuff stuff;
-    char *pkt;
+    static char pkt[8192];
     HttpHeader hdr(hoHtcpReply);
     MemBuf mb;
     Packer p;
@@ -849,20 +942,57 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, struct
         packerClean(&p);
     }
 
-    pkt = htcpBuildPacket(&stuff, &pktlen);
+    pktlen = htcpBuildPacket(pkt, sizeof(pkt), &stuff);
 
     safe_free(stuff.D.resp_hdrs);
     safe_free(stuff.D.entity_hdrs);
     safe_free(stuff.D.cache_hdrs);
 
-    if (pkt == NULL)
+    if (!pktlen)
     {
-        debug(31, 0) ("htcpTstReply: htcpBuildPacket() failed\n");
+        debug(31, 1) ("htcpTstReply: htcpBuildPacket() failed\n");
         return;
     }
 
     htcpSend(pkt, (int) pktlen, from);
-    xfree(pkt);
+}
+
+static void
+
+htcpClrReply(htcpDataHeader * dhdr, int purgeSucceeded, struct sockaddr_in *from)
+{
+    htcpStuff stuff;
+    static char pkt[8192];
+    ssize_t pktlen;
+
+    /* If dhdr->F1 == 0, no response desired */
+
+    if (dhdr->F1 == 0)
+        return;
+
+    memset(&stuff, '\0', sizeof(stuff));
+
+    stuff.op = HTCP_CLR;
+
+    stuff.rr = RR_RESPONSE;
+
+    stuff.f1 = 0;
+
+    stuff.response = purgeSucceeded ? 0 : 2;
+
+    debug(31, 3) ("htcpClrReply: response = %d\n", stuff.response);
+
+    stuff.msg_id = dhdr->msg_id;
+
+    pktlen = htcpBuildPacket(pkt, sizeof(pkt), &stuff);
+
+    if (pktlen == 0)
+    {
+        debug(31, 1) ("htcpClrReply: htcpBuildPacket() failed\n");
+        return;
+    }
+
+    htcpSend(pkt, (int) pktlen, from);
 }
 
 static void
@@ -875,9 +1005,8 @@ htcpHandleNop(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
 void
 htcpSpecifier::checkHit()
 {
-    method_t m = HttpRequestMethod(method);
     char *blk_end;
-    checkHitRequest = HttpRequest::CreateFromUrlAndMethod(uri, m);
+    checkHitRequest = request;
 
     if (NULL == checkHitRequest) {
         debug(31, 3) ("htcpCheckHit: NO; failed to parse URL\n");
@@ -923,8 +1052,52 @@ htcpSpecifier::created (StoreEntry *e)
     hit = e;
 
 miss:
-    delete checkHitRequest;
     checkedHit (hit);
+}
+
+static void
+htcpClrStoreEntry(StoreEntry * e)
+{
+    debug(31, 4) ("htcpClrStoreEntry: Clearing store for entry: %s\n", storeUrl(e));
+    storeReleaseRequest(e);
+}
+
+static int
+htcpClrStore(const htcpSpecifier * s)
+{
+    HttpRequest *request = s->request;
+    char *blk_end;
+    StoreEntry *e = NULL;
+    int released = 0;
+
+    if (request == NULL) {
+        debug(31, 3) ("htcpClrStore: failed to parse URL\n");
+        return -1;
+    }
+
+    /* Parse request headers */
+    blk_end = s->req_hdrs + strlen(s->req_hdrs);
+
+    if (!request->header.parse(s->req_hdrs, blk_end)) {
+        debug(31, 2) ("htcpClrStore: failed to parse request headers\n");
+        return -1;
+    }
+
+    /* Lookup matching entries. This matches both GET and HEAD */
+    while ((e = storeGetPublicByRequest(request)) != NULL) {
+        if (e != NULL) {
+            htcpClrStoreEntry(e);
+            released++;
+        }
+    }
+
+    if (released) {
+        debug(31, 4) ("htcpClrStore: Cleared %d matching entries\n", released);
+        return 1;
+    } else {
+        debug(31, 4) ("htcpClrStore: No matching entry found\n");
+        return 0;
+    }
 }
 
 static void
@@ -948,12 +1121,37 @@ htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_i
 {
     htcpReplyData htcpReply;
     cache_key *key = NULL;
+
+    struct sockaddr_in *peer;
     htcpDetail *d = NULL;
     char *t;
 
+
+    if (queried_id[hdr->msg_id % N_QUERIED_KEYS] != hdr->msg_id)
+    {
+        debug(31, 2) ("htcpHandleTstResponse: No matching query id '%d' (expected %d) from '%s'\n", hdr->msg_id, queried_id[hdr->msg_id % N_QUERIED_KEYS], inet_ntoa(from->sin_addr));
+        return;
+    }
+
+    key = queried_keys[hdr->msg_id % N_QUERIED_KEYS];
+
+    if (!key)
+    {
+        debug(31, 1) ("htcpHandleTstResponse: No query key for response id '%d' from '%s'\n", hdr->msg_id, inet_ntoa(from->sin_addr));
+        return;
+    }
+
+    peer = &queried_addr[hdr->msg_id % N_QUERIED_KEYS];
+
+    if (peer->sin_addr.s_addr != from->sin_addr.s_addr || peer->sin_port != from->sin_port)
+    {
+        debug(31, 1) ("htcpHandleTstResponse: Unexpected response source %s\n", inet_ntoa(from->sin_addr));
+        return;
+    }
+
     if (hdr->F1 == 1)
     {
-        debug(31, 1) ("htcpHandleTstResponse: error condition, F1/MO == 1\n");
+        debug(31, 2) ("htcpHandleTstResponse: error condition, F1/MO == 1\n");
         return;
     }
 
@@ -984,7 +1182,6 @@ htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_i
             htcpReply.hdr.parse(t, t + strlen(t));
     }
 
-    key = queried_keys[htcpReply.msg_id % N_QUERIED_KEYS];
     debug(31, 3) ("htcpHandleTstResponse: key (%p) %s\n", key, storeKeyText(key));
     neighborsHtcpReply(key, &htcpReply, from);
     htcpReply.hdr.clean();
@@ -1018,7 +1215,23 @@ htcpHandleTstRequest(htcpDataHeader * dhdr, char *buf, int sz, struct sockaddr_i
 
     if (NULL == s)
     {
-        debug(31, 3) ("htcpHandleTstRequest: htcpUnpackSpecifier failed\n");
+        debug(31, 2) ("htcpHandleTstRequest: htcpUnpackSpecifier failed\n");
+        return;
+    }
+
+    if (!s->request)
+    {
+        debug(31, 2) ("htcpHandleTstRequest: failed to parse request\n");
+        htcpFreeSpecifier(s);
+        return;
+    }
+
+    HTTPMSGLOCK(s->request);
+
+    if (!htcpAccessCheck(Config.accessList.htcp, s, from))
+    {
+        debug(31, 2) ("htcpHandleTstRequest: Access denied\n");
+        htcpFreeSpecifier(s);
         return;
     }
 
@@ -1057,24 +1270,86 @@ htcpHandleSet(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
 
 static void
 
+htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
+{
+    htcpSpecifier *s;
+    /* buf[0/1] is reserved and reason */
+    int reason = buf[1] << 4;
+    debug(31, 3) ("htcpHandleClr: reason=%d\n", reason);
+    buf += 2;
+    sz -= 2;
+
+    /* buf should be a SPECIFIER */
+
+    if (sz == 0)
+    {
+        debug(31, 4) ("htcpHandleClr: nothing to do\n");
+        return;
+    }
+
+    s = htcpUnpackSpecifier(buf, sz);
+
+    if (NULL == s)
+    {
+        debug(31, 3) ("htcpHandleClr: htcpUnpackSpecifier failed\n");
+        return;
+    }
+
+    if (!htcpAccessCheck(Config.accessList.htcp_clr, s, from))
+    {
+        debug(31, 2) ("htcpHandleClr: Access denied\n");
+        htcpFreeSpecifier(s);
+        return;
+    }
+
+    debug(31, 5) ("htcpHandleClr: %s %s %s\n",
+                  s->method,
+                  s->uri,
+                  s->version);
+    debug(31, 5) ("htcpHandleClr: request headers: %s\n", s->req_hdrs);
+
+    /* Release objects from cache
+     * analog to clientPurgeRequest in client_side.c
+     */
+
+    switch (htcpClrStore(s))
+    {
+
+    case 1:
+        htcpClrReply(hdr, 1, from);	/* hit */
+        break;
+
+    case 0:
+        htcpClrReply(hdr, 0, from);	/* miss */
+        break;
+
+    default:
+        break;
+    }
+
+    htcpFreeSpecifier(s);
+}
+
+static void
+
 htcpHandleData(char *buf, int sz, struct sockaddr_in *from)
 {
     htcpDataHeader hdr;
-    assert (sz >= 0);
 
     if ((size_t)sz < sizeof(htcpDataHeader))
     {
-        debug(31, 0) ("htcpHandleData: msg size less than htcpDataHeader size\n");
+        debug(31, 1) ("htcpHandleData: msg size less than htcpDataHeader size\n");
         return;
     }
 
     if (!old_squid_format)
     {
-        xmemcpy(&hdr, buf, sizeof(htcpDataHeader));
+        xmemcpy(&hdr, buf, sizeof(hdr));
     } else
     {
         htcpDataHeaderSquid hdrSquid;
         xmemcpy(&hdrSquid, buf, sizeof(hdrSquid));
+        hdr.length = hdrSquid.length;
         hdr.opcode = hdrSquid.opcode;
         hdr.response = hdrSquid.response;
         hdr.F1 = hdrSquid.F1;
@@ -1090,7 +1365,7 @@ htcpHandleData(char *buf, int sz, struct sockaddr_in *from)
 
     if (hdr.opcode >= HTCP_END)
     {
-        debug(31, 0) ("htcpHandleData: client %s, opcode %d out of range\n",
+        debug(31, 1) ("htcpHandleData: client %s, opcode %d out of range\n",
                       inet_ntoa(from->sin_addr),
                       (int) hdr.opcode);
         return;
@@ -1105,13 +1380,7 @@ htcpHandleData(char *buf, int sz, struct sockaddr_in *from)
 
     if (sz < hdr.length)
     {
-        debug(31, 1) ("htcpHandle: sz < hdr.length\n");
-        return;
-    }
-
-    if (hdr.length + sizeof(htcpDataHeader) > (size_t)sz)
-    {
-        debug(31, 1) ("htcpHandleData: Invalid HTCP packet from %s\n", inet_ntoa(from->sin_addr));
+        debug(31, 1) ("htcpHandleData: sz < hdr.length\n");
         return;
     }
 
@@ -1149,13 +1418,11 @@ htcpHandleData(char *buf, int sz, struct sockaddr_in *from)
         break;
 
     case HTCP_CLR:
-        debug(31, 1) ("htcpHandleData: client %s, CLR not supported\n",
-                      inet_ntoa(from->sin_addr));
+        htcpHandleClr(&hdr, buf, sz, from);
         break;
 
     default:
-        assert(0);
-        break;
+        return;
     }
 }
 
@@ -1168,7 +1435,7 @@ htcpHandle(char *buf, int sz, struct sockaddr_in *from)
 
     if ((size_t)sz < sizeof(htcpHeader))
     {
-        debug(31, 0) ("htcpHandle: msg size less than htcpHeader size\n");
+        debug(31, 1) ("htcpHandle: msg size less than htcpHeader size\n");
         return;
     }
 
@@ -1219,7 +1486,9 @@ htcpRecv(int fd, void *data)
     socklen_t flen = sizeof(struct sockaddr_in);
     memset(&from, '\0', flen);
 
-    len = comm_udp_recvfrom(fd, buf, 8192, 0, (struct sockaddr *) &from, &flen);
+    /* Receive up to 8191 bytes, leaving room for a null */
+
+    len = comm_udp_recvfrom(fd, buf, sizeof(buf) - 1, 0, (struct sockaddr *) &from, &flen);
     debug(31, 3) ("htcpRecv: FD %d, %d bytes from %s:%d\n",
                   fd, len, inet_ntoa(from.sin_addr), ntohs(from.sin_port));
 
@@ -1294,7 +1563,7 @@ void
 htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
 {
     cache_key *save_key;
-    char *pkt;
+    static char pkt[8192];
     ssize_t pktlen;
     char vbuf[32];
     htcpStuff stuff;
@@ -1343,20 +1612,21 @@ htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
 
     stuff.S.req_hdrs = mb.buf;
 
-    pkt = htcpBuildPacket(&stuff, &pktlen);
+    pktlen = htcpBuildPacket(pkt, sizeof(pkt), &stuff);
 
     mb.clean();
 
-    if (pkt == NULL) {
-        debug(31, 0) ("htcpQuery: htcpBuildPacket() failed\n");
+    if (!pktlen) {
+        debug(31, 1) ("htcpQuery: htcpBuildPacket() failed\n");
         return;
     }
 
     htcpSend(pkt, (int) pktlen, &p->in_addr);
+    queried_id[stuff.msg_id % N_QUERIED_KEYS] = stuff.msg_id;
     save_key = queried_keys[stuff.msg_id % N_QUERIED_KEYS];
     storeKeyCopy(save_key, (const cache_key *)e->key);
+    queried_addr[stuff.msg_id % N_QUERIED_KEYS] = p->in_addr;
     debug(31, 3) ("htcpQuery: key (%p) %s\n", save_key, storeKeyText(save_key));
-    xfree(pkt);
 }
 
 /*
