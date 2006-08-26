@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.547 2006/08/21 00:50:41 robertc Exp $
+ * $Id: structs.h,v 1.548 2006/08/25 18:53:35 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -585,6 +585,12 @@ struct _SquidConfig
         acl_access *reply;
         acl_address *outgoing_address;
         acl_tos *outgoing_tos;
+#if USE_HTCP
+
+        acl_access *htcp;
+        acl_access *htcp_clr;
+#endif
+
     }
 
     accessList;
