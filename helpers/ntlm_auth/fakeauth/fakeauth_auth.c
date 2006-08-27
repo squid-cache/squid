@@ -88,7 +88,7 @@ hex_dump(void *data, int size)
 	    if (n % 16 == 1) {
 		/* store address for this line */
 		snprintf(addrstr, sizeof(addrstr), "%.4x",
-		    ((unsigned int) p - (unsigned int) data));
+		    (int)(p - (unsigned char *) data));
 	    }
 	    c = *p;
 	    if (isalnum(c) == 0) {
@@ -278,7 +278,7 @@ ntlmDecodeAuth(struct ntlm_authenticate *auth, char *buf, size_t size)
 	fprintf(stderr, "ntlmDecodeAuth: header check fails\n");
 	return -1;
     }
-    debug("ntlmDecodeAuth: size of %d\n", size);
+    debug("ntlmDecodeAuth: size of %d\n", (int)size);
     debug("ntlmDecodeAuth: flg %08x\n", auth->flags);
     debug("ntlmDecodeAuth: usr o(%d) l(%d)\n", auth->user.offset, auth->user.len);
 
