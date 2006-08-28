@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.98 2006/05/08 23:38:33 robertc Exp $
+ * $Id: debug.cc,v 1.99 2006/08/28 10:11:10 serassio Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -54,6 +54,12 @@ static void _db_print_syslog(const char *format, va_list args);
 static void _db_print_stderr(const char *format, va_list args);
 static void _db_print_file(const char *format, va_list args);
 
+#ifdef _SQUID_MSWIN_
+SQUIDCEXTERN LPCRITICAL_SECTION dbg_mutex;
+typedef BOOL (WINAPI * PFInitializeCriticalSectionAndSpinCount) (LPCRITICAL_SECTION, DWORD);
+
+#endif
+
 void
 #if STDC_HEADERS
 _db_print(const char *format,...)
@@ -74,6 +80,39 @@ va_dcl
 #else
 #define args2 args1
 #define args3 args1
+#endif
+#ifdef _SQUID_MSWIN_
+    /* Multiple WIN32 threads may call this simultaneously */
+
+    if (!dbg_mutex)
+    {
+        HMODULE krnl_lib = GetModuleHandle("Kernel32");
+        PFInitializeCriticalSectionAndSpinCount InitializeCriticalSectionAndSpinCount = NULL;
+
+        if (krnl_lib)
+            InitializeCriticalSectionAndSpinCount =
+                (PFInitializeCriticalSectionAndSpinCount) GetProcAddress(krnl_lib,
+                        "InitializeCriticalSectionAndSpinCount");
+
+        dbg_mutex = static_cast<CRITICAL_SECTION*>(xcalloc(1, sizeof(CRITICAL_SECTION)));
+
+        if (InitializeCriticalSectionAndSpinCount) {
+            /* let multiprocessor systems EnterCriticalSection() fast */
+
+            if (!InitializeCriticalSectionAndSpinCount(dbg_mutex, 4000)) {
+                if (debug_log) {
+                    fprintf(debug_log, "FATAL: _db_print: can't initialize critical section\n");
+                    fflush(debug_log);
+                }
+
+                fprintf(stderr, "FATAL: _db_print: can't initialize critical section\n");
+                abort();
+            } else
+                InitializeCriticalSection(dbg_mutex);
+        }
+    }
+
+    EnterCriticalSection(dbg_mutex);
 #endif
     /* give a chance to context-based debugging to print current context */
 
@@ -105,6 +144,11 @@ va_dcl
 #if HAVE_SYSLOG
 
     _db_print_syslog(format, args3);
+
+#endif
+#ifdef _SQUID_MSWIN_
+
+    LeaveCriticalSection(dbg_mutex);
 
 #endif
 

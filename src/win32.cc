@@ -1,6 +1,6 @@
 
 /*
- * $Id: win32.cc,v 1.19 2006/04/29 13:53:16 serassio Exp $
+ * $Id: win32.cc,v 1.20 2006/08/28 10:11:10 serassio Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -71,6 +71,7 @@ void Squid_Win32InvalidParameterHandler(const wchar_t*, const wchar_t*, const wc
 #endif
 static int Win32SockInit(void);
 static void Win32SockCleanup(void);
+SQUIDCEXTERN LPCRITICAL_SECTION dbg_mutex;
 void WIN32_ExceptionHandlerCleanup(void);
 static LPTOP_LEVEL_EXCEPTION_FILTER Win32_Old_ExceptionHandler = NULL;
 static int s_iInitCount = 0;
@@ -412,6 +413,9 @@ WIN32_Exit()
 
 #endif
 #ifdef _SQUID_MSWIN_
+    if (dbg_mutex)
+        DeleteCriticalSection(dbg_mutex);
+
     WIN32_ExceptionHandlerCleanup();
 
 #endif
