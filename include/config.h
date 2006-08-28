@@ -1,5 +1,5 @@
 /*
- * $Id: config.h,v 1.20 2006/08/20 18:30:28 serassio Exp $
+ * $Id: config.h,v 1.21 2006/08/28 10:17:17 serassio Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -406,7 +406,11 @@ typedef union {
 #define squid_srandom srand
 #endif
 
-#if __GNUC__
+/* gcc doesn't recognize the Windows native 64 bit formatting tags causing
+ * the compile fail, so we must disable the check on native Windows.
+ */  
+
+#if __GNUC__ && !defined(_SQUID_MSWIN_)
 #define PRINTF_FORMAT_ARG1 __attribute__ ((format (printf, 1, 2)))
 #define PRINTF_FORMAT_ARG2 __attribute__ ((format (printf, 2, 3)))
 #define PRINTF_FORMAT_ARG3 __attribute__ ((format (printf, 3, 4)))
