@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.256 2006/08/20 09:50:05 serassio Exp $
+ * $Id: squid.h,v 1.257 2006/08/28 10:03:42 serassio Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -188,7 +188,7 @@
 /*
  * Filedescriptor limits in the different select loops
  */
-#if defined(USE_SELECT)
+#if defined(USE_SELECT) || defined(USE_SELECT_WIN32)
 /* Limited by design */
 # define SQUID_MAXFD_LIMIT FD_SETSIZE
 #elif defined(USE_POLL)
