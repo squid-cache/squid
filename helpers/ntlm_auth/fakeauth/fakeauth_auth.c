@@ -16,7 +16,7 @@
  * - Added negotiation of UNICODE char support
  * - More detailed debugging info
  *
-*/
+ */
 
 #include "config.h"
 #include "ntlmauth.h"
@@ -88,7 +88,7 @@ hex_dump(void *data, int size)
 	    if (n % 16 == 1) {
 		/* store address for this line */
 		snprintf(addrstr, sizeof(addrstr), "%.4x",
-		    (int)(p - (unsigned char *) data));
+		    (int) (p - (unsigned char *) data));
 	    }
 	    c = *p;
 	    if (isalnum(c) == 0) {
@@ -278,7 +278,7 @@ ntlmDecodeAuth(struct ntlm_authenticate *auth, char *buf, size_t size)
 	fprintf(stderr, "ntlmDecodeAuth: header check fails\n");
 	return -1;
     }
-    debug("ntlmDecodeAuth: size of %d\n", (int)size);
+    debug("ntlmDecodeAuth: size of %d\n", (int) size);
     debug("ntlmDecodeAuth: flg %08x\n", auth->flags);
     debug("ntlmDecodeAuth: usr o(%d) l(%d)\n", auth->user.offset, auth->user.len);
 
@@ -389,8 +389,9 @@ main(int argc, char *argv[])
 
 	if ((p = strchr(buf, '\n')) != NULL)
 	    *p = '\0';		/* strip \n */
-	if ((strlen(buf) > 3) && NTLM_packet_debug_enabled) {
+	if (strlen(buf) > 3)
 	    decoded = base64_decode(buf + 3);
+	if ((strlen(buf) > 3) && NTLM_packet_debug_enabled) {
 	    strncpy(helper_command, buf, 2);
 	    helper_command[2] = '\0';
 	    debug("Got '%s' from Squid with data:\n", helper_command);
