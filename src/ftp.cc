@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.401 2006/08/25 15:22:34 serassio Exp $
+ * $Id: ftp.cc,v 1.402 2006/09/02 03:35:52 adrian Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -410,10 +410,12 @@ FtpStateData::~FtpStateData()
         ctrl.buf = NULL;
     }
 
-    if (!data.readBuf->isNull())
-        data.readBuf->clean();
+    if (data.readBuf) {
+        if (!data.readBuf->isNull())
+           data.readBuf->clean();
 
-    delete data.readBuf;
+        delete data.readBuf;
+    }
 
     if (pathcomps)
         wordlistDestroy(&pathcomps);
