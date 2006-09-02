@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.86 2006/05/05 21:52:20 wessels Exp $
+ * $Id: icmp.cc,v 1.87 2006/09/02 15:31:30 serassio Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -51,6 +51,11 @@ static void icmpSend(pingerEchoData * pkt, int len);
 
 static void icmpHandleSourcePing(const struct sockaddr_in *from, const char *buf);
 #endif
+
+#ifdef _SQUID_MSWIN_
+static HANDLE hIpc;
+#endif
+static pid_t pid;
 
 static void
 
@@ -230,19 +235,18 @@ icmpOpen(void)
 {
 #if USE_ICMP
     const char *args[2];
-    int x;
     int rfd;
     int wfd;
     args[0] = "(pinger)";
     args[1] = NULL;
-    x = ipcCreate(IPC_DGRAM,
+    pid = ipcCreate(IPC_DGRAM,
                   Config.Program.pinger,
                   args,
                   "Pinger Socket",
                   &rfd,
                   &wfd);
 
-    if (x < 0)
+    if (pid < 0)
         return;
 
     assert(rfd == wfd);
@@ -257,6 +261,11 @@ icmpOpen(void)
 
     debug(37, 1) ("Pinger socket opened on FD %d\n", icmp_sock);
 
+#ifdef _SQUID_MSWIN_
+
+    debug(37, 4) ("Pinger handle: 0x%x, PID: %d\n", (unsigned)hIpc, pid);
+
+#endif
 #endif
 }
 
@@ -270,8 +279,28 @@ icmpClose(void)
 
     debug(37, 1) ("Closing Pinger socket on FD %d\n", icmp_sock);
 
+#ifdef _SQUID_MSWIN_
+
+    send(icmp_sock, (const void *) "$shutdown\n", 10, 0);
+
+#endif
+
     comm_close(icmp_sock);
 
+#ifdef _SQUID_MSWIN_
+
+    if (hIpc) {
+        if (WaitForSingleObject(hIpc, 12000) != WAIT_OBJECT_0) {
+            getCurrentTime();
+            debug(37, 1)
+            ("icmpClose: WARNING: (pinger,%ld) didn't exit in 12 seconds\n",
+             (long int)pid);
+        }
+
+        CloseHandle(hIpc);
+    }
+
+#endif
     icmp_sock = -1;
 
 #endif
