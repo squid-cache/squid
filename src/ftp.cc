@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.402 2006/09/02 03:35:52 adrian Exp $
+ * $Id: ftp.cc,v 1.403 2006/09/02 10:03:20 adrian Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -443,7 +443,6 @@ FtpStateData::~FtpStateData()
     safe_free(filepath);
 
     safe_free(data.host);
-
     fwd = NULL;	// refcounted
 }
 
