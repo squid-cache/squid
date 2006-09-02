@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.257 2006/08/28 10:03:42 serassio Exp $
+ * $Id: squid.h,v 1.258 2006/09/02 15:37:29 serassio Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -36,6 +36,10 @@
 #define SQUID_H
 
 #include "config.h"
+
+#ifdef _SQUID_MSWIN_
+using namespace Squid;
+#endif
 
 #include "assert.h"
 
