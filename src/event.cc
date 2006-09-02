@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.43 2006/08/21 00:50:41 robertc Exp $
+ * $Id: event.cc,v 1.44 2006/09/01 23:56:38 hno Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -163,7 +163,7 @@ EventScheduler::cancel(EVH * func, void *arg)
         if (event->func != func)
             continue;
 
-        if (event->arg != arg)
+        if (arg && event->arg != arg)
             continue;
 
         *E = event->next;
@@ -173,10 +173,12 @@ EventScheduler::cancel(EVH * func, void *arg)
 
         delete event;
 
-        return;
+	if (arg)
+	    return;
     }
 
-    debug_trap("eventDelete: event not found");
+    if (arg)
+	debug_trap("eventDelete: event not found");
 }
 
 int
