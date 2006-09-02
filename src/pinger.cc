@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.55 2006/05/08 23:38:33 robertc Exp $
+ * $Id: pinger.cc,v 1.56 2006/09/02 14:46:31 serassio Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -56,6 +56,8 @@ static int socket_from_squid = 0;
 static int socket_to_squid = 1;
 
 #else /* _SQUID_WIN32_ */
+
+#include "fde.h"
 
 #ifdef _SQUID_MSWIN_
 
@@ -207,6 +209,20 @@ static void pingerSendtoSquid(pingerReplyData * preply);
 static void pingerOpen(void);
 static void pingerClose(void);
 
+#ifdef _SQUID_MSWIN_
+
+int Win32__WSAFDIsSet(int fd, fd_set FAR * set
+                         )
+{
+    fde *F = &fd_table[fd];
+    SOCKET s = F->win32.handle;
+
+    return __WSAFDIsSet(s, set
+                           );
+}
+
+#endif
+
 void
 pingerOpen(void)
 {
@@ -289,14 +305,14 @@ pingerOpen(void)
 
     write(1, "OK\n", 3);
     memset(buf, 0, sizeof(buf));
-    x = recv(socket_to_squid, buf, sizeof(buf), 0);
+    x = recv(socket_to_squid, (void *) buf, sizeof(buf), 0);
 
     if (x < 3) {
         debug(42, 0) ("icmpOpen: recv: %s\n", xstrerror());
         exit(1);
     }
 
-    x = send(socket_to_squid, buf, strlen(buf), 0);
+    x = send(socket_to_squid, (const void *) buf, strlen(buf), 0);
 
     if (x < 3 || strncmp("OK\n", buf, 3)) {
         debug(42, 0) ("icmpOpen: recv: %s\n", xstrerror());
@@ -379,7 +395,7 @@ pingerSendEcho(struct IN_ADDR to, int opcode, char *payload, int len)
     S.sin_port = 0;
     assert(icmp_pktsize <= MAX_PKT_SZ);
     sendto(icmp_sock,
-           pkt,
+           (const void *) pkt,
            icmp_pktsize,
            0,
 
@@ -413,7 +429,7 @@ pingerRecv(void)
     fromlen = sizeof(from);
 
     n = recvfrom(icmp_sock,
-                 pkt,
+                 (void *)pkt,
                  MAX_PKT_SZ,
                  0,
 
@@ -543,7 +559,7 @@ pingerReadRequest(void)
     int n;
     int guess_size;
     memset(&pecho, '\0', sizeof(pecho));
-    n = recv(socket_from_squid, (char *) &pecho, sizeof(pecho), 0);
+    n = recv(socket_from_squid, &pecho, sizeof(pecho), 0);
 
     if (n < 0)
         return n;
@@ -576,7 +592,7 @@ pingerSendtoSquid(pingerReplyData * preply)
 {
     int len = sizeof(pingerReplyData) - MAX_PKT_SZ + preply->psize;
 
-    if (send(socket_to_squid, (char *) preply, len, 0) < 0) {
+    if (send(socket_to_squid, preply, len, 0) < 0) {
         debug(50, 0) ("pinger: send: %s\n", xstrerror());
         pingerClose();
         exit(1);
@@ -634,7 +650,7 @@ main(int argc, char *argv[])
             pingerRecv();
 
         if (PINGER_TIMEOUT + last_check_time < squid_curtime) {
-            if (send(socket_to_squid, (char *) &tv, 0, 0) < 0) {
+            if (send(socket_to_squid, &tv, 0, 0) < 0) {
                 pingerClose();
                 exit(1);
             }
