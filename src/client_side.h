@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.h,v 1.17 2006/08/07 02:28:22 robertc Exp $
+ * $Id: client_side.h,v 1.18 2006/09/02 06:49:48 robertc Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -126,13 +126,13 @@ private:
     bool connRegistered_;
 };
 
+
+/* A connection to a socket */
 class ConnStateData : public RefCountable
 {
 
 public:
     typedef RefCount<ConnStateData> Pointer;
-    void * operator new (size_t);
-    void operator delete (void *);
 
     ConnStateData();
     ~ConnStateData();
@@ -168,11 +168,8 @@ public:
          * will be staying open.
          */
         size_t abortedSize;
-    }
+    } in;
 
-    in;
-
-    BodyReader::Pointer body_reader;
     ssize_t bodySizeLeft();
 
     /*
@@ -214,12 +211,21 @@ public:
     bool closing() const;
     void closing(bool const);
 
+    /* get the body reader that has been attached to the client
+     * request
+     */
+    BodyReader * body_reader();
+    /* set a body reader that should read data from the request 
+     */
+    void body_reader(BodyReader::Pointer);
+
 private:
-    CBDATA_CLASS(ConnStateData);
+    CBDATA_CLASS2(ConnStateData);
     bool transparent_;
     bool reading_;
     bool closing_;
     Pointer openReference;
+    BodyReader::Pointer body_reader_;
 };
 
 /* convenience class while splitting up body handling */

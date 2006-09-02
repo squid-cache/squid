@@ -23,6 +23,11 @@ public:
 
     int bytes_read;
 
+    /* reduce the number of bytes that the BodyReader is looking for.
+     * Will trigger an assertion if it tries to reduce below zero
+     */
+    void reduce_remaining(size_t size);
+
 private:
     size_t _remaining;
     size_t _available;
@@ -31,7 +36,7 @@ private:
     /*
      * These are for interacting with things that
      * "provide" body content.  ie, ConnStateData and
-            * ICAPReqMod after adapation.
+     * ICAPReqMod after adapation.
      */
     BodyReadFunc *read_func;
     BodyAbortFunc *abort_func;
