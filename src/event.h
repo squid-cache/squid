@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.h,v 1.2 2006/08/12 01:43:11 robertc Exp $
+ * $Id: event.h,v 1.3 2006/09/02 12:20:53 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -68,7 +68,7 @@ public:
     int weight;
     bool cbdata;
 
-    struct ev_entry *next;
+    ev_entry *next;
 };
 
 MEMPROXY_CLASS_INLINE(ev_entry);
