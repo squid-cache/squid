@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_poll.cc,v 1.18 2006/08/12 01:43:11 robertc Exp $
+ * $Id: comm_poll.cc,v 1.19 2006/09/02 10:39:53 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -369,7 +369,6 @@ comm_select(int msec)
     int num;
     int callicp = 0, callhttp = 0;
     int calldns = 0;
-    static time_t last_timeout = 0;
     double timeout = current_dtime + (msec / 1000.0);
 
     do {
@@ -471,12 +470,6 @@ comm_select(int msec)
 
         debug(5, num ? 5 : 8) ("comm_poll: %d+%ld FDs ready\n", num, npending);
         statHistCount(&statCounter.select_fds_hist, num);
-        /* Check timeout handlers ONCE each second. */
-
-        if (squid_curtime > last_timeout) {
-            last_timeout = squid_curtime;
-            checkTimeouts();
-        }
 
         if (num == 0 && npending == 0)
             continue;

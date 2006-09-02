@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.421 2006/08/12 01:43:11 robertc Exp $
+ * $Id: comm.cc,v 1.422 2006/09/02 10:39:53 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -2655,6 +2655,14 @@ CommDispatcher::dispatch() {
 
 int
 CommSelectEngine::checkEvents(int timeout) {
+    static time_t last_timeout = 0;
+
+    /* No, this shouldn't be here. But it shouldn't be in each comm handler. -adrian */
+    if (squid_curtime > last_timeout) {
+        last_timeout = squid_curtime;
+        checkTimeouts();
+    }
+
     switch (comm_select(timeout)) {
 
     case COMM_OK:
