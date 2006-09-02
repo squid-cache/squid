@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIInclude.cc,v 1.9 2006/05/05 23:57:40 wessels Exp $
+ * $Id: ESIInclude.cc,v 1.10 2006/09/01 22:19:35 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -534,7 +534,32 @@ ESIInclude::subRequestDone (ESIStreamContext::Pointer stream, bool success)
 
     if (flags.finished || flags.failed) {
         /* Kick ESI Processor */
-        debug (86,5)("ESIInclude %p SubRequest %p completed, kicking processor , status %s\n", this, stream.getRaw(), flags.finished ? "OK" : "FAILED");
+        debugs (86, 5, "ESIInclude " << this << 
+                " SubRequest " << stream.getRaw() << 
+                " completed, kicking processor , status " <<
+                (flags.finished ? "OK" : "FAILED"));
+        /* There is a race condition - and we have no reproducible test case -
+         * during a subrequest the parent will get set to NULL, which is not 
+         * meant to be possible. Rather than killing squid, we let it leak
+         * memory but complain in the log.
+         *
+         * Someone wanting to debug this could well start by running squid with
+         * a hardware breakpoint set to this location.
+         * Its probably due to parent being set to null - by a call to
+         * 'this.finish' while the subrequest is still not completed.
+         */
+        if (parent.getRaw() == NULL) {
+            debugs (86, 0, "ESIInclude::subRequestDone: Sub request completed "
+                   "after finish() called and parent unlinked. Unable to "
+                   "continue handling the request, and may be memory leaking. "
+                   "See http://www.squid-cache.org/bugs/show_bug.cgi?id=951 - we "
+                   "are looking for a reproducible test case. This will require "
+                   "an ESI template with includes, probably with alt-options, "
+                   "and we're likely to need traffic dumps to allow us to "
+                   "reconstruct the exact tcp handling sequences to trigger this "
+                   "rather elusive bug.");
+            return;
+        }
         assert (parent.getRaw());
 
         if (!flags.failed) {
