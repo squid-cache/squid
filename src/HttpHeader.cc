@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.123 2006/09/01 22:57:44 robertc Exp $
+ * $Id: HttpHeader.cc,v 1.124 2006/09/02 00:27:04 robertc Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -772,6 +772,7 @@ HttpHeader::addEntry(HttpHeaderEntry * e)
 {
     assert(e);
     assert_eid(e->id);
+    assert(e->name.size());
 
     debugs(55, 9, this << " adding entry: " << e->id << " at " <<
            entries.count);
