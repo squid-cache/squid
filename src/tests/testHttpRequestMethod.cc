@@ -57,7 +57,9 @@ testHttpRequestMethod::testAssignFrommethod_t()
 void
 testHttpRequestMethod::testDefaultConstructor()
 {
-    CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(), HttpRequestMethod(METHOD_NONE));
+    HttpRequestMethod lhs;
+    HttpRequestMethod rhs(METHOD_NONE);
+    CPPUNIT_ASSERT_EQUAL(lhs, rhs);
 }
 
 /*

@@ -32,8 +32,13 @@ static Initer ensure_mempools;
 void
 testURL::testConstructScheme()
 {
-    CPPUNIT_ASSERT_EQUAL(URLScheme(), URL(PROTO_NONE).getScheme());
-    CPPUNIT_ASSERT_EQUAL(URLScheme(PROTO_FTP), URL(PROTO_FTP).getScheme());
+    URLScheme empty_scheme;
+    URL protoless_url(PROTO_NONE);
+    CPPUNIT_ASSERT_EQUAL(empty_scheme, protoless_url.getScheme());
+
+    URLScheme ftp_scheme(PROTO_FTP);
+    URL ftp_url(PROTO_FTP);
+    CPPUNIT_ASSERT_EQUAL(ftp_scheme, ftp_url.getScheme());
 }
 
 /*
@@ -44,8 +49,9 @@ testURL::testConstructScheme()
 void
 testURL::testDefaultConstructor()
 {
+    URLScheme aScheme;
     URL aUrl;
-    CPPUNIT_ASSERT_EQUAL(URLScheme(), aUrl.getScheme());
+    CPPUNIT_ASSERT_EQUAL(aScheme, aUrl.getScheme());
 
     URL *urlPointer = new URL;
     CPPUNIT_ASSERT(urlPointer != NULL);

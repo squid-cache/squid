@@ -48,11 +48,14 @@ testHttpRequestMethod::testConstructCharStartEnd()
 void
 testURLScheme::testAssignFromprotocol_t()
 {
+    URLScheme empty_scheme;
     URLScheme scheme;
     scheme = PROTO_NONE;
-    CPPUNIT_ASSERT_EQUAL(URLScheme(), scheme);
+    CPPUNIT_ASSERT_EQUAL(empty_scheme, scheme);
+
+    URLScheme https_scheme(PROTO_HTTPS);
     scheme = PROTO_HTTPS;
-    CPPUNIT_ASSERT_EQUAL(URLScheme(PROTO_HTTPS), scheme);
+    CPPUNIT_ASSERT_EQUAL(https_scheme, scheme);
 }
 
 /*
@@ -76,7 +79,9 @@ testURLScheme::testCastToprotocol_t()
 void
 testURLScheme::testDefaultConstructor()
 {
-    CPPUNIT_ASSERT_EQUAL(URLScheme(), URLScheme(PROTO_NONE));
+    URLScheme lhs;
+    URLScheme rhs(PROTO_NONE);
+    CPPUNIT_ASSERT_EQUAL(lhs, rhs);
 }
 
 /*
@@ -85,9 +90,12 @@ testURLScheme::testDefaultConstructor()
 void
 testURLScheme::testConstructprotocol_t()
 {
-    CPPUNIT_ASSERT_EQUAL(URLScheme(PROTO_NONE), URLScheme(PROTO_NONE));
-    CPPUNIT_ASSERT_EQUAL(URLScheme(PROTO_CACHEOBJ), URLScheme(PROTO_CACHEOBJ));
-    CPPUNIT_ASSERT(URLScheme(PROTO_NONE) != URLScheme(PROTO_CACHEOBJ));
+    URLScheme lhs_none(PROTO_NONE), rhs_none(PROTO_NONE);
+    CPPUNIT_ASSERT_EQUAL(lhs_none, rhs_none);
+
+    URLScheme lhs_cacheobj(PROTO_CACHEOBJ), rhs_cacheobj(PROTO_CACHEOBJ);
+    CPPUNIT_ASSERT_EQUAL(lhs_cacheobj, rhs_cacheobj);
+    CPPUNIT_ASSERT(lhs_none != rhs_cacheobj);
 }
 
 /*
@@ -96,7 +104,10 @@ testURLScheme::testConstructprotocol_t()
 void
 testURLScheme::testConst_str()
 {
-    CPPUNIT_ASSERT_EQUAL(String("wais"), String(URLScheme(PROTO_WAIS).const_str()));
+    String lhs("wais");
+    URLScheme wais(PROTO_WAIS);
+    String rhs(wais.const_str());
+    CPPUNIT_ASSERT_EQUAL(lhs, rhs);
 }
 
 /*
@@ -132,5 +143,7 @@ testURLScheme::testStream()
 {
     std::ostringstream buffer;
     buffer << URLScheme(PROTO_HTTP);
-    CPPUNIT_ASSERT_EQUAL(String("http"), String(buffer.str().c_str()));
+    String http_str("http");
+    String from_buf(buffer.str().c_str());
+    CPPUNIT_ASSERT_EQUAL(http_str, from_buf);
 }
