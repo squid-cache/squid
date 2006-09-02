@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.431 2006/09/02 13:55:56 serassio Exp $
+dnl  $Id: configure.in,v 1.432 2006/09/02 16:18:22 serassio Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.431 $)dnl
+AC_REVISION($Revision: 1.432 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -2010,7 +2010,7 @@ case "$host_os" in
   mingw|mingw32)
     AC_DEFINE(HAVE_STRUCT_RUSAGE)
     ac_cv_func_getrusage='yes'
-    echo "Using own rusage."
+    echo "Using own rusage on Windows."
     ;;
   *)      
     AC_CHECK_TYPE(struct rusage,AC_DEFINE(HAVE_STRUCT_RUSAGE,1,[The system provides struct rusage]),,[
