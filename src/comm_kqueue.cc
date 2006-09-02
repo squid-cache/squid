@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_kqueue.cc,v 1.11 2006/05/29 00:15:02 robertc Exp $
+ * $Id: comm_kqueue.cc,v 1.12 2006/09/02 10:43:10 adrian Exp $
  *
  * DEBUG: section 5    Socket functions
  *
@@ -330,6 +330,11 @@ void
 comm_quick_poll_required(void)
 {
     max_poll_time = 100;
+}
+
+void
+commKQueueRegisterWithCacheManager(CacheManager & manager)
+{
 }
 
 #endif /* USE_KQUEUE */
