@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.732 2006/09/02 06:49:48 robertc Exp $
+ * $Id: client_side.cc,v 1.733 2006/09/02 09:31:29 serassio Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -590,6 +590,7 @@ void
 ConnStateData::body_reader(BodyReader::Pointer reader)
 {
     body_reader_ = reader;
+
     if (reader == NULL)
         fd_note(fd, "Waiting for next request");
     else
@@ -2547,7 +2548,9 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
 
             if (buf != current_buf)
                 xmemmove(current_buf, buf, size);
+
             conn->in.notYetUsed += size;
+
             conn->in.buf[conn->in.notYetUsed] = '\0'; /* Terminate the string */
 
             /* if there is available non-aborted data, give it to the
@@ -2555,7 +2558,8 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
              */
             if (conn->body_reader() != NULL)
                 conn->body_reader()->notify(conn->in.notYetUsed);
-            /* there is some aborted body to remove 
+
+            /* there is some aborted body to remove
              * could we? should we? use BodyReader to eliminate this via an
              * abort() api.
              *
@@ -2570,8 +2574,9 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
                 conn->body_reader()->reduce_remaining(discardSize);
                 connNoteUseOfBuffer(conn.getRaw(), discardSize);
                 conn->in.abortedSize -= discardSize;
+
                 if (!conn->in.abortedSize)
-                    /* we've finished reading like good clients, 
+                    /* we've finished reading like good clients,
                      * now do the close that initiateClose initiated.
                      *
                      * XXX: do we have to close? why not check keepalive et.
@@ -2971,13 +2976,22 @@ clientNegotiateSSL(int fd, void *data)
 #if defined(OPENSSL_VERSION_NUMBER) && OPENSSL_VERSION_NUMBER >= 0x00908000L
             PEM_ASN1_write((i2d_of_void *)i2d_SSL_SESSION, PEM_STRING_SSL_SESSION, debug_log, (char *)SSL_get_session(ssl), NULL,NULL,0,NULL,NULL);
 
-#elif defined(OPENSSL_VERSION_NUMBER) && OPENSSL_VERSION_NUMBER == 0x0090704fL
+#elif (ALLOW_ALWAYS_SSL_SESSION_DETAIL == 1)
 
-            PEM_ASN1_write((int(*)(...))i2d_SSL_SESSION, PEM_STRING_SSL_SESSION, debug_log, (char *)SSL_get_session(ssl), NULL,NULL,0,NULL,NULL);
+            /* When using gcc 3.3.x and OpenSSL 0.9.7x sometimes a compile error can occur here.
+            * This is caused by an unpredicatble gcc behaviour on a cast of the first argument
+            * of PEM_ASN1_write(). For this reason this code section is disabled. To enable it,
+            * define ALLOW_ALWAYS_SSL_SESSION_DETAIL=1.
+            * Because there are two possible usable cast, if you get an error here, try the other
+            * commented line. */
+
+            PEM_ASN1_write((int(*)())i2d_SSL_SESSION, PEM_STRING_SSL_SESSION, debug_log, (char *)SSL_get_session(ssl), NULL,NULL,0,NULL,NULL);
+            /* PEM_ASN1_write((int(*)(...))i2d_SSL_SESSION, PEM_STRING_SSL_SESSION, debug_log, (char *)SSL_get_session(ssl), NULL,NULL,0,NULL,NULL); */
 
 #else
 
-            PEM_ASN1_write((int(*)())i2d_SSL_SESSION, PEM_STRING_SSL_SESSION, debug_log, (char *)SSL_get_session(ssl), NULL,NULL,0,NULL,NULL);
+            debug(83, 4) ("With " OPENSSL_VERSION_TEXT ", session details are available only defining ALLOW_ALWAYS_SSL_SESSION_DETAIL=1 in the source.\n");
+
 #endif
             /* Note: This does not automatically fflush the log file.. */
         }
