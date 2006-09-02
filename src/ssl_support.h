@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.h,v 1.12 2005/03/18 17:17:51 hno Exp $
+ * $Id: ssl_support.h,v 1.13 2006/09/02 15:40:03 serassio Exp $
  *
  * AUTHOR: Benno Rice
  *
@@ -58,5 +58,29 @@ SSLGETATTRIBUTE sslGetUserAttribute;
 SSLGETATTRIBUTE sslGetCAAttribute;
 const char *sslGetUserCertificatePEM(SSL *ssl);
 const char *sslGetUserCertificateChainPEM(SSL *ssl);
+
+#ifdef _SQUID_MSWIN_
+
+#ifdef __cplusplus
+
+namespace Squid {
+
+inline
+int SSL_set_fd(SSL *ssl, int fd)
+{
+    return ::SSL_set_fd(ssl, _get_osfhandle(fd));
+}
+
+#define SSL_set_fd(ssl,fd) Squid::SSL_set_fd(ssl,fd)
+
+} /* namespace Squid */
+
+#else
+
+#define SSL_set_fd(s,f) (SSL_set_fd(s, _get_osfhandle(f)))
+
+#endif /* __cplusplus */
+
+#endif /* _SQUID_MSWIN_ */
 
 #endif /* SQUID_SSL_SUPPORT_H */
