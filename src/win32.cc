@@ -1,6 +1,6 @@
 
 /*
- * $Id: win32.cc,v 1.20 2006/08/28 10:11:10 serassio Exp $
+ * $Id: win32.cc,v 1.21 2006/09/02 13:14:25 serassio Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -523,6 +523,10 @@ int WIN32_Subsystem_Init(int * argc, char *** argv)
         svcStatus.dwCheckPoint = 0;
         svcStatus.dwWaitHint = 10000;
         SetServiceStatus(svcHandle, &svcStatus);
+#ifdef _SQUID_MSWIN_
+
+        _setmaxstdio(Squid_MaxFD);
+#endif
     }
 
 #endif /* USE_WIN32_SERVICE */
