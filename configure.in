@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.430 2006/08/20 18:30:28 serassio Exp $
+dnl  $Id: configure.in,v 1.431 2006/09/02 13:55:56 serassio Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.430 $)dnl
+AC_REVISION($Revision: 1.431 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -2005,13 +2005,23 @@ AC_CHECK_MEMBERS([struct mallinfo.mxfast],,,[
 #include <malloc.h>
 #endif])
 
-AC_CHECK_TYPE(struct rusage,AC_DEFINE(HAVE_STRUCT_RUSAGE,1,[The system provides struct rusage]),,[
+dnl Override rusage() detect on MinGW because is emulated in source code
+case "$host_os" in
+  mingw|mingw32)
+    AC_DEFINE(HAVE_STRUCT_RUSAGE)
+    ac_cv_func_getrusage='yes'
+    echo "Using own rusage."
+    ;;
+  *)      
+    AC_CHECK_TYPE(struct rusage,AC_DEFINE(HAVE_STRUCT_RUSAGE,1,[The system provides struct rusage]),,[
 #if HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
 #if HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
 #endif])
+    ;;
+esac
 
 AC_CHECK_MEMBERS([struct iphdr.ip_hl],,,[
 #if HAVE_SYS_TYPES_H
@@ -2281,7 +2291,14 @@ if test $ac_cv_lib_bind_gethostbyname = "no" ; then
 		;;
     esac
 fi
-AC_CHECK_LIB(m, main)
+case "$host_os" in
+mingw|mingw32)
+	echo "Use MSVCRT for math functions."
+	;;
+	*)
+	AC_CHECK_LIB(m, main)
+	;;
+esac
 
 dnl Check for libcrypt
 dnl Some of our helpers use crypt(3) which may be in libc, or in
@@ -2488,6 +2505,13 @@ if test -z "$ac_cv_func_poll"; then
 			;;
 	esac
 fi
+
+dnl Override statfs() detect on MinGW becasue is emulated in source code
+case "$host_os" in
+mingw|mingw32)
+	ac_cv_func_statfs='yes'
+	;;
+esac
 
 dnl Check for library functions
 AC_CHECK_FUNCS(\
