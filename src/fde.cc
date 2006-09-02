@@ -1,6 +1,6 @@
 
 /*
- * $Id: fde.cc,v 1.4 2006/05/08 23:38:33 robertc Exp $
+ * $Id: fde.cc,v 1.5 2006/09/02 13:41:32 serassio Exp $
  *
  * DEBUG: section ??	FDE
  * AUTHOR: Robert Collins
@@ -54,8 +54,15 @@ fde::dumpStats (StoreEntry &dumpEntry, int fdNumber)
     if (!flags.open)
         return;
 
+#ifdef _SQUID_MSWIN_
+
+    storeAppendPrintf(&dumpEntry, "%4d 0x%-8lX %-6.6s %4d %7d%c %7d%c %-21s %s\n",
+                      fdNumber,
+                      win32.handle,
+#else
     storeAppendPrintf(&dumpEntry, "%4d %-6.6s %4d %7d%c %7d%c %-21s %s\n",
                       fdNumber,
+#endif
                       fdTypeStr[type],
                       timeout_handler ? (int) (timeout - squid_curtime) / 60 : 0,
                       bytes_read,
@@ -71,15 +78,26 @@ fde::DumpStats (StoreEntry *dumpEntry)
 {
     int i;
     storeAppendPrintf(dumpEntry, "Active file descriptors:\n");
+#ifdef _SQUID_MSWIN_
+
+    storeAppendPrintf(dumpEntry, "%-4s %-10s %-6s %-4s %-7s* %-7s* %-21s %s\n",
+                      "File",
+                      "Handle",
+#else
     storeAppendPrintf(dumpEntry, "%-4s %-6s %-4s %-7s* %-7s* %-21s %s\n",
                       "File",
+#endif
                       "Type",
                       "Tout",
                       "Nread",
                       "Nwrite",
                       "Remote Address",
                       "Description");
+#ifdef _SQUID_MSWIN_
+    storeAppendPrintf(dumpEntry, "---- ---------- ------ ---- -------- -------- --------------------- ------------------------------\n");
+#else
     storeAppendPrintf(dumpEntry, "---- ------ ---- -------- -------- --------------------- ------------------------------\n");
+#endif
 
     for (i = 0; i < Squid_MaxFD; i++) {
         fd_table[i].dumpStats(*dumpEntry, i);
