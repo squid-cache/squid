@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.432 2006/08/21 00:50:41 robertc Exp $
+ * $Id: main.cc,v 1.433 2006/09/02 08:43:37 serassio Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -702,6 +702,14 @@ mainReconfigure(void)
     storeDirOpenSwapLogs();
 
     mimeInit(Config.mimeTablePathname);
+
+    if (Config.onoff.announce) {
+        if (!eventFind(start_announce, NULL))
+            eventAdd("start_announce", start_announce, NULL, 3600.0, 1);
+    } else {
+        if (eventFind(start_announce, NULL))
+            eventDelete(start_announce, NULL);
+    }
 
     writePidFile();		/* write PID file */
 
