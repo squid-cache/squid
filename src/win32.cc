@@ -1,6 +1,6 @@
 
 /*
- * $Id: win32.cc,v 1.21 2006/09/02 13:14:25 serassio Exp $
+ * $Id: win32.cc,v 1.22 2006/09/02 13:21:00 serassio Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -880,8 +880,13 @@ int main(int argc, char **argv)
                                               {NULL, NULL}
                                           };
     char *c;
+    char stderr_path[256];
 
     if ((argc == 2) && strstr(argv[1], _WIN_SQUID_SERVICE_OPTION)) {
+        strcpy(stderr_path, argv[0]);
+        strcat(stderr_path,".log");
+        freopen(stderr_path, "w", stderr);
+        setmode(fileno(stderr), O_TEXT);
         WIN32_run_mode = _WIN_SQUID_RUN_MODE_SERVICE;
         opt_no_daemon = 1;
 
