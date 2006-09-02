@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.71 2006/06/21 22:37:49 wessels Exp $
+ * $Id: client_side_request.cc,v 1.72 2006/09/02 06:49:48 robertc Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -129,7 +129,7 @@ ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) : http(anH
     redirect_done = false;
     no_cache_done = false;
     interpreted_req_hdrs = false;
-    debugs(85,3, HERE << this << " ClientHttpRequest constructed");
+    debugs(85,3, HERE << this << " ClientRequestContext constructed");
 }
 
 CBDATA_CLASS_INIT(ClientHttpRequest);
@@ -242,17 +242,15 @@ ClientHttpRequest::~ClientHttpRequest()
      */
 
     if (request && request->body_reader != NULL) {
-        request->body_reader = NULL;	// refcounted
-        debugs(32,3,HERE << "setting body_reader = NULL for request " << request);
+        request->body_reader = NULL;	// refcounted, triggers abort if needed.
+        debugs(32, 3, HERE << "setting body_reader = NULL for request " << request);
     }
 
     /* the ICP check here was erroneous
      * - storeReleaseRequest was always called if entry was valid 
      */
     assert(logType < LOG_TYPE_MAX);
-
     logRequest();
-
     loggingEntry(NULL);
 
     if (request)
@@ -261,12 +259,10 @@ ClientHttpRequest::~ClientHttpRequest()
     freeResources();
 
 #if ICAP_CLIENT
-
     if (icap) {
         delete icap;
         cbdataReferenceDone(icap);
     }
-
 #endif
     if (calloutContext)
         delete calloutContext;
@@ -1085,14 +1081,14 @@ ClientHttpRequest::doCallouts()
 int
 ClientHttpRequest::doIcap(ICAPServiceRep::Pointer service)
 {
-    debugs(85,3, HERE << this << " ClientHttpRequest::doIcap() called");
+    debugs(85, 3, HERE << this << " ClientHttpRequest::doIcap() called");
     assert(NULL == icap);
     icap = new ICAPClientReqmodPrecache(service);
     (void) cbdataReference(icap);
     icap->startReqMod(this, request);
 
     if (request->body_reader == NULL) {
-        debugs(32,3,HERE << "client request hasnt body...");
+        debugs(32, 3, HERE << "client request hasnt body...");
         icap->doneSending();
 
     }

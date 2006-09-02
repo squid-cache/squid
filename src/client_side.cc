@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.731 2006/08/02 21:46:22 hno Exp $
+ * $Id: client_side.cc,v 1.732 2006/09/02 06:49:48 robertc Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -580,6 +580,22 @@ ConnStateData::areAllContextsForThisConnection() const
     return true;
 }
 
+BodyReader *
+ConnStateData::body_reader()
+{
+    return body_reader_.getRaw();
+}
+
+void
+ConnStateData::body_reader(BodyReader::Pointer reader)
+{
+    body_reader_ = reader;
+    if (reader == NULL)
+        fd_note(fd, "Waiting for next request");
+    else
+        fd_note(fd, "Reading request body");
+}
+
 void
 ConnStateData::freeAllContexts()
 {
@@ -639,7 +655,7 @@ ConnStateData::~ConnStateData()
 
     cbdataReferenceDone(port);
 
-    body_reader = NULL;		// refcounted
+    body_reader(NULL);	// refcounted
 }
 
 /*
@@ -1560,13 +1576,19 @@ ClientSocketContext::initiateClose()
                 * this may be an issue.
                 */
                 conn->closing(true);
+                /* any unread body becomes abortedSize at this point. */
+                conn->in.abortedSize = conn->bodySizeLeft();
                 /*
                  * Trigger the BodyReader abort handler, if necessary,
                  * by destroying it.  It is a refcounted pointer, so
                  * set it to NULL and let the destructor be called when
                  * all references are gone.
+                 *
+                 * This seems to be flawed: theres no way this can trigger
+                 * if conn->body_reader is not NULL. Perhaps it works for
+                 * ICAP but not real requests ?
                  */
-                http->request->body_reader = NULL;	// refcounted
+                http->request->body_reader = NULL; // refcounted
                 return;
             }
         }
@@ -2341,7 +2363,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, ClientSocketContext *context,
                                               clientAbortBody,
                                               NULL,
                                               conn.getRaw());
-        conn->body_reader = request->body_reader;
+        conn->body_reader(request->body_reader);
         request->body_reader->notify(conn->in.notYetUsed);
 
         if (request->body_reader->remaining())
@@ -2408,8 +2430,8 @@ connOkToAddRequest(ConnStateData::Pointer &conn)
 ssize_t
 ConnStateData::bodySizeLeft()
 {
-    if (body_reader != NULL)
-        return body_reader->remaining();
+    if (body_reader_ != NULL)
+        return body_reader_->remaining();
 
     return 0;
 }
@@ -2519,27 +2541,43 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
 
     if (flag == COMM_OK) {
         if (size > 0) {
-            /*
-             * If this assertion fails, we need to handle the case 
-             * where a persistent connection has some leftover body
-             * request data from a previous, aborted transaction.
-             * Probably just decrement size and adjust/memmove the
-             * 'buf' pointer accordingly.
-             */
-            assert(conn->in.abortedSize == 0);
+            kb_incr(&statCounter.client_http.kbytes_in, size);
 
             char *current_buf = conn->in.addressToReadInto();
-            kb_incr(&statCounter.client_http.kbytes_in, size);
 
             if (buf != current_buf)
                 xmemmove(current_buf, buf, size);
-
             conn->in.notYetUsed += size;
+            conn->in.buf[conn->in.notYetUsed] = '\0'; /* Terminate the string */
 
-            conn->in.buf[conn->in.notYetUsed] = '\0';   /* Terminate the string */
-
-            if (conn->body_reader != NULL)
-                conn->body_reader->notify(conn->in.notYetUsed);
+            /* if there is available non-aborted data, give it to the
+             * BodyReader
+             */
+            if (conn->body_reader() != NULL)
+                conn->body_reader()->notify(conn->in.notYetUsed);
+            /* there is some aborted body to remove 
+             * could we? should we? use BodyReader to eliminate this via an
+             * abort() api.
+             *
+             * This is not the most optimal path: ideally we would:
+             *  - optimise the memmove above to not move data we're discarding
+             *  - discard notYetUsed earlier
+             */
+            if (conn->in.abortedSize) {
+                size_t discardSize = XMIN(conn->in.abortedSize, conn->in.notYetUsed);
+                /* these figures must match */
+                assert(conn->in.abortedSize == (size_t)conn->bodySizeLeft());
+                conn->body_reader()->reduce_remaining(discardSize);
+                connNoteUseOfBuffer(conn.getRaw(), discardSize);
+                conn->in.abortedSize -= discardSize;
+                if (!conn->in.abortedSize)
+                    /* we've finished reading like good clients, 
+                     * now do the close that initiateClose initiated.
+                     *
+                     * XXX: do we have to close? why not check keepalive et.
+                     */
+                    comm_close(fd);
+            }
         } else if (size == 0) {
             debug(33, 5) ("clientReadRequest: FD %d closed?\n", fd);
 
@@ -3246,21 +3284,6 @@ clientAclChecklistCreate(const acl_access * acl, ClientHttpRequest * http)
 }
 
 CBDATA_CLASS_INIT(ConnStateData);
-
-void *
-ConnStateData::operator new (size_t)
-{
-    CBDATA_INIT_TYPE(ConnStateData);
-    ConnStateData *result = cbdataAlloc(ConnStateData);
-    return result;
-}
-
-void
-ConnStateData::operator delete (void *address)
-{
-    ConnStateData *t = static_cast<ConnStateData *>(address);
-    cbdataFree(t);
-}
 
 ConnStateData::ConnStateData() : transparent_ (false), reading_ (false), closing_ (false)
 {

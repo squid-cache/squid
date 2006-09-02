@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.217 2006/08/25 15:22:34 serassio Exp $
+ * $Id: errorpage.cc,v 1.218 2006/09/02 06:49:48 robertc Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -357,8 +357,12 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
     HttpReply *rep;
     assert(entry->mem_obj != NULL);
     assert (entry->isEmpty());
+    debugs(4, 4, "Creating an error page for entry " << entry <<
+           " with errorstate " << err <<
+           " page id " << err->page_id);
 
     if (entry->store_status != STORE_PENDING) {
+        debugs(4, 2, "Skipping error page due to store_status: " << entry->store_status);
         /*
          * If the entry is not STORE_PENDING, then no clients
          * care about it, and we don't need to generate an
@@ -377,34 +381,23 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
         }
     }
 
-    entry->lock()
-
-    ;
+    entry->lock();
     storeBuffer(entry);
-
     rep = errorBuildReply(err);
-
     /* Add authentication header */
     /* TODO: alter errorstate to be accel on|off aware. The 0 on the next line
-     * depends on authenticate behaviour: all schemes to date send no extra data
-     * on 407/401 responses, and do not check the accel state on 401/407 responses 
+     * depends on authenticate behaviour: all schemes to date send no extra
+     * data on 407/401 responses, and do not check the accel state on 401/407
+     * responses 
      */
     authenticateFixHeader(rep, err->auth_user_request, err->request, 0, 1);
-
     entry->replaceHttpReply(rep);
-
     EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
-
     storeBufferFlush(entry);
-
     entry->complete();
-
     storeNegativeCache(entry);
-
     storeReleaseRequest(entry);
-
     entry->unlock();
-
     errorStateFree(err);
 }
 

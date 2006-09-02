@@ -62,7 +62,7 @@ BodyReader::read(CBCB *callback, void *cbdata)
 
         if (nread > 0) {
             _available -= nread;
-            _remaining -= nread;
+            reduce_remaining(nread);
         } else {
             debugs(32,3,HERE << this << " " << "Help, read_func() ret " << nread);
         }
@@ -144,4 +144,11 @@ BodyReader::consume(size_t size)
     }
 
     return true;
+}
+
+void
+BodyReader::reduce_remaining(size_t size)
+{
+    assert(size <= _remaining);
+    _remaining -= size;
 }
