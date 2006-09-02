@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.122 2006/06/07 22:39:33 hno Exp $
+ * $Id: HttpHeader.cc,v 1.123 2006/09/01 22:57:44 robertc Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -831,16 +831,15 @@ HttpHeader::getList(http_hdr_type id) const
     }
 
     /*
-     * note: we might get an empty (len==0) string if there was an "empty"
-     * header; we must not get a NULL string though.
+     * note: we might get an empty (size==0) string if there was an "empty"
+     * header. This results in an empty length String, which may have a NULL
+     * buffer.
      */
-    assert(s.buf());
-
-    /* temporary warning: remove it! @?@ @?@ @?@ */
+    /* temporary warning: remove it? (Is it useful for diagnostics ?) */
     if (!s.size())
-        debug(55, 3) ("empty list header: %s (%d)\n", Headers[id].name.buf(), id);
-
-    debug(55, 6) ("%p: joined for id %d: %s\n", this, id, s.buf());
+        debugs(55, 3, "empty list header: " << Headers[id].name << "(" << id << ")");
+    else
+        debugs(55, 6, this << ": joined for id " << id << ": " << s);
 
     return s;
 }
