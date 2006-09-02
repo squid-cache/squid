@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.75 2006/08/21 00:50:41 robertc Exp $
+ * $Id: helper.cc,v 1.76 2006/09/02 15:24:08 serassio Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -615,6 +615,12 @@ void
 helperShutdown(helper * hlp)
 {
     dlink_node *link = hlp->servers.head;
+#ifdef _SQUID_MSWIN_
+
+    HANDLE hIpc;
+    pid_t pid;
+    int no;
+#endif
 
     while (link) {
         helper_server *srv;
@@ -645,12 +651,35 @@ helperShutdown(helper * hlp)
         }
 
         srv->flags.closing = 1;
+#ifdef _SQUID_MSWIN_
+
+        hIpc = srv->hIpc;
+        pid = srv->pid;
+        no = srv->index + 1;
+        shutdown(srv->wfd, SD_BOTH);
+#endif
+
         debug(84, 3) ("helperShutdown: %s #%d shutting down.\n",
                       hlp->id_name, srv->index + 1);
         /* the rest of the details is dealt with in the helperServerFree
          * close handler
          */
         comm_close(srv->rfd);
+#ifdef _SQUID_MSWIN_
+
+        if (hIpc) {
+            if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
+                getCurrentTime();
+                debug(84, 1) ("helperShutdown: WARNING: %s #%d (%s,%ld) "
+                              "didn't exit in 5 seconds\n",
+                              hlp->id_name, no, hlp->cmdline->key, (long int)pid);
+            }
+
+            CloseHandle(hIpc);
+        }
+
+#endif
+
     }
 }
 
@@ -659,6 +688,12 @@ helperStatefulShutdown(statefulhelper * hlp)
 {
     dlink_node *link = hlp->servers.head;
     helper_stateful_server *srv;
+#ifdef _SQUID_MSWIN_
+
+    HANDLE hIpc;
+    pid_t pid;
+    int no;
+#endif
 
     while (link) {
         srv = (helper_stateful_server *)link->data;
@@ -699,12 +734,35 @@ helperStatefulShutdown(statefulhelper * hlp)
         }
 
         srv->flags.closing = 1;
+#ifdef _SQUID_MSWIN_
+
+        hIpc = srv->hIpc;
+        pid = srv->pid;
+        no = srv->index + 1;
+        shutdown(srv->wfd, SD_BOTH);
+#endif
+
         debug(84, 3) ("helperStatefulShutdown: %s #%d shutting down.\n",
                       hlp->id_name, srv->index + 1);
         /* the rest of the details is dealt with in the helperStatefulServerFree
          * close handler
          */
         comm_close(srv->rfd);
+#ifdef _SQUID_MSWIN_
+
+        if (hIpc) {
+            if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
+                getCurrentTime();
+                debug(84, 1) ("helperShutdown: WARNING: %s #%d (%s,%ld) "
+                              "didn't exit in 5 seconds\n",
+                              hlp->id_name, no, hlp->cmdline->key, (long int)pid);
+            }
+
+            CloseHandle(hIpc);
+        }
+
+#endif
+
     }
 }
 

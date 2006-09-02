@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.h,v 1.4 2006/08/21 00:50:41 robertc Exp $
+ * $Id: helper.h,v 1.5 2006/09/02 15:24:08 serassio Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -149,6 +149,10 @@ unsigned int shutdown:
     }
 
     stats;
+#ifdef _SQUID_MSWIN_
+
+    HANDLE hIpc;
+#endif
 };
 
 class helper_stateful_request;
@@ -202,6 +206,10 @@ unsigned int shutdown:
     stats;
     int deferred_requests;	/* current number of deferred requests */
     void *data;			/* State data used by the calling routines */
+#ifdef _SQUID_MSWIN_
+
+    HANDLE hIpc;
+#endif
 };
 
 class helper_request
