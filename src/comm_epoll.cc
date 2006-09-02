@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_epoll.cc,v 1.11 2006/05/29 21:44:18 robertc Exp $
+ * $Id: comm_epoll.cc,v 1.12 2006/09/02 10:39:53 adrian Exp $
  *
  * DEBUG: section 5    Socket functions
  *
@@ -234,12 +234,6 @@ comm_select(int msec)
     PF *hdl;
 
     struct epoll_event *cevents;
-    static time_t last_timeout = 0;
-
-    if (squid_curtime > last_timeout) {
-        last_timeout = squid_curtime;
-        checkTimeouts();
-    }
 
     PROF_start(comm_check_incoming);
 

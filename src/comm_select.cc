@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.76 2006/05/29 00:15:02 robertc Exp $
+ * $Id: comm_select.cc,v 1.77 2006/09/02 10:39:53 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -387,7 +387,6 @@ comm_select(int msec)
     fd_mask *fdsp;
     fd_mask *pfdsp;
     fd_mask tmask;
-    static time_t last_timeout = 0;
 
     struct timeval poll_time;
     double timeout = current_dtime + (msec / 1000.0);
@@ -508,13 +507,6 @@ comm_select(int msec)
                                num, pending);
 
         statHistCount(&statCounter.select_fds_hist, num);
-
-        /* Check lifetime and timeout handlers ONCE each second.
-         * Replaces brain-dead check every time through the loop! */
-        if (squid_curtime > last_timeout) {
-            last_timeout = squid_curtime;
-            checkTimeouts();
-        }
 
         if (num == 0 && pending == 0)
             continue;
