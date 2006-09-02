@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-#  $Id: Makefile.am,v 1.22 2006/07/02 19:27:17 serassio Exp $
+#  $Id: Makefile.am,v 1.23 2006/09/02 13:48:53 serassio Exp $
 #
 
 DIST_SUBDIRS = libTrie cppunit-1.10.0
@@ -36,8 +36,10 @@ endif
 
 if ENABLE_WIN32SPECIFIC
 LIBSSPWIN32=libsspwin32.a
+WIN32SRC = win32lib.c
 else
 LIBSSPWIN32=
+WIN32SRC=
 endif
 
 EXTRA_LIBRARIES = \
@@ -54,7 +56,8 @@ EXTRA_libmiscutil_a_SOURCES = \
 	md5.c \
 	Profiler.c \
 	snprintf.c \
-	strsep.c
+	strsep.c \
+	win32lib.c
 libmiscutil_a_SOURCES = \
 	MemPool.cc \
 	base64.c \
@@ -77,7 +80,8 @@ libmiscutil_a_SOURCES = \
 	util.c \
 	uudecode.c \
 	assert.c \
-	$(XPROF_STATS_SOURCE)
+	$(XPROF_STATS_SOURCE) \
+	$(WIN32SRC)
 libmiscutil_a_LIBADD = \
 	libTrie/src/Trie.o \
 	libTrie/src/TrieNode.o \
@@ -102,6 +106,7 @@ check_PROGRAMS=tests/testAll
 
 tests_testAll_SOURCES= tests/testArray.cc tests/testMain.cc  tests/testArray.h \
 	$(XPROF_STATS_SOURCE) \
+	$(WIN32SRC) \
 	util.c assert.c
 
 tests_testAll_LDADD= @SQUID_CPPUNIT_LA@ @SQUID_CPPUNIT_LIBS@
