@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cci,v 1.5 2006/05/03 14:04:44 robertc Exp $
+ * $Id: String.cci,v 1.6 2006/09/01 22:57:44 robertc Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -136,14 +136,14 @@ String::caseCmp (char const *aString, size_t count) const
     return strncasecmp(buf(), aString, count);
 }
 
+/* FIXME: this is can perform buffer overflows and underflows! */
 void
-
-String::set
-    (char const *loc, char const ch)
+String::set (char const *loc, char const ch)
 {
     buf_[loc-buf_] = ch;
 }
 
+/* FIXME: this is can perform buffer overflows and underflows! */
 void
 String::cut (size_t newLength)
 {
@@ -151,6 +151,7 @@ String::cut (size_t newLength)
     buf_[newLength] = '\0';
 }
 
+/* FIXME: this is can perform buffer overflows and underflows! */
 void
 String::cutPointer (char const *loc)
 {
