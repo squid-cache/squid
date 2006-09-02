@@ -1,6 +1,6 @@
 
 /*
- * $Id: squidclient.cc,v 1.6 2006/05/28 16:11:38 serassio Exp $
+ * $Id: squidclient.cc,v 1.7 2006/09/02 15:37:29 serassio Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -34,6 +34,10 @@
  */
 
 #include "config.h"
+
+#ifdef _SQUID_MSWIN_
+using namespace Squid;
+#endif
 
 #ifdef _SQUID_WIN32_
 #include <io.h>
