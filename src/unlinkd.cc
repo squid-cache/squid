@@ -1,6 +1,6 @@
 
 /*
- * $Id: unlinkd.cc,v 1.54 2006/08/20 09:50:05 serassio Exp $
+ * $Id: unlinkd.cc,v 1.55 2006/09/02 14:59:49 serassio Exp $
  *
  * DEBUG: section 2     Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -77,12 +77,18 @@ main(int argc, char *argv[])
 
 #else /* UNLINK_DAEMON */
 
+#include "SquidTime.h"
 #include "fde.h"
 
 /* This code gets linked to Squid */
 
 static int unlinkd_wfd = -1;
 static int unlinkd_rfd = -1;
+
+#ifdef _SQUID_MSWIN_
+static HANDLE hIpc;
+#endif
+static pid_t pid;
 
 #define UNLINKD_QUEUE_LIMIT 20
 
@@ -170,11 +176,41 @@ unlinkdUnlink(const char *path)
 
 void
 unlinkdClose(void)
+#ifdef _SQUID_MSWIN_
 {
+
+    if (unlinkd_wfd > -1)
+    {
+        debugs(2, 1, "Closing unlinkd pipe on FD " << unlinkd_wfd);
+        shutdown(unlinkd_wfd, SD_BOTH);
+        comm_close(unlinkd_wfd);
+
+        if (unlinkd_wfd != unlinkd_rfd)
+            comm_close(unlinkd_rfd);
+
+        unlinkd_wfd = -1;
+
+        unlinkd_rfd = -1;
+    } else
+        debugs(2, 0, "unlinkdClose: WARNING: unlinkd_wfd is " << unlinkd_wfd);
+
+    if (hIpc)
+    {
+        if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
+            getCurrentTime();
+            debugs(2, 1, "unlinkdClose: WARNING: (unlinkd," << pid << "d) didn't exit in 5 seconds");
+        }
+
+        CloseHandle(hIpc);
+    }
+}
+#else
+{
+
     if (unlinkd_wfd < 0)
         return;
 
-    debug(2, 1) ("Closing unlinkd pipe on FD %d\n", unlinkd_wfd);
+    debugs(2, 1, "Closing unlinkd pipe on FD " << unlinkd_wfd);
 
     file_close(unlinkd_wfd);
 
@@ -186,10 +222,11 @@ unlinkdClose(void)
     unlinkd_rfd = -1;
 }
 
+#endif
+
 void
 unlinkdInit(void)
 {
-    int x;
     const char *args[2];
 
     struct timeval slp;
@@ -197,18 +234,18 @@ unlinkdInit(void)
     args[1] = NULL;
 #if USE_POLL && defined(_SQUID_OSF_)
     /* pipes and poll() don't get along on DUNIX -DW */
-    x = ipcCreate(IPC_STREAM,
+    pid = ipcCreate(IPC_STREAM,
 #else
 /* We currently need to use FIFO.. see below */
-x = ipcCreate(IPC_FIFO,
+pid = ipcCreate(IPC_FIFO,
 #endif
-                  Config.Program.unlinkd,
-                  args,
-                  "unlinkd",
-                  &unlinkd_rfd,
-                  &unlinkd_wfd);
+                    Config.Program.unlinkd,
+                    args,
+                    "unlinkd",
+                    &unlinkd_rfd,
+                    &unlinkd_wfd);
 
-    if (x < 0)
+    if (pid < 0)
         fatal("Failed to create unlinkd subprocess");
     slp.tv_sec = 0;
     slp.tv_usec = 250000;
@@ -228,6 +265,13 @@ x = ipcCreate(IPC_FIFO,
     if (FD_PIPE == fd_table[unlinkd_wfd].type)
         commUnsetNonBlocking(unlinkd_wfd);
     debug(2, 1) ("Unlinkd pipe opened on FD %d\n", unlinkd_wfd);
+
+#ifdef _SQUID_MSWIN_
+
+    debug(2, 4) ("Unlinkd handle: 0x%x, PID: %d\n", (unsigned)hIpc, pid);
+
+#endif
+
 }
 
 #endif /* ndef UNLINK_DAEMON */
