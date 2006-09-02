@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.149 2006/08/25 15:22:34 serassio Exp $
+ * $Id: forward.cc,v 1.150 2006/09/02 10:03:20 adrian Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -105,9 +105,15 @@ FwdState::FwdState(int fd, StoreEntry * e, HttpRequest * r)
     storeRegisterAbort(e, FwdState::abort, this);
 }
 
-FwdState::~FwdState()
+void
+FwdState::completed()
 {
-    debugs(17, 3, HERE << "FwdState destructor starting");
+	if (flags.forward_completed == 1) {
+		debugs(17, 1, HERE << "FwdState::completed called on a completed request! Bad!");
+		return;
+	}
+	flags.forward_completed = 1;
+
 #if URL_CHECKSUM_DEBUG
 
     entry->mem_obj->checkUrlChecksum();
@@ -132,6 +138,14 @@ FwdState::~FwdState()
     if (storePendingNClients(entry) > 0)
         assert(!EBIT_TEST(entry->flags, ENTRY_FWD_HDR_WAIT));
 
+}
+
+FwdState::~FwdState()
+{
+    debugs(17, 3, HERE << "FwdState destructor starting");
+    if (! flags.forward_completed)
+	    completed();
+
     serversFree(&servers);
 
     HTTPMSGUNLOCK(request);
@@ -153,7 +167,6 @@ FwdState::~FwdState()
         debug(17, 3) ("fwdStateFree: closing FD %d\n", fd);
         comm_close(fd);
     }
-
     debugs(17, 3, HERE << "FwdState destructor done");
 }
 
@@ -233,6 +246,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
 
     default:
         FwdState *fwd = new FwdState(client_fd, entry, request);
+	fwd->flags.forward_completed = 0;
         peerSelect(request, entry, fwdStartCompleteWrapper, fwd);
         return;
     }
@@ -313,7 +327,7 @@ FwdState::complete()
         debug(17, 3) ("fwdComplete: not re-forwarding status %d\n",
                       entry->getReply()->sline.status);
         EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
-        entry->complete();
+	completed();
     }
 }
 

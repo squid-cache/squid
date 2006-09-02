@@ -58,6 +58,7 @@ public:
 
 private:
     static void logReplyStatus(int tries, http_status status);
+    void completed();
 
 #if WIP_FWD_LOG
 
@@ -94,6 +95,8 @@ unsigned int dont_retry:
 
 unsigned int ftp_pasv_failed:
         1;
+
+unsigned int forward_completed:1;
     }
 
     flags;
