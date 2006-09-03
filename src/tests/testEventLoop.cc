@@ -232,7 +232,7 @@ class StubTime : public TimeEngine
 {
 
 public:
-    StubTime::StubTime() : calls(0) {}
+    StubTime() : calls(0) {}
 
     int calls;
     void tick()
