@@ -14,3 +14,5 @@ testString
 testUfs
 testURL
 test_http_range
+testEvent
+testEventLoop
