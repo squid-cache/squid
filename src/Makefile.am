@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.161 2006/08/21 00:50:41 robertc Exp $
+#  $Id: Makefile.am,v 1.162 2006/09/02 19:42:11 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -1333,12 +1333,12 @@ tests_testCacheManager_LDADD = \
 	@REPL_OBJS@ \
 	@ICAP_LIBS@ \
 	@REGEXLIB@ \
-	@SSLLIB@ \
+	@SNMPLIB@ \
 	-L../lib -lmiscutil \
-	@XTRA_LIBS@ \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
-	@SNMPLIB@ 
+	@SSLLIB@ \
+	@XTRA_LIBS@
 tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
 tests_testCacheManager_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
@@ -1483,12 +1483,12 @@ tests_testEvent_LDADD = \
 	@REPL_OBJS@ \
 	@ICAP_LIBS@ \
 	@REGEXLIB@ \
-	@SSLLIB@ \
+	@SNMPLIB@ \
 	-L../lib -lmiscutil \
-	@XTRA_LIBS@ \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
-	@SNMPLIB@ 
+	@SSLLIB@ \
+	@XTRA_LIBS@
 tests_testEvent_LDFLAGS = $(LIBADD_DL)
 tests_testEvent_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
@@ -1633,12 +1633,12 @@ tests_testEventLoop_LDADD = \
 	@REPL_OBJS@ \
 	@ICAP_LIBS@ \
 	@REGEXLIB@ \
-	@SSLLIB@ \
+	@SNMPLIB@ \
 	-L../lib -lmiscutil \
-	@XTRA_LIBS@ \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
-	@SNMPLIB@ 
+	@SSLLIB@ \
+	@XTRA_LIBS@
 tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
 tests_testEventLoop_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
@@ -1816,11 +1816,12 @@ tests_test_http_range_LDADD = \
 	@STORE_OBJS@ \
 	@ICAP_LIBS@ \
 	@REGEXLIB@ \
-	@SSLLIB@ \
+	@SNMPLIB@ \
 	-L../lib -lmiscutil \
-	@XTRA_LIBS@ \
 	@SQUID_CPPUNIT_LIBS@ \
-	@SNMPLIB@ 
+	@SQUID_CPPUNIT_LA@ \
+	@SSLLIB@ \
+	@XTRA_LIBS@
 tests_test_http_range_DEPENDENCIES = \
 	@SQUID_CPPUNIT_LA@
 
@@ -1961,11 +1962,12 @@ tests_testHttpRequest_LDADD = \
 	@REPL_OBJS@ \
 	@ICAP_LIBS@ \
 	@REGEXLIB@ \
-	@SSLLIB@ \
+	@SNMPLIB@ \
 	-L../lib -lmiscutil \
-	@XTRA_LIBS@ \
 	@SQUID_CPPUNIT_LIBS@ \
-	@SNMPLIB@ 
+	@SQUID_CPPUNIT_LA@ \
+	@SSLLIB@ \
+	@XTRA_LIBS@
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 tests_testHttpRequest_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
@@ -2289,11 +2291,12 @@ tests_testURL_LDADD = \
 	libauth.la \
 	@REPL_OBJS@ \
 	@ICAP_LIBS@ \
-	@SSLLIB@ \
+	@SNMPLIB@ \
 	-L../lib -lmiscutil \
-	@XTRA_LIBS@ \
 	@SQUID_CPPUNIT_LIBS@ \
-	@SNMPLIB@ 
+	@SQUID_CPPUNIT_LA@ \
+	@SSLLIB@ \
+	@XTRA_LIBS@
 tests_testURL_LDFLAGS = $(LIBADD_DL)
 tests_testURL_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
