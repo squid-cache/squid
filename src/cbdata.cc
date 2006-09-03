@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.73 2006/09/03 04:09:36 hno Exp $
+ * $Id: cbdata.cc,v 1.74 2006/09/03 05:29:44 hno Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -544,9 +544,9 @@ void
 cbdata::dump(StoreEntry *sentry) const
 {
 #if HASHED_CBDATA
-    void *p = hash.key;
+    void *p = (void *)hash.key;
 #else
-    void *p = &data;
+    void *p = (void *)&data;
 #endif
     storeAppendPrintf(sentry, "%c%p\t%d\t%d\t%20s:%-5d\n", valid ? ' ' :
                       '!', p, type, locks, file, line);
