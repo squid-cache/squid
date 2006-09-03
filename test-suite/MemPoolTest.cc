@@ -1,5 +1,5 @@
 /*
- * $Id: MemPoolTest.cc,v 1.4 2006/09/03 04:12:04 hno Exp $
+ * $Id: MemPoolTest.cc,v 1.5 2006/09/03 07:25:13 robertc Exp $
  *
  * AUTHOR: Robert Collins
  *
@@ -52,9 +52,9 @@ private:
 	  public:
 		  int aValue;
   };
-  static MemPool *Pool;
+  static MemImplementingAllocator *Pool;
 };
-MemAllocator *MemPoolTest::Pool = NULL;
+MemImplementingAllocator *MemPoolTest::Pool = NULL;
 
 void
 MemPoolTest::run()
