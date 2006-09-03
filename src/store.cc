@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.598 2006/08/19 12:31:21 robertc Exp $
+ * $Id: store.cc,v 1.599 2006/09/03 04:09:48 robertc Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -831,7 +831,18 @@ StoreEntry::write (StoreIOBuffer writeBuffer)
     assert(store_status == STORE_PENDING);
 
     if (!writeBuffer.length)
+      {
+        /* the headers are recieved already, but we have not recieved
+         * any body data. There are BROKEN abuses of HTTP which require
+         * the headers to be passed along before any body data - see
+         * http://developer.apple.com/documentation/QuickTime/QTSS/Concepts/chapter_2_section_14.html
+         * for an example of such bad behaviour. To accomodate this, if
+         * we have a empty write arrive, we flush to our clients.
+         * -RBC 20060903
+         */
+        InvokeHandlers(this);
         return;
+      }
 
     PROF_start(StoreEntry_write);
 
