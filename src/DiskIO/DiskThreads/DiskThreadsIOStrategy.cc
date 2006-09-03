@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsIOStrategy.cc,v 1.7 2006/06/17 16:36:15 serassio Exp $
+ * $Id: DiskThreadsIOStrategy.cc,v 1.8 2006/09/03 04:12:00 hno Exp $
  *
  * DEBUG: section 79    Squid-side Disk I/O functions.
  * AUTHOR: Robert Collins
@@ -43,15 +43,13 @@
 #include "Store.h"
 #include "fde.h"
 
-//static MemAllocatorProxy *squidaio_ctrl_pool;
-
 void
 DiskThreadsIOStrategy::init(void)
 {
     if (initialised)
         return;
 
-    squidaio_ctrl_pool = new MemAllocatorProxy("aio_ctrl", sizeof(squidaio_ctrl_t));
+    squidaio_ctrl_pool = MemPools::GetInstance().create("aio_ctrl", sizeof(squidaio_ctrl_t));
 
     initialised = true;
 

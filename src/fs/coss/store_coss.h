@@ -98,8 +98,8 @@ typedef struct _cossindex CossIndexNode;
 
 /* Whether the coss system has been setup or not */
 extern int coss_initialised;
-extern MemAllocatorProxy *coss_membuf_pool;
-extern MemAllocatorProxy *coss_index_pool;
+extern MemAllocator *coss_membuf_pool;
+extern MemAllocator *coss_index_pool;
 
 #include "DiskIO/ReadRequest.h"
 

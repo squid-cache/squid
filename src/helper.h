@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.h,v 1.5 2006/09/02 15:24:08 serassio Exp $
+ * $Id: helper.h,v 1.6 2006/09/03 04:11:59 hno Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -90,7 +90,7 @@ struct _helper_stateful
     int n_running;
     int n_active;
     int ipc_type;
-    MemAllocatorProxy *datapool;
+    MemAllocator *datapool;
     HLPSAVAIL *IsAvailable;
     HLPSONEQ *OnEmptyQueue;
     time_t last_queue_warn;

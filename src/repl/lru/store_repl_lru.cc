@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_lru.cc,v 1.18 2006/08/21 00:50:47 robertc Exp $
+ * $Id: store_repl_lru.cc,v 1.19 2006/09/03 04:12:04 hno Exp $
  *
  * DEBUG: section ?     LRU Removal policy
  * AUTHOR: Henrik Nordstrom
@@ -97,7 +97,7 @@ struct _LruNode
     dlink_node node;
 };
 
-static MemPool *lru_node_pool = NULL;
+static MemImplementingAllocator *lru_node_pool = NULL;
 static int nr_lru_policies = 0;
 
 static void
@@ -334,7 +334,7 @@ createRemovalPolicy_lru(wordlist * args)
 
     if (!lru_node_pool) {
         /* Must be chunked */
-        lru_node_pool = new MemPool("LRU policy node", sizeof(LruNode));
+        lru_node_pool = MemPools::GetInstance().create("LRU policy node", sizeof(LruNode));
         lru_node_pool->setChunkSize(512 * 1024);
     }
 
