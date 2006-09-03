@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.433 2006/09/02 08:43:37 serassio Exp $
+ * $Id: main.cc,v 1.434 2006/09/03 04:09:36 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -408,17 +408,12 @@ mainParseOptions(int argc, char *argv[])
 
         case 'm':
             if (optarg) {
-                if (*optarg == 'c') {
-                    MemPools::GetInstance().setDefaultPoolChunking(0);
-                } else {
 #if MALLOC_DBG
                     malloc_debug_level = atoi(optarg);
 #else
 
                     fatal("Need to add -DMALLOC_DBG when compiling to use -mX option");
 #endif
-
-                }
 
             } else {
 #if XMALLOC_TRACE
@@ -1690,7 +1685,7 @@ SquidShutdown()
     Store::Root().sync();		/* Flush log close */
     StoreFileSystem::FreeAllFs();
     DiskIOModule::FreeAllModules();
-#if PURIFY || XMALLOC_TRACE
+#if LEAK_CHECK_MODE
 
     configFreeMemory();
     storeFreeMemory();

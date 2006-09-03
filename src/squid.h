@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.258 2006/09/02 15:37:29 serassio Exp $
+ * $Id: squid.h,v 1.259 2006/09/03 04:09:36 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -308,7 +308,7 @@ SQUIDCEXTERN size_t getpagesize(void);
 #define SA_RESETHAND SA_ONESHOT
 #endif
 
-#if PURIFY
+#if LEACK_CHECK_MODE
 #define LOCAL_ARRAY(type,name,size) \
         static type *local_##name=NULL; \
         type *name = local_##name ? local_##name : \

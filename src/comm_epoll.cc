@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_epoll.cc,v 1.12 2006/09/02 10:39:53 adrian Exp $
+ * $Id: comm_epoll.cc,v 1.13 2006/09/03 04:09:36 hno Exp $
  *
  * DEBUG: section 5    Socket functions
  *
@@ -136,6 +136,10 @@ commSetSelect(int fd, unsigned int type, PF * handler,
     debug(5, DEBUG_EPOLL ? 0 : 8) ("commSetSelect(FD %d,type=%u,handler=%p,client_data=%p,timeout=%ld)\n",
                                    fd,type,handler,client_data,timeout);
 
+    if (RUNNING_ON_VALGRIND) {
+	/* Keep valgrind happy.. complains about uninitialized bytes otherwise */
+	memset(&ev, 0, sizeof(ev));
+    }
     ev.events = 0;
     ev.data.fd = fd;
 

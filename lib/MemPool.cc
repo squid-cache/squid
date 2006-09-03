@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemPool.cc,v 1.3 2006/06/18 08:56:32 serassio Exp $
+ * $Id: MemPool.cc,v 1.4 2006/09/03 04:09:35 hno Exp $
  *
  * DEBUG: section 63    Low Level Memory Pool Management
  * AUTHOR: Alex Rousskov, Andres Kroonmaa, Robert Collins
@@ -208,7 +208,9 @@ MemChunk::MemChunk(MemPool *aPool)
 
     for (int i = 1; i < pool->chunk_capacity; i++) {
 	*Free = (void *) ((char *) Free + pool->obj_size);
-	Free = (void **)*Free;
+	void **nextFree = (void **)*Free;
+	(void) VALGRIND_MAKE_NOACCESS(Free, pool->obj_size);
+	Free = nextFree;
     }
     nextFreeChunk = pool->nextFreeChunk;
     pool->nextFreeChunk = this;
@@ -273,6 +275,7 @@ MemPool::push(void *obj)
     Free = (void **)obj;
     *Free = freeCache;
     freeCache = obj;
+    (void) VALGRIND_MAKE_NOACCESS(obj, obj_size);
 }
 
 /*
@@ -289,6 +292,7 @@ MemPool::get()
     /* first, try cache */
     if (freeCache) {
 	Free = (void **)freeCache;
+	(void) VALGRIND_MAKE_READABLE(Free, obj_size);
 	freeCache = *Free;
 	*Free = NULL;
 	return Free;
@@ -311,6 +315,7 @@ MemPool::get()
 	/* last free in this chunk, so remove us from perchunk freelist chain */
 	nextFreeChunk = chunk->nextFreeChunk;
     }
+    (void) VALGRIND_MAKE_READABLE(Free, obj_size);
     return Free;
 }
 
@@ -351,8 +356,11 @@ MemPool::createChunk()
  * MemPools::GetInstance().setDefaultPoolChunking() can be called.
  */
 MemPools::MemPools() : pools(NULL), mem_idle_limit(2 * MB),
-  poolCount (0), defaultIsChunked (!DISABLE_POOLS)
+  poolCount (0), defaultIsChunked (!DISABLE_POOLS && !RUNNING_ON_VALGRIND)
 {
+    char *cfg = getenv("MEMPOOLS");
+    if (cfg)
+	defaultIsChunked = atoi(cfg);
 #if HAVE_MALLOPT && M_MMAP_MAX
     mallopt(M_MMAP_MAX, MEM_MAX_MMAP_CHUNKS);
 #endif
@@ -535,6 +543,7 @@ void
 MemImplementingAllocator::free(void *obj)
 {
     assert(obj != NULL);
+    (void) VALGRIND_CHECK_WRITABLE(obj, obj_size);
     deallocate(obj);
     ++free_calls;
 }
@@ -573,8 +582,10 @@ MemPool::convertFreeCacheToChunkFreeCache()
 	assert(splayLastResult == 0);
 	assert(chunk->inuse_count > 0);
 	chunk->inuse_count--;
+	(void) VALGRIND_MAKE_READABLE(Free, sizeof(void *));
 	freeCache = *(void **)Free;	/* remove from global cache */
 	*(void **)Free = chunk->freeList;	/* stuff into chunks freelist */
+	(void) VALGRIND_MAKE_NOACCESS(Free, sizeof(void *));
 	chunk->freeList = Free;
 	chunk->lastref = squid_curtime;
     }

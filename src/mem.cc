@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.99 2006/08/07 02:28:22 robertc Exp $
+ * $Id: mem.cc,v 1.100 2006/09/03 04:09:36 hno Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -138,6 +138,21 @@ Mem::Stats(StoreEntry * sentry)
     Report(stream);
     memStringStats(stream);
     memBufStats(stream);
+#if WITH_VALGRIND
+    if (RUNNING_ON_VALGRIND) {
+	long int leaked = 0, dubious = 0, reachable = 0, suppressed = 0;
+	stream << "Valgrind Report:\n";
+	stream << "Type\tAmount\n";
+	debug(13, 1) ("Asking valgrind for memleaks\n");
+	VALGRIND_DO_LEAK_CHECK;
+	debug(13, 1) ("Getting valgrind statistics\n");
+	VALGRIND_COUNT_LEAKS(leaked, dubious, reachable, suppressed);
+	stream << "Leaked\t" << leaked << "\n";
+	stream << "Dubious\t" << dubious << "\n";
+	stream << "Reachable\t" << reachable << "\n";
+	stream << "Suppressed\t" << suppressed << "\n";
+    }
+#endif
     stream.flush();
 }
 
