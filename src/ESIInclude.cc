@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIInclude.cc,v 1.10 2006/09/01 22:19:35 robertc Exp $
+ * $Id: ESIInclude.cc,v 1.11 2006/09/03 04:15:54 robertc Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -115,7 +115,13 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
 
 #endif
 
-            delete rep;
+            /* delete rep; 2006/09/02: TS, #975
+             * 
+             * This was causing double-deletes. Its possible that not deleting
+             * it here will cause memory leaks, but if so, this delete should
+             * not be reinstated or it will trigger bug #975 again - RBC
+             * 20060903
+             */
 
             rep = NULL;
         }
