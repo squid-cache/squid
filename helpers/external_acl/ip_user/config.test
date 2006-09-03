@@ -1,2 +1,5 @@
 #!/bin/sh
-exit 0
+if [ -f /usr/include/sys/socket.h ]; then
+    exit 0
+fi
+exit 1
