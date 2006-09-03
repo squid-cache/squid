@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.434 2006/09/03 04:09:36 hno Exp $
+ * $Id: main.cc,v 1.435 2006/09/03 05:32:53 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -1685,7 +1685,7 @@ SquidShutdown()
     Store::Root().sync();		/* Flush log close */
     StoreFileSystem::FreeAllFs();
     DiskIOModule::FreeAllModules();
-#if LEAK_CHECK_MODE
+#if LEAK_CHECK_MODE && 0 /* doesn't work at the moment */
 
     configFreeMemory();
     storeFreeMemory();
