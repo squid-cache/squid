@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.72 2006/08/21 00:50:41 robertc Exp $
+ * $Id: cbdata.cc,v 1.73 2006/09/03 04:09:36 hno Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -53,6 +53,10 @@
 #endif
 #include "Generic.h"
 
+#if WITH_VALGRIND
+#define HASHED_CBDATA 1
+#endif
+
 static int cbdataCount = 0;
 #if CBDATA_DEBUG
 dlink_list cbdataEntries;
@@ -77,15 +81,24 @@ public:
 
 class cbdata
 {
-
+    /* TODO: examine making cbdata templated on this - so we get type
+     * safe access to data - RBC 20030902 */
 public:
+#if HASHED_CBDATA
+    hash_link hash;	// Must be first
+#endif
+
 #if CBDATA_DEBUG
 
     void dump(StoreEntry *)const;
 #endif
 
+#if !HASHED_CBDATA
     void *operator new(size_t size, void *where);
     void operator delete(void *where, void *where2);
+#else
+    MEMPROXY_CLASS(cndata);
+#endif
 
     ~cbdata();
     int valid;
@@ -109,20 +122,21 @@ public:
 
     /* cookie used while debugging */
     long cookie;
-    /* MUST be the last per-instance member */
-    /* TODO: examine making cbdata templated on this - so we get type
-     * safe access to data - RBC 20030902 */
-    void *data;
-void check(int line) const {assert(cookie == ((long)this ^ Cookie));}
-
-    size_t dataSize() const { return sizeof(data);}
-
+    void check(int line) const {assert(cookie == ((long)this ^ Cookie));}
     static const long Cookie;
+
+#if !HASHED_CBDATA
+    size_t dataSize() const { return sizeof(data);}
     static long MakeOffset();
     static const long Offset;
+    /* MUST be the last per-instance member */
+    void *data;
+#endif
+
 };
 
 const long cbdata::Cookie((long)0xDEADBEEF);
+#if !HASHED_CBDATA
 const long cbdata::Offset(MakeOffset());
 
 void *
@@ -148,6 +162,9 @@ cbdata::MakeOffset()
     void **dataOffset = &zero->data;
     return (long)dataOffset;
 }
+#else
+MEMPROXY_CLASS_INLINE(cbdata)
+#endif
 
 static OBJH cbdataDump;
 #ifdef CBDATA_DEBUG
@@ -156,12 +173,29 @@ static OBJH cbdataDumpHistory;
 
 struct CBDataIndex
 {
-    MemAllocatorProxy *pool;
+    MemAllocator *pool;
     FREE *free_func;
 }
 
 *cbdata_index = NULL;
 int cbdata_types = 0;
+
+#if HASHED_CBDATA
+static hash_table *cbdata_htable = NULL;
+
+static int
+cbdata_cmp(const void *p1, const void *p2)
+{
+    return (char *) p1 - (char *) p2;
+}
+
+static unsigned int
+cbdata_hash(const void *p, unsigned int mod)
+{
+    return ((unsigned long) p >> 8) % mod;
+}
+#endif
+
 
 cbdata::~cbdata()
 {
@@ -175,8 +209,14 @@ cbdata::~cbdata()
 
     FREE *free_func = cbdata_index[type].free_func;
 
+#if HASHED_CBDATA
+    void *p = hash.key;
+#else
+    void *p = &data;
+#endif
+
     if (free_func)
-        free_func(&data);
+        free_func(p);
 }
 
 static void
@@ -193,11 +233,19 @@ cbdataInternalInitType(cbdata_type type, const char *name, int size, FREE * free
 
     snprintf(label, strlen(name) + 20, "cbdata %s (%d)", name, (int) type);
 
+#if !HASHED_CBDATA
     assert((size_t)cbdata::Offset == (sizeof(cbdata) - ((cbdata *)NULL)->dataSize()));
+    size += cbdata::Offset;
+#endif
 
-    cbdata_index[type].pool = new MemAllocatorProxy(label, size + cbdata::Offset);
+    cbdata_index[type].pool = MemPools::GetInstance().create(label, size);
 
     cbdata_index[type].free_func = free_func;
+
+#if HASHED_CBDATA
+    if (!cbdata_htable)
+	cbdata_htable = hash_create(cbdata_cmp, 1 << 12, cbdata_hash);
+#endif
 }
 
 cbdata_type
@@ -234,29 +282,38 @@ cbdataInternalAllocDbg(cbdata_type type, const char *file, int line)
 cbdataInternalAlloc(cbdata_type type)
 #endif
 {
-    cbdata *p;
+    cbdata *c;
+    void *p;
     assert(type > 0 && type <= cbdata_types);
     /* placement new: the pool alloc gives us cbdata + user type memory space
      * and we init it with cbdata at the start of it
      */
-    p = new (cbdata_index[type].pool->alloc()) cbdata;
+#if HASHED_CBDATA
+    c = new cbdata;
+    p = cbdata_index[type].pool->alloc();
+    c->hash.key = p;
+    hash_join(cbdata_htable, &c->hash);
+#else
+    c = new (cbdata_index[type].pool->alloc()) cbdata;
+    p = (void *)&c->data;
+#endif
 
-    p->type = type;
-    p->valid = 1;
-    p->locks = 0;
-    p->cookie = (long) p ^ cbdata::Cookie;
+    c->type = type;
+    c->valid = 1;
+    c->locks = 0;
+    c->cookie = (long) c ^ cbdata::Cookie;
     cbdataCount++;
 #if CBDATA_DEBUG
 
-    p->file = file;
-    p->line = line;
-    p->calls = Stack<CBDataCall *> ();
-    p->addHistory("Alloc", file, line);
-    dlinkAdd(p, &p->link, &cbdataEntries);
-    debug(45, 3) ("cbdataAlloc: %p %s:%d\n", &p->data, file, line);
+    c->file = file;
+    c->line = line;
+    c->calls = Stack<CBDataCall *> ();
+    c->addHistory("Alloc", file, line);
+    dlinkAdd(c, &c->link, &cbdataEntries);
+    debug(45, 3) ("cbdataAlloc: %p %s:%d\n", p, file, line);
 #endif
 
-    return (void *) &p->data;
+    return p;
 }
 
 void *
@@ -267,7 +324,11 @@ cbdataInternalFree(void *p)
 #endif
 {
     cbdata *c;
+#if HASHED_CBDATA
+    c = (cbdata *) hash_lookup(cbdata_htable, p);
+#else
     c = (cbdata *) (((char *) p) - cbdata::Offset);
+#endif
 #if CBDATA_DEBUG
 
     debug(45, 3) ("cbdataFree: %p %s:%d\n", p, file, line);
@@ -297,9 +358,6 @@ cbdataInternalFree(void *p)
     dlinkDelete(&c->link, &cbdataEntries);
 #endif
 
-    cbdata_type theType = c->type;
-    c->cbdata::~cbdata();
-
     /* This is ugly. But: operator delete doesn't get
      * the type parameter, so we can't use that 
      * to free the memory.
@@ -310,8 +368,15 @@ cbdataInternalFree(void *p)
      * we could use the normal delete operator
      * and it would Just Work. RBC 20030902
      */
-    assert ( cbdata_index[theType].pool );
+    cbdata_type theType = c->type;
+#if HASHED_CBDATA
+    hash_remove_link(cbdata_htable, &c->hash);
+    delete c;
+    cbdata_index[theType].pool->free((void *)p);
+#else
+    c->cbdata::~cbdata();
     cbdata_index[theType].pool->free(c);
+#endif
     return NULL;
 }
 
@@ -327,7 +392,11 @@ cbdataInternalLock(const void *p)
     if (p == NULL)
         return;
 
+#if HASHED_CBDATA
+    c = (cbdata *) hash_lookup(cbdata_htable, p);
+#else
     c = (cbdata *) (((char *) p) - cbdata::Offset);
+#endif
 
 #if CBDATA_DEBUG
 
@@ -360,7 +429,11 @@ cbdataInternalUnlock(const void *p)
     if (p == NULL)
         return;
 
+#if HASHED_CBDATA
+    c = (cbdata *) hash_lookup(cbdata_htable, p);
+#else
     c = (cbdata *) (((char *) p) - cbdata::Offset);
+#endif
 
 #if CBDATA_DEBUG
 
@@ -395,10 +468,6 @@ cbdataInternalUnlock(const void *p)
 
 #endif
 
-    cbdata_type theType = c->type;
-
-    c->cbdata::~cbdata();
-
     /* This is ugly. But: operator delete doesn't get
      * the type parameter, so we can't use that 
      * to free the memory.
@@ -409,7 +478,15 @@ cbdataInternalUnlock(const void *p)
      * we could use the normal delete operator
      * and it would Just Work. RBC 20030902
      */
+    cbdata_type theType = c->type;
+#if HASHED_CBDATA
+    hash_remove_link(cbdata_htable, &c->hash);
+    delete c;
+    cbdata_index[theType].pool->free((void *)p);
+#else
+    c->cbdata::~cbdata();
     cbdata_index[theType].pool->free(c);
+#endif
 }
 
 int
@@ -422,7 +499,11 @@ cbdataReferenceValid(const void *p)
 
     debug(45, 9) ("cbdataReferenceValid: %p\n", p);
 
+#if HASHED_CBDATA
+    c = (cbdata *) hash_lookup(cbdata_htable, p);
+#else
     c = (cbdata *) (((char *) p) - cbdata::Offset);
+#endif
 
     c->check(__LINE__);
 
@@ -462,8 +543,13 @@ cbdataInternalReferenceDoneValid(void **pp, void **tp)
 void
 cbdata::dump(StoreEntry *sentry) const
 {
+#if HASHED_CBDATA
+    void *p = hash.key;
+#else
+    void *p = &data;
+#endif
     storeAppendPrintf(sentry, "%c%p\t%d\t%d\t%20s:%-5d\n", valid ? ' ' :
-                      '!', &data, type, locks, file, line);
+                      '!', p, type, locks, file, line);
 }
 
 struct CBDataDumper : public unary_function<cbdata, void>
@@ -493,10 +579,14 @@ cbdataDump(StoreEntry * sentry)
     storeAppendPrintf(sentry, "types\tsize\tallocated\ttotal\n");
 
     for (int i = 1; i < cbdata_types; i++) {
-        MemAllocatorProxy *pool = cbdata_index[i].pool;
+        MemAllocator *pool = cbdata_index[i].pool;
 
         if (pool) {
+#if HASHED_CBDATA
+            int obj_size = pool->objectSize();
+#else
             int obj_size = pool->objectSize() - cbdata::Offset;
+#endif
             storeAppendPrintf(sentry, "%s\t%d\t%ld\t%ld\n", pool->objectType() + 7, obj_size, (long int)pool->getMeter().inuse.level, (long int)obj_size * pool->getMeter().inuse.level);
         }
     }

@@ -1,5 +1,5 @@
 /*
- * $Id: config.h,v 1.22 2006/09/02 13:30:54 serassio Exp $
+ * $Id: config.h,v 1.23 2006/09/03 04:09:35 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -420,5 +420,32 @@ typedef union {
 #define PRINTF_FORMAT_ARG2
 #define PRINTF_FORMAT_ARG3
 #endif
+
+/*
+ * Determine if this is a leak check build or standard
+ */
+#if PURIFY
+#define LEAK_CHECK_MODE 1
+#elif WITH_VALGRIND
+#define LEAK_CHECK_MODE 1
+#elif XMALLOC_TRACE
+#define LEAK_CHECK_MODE 1
+#endif
+
+/*
+ * valgrind debug support
+ */
+#if WITH_VALGRIND
+#include <valgrind/memcheck.h>
+#else
+#define VALGRIND_MAKE_NOACCESS(a,b) (0)
+#define VALGRIND_MAKE_WRITABLE(a,b) (0)
+#define VALGRIND_MAKE_READABLE(a,b) (0)
+#define VALGRIND_CHECK_WRITABLE(a,b) (0)
+#define VALGRIND_CHECK_READABLE(a,b) (0)
+#define VALGRIND_MALLOCLIKE_BLOCK(a,b,c,d)
+#define VALGRIND_FREELIKE_BLOCK(a,b)
+#define RUNNING_ON_VALGRIND 0
+#endif /* WITH_VALGRIND */
 
 #endif /* SQUID_CONFIG_H */

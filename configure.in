@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.432 2006/09/02 16:18:22 serassio Exp $
+dnl  $Id: configure.in,v 1.433 2006/09/03 04:09:35 hno Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.432 $)dnl
+AC_REVISION($Revision: 1.433 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -1642,6 +1642,26 @@ if test -n "$EXTERNAL_ACL_HELPERS"; then
     echo "External acl helpers built: $EXTERNAL_ACL_HELPERS"
 fi
 AC_SUBST(EXTERNAL_ACL_HELPERS)
+
+AC_ARG_WITH(valgrind,
+[  --with-valgrind       Include debug instrumentation for use with valgrind],
+[ case $withval in
+  yes)
+	valgrind=1
+	;;
+  no)
+	valgrind=
+	;;
+  *)
+	CPPFLAGS="$CPPFLAGS -I${enableval}/include"
+	valgrind=1
+	;;
+  esac
+  if test $valgrind; then
+	AC_DEFINE(WITH_VALGRIND, 1, [Valgrind memory debugger support])
+	echo "Valgrind debug support enabled"
+  fi
+])
 
 dnl Disable "memPools" code
 AC_DEFINE(DISABLE_POOLS, 0, [Define if you have problems with memPools and want to disable Pools.])
