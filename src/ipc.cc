@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.42 2006/02/26 10:56:29 serassio Exp $
+ * $Id: ipc.cc,v 1.43 2006/09/03 17:19:34 serassio Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -132,12 +132,12 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         int c2p[2];
 
         if (pipe(p2c) < 0) {
-            debug(50, 0) ("ipcCreate: pipe: %s\n", xstrerror());
+            debug(54, 0) ("ipcCreate: pipe: %s\n", xstrerror());
             return -1;
         }
 
         if (pipe(c2p) < 0) {
-            debug(50, 0) ("ipcCreate: pipe: %s\n", xstrerror());
+            debug(54, 0) ("ipcCreate: pipe: %s\n", xstrerror());
             return -1;
         }
 
@@ -152,7 +152,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         int buflen = 32768;
 
         if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) < 0) {
-            debug(50, 0) ("ipcCreate: socketpair: %s\n", xstrerror());
+            debug(54, 0) ("ipcCreate: socketpair: %s\n", xstrerror());
             return -1;
         }
 
@@ -166,7 +166,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         int fds[2];
 
         if (socketpair(AF_UNIX, SOCK_DGRAM, 0, fds) < 0) {
-            debug(50, 0) ("ipcCreate: socketpair: %s\n", xstrerror());
+            debug(54, 0) ("ipcCreate: socketpair: %s\n", xstrerror());
             return -1;
         }
 
@@ -198,7 +198,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         memset(&PaS, '\0', len);
 
         if (getsockname(pwfd, (struct sockaddr *) &PaS, &len) < 0) {
-            debug(50, 0) ("ipcCreate: getsockname: %s\n", xstrerror());
+            debug(54, 0) ("ipcCreate: getsockname: %s\n", xstrerror());
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
@@ -208,7 +208,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         memset(&ChS, '\0', len);
 
         if (getsockname(crfd, (struct sockaddr *) &ChS, &len) < 0) {
-            debug(50, 0) ("ipcCreate: getsockname: %s\n", xstrerror());
+            debug(54, 0) ("ipcCreate: getsockname: %s\n", xstrerror());
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
@@ -218,7 +218,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
     if (type == IPC_TCP_SOCKET) {
         if (listen(crfd, 1) < 0) {
-            debug(50, 1) ("ipcCreate: listen FD %d: %s\n", crfd, xstrerror());
+            debug(54, 1) ("ipcCreate: listen FD %d: %s\n", crfd, xstrerror());
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
@@ -229,7 +229,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     logsFlush();
 
     if ((pid = fork()) < 0) {
-        debug(50, 1) ("ipcCreate: fork: %s\n", xstrerror());
+        debug(54, 1) ("ipcCreate: fork: %s\n", xstrerror());
         return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
     }
 
@@ -255,8 +255,8 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
             x = read(prfd, hello_buf, HELLO_BUF_SZ - 1);
 
         if (x < 0) {
-            debug(50, 0) ("ipcCreate: PARENT: hello read test failed\n");
-            debug(50, 0) ("--> read: %s\n", xstrerror());
+            debug(54, 0) ("ipcCreate: PARENT: hello read test failed\n");
+            debug(54, 0) ("--> read: %s\n", xstrerror());
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         } else if (strcmp(hello_buf, hello_string)) {
             debug(54, 0) ("ipcCreate: PARENT: hello read test failed\n");
@@ -306,7 +306,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         debug(54, 3) ("ipcCreate: calling accept on FD %d\n", crfd);
 
         if ((fd = accept(crfd, NULL, NULL)) < 0) {
-            debug(50, 0) ("ipcCreate: FD %d accept: %s\n", crfd, xstrerror());
+            debug(54, 0) ("ipcCreate: FD %d accept: %s\n", crfd, xstrerror());
             _exit(1);
         }
 
@@ -322,14 +322,14 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         x = comm_udp_send(cwfd, hello_string, strlen(hello_string) + 1, 0);
 
         if (x < 0) {
-            debug(50, 0) ("sendto FD %d: %s\n", cwfd, xstrerror());
-            debug(50, 0) ("ipcCreate: CHILD: hello write test failed\n");
+            debug(54, 0) ("sendto FD %d: %s\n", cwfd, xstrerror());
+            debug(54, 0) ("ipcCreate: CHILD: hello write test failed\n");
             _exit(1);
         }
     } else {
         if (write(cwfd, hello_string, strlen(hello_string) + 1) < 0) {
-            debug(50, 0) ("write FD %d: %s\n", cwfd, xstrerror());
-            debug(50, 0) ("ipcCreate: CHILD: hello write test failed\n");
+            debug(54, 0) ("write FD %d: %s\n", cwfd, xstrerror());
+            debug(54, 0) ("ipcCreate: CHILD: hello write test failed\n");
             _exit(1);
         }
     }
@@ -387,7 +387,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
     debug_log = fdopen(2, "a+");
 
-    debug(50, 0) ("ipcCreate: %s: %s\n", prog, xstrerror());
+    debug(54, 0) ("ipcCreate: %s: %s\n", prog, xstrerror());
 
     _exit(1);
 
