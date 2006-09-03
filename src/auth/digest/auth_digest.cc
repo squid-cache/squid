@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.48 2006/08/07 02:28:24 robertc Exp $
+ * $Id: auth_digest.cc,v 1.49 2006/09/03 04:12:01 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -63,7 +63,7 @@ static hash_table *digest_nonce_cache;
 static AuthDigestConfig digestConfig;
 
 static int authdigest_initialised = 0;
-static MemAllocatorProxy *digest_nonce_pool = NULL;
+static MemAllocator *digest_nonce_pool = NULL;
 
 CBDATA_TYPE(DigestAuthenticateStateData);
 
@@ -201,7 +201,7 @@ static void
 authenticateDigestNonceSetup(void)
 {
     if (!digest_nonce_pool)
-        digest_nonce_pool = new MemAllocatorProxy("Digest Scheme nonce's", sizeof(digest_nonce_h));
+        digest_nonce_pool = MemPools::GetInstance().create("Digest Scheme nonce's", sizeof(digest_nonce_h));
 
     if (!digest_nonce_cache) {
         digest_nonce_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);

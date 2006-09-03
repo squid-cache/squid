@@ -109,6 +109,7 @@ public:
     virtual void free(void *) = 0;
     virtual char const *objectType() const;
     virtual size_t objectSize() const = 0;
+    int inUseCount();
 private:
     const char *label;
 };

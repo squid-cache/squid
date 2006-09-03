@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.59 2006/07/07 19:10:30 serassio Exp $
+ * $Id: auth_ntlm.cc,v 1.60 2006/09/03 04:12:02 hno Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -69,8 +69,6 @@ static statefulhelper *ntlmauthenticators = NULL;
 CBDATA_TYPE(authenticateStateData);
 
 static int authntlm_initialised = 0;
-
-//static MemAllocatorProxy *ntlm_user_hash_pool = NULL;
 
 static auth_ntlm_config ntlmConfig;
 
@@ -175,13 +173,6 @@ void
 AuthNTLMConfig::init(AuthConfig * scheme)
 {
     if (authenticate) {
-#if PLACEHOLDER
-
-        if (!ntlm_user_hash_pool)
-
-            ntlm_user_hash_pool = new MemAllocatorProxy("NTLM Header Hash Data", sizeof(struct ProxyAuthCachePointer));
-
-#endif
 
         authntlm_initialised = 1;
 

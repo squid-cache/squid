@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreFScoss.cc,v 1.5 2006/05/29 00:15:09 robertc Exp $
+ * $Id: StoreFScoss.cc,v 1.6 2006/09/03 04:12:02 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
@@ -79,7 +79,7 @@ StoreFScoss::setup()
 {
     assert(!initialised);
 
-    coss_index_pool = new MemAllocatorProxy("COSS index data", sizeof(CossIndexNode));
+    coss_index_pool = MemPools::GetInstance().create("COSS index data", sizeof(CossIndexNode));
     initialised = true;
 }
 

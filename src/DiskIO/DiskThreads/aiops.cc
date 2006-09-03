@@ -1,5 +1,5 @@
 /*
- * $Id: aiops.cc,v 1.10 2006/08/07 02:28:22 robertc Exp $
+ * $Id: aiops.cc,v 1.11 2006/09/03 04:12:01 hno Exp $
  *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
@@ -143,15 +143,15 @@ static int squidaio_initialised = 0;
 #define AIO_TINY_BUFS	AIO_LARGE_BUFS >> 3
 #define AIO_MICRO_BUFS	128
 
-static MemAllocatorProxy *squidaio_large_bufs = NULL;	/* 16K */
-static MemAllocatorProxy *squidaio_medium_bufs = NULL;	/* 8K */
-static MemAllocatorProxy *squidaio_small_bufs = NULL;	/* 4K */
-static MemAllocatorProxy *squidaio_tiny_bufs = NULL;	/* 2K */
-static MemAllocatorProxy *squidaio_micro_bufs = NULL;	/* 128K */
+static MemAllocator *squidaio_large_bufs = NULL;	/* 16K */
+static MemAllocator *squidaio_medium_bufs = NULL;	/* 8K */
+static MemAllocator *squidaio_small_bufs = NULL;	/* 4K */
+static MemAllocator *squidaio_tiny_bufs = NULL;	/* 2K */
+static MemAllocator *squidaio_micro_bufs = NULL;	/* 128K */
 
 static int request_queue_len = 0;
-static MemAllocatorProxy *squidaio_request_pool = NULL;
-static MemAllocatorProxy *squidaio_thread_pool = NULL;
+static MemAllocator *squidaio_request_pool = NULL;
+static MemAllocator *squidaio_thread_pool = NULL;
 static squidaio_request_queue_t request_queue;
 
 static struct
@@ -181,33 +181,30 @@ static struct sched_param globsched;
 #endif
 static pthread_t main_thread;
 
-static MemAllocatorProxy *
+static MemAllocator *
 squidaio_get_pool(int size)
 {
-    MemAllocatorProxy *p;
-
     if (size <= AIO_LARGE_BUFS) {
         if (size <= AIO_MICRO_BUFS)
-            p = squidaio_micro_bufs;
+            return squidaio_micro_bufs;
         else if (size <= AIO_TINY_BUFS)
-            p = squidaio_tiny_bufs;
+            return squidaio_tiny_bufs;
         else if (size <= AIO_SMALL_BUFS)
-            p = squidaio_small_bufs;
+            return squidaio_small_bufs;
         else if (size <= AIO_MEDIUM_BUFS)
-            p = squidaio_medium_bufs;
+            return squidaio_medium_bufs;
         else
-            p = squidaio_large_bufs;
-    } else
-        p = NULL;
+            return squidaio_large_bufs;
+    }
 
-    return p;
+    return NULL;
 }
 
 void *
 squidaio_xmalloc(int size)
 {
     void *p;
-    MemAllocatorProxy *pool;
+    MemAllocator *pool;
 
     if ((pool = squidaio_get_pool(size)) != NULL) {
         p = pool->alloc();
@@ -232,7 +229,7 @@ squidaio_xstrdup(const char *str)
 void
 squidaio_xfree(void *p, int size)
 {
-    MemAllocatorProxy *pool;
+    MemAllocator *pool;
 
     if ((pool = squidaio_get_pool(size)) != NULL) {
         pool->free(p);
@@ -243,7 +240,7 @@ squidaio_xfree(void *p, int size)
 static void
 squidaio_xstrfree(char *str)
 {
-    MemAllocatorProxy *pool;
+    MemAllocator *pool;
     int len = strlen(str) + 1;
 
     if ((pool = squidaio_get_pool(len)) != NULL) {
@@ -326,7 +323,7 @@ squidaio_init(void)
     done_queue.blocked = 0;
 
     /* Create threads and get them to sit in their wait loop */
-    squidaio_thread_pool = new MemAllocatorProxy("aio_thread", sizeof(squidaio_thread_t));
+    squidaio_thread_pool = MemPools::GetInstance().create("aio_thread", sizeof(squidaio_thread_t));
 
     assert(NUMTHREADS);
 
@@ -346,17 +343,17 @@ squidaio_init(void)
     }
 
     /* Create request pool */
-    squidaio_request_pool = new MemAllocatorProxy("aio_request", sizeof(squidaio_request_t));
+    squidaio_request_pool = MemPools::GetInstance().create("aio_request", sizeof(squidaio_request_t));
 
-    squidaio_large_bufs = new MemAllocatorProxy("squidaio_large_bufs", AIO_LARGE_BUFS);
+    squidaio_large_bufs = MemPools::GetInstance().create("squidaio_large_bufs", AIO_LARGE_BUFS);
 
-    squidaio_medium_bufs = new MemAllocatorProxy("squidaio_medium_bufs", AIO_MEDIUM_BUFS);
+    squidaio_medium_bufs = MemPools::GetInstance().create("squidaio_medium_bufs", AIO_MEDIUM_BUFS);
 
-    squidaio_small_bufs = new MemAllocatorProxy("squidaio_small_bufs", AIO_SMALL_BUFS);
+    squidaio_small_bufs = MemPools::GetInstance().create("squidaio_small_bufs", AIO_SMALL_BUFS);
 
-    squidaio_tiny_bufs = new MemAllocatorProxy("squidaio_tiny_bufs", AIO_TINY_BUFS);
+    squidaio_tiny_bufs = MemPools::GetInstance().create("squidaio_tiny_bufs", AIO_TINY_BUFS);
 
-    squidaio_micro_bufs = new MemAllocatorProxy("squidaio_micro_bufs", AIO_MICRO_BUFS);
+    squidaio_micro_bufs = MemPools::GetInstance().create("squidaio_micro_bufs", AIO_MICRO_BUFS);
 
     squidaio_initialised = 1;
 }

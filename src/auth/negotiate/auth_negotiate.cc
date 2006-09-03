@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_negotiate.cc,v 1.10 2006/07/07 19:10:30 serassio Exp $
+ * $Id: auth_negotiate.cc,v 1.11 2006/09/03 04:12:01 hno Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -69,8 +69,6 @@ static statefulhelper *negotiateauthenticators = NULL;
 CBDATA_TYPE(authenticateStateData);
 
 static int authnegotiate_initialised = 0;
-
-//static MemAllocatorProxy *negotiate_user_hash_pool = NULL;
 
 static auth_negotiate_config negotiateConfig;
 
@@ -175,14 +173,6 @@ void
 AuthNegotiateConfig::init(AuthConfig * scheme)
 {
     if (authenticate) {
-#if PLACEHOLDER
-
-        if (!negotiate_user_hash_pool)
-
-            negotiate_user_hash_pool = new MemAllocatorProxy("Negotiate Header Hash Data", sizeof(struct ProxyAuthCachePointer));
-
-#endif
-
         authnegotiate_initialised = 1;
 
         if (negotiateauthenticators == NULL)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsIOStrategy.h,v 1.3 2006/05/29 00:15:03 robertc Exp $
+ * $Id: DiskThreadsIOStrategy.h,v 1.4 2006/09/03 04:12:00 hno Exp $
  *
  * DEBUG: section 79    Squid-side Disk I/O functions.
  * AUTHOR: Robert Collins
@@ -64,7 +64,7 @@ public:
     /* Todo: add access limitations */
     bool initialised;
     static DiskThreadsIOStrategy Instance;
-    MemAllocatorProxy *squidaio_ctrl_pool;
+    MemAllocator *squidaio_ctrl_pool;
 
 private:
     static void aioStats(StoreEntry * sentry);

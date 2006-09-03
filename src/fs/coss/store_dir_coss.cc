@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.66 2006/08/19 12:31:21 robertc Exp $
+ * $Id: store_dir_coss.cc,v 1.67 2006/09/03 04:12:03 hno Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store COSS Directory Routines
@@ -54,7 +54,7 @@
 
 int n_coss_dirs = 0;
 /* static int last_coss_pick_index = -1; */
-MemAllocatorProxy *coss_index_pool = NULL;
+MemAllocator *coss_index_pool = NULL;
 
 typedef struct _RebuildState RebuildState;
 

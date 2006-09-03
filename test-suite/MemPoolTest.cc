@@ -1,5 +1,5 @@
 /*
- * $Id: MemPoolTest.cc,v 1.3 2004/08/30 05:12:33 robertc Exp $
+ * $Id: MemPoolTest.cc,v 1.4 2006/09/03 04:12:04 hno Exp $
  *
  * AUTHOR: Robert Collins
  *
@@ -54,13 +54,13 @@ private:
   };
   static MemPool *Pool;
 };
-MemPool *MemPoolTest::Pool = NULL;
+MemAllocator *MemPoolTest::Pool = NULL;
 
 void
 MemPoolTest::run()
 {
     assert (Pool == NULL);
-    Pool = new MemPool ("Test Pool", sizeof(SomethingToAlloc));
+    Pool = MemPools::GetInstance().create("Test Pool", sizeof(SomethingToAlloc));
     assert (Pool);
     SomethingToAlloc *something = static_cast<SomethingToAlloc *>(Pool->alloc());
     assert (something);

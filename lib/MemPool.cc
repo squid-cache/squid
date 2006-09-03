@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemPool.cc,v 1.4 2006/09/03 04:09:35 hno Exp $
+ * $Id: MemPool.cc,v 1.5 2006/09/03 04:11:59 hno Exp $
  *
  * DEBUG: section 63    Low Level Memory Pool Management
  * AUTHOR: Alex Rousskov, Andres Kroonmaa, Robert Collins
@@ -453,6 +453,14 @@ MemAllocator::objectType() const
     return label;
 }
 
+int
+MemAllocator::inUseCount()
+{
+    MemPoolStats stats;
+    getStats(&stats);
+    return stats.items_inuse;
+}
+
 void
 MemImplementingAllocator::flushMeters()
 {
@@ -832,10 +840,7 @@ MemMalloc::clean(time_t maxage)
 int
 memPoolInUseCount(MemAllocator * pool)
 {
-    MemPoolStats stats;
-    assert(pool != NULL);
-    pool->getStats(&stats);
-    return stats.items_inuse;
+    return pool->inUseCount();
 }
 
 int
