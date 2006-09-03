@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.55 2006/05/06 22:13:18 wessels Exp $
+ * $Id: HttpHeaderTools.cc,v 1.56 2006/09/03 05:30:40 hno Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -80,7 +80,7 @@ httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo * table, int count)
     for (i = 0; i < count; ++i)
         table[i].name.clean();
 
-    delete table;
+    delete [] table;
 }
 
 void
