@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskdIOStrategy.cc,v 1.4 2006/05/08 23:38:34 robertc Exp $
+ * $Id: DiskdIOStrategy.cc,v 1.5 2006/09/03 18:47:18 serassio Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -153,7 +153,8 @@ DiskdIOStrategy::unlinkFile(char const *path)
 void
 DiskdIOStrategy::init()
 {
-    int x;
+    int pid;
+    void * hIpc;
     int rfd;
     int ikey;
     const char *args[5];
@@ -186,14 +187,15 @@ DiskdIOStrategy::init()
     args[2] = skey2;
     args[3] = skey3;
     args[4] = NULL;
-    x = ipcCreate(IPC_STREAM,
-                  Config.Program.diskd,
-                  args,
-                  "diskd",
-                  &rfd,
-                  &wfd);
+    pid = ipcCreate(IPC_STREAM,
+                    Config.Program.diskd,
+                    args,
+                    "diskd",
+                    &rfd,
+                    &wfd,
+                    &hIpc);
 
-    if (x < 0)
+    if (pid < 0)
         fatalf("execl: %s", Config.Program.diskd);
 
     if (rfd != wfd)

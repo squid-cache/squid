@@ -1,6 +1,6 @@
 
 /*
- * $Id: win32.cc,v 1.22 2006/09/02 13:21:00 serassio Exp $
+ * $Id: win32.cc,v 1.23 2006/09/03 18:47:18 serassio Exp $
  *
  * * * * * * * * Legal stuff * * * * * * *
  *
@@ -907,6 +907,12 @@ int main(int argc, char **argv)
         }
     } else {
         WIN32_run_mode = _WIN_SQUID_RUN_MODE_INTERACTIVE;
+#ifdef _SQUID_MSWIN_
+
+        opt_no_daemon = 1;
+
+#endif
+
         return SquidMain(argc, argv);
     }
 

@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.433 2006/09/03 04:09:35 hno Exp $
+dnl  $Id: configure.in,v 1.434 2006/09/03 18:47:17 serassio Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.433 $)dnl
+AC_REVISION($Revision: 1.434 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -75,7 +75,11 @@ mingw|mingw32)
 		LIBS="$LIBS -lpsapi"
 	fi
 	MINGW_LIBS="-lmingwex"
+	AM_CONDITIONAL(USE_IPC_WIN32, true)
 	AC_SUBST(MINGW_LIBS)
+	;;
+*)
+	AM_CONDITIONAL(USE_IPC_WIN32, false)
 	;;
 esac
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.87 2006/09/02 15:31:30 serassio Exp $
+ * $Id: icmp.cc,v 1.88 2006/09/03 18:47:18 serassio Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -52,9 +52,7 @@ static void icmpSend(pingerEchoData * pkt, int len);
 static void icmpHandleSourcePing(const struct sockaddr_in *from, const char *buf);
 #endif
 
-#ifdef _SQUID_MSWIN_
-static HANDLE hIpc;
-#endif
+static void * hIpc;
 static pid_t pid;
 
 static void
@@ -240,11 +238,12 @@ icmpOpen(void)
     args[0] = "(pinger)";
     args[1] = NULL;
     pid = ipcCreate(IPC_DGRAM,
-                  Config.Program.pinger,
-                  args,
-                  "Pinger Socket",
-                  &rfd,
-                  &wfd);
+                    Config.Program.pinger,
+                    args,
+                    "Pinger Socket",
+                    &rfd,
+                    &wfd,
+                    &hIpc);
 
     if (pid < 0)
         return;

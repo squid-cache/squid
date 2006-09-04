@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.422 2006/08/25 18:53:35 serassio Exp $
+# $Id: cf.data.pre,v 1.423 2006/09/03 18:47:18 serassio Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -4902,6 +4902,8 @@ DOC_START
 	processes, these sleep delays will add up and your
 	Squid will not service requests for some amount of time
 	until all the child processes have been started.
+	On Windows value less then 1000 (1 millisencond) are
+	rounded to 1000.
 DOC_END
 
 NAME: minimum_expiry_time

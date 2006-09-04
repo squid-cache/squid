@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.97 2006/05/31 17:29:00 wessels Exp $
+ * $Id: dns.cc,v 1.98 2006/09/03 18:47:18 serassio Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -44,6 +44,7 @@
    using external DNS.
  */
 #if USE_DNSSERVERS
+
 static helper *dnsservers = NULL;
 
 static void

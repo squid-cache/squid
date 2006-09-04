@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.76 2006/09/02 15:24:08 serassio Exp $
+ * $Id: helper.cc,v 1.77 2006/09/03 18:47:18 serassio Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -80,9 +80,10 @@ helperOpenServers(helper * hlp)
     helper_server *srv;
     int nargs = 0;
     int k;
-    int x;
+    pid_t pid;
     int rfd;
     int wfd;
+    void * hIpc;
     wordlist *w;
 
     if (hlp->cmdline == NULL)
@@ -114,23 +115,25 @@ helperOpenServers(helper * hlp)
     for (k = 0; k < hlp->n_to_start; k++) {
         getCurrentTime();
         rfd = wfd = -1;
-        x = ipcCreate(hlp->ipc_type,
-                      progname,
-                      args,
-                      shortname,
-                      &rfd,
-                      &wfd);
+        pid = ipcCreate(hlp->ipc_type,
+                        progname,
+                        args,
+                        shortname,
+                        &rfd,
+                        &wfd,
+                        &hIpc);
 
-        if (x < 0) {
+        if (pid < 0) {
             debug(84, 1) ("WARNING: Cannot run '%s' process.\n", progname);
             continue;
         }
 
         hlp->n_running++;
         hlp->n_active++;
-	CBDATA_INIT_TYPE(helper_server);
+        CBDATA_INIT_TYPE(helper_server);
         srv = cbdataAlloc(helper_server);
-        srv->pid = x;
+        srv->hIpc = hIpc;
+        srv->pid = pid;
         srv->index = k;
         srv->rfd = rfd;
         srv->wfd = wfd;
@@ -179,9 +182,10 @@ helperStatefulOpenServers(statefulhelper * hlp)
     helper_stateful_server *srv;
     int nargs = 0;
     int k;
-    int x;
+    pid_t pid;
     int rfd;
     int wfd;
+    void * hIpc;
     wordlist *w;
 
     if (hlp->cmdline == NULL)
@@ -213,23 +217,25 @@ helperStatefulOpenServers(statefulhelper * hlp)
     for (k = 0; k < hlp->n_to_start; k++) {
         getCurrentTime();
         rfd = wfd = -1;
-        x = ipcCreate(hlp->ipc_type,
-                      progname,
-                      args,
-                      shortname,
-                      &rfd,
-                      &wfd);
+        pid = ipcCreate(hlp->ipc_type,
+                        progname,
+                        args,
+                        shortname,
+                        &rfd,
+                        &wfd,
+                        &hIpc);
 
-        if (x < 0) {
+        if (pid < 0) {
             debug(84, 1) ("WARNING: Cannot run '%s' process.\n", progname);
             continue;
         }
 
         hlp->n_running++;
         hlp->n_active++;
-	CBDATA_INIT_TYPE(helper_stateful_server);
+        CBDATA_INIT_TYPE(helper_stateful_server);
         srv = cbdataAlloc(helper_stateful_server);
-        srv->pid = x;
+        srv->hIpc = hIpc;
+        srv->pid = pid;
         srv->flags.reserved = S_HELPER_FREE;
         srv->deferred_requests = 0;
         srv->stats.deferbyfunc = 0;
