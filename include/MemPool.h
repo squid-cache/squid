@@ -110,6 +110,7 @@ public:
     virtual char const *objectType() const;
     virtual size_t objectSize() const = 0;
     int inUseCount();
+    virtual void setChunkSize(size_t chunksize) {}
 private:
     const char *label;
 };
@@ -292,6 +293,8 @@ struct _MemPoolGlobalStats
 };
 
 #define SIZEOF_CHUNK  ( ( sizeof(MemChunk) + sizeof(double) -1) / sizeof(double) ) * sizeof(double);
+
+#define memPoolCreate MemPools::GetInstance().create
 
 /* Allocator API */
 extern MemPoolIterator * memPoolIterate(void);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.25 2006/08/21 00:50:41 robertc Exp $
+ * $Id: Store.h,v 1.26 2006/09/03 21:05:20 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -157,7 +157,7 @@ public:
     virtual void release();
 
 private:
-    static MemImplementingAllocator *pool;
+    static MemAllocator *pool;
 
     bool validLength() const;
 };

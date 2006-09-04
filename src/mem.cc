@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.100 2006/09/03 04:09:36 hno Exp $
+ * $Id: mem.cc,v 1.101 2006/09/03 21:05:20 hno Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -53,7 +53,7 @@
 static void memStringStats(std::ostream &);
 
 /* module locals */
-static MemImplementingAllocator *MemPools[MEM_MAX];
+static MemAllocator *MemPools[MEM_MAX];
 static double xm_time = 0;
 static double xm_deltat = 0;
 
@@ -169,7 +169,7 @@ memDataInit(mem_type type, const char *name, size_t size, int max_pages_notused)
 {
     assert(name && size);
     assert(MemPools[type] == NULL);
-    MemPools[type] = MemPools::GetInstance().create(name, size);
+    MemPools[type] = memPoolCreate(name, size);
 }
 
 
@@ -415,7 +415,7 @@ Mem::Init(void)
     /* init string pools */
 
     for (i = 0; i < mem_str_pool_count; i++) {
-        StrPools[i].pool = MemPools::GetInstance().create(StrPoolsAttrs[i].name, StrPoolsAttrs[i].obj_size);
+        StrPools[i].pool = memPoolCreate(StrPoolsAttrs[i].name, StrPoolsAttrs[i].obj_size);
 
         if (StrPools[i].pool->objectSize() != StrPoolsAttrs[i].obj_size)
             debugs(13, 1, "Notice: " << StrPoolsAttrs[i].name << " is " << StrPools[i].pool->objectSize() << " bytes instead of requested " << StrPoolsAttrs[i].obj_size << " bytes");

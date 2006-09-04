@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLStrategised.h,v 1.10 2005/05/08 06:36:45 hno Exp $
+ * $Id: ACLStrategised.h,v 1.11 2006/09/03 21:05:20 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -89,7 +89,7 @@ ACLStrategised<MatchType>::operator new (size_t byteCount)
     assert (byteCount == sizeof (ACLStrategised<MatchType>));
 
     if (!Pool)
-        Pool = MemPools::GetInstance().create("ACLStrategised", sizeof (ACLStrategised<MatchType>));
+        Pool = memPoolCreate("ACLStrategised", sizeof (ACLStrategised<MatchType>));
 
     return Pool->alloc();
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.599 2006/09/03 04:09:48 robertc Exp $
+ * $Id: store.cc,v 1.600 2006/09/03 21:05:20 hno Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -117,7 +117,7 @@ static EVH storeLateRelease;
  * local variables
  */
 static Stack<StoreEntry*> LateReleaseStack;
-MemImplementingAllocator *StoreEntry::pool = NULL;
+MemAllocator *StoreEntry::pool = NULL;
 
 StorePointer Store::CurrentRoot = NULL;
 
@@ -164,7 +164,7 @@ StoreEntry::operator new (size_t bytecount)
     assert (bytecount == sizeof (StoreEntry));
 
     if (!pool) {
-        pool = MemPools::GetInstance().create ("StoreEntry", bytecount);
+        pool = memPoolCreate ("StoreEntry", bytecount);
         pool->setChunkSize(2048 * 1024);
     }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.46 2006/05/29 00:15:02 robertc Exp $
+ * $Id: pconn.cc,v 1.47 2006/09/03 21:05:20 hno Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -303,7 +303,7 @@ PconnPool::count(int uses)
 PconnModule::PconnModule() : pools(NULL), poolCount(0)
 {
     pools = (PconnPool **) xcalloc(MAX_NUM_PCONN_POOLS, sizeof(*pools));
-    pconn_fds_pool = MemPools::GetInstance().create("pconn_fds", PCONN_FDS_SZ * sizeof(int));
+    pconn_fds_pool = memPoolCreate("pconn_fds", PCONN_FDS_SZ * sizeof(int));
     debug(48, 0) ("persistent connection module initialized\n");
 }
 

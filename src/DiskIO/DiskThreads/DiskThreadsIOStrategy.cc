@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsIOStrategy.cc,v 1.8 2006/09/03 04:12:00 hno Exp $
+ * $Id: DiskThreadsIOStrategy.cc,v 1.9 2006/09/03 21:05:20 hno Exp $
  *
  * DEBUG: section 79    Squid-side Disk I/O functions.
  * AUTHOR: Robert Collins
@@ -49,7 +49,7 @@ DiskThreadsIOStrategy::init(void)
     if (initialised)
         return;
 
-    squidaio_ctrl_pool = MemPools::GetInstance().create("aio_ctrl", sizeof(squidaio_ctrl_t));
+    squidaio_ctrl_pool = memPoolCreate("aio_ctrl", sizeof(squidaio_ctrl_t));
 
     initialised = true;
 

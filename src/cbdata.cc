@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.74 2006/09/03 05:29:44 hno Exp $
+ * $Id: cbdata.cc,v 1.75 2006/09/03 21:05:20 hno Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -238,7 +238,7 @@ cbdataInternalInitType(cbdata_type type, const char *name, int size, FREE * free
     size += cbdata::Offset;
 #endif
 
-    cbdata_index[type].pool = MemPools::GetInstance().create(label, size);
+    cbdata_index[type].pool = memPoolCreate(label, size);
 
     cbdata_index[type].free_func = free_func;
 
