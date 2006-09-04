@@ -16,7 +16,7 @@
 
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.74 2006/07/02 19:33:19 serassio Exp $
+#  $Id: Makefile.in,v 1.75 2006/09/03 18:49:56 serassio Exp $
 #
 
 srcdir = @srcdir@
@@ -238,6 +238,8 @@ USE_ESI_FALSE = @USE_ESI_FALSE@
 USE_ESI_TRUE = @USE_ESI_TRUE@
 USE_ICAP_CLIENT_FALSE = @USE_ICAP_CLIENT_FALSE@
 USE_ICAP_CLIENT_TRUE = @USE_ICAP_CLIENT_TRUE@
+USE_IPC_WIN32_FALSE = @USE_IPC_WIN32_FALSE@
+USE_IPC_WIN32_TRUE = @USE_IPC_WIN32_TRUE@
 USE_SNMP_FALSE = @USE_SNMP_FALSE@
 USE_SNMP_TRUE = @USE_SNMP_TRUE@
 VERSION = @VERSION@
