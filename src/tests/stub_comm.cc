@@ -1,5 +1,5 @@
 /*
- * $Id: stub_comm.cc,v 1.2 2006/08/07 02:28:26 robertc Exp $
+ * $Id: stub_comm.cc,v 1.3 2006/09/03 18:58:37 serassio Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins
@@ -113,8 +113,8 @@ commUnsetNonBlocking(int fd)
 
 /* bah, cheating on stub count */
 
-int
-ipcCreate(int type, const char *prog, const char *const args[], const char *name, int *rfd, int *wfd)
+pid_t
+ipcCreate(int type, const char *prog, const char *const args[], const char *name, int *rfd, int *wfd. void **hIpc)
 {
     fatal ("Not implemented");
     return -1;
