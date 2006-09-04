@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.69 2006/08/25 18:53:35 serassio Exp $
+ * $Id: htcp.cc,v 1.70 2006/09/03 21:05:20 hno Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -1555,7 +1555,7 @@ htcpInit(void)
     }
 
     if (!htcpDetailPool) {
-        htcpDetailPool = MemPools::GetInstance().create("htcpDetail", sizeof(htcpDetail));
+        htcpDetailPool = memPoolCreate("htcpDetail", sizeof(htcpDetail));
     }
 }
 

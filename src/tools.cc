@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.269 2006/08/19 12:31:21 robertc Exp $
+ * $Id: tools.cc,v 1.270 2006/09/03 21:05:20 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -1038,7 +1038,7 @@ dlink_node *
 dlinkNodeNew()
 {
     if (dlink_node_pool == NULL)
-        dlink_node_pool = MemPools::GetInstance().create("Dlink list nodes", sizeof(dlink_node));
+        dlink_node_pool = memPoolCreate("Dlink list nodes", sizeof(dlink_node));
 
     /* where should we call delete dlink_node_pool;dlink_node_pool = NULL; */
     return (dlink_node *)dlink_node_pool->alloc();

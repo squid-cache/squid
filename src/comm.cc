@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.422 2006/09/02 10:39:53 adrian Exp $
+ * $Id: comm.cc,v 1.423 2006/09/03 21:05:20 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -2003,9 +2003,9 @@ comm_init(void) {
      * Since Squid_MaxFD can be as high as several thousand, don't waste them */
     RESERVED_FD = XMIN(100, Squid_MaxFD / 4);
 
-    comm_write_pool = MemPools::GetInstance().create("CommWriteStateData", sizeof(CommWriteStateData));
+    comm_write_pool = memPoolCreate("CommWriteStateData", sizeof(CommWriteStateData));
 
-    conn_close_pool = MemPools::GetInstance().create("close_handler", sizeof(close_handler));
+    conn_close_pool = memPoolCreate("close_handler", sizeof(close_handler));
 }
 
 /* Write to FD. */

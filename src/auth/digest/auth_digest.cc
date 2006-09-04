@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.49 2006/09/03 04:12:01 hno Exp $
+ * $Id: auth_digest.cc,v 1.50 2006/09/03 21:05:20 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -201,7 +201,7 @@ static void
 authenticateDigestNonceSetup(void)
 {
     if (!digest_nonce_pool)
-        digest_nonce_pool = MemPools::GetInstance().create("Digest Scheme nonce's", sizeof(digest_nonce_h));
+        digest_nonce_pool = memPoolCreate("Digest Scheme nonce's", sizeof(digest_nonce_h));
 
     if (!digest_nonce_cache) {
         digest_nonce_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
