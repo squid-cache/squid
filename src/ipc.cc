@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.43 2006/09/03 17:19:34 serassio Exp $
+ * $Id: ipc.cc,v 1.44 2006/09/03 19:28:10 serassio Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -73,8 +73,8 @@ PutEnvironment()
 #endif
 }
 
-int
-ipcCreate(int type, const char *prog, const char *const args[], const char *name, int *rfd, int *wfd)
+pid_t
+ipcCreate(int type, const char *prog, const char *const args[], const char *name, int *rfd, int *wfd, void **hIpc)
 {
     pid_t pid;
 
@@ -100,6 +100,9 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
     if (wfd)
         *wfd = -1;
+
+    if (hIpc)
+        *hIpc = NULL;
 
     if (type == IPC_TCP_SOCKET) {
         crfd = cwfd = comm_open(SOCK_STREAM,
