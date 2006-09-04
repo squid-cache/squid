@@ -1,6 +1,6 @@
 
 /*
- * $Id: unlinkd.cc,v 1.55 2006/09/02 14:59:49 serassio Exp $
+ * $Id: unlinkd.cc,v 1.56 2006/09/03 18:47:18 serassio Exp $
  *
  * DEBUG: section 2     Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -85,9 +85,7 @@ main(int argc, char *argv[])
 static int unlinkd_wfd = -1;
 static int unlinkd_rfd = -1;
 
-#ifdef _SQUID_MSWIN_
-static HANDLE hIpc;
-#endif
+static void * hIpc;
 static pid_t pid;
 
 #define UNLINKD_QUEUE_LIMIT 20
@@ -232,28 +230,41 @@ unlinkdInit(void)
     struct timeval slp;
     args[0] = "(unlinkd)";
     args[1] = NULL;
+    pid = ipcCreate(
 #if USE_POLL && defined(_SQUID_OSF_)
-    /* pipes and poll() don't get along on DUNIX -DW */
-    pid = ipcCreate(IPC_STREAM,
+              /* pipes and poll() don't get along on DUNIX -DW */
+              IPC_STREAM,
+#elif defined(_SQUID_MSWIN_)
+/* select() will fail on a pipe */
+IPC_TCP_SOCKET,
 #else
 /* We currently need to use FIFO.. see below */
-pid = ipcCreate(IPC_FIFO,
+IPC_FIFO,
 #endif
-                    Config.Program.unlinkd,
-                    args,
-                    "unlinkd",
-                    &unlinkd_rfd,
-                    &unlinkd_wfd);
+              Config.Program.unlinkd,
+              args,
+              "unlinkd",
+              &unlinkd_rfd,
+              &unlinkd_wfd,
+              &hIpc);
 
     if (pid < 0)
         fatal("Failed to create unlinkd subprocess");
+
     slp.tv_sec = 0;
+
     slp.tv_usec = 250000;
+
     select(0, NULL, NULL, NULL, &slp);
+
     fd_note(unlinkd_wfd, "squid -> unlinkd");
+
     fd_note(unlinkd_rfd, "unlinkd -> squid");
+
     commSetTimeout(unlinkd_rfd, -1, NULL, NULL);
+
     commSetTimeout(unlinkd_wfd, -1, NULL, NULL);
+
     /*
     * unlinkd_rfd should already be non-blocking because of
     * ipcCreate.  We change unlinkd_wfd to blocking mode because
@@ -262,8 +273,10 @@ pid = ipcCreate(IPC_FIFO,
     * do this only for the IPC_FIFO case.
     */
     assert(fd_table[unlinkd_rfd].flags.nonblocking);
+
     if (FD_PIPE == fd_table[unlinkd_wfd].type)
         commUnsetNonBlocking(unlinkd_wfd);
+
     debug(2, 1) ("Unlinkd pipe opened on FD %d\n", unlinkd_wfd);
 
 #ifdef _SQUID_MSWIN_

@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.536 2006/08/21 00:50:41 robertc Exp $
+ * $Id: protos.h,v 1.537 2006/09/03 18:47:18 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -676,16 +676,17 @@ SQUIDCEXTERN char *strwordtok(char *buf, char **t);
 SQUIDCEXTERN void strwordquote(MemBuf * mb, const char *str);
 
 
-
 /*
  * ipc.c
  */
-SQUIDCEXTERN int ipcCreate(int type,
-                           const char *prog,
-                           const char *const args[],
-                           const char *name,
-                           int *rfd,
-                           int *wfd);
+SQUIDCEXTERN pid_t ipcCreate(int type,
+                             const char *prog,
+                             const char *const args[],
+                             const char *name,
+                             int *rfd,
+                             int *wfd,
+                             void **hIpc);
+
 
 /* CacheDigest */
 SQUIDCEXTERN CacheDigest *cacheDigestCreate(int capacity, int bpe);

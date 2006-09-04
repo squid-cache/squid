@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.162 2006/09/02 19:42:11 hno Exp $
+#  $Id: Makefile.am,v 1.163 2006/09/03 18:47:18 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -147,6 +147,12 @@ else
 WIN32_SOURCE = 
 endif
 
+if USE_IPC_WIN32
+IPC_SOURCE = ipc_win32.cc
+else
+IPC_SOURCE = ipc.cc
+endif
+
 IDENT_ALL_SOURCE = ACLIdent.cc ACLIdent.h ident.cc
 if ENABLE_IDENT
 IDENT_SOURCE = $(IDENT_ALL_SOURCE)
@@ -252,6 +258,8 @@ EXTRA_squid_SOURCES = \
 	dns_internal.cc \
 	htcp.cc \
 	htcp.h \
+	ipc.cc \
+	ipc_win32.cc \
 	$(IDENT_ALL_SOURCE) \
 	$(ESI_ALL_SOURCE) \
 	ProfStats.cc \
@@ -482,7 +490,7 @@ squid_SOURCES = \
 	$(IDENT_SOURCE) \
 	int.cc \
 	internal.cc \
-	ipc.cc \
+	$(IPC_SOURCE) \
 	ipcache.cc \
 	$(LEAKFINDERSOURCE) \
 	list.cc \
@@ -778,7 +786,7 @@ ufsdump_SOURCES = \
 	icp_v3.cc \
 	$(IDENT_SOURCE) \
 	internal.cc \
-	ipc.cc \
+	$(IPC_SOURCE) \
 	ipcache.cc \
 	$(LEAKFINDERSOURCE) \
         list.cc \
@@ -1265,7 +1273,7 @@ tests_testCacheManager_SOURCES = \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IDENT_SOURCE) \
-	ipc.cc \
+	$(IPC_SOURCE) \
 	ipcache.cc \
 	int.cc \
 	internal.cc \
@@ -1416,7 +1424,7 @@ tests_testEvent_SOURCES = \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IDENT_SOURCE) \
-	ipc.cc \
+	$(IPC_SOURCE) \
 	ipcache.cc \
 	int.cc \
 	internal.cc \
@@ -1566,7 +1574,7 @@ tests_testEventLoop_SOURCES = \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IDENT_SOURCE) \
-	ipc.cc \
+	$(IPC_SOURCE) \
 	ipcache.cc \
 	int.cc \
 	internal.cc \
@@ -1746,7 +1754,7 @@ tests_test_http_range_SOURCES = \
 	$(IDENT_SOURCE) \
 	int.cc \
 	internal.cc \
-	ipc.cc \
+	$(IPC_SOURCE) \
 	ipcache.cc \
 	list.cc \
 	logfile.cc \
@@ -1894,7 +1902,7 @@ tests_testHttpRequest_SOURCES = \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IDENT_SOURCE) \
-	ipc.cc \
+	$(IPC_SOURCE) \
 	ipcache.cc \
 	int.cc \
 	internal.cc \
@@ -2227,7 +2235,7 @@ tests_testURL_SOURCES = \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IDENT_SOURCE) \
-	ipc.cc \
+	$(IPC_SOURCE) \
 	ipcache.cc \
 	int.cc \
 	internal.cc \
