@@ -16,7 +16,7 @@
 
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.69 2006/09/03 18:49:57 serassio Exp $
+#  $Id: Makefile.in,v 1.70 2006/09/04 20:17:20 serassio Exp $
 #
 
 srcdir = @srcdir@
@@ -223,6 +223,8 @@ STORE_OBJS = @STORE_OBJS@
 STORE_TESTS = @STORE_TESTS@
 STRIP = @STRIP@
 TRUE = @TRUE@
+USE_AIO_WIN32_FALSE = @USE_AIO_WIN32_FALSE@
+USE_AIO_WIN32_TRUE = @USE_AIO_WIN32_TRUE@
 USE_DELAY_POOLS_FALSE = @USE_DELAY_POOLS_FALSE@
 USE_DELAY_POOLS_TRUE = @USE_DELAY_POOLS_TRUE@
 USE_DNSSERVER_FALSE = @USE_DNSSERVER_FALSE@
