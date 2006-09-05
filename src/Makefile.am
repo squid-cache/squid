@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.163 2006/09/03 18:47:18 serassio Exp $
+#  $Id: Makefile.am,v 1.164 2006/09/04 20:15:21 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -153,6 +153,15 @@ else
 IPC_SOURCE = ipc.cc
 endif
 
+AIO_WIN32_ALL_SOURCES = \
+	DiskIO/AIO/aio_win32.cc \
+	DiskIO/AIO/aio_win32.h
+if USE_AIO_WIN32
+AIO_WIN32_SOURCES = $(AIO_WIN32_ALL_SOURCES)
+else
+AIO_WIN32_SOURCES =
+endif
+
 IDENT_ALL_SOURCE = ACLIdent.cc ACLIdent.h ident.cc
 if ENABLE_IDENT
 IDENT_SOURCE = $(IDENT_ALL_SOURCE)
@@ -249,6 +258,7 @@ all_AUTHMODULES = \
 EXTRA_squid_SOURCES = \
 	$(all_FSMODULES) \
 	$(all_DISKIOMODULES) \
+	$(AIO_WIN32_ALL_SOURCES) \
 	$(all_AUTHMODULES) \
 	$(ARP_ACL_ALL_SOURCE) \
 	ConfigOption.h \
@@ -904,6 +914,7 @@ EXTRA_DIST = \
 	mime.conf.default
 
 libAIO_a_SOURCES = \
+		$(AIO_WIN32_SOURCES) \
 		DiskIO/AIO/async_io.h \
 		DiskIO/AIO/AIODiskFile.cc \
 		DiskIO/AIO/AIODiskFile.h \

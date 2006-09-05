@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.434 2006/09/03 18:47:17 serassio Exp $
+dnl  $Id: configure.in,v 1.435 2006/09/04 20:15:21 serassio Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.434 $)dnl
+AC_REVISION($Revision: 1.435 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -607,31 +607,31 @@ for fs in $DISK_MODULES none; do
 done
 
 if test -z "$FOUND_BLOCKING" && test -n "$NEED_BLOCKING"; then
-   echo "adding Blocking, as it is used by an active, legacy Store Module"
-   DISK_LIBS="$DISK_LIBS libBlocking.a"
-   DISK_MODULES="$DISK_MODULES Blocking"
-   DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/Blocking/BlockingDiskIOModule.o"
+    echo "adding Blocking, as it is used by an active, legacy Store Module"
+    DISK_LIBS="$DISK_LIBS libBlocking.a"
+    DISK_MODULES="$DISK_MODULES Blocking"
+    DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/Blocking/BlockingDiskIOModule.o"
 fi
 
 if test -z "$FOUND_DISKDAEMON" && test -n "$NEED_DISKDAEMON"; then
-   echo "adding DiskDaemon, as it is used by an active, legacy Store Module"
-   DISK_LIBS="$DISK_LIBS libDiskDaemon.a"
-   DISK_MODULES="$DISK_MODULES DiskDaemon"
-   DISK_PROGRAMS="$DISK_PROGRAMS DiskIO/DiskDaemon/diskd"
-   DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/DiskDaemon/DiskDaemonDiskIOModule.o"
+    echo "adding DiskDaemon, as it is used by an active, legacy Store Module"
+    DISK_LIBS="$DISK_LIBS libDiskDaemon.a"
+    DISK_MODULES="$DISK_MODULES DiskDaemon"
+    DISK_PROGRAMS="$DISK_PROGRAMS DiskIO/DiskDaemon/diskd"
+    DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/DiskDaemon/DiskDaemonDiskIOModule.o"
 fi
 
 if test -z "$FOUND_DISKTHREADS" && test -n "$NEED_DISKTHREADS"; then
-   echo "adding DiskThreads, as it is used by an active, legacy Store Module"
-   DISK_LIBS="$DISK_LIBS libDiskThreads.a"
-   DISK_MODULES="$DISK_MODULES DiskThreads"
-   DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/DiskThreads/DiskThreadsDiskIOModule.o"
+    echo "adding DiskThreads, as it is used by an active, legacy Store Module"
+    DISK_LIBS="$DISK_LIBS libDiskThreads.a"
+    DISK_MODULES="$DISK_MODULES DiskThreads"
+    DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/DiskThreads/DiskThreadsDiskIOModule.o"
 fi
 if test -z "$FOUND_AIO" && test -n "$NEED_AIO"; then
-   echo "adding AIO, as it is used by an active, legacy Store Module"
-   DISK_LIBS="$DISK_LIBS libAIO.a"
-   DISK_MODULES="$DISK_MODULES AIO"
-   DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/AIO/AIODiskIOModule.o"
+    echo "adding AIO, as it is used by an active, legacy Store Module"
+    DISK_LIBS="$DISK_LIBS libAIO.a"
+    DISK_MODULES="$DISK_MODULES AIO"
+    DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/AIO/AIODiskIOModule.o"
 fi
 echo "IO Modules built: $DISK_MODULES"
 dnl we know what is being built. now add dependencies.
@@ -645,8 +645,17 @@ for fs in $DISK_MODULES none; do
 	;;
     AIO)
 	if test -z "$with_aio"; then
-	    echo "Aio IO Module used, aio support automatically enabled"
-	    with_aio=yes
+            case "$host_os" in
+            mingw|mingw32|cygwin|cygwin32)
+        	AM_CONDITIONAL(USE_AIO_WIN32, true)
+	        echo "Aio IO Module used, Windows overlapped I/O support automatically enabled"
+                ;;
+            *)
+        	AM_CONDITIONAL(USE_AIO_WIN32, false)
+	        echo "Aio IO Module used, aio support automatically enabled"
+	        with_aio=yes
+                ;;
+            esac
 	fi
 	;;
     esac

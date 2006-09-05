@@ -1,6 +1,6 @@
 
 /*
- * $Id: AIODiskFile.cc,v 1.2 2006/05/31 17:23:02 wessels Exp $
+ * $Id: AIODiskFile.cc,v 1.3 2006/09/04 20:15:22 serassio Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -84,7 +84,13 @@ void
 AIODiskFile::open (int flags, mode_t mode, IORequestor::Pointer callback)
 {
     /* Simulate async calls */
+#ifdef _SQUID_WIN32_
+    fd = aio_open(path.buf(), flags);
+#else
+
     fd = file_open(path.buf() , flags);
+#endif
+
     ioRequestor = callback;
 
     if (fd < 0) {
@@ -214,7 +220,7 @@ AIODiskFile::write(WriteRequest *request)
 
     /* Initiate aio */
     if (aio_write(&qe->aq_e_aiocb) < 0) {
-        fatalf("Aiee! aio_read() returned error (%d) FIXME and wrap file_write !\n", errno);
+        fatalf("Aiee! aio_write() returned error (%d) FIXME and wrap file_write !\n", errno);
         debug(79, 1) ("WARNING: aio_write() returned error: %s\n", xstrerror());
         /* fall back to blocking method */
         //       file_write(fd, offset, buf, len, callback, data, freefunc);
@@ -225,7 +231,14 @@ void
 AIODiskFile::close ()
 {
     assert (!closed);
+#ifdef _SQUID_WIN32_
+
+    aio_close(fd);
+#else
+
     file_close(fd);
+#endif
+
     fd = -1;
     closed = true;
     assert (ioRequestor != NULL);
