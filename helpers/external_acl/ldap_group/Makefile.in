@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid LDAP authentication helper
 #
-#  $Id: Makefile.in,v 1.60 2006/09/04 20:17:12 serassio Exp $
+#  $Id: Makefile.in,v 1.61 2006/09/06 19:38:18 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -220,6 +220,8 @@ STORE_OBJS = @STORE_OBJS@
 STORE_TESTS = @STORE_TESTS@
 STRIP = @STRIP@
 TRUE = @TRUE@
+USE_AIOPS_WIN32_FALSE = @USE_AIOPS_WIN32_FALSE@
+USE_AIOPS_WIN32_TRUE = @USE_AIOPS_WIN32_TRUE@
 USE_AIO_WIN32_FALSE = @USE_AIO_WIN32_FALSE@
 USE_AIO_WIN32_TRUE = @USE_AIO_WIN32_TRUE@
 USE_DELAY_POOLS_FALSE = @USE_DELAY_POOLS_FALSE@

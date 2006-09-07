@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.14 2006/09/04 20:17:13 serassio Exp $
+#  $Id: Makefile.in,v 1.15 2006/09/06 19:38:19 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -215,6 +215,8 @@ STORE_OBJS = @STORE_OBJS@
 STORE_TESTS = @STORE_TESTS@
 STRIP = @STRIP@
 TRUE = @TRUE@
+USE_AIOPS_WIN32_FALSE = @USE_AIOPS_WIN32_FALSE@
+USE_AIOPS_WIN32_TRUE = @USE_AIOPS_WIN32_TRUE@
 USE_AIO_WIN32_FALSE = @USE_AIO_WIN32_FALSE@
 USE_AIO_WIN32_TRUE = @USE_AIO_WIN32_TRUE@
 USE_DELAY_POOLS_FALSE = @USE_DELAY_POOLS_FALSE@
