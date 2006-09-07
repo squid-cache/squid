@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.164 2006/09/04 20:15:21 serassio Exp $
+#  $Id: Makefile.am,v 1.165 2006/09/06 19:36:42 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -162,6 +162,12 @@ else
 AIO_WIN32_SOURCES =
 endif
 
+if USE_AIOPS_WIN32
+AIOPS_SOURCE = DiskIO/DiskThreads/aiops_win32.cc
+else
+AIOPS_SOURCE = DiskIO/DiskThreads/aiops.cc
+endif
+
 IDENT_ALL_SOURCE = ACLIdent.cc ACLIdent.h ident.cc
 if ENABLE_IDENT
 IDENT_SOURCE = $(IDENT_ALL_SOURCE)
@@ -278,7 +284,9 @@ EXTRA_squid_SOURCES = \
 	$(SNMP_ALL_SOURCE) \
 	unlinkd.cc \
 	$(SSL_ALL_SOURCE) \
-	$(WIN32_ALL_SOURCE)
+	$(WIN32_ALL_SOURCE) \
+	DiskIO/DiskThreads/aiops.cc \
+	DiskIO/DiskThreads/aiops_win32.cc
 
 squid_ACLSOURCES = \
 	$(ARP_ACL_SOURCE) \
@@ -938,14 +946,14 @@ libDiskDaemon_a_SOURCES = \
 		DiskIO/DiskDaemon/DiskDaemonDiskIOModule.h
 
 libDiskThreads_a_SOURCES = \
-	DiskIO/DiskThreads/aiops.cc \
-	DiskIO/DiskThreads/async_io.cc \
-	DiskIO/DiskThreads/DiskThreads.h \
-	DiskIO/DiskThreads/DiskThreadsDiskFile.cc \
-	DiskIO/DiskThreads/DiskThreadsDiskFile.h \
-	DiskIO/DiskThreads/DiskThreadsDiskIOModule.h \
-	DiskIO/DiskThreads/DiskThreadsIOStrategy.cc \
-	DiskIO/DiskThreads/DiskThreadsIOStrategy.h
+		$(AIOPS_SOURCE) \
+		DiskIO/DiskThreads/async_io.cc \
+		DiskIO/DiskThreads/DiskThreads.h \
+		DiskIO/DiskThreads/DiskThreadsDiskFile.cc \
+		DiskIO/DiskThreads/DiskThreadsDiskFile.h \
+		DiskIO/DiskThreads/DiskThreadsDiskIOModule.h \
+		DiskIO/DiskThreads/DiskThreadsIOStrategy.cc \
+		DiskIO/DiskThreads/DiskThreadsIOStrategy.h
 
 DiskIO_DiskDaemon_diskd_SOURCES = DiskIO/DiskDaemon/diskd.cc 
 DiskIO_DiskDaemon_diskd_LDADD = $(top_builddir)/lib/libmiscutil.a @XTRA_LIBS@

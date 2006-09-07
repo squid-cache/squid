@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.435 2006/09/04 20:15:21 serassio Exp $
+dnl  $Id: configure.in,v 1.436 2006/09/06 19:36:42 serassio Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.435 $)dnl
+AC_REVISION($Revision: 1.436 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -627,6 +627,7 @@ if test -z "$FOUND_DISKTHREADS" && test -n "$NEED_DISKTHREADS"; then
     DISK_MODULES="$DISK_MODULES DiskThreads"
     DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/DiskThreads/DiskThreadsDiskIOModule.o"
 fi
+
 if test -z "$FOUND_AIO" && test -n "$NEED_AIO"; then
     echo "adding AIO, as it is used by an active, legacy Store Module"
     DISK_LIBS="$DISK_LIBS libAIO.a"
@@ -639,8 +640,17 @@ for fs in $DISK_MODULES none; do
     case "$fs" in
     DiskThreads)
 	if test -z "$with_pthreads"; then
-	    echo "DiskThreads IO Module used, pthreads support automatically enabled"
-	    with_pthreads=yes
+            case "$host_os" in
+            mingw|mingw32|cygwin|cygwin32)
+        	AM_CONDITIONAL(USE_AIOPS_WIN32, true)
+	        echo "DiskThreads IO Module used, Windows threads support automatically enabled"
+                ;;
+            *)
+        	AM_CONDITIONAL(USE_AIOPS_WIN32, false)
+	        echo "DiskThreads IO Module used, pthreads support automatically enabled"
+	        with_pthreads=yes
+                ;;
+            esac
 	fi
 	;;
     AIO)
