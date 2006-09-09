@@ -1,8 +1,10 @@
 /*
- * $Id: aiops_win32.cc,v 1.1 2006/09/06 19:36:42 serassio Exp $
+ * $Id: aiops_win32.cc,v 1.2 2006/09/09 15:29:59 serassio Exp $
  *
- * DEBUG: section 43    AIOPS
+ * DEBUG: section 43    Windows AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
+ * AUTHOR: Robert Collins <robertc@squid-cache.org>
+ * AUTHOR: Guido Serassio <serassio@squid-cache.org>
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------

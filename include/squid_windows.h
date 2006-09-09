@@ -1,7 +1,7 @@
 /*
- * $Id: squid_windows.h,v 1.1 2005/08/21 18:54:23 serassio Exp $
+ * $Id: squid_windows.h,v 1.2 2006/09/09 15:29:59 serassio Exp $
  *
- * AUTHOR: Guido Serassio
+ * AUTHOR: Guido Serassio <serassio@squid-cache.org>
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
