@@ -1,6 +1,6 @@
 
 /*
- * $Id: unlinkd.cc,v 1.56 2006/09/03 18:47:18 serassio Exp $
+ * $Id: unlinkd.cc,v 1.57 2006/09/10 03:20:37 adrian Exp $
  *
  * DEBUG: section 2     Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -111,14 +111,7 @@ unlinkdUnlink(const char *path)
     * of the CPU's time.
     */
     if (queuelen >= UNLINKD_QUEUE_LIMIT) {
-
-        struct timeval to;
-        fd_set R;
-        FD_ZERO(&R);
-        FD_SET(unlinkd_rfd, &R);
-        to.tv_sec = 0;
-        to.tv_usec = 100000;
-        select(unlinkd_rfd + 1, &R, NULL, NULL, &to);
+	usleep(100000);
     }
 
     /*
