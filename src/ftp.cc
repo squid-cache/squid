@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.403 2006/09/02 10:03:20 adrian Exp $
+ * $Id: ftp.cc,v 1.404 2006/09/10 01:53:00 adrian Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -202,6 +202,8 @@ public:
     void printfReplyBody(const char *fmt, ...);
     void maybeReadData();
     void transactionComplete();
+    void transactionForwardComplete();
+    void transactionAbort();
     void processReplyBody();
     void writeCommand(const char *buf);
 
@@ -443,6 +445,7 @@ FtpStateData::~FtpStateData()
     safe_free(filepath);
 
     safe_free(data.host);
+    /* XXX this is also set to NULL in transactionForwardComplete */
     fwd = NULL;	// refcounted
 }
 
@@ -1251,7 +1254,7 @@ FtpStateData::dataRead(int fd, char *buf, size_t len, comm_err_t errflag, int xe
 #endif
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        transactionComplete();
+        transactionAbort();
         return;
     }
 
@@ -1702,7 +1705,7 @@ FtpStateData::ftpReadControlReply(int fd, char *buf, size_t len, comm_err_t errf
         return;
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        ftpState->transactionComplete();
+        ftpState->transactionAbort();
         return;
     }
 
@@ -1734,7 +1737,8 @@ FtpStateData::ftpReadControlReply(int fd, char *buf, size_t len, comm_err_t errf
             return;
         }
 
-        ftpState->transactionComplete();
+	/* XXX this may end up having to be transactionComplete() .. */
+        ftpState->transactionAbort();
         return;
     }
 
@@ -2185,7 +2189,7 @@ ftpSendPasv(FtpStateData * ftpState)
          */
 
         if (!EBIT_TEST(ftpState->entry->flags, ENTRY_ABORTED))
-            ftpState->fwd->complete();
+		ftpState->transactionForwardComplete();
 
         ftpSendQuit(ftpState);
 
@@ -2466,7 +2470,7 @@ ftpAcceptDataConnection(int fd, int newfd, ConnectionDetail *details,
         return;
 
     if (EBIT_TEST(ftpState->entry->flags, ENTRY_ABORTED)) {
-        ftpState->transactionComplete();
+	ftpState->transactionAbort();
         return;
     }
 
@@ -2851,6 +2855,7 @@ ftpSendQuit(FtpStateData * ftpState)
 static void
 ftpReadQuit(FtpStateData * ftpState)
 {
+    /* XXX should this just be a case of transactionAbort? */
     ftpState->transactionComplete();
 }
 
@@ -3264,6 +3269,39 @@ FtpStateData::writeReplyBody(const char *data, int len)
 }
 
 /*
+ * We've completed with the forwardstate - finish up if necessary.
+ * This is a simple hack to ensure we don't double-complete on the
+ * forward entry.
+ */
+void
+FtpStateData::transactionForwardComplete()
+{
+    debugs(9,5,HERE << "transactionForwardComplete FD " << ctrl.fd << ", Data FD " << data.fd << ", this " << this);
+    if (fwd == NULL) {
+	    fwd->complete();
+	    /* XXX this is also set to NULL in the destructor, but we need to do it as early as possible.. -adrian */
+	    fwd = NULL;	// refcounted
+    }
+
+}
+
+/*
+ * Quickly abort a connection.
+ * This will, for now, just call comm_close(). That'll unravel everything
+ * properly (I hope!) by using abort handlers. This all has to change soon
+ * enough!
+ */
+void
+FtpStateData::transactionAbort()
+{
+    debugs(9,5,HERE << "transactionAbort FD " << ctrl.fd << ", Data FD " << data.fd << ", this " << this);
+    assert(ctrl.fd != -1);
+
+    comm_close(ctrl.fd);
+    /* We could have had our state data freed from underneath us here.. */
+}
+
+/*
  * Done with the FTP server, so close those sockets.  May not be
  * done with  ICAP yet though.  Don't free ftpStateData if ICAP is
  * still around.
@@ -3271,7 +3309,7 @@ FtpStateData::writeReplyBody(const char *data, int len)
 void
 FtpStateData::transactionComplete()
 {
-    debugs(9,5,HERE << "transactionComplete FD " << ctrl.fd << " this " << this);
+    debugs(9,5,HERE << "transactionComplete FD " << ctrl.fd << ", Data FD " << data.fd << ", this " << this);
 
     if (ctrl.fd > -1) {
         fwd->unregister(ctrl.fd);
@@ -3294,7 +3332,7 @@ FtpStateData::transactionComplete()
 
 #endif
 
-    fwd->complete();
+    transactionForwardComplete();
 
     ftpSocketClosed(-1, this);
 }
@@ -3391,7 +3429,7 @@ FtpStateData::doneAdapting()
         debug(11,5)("\toops, entry is not Accepting!\n");
         icap->ownerAbort();
     } else {
-        fwd->complete();
+	transactionForwardComplete();
     }
 
     /*
