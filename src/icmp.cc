@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.88 2006/09/03 18:47:18 serassio Exp $
+ * $Id: icmp.cc,v 1.89 2006/09/11 09:36:06 serassio Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -36,6 +36,7 @@
 
 #include "squid.h"
 #include "comm.h"
+#include "SquidTime.h"
 
 #if USE_ICMP
 
