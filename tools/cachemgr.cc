@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.2 2006/05/12 16:05:10 hno Exp $
+ * $Id: cachemgr.cc,v 1.3 2006/09/10 20:08:20 serassio Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -187,11 +187,7 @@ static void auth_html(const char *host, int port, const char *user_name);
 static void error_html(const char *msg);
 static char *menu_url(cachemgr_request * req, const char *action);
 static int parse_status_line(const char *sline, const char **statusStr);
-#ifdef _SQUID_MSWIN_
-static cachemgr_request *read_request(char *);
-#else
 static cachemgr_request *read_request(void);
-#endif
 static char *read_get_request(void);
 static char *read_post_request(void);
 
@@ -204,6 +200,7 @@ static int check_target_acl(const char *hostname, int port);
 
 #ifdef _SQUID_MSWIN_
 static int s_iInitCount = 0;
+
 int Win32SockInit(void)
 {
     int iVersionRequested;
@@ -597,7 +594,8 @@ read_reply(int s, cachemgr_request * req)
 #ifdef _SQUID_MSWIN_
 
     int reply;
-    FILE *fp = tmpfile();
+    char *tmpfile = tempnam(NULL, "tmp0000");
+    FILE *fp = fopen(tmpfile, "w+");
 #else
 
     FILE *fp = fdopen(s, "r");
@@ -617,7 +615,15 @@ read_reply(int s, cachemgr_request * req)
         parse_menu = 1;
 
     if (fp == NULL) {
+#ifdef _SQUID_MSWIN_
+        perror(tmpfile);
+        xfree(tmpfile);
+#else
+
         perror("fdopen");
+#endif
+
+        close(s);
         return 1;
     }
 
@@ -626,7 +632,6 @@ read_reply(int s, cachemgr_request * req)
     while ((reply=recv(s, buf , sizeof(buf), 0)) > 0)
         fwrite(buf, 1, reply, fp);
 
-    close(s);
     rewind(fp);
 
 #endif
@@ -747,6 +752,14 @@ read_reply(int s, cachemgr_request * req)
     }
 
     fclose(fp);
+#ifdef _SQUID_MSWIN_
+
+    remove(tmpfile);
+    xfree(tmpfile);
+    close(s);
+
+#endif
+
     return 0;
 }
 
@@ -759,10 +772,6 @@ process_request(cachemgr_request * req)
     static struct sockaddr_in S;
     int s;
     int l;
-#ifdef _SQUID_MSWIN_
-
-    int answer;
-#endif
 
     static char buf[2 * 1024];
 
@@ -835,15 +844,7 @@ process_request(cachemgr_request * req)
                  make_auth_header(req));
     write(s, buf, l);
     debug(1) fprintf(stderr, "wrote request: '%s'\n", buf);
-#ifdef _SQUID_MSWIN_
-
-    answer=read_reply(s, req);
-    close(s);
-    return answer;
-#else
-
     return read_reply(s, req);
-#endif
 }
 
 int
@@ -851,17 +852,13 @@ main(int argc, char *argv[])
 {
     char *s;
     cachemgr_request *req;
-#ifdef _SQUID_MSWIN_
-
-    int answer;
-#endif
 
     safe_inet_addr("255.255.255.255", &no_addr);
     now = time(NULL);
 #ifdef _SQUID_MSWIN_
 
     Win32SockInit();
-
+    atexit(Win32SockCleanup);
     _setmode( _fileno( stdin ), _O_BINARY );
     _setmode( _fileno( stdout ), _O_BINARY );
     _fmode = _O_BINARY;
@@ -879,23 +876,9 @@ main(int argc, char *argv[])
     if ((s = getenv("SCRIPT_NAME")) != NULL)
         script_name = xstrdup(s);
 
-#ifdef _SQUID_MSWIN_
-
-    req = read_request(NULL);
-
-    answer=process_request(req);
-
-    Win32SockCleanup();
-
-    return answer;
-
-#else
-
     req = read_request();
 
     return process_request(req);
-
-#endif
 }
 
 static char *
@@ -937,15 +920,10 @@ read_get_request(void)
     return xstrdup(s);
 }
 
-#ifdef _SQUID_MSWIN_
 static cachemgr_request *
-read_request(char* buf)
+read_request(void)
 {
-#else
-static cachemgr_request *
-read_request(void) {
     char *buf;
-#endif
 
     cachemgr_request *req;
     char *s;
@@ -1021,7 +999,8 @@ read_request(void) {
  * Currently no powerful encryption is used.
  */
 static void
-make_pub_auth(cachemgr_request * req) {
+make_pub_auth(cachemgr_request * req)
+{
     static char buf[1024];
     safe_free(req->pub_auth);
     debug(3) fprintf(stderr, "cmgr: encoding for pub...\n");
@@ -1044,7 +1023,8 @@ make_pub_auth(cachemgr_request * req) {
 }
 
 static void
-decode_pub_auth(cachemgr_request * req) {
+decode_pub_auth(cachemgr_request * req)
+{
     char *buf;
     const char *host_name;
     const char *time_str;
@@ -1102,13 +1082,15 @@ decode_pub_auth(cachemgr_request * req) {
 }
 
 static void
-reset_auth(cachemgr_request * req) {
+reset_auth(cachemgr_request * req)
+{
     safe_free(req->passwd);
     safe_free(req->pub_auth);
 }
 
 static const char *
-make_auth_header(const cachemgr_request * req) {
+make_auth_header(const cachemgr_request * req)
+{
     static char buf[1024];
     size_t stringLength = 0;
     const char *str64;
@@ -1133,7 +1115,8 @@ make_auth_header(const cachemgr_request * req) {
 }
 
 static int
-check_target_acl(const char *hostname, int port) {
+check_target_acl(const char *hostname, int port)
+{
     char config_line[BUFSIZ];
     FILE *fp = NULL;
     int ret = 0;
