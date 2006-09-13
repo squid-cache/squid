@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.165 2006/09/06 19:36:42 serassio Exp $
+#  $Id: Makefile.am,v 1.166 2006/09/13 15:08:11 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -2316,6 +2316,7 @@ nodist_tests_testURL_SOURCES = \
 tests_testURL_LDADD = \
 	libsquid.la \
 	libauth.la \
+	@REGEXLIB@ \
 	@REPL_OBJS@ \
 	@ICAP_LIBS@ \
 	@SNMPLIB@ \
