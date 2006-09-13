@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.72 2006/05/29 00:15:02 robertc Exp $
+ * $Id: refresh.cc,v 1.73 2006/09/13 15:42:15 adrian Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -340,16 +340,22 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
     }
 
     if (-1 == staleness) {
-        if (sf.expires)
+	debug(22, 3) ("refreshCheck: object isn't stale..\n");
+        if (sf.expires) {
+	    debug(22, 3) ("refreshCheck: returning FRESH_EXPIRES\n");
             return FRESH_EXPIRES;
+	}
 
         assert(!sf.max);
 
-        if (sf.lmfactor)
+        if (sf.lmfactor) {
+	    debug(22, 3) ("refreshCheck: returning FRESH_LMFACTOR_RULE\n");
             return FRESH_LMFACTOR_RULE;
+	}
 
         assert(sf.min);
 
+	debug(22, 3) ("refreshCheck: returning FRESH_MIN_RULE\n");
         return FRESH_MIN_RULE;
     }
 
@@ -384,6 +390,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
         return STALE_LMFACTOR_RULE;
     }
 
+    debug(22, 3) ("refreshCheck: returning STALE_DEFAULT\n");
     return STALE_DEFAULT;
 }
 
