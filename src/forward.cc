@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.150 2006/09/02 10:03:20 adrian Exp $
+ * $Id: forward.cc,v 1.151 2006/09/13 15:54:21 adrian Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -327,7 +327,9 @@ FwdState::complete()
         debug(17, 3) ("fwdComplete: not re-forwarding status %d\n",
                       entry->getReply()->sline.status);
         EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
-	completed();
+	entry->complete();
+	if (server_fd < 0)
+		completed();
     }
 }
 
