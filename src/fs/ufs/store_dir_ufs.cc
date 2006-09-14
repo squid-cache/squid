@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.75 2006/08/19 12:31:24 robertc Exp $
+ * $Id: store_dir_ufs.cc,v 1.76 2006/09/14 00:51:12 robertc Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -196,7 +196,9 @@ UFSSwapDir::getOptionTree() const
 
     currentIOOptions->options.push_back(new ConfigOptionAdapter<UFSSwapDir>(*const_cast<UFSSwapDir *>(this), &UFSSwapDir::optionIOParse, &UFSSwapDir::optionIODump));
 
-    ConfigOption *ioOptions  = IO->io->getOptionTree();
+    ConfigOption *ioOptions = NULL;
+    
+    IO->io->getOptionTree();
 
     if (ioOptions)
         currentIOOptions->options.push_back(ioOptions);
@@ -223,7 +225,6 @@ UFSSwapDir::init()
         "\tfor details.  Run 'squid -z' to create swap directories\n"
         "\tif needed, or if running Squid for the first time.";
     IO->init();
-    initBitmap();
 
     if (verifyCacheDirs())
         fatal(errmsg);
@@ -248,7 +249,13 @@ UFSSwapDir::create()
     createSwapSubDirs();
 }
 
-UFSSwapDir::UFSSwapDir(char const *aType, const char *anIOType) : SwapDir(aType), IO(NULL), map(NULL), suggest(0), swaplog_fd (-1), currentIOOptions(new ConfigOptionVector()), ioType(xstrdup(anIOType)) {}
+UFSSwapDir::UFSSwapDir(char const *aType, const char *anIOType) : SwapDir(aType), IO(NULL), map(file_map_create()), suggest(0), swaplog_fd (-1), currentIOOptions(new ConfigOptionVector()), ioType(xstrdup(anIOType))
+{
+    /* modulename is only set to disk modules that are built, by configure,
+     * so the Find call should never return NULL here.
+     */
+    IO = new UFSStrategy(DiskIOModule::Find(anIOType)->createStrategy());
+}
 
 UFSSwapDir::~UFSSwapDir()
 {
@@ -480,26 +487,6 @@ UFSSwapDir::mapBitAllocate()
     file_map_bit_set(map, fn);
     suggest = fn + 1;
     return fn;
-}
-
-/*
- * Initialise the ufs bitmap
- *
- * If there already is a bitmap, and the numobjects is larger than currently
- * configured, we allocate a new bitmap and 'grow' the old one into it.
- */
-void
-UFSSwapDir::initBitmap()
-{
-    if (map == NULL) {
-        /* First time */
-        map = file_map_create();
-    } else if (map->max_n_files) {
-        /* it grew, need to expand */
-        /* XXX We don't need it anymore .. */
-    }
-
-    /* else it shrunk, and we leave the old one in place */
 }
 
 char *

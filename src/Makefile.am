@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.168 2006/09/13 20:09:50 serassio Exp $
+#  $Id: Makefile.am,v 1.169 2006/09/14 00:51:09 robertc Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -1097,6 +1097,7 @@ check_PROGRAMS+= \
 	tests/testACLMaxUserIP \
 	tests/testBoilerplate \
 	tests/testCacheManager \
+	tests/testDiskIO \
 	tests/testEvent \
 	tests/testEventLoop \
 	tests/testHeaders \
@@ -1377,6 +1378,18 @@ tests_testCacheManager_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
 	@SQUID_CPPUNIT_LA@ \
 	@ICAP_LIBS@
+
+tests_testDiskIO_SOURCES= \
+	$(SWAP_TEST_SOURCES) \
+	tests/testDiskIO.cc \
+	tests/testDiskIO.h \
+	tests/testMain.cc
+tests_testDiskIO_LDADD= \
+	$(SWAP_TEST_LDADD) \
+	@SSLLIB@
+tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
+tests_testDiskIO_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
+	@SQUID_CPPUNIT_LA@
 
 ## Tests of the Even module.
 tests_testEvent_SOURCES = \

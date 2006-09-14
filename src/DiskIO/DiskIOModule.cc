@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskIOModule.cc,v 1.2 2006/05/29 00:15:03 robertc Exp $
+ * $Id: DiskIOModule.cc,v 1.3 2006/09/14 00:51:10 robertc Exp $
  *
  * DEBUG: section 92    Storage File System
  * AUTHOR: Robert Collins
@@ -113,6 +113,21 @@ DiskIOModule::Find(char const *type)
             return *i;
 
     return NULL;
+}
+
+DiskIOModule *
+DiskIOModule::FindDefault()
+{
+    /* Best IO options are in order: */
+    DiskIOModule * result;
+    result = Find("DiskThreads");
+    if (NULL == result)
+        result = Find("DiskDaemon");
+    if (NULL == result)
+        result = Find("AIO");
+    if (NULL == result)
+        result = Find("Blocking");
+    return result;
 }
 
 /* disk modules dont export anything by default */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.67 2006/09/03 04:12:03 hno Exp $
+ * $Id: store_dir_coss.cc,v 1.68 2006/09/14 00:51:10 robertc Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store COSS Directory Routines
@@ -1055,6 +1055,9 @@ CossSwapDir::parse(int anIndex, char *aPath)
     max_size = size;
 
     parseOptions(0);
+
+    if (NULL == io) 
+        changeIO(DiskIOModule::FindDefault());
 
     /* Enforce maxobjsize being set to something */
     if (max_objsize == -1)

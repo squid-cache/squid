@@ -267,3 +267,33 @@ testCoss::testCossSearch()
     if (0 > system ("rm -rf " TESTDIR))
         throw std::runtime_error("Failed to clean test work directory");
 }
+
+/* The COSS store should always configure an IO engine even if none is 
+ * supplied on the configuration line.
+ */
+void
+testCoss::testDefaultEngine()
+{
+    /* boring common test boilerplate */
+    if (0 > system ("rm -rf " TESTDIR))
+        throw std::runtime_error("Failed to clean test work directory");
+
+    StorePointer aRoot (new StoreController);
+    Store::Root(aRoot);
+    SwapDirPointer aStore (new CossSwapDir());
+    addSwapDir(aStore);
+    commonInit();
+
+    char *path=xstrdup(TESTDIR);
+    char *config_line=xstrdup("foo 100 max-size=102400 block-size=512");
+    strtok(config_line, w_space);
+    aStore->parse(0, path);
+    safe_free(path);
+    safe_free(config_line);
+    CPPUNIT_ASSERT(aStore->io != NULL);
+
+    free_cachedir(&Config.cacheSwap);
+    Store::Root(NULL);
+    if (0 > system ("rm -rf " TESTDIR))
+        throw std::runtime_error("Failed to clean test work directory");
+}
