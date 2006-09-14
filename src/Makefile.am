@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.167 2006/09/13 19:05:11 serassio Exp $
+#  $Id: Makefile.am,v 1.168 2006/09/13 20:09:50 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -2131,6 +2131,7 @@ SWAP_TEST_SOURCES = \
 	store_swapout.cc \
 	store_swapmeta.cc \
 	unlinkd.cc \
+	$(WIN32_SOURCE) \
 	$(STORE_TEST_SOURCES) \
 	$(DISKIO_SOURCE)
 
