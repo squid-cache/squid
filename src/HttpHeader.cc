@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.124 2006/09/02 00:27:04 robertc Exp $
+ * $Id: HttpHeader.cc,v 1.125 2006/09/14 06:04:27 adrian Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -256,7 +256,7 @@ static int HeaderEntryParsedCount = 0;
 
 #define assert_eid(id) assert((id) >= 0 && (id) < HDR_ENUM_END)
 
-static void httpHeaderNoteParsedEntry(http_hdr_type id, String value, int error);
+static void httpHeaderNoteParsedEntry(http_hdr_type id, String const &value, int error);
 
 static void httpHeaderStatInit(HttpHeaderStat * hs, const char *label);
 static void httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e);
@@ -1450,7 +1450,7 @@ HttpHeaderEntry::getInt() const
 }
 
 static void
-httpHeaderNoteParsedEntry(http_hdr_type id, String context, int error)
+httpHeaderNoteParsedEntry(http_hdr_type id, String const &context, int error)
 {
     Headers[id].stat.parsCount++;
 
