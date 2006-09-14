@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskIOModule.h,v 1.2 2006/05/29 00:15:03 robertc Exp $
+ * $Id: DiskIOModule.h,v 1.3 2006/09/14 00:51:10 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -52,6 +52,10 @@ public:
     static void ModuleAdd(DiskIOModule &);
     static void FreeAllModules();
     static DiskIOModule *Find(char const *type);
+    /* find *any* usable disk module. This will look for the 'best' 
+     * available module for this system.
+     */
+    static DiskIOModule *FindDefault();
     static Vector<DiskIOModule*> const &Modules();
     typedef Vector<DiskIOModule*>::iterator iterator;
     typedef Vector<DiskIOModule*>::const_iterator const_iterator;

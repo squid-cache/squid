@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreFSufs.h,v 1.4 2004/12/21 17:28:29 robertc Exp $
+ * $Id: StoreFSufs.h,v 1.5 2006/09/14 00:51:12 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -39,8 +39,12 @@
 #include "DiskIO/DiskIOModule.h"
 
 
+/* core UFS class. This template provides compile time aliases for
+ * ufs/aufs/diskd to ease configuration conversion - each becomes a 
+ * StoreFS module whose createSwapDir method parameterises the common
+ * UFSSwapDir with an IO module instance.
+ */
 template <class TheSwapDir>
-
 class StoreFSufs : public StoreFileSystem
 {
 
@@ -61,9 +65,6 @@ protected:
     DiskIOModule *IO;
     char const *moduleName;
     char const *label;
-
-private:
-    void checkIO();
 };
 
 template <class C>
@@ -84,8 +85,6 @@ SwapDir *
 StoreFSufs<C>::createSwapDir()
 {
     C *result = new C(type(), moduleName);
-    checkIO();
-    result->IO = new UFSStrategy(IO->createStrategy());
     return result;
 }
 
@@ -102,16 +101,6 @@ StoreFSufs<C>::setup()
 {
     assert(!initialised);
     initialised = true;
-}
-
-template <class C>
-void
-StoreFSufs<C>::checkIO()
-{
-    if (IO)
-        return;
-
-    IO = DiskIOModule::Find(moduleName);
 }
 
 #endif /* SQUID_STOREFSUFS_H */

@@ -38,27 +38,12 @@ searchCallback(void *cbdata)
 }
 
 void
-testUfs::testUfsSearch()
+testUfs::commonInit()
 {
-    /* test sequence
-     * make a valid working ufs swapdir
-     * put two entries in it and sync logs
-     * search the ufs dir
-     * check the entries we find are what we want
-     */
+    static bool inited = false;
 
-    if (0 > system ("rm -rf " TESTDIR))
-        throw std::runtime_error("Failed to clean test work directory");
-
-    StorePointer aRoot (new StoreController);
-
-    Store::Root(aRoot);
-
-    SwapDirPointer aStore (new UFSSwapDir("ufs", "Blocking"));
-
-    aStore->IO = new UFSStrategy(DiskIOModule::Find("Blocking")->createStrategy());
-
-    addSwapDir(aStore);
+    if (inited)
+        return;
 
     Config.Store.avgObjectSize = 1024;
 
@@ -83,7 +68,35 @@ testUfs::testUfsSearch()
 
     httpReplyInitModule();	/* must go before accepting replies */
 
+    inited = true;
+}
+
+void
+testUfs::testUfsSearch()
+{
+    /* test sequence
+     * make a valid working ufs swapdir
+     * put two entries in it and sync logs
+     * search the ufs dir
+     * check the entries we find are what we want
+     */
+
+    if (0 > system ("rm -rf " TESTDIR))
+        throw std::runtime_error("Failed to clean test work directory");
+
+    StorePointer aRoot (new StoreController);
+
+    Store::Root(aRoot);
+
+    SwapDirPointer aStore (new UFSSwapDir("ufs", "Blocking"));
+
+    aStore->IO = new UFSStrategy(DiskIOModule::Find("Blocking")->createStrategy());
+
+    addSwapDir(aStore);
+
+    commonInit();
     mem_policy = createRemovalPolicy(Config.replPolicy);
+
 
     char *path=xstrdup(TESTDIR);
 
@@ -194,6 +207,43 @@ testUfs::testUfsSearch()
 
     /* todo: here we should test a dirty rebuild */
 
+    Store::Root(NULL);
+    safe_free(Config.replPolicy->type);
+    delete Config.replPolicy;
+
+    if (0 > system ("rm -rf " TESTDIR))
+        throw std::runtime_error("Failed to clean test work directory");
+}
+
+/* The UFS store should always configure an IO engine even if none is 
+ * supplied on the configuration line.
+ */
+void
+testUfs::testUfsDefaultEngine()
+{
+    /* boring common test boilerplate */
+    if (0 > system ("rm -rf " TESTDIR))
+        throw std::runtime_error("Failed to clean test work directory");
+
+    StorePointer aRoot (new StoreController);
+    Store::Root(aRoot);
+    SwapDirPointer aStore (new UFSSwapDir("ufs", "Blocking"));
+    addSwapDir(aStore);
+    commonInit();
+    Config.replPolicy = new RemovalPolicySettings;
+    Config.replPolicy->type = xstrdup ("lru");
+    mem_policy = createRemovalPolicy(Config.replPolicy);
+
+    char *path=xstrdup(TESTDIR);
+    char *config_line=xstrdup("foo 100 1 1");
+    strtok(config_line, w_space);
+    aStore->parse(0, path);
+    safe_free(path);
+    safe_free(config_line);
+    CPPUNIT_ASSERT(aStore->IO->io != NULL);
+
+    free_cachedir(&Config.cacheSwap);
+    Store::Root(NULL);
     safe_free(Config.replPolicy->type);
     delete Config.replPolicy;
 

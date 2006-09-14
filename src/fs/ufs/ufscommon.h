@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufscommon.h,v 1.8 2006/08/07 02:28:26 robertc Exp $
+ * $Id: ufscommon.h,v 1.9 2006/09/14 00:51:12 robertc Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -130,7 +130,6 @@ private:
     bool pathIsDirectory(const char *path)const;
     int swaplog_fd;
     static EVH CleanEvent;
-    void initBitmap();
     bool verifyCacheDirs();
     void rebuild();
     int createDirectory(const char *path, int);
@@ -148,7 +147,11 @@ private:
 #include "RefCount.h"
 #include "DiskIO/IORequestor.h"
 
-/* UFS dir specific IO calls */
+/* UFS dir specific IO calls 
+ *
+ * This should be whittled away - DiskIOModule should be providing the
+ * entire needed api.
+ */
 
 class DiskIOStrategy;
 
@@ -187,10 +190,11 @@ public:
     /* cachemgr output on the IO instance stats */
     virtual void statfs(StoreEntry & sentry)const;
 
+    /* The io strategy in use */
+    DiskIOStrategy *io;
 protected:
 
     friend class UFSSwapDir;
-    DiskIOStrategy *io;
 };
 
 /* Common ufs-store-dir logic */
