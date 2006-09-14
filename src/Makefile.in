@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.404 2006/09/06 19:38:26 serassio Exp $
+#  $Id: Makefile.in,v 1.405 2006/09/13 19:06:15 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -267,7 +267,7 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc \
 	structs.h SwapDir.cc SwapDir.h time.cc tools.cc tunnel.cc \
 	typedefs.h unlinkd.cc url.cc URL.h URLScheme.cc URLScheme.h \
 	urn.cc useragent.cc wais.cc wccp.cc wccp2.cc whois.cc \
-	wordlist.cc wordlist.h win32.cc
+	wordlist.cc wordlist.h win32.cc WinSvc.cc
 am__objects_4 = ACLARP.$(OBJEXT)
 @ENABLE_ARP_ACL_TRUE@am__objects_5 = $(am__objects_4)
 am__objects_6 = $(am__objects_5) ACLASN.$(OBJEXT) ACLBrowser.$(OBJEXT) \
@@ -319,8 +319,8 @@ am__objects_22 = ACLCertificateData.$(OBJEXT) ACLCertificate.$(OBJEXT) \
 	ssl_support.$(OBJEXT)
 @ENABLE_SSL_TRUE@am__objects_23 = $(am__objects_22)
 @ENABLE_UNLINKD_TRUE@am__objects_24 = unlinkd.$(OBJEXT)
-am__objects_25 = win32.$(OBJEXT)
-@ENABLE_WIN32SPECIFIC_TRUE@am__objects_26 = $(am__objects_25)
+@ENABLE_WIN32SPECIFIC_TRUE@am__objects_25 = win32.$(OBJEXT)
+@ENABLE_WIN32SPECIFIC_TRUE@am__objects_26 = WinSvc.$(OBJEXT)
 am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	acl_noncore.$(OBJEXT) ACLChecklist.$(OBJEXT) $(am__objects_6) \
 	asn.$(OBJEXT) AsyncEngine.$(OBJEXT) authenticate.$(OBJEXT) \
@@ -371,11 +371,11 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	$(am__objects_24) url.$(OBJEXT) URLScheme.$(OBJEXT) \
 	urn.$(OBJEXT) useragent.$(OBJEXT) wais.$(OBJEXT) \
 	wccp.$(OBJEXT) wccp2.$(OBJEXT) whois.$(OBJEXT) \
-	wordlist.$(OBJEXT) $(am__objects_26)
+	wordlist.$(OBJEXT) $(am__objects_25) $(am__objects_26)
 nodist_squid_OBJECTS = repl_modules.$(OBJEXT) globals.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 squid_OBJECTS = $(am_squid_OBJECTS) $(nodist_squid_OBJECTS)
-am__objects_30 = ../test-suite/test_tools.$(OBJEXT) globals.$(OBJEXT)
+am__objects_31 = ../test-suite/test_tools.$(OBJEXT) globals.$(OBJEXT)
 am_tests_testACLMaxUserIP_OBJECTS = acl.$(OBJEXT) \
 	ACLChecklist.$(OBJEXT) ACLMaxUserIP.$(OBJEXT) \
 	ACLProxyAuth.$(OBJEXT) ACLRegexData.$(OBJEXT) \
@@ -390,10 +390,10 @@ am_tests_testACLMaxUserIP_OBJECTS = acl.$(OBJEXT) \
 	tests/stub_MemObject.$(OBJEXT) tests/stub_store.$(OBJEXT) \
 	tests/testACLMaxUserIP.$(OBJEXT) tests/testMain.$(OBJEXT) \
 	time.$(OBJEXT) mem.$(OBJEXT) MemBuf.$(OBJEXT) \
-	wordlist.$(OBJEXT) $(am__objects_30)
+	wordlist.$(OBJEXT) $(am__objects_31)
 tests_testACLMaxUserIP_OBJECTS = $(am_tests_testACLMaxUserIP_OBJECTS)
 am_tests_testAuth_OBJECTS = tests/testAuth.$(OBJEXT) \
-	tests/testMain.$(OBJEXT) $(am__objects_30) \
+	tests/testMain.$(OBJEXT) $(am__objects_31) \
 	authenticate.$(OBJEXT) ConfigParser.$(OBJEXT) \
 	tests/stub_acl.$(OBJEXT) tests/stub_cache_cf.$(OBJEXT) \
 	tests/stub_helper.$(OBJEXT) cbdata.$(OBJEXT) String.$(OBJEXT) \
@@ -415,7 +415,7 @@ am_tests_testAuth_OBJECTS = tests/testAuth.$(OBJEXT) \
 	URLScheme.$(OBJEXT) wordlist.$(OBJEXT)
 tests_testAuth_OBJECTS = $(am_tests_testAuth_OBJECTS)
 am_tests_testBoilerplate_OBJECTS = tests/testBoilerplate.$(OBJEXT) \
-	tests/testMain.$(OBJEXT) $(am__objects_30) time.$(OBJEXT)
+	tests/testMain.$(OBJEXT) $(am__objects_31) time.$(OBJEXT)
 tests_testBoilerplate_OBJECTS = $(am_tests_testBoilerplate_OBJECTS)
 am__tests_testCacheManager_SOURCES_DIST = debug.cc globals.cc \
 	HttpRequest.cc HttpRequestMethod.cc mem.cc String.cc \
@@ -464,7 +464,7 @@ am__tests_testCacheManager_SOURCES_DIST = debug.cc globals.cc \
 	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
 	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc url.cc \
 	URLScheme.cc urn.cc useragent.cc wais.cc wccp2.cc whois.cc \
-	wordlist.cc
+	win32.cc wordlist.cc
 am_tests_testCacheManager_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	HttpRequest.$(OBJEXT) HttpRequestMethod.$(OBJEXT) \
 	mem.$(OBJEXT) String.$(OBJEXT) \
@@ -513,7 +513,7 @@ am_tests_testCacheManager_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	tools.$(OBJEXT) tunnel.$(OBJEXT) SwapDir.$(OBJEXT) \
 	url.$(OBJEXT) URLScheme.$(OBJEXT) urn.$(OBJEXT) \
 	useragent.$(OBJEXT) wais.$(OBJEXT) wccp2.$(OBJEXT) \
-	whois.$(OBJEXT) wordlist.$(OBJEXT)
+	whois.$(OBJEXT) $(am__objects_25) wordlist.$(OBJEXT)
 nodist_tests_testCacheManager_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testCacheManager_OBJECTS = $(am_tests_testCacheManager_OBJECTS) \
@@ -553,7 +553,7 @@ am__tests_testCoss_SOURCES_DIST = tests/testCoss.cc tests/testMain.cc \
 	DiskIO/WriteRequest.h DiskIO/DiskFile.h \
 	DiskIO/DiskIOStrategy.h DiskIO/IORequestor.h \
 	DiskIO/DiskIOModule.h
-am__objects_31 = $(am__objects_30) $(am__objects_9) \
+am__objects_32 = $(am__objects_31) $(am__objects_9) \
 	CacheDigest.$(OBJEXT) ConfigParser.$(OBJEXT) \
 	EventLoop.$(OBJEXT) event.$(OBJEXT) HttpMsg.$(OBJEXT) \
 	RemovalPolicy.$(OBJEXT) store_dir.$(OBJEXT) store.$(OBJEXT) \
@@ -579,7 +579,7 @@ am__objects_31 = $(am__objects_30) $(am__objects_9) \
 	tests/stub_store_client.$(OBJEXT) tests/stub_tools.$(OBJEXT) \
 	tests/testStoreSupport.$(OBJEXT) time.$(OBJEXT) \
 	URLScheme.$(OBJEXT) wordlist.$(OBJEXT)
-am__objects_32 = tests/stub_store_rebuild.$(OBJEXT) \
+am__objects_33 = tests/stub_store_rebuild.$(OBJEXT) \
 	tests/stub_internal.$(OBJEXT) fd.$(OBJEXT) disk.$(OBJEXT) \
 	filemap.$(OBJEXT) HttpBody.$(OBJEXT) HttpReply.$(OBJEXT) \
 	HttpStatusLine.$(OBJEXT) int.$(OBJEXT) list.$(OBJEXT) \
@@ -589,10 +589,10 @@ am__objects_32 = tests/stub_store_rebuild.$(OBJEXT) \
 	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
 	StoreMetaVary.$(OBJEXT) StoreFileSystem.$(OBJEXT) \
 	store_io.$(OBJEXT) store_swapout.$(OBJEXT) \
-	store_swapmeta.$(OBJEXT) unlinkd.$(OBJEXT) $(am__objects_31) \
+	store_swapmeta.$(OBJEXT) unlinkd.$(OBJEXT) $(am__objects_32) \
 	$(am__objects_10)
 am_tests_testCoss_OBJECTS = tests/testCoss.$(OBJEXT) \
-	tests/testMain.$(OBJEXT) $(am__objects_32)
+	tests/testMain.$(OBJEXT) $(am__objects_33)
 tests_testCoss_OBJECTS = $(am_tests_testCoss_OBJECTS)
 am__DEPENDENCIES_1 = libsquid.la libauth.la \
 	DiskIO/Blocking/BlockingDiskIOModule.o \
@@ -644,7 +644,7 @@ am__tests_testEvent_SOURCES_DIST = debug.cc EventLoop.h EventLoop.cc \
 	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
 	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc url.cc \
 	URLScheme.cc urn.cc useragent.cc wais.cc wccp2.cc whois.cc \
-	wordlist.cc
+	win32.cc wordlist.cc
 am_tests_testEvent_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	globals.$(OBJEXT) HttpRequest.$(OBJEXT) \
 	HttpRequestMethod.$(OBJEXT) mem.$(OBJEXT) \
@@ -693,7 +693,8 @@ am_tests_testEvent_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	StoreSwapLogData.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
 	SwapDir.$(OBJEXT) url.$(OBJEXT) URLScheme.$(OBJEXT) \
 	urn.$(OBJEXT) useragent.$(OBJEXT) wais.$(OBJEXT) \
-	wccp2.$(OBJEXT) whois.$(OBJEXT) wordlist.$(OBJEXT)
+	wccp2.$(OBJEXT) whois.$(OBJEXT) $(am__objects_25) \
+	wordlist.$(OBJEXT)
 nodist_tests_testEvent_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testEvent_OBJECTS = $(am_tests_testEvent_OBJECTS) \
@@ -745,7 +746,7 @@ am__tests_testEventLoop_SOURCES_DIST = debug.cc EventLoop.h \
 	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
 	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc url.cc \
 	URLScheme.cc urn.cc useragent.cc wais.cc wccp2.cc whois.cc \
-	wordlist.cc
+	win32.cc wordlist.cc
 am_tests_testEventLoop_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	globals.$(OBJEXT) HttpRequest.$(OBJEXT) \
 	HttpRequestMethod.$(OBJEXT) mem.$(OBJEXT) \
@@ -794,12 +795,13 @@ am_tests_testEventLoop_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	StoreSwapLogData.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
 	SwapDir.$(OBJEXT) url.$(OBJEXT) URLScheme.$(OBJEXT) \
 	urn.$(OBJEXT) useragent.$(OBJEXT) wais.$(OBJEXT) \
-	wccp2.$(OBJEXT) whois.$(OBJEXT) wordlist.$(OBJEXT)
+	wccp2.$(OBJEXT) whois.$(OBJEXT) $(am__objects_25) \
+	wordlist.$(OBJEXT)
 nodist_tests_testEventLoop_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testEventLoop_OBJECTS = $(am_tests_testEventLoop_OBJECTS) \
 	$(nodist_tests_testEventLoop_OBJECTS)
-am__objects_33 = tests/testHeader_ACL.$(OBJEXT) \
+am__objects_34 = tests/testHeader_ACL.$(OBJEXT) \
 	tests/testHeader_AsyncEngine.$(OBJEXT) \
 	tests/testHeader_cbdata.$(OBJEXT) \
 	tests/testHeader_CompletionDispatcher.$(OBJEXT) \
@@ -822,7 +824,7 @@ am__objects_33 = tests/testHeader_ACL.$(OBJEXT) \
 	tests/testHeader_URLScheme.$(OBJEXT) \
 	tests/testHeader_wordlist.$(OBJEXT)
 am_tests_testHeaders_OBJECTS = tests/testMain.$(OBJEXT) \
-	$(am__objects_33)
+	$(am__objects_34)
 tests_testHeaders_OBJECTS = $(am_tests_testHeaders_OBJECTS)
 am__tests_testHttpRequest_SOURCES_DIST = debug.cc globals.cc \
 	HttpRequest.cc HttpRequestMethod.cc mem.cc String.cc \
@@ -871,7 +873,7 @@ am__tests_testHttpRequest_SOURCES_DIST = debug.cc globals.cc \
 	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
 	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc url.cc \
 	URLScheme.cc urn.cc useragent.cc wais.cc wccp2.cc whois.cc \
-	wordlist.cc
+	win32.cc wordlist.cc
 am_tests_testHttpRequest_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	HttpRequest.$(OBJEXT) HttpRequestMethod.$(OBJEXT) \
 	mem.$(OBJEXT) String.$(OBJEXT) tests/testHttpRequest.$(OBJEXT) \
@@ -920,7 +922,7 @@ am_tests_testHttpRequest_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	tools.$(OBJEXT) tunnel.$(OBJEXT) SwapDir.$(OBJEXT) \
 	url.$(OBJEXT) URLScheme.$(OBJEXT) urn.$(OBJEXT) \
 	useragent.$(OBJEXT) wais.$(OBJEXT) wccp2.$(OBJEXT) \
-	whois.$(OBJEXT) wordlist.$(OBJEXT)
+	whois.$(OBJEXT) $(am__objects_25) wordlist.$(OBJEXT)
 nodist_tests_testHttpRequest_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testHttpRequest_OBJECTS = $(am_tests_testHttpRequest_OBJECTS) \
@@ -961,7 +963,7 @@ am__tests_testNull_SOURCES_DIST = tests/testNull.cc tests/testMain.cc \
 	DiskIO/DiskIOStrategy.h DiskIO/IORequestor.h \
 	DiskIO/DiskIOModule.h
 am_tests_testNull_OBJECTS = tests/testNull.$(OBJEXT) \
-	tests/testMain.$(OBJEXT) $(am__objects_32)
+	tests/testMain.$(OBJEXT) $(am__objects_33)
 tests_testNull_OBJECTS = $(am_tests_testNull_OBJECTS)
 am__tests_testStore_SOURCES_DIST = tests/stub_store_swapout.cc \
 	tests/testMain.cc tests/stub_MemObject.cc tests/testStore.cc \
@@ -998,11 +1000,11 @@ am_tests_testStore_OBJECTS = tests/stub_store_swapout.$(OBJEXT) \
 	tests/testStoreController.$(OBJEXT) \
 	tests/testStoreHashIndex.$(OBJEXT) tests/TestSwapDir.$(OBJEXT) \
 	tests/stub_fd.$(OBJEXT) tests/stub_HttpReply.$(OBJEXT) \
-	$(am__objects_31)
+	$(am__objects_32)
 tests_testStore_OBJECTS = $(am_tests_testStore_OBJECTS)
 am_tests_testString_OBJECTS = mem.$(OBJEXT) String.$(OBJEXT) \
 	tests/testMain.$(OBJEXT) tests/testString.$(OBJEXT) \
-	$(am__objects_30) time.$(OBJEXT)
+	$(am__objects_31) time.$(OBJEXT)
 tests_testString_OBJECTS = $(am_tests_testString_OBJECTS)
 am__tests_testURL_SOURCES_DIST = debug.cc url.cc URLScheme.cc \
 	globals.cc HttpRequest.cc HttpRequestMethod.cc mem.cc \
@@ -1051,7 +1053,7 @@ am__tests_testURL_SOURCES_DIST = debug.cc url.cc URLScheme.cc \
 	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
 	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
 	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc urn.cc \
-	useragent.cc wais.cc wccp2.cc whois.cc wordlist.cc
+	useragent.cc wais.cc wccp2.cc whois.cc win32.cc wordlist.cc
 am_tests_testURL_OBJECTS = debug.$(OBJEXT) url.$(OBJEXT) \
 	URLScheme.$(OBJEXT) globals.$(OBJEXT) HttpRequest.$(OBJEXT) \
 	HttpRequestMethod.$(OBJEXT) mem.$(OBJEXT) \
@@ -1100,7 +1102,7 @@ am_tests_testURL_OBJECTS = debug.$(OBJEXT) url.$(OBJEXT) \
 	StoreSwapLogData.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
 	SwapDir.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) \
 	wais.$(OBJEXT) wccp2.$(OBJEXT) whois.$(OBJEXT) \
-	wordlist.$(OBJEXT)
+	$(am__objects_25) wordlist.$(OBJEXT)
 nodist_tests_testURL_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testURL_OBJECTS = $(am_tests_testURL_OBJECTS) \
@@ -1141,7 +1143,7 @@ am__tests_testUfs_SOURCES_DIST = tests/testUfs.cc tests/testMain.cc \
 	DiskIO/DiskIOStrategy.h DiskIO/IORequestor.h \
 	DiskIO/DiskIOModule.h
 am_tests_testUfs_OBJECTS = tests/testUfs.$(OBJEXT) \
-	tests/testMain.$(OBJEXT) $(am__objects_32)
+	tests/testMain.$(OBJEXT) $(am__objects_33)
 tests_testUfs_OBJECTS = $(am_tests_testUfs_OBJECTS)
 am__tests_test_http_range_SOURCES_DIST = tests/test_http_range.cc \
 	access_log.cc acl.cc acl_noncore.cc ACLChecklist.cc \
@@ -1188,8 +1190,8 @@ am__tests_test_http_range_SOURCES_DIST = tests/test_http_range.cc \
 	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaUnpacker.cc \
 	StoreMetaURL.cc StoreMetaVary.cc StoreSwapLogData.cc String.cc \
 	SwapDir.cc time.cc tools.cc tunnel.cc url.cc URLScheme.cc \
-	urn.cc useragent.cc wais.cc wccp2.cc whois.cc wordlist.cc \
-	Packer.cc MemBuf.cc
+	urn.cc useragent.cc wais.cc wccp2.cc whois.cc win32.cc \
+	wordlist.cc Packer.cc MemBuf.cc
 am_tests_test_http_range_OBJECTS = tests/test_http_range.$(OBJEXT) \
 	access_log.$(OBJEXT) acl.$(OBJEXT) acl_noncore.$(OBJEXT) \
 	ACLChecklist.$(OBJEXT) ACLProxyAuth.$(OBJEXT) \
@@ -1236,7 +1238,8 @@ am_tests_test_http_range_OBJECTS = tests/test_http_range.$(OBJEXT) \
 	time.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) url.$(OBJEXT) \
 	URLScheme.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) \
 	wais.$(OBJEXT) wccp2.$(OBJEXT) whois.$(OBJEXT) \
-	wordlist.$(OBJEXT) Packer.$(OBJEXT) MemBuf.$(OBJEXT)
+	$(am__objects_25) wordlist.$(OBJEXT) Packer.$(OBJEXT) \
+	MemBuf.$(OBJEXT)
 nodist_tests_test_http_range_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_test_http_range_OBJECTS = $(am_tests_test_http_range_OBJECTS) \
@@ -1342,7 +1345,7 @@ am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) mem.$(OBJEXT) \
 	SwapDir.$(OBJEXT) tools.$(OBJEXT) $(am__objects_24) \
 	URLScheme.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) \
 	wais.$(OBJEXT) wccp.$(OBJEXT) wccp2.$(OBJEXT) whois.$(OBJEXT) \
-	wordlist.$(OBJEXT) $(am__objects_26)
+	wordlist.$(OBJEXT) $(am__objects_25)
 nodist_ufsdump_OBJECTS = repl_modules.$(OBJEXT) globals.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 ufsdump_OBJECTS = $(am_ufsdump_OBJECTS) $(nodist_ufsdump_OBJECTS)
@@ -1730,9 +1733,14 @@ SSL_ALL_SOURCE = \
 
 @ENABLE_SSL_FALSE@SSL_SOURCE = 
 @ENABLE_SSL_TRUE@SSL_SOURCE = $(SSL_ALL_SOURCE)
-WIN32_ALL_SOURCE = win32.cc
+WIN32_ALL_SOURCE = \
+	win32.cc \
+	WinSvc.cc
+
 @ENABLE_WIN32SPECIFIC_FALSE@WIN32_SOURCE = 
-@ENABLE_WIN32SPECIFIC_TRUE@WIN32_SOURCE = $(WIN32_ALL_SOURCE)
+@ENABLE_WIN32SPECIFIC_TRUE@WIN32_SOURCE = win32.cc
+@ENABLE_WIN32SPECIFIC_FALSE@WINSVC_SOURCE = 
+@ENABLE_WIN32SPECIFIC_TRUE@WINSVC_SOURCE = WinSvc.cc
 @USE_IPC_WIN32_FALSE@IPC_SOURCE = ipc.cc
 @USE_IPC_WIN32_TRUE@IPC_SOURCE = ipc_win32.cc
 AIO_WIN32_ALL_SOURCES = \
@@ -2143,7 +2151,8 @@ squid_SOURCES = \
 	whois.cc \
 	wordlist.cc \
 	wordlist.h \
-	$(WIN32_SOURCE)
+	$(WIN32_SOURCE) \
+	$(WINSVC_SOURCE)
 
 noinst_HEADERS = ACLChecklist.cci \
 	AuthUser.cci \
@@ -2741,6 +2750,7 @@ tests_testCacheManager_SOURCES = \
 	wais.cc \
 	wccp2.cc \
 	whois.cc \
+	$(WIN32_SOURCE) \
 	wordlist.cc
 
 nodist_tests_testCacheManager_SOURCES = \
@@ -2893,6 +2903,7 @@ tests_testEvent_SOURCES = \
 	wais.cc \
 	wccp2.cc \
 	whois.cc \
+	$(WIN32_SOURCE) \
 	wordlist.cc
 
 nodist_tests_testEvent_SOURCES = \
@@ -3045,6 +3056,7 @@ tests_testEventLoop_SOURCES = \
 	wais.cc \
 	wccp2.cc \
 	whois.cc \
+	$(WIN32_SOURCE) \
 	wordlist.cc
 
 nodist_tests_testEventLoop_SOURCES = \
@@ -3224,6 +3236,7 @@ tests_test_http_range_SOURCES = \
 	wais.cc \
 	wccp2.cc \
 	whois.cc \
+	$(WIN32_SOURCE) \
 	wordlist.cc \
 	Packer.cc \
 	MemBuf.cc
@@ -3374,6 +3387,7 @@ tests_testHttpRequest_SOURCES = \
 	wais.cc \
 	wccp2.cc \
 	whois.cc \
+	$(WIN32_SOURCE) \
 	wordlist.cc
 
 nodist_tests_testHttpRequest_SOURCES = \
@@ -3713,6 +3727,7 @@ tests_testURL_SOURCES = \
 	wais.cc \
 	wccp2.cc \
 	whois.cc \
+	$(WIN32_SOURCE) \
 	wordlist.cc
 
 nodist_tests_testURL_SOURCES = \
@@ -3722,6 +3737,7 @@ nodist_tests_testURL_SOURCES = \
 tests_testURL_LDADD = \
 	libsquid.la \
 	libauth.la \
+	@REGEXLIB@ \
 	@REPL_OBJS@ \
 	@ICAP_LIBS@ \
 	@SNMPLIB@ \
@@ -4528,6 +4544,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/String.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SwapDir.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/URLScheme.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/WinSvc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/access_log.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/acl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/acl_noncore.Po@am__quote@
