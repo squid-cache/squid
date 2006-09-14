@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.138 2006/08/21 00:50:41 robertc Exp $
+ * $Id: globals.h,v 1.139 2006/09/13 18:55:10 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -171,10 +171,6 @@ extern "C"
     extern char *WIN32_Command_Line;        /* NULL */
     extern char *WIN32_Service_Command_Line; /* NULL */
     extern unsigned int WIN32_run_mode;     /* _WIN_SQUID_RUN_MODE_INTERACTIVE */
-#if defined(_SQUID_MSWIN_) && defined(_DEBUG)
-
-    extern int do_debug_trap;	                /* 0 */
-#endif
 #endif
 #if HAVE_SBRK
 

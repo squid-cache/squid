@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.435 2006/09/03 05:32:53 hno Exp $
+ * $Id: main.cc,v 1.436 2006/09/13 18:55:10 serassio Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -167,13 +167,6 @@ SignalDispatcher::dispatch()
     if (do_reconfigure) {
         mainReconfigure();
         do_reconfigure = 0;
-#if defined(_SQUID_MSWIN_) && defined(_DEBUG)
-
-    } else if (do_debug_trap) {
-        do_debug_trap = 0;
-        __asm int 3;
-#endif
-
     } else if (do_rotate) {
         mainRotate();
         do_rotate = 0;
