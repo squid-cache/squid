@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.270 2006/09/03 21:05:20 hno Exp $
+ * $Id: tools.cc,v 1.271 2006/09/13 18:55:10 serassio Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -391,11 +391,6 @@ death(int sig)
 void
 sigusr2_handle(int sig)
 {
-#if defined(_SQUID_MSWIN_) && defined(_DEBUG)
-    do_debug_trap = 1;
-#endif
-#if (defined(_SQUID_MSWIN_) && !defined(_DEBUG)) || !defined(_SQUID_MSWIN_)
-
     static int state = 0;
     /* no debug() here; bad things happen if the signal is delivered during _db_print() */
 
@@ -419,7 +414,6 @@ sigusr2_handle(int sig)
         state = 0;
     }
 
-#endif
 #if !HAVE_SIGACTION
     if (signal(sig, sigusr2_handle) == SIG_ERR)	/* reinstall */
         debug(50, 0) ("signal: sig=%d func=%p: %s\n", sig, sigusr2_handle, xstrerror());
