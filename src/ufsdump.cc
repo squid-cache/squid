@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufsdump.cc,v 1.8 2006/05/29 00:15:02 robertc Exp $
+ * $Id: ufsdump.cc,v 1.9 2006/09/13 19:05:11 serassio Exp $
  *
  * DEBUG: section 0     UFS Store Dump
  * AUTHOR: Robert Collins
@@ -44,24 +44,9 @@
 #include <iostream>
 #include <cassert>
 
-#if USE_WIN32_SERVICE
-#include "squid_windows.h"
-#endif
-
 /* stub functions for parts of squid not factored to be dynamic yet */
 void shut_down(int)
 {}
-
-#if USE_WIN32_SERVICE
-void
-rotate_logs(int)
-{}
-
-void
-reconfigure(int)
-{}
-
-#endif
 
 #if WHENITMINIMAL
 void
@@ -96,18 +81,8 @@ struct DumpStoreMeta : public unary_function<StoreMeta, void>
     }
 };
 
-#if USE_WIN32_SERVICE
-/* When USE_WIN32_SERVICE is defined, the main function is placed in win32.cc */
-extern "C" void WINAPI
-    SquidWinSvcMain(int, char **)
-{}
-
-int
-SquidMain(int argc, char *argv[])
-#else
 int
 main(int argc, char *argv[])
-#endif
 {
     int fd = -1;
     StoreMeta *metadata = NULL;

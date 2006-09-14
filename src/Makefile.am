@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.166 2006/09/13 15:08:11 serassio Exp $
+#  $Id: Makefile.am,v 1.167 2006/09/13 19:05:11 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -140,11 +140,15 @@ else
 SSL_SOURCE = 
 endif
 
-WIN32_ALL_SOURCE = win32.cc
+WIN32_ALL_SOURCE = \
+	win32.cc \
+	WinSvc.cc
 if ENABLE_WIN32SPECIFIC
-WIN32_SOURCE = $(WIN32_ALL_SOURCE)
+WIN32_SOURCE = win32.cc
+WINSVC_SOURCE = WinSvc.cc
 else
-WIN32_SOURCE = 
+WIN32_SOURCE =
+WINSVC_SOURCE =
 endif
 
 if USE_IPC_WIN32
@@ -608,7 +612,8 @@ squid_SOURCES = \
 	whois.cc \
 	wordlist.cc \
 	wordlist.h \
-	$(WIN32_SOURCE)
+	$(WIN32_SOURCE) \
+	$(WINSVC_SOURCE)
 
 noinst_HEADERS = ACLChecklist.cci \
 	AuthUser.cci \
@@ -1350,6 +1355,7 @@ tests_testCacheManager_SOURCES = \
 	wais.cc \
 	wccp2.cc \
 	whois.cc \
+	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testCacheManager_SOURCES = \
 	repl_modules.cc \
@@ -1500,6 +1506,7 @@ tests_testEvent_SOURCES = \
 	wais.cc \
 	wccp2.cc \
 	whois.cc \
+	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testEvent_SOURCES = \
 	repl_modules.cc \
@@ -1650,6 +1657,7 @@ tests_testEventLoop_SOURCES = \
 	wais.cc \
 	wccp2.cc \
 	whois.cc \
+	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testEventLoop_SOURCES = \
 	repl_modules.cc \
@@ -1830,6 +1838,7 @@ tests_test_http_range_SOURCES = \
 	wais.cc \
 	wccp2.cc \
 	whois.cc \
+	$(WIN32_SOURCE) \
 	wordlist.cc \
 	Packer.cc \
 	MemBuf.cc
@@ -1979,6 +1988,7 @@ tests_testHttpRequest_SOURCES = \
 	wais.cc \
 	wccp2.cc \
 	whois.cc \
+	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testHttpRequest_SOURCES = \
 	repl_modules.cc \
@@ -2309,6 +2319,7 @@ tests_testURL_SOURCES = \
 	wais.cc \
 	wccp2.cc \
 	whois.cc \
+	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testURL_SOURCES = \
 	repl_modules.cc \
