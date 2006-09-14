@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.405 2006/09/13 19:06:15 serassio Exp $
+#  $Id: Makefile.in,v 1.406 2006/09/13 20:10:48 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -526,7 +526,7 @@ am__tests_testCoss_SOURCES_DIST = tests/testCoss.cc tests/testMain.cc \
 	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaUnpacker.cc \
 	StoreMetaURL.cc StoreMetaVary.cc StoreFileSystem.cc \
 	store_io.cc store_swapout.cc store_swapmeta.cc unlinkd.cc \
-	../test-suite/test_tools.cc globals.cc CommonPool.h \
+	win32.cc ../test-suite/test_tools.cc globals.cc CommonPool.h \
 	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
 	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
 	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
@@ -589,8 +589,8 @@ am__objects_33 = tests/stub_store_rebuild.$(OBJEXT) \
 	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
 	StoreMetaVary.$(OBJEXT) StoreFileSystem.$(OBJEXT) \
 	store_io.$(OBJEXT) store_swapout.$(OBJEXT) \
-	store_swapmeta.$(OBJEXT) unlinkd.$(OBJEXT) $(am__objects_32) \
-	$(am__objects_10)
+	store_swapmeta.$(OBJEXT) unlinkd.$(OBJEXT) $(am__objects_25) \
+	$(am__objects_32) $(am__objects_10)
 am_tests_testCoss_OBJECTS = tests/testCoss.$(OBJEXT) \
 	tests/testMain.$(OBJEXT) $(am__objects_33)
 tests_testCoss_OBJECTS = $(am_tests_testCoss_OBJECTS)
@@ -935,7 +935,7 @@ am__tests_testNull_SOURCES_DIST = tests/testNull.cc tests/testMain.cc \
 	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaUnpacker.cc \
 	StoreMetaURL.cc StoreMetaVary.cc StoreFileSystem.cc \
 	store_io.cc store_swapout.cc store_swapmeta.cc unlinkd.cc \
-	../test-suite/test_tools.cc globals.cc CommonPool.h \
+	win32.cc ../test-suite/test_tools.cc globals.cc CommonPool.h \
 	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
 	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
 	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
@@ -1115,7 +1115,7 @@ am__tests_testUfs_SOURCES_DIST = tests/testUfs.cc tests/testMain.cc \
 	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaUnpacker.cc \
 	StoreMetaURL.cc StoreMetaVary.cc StoreFileSystem.cc \
 	store_io.cc store_swapout.cc store_swapmeta.cc unlinkd.cc \
-	../test-suite/test_tools.cc globals.cc CommonPool.h \
+	win32.cc ../test-suite/test_tools.cc globals.cc CommonPool.h \
 	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
 	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
 	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
@@ -3534,6 +3534,7 @@ SWAP_TEST_SOURCES = \
 	store_swapout.cc \
 	store_swapmeta.cc \
 	unlinkd.cc \
+	$(WIN32_SOURCE) \
 	$(STORE_TEST_SOURCES) \
 	$(DISKIO_SOURCE)
 
