@@ -52,7 +52,7 @@ BodyReader::read(CBCB *callback, void *cbdata)
     debugs(32,3,HERE << this << " " << "data=" << read_func_data);
     size_t size = theBuf.potentialSpaceSize();
 
-    debug(32, 3) ("BodyReader::read: available: %d, size %d, _remaining: %d\n", _available, size, _remaining);
+    debugs(32, 3, "BodyReader::read: available: " << _available << ", size " << size << ", remaining: " << _remaining);
 
     if (size > _available)
         size = _available;
