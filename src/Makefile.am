@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.170 2006/09/15 14:26:38 hno Exp $
+#  $Id: Makefile.am,v 1.171 2006/09/15 15:01:25 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -1403,6 +1403,7 @@ tests_testEvent_SOURCES = \
 	mem.cc \
 	RemovalPolicy.cc \
 	String.cc \
+	tests/CapturingStoreEntry.h \
 	tests/testEvent.cc \
 	tests/testEvent.h \
 	tests/testMain.cc \
@@ -1884,7 +1885,9 @@ tests_testHttpRequest_SOURCES = \
 	HttpRequestMethod.cc \
 	mem.cc \
 	String.cc \
+	tests/testHttpRequest.h \
 	tests/testHttpRequest.cc \
+	tests/testHttpRequestMethod.h \
 	tests/testHttpRequestMethod.cc \
 	tests/testMain.cc \
 	time.cc \
@@ -2078,6 +2081,7 @@ tests_testStore_SOURCES= \
 	tests/stub_MemObject.cc \
 	tests/testStore.cc \
 	tests/testStore.h \
+	tests/CapturingStoreEntry.h \
 	tests/testStoreEntryStream.cc \
 	tests/testStoreEntryStream.h \
 	tests/testStoreController.cc \
