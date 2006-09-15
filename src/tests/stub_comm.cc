@@ -1,5 +1,5 @@
 /*
- * $Id: stub_comm.cc,v 1.4 2006/09/03 19:34:15 serassio Exp $
+ * $Id: stub_comm.cc,v 1.5 2006/09/14 20:13:23 serassio Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins
@@ -131,3 +131,9 @@ comm_init(void)
     RESERVED_FD = XMIN(100, Squid_MaxFD / 4);
 }
 
+/* MinGW needs also a stub of _comm_close() */
+void
+_comm_close(int fd, char const *file, int line)
+{
+    fatal ("Not implemented");
+}
