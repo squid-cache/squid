@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.406 2006/09/13 20:10:48 serassio Exp $
+#  $Id: Makefile.in,v 1.407 2006/09/14 20:17:11 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -50,11 +50,11 @@ build_triplet = @build@
 host_triplet = @host@
 check_PROGRAMS = tests/testAuth$(EXEEXT) \
 	tests/testACLMaxUserIP$(EXEEXT) tests/testBoilerplate$(EXEEXT) \
-	tests/testCacheManager$(EXEEXT) tests/testEvent$(EXEEXT) \
-	tests/testEventLoop$(EXEEXT) tests/testHeaders$(EXEEXT) \
-	tests/test_http_range$(EXEEXT) tests/testHttpRequest$(EXEEXT) \
-	tests/testStore$(EXEEXT) tests/testString$(EXEEXT) \
-	tests/testURL$(EXEEXT) @STORE_TESTS@
+	tests/testCacheManager$(EXEEXT) tests/testDiskIO$(EXEEXT) \
+	tests/testEvent$(EXEEXT) tests/testEventLoop$(EXEEXT) \
+	tests/testHeaders$(EXEEXT) tests/test_http_range$(EXEEXT) \
+	tests/testHttpRequest$(EXEEXT) tests/testStore$(EXEEXT) \
+	tests/testString$(EXEEXT) tests/testURL$(EXEEXT) @STORE_TESTS@
 EXTRA_PROGRAMS = DiskIO/DiskDaemon/diskd$(EXEEXT) unlinkd$(EXEEXT) \
 	pinger$(EXEEXT) dnsserver$(EXEEXT) recv-announce$(EXEEXT) \
 	tests/testUfs$(EXEEXT) tests/testCoss$(EXEEXT) \
@@ -597,6 +597,44 @@ tests_testCoss_OBJECTS = $(am_tests_testCoss_OBJECTS)
 am__DEPENDENCIES_1 = libsquid.la libauth.la \
 	DiskIO/Blocking/BlockingDiskIOModule.o \
 	repl/lru/store_repl_lru.o
+am__tests_testDiskIO_SOURCES_DIST = tests/stub_store_rebuild.cc \
+	tests/stub_internal.cc fd.cc disk.cc filemap.cc HttpBody.cc \
+	HttpReply.cc HttpStatusLine.cc int.cc list.cc MemObject.cc \
+	StoreSwapLogData.cc StoreIOState.cc StoreMeta.cc \
+	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaUnpacker.cc \
+	StoreMetaURL.cc StoreMetaVary.cc StoreFileSystem.cc \
+	store_io.cc store_swapout.cc store_swapmeta.cc unlinkd.cc \
+	win32.cc ../test-suite/test_tools.cc globals.cc CommonPool.h \
+	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
+	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
+	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
+	DelaySpec.cc DelaySpec.h DelayTagged.cc DelayTagged.h \
+	DelayUser.cc DelayUser.h DelayVector.cc DelayVector.h \
+	NullDelayId.cc NullDelayId.h CacheDigest.cc ConfigParser.cc \
+	EventLoop.cc event.cc HttpMsg.cc RemovalPolicy.cc store_dir.cc \
+	store.cc HttpRequestMethod.cc store_key_md5.cc string_arrays.c \
+	Parsing.cc ConfigOption.cc SwapDir.cc authenticate.cc \
+	tests/stub_acl.cc tests/stub_cache_cf.cc tests/stub_helper.cc \
+	cbdata.cc String.cc tests/stub_comm.cc \
+	tests/stub_client_side_request.cc tests/stub_http.cc \
+	mem_node.cc stmem.cc tests/stub_mime.cc HttpHeaderTools.cc \
+	HttpHeader.cc acl.cc mem.cc acl_noncore.cc MemBuf.cc \
+	HttpHdrContRange.cc Packer.cc ACLChecklist.cc HttpHdrCc.cc \
+	HttpHdrSc.cc HttpHdrScTarget.cc url.cc ACLProxyAuth.cc \
+	ACLRegexData.cc ACLUserData.cc StatHist.cc HttpHdrRange.cc \
+	ETag.cc tests/stub_errorpage.cc tests/stub_HttpRequest.cc \
+	tests/stub_access_log.cc refresh.cc tests/stub_store_client.cc \
+	tests/stub_tools.cc tests/testStoreSupport.cc \
+	tests/testStoreSupport.h time.cc URLScheme.cc wordlist.cc \
+	DiskIO/DiskIOModule.cc DiskIO/ReadRequest.cc \
+	DiskIO/ReadRequest.h DiskIO/WriteRequest.cc \
+	DiskIO/WriteRequest.h DiskIO/DiskFile.h \
+	DiskIO/DiskIOStrategy.h DiskIO/IORequestor.h \
+	DiskIO/DiskIOModule.h tests/testDiskIO.cc tests/testDiskIO.h \
+	tests/testMain.cc
+am_tests_testDiskIO_OBJECTS = $(am__objects_33) \
+	tests/testDiskIO.$(OBJEXT) tests/testMain.$(OBJEXT)
+tests_testDiskIO_OBJECTS = $(am_tests_testDiskIO_OBJECTS)
 am__tests_testEvent_SOURCES_DIST = debug.cc EventLoop.h EventLoop.cc \
 	globals.cc HttpRequest.cc HttpRequestMethod.cc mem.cc \
 	RemovalPolicy.cc String.cc tests/testEvent.cc \
@@ -1385,8 +1423,8 @@ SOURCES = $(ICAP_libicap_a_SOURCES) $(libAIO_a_SOURCES) \
 	$(tests_testAuth_SOURCES) $(tests_testBoilerplate_SOURCES) \
 	$(tests_testCacheManager_SOURCES) \
 	$(nodist_tests_testCacheManager_SOURCES) \
-	$(tests_testCoss_SOURCES) $(tests_testEvent_SOURCES) \
-	$(nodist_tests_testEvent_SOURCES) \
+	$(tests_testCoss_SOURCES) $(tests_testDiskIO_SOURCES) \
+	$(tests_testEvent_SOURCES) $(nodist_tests_testEvent_SOURCES) \
 	$(tests_testEventLoop_SOURCES) \
 	$(nodist_tests_testEventLoop_SOURCES) \
 	$(tests_testHeaders_SOURCES) $(tests_testHttpRequest_SOURCES) \
@@ -1407,6 +1445,7 @@ DIST_SOURCES = $(ICAP_libicap_a_SOURCES) $(am__libAIO_a_SOURCES_DIST) \
 	$(tests_testAuth_SOURCES) $(tests_testBoilerplate_SOURCES) \
 	$(am__tests_testCacheManager_SOURCES_DIST) \
 	$(am__tests_testCoss_SOURCES_DIST) \
+	$(am__tests_testDiskIO_SOURCES_DIST) \
 	$(am__tests_testEvent_SOURCES_DIST) \
 	$(am__tests_testEventLoop_SOURCES_DIST) \
 	$(tests_testHeaders_SOURCES) \
@@ -2775,6 +2814,20 @@ tests_testCacheManager_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
 	@SQUID_CPPUNIT_LA@ \
 	@ICAP_LIBS@
+
+tests_testDiskIO_SOURCES = \
+	$(SWAP_TEST_SOURCES) \
+	tests/testDiskIO.cc \
+	tests/testDiskIO.h \
+	tests/testMain.cc
+
+tests_testDiskIO_LDADD = \
+	$(SWAP_TEST_LDADD) \
+	@SSLLIB@
+
+tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
+tests_testDiskIO_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
+	@SQUID_CPPUNIT_LA@
 
 tests_testEvent_SOURCES = \
 	debug.cc \
@@ -4204,6 +4257,11 @@ tests/testStoreSupport.$(OBJEXT): tests/$(am__dirstamp) \
 tests/testCoss$(EXEEXT): $(tests_testCoss_OBJECTS) $(tests_testCoss_DEPENDENCIES) tests/$(am__dirstamp)
 	@rm -f tests/testCoss$(EXEEXT)
 	$(CXXLINK) $(tests_testCoss_LDFLAGS) $(tests_testCoss_OBJECTS) $(tests_testCoss_LDADD) $(LIBS)
+tests/testDiskIO.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+tests/testDiskIO$(EXEEXT): $(tests_testDiskIO_OBJECTS) $(tests_testDiskIO_DEPENDENCIES) tests/$(am__dirstamp)
+	@rm -f tests/testDiskIO$(EXEEXT)
+	$(CXXLINK) $(tests_testDiskIO_LDFLAGS) $(tests_testDiskIO_OBJECTS) $(tests_testDiskIO_LDADD) $(LIBS)
 tests/testEvent.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 tests/testEvent$(EXEEXT): $(tests_testEvent_OBJECTS) $(tests_testEvent_DEPENDENCIES) tests/$(am__dirstamp)
@@ -4392,6 +4450,7 @@ mostlyclean-compile:
 	-rm -f tests/testBoilerplate.$(OBJEXT)
 	-rm -f tests/testCacheManager.$(OBJEXT)
 	-rm -f tests/testCoss.$(OBJEXT)
+	-rm -f tests/testDiskIO.$(OBJEXT)
 	-rm -f tests/testEvent.$(OBJEXT)
 	-rm -f tests/testEventLoop.$(OBJEXT)
 	-rm -f tests/testHeader_ACL.$(OBJEXT)
@@ -4716,6 +4775,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testBoilerplate.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testCacheManager.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testCoss.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testDiskIO.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testEvent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testEventLoop.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/testHeader_ACL.Po@am__quote@
