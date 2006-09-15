@@ -1,5 +1,5 @@
 /*
- * $Id: stub_tools.cc,v 1.2 2006/05/08 23:38:35 robertc Exp $
+ * $Id: stub_tools.cc,v 1.3 2006/09/14 20:13:23 serassio Exp $
  *
  * AUTHOR: Robert Collins
  *
@@ -39,3 +39,9 @@ percent(int a, int b)
     return b ? ((int) (100.0 * a / b + 0.5)) : 0;
 }
 
+/* MinGW needs also a stub of death() */
+void
+death(int sig)
+{
+    fatal ("Not implemented");
+}
