@@ -1,6 +1,6 @@
 
 /*
- * $Id: fde.h,v 1.10 2005/12/06 23:03:34 wessels Exp $
+ * $Id: fde.h,v 1.11 2006/09/15 17:30:13 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -60,58 +60,29 @@ public:
 
     struct
     {
+	unsigned int open:1;
+	unsigned int close_request:1;
+	unsigned int write_daemon:1;
+	unsigned int closing:1;
+	unsigned int socket_eof:1;
+	unsigned int nolinger:1;
+	unsigned int nonblocking:1;
+	unsigned int ipc:1;
+	unsigned int called_connect:1;
+	unsigned int nodelay:1;
+	unsigned int close_on_exec:1;
+	unsigned int read_pending:1;
+	unsigned int write_pending:1;
+    } flags;
 
-unsigned int open:
-        1;
-
-unsigned int close_request:
-        1;
-
-unsigned int write_daemon:
-        1;
-
-unsigned int closing:
-        1;
-
-unsigned int socket_eof:
-        1;
-
-unsigned int nolinger:
-        1;
-
-unsigned int nonblocking:
-        1;
-
-unsigned int ipc:
-        1;
-
-unsigned int called_connect:
-        1;
-
-unsigned int nodelay:
-        1;
-
-unsigned int close_on_exec:
-        1;
-
-unsigned int read_pending:
-        1;
-
-unsigned int write_pending:
-        1;
-    }
-
-    flags;
     int bytes_read;
     int bytes_written;
 
-    struct
-    {
+    struct {
         int uses;                   /* ie # req's over persistent conn */
         PconnPool *pool;
-    }
+    } pconn;
 
-    pconn;
     unsigned epoll_state;
 
     struct _fde_disk disk;
@@ -124,22 +95,16 @@ unsigned int write_pending:
     void *timeout_data;
     void *lifetime_data;
     close_handler *closeHandler;        /* linked list */
-    CommWriteStateData *wstate;        /* State data for comm_write */
+    CommWriteStateData wstate;        /* State data for comm_write */
     READ_HANDLER *read_method;
     WRITE_HANDLER *write_method;
 #if USE_SSL
-
     SSL *ssl;
 #endif
 #ifdef _SQUID_MSWIN_
-
-    struct
-    {
-
+    struct { 
         long handle;
-    }
-
-    win32;
+    } win32;
 #endif
 
 };
