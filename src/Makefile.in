@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.408 2006/09/15 14:33:26 hno Exp $
+#  $Id: Makefile.in,v 1.409 2006/09/15 15:02:28 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -637,33 +637,34 @@ am_tests_testDiskIO_OBJECTS = $(am__objects_33) \
 tests_testDiskIO_OBJECTS = $(am_tests_testDiskIO_OBJECTS)
 am__tests_testEvent_SOURCES_DIST = debug.cc EventLoop.h EventLoop.cc \
 	globals.cc HttpRequest.cc HttpRequestMethod.cc mem.cc \
-	RemovalPolicy.cc String.cc tests/testEvent.cc \
-	tests/testEvent.h tests/testMain.cc time.cc access_log.cc \
-	acl.cc acl_noncore.cc ACLChecklist.cc ACLProxyAuth.cc \
-	ACLStringData.cc ACLRegexData.cc ACLUserData.cc \
-	authenticate.cc BodyReader.cc cache_manager.cc cache_cf.cc \
-	CacheDigest.cc carp.cc cbdata.cc client_db.cc client_side.cc \
-	client_side_reply.cc client_side_request.cc clientStream.cc \
-	comm_select.cc comm_select.h comm_select_win32.cc comm_poll.cc \
-	comm_poll.h comm_epoll.cc comm_epoll.h comm_kqueue.cc \
-	comm_kqueue.h ConfigOption.cc ConfigParser.cc CommonPool.h \
-	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
-	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
-	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
-	DelaySpec.cc DelaySpec.h DelayTagged.cc DelayTagged.h \
-	DelayUser.cc DelayUser.h DelayVector.cc DelayVector.h \
-	NullDelayId.cc NullDelayId.h disk.cc dns_internal.cc dns.cc \
-	event.cc errorpage.cc ElementList.h ESI.cc ESI.h ESIAssign.cc \
-	ESIAssign.h ESIAttempt.h ESIContext.cc ESIContext.h \
-	ESICustomParser.cc ESICustomParser.h ESIElement.h ESIExcept.h \
-	ESIExpatParser.cc ESIExpatParser.h ESIExpression.cc \
-	ESIExpression.h ESIInclude.cc ESIInclude.h ESILiteral.h \
-	ESILibxml2Parser.cc ESILibxml2Parser.h ESIParser.cc \
-	ESIParser.h ESISegment.cc ESISegment.h ESISequence.cc \
-	ESISequence.h ESIVar.h ESIVarState.cc ESIVarState.h ETag.cc \
-	external_acl.cc ExternalACLEntry.cc fd.cc fde.cc forward.cc \
-	fqdncache.cc ftp.cc gopher.cc helper.cc htcp.cc htcp.h http.cc \
-	HttpBody.cc HttpHeader.cc HttpHeaderTools.cc HttpHdrCc.cc \
+	RemovalPolicy.cc String.cc tests/CapturingStoreEntry.h \
+	tests/testEvent.cc tests/testEvent.h tests/testMain.cc time.cc \
+	access_log.cc acl.cc acl_noncore.cc ACLChecklist.cc \
+	ACLProxyAuth.cc ACLStringData.cc ACLRegexData.cc \
+	ACLUserData.cc authenticate.cc BodyReader.cc cache_manager.cc \
+	cache_cf.cc CacheDigest.cc carp.cc cbdata.cc client_db.cc \
+	client_side.cc client_side_reply.cc client_side_request.cc \
+	clientStream.cc comm_select.cc comm_select.h \
+	comm_select_win32.cc comm_poll.cc comm_poll.h comm_epoll.cc \
+	comm_epoll.h comm_kqueue.cc comm_kqueue.h ConfigOption.cc \
+	ConfigParser.cc CommonPool.h CompositePoolNode.h \
+	delay_pools.cc DelayId.cc DelayId.h DelayIdComposite.h \
+	DelayBucket.cc DelayBucket.h DelayConfig.cc DelayConfig.h \
+	DelayPool.cc DelayPool.h DelayPools.h DelaySpec.cc DelaySpec.h \
+	DelayTagged.cc DelayTagged.h DelayUser.cc DelayUser.h \
+	DelayVector.cc DelayVector.h NullDelayId.cc NullDelayId.h \
+	disk.cc dns_internal.cc dns.cc event.cc errorpage.cc \
+	ElementList.h ESI.cc ESI.h ESIAssign.cc ESIAssign.h \
+	ESIAttempt.h ESIContext.cc ESIContext.h ESICustomParser.cc \
+	ESICustomParser.h ESIElement.h ESIExcept.h ESIExpatParser.cc \
+	ESIExpatParser.h ESIExpression.cc ESIExpression.h \
+	ESIInclude.cc ESIInclude.h ESILiteral.h ESILibxml2Parser.cc \
+	ESILibxml2Parser.h ESIParser.cc ESIParser.h ESISegment.cc \
+	ESISegment.h ESISequence.cc ESISequence.h ESIVar.h \
+	ESIVarState.cc ESIVarState.h ETag.cc external_acl.cc \
+	ExternalACLEntry.cc fd.cc fde.cc forward.cc fqdncache.cc \
+	ftp.cc gopher.cc helper.cc htcp.cc htcp.h http.cc HttpBody.cc \
+	HttpHeader.cc HttpHeaderTools.cc HttpHdrCc.cc \
 	HttpHdrContRange.cc HttpHdrRange.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc HttpMsg.cc HttpReply.cc HttpStatusLine.cc \
 	icmp.cc icp_v2.cc icp_v3.cc ACLIdent.cc ACLIdent.h ident.cc \
@@ -866,7 +867,8 @@ am_tests_testHeaders_OBJECTS = tests/testMain.$(OBJEXT) \
 tests_testHeaders_OBJECTS = $(am_tests_testHeaders_OBJECTS)
 am__tests_testHttpRequest_SOURCES_DIST = debug.cc globals.cc \
 	HttpRequest.cc HttpRequestMethod.cc mem.cc String.cc \
-	tests/testHttpRequest.cc tests/testHttpRequestMethod.cc \
+	tests/testHttpRequest.h tests/testHttpRequest.cc \
+	tests/testHttpRequestMethod.h tests/testHttpRequestMethod.cc \
 	tests/testMain.cc time.cc access_log.cc acl.cc acl_noncore.cc \
 	ACLChecklist.cc ACLProxyAuth.cc ACLStringData.cc \
 	ACLRegexData.cc ACLUserData.cc authenticate.cc BodyReader.cc \
@@ -1005,33 +1007,34 @@ am_tests_testNull_OBJECTS = tests/testNull.$(OBJEXT) \
 tests_testNull_OBJECTS = $(am_tests_testNull_OBJECTS)
 am__tests_testStore_SOURCES_DIST = tests/stub_store_swapout.cc \
 	tests/testMain.cc tests/stub_MemObject.cc tests/testStore.cc \
-	tests/testStore.h tests/testStoreEntryStream.cc \
-	tests/testStoreEntryStream.h tests/testStoreController.cc \
-	tests/testStoreController.h tests/testStoreHashIndex.cc \
-	tests/testStoreHashIndex.h tests/TestSwapDir.cc \
-	tests/TestSwapDir.h tests/stub_fd.cc tests/stub_HttpReply.cc \
-	../test-suite/test_tools.cc globals.cc CommonPool.h \
-	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
-	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
-	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
-	DelaySpec.cc DelaySpec.h DelayTagged.cc DelayTagged.h \
-	DelayUser.cc DelayUser.h DelayVector.cc DelayVector.h \
-	NullDelayId.cc NullDelayId.h CacheDigest.cc ConfigParser.cc \
-	EventLoop.cc event.cc HttpMsg.cc RemovalPolicy.cc store_dir.cc \
-	store.cc HttpRequestMethod.cc store_key_md5.cc string_arrays.c \
-	Parsing.cc ConfigOption.cc SwapDir.cc authenticate.cc \
-	tests/stub_acl.cc tests/stub_cache_cf.cc tests/stub_helper.cc \
-	cbdata.cc String.cc tests/stub_comm.cc \
-	tests/stub_client_side_request.cc tests/stub_http.cc \
-	mem_node.cc stmem.cc tests/stub_mime.cc HttpHeaderTools.cc \
-	HttpHeader.cc acl.cc mem.cc acl_noncore.cc MemBuf.cc \
-	HttpHdrContRange.cc Packer.cc ACLChecklist.cc HttpHdrCc.cc \
-	HttpHdrSc.cc HttpHdrScTarget.cc url.cc ACLProxyAuth.cc \
-	ACLRegexData.cc ACLUserData.cc StatHist.cc HttpHdrRange.cc \
-	ETag.cc tests/stub_errorpage.cc tests/stub_HttpRequest.cc \
-	tests/stub_access_log.cc refresh.cc tests/stub_store_client.cc \
-	tests/stub_tools.cc tests/testStoreSupport.cc \
-	tests/testStoreSupport.h time.cc URLScheme.cc wordlist.cc
+	tests/testStore.h tests/CapturingStoreEntry.h \
+	tests/testStoreEntryStream.cc tests/testStoreEntryStream.h \
+	tests/testStoreController.cc tests/testStoreController.h \
+	tests/testStoreHashIndex.cc tests/testStoreHashIndex.h \
+	tests/TestSwapDir.cc tests/TestSwapDir.h tests/stub_fd.cc \
+	tests/stub_HttpReply.cc ../test-suite/test_tools.cc globals.cc \
+	CommonPool.h CompositePoolNode.h delay_pools.cc DelayId.cc \
+	DelayId.h DelayIdComposite.h DelayBucket.cc DelayBucket.h \
+	DelayConfig.cc DelayConfig.h DelayPool.cc DelayPool.h \
+	DelayPools.h DelaySpec.cc DelaySpec.h DelayTagged.cc \
+	DelayTagged.h DelayUser.cc DelayUser.h DelayVector.cc \
+	DelayVector.h NullDelayId.cc NullDelayId.h CacheDigest.cc \
+	ConfigParser.cc EventLoop.cc event.cc HttpMsg.cc \
+	RemovalPolicy.cc store_dir.cc store.cc HttpRequestMethod.cc \
+	store_key_md5.cc string_arrays.c Parsing.cc ConfigOption.cc \
+	SwapDir.cc authenticate.cc tests/stub_acl.cc \
+	tests/stub_cache_cf.cc tests/stub_helper.cc cbdata.cc \
+	String.cc tests/stub_comm.cc tests/stub_client_side_request.cc \
+	tests/stub_http.cc mem_node.cc stmem.cc tests/stub_mime.cc \
+	HttpHeaderTools.cc HttpHeader.cc acl.cc mem.cc acl_noncore.cc \
+	MemBuf.cc HttpHdrContRange.cc Packer.cc ACLChecklist.cc \
+	HttpHdrCc.cc HttpHdrSc.cc HttpHdrScTarget.cc url.cc \
+	ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc StatHist.cc \
+	HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
+	tests/stub_HttpRequest.cc tests/stub_access_log.cc refresh.cc \
+	tests/stub_store_client.cc tests/stub_tools.cc \
+	tests/testStoreSupport.cc tests/testStoreSupport.h time.cc \
+	URLScheme.cc wordlist.cc
 am_tests_testStore_OBJECTS = tests/stub_store_swapout.$(OBJEXT) \
 	tests/testMain.$(OBJEXT) tests/stub_MemObject.$(OBJEXT) \
 	tests/testStore.$(OBJEXT) tests/testStoreEntryStream.$(OBJEXT) \
@@ -2840,6 +2843,7 @@ tests_testEvent_SOURCES = \
 	mem.cc \
 	RemovalPolicy.cc \
 	String.cc \
+	tests/CapturingStoreEntry.h \
 	tests/testEvent.cc \
 	tests/testEvent.h \
 	tests/testMain.cc \
@@ -3323,7 +3327,9 @@ tests_testHttpRequest_SOURCES = \
 	HttpRequestMethod.cc \
 	mem.cc \
 	String.cc \
+	tests/testHttpRequest.h \
 	tests/testHttpRequest.cc \
+	tests/testHttpRequestMethod.h \
 	tests/testHttpRequestMethod.cc \
 	tests/testMain.cc \
 	time.cc \
@@ -3518,6 +3524,7 @@ tests_testStore_SOURCES = \
 	tests/stub_MemObject.cc \
 	tests/testStore.cc \
 	tests/testStore.h \
+	tests/CapturingStoreEntry.h \
 	tests/testStoreEntryStream.cc \
 	tests/testStoreEntryStream.h \
 	tests/testStoreController.cc \
