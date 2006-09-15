@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.407 2006/09/14 20:17:11 serassio Exp $
+#  $Id: Makefile.in,v 1.408 2006/09/15 14:33:26 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -248,21 +248,21 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc \
 	mem_node.h Mem.h MemBuf.cc MemObject.cc MemObject.h mime.cc \
 	multicast.cc neighbors.cc net_db.cc Packer.cc Packer.h \
 	Parsing.cc Parsing.h ProfStats.cc pconn.cc pconn.h \
-	peer_digest.cc peer_select.cc PeerSelectState.h PingData.h \
-	protos.h redirect.cc referer.cc refresh.cc RemovalPolicy.cc \
-	RemovalPolicy.h send-announce.cc snmp_core.cc snmp_agent.cc \
-	squid.h SquidNew.cc ACLCertificateData.cc ACLCertificateData.h \
-	ACLCertificate.cc ACLCertificate.h ssl_support.cc \
-	ssl_support.h stat.cc StatHist.cc String.cc stmem.cc stmem.h \
-	store.cc Store.h StoreFileSystem.cc StoreFileSystem.h \
-	StoreHashIndex.h store_io.cc StoreIOBuffer.h StoreIOState.cc \
-	StoreIOState.h store_client.cc StoreClient.h store_digest.cc \
-	store_dir.cc store_key_md5.cc store_log.cc store_rebuild.cc \
-	store_swapin.cc store_swapmeta.cc store_swapout.cc \
-	StoreMeta.cc StoreMeta.h StoreMetaMD5.cc StoreMetaMD5.h \
-	StoreMetaSTD.cc StoreMetaSTD.h StoreMetaUnpacker.cc \
-	StoreMetaUnpacker.h StoreMetaURL.cc StoreMetaURL.h \
-	StoreMetaVary.cc StoreMetaVary.h StoreSearch.h \
+	PeerDigest.h peer_digest.cc peer_select.cc PeerSelectState.h \
+	PingData.h protos.h redirect.cc referer.cc refresh.cc \
+	RemovalPolicy.cc RemovalPolicy.h send-announce.cc snmp_core.cc \
+	snmp_agent.cc squid.h SquidNew.cc ACLCertificateData.cc \
+	ACLCertificateData.h ACLCertificate.cc ACLCertificate.h \
+	ssl_support.cc ssl_support.h stat.cc StatHist.cc String.cc \
+	stmem.cc stmem.h store.cc Store.h StoreFileSystem.cc \
+	StoreFileSystem.h StoreHashIndex.h store_io.cc StoreIOBuffer.h \
+	StoreIOState.cc StoreIOState.h store_client.cc StoreClient.h \
+	store_digest.cc store_dir.cc store_key_md5.cc store_log.cc \
+	store_rebuild.cc store_swapin.cc store_swapmeta.cc \
+	store_swapout.cc StoreMeta.cc StoreMeta.h StoreMetaMD5.cc \
+	StoreMetaMD5.h StoreMetaSTD.cc StoreMetaSTD.h \
+	StoreMetaUnpacker.cc StoreMetaUnpacker.h StoreMetaURL.cc \
+	StoreMetaURL.h StoreMetaVary.cc StoreMetaVary.h StoreSearch.h \
 	StoreSwapLogData.cc StoreSwapLogData.h Server.cc Server.h \
 	structs.h SwapDir.cc SwapDir.h time.cc tools.cc tunnel.cc \
 	typedefs.h unlinkd.cc url.cc URL.h URLScheme.cc URLScheme.h \
@@ -2114,6 +2114,7 @@ squid_SOURCES = \
 	$(XPROF_STATS_SOURCE) \
 	pconn.cc \
 	pconn.h \
+	PeerDigest.h \
 	peer_digest.cc \
 	peer_select.cc \
 	PeerSelectState.h \
