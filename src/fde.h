@@ -1,6 +1,6 @@
 
 /*
- * $Id: fde.h,v 1.11 2006/09/15 17:30:13 adrian Exp $
+ * $Id: fde.h,v 1.12 2006/09/15 20:40:29 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -95,7 +95,7 @@ public:
     void *timeout_data;
     void *lifetime_data;
     close_handler *closeHandler;        /* linked list */
-    CommWriteStateData wstate;        /* State data for comm_write */
+    CommWriteStateData *wstate;         /* State data for comm_write */
     READ_HANDLER *read_method;
     WRITE_HANDLER *write_method;
 #if USE_SSL
