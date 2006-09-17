@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.437 2006/09/13 12:32:26 serassio Exp $
+dnl  $Id: configure.in,v 1.438 2006/09/16 20:44:21 serassio Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.437 $)dnl
+AC_REVISION($Revision: 1.438 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -643,7 +643,7 @@ for fs in $DISK_MODULES none; do
     DiskThreads)
 	if test -z "$with_pthreads"; then
             case "$host_os" in
-            mingw|mingw32|cygwin|cygwin32)
+            mingw|mingw32)
         	USE_AIOPS_WIN32=1
 	        echo "DiskThreads IO Module used, Windows threads support automatically enabled"
                 ;;
@@ -657,7 +657,7 @@ for fs in $DISK_MODULES none; do
     AIO)
 	if test -z "$with_aio"; then
             case "$host_os" in
-            mingw|mingw32|cygwin|cygwin32)
+            mingw|mingw32)
         	USE_AIO_WIN32=1
 	        echo "Aio IO Module used, Windows overlapped I/O support automatically enabled"
                 ;;
