@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp2.cc,v 1.8 2006/09/15 20:49:49 serassio Exp $
+ * $Id: wccp2.cc,v 1.9 2006/09/18 23:05:43 hno Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Steven Wilton
@@ -319,6 +319,8 @@ struct wccp2_cache_list_t
 {
 
     struct IN_ADDR cache_ip;
+
+    int weight;
 
     struct wccp2_cache_list_t *next;
 };
@@ -672,7 +674,7 @@ wccp2Init(void)
 
         memset(&wccp2_identity_info.cache_identity.buckets, '\0', sizeof(wccp2_identity_info.cache_identity.buckets));
 
-        wccp2_identity_info.cache_identity.weight = htons(10000);
+        wccp2_identity_info.cache_identity.weight = htons(Config.Wccp2.weight);
 
         memset(&wccp2_identity_info.cache_identity.status, '\0', sizeof(wccp2_identity_info.cache_identity.status));
 
@@ -1281,7 +1283,7 @@ wccp2HandleUdp(int sock, void *not_used)
 
             /* Update the cache list */
             cache_list_ptr->cache_ip = cache_address;
-
+	    cache_list_ptr->weight = ntohs(cache_identity->weight);
             cache_list_ptr->next = (wccp2_cache_list_t*) xcalloc(1, sizeof(struct wccp2_cache_list_t));
             cache_list_ptr = cache_list_ptr->next;
             cache_list_ptr->next = NULL;
@@ -1526,20 +1528,26 @@ wccp2AssignBuckets(void *voidnotused)
         saved_offset = offset;
 
         for (router_list_ptr = &service_list_ptr->router_list_head; router_list_ptr->next != NULL; router_list_ptr = router_list_ptr->next) {
+	    unsigned long *weight = (unsigned long *)xcalloc(sizeof(*weight), ntohl(router_list_ptr->num_caches));
+	    unsigned long total_weight = 0;
+	    int num_caches = ntohl(router_list_ptr->num_caches);
+
             offset = saved_offset;
 
             /* Number of caches */
             xmemcpy(&wccp_packet[offset], &router_list_ptr->num_caches, sizeof(router_list_ptr->num_caches));
             offset += sizeof(router_list_ptr->num_caches);
 
-            if (ntohl(router_list_ptr->num_caches)) {
-                for (cache_list_ptr = &router_list_ptr->cache_list_head; cache_list_ptr->next; cache_list_ptr = cache_list_ptr->next) {
+	    if (num_caches) {
+		int cache;
+		for (cache = 0, cache_list_ptr = &router_list_ptr->cache_list_head; cache_list_ptr->next; cache_list_ptr = cache_list_ptr->next, cache++) {
                     /* add caches */
 
                     cache_address = (struct IN_ADDR *) &wccp_packet[offset];
 
                     xmemcpy(cache_address, &cache_list_ptr->cache_ip, sizeof(struct IN_ADDR));
-
+		    total_weight += cache_list_ptr->weight << 12;
+		    weight[cache] = cache_list_ptr->weight << 12;
                     offset += sizeof(struct IN_ADDR);
                 }
             }
@@ -1549,13 +1557,40 @@ wccp2AssignBuckets(void *voidnotused)
 
             memset(buckets, '\0', WCCP_BUCKETS);
 
-            if (ntohl(router_list_ptr->num_caches) != 0) {
-                for (bucket_counter = 0; bucket_counter < WCCP_BUCKETS; bucket_counter++) {
-                    buckets[bucket_counter] = (char) (bucket_counter % ntohl(router_list_ptr->num_caches));
-                }
-            }
-
-            offset += (WCCP_BUCKETS * sizeof(char));
+	    if (num_caches != 0) {
+		if (total_weight == 0) {
+		    for (bucket_counter = 0; bucket_counter < WCCP_BUCKETS; bucket_counter++) {
+			buckets[bucket_counter] = (char) (bucket_counter % num_caches);
+		    }
+		} else {
+		    unsigned long *assigned = (unsigned long *)xcalloc(sizeof(*assigned), num_caches);
+		    unsigned long done = 0;
+		    int cache = -1;
+		    unsigned long per_bucket = total_weight / WCCP_BUCKETS;
+		    for (bucket_counter = 0; bucket_counter < WCCP_BUCKETS; bucket_counter++) {
+			int n;
+			unsigned long step;
+			for (n = num_caches; n; n--) {
+			    cache++;
+			    if (cache >= num_caches)
+				cache = 0;
+			    if (!weight[cache]) {
+				n++;
+				continue;
+			    }
+			    if (assigned[cache] <= done)
+				break;
+			}
+			buckets[bucket_counter] = (char)cache;
+			step = per_bucket * total_weight / weight[cache];
+			assigned[cache] += step;
+			done += per_bucket;
+		    }
+		    safe_free(assigned);
+		}
+	    }
+	    offset += (WCCP_BUCKETS * sizeof(char));
+	    safe_free(weight);
 
             /* Fill in length */
 
