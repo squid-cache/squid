@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.423 2006/09/03 18:47:18 serassio Exp $
+# $Id: cf.data.pre,v 1.424 2006/09/18 23:05:43 hno Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -4186,6 +4186,16 @@ DOC_START
 
 	Note: the service id must have been defined by a previous
 	'wccp2_service dynamic <id>' entry.
+DOC_END
+
+NAME: wccp2_weight
+TYPE: int
+LOC: Config.Wccp2.weight
+DEFAULT: 10000
+IFDEF: USE_WCCPv2
+DOC_START
+	Each cache server gets assigned a set of the destination
+	hash proportional to their weight.
 DOC_END
 
 NAME: wccp_address
