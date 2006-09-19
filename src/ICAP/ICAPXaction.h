@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPXaction.h,v 1.7 2006/08/07 02:28:24 robertc Exp $
+ * $Id: ICAPXaction.h,v 1.8 2006/09/19 17:17:52 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -131,7 +131,7 @@ protected:
     // active (pending) comm callbacks for the ICAP server connection
     CNCB *connector;
     IOCB *reader;
-    CWCB *writer;
+    IOCB *writer;
     PF *closer;
 
     const char *typeName; // the type of the final class (child), for debugging
