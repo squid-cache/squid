@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.404 2006/09/10 01:53:00 adrian Exp $
+ * $Id: ftp.cc,v 1.405 2006/09/18 23:13:21 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2178,7 +2178,7 @@ ftpSendPasv(FtpStateData * ftpState)
 
     debugs(9, 3, HERE << "ftpSendPasv started");
 
-    if (ftpState->request->method == METHOD_HEAD) {
+    if (ftpState->request->method == METHOD_HEAD && (ftpState->flags.isdir || ftpState->size != -1)) {
         /* Terminate here for HEAD requests */
         ftpState->appendSuccessHeader();
         storeTimestampsSet(ftpState->entry);
