@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.405 2006/09/18 23:13:21 hno Exp $
+ * $Id: ftp.cc,v 1.406 2006/09/18 23:14:46 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -443,6 +443,8 @@ FtpStateData::~FtpStateData()
     base_href.clean();
 
     safe_free(filepath);
+
+    safe_free(dirpath);
 
     safe_free(data.host);
     /* XXX this is also set to NULL in transactionForwardComplete */
