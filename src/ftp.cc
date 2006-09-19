@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.406 2006/09/18 23:14:46 hno Exp $
+ * $Id: ftp.cc,v 1.407 2006/09/19 07:56:57 adrian Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -211,10 +211,10 @@ public:
     static CNCB ftpPasvCallback;
     static IOCB dataReadWrapper;
     static PF ftpDataWrite;
-    static IOWCB ftpDataWriteCallback;
+    static IOCB ftpDataWriteCallback;
     static PF ftpTimeout;
     static IOCB ftpReadControlReply;
-    static IOWCB ftpWriteCommandCallback;
+    static IOCB ftpWriteCommandCallback;
     static HttpReply *ftpAuthRequired(HttpRequest * request, const char *realm);
     static CBCB ftpRequestBody;
     static wordlist *ftpParseControlReply(char *, size_t, int *, int *);
@@ -1550,7 +1550,7 @@ FtpStateData::writeCommand(const char *buf)
                ctrl.last_command,
                strlen(ctrl.last_command),
                FtpStateData::ftpWriteCommandCallback,
-               this);
+               this, NULL);
 
     scheduleReadControlReply(0);
 }
@@ -2786,7 +2786,7 @@ FtpStateData::ftpRequestBody(MemBuf &mb, void *data)
 
     if (mb.contentSize() > 0) {
         /* DataWrite */
-        comm_write(ftpState->data.fd, mb.content(), mb.contentSize(), FtpStateData::ftpDataWriteCallback, ftpState);
+        comm_write(ftpState->data.fd, mb.content(), mb.contentSize(), FtpStateData::ftpDataWriteCallback, ftpState, NULL);
     } else if (mb.contentSize() < 0) {
         /* Error */
         debug(9, 1) ("ftpRequestBody: request aborted");

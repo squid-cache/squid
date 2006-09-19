@@ -7,6 +7,9 @@
 #include "StoreIOBuffer.h"
 #include "Array.h"
 
+#define COMMIO_FD_READCB(fd)    (&commfd_table[(fd)].readcb)
+#define COMMIO_FD_WRITECB(fd)   (&commfd_table[(fd)].writecb)
+
 typedef enum {
     COMM_OK = 0,
     COMM_ERROR = -1,
@@ -26,16 +29,6 @@ typedef void CWCB(int fd, char *, size_t size, comm_err_t flag, void *data);
 typedef void CNCB(int fd, comm_err_t status, int xerrno, void *data);
 
 typedef void IOCB(int fd, char *, size_t size, comm_err_t flag, int xerrno, void *data);
-
-struct _CommWriteStateData
-{
-    char *buf;
-    size_t size;
-    off_t offset;
-    CWCB *handler;
-    void *handler_data;
-    FREE *free_func;
-};
 
 /* comm.c */
 extern void comm_calliocallback(void);
@@ -64,13 +57,8 @@ SQUIDCEXTERN u_short comm_local_port(int fd);
 SQUIDCEXTERN void commSetSelect(int, unsigned int, PF *, void *, time_t);
 
 SQUIDCEXTERN int comm_udp_sendto(int, const struct sockaddr_in *, int, const void *, int);
-SQUIDCEXTERN void comm_old_write(int fd,
-                                 const char *buf,
-                                 int size,
-                                 CWCB * handler,
-                                 void *handler_data,
-                                 FREE *);
-SQUIDCEXTERN void comm_old_write_mbuf(int fd, MemBuf *mb, CWCB * handler, void *handler_data);
+extern void comm_write(int fd, const char *buf, int len, IOCB *callback, void *callback_data, FREE *func);
+SQUIDCEXTERN void comm_write_mbuf(int fd, MemBuf *mb, IOCB * handler, void *handler_data);
 SQUIDCEXTERN void commCallCloseHandlers(int fd);
 SQUIDCEXTERN int commSetTimeout(int fd, int, PF *, void *);
 SQUIDCEXTERN int ignoreErrno(int);
@@ -84,9 +72,6 @@ SQUIDCEXTERN void checkTimeouts(void);
 SQUIDCEXTERN void comm_select_init(void);
 SQUIDCEXTERN comm_err_t comm_select(int);
 SQUIDCEXTERN void comm_quick_poll_required(void);
-
-/* fill sb with up to length data from fd */
-extern void comm_fill_immediate(int fd, StoreIOBuffer sb, IOFCB *callback, void *data);
 
 class ConnectionDetail;
 typedef void IOACB(int fd, int nfd, ConnectionDetail *details, comm_err_t flag, int xerrno, void *data);
@@ -104,8 +89,6 @@ extern int comm_udp_recvfrom(int fd, void *buf, size_t len, int flags,
                                  struct sockaddr *from, socklen_t *fromlen);
 extern int comm_udp_recv(int fd, void *buf, size_t len, int flags);
 extern ssize_t comm_udp_send(int s, const void *buf, size_t len, int flags);
-
-extern void comm_write(int s, const char *buf, size_t len, IOWCB *callback, void *callback_data);
 extern void commMarkHalfClosed(int);
 extern int commIsHalfClosed(int);
 extern void commCheckHalfClosed(void *);

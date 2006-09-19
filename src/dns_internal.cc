@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.93 2006/09/18 23:17:19 hno Exp $
+ * $Id: dns_internal.cc,v 1.94 2006/09/19 07:56:57 adrian Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -636,7 +636,7 @@ idnsTickleQueue(void)
 }
 
 static void
-idnsSentQueryVC(int fd, char *buf, size_t size, comm_err_t flag, void *data)
+idnsSentQueryVC(int fd, char *buf, size_t size, comm_err_t flag, int xerrno, void *data)
 {
     nsvc * vc = (nsvc *)data;
 
@@ -669,7 +669,7 @@ idnsDoSendQueryVC(nsvc *vc)
 
     commSetTimeout(vc->fd, Config.Timeout.idns_query, NULL, NULL);
 
-    comm_old_write_mbuf(vc->fd, mb, idnsSentQueryVC, vc);
+    comm_write_mbuf(vc->fd, mb, idnsSentQueryVC, vc);
 
     delete mb;
 }

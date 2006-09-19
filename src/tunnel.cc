@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.164 2006/08/25 15:22:34 serassio Exp $
+ * $Id: tunnel.cc,v 1.165 2006/09/19 07:56:57 adrian Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -107,7 +107,7 @@ public:
 
 private:
     CBDATA_CLASS(SslStateData);
-    void copy (size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to, IOWCB *);
+    void copy (size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to, IOCB *);
     void readServer(char *buf, size_t len, comm_err_t errcode, int xerrno);
     void readClient(char *buf, size_t len, comm_err_t errcode, int xerrno);
     void writeClientDone(char *buf, size_t len, comm_err_t flag, int xerrno);
@@ -287,7 +287,7 @@ SslStateData::readClient(char *buf, size_t len, comm_err_t errcode, int xerrno)
 }
 
 void
-SslStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to, IOWCB *completion)
+SslStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to, IOCB *completion)
 {
     /* I think this is to prevent free-while-in-a-callback behaviour
      * - RBC 20030229 
@@ -304,7 +304,7 @@ SslStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &from
             comm_close(to.fd());
         }
     } else if (cbdataReferenceValid(this))
-        comm_write(to.fd(), from.buf, len, completion, this);
+        comm_write(to.fd(), from.buf, len, completion, this, NULL);
 
     cbdataInternalUnlock(this);	/* ??? */
 }
@@ -491,9 +491,9 @@ sslConnectedWriteDone(int fd, char *buf, size_t size, comm_err_t flag, int xerrn
  * handle the write completion from a proxy request to an upstream proxy
  */
 static void
-sslProxyConnectedWriteDone(int fd, char *buf, size_t size, comm_err_t flag, void *data)
+sslProxyConnectedWriteDone(int fd, char *buf, size_t size, comm_err_t flag, int xerrno, void *data)
 {
-    sslConnectedWriteDone(fd, buf, size, flag, 0, data);
+    sslConnectedWriteDone(fd, buf, size, flag, xerrno, data);
 }
 
 static void
@@ -503,7 +503,7 @@ sslConnected(int fd, void *data)
     debug(26, 3) ("sslConnected: FD %d sslState=%p\n", fd, sslState);
     *sslState->status_ptr = HTTP_OK;
     comm_write(sslState->client.fd(), conn_established, strlen(conn_established),
-               sslConnectedWriteDone, sslState);
+               sslConnectedWriteDone, sslState, NULL);
 }
 
 static void
@@ -692,12 +692,8 @@ sslProxyConnected(int fd, void *data)
     packerClean(&p);
     mb.append("\r\n", 2);
 
-    comm_old_write_mbuf(sslState->server.fd(), &mb, sslProxyConnectedWriteDone, sslState);
-
-    commSetTimeout(sslState->server.fd(),
-                   Config.Timeout.read,
-                   sslTimeout,
-                   sslState);
+    comm_write_mbuf(sslState->server.fd(), &mb, sslProxyConnectedWriteDone, sslState);
+    commSetTimeout(sslState->server.fd(), Config.Timeout.read, sslTimeout, sslState);
 }
 
 static void

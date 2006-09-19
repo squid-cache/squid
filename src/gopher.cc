@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.199 2006/08/25 15:22:34 serassio Exp $
+ * $Id: gopher.cc,v 1.200 2006/09/19 07:56:57 adrian Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -113,7 +113,7 @@ static void gopherEndHTML(GopherStateData *);
 static void gopherToHTML(GopherStateData *, char *inbuf, int len);
 static PF gopherTimeout;
 static IOCB gopherReadReply;
-static IOWCB gopherSendComplete;
+static IOCB gopherSendComplete;
 static PF gopherSendRequest;
 
 static char def_gopher_bin[] = "www/unknown";
@@ -922,11 +922,7 @@ gopherSendRequest(int fd, void *data)
     }
 
     debug(10, 5) ("gopherSendRequest: FD %d\n", fd);
-    comm_write(fd,
-               buf,
-               strlen(buf),
-               gopherSendComplete,
-               gopherState);
+    comm_write(fd, buf, strlen(buf), gopherSendComplete, gopherState, NULL);
 
     if (EBIT_TEST(gopherState->entry->flags, ENTRY_CACHABLE))
         storeSetPublicKey(gopherState->entry);	/* Make it public */
