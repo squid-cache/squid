@@ -32,15 +32,9 @@ public:
 
     struct _cossmembuf_flags
     {
-
-unsigned int full:
-        1;
-
-unsigned int writing:
-        1;
-    }
-
-    flags;
+        unsigned int full:1;
+        unsigned int writing:1;
+    } flags;
 };
 
 struct _cossindex
