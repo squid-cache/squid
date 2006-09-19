@@ -1,6 +1,6 @@
 
 /*
- * $Id: wais.cc,v 1.162 2006/08/25 15:22:34 serassio Exp $
+ * $Id: wais.cc,v 1.163 2006/09/19 07:56:57 adrian Exp $
  *
  * DEBUG: section 24    WAIS Relay
  * AUTHOR: Harvest Derived
@@ -64,7 +64,7 @@ public:
 static PF waisStateFree;
 static PF waisTimeout;
 static IOCB waisReadReply;
-static CWCB waisSendComplete;
+static IOCB waisSendComplete;
 static PF waisSendRequest;
 
 static void
@@ -187,7 +187,7 @@ waisReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *
 /* This will be called when request write is complete. Schedule read of
  * reply. */
 static void
-waisSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void *data)
+waisSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
 {
     WaisStateData *waisState = (WaisStateData *)data;
     StoreEntry *entry = waisState->entry;
@@ -206,7 +206,7 @@ waisSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void
     if (errflag) {
         ErrorState *err;
         err = errorCon(ERR_WRITE_ERROR, HTTP_SERVICE_UNAVAILABLE, waisState->fwd->request);
-        err->xerrno = errno;
+        err->xerrno = xerrno;
         waisState->fwd->fail(err);
         comm_close(fd);
     } else {
@@ -235,7 +235,7 @@ waisSendRequest(int fd, void *data)
 
     mb.Printf("\r\n");
     debug(24, 6) ("waisSendRequest: buf: %s\n", mb.buf);
-    comm_old_write_mbuf(fd, &mb, waisSendComplete, waisState);
+    comm_write_mbuf(fd, &mb, waisSendComplete, waisState);
 
     if (EBIT_TEST(waisState->entry->flags, ENTRY_CACHABLE))
         storeSetPublicKey(waisState->entry);	/* Make it public */

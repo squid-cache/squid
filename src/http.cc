@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.505 2006/08/25 15:22:34 serassio Exp $
+ * $Id: http.cc,v 1.506 2006/09/19 07:56:57 adrian Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1247,7 +1247,7 @@ HttpStateData::maybeReadData()
  * This will be called when request write is complete.
  */
 void
-HttpStateData::SendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void *data)
+HttpStateData::SendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
     debug(11, 5) ("httpSendComplete: FD %d: size %d: errflag %d.\n",
@@ -1269,7 +1269,7 @@ HttpStateData::SendComplete(int fd, char *bufnotused, size_t size, comm_err_t er
     if (errflag) {
         ErrorState *err;
         err = errorCon(ERR_WRITE_ERROR, HTTP_BAD_GATEWAY, httpState->fwd->request);
-        err->xerrno = errno;
+        err->xerrno = xerrno;
         httpState->fwd->fail(err);
         comm_close(fd);
         return;
@@ -1729,7 +1729,7 @@ void
 HttpStateData::sendRequest()
 {
     MemBuf mb;
-    CWCB *sendHeaderDone;
+    IOCB *sendHeaderDone;
 
     debug(11, 5) ("httpSendRequest: FD %d: this %p.\n", fd, this);
 
@@ -1781,7 +1781,7 @@ HttpStateData::sendRequest()
     mb.init();
     buildRequestPrefix(request, orig_request, entry, &mb, flags);
     debug(11, 6) ("httpSendRequest: FD %d:\n%s\n", fd, mb.buf);
-    comm_old_write_mbuf(fd, &mb, sendHeaderDone, this);
+    comm_write_mbuf(fd, &mb, sendHeaderDone, this);
 }
 
 void
@@ -1819,13 +1819,13 @@ HttpStateData::sendRequestEntityDone()
 
     if (!Config.accessList.brokenPosts) {
         debug(11, 5) ("httpSendRequestEntityDone: No brokenPosts list\n");
-        HttpStateData::SendComplete(fd, NULL, 0, COMM_OK, this);
+        HttpStateData::SendComplete(fd, NULL, 0, COMM_OK, 0, this);
     } else if (!ch.fastCheck()) {
         debug(11, 5) ("httpSendRequestEntityDone: didn't match brokenPosts\n");
-        HttpStateData::SendComplete(fd, NULL, 0, COMM_OK, this);
+        HttpStateData::SendComplete(fd, NULL, 0, COMM_OK, 0, this);
     } else {
         debug(11, 2) ("httpSendRequestEntityDone: matched brokenPosts\n");
-        comm_old_write(fd, "\r\n", 2, HttpStateData::SendComplete, this, NULL);
+        comm_write(fd, "\r\n", 2, HttpStateData::SendComplete, this, NULL);
     }
 }
 
@@ -1869,21 +1869,21 @@ HttpStateData::requestBodyHandler(MemBuf &mb)
          */
         flags.consume_body_data = 1;
 
-        comm_old_write(fd, mb.content(), mb.contentSize(), SendRequestEntityWrapper, this, NULL);
+        comm_write(fd, mb.content(), mb.contentSize(), SendRequestEntityWrapper, this, NULL);
     } else if (orig_request->body_reader == NULL) {
         /* Failed to get whole body, probably aborted */
-        SendComplete(fd, NULL, 0, COMM_ERR_CLOSING, this);
+        SendComplete(fd, NULL, 0, COMM_ERR_CLOSING, 0, this);
     } else if (orig_request->body_reader->remaining() == 0) {
         /* End of body */
         sendRequestEntityDone();
     } else {
         /* Failed to get whole body, probably aborted */
-        SendComplete(fd, NULL, 0, COMM_ERR_CLOSING, this);
+        SendComplete(fd, NULL, 0, COMM_ERR_CLOSING, 0, this);
     }
 }
 
 void
-HttpStateData::SendRequestEntityWrapper(int fd, char *bufnotused, size_t size, comm_err_t errflag, void *data)
+HttpStateData::SendRequestEntityWrapper(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
     httpState->sendRequestEntity(fd, size, errflag);

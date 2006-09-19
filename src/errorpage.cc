@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.218 2006/09/02 06:49:48 robertc Exp $
+ * $Id: errorpage.cc,v 1.219 2006/09/19 07:56:57 adrian Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -110,7 +110,7 @@ static void errorDynamicPageInfoDestroy(ErrorDynamicPageInfo * info);
 static MemBuf *errorBuildContent(ErrorState * err);
 static int errorDump(ErrorState * err, MemBuf * mb);
 static const char *errorConvert(char token, ErrorState * err);
-static CWCB errorSendComplete;
+static IOCB errorSendComplete;
 
 
 err_type &operator++ (err_type &anErr)
@@ -439,7 +439,7 @@ errorSend(int fd, ErrorState * err)
 
     rep = errorBuildReply(err);
 
-    comm_old_write_mbuf(fd, rep->pack(), errorSendComplete, err);
+    comm_write_mbuf(fd, rep->pack(), errorSendComplete, err);
 
     delete rep;
 }
@@ -454,7 +454,7 @@ errorSend(int fd, ErrorState * err)
  *            closeing the FD, otherwise we do it ourseves.
  */
 static void
-errorSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void *data)
+errorSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
 {
     ErrorState *err = static_cast<ErrorState *>(data);
     debug(4, 3) ("errorSendComplete: FD %d, size=%ld\n", fd, (long int) size);

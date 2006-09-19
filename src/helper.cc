@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.77 2006/09/03 18:47:18 serassio Exp $
+ * $Id: helper.cc,v 1.78 2006/09/19 07:56:57 adrian Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -1431,7 +1431,7 @@ helperDispatchWriteDone(int fd, char *buf, size_t len, comm_err_t flag, int xerr
                    srv->writebuf->content(),
                    srv->writebuf->contentSize(),
                    helperDispatchWriteDone,	/* Handler */
-                   srv);			/* Handler-data */
+                   srv, NULL);			/* Handler-data, freefunc */
     }
 }
 
@@ -1477,7 +1477,7 @@ helperDispatch(helper_server * srv, helper_request * r)
                    srv->writebuf->content(),
                    srv->writebuf->contentSize(),
                    helperDispatchWriteDone,	/* Handler */
-                   srv);			/* Handler-data */
+                   srv, NULL);			/* Handler-data, free func */
     }
 
     debug(84, 5) ("helperDispatch: Request sent to %s #%d, %d bytes\n",
@@ -1542,7 +1542,7 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
                r->buf,
                strlen(r->buf),
                helperStatefulDispatchWriteDone,	/* Handler */
-               hlp);				/* Handler-data */
+               hlp, NULL);				/* Handler-data, free func */
     debug(84, 5) ("helperStatefulDispatch: Request sent to %s #%d, %d bytes\n",
                   hlp->id_name, srv->index + 1, (int) strlen(r->buf));
     srv->stats.uses++;

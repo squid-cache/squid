@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.24 2006/04/27 19:27:37 wessels Exp $
+ * $Id: http.h,v 1.25 2006/09/19 07:56:57 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -55,8 +55,8 @@ public:
     HttpStateData(FwdState *);
     ~HttpStateData();
 
-    static CWCB SendComplete;
-    static CWCB SendRequestEntityWrapper;
+    static IOCB SendComplete;
+    static IOCB SendRequestEntityWrapper;
     static IOCB ReadReplyWrapper;
     static CBCB RequestBodyHandlerWrapper;
     static void httpBuildRequestHeader(HttpRequest * request,

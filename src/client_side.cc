@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.733 2006/09/02 09:31:29 serassio Exp $
+ * $Id: client_side.cc,v 1.734 2006/09/19 07:56:57 adrian Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -120,8 +120,8 @@ ClientSocketContext::operator delete (void *address)
 /* ClientSocketContext */
 static ClientSocketContext *ClientSocketContextNew(ClientHttpRequest *);
 /* other */
-static CWCB clientWriteComplete;
-static IOWCB clientWriteBodyComplete;
+static IOCB clientWriteComplete;
+static IOCB clientWriteBodyComplete;
 static IOCB clientReadRequest;
 static bool clientParseRequest(ConnStateData::Pointer conn, bool &do_next_read);
 static void clientAfterReadingRequests(int fd, ConnStateData::Pointer &conn, int do_next_read);
@@ -832,8 +832,7 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
     if (!multipartRangeRequest()) {
         size_t length = lengthToSend(bodyData.range());
         noteSentBodyBytes (length);
-        comm_write(fd(), bodyData.data, length,
-                   clientWriteBodyComplete, this);
+        comm_write(fd(), bodyData.data, length, clientWriteBodyComplete, this, NULL);
         return;
     }
 
@@ -843,7 +842,7 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
 
     if (mb.contentSize())
         /* write */
-        comm_old_write_mbuf(fd(), &mb, clientWriteComplete, this);
+        comm_write_mbuf(fd(), &mb, clientWriteComplete, this);
     else
         writeComplete(fd(), NULL, 0, COMM_OK);
 }
@@ -1236,7 +1235,7 @@ ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData)
     }
 
     /* write */
-    comm_old_write_mbuf(fd(), mb, clientWriteComplete, this);
+    comm_write_mbuf(fd(), mb, clientWriteComplete, this);
 
     delete mb;
 }
@@ -1316,7 +1315,7 @@ clientSocketDetach(clientStreamNode * node, ClientHttpRequest * http)
 static void
 clientWriteBodyComplete(int fd, char *buf, size_t size, comm_err_t errflag, int xerrno, void *data)
 {
-    clientWriteComplete(fd, NULL, size, errflag, data);
+    clientWriteComplete(fd, NULL, size, errflag, xerrno, data);
 }
 
 void
@@ -1547,7 +1546,7 @@ ClientSocketContext::socketState()
  * no more data to send.
  */
 void
-clientWriteComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, void *data)
+clientWriteComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
 {
     ClientSocketContext *context = (ClientSocketContext *)data;
     context->writeComplete (fd, bufnotused, size, errflag);
@@ -2705,7 +2704,7 @@ requestTimeout(int fd, void *data)
     ConnStateData *conn = data;
     debug(33, 3) ("requestTimeout: FD %d: lifetime is expired.\n", fd);
 
-    if (fd_table[fd].wstate) {
+    if (COMMIO_FD_WRITECB(fd)->active) {
         /* FIXME: If this code is reinstated, check the conn counters,
          * not the fd table state
          */
