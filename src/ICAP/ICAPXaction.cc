@@ -177,8 +177,8 @@ void ICAPXaction::noteCommConnected(comm_err_t commStatus)
 void ICAPXaction::scheduleWrite(MemBuf &buf)
 {
     // comm module will free the buffer
-    writer = &ICAPXaction_noteCommWrote;
-    comm_old_write_mbuf(connection, &buf, writer, this);
+    writer = (IOCB *)&ICAPXaction_noteCommWrote;
+    comm_write_mbuf(connection, &buf, writer, this);
     fd_table[connection].noteUse(icapPconnPool);
     commSetTimeout(connection, 61, &ICAPXaction_noteCommTimedout, this);
 }
