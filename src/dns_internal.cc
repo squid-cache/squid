@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.92 2006/08/25 12:42:57 serassio Exp $
+ * $Id: dns_internal.cc,v 1.93 2006/09/18 23:17:19 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -1373,9 +1373,6 @@ idnsPTRLookup(const struct IN_ADDR addr, IDNSCB * callback, void *data)
 
     const char *ip = inet_ntoa(addr);
 
-    if (idnsCachedLookup(ip, callback, data))
-        return;
-
     q = cbdataAlloc(idns_query);
 
     q->id = idnsQueryID();
@@ -1388,6 +1385,11 @@ idnsPTRLookup(const struct IN_ADDR addr, IDNSCB * callback, void *data)
         callback(data, NULL, 0, "Internal error");
         cbdataFree(q);
         return;
+    }
+
+    if (idnsCachedLookup(q->query.name, callback, data)) {
+	cbdataFree(q);
+	return;
     }
 
     debug(78, 3) ("idnsPTRLookup: buf is %d bytes for %s, id = %#hx\n",
