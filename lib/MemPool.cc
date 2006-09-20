@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemPool.cc,v 1.5 2006/09/03 04:11:59 hno Exp $
+ * $Id: MemPool.cc,v 1.6 2006/09/20 00:59:26 adrian Exp $
  *
  * DEBUG: section 63    Low Level Memory Pool Management
  * AUTHOR: Alex Rousskov, Andres Kroonmaa, Robert Collins
@@ -456,9 +456,7 @@ MemAllocator::objectType() const
 int
 MemAllocator::inUseCount()
 {
-    MemPoolStats stats;
-    getStats(&stats);
-    return stats.items_inuse;
+    return getInUseCount();
 }
 
 void
@@ -529,12 +527,14 @@ MemPools::flushMeters()
 void *
 MemMalloc::allocate()
 {
+    inuse++;
     return xcalloc(1, obj_size);
 }
 
 void
 MemMalloc::deallocate(void *obj)
 {
+    inuse--;
     xfree(obj);
 }
 
@@ -554,6 +554,12 @@ MemImplementingAllocator::free(void *obj)
     (void) VALGRIND_CHECK_WRITABLE(obj, obj_size);
     deallocate(obj);
     ++free_calls;
+}
+
+int
+MemPool::getInUseCount()
+{
+    return inuse;
 }
 
 void *
@@ -777,6 +783,12 @@ MemMalloc::getStats(MemPoolStats * stats)
     return getMeter().inuse.level;
 }
 
+int
+MemMalloc::getInUseCount()
+{
+	return inuse;
+}
+
 /*
  * Totals statistics is returned
  */
@@ -824,7 +836,7 @@ MemAllocator::MemAllocator(char const *aLabel) : label(aLabel)
 {
 }
 
-MemMalloc::MemMalloc(char const *label, size_t aSize) : MemImplementingAllocator(label, aSize) {}
+MemMalloc::MemMalloc(char const *label, size_t aSize) : MemImplementingAllocator(label, aSize) { inuse = 0; }
 
 bool
 MemMalloc::idleTrigger(int shift) const

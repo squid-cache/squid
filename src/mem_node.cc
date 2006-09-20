@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_node.cc,v 1.8 2005/11/02 22:19:22 serassio Exp $
+ * $Id: mem_node.cc,v 1.9 2006/09/20 00:59:27 adrian Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -77,11 +77,7 @@ mem_node::~mem_node()
 size_t
 mem_node::InUseCount()
 {
-    MemPoolStats stats;
-
-    Pool().getStats (&stats);
-
-    return stats.items_inuse;
+    return Pool().inUseCount();
 }
 
 size_t
