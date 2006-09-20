@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemBuf.cc,v 1.41 2005/09/17 05:50:07 wessels Exp $
+ * $Id: MemBuf.cc,v 1.42 2006/09/20 08:13:38 adrian Exp $
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov
@@ -208,6 +208,7 @@ void MemBuf::consume(mb_size_t shiftSize)
     assert(0 <= shiftSize && shiftSize <= cSize);
     assert(!stolen); /* not frozen */
 
+    PROF_start(MemBuf_consume);
     if (shiftSize > 0) {
         if (shiftSize < cSize)
             xmemmove(buf, buf + shiftSize, cSize - shiftSize);
@@ -216,6 +217,7 @@ void MemBuf::consume(mb_size_t shiftSize)
 
         terminate();
     }
+    PROF_stop(MemBuf_consume);
 }
 
 // calls memcpy, appends exactly size bytes, extends buffer if needed
@@ -225,6 +227,7 @@ void MemBuf::append(const char *newContent, mb_size_t sz)
     assert(buf);
     assert(!stolen); /* not frozen */
 
+    PROF_start(MemBuf_append);
     if (sz > 0) {
         if (size + sz + 1 > capacity)
             grow(size + sz + 1);
@@ -235,6 +238,7 @@ void MemBuf::append(const char *newContent, mb_size_t sz)
 
         appended(sz);
     }
+    PROF_stop(MemBuf_append);
 }
 
 // updates content size after external append
@@ -357,6 +361,8 @@ MemBuf::grow(mb_size_t min_cap) {
     assert(!stolen);
     assert(capacity < min_cap);
 
+    PROF_start(MemBuf_grow);
+
     /* determine next capacity */
 
     if (min_cap > 64 * 1024) {
@@ -382,6 +388,7 @@ MemBuf::grow(mb_size_t min_cap) {
 
     /* done */
     capacity = (mb_size_t) buf_cap;
+    PROF_stop(MemBuf_grow);
 }
 
 
