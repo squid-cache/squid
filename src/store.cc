@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.601 2006/09/20 00:59:27 adrian Exp $
+ * $Id: store.cc,v 1.602 2006/09/20 14:25:05 adrian Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -823,6 +823,7 @@ StoreEntry::write (StoreIOBuffer writeBuffer)
     assert(mem_obj != NULL);
     assert(writeBuffer.length >= 0);
     /* This assert will change when we teach the store to update */
+    PROF_start(StoreEntry_write);
     assert(store_status == STORE_PENDING);
 
     if (!writeBuffer.length)
@@ -835,20 +836,15 @@ StoreEntry::write (StoreIOBuffer writeBuffer)
          * we have a empty write arrive, we flush to our clients.
          * -RBC 20060903
          */
+        PROF_stop(StoreEntry_write);
         InvokeHandlers(this);
         return;
       }
 
-    PROF_start(StoreEntry_write);
-
-    debugs(20, 5, "storeWrite: writing " << writeBuffer.length <<
-           " bytes for '" << getMD5Text() << "'");
-
-    storeGetMemSpace(writeBuffer.length);
-
-    mem_obj->write (writeBuffer, storeWriteComplete, this);
-
+    debugs(20, 5, "storeWrite: writing " << writeBuffer.length << " bytes for '" << getMD5Text() << "'");
     PROF_stop(StoreEntry_write);
+    storeGetMemSpace(writeBuffer.length);
+    mem_obj->write (writeBuffer, storeWriteComplete, this);
 }
 
 /* Legacy call for appending data to a store entry */
