@@ -130,6 +130,9 @@ typedef enum {
     XPROF_headersEnd,
     XPROF_parseHttpRequest,
     XPROF_HttpStateData_processReplyHeader,
+    XPROF_MemBuf_consume,
+    XPROF_MemBuf_append,
+    XPROF_MemBuf_grow,
     XPROF_LAST
 } xprof_type;
 
