@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.734 2006/09/19 07:56:57 adrian Exp $
+ * $Id: client_side.cc,v 1.735 2006/09/20 06:29:10 adrian Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2469,7 +2469,9 @@ clientParseRequest(ConnStateData::Pointer conn, bool &do_next_read)
         conn->in.buf[conn->in.notYetUsed] = '\0';
 
         /* Process request */
+	PROF_start(parseHttpRequest);
         context = parseHttpRequest(conn, &method, &prefix, &req_line_sz, &http_ver);
+	PROF_stop(parseHttpRequest);
 
         /* partial or incomplete request */
         if (!context) {

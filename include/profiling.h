@@ -127,6 +127,9 @@ typedef enum {
     XPROF_MemObject_write,
     XPROF_storeWriteComplete,
     XPROF_mem_hdr_write,
+    XPROF_headersEnd,
+    XPROF_parseHttpRequest,
+    XPROF_HttpStateData_processReplyHeader,
     XPROF_LAST
 } xprof_type;
 

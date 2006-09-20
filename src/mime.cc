@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.127 2006/05/19 17:05:18 wessels Exp $
+ * $Id: mime.cc,v 1.128 2006/09/20 06:29:10 adrian Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -180,6 +180,8 @@ headersEnd(const char *mime, size_t l)
     size_t e = 0;
     int state = 1;
 
+    PROF_start(headersEnd);
+
     while (e < l && state < 3) {
         switch (state) {
 
@@ -214,6 +216,7 @@ headersEnd(const char *mime, size_t l)
 
         e++;
     }
+    PROF_stop(headersEnd);
 
     if (3 == state)
         return e;
