@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.600 2006/09/03 21:05:20 hno Exp $
+ * $Id: store.cc,v 1.601 2006/09/20 00:59:27 adrian Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -210,12 +210,7 @@ StoreEntry::inUseCount()
 {
     if (!pool)
         return 0;
-
-    MemPoolStats stats;
-
-    pool->getStats (&stats);
-
-    return stats.items_inuse;
+    return pool->getInUseCount();
 }
 
 const char *

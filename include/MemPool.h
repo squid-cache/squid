@@ -109,6 +109,7 @@ public:
     virtual void free(void *) = 0;
     virtual char const *objectType() const;
     virtual size_t objectSize() const = 0;
+    virtual int getInUseCount() = 0;
     int inUseCount();
     virtual void setChunkSize(size_t chunksize) {}
 private:
@@ -179,6 +180,7 @@ class MemImplementingAllocator : public MemAllocator
     /* Hint to the allocator - may be ignored */
     virtual void setChunkSize(size_t chunksize) {}
     virtual size_t objectSize() const;
+    virtual int getInUseCount() = 0;
   protected:
     virtual void *allocate() = 0;
     virtual void deallocate(void *) = 0;
@@ -204,6 +206,7 @@ class MemPool : public MemImplementingAllocator
     void createChunk();
     void *get();
     void push(void *obj);
+    virtual int getInUseCount();
   protected:
     virtual void *allocate();
     virtual void deallocate(void *);
@@ -230,9 +233,12 @@ class MemMalloc : public MemImplementingAllocator
     virtual bool idleTrigger(int shift) const;
     virtual void clean(time_t maxage);
     virtual int getStats(MemPoolStats * stats);
+    virtual int getInUseCount();
   protected:
     virtual void *allocate();
     virtual void deallocate(void *);
+  private:
+    int inuse;
 };
 
 class MemChunk

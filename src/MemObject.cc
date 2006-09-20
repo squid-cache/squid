@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.23 2006/08/21 00:50:41 robertc Exp $
+ * $Id: MemObject.cc,v 1.24 2006/09/20 00:59:26 adrian Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -68,11 +68,7 @@ RemovalPolicy * mem_policy = NULL;
 size_t
 MemObject::inUseCount()
 {
-    MemPoolStats stats;
-
-    Pool().getStats (&stats);
-
-    return stats.items_inuse;
+    return Pool().inUseCount();
 }
 
 MemObject::MemObject(char const *aUrl, char const *aLog_url)
