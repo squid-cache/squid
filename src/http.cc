@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.506 2006/09/19 07:56:57 adrian Exp $
+ * $Id: http.cc,v 1.507 2006/09/20 06:29:10 adrian Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1039,14 +1039,17 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
         /* Connection closed; retrieval done. */
         eof = 1;
 
-        if (!flags.headers_parsed)
+        if (!flags.headers_parsed) {
             /*
             * When we called processReplyHeader() before, we
             * didn't find the end of headers, but now we are
             * definately at EOF, so we want to process the reply
             * headers.
              */
+	    PROF_start(HttpStateData_processReplyHeader);
             processReplyHeader();
+	    PROF_stop(HttpStateData_processReplyHeader);
+	}
         else if (getReply()->sline.status == HTTP_INVALID_HEADER && HttpVersion(0,9) != getReply()->sline.version) {
             fwd->fail(errorCon(ERR_INVALID_RESP, HTTP_BAD_GATEWAY, fwd->request));
             flags.do_next_read = 0;
@@ -1063,7 +1066,9 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
         }
     } else {
         if (!flags.headers_parsed) {
+	    PROF_start(HttpStateData_processReplyHeader);
             processReplyHeader();
+	    PROF_stop(HttpStateData_processReplyHeader);
 
             if (flags.headers_parsed) {
                 bool fail = reply == NULL;
