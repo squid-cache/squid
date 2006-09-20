@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.30 2006/05/27 00:35:05 robertc Exp $
+ * $Id: HttpMsg.cc,v 1.31 2006/09/20 11:38:14 adrian Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -243,15 +243,22 @@ HttpMsg::httpMsgParseStep(const char *buf, int atEnd)
     const char **parse_end_ptr = &blk_end;
     assert(parse_start);
     assert(pstate < psParsed);
+    int retval;
 
     *parse_end_ptr = parse_start;
 
-    if (pstate == psReadyToParseStartLine) {
-        if (!httpMsgIsolateStart(&parse_start, &blk_start, &blk_end))
-            return 0;
+    PROF_start(HttpMsg_httpMsgParseStep);
 
-        if (!parseFirstLine(blk_start, blk_end))
-            return httpMsgParseError();
+    if (pstate == psReadyToParseStartLine) {
+        if (!httpMsgIsolateStart(&parse_start, &blk_start, &blk_end)) {
+            retval = 0;
+	    goto finish;
+	}
+
+        if (!parseFirstLine(blk_start, blk_end)) {
+            retval = httpMsgParseError();
+	    goto finish;
+	}
 
         *parse_end_ptr = parse_start;
 
@@ -262,10 +269,12 @@ HttpMsg::httpMsgParseStep(const char *buf, int atEnd)
 
     if (pstate == psReadyToParseHeaders) {
         if (!httpMsgIsolateHeaders(&parse_start, &blk_start, &blk_end)) {
-            if (atEnd)
+            if (atEnd) {
                 blk_start = parse_start, blk_end = blk_start + strlen(blk_start);
-            else
-                return 0;
+	    } else {
+		retval = 0;
+		goto finish;
+            }
         }
 
         if (!header.parse(blk_start, blk_end))
@@ -279,8 +288,10 @@ HttpMsg::httpMsgParseStep(const char *buf, int atEnd)
 
         ++pstate;
     }
-
-    return 1;
+    retval = 1;
+finish:
+    PROF_stop(HttpMsg_httpMsgParseStep);
+    return retval;
 }
 
 /* handy: resets and returns -1 */

@@ -133,6 +133,8 @@ typedef enum {
     XPROF_MemBuf_consume,
     XPROF_MemBuf_append,
     XPROF_MemBuf_grow,
+    XPROF_InvokeHandlers,
+    XPROF_HttpMsg_httpMsgParseStep,
     XPROF_LAST
 } xprof_type;
 

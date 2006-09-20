@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.147 2006/08/07 02:28:22 robertc Exp $
+ * $Id: store_client.cc,v 1.148 2006/09/20 11:38:14 adrian Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -716,6 +716,8 @@ InvokeHandlers(StoreEntry * e)
     dlink_node *nx = NULL;
     dlink_node *node;
 
+    PROF_start(InvokeHandlers);
+
     debug(90, 3) ("InvokeHandlers: %s\n", e->getMD5Text());
     /* walk the entire list looking for valid callbacks */
 
@@ -732,6 +734,7 @@ InvokeHandlers(StoreEntry * e)
 
         storeClientCopy2(e, sc);
     }
+    PROF_stop(InvokeHandlers);
 }
 
 int
