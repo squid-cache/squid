@@ -1,5 +1,5 @@
 /*
- * $Id: Server.cc,v 1.5 2006/05/19 17:19:09 wessels Exp $
+ * $Id: Server.cc,v 1.6 2006/09/20 22:26:24 hno Exp $
  *
  * DEBUG:
  * AUTHOR: Duane Wessels
@@ -62,12 +62,8 @@ ServerStateData::~ServerStateData()
     fwd = NULL; // refcounted
 
 #if ICAP_CLIENT
-
-    if (icap) {
+    if (icap)
         delete icap;
-        cbdataReferenceDone(icap);
-    }
-
 #endif
 }
 
@@ -83,7 +79,6 @@ ServerStateData::doIcap(ICAPServiceRep::Pointer service)
     debug(11,5)("ServerStateData::doIcap() called\n");
     assert(NULL == icap);
     icap = new ICAPClientRespmodPrecache(service);
-    (void) cbdataReference(icap);
     return 0;
 }
 
