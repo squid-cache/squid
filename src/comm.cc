@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.424 2006/09/19 07:56:57 adrian Exp $
+ * $Id: comm.cc,v 1.425 2006/09/20 22:15:00 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -117,10 +117,7 @@ commio_set_callback(int fd, iocb_type type, comm_io_callback_t *ccb, IOCB *cb, v
 	assert(ccb->type == type);
 	ccb->fd = fd;
 	ccb->callback = cb;
-	ccb->callback_data = cbdata;
-	if (cbdata) {
-		cbdataReference(cbdata);
-	}
+	ccb->callback_data = cbdataReference(cbdata);
 	ccb->buf = buf;
 	ccb->freefunc = freefunc;
 	ccb->size = size;
