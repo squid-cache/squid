@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.72 2006/09/02 06:49:48 robertc Exp $
+ * $Id: client_side_request.cc,v 1.73 2006/09/20 22:26:24 hno Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -122,9 +122,8 @@ ClientRequestContext::~ClientRequestContext()
     debugs(85,3, HERE << this << " ClientHttpRequest destructed");
 }
 
-ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) : http(anHttp), acl_checklist (NULL), redirect_state (REDIRECT_NONE)
+ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) : http(cbdataReference(anHttp)), acl_checklist (NULL), redirect_state (REDIRECT_NONE)
 {
-    (void) cbdataReference(http);
     http_access_done = false;
     redirect_done = false;
     no_cache_done = false;
@@ -259,10 +258,8 @@ ClientHttpRequest::~ClientHttpRequest()
     freeResources();
 
 #if ICAP_CLIENT
-    if (icap) {
+    if (icap)
         delete icap;
-        cbdataReferenceDone(icap);
-    }
 #endif
     if (calloutContext)
         delete calloutContext;
@@ -1084,7 +1081,6 @@ ClientHttpRequest::doIcap(ICAPServiceRep::Pointer service)
     debugs(85, 3, HERE << this << " ClientHttpRequest::doIcap() called");
     assert(NULL == icap);
     icap = new ICAPClientReqmodPrecache(service);
-    (void) cbdataReference(icap);
     icap->startReqMod(this, request);
 
     if (request->body_reader == NULL) {
