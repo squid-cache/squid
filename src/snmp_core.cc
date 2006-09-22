@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.74 2006/05/14 09:22:35 serassio Exp $
+ * $Id: snmp_core.cc,v 1.75 2006/09/22 02:48:51 hno Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -151,7 +151,7 @@ snmpInit(void)
                                                                                                                     snmpAddNode(snmpCreateOid(LEN_SQ_PRF, SQ_PRF),
                                                                                                                                 LEN_SQ_PRF, NULL, NULL, 2,
                                                                                                                                 snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 1, SQ_PRF, PERF_SYS),
-                                                                                                                                            LEN_SQ_PRF + 1, NULL, NULL, 11,
+                                                                                                                                            LEN_SQ_PRF + 1, NULL, NULL, 13,
                                                                                                                                             snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, PERF_SYS, 1),
                                                                                                                                                         LEN_SQ_PRF + 2, snmp_prfSysFn, static_Inst, 0),
                                                                                                                                             snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, PERF_SYS, 2),
@@ -173,7 +173,11 @@ snmpInit(void)
                                                                                                                                             snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, PERF_SYS, 10),
                                                                                                                                                         LEN_SQ_PRF + 2, snmp_prfSysFn, static_Inst, 0),
                                                                                                                                             snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, PERF_SYS, 11),
-                                                                                                                                                        LEN_SQ_PRF + 2, snmp_prfSysFn, static_Inst, 0)),
+                                                                                                                                                        LEN_SQ_PRF + 2, snmp_prfSysFn, static_Inst, 0),
+																	    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, PERF_SYS, 12),
+																			LEN_SQ_PRF + 2, snmp_prfSysFn, static_Inst, 0),
+																	    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, PERF_SYS, 13),
+																			LEN_SQ_PRF + 2, snmp_prfSysFn, static_Inst, 0)),
                                                                                                                                 snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 1, SQ_PRF, PERF_PROTO),
                                                                                                                                             LEN_SQ_PRF + 1, NULL, NULL, 2,
                                                                                                                                             snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, PERF_PROTO, 1),
@@ -211,7 +215,7 @@ snmpInit(void)
                                                                                                                                             snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, PERF_PROTO, 2),
                                                                                                                                                         LEN_SQ_PRF + 2, NULL, NULL, 1,
                                                                                                                                                         snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 3, SQ_PRF, PERF_PROTO, 2, 1),
-                                                                                                                                                                    LEN_SQ_PRF + 3, NULL, NULL, 10,
+                                                                                                                                                                    LEN_SQ_PRF + 3, NULL, NULL, 11,
                                                                                                                                                                     snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, PERF_PROTO, 2, 1, 1),
                                                                                                                                                                                 LEN_SQ_PRF + 4, snmp_prfProtoFn, time_Inst, 0),
                                                                                                                                                                     snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, PERF_PROTO, 2, 1, 2),
@@ -231,6 +235,8 @@ snmpInit(void)
                                                                                                                                                                     snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, PERF_PROTO, 2, 1, 9),
                                                                                                                                                                                 LEN_SQ_PRF + 4, snmp_prfProtoFn, time_Inst, 0),
                                                                                                                                                                     snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, PERF_PROTO, 2, 1, 10),
+                                                                                                                                                                                LEN_SQ_PRF + 4, snmp_prfProtoFn, time_Inst, 0),
+                                                                                                                                                                    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 4, SQ_PRF, PERF_PROTO, 2, 1, 11),
                                                                                                                                                                                 LEN_SQ_PRF + 4, snmp_prfProtoFn, time_Inst, 0))))),
                                                                                                                     snmpAddNode(snmpCreateOid(LEN_SQ_NET, SQ_NET),
                                                                                                                                 LEN_SQ_NET, NULL, NULL, 3,
