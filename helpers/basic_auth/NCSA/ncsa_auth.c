@@ -105,7 +105,7 @@ int
 main(int argc, char **argv)
 {
     struct stat sb;
-    time_t change_time = 0;
+    time_t change_time = -1;
     char buf[256];
     char *user, *passwd, *p;
     user_data *u;
