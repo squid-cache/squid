@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.92 2006/05/14 09:22:35 serassio Exp $
+ * $Id: snmp_agent.cc,v 1.93 2006/09/22 02:48:51 hno Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -371,6 +371,18 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
                                       SMI_GAUGE32);
         break;
 
+    case PERF_SYS_CURUSED_FD:
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+				      (snint) Number_FD,
+				      SMI_GAUGE32);
+	break;
+
+    case PERF_SYS_CURMAX_FD:
+	Answer = snmp_var_new_integer(Var->name, Var->name_length,
+				      (snint) Biggest_FD,
+				      SMI_GAUGE32);
+	break;
+
     case PERF_SYS_NUMOBJCNT:
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
                                       (snint) StoreEntry::inUseCount(),
@@ -563,6 +575,11 @@ snmp_prfProtoFn(variable_list * Var, snint * ErrP)
         case PERF_MEDIAN_BHR:
             x = statByteHitRatio(minutes);
             break;
+
+	case PERF_MEDIAN_HTTP_NH:
+	    x = statHistDeltaMedian(&l->client_http.nh_svc_time,
+				    &f->client_http.nm_svc_time);
+	    break;
 
         default:
             *ErrP = SNMP_ERR_NOSUCHNAME;

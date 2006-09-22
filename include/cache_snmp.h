@@ -1,5 +1,5 @@
 /*
- * $Id: cache_snmp.h,v 1.28 2006/05/14 09:22:35 serassio Exp $
+ * $Id: cache_snmp.h,v 1.29 2006/09/22 02:48:51 hno Exp $
  */
 
 #ifndef SQUID_CACHE_SNMP_H
@@ -210,6 +210,8 @@ enum {
     PERF_SYS_CURUNLREQ,
     PERF_SYS_CURUNUSED_FD,
     PERF_SYS_CURRESERVED_FD,
+    PERF_SYS_CURUSED_FD,
+    PERF_SYS_CURMAX_FD,
     PERF_SYS_END
 };
 
@@ -252,6 +254,7 @@ enum {
     PERF_MEDIAN_DNS,
     PERF_MEDIAN_RHR,
     PERF_MEDIAN_BHR,
+    PERF_MEDIAN_HTTP_NH,
     PERF_MEDIAN_END
 };
 

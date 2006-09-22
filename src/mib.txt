@@ -2,7 +2,7 @@
 
 SQUID-MIB DEFINITIONS ::= BEGIN
 --
--- $Id: mib.txt,v 1.29 2006/05/14 09:22:35 serassio Exp $
+-- $Id: mib.txt,v 1.30 2006/09/22 02:48:51 hno Exp $
 --
 
 IMPORTS
@@ -260,6 +260,21 @@ squid MODULE-IDENTITY
 			" Reserved number of file descriptors "
         ::= { cacheSysPerf 11 }
 
+	cacheCurrentFileDescrCnt  OBJECT-TYPE
+                SYNTAX Gauge32
+                MAX-ACCESS read-only
+                STATUS current
+		DESCRIPTION
+			" Number of file descriptors in use "
+        ::= { cacheSysPerf 12 }
+
+	cacheCurrentFileDescrMax  OBJECT-TYPE
+                SYNTAX Gauge32
+                MAX-ACCESS read-only
+                STATUS current
+		DESCRIPTION
+			" Highest file descriptors in use "
+        ::= { cacheSysPerf 13 }
 	--
 	-- cacheProtoStats
 	--
@@ -423,7 +438,8 @@ squid MODULE-IDENTITY
 		cacheIcpReplySvcTime 	Integer32,
 		cacheDnsSvcTime		Integer32,
 		cacheRequestHitRatio	Integer32,
-		cacheRequestByteRatio	Integer32
+		cacheRequestByteRatio	Integer32,
+		cacheHttpNhSvcTime	Integer32
 	}
 
 	cacheMedianTime OBJECT-TYPE
@@ -455,7 +471,7 @@ squid MODULE-IDENTITY
                 MAX-ACCESS read-only
                 STATUS current
 		DESCRIPTION
-                        " HTTP near miss service time "
+                        " HTTP hit not-modified service time "
         ::= { cacheMedianSvcEntry 4 }
 
 	cacheHttpHitSvcTime OBJECT-TYPE
@@ -505,6 +521,14 @@ squid MODULE-IDENTITY
 		DESCRIPTION
                         " Byte Hit Ratios "
         ::= { cacheMedianSvcEntry 10 }
+
+	cacheHttpNhSvcTime OBJECT-TYPE
+                SYNTAX Integer32
+                MAX-ACCESS read-only
+                STATUS current
+		DESCRIPTION
+                        " HTTP refresh hit service time "
+        ::= { cacheMedianSvcEntry 11 }
 
 --
 -- cacheNetwork group
