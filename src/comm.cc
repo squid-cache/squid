@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.425 2006/09/20 22:15:00 hno Exp $
+ * $Id: comm.cc,v 1.426 2006/09/23 07:16:07 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -519,7 +519,7 @@ bool
 comm_iocallbackpending(void)
 {
     debug(5, 7) ("comm_iocallbackpending: %p\n", CommCallbackList.head);
-    return CommCallbackList.head != NULL;
+    return (CommCallbackList.head != NULL) || (commfd_completed_events.head != NULL);
 }
 
 /*
