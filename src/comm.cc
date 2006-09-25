@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.426 2006/09/23 07:16:07 adrian Exp $
+ * $Id: comm.cc,v 1.427 2006/09/25 15:04:07 adrian Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -535,7 +535,6 @@ commHandleRead(int fd, void *data)
     
     assert(data == COMMIO_FD_READCB(fd));
     assert(commio_has_callback(fd, IOCB_READ, ccb));
-
     /* Attempt a read */
     statCounter.syscalls.sock.reads++;
     errno = 0;

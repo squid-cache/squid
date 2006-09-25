@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.735 2006/09/20 06:29:10 adrian Exp $
+ * $Id: client_side.cc,v 1.736 2006/09/25 15:04:06 adrian Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1256,6 +1256,7 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
     int fd;
     /* Test preconditions */
     assert(node != NULL);
+    PROF_start(clientSocketRecipient);
     /* TODO: handle this rather than asserting
      * - it should only ever happen if we cause an abort and 
      * the callback chain loops back to here, so we can simply return. 
@@ -1271,11 +1272,13 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
 
     if (context != http->getConn()->getCurrentContext()) {
         context->deferRecipientForLater(node, rep, recievedData);
+        PROF_stop(clientSocketRecipient);
         return;
     }
 
     if (responseFinishedOrFailed(rep, recievedData)) {
         context->writeComplete(fd, NULL, 0, COMM_OK);
+        PROF_stop(clientSocketRecipient);
         return;
     }
 
@@ -1285,6 +1288,7 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
         http->al.reply = HTTPMSGLOCK(rep);
         context->sendStartOfMessage(rep, recievedData);
     }
+    PROF_stop(clientSocketRecipient);
 }
 
 /* Called when a downstream node is no longer interested in

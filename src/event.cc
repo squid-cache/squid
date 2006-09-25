@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.44 2006/09/01 23:56:38 hno Exp $
+ * $Id: event.cc,v 1.45 2006/09/25 15:04:07 adrian Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -116,6 +116,7 @@ EventDispatcher::dispatch()
 {
     bool result = queue.size() != 0;
 
+    PROF_start(EventDispatcher_dispatch);
     for (Vector<ev_entry *>::iterator i = queue.begin(); i != queue.end(); ++i) {
         ev_entry * event = *i;
         EVH *callback;
@@ -134,6 +135,7 @@ EventDispatcher::dispatch()
     }
 
     queue.clean();
+    PROF_stop(EventDispatcher_dispatch);
     return result;
 }
 

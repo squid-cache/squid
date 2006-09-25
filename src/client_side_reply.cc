@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.112 2006/08/25 15:22:34 serassio Exp $
+ * $Id: client_side_reply.cc,v 1.113 2006/09/25 15:04:06 adrian Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1397,8 +1397,9 @@ clientReplyContext::identifyStoreObject()
     if (r->flags.cachable || r->flags.internal) {
         lookingforstore = 5;
         StoreEntry::getPublicByRequest (this, r);
-    } else
+    } else {
         identifyFoundObject (NullStoreEntry::getInstance());
+    }
 }
 
 void
@@ -1525,6 +1526,7 @@ clientGetMoreData(clientStreamNode * aNode, ClientHttpRequest * http)
     assert (context);
     assert(context->http == http);
 
+
     clientStreamNode *next = ( clientStreamNode *)aNode->node.next->data;
 
     if (!context->ourNode)
@@ -1565,7 +1567,6 @@ void
 clientReplyContext::doGetMoreData()
 {
     /* We still have to do store logic processing - vary, cache hit etc */
-
     if (http->storeEntry() != NULL) {
         /* someone found the object in the cache for us */
         StoreIOBuffer tempBuffer;
@@ -1602,8 +1603,7 @@ clientReplyContext::doGetMoreData()
         tempBuffer.offset = reqofs;
         tempBuffer.length = getNextNode()->readBuffer.length;
         tempBuffer.data = getNextNode()->readBuffer.data;
-        storeClientCopy(sc, http->storeEntry(),
-                        tempBuffer, CacheHit, this);
+        storeClientCopy(sc, http->storeEntry(), tempBuffer, CacheHit, this);
     } else {
         /* MISS CASE, http->logType is already set! */
         processMiss();
@@ -2024,7 +2024,6 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         sendStreamError(tempBuffer);
         return;
     }
-
     fatal ("clientReplyContext::sendMoreData: Unreachable code reached \n");
 }
 
