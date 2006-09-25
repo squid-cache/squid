@@ -135,6 +135,13 @@ typedef enum {
     XPROF_MemBuf_grow,
     XPROF_InvokeHandlers,
     XPROF_HttpMsg_httpMsgParseStep,
+    XPROF_EventDispatcher_dispatch,
+    XPROF_SignalDispatcher_dispatch,
+    XPROF_Temp1,
+    XPROF_Temp2,
+    XPROF_Temp3,
+    XPROF_clientSocketRecipient,
+    XPROF_httpStart,
     XPROF_LAST
 } xprof_type;
 

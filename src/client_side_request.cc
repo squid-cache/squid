@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.73 2006/09/20 22:26:24 hno Exp $
+ * $Id: client_side_request.cc,v 1.74 2006/09/25 15:04:07 adrian Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -909,6 +909,7 @@ ClientHttpRequest::processRequest()
 void
 ClientHttpRequest::httpStart()
 {
+    PROF_start(httpStart);
     logType = LOG_TAG_NONE;
     debug(85, 4) ("ClientHttpRequest::httpStart: %s for '%s'\n",
                   log_tags[logType], uri);
@@ -917,6 +918,7 @@ ClientHttpRequest::httpStart()
     /* Use the Stream Luke */
     clientStreamNode *node = (clientStreamNode *)client_stream.tail->data;
     clientStreamRead(node, this, node->readBuffer);
+    PROF_stop(httpStart);
 }
 
 bool

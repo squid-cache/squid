@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.436 2006/09/13 18:55:10 serassio Exp $
+ * $Id: main.cc,v 1.437 2006/09/25 15:04:07 adrian Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -164,6 +164,7 @@ private:
 bool
 SignalDispatcher::dispatch()
 {
+    PROF_start(SignalDispatcher_dispatch);
     if (do_reconfigure) {
         mainReconfigure();
         do_reconfigure = 0;
@@ -189,6 +190,7 @@ SignalDispatcher::dispatch()
 
     bool result = events_dispatched;
     events_dispatched = false;
+    PROF_stop(SignalDispatcher_dispatch);
     return result;
 }
 
