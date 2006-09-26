@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.439 2006/09/26 14:45:00 hno Exp $
+dnl  $Id: configure.in,v 1.440 2006/09/26 14:46:16 hno Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.439 $)dnl
+AC_REVISION($Revision: 1.440 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -746,18 +746,6 @@ AC_ARG_ENABLE(delay-pools,
     echo "Delay pools enabled"
     AC_DEFINE([DELAY_POOLS],1,[Traffic management via "delay pools".])
     AM_CONDITIONAL(USE_DELAY_POOLS, true,)
-  fi
-])
-
-AM_CONDITIONAL(ENABLE_CONTENT_ENCODING, false)
-AC_ARG_ENABLE(content-encoding,
-[  --enable-content-encoding   Enable content-encoding to compress content],    
-[ if test "$enableval" = "yes" ; then
-    echo "Content encoding enabled"
-    AC_CHECK_LIB(z, deflate)
-    XTRA_LIBS="$XTRA_LIBS -lz"
-    AC_DEFINE([CONTENT_ENCODING],1,[content encoding support.])
-    AM_CONDITIONAL(ENABLE_CONTENT_ENCODING, true,)
   fi
 ])
 
