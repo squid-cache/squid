@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.32 2006/09/26 13:30:09 adrian Exp $
+ * $Id: HttpMsg.cc,v 1.33 2006/09/26 15:19:22 adrian Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -389,3 +389,55 @@ HttpMsg::_unlock()
     if (0 == lock_count)
         delete this;
 }
+
+
+void
+HttpParserInit(HttpParser *hdr, const char *buf, int bufsiz)
+{
+	hdr->state = 1;
+	hdr->buf = buf;
+	hdr->bufsiz = bufsiz;
+	hdr->req_start = hdr->req_end = -1;
+	hdr->hdr_start = hdr->hdr_end = -1;
+}
+
+/* XXX This should eventually turn into something inlined or #define'd */
+int
+HttpParserReqSz(HttpParser *hp)
+{
+	assert(hp->state == 1);
+	assert(hp->req_start != -1);
+	assert(hp->req_end != -1);
+	return hp->req_end - hp->req_start + 1;
+}
+
+
+/* 
+ * This +1 makes it 'right' but won't make any sense if
+ * there's a 0 byte header? This won't happen normally - a valid header
+ * is at -least- a blank line (\n, or \r\n.)
+ */
+int
+HttpParserHdrSz(HttpParser *hp)
+{
+	assert(hp->state == 1);
+	assert(hp->hdr_start != -1);
+	assert(hp->hdr_end != -1);
+	return hp->hdr_end - hp->hdr_start + 1;
+}
+
+const char *
+HttpParserHdrBuf(HttpParser *hp)
+{
+	assert(hp->state == 1);
+	assert(hp->hdr_start != -1);
+	assert(hp->hdr_end != -1);
+	return hp->buf + hp->hdr_start;
+}
+
+int
+HttpParserRequestLen(HttpParser *hp)
+{
+	return hp->hdr_end - hp->req_start + 1;
+}
+
