@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.h,v 1.10 2006/09/26 13:30:09 adrian Exp $
+ * $Id: HttpMsg.h,v 1.11 2006/09/26 15:19:22 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -100,6 +100,22 @@ protected:
 
 };
 
+/* Temporary parsing state; might turn into the replacement parser later on */
+struct _HttpParser {
+	char state;
+	const char *buf;
+	int bufsiz;
+
+	int req_start, req_end;
+	int hdr_start, hdr_end;
+};
+typedef struct _HttpParser HttpParser;
+
+extern void HttpParserInit(HttpParser *, const char *buf, int len);
+extern int HttpParserReqSz(HttpParser *);
+extern int HttpParserHdrSz(HttpParser *);
+extern const char * HttpParserHdrBuf(HttpParser *);
+extern int HttpParserRequestLen(HttpParser *hp);
 
 SQUIDCEXTERN int httpMsgIsolateHeaders(const char **parse_start, int len, const char **blk_start, const char **blk_end);
 

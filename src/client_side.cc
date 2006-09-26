@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.737 2006/09/26 13:30:09 adrian Exp $
+ * $Id: client_side.cc,v 1.738 2006/09/26 15:19:22 adrian Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -130,8 +130,7 @@ static PF requestTimeout;
 static PF clientLifetimeTimeout;
 static ClientSocketContext *parseHttpRequestAbort(ConnStateData::Pointer & conn,
         const char *uri);
-static ClientSocketContext *parseHttpRequest(ConnStateData::Pointer &, method_t *,
-        char **, size_t *, HttpVersion *);
+static ClientSocketContext *parseHttpRequest(ConnStateData::Pointer &, HttpParser *, method_t *, HttpVersion *);
 #if USE_IDENT
 static IDCB clientIdentDone;
 #endif
@@ -1926,16 +1925,13 @@ prepareTransparentURL(ConnStateData::Pointer & conn, ClientHttpRequest *http, ch
  *  Sets result->flags.parsed_ok to 1 if we have a good request.
  */
 static ClientSocketContext *
-parseHttpRequest(ConnStateData::Pointer & conn, method_t * method_p,
-                 char **prefix_p, size_t * req_line_sz_p, HttpVersion *http_ver)
+parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * method_p, HttpVersion *http_ver)
 {
     char *inbuf = NULL;
     char *url = NULL;
     char *req_hdr = NULL;
     char *t;
     char *end;
-    size_t header_sz;		/* size of headers, not including first line */
-    size_t prefix_sz;		/* size of whole request (req-line + headers) */
     size_t req_sz;
     ClientHttpRequest *http;
     ClientSocketContext *result;
@@ -1943,38 +1939,43 @@ parseHttpRequest(ConnStateData::Pointer & conn, method_t * method_p,
     const char *http_version;
 
     /* pre-set these values to make aborting simpler */
-    *prefix_p = NULL;
     *method_p = METHOD_NONE;
 
     /* Read the HTTP message. HTTP/0.9 is detected by the absence of a HTTP signature */
 
-    if ((t = (char *)memchr(conn->in.buf, '\n', conn->in.notYetUsed)) == NULL) {
+    if ((t = (char *)memchr(hp->buf, '\n', hp->bufsiz)) == NULL) {
         debug(33, 5) ("Incomplete request, waiting for end of request line\n");
         return NULL;
     }
 
-    *req_line_sz_p = t - conn->in.buf + 1;
-    http_version = findTrailingHTTPVersion(conn->in.buf);
+    hp->req_start = 0;
+    hp->req_end = t - hp->buf;
+    http_version = findTrailingHTTPVersion(hp->buf);
 
     if (http_version) {
-        if ((req_sz = headersEnd(conn->in.buf, conn->in.notYetUsed)) == 0) {
+        if ((req_sz = headersEnd(hp->buf, hp->bufsiz)) == 0) {
             debug(33, 5) ("Incomplete request, waiting for end of headers\n");
             return NULL;
         }
     } else {
         debug(33, 3) ("parseHttpRequest: Missing HTTP identifier\n");
-        req_sz = t - conn->in.buf + 1;	/* HTTP/0.9 requests */
+        req_sz = t - hp->buf + 1;	/* HTTP/0.9 requests */
     }
 
-    assert(req_sz <= conn->in.notYetUsed);
+    assert(req_sz <= (size_t) hp->bufsiz);
+    /* Will the following be true with HTTP/0.9 requests? probably not .. */
+    /* So the rest of the code will need to deal with '0'-byte headers (ie, none, so don't try parsing em) */
+    assert(req_sz > 0);
+    hp->hdr_end = req_sz - 1;
+    hp->hdr_start = hp->req_end + 1;
     /* Use memcpy, not strdup! */
     inbuf = (char *)xmalloc(req_sz + 1);
-    xmemcpy(inbuf, conn->in.buf, req_sz);
+    xmemcpy(inbuf, hp->buf, req_sz);
     *(inbuf + req_sz) = '\0';
     /* and adjust http_version to point into the new copy */
 
     if (http_version)
-        http_version = inbuf + (http_version - conn->in.buf);
+        http_version = inbuf + (http_version - hp->buf);
 
     /* Enforce max_request_size */
 
@@ -2006,13 +2007,11 @@ parseHttpRequest(ConnStateData::Pointer & conn, method_t * method_p,
      * Process headers after request line
      * TODO: Use httpRequestParse here.
      */
-    req_hdr = inbuf + *req_line_sz_p;
-
-    header_sz = req_sz - *req_line_sz_p;
+    req_hdr = inbuf + hp->req_end;
 
     debug(33, 3) ("parseHttpRequest: req_hdr = {%s}\n", req_hdr);
 
-    end = req_hdr + header_sz;
+    end = req_hdr + HttpParserHdrSz(hp);
 
     debug(33, 3) ("parseHttpRequest: end = {%s}\n", end);
 
@@ -2022,17 +2021,15 @@ parseHttpRequest(ConnStateData::Pointer & conn, method_t * method_p,
         return parseHttpRequestAbort(conn, "error:double-CR");
     }
 
-    prefix_sz = end - inbuf;
-
     debug(33, 3) ("parseHttpRequest: prefix_sz = %d, req_line_sz = %d\n",
-                  (int) prefix_sz, (int) *req_line_sz_p);
+                  (int) HttpParserRequestLen(hp), HttpParserReqSz(hp));
 
-    assert(prefix_sz <= conn->in.notYetUsed);
+    assert((size_t) HttpParserRequestLen(hp) <= (size_t) hp->bufsiz);
 
     /* Ok, all headers are received */
     http = new ClientHttpRequest(conn);
 
-    http->req_sz = prefix_sz;
+    http->req_sz = HttpParserRequestLen(hp);
 
     result = ClientSocketContextNew(http);
 
@@ -2048,14 +2045,8 @@ parseHttpRequest(ConnStateData::Pointer & conn, method_t * method_p,
                      clientReplyStatus, newServer, clientSocketRecipient,
                      clientSocketDetach, newClient, tempBuffer);
 
-    *prefix_p = (char *)xmalloc(prefix_sz + 1);
-
-    xmemcpy(*prefix_p, conn->in.buf, prefix_sz);
-
-    *(*prefix_p + prefix_sz) = '\0';
-
     debug(33, 5) ("parseHttpRequest: Request Header is\n%s\n",
-                  (*prefix_p) + *req_line_sz_p);
+                  (hp->buf) + hp->hdr_start);
 
 #if THIS_VIOLATES_HTTP_SPECS_ON_URL_TRANSFORMATION
 
@@ -2247,7 +2238,7 @@ clientAfterReadingRequests(int fd, ConnStateData::Pointer &conn, int do_next_rea
 }
 
 static void
-clientProcessRequest(ConnStateData::Pointer &conn, ClientSocketContext *context, method_t method, char *prefix, size_t req_line_sz, HttpVersion http_ver)
+clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketContext *context, method_t method, HttpVersion http_ver)
 {
     ClientHttpRequest *http = context->http;
     HttpRequest *request = NULL;
@@ -2287,9 +2278,9 @@ clientProcessRequest(ConnStateData::Pointer &conn, ClientSocketContext *context,
     /* compile headers */
     /* we should skip request line! */
     /* XXX should actually know the damned buffer size here */
-    if (!request->parseHeader(prefix + req_line_sz, strlen(prefix + req_line_sz))) {
+    if (!request->parseHeader(HttpParserHdrBuf(hp), HttpParserHdrSz(hp))) {
         clientStreamNode *node = context->getClientReplyContext();
-        debug(33, 5) ("Failed to parse request headers:\n%s\n", prefix);
+        debug(33, 5) ("Failed to parse request headers:\n%s\n", HttpParserHdrBuf(hp));
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         repContext->setReplyToError(
@@ -2452,15 +2443,14 @@ static bool
 clientParseRequest(ConnStateData::Pointer conn, bool &do_next_read)
 {
     method_t method;
-    char *prefix = NULL;
     ClientSocketContext *context;
     bool parsed_req = false;
     HttpVersion http_ver;
+    HttpParser hp;
 
     debug(33, 5) ("clientParseRequest: FD %d: attempting to parse\n", conn->fd);
 
     while (conn->in.notYetUsed > 0 && conn->bodySizeLeft() == 0) {
-        size_t req_line_sz;
         connStripBufferWhitespace (conn);
 
         /* Limit the number of concurrent requests to 2 */
@@ -2473,14 +2463,16 @@ clientParseRequest(ConnStateData::Pointer conn, bool &do_next_read)
         /* Terminate the string */
         conn->in.buf[conn->in.notYetUsed] = '\0';
 
+	/* Begin the parsing */
+	HttpParserInit(&hp, conn->in.buf, conn->in.notYetUsed);
+
         /* Process request */
 	PROF_start(parseHttpRequest);
-        context = parseHttpRequest(conn, &method, &prefix, &req_line_sz, &http_ver);
+        context = parseHttpRequest(conn, &hp, &method, &http_ver);
 	PROF_stop(parseHttpRequest);
 
         /* partial or incomplete request */
         if (!context) {
-            safe_free(prefix);
 
             if (!connKeepReadingIncompleteRequest(conn))
                 connCancelIncompleteRequests(conn);
@@ -2494,9 +2486,8 @@ clientParseRequest(ConnStateData::Pointer conn, bool &do_next_read)
             commSetTimeout(conn->fd, Config.Timeout.lifetime, clientLifetimeTimeout,
                            context->http);
 
-            clientProcessRequest(conn, context, method, prefix, req_line_sz, http_ver);
+            clientProcessRequest(conn, &hp, context, method, http_ver);
 
-            safe_free(prefix);
             parsed_req = true;
 
             if (context->mayUseConnection()) {
@@ -2513,6 +2504,7 @@ clientParseRequest(ConnStateData::Pointer conn, bool &do_next_read)
             continue;		/* while offset > 0 && conn->bodySizeLeft() == 0 */
         }
     }				/* while offset > 0 && conn->bodySizeLeft() == 0 */
+    /* XXX where to 'finish' the parsing pass? */
 
     return parsed_req;
 }
