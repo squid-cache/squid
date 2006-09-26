@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.67 2006/05/29 21:44:18 robertc Exp $
+ * $Id: HttpRequest.cc,v 1.68 2006/09/26 13:30:09 adrian Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -208,11 +208,11 @@ HttpRequest::parseFirstLine(const char *start, const char *end)
 }
 
 int
-HttpRequest::parseHeader(const char *parse_start)
+HttpRequest::parseHeader(const char *parse_start, int len)
 {
     const char *blk_start, *blk_end;
 
-    if (!httpMsgIsolateHeaders(&parse_start, &blk_start, &blk_end))
+    if (!httpMsgIsolateHeaders(&parse_start, len, &blk_start, &blk_end))
         return 0;
 
     int result = header.parse(blk_start, blk_end);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.31 2006/09/20 11:38:14 adrian Exp $
+ * $Id: HttpMsg.cc,v 1.32 2006/09/26 13:30:09 adrian Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -56,13 +56,12 @@ HttpMsgParseState &operator++ (HttpMsgParseState &aState)
 
 /* find end of headers */
 int
-httpMsgIsolateHeaders(const char **parse_start, const char **blk_start, const char **blk_end)
+httpMsgIsolateHeaders(const char **parse_start, int l, const char **blk_start, const char **blk_end)
 {
     /*
      * parse_start points to the first line of HTTP message *headers*,
      * not including the request or status lines
      */
-    size_t l = strlen(*parse_start);
     size_t end = headersEnd(*parse_start, l);
     int nnl;
 
@@ -177,7 +176,7 @@ bool HttpMsg::parse(MemBuf *buf, bool eof, http_status *error)
         return false;
     }
 
-    const int res = httpMsgParseStep(buf->content(), eof);
+    const int res = httpMsgParseStep(buf->content(), buf->contentSize(), eof);
 
     if (res < 0) { // error
         debugs(58, 3, "HttpMsg::parse: cannot parse isolated headers " <<
@@ -223,7 +222,7 @@ HttpMsg::parseCharBuf(const char *buf, ssize_t end)
     mb.init();
     mb.append(buf, end);
     mb.terminate();
-    success = httpMsgParseStep(mb.buf, 0);
+    success = httpMsgParseStep(mb.buf, mb.size, 0);
     mb.clean();
     return success == 1;
 }
@@ -236,9 +235,10 @@ HttpMsg::parseCharBuf(const char *buf, ssize_t end)
  *      -1 -- parse error
  */
 int
-HttpMsg::httpMsgParseStep(const char *buf, int atEnd)
+HttpMsg::httpMsgParseStep(const char *buf, int len, int atEnd)
 {
     const char *parse_start = buf;
+    int parse_len = len;
     const char *blk_start, *blk_end;
     const char **parse_end_ptr = &blk_end;
     assert(parse_start);
@@ -263,12 +263,18 @@ HttpMsg::httpMsgParseStep(const char *buf, int atEnd)
         *parse_end_ptr = parse_start;
 
         hdr_sz = *parse_end_ptr - buf;
+	parse_len = parse_len - hdr_sz;
 
         ++pstate;
     }
 
+    /*
+     * XXX This code uses parse_start; but if we're incrementally parsing then
+     * this code might not actually be given parse_start at the right spot (just
+     * after headers.) Grr.
+     */
     if (pstate == psReadyToParseHeaders) {
-        if (!httpMsgIsolateHeaders(&parse_start, &blk_start, &blk_end)) {
+        if (!httpMsgIsolateHeaders(&parse_start, parse_len, &blk_start, &blk_end)) {
             if (atEnd) {
                 blk_start = parse_start, blk_end = blk_start + strlen(blk_start);
 	    } else {

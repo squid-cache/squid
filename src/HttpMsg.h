@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.h,v 1.9 2006/04/18 12:25:50 robertc Exp $
+ * $Id: HttpMsg.h,v 1.10 2006/09/26 13:30:09 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -79,7 +79,7 @@ public:
 
     bool parseCharBuf(const char *buf, ssize_t end);
 
-    int httpMsgParseStep(const char *buf, int atEnd);
+    int httpMsgParseStep(const char *buf, int len, int atEnd);
 
     virtual int httpMsgParseError();
 
@@ -101,7 +101,7 @@ protected:
 };
 
 
-SQUIDCEXTERN int httpMsgIsolateHeaders(const char **parse_start, const char **blk_start, const char **blk_end);
+SQUIDCEXTERN int httpMsgIsolateHeaders(const char **parse_start, int len, const char **blk_start, const char **blk_end);
 
 #define HTTPMSGUNLOCK(a) if(a){(a)->_unlock();(a)=NULL;}
 #define HTTPMSGLOCK(a) (a)->_lock()

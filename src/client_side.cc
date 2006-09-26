@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.736 2006/09/25 15:04:06 adrian Exp $
+ * $Id: client_side.cc,v 1.737 2006/09/26 13:30:09 adrian Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2286,7 +2286,8 @@ clientProcessRequest(ConnStateData::Pointer &conn, ClientSocketContext *context,
 
     /* compile headers */
     /* we should skip request line! */
-    if (!request->parseHeader(prefix + req_line_sz)) {
+    /* XXX should actually know the damned buffer size here */
+    if (!request->parseHeader(prefix + req_line_sz, strlen(prefix + req_line_sz))) {
         clientStreamNode *node = context->getClientReplyContext();
         debug(33, 5) ("Failed to parse request headers:\n%s\n", prefix);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
