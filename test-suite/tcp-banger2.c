@@ -1,6 +1,32 @@
 #include "config.h"
 
-/* $Id: tcp-banger2.c,v 1.24 2003/01/23 00:38:34 robertc Exp $ */
+/* $Id: tcp-banger2.c,v 1.25 2006/09/26 12:31:11 hno Exp $ */
+
+/*
+ * On some systems, FD_SETSIZE is set to something lower than the
+ * actual number of files which can be opened.  IRIX is one case,
+ * NetBSD is another.  So here we increase FD_SETSIZE to our
+ * configure-discovered maximum *before* any system includes.
+ */
+#define CHANGE_FD_SETSIZE 1
+
+/* Cannot increase FD_SETSIZE on Linux */
+#if defined(_SQUID_LINUX_)
+#undef CHANGE_FD_SETSIZE
+#define CHANGE_FD_SETSIZE 0
+#endif
+
+/* Cannot increase FD_SETSIZE on FreeBSD before 2.2.0, causes select(2)
+ * to return EINVAL. */
+/* Marian Durkovic <marian@svf.stuba.sk> */
+/* Peter Wemm <peter@spinner.DIALix.COM> */
+#if defined(_SQUID_FREEBSD_)
+#include <osreldate.h>
+#if __FreeBSD_version < 220000
+#undef CHANGE_FD_SETSIZE
+#define CHANGE_FD_SETSIZE 0
+#endif
+#endif
 
 /* Increase FD_SETSIZE if SQUID_MAXFD is bigger */
 #if CHANGE_FD_SETSIZE && SQUID_MAXFD > DEFAULT_FD_SETSIZE
@@ -78,9 +104,10 @@ static int max_connections = 64;
 static time_t lifetime = 60;
 static time_t process_lifetime = 86400;
 static struct timeval now;
-static long total_bytes_written = 0;
-static long total_bytes_read = 0;
+static long long total_bytes_written = 0;
+static long long total_bytes_read = 0;
 static int opt_checksum = 0;
+static char *custom_header = NULL;
 FILE *trace_file = NULL;
 
 typedef void (CB) (int, void *);
@@ -104,6 +131,7 @@ struct _request {
     int status;
     long validsum;
     long sum;
+    int validstatus;
 };
 
 struct _f FD[SQUID_MAXFD];
@@ -242,6 +270,7 @@ reply_done(int fd, void *data)
 {
     struct _request *r = data;
     if (opt_range);		/* skip size checks for now */
+    else if (strcmp(r->method, "HEAD") == 0);
     else if (r->bodysize != r->content_length && r->content_length >= 0)
 	fprintf(stderr, "ERROR: %s got %d of %d bytes\n",
 	    r->url, r->bodysize, r->content_length);
@@ -252,6 +281,10 @@ reply_done(int fd, void *data)
 	else if (opt_checksum && r->validsum != r->sum)
 	    fprintf(stderr, "WARNING: %s invalid checksum wanted 0x%lx got 0x%lx\n",
 		r->url, r->validsum, r->sum);
+    }
+    if (r->validstatus && r->status != r->validstatus) {
+	    fprintf(stderr, "WARNING: %s status mismatch wanted %d got %d\n",
+		r->url, r->validstatus, r->status);
     }
     if (trace_file) {
 	if (opt_checksum)
@@ -270,7 +303,7 @@ request(char *urlin)
     int s = -1, f = -1;
     char buf[4096];
     char msg[8192];
-    char *method, *url, *file, *size, *checksum;
+    char *method, *url, *file, *size, *checksum, *status;
     char *host;
     char urlbuf[8192];
     int len, len2;
@@ -296,6 +329,7 @@ request(char *urlin)
     strcpy(urlbuf, urlin);
     method = strtok(urlbuf, " ");
     url = strtok(NULL, " ");
+    status = strtok(NULL, " ");
     file = strtok(NULL, " ");
     size = strtok(NULL, " ");
     checksum = strtok(NULL, " ");
@@ -322,6 +356,8 @@ request(char *urlin)
 	r->validsize = -1;	/* Unknown */
     if (checksum && strcmp(checksum, "-") != 0)
 	r->validsum = strtoul(checksum, NULL, 0);
+    if (status)
+	r->validstatus = atoi(status);
     r->content_length = -1;	/* Unknown */
     if (opt_accel) {
 	host = strchr(url, '/') + 2;
@@ -339,7 +375,7 @@ request(char *urlin)
     strcat(msg, "Accept: */*\r\n");
     if (opt_ims && (lrand48() & 0x03) == 0) {
 	w = time(NULL) - (lrand48() & 0x3FFFF);
-	sprintf(buf, "If-Modified-Since: %s\r\n", mkrfc1123(&w));
+	sprintf(buf, "If-Modified-Since: %s\r\n", mkrfc850(&w));
 	strcat(msg, buf);
     }
     if (file && strcmp(file, "-") != 0) {
@@ -376,6 +412,7 @@ request(char *urlin)
 	}
 	strcat(msg, "\r\n");
     }
+    strcat(msg, custom_header);
     strcat(msg, "\r\n");
     len = strlen(msg);
     if ((len2 = write(s, msg, len)) != len) {
@@ -441,6 +478,7 @@ usage(void)
     fprintf(stderr, " -i              Send random If-Modified-Since times\n");
     fprintf(stderr, " -l <seconds>    Connection lifetime timeout (default 60)\n");
     fprintf(stderr, " -a              Accelerator mode\n");
+    fprintf(stderr, " -H <string>     Custom header\n");
 }
 
 int
@@ -461,7 +499,8 @@ main(argc, argv)
     progname = strdup(argv[0]);
     gettimeofday(&now, NULL);
     start = last = now;
-    while ((c = getopt(argc, argv, "ap:h:n:icrl:L:t:")) != -1) {
+    custom_header = strdup("");
+    while ((c = getopt(argc, argv, "ap:h:H:n:icrl:L:t:")) != -1) {
 	switch (c) {
 	case 'a':
 	    opt_accel = 1;
@@ -494,6 +533,11 @@ main(argc, argv)
 	    break;
 	case 'r':
 	    opt_range = 1;
+	    break;
+	case 'H':
+	    custom_header = realloc(custom_header, strlen(custom_header) + strlen(optarg) + 2 + 1);
+	    strcat(custom_header, optarg);
+	    strcat(custom_header, "\r\n");
 	    break;
 	default:
 	    usage();
@@ -550,8 +594,8 @@ main(argc, argv)
 		reqpersec,
 		nfds,
 		(int) (nrequests / dt),
-		(int) total_bytes_read / 1024 / 1024,
-		(int) total_bytes_read / 1024 / dt);
+		(int) (total_bytes_read / 1024 / 1024),
+		(int) (total_bytes_read / 1024 / dt));
 	    reqpersec = 0;
 	    /*
 	     * if (dt > process_lifetime)
