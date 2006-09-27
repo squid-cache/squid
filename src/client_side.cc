@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.739 2006/09/27 13:17:52 adrian Exp $
+ * $Id: client_side.cc,v 1.740 2006/09/27 13:47:53 adrian Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1865,6 +1865,7 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
     /* Request line is valid here .. */
     *http_ver = HttpVersion(hp->v_maj, hp->v_min);
 
+    /* This call scans the entire request, not just the headers */
     if (hp->v_maj > 0) {
         if ((req_sz = headersEnd(hp->buf, hp->bufsiz)) == 0) {
             debug(33, 5) ("Incomplete request, waiting for end of headers\n");
@@ -1874,6 +1875,8 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
         debug(33, 3) ("parseHttpRequest: Missing HTTP identifier\n");
         req_sz = HttpParserReqSz(hp);
     }
+
+    /* We know the whole request is in hp->buf now */
 
     assert(req_sz <= (size_t) hp->bufsiz);
     /* Will the following be true with HTTP/0.9 requests? probably not .. */
@@ -1912,11 +1915,8 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
      */
     /* XXX this code should be modified to take a const char * later! */
     req_hdr = (char *) hp->buf + hp->req_end + 1;
-
     debug(33, 3) ("parseHttpRequest: req_hdr = {%s}\n", req_hdr);
-
-    end = req_hdr + HttpParserHdrSz(hp);
-
+    end = (char *) hp->buf + hp->hdr_end;
     debug(33, 3) ("parseHttpRequest: end = {%s}\n", end);
 
     if (strstr(req_hdr, "\r\r\n")) {
@@ -1928,23 +1928,16 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
     debug(33, 3) ("parseHttpRequest: prefix_sz = %d, req_line_sz = %d\n",
                   (int) HttpParserRequestLen(hp), HttpParserReqSz(hp));
 
-    assert((size_t) HttpParserRequestLen(hp) <= (size_t) hp->bufsiz);
-
     /* Ok, all headers are received */
     http = new ClientHttpRequest(conn);
 
     http->req_sz = HttpParserRequestLen(hp);
-
     result = ClientSocketContextNew(http);
-
     tempBuffer.data = result->reqbuf;
-
     tempBuffer.length = HTTP_REQBUF_SZ;
 
     ClientStreamData newServer = new clientReplyContext(http);
-
     ClientStreamData newClient = result;
-
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
                      clientReplyStatus, newServer, clientSocketRecipient,
                      clientSocketDetach, newClient, tempBuffer);

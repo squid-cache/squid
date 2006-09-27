@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.34 2006/09/27 13:17:52 adrian Exp $
+ * $Id: HttpMsg.cc,v 1.35 2006/09/27 13:47:53 adrian Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -401,6 +401,7 @@ HttpParserInit(HttpParser *hdr, const char *buf, int bufsiz)
 	hdr->hdr_start = hdr->hdr_end = -1;
 }
 
+#if MSGDODEBUG
 /* XXX This should eventually turn into something inlined or #define'd */
 int
 HttpParserReqSz(HttpParser *hp)
@@ -440,6 +441,7 @@ HttpParserRequestLen(HttpParser *hp)
 {
 	return hp->hdr_end - hp->req_start + 1;
 }
+#endif
 
 /*
  * Attempt to parse the request line.
@@ -462,6 +464,7 @@ HttpParserParseReqLine(HttpParser *hmsg)
 	int maj = -1, min = -1;
 	int last_whitespace = -1, line_end = -1;
 
+	PROF_start(HttpParserParseReqLine);
 	/* Find \r\n - end of URL+Version (and the request) */
 	for (i = 0; i < hmsg->bufsiz; i++) {
 		if (hmsg->buf[i] == '\n') {
@@ -602,6 +605,7 @@ finish:
 	hmsg->v_min = min;
 	assert(maj != -1);
 	assert(min != -1);
+	PROF_stop(HttpParserParseReqLine);
 	debug(1, 2) ("Parser: retval %d: from %d->%d: method %d->%d; url %d->%d; version %d->%d (%d/%d)\n",
 	    retcode, hmsg->req_start, hmsg->req_end,
 	    hmsg->m_start, hmsg->m_end,
