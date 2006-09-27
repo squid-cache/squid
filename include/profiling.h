@@ -142,6 +142,7 @@ typedef enum {
     XPROF_Temp3,
     XPROF_clientSocketRecipient,
     XPROF_httpStart,
+    XPROF_HttpParserParseReqLine,
     XPROF_LAST
 } xprof_type;
 
