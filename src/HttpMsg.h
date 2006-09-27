@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.h,v 1.12 2006/09/27 13:17:52 adrian Exp $
+ * $Id: HttpMsg.h,v 1.13 2006/09/27 13:47:53 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -115,11 +115,19 @@ struct _HttpParser {
 typedef struct _HttpParser HttpParser;
 
 extern void HttpParserInit(HttpParser *, const char *buf, int len);
+extern int HttpParserParseReqLine(HttpParser *hp);
+
+#if MSGDODEBUG
 extern int HttpParserReqSz(HttpParser *);
 extern int HttpParserHdrSz(HttpParser *);
 extern const char * HttpParserHdrBuf(HttpParser *);
 extern int HttpParserRequestLen(HttpParser *hp);
-extern int HttpParserParseReqLine(HttpParser *hp);
+#else
+#define	HttpParserReqSz(hp)	( (hp)->req_end - (hp)->req_start + 1 )
+#define	HttpParserHdrSz(hp)	( (hp)->hdr_end - (hp)->hdr_start + 1 )
+#define	HttpParserHdrBuf(hp)	( (hp)->buf + (hp)->hdr_start )
+#define	HttpParserRequestLen(hp)	( (hp)->hdr_end - (hp)->req_start + 1 )
+#endif
 
 SQUIDCEXTERN int httpMsgIsolateHeaders(const char **parse_start, int len, const char **blk_start, const char **blk_end);
 
