@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.738 2006/09/26 15:19:22 adrian Exp $
+ * $Id: client_side.cc,v 1.739 2006/09/27 13:17:52 adrian Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -156,12 +156,10 @@ static int responseFinishedOrFailed(HttpReply * rep, StoreIOBuffer const &reciev
 static void ClientSocketContextPushDeferredIfNeeded(ClientSocketContext::Pointer deferredRequest, ConnStateData::Pointer & conn);
 static void clientUpdateSocketStats(log_type logType, size_t size);
 
-static ClientSocketContext *clientParseRequestMethod(char *inbuf, method_t * method_p, ConnStateData::Pointer & conn);
-static char *skipLeadingSpace(char *aString);
+char *skipLeadingSpace(char *aString);
 #if UNUSED_CODE
 static void trimTrailingSpaces(char *aString, size_t len);
 #endif
-static ClientSocketContext *parseURIandHTTPVersion(char **url_p, HttpVersion * http_ver_p, ConnStateData::Pointer& conn, char *http_version_str);
 static int connReadWasError(ConnStateData::Pointer& conn, comm_err_t, int size, int xerrno);
 static int connFinishedWithConn(ConnStateData::Pointer& conn, int size);
 static void connNoteUseOfBuffer(ConnStateData* conn, size_t byteCount);
@@ -1665,27 +1663,6 @@ parseHttpRequestAbort(ConnStateData::Pointer & conn, const char *uri)
     return context;
 }
 
-ClientSocketContext *
-clientParseRequestMethod(char *inbuf, method_t * method_p, ConnStateData::Pointer & conn)
-{
-    char *mstr = NULL;
-
-    if ((mstr = strtok(inbuf, "\t ")) == NULL) {
-        debug(33, 1) ("clientParseRequestMethod: Can't get request method\n");
-        return parseHttpRequestAbort(conn, "error:invalid-request");
-    }
-
-    *method_p = HttpRequestMethod(mstr);
-
-    if (*method_p == METHOD_NONE) {
-        debug(33, 1) ("clientParseRequestMethod: Unsupported method '%s'\n", mstr);
-        return parseHttpRequestAbort(conn, "error:unsupported-request-method");
-    }
-
-    debug(33, 5) ("clientParseRequestMethod: Method is '%s'\n", mstr);
-    return NULL;
-}
-
 char *
 skipLeadingSpace(char *aString)
 {
@@ -1736,69 +1713,6 @@ trimTrailingSpaces(char *aString, size_t len)
 }
 
 #endif
-
-static ClientSocketContext *
-parseURIandHTTPVersion(char **url_p, HttpVersion * http_ver_p,
-                       ConnStateData::Pointer & conn, char *http_version_str)
-{
-    char *url;
-    /* look for URL (strtok initiated by clientParseRequestMethod) */
-
-    if ((url = strtok(NULL, "\n")) == NULL) {
-        debug(33, 1) ("parseHttpRequest: Missing URL\n");
-        return parseHttpRequestAbort(conn, "error:missing-url");
-    }
-
-    url = skipLeadingSpace(url);
-
-    if (!*url || (http_version_str && http_version_str <= url+1)) {
-        debug(33, 1) ("parseHttpRequest: Missing URL\n");
-        return parseHttpRequestAbort(conn, "error:missing-url");
-    }
-
-    /* Terminate URL just before HTTP version (or at end of line) */
-    if (http_version_str)
-        http_version_str[-1] = '\0';
-    else {
-        char *t = url + strlen(url) - 1;
-
-        while (t > url && *t == '\r')
-            *t-- = '\0';
-    }
-
-    debug(33, 5) ("parseHttpRequest: URI is '%s'\n", url);
-    *url_p = url;
-
-    if (http_version_str) {
-        if (sscanf(http_version_str + 5, "%d.%d", &http_ver_p->major,
-                   &http_ver_p->minor) != 2) {
-            debug(33, 3) ("parseHttpRequest: Invalid HTTP identifier.\n");
-            return parseHttpRequestAbort(conn, "error:invalid-http-ident");
-        }
-
-        debug(33, 6) ("parseHttpRequest: Client HTTP version %d.%d.\n",
-                      http_ver_p->major, http_ver_p->minor);
-    } else {
-        *http_ver_p = HttpVersion(0,9);	/* wild guess */
-    }
-
-    return NULL;
-}
-
-/* Utility function to perform part of request parsing */
-static ClientSocketContext *
-clientParseHttpRequestLine(char *reqline, ConnStateData::Pointer &conn,
-                           method_t * method_p, char **url_p, HttpVersion * http_ver_p, char * http_version_str)
-{
-    ClientSocketContext *result = NULL;
-    /* XXX: This sequence relies on strtok() */
-
-    if ((result = clientParseRequestMethod(reqline, method_p, conn))
-            || (result = parseURIandHTTPVersion(url_p, http_ver_p, conn, http_version_str)))
-        return result;
-
-    return NULL;
-}
 
 void
 setLogUri(ClientHttpRequest * http, char const *uri)
@@ -1927,39 +1841,38 @@ prepareTransparentURL(ConnStateData::Pointer & conn, ClientHttpRequest *http, ch
 static ClientSocketContext *
 parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * method_p, HttpVersion *http_ver)
 {
-    char *inbuf = NULL;
     char *url = NULL;
     char *req_hdr = NULL;
-    char *t;
     char *end;
     size_t req_sz;
     ClientHttpRequest *http;
     ClientSocketContext *result;
     StoreIOBuffer tempBuffer;
-    const char *http_version;
+    int r;
 
     /* pre-set these values to make aborting simpler */
     *method_p = METHOD_NONE;
 
-    /* Read the HTTP message. HTTP/0.9 is detected by the absence of a HTTP signature */
-
-    if ((t = (char *)memchr(hp->buf, '\n', hp->bufsiz)) == NULL) {
+    /* Attempt to parse the first line; this'll define the method, url, version and header begin */
+    r = HttpParserParseReqLine(hp);
+    if (r == 0) {
         debug(33, 5) ("Incomplete request, waiting for end of request line\n");
-        return NULL;
+	return NULL;
     }
+    if (r == -1) {
+        return parseHttpRequestAbort(conn, "error:invalid-request");
+    }
+    /* Request line is valid here .. */
+    *http_ver = HttpVersion(hp->v_maj, hp->v_min);
 
-    hp->req_start = 0;
-    hp->req_end = t - hp->buf;
-    http_version = findTrailingHTTPVersion(hp->buf);
-
-    if (http_version) {
+    if (hp->v_maj > 0) {
         if ((req_sz = headersEnd(hp->buf, hp->bufsiz)) == 0) {
             debug(33, 5) ("Incomplete request, waiting for end of headers\n");
             return NULL;
         }
     } else {
         debug(33, 3) ("parseHttpRequest: Missing HTTP identifier\n");
-        req_sz = t - hp->buf + 1;	/* HTTP/0.9 requests */
+        req_sz = HttpParserReqSz(hp);
     }
 
     assert(req_sz <= (size_t) hp->bufsiz);
@@ -1968,46 +1881,37 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
     assert(req_sz > 0);
     hp->hdr_end = req_sz - 1;
     hp->hdr_start = hp->req_end + 1;
-    /* Use memcpy, not strdup! */
-    inbuf = (char *)xmalloc(req_sz + 1);
-    xmemcpy(inbuf, hp->buf, req_sz);
-    *(inbuf + req_sz) = '\0';
-    /* and adjust http_version to point into the new copy */
-
-    if (http_version)
-        http_version = inbuf + (http_version - hp->buf);
 
     /* Enforce max_request_size */
-
     if (req_sz >= Config.maxRequestHeaderSize) {
         debug(33, 5) ("parseHttpRequest: Too large request\n");
-        xfree(inbuf);
         return parseHttpRequestAbort(conn, "error:request-too-large");
     }
 
-    /* Barf on NULL characters in the headers */
-    if (strlen(inbuf) != req_sz) {
-        debug(33, 1) ("parseHttpRequest: Requestheader contains NULL characters\n");
-#if TRY_TO_IGNORE_THIS
-
-        return parseHttpRequestAbort(conn, "error:invalid-request");
-#endif
-
+    /* Set method_p */
+    *method_p = HttpRequestMethod(&hp->buf[hp->m_start], &hp->buf[hp->m_end]);
+    if (*method_p == METHOD_NONE) {
+	/* XXX need a way to say "this many character length string" */
+        debug(33, 1) ("clientParseRequestMethod: Unsupported method in request '%s'\n", hp->buf);
+	/* XXX where's the method set for this error? */
+        return parseHttpRequestAbort(conn, "error:unsupported-request-method");
     }
 
-    /* Is there a legitimate first line to the headers ? */
-    if ((result = clientParseHttpRequestLine(inbuf, conn, method_p, &url,
-                  http_ver, (char *) http_version))) {
-        /* something wrong, abort */
-        xfree(inbuf);
-        return result;
-    }
+    /* set url */
+    /*
+     * XXX this should eventually not use a malloc'ed buffer; the transformation code
+     * below needs to be modified to not expect a mutable nul-terminated string.
+     */
+    url = (char *)xmalloc(hp->u_end - hp->u_start + 16);
+    memcpy(url, hp->buf + hp->u_start, hp->u_end - hp->u_start + 1);
+    url[hp->u_end - hp->u_start + 1] = '\0';
 
     /*
      * Process headers after request line
      * TODO: Use httpRequestParse here.
      */
-    req_hdr = inbuf + hp->req_end;
+    /* XXX this code should be modified to take a const char * later! */
+    req_hdr = (char *) hp->buf + hp->req_end + 1;
 
     debug(33, 3) ("parseHttpRequest: req_hdr = {%s}\n", req_hdr);
 
@@ -2017,7 +1921,7 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
 
     if (strstr(req_hdr, "\r\r\n")) {
         debug(33, 1) ("WARNING: suspicious HTTP request contains double CR\n");
-        xfree(inbuf);
+	xfree(url);
         return parseHttpRequestAbort(conn, "error:double-CR");
     }
 
@@ -2076,10 +1980,9 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
 
     setLogUri(http, http->uri);
     debug(33, 5) ("parseHttpRequest: Complete request received\n");
-    xfree(inbuf);
     result->flags.parsed_ok = 1;
+    xfree(url);
     return result;
-
 }
 
 int

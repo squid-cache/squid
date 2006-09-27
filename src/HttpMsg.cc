@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.33 2006/09/26 15:19:22 adrian Exp $
+ * $Id: HttpMsg.cc,v 1.34 2006/09/27 13:17:52 adrian Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -439,5 +439,174 @@ int
 HttpParserRequestLen(HttpParser *hp)
 {
 	return hp->hdr_end - hp->req_start + 1;
+}
+
+/*
+ * Attempt to parse the request line.
+ *
+ * This will set the values in hmsg that it determines. One may end up 
+ * with a partially-parsed buffer; the return value tells you whether
+ * the values are valid or not.
+ *
+ * @return 1 if parsed correctly, 0 if more is needed, -1 if error
+ *
+ * TODO:
+ *   * have it indicate "error" and "not enough" as two separate conditions!
+ *   * audit this code as off-by-one errors are probably everywhere!
+ */
+int
+HttpParserParseReqLine(HttpParser *hmsg)
+{
+	int i = 0;
+	int retcode = 0;
+	int maj = -1, min = -1;
+	int last_whitespace = -1, line_end = -1;
+
+	/* Find \r\n - end of URL+Version (and the request) */
+	for (i = 0; i < hmsg->bufsiz; i++) {
+		if (hmsg->buf[i] == '\n') {
+			break;
+		}
+		if (i < hmsg->bufsiz - 1 && hmsg->buf[i - 1] == '\r' && hmsg->buf[i] == '\n') {
+			i++;
+			break;
+		}
+	}
+	if (i == hmsg->bufsiz) {
+		retcode = 0;
+		goto finish;
+	}
+	/* XXX this should point to the -end- of the \r\n, \n, etc. */
+	hmsg->req_end = i;
+	i = 0;
+
+	/* Find first non-whitespace - beginning of method */
+	for (; i < hmsg->req_end && (isspace(hmsg->buf[i])); i++);
+	if (i >= hmsg->req_end) {
+		retcode = 0;
+		goto finish;
+	}
+	hmsg->m_start = i;
+	hmsg->req_start = i;
+
+	/* Find first whitespace - end of method */
+	for (; i < hmsg->req_end && (! isspace(hmsg->buf[i])); i++);
+	if (i >= hmsg->req_end) {
+		retcode = 0;
+		goto finish;
+	}
+	hmsg->m_end = i - 1;
+
+	/* Find first non-whitespace - beginning of URL+Version */
+	for (; i < hmsg->req_end && (isspace(hmsg->buf[i])); i++);
+	if (i >= hmsg->req_end) {
+		retcode = 0;
+		goto finish;
+	}
+	hmsg->u_start = i;
+
+	/* Find \r\n or \n - thats the end of the line. Keep track of the last whitespace! */
+	for (; i <= hmsg->req_end; i++) {
+		/* If \n - its end of line */
+		if (hmsg->buf[i] == '\n') {
+			line_end = i;
+			break;
+		}
+		/* XXX could be off-by-one wrong! */
+		if (hmsg->buf[i] == '\r' && (i + 1) <= hmsg->req_end && hmsg->buf[i+1] == '\n') {
+			line_end = i;
+			break;
+		}
+		/* If its a whitespace, note it as it'll delimit our version */
+		if (hmsg->buf[i] == ' ' || hmsg->buf[i] == '\t') {
+			last_whitespace = i;
+		}
+	}
+	if (i > hmsg->req_end) {
+		retcode = 0;
+		goto finish;
+	}
+
+	/* At this point we don't need the 'i' value; so we'll recycle it for version parsing */
+
+	/* 
+	 * At this point: line_end points to the first eol char (\r or \n);
+	 * last_whitespace points to the last whitespace char in the URL.
+	 * We know we have a full buffer here!
+	 */
+	if (last_whitespace == -1) {
+		maj = 0; min = 9;
+		hmsg->u_end = line_end - 1;
+		assert(hmsg->u_end >= hmsg->u_start);
+	} else {
+		/* Find the first non-whitespace after last_whitespace */
+		/* XXX why <= vs < ? I do need to really re-audit all of this ..*/
+		for (i = last_whitespace; i <= hmsg->req_end && isspace(hmsg->buf[i]); i++);
+		if (i > hmsg->req_end) {
+			retcode = 0;
+			goto finish;
+		}
+
+		/* is it http/ ? if so, we try parsing. If not, the URL is the whole line; version is 0.9 */
+		if (i + 5 >= hmsg->req_end || (strncasecmp(&hmsg->buf[i], "HTTP/", 5) != 0)) {
+			maj = 0; min = 9;
+			hmsg->u_end = line_end - 1;
+			assert(hmsg->u_end >= hmsg->u_start);
+		} else {
+			/* Ok, lets try parsing! Yes, this needs refactoring! */
+			hmsg->v_start = i;
+			i += 5;
+
+			/* next should be 1 or more digits */
+			maj = 0;
+			for (; i < hmsg->req_end && (isdigit(hmsg->buf[i])); i++) {
+				maj = maj * 10;
+				maj = maj + (hmsg->buf[i]) - '0';
+			}
+			if (i >= hmsg->req_end) {
+				retcode = 0;
+				goto finish;
+			}
+
+			/* next should be .; we -have- to have this as we have a whole line.. */
+			if (hmsg->buf[i] != '.') {
+				retcode = 0;
+				goto finish;
+			}
+			if (i + 1 >= hmsg->req_end) {
+				retcode = 0;
+				goto finish;
+			}
+	
+			/* next should be one or more digits */
+			i++;
+			min = 0;
+			for (; i < hmsg->req_end && (isdigit(hmsg->buf[i])); i++) {
+				min = min * 10;
+				min = min + (hmsg->buf[i]) - '0';
+			}
+
+			/* Find whitespace, end of version */
+			hmsg->v_end = i;
+			hmsg->u_end = last_whitespace - 1;
+		}
+	}
+
+	/* 
+	 * Rightio - we have all the schtuff. Return true; we've got enough.
+	 */
+	retcode = 1;
+
+finish:
+	hmsg->v_maj = maj;
+	hmsg->v_min = min;
+	assert(maj != -1);
+	assert(min != -1);
+	debug(1, 2) ("Parser: retval %d: from %d->%d: method %d->%d; url %d->%d; version %d->%d (%d/%d)\n",
+	    retcode, hmsg->req_start, hmsg->req_end,
+	    hmsg->m_start, hmsg->m_end,
+	    hmsg->u_start, hmsg->u_end,
+	    hmsg->v_start, hmsg->v_end, maj, min);
+	return retcode;
 }
 
