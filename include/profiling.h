@@ -146,6 +146,12 @@ typedef enum {
     XPROF_httpRequestFree,
     XPROF_HttpHeaderParse,
     XPROF_HttpHeaderClean,
+    XPROF_StringInitBuf,
+    XPROF_StringInit,
+    XPROF_StringLimitInit,
+    XPROF_StringClean,
+    XPROF_StringReset,
+    XPROF_StringAppend,
     XPROF_LAST
 } xprof_type;
 

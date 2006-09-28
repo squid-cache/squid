@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cc,v 1.21 2006/05/29 00:15:01 robertc Exp $
+ * $Id: String.cc,v 1.22 2006/09/28 07:33:59 adrian Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -39,9 +39,11 @@
 void
 String::initBuf(size_t sz)
 {
+    PROF_start(StringInitBuf);
     buf((char *)memAllocString(sz, &sz));
     assert(sz < 65536);
     size_ = sz;
+    PROF_stop(StringInitBuf);
 }
 
 void
@@ -49,10 +51,12 @@ String::init(char const *str)
 {
     assert(this);
 
+    PROF_start(StringInit);
     if (str)
         limitInit(str, strlen(str));
     else
         clean();
+    PROF_stop(StringInit);
 }
 
 String::String (char const *aString) : size_(0), len_(0), buf_(NULL)
@@ -104,11 +108,13 @@ String::operator != (String const &that) const
 void
 String::limitInit(const char *str, int len)
 {
+    PROF_start(StringLimitInit);
     assert(this && str);
     initBuf(len + 1);
     len_ = len;
     xmemcpy(buf_, str, len);
     buf_[len] = '\0';
+    PROF_stop(StringLimitInit);
 }
 
 String::String (String const &old) : size_(0), len_(0), buf_(NULL)
@@ -123,6 +129,7 @@ String::String (String const &old) : size_(0), len_(0), buf_(NULL)
 void
 String::clean()
 {
+    PROF_start(StringClean);
     assert(this);
 
     if (buf())
@@ -133,6 +140,7 @@ String::clean()
     size_ = 0;
 
     buf_ = NULL;
+    PROF_stop(StringClean);
 }
 
 String::~String()
@@ -147,8 +155,10 @@ String::~String()
 void
 String::reset(const char *str)
 {
+    PROF_start(StringReset);
     clean();
     init(str);
+    PROF_stop(StringReset);
 }
 
 void
@@ -157,6 +167,7 @@ String::append(const char *str, int len)
     assert(this);
     assert(str && len >= 0);
 
+    PROF_start(StringAppend);
     if (len_ + len < size_) {
         strncat(buf_, str, len);
         len_ += len;
@@ -175,6 +186,7 @@ String::append(const char *str, int len)
 
         absorb(snew);
     }
+    PROF_stop(StringAppend);
 }
 
 void
