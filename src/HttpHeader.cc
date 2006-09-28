@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.125 2006/09/14 06:04:27 adrian Exp $
+ * $Id: HttpHeader.cc,v 1.126 2006/09/28 07:13:12 adrian Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -380,6 +380,8 @@ HttpHeader::clean()
     assert(owner > hoNone && owner <= hoReply);
     debug(55, 7) ("cleaning hdr: %p owner: %d\n", this, owner);
 
+    PROF_start(HttpHeaderClean);
+
     /*
      * An unfortunate bug.  The entries array is initialized
      * such that count is set to zero.  httpHeaderClean() seems to
@@ -410,9 +412,9 @@ HttpHeader::clean()
             delete e;
         }
     }
-
     entries.clean();
     httpHeaderMaskInit(&mask, 0);
+    PROF_stop(HttpHeaderClean);
 }
 
 /* append entries (also see httpHeaderUpdate) */
@@ -477,6 +479,8 @@ HttpHeader::parse(const char *header_start, const char *header_end)
     const char *field_ptr = header_start;
     HttpHeaderEntry *e, *e2;
 
+    PROF_start(HttpHeaderParse);
+
     assert(header_start && header_end);
     debug(55, 7) ("parsing hdr: (%p)\n%s\n", this, getStringPrefix(header_start, header_end));
     HttpHeaderStats[owner].parsedCount++;
@@ -484,7 +488,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
     if (memchr(header_start, '\0', header_end - header_start)) {
         debug(55, 1) ("WARNING: HTTP header contains NULL characters {%s}\n",
                       getStringPrefix(header_start, header_end));
-        return reset();
+        goto reset;
     }
 
     /* common format headers are "<name>:[ws]<value>" lines delimited by <CRLF>.
@@ -498,7 +502,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
             field_ptr = (const char *)memchr(field_ptr, '\n', header_end - field_ptr);
 
             if (!field_ptr)
-                return reset();	/* missing <LF> */
+                goto reset;	/* missing <LF> */
 
             field_end = field_ptr;
 
@@ -526,13 +530,13 @@ HttpHeader::parse(const char *header_start, const char *header_end)
                     while ((p = (char *)memchr(p, '\r', field_end - p)) != NULL)
                         *p++ = ' ';
                 } else
-                    return reset();
+                    goto reset;
             }
 
             if (this_line + 1 == field_end && this_line > field_start) {
                 debug(55, 1) ("WARNING: Blank continuation line in HTTP header {%s}\n",
                               getStringPrefix(header_start, header_end));
-                return reset();
+                goto reset;
             }
         } while (field_ptr < header_end && (*field_ptr == ' ' || *field_ptr == '\t'));
 
@@ -540,7 +544,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
             if (field_ptr < header_end) {
                 debug(55, 1) ("WARNING: unparseable HTTP header field near {%s}\n",
                               getStringPrefix(field_start, header_end));
-                return reset();
+                goto reset;
             }
 
             break;		/* terminating blank line */
@@ -555,7 +559,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
             if (Config.onoff.relaxed_header_parser)
                 continue;
             else
-                return reset();
+                goto reset;
         }
 
         if (e->id == HDR_CONTENT_LENGTH && (e2 = findEntry(e->id)) != NULL) {
@@ -565,7 +569,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
 
                 if (!Config.onoff.relaxed_header_parser) {
                     delete e;
-                    return reset();
+                    goto reset;
                 }
 
                 if (!httpHeaderParseSize(e->value.buf(), &l1)) {
@@ -590,7 +594,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
                     continue;
                 } else {
                     delete e;
-                    return reset();
+                    goto reset;
                 }
             }
         }
@@ -601,14 +605,18 @@ HttpHeader::parse(const char *header_start, const char *header_end)
 
             if (!Config.onoff.relaxed_header_parser) {
                 delete e;
-                return reset();
+                goto reset;
             }
         }
 
         addEntry(e);
     }
 
+    PROF_stop(HttpHeaderParse);
     return 1;			/* even if no fields where found, it is a valid header */
+reset:
+    PROF_stop(HttpHeaderParse);
+    return reset();
 }
 
 /* packs all the entries using supplied packer */
