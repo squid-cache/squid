@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.74 2006/09/25 15:04:07 adrian Exp $
+ * $Id: client_side_request.cc,v 1.75 2006/09/28 01:04:54 adrian Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -236,6 +236,7 @@ checkFailureRatio(err_type etype, hier_code hcode)
 ClientHttpRequest::~ClientHttpRequest()
 {
     debug(33, 3) ("httpRequestFree: %s\n", uri);
+    PROF_start(httpRequestFree);
     /* if body_connection !NULL, then ProcessBody has not
      * found the end of the body yet
      */
@@ -266,6 +267,7 @@ ClientHttpRequest::~ClientHttpRequest()
 
     /* moving to the next connection is handled by the context free */
     dlinkDelete(&active, &ClientActiveRequests);
+    PROF_stop(httpRequestFree);
 }
 
 /* Create a request and kick it off */
