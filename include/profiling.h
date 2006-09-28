@@ -144,6 +144,8 @@ typedef enum {
     XPROF_httpStart,
     XPROF_HttpParserParseReqLine,
     XPROF_httpRequestFree,
+    XPROF_HttpHeaderParse,
+    XPROF_HttpHeaderClean,
     XPROF_LAST
 } xprof_type;
 
