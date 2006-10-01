@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.507 2006/09/20 06:29:10 adrian Exp $
+ * $Id: http.cc,v 1.508 2006/10/01 17:26:34 adrian Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -467,8 +467,10 @@ HttpStateData::cacheableReply()
          * unless we know how to refresh it.
          */
 
-        if (!refreshIsCachable(entry))
+        if (!refreshIsCachable(entry)) {
+	    debug(22, 3) ("refreshIsCachable() returned non-cacheable..\n");
             return 0;
+	}
 
         /* don't cache objects from peers w/o LMT, Date, or Expires */
         /* check that is it enough to check headers @?@ */
