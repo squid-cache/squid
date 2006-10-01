@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.35 2006/09/27 13:47:53 adrian Exp $
+ * $Id: HttpMsg.cc,v 1.36 2006/10/01 17:27:10 adrian Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -466,21 +466,23 @@ HttpParserParseReqLine(HttpParser *hmsg)
 
 	PROF_start(HttpParserParseReqLine);
 	/* Find \r\n - end of URL+Version (and the request) */
+	hmsg->req_end = -1;
 	for (i = 0; i < hmsg->bufsiz; i++) {
 		if (hmsg->buf[i] == '\n') {
+			hmsg->req_end = i + 1;
 			break;
 		}
-		if (i < hmsg->bufsiz - 1 && hmsg->buf[i - 1] == '\r' && hmsg->buf[i] == '\n') {
-			i++;
+		if (i < hmsg->bufsiz - 1 && hmsg->buf[i] == '\r' && hmsg->buf[i + 1] == '\n') {
+			hmsg->req_end = i + 2;
 			break;
 		}
 	}
-	if (i == hmsg->bufsiz) {
+	if (hmsg->req_end == -1) {
 		retcode = 0;
 		goto finish;
 	}
-	/* XXX this should point to the -end- of the \r\n, \n, etc. */
-	hmsg->req_end = i;
+	assert(hmsg->buf[hmsg->req_end] != '\n' && hmsg->buf[hmsg->req_end] != '\r');
+	/* Start at the beginning again */
 	i = 0;
 
 	/* Find first non-whitespace - beginning of method */
@@ -606,7 +608,7 @@ finish:
 	assert(maj != -1);
 	assert(min != -1);
 	PROF_stop(HttpParserParseReqLine);
-	debug(1, 2) ("Parser: retval %d: from %d->%d: method %d->%d; url %d->%d; version %d->%d (%d/%d)\n",
+	debug(1, 1) ("Parser: retval %d: from %d->%d: method %d->%d; url %d->%d; version %d->%d (%d/%d)\n",
 	    retcode, hmsg->req_start, hmsg->req_end,
 	    hmsg->m_start, hmsg->m_end,
 	    hmsg->u_start, hmsg->u_end,
