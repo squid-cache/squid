@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.740 2006/09/27 13:47:53 adrian Exp $
+ * $Id: client_side.cc,v 1.741 2006/10/02 01:34:18 adrian Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2140,8 +2140,6 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
     HttpRequest *request = NULL;
     /* We have an initial client stream in place should it be needed */
     /* setup our private context */
-    connNoteUseOfBuffer(conn.getRaw(), http->req_sz);
-
     context->registerWithConn();
 
     if (context->flags.parsed_ok == 0) {
@@ -2154,7 +2152,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
-        return;
+	goto finish;
     }
 
     if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, method)) == NULL) {
@@ -2168,7 +2166,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
-        return;
+	goto finish;
     }
 
     /* compile headers */
@@ -2185,7 +2183,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
-        return;
+	goto finish;
     }
 
     request->flags.accelerated = http->flags.accel;
@@ -2228,7 +2226,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
-        return;
+	goto finish;
     }
 
 
@@ -2242,7 +2240,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
-        return;
+	goto finish;
     }
 
     http->request = HTTPMSGLOCK(request);
@@ -2274,7 +2272,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
             assert(context->http->out.offset == 0);
             context->pullData();
             conn->flags.readMoreRequests = false;
-            return;
+	    goto finish;
         }
 
         context->mayUseConnection(true);
@@ -2287,6 +2285,10 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
     http->calloutContext = new ClientRequestContext(http);
 
     http->doCallouts();
+
+finish:
+    /* Consume request buffer */
+    connNoteUseOfBuffer(conn.getRaw(), http->req_sz);
 }
 
 static void
