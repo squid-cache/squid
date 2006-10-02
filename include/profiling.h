@@ -152,6 +152,9 @@ typedef enum {
     XPROF_StringClean,
     XPROF_StringReset,
     XPROF_StringAppend,
+    XPROF_HttpHeader_findEntry,
+    XPROF_HttpHeader_getCc,
+    XPROF_HttpHeader_getRange,
     XPROF_LAST
 } xprof_type;
 
