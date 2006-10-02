@@ -73,6 +73,7 @@ read_passwd_file(const char *passwdfile)
     char *passwd;
     if (hash != NULL) {
 	hashFreeItems(hash, my_free);
+	hashFreeMemory(hash);
     }
     /* initial setup */
     hash = hash_create((HASHCMP *) strcmp, 7921, hash_string);
@@ -137,7 +138,7 @@ main(int argc, char **argv)
 	}
 	rfc1738_unescape(user);
 	rfc1738_unescape(passwd);
-	u = (user_data *)hash_lookup(hash, user);
+	u = (user_data *) hash_lookup(hash, user);
 	if (u == NULL) {
 	    printf("ERR No such user\n");
 	} else if (strcmp(u->passwd, (char *) crypt(passwd, u->passwd)) == 0) {
@@ -147,6 +148,10 @@ main(int argc, char **argv)
 	} else {
 	    printf("ERR Wrong password\n");
 	}
+    }
+    if (hash != NULL) {
+	hashFreeItems(hash, my_free);
+	hashFreeMemory(hash);
     }
     exit(0);
 }
