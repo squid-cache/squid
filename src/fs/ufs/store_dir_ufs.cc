@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.76 2006/09/14 00:51:12 robertc Exp $
+ * $Id: store_dir_ufs.cc,v 1.77 2006/10/02 01:31:59 adrian Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -931,7 +931,7 @@ UFSCleanLog::write(StoreEntry const &e)
     outbuf_offset += ss;
     /* buffered write */
 
-    if (outbuf_offset + ss > CLEAN_BUF_SZ) {
+    if (outbuf_offset + ss >= CLEAN_BUF_SZ) {
         if (FD_WRITE_METHOD(fd, outbuf, outbuf_offset) < 0) {
             /* XXX This error handling should probably move up to the caller */
             debug(50, 0) ("storeDirWriteCleanLogs: %s: write: %s\n",
