@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.741 2006/10/02 01:34:18 adrian Exp $
+ * $Id: client_side.cc,v 1.742 2006/10/02 02:22:22 adrian Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2350,6 +2350,10 @@ clientParseRequest(ConnStateData::Pointer conn, bool &do_next_read)
 
     while (conn->in.notYetUsed > 0 && conn->bodySizeLeft() == 0) {
         connStripBufferWhitespace (conn);
+
+	/* Don't try to parse if the buffer is empty */
+	if (conn->in.notYetUsed == 0)
+		break;
 
         /* Limit the number of concurrent requests to 2 */
 
