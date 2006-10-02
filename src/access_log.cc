@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.117 2006/09/30 16:51:41 serassio Exp $
+ * $Id: access_log.cc,v 1.118 2006/10/02 02:21:50 adrian Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -1310,7 +1310,7 @@ accessLogSquid(AccessLogEntry * al, Logfile * logfile)
         safe_free(ereq);
         safe_free(erep);
     }
-
+    logfilePrintf(logfile, "\n");
     safe_free(user);
 }
 
