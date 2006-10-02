@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.113 2006/09/25 15:04:06 adrian Exp $
+ * $Id: client_side_reply.cc,v 1.114 2006/10/02 11:35:39 adrian Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1325,7 +1325,8 @@ clientReplyContext::buildReplyHeader()
     /* Append VIA */
     {
         LOCAL_ARRAY(char, bbuf, MAX_URL + 32);
-        String strVia = hdr->getList(HDR_VIA);
+        String strVia;
+       	hdr->getList(HDR_VIA, &strVia);
         snprintf(bbuf, sizeof(bbuf), "%d.%d %s",
                  reply->sline.version.major,
                  reply->sline.version.minor,
@@ -1333,7 +1334,6 @@ clientReplyContext::buildReplyHeader()
         strListAdd(&strVia, bbuf, ',');
         hdr->delById(HDR_VIA);
         hdr->putStr(HDR_VIA, strVia.buf());
-        strVia.clean();
     }
     /* Signal keep-alive if needed */
     hdr->putStr(http->flags.accel ? HDR_CONNECTION : HDR_PROXY_CONNECTION,
