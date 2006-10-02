@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.h,v 1.17 2006/06/07 22:39:33 hno Exp $
+ * $Id: HttpHeader.h,v 1.18 2006/10/02 09:52:06 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -211,6 +211,7 @@ public:
     void addEntry(HttpHeaderEntry * e);
     void insertEntry(HttpHeaderEntry * e);
     String getList(http_hdr_type id) const;
+    bool getList(http_hdr_type id, String *s) const;
     String getStrOrList(http_hdr_type id) const;
     String getByName(const char *name) const;
     String getByNameListMember(const char *name, const char *member, const char separator) const;
