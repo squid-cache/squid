@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.36 2006/10/01 17:27:10 adrian Exp $
+ * $Id: HttpMsg.cc,v 1.37 2006/10/02 01:34:18 adrian Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -399,6 +399,7 @@ HttpParserInit(HttpParser *hdr, const char *buf, int bufsiz)
 	hdr->bufsiz = bufsiz;
 	hdr->req_start = hdr->req_end = -1;
 	hdr->hdr_start = hdr->hdr_end = -1;
+	debug(74, 5)("httpParseInit: Request buffer is %s\n", buf);
 }
 
 #if MSGDODEBUG
@@ -464,6 +465,8 @@ HttpParserParseReqLine(HttpParser *hmsg)
 	int maj = -1, min = -1;
 	int last_whitespace = -1, line_end = -1;
 
+	debug(74, 5)("httpParserParseReqLine: parsing %s\n", hmsg->buf);
+
 	PROF_start(HttpParserParseReqLine);
 	/* Find \r\n - end of URL+Version (and the request) */
 	hmsg->req_end = -1;
@@ -481,7 +484,8 @@ HttpParserParseReqLine(HttpParser *hmsg)
 		retcode = 0;
 		goto finish;
 	}
-	assert(hmsg->buf[hmsg->req_end] != '\n' && hmsg->buf[hmsg->req_end] != '\r');
+	assert(hmsg->buf[hmsg->req_end] != '\n');
+	assert(hmsg->buf[hmsg->req_end - 1] == '\n');
 	/* Start at the beginning again */
 	i = 0;
 
@@ -608,7 +612,7 @@ finish:
 	assert(maj != -1);
 	assert(min != -1);
 	PROF_stop(HttpParserParseReqLine);
-	debug(1, 1) ("Parser: retval %d: from %d->%d: method %d->%d; url %d->%d; version %d->%d (%d/%d)\n",
+	debug(74, 5) ("Parser: retval %d: from %d->%d: method %d->%d; url %d->%d; version %d->%d (%d/%d)\n",
 	    retcode, hmsg->req_start, hmsg->req_end,
 	    hmsg->m_start, hmsg->m_end,
 	    hmsg->u_start, hmsg->u_end,
