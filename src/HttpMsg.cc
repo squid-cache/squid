@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.37 2006/10/02 01:34:18 adrian Exp $
+ * $Id: HttpMsg.cc,v 1.38 2006/10/02 06:03:23 adrian Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -605,12 +605,12 @@ HttpParserParseReqLine(HttpParser *hmsg)
 	 * Rightio - we have all the schtuff. Return true; we've got enough.
 	 */
 	retcode = 1;
+	assert(maj != -1);
+	assert(min != -1);
 
 finish:
 	hmsg->v_maj = maj;
 	hmsg->v_min = min;
-	assert(maj != -1);
-	assert(min != -1);
 	PROF_stop(HttpParserParseReqLine);
 	debug(74, 5) ("Parser: retval %d: from %d->%d: method %d->%d; url %d->%d; version %d->%d (%d/%d)\n",
 	    retcode, hmsg->req_start, hmsg->req_end,
