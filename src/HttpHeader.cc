@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.126 2006/09/28 07:13:12 adrian Exp $
+ * $Id: HttpHeader.cc,v 1.127 2006/10/02 09:52:06 adrian Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -628,9 +628,12 @@ HttpHeader::packInto(Packer * p) const
     assert(p);
     debug(55, 7) ("packing hdr: (%p)\n", this);
     /* pack all entries one by one */
-
     while ((e = getEntry(&pos)))
         e->packInto(p);
+
+    /* Pack in the "special" entries */
+
+    /* Cache-Control */
 }
 
 /* returns next valid entry */
@@ -817,6 +820,37 @@ HttpHeader::insertEntry(HttpHeaderEntry * e)
 
     /* increment header length, allow for ": " and crlf */
     len += e->name.size() + 2 + e->value.size() + 2;
+}
+
+bool
+HttpHeader::getList(http_hdr_type id, String *s) const
+{
+    HttpHeaderEntry *e;
+    HttpHeaderPos pos = HttpHeaderInitPos;
+    debug(55, 9) ("%p: joining for id %d\n", this, id);
+    /* only fields from ListHeaders array can be "listed" */
+    assert(CBIT_TEST(ListHeadersMask, id));
+
+    if (!CBIT_TEST(mask, id))
+        return false;
+
+    while ((e = getEntry(&pos))) {
+        if (e->id == id)
+            strListAdd(s, e->value.buf(), ',');
+    }
+
+    /*
+     * note: we might get an empty (size==0) string if there was an "empty"
+     * header. This results in an empty length String, which may have a NULL
+     * buffer.
+     */
+    /* temporary warning: remove it? (Is it useful for diagnostics ?) */
+    if (!s->size())
+        debugs(55, 3, "empty list header: " << Headers[id].name << "(" << id << ")");
+    else
+        debugs(55, 6, this << ": joined for id " << id << ": " << s);
+
+    return true;
 }
 
 /* return a list of entries with the same id separated by ',' and ws */
@@ -1161,8 +1195,9 @@ HttpHeader::getCc() const
 
     if (!CBIT_TEST(mask, HDR_CACHE_CONTROL))
         return NULL;
+    PROF_start(HttpHeader_getCc);
 
-    s = getList(HDR_CACHE_CONTROL);
+    getList(HDR_CACHE_CONTROL, &s);
 
     cc = httpHdrCcParseCreate(&s);
 
@@ -1173,7 +1208,7 @@ HttpHeader::getCc() const
 
     httpHeaderNoteParsedEntry(HDR_CACHE_CONTROL, s, !cc);
 
-    s.clean();
+    PROF_stop(HttpHeader_getCc);
 
     return cc;
 }
@@ -1203,7 +1238,9 @@ HttpHeader::getSc() const
     if (!CBIT_TEST(mask, HDR_SURROGATE_CONTROL))
         return NULL;
 
-    String s (getList(HDR_SURROGATE_CONTROL));
+    String s;
+   
+    (void) getList(HDR_SURROGATE_CONTROL, &s);
 
     HttpHdrSc *sc = httpHdrScParseCreate(&s);
 
@@ -1662,7 +1699,9 @@ HttpHeader::removeConnectionHeaderEntries()
 {
     if (has(HDR_CONNECTION)) {
         /* anything that matches Connection list member will be deleted */
-        String strConnection = getList(HDR_CONNECTION);
+        String strConnection;
+	
+	(void) getList(HDR_CONNECTION, &strConnection);
         const HttpHeaderEntry *e;
         HttpHeaderPos pos = HttpHeaderInitPos;
         /*
@@ -1680,6 +1719,5 @@ HttpHeader::removeConnectionHeaderEntries()
         }
 
         delById(HDR_CONNECTION);
-        strConnection.clean();
     }
 }
