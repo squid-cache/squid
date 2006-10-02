@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.38 2006/10/02 06:03:23 adrian Exp $
+ * $Id: HttpMsg.cc,v 1.39 2006/10/02 12:08:20 adrian Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -472,11 +472,11 @@ HttpParserParseReqLine(HttpParser *hmsg)
 	hmsg->req_end = -1;
 	for (i = 0; i < hmsg->bufsiz; i++) {
 		if (hmsg->buf[i] == '\n') {
-			hmsg->req_end = i + 1;
+			hmsg->req_end = i;
 			break;
 		}
 		if (i < hmsg->bufsiz - 1 && hmsg->buf[i] == '\r' && hmsg->buf[i + 1] == '\n') {
-			hmsg->req_end = i + 2;
+			hmsg->req_end = i + 1;
 			break;
 		}
 	}
@@ -484,8 +484,7 @@ HttpParserParseReqLine(HttpParser *hmsg)
 		retcode = 0;
 		goto finish;
 	}
-	assert(hmsg->buf[hmsg->req_end] != '\n');
-	assert(hmsg->buf[hmsg->req_end - 1] == '\n');
+	assert(hmsg->buf[hmsg->req_end] == '\n');
 	/* Start at the beginning again */
 	i = 0;
 
