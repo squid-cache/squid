@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.500 2006/07/02 16:53:46 serassio Exp $
+ * $Id: cache_cf.cc,v 1.501 2006/10/08 13:10:34 serassio Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -160,22 +160,6 @@ void
 self_destruct(void)
 {
     LegacyParser.destruct();
-}
-
-/*
- * These functions is the same as atoi/l/f, except that they check for errors
- */
-
-static double
-xatof(const char *token)
-{
-    char *end;
-    double ret = strtod(token, &end);
-
-    if (ret == 0 && end == token)
-        self_destruct();
-
-    return ret;
 }
 
 static void
@@ -1495,7 +1479,6 @@ parse_peer(peer ** head)
 {
     char *token = NULL;
     peer *p;
-    int i;
     CBDATA_INIT_TYPE_FREECB(peer, peerDestroy);
     p = cbdataAlloc(peer);
     p->http_port = CACHE_HTTP_PORT;
@@ -1516,13 +1499,12 @@ parse_peer(peer ** head)
 
     p->type = parseNeighborType(token);
 
-    i = GetInteger();
+    p->http_port = GetShort();
 
-    p->http_port = (u_short) i;
+    if (!p->http_port)
+        self_destruct();
 
-    i = GetInteger();
-
-    p->icp.port = (u_short) i;
+    p->icp.port = GetShort();
 
     while ((token = strtok(NULL, w_space))) {
         if (!strcasecmp(token, "proxy-only")) {
@@ -1935,20 +1917,14 @@ static void
 parse_ushortlist(ushortlist ** P)
 {
     char *token;
-    int i;
+    u_short i;
     ushortlist *u;
     ushortlist **U;
 
     while ((token = strtok(NULL, w_space))) {
-        if (sscanf(token, "%d", &i) != 1)
-            self_destruct();
-
-        if (i < 0)
-            i = 0;
-
+        i = GetShort();
         u = xcalloc(1, sizeof(ushortlist));
-
-        u->i = (u_short) i;
+        u->i = i;
 
         for (U = P; *U; U = &(*U)->next)
 
@@ -2435,14 +2411,7 @@ parse_ushort(u_short * var)
 void
 ConfigParser::ParseUShort(u_short *var)
 {
-    int i;
-
-    i = GetInteger();
-
-    if (i < 0)
-        i = 0;
-
-    *var = (u_short) i;
+    *var = GetShort();
 }
 
 void
@@ -2626,7 +2595,7 @@ parse_sockaddr_in_list_token(sockaddr_in_list ** head, char *token)
         /* host:port */
         host = token;
         *t = '\0';
-        port = (unsigned short) xatoi(t + 1);
+        port = xatos(t + 1);
 
         if (0 == port)
             self_destruct();
@@ -2715,15 +2684,14 @@ parse_http_port_specification(http_port_list * s, char *token)
         /* host:port */
         host = token;
         *t = '\0';
-        port = (unsigned short) atoi(t + 1);
-
-        if (0 == port)
-            self_destruct();
-    } else if ((port = atoi(token)) > 0) {
-        /* port */
+        port = xatos(t + 1);
     } else {
-        self_destruct();
+        /* port */
+        port = xatos(token);
     }
+
+    if (port == 0)
+        self_destruct();
 
     s->s.sin_port = htons(port);
 
@@ -2758,7 +2726,7 @@ parse_http_port_option(http_port_list * s, char *token)
         s->vport = -1;
         s->accel = 1;
     } else if (strncmp(token, "vport=", 6) == 0) {
-        s->vport = atoi(token + 6);
+        s->vport = xatos(token + 6);
         s->accel = 1;
     } else if (strncmp(token, "protocol=", 9) == 0) {
         s->protocol = xstrdup(token + 9);

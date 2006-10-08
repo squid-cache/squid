@@ -1,6 +1,6 @@
 
 /*
- * $Id: Parsing.cc,v 1.2 2005/11/21 23:06:51 wessels Exp $
+ * $Id: Parsing.cc,v 1.3 2006/10/08 13:10:34 serassio Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -39,11 +39,11 @@
  * These functions is the same as atoi/l/f, except that they check for errors
  */
 
-long
-xatol(const char *token)
+double
+xatof(const char *token)
 {
     char *end;
-    long ret = strtol(token, &end, 10);
+    double ret = strtod(token, &end);
 
     if (ret == 0 && end == token)
         self_destruct();
@@ -55,6 +55,29 @@ int
 xatoi(const char *token)
 {
     return xatol(token);
+}
+
+long
+xatol(const char *token)
+{
+    char *end;
+    long ret = strtol(token, &end, 10);
+
+    if (end == token || *end)
+        self_destruct();
+
+    return ret;
+}
+
+unsigned short
+xatos(const char *token)
+{
+    long port = xatol(token);
+
+    if (port & ~0xFFFF)
+        self_destruct();
+
+    return port;
 }
 
 int
@@ -70,6 +93,17 @@ GetInteger(void)
         self_destruct();
 
     return i;
+}
+
+u_short
+GetShort(void)
+{
+    char *token = strtok(NULL, w_space);
+
+    if (token == NULL)
+        self_destruct();
+
+    return xatos(token);
 }
 
 bool

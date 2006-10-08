@@ -1,6 +1,6 @@
 
 /*
- * $Id: Parsing.h,v 1.2 2005/11/21 23:06:51 wessels Exp $
+ * $Id: Parsing.h,v 1.3 2006/10/08 13:10:34 serassio Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -38,9 +38,12 @@
 
 #include "squid.h"
 
-extern long xatol(const char *token);
+extern double xatof(const char *token);
 extern int xatoi(const char *token);
+extern long xatol(const char *token);
+extern unsigned short xatos(const char *token);
 extern int GetInteger(void);
+extern u_short GetShort(void);
 
 // on success, returns true and sets *p (if any) to the end of the integer
 extern bool StringToInt(const char *str, int &result, const char **p, int base);

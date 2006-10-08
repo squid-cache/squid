@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMaxUserIP.cc,v 1.10 2006/04/23 11:10:31 robertc Exp $
+ * $Id: ACLMaxUserIP.cc,v 1.11 2006/10/08 13:10:34 serassio Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -102,7 +102,7 @@ ACLMaxUserIP::parse()
     if (!t)
         return;
 
-    maximum = atoi(t);
+    maximum = xatoi(t);
 
     debug(28, 5) ("aclParseUserMaxIP: Max IP address's %d\n", (int) maximum);
 
