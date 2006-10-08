@@ -1,5 +1,5 @@
 /*
- * $Id: ACLIntRange.cc,v 1.8 2006/08/26 11:38:56 serassio Exp $
+ * $Id: ACLIntRange.cc,v 1.9 2006/10/08 13:10:34 serassio Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Robert Collins
@@ -37,6 +37,7 @@
 #include "squid.h"
 #include "ACLIntRange.h"
 #include "wordlist.h"
+#include "Parsing.h"
 
 /* explicit instantiation required for some systems */
 
@@ -46,28 +47,26 @@ template cbdata_type List<Range<int> >
 void
 ACLIntRange::parse()
 {
-    char *t = NULL;
+    char *a;
 
-    while ((t = strtokFile())) {
-        int port = atoi(t);
+    while ((a = strtokFile())) {
+        char *b = strchr(a, '-');
+        unsigned short port1, port2;
 
-        if (port > 0 && port < 65536) {
+        if (b)
+            *b++ = '\0';
+
+        port1 = xatos(a);
+
+        if (b)
+            port2 = xatos(b);
+        else
+            port2 = port1;
+
+        if (port2 >= port1) {
             RangeType temp (0,0);
-            temp.start = port;
-            t = strchr(t, '-');
-
-            if (t && *(++t)) {
-                port = atoi(t);
-
-                if (port > 0 && port < 65536 && port > temp.start) {
-                    temp.end = port+1;
-                } else {
-                    debug(28, 0) ("ACLIntRange::parse: Invalid port range\n");
-                    self_destruct();
-                }
-            } else
-                temp.end = temp.start+1;
-
+            temp.start = port1;
+            temp.end = port2+1;
             ranges.push_back(temp);
         } else {
             debug(28, 0) ("ACLIntRange::parse: Invalid port value\n");
