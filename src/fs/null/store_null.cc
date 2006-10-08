@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_null.cc,v 1.11 2006/08/19 12:31:21 robertc Exp $
+ * $Id: store_null.cc,v 1.12 2006/10/08 13:34:09 serassio Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -44,7 +44,10 @@
 #include "fs/null/store_null.h"
 
 static EVH storeNullDirRebuildComplete;
-NullSwapDir::NullSwapDir() : SwapDir ("null") {}
+NullSwapDir::NullSwapDir() : SwapDir ("null")
+{
+    repl = NULL;
+}
 
 void
 NullSwapDir::reconfigure(int index, char *path)
