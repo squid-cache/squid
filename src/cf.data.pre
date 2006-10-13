@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.424 2006/09/18 23:05:43 hno Exp $
+# $Id: cf.data.pre,v 1.425 2006/10/12 20:46:42 wessels Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -2670,10 +2670,10 @@ acl all src 0.0.0.0/0.0.0.0
 acl manager proto cache_object
 acl localhost src 127.0.0.1/255.255.255.255
 acl to_localhost dst 127.0.0.0/8
-acl SSL_ports port 443 563
+acl SSL_ports port 443
 acl Safe_ports port 80		# http
 acl Safe_ports port 21		# ftp
-acl Safe_ports port 443 563	# https, snews
+acl Safe_ports port 443		# https
 acl Safe_ports port 70		# gopher
 acl Safe_ports port 210		# wais
 acl Safe_ports port 1025-65535	# unregistered ports
