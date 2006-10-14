@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreIOBuffer.h,v 1.5 2005/11/21 23:14:22 wessels Exp $
+ * $Id: StoreIOBuffer.h,v 1.6 2006/10/14 13:34:29 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -75,7 +75,7 @@ public:
     struct
     {
 
-int error:
+unsigned error:
         1;
     }
 
