@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.73 2006/04/23 09:02:13 serassio Exp $
+ * $Id: util.h,v 1.74 2006/10/14 13:43:18 serassio Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -73,14 +73,24 @@ SQUIDCEXTERN void Tolower(char *);
 SQUIDCEXTERN void xfree(void *);
 SQUIDCEXTERN void xxfree(const void *);
 #ifdef __cplusplus
-/* Any code using libstdc++ must have externally resolvable overloads
+/* 
+ * Any code using libstdc++ must have externally resolvable overloads
  * for void * operator new - which means in the .o for the binary,
  * or in a shared library. static libs don't propogate the symbol
  * so, look in the translation unit containing main() in squid
  * for the extern version in squid
  */
 #ifndef _SQUID_EXTERNNEW_
+#if defined(_SQUID_SGI_) && !defined(_GNUC_)
+/* 
+ * The gcc compiler treats extern inline functions as being extern,
+ * while the SGI MIPSpro compilers treat them as inline. To get equivalent
+ * behavior, remove the inline keyword.
+ */
+#define _SQUID_EXTERNNEW_ extern
+#else
 #define _SQUID_EXTERNNEW_ extern inline
+#endif
 #endif
 #include "SquidNew.h"
 #endif
