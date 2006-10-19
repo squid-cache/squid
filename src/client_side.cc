@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.742 2006/10/02 02:22:22 adrian Exp $
+ * $Id: client_side.cc,v 1.743 2006/10/19 01:39:40 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2067,7 +2067,7 @@ connNoteUseOfBuffer(ConnStateData* conn, size_t byteCount)
 {
     assert(byteCount > 0 && byteCount <= conn->in.notYetUsed);
     conn->in.notYetUsed -= byteCount;
-    debug(33, 5) ("conn->in.notYetUsed = %u\n", (unsigned) conn->in.notYetUsed);
+    debugs(33, 5, HERE << "conn->in.notYetUsed = " << conn->in.notYetUsed);
     /*
      * If there is still data that will be used, 
      * move it to the beginning.
@@ -2254,7 +2254,13 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
                                               NULL,
                                               conn.getRaw());
         conn->body_reader(request->body_reader);
-        request->body_reader->notify(conn->in.notYetUsed);
+	/*
+	 * NOTE: We haven't called connNoteUseOfBuffer() yet.  It gets
+	 * done at finish: below.  So here we have to subtract off
+	 * req_sz from notYetUsed, or else the BodyReader thinks it
+	 * has more data than it really does, and will get confused.
+	 */
+        request->body_reader->notify(conn->in.notYetUsed - http->req_sz);
 
         if (request->body_reader->remaining())
             conn->readSomeData();
