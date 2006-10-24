@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.437 2006/09/25 15:04:07 adrian Exp $
+ * $Id: main.cc,v 1.438 2006/10/24 04:48:10 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -1733,8 +1733,16 @@ SquidShutdown()
     debug(1, 1) ("Squid Cache (Version %s): Exiting normally.\n",
                  version_string);
 
-    if (debug_log)
-        fclose(debug_log);
+    /*
+     * DPW 2006-10-23
+     * We used to fclose(debug_log) here if it was set, but then
+     * we forgot to set it to NULL.  That caused some coredumps
+     * because exit() ends up calling a bunch of destructors and
+     * such.   So rather than forcing the debug_log to close, we'll
+     * leave it open so that those destructors can write some
+     * debugging if necessary.  The file will be closed anyway when
+     * the process truly exits.
+     */
 
     exit(shutdown_status);
 }
