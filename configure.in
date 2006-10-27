@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.440 2006/09/26 14:46:16 hno Exp $
+dnl  $Id: configure.in,v 1.441 2006/10/26 19:53:48 serassio Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.440 $)dnl
+AC_REVISION($Revision: 1.441 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -146,9 +146,13 @@ if test -z "$PRESET_CFLAGS"; then
 	*mips-sgi-irix6.*)
 	    # suggested by Rafael Seidl <rafaels@cthulhu.engr.sgi.com>
 	    CFLAGS="-O3 -OPT:Olimit=0:space=OFF \
-		-woff 1009,1014,1110,1116,1185,1188,1204,1230,1233 \
+		-woff 1009,1014,1110,1116,1183,1185,1188,1204,1230,1233,1355 \
 		-Wl,-woff,85,-woff,84,-woff,134 \
 		-nostdinc -I/usr/include -D_BSD_SIGNALS $CFLAGS"
+	    CXXFLAGS="-O3 -OPT:Olimit=0:space=OFF \
+		-woff 1009,1014,1110,1116,1183,1185,1188,1204,1230,1233,1355 \
+		-Wl,-woff,85,-woff,84,-woff,134 \
+		-nostdinc -I/usr/include -D_BSD_SIGNALS $CXXFLAGS"
 	    ;;
 	alpha-dec-osf4.*)
 	    # Mogul says DEC compilers take both -g and -O2
