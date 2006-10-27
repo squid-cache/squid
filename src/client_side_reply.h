@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.h,v 1.15 2006/08/21 00:50:41 robertc Exp $
+ * $Id: client_side_reply.h,v 1.16 2006/10/26 19:42:24 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -108,11 +108,9 @@ public:
     struct
     {
 
-int storelogiccomplete:
-        1;
+unsigned storelogiccomplete: 1;
 
-int complete:
-        1;		/* we have read all we can from upstream */
+unsigned complete: 1;		/* we have read all we can from upstream */
         bool headersSent;
     }
 

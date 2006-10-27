@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.h,v 1.18 2006/09/02 06:49:48 robertc Exp $
+ * $Id: client_side.h,v 1.19 2006/10/26 19:42:24 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -69,11 +69,9 @@ public:
     struct
     {
 
-int deferred:
-        1; /* This is a pipelined request waiting for the current object to complete */
+unsigned deferred: 1; /* This is a pipelined request waiting for the current object to complete */
 
-int parsed_ok:
-        1; /* Was this parsed correctly? */
+unsigned parsed_ok: 1; /* Was this parsed correctly? */
     }
 
     flags;
