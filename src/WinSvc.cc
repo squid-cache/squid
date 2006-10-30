@@ -1,6 +1,6 @@
 
 /*
- * $Id: WinSvc.cc,v 1.1 2006/09/13 19:05:11 serassio Exp $
+ * $Id: WinSvc.cc,v 1.2 2006/10/29 18:14:52 serassio Exp $
  *
  * Windows support
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
@@ -301,72 +301,70 @@ static void WIN32_build_argv(char *cmd)
 static unsigned int
 GetOSVersion()
 {
-    OSVERSIONINFO osvi;
+    OSVERSIONINFOEX osvi;
+    BOOL bOsVersionInfoEx;
 
     safe_free(WIN32_OS_string);
-    memset(&osvi, '\0', sizeof(OSVERSIONINFO));
-    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    GetVersionEx((OSVERSIONINFO *) & osvi);
+    memset(&osvi, '\0', sizeof(OSVERSIONINFOEX));
+    /* Try calling GetVersionEx using the OSVERSIONINFOEX structure.
+     * If that fails, try using the OSVERSIONINFO structure.
+     */
 
-    switch (osvi.dwPlatformId) {
+    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
 
-    case VER_PLATFORM_WIN32_NT:
-
-        if (osvi.dwMajorVersion <= 4) {
-            WIN32_OS_string = xstrdup("Windows NT");
-            return _WIN_OS_WINNT;
-        }
-
-        if ((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion == 0)) {
-            WIN32_OS_string = xstrdup("Windows 2000");
-            return _WIN_OS_WIN2K;
-        }
-
-        if ((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion == 1)) {
-            WIN32_OS_string = xstrdup("Windows XP");
-            return _WIN_OS_WINXP;
-        }
-
-        if ((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion == 2)) {
-            WIN32_OS_string = xstrdup("Windows Server 2003");
-            return _WIN_OS_WINNET;
-        }
-
-        if ((osvi.dwMajorVersion == 6) && (osvi.dwMinorVersion == 0)) {
-            WIN32_OS_string = xstrdup("Windows code name \"Longhorn\"");
-            return _WIN_OS_WINLON;
-        }
-
-        break;
-
-    case VER_PLATFORM_WIN32_WINDOWS:
-
-        if ((osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion == 0)) {
-            WIN32_OS_string = xstrdup("Windows 95");
-            return _WIN_OS_WIN95;
-        }
-
-        if ((osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion == 10)) {
-            WIN32_OS_string = xstrdup("Windows 98");
-            return _WIN_OS_WIN98;
-        }
-
-        if ((osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion == 90)) {
-            WIN32_OS_string = xstrdup("Windows Me");
-            return _WIN_OS_WINME;
-        }
-
-        break;
-
-    case VER_PLATFORM_WIN32s:
-        WIN32_OS_string = xstrdup("Windows 3.1 with WIN32S");
-        return _WIN_OS_WIN32S;
-        break;
-
-    default:
-        break;
+    if (!(bOsVersionInfoEx = GetVersionEx((OSVERSIONINFO *) & osvi))) {
+	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+	if (!GetVersionEx((OSVERSIONINFO *) & osvi))
+	    goto GetVerError;
     }
-
+    switch (osvi.dwPlatformId) {
+    case VER_PLATFORM_WIN32_NT:
+	if (osvi.dwMajorVersion <= 4) {
+	    WIN32_OS_string = xstrdup("Windows NT");
+	    return _WIN_OS_WINNT;
+	}
+	if ((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion == 0)) {
+	    WIN32_OS_string = xstrdup("Windows 2000");
+	    return _WIN_OS_WIN2K;
+	}
+	if ((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion == 1)) {
+	    WIN32_OS_string = xstrdup("Windows XP");
+	    return _WIN_OS_WINXP;
+	}
+	if ((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion == 2)) {
+	    WIN32_OS_string = xstrdup("Windows Server 2003");
+	    return _WIN_OS_WINNET;
+	}
+	if ((osvi.dwMajorVersion == 6) && (osvi.dwMinorVersion == 0)) {
+	    if (osvi.wProductType == VER_NT_WORKSTATION)
+		WIN32_OS_string = xstrdup("Windows Vista");
+	    else
+		WIN32_OS_string = xstrdup("Windows Server \"Longhorn\"");
+	    return _WIN_OS_WINLON;
+	}
+	break;
+    case VER_PLATFORM_WIN32_WINDOWS:
+	if ((osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion == 0)) {
+	    WIN32_OS_string = xstrdup("Windows 95");
+	    return _WIN_OS_WIN95;
+	}
+	if ((osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion == 10)) {
+	    WIN32_OS_string = xstrdup("Windows 98");
+	    return _WIN_OS_WIN98;
+	}
+	if ((osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion == 90)) {
+	    WIN32_OS_string = xstrdup("Windows Me");
+	    return _WIN_OS_WINME;
+	}
+	break;
+    case VER_PLATFORM_WIN32s:
+	WIN32_OS_string = xstrdup("Windows 3.1 with WIN32S");
+	return _WIN_OS_WIN32S;
+	break;
+    default:
+	break;
+    }
+  GetVerError:
     WIN32_OS_string = xstrdup("Unknown Windows system");
     return _WIN_OS_UNKNOWN;
 }
