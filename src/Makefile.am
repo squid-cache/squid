@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.171 2006/09/15 15:01:25 hno Exp $
+#  $Id: Makefile.am,v 1.172 2006/10/31 23:30:56 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -670,6 +670,8 @@ ICAP_libicap_a_SOURCES = \
  	ICAP/ChunkedCodingParser.h \
 	ICAP/ICAPClient.cc \
 	ICAP/ICAPClient.h \
+	ICAP/ICAPClientVector.cc \
+	ICAP/ICAPClientVector.h \
 	ICAP/ICAPClientReqmodPrecache.cc \
 	ICAP/ICAPClientReqmodPrecache.h \
 	ICAP/ICAPClientRespmodPrecache.cc \

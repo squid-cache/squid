@@ -1,10 +1,7 @@
 #include "squid.h"
 #include "client_side_request.h"
 #include "ClientRequestContext.h"
-#include "MsgPipe.h"
 #include "MsgPipeData.h"
-#include "MsgPipeSource.h"
-#include "MsgPipeSink.h"
 #include "HttpRequest.h"
 #include "ICAPClientReqmodPrecache.h"
 #include "ICAPServiceRep.h"
@@ -12,106 +9,19 @@
 
 CBDATA_CLASS_INIT(ICAPClientReqmodPrecache);
 
-ICAPClientReqmodPrecache::ICAPClientReqmodPrecache(ICAPServiceRep::Pointer aService): service(aService), http(NULL), virgin(NULL), adapted(NULL)
+ICAPClientReqmodPrecache::ICAPClientReqmodPrecache(ICAPServiceRep::Pointer aService):
+    ICAPClientVector(aService, "ICAPClientReqmodPrecache"), http(NULL)
 {
-    debug(93,3)("ICAPClientReqmodPrecache constructed, this=%p\n", this);
-}
-
-ICAPClientReqmodPrecache::~ICAPClientReqmodPrecache()
-{
-    stop(notifyNone);
-    cbdataReferenceDone(http);
-    debug(93,3)("ICAPClientReqmodPrecache destructed, this=%p\n", this);
-
-    if (virgin != NULL)
-        freeVirgin();
-
-    if (adapted != NULL) {
-        /*
-         * adapted->sink is equal to this.  Remove the pointer since
-         * we are deleting this.
-         */
-
-        if (adapted->sink)
-            adapted->sink = NULL;
-
-        freeAdapted();
-    }
 }
 
 void ICAPClientReqmodPrecache::startReqMod(ClientHttpRequest *aHttp, HttpRequest *request)
 {
-    debug(93,3)("ICAPClientReqmodPrecache::startReqMod() called\n");
     http = cbdataReference(aHttp);
-
-    virgin = new MsgPipe("virgin"); // this is the place to create a refcount ptr
-    virgin->source = this;
-    virgin->data = new MsgPipeData;
-    virgin->data->cause = NULL;
-    virgin->data->setHeader(request);
-    virgin->data->body = new MemBuf;
-    virgin->data->body->init(ICAP::MsgPipeBufSizeMin, ICAP::MsgPipeBufSizeMax);
-
-    adapted = new MsgPipe("adapted");
-    adapted->sink = this;
-
-    ICAPInitXaction(service, virgin, adapted);
-
-    virgin->sendSourceStart(); // we may have virgin data to provide
-    adapted->sendSinkNeed();   // we want adapted response, eventially
+    startMod(http, NULL, request);
 }
 
-void ICAPClientReqmodPrecache::sendMoreData(StoreIOBuffer buf)
-{
-    debug(93,3)("ICAPClientReqmodPrecache::sendMoreData() called\n");
-    //buf.dump();
-    /*
-     * The caller is responsible for not giving us more data
-     * than will fit in body MemBuf.  Caller should use
-     * potentialSpaceSize() to find out how much we can hold.
-     */
-    virgin->data->body->append(buf.data, buf.length);
-    virgin->sendSourceProgress();
-}
-
-int
-ICAPClientReqmodPrecache::potentialSpaceSize()
-{
-    if (virgin == NULL)
-        return 0;
-
-    return (int) virgin->data->body->potentialSpaceSize();
-}
-
-// ClientHttpRequest says we have the entire HTTP message
-void ICAPClientReqmodPrecache::doneSending()
-{
-    debug(93,3)("ICAPClientReqmodPrecache::doneSending() called\n");
-
-    virgin->sendSourceFinish();
-}
-
-// ClientHttpRequest tells us to abort
-void ICAPClientReqmodPrecache::ownerAbort()
-{
-    debug(93,3)("ICAPClientReqmodPrecache::ownerAbort() called\n");
-    stop(notifyIcap);
-}
-
-// ICAP client needs more virgin response data
-void ICAPClientReqmodPrecache::noteSinkNeed(MsgPipe *p)
-{
-    debug(93,3)("ICAPClientReqmodPrecache::noteSinkNeed() called\n");
-
-    if (virgin->data->body->potentialSpaceSize())
-        http->icapSpaceAvailable();
-}
-
-// ICAP client aborting
-void ICAPClientReqmodPrecache::noteSinkAbort(MsgPipe *p)
-{
-    debug(93,3)("ICAPClientReqmodPrecache::noteSinkAbort() called\n");
-    stop(notifyOwner);
+void ICAPClientReqmodPrecache::tellSpaceAvailable() {
+    http->icapSpaceAvailable();
 }
 
 // ICAP client starts sending adapted response
@@ -157,7 +67,7 @@ void ICAPClientReqmodPrecache::noteSourceProgress(MsgPipe *p)
         HttpRequest *req = dynamic_cast<HttpRequest*>(adapted->data->header);
 
         if (req) {
-            debugs(32,3,HERE << "notifying body_reader, contentSize() = " << p->data->body->contentSize());
+            debugs(93,3,HERE << "notifying body_reader, contentSize() = " << p->data->body->contentSize());
             req->body_reader->notify(p->data->body->contentSize());
         } else {
             http->takeAdaptedBody(adapted->data->body);
@@ -165,71 +75,41 @@ void ICAPClientReqmodPrecache::noteSourceProgress(MsgPipe *p)
     }
 }
 
-// ICAP client is done sending adapted response
-void ICAPClientReqmodPrecache::noteSourceFinish(MsgPipe *p)
+void ICAPClientReqmodPrecache::tellDoneAdapting()
 {
-    debug(93,3)("ICAPClientReqmodPrecache::noteSourceFinish() called\n");
+    debug(93,3)("ICAPClientReqmodPrecache::tellDoneAdapting() called\n");
     //tell ClientHttpRequest that we expect no more response data
-    http->doneAdapting();
+    http->doneAdapting(); // does not delete us (yet?)
     stop(notifyNone);
+    // we should be eventually deleted by owner in ~ClientHttpRequest()
 }
 
-// ICAP client is aborting
-void ICAPClientReqmodPrecache::noteSourceAbort(MsgPipe *p)
+void ICAPClientReqmodPrecache::tellAbortAdapting()
 {
-    debug(93,3)("ICAPClientReqmodPrecache::noteSourceAbort() called\n");
-    stop(notifyOwner);
+    debug(93,3)("ICAPClientReqmodPrecache::tellAbortAdapting() called\n");
+    // tell ClientHttpRequest that we are aborting ICAP processing prematurely
+    http->abortAdapting();
 }
 
 // internal cleanup
 void ICAPClientReqmodPrecache::stop(Notify notify)
 {
-    if (virgin != NULL) {
-        if (notify == notifyIcap)
-            virgin->sendSourceAbort();
-        else
-            virgin->source = NULL;
-
-        freeVirgin();
-    }
-
-#if DONT_FREE_ADAPTED
     /*
      * NOTE: We do not clean up "adapted->sink" here because it may
      * have an HTTP message body that needs to stay around a little
      * while longer so that the HTTP server-side can forward it on.
      */
-    if (adapted != NULL) {
-        if (notify == notifyIcap)
-            adapted->sendSinkAbort();
-        else
-            adapted->sink = NULL;
 
-        freeAdapted();
-    }
+    // XXX: who will clean up the "adapted->sink" then? Does it happen
+    // when the owner deletes us? Is that why we are deleted when the
+    // owner is destroyed and not when ICAP adaptation is done, like
+    // in http.cc case?
 
-#endif
+    // XXX: "adapted->sink" does not really have an "HTTP message body",
+    // In fact, it simply points to "this". Should the above comment
+    // refer to adapted and adapted->data->body?
 
-    if (http) {
-        if (notify == notifyOwner)
-            // tell ClientHttpRequest that we are aborting prematurely
-            http->abortAdapting();
-
-        cbdataReferenceDone(http);
-
-        // http is now NULL, will not call it any more
-    }
-}
-
-void ICAPClientReqmodPrecache::freeVirgin()
-{
-    // virgin->data->cause should be NULL;
-    virgin = NULL;	// refcounted
-}
-
-void ICAPClientReqmodPrecache::freeAdapted()
-{
-    adapted = NULL;	// refcounted
+    ICAPClientVector::clean(notify, false);
 }
 
 /*
@@ -247,13 +127,13 @@ ICAPClientReqmodPrecache::readBody(void *data, MemBuf &mb, size_t size)
     assert(icap->adapted->data != NULL);
     MemBuf *bodybuf = icap->adapted->data->body;
     assert(bodybuf != NULL);
-    debugs(32,3,HERE << "readBody requested size " << size);
-    debugs(32,3,HERE << "readBody bodybuf size " << bodybuf->contentSize());
+    debugs(93,3,HERE << "readBody requested size " << size);
+    debugs(93,3,HERE << "readBody bodybuf size " << bodybuf->contentSize());
 
     if ((mb_size_t) size > bodybuf->contentSize())
         size = bodybuf->contentSize();
 
-    debugs(32,3,HERE << "readBody actual size " << size);
+    debugs(93,3,HERE << "readBody actual size " << size);
 
     assert(size);
 
@@ -268,7 +148,7 @@ void
 ICAPClientReqmodPrecache::abortBody(void *data, size_t remaining)
 {
     if (remaining >= 0) {
-        debugs(0,0,HERE << "ICAPClientReqmodPrecache::abortBody size " << remaining);
+        debugs(93,1,HERE << "ICAPClientReqmodPrecache::abortBody size " << remaining);
         // more?
     }
 
@@ -283,7 +163,7 @@ ICAPClientReqmodPrecache::abortBody(void *data, size_t remaining)
 void
 ICAPClientReqmodPrecache::kickBody(void *data)
 {
-    debugs(32,3,HERE << "ICAPClientReqmodPrecache::kickBody");
+    debugs(93,3,HERE << "ICAPClientReqmodPrecache::kickBody");
     ICAPClientReqmodPrecache *icap = static_cast<ICAPClientReqmodPrecache *>(data);
     assert(icap->adapted != NULL);
     icap->adapted->sendSinkNeed();

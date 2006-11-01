@@ -16,17 +16,16 @@ ICAPOptXact::ICAPOptXact(): ICAPXaction("ICAPOptXact"), options(NULL),
         cb(NULL), cbData(NULL)
 
 {
-    debug(93,9)("ICAPOptXact constructed, this=%p\n", this);
 }
 
 ICAPOptXact::~ICAPOptXact()
 {
     Must(!options); // the caller must set to NULL
-    debug(93,9)("ICAPOptXact destructed, this=%p\n", this);
 }
 
 void ICAPOptXact::start(ICAPServiceRep::Pointer &aService, Callback *aCb, void *aCbData)
 {
+    ICAPXaction_Enter(start);
     service(aService);
 
     Must(!cb && aCb && aCbData);
@@ -34,6 +33,8 @@ void ICAPOptXact::start(ICAPServiceRep::Pointer &aService, Callback *aCb, void *
     cbData = cbdataReference(aCbData);
 
     openConnection();
+
+    ICAPXaction_Exit();
 }
 
 void ICAPOptXact::handleCommConnected()
@@ -49,6 +50,12 @@ void ICAPOptXact::handleCommConnected()
     scheduleWrite(requestBuf);
 }
 
+bool ICAPOptXact::doneAll() const
+{
+    return options && ICAPXaction::doneAll();
+}
+
+
 void ICAPOptXact::doStop()
 {
     ICAPXaction::doStop();
@@ -63,7 +70,7 @@ void ICAPOptXact::doStop()
         }
     }
 
-    // get rid of options if we did call the callback
+    // get rid of options if we did not call the callback
     delete options;
 
     options = NULL;
@@ -94,6 +101,10 @@ void ICAPOptXact::handleCommRead(size_t)
 
 bool ICAPOptXact::parseResponse()
 {
+    debugs(93, 5, HERE << "have " << readBuf.contentSize() << " bytes to parse" <<
+           status());
+    debugs(93, 5, HERE << "\n" << readBuf.content());
+
     HttpReply *r = new HttpReply;
     r->protoPrefix = "ICAP/"; // TODO: make an IcapReply class?
 

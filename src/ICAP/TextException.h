@@ -27,20 +27,20 @@ protected:
 
 //inline
 //ostream &operator <<(ostream &os, const TextException &exx) {
-//	return exx.print(os);
+//    return exx.print(os);
 //}
 
 #if !defined(TexcHere)
-#	define TexcHere(msg) TextException((msg), __FILE__, __LINE__)
+#    define TexcHere(msg) TextException((msg), __FILE__, __LINE__)
 #endif
 
 extern void Throw(const char *message, const char *fileName, int lineNo);
 
 // Must(condition) is like assert(condition) but throws an exception instead
 #if !defined(Must)
-#	define Must(cond) ((cond) ? \
-		(void)0 : \
-		(void)Throw(#cond, __FILE__, __LINE__))
+#   define Must(cond) ((cond) ? \
+        (void)0 : \
+        (void)Throw(#cond, __FILE__, __LINE__))
 #endif
 
 #endif /* SQUID__TEXTEXCEPTION_H */

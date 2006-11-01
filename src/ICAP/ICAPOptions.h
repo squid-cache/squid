@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPOptions.h,v 1.7 2006/02/16 20:44:07 wessels Exp $
+ * $Id: ICAPOptions.h,v 1.8 2006/10/31 23:30:58 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,8 +35,9 @@
 #define SQUID_ICAPOPTIONS_H
 
 #include "squid.h"
-#include "List.h"
 #include "ICAPClient.h"
+
+class wordlist;
 
 /* Maintains options supported by a given ICAP service.
  * See RFC 3507, Section "4.10.2 OPTIONS Response". */
@@ -61,8 +62,8 @@ public:
 
     int ttl() const { return theTTL; };
 
-    typedef enum { TRANSFER_NONE, TRANSFER_PREVIEW, TRANSFER_IGNORE, TRANSFER_COMPLETE } transfer_type;
-    transfer_type getTransferExt(const char *);
+    typedef enum { xferNone, xferPreview, xferIgnore, xferComplete } TransferKind;
+    TransferKind transferKind(const String &urlPath) const;
 
 public:
     const char *error; // human-readable information; set iff !valid()
@@ -78,38 +79,42 @@ public:
     bool allow204;
     int preview;
 
-    // varios Transfer-* lists
-
-    struct Transfers
-    {
-        List<String> *preview;
-        List<String> *ignore;
-        List<String> *complete;
-        transfer_type other; // default X from Transfer-X: *
-    }
-
-    transfers;
-
 protected:
-    int theTTL;
-    time_t theTimestamp;
+    // Transfer-* extension list representation
+    // maintains wordlist and does parsing/matching
+    class TransferList {
+        public:
+            TransferList();
+            ~TransferList();
 
-    //  The list of pairs "file extension <-> transfer type"
+            bool matches(const String &urlPath) const;
 
-    struct TransferPair
-    {
-        char *ext;
-        transfer_type type;
+            void parse(const String &buf, bool &foundStar);
+            void add(const char *extension);
+            void report(int level, const char *prefix) const;
+
+        public:
+            wordlist *extensions; // TODO: optimize with a hash of some sort
+            const char *name;  // header name, mostly for debugging
+            TransferKind kind; // to simplify caller's life
     };
 
-    List<TransferPair> *transfer_ext;
+    // varios Transfer-* lists
+    struct Transfers
+    {
+        TransferList preview;
+        TransferList ignore;
+        TransferList complete;
+        TransferList *byDefault;  // Transfer-X that has '*'
+    } theTransfers;
+
+    int theTTL;
+    time_t theTimestamp;
 
 private:
     void cfgMethod(ICAP::Method m);
     void cfgIntHeader(const HttpHeader *h, const char *fname, int &value);
-    void insertTransferExt(const char *t, transfer_type t_type);
-    void cfgTransferListHeader(const HttpHeader *h, const char *fname, transfer_type type);
-    List<String> *parseExtFileList(const char *start, const char *end, transfer_type t_type);
+    void cfgTransferList(const HttpHeader *h, TransferList &l);
 };
 
 

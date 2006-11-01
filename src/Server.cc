@@ -1,5 +1,5 @@
 /*
- * $Id: Server.cc,v 1.6 2006/09/20 22:26:24 hno Exp $
+ * $Id: Server.cc,v 1.7 2006/10/31 23:30:56 wessels Exp $
  *
  * DEBUG:
  * AUTHOR: Duane Wessels
@@ -62,24 +62,35 @@ ServerStateData::~ServerStateData()
     fwd = NULL; // refcounted
 
 #if ICAP_CLIENT
-    if (icap)
+    if (icap) {
+        debug(11,5)("ServerStateData destroying icap=%p\n", icap);
+        icap->ownerAbort();
         delete icap;
+    }
 #endif
 }
 
 #if ICAP_CLIENT
 /*
- * Initiate an ICAP transaction.  Return 0 if all is well, or -1 upon error.
+ * Initiate an ICAP transaction.  Return true on success.
  * Caller will handle error condition by generating a Squid error message
  * or take other action.
  */
-int
-ServerStateData::doIcap(ICAPServiceRep::Pointer service)
+bool
+ServerStateData::startIcap(ICAPServiceRep::Pointer service)
 {
-    debug(11,5)("ServerStateData::doIcap() called\n");
+    debug(11,5)("ServerStateData::startIcap() called\n");
+    if (!service) {
+        debug(11,3)("ServerStateData::startIcap fails: lack of service\n");
+        return false;
+    }
+    if (service->broken()) {
+        debug(11,3)("ServerStateData::startIcap fails: broken service\n");
+        return false;
+    }
     assert(NULL == icap);
     icap = new ICAPClientRespmodPrecache(service);
-    return 0;
+    return true;
 }
 
 #endif

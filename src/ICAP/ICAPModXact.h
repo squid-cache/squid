@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPModXact.h,v 1.5 2006/01/09 20:38:44 wessels Exp $
+ * $Id: ICAPModXact.h,v 1.6 2006/10/31 23:30:58 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -110,7 +110,7 @@ public:
     bool done() const;      // wrote everything
     bool ieof() const;      // premature EOF
 
-    void wrote(size_t size, bool sawEof);
+    void wrote(size_t size, bool wroteEof);
 
 private:
     size_t theWritten;
@@ -167,17 +167,18 @@ private:
     void startReading();
     void readMore();
     virtual bool doneReading() const { return commEof || state.doneParsing(); }
+    virtual bool doneWriting() const { return state.doneWriting(); }
 
     size_t claimSize(const MemBufClaim &claim) const;
     const char *claimContent(const MemBufClaim &claim) const;
     void makeRequestHeaders(MemBuf &buf);
     void moveRequestChunk(MemBuf &buf, size_t chunkSize);
     void addLastRequestChunk(MemBuf &buf);
-    void openChunk(MemBuf &buf, size_t chunkSize);
-    void closeChunk(MemBuf &buf, bool ieof);
+    void openChunk(MemBuf &buf, size_t chunkSize, bool ieof);
+    void closeChunk(MemBuf &buf);
     void virginConsume();
 
-    bool shouldPreview();
+    bool shouldPreview(const String &urlPath);
     bool shouldAllow204();
     void prepBackup(size_t expectedSize);
     void backup(const MemBuf &buf);
@@ -206,7 +207,7 @@ private:
     virtual void doStop();
     void stopReceiving();
     void stopSending(bool nicely);
-    void stopWriting();
+    void stopWriting(bool nicely);
     void stopParsing();
     void stopBackup();
 
@@ -248,7 +249,7 @@ private:
         1; // expect no new virgin info (from the virgin pipe)
 
         // will not write anything [else] to the ICAP server connection
-        bool doneWriting() const { return writing == writingDone; }
+        bool doneWriting() const { return writing == writingReallyDone; }
 
         // parsed entire ICAP response from the ICAP server
         bool doneParsing() const { return parsing == psDone; }
@@ -264,7 +265,9 @@ private:
 
         // measures ICAP request writing progress
         enum Writing { writingInit, writingConnect, writingHeaders,
-                       writingPreview, writingPaused, writingPrime, writingDone } writing;
+            writingPreview, writingPaused, writingPrime,
+            writingAlmostDone, // waiting for the last write() call to finish
+            writingReallyDone } writing;
 
         enum Sending { sendingUndecided, sendingVirgin, sendingAdapted,
                        sendingDone } sending;

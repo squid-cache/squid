@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.427 2006/09/25 15:04:07 adrian Exp $
+ * $Id: comm.cc,v 1.428 2006/10/31 23:30:57 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -2063,6 +2063,18 @@ fdc_t::acceptCount() const {
 
 void
 fdc_t::acceptOne(int fd) {
+    // If there is no callback and we accept, we will leak the accepted FD.
+    // When we are running out of FDs, there is often no callback.
+    if (!accept.accept.callback.handler) {
+        debug (5,5) ("fdc_t::acceptOne orphaned: FD %d\n", fd);
+        // XXX: can we remove this and similar "just in case" calls and 
+        // either listen always or listen only when there is a callback?
+        if (!AcceptLimiter::Instance().deferring())
+            commSetSelect(fd, COMM_SELECT_READ, comm_accept_try, NULL, 0);
+        accept.accept.finished(true);
+        return;
+    }
+
     /*
      * We don't worry about running low on FDs here.  Instead,
      * httpAccept() will use AcceptLimiter if we reach the limit
@@ -2077,6 +2089,7 @@ fdc_t::acceptOne(int fd) {
     if (newfd < 0) {
         if (newfd == COMM_NOMESSAGE) {
             /* register interest again */
+            debug (5,5) ("fdc_t::acceptOne eof: FD %d handler: %p\n", fd, (void*)accept.accept.callback.handler);
             commSetSelect(fd, COMM_SELECT_READ, comm_accept_try, NULL, 0);
             accept.accept.finished(true);
             return;
@@ -2092,6 +2105,9 @@ fdc_t::acceptOne(int fd) {
         return;
     }
 
+    debug (5,5) ("fdc_t::acceptOne accepted: FD %d handler: %p newfd: %d\n", fd, (void*)accept.accept.callback.handler, newfd);
+
+    assert(accept.accept.callback.handler);
     accept.accept.doCallback(fd, newfd, COMM_OK, 0, &accept.connDetails);
 
     /* If we weren't re-registed, don't bother trying again! */
@@ -2136,6 +2152,7 @@ comm_accept_try(int fd, void *data) {
  */
 void
 comm_accept(int fd, IOACB *handler, void *handler_data) {
+    debug (5,5) ("comm_accept: FD %d handler: %p\n", fd, (void*)handler);
     requireOpenAndActive(fd);
 
     /* make sure we're not pending! */
@@ -2209,8 +2226,14 @@ AcceptLimiter &AcceptLimiter::Instance() {
     return Instance_;
 }
 
+bool
+AcceptLimiter::deferring() const {
+    return deferred.size() > 0;
+}
+
 void
 AcceptLimiter::defer (int fd, Acceptor::AcceptorFunction *aFunc, void *data) {
+    debug (5,5) ("AcceptLimiter::defer: FD %d handler: %p\n", fd, (void*)aFunc);
     Acceptor temp;
     temp.theFunction = aFunc;
     temp.acceptFD = fd;
@@ -2220,7 +2243,7 @@ AcceptLimiter::defer (int fd, Acceptor::AcceptorFunction *aFunc, void *data) {
 
 void
 AcceptLimiter::kick() {
-    if (!deferred.size())
+    if (!deferring())
         return;
 
     /* Yes, this means the first on is the last off....

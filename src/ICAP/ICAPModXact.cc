@@ -124,15 +124,16 @@ void ICAPModXact::noteServiceReady()
 
     Must(state.serviceWaiting);
     state.serviceWaiting = false;
-    startWriting(); // will throw if service is not up
+
+    Must(service().up());
+
+    startWriting();
 
     ICAPXaction_Exit();
 }
 
 void ICAPModXact::startWriting()
 {
-    Must(service().up());
-
     state.writing = State::writingConnect;
     openConnection();
     // put nothing here as openConnection calls commConnectStart
@@ -179,7 +180,7 @@ void ICAPModXact::handleCommWroteHeaders()
         virginWriteClaim.protectAll();
         writeMore();
     } else {
-        stopWriting();
+        stopWriting(true);
     }
 }
 
@@ -199,7 +200,11 @@ void ICAPModXact::writeMore()
 
     case State::writingPaused:  // waiting for the ICAP server response
 
-    case State::writingDone:    // nothing more to write
+    case State::writingReallyDone: // nothing more to write
+        return;
+
+    case State::writingAlmostDone: // was waiting for the last write
+        stopWriting(false);
         return;
 
     case State::writingPreview:
@@ -230,7 +235,7 @@ void ICAPModXact::writePriviewBody()
         debugs(93, 7, "ICAPModXact wrote entire Preview body " << status());
 
         if (preview.ieof())
-            stopWriting();
+            stopWriting(true);
         else
             state.writing = State::writingPaused;
     }
@@ -245,15 +250,15 @@ void ICAPModXact::writePrimeBody()
     const size_t size = body->contentSize();
     writeSomeBody("prime virgin body", size);
 
-    if (state.doneReceiving) {
-        debugs(98, 5, HERE << "state.doneReceiving is set");
-        stopWriting();
+    if (state.doneReceiving && claimSize(virginWriteClaim) <= 0) {
+        debugs(93, 5, HERE << "state.doneReceiving is set and wrote all");
+        stopWriting(true);
     }
 }
 
 void ICAPModXact::writeSomeBody(const char *label, size_t size)
 {
-    Must(!writer && !state.doneWriting());
+    Must(!writer && state.writing < state.writingAlmostDone);
     debugs(93, 8, HERE << "will write up to " << size << " bytes of " <<
            label);
 
@@ -261,14 +266,14 @@ void ICAPModXact::writeSomeBody(const char *label, size_t size)
 
     writeBuf.init(); // note: we assume that last-chunk will fit
 
-    const size_t writeableSize = claimSize(virginWriteClaim);
-    const size_t chunkSize = XMIN(writeableSize, size);
+    const size_t writableSize = claimSize(virginWriteClaim);
+    const size_t chunkSize = XMIN(writableSize, size);
 
     if (chunkSize) {
         debugs(93, 7, HERE << "will write " << chunkSize <<
                "-byte chunk of " << label);
     } else {
-        debugs(93, 7, "ICAPModXact has no writeable " << label << " content");
+        debugs(93, 7, "ICAPModXact has no writable " << label << " content");
     }
 
     moveRequestChunk(writeBuf, chunkSize);
@@ -295,34 +300,36 @@ void ICAPModXact::writeSomeBody(const char *label, size_t size)
 void ICAPModXact::moveRequestChunk(MemBuf &buf, size_t chunkSize)
 {
     if (chunkSize > 0) {
-        openChunk(buf, chunkSize);
+        openChunk(buf, chunkSize, false);
         buf.append(claimContent(virginWriteClaim), chunkSize);
-        closeChunk(buf, false);
+        closeChunk(buf);
 
         virginWriteClaim.release(chunkSize);
         virginConsume();
     }
 
-    if (state.writing == State::writingPreview)
-        preview.wrote(chunkSize, state.doneReceiving); // even if wrote nothing
+    if (state.writing == State::writingPreview) {
+        // even if we are doneReceiving, we may not have written everything
+        const bool wroteEof = state.doneReceiving &&
+            claimSize(virginWriteClaim) <= 0;
+        preview.wrote(chunkSize, wroteEof); // even if wrote nothing
+    }
 }
 
 void ICAPModXact::addLastRequestChunk(MemBuf &buf)
 {
-    openChunk(buf, 0);
-    closeChunk(buf, state.writing == State::writingPreview && preview.ieof());
+    const bool ieof = state.writing == State::writingPreview && preview.ieof();
+    openChunk(buf, 0, ieof);
+    closeChunk(buf);
 }
 
-void ICAPModXact::openChunk(MemBuf &buf, size_t chunkSize)
+void ICAPModXact::openChunk(MemBuf &buf, size_t chunkSize, bool ieof)
 {
-    buf.Printf("%x\r\n", (int) chunkSize);
+    buf.Printf((ieof ? "%x; ieof\r\n" : "%x\r\n"), (int) chunkSize);
 }
 
-void ICAPModXact::closeChunk(MemBuf &buf, bool ieof)
+void ICAPModXact::closeChunk(MemBuf &buf)
 {
-    if (ieof)
-        buf.append("; ieof", 6);
-
     buf.append(ICAP::crlf, 2); // chunk-terminating CRLF
 }
 
@@ -374,22 +381,36 @@ void ICAPModXact::handleCommWroteBody()
     writeMore();
 }
 
-void ICAPModXact::stopWriting()
+// Called when we do not expect to call comm_write anymore.
+// We may have a pending write though.
+// If stopping nicely, we will just wait for that pending write, if any.
+void ICAPModXact::stopWriting(bool nicely)
 {
-    if (state.writing == State::writingDone)
+    if (state.writing == State::writingReallyDone)
         return;
 
-    debugs(93, 7, HERE << "will no longer write " << status());
+    if (writer) {
+        if (nicely) {
+            debugs(93, 7, HERE << "will wait for the last write " << status());
+            state.writing = State::writingAlmostDone; // may already be set
+            return;
+        }
+        debugs(93, 2, HERE << "will NOT wait for the last write " << status());
 
-    state.writing = State::writingDone;
+        // Comm does not have an interface to clear the writer callback nicely,
+        // but without clearing the writer we cannot recycle the connection.
+        // We prevent connection reuse and hope that we can handle a callback
+        // call at any time. Somebody should either fix this code or add
+        // comm_remove_write_handler() to comm API.
+        reuseConnection = false;
+    }
+
+    debugs(93, 7, HERE << "will no longer write " << status());
+    state.writing = State::writingReallyDone;
 
     virginWriteClaim.disable();
 
     virginConsume();
-
-    // Comm does not have an interface to clear the writer, but
-    // writeMore() will not write if our write callback is called
-    // when state.writing == State::writingDone;
 }
 
 void ICAPModXact::stopBackup()
@@ -426,20 +447,20 @@ void ICAPModXact::startReading()
 void ICAPModXact::readMore()
 {
     if (reader || doneReading()) {
-        debugs(32,3,HERE << "returning from readMore because reader or doneReading()");
+        debugs(93,3,HERE << "returning from readMore because reader or doneReading()");
         return;
     }
 
     // do not fill readBuf if we have no space to store the result
     if (!adapted->data->body->hasPotentialSpace()) {
-        debugs(93,1,HERE << "Not reading because ICAP reply buffer is full");
+        debugs(93,3,HERE << "not reading because ICAP reply buffer is full");
         return;
     }
 
     if (readBuf.hasSpace())
         scheduleRead();
     else
-        debugs(93,1,HERE << "nothing to do because !readBuf.hasSpace()");
+        debugs(93,3,HERE << "nothing to do because !readBuf.hasSpace()");
 }
 
 // comm module read a portion of the ICAP response for us
@@ -471,7 +492,7 @@ void ICAPModXact::echoMore()
         adapted->sendSourceProgress();
     }
 
-    if (!from.hasContent() && state.doneReceiving) {
+    if (state.doneReceiving && claimSize(virginSendClaim) <= 0) {
         debugs(93, 5, "ICAPModXact echoed all " << status());
         stopSending(true);
     } else {
@@ -620,7 +641,7 @@ void ICAPModXact::parseIcapHead()
     // handle100Continue() manages state.writing on its own.
     // Non-100 status means the server needs no postPreview data from us.
     if (state.writing == State::writingPaused)
-        stopWriting();
+        stopWriting(true);
 
     // TODO: Consider applying a Squid 2.5 patch to recognize 201 responses
 }
@@ -653,7 +674,8 @@ void ICAPModXact::handle100Continue()
     if (virginSendClaim.limited()) // preview only
         stopBackup();
 
-    state.parsing = State::psHttpHeader; // eventually
+    state.parsing = State::psIcapHeader; // eventually
+    icapReply->reset();
 
     state.writing = State::writingPrime;
 
@@ -688,16 +710,16 @@ void ICAPModXact::handle204NoContent()
     httpBuf.init();
     packHead(httpBuf, oldHead);
 
-    // allocate the adapted message
+    // allocate the adapted message and copy metainfo
     Must(!adapted->data->header);
     HttpMsg *newHead = NULL;
-
-    if (dynamic_cast<const HttpRequest*>(oldHead))
-        newHead = new HttpRequest;
-    else
-        if (dynamic_cast<const HttpReply*>(oldHead))
-            newHead = new HttpReply;
-
+    if (const HttpRequest *oldR = dynamic_cast<const HttpRequest*>(oldHead)) {
+        HttpRequest *newR = new HttpRequest;
+        newR->client_addr = oldR->client_addr;
+        newHead = newR;
+    } else
+    if (dynamic_cast<const HttpReply*>(oldHead))
+        newHead = new HttpReply;
     Must(newHead);
 
     adapted->data->setHeader(newHead);
@@ -730,18 +752,16 @@ void ICAPModXact::parseHttpHead()
         maybeAllocateHttpMsg();
 
         if (!parseHead(adapted->data->header))
-            return;	// need more header data
+            return; // need more header data
     }
 
     state.parsing = State::psBody;
 }
 
-/*
- * Common routine used to parse both HTTP and ICAP headers
- */
+// parses both HTTP and ICAP headers
 bool ICAPModXact::parseHead(HttpMsg *head)
 {
-    assert(head);
+    Must(head);
     debugs(93, 5, HERE << "have " << readBuf.contentSize() << " head bytes to parse" <<
            "; state: " << state.parsing);
 
@@ -749,7 +769,7 @@ bool ICAPModXact::parseHead(HttpMsg *head)
     const bool parsed = head->parse(&readBuf, commEof, &error);
     Must(parsed || !error); // success or need more data
 
-    if (!parsed) {	// need more data
+    if (!parsed) { // need more data
         debugs(93, 5, HERE << "parse failed, need more data, return false");
         head->reset();
         return false;
@@ -794,10 +814,10 @@ bool ICAPModXact::parsePresentBody()
     if (parsed)
         return true;
 
-    debugs(32,3,HERE << this << " needsMoreData = " << bodyParser->needsMoreData());
+    debugs(93,3,HERE << this << " needsMoreData = " << bodyParser->needsMoreData());
 
     if (bodyParser->needsMoreData()) {
-        debugs(32,3,HERE << this);
+        debugs(93,3,HERE << this);
         Must(mayReadMore());
         readMore();
     }
@@ -896,10 +916,10 @@ void ICAPModXact::noteSinkAbort(MsgPipe *p)
 // internal cleanup
 void ICAPModXact::doStop()
 {
-    debugs(98, 5, HERE << "doStop() called");
+    debugs(93, 5, HERE << "doStop() called");
     ICAPXaction::doStop();
 
-    stopWriting();
+    stopWriting(false);
     stopBackup();
 
     if (icapReply) {
@@ -950,10 +970,21 @@ void ICAPModXact::makeRequestHeaders(MemBuf &buf)
     // build HTTP request header, if any
     ICAP::Method m = s.method;
 
-    if (ICAP::methodRespmod == m && virgin->data->cause)
-        encapsulateHead(buf, "req-hdr", httpBuf, virgin->data->cause);
-    else if (ICAP::methodReqmod == m)
-        encapsulateHead(buf, "req-hdr", httpBuf, virgin->data->header);
+    const HttpRequest *request = virgin->data->cause ?
+                                 virgin->data->cause :
+                                 dynamic_cast<const HttpRequest*>(virgin->data->header);
+
+    // to simplify, we could we assume that request is always available
+
+    String urlPath;
+    if (request) {
+        urlPath = request->urlpath;
+        if (ICAP::methodRespmod == m)
+            encapsulateHead(buf, "req-hdr", httpBuf, request);
+        else
+        if (ICAP::methodReqmod == m)
+            encapsulateHead(buf, "req-hdr", httpBuf, virgin->data->header);
+    }
 
     if (ICAP::methodRespmod == m)
         if (const MsgPipeData::Header *prime = virgin->data->header)
@@ -968,7 +999,7 @@ void ICAPModXact::makeRequestHeaders(MemBuf &buf)
 
     buf.append(ICAP::crlf, 2); // terminate Encapsulated line
 
-    if (shouldPreview()) {
+    if (shouldPreview(urlPath)) {
         buf.Printf("Preview: %d\r\n", (int)preview.ad());
         virginSendClaim.protectUpTo(preview.ad());
     }
@@ -979,15 +1010,12 @@ void ICAPModXact::makeRequestHeaders(MemBuf &buf)
         virginSendClaim.protectAll();
     }
 
-    const HttpRequest *request = virgin->data->cause ?
-                                 virgin->data->cause :
-                                 dynamic_cast<const HttpRequest*>(virgin->data->header);
-
-    if (TheICAPConfig.send_client_ip)
-        if (request->client_addr.s_addr != any_addr.s_addr)
+    if (TheICAPConfig.send_client_ip && request)
+        if (request->client_addr.s_addr != any_addr.s_addr &&
+            request->client_addr.s_addr != no_addr.s_addr)
             buf.Printf("X-Client-IP: %s\r\n", inet_ntoa(request->client_addr));
 
-    if (TheICAPConfig.send_client_username)
+    if (TheICAPConfig.send_client_username && request)
         if (request->auth_user_request)
             if (request->auth_user_request->username())
                 buf.Printf("X-Client-Username: %s\r\n", request->auth_user_request->username());
@@ -1020,7 +1048,7 @@ void ICAPModXact::packHead(MemBuf &httpBuf, const HttpMsg *head)
 }
 
 // decides whether to offer a preview and calculates its size
-bool ICAPModXact::shouldPreview()
+bool ICAPModXact::shouldPreview(const String &urlPath)
 {
     size_t wantedSize;
 
@@ -1029,8 +1057,8 @@ bool ICAPModXact::shouldPreview()
         return false;
     }
 
-    if (!service().wantsPreview(wantedSize)) {
-        debugs(93, 5, "ICAPModXact should not offer preview");
+    if (!service().wantsPreview(urlPath, wantedSize)) {
+        debugs(93, 5, "ICAPModXact should not offer preview for " << urlPath);
         return false;
     }
 
@@ -1071,11 +1099,18 @@ bool ICAPModXact::shouldAllow204()
     return virginBody.size() < TheBackupLimit;
 }
 
-// returns a temporary string depicting transaction status, for debugging
 void ICAPModXact::fillPendingStatus(MemBuf &buf) const
 {
+    ICAPXaction::fillPendingStatus(buf);
+
     if (state.serviceWaiting)
         buf.append("U", 1);
+
+    if (!state.doneReceiving)
+        buf.append("R", 1);
+
+    if (!doneReading())
+        buf.append("r", 1);
 
     if (!state.doneWriting() && state.writing != State::writingInit)
         buf.Printf("w(%d)", state.writing);
@@ -1097,6 +1132,8 @@ void ICAPModXact::fillPendingStatus(MemBuf &buf) const
 
 void ICAPModXact::fillDoneStatus(MemBuf &buf) const
 {
+    ICAPXaction::fillDoneStatus(buf);
+
     if (state.doneReceiving)
         buf.append("R", 1);
 
@@ -1275,15 +1312,15 @@ size_t ICAPPreview::debt() const
     return done() ? 0 : (theAd - theWritten);
 }
 
-void ICAPPreview::wrote(size_t size, bool sawEof)
+void ICAPPreview::wrote(size_t size, bool wroteEof)
 {
     Must(enabled());
     theWritten += size;
 
     if (theWritten >= theAd)
-        theState = stDone; // sawEof is irrelevant
+        theState = stDone; // wroteEof is irrelevant
     else
-        if (sawEof)
+        if (wroteEof)
             theState = stIeof;
 }
 

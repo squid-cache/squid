@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.cc,v 1.11 2006/05/11 23:53:13 wessels Exp $
+ * $Id: ICAPConfig.cc,v 1.12 2006/10/31 23:30:58 wessels Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -152,31 +152,17 @@ ICAPAccessCheck::check()
 
     for (ci = TheICAPConfig.classes.begin(); ci != TheICAPConfig.classes.end(); ++ci) {
 
-        ICAPClass *theClass = *ci;
-
-        Vector<ICAPServiceRep::Pointer>::iterator si;
-
-        for (si = theClass->services.begin(); si != theClass->services.end(); ++si) {
-            ICAPServiceRep *theService = si->getRaw();
-
-            if (method != theService->method)
-                continue;
-
-            if (point != theService->point)
-                continue;
-
-            debug(93,3)("ICAPAccessCheck::check: class '%s' has candidate service '%s'\n", theClass->key.buf(), theService->key.buf());
-
-            candidateClasses += theClass->key;
-
-            /*
-             * Break here because we only need one matching service
-             * to justify ACL-checking a class.  We might use other
-             * services belonging to the class if the first service
-             * is unavailable, etc.
-             */
-            break;
-
+        /*
+         * We only find the first matching service because we only need
+         * one matching service to justify ACL-checking a class.  We might
+         * use other services belonging to the class if the first service
+         * turns out to be unusable for some reason.
+         */
+        ICAPClass *c = *ci;
+        ICAPServiceRep::Pointer service = findBestService(c, false);
+        if (service.getRaw()) {
+            debug(93,3)("ICAPAccessCheck::check: class '%s' has candidate service '%s'\n", c->key.buf(), service->key.buf());
+            candidateClasses += c->key;
         }
     }
 
@@ -277,23 +263,72 @@ ICAPAccessCheck::do_callback()
         return;
     }
 
-    Vector<ICAPServiceRep::Pointer>::iterator i;
+    const ICAPServiceRep::Pointer service = findBestService(theClass, true);
+    if (!service)
+        callback(NULL, validated_cbdata);
+    else
+        callback(service, validated_cbdata);
+}
 
-    for (i = theClass->services.begin(); i != theClass->services.end(); ++i) {
-        ICAPServiceRep *theService = i->getRaw();
+ICAPServiceRep::Pointer
+ICAPAccessCheck::findBestService(ICAPClass *c, bool preferUp) {
 
-        if (method != theService->method)
+    const char *what = preferUp ? "up " : "";
+    debugs(93,7,HERE << "looking for the first matching " << 
+        what << "service in class " << c->key);
+
+    ICAPServiceRep::Pointer secondBest;
+
+    Vector<ICAPServiceRep::Pointer>::iterator si;
+    for (si = c->services.begin(); si != c->services.end(); ++si) {
+        ICAPServiceRep::Pointer service = *si;
+
+        if (method != service->method)
             continue;
 
-        if (point != theService->point)
+        if (point != service->point)
             continue;
 
-        callback(*i, validated_cbdata);
+        // sending a message to a broken service is likely to cause errors
+        if (service->bypass && service->broken())
+            continue;
 
-        return;
+        if (service->up()) {
+            // sending a message to a service that does not want it is useless
+            // note that we cannot check wantsUrl for service that is not "up"
+            // note that even essential services are skipped on unwanted URLs!
+            if (!service->wantsUrl(req->urlpath))
+                continue;
+        } else {
+            if (!secondBest)
+                secondBest = service;
+            if (preferUp) {
+                // the caller asked for an "up" service and we can bypass this one
+                if (service->bypass)
+                    continue;
+                debugs(93,5,HERE << "cannot skip an essential down service");
+                what = "down-but-essential ";
+            }
+        }
+
+        debugs(93,5,HERE << "found first matching " <<
+            what << "service in class " << c->key <<
+            ": " << service->key);
+
+        return service;
     }
 
-    callback(NULL, callback_data);
+    if (secondBest.getRaw()) {
+        what = "down ";
+        debugs(93,5,HERE << "found first matching " <<
+            what << "service in class " << c->key <<
+            ": " << secondBest->key);
+        return secondBest;
+    }
+
+    debugs(93,5,HERE << "found no matching " << 
+        what << "services in class " << c->key);
+    return ICAPServiceRep::Pointer();
 }
 
 // ================================================================================ //

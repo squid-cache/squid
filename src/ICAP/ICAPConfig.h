@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.h,v 1.9 2006/08/07 02:28:24 robertc Exp $
+ * $Id: ICAPConfig.h,v 1.10 2006/10/31 23:30:58 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -78,6 +78,7 @@ private:
     Vector<String> candidateClasses;
     String matchedClass;
     void do_callback();
+    ICAPServiceRep::Pointer findBestService(ICAPClass *c, bool preferUp);
 
 public:
     void check();

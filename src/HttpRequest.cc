@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.68 2006/09/26 13:30:09 adrian Exp $
+ * $Id: HttpRequest.cc,v 1.69 2006/10/31 23:30:56 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -96,6 +96,7 @@ HttpRequest::init()
     extacl_user = null_string;
     extacl_passwd = null_string;
     extacl_log = null_string;
+    pstate = psReadyToParseStartLine;
 }
 
 void

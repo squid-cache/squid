@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.407 2006/09/19 07:56:57 adrian Exp $
+ * $Id: ftp.cc,v 1.408 2006/10/31 23:30:57 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -223,12 +223,15 @@ public:
 
 public:
     void icapAclCheckDone(ICAPServiceRep::Pointer);
-    void takeAdaptedHeaders(HttpReply *);
-    void takeAdaptedBody(MemBuf *);
-    void doneAdapting();
-    void abortAdapting();
-    void icapSpaceAvailable();
+    virtual bool takeAdaptedHeaders(HttpReply *);
+    virtual bool takeAdaptedBody(MemBuf *);
+    virtual void finishAdapting();
+    virtual void abortAdapting();
+    virtual void icapSpaceAvailable();
     bool icapAccessCheckPending;
+private:
+    void backstabAdapter();
+    void endAdapting();
 #endif
 
 };
@@ -3353,18 +3356,18 @@ FtpStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
 {
     icapAccessCheckPending = false;
 
-    if (service == NULL) {
-        // handle case where no service is selected;
+    const bool startedIcap = startIcap(service);
+
+    if (!startedIcap && (!service || service->bypass)) {
+        // handle ICAP start failure when no service was selected
+        // or where the selected service was optional
         entry->replaceHttpReply(reply);
         processReplyBody();
         return;
     }
 
-    if (doIcap(service) < 0) {
-        /*
-         * XXX Maybe instead of an error page we should
-         * handle the reply normally (without ICAP).
-         */
+    if (!startedIcap) {
+        // handle start failure for an essential ICAP service
         ErrorState *err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, request);
         err->xerrno = errno;
         errorAppendEntry(entry, err);
@@ -3386,15 +3389,15 @@ FtpStateData::icapSpaceAvailable()
     maybeReadData();
 }
 
-void
+bool
 FtpStateData::takeAdaptedHeaders(HttpReply *rep)
 {
     debug(11,5)("FtpStateData::takeAdaptedHeaders() called\n");
 
     if (!entry->isAccepting()) {
         debug(11,5)("\toops, entry is not Accepting!\n");
-        icap->ownerAbort();
-        return;
+        backstabAdapter();
+        return false;
     }
 
     assert (rep);
@@ -3404,9 +3407,10 @@ FtpStateData::takeAdaptedHeaders(HttpReply *rep)
     reply = HTTPMSGLOCK(rep);
 
     debug(11,5)("FtpStateData::takeAdaptedHeaders() finished\n");
+    return true;
 }
 
-void
+bool
 FtpStateData::takeAdaptedBody(MemBuf *buf)
 {
     debug(11,5)("FtpStateData::takeAdaptedBody() called\n");
@@ -3414,49 +3418,33 @@ FtpStateData::takeAdaptedBody(MemBuf *buf)
 
     if (!entry->isAccepting()) {
         debug(11,5)("\toops, entry is not Accepting!\n");
-        icap->ownerAbort();
-        return;
+        backstabAdapter();
+        return false;
     }
 
     storeAppend(entry, buf->content(), buf->contentSize());
     buf->consume(buf->contentSize()); // consume everything written
+    return true;
 }
 
 void
-FtpStateData::doneAdapting()
+FtpStateData::finishAdapting()
 {
     debug(11,5)("FtpStateData::doneAdapting() called\n");
 
     if (!entry->isAccepting()) {
         debug(11,5)("\toops, entry is not Accepting!\n");
-        icap->ownerAbort();
+        backstabAdapter();
     } else {
-	transactionForwardComplete();
+        transactionForwardComplete();
+        endAdapting();
     }
-
-    /*
-     * ICAP is done, so we don't need this any more.
-     */
-    delete icap;
-
-    cbdataReferenceDone(icap);
-
-    if (ctrl.fd >= 0)
-        comm_close(ctrl.fd);
-    else
-        delete this;
 }
 
 void
 FtpStateData::abortAdapting()
 {
     debug(11,5)("FtpStateData::abortAdapting() called\n");
-
-    /*
-     * ICAP has given up, we're done with it too
-     */
-    delete icap;
-    cbdataReferenceDone(icap);
 
     if (entry->isEmpty()) {
         ErrorState *err;
@@ -3466,10 +3454,30 @@ FtpStateData::abortAdapting()
         fwd->dontRetry(true);
     }
 
+    endAdapting();
+}
+
+// internal helper to terminate adotation when called by the adapter
+void
+FtpStateData::backstabAdapter()
+{
+    debug(11,5)("HttpStateData::backstabAdapter() called for %p\n", icap);
+    assert(icap);
+    icap->ownerAbort();
+    endAdapting();
+}
+
+void
+FtpStateData::endAdapting()
+{
+    delete icap;
+    icap = NULL;
+
     if (ctrl.fd >= 0)
         comm_close(ctrl.fd);
     else
         delete this;
 }
+
 
 #endif

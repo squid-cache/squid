@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.508 2006/10/01 17:26:34 adrian Exp $
+ * $Id: http.cc,v 1.509 2006/10/31 23:30:57 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1984,8 +1984,11 @@ HttpStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
 {
     icapAccessCheckPending = false;
 
-    if (service == NULL) {
-        // handle case where no service is selected;
+    const bool startedIcap = startIcap(service);
+
+    if (!startedIcap && (!service || service->bypass)) {
+        // handle ICAP start failure when no service was selected
+        // or where the selected service was optional
         entry->replaceHttpReply(reply);
 
         haveParsedReplyHeaders();
@@ -1997,11 +2000,8 @@ HttpStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
         return;
     }
 
-    if (doIcap(service) < 0) {
-        /*
-         * XXX Maybe instead of an error page we should
-         * handle the reply normally (without ICAP).
-         */
+    if (!startedIcap) {
+        // handle start failure for an essential ICAP service
         ErrorState *err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, orig_request);
         err->xerrno = errno;
         errorAppendEntry(entry, err);
@@ -2023,15 +2023,15 @@ HttpStateData::icapSpaceAvailable()
     maybeReadData();
 }
 
-void
+bool
 HttpStateData::takeAdaptedHeaders(HttpReply *rep)
 {
     debug(11,5)("HttpStateData::takeAdaptedHeaders() called\n");
 
     if (!entry->isAccepting()) {
         debug(11,5)("\toops, entry is not Accepting!\n");
-        icap->ownerAbort();
-        return;
+        backstabAdapter();
+        return false;
     }
 
     assert (rep);
@@ -2043,9 +2043,10 @@ HttpStateData::takeAdaptedHeaders(HttpReply *rep)
     haveParsedReplyHeaders();
 
     debug(11,5)("HttpStateData::takeAdaptedHeaders() finished\n");
+    return true;
 }
 
-void
+bool
 HttpStateData::takeAdaptedBody(MemBuf *buf)
 {
     debug(11,5)("HttpStateData::takeAdaptedBody() called\n");
@@ -2054,50 +2055,38 @@ HttpStateData::takeAdaptedBody(MemBuf *buf)
 
     if (!entry->isAccepting()) {
         debug(11,5)("\toops, entry is not Accepting!\n");
-        icap->ownerAbort();
-        return;
+        backstabAdapter();
+        return false;
     }
 
     entry->write(StoreIOBuffer(buf, currentOffset)); // write everything
     currentOffset += buf->contentSize();
     buf->consume(buf->contentSize()); // consume everything written
+    return true;
 }
 
+// called when ICAP adaptation is about to finish successfully, destroys icap
+// must be called by the ICAP code
 void
-HttpStateData::doneAdapting()
+HttpStateData::finishAdapting()
 {
-    debug(11,5)("HttpStateData::doneAdapting() called\n");
+    debug(11,5)("HttpStateData::finishAdapting() called by %p\n", icap);
 
-    if (!entry->isAccepting()) {
+    if (!entry->isAccepting()) { // XXX: do we need this check here?
         debug(11,5)("\toops, entry is not Accepting!\n");
-        icap->ownerAbort();
+        backstabAdapter();
     } else {
         fwd->complete();
+        endAdapting();
     }
-
-    /*
-     * ICAP is done, so we don't need this any more.
-     */
-    delete icap;
-
-    cbdataReferenceDone(icap);
-
-    if (fd >= 0)
-        comm_close(fd);
-    else
-        httpStateFree(fd, this);
 }
 
+// called when there was an ICAP error, destroys icap
+// must be called by the ICAP code
 void
 HttpStateData::abortAdapting()
 {
-    debug(11,5)("HttpStateData::abortAdapting() called\n");
-
-    /*
-     * ICAP has given up, we're done with it too
-     */
-    delete icap;
-    cbdataReferenceDone(icap);
+    debug(11,5)("HttpStateData::abortAdapting() called by %p\n", icap);
 
     if (entry->isEmpty()) {
         ErrorState *err;
@@ -2108,11 +2097,32 @@ HttpStateData::abortAdapting()
         flags.do_next_read = 0;
     }
 
-    if (fd >= 0) {
+    endAdapting();
+}
+
+// internal helper to terminate adotation when called by the adapter
+void
+HttpStateData::backstabAdapter()
+{
+    debug(11,5)("HttpStateData::backstabAdapter() called for %p\n", icap);
+    assert(icap);
+    icap->ownerAbort();
+    endAdapting();
+}
+
+// internal helper to delete icap and close the HTTP connection
+void
+HttpStateData::endAdapting()
+{
+    debug(11,5)("HttpStateData::endAdapting() called, deleting %p\n", icap);
+
+    delete icap;
+    icap = NULL;
+
+    if (fd >= 0)
         comm_close(fd);
-    } else {
-        httpStateFree(-1, this);	// deletes this
-    }
+    else
+        httpStateFree(fd, this); // deletes us
 }
 
 #endif
