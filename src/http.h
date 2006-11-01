@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.25 2006/09/19 07:56:57 adrian Exp $
+ * $Id: http.h,v 1.26 2006/10/31 23:30:57 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -71,13 +71,13 @@ public:
     void readReply(size_t len, comm_err_t flag, int xerrno);
     void maybeReadData();
     int cacheableReply();
-#if ICAP_CLIENT
 
-    void takeAdaptedHeaders(HttpReply *);
-    void takeAdaptedBody(MemBuf *);
-    void doneAdapting();
-    void abortAdapting();
-    void icapSpaceAvailable();
+#if ICAP_CLIENT
+    virtual bool takeAdaptedHeaders(HttpReply *);
+    virtual bool takeAdaptedBody(MemBuf *);
+    virtual void finishAdapting(); // deletes icap
+    virtual void abortAdapting();  // deletes icap
+    virtual void icapSpaceAvailable();
 #endif
 
     peer *_peer;		/* peer request made to */
@@ -133,6 +133,11 @@ private:
                                  MemBuf * mb,
                                  http_state_flags flags);
     static bool decideIfWeDoRanges (HttpRequest * orig_request);
+
+#if ICAP_CLIENT
+    void backstabAdapter();
+    void endAdapting();
+#endif
 
 private:
     CBDATA_CLASS2(HttpStateData);

@@ -1,5 +1,5 @@
 /*
- * $Id: ICAPOptXact.h,v 1.3 2005/12/22 22:26:31 wessels Exp $
+ * $Id: ICAPOptXact.h,v 1.4 2006/10/31 23:30:58 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -59,6 +59,7 @@ protected:
     virtual void handleCommConnected();
     virtual void handleCommWrote(size_t size);
     virtual void handleCommRead(size_t size);
+    virtual bool doneAll() const;
 
     void makeRequest(MemBuf &buf);
     bool parseResponse();

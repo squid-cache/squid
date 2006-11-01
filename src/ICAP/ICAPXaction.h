@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPXaction.h,v 1.8 2006/09/19 17:17:52 serassio Exp $
+ * $Id: ICAPXaction.h,v 1.9 2006/10/31 23:30:58 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -79,14 +79,19 @@ protected:
 
     void openConnection();
     void closeConnection();
+    void dieOnConnectionFailure();
+
     void scheduleRead();
     void scheduleWrite(MemBuf &buf);
+    void updateTimeout();
 
     void cancelRead();
 
     bool parseHttpMsg(HttpMsg *msg); // true=success; false=needMore; throw=err
     bool mayReadMore() const;
     virtual bool doneReading() const;
+    virtual bool doneWriting() const;
+    bool doneWithIo() const;
 
     bool done() const;
     virtual bool doneAll() const;
@@ -152,20 +157,20 @@ private:
 // - open the try clause;
 // - call callStart().
 #define ICAPXaction_Enter(method) \
-	try { \
-		if (!callStart(#method)) \
-			return;
+    try { \
+        if (!callStart(#method)) \
+            return;
 
 // asynchronous call exit:
 // - close the try clause;
 // - catch exceptions;
 // - let callEnd() handle transaction termination conditions
 #define ICAPXaction_Exit() \
-	} \
-	catch (const TextException &e) { \
-		callException(e); \
-	} \
-	callEnd();
+    } \
+    catch (const TextException &e) { \
+        callException(e); \
+    } \
+    callEnd();
 
 
 #endif /* SQUID_ICAPXACTION_H */

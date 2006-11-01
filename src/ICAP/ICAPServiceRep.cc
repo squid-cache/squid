@@ -12,14 +12,21 @@
 
 CBDATA_CLASS_INIT(ICAPServiceRep);
 
+// XXX: move to squid.conf
+const int ICAPServiceRep::TheSessionFailureLimit = 10;
+
 ICAPServiceRep::ICAPServiceRep(): method(ICAP::methodNone),
-        point(ICAP::pointNone), port(-1), bypass(false), unreachable(false),
-        theOptions(NULL), theState(stateInit), notifying(false), self(NULL)
+        point(ICAP::pointNone), port(-1), bypass(false),
+        theOptions(NULL), theLastUpdate(0),
+        theSessionFailures(0), isSuspended(0),
+        waiting(false), notifying(false),
+        updateScheduled(false), self(NULL),
+        wasAnnouncedUp(true) // do not announce an "up" service at startup
 {}
 
 ICAPServiceRep::~ICAPServiceRep()
 {
-    Must(!waiting());
+    Must(!waiting);
     changeOptions(0);
 }
 
@@ -158,20 +165,72 @@ ICAPServiceRep::configure(Pointer &aSelf)
 void ICAPServiceRep::invalidate()
 {
     assert(self != NULL);
-    self = NULL; // may destroy us and, hence, invalidate cbdata(this)
+    Pointer savedSelf = self; // to prevent destruction when we nullify self
+    self = NULL;
+
+    announceStatusChange("invalidated by reconfigure", false);
+
+    savedSelf = NULL; // may destroy us and, hence, invalidate cbdata(this)
     // TODO: it would be nice to invalidate cbdata(this) when not destroyed
+}
+
+void ICAPServiceRep::noteFailure() {
+    ++theSessionFailures;
+    debugs(93,4, "ICAPService failure " << theSessionFailures <<
+        ", out of " << TheSessionFailureLimit << " allowed");
+
+    if (theSessionFailures > TheSessionFailureLimit)
+        suspend("too many failures");
+
+    // TODO: Should bypass setting affect how much Squid tries to talk to
+    // the ICAP service that is currently unusable and is likely to remain 
+    // so for some time? The current code says "no". Perhaps the answer 
+    // should be configurable.
+}
+
+void ICAPServiceRep::suspend(const char *reason) {
+    if (isSuspended) {
+        debugs(93,4, "keeping ICAPService suspended, also for " << reason);
+    } else {
+        isSuspended = reason;
+        debugs(93,1, "suspending ICAPService for " << reason);
+        announceStatusChange("suspended", true);
+    }
+}
+
+bool ICAPServiceRep::probed() const
+{
+    return theLastUpdate != 0;
+}
+
+bool ICAPServiceRep::hasOptions() const {
+    return theOptions && theOptions->valid() && theOptions->fresh();
 }
 
 bool ICAPServiceRep::up() const
 {
-    return self != NULL && theState == stateUp;
+    return self != NULL && !isSuspended && hasOptions();
 }
 
-bool ICAPServiceRep::wantsPreview(size_t &wantedSize) const
+bool ICAPServiceRep::broken() const
 {
-    Must(up());
+    return probed() && !up();
+}
+
+bool ICAPServiceRep::wantsUrl(const String &urlPath) const
+{
+    Must(hasOptions());
+    return theOptions->transferKind(urlPath) != ICAPOptions::xferIgnore;
+}
+
+bool ICAPServiceRep::wantsPreview(const String &urlPath, size_t &wantedSize) const
+{
+    Must(hasOptions());
 
     if (theOptions->preview < 0)
+        return false;
+
+    if (theOptions->transferKind(urlPath) != ICAPOptions::xferPreview)
         return false;
 
     wantedSize = theOptions->preview;
@@ -181,7 +240,7 @@ bool ICAPServiceRep::wantsPreview(size_t &wantedSize) const
 
 bool ICAPServiceRep::allows204() const
 {
-    Must(up());
+    Must(hasOptions());
     return true; // in the future, we may have ACLs to prevent 204s
 }
 
@@ -196,7 +255,10 @@ void ICAPServiceRep_noteTimeToUpdate(void *data)
 
 void ICAPServiceRep::noteTimeToUpdate()
 {
-    if (!self || waiting()) {
+    if (self != NULL)
+        updateScheduled = false;
+
+    if (!self || waiting) {
         debugs(93,5, "ICAPService ignores options update " << status());
         return;
     }
@@ -241,6 +303,7 @@ void ICAPServiceRep::callWhenReady(Callback *cb, void *data)
 {
     Must(cb);
     Must(self != NULL);
+    Must(!broken()); // we do not wait for a broken service
 
     Client i;
     i.service = self;
@@ -248,7 +311,7 @@ void ICAPServiceRep::callWhenReady(Callback *cb, void *data)
     i.data = cbdataReference(data);
     theClients.push_back(i);
 
-    if (waiting() || notifying)
+    if (waiting || notifying)
         return; // do nothing, we will be picked up in noteTimeToNotify()
 
     if (needNewOptions())
@@ -263,23 +326,28 @@ void ICAPServiceRep::scheduleNotification()
     eventAdd("ICAPServiceRep::noteTimeToNotify", &ICAPServiceRep_noteTimeToNotify, this, 0, 0, true);
 }
 
-bool ICAPServiceRep::waiting() const
-{
-    return theState == stateWait;
-}
-
 bool ICAPServiceRep::needNewOptions() const
 {
-    return !theOptions || !theOptions->fresh();
+    return self != NULL && !up();
 }
 
 void ICAPServiceRep::changeOptions(ICAPOptions *newOptions)
 {
     debugs(93,9, "ICAPService changes options from " << theOptions << " to " <<
            newOptions);
+
     delete theOptions;
     theOptions = newOptions;
+    theSessionFailures = 0;
+    isSuspended = 0;
+    theLastUpdate = squid_curtime;
 
+    checkOptions();
+    announceStatusChange("down after an options fetch failure", true);
+}
+
+void ICAPServiceRep::checkOptions()
+{
     if (theOptions == NULL)
         return;
 
@@ -292,10 +360,8 @@ void ICAPServiceRep::changeOptions(ICAPOptions *newOptions)
         bool method_found = false;
         String method_list;
         Vector <ICAP::Method>::iterator iter = theOptions->methods.begin();
-        debugs(0,0,HERE);
 
         while (iter != theOptions->methods.end()) {
-            debugs(0,0,HERE);
 
             if (*iter == method) {
                 method_found = true;
@@ -305,10 +371,7 @@ void ICAPServiceRep::changeOptions(ICAPOptions *newOptions)
             method_list.append(ICAP::methodStr(*iter));
             method_list.append(" ", 1);
             iter++;
-            debugs(0,0,HERE);
         }
-
-        debugs(0,0,HERE);
 
         if (!method_found) {
             debugs(93,1, "WARNING: Squid is configured to use ICAP method " <<
@@ -323,24 +386,21 @@ void ICAPServiceRep::changeOptions(ICAPOptions *newOptions)
      *  Check the ICAP server's date header for clock skew
      */
     int skew = abs((int)(theOptions->timestamp() - squid_curtime));
-
     if (skew > theOptions->ttl())
         debugs(93, 1, host.buf() << "'s clock is skewed by " << skew << " seconds!");
+}
 
-#if 0
+void ICAPServiceRep::announceStatusChange(const char *downPhrase, bool important) const
+{
+    if (wasAnnouncedUp == up()) // no significant changes to announce
+        return;
 
-    List<String> *tmp;
+    const char *what = bypass ? "optional" : "essential";
+    const char *state = wasAnnouncedUp ? downPhrase : "up";
+    const int level = important ? 1 : 2;
+    debugs(93,level, what << " ICAP service is " << state << ": " << uri);
 
-    for (tmp = theOptions->transfers.preview; tmp; tmp=tmp->next)
-        debugs(93,1,"Transfer-Preview: " << tmp->element.buf());
-
-    for (tmp = theOptions->transfers.ignore; tmp; tmp=tmp->next)
-        debugs(93,1,"Transfer-Ignore: " << tmp->element.buf());
-
-    for (tmp = theOptions->transfers.complete; tmp; tmp=tmp->next)
-        debugs(93,1,"Transfer-Complete: " << tmp->element.buf());
-
-#endif
+    wasAnnouncedUp = !wasAnnouncedUp;
 }
 
 static
@@ -354,91 +414,106 @@ void ICAPServiceRep_noteNewOptions(ICAPOptXact *x, void *data)
 void ICAPServiceRep::noteNewOptions(ICAPOptXact *x)
 {
     Must(x);
-    Must(waiting());
-
-    theState = stateDown; // default in case we fail to set new options
+    Must(waiting);
+    waiting = false;
 
     changeOptions(x->options);
     x->options = NULL;
     delete x;
 
-    if (theOptions && theOptions->valid())
-        theState = stateUp;
-
-    debugs(93,6, "ICAPService got new options and is now " <<
-           (up() ? "up" : "down"));
+    debugs(93,3, "ICAPService got new options and is now " << status());
 
     scheduleUpdate();
-
     scheduleNotification();
 }
 
 void ICAPServiceRep::startGettingOptions()
 {
+    Must(!waiting);
     debugs(93,6, "ICAPService will get new options " << status());
-    theState = stateWait;
+    waiting = true;
 
     ICAPOptXact *x = new ICAPOptXact;
     x->start(self, &ICAPServiceRep_noteNewOptions, this);
-    // TODO: timeout incase ICAPOptXact never calls us back?
+    // TODO: timeout in case ICAPOptXact never calls us back?
 }
 
 void ICAPServiceRep::scheduleUpdate()
 {
-    int delay = -1;
+    if (updateScheduled)
+        return; // already scheduled
+
+    // XXX: move hard-coded constants from here to TheICAPConfig
+
+    // conservative estimate of how long the OPTIONS transaction will take
+    const int expectedWait = 20; // seconds
+
+    time_t when = 0;
 
     if (theOptions && theOptions->valid()) {
         const time_t expire = theOptions->expire();
+        debugs(93,7, "ICAPService options expire on " << expire << " >= " << squid_curtime);
 
-        if (expire > squid_curtime)
-            delay = expire - squid_curtime;
+        if (expire < 0) // unknown expiration time
+            when = squid_curtime + 60*60;
         else
-            if (expire >= 0)
-                delay = 1; // delay for expired or 'expiring now' options
-            else
-                delay = 60*60; // default for options w/o known expiration time
+        if (expire < expectedWait) // invalid expiration time
+            when = squid_curtime + 60*60;
+        else
+            when = expire - expectedWait; // before the current options expire
     } else {
-        delay = 5*60; // delay for a down service
+        when = squid_curtime + 3*60; // delay for a down service
     }
 
-    if (delay <= 0) {
-        debugs(93,0, "internal error: ICAPServiceRep failed to compute options update schedule");
-        delay = 5*60; // delay for an internal error
-    }
+    debugs(93,7, "ICAPService options raw update on " << when << " or " << (when - squid_curtime));
+    if (when < squid_curtime)
+        when = squid_curtime;
 
-    // with zero delay, the state changes to stateWait before
-    // notifications are sent out to clients
-    assert(delay > 0);
+    const int minUpdateGap = 1*60; // seconds
+    if (when < theLastUpdate + minUpdateGap)
+        when = theLastUpdate + minUpdateGap;
 
-    debugs(93,7, "ICAPService will update options in " << delay << " sec");
+    // TODO: keep the time of the last update to prevet too-frequent updates
+
+    const int delay = when - squid_curtime;
+
+    debugs(93,5, "ICAPService will update options in " << delay << " sec");
 
     eventAdd("ICAPServiceRep::noteTimeToUpdate",
              &ICAPServiceRep_noteTimeToUpdate, this, delay, 0, true);
-
-    // XXX: prompt updates of valid options should not disable concurrent ICAP
-    // xactions. 'Wait' state should not mark the service 'down'! This will
-    // also remove 'delay == 0' as a special case above.
+    updateScheduled = true;
 }
 
+// returns a temporary string depicting service status, for debugging
 const char *ICAPServiceRep::status() const
 {
+    static MemBuf buf;
+
+    buf.reset();
+    buf.append("[", 1);
+
+    if (up())
+        buf.append("up", 2);
+    else
+        buf.append("down", 4);
+
     if (!self)
-        return "[invalidated]";
+        buf.append(",gone", 5);
 
-    switch (theState) {
+    if (waiting)
+        buf.append(",wait", 5);
 
-    case stateInit:
-        return "[init]";
+    if (notifying)
+        buf.append(",notif", 6);
 
-    case stateWait:
-        return "[wait]";
+    if (theSessionFailures > 0)
+        buf.Printf(",F%d", theSessionFailures);
 
-    case stateUp:
-        return "[up]";
+    if (isSuspended)
+        buf.append(",susp", 5);
 
-    case stateDown:
-        return "[down]";
-    }
+    buf.append("]", 1);
+    buf.terminate();
 
-    return "[unknown]";
+    return buf.content();
 }

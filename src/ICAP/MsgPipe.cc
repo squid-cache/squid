@@ -11,9 +11,9 @@ CBDATA_CLASS_INIT(MsgPipe);
 #define MsgPipe_MAKE_CALLBACK(callName, destination) \
 static \
 void MsgPipe_send ## callName(void *p) { \
-	MsgPipe *pipe = static_cast<MsgPipe*>(p); \
-	if (pipe && pipe->canSend(pipe->destination, #callName, false)) \
-		pipe->destination->note##callName(pipe); \
+    MsgPipe *pipe = static_cast<MsgPipe*>(p); \
+    if (pipe && pipe->canSend(pipe->destination, #callName, false)) \
+        pipe->destination->note##callName(pipe); \
 }
 
 // static event callbacks
@@ -90,7 +90,7 @@ bool MsgPipe::canSend(MsgPipeEnd *destination, const char *callName, bool future
     const char *verb = future ?
                        (res ? "will send " : "wont send ") :
                                (res ? "sends " : "ignores ");
-    debugs(99,5, "MsgPipe " << name << "(" << this << ") " <<
+    debugs(93,5, "MsgPipe " << name << "(" << this << ") " <<
            verb << callName << " to the " <<
            (destination ? destination->kind() : "destination") << "(" <<
            destination << "); " <<

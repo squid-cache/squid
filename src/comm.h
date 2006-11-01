@@ -114,6 +114,8 @@ public:
     void defer (int, Acceptor::AcceptorFunction *, void *);
     void kick();
 
+    bool deferring() const;
+
 private:
     static AcceptLimiter Instance_;
     Vector<Acceptor> deferred;

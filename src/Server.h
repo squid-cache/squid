@@ -1,6 +1,6 @@
 
 /*
- * $Id: Server.h,v 1.1 2006/01/25 17:47:26 wessels Exp $
+ * $Id: Server.h,v 1.2 2006/10/31 23:30:56 wessels Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -59,10 +59,9 @@ public:
     virtual ~ServerStateData();
 
 #if ICAP_CLIENT
-
-    virtual void takeAdaptedHeaders(HttpReply *) = 0;
-    virtual void takeAdaptedBody(MemBuf *) = 0;
-    virtual void doneAdapting() = 0;
+    virtual bool takeAdaptedHeaders(HttpReply *) = 0;
+    virtual bool takeAdaptedBody(MemBuf *) = 0;
+    virtual void finishAdapting() = 0;
     virtual void abortAdapting() = 0;
     virtual void icapSpaceAvailable() = 0;
     virtual void icapAclCheckDone(ICAPServiceRep::Pointer) = 0;
@@ -80,7 +79,7 @@ protected:
 
     ICAPClientRespmodPrecache *icap;
     bool icapAccessCheckPending;
-    int doIcap(ICAPServiceRep::Pointer);
+    bool startIcap(ICAPServiceRep::Pointer);
 #endif
 
 };

@@ -46,7 +46,7 @@ void ICAPXaction_noteCommConnected(int, comm_err_t status, int xerrno, void *dat
 }
 
 static
-void ICAPXaction_noteCommWrote(int, char *, size_t size, comm_err_t status, void *data)
+void ICAPXaction_noteCommWrote(int, char *, size_t size, comm_err_t status, int xerrno, void *data)
 {
     ICAPXaction_fromData(data).noteCommWrote(status, size);
 }
@@ -68,6 +68,7 @@ ICAPXaction::ICAPXaction(const char *aTypeName):
         theService(NULL),
         inCall(NULL)
 {
+    debug(93,3)("%s constructed, this=%p\n", typeName, this);
     readBuf.init(SQUID_TCP_SO_RCVBUF, SQUID_TCP_SO_RCVBUF);
     commBuf = (char*)memAllocBuf(SQUID_TCP_SO_RCVBUF, &commBufSize);
     // make sure maximum readBuf space does not exceed commBuf size
@@ -76,6 +77,7 @@ ICAPXaction::ICAPXaction(const char *aTypeName):
 
 ICAPXaction::~ICAPXaction()
 {
+    debug(93,3)("%s destructing, this=%p\n", typeName, this);
     doStop();
     readBuf.clean();
     memFreeBuf(commBufSize, commBuf);
@@ -104,7 +106,7 @@ void ICAPXaction::openConnection()
                                COMM_NONBLOCKING, s.uri.buf());
 
         if (connection < 0)
-            throw TexcHere("cannot connect to ICAP service " /* + uri */);
+            dieOnConnectionFailure(); // throws
     }
 
     debugs(93,3, typeName << " opens connection to " << s.host.buf() << ":" << s.port);
@@ -138,23 +140,31 @@ ICAPXaction::reusedConnection(void *data)
 void ICAPXaction::closeConnection()
 {
     if (connection >= 0) {
-        commSetTimeout(connection, -1, NULL, NULL);
 
         if (closer) {
             comm_remove_close_handler(connection, closer, this);
             closer = NULL;
         }
 
-        cancelRead();
+        cancelRead(); // may not work
+
+        if (reuseConnection && (writer || reader)) {
+            debugs(93,5, HERE << "not reusing pconn due to pending I/O " << status());
+            reuseConnection = false;
+        }
 
         if (reuseConnection) {
-            debugs(93,3, HERE << "pushing pconn " << connection);
+            debugs(93,3, HERE << "pushing pconn " << status());
+            commSetTimeout(connection, -1, NULL, NULL);
             icapPconnPool->push(connection, theService->host.buf(), theService->port, NULL);
         } else {
-            debugs(93,3, HERE << "closing pconn " << connection);
+            debugs(93,3, HERE << "closing pconn " << status());
+            // comm_close will clear timeout
             comm_close(connection);
         }
 
+        writer = NULL;
+        reader = NULL;
         connector = NULL;
         connection = -1;
     }
@@ -167,20 +177,30 @@ void ICAPXaction::noteCommConnected(comm_err_t commStatus)
 
     Must(connector);
     connector = NULL;
-    Must(commStatus == COMM_OK);
+
+    if (commStatus != COMM_OK)
+        dieOnConnectionFailure(); // throws
+
+    fd_table[connection].noteUse(icapPconnPool);
 
     handleCommConnected();
 
     ICAPXaction_Exit();
 }
 
+void ICAPXaction::dieOnConnectionFailure() {
+    theService->noteFailure();
+    debugs(93,3, typeName << " failed to connect to the ICAP service at " <<
+        service().uri);
+    throw TexcHere("cannot connect to the ICAP service");
+}
+
 void ICAPXaction::scheduleWrite(MemBuf &buf)
 {
     // comm module will free the buffer
-    writer = (IOCB *)&ICAPXaction_noteCommWrote;
+    writer = &ICAPXaction_noteCommWrote;
     comm_write_mbuf(connection, &buf, writer, this);
-    fd_table[connection].noteUse(icapPconnPool);
-    commSetTimeout(connection, 61, &ICAPXaction_noteCommTimedout, this);
+    updateTimeout();
 }
 
 void ICAPXaction::noteCommWrote(comm_err_t commStatus, size_t size)
@@ -191,6 +211,8 @@ void ICAPXaction::noteCommWrote(comm_err_t commStatus, size_t size)
     writer = NULL;
 
     Must(commStatus == COMM_OK);
+
+    updateTimeout();
 
     handleCommWrote(size);
 
@@ -239,17 +261,26 @@ void ICAPXaction::handleCommClosed()
 
 bool ICAPXaction::done() const
 {
-    if (stopReason != NULL) { // mustStop() has been called
-        debugs(93,1,HERE << "ICAPXaction is done() because " << stopReason);
-        return true;
-    }
-
-    return doneAll();
+    // stopReason, set in mustStop(), overwrites all other conditions
+    return stopReason != NULL || doneAll();
 }
 
 bool ICAPXaction::doneAll() const
 {
     return !connector && !reader && !writer;
+}
+
+void ICAPXaction::updateTimeout() {
+    if (reader || writer) {
+        // restart the timeout before each I/O
+        // XXX: why does Config.Timeout lacks a write timeout?
+        commSetTimeout(connection, Config.Timeout.read,
+            &ICAPXaction_noteCommTimedout, this);
+    } else {
+        // clear timeout when there is no I/O
+        // Do we need a lifetime timeout?
+        commSetTimeout(connection, -1, NULL, NULL);
+    }
 }
 
 void ICAPXaction::scheduleRead()
@@ -265,7 +296,7 @@ void ICAPXaction::scheduleRead()
      */
 
     comm_read(connection, commBuf, readBuf.spaceSize(), reader, this);
-    commSetTimeout(connection, 61, &ICAPXaction_noteCommTimedout, this);
+    updateTimeout();
 }
 
 // comm module read a portion of the ICAP response for us
@@ -278,6 +309,8 @@ void ICAPXaction::noteCommRead(comm_err_t commStatus, size_t sz)
 
     Must(commStatus == COMM_OK);
     Must(sz >= 0);
+
+    updateTimeout();
 
     debugs(93, 3, HERE << "read " << sz << " bytes");
 
@@ -305,10 +338,10 @@ void ICAPXaction::cancelRead()
         // These checks try to mimic the comm_read_cancel() assertions.
 
         if (comm_has_pending_read(connection) &&
-                !comm_has_pending_read_callback(connection))
+                !comm_has_pending_read_callback(connection)) {
             comm_read_cancel(connection, reader, this);
-
-        reader = NULL;
+            reader = NULL;
+        }
     }
 }
 
@@ -341,13 +374,28 @@ bool ICAPXaction::doneReading() const
     return commEof;
 }
 
+bool ICAPXaction::doneWriting() const
+{
+    return !writer;
+}
+
+bool ICAPXaction::doneWithIo() const
+{
+    return connection >= 0 && // or we could still be waiting to open it
+        !connector && !reader && !writer && // fast checks, some redundant
+        doneReading() && doneWriting();
+}
+
 void ICAPXaction::mustStop(const char *aReason)
 {
     Must(inCall); // otherwise nobody will call doStop()
-    Must(!stopReason);
     Must(aReason);
-    stopReason = aReason;
-    debugs(93, 5, typeName << " will stop, reason: " << stopReason);
+    if (!stopReason) {
+        stopReason = aReason;
+        debugs(93, 5, typeName << " will stop, reason: " << stopReason);
+    } else {
+        debugs(93, 5, typeName << " will stop, another reason: " << aReason);
+    }
 }
 
 // internal cleanup
@@ -392,8 +440,8 @@ void ICAPXaction::callException(const TextException &e)
     debugs(93, 4, typeName << "::" << inCall << " caught an exception: " <<
            e.message << ' ' << status());
 
-    if (!done())
-        mustStop("exception");
+    reuseConnection = false; // be conservative
+    mustStop("exception");
 }
 
 void ICAPXaction::callEnd()
@@ -403,6 +451,10 @@ void ICAPXaction::callEnd()
                status());
         doStop(); // may delete us
         return;
+    } else
+    if (doneWithIo()) {
+        debugs(93, 5, HERE << typeName << " done with I/O " << status());
+        closeConnection();
     }
 
     debugs(93, 6, typeName << "::" << inCall << " ended " << status());

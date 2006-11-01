@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.89 2006/06/07 22:39:33 hno Exp $
+ * $Id: HttpReply.cc,v 1.90 2006/10/31 23:30:56 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -94,6 +94,7 @@ HttpReply::init()
     httpBodyInit(&body);
     hdrCacheInit();
     httpStatusLineInit(&sline);
+    pstate = psReadyToParseStartLine;
     do_clean = true;
 }
 

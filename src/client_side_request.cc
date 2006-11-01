@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.76 2006/10/19 00:35:35 wessels Exp $
+ * $Id: client_side_request.cc,v 1.77 2006/10/31 23:30:57 wessels Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -526,6 +526,9 @@ ClientRequestContext::icapAclCheckDone(ICAPServiceRep::Pointer service)
      * to the user, or keep going without ICAP.
      */
     fatal("Fix this case in ClientRequestContext::icapAclCheckDone()");
+    // And when fixed, check whether the service is down in doIcap and
+    // if it is, abort early, without creating ICAPClientReqmodPrecache.
+    // See Server::startIcap() and its use.
 
     http->doCallouts();
 }
@@ -1149,9 +1152,9 @@ ClientHttpRequest::icapSendRequestBody(MemBuf &mb)
         icap->body_reader->bytes_read += size_to_send;
         debugs(32,3," HTTP client body bytes_read=" << icap->body_reader->bytes_read);
     } else {
-        debugs(32,0,HERE << "cannot send body data to ICAP");
-        debugs(32,0,HERE << "\tBodyReader MemBuf has " << mb.contentSize());
-        debugs(32,0,HERE << "\tbut icap->potentialSpaceSize() is " << icap->potentialSpaceSize());
+        debugs(32,2,HERE << "cannot send body data to ICAP");
+        debugs(32,2,HERE << "\tBodyReader MemBuf has " << mb.contentSize());
+        debugs(32,2,HERE << "\tbut icap->potentialSpaceSize() is " << icap->potentialSpaceSize());
         return;
     }
 

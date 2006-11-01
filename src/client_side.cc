@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.743 2006/10/19 01:39:40 wessels Exp $
+ * $Id: client_side.cc,v 1.744 2006/10/31 23:30:56 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2558,15 +2558,14 @@ clientReadBody(void *data, MemBuf &mb, size_t size)
     debugs(33,3,HERE << "clientReadBody in.notYetUsed " << conn->in.notYetUsed);
 
     if (size > conn->in.notYetUsed)
-        size = conn->in.notYetUsed;
+        size = conn->in.notYetUsed; // may make size zero
 
     debugs(33,3,HERE << "clientReadBody actual size " << size);
 
-    assert(size);
-
-    mb.append(conn->in.buf, size);
-
-    connNoteUseOfBuffer(conn, size);
+    if (size > 0) {
+        mb.append(conn->in.buf, size);
+        connNoteUseOfBuffer(conn, size);
+    }
 
     return size;
 }
