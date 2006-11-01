@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.409 2006/09/15 15:02:28 hno Exp $
+#  $Id: Makefile.in,v 1.410 2006/10/31 23:33:37 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -81,7 +81,7 @@ ICAP_libicap_a_AR = $(AR) $(ARFLAGS)
 ICAP_libicap_a_LIBADD =
 am__dirstamp = $(am__leading_dot)dirstamp
 am_ICAP_libicap_a_OBJECTS = ICAP/ChunkedCodingParser.$(OBJEXT) \
-	ICAP/ICAPClient.$(OBJEXT) \
+	ICAP/ICAPClient.$(OBJEXT) ICAP/ICAPClientVector.$(OBJEXT) \
 	ICAP/ICAPClientReqmodPrecache.$(OBJEXT) \
 	ICAP/ICAPClientRespmodPrecache.$(OBJEXT) \
 	ICAP/ICAPConfig.$(OBJEXT) ICAP/ICAPElements.$(OBJEXT) \
@@ -2252,6 +2252,8 @@ ICAP_libicap_a_SOURCES = \
  	ICAP/ChunkedCodingParser.h \
 	ICAP/ICAPClient.cc \
 	ICAP/ICAPClient.h \
+	ICAP/ICAPClientVector.cc \
+	ICAP/ICAPClientVector.h \
 	ICAP/ICAPClientReqmodPrecache.cc \
 	ICAP/ICAPClientReqmodPrecache.h \
 	ICAP/ICAPClientRespmodPrecache.cc \
@@ -3862,6 +3864,8 @@ ICAP/ChunkedCodingParser.$(OBJEXT): ICAP/$(am__dirstamp) \
 	ICAP/$(DEPDIR)/$(am__dirstamp)
 ICAP/ICAPClient.$(OBJEXT): ICAP/$(am__dirstamp) \
 	ICAP/$(DEPDIR)/$(am__dirstamp)
+ICAP/ICAPClientVector.$(OBJEXT): ICAP/$(am__dirstamp) \
+	ICAP/$(DEPDIR)/$(am__dirstamp)
 ICAP/ICAPClientReqmodPrecache.$(OBJEXT): ICAP/$(am__dirstamp) \
 	ICAP/$(DEPDIR)/$(am__dirstamp)
 ICAP/ICAPClientRespmodPrecache.$(OBJEXT): ICAP/$(am__dirstamp) \
@@ -4414,6 +4418,7 @@ mostlyclean-compile:
 	-rm -f ICAP/ICAPClient.$(OBJEXT)
 	-rm -f ICAP/ICAPClientReqmodPrecache.$(OBJEXT)
 	-rm -f ICAP/ICAPClientRespmodPrecache.$(OBJEXT)
+	-rm -f ICAP/ICAPClientVector.$(OBJEXT)
 	-rm -f ICAP/ICAPConfig.$(OBJEXT)
 	-rm -f ICAP/ICAPElements.$(OBJEXT)
 	-rm -f ICAP/ICAPModXact.$(OBJEXT)
@@ -4739,6 +4744,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPClient.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPClientReqmodPrecache.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPClientRespmodPrecache.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPClientVector.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPConfig.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPElements.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPModXact.Po@am__quote@
