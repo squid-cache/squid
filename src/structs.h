@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.549 2006/09/18 23:05:43 hno Exp $
+ * $Id: structs.h,v 1.550 2006/11/01 19:22:10 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -180,6 +180,7 @@ struct _https_port_list
 #endif
 
 /* forward decl for SquidConfig, see RemovalPolicy.h */
+
 class RemovalPolicySettings;
 
 
@@ -321,7 +322,8 @@ struct _SquidConfig
         struct IN_ADDR address;
         int forwarding_method;
         int return_method;
-	int weight;
+        int assignment_method;
+        int weight;
         int rebuildwait;
         void *info;
     }

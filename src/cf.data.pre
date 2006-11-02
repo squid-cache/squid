@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.425 2006/10/12 20:46:42 wessels Exp $
+# $Id: cf.data.pre,v 1.426 2006/11/01 19:22:10 serassio Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -4125,6 +4125,22 @@ DOC_START
 	enabled on the cache interface, then it is still safe for
 	the proxy server to use a l2 redirect method even if this
 	option is set to GRE.
+DOC_END
+
+NAME: wccp2_assignment_method
+TYPE: int
+LOC: Config.Wccp2.assignment_method
+DEFAULT: 1
+IFDEF: USE_WCCPv2
+DOC_START
+	WCCP2 allows the setting of methods to assign the WCCP hash
+	Valid values are as follows:
+
+	1 - Hash assignment
+	2 - Mask assignment
+
+	As a general rule, cisco routers support the hash assignment method
+	and cisco switches support the mask assignment method.
 DOC_END
 
 NAME: wccp2_service
