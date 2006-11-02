@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.410 2006/10/31 23:33:37 wessels Exp $
+#  $Id: Makefile.in,v 1.411 2006/11/01 19:56:34 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -385,7 +385,8 @@ am_tests_testACLMaxUserIP_OBJECTS = acl.$(OBJEXT) \
 	HttpHdrContRange.$(OBJEXT) HttpHdrRange.$(OBJEXT) \
 	HttpHdrCc.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
 	HttpHdrScTarget.$(OBJEXT) mem_node.$(OBJEXT) Packer.$(OBJEXT) \
-	StatHist.$(OBJEXT) stmem.$(OBJEXT) String.$(OBJEXT) \
+	Parsing.$(OBJEXT) StatHist.$(OBJEXT) stmem.$(OBJEXT) \
+	String.$(OBJEXT) tests/stub_cache_cf.$(OBJEXT) \
 	tests/stub_comm.$(OBJEXT) tests/stub_DelayId.$(OBJEXT) \
 	tests/stub_MemObject.$(OBJEXT) tests/stub_store.$(OBJEXT) \
 	tests/testACLMaxUserIP.$(OBJEXT) tests/testMain.$(OBJEXT) \
@@ -2626,9 +2627,11 @@ tests_testACLMaxUserIP_SOURCES = \
 	HttpHdrScTarget.cc \
 	mem_node.cc \
 	Packer.cc \
+	Parsing.cc \
 	StatHist.cc \
 	stmem.cc \
 	String.cc \
+	tests/stub_cache_cf.cc \
 	tests/stub_comm.cc \
 	tests/stub_DelayId.cc \
 	tests/stub_MemObject.cc \
@@ -4198,6 +4201,8 @@ tests/$(am__dirstamp):
 tests/$(DEPDIR)/$(am__dirstamp):
 	@$(mkdir_p) tests/$(DEPDIR)
 	@: > tests/$(DEPDIR)/$(am__dirstamp)
+tests/stub_cache_cf.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
 tests/stub_comm.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 tests/stub_DelayId.$(OBJEXT): tests/$(am__dirstamp) \
@@ -4224,8 +4229,6 @@ tests/testACLMaxUserIP$(EXEEXT): $(tests_testACLMaxUserIP_OBJECTS) $(tests_testA
 tests/testAuth.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 tests/stub_acl.$(OBJEXT): tests/$(am__dirstamp) \
-	tests/$(DEPDIR)/$(am__dirstamp)
-tests/stub_cache_cf.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 tests/stub_helper.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
