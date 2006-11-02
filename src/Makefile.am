@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.172 2006/10/31 23:30:56 wessels Exp $
+#  $Id: Makefile.am,v 1.173 2006/11/01 19:55:29 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -1191,9 +1191,11 @@ tests_testACLMaxUserIP_SOURCES= \
 	HttpHdrScTarget.cc \
 	mem_node.cc \
 	Packer.cc \
+	Parsing.cc \
 	StatHist.cc \
 	stmem.cc \
 	String.cc \
+	tests/stub_cache_cf.cc \
 	tests/stub_comm.cc \
 	tests/stub_DelayId.cc \
 	tests/stub_MemObject.cc \
