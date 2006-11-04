@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.70 2006/09/03 21:05:20 hno Exp $
+ * $Id: htcp.cc,v 1.71 2006/11/04 14:15:22 hno Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -340,7 +340,8 @@ htcpBuildAuth(char *buf, size_t buflen)
     assert(2 == sizeof(u_int16_t));
     auth.length = htons(2);
     copy_sz += 2;
-    assert(buflen >= copy_sz);
+    if (buflen < copy_sz)
+	return -1;
     xmemcpy(buf, &auth, copy_sz);
     return copy_sz;
 }
