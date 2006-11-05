@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.271 2006/09/13 18:55:10 serassio Exp $
+ * $Id: tools.cc,v 1.272 2006/11/04 17:10:43 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -1206,7 +1206,7 @@ parseEtcHosts(void)
             if (Config.appendDomain && !strchr(lt, '.')) {
                 /* I know it's ugly, but it's only at reconfig */
                 strncpy(buf2, lt, 512);
-                strncat(buf2, Config.appendDomain, 512 - strlen(lt));
+                strncat(buf2, Config.appendDomain, 512 - strlen(lt) - 1);
                 host = buf2;
             } else {
                 host = lt;
