@@ -16,7 +16,7 @@
 
 #  Makefile for digest auth helpers in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.69 2006/09/06 19:38:15 serassio Exp $
+#  $Id: Makefile.in,v 1.70 2006/11/06 05:15:19 adrian Exp $
 #
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
