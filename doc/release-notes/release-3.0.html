@@ -2,12 +2,12 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.21">
- <TITLE>Squid 3.0.PRE4 release notes</TITLE>
+ <TITLE>Squid 3.0.PRE5 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.0.PRE4 release notes</H1>
+<H1>Squid 3.0.PRE5 release notes</H1>
 
-<H2>Squid Developers</H2>$Id: release-3.0.html,v 1.4 2006/06/19 22:52:58 hno Exp $
+<H2>Squid Developers</H2>$Id: release-3.0.html,v 1.5 2006/11/06 05:14:08 adrian Exp $
 <HR>
 <EM>This document contains the release notes for version 3.0 of Squid.
 Squid is a WWW Cache application developed by the National Laboratory
@@ -15,15 +15,14 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1. Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.0.PRE4 for pre-release testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.0.PRE5 for pre-release testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.0/">http://www.squid-cache.org/Versions/v3/3.0/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
-<P>This is the first PRE release since August 2003, and marks a renewed effort to push Squid-3.0 through to STABLE.</P>
-<P>While this release is not deemed ready for production use, we believe it is ready for wider testing by the community</P>
+<P>A large number of the show-stopper bugs have been fixed along with general improvements to the ICAP support.
+While this release is not deemed ready for production use, we believe it is ready for wider testing by the community.</P>
 <P>We welcome feedback and bug reports. If you find a bug, please see 
 <A HREF="http://www.squid-cache.org/Doc/FAQ/FAQ-11.html#ss11.19">http://www.squid-cache.org/Doc/FAQ/FAQ-11.html#ss11.19</A> for how to submit a report with a stack trace.</P>
-
 
 <H2><A NAME="s2">2. Known issues</A></H2>
 
@@ -31,10 +30,14 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <A HREF="http://www.squid-cache.org/bugs/buglist.cgi?query_format=advanced&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;target_milestone=3.0&amp;long_desc_type=allwordssubstr&amp;long_desc=&amp;bug_file_loc_type=allwordssubstr&amp;bug_file_loc=&amp;status_whiteboard_type=allwordssubstr&amp;status_whiteboard=&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;emailtype1=substring&amp;email1=&amp;emailtype2=substring&amp;email2=&amp;bugidtype=include&amp;bug_id=&amp;votes=&amp;chfieldfrom=&amp;chfieldto=Now&amp;chfieldvalue=&amp;cmdtype=doit&amp;order=bugs.bug_severity&amp;field0-0-0=noop&amp;type0-0-0=noop&amp;value0-0-0=">open bugs against Squid-3.0</A>.</P>
 <P>In particular, ESI may still be too buggy for meaningful testing at this stage.</P>
 
+<H2><A NAME="s3">3. Changes since Squid-3.0-PRE4</A></H2>
 
-<H2><A NAME="s3">3. Changes since Squid-2.5.STABLE14</A></H2>
+<P>The change history can be 
+<A HREF="http://www.squid-cache.org/Versions/v3/3.0/changesets/">viewed here</A>.</P>
 
-<H2><A NAME="ss3.1">3.1 Major new features</A>
+<H2><A NAME="s4">4. Changes since Squid-2.5.STABLE14</A></H2>
+
+<H2><A NAME="ss4.1">4.1 Major new features</A>
 </H2>
 
 <P>Squid 3.0 represents a major rewrite of Squid 2.5 and has a large number of new features.</P>
@@ -52,7 +55,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 </P>
 <P>Most user-facing changes are reflected in squid.conf (see below).</P>
 
-<H2><A NAME="ss3.2">3.2 Logging changes</A>
+<H2><A NAME="ss4.2">4.2 Logging changes</A>
 </H2>
 
 <H3>access.log</H3>
@@ -71,7 +74,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 
 
 
-<H2><A NAME="ss3.3">3.3 Changes to squid.conf</A>
+<H2><A NAME="ss4.3">4.3 Changes to squid.conf</A>
 </H2>
 
 <P>There have been many changes to Squid's configuration file since Squid-2.5.</P>

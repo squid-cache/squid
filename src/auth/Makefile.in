@@ -296,7 +296,7 @@ target_alias = @target_alias@
 
 #  Makefile for authentication modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.72 2006/09/06 19:38:27 serassio Exp $
+#  $Id: Makefile.in,v 1.73 2006/11/06 05:15:27 adrian Exp $
 #
 AUTOMAKE_OPTIONS = subdir-objects
 AM_CFLAGS = @SQUID_CFLAGS@
