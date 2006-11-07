@@ -17,9 +17,17 @@ Changes to squid-3.0 ():
 	- COSS now uses a file called stripe and the path in squid.conf is the
 	  directory this is placed in. Additionally squid -z will create the
 	  COSS swapfile.
-	- WCCPv2 support
+	- WCCPv2 support, including mask assignment support
 	- HTCP support for access control and the CRL operation for
 	  purgeing of cache content
+	- ICAP related fixes
+	- Windows-related fixes, including Vista and Longhorn identification
+	- Client-side parsing and some string use optimisations
+	- Lots of off-by-one and memory leaks in corner cases have been fixed
+	  thanks to valgrind
+	- Improved high-resolution profiling
+	- Windows overlapped-IO and thread support added to the Async IO disk code
+	- Improvements for handling large DNS replies
 
 Changes to squid-2.5 ():
 
