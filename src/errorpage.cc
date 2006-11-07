@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.219 2006/09/19 07:56:57 adrian Exp $
+ * $Id: errorpage.cc,v 1.220 2006/11/07 03:00:52 hno Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -873,7 +873,7 @@ errorBuildReply(ErrorState * err)
             httpHeaderPutStrf(&rep->header, HDR_LOCATION, name, quoted_url);
         }
 
-        httpHeaderPutStrf(&rep->header, HDR_X_SQUID_ERROR, "%d %s\n", err->httpStatus, "Access Denied");
+        httpHeaderPutStrf(&rep->header, HDR_X_SQUID_ERROR, "%d %s", err->httpStatus, "Access Denied");
     } else {
         MemBuf *content = errorBuildContent(err);
         rep->setHeaders(version, err->httpStatus, NULL, "text/html", content->contentSize(), 0, squid_curtime);
