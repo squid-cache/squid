@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.93 2006/09/22 02:48:51 hno Exp $
+ * $Id: snmp_agent.cc,v 1.94 2006/11/09 16:35:32 hno Exp $
  *
  * DEBUG: section 49     SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -578,7 +578,7 @@ snmp_prfProtoFn(variable_list * Var, snint * ErrP)
 
 	case PERF_MEDIAN_HTTP_NH:
 	    x = statHistDeltaMedian(&l->client_http.nh_svc_time,
-				    &f->client_http.nm_svc_time);
+				    &f->client_http.nh_svc_time);
 	    break;
 
         default:
