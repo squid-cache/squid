@@ -308,7 +308,7 @@ manage_request()
 	    SEND("NA Broken authentication packet");
 	    return;
 	}
-	switch le32toh(fast_header->type) {
+	switch (le32toh(fast_header->type)) {
 	case NTLM_NEGOTIATE:
 	    SEND("NA Invalid negotiation request received");
 	    return;
