@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp2.cc,v 1.10 2006/11/01 19:22:10 serassio Exp $
+ * $Id: wccp2.cc,v 1.11 2006/11/22 06:07:54 adrian Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Steven Wilton
@@ -1481,7 +1481,7 @@ wccp2HandleUdp(int sock, void *not_used)
             eventDelete(wccp2AssignBuckets, NULL);
             eventAdd("wccp2AssignBuckets", wccp2AssignBuckets, NULL, 15.0, 1);
         } else {
-            debug(80, 5) ("Change not detected (%d = %d)\n", ntohl(router_view_header->change_number), router_list_ptr->member_change);
+            debug(80, 5) ("Change not detected (%d = %d)\n", (int) ntohl(router_view_header->change_number), router_list_ptr->member_change);
         }
     } else {
         eventDelete(wccp2AssignBuckets, NULL);
