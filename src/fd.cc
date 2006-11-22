@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.54 2006/05/08 23:38:33 robertc Exp $
+ * $Id: fd.cc,v 1.55 2006/11/22 07:43:26 adrian Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -112,19 +112,31 @@ fd_close(int fd)
 int
 socket_read_method(int fd, char *buf, int len)
 {
-    return (recv(fd, (void *) buf, len, 0));
+    int i;
+    PROF_start(send);
+    i = recv(fd, (void *) buf, len, 0);
+    PROF_stop(send);
+    return i;
 }
 
 int
 file_read_method(int fd, char *buf, int len)
 {
-    return (_read(fd, buf, len));
+    int i;
+    PROF_start(read);
+    i = _read(fd, buf, len));
+    PROF_stop(read);
+    return i;
 }
 
 int
 socket_write_method(int fd, const char *buf, int len)
 {
-    return (send(fd, (const void *) buf, len, 0));
+    int i;
+    PROF_start(send);
+    i = send(fd, (const void *) buf, len, 0);
+    PROF_stop(send);
+    return i;
 }
 
 int
@@ -137,13 +149,21 @@ file_write_method(int fd, const char *buf, int len)
 int
 default_read_method(int fd, char *buf, int len)
 {
-    return (read(fd, buf, len));
+    int i;
+    PROF_start(read);
+    i = read(fd, buf, len);
+    PROF_stop(read);
+    return i;
 }
 
 int
 default_write_method(int fd, const char *buf, int len)
 {
-    return (write(fd, buf, len));
+    int i;
+    PROF_start(write);
+    i = write(fd, buf, len);
+    PROF_stop(write);
+    return i;
 }
 
 #endif
