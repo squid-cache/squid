@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_kqueue.cc,v 1.12 2006/09/02 10:43:10 adrian Exp $
+ * $Id: comm_kqueue.cc,v 1.13 2006/11/22 06:08:32 adrian Exp $
  *
  * DEBUG: section 5    Socket functions
  *
@@ -100,11 +100,6 @@ kq_update_events(int fd, short filter, PF * handler)
     PF *cur_handler;
     int kep_flags;
 
-#if 0
-
-    int retval;
-#endif
-
     switch (filter) {
 
     case EVFILT_READ:
@@ -136,10 +131,11 @@ kq_update_events(int fd, short filter, PF * handler)
 
         EV_SET(kep, (uintptr_t) fd, filter, kep_flags, 0, 0, 0);
 
-        if (kqoff == kqmax) {
+	/* Check if we've used the last one. If we have then submit them all */
+        if (kqoff == kqmax - 1) {
             int ret;
 
-            ret = kevent(kq, kqlst, kqoff, NULL, 0, &zero_timespec);
+            ret = kevent(kq, kqlst, kqmax, NULL, 0, &zero_timespec);
             /* jdc -- someone needs to do error checking... */
 
             if (ret == -1) {
@@ -151,18 +147,6 @@ kq_update_events(int fd, short filter, PF * handler)
         } else {
             kqoff++;
         }
-
-#if 0
-        if (retval < 0) {
-            /* Error! */
-
-            if (ke.flags & EV_ERROR) {
-                errno = ke.data;
-            }
-        }
-
-#endif
-
     }
 }
 
@@ -248,12 +232,6 @@ comm_select(int msec)
     static struct kevent ke[KE_LENGTH];
 
     struct timespec poll_time;
-
-    /*
-     * remember we are doing NANOseconds here, not micro/milli. God knows
-     * why jlemon used a timespec, but hey, he wrote the interface, not I
-     *   -- Adrian
-     */
 
     if (msec > max_poll_time)
         msec = max_poll_time;
