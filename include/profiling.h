@@ -80,6 +80,15 @@ typedef enum {
     XPROF_xstrndup,
     XPROF_xstrncpy,
     XPROF_xcountws,
+    XPROF_socket,
+    XPROF_read,
+    XPROF_write,
+    XPROF_send,
+    XPROF_recv,
+    XPROF_sendto,
+    XPROF_recvfrom,
+    XPROF_accept,
+    XPROF_connect,
     XPROF_memPoolChunkNew,
     XPROF_memPoolAlloc,
     XPROF_memPoolFree,
@@ -155,6 +164,8 @@ typedef enum {
     XPROF_HttpHeader_findEntry,
     XPROF_HttpHeader_getCc,
     XPROF_HttpHeader_getRange,
+    XPROF_checkTimeouts,
+    XPROF_CommSelect,
     XPROF_LAST
 } xprof_type;
 
@@ -172,6 +183,7 @@ struct _xprof_stats_data
     hrtime_t best;
     hrtime_t worst;
     hrtime_t count;
+    hrtime_t accum;
     int64_t summ;
 };
 
@@ -186,7 +198,6 @@ typedef xprof_stats_node TimersArray[1];
 
 /* public Data */
 SQUIDCEXTERN TimersArray *xprof_Timers;
-SQUIDCEXTERN int xprof_nesting;
 
 /* Exported functions */
 SQUIDCEXTERN void xprof_start(xprof_type type, const char *timer);
