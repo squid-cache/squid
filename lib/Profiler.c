@@ -1,6 +1,6 @@
 
 /*
- * $Id: Profiler.c,v 1.5 2004/12/21 17:28:28 robertc Exp $
+ * $Id: Profiler.c,v 1.6 2006/11/22 06:07:16 adrian Exp $
  *
  * DEBUG: section 81     CPU Profiling Routines
  * AUTHOR: Andres Kroonmaa, Sep.2000
@@ -107,6 +107,8 @@
 
 #include "profiling.h"
 
+#include <assert.h>
+
 #ifdef USE_XPROF_STATS
 
 
@@ -121,9 +123,21 @@
 
 /* Exported Data */
 TimersArray *xprof_Timers = NULL;
-int xprof_nesting = 0;
 
 /* Private stuff */
+
+
+/* new stuff */
+#define	MAXSTACKDEPTH	512
+
+struct _callstack_entry {
+	int timer;		/* index into timers array */
+	const char *name;
+	hrtime_t start, stop, accum;
+};
+
+struct _callstack_entry cstack[MAXSTACKDEPTH];
+int cstack_head = 0;
 
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 static __inline void
@@ -132,7 +146,6 @@ static inline void
 #endif
 xprof_update(xprof_stats_data * head)
 {
-    head->delta = head->stop - head->start;
     if (head->delta < head->best)
 	head->best = head->delta;
     if (head->worst < head->delta)
@@ -155,33 +168,66 @@ xprof_InitLib(void)
     xprof_Timers[XPROF_PROF_UNACCOUNTED]->name = "PROF_UNACCOUNTED";
     xprof_Timers[XPROF_PROF_UNACCOUNTED]->accu.start = get_tick();
     xp_UNACCOUNTED = &xprof_Timers[XPROF_PROF_UNACCOUNTED]->accu;
+    cstack_head = 0;
     xprof_inited = 1;
 }
 
 void
 xprof_start(xprof_type type, const char *timer)
 {
+    hrtime_t tt = get_tick();
     if (!xprof_inited)
 	xprof_InitLib();
 
-    xprof_Timers[type]->accu.start = get_tick();
-    xprof_Timers[type]->name = timer;
+    /* If nested, stop current stack frame */
+    if (cstack_head > 0) {
+	cstack[cstack_head - 1].accum += get_tick() - cstack[cstack_head - 1].start;
+	cstack[cstack_head - 1].start = -1;
+    }
 
-    if (xprof_nesting++)
-	return;
-    xp_UNACCOUNTED->stop = xprof_Timers[type]->accu.start;
-    xprof_update(xp_UNACCOUNTED);
+    /* Are we at the first level? If so; stop the unaccounted timer */
+    if (cstack_head == 0) {
+    	assert(xp_UNACCOUNTED->start != -1);
+    	xp_UNACCOUNTED->delta = tt - xp_UNACCOUNTED->start;
+    	xp_UNACCOUNTED->start = -1;
+    	xprof_update(xp_UNACCOUNTED);
+    }
+
+    /* Allocate new stack frame */
+    cstack[cstack_head].start = tt;
+    cstack[cstack_head].stop = -1;
+    cstack[cstack_head].accum = 0;
+    cstack[cstack_head].timer = type;
+    cstack[cstack_head].name = timer;
+    cstack_head++;
+    assert(cstack_head < MAXSTACKDEPTH);
+
 }
 
 void
 xprof_stop(xprof_type type, const char *timer)
 {
-    xprof_Timers[type]->accu.stop = get_tick();
+    hrtime_t tt = get_tick();
+    assert(cstack_head > 0);
+    cstack_head--;
+    assert(cstack[cstack_head].timer == type);
+
+    /* Record timer details */
+    cstack[cstack_head].accum += tt - cstack[cstack_head].start;
+    xprof_Timers[type]->accu.delta = cstack[cstack_head].accum;
+    xprof_Timers[type]->name = timer;
+
+    /* Update */
     xprof_update(&xprof_Timers[type]->accu);
-    if (--xprof_nesting)
+
+    /* Restart previous timer if we're not at the top level */
+    if (cstack_head > 0) {
+	cstack[cstack_head - 1].start = tt;
+	cstack[cstack_head - 1].stop = 0;
 	return;
-    xp_UNACCOUNTED->start = xprof_Timers[type]->accu.stop;
-    xprof_nesting = 0;
+    }
+    /* Get here? We're at the top level; unaccounted */
+    xp_UNACCOUNTED->start = tt;
 }
 
 #endif /* USE_XPROF_STATS */
