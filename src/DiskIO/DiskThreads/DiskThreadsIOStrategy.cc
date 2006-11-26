@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsIOStrategy.cc,v 1.9 2006/09/03 21:05:20 hno Exp $
+ * $Id: DiskThreadsIOStrategy.cc,v 1.10 2006/11/25 20:12:38 serassio Exp $
  *
  * DEBUG: section 79    Squid-side Disk I/O functions.
  * AUTHOR: Robert Collins
@@ -259,7 +259,7 @@ DiskThreadsIOStrategy::unlinkFile(char const *path)
     statCounter.syscalls.disk.unlinks++;
 #if USE_TRUNCATE
 
-    aioTruncate(path, NULL, NULL);
+    aioTruncate(path, 0, NULL, NULL);
 #else
 
     aioUnlink(path, NULL, NULL);
