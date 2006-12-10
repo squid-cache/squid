@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.142 2006/08/21 00:50:41 robertc Exp $
+ * $Id: peer_select.cc,v 1.143 2006/12/10 05:25:53 hno Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -695,7 +695,7 @@ static void
 peerHandleHtcpReply(peer * p, peer_t type, htcpReplyData * htcp, void *data)
 {
     ps_state *psstate = (ps_state *)data;
-    debug(44, 3) ("peerHandleIcpReply: %s %s\n",
+    debug(44, 3) ("peerHandleHtcpReply: %s %s\n",
                   htcp->hit ? "HIT" : "MISS",
                   storeUrl(psstate->entry));
     psstate->ping.n_recv++;
