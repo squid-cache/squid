@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.501 2006/10/08 13:10:34 serassio Exp $
+ * $Id: cache_cf.cc,v 1.502 2006/12/14 01:36:01 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -2583,6 +2583,7 @@ parse_sockaddr_in_list_token(sockaddr_in_list ** head, char *token)
 {
     char *t;
     char *host;
+    char *tmp;
 
     const struct hostent *hp;
     unsigned short port;
@@ -2599,10 +2600,11 @@ parse_sockaddr_in_list_token(sockaddr_in_list ** head, char *token)
 
         if (0 == port)
             self_destruct();
-    } else if ((port = xatoi(token)) > 0) {
+    } else if ((port = strtol(token, &tmp, 10)), !*tmp) {
         /* port */
     } else {
-        self_destruct();
+        host = token;
+	port = 0;
     }
 
     s = static_cast<sockaddr_in_list *>(xcalloc(1, sizeof(*s)));
