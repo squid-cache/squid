@@ -112,8 +112,6 @@ Set Windows Service Command line options in Registry.
 No daemon mode.
 .IP -R
 Do not set REUSEADDR on port.
-.IP -V
-Virtual host httpd-accelerator.
 .IP -X
 Force full debugging.
 .IP -Y

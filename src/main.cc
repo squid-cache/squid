@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.438 2006/10/24 04:48:10 wessels Exp $
+ * $Id: main.cc,v 1.439 2006/12/21 00:34:51 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -252,7 +252,7 @@ mainParseOptions(int argc, char *argv[])
     while ((c = getopt(argc, argv, "CDFNO:RSVYXa:d:f:hik:m::n:rsl:u:vz?")) != -1)
 #else
 
-    while ((c = getopt(argc, argv, "CDFNRSVYXa:d:f:hk:m::sl:u:vz?")) != -1)
+    while ((c = getopt(argc, argv, "CDFNRSYXa:d:f:hk:m::sl:u:vz?")) != -1)
 #endif
 
     {
@@ -289,23 +289,6 @@ mainParseOptions(int argc, char *argv[])
 
         case 'S':
             opt_store_doublecheck = 1;
-            break;
-
-        case 'V':
-
-            if (Config.Sockaddr.http)
-                Config.Sockaddr.http->vhost = 1;
-
-#if USE_SSL
-
-            else if (Config.Sockaddr.https)
-                Config.Sockaddr.https->http.vhost = 1;
-
-#endif
-
-            else
-                fatal("No http_port specified\n");
-
             break;
 
         case 'X':
