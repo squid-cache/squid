@@ -1,5 +1,5 @@
 /*
- * $Id: ACLARP.cc,v 1.22 2006/07/29 16:17:29 serassio Exp $
+ * $Id: ACLARP.cc,v 1.23 2006/12/21 20:01:00 serassio Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -67,7 +67,7 @@ struct arpreq
 #endif
 #include <net/route.h>
 #include <net/if.h>
-#if defined(_SQUID_FREEBSD_) || defined(_SQUID_OPENBSD_)
+#if defined(_SQUID_FREEBSD_) || defined(_SQUID_NETBSD_) || defined(_SQUID_OPENBSD_)
 #include <net/if_arp.h>
 #endif
 #if HAVE_NETINET_IF_ETHER_H
@@ -437,7 +437,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
         return (0 == splayLastResult);
     }
 
-#elif defined(_SQUID_FREEBSD_) || defined(_SQUID_OPENBSD_)
+#elif defined(_SQUID_FREEBSD_) || defined(_SQUID_NETBSD_) || defined(_SQUID_OPENBSD_)
 
     struct arpreq arpReq;
 
