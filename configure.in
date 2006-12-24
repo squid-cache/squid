@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.445 2006/12/21 20:12:26 serassio Exp $
+dnl  $Id: configure.in,v 1.446 2006/12/24 14:12:24 serassio Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.445 $)dnl
+AC_REVISION($Revision: 1.446 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -933,7 +933,7 @@ AC_ARG_ENABLE(ssl,
     case "$host_os" in
     mingw|mingw32)
         dnl Native Windows port of OpenSSL needs -lgdi32
-        SSLLIB='-lssl -lcrypto -lgdi32'
+        SSLLIB='-lssleay32 -leay32 -lgdi32'
         ;;
     *)
         SSLLIB='-lssl -lcrypto'
