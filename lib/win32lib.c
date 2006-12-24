@@ -1,6 +1,6 @@
 
 /*
- * $Id: win32lib.c,v 1.2 2006/09/09 15:29:59 serassio Exp $
+ * $Id: win32lib.c,v 1.3 2006/12/24 14:19:28 serassio Exp $
  *
  * Windows support
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
@@ -176,6 +176,7 @@ kill(pid_t pid, int sig)
 	return 0;
 }
 
+#ifndef HAVE_GETTIMEOFDAY
 int 
 gettimeofday(struct timeval *pcur_time, void *tzp)
 {
@@ -192,6 +193,7 @@ gettimeofday(struct timeval *pcur_time, void *tzp)
     }
     return 0;
 }
+#endif
 
 int 
 statfs(const char *path, struct statfs *sfs)

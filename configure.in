@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.446 2006/12/24 14:12:24 serassio Exp $
+dnl  $Id: configure.in,v 1.447 2006/12/24 14:19:27 serassio Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.446 $)dnl
+AC_REVISION($Revision: 1.447 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -2580,6 +2580,7 @@ AC_CHECK_FUNCS(\
 	getrlimit \
 	getrusage \
 	getspnam \
+	gettimeofday \
 	htobe16 \
 	htole16 \
 	lrand48 \
