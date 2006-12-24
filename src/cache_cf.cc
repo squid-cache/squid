@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.502 2006/12/14 01:36:01 hno Exp $
+ * $Id: cache_cf.cc,v 1.503 2006/12/24 13:43:08 serassio Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1499,6 +1499,11 @@ parse_peer(peer ** head)
 
     p->type = parseNeighborType(token);
 
+    if (p->type == PEER_MULTICAST) {
+        p->options.no_digest = 1;
+        p->options.no_netdb_exchange = 1;
+    }
+
     p->http_port = GetShort();
 
     if (!p->http_port)
@@ -2604,7 +2609,7 @@ parse_sockaddr_in_list_token(sockaddr_in_list ** head, char *token)
         /* port */
     } else {
         host = token;
-	port = 0;
+        port = 0;
     }
 
     s = static_cast<sockaddr_in_list *>(xcalloc(1, sizeof(*s)));
