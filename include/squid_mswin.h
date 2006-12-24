@@ -1,5 +1,5 @@
 /*
- * $Id: squid_mswin.h,v 1.2 2006/09/09 15:29:59 serassio Exp $
+ * $Id: squid_mswin.h,v 1.3 2006/12/24 14:19:28 serassio Exp $
  *
  * AUTHOR: Andrey Shorin <tolsty@tushino.com>
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
@@ -195,11 +195,13 @@ struct statfs {
    long    f_spare[6]; /* spare for later */
 };
 
+#ifndef HAVE_GETTIMEOFDAY
 struct timezone 
   {
     int	tz_minuteswest;	/* minutes west of Greenwich */
     int	tz_dsttime;	/* type of dst correction */
   };
+#endif
 
 #define CHANGE_FD_SETSIZE 1
 #if CHANGE_FD_SETSIZE && SQUID_MAXFD > DEFAULT_FD_SETSIZE
@@ -728,7 +730,9 @@ struct rusage {
 
 SQUIDCEXTERN int chroot (const char *);
 SQUIDCEXTERN int ftruncate(int, off_t);
+#ifndef HAVE_GETTIMEOFDAY
 SQUIDCEXTERN int gettimeofday(struct timeval * ,void *);
+#endif
 SQUIDCEXTERN int kill(pid_t, int);
 SQUIDCEXTERN int statfs(const char *, struct statfs *);
 SQUIDCEXTERN int truncate(const char *, off_t);
