@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1123.c,v 1.38 2006/01/22 17:12:52 serassio Exp $
+ * $Id: rfc1123.c,v 1.39 2006/12/24 15:29:43 serassio Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -117,9 +117,7 @@ tmSaneValues(struct tm *tm)
 	return 0;
     if (tm->tm_mon < 0 || tm->tm_mon > 11)
 	return 0;
-    if (tm->tm_year < 70 || tm->tm_year > 120)
-	return 0;
-    return 1;
+    return mktime(tm) != -1;
 }
 
 static struct tm *
