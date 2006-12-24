@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.341 2006/11/21 23:37:50 hno Exp $
+ * $Id: neighbors.cc,v 1.342 2006/12/24 13:30:16 serassio Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -694,11 +694,6 @@ neighborsUdpPing(HttpRequest * request,
         p->stats.pings_sent++;
 
         if (p->type == PEER_MULTICAST) {
-            /*
-             * set a bogus last_reply time so neighborUp() never
-             * says a multicast peer is dead.
-             */
-            p->stats.last_reply = squid_curtime;
             mcast_exprep += p->mcast.n_replies_expected;
             mcast_timeout += (p->stats.rtt * p->mcast.n_replies_expected);
         } else if (neighborUp(p)) {
@@ -724,7 +719,12 @@ neighborsUdpPing(HttpRequest * request,
 
         p->stats.last_query = squid_curtime;
 
-        if (p->stats.probe_start == 0)
+        /*
+         * keep probe_start == 0 for a multicast peer,
+         * so neighborUp() never says this peer is dead.
+         */
+
+        if ((p->type != PEER_MULTICAST) && (p->stats.probe_start == 0))
             p->stats.probe_start = squid_curtime;
     }
 
@@ -1248,18 +1248,18 @@ neighborUp(const peer * p)
             return 0;
     }
 
-    if (p->options.no_query)
-        return 1;
-
-    if (p->stats.probe_start != 0 &&
-            squid_curtime - p->stats.probe_start > Config.Timeout.deadPeer)
-        return 0;
-
     /*
      * The peer can not be UP if we don't have any IP addresses
      * for it. 
      */
     if (0 == p->n_addresses)
+        return 0;
+
+    if (p->options.no_query)
+        return 1;
+
+    if (p->stats.probe_start != 0 &&
+            squid_curtime - p->stats.probe_start > Config.Timeout.deadPeer)
         return 0;
 
     return 1;
