@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp2.cc,v 1.12 2006/12/24 13:52:40 serassio Exp $
+ * $Id: wccp2.cc,v 1.13 2006/12/24 15:24:12 serassio Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Steven Wilton
@@ -1877,6 +1877,12 @@ wccp2AssignBuckets(void *voidnotused)
 
                     value_element = (struct wccp2_value_element_t *) &wccp_packet[offset];
 
+                    /* Update the value according the the "correct" formula */
+
+                    for (value++; (value & 0x1741) != value; value++) {
+                        assert(value <= 0x1741);
+                    }
+
                     if ((service_flags & WCCP2_SERVICE_SRC_IP_HASH) || (service_flags & WCCP2_SERVICE_SRC_IP_ALT_HASH)) {
                         value_element->source_ip_value = htonl(value);
                         value_element->dest_ip_value = 0;
@@ -1904,14 +1910,10 @@ wccp2AssignBuckets(void *voidnotused)
                     value_element->cache_ip = cache_list_ptr->cache_ip;
 
                     offset += sizeof(struct wccp2_value_element_t);
-
-                    /* Update the value according the the "correct" formula */
-
-                    for (value++; (value & 0x1741) != value; value++) {
-                        assert(value <= 0x1741);
-                    }
+                    value++;
 
                     /* Assign the next value to the next cache */
+
                     if ((cache_list_ptr->next) && (cache_list_ptr->next->next))
                         cache_list_ptr = cache_list_ptr->next;
                     else
