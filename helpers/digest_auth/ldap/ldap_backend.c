@@ -642,7 +642,7 @@ LDAPHHA1(RequestData * requestData)
     password = getpassword(requestData->user, requestData->realm);
     if (password != NULL) {
 	if (encrpass)
-	    xstrncpy(requestData->HHA1, &password[6], sizeof(requestData->HHA1));
+	    xstrncpy(requestData->HHA1, password, sizeof(requestData->HHA1));
 	else {
 	    HASH HA1;
 	    DigestCalcHA1("md5", requestData->user, requestData->realm, password, NULL, NULL, HA1, requestData->HHA1);
