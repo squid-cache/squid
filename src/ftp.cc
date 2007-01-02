@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.408 2006/10/31 23:30:57 wessels Exp $
+ * $Id: ftp.cc,v 1.409 2007/01/01 21:40:33 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -598,7 +598,7 @@ FtpStateData::listingFinish()
                         flags.dir_slash ? rfc1738_escape_part(old_filepath) : ".");
     } else if (typecode == 'D') {
         const char *path = flags.dir_slash ? filepath : ".";
-        printfReplyBody("<A HREF=\"%s/\">[As extended directory]</A>\n", html_quote(path));
+        printfReplyBody("<A HREF=\"%s/\">[As extended directory]</A>\n", rfc1738_escape_part(path));
     }
 
     printfReplyBody("<HR noshade size=\"1px\">\n");
@@ -918,8 +918,8 @@ FtpStateData::htmlifyListEntry(const char *line)
         return html;
     }
 
-    if (flags.dir_slash)
-        snprintf(prefix, sizeof(prefix), "%s/", rfc1738_escape_part(dirpath));
+    if (flags.dir_slash && dirpath && typecode != 'D')
+        snprintf(prefix, 2048, "%s/", rfc1738_escape_part(dirpath));
     else
         prefix[0] = '\0';
 
