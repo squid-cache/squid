@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.cc,v 1.10 2007/01/03 12:40:41 hno Exp $
+ * $Id: AuthUserRequest.cc,v 1.11 2007/01/03 12:57:47 hno Exp $
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 6803fde1-d5a2-4c29-9034-1c0c9f650eb4
@@ -562,6 +562,10 @@ AuthUserRequest::tryToAuthenticateAndSetAuthUser(auth_user_request_t ** auth_use
         if (!*auth_user_request)
             *auth_user_request = t;
 
+	if (!request->auth_user_request && t->lastReply == AUTH_AUTHENTICATED) {
+	    request->auth_user_request = t;
+	    t->lock();
+	}
         return t->lastReply;
     }
 
@@ -651,7 +655,8 @@ AuthUserRequest::addReplyAuthHeader(HttpReply * rep, auth_user_request_t * auth_
     if (auth_user_request != NULL)
     {
         auth_user_request->addHeader(rep, accelerated);
-        auth_user_request->lastReply = AUTH_ACL_CANNOT_AUTHENTICATE;
+	if (auth_user_request->lastReply != AUTH_AUTHENTICATED)
+	    auth_user_request->lastReply = AUTH_ACL_CANNOT_AUTHENTICATE;
     }
 }
 
