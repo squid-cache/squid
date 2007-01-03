@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUser.h,v 1.2 2005/10/23 11:55:31 hno Exp $
+ * $Id: AuthUser.h,v 1.3 2007/01/03 12:40:41 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -52,8 +52,6 @@ public:
     /* we may have many proxy-authenticate strings that decode to the same user */
     dlink_list proxy_auth_list;
     dlink_list proxy_match_cache;
-    /* what ip addresses has this user been seen at?, plus a list length cache */
-    dlink_list ip_list;
     size_t ipcount;
     long expiretime;
     /* how many references are outstanding to this instance */
@@ -70,6 +68,8 @@ public:
     _SQUID_INLINE_ char const *username() const;
     _SQUID_INLINE_ void username(char const *);
     void clearIp();
+    void removeIp(struct IN_ADDR);
+    void addIp(struct IN_ADDR);
     _SQUID_INLINE_ void addRequest(AuthUserRequest *);
 
     void lock()
@@ -86,6 +86,9 @@ private:
     static void cacheCleanup (void *unused);
 
     char const *username_;
+
+    /* what ip addresses has this user been seen at?, plus a list length cache */
+    dlink_list ip_list;
 };
 
 #ifdef _USE_INLINE_
