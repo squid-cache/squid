@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.cc,v 1.9 2006/07/09 09:09:45 serassio Exp $
+ * $Id: AuthUserRequest.cc,v 1.10 2007/01/03 12:40:41 hno Exp $
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 6803fde1-d5a2-4c29-9034-1c0c9f650eb4
@@ -51,9 +51,6 @@
 #include "AuthScheme.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "SquidTime.h"
-
-CBDATA_TYPE(auth_user_ip_t);
 
 /* Generic Functions */
 
@@ -201,101 +198,25 @@ AuthUserRequest::denyMessage(char const * const default_message)
 }
 
 static void
-
 authenticateAuthUserRequestSetIp(auth_user_request_t * auth_user_request, struct IN_ADDR ipaddr)
 {
-    auth_user_ip_t *ipdata, *tempnode;
-    auth_user_t *auth_user;
-    char *ip1;
-    int found = 0;
-    CBDATA_INIT_TYPE(auth_user_ip_t);
+    auth_user_t *auth_user = auth_user_request->user();
 
-    if (!auth_user_request->user())
+    if (!auth_user)
         return;
 
-    auth_user = auth_user_request->user();
-
-    ipdata = (auth_user_ip_t *) auth_user->ip_list.head;
-
-    /*
-     * we walk the entire list to prevent the first item in the list
-     * preventing old entries being flushed and locking a user out after
-     * a timeout+reconfigure
-     */
-    while (ipdata)
-    {
-        tempnode = (auth_user_ip_t *) ipdata->node.next;
-        /* walk the ip list */
-
-        if (ipdata->ipaddr.s_addr == ipaddr.s_addr) {
-            /* This ip has alreadu been seen. */
-            found = 1;
-            /* update IP ttl */
-            ipdata->ip_expiretime = squid_curtime;
-        } else if (ipdata->ip_expiretime + Config.authenticateIpTTL < squid_curtime) {
-            /* This IP has expired - remove from the seen list */
-            dlinkDelete(&ipdata->node, &auth_user->ip_list);
-            cbdataFree(ipdata);
-            /* catch incipient underflow */
-            assert(auth_user->ipcount);
-            auth_user->ipcount--;
-        }
-
-        ipdata = tempnode;
-    }
-
-    if (found)
-        return;
-
-    /* This ip is not in the seen list */
-    ipdata = cbdataAlloc(auth_user_ip_t);
-
-    ipdata->ip_expiretime = squid_curtime;
-
-    ipdata->ipaddr = ipaddr;
-
-    dlinkAddTail(ipdata, &ipdata->node, &auth_user->ip_list);
-
-    auth_user->ipcount++;
-
-    ip1 = xstrdup(inet_ntoa(ipaddr));
-
-    debug(29, 2) ("authenticateAuthUserRequestSetIp: user '%s' has been seen at a new IP address (%s)\n", auth_user->username(), ip1);
-
-    safe_free(ip1);
+    auth_user->addIp(ipaddr);
 }
 
 void
-
 authenticateAuthUserRequestRemoveIp(auth_user_request_t * auth_user_request, struct IN_ADDR ipaddr)
 {
-    auth_user_ip_t *ipdata;
-    auth_user_t *auth_user;
+    auth_user_t *auth_user = auth_user_request->user();
 
-    if (!auth_user_request->user())
+    if (!auth_user)
         return;
 
-    auth_user = auth_user_request->user();
-
-    ipdata = (auth_user_ip_t *) auth_user->ip_list.head;
-
-    while (ipdata)
-    {
-        /* walk the ip list */
-
-        if (ipdata->ipaddr.s_addr == ipaddr.s_addr) {
-            /* remove the node */
-            dlinkDelete(&ipdata->node, &auth_user->ip_list);
-            cbdataFree(ipdata);
-            /* catch incipient underflow */
-            assert(auth_user->ipcount);
-            auth_user->ipcount--;
-            return;
-        }
-
-        ipdata = (auth_user_ip_t *) ipdata->node.next;
-    }
-
+    auth_user->removeIp(ipaddr);
 }
 
 void
