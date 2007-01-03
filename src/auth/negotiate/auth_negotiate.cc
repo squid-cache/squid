@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_negotiate.cc,v 1.11 2006/09/03 04:12:01 hno Exp $
+ * $Id: auth_negotiate.cc,v 1.12 2007/01/03 12:39:48 hno Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -617,7 +617,7 @@ AuthNegotiateConfig::decode(char const *proxy_auth)
 int
 AuthNegotiateUserRequest::authenticated() const
 {
-    if (auth_state == AUTHENTICATE_STATE_FINISHED) {
+    if (auth_state == AUTHENTICATE_STATE_DONE) {
         debug(29, 9) ("AuthNegotiateUserRequest::authenticated: user authenticated.\n");
         return 1;
     }

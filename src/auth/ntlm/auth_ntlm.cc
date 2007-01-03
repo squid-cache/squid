@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.60 2006/09/03 04:12:02 hno Exp $
+ * $Id: auth_ntlm.cc,v 1.61 2007/01/03 12:39:49 hno Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -548,7 +548,7 @@ AuthNTLMConfig::decode(char const *proxy_auth)
 int
 AuthNTLMUserRequest::authenticated() const
 {
-    if (auth_state == AUTHENTICATE_STATE_FINISHED) {
+    if (auth_state == AUTHENTICATE_STATE_DONE) {
         debug(29, 9) ("AuthNTLMUserRequest::authenticated: user authenticated.\n");
         return 1;
     }
