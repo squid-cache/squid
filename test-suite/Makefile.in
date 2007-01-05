@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.68 2006/11/06 05:15:29 adrian Exp $
+#  $Id: Makefile.in,v 1.69 2007/01/05 01:10:48 hno Exp $
 #
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -123,9 +123,7 @@ syntheticoperators_DEPENDENCIES = $(top_builddir)/src/globals.o \
 	$(top_builddir)/src/time.o
 tcp_banger2_SOURCES = tcp-banger2.c
 tcp_banger2_OBJECTS = tcp-banger2.$(OBJEXT)
-tcp_banger2_LDADD = $(LDADD)
-tcp_banger2_DEPENDENCIES = $(top_builddir)/src/globals.o \
-	$(top_builddir)/src/time.o
+tcp_banger2_DEPENDENCIES =
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
 am__depfiles_maybe = depfiles
@@ -383,6 +381,7 @@ TESTS = debug \
 	$(ESI_TESTS)
 
 LDADD = $(top_builddir)/src/globals.o $(top_builddir)/src/time.o -L$(top_builddir)/lib -lmiscutil
+tcp_banger2_LDADD = -L$(top_builddir)/lib -lmiscutil
 DEBUG_SOURCE = test_tools.cc
 debug_SOURCES = debug.cc $(DEBUG_SOURCE)
 ESIExpressions_SOURCES = ESIExpressions.cc $(DEBUG_SOURCE)
