@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.427 2006/11/04 15:44:58 hno Exp $
+# $Id: cf.data.pre,v 1.428 2007/01/13 16:08:19 hno Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -1813,7 +1813,7 @@ DOC_START
 	"program" cmdline
 	Specify the command for the external authenticator.  Such
 	a program reads a line containing "username":"realm" and
-	replies with the appropriate H(A1) value base64 encoded or
+	replies with the appropriate H(A1) value hex encoded or
 	ERR if the user (or his H(A1) hash) does not exists.
 	See rfc 2616 for the definition of H(A1).
 	"ERR" responses may optionally be followed by a error description
