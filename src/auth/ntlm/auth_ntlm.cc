@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.61 2007/01/03 12:39:49 hno Exp $
+ * $Id: auth_ntlm.cc,v 1.62 2007/01/20 21:13:59 hno Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -293,6 +293,7 @@ AuthNTLMConfig::fixHeader(auth_user_request_t *auth_user_request, HttpReply *rep
             /* fall through */
 
         case AUTHENTICATE_STATE_FINISHED:
+        case AUTHENTICATE_STATE_DONE:
             /* Special case: authentication finished OK but disallowed by ACL.
              * Need to start over to give the client another chance.
              */
