@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_negotiate.cc,v 1.12 2007/01/03 12:39:48 hno Exp $
+ * $Id: auth_negotiate.cc,v 1.13 2007/01/20 21:13:59 hno Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -317,6 +317,7 @@ AuthNegotiateConfig::fixHeader(auth_user_request_t *auth_user_request, HttpReply
             /* fall through */
 
         case AUTHENTICATE_STATE_FINISHED:
+        case AUTHENTICATE_STATE_DONE:
             /* Special case: authentication finished OK but disallowed by ACL.
              * Need to start over to give the client another chance.
              */
