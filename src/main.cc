@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.439 2006/12/21 00:34:51 hno Exp $
+ * $Id: main.cc,v 1.440 2007/01/25 20:26:11 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -1637,16 +1637,16 @@ SquidShutdown()
 #endif
 
     authenticateShutdown();
-#if USE_UNLINKD
-
-    unlinkdClose();
-#endif
 #if USE_WIN32_SERVICE
 
     WIN32_svcstatusupdate(SERVICE_STOP_PENDING, 10000);
 #endif
 
     Store::Root().sync(); /* Flush pending object writes/unlinks */
+#if USE_UNLINKD
+
+    unlinkdClose();	  /* after sync/flush */
+#endif
     storeDirWriteCleanLogs(0);
     PrintRusage();
     dumpMallocStats();
