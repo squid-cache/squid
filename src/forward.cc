@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.151 2006/09/13 15:54:21 adrian Exp $
+ * $Id: forward.cc,v 1.152 2007/01/28 15:37:46 serassio Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -199,7 +199,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
 
         if (answer == 0) {
             err_type page_id;
-            page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName);
+            page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, 1);
 
             if (page_id == ERR_NONE)
                 page_id = ERR_FORWARDING_DENIED;

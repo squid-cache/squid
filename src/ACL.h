@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACL.h,v 1.17 2006/08/21 00:50:40 robertc Exp $
+ * $Id: ACL.h,v 1.18 2007/01/28 15:37:46 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -52,7 +52,7 @@ SQUIDCEXTERN void aclDestroyAclList(acl_list **);
 SQUIDCEXTERN void aclParseAccessLine(ConfigParser &parser, acl_access **);
 SQUIDCEXTERN void aclParseAclList(ConfigParser &parser, acl_list **);
 SQUIDCEXTERN int aclIsProxyAuth(const char *name);
-SQUIDCEXTERN err_type aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name);
+SQUIDCEXTERN err_type aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name, int redirect_allowed);
 
 SQUIDCEXTERN void aclParseDenyInfoLine(struct _acl_deny_info_list **);
 

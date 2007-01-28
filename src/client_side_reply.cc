@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.114 2006/10/02 11:35:39 adrian Exp $
+ * $Id: client_side_reply.cc,v 1.115 2007/01/28 15:37:46 serassio Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1791,7 +1791,7 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
          *  upstream at this point. */
         ErrorState *err;
         err_type page_id;
-        page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName);
+        page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, 1);
 
         if (page_id == ERR_NONE)
             page_id = ERR_ACCESS_DENIED;

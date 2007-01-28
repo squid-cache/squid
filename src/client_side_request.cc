@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.77 2006/10/31 23:30:57 wessels Exp $
+ * $Id: client_side_request.cc,v 1.78 2007/01/28 15:37:46 serassio Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -251,7 +251,9 @@ ClientHttpRequest::~ClientHttpRequest()
      * - storeReleaseRequest was always called if entry was valid 
      */
     assert(logType < LOG_TYPE_MAX);
+
     logRequest();
+
     loggingEntry(NULL);
 
     if (request)
@@ -260,14 +262,18 @@ ClientHttpRequest::~ClientHttpRequest()
     freeResources();
 
 #if ICAP_CLIENT
+
     if (icap)
         delete icap;
+
 #endif
+
     if (calloutContext)
         delete calloutContext;
 
     /* moving to the next connection is handled by the context free */
     dlinkDelete(&active, &ClientActiveRequests);
+
     PROF_stop(httpRequestFree);
 }
 
@@ -418,21 +424,26 @@ ClientRequestContext::clientAccessCheckDone(int answer)
 
     if (answer != ACCESS_ALLOWED) {
         /* Send an error */
+        int require_auth = (answer == ACCESS_REQ_PROXY_AUTH || aclIsProxyAuth(AclMatchedName));
         debug(85, 5) ("Access Denied: %s\n", http->uri);
         debug(85, 5) ("AclMatchedName = %s\n",
                       AclMatchedName ? AclMatchedName : "<null>");
-        debug(85, 5) ("Proxy Auth Message = %s\n",
-                      proxy_auth_msg ? proxy_auth_msg : "<null>");
+
+        if (require_auth)
+            debug(33, 5) ("Proxy Auth Message = %s\n",
+                          proxy_auth_msg ? proxy_auth_msg : "<null>");
+
         /*
          * NOTE: get page_id here, based on AclMatchedName because if
          * USE_DELAY_POOLS is enabled, then AclMatchedName gets clobbered in
          * the clientCreateStoreEntry() call just below.  Pedro Ribeiro
          * <pribeiro@isel.pt>
          */
-        page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName);
+        page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, answer != ACCESS_REQ_PROXY_AUTH);
+
         http->logType = LOG_TCP_DENIED;
 
-        if (answer == ACCESS_REQ_PROXY_AUTH || aclIsProxyAuth(AclMatchedName)) {
+        if (require_auth) {
             if (!http->flags.accel) {
                 /* Proxy authorisation needed */
                 status = HTTP_PROXY_AUTHENTICATION_REQUIRED;
@@ -526,6 +537,7 @@ ClientRequestContext::icapAclCheckDone(ICAPServiceRep::Pointer service)
      * to the user, or keep going without ICAP.
      */
     fatal("Fix this case in ClientRequestContext::icapAclCheckDone()");
+
     // And when fixed, check whether the service is down in doIcap and
     // if it is, abort early, without creating ICAPClientReqmodPrecache.
     // See Server::startIcap() and its use.
