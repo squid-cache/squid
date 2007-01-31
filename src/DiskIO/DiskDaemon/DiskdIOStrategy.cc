@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskdIOStrategy.cc,v 1.5 2006/09/03 18:47:18 serassio Exp $
+ * $Id: DiskdIOStrategy.cc,v 1.6 2007/01/31 07:13:54 wessels Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -348,109 +348,59 @@ DiskdIOStrategy::handle(diomsg * M)
 int
 DiskdIOStrategy::send(int mtype, int id, DiskdFile *theFile, int size, int offset, off_t shm_offset, RefCountable_ *requestor)
 {
-    int x;
     diomsg M;
-    static int send_errors = 0;
-    static int last_seq_no = 0;
-    static int seq_no = 0;
-    M.mtype = mtype;
     M.callback_data = cbdataReference(theFile);
     theFile->RefCountReference();
     M.requestor = requestor;
+    M.newstyle = true;
 
     if (requestor)
         requestor->RefCountReference();
 
-    M.size = size;
-
-    M.offset = offset;
-
-    M.status = -1;
-
-    M.shm_offset = (int) shm_offset;
-
-    M.id = id;
-
-    M.seq_no = ++seq_no;
-
-    M.newstyle = true;
-
-    if (M.seq_no < last_seq_no)
-        debug(79, 1) ("WARNING: sequencing out of order\n");
-
-    debugs (79,9, "sending with" << smsgid <<" " << &M << " " <<diomsg::msg_snd_rcv_sz << " " << IPC_NOWAIT);
-
-    x = msgsnd(smsgid, &M, diomsg::msg_snd_rcv_sz, IPC_NOWAIT);
-
-    last_seq_no = M.seq_no;
-
-    if (0 == x) {
-        diskd_stats.sent_count++;
-        away++;
-    } else {
-        debug(79, 1) ("storeDiskdSend: msgsnd: %s\n", xstrerror());
-        cbdataReferenceDone(M.callback_data);
-        assert(++send_errors < 100);
-        shm.put (shm_offset);
-    }
-
-    /*
-     * We have to drain the queue here if necessary.  If we don't,
-     * then we can have a lot of messages in the queue (probably
-     * up to 2*magic1) and we can run out of shared memory buffers.
-     */
-    /*
-     * Note that we call Store::Root().callbackk (for all SDs), rather
-     * than callback for just this SD, so that while
-     * we're "blocking" on this SD we can also handle callbacks
-     * from other SDs that might be ready.
-     */
-
-    struct timeval delay = {0, 1};
-
-    while (away > magic2) {
-        select(0, NULL, NULL, NULL, &delay);
-        Store::Root().callback();
-
-        if (delay.tv_usec < 1000000)
-            delay.tv_usec <<= 1;
-    }
-
-    return x;
+    return SEND(&M, mtype, id, size, offset, shm_offset);
 }
 
 int
 DiskdIOStrategy::send(int mtype, int id, StoreIOState::Pointer sio, int size, int offset, off_t shm_offset)
 {
-    int x;
     diomsg M;
+    M.callback_data = cbdataReference(sio.getRaw());
+    M.newstyle = false;
+
+    return SEND(&M, mtype, id, size, offset, shm_offset);
+}
+
+int
+DiskdIOStrategy::SEND(diomsg *M, int mtype, int id, int size, int offset, off_t shm_offset)
+{
     static int send_errors = 0;
     static int last_seq_no = 0;
     static int seq_no = 0;
-    M.mtype = mtype;
-    M.callback_data = cbdataReference(sio.getRaw());
-    M.size = size;
-    M.offset = offset;
-    M.status = -1;
-    M.shm_offset = (int) shm_offset;
-    M.id = id;
-    M.seq_no = ++seq_no;
-    M.newstyle = false;
+    int x;
 
-    if (M.seq_no < last_seq_no)
+    M->mtype = mtype;
+    M->size = size;
+    M->offset = offset;
+    M->status = -1;
+    M->shm_offset = (int) shm_offset;
+    M->id = id;
+    M->seq_no = ++seq_no;
+
+    if (M->seq_no < last_seq_no)
         debug(79, 1) ("WARNING: sequencing out of order\n");
 
-    x = msgsnd(smsgid, &M, diomsg::msg_snd_rcv_sz, IPC_NOWAIT);
+    x = msgsnd(smsgid, M, diomsg::msg_snd_rcv_sz, IPC_NOWAIT);
 
-    last_seq_no = M.seq_no;
+    last_seq_no = M->seq_no;
 
     if (0 == x) {
         diskd_stats.sent_count++;
         away++;
     } else {
         debug(79, 1) ("storeDiskdSend: msgsnd: %s\n", xstrerror());
-        cbdataReferenceDone(M.callback_data);
+        cbdataReferenceDone(M->callback_data);
         assert(++send_errors < 100);
+        shm.put (shm_offset);
     }
 
     /*

@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskdIOStrategy.h,v 1.2 2006/05/22 19:58:51 wessels Exp $
+ * $Id: DiskdIOStrategy.h,v 1.3 2007/01/31 07:13:54 wessels Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -103,6 +103,7 @@ private:
     bool optionQ2Parse(char const *option, const char *value, int reconfiguring);
     void optionQ2Dump(StoreEntry * e) const;
     int send(int mtype, int id, RefCount<StoreIOState> sio, int size, int offset, off_t shm_offset);
+    int SEND(diomsg * M, int mtype, int id, int size, int offset, off_t shm_offset);
     void handle(diomsg * M);
     void unlinkDone(diomsg * M);
     int magic1;
