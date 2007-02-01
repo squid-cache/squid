@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.115 2007/01/28 15:37:46 serassio Exp $
+ * $Id: client_side_reply.cc,v 1.116 2007/01/31 23:58:25 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -452,7 +452,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
 
     HttpRequest *r = http->request;
 
-    debug(88, 3) ("clientCacheHit: %s, %ud bytes\n", http->uri, (unsigned int)result.length);
+    debug(88, 3) ("clientCacheHit: %s, %u bytes\n", http->uri, (unsigned int)result.length);
 
     if (http->storeEntry() == NULL) {
         debug(88, 3) ("clientCacheHit: request aborted\n");
