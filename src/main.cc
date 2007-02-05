@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.440 2007/01/25 20:26:11 wessels Exp $
+ * $Id: main.cc,v 1.441 2007/02/05 15:15:03 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -667,10 +667,8 @@ mainReconfigure(void)
 
     serverConnectionsOpen();
 
-    if (theOutIcpConnection >= 0) {
-        neighbors_init();
-        neighborsRegisterWithCacheManager(manager);
-    }
+    neighbors_init();
+    neighborsRegisterWithCacheManager(manager);
 
     storeDirOpenSwapLogs();
 
@@ -988,10 +986,8 @@ mainInitialize(void)
 
     serverConnectionsOpen();
 
-    if (theOutIcpConnection >= 0) {
-        neighbors_init();
-        neighborsRegisterWithCacheManager(manager);
-    }
+    neighbors_init();
+    neighborsRegisterWithCacheManager(manager);
 
     if (Config.chroot_dir)
         no_suid();
