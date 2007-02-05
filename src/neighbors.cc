@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.343 2006/12/24 13:43:08 serassio Exp $
+ * $Id: neighbors.cc,v 1.344 2007/02/05 15:16:31 hno Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -1328,6 +1328,8 @@ peerDNSConfigure(const ipcache_addrs * ia, void *data)
         return;
     }
 
+    p->tcp_up = PEER_TCP_MAGIC_COUNT;
+
     for (j = 0; j < (int) ia->count && j < PEER_MAX_ADDRESSES; j++) {
         p->addresses[j] = ia->in_addrs[j];
         debug(15, 2) ("--> IP address #%d: %s\n", j, inet_ntoa(p->addresses[j]));
@@ -1404,6 +1406,8 @@ peerConnectSucceded(peer * p)
         debug(15, 1) ("Detected REVIVED %s: %s\n",
                       neighborTypeStr(p), p->name);
         p->stats.logged_state = PEER_ALIVE;
+	if (!p->n_addresses)
+	    ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);
     }
 
     p->tcp_up = PEER_TCP_MAGIC_COUNT;
