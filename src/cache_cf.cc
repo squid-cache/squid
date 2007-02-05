@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.503 2006/12/24 13:43:08 serassio Exp $
+ * $Id: cache_cf.cc,v 1.504 2007/02/05 15:16:31 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1650,8 +1650,6 @@ parse_peer(peer ** head)
         p->weight = 1;
 
     p->icp.version = ICP_VERSION_CURRENT;
-
-    p->tcp_up = PEER_TCP_MAGIC_COUNT;
 
     p->test_fd = -1;
 
