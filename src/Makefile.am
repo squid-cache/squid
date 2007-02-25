@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.174 2007/02/25 11:32:27 hno Exp $
+#  $Id: Makefile.am,v 1.175 2007/02/25 11:41:22 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -867,7 +867,6 @@ ufsdump_SOURCES = \
 	URLScheme.cc \
 	urn.cc \
 	useragent.cc \
-	wais.cc \
 	wccp.cc \
 	wccp2.cc \
 	whois.cc \
@@ -1357,7 +1356,6 @@ tests_testCacheManager_SOURCES = \
 	URLScheme.cc \
 	urn.cc \
 	useragent.cc \
-	wais.cc \
 	wccp2.cc \
 	whois.cc \
 	$(WIN32_SOURCE) \
@@ -1521,7 +1519,6 @@ tests_testEvent_SOURCES = \
 	URLScheme.cc \
 	urn.cc \
 	useragent.cc \
-	wais.cc \
 	wccp2.cc \
 	whois.cc \
 	$(WIN32_SOURCE) \
@@ -1672,7 +1669,6 @@ tests_testEventLoop_SOURCES = \
 	URLScheme.cc \
 	urn.cc \
 	useragent.cc \
-	wais.cc \
 	wccp2.cc \
 	whois.cc \
 	$(WIN32_SOURCE) \
@@ -1853,7 +1849,6 @@ tests_test_http_range_SOURCES = \
 	URLScheme.cc \
 	urn.cc \
 	useragent.cc \
-	wais.cc \
 	wccp2.cc \
 	whois.cc \
 	$(WIN32_SOURCE) \
@@ -2005,7 +2000,6 @@ tests_testHttpRequest_SOURCES = \
 	URLScheme.cc \
 	urn.cc \
 	useragent.cc \
-	wais.cc \
 	wccp2.cc \
 	whois.cc \
 	$(WIN32_SOURCE) \
@@ -2338,7 +2332,6 @@ tests_testURL_SOURCES = \
 	SwapDir.cc \
 	urn.cc \
 	useragent.cc \
-	wais.cc \
 	wccp2.cc \
 	whois.cc \
 	$(WIN32_SOURCE) \
