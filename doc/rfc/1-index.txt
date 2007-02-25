@@ -3,12 +3,6 @@ draft-ietf-radext-digest-auth-06.txt
 	A proposed extension to Radius for Digest authentication
 	via RADIUS servers.
 	
-draft-jaganathan-kerberos-http-01.txt
-	HTTP Authentication: Kerberos Authentication
-	Microsoft Negotiate "HTTP" authentication scheme
-	Microsoft connection pinning HTTP extension to support
-	connection oriented authentication over proxies
-
 draft-cooper-webi-wpad-00.txt
 draft-ietf-svrloc-wpad-template-00.txt
 	Web Proxy Auto-Discovery Protocol -- WPAD
@@ -88,4 +82,10 @@ rfc3875.txt
 	CGI/1.1 specification
 	used by cachemgr to get it's request arguments from the
 	web server where it is hosted
+
+rfc4559.txt
+	HTTP Authentication: Kerberos Authentication
+	Microsoft Negotiate "HTTP" authentication scheme
+	Microsoft connection pinning HTTP extension to support
+	connection oriented authentication over proxies
 
