@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.413 2007/02/25 11:32:28 hno Exp $
+#  $Id: Makefile.in,v 1.414 2007/02/25 11:41:22 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -464,8 +464,8 @@ am__tests_testCacheManager_SOURCES_DIST = debug.cc globals.cc \
 	StoreIOState.cc StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
 	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
 	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc url.cc \
-	URLScheme.cc urn.cc useragent.cc wais.cc wccp2.cc whois.cc \
-	win32.cc wordlist.cc
+	URLScheme.cc urn.cc useragent.cc wccp2.cc whois.cc win32.cc \
+	wordlist.cc
 am_tests_testCacheManager_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	HttpRequest.$(OBJEXT) HttpRequestMethod.$(OBJEXT) \
 	mem.$(OBJEXT) String.$(OBJEXT) \
@@ -513,8 +513,8 @@ am_tests_testCacheManager_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
 	tools.$(OBJEXT) tunnel.$(OBJEXT) SwapDir.$(OBJEXT) \
 	url.$(OBJEXT) URLScheme.$(OBJEXT) urn.$(OBJEXT) \
-	useragent.$(OBJEXT) wais.$(OBJEXT) wccp2.$(OBJEXT) \
-	whois.$(OBJEXT) $(am__objects_25) wordlist.$(OBJEXT)
+	useragent.$(OBJEXT) wccp2.$(OBJEXT) whois.$(OBJEXT) \
+	$(am__objects_25) wordlist.$(OBJEXT)
 nodist_tests_testCacheManager_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testCacheManager_OBJECTS = $(am_tests_testCacheManager_OBJECTS) \
@@ -683,8 +683,8 @@ am__tests_testEvent_SOURCES_DIST = debug.cc EventLoop.h EventLoop.cc \
 	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
 	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
 	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc url.cc \
-	URLScheme.cc urn.cc useragent.cc wais.cc wccp2.cc whois.cc \
-	win32.cc wordlist.cc
+	URLScheme.cc urn.cc useragent.cc wccp2.cc whois.cc win32.cc \
+	wordlist.cc
 am_tests_testEvent_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	globals.$(OBJEXT) HttpRequest.$(OBJEXT) \
 	HttpRequestMethod.$(OBJEXT) mem.$(OBJEXT) \
@@ -732,9 +732,8 @@ am_tests_testEvent_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
 	StoreSwapLogData.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
 	SwapDir.$(OBJEXT) url.$(OBJEXT) URLScheme.$(OBJEXT) \
-	urn.$(OBJEXT) useragent.$(OBJEXT) wais.$(OBJEXT) \
-	wccp2.$(OBJEXT) whois.$(OBJEXT) $(am__objects_25) \
-	wordlist.$(OBJEXT)
+	urn.$(OBJEXT) useragent.$(OBJEXT) wccp2.$(OBJEXT) \
+	whois.$(OBJEXT) $(am__objects_25) wordlist.$(OBJEXT)
 nodist_tests_testEvent_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testEvent_OBJECTS = $(am_tests_testEvent_OBJECTS) \
@@ -785,8 +784,8 @@ am__tests_testEventLoop_SOURCES_DIST = debug.cc EventLoop.h \
 	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
 	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
 	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc url.cc \
-	URLScheme.cc urn.cc useragent.cc wais.cc wccp2.cc whois.cc \
-	win32.cc wordlist.cc
+	URLScheme.cc urn.cc useragent.cc wccp2.cc whois.cc win32.cc \
+	wordlist.cc
 am_tests_testEventLoop_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	globals.$(OBJEXT) HttpRequest.$(OBJEXT) \
 	HttpRequestMethod.$(OBJEXT) mem.$(OBJEXT) \
@@ -834,9 +833,8 @@ am_tests_testEventLoop_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
 	StoreSwapLogData.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
 	SwapDir.$(OBJEXT) url.$(OBJEXT) URLScheme.$(OBJEXT) \
-	urn.$(OBJEXT) useragent.$(OBJEXT) wais.$(OBJEXT) \
-	wccp2.$(OBJEXT) whois.$(OBJEXT) $(am__objects_25) \
-	wordlist.$(OBJEXT)
+	urn.$(OBJEXT) useragent.$(OBJEXT) wccp2.$(OBJEXT) \
+	whois.$(OBJEXT) $(am__objects_25) wordlist.$(OBJEXT)
 nodist_tests_testEventLoop_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testEventLoop_OBJECTS = $(am_tests_testEventLoop_OBJECTS) \
@@ -913,8 +911,8 @@ am__tests_testHttpRequest_SOURCES_DIST = debug.cc globals.cc \
 	StoreIOState.cc StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
 	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
 	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc url.cc \
-	URLScheme.cc urn.cc useragent.cc wais.cc wccp2.cc whois.cc \
-	win32.cc wordlist.cc
+	URLScheme.cc urn.cc useragent.cc wccp2.cc whois.cc win32.cc \
+	wordlist.cc
 am_tests_testHttpRequest_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	HttpRequest.$(OBJEXT) HttpRequestMethod.$(OBJEXT) \
 	mem.$(OBJEXT) String.$(OBJEXT) tests/testHttpRequest.$(OBJEXT) \
@@ -962,8 +960,8 @@ am_tests_testHttpRequest_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
 	tools.$(OBJEXT) tunnel.$(OBJEXT) SwapDir.$(OBJEXT) \
 	url.$(OBJEXT) URLScheme.$(OBJEXT) urn.$(OBJEXT) \
-	useragent.$(OBJEXT) wais.$(OBJEXT) wccp2.$(OBJEXT) \
-	whois.$(OBJEXT) $(am__objects_25) wordlist.$(OBJEXT)
+	useragent.$(OBJEXT) wccp2.$(OBJEXT) whois.$(OBJEXT) \
+	$(am__objects_25) wordlist.$(OBJEXT)
 nodist_tests_testHttpRequest_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testHttpRequest_OBJECTS = $(am_tests_testHttpRequest_OBJECTS) \
@@ -1095,7 +1093,7 @@ am__tests_testURL_SOURCES_DIST = debug.cc url.cc URLScheme.cc \
 	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
 	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
 	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc urn.cc \
-	useragent.cc wais.cc wccp2.cc whois.cc win32.cc wordlist.cc
+	useragent.cc wccp2.cc whois.cc win32.cc wordlist.cc
 am_tests_testURL_OBJECTS = debug.$(OBJEXT) url.$(OBJEXT) \
 	URLScheme.$(OBJEXT) globals.$(OBJEXT) HttpRequest.$(OBJEXT) \
 	HttpRequestMethod.$(OBJEXT) mem.$(OBJEXT) \
@@ -1143,8 +1141,8 @@ am_tests_testURL_OBJECTS = debug.$(OBJEXT) url.$(OBJEXT) \
 	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
 	StoreSwapLogData.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
 	SwapDir.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) \
-	wais.$(OBJEXT) wccp2.$(OBJEXT) whois.$(OBJEXT) \
-	$(am__objects_25) wordlist.$(OBJEXT)
+	wccp2.$(OBJEXT) whois.$(OBJEXT) $(am__objects_25) \
+	wordlist.$(OBJEXT)
 nodist_tests_testURL_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testURL_OBJECTS = $(am_tests_testURL_OBJECTS) \
@@ -1232,8 +1230,8 @@ am__tests_test_http_range_SOURCES_DIST = tests/test_http_range.cc \
 	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaUnpacker.cc \
 	StoreMetaURL.cc StoreMetaVary.cc StoreSwapLogData.cc String.cc \
 	SwapDir.cc time.cc tools.cc tunnel.cc url.cc URLScheme.cc \
-	urn.cc useragent.cc wais.cc wccp2.cc whois.cc win32.cc \
-	wordlist.cc Packer.cc MemBuf.cc
+	urn.cc useragent.cc wccp2.cc whois.cc win32.cc wordlist.cc \
+	Packer.cc MemBuf.cc
 am_tests_test_http_range_OBJECTS = tests/test_http_range.$(OBJEXT) \
 	access_log.$(OBJEXT) acl.$(OBJEXT) acl_noncore.$(OBJEXT) \
 	ACLChecklist.$(OBJEXT) ACLProxyAuth.$(OBJEXT) \
@@ -1279,9 +1277,8 @@ am_tests_test_http_range_OBJECTS = tests/test_http_range.$(OBJEXT) \
 	StoreSwapLogData.$(OBJEXT) String.$(OBJEXT) SwapDir.$(OBJEXT) \
 	time.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) url.$(OBJEXT) \
 	URLScheme.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) \
-	wais.$(OBJEXT) wccp2.$(OBJEXT) whois.$(OBJEXT) \
-	$(am__objects_25) wordlist.$(OBJEXT) Packer.$(OBJEXT) \
-	MemBuf.$(OBJEXT)
+	wccp2.$(OBJEXT) whois.$(OBJEXT) $(am__objects_25) \
+	wordlist.$(OBJEXT) Packer.$(OBJEXT) MemBuf.$(OBJEXT)
 nodist_tests_test_http_range_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_test_http_range_OBJECTS = $(am_tests_test_http_range_OBJECTS) \
@@ -1336,8 +1333,7 @@ am__ufsdump_SOURCES_DIST = debug.cc int.cc mem.cc store_key_md5.cc \
 	store_dir.cc store_log.cc store_rebuild.cc store_swapin.cc \
 	store_swapmeta.cc store_swapout.cc structs.h SwapDir.cc \
 	tools.cc typedefs.h unlinkd.cc URLScheme.cc urn.cc \
-	useragent.cc wais.cc wccp.cc wccp2.cc whois.cc wordlist.cc \
-	win32.cc
+	useragent.cc wccp.cc wccp2.cc whois.cc wordlist.cc win32.cc
 am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) mem.$(OBJEXT) \
 	store_key_md5.$(OBJEXT) StoreMeta.$(OBJEXT) \
 	StoreMetaMD5.$(OBJEXT) StoreMetaSTD.$(OBJEXT) \
@@ -1386,7 +1382,7 @@ am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) mem.$(OBJEXT) \
 	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
 	SwapDir.$(OBJEXT) tools.$(OBJEXT) $(am__objects_24) \
 	URLScheme.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) \
-	wais.$(OBJEXT) wccp.$(OBJEXT) wccp2.$(OBJEXT) whois.$(OBJEXT) \
+	wccp.$(OBJEXT) wccp2.$(OBJEXT) whois.$(OBJEXT) \
 	wordlist.$(OBJEXT) $(am__objects_25)
 nodist_ufsdump_OBJECTS = repl_modules.$(OBJEXT) globals.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
@@ -2434,7 +2430,6 @@ ufsdump_SOURCES = \
 	URLScheme.cc \
 	urn.cc \
 	useragent.cc \
-	wais.cc \
 	wccp.cc \
 	wccp2.cc \
 	whois.cc \
@@ -2794,7 +2789,6 @@ tests_testCacheManager_SOURCES = \
 	URLScheme.cc \
 	urn.cc \
 	useragent.cc \
-	wais.cc \
 	wccp2.cc \
 	whois.cc \
 	$(WIN32_SOURCE) \
@@ -2962,7 +2956,6 @@ tests_testEvent_SOURCES = \
 	URLScheme.cc \
 	urn.cc \
 	useragent.cc \
-	wais.cc \
 	wccp2.cc \
 	whois.cc \
 	$(WIN32_SOURCE) \
@@ -3115,7 +3108,6 @@ tests_testEventLoop_SOURCES = \
 	URLScheme.cc \
 	urn.cc \
 	useragent.cc \
-	wais.cc \
 	wccp2.cc \
 	whois.cc \
 	$(WIN32_SOURCE) \
@@ -3295,7 +3287,6 @@ tests_test_http_range_SOURCES = \
 	URLScheme.cc \
 	urn.cc \
 	useragent.cc \
-	wais.cc \
 	wccp2.cc \
 	whois.cc \
 	$(WIN32_SOURCE) \
@@ -3448,7 +3439,6 @@ tests_testHttpRequest_SOURCES = \
 	URLScheme.cc \
 	urn.cc \
 	useragent.cc \
-	wais.cc \
 	wccp2.cc \
 	whois.cc \
 	$(WIN32_SOURCE) \
@@ -3790,7 +3780,6 @@ tests_testURL_SOURCES = \
 	SwapDir.cc \
 	urn.cc \
 	useragent.cc \
-	wais.cc \
 	wccp2.cc \
 	whois.cc \
 	$(WIN32_SOURCE) \
@@ -4716,7 +4705,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/url.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/urn.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/useragent.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wais.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wccp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wccp2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/whois.Po@am__quote@
