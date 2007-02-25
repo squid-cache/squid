@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.412 2006/11/06 05:15:27 adrian Exp $
+#  $Id: Makefile.in,v 1.413 2007/02/25 11:32:28 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -72,7 +72,7 @@ am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 	$(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
+mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/include/autoconf.h
 CONFIG_CLEAN_FILES =
 LIBRARIES = $(noinst_LIBRARIES)
@@ -266,8 +266,8 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc \
 	StoreSwapLogData.cc StoreSwapLogData.h Server.cc Server.h \
 	structs.h SwapDir.cc SwapDir.h time.cc tools.cc tunnel.cc \
 	typedefs.h unlinkd.cc url.cc URL.h URLScheme.cc URLScheme.h \
-	urn.cc useragent.cc wais.cc wccp.cc wccp2.cc whois.cc \
-	wordlist.cc wordlist.h win32.cc WinSvc.cc
+	urn.cc useragent.cc wccp.cc wccp2.cc whois.cc wordlist.cc \
+	wordlist.h win32.cc WinSvc.cc
 am__objects_4 = ACLARP.$(OBJEXT)
 @ENABLE_ARP_ACL_TRUE@am__objects_5 = $(am__objects_4)
 am__objects_6 = $(am__objects_5) ACLASN.$(OBJEXT) ACLBrowser.$(OBJEXT) \
@@ -369,9 +369,9 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	StoreSwapLogData.$(OBJEXT) Server.$(OBJEXT) SwapDir.$(OBJEXT) \
 	time.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
 	$(am__objects_24) url.$(OBJEXT) URLScheme.$(OBJEXT) \
-	urn.$(OBJEXT) useragent.$(OBJEXT) wais.$(OBJEXT) \
-	wccp.$(OBJEXT) wccp2.$(OBJEXT) whois.$(OBJEXT) \
-	wordlist.$(OBJEXT) $(am__objects_25) $(am__objects_26)
+	urn.$(OBJEXT) useragent.$(OBJEXT) wccp.$(OBJEXT) \
+	wccp2.$(OBJEXT) whois.$(OBJEXT) wordlist.$(OBJEXT) \
+	$(am__objects_25) $(am__objects_26)
 nodist_squid_OBJECTS = repl_modules.$(OBJEXT) globals.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 squid_OBJECTS = $(am_squid_OBJECTS) $(nodist_squid_OBJECTS)
@@ -2189,7 +2189,6 @@ squid_SOURCES = \
 	URLScheme.h \
 	urn.cc \
 	useragent.cc \
-	wais.cc \
 	wccp.cc \
 	wccp2.cc \
 	whois.cc \

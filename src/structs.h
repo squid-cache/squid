@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.550 2006/11/01 19:22:10 serassio Exp $
+ * $Id: structs.h,v 1.551 2007/02/25 11:32:33 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -202,15 +202,6 @@ struct _SquidConfig
 
     Swap;
     size_t memMaxSize;
-
-    struct
-    {
-        char *relayHost;
-        u_short relayPort;
-        peer *_peer;
-    }
-
-    Wais;
 
     struct
     {
@@ -1234,7 +1225,7 @@ struct _iostats
         int write_hist[16];
     }
 
-    Http, Ftp, Gopher, Wais;
+    Http, Ftp, Gopher;
 };
 
 

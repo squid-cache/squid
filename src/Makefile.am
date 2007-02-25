@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.173 2006/11/01 19:55:29 serassio Exp $
+#  $Id: Makefile.am,v 1.174 2007/02/25 11:32:27 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -607,7 +607,6 @@ squid_SOURCES = \
 	URLScheme.h \
 	urn.cc \
 	useragent.cc \
-	wais.cc \
 	wccp.cc \
 	wccp2.cc \
 	whois.cc \

@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.398 2006/08/28 09:53:51 serassio Exp $
+ * $Id: stat.cc,v 1.399 2007/02/25 11:32:32 hno Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -228,17 +228,6 @@ stat_io_get(StoreEntry * sentry)
     }
 
     storeAppendPrintf(sentry, "\n");
-    storeAppendPrintf(sentry, "WAIS I/O\n");
-    storeAppendPrintf(sentry, "number of reads: %d\n", IOStats.Wais.reads);
-    storeAppendPrintf(sentry, "Read Histogram:\n");
-
-    for (i = 0; i < 16; i++) {
-        storeAppendPrintf(sentry, "%5d-%5d: %9d %2d%%\n",
-                          i ? (1 << (i - 1)) + 1 : 1,
-                          1 << i,
-                          IOStats.Wais.read_hist[i],
-                          percent(IOStats.Wais.read_hist[i], IOStats.Wais.reads));
-    }
 }
 
 static const char *
