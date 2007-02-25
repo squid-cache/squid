@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.143 2006/12/10 05:25:53 hno Exp $
+ * $Id: peer_select.cc,v 1.144 2007/02/25 11:32:32 hno Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -498,11 +498,11 @@ peerGetSomeDirect(ps_state * ps)
     if (ps->direct == DIRECT_NO)
         return;
 
+    /* WAIS is not implemented natively */
     if (ps->request->protocol == PROTO_WAIS)
-        /* Its not really DIRECT, now is it? */
-        peerAddFwdServer(&ps->servers, Config.Wais._peer, HIER_DIRECT);
-    else
-        peerAddFwdServer(&ps->servers, NULL, HIER_DIRECT);
+	return;
+
+    peerAddFwdServer(&ps->servers, NULL, HIER_DIRECT);
 }
 
 static void

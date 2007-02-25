@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.69 2006/10/31 23:30:56 wessels Exp $
+ * $Id: HttpRequest.cc,v 1.70 2007/02/25 11:32:27 hno Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -422,12 +422,6 @@ HttpRequest::cacheable() const
 {
     if (protocol == PROTO_HTTP)
         return httpCachable(method);
-
-    /* FTP is always cachable */
-
-    /* WAIS is never cachable */
-    if (protocol == PROTO_WAIS)
-        return 0;
 
     /*
      * The below looks questionable: what non HTTP protocols use connect,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.504 2007/02/05 15:16:31 hno Exp $
+ * $Id: cache_cf.cc,v 1.505 2007/02/25 11:32:29 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -542,19 +542,6 @@ configDoConfigure(void)
         debug(22, 1) ("WARNING: HTTP requires the use of Via\n");
 
 #endif
-
-    if (Config.Wais.relayHost) {
-        if (Config.Wais._peer)
-            cbdataFree(Config.Wais._peer);
-
-        CBDATA_INIT_TYPE_FREECB(peer, peerDestroy);
-
-        Config.Wais._peer = cbdataAlloc(peer);
-
-        Config.Wais._peer->host = xstrdup(Config.Wais.relayHost);
-
-        Config.Wais._peer->http_port = Config.Wais.relayPort;
-    }
 
     if (aclPurgeMethodInUse(Config.accessList.http))
         Config2.onoff.enable_purge = 1;

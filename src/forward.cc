@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.152 2007/01/28 15:37:46 serassio Exp $
+ * $Id: forward.cc,v 1.153 2007/02/25 11:32:32 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -904,10 +904,6 @@ FwdState::dispatch()
             ftpStart(this);
             break;
 
-        case PROTO_WAIS:
-            waisStart(this);
-            break;
-
         case PROTO_CACHEOBJ:
 
         case PROTO_INTERNAL:
@@ -920,6 +916,7 @@ FwdState::dispatch()
             whoisStart(this);
             break;
 
+        case PROTO_WAIS:	/* Not implemented */
         default:
             debug(17, 1) ("fwdDispatch: Cannot retrieve '%s'\n",
                           storeUrl(entry));

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.78 2007/01/28 15:37:46 serassio Exp $
+ * $Id: client_side_request.cc,v 1.79 2007/02/25 11:32:32 hno Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -614,9 +614,6 @@ clientHierarchical(ClientHttpRequest * http)
 
     if (request->protocol == PROTO_GOPHER)
         return gopherCachable(request);
-
-    if (request->protocol == PROTO_WAIS)
-        return 0;
 
     if (request->protocol == PROTO_CACHEOBJ)
         return 0;

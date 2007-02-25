@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.428 2007/01/13 16:08:19 hno Exp $
+# $Id: cf.data.pre,v 1.429 2007/02/25 11:32:29 hno Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -2088,21 +2088,6 @@ COMMENT_START
  OPTIONS FOR TUNING THE CACHE
  -----------------------------------------------------------------------------
 COMMENT_END
-
-NAME: wais_relay_host
-TYPE: string
-DEFAULT: none
-LOC: Config.Wais.relayHost
-DOC_NONE
-
-NAME: wais_relay_port
-TYPE: ushort
-DEFAULT: 0
-LOC: Config.Wais.relayPort
-DOC_START
-	Relay WAIS request to host (1st arg) at port (2 arg).
-DOC_END
-
 
 NAME: request_header_max_size
 COMMENT: (KB)
