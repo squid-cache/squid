@@ -1,5 +1,5 @@
 /*
- * $Id: ufscommon.cc,v 1.6 2006/08/19 12:31:24 robertc Exp $
+ * $Id: ufscommon.cc,v 1.7 2007/03/01 07:25:15 wessels Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store Directory Routines
@@ -373,7 +373,7 @@ RebuildState::rebuildFromSwapLog()
              */
             currentEntry (Store::Root().get(swapData.key));
 
-            if (currentEntry() != NULL && swapData.lastref > e->lastref) {
+            if (currentEntry() != NULL && swapData.lastref >= e->lastref) {
                 /*
                  * Make sure we don't unlink the file, it might be
                  * in use by a subsequent entry.  Also note that
