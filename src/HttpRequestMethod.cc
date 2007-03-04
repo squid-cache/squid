@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequestMethod.cc,v 1.1 2006/05/08 23:38:33 robertc Exp $
+ * $Id: HttpRequestMethod.cc,v 1.2 2007/03/03 18:25:05 hno Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -67,6 +67,9 @@ const char *RequestMethodStr[] =
         "UNSUBSCRIBE",
         "POLL",
         "REPORT",
+        "MKACTIVITY",
+        "CHECKOUT",
+        "MERGE",
         "%EXT00",
         "%EXT01",
         "%EXT02",

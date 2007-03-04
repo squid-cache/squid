@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequestMethod.h,v 1.3 2006/05/10 21:03:04 hno Exp $
+ * $Id: HttpRequestMethod.h,v 1.4 2007/03/03 18:25:05 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -64,6 +64,9 @@ enum _method_t {
     METHOD_UNSUBSCRIBE,
     METHOD_POLL,
     METHOD_REPORT,
+    METHOD_MKACTIVITY,
+    METHOD_CHECKOUT,
+    METHOD_MERGE,
     METHOD_EXT00,
     METHOD_EXT01,
     METHOD_EXT02,
