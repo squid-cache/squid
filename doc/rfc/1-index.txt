@@ -22,14 +22,14 @@ rfc0959.txt
 	FTP
 
 rfc1035.txt
-	DNS
+	DNS for IPv4
 
 rfc1738.txt
 	Uniform Resource Locators (URL)
 
 rfc1945.txt
 	Hypertext Transfer Protocol -- HTTP/1.0
-	
+
 rfc2186.txt
 rfc2187.txt
 	Internet Cache Protocol (ICP), version 2
@@ -61,6 +61,10 @@ rfc2818.txt
 	HTTP Over TLS
 	Documents the https:// scheme
 
+rfc2874.txt
+	DNS Extensions to Support IPv6 Address Aggregation and Renumbering
+	Documents IPv6 reverse DNS lookups.
+
 rfc2964.txt
 	Use of HTTP State Management
 	Cookies
@@ -68,6 +72,11 @@ rfc2964.txt
 rfc2965.txt
 	HTTP State Management Mechanism
 	Cookies
+
+rfc3226.txt
+	DNSSEC and IPv6 A6 aware server/resolver message size requirements
+	Documents resolver requirements for IPv6 DNS structures and handling
+	of advanced IPv6 lookups of A6 and DNAME records.
 
 rfc3310.txt
 	Updated Digest specification
@@ -77,6 +86,15 @@ rfc3310.txt
 rfc3507.txt
 	Internet Content Adaptation Protocol (ICAP/1.0)
 	Common protocol for plugging into the datastream of a HTTP proxy
+
+rfc3513.txt
+	Internet Protocol Version 6 (IPv6) Addressing Architecture
+	Documents handling requirements for IP addresses under IPv6
+        and also new special case addresses defined by IANA.
+
+rfc3596.txt
+	DNS Extensions to Support IP Version 6
+	Documents AAAA record details for basic IPv6 DNS resolvers.
 
 rfc3875.txt
 	CGI/1.1 specification
