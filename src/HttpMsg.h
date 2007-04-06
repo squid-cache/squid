@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.h,v 1.14 2006/10/02 01:34:18 adrian Exp $
+ * $Id: HttpMsg.h,v 1.15 2007/04/06 04:50:04 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,6 +37,7 @@
 #include "typedefs.h"
 #include "HttpHeader.h"
 #include "HttpVersion.h"
+#include "BodyPipe.h"
 
 // common parts of HttpRequest and HttpReply
 
@@ -71,6 +72,8 @@ public:
     protocol_t protocol;
 
     HttpMsgParseState pstate;   /* the current parsing state */
+
+    BodyPipe::Pointer body_pipe; // optional pipeline to receive message body
 
     // returns true and sets hdr_sz on success
     // returns false and sets *error to zero when needs more data

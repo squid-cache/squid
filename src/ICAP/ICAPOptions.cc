@@ -57,10 +57,16 @@ bool ICAPOptions::fresh() const
     return squid_curtime <= expire();
 }
 
+int ICAPOptions::ttl() const
+{
+    Must(valid());
+    return theTTL >= 0 ? theTTL : TheICAPConfig.default_options_ttl;
+}
+
 time_t ICAPOptions::expire() const
 {
     Must(valid());
-    return theTTL >= 0 ? theTimestamp + theTTL : -1;
+    return theTimestamp + ttl();
 }
 
 void ICAPOptions::configure(const HttpReply *reply)
@@ -91,9 +97,6 @@ void ICAPOptions::configure(const HttpReply *reply)
     cfgIntHeader(h, "Max-Connections", max_connections);
 
     cfgIntHeader(h, "Options-TTL", theTTL);
-
-    if (theTTL < 0)
-        theTTL = TheICAPConfig.default_options_ttl;
 
     theTimestamp = h->getTime(HDR_DATE);
 

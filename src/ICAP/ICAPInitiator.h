@@ -1,6 +1,6 @@
 
 /*
- * $Id: MsgPipeEnd.h,v 1.2 2005/11/21 23:46:27 wessels Exp $
+ * $Id: ICAPInitiator.h,v 1.1 2007/04/06 04:50:07 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -31,20 +31,29 @@
  *
  */
 
-#ifndef SQUID_MSGPIPEEND_H
-#define SQUID_MSGPIPEEND_H
+#ifndef SQUID_ICAPINITIATOR_H
+#define SQUID_ICAPINITIATOR_H
 
-// MsgPipeEnd is a common part of the MsgPipeSource and MsgPipeSink interfaces.
-// Mesage pipe ends must be refcounted so that the recepient does not disappear
-// while a message is being [asynchoronously] delivered to it.
+#include "AsyncCall.h"
 
-class MsgPipeEnd: public RefCountable
+/*
+ * The ICAP Initiator is an ICAP vectoring point that initates ICAP
+ * transactions. This interface exists to allow ICAP transactions to
+ * signal their initiators that they are finished or aborted.
+ */
+
+class ICAPXaction;
+
+class ICAPInitiator
 {
-
 public:
-    virtual ~MsgPipeEnd() {}
+    virtual ~ICAPInitiator() {}
 
-    virtual const char *kind() const = 0; // "sink" or "source", for debugging
+	virtual void noteIcapHeadersAdapted() = 0;
+	virtual void noteIcapHeadersAborted() = 0;
+
+	AsyncCallWrapper(93,4, ICAPInitiator, noteIcapHeadersAdapted);
+	AsyncCallWrapper(93,3, ICAPInitiator, noteIcapHeadersAborted);
 };
 
-#endif /* SQUID_MSGPIPEEND_H */
+#endif /* SQUID_ICAPINITIATOR_H */

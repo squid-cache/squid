@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.70 2007/02/25 11:32:27 hno Exp $
+ * $Id: HttpRequest.cc,v 1.71 2007/04/06 04:50:04 rousskov Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -86,7 +86,7 @@ HttpRequest::init()
     my_addr = no_addr;
     my_port = 0;
     client_port = 0;
-    body_reader = NULL;
+    body_pipe = NULL;
     // hier
     errType = ERR_NONE;
     peer_login = NULL;		// not allocated/deallocated by this class
@@ -102,8 +102,9 @@ HttpRequest::init()
 void
 HttpRequest::clean()
 {
-    if (body_reader != NULL)
-        fatal ("request being destroyed with body reader intact\n");
+    // we used to assert that the pipe is NULL, but now the request only 
+    // points to a pipe that is owned and initiated by another object.
+    body_pipe = NULL; 
 
     if (auth_user_request) {
         auth_user_request->unlock();
@@ -332,6 +333,16 @@ request_flags::destinationIPLookedUp() const
 {
     return destinationIPLookedUp_;
 }
+
+request_flags
+request_flags::cloneAdaptationImmune() const
+{
+    // At the time of writing, all flags where either safe to copy after
+    // adaptation or were not set at the time of the adaptation. If there
+    // are flags that are different, they should be cleared in the clone.
+    return *this;
+}
+
 
 const char *HttpRequest::packableURI(bool full_uri) const
 {

@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.175 2007/02/25 11:41:22 hno Exp $
+#  $Id: Makefile.am,v 1.176 2007/04/06 04:50:04 rousskov Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -411,6 +411,8 @@ squid_SOURCES = \
 	ACLChecklist.h \
 	$(squid_ACLSOURCES) \
 	asn.cc \
+	AsyncCall.cc \
+	AsyncCall.h \
 	AsyncEngine.cc \
 	AsyncEngine.h \
 	authenticate.cc \
@@ -429,8 +431,8 @@ squid_SOURCES = \
 	client_side_reply.h \
 	client_side_request.cc \
 	client_side_request.h \
-	BodyReader.cc \
-	BodyReader.h \
+	BodyPipe.cc \
+	BodyPipe.h \
 	ClientRequestContext.h \
 	clientStream.cc \
 	clientStream.h \
@@ -669,12 +671,9 @@ ICAP_libicap_a_SOURCES = \
  	ICAP/ChunkedCodingParser.h \
 	ICAP/ICAPClient.cc \
 	ICAP/ICAPClient.h \
-	ICAP/ICAPClientVector.cc \
-	ICAP/ICAPClientVector.h \
-	ICAP/ICAPClientReqmodPrecache.cc \
-	ICAP/ICAPClientReqmodPrecache.h \
-	ICAP/ICAPClientRespmodPrecache.cc \
-	ICAP/ICAPClientRespmodPrecache.h \
+	ICAP/ICAPInitiator.cc \
+	ICAP/ICAPInitiator.h \
+	ICAP/ICAPInOut.h \
 	ICAP/ICAPConfig.cc \
 	ICAP/ICAPConfig.h \
 	ICAP/ICAPElements.cc \
@@ -689,12 +688,6 @@ ICAP_libicap_a_SOURCES = \
 	ICAP/ICAPServiceRep.h \
 	ICAP/ICAPXaction.cc \
 	ICAP/ICAPXaction.h \
-	ICAP/MsgPipe.cc \
-	ICAP/MsgPipe.h \
-	ICAP/MsgPipeData.h \
-	ICAP/MsgPipeEnd.h \
-	ICAP/MsgPipeSink.h \
-	ICAP/MsgPipeSource.h \
 	ICAP/TextException.cc \
 	ICAP/TextException.h
 
@@ -739,7 +732,10 @@ ufsdump_SOURCES = \
 	time.cc \
 	ufsdump.cc \
 	url.cc \
-	BodyReader.cc \
+	AsyncCall.cc \
+	AsyncCall.h \
+	BodyPipe.cc \
+	BodyPipe.h \
 	ConfigParser.cc \
 	store.cc \
 	StoreFileSystem.cc \
@@ -1254,7 +1250,7 @@ tests_testCacheManager_SOURCES = \
 	ACLRegexData.cc \
 	ACLUserData.cc \
 	authenticate.cc \
-	BodyReader.cc \
+	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.cc \
 	CacheDigest.cc \
@@ -1418,7 +1414,7 @@ tests_testEvent_SOURCES = \
 	ACLRegexData.cc \
 	ACLUserData.cc \
 	authenticate.cc \
-	BodyReader.cc \
+	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.cc \
 	CacheDigest.cc \
@@ -1568,7 +1564,7 @@ tests_testEventLoop_SOURCES = \
 	ACLRegexData.cc \
 	ACLUserData.cc \
 	authenticate.cc \
-	BodyReader.cc \
+	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.cc \
 	CacheDigest.cc \
@@ -1742,7 +1738,7 @@ tests_test_http_range_SOURCES = \
 	ACLRegexData.cc \
 	ACLUserData.cc \
 	authenticate.cc \
-	BodyReader.cc \
+	BodyPipe.cc \
 	cache_cf.cc \
 	cache_manager.cc \
 	CacheDigest.cc \
@@ -1898,7 +1894,7 @@ tests_testHttpRequest_SOURCES = \
 	ACLRegexData.cc \
 	ACLUserData.cc \
 	authenticate.cc \
-	BodyReader.cc \
+	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.cc \
 	CacheDigest.cc \
@@ -2233,7 +2229,7 @@ tests_testURL_SOURCES = \
 	ACLRegexData.cc \
 	ACLUserData.cc \
 	authenticate.cc \
-	BodyReader.cc \
+	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.cc \
 	CacheDigest.cc \

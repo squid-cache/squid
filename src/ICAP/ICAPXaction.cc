@@ -4,20 +4,21 @@
 
 #include "squid.h"
 #include "comm.h"
-#include "HttpReply.h"
+#include "HttpMsg.h"
 #include "ICAPXaction.h"
-#include "ICAPClient.h"
 #include "TextException.h"
 #include "pconn.h"
 #include "fde.h"
 
 static PconnPool *icapPconnPool = new PconnPool("ICAP Servers");
 
+int ICAPXaction::TheLastId = 0;
+
+//CBDATA_CLASS_INIT(ICAPXaction);
+
 /* comm module handlers (wrappers around corresponding ICAPXaction methods */
 
 // TODO: Teach comm module to call object methods directly
-
-//CBDATA_CLASS_INIT(ICAPXaction);
 
 static
 ICAPXaction &ICAPXaction_fromData(void *data)
@@ -58,7 +59,15 @@ void ICAPXaction_noteCommRead(int, char *, size_t size, comm_err_t status, int x
     ICAPXaction_fromData(data).noteCommRead(status, size);
 }
 
+ICAPXaction *ICAPXaction::AsyncStart(ICAPXaction *x) {
+    assert(x != NULL);
+    x->self = x; // yes, this works with the current RefCount cimplementation
+    AsyncCall(93,5, x, ICAPXaction::start);
+    return x;
+}
+
 ICAPXaction::ICAPXaction(const char *aTypeName):
+        id(++TheLastId),
         connection(-1),
         commBuf(NULL), commBufSize(0),
         commEof(false),
@@ -68,19 +77,26 @@ ICAPXaction::ICAPXaction(const char *aTypeName):
         theService(NULL),
         inCall(NULL)
 {
-    debug(93,3)("%s constructed, this=%p\n", typeName, this);
-    readBuf.init(SQUID_TCP_SO_RCVBUF, SQUID_TCP_SO_RCVBUF);
-    commBuf = (char*)memAllocBuf(SQUID_TCP_SO_RCVBUF, &commBufSize);
-    // make sure maximum readBuf space does not exceed commBuf size
-    Must(static_cast<size_t>(readBuf.potentialSpaceSize()) <= commBufSize);
+    debugs(93,3, typeName << " constructed, this=" << this <<
+        " [icapx" << id << ']'); // we should not call virtual status() here
 }
 
 ICAPXaction::~ICAPXaction()
 {
-    debug(93,3)("%s destructing, this=%p\n", typeName, this);
-    doStop();
-    readBuf.clean();
-    memFreeBuf(commBufSize, commBuf);
+    debugs(93,3, typeName << " destructed, this=" << this <<
+        " [icapx" << id << ']'); // we should not call virtual status() here
+}
+
+void ICAPXaction::start()
+{
+    debugs(93,3, HERE << typeName << " starts" << status());
+
+    Must(self != NULL); // set by AsyncStart;
+
+    readBuf.init(SQUID_TCP_SO_RCVBUF, SQUID_TCP_SO_RCVBUF);
+    commBuf = (char*)memAllocBuf(SQUID_TCP_SO_RCVBUF, &commBufSize);
+    // make sure maximum readBuf space does not exceed commBuf size
+    Must(static_cast<size_t>(readBuf.potentialSpaceSize()) <= commBufSize);
 }
 
 // TODO: obey service-specific, OPTIONS-reported connection limit
@@ -92,6 +108,7 @@ void ICAPXaction::openConnection()
 
     if (connection >= 0) {
         debugs(93,3, HERE << "reused pconn FD " << connection);
+        connector = &ICAPXaction_noteCommConnected; // make doneAll() false
         eventAdd("ICAPXaction::reusedConnection",
                  reusedConnection,
                  this,
@@ -130,10 +147,6 @@ ICAPXaction::reusedConnection(void *data)
 {
     debug(93,5)("ICAPXaction::reusedConnection\n");
     ICAPXaction *x = (ICAPXaction*)data;
-    /*
-     * XXX noteCommConnected Must()s that connector is set to something;
-     */
-    x->connector = &ICAPXaction_noteCommConnected;
     x->noteCommConnected(COMM_OK);
 }
 
@@ -148,17 +161,17 @@ void ICAPXaction::closeConnection()
 
         cancelRead(); // may not work
 
-        if (reuseConnection && (writer || reader)) {
-            debugs(93,5, HERE << "not reusing pconn due to pending I/O " << status());
+        if (reuseConnection && !doneWithIo()) {
+            debugs(93,5, HERE << "not reusing pconn due to pending I/O" << status());
             reuseConnection = false;
         }
 
         if (reuseConnection) {
-            debugs(93,3, HERE << "pushing pconn " << status());
+            debugs(93,3, HERE << "pushing pconn" << status());
             commSetTimeout(connection, -1, NULL, NULL);
             icapPconnPool->push(connection, theService->host.buf(), theService->port, NULL);
         } else {
-            debugs(93,3, HERE << "closing pconn " << status());
+            debugs(93,3, HERE << "closing pconn" << status());
             // comm_close will clear timeout
             comm_close(connection);
         }
@@ -388,7 +401,7 @@ bool ICAPXaction::doneWithIo() const
 
 void ICAPXaction::mustStop(const char *aReason)
 {
-    Must(inCall); // otherwise nobody will call doStop()
+    Must(inCall); // otherwise nobody will delete us if we are done()
     Must(aReason);
     if (!stopReason) {
         stopReason = aReason;
@@ -398,12 +411,22 @@ void ICAPXaction::mustStop(const char *aReason)
     }
 }
 
-// internal cleanup
-void ICAPXaction::doStop()
+// This 'last chance' method is called before a 'done' transaction is deleted.
+// It is wrong to call virtual methods from a destructor. Besides, this call
+// indicates that the transaction will terminate as planned.
+void ICAPXaction::swanSong()
 {
-    debugs(93, 5, typeName << "::doStop " << status());
+    // kids should sing first and then call the parent method.
 
-    closeConnection(); // TODO: pconn support: close iff bad connection
+    closeConnection(); // TODO: rename because we do not always close
+
+    if (!readBuf.isNull())
+        readBuf.clean();
+
+    if (commBuf)
+        memFreeBuf(commBufSize, commBuf);
+
+    debugs(93, 5, HERE << "swan sang" << status());
 }
 
 void ICAPXaction::service(ICAPServiceRep::Pointer &aService)
@@ -421,13 +444,21 @@ ICAPServiceRep &ICAPXaction::service()
 
 bool ICAPXaction::callStart(const char *method)
 {
-    debugs(93, 5, typeName << "::" << method << " called " << status());
+    debugs(93, 5, typeName << "::" << method << " called" << status());
 
     if (inCall) {
         // this may happen when we have bugs or when arguably buggy
         // comm interface calls us while we are closing the connection
-        debugs(93, 5, typeName << "::" << inCall << " is in progress; " <<
-               typeName << "::" << method << " cancels reentry.");
+        debugs(93, 5, HERE << typeName << "::" << inCall <<
+               " is in progress; " << typeName << "::" << method <<
+               " cancels reentry.");
+        return false;
+    }
+
+    if (!self) {
+        // this may happen when swanSong() has not properly cleaned up.
+        debugs(93, 5, HERE << typeName << "::" << method <<
+               " is not admitted to a finished transaction " << this);
         return false;
     }
 
@@ -437,7 +468,7 @@ bool ICAPXaction::callStart(const char *method)
 
 void ICAPXaction::callException(const TextException &e)
 {
-    debugs(93, 4, typeName << "::" << inCall << " caught an exception: " <<
+    debugs(93, 2, typeName << "::" << inCall << " caught an exception: " <<
            e.message << ' ' << status());
 
     reuseConnection = false; // be conservative
@@ -447,17 +478,23 @@ void ICAPXaction::callException(const TextException &e)
 void ICAPXaction::callEnd()
 {
     if (done()) {
-        debugs(93, 5, HERE << "ICAPXaction::" << inCall << " ends xaction " <<
-               status());
-        doStop(); // may delete us
+        debugs(93, 5, typeName << "::" << inCall << " ends xaction " <<
+            status());
+        swanSong();
+        const char *inCallSaved = inCall;
+        const char *typeNameSaved = typeName;
+        inCall = NULL;
+        self = NULL; // will delete us, now or eventually
+        debugs(93, 6, HERE << typeNameSaved << "::" << inCallSaved <<
+            " ended " << this);
         return;
     } else
     if (doneWithIo()) {
-        debugs(93, 5, HERE << typeName << " done with I/O " << status());
+        debugs(93, 5, HERE << typeName << " done with I/O" << status());
         closeConnection();
     }
 
-    debugs(93, 6, typeName << "::" << inCall << " ended " << status());
+    debugs(93, 6, typeName << "::" << inCall << " ended" << status());
     inCall = NULL;
 }
 
@@ -467,13 +504,13 @@ const char *ICAPXaction::status() const
     static MemBuf buf;
     buf.reset();
 
-    buf.append("[", 1);
+    buf.append(" [", 2);
 
     fillPendingStatus(buf);
     buf.append("/", 1);
     fillDoneStatus(buf);
 
-    buf.append("]", 1);
+    buf.Printf(" icapx%d]", id);
 
     buf.terminate();
 
@@ -483,7 +520,7 @@ const char *ICAPXaction::status() const
 void ICAPXaction::fillPendingStatus(MemBuf &buf) const
 {
     if (connection >= 0) {
-        buf.Printf("Comm(%d", connection);
+        buf.Printf("FD %d", connection);
 
         if (writer)
             buf.append("w", 1);
@@ -491,7 +528,7 @@ void ICAPXaction::fillPendingStatus(MemBuf &buf) const
         if (reader)
             buf.append("r", 1);
 
-        buf.append(")", 1);
+        buf.append(";", 1);
     }
 }
 

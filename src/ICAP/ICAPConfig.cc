@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.cc,v 1.12 2006/10/31 23:30:58 wessels Exp $
+ * $Id: ICAPConfig.cc,v 1.13 2007/04/06 04:50:07 rousskov Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -53,7 +53,7 @@ ICAPConfig::findService(const String& key)
     Vector<ICAPServiceRep::Pointer>::iterator iter = services.begin();
 
     while (iter != services.end()) {
-        if (iter->getRaw()->key == key)
+        if ((*iter)->key == key)
             return *iter;
 
         ++iter;
@@ -160,7 +160,7 @@ ICAPAccessCheck::check()
          */
         ICAPClass *c = *ci;
         ICAPServiceRep::Pointer service = findBestService(c, false);
-        if (service.getRaw()) {
+        if (service != NULL) {
             debug(93,3)("ICAPAccessCheck::check: class '%s' has candidate service '%s'\n", c->key.buf(), service->key.buf());
             candidateClasses += c->key;
         }
@@ -247,27 +247,24 @@ ICAPAccessCheck::do_callback()
         debug(93,3)("ICAPAccessCheck::do_callback matchedClass = %s\n", matchedClass.buf());
     }
 
-    ICAPClass *theClass = TheICAPConfig.findClass(matchedClass);
-
-    if (theClass == NULL) {
-        callback(NULL, callback_data);
-        return;
-    }
-
-    matchedClass.clean();
-
     void *validated_cbdata;
-
     if (!cbdataReferenceValidDone(callback_data, &validated_cbdata)) {
         debugs(93,3,HERE << "do_callback: callback_data became invalid, skipping");
         return;
     }
 
-    const ICAPServiceRep::Pointer service = findBestService(theClass, true);
-    if (!service)
-        callback(NULL, validated_cbdata);
-    else
-        callback(service, validated_cbdata);
+    ICAPServiceRep::Pointer service = NULL;
+    if (ICAPClass *c = TheICAPConfig.findClass(matchedClass)) {
+        service = findBestService(c, true);
+        if (service != NULL)
+            debugs(93,3,HERE << "do_callback: with service " << service->uri);
+        else
+            debugs(93,3,HERE << "do_callback: no " << matchedClass << " service");
+    } else {
+        debugs(93,3,HERE << "do_callback: no " << matchedClass << " class");
+    }
+
+    callback(service, validated_cbdata);
 }
 
 ICAPServiceRep::Pointer
@@ -318,7 +315,7 @@ ICAPAccessCheck::findBestService(ICAPClass *c, bool preferUp) {
         return service;
     }
 
-    if (secondBest.getRaw()) {
+    if (secondBest != NULL) {
         what = "down ";
         debugs(93,5,HERE << "found first matching " <<
             what << "service in class " << c->key <<

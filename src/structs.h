@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.551 2007/02/25 11:32:33 hno Exp $
+ * $Id: structs.h,v 1.552 2007/04/06 04:50:06 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1297,11 +1297,18 @@ unsigned int body_sent:
 
 unsigned int must_keepalive:
     1;
+
+    // When adding new flags, please update cloneAdaptationImmune() as needed.
+
     bool resetTCP() const;
     void setResetTCP();
     void clearResetTCP();
     void destinationIPLookupCompleted();
     bool destinationIPLookedUp() const;
+
+    // returns a partial copy of the flags that includes only those flags
+    // that are safe for a related (e.g., ICAP-adapted) request to inherit
+    request_flags cloneAdaptationImmune() const;
 
 private:
 

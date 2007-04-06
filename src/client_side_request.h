@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.26 2006/04/27 19:27:37 wessels Exp $
+ * $Id: client_side_request.h,v 1.27 2007/04/06 04:50:06 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -44,8 +44,8 @@
 
 #if ICAP_CLIENT
 #include "ICAP/ICAPServiceRep.h"
-
-class ICAPClientReqmodPrecache;
+#include "ICAP/ICAPInitiator.h"
+#include "ICAP/ICAPModXact.h"
 
 class HttpMsg;
 #endif
@@ -60,6 +60,10 @@ class ConnStateData;
 class ClientRequestContext;
 
 class ClientHttpRequest
+#if ICAP_CLIENT
+    : public ICAPInitiator, // to start ICAP transactions
+    public BodyConsumer     // to receive reply bodies in request satisf. mode
+#endif
 {
 
 public:
@@ -158,15 +162,25 @@ private:
 #if ICAP_CLIENT
 
 public:
-    ICAPClientReqmodPrecache *icap;
-    int doIcap(ICAPServiceRep::Pointer);
-    void icapSendRequestBody(MemBuf&);
-    static void icapSendRequestBodyWrapper(MemBuf&, void*);
-    void icapSpaceAvailable();
-    void takeAdaptedHeaders(HttpMsg *);
-    void takeAdaptedBody(MemBuf *);
-    void doneAdapting();
-    void abortAdapting();
+    bool startIcap(ICAPServiceRep::Pointer);
+    void handleIcapFailure(); // private but exposed for ClientRequestContext
+
+private:
+    // ICAPInitiator API, called by ICAPXaction
+    virtual void noteIcapHeadersAdapted();
+    virtual void noteIcapHeadersAborted();
+
+    // BodyConsumer API, called by BodyPipe
+    virtual void noteMoreBodyDataAvailable(BodyPipe &);
+    virtual void noteBodyProductionEnded(BodyPipe &);
+    virtual void noteBodyProducerAborted(BodyPipe &);
+
+    void endRequestSatisfaction();
+
+private:
+    ICAPModXact::Pointer icapHeadSource;
+    BodyPipe::Pointer icapBodySource;
+
     bool request_satisfaction_mode;
     off_t request_satisfaction_offset;
 #endif

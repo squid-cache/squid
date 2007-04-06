@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPClient.h,v 1.3 2005/12/22 22:26:31 wessels Exp $
+ * $Id: ICAPClient.h,v 1.4 2007/04/06 04:50:07 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,17 +34,9 @@
 #ifndef SQUID_ICAPCLIENT_H
 #define SQUID_ICAPCLIENT_H
 
-#include "MsgPipe.h"        // TODO: move; needed for ICAPInitXaction()
-#include "ICAPServiceRep.h" // TODO: move; needed for ICAPInitXaction()
-
 // ICAP-related things needed by code unaware of ICAP internals.
 
 extern void ICAPInitModule();
 extern void ICAPCleanModule();
-
-// let ICAP initialize ICAP-specific ends of message pipes
-
-class MsgPipe;
-extern void ICAPInitXaction(ICAPServiceRep::Pointer, MsgPipe::Pointer virgin, MsgPipe::Pointer adapted);
 
 #endif /* SQUID_ICAPCLIENT_H */

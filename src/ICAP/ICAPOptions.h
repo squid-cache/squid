@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPOptions.h,v 1.8 2006/10/31 23:30:58 wessels Exp $
+ * $Id: ICAPOptions.h,v 1.9 2007/04/06 04:50:07 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,7 +35,7 @@
 #define SQUID_ICAPOPTIONS_H
 
 #include "squid.h"
-#include "ICAPClient.h"
+#include "ICAPServiceRep.h"
 
 class wordlist;
 
@@ -57,10 +57,9 @@ public:
 
     bool valid() const;
     bool fresh() const;
+    int ttl() const;
     time_t expire() const;
     time_t timestamp() const { return theTimestamp; };
-
-    int ttl() const { return theTTL; };
 
     typedef enum { xferNone, xferPreview, xferIgnore, xferComplete } TransferKind;
     TransferKind transferKind(const String &urlPath) const;

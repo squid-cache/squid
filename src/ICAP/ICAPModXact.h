@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPModXact.h,v 1.6 2006/10/31 23:30:58 wessels Exp $
+ * $Id: ICAPModXact.h,v 1.7 2007/04/06 04:50:07 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,15 +35,19 @@
 #define SQUID_ICAPMODXACT_H
 
 #include "ICAPXaction.h"
-#include "MsgPipe.h"
-#include "MsgPipeSource.h"
-#include "MsgPipeSink.h"
+#include "ICAPInOut.h"
+#include "BodyPipe.h"
 
-/* ICAPModXact implements ICAP REQMOD and RESPMOD transaction using ICAPXaction
- * as the base. It implements message pipe sink and source interfaces for
- * communication with various HTTP "anchors" and "hooks".  ICAPModXact receives
- * virgin HTTP messages, communicates with the ICAP server, and sends the
- * adapted messages back. ICAPClient is the "owner" of the ICAPModXact. */
+/*
+ * ICAPModXact implements ICAP REQMOD and RESPMOD transaction using
+ * ICAPXaction as the base. The ICAPModXact receives a virgin HTTP message
+ * from an ICAP vecoring point, (a.k.a., initiator), communicates with the
+ * ICAP server, and sends the adapted HTTP message headers back.
+ * Virgin/adapted HTTP message body is reveived/sent using BodyPipe
+ * interface. The initiator (or its associate) is expected to send and/or
+ * receive the HTTP body.
+ */
+
 
 class ChunkedCodingParser;
 
@@ -67,31 +71,30 @@ private:
     ssize_t theData; // combines expectation and size info to save RAM
 };
 
-// Protects buffer area. If area size is unknown, protects buffer suffix.
-// Only "released" data can be consumed by the caller. Used to maintain
-// write, preview, and 204 promises for ICAPModXact virgin->data-body buffer.
-
-class MemBufClaim
+// Virgin body may be used for two activities: (a) writing preview or prime 
+// body to the ICAP server and (b) sending the body back in the echo mode.
+// Both activities use the same BodyPipe and may be active at the same time.
+// This class is used to maintain the state of body writing or sending
+// activity and to coordinate consumption of the shared virgin body buffer.
+class VirginBodyAct
 {
 
 public:
-    MemBufClaim();
+    VirginBodyAct(); // disabled by default
 
-    void protectAll();
-    void protectUpTo(size_t aGoal);
-    void disable();
-    bool active() const { return theStart >= 0; }
+    void plan(); // the activity may happen; do not consume at or above offset
+    void disable(); // the activity wont continue; no consumption restrictions
+    bool active() const { return theStart >= 0; } // planned and not disabled
 
     // methods below require active()
 
-    void release(size_t size); // stop protecting size more bytes
-    size_t offset() const;     // protected area start
-    bool limited() const;      // protects up to a known size goal
+    size_t offset() const; // the absolute beginning of not-yet-acted-on data
+    void progress(size_t size); // note processed body bytes
 
 private:
-    ssize_t theStart; // left area border
-    ssize_t theGoal;  // "end" maximum, if any
+    ssize_t theStart; // offset, unless negative.
 };
+
 
 // maintains preview-related sizes
 
@@ -118,27 +121,29 @@ private:
     enum State { stDisabled, stWriting, stIeof, stDone } theState;
 };
 
-class ICAPModXact: public ICAPXaction, public MsgPipeSource, public MsgPipeSink
+class ICAPInitiator;
+
+class ICAPModXact: public ICAPXaction, public BodyProducer, public BodyConsumer
 {
 
 public:
     typedef RefCount<ICAPModXact> Pointer;
 
 public:
-    ICAPModXact();
+    ICAPModXact(ICAPInitiator *anInitiator, HttpMsg *virginHeader, HttpRequest *virginCause, ICAPServiceRep::Pointer &s);
 
-    // called by ICAPClient
-    void init(ICAPServiceRep::Pointer&, MsgPipe::Pointer &aVirgin, MsgPipe::Pointer &anAdapted, Pointer &aSelf);
+    // communication with the initiator
+    void noteInitiatorAborted();
+    AsyncCallWrapper(93,3, ICAPModXact, noteInitiatorAborted)
 
-    // pipe source methods; called by Anchor while receiving the adapted msg
-    virtual void noteSinkNeed(MsgPipe *p);
-    virtual void noteSinkAbort(MsgPipe *p);
+    // BodyProducer methods
+    virtual void noteMoreBodySpaceAvailable(BodyPipe &);
+    virtual void noteBodyConsumerAborted(BodyPipe &);
 
-    // pipe sink methods; called by ICAP while sending the virgin message
-    virtual void noteSourceStart(MsgPipe *p);
-    virtual void noteSourceProgress(MsgPipe *p);
-    virtual void noteSourceFinish(MsgPipe *p);
-    virtual void noteSourceAbort(MsgPipe *p);
+    // BodyConsumer methods
+    virtual void noteMoreBodyDataAvailable(BodyPipe &);
+    virtual void noteBodyProductionEnded(BodyPipe &);
+    virtual void noteBodyProducerAborted(BodyPipe &);
 
     // comm handlers
     virtual void handleCommConnected();
@@ -150,8 +155,15 @@ public:
     // service waiting
     void noteServiceReady();
 
+public:
+    ICAPInOut virgin;
+    ICAPInOut adapted;
+
 private:
+    virtual void start();
+
     void estimateVirginBody();
+    void makeAdaptedBodyPipe(const char *what);
 
     void waitForService();
 
@@ -160,7 +172,7 @@ private:
 
     void startWriting();
     void writeMore();
-    void writePriviewBody();
+    void writePreviewBody();
     void writePrimeBody();
     void writeSomeBody(const char *label, size_t size);
 
@@ -169,14 +181,17 @@ private:
     virtual bool doneReading() const { return commEof || state.doneParsing(); }
     virtual bool doneWriting() const { return state.doneWriting(); }
 
-    size_t claimSize(const MemBufClaim &claim) const;
-    const char *claimContent(const MemBufClaim &claim) const;
+    size_t virginContentSize(const VirginBodyAct &act) const;
+    const char *virginContentData(const VirginBodyAct &act) const;
+    bool virginBodyEndReached(const VirginBodyAct &act) const;
+
     void makeRequestHeaders(MemBuf &buf);
-    void moveRequestChunk(MemBuf &buf, size_t chunkSize);
+    void makeUsernameHeader(const HttpRequest *request, MemBuf &buf);
     void addLastRequestChunk(MemBuf &buf);
     void openChunk(MemBuf &buf, size_t chunkSize, bool ieof);
     void closeChunk(MemBuf &buf);
     void virginConsume();
+    void finishNullOrEmptyBodyPreview(MemBuf &buf);
 
     bool shouldPreview(const String &urlPath);
     bool shouldAllow204();
@@ -189,9 +204,10 @@ private:
     void parseIcapHead();
     void parseHttpHead();
     bool parseHead(HttpMsg *head);
+    void inheritVirginProperties(HttpRequest &newR, const HttpRequest &oldR);
 
+    void decideOnParsingBody();
     void parseBody();
-    bool parsePresentBody();
     void maybeAllocateHttpMsg();
 
     void handle100Continue();
@@ -203,8 +219,8 @@ private:
     void echoMore();
 
     virtual bool doneAll() const;
+    virtual void swanSong();
 
-    virtual void doStop();
     void stopReceiving();
     void stopSending(bool nicely);
     void stopWriting(bool nicely);
@@ -219,17 +235,16 @@ private:
     void packHead(MemBuf &httpBuf, const HttpMsg *head);
     void encapsulateHead(MemBuf &icapBuf, const char *section, MemBuf &httpBuf, const HttpMsg *head);
     bool gotEncapsulated(const char *section) const;
+    void checkConsuming();
 
-    Pointer self;
-    MsgPipe::Pointer virgin;
-    MsgPipe::Pointer adapted;
+    ICAPInitiator *initiator;
 
     HttpReply *icapReply;
 
     SizedEstimate virginBody;
-    MemBufClaim virginWriteClaim; // preserve virgin data buffer for writing
-    MemBufClaim virginSendClaim;  // ... for sending (previe and 204s)
-    size_t virginConsumed;         // virgin data consumed so far
+    VirginBodyAct virginBodyWriting; // virgin body writing state
+    VirginBodyAct virginBodySending;  // virgin body sending state
+    size_t virginConsumed;        // virgin data consumed so far
     ICAPPreview preview; // use for creating (writing) the preview
 
     ChunkedCodingParser *bodyParser; // ICAP response body parser
@@ -242,14 +257,15 @@ private:
 
     public:
 
-    unsigned serviceWaiting:
-        1; // waiting for the ICAPServiceRep preparing the ICAP service
-
-    unsigned doneReceiving:
-        1; // expect no new virgin info (from the virgin pipe)
+        bool serviceWaiting; // waiting for ICAP service options
+        bool allowedPostview204; // mmust handle 204 No Content outside preview
 
         // will not write anything [else] to the ICAP server connection
         bool doneWriting() const { return writing == writingReallyDone; }
+
+        // will not use virgin.body_pipe
+        bool doneConsumingVirgin() const { return writing >= writingAlmostDone
+            && (sending == sendingAdapted || sending == sendingDone); }
 
         // parsed entire ICAP response from the ICAP server
         bool doneParsing() const { return parsing == psDone; }
