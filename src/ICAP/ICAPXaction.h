@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPXaction.h,v 1.9 2006/10/31 23:30:58 wessels Exp $
+ * $Id: ICAPXaction.h,v 1.10 2007/04/06 04:50:08 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,14 +37,21 @@
 #include "comm.h"
 #include "MemBuf.h"
 #include "ICAPServiceRep.h"
+#include "AsyncCall.h"
 
 class HttpMsg;
-
 class TextException;
 
-/* The ICAP Xaction implements message pipe sink and source interfaces.  It
- * receives virgin HTTP messages, communicates with the ICAP server, and sends
- * the adapted messages back. ICAPClient is the "owner" of the ICAPXaction. */
+/*
+ * The ICAP Xaction implements common tasks for ICAP OPTIONS, REQMOD, and
+ * RESPMOD transactions.
+ *
+ * All ICAP transactions are refcounted and hold a pointer to self.
+ * Both are necessary because a user need to access transaction data
+ * after the transaction has finished, while a transaction may need to
+ * finish after all its explicit users are gone. For safety and simplicity,
+ * the code assumes that both cases can happen to any ICAP transaction.
+ */
 
 // Note: ICAPXaction must be the first parent for object-unaware cbdata to work
 
@@ -53,6 +60,10 @@ class ICAPXaction: public RefCountable
 
 public:
     typedef RefCount<ICAPXaction> Pointer;
+
+    // Use this to start ICAP transactions because they need a pointer
+    // to self and because the start routine may result in failures/callbacks.
+    static ICAPXaction *AsyncStart(ICAPXaction *x);
 
 public:
     ICAPXaction(const char *aTypeName);
@@ -64,6 +75,10 @@ public:
     void noteCommRead(comm_err_t status, size_t sz);
     void noteCommTimedout();
     void noteCommClosed();
+
+    // start handler, treat as protected and call it from the kids
+    virtual void start() = 0;
+    AsyncCallWrapper(93,3, ICAPXaction, start);
 
 protected:
     // Set or get service pointer; ICAPXaction cbdata-locks it.
@@ -95,8 +110,10 @@ protected:
 
     bool done() const;
     virtual bool doneAll() const;
-    virtual void doStop();
     void mustStop(const char *reason);
+
+    // called just before the 'done' transaction is deleted
+    virtual void swanSong(); 
 
     // returns a temporary string depicting transaction status, for debugging
     const char *status() const;
@@ -107,6 +124,9 @@ protected:
     virtual bool fillVirginHttpHeader(MemBuf&) const;
 
 protected:
+    Pointer self; // see comments in the class description above
+    const int id; // transaction ID for debugging, unique across ICAP xactions
+
     int connection;     // FD of the ICAP server connection
 
     /*
@@ -142,6 +162,7 @@ protected:
     const char *typeName; // the type of the final class (child), for debugging
 
 private:
+    static int TheLastId;
     ICAPServiceRep::Pointer theService;
 
     const char *inCall; // name of the asynchronous call being executed, if any

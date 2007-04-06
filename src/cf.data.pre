@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.429 2007/02/25 11:32:29 hno Exp $
+# $Id: cf.data.pre,v 1.430 2007/04/06 04:50:05 rousskov Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -4968,6 +4968,39 @@ DOC_START
     If you want to enable the ICAP module support, set this to on.
 DOC_END
 
+NAME: icap_service_failure_limit
+TYPE: int
+IFDEF: ICAP_CLIENT
+LOC: TheICAPConfig.service_failure_limit
+DEFAULT: 10
+DOC_START
+	The limit specifies the number of failures that Squid tolerates
+	when establishing a new TCP connection with an ICAP service. If
+	the number of failures exceeds the limit, the ICAP service is
+	not used for new ICAP requests until it is time to refresh its
+	OPTIONS. The per-service failure counter is reset to zero each
+	time Squid fetches new service OPTIONS.
+
+	A negative value disables the limit. Without the limit, an ICAP
+	service will not be considered down due to connectivity failures
+	between ICAP OPTIONS requests.
+DOC_END
+
+NAME: icap_service_revival_delay
+TYPE: int
+IFDEF: ICAP_CLIENT
+LOC: TheICAPConfig.service_revival_delay
+DEFAULT: 180
+DOC_START
+	The delay specifies the number of seconds to wait after an ICAP
+	OPTIONS request failure before requesting the options again. The
+	failed ICAP service is considered "down" until fresh OPTIONS are
+	fetched.
+
+	The actual delay cannot be smaller than the hardcoded minimum
+	delay of 60 seconds.
+DOC_END
+
 NAME: icap_preview_enable
 TYPE: onoff
 IFDEF: ICAP_CLIENT
@@ -5028,8 +5061,29 @@ COMMENT: on|off
 LOC: TheICAPConfig.send_client_username
 DEFAULT: off
 DOC_START
-        This adds the header "X-Client-Username" to ICAP requests
-        if proxy access is authentified.
+	This sends authenticated HTTP client username (if available) to
+	the ICAP service. The username value is encoded based on the
+	icap_client_username_encode option and is sent using the header
+	specified by the icap_client_username_header option.
+DOC_END
+
+NAME: icap_client_username_header
+TYPE: string
+IFDEF: ICAP_CLIENT
+LOC: TheICAPConfig.client_username_header
+DEFAULT: X-Client-Username
+DOC_START
+	ICAP request header name to use for send_client_username.
+DOC_END
+
+NAME: icap_client_username_encode
+TYPE: onoff
+IFDEF: ICAP_CLIENT
+COMMENT: on|off
+LOC: TheICAPConfig.client_username_encode
+DEFAULT: off
+DOC_START
+	Whether to base64 encode the authenticated client username.
 DOC_END
 
 NAME: icap_service

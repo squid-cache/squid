@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.h,v 1.10 2006/10/31 23:30:58 wessels Exp $
+ * $Id: ICAPConfig.h,v 1.11 2007/04/06 04:50:07 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -42,8 +42,6 @@
 class acl_access;
 
 class ConfigParser;
-
-class ICAPConfig;
 
 class ICAPClass
 {
@@ -102,6 +100,10 @@ public:
     int send_client_ip;
     int send_client_username;
     int reuse_connections;
+    int service_failure_limit;
+    int service_revival_delay;
+    char* client_username_header;
+    int client_username_encode;
 
     Vector<ICAPServiceRep::Pointer> services;
     Vector<ICAPClass*> classes;
@@ -125,5 +127,7 @@ public:
     void dumpICAPAccess(StoreEntry *, const char *);
 
 };
+
+extern ICAPConfig TheICAPConfig;
 
 #endif /* SQUID_ICAPCONFIG_H */

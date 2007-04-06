@@ -1,5 +1,5 @@
 /*
- * $Id: ICAPOptXact.h,v 1.4 2006/10/31 23:30:58 wessels Exp $
+ * $Id: ICAPOptXact.h,v 1.5 2007/04/06 04:50:07 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -46,33 +46,31 @@ class ICAPOptXact: public ICAPXaction
 {
 
 public:
-    typedef void Callback(ICAPOptXact*, void *data);
+    typedef void Callback(ICAPOptions *newOptions, void *callerData);
 
-    ICAPOptXact();
+    ICAPOptXact(ICAPServiceRep::Pointer &aService, Callback *aCb, void *aCbData);
     virtual ~ICAPOptXact();
 
-    void start(ICAPServiceRep::Pointer &aService, Callback *aCb, void *aCbData);
-
-    ICAPOptions *options; // result for the caller to take/handle
-
 protected:
+    virtual void start();
     virtual void handleCommConnected();
     virtual void handleCommWrote(size_t size);
     virtual void handleCommRead(size_t size);
-    virtual bool doneAll() const;
+    virtual void swanSong();
 
     void makeRequest(MemBuf &buf);
-    bool parseResponse();
+    ICAPOptions *parseResponse();
+    void sendOptions(ICAPOptions *options);
 
     void startReading();
 
-    virtual void doStop();
-
 private:
-    Callback *cb;
-    void *cbData;
+    Callback *cbAddr; // callback to call with newly fetched options
+    void *cbData;     // callback data
 
     CBDATA_CLASS2(ICAPOptXact);
 };
+
+// TODO: replace the callback API with a class-base interface?
 
 #endif /* SQUID_ICAPOPTXACT_H */

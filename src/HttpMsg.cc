@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.39 2006/10/02 12:08:20 adrian Exp $
+ * $Id: HttpMsg.cc,v 1.40 2007/04/06 04:50:04 rousskov Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -45,6 +45,7 @@ HttpMsg::HttpMsg(http_hdr_owner_type owner): header(owner),
 HttpMsg::~HttpMsg()
 {
     assert(lock_count == 0);
+    assert(!body_pipe);
 }
 
 HttpMsgParseState &operator++ (HttpMsgParseState &aState)

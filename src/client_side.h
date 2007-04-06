@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.h,v 1.19 2006/10/26 19:42:24 serassio Exp $
+ * $Id: client_side.h,v 1.20 2007/04/06 04:50:06 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,7 +36,7 @@
 
 #include "comm.h"
 #include "StoreIOBuffer.h"
-#include "BodyReader.h"
+#include "BodyPipe.h"
 #include "RefCount.h"
 
 class ConnStateData;
@@ -119,14 +119,14 @@ private:
     void packRange(StoreIOBuffer const &, MemBuf * mb);
     void deRegisterWithConn();
     void doClose();
-    void initiateClose();
+    void initiateClose(const char *reason);
     bool mayUseConnection_; /* This request may use the connection. Don't read anymore requests for now */
     bool connRegistered_;
 };
 
 
 /* A connection to a socket */
-class ConnStateData : public RefCountable
+class ConnStateData : public BodyProducer, public RefCountable
 {
 
 public:
@@ -157,15 +157,6 @@ public:
         char *buf;
         size_t notYetUsed;
         size_t allocatedSize;
-        /*
-         * abortedSize is the amount of data that should be read
-         * from the socket and immediately discarded.  It may be
-         * set when there is a request body and that transaction
-         * gets aborted.  The client side should read the remaining
-         * body content and just discard it, if the connection
-         * will be staying open.
-         */
-        size_t abortedSize;
     } in;
 
     ssize_t bodySizeLeft();
@@ -206,16 +197,16 @@ public:
     void transparent(bool const);
     bool reading() const;
     void reading(bool const);
-    bool closing() const;
-    void closing(bool const);
 
-    /* get the body reader that has been attached to the client
-     * request
-     */
-    BodyReader * body_reader();
-    /* set a body reader that should read data from the request 
-     */
-    void body_reader(BodyReader::Pointer);
+    bool closing() const;
+    void startClosing(const char *reason);
+
+    BodyPipe::Pointer expectRequestBody(size_t size);
+    virtual void noteMoreBodySpaceAvailable(BodyPipe &);
+    virtual void noteBodyConsumerAborted(BodyPipe &);
+
+    void handleReadData(char *buf, size_t size);
+    void handleRequestBodyData();
 
 private:
     CBDATA_CLASS2(ConnStateData);
@@ -223,7 +214,7 @@ private:
     bool reading_;
     bool closing_;
     Pointer openReference;
-    BodyReader::Pointer body_reader_;
+    BodyPipe::Pointer bodyPipe; // set when we are reading request body
 };
 
 /* convenience class while splitting up body handling */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.744 2006/10/31 23:30:56 wessels Exp $
+ * $Id: client_side.cc,v 1.745 2007/04/06 04:50:05 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -134,8 +134,6 @@ static ClientSocketContext *parseHttpRequest(ConnStateData::Pointer &, HttpParse
 #if USE_IDENT
 static IDCB clientIdentDone;
 #endif
-static BodyReadFunc clientReadBody;
-static BodyAbortFunc clientAbortBody;
 static CSCB clientSocketRecipient;
 static CSD clientSocketDetach;
 static void clientSetKeepaliveFlag(ClientHttpRequest *);
@@ -494,6 +492,8 @@ ClientHttpRequest::logRequest()
             al.http.content_type = loggingEntry()->mem_obj->getReply()->content_type.buf();
         }
 
+        debug(33, 9) ("clientLogRequest: http.code='%d'\n", al.http.code);
+
         if (loggingEntry() && loggingEntry()->mem_obj)
             al.cache.objectSize = contentLen(loggingEntry());
 
@@ -577,23 +577,6 @@ ConnStateData::areAllContextsForThisConnection() const
     return true;
 }
 
-BodyReader *
-ConnStateData::body_reader()
-{
-    return body_reader_.getRaw();
-}
-
-void
-ConnStateData::body_reader(BodyReader::Pointer reader)
-{
-    body_reader_ = reader;
-
-    if (reader == NULL)
-        fd_note(fd, "Waiting for next request");
-    else
-        fd_note(fd, "Reading request body");
-}
-
 void
 ConnStateData::freeAllContexts()
 {
@@ -653,7 +636,10 @@ ConnStateData::~ConnStateData()
 
     cbdataReferenceDone(port);
 
-    body_reader(NULL);	// refcounted
+    if (bodyPipe != NULL) {
+        bodyPipe->clearProducer(false);
+        bodyPipe = NULL; // refcounted
+    }
 }
 
 /*
@@ -1560,14 +1546,24 @@ ClientSocketContext::doClose()
 }
 
 void
-ClientSocketContext::initiateClose()
+ClientSocketContext::initiateClose(const char *reason)
 {
+    debugs(33, 5, HERE << "initiateClose: closing for " << reason);
     if (http != NULL) {
         ConnStateData::Pointer conn = http->getConn();
 
         if (conn != NULL) {
-            if (conn->bodySizeLeft() > 0) {
-                debug(33, 5) ("ClientSocketContext::initiateClose: closing, but first we need to read the rest of the request\n");
+            if (const ssize_t expecting = conn->bodySizeLeft()) {
+                debugs(33, 5, HERE << "ClientSocketContext::initiateClose: " <<
+                       "closing, but first " << conn << " needs to read " <<
+                       expecting << " request body bytes with " <<
+                       conn->in.notYetUsed << " notYetUsed");
+
+                if (conn->closing()) {
+                    debugs(33, 2, HERE << "avoiding double-closing " << conn);
+                    return;
+                }
+                    
                 /*
                 * XXX We assume the reply fits in the TCP transmit
                 * window.  If not the connection may stall while sending
@@ -1576,20 +1572,7 @@ ClientSocketContext::initiateClose()
                 * As of yet we have not received any complaints indicating
                 * this may be an issue.
                 */
-                conn->closing(true);
-                /* any unread body becomes abortedSize at this point. */
-                conn->in.abortedSize = conn->bodySizeLeft();
-                /*
-                 * Trigger the BodyReader abort handler, if necessary,
-                 * by destroying it.  It is a refcounted pointer, so
-                 * set it to NULL and let the destructor be called when
-                 * all references are gone.
-                 *
-                 * This seems to be flawed: theres no way this can trigger
-                 * if conn->body_reader is not NULL. Perhaps it works for
-                 * ICAP but not real requests ?
-                 */
-                http->request->body_reader = NULL; // refcounted
+                conn->startClosing(reason);
                 return;
             }
         }
@@ -1610,9 +1593,12 @@ ClientSocketContext::writeComplete(int fd, char *bufnotused, size_t size, comm_e
     clientUpdateSocketStats(http->logType, size);
     assert (this->fd() == fd);
 
+    /* Bail out quickly on COMM_ERR_CLOSING - close handlers will tidy up */
+    if (errflag == COMM_ERR_CLOSING)
+        return;
+
     if (errflag || clientHttpRequestStatus(fd, http)) {
-        debug (33,5)("clientWriteComplete: FD %d, closing connection due to failure, or true requeststatus\n", fd);
-        initiateClose();
+        initiateClose("failure or true request status");
         /* Do we leak here ? */
         return;
     }
@@ -1632,7 +1618,7 @@ ClientSocketContext::writeComplete(int fd, char *bufnotused, size_t size, comm_e
         /* fallthrough */
 
     case STREAM_FAILED:
-        initiateClose();
+        initiateClose("STREAM_UNPLANNED_COMPLETE|STREAM_FAILED");
         return;
 
     default:
@@ -1857,7 +1843,7 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
     r = HttpParserParseReqLine(hp);
     if (r == 0) {
         debug(33, 5) ("Incomplete request, waiting for end of request line\n");
-	return NULL;
+    return NULL;
     }
     if (r == -1) {
         return parseHttpRequestAbort(conn, "error:invalid-request");
@@ -1894,9 +1880,9 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
     /* Set method_p */
     *method_p = HttpRequestMethod(&hp->buf[hp->m_start], &hp->buf[hp->m_end]);
     if (*method_p == METHOD_NONE) {
-	/* XXX need a way to say "this many character length string" */
+    /* XXX need a way to say "this many character length string" */
         debug(33, 1) ("clientParseRequestMethod: Unsupported method in request '%s'\n", hp->buf);
-	/* XXX where's the method set for this error? */
+    /* XXX where's the method set for this error? */
         return parseHttpRequestAbort(conn, "error:unsupported-request-method");
     }
 
@@ -1921,7 +1907,7 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
 
     if (strstr(req_hdr, "\r\r\n")) {
         debug(33, 1) ("WARNING: suspicious HTTP request contains double CR\n");
-	xfree(url);
+    xfree(url);
         return parseHttpRequestAbort(conn, "error:double-CR");
     }
 
@@ -2138,6 +2124,8 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
 {
     ClientHttpRequest *http = context->http;
     HttpRequest *request = NULL;
+    bool notedUseOfBuffer = false;
+
     /* We have an initial client stream in place should it be needed */
     /* setup our private context */
     context->registerWithConn();
@@ -2152,7 +2140,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
-	goto finish;
+    goto finish;
     }
 
     if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, method)) == NULL) {
@@ -2166,7 +2154,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
-	goto finish;
+    goto finish;
     }
 
     /* compile headers */
@@ -2183,7 +2171,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
-	goto finish;
+    goto finish;
     }
 
     request->flags.accelerated = http->flags.accel;
@@ -2226,7 +2214,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
-	goto finish;
+    goto finish;
     }
 
 
@@ -2240,29 +2228,22 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
-	goto finish;
+    goto finish;
     }
 
     http->request = HTTPMSGLOCK(request);
     clientSetKeepaliveFlag(http);
+
     /* Do we expect a request-body? */
-
     if (request->content_length > 0) {
-        request->body_reader = new BodyReader(request->content_length,
-                                              clientReadBody,
-                                              clientAbortBody,
-                                              NULL,
-                                              conn.getRaw());
-        conn->body_reader(request->body_reader);
-	/*
-	 * NOTE: We haven't called connNoteUseOfBuffer() yet.  It gets
-	 * done at finish: below.  So here we have to subtract off
-	 * req_sz from notYetUsed, or else the BodyReader thinks it
-	 * has more data than it really does, and will get confused.
-	 */
-        request->body_reader->notify(conn->in.notYetUsed - http->req_sz);
+        request->body_pipe = conn->expectRequestBody(request->content_length);
 
-        if (request->body_reader->remaining())
+        // consume header early so that body pipe gets just the body
+        connNoteUseOfBuffer(conn.getRaw(), http->req_sz);
+        notedUseOfBuffer = true;
+
+        conn->handleRequestBodyData();
+        if (!request->body_pipe->exhausted())
             conn->readSomeData();
 
         /* Is it too large? */
@@ -2278,7 +2259,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
             assert(context->http->out.offset == 0);
             context->pullData();
             conn->flags.readMoreRequests = false;
-	    goto finish;
+            goto finish;
         }
 
         context->mayUseConnection(true);
@@ -2293,8 +2274,8 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
     http->doCallouts();
 
 finish:
-    /* Consume request buffer */
-    connNoteUseOfBuffer(conn.getRaw(), http->req_sz);
+    if (!notedUseOfBuffer)
+        connNoteUseOfBuffer(conn.getRaw(), http->req_sz);
 }
 
 static void
@@ -2330,8 +2311,9 @@ connOkToAddRequest(ConnStateData::Pointer &conn)
 ssize_t
 ConnStateData::bodySizeLeft()
 {
-    if (body_reader_ != NULL)
-        return body_reader_->remaining();
+    // XXX: this logic will not work for chunked requests with unknown sizes
+    if (bodyPipe != NULL)
+        return bodyPipe->unproducedSize();
 
     return 0;
 }
@@ -2357,9 +2339,9 @@ clientParseRequest(ConnStateData::Pointer conn, bool &do_next_read)
     while (conn->in.notYetUsed > 0 && conn->bodySizeLeft() == 0) {
         connStripBufferWhitespace (conn);
 
-	/* Don't try to parse if the buffer is empty */
-	if (conn->in.notYetUsed == 0)
-		break;
+    /* Don't try to parse if the buffer is empty */
+    if (conn->in.notYetUsed == 0)
+        break;
 
         /* Limit the number of concurrent requests to 2 */
 
@@ -2371,13 +2353,13 @@ clientParseRequest(ConnStateData::Pointer conn, bool &do_next_read)
         /* Terminate the string */
         conn->in.buf[conn->in.notYetUsed] = '\0';
 
-	/* Begin the parsing */
-	HttpParserInit(&hp, conn->in.buf, conn->in.notYetUsed);
+    /* Begin the parsing */
+    HttpParserInit(&hp, conn->in.buf, conn->in.notYetUsed);
 
         /* Process request */
-	PROF_start(parseHttpRequest);
+    PROF_start(parseHttpRequest);
         context = parseHttpRequest(conn, &hp, &method, &http_ver);
-	PROF_stop(parseHttpRequest);
+    PROF_stop(parseHttpRequest);
 
         /* partial or incomplete request */
         if (!context) {
@@ -2450,45 +2432,8 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
         if (size > 0) {
             kb_incr(&statCounter.client_http.kbytes_in, size);
 
-            char *current_buf = conn->in.addressToReadInto();
+            conn->handleReadData(buf, size);
 
-            if (buf != current_buf)
-                xmemmove(current_buf, buf, size);
-
-            conn->in.notYetUsed += size;
-
-            conn->in.buf[conn->in.notYetUsed] = '\0'; /* Terminate the string */
-
-            /* if there is available non-aborted data, give it to the
-             * BodyReader
-             */
-            if (conn->body_reader() != NULL)
-                conn->body_reader()->notify(conn->in.notYetUsed);
-
-            /* there is some aborted body to remove
-             * could we? should we? use BodyReader to eliminate this via an
-             * abort() api.
-             *
-             * This is not the most optimal path: ideally we would:
-             *  - optimise the memmove above to not move data we're discarding
-             *  - discard notYetUsed earlier
-             */
-            if (conn->in.abortedSize) {
-                size_t discardSize = XMIN(conn->in.abortedSize, conn->in.notYetUsed);
-                /* these figures must match */
-                assert(conn->in.abortedSize == (size_t)conn->bodySizeLeft());
-                conn->body_reader()->reduce_remaining(discardSize);
-                connNoteUseOfBuffer(conn.getRaw(), discardSize);
-                conn->in.abortedSize -= discardSize;
-
-                if (!conn->in.abortedSize)
-                    /* we've finished reading like good clients,
-                     * now do the close that initiateClose initiated.
-                     *
-                     * XXX: do we have to close? why not check keepalive et.
-                     */
-                    comm_close(fd);
-            }
         } else if (size == 0) {
             debug(33, 5) ("clientReadRequest: FD %d closed?\n", fd);
 
@@ -2539,67 +2484,65 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
     }
 }
 
-/*
- * clientReadBody
- *
- * A request to receive some HTTP request body data.  This is a
- * 'read_func' of BodyReader class.  Feels to me like this function
- * belongs to ConnStateData class.
- *
- * clientReadBody is of type 'BodyReadFunc'
- */
-size_t
-clientReadBody(void *data, MemBuf &mb, size_t size)
+// called when new request data has been read from the socket
+void
+ConnStateData::handleReadData(char *buf, size_t size)
 {
-    ConnStateData *conn = (ConnStateData *) data;
-    assert(conn);
-    debugs(33,3,HERE << "clientReadBody requested size " << size);
-    debugs(33,3,HERE << "clientReadBody FD " << conn->fd);
-    debugs(33,3,HERE << "clientReadBody in.notYetUsed " << conn->in.notYetUsed);
+    char *current_buf = in.addressToReadInto();
 
-    if (size > conn->in.notYetUsed)
-        size = conn->in.notYetUsed; // may make size zero
+    if (buf != current_buf)
+        xmemmove(current_buf, buf, size);
 
-    debugs(33,3,HERE << "clientReadBody actual size " << size);
+    in.notYetUsed += size;
+    in.buf[in.notYetUsed] = '\0'; /* Terminate the string */
 
-    if (size > 0) {
-        mb.append(conn->in.buf, size);
-        connNoteUseOfBuffer(conn, size);
-    }
-
-    return size;
+    // if we are reading a body, stuff data into the body pipe
+    if (bodyPipe != NULL)
+        handleRequestBodyData();
 }
 
-/*
- * clientAbortBody
- *
- * A dummy callback that consumes the remains of a request
- * body for an aborted transaction.
- *
- * clientAbortBody is of type 'BodyAbortFunc'
- */
-static void
-clientAbortBody(void *data, size_t remaining)
+// called when new request body data has been buffered in in.buf
+// may close the connection if we were closing and piped everything out
+void
+ConnStateData::handleRequestBodyData()
 {
-    ConnStateData *conn = (ConnStateData *) data;
-    debugs(33,3,HERE << "clientAbortBody FD " << conn->fd);
-    debugs(33,3,HERE << "clientAbortBody in.notYetUsed " << conn->in.notYetUsed);
-    debugs(33,3,HERE << "clientAbortBody remaining " << remaining);
-    conn->in.abortedSize += remaining;
+    assert(bodyPipe != NULL);
 
-    if (conn->in.notYetUsed) {
-        size_t to_discard = XMIN(conn->in.notYetUsed, conn->in.abortedSize);
-        debugs(33,3,HERE << "to_discard " << to_discard);
-        conn->in.abortedSize -= to_discard;
-        connNoteUseOfBuffer(conn, to_discard);
+    if (const size_t putSize = bodyPipe->putMoreData(in.buf, in.notYetUsed))
+        connNoteUseOfBuffer(this, putSize);
+
+    if (!bodyPipe->mayNeedMoreData()) {
+        // BodyPipe will clear us automagically when we produced everything
+        bodyPipe = NULL;
+
+        debugs(33,5, HERE << "produced entire request body for FD " << fd);
+
+        if (closing()) {
+            /* we've finished reading like good clients,
+             * now do the close that initiateClose initiated.
+             *
+             * XXX: do we have to close? why not check keepalive et.
+             *
+             * XXX: To support chunked requests safely, we need to handle
+             * the case of an endless request. This if-statement does not,
+             * because mayNeedMoreData is true if request size is not known.
+             */
+            comm_close(fd);
+        }
     }
+}
 
-    /*
-     * This assertion exists to make sure that there is never a
-     * case where this function should be responsible for closing
-     * the file descriptor.
-     */
-    assert(!conn->isOpen());
+void
+ConnStateData::noteMoreBodySpaceAvailable(BodyPipe &)
+{
+    handleRequestBodyData();
+}
+
+void
+ConnStateData::noteBodyConsumerAborted(BodyPipe &)
+{
+    if (!closing())
+        startClosing("body consumer aborted");
 }
 
 /* general lifetime handler for HTTP requests */
@@ -3234,17 +3177,40 @@ ConnStateData::reading(bool const newBool)
     reading_ = newBool;
 }
 
+
+BodyPipe::Pointer
+ConnStateData::expectRequestBody(size_t size)
+{
+    bodyPipe = new BodyPipe(this);
+    bodyPipe->setBodySize(size);
+    return bodyPipe;
+}
+
 bool
 ConnStateData::closing() const
 {
     return closing_;
 }
 
+// Called by ClientSocketContext to give the connection a chance to read 
+// the entire body before closing the socket.
 void
-ConnStateData::closing(bool const newBool)
+ConnStateData::startClosing(const char *reason)
 {
-    assert (closing() != newBool);
-    closing_ = newBool;
+    debugs(33, 5, HERE << "startClosing " << this << " for " << reason);
+    assert(!closing());
+    closing_ = true;
+
+    assert(bodyPipe != NULL);
+    assert(bodySizeLeft() > 0);
+
+    // We do not have to abort the body pipeline because we are going to
+    // read the entire body anyway.
+    // Perhaps an ICAP server wants to log the complete request.
+
+    // If a consumer abort have caused this closing, we may get stuck
+    // as nobody is consuming our data. Allow auto-consumption.
+    bodyPipe->enableAutoConsumption();
 }
 
 char *

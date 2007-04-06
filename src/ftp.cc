@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.409 2007/01/01 21:40:33 hno Exp $
+ * $Id: ftp.cc,v 1.410 2007/04/06 04:50:06 rousskov Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -56,8 +56,8 @@
 #include "URLScheme.h"
 
 #if ICAP_CLIENT
-#include "ICAP/ICAPClientRespmodPrecache.h"
 #include "ICAP/ICAPConfig.h"
+#include "ICAP/ICAPModXact.h"
 extern ICAPConfig TheICAPConfig;
 static void icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data);
 #endif
@@ -107,6 +107,7 @@ struct _ftp_flags
     bool put_mkdir;
     bool listformat_unknown;
     bool listing_started;
+    bool completed_forwarding;
 };
 
 class FtpStateData;
@@ -191,6 +192,7 @@ public:
     void listingFinish();
     void scheduleReadControlReply(int);
     void handleControlReply();
+    void readStor();
     char *htmlifyListEntry(const char *line);
     void parseListing();
     void dataComplete();
@@ -200,10 +202,11 @@ public:
     void buildTitleUrl();
     void writeReplyBody(const char *, int len);
     void printfReplyBody(const char *fmt, ...);
-    void maybeReadData();
-    void transactionComplete();
-    void transactionForwardComplete();
-    void transactionAbort();
+    virtual int dataDescriptor() const;
+    virtual void maybeReadVirginBody();
+    virtual void closeServer();
+    virtual void completeForwarding();
+    virtual void abortTransaction(const char *reason);
     void processReplyBody();
     void writeCommand(const char *buf);
 
@@ -211,27 +214,27 @@ public:
     static CNCB ftpPasvCallback;
     static IOCB dataReadWrapper;
     static PF ftpDataWrite;
-    static IOCB ftpDataWriteCallback;
     static PF ftpTimeout;
     static IOCB ftpReadControlReply;
     static IOCB ftpWriteCommandCallback;
     static HttpReply *ftpAuthRequired(HttpRequest * request, const char *realm);
-    static CBCB ftpRequestBody;
     static wordlist *ftpParseControlReply(char *, size_t, int *, int *);
 
-#if ICAP_CLIENT
+    // sending of the request body to the server
+    virtual void sentRequestBody(int fd, size_t size, comm_err_t errflag);
+    virtual void doneSendingRequestBody();
 
+    virtual bool doneWithServer() const;
+
+private:
+    // BodyConsumer for HTTP: consume request body.
+    virtual void handleRequestBodyProducerAborted();
+
+#if ICAP_CLIENT
 public:
     void icapAclCheckDone(ICAPServiceRep::Pointer);
-    virtual bool takeAdaptedHeaders(HttpReply *);
-    virtual bool takeAdaptedBody(MemBuf *);
-    virtual void finishAdapting();
-    virtual void abortAdapting();
-    virtual void icapSpaceAvailable();
+
     bool icapAccessCheckPending;
-private:
-    void backstabAdapter();
-    void endAdapting();
 #endif
 
 };
@@ -450,7 +453,7 @@ FtpStateData::~FtpStateData()
     safe_free(dirpath);
 
     safe_free(data.host);
-    /* XXX this is also set to NULL in transactionForwardComplete */
+
     fwd = NULL;	// refcounted
 }
 
@@ -1103,6 +1106,12 @@ FtpStateData::parseListing()
     size_t usable;
     StoreEntry *e = entry;
     size_t len = data.readBuf->contentSize();
+
+    if (!len) {
+        debug(9, 3) ("ftpParseListing: no content to parse for %s\n", storeUrl(e));
+        return;
+    }
+
     /*
      * We need a NULL-terminated buffer for scanning, ick
      */
@@ -1152,15 +1161,14 @@ FtpStateData::parseListing()
         assert(t != NULL);
 
 #if ICAP_CLIENT
-
-        if (icap) {
-            if ((int)strlen(t) > icap->potentialSpaceSize()) {
+        if (virginBodyDestination != NULL) {
+            // XXX: There are other places where writeReplyBody may overflow!
+            if ((int)strlen(t) > virginBodyDestination->buf().potentialSpaceSize()) {
                 debugs(0,0,HERE << "WARNING avoid overwhelming ICAP with data!");
                 usable = s - sbuf;
                 break;
             }
         }
-
 #endif
 
         writeReplyBody(t, strlen(t));
@@ -1169,6 +1177,11 @@ FtpStateData::parseListing()
     data.readBuf->consume(usable);
     memFree(line, MEM_4K_BUF);
     xfree(sbuf);
+}
+
+int
+FtpStateData::dataDescriptor() const {
+    return data.fd;
 }
 
 void
@@ -1199,7 +1212,7 @@ FtpStateData::dataReadWrapper(int fd, char *buf, size_t len, comm_err_t errflag,
 }
 
 void
-FtpStateData::maybeReadData()
+FtpStateData::maybeReadVirginBody()
 {
     if (data.fd < 0)
         return;
@@ -1210,14 +1223,8 @@ FtpStateData::maybeReadData()
     int read_sz = data.readBuf->spaceSize();
 
 #if ICAP_CLIENT
-
-    if (icap) {
-        int icap_space = icap->potentialSpaceSize();
-
-        if (icap_space < read_sz)
-            read_sz = icap_space;
-    }
-
+    // See HttpStateData::maybeReadVirginBody() for a size-limiting piece of
+    // code that used to be there. Hopefully, it is not really needed.
 #endif
 
     debugs(11,9, HERE << "FTP may read up to " << read_sz << " bytes");
@@ -1259,7 +1266,7 @@ FtpStateData::dataRead(int fd, char *buf, size_t len, comm_err_t errflag, int xe
 #endif
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        transactionAbort();
+        abortTransaction("entry aborted during dataRead");
         return;
     }
 
@@ -1293,7 +1300,7 @@ FtpStateData::dataRead(int fd, char *buf, size_t len, comm_err_t errflag, int xe
 
         if (ignoreErrno(xerrno)) {
             commSetTimeout(fd, Config.Timeout.read, ftpTimeout, this);
-            maybeReadData();
+            maybeReadVirginBody();
         } else {
             if (!flags.http_header_sent && !fwd->ftpPasvFailed() && flags.pasv_supported) {
                 fwd->dontRetry(false);	/* this is a retryable error */
@@ -1339,7 +1346,7 @@ FtpStateData::processReplyBody()
 
     storeBufferFlush(entry);
 
-    maybeReadData();
+    maybeReadVirginBody();
 }
 
 /*
@@ -1485,7 +1492,7 @@ FtpStateData::start()
 
         entry->replaceHttpReply(reply);
 
-        transactionComplete();
+        serverComplete();
 
         return;
     }
@@ -1710,7 +1717,7 @@ FtpStateData::ftpReadControlReply(int fd, char *buf, size_t len, comm_err_t errf
         return;
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        ftpState->transactionAbort();
+        ftpState->abortTransaction("entry aborted during control reply read");
         return;
     }
 
@@ -1742,8 +1749,8 @@ FtpStateData::ftpReadControlReply(int fd, char *buf, size_t len, comm_err_t errf
             return;
         }
 
-	/* XXX this may end up having to be transactionComplete() .. */
-        ftpState->transactionAbort();
+    /* XXX this may end up having to be serverComplete() .. */
+        ftpState->abortTransaction("zero control reply read");
         return;
     }
 
@@ -2194,7 +2201,7 @@ ftpSendPasv(FtpStateData * ftpState)
          */
 
         if (!EBIT_TEST(ftpState->entry->flags, ENTRY_ABORTED))
-		ftpState->transactionForwardComplete();
+        ftpState->completeForwarding();
 
         ftpSendQuit(ftpState);
 
@@ -2475,7 +2482,7 @@ ftpAcceptDataConnection(int fd, int newfd, ConnectionDetail *details,
         return;
 
     if (EBIT_TEST(ftpState->entry->flags, ENTRY_ABORTED)) {
-	ftpState->transactionAbort();
+        ftpState->abortTransaction("entry aborted when accepting data conn");
         return;
     }
 
@@ -2567,33 +2574,42 @@ ftpSendStor(FtpStateData * ftpState)
 static void
 ftpReadStor(FtpStateData * ftpState)
 {
-    int code = ftpState->ctrl.replycode;
+    ftpState->readStor();
+}
+
+void FtpStateData::readStor() {
+    int code = ctrl.replycode;
     debug(9, 3) ("This is ftpReadStor\n");
 
-    if (code == 125 || (code == 150 && ftpState->data.host)) {
+    if (code == 125 || (code == 150 && data.host)) {
+        // register to receive body data
+        assert(request->body_pipe != NULL);
+        if (!request->body_pipe->setConsumerIfNotLate(this)) {
+            debug(9, 3) ("ftpReadStor: aborting on partially consumed body\n");
+            ftpFail(this);
+            return;
+        }
+
         /* Begin data transfer */
         debug(9, 3) ("ftpReadStor: starting data transfer\n");
-        commSetSelect(ftpState->data.fd,
-                      COMM_SELECT_WRITE,
-                      FtpStateData::ftpDataWrite,
-                      ftpState,
-                      Config.Timeout.read);
+        sendMoreRequestBody();
         /*
          * Cancel the timeout on the Control socket and
          * establish one on the data socket.
          */
-        commSetTimeout(ftpState->ctrl.fd, -1, NULL, NULL);
-        commSetTimeout(ftpState->data.fd, Config.Timeout.read, FtpStateData::ftpTimeout,
-                       ftpState);
-        ftpState->state = WRITING_DATA;
+        commSetTimeout(ctrl.fd, -1, NULL, NULL);
+        commSetTimeout(data.fd, Config.Timeout.read, FtpStateData::ftpTimeout,
+                       this);
+
+        state = WRITING_DATA;
         debug(9, 3) ("ftpReadStor: writing data channel\n");
     } else if (code == 150) {
         /* Accept data channel */
         debug(9, 3) ("ftpReadStor: accepting data channel\n");
-        comm_accept(ftpState->data.fd, ftpAcceptDataConnection, ftpState);
+        comm_accept(data.fd, ftpAcceptDataConnection, this);
     } else {
         debug(9, 3) ("ftpReadStor: Unexpected reply code %03d\n", code);
-        ftpFail(ftpState);
+        ftpFail(this);
     }
 }
 
@@ -2684,7 +2700,7 @@ ftpReadList(FtpStateData * ftpState)
     if (code == 125 || (code == 150 && ftpState->data.host)) {
         /* Begin data transfer */
         /* XXX what about Config.Timeout.read? */
-        ftpState->maybeReadData();
+        ftpState->maybeReadVirginBody();
         ftpState->state = READING_DATA;
         /*
          * Cancel the timeout on the Control socket and establish one
@@ -2729,7 +2745,7 @@ ftpReadRetr(FtpStateData * ftpState)
         /* Begin data transfer */
         debug(9, 3) ("ftpReadRetr: reading data channel\n");
         /* XXX what about Config.Timeout.read? */
-        ftpState->maybeReadData();
+        ftpState->maybeReadVirginBody();
         ftpState->state = READING_DATA;
         /*
          * Cancel the timeout on the Control socket and establish one
@@ -2780,55 +2796,22 @@ ftpReadTransferDone(FtpStateData * ftpState)
     }
 }
 
-/* This will be called when there is data available to put */
+// premature end of the request body
 void
-FtpStateData::ftpRequestBody(MemBuf &mb, void *data)
+FtpStateData::handleRequestBodyProducerAborted()
 {
-    FtpStateData *ftpState = (FtpStateData *) data;
-    debugs(9, 3, HERE << "ftpRequestBody: size=" << mb.contentSize() << " ftpState=%p" << data);
-
-    if (mb.contentSize() > 0) {
-        /* DataWrite */
-        comm_write(ftpState->data.fd, mb.content(), mb.contentSize(), FtpStateData::ftpDataWriteCallback, ftpState, NULL);
-    } else if (mb.contentSize() < 0) {
-        /* Error */
-        debug(9, 1) ("ftpRequestBody: request aborted");
-        ftpState->failed(ERR_READ_ERROR, 0);
-    } else if (mb.contentSize() == 0) {
-        /* End of transfer */
-        ftpState->dataComplete();
-    }
+    ServerStateData::handleRequestBodyProducerAborted();
+    debugs(9, 3, HERE << "noteBodyProducerAborted: ftpState=" << this);
+    failed(ERR_READ_ERROR, 0);
 }
 
 /* This will be called when the put write is completed */
 void
-FtpStateData::ftpDataWriteCallback(int fd, char *buf, size_t size, comm_err_t err, int xerrno, void *data)
+FtpStateData::sentRequestBody(int fd, size_t size, comm_err_t errflag)
 {
-    FtpStateData *ftpState = (FtpStateData *) data;
-
-    if (err == COMM_ERR_CLOSING)
-        return;
-
-    if (!err) {
-        /* Schedule the rest of the request */
-        commSetSelect(fd,
-                      COMM_SELECT_WRITE,
-                      ftpDataWrite,
-                      ftpState,
-                      Config.Timeout.read);
-    } else {
-        debug(9, 1) ("ftpDataWriteCallback: write error: %s\n", xstrerr(xerrno));
-        ftpState->failed(ERR_WRITE_ERROR, xerrno);
-    }
-}
-
-void
-FtpStateData::ftpDataWrite(int ftp, void *data)
-{
-    FtpStateData *ftpState = (FtpStateData *) data;
-    debug(9, 3) ("ftpDataWrite\n");
-    /* This starts the body transfer */
-    ftpState->request->body_reader->read(ftpRequestBody, ftpState);
+    if (size > 0)
+        kb_incr(&statCounter.server.ftp.kbytes_out, size);
+    ServerStateData::sentRequestBody(fd, size, errflag);
 }
 
 static void
@@ -2860,8 +2843,8 @@ ftpSendQuit(FtpStateData * ftpState)
 static void
 ftpReadQuit(FtpStateData * ftpState)
 {
-    /* XXX should this just be a case of transactionAbort? */
-    ftpState->transactionComplete();
+    /* XXX should this just be a case of abortTransaction? */
+    ftpState->serverComplete();
 }
 
 static void
@@ -2954,7 +2937,7 @@ FtpStateData::failed(err_type error, int xerrno)
     if (entry->isEmpty())
         failedErrorMessage(error, xerrno);
 
-    transactionComplete();
+    serverComplete();
 }
 
 void
@@ -3257,13 +3240,17 @@ void
 FtpStateData::writeReplyBody(const char *data, int len)
 {
 #if ICAP_CLIENT
-
-    if (icap)  {
+    if (virginBodyDestination != NULL)  {
         debugs(9,5,HERE << "writing " << len << " bytes to ICAP");
-        icap->sendMoreData (StoreIOBuffer(len, 0, (char*)data));
+        const size_t putSize = virginBodyDestination->putMoreData(data, len);
+        if (putSize != (size_t)len) {
+            // XXX: FTP writing should be rewritten to avoid temporary buffers
+            // because temporary buffers cannot handle overflows.
+            debugs(0,0,HERE << "ICAP cannot keep up with FTP; lost " << 
+                (len - putSize) << '/' << len << " bytes.");
+        }
         return;
     }
-
 #endif
 
     debugs(9,5,HERE << "writing " << len << " bytes to StoreEntry");
@@ -3273,48 +3260,36 @@ FtpStateData::writeReplyBody(const char *data, int len)
     storeAppend(entry, data, len);
 }
 
-/*
- * We've completed with the forwardstate - finish up if necessary.
- * This is a simple hack to ensure we don't double-complete on the
- * forward entry.
- */
+// called after we wrote the last byte of the request body
 void
-FtpStateData::transactionForwardComplete()
+FtpStateData::doneSendingRequestBody()
 {
-    debugs(9,5,HERE << "transactionForwardComplete FD " << ctrl.fd << ", Data FD " << data.fd << ", this " << this);
-    if (fwd == NULL) {
-	    fwd->complete();
-	    /* XXX this is also set to NULL in the destructor, but we need to do it as early as possible.. -adrian */
-	    fwd = NULL;	// refcounted
+    debugs(9,3,HERE << "doneSendingRequestBody");
+    ftpWriteTransferDone(this);
+}
+
+// a hack to ensure we do not double-complete on the forward entry.
+// TODO: FtpStateData logic should probably be rewritten to avoid 
+// double-completion or FwdState should be rewritten to allow it.
+void
+FtpStateData::completeForwarding()
+{
+    if (fwd == NULL || flags.completed_forwarding) {
+        debugs(9,2,HERE << "completeForwarding avoids " <<
+            "double-complete on FD " << ctrl.fd << ", Data FD " << data.fd <<
+            ", this " << this << ", fwd " << fwd);
+        return;
     }
 
+    flags.completed_forwarding = true;
+    ServerStateData::completeForwarding();
 }
 
-/*
- * Quickly abort a connection.
- * This will, for now, just call comm_close(). That'll unravel everything
- * properly (I hope!) by using abort handlers. This all has to change soon
- * enough!
- */
+// Close the FTP server connection(s). Used by serverComplete().
 void
-FtpStateData::transactionAbort()
+FtpStateData::closeServer()
 {
-    debugs(9,5,HERE << "transactionAbort FD " << ctrl.fd << ", Data FD " << data.fd << ", this " << this);
-    assert(ctrl.fd != -1);
-
-    comm_close(ctrl.fd);
-    /* We could have had our state data freed from underneath us here.. */
-}
-
-/*
- * Done with the FTP server, so close those sockets.  May not be
- * done with  ICAP yet though.  Don't free ftpStateData if ICAP is
- * still around.
- */
-void
-FtpStateData::transactionComplete()
-{
-    debugs(9,5,HERE << "transactionComplete FD " << ctrl.fd << ", Data FD " << data.fd << ", this " << this);
+    debugs(9,5, HERE << "closing FTP server FD " << ctrl.fd << ", Data FD " << data.fd << ", this " << this);
 
     if (ctrl.fd > -1) {
         fwd->unregister(ctrl.fd);
@@ -3327,19 +3302,27 @@ FtpStateData::transactionComplete()
         comm_close(data.fd);
         data.fd = -1;
     }
+}
 
-#if ICAP_CLIENT
+// Did we close all FTP server connection(s)?
+bool
+FtpStateData::doneWithServer() const
+{
+    return ctrl.fd < 0 && data.fd < 0;
+}
 
-    if (icap) {
-        icap->doneSending();
-        return;
-    }
-
-#endif
-
-    transactionForwardComplete();
-
-    ftpSocketClosed(-1, this);
+// Quickly abort the transaction
+// TODO: destruction should be sufficient as the destructor should cleanup,
+// including canceling close handlers
+void
+FtpStateData::abortTransaction(const char *reason)
+{
+    debugs(9,5,HERE << "aborting transaction for " << reason <<
+        "; FD " << ctrl.fd << ", Data FD " << data.fd << ", this " << this);
+    if (ctrl.fd >= 0)
+        comm_close(ctrl.fd);
+    else
+        delete this;
 }
 
 #if ICAP_CLIENT
@@ -3351,12 +3334,13 @@ icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data)
     ftpState->icapAclCheckDone(service);
 }
 
+// TODO: merge with http.cc and move to Server.cc?
 void
 FtpStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
 {
     icapAccessCheckPending = false;
 
-    const bool startedIcap = startIcap(service);
+    const bool startedIcap = startIcap(service, request);
 
     if (!startedIcap && (!service || service->bypass)) {
         // handle ICAP start failure when no service was selected
@@ -3375,109 +3359,7 @@ FtpStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
         return;
     }
 
-    icap->startRespMod(this, request, reply);
     processReplyBody();
 }
-
-/*
- * Called by ICAPClientRespmodPrecache when it has space available for us.
- */
-void
-FtpStateData::icapSpaceAvailable()
-{
-    debug(11,5)("FtpStateData::icapSpaceAvailable() called\n");
-    maybeReadData();
-}
-
-bool
-FtpStateData::takeAdaptedHeaders(HttpReply *rep)
-{
-    debug(11,5)("FtpStateData::takeAdaptedHeaders() called\n");
-
-    if (!entry->isAccepting()) {
-        debug(11,5)("\toops, entry is not Accepting!\n");
-        backstabAdapter();
-        return false;
-    }
-
-    assert (rep);
-    entry->replaceHttpReply(rep);
-    HTTPMSGUNLOCK(reply);
-
-    reply = HTTPMSGLOCK(rep);
-
-    debug(11,5)("FtpStateData::takeAdaptedHeaders() finished\n");
-    return true;
-}
-
-bool
-FtpStateData::takeAdaptedBody(MemBuf *buf)
-{
-    debug(11,5)("FtpStateData::takeAdaptedBody() called\n");
-    debug(11,5)("\t%d bytes\n", (int) buf->contentSize());
-
-    if (!entry->isAccepting()) {
-        debug(11,5)("\toops, entry is not Accepting!\n");
-        backstabAdapter();
-        return false;
-    }
-
-    storeAppend(entry, buf->content(), buf->contentSize());
-    buf->consume(buf->contentSize()); // consume everything written
-    return true;
-}
-
-void
-FtpStateData::finishAdapting()
-{
-    debug(11,5)("FtpStateData::doneAdapting() called\n");
-
-    if (!entry->isAccepting()) {
-        debug(11,5)("\toops, entry is not Accepting!\n");
-        backstabAdapter();
-    } else {
-        transactionForwardComplete();
-        endAdapting();
-    }
-}
-
-void
-FtpStateData::abortAdapting()
-{
-    debug(11,5)("FtpStateData::abortAdapting() called\n");
-
-    if (entry->isEmpty()) {
-        ErrorState *err;
-        err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, request);
-        err->xerrno = errno;
-        fwd->fail(err);
-        fwd->dontRetry(true);
-    }
-
-    endAdapting();
-}
-
-// internal helper to terminate adotation when called by the adapter
-void
-FtpStateData::backstabAdapter()
-{
-    debug(11,5)("HttpStateData::backstabAdapter() called for %p\n", icap);
-    assert(icap);
-    icap->ownerAbort();
-    endAdapting();
-}
-
-void
-FtpStateData::endAdapting()
-{
-    delete icap;
-    icap = NULL;
-
-    if (ctrl.fd >= 0)
-        comm_close(ctrl.fd);
-    else
-        delete this;
-}
-
 
 #endif

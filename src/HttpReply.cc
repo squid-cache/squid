@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.90 2006/10/31 23:30:56 wessels Exp $
+ * $Id: HttpReply.cc,v 1.91 2007/04/06 04:50:04 rousskov Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -114,6 +114,10 @@ void HttpReply::reset()
 void
 HttpReply::clean()
 {
+    // we used to assert that the pipe is NULL, but now the message only 
+    // points to a pipe that is owned and initiated by another object.
+    body_pipe = NULL;
+
     httpBodyClean(&body);
     hdrCacheClean();
     header.clean();

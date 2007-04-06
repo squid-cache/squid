@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.79 2007/02/25 11:32:32 hno Exp $
+ * $Id: client_side_request.cc,v 1.80 2007/04/06 04:50:06 rousskov Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -59,7 +59,7 @@
 #include "wordlist.h"
 
 #if ICAP_CLIENT
-#include "ICAP/ICAPClientReqmodPrecache.h"
+#include "ICAP/ICAPModXact.h"
 #include "ICAP/ICAPElements.h"
 #include "ICAP/ICAPConfig.h"
 static void icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data);
@@ -120,7 +120,7 @@ ClientRequestContext::~ClientRequestContext()
         }
     }
 
-    debugs(85,3, HERE << this << " ClientHttpRequest destructed");
+    debugs(85,3, HERE << this << " ClientRequestContext destructed");
 }
 
 ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) : http(cbdataReference(anHttp)), acl_checklist (NULL), redirect_state (REDIRECT_NONE)
@@ -156,7 +156,6 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData::Pointer aConn) : loggingEntr
     setConn(aConn);
     dlinkAdd(this, &active, &ClientActiveRequests);
 #if ICAP_CLIENT
-
     request_satisfaction_mode = false;
 #endif
 }
@@ -238,14 +237,10 @@ ClientHttpRequest::~ClientHttpRequest()
 {
     debug(33, 3) ("httpRequestFree: %s\n", uri);
     PROF_start(httpRequestFree);
-    /* if body_connection !NULL, then ProcessBody has not
-     * found the end of the body yet
-     */
 
-    if (request && request->body_reader != NULL) {
-        request->body_reader = NULL;	// refcounted, triggers abort if needed.
-        debugs(32, 3, HERE << "setting body_reader = NULL for request " << request);
-    }
+    // Even though freeResources() below may destroy the request,
+    // we no longer set request->body_pipe to NULL here
+    // because we did not initiate that pipe (ConnStateData did)
 
     /* the ICP check here was erroneous
      * - storeReleaseRequest was always called if entry was valid 
@@ -262,10 +257,12 @@ ClientHttpRequest::~ClientHttpRequest()
     freeResources();
 
 #if ICAP_CLIENT
-
-    if (icap)
-        delete icap;
-
+    if (icapHeadSource != NULL) {
+        icapHeadSource->noteInitiatorAborted();
+        icapHeadSource = NULL;
+    }
+    if (icapBodySource != NULL)
+        stopConsumingFrom(icapBodySource);
 #endif
 
     if (calloutContext)
@@ -514,35 +511,20 @@ void
 ClientRequestContext::icapAclCheckDone(ICAPServiceRep::Pointer service)
 {
     debugs(93,3,HERE << this << " icapAclCheckDone called");
-    /*
-     * No matching ICAP service in the config file
-     */
+    assert(http);
 
-    if (service == NULL) {
+    if (http->startIcap(service))
+        return;
+
+    if (!service || service->bypass) {
+        // handle ICAP start failure when no service was selected
+        // or where the selected service was optional
         http->doCallouts();
         return;
     }
 
-    /*
-     * Setup ICAP state and such.  If successful, just return.
-     * We'll get back to doCallouts() after REQMOD is done.
-     */
-    assert(http);
-
-    if (0 == http->doIcap(service))
-        return;
-
-    /*
-     * If doIcap() fails, then we have to either return an error
-     * to the user, or keep going without ICAP.
-     */
-    fatal("Fix this case in ClientRequestContext::icapAclCheckDone()");
-
-    // And when fixed, check whether the service is down in doIcap and
-    // if it is, abort early, without creating ICAPClientReqmodPrecache.
-    // See Server::startIcap() and its use.
-
-    http->doCallouts();
+    // handle start failure for an essential ICAP service
+    http->handleIcapFailure();
 }
 
 #endif
@@ -851,10 +833,10 @@ ClientRequestContext::clientRedirectDone(char *result)
             ;
         }
 
-        if (old_request->body_reader != NULL) {
-            new_request->body_reader = old_request->body_reader;
-            old_request->body_reader = NULL;
-            debugs(0,0,HERE << "setting body_reader = NULL for request " << old_request);
+        if (old_request->body_pipe != NULL) {
+            new_request->body_pipe = old_request->body_pipe;
+            old_request->body_pipe = NULL;
+            debugs(0,0,HERE << "redirecting body_pipe " << new_request->body_pipe << " from request " << old_request << " to " << new_request);
         }
 
         new_request->content_length = old_request->content_length;
@@ -867,7 +849,7 @@ ClientRequestContext::clientRedirectDone(char *result)
 
     /* FIXME PIPELINE: This is innacurate during pipelining */
 
-    if (http->getConn().getRaw() != NULL)
+    if (http->getConn() != NULL)
         fd_note(http->getConn()->fd, http->uri);
 
     assert(http->uri);
@@ -1088,140 +1070,40 @@ ClientHttpRequest::doCallouts()
 
 #if ICAP_CLIENT
 /*
- * Initiate an ICAP transaction.  Return 0 if all is well, or -1 upon error.
- * Caller will handle error condition by generating a Squid error message
- * or take other action.
+ * Initiate an ICAP transaction.  Return false on errors. 
+ * The caller must handle errors.
  */
-int
-ClientHttpRequest::doIcap(ICAPServiceRep::Pointer service)
+bool
+ClientHttpRequest::startIcap(ICAPServiceRep::Pointer service)
 {
-    debugs(85, 3, HERE << this << " ClientHttpRequest::doIcap() called");
-    assert(NULL == icap);
-    icap = new ICAPClientReqmodPrecache(service);
-    icap->startReqMod(this, request);
-
-    if (request->body_reader == NULL) {
-        debugs(32, 3, HERE << "client request hasnt body...");
-        icap->doneSending();
-
+    debugs(85, 3, HERE << this << " ClientHttpRequest::startIcap() called");
+    if (!service) {
+        debug(85,3)("ClientHttpRequest::startIcap fails: lack of service\n");
+        return false;
+    }
+    if (service->broken()) {
+        debug(85,3)("ClientHttpRequest::startIcap fails: broken service\n");
+        return false;
     }
 
-    return 0;
-}
-
-/*
- * icapSendRequestBodyWrapper
- *
- * A callback wrapper for ::icapSendRequestBody()
- *
- * icapSendRequestBodyWrapper is of type CBCB
- */
-void
-ClientHttpRequest::icapSendRequestBodyWrapper(MemBuf &mb, void *data)
-{
-    ClientHttpRequest *chr = static_cast<ClientHttpRequest*>(data);
-    chr->icapSendRequestBody(mb);
-}
-
-
-/*
- * icapSendRequestBody
- *
- * Sends some chunk of a request body to the ICAP side.  Must make sure
- * that the ICAP-side can accept the data we have.  If there is more
- * body data to read, then schedule another BodyReader callback.
- */
-void
-ClientHttpRequest::icapSendRequestBody(MemBuf &mb)
-{
-    ssize_t size_to_send  = mb.contentSize();
-    debugs(32,3,HERE << "have " << mb.contentSize() << " bytes in mb");
-
-    if (size_to_send == 0) {
-        /*
-         * An error occurred during this transaction.  Tell ICAP that we're done.
-         */
-
-        if (icap)
-            icap->doneSending();
-
-        return;
-    }
-
-    debugs(32,3,HERE << "icap->potentialSpaceSize() = " << icap->potentialSpaceSize());
-
-    if (size_to_send > icap->potentialSpaceSize())
-        size_to_send = icap->potentialSpaceSize();
-
-    if (size_to_send) {
-        debugs(32,3,HERE << "sending " << size_to_send << " body bytes to ICAP");
-        StoreIOBuffer sbuf(size_to_send, 0, mb.content());
-        icap->sendMoreData(sbuf);
-        icap->body_reader->consume(size_to_send);
-        icap->body_reader->bytes_read += size_to_send;
-        debugs(32,3," HTTP client body bytes_read=" << icap->body_reader->bytes_read);
-    } else {
-        debugs(32,2,HERE << "cannot send body data to ICAP");
-        debugs(32,2,HERE << "\tBodyReader MemBuf has " << mb.contentSize());
-        debugs(32,2,HERE << "\tbut icap->potentialSpaceSize() is " << icap->potentialSpaceSize());
-        return;
-    }
-
-    /*
-     * If we sent some data this time, and there is more data to
-     * read, then schedule another read request via BodyReader.
-     */
-    if (size_to_send && icap->body_reader->remaining()) {
-        debugs(32,3,HERE << "calling body_reader->read()");
-        icap->body_reader->read(icapSendRequestBodyWrapper, this);
-    } else {
-        debugs(32,3,HERE << "No more request body bytes to send");
-        icap->doneSending();
-    }
-}
-
-/*
- * Called by ICAPAnchor when it has space available for us.
- */
-void
-ClientHttpRequest::icapSpaceAvailable()
-{
-    debugs(85,3,HERE << this << " ClientHttpRequest::icapSpaceAvailable() called\n");
-
-    if (request->body_reader != NULL && icap->body_reader == NULL) {
-        debugs(32,3,HERE << "reassigning HttpRequest->body_reader to ICAP");
-        /*
-         * ICAP hooks on to the BodyReader that gets data from
-         * ConnStateData.  We'll make a new BodyReader that
-         * HttpStateData can use if the adapted response has a
-         * request body.  See ICAPClientReqmodPrecache::noteSourceStart()
-         */
-        icap->body_reader = request->body_reader;
-        request->body_reader = NULL;
-    }
-
-    if (icap->body_reader == NULL)
-        return;
-
-    if (icap->body_reader->callbackPending())
-        return;
-
-    debugs(32,3,HERE << "Calling read() for body data");
-
-    icap->body_reader->read(icapSendRequestBodyWrapper, this);
+    assert(!icapHeadSource);
+    assert(!icapBodySource);
+    icapHeadSource = new ICAPModXact(this, request, NULL, service);
+    ICAPModXact::AsyncStart(icapHeadSource.getRaw());
+    return true;
 }
 
 void
-ClientHttpRequest::takeAdaptedHeaders(HttpMsg *msg)
+ClientHttpRequest::noteIcapHeadersAdapted()
 {
-    debug(85,3)("ClientHttpRequest::takeAdaptedHeaders() called\n");
     assert(cbdataReferenceValid(this));		// indicates bug
+
+    HttpMsg *msg = icapHeadSource->adapted.header;
+    assert(msg);
 
     if (HttpRequest *new_req = dynamic_cast<HttpRequest*>(msg)) {
         /*
-         * Replace the old request with the new request.  First,
-         * Move the "body_connection" over, then unlink old and
-         * link new to the http state.
+         * Replace the old request with the new request.
          */
         HTTPMSGUNLOCK(request);
         request = HTTPMSGLOCK(new_req);
@@ -1235,6 +1117,12 @@ ClientHttpRequest::takeAdaptedHeaders(HttpMsg *msg)
     } else if (HttpReply *new_rep = dynamic_cast<HttpReply*>(msg)) {
         debugs(85,3,HERE << "REQMOD reply is HTTP reply");
 
+        // subscribe to receive reply body
+        if (new_rep->body_pipe != NULL) {
+            icapBodySource = new_rep->body_pipe;
+            assert(icapBodySource->setConsumerIfNotLate(this));
+        }
+
         clientStreamNode *node = (clientStreamNode *)client_stream.tail->prev->data;
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         repContext->createStoreEntry(request->method, request->flags);
@@ -1246,71 +1134,109 @@ ClientHttpRequest::takeAdaptedHeaders(HttpMsg *msg)
         clientGetMoreData(node, this);
     }
 
+    // we are done with getting headers (but may be receiving body)
+    icapHeadSource = NULL;
+
     if (!request_satisfaction_mode)
         doCallouts();
-
-    debug(85,3)("ClientHttpRequest::takeAdaptedHeaders() finished\n");
 }
 
 void
-ClientHttpRequest::takeAdaptedBody(MemBuf *buf)
+ClientHttpRequest::noteIcapHeadersAborted()
 {
-    debug(85,3)("ClientHttpRequest::takeAdaptedBody() called\n");
+    icapHeadSource = NULL;
+    assert(!icapBodySource);
+    handleIcapFailure();
+}
 
-    if (request_satisfaction_mode) {
-        storeEntry()->write(StoreIOBuffer(buf, request_satisfaction_offset));
-        request_satisfaction_offset += buf->contentSize();
-        buf->consume(buf->contentSize()); // consume everything written
-    } else {
-        debug(85,0)("Unexpected call to takeAdaptedBody when "
-                    "not in request_satisfaction_mode");
+void
+ClientHttpRequest::noteMoreBodyDataAvailable(BodyPipe &)
+{
+    assert(request_satisfaction_mode);
+    assert(icapBodySource != NULL);
+
+    if (const size_t contentSize = icapBodySource->buf().contentSize()) {
+        BodyPipeCheckout bpc(*icapBodySource);
+        const StoreIOBuffer ioBuf(&bpc.buf, request_satisfaction_offset);
+        storeEntry()->write(ioBuf);
+        // assume can write everything
+        request_satisfaction_offset += contentSize;
+        bpc.buf.consume(contentSize);
+        bpc.checkIn();
+    }
+
+    if (icapBodySource->exhausted())
+        endRequestSatisfaction();
+    // else wait for more body data
+}
+
+void
+ClientHttpRequest::noteBodyProductionEnded(BodyPipe &)
+{
+    assert(!icapHeadSource);
+    if (icapBodySource != NULL) { // did not end request satisfaction yet
+        // We do not expect more because noteMoreBodyDataAvailable always 
+        // consumes everything. We do not even have a mechanism to consume
+        // leftovers after noteMoreBodyDataAvailable notifications seize.
+        assert(icapBodySource->exhausted());
+        endRequestSatisfaction();
     }
 }
 
 void
-ClientHttpRequest::doneAdapting()
-{
-    debug(85,3)("ClientHttpRequest::doneAdapting() called\n");
+ClientHttpRequest::endRequestSatisfaction() {
+    debugs(85,4, HERE << this << " ends request satisfaction");
+    assert(request_satisfaction_mode);
+    stopConsumingFrom(icapBodySource);
+
+    // TODO: anything else needed to end store entry formation correctly?
+    storeEntry()->complete();
 }
 
 void
-ClientHttpRequest::abortAdapting()
+ClientHttpRequest::noteBodyProducerAborted(BodyPipe &)
 {
-    debug(85,3)("ClientHttpRequest::abortAdapting() called\n");
+    assert(!icapHeadSource);
+    stopConsumingFrom(icapBodySource);
+    handleIcapFailure();
+}
 
-    if ((NULL == storeEntry()) || storeEntry()->isEmpty()) {
-        debug(85,3)("WARNING: ICAP REQMOD callout failed, proceeding with original request\n");
+void
+ClientHttpRequest::handleIcapFailure()
+{
+    debugs(85,3, HERE << "handleIcapFailure");
 
+    const bool usedStore = storeEntry() && !storeEntry()->isEmpty();
+    const bool usedPipe = request->body_pipe != NULL &&
+        request->body_pipe->consumedSize() > 0;
+
+    // XXX: we must not try to recover if the ICAP service is not bypassable!
+
+    if (!usedStore && !usedPipe) {
+        debug(85,2)("WARNING: ICAP REQMOD callout failed, proceeding with original request\n");
         if (calloutContext)
             doCallouts();
-
-#if ICAP_HARD_ERROR
-
-        clientStreamNode *node = (clientStreamNode *)client_stream.tail->prev->data;
-
-        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-
-        assert (repContext);
-
-        // Note if this code is ever used, clientBuildError() should be modified to
-        // accept an errno arg
-        repContext->setReplyToError(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR,
-                                    request->method, NULL,
-                                    getConn().getRaw() != NULL ? &getConn()->peer.sin_addr : &no_addr, request,
-                                    NULL, getConn().getRaw() != NULL
-                                    && getConn()->auth_user_request ? getConn()->
-                                    auth_user_request : request->auth_user_request, errno);
-
-        node = (clientStreamNode *)client_stream.tail->data;
-
-        clientStreamRead(node, this, node->readBuffer);
-
-#endif
-
         return;
     }
 
-    debug(0,0)("write me at %s:%d\n", __FILE__,__LINE__);
+    debugs(85,3, HERE << "ICAP REQMOD callout failed, responding with error");
+
+    clientStreamNode *node = (clientStreamNode *)client_stream.tail->prev->data;
+    clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+    assert(repContext);
+
+    // The original author of the code also wanted to pass an errno to 
+    // setReplyToError, but it seems unlikely that the errno reflects the
+    // true cause of the error at this point, so I did not pass it.
+    ConnStateData::Pointer c = getConn();
+    repContext->setReplyToError(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR,
+        request->method, NULL,
+        (c != NULL ? &c->peer.sin_addr : &no_addr), request, NULL,
+        (c != NULL && c->auth_user_request ?
+            c->auth_user_request : request->auth_user_request));
+
+    node = (clientStreamNode *)client_stream.tail->data;
+    clientStreamRead(node, this, node->readBuffer);
 }
 
 #endif

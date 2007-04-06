@@ -12,25 +12,29 @@
 
 CBDATA_CLASS_INIT(ICAPOptXact);
 
-ICAPOptXact::ICAPOptXact(): ICAPXaction("ICAPOptXact"), options(NULL),
-        cb(NULL), cbData(NULL)
-
+ICAPOptXact::ICAPOptXact(ICAPServiceRep::Pointer &aService, Callback *aCbAddr, void *aCbData):
+    ICAPXaction("ICAPOptXact"),
+    cbAddr(aCbAddr), cbData(cbdataReference(aCbData))
 {
+    Must(aCbAddr && aCbData);
+    service(aService);
 }
 
 ICAPOptXact::~ICAPOptXact()
 {
-    Must(!options); // the caller must set to NULL
+    if (cbAddr) {
+        debugs(93, 1, HERE << "BUG: exiting without sending options");
+        cbdataReferenceDone(cbData);
+    }
 }
 
-void ICAPOptXact::start(ICAPServiceRep::Pointer &aService, Callback *aCb, void *aCbData)
+void ICAPOptXact::start()
 {
     ICAPXaction_Enter(start);
-    service(aService);
 
-    Must(!cb && aCb && aCbData);
-    cb = aCb;
-    cbData = cbdataReference(aCbData);
+    ICAPXaction::start();
+
+    Must(self != NULL); // set by AsyncStart;
 
     openConnection();
 
@@ -50,32 +54,6 @@ void ICAPOptXact::handleCommConnected()
     scheduleWrite(requestBuf);
 }
 
-bool ICAPOptXact::doneAll() const
-{
-    return options && ICAPXaction::doneAll();
-}
-
-
-void ICAPOptXact::doStop()
-{
-    ICAPXaction::doStop();
-
-    if (Callback *call = cb) {
-        cb = NULL;
-        void *data = NULL;
-
-        if (cbdataReferenceValidDone(cbData, &data)) {
-            (*call)(this, data); // will delete us
-            return;
-        }
-    }
-
-    // get rid of options if we did not call the callback
-    delete options;
-
-    options = NULL;
-}
-
 void ICAPOptXact::makeRequest(MemBuf &buf)
 {
     const ICAPServiceRep &s = service();
@@ -93,13 +71,16 @@ void ICAPOptXact::handleCommWrote(size_t size)
 // comm module read a portion of the ICAP response for us
 void ICAPOptXact::handleCommRead(size_t)
 {
-    if (parseResponse())
+    if (ICAPOptions *options = parseResponse()) {
+        sendOptions(options);
         Must(done()); // there should be nothing else to do
-    else
-        scheduleRead();
+        return;
+    }
+
+    scheduleRead();
 }
 
-bool ICAPOptXact::parseResponse()
+ICAPOptions *ICAPOptXact::parseResponse()
 {
     debugs(93, 5, HERE << "have " << readBuf.contentSize() << " bytes to parse" <<
            status());
@@ -108,19 +89,42 @@ bool ICAPOptXact::parseResponse()
     HttpReply *r = new HttpReply;
     r->protoPrefix = "ICAP/"; // TODO: make an IcapReply class?
 
-    if (!parseHttpMsg(r)) {
+    if (!parseHttpMsg(r)) { // throws on errors
         delete r;
-        return false;
+        return 0;
     }
-
-    options = new ICAPOptions;
-
-    options->configure(r);
 
     if (httpHeaderHasConnDir(&r->header, "close"))
         reuseConnection = false;
 
+    ICAPOptions *options = new ICAPOptions;
+    options->configure(r);
+
     delete r;
 
-    return true;
+    return options;
+}
+
+void ICAPOptXact::swanSong() {
+    if (cbAddr) {
+        debugs(93, 3, HERE << "probably failed; sending NULL options");
+        sendOptions(0);
+    }
+    ICAPXaction::swanSong();
+}
+
+void ICAPOptXact::sendOptions(ICAPOptions *options) {
+    debugs(93, 3, HERE << "sending options " << options << " to " << cbData <<
+        " at " << (void*)cbAddr << status());
+
+    Must(cbAddr);
+    Callback *addr = cbAddr;
+    cbAddr = NULL; // in case the callback calls us or throws
+
+    void *data = NULL;
+    if (cbdataReferenceValidDone(cbData, &data))
+        (*addr)(options, data); // callee takes ownership of the options
+    else
+        debugs(93, 2, HERE << "sending options " << options << " to " <<
+            data << " failed" << status());
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPServiceRep.h,v 1.5 2006/10/31 23:30:58 wessels Exp $
+ * $Id: ICAPServiceRep.h,v 1.6 2007/04/06 04:50:08 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -114,7 +114,7 @@ public:
 public: // treat these as private, they are for callbacks only
     void noteTimeToUpdate();
     void noteTimeToNotify();
-    void noteNewOptions(ICAPOptXact *x);
+    void noteNewOptions(ICAPOptions *newOptions);
 
 private:
     // stores Prepare() callback info

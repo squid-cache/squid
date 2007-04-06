@@ -1,6 +1,6 @@
 
 /*
- * $Id: MsgPipe.h,v 1.5 2006/08/21 00:50:45 robertc Exp $
+ * $Id: ICAPInOut.h,v 1.1 2007/04/06 04:50:07 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -31,59 +31,60 @@
  *
  */
 
-#ifndef SQUID_MSGPIPE_H
-#define SQUID_MSGPIPE_H
+#ifndef SQUID_ICAPINOUT_H
+#define SQUID_ICAPINOUT_H
 
-#include "cbdata.h"
-#include "event.h"
+#include "HttpMsg.h"
+#include "HttpRequest.h"
+#include "HttpReply.h"
 
-// MsgPipe is a unidirectional communication channel for asynchronously
-// transmitting potentially large messages. It aggregates the message
-// being piped and pointers to the message sender and recepient.
-// MsgPipe also provides convenience wrappers for asynchronous calls to
-// recepient's and sender's note*() methods.
+// IcapInOut manages a pointer to the HTTP message being worked on.
+// For HTTP responses, request header information is also available 
+// as the "cause". ICAP transactions use this class to store virgin 
+// and adapted HTTP messages.
 
-class MsgPipeData;
-
-class MsgPipeEnd;
-
-class MsgPipeSource;
-
-class MsgPipeSink;
-
-class MsgPipe : public RefCountable
+class ICAPInOut
 {
 
 public:
-    typedef RefCount<MsgPipe> Pointer;
+    typedef HttpMsg Header;
 
-    MsgPipe(const char *aName = "anonym");
-    ~MsgPipe();
+    ICAPInOut(): header(0), cause(0) {}
 
-    // the pipe source calls these to notify the sink
-    void sendSourceStart();
-    void sendSourceProgress();
-    void sendSourceFinish();
-    void sendSourceAbort();
+    ~ICAPInOut()
+    {
+        HTTPMSGUNLOCK(cause);
+        HTTPMSGUNLOCK(header);
+    }
 
-    // the pipe sink calls these to notify the source
-    void sendSinkNeed();
-    void sendSinkAbort();
+    void setCause(HttpRequest *r)
+    {
+        if (r) {
+            HTTPMSGUNLOCK(cause);
+            cause = HTTPMSGLOCK(r);
+        } else {
+            assert(!cause);
+        }
+    }
 
-    // private method exposed for the event handler only
-    bool canSend(MsgPipeEnd *destination, const char *callName, bool future);
+    void setHeader(Header *h)
+    {
+        HTTPMSGUNLOCK(header);
+        header = HTTPMSGLOCK(h);
+		body_pipe = header->body_pipe;
+    }
 
 public:
-    const char *name; // unmanaged pointer used for debugging only
+    // virgin or adapted message being worked on
+    Header *header;   // parsed HTTP status/request line and headers
 
-    MsgPipeData *data;
-    MsgPipeSource *source;
-    MsgPipeSink *sink;
+    // HTTP request header for HTTP responses (the cause of the response)
+    HttpRequest *cause;
 
-private:
-    void sendLater(const char *callName, EVH * handler, MsgPipeEnd *destination);
-
-    CBDATA_CLASS2(MsgPipe);
+	// Copy of header->body_pipe, in case somebody moves the original.
+	BodyPipe::Pointer body_pipe;
 };
 
-#endif /* SQUID_MSGPIPE_H */
+// TODO: s/Header/Message/i ?
+
+#endif /* SQUID_ICAPINOUT_H */

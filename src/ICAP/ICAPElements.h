@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPElements.h,v 1.3 2005/12/22 22:26:31 wessels Exp $
+ * $Id: ICAPElements.h,v 1.4 2007/04/06 04:50:07 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -43,9 +43,6 @@ struct ICAP
 {
     typedef enum { methodNone, methodReqmod, methodRespmod, methodOptions } Method;
     typedef enum { pointNone, pointPreCache, pointPostCache } VectPoint;
-
-    // recommended initial size and max capacity for MsgPipe buffer
-    enum { MsgPipeBufSizeMin = (4*1024), MsgPipeBufSizeMax = SQUID_TCP_SO_RCVBUF };
 
     static const char *crlf;
     static const char *methodStr(ICAP::Method);

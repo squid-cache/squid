@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.26 2006/10/31 23:30:57 wessels Exp $
+ * $Id: http.h,v 1.27 2007/04/06 04:50:06 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,12 +38,9 @@
 #include "comm.h"
 #include "forward.h"
 #include "Server.h"
-#include "BodyReader.h"
 
 #if ICAP_CLIENT
 #include "ICAP/ICAPServiceRep.h"
-
-class ICAPClientRespmodPrecache;
 
 class ICAPAccessCheck;
 #endif
@@ -56,29 +53,21 @@ public:
     ~HttpStateData();
 
     static IOCB SendComplete;
-    static IOCB SendRequestEntityWrapper;
     static IOCB ReadReplyWrapper;
-    static CBCB RequestBodyHandlerWrapper;
     static void httpBuildRequestHeader(HttpRequest * request,
                                        HttpRequest * orig_request,
                                        StoreEntry * entry,
                                        HttpHeader * hdr_out,
                                        http_state_flags flags);
+
+    virtual int dataDescriptor() const;
     /* should be private */
-    void sendRequest();
+    bool sendRequest();
     void processReplyHeader();
     void processReplyBody();
     void readReply(size_t len, comm_err_t flag, int xerrno);
-    void maybeReadData();
+    virtual void maybeReadVirginBody(); // read response data from the network
     int cacheableReply();
-
-#if ICAP_CLIENT
-    virtual bool takeAdaptedHeaders(HttpReply *);
-    virtual bool takeAdaptedBody(MemBuf *);
-    virtual void finishAdapting(); // deletes icap
-    virtual void abortAdapting();  // deletes icap
-    virtual void icapSpaceAvailable();
-#endif
 
     peer *_peer;		/* peer request made to */
     int eof;			/* reached end-of-object? */
@@ -87,13 +76,15 @@ public:
     http_state_flags flags;
     off_t currentOffset;
     size_t read_sz;
-    int body_bytes_read;	/* to find end of response, independent of StoreEntry */
+    int header_bytes_read;	// to find end of response,
+    int reply_bytes_read;	// without relying on StoreEntry
     MemBuf *readBuf;
     bool ignoreCacheControl;
     bool surrogateNoStore;
-    void processSurrogateControl(HttpReply *);
-#if ICAP_CLIENT
 
+    void processSurrogateControl(HttpReply *);
+
+#if ICAP_CLIENT
     void icapAclCheckDone(ICAPServiceRep::Pointer);
     bool icapAccessCheckPending;
 #endif
@@ -121,12 +112,20 @@ private:
     void failReply (HttpReply *reply, http_status const &status);
     void keepaliveAccounting(HttpReply *);
     void checkDateSkew(HttpReply *);
-    void haveParsedReplyHeaders();
-    void transactionComplete();
-    void writeReplyBody(const char *data, int len);
-    void sendRequestEntityDone();
+
+    virtual void haveParsedReplyHeaders();
+    virtual void closeServer(); // end communication with the server
+    virtual bool doneWithServer() const; // did we end communication?
+    virtual void abortTransaction(const char *reason); // abnormal termination
+
+    // consuming request body
+    virtual void handleMoreRequestBodyAvailable();
+    virtual void handleRequestBodyProducerAborted();
+
+    void writeReplyBody();
+    void doneSendingRequestBody();
     void requestBodyHandler(MemBuf &);
-    void sendRequestEntity(int fd, size_t size, comm_err_t errflag);
+    virtual void sentRequestBody(int fd, size_t size, comm_err_t errflag);
     mb_size_t buildRequestPrefix(HttpRequest * request,
                                  HttpRequest * orig_request,
                                  StoreEntry * entry,
@@ -135,8 +134,6 @@ private:
     static bool decideIfWeDoRanges (HttpRequest * orig_request);
 
 #if ICAP_CLIENT
-    void backstabAdapter();
-    void endAdapting();
 #endif
 
 private:
