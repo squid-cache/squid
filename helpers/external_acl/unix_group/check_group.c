@@ -1,5 +1,5 @@
 /*
- * $Id: check_group.c,v 1.6 2006/05/05 12:44:26 robertc Exp $
+ * $Id: check_group.c,v 1.7 2007/04/06 12:15:45 serassio Exp $
  *
  * This is a helper for the external ACL interface for Squid Cache
  * Copyright (C) 2002 Rodrigo Albani de Campos (rodrigo@geekbunker.org)
@@ -165,7 +165,7 @@ main(int argc, char *argv[])
 	    }
 	    break;
 	case '?':
-	    if (isprint(optopt)) {
+	    if (xisprint(optopt)) {
 
 		fprintf(stderr, "Unknown option '-%c'.\n", optopt);
 	    } else {

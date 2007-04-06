@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.511 2007/04/06 04:50:06 rousskov Exp $
+ * $Id: http.cc,v 1.512 2007/04/06 12:15:51 serassio Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -997,7 +997,7 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
     if (!flags.headers_parsed && flag == COMM_OK && len > 0 && fd_table[fd].uses > 1) {
         /* Skip whitespace between replies */
 
-        while (len > 0 && isspace(*buf))
+        while (len > 0 && xisspace(*buf))
             xmemmove(buf, buf + 1, len--);
 
         if (len == 0) {

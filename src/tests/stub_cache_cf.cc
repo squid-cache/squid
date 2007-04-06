@@ -1,5 +1,5 @@
 /*
- * $Id: stub_cache_cf.cc,v 1.3 2006/04/23 11:10:35 robertc Exp $
+ * $Id: stub_cache_cf.cc,v 1.4 2007/04/06 12:15:52 serassio Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Robert Collins
@@ -65,7 +65,7 @@ parse_eol(char *volatile *var)
     if (token == NULL)
         self_destruct();
 
-    while (*token && isspace(*token))
+    while (*token && xisspace(*token))
         token++;
 
     if (!*token)

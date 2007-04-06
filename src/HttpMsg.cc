@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.40 2007/04/06 04:50:04 rousskov Exp $
+ * $Id: HttpMsg.cc,v 1.41 2007/04/06 12:15:51 serassio Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -490,7 +490,7 @@ HttpParserParseReqLine(HttpParser *hmsg)
 	i = 0;
 
 	/* Find first non-whitespace - beginning of method */
-	for (; i < hmsg->req_end && (isspace(hmsg->buf[i])); i++);
+	for (; i < hmsg->req_end && (xisspace(hmsg->buf[i])); i++);
 	if (i >= hmsg->req_end) {
 		retcode = 0;
 		goto finish;
@@ -499,7 +499,7 @@ HttpParserParseReqLine(HttpParser *hmsg)
 	hmsg->req_start = i;
 
 	/* Find first whitespace - end of method */
-	for (; i < hmsg->req_end && (! isspace(hmsg->buf[i])); i++);
+	for (; i < hmsg->req_end && (! xisspace(hmsg->buf[i])); i++);
 	if (i >= hmsg->req_end) {
 		retcode = 0;
 		goto finish;
@@ -507,7 +507,7 @@ HttpParserParseReqLine(HttpParser *hmsg)
 	hmsg->m_end = i - 1;
 
 	/* Find first non-whitespace - beginning of URL+Version */
-	for (; i < hmsg->req_end && (isspace(hmsg->buf[i])); i++);
+	for (; i < hmsg->req_end && (xisspace(hmsg->buf[i])); i++);
 	if (i >= hmsg->req_end) {
 		retcode = 0;
 		goto finish;
@@ -550,7 +550,7 @@ HttpParserParseReqLine(HttpParser *hmsg)
 	} else {
 		/* Find the first non-whitespace after last_whitespace */
 		/* XXX why <= vs < ? I do need to really re-audit all of this ..*/
-		for (i = last_whitespace; i <= hmsg->req_end && isspace(hmsg->buf[i]); i++);
+		for (i = last_whitespace; i <= hmsg->req_end && xisspace(hmsg->buf[i]); i++);
 		if (i > hmsg->req_end) {
 			retcode = 0;
 			goto finish;

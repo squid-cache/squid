@@ -348,7 +348,7 @@ void hex_dump(void *data, int size)
             }
             
             c = *p;
-            if (isalnum(c) == 0) {
+            if (xisalnum(c) == 0) {
                 c = '.';
             }
 

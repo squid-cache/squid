@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.505 2007/02/25 11:32:29 hno Exp $
+ * $Id: cache_cf.cc,v 1.506 2007/04/06 12:15:51 serassio Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -255,7 +255,7 @@ parseConfigFile(const char *file_name, CacheManager & manager)
             if (file == token)
                 continue;	/* Not a valid #line directive, may be a comment */
 
-            while (*file && isspace((unsigned char) *file))
+            while (*file && xisspace((unsigned char) *file))
                 file++;
 
             if (*file) {
@@ -2289,7 +2289,7 @@ parse_eol(char *volatile *var)
     if (token == NULL)
         self_destruct();
 
-    while (*token && isspace(*token))
+    while (*token && xisspace(*token))
         token++;
 
     if (!*token)
