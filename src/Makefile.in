@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.414 2007/02/25 11:41:22 hno Exp $
+#  $Id: Makefile.in,v 1.415 2007/04/06 05:43:00 rousskov Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -81,14 +81,11 @@ ICAP_libicap_a_AR = $(AR) $(ARFLAGS)
 ICAP_libicap_a_LIBADD =
 am__dirstamp = $(am__leading_dot)dirstamp
 am_ICAP_libicap_a_OBJECTS = ICAP/ChunkedCodingParser.$(OBJEXT) \
-	ICAP/ICAPClient.$(OBJEXT) ICAP/ICAPClientVector.$(OBJEXT) \
-	ICAP/ICAPClientReqmodPrecache.$(OBJEXT) \
-	ICAP/ICAPClientRespmodPrecache.$(OBJEXT) \
+	ICAP/ICAPClient.$(OBJEXT) ICAP/ICAPInitiator.$(OBJEXT) \
 	ICAP/ICAPConfig.$(OBJEXT) ICAP/ICAPElements.$(OBJEXT) \
 	ICAP/ICAPModXact.$(OBJEXT) ICAP/ICAPOptions.$(OBJEXT) \
 	ICAP/ICAPOptXact.$(OBJEXT) ICAP/ICAPServiceRep.$(OBJEXT) \
-	ICAP/ICAPXaction.$(OBJEXT) ICAP/MsgPipe.$(OBJEXT) \
-	ICAP/TextException.$(OBJEXT)
+	ICAP/ICAPXaction.$(OBJEXT) ICAP/TextException.$(OBJEXT)
 ICAP_libicap_a_OBJECTS = $(am_ICAP_libicap_a_OBJECTS)
 libAIO_a_AR = $(AR) $(ARFLAGS)
 libAIO_a_LIBADD =
@@ -200,17 +197,17 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc \
 	ACLStringData.h ACLTime.cc ACLTime.h ACLTimeData.cc \
 	ACLTimeData.h ACLUrl.cc ACLUrl.h ACLUrlPath.cc ACLUrlPath.h \
 	ACLUrlPort.cc ACLUrlPort.h ACLUserData.cc ACLUserData.h asn.cc \
-	AsyncEngine.cc AsyncEngine.h authenticate.cc authenticate.h \
-	cache_cf.cc CacheDigest.cc cache_manager.cc CacheManager.h \
-	carp.cc cbdata.cc cbdata.h client_db.cc client_side.cc \
-	client_side.h client_side_reply.cc client_side_reply.h \
-	client_side_request.cc client_side_request.h BodyReader.cc \
-	BodyReader.h ClientRequestContext.h clientStream.cc \
-	clientStream.h CommIO.h CompletionDispatcher.cc \
-	CompletionDispatcher.h comm_select.cc comm_select.h \
-	comm_select_win32.cc comm_poll.cc comm_poll.h comm_epoll.cc \
-	comm_epoll.h comm_kqueue.cc comm_kqueue.h CommRead.h \
-	ConfigOption.cc ConfigParser.cc ConfigParser.h \
+	AsyncCall.cc AsyncCall.h AsyncEngine.cc AsyncEngine.h \
+	authenticate.cc authenticate.h cache_cf.cc CacheDigest.cc \
+	cache_manager.cc CacheManager.h carp.cc cbdata.cc cbdata.h \
+	client_db.cc client_side.cc client_side.h client_side_reply.cc \
+	client_side_reply.h client_side_request.cc \
+	client_side_request.h BodyPipe.cc BodyPipe.h \
+	ClientRequestContext.h clientStream.cc clientStream.h CommIO.h \
+	CompletionDispatcher.cc CompletionDispatcher.h comm_select.cc \
+	comm_select.h comm_select_win32.cc comm_poll.cc comm_poll.h \
+	comm_epoll.cc comm_epoll.h comm_kqueue.cc comm_kqueue.h \
+	CommRead.h ConfigOption.cc ConfigParser.cc ConfigParser.h \
 	ConnectionDetail.h debug.cc Debug.h defines.h CommonPool.h \
 	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
 	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
@@ -323,12 +320,12 @@ am__objects_22 = ACLCertificateData.$(OBJEXT) ACLCertificate.$(OBJEXT) \
 @ENABLE_WIN32SPECIFIC_TRUE@am__objects_26 = WinSvc.$(OBJEXT)
 am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	acl_noncore.$(OBJEXT) ACLChecklist.$(OBJEXT) $(am__objects_6) \
-	asn.$(OBJEXT) AsyncEngine.$(OBJEXT) authenticate.$(OBJEXT) \
-	cache_cf.$(OBJEXT) CacheDigest.$(OBJEXT) \
-	cache_manager.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
-	client_db.$(OBJEXT) client_side.$(OBJEXT) \
+	asn.$(OBJEXT) AsyncCall.$(OBJEXT) AsyncEngine.$(OBJEXT) \
+	authenticate.$(OBJEXT) cache_cf.$(OBJEXT) \
+	CacheDigest.$(OBJEXT) cache_manager.$(OBJEXT) carp.$(OBJEXT) \
+	cbdata.$(OBJEXT) client_db.$(OBJEXT) client_side.$(OBJEXT) \
 	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
-	BodyReader.$(OBJEXT) clientStream.$(OBJEXT) \
+	BodyPipe.$(OBJEXT) clientStream.$(OBJEXT) \
 	CompletionDispatcher.$(OBJEXT) $(am__objects_7) \
 	ConfigOption.$(OBJEXT) ConfigParser.$(OBJEXT) debug.$(OBJEXT) \
 	$(am__objects_9) disk.$(OBJEXT) $(am__objects_10) \
@@ -423,7 +420,7 @@ am__tests_testCacheManager_SOURCES_DIST = debug.cc globals.cc \
 	tests/testCacheManager.cc tests/testCacheManager.h \
 	tests/testMain.cc time.cc access_log.cc acl.cc acl_noncore.cc \
 	ACLChecklist.cc ACLProxyAuth.cc ACLStringData.cc \
-	ACLRegexData.cc ACLUserData.cc authenticate.cc BodyReader.cc \
+	ACLRegexData.cc ACLUserData.cc authenticate.cc BodyPipe.cc \
 	cache_manager.cc cache_cf.cc CacheDigest.cc carp.cc cbdata.cc \
 	client_db.cc client_side.cc client_side_reply.cc \
 	client_side_request.cc clientStream.cc comm_select.cc \
@@ -474,7 +471,7 @@ am_tests_testCacheManager_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	acl_noncore.$(OBJEXT) ACLChecklist.$(OBJEXT) \
 	ACLProxyAuth.$(OBJEXT) ACLStringData.$(OBJEXT) \
 	ACLRegexData.$(OBJEXT) ACLUserData.$(OBJEXT) \
-	authenticate.$(OBJEXT) BodyReader.$(OBJEXT) \
+	authenticate.$(OBJEXT) BodyPipe.$(OBJEXT) \
 	cache_manager.$(OBJEXT) cache_cf.$(OBJEXT) \
 	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
 	client_db.$(OBJEXT) client_side.$(OBJEXT) \
@@ -642,7 +639,7 @@ am__tests_testEvent_SOURCES_DIST = debug.cc EventLoop.h EventLoop.cc \
 	tests/testEvent.cc tests/testEvent.h tests/testMain.cc time.cc \
 	access_log.cc acl.cc acl_noncore.cc ACLChecklist.cc \
 	ACLProxyAuth.cc ACLStringData.cc ACLRegexData.cc \
-	ACLUserData.cc authenticate.cc BodyReader.cc cache_manager.cc \
+	ACLUserData.cc authenticate.cc BodyPipe.cc cache_manager.cc \
 	cache_cf.cc CacheDigest.cc carp.cc cbdata.cc client_db.cc \
 	client_side.cc client_side_reply.cc client_side_request.cc \
 	clientStream.cc comm_select.cc comm_select.h \
@@ -694,7 +691,7 @@ am_tests_testEvent_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	acl_noncore.$(OBJEXT) ACLChecklist.$(OBJEXT) \
 	ACLProxyAuth.$(OBJEXT) ACLStringData.$(OBJEXT) \
 	ACLRegexData.$(OBJEXT) ACLUserData.$(OBJEXT) \
-	authenticate.$(OBJEXT) BodyReader.$(OBJEXT) \
+	authenticate.$(OBJEXT) BodyPipe.$(OBJEXT) \
 	cache_manager.$(OBJEXT) cache_cf.$(OBJEXT) \
 	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
 	client_db.$(OBJEXT) client_side.$(OBJEXT) \
@@ -744,7 +741,7 @@ am__tests_testEventLoop_SOURCES_DIST = debug.cc EventLoop.h \
 	tests/testEventLoop.h tests/testMain.cc time.cc access_log.cc \
 	acl.cc acl_noncore.cc ACLChecklist.cc ACLProxyAuth.cc \
 	ACLStringData.cc ACLRegexData.cc ACLUserData.cc \
-	authenticate.cc BodyReader.cc cache_manager.cc cache_cf.cc \
+	authenticate.cc BodyPipe.cc cache_manager.cc cache_cf.cc \
 	CacheDigest.cc carp.cc cbdata.cc client_db.cc client_side.cc \
 	client_side_reply.cc client_side_request.cc clientStream.cc \
 	comm_select.cc comm_select.h comm_select_win32.cc comm_poll.cc \
@@ -795,7 +792,7 @@ am_tests_testEventLoop_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	acl_noncore.$(OBJEXT) ACLChecklist.$(OBJEXT) \
 	ACLProxyAuth.$(OBJEXT) ACLStringData.$(OBJEXT) \
 	ACLRegexData.$(OBJEXT) ACLUserData.$(OBJEXT) \
-	authenticate.$(OBJEXT) BodyReader.$(OBJEXT) \
+	authenticate.$(OBJEXT) BodyPipe.$(OBJEXT) \
 	cache_manager.$(OBJEXT) cache_cf.$(OBJEXT) \
 	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
 	client_db.$(OBJEXT) client_side.$(OBJEXT) \
@@ -870,7 +867,7 @@ am__tests_testHttpRequest_SOURCES_DIST = debug.cc globals.cc \
 	tests/testHttpRequestMethod.h tests/testHttpRequestMethod.cc \
 	tests/testMain.cc time.cc access_log.cc acl.cc acl_noncore.cc \
 	ACLChecklist.cc ACLProxyAuth.cc ACLStringData.cc \
-	ACLRegexData.cc ACLUserData.cc authenticate.cc BodyReader.cc \
+	ACLRegexData.cc ACLUserData.cc authenticate.cc BodyPipe.cc \
 	cache_manager.cc cache_cf.cc CacheDigest.cc carp.cc cbdata.cc \
 	client_db.cc client_side.cc client_side_reply.cc \
 	client_side_request.cc clientStream.cc comm_select.cc \
@@ -921,7 +918,7 @@ am_tests_testHttpRequest_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	acl_noncore.$(OBJEXT) ACLChecklist.$(OBJEXT) \
 	ACLProxyAuth.$(OBJEXT) ACLStringData.$(OBJEXT) \
 	ACLRegexData.$(OBJEXT) ACLUserData.$(OBJEXT) \
-	authenticate.$(OBJEXT) BodyReader.$(OBJEXT) \
+	authenticate.$(OBJEXT) BodyPipe.$(OBJEXT) \
 	cache_manager.$(OBJEXT) cache_cf.$(OBJEXT) \
 	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
 	client_db.$(OBJEXT) client_side.$(OBJEXT) \
@@ -1052,7 +1049,7 @@ am__tests_testURL_SOURCES_DIST = debug.cc url.cc URLScheme.cc \
 	tests/testURLScheme.cc tests/testURLScheme.h tests/testMain.cc \
 	time.cc access_log.cc acl.cc acl_noncore.cc ACLChecklist.cc \
 	ACLProxyAuth.cc ACLStringData.cc ACLRegexData.cc \
-	ACLUserData.cc authenticate.cc BodyReader.cc cache_manager.cc \
+	ACLUserData.cc authenticate.cc BodyPipe.cc cache_manager.cc \
 	cache_cf.cc CacheDigest.cc carp.cc cbdata.cc client_db.cc \
 	client_side.cc client_side_reply.cc client_side_request.cc \
 	clientStream.cc comm_select.cc comm_select.h \
@@ -1103,7 +1100,7 @@ am_tests_testURL_OBJECTS = debug.$(OBJEXT) url.$(OBJEXT) \
 	acl.$(OBJEXT) acl_noncore.$(OBJEXT) ACLChecklist.$(OBJEXT) \
 	ACLProxyAuth.$(OBJEXT) ACLStringData.$(OBJEXT) \
 	ACLRegexData.$(OBJEXT) ACLUserData.$(OBJEXT) \
-	authenticate.$(OBJEXT) BodyReader.$(OBJEXT) \
+	authenticate.$(OBJEXT) BodyPipe.$(OBJEXT) \
 	cache_manager.$(OBJEXT) cache_cf.$(OBJEXT) \
 	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
 	client_db.$(OBJEXT) client_side.$(OBJEXT) \
@@ -1188,7 +1185,7 @@ tests_testUfs_OBJECTS = $(am_tests_testUfs_OBJECTS)
 am__tests_test_http_range_SOURCES_DIST = tests/test_http_range.cc \
 	access_log.cc acl.cc acl_noncore.cc ACLChecklist.cc \
 	ACLProxyAuth.cc ACLStringData.cc ACLRegexData.cc \
-	ACLUserData.cc authenticate.cc BodyReader.cc cache_cf.cc \
+	ACLUserData.cc authenticate.cc BodyPipe.cc cache_cf.cc \
 	cache_manager.cc CacheDigest.cc carp.cc cbdata.cc client_db.cc \
 	client_side.cc client_side_reply.cc client_side_request.cc \
 	clientStream.cc comm_select.cc comm_select.h \
@@ -1237,9 +1234,9 @@ am_tests_test_http_range_OBJECTS = tests/test_http_range.$(OBJEXT) \
 	ACLChecklist.$(OBJEXT) ACLProxyAuth.$(OBJEXT) \
 	ACLStringData.$(OBJEXT) ACLRegexData.$(OBJEXT) \
 	ACLUserData.$(OBJEXT) authenticate.$(OBJEXT) \
-	BodyReader.$(OBJEXT) cache_cf.$(OBJEXT) \
-	cache_manager.$(OBJEXT) CacheDigest.$(OBJEXT) carp.$(OBJEXT) \
-	cbdata.$(OBJEXT) client_db.$(OBJEXT) client_side.$(OBJEXT) \
+	BodyPipe.$(OBJEXT) cache_cf.$(OBJEXT) cache_manager.$(OBJEXT) \
+	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
+	client_db.$(OBJEXT) client_side.$(OBJEXT) \
 	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
 	clientStream.$(OBJEXT) $(am__objects_7) ConfigOption.$(OBJEXT) \
 	ConfigParser.$(OBJEXT) debug.$(OBJEXT) $(am__objects_9) \
@@ -1286,13 +1283,14 @@ tests_test_http_range_OBJECTS = $(am_tests_test_http_range_OBJECTS) \
 am__ufsdump_SOURCES_DIST = debug.cc int.cc mem.cc store_key_md5.cc \
 	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
 	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
-	String.cc time.cc ufsdump.cc url.cc BodyReader.cc \
-	ConfigParser.cc store.cc StoreFileSystem.cc \
-	StoreSwapLogData.cc StoreSwapLogData.h access_log.cc acl.cc \
-	acl_noncore.cc ACLChecklist.cc ACLProxyAuth.cc ACLUserData.cc \
-	ACLRegexData.cc ACLStringData.cc authenticate.cc cache_cf.cc \
-	cache_manager.cc CacheDigest.cc carp.cc cbdata.cc client_db.cc \
-	client_side.cc client_side_reply.cc client_side_request.cc \
+	String.cc time.cc ufsdump.cc url.cc AsyncCall.cc AsyncCall.h \
+	BodyPipe.cc BodyPipe.h ConfigParser.cc store.cc \
+	StoreFileSystem.cc StoreSwapLogData.cc StoreSwapLogData.h \
+	access_log.cc acl.cc acl_noncore.cc ACLChecklist.cc \
+	ACLProxyAuth.cc ACLUserData.cc ACLRegexData.cc \
+	ACLStringData.cc authenticate.cc cache_cf.cc cache_manager.cc \
+	CacheDigest.cc carp.cc cbdata.cc client_db.cc client_side.cc \
+	client_side_reply.cc client_side_request.cc \
 	client_side_request.h clientStream.cc clientStream.h CommIO.h \
 	comm_select.cc comm_select.h comm_select_win32.cc comm_poll.cc \
 	comm_poll.h comm_epoll.cc comm_epoll.h comm_kqueue.cc \
@@ -1339,8 +1337,8 @@ am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) mem.$(OBJEXT) \
 	StoreMetaMD5.$(OBJEXT) StoreMetaSTD.$(OBJEXT) \
 	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
 	StoreMetaVary.$(OBJEXT) String.$(OBJEXT) time.$(OBJEXT) \
-	ufsdump.$(OBJEXT) url.$(OBJEXT) BodyReader.$(OBJEXT) \
-	ConfigParser.$(OBJEXT) store.$(OBJEXT) \
+	ufsdump.$(OBJEXT) url.$(OBJEXT) AsyncCall.$(OBJEXT) \
+	BodyPipe.$(OBJEXT) ConfigParser.$(OBJEXT) store.$(OBJEXT) \
 	StoreFileSystem.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
 	access_log.$(OBJEXT) acl.$(OBJEXT) acl_noncore.$(OBJEXT) \
 	ACLChecklist.$(OBJEXT) ACLProxyAuth.$(OBJEXT) \
@@ -1989,6 +1987,8 @@ squid_SOURCES = \
 	ACLChecklist.h \
 	$(squid_ACLSOURCES) \
 	asn.cc \
+	AsyncCall.cc \
+	AsyncCall.h \
 	AsyncEngine.cc \
 	AsyncEngine.h \
 	authenticate.cc \
@@ -2007,8 +2007,8 @@ squid_SOURCES = \
 	client_side_reply.h \
 	client_side_request.cc \
 	client_side_request.h \
-	BodyReader.cc \
-	BodyReader.h \
+	BodyPipe.cc \
+	BodyPipe.h \
 	ClientRequestContext.h \
 	clientStream.cc \
 	clientStream.h \
@@ -2248,12 +2248,9 @@ ICAP_libicap_a_SOURCES = \
  	ICAP/ChunkedCodingParser.h \
 	ICAP/ICAPClient.cc \
 	ICAP/ICAPClient.h \
-	ICAP/ICAPClientVector.cc \
-	ICAP/ICAPClientVector.h \
-	ICAP/ICAPClientReqmodPrecache.cc \
-	ICAP/ICAPClientReqmodPrecache.h \
-	ICAP/ICAPClientRespmodPrecache.cc \
-	ICAP/ICAPClientRespmodPrecache.h \
+	ICAP/ICAPInitiator.cc \
+	ICAP/ICAPInitiator.h \
+	ICAP/ICAPInOut.h \
 	ICAP/ICAPConfig.cc \
 	ICAP/ICAPConfig.h \
 	ICAP/ICAPElements.cc \
@@ -2268,12 +2265,6 @@ ICAP_libicap_a_SOURCES = \
 	ICAP/ICAPServiceRep.h \
 	ICAP/ICAPXaction.cc \
 	ICAP/ICAPXaction.h \
-	ICAP/MsgPipe.cc \
-	ICAP/MsgPipe.h \
-	ICAP/MsgPipeData.h \
-	ICAP/MsgPipeEnd.h \
-	ICAP/MsgPipeSink.h \
-	ICAP/MsgPipeSource.h \
 	ICAP/TextException.cc \
 	ICAP/TextException.h
 
@@ -2302,7 +2293,10 @@ ufsdump_SOURCES = \
 	time.cc \
 	ufsdump.cc \
 	url.cc \
-	BodyReader.cc \
+	AsyncCall.cc \
+	AsyncCall.h \
+	BodyPipe.cc \
+	BodyPipe.h \
 	ConfigParser.cc \
 	store.cc \
 	StoreFileSystem.cc \
@@ -2687,7 +2681,7 @@ tests_testCacheManager_SOURCES = \
 	ACLRegexData.cc \
 	ACLUserData.cc \
 	authenticate.cc \
-	BodyReader.cc \
+	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.cc \
 	CacheDigest.cc \
@@ -2855,7 +2849,7 @@ tests_testEvent_SOURCES = \
 	ACLRegexData.cc \
 	ACLUserData.cc \
 	authenticate.cc \
-	BodyReader.cc \
+	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.cc \
 	CacheDigest.cc \
@@ -3007,7 +3001,7 @@ tests_testEventLoop_SOURCES = \
 	ACLRegexData.cc \
 	ACLUserData.cc \
 	authenticate.cc \
-	BodyReader.cc \
+	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.cc \
 	CacheDigest.cc \
@@ -3180,7 +3174,7 @@ tests_test_http_range_SOURCES = \
 	ACLRegexData.cc \
 	ACLUserData.cc \
 	authenticate.cc \
-	BodyReader.cc \
+	BodyPipe.cc \
 	cache_cf.cc \
 	cache_manager.cc \
 	CacheDigest.cc \
@@ -3337,7 +3331,7 @@ tests_testHttpRequest_SOURCES = \
 	ACLRegexData.cc \
 	ACLUserData.cc \
 	authenticate.cc \
-	BodyReader.cc \
+	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.cc \
 	CacheDigest.cc \
@@ -3681,7 +3675,7 @@ tests_testURL_SOURCES = \
 	ACLRegexData.cc \
 	ACLUserData.cc \
 	authenticate.cc \
-	BodyReader.cc \
+	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.cc \
 	CacheDigest.cc \
@@ -3855,11 +3849,7 @@ ICAP/ChunkedCodingParser.$(OBJEXT): ICAP/$(am__dirstamp) \
 	ICAP/$(DEPDIR)/$(am__dirstamp)
 ICAP/ICAPClient.$(OBJEXT): ICAP/$(am__dirstamp) \
 	ICAP/$(DEPDIR)/$(am__dirstamp)
-ICAP/ICAPClientVector.$(OBJEXT): ICAP/$(am__dirstamp) \
-	ICAP/$(DEPDIR)/$(am__dirstamp)
-ICAP/ICAPClientReqmodPrecache.$(OBJEXT): ICAP/$(am__dirstamp) \
-	ICAP/$(DEPDIR)/$(am__dirstamp)
-ICAP/ICAPClientRespmodPrecache.$(OBJEXT): ICAP/$(am__dirstamp) \
+ICAP/ICAPInitiator.$(OBJEXT): ICAP/$(am__dirstamp) \
 	ICAP/$(DEPDIR)/$(am__dirstamp)
 ICAP/ICAPConfig.$(OBJEXT): ICAP/$(am__dirstamp) \
 	ICAP/$(DEPDIR)/$(am__dirstamp)
@@ -3874,8 +3864,6 @@ ICAP/ICAPOptXact.$(OBJEXT): ICAP/$(am__dirstamp) \
 ICAP/ICAPServiceRep.$(OBJEXT): ICAP/$(am__dirstamp) \
 	ICAP/$(DEPDIR)/$(am__dirstamp)
 ICAP/ICAPXaction.$(OBJEXT): ICAP/$(am__dirstamp) \
-	ICAP/$(DEPDIR)/$(am__dirstamp)
-ICAP/MsgPipe.$(OBJEXT): ICAP/$(am__dirstamp) \
 	ICAP/$(DEPDIR)/$(am__dirstamp)
 ICAP/TextException.$(OBJEXT): ICAP/$(am__dirstamp) \
 	ICAP/$(DEPDIR)/$(am__dirstamp)
@@ -4407,17 +4395,14 @@ mostlyclean-compile:
 	-rm -f DiskIO/WriteRequest.$(OBJEXT)
 	-rm -f ICAP/ChunkedCodingParser.$(OBJEXT)
 	-rm -f ICAP/ICAPClient.$(OBJEXT)
-	-rm -f ICAP/ICAPClientReqmodPrecache.$(OBJEXT)
-	-rm -f ICAP/ICAPClientRespmodPrecache.$(OBJEXT)
-	-rm -f ICAP/ICAPClientVector.$(OBJEXT)
 	-rm -f ICAP/ICAPConfig.$(OBJEXT)
 	-rm -f ICAP/ICAPElements.$(OBJEXT)
+	-rm -f ICAP/ICAPInitiator.$(OBJEXT)
 	-rm -f ICAP/ICAPModXact.$(OBJEXT)
 	-rm -f ICAP/ICAPOptXact.$(OBJEXT)
 	-rm -f ICAP/ICAPOptions.$(OBJEXT)
 	-rm -f ICAP/ICAPServiceRep.$(OBJEXT)
 	-rm -f ICAP/ICAPXaction.$(OBJEXT)
-	-rm -f ICAP/MsgPipe.$(OBJEXT)
 	-rm -f ICAP/TextException.$(OBJEXT)
 	-rm -f auth/basic/basicScheme.$(OBJEXT)
 	-rm -f auth/digest/digestScheme.$(OBJEXT)
@@ -4538,12 +4523,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLUrlPath.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLUrlPort.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLUserData.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AsyncCall.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AsyncEngine.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AuthConfig.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AuthScheme.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AuthUser.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AuthUserRequest.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BodyReader.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BodyPipe.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CacheDigest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CompletionDispatcher.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ConfigOption.Po@am__quote@
@@ -4732,17 +4718,14 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@DiskIO/DiskThreads/$(DEPDIR)/async_io.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ChunkedCodingParser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPClient.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPClientReqmodPrecache.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPClientRespmodPrecache.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPClientVector.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPConfig.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPElements.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPInitiator.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPModXact.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPOptXact.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPOptions.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPServiceRep.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPXaction.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/MsgPipe.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/TextException.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@auth/basic/$(DEPDIR)/basicScheme.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@auth/digest/$(DEPDIR)/digestScheme.Po@am__quote@
