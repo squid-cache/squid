@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.55 2006/11/22 07:43:26 adrian Exp $
+ * $Id: fd.cc,v 1.56 2007/04/06 15:39:06 serassio Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -124,7 +124,7 @@ file_read_method(int fd, char *buf, int len)
 {
     int i;
     PROF_start(read);
-    i = _read(fd, buf, len));
+    i = _read(fd, buf, len);
     PROF_stop(read);
     return i;
 }
