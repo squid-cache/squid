@@ -91,7 +91,7 @@ hex_dump(void *data, int size)
 		    (int) (p - (unsigned char *) data));
 	    }
 	    c = *p;
-	    if (isalnum(c) == 0) {
+	    if (xisalnum(c) == 0) {
 		c = '.';
 	    }
 	    /* store hex str (for left side) */
@@ -248,7 +248,7 @@ ntlmGetString(ntlmhdr * hdr, strhdr * str, int flags)
 	d = buf;
 
 	for (; l; l--) {
-	    if (*sc == '\0' || !isprint((int) (unsigned char) *sc)) {
+	    if (*sc == '\0' || !xisprint(*sc)) {
 		fprintf(stderr, "ntlmGetString: bad ascii: %04x\n", *sc);
 		return (NULL);
 	    }

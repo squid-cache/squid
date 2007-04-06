@@ -283,7 +283,7 @@ get_header_int_value(const char *hdr, const char *buf, const char *end)
     for (t = buf; t < end; t += strcspn(t, crlf), t += strspn(t, crlf)) {
 	if (strncasecmp(t, hdr, strlen(hdr)) == 0) {
 	    t += strlen(hdr);
-	    while (isspace(*t))
+	    while (xisspace(*t))
 		t++;
 	    return atoi(t);
 	}
@@ -299,7 +299,7 @@ get_header_string_value(const char *hdr, const char *buf, const char *end)
     for (t = buf; t < end; t += strcspn(t, crlf), t += strspn(t, crlf)) {
 	if (strncasecmp(t, hdr, strlen(hdr)) == 0) {
 	    t += strlen(hdr);
-	    while (isspace(*t))
+	    while (xisspace(*t))
 		t++;
 	    strcpy(result, "");
 	    strncat(result, t, strcspn(t, crlf));

@@ -320,12 +320,12 @@ validUsername(const char *user)
     const unsigned char *p = (const unsigned char *) user;
 
     /* Leading whitespace? */
-    if (isspace(p[0]))
+    if (xisspace(p[0]))
 	return 0;
     while (p[0] && p[1]) {
-	if (isspace(p[0])) {
+	if (xisspace(p[0])) {
 	    /* More than one consequitive space? */
-	    if (isspace(p[1]))
+	    if (xisspace(p[1]))
 		return 0;
 	    /* or odd space type character used? */
 	    if (p[0] != ' ')
@@ -334,7 +334,7 @@ validUsername(const char *user)
 	p++;
     }
     /* Trailing whitespace? */
-    if (isspace(p[0]))
+    if (xisspace(p[0]))
 	return 0;
     return 1;
 }

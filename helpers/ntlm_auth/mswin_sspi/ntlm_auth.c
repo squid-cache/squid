@@ -85,7 +85,7 @@ uc(char *string)
 {
     char *p = string, c;
     while ((c = *p)) {
-	*p = toupper(c);
+	*p = xtoupper(c);
 	p++;
     }
 }
@@ -96,7 +96,7 @@ lc(char *string)
 {
     char *p = string, c;
     while ((c = *p)) {
-	*p = tolower(c);
+	*p = xtolower(c);
 	p++;
     }
 }

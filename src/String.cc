@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cc,v 1.22 2006/09/28 07:33:59 adrian Exp $
+ * $Id: String.cc,v 1.23 2007/04/06 12:15:51 serassio Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -336,7 +336,7 @@ strwordtok(char *buf, char **t)
     if (!p)
         goto error;
 
-    while (*p && isspace(*p))
+    while (*p && xisspace(*p))
         p++;
 
     if (!*p)
@@ -384,7 +384,7 @@ strwordtok(char *buf, char **t)
             break;
 
         default:
-            if (!quoted && isspace(*p)) {
+            if (!quoted && xisspace(*p)) {
                 p++;
                 goto done;
             }

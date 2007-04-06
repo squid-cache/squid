@@ -79,12 +79,12 @@ void ChunkedCodingParser::parseChunkBeg()
             if (size == 0 && p && *p++ == ';') {
                 const char *e = theIn->content() + crlfBeg; // end of extension
 
-                while (p < e && isspace(*p))
+                while (p < e && xisspace(*p))
                     ++p; // skip space
 
                 sawIeof = e - p >= 4 &&
                           strncmp(p, "ieof", 4) == 0 &&
-                          isspace(p[4]);
+                          xisspace(p[4]);
             }
 
             theIn->consume(crlfEnd);
