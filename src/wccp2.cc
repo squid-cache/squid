@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp2.cc,v 1.13 2006/12/24 15:24:12 serassio Exp $
+ * $Id: wccp2.cc,v 1.14 2007/04/07 10:01:50 serassio Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Steven Wilton
@@ -2049,6 +2049,8 @@ dump_wccp2_service(StoreEntry * e, const char *label, void *v)
         if (srv->wccp2_security_type == WCCP2_MD5_SECURITY) {
             storeAppendPrintf(e, " %s", srv->wccp_password);
         }
+
+        storeAppendPrintf(e, "\n");
 
         srv = srv->next;
     }
