@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.155 2006/05/29 21:44:18 robertc Exp $
+ * $Id: url.cc,v 1.156 2007/04/07 09:35:38 serassio Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -38,19 +38,16 @@
 #include "URLScheme.h"
 
 static HttpRequest *urnParse(method_t method, char *urn);
-#if CHECK_HOSTNAMES
-static const char *const valid_hostname_chars =
-#if ALLOW_HOSTNAME_UNDERSCORES
+static const char valid_hostname_chars_u[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
-    "0123456789-._";
-#else
+    "0123456789-._"
+    ;
+static const char valid_hostname_chars[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
     "0123456789-."
     ;
-#endif
-#endif /* CHECK_HOSTNAMES */
 
 /* convert %xx in url string to a character
  * Allocate a new string and return a pointer to converted string */
@@ -286,13 +283,11 @@ urlParse(method_t method, char *url, HttpRequest *request)
         }
     }
 
-#if CHECK_HOSTNAMES
-    if (Config.onoff.check_hostnames && strspn(host, valid_hostname_chars) != strlen(host)) {
+    if (Config.onoff.check_hostnames && strspn(host, Config.onoff.allow_underscore ? valid_hostname_chars_u : valid_hostname_chars) != strlen(host)) {
         debug(23, 1) ("urlParse: Illegal character in hostname '%s'\n", host);
         return NULL;
     }
 
-#endif
 #if DONT_DO_THIS_IT_BREAKS_SEMANTIC_TRANSPARENCY
     /* remove trailing dots from hostnames */
     while ((l = strlen(host)) > 0 && host[--l] == '.')

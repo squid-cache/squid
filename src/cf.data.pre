@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.430 2007/04/06 04:50:05 rousskov Exp $
+# $Id: cf.data.pre,v 1.431 2007/04/07 09:35:38 serassio Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -1509,12 +1509,23 @@ DOC_END
 
 NAME: check_hostnames
 TYPE: onoff
-DEFAULT: on
+DEFAULT: off
 LOC: Config.onoff.check_hostnames
 DOC_START
-	For security and stability reasons Squid by default checks
-	hostnames for Internet standard RFC compliance. If you do not want
-	Squid to perform these checks turn this directive off.
+	For security and stability reasons Squid can check
+	hostnames for Internet standard RFC compliance. If you want
+	Squid to perform these checks turn this directive on.
+DOC_END
+
+NAME: allow_underscore
+TYPE: onoff
+DEFAULT: on
+LOC: Config.onoff.allow_underscore
+DOC_START
+	Underscore characers is not strictly allowed in Internet hostnames
+	but nevertheless used by many sites. Set this to off if you want
+	Squid to be strict about the standard.
+	This check is performed only when check_hostnames is set to on.
 DOC_END
 
 NAME: ftp_telnet_protocol
