@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskdIOStrategy.cc,v 1.6 2007/01/31 07:13:54 wessels Exp $
+ * $Id: DiskdIOStrategy.cc,v 1.7 2007/04/07 16:29:06 serassio Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -313,6 +313,10 @@ DiskdIOStrategy::handle(diomsg * M)
         return;
     }
 
+
+    /* set errno passed from diskd.  makes debugging more meaningful */
+    if (M->status < 0)
+        errno = -M->status;
 
     if (M->newstyle) {
         DiskdFile *theFile = (DiskdFile *)M->callback_data;
