@@ -1,8 +1,5 @@
 /* include/autoconf.h.in.  Generated from configure.in by autoheader.  */
 
-/* Allow underscores in host names */
-#undef ALLOW_HOSTNAME_UNDERSCORES
-
 /* Defines how many threads aufs uses for I/O */
 #undef AUFS_IO_THREADS
 
@@ -18,9 +15,6 @@
 
 /* Enable for cbdata debug information */
 #undef CBDATA_DEBUG
-
-/* Enable hostname sanity checks */
-#undef CHECK_HOSTNAMES
 
 /* Host type from configure */
 #undef CONFIG_HOST_TYPE
