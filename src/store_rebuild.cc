@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_rebuild.cc,v 1.86 2006/08/19 12:31:21 robertc Exp $
+ * $Id: store_rebuild.cc,v 1.87 2007/04/10 00:45:10 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -113,6 +113,7 @@ storeCleanup(void *datanotused)
         debugs(20, 1, "  Completed Validation Procedure");
         debugs(20, 1, "  Validated " << validated << " Entries");
         debugs(20, 1, "  store_swap_size = " << store_swap_size);
+	StoreController::store_dirs_rebuilding--;
         assert(0 == StoreController::store_dirs_rebuilding);
 
         if (opt_store_doublecheck)
@@ -143,7 +144,7 @@ storeRebuildComplete(struct _store_rebuild_data *dc)
     counts.bad_log_op += dc->bad_log_op;
     counts.zero_object_sz += dc->zero_object_sz;
     /*
-     * When store_dirs_rebuilding == 0, it means we are done reading
+     * When store_dirs_rebuilding == 1, it means we are done reading
      * or scanning all cache_dirs.  Now report the stats and start
      * the validation (storeCleanup()) thread.
      */
@@ -194,7 +195,7 @@ storeRebuildStart(void)
     memset(&counts, '\0', sizeof(counts));
     rebuild_start = current_time;
     /*
-     * Note: store_dirs_rebuilding is initialized to 0.
+     * Note: store_dirs_rebuilding is initialized to 1.
      *  
      * When we parse the configuration and construct each swap dir, 
      * the construction of that raises the rebuild count.
