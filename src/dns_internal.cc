@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.94 2006/09/19 07:56:57 adrian Exp $
+ * $Id: dns_internal.cc,v 1.95 2007/04/10 17:42:43 rousskov Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -1270,6 +1270,13 @@ idnsShutdown(void)
     comm_close(DnsSocket);
 
     DnsSocket = -1;
+
+    for (int i = 0; i < nns; i++) {
+        if (nsvc *vc = nameservers[i].vc) {
+            if (vc->fd >= 0)
+                comm_close(vc->fd);
+        }
+    }
 
     idnsFreeNameservers();
 
