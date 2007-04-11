@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_rebuild.cc,v 1.87 2007/04/10 00:45:10 wessels Exp $
+ * $Id: store_rebuild.cc,v 1.88 2007/04/10 19:24:38 wessels Exp $
  *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
@@ -149,7 +149,7 @@ storeRebuildComplete(struct _store_rebuild_data *dc)
      * the validation (storeCleanup()) thread.
      */
 
-    if (StoreController::store_dirs_rebuilding)
+    if (StoreController::store_dirs_rebuilding > 1)
         return;
 
     dt = tvSubDsec(rebuild_start, current_time);
