@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.154 2007/04/06 04:50:06 rousskov Exp $
+ * $Id: forward.cc,v 1.155 2007/04/12 14:07:10 rousskov Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -99,10 +99,24 @@ FwdState::FwdState(int fd, StoreEntry * e, HttpRequest * r)
 
     ;
     EBIT_SET(e->flags, ENTRY_FWD_HDR_WAIT);
+}
 
-    self = this;	// refcounted
+// Called once, right after object creation, when it is safe to set self
+void FwdState::start(Pointer aSelf) {
+    // Protect ourselves from being destroyed when the only Server pointing
+    // to us is gone (while we expect to talk to more Servers later).
+    // Once we set self, we are responsible for clearing it when we do not
+    // expect to talk to any servers.
+    self = aSelf; // refcounted
 
-    storeRegisterAbort(e, FwdState::abort, this);
+    // We hope that either the store entry aborts or peer is selected.
+    // Otherwise we are going to leak our object.
+
+    storeRegisterAbort(entry, FwdState::abort, this);
+    peerSelect(request, entry, fwdStartCompleteWrapper, this);
+
+    // TODO: set self _after_ the peer is selected because we do not need 
+    // self until we start talking to some Server.
 }
 
 void
@@ -245,9 +259,8 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
         return;
 
     default:
-        FwdState *fwd = new FwdState(client_fd, entry, request);
-	fwd->flags.forward_completed = 0;
-        peerSelect(request, entry, fwdStartCompleteWrapper, fwd);
+        FwdState::Pointer fwd = new FwdState(client_fd, entry, request);
+        fwd->start(fwd);
         return;
     }
 
@@ -314,14 +327,6 @@ FwdState::complete()
 
         storeEntryReset(e);
 
-        /*
-         * Need to re-establish the self-reference here since we'll
-         * be trying to forward the request again.  Otherwise the
-         * ref count could go to zero before a connection is
-         * established.
-         */
-        self = this;	// refcounted
-
         startComplete(servers);
     } else {
         debug(17, 3) ("fwdComplete: not re-forwarding status %d\n",
@@ -330,6 +335,7 @@ FwdState::complete()
 	entry->complete();
 	if (server_fd < 0)
 		completed();
+        self = NULL; // refcounted
     }
 }
 
@@ -937,12 +943,6 @@ FwdState::dispatch()
             break;
         }
     }
-
-    /*
-     * remove our self-refcount now that we've handed off the request
-     * to a server-side module
-     */
-    self = NULL;
 }
 
 int
