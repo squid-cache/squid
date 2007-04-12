@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.165 2006/09/19 07:56:57 adrian Exp $
+ * $Id: tunnel.cc,v 1.166 2007/04/12 14:21:50 rousskov Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -324,19 +324,23 @@ void
 SslStateData::writeServerDone(char *buf, size_t len, comm_err_t flag, int xerrno)
 {
     debug(26, 3) ("sslWriteServer: FD %d, %d bytes written\n", server.fd(), (int)len);
-    /* Valid data */
 
-    if (len > 0) {
-        kb_incr(&statCounter.server.all.kbytes_out, len);
-        kb_incr(&statCounter.server.other.kbytes_out, len);
-        client.dataSent(len);
+    /* Error? */
+    if (len < 0 || flag != COMM_OK) {
+        server.error(xerrno); // may call comm_close
+        return;
     }
 
-    /* EOF */
+    /* EOF? */
     if (len == 0) {
         comm_close(server.fd());
         return;
     }
+
+    /* Valid data */
+    kb_incr(&statCounter.server.all.kbytes_out, len);
+    kb_incr(&statCounter.server.other.kbytes_out, len);
+    client.dataSent(len);
 
     /* If the other end has closed, so should we */
     if (client.fd() == -1) {
@@ -345,11 +349,8 @@ SslStateData::writeServerDone(char *buf, size_t len, comm_err_t flag, int xerrno
     }
 
     cbdataInternalLock(this);	/* ??? should be locked by the caller... */
-    /* Error? */
 
-    if (len < 0)
-        server.error(xerrno);
-    else if (cbdataReferenceValid(this))
+    if (cbdataReferenceValid(this))
         copyRead(client, ReadClient);
 
     cbdataInternalUnlock(this);	/* ??? */
@@ -382,16 +383,21 @@ SslStateData::writeClientDone(char *buf, size_t len, comm_err_t flag, int xerrno
 {
     debug(26, 3) ("sslWriteClient: FD %d, %d bytes written\n", client.fd(), (int)len);
 
-    if (len > 0) {
-        kb_incr(&statCounter.client_http.kbytes_out, len);
-        server.dataSent(len);
+    /* Error? */
+    if (len < 0 || flag != COMM_OK) {
+        client.error(xerrno); // may call comm_close
+        return;
     }
 
-    /* EOF */
+    /* EOF? */
     if (len == 0) {
         comm_close(client.fd());
         return;
     }
+
+    /* Valid data */
+    kb_incr(&statCounter.client_http.kbytes_out, len);
+    server.dataSent(len);
 
     /* If the other end has closed, so should we */
     if (server.fd() == -1) {
@@ -400,11 +406,8 @@ SslStateData::writeClientDone(char *buf, size_t len, comm_err_t flag, int xerrno
     }
 
     cbdataInternalLock(this);	/* ??? should be locked by the caller... */
-    /* Error? */
 
-    if (len < 0)
-        client.error(xerrno);
-    else if (cbdataReferenceValid(this))
+    if (cbdataReferenceValid(this))
         copyRead(server, ReadServer);
 
     cbdataInternalUnlock(this);	/* ??? */
