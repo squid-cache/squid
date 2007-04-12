@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskdIOStrategy.cc,v 1.7 2007/04/07 16:29:06 serassio Exp $
+ * $Id: DiskdIOStrategy.cc,v 1.8 2007/04/12 17:56:39 rousskov Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -404,7 +404,8 @@ DiskdIOStrategy::SEND(diomsg *M, int mtype, int id, int size, int offset, off_t 
         debug(79, 1) ("storeDiskdSend: msgsnd: %s\n", xstrerror());
         cbdataReferenceDone(M->callback_data);
         assert(++send_errors < 100);
-        shm.put (shm_offset);
+        if (shm_offset > -1)
+            shm.put(shm_offset);
     }
 
     /*
