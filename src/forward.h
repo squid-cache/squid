@@ -22,7 +22,6 @@ class FwdState : public RefCountable
 
 public:
     typedef RefCount<FwdState> Pointer;
-    FwdState(int fd, StoreEntry *, HttpRequest *);
     ~FwdState();
     static void initModule();
     static void RegisterWithCacheManager(CacheManager & manager);
@@ -57,6 +56,10 @@ public:
     static void serversFree(FwdServer **);
 
 private:
+    // hidden for safer management of self; use static fwdStart
+    FwdState(int fd, StoreEntry *, HttpRequest *);
+    void start(Pointer aSelf);
+
     static void logReplyStatus(int tries, http_status status);
     void completed();
 
