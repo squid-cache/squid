@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.99 2006/08/28 10:11:10 serassio Exp $
+ * $Id: debug.cc,v 1.100 2007/04/11 22:57:34 wessels Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -263,6 +263,7 @@ debugOpenLog(const char *logfile) {
     if (debug_log && debug_log != stderr)
         fclose(debug_log);
 
+    assert(geteuid() != 0);
     debug_log = fopen(logfile, "a+");
 
     if (!debug_log) {

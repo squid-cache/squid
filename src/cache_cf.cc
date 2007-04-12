@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.506 2007/04/06 12:15:51 serassio Exp $
+ * $Id: cache_cf.cc,v 1.507 2007/04/11 22:57:34 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -328,13 +328,18 @@ parseConfigFile(const char *file_name, CacheManager & manager)
 
     defaults_if_none();
 
+    /*
+     * We must call configDoConfigure() before leave_suid() because
+     * configDoConfigure() is where we turn username strings into
+     * uid values.
+     */
+    configDoConfigure();
+
     if (!Config.chroot_dir) {
         leave_suid();
         _db_init(Config.Log.log, Config.debugOptions);
         enter_suid();
     }
-
-    configDoConfigure();
 
     if (opt_send_signal == -1) {
         manager.registerAction("config",
