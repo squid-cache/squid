@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.71 2006/11/04 14:15:22 hno Exp $
+ * $Id: htcp.cc,v 1.72 2007/04/12 05:03:54 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -767,6 +767,9 @@ htcpUnpackSpecifier(char *buf, int sz)
 
     s->request = HttpRequest::CreateFromUrlAndMethod(s->uri, method == METHOD_NONE ? METHOD_GET : method);
 
+    if (s->request)
+       HTTPMSGLOCK(s->request);
+
     return s;
 }
 
@@ -862,7 +865,7 @@ htcpAccessCheck(acl_access * acl, htcpSpecifier * s, struct sockaddr_in *from)
     ACLChecklist checklist;
     checklist.src_addr = from->sin_addr;
     checklist.my_addr = no_addr;
-    checklist.request = s->request;
+    checklist.request = HTTPMSGLOCK(s->request);
     checklist.accessList = cbdataReference(acl);
     /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
     int result = checklist.fastCheck();
@@ -1226,8 +1229,6 @@ htcpHandleTstRequest(htcpDataHeader * dhdr, char *buf, int sz, struct sockaddr_i
         htcpFreeSpecifier(s);
         return;
     }
-
-    HTTPMSGLOCK(s->request);
 
     if (!htcpAccessCheck(Config.accessList.htcp, s, from))
     {
