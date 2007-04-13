@@ -1,5 +1,5 @@
 /*
- * $Id: ufscommon.cc,v 1.7 2007/03/01 07:25:15 wessels Exp $
+ * $Id: ufscommon.cc,v 1.8 2007/04/12 23:51:58 wessels Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store Directory Routines
@@ -198,12 +198,6 @@ RebuildState::rebuildFromDirectory()
         store_open_disk_fd--;
         fd = -1;
         swap_hdr_len = 0;
-#if USE_TRUNCATE
-
-        if (sb.st_size == 0)
-            continue;
-
-#endif
 
         StoreMetaUnpacker aBuilder(hdr_buf, len, &swap_hdr_len);
 

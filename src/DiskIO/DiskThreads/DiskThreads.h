@@ -32,7 +32,6 @@ enum _squidaio_request_type {
     _AIO_OP_WRITE,
     _AIO_OP_CLOSE,
     _AIO_OP_UNLINK,
-    _AIO_OP_TRUNCATE,
     _AIO_OP_OPENDIR,
     _AIO_OP_STAT
 };
@@ -74,7 +73,6 @@ int squidaio_close(int, squidaio_result_t *);
 
 int squidaio_stat(const char *, struct stat *, squidaio_result_t *);
 int squidaio_unlink(const char *, squidaio_result_t *);
-int squidaio_truncate(const char *, off_t length, squidaio_result_t *);
 int squidaio_opendir(const char *, squidaio_result_t *);
 squidaio_result_t *squidaio_poll_done(void);
 int squidaio_operations_pending(void);
@@ -94,7 +92,6 @@ void aioRead(int, int offset, int size, AIOCB *, void *);
 
 void aioStat(char *, struct stat *, AIOCB *, void *);
 void aioUnlink(const char *, AIOCB *, void *);
-void aioTruncate(const char *, off_t length, AIOCB *, void *);
 int aioQueueSize(void);
 
 #include "DiskIO/DiskFile.h"

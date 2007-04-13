@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.78 2007/04/11 21:22:27 wessels Exp $
+ * $Id: store_dir_ufs.cc,v 1.79 2007/04/12 23:51:58 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1061,10 +1061,6 @@ UFSSwapDir::DirClean(int swap_index)
     struct dirent *de = NULL;
     LOCAL_ARRAY(char, p1, MAXPATHLEN + 1);
     LOCAL_ARRAY(char, p2, MAXPATHLEN + 1);
-#if USE_TRUNCATE
-
-    struct stat sb;
-#endif
 
     int files[20];
     int swapfileno;
@@ -1117,14 +1113,6 @@ UFSSwapDir::DirClean(int swap_index)
                 if (UFSSwapDir::FilenoBelongsHere(fn, D0, D1, D2))
                     continue;
 
-#if USE_TRUNCATE
-
-        if (!::stat(de->d_name, &sb))
-            if (sb.st_size == 0)
-                continue;
-
-#endif
-
         files[k++] = swapfileno;
     }
 
@@ -1141,14 +1129,7 @@ UFSSwapDir::DirClean(int swap_index)
     for (n = 0; n < k; n++) {
         debug(36, 3) ("storeDirClean: Cleaning file %08X\n", files[n]);
         snprintf(p2, MAXPATHLEN + 1, "%s/%08X", p1, files[n]);
-#if USE_TRUNCATE
-
-        truncate(p2, 0);
-#else
-
         safeunlink(p2, 0);
-#endif
-
         statCounter.swap.files_cleaned++;
     }
 

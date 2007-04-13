@@ -935,9 +935,6 @@
 /* Define this to include code for SSL encryption. */
 #undef USE_SSL
 
-/* Do we want to use truncate(2) or unlink(2)? */
-#undef USE_TRUNCATE
-
 /* Define this if unlinkd is required (strongly recommended for ufs storage
    type) */
 #undef USE_UNLINKD

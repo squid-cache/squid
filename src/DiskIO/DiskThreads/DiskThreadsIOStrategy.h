@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsIOStrategy.h,v 1.4 2006/09/03 04:12:00 hno Exp $
+ * $Id: DiskThreadsIOStrategy.h,v 1.5 2007/04/12 23:51:57 wessels Exp $
  *
  * DEBUG: section 79    Squid-side Disk I/O functions.
  * AUTHOR: Robert Collins
@@ -42,7 +42,6 @@
 #define _AIO_WRITE	2
 #define _AIO_CLOSE	3
 #define _AIO_UNLINK	4
-#define _AIO_TRUNCATE	4
 #define _AIO_OPENDIR	5
 #define _AIO_STAT	6
 #include "DiskIO/DiskIOStrategy.h"

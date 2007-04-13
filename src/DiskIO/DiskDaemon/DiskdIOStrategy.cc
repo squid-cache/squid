@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskdIOStrategy.cc,v 1.8 2007/04/12 17:56:39 rousskov Exp $
+ * $Id: DiskdIOStrategy.cc,v 1.9 2007/04/12 23:51:57 wessels Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -112,9 +112,6 @@ DiskdIOStrategy::unlinkFile(char const *path)
 #if USE_UNLINKD
 
         unlinkdUnlink(path);
-#elif USE_TRUNCATE
-
-        truncate(path, 0);
 #else
 
         unlink(path);

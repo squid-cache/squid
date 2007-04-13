@@ -1,6 +1,6 @@
 
 /*
- * $Id: unlinkd.cc,v 1.58 2006/09/10 03:49:05 adrian Exp $
+ * $Id: unlinkd.cc,v 1.59 2007/04/12 23:51:56 wessels Exp $
  *
  * DEBUG: section 2     Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -55,17 +55,7 @@ main(int argc, char *argv[])
     while (fgets(buf, UNLINK_BUF_LEN, stdin)) {
         if ((t = strchr(buf, '\n')))
             *t = '\0';
-
-#if USE_TRUNCATE
-
-        x = truncate(buf, 0);
-
-#else
-
         x = unlink(buf);
-
-#endif
-
         if (x < 0)
             printf("ERR\n");
         else
