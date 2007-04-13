@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.34 2006/05/31 17:47:53 wessels Exp $
+ * $Id: store_io_ufs.cc,v 1.35 2007/04/12 18:05:21 wessels Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -345,6 +345,19 @@ UFSStoreState::writeCompleted(int errflag, size_t len, RefCount<WriteRequest> wr
                " detected an error, will try to close");
         tryClosing();
     }
+
+    /*
+     * DPW 2007-04-12
+     * I'm seeing disk files remain open under vanilla UFS storage
+     * because storeClose() gets called before the last write is
+     * complete.  I guess we have to check for the try_closing
+     * flag here.
+     */
+    if (flags.try_closing) {
+	debugs(72, 2, HERE << "UFSStoreState::writeCompleted" <<
+	    " flags.try_closing is set");
+	tryClosing();
+    }
 }
 
 void
@@ -494,6 +507,8 @@ UFSStoreState::tryClosing()
            " ioInProgress = " << theFile->ioInProgress());
 
     if (theFile->ioInProgress()) {
+	debugs(79, 3, HERE << this <<
+	    " won't close since ioInProgress is true, bailing");
         flags.try_closing = true;
         return;
     }
