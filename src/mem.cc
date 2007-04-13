@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.101 2006/09/03 21:05:20 hno Exp $
+ * $Id: mem.cc,v 1.102 2007/04/12 19:37:23 wessels Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -354,8 +354,16 @@ memConfigure(void)
     else
         new_pool_limit = mem_unlimited_size;
 
+#if 0
+    /*
+     * DPW 2007-04-12
+     * No debugging here please because this method is called before
+     * the debug log is configured and we'll get the message on
+     * stderr when doing things like 'squid -k reconfigure'
+     */
     if (MemPools::GetInstance().idleLimit() > new_pool_limit)
         debug(13, 1) ("Shrinking idle mem pools to %.2f MB\n", toMB(new_pool_limit));
+#endif
 
     MemPools::GetInstance().setIdleLimit(new_pool_limit);
 }
