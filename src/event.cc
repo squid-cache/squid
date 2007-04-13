@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.45 2006/09/25 15:04:07 adrian Exp $
+ * $Id: event.cc,v 1.46 2007/04/12 21:47:12 wessels Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -177,6 +177,17 @@ EventScheduler::cancel(EVH * func, void *arg)
 
 	if (arg)
 	    return;
+	/*
+	 * DPW 2007-04-12
+	 * Since this method may now delete multiple events (when
+	 * arg is NULL) it no longer returns after a deletion and
+	 * we have a potential NULL pointer problem.  If we just
+	 * deleted the last event in the list then *E is now equal
+	 * to NULL.  We need to break here or else we'll get a NULL
+	 * pointer dereference in the last clause of the for loop.
+	 */
+	if (NULL == *E)
+	    break;
     }
 
     if (arg)
@@ -298,7 +309,7 @@ EventScheduler::schedule(const char *name, EVH * func, void *arg, double when, i
     struct ev_entry *event = new ev_entry(name, func, arg, current_dtime + when, weight, cbdata);
 
     struct ev_entry **E;
-    debugs(41, 7, "eventAdd: Adding '" << name << "', in " << when << " seconds");
+    debugs(41, 7, HERE << "schedule: Adding '" << name << "', in " << when << " seconds");
     /* Insert after the last event with the same or earlier time */
 
     for (E = &tasks; *E; E = &(*E)->next) {
