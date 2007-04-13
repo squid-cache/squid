@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.46 2007/04/12 21:47:12 wessels Exp $
+ * $Id: event.cc,v 1.47 2007/04/12 23:25:07 wessels Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -222,7 +222,7 @@ EventScheduler::checkEvents(int timeout)
 
     PROF_start(eventRun);
 
-    debugs(41, 5, "eventRun: \n");
+    debugs(41, 5, HERE << "checkEvents");
 
     while ((event = tasks)) {
         if (event->when > current_dtime)
