@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.442 2007/04/12 14:51:10 rousskov Exp $
+ * $Id: main.cc,v 1.443 2007/04/13 04:52:19 rousskov Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -1184,10 +1184,6 @@ main(int argc, char **argv)
 
         Mem::Init();
 
-        setMaxFD();
-
-        comm_init(); /* initialize early to handle fatal() errors */
-
         storeFsInit();		/* required for config parsing */
 
         /* May not be needed for parsing, have not audited for such */
@@ -1211,6 +1207,7 @@ main(int argc, char **argv)
 
 #if TEST_ACCESS
 
+    comm_init();
 
     comm_select_init();
 
@@ -1258,6 +1255,10 @@ main(int argc, char **argv)
     if (!opt_no_daemon)
         watch_child(argv);
 
+    setMaxFD();
+
+    /* init comm module */
+    comm_init();
 
     comm_select_init();
 
