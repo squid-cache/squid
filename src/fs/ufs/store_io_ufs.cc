@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.35 2007/04/12 18:05:21 wessels Exp $
+ * $Id: store_io_ufs.cc,v 1.36 2007/04/12 20:36:56 wessels Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -474,7 +474,17 @@ UFSStoreState::queueRead(char *buf, size_t size, off_t offset, STRCB *callback, 
 void
 UFSStoreState::drainWriteQueue()
 {
-    assert(!flags.write_draining);
+    /*
+     * DPW 2007-04-12
+     * We might find that flags.write_draining is already set
+     * because schemes like diskd can process I/O acks
+     * before sending another I/O request.    e.g. the following
+     * sequence of events: open request -> write request ->
+     * drainWriteQueue() -> queue full -> callbacks -> openDone() ->
+     * drainWriteQueue().
+     */
+    if (flags.write_draining)
+	return;
 
     if (!theFile->canWrite())
         return;
