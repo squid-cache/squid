@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.118 2006/08/21 00:50:41 robertc Exp $
+ * $Id: peer_digest.cc,v 1.119 2007/04/12 23:30:09 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -92,7 +92,12 @@ peerDigestInit(PeerDigest * pd, peer * p)
     assert(pd && p);
 
     memset(pd, 0, sizeof(*pd));
-    pd->peer = p;
+    /*
+     * DPW 2007-04-12
+     * Lock on to the peer here.  The corresponding cbdataReferenceDone()
+     * is in peerDigestDestroy().
+     */
+    pd->peer = cbdataReference(p);
     /* if peer disappears, we will know it's name */
     pd->host = p->host;
 
@@ -149,8 +154,12 @@ peerDigestDestroy(PeerDigest * pd)
     assert(pd);
     void * peerTmp = pd->peer;
 
-    /* inform peer (if any) that we are gone */
-
+    /*
+     * DPW 2007-04-12
+     * We locked the peer in peerDigestInit(), this is
+     * where we unlock it.  If the peer is still valid,
+     * tell it that the digest is gone.
+     */
     if (cbdataReferenceValidDone(peerTmp, &p))
         peerNoteDigestGone((peer *)p);
 
