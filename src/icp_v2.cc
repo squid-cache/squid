@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.94 2006/08/19 12:31:21 robertc Exp $
+ * $Id: icp_v2.cc,v 1.95 2007/04/13 17:04:00 wessels Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -600,7 +600,7 @@ icpHandleUdp(int sock, void *data)
     struct sockaddr_in from;
     socklen_t from_len;
     LOCAL_ARRAY(char, buf, SQUID_UDP_SO_RCVBUF);
-    size_t len;
+    int len;
     int icp_version;
     int max = INCOMING_ICP_MAX;
     commSetSelect(sock, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
@@ -649,7 +649,7 @@ icpHandleUdp(int sock, void *data)
         icpPktDump(buf);
 #endif
 
-        if (len < sizeof(icp_common_t)) {
+        if ((size_t) len < sizeof(icp_common_t)) {
             debug(12, 4) ("icpHandleUdp: Ignoring too-small UDP packet\n");
             break;
         }
