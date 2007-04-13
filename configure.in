@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.448 2007/04/07 09:35:37 serassio Exp $
+dnl  $Id: configure.in,v 1.449 2007/04/12 23:51:55 wessels Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.448 $)dnl
+AC_REVISION($Revision: 1.449 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -1323,18 +1323,6 @@ if test "$use_dnsserver" = "yes"; then
     AC_DEFINE(USE_DNSSERVERS,1,[Use dnsserver processes instead of the internal DNS protocol support])
     AM_CONDITIONAL(USE_DNSSERVER, true)
 fi
-
-AC_ARG_ENABLE(truncate,
-[  --enable-truncate       This uses truncate() instead of unlink() when
-                          removing cache files.  Truncate gives a little
-                          performance improvement, but may cause problems
-                          when used with async I/O.  Truncate uses more
-                          filesystem inodes than unlink..],
-[ if test "$enableval" = "yes" ; then
-    echo "Enabling truncate instead of unlink"
-    AC_DEFINE(USE_TRUNCATE,1,[Do we want to use truncate(2) or unlink(2)?])
-  fi
-])
 
 dnl Select Default hosts file location
 AC_ARG_ENABLE(default-hostsfile,

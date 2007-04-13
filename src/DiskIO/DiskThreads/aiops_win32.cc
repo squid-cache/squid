@@ -1,5 +1,5 @@
 /*
- * $Id: aiops_win32.cc,v 1.2 2006/09/09 15:29:59 serassio Exp $
+ * $Id: aiops_win32.cc,v 1.3 2007/04/12 23:51:57 wessels Exp $
  *
  * DEBUG: section 43    Windows AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
@@ -120,11 +120,7 @@ static void squidaio_do_read(squidaio_request_t *);
 static void squidaio_do_write(squidaio_request_t *);
 static void squidaio_do_close(squidaio_request_t *);
 static void squidaio_do_stat(squidaio_request_t *);
-#if USE_TRUNCATE
-static void squidaio_do_truncate(squidaio_request_t *);
-#else
 static void squidaio_do_unlink(squidaio_request_t *);
-#endif
 #if AIO_OPENDIR
 static void *squidaio_do_opendir(squidaio_request_t *);
 #endif
@@ -520,18 +516,10 @@ squidaio_thread_loop(LPVOID lpParam)
                 squidaio_do_close(request);
                 break;
 
-#if USE_TRUNCATE
-
-            case _AIO_OP_TRUNCATE:
-                squidaio_do_truncate(request);
-                break;
-#else
-
             case _AIO_OP_UNLINK:
                 squidaio_do_unlink(request);
                 break;
 
-#endif
 #if AIO_OPENDIR			/* Opendir not implemented yet */
 
             case _AIO_OP_OPENDIR:
@@ -719,8 +707,6 @@ squidaio_cleanup_request(squidaio_request_t * requestp)
         break;
 
     case _AIO_OP_UNLINK:
-
-    case _AIO_OP_TRUNCATE:
 
     case _AIO_OP_OPENDIR:
         squidaio_xstrfree(requestp->path);
@@ -963,42 +949,6 @@ squidaio_do_stat(squidaio_request_t * requestp)
 }
 
 
-#if USE_TRUNCATE
-int
-squidaio_truncate(const char *path, off_t length, squidaio_result_t * resultp)
-{
-    squidaio_init();
-    squidaio_request_t *requestp;
-
-    requestp = (squidaio_request_t *)squidaio_request_pool->alloc();
-
-    requestp->path = (char *) squidaio_xstrdup(path);
-
-    requestp->offset = length;
-
-    requestp->resultp = resultp;
-
-    requestp->request_type = _AIO_OP_TRUNCATE;
-
-    requestp->cancelled = 0;
-
-    resultp->result_type = _AIO_OP_TRUNCATE;
-
-    squidaio_queue_request(requestp);
-
-    return 0;
-}
-
-
-static void
-squidaio_do_truncate(squidaio_request_t * requestp)
-{
-    requestp->ret = truncate(requestp->path, requestp->offset);
-    requestp->err = errno;
-}
-
-
-#else
 int
 squidaio_unlink(const char *path, squidaio_result_t * resultp)
 {
@@ -1029,8 +979,6 @@ squidaio_do_unlink(squidaio_request_t * requestp)
     requestp->ret = unlink(requestp->path);
     requestp->err = errno;
 }
-
-#endif
 
 #if AIO_OPENDIR
 /* XXX squidaio_opendir NOT implemented yet.. */
@@ -1194,10 +1142,6 @@ squidaio_debug(squidaio_request_t * request)
         break;
 
     case _AIO_OP_UNLINK:
-        debug(43, 5) ("UNLINK of %s\n", request->path);
-        break;
-
-    case _AIO_OP_TRUNCATE:
         debug(43, 5) ("UNLINK of %s\n", request->path);
         break;
 

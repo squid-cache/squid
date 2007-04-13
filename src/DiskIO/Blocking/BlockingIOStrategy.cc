@@ -1,6 +1,6 @@
 
 /*
- * $Id: BlockingIOStrategy.cc,v 1.1 2004/12/20 16:30:38 robertc Exp $
+ * $Id: BlockingIOStrategy.cc,v 1.2 2007/04/12 23:51:56 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
@@ -60,11 +60,7 @@ BlockingIOStrategy::unlinkFile(char const *path)
 {
 #if USE_UNLINKD
     unlinkdUnlink(path);
-#elif USE_TRUNCATE
-
-    truncate(path, 0);
 #else
-
     ::unlink(path);
 #endif
 }
