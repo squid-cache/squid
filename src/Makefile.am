@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.176 2007/04/06 04:50:04 rousskov Exp $
+#  $Id: Makefile.am,v 1.177 2007/04/13 17:26:37 rousskov Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -1249,6 +1249,7 @@ tests_testCacheManager_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
+	AsyncCall.cc \
 	authenticate.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -1413,6 +1414,7 @@ tests_testEvent_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
+	AsyncCall.cc \
 	authenticate.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -1563,6 +1565,7 @@ tests_testEventLoop_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
+	AsyncCall.cc \
 	authenticate.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -1737,6 +1740,7 @@ tests_test_http_range_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
+	AsyncCall.cc \
 	authenticate.cc \
 	BodyPipe.cc \
 	cache_cf.cc \
@@ -1893,6 +1897,7 @@ tests_testHttpRequest_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
+	AsyncCall.cc \
 	authenticate.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -2228,6 +2233,7 @@ tests_testURL_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
+	AsyncCall.cc \
 	authenticate.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
