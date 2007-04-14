@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.538 2007/04/13 22:46:03 wessels Exp $
+ * $Id: protos.h,v 1.539 2007/04/13 23:12:31 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -520,6 +520,7 @@ SQUIDCEXTERN void storeLog(int tag, const StoreEntry * e);
 SQUIDCEXTERN void storeLogRotate(void);
 SQUIDCEXTERN void storeLogClose(void);
 SQUIDCEXTERN void storeLogOpen(void);
+SQUIDCEXTERN void storeLogRegisterWithCacheManager(CacheManager &);
 
 
 /*
