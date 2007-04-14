@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.537 2006/09/03 18:47:18 serassio Exp $
+ * $Id: protos.h,v 1.538 2007/04/13 22:46:03 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -476,6 +476,7 @@ SQUIDCEXTERN void statHistCount(StatHist * H, double val);
 SQUIDCEXTERN void statHistCopy(StatHist * Dest, const StatHist * Orig);
 SQUIDCEXTERN void statHistSafeCopy(StatHist * Dest, const StatHist * Orig);
 SQUIDCEXTERN double statHistDeltaMedian(const StatHist * A, const StatHist * B);
+SQUIDCEXTERN double statHistDeltaPctile(const StatHist * A, const StatHist * B, double pctile);
 SQUIDCEXTERN void statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper * bd);
 SQUIDCEXTERN void statHistLogInit(StatHist * H, int capacity, double min, double max);
 SQUIDCEXTERN void statHistEnumInit(StatHist * H, int last_enum);
