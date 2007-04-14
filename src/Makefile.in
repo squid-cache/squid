@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.415 2007/04/06 05:43:00 rousskov Exp $
+#  $Id: Makefile.in,v 1.416 2007/04/14 00:10:47 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -420,13 +420,13 @@ am__tests_testCacheManager_SOURCES_DIST = debug.cc globals.cc \
 	tests/testCacheManager.cc tests/testCacheManager.h \
 	tests/testMain.cc time.cc access_log.cc acl.cc acl_noncore.cc \
 	ACLChecklist.cc ACLProxyAuth.cc ACLStringData.cc \
-	ACLRegexData.cc ACLUserData.cc authenticate.cc BodyPipe.cc \
-	cache_manager.cc cache_cf.cc CacheDigest.cc carp.cc cbdata.cc \
-	client_db.cc client_side.cc client_side_reply.cc \
-	client_side_request.cc clientStream.cc comm_select.cc \
-	comm_select.h comm_select_win32.cc comm_poll.cc comm_poll.h \
-	comm_epoll.cc comm_epoll.h comm_kqueue.cc comm_kqueue.h \
-	ConfigOption.cc ConfigParser.cc CommonPool.h \
+	ACLRegexData.cc ACLUserData.cc AsyncCall.cc authenticate.cc \
+	BodyPipe.cc cache_manager.cc cache_cf.cc CacheDigest.cc \
+	carp.cc cbdata.cc client_db.cc client_side.cc \
+	client_side_reply.cc client_side_request.cc clientStream.cc \
+	comm_select.cc comm_select.h comm_select_win32.cc comm_poll.cc \
+	comm_poll.h comm_epoll.cc comm_epoll.h comm_kqueue.cc \
+	comm_kqueue.h ConfigOption.cc ConfigParser.cc CommonPool.h \
 	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
 	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
 	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
@@ -471,7 +471,7 @@ am_tests_testCacheManager_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	acl_noncore.$(OBJEXT) ACLChecklist.$(OBJEXT) \
 	ACLProxyAuth.$(OBJEXT) ACLStringData.$(OBJEXT) \
 	ACLRegexData.$(OBJEXT) ACLUserData.$(OBJEXT) \
-	authenticate.$(OBJEXT) BodyPipe.$(OBJEXT) \
+	AsyncCall.$(OBJEXT) authenticate.$(OBJEXT) BodyPipe.$(OBJEXT) \
 	cache_manager.$(OBJEXT) cache_cf.$(OBJEXT) \
 	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
 	client_db.$(OBJEXT) client_side.$(OBJEXT) \
@@ -639,30 +639,30 @@ am__tests_testEvent_SOURCES_DIST = debug.cc EventLoop.h EventLoop.cc \
 	tests/testEvent.cc tests/testEvent.h tests/testMain.cc time.cc \
 	access_log.cc acl.cc acl_noncore.cc ACLChecklist.cc \
 	ACLProxyAuth.cc ACLStringData.cc ACLRegexData.cc \
-	ACLUserData.cc authenticate.cc BodyPipe.cc cache_manager.cc \
-	cache_cf.cc CacheDigest.cc carp.cc cbdata.cc client_db.cc \
-	client_side.cc client_side_reply.cc client_side_request.cc \
-	clientStream.cc comm_select.cc comm_select.h \
-	comm_select_win32.cc comm_poll.cc comm_poll.h comm_epoll.cc \
-	comm_epoll.h comm_kqueue.cc comm_kqueue.h ConfigOption.cc \
-	ConfigParser.cc CommonPool.h CompositePoolNode.h \
-	delay_pools.cc DelayId.cc DelayId.h DelayIdComposite.h \
-	DelayBucket.cc DelayBucket.h DelayConfig.cc DelayConfig.h \
-	DelayPool.cc DelayPool.h DelayPools.h DelaySpec.cc DelaySpec.h \
-	DelayTagged.cc DelayTagged.h DelayUser.cc DelayUser.h \
-	DelayVector.cc DelayVector.h NullDelayId.cc NullDelayId.h \
-	disk.cc dns_internal.cc dns.cc event.cc errorpage.cc \
-	ElementList.h ESI.cc ESI.h ESIAssign.cc ESIAssign.h \
-	ESIAttempt.h ESIContext.cc ESIContext.h ESICustomParser.cc \
-	ESICustomParser.h ESIElement.h ESIExcept.h ESIExpatParser.cc \
-	ESIExpatParser.h ESIExpression.cc ESIExpression.h \
-	ESIInclude.cc ESIInclude.h ESILiteral.h ESILibxml2Parser.cc \
-	ESILibxml2Parser.h ESIParser.cc ESIParser.h ESISegment.cc \
-	ESISegment.h ESISequence.cc ESISequence.h ESIVar.h \
-	ESIVarState.cc ESIVarState.h ETag.cc external_acl.cc \
-	ExternalACLEntry.cc fd.cc fde.cc forward.cc fqdncache.cc \
-	ftp.cc gopher.cc helper.cc htcp.cc htcp.h http.cc HttpBody.cc \
-	HttpHeader.cc HttpHeaderTools.cc HttpHdrCc.cc \
+	ACLUserData.cc AsyncCall.cc authenticate.cc BodyPipe.cc \
+	cache_manager.cc cache_cf.cc CacheDigest.cc carp.cc cbdata.cc \
+	client_db.cc client_side.cc client_side_reply.cc \
+	client_side_request.cc clientStream.cc comm_select.cc \
+	comm_select.h comm_select_win32.cc comm_poll.cc comm_poll.h \
+	comm_epoll.cc comm_epoll.h comm_kqueue.cc comm_kqueue.h \
+	ConfigOption.cc ConfigParser.cc CommonPool.h \
+	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
+	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
+	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
+	DelaySpec.cc DelaySpec.h DelayTagged.cc DelayTagged.h \
+	DelayUser.cc DelayUser.h DelayVector.cc DelayVector.h \
+	NullDelayId.cc NullDelayId.h disk.cc dns_internal.cc dns.cc \
+	event.cc errorpage.cc ElementList.h ESI.cc ESI.h ESIAssign.cc \
+	ESIAssign.h ESIAttempt.h ESIContext.cc ESIContext.h \
+	ESICustomParser.cc ESICustomParser.h ESIElement.h ESIExcept.h \
+	ESIExpatParser.cc ESIExpatParser.h ESIExpression.cc \
+	ESIExpression.h ESIInclude.cc ESIInclude.h ESILiteral.h \
+	ESILibxml2Parser.cc ESILibxml2Parser.h ESIParser.cc \
+	ESIParser.h ESISegment.cc ESISegment.h ESISequence.cc \
+	ESISequence.h ESIVar.h ESIVarState.cc ESIVarState.h ETag.cc \
+	external_acl.cc ExternalACLEntry.cc fd.cc fde.cc forward.cc \
+	fqdncache.cc ftp.cc gopher.cc helper.cc htcp.cc htcp.h http.cc \
+	HttpBody.cc HttpHeader.cc HttpHeaderTools.cc HttpHdrCc.cc \
 	HttpHdrContRange.cc HttpHdrRange.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc HttpMsg.cc HttpReply.cc HttpStatusLine.cc \
 	icmp.cc icp_v2.cc icp_v3.cc ACLIdent.cc ACLIdent.h ident.cc \
@@ -691,7 +691,7 @@ am_tests_testEvent_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	acl_noncore.$(OBJEXT) ACLChecklist.$(OBJEXT) \
 	ACLProxyAuth.$(OBJEXT) ACLStringData.$(OBJEXT) \
 	ACLRegexData.$(OBJEXT) ACLUserData.$(OBJEXT) \
-	authenticate.$(OBJEXT) BodyPipe.$(OBJEXT) \
+	AsyncCall.$(OBJEXT) authenticate.$(OBJEXT) BodyPipe.$(OBJEXT) \
 	cache_manager.$(OBJEXT) cache_cf.$(OBJEXT) \
 	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
 	client_db.$(OBJEXT) client_side.$(OBJEXT) \
@@ -740,7 +740,7 @@ am__tests_testEventLoop_SOURCES_DIST = debug.cc EventLoop.h \
 	mem.cc RemovalPolicy.cc String.cc tests/testEventLoop.cc \
 	tests/testEventLoop.h tests/testMain.cc time.cc access_log.cc \
 	acl.cc acl_noncore.cc ACLChecklist.cc ACLProxyAuth.cc \
-	ACLStringData.cc ACLRegexData.cc ACLUserData.cc \
+	ACLStringData.cc ACLRegexData.cc ACLUserData.cc AsyncCall.cc \
 	authenticate.cc BodyPipe.cc cache_manager.cc cache_cf.cc \
 	CacheDigest.cc carp.cc cbdata.cc client_db.cc client_side.cc \
 	client_side_reply.cc client_side_request.cc clientStream.cc \
@@ -792,7 +792,7 @@ am_tests_testEventLoop_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	acl_noncore.$(OBJEXT) ACLChecklist.$(OBJEXT) \
 	ACLProxyAuth.$(OBJEXT) ACLStringData.$(OBJEXT) \
 	ACLRegexData.$(OBJEXT) ACLUserData.$(OBJEXT) \
-	authenticate.$(OBJEXT) BodyPipe.$(OBJEXT) \
+	AsyncCall.$(OBJEXT) authenticate.$(OBJEXT) BodyPipe.$(OBJEXT) \
 	cache_manager.$(OBJEXT) cache_cf.$(OBJEXT) \
 	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
 	client_db.$(OBJEXT) client_side.$(OBJEXT) \
@@ -867,13 +867,13 @@ am__tests_testHttpRequest_SOURCES_DIST = debug.cc globals.cc \
 	tests/testHttpRequestMethod.h tests/testHttpRequestMethod.cc \
 	tests/testMain.cc time.cc access_log.cc acl.cc acl_noncore.cc \
 	ACLChecklist.cc ACLProxyAuth.cc ACLStringData.cc \
-	ACLRegexData.cc ACLUserData.cc authenticate.cc BodyPipe.cc \
-	cache_manager.cc cache_cf.cc CacheDigest.cc carp.cc cbdata.cc \
-	client_db.cc client_side.cc client_side_reply.cc \
-	client_side_request.cc clientStream.cc comm_select.cc \
-	comm_select.h comm_select_win32.cc comm_poll.cc comm_poll.h \
-	comm_epoll.cc comm_epoll.h comm_kqueue.cc comm_kqueue.h \
-	ConfigOption.cc ConfigParser.cc CommonPool.h \
+	ACLRegexData.cc ACLUserData.cc AsyncCall.cc authenticate.cc \
+	BodyPipe.cc cache_manager.cc cache_cf.cc CacheDigest.cc \
+	carp.cc cbdata.cc client_db.cc client_side.cc \
+	client_side_reply.cc client_side_request.cc clientStream.cc \
+	comm_select.cc comm_select.h comm_select_win32.cc comm_poll.cc \
+	comm_poll.h comm_epoll.cc comm_epoll.h comm_kqueue.cc \
+	comm_kqueue.h ConfigOption.cc ConfigParser.cc CommonPool.h \
 	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
 	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
 	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
@@ -918,7 +918,7 @@ am_tests_testHttpRequest_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	acl_noncore.$(OBJEXT) ACLChecklist.$(OBJEXT) \
 	ACLProxyAuth.$(OBJEXT) ACLStringData.$(OBJEXT) \
 	ACLRegexData.$(OBJEXT) ACLUserData.$(OBJEXT) \
-	authenticate.$(OBJEXT) BodyPipe.$(OBJEXT) \
+	AsyncCall.$(OBJEXT) authenticate.$(OBJEXT) BodyPipe.$(OBJEXT) \
 	cache_manager.$(OBJEXT) cache_cf.$(OBJEXT) \
 	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
 	client_db.$(OBJEXT) client_side.$(OBJEXT) \
@@ -1049,30 +1049,30 @@ am__tests_testURL_SOURCES_DIST = debug.cc url.cc URLScheme.cc \
 	tests/testURLScheme.cc tests/testURLScheme.h tests/testMain.cc \
 	time.cc access_log.cc acl.cc acl_noncore.cc ACLChecklist.cc \
 	ACLProxyAuth.cc ACLStringData.cc ACLRegexData.cc \
-	ACLUserData.cc authenticate.cc BodyPipe.cc cache_manager.cc \
-	cache_cf.cc CacheDigest.cc carp.cc cbdata.cc client_db.cc \
-	client_side.cc client_side_reply.cc client_side_request.cc \
-	clientStream.cc comm_select.cc comm_select.h \
-	comm_select_win32.cc comm_poll.cc comm_poll.h comm_epoll.cc \
-	comm_epoll.h comm_kqueue.cc comm_kqueue.h ConfigOption.cc \
-	ConfigParser.cc CommonPool.h CompositePoolNode.h \
-	delay_pools.cc DelayId.cc DelayId.h DelayIdComposite.h \
-	DelayBucket.cc DelayBucket.h DelayConfig.cc DelayConfig.h \
-	DelayPool.cc DelayPool.h DelayPools.h DelaySpec.cc DelaySpec.h \
-	DelayTagged.cc DelayTagged.h DelayUser.cc DelayUser.h \
-	DelayVector.cc DelayVector.h NullDelayId.cc NullDelayId.h \
-	disk.cc dns_internal.cc dns.cc event.cc errorpage.cc \
-	ElementList.h ESI.cc ESI.h ESIAssign.cc ESIAssign.h \
-	ESIAttempt.h ESIContext.cc ESIContext.h ESICustomParser.cc \
-	ESICustomParser.h ESIElement.h ESIExcept.h ESIExpatParser.cc \
-	ESIExpatParser.h ESIExpression.cc ESIExpression.h \
-	ESIInclude.cc ESIInclude.h ESILiteral.h ESILibxml2Parser.cc \
-	ESILibxml2Parser.h ESIParser.cc ESIParser.h ESISegment.cc \
-	ESISegment.h ESISequence.cc ESISequence.h ESIVar.h \
-	ESIVarState.cc ESIVarState.h ETag.cc external_acl.cc \
-	ExternalACLEntry.cc fd.cc fde.cc forward.cc fqdncache.cc \
-	ftp.cc gopher.cc helper.cc htcp.cc htcp.h http.cc HttpBody.cc \
-	HttpHeader.cc HttpHeaderTools.cc HttpHdrCc.cc \
+	ACLUserData.cc AsyncCall.cc authenticate.cc BodyPipe.cc \
+	cache_manager.cc cache_cf.cc CacheDigest.cc carp.cc cbdata.cc \
+	client_db.cc client_side.cc client_side_reply.cc \
+	client_side_request.cc clientStream.cc comm_select.cc \
+	comm_select.h comm_select_win32.cc comm_poll.cc comm_poll.h \
+	comm_epoll.cc comm_epoll.h comm_kqueue.cc comm_kqueue.h \
+	ConfigOption.cc ConfigParser.cc CommonPool.h \
+	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
+	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
+	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
+	DelaySpec.cc DelaySpec.h DelayTagged.cc DelayTagged.h \
+	DelayUser.cc DelayUser.h DelayVector.cc DelayVector.h \
+	NullDelayId.cc NullDelayId.h disk.cc dns_internal.cc dns.cc \
+	event.cc errorpage.cc ElementList.h ESI.cc ESI.h ESIAssign.cc \
+	ESIAssign.h ESIAttempt.h ESIContext.cc ESIContext.h \
+	ESICustomParser.cc ESICustomParser.h ESIElement.h ESIExcept.h \
+	ESIExpatParser.cc ESIExpatParser.h ESIExpression.cc \
+	ESIExpression.h ESIInclude.cc ESIInclude.h ESILiteral.h \
+	ESILibxml2Parser.cc ESILibxml2Parser.h ESIParser.cc \
+	ESIParser.h ESISegment.cc ESISegment.h ESISequence.cc \
+	ESISequence.h ESIVar.h ESIVarState.cc ESIVarState.h ETag.cc \
+	external_acl.cc ExternalACLEntry.cc fd.cc fde.cc forward.cc \
+	fqdncache.cc ftp.cc gopher.cc helper.cc htcp.cc htcp.h http.cc \
+	HttpBody.cc HttpHeader.cc HttpHeaderTools.cc HttpHdrCc.cc \
 	HttpHdrContRange.cc HttpHdrRange.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc HttpMsg.cc HttpReply.cc HttpStatusLine.cc \
 	icmp.cc icp_v2.cc icp_v3.cc ACLIdent.cc ACLIdent.h ident.cc \
@@ -1100,7 +1100,7 @@ am_tests_testURL_OBJECTS = debug.$(OBJEXT) url.$(OBJEXT) \
 	acl.$(OBJEXT) acl_noncore.$(OBJEXT) ACLChecklist.$(OBJEXT) \
 	ACLProxyAuth.$(OBJEXT) ACLStringData.$(OBJEXT) \
 	ACLRegexData.$(OBJEXT) ACLUserData.$(OBJEXT) \
-	authenticate.$(OBJEXT) BodyPipe.$(OBJEXT) \
+	AsyncCall.$(OBJEXT) authenticate.$(OBJEXT) BodyPipe.$(OBJEXT) \
 	cache_manager.$(OBJEXT) cache_cf.$(OBJEXT) \
 	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
 	client_db.$(OBJEXT) client_side.$(OBJEXT) \
@@ -1185,31 +1185,31 @@ tests_testUfs_OBJECTS = $(am_tests_testUfs_OBJECTS)
 am__tests_test_http_range_SOURCES_DIST = tests/test_http_range.cc \
 	access_log.cc acl.cc acl_noncore.cc ACLChecklist.cc \
 	ACLProxyAuth.cc ACLStringData.cc ACLRegexData.cc \
-	ACLUserData.cc authenticate.cc BodyPipe.cc cache_cf.cc \
-	cache_manager.cc CacheDigest.cc carp.cc cbdata.cc client_db.cc \
-	client_side.cc client_side_reply.cc client_side_request.cc \
-	clientStream.cc comm_select.cc comm_select.h \
-	comm_select_win32.cc comm_poll.cc comm_poll.h comm_epoll.cc \
-	comm_epoll.h comm_kqueue.cc comm_kqueue.h ConfigOption.cc \
-	ConfigParser.cc debug.cc CommonPool.h CompositePoolNode.h \
-	delay_pools.cc DelayId.cc DelayId.h DelayIdComposite.h \
-	DelayBucket.cc DelayBucket.h DelayConfig.cc DelayConfig.h \
-	DelayPool.cc DelayPool.h DelayPools.h DelaySpec.cc DelaySpec.h \
-	DelayTagged.cc DelayTagged.h DelayUser.cc DelayUser.h \
-	DelayVector.cc DelayVector.h NullDelayId.cc NullDelayId.h \
-	disk.cc dns_internal.cc dns.cc event.cc errorpage.cc \
-	ElementList.h ESI.cc ESI.h ESIAssign.cc ESIAssign.h \
-	ESIAttempt.h ESIContext.cc ESIContext.h ESICustomParser.cc \
-	ESICustomParser.h ESIElement.h ESIExcept.h ESIExpatParser.cc \
-	ESIExpatParser.h ESIExpression.cc ESIExpression.h \
-	ESIInclude.cc ESIInclude.h ESILiteral.h ESILibxml2Parser.cc \
-	ESILibxml2Parser.h ESIParser.cc ESIParser.h ESISegment.cc \
-	ESISegment.h ESISequence.cc ESISequence.h ESIVar.h \
-	ESIVarState.cc ESIVarState.h ETag.cc external_acl.cc \
-	ExternalACLEntry.cc fd.cc fde.cc forward.cc fqdncache.cc \
-	ftp.cc globals.cc gopher.cc helper.cc htcp.cc htcp.h http.cc \
-	HttpBody.cc HttpHdrCc.cc HttpHdrContRange.cc HttpHdrRange.cc \
-	HttpHdrSc.cc HttpHdrScTarget.cc HttpHeader.cc \
+	ACLUserData.cc AsyncCall.cc authenticate.cc BodyPipe.cc \
+	cache_cf.cc cache_manager.cc CacheDigest.cc carp.cc cbdata.cc \
+	client_db.cc client_side.cc client_side_reply.cc \
+	client_side_request.cc clientStream.cc comm_select.cc \
+	comm_select.h comm_select_win32.cc comm_poll.cc comm_poll.h \
+	comm_epoll.cc comm_epoll.h comm_kqueue.cc comm_kqueue.h \
+	ConfigOption.cc ConfigParser.cc debug.cc CommonPool.h \
+	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
+	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
+	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
+	DelaySpec.cc DelaySpec.h DelayTagged.cc DelayTagged.h \
+	DelayUser.cc DelayUser.h DelayVector.cc DelayVector.h \
+	NullDelayId.cc NullDelayId.h disk.cc dns_internal.cc dns.cc \
+	event.cc errorpage.cc ElementList.h ESI.cc ESI.h ESIAssign.cc \
+	ESIAssign.h ESIAttempt.h ESIContext.cc ESIContext.h \
+	ESICustomParser.cc ESICustomParser.h ESIElement.h ESIExcept.h \
+	ESIExpatParser.cc ESIExpatParser.h ESIExpression.cc \
+	ESIExpression.h ESIInclude.cc ESIInclude.h ESILiteral.h \
+	ESILibxml2Parser.cc ESILibxml2Parser.h ESIParser.cc \
+	ESIParser.h ESISegment.cc ESISegment.h ESISequence.cc \
+	ESISequence.h ESIVar.h ESIVarState.cc ESIVarState.h ETag.cc \
+	external_acl.cc ExternalACLEntry.cc fd.cc fde.cc forward.cc \
+	fqdncache.cc ftp.cc globals.cc gopher.cc helper.cc htcp.cc \
+	htcp.h http.cc HttpBody.cc HttpHdrCc.cc HttpHdrContRange.cc \
+	HttpHdrRange.cc HttpHdrSc.cc HttpHdrScTarget.cc HttpHeader.cc \
 	HttpHeaderTools.cc HttpMsg.cc HttpReply.cc HttpRequest.cc \
 	HttpRequestMethod.cc HttpStatusLine.cc icmp.cc icp_v2.cc \
 	icp_v3.cc ACLIdent.cc ACLIdent.h ident.cc int.cc internal.cc \
@@ -1233,10 +1233,10 @@ am_tests_test_http_range_OBJECTS = tests/test_http_range.$(OBJEXT) \
 	access_log.$(OBJEXT) acl.$(OBJEXT) acl_noncore.$(OBJEXT) \
 	ACLChecklist.$(OBJEXT) ACLProxyAuth.$(OBJEXT) \
 	ACLStringData.$(OBJEXT) ACLRegexData.$(OBJEXT) \
-	ACLUserData.$(OBJEXT) authenticate.$(OBJEXT) \
-	BodyPipe.$(OBJEXT) cache_cf.$(OBJEXT) cache_manager.$(OBJEXT) \
-	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
-	client_db.$(OBJEXT) client_side.$(OBJEXT) \
+	ACLUserData.$(OBJEXT) AsyncCall.$(OBJEXT) \
+	authenticate.$(OBJEXT) BodyPipe.$(OBJEXT) cache_cf.$(OBJEXT) \
+	cache_manager.$(OBJEXT) CacheDigest.$(OBJEXT) carp.$(OBJEXT) \
+	cbdata.$(OBJEXT) client_db.$(OBJEXT) client_side.$(OBJEXT) \
 	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
 	clientStream.$(OBJEXT) $(am__objects_7) ConfigOption.$(OBJEXT) \
 	ConfigParser.$(OBJEXT) debug.$(OBJEXT) $(am__objects_9) \
@@ -2680,6 +2680,7 @@ tests_testCacheManager_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
+	AsyncCall.cc \
 	authenticate.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -2848,6 +2849,7 @@ tests_testEvent_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
+	AsyncCall.cc \
 	authenticate.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -3000,6 +3002,7 @@ tests_testEventLoop_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
+	AsyncCall.cc \
 	authenticate.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -3173,6 +3176,7 @@ tests_test_http_range_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
+	AsyncCall.cc \
 	authenticate.cc \
 	BodyPipe.cc \
 	cache_cf.cc \
@@ -3330,6 +3334,7 @@ tests_testHttpRequest_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
+	AsyncCall.cc \
 	authenticate.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -3674,6 +3679,7 @@ tests_testURL_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
+	AsyncCall.cc \
 	authenticate.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
