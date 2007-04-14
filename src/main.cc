@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.443 2007/04/13 04:52:19 rousskov Exp $
+ * $Id: main.cc,v 1.444 2007/04/13 23:12:31 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -962,6 +962,7 @@ mainInitialize(void)
         storeDigestRegisterWithCacheManager(manager);
         StoreFileSystem::RegisterAllFsWithCacheManager(manager);
         storeRegisterWithCacheManager(manager);
+	storeLogRegisterWithCacheManager(manager);
 #if DEBUGSTRINGS
 
         StringRegistry::Instance().registerWithCacheManager(manager);

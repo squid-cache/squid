@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_log.cc,v 1.28 2003/07/14 14:16:02 robertc Exp $
+ * $Id: store_log.cc,v 1.29 2007/04/13 23:12:31 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Logging Functions
  * AUTHOR: Duane Wessels
@@ -37,6 +37,7 @@
 #include "Store.h"
 #include "MemObject.h"
 #include "HttpReply.h"
+#include "CacheManager.h"
 
 static const char *storeLogTags[] =
     {
@@ -46,6 +47,9 @@ static const char *storeLogTags[] =
         "RELEASE",
         "SO_FAIL",
     };
+
+static int storeLogTagsCounts[STORE_LOG_SWAPOUTFAIL+1];
+static OBJH storeLogTagsHist;
 
 static Logfile *storelog = NULL;
 
@@ -65,6 +69,7 @@ storeLog(int tag, const StoreEntry * e)
 
 #endif
 
+    storeLogTagsCounts[tag]++;
     if (mem != NULL) {
         if (mem->log_url == NULL) {
             debug(20, 1) ("storeLog: NULL log_url for %s\n", mem->url);
@@ -135,4 +140,23 @@ storeLogOpen(void)
     }
 
     storelog = logfileOpen(Config.Log.store, 0, 1);
+}
+
+void
+storeLogRegisterWithCacheManager(CacheManager & manager)
+{
+    manager.registerAction("store_log_tags",
+	"Histogram of store.log tags",
+	storeLogTagsHist, 0, 1);
+}
+
+void
+storeLogTagsHist(StoreEntry *e)
+{
+    int tag;
+    for (tag = 0; tag <= STORE_LOG_SWAPOUTFAIL; tag++) {
+	storeAppendPrintf(e, "%s %d\n",
+	    storeLogTags[tag],
+	    storeLogTagsCounts[tag]);
+    }
 }
