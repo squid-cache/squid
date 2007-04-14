@@ -1,6 +1,6 @@
 
 /*
- * $Id: StatHist.cc,v 1.32 2005/09/03 12:33:32 serassio Exp $
+ * $Id: StatHist.cc,v 1.33 2007/04/13 22:46:03 wessels Exp $
  *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels
@@ -188,6 +188,12 @@ statHistVal(const StatHist * H, int bin)
 double
 statHistDeltaMedian(const StatHist * A, const StatHist * B)
 {
+    return statHistDeltaPctile(A, B, 0.5);
+}
+
+double
+statHistDeltaPctile(const StatHist * A, const StatHist * B, double pctile)
+{
     int i;
     int s1 = 0;
     int h = 0;
@@ -208,7 +214,7 @@ statHistDeltaMedian(const StatHist * A, const StatHist * B)
     for (i = 0; i < A->capacity; i++)
         s1 += D[i];
 
-    h = s1 >> 1;
+    h = int(s1 * pctile);
 
     for (i = 0; i < A->capacity; i++) {
         J = i;

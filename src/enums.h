@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.254 2006/08/21 00:50:41 robertc Exp $
+ * $Id: enums.h,v 1.255 2007/04/13 22:46:03 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -470,14 +470,14 @@ typedef enum {
 
 
 enum {
-    MEDIAN_HTTP,
-    MEDIAN_ICP_QUERY,
-    MEDIAN_DNS,
-    MEDIAN_HIT,
-    MEDIAN_MISS,
-    MEDIAN_NM,
-    MEDIAN_NH,
-    MEDIAN_ICP_REPLY
+    PCTILE_HTTP,
+    PCTILE_ICP_QUERY,
+    PCTILE_DNS,
+    PCTILE_HIT,
+    PCTILE_MISS,
+    PCTILE_NM,
+    PCTILE_NH,
+    PCTILE_ICP_REPLY
 };
 
 enum {
