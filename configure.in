@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.449 2007/04/12 23:51:55 wessels Exp $
+dnl  $Id: configure.in,v 1.450 2007/04/15 14:46:11 serassio Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.449 $)dnl
+AC_REVISION($Revision: 1.450 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -1274,6 +1274,21 @@ dnl "-64" from LDFLAGS
 	esac
 fi
 
+dnl Enable Linux transparent proxy support
+AC_ARG_ENABLE(linux-tproxy,
+[  --enable-linux-tproxy
+			  Enable real Transparent Proxy support for Netfilter TPROXY.],
+[ if test "$enableval" = "yes" ; then
+	echo "Linux Netfilter/TPROXY enabled"
+	AC_DEFINE(LINUX_TPROXY, 1, [Enable real Transparent Proxy support for Netfilter TPROXY.])
+	LINUX_TPROXY="yes"
+        if test -z "$LINUX_NETFILTER"; then
+	    echo "Linux-Netfilter Transparent Proxy automatically enabled"
+	    LINUX_NETFILTER="yes"
+	fi
+  fi
+])
+
 AM_CONDITIONAL(MAKE_LEAKFINDER, false)
 dnl Enable Leak Finding Functions
 AC_ARG_ENABLE(leakfinder,
@@ -1951,7 +1966,10 @@ AC_CHECK_HEADERS( \
 	db_185.h
 )
 
-AC_CHECK_HEADERS(linux/netfilter_ipv4.h,,,
+AC_CHECK_HEADERS(
+	linux/netfilter_ipv4.h \
+	linux/netfilter_ipv4/ip_tproxy.h \
+,,,
 SQUID_DEFAULT_INCLUDES
 #if HAVE_LIMITS_H
 #include <limits.h>
@@ -2782,6 +2800,27 @@ fi
 if test "$LINUX_NETFILTER" = "no" ; then
     echo "WARNING: Cannot find necessary Linux kernel (Netfilter) header files"
     echo "         Linux Transparent Proxy support WILL NOT be enabled"
+    sleep 10
+fi
+
+dnl Linux Netfilter/TPROXY support requires some specific header files
+dnl Shamelessly copied from shamelessly copied from above
+if test "$LINUX_TPROXY" ; then
+    AC_MSG_CHECKING(if TPROXY header files are installed)
+    # hold on to your hats...
+    if test "$ac_cv_header_linux_netfilter_ipv4_ip_tproxy_h" = "yes" && test "$LINUX_NETFILTER" = "yes"; then
+	LINUX_TPROXY="yes"
+	AC_DEFINE(LINUX_TPROXY, 1, [Enable real Transparent Proxy support for Netfilter TPROXY.])
+    else
+	LINUX_TPROXY="no"
+	AC_DEFINE(LINUX_TPROXY, 0, [Enable real Transparent Proxy support for Netfilter TPROXY.])
+    fi
+    AC_MSG_RESULT($LINUX_TPROXY)
+fi
+if test "$LINUX_TPROXY" = "no" && test "$LINUX_NETFILTER" = "yes"; then
+    echo "WARNING: Cannot find TPROXY headers, you need to install the"
+    echo "tproxy package from:"
+    echo " - lynx http://www.balabit.com/downloads/tproxy/"
     sleep 10
 fi
 

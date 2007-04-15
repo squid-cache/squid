@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.431 2007/04/07 09:35:38 serassio Exp $
+# $Id: cf.data.pre,v 1.432 2007/04/15 14:46:13 serassio Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -99,6 +99,10 @@ DOC_START
 
 	   protocol=	Protocol to reconstruct accelerated requests with.
 			Defaults to http
+
+	   tproxy	Support Linux TPROXY for spoofing
+			outgoing connections using the client
+			IP address.
 
 	   disable-pmtu-discovery=
 			Control Path-MTU discovery usage:

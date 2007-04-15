@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.155 2007/04/12 14:07:10 rousskov Exp $
+ * $Id: forward.cc,v 1.156 2007/04/15 14:46:16 serassio Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -48,6 +48,10 @@
 #include "pconn.h"
 #include "SquidTime.h"
 #include "Store.h"
+
+#if LINUX_TPROXY
+#include <linux/netfilter_ipv4/ip_tproxy.h>
+#endif
 
 static PSC fwdStartCompleteWrapper;
 static PF fwdServerClosedWrapper;
@@ -102,7 +106,8 @@ FwdState::FwdState(int fd, StoreEntry * e, HttpRequest * r)
 }
 
 // Called once, right after object creation, when it is safe to set self
-void FwdState::start(Pointer aSelf) {
+void FwdState::start(Pointer aSelf)
+{
     // Protect ourselves from being destroyed when the only Server pointing
     // to us is gone (while we expect to talk to more Servers later).
     // Once we set self, we are responsible for clearing it when we do not
@@ -115,18 +120,19 @@ void FwdState::start(Pointer aSelf) {
     storeRegisterAbort(entry, FwdState::abort, this);
     peerSelect(request, entry, fwdStartCompleteWrapper, this);
 
-    // TODO: set self _after_ the peer is selected because we do not need 
+    // TODO: set self _after_ the peer is selected because we do not need
     // self until we start talking to some Server.
 }
 
 void
 FwdState::completed()
 {
-	if (flags.forward_completed == 1) {
-		debugs(17, 1, HERE << "FwdState::completed called on a completed request! Bad!");
-		return;
-	}
-	flags.forward_completed = 1;
+    if (flags.forward_completed == 1) {
+        debugs(17, 1, HERE << "FwdState::completed called on a completed request! Bad!");
+        return;
+    }
+
+    flags.forward_completed = 1;
 
 #if URL_CHECKSUM_DEBUG
 
@@ -157,8 +163,9 @@ FwdState::completed()
 FwdState::~FwdState()
 {
     debugs(17, 3, HERE << "FwdState destructor starting");
+
     if (! flags.forward_completed)
-	    completed();
+        completed();
 
     serversFree(&servers);
 
@@ -181,6 +188,7 @@ FwdState::~FwdState()
         debug(17, 3) ("fwdStateFree: closing FD %d\n", fd);
         comm_close(fd);
     }
+
     debugs(17, 3, HERE << "FwdState destructor done");
 }
 
@@ -260,6 +268,14 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
 
     default:
         FwdState::Pointer fwd = new FwdState(client_fd, entry, request);
+#if LINUX_TPROXY
+        /* If we need to transparently proxy the request
+         * then we need the client source address and port */
+        fwd->src.sin_family = AF_INET;
+        fwd->src.sin_addr = request->client_addr;
+        fwd->src.sin_port = request->client_port;
+#endif
+
         fwd->start(fwd);
         return;
     }
@@ -332,9 +348,11 @@ FwdState::complete()
         debug(17, 3) ("fwdComplete: not re-forwarding status %d\n",
                       entry->getReply()->sline.status);
         EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
-	entry->complete();
-	if (server_fd < 0)
-		completed();
+        entry->complete();
+
+        if (server_fd < 0)
+            completed();
+
         self = NULL; // refcounted
     }
 }
@@ -721,9 +739,15 @@ FwdState::connectStart()
     const char *domain = NULL;
     int ctimeout;
     int ftimeout = Config.Timeout.forward - (squid_curtime - start_t);
+#if LINUX_TPROXY
+
+    struct in_tproxy itp;
+#endif
 
     struct IN_ADDR outgoing;
     unsigned short tos;
+
+    struct IN_ADDR *client_addr = NULL;
     assert(fs);
     assert(server_fd == -1);
     debug(17, 3) ("fwdConnectStart: %s\n", url);
@@ -742,13 +766,19 @@ FwdState::connectStart()
         ctimeout = Config.Timeout.connect;
     }
 
+#if LINUX_TPROXY
+    if (request->flags.tproxy)
+        client_addr = &request->client_addr;
+
+#endif
+
     if (ftimeout < 0)
         ftimeout = 5;
 
     if (ftimeout < ctimeout)
         ctimeout = ftimeout;
 
-    if ((fd = fwdPconnPool->pop(host, port, domain)) >= 0) {
+    if ((fd = fwdPconnPool->pop(host, port, domain, client_addr)) >= 0) {
         if (checkRetriable()) {
             debug(17, 3) ("fwdConnectStart: reusing pconn FD %d\n", fd);
             server_fd = fd;
@@ -822,10 +852,42 @@ FwdState::connectStart()
 
     commSetTimeout(fd, ctimeout, fwdConnectTimeoutWrapper, this);
 
-    if (fs->_peer)
+    if (fs->_peer) {
         hierarchyNote(&request->hier, fs->code, fs->_peer->host);
-    else
+    } else {
+#if LINUX_TPROXY
+
+        if (request->flags.tproxy) {
+            itp.v.addr.faddr.s_addr = src.sin_addr.s_addr;
+            itp.v.addr.fport = 0;
+
+            /* If these syscalls fail then we just fallback to connecting
+             * normally by simply ignoring the errors...
+             */
+            itp.op = TPROXY_ASSIGN;
+
+            if (setsockopt(fd, SOL_IP, IP_TPROXY, &itp, sizeof(itp)) == -1) {
+                debug(20, 1) ("tproxy ip=%s,0x%x,port=%d ERROR ASSIGN\n",
+                              inet_ntoa(itp.v.addr.faddr),
+                              itp.v.addr.faddr.s_addr,
+                              itp.v.addr.fport);
+                request->flags.tproxy = 0;
+            } else {
+                itp.op = TPROXY_FLAGS;
+                itp.v.flags = ITP_CONNECT;
+
+                if (setsockopt(fd, SOL_IP, IP_TPROXY, &itp, sizeof(itp)) == -1) {
+                    debug(20, 1) ("tproxy ip=%x,port=%d ERROR CONNECT\n",
+                                  itp.v.addr.faddr.s_addr,
+                                  itp.v.addr.fport);
+                    request->flags.tproxy = 0;
+                }
+            }
+        }
+
+#endif
         hierarchyNote(&request->hier, fs->code, request->host);
+    }
 
     commConnectStart(fd, host, port, fwdConnectDoneWrapper, this);
 }
@@ -923,6 +985,7 @@ FwdState::dispatch()
             break;
 
         case PROTO_WAIS:	/* Not implemented */
+
         default:
             debug(17, 1) ("fwdDispatch: Cannot retrieve '%s'\n",
                           storeUrl(entry));
@@ -1047,9 +1110,10 @@ FwdState::reforwardableStatus(http_status s)
 }
 
 void
-FwdState::pconnPush(int fd, const char *host, int port, const char *domain)
+
+FwdState::pconnPush(int fd, const char *host, int port, const char *domain, struct IN_ADDR *client_addr)
 {
-    fwdPconnPool->push(fd, host, port, domain);
+    fwdPconnPool->push(fd, host, port, domain, client_addr);
 }
 
 void

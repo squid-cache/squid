@@ -104,7 +104,7 @@ void ICAPXaction::openConnection()
 {
     const ICAPServiceRep &s = service();
     // TODO: check whether NULL domain is appropriate here
-    connection = icapPconnPool->pop(s.host.buf(), s.port, NULL);
+    connection = icapPconnPool->pop(s.host.buf(), s.port, NULL, NULL);
 
     if (connection >= 0) {
         debugs(93,3, HERE << "reused pconn FD " << connection);
@@ -169,7 +169,7 @@ void ICAPXaction::closeConnection()
         if (reuseConnection) {
             debugs(93,3, HERE << "pushing pconn" << status());
             commSetTimeout(connection, -1, NULL, NULL);
-            icapPconnPool->push(connection, theService->host.buf(), theService->port, NULL);
+            icapPconnPool->push(connection, theService->host.buf(), theService->port, NULL, NULL);
         } else {
             debugs(93,3, HERE << "closing pconn" << status());
             // comm_close will clear timeout

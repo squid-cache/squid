@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.507 2007/04/11 22:57:34 wessels Exp $
+ * $Id: cache_cf.cc,v 1.508 2007/04/15 14:46:12 serassio Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -2739,6 +2739,14 @@ parse_http_port_option(http_port_list * s, char *token)
             s->disable_pmtu_discovery = DISABLE_PMTU_ALWAYS;
         else
             self_destruct();
+
+#if LINUX_TPROXY
+
+    } else if (strcmp(token, "tproxy") == 0) {
+        s->tproxy = 1;
+        need_linux_tproxy = 1;
+#endif
+
     } else {
         self_destruct();
     }

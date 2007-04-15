@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.539 2007/04/13 23:12:31 wessels Exp $
+ * $Id: protos.h,v 1.540 2007/04/15 14:46:17 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -606,6 +606,7 @@ SQUIDCEXTERN int percent(int, int);
 SQUIDCEXTERN double dpercent(double, double);
 SQUIDCEXTERN void squid_signal(int sig, SIGHDLR *, int flags);
 SQUIDCEXTERN pid_t readPidFile(void);
+SQUIDCEXTERN void keepCapabilities(void);
 
 SQUIDCEXTERN struct IN_ADDR inaddrFromHostent(const struct hostent *hp);
 SQUIDCEXTERN int intAverage(int, int, int, int);
