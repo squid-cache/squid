@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.512 2007/04/06 12:15:51 serassio Exp $
+ * $Id: http.cc,v 1.513 2007/04/15 14:46:16 serassio Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -75,7 +75,7 @@ static void icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data)
 #endif
 
 HttpStateData::HttpStateData(FwdState *theFwdState) : ServerStateData(theFwdState),
-    header_bytes_read(0), reply_bytes_read(0)
+        header_bytes_read(0), reply_bytes_read(0)
 {
     debugs(11,5,HERE << "HttpStateData " << this << " created");
     ignoreCacheControl = false;
@@ -152,7 +152,8 @@ HttpStateData::~HttpStateData()
 }
 
 int
-HttpStateData::dataDescriptor() const {
+HttpStateData::dataDescriptor() const
+{
     return fd;
 }
 
@@ -466,9 +467,9 @@ HttpStateData::cacheableReply()
          */
 
         if (!refreshIsCachable(entry)) {
-        debug(22, 3) ("refreshIsCachable() returned non-cacheable..\n");
+            debug(22, 3) ("refreshIsCachable() returned non-cacheable..\n");
             return 0;
-    }
+        }
 
         /* don't cache objects from peers w/o LMT, Date, or Expires */
         /* check that is it enough to check headers @?@ */
@@ -844,6 +845,7 @@ no_cache:
 
 #if HEADERS_LOG
     headersLog(1, 0, request->method, getReply());
+
 #endif
 
     ctx_exit(ctx);
@@ -902,10 +904,12 @@ HttpStateData::persistentConnStatus() const
 
     /* If we haven't seen the end of reply headers, we are not done */
     debug(11,5)("persistentConnStatus: flags.headers_parsed=%d\n", flags.headers_parsed);
+
     if (!flags.headers_parsed)
         return INCOMPLETE_MSG;
 
     const int clen = reply->bodySize(request->method);
+
     debug(11,5)("persistentConnStatus: clen=%d\n", clen);
 
     /* If the body size is unknown we must wait for EOF */
@@ -918,7 +922,7 @@ HttpStateData::persistentConnStatus() const
         // if (entry->mem_obj->endOffset() < reply->content_length + reply->hdr_sz)
         const int body_bytes_read = reply_bytes_read - header_bytes_read;
         debugs(11,5, "persistentConnStatus: body_bytes_read=" <<
-            body_bytes_read << " content_length=" << reply->content_length);
+               body_bytes_read << " content_length=" << reply->content_length);
 
         if (body_bytes_read < reply->content_length)
             return INCOMPLETE_MSG;
@@ -1041,11 +1045,10 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
             * definately at EOF, so we want to process the reply
             * headers.
              */
-        PROF_start(HttpStateData_processReplyHeader);
+            PROF_start(HttpStateData_processReplyHeader);
             processReplyHeader();
-        PROF_stop(HttpStateData_processReplyHeader);
-    }
-        else if (getReply()->sline.status == HTTP_INVALID_HEADER && HttpVersion(0,9) != getReply()->sline.version) {
+            PROF_stop(HttpStateData_processReplyHeader);
+        } else if (getReply()->sline.status == HTTP_INVALID_HEADER && HttpVersion(0,9) != getReply()->sline.version) {
             fwd->fail(errorCon(ERR_INVALID_RESP, HTTP_BAD_GATEWAY, fwd->request));
             flags.do_next_read = 0;
         } else {
@@ -1061,9 +1064,9 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
         }
     } else {
         if (!flags.headers_parsed) {
-        PROF_start(HttpStateData_processReplyHeader);
+            PROF_start(HttpStateData_processReplyHeader);
             processReplyHeader();
-        PROF_stop(HttpStateData_processReplyHeader);
+            PROF_stop(HttpStateData_processReplyHeader);
 
             if (flags.headers_parsed) {
                 bool fail = reply == NULL;
@@ -1101,21 +1104,26 @@ HttpStateData::writeReplyBody()
     int len = readBuf->contentSize();
 
 #if ICAP_CLIENT
+
     if (virginBodyDestination != NULL) {
         const size_t putSize = virginBodyDestination->putMoreData(data, len);
         readBuf->consume(putSize);
         return;
     }
+
     // Even if we are done with sending the virgin body to ICAP, we may still
     // be waiting for adapted headers. We need them before writing to store.
     if (adaptedHeadSource != NULL) {
         debugs(11,5, HERE << "need adapted head from " << adaptedHeadSource);
         return;
     }
+
 #endif
 
     entry->write (StoreIOBuffer(len, currentOffset, (char*)data));
+
     readBuf->consume(len);
+
     currentOffset += len;
 }
 
@@ -1129,6 +1137,9 @@ HttpStateData::writeReplyBody()
 void
 HttpStateData::processReplyBody()
 {
+
+    struct IN_ADDR *client_addr = NULL;
+
     if (!flags.headers_parsed) {
         flags.do_next_read = 1;
         maybeReadVirginBody();
@@ -1138,6 +1149,7 @@ HttpStateData::processReplyBody()
 #if ICAP_CLIENT
     if (icapAccessCheckPending)
         return;
+
 #endif
 
     /*
@@ -1178,14 +1190,20 @@ HttpStateData::processReplyBody()
 
             comm_remove_close_handler(fd, httpStateFree, this);
             fwd->unregister(fd);
+#if LINUX_TPROXY
+
+            if (orig_request->flags.tproxy)
+                client_addr = &orig_request->client_addr;
+
+#endif
 
             if (_peer) {
                 if (_peer->options.originserver)
-                    fwd->pconnPush(fd, _peer->name, orig_request->port, orig_request->host);
+                    fwd->pconnPush(fd, _peer->name, orig_request->port, orig_request->host, client_addr);
                 else
-                    fwd->pconnPush(fd, _peer->name, _peer->http_port, NULL);
+                    fwd->pconnPush(fd, _peer->name, _peer->http_port, NULL, client_addr);
             } else {
-                fwd->pconnPush(fd, request->host, request->port, NULL);
+                fwd->pconnPush(fd, request->host, request->port, NULL, client_addr);
             }
 
             fd = -1;
@@ -1211,6 +1229,7 @@ HttpStateData::maybeReadVirginBody()
 #if RE_ENABLE_THIS_IF_NEEDED_OR_DELETE
     // This code is not broken, but is probably not needed because we
     // probably can read more than will fit into the BodyPipe buffer.
+
     if (virginBodyDestination != NULL) {
         /*
          * BodyPipe buffer has a finite size limit.  We
@@ -1227,11 +1246,12 @@ HttpStateData::maybeReadVirginBody()
         if (icap_space < read_sz)
             read_sz = icap_space;
     }
+
 #endif
 #endif
 
     debugs(11,9, HERE << (flags.do_next_read ? "may" : "wont") <<
-        " read up to " << read_sz << " bytes from FD " << fd);
+           " read up to " << read_sz << " bytes from FD " << fd);
 
     /*
      * why <2? Because delayAwareRead() won't actually read if
@@ -1300,6 +1320,7 @@ void
 HttpStateData::closeServer()
 {
     debugs(11,5, HERE << "closing HTTP server FD " << fd << " this " << this);
+
     if (fd >= 0) {
         fwd->unregister(fd);
         comm_remove_close_handler(fd, httpStateFree, this);
@@ -1732,11 +1753,13 @@ HttpStateData::sendRequest()
 
     if (orig_request->body_pipe != NULL) {
         requestBodySource = orig_request->body_pipe;
+
         if (!requestBodySource->setConsumerIfNotLate(this)) {
             debugs(32,3, HERE << "aborting on partially consumed body");
             requestBodySource = NULL;
             return false;
         }
+
         requestSender = HttpStateData::sentRequestBodyWrapper;
         debugs(32,3, HERE << "expecting request body on pipe " << requestBodySource);
     } else {
@@ -1847,8 +1870,10 @@ HttpStateData::handleMoreRequestBodyAvailable()
     }
 
     assert(requestBodySource != NULL);
+
     if (requestBodySource->buf().hasContent()) {
         // XXX: why does not this trigger a debug message on every request?
+
         if (flags.headers_parsed && !flags.abuse_detected) {
             flags.abuse_detected = 1;
             debug(11, 1) ("http handleMoreRequestBodyAvailable: Likely proxy abuse detected '%s' -> '%s'\n",
@@ -1880,6 +1905,7 @@ HttpStateData::sentRequestBody(int fd, size_t size, comm_err_t errflag)
 {
     if (size > 0)
         kb_incr(&statCounter.server.http.kbytes_out, size);
+
     ServerStateData::sentRequestBody(fd, size, errflag);
 }
 
@@ -1891,6 +1917,7 @@ HttpStateData::abortTransaction(const char *reason)
 {
     debugs(11,5, HERE << "aborting transaction for " << reason <<
            "; FD " << fd << ", this " << this);
+
     if (fd >= 0)
         comm_close(fd);
     else

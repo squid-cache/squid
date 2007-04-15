@@ -43,7 +43,7 @@ public:
     bool checkRetry();
     bool checkRetriable();
     void dispatch();
-    void pconnPush(int fd, const char *host, int port, const char *domain);
+    void pconnPush(int fd, const char *host, int port, const char *domain, struct IN_ADDR *client_addr);
 
     bool dontRetry() { return flags.dont_retry; }
 
@@ -103,6 +103,9 @@ unsigned int forward_completed:1;
     }
 
     flags;
+#if LINUX_NETFILTER
+    struct sockaddr_in src;
+#endif
 
 };
 

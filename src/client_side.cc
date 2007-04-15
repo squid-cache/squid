@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.745 2007/04/06 04:50:05 rousskov Exp $
+ * $Id: client_side.cc,v 1.746 2007/04/15 14:46:15 serassio Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1271,6 +1271,7 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
         http->al.reply = HTTPMSGLOCK(rep);
         context->sendStartOfMessage(rep, recievedData);
     }
+
     PROF_stop(clientSocketRecipient);
 }
 
@@ -1549,6 +1550,7 @@ void
 ClientSocketContext::initiateClose(const char *reason)
 {
     debugs(33, 5, HERE << "initiateClose: closing for " << reason);
+
     if (http != NULL) {
         ConnStateData::Pointer conn = http->getConn();
 
@@ -1563,7 +1565,7 @@ ClientSocketContext::initiateClose(const char *reason)
                     debugs(33, 2, HERE << "avoiding double-closing " << conn);
                     return;
                 }
-                    
+
                 /*
                 * XXX We assume the reply fits in the TCP transmit
                 * window.  If not the connection may stall while sending
@@ -1573,6 +1575,7 @@ ClientSocketContext::initiateClose(const char *reason)
                 * this may be an issue.
                 */
                 conn->startClosing(reason);
+
                 return;
             }
         }
@@ -1594,6 +1597,7 @@ ClientSocketContext::writeComplete(int fd, char *bufnotused, size_t size, comm_e
     assert (this->fd() == fd);
 
     /* Bail out quickly on COMM_ERR_CLOSING - close handlers will tidy up */
+
     if (errflag == COMM_ERR_CLOSING)
         return;
 
@@ -1841,13 +1845,16 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
 
     /* Attempt to parse the first line; this'll define the method, url, version and header begin */
     r = HttpParserParseReqLine(hp);
+
     if (r == 0) {
         debug(33, 5) ("Incomplete request, waiting for end of request line\n");
-    return NULL;
+        return NULL;
     }
+
     if (r == -1) {
         return parseHttpRequestAbort(conn, "error:invalid-request");
     }
+
     /* Request line is valid here .. */
     *http_ver = HttpVersion(hp->v_maj, hp->v_min);
 
@@ -1865,10 +1872,13 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
     /* We know the whole request is in hp->buf now */
 
     assert(req_sz <= (size_t) hp->bufsiz);
+
     /* Will the following be true with HTTP/0.9 requests? probably not .. */
     /* So the rest of the code will need to deal with '0'-byte headers (ie, none, so don't try parsing em) */
     assert(req_sz > 0);
+
     hp->hdr_end = req_sz - 1;
+
     hp->hdr_start = hp->req_end + 1;
 
     /* Enforce max_request_size */
@@ -1879,10 +1889,11 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
 
     /* Set method_p */
     *method_p = HttpRequestMethod(&hp->buf[hp->m_start], &hp->buf[hp->m_end]);
+
     if (*method_p == METHOD_NONE) {
-    /* XXX need a way to say "this many character length string" */
+        /* XXX need a way to say "this many character length string" */
         debug(33, 1) ("clientParseRequestMethod: Unsupported method in request '%s'\n", hp->buf);
-    /* XXX where's the method set for this error? */
+        /* XXX where's the method set for this error? */
         return parseHttpRequestAbort(conn, "error:unsupported-request-method");
     }
 
@@ -1892,7 +1903,9 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
      * below needs to be modified to not expect a mutable nul-terminated string.
      */
     url = (char *)xmalloc(hp->u_end - hp->u_start + 16);
+
     memcpy(url, hp->buf + hp->u_start, hp->u_end - hp->u_start + 1);
+
     url[hp->u_end - hp->u_start + 1] = '\0';
 
     /*
@@ -1901,13 +1914,16 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
      */
     /* XXX this code should be modified to take a const char * later! */
     req_hdr = (char *) hp->buf + hp->req_end + 1;
+
     debug(33, 3) ("parseHttpRequest: req_hdr = {%s}\n", req_hdr);
+
     end = (char *) hp->buf + hp->hdr_end;
+
     debug(33, 3) ("parseHttpRequest: end = {%s}\n", end);
 
     if (strstr(req_hdr, "\r\r\n")) {
         debug(33, 1) ("WARNING: suspicious HTTP request contains double CR\n");
-    xfree(url);
+        xfree(url);
         return parseHttpRequestAbort(conn, "error:double-CR");
     }
 
@@ -2140,7 +2156,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
-    goto finish;
+        goto finish;
     }
 
     if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, method)) == NULL) {
@@ -2154,7 +2170,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
-    goto finish;
+        goto finish;
     }
 
     /* compile headers */
@@ -2171,12 +2187,17 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
-    goto finish;
+        goto finish;
     }
 
     request->flags.accelerated = http->flags.accel;
 
     request->flags.transparent = http->flags.transparent;
+
+#if LINUX_TPROXY
+
+    request->flags.tproxy = conn->port->tproxy;
+#endif
 
     if (internalCheck(request->urlpath.buf())) {
         if (internalHostnameIs(request->host) &&
@@ -2214,7 +2235,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
-    goto finish;
+        goto finish;
     }
 
 
@@ -2228,13 +2249,14 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
-    goto finish;
+        goto finish;
     }
 
     http->request = HTTPMSGLOCK(request);
     clientSetKeepaliveFlag(http);
 
     /* Do we expect a request-body? */
+
     if (request->content_length > 0) {
         request->body_pipe = conn->expectRequestBody(request->content_length);
 
@@ -2243,6 +2265,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
         notedUseOfBuffer = true;
 
         conn->handleRequestBodyData();
+
         if (!request->body_pipe->exhausted())
             conn->readSomeData();
 
@@ -2312,6 +2335,7 @@ ssize_t
 ConnStateData::bodySizeLeft()
 {
     // XXX: this logic will not work for chunked requests with unknown sizes
+
     if (bodyPipe != NULL)
         return bodyPipe->unproducedSize();
 
@@ -2339,9 +2363,10 @@ clientParseRequest(ConnStateData::Pointer conn, bool &do_next_read)
     while (conn->in.notYetUsed > 0 && conn->bodySizeLeft() == 0) {
         connStripBufferWhitespace (conn);
 
-    /* Don't try to parse if the buffer is empty */
-    if (conn->in.notYetUsed == 0)
-        break;
+        /* Don't try to parse if the buffer is empty */
+
+        if (conn->in.notYetUsed == 0)
+            break;
 
         /* Limit the number of concurrent requests to 2 */
 
@@ -2353,13 +2378,15 @@ clientParseRequest(ConnStateData::Pointer conn, bool &do_next_read)
         /* Terminate the string */
         conn->in.buf[conn->in.notYetUsed] = '\0';
 
-    /* Begin the parsing */
-    HttpParserInit(&hp, conn->in.buf, conn->in.notYetUsed);
+        /* Begin the parsing */
+        HttpParserInit(&hp, conn->in.buf, conn->in.notYetUsed);
 
         /* Process request */
-    PROF_start(parseHttpRequest);
+        PROF_start(parseHttpRequest);
+
         context = parseHttpRequest(conn, &hp, &method, &http_ver);
-    PROF_stop(parseHttpRequest);
+
+        PROF_stop(parseHttpRequest);
 
         /* partial or incomplete request */
         if (!context) {
@@ -2394,6 +2421,7 @@ clientParseRequest(ConnStateData::Pointer conn, bool &do_next_read)
             continue;		/* while offset > 0 && conn->bodySizeLeft() == 0 */
         }
     }				/* while offset > 0 && conn->bodySizeLeft() == 0 */
+
     /* XXX where to 'finish' the parsing pass? */
 
     return parsed_req;
@@ -2494,6 +2522,7 @@ ConnStateData::handleReadData(char *buf, size_t size)
         xmemmove(current_buf, buf, size);
 
     in.notYetUsed += size;
+
     in.buf[in.notYetUsed] = '\0'; /* Terminate the string */
 
     // if we are reading a body, stuff data into the body pipe
@@ -3192,7 +3221,7 @@ ConnStateData::closing() const
     return closing_;
 }
 
-// Called by ClientSocketContext to give the connection a chance to read 
+// Called by ClientSocketContext to give the connection a chance to read
 // the entire body before closing the socket.
 void
 ConnStateData::startClosing(const char *reason)

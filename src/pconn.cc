@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.47 2006/09/03 21:05:20 hno Exp $
+ * $Id: pconn.cc,v 1.48 2007/04/15 14:46:17 serassio Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -175,12 +175,17 @@ IdleConnList::timeout(int fd, void *data)
 /* ========== PconnPool PRIVATE FUNCTIONS ============================================ */
 
 const char *
-PconnPool::key(const char *host, u_short port, const char *domain)
+
+PconnPool::key(const char *host, u_short port, const char *domain, struct IN_ADDR *client_address)
 {
     LOCAL_ARRAY(char, buf, SQUIDHOSTNAMELEN * 2 + 10);
 
-    if (domain)
+    if (domain && client_address)
+        snprintf(buf, SQUIDHOSTNAMELEN * 2 + 10, "%s:%d-%s/%s", host, (int) port, inet_ntoa(*client_address), domain);
+    else if (domain && (!client_address))
         snprintf(buf, SQUIDHOSTNAMELEN * 2 + 10, "%s:%d/%s", host, (int) port, domain);
+    else if ((!domain) && client_address)
+        snprintf(buf, SQUIDHOSTNAMELEN * 2 + 10, "%s:%d-%s", host, (int) port, inet_ntoa(*client_address));
     else
         snprintf(buf, SQUIDHOSTNAMELEN * 2 + 10, "%s:%d", host, (int) port);
 
@@ -222,27 +227,31 @@ PconnPool::PconnPool(const char *aDescr) : table(NULL), descr(aDescr)
 }
 
 void
-PconnPool::push(int fd, const char *host, u_short port, const char *domain)
+
+PconnPool::push(int fd, const char *host, u_short port, const char *domain, struct IN_ADDR *client_address)
 {
 
     IdleConnList *list;
     const char *aKey;
     LOCAL_ARRAY(char, desc, FD_DESC_SZ);
 
-    if (fdUsageHigh()) {
+    if (fdUsageHigh())
+    {
         debug(48, 3) ("PconnPool::push: Not many unused FDs\n");
         comm_close(fd);
         return;
-    } else if (shutting_down) {
+    } else if (shutting_down)
+    {
         comm_close(fd);
         return;
     }
 
-    aKey = key(host, port, domain);
+    aKey = key(host, port, domain, client_address);
 
     list = (IdleConnList *) hash_lookup(table, aKey);
 
-    if (list == NULL) {
+    if (list == NULL)
+    {
         list = new IdleConnList(aKey, this);
         debug(48, 3) ("pconnNew: adding %s\n", hashKeyStr(&list->hash));
         hash_join(table, &list->hash);
@@ -260,10 +269,11 @@ PconnPool::push(int fd, const char *host, u_short port, const char *domain)
  * return a pconn fd for host:port, or -1 if none are available
  */
 int
-PconnPool::pop(const char *host, u_short port, const char *domain)
+
+PconnPool::pop(const char *host, u_short port, const char *domain, struct IN_ADDR *client_address)
 {
     IdleConnList *list;
-    const char * aKey = key(host, port, domain);
+    const char * aKey = key(host, port, domain, client_address);
     list = (IdleConnList *)hash_lookup(table, aKey);
 
     if (list == NULL)
@@ -271,7 +281,8 @@ PconnPool::pop(const char *host, u_short port, const char *domain)
 
     int fd = list->findUseableFD();
 
-    if (fd >= 0) {
+    if (fd >= 0)
+    {
         list->clearHandlers(fd);
         list->removeFD(fd);	/* might delete list */
     }

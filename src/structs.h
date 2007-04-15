@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.553 2007/04/07 09:35:38 serassio Exp $
+ * $Id: structs.h,v 1.554 2007/04/15 14:46:17 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -150,6 +150,10 @@ unsigned int vhost:
 
     int vport;                 /* virtual port support, -1 for dynamic, >0 static*/
     int disable_pmtu_discovery;
+#if LINUX_TPROXY
+unsigned int tproxy:
+    1; /* spoof client ip using tproxy */
+#endif
 };
 
 
@@ -1237,6 +1241,9 @@ struct request_flags
 #if HTTP_VIOLATIONS
         nocache_hack = 0;
 #endif
+#if LINUX_TPROXY
+	tproxy = 0;
+#endif
 
     }
 
@@ -1287,6 +1294,10 @@ unsigned int accelerated:
 unsigned int transparent:
     1;
 
+#if LINUX_TPROXY
+unsigned int tproxy:
+    1; /* spoof client ip using tproxy */
+#endif
 unsigned int internal:
     1;
 

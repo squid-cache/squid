@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.444 2007/04/13 23:12:31 wessels Exp $
+ * $Id: main.cc,v 1.445 2007/04/15 14:46:17 serassio Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -165,6 +165,7 @@ bool
 SignalDispatcher::dispatch()
 {
     PROF_start(SignalDispatcher_dispatch);
+
     if (do_reconfigure) {
         mainReconfigure();
         do_reconfigure = 0;
@@ -334,6 +335,7 @@ mainParseOptions(int argc, char *argv[])
             break;
 
         case 'k':
+
             if ((int) strlen(optarg) < 1)
                 usage();
 
@@ -387,10 +389,10 @@ mainParseOptions(int argc, char *argv[])
         case 'm':
             if (optarg) {
 #if MALLOC_DBG
-                    malloc_debug_level = atoi(optarg);
+                malloc_debug_level = atoi(optarg);
 #else
 
-                    fatal("Need to add -DMALLOC_DBG when compiling to use -mX option");
+                fatal("Need to add -DMALLOC_DBG when compiling to use -mX option");
 #endif
 
             } else {
@@ -726,6 +728,7 @@ mainRotate(void)
 static void
 setEffectiveUser(void)
 {
+    keepCapabilities();
     leave_suid();		/* Run as non privilegied user */
 #ifdef _SQUID_OS2_
 
@@ -962,7 +965,7 @@ mainInitialize(void)
         storeDigestRegisterWithCacheManager(manager);
         StoreFileSystem::RegisterAllFsWithCacheManager(manager);
         storeRegisterWithCacheManager(manager);
-	storeLogRegisterWithCacheManager(manager);
+        storeLogRegisterWithCacheManager(manager);
 #if DEBUGSTRINGS
 
         StringRegistry::Instance().registerWithCacheManager(manager);
@@ -988,6 +991,7 @@ mainInitialize(void)
     serverConnectionsOpen();
 
     neighbors_init();
+
     neighborsRegisterWithCacheManager(manager);
 
     if (Config.chroot_dir)
@@ -1644,6 +1648,7 @@ SquidShutdown()
 
     unlinkdClose();	  /* after sync/flush */
 #endif
+
     storeDirWriteCleanLogs(0);
     PrintRusage();
     dumpMallocStats();

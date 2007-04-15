@@ -275,6 +275,9 @@
 /* Define to 1 if you have the <linux/netfilter_ipv4.h> header file. */
 #undef HAVE_LINUX_NETFILTER_IPV4_H
 
+/* Define to 1 if you have the <linux/netfilter_ipv4/ip_tproxy.h> header file.	*/
+#undef HAVE_LINUX_NETFILTER_IPV4_IP_TPROXY_H
+
 /* long is defined in system headers */
 #undef HAVE_LONG
 
@@ -735,6 +738,9 @@
 
 /* Enable support for Transparent Proxy on Linux (Netfilter) systems */
 #undef LINUX_NETFILTER
+
+/* Enable real Transparent Proxy support for Netfilter TPROXY. */
+#undef LINUX_TPROXY
 
 /* If we need to declare sys_errlist[] as external */
 #undef NEED_SYS_ERRLIST
