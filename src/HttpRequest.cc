@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.71 2007/04/06 04:50:04 rousskov Exp $
+ * $Id: HttpRequest.cc,v 1.72 2007/04/16 17:43:27 rousskov Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -343,6 +343,10 @@ request_flags::cloneAdaptationImmune() const
     return *this;
 }
 
+bool
+HttpRequest::bodyNibbled() const {
+    return body_pipe != NULL && body_pipe->consumedSize() > 0;
+}
 
 const char *HttpRequest::packableURI(bool full_uri) const
 {
