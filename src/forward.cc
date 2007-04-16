@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.156 2007/04/15 14:46:16 serassio Exp $
+ * $Id: forward.cc,v 1.157 2007/04/16 17:43:27 rousskov Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -441,7 +441,7 @@ FwdState::checkRetry()
     if (flags.dont_retry)
         return false;
 
-    if (request->flags.body_sent)
+    if (request->bodyNibbled())
         return false;
 
     return true;
@@ -1034,7 +1034,7 @@ FwdState::reforward()
     if (origin_tries > 1)
         return 0;
 
-    if (request->flags.body_sent)
+    if (request->bodyNibbled())
         return 0;
 
     assert(fs);

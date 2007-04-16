@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.25 2007/04/06 04:50:04 rousskov Exp $
+ * $Id: HttpRequest.h,v 1.26 2007/04/16 17:43:27 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -136,6 +136,8 @@ public:
     int parseHeader(const char *parse_start, int len);
 
     virtual bool expectingBody(method_t unused, ssize_t&) const;
+
+    bool bodyNibbled() const; // the request has a [partially] consumed body
 
     int prefixLen();
 
