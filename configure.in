@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.450 2007/04/15 14:46:11 serassio Exp $
+dnl  $Id: configure.in,v 1.451 2007/04/16 14:12:06 hno Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.450 $)dnl
+AC_REVISION($Revision: 1.451 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -1784,22 +1784,20 @@ AC_ARG_WITH(filedescriptors,
 AC_PATH_PROG(CPPUNITCONFIG, cppunit-config, false)
 if $CPPUNITCONFIG --help >/dev/null; then
   echo "using system installed cppunit"
-  SQUID_CPPUNIT_DIR=''
   SQUID_CPPUNIT_LIBS="`$CPPUNITCONFIG --libs`"
   SQUID_CPPUNIT_LA=''
   SQUID_CPPUNIT_INC="`$CPPUNITCONFIG --cflags`"
 else
-  SQUID_CPPUNIT_DIR='cppunit-1.10.0'
-  SQUID_CPPUNIT_LA='$(top_builddir)/lib/cppunit-1.10.0/src/cppunit/libcppunit.la' 
-  SQUID_CPPUNIT_LIBS='$(SQUID_CPPUNIT_LA)'
-  SQUID_CPPUNIT_INC='-I$(top_builddir)/lib/cppunit-1.10.0/include -I $(top_srcdir)/lib/cppunit-1.10.0/include'
+  echo "cppunit does not apear to be installed. squid does not require this, but code testing with 'make check' will fail."
+  SQUID_CPPUNIT_LA='' 
+  SQUID_CPPUNIT_LIBS=''
+  SQUID_CPPUNIT_INC=''
 fi
 
 AC_ARG_WITH(cppunit-basedir,
 [  --with-cppunit-basedir=/path/to/cppunit-base
                           Path where the cppunit headers are libraries are found
-			  for unit testing. (defaults to use internal copies -
-			  version 1.10.0)
+			  for unit testing.
 			  ],
 [ if test -f $withval/include/cppunit/TestCase.h; then
 	echo "Using cppunit includes from $withval"
@@ -1816,12 +1814,10 @@ AC_ARG_WITH(cppunit-basedir,
 	echo "ERROR: Cannot find cppunit at $withval"
 	exit 1
     fi
-  SQUID_CPPUNIT_DIR=''
 ])
 AC_SUBST(SQUID_CPPUNIT_LIBS)
 AC_SUBST(SQUID_CPPUNIT_LA)
 AC_SUBST(SQUID_CPPUNIT_INC)
-AC_SUBST(SQUID_CPPUNIT_DIR)
 
 # Force some compilers to use ANSI features
 #
@@ -3303,8 +3299,5 @@ AC_CONFIG_FILES([\
 	helpers/external_acl/mswin_lm_group/Makefile \
 	tools/Makefile
 ])
-
-AC_CONFIG_SUBDIRS(lib/libTrie)
-AC_CONFIG_SUBDIRS(lib/cppunit-1.10.0)
 
 AC_OUTPUT

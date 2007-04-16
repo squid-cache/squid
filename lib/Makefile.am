@@ -1,10 +1,10 @@
 ## Process this file with automake to produce Makefile.in
 #
-#  $Id: Makefile.am,v 1.23 2006/09/02 13:48:53 serassio Exp $
+#  $Id: Makefile.am,v 1.24 2007/04/16 14:12:06 hno Exp $
 #
 
-DIST_SUBDIRS = libTrie cppunit-1.10.0
-SUBDIRS= libTrie @SQUID_CPPUNIT_DIR@
+DIST_SUBDIRS = libTrie
+SUBDIRS= libTrie
 
 install: all
 install-strip: all

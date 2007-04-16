@@ -66,8 +66,7 @@ echo "libtool  : $ltver"
 
 for dir in \
 	"" \
-	lib/libTrie \
-	lib/cppunit-1.10.0
+	lib/libTrie
 do
     if [ -z "$dir" ] || [ -d $dir ]; then
 	if (
