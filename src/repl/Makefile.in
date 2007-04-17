@@ -16,7 +16,7 @@
 
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.73 2007/02/25 11:34:57 hno Exp $
+#  $Id: Makefile.in,v 1.74 2007/04/17 00:11:00 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -211,7 +211,6 @@ SH = @SH@
 SHELL = @SHELL@
 SNMPLIB = @SNMPLIB@
 SQUID_CFLAGS = @SQUID_CFLAGS@
-SQUID_CPPUNIT_DIR = @SQUID_CPPUNIT_DIR@
 SQUID_CPPUNIT_INC = @SQUID_CPPUNIT_INC@
 SQUID_CPPUNIT_LA = @SQUID_CPPUNIT_LA@
 SQUID_CPPUNIT_LIBS = @SQUID_CPPUNIT_LIBS@
@@ -285,7 +284,6 @@ prefix = @prefix@
 program_transform_name = @program_transform_name@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
-subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 AUTOMAKE_OPTIONS = subdir-objects
