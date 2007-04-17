@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_log.cc,v 1.29 2007/04/13 23:12:31 wessels Exp $
+ * $Id: store_log.cc,v 1.30 2007/04/17 06:07:50 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Logging Functions
  * AUTHOR: Duane Wessels
@@ -96,7 +96,7 @@ storeLog(int tag, const StoreEntry * e)
                       (int) reply->expires,
                       reply->content_type.size() ? reply->content_type.buf() : "unknown",
                       reply->content_length,
-                      contentLen(e),
+                      e->contentLen(),
                       RequestMethodStr[mem->method],
                       mem->log_url);
     } else {
