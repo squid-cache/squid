@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.18 2007/04/17 00:10:52 hno Exp $
+#  $Id: Makefile.in,v 1.19 2007/04/17 00:44:27 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -279,6 +279,7 @@ prefix = @prefix@
 program_transform_name = @program_transform_name@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
+subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 digest_ldap_auth_SOURCES = digest_pw_auth.c \

@@ -467,7 +467,8 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE build build_cpu build_vendor build_os host host_cpu host_vendor host_os EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CPP CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL LIBADD_DL CGIEXT ENABLE_WIN32SPECIFIC_TRUE ENABLE_WIN32SPECIFIC_FALSE WIN32_PSAPI USE_IPC_WIN32_TRUE USE_IPC_WIN32_FALSE MINGW_LIBS CACHE_HTTP_PORT CACHE_ICP_PORT SQUID_CFLAGS SQUID_CXXFLAGS LIBDLMALLOC LIB_MALLOC STORE_OBJS STORE_LIBS STORE_LINKOBJS STORE_TESTS DISK_LIBS DISK_PROGRAMS DISK_LINKOBJS USE_AIOPS_WIN32_TRUE USE_AIOPS_WIN32_FALSE USE_AIO_WIN32_TRUE USE_AIO_WIN32_FALSE REPL_POLICIES REPL_OBJS REPL_LIBS ENABLE_PINGER_TRUE ENABLE_PINGER_FALSE USE_DELAY_POOLS_TRUE USE_DELAY_POOLS_FALSE USE_ESI_TRUE USE_ESI_FALSE USE_ICAP_CLIENT_TRUE USE_ICAP_CLIENT_FALSE ICAP_LIBS USE_SNMP_TRUE USE_SNMP_FALSE SNMPLIB makesnmplib ENABLE_ARP_ACL_TRUE ENABLE_ARP_ACL_FALSE ENABLE_HTCP_TRUE ENABLE_HTCP_FALSE ENABLE_SSL_TRUE ENABLE_SSL_FALSE NEED_OWN_MD5_TRUE NEED_OWN_MD5_FALSE SSLLIB ERR_DEFAULT_LANGUAGE ERR_LANGUAGES MAKE_LEAKFINDER_TRUE MAKE_LEAKFINDER_FALSE ENABLE_IDENT_TRUE ENABLE_IDENT_FALSE USE_DNSSERVER_TRUE USE_DNSSERVER_FALSE OPT_DEFAULT_HOSTS AUTH_MODULES AUTH_LIBS AUTH_LINKOBJS AUTH_OBJS BASIC_AUTH_HELPERS NTLM_AUTH_HELPERS NEGOTIATE_AUTH_HELPERS DIGEST_AUTH_HELPERS EXTERNAL_ACL_HELPERS LIBSASL ENABLE_UNLINKD_TRUE ENABLE_UNLINKD_FALSE ENABLE_XPROF_STATS_TRUE ENABLE_XPROF_STATS_FALSE CPPUNITCONFIG SQUID_CPPUNIT_LIBS SQUID_CPPUNIT_LA SQUID_CPPUNIT_INC SH FALSE TRUE RM MV MKDIR LN PERL AR_R ALLOCA CRYPTLIB LIB_LDAP LIB_LBER LIB_DB EPOLL_LIBS NEED_OWN_SNPRINTF_TRUE NEED_OWN_SNPRINTF_FALSE NEED_OWN_STRSEP_TRUE NEED_OWN_STRSEP_FALSE REGEXLIB LIBREGEX LIBOBJS XTRA_OBJS XTRA_LIBS LTLIBOBJS'
+ac_subdirs_all="$ac_subdirs_all lib/libTrie"
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE build build_cpu build_vendor build_os host host_cpu host_vendor host_os EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CPP CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL LIBADD_DL CGIEXT ENABLE_WIN32SPECIFIC_TRUE ENABLE_WIN32SPECIFIC_FALSE WIN32_PSAPI USE_IPC_WIN32_TRUE USE_IPC_WIN32_FALSE MINGW_LIBS CACHE_HTTP_PORT CACHE_ICP_PORT SQUID_CFLAGS SQUID_CXXFLAGS LIBDLMALLOC LIB_MALLOC STORE_OBJS STORE_LIBS STORE_LINKOBJS STORE_TESTS DISK_LIBS DISK_PROGRAMS DISK_LINKOBJS USE_AIOPS_WIN32_TRUE USE_AIOPS_WIN32_FALSE USE_AIO_WIN32_TRUE USE_AIO_WIN32_FALSE REPL_POLICIES REPL_OBJS REPL_LIBS ENABLE_PINGER_TRUE ENABLE_PINGER_FALSE USE_DELAY_POOLS_TRUE USE_DELAY_POOLS_FALSE USE_ESI_TRUE USE_ESI_FALSE USE_ICAP_CLIENT_TRUE USE_ICAP_CLIENT_FALSE ICAP_LIBS USE_SNMP_TRUE USE_SNMP_FALSE SNMPLIB makesnmplib ENABLE_ARP_ACL_TRUE ENABLE_ARP_ACL_FALSE ENABLE_HTCP_TRUE ENABLE_HTCP_FALSE ENABLE_SSL_TRUE ENABLE_SSL_FALSE NEED_OWN_MD5_TRUE NEED_OWN_MD5_FALSE SSLLIB ERR_DEFAULT_LANGUAGE ERR_LANGUAGES MAKE_LEAKFINDER_TRUE MAKE_LEAKFINDER_FALSE ENABLE_IDENT_TRUE ENABLE_IDENT_FALSE USE_DNSSERVER_TRUE USE_DNSSERVER_FALSE OPT_DEFAULT_HOSTS AUTH_MODULES AUTH_LIBS AUTH_LINKOBJS AUTH_OBJS BASIC_AUTH_HELPERS NTLM_AUTH_HELPERS NEGOTIATE_AUTH_HELPERS DIGEST_AUTH_HELPERS EXTERNAL_ACL_HELPERS LIBSASL ENABLE_UNLINKD_TRUE ENABLE_UNLINKD_FALSE ENABLE_XPROF_STATS_TRUE ENABLE_XPROF_STATS_FALSE CPPUNITCONFIG SQUID_CPPUNIT_LIBS SQUID_CPPUNIT_LA SQUID_CPPUNIT_INC SH FALSE TRUE RM MV MKDIR LN PERL AR_R ALLOCA CRYPTLIB LIB_LDAP LIB_LBER LIB_DB EPOLL_LIBS NEED_OWN_SNPRINTF_TRUE NEED_OWN_SNPRINTF_FALSE NEED_OWN_STRSEP_TRUE NEED_OWN_STRSEP_FALSE REGEXLIB LIBREGEX LIBOBJS XTRA_OBJS XTRA_LIBS subdirs LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -4571,7 +4572,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 4574 "configure"' > conftest.$ac_ext
+  echo '#line 4575 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -5706,7 +5707,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:5709:" \
+echo "$as_me:5710:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -6769,11 +6770,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6772: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6773: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:6776: \$? = $ac_status" >&5
+   echo "$as_me:6777: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7037,11 +7038,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7040: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7041: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7044: \$? = $ac_status" >&5
+   echo "$as_me:7045: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7141,11 +7142,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7144: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7145: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7148: \$? = $ac_status" >&5
+   echo "$as_me:7149: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9486,7 +9487,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9489 "configure"
+#line 9490 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -9586,7 +9587,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9589 "configure"
+#line 9590 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11926,11 +11927,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11929: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11930: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:11933: \$? = $ac_status" >&5
+   echo "$as_me:11934: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -12030,11 +12031,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12033: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12034: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12037: \$? = $ac_status" >&5
+   echo "$as_me:12038: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -13600,11 +13601,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13603: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13604: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13607: \$? = $ac_status" >&5
+   echo "$as_me:13608: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -13704,11 +13705,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13707: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13708: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13711: \$? = $ac_status" >&5
+   echo "$as_me:13712: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -15907,11 +15908,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15910: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15911: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15914: \$? = $ac_status" >&5
+   echo "$as_me:15915: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -16175,11 +16176,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16178: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16179: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16182: \$? = $ac_status" >&5
+   echo "$as_me:16183: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -16279,11 +16280,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16282: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16283: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:16286: \$? = $ac_status" >&5
+   echo "$as_me:16287: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -43896,6 +43897,11 @@ rm -f core
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       ac_config_files="$ac_config_files Makefile lib/Makefile scripts/Makefile scripts/RunCache scripts/RunAccel src/Makefile src/fs/Makefile src/repl/Makefile src/auth/Makefile contrib/Makefile snmplib/Makefile icons/Makefile errors/Makefile test-suite/Makefile doc/Makefile helpers/Makefile helpers/basic_auth/Makefile helpers/basic_auth/LDAP/Makefile helpers/basic_auth/MSNT/Makefile helpers/basic_auth/NCSA/Makefile helpers/basic_auth/PAM/Makefile helpers/basic_auth/SMB/Makefile helpers/basic_auth/mswin_sspi/Makefile helpers/basic_auth/YP/Makefile helpers/basic_auth/getpwnam/Makefile helpers/basic_auth/multi-domain-NTLM/Makefile helpers/basic_auth/SASL/Makefile helpers/basic_auth/POP3/Makefile helpers/digest_auth/Makefile helpers/digest_auth/password/Makefile helpers/digest_auth/ldap/Makefile helpers/ntlm_auth/Makefile helpers/ntlm_auth/fakeauth/Makefile helpers/ntlm_auth/no_check/Makefile helpers/ntlm_auth/SMB/Makefile helpers/ntlm_auth/SMB/smbval/Makefile helpers/ntlm_auth/mswin_sspi/Makefile helpers/negotiate_auth/Makefile helpers/negotiate_auth/mswin_sspi/Makefile helpers/external_acl/Makefile helpers/external_acl/ip_user/Makefile helpers/external_acl/ldap_group/Makefile helpers/external_acl/session/Makefile helpers/external_acl/unix_group/Makefile helpers/external_acl/wbinfo_group/Makefile helpers/external_acl/mswin_lm_group/Makefile tools/Makefile"
 
 
+
+
+subdirs="$subdirs lib/libTrie"
+
+
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -45028,6 +45034,7 @@ s,@LIBREGEX@,$LIBREGEX,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
 s,@XTRA_OBJS@,$XTRA_OBJS,;t t
 s,@XTRA_LIBS@,$XTRA_LIBS,;t t
+s,@subdirs@,$subdirs,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
 CEOF
 
@@ -45742,5 +45749,185 @@ if test "$no_create" != yes; then
   # Use ||, not &&, to avoid exiting from the if with $? = 1, which
   # would make configure fail if this is the last instruction.
   $ac_cs_success || { (exit 1); exit 1; }
+fi
+
+#
+# CONFIG_SUBDIRS section.
+#
+if test "$no_recursion" != yes; then
+
+  # Remove --cache-file and --srcdir arguments so they do not pile up.
+  ac_sub_configure_args=
+  # Add --quiet option if used
+  test "$silent" = yes &&
+    ac_sub_configure_args="$ac_sub_configure_args --quiet"
+  ac_prev=
+  for ac_arg in $ac_configure_args; do
+    if test -n "$ac_prev"; then
+      ac_prev=
+      continue
+    fi
+    case $ac_arg in
+    -cache-file | --cache-file | --cache-fil | --cache-fi \
+    | --cache-f | --cache- | --cache | --cach | --cac | --ca | --c)
+      ac_prev=cache_file ;;
+    -cache-file=* | --cache-file=* | --cache-fil=* | --cache-fi=* \
+    | --cache-f=* | --cache-=* | --cache=* | --cach=* | --cac=* | --ca=* \
+    | --c=*)
+      ;;
+    --config-cache | -C)
+      ;;
+    -srcdir | --srcdir | --srcdi | --srcd | --src | --sr)
+      ac_prev=srcdir ;;
+    -srcdir=* | --srcdir=* | --srcdi=* | --srcd=* | --src=* | --sr=*)
+      ;;
+    -prefix | --prefix | --prefi | --pref | --pre | --pr | --p)
+      ac_prev=prefix ;;
+    -prefix=* | --prefix=* | --prefi=* | --pref=* | --pre=* | --pr=* | --p=*)
+      ;;
+    *) ac_sub_configure_args="$ac_sub_configure_args $ac_arg" ;;
+    esac
+  done
+
+  # Always prepend --prefix to ensure using the same prefix
+  # in subdir configurations.
+  ac_sub_configure_args="--prefix=$prefix $ac_sub_configure_args"
+
+  ac_popdir=`pwd`
+  for ac_dir in : $subdirs; do test "x$ac_dir" = x: && continue
+
+    # Do not complain, so a configure script can configure whichever
+    # parts of a large source tree are present.
+    test -d $srcdir/$ac_dir || continue
+
+    { echo "$as_me:$LINENO: configuring in $ac_dir" >&5
+echo "$as_me: configuring in $ac_dir" >&6;}
+    { if $as_mkdir_p; then
+    mkdir -p "$ac_dir"
+  else
+    as_dir="$ac_dir"
+    as_dirs=
+    while test ! -d "$as_dir"; do
+      as_dirs="$as_dir $as_dirs"
+      as_dir=`(dirname "$as_dir") 2>/dev/null ||
+$as_expr X"$as_dir" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
+	 X"$as_dir" : 'X\(//\)[^/]' \| \
+	 X"$as_dir" : 'X\(//\)$' \| \
+	 X"$as_dir" : 'X\(/\)' \| \
+	 .     : '\(.\)' 2>/dev/null ||
+echo X"$as_dir" |
+    sed '/^X\(.*[^/]\)\/\/*[^/][^/]*\/*$/{ s//\1/; q; }
+  	  /^X\(\/\/\)[^/].*/{ s//\1/; q; }
+  	  /^X\(\/\/\)$/{ s//\1/; q; }
+  	  /^X\(\/\).*/{ s//\1/; q; }
+  	  s/.*/./; q'`
+    done
+    test ! -n "$as_dirs" || mkdir $as_dirs
+  fi || { { echo "$as_me:$LINENO: error: cannot create directory \"$ac_dir\"" >&5
+echo "$as_me: error: cannot create directory \"$ac_dir\"" >&2;}
+   { (exit 1); exit 1; }; }; }
+
+    ac_builddir=.
+
+if test "$ac_dir" != .; then
+  ac_dir_suffix=/`echo "$ac_dir" | sed 's,^\.[\\/],,'`
+  # A "../" for each directory in $ac_dir_suffix.
+  ac_top_builddir=`echo "$ac_dir_suffix" | sed 's,/[^\\/]*,../,g'`
+else
+  ac_dir_suffix= ac_top_builddir=
+fi
+
+case $srcdir in
+  .)  # No --srcdir option.  We are building in place.
+    ac_srcdir=.
+    if test -z "$ac_top_builddir"; then
+       ac_top_srcdir=.
+    else
+       ac_top_srcdir=`echo $ac_top_builddir | sed 's,/$,,'`
+    fi ;;
+  [\\/]* | ?:[\\/]* )  # Absolute path.
+    ac_srcdir=$srcdir$ac_dir_suffix;
+    ac_top_srcdir=$srcdir ;;
+  *) # Relative path.
+    ac_srcdir=$ac_top_builddir$srcdir$ac_dir_suffix
+    ac_top_srcdir=$ac_top_builddir$srcdir ;;
+esac
+
+# Do not use `cd foo && pwd` to compute absolute paths, because
+# the directories may not exist.
+case `pwd` in
+.) ac_abs_builddir="$ac_dir";;
+*)
+  case "$ac_dir" in
+  .) ac_abs_builddir=`pwd`;;
+  [\\/]* | ?:[\\/]* ) ac_abs_builddir="$ac_dir";;
+  *) ac_abs_builddir=`pwd`/"$ac_dir";;
+  esac;;
+esac
+case $ac_abs_builddir in
+.) ac_abs_top_builddir=${ac_top_builddir}.;;
+*)
+  case ${ac_top_builddir}. in
+  .) ac_abs_top_builddir=$ac_abs_builddir;;
+  [\\/]* | ?:[\\/]* ) ac_abs_top_builddir=${ac_top_builddir}.;;
+  *) ac_abs_top_builddir=$ac_abs_builddir/${ac_top_builddir}.;;
+  esac;;
+esac
+case $ac_abs_builddir in
+.) ac_abs_srcdir=$ac_srcdir;;
+*)
+  case $ac_srcdir in
+  .) ac_abs_srcdir=$ac_abs_builddir;;
+  [\\/]* | ?:[\\/]* ) ac_abs_srcdir=$ac_srcdir;;
+  *) ac_abs_srcdir=$ac_abs_builddir/$ac_srcdir;;
+  esac;;
+esac
+case $ac_abs_builddir in
+.) ac_abs_top_srcdir=$ac_top_srcdir;;
+*)
+  case $ac_top_srcdir in
+  .) ac_abs_top_srcdir=$ac_abs_builddir;;
+  [\\/]* | ?:[\\/]* ) ac_abs_top_srcdir=$ac_top_srcdir;;
+  *) ac_abs_top_srcdir=$ac_abs_builddir/$ac_top_srcdir;;
+  esac;;
+esac
+
+
+    cd $ac_dir
+
+    # Check for guested configure; otherwise get Cygnus style configure.
+    if test -f $ac_srcdir/configure.gnu; then
+      ac_sub_configure="$SHELL '$ac_srcdir/configure.gnu'"
+    elif test -f $ac_srcdir/configure; then
+      ac_sub_configure="$SHELL '$ac_srcdir/configure'"
+    elif test -f $ac_srcdir/configure.in; then
+      ac_sub_configure=$ac_configure
+    else
+      { echo "$as_me:$LINENO: WARNING: no configuration information is in $ac_dir" >&5
+echo "$as_me: WARNING: no configuration information is in $ac_dir" >&2;}
+      ac_sub_configure=
+    fi
+
+    # The recursion is here.
+    if test -n "$ac_sub_configure"; then
+      # Make the cache file name correct relative to the subdirectory.
+      case $cache_file in
+      [\\/]* | ?:[\\/]* ) ac_sub_cache_file=$cache_file ;;
+      *) # Relative path.
+	ac_sub_cache_file=$ac_top_builddir$cache_file ;;
+      esac
+
+      { echo "$as_me:$LINENO: running $ac_sub_configure $ac_sub_configure_args --cache-file=$ac_sub_cache_file --srcdir=$ac_srcdir" >&5
+echo "$as_me: running $ac_sub_configure $ac_sub_configure_args --cache-file=$ac_sub_cache_file --srcdir=$ac_srcdir" >&6;}
+      # The eval makes quoting arguments work.
+      eval $ac_sub_configure $ac_sub_configure_args \
+	   --cache-file=$ac_sub_cache_file --srcdir=$ac_srcdir ||
+	{ { echo "$as_me:$LINENO: error: $ac_sub_configure failed for $ac_dir" >&5
+echo "$as_me: error: $ac_sub_configure failed for $ac_dir" >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+
+    cd $ac_popdir
+  done
 fi
 

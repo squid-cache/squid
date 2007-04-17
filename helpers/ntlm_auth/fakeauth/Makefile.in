@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.71 2007/04/17 00:10:57 hno Exp $
+#  $Id: Makefile.in,v 1.72 2007/04/17 00:44:33 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -277,6 +277,7 @@ prefix = @prefix@
 program_transform_name = @program_transform_name@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
+subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 fakeauth_auth_SOURCES = fakeauth_auth.c ntlm.h

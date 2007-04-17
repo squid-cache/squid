@@ -270,6 +270,7 @@ prefix = @prefix@
 program_transform_name = @program_transform_name@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
+subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \

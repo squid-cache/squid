@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.10 2007/04/17 00:11:02 hno Exp $
+#  $Id: Makefile.in,v 1.11 2007/04/17 00:44:37 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -290,6 +290,7 @@ prefix = @prefix@
 program_transform_name = @program_transform_name@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
+subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 AUTOMAKE_OPTIONS = subdir-objects
