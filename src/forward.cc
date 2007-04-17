@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.157 2007/04/16 17:43:27 rousskov Exp $
+ * $Id: forward.cc,v 1.158 2007/04/16 18:35:29 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -417,6 +417,13 @@ fwdPeerClosed(int fd, void *data)
 
 /**** PRIVATE *****************************************************************/
 
+/*
+ * FwdState::checkRetry
+ * 
+ * Return TRUE if the request SHOULD be retried.  This method is
+ * called when the HTTP connection fails, or when the connection
+ * is closed before server-side read the end of HTTP headers.
+ */
 bool
 FwdState::checkRetry()
 {
@@ -447,6 +454,14 @@ FwdState::checkRetry()
     return true;
 }
 
+/*
+ * FwdState::checkRetriable
+ *
+ * Return TRUE if this is the kind of request that can be retried
+ * after a failure.  If the request is not retriable then we don't
+ * want to risk sending it on a persistent connection.  Instead we'll
+ * force it to go on a new HTTP connection.
+ */
 bool
 FwdState::checkRetriable()
 {
@@ -1008,6 +1023,14 @@ FwdState::dispatch()
     }
 }
 
+/*
+ * FwdState::reforward
+ *
+ * returns TRUE if the transaction SHOULD be re-forwarded to the
+ * next choice in the FwdServers list.  This method is called when
+ * server-side communication completes normally, or experiences
+ * some error after receiving the end of HTTP headers.
+ */
 int
 FwdState::reforward()
 {
