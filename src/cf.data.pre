@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.432 2007/04/15 14:46:13 serassio Exp $
+# $Id: cf.data.pre,v 1.433 2007/04/16 22:10:49 hno Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -1157,7 +1157,7 @@ DOC_START
 
 	Common options:
 
-	read-only, this cache_dir is read only.
+	no-store, no new objects should be stored to this cache_dir
 
 	max-size=n, refers to the max object size this storedir supports.
 	It is used to initially choose the storedir to dump the object.
