@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid PAM authentication helper
 #
-#  $Id: Makefile.in,v 1.77 2007/04/17 00:10:49 hno Exp $
+#  $Id: Makefile.in,v 1.78 2007/04/17 00:44:24 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -279,6 +279,7 @@ prefix = @prefix@
 program_transform_name = @program_transform_name@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
+subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 INCLUDES = -I$(top_srcdir)/include

@@ -17,7 +17,7 @@
 #
 #  Makefile for the ip_user external_acl helper by Rodrigo Campos
 #
-#  $Id: Makefile.in,v 1.62 2007/04/17 00:10:53 hno Exp $
+#  $Id: Makefile.in,v 1.63 2007/04/17 00:44:28 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -276,6 +276,7 @@ prefix = @prefix@
 program_transform_name = @program_transform_name@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
+subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 ip_user_check_SOURCES = \

@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-#  $Id: Makefile.in,v 1.129 2007/04/17 00:10:58 hno Exp $
+#  $Id: Makefile.in,v 1.130 2007/04/17 00:44:34 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -334,6 +334,7 @@ prefix = @prefix@
 program_transform_name = @program_transform_name@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
+subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 DIST_SUBDIRS = libTrie

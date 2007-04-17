@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.17 2007/04/17 00:10:57 hno Exp $
+#  $Id: Makefile.in,v 1.18 2007/04/17 00:44:33 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -274,6 +274,7 @@ prefix = @prefix@
 program_transform_name = @program_transform_name@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
+subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 mswin_ntlm_auth_SOURCES = libntlmssp.c ntlm_auth.c ntlm.h
