@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.603 2007/02/07 00:48:15 hno Exp $
+ * $Id: store.cc,v 1.604 2007/04/17 05:40:18 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -1384,7 +1384,7 @@ StoreEntry::validLength() const
     reply = getReply();
     debug(20, 3) ("storeEntryValidLength: Checking '%s'\n", getMD5Text());
     debugs(20, 5, "storeEntryValidLength:     object_len = " <<
-           objectLen(this));
+           objectLen());
     debug(20, 5) ("storeEntryValidLength:         hdr_sz = %d\n",
                   reply->hdr_sz);
     debug(20, 5) ("storeEntryValidLength: content_length = %d\n",
@@ -1414,7 +1414,7 @@ StoreEntry::validLength() const
     if (reply->sline.status == HTTP_NO_CONTENT)
         return 1;
 
-    diff = reply->hdr_sz + reply->content_length - objectLen(this);
+    diff = reply->hdr_sz + reply->content_length - objectLen();
 
     if (diff == 0)
         return 1;
@@ -1710,10 +1710,10 @@ StoreEntry::flush()
 }
 
 ssize_t
-objectLen(const StoreEntry * e)
+StoreEntry::objectLen() const
 {
-    assert(e->mem_obj != NULL);
-    return e->mem_obj->object_sz;
+    assert(mem_obj != NULL);
+    return mem_obj->object_sz;
 }
 
 int
@@ -1721,7 +1721,7 @@ contentLen(const StoreEntry * e)
 {
     assert(e->mem_obj != NULL);
     assert(e->getReply() != NULL);
-    return objectLen(e) - e->getReply()->hdr_sz;
+    return e->objectLen() - e->getReply()->hdr_sz;
 
 }
 

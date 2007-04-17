@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.157 2007/04/10 00:45:10 wessels Exp $
+ * $Id: store_dir.cc,v 1.158 2007/04/17 05:40:18 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -188,7 +188,6 @@ storeDirSelectSwapDirRoundRobin(const StoreEntry * e)
     int i;
     int load;
     RefCount<SwapDir> sd;
-    ssize_t objsize = (ssize_t) objectLen(e);
 
     for (i = 0; i <= Config.cacheSwap.n_configured; i++) {
         if (++dirn >= Config.cacheSwap.n_configured)
@@ -202,7 +201,7 @@ storeDirSelectSwapDirRoundRobin(const StoreEntry * e)
         if (sd->cur_size > sd->max_size)
             continue;
 
-        if (!sd->objectSizeIsAcceptable(objsize))
+        if (!sd->objectSizeIsAcceptable(e->objectLen()))
             continue;
 
         /* check for error or overload condition */
@@ -244,7 +243,7 @@ storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
     RefCount<SwapDir> SD;
 
     /* Calculate the object size */
-    objsize = (ssize_t) objectLen(e);
+    objsize = e->objectLen();
 
     if (objsize != -1)
         objsize += e->mem_obj->swap_hdr_sz;

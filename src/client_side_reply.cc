@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.116 2007/01/31 23:58:25 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.117 2007/04/17 05:40:18 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -989,7 +989,7 @@ clientReplyContext::checkTransferDone()
 int
 clientReplyContext::storeOKTransferDone() const
 {
-    if (http->out.offset >= objectLen(http->storeEntry()) - headers_sz)
+    if (http->out.offset >= http->storeEntry()->objectLen() - headers_sz)
         return 1;
 
     return 0;
