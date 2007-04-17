@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.411 2007/04/06 12:15:51 serassio Exp $
+ * $Id: ftp.cc,v 1.412 2007/04/16 21:49:03 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -139,7 +139,6 @@ public:
     char *dirpath;
     int restart_offset;
     int restarted_offset;
-    int rest_att;
     char *proxy_host;
     size_t list_width;
     wordlist *cwd_message;
