@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.26 2006/09/03 21:05:20 hno Exp $
+ * $Id: Store.h,v 1.27 2007/04/17 05:40:18 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -150,6 +150,7 @@ public:
     /* reduce the memory lock count on the entry */
     virtual int unlock();
     /* increate the memory lock count on the entry */
+    virtual ssize_t objectLen() const;
 
     virtual void lock()
 

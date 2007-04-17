@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.148 2006/09/20 11:38:14 adrian Exp $
+ * $Id: store_client.cc,v 1.149 2007/04/17 05:40:18 wessels Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -282,7 +282,7 @@ storeClientNoMoreToSend(StoreEntry * e, store_client * sc)
     if (e->store_status == STORE_PENDING)
         return 0;
 
-    if ((len = objectLen(e)) < 0)
+    if ((len = e->objectLen()) < 0)
         return 0;
 
     if (sc->copyInto.offset < len)

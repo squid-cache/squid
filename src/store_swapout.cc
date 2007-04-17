@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.108 2006/08/21 00:50:41 robertc Exp $
+ * $Id: store_swapout.cc,v 1.109 2007/04/17 05:40:18 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -355,7 +355,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
         /* swapping complete */
         debug(20, 3) ("storeSwapOutFileClosed: SwapOut complete: '%s' to %d, %08X\n",
                       storeUrl(e), e->swap_dirn, e->swap_filen);
-        e->swap_file_sz = objectLen(e) + mem->swap_hdr_sz;
+        e->swap_file_sz = e->objectLen() + mem->swap_hdr_sz;
         e->swap_status = SWAPOUT_DONE;
         e->store()->updateSize(e->swap_file_sz, 1);
 

@@ -37,7 +37,7 @@ storeCreate(StoreEntry * e, StoreIOState::STFNCB * file_callback, StoreIOState::
 
     store_io_stats.create.calls++;
     /* This is just done for logging purposes */
-    objsize = objectLen(e);
+    objsize = e->objectLen();
 
     if (objsize != -1)
         objsize += e->mem_obj->swap_hdr_sz;

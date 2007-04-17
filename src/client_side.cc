@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.746 2007/04/15 14:46:15 serassio Exp $
+ * $Id: client_side.cc,v 1.747 2007/04/17 05:40:18 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1592,7 +1592,7 @@ ClientSocketContext::writeComplete(int fd, char *bufnotused, size_t size, comm_e
     assert(fd > -1);
     debugs(33, 5, "clientWriteComplete: FD " << fd << ", sz " << size <<
            ", err " << errflag << ", off " << http->out.size << ", len " <<
-           entry ? objectLen(entry) : 0);
+           entry ? entry->objectLen() : 0);
     clientUpdateSocketStats(http->logType, size);
     assert (this->fd() == fd);
 
