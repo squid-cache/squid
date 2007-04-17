@@ -1,10 +1,16 @@
+
+
+
+
+
+
 INTERNET-DRAFT                                         M Cieslak
-<draft-wilson-wrec-wccp-v2-01.txt>                     D Forster
+<draft-wilson-wrec-wccp-v2-03.txt>                     D Forster
                                                        G Tiwana
                                                        R Wilson
                                                        Cisco Systems
-                                                       03 Apr 2001
-                                                       Expires Oct 2001
+                                                       01 Nov 2001
+                                                       Expires May 2002
 
                  Web Cache Communication Protocol V2.0
 
@@ -50,8 +56,9 @@ Status of this Memo
 
 
                                                                [Page 1]
-
-web-caches.
+
+
+      web-caches.
 
    Designated Web-Cache.
 
@@ -103,7 +110,8 @@ web-caches.
 
 
                                                                [Page 2]
-
+
+
 3. Introduction
 
 3.1 Protocol Overview
@@ -156,8 +164,9 @@ web-caches.
 
 
                                                                [Page 3]
-
-* Alternative Hashing.
+
+
+   * Alternative Hashing.
    WCCP V2.0 allows the designated web-cache to mark individual buckets
    in the Redirection Hash Table for a secondary hash. This allows the
    traffic being hashed to a particular bucket to be distributed across
@@ -209,8 +218,9 @@ web-caches.
 
 
                                                                [Page 4]
-
-in the list should discard the WCCP2_I_SEE_YOU message.
+
+
+   in the list should discard the WCCP2_I_SEE_YOU message.
 
 4.2 Describing a Service Group
 
@@ -262,7 +272,8 @@ in the list should discard the WCCP2_I_SEE_YOU message.
 
 
                                                                [Page 5]
-
+
+
 4.4 Negotiating the Forwarding Method
 
    A web-cache and router may negotiate the method by which packets are
@@ -315,8 +326,9 @@ in the list should discard the WCCP2_I_SEE_YOU message.
 
 
                                                                [Page 6]
-
-web-cache then the web-cache will abort its attempt to join the
+
+
+   web-cache then the web-cache will abort its attempt to join the
    Service Group. Otherwise the web-cache will pick one method from those
    advertised by the router and specify that in the optional Capabilities
    Info component of its next WCCP2_HERE_I_AM message. Absence of an
@@ -368,7 +380,8 @@ web-cache then the web-cache will abort its attempt to join the
 
 
                                                                [Page 7]
-
+
+
 4.6 Advertising Views of the Service Group
 
    Each router advertises its view of a Service Group via the Router View
@@ -421,7 +434,8 @@ web-cache then the web-cache will abort its attempt to join the
 
 
                                                                [Page 8]
-
+
+
 4.8.1 Hash Tables
 
    When using hash assignment each router uses a 256-bucket Redirection
@@ -474,8 +488,9 @@ web-cache then the web-cache will abort its attempt to join the
 
 
                                                                [Page 9]
-
-will wait 1.5 HERE_I_AM_T seconds following a change before generating
+
+
+   will wait 1.5 HERE_I_AM_T seconds following a change before generating
    the message in order to allow the Service Group membership to
    stabilise.
 
@@ -527,7 +542,8 @@ will wait 1.5 HERE_I_AM_T seconds following a change before generating
 
 
                                                               [Page 10]
-
+
+
 4.11 Traffic Redirection
 
 4.11.1 Redirection with Hash Assignment
@@ -580,7 +596,8 @@ will wait 1.5 HERE_I_AM_T seconds following a change before generating
 
 
                                                               [Page 11]
-
+
+
 4.12.1 Forwarding with GRE Encapsulation
 
    Redirected packets are encapsulated in a new IP packet with a GRE [1]
@@ -633,7 +650,8 @@ will wait 1.5 HERE_I_AM_T seconds following a change before generating
 
 
                                                               [Page 12]
-
+
+
 4.13 Packet Return
 
    WCCP V2.0 allows a web-cache to decline a redirected packet and return
@@ -686,7 +704,8 @@ will wait 1.5 HERE_I_AM_T seconds following a change before generating
 
 
                                                               [Page 13]
-
+
+
 4.15 Command and Status Information
 
    WCCP V2.0 includes a mechanism to allow web-caches to send commands to
@@ -739,7 +758,8 @@ will wait 1.5 HERE_I_AM_T seconds following a change before generating
 
 
                                                               [Page 14]
-
+
+
 5.2 'I See You' Message
 
    +--------------------------------------+
@@ -792,7 +812,8 @@ will wait 1.5 HERE_I_AM_T seconds following a change before generating
 
 
                                                               [Page 15]
-
+
+
 5.5 WCCP Message Header
 
     0                   1                   2                   3
@@ -845,7 +866,8 @@ will wait 1.5 HERE_I_AM_T seconds following a change before generating
 
 
                                                               [Page 16]
-
+
+
 5.6.1 Security Info Component
 
     0                   1                   2                   3
@@ -898,7 +920,8 @@ will wait 1.5 HERE_I_AM_T seconds following a change before generating
 
 
                                                               [Page 17]
-
+
+
 5.6.2 Service Info Component
 
     0                   1                   2                   3
@@ -951,8 +974,9 @@ will wait 1.5 HERE_I_AM_T seconds following a change before generating
 
 
                                                               [Page 18]
-
-Priority
+
+
+   Priority
 
       Service priority. The lowest priority is 0, the highest is
       255. Packets for redirection are matched against Services in priority
@@ -1004,8 +1028,9 @@ Priority
 
 
                                                               [Page 19]
-
-Port 0-7
+
+
+   Port 0-7
 
       Zero terminated list of UDP or TCP port identifiers. Packets will be
       matched against this set of ports if the Ports Defined flag is set. If
@@ -1057,7 +1082,8 @@ Port 0-7
 
 
                                                               [Page 20]
-
+
+
 5.6.3 Router Identity Info Component
 
     0                   1                   2                   3
@@ -1110,8 +1136,9 @@ Port 0-7
 
 
                                                               [Page 21]
-
-actually see the message.
+
+
+      actually see the message.
 
    Received From Address 0-n
 
@@ -1163,7 +1190,8 @@ actually see the message.
 
 
                                                               [Page 22]
-
+
+
 5.6.4 Web-Cache Identity Info Component
 
     0                   1                   2                   3
@@ -1216,7 +1244,8 @@ actually see the message.
 
 
                                                               [Page 23]
-
+
+
 5.6.5 Router View Info Component
 
    This represents a router's view of the Service Group.
@@ -1269,8 +1298,9 @@ actually see the message.
 
 
                                                               [Page 24]
-
-Assignment Key
+
+
+   Assignment Key
 
       Assignment Key element received in the last WCCP2_REDIRECT_ASSIGNMENT
       message. Used by the designated web-cache to verify that an assignment
@@ -1322,7 +1352,8 @@ Assignment Key
 
 
                                                               [Page 25]
-
+
+
 5.6.6 Web Cache View Info Component
 
    This represents a web-cache's view of the Service Group.
@@ -1375,8 +1406,9 @@ Assignment Key
 
 
                                                               [Page 26]
-
-Router ID Element 0-n
+
+
+   Router ID Element 0-n
 
       List of elements containing the identifying IP address for each router
       in the Service Group and the last "Received ID" from each.
@@ -1428,7 +1460,8 @@ Router ID Element 0-n
 
 
                                                               [Page 27]
-
+
+
 5.6.7 Assignment Info Component
 
     0                   1                   2                   3
@@ -1481,8 +1514,9 @@ Router ID Element 0-n
 
 
                                                               [Page 28]
-
-Assignment Key
+
+
+   Assignment Key
 
       The designated web-cache expects this element to be returned by a router
       in subsequent WCCP2_I_SEE_YOU messages.
@@ -1534,7 +1568,8 @@ Assignment Key
 
 
                                                               [Page 29]
-
+
+
 5.6.8 Router Query Info Component
 
     0                   1                   2                   3
@@ -1587,7 +1622,8 @@ Assignment Key
 
 
                                                               [Page 30]
-
+
+
 5.6.9 Capabilities Info Component
 
     0                   1                   2                   3
@@ -1640,7 +1676,8 @@ Assignment Key
 
 
                                                               [Page 31]
-
+
+
 5.6.10 Alternate Assignment Component
 
     0                   1                   2                   3
@@ -1693,8 +1730,9 @@ Assignment Key
 
 
                                                               [Page 32]
-
-Assignment Type = WCCP2_MASK_ASSIGNMENT
+
+
+      Assignment Type = WCCP2_MASK_ASSIGNMENT
 
        0                   1                   2                   3
        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -1746,8 +1784,9 @@ Assignment Type = WCCP2_MASK_ASSIGNMENT
 
 
                                                               [Page 33]
-
-Mask/Value Set Element 0-m
+
+
+      Mask/Value Set Element 0-m
 
          A list of the Mask/Value Element Sets for the Service Group
 
@@ -1799,7 +1838,8 @@ Mask/Value Set Element 0-m
 
 
                                                               [Page 34]
-
+
+
 5.6.11 Assignment Map Component
 
     0                   1                   2                   3
@@ -1852,7 +1892,8 @@ Mask/Value Set Element 0-m
 
 
                                                               [Page 35]
-
+
+
 5.6.12 Command Extension Component
 
     0                   1                   2                   3
@@ -1905,7 +1946,8 @@ Mask/Value Set Element 0-m
 
 
                                                               [Page 36]
-
+
+
 5.7 Information Elements
 
 5.7.1 Router ID Element
@@ -1929,6 +1971,7 @@ Mask/Value Set Element 0-m
       protocol message including a Router Identity Info component. Will never be
       zero.
 
+
 5.7.2 Web-Cache Identity Element
 
     0                   1                   2                   3
@@ -1936,32 +1979,28 @@ Mask/Value Set Element 0-m
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    |                         WC Address                            |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   |        Hash Revision          |U|        Reserved             |
+   |        Hash Revision          |U|T|      Reserved             |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   |                          Bucket Block 0                       |
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                        Assignment data                        |
    |                               .                               |
    |                               .                               |
-   |                               .                               |
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   |                          Bucket Block 7                       |
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   |    Assignment Weight          |           Status              |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
    WC Address
 
       Web-Cache IP address
 
+   Hash Revision
+
+      0x00
+
+
 
 
 
 
                                                               [Page 37]
-
-Hash Revision
 
-      0x00
 
    U
 
@@ -1971,10 +2010,51 @@ Hash Revision
       the same bucket set to a web-cache that left and subsequently
       rejoined a Service Group.
 
+   T
+
+      A bit indicating the type of assignment data element immediately
+      following. The meaning of the values are:
+
+      0  Hash Assignment Data Element
+      1  Mask Assignment Data Element
+
+
+5.7.2 Hash Assignment Data Element
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                          Bucket Block 0                       |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                          Bucket Block 1                       |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                          Bucket Block 2                       |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+--+-+-+-+-+-+-+-+-+-+-+-+
+   |                          Bucket Block 3                       |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                          Bucket Block 4                       |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                          Bucket Block 5                       |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                          Bucket Block 6                       |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                          Bucket Block 7                       |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |    Assignment Weight          |           Status              |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
    Bucket Block 0-7
 
       256-bit vector. A set bit indicates the corresponding Redirection
       Hash Table bucket is assigned to this web-cache.
+
+
+
+
+
+
+                                                              [Page 38]
+
 
    Assignment Weight
 
@@ -1985,6 +2065,50 @@ Hash Revision
 
       Hash status. May be used to indicate to the designated web-cache how new
       assignments should be made.
+
+
+5.7.2 Mask Assignment Data Element
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |             Number of Mask/Value Set Elements (n)             |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                    Mask/Value Set Element 0                   |
+   |                               .                               |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                               .                               |
+   |                               .                               |
+   |                               .                               |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                    Mask/Value Set Element n                   |
+   |                               .                               |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |    Assignment Weight          |           Status              |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+   Number of Mask/Value Set Elements (n)
+
+      Number of Mask/Value Set elements in the element
+
+   Mask/Value Set Element 0-n
+
+      A list of Mask/Value Set elements
+
+   Assignment Weight
+
+      Mask weight. May be used to indicate to the designated web-cache how new
+      assignments should be made.
+
+   Status
+
+      Mask status. May be used to indicate to the designated web-cache how new
+      assignments should be made.
+
+
+
+                                                              [Page 39]
+
 
 5.7.3 Assignment Key Element
 
@@ -2007,11 +2131,6 @@ Hash Revision
       Incremented if a change has occurred.
 
 
-
-
-
-                                                              [Page 38]
-
 5.7.4 Router Assignment Element
 
     0                   1                   2                   3
@@ -2040,6 +2159,11 @@ Hash Revision
       Router ID. A router will ignore an assignment if Change Number is
       invalid.
 
+
+
+                                                              [Page 40]
+
+
 5.7.5 Capability Element
 
     0                   1                   2                   3
@@ -2058,14 +2182,7 @@ Hash Revision
       WCCP2_ASSIGNMENT_METHOD     0x02
       WCCP2_PACKET_RETURN_METHOD  0x03
 
-
-
-
-
-
-                                                              [Page 39]
-
-Length
+   Length
 
       Length of Capability element Value
 
@@ -2095,7 +2212,14 @@ Length
       Currently defined values are:
 
       WCCP2_PACKET_RETURN_METHOD_GRE  0x00000001
+
+
+
+                                                              [Page 41]
+
+
       WCCP2_PACKET_RETURN_METHOD_L2   0x00000002
+
 
 5.7.6 Mask/Value Set Element
 
@@ -2114,11 +2238,7 @@ Length
    |                        Value Element n                        |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-
-
-                                                              [Page 40]
-
-Mask Element
+   Mask Element
 
       Mask element for this set.
 
@@ -2129,6 +2249,7 @@ Mask Element
    Value Element 0-n
 
       The list of value elements for this set.
+
 
 5.7.7 Mask Element
 
@@ -2144,6 +2265,12 @@ Mask Element
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    |      Source Port Mask         |   Destination Port Mask       |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+
+
+
+                                                              [Page 42]
+
 
    Source Address Mask
 
@@ -2162,15 +2289,6 @@ Mask Element
       The 16 bit mask to be applied to the TCP/UDP destination port field of the packet.
 
 
-
-
-
-
-
-
-
-                                                              [Page 41]
-
 5.7.8 Value Element
 
     0                   1                   2                   3
@@ -2202,6 +2320,12 @@ Mask Element
 
    Destination Port Value
 
+
+
+
+                                                              [Page 43]
+
+
       The value to match against the TCP/UDP destination port number of the
       packet after masking.
 
@@ -2222,8 +2346,40 @@ Mask Element
 
 
 
-                                                              [Page 42]
-
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                              [Page 44]
+
+
 6. Security Considerations
 
    WCCP V2 provides a mechanism for message authentication. It is
@@ -2275,8 +2431,9 @@ Mask Element
 
 
 
-                                                              [Page 43]
-
+                                                              [Page 45]
+
+
 Gurumukh Tiwana
    Cisco Systems
    170 Tasman Drive
@@ -2289,7 +2446,7 @@ Gurumukh Tiwana
 
    email: robewils@cisco.com
 
-   Expires January 2001
+   Expires May 2002
 
 
 
@@ -2328,5 +2485,7 @@ Gurumukh Tiwana
 
 
 
-                                                              [Page 44]
-
+                                                              [Page 46]
+
+
+
