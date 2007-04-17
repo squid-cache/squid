@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.747 2007/04/17 05:40:18 wessels Exp $
+ * $Id: client_side.cc,v 1.748 2007/04/17 06:07:50 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -495,7 +495,7 @@ ClientHttpRequest::logRequest()
         debug(33, 9) ("clientLogRequest: http.code='%d'\n", al.http.code);
 
         if (loggingEntry() && loggingEntry()->mem_obj)
-            al.cache.objectSize = contentLen(loggingEntry());
+            al.cache.objectSize = loggingEntry()->contentLen();
 
         al.cache.caddr = getConn().getRaw() != NULL ? getConn()->log_addr : no_addr;
 

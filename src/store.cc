@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.604 2007/04/17 05:40:18 wessels Exp $
+ * $Id: store.cc,v 1.605 2007/04/17 06:07:50 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -1717,12 +1717,11 @@ StoreEntry::objectLen() const
 }
 
 int
-contentLen(const StoreEntry * e)
+StoreEntry::contentLen() const
 {
-    assert(e->mem_obj != NULL);
-    assert(e->getReply() != NULL);
-    return e->objectLen() - e->getReply()->hdr_sz;
-
+    assert(mem_obj != NULL);
+    assert(getReply() != NULL);
+    return objectLen() - getReply()->hdr_sz;
 }
 
 HttpReply const *
@@ -1934,7 +1933,7 @@ StoreEntry::modifiedSince(HttpRequest * request) const
     object_length = getReply()->content_length;
 
     if (object_length < 0)
-        object_length = contentLen(this);
+        object_length = contentLen();
 
     if (mod_time > request->ims) {
         debug(88, 3) ("--> YES: entry newer than client\n");

@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.27 2007/04/17 05:40:18 wessels Exp $
+ * $Id: Store.h,v 1.28 2007/04/17 06:07:50 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -151,6 +151,7 @@ public:
     virtual int unlock();
     /* increate the memory lock count on the entry */
     virtual ssize_t objectLen() const;
+    virtual int contentLen() const;
 
     virtual void lock()
 
@@ -314,7 +315,6 @@ SQUIDCEXTERN void storeAppendVPrintf(StoreEntry *, const char *, va_list ap);
 SQUIDCEXTERN int storeCheckCachable(StoreEntry * e);
 SQUIDCEXTERN void storeSetPrivateKey(StoreEntry *);
 SQUIDCEXTERN ssize_t objectLen(const StoreEntry * e);
-SQUIDCEXTERN int contentLen(const StoreEntry * e);
 SQUIDCEXTERN int storeTooManyDiskFilesOpen(void);
 SQUIDCEXTERN void storeEntryReset(StoreEntry *);
 SQUIDCEXTERN void storeHeapPositionUpdate(StoreEntry *, SwapDir *);
