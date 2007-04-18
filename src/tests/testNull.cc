@@ -143,14 +143,15 @@ testNull::testNullSearch()
     StockEventLoop loop;
 
     /* our swapdir must be scheduled to rebuild - though it does not
-     * make sense to rebuild Null stores at all.
+     * make sense to rebuild Null stores at all.  store_dirs_rebuilding
+     * is initialized to _1_ and adding our swapdir makes it 2.
      */
-    CPPUNIT_ASSERT_EQUAL(1, StoreController::store_dirs_rebuilding);
+    CPPUNIT_ASSERT_EQUAL(2, StoreController::store_dirs_rebuilding);
 
     loop.run();
 
     /* nothing left to rebuild */
-    CPPUNIT_ASSERT_EQUAL(0, StoreController::store_dirs_rebuilding);
+    CPPUNIT_ASSERT_EQUAL(1, StoreController::store_dirs_rebuilding);
 
     /* add an entry */
     {
