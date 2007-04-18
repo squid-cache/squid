@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.540 2007/04/15 14:46:17 serassio Exp $
+ * $Id: protos.h,v 1.541 2007/04/17 23:05:17 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -563,13 +563,6 @@ SQUIDCEXTERN void storeRebuildProgress(int sd_index, int total, int sofar);
  * store_swapin.c
  */
 SQUIDCEXTERN void storeSwapInStart(store_client *);
-
-/*
- * store_swapout.c
- */
-SQUIDCEXTERN void storeSwapOut(StoreEntry * e);
-SQUIDCEXTERN void storeSwapOutFileClose(StoreEntry * e);
-SQUIDCEXTERN int storeSwapOutAble(const StoreEntry * e);
 
 /*
  * store_client.c

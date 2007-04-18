@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.605 2007/04/17 06:07:50 wessels Exp $
+ * $Id: store.cc,v 1.606 2007/04/17 23:05:17 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -1163,7 +1163,7 @@ storeAbort(StoreEntry * e)
     InvokeHandlers(e);
 
     /* Close any swapout file */
-    storeSwapOutFileClose(e);
+    e->swapOutFileClose();
 
     e->unlock();       /* unlock */
 }
@@ -1879,7 +1879,7 @@ StoreEntry::swapoutPossible()
 
     if (EBIT_TEST(flags, ENTRY_ABORTED)) {
         assert(EBIT_TEST(flags, RELEASE_REQUEST));
-        storeSwapOutFileClose(this);
+        swapOutFileClose();
         return false;
     }
 
@@ -1900,7 +1900,7 @@ StoreEntry::trimMemory()
 
     assert (mem_obj->policyLowestOffsetToKeep() > 0);
 
-    if (!storeSwapOutAble(this)) {
+    if (!swapOutAble()) {
         /*
          * Its not swap-able, and we're about to delete a chunk,
          * so we must make it PRIVATE.  This is tricky/ugly because

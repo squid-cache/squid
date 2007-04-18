@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.149 2007/04/17 05:40:18 wessels Exp $
+ * $Id: store_client.cc,v 1.150 2007/04/17 23:05:17 wessels Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -194,7 +194,7 @@ store_client::store_client(StoreEntry *e) : entry (e)
     if (getType() == STORE_DISK_CLIENT)
         /* assert we'll be able to get the data we want */
         /* maybe we should open swapin_fd here */
-        assert(entry->swap_filen > -1 || storeSwapOutAble(entry));
+        assert(entry->swap_filen > -1 || entry->swapOutAble());
 
 #if STORE_CLIENT_LIST_DEBUG
 
@@ -666,7 +666,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
     mem->nclients--;
 
     if (e->store_status == STORE_OK && e->swap_status != SWAPOUT_DONE)
-        storeSwapOut(e);
+        e->swapOut();
 
     if (sc->swapin_sio.getRaw()) {
         storeClose(sc->swapin_sio);
@@ -709,7 +709,7 @@ void
 InvokeHandlers(StoreEntry * e)
 {
     /* Commit what we can to disk, if appropriate */
-    storeSwapOut (e);
+    e->swapOut();
     int i = 0;
     MemObject *mem = e->mem_obj;
     store_client *sc;
