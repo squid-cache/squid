@@ -1,5 +1,5 @@
 /*
- * $Id: stub_store_swapout.cc,v 1.2 2006/04/25 07:13:34 robertc Exp $
+ * $Id: stub_store_swapout.cc,v 1.3 2007/04/17 23:05:20 wessels Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins
@@ -33,22 +33,23 @@
  */
 
 #include "squid.h"
+#include "Store.h"
 
 void
-storeSwapOutFileClose(StoreEntry * e)
+StoreEntry::swapOutFileClose()
 {
     fatal ("Not implemented");
 }
 
-int
-storeSwapOutAble(const StoreEntry * e)
+bool
+StoreEntry::swapOutAble() const
 {
     fatal ("Not implemented");
-    return -1;
+    return false;
 }
 
 void
-storeSwapOut(StoreEntry * e)
+StoreEntry::swapOut()
 {
     fatal ("Not implemented");
 }

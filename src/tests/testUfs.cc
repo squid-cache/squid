@@ -158,7 +158,7 @@ testUfs::testUfsSearch()
         storeBufferFlush(pe);
         storeTimestampsSet(pe);
         pe->complete();
-        storeSwapOut(pe);
+        pe->swapOut();
         CPPUNIT_ASSERT(pe->swap_dirn == 0);
         CPPUNIT_ASSERT(pe->swap_filen == 0);
         pe->unlock();
