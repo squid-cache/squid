@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_coss.cc,v 1.29 2006/05/23 00:39:32 wessels Exp $
+ * $Id: store_io_coss.cc,v 1.30 2007/04/18 23:38:04 wessels Exp $
  *
  * DEBUG: section 79    Storage Manager COSS Interface
  * AUTHOR: Eric Stern
@@ -80,7 +80,7 @@ CossSwapDir::allocate(const StoreEntry * e, int which)
     if (e->swap_file_sz > 0)
         allocsize = e->swap_file_sz;
     else
-        allocsize = objectLen(e) + e->mem_obj->swap_hdr_sz;
+        allocsize = e->objectLen() + e->mem_obj->swap_hdr_sz;
 
     /* Check if we have overflowed the disk .. */
     /* max_size is int, so cast to (off_t) *before* bit-shifting */
@@ -160,7 +160,7 @@ CossSwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB * file_callback, 
      * this one is kinda strange - Eric called allocate(), then
      * storeCossOpen(O_RDONLY) .. weird. Anyway, I'm allocating this now.
      */
-    cstate->st_size = objectLen(&e) + e.mem_obj->swap_hdr_sz;
+    cstate->st_size = e.objectLen() + e.mem_obj->swap_hdr_sz;
     sio->swap_dirn = index;
     sio->swap_filen = allocate(&e, COSS_ALLOC_ALLOCATE);
     debug(79, 3) ("storeCossCreate: offset %ld, size %ld, end %ld\n",
