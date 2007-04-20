@@ -178,7 +178,7 @@ testNull::testNullSearch()
         storeBufferFlush(pe);
         storeTimestampsSet(pe);
         pe->complete();
-        storeSwapOut(pe);
+        pe->swapOut();
         /* Null does not accept store entries */
         CPPUNIT_ASSERT(pe->swap_dirn == -1);
         pe->unlock();
