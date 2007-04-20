@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICP.h,v 1.6 2003/08/10 11:00:40 robertc Exp $
+ * $Id: ICP.h,v 1.7 2007/04/19 20:21:34 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -77,7 +77,7 @@ class ICPState
 {
 
 public:
-    ICPState(icp_common_t &);
+    ICPState(icp_common_t &, HttpRequest *);
     virtual ~ ICPState();
     icp_common_t header;
     HttpRequest *request;
