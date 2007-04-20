@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.56 2006/09/03 05:30:40 hno Exp $
+ * $Id: HttpHeaderTools.cc,v 1.57 2007/04/20 07:29:47 wessels Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -39,9 +39,6 @@
 #include "ACLChecklist.h"
 #include "MemBuf.h"
 
-#if UNUSED_CODE
-static int httpHeaderStrCmp(const char *h1, const char *h2, int len);
-#endif
 static void httpHeaderPutStrvf(HttpHeader * hdr, http_hdr_type id, const char *fmt, va_list vargs);
 
 
@@ -218,20 +215,6 @@ strListIsSubstr(const String * list, const char *s, char del)
      * implementaion is equavalent to strstr()! Thus, we replace the loop with
      * strstr() above until strnstr() is available.
      */
-
-#ifdef BROKEN_CODE
-
-    const char *pos = NULL;
-    const char *item;
-    assert(list && s);
-
-    while (strListGetItem(list, del, &item, NULL, &pos)) {
-        if (strstr(item, s))
-            return 1;
-    }
-
-    return 0;
-#endif
 }
 
 /* appends an item to the list */
@@ -390,116 +373,6 @@ httpHeaderParseQuotedString (const char *start, String *val)
         pos = end + 1;
     }
 }
-
-/*
- * parses a given string then packs compiled headers and compares the result
- * with the original, reports discrepancies
- */
-#if UNUSED_CODE
-void
-httpHeaderTestParser(const char *hstr)
-{
-    static int bug_count = 0;
-    int hstr_len;
-    int parse_success;
-    HttpHeader hdr(hoReply);
-    int pos;
-    Packer p;
-    MemBuf mb;
-    assert(hstr);
-    /* skip start line if any */
-
-    if (!strncasecmp(hstr, "HTTP/", 5)) {
-        const char *p = strchr(hstr, '\n');
-
-        if (p)
-            hstr = p + 1;
-    }
-
-    /* skip invalid first line if any */
-    if (xisspace(*hstr)) {
-        const char *p = strchr(hstr, '\n');
-
-        if (p)
-            hstr = p + 1;
-    }
-
-    hstr_len = strlen(hstr);
-    /* skip terminator if any */
-
-    if (strstr(hstr, "\n\r\n"))
-        hstr_len -= 2;
-    else if (strstr(hstr, "\n\n"))
-        hstr_len -= 1;
-
-    /* Debug::Levels[55] = 8; */
-    parse_success = httpHeaderParse(&hdr, hstr, hstr + hstr_len);
-
-    /* Debug::Levels[55] = 2; */
-    if (!parse_success) {
-        debug(66, 2) ("TEST (%d): failed to parsed a header: {\n%s}\n", bug_count, hstr);
-        return;
-    }
-
-    /* we think that we parsed it, veryfy */
-    mb.init();
-
-    packerToMemInit(&p, &mb);
-
-    httpHeaderPackInto(&hdr, &p);
-
-    if ((pos = abs(httpHeaderStrCmp(hstr, mb.buf, hstr_len)))) {
-        bug_count++;
-        debug(66, 2) ("TEST (%d): hdr parsing bug (pos: %d near '%s'): expected: {\n%s} got: {\n%s}\n",
-                      bug_count, pos, hstr + pos, hstr, mb.buf);
-    }
-
-    hdr.clean();
-    packerClean(&p);
-    mb.clean();
-}
-
-#endif
-
-
-/* like strncasecmp but ignores ws characters */
-#if UNUSED_CODE
-static int
-httpHeaderStrCmp(const char *h1, const char *h2, int len)
-{
-    int len1 = 0;
-    int len2 = 0;
-    assert(h1 && h2);
-    /* fast check first */
-
-    if (!strncasecmp(h1, h2, len))
-        return 0;
-
-    while (1) {
-        const char c1 = xtoupper(h1[len1 += xcountws(h1 + len1)]);
-        const char c2 = xtoupper(h2[len2 += xcountws(h2 + len2)]);
-
-        if (c1 < c2)
-            return -len1;
-
-        if (c1 > c2)
-            return +len1;
-
-        if (!c1 && !c2)
-            return 0;
-
-        if (c1)
-            len1++;
-
-        if (c2)
-            len2++;
-    }
-
-    /* NOTREACHED */
-    return 0;
-}
-
-#endif
 
 /*
  * httpHdrMangle checks the anonymizer (header_access) configuration.

@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.344 2007/02/05 15:16:31 hno Exp $
+ * $Id: neighbors.cc,v 1.345 2007/04/20 07:29:47 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -277,36 +277,6 @@ neighborsCount(HttpRequest * request)
 
     return count;
 }
-
-#if UNUSED_CODE
-peer *
-getSingleParent(HttpRequest * request)
-{
-    peer *p = NULL;
-    peer *q = NULL;
-
-    for (q = Config.peers; q; q = q->next) {
-        if (!peerHTTPOkay(q, request))
-            continue;
-
-        if (neighborType(q, request) != PEER_PARENT)
-            return NULL;	/* oops, found SIBLING */
-
-        if (p)
-            return NULL;	/* oops, found second parent */
-
-        p = q;
-    }
-
-    if (p != NULL && !p->options.no_query)
-        return NULL;
-
-    debug(15, 3) ("getSingleParent: returning %s\n", p ? p->host : "NULL");
-
-    return p;
-}
-
-#endif
 
 peer *
 getFirstUpParent(HttpRequest * request)

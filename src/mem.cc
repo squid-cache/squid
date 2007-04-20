@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.102 2007/04/12 19:37:23 wessels Exp $
+ * $Id: mem.cc,v 1.103 2007/04/20 07:29:47 wessels Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -464,20 +464,6 @@ memCheckInit(void)
         assert(MemPools[t]);
     }
 }
-
-#if UNUSED_CODE
-/* to-do: make debug level a parameter? */
-static void memPoolDescribe(const MemAllocator * pool);
-static void
-memPoolDescribe(const MemAllocator * pool)
-{
-    assert(pool);
-    debug(13, 2) ("%-20s: %6d x %4d bytes = %5d KB\n",
-                  pool->label, memPoolInUseCount(pool), pool->obj_size,
-                  toKB(pool->obj_size * pool->meter.inuse.level));
-}
-
-#endif
 
 void
 memClean(void)

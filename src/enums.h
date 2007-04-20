@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.255 2007/04/13 22:46:03 wessels Exp $
+ * $Id: enums.h,v 1.256 2007/04/20 07:29:47 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -323,9 +323,6 @@ enum {
     ENTRY_VALIDATED,
     ENTRY_BAD_LENGTH,
     ENTRY_ABORTED
-#if UNUSED_CODE
-    ENTRY_DONT_LOG
-#endif
 };
 
 /*

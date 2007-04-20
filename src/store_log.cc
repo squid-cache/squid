@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_log.cc,v 1.30 2007/04/17 06:07:50 wessels Exp $
+ * $Id: store_log.cc,v 1.31 2007/04/20 07:29:47 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Logging Functions
  * AUTHOR: Duane Wessels
@@ -61,13 +61,6 @@ storeLog(int tag, const StoreEntry * e)
 
     if (NULL == storelog)
         return;
-
-#if UNUSED_CODE
-
-    if (EBIT_TEST(e->flags, ENTRY_DONT_LOG))
-        return;
-
-#endif
 
     storeLogTagsCounts[tag]++;
     if (mem != NULL) {

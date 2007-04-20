@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.70 2006/08/21 00:50:41 robertc Exp $
+ * $Id: store_digest.cc,v 1.71 2007/04/20 07:29:47 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -271,12 +271,6 @@ storeDigestAddable(const StoreEntry * e)
      * idea: skip objects that are going to be purged before the next
      * update.
      */
-#if OLD_UNUSED_CODE		/* This code isn't applicable anymore, we can't fix it atm either :( */
-    if ((squid_curtime + Config.digest.rebuild_period) - e->lastref > storeExpiredReferenceAge())
-        return 0;
-
-#endif
-
     return 1;
 }
 
