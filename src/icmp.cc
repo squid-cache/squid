@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.89 2006/09/11 09:36:06 serassio Exp $
+ * $Id: icmp.cc,v 1.90 2007/04/19 21:25:38 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -238,7 +238,12 @@ icmpOpen(void)
     int wfd;
     args[0] = "(pinger)";
     args[1] = NULL;
-    pid = ipcCreate(IPC_DGRAM,
+    /*
+     * Do NOT use IPC_DGRAM (=IPC_UNIX_DGRAM) here because you can't
+     * send() more than 4096 bytes on a socketpair() socket (at
+     * least on FreeBSD).
+     */
+    pid = ipcCreate(IPC_UDP_SOCKET,
                     Config.Program.pinger,
                     args,
                     "Pinger Socket",
