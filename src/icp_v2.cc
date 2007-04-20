@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.95 2007/04/13 17:04:00 wessels Exp $
+ * $Id: icp_v2.cc,v 1.96 2007/04/19 20:21:34 wessels Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -90,8 +90,9 @@ _icp_common_t::getOpCode() const
 
 /* ICPState */
 
-ICPState:: ICPState(icp_common_t & aHeader):header(aHeader)
-        ,request(NULL),
+ICPState:: ICPState(icp_common_t & aHeader, HttpRequest *aRequest):
+	header(aHeader),
+	request(HTTPMSGLOCK(aRequest)),
         fd(-1),
         url(NULL)
 {}
@@ -99,9 +100,7 @@ ICPState:: ICPState(icp_common_t & aHeader):header(aHeader)
 ICPState::~ICPState()
 {
     safe_free(url);
-
-    if (request)
-        delete request;
+    HTTPMSGUNLOCK(request);
 }
 
 
@@ -113,7 +112,8 @@ class ICP2State:public ICPState, public StoreClient
 {
 
 public:
-    ICP2State(icp_common_t & aHeader):ICPState(aHeader),rtt(0),src_rtt(0),flags(0)
+    ICP2State(icp_common_t & aHeader, HttpRequest *aRequest):
+	ICPState(aHeader, aRequest),rtt(0),src_rtt(0),flags(0)
     {}
 
     ~ICP2State();
@@ -473,7 +473,7 @@ doV2Query(int fd, struct sockaddr_in from, char *buf, icp_common_t header)
     }
 
     /* The peer is allowed to use this cache */
-    ICP2State *state = new ICP2State (header);
+    ICP2State *state = new ICP2State (header, icp_request);
 
     state->fd = fd;
 

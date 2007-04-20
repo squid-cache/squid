@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v3.cc,v 1.40 2006/01/19 18:40:28 wessels Exp $
+ * $Id: icp_v3.cc,v 1.41 2007/04/19 20:21:34 wessels Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -42,7 +42,9 @@ class ICP3State : public ICPState, public StoreClient
 {
 
 public:
-    ICP3State(icp_common_t &aHeader):ICPState(aHeader){}
+    ICP3State(icp_common_t &aHeader, HttpRequest *aRequest):
+	ICPState(aHeader, aRequest)
+	{}
 
     ~ICP3State();
     void created (StoreEntry *newEntry);
@@ -67,9 +69,7 @@ doV3Query(int fd, struct sockaddr_in from, char *buf, icp_common_t header)
     }
 
     /* The peer is allowed to use this cache */
-    ICP3State *state = new ICP3State (header);
-
-    state->request = icp_request;
+    ICP3State *state = new ICP3State (header, icp_request);
 
     state->fd = fd;
 
