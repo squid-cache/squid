@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.29 2007/04/17 23:05:17 wessels Exp $
+ * $Id: Store.h,v 1.30 2007/04/20 06:54:48 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -276,7 +276,6 @@ private:
 typedef RefCount<Store> StorePointer;
 
 SQUIDCEXTERN size_t storeEntryInUse();
-SQUIDCEXTERN off_t storeLowestMemReaderOffset(const StoreEntry * entry);
 SQUIDCEXTERN const char *storeEntryFlags(const StoreEntry *);
 SQUIDCEXTERN int storeEntryLocked(const StoreEntry *);
 extern void storeEntryReplaceObject(StoreEntry *, HttpReply *);
