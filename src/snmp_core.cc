@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.75 2006/09/22 02:48:51 hno Exp $
+ * $Id: snmp_core.cc,v 1.76 2007/04/20 07:29:47 wessels Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -1102,20 +1102,6 @@ va_dcl
 
     return (new_oid);
 }
-
-#if UNUSED_CODE
-/*
- * Allocate space for, and copy, an OID.  Returns new oid.
- */
-static oid *
-snmpOidDup(oid * A, snint ALen)
-{
-    oid *Ans = xmalloc(sizeof(oid) * ALen);
-    xmemcpy(Ans, A, (sizeof(oid) * ALen));
-    return Ans;
-}
-
-#endif
 
 /*
  * Debug calls, prints out the OID for debugging purposes.

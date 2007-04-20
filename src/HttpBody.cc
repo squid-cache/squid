@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpBody.cc,v 1.24 2005/09/17 05:50:07 wessels Exp $
+ * $Id: HttpBody.cc,v 1.25 2007/04/20 07:29:47 wessels Exp $
  *
  * DEBUG: section 56    HTTP Message Body
  * AUTHOR: Alex Rousskov
@@ -74,12 +74,3 @@ httpBodyPackInto(const HttpBody * body, Packer * p)
     if (body->mb->contentSize())
         packerAppend(p, body->mb->content(), body->mb->contentSize());
 }
-
-#if UNUSED_CODE
-const char *
-httpBodyPtr(const HttpBody * body)
-{
-    return body->mb->content() ? body->mb->content() : "";
-}
-
-#endif

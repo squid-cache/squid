@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.748 2007/04/17 06:07:50 wessels Exp $
+ * $Id: client_side.cc,v 1.749 2007/04/20 07:29:47 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -155,9 +155,6 @@ static void ClientSocketContextPushDeferredIfNeeded(ClientSocketContext::Pointer
 static void clientUpdateSocketStats(log_type logType, size_t size);
 
 char *skipLeadingSpace(char *aString);
-#if UNUSED_CODE
-static void trimTrailingSpaces(char *aString, size_t len);
-#endif
 static int connReadWasError(ConnStateData::Pointer& conn, comm_err_t, int size, int xerrno);
 static int connFinishedWithConn(ConnStateData::Pointer& conn, int size);
 static void connNoteUseOfBuffer(ConnStateData* conn, size_t byteCount);
@@ -1691,18 +1688,6 @@ findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *end)
 
     return NULL;
 }
-
-#if UNUSED_CODE
-void
-trimTrailingSpaces(char *aString, size_t len)
-{
-    char *endPointer = aString + len;
-
-    while (endPointer > aString && xisspace(*endPointer))
-        *(endPointer--) = '\0';
-}
-
-#endif
 
 void
 setLogUri(ClientHttpRequest * http, char const *uri)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.91 2007/04/06 04:50:04 rousskov Exp $
+ * $Id: HttpReply.cc,v 1.92 2007/04/20 07:29:47 wessels Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -123,23 +123,6 @@ HttpReply::clean()
     header.clean();
     httpStatusLineClean(&sline);
 }
-
-#if OLD
-/* absorb: copy the contents of a new reply to the old one, destroy new one */
-void
-HttpReply::absorb(HttpReply * new_rep)
-{
-    assert(new_rep);
-    clean();
-    *this = *new_rep;
-    new_rep->header.entries.clean();
-    /* cannot use Clean() on new reply now! */
-    new_rep->do_clean = false;
-    new_rep->cache_control = NULL;	// helps with debugging
-    delete new_rep;
-}
-
-#endif
 
 void
 HttpReply::packHeadersInto(Packer * p) const

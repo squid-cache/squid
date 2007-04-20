@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.27 2007/04/06 04:50:06 rousskov Exp $
+ * $Id: http.h,v 1.28 2007/04/20 07:29:47 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -93,13 +93,7 @@ public:
      * getReply() public only because it is called from a static function
      * as httpState->getReply()
      */
-#if OLD
-const HttpReply * getReply() const { return reply ? reply : entry->getReply(); }
-
-#else
     const HttpReply * getReply() const { assert(reply); return reply; }
-
-#endif
 
 private:
     enum ConnectionStatus {

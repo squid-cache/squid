@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.508 2007/04/15 14:46:12 serassio Exp $
+ * $Id: cache_cf.cc,v 1.509 2007/04/20 07:29:47 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -135,9 +135,6 @@ static int check_null_sockaddr_in_list(const sockaddr_in_list *);
 static void parse_http_port_list(http_port_list **);
 static void dump_http_port_list(StoreEntry *, const char *, const http_port_list *);
 static void free_http_port_list(http_port_list **);
-#if UNUSED_CODE
-static int check_null_http_port_list(const http_port_list *);
-#endif
 #if USE_SSL
 static void parse_https_port_list(https_port_list **);
 static void dump_https_port_list(StoreEntry *, const char *, const https_port_list *);
@@ -1892,55 +1889,6 @@ parse_hostdomaintype(void)
     }
 }
 
-#if UNUSED_CODE
-static void
-dump_ushortlist(StoreEntry * entry, const char *name, ushortlist * u)
-{
-    while (u) {
-        storeAppendPrintf(entry, "%s %d\n", name, (int) u->i);
-        u = u->next;
-    }
-}
-
-static int
-check_null_ushortlist(ushortlist * u)
-{
-    return u == NULL;
-}
-
-static void
-parse_ushortlist(ushortlist ** P)
-{
-    char *token;
-    u_short i;
-    ushortlist *u;
-    ushortlist **U;
-
-    while ((token = strtok(NULL, w_space))) {
-        i = GetShort();
-        u = xcalloc(1, sizeof(ushortlist));
-        u->i = i;
-
-        for (U = P; *U; U = &(*U)->next)
-
-            ;
-        *U = u;
-    }
-}
-
-static void
-free_ushortlist(ushortlist ** P)
-{
-    ushortlist *u;
-
-    while ((u = *P) != NULL) {
-        *P = u->next;
-        xfree(u);
-    }
-}
-
-#endif
-
 static void
 dump_int(StoreEntry * entry, const char *name, int var)
 {
@@ -2215,15 +2163,6 @@ parse_refreshpattern(refresh_t ** head)
 
     safe_free(pattern);
 }
-
-#if UNUSED_CODE
-static int
-check_null_refreshpattern(refresh_t * data)
-{
-    return data == NULL;
-}
-
-#endif
 
 static void
 free_refreshpattern(refresh_t ** head)
@@ -2859,15 +2798,6 @@ free_http_port_list(http_port_list ** head)
         cbdataFree(s);
     }
 }
-
-#if UNUSED_CODE
-static int
-check_null_http_port_list(const http_port_list * s)
-{
-    return NULL == s;
-}
-
-#endif
 
 #if USE_SSL
 static void
