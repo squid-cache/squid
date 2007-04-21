@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.117 2007/04/17 05:40:18 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.118 2007/04/20 22:17:06 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -274,7 +274,7 @@ clientReplyContext::processExpired()
      * A refcounted pointer so that FwdState stays around as long as
      * this clientReplyContext does
      */
-    FwdState::fwdStart(http->getConn().getRaw() != NULL ? http->getConn()->fd : -1,
+    FwdState::fwdStart(http->getConn() != NULL ? http->getConn()->fd : -1,
                        http->storeEntry(),
                        http->request);
     /* Register with storage manager to receive updates when data comes in. */
@@ -720,7 +720,7 @@ clientReplyContext::processMiss()
         if (http->flags.internal)
             r->protocol = PROTO_INTERNAL;
 
-        FwdState::fwdStart(http->getConn().getRaw() != NULL ? http->getConn()->fd : -1,
+        FwdState::fwdStart(http->getConn() != NULL ? http->getConn()->fd : -1,
                            http->storeEntry(),
                            r);
     }
@@ -1051,7 +1051,7 @@ clientHttpRequestStatus(int fd, ClientHttpRequest const *http)
         debug(88, 1) ("WARNING: closing FD %d to prevent counter overflow\n",
                       fd);
         debug(88, 1) ("\tclient %s\n",
-                      inet_ntoa(http->getConn().getRaw() != NULL ? http->getConn()->peer.sin_addr : no_addr));
+                      inet_ntoa(http->getConn() != NULL ? http->getConn()->peer.sin_addr : no_addr));
         debug(88, 1) ("\treceived %d bytes\n", (int) http->out.size);
         debug(88, 1) ("\tURI %s\n", http->log_uri);
         return 1;
@@ -1063,7 +1063,7 @@ clientHttpRequestStatus(int fd, ClientHttpRequest const *http)
         debug(88, 1) ("WARNING: closing FD %d to prevent counter overflow\n",
                       fd);
         debug(88, 1) ("\tclient %s\n",
-                      inet_ntoa(http->getConn().getRaw() != NULL ? http->getConn()->peer.sin_addr : no_addr));
+                      inet_ntoa(http->getConn() != NULL ? http->getConn()->peer.sin_addr : no_addr));
         debug(88, 1) ("\treceived %d bytes (offset %d)\n", (int) http->out.size,
                       (int) http->out.offset);
         debug(88, 1) ("\tURI %s\n", http->log_uri);
@@ -1754,7 +1754,7 @@ clientReplyContext::processReplyAccess ()
     if (http->isReplyBodyTooLarge(reply->content_length)) {
         ErrorState *err =
             clientBuildError(ERR_TOO_BIG, HTTP_FORBIDDEN, NULL,
-                             http->getConn().getRaw() != NULL ? &http->getConn()->peer.sin_addr : &no_addr,
+                             http->getConn() != NULL ? &http->getConn()->peer.sin_addr : &no_addr,
                              http->request);
         removeClientStoreReference(&sc, http);
         HTTPMSGUNLOCK(reply);
@@ -1798,7 +1798,7 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
 
         err =
             clientBuildError(page_id, HTTP_FORBIDDEN, NULL,
-                             http->getConn().getRaw() != NULL ? &http->getConn()->peer.sin_addr : &no_addr,
+                             http->getConn() != NULL ? &http->getConn()->peer.sin_addr : &no_addr,
                              http->request);
 
         removeClientStoreReference(&sc, http);
@@ -1897,7 +1897,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 
     ConnStateData::Pointer conn = http->getConn();
 
-    int fd = conn.getRaw() != NULL ? conn->fd : -1;
+    int fd = conn != NULL ? conn->fd : -1;
 
     char *buf = next()->readBuffer.data;
 

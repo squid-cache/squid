@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.80 2007/04/06 04:50:06 rousskov Exp $
+ * $Id: client_side_request.cc,v 1.81 2007/04/20 22:17:06 wessels Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -414,7 +414,7 @@ ClientRequestContext::clientAccessCheckDone(int answer)
                   AclMatchedName ? AclMatchedName : "NO ACL's");
     char const *proxy_auth_msg = "<null>";
 
-    if (http->getConn().getRaw() != NULL && http->getConn()->auth_user_request != NULL)
+    if (http->getConn() != NULL && http->getConn()->auth_user_request != NULL)
         proxy_auth_msg = http->getConn()->auth_user_request->denyMessage("<null>");
     else if (http->request->auth_user_request != NULL)
         proxy_auth_msg = http->request->auth_user_request->denyMessage("<null>");
@@ -463,8 +463,8 @@ ClientRequestContext::clientAccessCheckDone(int answer)
         assert (repContext);
         repContext->setReplyToError(page_id, status,
                                     http->request->method, NULL,
-                                    http->getConn().getRaw() != NULL ? &http->getConn()->peer.sin_addr : &no_addr, http->request,
-                                    NULL, http->getConn().getRaw() != NULL
+                                    http->getConn() != NULL ? &http->getConn()->peer.sin_addr : &no_addr, http->request,
+                                    NULL, http->getConn() != NULL
                                     && http->getConn()->auth_user_request ? http->getConn()->
                                     auth_user_request : http->request->auth_user_request);
         node = (clientStreamNode *)http->client_stream.tail->data;
@@ -736,13 +736,13 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 
 #if USE_USERAGENT_LOG
     if ((str = req_hdr->getStr(HDR_USER_AGENT)))
-        logUserAgent(fqdnFromAddr(http->getConn().getRaw() ? http->getConn()->log_addr : no_addr), str);
+        logUserAgent(fqdnFromAddr(http->getConn() != NULL ? http->getConn()->log_addr : no_addr), str);
 
 #endif
 #if USE_REFERER_LOG
 
     if ((str = req_hdr->getStr(HDR_REFERER)))
-        logReferer(fqdnFromAddr(http->getConn().getRaw() ? http->getConn()->log_addr : no_addr), str, http->log_uri);
+        logReferer(fqdnFromAddr(http->getConn() != NULL ? http->getConn()->log_addr : no_addr), str, http->log_uri);
 
 #endif
 #if FORW_VIA_DB
