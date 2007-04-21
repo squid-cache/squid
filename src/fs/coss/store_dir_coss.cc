@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.70 2007/04/21 07:14:16 wessels Exp $
+ * $Id: store_dir_coss.cc,v 1.71 2007/04/21 13:21:58 wessels Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store COSS Directory Routines
@@ -550,7 +550,7 @@ storeCossAddDiskRestore(CossSwapDir * SD, const cache_key * key,
     EBIT_CLR(e->flags, KEY_PRIVATE);
     e->ping_status = PING_NONE;
     EBIT_CLR(e->flags, ENTRY_VALIDATED);
-    hashInsert(key);	/* do it after we clear KEY_PRIVATE */
+    e->hashInsert(key);	/* do it after we clear KEY_PRIVATE */
     storeCossAdd(SD, e);
     assert(e->swap_filen >= 0);
     return e;
