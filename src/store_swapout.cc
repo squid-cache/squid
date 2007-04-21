@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.111 2007/04/19 16:14:53 wessels Exp $
+ * $Id: store_swapout.cc,v 1.112 2007/04/20 22:06:44 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -66,7 +66,7 @@ storeSwapOutStart(StoreEntry * e)
     generic_cbdata *c = new generic_cbdata(e);
     sio = storeCreate(e, storeSwapOutFileNotify, storeSwapOutFileClosed, c);
 
-    if (NULL == sio.getRaw()) {
+    if (sio == NULL) {
         e->swap_status = SWAPOUT_NONE;
         delete c;
         storeLog(STORE_LOG_SWAPOUTFAIL, e);
@@ -198,7 +198,7 @@ StoreEntry::swapOut()
     debug(20, 7) ("storeSwapOut: swapout.queue_offset = %d\n",
                   (int) mem_obj->swapout.queue_offset);
 
-    if (mem_obj->swapout.sio.getRaw())
+    if (mem_obj->swapout.sio != NULL)
         debug(20, 7) ("storeSwapOut: storeOffset() = %d\n",
                       (int) mem_obj->swapout.sio->offset());
 
@@ -288,7 +288,7 @@ StoreEntry::swapOut()
 
     doPages(this);
 
-    if (NULL == mem_obj->swapout.sio.getRaw())
+    if (mem_obj->swapout.sio == NULL)
         /* oops, we're not swapping out any more */
         return;
 
@@ -377,7 +377,7 @@ StoreEntry::swapOutAble() const
 {
     dlink_node *node;
 
-    if (mem_obj->swapout.sio.getRaw() != NULL)
+    if (mem_obj->swapout.sio != NULL)
         return true;
 
     if (mem_obj->inmem_lo > 0)

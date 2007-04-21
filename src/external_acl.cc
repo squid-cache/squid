@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.75 2007/04/06 12:15:51 serassio Exp $
+ * $Id: external_acl.cc,v 1.76 2007/04/20 22:11:34 wessels Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -840,7 +840,7 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
 
         case _external_acl_format::EXT_ACL_USER_CERT_RAW:
 
-            if (ch->conn().getRaw()) {
+            if (ch->conn() != NULL) {
                 SSL *ssl = fd_table[ch->conn()->fd].ssl;
 
                 if (ssl)
@@ -851,7 +851,7 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
 
         case _external_acl_format::EXT_ACL_USER_CERTCHAIN_RAW:
 
-            if (ch->conn().getRaw()) {
+            if (ch->conn() != NULL) {
                 SSL *ssl = fd_table[ch->conn()->fd].ssl;
 
                 if (ssl)
@@ -862,7 +862,7 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
 
         case _external_acl_format::EXT_ACL_USER_CERT:
 
-            if (ch->conn().getRaw()) {
+            if (ch->conn() != NULL) {
                 SSL *ssl = fd_table[ch->conn()->fd].ssl;
 
                 if (ssl)
@@ -873,7 +873,7 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
 
         case _external_acl_format::EXT_ACL_CA_CERT:
 
-            if (ch->conn().getRaw()) {
+            if (ch->conn() != NULL) {
                 SSL *ssl = fd_table[ch->conn()->fd].ssl;
 
                 if (ssl)
