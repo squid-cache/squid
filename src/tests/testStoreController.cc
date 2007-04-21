@@ -86,7 +86,7 @@ addedEntry(StorePointer hashStore,
 {
     StoreEntry *e = new StoreEntry();
     e->store_status = STORE_OK;
-    storeSetMemStatus(e, NOT_IN_MEMORY);
+    e->setMemStatus(NOT_IN_MEMORY);
     e->swap_status = SWAPOUT_DONE; /* bogus haha */
     e->swap_filen = 0; /* garh - lower level*/
     e->swap_dirn = -1;
@@ -109,7 +109,7 @@ addedEntry(StorePointer hashStore,
     EBIT_CLR(e->flags, KEY_PRIVATE);
     e->ping_status = PING_NONE;
     EBIT_CLR(e->flags, ENTRY_VALIDATED);
-    storeHashInsert(e, (const cache_key *)name.buf());	/* do it after we clear KEY_PRIVATE */
+    e->hashInsert((const cache_key *)name.buf());	/* do it after we clear KEY_PRIVATE */
     return e;
 }
 

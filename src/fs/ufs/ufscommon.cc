@@ -1,5 +1,5 @@
 /*
- * $Id: ufscommon.cc,v 1.9 2007/04/20 23:53:42 wessels Exp $
+ * $Id: ufscommon.cc,v 1.10 2007/04/21 07:14:16 wessels Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store Directory Routines
@@ -284,7 +284,7 @@ RebuildState::rebuildFromDirectory()
         }
 
         counts.objcount++;
-        storeEntryDump(&tmpe, 5);
+        tmpe.dump(5);
         currentEntry(sd->addDiskRestore(key,
                                         filn,
                                         tmpe.swap_file_sz,

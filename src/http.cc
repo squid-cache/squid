@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.514 2007/04/20 23:53:41 wessels Exp $
+ * $Id: http.cc,v 1.515 2007/04/21 07:14:14 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -94,7 +94,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : ServerStateData(theFwdStat
         if (_peer->options.originserver)
             url = orig_request->urlpath.buf();
         else
-            url = storeUrl(entry);
+            url = entry->url();
 
         HttpRequest * proxy_req = new HttpRequest(orig_request->method,
                                   orig_request->protocol, url);
@@ -182,7 +182,7 @@ httpTimeout(int fd, void *data)
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
     StoreEntry *entry = httpState->entry;
-    debug(11, 4) ("httpTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
+    debug(11, 4) ("httpTimeout: FD %d: '%s'\n", fd, entry->url());
 
     if (entry->store_status == STORE_PENDING) {
         httpState->fwd->fail(errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT, httpState->fwd->request));
@@ -358,7 +358,7 @@ HttpStateData::processSurrogateControl(HttpReply *reply)
                     reply->expires = reply->date + sctusable->max_stale;
 
                 /* And update the timestamps */
-                storeTimestampsSet(entry);
+                entry->timestampsSet();
             }
 
             /* We ignore cache-control directives as per the Surrogate specification */
@@ -660,7 +660,7 @@ HttpStateData::keepaliveAccounting(HttpReply *reply)
             _peer->stats.n_keepalives_recv++;
 
         if (Config.onoff.detect_broken_server_pconns && reply->bodySize(request->method) == -1) {
-            debug(11, 1) ("keepaliveAccounting: Impossible keep-alive header from '%s'\n", storeUrl(entry));
+            debug(11, 1) ("keepaliveAccounting: Impossible keep-alive header from '%s'\n", entry->url());
             // debug(11, 2) ("GOT HTTP REPLY HDR:\n---------\n%s\n----------\n", readBuf->content());
             flags.keepalive_broken = 1;
         }
@@ -774,7 +774,7 @@ HttpStateData::haveParsedReplyHeaders()
             getReply()->content_range)
         currentOffset = getReply()->content_range->spec.offset;
 
-    storeTimestampsSet(entry);
+    entry->timestampsSet();
 
     /* Check if object is cacheable or not based on reply code */
     debug(11, 3) ("haveParsedReplyHeaders: HTTP CODE: %d\n", getReply()->sline.status);
@@ -873,7 +873,7 @@ HttpStateData::statusIfComplete() const
     if (!flags.request_sent) {
         debug(11, 1) ("statusIfComplete: Request not yet fully sent \"%s %s\"\n",
                       RequestMethodStr[orig_request->method],
-                      storeUrl(entry));
+                      entry->url());
         return COMPLETE_NONPERSISTENT_MSG;
     }
 
@@ -1053,7 +1053,7 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
             flags.do_next_read = 0;
         } else {
             if (entry->mem_obj->getReply()->sline.status == HTTP_HEADER_TOO_LARGE) {
-                storeEntryReset(entry);
+                entry->reset();
                 fwd->fail( errorCon(ERR_TOO_BIG, HTTP_BAD_GATEWAY, fwd->request));
                 fwd->dontRetry(true);
                 flags.do_next_read = 0;
@@ -1078,7 +1078,7 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
                 }
 
                 if (fail) {
-                    storeEntryReset(entry);
+                    entry->reset();
                     fwd->fail( errorCon(ERR_INVALID_RESP, HTTP_BAD_GATEWAY, fwd->request));
                     comm_close(fd);
                     return;
@@ -1515,7 +1515,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
         if (!EBIT_TEST(cc->mask, CC_MAX_AGE)) {
             const char *url =
-                entry ? storeUrl(entry) : urlCanonical(orig_request);
+                entry ? entry->url() : urlCanonical(orig_request);
             httpHdrCcSetMaxAge(cc, getMaxAge(url));
 
             if (request->urlpath.size())
@@ -1814,7 +1814,7 @@ httpStart(FwdState *fwd)
 {
     debug(11, 3) ("httpStart: \"%s %s\"\n",
                   RequestMethodStr[fwd->request->method],
-                  storeUrl(fwd->entry));
+                  fwd->entry->url());
     HttpStateData *httpState = new HttpStateData(fwd);
 
     if (!httpState->sendRequest()) {
@@ -1878,7 +1878,7 @@ HttpStateData::handleMoreRequestBodyAvailable()
             flags.abuse_detected = 1;
             debug(11, 1) ("http handleMoreRequestBodyAvailable: Likely proxy abuse detected '%s' -> '%s'\n",
                           inet_ntoa(orig_request->client_addr),
-                          storeUrl(entry));
+                          entry->url());
 
             if (getReply()->sline.status == HTTP_INVALID_HEADER) {
                 comm_close(fd);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.221 2007/04/20 23:53:41 wessels Exp $
+ * $Id: errorpage.cc,v 1.222 2007/04/21 07:14:14 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -382,7 +382,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
     }
 
     entry->lock();
-    storeBuffer(entry);
+    entry->buffer();
     rep = errorBuildReply(err);
     /* Add authentication header */
     /* TODO: alter errorstate to be accel on|off aware. The 0 on the next line
@@ -393,7 +393,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
     authenticateFixHeader(rep, err->auth_user_request, err->request, 0, 1);
     entry->replaceHttpReply(rep);
     EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
-    storeBufferFlush(entry);
+    entry->flush();
     entry->complete();
     entry->negativeCache();
     entry->releaseRequest();

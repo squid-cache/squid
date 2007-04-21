@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.191 2006/08/21 00:50:41 robertc Exp $
+ * $Id: net_db.cc,v 1.192 2007/04/21 07:14:14 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -871,7 +871,7 @@ static void
 netdbExchangeDone(void *data)
 {
     netdbExchangeState *ex = (netdbExchangeState *)data;
-    debug(38, 3) ("netdbExchangeDone: %s\n", storeUrl(ex->e));
+    debug(38, 3) ("netdbExchangeDone: %s\n", ex->e->url());
     HTTPMSGUNLOCK(ex->r);
     storeUnregister(ex->sc, ex->e, ex);
     ex->e->unlock();
@@ -1216,7 +1216,7 @@ netdbBinaryExchange(StoreEntry * s)
     char *buf;
 
     struct IN_ADDR addr;
-    storeBuffer(s);
+    s->buffer();
     HttpVersion version(1, 0);
     reply->setHeaders(version, HTTP_OK, "OK", NULL, -1, squid_curtime, -2);
     s->replaceHttpReply(reply);
@@ -1261,18 +1261,18 @@ netdbBinaryExchange(StoreEntry * s)
         i += sizeof(int);
 
         if (i + rec_sz > 4096) {
-            storeAppend(s, buf, i);
+            s->append(buf, i);
             i = 0;
         }
     }
 
     if (i > 0) {
-        storeAppend(s, buf, i);
+        s->append(buf, i);
         i = 0;
     }
 
     assert(0 == i);
-    storeBufferFlush(s);
+    s->flush();
     memFree(buf, MEM_4K_BUF);
 #else
 

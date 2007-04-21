@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.73 2007/04/20 23:53:41 wessels Exp $
+ * $Id: htcp.cc,v 1.74 2007/04/21 07:14:14 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -1042,7 +1042,7 @@ htcpSpecifier::created (StoreEntry *e)
         goto miss;
     }
 
-    if (!storeEntryValidToSend(e)) {
+    if (!e->validToSend()) {
         debug(31, 3) ("htcpCheckHit: NO; entry not valid to send\n");
         goto miss;
     }
@@ -1062,7 +1062,7 @@ miss:
 static void
 htcpClrStoreEntry(StoreEntry * e)
 {
-    debug(31, 4) ("htcpClrStoreEntry: Clearing store for entry: %s\n", storeUrl(e));
+    debug(31, 4) ("htcpClrStoreEntry: Clearing store for entry: %s\n", e->url());
     e->releaseRequest();
 }
 
@@ -1596,7 +1596,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
 
     stuff.S.method = (char *) RequestMethodStr[req->method];
 
-    stuff.S.uri = (char *) storeUrl(e);
+    stuff.S.uri = (char *) e->url();
 
     stuff.S.version = vbuf;
 

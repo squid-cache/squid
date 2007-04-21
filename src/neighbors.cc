@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.346 2007/04/20 23:53:41 wessels Exp $
+ * $Id: neighbors.cc,v 1.347 2007/04/21 07:14:14 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -577,7 +577,7 @@ neighborsUdpPing(HttpRequest * request,
                  int *exprep,
                  int *timeout)
 {
-    const char *url = storeUrl(entry);
+    const char *url = entry->url();
     MemObject *mem = entry->mem_obj;
     peer *p = NULL;
     int i;

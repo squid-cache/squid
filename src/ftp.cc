@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.413 2007/04/20 23:53:41 wessels Exp $
+ * $Id: ftp.cc,v 1.414 2007/04/21 07:14:14 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -375,7 +375,7 @@ FtpStateData::ftpSocketClosed(int fdnotused, void *data)
 
 FtpStateData::FtpStateData(FwdState *theFwdState) : ServerStateData(theFwdState)
 {
-    const char *url = storeUrl(entry);
+    const char *url = entry->url();
     debug(9, 3) ("ftpStart: '%s'\n", url);
     statCounter.server.all.requests++;
     statCounter.server.ftp.requests++;
@@ -397,9 +397,9 @@ FtpStateData::FtpStateData(FwdState *theFwdState) : ServerStateData(theFwdState)
 
 FtpStateData::~FtpStateData()
 {
-    debug(9, 3) ("~ftpStateData: %s\n", storeUrl(entry));
+    debug(9, 3) ("~ftpStateData: %s\n", entry->url());
 
-    storeUnregisterAbort(entry);
+    entry->unregisterAbort();
 
     if (reply_hdr) {
         memFree(reply_hdr, MEM_8K_BUF);
@@ -489,7 +489,7 @@ FtpStateData::ftpTimeout(int fd, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *)data;
     StoreEntry *entry = ftpState->entry;
-    debug(9, 4) ("ftpTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
+    debug(9, 4) ("ftpTimeout: FD %d: '%s'\n", fd, entry->url());
 
     if (SENT_PASV == ftpState->state && fd == ftpState->data.fd) {
         /* stupid ftp.netscape.com */
@@ -592,7 +592,7 @@ void
 FtpStateData::listingFinish()
 {
     debugs(9,3,HERE << "listingFinish()");
-    storeBuffer(entry);
+    entry->buffer();
     printfReplyBody("</PRE>\n");
 
     if (flags.listformat_unknown && !flags.tried_nlst) {
@@ -1107,7 +1107,7 @@ FtpStateData::parseListing()
     size_t len = data.readBuf->contentSize();
 
     if (!len) {
-        debug(9, 3) ("ftpParseListing: no content to parse for %s\n", storeUrl(e));
+        debug(9, 3) ("ftpParseListing: no content to parse for %s\n", e->url());
         return;
     }
 
@@ -1126,7 +1126,7 @@ FtpStateData::parseListing()
     debug(9, 3) ("ftpParseListing: usable = %d\n", (int) usable);
 
     if (usable == 0) {
-        debug(9, 3) ("ftpParseListing: didn't find end for %s\n", storeUrl(e));
+        debug(9, 3) ("ftpParseListing: didn't find end for %s\n", e->url());
         xfree(sbuf);
         return;
     }
@@ -1134,7 +1134,7 @@ FtpStateData::parseListing()
     debug(9, 3) ("ftpParseListing: %lu bytes to play with\n", (unsigned long int)len);
     line = (char *)memAllocate(MEM_4K_BUF);
     end++;
-    storeBuffer(e);	/* released when done processing current data payload */
+    e->buffer();	/* released when done processing current data payload */
     s = sbuf;
     s += strspn(s, crlf);
 
@@ -1343,7 +1343,7 @@ FtpStateData::processReplyBody()
         data.readBuf->consume(data.readBuf->contentSize());
     }
 
-    storeBufferFlush(entry);
+    entry->flush();
 
     maybeReadVirginBody();
 }
@@ -2192,7 +2192,7 @@ ftpSendPasv(FtpStateData * ftpState)
     if (ftpState->request->method == METHOD_HEAD && (ftpState->flags.isdir || ftpState->size != -1)) {
         /* Terminate here for HEAD requests */
         ftpState->appendSuccessHeader();
-        storeTimestampsSet(ftpState->entry);
+        ftpState->entry->timestampsSet();
         /*
          * On rare occasions I'm seeing the entry get aborted after
          * ftpReadControlReply() and before here, probably when
@@ -2233,7 +2233,7 @@ ftpSendPasv(FtpStateData * ftpState)
                        addr.sin_addr,
                        0,
                        COMM_NONBLOCKING,
-                       storeUrl(ftpState->entry));
+                       ftpState->entry->url());
 
     debug(9, 3) ("ftpSendPasv: Unconnected data socket created on FD %d\n", fd);
 
@@ -2405,7 +2405,7 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
                    addr.sin_addr,
                    port,
                    COMM_NONBLOCKING | (fallback ? COMM_REUSEADDR : 0),
-                   storeUrl(ftpState->entry));
+                   ftpState->entry->url());
     debug(9, 3) ("ftpOpenListenSocket: Unconnected data socket created on FD %d\n", fd);
 
     if (fd < 0) {
@@ -2826,7 +2826,7 @@ ftpWriteTransferDone(FtpStateData * ftpState)
         return;
     }
 
-    storeTimestampsSet(ftpState->entry);	/* XXX Is this needed? */
+    ftpState->entry->timestampsSet();	/* XXX Is this needed? */
     ftpSendReply(ftpState);
 }
 
@@ -3030,7 +3030,7 @@ ftpSendReply(FtpStateData * ftpState)
     http_status http_code;
     err_type err_code = ERR_NONE;
     debug(9, 5) ("ftpSendReply: %s, code %d\n",
-                 storeUrl(ftpState->entry), code);
+                 ftpState->entry->url(), code);
 
     if (cbdataReferenceValid(ftpState))
         debug(9, 5) ("ftpSendReply: ftpState (%p) is valid!\n", ftpState);
@@ -3089,7 +3089,7 @@ FtpStateData::appendSuccessHeader()
 
     EBIT_CLR(e->flags, ENTRY_FWD_HDR_WAIT);
 
-    storeBuffer(e);	/* released when done processing current data payload */
+    e->buffer();	/* released when done processing current data payload */
 
     filename = (t = urlpath.rpos('/')) ? t + 1 : urlpath.buf();
 
@@ -3155,7 +3155,7 @@ FtpStateData::appendSuccessHeader()
 
     e->replaceHttpReply(reply);
 
-    storeTimestampsSet(e);
+    e->timestampsSet();
 
     if (flags.authenticated) {
         /*
@@ -3256,7 +3256,7 @@ FtpStateData::writeReplyBody(const char *data, int len)
 
     //debugs(9,5,HERE << data);
 
-    storeAppend(entry, data, len);
+    entry->append(data, len);
 }
 
 // called after we wrote the last byte of the request body

@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.129 2007/04/20 23:53:41 wessels Exp $
+ * $Id: mime.cc,v 1.130 2007/04/21 07:14:14 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -573,7 +573,7 @@ MimeIcon::created (StoreEntry *newEntry)
     assert(e != NULL);
     EBIT_SET(e->flags, ENTRY_SPECIAL);
     e->setPublicKey();
-    storeBuffer(e);
+    e->buffer();
     HttpRequest *r = HttpRequest::CreateFromUrl(url);
 
     if (NULL == r)
@@ -600,15 +600,15 @@ MimeIcon::created (StoreEntry *newEntry)
     buf = (char *)memAllocate(MEM_4K_BUF);
 
     while ((n = FD_READ_METHOD(fd, buf, 4096)) > 0)
-        storeAppend(e, buf, n);
+        e->append(buf, n);
 
     file_close(fd);
 
-    storeBufferFlush(e);
+    e->flush();
 
     e->complete();
 
-    storeTimestampsSet(e);
+    e->timestampsSet();
 
     debug(25, 3) ("Loaded icon %s\n", url);
 

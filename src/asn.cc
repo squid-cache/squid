@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.109 2006/06/05 18:35:02 serassio Exp $
+ * $Id: asn.cc,v 1.110 2007/04/21 07:14:13 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -288,7 +288,7 @@ asHandleReply(void *data, StoreIOBuffer result)
     }
 
     if (result.length == 0 && asState->dataRead) {
-        debug(53, 3) ("asHandleReply: Done: %s\n", storeUrl(e));
+        debug(53, 3) ("asHandleReply: Done: %s\n", e->url());
         asStateFree(asState);
         return;
     } else if (result.flags.error) {
@@ -354,7 +354,7 @@ asHandleReply(void *data, StoreIOBuffer result)
     debug(53, 3) ("asState->offset = %ld\n", (long int) asState->offset);
 
     if (e->store_status == STORE_PENDING) {
-        debug(53, 3) ("asHandleReply: store_status == STORE_PENDING: %s\n", storeUrl(e));
+        debug(53, 3) ("asHandleReply: store_status == STORE_PENDING: %s\n", e->url());
         StoreIOBuffer tempBuffer (AS_REQBUF_SZ - asState->reqofs,
                                   asState->offset,
                                   asState->reqbuf + asState->reqofs);
@@ -365,7 +365,7 @@ asHandleReply(void *data, StoreIOBuffer result)
                         asState);
     } else {
         StoreIOBuffer tempBuffer;
-        debug(53, 3) ("asHandleReply: store complete, but data recieved %s\n", storeUrl(e));
+        debug(53, 3) ("asHandleReply: store complete, but data recieved %s\n", e->url());
         tempBuffer.offset = asState->offset;
         tempBuffer.length = AS_REQBUF_SZ - asState->reqofs;
         tempBuffer.data = asState->reqbuf + asState->reqofs;
@@ -381,7 +381,7 @@ static void
 asStateFree(void *data)
 {
     ASState *asState = (ASState *)data;
-    debug(53, 3) ("asnStateFree: %s\n", storeUrl(asState->entry));
+    debug(53, 3) ("asnStateFree: %s\n", asState->entry->url());
     storeUnregister(asState->sc, asState->entry, asState);
     asState->entry->unlock();
     HTTPMSGUNLOCK(asState->request);

@@ -1,5 +1,5 @@
 /*
- * $Id: stub_store.cc,v 1.2 2006/04/25 07:13:34 robertc Exp $
+ * $Id: stub_store.cc,v 1.3 2007/04/21 07:14:20 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Robert Collins
@@ -50,24 +50,6 @@ extern "C" void
 
 extern "C" void
     storeAppendVPrintf(StoreEntry * e, const char *fmt, va_list vargs)
-{
-    fatal("Not implemented");
-}
-
-extern "C" void
-    storeBuffer(StoreEntry * e)
-{
-    fatal("Not implemented");
-}
-
-extern "C" void
-    storeBufferFlush(StoreEntry * e)
-{
-    fatal("Not implemented");
-}
-
-extern "C" void
-    storeAppend(StoreEntry * e, const char *buf, int len)
 {
     fatal("Not implemented");
 }

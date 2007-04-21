@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.119 2007/04/20 23:53:41 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.120 2007/04/21 07:14:13 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -341,7 +341,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         return;
 
     debug(88, 3) ("handleIMSReply: %s, %lu bytes\n",
-                  storeUrl(http->storeEntry()),
+                  http->storeEntry()->url(),
                   (long unsigned) result.length);
 
     if (http->storeEntry() == NULL)
@@ -357,7 +357,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
 
     // request to origin was aborted
     if (EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED)) {
-        debug(88, 3) ("handleIMSReply: request to origin aborted '%s', sending old entry to client\n", storeUrl(http->storeEntry()));
+        debug(88, 3) ("handleIMSReply: request to origin aborted '%s', sending old entry to client\n", http->storeEntry()->url());
         http->logType = LOG_TCP_REFRESH_FAIL;
         sendClientOldEntry();
     }
@@ -367,14 +367,14 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         // header is too large, send old entry
 
         if (reqsize >= HTTP_REQBUF_SZ) {
-            debug(88, 3) ("handleIMSReply: response from origin is too large '%s', sending old entry to client\n", storeUrl(http->storeEntry()));
+            debug(88, 3) ("handleIMSReply: response from origin is too large '%s', sending old entry to client\n", http->storeEntry()->url());
             http->logType = LOG_TCP_REFRESH_FAIL;
             sendClientOldEntry();
         }
 
         // everything looks fine, we're just waiting for more data
         else {
-            debug(88, 3) ("handleIMSReply: incomplete headers for '%s', waiting for more data\n", storeUrl(http->storeEntry()));
+            debug(88, 3) ("handleIMSReply: incomplete headers for '%s', waiting for more data\n", http->storeEntry()->url());
             reqofs = reqsize;
             waitForMoreData();
         }
@@ -392,7 +392,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
             // update headers on existing entry
             HttpReply *old_rep = (HttpReply *) old_entry->getReply();
             old_rep->updateOnNotModified(http->storeEntry()->getReply());
-            storeTimestampsSet(old_entry);
+            old_entry->timestampsSet();
 
             // if client sent IMS
 
@@ -550,7 +550,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
         return;
     }
 
-    if (storeCheckNegativeHit(e)
+    if (e->checkNegativeHit()
 #if HTTP_VIOLATIONS
             && !r->flags.nocache_hack
 #endif
@@ -670,7 +670,7 @@ clientReplyContext::processMiss()
             debug(88, 0) ("clientProcessMiss: miss on a special object (%s).\n",
                           url);
             debug(88, 0) ("\tlog_type = %s\n", log_tags[http->logType]);
-            storeEntryDump(http->storeEntry(), 1);
+            http->storeEntry()->dump(1);
         }
 
         removeClientStoreReference(&sc, http);
@@ -809,7 +809,7 @@ clientReplyContext::purgeFoundObject(StoreEntry *entry)
     http->storeEntry()->lock()
 
     ;
-    storeCreateMemObject(http->storeEntry(), http->uri, http->log_uri);
+    http->storeEntry()->createMemObject(http->uri, http->log_uri);
 
     http->storeEntry()->mem_obj->method = http->request->method;
 
@@ -870,7 +870,7 @@ clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
 
     if (!newEntry->isNull()) {
         /* Release the cached URI */
-        debug(88, 4) ("clientPurgeRequest: GET '%s'\n", storeUrl(newEntry));
+        debug(88, 4) ("clientPurgeRequest: GET '%s'\n", newEntry->url());
         newEntry->release();
         purgeStatus = HTTP_OK;
     }
@@ -883,7 +883,7 @@ void
 clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 {
     if (newEntry && !newEntry->isNull()) {
-        debug(88, 4) ("clientPurgeRequest: HEAD '%s'\n", storeUrl(newEntry));
+        debug(88, 4) ("clientPurgeRequest: HEAD '%s'\n", newEntry->url());
         newEntry->release();
         purgeStatus = HTTP_OK;
     }
@@ -896,7 +896,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 
         if (entry) {
             debug(88, 4) ("clientPurgeRequest: Vary GET '%s'\n",
-                          storeUrl(entry));
+                          entry->url());
             entry->release();
             purgeStatus = HTTP_OK;
         }
@@ -905,7 +905,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 
         if (entry) {
             debug(88, 4) ("clientPurgeRequest: Vary HEAD '%s'\n",
-                          storeUrl(entry));
+                          entry->url());
             entry->release();
             purgeStatus = HTTP_OK;
         }
@@ -946,7 +946,7 @@ clientReplyContext::traceReply(clientStreamNode * node)
     storeClientCopy(sc, http->storeEntry(),
                     tempBuffer, SendMoreData, this);
     http->storeEntry()->releaseRequest();
-    storeBuffer(http->storeEntry());
+    http->storeEntry()->buffer();
     HttpReply *rep = new HttpReply;
     HttpVersion version(1,0);
     rep->setHeaders(version, HTTP_OK, NULL, "text/plain",
@@ -1225,7 +1225,7 @@ clientReplyContext::buildReplyHeader()
         /*
          * This adds the calculated object age. Note that the details of the
          * age calculation is performed by adjusting the timestamp in
-         * storeTimestampsSet(), not here.
+         * StoreEntry::timestampsSet(), not here.
          *
          * BROWSER WORKAROUND: IE sometimes hangs when receiving a 0 Age
          * header, so don't use it unless there is a age to report. Please
@@ -1477,8 +1477,8 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
         return;
     }
 
-    if (!storeEntryValidToSend(e)) {
-        debug(85, 3) ("clientProcessRequest2: !storeEntryValidToSend MISS\n");
+    if (!e->validToSend()) {
+        debug(85, 3) ("clientProcessRequest2: !validToSend MISS\n");
         http->storeEntry(NULL);
         http->logType = LOG_TCP_MISS;
         doGetMoreData();
@@ -1583,8 +1583,7 @@ clientReplyContext::doGetMoreData()
              * is a cache hit for a GET response, we want to keep
              * the method as GET.
              */
-            storeCreateMemObject(http->storeEntry(), http->uri,
-                                 http->log_uri);
+            http->storeEntry()->createMemObject(http->uri, http->log_uri);
             http->storeEntry()->mem_obj->method =
                 http->request->method;
         }
@@ -1941,7 +1940,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
                   http->uri, (int) reqofs, (unsigned int)result.length);
 
     debug(88, 5) ("clientReplyContext::sendMoreData: FD %d '%s', out.offset=%ld \n",
-                  fd, storeUrl(entry), (long int) http->out.offset);
+                  fd, entry->url(), (long int) http->out.offset);
 
     /* update size of the request */
     reqsize = reqofs;

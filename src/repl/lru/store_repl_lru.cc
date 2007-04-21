@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_lru.cc,v 1.20 2006/09/03 21:05:21 hno Exp $
+ * $Id: store_repl_lru.cc,v 1.21 2007/04/21 07:14:19 wessels Exp $
  *
  * DEBUG: section ?     LRU Removal policy
  * AUTHOR: Henrik Nordstrom
@@ -246,7 +246,7 @@ try_again:
     entry = (StoreEntry *) lru_node->node.data;
     dlinkDelete(&lru_node->node, &lru->list);
 
-    if (storeEntryLocked(entry)) {
+    if (entry->locked()) {
         /* Shit, it is locked. we can't return this one */
         walker->locked++;
         dlinkAddTail(entry, &lru_node->node, &lru->list);
@@ -300,7 +300,7 @@ again:
     if (lru_node) {
         StoreEntry *entry = (StoreEntry *) lru_node->node.data;
 
-        if (storeEntryLocked(entry)) {
+        if (entry->locked()) {
             lru_node = (LruNode *) lru_node->node.next;
             goto again;
         }
