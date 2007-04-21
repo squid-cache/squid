@@ -1,5 +1,5 @@
 /*
- * $Id: stub_store_client.cc,v 1.1 2005/01/03 16:08:27 robertc Exp $
+ * $Id: stub_store_client.cc,v 1.2 2007/04/20 23:53:48 wessels Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins
@@ -34,6 +34,7 @@
 
 #include "squid.h"
 #include "StoreClient.h"
+#include "Store.h"
 
 int
 storePendingNClients(const StoreEntry * e)
@@ -45,7 +46,7 @@ storePendingNClients(const StoreEntry * e)
 /* Garh, too many stub files */
 
 void
-InvokeHandlers(StoreEntry * e)
+StoreEntry::invokeHandlers()
 {}
 
 void

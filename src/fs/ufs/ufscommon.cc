@@ -1,5 +1,5 @@
 /*
- * $Id: ufscommon.cc,v 1.8 2007/04/12 23:51:58 wessels Exp $
+ * $Id: ufscommon.cc,v 1.9 2007/04/20 23:53:42 wessels Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store Directory Routines
@@ -375,8 +375,8 @@ RebuildState::rebuildFromSwapLog()
                  * because adding to store_swap_size happens in
                  * the cleanup procedure.
                  */
-                storeExpireNow(currentEntry());
-                storeReleaseRequest(currentEntry());
+                currentEntry()->expireNow();
+                currentEntry()->releaseRequest();
 
                 if (currentEntry()->swap_filen > -1) {
                     UFSSwapDir *sdForThisEntry = dynamic_cast<UFSSwapDir *>(INDEXSD(currentEntry()->swap_dirn));
@@ -491,8 +491,8 @@ RebuildState::rebuildFromSwapLog()
         } else if (currentEntry()) {
             /* key already exists, this swapfile not being used */
             /* junk old, load new */
-            storeExpireNow(currentEntry());
-            storeReleaseRequest(currentEntry());
+            currentEntry()->expireNow();
+            currentEntry()->releaseRequest();
 
             if (currentEntry()->swap_filen > -1) {
                 UFSSwapDir *sdForThisEntry = dynamic_cast<UFSSwapDir *>(INDEXSD(currentEntry()->swap_dirn));

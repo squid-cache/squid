@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.513 2007/04/15 14:46:16 serassio Exp $
+ * $Id: http.cc,v 1.514 2007/04/20 23:53:41 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -119,7 +119,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : ServerStateData(theFwdStat
          * for example, the request to this neighbor fails.
          */
         if (_peer->options.proxy_only)
-            storeReleaseRequest(entry);
+            entry->releaseRequest();
 
 #if DELAY_POOLS
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.220 2006/11/07 03:00:52 hno Exp $
+ * $Id: errorpage.cc,v 1.221 2007/04/20 23:53:41 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -395,8 +395,8 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
     EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
     storeBufferFlush(entry);
     entry->complete();
-    storeNegativeCache(entry);
-    storeReleaseRequest(entry);
+    entry->negativeCache();
+    entry->releaseRequest();
     entry->unlock();
     errorStateFree(err);
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.68 2006/09/14 00:51:10 robertc Exp $
+ * $Id: store_dir_coss.cc,v 1.69 2007/04/20 23:53:42 wessels Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store COSS Directory Routines
@@ -441,8 +441,8 @@ storeCossRebuildFromSwapLog(void *data)
                  * because adding to store_swap_size happens in
                  * the cleanup procedure.
                  */
-                storeExpireNow(e);
-                storeReleaseRequest(e);
+                e->expireNow();
+                e->releaseRequest();
 
                 if (e->swap_filen > -1) {
                     e->swap_filen = -1;

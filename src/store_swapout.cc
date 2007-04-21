@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.113 2007/04/20 23:10:59 wessels Exp $
+ * $Id: store_swapout.cc,v 1.114 2007/04/20 23:53:42 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -347,7 +347,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
 
         e->swap_status = SWAPOUT_NONE;
 
-        storeReleaseRequest(e);
+        e->releaseRequest();
     } else {
         /* swapping complete */
         debug(20, 3) ("storeSwapOutFileClosed: SwapOut complete: '%s' to %d, %08X\n",

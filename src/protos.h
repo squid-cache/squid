@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.541 2007/04/17 23:05:17 wessels Exp $
+ * $Id: protos.h,v 1.542 2007/04/20 23:53:41 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -570,7 +570,6 @@ SQUIDCEXTERN void storeSwapInStart(store_client *);
 SQUIDCEXTERN store_client *storeClientListAdd(StoreEntry * e, void *data);
 SQUIDCEXTERN int storeClientCopyPending(store_client *, StoreEntry * e, void *data);
 SQUIDCEXTERN int storeUnregister(store_client * sc, StoreEntry * e, void *data);
-SQUIDCEXTERN void InvokeHandlers(StoreEntry * e);
 SQUIDCEXTERN int storePendingNClients(const StoreEntry * e);
 SQUIDCEXTERN int storeClientIsThisAClient(store_client * sc, void *someClient);
 

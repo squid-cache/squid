@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.31 2007/04/20 23:10:59 wessels Exp $
+ * $Id: Store.h,v 1.32 2007/04/20 23:53:41 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -84,7 +84,14 @@ public:
     void unlink();
     void makePublic();
     void makePrivate();
-    void cacheNegatively();
+    void setPublicKey();
+    void setPrivateKey();
+    void expireNow();
+    void releaseRequest();
+    void negativeCache();
+    void cacheNegatively();		/* argh, why both? */
+    void invokeHandlers();
+    void purgeMem();
     void swapOut();
     bool swapOutAble() const;
     void swapOutFileClose();
@@ -285,16 +292,12 @@ SQUIDCEXTERN StoreEntry *storeGetPublic(const char *uri, const method_t method);
 SQUIDCEXTERN StoreEntry *storeGetPublicByRequest(HttpRequest * request);
 SQUIDCEXTERN StoreEntry *storeGetPublicByRequestMethod(HttpRequest * request, const method_t method);
 SQUIDCEXTERN StoreEntry *storeCreateEntry(const char *, const char *, request_flags, method_t);
-SQUIDCEXTERN void storeSetPublicKey(StoreEntry *);
 SQUIDCEXTERN void storeCreateMemObject(StoreEntry *, const char *, const char *);
 SQUIDCEXTERN void storeInit(void);
 extern void storeRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN void storeAppend(StoreEntry *, const char *, int);
-SQUIDCEXTERN void storeExpireNow(StoreEntry *);
-SQUIDCEXTERN void storeReleaseRequest(StoreEntry *);
 SQUIDCEXTERN void storeConfigure(void);
 SQUIDCEXTERN int storeCheckNegativeHit(StoreEntry *);
-SQUIDCEXTERN void storeNegativeCache(StoreEntry *);
 SQUIDCEXTERN void storeFreeMemory(void);
 SQUIDCEXTERN int expiresMoreThan(time_t, time_t);
 SQUIDCEXTERN int storeEntryValidToSend(StoreEntry *);
@@ -315,7 +318,6 @@ SQUIDCEXTERN void storeAppendPrintf();
 #endif
 SQUIDCEXTERN void storeAppendVPrintf(StoreEntry *, const char *, va_list ap);
 SQUIDCEXTERN int storeCheckCachable(StoreEntry * e);
-SQUIDCEXTERN void storeSetPrivateKey(StoreEntry *);
 SQUIDCEXTERN ssize_t objectLen(const StoreEntry * e);
 SQUIDCEXTERN int storeTooManyDiskFilesOpen(void);
 SQUIDCEXTERN void storeEntryReset(StoreEntry *);

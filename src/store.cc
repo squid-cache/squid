@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.607 2007/04/20 23:10:59 wessels Exp $
+ * $Id: store.cc,v 1.608 2007/04/20 23:53:41 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -107,7 +107,6 @@ static storerepl_entry_t *storerepl_list = NULL;
 static void storeGetMemSpace(int);
 static void storeHashDelete(StoreEntry *);
 static void destroy_MemObject(StoreEntry *);
-static void storePurgeMem(StoreEntry *);
 static int getKeyCounter(void);
 static int storeKeepInMemory(const StoreEntry *);
 static OBJH storeCheckCachableStats;
@@ -183,26 +182,26 @@ StoreEntry::makePublic()
     /* This object can be cached for a long time */
 
     if (EBIT_TEST(flags, ENTRY_CACHABLE))
-        storeSetPublicKey(this);
+        setPublicKey();
 }
 
 void
 StoreEntry::makePrivate()
 {
     /* This object should never be cached at all */
-    storeExpireNow(this);
-    storeReleaseRequest(this); /* delete object when not used */
-    /* storeReleaseRequest clears ENTRY_CACHABLE flag */
+    expireNow();
+    releaseRequest(); /* delete object when not used */
+    /* releaseRequest clears ENTRY_CACHABLE flag */
 }
 
 void
 StoreEntry::cacheNegatively()
 {
     /* This object may be negatively cached */
-    storeNegativeCache(this);
+    negativeCache();
 
     if (EBIT_TEST(flags, ENTRY_CACHABLE))
-        storeSetPublicKey(this);
+        setPublicKey();
 }
 
 size_t
@@ -428,19 +427,19 @@ storeHashDelete(StoreEntry * e)
 
 
 /* get rid of memory copy of the object */
-static void
-storePurgeMem(StoreEntry * e)
+void
+StoreEntry::purgeMem()
 {
-    if (e->mem_obj == NULL)
+    if (mem_obj == NULL)
         return;
 
-    debug(20, 3) ("storePurgeMem: Freeing memory-copy of %s\n",
-                  e->getMD5Text());
+    debug(20, 3) ("StoreEntry::purgeMem: Freeing memory-copy of %s\n",
+                  getMD5Text());
 
-    destroy_MemObject(e);
+    destroy_MemObject(this);
 
-    if (e->swap_status != SWAPOUT_DONE)
-        e->release();
+    if (swap_status != SWAPOUT_DONE)
+        release();
 }
 
 /* RBC 20050104 this is wrong- memory ref counting
@@ -473,21 +472,21 @@ StoreEntry::setReleaseFlag()
 }
 
 void
-storeReleaseRequest(StoreEntry * e)
+StoreEntry::releaseRequest()
 {
-    if (EBIT_TEST(e->flags, RELEASE_REQUEST))
+    if (EBIT_TEST(flags, RELEASE_REQUEST))
         return;
 
-    e->setReleaseFlag();
+    setReleaseFlag();
 
     /*
      * Clear cachable flag here because we might get called before
      * anyone else even looks at the cachability flag.  Also, this
      * prevents httpMakePublic from really setting a public key.
      */
-    EBIT_CLR(e->flags, ENTRY_CACHABLE);
+    EBIT_CLR(flags, ENTRY_CACHABLE);
 
-    storeSetPrivateKey(e);
+    setPrivateKey();
 }
 
 /* unlock object, return -1 if object get released after unlock
@@ -519,8 +518,8 @@ StoreEntry::unlock()
         if (EBIT_TEST(flags, KEY_PRIVATE))
             debug(20, 1) ("WARNING: %s:%d: found KEY_PRIVATE\n", __FILE__, __LINE__);
 
-        /* storePurgeMem may free e */
-        storePurgeMem(this);
+        /* StoreEntry::purgeMem may free e */
+        purgeMem();
     }
 
     return 0;
@@ -607,44 +606,42 @@ getKeyCounter(void)
  * concept'.
  */
 void
-storeSetPrivateKey(StoreEntry * e)
+StoreEntry::setPrivateKey()
 {
     const cache_key *newkey;
-    MemObject *mem = e->mem_obj;
 
-    if (e->key && EBIT_TEST(e->flags, KEY_PRIVATE))
+    if (key && EBIT_TEST(flags, KEY_PRIVATE))
         return;                 /* is already private */
 
-    if (e->key) {
-        if (e->swap_filen > -1)
-            storeDirSwapLog(e, SWAP_LOG_DEL);
+    if (key) {
+        if (swap_filen > -1)
+            storeDirSwapLog(this, SWAP_LOG_DEL);
 
-        storeHashDelete(e);
+        storeHashDelete(this);
     }
 
-    if (mem != NULL) {
-        mem->id = getKeyCounter();
-        newkey = storeKeyPrivate(mem->url, mem->method, mem->id);
+    if (mem_obj != NULL) {
+        mem_obj->id = getKeyCounter();
+        newkey = storeKeyPrivate(mem_obj->url, mem_obj->method, mem_obj->id);
     } else {
         newkey = storeKeyPrivate("JUNK", METHOD_NONE, getKeyCounter());
     }
 
     assert(hash_lookup(store_table, newkey) == NULL);
-    EBIT_SET(e->flags, KEY_PRIVATE);
-    storeHashInsert(e, newkey);
+    EBIT_SET(flags, KEY_PRIVATE);
+    storeHashInsert(this, newkey);
 }
 
 void
-storeSetPublicKey(StoreEntry * e)
+StoreEntry::setPublicKey()
 {
     StoreEntry *e2 = NULL;
     const cache_key *newkey;
-    MemObject *mem = e->mem_obj;
 
-    if (e->key && !EBIT_TEST(e->flags, KEY_PRIVATE))
+    if (key && !EBIT_TEST(flags, KEY_PRIVATE))
         return;                 /* is already public */
 
-    assert(mem);
+    assert(mem_obj);
 
     /*
      * We can't make RELEASE_REQUEST objects public.  Depending on
@@ -654,31 +651,31 @@ storeSetPublicKey(StoreEntry * e)
      * been freed from memory.
      *
      * If RELEASE_REQUEST is set, then ENTRY_CACHABLE should not
-     * be set, and storeSetPublicKey() should not be called.
+     * be set, and StoreEntry::setPublicKey() should not be called.
      */
 #if MORE_DEBUG_OUTPUT
 
-    if (EBIT_TEST(e->flags, RELEASE_REQUEST))
+    if (EBIT_TEST(flags, RELEASE_REQUEST))
         debug(20, 1) ("assertion failed: RELEASE key %s, url %s\n",
-                      e->key, mem->url);
+                      key, mem->url);
 
 #endif
 
-    assert(!EBIT_TEST(e->flags, RELEASE_REQUEST));
+    assert(!EBIT_TEST(flags, RELEASE_REQUEST));
 
-    if (mem->request) {
-        HttpRequest *request = mem->request;
+    if (mem_obj->request) {
+        HttpRequest *request = mem_obj->request;
 
-        if (!mem->vary_headers) {
+        if (!mem_obj->vary_headers) {
             /* First handle the case where the object no longer varies */
             safe_free(request->vary_headers);
         } else {
-            if (request->vary_headers && strcmp(request->vary_headers, mem->vary_headers) != 0) {
+            if (request->vary_headers && strcmp(request->vary_headers, mem_obj->vary_headers) != 0) {
                 /* Oops.. the variance has changed. Kill the base object
                  * to record the new variance key
                  */
                 safe_free(request->vary_headers);       /* free old "bad" variance key */
-                StoreEntry *pe = storeGetPublic(mem->url, mem->method);
+                StoreEntry *pe = storeGetPublic(mem_obj->url, mem_obj->method);
 
                 if (pe)
                     pe->release();
@@ -686,22 +683,22 @@ storeSetPublicKey(StoreEntry * e)
 
             /* Make sure the request knows the variance status */
             if (!request->vary_headers) {
-                const char *vary = httpMakeVaryMark(request, mem->getReply());
+                const char *vary = httpMakeVaryMark(request, mem_obj->getReply());
 
                 if (vary)
                     request->vary_headers = xstrdup(vary);
             }
         }
 
-        if (mem->vary_headers && !storeGetPublic(mem->url, mem->method)) {
+        if (mem_obj->vary_headers && !storeGetPublic(mem_obj->url, mem_obj->method)) {
             /* Create "vary" base object */
             String vary;
-            StoreEntry *pe = storeCreateEntry(mem->url, mem->log_url, request->flags, request->method);
+            StoreEntry *pe = storeCreateEntry(mem_obj->url, mem_obj->log_url, request->flags, request->method);
             HttpVersion version(1, 0);
             /* We are allowed to do this typecast */
             HttpReply *rep = new HttpReply;
             rep->setHeaders(version, HTTP_OK, "Internal marker object", "x-squid-internal/vary", -1, -1, squid_curtime + 100000);
-            vary = mem->getReply()->header.getList(HDR_VARY);
+            vary = mem_obj->getReply()->header.getList(HDR_VARY);
 
             if (vary.size()) {
                 /* Again, we own this structure layout */
@@ -710,7 +707,7 @@ storeSetPublicKey(StoreEntry * e)
             }
 
 #if X_ACCELERATOR_VARY
-            vary = mem->getReply()->header.getList(HDR_X_ACCELERATOR_VARY);
+            vary = mem_obj->getReply()->header.getList(HDR_X_ACCELERATOR_VARY);
 
             if (vary.buf()) {
                 /* Again, we own this structure layout */
@@ -730,30 +727,30 @@ storeSetPublicKey(StoreEntry * e)
             pe->unlock();
         }
 
-        newkey = storeKeyPublicByRequest(mem->request);
+        newkey = storeKeyPublicByRequest(mem_obj->request);
     } else
-        newkey = storeKeyPublic(mem->url, mem->method);
+        newkey = storeKeyPublic(mem_obj->url, mem_obj->method);
 
     if ((e2 = (StoreEntry *) hash_lookup(store_table, newkey))) {
-        debug(20, 3) ("storeSetPublicKey: Making old '%s' private.\n", mem->url);
-        storeSetPrivateKey(e2);
+        debug(20, 3) ("StoreEntry::setPublicKey: Making old '%s' private.\n", mem_obj->url);
+        e2->setPrivateKey();
         e2->release();
 
-        if (mem->request)
-            newkey = storeKeyPublicByRequest(mem->request);
+        if (mem_obj->request)
+            newkey = storeKeyPublicByRequest(mem_obj->request);
         else
-            newkey = storeKeyPublic(mem->url, mem->method);
+            newkey = storeKeyPublic(mem_obj->url, mem_obj->method);
     }
 
-    if (e->key)
-        storeHashDelete(e);
+    if (key)
+        storeHashDelete(this);
 
-    EBIT_CLR(e->flags, KEY_PRIVATE);
+    EBIT_CLR(flags, KEY_PRIVATE);
 
-    storeHashInsert(e, newkey);
+    storeHashInsert(this, newkey);
 
-    if (e->swap_filen > -1)
-        storeDirSwapLog(e, SWAP_LOG_ADD);
+    if (swap_filen > -1)
+        storeDirSwapLog(this, SWAP_LOG_ADD);
 }
 
 StoreEntry *
@@ -769,16 +766,16 @@ storeCreateEntry(const char *url, const char *log_url, request_flags flags, meth
     mem->method = method;
 
     if (neighbors_do_private_keys || !flags.hierarchical)
-        storeSetPrivateKey(e);
+        e->setPrivateKey();
     else
-        storeSetPublicKey(e);
+        e->setPublicKey();
 
     if (flags.cachable) {
         EBIT_SET(e->flags, ENTRY_CACHABLE);
         EBIT_CLR(e->flags, RELEASE_REQUEST);
     } else {
-        /* storeReleaseRequest() clears ENTRY_CACHABLE */
-        storeReleaseRequest(e);
+        /* StoreEntry::releaseRequest() clears ENTRY_CACHABLE */
+        e->releaseRequest();
     }
 
     e->store_status = STORE_PENDING;
@@ -796,10 +793,10 @@ storeCreateEntry(const char *url, const char *log_url, request_flags flags, meth
 
 /* Mark object as expired */
 void
-storeExpireNow(StoreEntry * e)
+StoreEntry::expireNow()
 {
-    debug(20, 3) ("storeExpireNow: '%s'\n", e->getMD5Text());
-    e->expires = squid_curtime;
+    debug(20, 3) ("StoreEntry::expireNow: '%s'\n", getMD5Text());
+    expires = squid_curtime;
 }
 
 void
@@ -813,7 +810,7 @@ storeWriteComplete (void *data, StoreIOBuffer wroteBuffer)
         return;
     }
 
-    InvokeHandlers(e);
+    e->invokeHandlers();
     PROF_stop(storeWriteComplete);
 }
 
@@ -837,7 +834,7 @@ StoreEntry::write (StoreIOBuffer writeBuffer)
          * -RBC 20060903
          */
         PROF_stop(StoreEntry_write);
-        InvokeHandlers(this);
+        invokeHandlers();
         return;
       }
 
@@ -1028,8 +1025,8 @@ storeCheckCachable(StoreEntry * e)
             return 1;
         }
 
-    storeReleaseRequest(e);
-    /* storeReleaseRequest() cleared ENTRY_CACHABLE */
+    e->releaseRequest();
+    /* StoreEntry::releaseRequest() cleared ENTRY_CACHABLE */
     return 0;
 }
 
@@ -1090,7 +1087,7 @@ StoreEntry::complete()
 
     if (!validLength()) {
         EBIT_SET(flags, ENTRY_BAD_LENGTH);
-        storeReleaseRequest(this);
+        releaseRequest();
     }
 
 #if USE_CACHE_DIGESTS
@@ -1099,12 +1096,12 @@ StoreEntry::complete()
 
 #endif
     /*
-     * We used to call InvokeHandlers, then storeSwapOut.  However,
+     * We used to call invokeHandlers, then storeSwapOut.  However,
      * Madhukar Reddy <myreddy@persistence.com> reported that
      * responses without content length would sometimes get released
      * in client_side, thinking that the response is incomplete.
      */
-    InvokeHandlers(this);
+    invokeHandlers();
 }
 
 /*
@@ -1123,9 +1120,9 @@ StoreEntry::abort()
     lock()
 
     ;         /* lock while aborting */
-    storeNegativeCache(this);
+    negativeCache();
 
-    storeReleaseRequest(this);
+    releaseRequest();
 
     EBIT_SET(flags, ENTRY_ABORTED);
 
@@ -1159,7 +1156,7 @@ StoreEntry::abort()
      * unneeded disk swapping triggered? 
      */
     /* Notify the client side */
-    InvokeHandlers(this);
+    invokeHandlers();
 
     /* Close any swapout file */
     swapOutFileClose();
@@ -1199,7 +1196,7 @@ storeGetMemSpace(int size)
     walker = mem_policy->PurgeInit(mem_policy, 100000);
 
     while ((e = walker->Next(walker))) {
-        storePurgeMem(e);
+        e->purgeMem();
         released++;
 
         if (mem_node::InUseCount() + pages_needed < store_pages_max)
@@ -1270,15 +1267,15 @@ StoreEntry::release()
      * outstanding request, mark it for pending release */
 
     if (storeEntryLocked(this)) {
-        storeExpireNow(this);
+        expireNow();
         debug(20, 3) ("storeRelease: Only setting RELEASE_REQUEST bit\n");
-        storeReleaseRequest(this);
+        releaseRequest();
         PROF_stop(storeRelease);
         return;
     }
 
     if (StoreController::store_dirs_rebuilding && swap_filen > -1) {
-        storeSetPrivateKey(this);
+        setPrivateKey();
 
         if (mem_obj)
             destroy_MemObject(this);
@@ -1492,10 +1489,10 @@ storeCheckNegativeHit(StoreEntry * e)
 }
 
 void
-storeNegativeCache(StoreEntry * e)
+StoreEntry::negativeCache()
 {
-    e->expires = squid_curtime + Config.negativeTtl;
-    EBIT_SET(e->flags, ENTRY_NEGCACHED);
+    expires = squid_curtime + Config.negativeTtl;
+    EBIT_SET(flags, ENTRY_NEGCACHED);
 }
 
 void
@@ -1704,7 +1701,7 @@ StoreEntry::flush()
 {
     if (EBIT_TEST(flags, DELAY_SENDING)) {
         EBIT_CLR(flags, DELAY_SENDING);
-        InvokeHandlers(this);
+        invokeHandlers();
     }
 }
 
@@ -1905,7 +1902,7 @@ StoreEntry::trimMemory()
          * so we must make it PRIVATE.  This is tricky/ugly because
          * for the most part, we treat swapable == cachable here.
          */
-        storeReleaseRequest(this);
+        releaseRequest();
         mem_obj->trimUnSwappable ();
     } else {
         mem_obj->trimSwappable ();

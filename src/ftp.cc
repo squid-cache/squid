@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.412 2007/04/16 21:49:03 wessels Exp $
+ * $Id: ftp.cc,v 1.413 2007/04/20 23:53:41 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -3163,7 +3163,7 @@ FtpStateData::appendSuccessHeader()
          */
         e->release();
     } else if (EBIT_TEST(e->flags, ENTRY_CACHABLE) && !restarted_offset) {
-        storeSetPublicKey(e);
+        e->setPublicKey();
     } else {
         e->release();
     }

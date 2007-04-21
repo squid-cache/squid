@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.200 2006/09/19 07:56:57 adrian Exp $
+ * $Id: gopher.cc,v 1.201 2007/04/20 23:53:41 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -925,7 +925,7 @@ gopherSendRequest(int fd, void *data)
     comm_write(fd, buf, strlen(buf), gopherSendComplete, gopherState, NULL);
 
     if (EBIT_TEST(gopherState->entry->flags, ENTRY_CACHABLE))
-        storeSetPublicKey(gopherState->entry);	/* Make it public */
+        gopherState->entry->setPublicKey();	/* Make it public */
 }
 
 CBDATA_TYPE(GopherStateData);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.72 2007/04/12 05:03:54 wessels Exp $
+ * $Id: htcp.cc,v 1.73 2007/04/20 23:53:41 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -1063,7 +1063,7 @@ static void
 htcpClrStoreEntry(StoreEntry * e)
 {
     debug(31, 4) ("htcpClrStoreEntry: Clearing store for entry: %s\n", storeUrl(e));
-    storeReleaseRequest(e);
+    e->releaseRequest();
 }
 
 static int
