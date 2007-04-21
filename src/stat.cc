@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.402 2007/04/13 22:46:03 wessels Exp $
+ * $Id: stat.cc,v 1.403 2007/04/20 22:11:34 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1656,7 +1656,7 @@ statClientRequests(StoreEntry * s)
         ConnStateData::Pointer conn = http->getConn();
         storeAppendPrintf(s, "Connection: %p\n", conn.getRaw());
 
-        if (conn.getRaw() != NULL) {
+        if (conn != NULL) {
             fd = conn->fd;
             storeAppendPrintf(s, "\tFD %d, read %d, wrote %d\n", fd,
                               fd_table[fd].bytes_read, fd_table[fd].bytes_written);
@@ -1697,12 +1697,12 @@ statClientRequests(StoreEntry * s)
             p = http->request->extacl_user.buf();
         }
 
-        if (!p && (conn.getRaw() != NULL && conn->rfc931[0]))
+        if (!p && (conn != NULL && conn->rfc931[0]))
             p = conn->rfc931;
 
 #if USE_SSL
 
-        if (!p && conn.getRaw() != NULL)
+        if (!p && conn != NULL)
             p = sslGetUserEmail(fd_table[conn->fd].ssl);
 
 #endif

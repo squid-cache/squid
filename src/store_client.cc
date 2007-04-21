@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.151 2007/04/20 06:54:48 wessels Exp $
+ * $Id: store_client.cc,v 1.152 2007/04/20 22:06:44 wessels Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -369,7 +369,7 @@ store_client::doCopy(StoreEntry *anEntry)
      * if needed.
      */
 
-    if (STORE_DISK_CLIENT == getType() && NULL == swapin_sio.getRaw())
+    if (STORE_DISK_CLIENT == getType() && swapin_sio == NULL)
         startSwapin();
     else
         scheduleRead();
@@ -390,7 +390,7 @@ store_client::startSwapin()
         /* Don't set store_io_pending here */
         storeSwapInStart(this);
 
-        if (NULL == swapin_sio.getRaw()) {
+        if (swapin_sio == NULL) {
             fail();
             flags.store_copying = 0;
             return;
@@ -668,7 +668,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
     if (e->store_status == STORE_OK && e->swap_status != SWAPOUT_DONE)
         e->swapOut();
 
-    if (sc->swapin_sio.getRaw()) {
+    if (sc->swapin_sio != NULL) {
         storeClose(sc->swapin_sio);
         sc->swapin_sio = NULL;
         statCounter.swap.ins++;

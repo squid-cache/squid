@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.115 2006/08/21 00:50:41 robertc Exp $
+ * $Id: redirect.cc,v 1.116 2007/04/20 22:11:34 wessels Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -131,7 +131,7 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
 
     r = cbdataAlloc(redirectStateData);
     r->orig_url = xstrdup(http->uri);
-    r->client_addr = conn.getRaw() != NULL ? conn->log_addr : no_addr;
+    r->client_addr = conn != NULL ? conn->log_addr : no_addr;
     r->client_ident = NULL;
 
     if (http->request->auth_user_request)
@@ -140,12 +140,12 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
         r->client_ident = http->request->extacl_user.buf();
     }
 
-    if (!r->client_ident && (conn.getRaw() != NULL && conn->rfc931[0]))
+    if (!r->client_ident && (conn != NULL && conn->rfc931[0]))
         r->client_ident = conn->rfc931;
 
 #if USE_SSL
 
-    if (!r->client_ident && conn.getRaw() != NULL)
+    if (!r->client_ident && conn != NULL)
         r->client_ident = sslGetUserEmail(fd_table[conn->fd].ssl);
 
 #endif
