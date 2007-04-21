@@ -163,7 +163,7 @@ ProxyAuthLookup::LookupDone(void *data, char *result)
         /* OR the connection was closed, there's no way to continue */
         checklist->auth_user_request->unlock();
 
-        if (checklist->conn().getRaw() != NULL) {
+        if (checklist->conn() != NULL) {
             checklist->conn()->auth_user_request = NULL;
             checklist->conn()->auth_type = AUTH_BROKEN;
         }

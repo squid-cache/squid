@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.34 2006/05/18 21:51:10 wessels Exp $
+ * $Id: ACLChecklist.cc,v 1.35 2007/04/20 22:24:07 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -235,7 +235,7 @@ ACLChecklist::checkCallback(allow_t answer)
         /* the checklist lock */
         auth_user_request->unlock();
         /* it might have been connection based */
-        assert(conn().getRaw() != NULL);
+        assert(conn() != NULL);
         conn()->auth_user_request = NULL;
         conn()->auth_type = AUTH_BROKEN;
         auth_user_request = NULL;
@@ -371,7 +371,7 @@ ACLChecklist::conn()
 void
 ACLChecklist::conn(ConnStateData::Pointer aConn)
 {
-    assert (conn().getRaw() == NULL);
+    assert (conn() == NULL);
     conn_ = aConn;
 }
 

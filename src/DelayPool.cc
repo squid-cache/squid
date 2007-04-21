@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayPool.cc,v 1.5 2003/08/04 22:14:40 robertc Exp $
+ * $Id: DelayPool.cc,v 1.6 2007/04/20 22:24:07 wessels Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -62,14 +62,14 @@ DelayPool::~DelayPool()
 void
 DelayPool::parse()
 {
-    assert (theComposite().getRaw());
+    assert (theComposite() != NULL);
     theComposite()->parse();
 }
 
 void
 DelayPool::dump (StoreEntry *entry, unsigned int i) const
 {
-    if (!theComposite().getRaw())
+    if (!theComposite() != NULL)
         return;
 
     storeAppendPrintf(entry, "delay_class %d %s\n", i + 1, pool->theClassTypeLabel());
