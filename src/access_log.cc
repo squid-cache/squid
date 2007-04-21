@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.119 2006/11/04 15:44:58 hno Exp $
+ * $Id: access_log.cc,v 1.120 2007/04/21 07:14:13 wessels Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -1177,24 +1177,24 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
                     break;
                 }
 
-                storeAppend(entry, "%", 1);
+                entry->append("%", 1);
 
                 switch (t->quote) {
 
                 case LOG_QUOTE_QUOTES:
-                    storeAppend(entry, "\"", 1);
+                    entry->append("\"", 1);
                     break;
 
                 case LOG_QUOTE_BRAKETS:
-                    storeAppend(entry, "[", 1);
+                    entry->append("[", 1);
                     break;
 
                 case LOG_QUOTE_URL:
-                    storeAppend(entry, "#", 1);
+                    entry->append("#", 1);
                     break;
 
                 case LOG_QUOTE_RAW:
-                    storeAppend(entry, "'", 1);
+                    entry->append("'", 1);
                     break;
 
                 case LOG_QUOTE_NONE:
@@ -1202,10 +1202,10 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
                 }
 
                 if (t->left)
-                    storeAppend(entry, "-", 1);
+                    entry->append("-", 1);
 
                 if (t->zero)
-                    storeAppend(entry, "0", 1);
+                    entry->append("0", 1);
 
                 if (t->width)
                     storeAppendPrintf(entry, "%d", (int) t->width);
@@ -1224,13 +1224,13 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
                 }
 
                 if (t->space)
-                    storeAppend(entry, " ", 1);
+                    entry->append(" ", 1);
 
                 assert(te->config != NULL);
             }
         }
 
-        storeAppend(entry, "\n", 1);
+        entry->append("\n", 1);
     }
 
 }

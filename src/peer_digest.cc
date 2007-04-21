@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.120 2007/04/20 23:53:41 wessels Exp $
+ * $Id: peer_digest.cc,v 1.121 2007/04/21 07:14:14 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -378,7 +378,7 @@ peerDigestRequest(PeerDigest * pd)
         old_e->lock()
 
         ;
-        storeCreateMemObject(old_e, url, url);
+        old_e->createMemObject(url, url);
 
         fetch->old_sc = storeClientListAdd(old_e, fetch);
     }
@@ -566,7 +566,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 
             old_rep->updateOnNotModified(reply);
 
-            storeTimestampsSet(fetch->old_entry);
+            fetch->old_entry->timestampsSet();
 
             /* get rid of 304 reply */
             storeUnregister(fetch->sc, fetch->entry, fetch);

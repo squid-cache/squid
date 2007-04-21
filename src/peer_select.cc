@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.144 2007/02/25 11:32:32 hno Exp $
+ * $Id: peer_select.cc,v 1.145 2007/04/21 07:14:15 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -131,7 +131,7 @@ peerSelectIcpPing(HttpRequest * request, int direct, StoreEntry * entry)
     assert(entry);
     assert(entry->ping_status == PING_NONE);
     assert(direct != DIRECT_YES);
-    debug(44, 3) ("peerSelectIcpPing: %s\n", storeUrl(entry));
+    debug(44, 3) ("peerSelectIcpPing: %s\n", entry->url());
 
     if (!request->flags.hierarchical && direct != DIRECT_NO)
         return 0;
@@ -157,7 +157,7 @@ peerSelect(HttpRequest * request,
     ps_state *psstate;
 
     if (entry)
-        debug(44, 3) ("peerSelect: %s\n", storeUrl(entry));
+        debug(44, 3) ("peerSelect: %s\n", entry->url());
     else
         debug(44, 3) ("peerSelect: %s\n", RequestMethodStr[request->method]);
 
@@ -216,7 +216,7 @@ peerSelectCallback(ps_state * psstate)
     void *cbdata;
 
     if (entry) {
-        debug(44, 3) ("peerSelectCallback: %s\n", storeUrl(entry));
+        debug(44, 3) ("peerSelectCallback: %s\n", entry->url());
 
         if (entry->ping_status == PING_WAITING)
             eventDelete(peerPingTimeout, psstate);
@@ -225,7 +225,7 @@ peerSelectCallback(ps_state * psstate)
     }
 
     if (fs == NULL) {
-        debug(44, 1) ("Failed to select source for '%s'\n", storeUrl(entry));
+        debug(44, 1) ("Failed to select source for '%s'\n", entry->url());
         debug(44, 1) ("  always_direct = %d\n", psstate->always_direct);
         debug(44, 1) ("   never_direct = %d\n", psstate->never_direct);
         debug(44, 1) ("       timedout = %d\n", psstate->ping.timedout);
@@ -584,7 +584,7 @@ peerPingTimeout(void *data)
     StoreEntry *entry = psstate->entry;
 
     if (entry)
-        debug(44, 3) ("peerPingTimeout: '%s'\n", storeUrl(entry));
+        debug(44, 3) ("peerPingTimeout: '%s'\n", entry->url());
 
     if (!cbdataReferenceValid(psstate->callback_data)) {
         /* request aborted */
@@ -654,7 +654,7 @@ peerHandleIcpReply(peer * p, peer_t type, icp_common_t * header, void *data)
     icp_opcode op = header->getOpCode();
     debug(44, 3) ("peerHandleIcpReply: %s %s\n",
                   icp_opcode_str[op],
-                  storeUrl(psstate->entry));
+                  psstate->entry->url());
 #if USE_CACHE_DIGESTS && 0
     /* do cd lookup to count false misses */
 
@@ -697,7 +697,7 @@ peerHandleHtcpReply(peer * p, peer_t type, htcpReplyData * htcp, void *data)
     ps_state *psstate = (ps_state *)data;
     debug(44, 3) ("peerHandleHtcpReply: %s %s\n",
                   htcp->hit ? "HIT" : "MISS",
-                  storeUrl(psstate->entry));
+                  psstate->entry->url());
     psstate->ping.n_recv++;
 
     if (htcp->hit) {

@@ -166,7 +166,7 @@ testNull::testNullSearch()
 
         pe->setPublicKey();
 
-        storeBuffer(pe);
+        pe->buffer();
         /* TODO: remove this when the metadata is separated */
         {
             Packer p;
@@ -175,8 +175,8 @@ testNull::testNullSearch()
             packerClean(&p);
         }
 
-        storeBufferFlush(pe);
-        storeTimestampsSet(pe);
+        pe->flush();
+        pe->timestampsSet();
         pe->complete();
         pe->swapOut();
         /* Null does not accept store entries */

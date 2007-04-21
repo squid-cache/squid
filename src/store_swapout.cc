@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.114 2007/04/20 23:53:42 wessels Exp $
+ * $Id: store_swapout.cc,v 1.115 2007/04/21 07:14:15 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -57,7 +57,7 @@ storeSwapOutStart(StoreEntry * e)
      * metadata there is to store
      */
     debug(20, 5) ("storeSwapOutStart: Begin SwapOut '%s' to dirno %d, fileno %08X\n",
-                  storeUrl(e), e->swap_dirn, e->swap_filen);
+                  e->url(), e->swap_dirn, e->swap_filen);
     e->swap_status = SWAPOUT_WRITING;
     /* If we start swapping out objects with OutOfBand Metadata,
      * then this code needs changing
@@ -234,7 +234,7 @@ StoreEntry::swapOut()
 #if SIZEOF_OFF_T == 4
 
     if (mem_obj->endOffset() > 0x7FFF0000) {
-        debug(20, 0) ("WARNING: preventing off_t overflow for %s\n", storeUrl(this));
+        debug(20, 0) ("WARNING: preventing off_t overflow for %s\n", url());
         abort();
         return;
     }
@@ -275,7 +275,7 @@ StoreEntry::swapOut()
         assert(mem_obj->swapout.sio == NULL);
         assert(mem_obj->inmem_lo == 0);
 
-        if (storeCheckCachable(this))
+        if (checkCachable())
             storeSwapOutStart(this);
         else
             return;
@@ -351,12 +351,12 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
     } else {
         /* swapping complete */
         debug(20, 3) ("storeSwapOutFileClosed: SwapOut complete: '%s' to %d, %08X\n",
-                      storeUrl(e), e->swap_dirn, e->swap_filen);
+                      e->url(), e->swap_dirn, e->swap_filen);
         e->swap_file_sz = e->objectLen() + mem->swap_hdr_sz;
         e->swap_status = SWAPOUT_DONE;
         e->store()->updateSize(e->swap_file_sz, 1);
 
-        if (storeCheckCachable(e)) {
+        if (e->checkCachable()) {
             storeLog(STORE_LOG_SWAPOUT, e);
             storeDirSwapLog(e, SWAP_LOG_ADD);
         }

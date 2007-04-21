@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.39 2007/04/20 23:53:42 wessels Exp $
+ * $Id: whois.cc,v 1.40 2007/04/21 07:14:15 wessels Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -113,7 +113,7 @@ static void
 whoisTimeout(int fd, void *data)
 {
     WhoisState *p = (WhoisState *)data;
-    debug(75, 1) ("whoisTimeout: %s\n", storeUrl(p->entry));
+    debug(75, 1) ("whoisTimeout: %s\n", p->entry->url());
     whoisClose(fd, p);
 }
 
@@ -128,7 +128,7 @@ void
 WhoisState::setReplyToOK(StoreEntry *entry)
 {
     HttpReply *reply = new HttpReply;
-    storeBuffer(entry);
+    entry->buffer();
     HttpVersion version(1, 0);
     reply->setHeaders(version, HTTP_OK, "Gatewaying", "text/plain", -1, -1, -2);
     entry->replaceHttpReply(reply);
@@ -160,9 +160,9 @@ WhoisState::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xerrn
         /* No range support, we always grab it all */
         dataWritten = 1;
 
-        storeAppend(entry, buf, len);
+        entry->append(buf, len);
 
-        storeBufferFlush(entry);
+        entry->flush();
 
         do_next_read = 1;
     } else if (flag != COMM_OK || len < 0) {
@@ -180,15 +180,15 @@ WhoisState::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xerrn
             do_next_read = 0;
         }
     } else {
-        storeTimestampsSet(entry);
-        storeBufferFlush(entry);
+        entry->timestampsSet();
+        entry->flush();
 
         if (!EBIT_TEST(entry->flags, RELEASE_REQUEST))
             entry->setPublicKey();
 
         fwd->complete();
 
-        debug(75, 3) ("whoisReadReply: Done: %s\n", storeUrl(entry));
+        debug(75, 3) ("whoisReadReply: Done: %s\n", entry->url());
 
         comm_close(fd);
 

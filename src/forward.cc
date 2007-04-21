@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.159 2007/04/20 23:53:41 wessels Exp $
+ * $Id: forward.cc,v 1.160 2007/04/21 07:14:14 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -117,7 +117,7 @@ void FwdState::start(Pointer aSelf)
     // We hope that either the store entry aborts or peer is selected.
     // Otherwise we are going to leak our object.
 
-    storeRegisterAbort(entry, FwdState::abort, this);
+    entry->registerAbort(FwdState::abort, this);
     peerSelect(request, entry, fwdStartCompleteWrapper, this);
 
     // TODO: set self _after_ the peer is selected because we do not need
@@ -174,7 +174,7 @@ FwdState::~FwdState()
     if (err)
         errorStateFree(err);
 
-    storeUnregisterAbort(entry);
+    entry->unregisterAbort();
 
     entry->unlock();
 
@@ -234,7 +234,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
         }
     }
 
-    debug(17, 3) ("FwdState::start() '%s'\n", storeUrl(entry));
+    debug(17, 3) ("FwdState::start() '%s'\n", entry->url());
     /*
      * This seems like an odd place to bind mem_obj and request.
      * Might want to assert that request is NULL at this point
@@ -289,7 +289,7 @@ FwdState::fail(ErrorState * errorState)
     debug(17, 3) ("fwdFail: %s \"%s\"\n\t%s\n",
                   err_type_str[errorState->type],
                   httpStatusString(errorState->httpStatus),
-                  storeUrl(entry));
+                  entry->url());
 
     if (err)
         errorStateFree(err);
@@ -306,7 +306,7 @@ FwdState::fail(ErrorState * errorState)
 void
 FwdState::unregister(int fd)
 {
-    debug(17, 3) ("fwdUnregister: %s\n", storeUrl(entry));
+    debug(17, 3) ("fwdUnregister: %s\n", entry->url());
     assert(fd == server_fd);
     assert(fd > -1);
     comm_remove_close_handler(fd, fwdServerClosedWrapper, this);
@@ -324,7 +324,7 @@ FwdState::complete()
 {
     StoreEntry *e = entry;
     assert(entry->store_status == STORE_PENDING);
-    debug(17, 3) ("fwdComplete: %s\n\tstatus %d\n", storeUrl(e),
+    debug(17, 3) ("fwdComplete: %s\n\tstatus %d\n", e->url(),
                   entry->getReply()->sline.status);
 #if URL_CHECKSUM_DEBUG
 
@@ -336,12 +336,12 @@ FwdState::complete()
     if (reforward()) {
         debug(17, 3) ("fwdComplete: re-forwarding %d %s\n",
                       entry->getReply()->sline.status,
-                      storeUrl(e));
+                      e->url());
 
         if (server_fd > -1)
             unregister(server_fd);
 
-        storeEntryReset(e);
+        e->reset();
 
         startComplete(servers);
     } else {
@@ -500,7 +500,7 @@ FwdState::checkRetriable()
 void
 FwdState::serverClosed(int fd)
 {
-    debug(17, 2) ("fwdServerClosed: FD %d %s\n", fd, storeUrl(entry));
+    debug(17, 2) ("fwdServerClosed: FD %d %s\n", fd, entry->url());
     assert(server_fd == fd);
     server_fd = -1;
 
@@ -698,7 +698,7 @@ FwdState::connectDone(int aServerFD, comm_err_t status, int xerrno)
 
         comm_close(server_fd);
     } else {
-        debug(17, 3) ("fwdConnectDone: FD %d: '%s'\n", server_fd, storeUrl(entry));
+        debug(17, 3) ("fwdConnectDone: FD %d: '%s'\n", server_fd, entry->url());
 
         if (fs->_peer)
             peerConnectSucceded(fs->_peer);
@@ -721,7 +721,7 @@ FwdState::connectTimeout(int fd)
 {
     FwdServer *fs = servers;
 
-    debug(17, 2) ("fwdConnectTimeout: FD %d: '%s'\n", fd, storeUrl(entry));
+    debug(17, 2) ("fwdConnectTimeout: FD %d: '%s'\n", fd, entry->url());
     assert(fd == server_fd);
 
     if (Config.onoff.log_ip_on_direct && fs->code == HIER_DIRECT && fd_table[fd].ipaddr[0])
@@ -746,7 +746,7 @@ FwdState::connectTimeout(int fd)
 void
 FwdState::connectStart()
 {
-    const char *url = storeUrl(entry);
+    const char *url = entry->url();
     int fd = -1;
     FwdServer *fs = servers;
     const char *host;
@@ -910,7 +910,7 @@ FwdState::connectStart()
 void
 FwdState::startComplete(FwdServer * theServers)
 {
-    debug(17, 3) ("fwdStartComplete: %s\n", storeUrl(entry));
+    debug(17, 3) ("fwdStartComplete: %s\n", entry->url());
 
     if (theServers != NULL) {
         servers = theServers;
@@ -923,7 +923,7 @@ FwdState::startComplete(FwdServer * theServers)
 void
 FwdState::startFail()
 {
-    debug(17, 3) ("fwdStartFail: %s\n", storeUrl(entry));
+    debug(17, 3) ("fwdStartFail: %s\n", entry->url());
     ErrorState *anErr = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE, request);
     anErr->xerrno = errno;
     fail(anErr);
@@ -937,7 +937,7 @@ FwdState::dispatch()
     debug(17, 3) ("fwdDispatch: FD %d: Fetching '%s %s'\n",
                   client_fd,
                   RequestMethodStr[request->method],
-                  storeUrl(entry));
+                  entry->url());
     /*
      * Assert that server_fd is set.  This is to guarantee that fwdState
      * is attached to something and will be deallocated when server_fd
@@ -945,7 +945,7 @@ FwdState::dispatch()
      */
     assert(server_fd > -1);
 
-    fd_note(server_fd, storeUrl(entry));
+    fd_note(server_fd, entry->url());
 
     fd_table[server_fd].noteUse(fwdPconnPool);
 
@@ -1003,7 +1003,7 @@ FwdState::dispatch()
 
         default:
             debug(17, 1) ("fwdDispatch: Cannot retrieve '%s'\n",
-                          storeUrl(entry));
+                          entry->url());
             ErrorState *anErr = errorCon(ERR_UNSUP_REQ, HTTP_BAD_REQUEST, request);
             fail(anErr);
             /*
@@ -1044,7 +1044,7 @@ FwdState::reforward()
     e->mem_obj->checkUrlChecksum();
 #endif
 
-    debug(17, 3) ("fwdReforward: %s?\n", storeUrl(e));
+    debug(17, 3) ("fwdReforward: %s?\n", e->url());
 
     if (!EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT)) {
         debug(17, 3) ("fwdReforward: No, ENTRY_FWD_HDR_WAIT isn't set\n");

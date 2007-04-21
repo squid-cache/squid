@@ -1,6 +1,6 @@
 
 /*
- * $Id: internal.cc,v 1.43 2006/08/25 15:22:34 serassio Exp $
+ * $Id: internal.cc,v 1.44 2007/04/21 07:14:14 wessels Exp $
  *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
@@ -74,7 +74,7 @@ internalStart(HttpRequest * request, StoreEntry * entry)
                           squid_curtime,
                           -2);
         entry->replaceHttpReply(reply);
-        storeAppend(entry, msgbuf, strlen(msgbuf));
+        entry->append(msgbuf, strlen(msgbuf));
         entry->complete();
     } else {
         debugObj(76, 1, "internalStart: unknown request:\n",

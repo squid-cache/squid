@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.79 2007/04/12 23:51:58 wessels Exp $
+ * $Id: store_dir_ufs.cc,v 1.80 2007/04/21 07:14:16 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -276,7 +276,7 @@ UFSSwapDir::dumpEntry(StoreEntry &e) const
     debug(47, 0) ("UFSSwapDir::dumpEntry: FILENO %08X\n", e.swap_filen);
     debug(47, 0) ("UFSSwapDir::dumpEntry: PATH %s\n",
                   fullPath(e.swap_filen, NULL));
-    storeEntryDump(&e, 0);
+    e.dump(0);
 }
 
 /*
@@ -704,7 +704,7 @@ UFSSwapDir::addDiskRestore(const cache_key * key,
      * already in use! */
     e = new StoreEntry();
     e->store_status = STORE_OK;
-    storeSetMemStatus(e, NOT_IN_MEMORY);
+    e->setMemStatus(NOT_IN_MEMORY);
     e->swap_status = SWAPOUT_DONE;
     e->swap_filen = file_number;
     e->swap_dirn = index;
@@ -722,7 +722,7 @@ UFSSwapDir::addDiskRestore(const cache_key * key,
     e->ping_status = PING_NONE;
     EBIT_CLR(e->flags, ENTRY_VALIDATED);
     mapBitSet(e->swap_filen);
-    storeHashInsert(e, key);	/* do it after we clear KEY_PRIVATE */
+    e->hashInsert(key);	/* do it after we clear KEY_PRIVATE */
     replacementAdd (e);
     return e;
 }

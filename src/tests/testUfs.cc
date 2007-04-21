@@ -146,7 +146,7 @@ testUfs::testUfsSearch()
 
         pe->setPublicKey();
 
-        storeBuffer(pe);
+        pe->buffer();
         /* TODO: remove this when the metadata is separated */
         {
             Packer p;
@@ -155,8 +155,8 @@ testUfs::testUfsSearch()
             packerClean(&p);
         }
 
-        storeBufferFlush(pe);
-        storeTimestampsSet(pe);
+        pe->flush();
+        pe->timestampsSet();
         pe->complete();
         pe->swapOut();
         CPPUNIT_ASSERT(pe->swap_dirn == 0);

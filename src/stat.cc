@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.403 2007/04/20 22:11:34 wessels Exp $
+ * $Id: stat.cc,v 1.404 2007/04/21 07:14:15 wessels Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -349,7 +349,7 @@ statObjects(void *data)
         return;
     }
 
-    storeBuffer(state->sentry);
+    state->sentry->buffer();
     size_t statCount = 0;
     MemBuf mb;
     mb.init();
@@ -365,7 +365,7 @@ statObjects(void *data)
     }
 
     if (mb.size)
-        storeAppend(state->sentry, mb.buf, mb.size);
+        state->sentry->append(mb.buf, mb.size);
     mb.clean();
 
     eventAdd("statObjects", statObjects, state, 0.0, 1);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.72 2007/04/20 23:53:42 wessels Exp $
+ * $Id: store_digest.cc,v 1.73 2007/04/21 07:14:15 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -168,7 +168,7 @@ storeDigestDel(const StoreEntry * entry)
         if (!cacheDigestTest(store_digest,  (const cache_key *)entry->key)) {
             sd_stats.del_lost_count++;
             debug(71, 6) ("storeDigestDel: lost entry, key: %s url: %s\n",
-                          entry->getMD5Text(), storeUrl(entry));
+                          entry->getMD5Text(), entry->url());
         } else {
             sd_stats.del_count++;
             cacheDigestDel(store_digest,  (const cache_key *)entry->key);
@@ -221,7 +221,7 @@ storeDigestAddable(const StoreEntry * e)
     debug(71, 6) ("storeDigestAddable: checking entry, key: %s\n",
                   e->getMD5Text());
 
-    /* check various entry flags (mimics storeCheckCachable XXX) */
+    /* check various entry flags (mimics StoreEntry::checkCachable XXX) */
 
     if (!EBIT_TEST(e->flags, ENTRY_CACHABLE)) {
         debug(71, 6) ("storeDigestAddable: NO: not cachable\n");
@@ -432,10 +432,10 @@ storeDigestRewriteResume(void)
                     squid_curtime, squid_curtime + Config.digest.rewrite_period);
     debug(71, 3) ("storeDigestRewrite: entry expires on %ld (%+d)\n",
                   (long int) rep->expires, (int) (rep->expires - squid_curtime));
-    storeBuffer(e);
+    e->buffer();
     e->replaceHttpReply(rep);
     storeDigestCBlockSwapOut(e);
-    storeBufferFlush(e);
+    e->flush();
     eventAdd("storeDigestSwapOutStep", storeDigestSwapOutStep, sd_state.rewrite_lock, 0.0, 1, false);
 }
 
@@ -445,7 +445,7 @@ storeDigestRewriteFinish(StoreEntry * e)
 {
     assert(e == sd_state.rewrite_lock);
     e->complete();
-    storeTimestampsSet(e);
+    e->timestampsSet();
     debug(71, 2) ("storeDigestRewriteFinish: digest expires at %ld (%+d)\n",
                   (long int) e->expires, (int) (e->expires - squid_curtime));
     /* is this the write order? @?@ */
@@ -474,7 +474,7 @@ storeDigestSwapOutStep(void *data)
     if ((size_t)(sd_state.rewrite_offset + chunk_size) > store_digest->mask_size)
         chunk_size = store_digest->mask_size - sd_state.rewrite_offset;
 
-    storeAppend(e, store_digest->mask + sd_state.rewrite_offset, chunk_size);
+    e->append(store_digest->mask + sd_state.rewrite_offset, chunk_size);
 
     debugs(71, 3, "storeDigestSwapOutStep: size: " << store_digest->mask_size <<
            " offset: " << sd_state.rewrite_offset << " chunk: " <<
@@ -502,7 +502,7 @@ storeDigestCBlockSwapOut(StoreEntry * e)
     sd_state.cblock.bits_per_entry = (unsigned char)
                                      Config.digest.bits_per_entry;
     sd_state.cblock.hash_func_count = (unsigned char) CacheDigestHashFuncCount;
-    storeAppend(e, (char *) &sd_state.cblock, sizeof(sd_state.cblock));
+    e->append((char *) &sd_state.cblock, sizeof(sd_state.cblock));
 }
 
 /* calculates digest capacity */

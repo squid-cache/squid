@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_heap.cc,v 1.21 2006/08/21 00:50:47 robertc Exp $
+ * $Id: store_repl_heap.cc,v 1.22 2007/04/21 07:14:19 wessels Exp $
  *
  * DEBUG: section ?     HEAP based removal policies
  * AUTHOR: Henrik Nordstrom
@@ -232,7 +232,7 @@ try_again:
 
     entry = (StoreEntry *)heap_extractmin(heap->theHeap);
 
-    if (storeEntryLocked(entry)) {
+    if (entry->locked()) {
 
         entry->lock()
 

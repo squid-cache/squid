@@ -198,7 +198,7 @@ testCoss::testCossSearch()
 
         pe->setPublicKey();
 
-        storeBuffer(pe);
+        pe->buffer();
         /* TODO: remove this when the metadata is separated */
         {
             Packer p;
@@ -207,8 +207,8 @@ testCoss::testCossSearch()
             packerClean(&p);
         }
 
-        storeBufferFlush(pe);
-        storeTimestampsSet(pe);
+        pe->flush();
+        pe->timestampsSet();
         pe->complete();
         storeSwapOut(pe);
         CPPUNIT_ASSERT(pe->swap_dirn == 0);
