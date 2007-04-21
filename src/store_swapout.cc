@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.112 2007/04/20 22:06:44 wessels Exp $
+ * $Id: store_swapout.cc,v 1.113 2007/04/20 23:10:59 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -235,7 +235,7 @@ StoreEntry::swapOut()
 
     if (mem_obj->endOffset() > 0x7FFF0000) {
         debug(20, 0) ("WARNING: preventing off_t overflow for %s\n", storeUrl(this));
-        storeAbort(this);
+        abort();
         return;
     }
 
