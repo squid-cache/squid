@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.606 2007/04/17 23:05:17 wessels Exp $
+ * $Id: store.cc,v 1.607 2007/04/20 23:10:59 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -1113,26 +1113,25 @@ StoreEntry::complete()
  * entry for releasing
  */
 void
-storeAbort(StoreEntry * e)
+StoreEntry::abort()
 {
     statCounter.aborted_requests++;
-    MemObject *mem = e->mem_obj;
-    assert(e->store_status == STORE_PENDING);
-    assert(mem != NULL);
-    debug(20, 6) ("storeAbort: %s\n", e->getMD5Text());
+    assert(store_status == STORE_PENDING);
+    assert(mem_obj != NULL);
+    debug(20, 6) ("storeAbort: %s\n", getMD5Text());
 
-    e->lock()
+    lock()
 
     ;         /* lock while aborting */
-    storeNegativeCache(e);
+    storeNegativeCache(this);
 
-    storeReleaseRequest(e);
+    storeReleaseRequest(this);
 
-    EBIT_SET(e->flags, ENTRY_ABORTED);
+    EBIT_SET(flags, ENTRY_ABORTED);
 
-    storeSetMemStatus(e, NOT_IN_MEMORY);
+    storeSetMemStatus(this, NOT_IN_MEMORY);
 
-    e->store_status = STORE_OK;
+    store_status = STORE_OK;
 
     /*
      * We assign an object length here.  The only other place we assign
@@ -1142,30 +1141,30 @@ storeAbort(StoreEntry * e)
      * request, the request is private and negatively cached. Surely
      * the object length is inappropriate to set.
      */
-    mem->object_sz = mem->endOffset();
+    mem_obj->object_sz = mem_obj->endOffset();
 
     /* Notify the server side */
 
-    if (mem->abort.callback) {
-        eventAdd("mem->abort.callback",
-                 mem->abort.callback,
-                 mem->abort.data,
+    if (mem_obj->abort.callback) {
+        eventAdd("mem_obj->abort.callback",
+                 mem_obj->abort.callback,
+                 mem_obj->abort.data,
                  0.0,
                  0);
-        mem->abort.callback = NULL;
-        mem->abort.data = NULL;
+        mem_obj->abort.callback = NULL;
+        mem_obj->abort.data = NULL;
     }
 
     /* XXX Should we reverse these two, so that there is no
      * unneeded disk swapping triggered? 
      */
     /* Notify the client side */
-    InvokeHandlers(e);
+    InvokeHandlers(this);
 
     /* Close any swapout file */
-    e->swapOutFileClose();
+    swapOutFileClose();
 
-    e->unlock();       /* unlock */
+    unlock();       /* unlock */
 }
 
 /* Clear Memory storage to accommodate the given object len */

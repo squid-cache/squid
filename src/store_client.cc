@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.152 2007/04/20 22:06:44 wessels Exp $
+ * $Id: store_client.cc,v 1.153 2007/04/20 23:10:59 wessels Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -819,7 +819,7 @@ CheckQuickAbort(StoreEntry * entry)
     if (CheckQuickAbort2(entry) == 0)
         return;
 
-    storeAbort(entry);
+    entry->abort();
 }
 
 void
