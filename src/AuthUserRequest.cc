@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.cc,v 1.11 2007/01/03 12:57:47 hno Exp $
+ * $Id: AuthUserRequest.cc,v 1.12 2007/04/20 22:24:07 wessels Exp $
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 6803fde1-d5a2-4c29-9034-1c0c9f650eb4
@@ -298,7 +298,7 @@ authTryGetUser (auth_user_request_t **auth_user_request, ConnStateData::Pointer 
         return *auth_user_request;
     else if (request != NULL && request->auth_user_request)
         return request->auth_user_request;
-    else if (conn.getRaw() != NULL)
+    else if (conn != NULL)
         return conn->auth_user_request;
     else
         return NULL;
@@ -340,13 +340,13 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
      */
 
     if (((proxy_auth == NULL) && (!authenticateUserAuthenticated(authTryGetUser(auth_user_request,conn,request))))
-            || (conn.getRaw() != NULL  && conn->auth_type == AUTH_BROKEN))
+            || (conn != NULL  && conn->auth_type == AUTH_BROKEN))
     {
         /* no header or authentication failed/got corrupted - restart */
         debug(29, 4) ("authenticateAuthenticate: broken auth or no proxy_auth header. Requesting auth header.\n");
         /* something wrong with the AUTH credentials. Force a new attempt */
 
-        if (conn.getRaw() != NULL) {
+        if (conn != NULL) {
             conn->auth_type = AUTH_UNKNOWN;
 
             if (conn->auth_user_request)
@@ -369,7 +369,7 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
      * No check for function required in the if: its compulsory for conn based 
      * auth modules
      */
-    if (proxy_auth && conn.getRaw() != NULL && conn->auth_user_request &&
+    if (proxy_auth && conn != NULL && conn->auth_user_request &&
             authenticateUserAuthenticated(conn->auth_user_request) &&
             conn->auth_user_request->connLastHeader() != NULL &&
             strcmp(proxy_auth, conn->auth_user_request->connLastHeader()))
@@ -398,9 +398,9 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
     if (*auth_user_request == NULL)
     {
         debug(29, 9) ("authenticateAuthenticate: This is a new checklist test on FD:%d\n",
-                      conn.getRaw() != NULL ? conn->fd : -1);
+                      conn != NULL ? conn->fd : -1);
 
-        if (proxy_auth && !request->auth_user_request && conn.getRaw() && conn->auth_user_request) {
+        if (proxy_auth && !request->auth_user_request && conn != NULL && conn->auth_user_request) {
             AuthConfig * scheme = AuthConfig::Find(proxy_auth);
 
             if (!conn->auth_user_request->user() || conn->auth_user_request->user()->config != scheme) {
@@ -413,7 +413,7 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
         }
 
         if ((!request->auth_user_request)
-                && (conn.getRaw() == NULL || conn->auth_type == AUTH_UNKNOWN)) {
+                && (conn == NULL || conn->auth_type == AUTH_UNKNOWN)) {
             /* beginning of a new request check */
             debug(29, 4) ("authenticateAuthenticate: no connection authentication type\n");
 
@@ -451,7 +451,7 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
 
             ;
         } else {
-            assert (conn.getRaw() != NULL);
+            assert (conn != NULL);
 
             if (conn->auth_user_request != NULL) {
                 *auth_user_request = conn->auth_user_request;

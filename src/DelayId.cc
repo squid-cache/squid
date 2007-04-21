@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayId.cc,v 1.19 2006/02/17 18:10:59 wessels Exp $
+ * $Id: DelayId.cc,v 1.20 2007/04/20 22:24:07 wessels Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -109,7 +109,7 @@ DelayId::DelayClient(ClientHttpRequest * http)
         ch.my_addr = r->my_addr;
         ch.my_port = r->my_port;
 
-        if (http->getConn().getRaw() != NULL)
+        if (http->getConn() != NULL)
             ch.conn(http->getConn());
 
         ch.request = HTTPMSGLOCK(r);
@@ -155,7 +155,7 @@ DelayId::bytesWanted(int minimum, int maximum) const
     /* limited */
     int nbytes = max(minimum, maximum);
 
-    if (compositeId.getRaw())
+    if (compositeId != NULL)
         nbytes = compositeId->bytesWanted(minimum, nbytes);
 
     return nbytes;
@@ -177,14 +177,14 @@ DelayId::bytesIn(int qty)
 
     assert ((unsigned short)(pool() - 1) != 0xFFFF);
 
-    if (compositeId.getRaw())
+    if (compositeId != NULL)
         compositeId->bytesIn(qty);
 }
 
 void
 DelayId::delayRead(DeferredRead const &aRead)
 {
-    assert (compositeId.getRaw());
+    assert (compositeId != NULL);
     compositeId->delayRead(aRead);
 
 }

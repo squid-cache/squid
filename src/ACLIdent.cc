@@ -82,7 +82,7 @@ ACLIdent::match(ACLChecklist *checklist)
 {
     if (checklist->rfc931[0]) {
         return data->match(checklist->rfc931);
-    } else if (checklist->conn().getRaw() != NULL && checklist->conn()->rfc931[0]) {
+    } else if (checklist->conn() != NULL && checklist->conn()->rfc931[0]) {
         return data->match(checklist->conn()->rfc931);
     } else {
         debug(28, 3) ("ACLIdent::match() - switching to ident lookup state\n");
@@ -125,7 +125,7 @@ IdentLookup::Instance()
 void
 IdentLookup::checkForAsync(ACLChecklist *checklist)const
 {
-    if (checklist->conn().getRaw() != NULL) {
+    if (checklist->conn() != NULL) {
         debug(28, 3) ("IdentLookup::checkForAsync: Doing ident lookup\n");
         checklist->asyncInProgress(true);
         identStart(&checklist->conn()->me, &checklist->conn()->peer,
@@ -153,7 +153,7 @@ IdentLookup::LookupDone(const char *ident, void *data)
      * Cache the ident result in the connection, to avoid redoing ident lookup
      * over and over on persistent connections
      */
-    if (checklist->conn().getRaw() != NULL && !checklist->conn()->rfc931[0])
+    if (checklist->conn() != NULL && !checklist->conn()->rfc931[0])
         xstrncpy(checklist->conn()->rfc931, checklist->rfc931, USER_IDENT_SZ);
 
     checklist->asyncInProgress(false);
