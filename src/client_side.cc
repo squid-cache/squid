@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.749 2007/04/20 07:29:47 wessels Exp $
+ * $Id: client_side.cc,v 1.750 2007/04/20 22:17:06 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -167,7 +167,7 @@ int
 ClientSocketContext::fd() const
 {
     assert (http);
-    assert (http->getConn().getRaw() != NULL);
+    assert (http->getConn() != NULL);
     return http->getConn()->fd;
 }
 
@@ -214,8 +214,8 @@ void
 ClientSocketContext::removeFromConnectionList(ConnStateData::Pointer conn)
 {
     ClientSocketContext::Pointer *tempContextPointer;
-    assert(conn.getRaw() != NULL);
-    assert(conn->getCurrentContext().getRaw() != NULL);
+    assert(conn != NULL);
+    assert(conn->getCurrentContext() != NULL);
     /* Unlink us from the connection request list */
     tempContextPointer = & conn->currentobject;
 
@@ -259,7 +259,7 @@ ClientSocketContext::registerWithConn()
 {
     assert (!connRegistered_);
     assert (http);
-    assert (http->getConn().getRaw() != NULL);
+    assert (http->getConn() != NULL);
     connRegistered_ = true;
     http->getConn()->addContextToQueue(this);
 }
@@ -276,7 +276,7 @@ void
 ClientSocketContext::connIsFinished()
 {
     assert (http);
-    assert (http->getConn().getRaw() != NULL);
+    assert (http->getConn() != NULL);
     deRegisterWithConn();
     /* we can't handle any more stream data - detach */
     clientStreamDetach(getTail(), http);
@@ -494,7 +494,7 @@ ClientHttpRequest::logRequest()
         if (loggingEntry() && loggingEntry()->mem_obj)
             al.cache.objectSize = loggingEntry()->contentLen();
 
-        al.cache.caddr = getConn().getRaw() != NULL ? getConn()->log_addr : no_addr;
+        al.cache.caddr = getConn() != NULL ? getConn()->log_addr : no_addr;
 
         al.cache.size = out.size;
 
@@ -507,12 +507,12 @@ ClientHttpRequest::logRequest()
         if (request)
             clientPrepareLogWithRequestDetails(request, &al);
 
-        if (getConn().getRaw() != NULL && getConn()->rfc931[0])
+        if (getConn() != NULL && getConn()->rfc931[0])
             al.cache.rfc931 = getConn()->rfc931;
 
 #if USE_SSL
 
-        if (getConn().getRaw() != NULL)
+        if (getConn() != NULL)
             al.cache.ssluser = sslGetUserEmail(fd_table[getConn()->fd].ssl);
 
 #endif
@@ -527,7 +527,7 @@ ClientHttpRequest::logRequest()
             accessLogLog(&al, checklist);
             updateCounters();
 
-            if (getConn().getRaw() != NULL)
+            if (getConn() != NULL)
                 clientdbUpdate(getConn()->peer.sin_addr, logType, PROTO_HTTP, out.size);
         }
 
@@ -615,7 +615,7 @@ ConnStateData::close()
 bool
 ConnStateData::isOpen() const
 {
-    return openReference.getRaw() != NULL;
+    return openReference != NULL;
 }
 
 ConnStateData::~ConnStateData()
@@ -711,7 +711,7 @@ clientIsRequestBodyTooLargeForPolicy(size_t bodyLength)
 int
 connIsUsable(ConnStateData::Pointer conn)
 {
-    if (conn.getRaw() == NULL || conn->fd == -1)
+    if (conn == NULL || conn->fd == -1)
         return 0;
 
     return 1;
@@ -1245,7 +1245,7 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
     assert(cbdataReferenceValid(node));
     assert(node->node.next == NULL);
     ClientSocketContext::Pointer context = dynamic_cast<ClientSocketContext *>(node->data.getRaw());
-    assert(context.getRaw() != NULL);
+    assert(context != NULL);
     assert(connIsUsable(http->getConn()));
     fd = http->getConn()->fd;
     /* TODO: check offset is what we asked for */
