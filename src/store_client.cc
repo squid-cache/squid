@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.153 2007/04/20 23:10:59 wessels Exp $
+ * $Id: store_client.cc,v 1.154 2007/04/20 23:53:42 wessels Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -700,25 +700,24 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 
 /* Call handlers waiting for  data to be appended to E. */
 void
-InvokeHandlers(StoreEntry * e)
+StoreEntry::invokeHandlers()
 {
     /* Commit what we can to disk, if appropriate */
-    e->swapOut();
+    swapOut();
     int i = 0;
-    MemObject *mem = e->mem_obj;
     store_client *sc;
     dlink_node *nx = NULL;
     dlink_node *node;
 
-    PROF_start(InvokeHandlers);
+    PROF_start(StoreEntry::invokeHandlers);
 
-    debug(90, 3) ("InvokeHandlers: %s\n", e->getMD5Text());
+    debug(90, 3) ("StoreEntry::invokeHandlers: %s\n", getMD5Text());
     /* walk the entire list looking for valid callbacks */
 
-    for (node = mem->clients.head; node; node = nx) {
+    for (node = mem_obj->clients.head; node; node = nx) {
         sc = (store_client *)node->data;
         nx = node->next;
-        debug(90, 3) ("InvokeHandlers: checking client #%d\n", i++);
+        debug(90, 3) ("StoreEntry::invokeHandlers: checking client #%d\n", i++);
 
         if (!sc->_callback.pending())
             continue;
@@ -726,9 +725,9 @@ InvokeHandlers(StoreEntry * e)
         if (sc->flags.disk_io_pending)
             continue;
 
-        storeClientCopy2(e, sc);
+        storeClientCopy2(this, sc);
     }
-    PROF_stop(InvokeHandlers);
+    PROF_stop(StoreEntry::invokeHandlers);
 }
 
 int

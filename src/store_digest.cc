@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.71 2007/04/20 07:29:47 wessels Exp $
+ * $Id: store_digest.cc,v 1.72 2007/04/20 23:53:42 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -423,7 +423,7 @@ storeDigestRewriteResume(void)
     sd_state.rewrite_offset = 0;
     EBIT_SET(e->flags, ENTRY_SPECIAL);
     /* setting public key will purge old digest entry if any */
-    storeSetPublicKey(e);
+    e->setPublicKey();
     /* fake reply */
     HttpReply *rep = new HttpReply;
     HttpVersion version(1, 0);

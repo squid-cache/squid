@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.128 2006/09/20 06:29:10 adrian Exp $
+ * $Id: mime.cc,v 1.129 2007/04/20 23:53:41 wessels Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -572,7 +572,7 @@ MimeIcon::created (StoreEntry *newEntry)
                                      METHOD_GET);
     assert(e != NULL);
     EBIT_SET(e->flags, ENTRY_SPECIAL);
-    storeSetPublicKey(e);
+    e->setPublicKey();
     storeBuffer(e);
     HttpRequest *r = HttpRequest::CreateFromUrl(url);
 

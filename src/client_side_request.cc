@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.81 2007/04/20 22:17:06 wessels Exp $
+ * $Id: client_side_request.cc,v 1.82 2007/04/20 23:53:41 wessels Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -243,7 +243,7 @@ ClientHttpRequest::~ClientHttpRequest()
     // because we did not initiate that pipe (ConnStateData did)
 
     /* the ICP check here was erroneous
-     * - storeReleaseRequest was always called if entry was valid 
+     * - StoreEntry::releaseRequest was always called if entry was valid 
      */
     assert(logType < LOG_TYPE_MAX);
 

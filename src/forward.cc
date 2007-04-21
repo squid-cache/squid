@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.158 2007/04/16 18:35:29 wessels Exp $
+ * $Id: forward.cc,v 1.159 2007/04/20 23:53:41 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -151,7 +151,7 @@ FwdState::completed()
         } else {
             EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
             entry->complete();
-            storeReleaseRequest(entry);
+            entry->releaseRequest();
         }
     }
 

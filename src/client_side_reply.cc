@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.118 2007/04/20 22:17:06 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.119 2007/04/20 23:53:41 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -710,7 +710,7 @@ clientReplyContext::processMiss()
             http->logType = LOG_TCP_REDIRECT;
 #endif
 
-            storeReleaseRequest(http->storeEntry());
+            http->storeEntry()->releaseRequest();
             rep->redirect(http->redirect.status, http->redirect.location);
             http->storeEntry()->replaceHttpReply(rep);
             http->storeEntry()->complete();
@@ -945,7 +945,7 @@ clientReplyContext::traceReply(clientStreamNode * node)
     tempBuffer.data = next->readBuffer.data;
     storeClientCopy(sc, http->storeEntry(),
                     tempBuffer, SendMoreData, this);
-    storeReleaseRequest(http->storeEntry());
+    http->storeEntry()->releaseRequest();
     storeBuffer(http->storeEntry());
     HttpReply *rep = new HttpReply;
     HttpVersion version(1,0);

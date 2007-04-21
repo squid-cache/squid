@@ -144,7 +144,7 @@ testUfs::testUfsSearch()
         HttpReply *rep = (HttpReply *) pe->getReply();	// bypass const
         rep->setHeaders(version, HTTP_OK, "dummy test object", "x-squid-internal/test", -1, -1, squid_curtime + 100000);
 
-        storeSetPublicKey(pe);
+        pe->setPublicKey();
 
         storeBuffer(pe);
         /* TODO: remove this when the metadata is separated */

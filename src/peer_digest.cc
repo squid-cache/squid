@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.119 2007/04/12 23:30:09 wessels Exp $
+ * $Id: peer_digest.cc,v 1.120 2007/04/20 23:53:41 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -586,7 +586,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
             if (fetch->old_entry) {
                 debug(72, 3) ("peerDigestFetchReply: got new digest, releasing old one\n");
                 storeUnregister(fetch->old_sc, fetch->old_entry, fetch);
-                storeReleaseRequest(fetch->old_entry);
+                fetch->old_entry->releaseRequest();
                 fetch->old_entry->unlock();
                 fetch->old_entry = NULL;
             }
@@ -923,7 +923,7 @@ peerDigestFetchFinish(DigestFetchState * fetch, int err)
     if (fetch->old_entry) {
         debug(72, 2) ("peerDigestFetchFinish: deleting old entry\n");
         storeUnregister(fetch->old_sc, fetch->old_entry, fetch);
-        storeReleaseRequest(fetch->old_entry);
+        fetch->old_entry->releaseRequest();
         fetch->old_entry->unlock();
         fetch->old_entry = NULL;
     }

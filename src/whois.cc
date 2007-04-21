@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.38 2006/09/19 07:56:57 adrian Exp $
+ * $Id: whois.cc,v 1.39 2007/04/20 23:53:42 wessels Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -184,7 +184,7 @@ WhoisState::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xerrn
         storeBufferFlush(entry);
 
         if (!EBIT_TEST(entry->flags, RELEASE_REQUEST))
-            storeSetPublicKey(entry);
+            entry->setPublicKey();
 
         fwd->complete();
 
