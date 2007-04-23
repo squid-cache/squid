@@ -72,7 +72,7 @@ unsigned int credentials_ok:
 
 private:
     void decodeCleartext();
-    void extractUsername();
+    bool extractUsername();
     void extractPassword();
     char *cleartext;
     AuthUserRequest *currentRequest;
