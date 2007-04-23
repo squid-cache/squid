@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.43 2006/07/07 19:10:29 serassio Exp $
+ * $Id: auth_basic.cc,v 1.44 2007/04/23 05:43:08 wessels Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -397,7 +397,7 @@ BasicUser::decodeCleartext()
     xfree(sent_auth);
 }
 
-void
+bool
 BasicUser::extractUsername()
 {
     /*
@@ -409,8 +409,8 @@ BasicUser::extractUsername()
     if (strcspn(cleartext, "\r\n") != strlen(cleartext)) {
         debug(29, 1) ("authenticateBasicDecodeAuth: bad characters in authorization header '%s'\n",
                       httpAuthHeader);
-        xfree(cleartext);
-        return;
+        safe_free(cleartext);
+        return false;
     }
 
     char * tempusername = cleartext;
@@ -423,6 +423,7 @@ BasicUser::extractUsername()
 
     if (!basicConfig.casesensitive)
         Tolower((char *)username());
+    return true;
 }
 
 void
@@ -454,8 +455,8 @@ BasicUser::decode(char const *proxy_auth, AuthUserRequest *auth_user_request)
     currentRequest = auth_user_request;
     httpAuthHeader = proxy_auth;
     decodeCleartext ();
-    extractUsername();
-    extractPassword();
+    if (extractUsername())
+	extractPassword();
     currentRequest = NULL;
     httpAuthHeader = NULL;
 }
@@ -463,7 +464,11 @@ BasicUser::decode(char const *proxy_auth, AuthUserRequest *auth_user_request)
 bool
 BasicUser::valid() const
 {
-    return passwd != NULL;
+    if (username() == NULL)
+	return false;
+    if (passwd == NULL)
+	return false;
+    return true;
 }
 
 void
