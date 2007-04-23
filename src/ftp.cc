@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.414 2007/04/21 07:14:14 wessels Exp $
+ * $Id: ftp.cc,v 1.415 2007/04/23 07:29:57 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1322,6 +1322,15 @@ FtpStateData::processReplyBody()
 {
     if (!flags.http_header_sent && data.readBuf->contentSize() >= 0)
         appendSuccessHeader();
+
+    if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
+	/*
+	 * probably was aborted because content length exceeds one
+	 * of the maximum size limits.
+	 */
+        abortTransaction("entry aborted after calling appendSuccessHeader()");
+        return;
+    }
 
 #if ICAP_CLIENT
 
