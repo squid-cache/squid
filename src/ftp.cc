@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.415 2007/04/23 07:29:57 wessels Exp $
+ * $Id: ftp.cc,v 1.416 2007/04/23 17:50:49 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1199,7 +1199,15 @@ FtpStateData::dataComplete()
     }
 
     /* expect the "transfer complete" message on the control socket */
-    scheduleReadControlReply(1);
+    /*
+     * DPW 2007-04-23
+     * Previously, this was the only place where we set the
+     * 'buffered_ok' flag when calling scheduleReadControlReply().
+     * It caused some problems if the FTP server returns an unexpected
+     * status code after the data command.  FtpStateData was being
+     * deleted in the middle of dataRead().
+     */
+    scheduleReadControlReply(0);
 }
 
 void
@@ -1311,6 +1319,17 @@ FtpStateData::dataRead(int fd, char *buf, size_t len, comm_err_t errflag, int xe
             return;
         }
     } else if (len == 0) {
+	debugs(9,5,HERE << "Calling dataComplete() because len == 0");
+	/*
+	 * DPW 2007-04-23
+	 * Dangerous curves ahead.  This call to dataComplete was
+	 * calling scheduleReadControlReply, handleControlReply,
+	 * and then ftpReadTransferDone.  If ftpReadTransferDone
+	 * gets unexpected status code, it closes down the control
+	 * socket and our FtpStateData object gets destroyed.   As
+	 * a workaround we no longer set the 'buffered_ok' flag in
+	 * the scheduleReadControlReply call.
+	 */
         dataComplete();
     }
 
@@ -1320,6 +1339,7 @@ FtpStateData::dataRead(int fd, char *buf, size_t len, comm_err_t errflag, int xe
 void
 FtpStateData::processReplyBody()
 {
+    debugs(9, 5, HERE << "FtpStateData::processReplyBody starting.");
     if (!flags.http_header_sent && data.readBuf->contentSize() >= 0)
         appendSuccessHeader();
 
@@ -1335,7 +1355,7 @@ FtpStateData::processReplyBody()
 #if ICAP_CLIENT
 
     if (icapAccessCheckPending) {
-        debugs(9,3,HERE << "returning from dataRead due to icapAccessCheckPending");
+        debugs(9,3,HERE << "returning from FtpStateData::processReplyBody due to icapAccessCheckPending");
         return;
     }
 
@@ -1685,6 +1705,11 @@ FtpStateData::ftpParseControlReply(char *buf, size_t len, int *codep, int *used)
     return head;
 }
 
+/*
+ * DPW 2007-04-23
+ * Looks like there are no longer anymore callers that set
+ * buffered_ok=1.  Perhaps it can be removed at some point.
+ */
 void
 FtpStateData::scheduleReadControlReply(int buffered_ok)
 {
