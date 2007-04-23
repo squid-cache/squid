@@ -71,8 +71,8 @@ unsigned int credentials_ok:
     BasicAuthQueueNode *auth_queue;
 
 private:
-    void decodeCleartext();
-    bool extractUsername();
+    bool decodeCleartext();
+    void extractUsername();
     void extractPassword();
     char *cleartext;
     AuthUserRequest *currentRequest;

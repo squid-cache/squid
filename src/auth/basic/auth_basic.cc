@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.44 2007/04/23 05:43:08 wessels Exp $
+ * $Id: auth_basic.cc,v 1.45 2007/04/23 05:50:37 wessels Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -383,7 +383,7 @@ BasicUser::BasicUser(AuthConfig *config) : AuthUser (config) , passwd (NULL), cr
     flags.credentials_ok = 0;
 }
 
-void
+bool
 BasicUser::decodeCleartext()
 {
     char *sent_auth;
@@ -395,24 +395,25 @@ BasicUser::decodeCleartext()
     cleartext = uudecode(sent_auth);
 
     xfree(sent_auth);
-}
 
-bool
-BasicUser::extractUsername()
-{
     /*
      * Don't allow NL or CR in the credentials.
      * Oezguer Kesim <oec@codeblau.de>
      */
-    debug(29, 9) ("authenticateBasicDecodeAuth: cleartext = '%s'\n", cleartext);
+    debug(29, 9) ("BasicUser::decodeCleartext: '%s'\n", cleartext);
 
     if (strcspn(cleartext, "\r\n") != strlen(cleartext)) {
-        debug(29, 1) ("authenticateBasicDecodeAuth: bad characters in authorization header '%s'\n",
+        debug(29, 1) ("BasicUser::decodeCleartext: bad characters in authorization header '%s'\n",
                       httpAuthHeader);
         safe_free(cleartext);
         return false;
     }
+    return true;
+}
 
+void
+BasicUser::extractUsername()
+{
     char * tempusername = cleartext;
     /* terminate the username string */
 
@@ -423,7 +424,6 @@ BasicUser::extractUsername()
 
     if (!basicConfig.casesensitive)
         Tolower((char *)username());
-    return true;
 }
 
 void
@@ -454,9 +454,10 @@ BasicUser::decode(char const *proxy_auth, AuthUserRequest *auth_user_request)
 {
     currentRequest = auth_user_request;
     httpAuthHeader = proxy_auth;
-    decodeCleartext ();
-    if (extractUsername())
+    if (decodeCleartext ()) {
+	extractUsername();
 	extractPassword();
+    }
     currentRequest = NULL;
     httpAuthHeader = NULL;
 }
