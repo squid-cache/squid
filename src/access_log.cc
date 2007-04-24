@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.120 2007/04/21 07:14:13 wessels Exp $
+ * $Id: access_log.cc,v 1.121 2007/04/24 15:01:55 hno Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -445,6 +445,9 @@ struct logformat_token_table_entry logformat_token_table[] =
         /*{ "<a", LFT_SERVER_IP_ADDRESS }, */
         /*{ "<p", LFT_SERVER_PORT }, */
         {"<A", LFT_SERVER_IP_OR_PEER_NAME},
+
+	/* {"oa", LFT_OUTGOING_IP}, */
+	/* {"ot", LFT_OUTGOING_TOS}, */
 
         {"la", LFT_LOCAL_IP},
         {"lp", LFT_LOCAL_PORT},
