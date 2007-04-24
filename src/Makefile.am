@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.177 2007/04/13 17:26:37 rousskov Exp $
+#  $Id: Makefile.am,v 1.178 2007/04/24 00:40:25 wessels Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -286,7 +286,7 @@ EXTRA_squid_SOURCES = \
 	LeakFinder.cc \
 	LeakFinder.h \
 	$(SNMP_ALL_SOURCE) \
-	unlinkd.cc \
+	$(UNLINKDSOURCE) \
 	$(SSL_ALL_SOURCE) \
 	$(WIN32_ALL_SOURCE) \
 	DiskIO/DiskThreads/aiops.cc \
@@ -692,7 +692,7 @@ ICAP_libicap_a_SOURCES = \
 	ICAP/TextException.h
 
 
-unlinkd_SOURCES = unlinkd.cc SquidNew.cc
+unlinkd_SOURCES = $(UNLINKDSOURCE) SquidNew.cc
 unlinkd_CXXFLAGS = -DUNLINK_DAEMON
 
 pinger_SOURCES = \
@@ -2146,7 +2146,7 @@ SWAP_TEST_SOURCES = \
 	store_io.cc \
 	store_swapout.cc \
 	store_swapmeta.cc \
-	unlinkd.cc \
+	$(UNLINKDSOURCE) \
 	$(WIN32_SOURCE) \
 	$(STORE_TEST_SOURCES) \
 	$(DISKIO_SOURCE)
