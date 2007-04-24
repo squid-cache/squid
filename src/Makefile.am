@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.178 2007/04/24 00:40:25 wessels Exp $
+#  $Id: Makefile.am,v 1.179 2007/04/24 15:04:22 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -692,8 +692,7 @@ ICAP_libicap_a_SOURCES = \
 	ICAP/TextException.h
 
 
-unlinkd_SOURCES = $(UNLINKDSOURCE) SquidNew.cc
-unlinkd_CXXFLAGS = -DUNLINK_DAEMON
+unlinkd_SOURCES = unlinkd_daemon.cc SquidNew.cc
 
 pinger_SOURCES = \
 	pinger.cc \
