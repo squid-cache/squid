@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-#  $Id: Makefile.am,v 1.24 2007/04/16 14:12:06 hno Exp $
+#  $Id: Makefile.am,v 1.25 2007/04/24 06:30:37 wessels Exp $
 #
 
 DIST_SUBDIRS = libTrie
@@ -80,6 +80,7 @@ libmiscutil_a_SOURCES = \
 	util.c \
 	uudecode.c \
 	assert.c \
+	xusleep.c \
 	$(XPROF_STATS_SOURCE) \
 	$(WIN32SRC)
 libmiscutil_a_LIBADD = \
