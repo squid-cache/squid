@@ -1,6 +1,6 @@
 
 /*
- * $Id: unlinkd.cc,v 1.59 2007/04/12 23:51:56 wessels Exp $
+ * $Id: unlinkd.cc,v 1.60 2007/04/24 06:30:37 wessels Exp $
  *
  * DEBUG: section 2     Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -69,6 +69,7 @@ main(int argc, char *argv[])
 
 #include "SquidTime.h"
 #include "fde.h"
+#include "xusleep.h"
 
 /* This code gets linked to Squid */
 
@@ -95,13 +96,24 @@ unlinkdUnlink(const char *path)
     }
 
     /*
-    * If the queue length is greater than our limit, then
-    * we pause for up to 100ms, hoping that unlinkd
-    * has some feedback for us.  Maybe it just needs a slice
-    * of the CPU's time.
-    */
+     * If the queue length is greater than our limit, then we pause
+     * for a small amount of time, hoping that unlinkd has some
+     * feedback for us.  Maybe it just needs a slice of the CPU's
+     * time.
+     */
     if (queuelen >= UNLINKD_QUEUE_LIMIT) {
-
+#if defined(USE_EPOLL) || defined(USE_KQUEUE)
+	/*
+	 * DPW 2007-04-23
+	 * We can't use fd_set when using epoll() or kqueue().  In
+	 * these cases we block for 10 ms.
+	 */
+	xusleep(10000);
+#else
+	/*
+	 * DPW 2007-04-23
+	 * When we can use select, block for up to 100 ms.
+	 */
         struct timeval to;
         fd_set R;
         FD_ZERO(&R);
@@ -109,6 +121,7 @@ unlinkdUnlink(const char *path)
         to.tv_sec = 0;
         to.tv_usec = 100000;
         select(unlinkd_rfd + 1, &R, NULL, NULL, &to);
+#endif
     }
 
     /*
@@ -217,7 +230,6 @@ unlinkdInit(void)
 {
     const char *args[2];
 
-    struct timeval slp;
     args[0] = "(unlinkd)";
     args[1] = NULL;
     pid = ipcCreate(
@@ -241,11 +253,7 @@ IPC_FIFO,
     if (pid < 0)
         fatal("Failed to create unlinkd subprocess");
 
-    slp.tv_sec = 0;
-
-    slp.tv_usec = 250000;
-
-    select(0, NULL, NULL, NULL, &slp);
+    xusleep(250000);
 
     fd_note(unlinkd_wfd, "squid -> unlinkd");
 
