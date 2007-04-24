@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.56 2006/09/02 14:46:31 serassio Exp $
+ * $Id: pinger.cc,v 1.57 2007/04/24 15:04:22 hno Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -32,6 +32,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+
+#define SQUID_HELPER 1
 
 #include "squid.h"
 #include "SquidTime.h"
@@ -69,8 +71,7 @@ static int socket_to_squid = 1;
 static int socket_to_squid = -1;
 #define socket_from_squid socket_to_squid
 
-#else /* _SQUID_CYGWIN_ */
-
+#else /* _SQUID_CYGWIN_ */ 
 #include <netinet/in_systm.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
