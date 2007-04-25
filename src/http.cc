@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.515 2007/04/21 07:14:14 wessels Exp $
+ * $Id: http.cc,v 1.516 2007/04/24 23:13:25 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -545,10 +545,24 @@ HttpStateData::cacheableReply()
     case HTTP_INVALID_HEADER:	/* Squid header parsing error */
 
     case HTTP_HEADER_TOO_LARGE:
+
+    case HTTP_PAYMENT_REQUIRED:
+    case HTTP_NOT_ACCEPTABLE:
+    case HTTP_REQUEST_TIMEOUT:
+    case HTTP_CONFLICT:
+    case HTTP_LENGTH_REQUIRED:
+    case HTTP_PRECONDITION_FAILED:
+    case HTTP_REQUEST_ENTITY_TOO_LARGE:
+    case HTTP_UNSUPPORTED_MEDIA_TYPE:
+    case HTTP_UNPROCESSABLE_ENTITY:
+    case HTTP_LOCKED:
+    case HTTP_FAILED_DEPENDENCY:
+    case HTTP_INSUFFICIENT_STORAGE:
+
         return 0;
 
     default:			/* Unknown status code */
-        debug (11,0)("HttpStateData::cacheableReply: unknown http status code in reply\n");
+        debugs (11, 0, HERE << "HttpStateData::cacheableReply: unexpected http status code " << getReply()->sline.status);
 
         return 0;
 
