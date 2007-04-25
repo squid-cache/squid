@@ -1,8 +1,8 @@
 
 /*
- * $Id: RefCount.h,v 1.10 2007/04/06 04:40:58 rousskov Exp $
+ * $Id: RefCount.h,v 1.11 2007/04/25 11:30:15 adrian Exp $
  *
- * DEBUG: section xx    Refcount allocator
+ * DEBUG: none          Refcount allocator
  * AUTHOR:  Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

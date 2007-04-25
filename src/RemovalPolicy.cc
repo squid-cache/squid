@@ -1,8 +1,8 @@
 
 /*
- * $Id: RemovalPolicy.cc,v 1.1 2006/08/21 00:50:41 robertc Exp $
+ * $Id: RemovalPolicy.cc,v 1.2 2007/04/25 11:30:18 adrian Exp $
  *
- * DEBUG: section ?     Common Removal policy
+ * DEBUG: none          Common Removal Policy
  * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

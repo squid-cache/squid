@@ -1,8 +1,8 @@
 
 /*
- * $Id: comm_kqueue.cc,v 1.13 2006/11/22 06:08:32 adrian Exp $
+ * $Id: comm_kqueue.cc,v 1.14 2007/04/25 11:30:18 adrian Exp $
  *
- * DEBUG: section 5    Socket functions
+ * DEBUG: section 5     Socket Functions
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------

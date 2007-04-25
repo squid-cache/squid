@@ -1,5 +1,5 @@
 /*
- * DEBUG: section 93  ICAP (RFC 3507) Client
+ * DEBUG: section 93    ICAP (RFC 3507) Client
  */
 
 #include "squid.h"

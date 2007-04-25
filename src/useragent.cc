@@ -1,8 +1,8 @@
 
 /*
- * $Id: useragent.cc,v 1.29 2006/05/09 15:47:45 wessels Exp $
+ * $Id: useragent.cc,v 1.30 2007/04/25 11:30:18 adrian Exp $
  *
- * DEBUG: section 40    User-Agent logging
+ * DEBUG: section 40    User-Agent Logging
  * AUTHOR: Joe Ramey <ramey@csc.ti.com>
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

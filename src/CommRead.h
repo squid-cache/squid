@@ -1,8 +1,8 @@
 
 /*
- * $Id: CommRead.h,v 1.7 2006/08/07 02:28:22 robertc Exp $
+ * $Id: CommRead.h,v 1.8 2007/04/25 11:30:18 adrian Exp $
  *
- * DEBUG: section 5    Comms
+ * DEBUG: section 5     Comms
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

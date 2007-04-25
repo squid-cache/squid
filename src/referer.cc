@@ -1,8 +1,8 @@
 
 /*
- * $Id: referer.cc,v 1.7 2003/02/21 22:50:10 robertc Exp $
+ * $Id: referer.cc,v 1.8 2007/04/25 11:30:18 adrian Exp $
  *
- * DEBUG: section 40    User-Agent and Referer logging
+ * DEBUG: section 40    Referer Logging
  * AUTHOR: Joe Ramey <ramey@csc.ti.com> (useragent)
  *         Jens-S. Vöckler <voeckler@rvs.uni-hannover.de> (mod 4 referer)
  *

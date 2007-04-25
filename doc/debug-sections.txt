@@ -1,13 +1,27 @@
+
+ * DEBUG:
+none
+none          Common Removal Policy
+none          ETag parsing support
+none          FDE
+none          Generate squid.conf.default and cf_parser.h
+none          Linked list functions (deprecated)
+none          LRU Removal Policy
+none          Memory Allocation
+none          Refcount allocator
 section 0     Announcement Server
-section 0     CGI Cache Manager
 section 0     Client Database
 section 0     Debug Routines
 section 0     DNS Resolver
-section 0     WWW Client
+section 0     Hash Tables
+section 0     UFS Store Dump
+section --    External DISKD process implementation.
+section 1     Main Loop
 section 1     Startup and Main Loop
 section 2     Unlink Daemon
 section 3     Configuration File Parsing
 section 4     Error Generation
+section 5     Comms
 section 5     Socket Functions
 section 6     Disk I/O Routines
 section 7     Multicast
@@ -24,40 +38,58 @@ section 17    Request Forwarding
 section 18    Cache Manager Statistics
 section 19    Store Memory Primitives
 section 20    Storage Manager
+section 20    Storage Manager Heap-based replacement
+section 20    Storage Manager Logging Functions
+section 20    Storage Manager MD5 Cache Keys
+section 20    Storage Manager Swapfile Metadata
+section 20    Storage Manager Swapfile Unpacker
+section 20    Storage Manager Swapin Functions
+section 20    Storage Manager Swapout Functions
+section 20    Store Rebuild Routines
+section 20    Swap Dir base object
+section 21    Integer functions
 section 21    Misc Functions
+section 21    Time Functions
 section 22    Refresh Calculation
 section 23    URL Parsing
-section 24    WAIS Relay
+section 23    URL Scheme parsing
 section 25    MIME Parsing
 section 26    Secure Sockets Layer Proxy
 section 27    Cache Announcer
 section 28    Access Control
 section 29    Authenticator
+section 29    Negotiate Authenticator
+section 29    NTLM Authenticator
 section 30    Ident (RFC 931)
 section 31    Hypertext Caching Protocol
 section 32    Asynchronous Disk I/O
 section 33    Client-side Routines
 section 34    Dnsserver interface
 section 35    FQDN Cache
-section 36    Cache Directory Cleanup
 section 37    ICMP Routines
 section 38    Network Measurement Database
 section 39    Cache Array Routing Protocol
-section 40    User-Agent and Referer logging
+section 40    Referer Logging
+section 40    User-Agent Logging
 section 41    Event Processing
 section 42    ICMP Pinger program
 section 43    AIOPS
+section 43    Windows AIOPS
 section 44    Peer Selection Algorithm
 section 45    Callback Data Registry
 section 46    Access Log
+section 47    Store COSS Directory Routines
 section 47    Store Directory Routines
 section 48    Persistent Connections
-section 49    SNMP
+section 49    SNMP Interface
+section 49    SNMP support
 section 50    Log file handling
 section 51    Filedescriptor Functions
 section 52    URN Parsing
 section 53    AS Number handling
+section 53    Radix Tree data structure implementation
 section 54    Interprocess Communication
+section 54    Windows Interprocess Communication
 section 55    HTTP Header
 section 56    HTTP Message Body
 section 57    HTTP Status-line
@@ -66,7 +98,7 @@ section 59    auto-growing Memory Buffer with printf
 section 60    Packer: A uniform interface to store-like modules
 section 61    Redirector
 section 62    Generic Histogram
-section 63    -
+section 63    Low Level Memory Pool Management
 section 64    HTTP Range Header
 section 65    HTTP Cache Control Header
 section 66    HTTP Header Tools
@@ -81,18 +113,25 @@ section 74    HTTP Message
 section 75    WHOIS protocol
 section 76    Internal Squid Object handling
 section 77    Delay Pools
-section 78    DNS lookups
-section 79    Lowlevel store I/O
-section 80    WCCP
-section 81    Cache Store
+section 78    DNS lookups; interacts with lib/rfc1035.c
+section 79    Disk IO Routines
+section 79    Squid-side DISKD I/O functions.
+section 79    Squid-side Disk I/O functions.
+section 79    Storage Manager COSS Interface
+section 79    Storage Manager UFS Interface
+section 80    WCCP Support
+section 81    aio_xxx() POSIX emulation on Windows
+section 81    CPU Profiling Routines
+section 81    Store HEAP Removal Policies
 section 82    External ACL
 section 83    SSL accelerator support
 section 84    Helper process maintenance
-section 85    Client side request management - after parsing, before caching
+section 85    Client-side Request Routines
 section 86    ESI processing
-section 87    client side stream management
-section 88    Client side reply management - from store to stream
-section 89    NAT / IP Interception
-section 90    Store Client
-section 91    Http Surrogate-Control Header
-section 92    Store File System
+section 87    Client-side Stream routines.
+section 88    Client-side Reply Routines
+section 89    NAT / IP Interception 
+section 90    HTTP Cache Control Header
+section 90    Storage Manager Client-Side Interface
+section 92    Storage File System
+section 93    ICAP (RFC 3507) Client

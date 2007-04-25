@@ -1,8 +1,8 @@
 
 /*
- * $Id: comm_epoll.cc,v 1.13 2006/09/03 04:09:36 hno Exp $
+ * $Id: comm_epoll.cc,v 1.14 2007/04/25 11:30:18 adrian Exp $
  *
- * DEBUG: section 5    Socket functions
+ * DEBUG: section 5     Socket Functions
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------

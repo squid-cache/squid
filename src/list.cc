@@ -1,8 +1,8 @@
 
 /*
- * $Id: list.cc,v 1.1 2005/01/03 16:08:26 robertc Exp $
+ * $Id: list.cc,v 1.2 2007/04/25 11:30:18 adrian Exp $
  *
- * DEBUG: section ??    Linked list functions 
+ * DEBUG: none          Linked list functions (deprecated)
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

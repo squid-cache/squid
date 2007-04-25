@@ -1,6 +1,6 @@
 
 /*
- * DEBUG: 
+ * DEBUG: none
  * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

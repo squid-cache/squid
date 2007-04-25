@@ -1,8 +1,8 @@
 
 /*
- * $Id: store_repl_lru.cc,v 1.21 2007/04/21 07:14:19 wessels Exp $
+ * $Id: store_repl_lru.cc,v 1.22 2007/04/25 11:30:19 adrian Exp $
  *
- * DEBUG: section ?     LRU Removal policy
+ * DEBUG: none          LRU Removal Policy
  * AUTHOR: Henrik Nordstrom
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

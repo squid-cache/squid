@@ -1,8 +1,8 @@
 
 /*
- * $Id: StoreIOState.cc,v 1.5 2006/05/22 19:58:51 wessels Exp $
+ * $Id: StoreIOState.cc,v 1.6 2007/04/25 11:30:18 adrian Exp $
  *
- * DEBUG: section ??    Swap Dir base object
+ * DEBUG: section 20    Swap Dir base object
  * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
