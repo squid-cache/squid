@@ -1,8 +1,8 @@
 
 /*
- * $Id: SquidNew.cc,v 1.1 2003/07/07 22:44:28 robertc Exp $
+ * $Id: SquidNew.cc,v 1.2 2007/04/25 11:30:18 adrian Exp $
  *
- * DEBUG: section ??? 		Memory Allocation
+ * DEBUG: none          Memory Allocation
  * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

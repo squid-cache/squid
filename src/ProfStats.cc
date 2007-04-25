@@ -1,8 +1,8 @@
 
 /*
- * $Id: ProfStats.cc,v 1.9 2006/11/22 08:07:10 adrian Exp $
+ * $Id: ProfStats.cc,v 1.10 2007/04/25 11:30:18 adrian Exp $
  *
- * DEBUG: section 81     CPU Profiling Routines
+ * DEBUG: section 81    CPU Profiling Routines
  * AUTHOR: Andres Kroonmaa
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/

@@ -1,8 +1,8 @@
 
 /*
- * $Id: SwapDir.cc,v 1.8 2007/04/16 22:10:49 hno Exp $
+ * $Id: SwapDir.cc,v 1.9 2007/04/25 11:30:18 adrian Exp $
  *
- * DEBUG: section ??    Swap Dir base object
+ * DEBUG: section 20    Swap Dir base object
  * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

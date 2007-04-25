@@ -1,8 +1,8 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.94 2006/11/09 16:35:32 hno Exp $
+ * $Id: snmp_agent.cc,v 1.95 2007/04/25 11:30:18 adrian Exp $
  *
- * DEBUG: section 49     SNMP Interface
+ * DEBUG: section 49    SNMP Interface
  * AUTHOR: Kostas Anagnostakis
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

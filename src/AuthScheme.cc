@@ -1,8 +1,8 @@
 
 /*
- * $Id: AuthScheme.cc,v 1.1 2004/08/30 03:28:56 robertc Exp $
+ * $Id: AuthScheme.cc,v 1.2 2007/04/25 11:30:18 adrian Exp $
  *
- * DEBUG: section 29	Authenticator
+ * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

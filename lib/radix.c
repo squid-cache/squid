@@ -1,7 +1,7 @@
 /*
- * $Id: radix.c,v 1.22 2004/12/21 17:28:28 robertc Exp $
+ * $Id: radix.c,v 1.23 2007/04/25 11:30:16 adrian Exp $
  *
- * DEBUG: section 53     Radix tree data structure implementation
+ * DEBUG: section 53    Radix Tree data structure implementation
  * AUTHOR: NetBSD Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

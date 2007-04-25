@@ -1,8 +1,8 @@
 
 /*
- * $Id: Profiler.c,v 1.6 2006/11/22 06:07:16 adrian Exp $
+ * $Id: Profiler.c,v 1.7 2007/04/25 11:30:16 adrian Exp $
  *
- * DEBUG: section 81     CPU Profiling Routines
+ * DEBUG: section 81    CPU Profiling Routines
  * AUTHOR: Andres Kroonmaa, Sep.2000
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/

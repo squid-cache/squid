@@ -1,8 +1,8 @@
 
 /*
- * $Id: ConfigOption.cc,v 1.1 2004/12/20 16:30:32 robertc Exp $
+ * $Id: ConfigOption.cc,v 1.2 2007/04/25 11:30:18 adrian Exp $
  *
- * DEBUG: section ??    Swap Dir base object
+ * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

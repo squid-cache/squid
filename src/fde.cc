@@ -1,8 +1,8 @@
 
 /*
- * $Id: fde.cc,v 1.5 2006/09/02 13:41:32 serassio Exp $
+ * $Id: fde.cc,v 1.6 2007/04/25 11:30:18 adrian Exp $
  *
- * DEBUG: section ??	FDE
+ * DEBUG: none          FDE
  * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
