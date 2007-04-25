@@ -1,5 +1,5 @@
 /*
- * $Id: diskd.cc,v 1.6 2007/04/12 23:51:57 wessels Exp $
+ * $Id: diskd.cc,v 1.7 2007/04/25 16:41:56 wessels Exp $
  *
  * DEBUG: section --    External DISKD process implementation.
  * AUTHOR: Harvest Derived
@@ -66,7 +66,7 @@ struct _file_state
 static hash_table *hash = NULL;
 static pid_t mypid;
 static char *shmbuf;
-static int DebugLevel = 1;
+static int DebugLevel = 0;
 
 static int
 do_open(diomsg * r, int len, const char *buf)
