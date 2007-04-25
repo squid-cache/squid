@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.416 2007/04/23 17:50:49 wessels Exp $
+ * $Id: ftp.cc,v 1.417 2007/04/25 14:37:55 rousskov Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1366,10 +1366,11 @@ FtpStateData::processReplyBody()
 
     if (flags.isdir) {
         parseListing();
-    } else {
-        writeReplyBody(data.readBuf->content(), data.readBuf->contentSize());
-        debugs(9,5,HERE << "consuming " << data.readBuf->contentSize() << " bytes of readBuf");
-        data.readBuf->consume(data.readBuf->contentSize());
+    } else 
+    if (const int csize = data.readBuf->contentSize()) {
+        writeReplyBody(data.readBuf->content(), csize);
+        debugs(9,5,HERE << "consuming " << csize << " bytes of readBuf");
+        data.readBuf->consume(csize);
     }
 
     entry->flush();
