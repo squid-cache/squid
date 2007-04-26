@@ -17,7 +17,7 @@
 CPPUNIT_TEST_SUITE_REGISTRATION( testUfs );
 
 typedef RefCount<UFSSwapDir> SwapDirPointer;
-extern REMOVALPOLICYCREATE createRemovalPolicy_lru;
+extern REMOVALPOLICYCREATE createRemovalPolicy_lru;	/* XXX fails with --enable-removal-policies=heap */
 
 static void
 addSwapDir(SwapDirPointer aStore)
