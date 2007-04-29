@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.57 2007/04/20 07:29:47 wessels Exp $
+ * $Id: HttpHeaderTools.cc,v 1.58 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -325,7 +325,7 @@ httpHeaderParseInt(const char *start, int *value)
     *value = atoi(start);
 
     if (!*value && !xisdigit(*start)) {
-        debug(66, 2) ("failed to parse an int header field near '%s'\n", start);
+        debugs(66, 2, "failed to parse an int header field near '" << start << "'");
         return 0;
     }
 
@@ -358,7 +358,7 @@ httpHeaderParseQuotedString (const char *start, String *val)
 
     while (1) {
         if (!(end = index (pos,'"'))) {
-            debug (66, 2) ("failed to parse a quoted-string header field near '%s'\n", start);
+            debugs(66, 2, "failed to parse a quoted-string header field near '" << start << "'");
             return 0;
         }
 

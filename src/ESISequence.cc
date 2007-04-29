@@ -1,5 +1,5 @@
 /*
- * $Id: ESISequence.cc,v 1.5 2005/07/03 15:25:08 serassio Exp $
+ * $Id: ESISequence.cc,v 1.6 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -43,7 +43,7 @@ class esiExcept;
 
 esiSequence::~esiSequence ()
 {
-    debug (86,5)("esiSequence::~esiSequence %p\n", this);
+    debugs(86, 5, "esiSequence::~esiSequence " << this);
 }
 
 esiSequence::esiSequence(esiTreeParentPtr aParent, bool incrementalFlag) : elements(), parent (aParent), mayFail_(true), failed (false), provideIncrementalData (incrementalFlag), processing (false), processingResult (ESI_PROCESS_COMPLETE), nextElementToProcess_ (0)
@@ -107,7 +107,7 @@ esiSequence::render(ESISegment::Pointer output)
 void
 esiSequence::finish()
 {
-    debug (86,5) ("esiSequence::finish: %p is finished\n", this);
+    debugs(86, 5, "esiSequence::finish: " << this << " is finished");
     elements.setNULL(0, elements.size());
     parent = NULL;
 }
@@ -119,9 +119,9 @@ esiSequence::provideData (ESISegment::Pointer data, ESIElement *source)
     ESIElement::Pointer lockthis = this;
 
     if (processing)
-        debug (86,5) ("esiSequence::provideData: %p data provided during processing\n", this);
+        debugs(86, 5, "esiSequence::provideData: " << this << " data provided during processing");
+        debugs(86, 5, "esiSequence::provideData " << this << " " << data.getRaw() << " " << source);
 
-    debug (86,5) ("esiSequence::provideData %p %p %p\n", this, data.getRaw(), source);
 
     /* when data is provided, the element *must* be completed */
     /* XXX: when the callback model is complete,
@@ -158,15 +158,17 @@ esiSequence::addElement (ESIElement::Pointer element)
 
     if (dynamic_cast<esiAttempt*>(element.getRaw()) ||
             dynamic_cast<esiExcept*>(element.getRaw())) {
-        debug (86,0)("esiSequenceAdd: misparented Attempt or Except element (section 3.4)\n");
+        debugs(86, 0, "esiSequenceAdd: misparented Attempt or Except element (section 3.4)");
         return false;
     }
 
     /* Tie literals together for efficiency */
     if (elements.size() && dynamic_cast<esiLiteral*>(element.getRaw()) &&
             dynamic_cast<esiLiteral*>(elements[elements.size() - 1].getRaw())) {
-        debug (86,5)("esiSequenceAdd: tying Literals %p and %p together\n", elements[elements.size() - 1].getRaw(),
-                     element.getRaw());
+        debugs(86, 5, "esiSequenceAdd: tying Literals " <<
+               elements[elements.size() - 1].getRaw() << " and " <<
+               element.getRaw() << " together");
+
         ESISegment::ListTransfer (((esiLiteral *)element.getRaw())->buffer,
                                   ((esiLiteral *)elements[elements.size() - 1].getRaw())->buffer);
         return true;
@@ -195,7 +197,7 @@ esiSequence::processStep(int dovars)
     esiProcessResult_t tempResult = processOne(dovars, elementToProcess);
 
     if (processingResult < tempResult) {
-        debug (86,5)("esiSequence::process: processingResult was %d, increasing to %d\n", processingResult, tempResult);
+        debugs(86, 5, "esiSequence::process: processingResult was " << processingResult << ", increasing to " << tempResult);
         processingResult = tempResult;
     }
 }
@@ -208,8 +210,7 @@ esiSequence::processOne(int dovars, size_t index)
     switch (elements[index]->process(dovars)) {
 
     case ESI_PROCESS_COMPLETE:
-        debug (86,5)("esiSequenceProcess: %p element %p Processed OK\n",
-                     this, elements[index].getRaw());
+        debugs(86, 5, "esiSequenceProcess: " << this << " element " << elements[index].getRaw() << " Processed OK");
 
         if (index == processedcount)
             /* another completely ready */
@@ -218,17 +219,17 @@ esiSequence::processOne(int dovars, size_t index)
         return ESI_PROCESS_COMPLETE;
 
     case ESI_PROCESS_PENDING_WONTFAIL:
-        debug (86,5)("esiSequenceProcess: element Processed PENDING OK\n");
+        debugs(86, 5, "esiSequenceProcess: element Processed PENDING OK");
 
         return ESI_PROCESS_PENDING_WONTFAIL;
 
     case ESI_PROCESS_PENDING_MAYFAIL:
-        debug (86,5)("eseSequenceProcess: element Processed PENDING UNKNOWN\n");
+        debugs(86, 5, "eseSequenceProcess: element Processed PENDING UNKNOWN");
 
         return ESI_PROCESS_PENDING_MAYFAIL;
 
     case ESI_PROCESS_FAILED:
-        debug (86,5)("esiSequenceProcess: element Processed FAILED\n");
+        debugs(86, 5, "esiSequenceProcess: element Processed FAILED");
 
         return ESI_PROCESS_FAILED;
 
@@ -242,10 +243,11 @@ esiSequence::processOne(int dovars, size_t index)
 esiProcessResult_t
 esiSequence::process (int inheritedVarsFlag)
 {
-    debug (86,5) ("esiSequence::process: %p processing\n", this);
+    debugs(86, 5, "esiSequence::process: " << this << " processing");
 
     if (processing) {
-        debug (86,5)("esiSequence::process: %p reentry attempt during processing\n", this);
+        debugs(86, 5, "esiSequence::process: " << this <<
+               " reentry attempt during processing");
     }
 
     /* process as much of the list as we can, stopping only on
@@ -259,7 +261,8 @@ esiSequence::process (int inheritedVarsFlag)
     if (flags.dovars)
         dovars = 1;
 
-    debug (86,5)("esiSequence::process: Processing %p with%s variable processing\n", this, dovars ? "" : "out");
+    debugs(86, 5, "esiSequence::process: Processing " << this << " with" <<
+           (dovars ? "" : "out") << " variable processing");
 
     processing = true;
 
@@ -299,7 +302,7 @@ esiSequence::process (int inheritedVarsFlag)
     if (processedcount == elements.size())
         parent = NULL;
 
-    debug (86,5)("esiSequence::process: %p completed\n", this);
+    debugs(86, 5, "esiSequence::process: " << this << " completed");
 
     processing = false;
 
@@ -312,11 +315,11 @@ esiSequence::fail (ESIElement *source, char const *anError)
     failed = true;
 
     if (processing) {
-        debug (86,5) ("esiSequence::fail: %p failure callback during processing\n", this);
+        debugs(86, 5, "esiSequence::fail: " << this << " failure callback during processing");
         return;
     }
 
-    debug (86,5)("esiSequence::fail: %p has failed.\n", this);
+    debugs(86, 5, "esiSequence::fail: " << this << " has failed.");
     parent->fail (this, anError);
     elements.setNULL(0, elements.size());
     parent = NULL;
@@ -354,31 +357,31 @@ esiSequence::makeUsableElements(esiSequence const &old, ESIVarState &newVarState
 ESIElement::Pointer
 esiSequence::makeCacheable() const
 {
-    debug (86,5)("esiSequence::makeCacheable: Making cachable sequence from %p\n", this);
+    debugs(86, 5, "esiSequence::makeCacheable: Making cachable sequence from " << this);
     assert (processedcount == 0);
     assert (!failed);
 
     if (elements.size() == 0) {
-        debug (86,5)("esiSequence::makeCacheable: No elements in sequence %p, returning NULL\n", this);
+        debugs(86, 5, "esiSequence::makeCacheable: No elements in sequence " << this << ", returning NULL");
         return NULL;
     }
 
     esiSequence * resultS = new esiSequence (*this);
     ESIElement::Pointer result = resultS;
     resultS->makeCachableElements(*this);
-    debug (86,5)("esiSequence::makeCacheable: %p created %p\n", this, result.getRaw());
+    debugs(86, 5, "esiSequence::makeCacheable: " << this << " created " << result.getRaw());
     return result;
 }
 
 ESIElement::Pointer
 esiSequence::makeUsable(esiTreeParentPtr newParent, ESIVarState &newVarState) const
 {
-    debug (86,5)("esiSequence::makeUsable: Creating usable Sequence\n");
+    debugs(86, 5, "esiSequence::makeUsable: Creating usable Sequence");
     assert (processedcount == 0);
     assert (!failed);
 
     if (elements.size() == 0) {
-        debug (86,5)("esiSequence::makeUsable: No elements in sequence %p, returning NULL\n", this);
+        debugs(86, 5, "esiSequence::makeUsable: No elements in sequence " << this << ", returning NULL");
         return NULL;
     }
 

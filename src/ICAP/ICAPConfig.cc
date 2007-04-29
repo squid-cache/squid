@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.cc,v 1.13 2007/04/06 04:50:07 rousskov Exp $
+ * $Id: ICAPConfig.cc,v 1.14 2007/04/28 22:26:48 hno Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -129,9 +129,7 @@ ICAPAccessCheck::ICAPAccessCheck(ICAP::Method aMethod,
 
     acl_checklist = NULL;
 
-    debug(93,5)("ICAPAccessCheck constructed for %s %s\n",
-                ICAP::methodStr(method),
-                ICAP::vectPointStr(point));
+    debugs(93, 5, "ICAPAccessCheck constructed for " << ICAP::methodStr(method) << " " << ICAP::vectPointStr(point));
 }
 
 ICAPAccessCheck::~ICAPAccessCheck()
@@ -147,7 +145,7 @@ ICAPAccessCheck::~ICAPAccessCheck()
 void
 ICAPAccessCheck::check()
 {
-    debug(93,3)("ICAPAccessCheck::check\n");
+    debugs(93, 3, "ICAPAccessCheck::check");
     Vector<ICAPClass*>::iterator ci;
 
     for (ci = TheICAPConfig.classes.begin(); ci != TheICAPConfig.classes.end(); ++ci) {
@@ -161,7 +159,7 @@ ICAPAccessCheck::check()
         ICAPClass *c = *ci;
         ICAPServiceRep::Pointer service = findBestService(c, false);
         if (service != NULL) {
-            debug(93,3)("ICAPAccessCheck::check: class '%s' has candidate service '%s'\n", c->key.buf(), service->key.buf());
+            debugs(93, 3, "ICAPAccessCheck::check: class '" << c->key.buf() << "' has candidate service '" << service->key.buf() << "'");
             candidateClasses += c->key;
         }
     }
@@ -193,7 +191,7 @@ ICAPAccessCheck::checkCandidates()
      * when there are no canidates, set matchedClass to NULL string
      * and call the wrapper with answer = 1
      */
-    debug(93,3)("ICAPAccessCheck::check: NO candidates or matches found\n");
+    debugs(93, 3, "ICAPAccessCheck::check: NO candidates or matches found");
 
     matchedClass.clean();
 
@@ -205,12 +203,11 @@ ICAPAccessCheck::checkCandidates()
 void
 ICAPAccessCheck::ICAPAccessCheckCallbackWrapper(int answer, void *data)
 {
-    debug(93,5)("ICAPAccessCheckCallbackWrapper: answer=%d\n", answer);
+    debugs(93, 5, "ICAPAccessCheckCallbackWrapper: answer=" << answer);
     ICAPAccessCheck *ac = (ICAPAccessCheck*)data;
 
     if (ac->matchedClass.size()) {
-        debug(93,5)("ICAPAccessCheckCallbackWrapper matchedClass = %s\n",
-                    ac->matchedClass.buf());
+        debugs(93, 5, "ICAPAccessCheckCallbackWrapper matchedClass = " << ac->matchedClass.buf());
     }
 
     if (!answer) {
@@ -232,7 +229,7 @@ ICAPAccessCheck::ICAPAccessCheckCallbackWrapper(int answer, void *data)
 void
 ICAPAccessCheck::ICAPAccessCheckCallbackEvent(void *data)
 {
-    debug(93,5)("ICAPAccessCheckCallbackEvent\n");
+    debugs(93, 5, "ICAPAccessCheckCallbackEvent");
     ICAPAccessCheck *ac = (ICAPAccessCheck*)data;
     ac->do_callback();
     delete ac;
@@ -241,10 +238,10 @@ ICAPAccessCheck::ICAPAccessCheckCallbackEvent(void *data)
 void
 ICAPAccessCheck::do_callback()
 {
-    debug(93,3)("ICAPAccessCheck::do_callback\n");
+    debugs(93, 3, "ICAPAccessCheck::do_callback");
 
     if (matchedClass.size()) {
-        debug(93,3)("ICAPAccessCheck::do_callback matchedClass = %s\n", matchedClass.buf());
+        debugs(93, 3, "ICAPAccessCheck::do_callback matchedClass = " << matchedClass.buf());
     }
 
     void *validated_cbdata;

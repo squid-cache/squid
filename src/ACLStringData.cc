@@ -1,5 +1,5 @@
 /*
- * $Id: ACLStringData.cc,v 1.8 2006/04/23 11:10:31 robertc Exp $
+ * $Id: ACLStringData.cc,v 1.9 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -73,12 +73,11 @@ ACLStringData::match(char const *toFind)
     if (!values || !toFind)
         return 0;
 
-    debug(28, 3) ("aclMatchStringList: checking '%s'\n", toFind);
+    debugs(28, 3, "aclMatchStringList: checking '" << toFind << "'");
 
     values = values->splay((char *)toFind, splaystrcmp);
 
-    debug(28, 3) ("aclMatchStringList: '%s' %s\n",
-                  toFind, splayLastResult ? "NOT found" : "found");
+    debugs(28, 3, "aclMatchStringList: '" << toFind << "' " << (splayLastResult ? "NOT found" : "found"));
 
     return !splayLastResult;
 }

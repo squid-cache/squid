@@ -165,12 +165,12 @@ acl_ip_data::NetworkCompare(acl_ip_data * const & a, acl_ip_data * const &b)
         a->toStr(buf_n2, 60);
         a->toStr(buf_a, 60);
         /* TODO: this warning may display the wrong way around */
-        debug(28, 0) ("WARNING: '%s' is a subnetwork of "
-                      "'%s'\n", buf_n1, buf_n2);
-        debug(28, 0) ("WARNING: because of this '%s' is ignored "
-                      "to keep splay tree searching predictable\n", buf_a);
-        debug(28, 0) ("WARNING: You should probably remove '%s' "
-                      "from the ACL named '%s'\n", buf_n1, AclMatchedName);
+        debugs(28, 0, "WARNING: '" << buf_n1 <<
+               "' is a subnetwork of '" << buf_n2 << "'");
+        debugs(28, 0, "WARNING: because of this '" << buf_a <<
+               "' is ignored to keep splay tree searching predictable");
+        debugs(28, 0, "WARNING: You should probably remove '" << buf_n1 <<
+               "' from the ACL named '" << AclMatchedName << "'");
     }
 
     return ret;
@@ -220,7 +220,7 @@ acl_ip_data::FactoryParse(const char *t)
     acl_ip_data **Q;
     char **x;
     char c;
-    debug(28, 5) ("aclParseIpData: %s\n", t);
+    debugs(28, 5, "aclParseIpData: " << t);
     acl_ip_data *q = new acl_ip_data;
 
     if (!strcasecmp(t, "all")) {
@@ -254,7 +254,7 @@ acl_ip_data::FactoryParse(const char *t)
         struct hostent *hp;
 
         if ((hp = gethostbyname(addr1)) == NULL) {
-            debug(28, 0) ("aclParseIpData: Bad host/IP: '%s'\n", t);
+            debugs(28, 0, "aclParseIpData: Bad host/IP: '" << t << "'");
             self_destruct();
         }
 
@@ -269,7 +269,7 @@ acl_ip_data::FactoryParse(const char *t)
             r->addr2.s_addr = 0;
 
             if (!DecodeMask(mask, &r->mask)) {
-                debug(28, 0) ("aclParseIpData: unknown netmask '%s' in '%s'\n", mask, t);
+                debugs(28, 0, "aclParseIpData: unknown netmask '" << mask << "' in '" << t << "'");
                 delete r;
                 *Q = NULL;
                 self_destruct();
@@ -279,11 +279,11 @@ acl_ip_data::FactoryParse(const char *t)
 
             Q = &r->next;
 
-            debug(28, 3) ("%s --> %s\n", addr1, inet_ntoa(r->addr1));
+            debugs(28, 3, "" << addr1 << " --> " << inet_ntoa(r->addr1));
         }
 
         if (*Q != NULL) {
-            debug(28, 0) ("aclParseIpData: Bad host/IP: '%s'\n", t);
+            debugs(28, 0, "aclParseIpData: Bad host/IP: '" << t << "'");
             self_destruct();
         }
 
@@ -292,7 +292,7 @@ acl_ip_data::FactoryParse(const char *t)
 
     /* Decode addr1 */
     if (!safe_inet_addr(addr1, &q->addr1)) {
-        debug(28, 0) ("aclParseIpData: unknown first address in '%s'\n", t);
+        debugs(28, 0, "aclParseIpData: unknown first address in '" << t << "'");
         delete q;
         self_destruct();
         return NULL;
@@ -300,7 +300,7 @@ acl_ip_data::FactoryParse(const char *t)
 
     /* Decode addr2 */
     if (!safe_inet_addr(addr2, &q->addr2)) {
-        debug(28, 0) ("aclParseIpData: unknown second address in '%s'\n", t);
+        debugs(28, 0, "aclParseIpData: unknown second address in '" << t << "'");
         delete q;
         self_destruct();
         return NULL;
@@ -308,7 +308,7 @@ acl_ip_data::FactoryParse(const char *t)
 
     /* Decode mask */
     if (!DecodeMask(mask, &q->mask)) {
-        debug(28, 0) ("aclParseIpData: unknown netmask '%s' in '%s'\n", mask, t);
+        debugs(28, 0, "aclParseIpData: unknown netmask '" << mask << "' in '" << t << "'");
         delete q;
         self_destruct();
         return NULL;
@@ -316,7 +316,7 @@ acl_ip_data::FactoryParse(const char *t)
 
     if ((q->addr1.s_addr & q->mask.s_addr) != q->addr1.s_addr ||
             (q->addr2.s_addr & q->mask.s_addr) != q->addr2.s_addr)
-        debug(28, 0) ("aclParseIpData: WARNING: Netmask masks away part of the specified IP in '%s'\n", t);
+        debugs(28, 0, "aclParseIpData: WARNING: Netmask masks away part of the specified IP in '" << t << "'");
 
     q->addr1.s_addr &= q->mask.s_addr;
 
@@ -376,8 +376,7 @@ ACLIP::match(struct IN_ADDR &clientip)
     ClientAddress.addr1 = clientip;
     acl_ip_data *ClientAddressPointer = &ClientAddress;
     data = data->splay(ClientAddressPointer, aclIpAddrNetworkCompare);
-    debug(28, 3) ("aclMatchIp: '%s' %s\n",
-                  inet_ntoa(clientip), splayLastResult ? "NOT found" : "found");
+    debugs(28, 3, "aclMatchIp: '" << inet_ntoa(clientip) << "' " << (splayLastResult ? "NOT found" : "found"));
     return !splayLastResult;
 }
 

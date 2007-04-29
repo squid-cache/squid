@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.96 2007/04/13 17:04:00 wessels Exp $
+ * $Id: dns_internal.cc,v 1.97 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -191,13 +191,13 @@ idnsAddNameserver(const char *buf)
     struct IN_ADDR A;
 
     if (!safe_inet_addr(buf, &A)) {
-        debug(78, 0) ("WARNING: rejecting '%s' as a name server, because it is not a numeric IP address\n", buf);
+        debugs(78, 0, "WARNING: rejecting '" << buf << "' as a name server, because it is not a numeric IP address");
         return;
     }
 
     if (A.s_addr == 0) {
-        debug(78, 0) ("WARNING: Squid does not accept 0.0.0.0 in DNS server specifications.\n");
-        debug(78, 0) ("Will be using 127.0.0.1 instead, assuming you meant that DNS is running on the same machine\n");
+        debugs(78, 0, "WARNING: Squid does not accept 0.0.0.0 in DNS server specifications.");
+        debugs(78, 0, "Will be using 127.0.0.1 instead, assuming you meant that DNS is running on the same machine");
         safe_inet_addr("127.0.0.1", &A);
     }
 
@@ -223,8 +223,7 @@ idnsAddNameserver(const char *buf)
     nameservers[nns].S.sin_family = AF_INET;
     nameservers[nns].S.sin_port = htons(NS_DEFAULTPORT);
     nameservers[nns].S.sin_addr.s_addr = A.s_addr;
-    debug(78, 3) ("idnsAddNameserver: Added nameserver #%d: %s\n",
-                  nns, inet_ntoa(nameservers[nns].S.sin_addr));
+    debugs(78, 3, "idnsAddNameserver: Added nameserver #" << nns << ": " << inet_ntoa(nameservers[nns].S.sin_addr));
     nns++;
 }
 
@@ -251,8 +250,7 @@ idnsAddPathComponent(const char *buf)
 
     assert(npc < npc_alloc);
     strcpy(searchpath[npc].domain, buf);
-    debug(78, 3) ("idnsAddPathComponent: Added domain #%d: %s\n",
-                  npc, searchpath[npc].domain);
+    debugs(78, 3, "idnsAddPathComponent: Added domain #" << npc << ": " << searchpath[npc].domain);
     npc++;
 }
 
@@ -279,7 +277,7 @@ idnsParseNameservers(void)
     wordlist *w;
 
     for (w = Config.dns_nameservers; w; w = w->next) {
-        debug(78, 1) ("Adding nameserver %s from squid.conf\n", w->key);
+        debugs(78, 1, "Adding nameserver " << w->key << " from squid.conf");
         idnsAddNameserver(w->key);
     }
 }
@@ -294,7 +292,7 @@ idnsParseResolvConf(void)
     fp = fopen(_PATH_RESCONF, "r");
 
     if (fp == NULL) {
-        debug(78, 1) ("%s: %s\n", _PATH_RESCONF, xstrerror());
+        debugs(78, 1, "" << _PATH_RESCONF << ": " << xstrerror());
         return;
     }
 
@@ -314,7 +312,7 @@ idnsParseResolvConf(void)
             if (NULL == t)
                 continue;
 
-            debug(78, 1) ("Adding nameserver %s from %s\n", t, _PATH_RESCONF);
+            debugs(78, 1, "Adding nameserver " << t << " from " << _PATH_RESCONF);
 
             idnsAddNameserver(t);
         } else if (strcasecmp(t, "search") == 0) {
@@ -324,7 +322,7 @@ idnsParseResolvConf(void)
                 if (NULL == t)
                     continue;
 
-                debug(78, 1) ("Adding domain %s from %s\n", t, _PATH_RESCONF);
+                debugs(78, 1, "Adding domain " << t << " from " << _PATH_RESCONF);
 
                 idnsAddPathComponent(t);
             }
@@ -341,7 +339,7 @@ idnsParseResolvConf(void)
                     if (ndots < 1)
                         ndots = 1;
 
-                    debug(78, 1) ("Adding ndots %d from %s\n", ndots, _PATH_RESCONF);
+                    debugs(78, 1, "Adding ndots " << ndots << " from " << _PATH_RESCONF);
                 }
             }
         }
@@ -759,7 +757,7 @@ idnsSendQuery(idns_query * q)
     int ns;
 
     if (DnsSocket < 0) {
-        debug(78, 1) ("idnsSendQuery: Can't send query, no DNS socket!\n");
+        debugs(78, 1, "idnsSendQuery: Can't send query, no DNS socket!");
         return;
     }
 
@@ -788,8 +786,7 @@ try_again:
     q->sent_t = current_time;
 
     if (x < 0) {
-        debug(50, 1) ("idnsSendQuery: FD %d: sendto: %s\n",
-                      DnsSocket, xstrerror());
+        debugs(50, 1, "idnsSendQuery: FD " << DnsSocket << ": sendto: " << xstrerror());
 
         if (q->nsends % nns != 0)
             goto try_again;
@@ -849,7 +846,7 @@ idnsQueryID(void)
         id++;
 
         if (id == first_id) {
-            debug(78, 1) ("idnsQueryID: Warning, too many pending DNS requests\n");
+            debugs(78, 1, "idnsQueryID: Warning, too many pending DNS requests");
             break;
         }
     }
@@ -899,22 +896,22 @@ idnsGrokReply(const char *buf, size_t sz)
                              &message);
 
     if (message == NULL) {
-        debug(78, 1) ("idnsGrokReply: Malformed DNS response\n");
+        debugs(78, 1, "idnsGrokReply: Malformed DNS response");
         return;
     }
 
-    debug(78, 3) ("idnsGrokReply: ID %#hx, %d answers\n", message->id, n);
+    debugs(78, 3, "idnsGrokReply: ID 0x" << std::hex << message->id << ", " << std::dec << n << "answers");
 
     q = idnsFindQuery(message->id);
 
     if (q == NULL) {
-        debug(78, 3) ("idnsGrokReply: Late response\n");
+        debugs(78, 3, "idnsGrokReply: Late response");
         rfc1035MessageDestroy(message);
         return;
     }
 
     if (rfc1035QueryCompare(&q->query, message->query) != 0) {
-        debug(78, 3) ("idnsGrokReply: Query mismatch (%s != %s)\n", q->query.name, message->query->name);
+        debugs(78, 3, "idnsGrokReply: Query mismatch (" << q->query.name << " != " << message->query->name << ")");
         rfc1035MessageDestroy(message);
         return;
     }
@@ -937,7 +934,7 @@ idnsGrokReply(const char *buf, size_t sz)
     q->error = NULL;
 
     if (n < 0) {
-        debug(78, 3) ("idnsGrokReply: error %s (%d)\n", rfc1035_error_message, rfc1035_errno);
+        debugs(78, 3, "idnsGrokReply: error " << rfc1035_error_message << " (" << rfc1035_errno << ")");
 
         q->error = rfc1035_error_message;
         q->rcode = -n;
@@ -963,8 +960,7 @@ idnsGrokReply(const char *buf, size_t sz)
             if (q->domain < npc) {
                 strcat(q->name, ".");
                 strcat(q->name, searchpath[q->domain].domain);
-                debug(78, 3) ("idnsGrokReply: searchpath used for %s\n",
-                              q->name);
+                debugs(78, 3, "idnsGrokReply: searchpath used for " << q->name);
                 q->domain++;
             } else {
                 q->attempt++;
@@ -1022,8 +1018,7 @@ idnsRead(int fd, void *data)
             if (errno != ECONNREFUSED && errno != EHOSTUNREACH)
 #endif
 
-                debug(50, 1) ("idnsRead: FD %d recvfrom: %s\n",
-                              fd, xstrerror());
+                debugs(50, 1, "idnsRead: FD " << fd << " recvfrom: " << xstrerror());
 
             break;
         }
@@ -1031,10 +1026,7 @@ idnsRead(int fd, void *data)
         fd_bytes(DnsSocket, len, FD_READ);
         assert(N);
         (*N)++;
-        debug(78, 3) ("idnsRead: FD %d: received %d bytes from %s.\n",
-                      fd,
-                      (int) len,
-                      inet_ntoa(from.sin_addr));
+        debugs(78, 3, "idnsRead: FD " << fd << ": received " << (int) len << " bytes from " << inet_ntoa(from.sin_addr) << ".");
         ns = idnsFromKnownNameserver(&from);
 
         if (ns >= 0) {
@@ -1043,8 +1035,7 @@ idnsRead(int fd, void *data)
             static time_t last_warning = 0;
 
             if (squid_curtime - last_warning > 60) {
-                debug(78, 1) ("WARNING: Reply from unknown nameserver [%s]\n",
-                              inet_ntoa(from.sin_addr));
+                debugs(78, 1, "WARNING: Reply from unknown nameserver [" << inet_ntoa(from.sin_addr) << "]");
                 last_warning = squid_curtime;
             }
 
@@ -1076,8 +1067,7 @@ idnsCheckQueue(void *unused)
         if (tvSubDsec(q->sent_t, current_time) < Config.Timeout.idns_retransmit * (1 << (q->nsends - 1) % nns))
             break;
 
-        debug(78, 3) ("idnsCheckQueue: ID %#04x timeout\n",
-                      q->id);
+        debugs(78, 3, "idnsCheckQueue: ID 0x" << std::hex << std::setfill('0') << std::setw(4) << q->id << "timeout" );
 
         p = n->prev;
 
@@ -1086,9 +1076,9 @@ idnsCheckQueue(void *unused)
         if (tvSubDsec(q->start_t, current_time) < Config.Timeout.idns_query) {
             idnsSendQuery(q);
         } else {
-            debug(78, 2) ("idnsCheckQueue: ID %x: giving up after %d tries and %5.1f seconds\n",
-                          (int) q->id, q->nsends,
-                          tvSubDsec(q->start_t, current_time));
+             debugs(78, 2, "idnsCheckQueue: ID " << std::hex << (int) q->id << 
+                    ": giving up after " << std::dec << q->nsends << " tries and " << 
+                    std::setw(5)<< std::setprecision(2) << tvSubDsec(q->start_t, current_time) << " seconds");
 
             if (q->rcode != 0)
                 idnsCallback(q, NULL, -q->rcode, q->error);
@@ -1122,10 +1112,9 @@ idnsReadVC(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *dat
         return;
     }
 
-    debug(78, 3) ("idnsReadVC: FD %d: received %d bytes via tcp from %s.\n",
-                  fd,
-                  (int) vc->msg->contentSize(),
-                  inet_ntoa(nameservers[vc->ns].S.sin_addr));
+    debugs(78, 3, "idnsReadVC: FD " << fd << ": received " <<
+           (int) vc->msg->contentSize() << " bytes via tcp from " <<
+           inet_ntoa(nameservers[vc->ns].S.sin_addr) << ".");
 
     idnsGrokReply(vc->msg->buf, vc->msg->contentSize());
     vc->msg->clean();
@@ -1213,9 +1202,8 @@ idnsInit(void)
          */
         port = comm_local_port(DnsSocket);
 
-        debug(78, 1) ("DNS Socket created at %s, port %d, FD %d\n",
-                      inet_ntoa(addr),
-                      port, DnsSocket);
+        debugs(78, 1, "DNS Socket created at " << inet_ntoa(addr) << ", port " <<
+               port << ", FD " << DnsSocket);
     }
 
     assert(0 == nns);
@@ -1344,8 +1332,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
         q->domain = 0;
         strcat(q->name, ".");
         strcat(q->name, searchpath[q->domain].domain);
-        debug(78, 3) ("idnsALookup: searchpath used for %s\n",
-                      q->name);
+        debugs(78, 3, "idnsALookup: searchpath used for " << q->name);
     }
 
     q->sz = rfc1035BuildAQuery(q->name, q->buf, sizeof(q->buf), q->id,
@@ -1358,8 +1345,8 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
         return;
     }
 
-    debug(78, 3) ("idnsALookup: buf is %d bytes for %s, id = %#hx\n",
-                  (int) q->sz, q->name, q->id);
+    debugs(78, 3, "idnsALookup: buf is " << (int) q->sz << " bytes for " << q->name << 
+           ", id = 0x" << std::hex << q->id);
 
     q->callback = callback;
 
@@ -1399,8 +1386,8 @@ idnsPTRLookup(const struct IN_ADDR addr, IDNSCB * callback, void *data)
 	return;
     }
 
-    debug(78, 3) ("idnsPTRLookup: buf is %d bytes for %s, id = %#hx\n",
-                  (int) q->sz, ip, q->id);
+    debugs(78, 3, "idnsPTRLookup: buf is " << (int) q->sz << " bytes for " << ip << 
+           ", id = 0x" << std::hex << q->id);
 
     q->callback = callback;
 
@@ -1422,7 +1409,7 @@ snmp_netIdnsFn(variable_list * Var, snint * ErrP)
 {
     int i, n = 0;
     variable_list *Answer = NULL;
-    debug(49, 5) ("snmp_netDnsFn: Processing request: \n");
+    debugs(49, 5, "snmp_netDnsFn: Processing request: ");
     snmpDebugOid(5, Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
 

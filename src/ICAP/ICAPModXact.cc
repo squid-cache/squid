@@ -965,7 +965,7 @@ void ICAPModXact::swanSong()
     debugs(93, 5, HERE << "swan sings" << status());
 
     if (initiator) {
-debugs(93, 2, HERE << "swan sings for " << stopReason << status());
+        debugs(93, 2, HERE << "swan sings for " << stopReason << status());
         AsyncCall(93,5, initiator, ICAPInitiator::noteIcapHeadersAborted);
         cbdataReferenceDone(initiator);
     }

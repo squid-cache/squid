@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskdIOStrategy.cc,v 1.9 2007/04/12 23:51:57 wessels Exp $
+ * $Id: DiskdIOStrategy.cc,v 1.10 2007/04/28 22:26:45 hno Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -67,7 +67,7 @@ DiskdIOStrategy::shedLoad()
      */
 
     if (away > magic1) {
-        debug(79, 3) ("storeDiskdIO::shedLoad: Shedding, too many requests away\n");
+        debugs(79, 3, "storeDiskdIO::shedLoad: Shedding, too many requests away");
 
         return true;
     }
@@ -108,7 +108,7 @@ DiskdIOStrategy::unlinkFile(char const *path)
 {
     if (shedLoad()) {
         /* Damn, we need to issue a sync unlink here :( */
-        debug(79, 2) ("storeDiskUnlink: Out of queue space, sync unlink\n");
+        debugs(79, 2, "storeDiskUnlink: Out of queue space, sync unlink");
 #if USE_UNLINKD
 
         unlinkdUnlink(path);
@@ -139,7 +139,7 @@ DiskdIOStrategy::unlinkFile(char const *path)
              shm_offset);
 
     if (x < 0) {
-        debug(79, 1) ("storeDiskdSend UNLINK: %s\n", xstrerror());
+        debugs(79, 1, "storeDiskdSend UNLINK: " << xstrerror());
         ::unlink(buf);		/* XXX EWW! */
         //        shm.put (shm_offset);
     }
@@ -164,14 +164,14 @@ DiskdIOStrategy::init()
     smsgid = msgget((key_t) ikey, 0700 | IPC_CREAT);
 
     if (smsgid < 0) {
-        debug(50, 0) ("storeDiskdInit: msgget: %s\n", xstrerror());
+        debugs(50, 0, "storeDiskdInit: msgget: " << xstrerror());
         fatal("msgget failed");
     }
 
     rmsgid = msgget((key_t) (ikey + 1), 0700 | IPC_CREAT);
 
     if (rmsgid < 0) {
-        debug(50, 0) ("storeDiskdInit: msgget: %s\n", xstrerror());
+        debugs(50, 0, "storeDiskdInit: msgget: " << xstrerror());
         fatal("msgget failed");
     }
 
@@ -263,14 +263,14 @@ SharedMemory::init(int ikey, int magic2)
                 nbufs * SHMBUF_BLKSZ, 0600 | IPC_CREAT);
 
     if (id < 0) {
-        debug(50, 0) ("storeDiskdInit: shmget: %s\n", xstrerror());
+        debugs(50, 0, "storeDiskdInit: shmget: " << xstrerror());
         fatal("shmget failed");
     }
 
     buf = (char *)shmat(id, NULL, 0);
 
     if (buf == (void *) -1) {
-        debug(50, 0) ("storeDiskdInit: shmat: %s\n", xstrerror());
+        debugs(50, 0, "storeDiskdInit: shmat: " << xstrerror());
         fatal("shmat failed");
     }
 
@@ -286,8 +286,7 @@ SharedMemory::init(int ikey, int magic2)
 void
 DiskdIOStrategy::unlinkDone(diomsg * M)
 {
-    debug(79, 3) ("storeDiskdUnlinkDone: file %s status %d\n",shm.buf + M->shm_offset,
-                  M->status);
+    debugs(79, 3, "storeDiskdUnlinkDone: file " << shm.buf + M->shm_offset << " status " << M->status);
     statCounter.syscalls.disk.unlinks++;
 
     if (M->status < 0)
@@ -304,8 +303,7 @@ DiskdIOStrategy::handle(diomsg * M)
          * - say when we have a error opening after
          *   a read was already queued
          */
-        debug(79, 3) ("storeDiskdHandle: Invalid callback_data %p\n",
-                      M->callback_data);
+         debugs(79, 3, "storeDiskdHandle: Invalid callback_data " << M->callback_data);
         cbdataReferenceDone (M->callback_data);
         return;
     }
@@ -388,7 +386,7 @@ DiskdIOStrategy::SEND(diomsg *M, int mtype, int id, int size, int offset, off_t 
     M->seq_no = ++seq_no;
 
     if (M->seq_no < last_seq_no)
-        debug(79, 1) ("WARNING: sequencing out of order\n");
+        debugs(79, 1, "WARNING: sequencing out of order");
 
     x = msgsnd(smsgid, M, diomsg::msg_snd_rcv_sz, IPC_NOWAIT);
 
@@ -398,7 +396,7 @@ DiskdIOStrategy::SEND(diomsg *M, int mtype, int id, int size, int offset, off_t 
         diskd_stats.sent_count++;
         away++;
     } else {
-        debug(79, 1) ("storeDiskdSend: msgsnd: %s\n", xstrerror());
+        debugs(79, 1, "storeDiskdSend: msgsnd: " << xstrerror());
         cbdataReferenceDone(M->callback_data);
         assert(++send_errors < 100);
         if (shm_offset > -1)
@@ -461,14 +459,13 @@ DiskdIOStrategy::optionQ1Parse(const char *name, const char *value, int reconfig
         * will cause an assertion in storeDiskdShmGet().
         */
         /* TODO: have DiskdIO hold a link to the swapdir, to allow detailed reporting again */
-        debug(3, 1) ("WARNING: cannot increase cache_dir Q1 value while Squid is running.\n");
+        debugs(3, 1, "WARNING: cannot increase cache_dir Q1 value while Squid is running.");
         magic1 = old_magic1;
         return true;
     }
 
     if (old_magic1 != magic1)
-        debug(3, 1) ("cache_dir new Q1 value '%d'\n",
-                     magic1);
+        debugs(3, 1, "cache_dir new Q1 value '" << magic1 << "'");
 
     return true;
 }
@@ -494,14 +491,13 @@ DiskdIOStrategy::optionQ2Parse(const char *name, const char *value, int reconfig
 
     if (old_magic2 < magic2) {
         /* See comments in Q1 function above */
-        debug(3, 1) ("WARNING: cannot increase cache_dir Q2 value while Squid is running.\n");
+        debugs(3, 1, "WARNING: cannot increase cache_dir Q2 value while Squid is running.");
         magic2 = old_magic2;
         return true;
     }
 
     if (old_magic2 != magic2)
-        debug(3, 1) ("cache_dir new Q2 value '%d'\n",
-                     magic2);
+        debugs(3, 1, "cache_dir new Q2 value '" << magic2 << "'");
 
     return true;
 }
@@ -523,8 +519,7 @@ DiskdIOStrategy::sync()
 
     while (away > 0) {
         if (squid_curtime > lastmsg) {
-            debug(47, 1) ("storeDiskdDirSync: %d messages away\n",
-                          away);
+            debugs(47, 1, "storeDiskdDirSync: " << away << " messages away");
             lastmsg = squid_curtime;
         }
 
@@ -568,8 +563,7 @@ DiskdIOStrategy::callback()
         if (x < 0)
             break;
         else if (x != diomsg::msg_snd_rcv_sz) {
-            debug(47, 1) ("storeDiskdDirCallback: msgget returns %d\n",
-                          x);
+            debugs(47, 1, "storeDiskdDirCallback: msgget returns " << x);
             break;
         }
 

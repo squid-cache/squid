@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.222 2007/04/21 07:14:14 wessels Exp $
+ * $Id: errorpage.cc,v 1.223 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -226,7 +226,7 @@ errorTryLoadText(const char *page_name, const char *dir)
     fd = file_open(path, O_RDONLY | O_TEXT);
 
     if (fd < 0) {
-        debug(4, 0) ("errorTryLoadText: '%s': %s\n", path, xstrerror());
+        debugs(4, 0, "errorTryLoadText: '" << path << "': " << xstrerror());
         return NULL;
     }
 
@@ -237,8 +237,7 @@ errorTryLoadText(const char *page_name, const char *dir)
     }
 
     if (len < 0) {
-        debug(4, 0) ("errorTryLoadText: failed to fully read: '%s': %s\n",
-                     path, xstrerror());
+        debugs(4, 0, "errorTryLoadText: failed to fully read: '" << path << "': " << xstrerror());
     }
 
     file_close(fd);
@@ -376,7 +375,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
 
     if (err->page_id == TCP_RESET) {
         if (err->request) {
-            debug(4, 2) ("RSTing this reply\n");
+            debugs(4, 2, "RSTing this reply");
             err->request->flags.setResetTCP();
         }
     }
@@ -424,7 +423,7 @@ void
 errorSend(int fd, ErrorState * err)
 {
     HttpReply *rep;
-    debug(4, 3) ("errorSend: FD %d, err=%p\n", fd, err);
+    debugs(4, 3, "errorSend: FD " << fd << ", err=" << err);
     assert(fd >= 0);
     /*
      * ugh, this is how we make sure error codes get back to
@@ -457,15 +456,15 @@ static void
 errorSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
 {
     ErrorState *err = static_cast<ErrorState *>(data);
-    debug(4, 3) ("errorSendComplete: FD %d, size=%ld\n", fd, (long int) size);
+    debugs(4, 3, "errorSendComplete: FD " << fd << ", size=" << (long int) size);
 
     if (errflag != COMM_ERR_CLOSING) {
         if (err->callback) {
-            debug(4, 3) ("errorSendComplete: callback\n");
+            debugs(4, 3, "errorSendComplete: callback");
             err->callback(fd, err->callback_data, size);
         } else {
             comm_close(fd);
-            debug(4, 3) ("errorSendComplete: comm_close\n");
+            debugs(4, 3, "errorSendComplete: comm_close");
         }
     }
 
@@ -847,7 +846,7 @@ errorConvert(char token, ErrorState * err)
 
     assert(p);
 
-    debug(4, 3) ("errorConvert: %%%c --> '%s'\n", token, p);
+    debugs(4, 3, "errorConvert: %%" << token << " --> '" << p << "'" );
 
     if (do_quote)
         p = html_quote(p);

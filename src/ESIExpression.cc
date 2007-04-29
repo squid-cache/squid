@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIExpression.cc,v 1.4 2005/07/03 15:25:08 serassio Exp $
+ * $Id: ESIExpression.cc,v 1.5 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -181,7 +181,7 @@ membercompare (stackmember a, stackmember b)
             return 0;
         } else {
             /* TODO: numeric to string conversion ? */
-            debug (86,1) ("strcmp with non-string\n");
+            debugs(86, 1, "strcmp with non-string");
             return -2;
         }
     } else if (a.valuestored == ESI_LITERAL_FLOAT) {
@@ -201,7 +201,7 @@ membercompare (stackmember a, stackmember b)
                 return 1;
         } else {
             /* TODO: attempt numeric converson again? */
-            debug (86,1) ("floatcomp with non float or int\n");
+            debugs(86, 1, "floatcomp with non float or int");
             return -2;
         }
     } else if (a.valuestored == ESI_LITERAL_INT) {
@@ -221,7 +221,7 @@ membercompare (stackmember a, stackmember b)
                 return 1;
         } else {
             /* TODO: attempt numeric converson again? */
-            debug (86,1) ("intcomp vs non float non int\n");
+            debugs(86, 1, "intcomp vs non float non int");
             return -2;
         }
     }
@@ -259,7 +259,7 @@ int evalnegate
 int evalliteral
 (stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
 {
-    debug (86,1) ("attempt to evaluate a literal\n");
+    debugs(86, 1, "attempt to evaluate a literal");
     /* literals can't be evaluated */
     return 1;
 }
@@ -267,7 +267,7 @@ int evalliteral
 int evalexpr
 (stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
 {
-    debug (86,1) ("attempt to evaluate a sub-expression result\n");
+    debugs(86, 1, "attempt to evaluate a sub-expression result");
     /* sub-scpr's can't be evaluated */
     return 1;
 }
@@ -418,7 +418,7 @@ int evallesseq
         /* Something wrong upstream */
         return 1;
 
-    /* debug (86,1) ("?= %d \n", srv.value.integral); */
+    /*  debugs(86, 1, "?= " << srv.value.integral << " "); */
     return 0;
 
 
@@ -467,7 +467,7 @@ int evallessthan
         /* Something wrong upstream */
         return 1;
 
-    /* debug (86,1) ("?= %d \n", srv.value.integral); */
+    /* debugs(86, 1, "?= " << srv.value.integral << " "); */
     return 0;
 
 
@@ -516,7 +516,7 @@ int evalmoreeq
         /* Something wrong upstream */
         return 1;
 
-    /* debug (86,1) ("?= %d \n", srv.value.integral); */
+    /* debugs(86, 1, "?= " << srv.value.integral << " "); */
     return 0;
 
 
@@ -565,7 +565,7 @@ int evalmorethan
         /* Something wrong upstream */
         return 1;
 
-    /* debug (86,1) ("?= %d \n", srv.value.integral); */
+    /* debugs(86, 1, "?= " << srv.value.integral << " "); */
     return 0;
 
 }
@@ -614,7 +614,7 @@ evalequals (stackmember * stack, int *depth, int whereAmI,
         /* Something wrong upstream */
         return 1;
 
-    /* debug (86,1) ("?= %d \n", srv.value.integral); */
+    /* debugs(86, 1, "?= " << srv.value.integral << " "); */
     return 0;
 }
 
@@ -661,14 +661,14 @@ int evalnotequals
         /* Something wrong upstream */
         return 1;
 
-    /* debug (86,1) ("?= %d \n", srv.value.integral); */
+    /* debugs(86, 1, "?= " << srv.value.integral << " "); */
     return 0;
 }
 
 int evalstartexpr
 (stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
 {
-    /* debug (86,1) ("?(\n"); */
+    /* debugs(86, 1, "?("); */
 
     if (whereAmI != *depth - 2)
         /* invalid stack */
@@ -725,7 +725,7 @@ getsymbol (const char *s, char const **endptr)
 
             if (s == end || errno) {
                 /* Couldn't convert to float */
-                debug (86,1) ("failed to convert '%s' to float \n", s);
+                debugs(86, 1, "failed to convert '" << s << "' to float ");
                 *endptr = origs;
             } else {
                 debugs (86,6, "found " << rv.value.floating << " of length " << end - s);
@@ -741,7 +741,7 @@ getsymbol (const char *s, char const **endptr)
 
             if (s == end || errno) {
                 /* Couldn't convert to int */
-                debug (86,1) ("failed to convert '%s' to int \n", s);
+                debugs(86, 1, "failed to convert '" << s << "' to int ");
                 *endptr = origs;
             } else {
                 debugs (86,6, "found " << rv.value.integral << " of length " << end - s);
@@ -754,13 +754,13 @@ getsymbol (const char *s, char const **endptr)
         }
     } else if ('!' == *s) {
         if ('=' == *(s + 1)) {
-            debug (86,6) ("found !=\n");
+            debugs(86, 6, "found !=");
             *endptr = s + 2;
             rv.eval = evalnotequals;
             rv.valuetype = ESI_EXPR_NOTEQ;
             rv.precedence = 5;
         } else {
-            debug (86,6) ("found !\n");
+            debugs(86, 6, "found !");
             *endptr = s + 1;
             rv.valuetype = ESI_EXPR_NOT;
             rv.precedence = 4;
@@ -768,13 +768,13 @@ getsymbol (const char *s, char const **endptr)
         }
     } else if ('\'' == *s) {
         char const *t = s + 1;
-        debug (86,6) ("found \'\n");
+        debugs(86, 6, "found \'");
 
         while (*t != '\'' && *t)
             ++t;
 
         if (!*t) {
-            debug (86,1) ("missing end \' in '%s'\n", s);
+            debugs(86, 1, "missing end \' in '" << s << "'");
             *endptr = origs;
         } else {
             *endptr = t + 1;
@@ -793,52 +793,52 @@ getsymbol (const char *s, char const **endptr)
 
             rv.precedence = 1;
 
-            debug (86,6) ("found  string '%s'\n", rv.value.string);
+            debugs(86, 6, "found  string '" << rv.value.string << "'");
         }
     } else if ('(' == *s) {
-        debug (86,6)("found subexpr start\n");
+        debugs(86, 6, "found subexpr start");
         *endptr = s + 1;
         rv.valuetype = ESI_EXPR_START;
         rv.precedence = 5;
         rv.eval = evalstartexpr;
     } else if (')' == *s) {
-        debug (86,6)("found subexpr end\n");
+        debugs(86, 6, "found subexpr end");
         *endptr = s + 1;
         rv.valuetype = ESI_EXPR_END;
         rv.precedence = 0;
         rv.eval = evalendexpr;
     } else if ('&' == *s) {
-        debug (86,6) ("found AND\n");
+        debugs(86, 6, "found AND");
         *endptr = s + 1;
         rv.valuetype = ESI_EXPR_AND;
         rv.precedence = 3;
         rv.eval = evaland;
     } else if ('|' == *s) {
-        debug (86,6) ("found OR\n");
+        debugs(86, 6, "found OR");
         *endptr = s + 1;
         rv.valuetype = ESI_EXPR_OR;
         rv.precedence = 2;
         rv.eval = evalor;
     } else if ('=' == *s) {
         if ('=' == *(s + 1)) {
-            debug (86,6) ("found equals\n");
+            debugs(86, 6, "found equals");
             *endptr = s + 2;
             rv.valuetype = ESI_EXPR_EQ;
             rv.precedence = 5;
             rv.eval = evalequals;
         } else {
-            debug (86,1) ("invalid expr '%s'\n", s);
+            debugs(86, 1, "invalid expr '" << s << "'");
             *endptr = origs;
         }
     } else if ('<' == *s) {
         if ('=' == *(s + 1)) {
-            debug (86,6) ("found less-equals\n");
+            debugs(86, 6, "found less-equals");
             *endptr = s + 2;
             rv.valuetype = ESI_EXPR_LESSEQ;
             rv.precedence = 5;
             rv.eval = evallesseq;
         } else {
-            debug (86,6) ("found less than\n");
+            debugs(86, 6, "found less than");
             *endptr = s + 1;
             rv.valuetype = ESI_EXPR_LESS;
             rv.precedence = 5;
@@ -846,20 +846,20 @@ getsymbol (const char *s, char const **endptr)
         }
     } else if ('>' == *s) {
         if ('=' == *(s + 1)) {
-            debug (86,6) ("found more-equals\n");
+            debugs(86, 6, "found more-equals");
             *endptr = s + 2;
             rv.valuetype = ESI_EXPR_MOREEQ;
             rv.precedence = 5;
             rv.eval = evalmoreeq;
         } else {
-            debug (86,6) ("found more than\n");
+            debugs(86, 6, "found more than");
             *endptr = s + 1;
             rv.valuetype = ESI_EXPR_MORE;
             rv.precedence = 5;
             rv.eval = evalmorethan;
         }
     } else if (!strncmp (s, "false", 5)) {
-        debug (86,5)("getsymbol: found variable result 'false'\n");
+        debugs(86, 5, "getsymbol: found variable result 'false'");
         *endptr = s + 5;
         rv.valuetype = ESI_EXPR_EXPR;
         rv.valuestored = ESI_LITERAL_BOOL;
@@ -867,7 +867,7 @@ getsymbol (const char *s, char const **endptr)
         rv.precedence = 1;
         rv.eval = evalexpr;
     } else if (!strncmp (s, "true", 4)) {
-        debug (86,5)("getsymbol: found variable result 'true'\n");
+        debugs(86, 5, "getsymbol: found variable result 'true'");
         *endptr = s + 4;
         rv.valuetype = ESI_EXPR_EXPR;
         rv.valuestored = ESI_LITERAL_BOOL;
@@ -875,7 +875,7 @@ getsymbol (const char *s, char const **endptr)
         rv.precedence = 1;
         rv.eval = evalexpr;
     } else {
-        debug (86,1) ("invalid expr '%s'\n", s);
+        debugs(86, 1, "invalid expr '" << s << "'");
         *endptr = origs;
     }
 
@@ -888,7 +888,7 @@ printliteral (stackmember s)
     switch (s.valuestored) {
 
     case ESI_LITERAL_INVALID:
-        debug (86,1) (" Invalid ");
+        debug(86, 1) ( " Invalid " );
         break;
 
     case ESI_LITERAL_FLOAT:
@@ -900,7 +900,7 @@ printliteral (stackmember s)
         break;
 
     case ESI_LITERAL_INT:
-        debug (86,1) ("%d", s.value.integral);
+        debug (86,1) ("%d", s.value.integral);        
         break;
 
     case ESI_LITERAL_BOOL:
@@ -1001,7 +1001,7 @@ addmember (stackmember * stack, int *stackdepth, stackmember * candidate)
                 /* cleanup candidate and stack */
                 dumpstack (stack, *stackdepth);
                 cleanmember (candidate);
-                debug (86,1) ("invalid expression\n");
+                debugs(86, 1, "invalid expression");
                 return 0;
             }
         } else {
@@ -1035,7 +1035,7 @@ ESIExpression::Evaluate (char const *s)
             s = end;
         } else {
             assert (s == end);
-            debug (86,1) ("failed parsing expression\n");
+            debugs(86, 1, "failed parsing expression");
             PROF_stop(esiExpressionEval);
             return 0;
         }
@@ -1049,7 +1049,7 @@ ESIExpression::Evaluate (char const *s)
         if (stack[stackdepth - 2].
                 eval (stack, &stackdepth, stackdepth - 2, &rv)) {
             /* special case - leading operator failed */
-            debug (86,1) ("invalid expression\n");
+            debugs(86, 1, "invalid expression");
             PROF_stop(esiExpressionEval);
             return 0;
         }

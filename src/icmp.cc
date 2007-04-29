@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.90 2007/04/19 21:25:38 wessels Exp $
+ * $Id: icmp.cc,v 1.91 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -94,7 +94,7 @@ icmpRecv(int unused1, void *unused2)
                       0);
 
     if (n < 0 && EAGAIN != errno) {
-        debug(37, 1) ("icmpRecv: recv: %s\n", xstrerror());
+        debugs(37, 1, "icmpRecv: recv: " << xstrerror());
 
         if (errno == ECONNREFUSED)
             icmpClose();
@@ -135,7 +135,7 @@ icmpRecv(int unused1, void *unused2)
         break;
 
     default:
-        debug(37, 1) ("icmpRecv: Bad opcode: %d\n", (int) preply.opcode);
+        debugs(37, 1, "icmpRecv: Bad opcode: " << (int) preply.opcode);
         break;
     }
 }
@@ -148,20 +148,20 @@ icmpSend(pingerEchoData * pkt, int len)
     if (icmp_sock < 0)
         return;
 
-    debug(37, 2) ("icmpSend: to %s, opcode %d, len %d\n",
-                  inet_ntoa(pkt->to), (int) pkt->opcode, pkt->psize);
+    debugs(37, 2, "icmpSend: to " << inet_ntoa(pkt->to) << ", opcode " <<
+           (int) pkt->opcode << ", len " << pkt->psize);
 
     x = comm_udp_send(icmp_sock, (char *) pkt, len, 0);
 
     if (x < 0) {
-        debug(37, 1) ("icmpSend: send: %s\n", xstrerror());
+        debugs(37, 1, "icmpSend: send: " << xstrerror());
 
         if (errno == ECONNREFUSED || errno == EPIPE) {
             icmpClose();
             return;
         }
     } else if (x != len) {
-        debug(37, 1) ("icmpSend: Wrote %d of %d bytes\n", x, len);
+        debugs(37, 1, "icmpSend: Wrote " << x << " of " << len << " bytes");
     }
 }
 
@@ -176,8 +176,8 @@ icmpHandleSourcePing(const struct sockaddr_in *from, const char *buf)
     xmemcpy(&header, buf, sizeof(icp_common_t));
     url = buf + sizeof(icp_common_t);
     key = icpGetCacheKey(url, (int) header.reqnum);
-    debug(37, 3) ("icmpHandleSourcePing: from %s, key '%s'\n",
-                  inet_ntoa(from->sin_addr), storeKeyText(key));
+    debugs(37, 3, "icmpHandleSourcePing: from " << inet_ntoa(from->sin_addr) << ", key '" << storeKeyText(key) << "'");
+
     /* call neighborsUdpAck even if ping_status != PING_WAITING */
     neighborsUdpAck(key, &header, from);
 }
@@ -195,7 +195,7 @@ icmpSourcePing(struct IN_ADDR to, const icp_common_t * header, const char *url)
     char *payload;
     int len;
     int ulen;
-    debug(37, 3) ("icmpSourcePing: '%s'\n", url);
+    debugs(37, 3, "icmpSourcePing: '" << url << "'");
 
     if ((ulen = strlen(url)) > MAX_URL)
         return;
@@ -224,7 +224,7 @@ void
 icmpDomainPing(struct IN_ADDR to, const char *domain)
 {
 #if USE_ICMP
-    debug(37, 3) ("icmpDomainPing: '%s'\n", domain);
+    debugs(37, 3, "icmpDomainPing: '" << domain << "'");
     icmpSendEcho(to, S_ICMP_DOM, domain, 0);
 #endif
 }
@@ -264,11 +264,11 @@ icmpOpen(void)
 
     commSetTimeout(icmp_sock, -1, NULL, NULL);
 
-    debug(37, 1) ("Pinger socket opened on FD %d\n", icmp_sock);
+    debugs(37, 1, "Pinger socket opened on FD " << icmp_sock);
 
 #ifdef _SQUID_MSWIN_
 
-    debug(37, 4) ("Pinger handle: 0x%x, PID: %d\n", (unsigned)hIpc, pid);
+    debugs(37, 4, "Pinger handle: 0x" << hex << (unsigned)hIpc << dec << ", PID: " << pid);
 
 #endif
 #endif
@@ -282,7 +282,7 @@ icmpClose(void)
     if (icmp_sock < 0)
         return;
 
-    debug(37, 1) ("Closing Pinger socket on FD %d\n", icmp_sock);
+    debugs(37, 1, "Closing Pinger socket on FD " << icmp_sock);
 
 #ifdef _SQUID_MSWIN_
 
@@ -297,9 +297,7 @@ icmpClose(void)
     if (hIpc) {
         if (WaitForSingleObject(hIpc, 12000) != WAIT_OBJECT_0) {
             getCurrentTime();
-            debug(37, 1)
-            ("icmpClose: WARNING: (pinger,%ld) didn't exit in 12 seconds\n",
-             (long int)pid);
+            debugs(37, 1, "icmpClose: WARNING: (pinger," << (long int)pid << ") didn't exit in 12 seconds");
         }
 
         CloseHandle(hIpc);

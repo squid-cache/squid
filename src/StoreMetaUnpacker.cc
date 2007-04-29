@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaUnpacker.cc,v 1.3 2006/05/20 13:15:14 hno Exp $
+ * $Id: StoreMetaUnpacker.cc,v 1.4 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Unpacker
  * AUTHOR: Robert Collins
@@ -91,9 +91,8 @@ StoreMetaUnpacker::doOneEntry()
     getLength();
 
     if (position + length > *hdr_len) {
-        debug(20, 0) ("storeSwapMetaUnpack: overflow!\n");
-        debug(20, 0) ("\ttype=%d, length=%d, *hdr_len=%d, offset=%d\n",
-                      type, length, *hdr_len, (int) position);
+        debugs(20, 0, "storeSwapMetaUnpack: overflow!");
+        debugs(20, 0, "\ttype=" << type << ", length=" << length << ", *hdr_len=" << *hdr_len << ", offset=" << (int) position);
         return false;
     }
 

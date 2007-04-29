@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.67 2006/08/07 02:28:22 robertc Exp $
+ * $Id: send-announce.cc,v 1.68 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -70,11 +70,11 @@ send_announce(const ipcache_addrs * ia, void *junk)
     int x;
 
     if (ia == NULL) {
-        debug(27, 1) ("send_announce: Unknown host '%s'\n", host);
+        debugs(27, 1, "send_announce: Unknown host '" << host << "'");
         return;
     }
 
-    debug(27, 1) ("Sending Announcement to %s\n", host);
+    debugs(27, 1, "Sending Announcement to " << host);
     sndbuf[0] = '\0';
     snprintf(tbuf, 256, "cache_version SQUID/%s\n", version_string);
     strcat(sndbuf, tbuf);
@@ -105,7 +105,7 @@ send_announce(const ipcache_addrs * ia, void *junk)
             sndbuf[l] = '\0';
             file_close(fd);
         } else {
-            debug(50, 1) ("send_announce: %s: %s\n", file, xstrerror());
+            debugs(50, 1, "send_announce: " << file << ": " << xstrerror());
         }
     }
 
@@ -119,6 +119,5 @@ send_announce(const ipcache_addrs * ia, void *junk)
                         sndbuf, strlen(sndbuf) + 1);
 
     if (x < 0)
-        debug(27, 1) ("send_announce: FD %d: %s\n", theOutIcpConnection,
-                      xstrerror());
+        debugs(27, 1, "send_announce: FD " << theOutIcpConnection << ": " << xstrerror());
 }

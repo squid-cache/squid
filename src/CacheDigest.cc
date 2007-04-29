@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.38 2003/07/07 22:48:22 robertc Exp $
+ * $Id: CacheDigest.cc,v 1.39 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -340,9 +340,9 @@ cacheDigestHashKey(const CacheDigest * cd, const cache_key * key)
     hashed_keys[1] = htonl(tmp_keys[1]) % bit_count;
     hashed_keys[2] = htonl(tmp_keys[2]) % bit_count;
     hashed_keys[3] = htonl(tmp_keys[3]) % bit_count;
-    debug(70, 9) ("cacheDigestHashKey: %s -(%d)-> %d %d %d %d\n",
-                  storeKeyText(key), bit_count,
-                  hashed_keys[0], hashed_keys[1], hashed_keys[2], hashed_keys[3]);
+    debugs(70, 9, "cacheDigestHashKey: " << storeKeyText(key) << " -(" <<
+           bit_count << ")-> " << hashed_keys[0] << " " << hashed_keys[1] <<
+           " " << hashed_keys[2] << " " << hashed_keys[3]);
 }
 
 #endif

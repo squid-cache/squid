@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsDiskFile.cc,v 1.8 2006/06/17 16:36:15 serassio Exp $
+ * $Id: DiskThreadsDiskFile.cc,v 1.9 2007/04/28 22:26:47 hno Exp $
  *
  * DEBUG: section 79    Disk IO Routines
  * AUTHOR: Robert Collins
@@ -71,7 +71,7 @@ DiskThreadsDiskFile::DiskThreadsDiskFile (char const *aPath, DiskThreadsIOStrate
         inProgressIOs (0)
 {
     assert (aPath);
-    debug (79,3)("UFSFile::UFSFile: %s\n", aPath);
+    debugs(79, 3, "UFSFile::UFSFile: " << aPath);
     path_ = xstrdup (aPath);
 }
 
@@ -90,7 +90,7 @@ DiskThreadsDiskFile::open (int flags, mode_t mode, IORequestor::Pointer callback
     fd = file_open(path_, flags);
 
     if (fd < 0) {
-        debug(79, 3) ("DiskThreadsDiskFile::open: got failure (%d)\n", errno);
+        debugs(79, 3, "DiskThreadsDiskFile::open: got failure (" << errno << ")");
         errorOccured = true;
         return;
     }
@@ -139,7 +139,7 @@ DiskThreadsDiskFile::create (int flags, mode_t mode, IORequestor::Pointer callba
     int fd = file_open(path_, flags);
 
     if (fd < 0) {
-        debug(79, 3) ("DiskThreadsDiskFile::create: got failure (%d)\n", errno);
+        debugs(79, 3, "DiskThreadsDiskFile::create: got failure (" << errno << ")");
         errorOccured = true;
         return;
     }
@@ -178,15 +178,15 @@ DiskThreadsDiskFile::OpenDone(int fd, void *cbdata, const char *buf, int aio_ret
 void
 DiskThreadsDiskFile::openDone(int unused, const char *unused2, int anFD, int errflag)
 {
-    debug(79, 3) ("DiskThreadsDiskFile::openDone: FD %d, errflag %d\n", anFD, errflag);
+    debugs(79, 3, "DiskThreadsDiskFile::openDone: FD " << anFD << ", errflag " << errflag);
     Opening_FD--;
 
     fd = anFD;
 
     if (errflag || fd < 0) {
         errno = errflag;
-        debug(79, 0) ("DiskThreadsDiskFile::openDone: %s\n", xstrerror());
-        debug(79, 1) ("\t%s\n", path_);
+        debugs(79, 0, "DiskThreadsDiskFile::openDone: " << xstrerror());
+        debugs(79, 1, "\t" << path_);
         errorOccured = true;
     } else {
         store_open_disk_fd++;
@@ -198,7 +198,7 @@ DiskThreadsDiskFile::openDone(int unused, const char *unused2, int anFD, int err
     --inProgressIOs;
     t->ioCompletedNotification();
 
-    debug(79, 3) ("DiskThreadsDiskFile::openDone: exiting\n");
+    debugs(79, 3, "DiskThreadsDiskFile::openDone: exiting");
 }
 
 void DiskThreadsDiskFile::doClose()
@@ -223,7 +223,7 @@ void DiskThreadsDiskFile::doClose()
 void
 DiskThreadsDiskFile::close ()
 {
-    debug (79,3)("DiskThreadsDiskFile::close: %p closing for %p\n", this, ioRequestor.getRaw());
+    debugs(79, 3, "DiskThreadsDiskFile::close: " << this << " closing for " << ioRequestor.getRaw());
 
     if (!ioInProgress()) {
         doClose();
@@ -239,14 +239,14 @@ DiskThreadsDiskFile::close ()
 bool
 DiskThreadsDiskFile::canRead() const
 {
-    debug (79,3)("DiskThreadsDiskFile::canRead: fd is %d\n",fd);
+    debugs(79, 3, "DiskThreadsDiskFile::canRead: fd is " << fd);
     return fd > -1;
 }
 
 void
 DiskThreadsDiskFile::write(WriteRequest * writeRequest)
 {
-    debug(79, 3) ("DiskThreadsDiskFile::write: FD %d\n", fd);
+    debugs(79, 3, "DiskThreadsDiskFile::write: FD " << fd);
     statCounter.syscalls.disk.writes++;
     ++inProgressIOs;
 #if ASYNC_WRITE
@@ -291,13 +291,13 @@ DiskThreadsDiskFile::ReadDone(int fd, const char *buf, int len, int errflag, voi
 void
 DiskThreadsDiskFile::readDone(int rvfd, const char *buf, int len, int errflag, ReadRequest::Pointer request)
 {
-    debug (79,3)("DiskThreadsDiskFile::readDone: FD %d\n",rvfd);
+    debugs(79, 3, "DiskThreadsDiskFile::readDone: FD " << rvfd);
     assert (fd == rvfd);
 
     ssize_t rlen;
 
     if (errflag) {
-        debug(79, 3) ("DiskThreadsDiskFile::readDone: got failure (%d)\n", errflag);
+        debugs(79, 3, "DiskThreadsDiskFile::readDone: got failure (" << errflag << ")");
         rlen = -1;
     } else {
         rlen = (ssize_t) len;
@@ -354,8 +354,7 @@ DiskThreadsDiskFile::writeDone (int rvfd, int errflag, size_t len, WriteRequest:
 
 #endif
 
-    debug(79, 3) ("DiskThreadsDiskFile::writeDone: FD %d, len %ld, err=%d\n",
-                  fd, (long int) len, errflag);
+    debugs(79, 3, "DiskThreadsDiskFile::writeDone: FD " << fd << ", len " << (long int) len << ", err=" << errflag);
 
     assert(++loop_detect < 10);
 

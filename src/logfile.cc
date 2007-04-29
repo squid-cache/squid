@@ -1,5 +1,5 @@
 /*
- * $Id: logfile.cc,v 1.21 2006/06/05 21:08:15 serassio Exp $
+ * $Id: logfile.cc,v 1.22 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 50    Log file handling
  * AUTHOR: Duane Wessels
@@ -129,7 +129,7 @@ logfileOpen(const char *path, size_t bufsz, int fatal_flag)
                        "\tuser '%s', which is the cache_effective_user\n"
                        "\tset in squid.conf.", path, Config.effectiveUser);
             } else {
-                debug(50, 1) ("logfileOpen: %s: %s\n", path, xstrerror());
+                debugs(50, 1, "logfileOpen: " << path << ": " << xstrerror());
                 return NULL;
             }
         }
@@ -186,7 +186,7 @@ logfileRotate(Logfile * lf)
 
 #endif
 
-    debug(0, 1) ("logfileRotate: %s\n", lf->path);
+    debugs(0, 1, "logfileRotate: " << lf->path);
 
     /* Rotate numbers 0 through N up one */
     for (i = Config.Log.rotateNumber; i > 1;) {
@@ -210,7 +210,7 @@ logfileRotate(Logfile * lf)
     lf->fd = file_open(lf->path, O_WRONLY | O_CREAT | O_TEXT);
 
     if (DISK_ERROR == lf->fd && lf->flags.fatal) {
-        debug(50, 1) ("logfileRotate: %s: %s\n", lf->path, xstrerror());
+        debugs(50, 1, "logfileRotate: " << lf->path << ": " << xstrerror());
         fatalf("Cannot open %s: %s", lf->path, xstrerror());
     }
 }

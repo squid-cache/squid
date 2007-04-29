@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMaxConnection.cc,v 1.6 2006/04/23 11:10:31 robertc Exp $
+ * $Id: ACLMaxConnection.cc,v 1.7 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -121,5 +121,5 @@ ACLMaxConnection::prepareForUse()
     if (0 != Config.onoff.client_db)
         return;
 
-    debug(22, 0) ("WARNING: 'maxconn' ACL (%s) won't work with client_db disabled\n", name);
+    debugs(22, 0, "WARNING: 'maxconn' ACL (" << name << ") won't work with client_db disabled");
 }

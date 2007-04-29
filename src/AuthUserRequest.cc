@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.cc,v 1.12 2007/04/20 22:24:07 wessels Exp $
+ * $Id: AuthUserRequest.cc,v 1.13 2007/04/28 22:26:37 hno Exp $
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 6803fde1-d5a2-4c29-9034-1c0c9f650eb4
@@ -82,7 +82,7 @@ void
 AuthUserRequest::start(RH * handler, void *data)
 {
     assert(handler);
-    debug(29, 9) ("authenticateStart: auth_user_request '%p'\n", this);
+    debugs(29, 9, "authenticateStart: auth_user_request '" << this << "'");
     module_start(handler, data);
 }
 
@@ -94,25 +94,25 @@ AuthUserRequest::start(RH * handler, void *data)
 int
 authenticateValidateUser(auth_user_request_t * auth_user_request)
 {
-    debug(29, 9) ("authenticateValidateUser: Validating Auth_user request '%p'.\n", auth_user_request);
+    debugs(29, 9, "authenticateValidateUser: Validating Auth_user request '" << auth_user_request << "'.");
 
     if (auth_user_request == NULL) {
-        debug(29, 4) ("authenticateValidateUser: Auth_user_request was NULL!\n");
+        debugs(29, 4, "authenticateValidateUser: Auth_user_request was NULL!");
         return 0;
     }
 
     if (auth_user_request->user() == NULL) {
-        debug(29, 4) ("authenticateValidateUser: No associated auth_user structure\n");
+        debugs(29, 4, "authenticateValidateUser: No associated auth_user structure");
         return 0;
     }
 
     if (auth_user_request->user()->auth_type == AUTH_UNKNOWN) {
-        debug(29, 4) ("authenticateValidateUser: Auth_user '%p' uses unknown scheme.\n", auth_user_request->user());
+        debugs(29, 4, "authenticateValidateUser: Auth_user '" << auth_user_request->user() << "' uses unknown scheme.");
         return 0;
     }
 
     if (auth_user_request->user()->auth_type == AUTH_BROKEN) {
-        debug(29, 4) ("authenticateValidateUser: Auth_user '%p' is broken for it's scheme.\n", auth_user_request->user());
+        debugs(29, 4, "authenticateValidateUser: Auth_user '" << auth_user_request->user() << "' is broken for it's scheme.");
         return 0;
     }
 
@@ -121,7 +121,7 @@ authenticateValidateUser(auth_user_request_t * auth_user_request)
     /* Thus should a module call to something like authValidate */
 
     /* finally return ok */
-    debug(29, 5) ("authenticateValidateUser: Validated Auth_user request '%p'.\n", auth_user_request);
+    debugs(29, 5, "authenticateValidateUser: Validated Auth_user request '" << auth_user_request << "'.");
 
     return 1;
 
@@ -143,13 +143,15 @@ AuthUserRequest::operator delete (void *address)
 AuthUserRequest::AuthUserRequest():_auth_user(NULL), message(NULL),
         references (0), lastReply (AUTH_ACL_CANNOT_AUTHENTICATE)
 {
-    debug(29, 5) ("AuthUserRequest::AuthUserRequest: initialised request %p\n", this);
+    debugs(29, 5, "AuthUserRequest::AuthUserRequest: initialised request " <<
+           this);
 }
 
 AuthUserRequest::~AuthUserRequest()
 {
     dlink_node *link;
-    debug(29, 5) ("AuthUserRequest::~AuthUserRequest: freeing request %p\n", this);
+    debugs(29, 5, "AuthUserRequest::~AuthUserRequest: freeing request " <<
+           this);
     assert(references == 0);
 
     if (user()) {
@@ -343,7 +345,7 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
             || (conn != NULL  && conn->auth_type == AUTH_BROKEN))
     {
         /* no header or authentication failed/got corrupted - restart */
-        debug(29, 4) ("authenticateAuthenticate: broken auth or no proxy_auth header. Requesting auth header.\n");
+        debugs(29, 4, "authenticateAuthenticate: broken auth or no proxy_auth header. Requesting auth header.");
         /* something wrong with the AUTH credentials. Force a new attempt */
 
         if (conn != NULL) {
@@ -374,7 +376,11 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
             conn->auth_user_request->connLastHeader() != NULL &&
             strcmp(proxy_auth, conn->auth_user_request->connLastHeader()))
     {
-        debug(29, 2) ("authenticateAuthenticate: DUPLICATE AUTH - authentication header on already authenticated connection!. AU %p, Current user '%s' proxy_auth %s\n", conn->auth_user_request, conn->auth_user_request->username(), proxy_auth);
+        debugs(29, 2, "authenticateAuthenticate: DUPLICATE AUTH - authentication header on already authenticated connection!. AU " <<
+               conn->auth_user_request << ", Current user '" <<
+               conn->auth_user_request->username() << "' proxy_auth " <<
+               proxy_auth);
+
         /* remove this request struct - the link is already authed and it can't be to
          * reauth.
          */
@@ -393,19 +399,21 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
 
     /* we have a proxy auth header and as far as we know this connection has
      * not had bungled connection oriented authentication happen on it. */
-    debug(29, 9) ("authenticateAuthenticate: header %s.\n", proxy_auth ? proxy_auth : "-");
+    debugs(29, 9, "authenticateAuthenticate: header " << (proxy_auth ? proxy_auth : "-") << ".");
 
     if (*auth_user_request == NULL)
     {
-        debug(29, 9) ("authenticateAuthenticate: This is a new checklist test on FD:%d\n",
-                      conn != NULL ? conn->fd : -1);
+        debugs(29, 9, "authenticateAuthenticate: This is a new checklist test on FD:" << (conn != NULL ? conn->fd : -1)  );
 
         if (proxy_auth && !request->auth_user_request && conn != NULL && conn->auth_user_request) {
             AuthConfig * scheme = AuthConfig::Find(proxy_auth);
 
             if (!conn->auth_user_request->user() || conn->auth_user_request->user()->config != scheme) {
-                debug(29, 1) ("authenticateAuthenticate: Unexpected change of authentication scheme from '%s' to '%s' (client %s)\n",
-                              conn->auth_user_request->user()->config->type(), proxy_auth, inet_ntoa(src_addr));
+                debugs(29, 1, "authenticateAuthenticate: Unexpected change of authentication scheme from '" <<
+                       conn->auth_user_request->user()->config->type() <<
+                       "' to '" << proxy_auth << "' (client " <<
+                       inet_ntoa(src_addr) << ")");
+
                 conn->auth_user_request->unlock();
                 conn->auth_user_request = NULL;
                 conn->auth_type = AUTH_UNKNOWN;
@@ -415,7 +423,7 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
         if ((!request->auth_user_request)
                 && (conn == NULL || conn->auth_type == AUTH_UNKNOWN)) {
             /* beginning of a new request check */
-            debug(29, 4) ("authenticateAuthenticate: no connection authentication type\n");
+            debugs(29, 4, "authenticateAuthenticate: no connection authentication type");
 
             if (!authenticateValidateUser(*auth_user_request =
                                               AuthConfig::CreateAuthUser(proxy_auth))) {
@@ -462,8 +470,11 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
                 ;
             } else {
                 /* failed connection based authentication */
-                debug(29, 4) ("authenticateAuthenticate: Auth user request %p conn-auth user request %p conn type %d authentication failed.\n",
-                              *auth_user_request, conn->auth_user_request, conn->auth_type);
+                debugs(29, 4, "authenticateAuthenticate: Auth user request " <<
+                       *auth_user_request << " conn-auth user request " <<
+                       conn->auth_user_request << " conn type " <<
+                       conn->auth_type << " authentication failed.");
+
                 (*auth_user_request)->unlock();
                 *auth_user_request = NULL;
                 return AUTH_ACL_CHALLENGE;
@@ -622,7 +633,7 @@ AuthUserRequest::addReplyAuthHeader(HttpReply * rep, auth_user_request_t * auth_
         break;
     }
 
-    debug(29, 9) ("authenticateFixHeader: headertype:%d authuser:%p\n", type, auth_user_request);
+    debugs(29, 9, "authenticateFixHeader: headertype:" << type << " authuser:" << auth_user_request);
 
     if (((rep->sline.status == HTTP_PROXY_AUTHENTICATION_REQUIRED)
             || (rep->sline.status == HTTP_UNAUTHORIZED)) && internal)
@@ -642,7 +653,7 @@ AuthUserRequest::addReplyAuthHeader(HttpReply * rep, auth_user_request_t * auth_
                 if (scheme->active())
                     scheme->fixHeader(NULL, rep, type, request);
                 else
-                    debug(29, 4) ("authenticateFixHeader: Configured scheme %s not Active\n", scheme->type());
+                    debugs(29, 4, "authenticateFixHeader: Configured scheme " << scheme->type() << " not Active");
             }
         }
 
@@ -679,7 +690,7 @@ void
 
 AuthUserRequest::lock()
 {
-    debug(29, 9) ("AuthUserRequest::lock: auth_user request '%p' (%ld references).\n", this, (long int) references);
+    debugs(29, 9, "AuthUserRequest::lock: auth_user request '" << this << "' (" << (long int) references << " references).");
     assert(this);
     ++references;
 }
@@ -687,17 +698,17 @@ AuthUserRequest::lock()
 void
 AuthUserRequest::unlock()
 {
-    debug(29, 9) ("AuthUserRequest::unlock: auth_user request '%p' (%ld references) .\n", this, (long int) references);
+    debugs(29, 9, "AuthUserRequest::unlock: auth_user request '" << this << "' (" << (long int) references << " references) .");
     assert(this != NULL);
 
     if (references > 0) {
         --references;
     } else {
-        debug(29, 1) ("Attempt to lower Auth User request %p refcount below 0!\n", this);
+        debugs(29, 1, "Attempt to lower Auth User request " << this << " refcount below 0!");
     }
 
     if (references == 0) {
-        debug(29, 9) ("AuthUserRequest::unlock: deleting auth_user_request '%p'.\n", this);
+        debugs(29, 9, "AuthUserRequest::unlock: deleting auth_user_request '" << this << "'.");
         /* not locked anymore */
         delete this;
     }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIAssign.cc,v 1.3 2004/08/30 05:12:31 robertc Exp $
+ * $Id: ESIAssign.cc,v 1.4 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -55,14 +55,14 @@ ESIAssign::ESIAssign (esiTreeParentPtr aParent, int attrcount, char const **attr
     for (int i = 0; i < attrcount && attr[i]; i += 2) {
         if (!strcmp(attr[i],"name")) {
             /* the variables name is ...  */
-            debug (86,5)("ESIAssign::ESIAssign: Variable name '%s'\n",attr[i+1]);
+            debugs(86, 5, "ESIAssign::ESIAssign: Variable name '" << attr[i+1] << "'");
             /* If there are duplicate name attributes, we simply use the
              * last one
              */
             name = attr[i+1];
         } else if (!strcmp(attr[i],"value")) {
             /* short form assignment:  */
-            debug (86,5)("ESIAssign::ESIAssign: Unevaluated variable '%s'\n",attr[i+1]);
+            debugs(86, 5, "ESIAssign::ESIAssign: Unevaluated variable '" << attr[i+1] << "'");
             /* Again, if there are duplicate attributes, we use the last */
             unevaluatedVariable = attr[i+1];
         } else {
@@ -121,7 +121,7 @@ ESIAssign::process (int dovars)
 
     value = NULL;
 
-    debug (86,5) ("ESIAssign: Processed %p\n",this);
+    debugs(86, 5, "ESIAssign: Processed " << this);
 
     return ESI_PROCESS_COMPLETE;
 }

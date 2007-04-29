@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrSc.cc,v 1.3 2006/04/22 05:29:17 robertc Exp $
+ * $Id: HttpHdrSc.cc,v 1.4 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 90    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
@@ -139,7 +139,7 @@ httpHdrScParseInit(HttpHdrSc * sc, const String * str)
                                   ScFieldsInfo, SC_ENUM_END);
 
         if (type < 0) {
-            debug(90, 2) ("hdr sc: unknown control-directive: near '%s' in '%s'\n", item, str->buf());
+            debugs(90, 2, "hdr sc: unknown control-directive: near '" << item << "' in '" << str->buf() << "'");
             type = SC_OTHER;
         }
 
@@ -163,7 +163,7 @@ httpHdrScParseInit(HttpHdrSc * sc, const String * str)
 
         if (EBIT_TEST(sct->mask, type)) {
             if (type != SC_OTHER)
-                debug(90, 2) ("hdr sc: ignoring duplicate control-directive: near '%s' in '%s'\n", item, str->buf());
+                debugs(90, 2, "hdr sc: ignoring duplicate control-directive: near '" << item << "' in '" << str->buf() << "'");
 
             ScFieldsInfo[type].stat.repCount++;
 
@@ -179,14 +179,14 @@ httpHdrScParseInit(HttpHdrSc * sc, const String * str)
         case SC_MAX_AGE:
 
             if (!p || !httpHeaderParseInt(p, &sct->max_age)) {
-                debug(90, 2) ("sc: invalid max-age specs near '%s'\n", item);
+                debugs(90, 2, "sc: invalid max-age specs near '" << item << "'");
                 sct->max_age = -1;
                 EBIT_CLR(sct->mask, type);
             }
 
             if ((p = strchr (p, '+')))
                 if (!httpHeaderParseInt(++p, &sct->max_stale)) {
-                    debug(90, 2) ("sc: invalid max-stale specs near '%s'\n", item);
+                    debugs(90, 2, "sc: invalid max-stale specs near '" << item << "'");
                     sct->max_stale = 0;
                     /* leave the max-age alone */
                 }
@@ -196,7 +196,7 @@ httpHdrScParseInit(HttpHdrSc * sc, const String * str)
         case SC_CONTENT:
 
             if (!p || !httpHeaderParseQuotedString(p, &sct->content)) {
-                debug (90, 2) ("sc: invalid content= quoted string near '%s'\n",item);
+                debugs(90, 2, "sc: invalid content= quoted string near '" << item << "'");
                 sct->content.clean();
                 EBIT_CLR(sct->mask, type);
             }

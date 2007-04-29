@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapin.cc,v 1.39 2006/05/23 00:30:21 wessels Exp $
+ * $Id: store_swapin.cc,v 1.40 2007/04/28 22:26:38 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Swapin Functions
  * AUTHOR: Duane Wessels
@@ -51,23 +51,22 @@ storeSwapInStart(store_client * sc)
         return;
     }
 
-    debug(20, 3) ("storeSwapInStart: called for %d %08X %s \n",
-                  e->swap_dirn, e->swap_filen, e->getMD5Text());
+    debugs(20, 3, "storeSwapInStart: called for : " << e->swap_dirn << " " <<  
+           std::hex << std::setw(8) << std::setfill('0') << std::uppercase << 
+           e->swap_filen << " " <<  e->getMD5Text());
 
     if (e->swap_status != SWAPOUT_WRITING && e->swap_status != SWAPOUT_DONE) {
-        debug(20, 1) ("storeSwapInStart: bad swap_status (%s)\n",
-                      swapStatusStr[e->swap_status]);
+        debugs(20, 1, "storeSwapInStart: bad swap_status (" << swapStatusStr[e->swap_status] << ")");
         return;
     }
 
     if (e->swap_filen < 0) {
-        debug(20, 1) ("storeSwapInStart: swap_filen < 0\n");
+        debugs(20, 1, "storeSwapInStart: swap_filen < 0");
         return;
     }
 
     assert(e->mem_obj != NULL);
-    debug(20, 3) ("storeSwapInStart: Opening fileno %08X\n",
-                  e->swap_filen);
+    debugs(20, 3, "storeSwapInStart: Opening fileno " << std::hex << std::setw(8) << std::setfill('0') << std::uppercase << e->swap_filen);
     sc->swapin_sio = storeOpen(e, storeSwapInFileNotify, storeSwapInFileClosed, sc);
 }
 
@@ -75,8 +74,7 @@ static void
 storeSwapInFileClosed(void *data, int errflag, StoreIOState::Pointer self)
 {
     store_client *sc = (store_client *)data;
-    debug(20, 3) ("storeSwapInFileClosed: sio=%p, errflag=%d\n",
-                  sc->swapin_sio.getRaw(), errflag);
+    debugs(20, 3, "storeSwapInFileClosed: sio=" << sc->swapin_sio.getRaw() << ", errflag=" << errflag);
     sc->swapin_sio = NULL;
 
     if (sc->_callback.pending()) {
@@ -93,7 +91,9 @@ storeSwapInFileNotify(void *data, int errflag, StoreIOState::Pointer self)
     store_client *sc = (store_client *)data;
     StoreEntry *e = sc->entry;
 
-    debug(1, 3) ("storeSwapInFileNotify: changing %d/%d to %d/%d\n", e->swap_filen, e->swap_dirn, sc->swapin_sio->swap_filen, sc->swapin_sio->swap_dirn);
+    debugs(1, 3, "storeSwapInFileNotify: changing " << e->swap_filen << "/" <<
+           e->swap_dirn << " to " << sc->swapin_sio->swap_filen << "/" <<
+           sc->swapin_sio->swap_dirn);
 
     e->swap_filen = sc->swapin_sio->swap_filen;
     e->swap_dirn = sc->swapin_sio->swap_dirn;

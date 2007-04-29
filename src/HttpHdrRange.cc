@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.40 2006/06/06 19:22:13 hno Exp $
+ * $Id: HttpHdrRange.cc,v 1.41 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -98,7 +98,7 @@ HttpHdrRangeSpec::parseInit(const char *field, int flen)
     } else
         /* must have a '-' somewhere in _this_ field */
         if (!((p = strchr(field, '-')) || (p - field >= flen))) {
-            debug(64, 2) ("ignoring invalid (missing '-') range-spec near: '%s'\n", field);
+            debugs(64, 2, "ignoring invalid (missing '-') range-spec near: '" << field << "'");
             return false;
         } else {
             if (!httpHeaderParseSize(field, &offset))
@@ -121,7 +121,7 @@ HttpHdrRangeSpec::parseInit(const char *field, int flen)
 
     /* we managed to parse, check if the result makes sence */
     if (length == 0) {
-        debug(64, 2) ("ignoring invalid (zero length) range-spec near: '%s'\n", field);
+        debugs(64, 2, "ignoring invalid (zero length) range-spec near: '" << field << "'");
         return false;
     }
 
@@ -143,8 +143,9 @@ HttpHdrRangeSpec::packInto(Packer * packer) const
 void
 HttpHdrRangeSpec::outputInfo( char const *note) const
 {
-    debug(64, 5) ("HttpHdrRangeSpec::canonize: %s: [%ld, %ld) len: %ld\n",
-                  note, (long int) offset, (long int) offset + length, (long int) length);
+    debugs(64, 5, "HttpHdrRangeSpec::canonize: " << note << ": [" <<
+           (long int) offset << ", " << (long int) offset + length <<
+           ") len: " << (long int) length);
 }
 
 /* fills "absent" positions in range specification based on response body size
@@ -252,7 +253,7 @@ HttpHdrRange::parseInit(const String * range_spec)
     int count = 0;
     assert(this && range_spec);
     ++ParsedCount;
-    debug(64, 8) ("parsing range field: '%s'\n", range_spec->buf());
+    debugs(64, 8, "parsing range field: '" << range_spec->buf() << "'");
     /* check range type */
 
     if (range_spec->caseCmp("bytes=", 6))
@@ -592,14 +593,12 @@ HttpHdrRangeIter::updateSpec()
 ssize_t
 HttpHdrRangeIter::debt() const
 {
-    debug(64, 3) ("HttpHdrRangeIter::debt: debt is %d\n",
-                  (int)debt_size);
+    debugs(64, 3, "HttpHdrRangeIter::debt: debt is " << (int)debt_size);
     return debt_size;
 }
 
 void HttpHdrRangeIter::debt(ssize_t newDebt)
 {
-    debug(64, 3) ("HttpHdrRangeIter::debt: was %d now %d\n",
-                  (int)debt_size, (int)newDebt);
+    debugs(64, 3, "HttpHdrRangeIter::debt: was " << (int)debt_size << " now " << (int)newDebt);
     debt_size = newDebt;
 }

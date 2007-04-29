@@ -1,5 +1,5 @@
 /*
- * $Id: Server.cc,v 1.8 2007/04/06 04:50:05 rousskov Exp $
+ * $Id: Server.cc,v 1.9 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG:
  * AUTHOR: Duane Wessels
@@ -226,8 +226,7 @@ ServerStateData::sentRequestBodyWrapper(int fd, char *bufnotused, size_t size, c
 void
 ServerStateData::sentRequestBody(int fd, size_t size, comm_err_t errflag)
 {
-    debug(11, 5) ("sentRequestBody: FD %d: size %d: errflag %d.\n",
-                  fd, (int) size, errflag);
+    debugs(11, 5, "sentRequestBody: FD " << fd << ": size " << (int) size << ": errflag " << errflag << ".");
     debugs(32,3,HERE << "sentRequestBody called");
 
     requestSender = NULL;
@@ -247,7 +246,7 @@ ServerStateData::sentRequestBody(int fd, size_t size, comm_err_t errflag)
     }
 
     if (errflag) {
-        debug(11, 1) ("sentRequestBody error: FD %d: %s\n", fd, xstrerr(errno));
+        debugs(11, 1, "sentRequestBody error: FD " << fd << ": " << xstrerr(errno));
         ErrorState *err;
         err = errorCon(ERR_WRITE_ERROR, HTTP_BAD_GATEWAY, fwd->request);
         err->xerrno = errno;
@@ -300,13 +299,13 @@ ServerStateData::haveParsedReplyHeaders()
 bool
 ServerStateData::startIcap(ICAPServiceRep::Pointer service, HttpRequest *cause)
 {
-    debug(11,5)("ServerStateData::startIcap() called\n");
+    debugs(11, 5, "ServerStateData::startIcap() called");
     if (!service) {
-        debug(11,3)("ServerStateData::startIcap fails: lack of service\n");
+        debugs(11, 3, "ServerStateData::startIcap fails: lack of service");
         return false;
     }
     if (service->broken()) {
-        debug(11,3)("ServerStateData::startIcap fails: broken service\n");
+        debugs(11, 3, "ServerStateData::startIcap fails: broken service");
         return false;
     }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.101 2007/04/11 22:58:32 wessels Exp $
+ * $Id: debug.cc,v 1.102 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -563,7 +563,7 @@ debugLogTime(void) {
 
 void
 xassert(const char *msg, const char *file, int line) {
-    debug(0, 0) ("assertion failed: %s:%d: \"%s\"\n", file, line, msg);
+    debugs(0, 0, "assertion failed: " << file << ":" << line << ": \"" << msg << "\"");
 
     if (!shutting_down)
         abort();
@@ -603,7 +603,7 @@ xassert(const char *msg, const char *file, int line) {
  *      // detect exceptional condition, and simply report it, the context
  *      // information will be available somewhere close in the log file
  *      if (status == STRANGE_STATUS)
- *      debug(13, 6) ("DOS attack detected, data: %p\n", data);
+ *      debugs(13, 6, "DOS attack detected, data: " << data);
  *      ...
  * }
  * 
@@ -671,7 +671,7 @@ ctx_enter(const char *descr) {
         Ctx_Descrs[Ctx_Current_Level] = descr;
 
     if (Ctx_Current_Level == Ctx_Warn_Level) {
-        debug(0, 0) ("# ctx: suspiciously deep (%d) nesting:\n", Ctx_Warn_Level);
+        debugs(0, 0, "# ctx: suspiciously deep (" << Ctx_Warn_Level << ") nesting:");
         Ctx_Warn_Level *= 2;
     }
 

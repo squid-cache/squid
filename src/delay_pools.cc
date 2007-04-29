@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.47 2006/08/07 02:28:22 robertc Exp $
+ * $Id: delay_pools.cc,v 1.48 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -662,7 +662,7 @@ void
 DelayPools::pools (u_short newPools)
 {
     if (pools()) {
-        debug(3, 0) ("parse_delay_pool_count: multiple delay_pools lines, aborting all previous delay_pools config\n");
+        debugs(3, 0, "parse_delay_pool_count: multiple delay_pools lines, aborting all previous delay_pools config");
         FreePools();
     }
 

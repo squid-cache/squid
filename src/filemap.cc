@@ -1,6 +1,6 @@
 
 /*
- * $Id: filemap.cc,v 1.42 2003/02/21 22:50:08 robertc Exp $
+ * $Id: filemap.cc,v 1.43 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 8     Swap File Bitmap
  * AUTHOR: Harvest Derived
@@ -61,9 +61,8 @@ file_map_create(void)
     fileMap *fm = (fileMap *)xcalloc(1, sizeof(fileMap));
     fm->max_n_files = FM_INITIAL_NUMBER;
     fm->nwords = fm->max_n_files >> LONG_BIT_SHIFT;
-    debug(8, 3) ("file_map_create: creating space for %d files\n", fm->max_n_files);
-    debug(8, 5) ("--> %d words of %d bytes each\n",
-                 fm->nwords, (int) sizeof(*fm->file_map));
+    debugs(8, 3, "file_map_create: creating space for " << fm->max_n_files << " files");
+    debugs(8, 5, "--> " << fm->nwords << " words of " << (int) sizeof(*fm->file_map) << " bytes each");
     fm->file_map = (unsigned long *)xcalloc(fm->nwords, sizeof(*fm->file_map));
     /* XXX account fm->file_map */
     return fm;
@@ -77,9 +76,9 @@ file_map_grow(fileMap * fm)
     fm->max_n_files <<= 1;
     assert(fm->max_n_files <= (1 << 24));	/* swap_filen is 25 bits, signed */
     fm->nwords = fm->max_n_files >> LONG_BIT_SHIFT;
-    debug(8, 3) ("file_map_grow: creating space for %d files\n", fm->max_n_files);
+    debugs(8, 3, "file_map_grow: creating space for " << fm->max_n_files << " files");
     fm->file_map = (unsigned long *)xcalloc(fm->nwords, sizeof(*fm->file_map));
-    debug(8, 3) ("copying %d old bytes\n", old_sz);
+    debugs(8, 3, "copying " << old_sz << " old bytes");
     xmemcpy(fm->file_map, old_map, old_sz);
     xfree(old_map);
     /* XXX account fm->file_map */
@@ -156,7 +155,7 @@ file_map_allocate(fileMap * fm, int suggestion)
         }
     }
 
-    debug(8, 3) ("growing from file_map_allocate\n");
+    debugs(8, 3, "growing from file_map_allocate");
     file_map_grow(fm);
     return file_map_allocate(fm, fm->max_n_files >> 1);
 }

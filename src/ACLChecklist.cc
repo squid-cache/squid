@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.35 2007/04/20 22:24:07 wessels Exp $
+ * $Id: ACLChecklist.cc,v 1.36 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -54,7 +54,7 @@ ACLChecklist::authenticated()
         /* WWW authorization on accelerated requests */
         headertype = HDR_AUTHORIZATION;
     } else if (request->flags.transparent) {
-        debug(28, 1) ("ACHChecklist::authenticated: authentication not applicable on transparently intercepted requests.\n");
+        debugs(28, 1, "ACHChecklist::authenticated: authentication not applicable on transparently intercepted requests.");
         return -1;
     } else {
         /* Proxy authorization on proxy requests */
@@ -66,7 +66,7 @@ ACLChecklist::authenticated()
     switch (AuthUserRequest::tryToAuthenticateAndSetAuthUser (&auth_user_request, headertype, request, conn(), src_addr)) {
 
     case AUTH_ACL_CANNOT_AUTHENTICATE:
-        debug(28, 4) ("aclMatchAcl: returning  0 user authenticated but not authorised.\n");
+        debugs(28, 4, "aclMatchAcl: returning  0 user authenticated but not authorised.");
         return 0;
 
     case AUTH_AUTHENTICATED:
@@ -75,12 +75,12 @@ ACLChecklist::authenticated()
         break;
 
     case AUTH_ACL_HELPER:
-        debug(28, 4) ("aclMatchAcl: returning 0 sending credentials to helper.\n");
+        debugs(28, 4, "aclMatchAcl: returning 0 sending credentials to helper.");
         changeState (ProxyAuthLookup::Instance());
         return 0;
 
     case AUTH_ACL_CHALLENGE:
-        debug(28, 4) ("aclMatchAcl: returning 0 sending authentication challenge.\n");
+        debugs(28, 4, "aclMatchAcl: returning 0 sending authentication challenge.");
         changeState (ProxyAuthNeeded::Instance());
         return 0;
 
@@ -123,7 +123,7 @@ ACLChecklist::check()
 
         if (!cbdataReferenceValid(accessList)) {
             cbdataReferenceDone(accessList);
-            debug (28,4)("ACLChecklist::check: %p accessList is invalid\n", this);
+            debugs(28, 4, "ACLChecklist::check: " << this << " accessList is invalid");
             continue;
         }
 
@@ -140,7 +140,7 @@ ACLChecklist::check()
              * We are done.  Either the request
              * is allowed, denied, requires authentication.
              */
-            debug(28, 3) ("ACLChecklist::check: %p match found, calling back with %d\n", this, currentAnswer());
+            debugs(28, 3, "ACLChecklist::check: " << this << " match found, calling back with " << currentAnswer());
             cbdataReferenceDone(accessList); /* A */
             checkCallback(currentAnswer());
             /* From here on in, this may be invalid */
@@ -160,8 +160,9 @@ ACLChecklist::check()
     }
 
     /* dropped off the end of the list */
-    debug(28, 3) ("ACLChecklist::check: %p NO match found, returning %d\n", this,
-                  currentAnswer() != ACCESS_DENIED ? ACCESS_DENIED : ACCESS_ALLOWED);
+    debugs(28, 3, "ACLChecklist::check: " << this <<
+           " NO match found, returning " <<
+           (currentAnswer() != ACCESS_DENIED ? ACCESS_DENIED : ACCESS_ALLOWED));
 
     checkCallback(currentAnswer() != ACCESS_DENIED ? ACCESS_DENIED : ACCESS_ALLOWED);
 }
@@ -177,7 +178,8 @@ ACLChecklist::asyncInProgress(bool const newAsync)
 {
     assert (!finished() && !(asyncInProgress() && newAsync));
     async_ = newAsync;
-    debug (28,3)("ACLChecklist::asyncInProgress: %p async set to %d\n", this, async_);
+    debugs(28, 3, "ACLChecklist::asyncInProgress: " << this <<
+           " async set to " << async_);
 }
 
 void
@@ -197,13 +199,14 @@ ACLChecklist::markFinished()
 {
     assert (!finished() && !asyncInProgress());
     finished_ = true;
-    debug (28,3)("ACLChecklist::markFinished: %p checklist processing finished\n", this);
+    debugs(28, 3, "ACLChecklist::markFinished: " << this <<
+           " checklist processing finished");
 }
 
 void
 ACLChecklist::preCheck()
 {
-    debug(28, 3) ("ACLChecklist::preCheck: %p checking '%s'\n", this, accessList->cfgline);
+    debugs(28, 3, "ACLChecklist::preCheck: " << this << " checking '" << accessList->cfgline << "'");
     /* what is our result on a match? */
     currentAnswer(accessList->allow);
 }
@@ -227,7 +230,8 @@ ACLChecklist::checkCallback(allow_t answer)
 {
     PF *callback_;
     void *cbdata_;
-    debug(28, 3) ("ACLChecklist::checkCallback: %p answer=%d\n", this, answer);
+    debugs(28, 3, "ACLChecklist::checkCallback: " << this << " answer=" << answer);
+
     /* During reconfigure, we can end up not finishing call
      * sequences into the auth code */
 
@@ -265,15 +269,17 @@ ACLChecklist::matchAclList(const acl_list * head, bool const fast)
             changeState(NullState::Instance());
 
         if (!nodeMatched || state_ != NullState::Instance()) {
-            debug(28, 3) ("aclmatchAclList: %p returning false (AND list entry failed to match)\n", this);
+            debugs(28, 3, "aclmatchAclList: " << this << " returning false (AND list entry failed to match)");
+
             bool async = state_ != NullState::Instance();
 
             checkForAsync();
 
             bool async_in_progress = asyncInProgress();
-            debug(28,3)("aclmatchAclList: async=%d nodeMatched=%d async_in_progress=%d lastACLResult() = %d\n",
-                        async ? 1 : 0, nodeMatched ? 1 : 0, async_in_progress ? 1 : 0,
-                        lastACLResult() ? 1 : 0);
+            debugs(28, 3, "aclmatchAclList: async=" << (async ? 1 : 0) <<
+                   " nodeMatched=" << (nodeMatched ? 1 : 0) <<
+                   " async_in_progress=" << (async_in_progress ? 1 : 0) <<
+                   " lastACLResult() = " << (lastACLResult() ? 1 : 0));
 
             if (async && nodeMatched && !asyncInProgress() && lastACLResult()) {
                 // async acl, but using cached response, and it was a match
@@ -292,7 +298,8 @@ ACLChecklist::matchAclList(const acl_list * head, bool const fast)
         node = node->next;
     }
 
-    debug(28, 3) ("aclmatchAclList: %p returning true (AND list satisfied)\n", this);
+    debugs(28, 3, "aclmatchAclList: " << this << " returning true (AND list satisfied)");
+
     markFinished();
     PROF_stop(aclMatchAclList);
 }
@@ -358,7 +365,7 @@ ACLChecklist::~ACLChecklist()
 
     cbdataReferenceDone(accessList);
 
-    debug (28,4)("ACLChecklist::~ACLChecklist: destroyed %p\n", this);
+    debugs(28, 4, "ACLChecklist::~ACLChecklist: destroyed " << this);
 }
 
 
@@ -427,7 +434,7 @@ ACLChecklist::fastCheck()
 {
     PROF_start(aclCheckFast);
     currentAnswer(ACCESS_DENIED);
-    debug(28, 5) ("aclCheckFast: list: %p\n", accessList);
+    debugs(28, 5, "aclCheckFast: list: " << accessList);
 
     while (accessList) {
         preCheck();
@@ -451,7 +458,8 @@ ACLChecklist::fastCheck()
         cbdataReferenceDone(A);
     }
 
-    debug(28, 5) ("aclCheckFast: no matches, returning: %d\n", currentAnswer() == ACCESS_DENIED);
+    debugs(28, 5, "aclCheckFast: no matches, returning: " << (currentAnswer() == ACCESS_DENIED));
+
     PROF_stop(aclCheckFast);
     return currentAnswer() == ACCESS_DENIED;
 }

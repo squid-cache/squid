@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.56 2007/04/06 15:39:06 serassio Exp $
+ * $Id: fd.cc,v 1.57 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -97,7 +97,7 @@ fd_close(int fd)
         assert(F->write_handler == NULL);
     }
 
-    debug(51, 3) ("fd_close FD %d %s\n", fd, F->desc);
+    debugs(51, 3, "fd_close FD " << fd << " " << F->desc);
     commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
     commSetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
     F->flags.open = 0;
@@ -176,12 +176,12 @@ fd_open(int fd, unsigned int type, const char *desc)
     F = &fd_table[fd];
 
     if (F->flags.open) {
-        debug(51, 1) ("WARNING: Closing open FD %4d\n", fd);
+        debugs(51, 1, "WARNING: Closing open FD " << std::setw(4) << fd);
         fd_close(fd);
     }
 
     assert(!F->flags.open);
-    debug(51, 3) ("fd_open FD %d %s\n", fd, desc);
+    debugs(51, 3, "fd_open FD " << fd << " " << desc);
     F->type = type;
     F->flags.open = 1;
     F->epoll_state = 0;
@@ -268,11 +268,11 @@ fdDumpOpen(void)
         if (i == fileno(debug_log))
             continue;
 
-        debug(51, 1) ("Open FD %-10s %4d %s\n",
-                      F->bytes_read && F->bytes_written ? "READ/WRITE" :
-                      F->bytes_read ? "READING" :
-                      F->bytes_written ? "WRITING" : null_string,
-                      i, F->desc);
+        debugs(51, 1, "Open FD "<< std::left<< std::setw(10) << 
+               (F->bytes_read && F->bytes_written ? "READ/WRITE" :
+                F->bytes_read ? "READING" : F->bytes_written ? "WRITING" : 
+                null_string)  <<
+               " "<< std::right << std::setw(4) << i  << " " << F->desc);
     }
 }
 
@@ -322,11 +322,10 @@ fdAdjustReserved(void)
 
     if (newReserve > x) {
         /* perhaps this should be fatal()? -DW */
-        debug(51, 0) ("WARNING: This machine has a serious shortage of filedescriptors.\n");
+        debugs(51, 0, "WARNING: This machine has a serious shortage of filedescriptors.");
         newReserve = x;
     }
 
-    debug(51, 0) ("Reserved FD adjusted from %d to %d due to failures\n",
-                  RESERVED_FD, newReserve);
+    debugs(51, 0, "Reserved FD adjusted from " << RESERVED_FD << " to " << newReserve << " due to failures");
     RESERVED_FD = newReserve;
 }

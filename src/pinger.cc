@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.57 2007/04/24 15:04:22 hno Exp $
+ * $Id: pinger.cc,v 1.58 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -248,7 +248,7 @@ pingerOpen(void)
 
     if (x < (int)sizeof(wpi)) {
         getCurrentTime();
-        debug(42, 0) ("pingerOpen: read: FD 0: %s\n", xstrerror());
+        debugs(42, 0, "pingerOpen: read: FD 0: " << xstrerror());
         write(1, "ERR\n", 4);
         exit(1);
     }
@@ -260,7 +260,7 @@ pingerOpen(void)
 
     if (x < (int)sizeof(PS)) {
         getCurrentTime();
-        debug(42, 0) ("pingerOpen: read: FD 0: %s\n", xstrerror());
+        debugs(42, 0, "pingerOpen: read: FD 0: " << xstrerror());
         write(1, "ERR\n", 4);
         exit(1);
     }
@@ -269,19 +269,19 @@ pingerOpen(void)
 #endif
 
     if ((proto = getprotobyname("icmp")) == 0) {
-        debug(42, 0) ("pingerOpen: unknown protocol: icmp\n");
+        debugs(42, 0, "pingerOpen: unknown protocol: icmp");
         exit(1);
     }
 
     icmp_sock = socket(PF_INET, SOCK_RAW, proto->p_proto);
 
     if (icmp_sock < 0) {
-        debug(50, 0) ("pingerOpen: icmp_sock: %s\n", xstrerror());
+        debugs(50, 0, "pingerOpen: icmp_sock: " << xstrerror());
         exit(1);
     }
 
     icmp_ident = getpid() & 0xffff;
-    debug(42, 0) ("pinger: ICMP socket opened\n");
+    debugs(42, 0, "pinger: ICMP socket opened");
 #ifdef _SQUID_MSWIN_
 
     socket_to_squid =
@@ -290,7 +290,7 @@ pingerOpen(void)
 
     if (socket_to_squid == -1) {
         getCurrentTime();
-        debug(42, 0) ("pingerOpen: WSASocket: %s\n", xstrerror());
+        debugs(42, 0, "pingerOpen: WSASocket: " << xstrerror());
         write(1, "ERR\n", 4);
         exit(1);
     }
@@ -299,7 +299,7 @@ pingerOpen(void)
 
     if (SOCKET_ERROR == x) {
         getCurrentTime();
-        debug(42, 0) ("pingerOpen: connect: %s\n", xstrerror());
+        debugs(42, 0, "pingerOpen: connect: " << xstrerror());
         write(1, "ERR\n", 4);
         exit(1);
     }
@@ -309,19 +309,19 @@ pingerOpen(void)
     x = recv(socket_to_squid, (void *) buf, sizeof(buf), 0);
 
     if (x < 3) {
-        debug(42, 0) ("icmpOpen: recv: %s\n", xstrerror());
+        debugs(42, 0, "icmpOpen: recv: " << xstrerror());
         exit(1);
     }
 
     x = send(socket_to_squid, (const void *) buf, strlen(buf), 0);
 
     if (x < 3 || strncmp("OK\n", buf, 3)) {
-        debug(42, 0) ("icmpOpen: recv: %s\n", xstrerror());
+        debugs(42, 0, "icmpOpen: recv: " << xstrerror());
         exit(1);
     }
 
     getCurrentTime();
-    debug(42, 0) ("pinger: Squid socket opened\n");
+    debugs(42, 0, "pinger: Squid socket opened");
 #endif
 }
 
@@ -447,7 +447,8 @@ pingerRecv(void)
 
 #endif
 
-    debug(42, 9) ("pingerRecv: %d bytes from %s\n", n, inet_ntoa(from.sin_addr));
+    debugs(42, 9, "pingerRecv: " << n << " bytes from " <<
+           inet_ntoa(from.sin_addr));
 
     ip = (struct iphdr *) (void *) pkt;
 
@@ -522,14 +523,12 @@ static void
 
 pingerLog(struct icmphdr *icmp, struct IN_ADDR addr, int rtt, int hops)
 {
-    debug(42, 2) ("pingerLog: %9d.%06d %-16s %d %-15.15s %dms %d hops\n",
-                  (int) current_time.tv_sec,
-                  (int) current_time.tv_usec,
-                  inet_ntoa(addr),
-                  (int) icmp->icmp_type,
-                  icmpPktStr[icmp->icmp_type],
-                  rtt,
-                  hops);
+    debugs(42, 2, "pingerLog: " << std::setw(9) << (int) current_time.tv_sec  <<
+           "."<< std::setfill('0') << std::setw(6) <<
+           (int) current_time.tv_usec  << " "<< std::left << std::setfill(' ')<<
+           std::setw(16) << inet_ntoa(addr)  << " "<< (int) icmp->icmp_type  <<
+           " " << std::setw(15) <<  icmpPktStr[icmp->icmp_type] << " " << rtt  <<
+           "ms " << hops  << " hops");
 }
 
 static int
@@ -594,7 +593,7 @@ pingerSendtoSquid(pingerReplyData * preply)
     int len = sizeof(pingerReplyData) - MAX_PKT_SZ + preply->psize;
 
     if (send(socket_to_squid, preply, len, 0) < 0) {
-        debug(50, 0) ("pinger: send: %s\n", xstrerror());
+        debugs(50, 0, "pinger: send: " << xstrerror());
         pingerClose();
         exit(1);
     }
@@ -642,7 +641,7 @@ main(int argc, char *argv[])
 
         if (FD_ISSET(socket_from_squid, &R))
             if (pingerReadRequest() < 0) {
-                debug(42, 0) ("Pinger exiting.\n");
+                debugs(42, 0, "Pinger exiting.");
                 pingerClose();
                 exit(1);
             }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: referer.cc,v 1.8 2007/04/25 11:30:18 adrian Exp $
+ * $Id: referer.cc,v 1.9 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 40    Referer Logging
  * AUTHOR: Joe Ramey <ramey@csc.ti.com> (useragent)
@@ -47,7 +47,7 @@ refererOpenLog(void)
     assert(NULL == refererlog);
 
     if (!Config.Log.referer || (0 == strcmp(Config.Log.referer, "none"))) {
-        debug(40, 1) ("Referer logging is disabled.\n");
+        debugs(40, 1, "Referer logging is disabled.");
         return;
     }
 

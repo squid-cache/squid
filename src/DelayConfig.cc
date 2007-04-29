@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayConfig.cc,v 1.7 2006/04/25 12:00:29 robertc Exp $
+ * $Id: DelayConfig.cc,v 1.8 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -64,7 +64,7 @@ DelayConfig::parsePoolClass()
     ConfigParser::ParseUShort(&pool);
 
     if (pool < 1 || pool > DelayPools::pools()) {
-        debug(3, 0) ("parse_delay_pool_class: Ignoring pool %d not in 1 .. %d\n", pool, DelayPools::pools());
+        debugs(3, 0, "parse_delay_pool_class: Ignoring pool " << pool << " not in 1 .. " << DelayPools::pools());
         return;
     }
 
@@ -72,7 +72,7 @@ DelayConfig::parsePoolClass()
     ConfigParser::ParseUShort(&delay_class_);
 
     if (delay_class_ < 1 || delay_class_ > 5) {
-        debug(3, 0) ("parse_delay_pool_class: Ignoring pool %d class %d not in 1 .. 5\n", pool, delay_class_);
+        debugs(3, 0, "parse_delay_pool_class: Ignoring pool " << pool << " class " << delay_class_ << " not in 1 .. 5");
         return;
     }
 
@@ -88,14 +88,14 @@ DelayConfig::parsePoolRates()
     ConfigParser::ParseUShort(&pool);
 
     if (pool < 1 || pool > DelayPools::pools()) {
-        debug(3, 0) ("parse_delay_pool_rates: Ignoring pool %d not in 1 .. %d\n", pool, DelayPools::pools());
+        debugs(3, 0, "parse_delay_pool_rates: Ignoring pool " << pool << " not in 1 .. " << DelayPools::pools());
         return;
     }
 
     pool--;
 
     if (!DelayPools::delay_data[pool].theComposite().getRaw()) {
-        debug(3, 0) ("parse_delay_pool_rates: Ignoring pool %d attempt to set rates with class not set\n", pool + 1);
+        debugs(3, 0, "parse_delay_pool_rates: Ignoring pool " << pool + 1 << " attempt to set rates with class not set");
         return;
     }
 
@@ -110,7 +110,7 @@ DelayConfig::parsePoolAccess(ConfigParser &parser)
     ConfigParser::ParseUShort(&pool);
 
     if (pool < 1 || pool > DelayPools::pools()) {
-        debug(3, 0) ("parse_delay_pool_rates: Ignoring pool %d not in 1 .. %d\n", pool, DelayPools::pools());
+        debugs(3, 0, "parse_delay_pool_rates: Ignoring pool " << pool << " not in 1 .. " << DelayPools::pools());
         return;
     }
 

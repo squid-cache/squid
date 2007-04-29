@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaMD5.cc,v 1.4 2004/08/30 05:12:31 robertc Exp $
+ * $Id: StoreMetaMD5.cc,v 1.5 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -54,13 +54,12 @@ StoreMetaMD5::checkConsistency(StoreEntry *e) const
 
     if (!EBIT_TEST(e->flags, KEY_PRIVATE) &&
             memcmp(value, e->key, MD5_DIGEST_CHARS)) {
-        debug(20, 2) ("storeClientReadHeader: swapin MD5 mismatch\n");
-        //	debug(20, 2) ("\t%s\n", storeKeyText((const cache_key *)value));
-        debug(20, 2) ("\t%s\n", e->getMD5Text());
+        debugs(20, 2, "storeClientReadHeader: swapin MD5 mismatch");
+        // debugs(20, 2, "\t" << storeKeyText((const cache_key *)value));
+        debugs(20, 2, "\t" << e->getMD5Text());
 
         if (isPowTen(++md5_mismatches))
-            debug(20, 1) ("WARNING: %d swapin MD5 mismatches\n",
-                          md5_mismatches);
+            debugs(20, 1, "WARNING: " << md5_mismatches << " swapin MD5 mismatches");
 
         return false;
     }

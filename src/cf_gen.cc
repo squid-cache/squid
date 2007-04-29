@@ -1,6 +1,6 @@
 
 /*
- * $Id: cf_gen.cc,v 1.58 2006/05/08 23:38:33 robertc Exp $
+ * $Id: cf_gen.cc,v 1.59 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: none          Generate squid.conf.default and cf_parser.h
  * AUTHOR: Max Okumoto
@@ -598,7 +598,7 @@ gen_parse(Entry * head, FILE * fp)
             "parse_line(char *buff)\n"
             "{\n"
             "\tchar\t*token;\n"
-            "\tdebug(0,10)(\"parse_line: %%s\\n\", buff);\n"
+            "\tdebugs(0, 10, \"parse_line: \" << buff << \"\\n\" );\n"
             "\tif ((token = strtok(buff, w_space)) == NULL) \n"
             "\t\treturn 1;\t/* ignore empty lines */\n"
            );

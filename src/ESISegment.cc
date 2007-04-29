@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESISegment.cc,v 1.3 2003/08/04 22:14:40 robertc Exp $
+ * $Id: ESISegment.cc,v 1.4 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -236,5 +236,5 @@ ESISegment::dumpOne() const
 {
     String temp;
     temp.limitInit(buf, len);
-    debug (86, 9) ("ESISegment::dumpOne: \"%s\"\n", temp.buf());
+    debugs(86, 9, "ESISegment::dumpOne: \"" << temp.buf() << "\"");
 }

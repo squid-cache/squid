@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayVector.cc,v 1.9 2003/08/04 22:14:40 robertc Exp $
+ * $Id: DelayVector.cc,v 1.10 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -140,7 +140,7 @@ DelayVector::Id::operator delete (void *address)
 
 DelayVector::Id::Id(DelayVector::Pointer aDelayVector, CompositeSelectionDetails &details) : theVector(aDelayVector)
 {
-    debug(77,3)("DelayVector::Id::Id\n");
+    debugs(77, 3, "DelayVector::Id::Id");
     DelayVector::iterator pos = theVector->pools.begin();
 
     while (pos != theVector->pools.end()) {
@@ -151,7 +151,7 @@ DelayVector::Id::Id(DelayVector::Pointer aDelayVector, CompositeSelectionDetails
 
 DelayVector::Id::~Id()
 {
-    debug(77,3)("DelayVector::Id::~Id\n");
+    debugs(77, 3, "DelayVector::Id::~Id");
 }
 
 int

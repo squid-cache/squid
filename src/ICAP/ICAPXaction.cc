@@ -145,7 +145,7 @@ void ICAPXaction::openConnection()
 void
 ICAPXaction::reusedConnection(void *data)
 {
-    debug(93,5)("ICAPXaction::reusedConnection\n");
+    debugs(93, 5, "ICAPXaction::reusedConnection");
     ICAPXaction *x = (ICAPXaction*)data;
     x->noteCommConnected(COMM_OK);
 }

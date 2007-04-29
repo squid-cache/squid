@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_epoll.cc,v 1.14 2007/04/25 11:30:18 adrian Exp $
+ * $Id: comm_epoll.cc,v 1.15 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -133,8 +133,9 @@ commSetSelect(int fd, unsigned int type, PF * handler,
 
     struct epoll_event ev;
     assert(fd >= 0);
-    debug(5, DEBUG_EPOLL ? 0 : 8) ("commSetSelect(FD %d,type=%u,handler=%p,client_data=%p,timeout=%ld)\n",
-                                   fd,type,handler,client_data,timeout);
+    debugs(5, DEBUG_EPOLL ? 0 : 8, "commSetSelect(FD " << fd << ",type=" << type << 
+           ",handler=" << handler << ",client_data=" << client_data << 
+           ",timeout=" << timeout << ")");
 
     if (RUNNING_ON_VALGRIND) {
 	/* Keep valgrind happy.. complains about uninitialized bytes otherwise */
@@ -189,8 +190,8 @@ commSetSelect(int fd, unsigned int type, PF * handler,
         F->epoll_state = ev.events;
 
         if (epoll_ctl(kdpfd, epoll_ctl_type, fd, &ev) < 0) {
-            debug(5, DEBUG_EPOLL ? 0 : 8) ("commSetSelect: epoll_ctl(,%s,,): failed on FD %d: %s\n",
-                                           epolltype_atoi(epoll_ctl_type), fd, xstrerror());
+            debugs(5, DEBUG_EPOLL ? 0 : 8, "commSetSelect: epoll_ctl(," << epolltype_atoi(epoll_ctl_type) << 
+                   ",,): failed on FD " << fd << ": " << xstrerror());
         }
     }
 
@@ -274,21 +275,22 @@ comm_select(int msec)
     for (i = 0, cevents = pevents; i < num; i++, cevents++) {
         fd = cevents->data.fd;
         F = &fd_table[fd];
-        debug(5, DEBUG_EPOLL ? 0 : 8) ("comm_select(): got FD %d events=%x monitoring=%x F->read_handler=%p F->write_handler=%p\n",
-                                       fd,cevents->events,F->epoll_state,F->read_handler,F->write_handler);
+        debugs(5, DEBUG_EPOLL ? 0 : 8, "comm_select(): got FD " << fd << " events=" << 
+              std::hex << cevents->events << " monitoring=" << F->epoll_state << 
+              " F->read_handler=" << F->read_handler << " F->write_handler=" << F->write_handler);
 
         // TODO: add EPOLLPRI??
 
         if (cevents->events & (EPOLLIN|EPOLLHUP|EPOLLERR)) {
             if ((hdl = F->read_handler) != NULL) {
-                debug(5, DEBUG_EPOLL ? 0 : 8) ("comm_select(): Calling read handler on FD %d\n",fd);
+                debugs(5, DEBUG_EPOLL ? 0 : 8, "comm_select(): Calling read handler on FD " << fd);
                 PROF_start(comm_write_handler);
                 F->read_handler = NULL;
                 hdl(fd, F->read_data);
                 PROF_stop(comm_write_handler);
                 statCounter.select_fds++;
             } else {
-                debug(5, DEBUG_EPOLL ? 0 : 8) ("comm_select(): no read handler for FD %d\n",fd);
+                debugs(5, DEBUG_EPOLL ? 0 : 8, "comm_select(): no read handler for FD " << fd);
                 fd_table[fd].flags.read_pending = 1;
                 // remove interest since no handler exist for this event.
                 commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
@@ -297,7 +299,7 @@ comm_select(int msec)
 
         if (cevents->events & (EPOLLOUT|EPOLLHUP|EPOLLERR)) {
             if ((hdl = F->write_handler) != NULL) {
-                debug(5, DEBUG_EPOLL ? 0 : 8) ("comm_select(): Calling write handler on FD %d\n",fd);
+                debugs(5, DEBUG_EPOLL ? 0 : 8, "comm_select(): Calling write handler on FD " << fd);
                 PROF_start(comm_read_handler);
                 F->write_handler = NULL;
                 hdl(fd, F->write_data);
@@ -305,7 +307,7 @@ comm_select(int msec)
                 statCounter.select_fds++;
             } else {
                 fd_table[fd].flags.write_pending = 1;
-                debug(5, DEBUG_EPOLL ? 0 : 8) ("comm_select(): no write handler for FD %d\n",fd);
+                debugs(5, DEBUG_EPOLL ? 0 : 8, "comm_select(): no write handler for FD " << fd);
                 // remove interest since no handler exist for this event.
                 commSetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
             }

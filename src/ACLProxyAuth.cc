@@ -104,12 +104,12 @@ bool
 ACLProxyAuth::valid () const
 {
     if (authenticateSchemeCount() == 0) {
-        debug(28, 0) ("Can't use proxy auth because no authentication schemes were compiled.\n");
+        debugs(28, 0, "Can't use proxy auth because no authentication schemes were compiled.");
         return false;
     }
 
     if (authenticateActiveSchemeCount() == 0) {
-        debug(28, 0) ("Can't use proxy auth because no authentication schemes are fully configured.\n");
+        debugs(28, 0, "Can't use proxy auth because no authentication schemes are fully configured.");
         return false;
     }
 
@@ -136,8 +136,7 @@ void
 ProxyAuthLookup::checkForAsync(ACLChecklist *checklist)const
 {
     checklist->asyncInProgress(true);
-    debug(28, 3)
-    ("ACLChecklist::checkForAsync: checking password via authenticator\n");
+    debugs(28, 3, "ACLChecklist::checkForAsync: checking password via authenticator");
 
     auth_user_request_t *auth_user_request;
     /* make sure someone created auth_user_request for us */
@@ -183,7 +182,7 @@ ProxyAuthNeeded::checkForAsync(ACLChecklist *checklist) const
      * credentials. (This may be part of a stateful auth protocol.)
      * The request is denied.
      */
-    debug(28, 6) ("ACLChecklist::checkForAsync: requiring Proxy Auth header.\n");
+    debugs(28, 6, "ACLChecklist::checkForAsync: requiring Proxy Auth header.");
     checklist->currentAnswer(ACCESS_REQ_PROXY_AUTH);
     checklist->changeState (ACLChecklist::NullState::Instance());
     checklist->markFinished();

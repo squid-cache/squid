@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.116 2007/04/20 22:11:34 wessels Exp $
+ * $Id: redirect.cc,v 1.117 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -70,7 +70,7 @@ redirectHandleReply(void *data, char *reply)
     redirectStateData *r = static_cast<redirectStateData *>(data);
     char *t;
     void *cbdata;
-    debug(61, 5) ("redirectHandleRead: {%s}\n", reply ? reply : "<NULL>");
+    debugs(61, 5, "redirectHandleRead: {" << (reply ? reply : "<NULL>") << "}");
 
     if (reply) {
         if ((t = strchr(reply, ' ')))
@@ -120,7 +120,7 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
     char buf[8192];
     assert(http);
     assert(handler);
-    debug(61, 5) ("redirectStart: '%s'\n", http->uri);
+    debugs(61, 5, "redirectStart: '" << http->uri << "'");
 
     if (Config.onoff.redirector_bypass && redirectors->stats.queue_size) {
         /* Skip redirector if there is one request queued */

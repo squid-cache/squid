@@ -1,6 +1,6 @@
 
 /*
- * $Id: BlockingFile.cc,v 1.2 2004/12/21 17:28:29 robertc Exp $
+ * $Id: BlockingFile.cc,v 1.3 2007/04/28 22:26:44 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
@@ -60,7 +60,7 @@ BlockingFile::operator delete (void *address)
 BlockingFile::BlockingFile (char const *aPath) : fd (-1), closed (true), error_(false)
 {
     assert (aPath);
-    debug (79,3)("BlockingFile::BlockingFile: %s\n", aPath);
+    debugs(79, 3, "BlockingFile::BlockingFile: " << aPath);
     path_ = xstrdup (aPath);
 }
 
@@ -78,12 +78,12 @@ BlockingFile::open (int flags, mode_t mode, IORequestor::Pointer callback)
     ioRequestor = callback;
 
     if (fd < 0) {
-        debug(79, 3) ("BlockingFile::open: got failure (%d)\n", errno);
+        debugs(79, 3, "BlockingFile::open: got failure (" << errno << ")");
         error(true);
     } else {
         closed = false;
         store_open_disk_fd++;
-        debug(79, 3) ("BlockingFile::open: opened FD %d\n", fd);
+        debugs(79, 3, "BlockingFile::open: opened FD " << fd);
     }
 
     callback->ioCompletedNotification();
@@ -110,7 +110,7 @@ void BlockingFile::doClose()
 void
 BlockingFile::close ()
 {
-    debug (79,3)("BlockingFile::close: %p closing for %p\n", this, ioRequestor.getRaw());
+    debugs(79, 3, "BlockingFile::close: " << this << " closing for " << ioRequestor.getRaw());
     doClose();
     assert (ioRequestor.getRaw());
     ioRequestor->closeCompleted();
@@ -156,7 +156,7 @@ BlockingFile::ReadDone(int fd, const char *buf, int len, int errflag, void *my_d
 void
 BlockingFile::write(WriteRequest *aRequest)
 {
-    debug(79, 3) ("storeUfsWrite: FD %d\n",fd);
+    debugs(79, 3, "storeUfsWrite: FD " << fd);
     writeRequest = aRequest;
     file_write(fd,
                aRequest->offset,
@@ -179,13 +179,13 @@ BlockingFile::ioInProgress()const
 void
 BlockingFile::readDone(int rvfd, const char *buf, int len, int errflag)
 {
-    debug (79,3)("BlockingFile::readDone: FD %d\n",rvfd);
+    debugs(79, 3, "BlockingFile::readDone: FD " << rvfd);
     assert (fd == rvfd);
 
     ssize_t rlen;
 
     if (errflag) {
-        debug(79, 3) ("BlockingFile::readDone: got failure (%d)\n", errflag);
+        debugs(79, 3, "BlockingFile::readDone: got failure (" << errflag << ")");
         rlen = -1;
     } else {
         rlen = (ssize_t) len;
@@ -212,14 +212,13 @@ void
 BlockingFile::writeDone(int rvfd, int errflag, size_t len)
 {
     assert (rvfd == fd);
-    debug(79, 3) ("storeUfsWriteDone: FD %d, len %ld\n",
-                  fd, (long int) len);
+    debugs(79, 3, "storeUfsWriteDone: FD " << fd << ", len " << (long int) len);
 
     WriteRequest::Pointer result = writeRequest;
     writeRequest = NULL;
 
     if (errflag) {
-        debug(79, 0) ("storeUfsWriteDone: got failure (%d)\n", errflag);
+        debugs(79, 0, "storeUfsWriteDone: got failure (" << errflag << ")");
         doClose();
         ioRequestor->writeCompleted (DISK_ERROR,0, result);
         return;

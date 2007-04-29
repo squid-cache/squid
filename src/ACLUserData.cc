@@ -71,16 +71,14 @@ ACLUserData::match(char const *user)
 {
     SplayNode<char *> *Top = names;
 
-    debug(28, 7) ("aclMatchUser: user is %s, case_insensitive is %d\n",
-                  user, flags.case_insensitive);
-    debug(28, 8) ("Top is %p, Top->data is %s\n", Top,
-                  (char *) (Top != NULL ? (Top)->data : "Unavailable"));
+    debugs(28, 7, "aclMatchUser: user is " << user << ", case_insensitive is " << flags.case_insensitive);
+    debugs(28, 8, "Top is " << Top << ", Top->data is " << ((char *) (Top != NULL ? (Top)->data : "Unavailable")));
 
     if (user == NULL || strcmp(user, "-") == 0)
         return 0;
 
     if (flags.required) {
-        debug(28, 7) ("aclMatchUser: user REQUIRED and auth-info present.\n");
+        debugs(28, 7, "aclMatchUser: user REQUIRED and auth-info present.");
         return 1;
     }
 
@@ -90,8 +88,8 @@ ACLUserData::match(char const *user)
         Top = Top->splay((char *)user, splaystrcmp);
 
     /* Top=splay_splay(user,Top,(splayNode::SPLAYCMP *)dumping_strcmp); */
-    debug(28, 7) ("aclMatchUser: returning %d,Top is %p, Top->data is %s\n",
-                  !splayLastResult, Top, (char *) (Top ? Top->data : "Unavailable"));
+    debugs(28, 7, "aclMatchUser: returning " << !splayLastResult << ",Top is " <<
+           Top << ", Top->data is " << ((char *) (Top ? Top->data : "Unavailable")));
 
     names = Top;
 
@@ -128,17 +126,17 @@ ACLUserData::dump()
 void
 ACLUserData::parse()
 {
-    debug(28, 2) ("aclParseUserList: parsing user list\n");
+    debugs(28, 2, "aclParseUserList: parsing user list");
     char *t = NULL;
 
     if ((t = ConfigParser::strtokFile())) {
-        debug(28, 5) ("aclParseUserList: First token is %s\n", t);
+        debugs(28, 5, "aclParseUserList: First token is " << t);
 
         if (strcmp("-i", t) == 0) {
-            debug(28, 5) ("aclParseUserList: Going case-insensitive\n");
+            debugs(28, 5, "aclParseUserList: Going case-insensitive");
             flags.case_insensitive = 1;
         } else if (strcmp("REQUIRED", t) == 0) {
-            debug(28, 5) ("aclParseUserList: REQUIRED-type enabled\n");
+            debugs(28, 5, "aclParseUserList: REQUIRED-type enabled");
             flags.required = 1;
         } else {
             if (flags.case_insensitive)
@@ -148,14 +146,13 @@ ACLUserData::parse()
         }
     }
 
-    debug(28, 3) ("aclParseUserList: Case-insensitive-switch is %d\n",
-                  flags.case_insensitive);
+    debugs(28, 3, "aclParseUserList: Case-insensitive-switch is " << flags.case_insensitive);
     /* we might inherit from a previous declaration */
 
-    debug(28, 4) ("aclParseUserList: parsing user list\n");
+    debugs(28, 4, "aclParseUserList: parsing user list");
 
     while ((t = ConfigParser::strtokFile())) {
-        debug(28, 6) ("aclParseUserList: Got token: %s\n", t);
+        debugs(28, 6, "aclParseUserList: Got token: " << t);
 
         if (flags.case_insensitive)
             Tolower(t);

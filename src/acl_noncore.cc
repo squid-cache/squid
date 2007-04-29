@@ -1,5 +1,5 @@
 /*
- * $Id: acl_noncore.cc,v 1.4 2007/01/28 15:37:46 serassio Exp $
+ * $Id: acl_noncore.cc,v 1.5 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -52,28 +52,27 @@ aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name, int redirect_al
 {
     acl_deny_info_list *A = NULL;
 
-    debug(28,9)("aclGetDenyInfoPage: got called for %s\n",name);
+    debugs(28, 9, "aclGetDenyInfoPage: got called for " << name);
 
 
     for (A = *head; A; A = A->next) {
         acl_name_list *L = NULL;
 
         if (!redirect_allowed && strchr(A->err_page_name, ':')) {
-            debug(28,3)("aclGetDenyInfoPage: "
-                        "WARNING, unexpected codepath taken\n");
+            debugs(28, 3, "aclGetDenyInfoPage: WARNING, unexpected codepath taken");
             continue;
         }
 
         for (L = A->acl_list; L; L = L->next) {
             if (!strcmp(name, L->name)) {
-                debug(28,8)("aclGetDenyInfoPage: match on %s\n",name);
+                debugs(28, 8, "aclGetDenyInfoPage: match on " << name);
                 return A->err_page_id;
             }
 
         }
     }
 
-    debug(28,8)("aclGetDenyInfoPage: no match\n");
+    debugs(28, 8, "aclGetDenyInfoPage: no match");
     return ERR_NONE;
 }
 
@@ -81,7 +80,7 @@ aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name, int redirect_al
 int
 aclIsProxyAuth(const char *name)
 {
-    debug(28,5)("aclIsProxyAuth: called for %s\n",name);
+    debugs(28, 5, "aclIsProxyAuth: called for " << name);
 
     if (NULL == name)
         return false;
@@ -89,11 +88,11 @@ aclIsProxyAuth(const char *name)
     ACL *a;
 
     if ((a = ACL::FindByName(name))) {
-        debug(28,5)("aclIsProxyAuth: returning %d\n",a->isProxyAuth());
+        debugs(28, 5, "aclIsProxyAuth: returning " << a->isProxyAuth());
         return a->isProxyAuth();
     }
 
-    debug(28,3)("aclIsProxyAuth: WARNING, called for nonexistent ACL\n");
+    debugs(28, 3, "aclIsProxyAuth: WARNING, called for nonexistent ACL");
     return false;
 }
 
@@ -120,9 +119,8 @@ aclParseDenyInfoLine(acl_deny_info_list ** head)
     /* first expect a page name */
 
     if ((t = strtok(NULL, w_space)) == NULL) {
-        debug(28, 0) ("aclParseDenyInfoLine: %s line %d: %s\n",
-                      cfg_filename, config_lineno, config_input_line);
-        debug(28, 0) ("aclParseDenyInfoLine: missing 'error page' parameter.\n");
+        debugs(28, 0, "aclParseDenyInfoLine: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
+        debugs(28, 0, "aclParseDenyInfoLine: missing 'error page' parameter.");
         return;
     }
 
@@ -141,9 +139,8 @@ aclParseDenyInfoLine(acl_deny_info_list ** head)
     }
 
     if (A->acl_list == NULL) {
-        debug(28, 0) ("aclParseDenyInfoLine: %s line %d: %s\n",
-                      cfg_filename, config_lineno, config_input_line);
-        debug(28, 0) ("aclParseDenyInfoLine: deny_info line contains no ACL's, skipping\n");
+        debugs(28, 0, "aclParseDenyInfoLine: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
+        debugs(28, 0, "aclParseDenyInfoLine: deny_info line contains no ACL's, skipping");
         memFree(A, MEM_ACL_DENY_INFO_LIST);
         return;
     }
@@ -165,9 +162,8 @@ aclParseAccessLine(ConfigParser &parser, acl_access ** head)
     /* first expect either 'allow' or 'deny' */
 
     if ((t = strtok(NULL, w_space)) == NULL) {
-        debug(28, 0) ("aclParseAccessLine: %s line %d: %s\n",
-                      cfg_filename, config_lineno, config_input_line);
-        debug(28, 0) ("aclParseAccessLine: missing 'allow' or 'deny'.\n");
+        debugs(28, 0, "aclParseAccessLine: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
+        debugs(28, 0, "aclParseAccessLine: missing 'allow' or 'deny'.");
         return;
     }
 
@@ -178,9 +174,8 @@ aclParseAccessLine(ConfigParser &parser, acl_access ** head)
     else if (!strcmp(t, "deny"))
         A->allow = ACCESS_DENIED;
     else {
-        debug(28, 0) ("aclParseAccessLine: %s line %d: %s\n",
-                      cfg_filename, config_lineno, config_input_line);
-        debug(28, 0) ("aclParseAccessLine: expecting 'allow' or 'deny', got '%s'.\n", t);
+        debugs(28, 0, "aclParseAccessLine: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
+        debugs(28, 0, "aclParseAccessLine: expecting 'allow' or 'deny', got '" << t << "'.");
         delete A;
         return;
     }
@@ -188,9 +183,8 @@ aclParseAccessLine(ConfigParser &parser, acl_access ** head)
     aclParseAclList(parser, &A->aclList);
 
     if (A->aclList == NULL) {
-        debug(28, 0) ("%s line %d: %s\n",
-                      cfg_filename, config_lineno, config_input_line);
-        debug(28, 0) ("aclParseAccessLine: Access line contains no ACL's, skipping\n");
+        debugs(28, 0, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
+        debugs(28, 0, "aclParseAccessLine: Access line contains no ACL's, skipping");
         delete A;
         return;
     }
@@ -224,11 +218,11 @@ aclParseAclList(ConfigParser &parser, acl_list ** head)
             t++;
         }
 
-        debug(28, 3) ("aclParseAccessLine: looking for ACL name '%s'\n", t);
+        debugs(28, 3, "aclParseAccessLine: looking for ACL name '" << t << "'");
         a = ACL::FindByName(t);
 
         if (a == NULL) {
-            debug(28, 0) ("aclParseAccessLine: ACL name '%s' not found.\n", t);
+            debugs(28, 0, "aclParseAccessLine: ACL name '" << t << "' not found.");
             delete L;
             parser.destruct();
             continue;
@@ -251,7 +245,7 @@ aclDestroyAcls(ACL ** head)
 {
     ACL *next = NULL;
 
-    debug(28,8)("aclDestroyACLs: invoked\n");
+    debugs(28, 8, "aclDestroyACLs: invoked");
 
     for (ACL *a = *head; a; a = next) {
         next = a->next;
@@ -265,7 +259,7 @@ void
 aclDestroyAclList(acl_list ** head)
 {
     acl_list *l;
-    debug(28,8)("aclDestroyAclList: invoked\n");
+    debugs(28, 8, "aclDestroyAclList: invoked");
 
     for (l = *head; l; l = *head) {
         *head = l->next;
@@ -280,7 +274,7 @@ aclDestroyAccessList(acl_access ** list)
     acl_access *next = NULL;
 
     for (l = *list; l; l = next) {
-        debug(28, 3) ("aclDestroyAccessList: '%s'\n", l->cfgline);
+        debugs(28, 3, "aclDestroyAccessList: '" << l->cfgline << "'");
         next = l->next;
         aclDestroyAclList(&l->aclList);
         safe_free(l->cfgline);
@@ -301,7 +295,7 @@ aclDestroyDenyInfoList(acl_deny_info_list ** list)
     acl_name_list *l = NULL;
     acl_name_list *l_next = NULL;
 
-    debug(28,8)("aclDestroyDenyInfoList: invoked\n");
+    debugs(28, 8, "aclDestroyDenyInfoList: invoked");
 
     for (a = *list; a; a = a_next) {
         for (l = a->acl_list; l; l = l_next) {

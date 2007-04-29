@@ -1,6 +1,6 @@
 
 /*
- * $Id: WinSvc.cc,v 1.2 2006/10/29 18:14:52 serassio Exp $
+ * $Id: WinSvc.cc,v 1.3 2007/04/28 22:26:37 hno Exp $
  *
  * Windows support
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
@@ -560,10 +560,10 @@ WIN32_svcHandler(DWORD Opcode)
 
         if (!SetServiceStatus(svcHandle, &svcStatus)) {
             status = GetLastError();
-            debug(1, 1) ("SetServiceStatus error %ld\n", status);
+            debugs(1, 1, "SetServiceStatus error " << status);
         }
 
-        debug(1, 1) ("Leaving Squid service\n");
+        debugs(1, 1, "Leaving Squid service");
         return;
 
     case _WIN_SQUID_SERVICE_CONTROL_INTERROGATE:
@@ -571,7 +571,7 @@ WIN32_svcHandler(DWORD Opcode)
 
         if (!SetServiceStatus(svcHandle, &svcStatus)) {
             status = GetLastError();
-            debug(1, 1) ("SetServiceStatus error %ld\n", status);
+            debugs(1, 1, "SetServiceStatus error " << status);
         }
 
         break;
@@ -598,14 +598,14 @@ WIN32_svcHandler(DWORD Opcode)
 
         if (!SetServiceStatus(svcHandle, &svcStatus)) {
             status = GetLastError();
-            debug(1, 1) ("SetServiceStatus error %ld\n", status);
+            debugs(1, 1, "SetServiceStatus error " << status);
         }
 
-        debug(1, 1) ("Leaving Squid service\n");
+        debugs(1, 1, "Leaving Squid service");
         break;
 
     default:
-        debug(1, 1) ("Unrecognized opcode %ld\n", Opcode);
+        debugs(1, 1, "Unrecognized opcode " << Opcode);
     }
 
     return;

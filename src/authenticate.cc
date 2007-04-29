@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.67 2006/05/29 00:15:01 robertc Exp $
+ * $Id: authenticate.cc,v 1.68 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -58,7 +58,7 @@ authenticateActiveSchemeCount(void)
         if ((*i)->configured())
             ++rv;
 
-    debug(29, 9) ("authenticateActiveSchemeCount: %d active.\n", rv);
+    debugs(29, 9, "authenticateActiveSchemeCount: " << rv << " active.");
 
     return rv;
 }
@@ -68,7 +68,7 @@ authenticateSchemeCount(void)
 {
     int rv = AuthScheme::Schemes().size();
 
-    debug(29, 9) ("authenticateSchemeCount: %d active.\n", rv);
+    debugs(29, 9, "authenticateSchemeCount: " << rv << " active.");
 
     return rv;
 }
@@ -101,7 +101,7 @@ authenticateRegisterWithCacheManager(authConfig * config, CacheManager & manager
 void
 authenticateShutdown(void)
 {
-    debug(29, 2) ("authenticateShutdown: shutting down auth schemes\n");
+    debugs(29, 2, "authenticateShutdown: shutting down auth schemes");
     /* free the cache if we are shutting down */
 
     if (shutting_down) {
@@ -137,12 +137,12 @@ authenticateUserCacheRestart(void)
 {
     AuthUserHashPointer *usernamehash;
     auth_user_t *auth_user;
-    debug(29, 3) ("authenticateUserCacheRestart: Clearing config dependent cache data.\n");
+    debugs(29, 3, "authenticateUserCacheRestart: Clearing config dependent cache data.");
     hash_first(proxy_auth_username_cache);
 
     while ((usernamehash = ((AuthUserHashPointer *) hash_next(proxy_auth_username_cache)))) {
         auth_user = usernamehash->user();
-        debug(29, 5) ("authenticateUserCacheRestat: Clearing cache ACL results for user: %s\n", auth_user->username());
+        debugs(29, 5, "authenticateUserCacheRestat: Clearing cache ACL results for user: " << auth_user->username());
     }
 
 }
@@ -156,7 +156,7 @@ AuthUserHashPointer::removeFromCache(void *usernamehash_p)
     auth_user_t *auth_user = usernamehash->auth_user;
 
     if ((authenticateAuthUserInuse(auth_user) - 1))
-        debug(29, 1) ("AuthUserHashPointer::removeFromCache: entry in use - not freeing\n");
+        debugs(29, 1, "AuthUserHashPointer::removeFromCache: entry in use - not freeing");
 
     auth_user->unlock();
 

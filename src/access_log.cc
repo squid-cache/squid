@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.121 2007/04/24 15:01:55 hno Exp $
+ * $Id: access_log.cc,v 1.122 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -1098,7 +1098,7 @@ accessLogParseLogFormat(logformat_token ** fmt, char *def)
     logformat_token *new_lt, *last_lt;
     enum log_quote quote = LOG_QUOTE_NONE;
 
-    debug(46, 2) ("accessLogParseLogFormat: got definition '%s'\n", def);
+    debugs(46, 2, "accessLogParseLogFormat: got definition '" << def << "'");
 
     /* very inefficent parser, but who cares, this needs to be simple */
     /* First off, let's tokenize, we'll optimize in a second pass.
@@ -1126,10 +1126,10 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
     logformat *format;
 
     struct logformat_token_table_entry *te;
-    debug(46, 0) ("accessLogDumpLogFormat called\n");
+    debugs(46, 0, "accessLogDumpLogFormat called");
 
     for (format = definitions; format; format = format->next) {
-        debug(46, 0) ("Dumping logformat definition for %s\n", format->name);
+        debugs(46, 0, "Dumping logformat definition for " << format->name);
         storeAppendPrintf(entry, "logformat %s ", format->name);
 
         for (t = format->format; t; t = t->next) {
@@ -1573,8 +1573,7 @@ accessLogInit(void)
         if (mcast_miss_fd < 0)
             fatal("Cannot open Multicast Miss Stream Socket");
 
-        debug(46, 1) ("Multicast Miss Stream Socket opened on FD %d\n",
-                      mcast_miss_fd);
+        debugs(46, 1, "Multicast Miss Stream Socket opened on FD " << mcast_miss_fd);
 
         mcastSetTtl(mcast_miss_fd, Config.mcast_miss.ttl);
 

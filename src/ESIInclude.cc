@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIInclude.cc,v 1.11 2006/09/03 04:15:54 robertc Exp $
+ * $Id: ESIInclude.cc,v 1.12 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -149,7 +149,7 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
     /* EOF / Read error /  aborted entry */
     if (rep == NULL && recievedData.data == NULL && recievedData.length == 0) {
         /* TODO: get stream status to test the entry for aborts */
-        debug (86,5)("Finished reading upstream data in subrequest\n");
+        debugs(86, 5, "Finished reading upstream data in subrequest");
         esiStream->include->subRequestDone (esiStream, true);
         esiStream->finished = 1;
         httpRequestFree (http);
@@ -173,14 +173,14 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
     case STREAM_UNPLANNED_COMPLETE: /* fallthru ok */
 
     case STREAM_COMPLETE: /* ok */
-        debug (86,3)("ESI subrequest finished OK\n");
+        debugs(86, 3, "ESI subrequest finished OK");
         esiStream->include->subRequestDone (esiStream, true);
         esiStream->finished = 1;
         httpRequestFree (http);
         return;
 
     case STREAM_FAILED:
-        debug (86,1)("ESI subrequest failed transfer\n");
+        debugs(86, 1, "ESI subrequest failed transfer");
         esiStream->include->fail (esiStream);
         esiStream->finished = 1;
         httpRequestFree (http);
@@ -206,7 +206,7 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
             /* now just read into 'buffer' */
             clientStreamRead (node,
                               http, tempBuffer);
-            debug (86,5)("esiBufferRecipient: Requested more data for ESI subrequest\n");
+            debugs(86, 5, "esiBufferRecipient: Requested more data for ESI subrequest");
         }
 
         break;
@@ -227,7 +227,7 @@ ESIStreamContext::~ESIStreamContext()
 void
 ESIStreamContext::freeResources()
 {
-    debug (86,5)("Freeing stream context resources.\n");
+    debugs(86, 5, "Freeing stream context resources.");
     buffer = NULL;
     localbuffer = NULL;
     include = NULL;
@@ -262,7 +262,7 @@ ESIStreamContextNew (ESIIncludePtr include)
 /* ESIInclude */
 ESIInclude::~ESIInclude()
 {
-    debug (86,5)("ESIInclude::Free %p\n", this);
+    debugs(86, 5, "ESIInclude::Free " << this);
     ESISegmentFreeList (srccontent);
     ESISegmentFreeList (altcontent);
     cbdataReferenceDone (varState);
@@ -335,10 +335,11 @@ ESIInclude::Start (ESIStreamContext::Pointer stream, char const *url, ESIVarStat
     /* tempUrl is eaten by the request */
     char const *tempUrl = vars->extractChar ();
 
-    debug (86,5)("ESIIncludeStart: Starting subrequest with url '%s'\n", tempUrl);
+    debugs(86, 5, "ESIIncludeStart: Starting subrequest with url '" << tempUrl <<
+           "'");
 
     if (clientBeginRequest(METHOD_GET, tempUrl, esiBufferRecipient, esiBufferDetach, stream.getRaw(), &tempheaders, stream->localbuffer->buf, HTTP_REQBUF_SZ)) {
-        debug (86,0) ("starting new ESI subrequest failed\n");
+        debugs(86, 0, "starting new ESI subrequest failed");
     }
 
     tempheaders.clean();
@@ -352,7 +353,8 @@ ESIInclude::ESIInclude (esiTreeParentPtr aParent, int attrcount, char const **at
     for (i = 0; i < attrcount && attr[i]; i += 2) {
         if (!strcmp(attr[i],"src")) {
             /* Start a request for thisNode url */
-            debug (86,5)("ESIIncludeNew: Requesting source '%s'\n",attr[i+1]);
+            debugs(86, 5, "ESIIncludeNew: Requesting source '" << attr[i+1] << "'");
+
             /* TODO: don't assert on thisNode, ignore the duplicate */
             assert (src.getRaw() == NULL);
             src = ESIStreamContextNew (this);
@@ -363,7 +365,8 @@ ESIInclude::ESIInclude (esiTreeParentPtr aParent, int attrcount, char const **at
             /* TODO: make a config parameter to wait on requesting alt's
              * for the src to fail
              */
-            debug (86,5)("ESIIncludeNew: Requesting alternate '%s'\n",attr[i+1]);
+            debugs(86, 5, "ESIIncludeNew: Requesting alternate '" << attr[i+1] << "'");
+
             assert (alt.getRaw() == NULL); /* TODO: FIXME */
             alt = ESIStreamContextNew (this);
             assert (alt.getRaw() != NULL);
@@ -373,7 +376,7 @@ ESIInclude::ESIInclude (esiTreeParentPtr aParent, int attrcount, char const **at
                 flags.onerrorcontinue = 1;
             } else {
                 /* ignore mistyped attributes */
-                debug (86, 1)("invalid value for onerror='%s'\n", attr[i+1]);
+                debugs(86, 1, "invalid value for onerror='" << attr[i+1] << "'");
             }
         } else {
             /* ignore mistyped attributes. TODO:? error on these for user feedback - config parameter needed
@@ -401,7 +404,7 @@ ESIInclude::start()
     } else {
         alt = NULL;
 
-        debug (86,1)("ESIIncludeNew: esi:include with no src attributes\n");
+        debugs(86, 1, "ESIIncludeNew: esi:include with no src attributes");
 
         flags.failed = 1;
     }
@@ -415,7 +418,7 @@ ESIInclude::render(ESISegment::Pointer output)
 
     ESISegment::Pointer myout;
 
-    debug (86, 5)("ESIIncludeRender: Rendering include %p\n", this);
+    debugs(86, 5, "ESIIncludeRender: Rendering include " << this);
 
     assert (flags.finished || (flags.failed && flags.onerrorcontinue));
 
@@ -446,7 +449,7 @@ ESIInclude::process (int dovars)
     /* Prevent refcount race leading to free */
     Pointer me (this);
     start();
-    debug (86, 5)("ESIIncludeRender: Processing include %p\n", this);
+    debugs(86, 5, "ESIIncludeRender: Processing include " << this);
 
     if (flags.failed) {
         if (flags.onerrorcontinue)
@@ -486,24 +489,24 @@ ESIInclude::subRequestDone (ESIStreamContext::Pointer stream, bool success)
         return;
 
     if (stream == src) {
-        debug (86,3)("ESIInclude::subRequestDone: %s\n", srcurl);
+        debugs(86, 3, "ESIInclude::subRequestDone: " << srcurl);
 
         if (success) {
             /* copy the lead segment */
-            debug (86,3)("ESIIncludeSubRequestDone: Src OK - include PASSED.\n");
+            debugs(86, 3, "ESIIncludeSubRequestDone: Src OK - include PASSED.");
             assert (!srccontent.getRaw());
             ESISegment::ListTransfer (stream->localbuffer, srccontent);
             /* we're done! */
             flags.finished = 1;
         } else {
             /* Fail if there is no alt being retrieved */
-            debug (86,3)("ESIIncludeSubRequestDone: Src FAILED\n");
+            debugs(86, 3, "ESIIncludeSubRequestDone: Src FAILED");
 
             if (!(alt.getRaw() || altcontent.getRaw())) {
-                debug (86,3)("ESIIncludeSubRequestDone: Include FAILED - No ALT\n");
+                debugs(86, 3, "ESIIncludeSubRequestDone: Include FAILED - No ALT");
                 flags.failed = 1;
             } else if (altcontent.getRaw()) {
-                debug (86,3)("ESIIncludeSubRequestDone: Include PASSED - ALT already Complete\n");
+                debugs(86, 3, "ESIIncludeSubRequestDone: Include PASSED - ALT already Complete");
                 /* ALT was already retrieved, we are done */
                 flags.finished = 1;
             }
@@ -511,10 +514,10 @@ ESIInclude::subRequestDone (ESIStreamContext::Pointer stream, bool success)
 
         src = NULL;
     } else if (stream == alt) {
-        debug (86,3)("ESIInclude::subRequestDone: %s\n", alturl);
+        debugs(86, 3, "ESIInclude::subRequestDone: " << alturl);
 
         if (success) {
-            debug (86,3)("ESIIncludeSubRequestDone: ALT OK.\n");
+            debugs(86, 3, "ESIIncludeSubRequestDone: ALT OK.");
             /* copy the lead segment */
             assert (!altcontent.getRaw());
             ESISegment::ListTransfer (stream->localbuffer, altcontent);
@@ -522,12 +525,12 @@ ESIInclude::subRequestDone (ESIStreamContext::Pointer stream, bool success)
 
             if (!(src.getRaw() || srccontent.getRaw())) {
                 /* src already failed, kick ESI processor */
-                debug (86,3)("ESIIncludeSubRequestDone: Include PASSED - SRC already failed.\n");
+                debugs(86, 3, "ESIIncludeSubRequestDone: Include PASSED - SRC already failed.");
                 flags.finished = 1;
             }
         } else {
             if (!(src.getRaw() || srccontent.getRaw())) {
-                debug (86,3)("ESIIncludeSubRequestDone: ALT FAILED, Include FAILED - SRC already failed\n");
+                debugs(86, 3, "ESIIncludeSubRequestDone: ALT FAILED, Include FAILED - SRC already failed");
                 /* src already failed */
                 flags.failed = 1;
             }

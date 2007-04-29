@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUser.cc,v 1.3 2007/01/03 12:40:41 hno Exp $
+ * $Id: AuthUser.cc,v 1.4 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -58,7 +58,7 @@ AuthUser::AuthUser (AuthConfig *aConfig) :
     proxy_match_cache.head = proxy_match_cache.tail = NULL;
     ip_list.head = ip_list.tail = NULL;
     requests.head = requests.tail = NULL;
-    debug(29, 5) ("AuthUser::AuthUser: Initialised auth_user '%p' with refcount '%ld'.\n", this, (long int) references);
+    debugs(29, 5, "AuthUser::AuthUser: Initialised auth_user '" << this << "' with refcount '" << (long int) references << "'.");
 }
 
 /* Combine two user structs. ONLY to be called from within a scheme
@@ -76,7 +76,7 @@ AuthUser::absorb (AuthUser *from)
      * in hash references too and ask the module to merge in scheme
      * data
      */
-    debug(29, 5) ("authenticateAuthUserMerge auth_user '%p' into auth_user '%p'.\n", from, this);
+    debugs(29, 5, "authenticateAuthUserMerge auth_user '" << from << "' into auth_user '" << this << "'.");
     dlink_node *link = from->requests.head;
 
     while (link) {
@@ -97,13 +97,13 @@ AuthUser::~AuthUser()
 {
     auth_user_request_t *auth_user_request;
     dlink_node *link, *tmplink;
-    debug(29, 5) ("AuthUser::~AuthUser: Freeing auth_user '%p' with refcount '%ld'.\n", this, (long int) references);
+    debugs(29, 5, "AuthUser::~AuthUser: Freeing auth_user '" << this << "' with refcount '" << (long int) references << "'.");
     assert(references == 0);
     /* were they linked in by username ? */
 
     if (usernamehash) {
         assert(usernamehash->user() == this);
-        debug(29, 5) ("AuthUser::~AuthUser: removing usernamehash entry '%p'\n", usernamehash);
+        debugs(29, 5, "AuthUser::~AuthUser: removing usernamehash entry '" << usernamehash << "'");
         hash_remove_link(proxy_auth_username_cache,
                          (hash_link *) usernamehash);
         /* don't free the key as we use the same user string as the auth_user
@@ -115,7 +115,7 @@ AuthUser::~AuthUser()
     link = requests.head;
 
     while (link) {
-        debug(29, 5) ("AuthUser::~AuthUser: removing request entry '%p'\n", link->data);
+        debugs(29, 5, "AuthUser::~AuthUser: removing request entry '" << link->data << "'");
         auth_user_request = static_cast<auth_user_request_t *>(link->data);
         tmplink = link;
         link = link->next;
@@ -159,7 +159,7 @@ AuthUser::CachedACLsReset()
     AuthUserHashPointer *usernamehash;
     auth_user_t *auth_user;
     char const *username = NULL;
-    debug(29, 3) ("AuthUser::CachedACLsReset: Flushing the ACL caches for all users.\n");
+    debugs(29, 3, "AuthUser::CachedACLsReset: Flushing the ACL caches for all users.");
     hash_first(proxy_auth_username_cache);
 
     while ((usernamehash = ((AuthUserHashPointer *) hash_next(proxy_auth_username_cache)))) {
@@ -170,7 +170,7 @@ AuthUser::CachedACLsReset()
 
     }
 
-    debug(29, 3) ("AuthUser::CachedACLsReset: Finished.\n");
+    debugs(29, 3, "AuthUser::CachedACLsReset: Finished.");
 }
 
 void
@@ -184,8 +184,8 @@ AuthUser::cacheCleanup(void *datanotused)
     AuthUserHashPointer *usernamehash;
     auth_user_t *auth_user;
     char const *username = NULL;
-    debug(29, 3) ("AuthUser::cacheCleanup: Cleaning the user cache now\n");
-    debug(29, 3) ("AuthUser::cacheCleanup: Current time: %ld\n", (long int) current_time.tv_sec);
+    debugs(29, 3, "AuthUser::cacheCleanup: Cleaning the user cache now");
+    debugs(29, 3, "AuthUser::cacheCleanup: Current time: " << (long int) current_time.tv_sec);
     hash_first(proxy_auth_username_cache);
 
     while ((usernamehash = ((AuthUserHashPointer *) hash_next(proxy_auth_username_cache)))) {
@@ -194,10 +194,14 @@ AuthUser::cacheCleanup(void *datanotused)
 
         /* if we need to have inpedendent expiry clauses, insert a module call
          * here */
-        debug(29, 4) ("AuthUser::cacheCleanup: Cache entry:\n\tType: %d\n\tUsername: %s\n\texpires: %ld\n\treferences: %ld\n", auth_user->auth_type, username, (long int) (auth_user->expiretime + Config.authenticateTTL), (long int) auth_user->references);
+        debugs(29, 4, "AuthUser::cacheCleanup: Cache entry:\n\tType: " <<
+               auth_user->auth_type << "\n\tUsername: " << username <<
+               "\n\texpires: " <<
+               (long int) (auth_user->expiretime + Config.authenticateTTL) <<
+               "\n\treferences: " << (long int) auth_user->references);
 
         if (auth_user->expiretime + Config.authenticateTTL <= current_time.tv_sec) {
-            debug(29, 5) ("AuthUser::cacheCleanup: Removing user %s from cache due to timeout.\n", username);
+            debugs(29, 5, "AuthUser::cacheCleanup: Removing user " << username << " from cache due to timeout.");
             /* the minus 1 accounts for the cache lock */
 
             if (!(authenticateAuthUserInuse(auth_user) - 1))
@@ -209,7 +213,7 @@ AuthUser::cacheCleanup(void *datanotused)
         }
     }
 
-    debug(29, 3) ("AuthUser::cacheCleanup: Finished cleaning the user cache.\n");
+    debugs(29, 3, "AuthUser::cacheCleanup: Finished cleaning the user cache.");
     eventAdd("User Cache Maintenance", cacheCleanup, NULL, Config.authenticateGCInterval, 1);
 }
 
@@ -311,7 +315,7 @@ AuthUser::addIp(struct IN_ADDR ipaddr)
 
     ip1 = xstrdup(inet_ntoa(ipaddr));
 
-    debug(29, 2) ("authenticateAuthUserAddIp: user '%s' has been seen at a new IP address (%s)\n", username(), ip1);
+    debugs(29, 2, "authenticateAuthUserAddIp: user '" << username() << "' has been seen at a new IP address (" << ip1 << ")");
 
     safe_free(ip1);
 }
@@ -320,25 +324,25 @@ AuthUser::addIp(struct IN_ADDR ipaddr)
 void
 AuthUser::lock()
 {
-    debug(29, 9) ("authenticateAuthUserLock auth_user '%p'.\n", this);
+    debugs(29, 9, "authenticateAuthUserLock auth_user '" << this << "'.");
     assert(this != NULL);
     references++;
-    debug(29, 9) ("authenticateAuthUserLock auth_user '%p' now at '%ld'.\n", this, (long int) references);
+    debugs(29, 9, "authenticateAuthUserLock auth_user '" << this << "' now at '" << (long int) references << "'.");
 }
 
 void
 AuthUser::unlock()
 {
-    debug(29, 9) ("authenticateAuthUserUnlock auth_user '%p'.\n", this);
+    debugs(29, 9, "authenticateAuthUserUnlock auth_user '" << this << "'.");
     assert(this != NULL);
 
     if (references > 0) {
         references--;
     } else {
-        debug(29, 1) ("Attempt to lower Auth User %p refcount below 0!\n", this);
+        debugs(29, 1, "Attempt to lower Auth User " << this << " refcount below 0!");
     }
 
-    debug(29, 9) ("authenticateAuthUserUnlock auth_user '%p' now at '%ld'.\n", this, (long int) references);
+    debugs(29, 9, "authenticateAuthUserUnlock auth_user '" << this << "' now at '" << (long int) references << "'.");
 
     if (references == 0)
         delete this;

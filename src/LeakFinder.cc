@@ -1,6 +1,6 @@
 
 /*
- * $Id: LeakFinder.cc,v 1.4 2006/05/29 00:15:00 robertc Exp $
+ * $Id: LeakFinder.cc,v 1.5 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -56,7 +56,7 @@ LeakFinderPtr::LeakFinderPtr(void *p , const char *f, const int l) :
 
 LeakFinder::LeakFinder()
 {
-    debug(45, 3) ("LeakFinder constructed\n");
+    debugs(45, 3, "LeakFinder constructed");
     table = hash_create(cmp, 1 << 8, hash);
 #if 0
     /* if this is desired to reinstate, add a
@@ -131,15 +131,15 @@ LeakFinder::dump()
 
     last_dump = squid_curtime;
 
-    debug(45,1)("Tracking %d pointers\n", count);
+    debugs(45, 1, "Tracking " << count << " pointers");
 
     hash_first(table);
 
     LeakFinderPtr *c;
 
     while ((c = (LeakFinderPtr *)hash_next(table))) {
-        debug(45,1)("%20p last used %9d seconds ago by %s:%d\n",
-                    c->key, (int)(squid_curtime - c->when), c->file, c->line);
+         debugs(45, 1, std::setw(20) << c->key << " last used " << std::setw(9) << (int)(squid_curtime - c->when) << 
+                " seconds ago by " << c->file << ":" << c->line);
     }
 }
 

@@ -30,16 +30,16 @@ icapclientProcessStream(clientStreamNode *thisNode, clientHttpRequest *http, Htt
     assert (thisNode != NULL);
     assert (cbdataReferenceValid (thisNode));
 
-    debug(0,0)("This is icapclientProcessStream\n");
-    debug(0,0)("\tthisNode=%p\n", thisNode);
-    debug(0,0)("\thttp=%p\n", http);
-    debug(0,0)("\trep=%p\n", rep);
-    //debug(0,0)("\trep->content_length=%d\n", rep->content_length);
+    debugs(0, 0, "This is icapclientProcessStream");
+    debugs(0, 0, "\tthisNode=" << thisNode);
+    debugs(0, 0, "\thttp=" << http);
+    debugs(0, 0, "\trep=" << rep);
+    debugs(0, 0, "\trep->content_length=" << rep->content_length);
     char *foo;
     foo = new char[receivedData.length+1];
     xstrncpy(foo, receivedData.data, receivedData.length+1);
     *(foo+receivedData.length) = '\0';
-    debug(0,0)("{%s}\n", foo);
+    debugs(0, 0, "{" << foo << "}");
 
     struct _junk *j = (struct _junk *) xcalloc(1, sizeof(*j));
     j->node = thisNode;
@@ -54,7 +54,7 @@ icapclientProcessStream(clientStreamNode *thisNode, clientHttpRequest *http, Htt
 void
 icapclientStreamRead(clientStreamNode *thisNode, clientHttpRequest *http)
 {
-    debug(0,0)("This is icapclientStreamRead\n");
+    debugs(0, 0, "This is icapclientStreamRead");
 
     /* pass data through untouched */
     clientStreamNode *next = thisNode->next();
@@ -65,13 +65,13 @@ icapclientStreamRead(clientStreamNode *thisNode, clientHttpRequest *http)
 void
 icapclientStreamDetach(clientStreamNode *thisNode, clientHttpRequest *http)
 {
-    debug(0,0)("This is icapclientStreamDetach\n");
+    debugs(0, 0, "This is icapclientStreamDetach");
 }
 
 clientStream_status_t
 icapclientStreamStatus(clientStreamNode *thisNode, clientHttpRequest *http)
 {
-    debug(0,0)("This is icapclientStreamStatus\n");
+    debugs(0, 0, "This is icapclientStreamStatus");
 
     /* pass data through untouched */
     return clientStreamStatus (thisNode, http);
@@ -82,7 +82,7 @@ icapclientStreamStatus(clientStreamNode *thisNode, clientHttpRequest *http)
 static void
 someEvent(void *foo)
 {
-    debug(0,0)("this is someEvent\n");
+    debugs(0, 0, "this is someEvent");
 
     struct _junk *j = (struct _junk *) foo;
 

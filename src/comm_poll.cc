@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_poll.cc,v 1.19 2006/09/02 10:39:53 adrian Exp $
+ * $Id: comm_poll.cc,v 1.20 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -129,7 +129,7 @@ commSetSelect(int fd, unsigned int type, PF * handler, void *client_data,
     fde *F = &fd_table[fd];
     assert(fd >= 0);
     assert(F->flags.open);
-    debug(5, 5) ("commSetSelect: FD %d type %d\n", fd, type);
+    debugs(5, 5, "commSetSelect: FD " << fd << " type " << type);
 
     if (type & COMM_SELECT_READ) {
         F->read_handler = handler;
@@ -264,8 +264,7 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
                 fd_table[fd].read_handler = NULL;
                 hdl(fd, fd_table[fd].read_data);
             } else if (pfds[i].events & POLLRDNORM)
-                debug(5, 1) ("comm_poll_incoming: FD %d NULL read handler\n",
-                             fd);
+                debugs(5, 1, "comm_poll_incoming: FD " << fd << " NULL read handler");
         }
 
         if (revents & (POLLWRNORM | POLLOUT | POLLHUP | POLLERR)) {
@@ -273,8 +272,7 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
                 fd_table[fd].write_handler = NULL;
                 hdl(fd, fd_table[fd].write_data);
             } else if (pfds[i].events & POLLWRNORM)
-                debug(5, 1) ("comm_poll_incoming: FD %d NULL write_handler\n",
-                             fd);
+                debugs(5, 1, "comm_poll_incoming: FD " << fd << " NULL write_handler");
         }
     }
 
@@ -457,7 +455,7 @@ comm_select(int msec)
             if (ignoreErrno(errno))
                 continue;
 
-            debug(5, 0) ("comm_poll: poll failure: %s\n", xstrerror());
+            debugs(5, 0, "comm_poll: poll failure: " << xstrerror());
 
             assert(errno != EINVAL);
 
@@ -468,7 +466,7 @@ comm_select(int msec)
 
         getCurrentTime();
 
-        debug(5, num ? 5 : 8) ("comm_poll: %d+%ld FDs ready\n", num, npending);
+        debugs(5, num ? 5 : 8, "comm_poll: " << num << "+" << npending << " FDs ready");
         statHistCount(&statCounter.select_fds_hist, num);
 
         if (num == 0 && npending == 0)
@@ -511,7 +509,7 @@ comm_select(int msec)
             F = &fd_table[fd];
 
             if (revents & (POLLRDNORM | POLLIN | POLLHUP | POLLERR)) {
-                debug(5, 6) ("comm_poll: FD %d ready for reading\n", fd);
+                debugs(5, 6, "comm_poll: FD " << fd << " ready for reading");
 
                 if (NULL == (hdl = F->read_handler))
                     (void) 0;
@@ -542,7 +540,7 @@ comm_select(int msec)
             }
 
             if (revents & (POLLWRNORM | POLLOUT | POLLHUP | POLLERR)) {
-                debug(5, 5) ("comm_poll: FD %d ready for writing\n", fd);
+                debugs(5, 5, "comm_poll: FD " << fd << " ready for writing");
 
                 if ((hdl = F->write_handler)) {
                     PROF_start(comm_write_handler);
@@ -564,21 +562,19 @@ comm_select(int msec)
 
             if (revents & POLLNVAL) {
                 close_handler *ch;
-                debug(5, 0) ("WARNING: FD %d has handlers, but it's invalid.\n", fd);
-                debug(5, 0) ("FD %d is a %s\n", fd, fdTypeStr[F->type]);
-                debug(5, 0) ("--> %s\n", F->desc);
-                debug(5, 0) ("tmout:%p read:%p write:%p\n",
-                             F->timeout_handler,
-                             F->read_handler,
-                             F->write_handler);
+                debugs(5, 0, "WARNING: FD " << fd << " has handlers, but it's invalid.");
+                debugs(5, 0, "FD " << fd << " is a " << fdTypeStr[F->type]);
+                debugs(5, 0, "--> " << F->desc);
+                debugs(5, 0, "tmout:" << F->timeout_handler << " read:" <<
+                       F->read_handler << " write:" << F->write_handler);
 
                 for (ch = F->closeHandler; ch; ch = ch->next)
-                    debug(5, 0) (" close handler: %p\n", ch->handler);
+                    debugs(5, 0, " close handler: " << ch->handler);
 
                 if (F->closeHandler) {
                     commCallCloseHandlers(fd);
                 } else if (F->timeout_handler) {
-                    debug(5, 0) ("comm_poll: Calling Timeout Handler\n");
+                    debugs(5, 0, "comm_poll: Calling Timeout Handler");
                     F->timeout_handler(fd, F->timeout_data);
                 }
 
@@ -607,7 +603,7 @@ comm_select(int msec)
 
         while ((fd = commGetSlowFd()) != -1) {
             fde *F = &fd_table[fd];
-            debug(5, 6) ("comm_select: slow FD %d selected for reading\n", fd);
+            debugs(5, 6, "comm_select: slow FD " << fd << " selected for reading");
 
             if ((hdl = F->read_handler)) {
                 F->read_handler = NULL;
@@ -633,7 +629,7 @@ comm_select(int msec)
         return COMM_OK;
     } while (timeout > current_dtime);
 
-    debug(5, 8) ("comm_poll: time out: %ld.\n", (long int) squid_curtime);
+    debugs(5, 8, "comm_poll: time out: " << (long int) squid_curtime << ".");
 
     return COMM_TIMEOUT;
 }

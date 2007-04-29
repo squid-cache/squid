@@ -1,5 +1,5 @@
 /*
- * $Id: ACLExtUser.cc,v 1.8 2005/05/08 06:53:58 hno Exp $
+ * $Id: ACLExtUser.cc,v 1.9 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -70,7 +70,7 @@ ACLExtUser::typeString() const
 void
 ACLExtUser::parse()
 {
-    debug(28, 3) ("aclParseUserList: current is null. Creating\n");
+    debugs(28, 3, "aclParseUserList: current is null. Creating");
     data = new ACLUserData;
     data->parse();
 }

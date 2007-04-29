@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.130 2007/04/21 07:14:14 wessels Exp $
+ * $Id: mime.cc,v 1.131 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -125,7 +125,7 @@ mime_get_header_field(const char *mime, const char *name, const char *prefix)
 
     assert(NULL != name);
 
-    debug(25, 5) ("mime_get_header: looking for '%s'\n", name);
+    debugs(25, 5, "mime_get_header: looking for '" << name << "'");
 
     for (p = mime; *p; p += strcspn(p, "\n\r")) {
         if (strcmp(p, "\r\n\r\n") == 0 || strcmp(p, "\n\n") == 0)
@@ -147,7 +147,7 @@ mime_get_header_field(const char *mime, const char *name, const char *prefix)
 
         xstrncpy(header, p, l);
 
-        debug(25, 5) ("mime_get_header: checking '%s'\n", header);
+        debugs(25, 5, "mime_get_header: checking '" << header << "'");
 
         q = header;
 
@@ -166,7 +166,7 @@ mime_get_header_field(const char *mime, const char *name, const char *prefix)
         }
 
         if (got) {
-            debug(25, 5) ("mime_get_header: returning '%s'\n", q);
+            debugs(25, 5, "mime_get_header: returning '" << q << "'");
             return q;
         }
     }
@@ -397,7 +397,7 @@ mimeInit(char *filename)
         return;
 
     if ((fp = fopen(filename, "r")) == NULL) {
-        debug(25, 1) ("mimeInit: %s: %s\n", filename, xstrerror());
+        debugs(25, 1, "mimeInit: " << filename << ": " << xstrerror());
         return;
     }
 
@@ -424,27 +424,27 @@ mimeInit(char *filename)
         xstrncpy(chopbuf, buf, BUFSIZ);
 
         if ((pattern = strtok(chopbuf, w_space)) == NULL) {
-            debug(25, 1) ("mimeInit: parse error: '%s'\n", buf);
+            debugs(25, 1, "mimeInit: parse error: '" << buf << "'");
             continue;
         }
 
         if ((type = strtok(NULL, w_space)) == NULL) {
-            debug(25, 1) ("mimeInit: parse error: '%s'\n", buf);
+            debugs(25, 1, "mimeInit: parse error: '" << buf << "'");
             continue;
         }
 
         if ((icon = strtok(NULL, w_space)) == NULL) {
-            debug(25, 1) ("mimeInit: parse error: '%s'\n", buf);
+            debugs(25, 1, "mimeInit: parse error: '" << buf << "'");
             continue;
         }
 
         if ((encoding = strtok(NULL, w_space)) == NULL) {
-            debug(25, 1) ("mimeInit: parse error: '%s'\n", buf);
+            debugs(25, 1, "mimeInit: parse error: '" << buf << "'");
             continue;
         }
 
         if ((mode = strtok(NULL, w_space)) == NULL) {
-            debug(25, 1) ("mimeInit: parse error: '%s'\n", buf);
+            debugs(25, 1, "mimeInit: parse error: '" << buf << "'");
             continue;
         }
 
@@ -457,11 +457,11 @@ mimeInit(char *filename)
             else if (!strcmp(option, "+view"))
                 view_option = 1;
             else
-                debug(25, 1) ("mimeInit: unknown option: '%s' (%s)\n", buf, option);
+                debugs(25, 1, "mimeInit: unknown option: '" << buf << "' (" << option << ")");
         }
 
         if (regcomp(&re, pattern, re_flags) != 0) {
-            debug(25, 1) ("mimeInit: regcomp error: '%s'\n", buf);
+            debugs(25, 1, "mimeInit: regcomp error: '" << buf << "'");
             continue;
         }
 
@@ -487,7 +487,7 @@ mimeInit(char *filename)
 
         MimeTableTail = &m->next;
 
-        debug(25, 5) ("mimeInit: added '%s'\n", buf);
+        debugs(25, 5, "mimeInit: added '" << buf << "'");
     }
 
     fclose(fp);
@@ -498,7 +498,7 @@ mimeInit(char *filename)
     for (m = MimeTable; m != NULL; m = m->next)
         m->theIcon.load();
 
-    debug(25, 1) ("Loaded Icons.\n");
+    debugs(25, 1, "Loaded Icons.");
 }
 
 void
@@ -555,12 +555,12 @@ MimeIcon::created (StoreEntry *newEntry)
     fd = file_open(path, O_RDONLY | O_BINARY);
 
     if (fd < 0) {
-        debug(25, 0) ("mimeLoadIconFile: %s: %s\n", path, xstrerror());
+        debugs(25, 0, "mimeLoadIconFile: " << path << ": " << xstrerror());
         return;
     }
 
     if (fstat(fd, &sb) < 0) {
-        debug(25, 0) ("mimeLoadIconFile: FD %d: fstat: %s\n", fd, xstrerror());
+        debugs(25, 0, "mimeLoadIconFile: FD " << fd << ": fstat: " << xstrerror());
         file_close(fd);
         return;
     }
@@ -610,7 +610,7 @@ MimeIcon::created (StoreEntry *newEntry)
 
     e->timestampsSet();
 
-    debug(25, 3) ("Loaded icon %s\n", url);
+    debugs(25, 3, "Loaded icon " << url);
 
     e->unlock();
 

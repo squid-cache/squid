@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_kqueue.cc,v 1.14 2007/04/25 11:30:18 adrian Exp $
+ * $Id: comm_kqueue.cc,v 1.15 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -296,7 +296,7 @@ comm_select(int msec)
 
         default:
             /* Bad! -- adrian */
-            debug(5, 1) ("comm_select: kevent returned %d!\n", ke[i].filter);
+            debugs(5, 1, "comm_select: kevent returned " << ke[i].filter << "!");
             break;
         }
     }

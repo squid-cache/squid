@@ -1,5 +1,5 @@
 /*
- * $Id: ACLDomainData.cc,v 1.12 2006/04/23 11:10:31 robertc Exp $
+ * $Id: ACLDomainData.cc,v 1.13 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -100,9 +100,9 @@ aclDomainCompare(T const &a, T const &b)
 
     /* FIXME this warning may display d1 and d2 when it should display d3 and d4 */
     if (ret == 0) {
-        debug(28, 0) ("WARNING: '%s' is a subdomain of '%s'\n", d1, d2);
-        debug(28, 0) ("WARNING: because of this '%s' is ignored to keep splay tree searching predictable\n", (char *) a);
-        debug(28, 0) ("WARNING: You should probably remove '%s' from the ACL named '%s'\n", d1, AclMatchedName);
+        debugs(28, 0, "WARNING: '" << d1 << "' is a subdomain of '" << d2 << "'");
+        debugs(28, 0, "WARNING: because of this '" << (char *) a << "' is ignored to keep splay tree searching predictable");
+        debugs(28, 0, "WARNING: You should probably remove '" << d1 << "' from the ACL named '" << AclMatchedName << "'");
     }
 
     return ret;
@@ -114,12 +114,11 @@ ACLDomainData::match(char const *host)
     if (host == NULL)
         return 0;
 
-    debug(28, 3) ("aclMatchDomainList: checking '%s'\n", host);
+    debugs(28, 3, "aclMatchDomainList: checking '" << host << "'");
 
     domains = domains->splay((char *)host, aclHostDomainCompare);
 
-    debug(28, 3) ("aclMatchDomainList: '%s' %s\n",
-                  host, splayLastResult ? "NOT found" : "found");
+    debugs(28, 3, "aclMatchDomainList: '" << host << "' " << (splayLastResult ? "NOT found" : "found"));
 
     return !splayLastResult;
 }

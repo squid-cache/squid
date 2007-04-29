@@ -70,7 +70,7 @@ void
 ACLIdent::parse()
 {
     if (!data) {
-        debug(28, 3) ("aclParseUserList: current is null. Creating\n");
+        debugs(28, 3, "aclParseUserList: current is null. Creating");
         data = new ACLUserData;
     }
 
@@ -85,7 +85,7 @@ ACLIdent::match(ACLChecklist *checklist)
     } else if (checklist->conn() != NULL && checklist->conn()->rfc931[0]) {
         return data->match(checklist->conn()->rfc931);
     } else {
-        debug(28, 3) ("ACLIdent::match() - switching to ident lookup state\n");
+        debugs(28, 3, "ACLIdent::match() - switching to ident lookup state");
         checklist->changeState(IdentLookup::Instance());
         return 0;
     }
@@ -126,12 +126,12 @@ void
 IdentLookup::checkForAsync(ACLChecklist *checklist)const
 {
     if (checklist->conn() != NULL) {
-        debug(28, 3) ("IdentLookup::checkForAsync: Doing ident lookup\n");
+        debugs(28, 3, "IdentLookup::checkForAsync: Doing ident lookup" );
         checklist->asyncInProgress(true);
         identStart(&checklist->conn()->me, &checklist->conn()->peer,
                    LookupDone, checklist);
     } else {
-        debug(28, 1) ("IdentLookup::checkForAsync: Can't start ident lookup. No client connection\n");
+        debugs(28, 1, "IdentLookup::checkForAsync: Can't start ident lookup. No client connection" );
         checklist->currentAnswer(ACCESS_DENIED);
         checklist->markFinished();
     }

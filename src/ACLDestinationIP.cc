@@ -60,8 +60,7 @@ ACLDestinationIP::match(ACLChecklist *checklist)
         return 0;
     } else if (!checklist->request->flags.destinationIPLookedUp()) {
         /* No entry in cache, lookup not attempted */
-        debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-                      name, checklist->request->host);
+        debugs(28, 3, "aclMatchAcl: Can't yet compare '" << name << "' ACL for '" << checklist->request->host << "'");
         checklist->changeState (DestinationIPLookup::Instance());
         return 0;
     } else {

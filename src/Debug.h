@@ -1,6 +1,6 @@
 
 /*
- * $Id: Debug.h,v 1.8 2005/12/19 22:00:47 wessels Exp $
+ * $Id: Debug.h,v 1.9 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -39,6 +39,7 @@
 #include <iostream>
 #undef assert
 #include <sstream>
+#include <iomanip>
 #if defined assert
 #undef assert
 #endif

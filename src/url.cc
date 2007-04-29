@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.156 2007/04/07 09:35:38 serassio Exp $
+ * $Id: url.cc,v 1.157 2007/04/28 22:26:38 hno Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -84,7 +84,7 @@ url_convert_hex(char *org_url, int allocate)
 void
 urlInitialize(void)
 {
-    debug(23, 5) ("urlInitialize: Initializing...\n");
+    debugs(23, 5, "urlInitialize: Initializing...");
     /* this ensures that the number of protocol strings is the same as
      * the enum slots allocated because the last enum is always 'TOTAL'.
      */
@@ -230,7 +230,7 @@ urlParse(method_t method, char *url, HttpRequest *request)
     if ((l = strlen(url)) + Config.appendDomainLen > (MAX_URL - 1)) {
         /* terminate so it doesn't overflow other buffers */
         *(url + (MAX_URL >> 1)) = '\0';
-        debug(23, 1) ("urlParse: URL too large (%d bytes)\n", l);
+        debugs(23, 1, "urlParse: URL too large (" << l << " bytes)");
         return NULL;
     }
 
@@ -284,7 +284,7 @@ urlParse(method_t method, char *url, HttpRequest *request)
     }
 
     if (Config.onoff.check_hostnames && strspn(host, Config.onoff.allow_underscore ? valid_hostname_chars_u : valid_hostname_chars) != strlen(host)) {
-        debug(23, 1) ("urlParse: Illegal character in hostname '%s'\n", host);
+        debugs(23, 1, "urlParse: Illegal character in hostname '" << host << "'");
         return NULL;
     }
 
@@ -303,7 +303,7 @@ urlParse(method_t method, char *url, HttpRequest *request)
         strncat(host, Config.appendDomain, SQUIDHOSTNAMELEN - strlen(host) - 1);
 
     if (port < 1 || port > 65535) {
-        debug(23, 3) ("urlParse: Invalid port '%d'\n", port);
+        debugs(23, 3, "urlParse: Invalid port '" << port << "'");
         return NULL;
     }
 
@@ -311,13 +311,13 @@ urlParse(method_t method, char *url, HttpRequest *request)
     /* These ports are filtered in the default squid.conf, but
      * maybe someone wants them hardcoded... */
     if (port == 7 || port == 9 || port == 19) {
-        debug(23, 0) ("urlParse: Deny access to port %d\n", port);
+        debugs(23, 0, "urlParse: Deny access to port " << port);
         return NULL;
     }
 
 #endif
     if (stringHasWhitespace(urlpath)) {
-        debug(23, 2) ("urlParse: URI has whitespace: {%s}\n", url);
+        debugs(23, 2, "urlParse: URI has whitespace: {" << url << "}");
 
         switch (Config.uri_whitespace) {
 
@@ -367,7 +367,7 @@ urlParse(method_t method, char *url, HttpRequest *request)
 static HttpRequest *
 urnParse(method_t method, char *urn)
 {
-    debug(50, 5) ("urnParse: %s\n", urn);
+    debugs(50, 5, "urnParse: " << urn);
     return new HttpRequest(method, PROTO_URN, urn + 4);
 }
 

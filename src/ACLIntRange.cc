@@ -1,5 +1,5 @@
 /*
- * $Id: ACLIntRange.cc,v 1.9 2006/10/08 13:10:34 serassio Exp $
+ * $Id: ACLIntRange.cc,v 1.10 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Robert Collins
@@ -69,7 +69,7 @@ ACLIntRange::parse()
             temp.end = port2+1;
             ranges.push_back(temp);
         } else {
-            debug(28, 0) ("ACLIntRange::parse: Invalid port value\n");
+            debugs(28, 0, "ACLIntRange::parse: Invalid port value");
             self_destruct();
         }
     }

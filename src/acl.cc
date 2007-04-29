@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.321 2006/07/29 13:46:05 hno Exp $
+ * $Id: acl.cc,v 1.322 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -57,13 +57,13 @@ ACL *
 ACL::FindByName(const char *name)
 {
     ACL *a;
-    debug(28, 9) ("ACL::FindByName '%s'\n",name);
+    debugs(28, 9, "ACL::FindByName '" << name << "'");
 
     for (a = Config.aclList; a; a = a->next)
         if (!strcasecmp(a->name, name))
             return a;
 
-    debug(28,9) ("ACL::FindByName found no match\n");
+    debugs(28, 9, "ACL::FindByName found no match");
 
     return NULL;
 }
@@ -98,13 +98,14 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
     /* snarf the ACL name */
 
     if ((t = strtok(NULL, w_space)) == NULL) {
-        debug(28, 0) ("aclParseAclLine: missing ACL name.\n");
+        debugs(28, 0, "aclParseAclLine: missing ACL name.");
         parser.destruct();
         return;
     }
 
     if (strlen(t) >= ACL_NAME_SZ) {
-        debug(28, 0) ("aclParseAclLine: aclParseAclLine: ACL name '%s' too long, max %d characters supported\n", t, ACL_NAME_SZ - 1);
+        debugs(28, 0, "aclParseAclLine: aclParseAclLine: ACL name '" << t <<
+               "' too long, max " << ACL_NAME_SZ - 1 << " characters supported");
         parser.destruct();
         return;
     }
@@ -114,31 +115,31 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
     char *theType;
 
     if ((theType = strtok(NULL, w_space)) == NULL) {
-        debug(28, 0) ("aclParseAclLine: missing ACL type.\n");
+        debugs(28, 0, "aclParseAclLine: missing ACL type.");
         parser.destruct();
         return;
     }
 
     if (!Prototype::Registered (theType)) {
-        debug(28, 0) ("aclParseAclLine: Invalid ACL type '%s'\n", theType);
+        debugs(28, 0, "aclParseAclLine: Invalid ACL type '" << theType << "'");
         parser.destruct();
         return;
     }
 
     if ((A = FindByName(aclname)) == NULL) {
-        debug(28, 3) ("aclParseAclLine: Creating ACL '%s'\n", aclname);
+        debugs(28, 3, "aclParseAclLine: Creating ACL '" << aclname << "'");
         A = ACL::Factory(theType);
         xstrncpy(A->name, aclname, ACL_NAME_SZ);
         A->cfgline = xstrdup(config_input_line);
         new_acl = 1;
     } else {
         if (strcmp (A->typeString(),theType) ) {
-            debug(28, 0) ("aclParseAclLine: ACL '%s' already exists with different type.\n", A->name);
+            debugs(28, 0, "aclParseAclLine: ACL '" << A->name << "' already exists with different type.");
             parser.destruct();
             return;
         }
 
-        debug(28, 3) ("aclParseAclLine: Appending to '%s'\n", aclname);
+        debugs(28, 3, "aclParseAclLine: Appending to '" << aclname << "'");
         new_acl = 0;
     }
 
@@ -160,8 +161,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         return;
 
     if (A->empty()) {
-        debug(28, 0) ("Warning: empty ACL: %s\n",
-                      A->cfgline);
+        debugs(28, 0, "Warning: empty ACL: " << A->cfgline);
     }
 
     if (!A->valid()) {
@@ -226,7 +226,7 @@ ACL::cacheMatchAcl(dlink_list * cache, ACLChecklist *checklist)
         auth_match = (acl_proxy_auth_match_cache *)link->data;
 
         if (auth_match->acl_data == this) {
-            debug(28, 4) ("ACL::cacheMatchAcl: cache hit on acl '%s' (%p)\n", name, this);
+            debugs(28, 4, "ACL::cacheMatchAcl: cache hit on acl '" << name << "' (" << this << ")");
             return auth_match->matchrv;
         }
 
@@ -237,7 +237,7 @@ ACL::cacheMatchAcl(dlink_list * cache, ACLChecklist *checklist)
     auth_match->matchrv = matchForCache (checklist);
     auth_match->acl_data = this;
     dlinkAddTail(auth_match, &auth_match->link, cache);
-    debug(28,4)("ACL::cacheMatchAcl: miss for '%s'. Adding result %d\n",name,auth_match->matchrv);
+    debugs(28, 4, "ACL::cacheMatchAcl: miss for '" << name << "'. Adding result " << auth_match->matchrv);
     return auth_match->matchrv;
 }
 
@@ -248,7 +248,7 @@ aclCacheMatchFlush(dlink_list * cache)
     dlink_node *link, *tmplink;
     link = cache->head;
 
-    debug(28,8)("aclCacheMatchFlush called for cache %p\n",cache);
+    debugs(28, 8, "aclCacheMatchFlush called for cache " << cache);
 
     while (link) {
         auth_match = (acl_proxy_auth_match_cache *)link->data;
@@ -277,22 +277,18 @@ ACL::checklistMatches(ACLChecklist *checklist)
     int rv;
 
     if (NULL == checklist->request && requiresRequest()) {
-        debug(28, 1) ( "ACL::checklistMatches "
-                       "WARNING: '%s' ACL is used but there is no"
-                       " HTTP request -- not matching.\n", name);
+        debugs(28, 1, "ACL::checklistMatches WARNING: '" << name << "' ACL is used but there is no HTTP request -- not matching.");
         return 0;
     }
 
     if (NULL == checklist->reply && requiresReply()) {
-        debug(28, 1) ( "ACL::checklistMatches "
-                       "WARNING: '%s' ACL is used but there is no"
-                       " HTTP reply -- not matching.\n", name);
+        debugs(28, 1, "ACL::checklistMatches WARNING: '" << name << "' ACL is used but there is no HTTP reply -- not matching.");
         return 0;
     }
 
-    debug(28, 3) ("ACL::checklistMatches: checking '%s'\n", name);
+    debugs(28, 3, "ACL::checklistMatches: checking '" << name << "'");
     rv= match(checklist);
-    debug(28,3) ("ACL::ChecklistMatches: result for '%s' is %d\n",name,rv);
+    debugs(28, 3, "ACL::ChecklistMatches: result for '" << name << "' is " << rv);
     return rv;
 }
 
@@ -301,15 +297,14 @@ ACLList::matches (ACLChecklist *checklist) const
 {
     assert (_acl);
     AclMatchedName = _acl->name;
-    debug(28, 3) ("ACLList::matches: checking %s%s\n",
-                  op ? null_string : "!", _acl->name);
+    debugs(28, 3, "ACLList::matches: checking " << (op ? null_string : "!") << _acl->name);
 
     if (_acl->checklistMatches(checklist) != op) {
-        debug(28,4)("ACLList::matches: result is false\n");
+        debugs(28, 4, "ACLList::matches: result is false");
         return checklist->lastACLResult(false);
     }
 
-    debug(28,4)("ACLList::matches: result is true\n");
+    debugs(28, 4, "ACLList::matches: result is true");
     return checklist->lastACLResult(true);
 }
 
@@ -320,7 +315,7 @@ ACLList::matches (ACLChecklist *checklist) const
 
 ACL::~ACL()
 {
-    debug(28, 3) ("ACL::~ACL: '%s'\n", cfgline);
+    debugs(28, 3, "ACL::~ACL: '" << cfgline << "'");
     safe_free(cfgline);
 }
 
@@ -331,25 +326,25 @@ acl_access::containsPURGE() const
     acl_access const *a = this;
     acl_list *b;
 
-    debug(28,6)("acl_access::containsPURGE: invoked for '%s'\n",cfgline);
+    debugs(28, 6, "acl_access::containsPURGE: invoked for '" << cfgline << "'");
 
     for (; a; a = a->next) {
         for (b = a->aclList; b; b = b->next) {
             ACLStrategised<method_t> *tempAcl = dynamic_cast<ACLStrategised<method_t> *>(b->_acl);
 
             if (!tempAcl) {
-                debug(28,7)("acl_access::containsPURGE: can't create tempAcl\n");
+                debugs(28, 7, "acl_access::containsPURGE: can't create tempAcl");
                 continue;
             }
 
             if (tempAcl->match(METHOD_PURGE)) {
-                debug(28,6)("acl_access::containsPURGE:   returning true\n");
+                debugs(28, 6, "acl_access::containsPURGE:   returning true");
                 return true;
             }
         }
     }
 
-    debug(28,6)("acl_access::containsPURGE:   returning false\n");
+    debugs(28, 6, "acl_access::containsPURGE:   returning false");
     return false;
 }
 
@@ -385,15 +380,15 @@ void *ACL::Prototype::Initialized;
 bool
 ACL::Prototype::Registered(char const *aType)
 {
-    debug(28,7)("ACL::Prototype::Registered: invoked for type %s\n",aType);
+    debugs(28, 7, "ACL::Prototype::Registered: invoked for type " << aType);
 
     for (iterator i = Registry->begin(); i != Registry->end(); ++i)
         if (!strcmp (aType, (*i)->typeString)) {
-            debug(28,7)("ACL::Prototype::Registered:    yes\n");
+            debugs(28, 7, "ACL::Prototype::Registered:    yes");
             return true;
         }
 
-    debug(28,7)("ACL::Prototype::Registered:    no\n");
+    debugs(28, 7, "ACL::Prototype::Registered:    no");
     return false;
 }
 
@@ -415,19 +410,19 @@ ACL::Prototype::registerMe ()
 
 ACL::Prototype::~Prototype()
 {
-    debug (28,2)("ACL::Prototype::~Prototype: TODO: unregister me\n");
+    debugs(28, 2, "ACL::Prototype::~Prototype: TODO: unregister me");
 }
 
 ACL *
 ACL::Prototype::Factory (char const *typeToClone)
 {
-    debug(28,4)("ACL::Prototype::Factory: cloning an object for type '%s'\n",typeToClone);
+    debugs(28, 4, "ACL::Prototype::Factory: cloning an object for type '" << typeToClone << "'");
 
     for (iterator i = Registry->begin(); i != Registry->end(); ++i)
         if (!strcmp (typeToClone, (*i)->typeString))
             return (*i)->prototype->clone();
 
-    debug(28,4)("ACL::Prototype::Factory: cloning failed, no type '%s' available\n",typeToClone);
+    debugs(28, 4, "ACL::Prototype::Factory: cloning failed, no type '" << typeToClone << "' available");
 
     return NULL;
 }
@@ -436,7 +431,7 @@ void
 ACL::Initialize()
 {
     ACL *a = Config.aclList;
-    debug(53, 3) ("ACL::Initialize\n");
+    debugs(53, 3, "ACL::Initialize");
 
     while (a) {
         a->prepareForUse();

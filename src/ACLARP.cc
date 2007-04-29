@@ -1,5 +1,5 @@
 /*
- * $Id: ACLARP.cc,v 1.23 2006/12/21 20:01:00 serassio Exp $
+ * $Id: ACLARP.cc,v 1.24 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -160,7 +160,7 @@ decode_eth(const char *asc, char *eth)
     int a1 = 0, a2 = 0, a3 = 0, a4 = 0, a5 = 0, a6 = 0;
 
     if (sscanf(asc, "%x:%x:%x:%x:%x:%x", &a1, &a2, &a3, &a4, &a5, &a6) != 6) {
-        debug(28, 0) ("decode_eth: Invalid ethernet address '%s'\n", asc);
+        debugs(28, 0, "decode_eth: Invalid ethernet address '" << asc << "'");
         return 0;		/* This is not valid address */
     }
 
@@ -178,18 +178,17 @@ aclParseArpData(const char *t)
 {
     LOCAL_ARRAY(char, eth, 256);
     acl_arp_data *q = new acl_arp_data;
-    debug(28, 5) ("aclParseArpData: %s\n", t);
+    debugs(28, 5, "aclParseArpData: " << t);
 
     if (sscanf(t, "%[0-9a-fA-F:]", eth) != 1) {
-        debug(28, 0) ("aclParseArpData: Bad ethernet address: '%s'\n", t);
+        debugs(28, 0, "aclParseArpData: Bad ethernet address: '" << t << "'");
         safe_free(q);
         return NULL;
     }
 
     if (!decode_eth(eth, q->eth)) {
-        debug(28, 0) ("%s line %d: %s\n",
-                      cfg_filename, config_lineno, config_input_line);
-        debug(28, 0) ("aclParseArpData: Ignoring invalid ARP acl entry: can't parse '%s'\n", eth);
+        debugs(28, 0, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
+        debugs(28, 0, "aclParseArpData: Ignoring invalid ARP acl entry: can't parse '" << eth << "'");
         safe_free(q);
         return NULL;
     }
@@ -276,16 +275,19 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
             return 0;
         }
 
-        debug(28, 4) ("Got address %02x:%02x:%02x:%02x:%02x:%02x\n",
-                      arpReq.arp_ha.sa_data[0] & 0xff, arpReq.arp_ha.sa_data[1] & 0xff,
-                      arpReq.arp_ha.sa_data[2] & 0xff, arpReq.arp_ha.sa_data[3] & 0xff,
-                      arpReq.arp_ha.sa_data[4] & 0xff, arpReq.arp_ha.sa_data[5] & 0xff);
+        debugs(28, 4, "Got address "<< std::setfill('0') << std::hex <<
+               std::setw(2) << (arpReq.arp_ha.sa_data[0] & 0xff)  << ":" <<
+               std::setw(2) << (arpReq.arp_ha.sa_data[1] & 0xff)  << ":" <<
+               std::setw(2) << (arpReq.arp_ha.sa_data[2] & 0xff)  << ":" <<
+               std::setw(2) << (arpReq.arp_ha.sa_data[3] & 0xff)  << ":" <<
+               std::setw(2) << (arpReq.arp_ha.sa_data[4] & 0xff)  << ":" <<
+               std::setw(2) << (arpReq.arp_ha.sa_data[5] & 0xff));
+
         /* Do lookup */
         acl_arp_data X;
         memcpy (X.eth, arpReq.arp_ha.sa_data, 6);
         *Top = (*Top)->splay(&X, aclArpCompare);
-        debug(28, 3) ("aclMatchArp: '%s' %s\n",
-                      inet_ntoa(c), splayLastResult ? "NOT found" : "found");
+        debugs(28, 3, "aclMatchArp: '" << inet_ntoa(c) << "' " << (splayLastResult ? "NOT found" : "found"));
         return (0 == splayLastResult);
     }
 
@@ -295,13 +297,12 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
     ifc.ifc_buf = (char *)ifbuffer;
 
     if (ioctl(HttpSockets[0], SIOCGIFCONF, &ifc) < 0) {
-        debug(28, 1) ("Attempt to retrieve interface list failed: %s\n",
-                      xstrerror());
+        debugs(28, 1, "Attempt to retrieve interface list failed: " << xstrerror());
         return 0;
     }
 
     if (ifc.ifc_len > (int)sizeof(ifbuffer)) {
-        debug(28, 1) ("Interface list too long - %d\n", ifc.ifc_len);
+        debugs(28, 1, "Interface list too long - " << ifc.ifc_len);
         return 0;
     }
 
@@ -320,8 +321,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
         if (NULL != strchr(ifr->ifr_name, ':'))
             continue;
 
-        debug(28, 4) ("Looking up ARP address for %s on %s\n", inet_ntoa(c),
-                      ifr->ifr_name);
+        debugs(28, 4, "Looking up ARP address for " << inet_ntoa(c) << " on " << ifr->ifr_name);
 
         /* Set up structures for ARP lookup */
         ipAddr.sin_family = AF_INET;
@@ -350,8 +350,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
             else if (ENODEV == errno)
                 (void) 0;
             else
-                debug(28, 1) ("ARP query failed: %s: %s\n",
-                              ifr->ifr_name, xstrerror());
+                debugs(28, 1, "ARP query failed: " << ifr->ifr_name << ": " << xstrerror());
 
             continue;
         }
@@ -360,13 +359,14 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
         if (arpReq.arp_ha.sa_family != ARPHRD_ETHER)
             continue;
 
-        debug(28, 4) ("Got address %02x:%02x:%02x:%02x:%02x:%02x on %s\n",
-                      arpReq.arp_ha.sa_data[0] & 0xff,
-                      arpReq.arp_ha.sa_data[1] & 0xff,
-                      arpReq.arp_ha.sa_data[2] & 0xff,
-                      arpReq.arp_ha.sa_data[3] & 0xff,
-                      arpReq.arp_ha.sa_data[4] & 0xff,
-                      arpReq.arp_ha.sa_data[5] & 0xff, ifr->ifr_name);
+        debugs(28, 4, "Got address "<< std::setfill('0') << std::hex <<
+               std::setw(2) << (arpReq.arp_ha.sa_data[0] & 0xff)  << ":" <<
+               std::setw(2) << (arpReq.arp_ha.sa_data[1] & 0xff)  << ":" <<
+               std::setw(2) << (arpReq.arp_ha.sa_data[2] & 0xff)  << ":" <<
+               std::setw(2) << (arpReq.arp_ha.sa_data[3] & 0xff)  << ":" <<
+               std::setw(2) << (arpReq.arp_ha.sa_data[4] & 0xff)  << ":" <<
+               std::setw(2) << (arpReq.arp_ha.sa_data[5] & 0xff)  << " on "<<
+               std::setfill(' ') << ifr->ifr_name);
 
         /* Do lookup */
         acl_arp_data X;
@@ -377,8 +377,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
 
         /* Return if match, otherwise continue to other interfaces */
         if (0 == splayLastResult) {
-            debug(28, 3) ("aclMatchArp: %s found on %s\n",
-                          inet_ntoa(c), ifr->ifr_name);
+            debugs(28, 3, "aclMatchArp: " << inet_ntoa(c) << " found on " << ifr->ifr_name);
             return 1;
         }
 
@@ -423,16 +422,18 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
                 arpReq.arp_ha.sa_data[4] == 0 && arpReq.arp_ha.sa_data[5] == 0)
             return 0;
 
-        debug(28, 4) ("Got address %02x:%02x:%02x:%02x:%02x:%02x\n",
-                      arpReq.arp_ha.sa_data[0] & 0xff, arpReq.arp_ha.sa_data[1] & 0xff,
-                      arpReq.arp_ha.sa_data[2] & 0xff, arpReq.arp_ha.sa_data[3] & 0xff,
-                      arpReq.arp_ha.sa_data[4] & 0xff, arpReq.arp_ha.sa_data[5] & 0xff);
+        debugs(28, 4, "Got address "<< std::setfill('0') << std::hex <<
+               std::setw(2) << (arpReq.arp_ha.sa_data[0] & 0xff)  << ":" <<
+               std::setw(2) << (arpReq.arp_ha.sa_data[1] & 0xff)  << ":" <<
+               std::setw(2) << (arpReq.arp_ha.sa_data[2] & 0xff)  << ":" <<
+               std::setw(2) << (arpReq.arp_ha.sa_data[3] & 0xff)  << ":" <<
+               std::setw(2) << (arpReq.arp_ha.sa_data[4] & 0xff)  << ":" <<
+               std::setw(2) << (arpReq.arp_ha.sa_data[5] & 0xff));
 
         /* Do lookup */
         *Top = (*Top)->splay((acl_arp_data *)&arpReq.arp_ha.sa_data, aclArpCompare);
 
-        debug(28, 3) ("aclMatchArp: '%s' %s\n",
-                      inet_ntoa(c), splayLastResult ? "NOT found" : "found");
+        debugs(28, 3, "aclMatchArp: '" << inet_ntoa(c) << "' " << (splayLastResult ? "NOT found" : "found"));
 
         return (0 == splayLastResult);
     }
@@ -484,17 +485,17 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
     mib[5] = RTF_LLINFO;
 
     if (sysctl(mib, 6, NULL, &needed, NULL, 0) < 0) {
-        debug(28, 0) ("Can't estimate ARP table size!\n");
+        debugs(28, 0, "Can't estimate ARP table size!");
         return 0;
     }
 
     if ((buf = (char *)xmalloc(needed)) == NULL) {
-        debug(28, 0) ("Can't allocate temporary ARP table!\n");
+        debugs(28, 0, "Can't allocate temporary ARP table!");
         return 0;
     }
 
     if (sysctl(mib, 6, buf, &needed, NULL, 0) < 0) {
-        debug(28, 0) ("Can't retrieve ARP table!\n");
+        debugs(28, 0, "Can't retrieve ARP table!");
         xfree(buf);
         return 0;
     }
@@ -530,16 +531,18 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
             arpReq.arp_ha.sa_data[4] == 0 && arpReq.arp_ha.sa_data[5] == 0)
         return 0;
 
-    debug(28, 4) ("Got address %02x:%02x:%02x:%02x:%02x:%02x\n",
-                  arpReq.arp_ha.sa_data[0] & 0xff, arpReq.arp_ha.sa_data[1] & 0xff,
-                  arpReq.arp_ha.sa_data[2] & 0xff, arpReq.arp_ha.sa_data[3] & 0xff,
-                  arpReq.arp_ha.sa_data[4] & 0xff, arpReq.arp_ha.sa_data[5] & 0xff);
+    debugs(28, 4, "Got address "<< std::setfill('0') << std::hex <<
+           std::setw(2) << (arpReq.arp_ha.sa_data[0] & 0xff)  << ":" <<
+           std::setw(2) << (arpReq.arp_ha.sa_data[1] & 0xff)  << ":" <<
+           std::setw(2) << (arpReq.arp_ha.sa_data[2] & 0xff)  << ":" <<
+           std::setw(2) << (arpReq.arp_ha.sa_data[3] & 0xff)  << ":" <<
+           std::setw(2) << (arpReq.arp_ha.sa_data[4] & 0xff)  << ":" <<
+           std::setw(2) << (arpReq.arp_ha.sa_data[5] & 0xff));
 
     /* Do lookup */
     *Top = (*Top)->splay((acl_arp_data *)&arpReq.arp_ha.sa_data, aclArpCompare);
 
-    debug(28, 3) ("aclMatchArp: '%s' %s\n",
-                  inet_ntoa(c), splayLastResult ? "NOT found" : "found");
+    debugs(28, 3, "aclMatchArp: '" << inet_ntoa(c) << "' " << (splayLastResult ? "NOT found" : "found"));
 
     return (0 == splayLastResult);
 
@@ -561,19 +564,19 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
 
     /* Get size of Windows ARP table */
     if (GetIpNetTable(NetTable, &ipNetTableLen, FALSE) != ERROR_INSUFFICIENT_BUFFER) {
-        debug(28, 0) ("Can't estimate ARP table size!\n");
+        debugs(28, 0, "Can't estimate ARP table size!");
         return 0;
     }
 
     /* Allocate space for ARP table and assign pointers */
     if ((NetTable = (PMIB_IPNETTABLE)xmalloc(ipNetTableLen)) == NULL) {
-        debug(28, 0) ("Can't allocate temporary ARP table!\n");
+        debugs(28, 0, "Can't allocate temporary ARP table!");
         return 0;
     }
 
     /* Get actual ARP table */
     if ((dwNetTable = GetIpNetTable(NetTable, &ipNetTableLen, FALSE)) != NO_ERROR) {
-        debug(28, 0) ("Can't retrieve ARP table!\n");
+        debugs(28, 0, "Can't retrieve ARP table!");
         xfree(NetTable);
         return 0;
     }
@@ -593,16 +596,18 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
             arpReq.arp_ha.sa_data[4] == 0 && arpReq.arp_ha.sa_data[5] == 0)
         return 0;
 
-    debug(28, 4) ("Got address %02x:%02x:%02x:%02x:%02x:%02x\n",
-                  arpReq.arp_ha.sa_data[0] & 0xff, arpReq.arp_ha.sa_data[1] & 0xff,
-                  arpReq.arp_ha.sa_data[2] & 0xff, arpReq.arp_ha.sa_data[3] & 0xff,
-                  arpReq.arp_ha.sa_data[4] & 0xff, arpReq.arp_ha.sa_data[5] & 0xff);
+    debugs(28, 4, "Got address "<< std::setfill('0') << std::hex <<
+           std::setw(2) << (arpReq.arp_ha.sa_data[0] & 0xff)  << ":" <<
+           std::setw(2) << (arpReq.arp_ha.sa_data[1] & 0xff)  << ":" <<
+           std::setw(2) << (arpReq.arp_ha.sa_data[2] & 0xff)  << ":" <<
+           std::setw(2) << (arpReq.arp_ha.sa_data[3] & 0xff)  << ":" <<
+           std::setw(2) << (arpReq.arp_ha.sa_data[4] & 0xff)  << ":" <<
+           std::setw(2) << (arpReq.arp_ha.sa_data[5] & 0xff));
 
     /* Do lookup */
     *Top = (*Top)->splay((acl_arp_data *)&arpReq.arp_ha.sa_data, aclArpCompare);
 
-    debug(28, 3) ("aclMatchArp: '%s' %s\n",
-                  inet_ntoa(c), splayLastResult ? "NOT found" : "found");
+    debugs(28, 3, "aclMatchArp: '" << inet_ntoa(c) << "' " << (splayLastResult ? "NOT found" : "found"));
 
     return (0 == splayLastResult);
 
@@ -614,7 +619,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
     /*
      * Address was not found on any interface
      */
-    debug(28, 3) ("aclMatchArp: %s NOT found\n", inet_ntoa(c));
+    debugs(28, 3, "aclMatchArp: " << inet_ntoa(c) << " NOT found");
 
     return 0;
 }
