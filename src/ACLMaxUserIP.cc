@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMaxUserIP.cc,v 1.11 2006/10/08 13:10:34 serassio Exp $
+ * $Id: ACLMaxUserIP.cc,v 1.12 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -82,7 +82,7 @@ void
 ACLMaxUserIP::parse()
 {
     if (maximum) {
-        debug(28, 1) ("Attempting to alter already set User max IP acl\n");
+        debugs(28, 1, "Attempting to alter already set User max IP acl");
         return;
     }
 
@@ -91,10 +91,10 @@ ACLMaxUserIP::parse()
     if (!t)
         return;
 
-    debug(28, 5) ("aclParseUserMaxIP: First token is %s\n", t);
+    debugs(28, 5, "aclParseUserMaxIP: First token is " << t);
 
     if (strcmp("-s", t) == 0) {
-        debug(28, 5) ("aclParseUserMaxIP: Going strict\n");
+        debugs(28, 5, "aclParseUserMaxIP: Going strict");
         flags.strict = 1;
         t = ConfigParser::strtokFile();
     }
@@ -104,7 +104,7 @@ ACLMaxUserIP::parse()
 
     maximum = xatoi(t);
 
-    debug(28, 5) ("aclParseUserMaxIP: Max IP address's %d\n", (int) maximum);
+    debugs(28, 5, "aclParseUserMaxIP: Max IP address's " << (int) maximum);
 
     return;
 }
@@ -128,7 +128,7 @@ ACLMaxUserIP::match(auth_user_request_t * auth_user_request,
     if (authenticateAuthUserRequestIPCount(auth_user_request) <= maximum)
         return 0;
 
-    debug(28, 1) ("aclMatchUserMaxIP: user '%s' tries to use too many IP addresses (max %d allowed)!\n", auth_user_request->username(), maximum);
+    debugs(28, 1, "aclMatchUserMaxIP: user '" << auth_user_request->username() << "' tries to use too many IP addresses (max " << maximum << " allowed)!");
 
     /* this is a match */
     if (flags.strict)
@@ -139,7 +139,7 @@ ACLMaxUserIP::match(auth_user_request_t * auth_user_request,
          */
         /* remove _this_ ip, as it is the culprit for going over the limit */
         authenticateAuthUserRequestRemoveIp(auth_user_request, src_addr);
-        debug(28, 4) ("aclMatchUserMaxIP: Denying access in strict mode\n");
+        debugs(28, 4, "aclMatchUserMaxIP: Denying access in strict mode");
     } else
     {
         /*
@@ -147,7 +147,7 @@ ACLMaxUserIP::match(auth_user_request_t * auth_user_request,
          * ie to allow the user to move machines easily
          */
         authenticateAuthUserRequestClearIp(auth_user_request);
-        debug(28, 4) ("aclMatchUserMaxIP: Denying access in non-strict mode - flushing the user ip cache\n");
+        debugs(28, 4, "aclMatchUserMaxIP: Denying access in non-strict mode - flushing the user ip cache");
     }
 
     return 1;

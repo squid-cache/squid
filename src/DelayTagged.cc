@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayTagged.cc,v 1.4 2003/08/04 22:14:40 robertc Exp $
+ * $Id: DelayTagged.cc,v 1.5 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -185,12 +185,12 @@ DelayTaggedBucket::operator delete (void *address)
 
 DelayTaggedBucket::DelayTaggedBucket(String &aTag) : tag (aTag)
 {
-    debug (77,3) ("DelayTaggedBucket::DelayTaggedBucket\n");
+    debugs(77, 3, "DelayTaggedBucket::DelayTaggedBucket");
 }
 
 DelayTaggedBucket::~DelayTaggedBucket()
 {
-    debug (77,3) ("DelayTaggedBucket::~DelayTaggedBucket\n");
+    debugs(77, 3, "DelayTaggedBucket::~DelayTaggedBucket");
 }
 
 void
@@ -216,7 +216,7 @@ DelayTagged::Id::Id(DelayTagged::Pointer aDelayTagged, String &aTag) : theTagged
 
 DelayTagged::Id::~Id()
 {
-    debug (77,3) ("DelayTagged::Id::~Id\n");
+    debugs(77, 3, "DelayTagged::Id::~Id");
 }
 
 int

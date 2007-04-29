@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.158 2007/04/17 05:40:18 wessels Exp $
+ * $Id: store_dir.cc,v 1.159 2007/04/28 22:26:38 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -89,10 +89,10 @@ StoreController::init()
 
     if (0 == strcasecmp(Config.store_dir_select_algorithm, "round-robin")) {
         storeDirSelectSwapDir = storeDirSelectSwapDirRoundRobin;
-        debug(47, 1) ("Using Round Robin store dir selection\n");
+        debugs(47, 1, "Using Round Robin store dir selection");
     } else {
         storeDirSelectSwapDir = storeDirSelectSwapDirLeastLoad;
-        debug(47, 1) ("Using Least Load store dir selection\n");
+        debugs(47, 1, "Using Least Load store dir selection");
     }
 }
 
@@ -320,11 +320,11 @@ storeDirSwapLog(const StoreEntry * e, int op)
 
     assert(op > SWAP_LOG_NOP && op < SWAP_LOG_MAX);
 
-    debug(20, 3) ("storeDirSwapLog: %s %s %d %08X\n",
-                  swap_log_op_str[op],
-                  e->getMD5Text(),
-                  e->swap_dirn,
-                  e->swap_filen);
+    debugs(20, 3, "storeDirSwapLog: " << 
+           swap_log_op_str[op] << " " <<  
+           e->getMD5Text() << " " <<  
+           e->swap_dirn << " " << 
+           std::hex << std::uppercase << std::setfill('0') << std::setw(8) << e->swap_filen);
 
     dynamic_cast<SwapDir *>(INDEXSD(e->swap_dirn))->logEntry(*e, op);
 }
@@ -430,12 +430,12 @@ storeDirWriteCleanLogs(int reopen)
     int notdone = 1;
 
     if (StoreController::store_dirs_rebuilding) {
-        debug(20, 1) ("Not currently OK to rewrite swap log.\n");
-        debug(20, 1) ("storeDirWriteCleanLogs: Operation aborted.\n");
+        debugs(20, 1, "Not currently OK to rewrite swap log.");
+        debugs(20, 1, "storeDirWriteCleanLogs: Operation aborted.");
         return 0;
     }
 
-    debug(20, 1) ("storeDirWriteCleanLogs: Starting...\n");
+    debugs(20, 1, "storeDirWriteCleanLogs: Starting...");
     getCurrentTime();
     start = current_time;
 
@@ -443,7 +443,7 @@ storeDirWriteCleanLogs(int reopen)
         sd = dynamic_cast<SwapDir *>(INDEXSD(dirn));
 
         if (sd->writeCleanStart() < 0) {
-            debug(20, 1) ("log.clean.start() failed for dir #%d\n", sd->index);
+            debugs(20, 1, "log.clean.start() failed for dir #" << sd->index);
             continue;
         }
     }
@@ -476,7 +476,8 @@ storeDirWriteCleanLogs(int reopen)
 
             if ((++n & 0xFFFF) == 0) {
                 getCurrentTime();
-                debug(20, 1) ("  %7d entries written so far.\n", n);
+                debugs(20, 1, "  " << std::setw(7) << n  <<
+                       " entries written so far.");
             }
         }
     }
@@ -492,10 +493,10 @@ storeDirWriteCleanLogs(int reopen)
 
     dt = tvSubDsec(start, current_time);
 
-    debug(20, 1) ("  Finished.  Wrote %d entries.\n", n);
+    debugs(20, 1, "  Finished.  Wrote " << n << " entries.");
+    debugs(20, 1, "  Took "<< std::setw(3)<< std::setprecision(2) << dt <<
+           " seconds ("<< std::setw(6) << ((double) n / (dt > 0.0 ? dt : 1.0)) << " entries/sec).");
 
-    debug(20, 1) ("  Took %3.1f seconds (%6.1f entries/sec).\n",
-                  dt, (double) n / (dt > 0.0 ? dt : 1.0));
 
     return n;
 }
@@ -545,7 +546,7 @@ storeDirGetBlkSize(const char *path, int *blksize)
     struct statvfs sfs;
 
     if (statvfs(path, &sfs)) {
-        debug(50, 1) ("%s: %s\n", path, xstrerror());
+        debugs(50, 1, "" << path << ": " << xstrerror());
         *blksize = 2048;
         return 1;
     }
@@ -556,7 +557,7 @@ storeDirGetBlkSize(const char *path, int *blksize)
     struct statfs sfs;
 
     if (statfs(path, &sfs)) {
-        debug(50, 1) ("%s: %s\n", path, xstrerror());
+        debugs(50, 1, "" << path << ": " << xstrerror());
         *blksize = 2048;
         return 1;
     }
@@ -584,7 +585,7 @@ storeDirGetUFSStats(const char *path, int *totl_kb, int *free_kb, int *totl_in, 
     struct statvfs sfs;
 
     if (statvfs(path, &sfs)) {
-        debug(50, 1) ("%s: %s\n", path, xstrerror());
+        debugs(50, 1, "" << path << ": " << xstrerror());
         return 1;
     }
 
@@ -597,7 +598,7 @@ storeDirGetUFSStats(const char *path, int *totl_kb, int *free_kb, int *totl_in, 
     struct statfs sfs;
 
     if (statfs(path, &sfs)) {
-        debug(50, 1) ("%s: %s\n", path, xstrerror());
+        debugs(50, 1, "" << path << ": " << xstrerror());
         return 1;
     }
 
@@ -765,7 +766,7 @@ StoreHashIndex::get
     (const cache_key *key)
 {
     PROF_start(storeGet);
-    debug(20, 3) ("storeGet: looking up %s\n", storeKeyText(key));
+    debugs(20, 3, "storeGet: looking up " << storeKeyText(key));
     StoreEntry *p = static_cast<StoreEntry *>(hash_lookup(store_table, key));
     PROF_stop(storeGet);
     return p;

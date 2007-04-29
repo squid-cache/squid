@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.46 2007/04/21 07:14:13 wessels Exp $
+ * $Id: cache_manager.cc,v 1.47 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -149,13 +149,13 @@ cachemgrParseUrl(const char *url)
 #endif
 
     } else if ((a = cachemgrFindAction(request)) == NULL) {
-        debug(16, 1) ("cachemgrParseUrl: action '%s' not found\n", request);
+        debugs(16, 1, "cachemgrParseUrl: action '" << request << "' not found");
         return NULL;
     } else {
         prot = cachemgrActionProtection(a);
 
         if (!strcmp(prot, "disabled") || !strcmp(prot, "hidden")) {
-            debug(16, 1) ("cachemgrParseUrl: action '%s' is %s\n", request, prot);
+            debugs(16, 1, "cachemgrParseUrl: action '" << request << "' is " << prot);
             return NULL;
         }
     }
@@ -184,7 +184,7 @@ cachemgrParseHeaders(cachemgrStateData * mgr, const HttpRequest * request)
         return;
 
     if (!(passwd_del = strchr(basic_cookie, ':'))) {
-        debug(16, 1) ("cachemgrParseHeaders: unknown basic_cookie format '%s'\n", basic_cookie);
+        debugs(16, 1, "cachemgrParseHeaders: unknown basic_cookie format '" << basic_cookie << "'");
         return;
     }
 
@@ -200,7 +200,7 @@ cachemgrParseHeaders(cachemgrStateData * mgr, const HttpRequest * request)
     mgr->passwd = xstrdup(passwd_del + 1);
 
     /* warning: this prints decoded password which maybe not what you want to do @?@ @?@ */
-    debug(16, 9) ("cachemgrParseHeaders: got user: '%s' passwd: '%s'\n", mgr->user_name, mgr->passwd);
+    debugs(16, 9, "cachemgrParseHeaders: got user: '" << mgr->user_name << "' passwd: '" << mgr->passwd << "'");
 }
 
 /*
@@ -244,7 +244,7 @@ cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
     cachemgrStateData *mgr = NULL;
     ErrorState *err = NULL;
     CacheManagerAction *a;
-    debug(16, 3) ("objectcacheStart: '%s'\n", entry->url());
+    debugs(16, 3, "objectcacheStart: '" << entry->url() << "'" );
 
     if ((mgr = cachemgrParseUrl(entry->url())) == NULL) {
         err = errorCon(ERR_INVALID_URL, HTTP_NOT_FOUND, request);
@@ -261,8 +261,7 @@ cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
     ;
     entry->expires = squid_curtime;
 
-    debug(16, 5) ("CACHEMGR: %s requesting '%s'\n",
-                  fd_table[fd].ipaddr, mgr->action);
+    debugs(16, 5, "CACHEMGR: " << fd_table[fd].ipaddr << " requesting '" << mgr->action << "'");
 
     /* get additional info from request headers */
     cachemgrParseHeaders(mgr, request);
@@ -277,13 +276,15 @@ cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
         /* warn if user specified incorrect password */
 
         if (mgr->passwd)
-            debug(16, 1) ("CACHEMGR: %s@%s: incorrect password for '%s'\n",
-                          mgr->user_name ? mgr->user_name : "<unknown>",
-                          fd_table[fd].ipaddr, mgr->action);
+            debugs(16, 1, "CACHEMGR: " << 
+                   (mgr->user_name ? mgr->user_name : "<unknown>") << "@" << 
+                   fd_table[fd].ipaddr << ": incorrect password for '" << 
+                   mgr->action << "'" );
         else
-            debug(16, 1) ("CACHEMGR: %s@%s: password needed for '%s'\n",
-                          mgr->user_name ? mgr->user_name : "<unknown>",
-                          fd_table[fd].ipaddr, mgr->action);
+            debugs(16, 1, "CACHEMGR: " << 
+                   (mgr->user_name ? mgr->user_name : "<unknown>") << "@" << 
+                   fd_table[fd].ipaddr << ": password needed for '" << 
+                   mgr->action << "'" );
 
         rep = errorBuildReply(err);
 
@@ -307,9 +308,10 @@ cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
         return;
     }
 
-    debug(16, 1) ("CACHEMGR: %s@%s requesting '%s'\n",
-                  mgr->user_name ? mgr->user_name : "<unknown>",
-                  fd_table[fd].ipaddr, mgr->action);
+    debugs(16, 1, "CACHEMGR: " << 
+           (mgr->user_name ? mgr->user_name : "<unknown>") << "@" << 
+           fd_table[fd].ipaddr << " requesting '" << 
+           mgr->action << "'" );
     /* retrieve object requested */
     a = cachemgrFindAction(mgr->action);
     assert(a != NULL);
@@ -342,7 +344,7 @@ cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
 static void
 cachemgrShutdown(StoreEntry * entryunused)
 {
-    debug(16, 0) ("Shutdown by command.\n");
+    debugs(16, 0, "Shutdown by command.");
     shut_down(0);
 }
 
@@ -350,8 +352,8 @@ static void
 cachemgrOfflineToggle(StoreEntry * sentry)
 {
     Config.onoff.offline = !Config.onoff.offline;
-    debug(16, 0) ("offline_mode now %s.\n",
-                  Config.onoff.offline ? "ON" : "OFF");
+    debugs(16, 0, "offline_mode now " << (Config.onoff.offline ? "ON" : "OFF") << ".");
+
     storeAppendPrintf(sentry, "offline_mode is now %s\n",
                       Config.onoff.offline ? "ON" : "OFF");
 }

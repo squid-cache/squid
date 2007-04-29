@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIVarState.cc,v 1.7 2006/05/06 22:23:44 wessels Exp $
+ * $Id: ESIVarState.cc,v 1.8 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -139,7 +139,7 @@ ESIVarState::extractList()
     doIt();
     ESISegment::Pointer rv = output;
     output = NULL;
-    debug (86,6)("ESIVarStateExtractList: Extracted list\n");
+    debugs(86, 6, "ESIVarStateExtractList: Extracted list");
     return rv;
 }
 
@@ -155,7 +155,7 @@ ESIVarState::extractChar ()
 
     ESISegmentFreeList (output);
 
-    debug (86,6)("ESIVarStateExtractList: Extracted char\n");
+    debugs(86, 6, "ESIVarStateExtractList: Extracted char");
 
     return rv;
 }
@@ -271,10 +271,10 @@ ESIVariableQuery::ESIVariableQuery(char const *uri) : query (NULL), query_sz (0)
 
     if (query) {
         unsigned int n = 0;
-        debug (86,6)("esiVarStateNew: Parsed Query string: '%s'\n",uri);
+        debugs(86, 6, "esiVarStateNew: Parsed Query string: '" << uri << "'");
 
         while (n < query_elements) {
-            debug (86,6)("esiVarStateNew: Parsed Query element %d '%s'='%s'\n",n + 1, query[n].var, query[n].val);
+            debugs(86, 6, "esiVarStateNew: Parsed Query element " << n + 1 << " '" << query[n].var << "'='" << query[n].val << "'");
             ++n;
         }
     }
@@ -717,19 +717,19 @@ ESIVariableProcessor::doFunction()
                 safe_free(found_default);
                 state = LOOKFORSTART;
             } else if (!found_subref && !found_default && string[pos] == '{') {
-                debug (86,6)("ESIVarStateDoIt: Subref of some sort\n");
+                debugs(86, 6, "ESIVarStateDoIt: Subref of some sort");
                 /* subreference of some sort */
                 /* look for the entry name */
                 var_pos = ++pos;
                 state = 4;
             } else if (!found_default && string[pos] == '|') {
-                debug (86,6)("esiVarStateDoIt: Default present\n");
+                debugs(86, 6, "esiVarStateDoIt: Default present");
                 /* extract default value */
                 state = 5;
                 var_pos = ++pos;
             } else {
                 /* unexpected char, not a variable after all */
-                debug (86,6)("esiVarStateDoIt: unexpected char after varname\n");
+                debugs(86, 6, "esiVarStateDoIt: unexpected char after varname");
                 state = LOOKFORSTART;
                 pos = done_pos + 2;
             }
@@ -741,11 +741,11 @@ ESIVariableProcessor::doFunction()
             if (string[pos] == '}') {
                 /* end of subref */
                 found_subref = xstrndup (&string[var_pos], pos - var_pos + 1);
-                debug (86,6)("esiVarStateDoIt: found end of variable subref '%s'\n", found_subref);
+                debugs(86, 6, "esiVarStateDoIt: found end of variable subref '" << found_subref << "'");
                 state = 3;
                 ++pos;
             } else if (!validChar (string[pos])) {
-                debug (86,6)("esiVarStateDoIt: found invalid char in variable subref\n");
+                debugs(86, 6, "esiVarStateDoIt: found invalid char in variable subref");
                 /* not a valid subref */
                 safe_free(found_subref);
                 state = LOOKFORSTART;
@@ -760,12 +760,12 @@ ESIVariableProcessor::doFunction()
 
             if (string[pos] == '\'') {
                 /* begins with a quote */
-                debug (86,6)("esiVarStateDoIt: found quoted default\n");
+                debugs(86, 6, "esiVarStateDoIt: found quoted default");
                 state = 6;
                 var_pos = ++pos;
             } else {
                 /* doesn't */
-                debug (86,6)("esiVarStateDoIt: found unquoted default\n");
+                debugs(86, 6, "esiVarStateDoIt: found unquoted default");
                 state = 7;
                 ++pos;
             }
@@ -777,7 +777,7 @@ ESIVariableProcessor::doFunction()
             if (string[pos] == '\'') {
                 /* end of default */
                 found_default = xstrndup (&string[var_pos], pos - var_pos + 1);
-                debug (86,6)("esiVarStateDoIt: found end of quoted default '%s'\n", found_default);
+                debugs(86, 6, "esiVarStateDoIt: found end of quoted default '" << found_default << "'");
                 state = 3;
             }
 
@@ -789,7 +789,7 @@ ESIVariableProcessor::doFunction()
             if (string[pos] == ')') {
                 /* end of default - end of variable*/
                 found_default = xstrndup (&string[var_pos], pos - var_pos + 1);
-                debug (86,6)("esiVarStateDoIt: found end of variable (w/ unquoted default) '%s'\n",found_default);
+                debugs(86, 6, "esiVarStateDoIt: found end of variable (w/ unquoted default) '" << found_default << "'");
                 eval(vartype,found_subref, found_default);
                 done_pos = ++pos;
                 safe_free(found_default);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp2.cc,v 1.14 2007/04/07 10:01:50 serassio Exp $
+ * $Id: wccp2.cc,v 1.15 2007/04/28 22:26:38 hno Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Steven Wilton
@@ -32,6 +32,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+
 #include "squid.h"
 #include "comm.h"
 #include "event.h"
@@ -453,7 +454,7 @@ void wccp2_add_service_list(int service, int service_id, int service_priority,
 static void
 wccp2InitServices(void)
 {
-    debug(80, 5) ("wccp2InitServices: called\n");
+    debugs(80, 5, "wccp2InitServices: called");
 }
 
 static void
@@ -488,7 +489,7 @@ wccp2_add_service_list(int service, int service_id, int service_priority,
 
     wccp2_service_list_ptr = (wccp2_service_list_t *) xcalloc(1, sizeof(struct wccp2_service_list_t));
 
-    debug(80, 5) ("wccp2_add_service_list: added service id %d\n", service_id);
+    debugs(80, 5, "wccp2_add_service_list: added service id " << service_id);
 
     /* XXX check what needs to be wrapped in htons()! */
     wccp2_service_list_ptr->info.service_type = htons(WCCP2_SERVICE_INFO);
@@ -539,7 +540,7 @@ wccp2_update_md5_security(char *password, char *ptr, char *packet, int len)
 
     struct wccp2_security_md5_t *ws;
 
-    debug(80, 5) ("wccp2_update_md5_security: called\n");
+    debugs(80, 5, "wccp2_update_md5_security: called");
 
     /* The password field, for the MD5 hash, needs to be 8 bytes and NUL padded. */
     memset(pwd, 0, sizeof(pwd));
@@ -550,7 +551,7 @@ wccp2_update_md5_security(char *password, char *ptr, char *packet, int len)
     /* Its the security part */
 
     if (ntohl(ws->security_option) != WCCP2_MD5_SECURITY) {
-        debug(80, 5) ("wccp2_update_md5_security: this service ain't md5'ing, abort\n");
+        debugs(80, 5, "wccp2_update_md5_security: this service ain't md5'ing, abort");
         return 0;
     }
 
@@ -595,7 +596,7 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
 
     if (ntohl(ws->security_option) != srv->wccp2_security_type)
     {
-        debug(80, 1) ("wccp2_check_security: received packet has the wrong security option\n");
+        debugs(80, 1, "wccp2_check_security: received packet has the wrong security option");
         return 0;
     }
 
@@ -606,7 +607,7 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
 
     if (srv->wccp2_security_type != WCCP2_MD5_SECURITY)
     {
-        debug(80, 1) ("wccp2_check_security: invalid security option\n");
+        debugs(80, 1, "wccp2_check_security: invalid security option");
         return 0;
     }
 
@@ -647,7 +648,7 @@ wccp2Init(void)
 
     struct wccp2_security_md5_t wccp2_security_md5;
 
-    debug(80, 5) ("wccp2Init: Called\n");
+    debugs(80, 5, "wccp2Init: Called");
 
     if (wccp2_connected == 1)
         return;
@@ -951,10 +952,10 @@ wccp2ConnectionOpen(void)
 
     struct wccp2_router_list_t *router_list_ptr;
 
-    debug(80, 5) ("wccp2ConnectionOpen: Called\n");
+    debugs(80, 5, "wccp2ConnectionOpen: Called");
 
     if (wccp2_numrouters == 0 || !wccp2_service_list_head) {
-        debug(80, 2) ("WCCPv2 Disabled.\n");
+        debugs(80, 2, "WCCPv2 Disabled.");
         return;
     }
 
@@ -981,10 +982,8 @@ wccp2ConnectionOpen(void)
                   NULL,
                   0);
 
-    debug(80, 1) ("Accepting WCCPv2 messages on port %d, FD %d.\n",
-                  (int) port, theWccp2Connection);
-
-    debug(80, 1) ("Initialising all WCCPv2 lists\n");
+    debugs(80, 1, "Accepting WCCPv2 messages on port " << (int) port << ", FD " << theWccp2Connection << ".");
+    debugs(80, 1, "Initialising all WCCPv2 lists");
 
     /* Initialise all routers on all services */
     memset(&null, 0, sizeof(null));
@@ -1048,7 +1047,7 @@ wccp2ConnectionClose(void)
     }
 
     if (theWccp2Connection > -1) {
-        debug(80, 1) ("FD %d Closing WCCP socket\n", theWccp2Connection);
+        debugs(80, 1, "FD " << theWccp2Connection << " Closing WCCP socket");
         comm_close(theWccp2Connection);
         theWccp2Connection = -1;
     }
@@ -1142,7 +1141,7 @@ wccp2HandleUdp(int sock, void *not_used)
     char *ptr;
     int num_caches;
 
-    debug(80, 6) ("wccp2HandleUdp: Called.\n");
+    debugs(80, 6, "wccp2HandleUdp: Called.");
 
     commSetSelect(sock, COMM_SELECT_READ, wccp2HandleUdp, NULL, 0);
 
@@ -1166,7 +1165,7 @@ wccp2HandleUdp(int sock, void *not_used)
     if (ntohl(wccp2_i_see_you.type) != WCCP2_I_SEE_YOU)
         return;
 
-    debug(80, 3) ("Incoming WCCPv2 I_SEE_YOU length %d.\n", ntohs(wccp2_i_see_you.length));
+    debugs(80, 3, "Incoming WCCPv2 I_SEE_YOU length " << ntohs(wccp2_i_see_you.length) << ".");
 
     /* Record the total data length */
     data_length = ntohs(wccp2_i_see_you.length);
@@ -1174,7 +1173,7 @@ wccp2HandleUdp(int sock, void *not_used)
     offset = 0;
 
     if (data_length > len) {
-        debug(80, 1) ("ERROR: Malformed WCCPv2 packet claiming it's bigger than received data\n");
+        debugs(80, 1, "ERROR: Malformed WCCPv2 packet claiming it's bigger than received data");
         return;
     }
 
@@ -1188,7 +1187,7 @@ wccp2HandleUdp(int sock, void *not_used)
         case WCCP2_SECURITY_INFO:
 
             if (security_info != NULL) {
-                debug(80, 1) ("Duplicate security definition\n");
+                debugs(80, 1, "Duplicate security definition");
                 return;
             }
 
@@ -1198,7 +1197,7 @@ wccp2HandleUdp(int sock, void *not_used)
         case WCCP2_SERVICE_INFO:
 
             if (service_info != NULL) {
-                debug(80, 1) ("Duplicate service_info definition\n");
+                debugs(80, 1, "Duplicate service_info definition");
                 return;
             }
 
@@ -1208,7 +1207,7 @@ wccp2HandleUdp(int sock, void *not_used)
         case WCCP2_ROUTER_ID_INFO:
 
             if (router_identity_info != NULL) {
-                debug(80, 1) ("Duplicate router_identity_info definition\n");
+                debugs(80, 1, "Duplicate router_identity_info definition");
                 return;
             }
 
@@ -1218,7 +1217,7 @@ wccp2HandleUdp(int sock, void *not_used)
         case WCCP2_RTR_VIEW_INFO:
 
             if (router_view_header != NULL) {
-                debug(80, 1) ("Duplicate router_view definition\n");
+                debugs(80, 1, "Duplicate router_view definition");
                 return;
             }
 
@@ -1228,7 +1227,7 @@ wccp2HandleUdp(int sock, void *not_used)
         case WCCP2_CAPABILITY_INFO:
 
             if (router_capability_header != NULL) {
-                debug(80, 1) ("Duplicate router_capability definition\n");
+                debugs(80, 1, "Duplicate router_capability definition");
                 return;
             }
 
@@ -1241,25 +1240,24 @@ wccp2HandleUdp(int sock, void *not_used)
             break;
 
         default:
-            debug(80, 1) ("Unknown record type in WCCPv2 Packet (%d).\n",
-                          ntohs(header->type));
+            debugs(80, 1, "Unknown record type in WCCPv2 Packet (" << ntohs(header->type) << ").");
         }
 
         offset += sizeof(struct wccp2_item_header_t);
         offset += ntohs(header->length);
 
         if (offset > data_length) {
-            debug(80, 1) ("Error: WCCPv2 packet tried to tell us there is data beyond the end of the packet\n");
+            debugs(80, 1, "Error: WCCPv2 packet tried to tell us there is data beyond the end of the packet");
             return;
         }
     }
 
     if ((security_info == NULL) || (service_info == NULL) || (router_identity_info == NULL) || (router_view_header == NULL)) {
-        debug(80, 1) ("Incomplete WCCPv2 Packet\n");
+        debugs(80, 1, "Incomplete WCCPv2 Packet");
         return;
     }
 
-    debug(80, 5) ("Complete packet received\n");
+    debugs(80, 5, "Complete packet received");
 
     /* Check that the service in the packet is configured on this router */
     service_list_ptr = wccp2_service_list_head;
@@ -1273,7 +1271,7 @@ wccp2HandleUdp(int sock, void *not_used)
     }
 
     if (service_list_ptr == NULL) {
-        debug(80, 1) ("WCCPv2 Unknown service received from router (%d)\n", service_info->service_id);
+        debugs(80, 1, "WCCPv2 Unknown service received from router (" << service_info->service_id << ")");
         return;
     }
 
@@ -1283,7 +1281,7 @@ wccp2HandleUdp(int sock, void *not_used)
     }
 
     if (!wccp2_check_security(service_list_ptr, (char *) security_info, (char *) &wccp2_i_see_you, len)) {
-        debug(80, 1) ("Received WCCPv2 Packet failed authentication\n");
+        debugs(80, 1, "Received WCCPv2 Packet failed authentication");
         return;
     }
 
@@ -1294,7 +1292,7 @@ wccp2HandleUdp(int sock, void *not_used)
     }
 
     if (router_list_ptr->next == NULL) {
-        debug(80, 1) ("WCCPv2 Packet received from unknown router\n");
+        debugs(80, 1, "WCCPv2 Packet received from unknown router");
         return;
     }
 
@@ -1310,7 +1308,7 @@ wccp2HandleUdp(int sock, void *not_used)
     /* TODO: check return/forwarding methods */
     if (router_capability_header == NULL) {
         if ((Config.Wccp2.return_method != WCCP2_PACKET_RETURN_METHOD_GRE) || (Config.Wccp2.forwarding_method != WCCP2_FORWARDING_METHOD_GRE)) {
-            debug(80, 1) ("wccp2HandleUdp: fatal error - A WCCP router does not support the forwarding method specified, only GRE supported\n");
+            debugs(80, 1, "wccp2HandleUdp: fatal error - A WCCP router does not support the forwarding method specified, only GRE supported");
             wccp2ConnectionClose();
             return;
         }
@@ -1355,15 +1353,14 @@ wccp2HandleUdp(int sock, void *not_used)
                 break;
 
             default:
-                debug(80, 1) ("Unknown capability type in WCCPv2 Packet (%d).\n",
-                              ntohs(router_capability_element->capability_type));
+                debugs(80, 1, "Unknown capability type in WCCPv2 Packet (" << ntohs(router_capability_element->capability_type) << ").");
             }
 
             router_capability_element = (struct wccp2_capability_element_t *) (((char *) router_capability_element) + sizeof(struct wccp2_capability_element_header_t) + ntohs(router_capability_element->capability_length));
         }
     }
 
-    debug(80, 5) ("Cleaning out cache list\n");
+    debugs(80, 5, "Cleaning out cache list");
     /* clean out the old cache list */
 
     for (cache_list_ptr = &router_list_ptr->cache_list_head; cache_list_ptr; cache_list_ptr = cache_list_ptr_next) {
@@ -1452,7 +1449,7 @@ wccp2HandleUdp(int sock, void *not_used)
 
             cache_list_ptr->next = NULL;
 
-            debug(80, 5) ("checking cache list: (%x:%x)\n", cache_address.s_addr, router_list_ptr->local_ip.s_addr);
+            debugs (80, 5,  "checking cache list: (" << std::hex << cache_address.s_addr << ":" <<  router_list_ptr->local_ip.s_addr << ")");
 
             /* Check to see if it's the master, or us */
 
@@ -1465,7 +1462,7 @@ wccp2HandleUdp(int sock, void *not_used)
             }
         }
     } else {
-        debug(80, 5) ("Adding ourselves as the only cache\n");
+        debugs(80, 5, "Adding ourselves as the only cache");
 
         /* Update the cache list */
         cache_list_ptr->cache_ip = router_list_ptr->local_ip;
@@ -1483,16 +1480,16 @@ wccp2HandleUdp(int sock, void *not_used)
 
     if ((found == 1) && (service_list_ptr->lowest_ip == 1)) {
         if (ntohl(router_view_header->change_number) != router_list_ptr->member_change) {
-            debug(80, 4) ("Change detected - queueing up new assignment\n");
+            debugs(80, 4, "Change detected - queueing up new assignment");
             router_list_ptr->member_change = ntohl(router_view_header->change_number);
             eventDelete(wccp2AssignBuckets, NULL);
             eventAdd("wccp2AssignBuckets", wccp2AssignBuckets, NULL, 15.0, 1);
         } else {
-            debug(80, 5) ("Change not detected (%d = %d)\n", (int) ntohl(router_view_header->change_number), router_list_ptr->member_change);
+            debugs(80, 5, "Change not detected (" << (int) ntohl(router_view_header->change_number) << " = " << router_list_ptr->member_change << ")");
         }
     } else {
         eventDelete(wccp2AssignBuckets, NULL);
-        debug(80, 5) ("I am not the lowest ip cache - not assigning buckets\n");
+        debugs(80, 5, "I am not the lowest ip cache - not assigning buckets");
     }
 }
 
@@ -1512,10 +1509,10 @@ wccp2HereIam(void *voidnotused)
     int router_len;
     u_short port = WCCP_PORT;
 
-    debug(80, 6) ("wccp2HereIam: Called\n");
+    debugs(80, 6, "wccp2HereIam: Called");
 
     if (wccp2_connected == 0) {
-        debug(80, 1) ("wccp2HereIam: wccp2 socket closed.  Shutting down WCCP2\n");
+        debugs(80, 1, "wccp2HereIam: wccp2 socket closed.  Shutting down WCCP2");
         return;
     }
 
@@ -1534,7 +1531,7 @@ wccp2HereIam(void *voidnotused)
     service_list_ptr = wccp2_service_list_head;
 
     while (service_list_ptr != NULL) {
-        debug(80, 5) ("wccp2HereIam: sending to service id %d\n", service_list_ptr->info.service_id);
+        debugs(80, 5, "wccp2HereIam: sending to service id " << service_list_ptr->info.service_id);
 
         for (router_list_ptr = &service_list_ptr->router_list_head; router_list_ptr->next != NULL; router_list_ptr = router_list_ptr->next) {
             router.sin_addr = router_list_ptr->router_sendto_address;
@@ -1565,7 +1562,7 @@ wccp2HereIam(void *voidnotused)
                 wccp2_update_md5_security(service_list_ptr->wccp_password, (char *) service_list_ptr->security_info, service_list_ptr->wccp_packet, service_list_ptr->wccp_packet_size);
             }
 
-            debug(80, 3) ("Sending HereIam packet size %d\n", (int) service_list_ptr->wccp_packet_size);
+            debugs(80, 3, "Sending HereIam packet size " << (int) service_list_ptr->wccp_packet_size);
             /* Send the packet */
 
             if (wccp2_numrouters > 1) {
@@ -1647,7 +1644,7 @@ wccp2AssignBuckets(void *voidnotused)
     main_header->type = htonl(WCCP2_REDIRECT_ASSIGN);
     main_header->version = htons(WCCP2_VERSION);
 
-    debug(80, 2) ("Running wccp2AssignBuckets\n");
+    debugs(80, 2, "Running wccp2AssignBuckets");
     service_list_ptr = wccp2_service_list_head;
 
     while (service_list_ptr != NULL) {
@@ -1991,14 +1988,13 @@ parse_wccp2_service(void *v)
     char wccp_password[WCCP2_PASSWORD_LEN + 1];
 
     if (wccp2_connected == 1) {
-        debug(80, 1) ("WCCPv2: Somehow reparsing the configuration "
-                      "without having shut down WCCP! Try reloading squid again.\n");
+        debugs(80, 1, "WCCPv2: Somehow reparsing the configuration without having shut down WCCP! Try reloading squid again.");
         return;
     }
 
     /* Snarf the type */
     if ((t = strtok(NULL, w_space)) == NULL) {
-        debug(80, 0) ("wccp2ParseServiceInfo: missing service info type (standard|dynamic)\n");
+        debugs(80, 0, "wccp2ParseServiceInfo: missing service info type (standard|dynamic)");
         self_destruct();
     }
 
@@ -2007,7 +2003,7 @@ parse_wccp2_service(void *v)
     } else if (strcmp(t, "dynamic") == 0) {
         service = WCCP2_SERVICE_DYNAMIC;
     } else {
-        debug(80, 0) ("wccp2ParseServiceInfo: bad service info type (expected standard|dynamic, got %s)\n", t);
+        debugs(80, 0, "wccp2ParseServiceInfo: bad service info type (expected standard|dynamic, got " << t << ")");
         self_destruct();
     }
 
@@ -2015,7 +2011,7 @@ parse_wccp2_service(void *v)
     service_id = GetInteger();
 
     if (service_id < 0 || service_id > 255) {
-        debug(80, 0) ("wccp2ParseServiceInfo: service info id %d is out of range (0..255)\n", service_id);
+        debugs(80, 0, "wccp2ParseServiceInfo: service info id " << service_id << " is out of range (0..255)");
         self_destruct();
     }
 
@@ -2041,7 +2037,7 @@ dump_wccp2_service(StoreEntry * e, const char *label, void *v)
     srv = wccp2_service_list_head;
 
     while (srv != NULL) {
-        debug(80, 3) ("dump_wccp2_service: id %d, type %d\n", srv->info.service_id, srv->info.service);
+        debugs(80, 3, "dump_wccp2_service: id " << srv->info.service_id << ", type " << srv->info.service);
         storeAppendPrintf(e, "%s %s %d", label,
                           (srv->info.service == WCCP2_SERVICE_DYNAMIC) ? "dynamic" : "standard",
                           srv->info.service_id);
@@ -2176,18 +2172,17 @@ parse_wccp2_service_info(void *v)
     int priority = -1;
 
     if (wccp2_connected == 1) {
-        debug(80, 1) ("WCCPv2: Somehow reparsing the configuration "
-                      "without having shut down WCCP! Try reloading squid again.\n");
+        debugs(80, 1, "WCCPv2: Somehow reparsing the configuration without having shut down WCCP! Try reloading squid again.");
         return;
     }
 
-    debug(80, 5) ("parse_wccp2_service_info: called\n");
+    debugs(80, 5, "parse_wccp2_service_info: called");
     memset(portlist, 0, sizeof(portlist));
     /* First argument: id */
     service_id = GetInteger();
 
     if (service_id < 0 || service_id > 255) {
-        debug(80, 1) ("parse_wccp2_service_info: invalid service id %d (must be between 0 .. 255)\n", service_id);
+        debugs(80, 1, "parse_wccp2_service_info: invalid service id " << service_id << " (must be between 0 .. 255)");
         self_destruct();
     }
 
@@ -2253,12 +2248,13 @@ dump_wccp2_service_info(StoreEntry * e, const char *label, void *v)
     srv = wccp2_service_list_head;
 
     while (srv != NULL) {
-        debug(80, 3) ("dump_wccp2_service_info: id %d (type %d)\n", srv->info.service_id, srv->info.service);
+        debugs(80, 3, "dump_wccp2_service_info: id " << srv->info.service_id << " (type " << srv->info.service << ")");
 
         /* We don't need to spit out information for standard services */
 
         if (srv->info.service == WCCP2_SERVICE_STANDARD) {
-            debug(80, 3) ("dump_wccp2_service_info: id %d: standard service, not dumping info\n", srv->info.service_id);
+            debugs(80, 3, "dump_wccp2_service_info: id " << srv->info.service_id << ": standard service, not dumping info");
+
             /* XXX eww */
             srv = srv->next;
             continue;

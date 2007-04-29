@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v3.cc,v 1.41 2007/04/19 20:21:34 wessels Exp $
+ * $Id: icp_v3.cc,v 1.42 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -87,8 +87,7 @@ void
 ICP3State::created (StoreEntry *newEntry)
 {
     StoreEntry *entry = newEntry->isNull () ? NULL : newEntry;
-    debug(12, 5) ("icpHandleIcpV3: OPCODE %s\n",
-                  icp_opcode_str[header.opcode]);
+    debugs(12, 5, "icpHandleIcpV3: OPCODE " << icp_opcode_str[header.opcode]);
     icp_opcode codeToSend;
 
     if (icpCheckUdpHit(entry, request)) {
@@ -110,7 +109,7 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 {
     if (len <= 0)
     {
-        debug(12, 3) ("icpHandleIcpV3: ICP message is too small\n");
+        debugs(12, 3, "icpHandleIcpV3: ICP message is too small");
         return;
     }
 
@@ -121,7 +120,7 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
 
     if (len != header.length)
     {
-        debug(12, 3) ("icpHandleIcpV3: ICP message is too small\n");
+        debugs(12, 3, "icpHandleIcpV3: ICP message is too small");
         return;
     }
 
@@ -154,8 +153,7 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
         break;
 
     default:
-        debug(12, 0) ("icpHandleIcpV3: UNKNOWN OPCODE: %d from %s\n",
-                      header.opcode, inet_ntoa(from.sin_addr));
+        debugs(12, 0, "icpHandleIcpV3: UNKNOWN OPCODE: " << header.opcode << " from " << inet_ntoa(from.sin_addr));
         break;
     }
 }

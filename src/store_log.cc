@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_log.cc,v 1.31 2007/04/20 07:29:47 wessels Exp $
+ * $Id: store_log.cc,v 1.32 2007/04/28 22:26:38 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Logging Functions
  * AUTHOR: Duane Wessels
@@ -65,7 +65,7 @@ storeLog(int tag, const StoreEntry * e)
     storeLogTagsCounts[tag]++;
     if (mem != NULL) {
         if (mem->log_url == NULL) {
-            debug(20, 1) ("storeLog: NULL log_url for %s\n", mem->url);
+            debugs(20, 1, "storeLog: NULL log_url for " << mem->url);
             mem->dump();
             mem->log_url = xstrdup(mem->url);
         }
@@ -128,7 +128,7 @@ void
 storeLogOpen(void)
 {
     if (strcmp(Config.Log.store, "none") == 0) {
-        debug(20, 1) ("Store logging disabled\n");
+        debugs(20, 1, "Store logging disabled");
         return;
     }
 

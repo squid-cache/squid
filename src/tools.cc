@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.273 2007/04/15 14:46:17 serassio Exp $
+ * $Id: tools.cc,v 1.274 2007/04/28 22:26:38 hno Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -425,7 +425,8 @@ sigusr2_handle(int sig)
 
 #if !HAVE_SIGACTION
     if (signal(sig, sigusr2_handle) == SIG_ERR)	/* reinstall */
-        debug(50, 0) ("signal: sig=%d func=%p: %s\n", sig, sigusr2_handle, xstrerror());
+        debugs(50, 0, "signal: sig=" << sig << " func=" << sigusr2_handle <<
+               ": " << xstrerror());
 
 #endif
 }
@@ -609,9 +610,8 @@ getMyHostname(void)
             /* DNS lookup successful */
             /* use the official name from DNS lookup */
             xstrncpy(host, h->h_name, SQUIDHOSTNAMELEN);
-            debug(50, 4) ("getMyHostname: resolved %s to '%s'\n",
-                          inet_ntoa(sa),
-                          host);
+            debugs(50, 4, "getMyHostname: resolved " << inet_ntoa(sa) << " to '" << host << "'");
+
             present = 1;
 
             if (strchr(host, '.'))
@@ -619,20 +619,18 @@ getMyHostname(void)
 
         }
 
-        debug(50, 1) ("WARNING: failed to resolve %s to a fully qualified hostname\n",
-                      inet_ntoa(sa));
+        debugs(50, 1, "WARNING: failed to resolve " << inet_ntoa(sa) << " to a fully qualified hostname");
     }
 
     /*
      * Get the host name and store it in host to return
      */
     if (gethostname(host, SQUIDHOSTNAMELEN) < 0) {
-        debug(50, 1) ("WARNING: gethostname failed: %s\n", xstrerror());
+        debugs(50, 1, "WARNING: gethostname failed: " << xstrerror());
     } else if ((h = gethostbyname(host)) == NULL) {
-        debug(50, 1) ("WARNING: gethostbyname failed for %s\n", host);
+        debugs(50, 1, "WARNING: gethostbyname failed for " << host);
     } else {
-        debug(50, 6) ("getMyHostname: '%s' resolved into '%s'\n",
-                      host, h->h_name);
+        debugs(50, 6, "getMyHostname: '" << host << "' resolved into '" << h->h_name << "'");
         /* DNS lookup successful */
         /* use the official name from DNS lookup */
         xstrncpy(host, h->h_name, SQUIDHOSTNAMELEN);
@@ -675,7 +673,7 @@ leave_suid(void)
 #endif
 
         if (setgid(Config2.effectiveGroupID) < 0)
-            debug(50, 0) ("ALERT: setgid: %s\n", xstrerror());
+            debugs(50, 0, "ALERT: setgid: " << xstrerror());
 
     }
 
@@ -691,29 +689,29 @@ leave_suid(void)
     if (!Config.effectiveGroup) {
 
         if (setgid(Config2.effectiveGroupID) < 0)
-            debug(50, 0) ("ALERT: setgid: %s\n", xstrerror());
+            debugs(50, 0, "ALERT: setgid: " << xstrerror());
 
         if (initgroups(Config.effectiveUser, Config2.effectiveGroupID) < 0) {
-            debug(50, 0) ("ALERT: initgroups: unable to set groups for User %s "
-                          "and Group %u", Config.effectiveUser,
-                          (unsigned) Config2.effectiveGroupID);
+            debugs(50, 0, "ALERT: initgroups: unable to set groups for User " <<
+                   Config.effectiveUser << " and Group " <<
+                   (unsigned) Config2.effectiveGroupID << "");
         }
     }
 
 #if HAVE_SETRESUID
 
     if (setresuid(Config2.effectiveUserID, Config2.effectiveUserID, 0) < 0)
-        debug(50, 0) ("ALERT: setresuid: %s\n", xstrerror());
+        debugs(50, 0, "ALERT: setresuid: " << xstrerror());
 
 #elif HAVE_SETEUID
 
     if (seteuid(Config2.effectiveUserID) < 0)
-        debug(50, 0) ("ALERT: seteuid: %s\n", xstrerror());
+        debugs(50, 0, "ALERT: seteuid: " << xstrerror());
 
 #else
 
     if (setuid(Config2.effectiveUserID) < 0)
-        debug(50, 0) ("ALERT: setuid: %s\n", xstrerror());
+        debugs(50, 0, "ALERT: setuid: " << xstrerror());
 
 #endif
 #if LINUX_TPROXY
@@ -740,7 +738,7 @@ leave_suid(void)
 #if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
     /* Set Linux DUMPABLE flag */
     if (Config.coredump_dir && prctl(PR_SET_DUMPABLE, 1) != 0)
-        debug(50, 2) ("ALERT: prctl: %s\n", xstrerror());
+        debugs(50, 2, "ALERT: prctl: " << xstrerror());
 
 #endif
 }
@@ -761,7 +759,7 @@ enter_suid(void)
     /* Set Linux DUMPABLE flag */
 
     if (Config.coredump_dir && prctl(PR_SET_DUMPABLE, 1) != 0)
-        debug(50, 2) ("ALERT: prctl: %s\n", xstrerror());
+        debugs(50, 2, "ALERT: prctl: " << xstrerror());
 
 #endif
 }
@@ -779,20 +777,20 @@ no_suid(void)
 #if HAVE_SETRESUID
 
     if (setresuid(uid, uid, uid) < 0)
-        debug(50, 1) ("no_suid: setresuid: %s\n", xstrerror());
+        debugs(50, 1, "no_suid: setresuid: " << xstrerror());
 
 #else
 
     setuid(0);
 
     if (setuid(uid) < 0)
-        debug(50, 1) ("no_suid: setuid: %s\n", xstrerror());
+        debugs(50, 1, "no_suid: setuid: " << xstrerror());
 
 #endif
 #if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
     /* Set Linux DUMPABLE flag */
     if (Config.coredump_dir && prctl(PR_SET_DUMPABLE, 1) != 0)
-        debug(50, 2) ("ALERT: prctl: %s\n", xstrerror());
+        debugs(50, 2, "ALERT: prctl: " << xstrerror());
 
 #endif
 }
@@ -822,7 +820,7 @@ writePidFile(void)
     leave_suid();
 
     if (fd < 0) {
-        debug(50, 0) ("%s: %s\n", f, xstrerror());
+        debugs(50, 0, "" << f << ": " << xstrerror());
         debug_trap("Could not write pid file");
         return;
     }
@@ -887,7 +885,7 @@ setMaxFD(void)
 #if defined(RLIMIT_NOFILE)
 
     if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
-        debug(50, 0) ("setrlimit: RLIMIT_NOFILE: %s\n", xstrerror());
+        debugs(50, 0, "setrlimit: RLIMIT_NOFILE: " << xstrerror());
     } else {
         rl.rlim_cur = Squid_MaxFD;
 
@@ -903,7 +901,7 @@ setMaxFD(void)
 
 #elif defined(RLIMIT_OFILE)
     if (getrlimit(RLIMIT_OFILE, &rl) < 0) {
-        debug(50, 0) ("setrlimit: RLIMIT_NOFILE: %s\n", xstrerror());
+        debugs(50, 0, "setrlimit: RLIMIT_NOFILE: " << xstrerror());
     } else {
         rl.rlim_cur = Squid_MaxFD;
 
@@ -919,14 +917,14 @@ setMaxFD(void)
 
 #endif
 #else /* HAVE_SETRLIMIT */
-    debug(21, 1) ("setMaxFD: Cannot increase: setrlimit() not supported on this system\n");
+    debugs(21, 1, "setMaxFD: Cannot increase: setrlimit() not supported on this system");
 
 #endif /* HAVE_SETRLIMIT */
 
 #if HAVE_SETRLIMIT && defined(RLIMIT_DATA)
 
     if (getrlimit(RLIMIT_DATA, &rl) < 0) {
-        debug(50, 0) ("getrlimit: RLIMIT_DATA: %s\n", xstrerror());
+        debugs(50, 0, "getrlimit: RLIMIT_DATA: " << xstrerror());
     } else if (rl.rlim_max > rl.rlim_cur) {
         rl.rlim_cur = rl.rlim_max;	/* set it to the max */
 
@@ -940,7 +938,7 @@ setMaxFD(void)
 #endif /* RLIMIT_DATA */
 #if HAVE_SETRLIMIT && defined(RLIMIT_VMEM)
     if (getrlimit(RLIMIT_VMEM, &rl) < 0) {
-        debug(50, 0) ("getrlimit: RLIMIT_VMEM: %s\n", xstrerror());
+        debugs(50, 0, "getrlimit: RLIMIT_VMEM: " << xstrerror());
     } else if (rl.rlim_max > rl.rlim_cur) {
         rl.rlim_cur = rl.rlim_max;	/* set it to the max */
 
@@ -977,7 +975,7 @@ squid_signal(int sig, SIGHDLR * func, int flags)
     sigemptyset(&sa.sa_mask);
 
     if (sigaction(sig, &sa, NULL) < 0)
-        debug(50, 0) ("sigaction: sig=%d func=%p: %s\n", sig, func, xstrerror());
+        debugs(50, 0, "sigaction: sig=" << sig << " func=" << func << ": " << xstrerror());
 
 #else
 #ifdef _SQUID_MSWIN_
@@ -1162,7 +1160,7 @@ debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm)
     mb.init();
     packerToMemInit(&p, &mb);
     (*pm) (obj, &p);
-    debug(section, level) ("%s%s", label, mb.buf);
+    debugs(section, level, "" << label << "" << mb.buf << "");
     packerClean(&p);
     mb.clean();
 }
@@ -1185,8 +1183,7 @@ parseEtcHosts(void)
     fp = fopen(Config.etcHostsPath, "r");
 
     if (fp == NULL) {
-        debug(1, 1) ("parseEtcHosts: %s: %s\n",
-                     Config.etcHostsPath, xstrerror());
+        debugs(1, 1, "parseEtcHosts: " << Config.etcHostsPath << ": " << xstrerror());
         return;
     }
 
@@ -1208,7 +1205,7 @@ parseEtcHosts(void)
 
         addr = buf;
 
-        debug(1, 5) ("etc_hosts: line is '%s'\n", buf);
+        debugs(1, 5, "etc_hosts: line is '" << buf << "'");
 
         nt = strpbrk(lt, w_space);
 
@@ -1217,7 +1214,7 @@ parseEtcHosts(void)
 
         *nt = '\0';		/* null-terminate the address */
 
-        debug(1, 5) ("etc_hosts: address is '%s'\n", addr);
+        debugs(1, 5, "etc_hosts: address is '" << addr << "'");
 
         lt = nt + 1;
 
@@ -1225,13 +1222,13 @@ parseEtcHosts(void)
             char *host = NULL;
 
             if (nt == lt) {	/* multiple spaces */
-                debug(1, 5) ("etc_hosts: multiple spaces, skipping\n");
+                debugs(1, 5, "etc_hosts: multiple spaces, skipping");
                 lt = nt + 1;
                 continue;
             }
 
             *nt = '\0';
-            debug(1, 5) ("etc_hosts: got hostname '%s'\n", lt);
+            debugs(1, 5, "etc_hosts: got hostname '" << lt << "'");
 
             if (Config.appendDomain && !strchr(lt, '.')) {
                 /* I know it's ugly, but it's only at reconfig */
@@ -1330,7 +1327,7 @@ keepCapabilities(void)
 
     if (need_linux_tproxy) {
         if (prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0)) {
-            debug(1, 1) ("Error - tproxy support requires capability setting which has failed.  Continuing without tproxy support\n");
+            debugs(1, 1, "Error - tproxy support requires capability setting which has failed.  Continuing without tproxy support");
         }
     }
 

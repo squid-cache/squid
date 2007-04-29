@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrCc.cc,v 1.28 2005/09/15 19:04:56 wessels Exp $
+ * $Id: HttpHdrCc.cc,v 1.29 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 65    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
@@ -135,13 +135,13 @@ httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
                 CcFieldsInfo, CC_ENUM_END);
 
         if (type < 0) {
-            debug(65, 2) ("hdr cc: unknown cache-directive: near '%s' in '%s'\n", item, str->buf());
+            debugs(65, 2, "hdr cc: unknown cache-directive: near '" << item << "' in '" << str->buf() << "'");
             type = CC_OTHER;
         }
 
         if (EBIT_TEST(cc->mask, type)) {
             if (type != CC_OTHER)
-                debug(65, 2) ("hdr cc: ignoring duplicate cache-directive: near '%s' in '%s'\n", item, str->buf());
+                debugs(65, 2, "hdr cc: ignoring duplicate cache-directive: near '" << item << "' in '" << str->buf() << "'");
 
             CcFieldsInfo[type].stat.repCount++;
 
@@ -157,7 +157,7 @@ httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
         case CC_MAX_AGE:
 
             if (!p || !httpHeaderParseInt(p, &cc->max_age)) {
-                debug(65, 2) ("cc: invalid max-age specs near '%s'\n", item);
+                debugs(65, 2, "cc: invalid max-age specs near '" << item << "'");
                 cc->max_age = -1;
                 EBIT_CLR(cc->mask, type);
             }
@@ -167,7 +167,7 @@ httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
         case CC_S_MAXAGE:
 
             if (!p || !httpHeaderParseInt(p, &cc->s_maxage)) {
-                debug(65, 2) ("cc: invalid s-maxage specs near '%s'\n", item);
+                debugs(65, 2, "cc: invalid s-maxage specs near '" << item << "'");
                 cc->s_maxage = -1;
                 EBIT_CLR(cc->mask, type);
             }
@@ -177,7 +177,7 @@ httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
         case CC_MAX_STALE:
 
             if (!p || !httpHeaderParseInt(p, &cc->max_stale)) {
-                debug(65, 2) ("cc: max-stale directive is valid without value\n");
+                debugs(65, 2, "cc: max-stale directive is valid without value");
                 cc->max_stale = -1;
             }
 

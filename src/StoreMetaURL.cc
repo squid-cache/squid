@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaURL.cc,v 1.4 2004/08/30 05:12:31 robertc Exp $
+ * $Id: StoreMetaURL.cc,v 1.5 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -47,8 +47,8 @@ StoreMetaURL::checkConsistency(StoreEntry *e) const
         return true;
 
     if (strcasecmp(e->mem_obj->url, (char *)value)) {
-        debug(20, 1) ("storeClientReadHeader: URL mismatch\n");
-        debug(20, 1) ("\t{%s} != {%s}\n", (char *) value, e->mem_obj->url);
+        debugs(20, 1, "storeClientReadHeader: URL mismatch");
+        debugs(20, 1, "\t{" << (char *) value << "} != {" << e->mem_obj->url << "}");
         return false;
     }
 

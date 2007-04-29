@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.40 2007/04/21 07:14:15 wessels Exp $
+ * $Id: whois.cc,v 1.41 2007/04/28 22:26:38 hno Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -113,7 +113,7 @@ static void
 whoisTimeout(int fd, void *data)
 {
     WhoisState *p = (WhoisState *)data;
-    debug(75, 1) ("whoisTimeout: %s\n", p->entry->url());
+    debugs(75, 1, "whoisTimeout: " << p->entry->url()  );
     whoisClose(fd, p);
 }
 
@@ -146,8 +146,8 @@ WhoisState::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xerrn
     }
 
     buf[len] = '\0';
-    debug(75, 3) ("whoisReadReply: FD %d read %d bytes\n", fd, (int)len);
-    debug(75, 5) ("{%s}\n", buf);
+    debugs(75, 3, "whoisReadReply: FD " << fd << " read " << (int)len << " bytes");
+    debugs(75, 5, "{" << buf << "}");
 
     if (flag == COMM_OK && len > 0) {
         if (!dataWritten)
@@ -166,8 +166,7 @@ WhoisState::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xerrn
 
         do_next_read = 1;
     } else if (flag != COMM_OK || len < 0) {
-        debug(50, 2) ("whoisReadReply: FD %d: read failure: %s.\n",
-                      fd, xstrerror());
+        debugs(50, 2, "whoisReadReply: FD " << fd << ": read failure: " << xstrerror() << ".");
 
         if (ignoreErrno(errno)) {
             do_next_read = 1;
@@ -188,7 +187,7 @@ WhoisState::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xerrn
 
         fwd->complete();
 
-        debug(75, 3) ("whoisReadReply: Done: %s\n", entry->url());
+        debugs(75, 3, "whoisReadReply: Done: " << entry->url()  );
 
         comm_close(fd);
 
@@ -203,7 +202,7 @@ static void
 whoisClose(int fd, void *data)
 {
     WhoisState *p = (WhoisState *)data;
-    debug(75, 3) ("whoisClose: FD %d\n", fd);
+    debugs(75, 3, "whoisClose: FD " << fd);
     p->entry->unlock();
     cbdataFree(p);
 }

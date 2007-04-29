@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.74 2006/09/19 07:56:57 adrian Exp $
+ * $Id: ident.cc,v 1.75 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -107,8 +107,8 @@ static void
 identTimeout(int fd, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
-    debug(30, 3) ("identTimeout: FD %d, %s\n", fd,
-                  inet_ntoa(state->my_peer.sin_addr));
+    debugs(30, 3, "identTimeout: FD " << fd << ", " << inet_ntoa(state->my_peer.sin_addr));
+
     comm_close(fd);
 }
 
@@ -175,7 +175,7 @@ identReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void 
     if ((t = strchr(buf, '\n')))
         *t = '\0';
 
-    debug(30, 5) ("identReadReply: FD %d: Read '%s'\n", fd, buf);
+    debugs(30, 5, "identReadReply: FD " << fd << ": Read '" << buf << "'");
 
     if (strstr(buf, "USERID")) {
         if ((ident = strrchr(buf, ':'))) {

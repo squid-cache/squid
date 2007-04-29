@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrContRange.cc,v 1.17 2003/02/21 22:50:05 robertc Exp $
+ * $Id: HttpHdrContRange.cc,v 1.18 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 68    HTTP Content-Range Header
  * AUTHOR: Alex Rousskov
@@ -76,7 +76,7 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec * spec, const char *field, int fl
 
     /* check format, must be %d-%d */
     if (!((p = strchr(field, '-')) && (p - field < flen))) {
-        debug(68, 2) ("invalid (no '-') resp-range-spec near: '%s'\n", field);
+        debugs(68, 2, "invalid (no '-') resp-range-spec near: '" << field << "'");
         return 0;
     }
 
@@ -101,8 +101,8 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec * spec, const char *field, int fl
 
     /* we managed to parse, check if the result makes sence */
     if (known_spec((size_t)spec->length) && spec->length == 0) {
-        debug(68, 2) ("invalid range (%ld += %ld) in resp-range-spec near: '%s'\n",
-                      (long int) spec->offset, (long int) spec->length, field);
+        debugs(68, 2, "invalid range (" << (long int) spec->offset << " += " <<
+               (long int) spec->length << ") in resp-range-spec near: '" << field << "'");
         return 0;
     }
 
@@ -155,7 +155,7 @@ httpHdrContRangeParseInit(HttpHdrContRange * range, const char *str)
 {
     const char *p;
     assert(range && str);
-    debug(68, 8) ("parsing content-range field: '%s'\n", str);
+    debugs(68, 8, "parsing content-range field: '" << str << "'");
     /* check range type */
 
     if (strncasecmp(str, "bytes ", 6))
@@ -179,9 +179,10 @@ httpHdrContRangeParseInit(HttpHdrContRange * range, const char *str)
     else if (!httpHeaderParseSize(p, &range->elength))
         return 0;
 
-    debug(68, 8) ("parsed content-range field: %ld-%ld / %ld\n",
-                  (long int) range->spec.offset, (long int) range->spec.offset + range->spec.length - 1,
-                  (long int) range->elength);
+        debugs(68, 8, "parsed content-range field: " <<
+               (long int) range->spec.offset << "-" <<
+               (long int) range->spec.offset + range->spec.length - 1 << " / " <<
+               (long int) range->elength);
 
     return 1;
 }

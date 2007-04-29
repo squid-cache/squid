@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.22 2006/08/21 00:50:40 robertc Exp $
+ * $Id: ESI.cc,v 1.23 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -325,13 +325,13 @@ ESIContext::appendOutboundData(ESISegment::Pointer theData)
     }
 
     fixupOutboundTail();
-    debug (86,9)("ESIContext::appendOutboundData: outbound %p\n", outbound.getRaw());
+    debugs(86, 9, "ESIContext::appendOutboundData: outbound " << outbound.getRaw());
 }
 
 void
 ESIContext::provideData (ESISegment::Pointer theData, ESIElement * source)
 {
-    debug (86,5)("ESIContext::provideData: %p %p %p\n",this, theData.getRaw(), source);
+    debugs(86, 5, "ESIContext::provideData: " << this << " " << theData.getRaw() << " " << source);
     /* No callbacks permitted after finish() called on the tree */
     assert (tree.getRaw());
     assert (source == tree);
@@ -366,7 +366,7 @@ ESIContext::kick ()
     assert (this);
 
     if (flags.kicked) {
-        debug (86,5)("esiKick: Re-entered whilst in progress\n");
+        debugs(86, 5, "esiKick: Re-entered whilst in progress");
         // return ESI_KICK_INPROGRESS;
     } else
         ++flags.kicked;
@@ -381,19 +381,19 @@ ESIContext::kick ()
         switch (process ()) {
 
         case ESI_PROCESS_COMPLETE:
-            debug (86,5)("esiKick: esiProcess OK\n");
+            debugs(86, 5, "esiKick: esiProcess OK");
             break;
 
         case ESI_PROCESS_PENDING_WONTFAIL:
-            debug (86,5)("esiKick: esiProcess PENDING OK\n");
+            debugs(86, 5, "esiKick: esiProcess PENDING OK");
             break;
 
         case ESI_PROCESS_PENDING_MAYFAIL:
-            debug (86,5)("esiKick: esiProcess PENDING UNKNOWN\n");
+            debugs(86, 5, "esiKick: esiProcess PENDING UNKNOWN");
             break;
 
         case ESI_PROCESS_FAILED:
-            debug (86,2)("esiKick: esiProcess %p FAILED\n", this);
+            debugs(86, 2, "esiKick: esiProcess " << this << " FAILED");
             /* this can not happen - processing can't fail until we have data,
              * and when we come here we have sent data to the client
              */
@@ -456,7 +456,7 @@ esiStreamRead (clientStreamNode *thisNode, ClientHttpRequest *http)
     }
 
     context->flags.clientwantsdata = 1;
-    debug (86,5)("esiStreamRead: Client now wants data\n");
+    debugs(86, 5, "esiStreamRead: Client now wants data");
 
     /* Ok, not passing through */
 
@@ -485,12 +485,12 @@ esiStreamRead (clientStreamNode *thisNode, ClientHttpRequest *http)
          * processing. stop here, a callback will resume the stream
          * flow
          */
-        debug (86,5) ("esiStreamRead: Waiting for async resume of esi processing\n");
+        debugs(86, 5, "esiStreamRead: Waiting for async resume of esi processing");
         return;
     }
 
     if (context->flags.oktosend && context->flags.finished && context->outbound.getRaw()) {
-        debug (86,5)("all processing complete, but outbound data still buffered\n");
+        debugs(86, 5, "all processing complete, but outbound data still buffered");
         assert (!context->flags.clientwantsdata);
         /* client MUST be processing the last reply */
         return;
@@ -501,7 +501,7 @@ esiStreamRead (clientStreamNode *thisNode, ClientHttpRequest *http)
         StoreIOBuffer tempBuffer;
         assert (!context->outbound.getRaw());
         /* We've finished processing, and there is no more data buffered */
-        debug (86,5)("Telling recipient EOF on READ\n");
+        debugs(86, 5, "Telling recipient EOF on READ");
         clientStreamCallback (thisNode, http, NULL, tempBuffer);
         return;
     }
@@ -546,7 +546,7 @@ esiStreamStatus (clientStreamNode *thisNode, ClientHttpRequest *http)
 
     if (context->flags.oktosend && context->flags.finished &&
             !(context->outbound.getRaw() && context->outbound_offset < context->outbound->len)) {
-        debug (86,5) ("Telling recipient EOF on STATUS\n");
+        debugs(86, 5, "Telling recipient EOF on STATUS");
         return STREAM_UNPLANNED_COMPLETE; /* we don't know lengths in advance */
     }
 
@@ -587,7 +587,8 @@ ESIContext::trimBlanks()
     /* trim leading empty buffers ? */
 
     while (outbound.getRaw() && outbound->next.getRaw() && !outbound->len) {
-        debug(86,5)("ESIContext::trimBlanks: %p skipping segment %p\n", this, outbound.getRaw());
+        debugs(86, 5, "ESIContext::trimBlanks: " << this <<
+               " skipping segment " << outbound.getRaw());
         outbound = outbound->next;
     }
 
@@ -601,18 +602,18 @@ ESIContext::trimBlanks()
 size_t
 ESIContext::send ()
 {
-    debug (86,5)("ESIContext::send: this=%p\n",this);
+    debugs(86, 5, "ESIContext::send: this=" << this);
     /* send any processed data */
 
     trimBlanks();
 
     if (!flags.clientwantsdata) {
-        debug (86,5)("ESIContext::send: Client does not want data - not sending anything\n");
+        debugs(86, 5, "ESIContext::send: Client does not want data - not sending anything");
         return 0;
     }
 
     if (tree.getRaw() && tree->mayFail()) {
-        debug (86, 5)("ESIContext::send: Tree may fail. Not sending.\n");
+        debugs(86, 5, "ESIContext::send: Tree may fail. Not sending.");
         return 0;
     } else
         flags.oktosend = 1;
@@ -629,11 +630,11 @@ ESIContext::send ()
 
     if (!(rep || (outbound.getRaw() &&
                   outbound->len && (outbound_offset <= outbound->len)))) {
-        debug (86,5)("ESIContext::send: Nothing to send.\n");
+        debugs(86, 5, "ESIContext::send: Nothing to send.");
         return 0;
     }
 
-    debug (86,5)("ESIContext::send: Sending something...\n");
+    debugs(86, 5, "ESIContext::send: Sending something...");
     /* Yes! Send it without asking for more upstream */
     /* memcopying because the client provided the buffer */
     /* TODO: skip data until pos == next->readoff; */
@@ -670,7 +671,7 @@ ESIContext::send ()
     }
 
     flags.clientwantsdata = 0;
-    debug (86,5)("ESIContext::send: this=%p Client no longer wants data \n",this);
+    debugs(86, 5, "ESIContext::send: this=" << this << " Client no longer wants data ");
     /* Deal with re-entrancy */
     HttpReply *temprep = rep;
     rep = NULL; /* freed downstream */
@@ -777,7 +778,10 @@ esiProcessStream (clientStreamNode *thisNode, ClientHttpRequest *http, HttpReply
         return;
     }
 
-    debug (86, 3)("esiProcessStream: Processing thisNode %p context %p offset %d length %u\n",thisNode, context.getRaw(), (int) recievedData.offset, (unsigned int)recievedData.length);
+    debugs(86, 3, "esiProcessStream: Processing thisNode " << thisNode <<
+           " context " << context.getRaw() << " offset " <<
+           (int) recievedData.offset << " length " <<
+           (unsigned int)recievedData.length);
 
     /* once we finish the template, we *cannot* return here */
     assert (!context->flags.finishedtemplate);
@@ -794,7 +798,7 @@ esiProcessStream (clientStreamNode *thisNode, ClientHttpRequest *http, HttpReply
 
         if (!context->incoming.getRaw()) {
             /* create a new buffer segment */
-            debug (86,5) ("esiProcessStream: Setting up incoming buffer\n");
+            debugs(86, 5, "esiProcessStream: Setting up incoming buffer");
             context->buffered = new ESISegment;
             context->incoming = context->buffered;
         }
@@ -803,8 +807,10 @@ esiProcessStream (clientStreamNode *thisNode, ClientHttpRequest *http, HttpReply
             /* We have to copy the data out because we didn't supply thisNode buffer */
             size_t space = HTTP_REQBUF_SZ - context->incoming->len;
             size_t len = min (space, recievedData.length);
-            debug (86,5)("Copying data from %p to %p because our buffer was not used\n", recievedData.data,
-                         &context->incoming->buf[context->incoming->len]);
+            debugs(86, 5, "Copying data from " << recievedData.data << " to " <<
+                   &context->incoming->buf[context->incoming->len] <<
+                   " because our buffer was not used");
+
             xmemcpy (&context->incoming->buf[context->incoming->len], recievedData.data, len);
             context->incoming->len += len;
 
@@ -841,7 +847,7 @@ esiProcessStream (clientStreamNode *thisNode, ClientHttpRequest *http, HttpReply
     if (rep == NULL && recievedData.data == NULL && recievedData.length == 0 && !context->flags.finishedtemplate) {
         /* TODO: get stream status to test the entry for aborts */
         /* else flush the esi processor */
-        debug (86,5)("esiProcess: %p Finished reading upstream data\n", context.getRaw());
+        debugs(86, 5, "esiProcess: " << context.getRaw() << " Finished reading upstream data");
         /* This is correct */
         context->flags.finishedtemplate = 1;
     }
@@ -878,7 +884,7 @@ esiProcessStream (clientStreamNode *thisNode, ClientHttpRequest *http, HttpReply
         return;
     }
 
-    debug (86,3)("esiProcessStream: no data to send, no data to read, awaiting a callback\n");
+    debugs(86, 3, "esiProcessStream: no data to send, no data to read, awaiting a callback");
 }
 
 ESIContext::~ESIContext()
@@ -886,7 +892,7 @@ ESIContext::~ESIContext()
     freeResources ();
     /* Not freed by freeresources because esi::fail needs it */
     safe_free (errormessage);
-    debug (86,3)("ESIContext::~ESIContext: Freed %p\n", this);
+    debugs(86, 3, "ESIContext::~ESIContext: Freed " << this);
 }
 
 ESIContext *
@@ -912,10 +918,10 @@ ESIContextNew (HttpReply *rep, clientStreamNode *thisNode, ClientHttpRequest *ht
         rv->http = http;
         rv->flags.clientwantsdata = 1;
         rv->varState = new ESIVarState (&http->request->header, http->uri);
-        debug (86,5)("ESIContextNew: Client wants data (always created during reply cycle\n");
+        debugs(86, 5, "ESIContextNew: Client wants data (always created during reply cycle");
     }
 
-    debug (86,5)("ESIContextNew: Create context %p\n",rv);
+    debugs(86, 5, "ESIContextNew: Create context " << rv);
     return rv;
 }
 
@@ -992,10 +998,10 @@ ESIContext::addStackElement (ESIElement::Pointer element)
     /* Put on the stack to allow skipping of 'invalid' markup */
     assert (parserState.stackdepth <11);
     assert (!failed());
-    debug (86,5)("ESIContext::addStackElement: About to add ESI Node %p\n", element.getRaw());
+    debugs(86, 5, "ESIContext::addStackElement: About to add ESI Node " << element.getRaw());
 
     if (!parserState.top()->addElement(element)) {
-        debug (86,1)("ESIContext::addStackElement: failed to add esi node, probable error in ESI template\n");
+        debugs(86, 1, "ESIContext::addStackElement: failed to add esi node, probable error in ESI template");
         flags.error = 1;
     } else {
         /* added ok, push onto the stack */
@@ -1014,7 +1020,7 @@ ESIContext::start(const char *el, const char **attr, size_t attrCount)
     char *pos;
     assert (ellen < sizeof (localbuf)); /* prevent unexpected overruns. */
 
-    debug (86, 5)("ESIContext::Start: element '%s' with %d tags\n", el, specifiedattcount);
+    debugs(86, 5, "ESIContext::Start: element '" << el << "' with " << specifiedattcount << " tags");
 
     if (failed())
         /* waiting for expat to finish the buffer we gave it */
@@ -1045,7 +1051,7 @@ ESIContext::start(const char *el, const char **attr, size_t attrCount)
         *pos = '\0';
 
         addLiteral (localbuf, pos - localbuf);
-        debug (86,5)("esi stack depth %d\n",parserState.stackdepth);
+        debugs(86, 5, "esi stack depth " << parserState.stackdepth);
         return;
         break;
 
@@ -1107,7 +1113,7 @@ ESIContext::start(const char *el, const char **attr, size_t attrCount)
 
     addStackElement(element);
 
-    debug (86,5)("esi stack depth %d\n",parserState.stackdepth);
+    debugs(86, 5, "esi stack depth " << parserState.stackdepth);
 
 }  /* End of start handler */
 
@@ -1180,7 +1186,7 @@ ESIContext::parserComment (const char *s)
         return;
 
     if (!strncmp(s, "esi",3)) {
-        debug (86,5)("ESIContext::parserComment: ESI <!-- block encountered\n");
+        debugs(86, 5, "ESIContext::parserComment: ESI <!-- block encountered");
         ESIParser::Pointer tempParser = ESIParser::NewParser (this);
 
         /* wrap the comment in some tags */
@@ -1188,27 +1194,27 @@ ESIContext::parserComment (const char *s)
         if (!tempParser->parse("<div>", 5,0) ||
                 !tempParser->parse(s + 3, strlen(s) - 3, 0) ||
                 !tempParser->parse("</div>",6,1)) {
-            debug (86,0)("ESIContext::parserComment: Parsing fragment '%s' failed.\n", s + 3);
+            debugs(86, 0, "ESIContext::parserComment: Parsing fragment '" << s + 3 << "' failed.");
             setError();
             char tempstr[1024];
             snprintf(tempstr, 1023, "ESIContext::parserComment: Parse error at line %ld:\n%s\n",
                      tempParser->lineNumber(),
                      tempParser->errorString());
-            debug (86,0)("%s",tempstr);
+            debugs(86, 0, "" << tempstr << "");
 
             setErrorMessage(tempstr);
         }
 
-        debug (86,5)("ESIContext::parserComment: ESI <!-- block parsed\n");
+        debugs(86, 5, "ESIContext::parserComment: ESI <!-- block parsed");
         return;
     } else {
         char localbuf [HTTP_REQBUF_SZ];
         unsigned int len;
-        debug (86,5)("ESIContext::parserComment: Regenerating comment block\n");
+        debugs(86, 5, "ESIContext::parserComment: Regenerating comment block");
         len = strlen (s);
 
         if (len > sizeof (localbuf) - 9) {
-            debug (86,0)("ESIContext::parserComment: Truncating long comment\n");
+            debugs(86, 0, "ESIContext::parserComment: Truncating long comment");
             len = sizeof (localbuf) - 9;
         }
 
@@ -1224,13 +1230,13 @@ ESIContext::addLiteral (const char *s, int len)
 {
     /* handle any skipped data */
     assert (len);
-    debug (86,5)("literal length is %d\n", len);
+    debugs(86, 5, "literal length is " << len);
     /* give a literal to the current element */
     assert (parserState.stackdepth <11);
     ESIElement::Pointer element (new esiLiteral (this, s, len));
 
     if (!parserState.top()->addElement(element)) {
-        debug (86,1)("ESIContext::addLiteral: failed to add esi node, probable error in ESI template\n");
+        debugs(86, 1, "ESIContext::addLiteral: failed to add esi node, probable error in ESI template");
         flags.error = 1;
     }
 }
@@ -1256,7 +1262,7 @@ ESIContext::parseOneBuffer()
         snprintf (tempstr, 1023, "esiProcess: Parse error at line %ld:\n%s\n",
                   parserState.theParser->lineNumber(),
                   parserState.theParser->errorString());
-        debug (86,0)("%s", tempstr);
+        debugs(86, 0, "" << tempstr << "");
 
         setErrorMessage(tempstr);
 
@@ -1278,7 +1284,7 @@ void
 ESIContext::parse()
 {
     if (!parserState.stackdepth) {
-        debug (86,5)("empty parser stack, inserting the top level node\n");
+        debugs(86, 5, "empty parser stack, inserting the top level node");
         assert (tree.getRaw());
         parserState.stack[parserState.stackdepth++] = tree;
     }
@@ -1330,7 +1336,7 @@ ESIContext::process ()
         getCachedAST();
 
     if (flags.error) {
-        debug (86,5) ("ESIContext::process: Parsing failed\n");
+        debugs(86, 5, "ESIContext::process: Parsing failed");
         finishChildren ();
         parserState.popAll();
         return ESI_PROCESS_FAILED;
@@ -1360,19 +1366,19 @@ ESIContext::process ()
         {
 
         case ESI_PROCESS_COMPLETE:
-            debug (86,5)("esiProcess: tree Processed OK\n");
+            debugs(86, 5, "esiProcess: tree Processed OK");
             break;
 
         case ESI_PROCESS_PENDING_WONTFAIL:
-            debug (86,5)("esiProcess: tree Processed PENDING OK\n");
+            debugs(86, 5, "esiProcess: tree Processed PENDING OK");
             break;
 
         case ESI_PROCESS_PENDING_MAYFAIL:
-            debug (86,5)("esiProcess: tree Processed PENDING UNKNOWN\n");
+            debugs(86, 5, "esiProcess: tree Processed PENDING UNKNOWN");
             break;
 
         case ESI_PROCESS_FAILED:
-            debug (86,0)("esiProcess: tree Processed FAILED\n");
+            debugs(86, 0, "esiProcess: tree Processed FAILED");
             setError();
 
             setErrorMessage("esiProcess: ESI template Processing failed.");
@@ -1389,7 +1395,7 @@ ESIContext::process ()
             /* We've read the entire template, and no nodes will
              * return failure
              */
-            debug (86,5)("esiProcess, request will succeed\n");
+            debugs(86, 5, "esiProcess, request will succeed");
             flags.oktosend = 1;
         }
 
@@ -1397,7 +1403,7 @@ ESIContext::process ()
                 && (flags.finishedtemplate || cachedASTInUse))
         {
             /* we've finished all processing. Render and send. */
-            debug (86,5)("esiProcess, processing complete\n");
+            debugs(86, 5, "esiProcess, processing complete");
             flags.finished = 1;
         }
 
@@ -1423,7 +1429,7 @@ ESIContext::ParserState::popAll()
 void
 ESIContext::freeResources ()
 {
-    debug (86,5)("ESIContext::freeResources: Freeing for this=%p\n",this);
+    debugs(86, 5, "ESIContext::freeResources: Freeing for this=" << this);
 
     if (rep) {
         delete rep;
@@ -1452,7 +1458,7 @@ extern ErrorState *clientBuildError (err_type, http_status, char const *, struct
 void
 ESIContext::fail ()
 {
-    debug (86,5)("ESIContext::fail: this=%p\n",this);
+    debugs(86, 5, "ESIContext::fail: this=" << this);
     /* check preconditions */
     assert (pos == 0);
     /* cleanup current state */
@@ -1495,7 +1501,7 @@ ESIContext::fail ()
 /* esiComment */
 esiComment::~esiComment()
 {
-    debug (86,5)("esiComment::~esiComment %p\n", this);
+    debugs(86, 5, "esiComment::~esiComment " << this);
 }
 
 esiComment::esiComment()
@@ -1509,13 +1515,13 @@ void
 esiComment::render(ESISegment::Pointer output)
 {
     /* Comments do nothing dude */
-    debug (86, 5)("esiCommentRender: Rendering comment %p into %p\n", this, output.getRaw());
+    debugs(86, 5, "esiCommentRender: Rendering comment " << this << " into " << output.getRaw());
 }
 
 ESIElement::Pointer
 esiComment::makeCacheable() const
 {
-    debug (86, 5) ("esiComment::makeCacheable: returning NULL\n");
+    debugs(86, 5, "esiComment::makeCacheable: returning NULL");
     return NULL;
 }
 
@@ -1529,7 +1535,7 @@ esiComment::makeUsable(esiTreeParentPtr, ESIVarState &) const
 /* esiLiteral */
 esiLiteral::~esiLiteral()
 {
-    debug (86, 5) ("esiLiteral::~esiLiteral: %p\n", this);
+    debugs(86, 5, "esiLiteral::~esiLiteral: " << this);
     ESISegmentFreeList (buffer);
     cbdataReferenceDone (varState);
 }
@@ -1574,7 +1580,7 @@ esiLiteral::esiLiteral(ESIContext *context, const char *s, int numberOfCharacter
 void
 esiLiteral::render (ESISegment::Pointer output)
 {
-    debug (86,9)("esiLiteral::render: Rendering %p\n",this);
+    debugs(86, 9, "esiLiteral::render: Rendering " << this);
     /* append the entire chain */
     assert (output->next.getRaw() == NULL);
     output->next = buffer;
@@ -1621,7 +1627,7 @@ esiLiteral::makeCacheable() const
 ESIElement::Pointer
 esiLiteral::makeUsable(esiTreeParentPtr , ESIVarState &newVarState) const
 {
-    debug (86,5)("esiLiteral::makeUsable: Creating usable literal\n");
+    debugs(86, 5, "esiLiteral::makeUsable: Creating usable literal");
     esiLiteral * result = new esiLiteral (*this);
     result->varState = cbdataReference (&newVarState);
     return result;
@@ -1632,7 +1638,7 @@ void
 esiRemoveFree (void *data)
 {
     esiRemove *thisNode = (esiRemove *)data;
-    debug (86,5)("esiRemoveFree %p\n", thisNode);
+    debugs(86, 5, "esiRemoveFree " << thisNode);
 }
 
 void *
@@ -1668,7 +1674,7 @@ void
 esiRemove::render(ESISegment::Pointer output)
 {
     /* Removes do nothing dude */
-    debug (86, 5)("esiRemoveRender: Rendering remove %p\n", this);
+    debugs(86, 5, "esiRemoveRender: Rendering remove " << this);
 }
 
 /* Accept non-ESI children */
@@ -1676,7 +1682,7 @@ bool
 esiRemove::addElement (ESIElement::Pointer element)
 {
     if (!dynamic_cast<esiLiteral*>(element.getRaw())) {
-        debug (86,5)("esiRemoveAdd: Failed for %p\n",this);
+        debugs(86, 5, "esiRemoveAdd: Failed for " << this);
         return false;
     }
 
@@ -1686,7 +1692,7 @@ esiRemove::addElement (ESIElement::Pointer element)
 ESIElement::Pointer
 esiRemove::makeCacheable() const
 {
-    debug (86,5)("esiRemove::makeCacheable: Returning NULL\n");
+    debugs(86, 5, "esiRemove::makeCacheable: Returning NULL");
     return NULL;
 }
 
@@ -1700,7 +1706,7 @@ esiRemove::makeUsable(esiTreeParentPtr, ESIVarState &) const
 /* esiTry */
 esiTry::~esiTry()
 {
-    debug (86,5)("esiTry::~esiTry %p\n", this);
+    debugs(86, 5, "esiTry::~esiTry " << this);
 }
 
 esiTry::esiTry(esiTreeParentPtr aParent) : parent (aParent) , exceptbuffer(NULL)
@@ -1713,7 +1719,7 @@ esiTry::render (ESISegment::Pointer output)
     assert (this);
     assert (attempt.getRaw());
     assert (except.getRaw());
-    debug (86, 5)("esiTryRender: Rendering Try %p\n", this);
+    debugs(86, 5, "esiTryRender: Rendering Try " << this);
 
     if (flags.attemptok) {
         attempt->render(output);
@@ -1725,24 +1731,25 @@ esiTry::render (ESISegment::Pointer output)
         else
             except->render(output);
     } else
-        debug (86,5)("esiTryRender: Neither except nor attempt succeeded?!?\n");
+        debugs(86, 5, "esiTryRender: Neither except nor attempt succeeded?!?");
 }
 
 /* Accept attempt and except only */
 bool
 esiTry::addElement(ESIElement::Pointer element)
 {
-    debug (86,5)("esiTryAdd: Try %p adding element %p\n",this, element.getRaw());
+    debugs(86, 5, "esiTryAdd: Try " << this << " adding element " <<
+           element.getRaw());
 
     if (dynamic_cast<esiLiteral*>(element.getRaw())) {
         /* Swallow whitespace */
-        debug (86,5)("esiTryAdd: Try %p skipping whitespace %p\n",this, element.getRaw());
+        debugs(86, 5, "esiTryAdd: Try " << this << " skipping whitespace " << element.getRaw());
         return true;
     }
 
     if (dynamic_cast<esiAttempt*>(element.getRaw())) {
         if (attempt.getRaw()) {
-            debug (86,1)("esiTryAdd: Failed for %p - try allready has an attempt node (section 3.4)\n",this);
+            debugs(86, 1, "esiTryAdd: Failed for " << this << " - try allready has an attempt node (section 3.4)");
             return false;
         }
 
@@ -1752,7 +1759,7 @@ esiTry::addElement(ESIElement::Pointer element)
 
     if (dynamic_cast<esiExcept*>(element.getRaw())) {
         if (except.getRaw()) {
-            debug (86,1)("esiTryAdd: Failed for %p - try already has an except node (section 3.4)\n",this);
+            debugs(86, 1, "esiTryAdd: Failed for " << this << " - try already has an except node (section 3.4)");
             return false;
         }
 
@@ -1760,7 +1767,7 @@ esiTry::addElement(ESIElement::Pointer element)
         return true;
     }
 
-    debug (86,1)("esiTryAdd: Failed to add element %p to try %p, incorrect element type (see section 3.4)\n", element.getRaw(), this);
+    debugs(86, 1, "esiTryAdd: Failed to add element " << element.getRaw() << " to try " << this << ", incorrect element type (see section 3.4)");
     return false;
 }
 
@@ -1780,12 +1787,12 @@ esiTry::process (int dovars)
     assert (this);
 
     if (!attempt.getRaw()) {
-        debug (86,0)("esiTryProcess: Try has no attempt element - ESI template is invalid (section 3.4)\n");
+        debugs(86, 0, "esiTryProcess: Try has no attempt element - ESI template is invalid (section 3.4)");
         return ESI_PROCESS_FAILED;
     }
 
     if (!except.getRaw()) {
-        debug (86,0)("esiTryProcess: Try has no except element - ESI template is invalid (section 3.4)\n");
+        debugs(86, 0, "esiTryProcess: Try has no except element - ESI template is invalid (section 3.4)");
         return ESI_PROCESS_FAILED;
     }
 
@@ -1794,21 +1801,21 @@ esiTry::process (int dovars)
         switch ((rv = attempt->process(dovars))) {
 
         case ESI_PROCESS_COMPLETE:
-            debug (86,5)("esiTryProcess: attempt Processed OK\n");
+            debugs(86, 5, "esiTryProcess: attempt Processed OK");
             flags.attemptok = 1;
             return ESI_PROCESS_COMPLETE;
 
         case ESI_PROCESS_PENDING_WONTFAIL:
-            debug (86,5)("esiTryProcess: attempt Processed PENDING OK\n");
+            debugs(86, 5, "esiTryProcess: attempt Processed PENDING OK");
             /* We're not done yet, but don't need to test except */
             return ESI_PROCESS_PENDING_WONTFAIL;
 
         case ESI_PROCESS_PENDING_MAYFAIL:
-            debug (86,5)("eseSequenceProcess: element Processed PENDING UNKNOWN\n");
+            debugs(86, 5, "eseSequenceProcess: element Processed PENDING UNKNOWN");
             break;
 
         case ESI_PROCESS_FAILED:
-            debug (86,5)("esiSequenceProcess: element Processed FAILED\n");
+            debugs(86, 5, "esiSequenceProcess: element Processed FAILED");
             flags.attemptfailed = 1;
             break;
         }
@@ -1823,22 +1830,22 @@ esiTry::process (int dovars)
         switch (except->process(dovars)) {
 
         case ESI_PROCESS_COMPLETE:
-            debug (86,5)("esiTryProcess: except Processed OK\n");
+            debugs(86, 5, "esiTryProcess: except Processed OK");
             flags.exceptok = 1;
             return bestAttemptRV();
 
         case ESI_PROCESS_PENDING_WONTFAIL:
-            debug (86,5)("esiTryProcess: attempt Processed PENDING OK\n");
+            debugs(86, 5, "esiTryProcess: attempt Processed PENDING OK");
             /* We're not done yet, but can't fail */
             return ESI_PROCESS_PENDING_WONTFAIL;
 
         case ESI_PROCESS_PENDING_MAYFAIL:
-            debug (86,5)("eseSequenceProcess: element Processed PENDING UNKNOWN\n");
+            debugs(86, 5, "eseSequenceProcess: element Processed PENDING UNKNOWN");
             /* The except branch fail fail */
             return ESI_PROCESS_PENDING_MAYFAIL;
 
         case ESI_PROCESS_FAILED:
-            debug (86,5)("esiSequenceProcess: element Processed FAILED\n");
+            debugs(86, 5, "esiSequenceProcess: element Processed FAILED");
             flags.exceptfailed = 1;
             break;
         }
@@ -1870,7 +1877,7 @@ esiTry::fail(ESIElement *source, char const *anError)
 {
     assert (source);
     assert (source == attempt || source == except);
-    debug (86,5) ("esiTry::fail: this=%p, source=%p, message=%s\n", this, source, anError);
+    debugs(86, 5, "esiTry::fail: this=" << this << ", source=" << source << ", message=" << anError);
 
     if (source == except) {
         flags.exceptfailed = 1;
@@ -1910,7 +1917,7 @@ esiTry::esiTry(esiTry const &old)
 ESIElement::Pointer
 esiTry::makeCacheable() const
 {
-    debug (86,5)("esiTry::makeCacheable: making cachable Try from %p\n",this);
+    debugs(86, 5, "esiTry::makeCacheable: making cachable Try from " << this);
     esiTry *resultT = new esiTry (*this);
     ESIElement::Pointer result = resultT;
 
@@ -1926,7 +1933,7 @@ esiTry::makeCacheable() const
 ESIElement::Pointer
 esiTry::makeUsable(esiTreeParentPtr newParent, ESIVarState &newVarState) const
 {
-    debug (86,5)("esiTry::makeUsable: making usable Try from %p\n",this);
+    debugs(86, 5, "esiTry::makeUsable: making usable Try from " << this);
     esiTry *resultT = new esiTry (*this);
     ESIElement::Pointer result = resultT;
 
@@ -2017,7 +2024,7 @@ esiVar::operator delete (void *address)
 /* esiChoose */
 esiChoose::~esiChoose()
 {
-    debug (86,5)("esiChoose::~esiChoose %p\n", this);
+    debugs(86, 5, "esiChoose::~esiChoose " << this);
 }
 
 esiChoose::esiChoose(esiTreeParentPtr aParent) : elements (), chosenelement (-1),parent (aParent)
@@ -2029,7 +2036,7 @@ esiChoose::render(ESISegment::Pointer output)
     /* append all processed elements, and trim processed and rendered elements */
     assert (output->next == NULL);
     assert (elements.size() || otherwise.getRaw());
-    debug (86,5)("esiChooseRender: rendering\n");
+    debugs(86, 5, "esiChooseRender: rendering");
 
     if (chosenelement >= 0)
         elements[chosenelement]->render(output);
@@ -2044,19 +2051,19 @@ esiChoose::addElement(ESIElement::Pointer element)
 
     if (dynamic_cast<esiLiteral*>(element.getRaw())) {
         /* Swallow whitespace */
-        debug (86,5)("esiChooseAdd: Choose %p skipping whitespace %p\n",this, element.getRaw());
+        debugs(86, 5, "esiChooseAdd: Choose " << this << " skipping whitespace " << element.getRaw());
         return true;
     }
 
     /* Some elements require specific parents */
     if (!(dynamic_cast<esiWhen*>(element.getRaw()) || dynamic_cast<esiOtherwise*>(element.getRaw()))) {
-        debug (86,0)("esiChooseAdd: invalid child node for esi:choose (section 3.3)\n");
+        debugs(86, 0, "esiChooseAdd: invalid child node for esi:choose (section 3.3)");
         return false;
     }
 
     if (dynamic_cast<esiOtherwise*>(element.getRaw())) {
         if (otherwise.getRaw()) {
-            debug (86,0)("esiChooseAdd: only one otherwise node allowed for esi:choose (section 3.3)\n");
+            debugs(86, 0, "esiChooseAdd: only one otherwise node allowed for esi:choose (section 3.3)");
             return false;
         }
 
@@ -2116,7 +2123,9 @@ ElementList::setNULL (int start, int end)
         if (elements[loopPosition].getRaw())
             elements[loopPosition]->finish();
 
-        debug (86,5)("esiSequence::NULLElements: Setting index %d, pointer %p to NULL\n", loopPosition, elements[loopPosition].getRaw());
+            debugs(86, 5, "esiSequence::NULLElements: Setting index " <<
+                   loopPosition << ", pointer " <<
+                   elements[loopPosition].getRaw() << " to NULL");
 
         elements[loopPosition] = NULL;
     }
@@ -2273,7 +2282,7 @@ ElementList::ElementList () : elements(NULL), allocedcount(0), allocedsize(0), e
 
 ElementList::~ElementList()
 {
-    debug (86,5)("ElementList::~ElementList %p\n", this);
+    debugs(86, 5, "ElementList::~ElementList " << this);
     setNULL(0, elementcount);
 
     if (elements)
@@ -2329,7 +2338,7 @@ esiWhen::esiWhen (esiTreeParentPtr aParent, int attrcount, const char **attr,ESI
     for (int loopCounter = 0; loopCounter < attrcount && attr[loopCounter]; loopCounter += 2) {
         if (!strcmp(attr[loopCounter],"test")) {
             /* evaluate test */
-            debug (86,5)("esiWhen::esiWhen: Evaluating '%s'\n",attr[loopCounter+1]);
+            debugs(86, 5, "esiWhen::esiWhen: Evaluating '" << attr[loopCounter+1] << "'");
             /* TODO: warn the user instead of asserting */
             assert (expression == NULL);
             expression = attr[loopCounter+1];
@@ -2337,7 +2346,7 @@ esiWhen::esiWhen (esiTreeParentPtr aParent, int attrcount, const char **attr,ESI
             /* ignore mistyped attributes.
              * TODO:? error on these for user feedback - config parameter needed
              */
-            debug (86,1)("Found misttyped attribute on ESI When clause\n");
+             debugs(86, 1, "Found misttyped attribute on ESI When clause");
         }
     }
 

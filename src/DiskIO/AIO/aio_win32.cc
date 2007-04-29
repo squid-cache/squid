@@ -1,6 +1,6 @@
 
 /*
- * $Id: aio_win32.cc,v 1.2 2006/09/09 15:29:59 serassio Exp $
+ * $Id: aio_win32.cc,v 1.3 2007/04/28 22:26:40 hno Exp $
  *
  * DEBUG: section 81    aio_xxx() POSIX emulation on Windows
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
@@ -46,7 +46,7 @@ VOID CALLBACK IoCompletionRoutine(DWORD dwErrorCode,
 
     aiocbp->aio_sigevent.sigev_notify = dwErrorCode;
     aiocbp->aio_sigevent.sigev_signo = dwNumberOfBytesTransfered;
-    debug(81,7) ("AIO operation complete: errorcode=%ld nbytes=%ld\n", dwErrorCode, dwNumberOfBytesTransfered);
+    debugs(81, 7, "AIO operation complete: errorcode=" << dwErrorCode << " nbytes=" << dwNumberOfBytesTransfered);
     xfree(lpOverlapped);
 }
 
@@ -102,7 +102,7 @@ int aio_read(struct aiocb *aiocbp)
     if (!IoOperationStatus)
     {
         errno = GetLastError();
-        debug(81,1) ("aio_read: GetLastError=%i\n", errno);
+        debugs(81,1, "aio_read: GetLastError=" << errno  );
         return -1;
     }
 
@@ -156,7 +156,7 @@ int aio_read64(struct aiocb64 *aiocbp)
     if (!IoOperationStatus)
     {
         errno = GetLastError();
-        debug(81,1) ("aio_read: GetLastError=%i\n", errno);
+        debugs(81, 1, "aio_read: GetLastError=" << errno  );
         return -1;
     }
 
@@ -218,7 +218,7 @@ int aio_write(struct aiocb *aiocbp)
     if (!IoOperationStatus)
     {
         errno = GetLastError();
-        debug(81,1) ("aio_write: GetLastError=%i\n", errno);
+        debugs(81, 1, "aio_write: GetLastError=" << errno  );
         return -1;
     }
 
@@ -272,7 +272,7 @@ int aio_write64(struct aiocb64 *aiocbp)
     if (!IoOperationStatus)
     {
         errno = GetLastError();
-        debug(81,1) ("aio_write: GetLastError=%i\n", errno);
+        debugs(81, 1, "aio_write: GetLastError=" << errno  );
         return -1;
     }
 

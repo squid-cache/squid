@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.73 2006/09/13 15:42:15 adrian Exp $
+ * $Id: refresh.cc,v 1.74 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -168,12 +168,14 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, time_t age, const 
         sf->expires = true;
 
         if (entry->expires > check_time) {
-            debug(22, 3) ("FRESH: expires %d >= check_time %d \n",
-                          (int) entry->expires, (int) check_time);
+            debugs(22, 3, "FRESH: expires " << (int) entry->expires <<
+                   " >= check_time " << (int) check_time << " ");
+
             return -1;
         } else {
-            debug(22, 3) ("STALE: expires %d < check_time %d \n",
-                          (int) entry->expires, (int) check_time);
+            debugs(22, 3, "STALE: expires " << (int) entry->expires <<
+                   " < check_time " << (int) check_time << " ");
+
             return (check_time - entry->expires);
         }
     }
@@ -185,7 +187,7 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, time_t age, const 
      */
 
     if (age > R->max) {
-        debug(22, 3) ("STALE: age %d > max %d \n", (int) age, (int) R->max);
+        debugs(22, 3, "STALE: age " << (int) age << " > max " << (int) R->max << " ");
         sf->max = true;
         return (age - R->max);
     }
@@ -202,12 +204,10 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, time_t age, const 
         sf->lmfactor = true;
 
         if (age >= stale_age) {
-            debug(22, 3) ("STALE: age %d > stale_age %d\n",
-                          (int) age, (int) stale_age);
+            debugs(22, 3, "STALE: age " << (int) age << " > stale_age " << (int) stale_age);
             return (age - stale_age);
         } else {
-            debug(22, 3) ("FRESH: age %d <= stale_age %d\n",
-                          (int) age, (int) stale_age);
+            debugs(22, 3, "FRESH: age " << (int) age << " <= stale_age " << (int) stale_age);
             return -1;
         }
     }
@@ -217,12 +217,12 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, time_t age, const 
      * configured minimum age.
      */
     if (age <= R->min) {
-        debug(22, 3) ("FRESH: age %d <= min %d\n", (int) age, (int) R->min);
+        debugs(22, 3, "FRESH: age " << (int) age << " <= min " << (int) R->min);
         sf->min = true;
         return -1;
     }
 
-    debug(22, 3) ("STALE: age %d > min %d\n", (int) age, (int) R->min);
+    debugs(22, 3, "STALE: age " << (int) age << " > min " << (int) R->min);
     return (age - R->min);
 }
 
@@ -246,7 +246,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
     else if (request)
         uri = urlCanonical(request);
 
-    debug(22, 3) ("refreshCheck: '%s'\n", uri ? uri : "<none>");
+    debugs(22, 3, "refreshCheck: '" << (uri ? uri : "<none>") << "'");
 
     if (check_time > entry->timestamp)
         age = check_time - entry->timestamp;
@@ -260,19 +260,21 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     staleness = refreshStaleness(entry, check_time, age, R, &sf);
 
-    debug(22, 3) ("Staleness = %d\n", staleness);
+    debugs(22, 3, "Staleness = " << staleness);
 
-    debug(22, 3) ("refreshCheck: Matched '%s %d %d%% %d'\n",
-                  R->pattern, (int) R->min, (int) (100.0 * R->pct), (int) R->max);
+    debugs(22, 3, "refreshCheck: Matched '" << R->pattern << " " <<
+           (int) R->min << " " << (int) (100.0 * R->pct) << "%% " <<
+           (int) R->max << "'");
 
-    debug(22, 3) ("refreshCheck: age = %d\n", (int) age);
 
-    debug(22, 3) ("\tcheck_time:\t%s\n", mkrfc1123(check_time));
+    debugs(22, 3, "refreshCheck: age = " << (int) age);
 
-    debug(22, 3) ("\tentry->timestamp:\t%s\n", mkrfc1123(entry->timestamp));
+    debugs(22, 3, "\tcheck_time:\t" << mkrfc1123(check_time));
+
+    debugs(22, 3, "\tentry->timestamp:\t" << mkrfc1123(entry->timestamp));
 
     if (EBIT_TEST(entry->flags, ENTRY_REVALIDATE) && staleness > -1) {
-        debug(22, 3) ("refreshCheck: YES: Must revalidate stale response\n");
+        debugs(22, 3, "refreshCheck: YES: Must revalidate stale response");
         return STALE_MUST_REVALIDATE;
     }
 
@@ -282,7 +284,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
         if (request->flags.ims && (R->flags.refresh_ims || Config.onoff.refresh_all_ims)) {
             /* The clients no-cache header is changed into a IMS query */
-            debug(22, 3) ("refreshCheck: YES: refresh-ims\n");
+            debugs(22, 3, "refreshCheck: YES: refresh-ims");
             return STALE_FORCED_RELOAD;
         }
 
@@ -292,14 +294,14 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
             (void) 0;
         } else if (R->flags.ignore_reload) {
             /* The clients no-cache header is ignored */
-            debug(22, 3) ("refreshCheck: MAYBE: ignore-reload\n");
+            debugs(22, 3, "refreshCheck: MAYBE: ignore-reload");
         } else if (R->flags.reload_into_ims || Config.onoff.reload_into_ims) {
             /* The clients no-cache header is changed into a IMS query */
-            debug(22, 3) ("refreshCheck: YES: reload-into-ims\n");
+            debugs(22, 3, "refreshCheck: YES: reload-into-ims");
             return STALE_RELOAD_INTO_IMS;
         } else {
             /* The clients no-cache header is not overridden on this request */
-            debug(22, 3) ("refreshCheck: YES: client reload\n");
+            debugs(22, 3, "refreshCheck: YES: client reload");
             request->flags.nocache = 1;
             return STALE_FORCED_RELOAD;
         }
@@ -314,13 +316,13 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 #if 0
 
                     if (cc->max_age == 0) {
-                        debug (22,3) ("refreshCheck: YES: client-max-age = 0\n");
+                        debugs(22, 3, "refreshCheck: YES: client-max-age = 0");
                         return STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE;
                     }
 
 #endif
                     if (age > cc->max_age) {
-                        debug(22, 3) ("refreshCheck: YES: age > client-max-age\n");
+                        debugs(22, 3, "refreshCheck: YES: age > client-max-age");
                         return STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE;
                     }
                 }
@@ -329,10 +331,10 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
             if (EBIT_TEST(cc->mask, CC_MAX_STALE) && staleness > -1) {
                 if (cc->max_stale < 0) {
                     /* max-stale directive without a value */
-                    debug(22, 3) ("refreshCheck: NO: max-stale wildcard\n");
+                    debugs(22, 3, "refreshCheck: NO: max-stale wildcard");
                     return FRESH_REQUEST_MAX_STALE_ALL;
                 } else if (staleness < cc->max_stale) {
-                    debug(22, 3) ("refreshCheck: NO: staleness < max-stale\n");
+                    debugs(22, 3, "refreshCheck: NO: staleness < max-stale");
                     return FRESH_REQUEST_MAX_STALE_VALUE;
                 }
             }
@@ -340,22 +342,22 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
     }
 
     if (-1 == staleness) {
-	debug(22, 3) ("refreshCheck: object isn't stale..\n");
+        debugs(22, 3, "refreshCheck: object isn't stale..");
         if (sf.expires) {
-	    debug(22, 3) ("refreshCheck: returning FRESH_EXPIRES\n");
+            debugs(22, 3, "refreshCheck: returning FRESH_EXPIRES");
             return FRESH_EXPIRES;
 	}
 
         assert(!sf.max);
 
         if (sf.lmfactor) {
-	    debug(22, 3) ("refreshCheck: returning FRESH_LMFACTOR_RULE\n");
+            debugs(22, 3, "refreshCheck: returning FRESH_LMFACTOR_RULE");
             return FRESH_LMFACTOR_RULE;
 	}
 
         assert(sf.min);
 
-	debug(22, 3) ("refreshCheck: returning FRESH_MIN_RULE\n");
+        debugs(22, 3, "refreshCheck: returning FRESH_MIN_RULE");
         return FRESH_MIN_RULE;
     }
 
@@ -367,7 +369,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 #if HTTP_VIOLATIONS
 
         if (R->flags.override_expire && age < R->min) {
-            debug(22, 3) ("refreshCheck: NO: age < min && override-expire\n");
+            debugs(22, 3, "refreshCheck: NO: age < min && override-expire");
             return FRESH_OVERRIDE_EXPIRES;
         }
 
@@ -382,7 +384,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 #if HTTP_VIOLATIONS
 
         if (R->flags.override_lastmod && age < R->min) {
-            debug(22, 3) ("refreshCheck: NO: age < min && override-lastmod\n");
+            debugs(22, 3, "refreshCheck: NO: age < min && override-lastmod");
             return FRESH_OVERRIDE_LASTMOD;
         }
 
@@ -390,7 +392,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
         return STALE_LMFACTOR_RULE;
     }
 
-    debug(22, 3) ("refreshCheck: returning STALE_DEFAULT\n");
+    debugs(22, 3, "refreshCheck: returning STALE_DEFAULT");
     return STALE_DEFAULT;
 }
 
@@ -483,7 +485,7 @@ time_t
 getMaxAge(const char *url)
 {
     const refresh_t *R;
-    debug(22, 3) ("getMaxAge: '%s'\n", url);
+    debugs(22, 3, "getMaxAge: '" << url << "'");
 
     if ((R = refreshLimits(url)))
         return R->max;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: unlinkd.cc,v 1.61 2007/04/24 15:04:22 hno Exp $
+ * $Id: unlinkd.cc,v 1.62 2007/04/28 22:26:38 hno Exp $
  *
  * DEBUG: section 2     Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -121,13 +121,11 @@ unlinkdUnlink(const char *path)
     x = write(unlinkd_wfd, buf, l);
 
     if (x < 0) {
-        debug(2, 1) ("unlinkdUnlink: write FD %d failed: %s\n",
-                     unlinkd_wfd, xstrerror());
+        debugs(2, 1, "unlinkdUnlink: write FD " << unlinkd_wfd << " failed: " << xstrerror());
         safeunlink(path, 0);
         return;
     } else if (x != l) {
-        debug(2, 1) ("unlinkdUnlink: FD %d only wrote %d of %d bytes\n",
-                     unlinkd_wfd, x, l);
+        debugs(2, 1, "unlinkdUnlink: FD " << unlinkd_wfd << " only wrote " << x << " of " << l << " bytes");
         safeunlink(path, 0);
         return;
     }
@@ -242,11 +240,11 @@ IPC_FIFO,
     if (FD_PIPE == fd_table[unlinkd_wfd].type)
         commUnsetNonBlocking(unlinkd_wfd);
 
-    debug(2, 1) ("Unlinkd pipe opened on FD %d\n", unlinkd_wfd);
+    debugs(2, 1, "Unlinkd pipe opened on FD " << unlinkd_wfd);
 
 #ifdef _SQUID_MSWIN_
 
-    debug(2, 4) ("Unlinkd handle: 0x%x, PID: %d\n", (unsigned)hIpc, pid);
+    debugs(2, 4, "Unlinkd handle: 0x" << hex << (unsigned)hIpc << dec << ", PID: " << pid);
 
 #endif
 

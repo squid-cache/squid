@@ -1,5 +1,5 @@
 /*
- * $Id: ACLTimeData.cc,v 1.13 2006/10/09 12:43:02 hno Exp $
+ * $Id: ACLTimeData.cc,v 1.14 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -86,8 +86,9 @@ ACLTimeData::match(time_t when)
     ACLTimeData *data = this;
 
     while (data) {
-        debug(28, 3) ("aclMatchTime: checking %d in %d-%d, weekbits=%x\n",
-                      (int) t, (int) data->start, (int) data->stop, data->weekbits);
+        debugs(28, 3, "aclMatchTime: checking " << (int) t  << " in " <<
+               (int) data->start  << "-" << (int) data->stop  << ", weekbits=" <<
+               std::hex << data->weekbits);
 
         if (t >= data->start && t <= data->stop && (data->weekbits & (1 << tm.tm_wday)))
             return 1;
@@ -181,9 +182,9 @@ ACLTimeData::parse()
                     break;
 
                 default:
-                    debug(28, 0) ("%s line %d: %s\n",
-                                  cfg_filename, config_lineno, config_input_line);
-                    debug(28, 0) ("aclParseTimeSpec: Bad Day '%c'\n", *t);
+                    debugs(28, 0, "" << cfg_filename << " line " << config_lineno <<
+                           ": " << config_input_line);
+                    debugs(28, 0, "aclParseTimeSpec: Bad Day '" << *t << "'" );
                     break;
                 }
             }
@@ -191,7 +192,7 @@ ACLTimeData::parse()
             /* assume its time-of-day spec */
 
             if ((sscanf(t, "%d:%d-%d:%d", &h1, &m1, &h2, &m2) < 4) || (!((h1 >= 0 && h1 < 24) && ((h2 >= 0 && h2 < 24) || (h2 == 24 && m2 == 0)) && (m1 >= 0 && m1 < 60) && (m2 >= 0 && m2 < 60)))) {
-                debug(28, 0) ("aclParseTimeSpec: Bad time range '%s'\n", t);
+                debugs(28, 0, "aclParseTimeSpec: Bad time range '" << t << "'");
                 self_destruct();
 
                 if (q != this)
@@ -214,7 +215,7 @@ ACLTimeData::parse()
             weekbits = 0;
 
             if (q->start > q->stop) {
-                debug(28, 0) ("aclParseTimeSpec: Reversed time range\n");
+                debugs(28, 0, "aclParseTimeSpec: Reversed time range");
                 self_destruct();
 
                 if (q != this)

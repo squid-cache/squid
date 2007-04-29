@@ -1,5 +1,5 @@
 /*
- * $Id: ACLHTTPStatus.cc,v 1.2 2006/04/23 11:10:31 robertc Exp $
+ * $Id: ACLHTTPStatus.cc,v 1.3 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -75,11 +75,9 @@ int acl_httpstatus_data::compare(acl_httpstatus_data* const& a, acl_httpstatus_d
         char bufb[8];
         a->toStr(bufa, sizeof(bufa));
         b->toStr(bufb, sizeof(bufb));
-        debug(28, 0) ("WARNING: '%s' is a subrange of '%s'\n", bufa, bufb);
-        debug(28, 0) ("WARNING: because of this '%s' is ignored "
-                      "to keep splay tree searching predictable\n", bufa);
-        debug(28, 0) ("WARNING: You should probably remove '%s' "
-                      "from the ACL named '%s'\n", bufb, AclMatchedName);
+        debugs(28, 0, "WARNING: '" << bufa << "' is a subrange of '" << bufb << "'");
+        debugs(28, 0, "WARNING: because of this '" << bufa << "' is ignored to keep splay tree searching predictable");
+        debugs(28, 0, "WARNING: You should probably remove '" << bufb << "' from the ACL named '" << AclMatchedName << "'");
     }
 
     return ret;
@@ -174,8 +172,7 @@ aclMatchHTTPStatus(SplayNode<acl_httpstatus_data*> **dataptr, http_status status
     SplayNode<acl_httpstatus_data*> **Top = dataptr;
     *Top = Top[0]->splay(&X, aclHTTPStatusCompare);
 
-    debug(28, 3) ("aclMatchHTTPStatus: '%d' %s\n", status,
-                  splayLastResult ? "NOT found" : "found");
+    debugs(28, 3, "aclMatchHTTPStatus: '" << status << "' " << (splayLastResult ? "NOT found" : "found"));
     return (0 == splayLastResult);
 }
 

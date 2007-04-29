@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskdFile.cc,v 1.2 2004/12/21 17:28:29 robertc Exp $
+ * $Id: DiskdFile.cc,v 1.3 2007/04/28 22:26:45 hno Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -57,7 +57,7 @@ DiskdFile::operator new (size_t)
     DiskdFile *result = cbdataAlloc(DiskdFile);
     /* Mark result as being owned - we want the refcounter to do the delete
      * call */
-    debug (79,3)("diskdFile with base %p allocating\n", result);
+    debugs(79, 3, "diskdFile with base " << result << " allocating");
     return result;
 }
 
@@ -65,7 +65,7 @@ void
 DiskdFile::operator delete (void *address)
 {
     DiskdFile *t = static_cast<DiskdFile *>(address);
-    debug (79,3)("diskdFile with base %p deleting\n",t);
+    debugs(79, 3, "diskdFile with base " << t << " deleting");
     cbdataFree(t);
 }
 
@@ -73,7 +73,7 @@ DiskdFile::DiskdFile (char const *aPath, DiskdIOStrategy *anIO) : errorOccured (
         inProgressIOs (0)
 {
     assert (aPath);
-    debug (79,3)("DiskdFile::DiskdFile: %s\n", aPath);
+    debugs(79, 3, "DiskdFile::DiskdFile: " << aPath);
     path_ = xstrdup (aPath);
     id = diskd_stats.sio_id++;
 }
@@ -87,7 +87,7 @@ DiskdFile::~DiskdFile()
 void
 DiskdFile::open (int flags, mode_t aMode, IORequestor::Pointer callback)
 {
-    debug (79,3)("DiskdFile::open: %p opening for %p\n", this, callback.getRaw());
+    debugs(79, 3, "DiskdFile::open: " << this << " opening for " << callback.getRaw());
     assert (ioRequestor.getRaw() == NULL);
     ioRequestor = callback;
     assert (callback.getRaw());
@@ -118,7 +118,7 @@ DiskdFile::open (int flags, mode_t aMode, IORequestor::Pointer callback)
 void
 DiskdFile::create (int flags, mode_t aMode, IORequestor::Pointer callback)
 {
-    debug (79,3)("DiskdFile::create: %p creating for %p\n", this, callback.getRaw());
+    debugs(79, 3, "DiskdFile::create: " << this << " creating for " << callback.getRaw());
     assert (ioRequestor.getRaw() == NULL);
     ioRequestor = callback;
     assert (callback.getRaw());
@@ -139,7 +139,7 @@ DiskdFile::create (int flags, mode_t aMode, IORequestor::Pointer callback)
         ioCompleted();
         errorOccured = true;
         //        IO->shm.put (shm_offset);
-        debug(79, 1) ("storeDiskdSend CREATE: %s\n", xstrerror());
+        debugs(79, 1, "storeDiskdSend CREATE: " << xstrerror());
         notifyClient();
         ioRequestor = NULL;
         return;
@@ -168,7 +168,7 @@ DiskdFile::read(ReadRequest *aRead)
         ioCompleted();
         errorOccured = true;
         //        IO->shm.put (shm_offset);
-        debug(79, 1) ("storeDiskdSend READ: %s\n", xstrerror());
+        debugs(79, 1, "storeDiskdSend READ: " << xstrerror());
         notifyClient();
         ioRequestor = NULL;
         return;
@@ -180,7 +180,7 @@ DiskdFile::read(ReadRequest *aRead)
 void
 DiskdFile::close()
 {
-    debug (79,3)("DiskdFile::close: %p closing for %p\n", this, ioRequestor.getRaw());
+    debugs(79, 3, "DiskdFile::close: " << this << " closing for " << ioRequestor.getRaw());
     assert (ioRequestor.getRaw());
     ioAway();
     int x = IO->send(_MQD_CLOSE,
@@ -194,7 +194,7 @@ DiskdFile::close()
     if (x < 0) {
         ioCompleted();
         errorOccured = true;
-        debug(79, 1) ("storeDiskdSend CLOSE: %s\n", xstrerror());
+        debugs(79, 1, "storeDiskdSend CLOSE: " << xstrerror());
         notifyClient();
         ioRequestor = NULL;
         return;
@@ -219,7 +219,7 @@ bool
 DiskdFile::canNotifyClient() const
 {
     if (!ioRequestor.getRaw()) {
-        debug (79,3)("DiskdFile::canNotifyClient: No ioRequestor to notify\n");
+        debugs(79, 3, "DiskdFile::canNotifyClient: No ioRequestor to notify");
         return false;
     }
 
@@ -277,7 +277,7 @@ void
 DiskdFile::openDone(diomsg *M)
 {
     statCounter.syscalls.disk.opens++;
-    debug(79, 3) ("storeDiskdOpenDone: status %d\n", M->status);
+    debugs(79, 3, "storeDiskdOpenDone: status " << M->status);
 
     if (M->status < 0) {
         diskd_stats.open.fail++;
@@ -294,7 +294,7 @@ void
 DiskdFile::createDone(diomsg *M)
 {
     statCounter.syscalls.disk.opens++;
-    debug(79, 3) ("storeDiskdCreateDone: status %d\n", M->status);
+    debugs(79, 3, "storeDiskdCreateDone: status " << M->status);
 
     if (M->status < 0) {
         diskd_stats.create.fail++;
@@ -332,7 +332,7 @@ DiskdFile::write(WriteRequest *aRequest)
         ioCompleted()
         ;
         errorOccured = true;
-        debug(79, 1) ("storeDiskdSend WRITE: %s\n", xstrerror());
+        debugs(79, 1, "storeDiskdSend WRITE: " << xstrerror());
         //        IO->shm.put (shm_offset);
         notifyClient();
         ioRequestor = NULL;
@@ -358,7 +358,7 @@ void
 DiskdFile::closeDone(diomsg * M)
 {
     statCounter.syscalls.disk.closes++;
-    debug(79, 3) ("DiskdFile::closeDone: status %d\n", M->status);
+    debugs(79, 3, "DiskdFile::closeDone: status " << M->status);
 
     if (M->status < 0) {
         diskd_stats.close.fail++;
@@ -379,7 +379,7 @@ void
 DiskdFile::readDone(diomsg * M)
 {
     statCounter.syscalls.disk.reads++;
-    debug(79, 3) ("DiskdFile::readDone: status %d\n", M->status);
+    debugs(79, 3, "DiskdFile::readDone: status " << M->status);
     assert (M->requestor);
     ReadRequest::Pointer readRequest = dynamic_cast<ReadRequest *>(M->requestor);
     /* remove the free protection */
@@ -403,7 +403,7 @@ void
 DiskdFile::writeDone(diomsg *M)
 {
     statCounter.syscalls.disk.writes++;
-    debug(79, 3) ("storeDiskdWriteDone: status %d\n", M->status);
+    debugs(79, 3, "storeDiskdWriteDone: status " << M->status);
     assert (M->requestor);
     WriteRequest::Pointer writeRequest = dynamic_cast<WriteRequest *>(M->requestor);
     /* remove the free protection */

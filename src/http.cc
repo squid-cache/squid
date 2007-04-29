@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.516 2007/04/24 23:13:25 wessels Exp $
+ * $Id: http.cc,v 1.517 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -161,7 +161,7 @@ static void
 httpStateFree(int fd, void *data)
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
-    debug(11,5)("httpStateFree: FD %d, httpState=%p\n", fd, data);
+    debugs(11, 5, "httpStateFree: FD " << fd << ", httpState=" << data);
     delete httpState;
 }
 
@@ -182,7 +182,7 @@ httpTimeout(int fd, void *data)
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
     StoreEntry *entry = httpState->entry;
-    debug(11, 4) ("httpTimeout: FD %d: '%s'\n", fd, entry->url());
+    debugs(11, 4, "httpTimeout: FD " << fd << ": '" << entry->url() << "'" );
 
     if (entry->store_status == STORE_PENDING) {
         httpState->fwd->fail(errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT, httpState->fwd->request));
@@ -467,7 +467,7 @@ HttpStateData::cacheableReply()
          */
 
         if (!refreshIsCachable(entry)) {
-            debug(22, 3) ("refreshIsCachable() returned non-cacheable..\n");
+            debugs(22, 3, "refreshIsCachable() returned non-cacheable..");
             return 0;
         }
 
@@ -646,7 +646,7 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
     vary.clean();
 #endif
 
-    debug(11, 3) ("httpMakeVaryMark: %s\n", vstr.buf());
+    debugs(11, 3, "httpMakeVaryMark: " << vstr.buf());
     return vstr.buf();
 }
 
@@ -674,8 +674,8 @@ HttpStateData::keepaliveAccounting(HttpReply *reply)
             _peer->stats.n_keepalives_recv++;
 
         if (Config.onoff.detect_broken_server_pconns && reply->bodySize(request->method) == -1) {
-            debug(11, 1) ("keepaliveAccounting: Impossible keep-alive header from '%s'\n", entry->url());
-            // debug(11, 2) ("GOT HTTP REPLY HDR:\n---------\n%s\n----------\n", readBuf->content());
+            debugs(11, 1, "keepaliveAccounting: Impossible keep-alive header from '" << entry->url() << "'" );
+            // debugs(11, 2, "GOT HTTP REPLY HDR:\n---------\n" << readBuf->content() << "\n----------" );
             flags.keepalive_broken = 1;
         }
     }
@@ -688,8 +688,7 @@ HttpStateData::checkDateSkew(HttpReply *reply)
         int skew = abs((int)(reply->date - squid_curtime));
 
         if (skew > 86400)
-            debug(11, 3) ("%s's clock is skewed by %d seconds!\n",
-                          request->host, skew);
+            debugs(11, 3, "" << request->host << "'s clock is skewed by " << skew << " seconds!");
     }
 }
 
@@ -707,7 +706,7 @@ HttpStateData::processReplyHeader()
      */
     HttpReply *newrep = new HttpReply;
     Ctx ctx = ctx_enter(entry->mem_obj->url);
-    debug(11, 3) ("processReplyHeader: key '%s'\n", entry->getMD5Text());
+    debugs(11, 3, "processReplyHeader: key '" << entry->getMD5Text() << "'");
 
     assert(!flags.headers_parsed);
 
@@ -734,8 +733,7 @@ HttpStateData::processReplyHeader()
 
     reply = HTTPMSGLOCK(newrep);
 
-    debug(11, 9) ("GOT HTTP REPLY HDR:\n---------\n%s\n----------\n",
-                  readBuf->content());
+    debugs(11, 9, "GOT HTTP REPLY HDR:\n---------\n" << readBuf->content() << "\n----------");
 
     header_bytes_read = headersEnd(readBuf->content(), readBuf->contentSize());
     readBuf->consume(header_bytes_read);
@@ -791,7 +789,7 @@ HttpStateData::haveParsedReplyHeaders()
     entry->timestampsSet();
 
     /* Check if object is cacheable or not based on reply code */
-    debug(11, 3) ("haveParsedReplyHeaders: HTTP CODE: %d\n", getReply()->sline.status);
+    debugs(11, 3, "haveParsedReplyHeaders: HTTP CODE: " << getReply()->sline.status);
 
     if (neighbors_do_private_keys)
         httpMaybeRemovePublic(entry, getReply()->sline.status);
@@ -885,9 +883,7 @@ HttpStateData::statusIfComplete() const
      * connection.
      */
     if (!flags.request_sent) {
-        debug(11, 1) ("statusIfComplete: Request not yet fully sent \"%s %s\"\n",
-                      RequestMethodStr[orig_request->method],
-                      entry->url());
+        debugs(11, 1, "statusIfComplete: Request not yet fully sent \"" << RequestMethodStr[orig_request->method] << " " << entry->url() << "\"" );
         return COMPLETE_NONPERSISTENT_MSG;
     }
 
@@ -912,19 +908,18 @@ HttpStateData::statusIfComplete() const
 HttpStateData::ConnectionStatus
 HttpStateData::persistentConnStatus() const
 {
-    debug(11, 3) ("persistentConnStatus: FD %d\n", fd);
-    debug(11, 5) ("persistentConnStatus: content_length=%d\n",
-                  reply->content_length);
+    debugs(11, 3, "persistentConnStatus: FD " << fd);
+    debugs(11, 5, "persistentConnStatus: content_length=" << reply->content_length);
 
     /* If we haven't seen the end of reply headers, we are not done */
-    debug(11,5)("persistentConnStatus: flags.headers_parsed=%d\n", flags.headers_parsed);
+    debugs(11, 5, "persistentConnStatus: flags.headers_parsed=" << flags.headers_parsed);
 
     if (!flags.headers_parsed)
         return INCOMPLETE_MSG;
 
     const int clen = reply->bodySize(request->method);
 
-    debug(11,5)("persistentConnStatus: clen=%d\n", clen);
+    debugs(11, 5, "persistentConnStatus: clen=" << clen);
 
     /* If the body size is unknown we must wait for EOF */
     if (clen < 0)
@@ -973,7 +968,7 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
      */
 
     if (flag == COMM_ERR_CLOSING) {
-        debug (11,3)("http socket closing\n");
+        debugs(11, 3, "http socket closing");
         return;
     }
 
@@ -985,7 +980,7 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
     errno = 0;
     /* prepare the read size for the next read (if any) */
 
-    debug(11, 5) ("httpReadReply: FD %d: len %d.\n", fd, (int)len);
+    debugs(11, 5, "httpReadReply: FD " << fd << ": len " << (int)len << ".");
 
     if (flag == COMM_OK && len > 0) {
         readBuf->appended(len);
@@ -1030,8 +1025,7 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
 #endif
 
     if (flag != COMM_OK || len < 0) {
-        debug(50, 2) ("httpReadReply: FD %d: read failure: %s.\n",
-                      fd, xstrerror());
+        debugs(50, 2, "httpReadReply: FD " << fd << ": read failure: " << xstrerror() << ".");
 
         if (ignoreErrno(errno)) {
             flags.do_next_read = 1;
@@ -1184,7 +1178,7 @@ HttpStateData::processReplyBody()
         switch (persistentConnStatus()) {
 
         case INCOMPLETE_MSG:
-            debug(11,5)("processReplyBody: INCOMPLETE_MSG\n");
+            debugs(11, 5, "processReplyBody: INCOMPLETE_MSG");
             /* Wait for more data or EOF condition */
 
             if (flags.keepalive_broken) {
@@ -1197,7 +1191,7 @@ HttpStateData::processReplyBody()
             break;
 
         case COMPLETE_PERSISTENT_MSG:
-            debug(11,5)("processReplyBody: COMPLETE_PERSISTENT_MSG\n");
+            debugs(11, 5, "processReplyBody: COMPLETE_PERSISTENT_MSG");
             /* yes we have to clear all these! */
             commSetTimeout(fd, -1, NULL, NULL);
             flags.do_next_read = 0;
@@ -1226,7 +1220,7 @@ HttpStateData::processReplyBody()
             return;
 
         case COMPLETE_NONPERSISTENT_MSG:
-            debug(11,5)("processReplyBody: COMPLETE_NONPERSISTENT_MSG\n");
+            debugs(11, 5, "processReplyBody: COMPLETE_NONPERSISTENT_MSG");
             serverComplete();
             return;
         }
@@ -1291,8 +1285,7 @@ void
 HttpStateData::SendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
-    debug(11, 5) ("httpSendComplete: FD %d: size %d: errflag %d.\n",
-                  fd, (int) size, errflag);
+    debugs(11, 5, "httpSendComplete: FD " << fd << ": size " << (int) size << ": errflag " << errflag << ".");
 #if URL_CHECKSUM_DEBUG
 
     entry->mem_obj->checkUrlChecksum();
@@ -1574,11 +1567,10 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 void
 copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, String strConnection, HttpRequest * request, HttpRequest * orig_request, HttpHeader * hdr_out, int we_do_ranges, http_state_flags flags)
 {
-    debug(11, 5) ("httpBuildRequestHeader: %s: %s\n",
-                  e->name.buf(), e->value.buf());
+    debugs(11, 5, "httpBuildRequestHeader: " << e->name.buf() << ": " << e->value.buf());
 
     if (!httpRequestHdrAllowed(e, &strConnection)) {
-        debug(11, 2) ("'%s' header denied by anonymize_headers configuration\n",+       e->name.buf());
+        debugs(11, 2, "'" << e->name.buf() << "' header denied by anonymize_headers configuration");
         return;
     }
 
@@ -1717,8 +1709,9 @@ HttpStateData::decideIfWeDoRanges (HttpRequest * orig_request)
             || orig_request->range->offsetLimitExceeded())
         result = false;
 
-    debug(11, 8) ("decideIfWeDoRanges: range specs: %p, cachable: %d; we_do_ranges: %d\n",
-                  orig_request->range, orig_request->flags.cachable, result);
+        debugs(11, 8, "decideIfWeDoRanges: range specs: " <<
+               orig_request->range << ", cachable: " <<
+               orig_request->flags.cachable << "; we_do_ranges: " << result);
 
     return result;
 }
@@ -1759,7 +1752,7 @@ HttpStateData::sendRequest()
 {
     MemBuf mb;
 
-    debug(11, 5) ("httpSendRequest: FD %d, request %p, this %p.\n", fd, request, this);
+    debugs(11, 5, "httpSendRequest: FD " << fd << ", request " << request << ", this " << this << ".");
 
     commSetTimeout(fd, Config.Timeout.lifetime, httpTimeout, this);
     flags.do_next_read = 1;
@@ -1817,7 +1810,7 @@ HttpStateData::sendRequest()
 
     mb.init();
     buildRequestPrefix(request, orig_request, entry, &mb, flags);
-    debug(11, 6) ("httpSendRequest: FD %d:\n%s\n", fd, mb.buf);
+    debugs(11, 6, "httpSendRequest: FD " << fd << ":\n" << mb.buf);
     comm_write_mbuf(fd, &mb, requestSender, this);
 
     return true;
@@ -1826,13 +1819,11 @@ HttpStateData::sendRequest()
 void
 httpStart(FwdState *fwd)
 {
-    debug(11, 3) ("httpStart: \"%s %s\"\n",
-                  RequestMethodStr[fwd->request->method],
-                  fwd->entry->url());
+    debugs(11, 3, "httpStart: \"" << RequestMethodStr[fwd->request->method] << " " << fwd->entry->url() << "\"" );
     HttpStateData *httpState = new HttpStateData(fwd);
 
     if (!httpState->sendRequest()) {
-        debug(11, 3) ("httpStart: aborted");
+        debugs(11, 3, "httpStart: aborted");
         delete httpState;
         return;
     }
@@ -1860,13 +1851,13 @@ HttpStateData::doneSendingRequestBody()
     /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
 
     if (!Config.accessList.brokenPosts) {
-        debug(11, 5) ("doneSendingRequestBody: No brokenPosts list\n");
+        debugs(11, 5, "doneSendingRequestBody: No brokenPosts list");
         HttpStateData::SendComplete(fd, NULL, 0, COMM_OK, 0, this);
     } else if (!ch.fastCheck()) {
-        debug(11, 5) ("doneSendingRequestBody: didn't match brokenPosts\n");
+        debugs(11, 5, "doneSendingRequestBody: didn't match brokenPosts");
         HttpStateData::SendComplete(fd, NULL, 0, COMM_OK, 0, this);
     } else {
-        debug(11, 2) ("doneSendingRequestBody: matched brokenPosts\n");
+        debugs(11, 2, "doneSendingRequestBody: matched brokenPosts");
         comm_write(fd, "\r\n", 2, HttpStateData::SendComplete, this, NULL);
     }
 }
@@ -1890,9 +1881,7 @@ HttpStateData::handleMoreRequestBodyAvailable()
 
         if (flags.headers_parsed && !flags.abuse_detected) {
             flags.abuse_detected = 1;
-            debug(11, 1) ("http handleMoreRequestBodyAvailable: Likely proxy abuse detected '%s' -> '%s'\n",
-                          inet_ntoa(orig_request->client_addr),
-                          entry->url());
+            debugs(11, 1, "http handleMoreRequestBodyAvailable: Likely proxy abuse detected '" << inet_ntoa(orig_request->client_addr) << "' -> '" << entry->url() << "'" );
 
             if (getReply()->sline.status == HTTP_INVALID_HEADER) {
                 comm_close(fd);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.104 2007/04/21 07:14:15 wessels Exp $
+ * $Id: urn.cc,v 1.105 2007/04/28 22:26:38 hno Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -135,22 +135,22 @@ urnFindMinRtt(url_entry * urls, method_t m, int *rtt_ret)
     url_entry *min_u = NULL;
     int i;
     int urlcnt = 0;
-    debug(52, 3) ("urnFindMinRtt\n");
+    debugs(52, 3, "urnFindMinRtt");
     assert(urls != NULL);
 
     for (i = 0; NULL != urls[i].url; i++)
         urlcnt++;
 
-    debug(53, 3) ("urnFindMinRtt: Counted %d URLs\n", i);
+    debugs(53, 3, "urnFindMinRtt: Counted " << i << " URLs");
 
     if (1 == urlcnt) {
-        debug(52, 3) ("urnFindMinRtt: Only one URL - return it!\n");
+        debugs(52, 3, "urnFindMinRtt: Only one URL - return it!");
         return urls;
     }
 
     for (i = 0; i < urlcnt; i++) {
         u = &urls[i];
-        debug(52, 3) ("urnFindMinRtt: %s rtt=%d\n", u->host, u->rtt);
+        debugs(52, 3, "urnFindMinRtt: " << u->host << " rtt=" << u->rtt);
 
         if (u->rtt == 0)
             continue;
@@ -166,9 +166,9 @@ urnFindMinRtt(url_entry * urls, method_t m, int *rtt_ret)
     if (rtt_ret)
         *rtt_ret = min_rtt;
 
-    debug(52, 1) ("urnFindMinRtt: Returning '%s' RTT %d\n",
-                  min_u ? min_u->url : "NONE",
-                  min_rtt);
+    debugs(52, 1, "urnFindMinRtt: Returning '" <<
+                  (min_u ? min_u->url : "NONE") << "' RTT " << 
+                  min_rtt  );
 
     return min_u;
 }
@@ -227,7 +227,7 @@ UrnState::setUriResFromRequest(HttpRequest *r)
     createUriResRequest (r->urlpath);
 
     if (urlres_r == NULL) {
-        debug(52, 3) ("urnStart: Bad uri-res URL %s\n", urlres);
+        debugs(52, 3, "urnStart: Bad uri-res URL " << urlres);
         ErrorState *err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND, r);
         err->url = urlres;
         urlres = NULL;
@@ -242,7 +242,7 @@ UrnState::setUriResFromRequest(HttpRequest *r)
 void
 UrnState::start(HttpRequest * r, StoreEntry * e)
 {
-    debug(52, 3) ("urnStart: '%s'\n", e->url());
+    debugs(52, 3, "urnStart: '" << e->url() << "'" );
     entry = e;
     request = HTTPMSGLOCK(r);
 
@@ -328,7 +328,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
     char *buf = urnState->reqbuf;
     StoreIOBuffer tempBuffer;
 
-    debug(52, 3) ("urnHandleReply: Called with size=%u.\n", (unsigned int)result.length);
+    debugs(52, 3, "urnHandleReply: Called with size=" << (unsigned int)result.length << ".");
 
     /* Can't be lower because of the goto's */
     HttpVersion version(1, 0);
@@ -368,8 +368,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
     k = headersEnd(buf, urnState->reqofs);
 
     if (0 == k) {
-        debug(52, 1) ("urnHandleReply: didn't find end-of-headers for %s\n",
-                      e->url());
+        debugs(52, 1, "urnHandleReply: didn't find end-of-headers for " << e->url()  );
         goto error;
     }
 
@@ -377,10 +376,10 @@ urnHandleReply(void *data, StoreIOBuffer result)
     assert(urlres_e->getReply());
     rep = new HttpReply;
     rep->parseCharBuf(buf, k);
-    debug(52, 3) ("reply exists, code=%d.\n", rep->sline.status);
+    debugs(52, 3, "reply exists, code=" << rep->sline.status << ".");
 
     if (rep->sline.status != HTTP_OK) {
-        debug(52, 3) ("urnHandleReply: failed.\n");
+        debugs(52, 3, "urnHandleReply: failed.");
         err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND, urnState->request);
         err->url = xstrdup(e->url());
         errorAppendEntry(e, err);
@@ -398,10 +397,10 @@ urnHandleReply(void *data, StoreIOBuffer result)
     for (i = 0; NULL != urls[i].url; i++)
         urlcnt++;
 
-    debug(53, 3) ("urnFindMinRtt: Counted %d URLs\n", i);
+    debugs(53, 3, "urnFindMinRtt: Counted " << i << " URLs");
 
     if (urls == NULL) {		/* unkown URN error */
-        debug(52, 3) ("urnTranslateDone: unknown URN %s\n", e->url());
+        debugs(52, 3, "urnTranslateDone: unknown URN " << e->url()  );
         err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND, urnState->request);
         err->url = xstrdup(e->url());
         errorAppendEntry(e, err);
@@ -420,7 +419,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     for (i = 0; i < urlcnt; i++) {
         u = &urls[i];
-        debug(52, 3) ("URL {%s}\n", u->url);
+        debugs(52, 3, "URL {" << u->url << "}");
         mb->Printf(
             "<TR><TD><A HREF=\"%s\">%s</A></TD>", u->url, u->url);
 
@@ -446,7 +445,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
                     "text/html", mb->contentSize(), 0, squid_curtime);
 
     if (urnState->flags.force_menu) {
-        debug(51, 3) ("urnHandleReply: forcing menu\n");
+        debugs(51, 3, "urnHandleReply: forcing menu");
     } else if (min_u) {
         rep->header.putStr(HDR_LOCATION, min_u->url);
     }
@@ -485,11 +484,11 @@ urnParseReply(const char *inbuf, method_t m)
     url_entry *old;
     int n = 32;
     int i = 0;
-    debug(52, 3) ("urnParseReply\n");
+    debugs(52, 3, "urnParseReply");
     list = (url_entry *)xcalloc(n + 1, sizeof(*list));
 
     for (token = strtok(buf, crlf); token; token = strtok(NULL, crlf)) {
-        debug(52, 3) ("urnParseReply: got '%s'\n", token);
+        debugs(52, 3, "urnParseReply: got '" << token << "'");
 
         if (i == n) {
             old = list;
@@ -508,7 +507,7 @@ urnParseReply(const char *inbuf, method_t m)
         rtt = netdbHostRtt(host);
 
         if (0 == rtt) {
-            debug(52, 3) ("urnParseReply: Pinging %s\n", host);
+            debugs(52, 3, "urnParseReply: Pinging " << host);
             netdbPingSite(host);
         }
 
@@ -519,6 +518,6 @@ urnParseReply(const char *inbuf, method_t m)
         i++;
     }
 
-    debug(52, 3) ("urnParseReply: Found %d URLs\n", i);
+    debugs(52, 3, "urnParseReply: Found " << i << " URLs");
     return list;
 }

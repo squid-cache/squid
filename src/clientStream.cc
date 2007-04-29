@@ -1,6 +1,6 @@
 
 /*
- * $Id: clientStream.cc,v 1.12 2005/09/09 17:31:33 wessels Exp $
+ * $Id: clientStream.cc,v 1.13 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 87    Client-side Stream routines.
  * AUTHOR: Robert Collins
@@ -156,9 +156,8 @@ clientStreamInsertHead(dlink_list * list, CSR * func, CSCB * callback,
     assert(list->head);
     clientStreamNode *temp = clientStreamNew(func, callback, detach, status, data);
     temp->head = list;
-    debug(87, 3)
-    ("clientStreamInsertHead: Inserted node %p with data %p after head\n",
-     temp, data.getRaw());
+    debugs(87, 3, "clientStreamInsertHead: Inserted node " << temp <<
+           " with data " << data.getRaw() << " after head");
 
     if (list->head->next)
         temp->readBuffer = ((clientStreamNode *)list->head->next->data)->readBuffer;
@@ -177,9 +176,8 @@ clientStreamCallback(clientStreamNode * thisObject, ClientHttpRequest * http,
     assert(thisObject && http && thisObject->node.next);
     next = thisObject->next();
 
-    debug(87,
-          3) ("clientStreamCallback: Calling %p with cbdata %p from node %p\n",
-              next->callback, next->data.getRaw(), thisObject);
+    debugs(87, 3, "clientStreamCallback: Calling " << next->callback << " with cbdata " << 
+           next->data.getRaw() << " from node " << thisObject);
     next->callback(next, http, rep, replyBuffer);
 }
 
@@ -195,8 +193,8 @@ clientStreamRead(clientStreamNode * thisObject, ClientHttpRequest * http,
     assert(thisObject && http && thisObject->prev());
     prev = thisObject->prev();
 
-    debug(87, 3) ("clientStreamRead: Calling %p with cbdata %p from node %p\n",
-                  prev->readfunc, prev->data.getRaw(), thisObject);
+    debugs(87, 3, "clientStreamRead: Calling " << prev->readfunc <<
+           " with cbdata " << prev->data.getRaw() << " from node " << thisObject);
     thisObject->readBuffer = readBuffer;
     prev->readfunc(prev, http);
 }
@@ -210,7 +208,7 @@ clientStreamDetach(clientStreamNode * thisObject, ClientHttpRequest * http)
     clientStreamNode *temp = thisObject;
 
     assert(thisObject->node.next == NULL);
-    debug(87, 3) ("clientStreamDetach: Detaching node %p\n", thisObject);
+    debugs(87, 3, "clientStreamDetach: Detaching node " << thisObject);
     /* And clean up thisObject node */
     /* ESI TODO: push refcount class through to head */
     clientStreamNode *prev = NULL;
@@ -231,8 +229,7 @@ clientStreamDetach(clientStreamNode * thisObject, ClientHttpRequest * http)
      */
 
     if (prev) {
-        debug(87, 3) ("clientStreamDetach: Calling %p with cbdata %p\n",
-                      prev->detach, prev->data.getRaw());
+        debugs(87, 3, "clientStreamDetach: Calling " << prev->detach << " with cbdata " << prev->data.getRaw());
 
         if (cbdataReferenceValid(prev))
             prev->detach(prev, http);
@@ -252,8 +249,7 @@ clientStreamAbort(clientStreamNode * thisObject, ClientHttpRequest * http)
     assert(thisObject != NULL);
     assert(http != NULL);
     list = thisObject->head;
-    debug(87, 3) ("clientStreamAbort: Aborting stream with tail %p\n",
-                  list->tail);
+    debugs(87, 3, "clientStreamAbort: Aborting stream with tail " << list->tail);
 
     if (list->tail) {
         clientStreamDetach((clientStreamNode *)list->tail->data, http);
@@ -287,7 +283,7 @@ clientStreamFree(void *foo)
 {
     clientStreamNode *thisObject = (clientStreamNode *)foo;
 
-    debug(87, 3) ("Freeing clientStreamNode %p\n", thisObject);
+    debugs(87, 3, "Freeing clientStreamNode " << thisObject);
 
     thisObject->removeFromStream();
     thisObject->data = NULL;

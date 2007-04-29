@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.36 2007/04/12 20:36:56 wessels Exp $
+ * $Id: store_io_ufs.cc,v 1.37 2007/04/28 22:26:51 hno Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -103,8 +103,11 @@ UFSStoreState::ioCompletedNotification()
 {
     if (opening) {
         opening = false;
-        debug(79, 3) ("UFSStoreState::ioCompletedNotification: dirno %d, fileno %08x status %d\n",
-                      swap_dirn, swap_filen, theFile->error());
+        debugs(79, 3, "UFSStoreState::ioCompletedNotification: dirno " <<
+               swap_dirn  << ", fileno "<< std::setfill('0') << std::hex <<
+               std::setw(8) << swap_filen  << " status "<< std::setfill(' ') <<
+               std::dec << theFile->error());
+
         assert (FILE_MODE(mode) == O_RDONLY);
         openDone();
 
@@ -113,15 +116,21 @@ UFSStoreState::ioCompletedNotification()
 
     if (creating) {
         creating = false;
-        debug(79, 3) ("UFSStoreState::ioCompletedNotification: dirno %d, fileno %08x status %d\n",
-                      swap_dirn, swap_filen, theFile->error());
+        debugs(79, 3, "UFSStoreState::ioCompletedNotification: dirno " <<
+               swap_dirn  << ", fileno "<< std::setfill('0') << std::hex <<
+               std::setw(8) << swap_filen  << " status "<< std::setfill(' ') <<
+               std::dec << theFile->error());
+
         openDone();
 
         return;
     }
 
     assert (!(closing ||opening));
-    debug(79, 3) ("diskd::ioCompleted: dirno %d, fileno %08x status %d\n",                      swap_dirn, swap_filen, theFile->error());
+    debugs(79, 3, "diskd::ioCompleted: dirno " << swap_dirn  << ", fileno "<<
+           std::setfill('0') << std::hex << std::setw(8) << swap_filen  <<
+           " status "<< std::setfill(' ') << std::dec << theFile->error());
+
     /* Ok, notification past open means an error has occured */
     assert (theFile->error());
     tryClosing();
@@ -149,15 +158,17 @@ UFSStoreState::openDone()
     if (flags.try_closing)
         tryClosing();
 
-    debug(79, 3) ("UFSStoreState::openDone: exiting\n");
+    debugs(79, 3, "UFSStoreState::openDone: exiting");
 }
 
 void
 UFSStoreState::closeCompleted()
 {
     assert (closing);
-    debug(79, 3) ("UFSStoreState::closeCompleted: dirno %d, fileno %08x status %d\n",
-                  swap_dirn, swap_filen, theFile->error());
+    debugs(79, 3, "UFSStoreState::closeCompleted: dirno " << swap_dirn  <<
+           ", fileno "<< std::setfill('0') << std::hex << std::setw(8) <<
+           swap_filen  << " status "<< std::setfill(' ') << std::dec <<
+           theFile->error());
 
     if (theFile->error()) {
         debugs(79,3,HERE<< "theFile->error() ret " << theFile->error());
@@ -181,8 +192,8 @@ UFSStoreState::closeCompleted()
 void
 UFSStoreState::close()
 {
-    debug(79, 3) ("UFSStoreState::close: dirno %d, fileno %08X\n", swap_dirn,
-                  swap_filen);
+    debugs(79, 3, "UFSStoreState::close: dirno " << swap_dirn  << ", fileno "<<
+           std::setfill('0') << std::hex << std::uppercase << std::setw(8) << swap_filen);
     tryClosing();
 }
 
@@ -196,15 +207,15 @@ UFSStoreState::read_(char *buf, size_t size, off_t offset, STRCB * callback, voi
     assert (callback);
 
     if (!theFile->canRead()) {
-        debug(79, 3) ("UFSStoreState::read_: queueing read because theFile can't read\n");
+        debugs(79, 3, "UFSStoreState::read_: queueing read because theFile can't read");
         queueRead (buf, size, offset, callback, callback_data);
         return;
     }
 
     read.callback = callback;
     read.callback_data = cbdataReference(callback_data);
-    debug(79, 3) ("UFSStoreState::read_: dirno %d, fileno %08X\n",
-                  swap_dirn, swap_filen);
+    debugs(79, 3, "UFSStoreState::read_: dirno " << swap_dirn  << ", fileno "<<
+           std::setfill('0') << std::hex << std::uppercase << std::setw(8) << swap_filen);
     offset_ = offset;
     read_buf = buf;
     reading = true;
@@ -223,7 +234,8 @@ UFSStoreState::read_(char *buf, size_t size, off_t offset, STRCB * callback, voi
 void
 UFSStoreState::write(char const *buf, size_t size, off_t offset, FREE * free_func)
 {
-    debug(79, 3) ("UFSStoreState::write: dirn %d, fileno %08X\n", swap_dirn, swap_filen);
+    debugs(79, 3, "UFSStoreState::write: dirn " << swap_dirn  << ", fileno "<<
+           std::setfill('0') << std::hex << std::uppercase << std::setw(8) << swap_filen);
 
     if (theFile->error()) {
         debugs(79,1,HERE << "avoid write on theFile with error");
@@ -290,8 +302,9 @@ UFSStoreState::readCompleted(const char *buf, int len, int errflag, RefCount<Rea
 {
     assert (result.getRaw());
     reading = false;
-    debug(79, 3) ("UFSStoreState::readCompleted: dirno %d, fileno %08x len %d\n",
-                  swap_dirn, swap_filen, len);
+    debugs(79, 3, "UFSStoreState::readCompleted: dirno " << swap_dirn  <<
+           ", fileno "<< std::setfill('0') << std::hex << std::setw(8) <<
+           swap_filen  << " len "<< std::setfill(' ') << std::dec << len);
 
     if (len > 0)
         offset_ += len;
@@ -330,8 +343,9 @@ UFSStoreState::readCompleted(const char *buf, int len, int errflag, RefCount<Rea
 void
 UFSStoreState::writeCompleted(int errflag, size_t len, RefCount<WriteRequest> writeRequest)
 {
-    debug(79, 3) ("UFSStoreState::writeCompleted: dirno %d, fileno %08X, len %ld\n",
-                  swap_dirn, swap_filen, (long int) len);
+     debugs(79, 3, "UFSStoreState::writeCompleted: dirno " << swap_dirn << ", fileno " << 
+            std::setfill('0') << std::hex << std::uppercase << std::setw(8) << swap_filen << 
+            ", len " << len );
     /*
      * DPW 2006-05-24
      * See doWrites() for why we don't update UFSStoreState::writing
@@ -363,7 +377,7 @@ UFSStoreState::writeCompleted(int errflag, size_t len, RefCount<WriteRequest> wr
 void
 UFSStoreState::doCloseCallback(int errflag)
 {
-    debug(79, 3) ("storeUfsIOCallback: errflag=%d\n", errflag);
+    debugs(79, 3, "storeUfsIOCallback: errflag=" << errflag);
     /*
      * DPW 2006-05-24
      * When we signal the higher layer with this callback, it might unlock
@@ -439,8 +453,7 @@ UFSStoreState::kickReadQueue()
     if (NULL == q)
         return false;
 
-    debug(79, 3) ("UFSStoreState::kickReadQueue: reading queued request of %ld bytes\n",
-                  (long int) q->size);
+    debugs(79, 3, "UFSStoreState::kickReadQueue: reading queued request of " << (long int) q->size << " bytes");
 
     void *cbdata;
 
@@ -455,7 +468,7 @@ UFSStoreState::kickReadQueue()
 void
 UFSStoreState::queueRead(char *buf, size_t size, off_t offset, STRCB *callback, void *callback_data)
 {
-    debug(79, 3) ("UFSStoreState::queueRead: queueing read\n");
+    debugs(79, 3, "UFSStoreState::queueRead: queueing read");
     assert(opening);
     assert (pending_reads == NULL);
     _queued_read *q = new _queued_read;
@@ -547,7 +560,7 @@ UFSStrategy::open(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB * file_call
                   StoreIOState::STIOCB * callback, void *callback_data)
 {
     assert (((UFSSwapDir *)SD)->IO == this);
-    debug(79, 3) ("UFSStrategy::open: fileno %08X\n", e->swap_filen);
+    debugs(79, 3, "UFSStrategy::open: fileno "<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << e->swap_filen);
 
     /* to consider: make createstate a private UFSStrategy call */
     StoreIOState::Pointer sio = createState (SD, e, callback, callback_data);
@@ -584,7 +597,7 @@ UFSStrategy::create(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB * file_ca
     assert (((UFSSwapDir *)SD)->IO == this);
     /* Allocate a number */
     sfileno filn = ((UFSSwapDir *)SD)->mapBitAllocate();
-    debug(79, 3) ("UFSStrategy::create: fileno %08X\n", filn);
+    debugs(79, 3, "UFSStrategy::create: fileno "<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << filn);
 
     /* Shouldn't we handle a 'bitmap full' error here? */
 

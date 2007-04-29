@@ -1,6 +1,6 @@
 
 /*
- * $Id: SwapDir.cc,v 1.9 2007/04/25 11:30:18 adrian Exp $
+ * $Id: SwapDir.cc,v 1.10 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 20    Swap Dir base object
  * AUTHOR: Robert Collins
@@ -195,8 +195,7 @@ SwapDir::parseOptions(int reconfiguring)
 
     if (reconfiguring) {
         if (old_read_only != flags.read_only) {
-            debug(3, 1) ("Cache dir '%s' now %s\n",
-                         path, flags.read_only ? "No-Store" : "Read-Write");
+            debugs(3, 1, "Cache dir '" << path << "' now " << (flags.read_only ? "No-Store" : "Read-Write"));
         }
     }
 }
@@ -249,7 +248,7 @@ SwapDir::optionMaxSizeParse(char const *option, const char *value, int reconfigu
     ssize_t size = xatoi(value);
 
     if (reconfiguring && max_objsize != size)
-        debug(3, 1) ("Cache dir '%s' max object size now %ld\n", path, (long int) size);
+        debugs(3, 1, "Cache dir '" << path << "' max object size now " << (long int) size);
 
     max_objsize = size;
 

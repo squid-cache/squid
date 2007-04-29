@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.170 2006/08/21 00:50:41 robertc Exp $
+ * $Id: fqdncache.cc,v 1.171 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -120,8 +120,7 @@ fqdncacheRelease(fqdncache_entry * f)
     for (k = 0; k < (int) f->name_count; k++)
         safe_free(f->names[k]);
 
-    debug(35, 5) ("fqdncacheRelease: Released FQDN record for '%s'.\n",
-                  hashKeyStr(&f->hash));
+    debugs(35, 5, "fqdncacheRelease: Released FQDN record for '" << hashKeyStr(&f->hash) << "'.");
 
     dlinkDelete(&f->lru, &lru_list);
 
@@ -187,7 +186,7 @@ fqdncache_purgelru(void *notused)
         removed++;
     }
 
-    debug(35, 9) ("fqdncache_purgelru: removed %d entries\n", removed);
+    debugs(35, 9, "fqdncache_purgelru: removed " << removed << " entries");
 }
 
 static void
@@ -279,17 +278,17 @@ fqdncacheParse(fqdncache_entry *f, const char *inbuf)
     f->flags.negcached = 1;
 
     if (inbuf == NULL) {
-        debug(35, 1) ("fqdncacheParse: Got <NULL> reply in response to '%s'\n", name);
+        debugs(35, 1, "fqdncacheParse: Got <NULL> reply in response to '" << name << "'");
         f->error_message = xstrdup("Internal Error");
         return -1;
     }
 
     xstrncpy(buf, inbuf, DNS_INBUF_SZ);
-    debug(35, 5) ("fqdncacheParse: parsing: {%s}\n", buf);
+    debugs(35, 5, "fqdncacheParse: parsing: {" << buf << "}");
     token = strtok(buf, w_space);
 
     if (NULL == token) {
-        debug(35, 1) ("fqdncacheParse: Got <NULL>, expecting '$name' in response to '%s'\n", name);
+        debugs(35, 1, "fqdncacheParse: Got <NULL>, expecting '$name' in response to '" << name << "'");
         f->error_message = xstrdup("Internal Error");
         return -1;
     }
@@ -302,7 +301,7 @@ fqdncacheParse(fqdncache_entry *f, const char *inbuf)
     }
 
     if (0 != strcmp(token, "$name")) {
-        debug(35, 1) ("fqdncacheParse: Got '%s', expecting '$name' in response to '%s'\n", inbuf, name);
+        debugs(35, 1, "fqdncacheParse: Got '" << inbuf << "', expecting '$name' in response to '" << name << "'");
         f->error_message = xstrdup("Internal Error");
         return -1;
     }
@@ -310,7 +309,7 @@ fqdncacheParse(fqdncache_entry *f, const char *inbuf)
     token = strtok(NULL, w_space);
 
     if (NULL == token) {
-        debug(35, 1) ("fqdncacheParse: Got '%s', expecting TTL in response to '%s'\n", inbuf, name);
+        debugs(35, 1, "fqdncacheParse: Got '" << inbuf << "', expecting TTL in response to '" << name << "'");
         f->error_message = xstrdup("Internal Error");
         return -1;
     }
@@ -320,7 +319,7 @@ fqdncacheParse(fqdncache_entry *f, const char *inbuf)
     token = strtok(NULL, w_space);
 
     if (NULL == token) {
-        debug(35, 1) ("fqdncacheParse: Got '%s', expecting hostname in response to '%s'\n", inbuf, name);
+        debugs(35, 1, "fqdncacheParse: Got '" << inbuf << "', expecting hostname in response to '" << name << "'");
         f->error_message = xstrdup("Internal Error");
         return -1;
     }
@@ -352,18 +351,18 @@ fqdncacheParse(fqdncache_entry *f, rfc1035_rr * answers, int nr, const char *err
     f->flags.negcached = 1;
 
     if (nr < 0) {
-        debug(35, 3) ("fqdncacheParse: Lookup of '%s' failed (%s)\n", name, error_message);
+        debugs(35, 3, "fqdncacheParse: Lookup of '" << name << "' failed (" << error_message << ")");
         f->error_message = xstrdup(error_message);
         return -1;
     }
 
     if (nr == 0) {
-        debug(35, 3) ("fqdncacheParse: No DNS records for '%s'\n", name);
+        debugs(35, 3, "fqdncacheParse: No DNS records for '" << name << "'");
         f->error_message = xstrdup("No DNS records");
         return 0;
     }
 
-    debug(35, 3) ("fqdncacheParse: %d answers for '%s'\n", nr, name);
+    debugs(35, 3, "fqdncacheParse: " << nr << " answers for '" << name << "'");
     assert(answers);
 
     for (k = 0; k < nr; k++) {
@@ -372,12 +371,12 @@ fqdncacheParse(fqdncache_entry *f, rfc1035_rr * answers, int nr, const char *err
 
         if (answers[k].type == RFC1035_TYPE_PTR) {
             if (!answers[k].rdata[0]) {
-                debug(35, 2) ("fqdncacheParse: blank PTR record for '%s'\n", name);
+                debugs(35, 2, "fqdncacheParse: blank PTR record for '" << name << "'");
                 continue;
             }
 
             if (strchr(answers[k].rdata, ' ')) {
-                debug(35, 2) ("fqdncacheParse: invalid PTR record '%s' for '%s'\n", answers[k].rdata, name);
+                debugs(35, 2, "fqdncacheParse: invalid PTR record '" << answers[k].rdata << "' for '" << name << "'");
                 continue;
             }
 
@@ -393,7 +392,7 @@ fqdncacheParse(fqdncache_entry *f, rfc1035_rr * answers, int nr, const char *err
     }
 
     if (f->name_count == 0) {
-        debug(35, 1) ("fqdncacheParse: No PTR record for '%s'\n", name);
+        debugs(35, 1, "fqdncacheParse: No PTR record for '" << name << "'");
         return 0;
     }
 
@@ -448,12 +447,12 @@ fqdncache_nbgethostbyaddr(struct IN_ADDR addr, FQDNH * handler, void *handlerDat
     char *name = inet_ntoa(addr);
     generic_cbdata *c;
     assert(handler);
-    debug(35, 4) ("fqdncache_nbgethostbyaddr: Name '%s'.\n", name);
+    debugs(35, 4, "fqdncache_nbgethostbyaddr: Name '" << name << "'.");
     FqdncacheStats.requests++;
 
     if (name == NULL || name[0] == '\0')
     {
-        debug(35, 4) ("fqdncache_nbgethostbyaddr: Invalid name!\n");
+        debugs(35, 4, "fqdncache_nbgethostbyaddr: Invalid name!");
         dns_error_message = "Invalid hostname";
         handler(NULL, handlerData);
         return;
@@ -473,7 +472,7 @@ fqdncache_nbgethostbyaddr(struct IN_ADDR addr, FQDNH * handler, void *handlerDat
     } else
     {
         /* hit */
-        debug(35, 4) ("fqdncache_nbgethostbyaddr: HIT for '%s'\n", name);
+        debugs(35, 4, "fqdncache_nbgethostbyaddr: HIT for '" << name << "'");
 
         if (f->flags.negcached)
             FqdncacheStats.negative_hits++;
@@ -489,7 +488,7 @@ fqdncache_nbgethostbyaddr(struct IN_ADDR addr, FQDNH * handler, void *handlerDat
         return;
     }
 
-    debug(35, 5) ("fqdncache_nbgethostbyaddr: MISS for '%s'\n", name);
+    debugs(35, 5, "fqdncache_nbgethostbyaddr: MISS for '" << name << "'");
     FqdncacheStats.misses++;
     f = fqdncacheCreateEntry(name);
     f->handler = handler;
@@ -514,7 +513,7 @@ fqdncache_init(void)
     if (fqdn_table)
         return;
 
-    debug(35, 3) ("Initializing FQDN Cache...\n");
+    debugs(35, 3, "Initializing FQDN Cache...");
 
     memset(&FqdncacheStats, '\0', sizeof(FqdncacheStats));
 
@@ -731,7 +730,7 @@ fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames)
         if (1 == fce->flags.fromhosts) {
             fqdncacheUnlockEntry(fce);
         } else if (fce->locks > 0) {
-            debug(35, 1) ("fqdncacheAddEntryFromHosts: can't add static entry for locked address '%s'\n", addr);
+            debugs(35, 1, "fqdncacheAddEntryFromHosts: can't add static entry for locked address '" << addr << "'");
             return;
         } else {
             fqdncacheRelease(fce);
@@ -766,7 +765,7 @@ variable_list *
 snmp_netFqdnFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer = NULL;
-    debug(49, 5) ("snmp_netFqdnFn: Processing request:\n");
+    debugs(49, 5, "snmp_netFqdnFn: Processing request:");
     snmpDebugOid(5, Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.79 2007/04/06 12:15:51 serassio Exp $
+ * $Id: helper.cc,v 1.80 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -96,8 +96,7 @@ helperOpenServers(helper * hlp)
     else
         shortname = xstrdup(progname);
 
-    debug(84, 1) ("helperOpenServers: Starting %d '%s' processes\n",
-                  hlp->n_to_start, shortname);
+    debugs(84, 1, "helperOpenServers: Starting " << hlp->n_to_start << " '" << shortname << "' processes");
 
     procname = (char *)xmalloc(strlen(shortname) + 3);
 
@@ -124,7 +123,7 @@ helperOpenServers(helper * hlp)
                         &hIpc);
 
         if (pid < 0) {
-            debug(84, 1) ("WARNING: Cannot run '%s' process.\n", progname);
+            debugs(84, 1, "WARNING: Cannot run '" << progname << "' process.");
             continue;
         }
 
@@ -198,8 +197,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
     else
         shortname = xstrdup(progname);
 
-    debug(84, 1) ("helperStatefulOpenServers: Starting %d '%s' processes\n",
-                  hlp->n_to_start, shortname);
+    debugs(84, 1, "helperStatefulOpenServers: Starting " << hlp->n_to_start << " '" << shortname << "' processes");
 
     procname = (char *)xmalloc(strlen(shortname) + 3);
 
@@ -226,7 +224,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
                         &hIpc);
 
         if (pid < 0) {
-            debug(84, 1) ("WARNING: Cannot run '%s' process.\n", progname);
+            debugs(84, 1, "WARNING: Cannot run '" << progname << "' process.");
             continue;
         }
 
@@ -289,7 +287,7 @@ helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
     helper_server *srv;
 
     if (hlp == NULL) {
-        debug(84, 3) ("helperSubmit: hlp == NULL\n");
+        debugs(84, 3, "helperSubmit: hlp == NULL");
         callback(data, NULL);
         return;
     }
@@ -303,7 +301,7 @@ helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
     else
         Enqueue(hlp, r);
 
-    debug(84, 9) ("helperSubmit: %s\n", buf);
+    debugs(84, 9, "helperSubmit: " << buf);
 }
 
 /* lastserver = "server last used as part of a deferred or reserved
@@ -316,7 +314,7 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, v
     helper_stateful_server *srv;
 
     if (hlp == NULL) {
-        debug(84, 3) ("helperStatefulSubmit: hlp == NULL\n");
+        debugs(84, 3, "helperStatefulSubmit: hlp == NULL");
         callback(data, 0, NULL);
         return;
     }
@@ -333,7 +331,7 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, v
     }
 
     if ((buf != NULL) && lastserver) {
-        debug(84, 5) ("StatefulSubmit with lastserver %p\n", lastserver);
+        debugs(84, 5, "StatefulSubmit with lastserver " << lastserver);
         /* the queue doesn't count for this assert because queued requests
          * have already gone through here and been tested.
          * It's legal to have deferred_requests == 0 and queue entries 
@@ -350,10 +348,10 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, v
         }
 
         if (!(lastserver->request)) {
-            debug(84, 5) ("StatefulSubmit dispatching\n");
+            debugs(84, 5, "StatefulSubmit dispatching");
             helperStatefulDispatch(lastserver, r);
         } else {
-            debug(84, 5) ("StatefulSubmit queuing\n");
+            debugs(84, 5, "StatefulSubmit queuing");
             StatefulServerEnqueue(lastserver, r);
         }
     } else {
@@ -363,7 +361,7 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, v
             StatefulEnqueue(hlp, r);
     }
 
-    debug(84, 9) ("helperStatefulSubmit: placeholder: '%d', buf '%s'.\n", r->placeholder, buf);
+    debugs(84, 9, "helperStatefulSubmit: placeholder: '" << r->placeholder << "', buf '" << buf << "'.");
 }
 
 helper_stateful_server *
@@ -375,15 +373,15 @@ helperStatefulDefer(statefulhelper * hlp)
 
     if (hlp == NULL)
     {
-        debug(84, 3) ("helperStatefulDefer: hlp == NULL\n");
+        debugs(84, 3, "helperStatefulDefer: hlp == NULL");
         return NULL;
     }
 
-    debug(84, 5) ("helperStatefulDefer: Running servers %d.\n", hlp->n_running);
+    debugs(84, 5, "helperStatefulDefer: Running servers " << hlp->n_running << ".");
 
     if (hlp->n_running == 0)
     {
-        debug(84, 1) ("helperStatefulDefer: No running servers!. \n");
+        debugs(84, 1, "helperStatefulDefer: No running servers!. ");
         return NULL;
     }
 
@@ -418,7 +416,7 @@ helperStatefulDefer(statefulhelper * hlp)
 
     if (rv == NULL)
     {
-        debug(84, 1) ("helperStatefulDefer: None available.\n");
+        debugs(84, 1, "helperStatefulDefer: None available.");
         return NULL;
     }
 
@@ -455,8 +453,7 @@ helperStatefulReset(helper_stateful_server * srv)
     if (r != NULL)
     {
         /* reset attempt DURING an outstaning request */
-        debug(84, 1) ("helperStatefulReset: RESET During request %s \n",
-                      hlp->id_name);
+        debugs(84, 1, "helperStatefulReset: RESET During request " << hlp->id_name << " ");
         srv->flags.busy = 0;
         srv->roffset = 0;
         helperStatefulRequestFree(r);
@@ -634,8 +631,7 @@ helperShutdown(helper * hlp)
         link = link->next;
 
         if (srv->flags.shutdown) {
-            debug(84, 3) ("helperShutdown: %s #%d has already SHUT DOWN.\n",
-                          hlp->id_name, srv->index + 1);
+            debugs(84, 3, "helperShutdown: " << hlp->id_name << " #" << srv->index + 1 << " has already SHUT DOWN.");
             continue;
         }
 
@@ -645,14 +641,12 @@ helperShutdown(helper * hlp)
         srv->flags.shutdown = 1;	/* request it to shut itself down */
 
         if (srv->flags.closing) {
-            debug(84, 3) ("helperShutdown: %s #%d is CLOSING.\n",
-                          hlp->id_name, srv->index + 1);
+            debugs(84, 3, "helperShutdown: " << hlp->id_name << " #" << srv->index + 1 << " is CLOSING.");
             continue;
         }
 
         if (srv->stats.pending) {
-            debug(84, 3) ("helperShutdown: %s #%d is BUSY.\n",
-                          hlp->id_name, srv->index + 1);
+            debugs(84, 3, "helperShutdown: " << hlp->id_name << " #" << srv->index + 1 << " is BUSY.");
             continue;
         }
 
@@ -665,8 +659,7 @@ helperShutdown(helper * hlp)
         shutdown(srv->wfd, SD_BOTH);
 #endif
 
-        debug(84, 3) ("helperShutdown: %s #%d shutting down.\n",
-                      hlp->id_name, srv->index + 1);
+        debugs(84, 3, "helperShutdown: " << hlp->id_name << " #" << srv->index + 1 << " shutting down.");
         /* the rest of the details is dealt with in the helperServerFree
          * close handler
          */
@@ -676,9 +669,10 @@ helperShutdown(helper * hlp)
         if (hIpc) {
             if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
                 getCurrentTime();
-                debug(84, 1) ("helperShutdown: WARNING: %s #%d (%s,%ld) "
-                              "didn't exit in 5 seconds\n",
-                              hlp->id_name, no, hlp->cmdline->key, (long int)pid);
+                debugs(84, 1, "helperShutdown: WARNING: " << hlp->id_name <<
+                       " #" << no << " (" << hlp->cmdline->key << "," <<
+                       (long int)pid << ") didn't exit in 5 seconds");
+
             }
 
             CloseHandle(hIpc);
@@ -706,8 +700,7 @@ helperStatefulShutdown(statefulhelper * hlp)
         link = link->next;
 
         if (srv->flags.shutdown) {
-            debug(84, 3) ("helperStatefulShutdown: %s #%d has already SHUT DOWN.\n",
-                          hlp->id_name, srv->index + 1);
+            debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index + 1 << " has already SHUT DOWN.");
             continue;
         }
 
@@ -716,26 +709,22 @@ helperStatefulShutdown(statefulhelper * hlp)
         srv->flags.shutdown = 1;	/* request it to shut itself down */
 
         if (srv->flags.busy) {
-            debug(84, 3) ("helperStatefulShutdown: %s #%d is BUSY.\n",
-                          hlp->id_name, srv->index + 1);
+            debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index + 1 << " is BUSY.");
             continue;
         }
 
         if (srv->flags.closing) {
-            debug(84, 3) ("helperStatefulShutdown: %s #%d is CLOSING.\n",
-                          hlp->id_name, srv->index + 1);
+            debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index + 1 << " is CLOSING.");
             continue;
         }
 
         if (srv->flags.reserved != S_HELPER_FREE) {
-            debug(84, 3) ("helperStatefulShutdown: %s #%d is RESERVED.\n",
-                          hlp->id_name, srv->index + 1);
+            debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index + 1 << " is RESERVED.");
             continue;
         }
 
         if (srv->deferred_requests) {
-            debug(84, 3) ("helperStatefulShutdown: %s #%d has DEFERRED requests.\n",
-                          hlp->id_name, srv->index + 1);
+            debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index + 1 << " has DEFERRED requests.");
             continue;
         }
 
@@ -748,8 +737,8 @@ helperStatefulShutdown(statefulhelper * hlp)
         shutdown(srv->wfd, SD_BOTH);
 #endif
 
-        debug(84, 3) ("helperStatefulShutdown: %s #%d shutting down.\n",
-                      hlp->id_name, srv->index + 1);
+        debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index + 1 << " shutting down.");
+
         /* the rest of the details is dealt with in the helperStatefulServerFree
          * close handler
          */
@@ -759,9 +748,9 @@ helperStatefulShutdown(statefulhelper * hlp)
         if (hIpc) {
             if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
                 getCurrentTime();
-                debug(84, 1) ("helperShutdown: WARNING: %s #%d (%s,%ld) "
-                              "didn't exit in 5 seconds\n",
-                              hlp->id_name, no, hlp->cmdline->key, (long int)pid);
+                debugs(84, 1, "helperShutdown: WARNING: " << hlp->id_name <<
+                       " #" << no << " (" << hlp->cmdline->key << "," <<
+                       (long int)pid << ") didn't exit in 5 seconds");
             }
 
             CloseHandle(hIpc);
@@ -802,8 +791,8 @@ helperFree(helper * hlp)
 
     /* note, don't free hlp->name, it probably points to static memory */
     if (hlp->queue.head)
-        debug(84, 0) ("WARNING: freeing %s helper with %d requests queued\n",
-                      hlp->id_name, hlp->stats.queue_size);
+        debugs(84, 0, "WARNING: freeing " << hlp->id_name << " helper with " <<
+               hlp->stats.queue_size << " requests queued");
 
     cbdataFree(hlp);
 }
@@ -816,8 +805,8 @@ helperStatefulFree(statefulhelper * hlp)
 
     /* note, don't free hlp->name, it probably points to static memory */
     if (hlp->queue.head)
-        debug(84, 0) ("WARNING: freeing %s helper with %d requests queued\n",
-                      hlp->id_name, hlp->stats.queue_size);
+        debugs(84, 0, "WARNING: freeing " << hlp->id_name << " helper with " <<
+               hlp->stats.queue_size << " requests queued");
 
     cbdataFree(hlp);
 }
@@ -881,16 +870,16 @@ helperServerFree(int fd, void *data)
     if (!srv->flags.shutdown) {
         hlp->n_active--;
         assert(hlp->n_active >= 0);
-        debug(84, 0) ("WARNING: %s #%d (FD %d) exited\n",
-                      hlp->id_name, srv->index + 1, fd);
+        debugs(84, 0, "WARNING: " << hlp->id_name << " #" << srv->index + 1 <<
+               " (FD " << fd << ") exited");
 
         if (hlp->n_active < hlp->n_to_start / 2) {
-            debug(80, 0) ("Too few %s processes are running\n", hlp->id_name);
+            debugs(80, 0, "Too few " << hlp->id_name << " processes are running");
 
             if (hlp->last_restart > squid_curtime - 30)
                 fatalf("The %s helpers are crashing too rapidly, need help!\n", hlp->id_name);
 
-            debug(80, 0) ("Starting new helpers\n");
+            debugs(80, 0, "Starting new helpers");
 
             helperOpenServers(hlp);
         }
@@ -944,16 +933,15 @@ helperStatefulServerFree(int fd, void *data)
     if (!srv->flags.shutdown) {
         hlp->n_active--;
         assert( hlp->n_active >= 0);
-        debug(84, 0) ("WARNING: %s #%d (FD %d) exited\n",
-                      hlp->id_name, srv->index + 1, fd);
+        debugs(84, 0, "WARNING: " << hlp->id_name << " #" << srv->index + 1 << " (FD " << fd << ") exited");
 
         if (hlp->n_active <= hlp->n_to_start / 2) {
-            debug(80, 0) ("Too few %s processes are running\n", hlp->id_name);
+            debugs(80, 0, "Too few " << hlp->id_name << " processes are running");
 
             if (hlp->last_restart > squid_curtime - 30)
                 fatalf("The %s helpers are crashing too rapidly, need help!\n", hlp->id_name);
 
-            debug(80, 0) ("Starting new helpers\n");
+            debugs(80, 0, "Starting new helpers");
 
             helperStatefulOpenServers(hlp);
         }
@@ -983,12 +971,11 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
         return;
     }
 
-    debug(84, 5) ("helperHandleRead: %d bytes from %s #%d.\n",
-                  (int)len, hlp->id_name, srv->index + 1);
+    debugs(84, 5, "helperHandleRead: " << (int)len << " bytes from " << hlp->id_name << " #" << srv->index + 1 << ".");
 
     if (flag != COMM_OK || len <= 0) {
         if (len < 0)
-            debug(84, 1) ("helperHandleRead: FD %d read: %s\n", fd, xstrerror());
+            debugs(84, 1, "helperHandleRead: FD " << fd << " read: " << xstrerror());
 
         comm_close(fd);
 
@@ -997,12 +984,14 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
 
     srv->roffset += len;
     srv->rbuf[srv->roffset] = '\0';
-    debug(84, 9) ("helperHandleRead: '%s'\n", srv->rbuf);
+    debugs(84, 9, "helperHandleRead: '" << srv->rbuf << "'");
 
     if (!srv->stats.pending) {
         /* someone spoke without being spoken to */
-        debug(84, 1) ("helperHandleRead: unexpected read from %s #%d, %d bytes '%s'\n",
-                      hlp->id_name, srv->index + 1, (int)len, srv->rbuf);
+        debugs(84, 1, "helperHandleRead: unexpected read from " <<
+               hlp->id_name << " #" << srv->index + 1 << ", " << (int)len <<
+               " bytes '" << srv->rbuf << "'");
+
         srv->roffset = 0;
         srv->rbuf[0] = '\0';
     }
@@ -1012,7 +1001,7 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
         helper_request *r;
         char *msg = srv->rbuf;
         int i = 0;
-        debug(84, 3) ("helperHandleRead: end of reply found\n");
+        debugs(84, 3, "helperHandleRead: end of reply found");
 
         if (t > srv->rbuf && t[-1] == '\r')
             t[-1] = '\0';
@@ -1054,8 +1043,10 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
 
             helperRequestFree(r);
         } else {
-            debug(84, 1) ("helperHandleRead: unexpected reply on channel %d from %s #%d '%s'\n",
-                          i, hlp->id_name, srv->index + 1, srv->rbuf);
+            debugs(84, 1, "helperHandleRead: unexpected reply on channel " <<
+                   i << " from " << hlp->id_name << " #" << srv->index + 1 <<
+                   " '" << srv->rbuf << "'");
+
         }
 
         srv->roffset -= (t - srv->rbuf);
@@ -1089,12 +1080,13 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
         return;
     }
 
-    debug(84, 5) ("helperStatefulHandleRead: %d bytes from %s #%d.\n",
-                  (int)len, hlp->id_name, srv->index + 1);
+    debugs(84, 5, "helperStatefulHandleRead: " << (int)len << " bytes from " <<
+           hlp->id_name << " #" << srv->index + 1 << ".");
+
 
     if (flag != COMM_OK || len <= 0) {
         if (len < 0)
-            debug(84, 1) ("helperStatefulHandleRead: FD %d read: %s\n", fd, xstrerror());
+            debugs(84, 1, "helperStatefulHandleRead: FD " << fd << " read: " << xstrerror());
 
         comm_close(fd);
 
@@ -1107,14 +1099,16 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
 
     if (r == NULL) {
         /* someone spoke without being spoken to */
-        debug(84, 1) ("helperStatefulHandleRead: unexpected read from %s #%d, %d bytes '%s'\n",
-                      hlp->id_name, srv->index + 1, (int)len, srv->rbuf);
+        debugs(84, 1, "helperStatefulHandleRead: unexpected read from " <<
+               hlp->id_name << " #" << srv->index + 1 << ", " << (int)len <<
+               " bytes '" << srv->rbuf << "'");
+
         srv->roffset = 0;
     }
 
     if ((t = strchr(srv->rbuf, '\n'))) {
         /* end of reply found */
-        debug(84, 3) ("helperStatefulHandleRead: end of reply found\n");
+        debugs(84, 3, "helperStatefulHandleRead: end of reply found");
 
         if (t > srv->rbuf && t[-1] == '\r')
             t[-1] = '\0';
@@ -1136,10 +1130,12 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
                     if ((srv->parent->OnEmptyQueue != NULL) && (srv->data))
                         srv->parent->OnEmptyQueue(srv->data);
 
-                    debug(84, 5) ("StatefulHandleRead: releasing %s #%d\n", hlp->id_name, srv->index + 1);
+                    debugs(84, 5, "StatefulHandleRead: releasing " << hlp->id_name << " #" << srv->index + 1);
                 } else {
                     srv->flags.reserved = S_HELPER_DEFERRED;
-                    debug(84, 5) ("StatefulHandleRead: outstanding deferred requests on %s #%d. reserving for deferred requests.\n", hlp->id_name, srv->index + 1);
+                    debugs(84, 5, "StatefulHandleRead: outstanding deferred requests on " <<
+                           hlp->id_name << " #" << srv->index + 1 <<
+                           ". reserving for deferred requests.");
                 }
 
                 break;
@@ -1149,7 +1145,7 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
                 if (!srv->queue.head) {
                     assert(srv->deferred_requests == 0);
                     srv->flags.reserved = S_HELPER_RESERVED;
-                    debug(84, 5) ("StatefulHandleRead: reserving %s #%d\n", hlp->id_name, srv->index + 1);
+                    debugs(84, 5, "StatefulHandleRead: reserving " << hlp->id_name << " #" << srv->index + 1);
                 } else {
                     fatal("StatefulHandleRead: Callback routine attempted to reserve a stateful helper with deferred requests. This can lead to deadlock.\n");
                 }
@@ -1163,7 +1159,7 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
                 srv->flags.reserved = S_HELPER_DEFERRED;
                 srv->deferred_requests++;
                 srv->stats.deferbycb++;
-                debug(84, 5) ("StatefulHandleRead: reserving %s #%d for deferred requests.\n", hlp->id_name, srv->index + 1);
+                debugs(84, 5, "StatefulHandleRead: reserving " << hlp->id_name << " #" << srv->index + 1 << " for deferred requests.");
                 break;
 
             default:
@@ -1171,7 +1167,7 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
             }
 
         } else {
-            debug(84, 1) ("StatefulHandleRead: no callback data registered\n");
+            debugs(84, 1, "StatefulHandleRead: no callback data registered");
         }
 
         srv->flags.busy = 0;
@@ -1222,14 +1218,15 @@ Enqueue(helper * hlp, helper_request * r)
 
     hlp->last_queue_warn = squid_curtime;
 
-    debug(84, 0) ("WARNING: All %s processes are busy.\n", hlp->id_name);
+    debugs(84, 0, "WARNING: All " << hlp->id_name << " processes are busy.");
+    debugs(84, 0, "WARNING: " << hlp->stats.queue_size << " pending requests queued");
 
-    debug(84, 0) ("WARNING: %d pending requests queued\n", hlp->stats.queue_size);
 
     if (hlp->stats.queue_size > hlp->n_running * 2)
         fatalf("Too many queued %s requests", hlp->id_name);
 
-    debug(84, 1) ("Consider increasing the number of %s processes in your config file.\n", hlp->id_name);
+    debugs(84, 1, "Consider increasing the number of " << hlp->id_name << " processes in your config file.");
+
 }
 
 static void
@@ -1253,11 +1250,11 @@ StatefulEnqueue(statefulhelper * hlp, helper_stateful_request * r)
 
     hlp->last_queue_warn = squid_curtime;
 
-    debug(84, 0) ("WARNING: All %s processes are busy.\n", hlp->id_name);
+    debugs(84, 0, "WARNING: All " << hlp->id_name << " processes are busy.");
 
-    debug(84, 0) ("WARNING: %d pending requests queued\n", hlp->stats.queue_size);
+    debugs(84, 0, "WARNING: " << hlp->stats.queue_size << " pending requests queued");
+    debugs(84, 1, "Consider increasing the number of " << hlp->id_name << " processes in your config file.");
 
-    debug(84, 1) ("Consider increasing the number of %s processes in your config file.\n", hlp->id_name);
 }
 
 static void
@@ -1277,11 +1274,11 @@ StatefulServerEnqueue(helper_stateful_server * srv, helper_stateful_request * r)
      * if (shutting_down || reconfiguring)
      * return;
      * hlp->last_queue_warn = squid_curtime;
-     * debug(84, 0) ("WARNING: All %s processes are busy.\n", hlp->id_name);
-     * debug(84, 0) ("WARNING: %d pending requests queued\n", hlp->stats.queue_size);
+     * debugs(84, 0, "WARNING: All " << hlp->id_name << " processes are busy.");
+     * debugs(84, 0, "WARNING: " << hlp->stats.queue_size << " pending requests queued");
      * if (hlp->stats.queue_size > hlp->n_running * 2)
      * fatalf("Too many queued %s requests", hlp->id_name);
-     * debug(84, 1) ("Consider increasing the number of %s processes in your config file.\n", hlp->id_name);  */
+     * debugs(84, 1, "Consider increasing the number of " << hlp->id_name << " processes in your config file." );  */
 }
 
 
@@ -1378,7 +1375,7 @@ StatefulGetFirstAvailable(statefulhelper * hlp)
 {
     dlink_node *n;
     helper_stateful_server *srv = NULL;
-    debug(84, 5) ("StatefulGetFirstAvailable: Running servers %d.\n", hlp->n_running);
+    debugs(84, 5, "StatefulGetFirstAvailable: Running servers " << hlp->n_running << ".");
 
     if (hlp->n_running == 0)
         return NULL;
@@ -1401,7 +1398,7 @@ StatefulGetFirstAvailable(statefulhelper * hlp)
         return srv;
     }
 
-    debug(84, 5) ("StatefulGetFirstAvailable: None available.\n");
+    debugs(84, 5, "StatefulGetFirstAvailable: None available.");
     return NULL;
 }
 
@@ -1418,8 +1415,7 @@ helperDispatchWriteDone(int fd, char *buf, size_t len, comm_err_t flag, int xerr
 
     if (flag != COMM_OK) {
         /* Helper server has crashed */
-        debug(84, 0) ("helperDispatch: Helper %s #%d has crashed\n",
-                      srv->parent->id_name, srv->index + 1);
+        debugs(84, 0, "helperDispatch: Helper " << srv->parent->id_name << " #" << srv->index + 1 << " has crashed");
         return;
     }
 
@@ -1443,7 +1439,7 @@ helperDispatch(helper_server * srv, helper_request * r)
     unsigned int slot;
 
     if (!cbdataReferenceValid(r->data)) {
-        debug(84, 1) ("helperDispatch: invalid callback data\n");
+        debugs(84, 1, "helperDispatch: invalid callback data");
         helperRequestFree(r);
         return;
     }
@@ -1480,8 +1476,8 @@ helperDispatch(helper_server * srv, helper_request * r)
                    srv, NULL);			/* Handler-data, free func */
     }
 
-    debug(84, 5) ("helperDispatch: Request sent to %s #%d, %d bytes\n",
-                  hlp->id_name, srv->index + 1, (int) strlen(r->buf));
+    debugs(84, 5, "helperDispatch: Request sent to " << hlp->id_name << " #" << srv->index + 1 << ", " << (int) strlen(r->buf) << " bytes");
+
     srv->stats.uses++;
     hlp->stats.requests++;
 }
@@ -1500,12 +1496,12 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
     statefulhelper *hlp = srv->parent;
 
     if (!cbdataReferenceValid(r->data)) {
-        debug(84, 1) ("helperStatefulDispatch: invalid callback data\n");
+        debugs(84, 1, "helperStatefulDispatch: invalid callback data");
         helperStatefulRequestFree(r);
         return;
     }
 
-    debug(84, 9) ("helperStatefulDispatch busying helper %s #%d\n", hlp->id_name, srv->index + 1);
+    debugs(84, 9, "helperStatefulDispatch busying helper " << hlp->id_name << " #" << srv->index + 1);
 
     if (r->placeholder == 1) {
         /* a callback is needed before this request can _use_ a helper. */
@@ -1543,8 +1539,10 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
                strlen(r->buf),
                helperStatefulDispatchWriteDone,	/* Handler */
                hlp, NULL);				/* Handler-data, free func */
-    debug(84, 5) ("helperStatefulDispatch: Request sent to %s #%d, %d bytes\n",
-                  hlp->id_name, srv->index + 1, (int) strlen(r->buf));
+    debugs(84, 5, "helperStatefulDispatch: Request sent to " <<
+           hlp->id_name << " #" << srv->index + 1 << ", " <<
+           (int) strlen(r->buf) << " bytes");
+
     srv->stats.uses++;
     hlp->stats.requests++;
 }

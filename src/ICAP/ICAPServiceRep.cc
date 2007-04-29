@@ -84,15 +84,15 @@ ICAPServiceRep::configure(Pointer &aSelf)
     ConfigParser::ParseBool(&bypass);
     ConfigParser::ParseString(&uri);
 
-    debug(3, 5) ("ICAPService::parseConfigLine (line %d): %s %s %d\n", config_lineno, key.buf(), service_type, bypass);
+    debugs(3, 5, "ICAPService::parseConfigLine (line " << config_lineno << "): " << key.buf() << " " << service_type << " " << bypass);
 
     method = parseMethod(service_type);
     point = parseVectPoint(service_type);
 
-    debug(3, 5) ("ICAPService::parseConfigLine (line %d): service is %s_%s\n", config_lineno, methodStr(), vectPointStr());
+    debugs(3, 5, "ICAPService::parseConfigLine (line " << config_lineno << "): service is " << methodStr() << "_" << vectPointStr());
 
     if (uri.cmp("icap://", 7) != 0) {
-        debug(3, 0) ("ICAPService::parseConfigLine (line %d): wrong uri: %s\n", config_lineno, uri.buf());
+        debugs(3, 0, "ICAPService::parseConfigLine (line " << config_lineno << "): wrong uri: " << uri.buf());
         return false;
     }
 
@@ -147,7 +147,7 @@ ICAPServiceRep::configure(Pointer &aSelf)
     len = e - s;
 
     if (len > 1024) {
-        debug(3, 0) ("icap_service_process (line %d): long resource name (>1024), probably wrong\n", config_lineno);
+        debugs(3, 0, "icap_service_process (line " << config_lineno << "): long resource name (>1024), probably wrong");
     }
 
     resource.limitInit(s, len + 1);

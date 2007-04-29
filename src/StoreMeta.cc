@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMeta.cc,v 1.3 2003/08/04 22:14:41 robertc Exp $
+ * $Id: StoreMeta.cc,v 1.4 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -48,7 +48,7 @@ StoreMeta::validType(char type)
     /* VOID is reserved, and new types have to be added as classes */
 
     if (type <= STORE_META_VOID || type >= STORE_META_END) {
-        debug(20, 0) ("storeSwapMetaUnpack: bad type (%d)!\n", type);
+        debugs(20, 0, "storeSwapMetaUnpack: bad type (" << type << ")!");
         return false;
     }
 
@@ -57,7 +57,7 @@ StoreMeta::validType(char type)
             type == STORE_META_KEY_SHA ||
             type == STORE_META_HITMETERING ||
             type == STORE_META_VALID) {
-        debug (20,0)("Obsolete and unused type (%d) in disk metadata\n", type);
+        debugs(20, 0, "Obsolete and unused type (" << type << ") in disk metadata");
         return false;
     }
 
@@ -97,7 +97,7 @@ bool
 StoreMeta::validLength(int length) const
 {
     if (!IntRange (MinimumTLVLength, MaximumTLVLength).includes(length)) {
-        debug(20, 0) ("storeSwapMetaUnpack: insane length (%d)!\n", length);
+        debugs(20, 0, "storeSwapMetaUnpack: insane length (" << length << ")!");
         return false;
     }
 
@@ -132,7 +132,7 @@ StoreMeta::Factory (char type, size_t len, void const *value)
         break;
 
     default:
-        debug (20,0)("Attempt to create unknown concrete StoreMeta\n");
+        debugs(20, 0, "Attempt to create unknown concrete StoreMeta");
         return NULL;
     }
 
@@ -184,7 +184,7 @@ StoreMeta::checkConsistency(StoreEntry *e) const
         break;
 
     default:
-        debug(20, 1) ("WARNING: got unused STORE_META type %d\n", getType());
+        debugs(20, 1, "WARNING: got unused STORE_META type " << getType());
         break;
     }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ConfigParser.cc,v 1.2 2006/04/25 12:00:29 robertc Exp $
+ * $Id: ConfigParser.cc,v 1.3 2007/04/28 22:26:37 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -70,7 +70,7 @@ strtok_again:
             *t = '\0';
 
             if ((wordFile = fopen(fn, "r")) == NULL) {
-                debug(28, 0) ("strtokFile: %s not found\n", fn);
+                debugs(28, 0, "strtokFile: " << fn << " not found");
                 return (NULL);
             }
 

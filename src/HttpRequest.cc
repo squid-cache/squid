@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.72 2007/04/16 17:43:27 rousskov Exp $
+ * $Id: HttpRequest.cc,v 1.73 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -155,7 +155,7 @@ HttpRequest::sanityCheckStartLine(MemBuf *buf, http_status *error)
      */
 
     if (METHOD_NONE == HttpRequestMethod(buf->content())) {
-        debug(73, 3)("HttpRequest::sanityCheckStartLine: did not find HTTP request method\n");
+        debugs(73, 3, "HttpRequest::sanityCheckStartLine: did not find HTTP request method");
         return false;
     }
 
@@ -184,7 +184,7 @@ HttpRequest::parseFirstLine(const char *start, const char *end)
         end++;                 // back to space
 
         if (2 != sscanf(ver + 5, "%d.%d", &http_ver.major, &http_ver.minor)) {
-            debug(73, 1) ("parseRequestLine: Invalid HTTP identifier.\n");
+            debugs(73, 1, "parseRequestLine: Invalid HTTP identifier.");
             return false;
         }
     } else {
@@ -305,14 +305,14 @@ request_flags::resetTCP() const
 void
 request_flags::setResetTCP()
 {
-    debug (73, 9) ("request_flags::setResetTCP\n");
+    debugs(73, 9, "request_flags::setResetTCP");
     reset_tcp = 1;
 }
 
 void
 request_flags::clearResetTCP()
 {
-    debug(73, 9) ("request_flags::clearResetTCP\n");
+    debugs(73, 9, "request_flags::clearResetTCP");
     reset_tcp = 0;
 }
 

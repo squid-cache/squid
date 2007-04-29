@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIContext.cc,v 1.2 2003/07/14 14:15:56 robertc Exp $
+ * $Id: ESIContext.cc,v 1.3 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -45,12 +45,18 @@ ESIContext::updateCachedAST()
     assert (http->storeEntry());
 
     if (hasCachedAST()) {
-        debug (86,5)("ESIContext::updateCachedAST: not updating AST cache for entry %p from ESI Context %p as there is already a cached AST.\n", http->storeEntry(), this);
+        debugs(86, 5, "ESIContext::updateCachedAST: not updating AST cache for entry " <<
+               http->storeEntry() << " from ESI Context " << this <<
+               " as there is already a cached AST.");
+
         return;
     }
 
     ESIElement::Pointer treeToCache = tree->makeCacheable();
-    debug (86,5)("ESIContext::updateCachedAST: Updating AST cache for entry %p with current value %p to new value %p\n", http->storeEntry(), http->storeEntry()->cachedESITree.getRaw(), treeToCache.getRaw());
+    debugs(86, 5, "ESIContext::updateCachedAST: Updating AST cache for entry " <<
+           http->storeEntry() << " with current value " <<
+           http->storeEntry()->cachedESITree.getRaw() << " to new value " <<
+           treeToCache.getRaw());
 
     if (http->storeEntry()->cachedESITree.getRaw())
         http->storeEntry()->cachedESITree->finish();
@@ -67,10 +73,12 @@ ESIContext::hasCachedAST() const
     assert (http->storeEntry());
 
     if (http->storeEntry()->cachedESITree.getRaw()) {
-        debug (86,5)("ESIContext::hasCachedAST: %p - Cached AST present in store entry %p.\n", this, http->storeEntry());
+        debugs(86, 5, "ESIContext::hasCachedAST: " << this <<
+               " - Cached AST present in store entry " << http->storeEntry() << ".");
         return true;
     } else {
-        debug (86,5)("ESIContext::hasCachedAST: %p - Cached AST not present in store entry %p.\n", this, http->storeEntry());
+        debugs(86, 5, "ESIContext::hasCachedAST: " << this <<
+               " - Cached AST not present in store entry " << http->storeEntry() << ".");
         return false;
     }
 }

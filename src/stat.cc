@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.404 2007/04/21 07:14:15 wessels Exp $
+ * $Id: stat.cc,v 1.405 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -840,8 +840,7 @@ statAvgDump(StoreEntry * sentry, int minutes, int hours)
 
         l = &CountHourHist[hours];
     } else {
-        debug(18, 1) ("statAvgDump: Invalid args, minutes=%d, hours=%d\n",
-                      minutes, hours);
+        debugs(18, 1, "statAvgDump: Invalid args, minutes=" << minutes << ", hours=" << hours);
         return;
     }
 
@@ -1020,7 +1019,7 @@ void
 statInit(void)
 {
     int i;
-    debug(18, 5) ("statInit: Initializing...\n");
+    debugs(18, 5, "statInit: Initializing...");
 
     for (i = 0; i < N_COUNT_HIST; i++)
         statCountersInit(&CountHist[i]);
@@ -1147,7 +1146,7 @@ statAvgTick(void *notused)
         int i = (int) statPctileSvc(0.5, 20, PCTILE_HTTP);
 
         if (Config.warnings.high_rptm < i)
-            debug(18, 0) ("WARNING: Median response time is %d milliseconds\n", i);
+            debugs(18, 0, "WARNING: Median response time is " << i << " milliseconds");
     }
 
     if (Config.warnings.high_pf) {
@@ -1158,7 +1157,7 @@ statAvgTick(void *notused)
             i /= (int) dt;
 
             if (Config.warnings.high_pf < i)
-                debug(18, 0) ("WARNING: Page faults occuring at %d/sec\n", i);
+                debugs(18, 0, "WARNING: Page faults occuring at " << i << "/sec");
         }
     }
 
@@ -1178,7 +1177,7 @@ statAvgTick(void *notused)
 #endif
 
         if (Config.warnings.high_memory < i)
-            debug(18, 0) ("WARNING: Memory usage at %lu MB\n", (unsigned long int)(i >> 20));
+            debugs(18, 0, "WARNING: Memory usage at " << ((unsigned long int)(i >> 20)) << " MB");
     }
 }
 
@@ -1547,7 +1546,7 @@ statPctileSvc(double pctile, int interval, int which)
         break;
 
     default:
-        debug(49, 5) ("statPctileSvc: unknown type.\n");
+        debugs(49, 5, "statPctileSvc: unknown type.");
         x = 0;
     }
 

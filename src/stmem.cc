@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.89 2005/09/14 18:23:21 wessels Exp $
+ * $Id: stmem.cc,v 1.90 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Harvest Derived
@@ -91,7 +91,7 @@ bool
 mem_hdr::unlink(mem_node *aNode)
 {
     if (aNode->write_pending) {
-        debug(0,0)("cannot unlink mem_node %p while write_pending\n", aNode);
+        debugs(0, 0, "cannot unlink mem_node " << aNode << " while write_pending");
         return false;
     }
 

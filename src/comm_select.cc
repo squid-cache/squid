@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.77 2006/09/02 10:39:53 adrian Exp $
+ * $Id: comm_select.cc,v 1.78 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -138,7 +138,7 @@ commSetSelect(int fd, unsigned int type, PF * handler, void *client_data,
     fde *F = &fd_table[fd];
     assert(fd >= 0);
     assert(F->flags.open);
-    debug(5, 5) ("commSetSelect: FD %d type %d\n", fd, type);
+    debugs(5, 5, "commSetSelect: FD " << fd << " type " << type);
 
     if (type & COMM_SELECT_READ) {
         F->read_handler = handler;
@@ -271,8 +271,7 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
                 commUpdateReadBits(fd, NULL);
                 hdl(fd, fd_table[fd].read_data);
             } else {
-                debug(5, 1) ("comm_select_incoming: FD %d NULL read handler\n",
-                             fd);
+                debugs(5, 1, "comm_select_incoming: FD " << fd << " NULL read handler");
             }
         }
 
@@ -282,8 +281,7 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
                 commUpdateWriteBits(fd, NULL);
                 hdl(fd, fd_table[fd].write_data);
             } else {
-                debug(5, 1) ("comm_select_incoming: FD %d NULL write handler\n",
-                             fd);
+                debugs(5, 1, "comm_select_incoming: FD " << fd << " NULL write handler");
             }
         }
     }
@@ -488,8 +486,7 @@ comm_select(int msec)
             if (ignoreErrno(errno))
                 break;
 
-            debug(5, 0) ("comm_select: select failure: %s\n",
-                         xstrerror());
+            debugs(5, 0, "comm_select: select failure: " << xstrerror());
 
             examine_select(&readfds, &writefds);
 
@@ -503,8 +500,7 @@ comm_select(int msec)
 
         getCurrentTime();
 
-        debug(5, num ? 5 : 8) ("comm_select: %d+%d FDs ready\n",
-                               num, pending);
+        debugs(5, num ? 5 : 8, "comm_select: " << num << "+" << pending << " FDs ready");
 
         statHistCount(&statCounter.select_fds_hist, num);
 
@@ -536,7 +532,7 @@ comm_select(int msec)
 
 #if DEBUG_FDBITS
 
-                debug(5, 9) ("FD %d bit set for reading\n", fd);
+                debugs(5, 9, "FD " << fd << " bit set for reading");
 
                 assert(FD_ISSET(fd, &readfds));
 
@@ -558,7 +554,7 @@ comm_select(int msec)
                 }
 
                 F = &fd_table[fd];
-                debug(5, 6) ("comm_select: FD %d ready for reading\n", fd);
+                debugs(5, 6, "comm_select: FD " << fd << " ready for reading");
 
                 if (NULL == (hdl = F->read_handler))
                     (void) 0;
@@ -608,7 +604,7 @@ comm_select(int msec)
 
 #if DEBUG_FDBITS
 
-                debug(5, 9) ("FD %d bit set for writing\n", fd);
+                debugs(5, 9, "FD " << fd << " bit set for writing");
 
                 assert(FD_ISSET(fd, &writefds));
 
@@ -630,7 +626,7 @@ comm_select(int msec)
                 }
 
                 F = &fd_table[fd];
-                debug(5, 5) ("comm_select: FD %d ready for writing\n", fd);
+                debugs(5, 5, "comm_select: FD " << fd << " ready for writing");
 
                 if ((hdl = F->write_handler)) {
                     F->write_handler = NULL;
@@ -663,7 +659,7 @@ comm_select(int msec)
 
         while ((fd = commGetSlowFd()) != -1) {
             F = &fd_table[fd];
-            debug(5, 6) ("comm_select: slow FD %d selected for reading\n", fd);
+            debugs(5, 6, "comm_select: slow FD " << fd << " selected for reading");
 
             if ((hdl = F->read_handler)) {
                 F->read_handler = NULL;
@@ -691,7 +687,7 @@ comm_select(int msec)
     } while (timeout > current_dtime)
 
         ;
-    debug(5, 8) ("comm_select: time out: %d\n", (int) squid_curtime);
+    debugs(5, 8, "comm_select: time out: " << (int) squid_curtime);
 
     return COMM_TIMEOUT;
 }
@@ -768,7 +764,7 @@ examine_select(fd_set * readfds, fd_set * writefds)
     fde *F = NULL;
 
     struct stat sb;
-    debug(5, 0) ("examine_select: Examining open file descriptors...\n");
+    debugs(5, 0, "examine_select: Examining open file descriptors...");
 
     for (fd = 0; fd < Squid_MaxFD; fd++) {
         FD_ZERO(&read_x);
@@ -787,29 +783,23 @@ examine_select(fd_set * readfds, fd_set * writefds)
         errno = 0;
 
         if (!fstat(fd, &sb)) {
-            debug(5, 5) ("FD %d is valid.\n", fd);
+            debugs(5, 5, "FD " << fd << " is valid.");
             continue;
         }
 
         F = &fd_table[fd];
-        debug(5, 0) ("FD %d: %s\n", fd, xstrerror());
-        debug(5, 0) ("WARNING: FD %d has handlers, but it's invalid.\n", fd);
-        debug(5, 0) ("FD %d is a %s called '%s'\n",
-                     fd,
-                     fdTypeStr[F->type],
-                     F->desc);
-        debug(5, 0) ("tmout:%p read:%p write:%p\n",
-                     F->timeout_handler,
-                     F->read_handler,
-                     F->write_handler);
+        debugs(5, 0, "FD " << fd << ": " << xstrerror());
+        debugs(5, 0, "WARNING: FD " << fd << " has handlers, but it's invalid.");
+        debugs(5, 0, "FD " << fd << " is a " << fdTypeStr[F->type] << " called '" << F->desc << "'");
+        debugs(5, 0, "tmout:" << F->timeout_handler << " read:" << F->read_handler << " write:" << F->write_handler);
 
         for (ch = F->closeHandler; ch; ch = ch->next)
-            debug(5, 0) (" close handler: %p\n", ch->handler);
+            debugs(5, 0, " close handler: " << ch->handler);
 
         if (F->closeHandler) {
             commCallCloseHandlers(fd);
         } else if (F->timeout_handler) {
-            debug(5, 0) ("examine_select: Calling Timeout Handler\n");
+            debugs(5, 0, "examine_select: Calling Timeout Handler");
             F->timeout_handler(fd, F->timeout_data);
         }
 

@@ -1,5 +1,5 @@
 /*
- * $Id: ACLHTTPHeaderData.cc,v 1.2 2006/08/05 12:05:35 robertc Exp $
+ * $Id: ACLHTTPHeaderData.cc,v 1.3 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -63,7 +63,7 @@ ACLHTTPHeaderData::match(HttpHeader* hdr)
     if (hdr == NULL)
         return false;
 
-    debug(28, 3) ("aclHeaderData::match: checking '%s'\n", hdrName.buf());
+    debugs(28, 3, "aclHeaderData::match: checking '" << hdrName.buf() << "'");
 
     String value = hdrId != HDR_BAD_HDR ? hdr->getStrOrList(hdrId) : hdr->getByName(hdrName.buf());
 

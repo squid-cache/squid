@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.82 2007/04/20 23:53:41 wessels Exp $
+ * $Id: client_side_request.cc,v 1.83 2007/04/28 22:26:37 hno Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -223,10 +223,11 @@ checkFailureRatio(err_type etype, hier_code hcode)
     if (request_failure_ratio < 1.0)
         return;
 
-    debug(33, 0) ("Failure Ratio at %4.2f\n", request_failure_ratio);
+    debugs(33, 0, "Failure Ratio at "<< std::setw(4)<<
+           std::setprecision(3) << request_failure_ratio);
 
-    debug(33, 0) ("Going into hit-only-mode for %d minutes...\n",
-                  FAILURE_MODE_TIME / 60);
+    debugs(33, 0, "Going into hit-only-mode for " <<
+           FAILURE_MODE_TIME / 60 << " minutes...");
 
     hit_only_mode_until = squid_curtime + FAILURE_MODE_TIME;
 
@@ -235,7 +236,7 @@ checkFailureRatio(err_type etype, hier_code hcode)
 
 ClientHttpRequest::~ClientHttpRequest()
 {
-    debug(33, 3) ("httpRequestFree: %s\n", uri);
+    debugs(33, 3, "httpRequestFree: " << uri);
     PROF_start(httpRequestFree);
 
     // Even though freeResources() below may destroy the request,
@@ -309,7 +310,7 @@ clientBeginRequest(method_t method, char const *url, CSCB * streamcallback,
     strcpy(http->uri, url);
 
     if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, method)) == NULL) {
-        debug(85, 5) ("Invalid URL: %s\n", http->uri);
+        debugs(85, 5, "Invalid URL: " << http->uri);
         return -1;
     }
 
@@ -408,10 +409,12 @@ ClientRequestContext::clientAccessCheckDone(int answer)
     acl_checklist = NULL;
     err_type page_id;
     http_status status;
-    debug(85, 2) ("The request %s %s is %s, because it matched '%s'\n",
-                  RequestMethodStr[http->request->method], http->uri,
-                  answer == ACCESS_ALLOWED ? "ALLOWED" : "DENIED",
-                  AclMatchedName ? AclMatchedName : "NO ACL's");
+    debugs(85, 2, "The request " << 
+                 RequestMethodStr[http->request->method] << " " <<  
+                 http->uri << " is " << 
+                 (answer == ACCESS_ALLOWED ? "ALLOWED" : "DENIED") << 
+                 ", because it matched '" << 
+                 (AclMatchedName ? AclMatchedName : "NO ACL's") << "'" );
     char const *proxy_auth_msg = "<null>";
 
     if (http->getConn() != NULL && http->getConn()->auth_user_request != NULL)
@@ -422,13 +425,11 @@ ClientRequestContext::clientAccessCheckDone(int answer)
     if (answer != ACCESS_ALLOWED) {
         /* Send an error */
         int require_auth = (answer == ACCESS_REQ_PROXY_AUTH || aclIsProxyAuth(AclMatchedName));
-        debug(85, 5) ("Access Denied: %s\n", http->uri);
-        debug(85, 5) ("AclMatchedName = %s\n",
-                      AclMatchedName ? AclMatchedName : "<null>");
+        debugs(85, 5, "Access Denied: " << http->uri);
+        debugs(85, 5, "AclMatchedName = " << (AclMatchedName ? AclMatchedName : "<null>"));
 
         if (require_auth)
-            debug(33, 5) ("Proxy Auth Message = %s\n",
-                          proxy_auth_msg ? proxy_auth_msg : "<null>");
+            debugs(33, 5, "Proxy Auth Message = " << (proxy_auth_msg ? proxy_auth_msg : "<null>"));
 
         /*
          * NOTE: get page_id here, based on AclMatchedName because if
@@ -545,7 +546,7 @@ clientRedirectAccessCheckDone(int answer, void *data)
 void
 ClientRequestContext::clientRedirectStart()
 {
-    debug(33, 5) ("clientRedirectStart: '%s'\n", http->uri);
+    debugs(33, 5, "clientRedirectStart: '" << http->uri << "'");
 
     if (Config.accessList.redirector) {
         acl_checklist = clientAclChecklistCreate(Config.accessList.redirector, http);
@@ -763,14 +764,13 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     if (clientHierarchical(http))
         request->flags.hierarchical = 1;
 
-    debug(85, 5) ("clientInterpretRequestHeaders: REQ_NOCACHE = %s\n",
-                  request->flags.nocache ? "SET" : "NOT SET");
+    debugs(85, 5, "clientInterpretRequestHeaders: REQ_NOCACHE = " <<
+           (request->flags.nocache ? "SET" : "NOT SET"));
+    debugs(85, 5, "clientInterpretRequestHeaders: REQ_CACHABLE = " <<
+           (request->flags.cachable ? "SET" : "NOT SET"));
+    debugs(85, 5, "clientInterpretRequestHeaders: REQ_HIERARCHICAL = " <<
+           (request->flags.hierarchical ? "SET" : "NOT SET"));
 
-    debug(85, 5) ("clientInterpretRequestHeaders: REQ_CACHABLE = %s\n",
-                  request->flags.cachable ? "SET" : "NOT SET");
-
-    debug(85, 5) ("clientInterpretRequestHeaders: REQ_HIERARCHICAL = %s\n",
-                  request->flags.hierarchical ? "SET" : "NOT SET");
 }
 
 void
@@ -789,8 +789,7 @@ ClientRequestContext::clientRedirectDone(char *result)
 {
     HttpRequest *new_request = NULL;
     HttpRequest *old_request = http->request;
-    debug(85, 5) ("clientRedirectDone: '%s' result=%s\n", http->uri,
-                  result ? result : "NULL");
+    debugs(85, 5, "clientRedirectDone: '" << http->uri << "' result=" << (result ? result : "NULL"));
     assert(redirect_state == REDIRECT_PENDING);
     redirect_state = REDIRECT_DONE;
 
@@ -807,7 +806,7 @@ ClientRequestContext::clientRedirectDone(char *result)
                 http->redirect.status = status;
                 http->redirect.location = xstrdup(t + 1);
             } else {
-                debug(85, 1) ("clientRedirectDone: bad input: %s\n", result);
+                debugs(85, 1, "clientRedirectDone: bad input: " << result);
             }
         } else if (strcmp(result, http->uri))
             new_request = HttpRequest::CreateFromUrlAndMethod(result, old_request->method);
@@ -891,8 +890,7 @@ ClientRequestContext::checkNoCacheDone(int answer)
 void
 ClientHttpRequest::processRequest()
 {
-    debug(85, 4) ("clientProcessRequest: %s '%s'\n",
-                  RequestMethodStr[request->method], uri);
+    debugs(85, 4, "clientProcessRequest: " << RequestMethodStr[request->method] << " '" << uri << "'");
 
     if (request->method == METHOD_CONNECT && !redirect.status) {
         logType = LOG_TCP_MISS;
@@ -908,8 +906,8 @@ ClientHttpRequest::httpStart()
 {
     PROF_start(httpStart);
     logType = LOG_TAG_NONE;
-    debug(85, 4) ("ClientHttpRequest::httpStart: %s for '%s'\n",
-                  log_tags[logType], uri);
+    debugs(85, 4, "ClientHttpRequest::httpStart: " << log_tags[logType] << " for '" << uri << "'");
+
     /* no one should have touched this */
     assert(out.offset == 0);
     /* Use the Stream Luke */
@@ -1078,11 +1076,11 @@ ClientHttpRequest::startIcap(ICAPServiceRep::Pointer service)
 {
     debugs(85, 3, HERE << this << " ClientHttpRequest::startIcap() called");
     if (!service) {
-        debug(85,3)("ClientHttpRequest::startIcap fails: lack of service\n");
+        debugs(85, 3, "ClientHttpRequest::startIcap fails: lack of service");
         return false;
     }
     if (service->broken()) {
-        debug(85,3)("ClientHttpRequest::startIcap fails: broken service\n");
+        debugs(85, 3, "ClientHttpRequest::startIcap fails: broken service");
         return false;
     }
 
@@ -1213,7 +1211,7 @@ ClientHttpRequest::handleIcapFailure()
     // XXX: we must not try to recover if the ICAP service is not bypassable!
 
     if (!usedStore && !usedPipe) {
-        debug(85,2)("WARNING: ICAP REQMOD callout failed, proceeding with original request\n");
+        debugs(85, 2, "WARNING: ICAP REQMOD callout failed, proceeding with original request");
         if (calloutContext)
             doCallouts();
         return;

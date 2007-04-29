@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.258 2006/08/21 00:50:41 robertc Exp $
+ * $Id: ipcache.cc,v 1.259 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -117,7 +117,7 @@ static int
 ipcache_testname(void)
 {
     wordlist *w = NULL;
-    debug(14, 1) ("Performing DNS Tests...\n");
+    debugs(14, 1, "Performing DNS Tests...");
 
     if ((w = Config.dns_testname_list) == NULL)
         return 1;
@@ -134,7 +134,8 @@ ipcache_testname(void)
 static void
 ipcacheRelease(ipcache_entry * i)
 {
-    debug(14, 3) ("ipcacheRelease: Releasing entry for '%s'\n", (const char *) i->hash.key);
+    debugs(14, 3, "ipcacheRelease: Releasing entry for '" << (const char *) i->hash.key << "'");
+
     hash_remove_link(ip_table, (hash_link *) i);
     dlinkDelete(&i->lru, &lru_list);
     ipcacheFreeEntry(i);
@@ -192,7 +193,7 @@ ipcache_purgelru(void *voidnotused)
         removed++;
     }
 
-    debug(14, 9) ("ipcache_purgelru: removed %d entries\n", removed);
+    debugs(14, 9, "ipcache_purgelru: removed " << removed << " entries");
 }
 
 /* purges entries added from /etc/hosts (or whatever). */
@@ -290,17 +291,18 @@ ipcacheParse(ipcache_entry *i, const char *inbuf)
     i->addrs.count = 0;
 
     if (inbuf == NULL) {
-        debug(14, 1) ("ipcacheParse: Got <NULL> reply\n");
+        debugs(14, 1, "ipcacheParse: Got <NULL> reply");
         i->error_message = xstrdup("Internal Error");
         return -1;
     }
 
     xstrncpy(buf, inbuf, DNS_INBUF_SZ);
-    debug(14, 5) ("ipcacheParse: parsing: {%s}\n", buf);
+    debugs(14, 5, "ipcacheParse: parsing: {" << buf << "}");
     token = strtok(buf, w_space);
 
     if (NULL == token) {
-        debug(14, 1) ("ipcacheParse: expecting result, got '%s'\n", inbuf);
+        debugs(14, 1, "ipcacheParse: expecting result, got '" << inbuf << "'");
+
         i->error_message = xstrdup("Internal Error");
         return -1;
     }
@@ -313,7 +315,8 @@ ipcacheParse(ipcache_entry *i, const char *inbuf)
     }
 
     if (0 != strcmp(token, "$addr")) {
-        debug(14, 1) ("ipcacheParse: expecting '$addr', got '%s' in response to '%s'\n", inbuf, name);
+        debugs(14, 1, "ipcacheParse: expecting '$addr', got '" << inbuf << "' in response to '" << name << "'");
+
         i->error_message = xstrdup("Internal Error");
         return -1;
     }
@@ -321,7 +324,8 @@ ipcacheParse(ipcache_entry *i, const char *inbuf)
     token = strtok(NULL, w_space);
 
     if (NULL == token) {
-        debug(14, 1) ("ipcacheParse: expecting TTL, got '%s' in response to '%s'\n", inbuf, name);
+        debugs(14, 1, "ipcacheParse: expecting TTL, got '" << inbuf << "' in response to '" << name << "'");
+
         i->error_message = xstrdup("Internal Error");
         return -1;
     }
@@ -345,14 +349,14 @@ ipcacheParse(ipcache_entry *i, const char *inbuf)
             if (safe_inet_addr(A[k], &i->addrs.in_addrs[j]))
                 j++;
             else
-                debug(14, 1) ("ipcacheParse: Invalid IP address '%s' in response to '%s'\n", A[k], name);
+                debugs(14, 1, "ipcacheParse: Invalid IP address '" << A[k] << "' in response to '" << name << "'");
         }
 
         i->addrs.count = (unsigned char) j;
     }
 
     if (i->addrs.count <= 0) {
-        debug(14, 1) ("ipcacheParse: No addresses in response to '%s'\n", name);
+        debugs(14, 1, "ipcacheParse: No addresses in response to '" << name << "'");
         return -1;
     }
 
@@ -386,14 +390,13 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
     i->addrs.count = 0;
 
     if (nr < 0) {
-        debug(14, 3) ("ipcacheParse: Lookup failed '%s' for '%s'\n",
-                      error_message, (const char *)i->hash.key);
+        debugs(14, 3, "ipcacheParse: Lookup failed '" << error_message << "' for '" << (const char *)i->hash.key << "'");
         i->error_message = xstrdup(error_message);
         return -1;
     }
 
     if (nr == 0) {
-        debug(14, 3) ("ipcacheParse: No DNS records in response to '%s'\n", name);
+        debugs(14, 3, "ipcacheParse: No DNS records in response to '" << name << "'");
         i->error_message = xstrdup("No DNS records");
         return 0;
     }
@@ -408,7 +411,7 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
             continue;
 
         if (answers[k].rdlength != 4) {
-            debug(14, 1)("ipcacheParse: Invalid IP address in response to '%s'\n", name);
+            debugs(14, 1, "ipcacheParse: Invalid IP address in response to '" << name << "'");
             continue;
         }
 
@@ -416,7 +419,7 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
     }
 
     if (na == 0) {
-        debug(14, 1) ("ipcacheParse: No Address records in response to '%s'\n", name);
+        debugs(14, 1, "ipcacheParse: No Address records in response to '" << name << "'");
         i->error_message = xstrdup("No Address records");
         return 0;
     }
@@ -434,9 +437,8 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
 
             xmemcpy(&i->addrs.in_addrs[j++], answers[k].rdata, 4);
 
-            debug(14, 3) ("ipcacheParse: #%d %s\n",
-                          j - 1,
-                          inet_ntoa(i->addrs.in_addrs[j - 1]));
+            debugs(14, 3, "ipcacheParse: #" << j - 1 << " " << inet_ntoa(i->addrs.in_addrs[j - 1]));
+
         } else if (answers[k].type != RFC1035_TYPE_CNAME)
             continue;
 
@@ -498,11 +500,11 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
     const ipcache_addrs *addrs = NULL;
     generic_cbdata *c;
     assert(handler != NULL);
-    debug(14, 4) ("ipcache_nbgethostbyname: Name '%s'.\n", name);
+    debugs(14, 4, "ipcache_nbgethostbyname: Name '" << name << "'.");
     IpcacheStats.requests++;
 
     if (name == NULL || name[0] == '\0') {
-        debug(14, 4) ("ipcache_nbgethostbyname: Invalid name!\n");
+        debugs(14, 4, "ipcache_nbgethostbyname: Invalid name!");
         dns_error_message = "Invalid hostname";
         handler(NULL, handlerData);
         return;
@@ -525,7 +527,7 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
         i = NULL;
     } else {
         /* hit */
-        debug(14, 4) ("ipcache_nbgethostbyname: HIT for '%s'\n", name);
+        debugs(14, 4, "ipcache_nbgethostbyname: HIT for '" << name << "'");
 
         if (i->flags.negcached)
             IpcacheStats.negative_hits++;
@@ -541,7 +543,7 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
         return;
     }
 
-    debug(14, 5) ("ipcache_nbgethostbyname: MISS for '%s'\n", name);
+    debugs(14, 5, "ipcache_nbgethostbyname: MISS for '" << name << "'");
     IpcacheStats.misses++;
     i = ipcacheCreateEntry(name);
     i->handler = handler;
@@ -562,17 +564,17 @@ void
 ipcache_init(void)
 {
     int n;
-    debug(14, 3) ("Initializing IP Cache...\n");
+    debugs(14, 3, "Initializing IP Cache...");
     memset(&IpcacheStats, '\0', sizeof(IpcacheStats));
     memset(&lru_list, '\0', sizeof(lru_list));
     /* test naming lookup */
 
     if (!opt_dns_tests) {
-        debug(14, 4) ("ipcache_init: Skipping DNS name lookup tests.\n");
+        debugs(14, 4, "ipcache_init: Skipping DNS name lookup tests.");
     } else if (!ipcache_testname()) {
         fatal("ipcache_init: DNS name lookup tests failed.");
     } else {
-        debug(14, 1) ("Successful DNS name lookup tests...\n");
+        debugs(14, 1, "Successful DNS name lookup tests...");
     }
 
     memset(&static_addrs, '\0', sizeof(ipcache_addrs));
@@ -602,7 +604,7 @@ ipcache_gethostbyname(const char *name, int flags)
     ipcache_entry *i = NULL;
     ipcache_addrs *addrs;
     assert(name);
-    debug(14, 3) ("ipcache_gethostbyname: '%s', flags=%x\n", name, flags);
+    debugs(14, 3, "ipcache_gethostbyname: '" << name  << "', flags=" << std::hex << flags);
     IpcacheStats.requests++;
     i = ipcache_get(name);
 
@@ -794,8 +796,7 @@ ipcacheCycleAddr(const char *name, ipcache_addrs * ia)
 
     if (k == ia->count) {
         /* All bad, reset to All good */
-        debug(14, 3) ("ipcacheCycleAddr: Changing ALL %s addrs from BAD to OK\n",
-                      name);
+        debugs(14, 3, "ipcacheCycleAddr: Changing ALL " << name << " addrs from BAD to OK");
 
         for (k = 0; k < ia->count; k++)
             ia->bad_mask[k] = 0;
@@ -805,8 +806,7 @@ ipcacheCycleAddr(const char *name, ipcache_addrs * ia)
         ia->cur = 0;
     }
 
-    debug(14, 3) ("ipcacheCycleAddr: %s now at %s\n", name,
-                  inet_ntoa(ia->in_addrs[ia->cur]));
+    debugs(14, 3, "ipcacheCycleAddr: " << name << " now at " << inet_ntoa(ia->in_addrs[ia->cur]));
 }
 
 /*
@@ -840,7 +840,7 @@ ipcacheMarkBadAddr(const char *name, struct IN_ADDR addr)
         ia->bad_mask[k] = TRUE;
         ia->badcount++;
         i->expires = XMIN(squid_curtime + XMAX((time_t)60, Config.negativeDnsTtl), i->expires);
-        debug(14, 2) ("ipcacheMarkBadAddr: %s [%s]\n", name, inet_ntoa(addr));
+        debugs(14, 2, "ipcacheMarkBadAddr: " << name << " [" << inet_ntoa(addr) << "]");
     }
 
     ipcacheCycleAddr(name, ia);
@@ -875,7 +875,7 @@ ipcacheMarkGoodAddr(const char *name, struct IN_ADDR addr)
 
     ia->badcount--;
 
-    debug(14, 2) ("ipcacheMarkGoodAddr: %s [%s]\n", name, inet_ntoa(addr));
+    debugs(14, 2, "ipcacheMarkGoodAddr: " << name << " [" << inet_ntoa(addr) << "]");
 }
 
 static void
@@ -921,10 +921,9 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
 
     if (!safe_inet_addr(ipaddr, &ip)) {
         if (strchr(ipaddr, ':') && strspn(ipaddr, "0123456789abcdefABCDEF:") == strlen(ipaddr)) {
-            debug(14, 3) ("ipcacheAddEntryFromHosts: Skipping IPv6 address '%s'\n", ipaddr);
+            debugs(14, 3, "ipcacheAddEntryFromHosts: Skipping IPv6 address '" << ipaddr << "'");
         } else {
-            debug(14, 1) ("ipcacheAddEntryFromHosts: Bad IP address '%s'\n",
-                          ipaddr);
+            debugs(14, 1, "ipcacheAddEntryFromHosts: Bad IP address '" << ipaddr << "'");
         }
 
         return 1;
@@ -934,8 +933,7 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
         if (1 == i->flags.fromhosts) {
             ipcacheUnlockEntry(i);
         } else if (i->locks > 0) {
-            debug(14, 1) ("ipcacheAddEntryFromHosts: can't add static entry"
-                          " for locked name '%s'\n", name);
+            debugs(14, 1, "ipcacheAddEntryFromHosts: can't add static entry for locked name '" << name << "'");
             return 1;
         } else {
             ipcacheRelease(i);
@@ -966,7 +964,7 @@ variable_list *
 snmp_netIpFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer = NULL;
-    debug(49, 5) ("snmp_netIpFn: Processing request:\n");
+    debugs(49, 5, "snmp_netIpFn: Processing request:");
     snmpDebugOid(5, Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
 

@@ -1,5 +1,5 @@
 /*
- * $Id: ACLDestinationDomain.cc,v 1.12 2005/07/07 21:22:52 wessels Exp $
+ * $Id: ACLDestinationDomain.cc,v 1.13 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -92,8 +92,7 @@ ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLChecklist *c
         return data->match(fqdn);
     } else if (!checklist->destinationDomainChecked()) {
         /* FIXME: Using AclMatchedName here is not OO correct. Should find a way to the current acl */
-        debug(28, 3) ("aclMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-                      AclMatchedName, checklist->request->host);
+        debugs(28, 3, "aclMatchAcl: Can't yet compare '" << AclMatchedName << "' ACL for '" << checklist->request->host << "'");
         checklist->changeState(DestinationDomainLookup::Instance());
         return 0;
     }

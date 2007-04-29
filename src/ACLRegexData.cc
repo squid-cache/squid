@@ -1,5 +1,5 @@
 /*
- * $Id: ACLRegexData.cc,v 1.10 2006/05/29 19:05:26 serassio Exp $
+ * $Id: ACLRegexData.cc,v 1.11 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -67,7 +67,7 @@ ACLRegexData::match(char const *word)
     if (word == NULL)
         return 0;
 
-    debug(28, 3) ("aclRegexData::match: checking '%s'\n", word);
+    debugs(28, 3, "aclRegexData::match: checking '" << word << "'");
 
     relist *first, *prev;
 
@@ -78,7 +78,7 @@ ACLRegexData::match(char const *word)
     relist *current = first;
 
     while (current) {
-        debug(28, 3) ("aclRegexData::match: looking for '%s'\n", current->pattern);
+        debugs(28, 3, "aclRegexData::match: looking for '" << current->pattern << "'");
 
         if (regexec(&current->regex, word, 0, 0, 0) == 0) {
             if (prev != NULL) {
@@ -89,7 +89,7 @@ ACLRegexData::match(char const *word)
                 first->next = current;
             }
 
-            debug(28, 2) ("aclRegexData::match: match '%s' found in '%s'\n", current->pattern, word);
+            debugs(28, 2, "aclRegexData::match: match '" << current->pattern << "' found in '" << word << "'");
             return 1;
         }
 
@@ -142,10 +142,8 @@ aclParseRegexList(relist **curlist)
         if ((errcode = regcomp(&comp, t, flags)) != 0) {
             char errbuf[256];
             regerror(errcode, &comp, errbuf, sizeof errbuf);
-            debug(28, 0) ("%s line %d: %s\n",
-                          cfg_filename, config_lineno, config_input_line);
-            debug(28, 0) ("aclParseRegexList: Invalid regular expression '%s': %s\n",
-                          t, errbuf);
+            debugs(28, 0, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
+            debugs(28, 0, "aclParseRegexList: Invalid regular expression '" << t << "': " << errbuf);
             continue;
         }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsIOStrategy.cc,v 1.11 2007/04/12 23:51:57 wessels Exp $
+ * $Id: DiskThreadsIOStrategy.cc,v 1.12 2007/04/28 22:26:47 hno Exp $
  *
  * DEBUG: section 79    Squid-side Disk I/O functions.
  * AUTHOR: Robert Collins
@@ -177,13 +177,13 @@ DiskThreadsIOStrategy::sync()
         return;			/* nothing to do then */
 
     /* Flush all pending operations */
-    debug(32, 1) ("aioSync: flushing pending I/O operations\n");
+    debugs(32, 1, "aioSync: flushing pending I/O operations");
 
     do {
         callback();
     } while (squidaio_sync());
 
-    debug(32, 1) ("aioSync: done\n");
+    debugs(32, 1, "aioSync: done");
 }
 
 DiskThreadsIOStrategy::DiskThreadsIOStrategy() :  initialised (false) {}
@@ -236,7 +236,7 @@ DiskThreadsIOStrategy::load()
 
     loadav = ql * 1000 / MAGIC1;
 
-    debug(47, 9) ("DiskThreadsIOStrategy::load: load=%d\n", loadav);
+    debugs(47, 9, "DiskThreadsIOStrategy::load: load=" << loadav);
 
     return loadav;
 }

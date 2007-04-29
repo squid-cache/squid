@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.202 2007/04/21 07:14:14 wessels Exp $
+ * $Id: gopher.cc,v 1.203 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -399,8 +399,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
             xstrncpy(line, gopherState->buf, gopherState->len + 1);
 
             if (gopherState->len + len > TEMP_BUF_SIZE) {
-                debug(10, 1) ("GopherHTML: Buffer overflow. Lost some data on URL: %s\n",
-                              entry->url());
+                debugs(10, 1, "GopherHTML: Buffer overflow. Lost some data on URL: " << entry->url()  );
                 len = TEMP_BUF_SIZE - gopherState->len;
             }
 
@@ -413,8 +412,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                 /* copy it to temp buffer */
 
                 if (gopherState->len + len > TEMP_BUF_SIZE) {
-                    debug(10, 1) ("GopherHTML: Buffer overflow. Lost some data on URL: %s\n",
-                                  entry->url());
+                    debugs(10, 1, "GopherHTML: Buffer overflow. Lost some data on URL: " << entry->url()  );
                     len = TEMP_BUF_SIZE - gopherState->len;
                 }
 
@@ -444,8 +442,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                 /* copy it to temp buffer */
 
                 if ((len - (pos - inbuf)) > TEMP_BUF_SIZE) {
-                    debug(10, 1) ("GopherHTML: Buffer overflow. Lost some data on URL: %s\n",
-                                  entry->url());
+                    debugs(10, 1, "GopherHTML: Buffer overflow. Lost some data on URL: " << entry->url()  );
                     len = TEMP_BUF_SIZE;
                 }
 
@@ -708,7 +705,7 @@ gopherTimeout(int fd, void *data)
 {
     GopherStateData *gopherState = (GopherStateData *)data;
     StoreEntry *entry = gopherState->entry;
-    debug(10, 4) ("gopherTimeout: FD %d: '%s'\n", fd, entry->url());
+    debugs(10, 4, "gopherTimeout: FD " << fd << ": '" << entry->url() << "'" );
 
     gopherState->fwd->fail(errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT, gopherState->fwd->request));
 
@@ -761,7 +758,7 @@ gopherReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void
         kb_incr(&statCounter.server.other.kbytes_in, len);
     }
 
-    debug(10, 5) ("gopherReadReply: FD %d read len=%d\n", fd, (int)len);
+    debugs(10, 5, "gopherReadReply: FD " << fd << " read len=" << (int)len);
 
     if (flag == COMM_OK && len > 0) {
         commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
@@ -774,7 +771,7 @@ gopherReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void
     }
 
     if (flag != COMM_OK || len < 0) {
-        debug(50, 1) ("gopherReadReply: error reading: %s\n", xstrerror());
+        debugs(50, 1, "gopherReadReply: error reading: " << xstrerror());
 
         if (ignoreErrno(errno)) {
             do_next_read = 1;
@@ -829,8 +826,7 @@ gopherSendComplete(int fd, char *buf, size_t size, comm_err_t errflag, int xerrn
 {
     GopherStateData *gopherState = (GopherStateData *) data;
     StoreEntry *entry = gopherState->entry;
-    debug(10, 5) ("gopherSendComplete: FD %d size: %d errflag: %d\n",
-                  fd, (int) size, errflag);
+    debugs(10, 5, "gopherSendComplete: FD " << fd << " size: " << (int) size << " errflag: " << errflag);
 
     if (size > 0) {
         fd_bytes(fd, size, FD_WRITE);
@@ -921,7 +917,7 @@ gopherSendRequest(int fd, void *data)
         snprintf(buf, 4096, "%s\r\n", gopherState->request);
     }
 
-    debug(10, 5) ("gopherSendRequest: FD %d\n", fd);
+    debugs(10, 5, "gopherSendRequest: FD " << fd);
     comm_write(fd, buf, strlen(buf), gopherSendComplete, gopherState, NULL);
 
     if (EBIT_TEST(gopherState->entry->flags, ENTRY_CACHABLE))
@@ -947,7 +943,7 @@ gopherStart(FwdState * fwd)
 
     gopherState->fwd = fwd;
 
-    debug(10, 3) ("gopherStart: %s\n", entry->url());
+    debugs(10, 3, "gopherStart: " << entry->url()  );
 
     statCounter.server.all.requests++;
 

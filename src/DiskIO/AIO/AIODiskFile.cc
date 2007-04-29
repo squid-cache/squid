@@ -1,6 +1,6 @@
 
 /*
- * $Id: AIODiskFile.cc,v 1.3 2006/09/04 20:15:22 serassio Exp $
+ * $Id: AIODiskFile.cc,v 1.4 2007/04/28 22:26:40 hno Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -68,7 +68,7 @@ AIODiskFile::AIODiskFile (char const *aPath, AIODiskIOStrategy *aStrategy) : fd(
     assert (aPath);
     path = aPath;
     strategy = aStrategy;
-    debug (79,3)("AIODiskFile::AIODiskFile: %s\n", aPath);
+    debugs(79, 3, "AIODiskFile::AIODiskFile: " << aPath);
 }
 
 AIODiskFile::~AIODiskFile()
@@ -94,12 +94,12 @@ AIODiskFile::open (int flags, mode_t mode, IORequestor::Pointer callback)
     ioRequestor = callback;
 
     if (fd < 0) {
-        debug(79, 3) ("BlockingFile::open: got failure (%d)\n", errno);
+        debugs(79, 3, "BlockingFile::open: got failure (" << errno << ")");
         error(true);
     } else {
         closed = false;
         store_open_disk_fd++;
-        debug(79, 3) ("BlockingFile::open: opened FD %d\n", fd);
+        debugs(79, 3, "BlockingFile::open: opened FD " << fd);
     }
 
     callback->ioCompletedNotification();
@@ -126,7 +126,7 @@ AIODiskFile::read(ReadRequest *request)
     if (slot < 0) {
         /* No free slot? Callback error, and return */
         fatal("Aiee! out of aiocb slots! - FIXME and wrap file_read\n");
-        debug(79, 1) ("WARNING: out of aiocb slots!\n");
+        debugs(79, 1, "WARNING: out of aiocb slots!");
         /* fall back to blocking method */
         //        file_read(fd, request->buf, request->len, request->offset, callback, data);
         return;
@@ -163,7 +163,7 @@ AIODiskFile::read(ReadRequest *request)
     /* Initiate aio */
     if (aio_read(&qe->aq_e_aiocb) < 0) {
         fatalf("Aiee! aio_read() returned error (%d)  FIXME and wrap file_read !\n", errno);
-        debug(79, 1) ("WARNING: aio_read() returned error: %s\n", xstrerror());
+        debugs(79, 1, "WARNING: aio_read() returned error: " << xstrerror());
         /* fall back to blocking method */
         //        file_read(fd, request->buf, request->len, request->offset, callback, data);
     }
@@ -184,7 +184,7 @@ AIODiskFile::write(WriteRequest *request)
     if (slot < 0) {
         /* No free slot? Callback error, and return */
         fatal("Aiee! out of aiocb slots FIXME and wrap file_write !\n");
-        debug(79, 1) ("WARNING: out of aiocb slots!\n");
+        debugs(79, 1, "WARNING: out of aiocb slots!");
         /* fall back to blocking method */
         //        file_write(fd, offset, buf, len, callback, data, freefunc);
         return;
@@ -221,7 +221,7 @@ AIODiskFile::write(WriteRequest *request)
     /* Initiate aio */
     if (aio_write(&qe->aq_e_aiocb) < 0) {
         fatalf("Aiee! aio_write() returned error (%d) FIXME and wrap file_write !\n", errno);
-        debug(79, 1) ("WARNING: aio_write() returned error: %s\n", xstrerror());
+        debugs(79, 1, "WARNING: aio_write() returned error: " << xstrerror());
         /* fall back to blocking method */
         //       file_write(fd, offset, buf, len, callback, data, freefunc);
     }

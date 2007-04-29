@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.609 2007/04/21 07:14:15 wessels Exp $
+ * $Id: store.cc,v 1.610 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -313,7 +313,7 @@ StoreEntry::storeClientType() const
 
     if (EBIT_TEST(flags, ENTRY_ABORTED)) {
         /* I don't think we should be adding clients to aborted entries */
-        debug(20, 1) ("storeClientType: adding to ENTRY_ABORTED entry\n");
+        debugs(20, 1, "storeClientType: adding to ENTRY_ABORTED entry");
         return STORE_MEM_CLIENT;
     }
 
@@ -406,8 +406,7 @@ destroyStoreEntry(void *data)
 void
 StoreEntry::hashInsert(const cache_key * someKey)
 {
-    debug(20, 3) ("StoreEntry::hashInsert: Inserting Entry %p key '%s'\n",
-                  this, storeKeyText(someKey));
+    debugs(20, 3, "StoreEntry::hashInsert: Inserting Entry " << this << " key '" << storeKeyText(someKey) << "'");
     key = storeKeyDup(someKey);
     hash_join(store_table, this);
 }
@@ -430,8 +429,7 @@ StoreEntry::purgeMem()
     if (mem_obj == NULL)
         return;
 
-    debug(20, 3) ("StoreEntry::purgeMem: Freeing memory-copy of %s\n",
-                  getMD5Text());
+    debugs(20, 3, "StoreEntry::purgeMem: Freeing memory-copy of " << getMD5Text());
 
     destroyMemObject();
 
@@ -452,7 +450,7 @@ StoreEntry::lock()
 {
     lock_count++;
     debugs(20, 3, "StoreEntry::lock: key '" << getMD5Text() <<"' count=" <<
-           lock_count << "\n");
+           lock_count  );
     lastref = squid_curtime;
     Store::Root().reference(*this);
 }
@@ -463,7 +461,7 @@ StoreEntry::setReleaseFlag()
     if (EBIT_TEST(flags, RELEASE_REQUEST))
         return;
 
-    debug(20, 3) ("StoreEntry::setReleaseFlag: '%s'\n", getMD5Text());
+    debugs(20, 3, "StoreEntry::setReleaseFlag: '" << getMD5Text() << "'");
 
     EBIT_SET(flags, RELEASE_REQUEST);
 }
@@ -492,8 +490,7 @@ int
 StoreEntry::unlock()
 {
     lock_count--;
-    debug(20, 3) ("StoreEntry::unlock: key '%s' count=%d\n",
-                  getMD5Text(), lock_count);
+    debugs(20, 3, "StoreEntry::unlock: key '" << getMD5Text() << "' count=" << lock_count);
 
     if (lock_count)
         return (int) lock_count;
@@ -513,7 +510,7 @@ StoreEntry::unlock()
         Store::Root().dereference(*this);
 
         if (EBIT_TEST(flags, KEY_PRIVATE))
-            debug(20, 1) ("WARNING: %s:%d: found KEY_PRIVATE\n", __FILE__, __LINE__);
+            debugs(20, 1, "WARNING: " << __FILE__ << ":" << __LINE__ << ": found KEY_PRIVATE");
 
         /* StoreEntry::purgeMem may free e */
         purgeMem();
@@ -653,8 +650,7 @@ StoreEntry::setPublicKey()
 #if MORE_DEBUG_OUTPUT
 
     if (EBIT_TEST(flags, RELEASE_REQUEST))
-        debug(20, 1) ("assertion failed: RELEASE key %s, url %s\n",
-                      key, mem->url);
+        debugs(20, 1, "assertion failed: RELEASE key " << key << ", url " << mem->url);
 
 #endif
 
@@ -729,7 +725,7 @@ StoreEntry::setPublicKey()
         newkey = storeKeyPublic(mem_obj->url, mem_obj->method);
 
     if ((e2 = (StoreEntry *) hash_lookup(store_table, newkey))) {
-        debug(20, 3) ("StoreEntry::setPublicKey: Making old '%s' private.\n", mem_obj->url);
+        debugs(20, 3, "StoreEntry::setPublicKey: Making old '" << mem_obj->url << "' private.");
         e2->setPrivateKey();
         e2->release();
 
@@ -755,7 +751,7 @@ storeCreateEntry(const char *url, const char *log_url, request_flags flags, meth
 {
     StoreEntry *e = NULL;
     MemObject *mem = NULL;
-    debug(20, 3) ("storeCreateEntry: '%s'\n", url);
+    debugs(20, 3, "storeCreateEntry: '" << url << "'");
 
     e = new StoreEntry(url, log_url);
     e->lock_count = 1;          /* Note lock here w/o calling storeLock() */
@@ -792,7 +788,7 @@ storeCreateEntry(const char *url, const char *log_url, request_flags flags, meth
 void
 StoreEntry::expireNow()
 {
-    debug(20, 3) ("StoreEntry::expireNow: '%s'\n", getMD5Text());
+    debugs(20, 3, "StoreEntry::expireNow: '" << getMD5Text() << "'");
     expires = squid_curtime;
 }
 
@@ -959,37 +955,34 @@ StoreEntry::checkCachable()
 #if CACHE_ALL_METHODS
 
     if (mem_obj->method != METHOD_GET) {
-        debug(20, 2) ("StoreEntry::checkCachable: NO: non-GET method\n");
+        debugs(20, 2, "StoreEntry::checkCachable: NO: non-GET method");
         store_check_cachable_hist.no.non_get++;
     } else
 #endif
         if (store_status == STORE_OK && EBIT_TEST(flags, ENTRY_BAD_LENGTH)) {
-            debug(20, 2) ("StoreEntry::checkCachable: NO: wrong content-length\n");
+            debugs(20, 2, "StoreEntry::checkCachable: NO: wrong content-length");
             store_check_cachable_hist.no.wrong_content_length++;
         } else if (!EBIT_TEST(flags, ENTRY_CACHABLE)) {
-            debug(20, 2) ("StoreEntry::checkCachable: NO: not cachable\n");
+            debugs(20, 2, "StoreEntry::checkCachable: NO: not cachable");
             store_check_cachable_hist.no.not_entry_cachable++;
         } else if (EBIT_TEST(flags, ENTRY_NEGCACHED)) {
-            debug(20, 3) ("StoreEntry::checkCachable: NO: negative cached\n");
+            debugs(20, 3, "StoreEntry::checkCachable: NO: negative cached");
             store_check_cachable_hist.no.negative_cached++;
             return 0;           /* avoid release call below */
         } else if ((getReply()->content_length > 0 &&
                     static_cast<size_t>(getReply()->content_length)
                     > Config.Store.maxObjectSize) ||
                    static_cast<size_t>(mem_obj->endOffset()) > Config.Store.maxObjectSize) {
-            debug(20, 2) ("StoreEntry::checkCachable: NO: too big\n");
+            debugs(20, 2, "StoreEntry::checkCachable: NO: too big");
             store_check_cachable_hist.no.too_big++;
         } else if (getReply()->content_length > (int) Config.Store.maxObjectSize) {
-            debug(20, 2)
-            ("StoreEntry::checkCachable: NO: too big\n");
+            debugs(20, 2, "StoreEntry::checkCachable: NO: too big");
             store_check_cachable_hist.no.too_big++;
         } else if (checkTooSmall()) {
-            debug(20, 2)
-            ("StoreEntry::checkCachable: NO: too small\n");
+            debugs(20, 2, "StoreEntry::checkCachable: NO: too small");
             store_check_cachable_hist.no.too_small++;
         } else if (EBIT_TEST(flags, KEY_PRIVATE)) {
-            debug(20, 3)
-            ("StoreEntry::checkCachable: NO: private key\n");
+            debugs(20, 3, "StoreEntry::checkCachable: NO: private key");
             store_check_cachable_hist.no.private_key++;
         } else if (swap_status != SWAPOUT_NONE) {
             /*
@@ -999,12 +992,10 @@ StoreEntry::checkCachable()
              */
             return 1;
         } else if (storeTooManyDiskFilesOpen()) {
-            debug(20, 2)
-            ("StoreEntry::checkCachable: NO: too many disk files open\n");
+            debugs(20, 2, "StoreEntry::checkCachable: NO: too many disk files open");
             store_check_cachable_hist.no.too_many_open_files++;
         } else if (fdNFree() < RESERVED_FD) {
-            debug(20, 2)
-            ("StoreEntry::checkCachable: NO: too many FD's open\n");
+            debugs(20, 2, "StoreEntry::checkCachable: NO: too many FD's open");
             store_check_cachable_hist.no.too_many_open_fds++;
         } else {
             store_check_cachable_hist.yes.Default++;
@@ -1050,7 +1041,7 @@ storeCheckCachableStats(StoreEntry *sentry)
 void
 StoreEntry::complete()
 {
-    debug(20, 3) ("storeComplete: '%s'\n", getMD5Text());
+    debugs(20, 3, "storeComplete: '" << getMD5Text() << "'");
 
     if (store_status != STORE_PENDING) {
         /*
@@ -1101,7 +1092,7 @@ StoreEntry::abort()
     statCounter.aborted_requests++;
     assert(store_status == STORE_PENDING);
     assert(mem_obj != NULL);
-    debug(20, 6) ("storeAbort: %s\n", getMD5Text());
+    debugs(20, 6, "storeAbort: " << getMD5Text());
 
     lock()
 
@@ -1190,9 +1181,9 @@ storeGetMemSpace(int size)
     }
 
     walker->Done(walker);
-    debug(20, 3) ("storeGetMemSpace stats:\n");
-    debug(20, 3) ("  %6d HOT objects\n", hot_obj_count);
-    debug(20, 3) ("  %6d were released\n", released);
+    debugs(20, 3, "storeGetMemSpace stats:");
+    debugs(20, 3, "  " << std::setw(6) << hot_obj_count  << " HOT objects");
+    debugs(20, 3, "  " << std::setw(6) << released  << " were released");
     PROF_stop(storeGetMemSpace);
 }
 
@@ -1248,13 +1239,13 @@ void
 StoreEntry::release()
 {
     PROF_start(storeRelease);
-    debug(20, 3) ("storeRelease: Releasing: '%s'\n", getMD5Text());
+    debugs(20, 3, "storeRelease: Releasing: '" << getMD5Text() << "'");
     /* If, for any reason we can't discard this object because of an
      * outstanding request, mark it for pending release */
 
     if (locked()) {
         expireNow();
-        debug(20, 3) ("storeRelease: Only setting RELEASE_REQUEST bit\n");
+        debugs(20, 3, "storeRelease: Only setting RELEASE_REQUEST bit");
         releaseRequest();
         PROF_stop(storeRelease);
         return;
@@ -1323,7 +1314,7 @@ storeLateRelease(void *unused)
 
         if (e == NULL) {
             /* done! */
-            debug(20, 1) ("storeLateRelease: released %d objects\n", n);
+            debugs(20, 1, "storeLateRelease: released " << n << " objects");
             return;
         }
 
@@ -1364,29 +1355,24 @@ StoreEntry::validLength() const
     const HttpReply *reply;
     assert(mem_obj != NULL);
     reply = getReply();
-    debug(20, 3) ("storeEntryValidLength: Checking '%s'\n", getMD5Text());
+    debugs(20, 3, "storeEntryValidLength: Checking '" << getMD5Text() << "'");
     debugs(20, 5, "storeEntryValidLength:     object_len = " <<
            objectLen());
-    debug(20, 5) ("storeEntryValidLength:         hdr_sz = %d\n",
-                  reply->hdr_sz);
-    debug(20, 5) ("storeEntryValidLength: content_length = %d\n",
-                  reply->content_length);
+    debugs(20, 5, "storeEntryValidLength:         hdr_sz = " << reply->hdr_sz);
+    debugs(20, 5, "storeEntryValidLength: content_length = " << reply->content_length);
 
     if (reply->content_length < 0) {
-        debug(20, 5) ("storeEntryValidLength: Unspecified content length: %s\n",
-                      getMD5Text());
+        debugs(20, 5, "storeEntryValidLength: Unspecified content length: " << getMD5Text());
         return 1;
     }
 
     if (reply->hdr_sz == 0) {
-        debug(20, 5) ("storeEntryValidLength: Zero header size: %s\n",
-                      getMD5Text());
+        debugs(20, 5, "storeEntryValidLength: Zero header size: " << getMD5Text());
         return 1;
     }
 
     if (mem_obj->method == METHOD_HEAD) {
-        debug(20, 5) ("storeEntryValidLength: HEAD request: %s\n",
-                      getMD5Text());
+        debugs(20, 5, "storeEntryValidLength: HEAD request: " << getMD5Text());
         return 1;
     }
 
@@ -1401,10 +1387,7 @@ StoreEntry::validLength() const
     if (diff == 0)
         return 1;
 
-    debug(20, 3) ("storeEntryValidLength: %d bytes too %s; '%s'\n",
-                  diff < 0 ? -diff : diff,
-                  diff < 0 ? "big" : "small",
-                  getMD5Text());
+    debugs(20, 3, "storeEntryValidLength: " << (diff < 0 ? -diff : diff)  << " bytes too " << (diff < 0 ? "big" : "small") <<"; '" << getMD5Text() << "'" );
 
     return 0;
 }
@@ -1576,23 +1559,23 @@ StoreEntry::unregisterAbort()
 void
 StoreEntry::dump(int l) const
 {
-    debug(20, l) ("StoreEntry->key: %s\n", getMD5Text());
-    debug(20, l) ("StoreEntry->next: %p\n", next);
-    debug(20, l) ("StoreEntry->mem_obj: %p\n", mem_obj);
-    debug(20, l) ("StoreEntry->timestamp: %d\n", (int) timestamp);
-    debug(20, l) ("StoreEntry->lastref: %d\n", (int) lastref);
-    debug(20, l) ("StoreEntry->expires: %d\n", (int) expires);
-    debug(20, l) ("StoreEntry->lastmod: %d\n", (int) lastmod);
-    debug(20, l) ("StoreEntry->swap_file_sz: %d\n", (int) swap_file_sz);
-    debug(20, l) ("StoreEntry->refcount: %d\n", refcount);
-    debug(20, l) ("StoreEntry->flags: %s\n", storeEntryFlags(this));
-    debug(20, l) ("StoreEntry->swap_dirn: %d\n", (int) swap_dirn);
-    debug(20, l) ("StoreEntry->swap_filen: %d\n", (int) swap_filen);
-    debug(20, l) ("StoreEntry->lock_count: %d\n", (int) lock_count);
-    debug(20, l) ("StoreEntry->mem_status: %d\n", (int) mem_status);
-    debug(20, l) ("StoreEntry->ping_status: %d\n", (int) ping_status);
-    debug(20, l) ("StoreEntry->store_status: %d\n", (int) store_status);
-    debug(20, l) ("StoreEntry->swap_status: %d\n", (int) swap_status);
+    debugs(20, l, "StoreEntry->key: " << getMD5Text());
+    debugs(20, l, "StoreEntry->next: " << next);
+    debugs(20, l, "StoreEntry->mem_obj: " << mem_obj);
+    debugs(20, l, "StoreEntry->timestamp: " << (int) timestamp);
+    debugs(20, l, "StoreEntry->lastref: " << (int) lastref);
+    debugs(20, l, "StoreEntry->expires: " << (int) expires);
+    debugs(20, l, "StoreEntry->lastmod: " << (int) lastmod);
+    debugs(20, l, "StoreEntry->swap_file_sz: " << (int) swap_file_sz);
+    debugs(20, l, "StoreEntry->refcount: " << refcount);
+    debugs(20, l, "StoreEntry->flags: " << storeEntryFlags(this));
+    debugs(20, l, "StoreEntry->swap_dirn: " << (int) swap_dirn);
+    debugs(20, l, "StoreEntry->swap_filen: " << (int) swap_filen);
+    debugs(20, l, "StoreEntry->lock_count: " << (int) lock_count);
+    debugs(20, l, "StoreEntry->mem_status: " << (int) mem_status);
+    debugs(20, l, "StoreEntry->ping_status: " << (int) ping_status);
+    debugs(20, l, "StoreEntry->store_status: " << (int) store_status);
+    debugs(20, l, "StoreEntry->swap_status: " << (int) swap_status);
 }
 
 /*
@@ -1610,23 +1593,19 @@ StoreEntry::setMemStatus(mem_status_t new_status)
         assert(mem_obj->inmem_lo == 0);
 
         if (EBIT_TEST(flags, ENTRY_SPECIAL)) {
-            debug(20, 4) ("StoreEntry::setMemStatus: not inserting special %s into policy\n",
-                          mem_obj->url);
+            debugs(20, 4, "StoreEntry::setMemStatus: not inserting special " << mem_obj->url << " into policy");
         } else {
             mem_policy->Add(mem_policy, this, &mem_obj->repl);
-            debug(20, 4) ("StoreEntry::setMemStatus: inserted mem node %s\n",
-                          mem_obj->url);
+            debugs(20, 4, "StoreEntry::setMemStatus: inserted mem node " << mem_obj->url);
         }
 
         hot_obj_count++;
     } else {
         if (EBIT_TEST(flags, ENTRY_SPECIAL)) {
-            debug(20, 4) ("StoreEntry::setMemStatus: special entry %s\n",
-                          mem_obj->url);
+            debugs(20, 4, "StoreEntry::setMemStatus: special entry " << mem_obj->url);
         } else {
             mem_policy->Remove(mem_policy, this, &mem_obj->repl);
-            debug(20, 4) ("StoreEntry::setMemStatus: removed mem node %s\n",
-                          mem_obj->url);
+            debugs(20, 4, "StoreEntry::setMemStatus: removed mem node " << mem_obj->url);
         }
 
         hot_obj_count--;
@@ -1700,7 +1679,7 @@ void
 StoreEntry::reset()
 {
     assert (mem_obj);
-    debug(20, 3) ("StoreEntry::reset: %s\n", url());
+    debugs(20, 3, "StoreEntry::reset: " << url());
     mem_obj->reset();
     HttpReply *rep = (HttpReply *) getReply();       // bypass const
     rep->reset();
@@ -1756,9 +1735,9 @@ createRemovalPolicy(RemovalPolicySettings * settings)
             return r->create(settings->args);
     }
 
-    debug(20, 1) ("ERROR: Unknown policy %s\n", settings->type);
-    debug(20, 1) ("ERROR: Be sure to have set cache_replacement_policy\n");
-    debug(20, 1) ("ERROR:   and memory_replacement_policy in squid.conf!\n");
+    debugs(20, 1, "ERROR: Unknown policy " << settings->type);
+    debugs(20, 1, "ERROR: Be sure to have set cache_replacement_policy");
+    debugs(20, 1, "ERROR:   and memory_replacement_policy in squid.conf!");
     fatalf("ERROR: Unknown policy %s\n", settings->type);
     return NULL;                /* NOTREACHED */
 }
@@ -1792,11 +1771,11 @@ storeSwapFileNumberSet(StoreEntry * e, sfileno filn)
 void
 StoreEntry::replaceHttpReply(HttpReply *rep)
 {
-    debug(20, 3) ("StoreEntry::replaceHttpReply: %s\n", url());
+    debugs(20, 3, "StoreEntry::replaceHttpReply: " << url());
     Packer p;
 
     if (!mem_obj) {
-        debug (20,0)("Attempt to replace object with no in-memory representation\n");
+        debugs(20, 0, "Attempt to replace object with no in-memory representation");
         return;
     }
 
@@ -1835,9 +1814,8 @@ bool
 StoreEntry::swapoutPossible()
 {
     /* should we swap something out to disk? */
-    debug(20, 7) ("storeSwapOut: %s\n", url());
-    debug(20, 7) ("storeSwapOut: store_status = %s\n",
-                  storeStatusStr[store_status]);
+    debugs(20, 7, "storeSwapOut: " << url());
+    debugs(20, 7, "storeSwapOut: store_status = " << storeStatusStr[store_status]);
 
     if (EBIT_TEST(flags, ENTRY_ABORTED)) {
         assert(EBIT_TEST(flags, RELEASE_REQUEST));
@@ -1846,7 +1824,7 @@ StoreEntry::swapoutPossible()
     }
 
     if (EBIT_TEST(flags, ENTRY_SPECIAL)) {
-        debug(20, 3) ("storeSwapOut: %s SPECIAL\n", url());
+        debugs(20, 3, "storeSwapOut: " << url() << " SPECIAL");
         return false;
     }
 
@@ -1884,9 +1862,9 @@ StoreEntry::modifiedSince(HttpRequest * request) const
     if (mod_time < 0)
         mod_time = timestamp;
 
-    debug(88, 3) ("modifiedSince: '%s'\n", url());
+    debugs(88, 3, "modifiedSince: '" << url() << "'");
 
-    debug(88, 3) ("modifiedSince: mod_time = %ld\n", (long int) mod_time);
+    debugs(88, 3, "modifiedSince: mod_time = " << (long int) mod_time);
 
     if (mod_time < 0)
         return true;
@@ -1898,19 +1876,19 @@ StoreEntry::modifiedSince(HttpRequest * request) const
         object_length = contentLen();
 
     if (mod_time > request->ims) {
-        debug(88, 3) ("--> YES: entry newer than client\n");
+        debugs(88, 3, "--> YES: entry newer than client");
         return true;
     } else if (mod_time < request->ims) {
-        debug(88, 3) ("-->  NO: entry older than client\n");
+        debugs(88, 3, "-->  NO: entry older than client");
         return false;
     } else if (request->imslen < 0) {
-        debug(88, 3) ("-->  NO: same LMT, no client length\n");
+        debugs(88, 3, "-->  NO: same LMT, no client length");
         return false;
     } else if (request->imslen == object_length) {
-        debug(88, 3) ("-->  NO: same LMT, same length\n");
+        debugs(88, 3, "-->  NO: same LMT, same length");
         return false;
     } else {
-        debug(88, 3) ("--> YES: same LMT, different length\n");
+        debugs(88, 3, "--> YES: same LMT, different length");
         return true;
     }
 }

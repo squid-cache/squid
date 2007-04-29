@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.110 2007/04/21 07:14:13 wessels Exp $
+ * $Id: asn.cc,v 1.111 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -143,7 +143,7 @@ asnMatchIp(List<int> *data, struct IN_ADDR addr)
     List<int> *a = NULL;
     List<int> *b = NULL;
     lh = ntohl(addr.s_addr);
-    debug(53, 3) ("asnMatchIp: Called for %s.\n", inet_ntoa(addr));
+    debugs(53, 3, "asnMatchIp: Called for " << inet_ntoa(addr) << ".");
 
     if (AS_tree_head == NULL)
         return 0;
@@ -159,22 +159,22 @@ asnMatchIp(List<int> *data, struct IN_ADDR addr)
     rn = squid_rn_match(m_addr, AS_tree_head);
 
     if (rn == NULL) {
-        debug(53, 3) ("asnMatchIp: Address not in as db.\n");
+        debugs(53, 3, "asnMatchIp: Address not in as db.");
         return 0;
     }
 
-    debug(53, 3) ("asnMatchIp: Found in db!\n");
+    debugs(53, 3, "asnMatchIp: Found in db!");
     e = ((rtentry_t *) rn)->e_info;
     assert(e);
 
     for (a = data; a; a = a->next)
         for (b = e->as_number; b; b = b->next)
             if (a->element == b->element) {
-                debug(53, 5) ("asnMatchIp: Found a match!\n");
+                debugs(53, 5, "asnMatchIp: Found a match!");
                 return 1;
             }
 
-    debug(53, 5) ("asnMatchIp: AS not in as db.\n");
+    debugs(53, 5, "asnMatchIp: AS not in as db.");
     return 0;
 }
 
@@ -237,7 +237,7 @@ asnCacheStart(int as)
     ASState *asState;
     asState = cbdataAlloc(ASState);
     asState->dataRead = 0;
-    debug(53, 3) ("asnCacheStart: AS %d\n", as);
+    debugs(53, 3, "asnCacheStart: AS " << as);
     snprintf(asres, 4096, "whois://%s/!gAS%d", Config.as_whois_server, as);
     asState->as_number = as;
     req = HttpRequest::CreateFromUrl(asres);
@@ -277,8 +277,8 @@ asHandleReply(void *data, StoreIOBuffer result)
     char *buf = asState->reqbuf;
     int leftoversz = -1;
 
-    debug(53, 3) ("asHandleReply: Called with size=%u\n", (unsigned int)result.length);
-    debug(53, 3) ("asHandleReply: buffer='%s'\n", buf);
+    debugs(53, 3, "asHandleReply: Called with size=" << (unsigned int)result.length);
+    debugs(53, 3, "asHandleReply: buffer='" << buf << "'");
 
     /* First figure out whether we should abort the request */
 
@@ -288,16 +288,15 @@ asHandleReply(void *data, StoreIOBuffer result)
     }
 
     if (result.length == 0 && asState->dataRead) {
-        debug(53, 3) ("asHandleReply: Done: %s\n", e->url());
+        debugs(53, 3, "asHandleReply: Done: " << e->url()  );
         asStateFree(asState);
         return;
     } else if (result.flags.error) {
-        debug(53, 1) ("asHandleReply: Called with Error set and size=%u\n", (unsigned int) result.length);
+        debugs(53, 1, "asHandleReply: Called with Error set and size=" << (unsigned int) result.length);
         asStateFree(asState);
         return;
     } else if (HTTP_OK != e->getReply()->sline.status) {
-        debug(53, 1) ("WARNING: AS %d whois request failed\n",
-                      asState->as_number);
+        debugs(53, 1, "WARNING: AS " << asState->as_number << " whois request failed");
         asStateFree(asState);
         return;
     }
@@ -323,7 +322,7 @@ asHandleReply(void *data, StoreIOBuffer result)
         }
 
         *t = '\0';
-        debug(53, 3) ("asHandleReply: AS# %s (%d)\n", s, asState->as_number);
+        debugs(53, 3, "asHandleReply: AS# " << s << " (" << asState->as_number << ")");
         asnAddNet(s, asState->as_number);
         s = t + 1;
         asState->dataRead = 1;
@@ -351,10 +350,10 @@ asHandleReply(void *data, StoreIOBuffer result)
 
     asState->reqofs = leftoversz;
 
-    debug(53, 3) ("asState->offset = %ld\n", (long int) asState->offset);
+    debugs(53, 3, "asState->offset = " << (long int) asState->offset);
 
     if (e->store_status == STORE_PENDING) {
-        debug(53, 3) ("asHandleReply: store_status == STORE_PENDING: %s\n", e->url());
+        debugs(53, 3, "asHandleReply: store_status == STORE_PENDING: " << e->url()  );
         StoreIOBuffer tempBuffer (AS_REQBUF_SZ - asState->reqofs,
                                   asState->offset,
                                   asState->reqbuf + asState->reqofs);
@@ -365,7 +364,7 @@ asHandleReply(void *data, StoreIOBuffer result)
                         asState);
     } else {
         StoreIOBuffer tempBuffer;
-        debug(53, 3) ("asHandleReply: store complete, but data recieved %s\n", e->url());
+        debugs(53, 3, "asHandleReply: store complete, but data recieved " << e->url()  );
         tempBuffer.offset = asState->offset;
         tempBuffer.length = AS_REQBUF_SZ - asState->reqofs;
         tempBuffer.data = asState->reqbuf + asState->reqofs;
@@ -381,7 +380,7 @@ static void
 asStateFree(void *data)
 {
     ASState *asState = (ASState *)data;
-    debug(53, 3) ("asnStateFree: %s\n", asState->entry->url());
+    debugs(53, 3, "asnStateFree: " << asState->entry->url()  );
     storeUnregister(asState->sc, asState->entry, asState);
     asState->entry->unlock();
     HTTPMSGUNLOCK(asState->request);
@@ -411,7 +410,7 @@ asnAddNet(char *as_string, int as_number)
     t = strchr(as_string, '/');
 
     if (t == NULL) {
-        debug(53, 3) ("asnAddNet: failed, invalid response from whois server.\n");
+        debugs(53, 3, "asnAddNet: failed, invalid response from whois server.");
         return 0;
     }
 
@@ -438,7 +437,7 @@ asnAddNet(char *as_string, int as_number)
     addr = ntohl(addr);
 
     /*mask = ntohl(mask); */
-    debug(53, 3) ("asnAddNet: called for %s/%s\n", dbg1, dbg2);
+    debugs(53, 3, "asnAddNet: called for " << dbg1 << "/" << dbg2);
 
     e = (rtentry_t *)xmalloc(sizeof(rtentry_t));
 
@@ -454,10 +453,9 @@ asnAddNet(char *as_string, int as_number)
         asinfo = ((rtentry_t *) rn)->e_info;
 
         if (asinfo->as_number->find(as_number)) {
-            debug(53, 3) ("asnAddNet: Ignoring repeated network '%s/%d' for AS %d\n",
-                          dbg1, bitl, as_number);
+            debugs(53, 3, "asnAddNet: Ignoring repeated network '" << dbg1 << "/" << bitl << "' for AS " << as_number);
         } else {
-            debug(53, 3) ("asnAddNet: Warning: Found a network with multiple AS numbers!\n");
+            debugs(53, 3, "asnAddNet: Warning: Found a network with multiple AS numbers!");
 
             for (Tail = &asinfo->as_number; *Tail; Tail = &(*Tail)->next)
 
@@ -482,7 +480,7 @@ asnAddNet(char *as_string, int as_number)
         xfree(asinfo);
         delete q;
         xfree(e);
-        debug(53, 3) ("asnAddNet: Could not add entry.\n");
+        debugs(53, 3, "asnAddNet: Could not add entry.");
         return 0;
     }
 
@@ -503,7 +501,7 @@ destroyRadixNode(struct squid_radix_node *rn, void *w)
         rn = squid_rn_delete(rn->rn_key, rn->rn_mask, rnh);
 
         if (rn == 0)
-            debug(53, 3) ("destroyRadixNode: internal screwup\n");
+            debugs(53, 3, "destroyRadixNode: internal screwup");
 
         destroyRadixNodeInfo(e->e_info);
 
@@ -679,8 +677,7 @@ ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLChecklist *chec
     } else if (!checklist->request->flags.destinationIPLookedUp()) {
         /* No entry in cache, lookup not attempted */
         /* XXX FIXME: allow accessing the acl name here */
-        debug(28, 3) ("asnMatchAcl: Can't yet compare '%s' ACL for '%s'\n",
-                      "unknown" /*name*/, checklist->request->host);
+        debugs(28, 3, "asnMatchAcl: Can't yet compare '" << "unknown" /*name*/ << "' ACL for '" << checklist->request->host << "'");
         checklist->changeState (DestinationIPLookup::Instance());
     } else {
         return data->match(no_addr);

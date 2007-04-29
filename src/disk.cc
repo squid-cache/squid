@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.171 2005/09/17 05:50:08 wessels Exp $
+ * $Id: disk.cc,v 1.172 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -75,11 +75,10 @@ file_open(const char *path, int mode)
     statCounter.syscalls.disk.opens++;
 
     if (fd < 0) {
-        debug(50, 3) ("file_open: error opening file %s: %s\n", path,
-                      xstrerror());
+        debugs(50, 3, "file_open: error opening file " << path << ": " << xstrerror());
         fd = DISK_ERROR;
     } else {
-        debug(6, 5) ("file_open: FD %d\n", fd);
+        debugs(6, 5, "file_open: FD " << fd);
         commSetCloseOnExec(fd);
         fd_open(fd, FD_FILE, path);
     }
@@ -118,7 +117,7 @@ file_close(int fd)
 
         F->flags.close_request = 1;
 
-        debug(6, 2) ("file_close: FD %d, delaying close\n", fd);
+        debugs(6, 2, "file_close: FD " << fd << ", delaying close");
 
         PROF_stop(file_close);
 
@@ -144,8 +143,7 @@ file_close(int fd)
 
     close(fd);
 
-    debug(6, F->flags.close_request ? 2 : 5)
-    ("file_close: FD %d, really closing\n", fd);
+    debugs(6, F->flags.close_request ? 2 : 5, "file_close: FD " << fd << " really closing\n");
 
     fd_close(fd);
 
@@ -235,7 +233,7 @@ diskHandleWrite(int fd, void *notused)
 
     PROF_start(diskHandleWrite);
 
-    debug(6, 3) ("diskHandleWrite: FD %d\n", fd);
+    debugs(6, 3, "diskHandleWrite: FD " << fd);
 
     F->flags.write_daemon = 0;
 
@@ -243,8 +241,7 @@ diskHandleWrite(int fd, void *notused)
 
     assert(fdd->write_q->len > fdd->write_q->buf_offset);
 
-    debug(6, 3) ("diskHandleWrite: FD %d writing %d bytes\n",
-                 fd, (int) (fdd->write_q->len - fdd->write_q->buf_offset));
+    debugs(6, 3, "diskHandleWrite: FD " << fd << " writing " << (int) (fdd->write_q->len - fdd->write_q->buf_offset) << " bytes");
 
     errno = 0;
 
@@ -255,7 +252,7 @@ diskHandleWrite(int fd, void *notused)
                           fdd->write_q->buf + fdd->write_q->buf_offset,
                           fdd->write_q->len - fdd->write_q->buf_offset);
 
-    debug(6, 3) ("diskHandleWrite: FD %d len = %d\n", fd, len);
+    debugs(6, 3, "diskHandleWrite: FD " << fd << " len = " << len);
 
     statCounter.syscalls.disk.writes++;
 
@@ -264,8 +261,8 @@ diskHandleWrite(int fd, void *notused)
     if (len < 0) {
         if (!ignoreErrno(errno)) {
             status = errno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR;
-            debug(50, 1) ("diskHandleWrite: FD %d: disk write error: %s\n",
-                          fd, xstrerror());
+            debugs(50, 1, "diskHandleWrite: FD " << fd << ": disk write error: " << xstrerror());
+
             /*
              * If there is no write callback, then this file is
              * most likely something important like a log file, or
@@ -309,8 +306,10 @@ diskHandleWrite(int fd, void *notused)
         q->buf_offset += len;
 
         if (q->buf_offset > q->len)
-            debug(50, 1) ("diskHandleWriteComplete: q->buf_offset > q->len (%p,%d, %d, %d FD %d)\n",
-                          q, (int) q->buf_offset, q->len, len, fd);
+            debugs(50, 1, "diskHandleWriteComplete: q->buf_offset > q->len (" <<
+                   q << "," << (int) q->buf_offset << ", " << q->len << ", " <<
+                   len << " FD " << fd << ")");
+
 
         assert(q->buf_offset <= q->len);
 
@@ -445,8 +444,7 @@ diskHandleRead(int fd, void *data)
     PROF_start(diskHandleRead);
 
     if (F->disk.offset != ctrl_dat->offset) {
-        debug(6, 3) ("diskHandleRead: FD %d seeking to offset %d\n",
-                     fd, (int) ctrl_dat->offset);
+        debugs(6, 3, "diskHandleRead: FD " << fd << " seeking to offset " << (int) ctrl_dat->offset);
         lseek(fd, ctrl_dat->offset, SEEK_SET);	/* XXX ignore return? */
         statCounter.syscalls.disk.seeks++;
         F->disk.offset = ctrl_dat->offset;
@@ -469,7 +467,7 @@ diskHandleRead(int fd, void *data)
             return;
         }
 
-        debug(50, 1) ("diskHandleRead: FD %d: %s\n", fd, xstrerror());
+        debugs(50, 1, "diskHandleRead: FD " << fd << ": " << xstrerror());
         len = 0;
         rc = DISK_ERROR;
     } else if (len == 0) {
@@ -515,7 +513,7 @@ safeunlink(const char *s, int quiet)
     statCounter.syscalls.disk.unlinks++;
 
     if (unlink(s) < 0 && !quiet)
-        debug(50, 1) ("safeunlink: Couldn't delete %s: %s\n", s, xstrerror());
+        debugs(50, 1, "safeunlink: Couldn't delete " << s << ": " << xstrerror());
 }
 
 /*
@@ -526,7 +524,7 @@ safeunlink(const char *s, int quiet)
 int
 xrename(const char *from, const char *to)
 {
-    debug(21, 2) ("xrename: renaming %s to %s\n", from, to);
+    debugs(21, 2, "xrename: renaming " << from << " to " << to);
 #if defined (_SQUID_OS2_) || defined (_SQUID_WIN32_)
 
     remove
@@ -537,8 +535,7 @@ xrename(const char *from, const char *to)
     if (0 == rename(from, to))
         return 0;
 
-    debug(21, errno == ENOENT ? 2 : 1) ("xrename: Cannot rename %s to %s: %s\n",
-                                        from, to, xstrerror());
+    debugs(21, errno == ENOENT ? 2 : 1, "xrename: Cannot rename " << from << " to " << to << ": " << xstrerror());
 
     return -1;
 }

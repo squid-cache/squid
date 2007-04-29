@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.71 2007/04/21 13:21:58 wessels Exp $
+ * $Id: store_dir_coss.cc,v 1.72 2007/04/28 22:26:50 hno Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store COSS Directory Routines
@@ -140,11 +140,11 @@ CossSwapDir::openLog()
     swaplog_fd = file_open(logPath, O_WRONLY | O_CREAT | O_BINARY);
 
     if (swaplog_fd < 0) {
-        debug(47, 1) ("%s: %s\n", logPath, xstrerror());
+        debugs(47, 1, "" << logPath << ": " << xstrerror());
         fatal("storeCossDirOpenSwapLog: Failed to open swap log.");
     }
 
-    debug(47, 3) ("Cache COSS Dir #%d log opened on FD %d\n", index, swaplog_fd);
+    debugs(47, 3, "Cache COSS Dir #" << index << " log opened on FD " << swaplog_fd);
 }
 
 void
@@ -155,8 +155,7 @@ CossSwapDir::closeLog()
 
     file_close(swaplog_fd);
 
-    debug(47, 3) ("Cache COSS Dir #%d log closed on FD %d\n",
-                  index, swaplog_fd);
+    debugs(47, 3, "Cache COSS Dir #" << index << " log closed on FD " << swaplog_fd);
 
     swaplog_fd = -1;
 }
@@ -165,7 +164,7 @@ void
 CossSwapDir::ioCompletedNotification()
 {
     if (theFile->error()) {
-        debug(47, 1) ("%s: %s\n", path, xstrerror());
+        debugs(47, 1, "" << path << ": " << xstrerror());
         fatal("storeCossDirInit: Failed to open a COSS file.");
     }
 }
@@ -188,8 +187,7 @@ CossSwapDir::readCompleted(const char *buf, int len, int errflag, RefCount<ReadR
     CossState *cstate = dynamic_cast<CossState *>(sio.getRaw());
     ssize_t rlen;
 
-    debug(79, 3) ("storeCossReadDone: fileno %d, len %d\n",
-                  sio->swap_filen, len);
+    debugs(79, 3, "storeCossReadDone: fileno " << sio->swap_filen << ", len " << len);
     cstate->flags.reading = 0;
 
     if (errflag) {
@@ -197,9 +195,9 @@ CossSwapDir::readCompleted(const char *buf, int len, int errflag, RefCount<ReadR
 
         if (errflag > 0) {
             errno = errflag;
-            debug(79, 1) ("storeCossReadDone: error: %s\n", xstrerror());
+            debugs(79, 1, "storeCossReadDone: error: " << xstrerror());
         } else {
-            debug(79, 1) ("storeCossReadDone: got failure (%d)\n", errflag);
+            debugs(79, 1, "storeCossReadDone: got failure (" << errflag << ")");
         }
 
         rlen = -1;
@@ -232,12 +230,12 @@ CossSwapDir::writeCompleted(int errflag, size_t len, RefCount<WriteRequest> writ
     CossWrite* cossWrite= dynamic_cast<CossWrite *>(writeRequest.getRaw());
     assert (cossWrite);
 
-    debug(79, 3) ("storeCossWriteMemBufDone: buf %p, len %ld\n", cossWrite->membuf, (long int) len);
+    debugs(79, 3, "storeCossWriteMemBufDone: buf " << cossWrite->membuf << ", len " << (long int) len);
 
 
     if (errflag) {
         StoreFScoss::GetInstance().stats.stripe_write.fail++;
-        debug(79, 1) ("storeCossWriteMemBufDone: got failure (%d)\n", errflag);
+        debugs(79, 1, "storeCossWriteMemBufDone: got failure (" << errflag << ")");
         debugs(79, 1, "size=" << cossWrite->membuf->diskend - cossWrite->membuf->diskstart);
     } else {
         StoreFScoss::GetInstance().stats.stripe_write.success++;
@@ -406,8 +404,7 @@ storeCossRebuildFromSwapLog(void *data)
 
     for (int aCount = 0; aCount < rb->speed; aCount++) {
         if (fread(&s, ss, 1, rb->log) != 1) {
-            debug(47, 1) ("Done reading %s swaplog (%d entries)\n",
-                          rb->sd->path, rb->n_read);
+            debugs(47, 1, "Done reading " << rb->sd->path << " swaplog (" << rb->n_read << " entries)");
             fclose(rb->log);
             rb->log = NULL;
             storeCossRebuildComplete(rb);
@@ -422,10 +419,10 @@ storeCossRebuildFromSwapLog(void *data)
         if (s.op >= SWAP_LOG_MAX)
             continue;
 
-        debug(47, 3) ("storeCossRebuildFromSwapLog: %s %s %08X\n",
-                      swap_log_op_str[(int) s.op],
-                      storeKeyText(s.key),
-                      s.swap_filen);
+        debugs(47, 3, "storeCossRebuildFromSwapLog: " <<
+               swap_log_op_str[(int) s.op]  << " " << storeKeyText(s.key)  <<
+               " "<< std::setfill('0') << std::hex << std::uppercase <<
+               std::setw(8) << s.swap_filen);
 
         if (s.op == SWAP_LOG_ADD) {
             (void) 0;
@@ -461,8 +458,7 @@ storeCossRebuildFromSwapLog(void *data)
 
             if (0.0 == x - (double)
                     (int) x)
-                debug(47, 1) ("WARNING: %d invalid swap log entries found\n",
-                              rb->counts.bad_log_op);
+                debugs(47, 1, "WARNING: " << rb->counts.bad_log_op << " invalid swap log entries found");
 
             rb->counts.invalid++;
 
@@ -528,7 +524,10 @@ storeCossAddDiskRestore(CossSwapDir * SD, const cache_key * key,
                         int clean)
 {
     StoreEntry *e = NULL;
-    debug(47, 5) ("storeCossAddDiskRestore: %s, fileno=%08X\n", storeKeyText(key), file_number);
+    debugs(47, 5, "storeCossAddDiskRestore: " << storeKeyText(key)  <<
+           ", fileno="<< std::setfill('0') << std::hex << std::uppercase <<
+           std::setw(8) << file_number);
+
     /* if you call this you'd better be sure file_number is not
      * already in use! */
     e = new StoreEntry();
@@ -574,8 +573,7 @@ storeCossDirRebuild(CossSwapDir * sd)
      * we'll use storeCossRebuildFromSwapLog().
      */
     fp = storeCossDirOpenTmpSwapLog(sd, &clean, &zero);
-    debug(47, 1) ("Rebuilding COSS storage in %s (%s)\n",
-                  sd->path, clean ? "CLEAN" : "DIRTY");
+    debugs(47, 1, "Rebuilding COSS storage in " << sd->path << " (" << (clean ? "CLEAN" : "DIRTY") << ")");
     rb->log = fp;
     StoreController::store_dirs_rebuilding++;
 
@@ -618,14 +616,14 @@ storeCossDirCloseTmpSwapLog(CossSwapDir * sd)
     anfd = file_open(swaplog_path, O_WRONLY | O_CREAT | O_BINARY);
 
     if (anfd < 0) {
-        debug(50, 1) ("%s: %s\n", swaplog_path, xstrerror());
+        debugs(50, 1, "" << swaplog_path << ": " << xstrerror());
         fatal("storeCossDirCloseTmpSwapLog: Failed to open swap log.");
     }
 
     safe_free(swaplog_path);
     safe_free(new_path);
     sd->swaplog_fd = anfd;
-    debug(47, 3) ("Cache COSS Dir #%d log opened on FD %d\n", sd->index, anfd);
+    debugs(47, 3, "Cache COSS Dir #" << sd->index << " log opened on FD " << anfd);
 }
 
 static FILE *
@@ -642,7 +640,7 @@ storeCossDirOpenTmpSwapLog(CossSwapDir * sd, int *clean_flag, int *zero_flag)
     int anfd;
 
     if (::stat(swaplog_path, &log_sb) < 0) {
-        debug(50, 1) ("Cache COSS Dir #%d: No log file\n", sd->index);
+        debugs(50, 1, "Cache COSS Dir #" << sd->index << ": No log file");
         safe_free(swaplog_path);
         safe_free(clean_path);
         safe_free(new_path);
@@ -659,7 +657,7 @@ storeCossDirOpenTmpSwapLog(CossSwapDir * sd, int *clean_flag, int *zero_flag)
     anfd = file_open(new_path, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY);
 
     if (anfd < 0) {
-        debug(50, 1) ("%s: %s\n", new_path, xstrerror());
+        debugs(50, 1, "" << new_path << ": " << xstrerror());
         fatal("storeDirOpenTmpSwapLog: Failed to open swap log.");
     }
 
@@ -668,7 +666,7 @@ storeCossDirOpenTmpSwapLog(CossSwapDir * sd, int *clean_flag, int *zero_flag)
     fp = fopen(swaplog_path, "rb");
 
     if (fp == NULL) {
-        debug(50, 0) ("%s: %s\n", swaplog_path, xstrerror());
+        debugs(50, 0, "" << swaplog_path << ": " << xstrerror());
         fatal("Failed to open swap log for reading");
     }
 
@@ -745,8 +743,7 @@ CossSwapDir::writeCleanStart()
     state->outbuf_offset = 0;
     ::unlink(state->cln);
     state->current = cossindex.tail;
-    debug(50, 3) ("storeCOssDirWriteCleanLogs: opened %s, FD %d\n",
-                  state->newLog, state->fd);
+    debugs(50, 3, "storeCOssDirWriteCleanLogs: opened " << state->newLog << ", FD " << state->fd);
 #if HAVE_FCHMOD
 
     if (::stat(state->cur, &sb) == 0)
@@ -803,9 +800,8 @@ CossCleanLog::write(StoreEntry const &e)
 
     if (outbuf_offset + ss > CLEAN_BUF_SZ) {
         if (FD_WRITE_METHOD(fd, outbuf, outbuf_offset) < 0) {
-            debug(50, 0) ("storeCossDirWriteCleanLogs: %s: write: %s\n",
-                          newLog, xstrerror());
-            debug(50, 0) ("storeCossDirWriteCleanLogs: Current swap logfile not replaced.\n");
+            debugs(50, 0, "storeCossDirWriteCleanLogs: " << newLog << ": write: " << xstrerror());
+            debugs(50, 0, "storeCossDirWriteCleanLogs: Current swap logfile not replaced.");
             file_close(fd);
             fd = -1;
             unlink(newLog);
@@ -830,10 +826,8 @@ CossSwapDir::writeCleanDone()
         return;
 
     if (FD_WRITE_METHOD(state->fd, state->outbuf, state->outbuf_offset) < 0) {
-        debug(50, 0) ("storeCossDirWriteCleanLogs: %s: write: %s\n",
-                      state->newLog, xstrerror());
-        debug(50, 0) ("storeCossDirWriteCleanLogs: Current swap logfile "
-                      "not replaced.\n");
+        debugs(50, 0, "storeCossDirWriteCleanLogs: " << state->newLog << ": write: " << xstrerror());
+        debugs(50, 0, "storeCossDirWriteCleanLogs: Current swap logfile not replaced.");
         file_close(state->fd);
         state->fd = -1;
         ::unlink(state->newLog);
@@ -1075,9 +1069,9 @@ CossSwapDir::parse(int anIndex, char *aPath)
     max_offset = (unsigned long) 0xFFFFFF << blksz_bits;
 
     if ((unsigned long)max_size > (unsigned long)(max_offset>>10)) {
-        debug(47,0)("COSS block-size = %d bytes\n", 1<<blksz_bits);
+        debugs(47, 0, "COSS block-size = " << (1<<blksz_bits) << " bytes");
         debugs(47,0, "COSS largest file offset = " << (max_offset >> 10) << " KB");
-        debug(47,0)("COSS cache_dir size = %d KB\n", max_size);
+        debugs(47, 0, "COSS cache_dir size = " << max_size << " KB");
         fatal("COSS cache_dir size exceeds largest offset\n");
     }
 }
@@ -1096,9 +1090,9 @@ CossSwapDir::reconfigure(int index, char *path)
         fatal("storeCossDirParse: invalid size value");
 
     if (size == (size_t)max_size)
-        debug(3, 1) ("Cache COSS dir '%s' size remains unchanged at %d KB\n", path, size);
+        debugs(3, 1, "Cache COSS dir '" << path << "' size remains unchanged at " << size << " KB");
     else {
-        debug(3, 1) ("Cache COSS dir '%s' size changed to %d KB\n", path, size);
+        debugs(3, 1, "Cache COSS dir '" << path << "' size changed to " << size << " KB");
         max_size = size;
     }
 
@@ -1142,8 +1136,7 @@ CossSwapDir::optionBlockSizeParse(const char *option, const char *value, int rec
         return true;
 
     if (reconfiguring) {
-        debug(47, 0) ("WARNING: cannot change COSS block-size while"
-                      " Squid is running\n");
+        debugs(47, 0, "WARNING: cannot change COSS block-size while Squid is running");
         return false;
     }
 

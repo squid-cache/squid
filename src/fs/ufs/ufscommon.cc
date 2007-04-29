@@ -1,5 +1,5 @@
 /*
- * $Id: ufscommon.cc,v 1.10 2007/04/21 07:14:16 wessels Exp $
+ * $Id: ufscommon.cc,v 1.11 2007/04/28 22:26:51 hno Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store Directory Routines
@@ -73,8 +73,7 @@ RebuildState::RebuildState (RefCount<UFSSwapDir> aSwapDir) : sd (aSwapDir), e(NU
     if (!clean)
         flags.need_to_validate = 1;
 
-    debug(47, 1) ("Rebuilding storage in %s (%s)\n",
-                  sd->path, clean ? "CLEAN" : "DIRTY");
+    debugs(47, 1, "Rebuilding storage in " << sd->path << " (" << (clean ? "CLEAN" : "DIRTY") << ")");
 }
 
 RebuildState::~RebuildState()
@@ -146,7 +145,7 @@ RebuildState::rebuildFromDirectory()
     int fd = -1;
     StoreMeta *tlv_list;
     assert(this != NULL);
-    debug(47, 3) ("commonUfsDirRebuildFromDirectory: DIR #%d\n", sd->index);
+    debugs(47, 3, "commonUfsDirRebuildFromDirectory: DIR #" << sd->index);
 
     for (int count = 0; count < speed; count++) {
         assert(fd == -1);
@@ -155,8 +154,7 @@ RebuildState::rebuildFromDirectory()
         fd = getNextFile(&filn, &size);
 
         if (fd == -2) {
-            debug(47, 1) ("Done scanning %s swaplog (%d entries)\n",
-                          sd->path, n_read);
+            debugs(47, 1, "Done scanning " << sd->path << " swaplog (" << n_read << " entries)");
             _done = true;
             return;
         } else if (fd < 0) {
@@ -167,8 +165,7 @@ RebuildState::rebuildFromDirectory()
         /* lets get file stats here */
 
         if (fstat(fd, &sb) < 0) {
-            debug(47, 1) ("commonUfsDirRebuildFromDirectory: fstat(FD %d): %s\n",
-                          fd, xstrerror());
+            debugs(47, 1, "commonUfsDirRebuildFromDirectory: fstat(FD " << fd << "): " << xstrerror());
             file_close(fd);
             store_open_disk_fd--;
             fd = -1;
@@ -176,18 +173,16 @@ RebuildState::rebuildFromDirectory()
         }
 
         if ((++counts.scancount & 0xFFFF) == 0)
-            debug(47, 3) ("  %s %7d files opened so far.\n",
-                          sd->path, counts.scancount);
+            debugs(47, 3, "  " << sd->path  << " " << std::setw(7) << counts.scancount  << " files opened so far.");
+            debugs(47, 9, "file_in: fd=" << fd  << " "<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << filn);
 
-        debug(47, 9) ("file_in: fd=%d %08X\n", fd, filn);
 
         statCounter.syscalls.disk.reads++;
 
         int len;
 
         if ((len = FD_READ_METHOD(fd, hdr_buf, SM_PAGE_SIZE)) < 0) {
-            debug(47, 1) ("commonUfsDirRebuildFromDirectory: read(FD %d): %s\n",
-                          fd, xstrerror());
+            debugs(47, 1, "commonUfsDirRebuildFromDirectory: read(FD " << fd << "): " << xstrerror());
             file_close(fd);
             store_open_disk_fd--;
             fd = -1;
@@ -202,7 +197,7 @@ RebuildState::rebuildFromDirectory()
         StoreMetaUnpacker aBuilder(hdr_buf, len, &swap_hdr_len);
 
         if (!aBuilder.isBufferSane()) {
-            debug(47, 1) ("commonUfsDirRebuildFromDirectory: Swap data buffer length is not sane.\n");
+            debugs(47, 1, "commonUfsDirRebuildFromDirectory: Swap data buffer length is not sane.");
             /* XXX shouldn't this be a call to commonUfsUnlink ? */
             sd->unlinkFile ( filn);
             continue;
@@ -211,13 +206,13 @@ RebuildState::rebuildFromDirectory()
         tlv_list = aBuilder.createStoreMeta ();
 
         if (tlv_list == NULL) {
-            debug(47, 1) ("commonUfsDirRebuildFromDirectory: failed to get meta data\n");
+            debugs(47, 1, "commonUfsDirRebuildFromDirectory: failed to get meta data");
             /* XXX shouldn't this be a call to commonUfsUnlink ? */
             sd->unlinkFile (filn);
             continue;
         }
 
-        debug(47, 3) ("commonUfsDirRebuildFromDirectory: successful swap meta unpacking\n");
+        debugs(47, 3, "commonUfsDirRebuildFromDirectory: successful swap meta unpacking");
         memset(key, '\0', MD5_DIGEST_CHARS);
         memset(&tmpe, '\0', sizeof(StoreEntry));
         InitStoreEntry visitor(&tmpe, key);
@@ -226,7 +221,7 @@ RebuildState::rebuildFromDirectory()
         tlv_list = NULL;
 
         if (storeKeyNull(key)) {
-            debug(47, 1) ("commonUfsDirRebuildFromDirectory: NULL key\n");
+            debugs(47, 1, "commonUfsDirRebuildFromDirectory: NULL key");
             sd->unlinkFile(filn);
             continue;
         }
@@ -239,8 +234,10 @@ RebuildState::rebuildFromDirectory()
         } else if (tmpe.swap_file_sz == (size_t)(sb.st_size - swap_hdr_len)) {
             tmpe.swap_file_sz = (size_t) sb.st_size;
         } else if (tmpe.swap_file_sz != (size_t)sb.st_size) {
-            debug(47, 1) ("commonUfsDirRebuildFromDirectory: SIZE MISMATCH %ld!=%ld\n",
-                          (long int) tmpe.swap_file_sz, (long int) sb.st_size);
+            debugs(47, 1, "commonUfsDirRebuildFromDirectory: SIZE MISMATCH " <<
+                   (long int) tmpe.swap_file_sz << "!=" <<
+                   (long int) sb.st_size);
+
             sd->unlinkFile(filn);
             continue;
         }
@@ -324,8 +321,7 @@ RebuildState::rebuildFromSwapLog()
         size_t ss = sizeof(StoreSwapLogData);
 
         if (fread(&swapData, ss, 1, log) != 1) {
-            debug(47, 1) ("Done reading %s swaplog (%d entries)\n",
-                          sd->path, n_read);
+            debugs(47, 1, "Done reading " << sd->path << " swaplog (" << n_read << " entries)");
             fclose(log);
             log = NULL;
             _done = true;
@@ -350,10 +346,11 @@ RebuildState::rebuildFromSwapLog()
          */
         swapData.swap_filen &= 0x00FFFFFF;
 
-        debug(47, 3) ("commonUfsDirRebuildFromSwapLog: %s %s %08X\n",
-                      swap_log_op_str[(int) swapData.op],
-                      storeKeyText(swapData.key),
-                      swapData.swap_filen);
+        debugs(47, 3, "commonUfsDirRebuildFromSwapLog: " <<
+               swap_log_op_str[(int) swapData.op]  << " " <<
+               storeKeyText(swapData.key)  << " "<< std::setfill('0') <<
+               std::hex << std::uppercase << std::setw(8) <<
+               swapData.swap_filen);
 
         if (swapData.op == SWAP_LOG_ADD) {
             (void) 0;
@@ -397,8 +394,7 @@ RebuildState::rebuildFromSwapLog()
             x = ::log(static_cast<double>(++counts.bad_log_op)) / ::log(10.0);
 
             if (0.0 == x - (double) (int) x)
-                debug(47, 1) ("WARNING: %d invalid swap log entries found\n",
-                              counts.bad_log_op);
+                debugs(47, 1, "WARNING: " << counts.bad_log_op << " invalid swap log entries found");
 
             counts.invalid++;
 
@@ -459,7 +455,7 @@ RebuildState::rebuildFromSwapLog()
                 sd->dereference(*currentEntry());
             } else {
                 debug_trap("commonUfsDirRebuildFromSwapLog: bad condition");
-                debug(47, 1) ("\tSee %s:%d\n", __FILE__, __LINE__);
+                debugs(47, 1, "\tSee " << __FILE__ << ":" << __LINE__);
             }
 
             continue;
@@ -469,8 +465,10 @@ RebuildState::rebuildFromSwapLog()
              * point.  If the log is dirty, the filesize check should have
              * caught this.  If the log is clean, there should never be a
              * newer entry. */
-            debug(47, 1) ("WARNING: newer swaplog entry for dirno %d, fileno %08X\n",
-                          sd->index, swapData.swap_filen);
+             debugs(47, 1, "WARNING: newer swaplog entry for dirno " <<
+                    sd->index  << ", fileno "<< std::setfill('0') << std::hex <<
+                    std::uppercase << std::setw(8) << swapData.swap_filen);
+
             /* I'm tempted to remove the swapfile here just to be safe,
              * but there is a bad race condition in the NOVM version if
              * the swapfile has recently been opened for writing, but
@@ -535,11 +533,10 @@ RebuildState::getNextFile(sfileno * filn_p, int *size)
 {
     int fd = -1;
     int dirs_opened = 0;
-    debug(47, 3) ("commonUfsDirGetNextFile: flag=%d, %d: /%02X/%02X\n",
-                  flags.init,
-                  sd->index,
-                  curlvl1,
-                  curlvl2);
+    debugs(47, 3, "commonUfsDirGetNextFile: flag=" << flags.init  << ", " <<
+           sd->index  << ": /"<< std::setfill('0') << std::hex <<
+           std::uppercase << std::setw(2) << curlvl1  << "/" << std::setw(2) <<
+           curlvl2);
 
     if (done)
         return -2;
@@ -569,16 +566,14 @@ RebuildState::getNextFile(sfileno * filn_p, int *size)
             dirs_opened++;
 
             if (td == NULL) {
-                debug(47, 1) ("commonUfsDirGetNextFile: opendir: %s: %s\n",
-                              fullpath, xstrerror());
+                debugs(47, 1, "commonUfsDirGetNextFile: opendir: " << fullpath << ": " << xstrerror());
             } else {
                 entry = readdir(td);	/* skip . and .. */
                 entry = readdir(td);
 
                 if (entry == NULL && errno == ENOENT)
-                    debug(47, 1) ("commonUfsDirGetNextFile: directory does not exist!.\n");
-
-                debug(47, 3) ("commonUfsDirGetNextFile: Directory %s\n", fullpath);
+                debugs(47, 1, "commonUfsDirGetNextFile: directory does not exist!.");
+                debugs(47, 3, "commonUfsDirGetNextFile: Directory " << fullpath);
             }
         }
 
@@ -586,29 +581,31 @@ RebuildState::getNextFile(sfileno * filn_p, int *size)
             in_dir++;
 
             if (sscanf(entry->d_name, "%x", &fn) != 1) {
-                debug(47, 3) ("commonUfsDirGetNextFile: invalid %s\n",
-                              entry->d_name);
+                debugs(47, 3, "commonUfsDirGetNextFile: invalid " << entry->d_name);
                 continue;
             }
 
             if (!UFSSwapDir::FilenoBelongsHere(fn, sd->index, curlvl1, curlvl2)) {
-                debug(47, 3) ("commonUfsDirGetNextFile: %08X does not belong in %d/%d/%d\n",
-                              fn, sd->index, curlvl1, curlvl2);
+                debugs(47, 3, "commonUfsDirGetNextFile: "<< std::setfill('0') <<
+                       std::hex << std::uppercase << std::setw(8) << fn  <<
+                       " does not belong in " << std::dec << sd->index  << "/" <<
+                       curlvl1  << "/" << curlvl2);
+
                 continue;
             }
 
             if (sd->mapBitTest(fn)) {
-                debug(47, 3) ("commonUfsDirGetNextFile: Locked, continuing with next.\n");
+                debugs(47, 3, "commonUfsDirGetNextFile: Locked, continuing with next.");
                 continue;
             }
 
             snprintf(fullfilename, SQUID_MAXPATHLEN, "%s/%s",
                      fullpath, entry->d_name);
-            debug(47, 3) ("commonUfsDirGetNextFile: Opening %s\n", fullfilename);
+            debugs(47, 3, "commonUfsDirGetNextFile: Opening " << fullfilename);
             fd = file_open(fullfilename, O_RDONLY | O_BINARY);
 
             if (fd < 0)
-                debug(47, 1) ("commonUfsDirGetNextFile: %s: %s\n", fullfilename, xstrerror());
+                debugs(47, 1, "commonUfsDirGetNextFile: " << fullfilename << ": " << xstrerror());
             else
                 store_open_disk_fd++;
 

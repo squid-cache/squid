@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.24 2006/09/20 00:59:26 adrian Exp $
+ * $Id: MemObject.cc,v 1.25 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -138,7 +138,7 @@ void
 MemObject::write ( StoreIOBuffer writeBuffer, STMCB *callback, void *callbackData)
 {
     PROF_start(MemObject_write);
-    debug(19, 6) ("memWrite: offset %lu len %ld\n", (unsigned long)writeBuffer.offset, (long)writeBuffer.length);
+    debugs(19, 6, "memWrite: offset " << (unsigned long)writeBuffer.offset << " len " << (long)writeBuffer.length);
 
     /* the offset is into the content, not the headers */
     writeBuffer.offset += (_reply ? _reply->hdr_sz : 0);
@@ -159,26 +159,16 @@ MemObject::dump() const
     data_hdr.dump();
 #if 0
     /* do we want this one? */
-    debug(20, 1) ("MemObject->data.origin_offset: %d\n",
-                  data_hdr.head ? data_hdr.head->nodeBuffer.offset : 0);
+    debugs(20, 1, "MemObject->data.origin_offset: " << (data_hdr.head ? data_hdr.head->nodeBuffer.offset : 0));
 #endif
 
-    debug(20, 1) ("MemObject->start_ping: %d.%06d\n",
-                  (int) start_ping.tv_sec,
-                  (int) start_ping.tv_usec);
-    debug(20, 1) ("MemObject->inmem_hi: %d\n",
-                  (int) data_hdr.endOffset());
-    debug(20, 1) ("MemObject->inmem_lo: %d\n",
-                  (int) inmem_lo);
-    debug(20, 1) ("MemObject->nclients: %d\n",
-                  nclients);
-    debug(20, 1) ("MemObject->reply: %p\n",
-                  _reply);
-    debug(20, 1) ("MemObject->request: %p\n",
-                  request);
-    debug(20, 1) ("MemObject->log_url: %p %s\n",
-                  log_url,
-                  checkNullString(log_url));
+    debugs(20, 1, "MemObject->start_ping: " << (int) start_ping.tv_sec  << "."<< std::setfill('0') << std::setw(6) << (int) start_ping.tv_usec);
+    debugs(20, 1, "MemObject->inmem_hi: " << (int) data_hdr.endOffset());
+    debugs(20, 1, "MemObject->inmem_lo: " << (int) inmem_lo);
+    debugs(20, 1, "MemObject->nclients: " << nclients);
+    debugs(20, 1, "MemObject->reply: " << _reply);
+    debugs(20, 1, "MemObject->request: " << request);
+    debugs(20, 1, "MemObject->log_url: " << log_url << " " << checkNullString(log_url));
 }
 
 HttpReply const *
@@ -383,8 +373,7 @@ MemObject::isContiguous() const
 {
     bool result = data_hdr.hasContigousContentRange (Range<size_t>(inmem_lo, endOffset()));
     /* XXX : make this higher level */
-    debug (19, result ? 4 :3) ("MemObject::isContiguous: Returning %s\n",
-                               result ? "true" : "false");
+    debugs (19, result ? 4 :3, "MemObject::isContiguous: Returning " << (result ? "true" : "false"));
     return result;
 }
 

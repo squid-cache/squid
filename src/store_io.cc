@@ -49,12 +49,12 @@ storeCreate(StoreEntry * e, StoreIOState::STFNCB * file_callback, StoreIOState::
     dirn = storeDirSelectSwapDir(e);
 
     if (dirn == -1) {
-        debug(20, 2) ("storeCreate: no valid swapdirs for this object\n");
+        debugs(20, 2, "storeCreate: no valid swapdirs for this object");
         store_io_stats.create.select_fail++;
         return NULL;
     }
 
-    debug(20, 2) ("storeCreate: Selected dir '%d' for obj size '%ld'\n", dirn, (long int) objsize);
+    debugs(20, 2, "storeCreate: Selected dir '" << dirn << "' for obj size '" << (long int) objsize << "'");
     SD = dynamic_cast<SwapDir *>(INDEXSD(dirn));
 
     /* Now that we have a fs to use, call its storeCreate function */

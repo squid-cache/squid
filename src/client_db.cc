@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.67 2006/08/07 02:28:22 robertc Exp $
+ * $Id: client_db.cc,v 1.68 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -208,12 +208,13 @@ clientdbCutoffDenied(struct IN_ADDR addr)
     if (p < 95.0)
         return 0;
 
-    debug(1, 0) ("WARNING: Probable misconfigured neighbor at %s\n", key);
+    debugs(1, 0, "WARNING: Probable misconfigured neighbor at " << key);
 
-    debug(1, 0) ("WARNING: %d of the last %d ICP replies are DENIED\n", ND, NR);
+    debugs(1, 0, "WARNING: " << ND << " of the last " << NR <<
+           " ICP replies are DENIED");
 
-    debug(1, 0) ("WARNING: No replies will be sent for the next %d seconds\n",
-                 CUTOFF_SECONDS);
+    debugs(1, 0, "WARNING: No replies will be sent for the next " <<
+           CUTOFF_SECONDS << " seconds");
 
     c->cutoff.time = squid_curtime;
 
@@ -369,7 +370,7 @@ clientdbGC(void *unused)
             eventAdd("client_db garbage collector", clientdbScheduledGC, NULL, 6 * 3600, 0);
         }
 
-        debug(49, 2) ("clientdbGC: Removed %d entries\n", cleanup_removed);
+        debugs(49, 2, "clientdbGC: Removed " << cleanup_removed << " entries");
     }
 }
 
@@ -426,15 +427,15 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
     int aggr = 0;
     log_type l;
     *ErrP = SNMP_ERR_NOERROR;
-    debug(49, 6) ("snmp_meshCtblFn: Current : \n");
+    debugs(49, 6, "snmp_meshCtblFn: Current : ");
     snmpDebugOid(6, Var->name, Var->name_length);
     snprintf(key, sizeof(key), "%d.%d.%d.%d", Var->name[LEN_SQ_NET + 3], Var->name[LEN_SQ_NET + 4],
              Var->name[LEN_SQ_NET + 5], Var->name[LEN_SQ_NET + 6]);
-    debug(49, 5) ("snmp_meshCtblFn: [%s] requested!\n", key);
+    debugs(49, 5, "snmp_meshCtblFn: [" << key << "] requested!");
     c = (ClientInfo *) hash_lookup(client_table, key);
 
     if (c == NULL) {
-        debug(49, 5) ("snmp_meshCtblFn: not found.\n");
+        debugs(49, 5, "snmp_meshCtblFn: not found.");
         *ErrP = SNMP_ERR_NOSUCHNAME;
         return NULL;
     }
@@ -505,7 +506,7 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
 
     default:
         *ErrP = SNMP_ERR_NOSUCHNAME;
-        debug(49, 5) ("snmp_meshCtblFn: illegal column.\n");
+        debugs(49, 5, "snmp_meshCtblFn: illegal column.");
         break;
     }
 

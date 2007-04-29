@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESICustomParser.cc,v 1.7 2005/07/03 15:25:08 serassio Exp $
+ * $Id: ESICustomParser.cc,v 1.8 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -91,7 +91,7 @@ ESICustomParser::findTag(char const *buffer, size_t bufferLength)
     if (myOffset == bufferLength)
         return NULL;
 
-    debug (86,9)("ESICustomParser::findTag: found %d\n", *resulttype);
+    debugs(86, 9, "ESICustomParser::findTag: found " << *resulttype);
 
     lastTag = *resulttype;
 
@@ -101,7 +101,7 @@ ESICustomParser::findTag(char const *buffer, size_t bufferLength)
 bool
 ESICustomParser::parse(char const *dataToParse, size_t const lengthOfData, bool const endOfStream)
 {
-    debug (86,9)("ESICustomParser::parse: Appending data to internal buffer\n");
+    debugs(86, 9, "ESICustomParser::parse: Appending data to internal buffer");
     content.append (dataToParse, lengthOfData);
 
     if (!endOfStream) {
@@ -283,7 +283,7 @@ ESICustomParser::parse(char const *dataToParse, size_t const lengthOfData, bool 
     if (remainingCount)
         theClient->parserDefault (currentPos,remainingCount);
 
-    debug (86,5)("ESICustomParser::parse: Finished parsing, will return %d\n", !openESITags);
+    debugs(86, 5, "ESICustomParser::parse: Finished parsing, will return " << !openESITags);
 
     if (openESITags)
         error = "ESI Tags still open";

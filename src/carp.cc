@@ -1,6 +1,6 @@
 
 /*
- * $Id: carp.cc,v 1.25 2006/05/29 00:15:01 robertc Exp $
+ * $Id: carp.cc,v 1.26 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 39    Cache Array Routing Protocol
  * AUTHOR: Henrik Nordstrom
@@ -177,7 +177,7 @@ carpSelectParent(HttpRequest * request)
     key = urlCanonical(request);
 
     /* calculate hash key */
-    debug(39, 2) ("carpSelectParent: Calculating hash for %s\n", key);
+    debugs(39, 2, "carpSelectParent: Calculating hash for " << key);
 
     for (c = key; *c != 0; c++)
         user_hash += ROTATE_LEFT(user_hash, 19) + *c;
@@ -189,8 +189,8 @@ carpSelectParent(HttpRequest * request)
         combined_hash += combined_hash * 0x62531965;
         combined_hash = ROTATE_LEFT(combined_hash, 21);
         score = combined_hash * tp->carp.load_multiplier;
-        debug(39, 3) ("carpSelectParent: %s combined_hash %u score %.0f\n",
-                      tp->host, combined_hash, score);
+        debugs(39, 3, "carpSelectParent: " << tp->host << " combined_hash " << combined_hash  << 
+               " score " << std::setprecision(0) << score);
 
         if ((score > high_score) && peerHTTPOkay(tp, request)) {
             p = tp;
@@ -199,7 +199,7 @@ carpSelectParent(HttpRequest * request)
     }
 
     if (p)
-        debug(39, 2) ("carpSelectParent: selected %s\n", p->host);
+        debugs(39, 2, "carpSelectParent: selected " << p->host);
 
     return p;
 }

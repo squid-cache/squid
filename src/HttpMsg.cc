@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.41 2007/04/06 12:15:51 serassio Exp $
+ * $Id: HttpMsg.cc,v 1.42 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -400,7 +400,7 @@ HttpParserInit(HttpParser *hdr, const char *buf, int bufsiz)
 	hdr->bufsiz = bufsiz;
 	hdr->req_start = hdr->req_end = -1;
 	hdr->hdr_start = hdr->hdr_end = -1;
-	debug(74, 5)("httpParseInit: Request buffer is %s\n", buf);
+        debugs(74, 5, "httpParseInit: Request buffer is " << buf);
 }
 
 #if MSGDODEBUG
@@ -466,7 +466,7 @@ HttpParserParseReqLine(HttpParser *hmsg)
 	int maj = -1, min = -1;
 	int last_whitespace = -1, line_end = -1;
 
-	debug(74, 5)("httpParserParseReqLine: parsing %s\n", hmsg->buf);
+        debugs(74, 5, "httpParserParseReqLine: parsing " << hmsg->buf);
 
 	PROF_start(HttpParserParseReqLine);
 	/* Find \r\n - end of URL+Version (and the request) */
@@ -612,11 +612,12 @@ finish:
 	hmsg->v_maj = maj;
 	hmsg->v_min = min;
 	PROF_stop(HttpParserParseReqLine);
-	debug(74, 5) ("Parser: retval %d: from %d->%d: method %d->%d; url %d->%d; version %d->%d (%d/%d)\n",
-	    retcode, hmsg->req_start, hmsg->req_end,
-	    hmsg->m_start, hmsg->m_end,
-	    hmsg->u_start, hmsg->u_end,
-	    hmsg->v_start, hmsg->v_end, maj, min);
+        debugs(74, 5, "Parser: retval " << retcode << ": from " << hmsg->req_start <<
+               "->" << hmsg->req_end << ": method " << hmsg->m_start << "->" <<
+               hmsg->m_end << "; url " << hmsg->u_start << "->" << hmsg->u_end <<
+               "; version " << hmsg->v_start << "->" << hmsg->v_end << " (" << maj <<
+               "/" << min << ")");
+
 	return retcode;
 }
 

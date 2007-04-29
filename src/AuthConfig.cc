@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthConfig.cc,v 1.2 2006/05/29 00:14:59 robertc Exp $
+ * $Id: AuthConfig.cc,v 1.3 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -46,12 +46,12 @@ AuthUserRequest *
 AuthConfig::CreateAuthUser(const char *proxy_auth)
 {
     assert(proxy_auth != NULL);
-    debug(29, 9) ("AuthConfig::CreateAuthUser: header = '%s'\n", proxy_auth);
+    debugs(29, 9, "AuthConfig::CreateAuthUser: header = '" << proxy_auth << "'");
 
     AuthConfig *config = Find(proxy_auth);
 
     if (config == NULL || !config->active()) {
-        debug(29, 1) ("AuthConfig::CreateAuthUser: Unsupported or unconfigured/inactive proxy-auth scheme, '%s'\n", proxy_auth);
+        debugs(29, 1, "AuthConfig::CreateAuthUser: Unsupported or unconfigured/inactive proxy-auth scheme, '" << proxy_auth << "'");
         return NULL;
     }
 

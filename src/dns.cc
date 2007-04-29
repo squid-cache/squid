@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns.cc,v 1.99 2006/10/20 05:34:20 wessels Exp $
+ * $Id: dns.cc,v 1.100 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
@@ -125,7 +125,7 @@ dnsSubmit(const char *lookup, HLPCB * callback, void *data)
         if (squid_curtime - first_warn > 3 * 60)
             fatal("DNS servers not responding for 3 minutes");
 
-        debug(34, 1) ("dnsSubmit: queue overload, rejecting %s\n", lookup);
+        debugs(34, 1, "dnsSubmit: queue overload, rejecting " << lookup);
 
         callback(data, (char *)"$fail Temporary network problem, please retry later");
 
@@ -144,7 +144,7 @@ variable_list *
 snmp_netDnsFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer = NULL;
-    debug(49, 5) ("snmp_netDnsFn: Processing request: %d\n", Var->name[LEN_SQ_NET + 1]);
+    debugs(49, 5, "snmp_netDnsFn: Processing request: " << Var->name[LEN_SQ_NET + 1]);
     snmpDebugOid(5, Var->name, Var->name_length);
     *ErrP = SNMP_ERR_NOERROR;
 

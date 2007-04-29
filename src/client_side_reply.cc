@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.120 2007/04/21 07:14:13 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.121 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -169,7 +169,7 @@ void
 clientReplyContext::saveState()
 {
     assert(old_sc == NULL);
-    debug(88, 3)("clientReplyContext::saveState: saving store context\n");
+    debugs(88, 3, "clientReplyContext::saveState: saving store context");
     old_entry = http->storeEntry();
     old_sc = sc;
     old_reqsize = reqsize;
@@ -185,7 +185,7 @@ void
 clientReplyContext::restoreState()
 {
     assert(old_sc != NULL);
-    debug(88, 3)("clientReplyContext::restoreState: Restoring store context\n");
+    debugs(88, 3, "clientReplyContext::restoreState: Restoring store context");
     removeClientStoreReference(&sc, http);
     http->storeEntry(old_entry);
     sc = old_sc;
@@ -234,7 +234,7 @@ clientReplyContext::processExpired()
 {
     char *url = http->uri;
     StoreEntry *entry = NULL;
-    debug(88, 3)("clientReplyContext::processExpired: '%s'", http->uri);
+    debugs(88, 3, "clientReplyContext::processExpired: '" << http->uri << "'");
     assert(http->storeEntry()->lastmod >= 0);
     /*
      * check if we are allowed to contact other servers
@@ -265,8 +265,7 @@ clientReplyContext::processExpired()
 #endif
 
     http->request->lastmod = old_entry->lastmod;
-    debug(88, 5)("clientReplyContext::processExpired : lastmod %ld",
-                 (long int) entry->lastmod);
+    debugs(88, 5, "clientReplyContext::processExpired : lastmod " << (long int) entry->lastmod );
     http->storeEntry(entry);
     assert(http->out.offset == 0);
 
@@ -280,7 +279,7 @@ clientReplyContext::processExpired()
     /* Register with storage manager to receive updates when data comes in. */
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
-        debug(88, 0) ("clientReplyContext::processExpired: Found ENTRY_ABORTED object");
+        debugs(88, 0, "clientReplyContext::processExpired: Found ENTRY_ABORTED object");
 
     {
         /* start counting the length from 0 */
@@ -340,9 +339,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
     if (deleting)
         return;
 
-    debug(88, 3) ("handleIMSReply: %s, %lu bytes\n",
-                  http->storeEntry()->url(),
-                  (long unsigned) result.length);
+    debugs(88, 3, "handleIMSReply: " << http->storeEntry()->url() << ", " << (long unsigned) result.length << " bytes" );
 
     if (http->storeEntry() == NULL)
         return;
@@ -357,7 +354,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
 
     // request to origin was aborted
     if (EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED)) {
-        debug(88, 3) ("handleIMSReply: request to origin aborted '%s', sending old entry to client\n", http->storeEntry()->url());
+        debugs(88, 3, "handleIMSReply: request to origin aborted '" << http->storeEntry()->url() << "', sending old entry to client" );
         http->logType = LOG_TCP_REFRESH_FAIL;
         sendClientOldEntry();
     }
@@ -367,14 +364,14 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         // header is too large, send old entry
 
         if (reqsize >= HTTP_REQBUF_SZ) {
-            debug(88, 3) ("handleIMSReply: response from origin is too large '%s', sending old entry to client\n", http->storeEntry()->url());
+            debugs(88, 3, "handleIMSReply: response from origin is too large '" << http->storeEntry()->url() << "', sending old entry to client" );
             http->logType = LOG_TCP_REFRESH_FAIL;
             sendClientOldEntry();
         }
 
         // everything looks fine, we're just waiting for more data
         else {
-            debug(88, 3) ("handleIMSReply: incomplete headers for '%s', waiting for more data\n", http->storeEntry()->url());
+            debugs(88, 3, "handleIMSReply: incomplete headers for '" << http->storeEntry()->url() << "', waiting for more data" );
             reqofs = reqsize;
             waitForMoreData();
         }
@@ -398,11 +395,12 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
 
             if (http->request->flags.ims) {
                 // forward the 304 from origin
-                debug(88,3) ("handleIMSReply: origin replied 304, revalidating existing entry and forwarding 304 to client\n");
+                debugs(88, 3, "handleIMSReply: origin replied 304, revalidating existing entry and forwarding 304 to client");
                 sendClientUpstreamResponse();
             } else {
                 // send existing entry, it's still valid
-                debug(88,3) ("handleIMSReply: origin replied 304, revalidating existing entry and sending %d to client\n", old_rep->sline.status);
+                debugs(88, 3, "handleIMSReply: origin replied 304, revalidating existing entry and sending " <<
+                       old_rep->sline.status << " to client");
                 sendClientOldEntry();
             }
         }
@@ -411,7 +409,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         else if (status > HTTP_STATUS_NONE && status < HTTP_INTERNAL_SERVER_ERROR) {
             // forward response from origin
             http->logType = LOG_TCP_REFRESH_MODIFIED;
-            debug(88,3) ("handleIMSReply: origin replied %d, replacing existing entry and forwarding to client\n", status);
+            debugs(88, 3, "handleIMSReply: origin replied " << status << ", replacing existing entry and forwarding to client");
             sendClientUpstreamResponse();
         }
 
@@ -419,7 +417,8 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         else {
             // ignore and let client have old entry
             http->logType = LOG_TCP_REFRESH_FAIL;
-            debug(88,3) ("handleIMSReply: origin replied with error %d, sending old entry (%d) to client\n", status, old_rep->sline.status);
+            debugs(88, 3, "handleIMSReply: origin replied with error " <<
+                   status << ", sending old entry (" << old_rep->sline.status << ") to client");
             sendClientOldEntry();
         }
     }
@@ -452,14 +451,14 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
 
     HttpRequest *r = http->request;
 
-    debug(88, 3) ("clientCacheHit: %s, %u bytes\n", http->uri, (unsigned int)result.length);
+    debugs(88, 3, "clientCacheHit: " << http->uri << ", " << (unsigned int)result.length << " bytes");
 
     if (http->storeEntry() == NULL) {
-        debug(88, 3) ("clientCacheHit: request aborted\n");
+        debugs(88, 3, "clientCacheHit: request aborted");
         return;
     } else if (result.flags.error) {
         /* swap in failure */
-        debug(88, 3) ("clientCacheHit: swapin failure for %s\n", http->uri);
+        debugs(88, 3, "clientCacheHit: swapin failure for " << http->uri);
         http->logType = LOG_TCP_SWAPFAIL_MISS;
         removeClientStoreReference(&sc, http);
         processMiss();
@@ -492,7 +491,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
                    && http->out.offset == 0) {
             processMiss();
         } else {
-            debug(88, 3) ("clientCacheHit: waiting for HTTP reply headers\n");
+            debugs(88, 3, "clientCacheHit: waiting for HTTP reply headers");
             reqofs += result.length;
             assert(reqofs <= HTTP_REQBUF_SZ);
             /* get the next users' buffer */
@@ -520,7 +519,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
 
     case VARY_MATCH:
         /* This is the correct entity for this request. Continue */
-        debug(88, 2) ("clientProcessHit: Vary MATCH!\n");
+        debugs(88, 2, "clientProcessHit: Vary MATCH!");
         break;
 
     case VARY_OTHER:
@@ -532,13 +531,13 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
         /* Note: varyEvalyateMatch updates the request with vary information
          * so we only get here once. (it also takes care of cancelling loops)
          */
-        debug(88, 2) ("clientProcessHit: Vary detected!\n");
+         debugs(88, 2, "clientProcessHit: Vary detected!");
         clientGetMoreData(ourNode, http);
         return;
 
     case VARY_CANCEL:
         /* varyEvaluateMatch found a object loop. Process as miss */
-        debug(88, 1) ("clientProcessHit: Vary object loop!\n");
+        debugs(88, 1, "clientProcessHit: Vary object loop!");
         processMiss();
         return;
     }
@@ -558,7 +557,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
         http->logType = LOG_TCP_NEGATIVE_HIT;
         sendMoreData(result);
     } else if (!Config.onoff.offline && refreshCheckHTTP(e, r) && !http->flags.internal) {
-        debug(88, 5) ("clientCacheHit: in refreshCheck() block\n");
+        debugs(88, 5, "clientCacheHit: in refreshCheck() block");
         /*
          * We hold a stale copy; it needs to be validated
          */
@@ -605,8 +604,8 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
          */
 
         if (e->getReply()->sline.status != HTTP_OK) {
-            debug(88, 4) ("clientCacheHit: Reply code %d != 200\n",
-                          e->getReply()->sline.status);
+            debugs(88, 4, "clientCacheHit: Reply code " <<
+                   e->getReply()->sline.status << " != 200");
             http->logType = LOG_TCP_MISS;
             processMiss();
         } else if (e->modifiedSince(http->request)) {
@@ -658,8 +657,7 @@ clientReplyContext::processMiss()
     char *url = http->uri;
     HttpRequest *r = http->request;
     ErrorState *err = NULL;
-    debug(88, 4) ("clientProcessMiss: '%s %s'\n",
-                  RequestMethodStr[r->method], url);
+    debugs(88, 4, "clientProcessMiss: '" << RequestMethodStr[r->method] << " " << url << "'");
     /*
      * We might have a left-over StoreEntry from a failed cache hit
      * or IMS request.
@@ -667,9 +665,8 @@ clientReplyContext::processMiss()
 
     if (http->storeEntry()) {
         if (EBIT_TEST(http->storeEntry()->flags, ENTRY_SPECIAL)) {
-            debug(88, 0) ("clientProcessMiss: miss on a special object (%s).\n",
-                          url);
-            debug(88, 0) ("\tlog_type = %s\n", log_tags[http->logType]);
+            debugs(88, 0, "clientProcessMiss: miss on a special object (" << url << ").");
+            debugs(88, 0, "\tlog_type = " << log_tags[http->logType]);
             http->storeEntry()->dump(1);
         }
 
@@ -736,8 +733,8 @@ void
 clientReplyContext::processOnlyIfCachedMiss()
 {
     ErrorState *err = NULL;
-    debug(88, 4) ("clientProcessOnlyIfCachedMiss: '%s %s'\n",
-                  RequestMethodStr[http->request->method], http->uri);
+    debugs(88, 4, "clientProcessOnlyIfCachedMiss: '" <<
+           RequestMethodStr[http->request->method] << " " << http->uri << "'");
     http->al.http.code = HTTP_GATEWAY_TIMEOUT;
     err = clientBuildError(ERR_ONLY_IF_CACHED_MISS, HTTP_GATEWAY_TIMEOUT, NULL,
                            &http->getConn()->peer.sin_addr, http->request);
@@ -832,8 +829,8 @@ clientReplyContext::purgeFoundObject(StoreEntry *entry)
 void
 clientReplyContext::purgeRequest()
 {
-    debug(88, 3) ("Config2.onoff.enable_purge = %d\n",
-                  Config2.onoff.enable_purge);
+    debugs(88, 3, "Config2.onoff.enable_purge = " <<
+           Config2.onoff.enable_purge);
 
     if (!Config2.onoff.enable_purge) {
         http->logType = LOG_TCP_DENIED;
@@ -870,7 +867,7 @@ clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
 
     if (!newEntry->isNull()) {
         /* Release the cached URI */
-        debug(88, 4) ("clientPurgeRequest: GET '%s'\n", newEntry->url());
+        debugs(88, 4, "clientPurgeRequest: GET '" << newEntry->url() << "'" );
         newEntry->release();
         purgeStatus = HTTP_OK;
     }
@@ -883,7 +880,7 @@ void
 clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 {
     if (newEntry && !newEntry->isNull()) {
-        debug(88, 4) ("clientPurgeRequest: HEAD '%s'\n", newEntry->url());
+        debugs(88, 4, "clientPurgeRequest: HEAD '" << newEntry->url() << "'" );
         newEntry->release();
         purgeStatus = HTTP_OK;
     }
@@ -895,8 +892,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
         StoreEntry *entry = storeGetPublic(urlCanonical(http->request), METHOD_GET);
 
         if (entry) {
-            debug(88, 4) ("clientPurgeRequest: Vary GET '%s'\n",
-                          entry->url());
+            debugs(88, 4, "clientPurgeRequest: Vary GET '" << entry->url() << "'" );
             entry->release();
             purgeStatus = HTTP_OK;
         }
@@ -904,8 +900,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
         entry = storeGetPublic(urlCanonical(http->request), METHOD_HEAD);
 
         if (entry) {
-            debug(88, 4) ("clientPurgeRequest: Vary HEAD '%s'\n",
-                          entry->url());
+            debugs(88, 4, "clientPurgeRequest: Vary HEAD '" << entry->url() << "'" );
             entry->release();
             purgeStatus = HTTP_OK;
         }
@@ -1048,25 +1043,20 @@ clientHttpRequestStatus(int fd, ClientHttpRequest const *http)
 #if SIZEOF_SIZE_T == 4
 
     if (http->out.size > 0x7FFF0000) {
-        debug(88, 1) ("WARNING: closing FD %d to prevent counter overflow\n",
-                      fd);
-        debug(88, 1) ("\tclient %s\n",
-                      inet_ntoa(http->getConn() != NULL ? http->getConn()->peer.sin_addr : no_addr));
-        debug(88, 1) ("\treceived %d bytes\n", (int) http->out.size);
-        debug(88, 1) ("\tURI %s\n", http->log_uri);
+        debugs(88, 1, "WARNING: closing FD " << fd << " to prevent counter overflow" );
+        debugs(88, 1, "\tclient " << (inet_ntoa(http->getConn() != NULL ? http->getConn()->peer.sin_addr : no_addr))  );
+        debugs(88, 1, "\treceived " << (int) http->out.size << " bytes" );
+        debugs(88, 1, "\tURI " << http->log_uri  );
         return 1;
     }
 
 #endif
 #if SIZEOF_OFF_T == 4
     if (http->out.offset > 0x7FFF0000) {
-        debug(88, 1) ("WARNING: closing FD %d to prevent counter overflow\n",
-                      fd);
-        debug(88, 1) ("\tclient %s\n",
-                      inet_ntoa(http->getConn() != NULL ? http->getConn()->peer.sin_addr : no_addr));
-        debug(88, 1) ("\treceived %d bytes (offset %d)\n", (int) http->out.size,
-                      (int) http->out.offset);
-        debug(88, 1) ("\tURI %s\n", http->log_uri);
+        debugs(88, 1, "WARNING: closing FD " << fd << " to prevent counter overflow" );
+        debugs(88, 1, "\tclient " << (inet_ntoa(http->getConn() != NULL ? http->getConn()->peer.sin_addr : no_addr))  );
+        debugs(88, 1, "\treceived " << (int) http->out.size << " bytes (offset " << (int) http->out.offset << ")" );
+        debugs(88, 1, "\tURI " << http->log_uri  );
         return 1;
     }
 
@@ -1109,36 +1099,36 @@ clientReplyContext::replyStatus()
         return STREAM_FAILED;
 
     if ((done = checkTransferDone()) != 0 || flags.complete) {
-        debug(88, 5) ("clientReplyStatus: transfer is DONE\n");
+        debugs(88, 5, "clientReplyStatus: transfer is DONE");
         /* Ok we're finished, but how? */
 
         if (http->storeEntry()->getReply()->bodySize(http->request->method) < 0) {
-            debug(88, 5) ("clientReplyStatus: closing, content_length < 0\n");
+            debugs(88, 5, "clientReplyStatus: closing, content_length < 0");
             return STREAM_FAILED;
         }
 
         if (!done) {
-            debug(88, 5) ("clientReplyStatus: closing, !done, but read 0 bytes\n");
+            debugs(88, 5, "clientReplyStatus: closing, !done, but read 0 bytes");
             return STREAM_FAILED;
         }
 
         if (!http->gotEnough()) {
-            debug(88, 5) ("clientReplyStatus: client didn't get all it expected\n");
+            debugs(88, 5, "clientReplyStatus: client didn't get all it expected");
             return STREAM_UNPLANNED_COMPLETE;
         }
 
         if (http->request->flags.proxy_keepalive) {
-            debug(88, 5) ("clientReplyStatus: stream complete and can keepalive\n");
+            debugs(88, 5, "clientReplyStatus: stream complete and can keepalive");
             return STREAM_COMPLETE;
         }
 
-        debug(88, 5) ("clientReplyStatus: stream was not expected to complete!\n");
+        debugs(88, 5, "clientReplyStatus: stream was not expected to complete!");
         return STREAM_UNPLANNED_COMPLETE;
     }
 
     if (http->isReplyBodyTooLarge(http->out.offset - 4096)) {
         /* 4096 is a margin for the HTTP headers included in out.offset */
-        debug(88, 5) ("clientReplyStatus: client reply body is too large\n");
+        debugs(88, 5, "clientReplyStatus: client reply body is too large");
         return STREAM_FAILED;
     }
 
@@ -1303,19 +1293,17 @@ clientReplyContext::buildReplyHeader()
 #endif
 
     if (reply->bodySize(request->method) < 0) {
-        debug(88,
-              3)
-        ("clientBuildReplyHeader: can't keep-alive, unknown body size\n");
+        debugs(88, 3, "clientBuildReplyHeader: can't keep-alive, unknown body size" );
         request->flags.proxy_keepalive = 0;
     }
 
     if (fdUsageHigh()&& !request->flags.must_keepalive) {
-        debug(88, 3) ("clientBuildReplyHeader: Not many unused FDs, can't keep-alive\n");
+        debugs(88, 3, "clientBuildReplyHeader: Not many unused FDs, can't keep-alive");
         request->flags.proxy_keepalive = 0;
     }
 
     if (!Config.onoff.error_pconns && reply->sline.status >= 400 && !request->flags.must_keepalive) {
-        debug(33, 3) ("clientBuildReplyHeader: Error, don't keep-alive\n");
+        debugs(33, 3, "clientBuildReplyHeader: Error, don't keep-alive");
         request->flags.proxy_keepalive = 0;
     }
 
@@ -1456,14 +1444,14 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 
     if (NULL == http->storeEntry()) {
         /* this object isn't in the cache */
-        debug(85, 3) ("clientProcessRequest2: storeGet() MISS\n");
+        debugs(85, 3, "clientProcessRequest2: storeGet() MISS");
         http->logType = LOG_TCP_MISS;
         doGetMoreData();
         return;
     }
 
     if (Config.onoff.offline) {
-        debug(85, 3) ("clientProcessRequest2: offline HIT\n");
+        debugs(85, 3, "clientProcessRequest2: offline HIT");
         http->logType = LOG_TCP_HIT;
         doGetMoreData();
         return;
@@ -1478,7 +1466,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
     }
 
     if (!e->validToSend()) {
-        debug(85, 3) ("clientProcessRequest2: !validToSend MISS\n");
+        debugs(85, 3, "clientProcessRequest2: !storeEntryValidToSend MISS" );
         http->storeEntry(NULL);
         http->logType = LOG_TCP_MISS;
         doGetMoreData();
@@ -1487,21 +1475,21 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 
     if (EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
         /* Special entries are always hits, no matter what the client says */
-        debug(85, 3) ("clientProcessRequest2: ENTRY_SPECIAL HIT\n");
+        debugs(85, 3, "clientProcessRequest2: ENTRY_SPECIAL HIT");
         http->logType = LOG_TCP_HIT;
         doGetMoreData();
         return;
     }
 
     if (r->flags.nocache) {
-        debug(85, 3) ("clientProcessRequest2: no-cache REFRESH MISS\n");
+        debugs(85, 3, "clientProcessRequest2: no-cache REFRESH MISS");
         http->storeEntry(NULL);
         http->logType = LOG_TCP_CLIENT_REFRESH_MISS;
         doGetMoreData();
         return;
     }
 
-    debug(85, 3) ("clientProcessRequest2: default HIT\n");
+    debugs(85, 3, "clientProcessRequest2: default HIT");
     http->logType = LOG_TCP_HIT;
     doGetMoreData();
 }
@@ -1652,7 +1640,7 @@ clientReplyContext::sendStreamError(StoreIOBuffer const &result)
     /* We call into the stream, because we don't know that there is a
      * client socket!
      */
-    debug(88,5)("clientReplyContext::sendStreamError: A stream error has occured, marking as complete and sending no data.\n");
+     debugs(88, 5, "clientReplyContext::sendStreamError: A stream error has occured, marking as complete and sending no data.");
     StoreIOBuffer tempBuffer;
     flags.complete = 1;
     tempBuffer.flags.error = result.flags.error;
@@ -1666,7 +1654,7 @@ clientReplyContext::pushStreamData(StoreIOBuffer const &result, char *source)
     StoreIOBuffer tempBuffer;
 
     if (result.length == 0) {
-        debug (88,5)("clientReplyContext::pushStreamData: marking request as complete due to 0 length store result\n");
+        debugs(88, 5, "clientReplyContext::pushStreamData: marking request as complete due to 0 length store result");
         flags.complete = 1;
     }
 
@@ -1691,7 +1679,7 @@ clientReplyContext::next() const
 void
 clientReplyContext::waitForMoreData ()
 {
-    debug(88,5)("clientReplyContext::waitForMoreData: Waiting for more data to parse reply headers in client side.\n");
+    debugs(88, 5, "clientReplyContext::waitForMoreData: Waiting for more data to parse reply headers in client side.");
     /* We don't have enough to parse the metadata yet */
     /* TODO: the store should give us out of band metadata and
      * obsolete this routine 
@@ -1703,7 +1691,7 @@ clientReplyContext::waitForMoreData ()
 void
 clientReplyContext::startSendProcess()
 {
-    debug(88,5)("clientReplyContext::startSendProcess: triggering store read to SendMoreData\n");
+    debugs(88, 5, "clientReplyContext::startSendProcess: triggering store read to SendMoreData");
     assert(reqofs <= HTTP_REQBUF_SZ);
     /* TODO: copy into the supplied buffer */
     StoreIOBuffer tempBuffer;
@@ -1733,7 +1721,7 @@ clientReplyContext::buildMaxBodySize(HttpReply * reply)
     for (l = Config.ReplyBodySize; l; l = l -> next) {
         if (ch->matchAclListFast(l->aclList)) {
             if (l->size != static_cast<size_t>(-1)) {
-                debug(58, 3) ("clientReplyContext: Setting maxBodySize to %ld\n", (long int) l->size);
+                debugs(58, 3, "clientReplyContext: Setting maxBodySize to " << (long int) l->size);
                 http->maxReplyBodySize(l->size);
             }
 
@@ -1778,10 +1766,11 @@ clientReplyContext::ProcessReplyAccessResult (int rv, void *voidMe)
 void
 clientReplyContext::processReplyAccessResult(bool accessAllowed)
 {
-    debug(88, 2) ("The reply for %s %s is %s, because it matched '%s'\n",
-                  RequestMethodStr[http->request->method], http->uri,
-                  accessAllowed ? "ALLOWED" : "DENIED",
-                  AclMatchedName ? AclMatchedName : "NO ACL's");
+    debugs(88, 2, "The reply for " << RequestMethodStr[http->request->method] 
+           << " " << http->uri << " is " 
+           << ( accessAllowed ? "ALLOWED" : "DENIED") 
+           << ", because it matched '" 
+           << (AclMatchedName ? AclMatchedName : "NO ACL's") << "'" );
 
     if (!accessAllowed && reply->sline.status != HTTP_FORBIDDEN
             && !alwaysAllowResponse(reply->sline.status)) {
@@ -1818,16 +1807,16 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
 
     assert(body_size >= 0);
 
-    debug(88,3)
-    ("clientReplyContext::sendMoreData: Appending %d bytes after %d bytes of headers\n",
-     (int) body_size, reply->hdr_sz);
+    debugs(88, 3, "clientReplyContext::sendMoreData: Appending " <<
+           (int) body_size << " bytes after " << reply->hdr_sz <<
+           " bytes of headers");
 
 #if ESI
 
     if (http->flags.accel && reply->sline.status != HTTP_FORBIDDEN &&
             !alwaysAllowResponse(reply->sline.status) &&
             esiEnableProcessing(reply)) {
-        debug(88, 2) ("Enabling ESI processing for %s\n", http->uri);
+        debugs(88, 2, "Enabling ESI processing for " << http->uri);
         clientStreamInsertHead(&http->client_stream, esiStreamRead,
                                esiProcessStream, esiStreamDetach, esiStreamStatus, NULL);
     }
@@ -1836,7 +1825,7 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
 
 #if ICAP_CLIENT_RESPMOD_POSTCACHE
 
-    debug(88, 0) ("Enabling ICAP processing for %s\n", http->uri);
+    debugs(88, 0, "Enabling ICAP processing for " << http->uri);
 
     clientStreamInsertHead(&http->client_stream, icapclientStreamRead,
                            icapclientProcessStream,
@@ -1936,11 +1925,10 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 
     makeThisHead();
 
-    debug(88, 5) ("clientReplyContext::sendMoreData: %s, %d bytes (%u new bytes)\n",
-                  http->uri, (int) reqofs, (unsigned int)result.length);
-
-    debug(88, 5) ("clientReplyContext::sendMoreData: FD %d '%s', out.offset=%ld \n",
-                  fd, entry->url(), (long int) http->out.offset);
+    debugs(88, 5, "clientReplyContext::sendMoreData: " << http->uri << ", " <<
+           (int) reqofs << " bytes (" << (unsigned int)result.length <<
+           " new bytes)");
+    debugs(88, 5, "clientReplyContext::sendMoreData: FD " << fd << " '" << entry->url() << "', out.offset=" << (long int) http->out.offset << " " );
 
     /* update size of the request */
     reqsize = reqofs;
@@ -2002,7 +1990,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
          * webservers are seriously broken, this is probably not 
          * going to get fixed.. perhapos we should remove it?
          */
-        debug (88,0)("Broken head response - probably phttpd/0.99.72\n");
+        debugs(88, 0, "Broken head response - probably phttpd/0.99.72");
         http->flags.done_copying = 1;
         flags.complete = 1;
         /*
@@ -2016,7 +2004,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         clientStreamCallback((clientStreamNode *)http->client_stream.head->data,
                              http, NULL, tempBuffer);
     } else {
-        debug (88,0)("clientReplyContext::sendMoreData: Unable to parse reply headers within a single HTTP_REQBUF_SZ length buffer\n");
+        debugs(88, 0, "clientReplyContext::sendMoreData: Unable to parse reply headers within a single HTTP_REQBUF_SZ length buffer");
         StoreIOBuffer tempBuffer;
         tempBuffer.flags.error = 1;
         /* XXX FIXME: make an html error page here */

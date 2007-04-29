@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.155 2007/04/21 07:10:06 wessels Exp $
+ * $Id: store_client.cc,v 1.156 2007/04/28 22:26:38 hno Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -170,7 +170,7 @@ static void
 storeClientCopyEvent(void *data)
 {
     store_client *sc = (store_client *)data;
-    debug(90, 3)("storeClientCopyEvent: Running\n");
+    debugs(90, 3, "storeClientCopyEvent: Running");
     assert (sc->flags.copy_event_pending);
     sc->flags.copy_event_pending = 0;
 
@@ -228,12 +228,11 @@ store_client::copy(StoreEntry * anEntry,
     assert (callback_fn);
     assert (data);
     assert(!EBIT_TEST(entry->flags, ENTRY_ABORTED));
-    debug(90, 3)("store_client::copy: %s, from %lu, for length %d, cb %p, cbdata %p\n",
-                 entry->getMD5Text(),
-                 (unsigned long) copyRequest.offset,
-                 (int) copyRequest.length,
-                 callback_fn,
-                 data);
+    debugs(90, 3, "store_client::copy: " << entry->getMD5Text() << ", from " <<
+           (unsigned long) copyRequest.offset << ", for length " <<
+           (int) copyRequest.length << ", cb " << callback_fn << ", cbdata " <<
+           data);
+
 #if STORE_CLIENT_LIST_DEBUG
 
     assert(this == storeClientListSearch(entry->mem_obj, data));
@@ -303,18 +302,18 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     }
 
     if (EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT)) {
-        debug(90, 5)("storeClientCopy2: returning because ENTRY_FWD_HDR_WAIT set\n");
+        debugs(90, 5, "storeClientCopy2: returning because ENTRY_FWD_HDR_WAIT set");
         return;
     }
 
     if (sc->flags.store_copying) {
         sc->flags.copy_event_pending = 1;
-        debug(90, 3)("storeClientCopy2: Queueing storeClientCopyEvent()\n");
+        debugs(90, 3, "storeClientCopy2: Queueing storeClientCopyEvent()");
         eventAdd("storeClientCopyEvent", storeClientCopyEvent, sc, 0.0, 0);
         return;
     }
 
-    debug(90, 3)("storeClientCopy2: %s\n", e->getMD5Text());
+    debugs(90, 3, "storeClientCopy2: " << e->getMD5Text());
     assert(sc->_callback.pending());
     /*
      * We used to check for ENTRY_ABORTED here.  But there were some
@@ -341,7 +340,9 @@ store_client::doCopy(StoreEntry *anEntry)
     flags.store_copying = 1;
     MemObject *mem = entry->mem_obj;
 
-    debug(33, 5)("store_client::doCopy: co: %lu, hi: %ld\n", (unsigned long) copyInto.offset, (long int) mem->endOffset());
+    debugs(33, 5, "store_client::doCopy: co: " <<
+           (unsigned long) copyInto.offset << ", hi: " <<
+           (long int) mem->endOffset());
 
     if (storeClientNoMoreToSend(entry, this)) {
         /* There is no more to send! */
@@ -352,7 +353,7 @@ store_client::doCopy(StoreEntry *anEntry)
 
     /* Check that we actually have data */
     if (anEntry->store_status == STORE_PENDING && copyInto.offset >= mem->endOffset()) {
-        debug(90, 3)("store_client::doCopy: Waiting for more\n");
+        debugs(90, 3, "store_client::doCopy: Waiting for more");
         flags.store_copying = 0;
         return;
     }
@@ -378,7 +379,7 @@ store_client::doCopy(StoreEntry *anEntry)
 void
 store_client::startSwapin()
 {
-    debug(90, 3)("store_client::doCopy: Need to open swap in file\n");
+    debugs(90, 3, "store_client::doCopy: Need to open swap in file");
     /* gotta open the swapin file */
 
     if (storeTooManyDiskFilesOpen()) {
@@ -404,7 +405,7 @@ store_client::startSwapin()
 
         return;
     } else {
-        debug (90, 1)("WARNING: Averted multiple fd operation (1)\n");
+        debugs(90, 1, "WARNING: Averted multiple fd operation (1)");
         flags.store_copying = 0;
         return;
     }
@@ -429,7 +430,7 @@ store_client::scheduleDiskRead()
 
     assert(!flags.disk_io_pending);
 
-    debug(90, 3)("store_client::doCopy: reading from STORE\n");
+    debugs(90, 3, "store_client::doCopy: reading from STORE");
 
     fileRead();
 
@@ -441,7 +442,7 @@ store_client::scheduleMemRead()
 {
     /* What the client wants is in memory */
     /* Old style */
-    debug(90, 3)("store_client::doCopy: Copying normal from memory\n");
+    debugs(90, 3, "store_client::doCopy: Copying normal from memory");
     size_t sz = entry->mem_obj->data_hdr.copy(copyInto);
     callback(sz);
     flags.store_copying = 0;
@@ -476,14 +477,14 @@ storeClientReadBody(void *data, const char *buf, ssize_t len, StoreIOState::Poin
     assert(sc->flags.disk_io_pending);
     sc->flags.disk_io_pending = 0;
     assert(sc->_callback.pending());
-    debug(90, 3)("storeClientReadBody: len %d", (int) len);
+    debugs(90, 3, "storeClientReadBody: len " << (int) len << "");
 
     if (sc->copyInto.offset == 0 && len > 0 && sc->entry->getReply()->sline.status == 0) {
         /* Our structure ! */
         HttpReply *rep = (HttpReply *) sc->entry->getReply(); // bypass const
 
         if (!rep->parseCharBuf(sc->copyInto.data, headersEnd(sc->copyInto.data, len))) {
-            debug (90,0)("Could not parse headers from on disk object\n");
+            debugs(90, 0, "Could not parse headers from on disk object");
         }
     }
 
@@ -515,10 +516,10 @@ storeClientReadHeader(void *data, const char *buf, ssize_t len, StoreIOState::Po
 void
 store_client::unpackHeader(char const *buf, ssize_t len)
 {
-    debug(90, 3)("store_client::unpackHeader: len %d", (int) len);
+    debugs(90, 3, "store_client::unpackHeader: len " << (int) len << "");
 
     if (len < 0) {
-        debug(90, 3)("store_client::unpackHeader: %s", xstrerror());
+        debugs(90, 3, "store_client::unpackHeader: " << xstrerror() << "");
         fail();
         return;
     }
@@ -528,7 +529,7 @@ store_client::unpackHeader(char const *buf, ssize_t len)
 
     if (!aBuilder.isBufferSane()) {
         /* oops, bad disk file? */
-        debug(90, 1) ("WARNING: swapfile header inconsistent with available data\n");
+        debugs(90, 1, "WARNING: swapfile header inconsistent with available data");
         fail();
         return;
     }
@@ -536,7 +537,7 @@ store_client::unpackHeader(char const *buf, ssize_t len)
     tlv *tlv_list = aBuilder.createStoreMeta ();
 
     if (tlv_list == NULL) {
-        debug(90, 1) ("WARNING: failed to unpack meta data\n");
+        debugs(90, 1, "WARNING: failed to unpack meta data");
         fail();
         return;
     }
@@ -585,8 +586,7 @@ store_client::readHeader(char const *buf, ssize_t len)
          */
         size_t copy_sz = XMIN(copyInto.length, body_sz)
                          ;
-        debug(90, 3) ("storeClientReadHeader: copying %d bytes of body\n",
-                      (int) copy_sz);
+        debugs(90, 3, "storeClientReadHeader: copying " << (int) copy_sz << " bytes of body");
         xmemmove(copyInto.data, copyInto.data + mem->swap_hdr_sz, copy_sz);
 
         if (copyInto.offset == 0 && len > 0 && entry->getReply()->sline.status == 0) {
@@ -594,7 +594,7 @@ store_client::readHeader(char const *buf, ssize_t len)
             HttpReply *rep = (HttpReply *) entry->getReply(); // bypass const
 
             if (!rep->parseCharBuf(copyInto.data, headersEnd(copyInto.data, copy_sz))) {
-                debug (90,0)("could not parse headers from on disk structure!\n");
+                debugs(90, 0, "could not parse headers from on disk structure!");
             }
         }
 
@@ -650,15 +650,15 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
     if (mem == NULL)
         return 0;
 
-    debug(90, 3) ("storeUnregister: called for '%s'\n", e->getMD5Text());
+        debugs(90, 3, "storeUnregister: called for '" << e->getMD5Text() << "'");
 
     if (sc == NULL) {
-        debug(90, 3) ("storeUnregister: No matching client for '%s'\n", e->getMD5Text());
+        debugs(90, 3, "storeUnregister: No matching client for '" << e->getMD5Text() << "'");
         return 0;
     }
 
     if (mem->clientCount() == 0) {
-        debug(90, 3) ("storeUnregister: Consistency failure - store client being unregistered is not in the mem object's list for '%s'\n", e->getMD5Text());
+        debugs(90, 3, "storeUnregister: Consistency failure - store client being unregistered is not in the mem object's list for '" << e->getMD5Text() << "'");
         return 0;
     }
 
@@ -676,8 +676,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 
     if (sc->_callback.pending()) {
         /* callback with ssize = -1 to indicate unexpected termination */
-        debug(90, 3) ("storeUnregister: store_client for %s has a callback\n",
-                      mem->url);
+        debugs(90, 3, "storeUnregister: store_client for " << mem->url << " has a callback");
         sc->fail();
     }
 
@@ -711,13 +710,13 @@ StoreEntry::invokeHandlers()
 
     PROF_start(InvokeHandlers);
 
-    debug(90, 3) ("StoreEntry::invokeHandlers: %s\n", getMD5Text());
+    debugs(90, 3, "InvokeHandlers: " << getMD5Text()  );
     /* walk the entire list looking for valid callbacks */
 
     for (node = mem_obj->clients.head; node; node = nx) {
         sc = (store_client *)node->data;
         nx = node->next;
-        debug(90, 3) ("StoreEntry::invokeHandlers: checking client #%d\n", i++);
+        debugs(90, 3, "StoreEntry::InvokeHandlers: checking client #" << i++  );
 
         if (!sc->_callback.pending())
             continue;
@@ -735,7 +734,7 @@ storePendingNClients(const StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
     int npend = NULL == mem ? 0 : mem->nclients;
-    debug(90, 3) ("storePendingNClients: returning %d\n", npend);
+    debugs(90, 3, "storePendingNClients: returning " << npend);
     return npend;
 }
 
@@ -745,15 +744,15 @@ CheckQuickAbort2(StoreEntry * entry)
 {
     MemObject * const mem = entry->mem_obj;
     assert(mem);
-    debug(90, 3) ("CheckQuickAbort2: entry=%p, mem=%p\n", entry, mem);
+    debugs(90, 3, "CheckQuickAbort2: entry=" << entry << ", mem=" << mem);
 
     if (mem->request && !mem->request->flags.cachable) {
-        debug(90, 3) ("CheckQuickAbort2: YES !mem->request->flags.cachable\n");
+        debugs(90, 3, "CheckQuickAbort2: YES !mem->request->flags.cachable");
         return 1;
     }
 
     if (EBIT_TEST(entry->flags, KEY_PRIVATE)) {
-        debug(90, 3) ("CheckQuickAbort2: YES KEY_PRIVATE\n");
+        debugs(90, 3, "CheckQuickAbort2: YES KEY_PRIVATE");
         return 1;
     }
 
@@ -768,36 +767,36 @@ CheckQuickAbort2(StoreEntry * entry)
     size_t minlen = (size_t) Config.quickAbort.min << 10;
 
     if (minlen < 0) {
-        debug(90, 3) ("CheckQuickAbort2: NO disabled\n");
+        debugs(90, 3, "CheckQuickAbort2: NO disabled");
         return 0;
     }
 
     if (curlen > expectlen) {
-        debug(90, 3) ("CheckQuickAbort2: YES bad content length\n");
+        debugs(90, 3, "CheckQuickAbort2: YES bad content length");
         return 1;
     }
 
     if ((expectlen - curlen) < minlen) {
-        debug(90, 3) ("CheckQuickAbort2: NO only little more left\n");
+        debugs(90, 3, "CheckQuickAbort2: NO only little more left");
         return 0;
     }
 
     if ((expectlen - curlen) > (Config.quickAbort.max << 10)) {
-        debug(90, 3) ("CheckQuickAbort2: YES too much left to go\n");
+        debugs(90, 3, "CheckQuickAbort2: YES too much left to go");
         return 1;
     }
 
     if (expectlen < 100) {
-        debug(90, 3) ("CheckQuickAbort2: NO avoid FPE\n");
+        debugs(90, 3, "CheckQuickAbort2: NO avoid FPE");
         return 0;
     }
 
     if ((curlen / (expectlen / 100)) > (size_t)Config.quickAbort.pct) {
-        debug(90, 3) ("CheckQuickAbort2: NO past point of no return\n");
+        debugs(90, 3, "CheckQuickAbort2: NO past point of no return");
         return 0;
     }
 
-    debug(90, 3) ("CheckQuickAbort2: YES default, returning 1\n");
+    debugs(90, 3, "CheckQuickAbort2: YES default, returning 1");
     return 1;
 }
 

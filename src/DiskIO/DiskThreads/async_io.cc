@@ -1,6 +1,6 @@
 
 /*
- * $Id: async_io.cc,v 1.3 2007/04/12 23:51:57 wessels Exp $
+ * $Id: async_io.cc,v 1.4 2007/04/28 22:26:47 hno Exp $
  *
  * DEBUG: section 32    Asynchronous Disk I/O
  * AUTHOR: Pete Bentley <pete@demon.net>
@@ -113,7 +113,7 @@ aioCancel(int fd)
             AIOCB *callback = ctrlp->done_handler;
             void *cbdata;
             ctrlp->done_handler = NULL;
-            debug(32, 1) ("this be aioCancel. Danger ahead!\n");
+            debugs(32, 1, "this be aioCancel. Danger ahead!");
 
             if (cbdataReferenceValidDone(ctrlp->done_handler_data, &cbdata))
                 callback(fd, cbdata, NULL, -2, -2);

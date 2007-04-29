@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayId.cc,v 1.20 2007/04/20 22:24:07 wessels Exp $
+ * $Id: DelayId.cc,v 1.21 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -57,7 +57,7 @@ DelayId::DelayId () : pool_ (0), compositeId(NULL), markedAsNoDelay(false)
 DelayId::DelayId (unsigned short aPool) :
         pool_ (aPool), compositeId (NULL), markedAsNoDelay (false)
 {
-    debug (77,3)("DelayId::DelayId: Pool %du\n", aPool);
+    debugs(77, 3, "DelayId::DelayId: Pool " << aPool << "u");
 }
 
 DelayId::~DelayId ()
@@ -99,7 +99,7 @@ DelayId::DelayClient(ClientHttpRequest * http)
     r = http->request;
 
     if (r->client_addr.s_addr == INADDR_BROADCAST) {
-        debug(77, 2) ("delayClient: WARNING: Called with 'allones' address, ignoring\n");
+        debugs(77, 2, "delayClient: WARNING: Called with 'allones' address, ignoring");
         return DelayId();
     }
 

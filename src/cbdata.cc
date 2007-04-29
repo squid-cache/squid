@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.75 2006/09/03 21:05:20 hno Exp $
+ * $Id: cbdata.cc,v 1.76 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -310,7 +310,7 @@ cbdataInternalAlloc(cbdata_type type)
     c->calls = Stack<CBDataCall *> ();
     c->addHistory("Alloc", file, line);
     dlinkAdd(c, &c->link, &cbdataEntries);
-    debug(45, 3) ("cbdataAlloc: %p %s:%d\n", p, file, line);
+    debugs(45, 3, "cbdataAlloc: " << p << " " << file << ":" << line);
 #endif
 
     return p;
@@ -331,10 +331,10 @@ cbdataInternalFree(void *p)
 #endif
 #if CBDATA_DEBUG
 
-    debug(45, 3) ("cbdataFree: %p %s:%d\n", p, file, line);
+    debugs(45, 3, "cbdataFree: " << p << " " << file << ":" << line);
 #else
 
-    debug(45, 9) ("cbdataFree: %p\n", p);
+    debugs(45, 9, "cbdataFree: " << p);
 #endif
 
     c->check(__LINE__);
@@ -346,13 +346,12 @@ cbdataInternalFree(void *p)
 #endif
 
     if (c->locks) {
-        debug(45, 9) ("cbdataFree: %p has %d locks, not freeing\n",
-                      p, c->locks);
+        debugs(45, 9, "cbdataFree: " << p << " has " << c->locks << " locks, not freeing");
         return NULL;
     }
 
     cbdataCount--;
-    debug(45, 9) ("cbdataFree: Freeing %p\n", p);
+    debugs(45, 9, "cbdataFree: Freeing " << p);
 #if CBDATA_DEBUG
 
     dlinkDelete(&c->link, &cbdataEntries);
@@ -400,13 +399,13 @@ cbdataInternalLock(const void *p)
 
 #if CBDATA_DEBUG
 
-    debug(45, 3) ("cbdataLock: %p=%d %s:%d\n", p, c ? c->locks + 1 : -1, file, line);
+    debugs(45, 3, "cbdataLock: " << p << "=" << (c ? c->locks + 1 : -1) << " " << file << ":" << line);
 
     c->addHistory("Reference", file, line);
 
 #else
 
-    debug(45, 9) ("cbdataLock: %p=%d\n", p, c ? c->locks + 1 : -1);
+    debugs(45, 9, "cbdataLock: " << p << "=" << (c ? c->locks + 1 : -1));
 
 #endif
 
@@ -437,13 +436,13 @@ cbdataInternalUnlock(const void *p)
 
 #if CBDATA_DEBUG
 
-    debug(45, 3) ("cbdataUnlock: %p=%d %s:%d\n", p, c ? c->locks - 1 : -1, file, line);
+    debugs(45, 3, "cbdataUnlock: " << p << "=" << (c ? c->locks - 1 : -1) << " " << file << ":" << line);
 
     c->addHistory("Dereference", file, line);
 
 #else
 
-    debug(45, 9) ("cbdataUnlock: %p=%d\n", p, c ? c->locks - 1 : -1);
+    debugs(45, 9, "cbdataUnlock: " << p << "=" << (c ? c->locks - 1 : -1));
 
 #endif
 
@@ -460,7 +459,7 @@ cbdataInternalUnlock(const void *p)
 
     cbdataCount--;
 
-    debug(45, 9) ("cbdataUnlock: Freeing %p\n", p);
+    debugs(45, 9, "cbdataUnlock: Freeing " << p);
 
 #if CBDATA_DEBUG
 
@@ -497,7 +496,7 @@ cbdataReferenceValid(const void *p)
     if (p == NULL)
         return 1;		/* A NULL pointer cannot become invalid */
 
-    debug(45, 9) ("cbdataReferenceValid: %p\n", p);
+    debugs(45, 9, "cbdataReferenceValid: " << p);
 
 #if HASHED_CBDATA
     c = (cbdata *) hash_lookup(cbdata_htable, p);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.128 2007/04/21 13:34:42 adrian Exp $
+ * $Id: HttpHeader.cc,v 1.129 2007/04/28 22:26:37 hno Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -600,8 +600,9 @@ HttpHeader::parse(const char *header_start, const char *header_end)
         }
 
         if (e->id == HDR_OTHER && stringHasWhitespace(e->name.buf())) {
-            debug(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2)
-            ("WARNING: found whitespace in HTTP header name {%s}\n", getStringPrefix(field_start, field_end));
+            debugs(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2,
+                   "WARNING: found whitespace in HTTP header name {" << 
+                   getStringPrefix(field_start, field_end) << "}");
 
             if (!Config.onoff.relaxed_header_parser) {
                 delete e;
@@ -1363,7 +1364,7 @@ HttpHeaderEntry::HttpHeaderEntry(http_hdr_type anId, const char *aName, const ch
 HttpHeaderEntry::~HttpHeaderEntry()
 {
     assert_eid(id);
-    debug(55, 9) ("destroying entry %p: '%s: %s'\n", this, name.buf(), value.buf());
+    debugs(55, 9, "destroying entry " << this << ": '" << name.buf() << ": " << value.buf() << "'");
     /* clean name if needed */
 
     if (id == HDR_OTHER)
@@ -1402,8 +1403,8 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
     }
 
     if (Config.onoff.relaxed_header_parser && xisspace(field_start[name_len - 1])) {
-        debug(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2)
-        ("NOTICE: Whitespace after header name in '%s'\n", getStringPrefix(field_start, field_end));
+        debugs(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2,
+               "NOTICE: Whitespace after header name in '" << getStringPrefix(field_start, field_end) << "'");
 
         while (name_len > 0 && xisspace(field_start[name_len - 1]))
             name_len--;
@@ -1414,7 +1415,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 
     /* now we know we can parse it */
 
-    debug(55, 9) ("parsing HttpHeaderEntry: near '%s'\n", getStringPrefix(field_start, field_end));
+    debugs(55, 9, "parsing HttpHeaderEntry: near '" <<  getStringPrefix(field_start, field_end) << "'");
 
     /* is it a "known" field? */
     http_hdr_type id = httpHeaderIdByName(field_start, name_len, Headers, HDR_ENUM_END);
@@ -1443,8 +1444,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 
     if (field_end - value_start > 65534) {
         /* String must be LESS THAN 64K and it adds a terminating NULL */
-        debug(55, 1) ("WARNING: ignoring '%s' header of %d bytes\n",
-                      name.buf(), (int) (field_end - value_start));
+        debugs(55, 1, "WARNING: ignoring '" << name.buf() << "' header of " << (int) (field_end - value_start) << " bytes");
 
         if (id == HDR_OTHER)
             name.clean();
@@ -1459,7 +1459,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 
     Headers[id].stat.aliveCount++;
 
-    debug(55, 9) ("parsed HttpHeaderEntry: '%s: %s'\n", name.buf(), value.buf());
+    debugs(55, 9, "parsed HttpHeaderEntry: '" << name.buf() << ": " << value.buf() << "'");
 
     return new HttpHeaderEntry(id, name.buf(), value.buf());
 }
@@ -1501,8 +1501,7 @@ httpHeaderNoteParsedEntry(http_hdr_type id, String const &context, int error)
 
     if (error) {
         Headers[id].stat.errCount++;
-        debug(55, 2) ("cannot parse hdr field: '%s: %s'\n",
-                      Headers[id].name.buf(), context.buf());
+        debugs(55, 2, "cannot parse hdr field: '" << Headers[id].name.buf() << ": " << context.buf() << "'");
     }
 }
 
