@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.91 2007/04/28 22:26:37 hno Exp $
+ * $Id: icmp.cc,v 1.92 2007/04/29 17:35:52 hno Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -268,7 +268,7 @@ icmpOpen(void)
 
 #ifdef _SQUID_MSWIN_
 
-    debugs(37, 4, "Pinger handle: 0x" << hex << (unsigned)hIpc << dec << ", PID: " << pid);
+    debugs(37, 4, "Pinger handle: 0x" << std::hex << (unsigned)hIpc << std::dec << ", PID: " << pid);
 
 #endif
 #endif
