@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.161 2007/04/28 22:26:37 hno Exp $
+ * $Id: forward.cc,v 1.162 2007/04/29 17:35:52 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -873,7 +873,7 @@ FwdState::connectStart()
 
             if (setsockopt(fd, SOL_IP, IP_TPROXY, &itp, sizeof(itp)) == -1) {
                 debugs(20, 1, "tproxy ip=" << inet_ntoa(itp.v.addr.faddr) <<
-                       ",0x" << hex << itp.v.addr.faddr.s_addr << dec <<
+                       ",0x" << std::hex << itp.v.addr.faddr.s_addr << std::dec <<
                        ",port=" << itp.v.addr.fport << " ERROR ASSIGN");
 
                 request->flags.tproxy = 0;
@@ -882,8 +882,8 @@ FwdState::connectStart()
                 itp.v.flags = ITP_CONNECT;
 
                 if (setsockopt(fd, SOL_IP, IP_TPROXY, &itp, sizeof(itp)) == -1) {
-                    debugs(20, 1, "tproxy ip=" << hex <<
-                           itp.v.addr.faddr.s_addr << dec << ",port=" <<
+                    debugs(20, 1, "tproxy ip=" << std::hex <<
+                           itp.v.addr.faddr.s_addr << std::dec << ",port=" <<
                            itp.v.addr.fport << " ERROR CONNECT");
 
                     request->flags.tproxy = 0;

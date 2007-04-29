@@ -1,6 +1,6 @@
 
 /*
- * $Id: unlinkd.cc,v 1.62 2007/04/28 22:26:38 hno Exp $
+ * $Id: unlinkd.cc,v 1.63 2007/04/29 17:35:52 hno Exp $
  *
  * DEBUG: section 2     Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -244,7 +244,7 @@ IPC_FIFO,
 
 #ifdef _SQUID_MSWIN_
 
-    debugs(2, 4, "Unlinkd handle: 0x" << hex << (unsigned)hIpc << dec << ", PID: " << pid);
+    debugs(2, 4, "Unlinkd handle: 0x" << std::hex << (unsigned)hIpc << std::dec << ", PID: " << pid);
 
 #endif
 
