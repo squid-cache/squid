@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsDiskFile.cc,v 1.9 2007/04/28 22:26:47 hno Exp $
+ * $Id: DiskThreadsDiskFile.cc,v 1.10 2007/04/30 16:56:13 wessels Exp $
  *
  * DEBUG: section 79    Disk IO Routines
  * AUTHOR: Robert Collins
@@ -354,7 +354,7 @@ DiskThreadsDiskFile::writeDone (int rvfd, int errflag, size_t len, WriteRequest:
 
 #endif
 
-    debugs(79, 3, "DiskThreadsDiskFile::writeDone: FD " << fd << ", len " << (long int) len << ", err=" << errflag);
+    debugs(79, 3, "DiskThreadsDiskFile::writeDone: FD " << fd << ", len " << len << ", err=" << errflag);
 
     assert(++loop_detect < 10);
 

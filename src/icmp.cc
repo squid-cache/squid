@@ -1,6 +1,6 @@
 
 /*
- * $Id: icmp.cc,v 1.92 2007/04/29 17:35:52 hno Exp $
+ * $Id: icmp.cc,v 1.93 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels
@@ -135,7 +135,7 @@ icmpRecv(int unused1, void *unused2)
         break;
 
     default:
-        debugs(37, 1, "icmpRecv: Bad opcode: " << (int) preply.opcode);
+        debugs(37, 1, "icmpRecv: Bad opcode: " << preply.opcode);
         break;
     }
 }
@@ -268,7 +268,7 @@ icmpOpen(void)
 
 #ifdef _SQUID_MSWIN_
 
-    debugs(37, 4, "Pinger handle: 0x" << std::hex << (unsigned)hIpc << std::dec << ", PID: " << pid);
+    debugs(37, 4, "Pinger handle: 0x" << std::hex << hIpc << std::dec << ", PID: " << pid);
 
 #endif
 #endif
@@ -297,7 +297,7 @@ icmpClose(void)
     if (hIpc) {
         if (WaitForSingleObject(hIpc, 12000) != WAIT_OBJECT_0) {
             getCurrentTime();
-            debugs(37, 1, "icmpClose: WARNING: (pinger," << (long int)pid << ") didn't exit in 12 seconds");
+            debugs(37, 1, "icmpClose: WARNING: (pinger," << pid << ") didn't exit in 12 seconds");
         }
 
         CloseHandle(hIpc);

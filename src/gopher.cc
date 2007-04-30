@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.203 2007/04/28 22:26:37 hno Exp $
+ * $Id: gopher.cc,v 1.204 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -758,7 +758,7 @@ gopherReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void
         kb_incr(&statCounter.server.other.kbytes_in, len);
     }
 
-    debugs(10, 5, "gopherReadReply: FD " << fd << " read len=" << (int)len);
+    debugs(10, 5, "gopherReadReply: FD " << fd << " read len=" << len);
 
     if (flag == COMM_OK && len > 0) {
         commSetTimeout(fd, Config.Timeout.read, NULL, NULL);
@@ -826,7 +826,7 @@ gopherSendComplete(int fd, char *buf, size_t size, comm_err_t errflag, int xerrn
 {
     GopherStateData *gopherState = (GopherStateData *) data;
     StoreEntry *entry = gopherState->entry;
-    debugs(10, 5, "gopherSendComplete: FD " << fd << " size: " << (int) size << " errflag: " << errflag);
+    debugs(10, 5, "gopherSendComplete: FD " << fd << " size: " << size << " errflag: " << errflag);
 
     if (size > 0) {
         fd_bytes(fd, size, FD_WRITE);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_coss.cc,v 1.31 2007/04/28 22:26:51 hno Exp $
+ * $Id: store_io_coss.cc,v 1.32 2007/04/30 16:56:16 wessels Exp $
  *
  * DEBUG: section 79    Storage Manager COSS Interface
  * AUTHOR: Eric Stern
@@ -108,7 +108,7 @@ CossSwapDir::allocate(const StoreEntry * e, int which)
         current_membuf->flags.full = 1;
         current_offset = current_membuf->diskend;
         current_membuf->maybeWrite(this);
-        debugs(79, 2, "CossSwapDir::allocate: New offset - " << (long int) current_offset);
+        debugs(79, 2, "CossSwapDir::allocate: New offset - " << current_offset);
         newmb = createMemBuf(current_offset, checkf, &coll);
         current_membuf = newmb;
     }
@@ -297,7 +297,7 @@ CossState::read_(char *buf, size_t size, off_t offset, STRCB * callback, void *c
     assert(read.callback_data == NULL);
     read.callback = callback;
     read.callback_data = cbdataReference(callback_data);
-    debugs(79, 3, "storeCossRead: offset " << (long int) offset);
+    debugs(79, 3, "storeCossRead: offset " << offset);
     offset_ = offset;
     flags.reading = 1;
 
@@ -339,7 +339,7 @@ CossState::write(char const *buf, size_t size, off_t offset, FREE * free_func)
     assert(e->mem_obj->object_sz != -1);
     StoreFScoss::GetInstance().stats.write.ops++;
 
-    debugs(79, 3, "storeCossWrite: offset " << (long int) offset_ << ", len " << (unsigned long int) size);
+    debugs(79, 3, "storeCossWrite: offset " << offset_ << ", len " << (unsigned long int) size);
     diskoffset = SD->storeCossFilenoToDiskOffset(swap_filen) + offset_;
     CossSwapDir *SD = (CossSwapDir *)INDEXSD(swap_dirn);
     dest = SD->storeCossMemPointerFromDiskOffset(diskoffset, &membuf);
@@ -532,7 +532,7 @@ void
 CossMemBuf::write(CossSwapDir * SD)
 {
     StoreFScoss::GetInstance().stats.stripe_write.ops++;
-    debugs(79, 3, "CossMemBuf::write: offset " << (long int) diskstart << ", len " << (long int) (diskend - diskstart));
+    debugs(79, 3, "CossMemBuf::write: offset " << diskstart << ", len " << (diskend - diskstart));
     flags.writing = 1;
     /* XXX Remember that diskstart/diskend are block offsets! */
     SD->theFile->write(new CossWrite(WriteRequest((char const *)&buffer, diskstart, diskend - diskstart, NULL), this));
@@ -550,7 +550,7 @@ CossSwapDir::createMemBuf(size_t start, sfileno curfn, int *collision)
     CBDATA_INIT_TYPE_FREECB(CossMemBuf, NULL);
     newmb = cbdataAlloc(CossMemBuf);
     newmb->diskstart = start;
-    debugs(79, 3, "CossSwapDir::createMemBuf: creating new membuf at " << (long int) newmb->diskstart);
+    debugs(79, 3, "CossSwapDir::createMemBuf: creating new membuf at " << newmb->diskstart);
     debugs(79, 3, "CossSwapDir::createMemBuf: at " << newmb);
     newmb->diskend = newmb->diskstart + COSS_MEMBUF_SZ;
     newmb->flags.full = 0;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.517 2007/04/28 22:26:37 hno Exp $
+ * $Id: http.cc,v 1.518 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -980,7 +980,7 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
     errno = 0;
     /* prepare the read size for the next read (if any) */
 
-    debugs(11, 5, "httpReadReply: FD " << fd << ": len " << (int)len << ".");
+    debugs(11, 5, "httpReadReply: FD " << fd << ": len " << len << ".");
 
     if (flag == COMM_OK && len > 0) {
         readBuf->appended(len);
@@ -1285,7 +1285,7 @@ void
 HttpStateData::SendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
-    debugs(11, 5, "httpSendComplete: FD " << fd << ": size " << (int) size << ": errflag " << errflag << ".");
+    debugs(11, 5, "httpSendComplete: FD " << fd << ": size " << size << ": errflag " << errflag << ".");
 #if URL_CHECKSUM_DEBUG
 
     entry->mem_obj->checkUrlChecksum();

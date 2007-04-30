@@ -1,6 +1,6 @@
 
 /*
- * $Id: SwapDir.cc,v 1.10 2007/04/28 22:26:37 hno Exp $
+ * $Id: SwapDir.cc,v 1.11 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 20    Swap Dir base object
  * AUTHOR: Robert Collins
@@ -248,7 +248,7 @@ SwapDir::optionMaxSizeParse(char const *option, const char *value, int reconfigu
     ssize_t size = xatoi(value);
 
     if (reconfiguring && max_objsize != size)
-        debugs(3, 1, "Cache dir '" << path << "' max object size now " << (long int) size);
+        debugs(3, 1, "Cache dir '" << path << "' max object size now " << size);
 
     max_objsize = size;
 

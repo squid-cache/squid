@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.74 2007/04/28 22:26:38 hno Exp $
+ * $Id: store_digest.cc,v 1.75 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -255,7 +255,7 @@ storeDigestAddable(const StoreEntry * e)
     /* still here? check staleness */
     /* Note: We should use the time of the next rebuild, not (cur_time+period) */
     if (refreshCheckDigest(e, Config.digest.rebuild_period)) {
-        debugs(71, 6, "storeDigestAdd: entry expires within " << (int) Config.digest.rebuild_period << " secs, ignoring");
+        debugs(71, 6, "storeDigestAdd: entry expires within " << Config.digest.rebuild_period << " secs, ignoring");
         return 0;
     }
 
@@ -425,7 +425,7 @@ storeDigestRewriteResume(void)
     rep->setHeaders(version, HTTP_OK, "Cache Digest OK",
                     "application/cache-digest", store_digest->mask_size + sizeof(sd_state.cblock),
                     squid_curtime, squid_curtime + Config.digest.rewrite_period);
-    debugs(71, 3, "storeDigestRewrite: entry expires on " << (long int) rep->expires << 
+    debugs(71, 3, "storeDigestRewrite: entry expires on " << rep->expires << 
            " (" << std::showpos << (int) (rep->expires - squid_curtime) << ")");
     e->buffer();
     e->replaceHttpReply(rep);
@@ -441,7 +441,7 @@ storeDigestRewriteFinish(StoreEntry * e)
     assert(e == sd_state.rewrite_lock);
     e->complete();
     e->timestampsSet();
-    debugs(71, 2, "storeDigestRewriteFinish: digest expires at " << (long int) e->expires << 
+    debugs(71, 2, "storeDigestRewriteFinish: digest expires at " << e->expires << 
            " (" << std::showpos << (int) (e->expires - squid_curtime) << ")");
     /* is this the write order? @?@ */
     e->mem_obj->unlinkRequest();

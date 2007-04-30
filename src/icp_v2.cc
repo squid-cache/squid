@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.98 2007/04/28 22:26:37 hno Exp $
+ * $Id: icp_v2.cc,v 1.99 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -572,9 +572,9 @@ icpPktDump(icp_common_t * pkt)
 
     struct IN_ADDR a;
 
-    debugs(12, 9, "opcode:     " << std::setw(3) << (int) pkt->opcode  << " " << icp_opcode_str[pkt->opcode]);
-    debugs(12, 9, "version: "<< std::left << std::setw(8) << (int) pkt->version);
-    debugs(12, 9, "length:  "<< std::left << std::setw(8) << (int) ntohs(pkt->length));
+    debugs(12, 9, "opcode:     " << std::setw(3) << pkt->opcode  << " " << icp_opcode_str[pkt->opcode]);
+    debugs(12, 9, "version: "<< std::left << std::setw(8) << pkt->version);
+    debugs(12, 9, "length:  "<< std::left << std::setw(8) << ntohs(pkt->length));
     debugs(12, 9, "reqnum:  "<< std::left << std::setw(8) << ntohl(pkt->reqnum));
     debugs(12, 9, "flags:   "<< std::left << std::hex << std::setw(8) << ntohl(pkt->flags));
     a.s_addr = pkt->shostid;
@@ -719,7 +719,7 @@ icpConnectionsOpen(void)
                       NULL,
                       0);
 
-        debugs(12, 1, "Outgoing ICP messages on port " << (int) port << ", FD " << theOutIcpConnection << ".");
+        debugs(12, 1, "Outgoing ICP messages on port " << port << ", FD " << theOutIcpConnection << ".");
 
         fd_note(theOutIcpConnection, "Outgoing ICP socket");
 

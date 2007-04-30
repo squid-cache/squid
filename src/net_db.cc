@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.193 2007/04/28 22:26:37 hno Exp $
+ * $Id: net_db.cc,v 1.194 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -695,7 +695,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer recievedData)
     rec_sz += 1 + sizeof(addr.s_addr);
     rec_sz += 1 + sizeof(int);
     rec_sz += 1 + sizeof(int);
-    debugs(38, 3, "netdbExchangeHandleReply: " << (int) recievedData.length << " read bytes");
+    debugs(38, 3, "netdbExchangeHandleReply: " << recievedData.length << " read bytes");
 
     if (!cbdataReferenceValid(ex->p)) {
         debugs(38, 3, "netdbExchangeHandleReply: Peer became invalid");
@@ -849,7 +849,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer recievedData)
            " entries, (x " << rec_sz << " bytes) == " << nused * rec_sz <<
            " bytes total");
 
-    debugs(38, 3, "netdbExchangeHandleReply: used " << (long int) ex->used);
+    debugs(38, 3, "netdbExchangeHandleReply: used " << ex->used);
 
     if (EBIT_TEST(ex->e->flags, ENTRY_ABORTED)) {
         debugs(38, 3, "netdbExchangeHandleReply: ENTRY_ABORTED");

@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMaxUserIP.cc,v 1.12 2007/04/28 22:26:37 hno Exp $
+ * $Id: ACLMaxUserIP.cc,v 1.13 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -104,7 +104,7 @@ ACLMaxUserIP::parse()
 
     maximum = xatoi(t);
 
-    debugs(28, 5, "aclParseUserMaxIP: Max IP address's " << (int) maximum);
+    debugs(28, 5, "aclParseUserMaxIP: Max IP address's " << maximum);
 
     return;
 }

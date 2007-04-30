@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.121 2007/04/28 22:26:37 hno Exp $
+ * $Id: client_side_reply.cc,v 1.122 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -265,7 +265,7 @@ clientReplyContext::processExpired()
 #endif
 
     http->request->lastmod = old_entry->lastmod;
-    debugs(88, 5, "clientReplyContext::processExpired : lastmod " << (long int) entry->lastmod );
+    debugs(88, 5, "clientReplyContext::processExpired : lastmod " << entry->lastmod );
     http->storeEntry(entry);
     assert(http->out.offset == 0);
 
@@ -451,7 +451,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
 
     HttpRequest *r = http->request;
 
-    debugs(88, 3, "clientCacheHit: " << http->uri << ", " << (unsigned int)result.length << " bytes");
+    debugs(88, 3, "clientCacheHit: " << http->uri << ", " << result.length << " bytes");
 
     if (http->storeEntry() == NULL) {
         debugs(88, 3, "clientCacheHit: request aborted");
@@ -1045,7 +1045,7 @@ clientHttpRequestStatus(int fd, ClientHttpRequest const *http)
     if (http->out.size > 0x7FFF0000) {
         debugs(88, 1, "WARNING: closing FD " << fd << " to prevent counter overflow" );
         debugs(88, 1, "\tclient " << (inet_ntoa(http->getConn() != NULL ? http->getConn()->peer.sin_addr : no_addr))  );
-        debugs(88, 1, "\treceived " << (int) http->out.size << " bytes" );
+        debugs(88, 1, "\treceived " << http->out.size << " bytes" );
         debugs(88, 1, "\tURI " << http->log_uri  );
         return 1;
     }
@@ -1055,7 +1055,7 @@ clientHttpRequestStatus(int fd, ClientHttpRequest const *http)
     if (http->out.offset > 0x7FFF0000) {
         debugs(88, 1, "WARNING: closing FD " << fd << " to prevent counter overflow" );
         debugs(88, 1, "\tclient " << (inet_ntoa(http->getConn() != NULL ? http->getConn()->peer.sin_addr : no_addr))  );
-        debugs(88, 1, "\treceived " << (int) http->out.size << " bytes (offset " << (int) http->out.offset << ")" );
+        debugs(88, 1, "\treceived " << http->out.size << " bytes (offset " << http->out.offset << ")" );
         debugs(88, 1, "\tURI " << http->log_uri  );
         return 1;
     }
@@ -1721,7 +1721,7 @@ clientReplyContext::buildMaxBodySize(HttpReply * reply)
     for (l = Config.ReplyBodySize; l; l = l -> next) {
         if (ch->matchAclListFast(l->aclList)) {
             if (l->size != static_cast<size_t>(-1)) {
-                debugs(58, 3, "clientReplyContext: Setting maxBodySize to " << (long int) l->size);
+                debugs(58, 3, "clientReplyContext: Setting maxBodySize to " <<  l->size);
                 http->maxReplyBodySize(l->size);
             }
 
@@ -1928,7 +1928,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     debugs(88, 5, "clientReplyContext::sendMoreData: " << http->uri << ", " <<
            (int) reqofs << " bytes (" << (unsigned int)result.length <<
            " new bytes)");
-    debugs(88, 5, "clientReplyContext::sendMoreData: FD " << fd << " '" << entry->url() << "', out.offset=" << (long int) http->out.offset << " " );
+    debugs(88, 5, "clientReplyContext::sendMoreData: FD " << fd << " '" << entry->url() << "', out.offset=" << http->out.offset << " " );
 
     /* update size of the request */
     reqsize = reqofs;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.223 2007/04/28 22:26:37 hno Exp $
+ * $Id: errorpage.cc,v 1.224 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -456,7 +456,7 @@ static void
 errorSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
 {
     ErrorState *err = static_cast<ErrorState *>(data);
-    debugs(4, 3, "errorSendComplete: FD " << fd << ", size=" << (long int) size);
+    debugs(4, 3, "errorSendComplete: FD " << fd << ", size=" << size);
 
     if (errflag != COMM_ERR_CLOSING) {
         if (err->callback) {

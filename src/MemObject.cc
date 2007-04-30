@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.25 2007/04/28 22:26:37 hno Exp $
+ * $Id: MemObject.cc,v 1.26 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -138,7 +138,7 @@ void
 MemObject::write ( StoreIOBuffer writeBuffer, STMCB *callback, void *callbackData)
 {
     PROF_start(MemObject_write);
-    debugs(19, 6, "memWrite: offset " << (unsigned long)writeBuffer.offset << " len " << (long)writeBuffer.length);
+    debugs(19, 6, "memWrite: offset " << writeBuffer.offset << " len " << writeBuffer.length);
 
     /* the offset is into the content, not the headers */
     writeBuffer.offset += (_reply ? _reply->hdr_sz : 0);
@@ -162,9 +162,9 @@ MemObject::dump() const
     debugs(20, 1, "MemObject->data.origin_offset: " << (data_hdr.head ? data_hdr.head->nodeBuffer.offset : 0));
 #endif
 
-    debugs(20, 1, "MemObject->start_ping: " << (int) start_ping.tv_sec  << "."<< std::setfill('0') << std::setw(6) << (int) start_ping.tv_usec);
-    debugs(20, 1, "MemObject->inmem_hi: " << (int) data_hdr.endOffset());
-    debugs(20, 1, "MemObject->inmem_lo: " << (int) inmem_lo);
+    debugs(20, 1, "MemObject->start_ping: " << start_ping.tv_sec  << "."<< std::setfill('0') << std::setw(6) << start_ping.tv_usec);
+    debugs(20, 1, "MemObject->inmem_hi: " << data_hdr.endOffset());
+    debugs(20, 1, "MemObject->inmem_lo: " << inmem_lo);
     debugs(20, 1, "MemObject->nclients: " << nclients);
     debugs(20, 1, "MemObject->reply: " << _reply);
     debugs(20, 1, "MemObject->request: " << request);

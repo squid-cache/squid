@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.42 2007/04/28 22:26:38 hno Exp $
+ * $Id: wccp.cc,v 1.43 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Glenn Chisholm
@@ -159,7 +159,7 @@ wccpConnectionOpen(void)
                   NULL,
                   0);
 
-    debugs(1, 1, "Accepting WCCP messages on port " << (int) port << ", FD " << theWccpConnection << ".");
+    debugs(1, 1, "Accepting WCCP messages on port " << port << ", FD " << theWccpConnection << ".");
 
 
     router_len = sizeof(router);

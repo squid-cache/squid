@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.49 2007/04/28 22:26:37 hno Exp $
+ * $Id: pconn.cc,v 1.50 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -151,7 +151,7 @@ IdleConnList::findUseableFD()
 void
 IdleConnList::read(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
-    debugs(48, 3, "IdleConnList::read: " << (int) len << " bytes from FD " << fd);
+    debugs(48, 3, "IdleConnList::read: " << len << " bytes from FD " << fd);
 
     if (flag == COMM_ERR_CLOSING) {
         /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */

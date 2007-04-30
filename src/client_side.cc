@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.751 2007/04/28 22:26:37 hno Exp $
+ * $Id: client_side.cc,v 1.752 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -831,7 +831,7 @@ static void
 clientPackTermBound(String boundary, MemBuf * mb)
 {
     mb->Printf("\r\n--%s--\r\n", boundary.buf());
-    debugs(33, 6, "clientPackTermBound: buf offset: " << (long int) mb->size);
+    debugs(33, 6, "clientPackTermBound: buf offset: " << mb->size);
 }
 
 /* appends a "part" HTTP header (as in a multi-part/range reply) to the buffer */
@@ -906,7 +906,7 @@ ClientSocketContext::packRange(StoreIOBuffer const &source, MemBuf * mb)
             /*
              * append content
              */
-            debugs(33, 3, "clientPackRange: appending " << (long int) copy_sz << " bytes");
+            debugs(33, 3, "clientPackRange: appending " << copy_sz << " bytes");
 
             noteSentBodyBytes (copy_sz);
 
@@ -983,7 +983,7 @@ ClientHttpRequest::mRangeCLen()
         /* account for range content */
         clen += (*pos)->length;
 
-        debugs(33, 6, "clientMRangeCLen: (clen += " << (long int) mb.size << " + " << (long int) (*pos)->length << ") == " << clen);
+        debugs(33, 6, "clientMRangeCLen: (clen += " << mb.size << " + " << (*pos)->length << ") == " << clen);
         ++pos;
     }
 
@@ -1987,7 +1987,7 @@ ConnStateData::makeSpaceAvailable()
 {
     if (getAvailableBufferLength() < 2) {
         in.buf = (char *)memReallocBuf(in.buf, in.allocatedSize * 2, &in.allocatedSize);
-        debugs(33, 2, "growing request buffer: notYetUsed=" << (long) in.notYetUsed << " size=" << (long) in.allocatedSize);
+        debugs(33, 2, "growing request buffer: notYetUsed=" << in.notYetUsed << " size=" << in.allocatedSize);
     }
 }
 
@@ -2084,8 +2084,8 @@ connCancelIncompleteRequests(ConnStateData::Pointer & conn)
     ClientSocketContext *context = parseHttpRequestAbort(conn, "error:request-too-large");
     clientStreamNode *node = context->getClientReplyContext();
     assert(!connKeepReadingIncompleteRequest(conn));
-    debugs(33, 1, "Request header is too large (" << (unsigned) conn->in.notYetUsed << " bytes)");
-    debugs(33, 1, "Config 'request_header_max_size'= " << (long int) Config.maxRequestHeaderSize << " bytes.");
+    debugs(33, 1, "Request header is too large (" << conn->in.notYetUsed << " bytes)");
+    debugs(33, 1, "Config 'request_header_max_size'= " << Config.maxRequestHeaderSize << " bytes.");
     clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
     assert (repContext);
     repContext->setReplyToError(ERR_TOO_BIG,

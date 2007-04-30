@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.116 2007/04/28 22:26:38 hno Exp $
+ * $Id: store_swapout.cc,v 1.117 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -147,11 +147,11 @@ doPages(StoreEntry *anEntry)
          */
         ssize_t swap_buf_len = mem->swapout.memnode->nodeBuffer.length;
 
-        debugs(20, 3, "storeSwapOut: swap_buf_len = " << (int) swap_buf_len);
+        debugs(20, 3, "storeSwapOut: swap_buf_len = " << swap_buf_len);
 
         assert(swap_buf_len > 0);
 
-        debugs(20, 3, "storeSwapOut: swapping out " << (long int) swap_buf_len << " bytes from " << (long int) mem->swapout.queue_offset);
+        debugs(20, 3, "storeSwapOut: swapping out " << swap_buf_len << " bytes from " << mem->swapout.queue_offset);
 
         mem->swapout.queue_offset += swap_buf_len;
 
@@ -189,12 +189,12 @@ StoreEntry::swapOut()
     if (!swapoutPossible())
         return;
 
-    debugs(20, 7, "storeSwapOut: mem_obj->inmem_lo = " << (int) mem_obj->inmem_lo);
-    debugs(20, 7, "storeSwapOut: mem_obj->endOffset() = " << (int) mem_obj->endOffset());
-    debugs(20, 7, "storeSwapOut: swapout.queue_offset = " << (int) mem_obj->swapout.queue_offset);
+    debugs(20, 7, "storeSwapOut: mem_obj->inmem_lo = " << mem_obj->inmem_lo);
+    debugs(20, 7, "storeSwapOut: mem_obj->endOffset() = " << mem_obj->endOffset());
+    debugs(20, 7, "storeSwapOut: swapout.queue_offset = " << mem_obj->swapout.queue_offset);
 
     if (mem_obj->swapout.sio != NULL)
-    debugs(20, 7, "storeSwapOut: storeOffset() = " << (int) mem_obj->swapout.sio->offset()  );
+    debugs(20, 7, "storeSwapOut: storeOffset() = " << mem_obj->swapout.sio->offset()  );
 
     ssize_t swapout_maxsize = (ssize_t) (mem_obj->endOffset() - mem_obj->swapout.queue_offset);
 
@@ -202,7 +202,7 @@ StoreEntry::swapOut()
 
     off_t const lowest_offset = mem_obj->lowestMemReaderOffset();
 
-    debugs(20, 7, "storeSwapOut: lowest_offset = " << (int) lowest_offset);
+    debugs(20, 7, "storeSwapOut: lowest_offset = " << lowest_offset);
 
     /*
      * Grab the swapout_size and check to see whether we're going to defer
@@ -239,7 +239,7 @@ StoreEntry::swapOut()
     if (!swapOutAble())
         return;
 
-    debugs(20, 7, "storeSwapOut: swapout_size = " << (int) swapout_maxsize);
+    debugs(20, 7, "storeSwapOut: swapout_size = " << swapout_maxsize);
 
     if (swapout_maxsize == 0) {
         if (store_status == STORE_OK)

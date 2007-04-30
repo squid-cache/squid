@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.74 2007/04/28 22:26:37 hno Exp $
+ * $Id: refresh.cc,v 1.75 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -168,13 +168,13 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, time_t age, const 
         sf->expires = true;
 
         if (entry->expires > check_time) {
-            debugs(22, 3, "FRESH: expires " << (int) entry->expires <<
-                   " >= check_time " << (int) check_time << " ");
+            debugs(22, 3, "FRESH: expires " << entry->expires <<
+                   " >= check_time " << check_time << " ");
 
             return -1;
         } else {
-            debugs(22, 3, "STALE: expires " << (int) entry->expires <<
-                   " < check_time " << (int) check_time << " ");
+            debugs(22, 3, "STALE: expires " << entry->expires <<
+                   " < check_time " << check_time << " ");
 
             return (check_time - entry->expires);
         }
@@ -187,7 +187,7 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, time_t age, const 
      */
 
     if (age > R->max) {
-        debugs(22, 3, "STALE: age " << (int) age << " > max " << (int) R->max << " ");
+        debugs(22, 3, "STALE: age " << age << " > max " << R->max << " ");
         sf->max = true;
         return (age - R->max);
     }
@@ -204,10 +204,10 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, time_t age, const 
         sf->lmfactor = true;
 
         if (age >= stale_age) {
-            debugs(22, 3, "STALE: age " << (int) age << " > stale_age " << (int) stale_age);
+            debugs(22, 3, "STALE: age " << age << " > stale_age " << stale_age);
             return (age - stale_age);
         } else {
-            debugs(22, 3, "FRESH: age " << (int) age << " <= stale_age " << (int) stale_age);
+            debugs(22, 3, "FRESH: age " << age << " <= stale_age " << stale_age);
             return -1;
         }
     }
@@ -217,12 +217,12 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, time_t age, const 
      * configured minimum age.
      */
     if (age <= R->min) {
-        debugs(22, 3, "FRESH: age " << (int) age << " <= min " << (int) R->min);
+        debugs(22, 3, "FRESH: age " << age << " <= min " << R->min);
         sf->min = true;
         return -1;
     }
 
-    debugs(22, 3, "STALE: age " << (int) age << " > min " << (int) R->min);
+    debugs(22, 3, "STALE: age " << age << " > min " << R->min);
     return (age - R->min);
 }
 
@@ -267,7 +267,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
            (int) R->max << "'");
 
 
-    debugs(22, 3, "refreshCheck: age = " << (int) age);
+    debugs(22, 3, "refreshCheck: age = " << age);
 
     debugs(22, 3, "\tcheck_time:\t" << mkrfc1123(check_time));
 

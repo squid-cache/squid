@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.37 2007/04/28 22:26:51 hno Exp $
+ * $Id: store_io_ufs.cc,v 1.38 2007/04/30 16:56:17 wessels Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -453,7 +453,7 @@ UFSStoreState::kickReadQueue()
     if (NULL == q)
         return false;
 
-    debugs(79, 3, "UFSStoreState::kickReadQueue: reading queued request of " << (long int) q->size << " bytes");
+    debugs(79, 3, "UFSStoreState::kickReadQueue: reading queued request of " << q->size << " bytes");
 
     void *cbdata;
 

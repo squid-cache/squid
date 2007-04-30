@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_select.cc,v 1.146 2007/04/28 22:26:37 hno Exp $
+ * $Id: peer_select.cc,v 1.147 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -762,7 +762,7 @@ peerHandlePingReply(peer * p, peer_t type, protocol_t proto, void *pingdata, voi
 #endif
 
     else
-        debugs(44, 1, "peerHandlePingReply: unknown protocol_t " << (int) proto);
+        debugs(44, 1, "peerHandlePingReply: unknown protocol_t " << proto);
 }
 
 static void

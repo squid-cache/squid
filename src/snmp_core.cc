@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.77 2007/04/28 22:26:37 hno Exp $
+ * $Id: snmp_core.cc,v 1.78 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -381,7 +381,7 @@ snmpConnectionOpen(void)
 
         commSetSelect(theInSnmpConnection, COMM_SELECT_READ, snmpHandleUdp, NULL, 0);
 
-        debugs(1, 1, "Accepting SNMP messages on port " << (int) port << ", FD " << theInSnmpConnection << ".");
+        debugs(1, 1, "Accepting SNMP messages on port " << port << ", FD " << theInSnmpConnection << ".");
 
         if (Config.Addrs.snmp_outgoing.s_addr != no_addr.s_addr) {
             enter_suid();
@@ -401,7 +401,7 @@ snmpConnectionOpen(void)
                           snmpHandleUdp,
                           NULL, 0);
 
-            debugs(1, 1, "Outgoing SNMP messages on port " << (int) port << ", FD " << theOutSnmpConnection << ".");
+            debugs(1, 1, "Outgoing SNMP messages on port " << port << ", FD " << theOutSnmpConnection << ".");
 
             fd_note(theOutSnmpConnection, "Outgoing SNMP socket");
 
