@@ -54,7 +54,7 @@ storeCreate(StoreEntry * e, StoreIOState::STFNCB * file_callback, StoreIOState::
         return NULL;
     }
 
-    debugs(20, 2, "storeCreate: Selected dir '" << dirn << "' for obj size '" << (long int) objsize << "'");
+    debugs(20, 2, "storeCreate: Selected dir '" << dirn << "' for obj size '" << objsize << "'");
     SD = dynamic_cast<SwapDir *>(INDEXSD(dirn));
 
     /* Now that we have a fs to use, call its storeCreate function */

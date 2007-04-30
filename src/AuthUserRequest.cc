@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.cc,v 1.13 2007/04/28 22:26:37 hno Exp $
+ * $Id: AuthUserRequest.cc,v 1.14 2007/04/30 16:56:09 wessels Exp $
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 6803fde1-d5a2-4c29-9034-1c0c9f650eb4
@@ -690,7 +690,7 @@ void
 
 AuthUserRequest::lock()
 {
-    debugs(29, 9, "AuthUserRequest::lock: auth_user request '" << this << "' (" << (long int) references << " references).");
+    debugs(29, 9, "AuthUserRequest::lock: auth_user request '" << this << "' (" << references << " references).");
     assert(this);
     ++references;
 }
@@ -698,7 +698,7 @@ AuthUserRequest::lock()
 void
 AuthUserRequest::unlock()
 {
-    debugs(29, 9, "AuthUserRequest::unlock: auth_user request '" << this << "' (" << (long int) references << " references) .");
+    debugs(29, 9, "AuthUserRequest::unlock: auth_user request '" << this << "' (" << references << " references) .");
     assert(this != NULL);
 
     if (references > 0) {

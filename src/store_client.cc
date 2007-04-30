@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.156 2007/04/28 22:26:38 hno Exp $
+ * $Id: store_client.cc,v 1.157 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -477,7 +477,7 @@ storeClientReadBody(void *data, const char *buf, ssize_t len, StoreIOState::Poin
     assert(sc->flags.disk_io_pending);
     sc->flags.disk_io_pending = 0;
     assert(sc->_callback.pending());
-    debugs(90, 3, "storeClientReadBody: len " << (int) len << "");
+    debugs(90, 3, "storeClientReadBody: len " << len << "");
 
     if (sc->copyInto.offset == 0 && len > 0 && sc->entry->getReply()->sline.status == 0) {
         /* Our structure ! */
@@ -516,7 +516,7 @@ storeClientReadHeader(void *data, const char *buf, ssize_t len, StoreIOState::Po
 void
 store_client::unpackHeader(char const *buf, ssize_t len)
 {
-    debugs(90, 3, "store_client::unpackHeader: len " << (int) len << "");
+    debugs(90, 3, "store_client::unpackHeader: len " << len << "");
 
     if (len < 0) {
         debugs(90, 3, "store_client::unpackHeader: " << xstrerror() << "");
@@ -586,7 +586,7 @@ store_client::readHeader(char const *buf, ssize_t len)
          */
         size_t copy_sz = XMIN(copyInto.length, body_sz)
                          ;
-        debugs(90, 3, "storeClientReadHeader: copying " << (int) copy_sz << " bytes of body");
+        debugs(90, 3, "storeClientReadHeader: copying " << copy_sz << " bytes of body");
         xmemmove(copyInto.data, copyInto.data + mem->swap_hdr_sz, copy_sz);
 
         if (copyInto.offset == 0 && len > 0 && entry->getReply()->sline.status == 0) {

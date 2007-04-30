@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.348 2007/04/28 22:26:37 hno Exp $
+ * $Id: neighbors.cc,v 1.349 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -376,7 +376,7 @@ getWeightedRoundRobinParent(HttpRequest * request)
 
         q->rr_count += weighted_rtt;
 
-        debugs(15, 3, "getWeightedRoundRobinParent: weighted_rtt " << (int) weighted_rtt);
+        debugs(15, 3, "getWeightedRoundRobinParent: weighted_rtt " << weighted_rtt);
     }
 
     debugs(15, 3, "getWeightedRoundRobinParent: returning " << (q ? q->host : "NULL"));
@@ -1039,7 +1039,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const struct socka
     char *opcode_d;
     icp_opcode opcode = (icp_opcode) header->opcode;
 
-    debugs(15, 6, "neighborsUdpAck: opcode " << (int) opcode << " '" << storeKeyText(key) << "'");
+    debugs(15, 6, "neighborsUdpAck: opcode " << opcode << " '" << storeKeyText(key) << "'");
 
     if (NULL != (entry = Store::Root().get(key)))
         mem = entry->mem_obj;

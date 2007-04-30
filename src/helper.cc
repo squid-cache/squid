@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.80 2007/04/28 22:26:37 hno Exp $
+ * $Id: helper.cc,v 1.81 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -971,7 +971,7 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
         return;
     }
 
-    debugs(84, 5, "helperHandleRead: " << (int)len << " bytes from " << hlp->id_name << " #" << srv->index + 1 << ".");
+    debugs(84, 5, "helperHandleRead: " << len << " bytes from " << hlp->id_name << " #" << srv->index + 1 << ".");
 
     if (flag != COMM_OK || len <= 0) {
         if (len < 0)
@@ -1080,7 +1080,7 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
         return;
     }
 
-    debugs(84, 5, "helperStatefulHandleRead: " << (int)len << " bytes from " <<
+    debugs(84, 5, "helperStatefulHandleRead: " << len << " bytes from " <<
            hlp->id_name << " #" << srv->index + 1 << ".");
 
 
@@ -1476,7 +1476,7 @@ helperDispatch(helper_server * srv, helper_request * r)
                    srv, NULL);			/* Handler-data, free func */
     }
 
-    debugs(84, 5, "helperDispatch: Request sent to " << hlp->id_name << " #" << srv->index + 1 << ", " << (int) strlen(r->buf) << " bytes");
+    debugs(84, 5, "helperDispatch: Request sent to " << hlp->id_name << " #" << srv->index + 1 << ", " << strlen(r->buf) << " bytes");
 
     srv->stats.uses++;
     hlp->stats.requests++;

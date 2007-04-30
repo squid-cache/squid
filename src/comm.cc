@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.429 2007/04/28 22:26:37 hno Exp $
+ * $Id: comm.cc,v 1.430 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -775,7 +775,7 @@ comm_local_port(int fd)
     }
 
     F->local_port = ntohs(addr.sin_port);
-    debugs(5, 6, "comm_local_port: FD " << fd << ": port " << (int) F->local_port);
+    debugs(5, 6, "comm_local_port: FD " << fd << ": port " << F->local_port);
     return F->local_port;
 }
 
@@ -966,7 +966,7 @@ void
 commConnectStart(int fd, const char *host, u_short port, CNCB * callback, void *data)
 {
     ConnectStateData *cs;
-    debugs(5, 3, "commConnectStart: FD " << fd << ", data " << data << ", " << host << ":" << (int) port);
+    debugs(5, 3, "commConnectStart: FD " << fd << ", data " << data << ", " << host << ":" << port);
     cs = new ConnectStateData;
     cs->fd = fd;
     cs->host = xstrdup(host);

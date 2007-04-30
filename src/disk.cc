@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.172 2007/04/28 22:26:37 hno Exp $
+ * $Id: disk.cc,v 1.173 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived
@@ -241,7 +241,7 @@ diskHandleWrite(int fd, void *notused)
 
     assert(fdd->write_q->len > fdd->write_q->buf_offset);
 
-    debugs(6, 3, "diskHandleWrite: FD " << fd << " writing " << (int) (fdd->write_q->len - fdd->write_q->buf_offset) << " bytes");
+    debugs(6, 3, "diskHandleWrite: FD " << fd << " writing " << (fdd->write_q->len - fdd->write_q->buf_offset) << " bytes");
 
     errno = 0;
 
@@ -444,7 +444,7 @@ diskHandleRead(int fd, void *data)
     PROF_start(diskHandleRead);
 
     if (F->disk.offset != ctrl_dat->offset) {
-        debugs(6, 3, "diskHandleRead: FD " << fd << " seeking to offset " << (int) ctrl_dat->offset);
+        debugs(6, 3, "diskHandleRead: FD " << fd << " seeking to offset " << ctrl_dat->offset);
         lseek(fd, ctrl_dat->offset, SEEK_SET);	/* XXX ignore return? */
         statCounter.syscalls.disk.seeks++;
         F->disk.offset = ctrl_dat->offset;

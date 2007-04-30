@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc_win32.cc,v 1.3 2007/04/28 22:26:37 hno Exp $
+ * $Id: ipc_win32.cc,v 1.4 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 54    Windows Interprocess Communication
  * AUTHOR: Andrey Shorin <tolsty@tushino.com>
@@ -699,7 +699,7 @@ ipc_thread_1(void *in_params)
     if (-1 == ipcSend(cwfd, buf1, strlen(buf1)))
         goto cleanup;
 
-        debugs(54, 2, "ipc(" << prog << "," << (long int) pid << "): started successfully");
+        debugs(54, 2, "ipc(" << prog << "," << pid << "): started successfully");
 
     /* cycle */
     for (;;) {

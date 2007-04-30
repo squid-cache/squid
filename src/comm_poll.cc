@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_poll.cc,v 1.20 2007/04/28 22:26:37 hno Exp $
+ * $Id: comm_poll.cc,v 1.21 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -629,7 +629,7 @@ comm_select(int msec)
         return COMM_OK;
     } while (timeout > current_dtime);
 
-    debugs(5, 8, "comm_poll: time out: " << (long int) squid_curtime << ".");
+    debugs(5, 8, "comm_poll: time out: " << squid_curtime << ".");
 
     return COMM_TIMEOUT;
 }

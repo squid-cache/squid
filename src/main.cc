@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.446 2007/04/28 22:26:37 hno Exp $
+ * $Id: main.cc,v 1.447 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -175,7 +175,7 @@ SignalDispatcher::dispatch()
     } else if (do_shutdown) {
         time_t wait = do_shutdown > 0 ? (int) Config.shutdownLifetime : 0;
         debugs(1, 1, "Preparing for shutdown after " << statCounter.client_http.requests << " requests");
-        debugs(1, 1, "Waiting " << (int) wait << " seconds for active connections to finish");
+        debugs(1, 1, "Waiting " << wait << " seconds for active connections to finish");
         do_shutdown = 0;
         shutting_down = 1;
 #if USE_WIN32_SERVICE

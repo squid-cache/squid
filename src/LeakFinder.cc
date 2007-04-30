@@ -1,6 +1,6 @@
 
 /*
- * $Id: LeakFinder.cc,v 1.5 2007/04/28 22:26:37 hno Exp $
+ * $Id: LeakFinder.cc,v 1.6 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
@@ -138,7 +138,7 @@ LeakFinder::dump()
     LeakFinderPtr *c;
 
     while ((c = (LeakFinderPtr *)hash_next(table))) {
-         debugs(45, 1, std::setw(20) << c->key << " last used " << std::setw(9) << (int)(squid_curtime - c->when) << 
+         debugs(45, 1, std::setw(20) << c->key << " last used " << std::setw(9) << (squid_curtime - c->when) << 
                 " seconds ago by " << c->file << ":" << c->line);
     }
 }

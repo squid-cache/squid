@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrContRange.cc,v 1.18 2007/04/28 22:26:37 hno Exp $
+ * $Id: HttpHdrContRange.cc,v 1.19 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 68    HTTP Content-Range Header
  * AUTHOR: Alex Rousskov
@@ -101,7 +101,7 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec * spec, const char *field, int fl
 
     /* we managed to parse, check if the result makes sence */
     if (known_spec((size_t)spec->length) && spec->length == 0) {
-        debugs(68, 2, "invalid range (" << (long int) spec->offset << " += " <<
+        debugs(68, 2, "invalid range (" << spec->offset << " += " <<
                (long int) spec->length << ") in resp-range-spec near: '" << field << "'");
         return 0;
     }

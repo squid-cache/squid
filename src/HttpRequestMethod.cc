@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequestMethod.cc,v 1.3 2007/04/28 22:26:37 hno Exp $
+ * $Id: HttpRequestMethod.cc,v 1.4 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -154,7 +154,7 @@ HttpRequestMethod::AddExtension(const char *mstr)
         /* Don't free statically allocated "%EXTnn" string */
         RequestMethodStr[method] = xstrdup(mstr);
 
-        debugs(23, 1, "Extension method '" << mstr << "' added, enum=" << (int) method);
+        debugs(23, 1, "Extension method '" << mstr << "' added, enum=" << method);
 
         return;
     }

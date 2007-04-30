@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.167 2007/04/28 22:26:38 hno Exp $
+ * $Id: tunnel.cc,v 1.168 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -227,7 +227,7 @@ SslStateData::readServer(char *buf, size_t len, comm_err_t errcode, int xerrno)
     if (errcode == COMM_ERR_CLOSING)
         return;
 
-    debugs(26, 3, "sslReadServer: FD " << server.fd() << ", read   " << (int)len << " bytes");
+    debugs(26, 3, "sslReadServer: FD " << server.fd() << ", read   " << len << " bytes");
 
     if (len > 0) {
         server.bytesIn(len);
@@ -276,7 +276,7 @@ SslStateData::readClient(char *buf, size_t len, comm_err_t errcode, int xerrno)
     if (errcode == COMM_ERR_CLOSING)
         return;
 
-    debugs(26, 3, "sslReadClient: FD " << client.fd() << ", read " << (int) len << " bytes");
+    debugs(26, 3, "sslReadClient: FD " << client.fd() << ", read " << len << " bytes");
 
     if (len > 0) {
         client.bytesIn(len);
@@ -323,7 +323,7 @@ SslStateData::WriteServerDone(int fd, char *buf, size_t len, comm_err_t flag, in
 void
 SslStateData::writeServerDone(char *buf, size_t len, comm_err_t flag, int xerrno)
 {
-    debugs(26, 3, "sslWriteServer: FD " << server.fd() << ", " << (int)len << " bytes written");
+    debugs(26, 3, "sslWriteServer: FD " << server.fd() << ", " << len << " bytes written");
 
     /* Error? */
     if (len < 0 || flag != COMM_OK) {
@@ -381,7 +381,7 @@ SslStateData::Connection::dataSent (size_t amount)
 void
 SslStateData::writeClientDone(char *buf, size_t len, comm_err_t flag, int xerrno)
 {
-    debugs(26, 3, "sslWriteClient: FD " << client.fd() << ", " << (int)len << " bytes written");
+    debugs(26, 3, "sslWriteClient: FD " << client.fd() << ", " << len << " bytes written");
 
     /* Error? */
     if (len < 0 || flag != COMM_OK) {

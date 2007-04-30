@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.75 2007/04/28 22:26:37 hno Exp $
+ * $Id: htcp.cc,v 1.76 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -415,7 +415,7 @@ htcpBuildSpecifier(char *buf, size_t buflen, htcpStuff * stuff)
 
     off += s;
 
-    debugs(31, 3, "htcpBuildSpecifier: size " << (int) off);
+    debugs(31, 3, "htcpBuildSpecifier: size " << off);
 
     return off;
 }
@@ -518,7 +518,7 @@ htcpBuildData(char *buf, size_t buflen, htcpStuff * stuff)
 
     off += op_data_sz;
 
-    debugs(31, 3, "htcpBuildData: hdr.length = " << (int) off);
+    debugs(31, 3, "htcpBuildData: hdr.length = " << off);
 
     hdr.length = (u_int16_t) off;
 
@@ -550,7 +550,7 @@ htcpBuildData(char *buf, size_t buflen, htcpStuff * stuff)
         xmemcpy(buf, &hdrSquid, hdr_sz);
     }
 
-    debugs(31, 3, "htcpBuildData: size " << (int) off);
+    debugs(31, 3, "htcpBuildData: size " << off);
 
     return off;
 }
@@ -597,7 +597,7 @@ htcpBuildPacket(char *buf, size_t buflen, htcpStuff * stuff)
 
     xmemcpy(buf, &hdr, hdr_sz);
 
-    debugs(31, 3, "htcpBuildPacket: size " << (int) off);
+    debugs(31, 3, "htcpBuildPacket: size " << off);
 
     return off;
 }
@@ -1107,7 +1107,7 @@ static void
 
 htcpHandleTst(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
 {
-    debugs(31, 3, "htcpHandleTst: sz = " << (int) sz);
+    debugs(31, 3, "htcpHandleTst: sz = " << sz);
 
     if (hdr->RR == RR_REQUEST)
         htcpHandleTstRequest(hdr, buf, sz, from);
@@ -1163,7 +1163,7 @@ htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_i
     }
 
     htcpReply.msg_id = hdr->msg_id;
-    debugs(31, 3, "htcpHandleTstResponse: msg_id = " << (int) htcpReply.msg_id);
+    debugs(31, 3, "htcpHandleTstResponse: msg_id = " << htcpReply.msg_id);
     htcpReply.hit = hdr->response ? 0 : 1;
 
     if (hdr->F1)
@@ -1360,19 +1360,19 @@ htcpHandleData(char *buf, int sz, struct sockaddr_in *from)
     hdr.length = ntohs(hdr.length);
     hdr.msg_id = ntohl(hdr.msg_id);
     debugs(31, 3, "htcpHandleData: sz = " << sz);
-    debugs(31, 3, "htcpHandleData: length = " << (int) hdr.length);
+    debugs(31, 3, "htcpHandleData: length = " << hdr.length);
 
     if (hdr.opcode >= HTCP_END)
     {
-        debugs(31, 1, "htcpHandleData: client " << inet_ntoa(from->sin_addr) << ", opcode " << (int) hdr.opcode << " out of range");
+        debugs(31, 1, "htcpHandleData: client " << inet_ntoa(from->sin_addr) << ", opcode " << hdr.opcode << " out of range");
         return;
     }
 
-    debugs(31, 3, "htcpHandleData: opcode = " << (int) hdr.opcode << " " << htcpOpcodeStr[hdr.opcode]);
-    debugs(31, 3, "htcpHandleData: response = " << (int) hdr.response);
-    debugs(31, 3, "htcpHandleData: F1 = " << (int) hdr.F1);
-    debugs(31, 3, "htcpHandleData: RR = " << (int) hdr.RR);
-    debugs(31, 3, "htcpHandleData: msg_id = " << (int) hdr.msg_id);
+    debugs(31, 3, "htcpHandleData: opcode = " << hdr.opcode << " " << htcpOpcodeStr[hdr.opcode]);
+    debugs(31, 3, "htcpHandleData: response = " << hdr.response);
+    debugs(31, 3, "htcpHandleData: F1 = " << hdr.F1);
+    debugs(31, 3, "htcpHandleData: RR = " << hdr.RR);
+    debugs(31, 3, "htcpHandleData: msg_id = " << hdr.msg_id);
 
     if (sz < hdr.length)
     {
@@ -1444,9 +1444,9 @@ htcpHandle(char *buf, int sz, struct sockaddr_in *from)
     else
         old_squid_format = 0;
 
-    debugs(31, 3, "htcpHandle: htcpHdr.length = " << (int) htcpHdr.length);
-    debugs(31, 3, "htcpHandle: htcpHdr.major = " << (int) htcpHdr.major);
-    debugs(31, 3, "htcpHandle: htcpHdr.minor = " << (int) htcpHdr.minor);
+    debugs(31, 3, "htcpHandle: htcpHdr.length = " << htcpHdr.length);
+    debugs(31, 3, "htcpHandle: htcpHdr.major = " << htcpHdr.major);
+    debugs(31, 3, "htcpHandle: htcpHdr.minor = " << htcpHdr.minor);
 
     if (sz != htcpHdr.length)
     {
@@ -1524,7 +1524,7 @@ htcpInit(void)
 
     commSetSelect(htcpInSocket, COMM_SELECT_READ, htcpRecv, NULL, 0);
 
-    debugs(31, 1, "Accepting HTCP messages on port " << (int) Config.Port.htcp << ", FD " << htcpInSocket << ".");
+    debugs(31, 1, "Accepting HTCP messages on port " << Config.Port.htcp << ", FD " << htcpInSocket << ".");
 
     if (Config.Addrs.udp_outgoing.s_addr != no_addr.s_addr) {
         enter_suid();
@@ -1541,7 +1541,7 @@ htcpInit(void)
 
         commSetSelect(htcpOutSocket, COMM_SELECT_READ, htcpRecv, NULL, 0);
 
-        debugs(31, 1, "Outgoing HTCP messages on port " << (int) Config.Port.htcp << ", FD " << htcpOutSocket << ".");
+        debugs(31, 1, "Outgoing HTCP messages on port " << Config.Port.htcp << ", FD " << htcpOutSocket << ".");
 
         fd_note(htcpInSocket, "Incoming HTCP socket");
     } else {

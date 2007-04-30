@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.418 2007/04/28 22:26:37 hno Exp $
+ * $Id: ftp.cc,v 1.419 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1123,7 +1123,7 @@ FtpStateData::parseListing()
 
     usable = end - sbuf;
 
-    debugs(9, 3, "ftpParseListing: usable = " << (int) usable);
+    debugs(9, 3, "ftpParseListing: usable = " << usable);
 
     if (usable == 0) {
         debugs(9, 3, "ftpParseListing: didn't find end for " << e->url()  );
@@ -1601,7 +1601,7 @@ FtpStateData::ftpWriteCommandCallback(int fd, char *buf, size_t size, comm_err_t
 {
     FtpStateData *ftpState = (FtpStateData *)data;
 
-    debugs(9, 7, "ftpWriteCommandCallback: wrote " << (int) size << " bytes");
+    debugs(9, 7, "ftpWriteCommandCallback: wrote " << size << " bytes");
 
     if (size > 0) {
         fd_bytes(fd, size, FD_WRITE);
@@ -1655,7 +1655,7 @@ FtpStateData::ftpParseControlReply(char *buf, size_t len, int *codep, int *used)
         return NULL;
     }
 
-    debugs(9, 3, "ftpParseControlReply: " << (int) len << " bytes to play with");
+    debugs(9, 3, "ftpParseControlReply: " << len << " bytes to play with");
     end++;
     s = sbuf;
     s += strspn(s, crlf);
@@ -1742,7 +1742,7 @@ FtpStateData::ftpReadControlReply(int fd, char *buf, size_t len, comm_err_t errf
 {
     FtpStateData *ftpState = (FtpStateData *)data;
     StoreEntry *entry = ftpState->entry;
-    debugs(9, 5, "ftpReadControlReply: FD " << fd << ", Read " << (int)len << " bytes");
+    debugs(9, 5, "ftpReadControlReply: FD " << fd << ", Read " << len << " bytes");
 
     if (len > 0) {
         kb_incr(&statCounter.server.all.kbytes_in, len);

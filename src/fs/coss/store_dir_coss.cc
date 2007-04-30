@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.72 2007/04/28 22:26:50 hno Exp $
+ * $Id: store_dir_coss.cc,v 1.73 2007/04/30 16:56:16 wessels Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store COSS Directory Routines
@@ -230,7 +230,7 @@ CossSwapDir::writeCompleted(int errflag, size_t len, RefCount<WriteRequest> writ
     CossWrite* cossWrite= dynamic_cast<CossWrite *>(writeRequest.getRaw());
     assert (cossWrite);
 
-    debugs(79, 3, "storeCossWriteMemBufDone: buf " << cossWrite->membuf << ", len " << (long int) len);
+    debugs(79, 3, "storeCossWriteMemBufDone: buf " << cossWrite->membuf << ", len " << len);
 
 
     if (errflag) {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.51 2007/04/28 22:26:49 hno Exp $
+ * $Id: auth_digest.cc,v 1.52 2007/04/30 16:56:15 wessels Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -173,7 +173,7 @@ authenticateDigestNonceNew(void)
     /* the cache's link */
     authDigestNonceLink(newnonce);
     newnonce->flags.incache = 1;
-    debugs(29, 5, "authenticateDigestNonceNew: created nonce " << newnonce << " at " << (long int) newnonce->noncedata.creationtime);
+    debugs(29, 5, "authenticateDigestNonceNew: created nonce " << newnonce << " at " << newnonce->noncedata.creationtime);
     return newnonce;
 }
 
@@ -253,12 +253,12 @@ authenticateDigestNonceCacheCleanup(void *data)
      */
     digest_nonce_h *nonce;
     debugs(29, 3, "authenticateDigestNonceCacheCleanup: Cleaning the nonce cache now");
-    debugs(29, 3, "authenticateDigestNonceCacheCleanup: Current time: " << (long int) current_time.tv_sec);
+    debugs(29, 3, "authenticateDigestNonceCacheCleanup: Current time: " << current_time.tv_sec);
     hash_first(digest_nonce_cache);
 
     while ((nonce = ((digest_nonce_h *) hash_next(digest_nonce_cache)))) {
         debugs(29, 3, "authenticateDigestNonceCacheCleanup: nonce entry  : " << nonce << " '" << (char *) nonce->key << "'");
-        debugs(29, 4, "authenticateDigestNonceCacheCleanup: Creation time: " << (long int) nonce->noncedata.creationtime);
+        debugs(29, 4, "authenticateDigestNonceCacheCleanup: Creation time: " << nonce->noncedata.creationtime);
 
         if (authDigestNonceIsStale(nonce)) {
             debugs(29, 4, "authenticateDigestNonceCacheCleanup: Removing nonce " << (char *) nonce->key << " from cache due to timeout.");
@@ -393,9 +393,9 @@ authDigestNonceIsStale(digest_nonce_h * nonce)
     /* has it's max duration expired? */
     if (nonce->noncedata.creationtime + digestConfig.noncemaxduration < current_time.tv_sec) {
         debugs(29, 4, "authDigestNonceIsStale: Nonce is too old. " <<
-               (long int) nonce->noncedata.creationtime << " " <<
-               (int) digestConfig.noncemaxduration << " " <<
-               (long int) current_time.tv_sec);
+               nonce->noncedata.creationtime << " " <<
+               digestConfig.noncemaxduration << " " <<
+               current_time.tv_sec);
 
         nonce->flags.valid = 0;
         return -1;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: BlockingFile.cc,v 1.3 2007/04/28 22:26:44 hno Exp $
+ * $Id: BlockingFile.cc,v 1.4 2007/04/30 16:56:11 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
@@ -212,7 +212,7 @@ void
 BlockingFile::writeDone(int rvfd, int errflag, size_t len)
 {
     assert (rvfd == fd);
-    debugs(79, 3, "storeUfsWriteDone: FD " << fd << ", len " << (long int) len);
+    debugs(79, 3, "storeUfsWriteDone: FD " << fd << ", len " << len);
 
     WriteRequest::Pointer result = writeRequest;
     writeRequest = NULL;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.111 2007/04/28 22:26:37 hno Exp $
+ * $Id: asn.cc,v 1.112 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -350,7 +350,7 @@ asHandleReply(void *data, StoreIOBuffer result)
 
     asState->reqofs = leftoversz;
 
-    debugs(53, 3, "asState->offset = " << (long int) asState->offset);
+    debugs(53, 3, "asState->offset = " << asState->offset);
 
     if (e->store_status == STORE_PENDING) {
         debugs(53, 3, "asHandleReply: store_status == STORE_PENDING: " << e->url()  );

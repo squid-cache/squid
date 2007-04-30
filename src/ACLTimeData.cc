@@ -1,5 +1,5 @@
 /*
- * $Id: ACLTimeData.cc,v 1.14 2007/04/28 22:26:37 hno Exp $
+ * $Id: ACLTimeData.cc,v 1.15 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -86,8 +86,8 @@ ACLTimeData::match(time_t when)
     ACLTimeData *data = this;
 
     while (data) {
-        debugs(28, 3, "aclMatchTime: checking " << (int) t  << " in " <<
-               (int) data->start  << "-" << (int) data->stop  << ", weekbits=" <<
+        debugs(28, 3, "aclMatchTime: checking " << t  << " in " <<
+               data->start  << "-" << data->stop  << ", weekbits=" <<
                std::hex << data->weekbits);
 
         if (t >= data->start && t <= data->stop && (data->weekbits & (1 << tm.tm_wday)))

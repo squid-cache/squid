@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.41 2007/04/28 22:26:37 hno Exp $
+ * $Id: HttpHdrRange.cc,v 1.42 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -593,12 +593,12 @@ HttpHdrRangeIter::updateSpec()
 ssize_t
 HttpHdrRangeIter::debt() const
 {
-    debugs(64, 3, "HttpHdrRangeIter::debt: debt is " << (int)debt_size);
+    debugs(64, 3, "HttpHdrRangeIter::debt: debt is " << debt_size);
     return debt_size;
 }
 
 void HttpHdrRangeIter::debt(ssize_t newDebt)
 {
-    debugs(64, 3, "HttpHdrRangeIter::debt: was " << (int)debt_size << " now " << (int)newDebt);
+    debugs(64, 3, "HttpHdrRangeIter::debt: was " << debt_size << " now " << newDebt);
     debt_size = newDebt;
 }

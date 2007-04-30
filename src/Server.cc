@@ -1,5 +1,5 @@
 /*
- * $Id: Server.cc,v 1.9 2007/04/28 22:26:37 hno Exp $
+ * $Id: Server.cc,v 1.10 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG:
  * AUTHOR: Duane Wessels
@@ -226,7 +226,7 @@ ServerStateData::sentRequestBodyWrapper(int fd, char *bufnotused, size_t size, c
 void
 ServerStateData::sentRequestBody(int fd, size_t size, comm_err_t errflag)
 {
-    debugs(11, 5, "sentRequestBody: FD " << fd << ": size " << (int) size << ": errflag " << errflag << ".");
+    debugs(11, 5, "sentRequestBody: FD " << fd << ": size " << size << ": errflag " << errflag << ".");
     debugs(32,3,HERE << "sentRequestBody called");
 
     requestSender = NULL;

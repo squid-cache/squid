@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.97 2007/04/28 22:26:37 hno Exp $
+ * $Id: dns_internal.cc,v 1.98 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -1026,7 +1026,7 @@ idnsRead(int fd, void *data)
         fd_bytes(DnsSocket, len, FD_READ);
         assert(N);
         (*N)++;
-        debugs(78, 3, "idnsRead: FD " << fd << ": received " << (int) len << " bytes from " << inet_ntoa(from.sin_addr) << ".");
+        debugs(78, 3, "idnsRead: FD " << fd << ": received " << len << " bytes from " << inet_ntoa(from.sin_addr) << ".");
         ns = idnsFromKnownNameserver(&from);
 
         if (ns >= 0) {
@@ -1076,7 +1076,7 @@ idnsCheckQueue(void *unused)
         if (tvSubDsec(q->start_t, current_time) < Config.Timeout.idns_query) {
             idnsSendQuery(q);
         } else {
-             debugs(78, 2, "idnsCheckQueue: ID " << std::hex << (int) q->id << 
+             debugs(78, 2, "idnsCheckQueue: ID " << std::hex << q->id << 
                     ": giving up after " << std::dec << q->nsends << " tries and " << 
                     std::setw(5)<< std::setprecision(2) << tvSubDsec(q->start_t, current_time) << " seconds");
 
@@ -1345,7 +1345,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
         return;
     }
 
-    debugs(78, 3, "idnsALookup: buf is " << (int) q->sz << " bytes for " << q->name << 
+    debugs(78, 3, "idnsALookup: buf is " << q->sz << " bytes for " << q->name << 
            ", id = 0x" << std::hex << q->id);
 
     q->callback = callback;
@@ -1386,7 +1386,7 @@ idnsPTRLookup(const struct IN_ADDR addr, IDNSCB * callback, void *data)
 	return;
     }
 
-    debugs(78, 3, "idnsPTRLookup: buf is " << (int) q->sz << " bytes for " << ip << 
+    debugs(78, 3, "idnsPTRLookup: buf is " << q->sz << " bytes for " << ip << 
            ", id = 0x" << std::hex << q->id);
 
     q->callback = callback;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.122 2007/04/28 22:26:37 hno Exp $
+ * $Id: peer_digest.cc,v 1.123 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -231,7 +231,7 @@ peerDigestSetCheck(PeerDigest * pd, time_t delay)
 {
     eventAdd("peerDigestCheck", peerDigestCheck, pd, (double) delay, 1);
     pd->times.next_check = squid_curtime + delay;
-    debugs(72, 3, "peerDigestSetCheck: will check peer " << pd->host.buf() << " in " << (int) delay << " secs");
+    debugs(72, 3, "peerDigestSetCheck: will check peer " << pd->host.buf() << " in " << delay << " secs");
 }
 
 /*
@@ -268,7 +268,7 @@ peerDigestCheck(void *data)
     }
 
     debugs(72, 3, "peerDigestCheck: peer " << pd->peer->host << ":" << pd->peer->http_port);
-    debugs(72, 3, "peerDigestCheck: time: " << (long int) squid_curtime << 
+    debugs(72, 3, "peerDigestCheck: time: " << squid_curtime << 
            ", last received: " << (long int) pd->times.received << "  (" << 
            std::showpos << (int) (squid_curtime - pd->times.received) << ")");
 

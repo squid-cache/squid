@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.129 2007/04/28 22:26:37 hno Exp $
+ * $Id: HttpHeader.cc,v 1.130 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -1444,7 +1444,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 
     if (field_end - value_start > 65534) {
         /* String must be LESS THAN 64K and it adds a terminating NULL */
-        debugs(55, 1, "WARNING: ignoring '" << name.buf() << "' header of " << (int) (field_end - value_start) << " bytes");
+        debugs(55, 1, "WARNING: ignoring '" << name.buf() << "' header of " << (field_end - value_start) << " bytes");
 
         if (id == HDR_OTHER)
             name.clean();

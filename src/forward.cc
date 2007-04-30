@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.162 2007/04/29 17:35:52 hno Exp $
+ * $Id: forward.cc,v 1.163 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -499,7 +499,7 @@ FwdState::serverClosed(int fd)
 
     if (checkRetry()) {
         int originserver = (servers->_peer == NULL);
-        debugs(17, 3, "fwdServerClosed: re-forwarding (" << n_tries << " tries, " << (int) (squid_curtime - start_t) << " secs)");
+        debugs(17, 3, "fwdServerClosed: re-forwarding (" << n_tries << " tries, " << (squid_curtime - start_t) << " secs)");
 
         if (servers->next) {
             /* use next, or cycle if origin server isn't last */
@@ -1059,7 +1059,7 @@ FwdState::reforward()
     }
 
     s = e->getReply()->sline.status;
-    debugs(17, 3, "fwdReforward: status " << (int) s);
+    debugs(17, 3, "fwdReforward: status " << s);
     return reforwardableStatus(s);
 }
 

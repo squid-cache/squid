@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUser.cc,v 1.4 2007/04/28 22:26:37 hno Exp $
+ * $Id: AuthUser.cc,v 1.5 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -58,7 +58,7 @@ AuthUser::AuthUser (AuthConfig *aConfig) :
     proxy_match_cache.head = proxy_match_cache.tail = NULL;
     ip_list.head = ip_list.tail = NULL;
     requests.head = requests.tail = NULL;
-    debugs(29, 5, "AuthUser::AuthUser: Initialised auth_user '" << this << "' with refcount '" << (long int) references << "'.");
+    debugs(29, 5, "AuthUser::AuthUser: Initialised auth_user '" << this << "' with refcount '" << references << "'.");
 }
 
 /* Combine two user structs. ONLY to be called from within a scheme
@@ -97,7 +97,7 @@ AuthUser::~AuthUser()
 {
     auth_user_request_t *auth_user_request;
     dlink_node *link, *tmplink;
-    debugs(29, 5, "AuthUser::~AuthUser: Freeing auth_user '" << this << "' with refcount '" << (long int) references << "'.");
+    debugs(29, 5, "AuthUser::~AuthUser: Freeing auth_user '" << this << "' with refcount '" << references << "'.");
     assert(references == 0);
     /* were they linked in by username ? */
 
@@ -185,7 +185,7 @@ AuthUser::cacheCleanup(void *datanotused)
     auth_user_t *auth_user;
     char const *username = NULL;
     debugs(29, 3, "AuthUser::cacheCleanup: Cleaning the user cache now");
-    debugs(29, 3, "AuthUser::cacheCleanup: Current time: " << (long int) current_time.tv_sec);
+    debugs(29, 3, "AuthUser::cacheCleanup: Current time: " << current_time.tv_sec);
     hash_first(proxy_auth_username_cache);
 
     while ((usernamehash = ((AuthUserHashPointer *) hash_next(proxy_auth_username_cache)))) {
@@ -327,7 +327,7 @@ AuthUser::lock()
     debugs(29, 9, "authenticateAuthUserLock auth_user '" << this << "'.");
     assert(this != NULL);
     references++;
-    debugs(29, 9, "authenticateAuthUserLock auth_user '" << this << "' now at '" << (long int) references << "'.");
+    debugs(29, 9, "authenticateAuthUserLock auth_user '" << this << "' now at '" << references << "'.");
 }
 
 void
@@ -342,7 +342,7 @@ AuthUser::unlock()
         debugs(29, 1, "Attempt to lower Auth User " << this << " refcount below 0!");
     }
 
-    debugs(29, 9, "authenticateAuthUserUnlock auth_user '" << this << "' now at '" << (long int) references << "'.");
+    debugs(29, 9, "authenticateAuthUserUnlock auth_user '" << this << "' now at '" << references << "'.");
 
     if (references == 0)
         delete this;

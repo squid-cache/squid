@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_heap.cc,v 1.24 2007/04/28 22:26:51 hno Exp $
+ * $Id: store_repl_heap.cc,v 1.25 2007/04/30 16:56:19 wessels Exp $
  *
  * DEBUG: section 81    Store HEAP Removal Policies
  * AUTHOR: Henrik Nordstrom
@@ -260,7 +260,7 @@ heap_purgeDone(RemovalPurgeWalker * walker)
 
     if (heap_walker->min_age > 0) {
         heap->theHeap->age = heap_walker->min_age;
-        debugs(81, 3, "heap_purgeDone: Heap age set to " << (double) heap->theHeap->age  );
+        debugs(81, 3, "heap_purgeDone: Heap age set to " << heap->theHeap->age  );
     }
 
     /*

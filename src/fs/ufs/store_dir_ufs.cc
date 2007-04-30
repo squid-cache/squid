@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.81 2007/04/28 22:26:51 hno Exp $
+ * $Id: store_dir_ufs.cc,v 1.82 2007/04/30 16:56:17 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -295,7 +295,7 @@ UFSSwapDir::doubleCheck(StoreEntry & e)
 
     if ((off_t)e.swap_file_sz != sb.st_size) {
         debugs(47, 0, "UFSSwapDir::doubleCheck: SIZE MISMATCH");
-        debugs(47, 0, "UFSSwapDir::doubleCheck: ENTRY SIZE: " << (long int) e.swap_file_sz << ", FILE SIZE: " << (long int) sb.st_size);
+        debugs(47, 0, "UFSSwapDir::doubleCheck: ENTRY SIZE: " << e.swap_file_sz << ", FILE SIZE: " << sb.st_size);
         dumpEntry(e);
         return true;
     }

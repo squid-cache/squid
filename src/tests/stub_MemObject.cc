@@ -1,5 +1,5 @@
 /*
- * $Id: stub_MemObject.cc,v 1.6 2007/04/28 22:26:52 hno Exp $
+ * $Id: stub_MemObject.cc,v 1.7 2007/04/30 16:56:19 wessels Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins
@@ -133,7 +133,7 @@ void
 MemObject::write(StoreIOBuffer writeBuffer, STMCB *callback, void *callbackData)
 {
     PROF_start(MemObject_write);
-    debugs(19, 6, "memWrite: offset " << (unsigned long)writeBuffer.offset << " len " << (long)writeBuffer.length);
+    debugs(19, 6, "memWrite: offset " << writeBuffer.offset << " len " << writeBuffer.length);
 
     /* the offset is into the content, not the headers */
     writeBuffer.offset += (_reply ? _reply->hdr_sz : 0);

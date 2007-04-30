@@ -1,6 +1,6 @@
 
 /*
- * $Id: pinger.cc,v 1.58 2007/04/28 22:26:37 hno Exp $
+ * $Id: pinger.cc,v 1.59 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -523,10 +523,10 @@ static void
 
 pingerLog(struct icmphdr *icmp, struct IN_ADDR addr, int rtt, int hops)
 {
-    debugs(42, 2, "pingerLog: " << std::setw(9) << (int) current_time.tv_sec  <<
+    debugs(42, 2, "pingerLog: " << std::setw(9) << current_time.tv_sec  <<
            "."<< std::setfill('0') << std::setw(6) <<
-           (int) current_time.tv_usec  << " "<< std::left << std::setfill(' ')<<
-           std::setw(16) << inet_ntoa(addr)  << " "<< (int) icmp->icmp_type  <<
+           current_time.tv_usec  << " "<< std::left << std::setfill(' ')<<
+           std::setw(16) << inet_ntoa(addr)  << " "<< icmp->icmp_type  <<
            " " << std::setw(15) <<  icmpPktStr[icmp->icmp_type] << " " << rtt  <<
            "ms " << hops  << " hops");
 }

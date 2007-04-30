@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp2.cc,v 1.15 2007/04/28 22:26:38 hno Exp $
+ * $Id: wccp2.cc,v 1.16 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Steven Wilton
@@ -982,7 +982,7 @@ wccp2ConnectionOpen(void)
                   NULL,
                   0);
 
-    debugs(80, 1, "Accepting WCCPv2 messages on port " << (int) port << ", FD " << theWccp2Connection << ".");
+    debugs(80, 1, "Accepting WCCPv2 messages on port " << port << ", FD " << theWccp2Connection << ".");
     debugs(80, 1, "Initialising all WCCPv2 lists");
 
     /* Initialise all routers on all services */
@@ -1485,7 +1485,7 @@ wccp2HandleUdp(int sock, void *not_used)
             eventDelete(wccp2AssignBuckets, NULL);
             eventAdd("wccp2AssignBuckets", wccp2AssignBuckets, NULL, 15.0, 1);
         } else {
-            debugs(80, 5, "Change not detected (" << (int) ntohl(router_view_header->change_number) << " = " << router_list_ptr->member_change << ")");
+            debugs(80, 5, "Change not detected (" << ntohl(router_view_header->change_number) << " = " << router_list_ptr->member_change << ")");
         }
     } else {
         eventDelete(wccp2AssignBuckets, NULL);
@@ -1562,7 +1562,7 @@ wccp2HereIam(void *voidnotused)
                 wccp2_update_md5_security(service_list_ptr->wccp_password, (char *) service_list_ptr->security_info, service_list_ptr->wccp_packet, service_list_ptr->wccp_packet_size);
             }
 
-            debugs(80, 3, "Sending HereIam packet size " << (int) service_list_ptr->wccp_packet_size);
+            debugs(80, 3, "Sending HereIam packet size " << service_list_ptr->wccp_packet_size);
             /* Send the packet */
 
             if (wccp2_numrouters > 1) {

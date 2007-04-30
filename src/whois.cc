@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.42 2007/04/30 16:38:19 wessels Exp $
+ * $Id: whois.cc,v 1.43 2007/04/30 16:56:09 wessels Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -146,7 +146,7 @@ WhoisState::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xerrn
     }
 
     buf[len] = '\0';
-    debugs(75, 3, "whoisReadReply: FD " << fd << " read " << (int)len << " bytes");
+    debugs(75, 3, "whoisReadReply: FD " << fd << " read " << len << " bytes");
     debugs(75, 5, "{" << buf << "}");
 
     if (flag == COMM_OK && len > 0) {
