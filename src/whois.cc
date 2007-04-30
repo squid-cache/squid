@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.41 2007/04/28 22:26:38 hno Exp $
+ * $Id: whois.cc,v 1.42 2007/04/30 16:38:19 wessels Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -54,7 +54,7 @@ public:
     StoreEntry *entry;
     HttpRequest *request;
     FwdState::Pointer fwd;
-    char buf[BUFSIZ];
+    char buf[BUFSIZ+1];		/* readReply adds terminating NULL */
     bool dataWritten;
 };
 
@@ -89,7 +89,7 @@ whoisStart(FwdState * fwd)
     p->request = fwd->request;
     p->entry = fwd->entry;
     p->fwd = fwd;
-    p->dataWritten = 0;
+    p->dataWritten = false;
 
     p->entry->lock()
 
@@ -158,7 +158,7 @@ WhoisState::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xerrn
         kb_incr(&statCounter.server.http.kbytes_in, len);
 
         /* No range support, we always grab it all */
-        dataWritten = 1;
+        dataWritten = true;
 
         entry->append(buf, len);
 
