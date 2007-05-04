@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.81 2007/04/30 16:56:09 wessels Exp $
+ * $Id: helper.cc,v 1.82 2007/05/04 15:40:12 rousskov Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -283,14 +283,14 @@ helperStatefulOpenServers(statefulhelper * hlp)
 void
 helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
 {
-    helper_request *r = new helper_request;
-    helper_server *srv;
-
     if (hlp == NULL) {
         debugs(84, 3, "helperSubmit: hlp == NULL");
         callback(data, NULL);
         return;
     }
+
+    helper_request *r = new helper_request;
+    helper_server *srv;
 
     r->callback = callback;
     r->data = cbdataReference(data);
@@ -310,14 +310,14 @@ helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
 void
 helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, void *data, helper_stateful_server * lastserver)
 {
-    helper_stateful_request *r = new helper_stateful_request;
-    helper_stateful_server *srv;
-
     if (hlp == NULL) {
         debugs(84, 3, "helperStatefulSubmit: hlp == NULL");
         callback(data, 0, NULL);
         return;
     }
+
+    helper_stateful_request *r = new helper_stateful_request;
+    helper_stateful_server *srv;
 
     r->callback = callback;
     r->data = cbdataReference(data);
@@ -368,14 +368,14 @@ helper_stateful_server *
 helperStatefulDefer(statefulhelper * hlp)
 /* find and add a deferred request to a server */
 {
-    dlink_node *n;
-    helper_stateful_server *srv = NULL, *rv = NULL;
-
     if (hlp == NULL)
     {
         debugs(84, 3, "helperStatefulDefer: hlp == NULL");
         return NULL;
     }
+
+    dlink_node *n;
+    helper_stateful_server *srv = NULL, *rv = NULL;
 
     debugs(84, 5, "helperStatefulDefer: Running servers " << hlp->n_running << ".");
 
