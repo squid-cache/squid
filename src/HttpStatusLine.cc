@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpStatusLine.cc,v 1.31 2007/04/28 22:26:37 hno Exp $
+ * $Id: HttpStatusLine.cc,v 1.32 2007/05/04 22:12:55 wessels Exp $
  *
  * DEBUG: section 57    HTTP Status-line
  * AUTHOR: Alex Rousskov
@@ -257,6 +257,14 @@ httpStatusString(http_status status)
 
     case HTTP_UNSUPPORTED_MEDIA_TYPE:
         p = "Unsupported Media Type";
+        break;
+
+    case HTTP_REQUESTED_RANGE_NOT_SATISFIABLE:
+        p = "Requested Range Not Satisfiable";
+        break;
+
+    case HTTP_EXPECTATION_FAILED:
+        p = "Expectation Failed";
         break;
 
     case HTTP_INTERNAL_SERVER_ERROR:
