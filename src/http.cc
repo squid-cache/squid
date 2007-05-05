@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.518 2007/04/30 16:56:09 wessels Exp $
+ * $Id: http.cc,v 1.519 2007/05/05 00:16:32 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -558,6 +558,8 @@ HttpStateData::cacheableReply()
     case HTTP_LOCKED:
     case HTTP_FAILED_DEPENDENCY:
     case HTTP_INSUFFICIENT_STORAGE:
+    case HTTP_REQUESTED_RANGE_NOT_SATISFIABLE:
+    case HTTP_EXPECTATION_FAILED:
 
         return 0;
 
