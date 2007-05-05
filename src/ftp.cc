@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.419 2007/04/30 16:56:09 wessels Exp $
+ * $Id: ftp.cc,v 1.420 2007/05/04 23:46:42 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -3162,20 +3162,29 @@ FtpStateData::appendSuccessHeader()
 
     /* set standard stuff */
 
-    if (restarted_offset) {
+    HttpVersion version(1, 0);
+    if (0 == restarted_offset) {
+        /* Full reply */
+        reply->setHeaders(version, HTTP_OK, "Gatewaying",
+                          mime_type, size, mdtm, -2);
+    } else if (size < restarted_offset) {
+	/*
+	 * offset should not be larger than size.
+	 */
+	debugs(0,0,HERE << "Whoops! " <<
+		" restarted_offset=" << restarted_offset <<
+		", but size=" << size <<
+		".  assuming full content response");
+        reply->setHeaders(version, HTTP_OK, "Gatewaying",
+                          mime_type, size, mdtm, -2);
+    } else {
         /* Partial reply */
         HttpHdrRangeSpec range_spec;
         range_spec.offset = restarted_offset;
         range_spec.length = size - restarted_offset;
-        HttpVersion version(1, 0);
         reply->setHeaders(version, HTTP_PARTIAL_CONTENT, "Gatewaying",
                           mime_type, size - restarted_offset, mdtm, -2);
         httpHeaderAddContRange(&reply->header, range_spec, size);
-    } else {
-        /* Full reply */
-        HttpVersion version(1, 0);
-        reply->setHeaders(version, HTTP_OK, "Gatewaying",
-                          mime_type, size, mdtm, -2);
     }
 
     /* additional info */
