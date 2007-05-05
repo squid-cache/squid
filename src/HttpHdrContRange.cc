@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrContRange.cc,v 1.19 2007/04/30 16:56:09 wessels Exp $
+ * $Id: HttpHdrContRange.cc,v 1.20 2007/05/04 20:30:16 wessels Exp $
  *
  * DEBUG: section 68    HTTP Content-Range Header
  * AUTHOR: Alex Rousskov
@@ -113,7 +113,6 @@ static void
 httpHdrRangeRespSpecPackInto(const HttpHdrRangeSpec * spec, Packer * p)
 {
     /* Ensure typecast is safe */
-    assert (spec->length >= 0);
     assert (spec->length >= 0);
 
     if (!known_spec((size_t)spec->offset) || !known_spec((size_t)spec->length))
