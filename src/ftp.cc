@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.420 2007/05/04 23:46:42 wessels Exp $
+ * $Id: ftp.cc,v 1.421 2007/05/05 00:14:17 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2684,11 +2684,15 @@ FtpStateData::restartable()
     if (size <= 0)
         return 0;
 
-    restart_offset = request->range->lowestOffset((size_t) size);
+    int desired_offset = request->range->lowestOffset((size_t) size);
 
-    if (restart_offset <= 0)
+    if (desired_offset <= 0)
         return 0;
 
+    if (desired_offset >= size)
+	return 0;
+
+    restart_offset = desired_offset;
     return 1;
 }
 
@@ -3169,7 +3173,10 @@ FtpStateData::appendSuccessHeader()
                           mime_type, size, mdtm, -2);
     } else if (size < restarted_offset) {
 	/*
-	 * offset should not be larger than size.
+	 * DPW 2007-05-04
+	 * offset should not be larger than size.  We should
+	 * not be seeing this condition any more because we'll only
+	 * send REST if we know the size and if it is less than size.
 	 */
 	debugs(0,0,HERE << "Whoops! " <<
 		" restarted_offset=" << restarted_offset <<
