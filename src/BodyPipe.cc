@@ -145,7 +145,7 @@ BodyPipe::clearConsumer() {
 	if (theConsumer) {
 		debugs(91,7, HERE << "clearing consumer" << status());
 		theConsumer = NULL;
-		if (!exhausted())
+		if (consumedSize() && !exhausted())
 			AsyncCall(91,5, this, BodyPipe::tellBodyConsumerAborted);
 	}
 }
