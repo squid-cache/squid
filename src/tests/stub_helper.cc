@@ -1,5 +1,5 @@
 /*
- * $Id: stub_helper.cc,v 1.2 2006/08/21 00:50:47 robertc Exp $
+ * $Id: stub_helper.cc,v 1.3 2007/05/07 19:54:58 wessels Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins
@@ -72,13 +72,13 @@ helperCreate(const char *name)
 }
 
 void
-helperStats(StoreEntry * sentry, helper * hlp)
+helperStats(StoreEntry * sentry, helper * hlp, const char *label)
 {
     fatal("Not implemented");
 }
 
 void
-helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp)
+helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label)
 {
     fatal("Not implemented");
 }
