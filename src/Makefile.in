@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.420 2007/04/24 16:23:40 wessels Exp $
+#  $Id: Makefile.in,v 1.421 2007/05/08 16:52:59 rousskov Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -80,12 +80,14 @@ ARFLAGS = cru
 ICAP_libicap_a_AR = $(AR) $(ARFLAGS)
 ICAP_libicap_a_LIBADD =
 am__dirstamp = $(am__leading_dot)dirstamp
-am_ICAP_libicap_a_OBJECTS = ICAP/ChunkedCodingParser.$(OBJEXT) \
-	ICAP/ICAPClient.$(OBJEXT) ICAP/ICAPInitiator.$(OBJEXT) \
-	ICAP/ICAPConfig.$(OBJEXT) ICAP/ICAPElements.$(OBJEXT) \
-	ICAP/ICAPModXact.$(OBJEXT) ICAP/ICAPOptions.$(OBJEXT) \
-	ICAP/ICAPOptXact.$(OBJEXT) ICAP/ICAPServiceRep.$(OBJEXT) \
-	ICAP/ICAPXaction.$(OBJEXT) ICAP/TextException.$(OBJEXT)
+am_ICAP_libicap_a_OBJECTS = ICAP/AsyncJob.$(OBJEXT) \
+	ICAP/ChunkedCodingParser.$(OBJEXT) ICAP/ICAPClient.$(OBJEXT) \
+	ICAP/ICAPInitiator.$(OBJEXT) ICAP/ICAPInitiate.$(OBJEXT) \
+	ICAP/ICAPLauncher.$(OBJEXT) ICAP/ICAPConfig.$(OBJEXT) \
+	ICAP/ICAPElements.$(OBJEXT) ICAP/ICAPModXact.$(OBJEXT) \
+	ICAP/ICAPOptions.$(OBJEXT) ICAP/ICAPOptXact.$(OBJEXT) \
+	ICAP/ICAPServiceRep.$(OBJEXT) ICAP/ICAPXaction.$(OBJEXT) \
+	ICAP/TextException.$(OBJEXT)
 ICAP_libicap_a_OBJECTS = $(am_ICAP_libicap_a_OBJECTS)
 libAIO_a_AR = $(AR) $(ARFLAGS)
 libAIO_a_LIBADD =
@@ -2277,13 +2279,19 @@ squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a @STORE_OBJS@ @STORE_LINKO
 	@ICAP_LIBS@
 
 ICAP_libicap_a_SOURCES = \
+	ICAP/AsyncJob.cc \
+	ICAP/AsyncJob.h \
  	ICAP/ChunkedCodingParser.cc \
  	ICAP/ChunkedCodingParser.h \
 	ICAP/ICAPClient.cc \
 	ICAP/ICAPClient.h \
 	ICAP/ICAPInitiator.cc \
 	ICAP/ICAPInitiator.h \
+	ICAP/ICAPInitiate.cc \
+	ICAP/ICAPInitiate.h \
 	ICAP/ICAPInOut.h \
+	ICAP/ICAPLauncher.cc \
+	ICAP/ICAPLauncher.h \
 	ICAP/ICAPConfig.cc \
 	ICAP/ICAPConfig.h \
 	ICAP/ICAPElements.cc \
@@ -3883,11 +3891,17 @@ ICAP/$(am__dirstamp):
 ICAP/$(DEPDIR)/$(am__dirstamp):
 	@$(mkdir_p) ICAP/$(DEPDIR)
 	@: > ICAP/$(DEPDIR)/$(am__dirstamp)
+ICAP/AsyncJob.$(OBJEXT): ICAP/$(am__dirstamp) \
+	ICAP/$(DEPDIR)/$(am__dirstamp)
 ICAP/ChunkedCodingParser.$(OBJEXT): ICAP/$(am__dirstamp) \
 	ICAP/$(DEPDIR)/$(am__dirstamp)
 ICAP/ICAPClient.$(OBJEXT): ICAP/$(am__dirstamp) \
 	ICAP/$(DEPDIR)/$(am__dirstamp)
 ICAP/ICAPInitiator.$(OBJEXT): ICAP/$(am__dirstamp) \
+	ICAP/$(DEPDIR)/$(am__dirstamp)
+ICAP/ICAPInitiate.$(OBJEXT): ICAP/$(am__dirstamp) \
+	ICAP/$(DEPDIR)/$(am__dirstamp)
+ICAP/ICAPLauncher.$(OBJEXT): ICAP/$(am__dirstamp) \
 	ICAP/$(DEPDIR)/$(am__dirstamp)
 ICAP/ICAPConfig.$(OBJEXT): ICAP/$(am__dirstamp) \
 	ICAP/$(DEPDIR)/$(am__dirstamp)
@@ -4431,11 +4445,14 @@ mostlyclean-compile:
 	-rm -f DiskIO/DiskThreads/async_io.$(OBJEXT)
 	-rm -f DiskIO/ReadRequest.$(OBJEXT)
 	-rm -f DiskIO/WriteRequest.$(OBJEXT)
+	-rm -f ICAP/AsyncJob.$(OBJEXT)
 	-rm -f ICAP/ChunkedCodingParser.$(OBJEXT)
 	-rm -f ICAP/ICAPClient.$(OBJEXT)
 	-rm -f ICAP/ICAPConfig.$(OBJEXT)
 	-rm -f ICAP/ICAPElements.$(OBJEXT)
+	-rm -f ICAP/ICAPInitiate.$(OBJEXT)
 	-rm -f ICAP/ICAPInitiator.$(OBJEXT)
+	-rm -f ICAP/ICAPLauncher.$(OBJEXT)
 	-rm -f ICAP/ICAPModXact.$(OBJEXT)
 	-rm -f ICAP/ICAPOptXact.$(OBJEXT)
 	-rm -f ICAP/ICAPOptions.$(OBJEXT)
@@ -4753,11 +4770,14 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@DiskIO/DiskThreads/$(DEPDIR)/aiops.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@DiskIO/DiskThreads/$(DEPDIR)/aiops_win32.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@DiskIO/DiskThreads/$(DEPDIR)/async_io.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/AsyncJob.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ChunkedCodingParser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPClient.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPConfig.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPElements.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPInitiate.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPInitiator.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPLauncher.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPModXact.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPOptXact.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPOptions.Po@am__quote@
