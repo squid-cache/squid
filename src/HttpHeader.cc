@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.130 2007/04/30 16:56:09 wessels Exp $
+ * $Id: HttpHeader.cc,v 1.131 2007/05/07 18:12:28 wessels Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -455,7 +455,10 @@ HttpHeader::update (HttpHeader const *fresh, HttpHeaderMask const *denied_mask)
 
         debugs(55, 7, "Updating header '" << HeadersAttrs[e->id].name << "' in cached entry");
 
-        delByName(e->name.buf());
+        if (e->id != HDR_OTHER)
+            delById(e->id);
+        else
+            delByName(e->name.buf());
 
         addEntry(e->clone());
     }
@@ -722,10 +725,9 @@ HttpHeader::delByName(const char *name)
     debugs(55, 9, "deleting '" << name << "' fields in hdr " << this);
 
     while ((e = getEntry(&pos))) {
-        if (!e->name.caseCmp(name)) {
-            delAt(pos);
-            count++;
-        } else
+        if (!e->name.caseCmp(name))
+            delAt(pos, count);
+        else
             CBIT_SET(mask, e->id);
     }
 
@@ -747,10 +749,8 @@ HttpHeader::delById(http_hdr_type id)
         return 0;
 
     while ((e = getEntry(&pos))) {
-        if (e->id == id) {
-            delAt(pos);
-            count++;
-        }
+        if (e->id == id)
+            delAt(pos, count);
     }
 
     CBIT_CLR(mask, id);
@@ -761,9 +761,11 @@ HttpHeader::delById(http_hdr_type id)
 /*
  * deletes an entry at pos and leaves a gap; leaving a gap makes it
  * possible to iterate(search) and delete fields at the same time
+ * NOTE: Does not update the header mask. Caller must follow up with
+ * a call to refreshMask() if headers_deleted was incremented.
  */
 void
-HttpHeader::delAt(HttpHeaderPos pos)
+HttpHeader::delAt(HttpHeaderPos pos, int &headers_deleted)
 {
     HttpHeaderEntry *e;
     assert(pos >= HttpHeaderInitPos && pos < (ssize_t)entries.count);
@@ -773,8 +775,22 @@ HttpHeader::delAt(HttpHeaderPos pos)
     len -= e->name.size() + 2 + e->value.size() + 2;
     assert(len >= 0);
     delete e;
+    ++headers_deleted;
 }
 
+/*
+ * Refreshes the header mask. Required after delAt() calls.
+ */
+void
+HttpHeader::refreshMask()
+{
+    httpHeaderMaskInit(&mask, 0);
+    debugs(55, 7, "refreshing the mask in hdr " << this);
+    HttpHeaderPos pos = HttpHeaderInitPos;
+    while (HttpHeaderEntry *e = getEntry(&pos)) {
+       CBIT_SET(mask, e->id);
+    }
+}
 
 /* appends an entry;
  * does not call e->clone() so one should not reuse "*e"
@@ -1712,10 +1728,13 @@ HttpHeader::removeConnectionHeaderEntries()
          * from strConnection first?
          */
 
+        int headers_deleted = 0;
         while ((e = getEntry(&pos))) {
             if (strListIsMember(&strConnection, e->name.buf(), ','))
-                delAt(pos);
+                delAt(pos, headers_deleted);
         }
+        if (headers_deleted)
+            refreshMask();
 
         delById(HDR_CONNECTION);
     }

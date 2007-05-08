@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.58 2007/04/28 22:26:37 hno Exp $
+ * $Id: HttpHeaderTools.cc,v 1.59 2007/05/07 18:12:28 wessels Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -425,9 +425,13 @@ httpHdrMangleList(HttpHeader * l, HttpRequest * request, int req_or_rep)
     HttpHeaderEntry *e;
     HttpHeaderPos p = HttpHeaderInitPos;
 
+    int headers_deleted = 0;
     while ((e = l->getEntry(&p)))
         if (0 == httpHdrMangle(e, request, req_or_rep))
-            l->delAt(p);
+            l->delAt(p, headers_deleted);
+
+    if (headers_deleted)
+        l->refreshMask();
 }
 
 /*

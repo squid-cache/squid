@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.122 2007/04/30 16:56:09 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.123 2007/05/07 18:12:28 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1187,9 +1187,14 @@ clientReplyContext::buildReplyHeader()
     hdr->delById(HDR_ETAG);
 #endif
 
+    // TODO: Should ESIInclude.cc that calls removeConnectionHeaderEntries
+    // also delete HDR_PROXY_CONNECTION and HDR_KEEP_ALIVE like we do below?
+
+    // XXX: Should HDR_PROXY_CONNECTION by studied instead of HDR_CONNECTION?
+    // httpHeaderHasConnDir does that but we do not. Is this is a bug?
     hdr->delById(HDR_PROXY_CONNECTION);
     /* here: Keep-Alive is a field-name, not a connection directive! */
-    hdr->delByName("Keep-Alive");
+    hdr->delById(HDR_KEEP_ALIVE);
     /* remove Set-Cookie if a hit */
 
     if (is_hit)
@@ -1261,6 +1266,7 @@ clientReplyContext::buildReplyHeader()
         HttpHeaderPos pos = HttpHeaderInitPos;
         HttpHeaderEntry *e;
 
+        int headers_deleted = 0;
         while ((e = hdr->getEntry(&pos))) {
             if (e->id == HDR_WWW_AUTHENTICATE || e->id == HDR_PROXY_AUTHENTICATE) {
                 const char *value = e->value.buf();
@@ -1270,9 +1276,11 @@ clientReplyContext::buildReplyHeader()
                         ||
                         (strncasecmp(value, "Negotiate", 9) == 0 &&
                          (value[9] == '\0' || value[9] == ' ')))
-                    hdr->delAt(pos);
+                            hdr->delAt(pos, headers_deleted);
             }
         }
+        if (headers_deleted)
+            hdr->refreshMask();
     }
 
     /* Handle authentication headers */
