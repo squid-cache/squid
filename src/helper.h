@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.h,v 1.8 2006/09/03 19:12:52 serassio Exp $
+ * $Id: helper.h,v 1.9 2007/05/07 18:38:40 wessels Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -238,8 +238,8 @@ SQUIDCEXTERN void helperOpenServers(helper * hlp);
 SQUIDCEXTERN void helperStatefulOpenServers(statefulhelper * hlp);
 SQUIDCEXTERN void helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data);
 SQUIDCEXTERN void helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, void *data, helper_stateful_server * lastserver);
-SQUIDCEXTERN void helperStats(StoreEntry * sentry, helper * hlp);
-SQUIDCEXTERN void helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp);
+SQUIDCEXTERN void helperStats(StoreEntry * sentry, helper * hlp, const char *label = NULL);
+SQUIDCEXTERN void helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label = NULL);
 SQUIDCEXTERN void helperShutdown(helper * hlp);
 SQUIDCEXTERN void helperStatefulShutdown(statefulhelper * hlp);
 SQUIDCEXTERN helper *helperCreate(const char *);

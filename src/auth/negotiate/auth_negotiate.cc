@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_negotiate.cc,v 1.14 2007/04/28 22:26:49 hno Exp $
+ * $Id: auth_negotiate.cc,v 1.15 2007/05/07 18:38:41 wessels Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -503,8 +503,7 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
 static void
 authenticateNegotiateStats(StoreEntry * sentry)
 {
-    storeAppendPrintf(sentry, "NEGOTIATE Authenticator Statistics:\n");
-    helperStatefulStats(sentry, negotiateauthenticators);
+    helperStatefulStats(sentry, negotiateauthenticators, "NEGOTIATE Authenticator Statistics");
 }
 
 

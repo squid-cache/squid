@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.82 2007/05/04 15:40:12 rousskov Exp $
+ * $Id: helper.cc,v 1.83 2007/05/07 18:38:40 wessels Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -62,6 +62,8 @@ static void StatefulEnqueue(statefulhelper * hlp, helper_stateful_request * r);
 static helper_stateful_request *StatefulServerDequeue(helper_stateful_server * srv);
 static void StatefulServerEnqueue(helper_stateful_server * srv, helper_stateful_request * r);
 static void helperStatefulServerKickQueue(helper_stateful_server * srv);
+static bool helperStartStats(StoreEntry *sentry, void *hlp, const char *label);
+
 
 CBDATA_TYPE(helper);
 CBDATA_TYPE(helper_server);
@@ -506,8 +508,11 @@ helperStatefulServerGetData(helper_stateful_server * srv)
 }
 
 void
-helperStats(StoreEntry * sentry, helper * hlp)
+helperStats(StoreEntry * sentry, helper * hlp, const char *label)
 {
+    if (!helperStartStats(sentry, hlp, label))
+        return;
+
     dlink_node *link;
     storeAppendPrintf(sentry, "program: %s\n",
                       hlp->cmdline->key);
@@ -557,8 +562,11 @@ helperStats(StoreEntry * sentry, helper * hlp)
 }
 
 void
-helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp)
+helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label)
 {
+    if (!helperStartStats(sentry, hlp, label))
+        return;
+
     helper_stateful_server *srv;
     dlink_node *link;
     double tt;
@@ -1591,4 +1599,20 @@ helperStatefulRequestFree(helper_stateful_request * r)
     cbdataReferenceDone(r->data);
     xfree(r->buf);
     delete r;
+}
+
+// TODO: should helper_ and helper_stateful_ have a common parent?
+static bool
+helperStartStats(StoreEntry *sentry, void *hlp, const char *label)
+{
+    if (!hlp) {
+        if (label)
+            storeAppendPrintf(sentry, "%s: unavailable\n", label);
+        return false;
+    }
+
+    if (label)
+        storeAppendPrintf(sentry, "%s:\n", label);
+
+    return true;
 }

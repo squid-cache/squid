@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.52 2007/04/30 16:56:15 wessels Exp $
+ * $Id: auth_digest.cc,v 1.53 2007/05/07 18:38:40 wessels Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -965,8 +965,7 @@ AuthDigestConfig::type() const
 static void
 authenticateDigestStats(StoreEntry * sentry)
 {
-    storeAppendPrintf(sentry, "Digest Authenticator Statistics:\n");
-    helperStats(sentry, digestauthenticators);
+    helperStats(sentry, digestauthenticators, "Digest Authenticator Statistics");
 }
 
 /* NonceUserUnlink: remove the reference to auth_user and unlink the node from the list */
