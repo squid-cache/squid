@@ -1,6 +1,6 @@
 
 /*
- * $Id: Server.h,v 1.3 2007/04/06 04:50:05 rousskov Exp $
+ * $Id: Server.h,v 1.4 2007/05/08 16:46:37 rousskov Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -53,7 +53,6 @@
 #if ICAP_CLIENT
 #include "ICAP/ICAPServiceRep.h"
 #include "ICAP/ICAPInitiator.h"
-#include "ICAP/ICAPModXact.h"
 
 class ICAPAccessCheck;
 #endif
@@ -90,8 +89,8 @@ public:
     virtual void icapAclCheckDone(ICAPServiceRep::Pointer) = 0;
 
     // ICAPInitiator: start an ICAP transaction and receive adapted headers.
-    virtual void noteIcapHeadersAdapted();
-    virtual void noteIcapHeadersAborted();
+    virtual void noteIcapAnswer(HttpMsg *message);
+    virtual void noteIcapQueryAbort(bool final);
 
     // BodyProducer: provide virgin response body to ICAP.
     virtual void noteMoreBodySpaceAvailable(BodyPipe &);
@@ -135,7 +134,7 @@ protected:
     void handleAdaptedBodyProducerAborted();
 
     void handleIcapCompleted();
-    void handleIcapAborted();
+    void handleIcapAborted(bool bypassable = false);
 #endif
 
 public: // should not be
@@ -150,7 +149,7 @@ protected:
 
 #if ICAP_CLIENT
     BodyPipe::Pointer virginBodyDestination; // to provide virgin response body
-    ICAPModXact::Pointer adaptedHeadSource; // to get adapted response headers
+    ICAPInitiate *adaptedHeadSource; // to get adapted response headers
     BodyPipe::Pointer adaptedBodySource; // to consume adated response body
 
     bool icapAccessCheckPending;
