@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.27 2007/04/06 04:50:06 rousskov Exp $
+ * $Id: client_side_request.h,v 1.28 2007/05/08 16:46:37 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -45,7 +45,6 @@
 #if ICAP_CLIENT
 #include "ICAP/ICAPServiceRep.h"
 #include "ICAP/ICAPInitiator.h"
-#include "ICAP/ICAPModXact.h"
 
 class HttpMsg;
 #endif
@@ -163,12 +162,14 @@ private:
 
 public:
     bool startIcap(ICAPServiceRep::Pointer);
-    void handleIcapFailure(); // private but exposed for ClientRequestContext
+
+    // private but exposed for ClientRequestContext
+    void handleIcapFailure(bool bypassable = false);
 
 private:
     // ICAPInitiator API, called by ICAPXaction
-    virtual void noteIcapHeadersAdapted();
-    virtual void noteIcapHeadersAborted();
+    virtual void noteIcapAnswer(HttpMsg *message);
+    virtual void noteIcapQueryAbort(bool final);
 
     // BodyConsumer API, called by BodyPipe
     virtual void noteMoreBodyDataAvailable(BodyPipe &);
@@ -178,7 +179,7 @@ private:
     void endRequestSatisfaction();
 
 private:
-    ICAPModXact::Pointer icapHeadSource;
+    ICAPInitiate *icapHeadSource;
     BodyPipe::Pointer icapBodySource;
 
     bool request_satisfaction_mode;

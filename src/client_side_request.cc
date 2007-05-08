@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.83 2007/04/28 22:26:37 hno Exp $
+ * $Id: client_side_request.cc,v 1.84 2007/05/08 16:46:37 rousskov Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -258,10 +258,8 @@ ClientHttpRequest::~ClientHttpRequest()
     freeResources();
 
 #if ICAP_CLIENT
-    if (icapHeadSource != NULL) {
-        icapHeadSource->noteInitiatorAborted();
-        icapHeadSource = NULL;
-    }
+    announceInitiatorAbort(icapHeadSource);
+
     if (icapBodySource != NULL)
         stopConsumingFrom(icapBodySource);
 #endif
@@ -1086,17 +1084,15 @@ ClientHttpRequest::startIcap(ICAPServiceRep::Pointer service)
 
     assert(!icapHeadSource);
     assert(!icapBodySource);
-    icapHeadSource = new ICAPModXact(this, request, NULL, service);
-    ICAPModXact::AsyncStart(icapHeadSource.getRaw());
+    icapHeadSource = initiateIcap(
+        new ICAPModXactLauncher(this, request, NULL, service));
     return true;
 }
 
 void
-ClientHttpRequest::noteIcapHeadersAdapted()
+ClientHttpRequest::noteIcapAnswer(HttpMsg *msg)
 {
     assert(cbdataReferenceValid(this));		// indicates bug
-
-    HttpMsg *msg = icapHeadSource->adapted.header;
     assert(msg);
 
     if (HttpRequest *new_req = dynamic_cast<HttpRequest*>(msg)) {
@@ -1133,18 +1129,18 @@ ClientHttpRequest::noteIcapHeadersAdapted()
     }
 
     // we are done with getting headers (but may be receiving body)
-    icapHeadSource = NULL;
+    clearIcap(icapHeadSource);
 
     if (!request_satisfaction_mode)
         doCallouts();
 }
 
 void
-ClientHttpRequest::noteIcapHeadersAborted()
+ClientHttpRequest::noteIcapQueryAbort(bool final)
 {
-    icapHeadSource = NULL;
+    clearIcap(icapHeadSource);
     assert(!icapBodySource);
-    handleIcapFailure();
+    handleIcapFailure(!final);
 }
 
 void
@@ -1200,18 +1196,16 @@ ClientHttpRequest::noteBodyProducerAborted(BodyPipe &)
 }
 
 void
-ClientHttpRequest::handleIcapFailure()
+ClientHttpRequest::handleIcapFailure(bool bypassable)
 {
-    debugs(85,3, HERE << "handleIcapFailure");
+    debugs(85,3, HERE << "handleIcapFailure(" << bypassable << ")");
 
     const bool usedStore = storeEntry() && !storeEntry()->isEmpty();
     const bool usedPipe = request->body_pipe != NULL &&
         request->body_pipe->consumedSize() > 0;
 
-    // XXX: we must not try to recover if the ICAP service is not bypassable!
-
-    if (!usedStore && !usedPipe) {
-        debugs(85, 2, "WARNING: ICAP REQMOD callout failed, proceeding with original request");
+    if (bypassable && !usedStore && !usedPipe) {
+        debugs(85,3, HERE << "ICAP REQMOD callout failed, bypassing: " << calloutContext);
         if (calloutContext)
             doCallouts();
         return;
