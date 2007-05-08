@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.h,v 1.18 2006/10/02 09:52:06 adrian Exp $
+ * $Id: HttpHeader.h,v 1.19 2007/05/07 18:12:28 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -207,7 +207,8 @@ public:
     HttpHeaderEntry *findEntry(http_hdr_type id) const;
     int delByName(const char *name);
     int delById(http_hdr_type id);
-    void delAt(HttpHeaderPos pos);
+    void delAt(HttpHeaderPos pos, int &headers_deleted);
+    void refreshMask();
     void addEntry(HttpHeaderEntry * e);
     void insertEntry(HttpHeaderEntry * e);
     String getList(http_hdr_type id) const;
