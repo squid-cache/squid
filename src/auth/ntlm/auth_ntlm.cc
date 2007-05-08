@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.63 2007/04/28 22:26:49 hno Exp $
+ * $Id: auth_ntlm.cc,v 1.64 2007/05/07 18:38:41 wessels Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -434,8 +434,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 static void
 authenticateNTLMStats(StoreEntry * sentry)
 {
-    storeAppendPrintf(sentry, "NTLM Authenticator Statistics:\n");
-    helperStatefulStats(sentry, ntlmauthenticators);
+    helperStatefulStats(sentry, ntlmauthenticators, "NTLM Authenticator Statistics");
 }
 
 

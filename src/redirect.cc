@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.117 2007/04/28 22:26:37 hno Exp $
+ * $Id: redirect.cc,v 1.118 2007/05/07 18:38:40 wessels Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -101,8 +101,7 @@ redirectStats(StoreEntry * sentry)
         return;
     }
 
-    storeAppendPrintf(sentry, "Redirector Statistics:\n");
-    helperStats(sentry, redirectors);
+    helperStats(sentry, redirectors, "Redirector Statistics");
 
     if (Config.onoff.redirector_bypass)
         storeAppendPrintf(sentry, "\nNumber of requests bypassed "

@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.46 2007/04/28 22:26:48 hno Exp $
+ * $Id: auth_basic.cc,v 1.47 2007/05/07 18:38:40 wessels Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -346,8 +346,7 @@ AuthBasicConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
 static void
 authenticateBasicStats(StoreEntry * sentry)
 {
-    storeAppendPrintf(sentry, "Basic Authenticator Statistics:\n");
-    helperStats(sentry, basicauthenticators);
+    helperStats(sentry, basicauthenticators, "Basic Authenticator Statistics");
 }
 
 CBDATA_TYPE(AuthenticateStateData);
