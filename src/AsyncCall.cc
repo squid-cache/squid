@@ -3,11 +3,11 @@
 
 void scheduleAsyncCall(int debugSection, int debugLevel,
     const char *fileName, int fileLine, void *objectPtr, const char *callName,
-    EVH *wrapper)
+    EVH *wrapper, bool cbdataProtected)
 {
     debugs(debugSection, debugLevel, fileName << "(" << fileLine <<
         ") will call " << callName << '(' << objectPtr << ')');
-    eventAdd(callName, wrapper, objectPtr, 0.0, 0, true);
+    eventAdd(callName, wrapper, objectPtr, 0.0, 0, cbdataProtected);
 }
 
 bool enterAsyncCallWrapper(int debugSection, int debugLevel,
