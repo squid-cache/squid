@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.421 2007/05/05 00:14:17 wessels Exp $
+ * $Id: ftp.cc,v 1.422 2007/05/07 21:32:00 wessels Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -398,8 +398,6 @@ FtpStateData::FtpStateData(FwdState *theFwdState) : ServerStateData(theFwdState)
 FtpStateData::~FtpStateData()
 {
     debugs(9, 3, "~ftpStateData: " << entry->url()  );
-
-    entry->unregisterAbort();
 
     if (reply_hdr) {
         memFree(reply_hdr, MEM_8K_BUF);
