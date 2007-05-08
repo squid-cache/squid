@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.520 2007/05/07 22:25:15 wessels Exp $
+ * $Id: http.cc,v 1.521 2007/05/08 16:37:59 rousskov Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1237,17 +1237,18 @@ HttpStateData::maybeReadVirginBody()
     int read_sz = readBuf->spaceSize();
 
 #if ICAP_CLIENT
-#if RE_ENABLE_THIS_IF_NEEDED_OR_DELETE
-    // This code is not broken, but is probably not needed because we
-    // probably can read more than will fit into the BodyPipe buffer.
-
     if (virginBodyDestination != NULL) {
         /*
          * BodyPipe buffer has a finite size limit.  We
          * should not read more data from the network than will fit
-         * into the pipe buffer.  If totally full, don't register
-         * the read handler at all.  The ICAP side will call our
-         * icapSpaceAvailable() method when it has free space again.
+         * into the pipe buffer or we _lose_ what did not fit if
+         * the response ends sooner that BodyPipe frees up space:
+         * There is no code to keep pumping data into the pipe once
+         * response ends and serverComplete() is called.
+         *
+         * If the pipe is totally full, don't register the read handler.
+         * The BodyPipe will call our noteMoreBodySpaceAvailable() method
+         * when it has free space again.
          */
         int icap_space = virginBodyDestination->buf().potentialSpaceSize();
 
@@ -1257,8 +1258,6 @@ HttpStateData::maybeReadVirginBody()
         if (icap_space < read_sz)
             read_sz = icap_space;
     }
-
-#endif
 #endif
 
     debugs(11,9, HERE << (flags.do_next_read ? "may" : "wont") <<
