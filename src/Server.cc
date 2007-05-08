@@ -1,5 +1,5 @@
 /*
- * $Id: Server.cc,v 1.10 2007/04/30 16:56:09 wessels Exp $
+ * $Id: Server.cc,v 1.11 2007/05/08 16:45:00 rousskov Exp $
  *
  * DEBUG:
  * AUTHOR: Duane Wessels
@@ -39,6 +39,9 @@
 #include "HttpReply.h"
 #include "errorpage.h"
 
+#if ICAP_CLIENT
+#include "ICAP/ICAPModXact.h"
+#endif
 
 ServerStateData::ServerStateData(FwdState *theFwdState): requestSender(NULL)
 {
@@ -282,7 +285,7 @@ ServerStateData::sendMoreRequestBody()
     }
 }
 
-// called by noteIcapHeadersAdapted(), HTTP server overwrites this
+// called by noteIcapAnswer(), HTTP server overwrites this
 void
 ServerStateData::haveParsedReplyHeaders()
 {
@@ -321,8 +324,8 @@ ServerStateData::startIcap(ICAPServiceRep::Pointer service, HttpRequest *cause)
             virginBodyDestination << "; size: " << size);
     }
 
-    adaptedHeadSource = new ICAPModXact(this, reply, cause, service);
-    ICAPModXact::AsyncStart(adaptedHeadSource.getRaw());
+    adaptedHeadSource = initiateIcap(
+        new ICAPModXactLauncher(this, reply, cause, service));
     return true;
 }
 
@@ -334,10 +337,7 @@ void ServerStateData::cleanIcap() {
     if (virginBodyDestination != NULL)
         stopProducingFor(virginBodyDestination, false);
 
-    if (adaptedHeadSource != NULL) {
-        AsyncCall(11,5, adaptedHeadSource.getRaw(), ICAPModXact::noteInitiatorAborted);
-        adaptedHeadSource = NULL;
-    }
+    announceInitiatorAbort(adaptedHeadSource);
 
     if (adaptedBodySource != NULL)
         stopConsumingFrom(adaptedBodySource);
@@ -367,12 +367,11 @@ ServerStateData::noteBodyConsumerAborted(BodyPipe &bp)
 
 // received adapted response headers (body may follow)
 void
-ServerStateData::noteIcapHeadersAdapted()
+ServerStateData::noteIcapAnswer(HttpMsg *msg)
 {
-    // extract and lock reply before (adaptedHeadSource = NULL) can destroy it
-    HttpReply *rep = dynamic_cast<HttpReply*>(adaptedHeadSource->adapted.header);
+    HttpReply *rep = dynamic_cast<HttpReply*>(msg);
     HTTPMSGLOCK(rep);
-    adaptedHeadSource = NULL; // we do not expect any more messages from it
+    clearIcap(adaptedHeadSource); // we do not expect more messages
 
     if (abortOnBadEntry("entry went bad while waiting for adapted headers")) {
         HTTPMSGUNLOCK(rep); // hopefully still safe, even if "this" is deleted
@@ -402,10 +401,10 @@ ServerStateData::noteIcapHeadersAdapted()
 
 // will not receive adapted response headers (and, hence, body)
 void
-ServerStateData::noteIcapHeadersAborted()
+ServerStateData::noteIcapQueryAbort(bool final)
 {
-    adaptedHeadSource = NULL;
-    handleIcapAborted();
+    clearIcap(adaptedHeadSource);
+    handleIcapAborted(!final);
 }
 
 // more adapted response body is available
@@ -447,7 +446,7 @@ void ServerStateData::handleAdaptedBodyProducerAborted()
     handleIcapAborted();
 }
 
-// common part of noteIcapHeadersAdapted and handleAdaptedBodyProductionEnded
+// common part of noteIcapAnswer and handleAdaptedBodyProductionEnded
 void
 ServerStateData::handleIcapCompleted()
 {
@@ -459,12 +458,15 @@ ServerStateData::handleIcapCompleted()
 
 // common part of noteIcap*Aborted and noteBodyConsumerAborted methods
 void
-ServerStateData::handleIcapAborted()
+ServerStateData::handleIcapAborted(bool bypassable)
 {
-    debugs(11,5, HERE << "handleIcapAborted; entry empty: " << entry->isEmpty());
+    debugs(11,5, HERE << "handleIcapAborted; bypassable: " << bypassable <<
+        ", entry empty: " << entry->isEmpty());
 
     if (abortOnBadEntry("entry went bad while ICAP aborted"))
         return;
+
+    // TODO: bypass if possible
 
     if (entry->isEmpty()) {
         debugs(11,9, HERE << "creating ICAP error entry after ICAP failure");
@@ -475,11 +477,7 @@ ServerStateData::handleIcapAborted()
         fwd->dontRetry(true);
     }
 
-    debugs(11,5, HERE << "bailing after ICAP failure");
-
-    cleanIcap();
-    closeServer();
-    quitIfAllDone();
+    abortTransaction("ICAP failure");
 }
 
 #endif
