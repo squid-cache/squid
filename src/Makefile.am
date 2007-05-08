@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.179 2007/04/24 15:04:22 hno Exp $
+#  $Id: Makefile.am,v 1.180 2007/05/08 16:32:11 rousskov Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -667,13 +667,19 @@ squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a @STORE_OBJS@ @STORE_LINKO
 	@ICAP_LIBS@
 
 ICAP_libicap_a_SOURCES = \
+	ICAP/AsyncJob.cc \
+	ICAP/AsyncJob.h \
  	ICAP/ChunkedCodingParser.cc \
  	ICAP/ChunkedCodingParser.h \
 	ICAP/ICAPClient.cc \
 	ICAP/ICAPClient.h \
 	ICAP/ICAPInitiator.cc \
 	ICAP/ICAPInitiator.h \
+	ICAP/ICAPInitiate.cc \
+	ICAP/ICAPInitiate.h \
 	ICAP/ICAPInOut.h \
+	ICAP/ICAPLauncher.cc \
+	ICAP/ICAPLauncher.h \
 	ICAP/ICAPConfig.cc \
 	ICAP/ICAPConfig.h \
 	ICAP/ICAPElements.cc \

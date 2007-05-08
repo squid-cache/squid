@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPServiceRep.h,v 1.6 2007/04/06 04:50:08 rousskov Exp $
+ * $Id: ICAPServiceRep.h,v 1.7 2007/05/08 16:32:12 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,10 +35,10 @@
 #define SQUID_ICAPSERVICEREP_H
 
 #include "cbdata.h"
+#include "ICAPInitiator.h"
 #include "ICAPElements.h"
 
 class ICAPOptions;
-
 class ICAPOptXact;
 
 /* The ICAP service representative maintains information about a single ICAP
@@ -67,7 +67,7 @@ class ICAPOptXact;
  */
 
 
-class ICAPServiceRep : public RefCountable
+class ICAPServiceRep : public RefCountable, public ICAPInitiator
 {
 
 public:
@@ -114,7 +114,10 @@ public:
 public: // treat these as private, they are for callbacks only
     void noteTimeToUpdate();
     void noteTimeToNotify();
-    void noteNewOptions(ICAPOptions *newOptions);
+
+    // receive either an ICAP OPTIONS response header or an abort message
+    virtual void noteIcapAnswer(HttpMsg *msg);
+    virtual void noteIcapQueryAbort(bool);
 
 private:
     // stores Prepare() callback info
@@ -153,6 +156,7 @@ private:
     void scheduleNotification();
 
     void startGettingOptions();
+    void handleNewOptions(ICAPOptions *newOptions);
     void changeOptions(ICAPOptions *newOptions);
     void checkOptions();
 

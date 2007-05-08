@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPInitiator.h,v 1.1 2007/04/06 04:50:07 rousskov Exp $
+ * $Id: ICAPInitiator.h,v 1.2 2007/05/08 16:32:11 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,26 +34,41 @@
 #ifndef SQUID_ICAPINITIATOR_H
 #define SQUID_ICAPINITIATOR_H
 
-#include "AsyncCall.h"
-
 /*
  * The ICAP Initiator is an ICAP vectoring point that initates ICAP
  * transactions. This interface exists to allow ICAP transactions to
- * signal their initiators that they are finished or aborted.
+ * signal their initiators that they have the answer from the ICAP server
+ * or that the ICAP query has aborted and there will be no answer. It
+ * is also handy for implementing common initiator actions such as starting
+ * or aborting an ICAP transaction.
  */
 
-class ICAPXaction;
+class HttpMsg;
+class ICAPInitiate;
 
 class ICAPInitiator
 {
 public:
     virtual ~ICAPInitiator() {}
 
-	virtual void noteIcapHeadersAdapted() = 0;
-	virtual void noteIcapHeadersAborted() = 0;
+    // called when ICAP response headers are successfully interpreted
+    virtual void noteIcapAnswer(HttpMsg *message) = 0;
 
-	AsyncCallWrapper(93,4, ICAPInitiator, noteIcapHeadersAdapted);
-	AsyncCallWrapper(93,3, ICAPInitiator, noteIcapHeadersAborted);
+    // called when valid ICAP response headers are no longer expected
+    // the final parameter is set to disable bypass or retries
+    virtual void noteIcapQueryAbort(bool final) = 0;
+
+    // a temporary cbdata-for-multiple inheritance hack, see ICAPInitiator.cc
+    virtual void *toCbdata() { return this; }
+
+protected:
+    ICAPInitiate *initiateIcap(ICAPInitiate *x); // locks and returns x
+
+    // done with x (and not calling announceInitiatorAbort)
+    void clearIcap(ICAPInitiate *&x); // unlocks x
+
+    // inform the transaction about abnormal termination and clear it
+    void announceInitiatorAbort(ICAPInitiate *&x); // unlocks x
 };
 
 #endif /* SQUID_ICAPINITIATOR_H */
