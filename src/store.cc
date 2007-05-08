@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.611 2007/04/30 16:56:09 wessels Exp $
+ * $Id: store.cc,v 1.612 2007/05/07 21:51:21 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -1119,14 +1119,19 @@ StoreEntry::abort()
 
     /* Notify the server side */
 
+    /*
+     * DPW 2007-05-07
+     * Should we check abort.data for validity?
+     */
     if (mem_obj->abort.callback) {
+	if (!cbdataReferenceValid(mem_obj->abort.data))
+	    debugs(20,1,HERE << "queueing event when abort.data is not valid");
         eventAdd("mem_obj->abort.callback",
                  mem_obj->abort.callback,
                  mem_obj->abort.data,
                  0.0,
-                 0);
-        mem_obj->abort.callback = NULL;
-        mem_obj->abort.data = NULL;
+                 true);
+	unregisterAbort();
     }
 
     /* XXX Should we reverse these two, so that there is no
@@ -1546,14 +1551,17 @@ StoreEntry::registerAbort(STABH * cb, void *data)
     assert(mem_obj);
     assert(mem_obj->abort.callback == NULL);
     mem_obj->abort.callback = cb;
-    mem_obj->abort.data = data;
+    mem_obj->abort.data = cbdataReference(data);
 }
 
 void
 StoreEntry::unregisterAbort()
 {
     assert(mem_obj);
-    mem_obj->abort.callback = NULL;
+    if (mem_obj->abort.callback) {
+	mem_obj->abort.callback = NULL;
+	cbdataReferenceDone(mem_obj->abort.data);
+    }
 }
 
 void
