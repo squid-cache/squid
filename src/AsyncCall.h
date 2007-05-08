@@ -1,6 +1,6 @@
 
 /*
- * $Id: AsyncCall.h,v 1.1 2007/04/06 04:45:07 rousskov Exp $
+ * $Id: AsyncCall.h,v 1.2 2007/05/08 16:15:50 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -80,7 +80,7 @@ void callName ## Wrapper(void *data) { \
 
 extern void scheduleAsyncCall(int debugSection, int debugLevel,
     const char *fileName, int fileLine, void *objectPtr, const char *callName,
-    EVH *wrapper);
+    EVH *wrapper, bool cbdataProtected = true);
 
 extern bool enterAsyncCallWrapper(int debugSection, int debugLevel,
     void *objectPtr, const char *className, const char *methodName);
