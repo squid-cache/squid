@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.519 2007/05/05 00:16:32 wessels Exp $
+ * $Id: http.cc,v 1.520 2007/05/07 22:25:15 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -492,6 +492,7 @@ HttpStateData::cacheableReply()
         /* Responses that only are cacheable if the server says so */
 
     case HTTP_MOVED_TEMPORARILY:
+    case HTTP_TEMPORARY_REDIRECT:
         if (rep->expires > rep->date && rep->date > 0)
             return 1;
         else
