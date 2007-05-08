@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPModXact.h,v 1.7 2007/04/06 04:50:07 rousskov Exp $
+ * $Id: ICAPModXact.h,v 1.8 2007/05/08 16:32:11 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,9 +34,10 @@
 #ifndef SQUID_ICAPMODXACT_H
 #define SQUID_ICAPMODXACT_H
 
+#include "BodyPipe.h"
 #include "ICAPXaction.h"
 #include "ICAPInOut.h"
-#include "BodyPipe.h"
+#include "ICAPLauncher.h"
 
 /*
  * ICAPModXact implements ICAP REQMOD and RESPMOD transaction using
@@ -127,14 +128,7 @@ class ICAPModXact: public ICAPXaction, public BodyProducer, public BodyConsumer
 {
 
 public:
-    typedef RefCount<ICAPModXact> Pointer;
-
-public:
     ICAPModXact(ICAPInitiator *anInitiator, HttpMsg *virginHeader, HttpRequest *virginCause, ICAPServiceRep::Pointer &s);
-
-    // communication with the initiator
-    void noteInitiatorAborted();
-    AsyncCallWrapper(93,3, ICAPModXact, noteInitiatorAborted)
 
     // BodyProducer methods
     virtual void noteMoreBodySpaceAvailable(BodyPipe &);
@@ -193,8 +187,11 @@ private:
     void virginConsume();
     void finishNullOrEmptyBodyPreview(MemBuf &buf);
 
-    bool shouldPreview(const String &urlPath);
+    void decideOnPreview();
+    void decideOnRetries();
     bool shouldAllow204();
+    bool canBackupEverything() const;
+
     void prepBackup(size_t expectedSize);
     void backup(const MemBuf &buf);
 
@@ -237,7 +234,6 @@ private:
     bool gotEncapsulated(const char *section) const;
     void checkConsuming();
 
-    ICAPInitiator *initiator;
 
     HttpReply *icapReply;
 
@@ -294,7 +290,20 @@ private:
     CBDATA_CLASS2(ICAPModXact);
 };
 
-// destroys the transaction; implemented in ICAPClient.cc (ick?)
-extern void ICAPNoteXactionDone(ICAPModXact::Pointer x);
+// An ICAPLauncher that stores ICAPModXact construction info and 
+// creates ICAPModXact when needed
+class ICAPModXactLauncher: public ICAPLauncher
+{
+public:
+    ICAPModXactLauncher(ICAPInitiator *anInitiator, HttpMsg *virginHeader, HttpRequest *virginCause, ICAPServiceRep::Pointer &s);
+
+protected:
+    virtual ICAPXaction *createXaction();
+
+    ICAPInOut virgin;
+
+private:
+    CBDATA_CLASS2(ICAPModXactLauncher);
+};
 
 #endif /* SQUID_ICAPMOD_XACT_H */

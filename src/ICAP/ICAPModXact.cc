@@ -9,6 +9,7 @@
 #include "HttpReply.h"
 #include "ICAPServiceRep.h"
 #include "ICAPInitiator.h"
+#include "ICAPLauncher.h"
 #include "ICAPModXact.h"
 #include "ICAPClient.h"
 #include "ChunkedCodingParser.h"
@@ -24,6 +25,7 @@
 // TODO: replace gotEncapsulated() with something faster; we call it often
 
 CBDATA_CLASS_INIT(ICAPModXact);
+CBDATA_CLASS_INIT(ICAPModXactLauncher);
 
 static const size_t TheBackupLimit = BodyPipe::MaxCapacity;
 
@@ -37,15 +39,12 @@ ICAPModXact::State::State()
 
 ICAPModXact::ICAPModXact(ICAPInitiator *anInitiator, HttpMsg *virginHeader,
     HttpRequest *virginCause, ICAPServiceRep::Pointer &aService):
-    ICAPXaction("ICAPModXact"),
-    initiator(cbdataReference(anInitiator)),
+    ICAPXaction("ICAPModXact", anInitiator, aService),
     icapReply(NULL),
     virginConsumed(0),
     bodyParser(NULL)
 {
     assert(virginHeader);
-
-    service(aService);
 
     virgin.setHeader(virginHeader); // sets virgin.body_pipe if needed
     virgin.setCause(virginCause); // may be NULL
@@ -67,8 +66,6 @@ ICAPModXact::ICAPModXact(ICAPInitiator *anInitiator, HttpMsg *virginHeader,
 // initiator wants us to start
 void ICAPModXact::start()
 {
-    ICAPXaction_Enter(start);
-
     ICAPXaction::start();
 
     estimateVirginBody(); // before virgin disappears!
@@ -80,11 +77,9 @@ void ICAPModXact::start()
     else
         waitForService();
 
-    // XXX: but this has to be here to catch other errors. Thus, if
-    // commConnectStart in startWriting fails, we may get here
+    // XXX: If commConnectStart in startWriting fails, we may get here
     //_after_ the object got destroyed. Somebody please fix commConnectStart!
-    // XXX: Is the above comment still valid?
-    ICAPXaction_Exit();
+    // TODO: Does re-entrance protection in callStart() solve the above?
 }
 
 static
@@ -110,9 +105,12 @@ void ICAPModXact::noteServiceReady()
     Must(state.serviceWaiting);
     state.serviceWaiting = false;
 
-    Must(service().up());
-
-    startWriting();
+    if (service().up()) {
+        startWriting();
+    } else {
+        disableRetries();
+        mustStop("ICAP service unusable");
+    }
 
     ICAPXaction_Exit();
 }
@@ -120,6 +118,10 @@ void ICAPModXact::noteServiceReady()
 void ICAPModXact::startWriting()
 {
     state.writing = State::writingConnect;
+
+    decideOnPreview(); // must be decided before we decideOnRetries
+    decideOnRetries();
+
     openConnection();
     // put nothing here as openConnection calls commConnectStart
     // and that may call us back without waiting for the next select loop
@@ -347,7 +349,10 @@ const char *ICAPModXact::virginContentData(const VirginBodyAct &act) const
 void ICAPModXact::virginConsume()
 {
     if (!virgin.body_pipe)
-        return;
+        return; // nothing to consume
+
+    if (isRetriable)
+        return; // do not consume if we may have to retry later
 
     BodyPipe &bp = *virgin.body_pipe;
     const size_t have = static_cast<size_t>(bp.buf().contentSize());
@@ -367,6 +372,7 @@ void ICAPModXact::virginConsume()
                " virgin body bytes");
         bp.consume(size);
         virginConsumed += size;
+        Must(!isRetriable); // or we should not be consuming
     }
 }
 
@@ -581,8 +587,7 @@ void ICAPModXact::parseHeaders()
         return;
     }
 
-    AsyncCall(93,5, initiator, ICAPInitiator::noteIcapHeadersAdapted);
-    cbdataReferenceDone(initiator);
+    sendAnswer(adapted.header);
 
     if (state.sending == State::sendingVirgin)
         echoMore();
@@ -920,19 +925,6 @@ void ICAPModXact::noteBodyProducerAborted(BodyPipe &)
     ICAPXaction_Exit();
 }
 
-// initiator aborted
-void ICAPModXact::noteInitiatorAborted()
-{
-    ICAPXaction_Enter(noteInitiatorAborted);
-
-    if (initiator) {
-        cbdataReferenceDone(initiator);
-        mustStop("initiator aborted");
-    }
-
-    ICAPXaction_Exit();
-}
-
 // adapted body consumer wants more adapted data and 
 // possibly freed some buffer space
 void ICAPModXact::noteMoreBodySpaceAvailable(BodyPipe &)
@@ -964,21 +956,13 @@ void ICAPModXact::swanSong()
 {
     debugs(93, 5, HERE << "swan sings" << status());
 
-    if (initiator) {
-        debugs(93, 2, HERE << "swan sings for " << stopReason << status());
-        AsyncCall(93,5, initiator, ICAPInitiator::noteIcapHeadersAborted);
-        cbdataReferenceDone(initiator);
-    }
-
     stopWriting(false);
-    stopBackup();
+    stopSending(false);
 
     if (icapReply) {
         delete icapReply;
         icapReply = NULL;
     }
-
-    stopSending(false);
 
     ICAPXaction::swanSong();
 }
@@ -1034,7 +1018,7 @@ void ICAPModXact::makeRequestHeaders(MemBuf &buf)
 
     buf.append(ICAP::crlf, 2); // terminate Encapsulated line
 
-    if (shouldPreview(urlPath)) {
+    if (preview.enabled()) {
         buf.Printf("Preview: %d\r\n", (int)preview.ad());
         if (virginBody.expected()) // there is a body to preview
             virginBodySending.plan();
@@ -1097,19 +1081,24 @@ void ICAPModXact::packHead(MemBuf &httpBuf, const HttpMsg *head)
 }
 
 // decides whether to offer a preview and calculates its size
-bool ICAPModXact::shouldPreview(const String &urlPath)
+void ICAPModXact::decideOnPreview()
 {
     if (!TheICAPConfig.preview_enable) {
         debugs(93, 5, HERE << "preview disabled by squid.conf");
-        return false;
+        return;
     }
 
+    const HttpRequest *request = virgin.cause ?
+        virgin.cause :
+        dynamic_cast<const HttpRequest*>(virgin.header);
+    const String urlPath = request ? request->urlpath : String();
     size_t wantedSize;
-
     if (!service().wantsPreview(urlPath, wantedSize)) {
         debugs(93, 5, "ICAPModXact should not offer preview for " << urlPath);
-        return false;
+        return;
     }
+
+    // we decided to do preview, now compute its size
 
     Must(wantedSize >= 0);
 
@@ -1127,8 +1116,6 @@ bool ICAPModXact::shouldPreview(const String &urlPath)
 
     preview.enable(ad);
     Must(preview.enabled());
-
-    return true;
 }
 
 // decides whether to allow 204 responses
@@ -1137,10 +1124,16 @@ bool ICAPModXact::shouldAllow204()
     if (!service().allows204())
         return false;
 
-    if (!virginBody.expected())
-        return true; // no body means no problems with supporting 204s.
+    return canBackupEverything();
+}
 
-    // if there is a body, make sure we can backup it all
+// used by shouldAllow204 and decideOnRetries
+bool ICAPModXact::canBackupEverything() const
+{
+    if (!virginBody.expected())
+        return true; // no body means no problems with backup
+
+    // if there is a body, check whether we can backup it all
 
     if (!virginBody.knownSize())
         return false;
@@ -1148,6 +1141,22 @@ bool ICAPModXact::shouldAllow204()
     // or should we have a different backup limit?
     // note that '<' allows for 0-termination of the "full" backup buffer
     return virginBody.size() < TheBackupLimit;
+}
+
+// Decide whether this transaction can be retried if pconn fails
+// Must be called after decideOnPreview and before openConnection()
+void ICAPModXact::decideOnRetries()
+{
+    if (!isRetriable)
+        return; // no, already decided
+
+    if (preview.enabled())
+        return; // yes, because preview provides enough guarantees
+
+    if (canBackupEverything())
+        return; // yes, because we can back everything up
+
+    disableRetries(); // no, because we cannot back everything up
 }
 
 // Normally, the body-writing code handles preview body. It can deal with
@@ -1408,4 +1417,19 @@ bool ICAPModXact::fillVirginHttpHeader(MemBuf &mb) const
     virgin.header->firstLineBuf(mb);
 
     return true;
+}
+
+
+/* ICAPModXactLauncher */
+
+ICAPModXactLauncher::ICAPModXactLauncher(ICAPInitiator *anInitiator, HttpMsg *virginHeader, HttpRequest *virginCause, ICAPServiceRep::Pointer &aService):
+    ICAPLauncher("ICAPModXactLauncher", anInitiator, aService)
+{
+    virgin.setHeader(virginHeader);
+    virgin.setCause(virginCause);
+}
+
+ICAPXaction *ICAPModXactLauncher::createXaction()
+{
+    return new ICAPModXact(this, virgin.header, virgin.cause, theService);
 }

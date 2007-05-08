@@ -1,5 +1,5 @@
 /*
- * $Id: ICAPOptXact.h,v 1.5 2007/04/06 04:50:07 rousskov Exp $
+ * $Id: ICAPOptXact.h,v 1.6 2007/05/08 16:32:11 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,43 +34,49 @@
 #define SQUID_ICAPOPTXACT_H
 
 #include "ICAPXaction.h"
+#include "ICAPLauncher.h"
 
 class ICAPOptions;
 
+
 /* ICAPOptXact sends an ICAP OPTIONS request to the ICAP service,
- * converts the response into ICAPOptions object, and notifies
- * the caller via the callback. NULL options objects means the
- * ICAP service could not be contacted or did not return any response */
+ * parses the ICAP response, and sends it to the initiator. A NULL response
+ * means the ICAP service could not be contacted or did not return any
+ * valid response. */
 
 class ICAPOptXact: public ICAPXaction
 {
 
 public:
-    typedef void Callback(ICAPOptions *newOptions, void *callerData);
-
-    ICAPOptXact(ICAPServiceRep::Pointer &aService, Callback *aCb, void *aCbData);
-    virtual ~ICAPOptXact();
+    ICAPOptXact(ICAPInitiator *anInitiator, ICAPServiceRep::Pointer &aService);
 
 protected:
     virtual void start();
     virtual void handleCommConnected();
     virtual void handleCommWrote(size_t size);
     virtual void handleCommRead(size_t size);
-    virtual void swanSong();
 
     void makeRequest(MemBuf &buf);
-    ICAPOptions *parseResponse();
-    void sendOptions(ICAPOptions *options);
+    HttpMsg *parseResponse();
 
     void startReading();
 
 private:
-    Callback *cbAddr; // callback to call with newly fetched options
-    void *cbData;     // callback data
-
     CBDATA_CLASS2(ICAPOptXact);
 };
 
-// TODO: replace the callback API with a class-base interface?
+// An ICAPLauncher that stores ICAPOptXact construction info and 
+// creates ICAPOptXact when needed
+class ICAPOptXactLauncher: public ICAPLauncher
+{
+public:
+    ICAPOptXactLauncher(ICAPInitiator *anInitiator, ICAPServiceRep::Pointer &aService);
+
+protected:
+    virtual ICAPXaction *createXaction();
+
+private:
+    CBDATA_CLASS2(ICAPOptXactLauncher);
+};
 
 #endif /* SQUID_ICAPOPTXACT_H */

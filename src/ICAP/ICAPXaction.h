@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPXaction.h,v 1.10 2007/04/06 04:50:08 rousskov Exp $
+ * $Id: ICAPXaction.h,v 1.11 2007/05/08 16:32:12 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,37 +37,28 @@
 #include "comm.h"
 #include "MemBuf.h"
 #include "ICAPServiceRep.h"
-#include "AsyncCall.h"
+#include "ICAPInitiate.h"
 
 class HttpMsg;
-class TextException;
 
 /*
  * The ICAP Xaction implements common tasks for ICAP OPTIONS, REQMOD, and
- * RESPMOD transactions.
- *
- * All ICAP transactions are refcounted and hold a pointer to self.
- * Both are necessary because a user need to access transaction data
- * after the transaction has finished, while a transaction may need to
- * finish after all its explicit users are gone. For safety and simplicity,
- * the code assumes that both cases can happen to any ICAP transaction.
+ * RESPMOD transactions. It is started by an ICAPInitiator. It terminates
+ * on its own, when done. Transactions communicate with Initiator using
+ * asynchronous messages because a transaction or Initiator may be gone at
+ * any time.
  */
 
 // Note: ICAPXaction must be the first parent for object-unaware cbdata to work
 
-class ICAPXaction: public RefCountable
+class ICAPXaction: public ICAPInitiate
 {
 
 public:
-    typedef RefCount<ICAPXaction> Pointer;
-
-    // Use this to start ICAP transactions because they need a pointer
-    // to self and because the start routine may result in failures/callbacks.
-    static ICAPXaction *AsyncStart(ICAPXaction *x);
-
-public:
-    ICAPXaction(const char *aTypeName);
+    ICAPXaction(const char *aTypeName, ICAPInitiator *anInitiator, ICAPServiceRep::Pointer &aService);
     virtual ~ICAPXaction();
+
+    void disableRetries();
 
     // comm handler wrappers, treat as private
     void noteCommConnected(comm_err_t status);
@@ -76,14 +67,9 @@ public:
     void noteCommTimedout();
     void noteCommClosed();
 
-    // start handler, treat as protected and call it from the kids
-    virtual void start() = 0;
-    AsyncCallWrapper(93,3, ICAPXaction, start);
-
 protected:
-    // Set or get service pointer; ICAPXaction cbdata-locks it.
-    void service(ICAPServiceRep::Pointer &aService);
-    ICAPServiceRep &service();
+    virtual void start();
+    virtual void noteInitiatorAborted(); // TODO: move to ICAPInitiate
 
     // comm hanndlers; called by comm handler wrappers
     virtual void handleCommConnected() = 0;
@@ -104,27 +90,27 @@ protected:
 
     bool parseHttpMsg(HttpMsg *msg); // true=success; false=needMore; throw=err
     bool mayReadMore() const;
+
     virtual bool doneReading() const;
     virtual bool doneWriting() const;
     bool doneWithIo() const;
-
-    bool done() const;
     virtual bool doneAll() const;
-    void mustStop(const char *reason);
 
     // called just before the 'done' transaction is deleted
     virtual void swanSong(); 
 
     // returns a temporary string depicting transaction status, for debugging
-    const char *status() const;
+    virtual const char *status() const;
     virtual void fillPendingStatus(MemBuf &buf) const;
     virtual void fillDoneStatus(MemBuf &buf) const;
 
     // useful for debugging
     virtual bool fillVirginHttpHeader(MemBuf&) const;
 
+    // custom end-of-call checks
+    virtual void callEnd();
+
 protected:
-    Pointer self; // see comments in the class description above
     const int id; // transaction ID for debugging, unique across ICAP xactions
 
     int connection;     // FD of the ICAP server connection
@@ -145,13 +131,9 @@ protected:
     size_t commBufSize;
     bool commEof;
     bool reuseConnection;
+    bool isRetriable;
 
     const char *stopReason;
-
-    // asynchronous call maintenance
-    bool callStart(const char *method);
-    void callException(const TextException &e);
-    void callEnd();
 
     // active (pending) comm callbacks for the ICAP server connection
     CNCB *connector;
@@ -163,7 +145,6 @@ protected:
 
 private:
     static int TheLastId;
-    ICAPServiceRep::Pointer theService;
 
     const char *inCall; // name of the asynchronous call being executed, if any
 
@@ -173,25 +154,8 @@ private:
 };
 
 // call guards for all "asynchronous" note*() methods
-
-// asynchronous call entry:
-// - open the try clause;
-// - call callStart().
-#define ICAPXaction_Enter(method) \
-    try { \
-        if (!callStart(#method)) \
-            return;
-
-// asynchronous call exit:
-// - close the try clause;
-// - catch exceptions;
-// - let callEnd() handle transaction termination conditions
-#define ICAPXaction_Exit() \
-    } \
-    catch (const TextException &e) { \
-        callException(e); \
-    } \
-    callEnd();
-
+// If we move ICAPXaction_* macros to core, they can use these generic names:
+#define ICAPXaction_Enter(method) AsyncCallEnter(method)
+#define ICAPXaction_Exit() AsyncCallExit()
 
 #endif /* SQUID_ICAPXACTION_H */

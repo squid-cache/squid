@@ -59,23 +59,15 @@ void ICAPXaction_noteCommRead(int, char *, size_t size, comm_err_t status, int x
     ICAPXaction_fromData(data).noteCommRead(status, size);
 }
 
-ICAPXaction *ICAPXaction::AsyncStart(ICAPXaction *x) {
-    assert(x != NULL);
-    x->self = x; // yes, this works with the current RefCount cimplementation
-    AsyncCall(93,5, x, ICAPXaction::start);
-    return x;
-}
-
-ICAPXaction::ICAPXaction(const char *aTypeName):
+ICAPXaction::ICAPXaction(const char *aTypeName, ICAPInitiator *anInitiator, ICAPServiceRep::Pointer &aService):
+        ICAPInitiate(aTypeName, anInitiator, aService),
         id(++TheLastId),
         connection(-1),
         commBuf(NULL), commBufSize(0),
         commEof(false),
         reuseConnection(true),
-        connector(NULL), reader(NULL), writer(NULL), closer(NULL),
-        typeName(aTypeName),
-        theService(NULL),
-        inCall(NULL)
+        isRetriable(true),
+        connector(NULL), reader(NULL), writer(NULL), closer(NULL)
 {
     debugs(93,3, typeName << " constructed, this=" << this <<
         " [icapx" << id << ']'); // we should not call virtual status() here
@@ -87,11 +79,15 @@ ICAPXaction::~ICAPXaction()
         " [icapx" << id << ']'); // we should not call virtual status() here
 }
 
+void ICAPXaction::disableRetries() {
+    debugs(93,5, typeName << (isRetriable ? "becomes" : "remains") <<
+        " final" << status());
+    isRetriable = false;
+}
+
 void ICAPXaction::start()
 {
-    debugs(93,3, HERE << typeName << " starts" << status());
-
-    Must(self != NULL); // set by AsyncStart;
+    ICAPInitiate::start();
 
     readBuf.init(SQUID_TCP_SO_RCVBUF, SQUID_TCP_SO_RCVBUF);
     commBuf = (char*)memAllocBuf(SQUID_TCP_SO_RCVBUF, &commBufSize);
@@ -102,29 +98,35 @@ void ICAPXaction::start()
 // TODO: obey service-specific, OPTIONS-reported connection limit
 void ICAPXaction::openConnection()
 {
-    const ICAPServiceRep &s = service();
-    // TODO: check whether NULL domain is appropriate here
-    connection = icapPconnPool->pop(s.host.buf(), s.port, NULL, NULL);
+    Must(connection < 0);
 
-    if (connection >= 0) {
-        debugs(93,3, HERE << "reused pconn FD " << connection);
-        connector = &ICAPXaction_noteCommConnected; // make doneAll() false
-        eventAdd("ICAPXaction::reusedConnection",
+    const ICAPServiceRep &s = service();
+
+    // if we cannot retry, we must not reuse pconns because of race conditions
+    if (isRetriable) {
+        // TODO: check whether NULL domain is appropriate here
+        connection = icapPconnPool->pop(s.host.buf(), s.port, NULL, NULL);
+
+        if (connection >= 0) {
+            debugs(93,3, HERE << "reused pconn FD " << connection);
+            connector = &ICAPXaction_noteCommConnected; // make doneAll() false
+            eventAdd("ICAPXaction::reusedConnection",
                  reusedConnection,
                  this,
                  0.0,
                  0,
                  true);
-        return;
+            return;
+        }
+
+        disableRetries(); // we only retry pconn failures
     }
 
-    if (connection < 0) {
-        connection = comm_open(SOCK_STREAM, 0, getOutgoingAddr(NULL), 0,
-                               COMM_NONBLOCKING, s.uri.buf());
+    connection = comm_open(SOCK_STREAM, 0, getOutgoingAddr(NULL), 0,
+        COMM_NONBLOCKING, s.uri.buf());
 
-        if (connection < 0)
-            dieOnConnectionFailure(); // throws
-    }
+    if (connection < 0)
+        dieOnConnectionFailure(); // throws
 
     debugs(93,3, typeName << " opens connection to " << s.host.buf() << ":" << s.port);
 
@@ -170,6 +172,7 @@ void ICAPXaction::closeConnection()
             debugs(93,3, HERE << "pushing pconn" << status());
             commSetTimeout(connection, -1, NULL, NULL);
             icapPconnPool->push(connection, theService->host.buf(), theService->port, NULL, NULL);
+            disableRetries();
         } else {
             debugs(93,3, HERE << "closing pconn" << status());
             // comm_close will clear timeout
@@ -272,15 +275,18 @@ void ICAPXaction::handleCommClosed()
     mustStop("ICAP service connection externally closed");
 }
 
-bool ICAPXaction::done() const
+void ICAPXaction::callEnd()
 {
-    // stopReason, set in mustStop(), overwrites all other conditions
-    return stopReason != NULL || doneAll();
+    if (doneWithIo()) {
+        debugs(93, 5, HERE << typeName << " done with I/O" << status());
+        closeConnection();
+    }
+    ICAPInitiate::callEnd(); // may destroy us
 }
 
 bool ICAPXaction::doneAll() const
 {
-    return !connector && !reader && !writer;
+    return !connector && !reader && !writer && ICAPInitiate::doneAll();
 }
 
 void ICAPXaction::updateTimeout() {
@@ -332,10 +338,13 @@ void ICAPXaction::noteCommRead(comm_err_t commStatus, size_t sz)
      * here instead of reading directly into readBuf.buf.
      */
 
-    if (sz > 0)
+    if (sz > 0) {
         readBuf.append(commBuf, sz);
-    else
+        disableRetries(); // because pconn did not fail
+    } else {
+        reuseConnection = false;
         commEof = true;
+    }
 
     handleCommRead(sz);
 
@@ -399,16 +408,17 @@ bool ICAPXaction::doneWithIo() const
         doneReading() && doneWriting();
 }
 
-void ICAPXaction::mustStop(const char *aReason)
+// initiator aborted
+void ICAPXaction::noteInitiatorAborted()
 {
-    Must(inCall); // otherwise nobody will delete us if we are done()
-    Must(aReason);
-    if (!stopReason) {
-        stopReason = aReason;
-        debugs(93, 5, typeName << " will stop, reason: " << stopReason);
-    } else {
-        debugs(93, 5, typeName << " will stop, another reason: " << aReason);
+    ICAPXaction_Enter(noteInitiatorAborted);
+
+    if (theInitiator) {
+        clearInitiator();
+        mustStop("initiator aborted");
     }
+
+    ICAPXaction_Exit();
 }
 
 // This 'last chance' method is called before a 'done' transaction is deleted.
@@ -426,76 +436,10 @@ void ICAPXaction::swanSong()
     if (commBuf)
         memFreeBuf(commBufSize, commBuf);
 
-    debugs(93, 5, HERE << "swan sang" << status());
-}
+    if (theInitiator)
+        tellQueryAborted(!isRetriable);
 
-void ICAPXaction::service(ICAPServiceRep::Pointer &aService)
-{
-    Must(!theService);
-    Must(aService != NULL);
-    theService = aService;
-}
-
-ICAPServiceRep &ICAPXaction::service()
-{
-    Must(theService != NULL);
-    return *theService;
-}
-
-bool ICAPXaction::callStart(const char *method)
-{
-    debugs(93, 5, typeName << "::" << method << " called" << status());
-
-    if (inCall) {
-        // this may happen when we have bugs or when arguably buggy
-        // comm interface calls us while we are closing the connection
-        debugs(93, 5, HERE << typeName << "::" << inCall <<
-               " is in progress; " << typeName << "::" << method <<
-               " cancels reentry.");
-        return false;
-    }
-
-    if (!self) {
-        // this may happen when swanSong() has not properly cleaned up.
-        debugs(93, 5, HERE << typeName << "::" << method <<
-               " is not admitted to a finished transaction " << this);
-        return false;
-    }
-
-    inCall = method;
-    return true;
-}
-
-void ICAPXaction::callException(const TextException &e)
-{
-    debugs(93, 2, typeName << "::" << inCall << " caught an exception: " <<
-           e.message << ' ' << status());
-
-    reuseConnection = false; // be conservative
-    mustStop("exception");
-}
-
-void ICAPXaction::callEnd()
-{
-    if (done()) {
-        debugs(93, 5, typeName << "::" << inCall << " ends xaction " <<
-            status());
-        swanSong();
-        const char *inCallSaved = inCall;
-        const char *typeNameSaved = typeName;
-        inCall = NULL;
-        self = NULL; // will delete us, now or eventually
-        debugs(93, 6, HERE << typeNameSaved << "::" << inCallSaved <<
-            " ended " << this);
-        return;
-    } else
-    if (doneWithIo()) {
-        debugs(93, 5, HERE << typeName << " done with I/O" << status());
-        closeConnection();
-    }
-
-    debugs(93, 6, typeName << "::" << inCall << " ended" << status());
-    inCall = NULL;
+    ICAPInitiate::swanSong();
 }
 
 // returns a temporary string depicting transaction status, for debugging

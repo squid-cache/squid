@@ -11,34 +11,19 @@
 #include "TextException.h"
 
 CBDATA_CLASS_INIT(ICAPOptXact);
+CBDATA_CLASS_INIT(ICAPOptXactLauncher);
 
-ICAPOptXact::ICAPOptXact(ICAPServiceRep::Pointer &aService, Callback *aCbAddr, void *aCbData):
-    ICAPXaction("ICAPOptXact"),
-    cbAddr(aCbAddr), cbData(cbdataReference(aCbData))
-{
-    Must(aCbAddr && aCbData);
-    service(aService);
-}
 
-ICAPOptXact::~ICAPOptXact()
+ICAPOptXact::ICAPOptXact(ICAPInitiator *anInitiator, ICAPServiceRep::Pointer &aService):
+    ICAPXaction("ICAPOptXact", anInitiator, aService)
 {
-    if (cbAddr) {
-        debugs(93, 1, HERE << "BUG: exiting without sending options");
-        cbdataReferenceDone(cbData);
-    }
 }
 
 void ICAPOptXact::start()
 {
-    ICAPXaction_Enter(start);
-
     ICAPXaction::start();
 
-    Must(self != NULL); // set by AsyncStart;
-
     openConnection();
-
-    ICAPXaction_Exit();
 }
 
 void ICAPOptXact::handleCommConnected()
@@ -71,8 +56,8 @@ void ICAPOptXact::handleCommWrote(size_t size)
 // comm module read a portion of the ICAP response for us
 void ICAPOptXact::handleCommRead(size_t)
 {
-    if (ICAPOptions *options = parseResponse()) {
-        sendOptions(options);
+    if (HttpMsg *r = parseResponse()) {
+        sendAnswer(r);
         Must(done()); // there should be nothing else to do
         return;
     }
@@ -80,7 +65,7 @@ void ICAPOptXact::handleCommRead(size_t)
     scheduleRead();
 }
 
-ICAPOptions *ICAPOptXact::parseResponse()
+HttpMsg *ICAPOptXact::parseResponse()
 {
     debugs(93, 5, HERE << "have " << readBuf.contentSize() << " bytes to parse" <<
            status());
@@ -97,34 +82,17 @@ ICAPOptions *ICAPOptXact::parseResponse()
     if (httpHeaderHasConnDir(&r->header, "close"))
         reuseConnection = false;
 
-    ICAPOptions *options = new ICAPOptions;
-    options->configure(r);
-
-    delete r;
-
-    return options;
+    return r;
 }
 
-void ICAPOptXact::swanSong() {
-    if (cbAddr) {
-        debugs(93, 3, HERE << "probably failed; sending NULL options");
-        sendOptions(0);
-    }
-    ICAPXaction::swanSong();
+/* ICAPOptXactLauncher */
+
+ICAPOptXactLauncher::ICAPOptXactLauncher(ICAPInitiator *anInitiator, ICAPServiceRep::Pointer &aService):
+    ICAPLauncher("ICAPOptXactLauncher", anInitiator, aService)
+{
 }
 
-void ICAPOptXact::sendOptions(ICAPOptions *options) {
-    debugs(93, 3, HERE << "sending options " << options << " to " << cbData <<
-        " at " << (void*)cbAddr << status());
-
-    Must(cbAddr);
-    Callback *addr = cbAddr;
-    cbAddr = NULL; // in case the callback calls us or throws
-
-    void *data = NULL;
-    if (cbdataReferenceValidDone(cbData, &data))
-        (*addr)(options, data); // callee takes ownership of the options
-    else
-        debugs(93, 2, HERE << "sending options " << options << " to " <<
-            data << " failed" << status());
+ICAPXaction *ICAPOptXactLauncher::createXaction()
+{
+    return new ICAPOptXact(this, theService);
 }

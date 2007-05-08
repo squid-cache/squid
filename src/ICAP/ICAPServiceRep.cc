@@ -4,6 +4,7 @@
 
 #include "squid.h"
 #include "TextException.h"
+#include "HttpReply.h"
 #include "ICAPServiceRep.h"
 #include "ICAPOptions.h"
 #include "ICAPOptXact.h"
@@ -410,21 +411,38 @@ void ICAPServiceRep::announceStatusChange(const char *downPhrase, bool important
     wasAnnouncedUp = !wasAnnouncedUp;
 }
 
-static
-void ICAPServiceRep_noteNewOptions(ICAPOptions *newOptions, void *data)
+// we are receiving ICAP OPTIONS response headers here or NULL on failures
+void ICAPServiceRep::noteIcapAnswer(HttpMsg *msg)
 {
-    ICAPServiceRep *service = static_cast<ICAPServiceRep*>(data);
-    Must(service);
-    service->noteNewOptions(newOptions);
-}
-
-void ICAPServiceRep::noteNewOptions(ICAPOptions *newOptions)
-{
-    // newOptions may be NULL
-
     Must(waiting);
     waiting = false;
 
+    Must(msg);
+
+    debugs(93,5, "ICAPService is interpreting new options " << status());
+
+    ICAPOptions *newOptions = NULL;
+    if (HttpReply *r = dynamic_cast<HttpReply*>(msg)) {
+    	newOptions = new ICAPOptions;
+    	newOptions->configure(r);
+    } else {
+    	debugs(93,1, "ICAPService got wrong options message " << status());
+    }
+
+    handleNewOptions(newOptions);
+}
+
+void ICAPServiceRep::noteIcapQueryAbort(bool) {
+    Must(waiting);
+    waiting = false;
+
+    debugs(93,3, "ICAPService failed to fetch options " << status());
+    handleNewOptions(0);
+}
+
+void ICAPServiceRep::handleNewOptions(ICAPOptions *newOptions)
+{
+    // new options may be NULL
     changeOptions(newOptions);
 
     debugs(93,3, "ICAPService got new options and is now " << status());
@@ -439,9 +457,9 @@ void ICAPServiceRep::startGettingOptions()
     debugs(93,6, "ICAPService will get new options " << status());
     waiting = true;
 
-    ICAPOptXact::AsyncStart(
-        new ICAPOptXact(self, &ICAPServiceRep_noteNewOptions, this));
+    initiateIcap(new ICAPOptXactLauncher(this, self));
     // TODO: timeout in case ICAPOptXact never calls us back?
+    // Such a timeout should probably be a generic AsyncStart feature.
 }
 
 void ICAPServiceRep::scheduleUpdate()
