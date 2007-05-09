@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.36 2007/04/28 22:26:37 hno Exp $
+ * $Id: ACLChecklist.cc,v 1.37 2007/05/09 08:31:47 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -268,6 +268,11 @@ ACLChecklist::matchAclList(const acl_list * head, bool const fast)
         if (fast)
             changeState(NullState::Instance());
 
+	if (finished()) {
+	    PROF_stop(aclMatchAclList);
+	    return;
+	}
+
         if (!nodeMatched || state_ != NullState::Instance()) {
             debugs(28, 3, "aclmatchAclList: " << this << " returning false (AND list entry failed to match)");
 
@@ -279,7 +284,13 @@ ACLChecklist::matchAclList(const acl_list * head, bool const fast)
             debugs(28, 3, "aclmatchAclList: async=" << (async ? 1 : 0) <<
                    " nodeMatched=" << (nodeMatched ? 1 : 0) <<
                    " async_in_progress=" << (async_in_progress ? 1 : 0) <<
-                   " lastACLResult() = " << (lastACLResult() ? 1 : 0));
+                   " lastACLResult() = " << (lastACLResult() ? 1 : 0) <<
+		   " finished() = " << finished());
+
+	    if (finished()) {
+		PROF_stop(aclMatchAclList);
+		return;
+	    }
 
             if (async && nodeMatched && !asyncInProgress() && lastACLResult()) {
                 // async acl, but using cached response, and it was a match
