@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLMaxUserIP.h,v 1.8 2006/04/23 11:10:31 robertc Exp $
+ * $Id: ACLMaxUserIP.h,v 1.9 2007/05/09 07:36:24 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -66,7 +66,7 @@ private:
     static Prototype RegistryProtoype;
     static ACLMaxUserIP RegistryEntry_;
 
-    int match(auth_user_request_t *, struct IN_ADDR const &);
+    int match(AuthUserRequest *, struct IN_ADDR const &);
     char const *class_;
     int maximum;
 

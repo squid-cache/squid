@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLChecklist.h,v 1.23 2006/05/16 05:49:44 hno Exp $
+ * $Id: ACLChecklist.h,v 1.24 2007/05/09 07:36:24 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -127,7 +127,7 @@ class NullState : public AsyncState
     /* for acls that look at reply data */
     HttpReply *reply;
     char rfc931[USER_IDENT_SZ];
-    auth_user_request_t *auth_user_request;
+    AuthUserRequest *auth_user_request;
 #if SQUID_SNMP
 
     char *snmp_community;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.cc,v 1.14 2007/04/30 16:56:09 wessels Exp $
+ * $Id: AuthUserRequest.cc,v 1.15 2007/05/09 07:36:24 wessels Exp $
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 6803fde1-d5a2-4c29-9034-1c0c9f650eb4
@@ -70,7 +70,7 @@ AuthUserRequest::username() const
 }
 
 size_t
-authenticateRequestRefCount (auth_user_request_t *aRequest)
+authenticateRequestRefCount (AuthUserRequest *aRequest)
 {
     return aRequest->refCount();
 }
@@ -92,7 +92,7 @@ AuthUserRequest::start(RH * handler, void *data)
  */
 
 int
-authenticateValidateUser(auth_user_request_t * auth_user_request)
+authenticateValidateUser(AuthUserRequest * auth_user_request)
 {
     debugs(29, 9, "authenticateValidateUser: Validating Auth_user request '" << auth_user_request << "'.");
 
@@ -200,7 +200,7 @@ AuthUserRequest::denyMessage(char const * const default_message)
 }
 
 static void
-authenticateAuthUserRequestSetIp(auth_user_request_t * auth_user_request, struct IN_ADDR ipaddr)
+authenticateAuthUserRequestSetIp(AuthUserRequest * auth_user_request, struct IN_ADDR ipaddr)
 {
     auth_user_t *auth_user = auth_user_request->user();
 
@@ -211,7 +211,7 @@ authenticateAuthUserRequestSetIp(auth_user_request_t * auth_user_request, struct
 }
 
 void
-authenticateAuthUserRequestRemoveIp(auth_user_request_t * auth_user_request, struct IN_ADDR ipaddr)
+authenticateAuthUserRequestRemoveIp(AuthUserRequest * auth_user_request, struct IN_ADDR ipaddr)
 {
     auth_user_t *auth_user = auth_user_request->user();
 
@@ -222,14 +222,14 @@ authenticateAuthUserRequestRemoveIp(auth_user_request_t * auth_user_request, str
 }
 
 void
-authenticateAuthUserRequestClearIp(auth_user_request_t * auth_user_request)
+authenticateAuthUserRequestClearIp(AuthUserRequest * auth_user_request)
 {
     if (auth_user_request)
         auth_user_request->user()->clearIp();
 }
 
 int
-authenticateAuthUserRequestIPCount(auth_user_request_t * auth_user_request)
+authenticateAuthUserRequestIPCount(AuthUserRequest * auth_user_request)
 {
     assert(auth_user_request);
     assert(auth_user_request->user());
@@ -241,7 +241,7 @@ authenticateAuthUserRequestIPCount(auth_user_request_t * auth_user_request)
  * authenticateUserAuthenticated: is this auth_user structure logged in ?
  */
 int
-authenticateUserAuthenticated(auth_user_request_t * auth_user_request)
+authenticateUserAuthenticated(AuthUserRequest * auth_user_request)
 {
     if (!authenticateValidateUser(auth_user_request))
         return 0;
@@ -286,15 +286,15 @@ AuthUserRequest::connLastHeader()
  * This is basically a handle approach.
  */
 static void
-authenticateAuthenticateUser(auth_user_request_t * auth_user_request, HttpRequest * request, ConnStateData::Pointer &conn, http_hdr_type type)
+authenticateAuthenticateUser(AuthUserRequest * auth_user_request, HttpRequest * request, ConnStateData::Pointer &conn, http_hdr_type type)
 {
     assert(auth_user_request != NULL);
 
     auth_user_request->authenticate(request, conn, type);
 }
 
-static auth_user_request_t *
-authTryGetUser (auth_user_request_t **auth_user_request, ConnStateData::Pointer & conn, HttpRequest * request)
+static AuthUserRequest *
+authTryGetUser (AuthUserRequest **auth_user_request, ConnStateData::Pointer & conn, HttpRequest * request)
 {
     if (*auth_user_request)
         return *auth_user_request;
@@ -327,7 +327,7 @@ authTryGetUser (auth_user_request_t **auth_user_request, ConnStateData::Pointer 
  */
 auth_acl_t
 
-AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData::Pointer conn, struct IN_ADDR src_addr)
+AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData::Pointer conn, struct IN_ADDR src_addr)
 {
     const char *proxy_auth;
     assert(headertype != 0);
@@ -562,10 +562,10 @@ AuthUserRequest::authenticate(auth_user_request_t ** auth_user_request, http_hdr
 
 auth_acl_t
 
-AuthUserRequest::tryToAuthenticateAndSetAuthUser(auth_user_request_t ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData::Pointer conn, struct IN_ADDR src_addr)
+AuthUserRequest::tryToAuthenticateAndSetAuthUser(AuthUserRequest ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData::Pointer conn, struct IN_ADDR src_addr)
 {
     /* If we have already been called, return the cached value */
-    auth_user_request_t *t = authTryGetUser (auth_user_request, conn, request);
+    AuthUserRequest *t = authTryGetUser (auth_user_request, conn, request);
 
     if (t && t->lastReply != AUTH_ACL_CANNOT_AUTHENTICATE
             && t->lastReply != AUTH_ACL_HELPER)
@@ -599,7 +599,7 @@ AuthUserRequest::tryToAuthenticateAndSetAuthUser(auth_user_request_t ** auth_use
  * -2: authenticate broken in some fashion
  */
 int
-authenticateDirection(auth_user_request_t * auth_user_request)
+authenticateDirection(AuthUserRequest * auth_user_request)
 {
     if (!auth_user_request)
         return -2;
@@ -608,7 +608,7 @@ authenticateDirection(auth_user_request_t * auth_user_request)
 }
 
 void
-AuthUserRequest::addReplyAuthHeader(HttpReply * rep, auth_user_request_t * auth_user_request, HttpRequest * request, int accelerated, int internal)
+AuthUserRequest::addReplyAuthHeader(HttpReply * rep, AuthUserRequest * auth_user_request, HttpRequest * request, int accelerated, int internal)
 /* send the auth types we are configured to support (and have compiled in!) */
 {
     http_hdr_type type;
@@ -672,7 +672,7 @@ AuthUserRequest::addReplyAuthHeader(HttpReply * rep, auth_user_request_t * auth_
 }
 
 void
-authenticateFixHeader(HttpReply * rep, auth_user_request_t * auth_user_request, HttpRequest * request, int accelerated, int internal)
+authenticateFixHeader(HttpReply * rep, AuthUserRequest * auth_user_request, HttpRequest * request, int accelerated, int internal)
 {
     AuthUserRequest::addReplyAuthHeader(rep, auth_user_request, request, accelerated, internal);
 }
@@ -680,7 +680,7 @@ authenticateFixHeader(HttpReply * rep, auth_user_request_t * auth_user_request, 
 
 /* call the active auth module and allow it to add a trailer to the request */
 void
-authenticateAddTrailer(HttpReply * rep, auth_user_request_t * auth_user_request, HttpRequest * request, int accelerated)
+authenticateAddTrailer(HttpReply * rep, AuthUserRequest * auth_user_request, HttpRequest * request, int accelerated)
 {
     if (auth_user_request != NULL)
         auth_user_request->addTrailer(rep, accelerated);

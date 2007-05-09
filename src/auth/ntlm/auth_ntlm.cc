@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.64 2007/05/07 18:38:41 wessels Exp $
+ * $Id: auth_ntlm.cc,v 1.65 2007/05/09 07:36:31 wessels Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -51,7 +51,7 @@
 #include "wordlist.h"
 
 static void
-authenticateNTLMReleaseServer(auth_user_request_t * auth_user_request);
+authenticateNTLMReleaseServer(AuthUserRequest * auth_user_request);
 
 
 static void
@@ -263,7 +263,7 @@ AuthNTLMUserRequest::module_direction()
 }
 
 void
-AuthNTLMConfig::fixHeader(auth_user_request_t *auth_user_request, HttpReply *rep, http_hdr_type type, HttpRequest * request)
+AuthNTLMConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, http_hdr_type type, HttpRequest * request)
 {
     AuthNTLMUserRequest *ntlm_request;
 
@@ -336,7 +336,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
     stateful_helper_callback_t result = S_HELPER_UNKNOWN;
     char *blob;
 
-    auth_user_request_t *auth_user_request;
+    AuthUserRequest *auth_user_request;
     AuthUser *auth_user;
     NTLMUser *ntlm_user;
     AuthNTLMUserRequest *ntlm_request;
@@ -484,7 +484,7 @@ AuthNTLMUserRequest::module_start(RH * handler, void *data)
 
 /* clear the NTLM helper of being reserved for future requests */
 static void
-authenticateNTLMReleaseServer(auth_user_request_t * auth_user_request)
+authenticateNTLMReleaseServer(AuthUserRequest * auth_user_request)
 {
     AuthNTLMUserRequest *ntlm_request;
     assert(auth_user_request->user()->auth_type == AUTH_NTLM);
