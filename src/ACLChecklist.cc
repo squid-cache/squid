@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.37 2007/05/09 08:31:47 wessels Exp $
+ * $Id: ACLChecklist.cc,v 1.38 2007/05/09 09:07:38 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -63,7 +63,24 @@ ACLChecklist::authenticated()
 
     /* get authed here */
     /* Note: this fills in auth_user_request when applicable */
-    switch (AuthUserRequest::tryToAuthenticateAndSetAuthUser (&auth_user_request, headertype, request, conn(), src_addr)) {
+    /*
+     * DPW 2007-05-08
+     * tryToAuthenticateAndSetAuthUser used to try to lock and
+     * unlock auth_user_request on our behalf, but it was too
+     * ugly and hard to follow.  Now we do our own locking here.
+     *
+     * I'm not sure what tryToAuthenticateAndSetAuthUser does when
+     * auth_user_request is set before calling.  I'm tempted to
+     * unlock and set it to NULL, but it seems safer to save the
+     * pointer before calling and unlock it afterwards.  If the
+     * pointer doesn't change then its a no-op.
+     */
+    AuthUserRequest *old_auth_user_request = auth_user_request;
+    auth_acl_t result = AuthUserRequest::tryToAuthenticateAndSetAuthUser (&auth_user_request, headertype, request, conn(), src_addr);
+    if (auth_user_request)
+	AUTHUSERREQUESTLOCK(auth_user_request, "ACLChecklist");
+    AUTHUSERREQUESTUNLOCK(old_auth_user_request, "old ACLChecklist");
+    switch (result) {
 
     case AUTH_ACL_CANNOT_AUTHENTICATE:
         debugs(28, 4, "aclMatchAcl: returning  0 user authenticated but not authorised.");
@@ -237,12 +254,16 @@ ACLChecklist::checkCallback(allow_t answer)
 
     if (auth_user_request) {
         /* the checklist lock */
-        auth_user_request->unlock();
+	AUTHUSERREQUESTUNLOCK(auth_user_request, "ACLChecklist");
         /* it might have been connection based */
         assert(conn() != NULL);
-        conn()->auth_user_request = NULL;
+	/*
+	 * DPW 2007-05-08
+	 * yuck, this make me uncomfortable.  why do this here?
+	 * ConnStateData will do its own unlocking.
+	 */
+	AUTHUSERREQUESTUNLOCK(conn()->auth_user_request, "conn via ACLChecklist");
         conn()->auth_type = AUTH_BROKEN;
-        auth_user_request = NULL;
     }
 
     callback_ = callback;
@@ -335,11 +356,11 @@ ACLChecklist::operator delete (void *address)
 
 ACLChecklist::ACLChecklist() : accessList (NULL), my_port (0), request (NULL),
         reply (NULL),
-        auth_user_request (NULL)
+        auth_user_request (NULL),
 #if SQUID_SNMP
-        ,snmp_community(NULL)
+        snmp_community(NULL),
 #endif
-        , callback (NULL),
+        callback (NULL),
         callback_data (NULL),
         extacl_entry (NULL),
         conn_(NULL),
@@ -371,6 +392,13 @@ ACLChecklist::~ACLChecklist()
     HTTPMSGUNLOCK(request);
 
     HTTPMSGUNLOCK(reply);
+
+    /*
+     * DPW 2007-05-08
+     * If this fails, then we'll need a backup UNLOCK call in the
+     * destructor.
+     */
+    assert(auth_user_request == NULL);
 
     conn_ = NULL;
 
@@ -552,8 +580,6 @@ aclChecklistCreate(const acl_access * A, HttpRequest * request, const char *iden
         xstrncpy(checklist->rfc931, ident, USER_IDENT_SZ);
 
 #endif
-
-    checklist->auth_user_request = NULL;
 
     return checklist;
 }

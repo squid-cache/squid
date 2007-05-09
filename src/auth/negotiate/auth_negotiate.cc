@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_negotiate.cc,v 1.17 2007/05/09 08:07:23 wessels Exp $
+ * $Id: auth_negotiate.cc,v 1.18 2007/05/09 09:07:40 wessels Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -57,6 +57,7 @@ authenticateNegotiateReleaseServer(AuthUserRequest * auth_user_request);
 static void
 authenticateStateFree(authenticateStateData * r)
 {
+    AUTHUSERREQUESTUNLOCK(r->auth_user_request, "r");
     cbdataFree(r);
 }
 
@@ -558,11 +559,7 @@ AuthNegotiateUserRequest::module_start(RH * handler, void *data)
     r = cbdataAlloc(authenticateStateData);
     r->handler = handler;
     r->data = cbdataReference(data);
-    r->auth_user_request = this;
-
-    lock()
-
-        ;
+    AUTHUSERREQUESTLOCK(r->auth_user_request, "r");
     if (auth_state == AUTHENTICATE_STATE_INITIAL) {
         snprintf(buf, 8192, "YR %s\n", client_blob); //CHECKME: can ever client_blob be 0 here?
     } else {
@@ -593,13 +590,13 @@ authenticateNegotiateReleaseServer(AuthUserRequest * auth_user_request)
 
 /* clear any connection related authentication details */
 void
-AuthNegotiateUserRequest::onConnectionClose(ConnStateData *connection)
+AuthNegotiateUserRequest::onConnectionClose(ConnStateData *conn)
 {
-    assert(connection != NULL);
+    assert(conn != NULL);
 
-    debugs(29, 8, "AuthNegotiateUserRequest::onConnectionClose: closing connection '" << connection << "' (this is '" << this << "')");
+    debugs(29, 8, "AuthNegotiateUserRequest::onConnectionClose: closing connection '" << conn << "' (this is '" << this << "')");
 
-    if (connection->auth_user_request == NULL) {
+    if (conn->auth_user_request == NULL) {
         debugs(29, 8, "AuthNegotiateUserRequest::onConnectionClose: no auth_user_request");
         return;
     }
@@ -608,15 +605,8 @@ AuthNegotiateUserRequest::onConnectionClose(ConnStateData *connection)
         authenticateNegotiateReleaseServer(this);
 
     /* unlock the connection based lock */
-    debugs(29, 9, "AuthNegotiateUserRequest::onConnectionClose: Unlocking auth_user from the connection '" << connection << "'.");
-
-    /* This still breaks the abstraction, but is at least read only now.
-    * If needed, this could be ignored, as the conn deletion will also unlock
-    * the auth user request.
-    */
-    unlock();
-
-    connection->auth_user_request = NULL;
+    debugs(29, 9, "AuthNegotiateUserRequest::onConnectionClose: Unlocking auth_user from the connection '" << conn << "'.");
+    AUTHUSERREQUESTUNLOCK(conn->auth_user_request, "conn");
 }
 
 /*
@@ -709,12 +699,9 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * request, ConnStateData::Poi
         safe_free(client_blob);
         client_blob=xstrdup(blob);
         conn->auth_type = AUTH_NEGOTIATE;
+	assert(conn->auth_user_request == NULL);
         conn->auth_user_request = this;
-        conn = conn;
-
-        lock()
-
-            ;
+        AUTHUSERREQUESTLOCK(conn->auth_user_request, "conn");
         return;
 
         break;

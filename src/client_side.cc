@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.752 2007/04/30 16:56:09 wessels Exp $
+ * $Id: client_side.cc,v 1.753 2007/05/09 09:07:38 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -467,9 +467,7 @@ clientPrepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogE
             aLogEntry->cache.authuser =
                 xstrdup(request->auth_user_request->username());
 
-        request->auth_user_request->unlock();
-
-        request->auth_user_request = NULL;
+	AUTHUSERREQUESTUNLOCK(request->auth_user_request, "request via clientPrepareLogWithRequestDetails");
     }
 }
 
@@ -625,10 +623,7 @@ ConnStateData::~ConnStateData()
     if (isOpen())
         close();
 
-    if (auth_user_request)
-        auth_user_request->unlock();
-
-    auth_user_request = NULL;
+    AUTHUSERREQUESTUNLOCK(auth_user_request, "~conn");
 
     cbdataReferenceDone(port);
 

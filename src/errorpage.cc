@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.224 2007/04/30 16:56:09 wessels Exp $
+ * $Id: errorpage.cc,v 1.225 2007/05/09 09:07:39 wessels Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -482,14 +482,8 @@ errorStateFree(ErrorState * err)
     wordlistDestroy(&err->ftp.server_msg);
     safe_free(err->ftp.request);
     safe_free(err->ftp.reply);
-
-    if (err->auth_user_request)
-        err->auth_user_request->unlock();
-
-    err->auth_user_request = NULL;
-
+    AUTHUSERREQUESTUNLOCK(err->auth_user_request, "errstate");
     safe_free(err->err_msg);
-
     cbdataFree(err);
 }
 

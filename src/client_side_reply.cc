@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.125 2007/05/09 07:36:24 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.126 2007/05/09 09:07:38 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -91,7 +91,6 @@ clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) : http 
 void
 clientReplyContext::setReplyToError(
     err_type err, http_status status, method_t method, char const *uri,
-
     struct IN_ADDR *addr, HttpRequest * failedrequest, char *unparsedrequest,
     AuthUserRequest * auth_user_request)
 {
@@ -112,10 +111,7 @@ clientReplyContext::setReplyToError(
     if (auth_user_request)
     {
         errstate->auth_user_request = auth_user_request;
-
-        errstate->auth_user_request->lock()
-
-        ;
+	AUTHUSERREQUESTLOCK(errstate->auth_user_request, "errstate");
     }
 
     assert(errstate->callback_data == NULL);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.83 2007/05/07 18:38:40 wessels Exp $
+ * $Id: helper.cc,v 1.84 2007/05/09 09:07:39 wessels Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -171,29 +171,25 @@ helperOpenServers(helper * hlp)
     helperKickQueue(hlp);
 }
 
+/*
+ * DPW 2007-05-08
+ * 
+ * helperStatefulOpenServers: create the stateful child helper processes
+ */
 void
 helperStatefulOpenServers(statefulhelper * hlp)
 {
-    char *s;
-    char *progname;
     char *shortname;
-    char *procname;
     const char *args[HELPER_MAX_ARGS];
     char fd_note_buf[FD_DESC_SZ];
-    helper_stateful_server *srv;
     int nargs = 0;
-    int k;
-    pid_t pid;
-    int rfd;
-    int wfd;
-    void * hIpc;
-    wordlist *w;
 
     if (hlp->cmdline == NULL)
         return;
 
-    progname = hlp->cmdline->key;
+    char *progname = hlp->cmdline->key;
 
+    char *s;
     if ((s = strrchr(progname, '/')))
         shortname = xstrdup(s + 1);
     else
@@ -201,23 +197,25 @@ helperStatefulOpenServers(statefulhelper * hlp)
 
     debugs(84, 1, "helperStatefulOpenServers: Starting " << hlp->n_to_start << " '" << shortname << "' processes");
 
-    procname = (char *)xmalloc(strlen(shortname) + 3);
+    char *procname = (char *)xmalloc(strlen(shortname) + 3);
 
     snprintf(procname, strlen(shortname) + 3, "(%s)", shortname);
 
     args[nargs++] = procname;
 
-    for (w = hlp->cmdline->next; w && nargs < HELPER_MAX_ARGS; w = w->next)
+    for (wordlist *w = hlp->cmdline->next; w && nargs < HELPER_MAX_ARGS; w = w->next)
         args[nargs++] = w->key;
 
     args[nargs++] = NULL;
 
     assert(nargs <= HELPER_MAX_ARGS);
 
-    for (k = 0; k < hlp->n_to_start; k++) {
+    for (int k = 0; k < hlp->n_to_start; k++) {
         getCurrentTime();
-        rfd = wfd = -1;
-        pid = ipcCreate(hlp->ipc_type,
+	int rfd = -1;
+	int wfd = -1;
+	void * hIpc;
+        pid_t pid = ipcCreate(hlp->ipc_type,
                         progname,
                         args,
                         shortname,
@@ -233,7 +231,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
         hlp->n_running++;
         hlp->n_active++;
         CBDATA_INIT_TYPE(helper_stateful_server);
-        srv = cbdataAlloc(helper_stateful_server);
+        helper_stateful_server *srv = cbdataAlloc(helper_stateful_server);
         srv->hIpc = hIpc;
         srv->pid = pid;
         srv->flags.reserved = S_HELPER_FREE;
@@ -319,7 +317,6 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, v
     }
 
     helper_stateful_request *r = new helper_stateful_request;
-    helper_stateful_server *srv;
 
     r->callback = callback;
     r->data = cbdataReference(data);
@@ -357,6 +354,7 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, v
             StatefulServerEnqueue(lastserver, r);
         }
     } else {
+	helper_stateful_server *srv;
         if ((srv = StatefulGetFirstAvailable(hlp))) {
             helperStatefulDispatch(srv, r);
         } else
@@ -366,38 +364,36 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, v
     debugs(84, 9, "helperStatefulSubmit: placeholder: '" << r->placeholder << "', buf '" << buf << "'.");
 }
 
+/*
+ * helperStatefulDefer
+ *
+ * find and add a deferred request to a helper
+ */
 helper_stateful_server *
 helperStatefulDefer(statefulhelper * hlp)
-/* find and add a deferred request to a server */
 {
-    if (hlp == NULL)
-    {
+    if (hlp == NULL) {
         debugs(84, 3, "helperStatefulDefer: hlp == NULL");
         return NULL;
     }
 
-    dlink_node *n;
-    helper_stateful_server *srv = NULL, *rv = NULL;
+    debugs(84, 5, "helperStatefulDefer: Running servers " << hlp->n_running);
 
-    debugs(84, 5, "helperStatefulDefer: Running servers " << hlp->n_running << ".");
-
-    if (hlp->n_running == 0)
-    {
+    if (hlp->n_running == 0) {
         debugs(84, 1, "helperStatefulDefer: No running servers!. ");
         return NULL;
     }
 
-    rv = srv = StatefulGetFirstAvailable(hlp);
+    helper_stateful_server *rv = StatefulGetFirstAvailable(hlp);
 
-    if (rv == NULL)
-    {
+    if (rv == NULL) {
         /*
          * all currently busy; loop through servers and find server
          * with the shortest queue
          */
 
-        for (n = hlp->servers.head; n != NULL; n = n->next) {
-            srv = (helper_stateful_server *)n->data;
+        for (dlink_node *n = hlp->servers.head; n != NULL; n = n->next) {
+            helper_stateful_server *srv = (helper_stateful_server *)n->data;
 
             if (srv->flags.reserved == S_HELPER_RESERVED)
                 continue;
@@ -416,8 +412,7 @@ helperStatefulDefer(statefulhelper * hlp)
         }
     }
 
-    if (rv == NULL)
-    {
+    if (rv == NULL) {
         debugs(84, 1, "helperStatefulDefer: None available.");
         return NULL;
     }
@@ -449,11 +444,9 @@ helperStatefulReset(helper_stateful_server * srv)
  */
 {
     statefulhelper *hlp = srv->parent;
-    helper_stateful_request *r;
-    r = srv->request;
+    helper_stateful_request *r = srv->request;
 
-    if (r != NULL)
-    {
+    if (r != NULL) {
         /* reset attempt DURING an outstaning request */
         debugs(84, 1, "helperStatefulReset: RESET During request " << hlp->id_name << " ");
         srv->flags.busy = 0;
@@ -464,12 +457,10 @@ helperStatefulReset(helper_stateful_server * srv)
 
     srv->flags.busy = 0;
 
-    if (srv->queue.head)
-    {
+    if (srv->queue.head) {
         srv->flags.reserved = S_HELPER_DEFERRED;
         helperStatefulServerKickQueue(srv);
-    } else
-    {
+    } else {
         srv->flags.reserved = S_HELPER_FREE;
 
         if ((srv->parent->OnEmptyQueue != NULL) && (srv->data))
@@ -479,25 +470,43 @@ helperStatefulReset(helper_stateful_server * srv)
     }
 }
 
+/*
+ * DPW 2007-05-08
+ *
+ * helperStatefulReleaseServer tells the helper that whoever was
+ * using it no longer needs its services.
+ *
+ * If the state is S_HELPER_DEFERRED, decrease the deferred count.
+ * If the count goes to zero, then it can become S_HELPER_FREE.
+ *
+ * If the state is S_HELPER_RESERVED, then it should always
+ * become S_HELPER_FREE.
+ */
 void
 helperStatefulReleaseServer(helper_stateful_server * srv)
-/*decrease the number of 'waiting' clients that set the helper to be DEFERRED */
 {
+    debugs(84, 3, HERE << "srv-" << srv->index << " flags.reserved = " << srv->flags.reserved);
+    if (srv->flags.reserved = S_HELPER_FREE)
+	return;
+
     srv->stats.releases++;
 
-    if (srv->flags.reserved == S_HELPER_DEFERRED)
-    {
+    if (srv->flags.reserved == S_HELPER_DEFERRED) {
         assert(srv->deferred_requests);
         srv->deferred_requests--;
+	if (srv->deferred_requests) {
+	    debugs(0,0,HERE << "helperStatefulReleaseServer srv->deferred_requests=" << srv->deferred_requests);
+	    return;
+	}
+	if (srv->queue.head) {
+	    debugs(0,0,HERE << "helperStatefulReleaseServer srv->queue.head not NULL");
+	    return;
+	}
     }
 
-    if (!(srv->deferred_requests) && (srv->flags.reserved == S_HELPER_DEFERRED) && !(srv->queue.head))
-    {
-        srv->flags.reserved = S_HELPER_FREE;
-
-        if ((srv->parent->OnEmptyQueue != NULL) && (srv->data))
-            srv->parent->OnEmptyQueue(srv->data);
-    }
+    srv->flags.reserved = S_HELPER_FREE;
+    if (srv->parent->OnEmptyQueue != NULL && srv->data)
+	srv->parent->OnEmptyQueue(srv->data);
 }
 
 void *
@@ -513,7 +522,6 @@ helperStats(StoreEntry * sentry, helper * hlp, const char *label)
     if (!helperStartStats(sentry, hlp, label))
         return;
 
-    dlink_node *link;
     storeAppendPrintf(sentry, "program: %s\n",
                       hlp->cmdline->key);
     storeAppendPrintf(sentry, "number running: %d of %d\n",
@@ -537,7 +545,7 @@ helperStats(StoreEntry * sentry, helper * hlp, const char *label)
                       "Offset",
                       "Request");
 
-    for (link = hlp->servers.head; link; link = link->next) {
+    for (dlink_node *link = hlp->servers.head; link; link = link->next) {
         helper_server *srv = (helper_server*)link->data;
         double tt = 0.001 * (srv->requests[0] ? tvSubMsec(srv->requests[0]->dispatch_time, current_time) : tvSubMsec(srv->dispatch_time, srv->answer_time));
         storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%c%c%c%c\t%7.3f\t%7d\t%s\n",
@@ -567,9 +575,6 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label
     if (!helperStartStats(sentry, hlp, label))
         return;
 
-    helper_stateful_server *srv;
-    dlink_node *link;
-    double tt;
     storeAppendPrintf(sentry, "program: %s\n",
                       hlp->cmdline->key);
     storeAppendPrintf(sentry, "number running: %d of %d\n",
@@ -594,9 +599,9 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label
                       "Offset",
                       "Request");
 
-    for (link = hlp->servers.head; link; link = link->next) {
-        srv = (helper_stateful_server *)link->data;
-        tt = 0.001 * tvSubMsec(srv->dispatch_time,
+    for (dlink_node *link = hlp->servers.head; link; link = link->next) {
+        helper_stateful_server *srv = (helper_stateful_server *)link->data;
+        double tt = 0.001 * tvSubMsec(srv->dispatch_time,
                                srv->flags.busy ? current_time : srv->answer_time);
         storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%20d\t%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
                           srv->index + 1,
@@ -606,7 +611,7 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label
                           (int) srv->deferred_requests,
                           srv->flags.busy ? 'B' : ' ',
                           srv->flags.closing ? 'C' : ' ',
-                          srv->flags.reserved != S_HELPER_FREE ? 'R' : ' ',
+                          srv->flags.reserved == S_HELPER_RESERVED ? 'R' : (srv->flags.reserved == S_HELPER_DEFERRED ? 'D' : ' '),
                           srv->flags.shutdown ? 'S' : ' ',
                           srv->request ? (srv->request->placeholder ? 'P' : ' ') : ' ',
                                   tt < 0.0 ? 0.0 : tt,
@@ -979,7 +984,7 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
         return;
     }
 
-    debugs(84, 5, "helperHandleRead: " << len << " bytes from " << hlp->id_name << " #" << srv->index + 1 << ".");
+    debugs(84, 5, "helperHandleRead: " << len << " bytes from " << hlp->id_name << " #" << srv->index + 1);
 
     if (flag != COMM_OK || len <= 0) {
         if (len < 0)
@@ -1089,7 +1094,7 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
     }
 
     debugs(84, 5, "helperStatefulHandleRead: " << len << " bytes from " <<
-           hlp->id_name << " #" << srv->index + 1 << ".");
+           hlp->id_name << " #" << srv->index + 1);
 
 
     if (flag != COMM_OK || len <= 0) {
@@ -1383,7 +1388,7 @@ StatefulGetFirstAvailable(statefulhelper * hlp)
 {
     dlink_node *n;
     helper_stateful_server *srv = NULL;
-    debugs(84, 5, "StatefulGetFirstAvailable: Running servers " << hlp->n_running << ".");
+    debugs(84, 5, "StatefulGetFirstAvailable: Running servers " << hlp->n_running);
 
     if (hlp->n_running == 0)
         return NULL;
@@ -1403,6 +1408,7 @@ StatefulGetFirstAvailable(statefulhelper * hlp)
         if ((hlp->IsAvailable != NULL) && (srv->data != NULL) && !(hlp->IsAvailable(srv->data)))
             continue;
 
+	debugs(84, 5, "StatefulGetFirstAvailable: returning srv-" << srv->index);
         return srv;
     }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthConfig.cc,v 1.3 2007/04/28 22:26:37 hno Exp $
+ * $Id: AuthConfig.cc,v 1.4 2007/05/09 09:07:38 wessels Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -55,15 +55,13 @@ AuthConfig::CreateAuthUser(const char *proxy_auth)
         return NULL;
     }
 
-    assert (config != NULL);
-
     AuthUserRequest *result = config->decode (proxy_auth);
-    /* and lock for the callers instance */
 
-    if (result != NULL)
-        result->lock()
-
-        ;
+    /*
+     * DPW 2007-05-08
+     * Do not lock the AuthUserRequest on the caller's behalf.
+     * Callers must manage their own locks.
+     */
     return result;
 }
 

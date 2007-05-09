@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.67 2007/05/09 08:14:09 wessels Exp $
+ * $Id: auth_ntlm.cc,v 1.68 2007/05/09 09:07:43 wessels Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -57,6 +57,7 @@ authenticateNTLMReleaseServer(AuthUserRequest * auth_user_request);
 static void
 authenticateStateFree(authenticateStateData * r)
 {
+    AUTHUSERREQUESTUNLOCK(r->auth_user_request, "r");
     cbdataFree(r);
 }
 
@@ -390,8 +391,6 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
         ntlm_user->username(blob);
         auth_user_request->denyMessage("Login successful");
         safe_free(ntlm_request->server_blob);
-        authenticateNTLMReleaseServer(ntlm_request);
-        ntlm_request->auth_state = AUTHENTICATE_STATE_DONE;
 
         result = S_HELPER_RELEASE;
         debugs(29, 4, "authenticateNTLMHandleReply: Successfully validated user via NTLM. Username '" << blob << "'");
@@ -488,10 +487,8 @@ AuthNTLMUserRequest::module_start(RH * handler, void *data)
     r->handler = handler;
     r->data = cbdataReference(data);
     r->auth_user_request = this;
+    AUTHUSERREQUESTLOCK(r->auth_user_request, "r");
 
-    lock()
-
-        ;
     if (auth_state == AUTHENTICATE_STATE_INITIAL) {
         snprintf(buf, 8192, "YR %s\n", client_blob); //CHECKME: can ever client_blob be 0 here?
     } else {
@@ -516,19 +513,23 @@ authenticateNTLMReleaseServer(AuthUserRequest * auth_user_request)
      * Let's see what happens, might segfault in helperStatefulReleaseServer
      * if it does. I leave it like this not to cover possibly problematic
      * code-paths. Kinkie */
-    helperStatefulReleaseServer(ntlm_request->authserver);
-    ntlm_request->authserver = NULL;
+    /* DPW 2007-05-07
+     * yes, it is possible */
+    if (ntlm_request->authserver) {
+	helperStatefulReleaseServer(ntlm_request->authserver);
+	ntlm_request->authserver = NULL;
+    }
 }
 
 /* clear any connection related authentication details */
 void
-AuthNTLMUserRequest::onConnectionClose(ConnStateData *connection)
+AuthNTLMUserRequest::onConnectionClose(ConnStateData *conn)
 {
-    assert(connection != NULL);
+    assert(conn != NULL);
 
-    debugs(29, 8, "AuthNTLMUserRequest::onConnectionClose: closing connection '" << connection << "' (this is '" << this << "')");
+    debugs(29, 8, "AuthNTLMUserRequest::onConnectionClose: closing connection '" << conn << "' (this is '" << this << "')");
 
-    if (connection->auth_user_request == NULL) {
+    if (conn->auth_user_request == NULL) {
         debugs(29, 8, "AuthNTLMUserRequest::onConnectionClose: no auth_user_request");
         return;
     }
@@ -537,15 +538,9 @@ AuthNTLMUserRequest::onConnectionClose(ConnStateData *connection)
         authenticateNTLMReleaseServer(this);
 
     /* unlock the connection based lock */
-    debugs(29, 9, "AuthNTLMUserRequest::onConnectionClose: Unlocking auth_user from the connection '" << connection << "'.");
+    debugs(29, 9, "AuthNTLMUserRequest::onConnectionClose: Unlocking auth_user from the connection '" << conn << "'.");
 
-    /* This still breaks the abstraction, but is at least read only now.
-    * If needed, this could be ignored, as the conn deletion will also unlock
-    * the auth user request.
-    */
-    unlock();
-
-    connection->auth_user_request = NULL;
+    AUTHUSERREQUESTUNLOCK(conn->auth_user_request, "conn");
 }
 
 /*
@@ -638,12 +633,9 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointer 
         safe_free(client_blob);
         client_blob=xstrdup(blob);
         conn->auth_type = AUTH_NTLM;
+        assert(conn->auth_user_request == NULL);
         conn->auth_user_request = this;
-        conn = conn;
-
-        lock()
-
-            ;
+	AUTHUSERREQUESTLOCK(conn->auth_user_request, "conn");
         return;
 
         break;

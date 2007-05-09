@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.54 2007/05/09 07:36:28 wessels Exp $
+ * $Id: auth_digest.cc,v 1.55 2007/05/09 09:07:39 wessels Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -858,9 +858,7 @@ authenticateDigestHandleReply(void *data, char *reply)
         replyData->handler(cbdata, NULL);
 
     //we know replyData->auth_user_request != NULL, or we'd have asserted
-    replyData->auth_user_request->unlock();
-
-    replyData->auth_user_request=NULL;
+    AUTHUSERREQUESTUNLOCK(replyData->auth_user_request, "replyData");
 
     cbdataFree(replyData);
 }
@@ -1372,11 +1370,7 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
     r->handler = handler;
     r->data = cbdataReference(data);
     r->auth_user_request = this;
-
-    lock()
-
-        ;
-
+    AUTHUSERREQUESTLOCK(r->auth_user_request, "r");
     snprintf(buf, 8192, "\"%s\":\"%s\"\n", digest_user->username(), realm);
 
     helperSubmit(digestauthenticators, buf, authenticateDigestHandleReply, r);

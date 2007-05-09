@@ -160,14 +160,12 @@ ProxyAuthLookup::LookupDone(void *data, char *result)
         /* credentials could not be checked either way
          * restart the whole process */
         /* OR the connection was closed, there's no way to continue */
-        checklist->auth_user_request->unlock();
+        AUTHUSERREQUESTUNLOCK(checklist->auth_user_request, "ProxyAuthLookup");
 
         if (checklist->conn() != NULL) {
-            checklist->conn()->auth_user_request = NULL;
+	    AUTHUSERREQUESTUNLOCK(checklist->conn()->auth_user_request, "conn via ProxyAuthLookup");	// DPW discomfort
             checklist->conn()->auth_type = AUTH_BROKEN;
         }
-
-        checklist->auth_user_request = NULL;
     }
 
     checklist->asyncInProgress(false);
@@ -225,14 +223,8 @@ void
 ACLProxyAuth::checkAuthForCaching(ACLChecklist *checklist)const
 {
     /* for completeness */
-
-    checklist->auth_user_request->lock()
-
-    ;
     /* consistent parameters ? */
     assert(authenticateUserAuthenticated(checklist->auth_user_request));
-
     /* this check completed */
-    checklist->auth_user_request->unlock();
 }
 

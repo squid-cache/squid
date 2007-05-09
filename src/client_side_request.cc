@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.84 2007/05/08 16:46:37 rousskov Exp $
+ * $Id: client_side_request.cc,v 1.85 2007/05/09 09:07:39 wessels Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -824,10 +824,7 @@ ClientRequestContext::clientRedirectDone(char *result)
 
         if (old_request->auth_user_request) {
             new_request->auth_user_request = old_request->auth_user_request;
-
-            new_request->auth_user_request->lock()
-
-            ;
+            AUTHUSERREQUESTLOCK(new_request->auth_user_request, "new request");
         }
 
         if (old_request->body_pipe != NULL) {
