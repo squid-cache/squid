@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.66 2007/05/09 08:07:23 wessels Exp $
+ * $Id: auth_ntlm.cc,v 1.67 2007/05/09 08:14:09 wessels Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -401,7 +401,6 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
          * string */
         auth_user_hash_pointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, ntlm_user->username()));
 	auth_user_t *local_auth_user = ntlm_request->user();
-        ntlm_user_t *ntlm_user = NULL;;
         while (usernamehash && (usernamehash->user()->auth_type != AUTH_NTLM || strcmp(usernamehash->user()->username(), ntlm_user->username()) != 0))
             usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
         if (usernamehash) {
