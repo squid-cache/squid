@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.189 2007/05/09 07:36:24 wessels Exp $
+ * $Id: typedefs.h,v 1.190 2007/05/09 07:45:58 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -57,9 +57,6 @@ typedef struct _acl_name_list acl_name_list;
 typedef struct _acl_deny_info_list acl_deny_info_list;
 
 typedef class AuthUser auth_user_t;
-
-class AuthUserRequest;
-typedef AuthUserRequest AuthUserRequest;
 
 typedef struct AuthUserHashPointer auth_user_hash_pointer;
 

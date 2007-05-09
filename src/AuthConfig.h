@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthConfig.h,v 1.3 2007/05/09 07:36:24 wessels Exp $
+ * $Id: AuthConfig.h,v 1.4 2007/05/09 07:45:58 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -45,6 +45,7 @@
  * ref counting...
  */
 
+class AuthUserRequest;
 class AuthConfig
 {
 
