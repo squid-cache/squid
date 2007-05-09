@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.h,v 1.5 2007/05/09 07:36:24 wessels Exp $
+ * $Id: AuthUserRequest.h,v 1.6 2007/05/09 09:07:38 wessels Exp $
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 674533af-8b21-4641-b71a-74c4639072a0
@@ -94,11 +94,8 @@ public:
     char const * getDenyMessage ();
 
     size_t refCount() const;
-
-    void lock ()
-
-        ;
-    void unlock ();
+    void _lock ();		// please use AUTHUSERREQUESTLOCK()
+    void _unlock ();		// please use AUTHUSERREQUESTUNLOCK()
 
     char const *username() const;
 
@@ -136,5 +133,13 @@ extern int authenticateDirection(AuthUserRequest *);
 
 extern int authenticateUserAuthenticated(AuthUserRequest *);
 extern int authenticateValidateUser(AuthUserRequest *);
+
+#if 0
+#define AUTHUSERREQUESTUNLOCK(a,b) if(a){(a)->_unlock();debugs(0,0,HERE << "auth_user_request " << a << " was unlocked for " << b); (a)=NULL;}
+#define AUTHUSERREQUESTLOCK(a,b) { (a)->_lock(); debugs(0,0,HERE << "auth_user_request " << a << " was locked for " << b); }
+#endif
+#define AUTHUSERREQUESTUNLOCK(a,b) if(a){(a)->_unlock();(a)=NULL;}
+#define AUTHUSERREQUESTLOCK(a,b) (a)->_lock()
+
 
 #endif /* SQUID_AUTHUSERREQUEST_H */

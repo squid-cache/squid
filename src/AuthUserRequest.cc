@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.cc,v 1.15 2007/05/09 07:36:24 wessels Exp $
+ * $Id: AuthUserRequest.cc,v 1.16 2007/05/09 09:07:38 wessels Exp $
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 6803fde1-d5a2-4c29-9034-1c0c9f650eb4
@@ -324,6 +324,8 @@ authTryGetUser (AuthUserRequest **auth_user_request, ConnStateData::Pointer & co
  * callback mechanism like the acl testing routines that will send a 40[1|7] to
  * the client when rv==AUTH_ACL_CHALLENGE, and will communicate with 
  * the authenticateStart routine for rv==AUTH_ACL_HELPER
+ *
+ * Caller is responsible for locking and unlocking their *auth_user_request!
  */
 auth_acl_t
 
@@ -350,19 +352,10 @@ AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_typ
 
         if (conn != NULL) {
             conn->auth_type = AUTH_UNKNOWN;
-
-            if (conn->auth_user_request)
-                conn->auth_user_request->unlock();
-
-            conn->auth_user_request = NULL;
+	    AUTHUSERREQUESTUNLOCK(conn->auth_user_request, "conn");
         }
 
-        if (*auth_user_request) {
-            /* unlock the ACL lock */
-            (*auth_user_request)->unlock();
-            auth_user_request = NULL;
-        }
-
+	*auth_user_request = NULL;
         return AUTH_ACL_CHALLENGE;
     }
 
@@ -389,10 +382,7 @@ AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_typ
          * authenticateAuthenticate 
          */
         assert(*auth_user_request == NULL);
-        /* unlock the conn lock on the auth_user_request */
-        conn->auth_user_request->unlock();
-        /* mark the conn as non-authed. */
-        conn->auth_user_request = NULL;
+	AUTHUSERREQUESTUNLOCK(conn->auth_user_request, "conn");
         /* Set the connection auth type */
         conn->auth_type = AUTH_UNKNOWN;
     }
@@ -414,8 +404,7 @@ AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_typ
                        "' to '" << proxy_auth << "' (client " <<
                        inet_ntoa(src_addr) << ")");
 
-                conn->auth_user_request->unlock();
-                conn->auth_user_request = NULL;
+		AUTHUSERREQUESTUNLOCK(conn->auth_user_request, "conn");
                 conn->auth_type = AUTH_UNKNOWN;
             }
         }
@@ -425,8 +414,8 @@ AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_typ
             /* beginning of a new request check */
             debugs(29, 4, "authenticateAuthenticate: no connection authentication type");
 
-            if (!authenticateValidateUser(*auth_user_request =
-                                              AuthConfig::CreateAuthUser(proxy_auth))) {
+	    *auth_user_request = AuthConfig::CreateAuthUser(proxy_auth);
+            if (!authenticateValidateUser(*auth_user_request)) {
                 if (*auth_user_request == NULL)
                     return AUTH_ACL_CHALLENGE;
 
@@ -434,40 +423,21 @@ AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_typ
                  * the user */
 
                 if ((*auth_user_request)->username()) {
-                    /* lock the user for the request structure link */
-
-                    (*auth_user_request)->lock()
-
-                    ;
                     request->auth_user_request = *auth_user_request;
+		    AUTHUSERREQUESTLOCK(request->auth_user_request, "request");
                 }
 
-                /* unlock the ACL reference granted by ...createAuthUser. */
-                (*auth_user_request)->unlock();
-
                 *auth_user_request = NULL;
-
                 return AUTH_ACL_CHALLENGE;
             }
 
             /* the user_request comes prelocked for the caller to createAuthUser (us) */
         } else if (request->auth_user_request) {
             *auth_user_request = request->auth_user_request;
-            /* lock the user request for this ACL processing */
-
-            (*auth_user_request)->lock()
-
-            ;
         } else {
             assert (conn != NULL);
-
-            if (conn->auth_user_request != NULL) {
+            if (conn->auth_user_request) {
                 *auth_user_request = conn->auth_user_request;
-                /* lock the user request for this ACL processing */
-
-                (*auth_user_request)->lock()
-
-                ;
             } else {
                 /* failed connection based authentication */
                 debugs(29, 4, "authenticateAuthenticate: Auth user request " <<
@@ -475,7 +445,6 @@ AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_typ
                        conn->auth_user_request << " conn type " <<
                        conn->auth_type << " authentication failed.");
 
-                (*auth_user_request)->unlock();
                 *auth_user_request = NULL;
                 return AUTH_ACL_CHALLENGE;
             }
@@ -492,22 +461,16 @@ AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_typ
 
         case 1:
 
-            if (!request->auth_user_request) {
-
-                (*auth_user_request)->lock()
-
-                ;
+            if (NULL == request->auth_user_request) {
                 request->auth_user_request = *auth_user_request;
+		AUTHUSERREQUESTLOCK(request->auth_user_request, "request");
             }
 
             /* fallthrough to -2 */
 
         case -2:
-            /* this ACL check is finished. Unlock. */
-            (*auth_user_request)->unlock();
-
+            /* this ACL check is finished. */
             *auth_user_request = NULL;
-
             return AUTH_ACL_CHALLENGE;
 
         case -1:
@@ -522,40 +485,23 @@ AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_typ
         if (!authenticateUserAuthenticated(*auth_user_request)) {
             if ((*auth_user_request)->username()) {
                 if (!request->auth_user_request) {
-                    /* lock the user for the request structure link */
-
-                    (*auth_user_request)->lock()
-
-                    ;
                     request->auth_user_request = *auth_user_request;
+		    AUTHUSERREQUESTLOCK(request->auth_user_request, "request");
                 }
             }
 
-            /* this ACL check is finished. Unlock. */
-            (*auth_user_request)->unlock();
-
             *auth_user_request = NULL;
-
             return AUTH_ACL_CHALLENGE;
         }
     }
 
     /* copy username to request for logging on client-side */
     /* the credentials are correct at this point */
-    if (!request->auth_user_request)
-    {
-        /* lock the user for the request structure link */
-
-        (*auth_user_request)->lock()
-
-        ;
+    if (NULL == request->auth_user_request) {
         request->auth_user_request = *auth_user_request;
-
+	AUTHUSERREQUESTLOCK(request->auth_user_request, "request");
         authenticateAuthUserRequestSetIp(*auth_user_request, src_addr);
     }
-
-    /* Unlock the request - we've authenticated it */
-    (*auth_user_request)->unlock();
 
     return AUTH_AUTHENTICATED;
 }
@@ -575,7 +521,7 @@ AuthUserRequest::tryToAuthenticateAndSetAuthUser(AuthUserRequest ** auth_user_re
 
 	if (!request->auth_user_request && t->lastReply == AUTH_AUTHENTICATED) {
 	    request->auth_user_request = t;
-	    t->lock();
+	    AUTHUSERREQUESTLOCK(request->auth_user_request, "request");
 	}
         return t->lastReply;
     }
@@ -688,20 +634,20 @@ authenticateAddTrailer(HttpReply * rep, AuthUserRequest * auth_user_request, Htt
 
 void
 
-AuthUserRequest::lock()
+AuthUserRequest::_lock()
 {
-    debugs(29, 9, "AuthUserRequest::lock: auth_user request '" << this << "' (" << references << " references).");
     assert(this);
+    debugs(29, 9, "AuthUserRequest::lock: auth_user request '" << this << " " << references << "->" << references+1);
     ++references;
 }
 
 void
-AuthUserRequest::unlock()
+AuthUserRequest::_unlock()
 {
-    debugs(29, 9, "AuthUserRequest::unlock: auth_user request '" << this << "' (" << references << " references) .");
     assert(this != NULL);
 
     if (references > 0) {
+        debugs(29, 9, "AuthUserRequest::unlock: auth_user request '" << this << " " << references << "->" << references-1);
         --references;
     } else {
         debugs(29, 1, "Attempt to lower Auth User request " << this << " refcount below 0!");

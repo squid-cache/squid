@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.73 2007/04/28 22:26:37 hno Exp $
+ * $Id: HttpRequest.cc,v 1.74 2007/05/09 09:07:38 wessels Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -106,10 +106,7 @@ HttpRequest::clean()
     // points to a pipe that is owned and initiated by another object.
     body_pipe = NULL; 
 
-    if (auth_user_request) {
-        auth_user_request->unlock();
-        auth_user_request = NULL;
-    }
+    AUTHUSERREQUESTUNLOCK(auth_user_request, "request");
 
     safe_free(canonical);
 
