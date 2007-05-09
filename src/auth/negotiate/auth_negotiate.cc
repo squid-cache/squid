@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_negotiate.cc,v 1.16 2007/05/09 07:36:31 wessels Exp $
+ * $Id: auth_negotiate.cc,v 1.17 2007/05/09 08:07:23 wessels Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -247,9 +247,6 @@ AuthNegotiateUserRequest::module_direction()
         assert(server_blob);
         return 1; /* send to client */
 
-    case AUTHENTICATE_STATE_FINISHED:
-        return 0; /* do nothing */
-
     case AUTHENTICATE_STATE_DONE:
         return 0; /* do nothing */
 
@@ -316,7 +313,6 @@ AuthNegotiateConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *re
             request->flags.proxy_keepalive = 0;
             /* fall through */
 
-        case AUTHENTICATE_STATE_FINISHED:
         case AUTHENTICATE_STATE_DONE:
             /* Special case: authentication finished OK but disallowed by ACL.
              * Need to start over to give the client another chance.
@@ -452,11 +448,39 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
 
         authenticateNegotiateReleaseServer(negotiate_request);
 
-        negotiate_request->auth_state = AUTHENTICATE_STATE_FINISHED;
+        negotiate_request->auth_state = AUTHENTICATE_STATE_DONE;
 
         result = S_HELPER_RELEASE;
 
         debugs(29, 4, "authenticateNegotiateHandleReply: Successfully validated user via NEGOTIATE. Username '" << blob << "'");
+
+        /* connection is authenticated */
+        debugs(29, 4, "AuthNegotiateUserRequest::authenticate: authenticated user " << negotiate_user->username());
+        /* see if this is an existing user with a different proxy_auth
+         * string */
+	auth_user_hash_pointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, negotiate_user->username()));
+	auth_user_t *local_auth_user = negotiate_request->user();
+        while (usernamehash && (usernamehash->user()->auth_type != AUTH_NEGOTIATE || strcmp(usernamehash->user()->username(), negotiate_user->username()) != 0))
+            usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
+        if (usernamehash) {
+            /* we can't seamlessly recheck the username due to the
+             * challenge-response nature of the protocol.
+             * Just free the temporary auth_user */
+            usernamehash->user()->absorb(local_auth_user);
+            //authenticateAuthUserMerge(local_auth_user, usernamehash->user());
+            local_auth_user = usernamehash->user();
+            negotiate_request->_auth_user = local_auth_user;
+        } else {
+            /* store user in hash's */
+            local_auth_user->addToNameCache();
+            // authenticateUserNameCacheAdd(local_auth_user);
+        }
+        /* set these to now because this is either a new login from an
+         * existing user or a new user */
+        local_auth_user->expiretime = current_time.tv_sec;
+        authenticateNegotiateReleaseServer(negotiate_request);
+        negotiate_request->auth_state = AUTHENTICATE_STATE_DONE;
+
     } else if (strncasecmp(reply, "NA ", 3) == 0 && arg != NULL) {
         /* authentication failure (wrong password, etc.) */
 
@@ -632,9 +656,6 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * request, ConnStateData::Poi
 {
     const char *proxy_auth, *blob;
 
-    //ProxyAuthCachePointer *proxy_auth_hash = NULL;
-    auth_user_hash_pointer *usernamehash;
-
     /* TODO: rename this!! */
     auth_user_t *local_auth_user;
     negotiate_user_t *negotiate_user;
@@ -717,48 +738,6 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * request, ConnStateData::Poi
 
         break;
 
-    case AUTHENTICATE_STATE_FINISHED:
-        /* connection is authenticated */
-        debugs(29, 4, "AuthNegotiateUserRequest::authenticate: authenticated user " << negotiate_user->username());
-
-        /* see if this is an existing user with a different proxy_auth
-         * string */
-        usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, negotiate_user->username()));
-
-        while (usernamehash && (usernamehash->user()->auth_type != AUTH_NEGOTIATE || strcmp(usernamehash->user()->username(), negotiate_user->username()) != 0))
-            usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
-
-        if (usernamehash) {
-            /* we can't seamlessly recheck the username due to the
-             * challenge-response nature of the protocol.
-             * Just free the temporary auth_user */
-            usernamehash->user()->absorb(local_auth_user);
-            //authenticateAuthUserMerge(local_auth_user, usernamehash->user());
-            local_auth_user = usernamehash->user();
-            _auth_user = local_auth_user;
-        } else {
-            /* store user in hash's */
-            local_auth_user->addToNameCache();
-            // authenticateUserNameCacheAdd(local_auth_user);
-        }
-
-        /* set these to now because this is either a new login from an
-         * existing user or a new user */
-        local_auth_user->expiretime = current_time.tv_sec;
-
-        authenticateNegotiateReleaseServer(this);
-
-        auth_state = AUTHENTICATE_STATE_DONE;
-
-        return;
-
-        break;
-
-    case AUTHENTICATE_STATE_DONE:
-        fatal("AuthNegotiateUserRequest::authenticate: unexpect auth state DONE! Report a bug to the squid developers.\n");
-
-        break;
-
     case AUTHENTICATE_STATE_FAILED:
         /* we've failed somewhere in authentication */
         debugs(29, 9, "AuthNegotiateUserRequest::authenticate: auth state negotiate failed. " << proxy_auth);
@@ -766,6 +745,12 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * request, ConnStateData::Poi
         return;
 
         break;
+
+    case AUTHENTICATE_STATE_DONE:
+	fatal("AuthNegotiateUserRequest::authenticate: unexpect auth state DONE! Report a bug to the squid developers.\n");
+
+	break;
+
     }
 
     return;
