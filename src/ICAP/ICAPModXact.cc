@@ -817,7 +817,7 @@ void ICAPModXact::inheritVirginProperties(HttpRequest &newR, const HttpRequest &
 
     if (oldR.auth_user_request) {
         newR.auth_user_request = oldR.auth_user_request;
-        newR.auth_user_request->lock();
+	AUTHUSERREQUESTLOCK(newR.auth_user_request, "newR in ICAPModXact");
     }
 }
 
