@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.h,v 1.20 2007/04/06 04:50:06 rousskov Exp $
+ * $Id: client_side.h,v 1.21 2007/05/09 07:36:24 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -170,7 +170,7 @@ public:
      * note this is ONLY connection based because NTLM is against HTTP spec.
      * the user details for connection based authentication
      */
-    auth_user_request_t *auth_user_request;
+    AuthUserRequest *auth_user_request;
     /*
      * used by the owner of the connection, opaque otherwise
      * TODO: generalise the connection owner concept.

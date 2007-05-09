@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMaxUserIP.cc,v 1.13 2007/04/30 16:56:09 wessels Exp $
+ * $Id: ACLMaxUserIP.cc,v 1.14 2007/05/09 07:36:24 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -115,7 +115,7 @@ ACLMaxUserIP::parse()
  * 1 : Match 
  */
 int
-ACLMaxUserIP::match(auth_user_request_t * auth_user_request,
+ACLMaxUserIP::match(AuthUserRequest * auth_user_request,
 
                     struct IN_ADDR const &src_addr)
 {

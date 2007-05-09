@@ -20,7 +20,7 @@ class AuthenticateStateData
 
 public:
     void *data;
-    auth_user_request_t *auth_user_request;
+    AuthUserRequest *auth_user_request;
     RH *handler;
 };
 
@@ -48,8 +48,8 @@ public:
     BasicUser(AuthConfig *);
     ~BasicUser();
     bool authenticated() const;
-    void queueRequest(auth_user_request_t * auth_user_request, RH * handler, void *data);
-    void submitRequest (auth_user_request_t * auth_user_request, RH * handler, void *data);
+    void queueRequest(AuthUserRequest * auth_user_request, RH * handler, void *data);
+    void submitRequest (AuthUserRequest * auth_user_request, RH * handler, void *data);
     void decode(char const *credentials, AuthUserRequest *);
     char *getCleartext() {return cleartext;}
 
@@ -122,7 +122,7 @@ public:
     virtual AuthUserRequest *decode(char const *proxy_auth);
     virtual void done();
     virtual void dump(StoreEntry *, const char *, AuthConfig *);
-    virtual void fixHeader(auth_user_request_t *, HttpReply *, http_hdr_type, HttpRequest *);
+    virtual void fixHeader(AuthUserRequest *, HttpReply *, http_hdr_type, HttpRequest *);
     virtual void init(AuthConfig *);
     virtual void parse(AuthConfig *, int, char *);
     virtual void registerWithCacheManager(CacheManager & manager);

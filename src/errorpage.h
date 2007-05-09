@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.h,v 1.2 2006/08/25 15:22:34 serassio Exp $
+ * $Id: errorpage.h,v 1.3 2007/05/09 07:36:24 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -45,7 +45,7 @@ public:
     err_type type;
     int page_id;
     http_status httpStatus;
-    auth_user_request_t *auth_user_request;
+    AuthUserRequest *auth_user_request;
     HttpRequest *request;
     char *url;
     int xerrno;

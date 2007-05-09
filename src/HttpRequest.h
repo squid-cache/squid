@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.26 2007/04/16 17:43:27 rousskov Exp $
+ * $Id: HttpRequest.h,v 1.27 2007/05/09 07:36:24 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -80,7 +80,7 @@ public:
 
     char host[SQUIDHOSTNAMELEN + 1];
 
-    auth_user_request_t *auth_user_request;
+    AuthUserRequest *auth_user_request;
 
     u_short port;
 

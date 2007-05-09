@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.h,v 1.16 2006/10/26 19:42:24 serassio Exp $
+ * $Id: client_side_reply.h,v 1.17 2007/05/09 07:36:24 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -76,7 +76,7 @@ public:
     int storeOKTransferDone() const;
     int storeNotOKTransferDone() const;
 
-    void setReplyToError(err_type, http_status, method_t, char const *, struct IN_ADDR *, HttpRequest *, char *, auth_user_request_t *);
+    void setReplyToError(err_type, http_status, method_t, char const *, struct IN_ADDR *, HttpRequest *, char *, AuthUserRequest *);
     void createStoreEntry(method_t m, request_flags flags);
     void removeStoreReference(store_client ** scp, StoreEntry ** ep);
     void removeClientStoreReference(store_client **scp, ClientHttpRequest *http);

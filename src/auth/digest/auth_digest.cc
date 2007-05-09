@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.53 2007/05/07 18:38:40 wessels Exp $
+ * $Id: auth_digest.cc,v 1.54 2007/05/09 07:36:28 wessels Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -776,7 +776,7 @@ AuthDigestUserRequest::addTrailer(HttpReply * rep, int accel)
 
 /* add the [www-|Proxy-]authenticate header on a 407 or 401 reply */
 void
-AuthDigestConfig::fixHeader(auth_user_request_t *auth_user_request, HttpReply *rep, http_hdr_type type, HttpRequest * request)
+AuthDigestConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, http_hdr_type type, HttpRequest * request)
 {
     if (!authenticate)
         return;
@@ -823,7 +823,7 @@ static void
 authenticateDigestHandleReply(void *data, char *reply)
 {
     DigestAuthenticateStateData *replyData = static_cast < DigestAuthenticateStateData * >(data);
-    auth_user_request_t *auth_user_request;
+    AuthUserRequest *auth_user_request;
     AuthDigestUserRequest *digest_request;
     digest_user_h *digest_user;
     char *t = NULL;

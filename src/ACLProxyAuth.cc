@@ -138,7 +138,7 @@ ProxyAuthLookup::checkForAsync(ACLChecklist *checklist)const
     checklist->asyncInProgress(true);
     debugs(28, 3, "ACLChecklist::checkForAsync: checking password via authenticator");
 
-    auth_user_request_t *auth_user_request;
+    AuthUserRequest *auth_user_request;
     /* make sure someone created auth_user_request for us */
     assert(checklist->auth_user_request != NULL);
     auth_user_request = checklist->auth_user_request;

@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.47 2007/05/07 18:38:40 wessels Exp $
+ * $Id: auth_basic.cc,v 1.48 2007/05/09 07:36:26 wessels Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -211,7 +211,7 @@ AuthBasicUserRequest::module_direction()
 }
 
 void
-AuthBasicConfig::fixHeader(auth_user_request_t *auth_user_request, HttpReply *rep, http_hdr_type type, HttpRequest * request)
+AuthBasicConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, http_hdr_type type, HttpRequest * request)
 {
     if (authenticate) {
         debugs(29, 9, "authenticateFixErrorHeader: Sending type:" << type << " header: 'Basic realm=\"" << basicAuthRealm << "\"'");
@@ -615,7 +615,7 @@ AuthBasicConfig::registerWithCacheManager(CacheManager & manager)
 }
 
 void
-BasicUser::queueRequest(auth_user_request_t * auth_user_request, RH * handler, void *data)
+BasicUser::queueRequest(AuthUserRequest * auth_user_request, RH * handler, void *data)
 {
     BasicAuthQueueNode *node;
     node = static_cast<BasicAuthQueueNode *>(xmalloc(sizeof(BasicAuthQueueNode)));
@@ -653,7 +653,7 @@ AuthBasicUserRequest::module_start(RH * handler, void *data)
 }
 
 void
-BasicUser::submitRequest (auth_user_request_t * auth_user_request, RH * handler, void *data)
+BasicUser::submitRequest (AuthUserRequest * auth_user_request, RH * handler, void *data)
 {
     /* mark the user as haveing verification in progress */
     flags.credentials_ok = 2;

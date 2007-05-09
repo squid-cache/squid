@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_negotiate.cc,v 1.15 2007/05/07 18:38:41 wessels Exp $
+ * $Id: auth_negotiate.cc,v 1.16 2007/05/09 07:36:31 wessels Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -51,7 +51,7 @@
 #include "wordlist.h"
 
 static void
-authenticateNegotiateReleaseServer(auth_user_request_t * auth_user_request);
+authenticateNegotiateReleaseServer(AuthUserRequest * auth_user_request);
 
 
 static void
@@ -284,7 +284,7 @@ AuthNegotiateUserRequest::addHeader(HttpReply * rep, int accel)
 }
 
 void
-AuthNegotiateConfig::fixHeader(auth_user_request_t *auth_user_request, HttpReply *rep, http_hdr_type type, HttpRequest * request)
+AuthNegotiateConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, http_hdr_type type, HttpRequest * request)
 {
     AuthNegotiateUserRequest *negotiate_request;
 
@@ -370,7 +370,7 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
     stateful_helper_callback_t result = S_HELPER_UNKNOWN;
     char *blob, *arg = NULL;
 
-    auth_user_request_t *auth_user_request;
+    AuthUserRequest *auth_user_request;
     AuthUser *auth_user;
     NegotiateUser *negotiate_user;
     AuthNegotiateUserRequest *negotiate_request;
@@ -553,7 +553,7 @@ AuthNegotiateUserRequest::module_start(RH * handler, void *data)
 
 /* clear the NEGOTIATE helper of being reserved for future requests */
 static void
-authenticateNegotiateReleaseServer(auth_user_request_t * auth_user_request)
+authenticateNegotiateReleaseServer(AuthUserRequest * auth_user_request)
 {
     AuthNegotiateUserRequest *negotiate_request;
     assert(auth_user_request->user()->auth_type == AUTH_NEGOTIATE);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.124 2007/05/08 17:26:54 rousskov Exp $
+ * $Id: client_side_reply.cc,v 1.125 2007/05/09 07:36:24 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -93,7 +93,7 @@ clientReplyContext::setReplyToError(
     err_type err, http_status status, method_t method, char const *uri,
 
     struct IN_ADDR *addr, HttpRequest * failedrequest, char *unparsedrequest,
-    auth_user_request_t * auth_user_request)
+    AuthUserRequest * auth_user_request)
 {
     ErrorState *errstate =
         clientBuildError(err, status, uri, addr, failedrequest);
