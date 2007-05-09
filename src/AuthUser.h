@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUser.h,v 1.4 2007/05/09 07:45:58 wessels Exp $
+ * $Id: AuthUser.h,v 1.5 2007/05/09 08:26:57 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -87,6 +87,11 @@ protected:
 private:
     static void cacheCleanup (void *unused);
 
+    /*
+     * DPW 2007-05-08
+     * The username_ memory will be allocated via
+     * xstrdup().  It is our responsibility.
+     */
     char const *username_;
 
     /* what ip addresses has this user been seen at?, plus a list length cache */

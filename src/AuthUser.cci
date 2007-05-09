@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUser.cci,v 1.1 2004/08/30 03:28:56 robertc Exp $
+ * $Id: AuthUser.cci,v 1.2 2007/05/09 08:26:57 wessels Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -44,7 +44,7 @@ void
 AuthUser::username(char const*aString)
 {
     assert (!username() || !aString);
-    username_ = aString;
+    username_ = xstrdup(aString);
 }
 
 void

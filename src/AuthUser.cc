@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUser.cc,v 1.6 2007/05/09 07:36:24 wessels Exp $
+ * $Id: AuthUser.cc,v 1.7 2007/05/09 08:26:57 wessels Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -130,8 +130,8 @@ AuthUser::~AuthUser()
     /* free seen ip address's */
     clearIp();
 
-    if (username())
-        xfree((char *)username());
+    if (username_)
+        xfree((char*)username_);
 
     /* prevent accidental reuse */
     auth_type = AUTH_UNKNOWN;
