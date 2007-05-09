@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.h,v 1.3 2007/05/09 07:36:24 wessels Exp $
+ * $Id: errorpage.h,v 1.4 2007/05/09 07:45:58 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,6 +37,8 @@
 
 #include "squid.h"
 #include "cbdata.h"
+
+class AuthUserRequest;
 
 class ErrorState
 {

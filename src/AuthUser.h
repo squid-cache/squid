@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUser.h,v 1.3 2007/01/03 12:40:41 hno Exp $
+ * $Id: AuthUser.h,v 1.4 2007/05/09 07:45:58 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,6 +34,8 @@
 
 #ifndef SQUID_AUTHUSER_H
 #define SQUID_AUTHUSER_H
+
+class AuthUserRequest;
 
 class AuthUser
 {

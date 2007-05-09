@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.h,v 1.21 2007/05/09 07:36:24 wessels Exp $
+ * $Id: client_side.h,v 1.22 2007/05/09 07:45:58 wessels Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -44,6 +44,8 @@ class ConnStateData;
 class ClientHttpRequest;
 
 class clientStreamNode;
+
+class AuthUserRequest;
 
 template <class T>
 
