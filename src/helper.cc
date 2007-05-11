@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.84 2007/05/09 09:07:39 wessels Exp $
+ * $Id: helper.cc,v 1.85 2007/05/11 04:06:08 rousskov Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -486,8 +486,8 @@ void
 helperStatefulReleaseServer(helper_stateful_server * srv)
 {
     debugs(84, 3, HERE << "srv-" << srv->index << " flags.reserved = " << srv->flags.reserved);
-    if (srv->flags.reserved = S_HELPER_FREE)
-	return;
+    if (srv->flags.reserved == S_HELPER_FREE)
+        return;
 
     srv->stats.releases++;
 
