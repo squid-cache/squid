@@ -102,25 +102,21 @@ void ICAPXaction::openConnection()
 
     const ICAPServiceRep &s = service();
 
-    // if we cannot retry, we must not reuse pconns because of race conditions
-    if (isRetriable) {
-        // TODO: check whether NULL domain is appropriate here
-        connection = icapPconnPool->pop(s.host.buf(), s.port, NULL, NULL);
-
-        if (connection >= 0) {
-            debugs(93,3, HERE << "reused pconn FD " << connection);
-            connector = &ICAPXaction_noteCommConnected; // make doneAll() false
-            eventAdd("ICAPXaction::reusedConnection",
-                 reusedConnection,
-                 this,
-                 0.0,
-                 0,
-                 true);
-            return;
-        }
-
-        disableRetries(); // we only retry pconn failures
+    // TODO: check whether NULL domain is appropriate here
+    connection = icapPconnPool->pop(s.host.buf(), s.port, NULL, NULL, isRetriable);
+    if (connection >= 0) {
+        debugs(93,3, HERE << "reused pconn FD " << connection);
+        connector = &ICAPXaction_noteCommConnected; // make doneAll() false
+        eventAdd("ICAPXaction::reusedConnection",
+             reusedConnection,
+             this,
+             0.0,
+             0,
+             true);
+        return;
     }
+
+    disableRetries(); // we only retry pconn failures
 
     connection = comm_open(SOCK_STREAM, 0, getOutgoingAddr(NULL), 0,
         COMM_NONBLOCKING, s.uri.buf());
