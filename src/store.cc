@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.612 2007/05/07 21:51:21 wessels Exp $
+ * $Id: store.cc,v 1.613 2007/05/10 22:40:12 hno Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -650,7 +650,7 @@ StoreEntry::setPublicKey()
 #if MORE_DEBUG_OUTPUT
 
     if (EBIT_TEST(flags, RELEASE_REQUEST))
-        debugs(20, 1, "assertion failed: RELEASE key " << key << ", url " << mem->url);
+        debugs(20, 1, "assertion failed: RELEASE key " << key << ", url " << mem_obj->url);
 
 #endif
 
