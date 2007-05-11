@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.50 2007/04/30 16:56:09 wessels Exp $
+ * $Id: pconn.cc,v 1.51 2007/05/11 13:20:57 rousskov Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -266,11 +266,16 @@ PconnPool::push(int fd, const char *host, u_short port, const char *domain, stru
 }
 
 /*
- * return a pconn fd for host:port, or -1 if none are available
+ * Return a pconn fd for host:port if available and retriable.
+ * Otherwise, return -1.
+ *
+ * We close available persistent connection if the caller transaction is not
+ * retriable to avoid having a growing number of open connections when many
+ * transactions create persistent connections but are not retriable.
  */
 int
 
-PconnPool::pop(const char *host, u_short port, const char *domain, struct IN_ADDR *client_address)
+PconnPool::pop(const char *host, u_short port, const char *domain, struct IN_ADDR *client_address, bool isRetriable)
 {
     IdleConnList *list;
     const char * aKey = key(host, port, domain, client_address);
@@ -285,6 +290,11 @@ PconnPool::pop(const char *host, u_short port, const char *domain, struct IN_ADD
     {
         list->clearHandlers(fd);
         list->removeFD(fd);	/* might delete list */
+
+        if (!isRetriable) {
+            comm_close(fd);
+            return -1;
+        }
     }
 
     return fd;

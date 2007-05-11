@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.163 2007/04/30 16:56:09 wessels Exp $
+ * $Id: forward.cc,v 1.164 2007/05/11 13:20:57 rousskov Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -784,27 +784,20 @@ FwdState::connectStart()
     if (ftimeout < ctimeout)
         ctimeout = ftimeout;
 
-    if ((fd = fwdPconnPool->pop(host, port, domain, client_addr)) >= 0) {
-        if (checkRetriable()) {
-            debugs(17, 3, "fwdConnectStart: reusing pconn FD " << fd);
-            server_fd = fd;
-            n_tries++;
+    fd = fwdPconnPool->pop(host, port, domain, client_addr, checkRetriable());
+    if (fd >= 0) {
+        debugs(17, 3, "fwdConnectStart: reusing pconn FD " << fd);
+        server_fd = fd;
+        n_tries++;
 
-            if (!fs->_peer)
-                origin_tries++;
+        if (!fs->_peer)
+            origin_tries++;
 
-            comm_add_close_handler(fd, fwdServerClosedWrapper, this);
+        comm_add_close_handler(fd, fwdServerClosedWrapper, this);
 
-            dispatch();
+        dispatch();
 
-            return;
-        } else {
-            /* Discard the persistent connection to not cause
-             * an imbalance in number of connections open if there
-             * is a lot of POST requests
-             */
-            comm_close(fd);
-        }
+        return;
     }
 
 #if URL_CHECKSUM_DEBUG
