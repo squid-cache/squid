@@ -32,17 +32,21 @@ make_snapshot()
     type=`echo $file | sed -e 's/.*\.tar\.gz/.tar.gz/' -e 's/.*\.tar\.bz2/.tar.bz2/' -e 's/.*\.patch/.patch/' -e 's/.*\.diff/.diff/' -e 's/.*-RELEASENOTES.html/-RELEASENOTES.html/' -e 's/^.*ChangeLog.txt$/-ChangeLog.txt/'`
 
     # move tarball
+    rm -f $dst/$file.md5
     rm -f $dst/$file
+    md5 $file >$dst/$file.md5
     cp -p $file $dst/$file
     rm -f $file
 
     # update snapshot symlink
     rm -f $dst/squid-$ver.snapshot$type
     ln -s $file $dst/squid-$ver.snapshot$type
+    rm -f $dst/squid-$ver.snapshot$type.md5
+    ln -s $file $dst/squid-$ver.snapshot$type.md5
 
     # cleanup old snapshots
     ls $dst/*-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]$type | sed -e 's/.*-\([0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'$type'\)/\1/' | sort -r | tail +$save | while read f; do
-	rm -f $dst/*-$f
+	rm -f $dst/*-$f $dst/*-$f.md5
     done
   done
 
