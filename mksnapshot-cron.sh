@@ -11,7 +11,7 @@ fi
 mkdir -p $TMPDIR
 trap "cd /; chmod -R +w $TMPDIR; rm -rf $TMPDIR" 0
 
-PATH=/bin:/usr/bin:/usr/local/bin
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
 export PATH
 
 # Be nice to our friends. This is a batch job
