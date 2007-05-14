@@ -29,7 +29,7 @@ make_snapshot()
   dst=$versions/$dir/$ver
   $mksnap $tag 2>&1 | grep -v "set owner/group"
   for file in `cat $tag.out` ; do
-    type=`echo $file | sed -e 's/.*\.tar\.gz/.tar.gz/' -e 's/.*\.tar\.bz2/.tar.bz2/' -e 's/.*\.patch/.patch/' -e 's/.*\.diff/.diff/' -e 's/.*-RELEASENOTES.html/-RELEASENOTES.html/' -e 's/^.*ChangeLog.txt$/-ChangeLog.txt/'`
+    type=`echo $file | sed -e 's/.*\.tar\.gz/.tar.gz/' -e 's/.*\.tar\.bz2/.tar.bz2/' -e 's/.*\.patch/.patch/' -e 's/.*\.diff/.diff/' -e 's/.*-RELEASENOTES.html/-RELEASENOTES.html/' -e 's/^.*ChangeLog.txt$/-ChangeLog.txt/' -e 's/.*-cfgman/-cfgman/'`
 
     # move tarball
     rm -f $dst/$file.md5
@@ -56,12 +56,12 @@ make_snapshot()
 	tar -C $dst/cfgman -zxf $dst/$file
 	;;
     *-cfgman.html)
-	rm -f cfgman.html
-	ln -s $dst/$file cfgman.html
+	rm -f $dst/cfgman.html
+	ln -s $dst/$file $dst/cfgman.html
 	;;
     *-cfgman.html.gz)
-	rm -f cfgman.html.gz
-	ln -s $dst/$file cfgman.html.gz
+	rm -f $dst/cfgman.html.gz
+	ln -s $dst/$file $dst/cfgman.html.gz
 	;;
     esac
   done
