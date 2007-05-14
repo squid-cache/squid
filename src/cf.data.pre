@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.433 2007/04/16 22:10:49 hno Exp $
+# $Id: cf.data.pre,v 1.434 2007/05/13 21:27:50 hno Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -3221,6 +3221,190 @@ DOC_START
 	encodings.
 DOC_END
 
+
+COMMENT_START
+ DELAY POOL PARAMETERS (all require DELAY_POOLS compilation option)
+ -----------------------------------------------------------------------------
+COMMENT_END
+
+NAME: delay_pools
+TYPE: delay_pool_count
+DEFAULT: 0
+IFDEF: DELAY_POOLS
+LOC: Config.Delay
+DOC_START
+	This represents the number of delay pools to be used.  For example,
+	if you have one class 2 delay pool and one class 3 delays pool, you
+	have a total of 2 delay pools.
+DOC_END
+
+NAME: delay_class
+TYPE: delay_pool_class
+DEFAULT: none
+IFDEF: DELAY_POOLS
+LOC: Config.Delay
+DOC_START
+	This defines the class of each delay pool.  There must be exactly one
+	delay_class line for each delay pool.  For example, to define two
+	delay pools, one of class 2 and one of class 3, the settings above
+	and here would be:
+
+Example:
+ delay_pools 4      # 4 delay pools
+ delay_class 1 2    # pool 1 is a class 2 pool
+ delay_class 2 3    # pool 2 is a class 3 pool
+ delay_class 3 4    # pool 3 is a class 4 pool
+ delay_class 4 5    # pool 4 is a class 5 pool
+
+	The delay pool classes are:
+
+		class 1		Everything is limited by a single aggregate
+				bucket.
+
+		class 2 	Everything is limited by a single aggregate
+				bucket as well as an "individual" bucket chosen
+				from bits 25 through 32 of the IP address.
+
+		class 3		Everything is limited by a single aggregate
+				bucket as well as a "network" bucket chosen
+				from bits 17 through 24 of the IP address and a
+				"individual" bucket chosen from bits 17 through
+				32 of the IP address.
+
+		class 4		Everything in a class 3 delay pool, with an
+				additional limit on a per user basis. This
+				only takes effect if the username is established
+				in advance - by forcing authentication in your
+				http_access rules.
+
+		class 5		Requests are grouped according their tag (see
+				external_acl's tag= reply).
+
+	NOTE: If an IP address is a.b.c.d
+		-> bits 25 through 32 are "d"
+		-> bits 17 through 24 are "c"
+		-> bits 17 through 32 are "c * 256 + d"
+DOC_END
+
+NAME: delay_access
+TYPE: delay_pool_access
+DEFAULT: none
+IFDEF: DELAY_POOLS
+LOC: Config.Delay
+DOC_START
+	This is used to determine which delay pool a request falls into.
+
+	delay_access is sorted per pool and the matching starts with pool 1,
+	then pool 2, ..., and finally pool N. The first delay pool where the
+	request is allowed is selected for the request. If it does not allow
+	the request to any pool then the request is not delayed (default).
+
+	For example, if you want some_big_clients in delay
+	pool 1 and lotsa_little_clients in delay pool 2:
+
+Example:
+ delay_access 1 allow some_big_clients
+ delay_access 1 deny all
+ delay_access 2 allow lotsa_little_clients
+ delay_access 2 deny all
+ delay_access 3 allow authenticated_clients
+DOC_END
+
+NAME: delay_parameters
+TYPE: delay_pool_rates
+DEFAULT: none
+IFDEF: DELAY_POOLS
+LOC: Config.Delay
+DOC_START
+	This defines the parameters for a delay pool.  Each delay pool has
+	a number of "buckets" associated with it, as explained in the
+	description of delay_class.  For a class 1 delay pool, the syntax is:
+
+delay_parameters pool aggregate
+
+	For a class 2 delay pool:
+
+delay_parameters pool aggregate individual
+
+	For a class 3 delay pool:
+
+delay_parameters pool aggregate network individual
+
+	For a class 4 delay pool:
+
+delay_parameters pool aggregate network individual user
+
+	For a class 5 delay pool:
+
+delay_parameters pool tag
+
+	The variables here are:
+
+		pool		a pool number - ie, a number between 1 and the
+				number specified in delay_pools as used in
+				delay_class lines.
+
+		aggregate	the "delay parameters" for the aggregate bucket
+				(class 1, 2, 3).
+
+		individual	the "delay parameters" for the individual
+				buckets (class 2, 3).
+
+		network		the "delay parameters" for the network buckets
+				(class 3).
+
+		user		the delay parameters for the user buckets
+				(class 4).
+
+		tag		the delay parameters for the tag buckets
+				(class 5).
+
+	A pair of delay parameters is written restore/maximum, where restore is
+	the number of bytes (not bits - modem and network speeds are usually
+	quoted in bits) per second placed into the bucket, and maximum is the
+	maximum number of bytes which can be in the bucket at any time.
+
+	For example, if delay pool number 1 is a class 2 delay pool as in the
+	above example, and is being used to strictly limit each host to 64kbps
+	(plus overheads), with no overall limit, the line is:
+
+delay_parameters 1 -1/-1 8000/8000
+
+	Note that the figure -1 is used to represent "unlimited".
+
+	And, if delay pool number 2 is a class 3 delay pool as in the above
+	example, and you want to limit it to a total of 256kbps (strict limit)
+	with each 8-bit network permitted 64kbps (strict limit) and each
+	individual host permitted 4800bps with a bucket maximum size of 64kb
+	to permit a decent web page to be downloaded at a decent speed
+	(if the network is not being limited due to overuse) but slow down
+	large downloads more significantly:
+
+delay_parameters 2 32000/32000 8000/8000 600/8000
+
+	There must be one delay_parameters line for each delay pool.
+
+	Finally, for a class 4 delay pool as in the example - each user will
+	be limited to 128Kb no matter how many workstations they are logged into.:
+
+delay_parameters 4 32000/32000 8000/8000 600/64000 16000/16000
+DOC_END
+
+NAME: delay_initial_bucket_level
+COMMENT: (percent, 0-100)
+TYPE: ushort
+DEFAULT: 50
+IFDEF: DELAY_POOLS
+LOC: Config.Delay.initial
+DOC_START
+	The initial bucket percentage is used to determine how much is put
+	in each bucket when squid starts, is reconfigured, or first notices
+	a host accessing it (in class 2 and class 3, individual hosts and
+	networks only have buckets associated with them once they have been
+	"seen" by squid).
+DOC_END
+
+
 COMMENT_START
  MISCELLANEOUS
  -----------------------------------------------------------------------------
@@ -4233,188 +4417,6 @@ DOC_START
 	The default behavior is to not bind to any specific address.
 DOC_END
 
-
-COMMENT_START
- DELAY POOL PARAMETERS (all require DELAY_POOLS compilation option)
- -----------------------------------------------------------------------------
-COMMENT_END
-
-NAME: delay_pools
-TYPE: delay_pool_count
-DEFAULT: 0
-IFDEF: DELAY_POOLS
-LOC: Config.Delay
-DOC_START
-	This represents the number of delay pools to be used.  For example,
-	if you have one class 2 delay pool and one class 3 delays pool, you
-	have a total of 2 delay pools.
-DOC_END
-
-NAME: delay_class
-TYPE: delay_pool_class
-DEFAULT: none
-IFDEF: DELAY_POOLS
-LOC: Config.Delay
-DOC_START
-	This defines the class of each delay pool.  There must be exactly one
-	delay_class line for each delay pool.  For example, to define two
-	delay pools, one of class 2 and one of class 3, the settings above
-	and here would be:
-
-Example:
- delay_pools 4      # 4 delay pools
- delay_class 1 2    # pool 1 is a class 2 pool
- delay_class 2 3    # pool 2 is a class 3 pool
- delay_class 3 4    # pool 3 is a class 4 pool
- delay_class 4 5    # pool 4 is a class 5 pool
-
-	The delay pool classes are:
-
-		class 1		Everything is limited by a single aggregate
-				bucket.
-
-		class 2 	Everything is limited by a single aggregate
-				bucket as well as an "individual" bucket chosen
-				from bits 25 through 32 of the IP address.
-
-		class 3		Everything is limited by a single aggregate
-				bucket as well as a "network" bucket chosen
-				from bits 17 through 24 of the IP address and a
-				"individual" bucket chosen from bits 17 through
-				32 of the IP address.
-
-		class 4		Everything in a class 3 delay pool, with an
-				additional limit on a per user basis. This
-				only takes effect if the username is established
-				in advance - by forcing authentication in your
-				http_access rules.
-
-		class 5		Requests are grouped according their tag (see
-				external_acl's tag= reply).
-
-	NOTE: If an IP address is a.b.c.d
-		-> bits 25 through 32 are "d"
-		-> bits 17 through 24 are "c"
-		-> bits 17 through 32 are "c * 256 + d"
-DOC_END
-
-NAME: delay_access
-TYPE: delay_pool_access
-DEFAULT: none
-IFDEF: DELAY_POOLS
-LOC: Config.Delay
-DOC_START
-	This is used to determine which delay pool a request falls into.
-
-	delay_access is sorted per pool and the matching starts with pool 1,
-	then pool 2, ..., and finally pool N. The first delay pool where the
-	request is allowed is selected for the request. If it does not allow
-	the request to any pool then the request is not delayed (default).
-
-	For example, if you want some_big_clients in delay
-	pool 1 and lotsa_little_clients in delay pool 2:
-
-Example:
- delay_access 1 allow some_big_clients
- delay_access 1 deny all
- delay_access 2 allow lotsa_little_clients
- delay_access 2 deny all
- delay_access 3 allow authenticated_clients
-DOC_END
-
-NAME: delay_parameters
-TYPE: delay_pool_rates
-DEFAULT: none
-IFDEF: DELAY_POOLS
-LOC: Config.Delay
-DOC_START
-	This defines the parameters for a delay pool.  Each delay pool has
-	a number of "buckets" associated with it, as explained in the
-	description of delay_class.  For a class 1 delay pool, the syntax is:
-
-delay_parameters pool aggregate
-
-	For a class 2 delay pool:
-
-delay_parameters pool aggregate individual
-
-	For a class 3 delay pool:
-
-delay_parameters pool aggregate network individual
-
-	For a class 4 delay pool:
-
-delay_parameters pool aggregate network individual user
-
-	For a class 5 delay pool:
-
-delay_parameters pool tag
-
-	The variables here are:
-
-		pool		a pool number - ie, a number between 1 and the
-				number specified in delay_pools as used in
-				delay_class lines.
-
-		aggregate	the "delay parameters" for the aggregate bucket
-				(class 1, 2, 3).
-
-		individual	the "delay parameters" for the individual
-				buckets (class 2, 3).
-
-		network		the "delay parameters" for the network buckets
-				(class 3).
-
-		user		the delay parameters for the user buckets
-				(class 4).
-
-		tag		the delay parameters for the tag buckets
-				(class 5).
-
-	A pair of delay parameters is written restore/maximum, where restore is
-	the number of bytes (not bits - modem and network speeds are usually
-	quoted in bits) per second placed into the bucket, and maximum is the
-	maximum number of bytes which can be in the bucket at any time.
-
-	For example, if delay pool number 1 is a class 2 delay pool as in the
-	above example, and is being used to strictly limit each host to 64kbps
-	(plus overheads), with no overall limit, the line is:
-
-delay_parameters 1 -1/-1 8000/8000
-
-	Note that the figure -1 is used to represent "unlimited".
-
-	And, if delay pool number 2 is a class 3 delay pool as in the above
-	example, and you want to limit it to a total of 256kbps (strict limit)
-	with each 8-bit network permitted 64kbps (strict limit) and each
-	individual host permitted 4800bps with a bucket maximum size of 64kb
-	to permit a decent web page to be downloaded at a decent speed
-	(if the network is not being limited due to overuse) but slow down
-	large downloads more significantly:
-
-delay_parameters 2 32000/32000 8000/8000 600/8000
-
-	There must be one delay_parameters line for each delay pool.
-
-	Finally, for a class 4 delay pool as in the example - each user will
-	be limited to 128Kb no matter how many workstations they are logged into.:
-
-delay_parameters 4 32000/32000 8000/8000 600/64000 16000/16000
-DOC_END
-
-NAME: delay_initial_bucket_level
-COMMENT: (percent, 0-100)
-TYPE: ushort
-DEFAULT: 50
-IFDEF: DELAY_POOLS
-LOC: Config.Delay.initial
-DOC_START
-	The initial bucket percentage is used to determine how much is put
-	in each bucket when squid starts, is reconfigured, or first notices
-	a host accessing it (in class 2 and class 3, individual hosts and
-	networks only have buckets associated with them once they have been
-	"seen" by squid).
-DOC_END
 
 NAME: incoming_icp_average
 TYPE: int
