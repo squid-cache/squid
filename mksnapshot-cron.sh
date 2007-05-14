@@ -55,6 +55,14 @@ make_snapshot()
 	mkdir -p $dst/cfgman
 	tar -C $dst/cfgman -zxf $dst/$file
 	;;
+    *-cfgman.html)
+	rm -f cfgman.html
+	ln -s $dst/$file cfgman.html
+	;;
+    *-cfgman.html.gz)
+	rm -f cfgman.html.gz
+	ln -s $dst/$file cfgman.html.gz
+	;;
     esac
   done
 
