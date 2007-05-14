@@ -48,6 +48,14 @@ make_snapshot()
     ls $dst/*-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]$type | sed -e 's/.*-\([0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'$type'\)/\1/' | sort -r | tail +$save | while read f; do
 	rm -f $dst/*-$f $dst/*-$f.md5
     done
+
+    # Special cases
+    case $file in
+    *-cfgman.tar.gz)
+	mkdir -p $dst/cfgman
+	tar -C $dst/cfgman -zxf $dst/$file
+	;;
+    esac
   done
 
   # update web page
