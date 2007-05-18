@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.123 2007/05/17 19:55:52 hno Exp $
+ * $Id: access_log.cc,v 1.124 2007/05/17 19:59:41 hno Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -636,7 +636,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
         case LFT_REPLY_HEADER:
             if (al->reply)
-                sb = al->request->header.getByName(fmt->data.header.header);
+                sb = al->reply->header.getByName(fmt->data.header.header);
 
             out = sb.buf();
 
@@ -656,7 +656,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
         case LFT_REPLY_HEADER_ELEM:
             if (al->reply)
-                sb = al->request->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
+                sb = al->reply->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
 
             out = sb.buf();
 
