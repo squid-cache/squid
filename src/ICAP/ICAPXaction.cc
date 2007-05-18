@@ -103,7 +103,7 @@ void ICAPXaction::openConnection()
     const ICAPServiceRep &s = service();
 
     // TODO: check whether NULL domain is appropriate here
-    connection = icapPconnPool->pop(s.host.buf(), s.port, NULL, NULL, isRetriable);
+    connection = icapPconnPool->pop(s.host.c_str(), s.port, NULL, NULL, isRetriable);
     if (connection >= 0) {
         debugs(93,3, HERE << "reused pconn FD " << connection);
         connector = &ICAPXaction_noteCommConnected; // make doneAll() false
@@ -118,14 +118,8 @@ void ICAPXaction::openConnection()
 
     disableRetries(); // we only retry pconn failures
 
-<<<<<<< ICAPXaction.cc
-    if (connection < 0) {
-        connection = comm_open(SOCK_STREAM, 0, getOutgoingAddr(NULL), 0,
-                               COMM_NONBLOCKING, s.uri.c_str());
-=======
     connection = comm_open(SOCK_STREAM, 0, getOutgoingAddr(NULL), 0,
-        COMM_NONBLOCKING, s.uri.buf());
->>>>>>> 1.15
+                           COMM_NONBLOCKING, s.uri.c_str());
 
     if (connection < 0)
         dieOnConnectionFailure(); // throws
@@ -173,12 +167,8 @@ void ICAPXaction::closeConnection()
         if (reuseConnection) {
             debugs(93,3, HERE << "pushing pconn" << status());
             commSetTimeout(connection, -1, NULL, NULL);
-<<<<<<< ICAPXaction.cc
             icapPconnPool->push(connection, theService->host.c_str(), theService->port, NULL, NULL);
-=======
-            icapPconnPool->push(connection, theService->host.buf(), theService->port, NULL, NULL);
             disableRetries();
->>>>>>> 1.15
         } else {
             debugs(93,3, HERE << "closing pconn" << status());
             // comm_close will clear timeout
