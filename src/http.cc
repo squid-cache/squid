@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.521 2007/05/08 16:37:59 rousskov Exp $
+ * $Id: http.cc,v 1.522 2007/05/18 06:41:24 amosjeffries Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -68,7 +68,7 @@ static const char *const crlf = "\r\n";
 static PF httpStateFree;
 static PF httpTimeout;
 static void httpMaybeRemovePublic(StoreEntry *, http_status);
-static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, String strConnection, HttpRequest * request, HttpRequest * orig_request,
+static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, string strConnection, HttpRequest * request, HttpRequest * orig_request,
         HttpHeader * hdr_out, int we_do_ranges, http_state_flags);
 #if ICAP_CLIENT
 static void icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data);
@@ -92,7 +92,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : ServerStateData(theFwdStat
         const char *url;
 
         if (_peer->options.originserver)
-            url = orig_request->urlpath.buf();
+            url = orig_request->urlpath.c_str();
         else
             url = entry->url();
 
@@ -430,9 +430,9 @@ HttpStateData::cacheableReply()
     /* Pragma: no-cache in _replies_ is not documented in HTTP,
      * but servers like "Active Imaging Webcast/2.0" sure do use it */
     if (hdr->has(HDR_PRAGMA)) {
-        String s = hdr->getList(HDR_PRAGMA);
+        string s = hdr->getList(HDR_PRAGMA);
         const int no_cache = strListIsMember(&s, "no-cache", ',');
-        s.clean();
+        s.clear();
 
         if (no_cache) {
             if (!REFRESH_OVERRIDE(ignore_no_cache))
@@ -584,14 +584,14 @@ HttpStateData::cacheableReply()
 const char *
 httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
 {
-    String vary, hdr;
+    string vary, hdr;
     const char *pos = NULL;
     const char *item;
     const char *value;
     int ilen;
-    static String vstr;
+    static string vstr;
 
-    vstr.clean();
+    vstr.clear();
     vary = reply->header.getList(HDR_VARY);
 
     while (strListGetItem(&vary, ',', &item, &ilen, &pos)) {
@@ -602,14 +602,14 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
         if (strcmp(name, "*") == 0) {
             /* Can not handle "Vary: *" withtout ETag support */
             safe_free(name);
-            vstr.clean();
+            vstr.clear();
             break;
         }
 
         strListAdd(&vstr, name, ',');
         hdr = request->header.getByName(name);
         safe_free(name);
-        value = hdr.buf();
+        value = hdr.c_str();
 
         if (value) {
             value = rfc1738_escape_part(value);
@@ -618,10 +618,10 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
             vstr.append("\"", 1);
         }
 
-        hdr.clean();
+        hdr.clear();
     }
 
-    vary.clean();
+    vary.clear();
 #if X_ACCELERATOR_VARY
 
     pos = NULL;
@@ -634,7 +634,7 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
         strListAdd(&vstr, name, ',');
         hdr = request->header.getByName(name);
         safe_free(name);
-        value = hdr.buf();
+        value = hdr.c_str();
 
         if (value) {
             value = rfc1738_escape_part(value);
@@ -643,14 +643,14 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
             vstr.append("\"", 1);
         }
 
-        hdr.clean();
+        hdr.clear();
     }
 
-    vary.clean();
+    vary.clear();
 #endif
 
-    debugs(11, 3, "httpMakeVaryMark: " << vstr.buf());
-    return vstr.buf();
+    debugs(11, 3, "httpMakeVaryMark: " << vstr);
+    return vstr.c_str();
 }
 
 void
@@ -1361,7 +1361,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     LOCAL_ARRAY(char, bbuf, BBUF_SZ);
     const HttpHeader *hdr_in = &orig_request->header;
     const HttpHeaderEntry *e;
-    String strFwd;
+    string strFwd;
     HttpHeaderPos pos = HttpHeaderInitPos;
     assert (hdr_out->owner == hoRequest);
     /* append our IMS header */
@@ -1371,7 +1371,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
     bool we_do_ranges = decideIfWeDoRanges (orig_request);
 
-    String strConnection (hdr_in->getList(HDR_CONNECTION));
+    string strConnection (hdr_in->getList(HDR_CONNECTION));
 
     while ((e = hdr_in->getEntry(&pos)))
         copyOneHeaderFromClientsideRequestToUpstreamRequest(e, strConnection, request, orig_request, hdr_out, we_do_ranges, flags);
@@ -1390,24 +1390,24 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
     /* append Via */
     if (Config.onoff.via) {
-        String strVia;
+        string strVia;
         strVia = hdr_in->getList(HDR_VIA);
         snprintf(bbuf, BBUF_SZ, "%d.%d %s",
                  orig_request->http_ver.major,
                  orig_request->http_ver.minor, ThisCache);
         strListAdd(&strVia, bbuf, ',');
-        hdr_out->putStr(HDR_VIA, strVia.buf());
-        strVia.clean();
+        hdr_out->putStr(HDR_VIA, strVia.c_str());
+        strVia.clear();
     }
 
 #if ESI
     {
         /* Append Surrogate-Capabilities */
-        String strSurrogate (hdr_in->getList(HDR_SURROGATE_CAPABILITY));
+        string strSurrogate (hdr_in->getList(HDR_SURROGATE_CAPABILITY));
         snprintf(bbuf, BBUF_SZ, "%s=\"Surrogate/1.0 ESI/1.0\"",
                  Config.Accel.surrogate_id);
         strListAdd(&strSurrogate, bbuf, ',');
-        hdr_out->putStr(HDR_SURROGATE_CAPABILITY, strSurrogate.buf());
+        hdr_out->putStr(HDR_SURROGATE_CAPABILITY, strSurrogate.c_str());
     }
 #endif
 
@@ -1419,9 +1419,9 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     else
         strListAdd(&strFwd, "unknown", ',');
 
-    hdr_out->putStr(HDR_X_FORWARDED_FOR, strFwd.buf());
+    hdr_out->putStr(HDR_X_FORWARDED_FOR, strFwd.c_str());
 
-    strFwd.clean();
+    strFwd.clear();
 
     /* append Host if not there already */
     if (!hdr_out->has(HDR_HOST)) {
@@ -1455,7 +1455,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             if (orig_request->auth_user_request)
                 username = orig_request->auth_user_request->username();
             else if (orig_request->extacl_user.size())
-                username = orig_request->extacl_user.buf();
+                username = orig_request->extacl_user.c_str();
 
             snprintf(loginbuf, sizeof(loginbuf), "%s%s", username, orig_request->peer_login + 1);
 
@@ -1464,7 +1464,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         } else if (strcmp(orig_request->peer_login, "PASS") == 0) {
             if (orig_request->extacl_user.size() && orig_request->extacl_passwd.size()) {
                 char loginbuf[256];
-                snprintf(loginbuf, sizeof(loginbuf), "%s:%s", orig_request->extacl_user.buf(), orig_request->extacl_passwd.buf());
+                snprintf(loginbuf, sizeof(loginbuf), "%s:%s", orig_request->extacl_user.c_str(), orig_request->extacl_passwd.c_str());
                 httpHeaderPutStrf(hdr_out, HDR_PROXY_AUTHORIZATION, "Basic %s",
                                   base64_encode(loginbuf));
             }
@@ -1491,7 +1491,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                 hdr_out->putStr(HDR_AUTHORIZATION, auth);
             } else if (orig_request->extacl_user.size() && orig_request->extacl_passwd.size()) {
                 char loginbuf[256];
-                snprintf(loginbuf, sizeof(loginbuf), "%s:%s", orig_request->extacl_user.buf(), orig_request->extacl_passwd.buf());
+                snprintf(loginbuf, sizeof(loginbuf), "%s:%s", orig_request->extacl_user.c_str(), orig_request->extacl_passwd.c_str());
                 httpHeaderPutStrf(hdr_out, HDR_AUTHORIZATION, "Basic %s",
                                   base64_encode(loginbuf));
             }
@@ -1503,7 +1503,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             if (orig_request->auth_user_request)
                 username = orig_request->auth_user_request->username();
             else if (orig_request->extacl_user.size())
-                username = orig_request->extacl_user.buf();
+                username = orig_request->extacl_user.c_str();
 
             snprintf(loginbuf, sizeof(loginbuf), "%s%s", username, orig_request->peer_login + 1);
 
@@ -1528,7 +1528,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             httpHdrCcSetMaxAge(cc, getMaxAge(url));
 
             if (request->urlpath.size())
-                assert(strstr(url, request->urlpath.buf()));
+                assert(strstr(url, request->urlpath.c_str()));
         }
 
         /* Set no-cache if determined needed but not found */
@@ -1563,16 +1563,16 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     if (Config2.onoff.mangle_request_headers)
         httpHdrMangleList(hdr_out, request, ROR_REQUEST);
 
-    strConnection.clean();
+    strConnection.clear();
 }
 
 void
-copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, String strConnection, HttpRequest * request, HttpRequest * orig_request, HttpHeader * hdr_out, int we_do_ranges, http_state_flags flags)
+copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, string strConnection, HttpRequest * request, HttpRequest * orig_request, HttpHeader * hdr_out, int we_do_ranges, http_state_flags flags)
 {
-    debugs(11, 5, "httpBuildRequestHeader: " << e->name.buf() << ": " << e->value.buf());
+    debugs(11, 5, "httpBuildRequestHeader: " << e->name << ": " << e->value);
 
     if (!httpRequestHdrAllowed(e, &strConnection)) {
-        debugs(11, 2, "'" << e->name.buf() << "' header denied by anonymize_headers configuration");
+        debugs(11, 2, "'" << e->name << "' header denied by anonymize_headers configuration");
         return;
     }
 
@@ -1731,7 +1731,7 @@ HttpStateData::buildRequestPrefix(HttpRequest * request,
     HttpVersion httpver(1, 0);
     mb->Printf("%s %s HTTP/%d.%d\r\n",
                RequestMethodStr[request->method],
-               request->urlpath.size() ? request->urlpath.buf() : "/",
+               request->urlpath.size() ? request->urlpath.c_str() : "/",
                httpver.major,httpver.minor);
     /* build and pack headers */
     {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_negotiate.cc,v 1.18 2007/05/09 09:07:40 wessels Exp $
+ * $Id: auth_negotiate.cc,v 1.19 2007/05/18 06:41:31 amosjeffries Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -180,7 +180,7 @@ AuthNegotiateConfig::init(AuthConfig * scheme)
             negotiateauthenticators = helperStatefulCreate("negotiateauthenticator");
 
         if (!proxy_auth_cache)
-            proxy_auth_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
+            proxy_auth_cache = hash_create((HASHCMP *) std::strcmp, 7921, hash_string);
 
         assert(proxy_auth_cache);
 

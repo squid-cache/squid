@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.26 2007/04/30 16:56:09 wessels Exp $
+ * $Id: MemObject.cc,v 1.27 2007/05/18 06:41:23 amosjeffries Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -168,7 +168,7 @@ MemObject::dump() const
     debugs(20, 1, "MemObject->nclients: " << nclients);
     debugs(20, 1, "MemObject->reply: " << _reply);
     debugs(20, 1, "MemObject->request: " << request);
-    debugs(20, 1, "MemObject->log_url: " << log_url << " " << checkNullString(log_url));
+    debugs(20, 1, "MemObject->log_url: " << (log_url ? log_url : "(NULL)") );
 }
 
 HttpReply const *

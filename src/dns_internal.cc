@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.98 2007/04/30 16:56:09 wessels Exp $
+ * $Id: dns_internal.cc,v 1.99 2007/05/18 06:41:24 amosjeffries Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -1238,7 +1238,7 @@ idnsInit(void)
     if (!init) {
         memDataInit(MEM_IDNS_QUERY, "idns_query", sizeof(idns_query), 0);
         memset(RcodeMatrix, '\0', sizeof(RcodeMatrix));
-        idns_lookup_hash = hash_create((HASHCMP *) strcmp, 103, hash_string);
+        idns_lookup_hash = hash_create((HASHCMP *) std::strcmp, 103, hash_string);
         init++;
     }
 }

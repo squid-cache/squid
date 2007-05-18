@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.68 2007/05/09 09:07:43 wessels Exp $
+ * $Id: auth_ntlm.cc,v 1.69 2007/05/18 06:41:32 amosjeffries Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -181,7 +181,7 @@ AuthNTLMConfig::init(AuthConfig * scheme)
             ntlmauthenticators = helperStatefulCreate("ntlmauthenticator");
 
         if (!proxy_auth_cache)
-            proxy_auth_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
+            proxy_auth_cache = hash_create((HASHCMP *) std::strcmp, 7921, hash_string);
 
         assert(proxy_auth_cache);
 

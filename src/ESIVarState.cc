@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIVarState.cc,v 1.8 2007/04/28 22:26:37 hno Exp $
+ * $Id: ESIVarState.cc,v 1.9 2007/05/18 06:41:22 amosjeffries Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -318,9 +318,9 @@ ESIVarState::ESIVarState (HttpHeader const *aHeader, char const *uri)
 }
 
 void
-ESIVarState::removeVariable (String const &name)
+ESIVarState::removeVariable (string const &name)
 {
-    Variable *candidate = static_cast <Variable *>(variables.find (name.buf(), name.size()));
+    Variable *candidate = static_cast <Variable *>(variables.find (name.c_str(), name.size()));
 
     if (candidate) {
         /* XXX: remove me */
@@ -335,7 +335,7 @@ ESIVarState::removeVariable (String const &name)
 void
 ESIVarState::addVariable(char const *name, size_t len, Variable *aVariable)
 {
-    String temp;
+    string temp;
     temp.limitInit (name, len);
     removeVariable (temp);
     variables.add(name, len, aVariable);
@@ -434,10 +434,10 @@ ESIVariableCookie::eval (ESIVarState &state, char const *subref, char const *fou
         if (!subref)
             s = state.header().getStr (HDR_COOKIE);
         else {
-            String S = state.header().getListMember (HDR_COOKIE, subref, ';');
+            string S = state.header().getListMember (HDR_COOKIE, subref, ';');
 
             if (S.size())
-                ESISegment::ListAppend (state.getOutput(), S.buf(), S.size());
+                ESISegment::ListAppend (state.getOutput(), S.c_str(), S.size());
             else if (found_default)
                 ESISegment::ListAppend (state.getOutput(), found_default, strlen (found_default));
         }
@@ -470,8 +470,8 @@ ESIVariableLanguage::eval (ESIVarState &state, char const *subref, char const *f
 
     if (state.header().has(HDR_ACCEPT_LANGUAGE)) {
         if (!subref) {
-            String S (state.header().getList (HDR_ACCEPT_LANGUAGE));
-            ESISegment::ListAppend (state.getOutput(), S.buf(), S.size());
+            string S (state.header().getList (HDR_ACCEPT_LANGUAGE));
+            ESISegment::ListAppend (state.getOutput(), S.c_str(), S.size());
         } else {
             if (state.header().hasListMember (HDR_ACCEPT_LANGUAGE, subref, ',')) {
                 s = "true";
@@ -885,10 +885,9 @@ ESIVarState::buildVary (HttpReply *rep)
     if (!tempstr[0])
         return;
 
-    String strVary (rep->header.getList (HDR_VARY));
+    string strVary (rep->header.getList (HDR_VARY));
 
-    if (!strVary.size() || strVary.buf()[0] != '*') {
+    if (!strVary.size() || strVary[0] != '*') {
         rep->header.putStr (HDR_VARY, tempstr);
     }
 }
-

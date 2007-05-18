@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.225 2007/05/09 09:07:39 wessels Exp $
+ * $Id: errorpage.cc,v 1.226 2007/05/18 06:41:24 amosjeffries Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -534,7 +534,7 @@ errorDump(ErrorState * err, MemBuf * mb)
         Packer p;
         str.Printf("%s %s HTTP/%d.%d\n",
                    RequestMethodStr[r->method],
-                   r->urlpath.size() ? r->urlpath.buf() : "/",
+                   r->urlpath.size() ? r->urlpath.c_str() : "/",
                    r->http_ver.major, r->http_ver.minor);
         packerToMemInit(&p, &str);
         r->header.packInto(&p);
@@ -739,7 +739,7 @@ errorConvert(char token, ErrorState * err)
             Packer p;
             mb.Printf("%s %s HTTP/%d.%d\n",
                       RequestMethodStr[r->method],
-                      r->urlpath.size() ? r->urlpath.buf() : "/",
+                      r->urlpath.size() ? r->urlpath.c_str() : "/",
                       r->http_ver.major, r->http_ver.minor);
             packerToMemInit(&p, &mb);
             r->header.packInto(&p);

@@ -1,5 +1,5 @@
 /*
- * $Id: ESIAssign.h,v 1.3 2004/08/30 05:12:31 robertc Exp $
+ * $Id: ESIAssign.h,v 1.4 2007/05/18 06:41:22 amosjeffries Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -49,11 +49,11 @@ class ESIVariableExpression : public ESIVarState::Variable
 
 public:
     ~ESIVariableExpression();
-    ESIVariableExpression (String const &value);
+    ESIVariableExpression (string const &value);
     virtual void eval (ESIVarState &state, char const *, char const *) const;
 
 private:
-    String expression;
+    string expression;
 };
 
 /* ESIAssign */
@@ -81,10 +81,10 @@ private:
     void evaluateVariable();
     esiTreeParentPtr parent;
     ESIVarState *varState;
-    String name;
+    string name;
     ESIVariableExpression * value;
     ESIElement::Pointer variable;
-    String unevaluatedVariable;
+    string unevaluatedVariable;
 };
 
 MEMPROXY_CLASS_INLINE(ESIAssign)

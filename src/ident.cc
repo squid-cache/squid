@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.75 2007/04/28 22:26:37 hno Exp $
+ * $Id: ident.cc,v 1.76 2007/05/18 06:41:24 amosjeffries Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -270,7 +270,7 @@ identStart(struct sockaddr_in *me, struct sockaddr_in *my_peer, IDCB * callback,
 void
 identInit(void)
 {
-    ident_hash = hash_create((HASHCMP *) strcmp,
+    ident_hash = hash_create((HASHCMP *) std::strcmp,
                              hashPrime(Squid_MaxFD / 8),
                              hash4);
 }

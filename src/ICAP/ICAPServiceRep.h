@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPServiceRep.h,v 1.7 2007/05/08 16:32:12 rousskov Exp $
+ * $Id: ICAPServiceRep.h,v 1.8 2007/05/18 06:41:30 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -91,22 +91,22 @@ public:
     void callWhenReady(Callback *cb, void *data);
 
     // the methods below can only be called on an up() service
-    bool wantsUrl(const String &urlPath) const;
-    bool wantsPreview(const String &urlPath, size_t &wantedSize) const;
+    bool wantsUrl(const string &urlPath) const;
+    bool wantsPreview(const string &urlPath, size_t &wantedSize) const;
     bool allows204() const;
 
     void noteFailure(); // called by transactions to report service failure
 
 public:
-    String key;
+    string key;
     ICAP::Method method;
     ICAP::VectPoint point;
-    String uri;    // service URI
+    string uri;    // service URI
 
     // URI components
-    String host;
+    string host;
     int port;
-    String resource;
+    string resource;
 
     // XXX: use it when selecting a service and handling ICAP errors!
     bool bypass;

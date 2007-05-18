@@ -21,7 +21,7 @@ public:
     virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
     virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
     virtual void parse(int, char*);
-    virtual StoreSearch *search(String, HttpRequest *);
+    virtual StoreSearch *search(string, HttpRequest *);
 };
 
 typedef RefCount<TestSwapDir> TestSwapDirPointer;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: internal.cc,v 1.45 2007/04/28 22:26:37 hno Exp $
+ * $Id: internal.cc,v 1.46 2007/05/18 06:41:24 amosjeffries Exp $
  *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
@@ -50,7 +50,7 @@ void
 internalStart(HttpRequest * request, StoreEntry * entry)
 {
     ErrorState *err;
-    const char *upath = request->urlpath.buf();
+    const char *upath = request->urlpath.c_str();
     debugs(76, 3, "internalStart: " << inet_ntoa(request->client_addr) << " requesting '" << upath << "'");
 
     if (0 == strcmp(upath, "/squid-internal-dynamic/netdb")) {

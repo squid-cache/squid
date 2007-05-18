@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_log.cc,v 1.32 2007/04/28 22:26:38 hno Exp $
+ * $Id: store_log.cc,v 1.33 2007/05/18 06:41:25 amosjeffries Exp $
  *
  * DEBUG: section 20    Storage Manager Logging Functions
  * AUTHOR: Duane Wessels
@@ -87,7 +87,7 @@ storeLog(int tag, const StoreEntry * e)
                       (int) reply->date,
                       (int) reply->last_modified,
                       (int) reply->expires,
-                      reply->content_type.size() ? reply->content_type.buf() : "unknown",
+                      !reply->content_type.empty() ? reply->content_type.c_str() : "unknown",
                       reply->content_length,
                       e->contentLen(),
                       RequestMethodStr[mem->method],

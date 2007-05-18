@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.68 2007/04/28 22:26:37 hno Exp $
+ * $Id: client_db.cc,v 1.69 2007/05/18 06:41:23 amosjeffries Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -80,7 +80,7 @@ clientdbInit(void)
     if (client_table)
         return;
 
-    client_table = hash_create((HASHCMP *) strcmp, CLIENT_DB_HASH_SIZE, hash_string);
+    client_table = hash_create((HASHCMP *) std::strcmp, CLIENT_DB_HASH_SIZE, hash_string);
 }
 
 void

@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.33 2007/04/21 07:14:13 wessels Exp $
+ * $Id: Store.h,v 1.34 2007/05/18 06:41:23 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -258,7 +258,7 @@ public:
 
     /* TODO: imeplement the async version */
     virtual void get
-        (String const key , STOREGETCLIENT callback, void *cbdata) = 0;
+        (string const key , STOREGETCLIENT callback, void *cbdata) = 0;
 
     /* prepare the store for use. The store need not be usable immediately,
      * it should respond to readable() and writable() with true as soon
@@ -282,7 +282,7 @@ public:
     virtual void unlink (StoreEntry &);
 
     /* search in the store */
-    virtual StoreSearch *search(String const url, HttpRequest *) = 0;
+    virtual StoreSearch *search(string const url, HttpRequest *) = 0;
 
     /* pulled up from SwapDir for migration.... probably do not belong here */
     virtual void reference(StoreEntry &) = 0;	/* Reference this object */

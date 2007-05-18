@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.74 2007/05/09 09:07:38 wessels Exp $
+ * $Id: HttpRequest.cc,v 1.75 2007/05/18 06:41:22 amosjeffries Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -70,7 +70,7 @@ HttpRequest::init()
 {
     method = METHOD_NONE;
     protocol = PROTO_NONE;
-    urlpath = NULL;
+    urlpath.clear();
     login[0] = '\0';
     host[0] = '\0';
     auth_user_request = NULL;
@@ -112,7 +112,7 @@ HttpRequest::clean()
 
     safe_free(vary_headers);
 
-    urlpath.clean();
+    urlpath.clear();
 
     header.clean();
 
@@ -126,13 +126,13 @@ HttpRequest::clean()
         range = NULL;
     }
 
-    tag.clean();
+    tag.clear();
 
-    extacl_user.clean();
+    extacl_user.clear();
 
-    extacl_passwd.clean();
+    extacl_passwd.clear();
 
-    extacl_log.clean();
+    extacl_log.clear();
 }
 
 void
@@ -240,7 +240,7 @@ HttpRequest::pack(Packer * p)
     assert(p);
     /* pack request-line */
     packerPrintf(p, "%s %s HTTP/1.0\r\n",
-                 RequestMethodStr[method], urlpath.buf());
+                 RequestMethodStr[method], urlpath.c_str());
     /* headers */
     header.packInto(p);
     /* trailer */
@@ -272,12 +272,12 @@ HttpRequest::prefixLen()
  * check anonymizer (aka header_access) configuration.
  */
 int
-httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConn)
+httpRequestHdrAllowed(const HttpHeaderEntry * e, string * strConn)
 {
     assert(e);
     /* check connection header */
 
-    if (strConn && strListIsMember(strConn, e->name.buf(), ','))
+    if (strConn && strListIsMember(strConn, e->name.c_str(), ','))
         return 0;
 
     return 1;
@@ -351,7 +351,7 @@ const char *HttpRequest::packableURI(bool full_uri) const
         return urlCanonical((HttpRequest*)this);
 
     if (urlpath.size())
-        return urlpath.buf();
+        return urlpath.c_str();
 
     return "/";
 }

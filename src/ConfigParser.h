@@ -1,6 +1,6 @@
 
 /*
- * $Id: ConfigParser.h,v 1.6 2006/05/29 00:14:59 robertc Exp $
+ * $Id: ConfigParser.h,v 1.7 2007/05/18 06:41:22 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -61,7 +61,7 @@ public:
     static void ParseUShort(u_short *var);
     static void ParseBool(bool *var);
     static void ParseString(char **var);
-    static void ParseString(String *var);
+    static void ParseString(string &var);
     static void ParseWordList(wordlist **list);
     static char * strtokFile();
 };

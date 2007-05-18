@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.59 2007/05/07 18:12:28 wessels Exp $
+ * $Id: HttpHeaderTools.cc,v 1.60 2007/05/18 06:41:22 amosjeffries Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -75,7 +75,7 @@ httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo * table, int count)
     int i;
 
     for (i = 0; i < count; ++i)
-        table[i].name.clean();
+        table[i].name.clear();
 
     delete [] table;
 }
@@ -161,7 +161,7 @@ httpHeaderAddContRange(HttpHeader * hdr, HttpHdrRangeSpec spec, ssize_t ent_len)
 int
 httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive)
 {
-    String list;
+    string list;
     http_hdr_type ht;
     int res;
     /* what type of header do we have? */
@@ -177,14 +177,12 @@ httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive)
 
     res = strListIsMember(&list, directive, ',');
 
-    list.clean();
-
     return res;
 }
 
 /* returns true iff "m" is a member of the list */
 int
-strListIsMember(const String * list, const char *m, char del)
+strListIsMember(const string * list, const char *m, char del)
 {
     const char *pos = NULL;
     const char *item;
@@ -203,7 +201,7 @@ strListIsMember(const String * list, const char *m, char del)
 
 /* returns true iff "s" is a substring of a member of the list */
 int
-strListIsSubstr(const String * list, const char *s, char del)
+strListIsSubstr(const string * list, const char *s, char del)
 {
     assert(list && del);
     return list->pos(s) != 0;
@@ -219,7 +217,7 @@ strListIsSubstr(const String * list, const char *s, char del)
 
 /* appends an item to the list */
 void
-strListAdd(String * str, const char *item, char del)
+strListAdd(string * str, const char *item, char del)
 {
     assert(str && item);
 
@@ -243,7 +241,7 @@ strListAdd(String * str, const char *item, char del)
  * init pos with NULL to start iteration.
  */
 int
-strListGetItem(const String * str, char del, const char **item, int *ilen, const char **pos)
+strListGetItem(const string * str, char del, const char **item, int *ilen, const char **pos)
 {
     size_t len;
     static char delim[2][3] = {
@@ -260,7 +258,7 @@ strListGetItem(const String * str, char del, const char **item, int *ilen, const
         else
             (*pos)++;
     } else {
-        *pos = str->buf();
+        *pos = str->c_str();
 
         if (!*pos)
             return 0;
@@ -349,10 +347,10 @@ httpHeaderParseSize(const char *start, ssize_t * value)
  * RC TODO: This is too looose. We should honour the BNF and exclude CTL's
  */
 int
-httpHeaderParseQuotedString (const char *start, String *val)
+httpHeaderParseQuotedString (const char *start, string *val)
 {
     const char *end, *pos;
-    val->clean();
+    val->clear();
     assert (*start == '"');
     pos = start + 1;
 

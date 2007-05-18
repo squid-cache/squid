@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.28 2007/05/08 16:46:37 rousskov Exp $
+ * $Id: client_side_request.h,v 1.29 2007/05/18 06:41:23 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -75,7 +75,7 @@ public:
     ClientHttpRequest(ClientHttpRequest const &);
     ClientHttpRequest& operator=(ClientHttpRequest const &);
 
-    String rangeBoundaryStr() const;
+    string rangeBoundaryStr() const;
     void freeResources();
     void updateCounters();
     void logRequest();

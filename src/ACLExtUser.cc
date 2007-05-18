@@ -1,5 +1,5 @@
 /*
- * $Id: ACLExtUser.cc,v 1.9 2007/04/28 22:26:37 hno Exp $
+ * $Id: ACLExtUser.cc,v 1.10 2007/05/18 06:41:21 amosjeffries Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -79,7 +79,7 @@ int
 ACLExtUser::match(ACLChecklist *checklist)
 {
     if (checklist->request->extacl_user.size()) {
-        return data->match(checklist->request->extacl_user.buf());
+        return data->match(checklist->request->extacl_user.c_str());
     } else {
         return -1;
     }

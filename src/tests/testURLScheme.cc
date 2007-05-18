@@ -104,9 +104,9 @@ testURLScheme::testConstructprotocol_t()
 void
 testURLScheme::testConst_str()
 {
-    String lhs("wais");
+    string lhs("wais");
     URLScheme wais(PROTO_WAIS);
-    String rhs(wais.const_str());
+    string rhs(wais.const_str());
     CPPUNIT_ASSERT_EQUAL(lhs, rhs);
 }
 
@@ -143,7 +143,7 @@ testURLScheme::testStream()
 {
     std::ostringstream buffer;
     buffer << URLScheme(PROTO_HTTP);
-    String http_str("http");
-    String from_buf(buffer.str().c_str());
+    string http_str("http");
+    string from_buf(buffer.str().c_str());
     CPPUNIT_ASSERT_EQUAL(http_str, from_buf);
 }
