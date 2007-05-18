@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.122 2007/04/28 22:26:37 hno Exp $
+ * $Id: access_log.cc,v 1.123 2007/05/17 19:55:52 hno Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -364,6 +364,7 @@ typedef enum {
 
     LFT_REQUEST_METHOD,
     LFT_REQUEST_URI,
+    LFT_REQUEST_URLPATH,
     /*LFT_REQUEST_QUERY, * // * this is not needed. see strip_query_terms */
     LFT_REQUEST_VERSION,
 
@@ -482,6 +483,7 @@ struct logformat_token_table_entry logformat_token_table[] =
 
         {"rm", LFT_REQUEST_METHOD},
         {"ru", LFT_REQUEST_URI},	/* doesn't include the query-string */
+        {"rp", LFT_REQUEST_URLPATH},	/* doesn't include the host */
         /* { "rq", LFT_REQUEST_QUERY }, * /     / * the query-string, INCLUDING the leading ? */
         {">v", LFT_REQUEST_VERSION},
         {"rv", LFT_REQUEST_VERSION},
@@ -761,6 +763,13 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
         case LFT_REQUEST_URI:
             out = al->url;
 
+            break;
+
+        case LFT_REQUEST_URLPATH:
+	    if (al->request) {
+		out = al->request->urlpath.buf();
+		quote = 1;
+	    }
             break;
 
         case LFT_REQUEST_VERSION:
