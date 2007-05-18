@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.105 2007/04/28 22:26:38 hno Exp $
+ * $Id: urn.cc,v 1.106 2007/05/18 06:41:26 amosjeffries Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -53,11 +53,11 @@ public:
     void *operator new (size_t byteCount);
     void operator delete (void *address);
     void start (HttpRequest *, StoreEntry *);
-    char *getHost (String &urlpath);
+    char *getHost (string &urlpath);
     void setUriResFromRequest(HttpRequest *);
     bool RequestNeedsMenu(HttpRequest *r);
     void updateRequestURL(HttpRequest *r, char const *newPath);
-    void createUriResRequest (String &uri);
+    void createUriResRequest (string &uri);
 
     virtual ~UrnState();
 
@@ -174,17 +174,17 @@ urnFindMinRtt(url_entry * urls, method_t m, int *rtt_ret)
 }
 
 char *
-UrnState::getHost (String &urlpath)
+UrnState::getHost (string &urlpath)
 {
     char * result;
     char const *t;
 
     if ((t = urlpath.pos(':')) != NULL) {
         urlpath.set(t, '\0');
-        result = xstrdup(urlpath.buf());
+        result = xstrdup(urlpath.c_str());
         urlpath.set(t, ':');
     } else {
-        result = xstrdup(urlpath.buf());
+        result = xstrdup(urlpath.c_str());
     }
 
     return result;
@@ -193,7 +193,7 @@ UrnState::getHost (String &urlpath)
 bool
 UrnState::RequestNeedsMenu(HttpRequest *r)
 {
-    return strncasecmp(r->urlpath.buf(), "menu.", 5) == 0;
+    return strncasecmp(r->urlpath, "menu.", 5) == 0;
 }
 
 void
@@ -205,11 +205,11 @@ UrnState::updateRequestURL(HttpRequest *r, char const *newPath)
 }
 
 void
-UrnState::createUriResRequest (String &uri)
+UrnState::createUriResRequest (string &uri)
 {
     LOCAL_ARRAY(char, local_urlres, 4096);
     char *host = getHost (uri);
-    snprintf(local_urlres, 4096, "http://%s/uri-res/N2L?urn:%s", host, uri.buf());
+    snprintf(local_urlres, 4096, "http://%s/uri-res/N2L?urn:%s", host, uri.c_str());
     safe_free (host);
     safe_free (urlres);
     urlres = xstrdup (local_urlres);
@@ -220,7 +220,7 @@ void
 UrnState::setUriResFromRequest(HttpRequest *r)
 {
     if (RequestNeedsMenu(r)) {
-        updateRequestURL(r, r->urlpath.buf() + 5);
+        updateRequestURL(r, r->urlpath.c_str() + 5);
         flags.force_menu = 1;
     }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIVarState.h,v 1.2 2003/08/04 22:14:40 robertc Exp $
+ * $Id: ESIVarState.h,v 1.3 2007/05/18 06:41:22 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -64,7 +64,7 @@ public:
 
     class Variable;
     void addVariable (char const *, size_t, Variable *);
-    void removeVariable (String const &);
+    void removeVariable (string const &);
 
     void *operator new (size_t byteCount);
     void operator delete (void *address);

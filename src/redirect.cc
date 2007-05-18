@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.118 2007/05/07 18:38:40 wessels Exp $
+ * $Id: redirect.cc,v 1.119 2007/05/18 06:41:25 amosjeffries Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -135,8 +135,8 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
 
     if (http->request->auth_user_request)
         r->client_ident = http->request->auth_user_request->username();
-    else if (http->request->extacl_user.buf() != NULL) {
-        r->client_ident = http->request->extacl_user.buf();
+    else if (!http->request->extacl_user.empty()) {
+        r->client_ident = http->request->extacl_user.c_str();
     }
 
     if (!r->client_ident && (conn != NULL && conn->rfc931[0]))

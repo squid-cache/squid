@@ -1,9 +1,9 @@
 
 /*
- * $Id: SquidString.h,v 1.8 2006/05/29 00:15:01 robertc Exp $
+ * $Id: SquidString.h,v 1.9 2007/05/18 06:41:23 amosjeffries Exp $
  *
  * DEBUG: section 67    String
- * AUTHOR: Duane Wessels
+ * AUTHOR: Duane Wessels, Amos Jeffries
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -33,112 +33,68 @@
  *
  */
 
+/**
+ *
+ *  To allow for easy future updates to the string handling within squid
+ *  We adopt the std::string API as the basis for string operations.
+ *  Then we typedef string (due to namespacing actually ::Squid::string)
+ *  as the preferred string handling class.
+ *  For Release 3.0 it is intended that the old String (no SquidString)
+ *  Will be the default string type.
+ *  For Release 3.1 it is expected that either std::string of another
+ *  custom managed type will be defined as default.
+ *
+ *  NP: checkout http://johnpanzer.com/tsc_cuj/ToolboxOfStrings.html
+ *      for possibly better and faster strings.
+ *
+ *  This has been done for several reasons:
+ * 
+ *  The initial String implementation was incomplete and non-standard
+ *  std::string provides a better known API for string handling
+ *  std::string or a derivative may be used in future within squid
+ *  String is a defined alternative to std::string in some systems
+ *  
+ *  These changes:
+ *    - move the old String class to SquidString making the
+ *      internal definition explicit.
+ *    - provide the well-known type of 'string' for general use
+ *    - migrate custom functions to well-known API:
+ *        buf()           -> c_str()
+ *        clean()         -> clear()
+ *    - remove redundant functions:
+ *        buf(char*)      -> operator=(char*)
+ *        initBuf(char*)  -> operator=(char*)
+ *        reset(char*)    -> operator=(char*)
+ *    - make init(char*) private for use by various assignment/costructor
+ *    - define standard string operators
+ *    - define debugs stream operator
+ *
+ */
+
 #ifndef SQUID_STRING_H
 #define SQUID_STRING_H
 
-/* forward decls */
+    /* Provide standard 'string' type                                                */
+    /* class defined by the #include file MUST present the basic std::string API     */
+    /* at least partially as not all operatios are used by squid.                    */
+    /* API Ref:  http://www.sgi.com/tech/stl/basic_string.html                       */
 
-class CacheManager;
+#include "SqString.h"
+typedef SqString string;
 
-#define DEBUGSTRINGS 0
-#if DEBUGSTRINGS
-#include "splay.h"
 
-class String;
+    /* Overload standard C functions using the basic string API */
 
-class StringRegistry
-{
+inline int strncasecmp(const string &lhs, const string &rhs, size_t len) { return strncasecmp(lhs.c_str(), rhs.c_str(), len); }
+inline int strcasecmp(const string &lhs, const string &rhs) { return strcasecmp(lhs.c_str(), rhs.c_str()); }
 
-public:
-    static StringRegistry &Instance();
+inline int strncmp(const string &lhs, const string &rhs, size_t len) { return strncmp(lhs.c_str(), rhs.c_str(), len); }
+inline int strcmp(const string &lhs, const string &rhs) { return strcmp(lhs.c_str(), rhs.c_str()); }
 
-    void add
-        (String const *);
+inline const char * strpbrk(const string &lhs, const string &rhs) { return strpbrk(lhs.c_str(), rhs.c_str()); }
 
-    void registerWithCacheManager(CacheManager & manager);
+inline const char * strstr(const string &lhs, const string &rhs) { return strstr(lhs.c_str(), rhs.c_str()); }
 
-    void remove
-        (String const *);
-
-private:
-    static OBJH Stat;
-
-    static StringRegistry Instance_;
-
-    static SplayNode<String const *>::SPLAYWALKEE Stater;
-
-    Splay<String const *> entries;
-
-    bool registered;
-
-};
-
-class StoreEntry;
-#endif
-
-class String
-{
-
-public:
-    _SQUID_INLINE_ String();
-    String (char const *);
-    String (String const &);
-    ~String();
-
-    String &operator =(char const *);
-    String &operator =(String const &);
-    bool operator ==(String const &) const;
-    bool operator !=(String const &) const;
-
-    _SQUID_INLINE_ int size() const;
-    _SQUID_INLINE_ char const * buf() const;
-    void buf(char *);
-    void init (char const *);
-    void initBuf(size_t sz);
-    void limitInit(const char *str, int len);
-    void clean();
-    void reset(char const *str);
-    void append(char const *buf, int len);
-    void append(char const *buf);
-    void append(char const);
-    void append (String const &);
-    void absorb(String &old);
-    _SQUID_INLINE_ const char * pos(char const *) const;
-    _SQUID_INLINE_ const char * pos(char const ch) const;
-    _SQUID_INLINE_ const char * rpos(char const ch) const;
-    _SQUID_INLINE_ int cmp (char const *) const;
-    _SQUID_INLINE_ int cmp (char const *, size_t count) const;
-    _SQUID_INLINE_ int cmp (String const &) const;
-    _SQUID_INLINE_ int caseCmp (char const *) const;
-    _SQUID_INLINE_ int caseCmp (char const *, size_t count) const;
-
-    _SQUID_INLINE_ void set
-        (char const *loc, char const ch);
-
-    _SQUID_INLINE_ void cut (size_t newLength);
-
-    _SQUID_INLINE_ void cutPointer (char const *loc);
-
-#if DEBUGSTRINGS
-
-    void stat (StoreEntry *) const;
-
-#endif
-
-private:
-    /* never reference these directly! */
-    unsigned short int size_;	/* buffer size; 64K limit */
-
-    unsigned short int len_;	/* current length  */
-
-    char *buf_;
-};
-
-_SQUID_INLINE_ std::ostream & operator<<(std::ostream& os, String const &aString);
-
-#ifdef _USE_INLINE_
-#include "String.cci"
-#endif
+inline std::ostream& operator <<(std::ostream &os, const string &s) { os << s.c_str(); return os; }
 
 #endif /* SQUID_STRING_H */
-

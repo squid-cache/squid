@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayTagged.h,v 1.4 2003/08/04 22:14:40 robertc Exp $
+ * $Id: DelayTagged.h,v 1.5 2007/05/18 06:41:22 amosjeffries Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -58,10 +58,10 @@ public:
     void operator delete (void *);
 
     void stats(StoreEntry *)const;
-    DelayTaggedBucket(String &aTag);
+    DelayTaggedBucket(string &aTag);
     ~DelayTaggedBucket();
     DelayBucket theBucket;
-    String tag;
+    string tag;
 };
 
 class DelayTagged : public CompositePoolNode
@@ -88,7 +88,7 @@ class Id:public DelayIdComposite
     public:
         void *operator new(size_t);
         void operator delete (void *);
-        Id (RefCount<DelayTagged>, String &);
+        Id (RefCount<DelayTagged>, string &);
         ~Id();
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);

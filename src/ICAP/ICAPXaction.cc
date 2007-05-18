@@ -118,13 +118,19 @@ void ICAPXaction::openConnection()
 
     disableRetries(); // we only retry pconn failures
 
+<<<<<<< ICAPXaction.cc
+    if (connection < 0) {
+        connection = comm_open(SOCK_STREAM, 0, getOutgoingAddr(NULL), 0,
+                               COMM_NONBLOCKING, s.uri.c_str());
+=======
     connection = comm_open(SOCK_STREAM, 0, getOutgoingAddr(NULL), 0,
         COMM_NONBLOCKING, s.uri.buf());
+>>>>>>> 1.15
 
     if (connection < 0)
         dieOnConnectionFailure(); // throws
 
-    debugs(93,3, typeName << " opens connection to " << s.host.buf() << ":" << s.port);
+    debugs(93,3, typeName << " opens connection to " << s.host << ":" << s.port);
 
     commSetTimeout(connection, Config.Timeout.connect,
                    &ICAPXaction_noteCommTimedout, this);
@@ -133,7 +139,7 @@ void ICAPXaction::openConnection()
     comm_add_close_handler(connection, closer, this);
 
     connector = &ICAPXaction_noteCommConnected;
-    commConnectStart(connection, s.host.buf(), s.port, connector, this);
+    commConnectStart(connection, s.host.c_str(), s.port, connector, this);
 }
 
 /*
@@ -167,8 +173,12 @@ void ICAPXaction::closeConnection()
         if (reuseConnection) {
             debugs(93,3, HERE << "pushing pconn" << status());
             commSetTimeout(connection, -1, NULL, NULL);
+<<<<<<< ICAPXaction.cc
+            icapPconnPool->push(connection, theService->host.c_str(), theService->port, NULL, NULL);
+=======
             icapPconnPool->push(connection, theService->host.buf(), theService->port, NULL, NULL);
             disableRetries();
+>>>>>>> 1.15
         } else {
             debugs(93,3, HERE << "closing pconn" << status());
             // comm_close will clear timeout
@@ -243,7 +253,7 @@ void ICAPXaction::noteCommTimedout()
 
 void ICAPXaction::handleCommTimedout()
 {
-    debugs(93, 0, HERE << "ICAP FD " << connection << " timeout to " << theService->methodStr() << " " << theService->uri.buf());
+    debugs(93, 0, HERE << "ICAP FD " << connection << " timeout to " << theService->methodStr() << " " << theService->uri);
     reuseConnection = false;
     MemBuf mb;
     mb.init();

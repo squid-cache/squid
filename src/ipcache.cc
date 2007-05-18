@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.259 2007/04/28 22:26:37 hno Exp $
+ * $Id: ipcache.cc,v 1.260 2007/05/18 06:41:24 amosjeffries Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -586,7 +586,7 @@ ipcache_init(void)
     ipcache_low = (long) (((float) Config.ipcache.size *
                            (float) Config.ipcache.low) / (float) 100);
     n = hashPrime(ipcache_high / 4);
-    ip_table = hash_create((HASHCMP *) strcmp, n, hash4);
+    ip_table = hash_create((HASHCMP *) std::strcmp, n, hash4);
     memDataInit(MEM_IPCACHE_ENTRY, "ipcache_entry", sizeof(ipcache_entry), 0);
 }
 

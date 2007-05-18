@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLHTTPHeaderData.h,v 1.2 2006/08/05 12:05:35 robertc Exp $
+ * $Id: ACLHTTPHeaderData.h,v 1.3 2007/05/18 06:41:21 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -53,7 +53,7 @@ public:
 
 private:
     http_hdr_type hdrId; // set if header is known
-    String hdrName; // always set
+    string hdrName; // always set
     ACLData<char const *> * regex_rule;
 };
 

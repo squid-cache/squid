@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.43 2007/04/30 16:56:09 wessels Exp $
+ * $Id: whois.cc,v 1.44 2007/05/18 06:41:26 amosjeffries Exp $
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -100,7 +100,7 @@ whoisStart(FwdState * fwd)
 
     buf = (char *)xmalloc(l);
 
-    snprintf(buf, l, "%s\r\n", p->request->urlpath.buf() + 1);
+    snprintf(buf, l, "%s\r\n", p->request->urlpath.c_str() + 1);
 
     comm_write(fd, buf, strlen(buf), whoisWriteComplete, p, NULL);
     comm_read(fd, p->buf, BUFSIZ, whoisReadReply, p);

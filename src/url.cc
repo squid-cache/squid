@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.157 2007/04/28 22:26:38 hno Exp $
+ * $Id: url.cc,v 1.158 2007/05/18 06:41:25 amosjeffries Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -268,7 +268,7 @@ urlParse(method_t method, char *url, HttpRequest *request)
     for (t = host; *t; t++)
         *t = xtolower(*t);
 
-    if (stringHasWhitespace(host)) {
+    if (strpbrk(host, w_space) != NULL) {
         if (URI_WHITESPACE_STRIP == Config.uri_whitespace) {
             t = q = host;
 
@@ -316,7 +316,7 @@ urlParse(method_t method, char *url, HttpRequest *request)
     }
 
 #endif
-    if (stringHasWhitespace(urlpath)) {
+    if (strpbrk(urlpath, w_space) != NULL) {
         debugs(23, 2, "urlParse: URI has whitespace: {" << url << "}");
 
         switch (Config.uri_whitespace) {
@@ -381,7 +381,7 @@ urlCanonical(HttpRequest * request)
         return request->canonical;
 
     if (request->protocol == PROTO_URN) {
-        snprintf(urlbuf, MAX_URL, "urn:%s", request->urlpath.buf());
+        snprintf(urlbuf, MAX_URL, "urn:%s", request->urlpath.c_str());
     } else {
         switch (request->method) {
 
@@ -401,13 +401,29 @@ urlCanonical(HttpRequest * request)
                      *request->login ? "@" : null_string,
                      request->host,
                      portbuf,
-                     request->urlpath.buf());
+                     request->urlpath.c_str());
 
             break;
         }
     }
 
     return (request->canonical = xstrdup(urlbuf));
+}
+
+int
+stringHasCntl(const char *s)
+{
+    unsigned char c;
+
+    while ((c = (unsigned char) *s++) != '\0') {
+        if (c <= 0x1f)
+            return 1;
+
+        if (c >= 0x7f && c <= 0x9f)
+            return 1;
+    }
+
+    return 0;
 }
 
 char *
@@ -419,7 +435,7 @@ urlCanonicalClean(const HttpRequest * request)
     char *t;
 
     if (request->protocol == PROTO_URN) {
-        snprintf(buf, MAX_URL, "urn:%s", request->urlpath.buf());
+        snprintf(buf, MAX_URL, "urn:%s", request->urlpath.c_str());
     } else {
         switch (request->method) {
 
@@ -449,7 +465,7 @@ urlCanonicalClean(const HttpRequest * request)
                      loginbuf,
                      request->host,
                      portbuf,
-                     request->urlpath.buf());
+                     request->urlpath.c_str());
             /*
              * strip arguments AFTER a question-mark
              */

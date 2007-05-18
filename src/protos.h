@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.542 2007/04/20 23:53:41 wessels Exp $
+ * $Id: protos.h,v 1.543 2007/05/18 06:41:25 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -222,7 +222,7 @@ SQUIDCEXTERN void httpBodyPackInto(const HttpBody * body, Packer * p);
 SQUIDCEXTERN void httpHdrCcInitModule(void);
 SQUIDCEXTERN void httpHdrCcCleanModule(void);
 SQUIDCEXTERN HttpHdrCc *httpHdrCcCreate(void);
-SQUIDCEXTERN HttpHdrCc *httpHdrCcParseCreate(const String * str);
+SQUIDCEXTERN HttpHdrCc *httpHdrCcParseCreate(const string * str);
 SQUIDCEXTERN void httpHdrCcDestroy(HttpHdrCc * cc);
 SQUIDCEXTERN HttpHdrCc *httpHdrCcDup(const HttpHdrCc * cc);
 SQUIDCEXTERN void httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p);
@@ -234,14 +234,14 @@ SQUIDCEXTERN void httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, 
 /* Http Header Tools */
 SQUIDCEXTERN HttpHeaderFieldInfo *httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count);
 SQUIDCEXTERN void httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo * info, int count);
-SQUIDCEXTERN http_hdr_type httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo * attrs, int end);
+SQUIDCEXTERN http_hdr_type httpHeaderIdByName(const char *name, unsigned int name_len, const HttpHeaderFieldInfo * attrs, int end);
 SQUIDCEXTERN http_hdr_type httpHeaderIdByNameDef(const char *name, int name_len);
 SQUIDCEXTERN const char *httpHeaderNameById(int id);
 SQUIDCEXTERN int httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive);
-SQUIDCEXTERN void strListAdd(String * str, const char *item, char del);
-SQUIDCEXTERN int strListIsMember(const String * str, const char *item, char del);
-SQUIDCEXTERN int strListIsSubstr(const String * list, const char *s, char del);
-SQUIDCEXTERN int strListGetItem(const String * str, char del, const char **item, int *ilen, const char **pos);
+SQUIDCEXTERN void strListAdd(string * str, const char *item, char del);
+SQUIDCEXTERN int strListIsMember(const string * str, const char *item, char del);
+SQUIDCEXTERN int strListIsSubstr(const string * list, const char *s, char del);
+SQUIDCEXTERN int strListGetItem(const string * str, char del, const char **item, int *ilen, const char **pos);
 SQUIDCEXTERN const char *getStringPrefix(const char *str, const char *end);
 SQUIDCEXTERN int httpHeaderParseInt(const char *start, int *val);
 SQUIDCEXTERN int httpHeaderParseSize(const char *start, ssize_t * sz);

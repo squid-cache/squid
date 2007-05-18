@@ -39,7 +39,7 @@ testStoreEntryStream::testGetStream()
         stream.flush();
         CPPUNIT_ASSERT_EQUAL(1, anEntry->_buffer_calls);
         CPPUNIT_ASSERT_EQUAL(1, anEntry->_flush_calls);
-        CPPUNIT_ASSERT_EQUAL(String("some text   !"), anEntry->_appended_text);
+        CPPUNIT_ASSERT_EQUAL((string)"some text   !", (string)anEntry->_appended_text);
     }
 
     delete anEntry;

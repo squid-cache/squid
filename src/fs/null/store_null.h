@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_null.h,v 1.3 2006/05/23 00:48:13 wessels Exp $
+ * $Id: store_null.h,v 1.4 2007/05/18 06:41:33 amosjeffries Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -49,7 +49,7 @@ public:
     virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
     virtual void parse(int, char*);
     virtual void reconfigure (int, char *);
-    virtual StoreSearch *search(String const url, HttpRequest *);
+    virtual StoreSearch *search(string const url, HttpRequest *);
 };
 
 class StoreSearchNull : public StoreSearch

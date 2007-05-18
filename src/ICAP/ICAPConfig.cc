@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.cc,v 1.14 2007/04/28 22:26:48 hno Exp $
+ * $Id: ICAPConfig.cc,v 1.15 2007/05/18 06:41:29 amosjeffries Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -48,7 +48,7 @@
 ICAPConfig TheICAPConfig;
 
 ICAPServiceRep::Pointer
-ICAPConfig::findService(const String& key)
+ICAPConfig::findService(const string& key)
 {
     Vector<ICAPServiceRep::Pointer>::iterator iter = services.begin();
 
@@ -63,7 +63,7 @@ ICAPConfig::findService(const String& key)
 }
 
 ICAPClass *
-ICAPConfig::findClass(const String& key)
+ICAPConfig::findClass(const string& key)
 {
     if (!key.size())
         return NULL;
@@ -87,7 +87,7 @@ ICAPClass::prepare()
     wordlist *service_names = NULL;
     wordlist *iter;
 
-    ConfigParser::ParseString(&key);
+    ConfigParser::ParseString(key);
     ConfigParser::ParseWordList(&service_names);
 
     for (iter = service_names; iter; iter = iter->next) {
@@ -125,7 +125,7 @@ ICAPAccessCheck::ICAPAccessCheck(ICAP::Method aMethod,
 
     candidateClasses.clean();
 
-    matchedClass.clean();
+    matchedClass.clear();
 
     acl_checklist = NULL;
 
@@ -159,7 +159,7 @@ ICAPAccessCheck::check()
         ICAPClass *c = *ci;
         ICAPServiceRep::Pointer service = findBestService(c, false);
         if (service != NULL) {
-            debugs(93, 3, "ICAPAccessCheck::check: class '" << c->key.buf() << "' has candidate service '" << service->key.buf() << "'");
+            debugs(93, 3, "ICAPAccessCheck::check: class '" << c->key << "' has candidate service '" << service->key << "'");
             candidateClasses += c->key;
         }
     }
@@ -193,7 +193,7 @@ ICAPAccessCheck::checkCandidates()
      */
     debugs(93, 3, "ICAPAccessCheck::check: NO candidates or matches found");
 
-    matchedClass.clean();
+    matchedClass.clear();
 
     ICAPAccessCheckCallbackWrapper(1, this);
 
@@ -207,7 +207,7 @@ ICAPAccessCheck::ICAPAccessCheckCallbackWrapper(int answer, void *data)
     ICAPAccessCheck *ac = (ICAPAccessCheck*)data;
 
     if (ac->matchedClass.size()) {
-        debugs(93, 5, "ICAPAccessCheckCallbackWrapper matchedClass = " << ac->matchedClass.buf());
+        debugs(93, 5, "ICAPAccessCheckCallbackWrapper matchedClass = " << ac->matchedClass);
     }
 
     if (!answer) {
@@ -241,7 +241,7 @@ ICAPAccessCheck::do_callback()
     debugs(93, 3, "ICAPAccessCheck::do_callback");
 
     if (matchedClass.size()) {
-        debugs(93, 3, "ICAPAccessCheck::do_callback matchedClass = " << matchedClass.buf());
+        debugs(93, 3, "ICAPAccessCheck::do_callback matchedClass = " << matchedClass);
     }
 
     void *validated_cbdata;
@@ -351,8 +351,8 @@ ICAPConfig::dumpICAPService(StoreEntry *entry, const char *name)
 
     for (VI i = services.begin(); i != services.end(); ++i) {
         const ICAPServiceRep::Pointer &r = *i;
-        storeAppendPrintf(entry, "%s %s_%s %s %d %s\n", name, r->key.buf(),
-                          r->methodStr(), r->vectPointStr(), r->bypass, r->uri.buf());
+        storeAppendPrintf(entry, "%s %s_%s %s %d %s\n", name, r->key.c_str(),
+                          r->methodStr(), r->vectPointStr(), r->bypass, r->uri.c_str());
     }
 };
 
@@ -380,7 +380,7 @@ ICAPConfig::dumpICAPClass(StoreEntry *entry, const char *name)
     Vector<ICAPClass*>::iterator i = classes.begin();
 
     while (i != classes.end()) {
-        storeAppendPrintf(entry, "%s %s\n", name, (*i)->key.buf());
+        storeAppendPrintf(entry, "%s %s\n", name, (*i)->key.c_str());
         ++i;
     }
 };
@@ -388,13 +388,13 @@ ICAPConfig::dumpICAPClass(StoreEntry *entry, const char *name)
 void
 ICAPConfig::parseICAPAccess(ConfigParser &parser)
 {
-    String aKey;
-    ConfigParser::ParseString(&aKey);
+    string aKey;
+    ConfigParser::ParseString(aKey);
     ICAPClass *theClass = TheICAPConfig.findClass(aKey);
 
     if (theClass == NULL)
         fatalf("Did not find ICAP class '%s' referenced on line %d\n",
-               aKey.buf(), config_lineno);
+               aKey.c_str(), config_lineno);
 
     aclParseAccessLine(parser, &theClass->accessList);
 };
@@ -413,7 +413,7 @@ ICAPConfig::dumpICAPAccess(StoreEntry *entry, const char *name)
     Vector<ICAPClass*>::iterator i = classes.begin();
 
     while (i != classes.end()) {
-        snprintf(nom, 64, "%s %s", name, (*i)->key.buf());
+        snprintf(nom, 64, "%s %s", name, (*i)->key.c_str());
         dump_acl_access(entry, nom, (*i)->accessList);
         ++i;
     }

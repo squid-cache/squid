@@ -80,24 +80,24 @@ ICAPServiceRep::configure(Pointer &aSelf)
 
     char *service_type = NULL;
 
-    ConfigParser::ParseString(&key);
+    ConfigParser::ParseString(key);
     ConfigParser::ParseString(&service_type);
     ConfigParser::ParseBool(&bypass);
-    ConfigParser::ParseString(&uri);
+    ConfigParser::ParseString(uri);
 
-    debugs(3, 5, "ICAPService::parseConfigLine (line " << config_lineno << "): " << key.buf() << " " << service_type << " " << bypass);
+    debugs(3, 5, "ICAPService::parseConfigLine (line " << config_lineno << "): " << key << " " << service_type << " " << bypass);
 
     method = parseMethod(service_type);
     point = parseVectPoint(service_type);
 
     debugs(3, 5, "ICAPService::parseConfigLine (line " << config_lineno << "): service is " << methodStr() << "_" << vectPointStr());
 
-    if (uri.cmp("icap://", 7) != 0) {
-        debugs(3, 0, "ICAPService::parseConfigLine (line " << config_lineno << "): wrong uri: " << uri.buf());
+    if (strncmp(uri, "icap://", 7) != 0) {
+        debugs(3, 0, "ICAPService::parseConfigLine (line " << config_lineno << "): wrong uri: " << uri);
         return false;
     }
 
-    const char *s = uri.buf() + 7;
+    const char *s = &uri[7];
 
     const char *e;
 
@@ -217,13 +217,13 @@ bool ICAPServiceRep::broken() const
     return probed() && !up();
 }
 
-bool ICAPServiceRep::wantsUrl(const String &urlPath) const
+bool ICAPServiceRep::wantsUrl(const string &urlPath) const
 {
     Must(hasOptions());
     return theOptions->transferKind(urlPath) != ICAPOptions::xferIgnore;
 }
 
-bool ICAPServiceRep::wantsPreview(const String &urlPath, size_t &wantedSize) const
+bool ICAPServiceRep::wantsPreview(const string &urlPath, size_t &wantedSize) const
 {
     Must(hasOptions());
 
@@ -361,7 +361,7 @@ void ICAPServiceRep::checkOptions()
 
     if (!theOptions->methods.empty()) {
         bool method_found = false;
-        String method_list;
+        string method_list;
         Vector <ICAP::Method>::iterator iter = theOptions->methods.begin();
 
         while (iter != theOptions->methods.end()) {
@@ -379,8 +379,8 @@ void ICAPServiceRep::checkOptions()
         if (!method_found) {
             debugs(93,1, "WARNING: Squid is configured to use ICAP method " <<
                    ICAP::methodStr(method) <<
-                   " for service " << uri.buf() <<
-                   " but OPTIONS response declares the methods are " << method_list.buf());
+                   " for service " << uri <<
+                   " but OPTIONS response declares the methods are " << method_list);
         }
     }
 
@@ -393,7 +393,7 @@ void ICAPServiceRep::checkOptions()
         // TODO: If skew is negative, the option will be considered down
         // because of stale options. We should probably change this.
         debugs(93, 1, "ICAP service's clock is skewed by " << skew <<
-            " seconds: " << uri.buf());
+            " seconds: " << uri);
     }
 }
 

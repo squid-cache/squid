@@ -78,10 +78,9 @@ testStoreController::testMaxSize()
 static StoreEntry *
 addedEntry(StorePointer hashStore,
            StorePointer aStore,
-           String name,
-           String varySpec,
-           String varyKey
-
+           string name,
+           string varySpec,
+           string varyKey
           )
 {
     StoreEntry *e = new StoreEntry();
@@ -109,7 +108,7 @@ addedEntry(StorePointer hashStore,
     EBIT_CLR(e->flags, KEY_PRIVATE);
     e->ping_status = PING_NONE;
     EBIT_CLR(e->flags, ENTRY_VALIDATED);
-    e->hashInsert((const cache_key *)name.buf());	/* do it after we clear KEY_PRIVATE */
+    e->hashInsert((const cache_key *)name.c_str());	/* do it after we clear KEY_PRIVATE */
     return e;
 }
 

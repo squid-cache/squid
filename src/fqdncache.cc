@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.171 2007/04/28 22:26:37 hno Exp $
+ * $Id: fqdncache.cc,v 1.172 2007/05/18 06:41:24 amosjeffries Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -527,7 +527,7 @@ fqdncache_init(void)
 
     n = hashPrime(fqdncache_high / 4);
 
-    fqdn_table = hash_create((HASHCMP *) strcmp, n, hash4);
+    fqdn_table = hash_create((HASHCMP *) std::strcmp, n, hash4);
 
     memDataInit(MEM_FQDNCACHE_ENTRY, "fqdncache_entry",
                 sizeof(fqdncache_entry), 0);

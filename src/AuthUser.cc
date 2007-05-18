@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUser.cc,v 1.7 2007/05/09 08:26:57 wessels Exp $
+ * $Id: AuthUser.cc,v 1.8 2007/05/18 06:41:21 amosjeffries Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -143,7 +143,7 @@ AuthUser::cacheInit(void)
     if (!proxy_auth_username_cache) {
         /* First time around, 7921 should be big enough */
         proxy_auth_username_cache =
-            hash_create((HASHCMP *) strcmp, 7921, hash_string);
+            hash_create((HASHCMP *) std::strcmp, 7921, hash_string);
         assert(proxy_auth_username_cache);
         eventAdd("User Cache Maintenance", cacheCleanup, NULL, Config.authenticateGCInterval, 1);
     }

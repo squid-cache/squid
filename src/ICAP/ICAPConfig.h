@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.h,v 1.11 2007/04/06 04:50:07 rousskov Exp $
+ * $Id: ICAPConfig.h,v 1.12 2007/05/18 06:41:29 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -47,7 +47,7 @@ class ICAPClass
 {
 
 public:
-    String key;
+    string key;
     acl_access *accessList;
 
     Vector<ICAPServiceRep::Pointer> services;
@@ -73,8 +73,8 @@ private:
     ICAPAccessCheckCallback *callback;
     void *callback_data;
     ACLChecklist *acl_checklist;
-    Vector<String> candidateClasses;
-    String matchedClass;
+    Vector<string> candidateClasses;
+    string matchedClass;
     void do_callback();
     ICAPServiceRep::Pointer findBestService(ICAPClass *c, bool preferUp);
 
@@ -115,8 +115,8 @@ public:
     void parseICAPService(void);
     void freeICAPService(void);
     void dumpICAPService(StoreEntry *, const char *);
-    ICAPServiceRep::Pointer findService(const String&);
-    ICAPClass * findClass(const String& key);
+    ICAPServiceRep::Pointer findService(const string&);
+    ICAPClass * findClass(const string& key);
 
     void parseICAPClass(void);
     void freeICAPClass(void);
