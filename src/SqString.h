@@ -1,6 +1,6 @@
 
 /*
- * $Id: SqString.h,v 1.1 2007/05/18 06:44:35 amosjeffries Exp $
+ * $Id: SqString.h,v 1.2 2007/05/18 16:56:18 amosjeffries Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -99,6 +99,7 @@ public:
     _SQUID_INLINE_ int size() const;
     _SQUID_INLINE_ char const * c_str() const;
 
+    const char& operator [](unsigned int) const;
     char& operator [](unsigned int);
 
     void clear();

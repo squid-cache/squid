@@ -1,6 +1,6 @@
 
 /*
- * $Id: SqString.cc,v 1.1 2007/05/18 06:44:35 amosjeffries Exp $
+ * $Id: SqString.cc,v 1.2 2007/05/18 16:56:18 amosjeffries Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -232,6 +232,14 @@ void
 SqString::append(SqString const &old)
 {
     append (old.c_str(), old.len_);
+}
+
+const char&
+SqString::operator [](unsigned int pos) const
+{
+    assert(pos < size_ );
+
+    return buf_[pos];
 }
 
 char&
