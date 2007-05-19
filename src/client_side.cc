@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.754 2007/05/18 06:41:23 amosjeffries Exp $
+ * $Id: client_side.cc,v 1.755 2007/05/18 18:30:41 wessels Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2279,10 +2279,23 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
     http->calloutContext = new ClientRequestContext(http);
 
     http->doCallouts();
-
+    
 finish:
     if (!notedUseOfBuffer)
         connNoteUseOfBuffer(conn.getRaw(), http->req_sz);
+
+    /*
+     * DPW 2007-05-18
+     * Moved the TCP_RESET feature from clientReplyContext::sendMoreData
+     * to here because calling comm_reset_close() causes http to
+     * be freed and the above connNoteUseOfBuffer() would hit an
+     * assertion, not to mention that we were accessing freed memory.
+     */
+    if (http->request->flags.resetTCP() && conn->fd > -1) {
+	debugs(33, 3, HERE << "Sending TCP RST on FD " << conn->fd);
+	comm_reset_close(conn->fd);
+	return;
+    }
 }
 
 static void
