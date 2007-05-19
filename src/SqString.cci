@@ -1,6 +1,6 @@
 
 /*
- * $Id: SqString.cci,v 1.1 2007/05/18 06:44:35 amosjeffries Exp $
+ * $Id: SqString.cci,v 1.2 2007/05/19 06:49:12 amosjeffries Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -142,25 +142,22 @@ SqString::compare(SqString const &aString) const
     return strcmp(c_str(), aString.c_str());
 }
 
-/* FIXME: this is can perform buffer overflows and underflows! */
 void
 SqString::set (char const *loc, char const ch)
 {
-    buf_[loc-buf_] = ch;
+    operator[](loc-buf_) = ch;
 }
 
-/* FIXME: this is can perform buffer overflows and underflows! */
 void
 SqString::cut (size_t newLength)
 {
+    operator[](newLength) = '\0';
     len_ = newLength;
-    buf_[newLength] = '\0';
 }
 
-/* FIXME: this is can perform buffer overflows and underflows! */
 void
 SqString::cutPointer (char const *loc)
 {
+    operator[](loc-buf_) = '\0';
     len_ = loc-buf_;
-    buf_[len_] = '\0';
 }
