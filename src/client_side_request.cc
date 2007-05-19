@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.86 2007/05/18 06:41:23 amosjeffries Exp $
+ * $Id: client_side_request.cc,v 1.87 2007/05/18 18:26:01 wessels Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1005,6 +1005,7 @@ ClientHttpRequest::doCallouts()
     assert(calloutContext);
 
     if (!calloutContext->http_access_done) {
+	debugs(83, 3, HERE << "Doing calloutContext->clientAccessCheck()");
         calloutContext->http_access_done = true;
         calloutContext->clientAccessCheck();
         return;
@@ -1012,6 +1013,7 @@ ClientHttpRequest::doCallouts()
 
 #if ICAP_CLIENT
     if (TheICAPConfig.onoff && !calloutContext->icap_acl_check_done) {
+	debugs(83, 3, HERE << "Doing calloutContext->icapAccessCheck()");
         calloutContext->icap_acl_check_done = true;
         calloutContext->icapAccessCheck();
         return;
@@ -1024,6 +1026,7 @@ ClientHttpRequest::doCallouts()
         assert(calloutContext->redirect_state == REDIRECT_NONE);
 
         if (Config.Program.redirect) {
+	    debugs(83, 3, HERE << "Doing calloutContext->clientRedirectStart()");
             calloutContext->redirect_state = REDIRECT_PENDING;
             calloutContext->clientRedirectStart();
             return;
@@ -1031,6 +1034,7 @@ ClientHttpRequest::doCallouts()
     }
 
     if (!calloutContext->interpreted_req_hdrs) {
+	debugs(83, 3, HERE << "Doing clientInterpretRequestHeaders()");
         calloutContext->interpreted_req_hdrs = 1;
         clientInterpretRequestHeaders(this);
     }
@@ -1039,6 +1043,7 @@ ClientHttpRequest::doCallouts()
         calloutContext->no_cache_done = true;
 
         if (Config.accessList.noCache && request->flags.cachable) {
+	    debugs(83, 3, HERE << "Doing calloutContext->checkNoCache()");
             calloutContext->checkNoCache();
             return;
         }
@@ -1052,6 +1057,7 @@ ClientHttpRequest::doCallouts()
     headersLog(0, 1, request->method, request);
 #endif
 
+    debugs(83, 3, HERE << "calling processRequest()");
     processRequest();
 }
 
