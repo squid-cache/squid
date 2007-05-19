@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.127 2007/05/18 06:41:23 amosjeffries Exp $
+ * $Id: client_side_reply.cc,v 1.128 2007/05/18 18:30:41 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1921,15 +1921,6 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 
     /* update size of the request */
     reqsize = reqofs;
-
-    if (http->request->flags.resetTCP()) {
-        /* yuck. FIXME: move to client_side.c */
-
-        if (fd != -1)
-            comm_reset_close(fd);
-
-        return;
-    }
 
     if (errorInStream(result, reqofs)) {
         sendStreamError(result);
