@@ -1,6 +1,6 @@
 
 /*
- * $Id: SqString.cc,v 1.3 2007/05/19 06:31:00 amosjeffries Exp $
+ * $Id: SqString.cc,v 1.4 2007/05/19 14:51:14 amosjeffries Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -186,7 +186,8 @@ SqString::append(const char *str, int len)
         return;
 
     if (len_ + len < size_) {
-        strncat(buf_, str, len);
+        operator[](len_+len) = '\0';
+        xmemcpy(buf_+len_, str, len);
         len_ += len;
     } else {
         unsigned int ssz = len_ + len;
