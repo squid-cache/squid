@@ -29,7 +29,13 @@ make_snapshot()
   dst=$versions/$dir/$ver
   $mksnap $tag 2>&1 | grep -v "set owner/group"
   for file in `cat $tag.out` ; do
-    type=`echo $file | sed -e 's/.*\.tar\.gz/.tar.gz/' -e 's/.*\.tar\.bz2/.tar.bz2/' -e 's/.*\.patch/.patch/' -e 's/.*\.diff/.diff/' -e 's/.*-RELEASENOTES.html/-RELEASENOTES.html/' -e 's/^.*ChangeLog.txt$/-ChangeLog.txt/' -e 's/.*-cfgman/-cfgman/'`
+    case $file in
+    *-cfgman.tar.gz)
+	type=-cfgman.tar.gz
+	;;
+    *)
+	type=`echo $file | sed -e 's/.*\.tar\.gz/.tar.gz/' -e 's/.*\.tar\.bz2/.tar.bz2/' -e 's/.*\.patch/.patch/' -e 's/.*\.diff/.diff/' -e 's/.*-RELEASENOTES.html/-RELEASENOTES.html/' -e 's/^.*ChangeLog.txt$/-ChangeLog.txt/' -e 's/.*-cfgman/-cfgman/'`
+    esac
 
     # move tarball
     rm -f $dst/$file.md5
