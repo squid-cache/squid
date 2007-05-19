@@ -1,6 +1,6 @@
 
 /*
- * $Id: SqString.cc,v 1.2 2007/05/18 16:56:18 amosjeffries Exp $
+ * $Id: SqString.cc,v 1.3 2007/05/19 06:31:00 amosjeffries Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -215,7 +215,7 @@ SqString::append(const char *str, int len)
 void
 SqString::append(char const *str)
 {
-    assert (str);
+    if(!str) return;
     append (str, strlen(str));
 }
 
