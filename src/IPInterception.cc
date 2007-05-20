@@ -1,6 +1,6 @@
 
 /*
- * $Id: IPInterception.cc,v 1.16 2007/04/28 22:26:37 hno Exp $
+ * $Id: IPInterception.cc,v 1.17 2007/05/20 04:22:45 adrian Exp $
  *
  * DEBUG: section 89    NAT / IP Interception 
  * AUTHOR: Robert Collins
@@ -282,14 +282,29 @@ clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct s
     }
 }
 
-#else
+#elif IPFW_TRANSPARENT
 int
-
 clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct sockaddr_in *dst)
 {
-    debugs(89, 1, "WARNING: transparent proxying not supported");
-    return -1;
+	int ret;
+	struct sockaddr_in s;
+	int slen = sizeof(struct sockaddr_in);
+
+	ret = getsockname(fd, (struct sockaddr *) &s, (socklen_t * )&slen);
+	if (ret < 0) {
+		debugs(89, 1, "clientNatLookup: getpeername failed (fd " << fd << "), errstr " << xstrerror());
+		return -1;
+	}
+	*dst = s;
+	return 0;
 }
 
+#else
+int
+clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct sockaddr_in *dst)
+{
+	debugs(89, 1, "WARNING: transparent proxying not supported");
+	return -1;
+}
 #endif
 
