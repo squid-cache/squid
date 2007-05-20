@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.454 2007/05/13 10:57:41 hno Exp $
+dnl  $Id: configure.in,v 1.455 2007/05/20 04:22:43 adrian Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.454 $)dnl
+AC_REVISION($Revision: 1.455 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -1139,6 +1139,18 @@ if test $http_violations = 1; then
 else
     AC_DEFINE(HTTP_VIOLATIONS, 0)
 fi
+
+dnl Enable IPFW Transparent Proxy
+AC_ARG_ENABLE(ipfw-transparent,
+[  --enable-ipfw-transparent
+                          Enable Transparent Proxy support for systems
+                          using FreeBSD IPFW style redirection.],
+[ if test "$enableval" = "yes" ; then
+	echo "IPFW Transparent Proxy enabled"
+	AC_DEFINE(IPFW_TRANSPARENT,1,[Enable support for Transparent Proxy on systems using FreeBSD IPFW address redirection.])
+	IPFW_TRANSPARENT="yes"
+  fi
+])
 
 dnl Enable IP-Filter Transparent Proxy
 AC_ARG_ENABLE(ipf-transparent,
