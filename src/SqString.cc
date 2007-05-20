@@ -1,6 +1,6 @@
 
 /*
- * $Id: SqString.cc,v 1.4 2007/05/19 14:51:14 amosjeffries Exp $
+ * $Id: SqString.cc,v 1.5 2007/05/20 04:22:06 amosjeffries Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -168,7 +168,7 @@ SqString::SqString (SqString const &old)
 {
     memset(this, 0, sizeof(SqString));
 
-    init (old.c_str());
+    operator=(old);
 #if DEBUGSTRINGS
 
     SqStringRegistry::Instance().add(this);
