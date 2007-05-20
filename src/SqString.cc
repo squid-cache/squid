@@ -1,6 +1,6 @@
 
 /*
- * $Id: SqString.cc,v 1.5 2007/05/20 04:22:06 amosjeffries Exp $
+ * $Id: SqString.cc,v 1.6 2007/05/20 08:29:44 amosjeffries Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -40,16 +40,19 @@
 void
 SqString::initBuf(size_t sz)
 {
+    size_t bsz;
     PROF_start(StringInitBuf);
     clear();
-    buf_ = (char *)memAllocString(sz, &sz);
     assert(sz < 65536);
-    size_ = sz;
+    buf_ = (char *)memAllocString(sz, &bsz);
+    assert(bsz < 65536);
+    assert(bsz >= sz);
+    size_ = bsz;
     PROF_stop(StringInitBuf);
 }
 
 void
-SqString::limitInit(const char *str, int len)
+SqString::limitInit(const char *str, unsigned int len)
 {
     PROF_start(StringLimitInit);
     assert(this && str);
@@ -185,15 +188,16 @@ SqString::append(const char *str, int len)
     if(len < 1 || str == NULL)
         return;
 
-    if (len_ + len < size_) {
+    if ( (len_ + len +1) < size_) {
         operator[](len_+len) = '\0';
         xmemcpy(buf_+len_, str, len);
         len_ += len;
     } else {
         unsigned int ssz = len_ + len;
         unsigned int bsz = len_ + len + 1;
-        char* tmp = (char *)memAllocString(ssz, &bsz);
+        char* tmp = (char *)memAllocString(bsz, &bsz);
         assert(bsz < 65536);
+        assert(bsz > ssz);
 
         if (buf_)
             xmemcpy(tmp, buf_, len_);
@@ -201,7 +205,7 @@ SqString::append(const char *str, int len)
         if (len)
             xmemcpy(tmp + len_, str, len);
 
-        tmp[ssz + 1] = '\0';
+        tmp[ssz] = '\0';
 
         clear();
 
@@ -232,7 +236,7 @@ SqString::append (char chr)
 void
 SqString::append(SqString const &old)
 {
-    append (old.c_str(), old.len_);
+    append (old.c_str(), old.size());
 }
 
 const char&

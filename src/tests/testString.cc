@@ -123,7 +123,55 @@ testString::testAppend()
     cStr.append("rld\0 untroubled by things such as null termination", 10);
     CPPUNIT_ASSERT( !cStr.empty() );
     CPPUNIT_ASSERT_EQUAL( 18, cStr.size() );
-    CPPUNIT_ASSERT_EQUAL( (string)"hello world\0 untr", cStr );
+    CPPUNIT_ASSERT( memcmp("hello world", cStr.c_str(), 11) == 0 );
+    CPPUNIT_ASSERT( memcmp("hello world\0", cStr.c_str(), 12) == 0 );
+    CPPUNIT_ASSERT( memcmp("hello world\0 untro", cStr.c_str(), 18) == 0 );
+    CPPUNIT_ASSERT( memcmp("hello world\0 untro\0", cStr.c_str(), 19) == 0 );
+}
+
+void
+testString::testAccess()
+{
+    string test;
+    test = "123456789a"; // to get a predictable length buffer.
+
+    CPPUNIT_ASSERT_EQUAL( test.size(), 10 );
+
+/* FIXME: flow checks do not seem to catch assert() sent from within code. */
+      /* underflow handling test: _should_ fail with core dump. */
+      /* this SHOULD be impossible due to unsigned type of parameter. */
+//    CPPUNIT_ASSERT_ASSERTION_FAIL( CPPUNIT_ASSERT( test[-1] ) );
+
+      /* overflow handling test: _should_ fail with core dump. */
+//    CPPUNIT_ASSERT_ASSERTION_FAIL( CPPUNIT_ASSERT( test[test.size()+10] ) );
+
+      /* [] access method (read and write) */
+    CPPUNIT_ASSERT( test[0]  == '1' );
+    CPPUNIT_ASSERT( test[9]  == 'a' );
+    CPPUNIT_ASSERT( test[10] == '\0' );
+
+    test.append('T');
+    CPPUNIT_ASSERT( test[10]  ==  'T' );
+    CPPUNIT_ASSERT( test[11]  == '\0' );
+    CPPUNIT_ASSERT_EQUAL((string)"123456789aT", test);
+
+      /* Random access inside buffer. */
+    test[5] = 't';
+    CPPUNIT_ASSERT( test[5]   ==  't' );
+    CPPUNIT_ASSERT( test[11]  == '\0' );
+    CPPUNIT_ASSERT_EQUAL((string)"12345t789aT", test);
+
+      /* border case at last position of string */
+    test[9] = 'E';
+    CPPUNIT_ASSERT( test[9]   ==  'E' );
+    CPPUNIT_ASSERT( test[11]  == '\0' );
+    CPPUNIT_ASSERT_EQUAL((string)"12345t789ET", test);
+
+      /* border case at EOS position */
+    test[11] = 'F';
+    CPPUNIT_ASSERT( test[11]  == 'F' );
+    CPPUNIT_ASSERT( test[12]  == '\0' );
+    CPPUNIT_ASSERT_EQUAL((string)"12345t789ETF", test);
 }
 
 void

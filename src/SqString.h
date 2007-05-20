@@ -1,6 +1,6 @@
 
 /*
- * $Id: SqString.h,v 1.2 2007/05/18 16:56:18 amosjeffries Exp $
+ * $Id: SqString.h,v 1.3 2007/05/20 08:29:44 amosjeffries Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -135,7 +135,7 @@ public:
 
 #endif
 
-    void limitInit(const char *str, int len);
+    void limitInit(const char *str, unsigned int len);
 private:
     void initBuf(size_t sz);
     void init (char const *);

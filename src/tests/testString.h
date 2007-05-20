@@ -20,6 +20,7 @@ class testString : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testBooleans );
     CPPUNIT_TEST( testAppend );
     CPPUNIT_TEST( testAssignments );
+    CPPUNIT_TEST( testAccess );
     CPPUNIT_TEST( testCstrMethods );
     CPPUNIT_TEST( testSearch );
     CPPUNIT_TEST_SUITE_END();
@@ -36,6 +37,7 @@ protected:
     void testBooleans();
     void testAppend();
     void testAssignments();
+    void testAccess();
     void testCstrMethods();
     void testSearch();
 };
