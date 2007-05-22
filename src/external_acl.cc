@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.78 2007/05/18 06:41:24 amosjeffries Exp $
+ * $Id: external_acl.cc,v 1.79 2007/05/22 01:16:40 hno Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -143,6 +143,7 @@ struct _external_acl_format
         EXT_ACL_SRCPORT,
         EXT_ACL_MYADDR,
         EXT_ACL_MYPORT,
+        EXT_ACL_URI,
         EXT_ACL_DST,
         EXT_ACL_PROTO,
         EXT_ACL_PORT,
@@ -337,6 +338,8 @@ parse_externalAclHelper(external_acl ** list)
             format->type = _external_acl_format::EXT_ACL_MYADDR;
         else if (strcmp(token, "%MYPORT") == 0)
             format->type = _external_acl_format::EXT_ACL_MYPORT;
+        else if (strcmp(token, "%URI") == 0)
+            format->type = _external_acl_format::EXT_ACL_URI;
         else if (strcmp(token, "%DST") == 0)
             format->type = _external_acl_format::EXT_ACL_DST;
         else if (strcmp(token, "%PROTO") == 0)
@@ -450,6 +453,7 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
                 DUMP_EXT_ACL_TYPE(SRCPORT);
                 DUMP_EXT_ACL_TYPE(MYADDR);
                 DUMP_EXT_ACL_TYPE(MYPORT);
+                DUMP_EXT_ACL_TYPE(URI);
                 DUMP_EXT_ACL_TYPE(DST);
                 DUMP_EXT_ACL_TYPE(PROTO);
                 DUMP_EXT_ACL_TYPE(PORT);
@@ -796,6 +800,10 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
         case _external_acl_format::EXT_ACL_MYPORT:
             snprintf(buf, sizeof(buf), "%d", request->my_port);
             str = buf;
+            break;
+
+        case _external_acl_format::EXT_ACL_URI:
+            str = urlCanonical(request);
             break;
 
         case _external_acl_format::EXT_ACL_DST:
