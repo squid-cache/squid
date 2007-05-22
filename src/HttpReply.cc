@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.93 2007/05/18 06:41:22 amosjeffries Exp $
+ * $Id: HttpReply.cc,v 1.94 2007/05/22 16:37:26 rousskov Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -433,7 +433,7 @@ HttpReply::bodySize(method_t method) const
 
 bool HttpReply::sanityCheckStartLine(MemBuf *buf, http_status *error)
 {
-    if (buf->contentSize() >= protoPrefix.size() && strncmp(protoPrefix, buf->content(), protoPrefix.size()) != 0) {
+    if (buf->contentSize() >= protoPrefix.size() && protoPrefix.compare(buf->content(), protoPrefix.size()) != 0) {
         debugs(58, 3, "HttpReply::sanityCheckStartLine: missing protocol prefix (" << protoPrefix << ") in '" << buf->content() << "'");
         *error = HTTP_INVALID_HEADER;
         return false;
