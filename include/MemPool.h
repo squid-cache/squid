@@ -298,8 +298,6 @@ struct _MemPoolGlobalStats
     int mem_idle_limit;
 };
 
-#define SIZEOF_CHUNK  ( ( sizeof(MemChunk) + sizeof(double) -1) / sizeof(double) ) * sizeof(double);
-
 #define memPoolCreate MemPools::GetInstance().create
 
 /* Allocator API */
