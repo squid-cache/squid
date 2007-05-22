@@ -3,13 +3,14 @@
 use strict;
 use IO::File;
 use Getopt::Long;
+use File::Basename;
 
 # This mess is designed to parse the squid config template file
 # cf.data.pre and generate a set of HTML pages to use as documentation.
 #
 # Adrian Chadd <adrian@squid-cache.org>
 #
-# $Id: build-cfg-help.pl,v 1.1 2007/05/18 00:43:28 hno Exp $
+# $Id: build-cfg-help.pl,v 1.2 2007/05/21 23:31:37 hno Exp $
 
 #
 # The template file is reasonably simple to parse. There's a number of
@@ -53,6 +54,7 @@ my ($state) = "";
 my (%option);
 my (%all_names);
 my ($comment);
+my (%defines);
 
 my $version = "2.HEAD";
 my $verbose = '';
@@ -62,8 +64,7 @@ my $pagetemplate;
 
 my ($index) = new IO::File;
 
-my $top = $0;
-$top =~ s%[^/]*$%%;
+my $top = dirname($0);
 
 GetOptions(
 	'verbose' => \$verbose, 'v' => \$verbose,
@@ -77,6 +78,16 @@ if ($format eq "splithtml") {
 } elsif ($format eq "singlehtml") {
     $pagetemplate = "template_single.html";
 }
+
+# Load defines
+my ($df) = new IO::File;
+
+$df->open("$top/../../src/cf_gen_defines", "r") || die;
+while(<$df>) {
+    $defines{$1} = $2 if /define\["([^"]*)"\]="([^"]*)"/;
+}
+close $df;
+undef $df;
 
 # XXX should implement this!
 sub uriescape($)
@@ -134,6 +145,7 @@ sub generate_page($$)
 	    $fh = $index;
 	}
 
+	$data->{"ifdef"} = $defines{$data->{"ifdef"}} if (exists $data->{"ifdef"} && exists $defines{$data->{"ifdef"}});
 
 	my ($th) = new IO::File;
 	$th->open($template, "r") || die "Couldn't open $template: $!\n";
@@ -199,6 +211,13 @@ sub end_options()
     print $index "</ul>\n";
     $in_options = 0;
 }
+sub section_heading($)
+{
+	my ($comment) = @_;
+	print $index "<pre>\n";
+	print $index $comment;
+	print $index "</pre>\n";
+}
 while (<>) {
 	chomp;
 	last if (/^EOF$/);
@@ -261,9 +280,7 @@ while (<>) {
 		$state = "comment";
 		$comment = "";
 	} elsif ($_ =~ /^COMMENT_END$/) {
-		print $index "<pre>\n";
-		print $index $comment;
-		print $index "</pre>\n";
+		section_heading($comment);
 	} elsif ($state eq "comment") {
 		$comment .= $_ . "\n";
 	} elsif (/^#/) {
@@ -273,7 +290,6 @@ while (<>) {
 	}
 }
 end_options;
-print $index "</ul>\n";
 print $index "<p><a href=\"index_all.html\">Alphabetic index</a></p>\n" if $format eq "splithtml";
 print $index "<p><a href=\"#index\">Alphabetic index</a></p>\n" if $format eq "singlehtml";
 print $index "<hr />\n" if $format eq "singlehtml";
@@ -281,7 +297,7 @@ print $index "<hr />\n" if $format eq "singlehtml";
 # and now, build the option pages
 my (@names) = keys %option;
 foreach $name (@names) {
-	generate_page("${top}${pagetemplate}", $option{$name});
+	generate_page("${top}/${pagetemplate}", $option{$name});
 }
 
 # and now, the alpabetic index file!
