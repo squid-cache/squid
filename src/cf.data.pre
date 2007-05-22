@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.435 2007/05/17 19:55:52 hno Exp $
+# $Id: cf.data.pre,v 1.436 2007/05/22 01:16:39 hno Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -2050,6 +2050,7 @@ DOC_START
 	  %IDENT	Ident user name
 	  %SRC		Client IP
 	  %SRCPORT	Client source port
+	  %URI		Requested URI
 	  %DST		Requested host
 	  %PROTO	Requested protocol
 	  %PORT		Requested port
