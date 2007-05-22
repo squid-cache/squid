@@ -1,6 +1,6 @@
 
 /*
- * $Id: SqString.cc,v 1.6 2007/05/20 08:29:44 amosjeffries Exp $
+ * $Id: SqString.cc,v 1.7 2007/05/22 01:15:55 hno Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -193,8 +193,8 @@ SqString::append(const char *str, int len)
         xmemcpy(buf_+len_, str, len);
         len_ += len;
     } else {
-        unsigned int ssz = len_ + len;
-        unsigned int bsz = len_ + len + 1;
+        size_t ssz = len_ + len;
+        size_t bsz = len_ + len + 1;
         char* tmp = (char *)memAllocString(bsz, &bsz);
         assert(bsz < 65536);
         assert(bsz > ssz);
