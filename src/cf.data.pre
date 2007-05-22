@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.436 2007/05/22 01:16:39 hno Exp $
+# $Id: cf.data.pre,v 1.437 2007/05/22 17:12:38 rousskov Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -5017,7 +5017,7 @@ DOC_START
 	fetched.
 
 	The actual delay cannot be smaller than the hardcoded minimum
-	delay of 60 seconds.
+	delay of 30 seconds.
 DOC_END
 
 NAME: icap_preview_enable
