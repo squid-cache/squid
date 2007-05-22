@@ -6,6 +6,7 @@
 #include "comm.h"
 #include "HttpMsg.h"
 #include "ICAPXaction.h"
+#include "ICAPConfig.h"
 #include "TextException.h"
 #include "pconn.h"
 #include "fde.h"
@@ -101,6 +102,9 @@ void ICAPXaction::openConnection()
     Must(connection < 0);
 
     const ICAPServiceRep &s = service();
+
+    if (!TheICAPConfig.reuse_connections)
+        disableRetries(); // this will also safely drain pconn pool
 
     // TODO: check whether NULL domain is appropriate here
     connection = icapPconnPool->pop(s.host.c_str(), s.port, NULL, NULL, isRetriable);
