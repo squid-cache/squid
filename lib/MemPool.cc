@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemPool.cc,v 1.6 2006/09/20 00:59:26 adrian Exp $
+ * $Id: MemPool.cc,v 1.7 2007/05/22 16:40:06 rousskov Exp $
  *
  * DEBUG: section 63    Low Level Memory Pool Management
  * AUTHOR: Alex Rousskov, Andres Kroonmaa, Robert Collins
@@ -836,6 +836,11 @@ MemAllocator::MemAllocator(char const *aLabel) : label(aLabel)
 {
 }
 
+size_t MemAllocator::RoundedSize(size_t s)
+{
+    return ((s + sizeof(void*) - 1) / sizeof(void*)) * sizeof(void*);
+}
+
 MemMalloc::MemMalloc(char const *label, size_t aSize) : MemImplementingAllocator(label, aSize) { inuse = 0; }
 
 bool
@@ -923,7 +928,7 @@ MemImplementingAllocator::MemImplementingAllocator(char const *aLabel, size_t aS
 	next(NULL),
 	alloc_calls(0),
 	free_calls(0),
-	obj_size(((aSize + sizeof(void *) - 1) / sizeof(void *)) * sizeof(void *))
+	obj_size(RoundedSize(aSize))
 {
 }
 

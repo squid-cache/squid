@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.104 2007/04/28 22:26:37 hno Exp $
+ * $Id: mem.cc,v 1.105 2007/05/22 16:40:06 rousskov Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -69,13 +69,13 @@ static const struct
 StrPoolsAttrs[mem_str_pool_count] = {
 
                                         {
-                                            "Short Strings", 36,
+                                            "Short Strings", MemAllocator::RoundedSize(36),
                                         },				/* to fit rfc1123 and similar */
                                         {
-                                            "Medium Strings", 128,
+                                            "Medium Strings", MemAllocator::RoundedSize(128),
                                         },				/* to fit most urls */
                                         {
-                                            "Long Strings", 512
+                                            "Long Strings", MemAllocator::RoundedSize(512)
                                         }				/* other */
                                     };
 

@@ -112,6 +112,9 @@ public:
     virtual int getInUseCount() = 0;
     int inUseCount();
     virtual void setChunkSize(size_t chunksize) {}
+
+    // smallest size divisible by sizeof(void*) and at least minSize
+    static size_t RoundedSize(size_t minSize);
 private:
     const char *label;
 };
