@@ -1,6 +1,6 @@
 
 /*
- * $Id: refresh.cc,v 1.75 2007/04/30 16:56:09 wessels Exp $
+ * $Id: refresh.cc,v 1.76 2007/05/24 01:45:03 hno Exp $
  *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
@@ -216,13 +216,13 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, time_t age, const 
      * If we are here, staleness is determined by the refresh_pattern
      * configured minimum age.
      */
-    if (age <= R->min) {
-        debugs(22, 3, "FRESH: age " << age << " <= min " << R->min);
+    if (age < R->min) {
+        debugs(22, 3, "FRESH: age " << age << " < min " << R->min);
         sf->min = true;
         return -1;
     }
 
-    debugs(22, 3, "STALE: age " << age << " > min " << R->min);
+    debugs(22, 3, "STALE: age " << age << " >= min " << R->min);
     return (age - R->min);
 }
 
