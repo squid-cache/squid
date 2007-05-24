@@ -14,12 +14,10 @@ CPPUNIT_TEST_SUITE_REGISTRATION( testStoreEntryStream );
 
 /* init memory pools */
 
-struct Initer
+void testStoreEntryStream::setUp()
 {
-    Initer() {Mem::Init();}
-};
-
-static Initer ensure_mempools;
+    Mem::Init();
+}
 
 void
 testStoreEntryStream::testGetStream()

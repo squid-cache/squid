@@ -16,14 +16,12 @@
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testDiskIO );
 
-struct Initer {
-  Initer() {
+void
+testDiskIO::setUp()
+{
     Mem::Init();
     DiskIOModule::SetupAllModules();
-  };
-};
-
-Initer ensure_inited;
+}
 
 void
 testDiskIO::testFindDefault()

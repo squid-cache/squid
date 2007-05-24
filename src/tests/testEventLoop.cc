@@ -20,16 +20,12 @@ shut_down(int)
 
 /* init legacy static-initialized modules */
 
-struct Initer
+void
+testEventLoop::setUp()
 {
-    Initer()
-    {
-        Mem::Init();
-        statInit();
-    }
-};
-
-static Initer ensure_mempools;
+    Mem::Init();
+    statInit();
+}
 
 /*
  * Test creating a EventLoop

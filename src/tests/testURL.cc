@@ -18,12 +18,11 @@ shut_down(int)
 
 /* init memory pools */
 
-struct Initer
+void
+testURL::setUp()
 {
-    Initer() {Mem::Init();}
-};
-
-static Initer ensure_mempools;
+    Mem::Init();
+}
 
 /*
  * we can construct a URL with a URLScheme.
