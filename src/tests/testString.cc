@@ -13,12 +13,11 @@ eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata)
 
 /* init memory pools */
 
-struct Initer
+void
+testString::setUp()
 {
-    Initer() {Mem::Init();}
-};
-
-static Initer ensure_mempools;
+    Mem::Init();
+}
 
 void
 testString::testDefaults()

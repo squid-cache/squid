@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.205 2007/05/18 06:41:24 amosjeffries Exp $
+ * $Id: gopher.cc,v 1.206 2007/05/23 20:59:14 hno Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -248,7 +248,7 @@ gopher_request_parse(const HttpRequest * req, char *type_id, char *request)
     if (request) {
         xstrncpy(request, path + 1, MAX_URL);
         /* convert %xx to char */
-        url_convert_hex(request, 0);
+        rfc1738_unescape(request);
     }
 }
 

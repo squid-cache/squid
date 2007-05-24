@@ -17,12 +17,11 @@ shut_down(int)
 
 /* init memory pools */
 
-struct Initer
+void
+testHttpRequest::setUp()
 {
-    Initer() {Mem::Init();}
-};
-
-static Initer ensure_mempools;
+    Mem::Init();
+}
 
 /*
  * Test creating an HttpRequest object from a Url and method

@@ -17,12 +17,10 @@ shut_down(int)
 
 /* init memory pools */
 
-struct Initer
+void testCacheManager::setUp()
 {
-    Initer() {Mem::Init();}
-};
-
-static Initer ensure_mempools;
+    Mem::Init();
+}
 
 /*
  * Test creating a CacheManager
