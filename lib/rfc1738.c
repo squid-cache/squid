@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1738.c,v 1.26 2003/12/19 06:12:40 wessels Exp $
+ * $Id: rfc1738.c,v 1.27 2007/05/23 21:59:44 hno Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -136,7 +136,7 @@ rfc1738_do_escape(const char *url, int encode_reserved)
 	 * allocated - KA */
 
 	if (do_escape == 1) {
-	    (void) sprintf(q, "%%%02x", (unsigned char) *p);
+	    (void) sprintf(q, "%%%02X", (unsigned char) *p);
 	    q += sizeof(char) * 2;
 	} else {
 	    *q = *p;
