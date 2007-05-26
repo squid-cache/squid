@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.430 2007/04/30 16:56:09 wessels Exp $
+ * $Id: comm.cc,v 1.431 2007/05/26 06:38:04 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -821,6 +821,21 @@ limitError(int const anErrno)
 {
     return anErrno == ENFILE || anErrno == EMFILE;
 }
+
+int
+comm_set_tos(int fd, int tos)
+{
+#ifdef IP_TOS
+	int x = setsockopt(fd, IPPROTO_IP, IP_TOS, (char *) &tos, sizeof(int));
+        if (x < 0)
+            debugs(50, 1, "comm_set_tos: setsockopt(IP_TOS) on FD " << fd << ": " << xstrerror());
+	return x;
+#else
+        debugs(50, 0, "comm_set_tos: setsockopt(IP_TOS) not supported on this platform");
+	return -1
+#endif
+}
+
 
 /* Create a socket. Default is blocking, stream (TCP) socket.  IO_TYPE
  * is OR of flags specified in defines.h:COMM_* */
