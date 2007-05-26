@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.437 2007/05/22 17:12:38 rousskov Exp $
+# $Id: cf.data.pre,v 1.438 2007/05/26 06:38:03 wessels Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -2920,6 +2920,16 @@ DOC_START
 
 	Processing proceeds in the order specified, and stops at first fully
 	matching line.
+DOC_END
+
+NAME: clientside_tos
+TYPE: acl_tos
+DEFAULT: none
+LOC: Config.accessList.clientside_tos
+DOC_START
+	Allows you to select a TOS/Diffserv value to mark client-side
+	connections with, based on the username or source address
+	making the request.
 DOC_END
 
 NAME: tcp_outgoing_address

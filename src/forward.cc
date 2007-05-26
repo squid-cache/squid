@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.164 2007/05/11 13:20:57 rousskov Exp $
+ * $Id: forward.cc,v 1.165 2007/05/26 06:38:04 wessels Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -1197,7 +1197,11 @@ static struct IN_ADDR
     return addr;
 }
 
-static int
+/*
+ * DPW 2007-05-19
+ * Formerly static, but now used by client_side_request.cc
+ */
+int
 aclMapTOS(acl_tos * head, ACLChecklist * ch)
 {
     acl_tos *l;

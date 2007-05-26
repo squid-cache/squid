@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.87 2007/05/18 18:26:01 wessels Exp $
+ * $Id: client_side_request.cc,v 1.88 2007/05/26 06:38:04 wessels Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -999,6 +999,8 @@ ClientHttpRequest::loggingEntry(StoreEntry *newEntry)
  * the callout.  This is strictly for convenience.
  */
 
+extern int aclMapTOS (acl_tos * head, ACLChecklist * ch);
+
 void
 ClientHttpRequest::doCallouts()
 {
@@ -1047,6 +1049,20 @@ ClientHttpRequest::doCallouts()
             calloutContext->checkNoCache();
             return;
         }
+    }
+
+    if (!calloutContext->clientside_tos_done) {
+        calloutContext->clientside_tos_done = true;
+	if (getConn() != NULL) {
+	    ACLChecklist ch;
+            ch.src_addr = request->client_addr;
+            ch.my_addr = request->my_addr;
+            ch.my_port = request->my_port;
+            ch.request = HTTPMSGLOCK(request);
+	    int tos = aclMapTOS(Config.accessList.clientside_tos, &ch);
+	    if (tos)
+		comm_set_tos(getConn()->fd, tos);
+	}
     }
 
     cbdataReferenceDone(calloutContext->http);
