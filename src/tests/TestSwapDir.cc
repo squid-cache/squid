@@ -46,7 +46,7 @@ TestSwapDir::parse(int, char*)
 {}
 
 StoreSearch *
-TestSwapDir::search(string, HttpRequest *)
+TestSwapDir::search(String, HttpRequest *)
 {
     return NULL;
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.557 2007/05/26 06:38:05 wessels Exp $
+ * $Id: structs.h,v 1.558 2007/05/29 13:31:41 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -843,8 +843,8 @@ struct _HttpBody
 
 class HttpHdrExtField
 {
-    string name;		/* field-name  from HTTP/1.1 (no column after name) */
-    string value;		/* field-value from HTTP/1.1 */
+    String name;		/* field-name  from HTTP/1.1 (no column after name) */
+    String value;		/* field-value from HTTP/1.1 */
 };
 
 /* http cache control header field */
@@ -857,7 +857,7 @@ public:
     int max_age;
     int s_maxage;
     int max_stale;
-    string other;
+    String other;
 };
 
 /* some fields can hold either time or etag specs (e.g. If-Range) */
@@ -893,7 +893,7 @@ public:
     HttpHeaderFieldInfo() : id (HDR_ACCEPT), type (ftInvalid){}
 
     http_hdr_type id;
-    string name;
+    String name;
     field_type type;
     HttpHeaderFieldStat stat;
 };

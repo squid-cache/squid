@@ -1,6 +1,6 @@
 
 /*
- * $Id: AIODiskFile.h,v 1.3 2007/05/18 06:41:27 amosjeffries Exp $
+ * $Id: AIODiskFile.h,v 1.4 2007/05/29 13:31:43 amosjeffries Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -70,7 +70,7 @@ private:
     CBDATA_CLASS(AIODiskFile);
     void error(bool const &);
     int fd;
-    string path;
+    String path;
     AIODiskIOStrategy *strategy;
     RefCount<IORequestor> ioRequestor;
     bool closed;

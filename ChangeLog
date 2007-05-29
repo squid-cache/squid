@@ -28,7 +28,6 @@ Changes to squid-3.0 ():
 	- Improved high-resolution profiling
 	- Windows overlapped-IO and thread support added to the Async IO disk code
 	- Improvements for handling large DNS replies
-	- Adds standard API for string handling
 
 Changes to squid-2.5 ():
 

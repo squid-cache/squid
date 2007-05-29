@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_null.cc,v 1.13 2007/05/18 06:41:32 amosjeffries Exp $
+ * $Id: store_null.cc,v 1.14 2007/05/29 13:31:47 amosjeffries Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -103,7 +103,7 @@ NullSwapDir::parse(int anIndex, char *aPath)
 }
 
 StoreSearch *
-NullSwapDir::search(string const url, HttpRequest *)
+NullSwapDir::search(String const url, HttpRequest *)
 {
     if (url.size())
         fatal ("Cannot search by url yet\n");

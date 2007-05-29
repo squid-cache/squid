@@ -1,5 +1,5 @@
 /*
- * $Id: ESICustomParser.h,v 1.7 2007/05/18 06:41:22 amosjeffries Exp $
+ * $Id: ESICustomParser.h,v 1.8 2007/05/29 13:31:37 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -60,9 +60,9 @@ private:
 
     char const *findTag(char const *a, size_t b);
     ESIParserClient *theClient;
-    string error;
+    String error;
     /* cheap n dirty - buffer it all */
-    string content;
+    String content;
     /* TODO: make a class of this type code */
     ESITAG_t lastTag;
 };

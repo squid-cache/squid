@@ -45,8 +45,8 @@ testCacheManager::testRegister()
     CacheManager manager;
     manager.registerAction("sample", "my sample", &dummy_action, false, false);
     CacheManagerAction *anAction = manager.findAction("sample");
-    CPPUNIT_ASSERT_EQUAL( (string)"sample", (string)anAction->action );
-    CPPUNIT_ASSERT_EQUAL( (string)"my sample", (string)anAction->desc );
+    CPPUNIT_ASSERT_EQUAL(String("sample"), String(anAction->action));
+    CPPUNIT_ASSERT_EQUAL(String("my sample"), String(anAction->desc));
     CPPUNIT_ASSERT_EQUAL(&dummy_action, anAction->handler);
     CPPUNIT_ASSERT_EQUAL(0, (int)anAction->flags.pw_req);
     CPPUNIT_ASSERT_EQUAL(0, (int)anAction->flags.atomic);

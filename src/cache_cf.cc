@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.511 2007/05/18 06:41:23 amosjeffries Exp $
+ * $Id: cache_cf.cc,v 1.512 2007/05/29 13:31:38 amosjeffries Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -2201,14 +2201,14 @@ ConfigParser::ParseString(char **var)
 }
 
 void
-ConfigParser::ParseString(string &var)
+ConfigParser::ParseString(String *var)
 {
     char *token = strtok(NULL, w_space);
 
     if (token == NULL)
         self_destruct();
 
-    var = token;
+    var->reset(token);
 }
 
 static void

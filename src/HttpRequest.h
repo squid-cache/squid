@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.28 2007/05/18 06:41:22 amosjeffries Exp $
+ * $Id: HttpRequest.h,v 1.29 2007/05/29 13:31:38 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -40,7 +40,7 @@
 #include "HttpRequestMethod.h"
 
 /*  Http Request */
-extern int httpRequestHdrAllowed(const HttpHeaderEntry * e, string * strConnection);
+extern int httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConnection);
 extern int httpRequestHdrAllowedByName(http_hdr_type id);
 extern void httpRequestPack(void *obj, Packer *p);
 
@@ -84,7 +84,7 @@ public:
 
     u_short port;
 
-    string urlpath;
+    String urlpath;
 
     char *canonical;
 
@@ -120,13 +120,13 @@ public:
 
     char *peer_domain;		/* Configured peer forceddomain */
 
-    string tag;			/* Internal tag for this request */
+    String tag;			/* Internal tag for this request */
 
-    string extacl_user;		/* User name returned by extacl lookup */
+    String extacl_user;		/* User name returned by extacl lookup */
 
-    string extacl_passwd;	/* Password returned by extacl lookup */
+    String extacl_passwd;	/* Password returned by extacl lookup */
 
-    string extacl_log;		/* String to be used for access.log purposes */
+    String extacl_log;		/* String to be used for access.log purposes */
 
 public:
     bool multipartRangeRequest() const;

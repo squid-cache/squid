@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.195 2007/05/18 06:41:25 amosjeffries Exp $
+ * $Id: net_db.cc,v 1.196 2007/05/29 13:31:40 amosjeffries Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -892,11 +892,11 @@ netdbInit(void)
 
     n = hashPrime(Config.Netdb.high / 4);
 
-    addr_table = hash_create((HASHCMP *) std::strcmp, n, hash_string);
+    addr_table = hash_create((HASHCMP *) strcmp, n, hash_string);
 
     n = hashPrime(3 * Config.Netdb.high / 4);
 
-    host_table = hash_create((HASHCMP *) std::strcmp, n, hash_string);
+    host_table = hash_create((HASHCMP *) strcmp, n, hash_string);
 
     eventAddIsh("netdbSaveState", netdbSaveState, NULL, 3600.0, 1);
 

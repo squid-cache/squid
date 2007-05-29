@@ -1,6 +1,6 @@
 
 /*
- * $Id: SqString.cci,v 1.2 2007/05/19 06:49:12 amosjeffries Exp $
+ * $Id: String.cci,v 1.9 2007/05/29 13:31:38 amosjeffries Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -33,63 +33,45 @@
  *
  */
 
-SqString::SqString() : size_(0), len_(0), buf_ (NULL)
+String::String() : size_(0), len_(0), buf_ (NULL)
 {
 #if DEBUGSTRINGS
-    SqStringRegistry::Instance().add(this);
+    StringRegistry::Instance().add(this);
 #endif
 }
 
-void
-SqString::absorb(SqString &old)
-{
-    clear();
-    size_ = old.size_;
-    buf_ = old.buf_;
-    len_ = old.len_;
-    old.size_ = 0;
-    old.buf_ = NULL;
-    old.len_ = 0;
-}
-
 int
-SqString::size() const
+String::size() const
 {
     return len_;
 }
 
 char const *
-SqString::c_str() const
+String::buf() const
 {
     return buf_;
 }
 
 const char *
-SqString::pos(char const *aString) const
+String::pos(char const *aString) const
 {
-    return strstr(c_str(), aString);
+    return strstr(buf(), aString);
 }
 
 const char *
-SqString::pos(char const ch) const
+String::pos(char const ch) const
 {
-    return strchr(c_str(), ch);
+    return strchr(buf(), ch);
 }
 
 const char *
-SqString::rpos(char const ch) const
+String::rpos(char const ch) const
 {
-    return strrchr(c_str(), ch);
-}
-
-bool
-SqString::empty() const
-{
-    return (buf_ == NULL || len_ == 0);
+    return strrchr(buf(), (ch));
 }
 
 int
-SqString::compare(char const *aString) const
+String::cmp (char const *aString) const
 {
     /* strcmp fails on NULLS */
 
@@ -102,11 +84,11 @@ SqString::compare(char const *aString) const
     if (aString == NULL || aString[0] == '\0')
         return 1;
 
-    return strcmp(c_str(), aString);
+    return strcmp(buf(), aString);
 }
 
 int
-SqString::compare(char const *aString, size_t count) const
+String::cmp (char const *aString, size_t count) const
 {
     /* always the same at length 0 */
 
@@ -122,11 +104,11 @@ SqString::compare(char const *aString, size_t count) const
     if (aString == NULL || aString[0] == '\0')
         return 1;
 
-    return strncmp(c_str(), aString, count);
+    return strncmp(buf(), aString, count);
 }
 
 int
-SqString::compare(SqString const &aString) const
+String::cmp (String const &aString) const
 {
     /* strcmp fails on NULLS */
 
@@ -139,25 +121,49 @@ SqString::compare(SqString const &aString) const
     if (aString.size() == 0)
         return 1;
 
-    return strcmp(c_str(), aString.c_str());
+    return strcmp(buf(), aString.buf());
 }
 
-void
-SqString::set (char const *loc, char const ch)
+int
+String::caseCmp (char const *aString) const
 {
-    operator[](loc-buf_) = ch;
+    return strcasecmp(buf(), aString);
 }
 
-void
-SqString::cut (size_t newLength)
+int
+String::caseCmp (char const *aString, size_t count) const
 {
-    operator[](newLength) = '\0';
+    return strncasecmp(buf(), aString, count);
+}
+
+/* FIXME: this is can perform buffer overflows and underflows! */
+void
+String::set (char const *loc, char const ch)
+{
+    buf_[loc-buf_] = ch;
+}
+
+/* FIXME: this is can perform buffer overflows and underflows! */
+void
+String::cut (size_t newLength)
+{
     len_ = newLength;
+    buf_[newLength] = '\0';
 }
 
+/* FIXME: this is can perform buffer overflows and underflows! */
 void
-SqString::cutPointer (char const *loc)
+String::cutPointer (char const *loc)
 {
-    operator[](loc-buf_) = '\0';
     len_ = loc-buf_;
+    buf_[len_] = '\0';
 }
+
+std::ostream &
+operator<<(std::ostream& os, String const &aString)
+{
+    os << aString.buf();
+    return os;
+}
+
+

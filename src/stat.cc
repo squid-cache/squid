@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.406 2007/05/18 06:41:25 amosjeffries Exp $
+ * $Id: stat.cc,v 1.407 2007/05/29 13:31:40 amosjeffries Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1692,8 +1692,8 @@ statClientRequests(StoreEntry * s)
 
         if (http->request->auth_user_request)
             p = http->request->auth_user_request->username();
-        else if (!http->request->extacl_user.empty()) {
-            p = http->request->extacl_user.c_str();
+        else if (http->request->extacl_user.buf() != NULL) {
+            p = http->request->extacl_user.buf();
         }
 
         if (!p && (conn != NULL && conn->rfc931[0]))

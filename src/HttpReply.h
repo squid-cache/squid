@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.h,v 1.19 2007/05/18 06:41:22 amosjeffries Exp $
+ * $Id: HttpReply.h,v 1.20 2007/05/29 13:31:37 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -77,7 +77,7 @@ public:
 
     time_t expires;
 
-    string content_type;
+    String content_type;
 
     HttpHdrSc *surrogate_control;
 
@@ -90,7 +90,7 @@ public:
 
     HttpBody body;		/* for small constant memory-resident text bodies only */
 
-    string protoPrefix;       // e.g., "HTTP/"
+    String protoPrefix;       // e.g., "HTTP/"
 
     bool do_clean;
 

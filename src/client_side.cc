@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.755 2007/05/18 18:30:41 wessels Exp $
+ * $Id: client_side.cc,v 1.756 2007/05/29 13:31:39 amosjeffries Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -459,7 +459,7 @@ clientPrepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogE
     aLogEntry->http.version = request->http_ver;
     aLogEntry->hier = request->hier;
 
-    aLogEntry->cache.extuser = request->extacl_user.c_str();
+    aLogEntry->cache.extuser = request->extacl_user.buf();
 
     if (request->auth_user_request) {
 
@@ -481,10 +481,10 @@ ClientHttpRequest::logRequest()
 
         if (al.reply) {
             al.http.code = al.reply->sline.status;
-            al.http.content_type = al.reply->content_type.c_str();
+            al.http.content_type = al.reply->content_type.buf();
         } else if (loggingEntry() && loggingEntry()->mem_obj) {
             al.http.code = loggingEntry()->mem_obj->getReply()->sline.status;
-            al.http.content_type = loggingEntry()->mem_obj->getReply()->content_type.c_str();
+            al.http.content_type = loggingEntry()->mem_obj->getReply()->content_type.buf();
         }
 
         debugs(33, 9, "clientLogRequest: http.code='" << al.http.code << "'");
@@ -541,7 +541,7 @@ ClientHttpRequest::freeResources()
     safe_free(uri);
     safe_free(log_uri);
     safe_free(redirect.location);
-    range_iter.boundary.clear();
+    range_iter.boundary.clean();
     HTTPMSGUNLOCK(request);
 
     if (client_stream.tail)
@@ -823,15 +823,15 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
 
 /* put terminating boundary for multiparts */
 static void
-clientPackTermBound(string boundary, MemBuf * mb)
+clientPackTermBound(String boundary, MemBuf * mb)
 {
-    mb->Printf("\r\n--%s--\r\n", boundary.c_str());
+    mb->Printf("\r\n--%s--\r\n", boundary.buf());
     debugs(33, 6, "clientPackTermBound: buf offset: " << mb->size);
 }
 
 /* appends a "part" HTTP header (as in a multi-part/range reply) to the buffer */
 static void
-clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, string boundary, MemBuf * mb)
+clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String boundary, MemBuf * mb)
 {
     HttpHeader hdr(hoReply);
     Packer p;
@@ -839,9 +839,10 @@ clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, string 
     assert(spec);
 
     /* put boundary */
-    debugs(33, 5, "clientPackRangeHdr: appending boundary: " << boundary);
+    debugs(33, 5, "clientPackRangeHdr: appending boundary: " <<
+           boundary.buf());
     /* rfc2046 requires to _prepend_ boundary with <crlf>! */
-    mb->Printf("\r\n--%s\r\n", boundary.c_str());
+    mb->Printf("\r\n--%s\r\n", boundary.buf());
 
     /* stuff the header with required entries and pack it */
 
@@ -1033,12 +1034,12 @@ clientIfRangeMatch(ClientHttpRequest * http, HttpReply * rep)
 
 /* generates a "unique" boundary string for multipart responses
  * the caller is responsible for cleaning the string */
-string
+String
 ClientHttpRequest::rangeBoundaryStr() const
 {
     assert(this);
     const char *key;
-    string b (full_appname_string);
+    String b (full_appname_string);
     b.append (":",1);
     key = storeEntry()->getMD5Text();
     b.append(key, strlen(key));
@@ -1150,7 +1151,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
             hdr->delById(HDR_CONTENT_TYPE);
             httpHeaderPutStrf(hdr, HDR_CONTENT_TYPE,
                               "multipart/byteranges; boundary=\"%s\"",
-                              http->range_iter.boundary.c_str());
+                              http->range_iter.boundary.buf());
             /* Content-Length is not required in multipart responses
              * but it is always nice to have one */
             actual_clen = http->mRangeCLen();
@@ -2183,11 +2184,11 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
     request->flags.tproxy = conn->port->tproxy;
 #endif
 
-    if (internalCheck(request->urlpath.c_str())) {
+    if (internalCheck(request->urlpath.buf())) {
         if (internalHostnameIs(request->host) &&
                 request->port == getMyPort()) {
             http->flags.internal = 1;
-        } else if (Config.onoff.global_internal_static && internalStaticCheck(request->urlpath.c_str())) {
+        } else if (Config.onoff.global_internal_static && internalStaticCheck(request->urlpath.buf())) {
             xstrncpy(request->host, internalHostname(),
                      SQUIDHOSTNAMELEN);
             request->port = getMyPort();

@@ -31,7 +31,7 @@ ICAPOptions::~ICAPOptions()
 // future optimization note: this method is called by ICAP ACL code at least
 // twice for each HTTP message to see if the message should be ignored. For any
 // non-ignored HTTP message, ICAP calls to check whether a preview is needed.
-ICAPOptions::TransferKind ICAPOptions::transferKind(const string &urlPath) const
+ICAPOptions::TransferKind ICAPOptions::transferKind(const String &urlPath) const
 {
     if (theTransfers.preview.matches(urlPath))
         return xferPreview;
@@ -122,10 +122,10 @@ void ICAPOptions::cfgMethod(ICAP::Method m)
 // TODO: HttpHeader should provide a general method for this type of conversion
 void ICAPOptions::cfgIntHeader(const HttpHeader *h, const char *fname, int &value)
 {
-    const string s = h->getByName(fname);
+    const String s = h->getByName(fname);
 
-    if (!s.empty() && xisdigit(s[0]))
-        value = atoi(s.c_str());
+    if (s.size() && xisdigit(*s.buf()))
+        value = atoi(s.buf());
     else
         value = -1;
 
@@ -134,7 +134,7 @@ void ICAPOptions::cfgIntHeader(const HttpHeader *h, const char *fname, int &valu
 
 void ICAPOptions::cfgTransferList(const HttpHeader *h, TransferList &list)
 {
-    const string buf = h->getByName(list.name);
+    const String buf = h->getByName(list.name);
     bool foundStar = false;
     list.parse(buf, foundStar);
 
@@ -162,7 +162,7 @@ void ICAPOptions::TransferList::add(const char *extension) {
     wordlistAdd(&extensions, extension);
 };
 
-bool ICAPOptions::TransferList::matches(const string &urlPath) const {
+bool ICAPOptions::TransferList::matches(const String &urlPath) const {
     const int urlLen = urlPath.size();
     for (wordlist *e = extensions; e; e = e->next) {
         // optimize: store extension lengths
@@ -172,8 +172,8 @@ bool ICAPOptions::TransferList::matches(const string &urlPath) const {
         if (eLen < urlLen) {
             const int eOff = urlLen - eLen;
             // RFC 3507 examples imply that extensions come without leading '.'
-            if (urlPath[eOff-1] == '.' &&
-                strcmp(&urlPath[eOff], e->key) == 0) {
+            if (urlPath.buf()[eOff-1] == '.' &&
+                strcmp(urlPath.buf() + eOff, e->key) == 0) {
                 debugs(93,7, "ICAPOptions url " << urlPath << " matches " <<
                     name << " extension " << e->key);
                 return true;
@@ -184,7 +184,7 @@ bool ICAPOptions::TransferList::matches(const string &urlPath) const {
     return false;
 }
 
-void ICAPOptions::TransferList::parse(const string &buf, bool &foundStar) {
+void ICAPOptions::TransferList::parse(const String &buf, bool &foundStar) {
     foundStar = false;
 
     const char *item;

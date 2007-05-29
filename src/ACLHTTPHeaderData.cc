@@ -1,5 +1,5 @@
 /*
- * $Id: ACLHTTPHeaderData.cc,v 1.4 2007/05/18 06:41:21 amosjeffries Exp $
+ * $Id: ACLHTTPHeaderData.cc,v 1.5 2007/05/29 13:31:36 amosjeffries Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -63,18 +63,18 @@ ACLHTTPHeaderData::match(HttpHeader* hdr)
     if (hdr == NULL)
         return false;
 
-    debugs(28, 3, "aclHeaderData::match: checking '" << hdrName << "'");
+    debugs(28, 3, "aclHeaderData::match: checking '" << hdrName.buf() << "'");
 
-    string value = hdrId != HDR_BAD_HDR ? hdr->getStrOrList(hdrId) : hdr->getByName(hdrName.c_str());
+    String value = hdrId != HDR_BAD_HDR ? hdr->getStrOrList(hdrId) : hdr->getByName(hdrName.buf());
 
-    return regex_rule->match(value.c_str());
+    return regex_rule->match(value.buf());
 }
 
 wordlist *
 ACLHTTPHeaderData::dump()
 {
     wordlist *W = NULL;
-    wordlistAdd(&W, hdrName.c_str());
+    wordlistAdd(&W, hdrName.buf());
     wordlist * regex_dump = regex_rule->dump();
     wordlistAddWl(&W, regex_dump);
     wordlistDestroy(&regex_dump);
@@ -87,14 +87,14 @@ ACLHTTPHeaderData::parse()
     char* t = strtokFile();
     assert (t != NULL);
     hdrName = t;
-    hdrId = httpHeaderIdByNameDef(hdrName.c_str(), hdrName.size());
+    hdrId = httpHeaderIdByNameDef(hdrName.buf(), strlen(hdrName.buf()));
     regex_rule->parse();
 }
 
 bool
 ACLHTTPHeaderData::empty() const
 {
-    return (hdrId == HDR_BAD_HDR && !hdrName.c_str()) || regex_rule->empty();
+    return (hdrId == HDR_BAD_HDR && !hdrName.buf()) || regex_rule->empty();
 }
 
 ACLData<HttpHeader*> *

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.128 2007/05/18 18:30:41 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.129 2007/05/29 13:31:39 amosjeffries Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1262,7 +1262,7 @@ clientReplyContext::buildReplyHeader()
         int headers_deleted = 0;
         while ((e = hdr->getEntry(&pos))) {
             if (e->id == HDR_WWW_AUTHENTICATE || e->id == HDR_PROXY_AUTHENTICATE) {
-                const char *value = e->value.c_str();
+                const char *value = e->value.buf();
 
                 if ((strncasecmp(value, "NTLM", 4) == 0 &&
                         (value[4] == '\0' || value[4] == ' '))
@@ -1314,7 +1314,7 @@ clientReplyContext::buildReplyHeader()
     /* Append VIA */
     {
         LOCAL_ARRAY(char, bbuf, MAX_URL + 32);
-        string strVia;
+        String strVia;
        	hdr->getList(HDR_VIA, &strVia);
         snprintf(bbuf, sizeof(bbuf), "%d.%d %s",
                  reply->sline.version.major,
@@ -1322,7 +1322,7 @@ clientReplyContext::buildReplyHeader()
                  ThisCache);
         strListAdd(&strVia, bbuf, ',');
         hdr->delById(HDR_VIA);
-        hdr->putStr(HDR_VIA, strVia.c_str());
+        hdr->putStr(HDR_VIA, strVia.buf());
     }
     /* Signal keep-alive if needed */
     hdr->putStr(http->flags.accel ? HDR_CONNECTION : HDR_PROXY_CONNECTION,

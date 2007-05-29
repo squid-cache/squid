@@ -49,7 +49,7 @@ public:
         (const cache_key*);
 
     virtual void get
-        (string, void (*)(StoreEntry*, void*), void*);
+        (String, void (*)(StoreEntry*, void*), void*);
 
     virtual void init();
 
@@ -67,7 +67,7 @@ virtual void maintain() {};
 
     virtual void updateSize(size_t size, int sign) {}
 
-    virtual StoreSearch *search(string const url, HttpRequest *);
+    virtual StoreSearch *search(String const url, HttpRequest *);
 };
 
 typedef RefCount<TestStore> TestStorePointer;

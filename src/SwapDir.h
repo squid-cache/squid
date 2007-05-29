@@ -1,6 +1,6 @@
 
 /*
- * $Id: SwapDir.h,v 1.12 2007/05/18 06:41:23 amosjeffries Exp $
+ * $Id: SwapDir.h,v 1.13 2007/05/29 13:31:38 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -60,7 +60,7 @@ public:
         (const cache_key *);
 
     virtual void get
-        (string const, STOREGETCLIENT, void * cbdata);
+        (String const, STOREGETCLIENT, void * cbdata);
 
     virtual void init();
 
@@ -74,7 +74,7 @@ public:
 
     virtual void sync();	/* Sync the store prior to shutdown */
 
-    virtual StoreSearch *search(string const url, HttpRequest *);
+    virtual StoreSearch *search(String const url, HttpRequest *);
 
     virtual void reference(StoreEntry &);	/* Reference this object */
 
@@ -134,13 +134,13 @@ public:
         (const cache_key *);
 
     virtual void get
-        (string const, STOREGETCLIENT, void * cbdata);
+        (String const, STOREGETCLIENT, void * cbdata);
 
 virtual size_t maxSize() const { return max_size;}
 
     virtual size_t minSize() const;
     virtual void stat (StoreEntry &anEntry) const;
-    virtual StoreSearch *search(string const url, HttpRequest *) = 0;
+    virtual StoreSearch *search(String const url, HttpRequest *) = 0;
 
     virtual void updateSize(size_t size, int sign);
 

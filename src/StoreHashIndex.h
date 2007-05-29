@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreHashIndex.h,v 1.3 2007/05/18 06:41:23 amosjeffries Exp $
+ * $Id: StoreHashIndex.h,v 1.4 2007/05/29 13:31:38 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -57,7 +57,7 @@ public:
         (const cache_key *);
 
     virtual void get
-        (string const, STOREGETCLIENT, void * cbdata);
+        (String const, STOREGETCLIENT, void * cbdata);
 
     virtual void init();
 
@@ -77,7 +77,7 @@ public:
 
     virtual void updateSize(size_t, int);
 
-    virtual StoreSearch *search(string const url, HttpRequest *);
+    virtual StoreSearch *search(String const url, HttpRequest *);
 
 private:
     /* migration logic */

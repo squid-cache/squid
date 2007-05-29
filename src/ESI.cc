@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.24 2007/05/18 06:41:22 amosjeffries Exp $
+ * $Id: ESI.cc,v 1.25 2007/05/29 13:31:36 amosjeffries Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -2450,7 +2450,7 @@ esiEnableProcessing (HttpReply *rep)
              */
             return 0;
 
-        if (strstr (sctusable->content, "ESI/1.0"))
+        if (strstr (sctusable->content.buf(), "ESI/1.0"))
             rv = 1;
 
         httpHdrScTargetDestroy (sctusable);

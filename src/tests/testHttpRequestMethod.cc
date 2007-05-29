@@ -79,7 +79,7 @@ testHttpRequestMethod::testConstructmethod_t()
 void
 testHttpRequestMethod::testConst_str()
 {
-    CPPUNIT_ASSERT_EQUAL((string)"POST", (string)HttpRequestMethod("post").const_str());
+    CPPUNIT_ASSERT_EQUAL(String("POST"), String(HttpRequestMethod("post").const_str()));
 }
 
 /*
@@ -115,5 +115,5 @@ testHttpRequestMethod::testStream()
 {
     std::ostringstream buffer;
     buffer << HttpRequestMethod("get");
-    CPPUNIT_ASSERT_EQUAL((string)"GET", (string)buffer.str().c_str() );
+    CPPUNIT_ASSERT_EQUAL(String("GET"), String(buffer.str().c_str()));
 }

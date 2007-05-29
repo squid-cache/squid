@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIAssign.cc,v 1.5 2007/05/18 06:41:22 amosjeffries Exp $
+ * $Id: ESIAssign.cc,v 1.6 2007/05/29 13:31:37 amosjeffries Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -83,7 +83,7 @@ ESIAssign::evaluateVariable()
     variable = NULL;
 
     if (unevaluatedVariable.size()) {
-        varState->feedData(unevaluatedVariable.c_str(), unevaluatedVariable.size());
+        varState->feedData(unevaluatedVariable.buf(), unevaluatedVariable.size());
         char const *result = varState->extractChar ();
 
         /* Consider activating this, when we want to evaluate variables to a
@@ -117,7 +117,7 @@ ESIAssign::process (int dovars)
     if (!value)
         return ESI_PROCESS_COMPLETE;
 
-    varState->addVariable (name.c_str(), name.size(), value);
+    varState->addVariable (name.buf(), name.size(), value);
 
     value = NULL;
 
@@ -181,12 +181,12 @@ ESIAssign::addElement(ESIElement::Pointer anElement)
 ESIVariableExpression::~ESIVariableExpression()
 {}
 
-ESIVariableExpression::ESIVariableExpression (string const &aString) : expression (aString)
+ESIVariableExpression::ESIVariableExpression (String const &aString) : expression (aString)
 {}
 
 void
 ESIVariableExpression::eval (ESIVarState &state, char const *subref, char const *defaultOnEmpty) const
 {
     /* XXX: Implement evaluation of the expression */
-    ESISegment::ListAppend (state.getOutput(), expression.c_str(), expression.size());
+    ESISegment::ListAppend (state.getOutput(), expression.buf(), expression.size());
 }

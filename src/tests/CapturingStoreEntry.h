@@ -14,7 +14,7 @@ public:
 
     CapturingStoreEntry() : _buffer_calls(0), _flush_calls(0) {}
 
-    string _appended_text;
+    String _appended_text;
     int _buffer_calls;
     int _flush_calls;
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.88 2007/05/26 06:38:04 wessels Exp $
+ * $Id: client_side_request.cc,v 1.89 2007/05/29 13:31:39 amosjeffries Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -628,10 +628,12 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 #else
 
     if (req_hdr->has(HDR_PRAGMA)) {
-        string s = req_hdr->getList(HDR_PRAGMA);
+        String s = req_hdr->getList(HDR_PRAGMA);
 
         if (strListIsMember(&s, "no-cache", ','))
             no_cache++;
+
+        s.clean();
     }
 
     if (request->cache_control)
@@ -710,7 +712,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         request->flags.auth = 1;
 
     if (req_hdr->has(HDR_VIA)) {
-        string s = req_hdr->getList(HDR_VIA);
+        String s = req_hdr->getList(HDR_VIA);
         /*
          * ThisCache cannot be a member of Via header, "1.0 ThisCache" can.
          * Note ThisCache2 has a space prepended to the hostname so we don't
@@ -724,11 +726,11 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         }
 
 #if FORW_VIA_DB
-        fvdbCountVia(s.c_str());
+        fvdbCountVia(s.buf());
 
 #endif
 
-        s.clear();
+        s.clean();
     }
 
 #if USE_USERAGENT_LOG
@@ -745,9 +747,9 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 #if FORW_VIA_DB
 
     if (req_hdr->has(HDR_X_FORWARDED_FOR)) {
-        string s = req_hdr->getList(HDR_X_FORWARDED_FOR);
-        fvdbCountForw(s.c_str());
-        s.clear();
+        String s = req_hdr->getList(HDR_X_FORWARDED_FOR);
+        fvdbCountForw(s.buf());
+        s.clean();
     }
 
 #endif

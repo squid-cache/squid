@@ -37,10 +37,10 @@ testHttpRequest::testCreateFromUrlAndMethod()
     HttpRequest *nullRequest = NULL;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->port);
     CPPUNIT_ASSERT_EQUAL(METHOD_GET, aRequest->method);
-    CPPUNIT_ASSERT_EQUAL((string)"foo", (string)aRequest->host);
-    CPPUNIT_ASSERT_EQUAL((string)"/bar", aRequest->urlpath);
+    CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->host));
+    CPPUNIT_ASSERT_EQUAL(String("/bar"), aRequest->urlpath);
     CPPUNIT_ASSERT_EQUAL(PROTO_HTTP, aRequest->protocol);
-    CPPUNIT_ASSERT_EQUAL((string)"http://foo:90/bar", (string)url);
+    CPPUNIT_ASSERT_EQUAL(String("http://foo:90/bar"), String(url));
     xfree(url);
     /* vanilla url, different method */
     url = xstrdup("http://foo/bar");
@@ -48,10 +48,10 @@ testHttpRequest::testCreateFromUrlAndMethod()
     expected_port = 80;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->port);
     CPPUNIT_ASSERT_EQUAL(METHOD_PUT, aRequest->method);
-    CPPUNIT_ASSERT_EQUAL((string)"foo", (string)aRequest->host);
-    CPPUNIT_ASSERT_EQUAL((string)"/bar", aRequest->urlpath);
+    CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->host));
+    CPPUNIT_ASSERT_EQUAL(String("/bar"), aRequest->urlpath);
     CPPUNIT_ASSERT_EQUAL(PROTO_HTTP, aRequest->protocol);
-    CPPUNIT_ASSERT_EQUAL((string)"http://foo/bar", (string)url);
+    CPPUNIT_ASSERT_EQUAL(String("http://foo/bar"), String(url));
     /* a connect url with non-CONNECT data */
     url = xstrdup(":foo/bar");
     aRequest = HttpRequest::CreateFromUrlAndMethod(url, METHOD_CONNECT);
@@ -63,10 +63,10 @@ testHttpRequest::testCreateFromUrlAndMethod()
     expected_port = 45;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->port);
     CPPUNIT_ASSERT_EQUAL(METHOD_CONNECT, aRequest->method);
-    CPPUNIT_ASSERT_EQUAL((string)"foo", (string)aRequest->host);
-    CPPUNIT_ASSERT_EQUAL((string)"", aRequest->urlpath);
+    CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->host));
+    CPPUNIT_ASSERT_EQUAL(String(""), aRequest->urlpath);
     CPPUNIT_ASSERT_EQUAL(PROTO_NONE, aRequest->protocol);
-    CPPUNIT_ASSERT_EQUAL((string)"foo:45", (string)url);
+    CPPUNIT_ASSERT_EQUAL(String("foo:45"), String(url));
     xfree(url);
 }
 
@@ -83,9 +83,9 @@ testHttpRequest::testCreateFromUrl()
     expected_port = 90;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->port);
     CPPUNIT_ASSERT_EQUAL(METHOD_GET, aRequest->method);
-    CPPUNIT_ASSERT_EQUAL((string)"foo", (string)aRequest->host);
-    CPPUNIT_ASSERT_EQUAL((string)"/bar", aRequest->urlpath);
+    CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->host));
+    CPPUNIT_ASSERT_EQUAL(String("/bar"), aRequest->urlpath);
     CPPUNIT_ASSERT_EQUAL(PROTO_HTTP, aRequest->protocol);
-    CPPUNIT_ASSERT_EQUAL((string)"http://foo:90/bar", (string)url);
+    CPPUNIT_ASSERT_EQUAL(String("http://foo:90/bar"), String(url));
     xfree(url);
 }

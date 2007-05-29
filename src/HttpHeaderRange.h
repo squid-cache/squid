@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderRange.h,v 1.9 2007/05/18 06:41:22 amosjeffries Exp $
+ * $Id: HttpHeaderRange.h,v 1.10 2007/05/29 13:31:37 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -78,7 +78,7 @@ public:
 
     static size_t ParsedCount;
     /* Http Range Header Field */
-    static HttpHdrRange *ParseCreate(const string * range_spec);
+    static HttpHdrRange *ParseCreate(const String * range_spec);
 
     HttpHdrRange();
     HttpHdrRange(HttpHdrRange const &);
@@ -96,7 +96,7 @@ public:
     int canonize(size_t);
     int canonize(HttpReply *rep);
     /* returns true if ranges are valid; inits HttpHdrRange */
-    bool parseInit(const string * range_spec);
+    bool parseInit(const String * range_spec);
     void packInto(Packer * p) const;
     /* other */
     bool isComplex() const;
@@ -127,7 +127,7 @@ public:
     ssize_t debt() const;
     void debt(ssize_t);
     ssize_t debt_size;		/* bytes left to send from the current spec */
-    string boundary;		/* boundary for multipart responses */
+    String boundary;		/* boundary for multipart responses */
     bool valid;
 };
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.43 2007/05/18 06:41:22 amosjeffries Exp $
+ * $Id: HttpHdrRange.cc,v 1.44 2007/05/29 13:31:37 amosjeffries Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -231,7 +231,7 @@ HttpHdrRange::HttpHdrRange () : clen (HttpHdrRangeSpec::UnknownPosition)
 {}
 
 HttpHdrRange *
-HttpHdrRange::ParseCreate(const string * range_spec)
+HttpHdrRange::ParseCreate(const String * range_spec)
 {
     HttpHdrRange *r = new HttpHdrRange;
 
@@ -245,7 +245,7 @@ HttpHdrRange::ParseCreate(const string * range_spec)
 
 /* returns true if ranges are valid; inits HttpHdrRange */
 bool
-HttpHdrRange::parseInit(const string * range_spec)
+HttpHdrRange::parseInit(const String * range_spec)
 {
     const char *item;
     const char *pos = NULL;
@@ -253,14 +253,14 @@ HttpHdrRange::parseInit(const string * range_spec)
     int count = 0;
     assert(this && range_spec);
     ++ParsedCount;
-    debugs(64, 8, "parsing range field: '" << *range_spec << "'");
+    debugs(64, 8, "parsing range field: '" << range_spec->buf() << "'");
     /* check range type */
 
-    if (strncasecmp(*range_spec,"bytes=", 6))
+    if (range_spec->caseCmp("bytes=", 6))
         return 0;
 
     /* skip "bytes="; hack! */
-    pos = range_spec->c_str() + 5;
+    pos = range_spec->buf() + 5;
 
     /* iterate through comma separated list */
     while (strListGetItem(range_spec, ',', &item, &ilen, &pos)) {
@@ -276,7 +276,8 @@ HttpHdrRange::parseInit(const string * range_spec)
         ++count;
     }
 
-    debugs(64, 8, "parsed range range count: " << count << ", kept " << specs.size());
+    debugs(64, 8, "parsed range range count: " << count << ", kept " <<
+           specs.size());
     return specs.count != 0;
 }
 

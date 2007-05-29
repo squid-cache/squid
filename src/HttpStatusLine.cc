@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpStatusLine.cc,v 1.33 2007/05/18 06:41:22 amosjeffries Exp $
+ * $Id: HttpStatusLine.cc,v 1.34 2007/05/29 13:31:38 amosjeffries Exp $
  *
  * DEBUG: section 57    HTTP Status-line
  * AUTHOR: Alex Rousskov
@@ -82,7 +82,7 @@ httpStatusLinePackInto(const HttpStatusLine * sline, Packer * p)
  * so NULL-termination assumed.
  */
 int
-httpStatusLineParse(HttpStatusLine * sline, const string &protoPrefix, const char *start, const char *end)
+httpStatusLineParse(HttpStatusLine * sline, const String &protoPrefix, const char *start, const char *end)
 {
     assert(sline);
     sline->status = HTTP_INVALID_HEADER;	/* Squid header parsing error */
@@ -90,7 +90,7 @@ httpStatusLineParse(HttpStatusLine * sline, const string &protoPrefix, const cha
     // XXX: HttpMsg::parse() has a similar check but is using
     // casesensitive comparison (which is required by HTTP errata?)
 
-    if (strncasecmp(protoPrefix,start, protoPrefix.size()) != 0)
+    if (protoPrefix.caseCmp(start, protoPrefix.size()) != 0)
         return 0;
 
     start += protoPrefix.size();

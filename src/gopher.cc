@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.208 2007/05/23 21:10:06 hno Exp $
+ * $Id: gopher.cc,v 1.209 2007/05/29 13:31:40 amosjeffries Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -230,7 +230,7 @@ gopherMimeCreate(GopherStateData * gopherState)
 static void
 gopher_request_parse(const HttpRequest * req, char *type_id, char *request)
 {
-    const char *path = req->urlpath.c_str();
+    const char *path = req->urlpath.buf();
 
     if (request)
         request[0] = '\0';
@@ -377,7 +377,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
     }
 
     inbuf[len] = '\0';
-    string outbuf;
+    String outbuf;
 
     if (!gopherState->HTML_header_added) {
         if (gopherState->conversion == gopher_ds::HTML_CSO_RESULT)
@@ -691,12 +691,12 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
     }				/* while loop */
 
     if (outbuf.size() > 0) {
-        entry->append(outbuf.c_str(), outbuf.size());
+        entry->append(outbuf.buf(), outbuf.size());
         /* now let start sending stuff to client */
         entry->flush();
     }
 
-    outbuf.clear();
+    outbuf.clean();
     return;
 }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.160 2007/05/18 06:41:25 amosjeffries Exp $
+ * $Id: store_dir.cc,v 1.161 2007/05/29 13:31:41 amosjeffries Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -502,7 +502,7 @@ storeDirWriteCleanLogs(int reopen)
 }
 
 StoreSearch *
-StoreController::search(string const url, HttpRequest *request)
+StoreController::search(String const url, HttpRequest *request)
 {
     /* cheat, for now you can't search the memory hot cache */
     return swapDir->search(url, request);
@@ -700,7 +700,7 @@ StoreController::get
 void
 
 StoreController::get
-    (string const key, STOREGETCLIENT callback, void *cbdata)
+    (String const key, STOREGETCLIENT callback, void *cbdata)
 {
     fatal("not implemented");
 }
@@ -775,7 +775,7 @@ StoreHashIndex::get
 void
 
 StoreHashIndex::get
-    (string const key, STOREGETCLIENT callback, void *cbdata)
+    (String const key, STOREGETCLIENT callback, void *cbdata)
 {
     fatal("not implemented");
 }
@@ -891,7 +891,7 @@ StoreHashIndex::sync()
 }
 
 StoreSearch *
-StoreHashIndex::search(string const url, HttpRequest *)
+StoreHashIndex::search(String const url, HttpRequest *)
 {
     if (url.size())
         fatal ("Cannot search by url yet\n");

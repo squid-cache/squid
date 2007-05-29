@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayTagged.cc,v 1.6 2007/05/18 06:41:22 amosjeffries Exp $
+ * $Id: DelayTagged.cc,v 1.7 2007/05/29 13:31:36 amosjeffries Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -77,7 +77,7 @@ int
 DelayTaggedCmp(DelayTaggedBucket::Pointer const &left, DelayTaggedBucket::Pointer const &right)
 {
     /* for rate limiting, case insensitive */
-    return strcasecmp(left->tag, right->tag);
+    return left->tag.caseCmp(right->tag.buf());
 }
 
 void
@@ -183,7 +183,7 @@ DelayTaggedBucket::operator delete (void *address)
     ::operator delete (address);
 }
 
-DelayTaggedBucket::DelayTaggedBucket(string &aTag) : tag (aTag)
+DelayTaggedBucket::DelayTaggedBucket(String &aTag) : tag (aTag)
 {
     debugs(77, 3, "DelayTaggedBucket::DelayTaggedBucket");
 }
@@ -196,11 +196,11 @@ DelayTaggedBucket::~DelayTaggedBucket()
 void
 DelayTaggedBucket::stats (StoreEntry *entry) const
 {
-    storeAppendPrintf(entry, " %s:", tag.c_str());
+    storeAppendPrintf(entry, " %s:", tag.buf());
     theBucket.stats (entry);
 }
 
-DelayTagged::Id::Id(DelayTagged::Pointer aDelayTagged, string &aTag) : theTagged(aDelayTagged)
+DelayTagged::Id::Id(DelayTagged::Pointer aDelayTagged, String &aTag) : theTagged(aDelayTagged)
 {
     theBucket = new DelayTaggedBucket(aTag);
     DelayTaggedBucket::Pointer const *existing = theTagged->buckets.find(theBucket, DelayTaggedCmp);

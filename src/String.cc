@@ -1,6 +1,6 @@
 
 /*
- * $Id: SqString.cc,v 1.7 2007/05/22 01:15:55 hno Exp $
+ * $Id: String.cc,v 1.26 2007/05/29 13:31:38 amosjeffries Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -34,25 +34,79 @@
  */
 
 #include "squid.h"
-#include "SqString.h"
 #include "Store.h"
 
 void
-SqString::initBuf(size_t sz)
+String::initBuf(size_t sz)
 {
-    size_t bsz;
     PROF_start(StringInitBuf);
-    clear();
+    buf((char *)memAllocString(sz, &sz));
     assert(sz < 65536);
-    buf_ = (char *)memAllocString(sz, &bsz);
-    assert(bsz < 65536);
-    assert(bsz >= sz);
-    size_ = bsz;
+    size_ = sz;
     PROF_stop(StringInitBuf);
 }
 
 void
-SqString::limitInit(const char *str, unsigned int len)
+String::init(char const *str)
+{
+    assert(this);
+
+    PROF_start(StringInit);
+    if (str)
+        limitInit(str, strlen(str));
+    else
+        clean();
+    PROF_stop(StringInit);
+}
+
+String::String (char const *aString) : size_(0), len_(0), buf_(NULL)
+{
+    init (aString);
+#if DEBUGSTRINGS
+
+    StringRegistry::Instance().add(this);
+#endif
+}
+
+String &
+String::operator =(char const *aString)
+{
+    clean();
+    init (aString);
+    return *this;
+}
+
+String &
+String::operator = (String const &old)
+{
+    clean ();
+
+    if (old.len_)
+        limitInit (old.buf(), old.len_);
+
+    return *this;
+}
+
+bool
+String::operator == (String const &that) const
+{
+    if (0 == this->cmp(that))
+        return true;
+
+    return false;
+}
+
+bool
+String::operator != (String const &that) const
+{
+    if (0 == this->cmp(that))
+        return false;
+
+    return true;
+}
+
+void
+String::limitInit(const char *str, int len)
 {
     PROF_start(StringLimitInit);
     assert(this && str);
@@ -63,169 +117,87 @@ SqString::limitInit(const char *str, unsigned int len)
     PROF_stop(StringLimitInit);
 }
 
-void
-SqString::init(char const *str)
+String::String (String const &old) : size_(0), len_(0), buf_(NULL)
 {
-    assert(this);
+    init (old.buf());
+#if DEBUGSTRINGS
 
-    PROF_start(StringInit);
-
-    if (str)
-        limitInit(str, strlen(str));
-    else
-        clear();
-    PROF_stop(StringInit);
+    StringRegistry::Instance().add(this);
+#endif
 }
 
 void
-SqString::clear()
+String::clean()
 {
     PROF_start(StringClean);
     assert(this);
 
-    if (buf_)
+    if (buf())
         memFreeString(size_, buf_);
 
     len_ = 0;
+
     size_ = 0;
+
     buf_ = NULL;
     PROF_stop(StringClean);
 }
 
-SqString::~SqString()
+String::~String()
 {
-    clear();
+    clean();
 #if DEBUGSTRINGS
 
-    SqStringRegistry::Instance().remove(this);
-#endif
-}
-
-SqString::SqString (char const *aString)
-{
-    memset(this, 0, sizeof(SqString));
-
-    init(aString);
-#if DEBUGSTRINGS
-
-    SqStringRegistry::Instance().add(this);
-#endif
-}
-
-SqString &
-SqString::operator =(char const *aString)
-{
-    assert(this);
-    init(aString);
-    return *this;
-}
-
-SqString &
-SqString::operator = (SqString const &old)
-{
-    if (old.size())
-        limitInit(old.c_str(), old.size());
-    else
-        clear();
-
-    return *this;
-}
-
-bool
-SqString::operator == (SqString const &that) const
-{
-    return (this->compare(that) == 0);
-}
-
-bool
-SqString::operator != (SqString const &that) const
-{
-    return (this->compare(that) != 0);
-}
-
-bool
-SqString::operator >= (SqString const &that) const
-{
-    return (this->compare(that) >= 0);
-}
-
-bool
-SqString::operator <= (SqString const &that) const
-{
-    return (this->compare(that) <= 0);
-}
-
-bool
-SqString::operator > (SqString const &that) const
-{
-    return (this->compare(that) > 0);
-}
-
-bool
-SqString::operator < (SqString const &that) const
-{
-    return (this->compare(that) < 0);
-}
-
-SqString::SqString (SqString const &old)
-{
-    memset(this, 0, sizeof(SqString));
-
-    operator=(old);
-#if DEBUGSTRINGS
-
-    SqStringRegistry::Instance().add(this);
+    StringRegistry::Instance().remove(this);
 #endif
 }
 
 void
-SqString::append(const char *str, int len)
+String::reset(const char *str)
+{
+    PROF_start(StringReset);
+    clean();
+    init(str);
+    PROF_stop(StringReset);
+}
+
+void
+String::append(const char *str, int len)
 {
     assert(this);
+    assert(str && len >= 0);
 
     PROF_start(StringAppend);
-
-    if(len < 1 || str == NULL)
-        return;
-
-    if ( (len_ + len +1) < size_) {
-        operator[](len_+len) = '\0';
-        xmemcpy(buf_+len_, str, len);
+    if (len_ + len < size_) {
+        strncat(buf_, str, len);
         len_ += len;
     } else {
-        size_t ssz = len_ + len;
-        size_t bsz = len_ + len + 1;
-        char* tmp = (char *)memAllocString(bsz, &bsz);
-        assert(bsz < 65536);
-        assert(bsz > ssz);
+        String snew;
+        snew.len_ = len_ + len;
+        snew.initBuf(snew.len_ + 1);
 
         if (buf_)
-            xmemcpy(tmp, buf_, len_);
+            xmemcpy(snew.buf_, buf(), len_);
 
         if (len)
-            xmemcpy(tmp + len_, str, len);
+            xmemcpy(snew.buf_ + len_, str, len);
 
-        tmp[ssz] = '\0';
+        snew.buf_[snew.len_] = '\0';
 
-        clear();
-
-        size_ = bsz;
-        len_ = ssz;
-        buf_ = tmp;
-        tmp = NULL;
+        absorb(snew);
     }
     PROF_stop(StringAppend);
 }
 
 void
-SqString::append(char const *str)
+String::append(char const *str)
 {
-    if(!str) return;
+    assert (str);
     append (str, strlen(str));
 }
 
 void
-SqString::append (char chr)
+String::append (char chr)
 {
     char myString[2];
     myString[0]=chr;
@@ -234,36 +206,39 @@ SqString::append (char chr)
 }
 
 void
-SqString::append(SqString const &old)
+String::append(String const &old)
 {
-    append (old.c_str(), old.size());
+    append (old.buf(), old.len_);
 }
 
-const char&
-SqString::operator [](unsigned int pos) const
+void
+String::absorb(String &old)
 {
-    assert(pos < size_ );
-
-    return buf_[pos];
+    clean();
+    size_ = old.size_;
+    buf (old.buf_);
+    len_ = old.len_;
+    old.size_ = 0;
+    old.buf_ = NULL;
+    old.len_ = 0;
 }
 
-char&
-SqString::operator [](unsigned int pos)
+void
+String::buf(char *newBuf)
 {
-    assert(pos < size_ );
-
-    return buf_[pos];
+    assert (buf_ == NULL);
+    buf_ = newBuf;
 }
 
 #if DEBUGSTRINGS
 void
-SqString::stat(StoreEntry *entry) const
+String::stat(StoreEntry *entry) const
 {
-    storeAppendPrintf(entry, "%p : %d/%d \"%s\"\n",this,len_, size_, c_str());
+    storeAppendPrintf(entry, "%p : %d/%d \"%s\"\n",this,len_, size_, buf());
 }
 
-SqStringRegistry &
-SqStringRegistry::Instance()
+StringRegistry &
+StringRegistry::Instance()
 {
     return Instance_;
 }
@@ -276,43 +251,71 @@ ptrcmp(C const &lhs, C const &rhs)
 }
 
 void
-SqStringRegistry::registerWithCacheManager(CacheManager & manager)
+StringRegistry::registerWithCacheManager(CacheManager & manager)
 {
     manager.registerAction("strings",
                            "Strings in use in squid", Stat, 0, 1);
 }
 
 void
-SqStringRegistry::add(SqString const *entry)
+
+StringRegistry::add
+    (String const *entry)
 {
     entries.insert(entry, ptrcmp);
 }
 
 void
-SqStringRegistry::remove(SqString const *entry)
+
+StringRegistry::remove
+    (String const *entry)
 {
     entries.remove(entry, ptrcmp);
 }
 
-SqStringRegistry SqStringRegistry::Instance_;
+StringRegistry StringRegistry::Instance_;
 
 extern size_t memStringCount();
 
 void
-SqStringRegistry::Stat(StoreEntry *entry)
+StringRegistry::Stat(StoreEntry *entry)
 {
     storeAppendPrintf(entry, "%lu entries, %lu reported from MemPool\n", (unsigned long) Instance().entries.elements, (unsigned long) memStringCount());
     Instance().entries.head->walk(Stater, entry);
 }
 
 void
-SqStringRegistry::Stater(SqString const * const & nodedata, void *state)
+StringRegistry::Stater(String const * const & nodedata, void *state)
 {
     StoreEntry *entry = (StoreEntry *) state;
     nodedata->stat(entry);
 }
 
 #endif
+
+/* TODO: move onto String */
+int
+stringHasWhitespace(const char *s)
+{
+    return strpbrk(s, w_space) != NULL;
+}
+
+/* TODO: move onto String */
+int
+stringHasCntl(const char *s)
+{
+    unsigned char c;
+
+    while ((c = (unsigned char) *s++) != '\0') {
+        if (c <= 0x1f)
+            return 1;
+
+        if (c >= 0x7f && c <= 0x9f)
+            return 1;
+    }
+
+    return 0;
+}
 
 /*
  * Similar to strtok, but has some rudimentary knowledge
@@ -399,6 +402,12 @@ error:
     return (char *) word;
 }
 
+const char *
+checkNullString(const char *p)
+{
+    return p ? p : "(NULL)";
+}
+
 #ifndef _USE_INLINE_
-#include "SqString.cci"
+#include "String.cci"
 #endif

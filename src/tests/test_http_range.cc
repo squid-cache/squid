@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_http_range.cc,v 1.2 2007/05/18 06:41:33 amosjeffries Exp $
+ * $Id: test_http_range.cc,v 1.3 2007/05/29 13:31:48 amosjeffries Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -56,10 +56,10 @@ SQUIDCEXTERN HttpHeaderEntry *httpHeaderGetEntry(const HttpHeader * hdr, HttpHea
     return NULL;
 }
 
-extern string httpHeaderGetList(const HttpHeader * hdr, http_hdr_type id)
+extern String httpHeaderGetList(const HttpHeader * hdr, http_hdr_type id)
 {
     fatal ("dummy function\n");
-    return "";
+    return String();
 }
 
 SQUIDCEXTERN int httpHeaderHas(const HttpHeader * hdr, http_hdr_type type)
@@ -76,7 +76,7 @@ SQUIDCEXTERN void httpHeaderPutContRange(HttpHeader * hdr, const HttpHdrContRang
 void
 testRangeParser(char const *rangestring)
 {
-    string aString (rangestring);
+    String aString (rangestring);
     HttpHdrRange *range = HttpHdrRange::ParseCreate (&aString);
 
     if (!range)
@@ -96,7 +96,7 @@ testRangeParser(char const *rangestring)
 HttpHdrRange *
 rangeFromString(char const *rangestring)
 {
-    string aString (rangestring);
+    String aString (rangestring);
     HttpHdrRange *range = HttpHdrRange::ParseCreate (&aString);
 
     if (!range)

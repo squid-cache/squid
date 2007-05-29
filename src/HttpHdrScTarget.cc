@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrScTarget.cc,v 1.3 2007/05/18 06:41:22 amosjeffries Exp $
+ * $Id: HttpHdrScTarget.cc,v 1.4 2007/05/29 13:31:37 amosjeffries Exp $
  *
  * DEBUG: section 90    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
@@ -58,6 +58,8 @@ void
 httpHdrScTargetDestroy(HttpHdrScTarget * sc)
 {
     assert(sc);
+    sc->target.clean();
+    sc->content.clean();
     delete sc;
 }
 
@@ -66,7 +68,7 @@ httpHdrScTargetDup(const HttpHdrScTarget * sc)
 {
     HttpHdrScTarget *dup;
     assert(sc);
-    dup = httpHdrScTargetCreate(sc->target.c_str());
+    dup = httpHdrScTargetCreate(sc->target.buf());
     dup->mask = sc->mask;
     dup->max_age = sc->max_age;
     dup->content = sc->content;

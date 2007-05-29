@@ -1,6 +1,6 @@
 
 /*
- * $Id: CompositePoolNode.h,v 1.7 2007/05/18 06:41:22 amosjeffries Exp $
+ * $Id: CompositePoolNode.h,v 1.8 2007/05/29 13:31:36 amosjeffries Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -78,7 +78,7 @@ public:
 
         struct IN_ADDR src_addr;
         AuthUserRequest *user;
-        string tag;
+        String tag;
     };
 
 protected:
