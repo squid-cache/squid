@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufscommon.h,v 1.10 2007/05/18 06:41:33 amosjeffries Exp $
+ * $Id: ufscommon.h,v 1.11 2007/05/29 13:31:47 amosjeffries Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -63,7 +63,7 @@ public:
     virtual void create();
     virtual void dump(StoreEntry &) const;
     ~UFSSwapDir();
-    virtual StoreSearch *search(string const url, HttpRequest *);
+    virtual StoreSearch *search(String const url, HttpRequest *);
     virtual bool doubleCheck(StoreEntry &);
     virtual void unlink(StoreEntry &);
     virtual void statfs(StoreEntry &)const;

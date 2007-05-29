@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.79 2007/05/22 01:16:40 hno Exp $
+ * $Id: external_acl.cc,v 1.80 2007/05/29 13:31:39 amosjeffries Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -693,7 +693,7 @@ aclMatchExternal(external_acl_data *acl, ACLChecklist * ch)
 
     external_acl_cache_touch(acl->def, entry);
     result = entry->result;
-    external_acl_message = entry->message.c_str();
+    external_acl_message = entry->message.buf();
 
     debugs(82, 2, "aclMatchExternal: " << acl->def->name << " = " << result);
 
@@ -763,7 +763,7 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
 
     for (format = acl_data->def->format; format; format = format->next) {
         const char *str = NULL;
-        string sb;
+        String sb;
 
         switch (format->type) {
 
@@ -820,7 +820,7 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
             break;
 
         case _external_acl_format::EXT_ACL_PATH:
-            str = request->urlpath.c_str();
+            str = request->urlpath.buf();
             break;
 
         case _external_acl_format::EXT_ACL_METHOD:
@@ -829,22 +829,22 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
 
         case _external_acl_format::EXT_ACL_HEADER:
             sb = request->header.getByName(format->header);
-            str = sb.c_str();
+            str = sb.buf();
             break;
 
         case _external_acl_format::EXT_ACL_HEADER_ID:
             sb = request->header.getStrOrList(format->header_id);
-            str = sb.c_str();
+            str = sb.buf();
             break;
 
         case _external_acl_format::EXT_ACL_HEADER_MEMBER:
             sb = request->header.getByNameListMember(format->header, format->member, format->separator);
-            str = sb.c_str();
+            str = sb.buf();
             break;
 
         case _external_acl_format::EXT_ACL_HEADER_ID_MEMBER:
             sb = request->header.getListMember(format->header_id, format->member, format->separator);
-            str = sb.c_str();
+            str = sb.buf();
             break;
 #if USE_SSL
 
@@ -894,7 +894,7 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
 #endif
 
         case _external_acl_format::EXT_ACL_EXT_USER:
-            str = request->extacl_user.c_str();
+            str = request->extacl_user.buf();
             break;
 
         case _external_acl_format::EXT_ACL_UNKNOWN:
@@ -921,7 +921,7 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
             strwordquote(&mb, str);
         }
 
-        sb.clear();
+        sb.clean();
 
         first = 0;
     }
@@ -1244,8 +1244,8 @@ ACLExternal::ExternalAclLookup(ACLChecklist * ch, ACLExternal * me, EAH * callba
         if (entry != NULL) {
             debugs(82, 4, "externalAclLookup: entry = { date=" <<
                    (long unsigned int) entry->date << ", result=" <<
-                   entry->result << ", user=" << entry->user << " tag=" <<
-                   entry->tag << " log=" << entry->log << " }");
+                   entry->result << ", user=" << entry->user.buf() << " tag=" <<
+                   entry->tag.buf() << " log=" << entry->log.buf() << " }");
 
         }
 
@@ -1278,7 +1278,7 @@ externalAclInit(void)
 
     for (p = Config.externalAclHelperList; p; p = p->next) {
         if (!p->cache)
-            p->cache = hash_create((HASHCMP *) std::strcmp, hashPrime(1024), hash4);
+            p->cache = hash_create((HASHCMP *) strcmp, hashPrime(1024), hash4);
 
         if (!p->theHelper)
             p->theHelper = helperCreate(p->name);

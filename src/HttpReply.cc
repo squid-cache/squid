@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.94 2007/05/22 16:37:26 rousskov Exp $
+ * $Id: HttpReply.cc,v 1.95 2007/05/29 13:31:37 amosjeffries Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -105,7 +105,7 @@ void HttpReply::reset()
     // virtual function instead, but it is not clear whether virtual methods
     // are allowed with MEMPROXY_CLASS() and whether some cbdata void*
     // conversions are not going to kill virtual tables
-    const string pfx = protoPrefix;
+    const String pfx = protoPrefix;
     clean();
     init();
     protoPrefix = pfx;
@@ -220,7 +220,7 @@ HttpReply::setHeaders(HttpVersion ver, http_status status, const char *reason,
         hdr->putStr(HDR_CONTENT_TYPE, ctype);
         content_type = ctype;
     } else
-        content_type.clear();
+        content_type = String();
 
     if (clen >= 0)
         hdr->putInt(HDR_CONTENT_LENGTH, clen);
@@ -262,7 +262,7 @@ HttpReply::redirect(http_status status, const char *loc)
 int
 HttpReply::validatorsMatch(HttpReply const * otherRep) const
 {
-    string one,two;
+    String one,two;
     assert (otherRep);
     /* Numbers first - easiest to check */
     /* Content-Length */
@@ -278,7 +278,9 @@ HttpReply::validatorsMatch(HttpReply const * otherRep) const
 
     two = otherRep->header.getStrOrList(HDR_ETAG);
 
-    if (one.empty() || two.empty() || strcasecmp (one, two)) {
+    if (!one.buf() || !two.buf() || strcasecmp (one.buf(), two.buf())) {
+        one.clean();
+        two.clean();
         return 0;
     }
 
@@ -290,9 +292,9 @@ HttpReply::validatorsMatch(HttpReply const * otherRep) const
 
     two = otherRep->header.getStrOrList(HDR_CONTENT_MD5);
 
-    if (one.empty() || two.empty() || strcasecmp (one, two)) {
-        one.clear();
-        two.clear();
+    if (!one.buf() || !two.buf() || strcasecmp (one.buf(), two.buf())) {
+        one.clean();
+        two.clean();
         return 0;
     }
 
@@ -381,7 +383,7 @@ HttpReply::hdrCacheInit()
     if (str)
         content_type.limitInit(str, strcspn(str, ";\t "));
     else
-        content_type = "";
+        content_type = String();
 
     /* be sure to set expires after date and cache-control */
     expires = hdrExpirationTime();
@@ -391,7 +393,7 @@ HttpReply::hdrCacheInit()
 void
 HttpReply::hdrCacheClean()
 {
-    content_type.clear();
+    content_type.clean();
 
     if (cache_control) {
         httpHdrCcDestroy(cache_control);
@@ -433,8 +435,8 @@ HttpReply::bodySize(method_t method) const
 
 bool HttpReply::sanityCheckStartLine(MemBuf *buf, http_status *error)
 {
-    if (buf->contentSize() >= protoPrefix.size() && protoPrefix.compare(buf->content(), protoPrefix.size()) != 0) {
-        debugs(58, 3, "HttpReply::sanityCheckStartLine: missing protocol prefix (" << protoPrefix << ") in '" << buf->content() << "'");
+    if (buf->contentSize() >= protoPrefix.size() && protoPrefix.cmp(buf->content(), protoPrefix.size()) != 0) {
+        debugs(58, 3, "HttpReply::sanityCheckStartLine: missing protocol prefix (" << protoPrefix.buf() << ") in '" << buf->content() << "'");
         *error = HTTP_INVALID_HEADER;
         return false;
     }

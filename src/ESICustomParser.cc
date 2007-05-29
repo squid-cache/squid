@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESICustomParser.cc,v 1.9 2007/05/18 06:41:22 amosjeffries Exp $
+ * $Id: ESICustomParser.cc,v 1.10 2007/05/29 13:31:37 amosjeffries Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -109,7 +109,7 @@ ESICustomParser::parse(char const *dataToParse, size_t const lengthOfData, bool 
     }
 
     size_t openESITags (0);
-    char const *currentPos = content.c_str();
+    char const *currentPos = content.buf();
     size_t remainingCount = content.size();
     char const *tag = NULL;
 
@@ -302,7 +302,7 @@ char const *
 ESICustomParser::errorString() const
 {
     if (error.size())
-        return error.c_str();
+        return error.buf();
     else
         return "Parsing error strings not implemented";
 }

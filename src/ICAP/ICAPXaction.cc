@@ -107,7 +107,7 @@ void ICAPXaction::openConnection()
         disableRetries(); // this will also safely drain pconn pool
 
     // TODO: check whether NULL domain is appropriate here
-    connection = icapPconnPool->pop(s.host.c_str(), s.port, NULL, NULL, isRetriable);
+    connection = icapPconnPool->pop(s.host.buf(), s.port, NULL, NULL, isRetriable);
     if (connection >= 0) {
         debugs(93,3, HERE << "reused pconn FD " << connection);
         connector = &ICAPXaction_noteCommConnected; // make doneAll() false
@@ -123,12 +123,12 @@ void ICAPXaction::openConnection()
     disableRetries(); // we only retry pconn failures
 
     connection = comm_open(SOCK_STREAM, 0, getOutgoingAddr(NULL), 0,
-                           COMM_NONBLOCKING, s.uri.c_str());
+        COMM_NONBLOCKING, s.uri.buf());
 
     if (connection < 0)
         dieOnConnectionFailure(); // throws
 
-    debugs(93,3, typeName << " opens connection to " << s.host << ":" << s.port);
+    debugs(93,3, typeName << " opens connection to " << s.host.buf() << ":" << s.port);
 
     commSetTimeout(connection, Config.Timeout.connect,
                    &ICAPXaction_noteCommTimedout, this);
@@ -137,7 +137,7 @@ void ICAPXaction::openConnection()
     comm_add_close_handler(connection, closer, this);
 
     connector = &ICAPXaction_noteCommConnected;
-    commConnectStart(connection, s.host.c_str(), s.port, connector, this);
+    commConnectStart(connection, s.host.buf(), s.port, connector, this);
 }
 
 /*
@@ -171,7 +171,7 @@ void ICAPXaction::closeConnection()
         if (reuseConnection) {
             debugs(93,3, HERE << "pushing pconn" << status());
             commSetTimeout(connection, -1, NULL, NULL);
-            icapPconnPool->push(connection, theService->host.c_str(), theService->port, NULL, NULL);
+            icapPconnPool->push(connection, theService->host.buf(), theService->port, NULL, NULL);
             disableRetries();
         } else {
             debugs(93,3, HERE << "closing pconn" << status());
@@ -247,7 +247,7 @@ void ICAPXaction::noteCommTimedout()
 
 void ICAPXaction::handleCommTimedout()
 {
-    debugs(93, 0, HERE << "ICAP FD " << connection << " timeout to " << theService->methodStr() << " " << theService->uri);
+    debugs(93, 0, HERE << "ICAP FD " << connection << " timeout to " << theService->methodStr() << " " << theService->uri.buf());
     reuseConnection = false;
     MemBuf mb;
     mb.init();

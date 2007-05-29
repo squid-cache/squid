@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.181 2007/05/18 06:41:22 amosjeffries Exp $
+#  $Id: Makefile.am,v 1.182 2007/05/29 13:31:38 amosjeffries Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -556,7 +556,7 @@ squid_SOURCES = \
 	$(SSL_SOURCE) \
 	stat.cc \
 	StatHist.cc \
-	SqString.cc \
+	String.cc \
 	stmem.cc \
 	stmem.h \
 	store.cc \
@@ -626,8 +626,7 @@ noinst_HEADERS = ACLChecklist.cci \
 	MemBuf.h \
 	Store.cci \
 	StoreEntryStream.h \
-	SqString.cci \
-	SqString.h \
+	String.cci \
 	SquidString.h \
 	SquidTime.h
 
@@ -734,7 +733,7 @@ ufsdump_SOURCES = \
 	StoreMetaUnpacker.cc \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
-	SqString.cc \
+	String.cc \
 	time.cc \
 	ufsdump.cc \
 	url.cc \
@@ -1096,7 +1095,6 @@ TESTSOURCES= \
 	globals.cc
 
 check_PROGRAMS+= \
-	tests/testString \
 	tests/testAuth \
 	tests/testACLMaxUserIP \
 	tests/testBoilerplate \
@@ -1108,6 +1106,7 @@ check_PROGRAMS+= \
 	tests/test_http_range \
 	tests/testHttpRequest \
 	tests/testStore \
+	tests/testString \
 	tests/testURL \
 	@STORE_TESTS@
 
@@ -1115,7 +1114,7 @@ tests_testAuth_SOURCES= tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $(
 	authenticate.cc \
 	ConfigParser.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
-	tests/stub_helper.cc cbdata.cc SqString.cc \
+	tests/stub_helper.cc cbdata.cc String.cc \
 	tests/stub_store.cc HttpHeaderTools.cc HttpHeader.cc acl.cc event.cc mem.cc \
 	MemBuf.cc HttpHdrContRange.cc Packer.cc ACLChecklist.cc HttpHdrCc.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc url.cc ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc \
@@ -1133,7 +1132,7 @@ tests_testAuth_SOURCES= tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $(
 	URLScheme.cc \
 	wordlist.cc
 ##	acl.cc cache_cf.cc tools.cc \
-##	helper.cc SqString.cc cbdata.cc HttpHeaderTools.cc store.cc cache_manager.cc \
+##	helper.cc String.cc cbdata.cc HttpHeaderTools.cc store.cc cache_manager.cc \
 ##	HttpHeader.cc url.cc mem.cc HttpRequest.cc Packer.cc access_log.cc \
 ##	MemBuf.cc StatHist.cc logfile.cc
 
@@ -1169,7 +1168,7 @@ tests_testAuth_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 ##	HttpHdrScTarget.cc \
 ##	Packer.cc \
 ##	StatHist.cc \
-##	SqString.cc \
+##	String.cc \
 tests_testACLMaxUserIP_SOURCES= \
 	acl.cc \
 	ACLChecklist.cc \
@@ -1194,7 +1193,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	Parsing.cc \
 	StatHist.cc \
 	stmem.cc \
-	SqString.cc \
+	String.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_comm.cc \
 	tests/stub_DelayId.cc \
@@ -1242,7 +1241,7 @@ tests_testCacheManager_SOURCES = \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	mem.cc \
-	SqString.cc \
+	String.cc \
 	tests/testCacheManager.cc \
 	tests/testCacheManager.h \
 	tests/testMain.cc \
@@ -1406,7 +1405,7 @@ tests_testEvent_SOURCES = \
 	HttpRequestMethod.cc \
 	mem.cc \
 	RemovalPolicy.cc \
-	SqString.cc \
+	String.cc \
 	tests/CapturingStoreEntry.h \
 	tests/testEvent.cc \
 	tests/testEvent.h \
@@ -1558,7 +1557,7 @@ tests_testEventLoop_SOURCES = \
 	HttpRequestMethod.cc \
 	mem.cc \
 	RemovalPolicy.cc \
-	SqString.cc \
+	String.cc \
 	tests/testEventLoop.cc \
 	tests/testEventLoop.h \
 	tests/testMain.cc \
@@ -1846,7 +1845,7 @@ tests_test_http_range_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
-	SqString.cc \
+	String.cc \
 	SwapDir.cc \
 	time.cc \
 	tools.cc \
@@ -1888,7 +1887,7 @@ tests_testHttpRequest_SOURCES = \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	mem.cc \
-	SqString.cc \
+	String.cc \
 	tests/testHttpRequest.h \
 	tests/testHttpRequest.cc \
 	tests/testHttpRequestMethod.h \
@@ -2055,7 +2054,7 @@ STORE_TEST_SOURCES=\
 	SwapDir.cc \
 	authenticate.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
-	tests/stub_helper.cc cbdata.cc SqString.cc \
+	tests/stub_helper.cc cbdata.cc String.cc \
 	tests/stub_comm.cc \
 	tests/stub_client_side_request.cc \
 	tests/stub_http.cc \
@@ -2108,10 +2107,11 @@ tests_testStore_LDADD= \
 tests_testStore_LDFLAGS = $(LIBADD_DL)
 tests_testStore_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@SQUID_CPPUNIT_LA@
+
 # string needs mem.cc.
 tests_testString_SOURCES= \
 	mem.cc \
-	SqString.cc \
+	String.cc \
 	tests/testMain.cc \
 	tests/testString.cc \
 	tests/testString.h \
@@ -2223,7 +2223,7 @@ tests_testURL_SOURCES = \
 	HttpRequestMethod.cc \
 	mem.cc \
 	RemovalPolicy.cc \
-	SqString.cc \
+	String.cc \
 	tests/testURL.cc \
 	tests/testURL.h \
 	tests/testURLScheme.cc \

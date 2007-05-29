@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.83 2007/05/18 06:41:33 amosjeffries Exp $
+ * $Id: store_dir_ufs.cc,v 1.84 2007/05/29 13:31:47 amosjeffries Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -1348,7 +1348,7 @@ UFSSwapDir::sync()
 }
 
 StoreSearch *
-UFSSwapDir::search(string const url, HttpRequest *request)
+UFSSwapDir::search(String const url, HttpRequest *request)
 {
     if (url.size())
         fatal ("Cannot search by url yet\n");

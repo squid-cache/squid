@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrCc.cc,v 1.30 2007/05/18 06:41:22 amosjeffries Exp $
+ * $Id: HttpHdrCc.cc,v 1.31 2007/05/29 13:31:37 amosjeffries Exp $
  *
  * DEBUG: section 65    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
@@ -66,7 +66,7 @@ http_hdr_cc_type &operator++ (http_hdr_cc_type &aHeader)
 
 
 /* local prototypes */
-static int httpHdrCcParseInit(HttpHdrCc * cc, const string * str);
+static int httpHdrCcParseInit(HttpHdrCc * cc, const String * str);
 
 
 /* module initialization */
@@ -96,7 +96,7 @@ httpHdrCcCreate(void)
 
 /* creates an cc object from a 0-terminating string */
 HttpHdrCc *
-httpHdrCcParseCreate(const string * str)
+httpHdrCcParseCreate(const String * str)
 {
     HttpHdrCc *cc = httpHdrCcCreate();
 
@@ -110,7 +110,7 @@ httpHdrCcParseCreate(const string * str)
 
 /* parses a 0-terminating string and inits cc */
 static int
-httpHdrCcParseInit(HttpHdrCc * cc, const string * str)
+httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
 {
     const char *item;
     const char *p;		/* '=' parameter */
@@ -131,16 +131,17 @@ httpHdrCcParseInit(HttpHdrCc * cc, const string * str)
             nlen = ilen;
 
         /* find type */
-        type = (http_hdr_cc_type ) httpHeaderIdByName(item, nlen, CcFieldsInfo, CC_ENUM_END);
+        type = (http_hdr_cc_type ) httpHeaderIdByName(item, nlen,
+                CcFieldsInfo, CC_ENUM_END);
 
         if (type < 0) {
-            debugs(65, 2, "hdr cc: unknown cache-directive: near '" << item << "' in '" << *str << "'");
+            debugs(65, 2, "hdr cc: unknown cache-directive: near '" << item << "' in '" << str->buf() << "'");
             type = CC_OTHER;
         }
 
         if (EBIT_TEST(cc->mask, type)) {
             if (type != CC_OTHER)
-                debugs(65, 2, "hdr cc: ignoring duplicate cache-directive: near '" << item << "' in '" << *str << "'");
+                debugs(65, 2, "hdr cc: ignoring duplicate cache-directive: near '" << item << "' in '" << str->buf() << "'");
 
             CcFieldsInfo[type].stat.repCount++;
 
@@ -205,8 +206,8 @@ httpHdrCcDestroy(HttpHdrCc * cc)
 {
     assert(cc);
 
-    if (cc->other.c_str())
-        cc->other.clear();
+    if (cc->other.buf())
+        cc->other.clean();
 
     memFree(cc, MEM_HTTP_HDR_CC);
 }
@@ -235,7 +236,7 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
         if (EBIT_TEST(cc->mask, flag) && flag != CC_OTHER) {
 
             /* print option name */
-            packerPrintf(p, (pcount ? ", %s" : "%s"), CcFieldsInfo[flag].name.c_str());
+            packerPrintf(p, (pcount ? ", %s" : "%s"), CcFieldsInfo[flag].name.buf());
 
             /* handle options with values */
 
@@ -253,7 +254,7 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
     }
 
     if (cc->other.size())
-        packerPrintf(p, (pcount ? ", %s" : "%s"), cc->other.c_str());
+        packerPrintf(p, (pcount ? ", %s" : "%s"), cc->other.buf());
 }
 
 /* negative max_age will clean old max_Age setting */
@@ -299,7 +300,7 @@ httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int c
     extern const HttpHeaderStat *dump_stat;	/* argh! */
     const int id = (int) val;
     const int valid_id = id >= 0 && id < CC_ENUM_END;
-    const char *name = valid_id ? CcFieldsInfo[id].name.c_str() : "INVALID";
+    const char *name = valid_id ? CcFieldsInfo[id].name.buf() : "INVALID";
 
     if (count || valid_id)
         storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",

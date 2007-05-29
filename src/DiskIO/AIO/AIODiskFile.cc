@@ -1,6 +1,6 @@
 
 /*
- * $Id: AIODiskFile.cc,v 1.5 2007/05/19 05:03:48 amosjeffries Exp $
+ * $Id: AIODiskFile.cc,v 1.6 2007/05/29 13:31:43 amosjeffries Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -85,10 +85,10 @@ AIODiskFile::open (int flags, mode_t mode, IORequestor::Pointer callback)
 {
     /* Simulate async calls */
 #ifdef _SQUID_WIN32_
-    fd = aio_open(path.c_str(), flags);
+    fd = aio_open(path.buf(), flags);
 #else
 
-    fd = file_open(path.c_str() , flags);
+    fd = file_open(path.buf() , flags);
 #endif
 
     ioRequestor = callback;

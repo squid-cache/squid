@@ -973,8 +973,8 @@ void ICAPModXact::makeRequestHeaders(MemBuf &buf)
      * XXX These should use HttpHdr interfaces instead of Printfs
      */
     const ICAPServiceRep &s = service();
-    buf.Printf("%s %s ICAP/1.0\r\n", s.methodStr(), s.uri.c_str());
-    buf.Printf("Host: %s:%d\r\n", s.host.c_str(), s.port);
+    buf.Printf("%s %s ICAP/1.0\r\n", s.methodStr(), s.uri.buf());
+    buf.Printf("Host: %s:%d\r\n", s.host.buf(), s.port);
     buf.Printf("Date: %s\r\n", mkrfc1123(squid_curtime));
 
     if (!TheICAPConfig.reuse_connections)
@@ -995,7 +995,7 @@ void ICAPModXact::makeRequestHeaders(MemBuf &buf)
 
     // to simplify, we could assume that request is always available
 
-    string urlPath;
+    String urlPath;
     if (request) {
         urlPath = request->urlpath;
         if (ICAP::methodRespmod == m)
@@ -1091,7 +1091,7 @@ void ICAPModXact::decideOnPreview()
     const HttpRequest *request = virgin.cause ?
         virgin.cause :
         dynamic_cast<const HttpRequest*>(virgin.header);
-    const string urlPath = request ? request->urlpath : "";
+    const String urlPath = request ? request->urlpath : String();
     size_t wantedSize;
     if (!service().wantsPreview(urlPath, wantedSize)) {
         debugs(93, 5, "ICAPModXact should not offer preview for " << urlPath);

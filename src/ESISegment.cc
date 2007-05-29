@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESISegment.cc,v 1.5 2007/05/18 06:41:22 amosjeffries Exp $
+ * $Id: ESISegment.cc,v 1.6 2007/05/29 13:31:37 amosjeffries Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -234,7 +234,7 @@ ESISegment::dumpToLog() const
 void
 ESISegment::dumpOne() const
 {
-    string temp;
+    String temp;
     temp.limitInit(buf, len);
-    debugs(86, 9, "ESISegment::dumpOne: \"" << temp << "\"");
+    debugs(86, 9, "ESISegment::dumpOne: \"" << temp.buf() << "\"");
 }

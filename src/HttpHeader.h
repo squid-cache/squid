@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.h,v 1.20 2007/05/18 06:41:22 amosjeffries Exp $
+ * $Id: HttpHeader.h,v 1.21 2007/05/29 13:31:37 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -183,8 +183,8 @@ public:
     int getInt() const;
     MEMPROXY_CLASS(HttpHeaderEntry);
     http_hdr_type id;
-    string name;
-    string value;
+    String name;
+    String value;
 };
 
 MEMPROXY_CLASS_INLINE(HttpHeaderEntry)
@@ -211,12 +211,12 @@ public:
     void refreshMask();
     void addEntry(HttpHeaderEntry * e);
     void insertEntry(HttpHeaderEntry * e);
-    string getList(http_hdr_type id) const;
-    bool getList(http_hdr_type id, string *s) const;
-    string getStrOrList(http_hdr_type id) const;
-    string getByName(const char *name) const;
-    string getByNameListMember(const char *name, const char *member, const char separator) const;
-    string getListMember(http_hdr_type id, const char *member, const char separator) const;
+    String getList(http_hdr_type id) const;
+    bool getList(http_hdr_type id, String *s) const;
+    String getStrOrList(http_hdr_type id) const;
+    String getByName(const char *name) const;
+    String getByNameListMember(const char *name, const char *member, const char separator) const;
+    String getListMember(http_hdr_type id, const char *member, const char separator) const;
     int has(http_hdr_type id) const;
     void putInt(http_hdr_type id, int number);
     void putTime(http_hdr_type id, time_t htime);
@@ -258,7 +258,7 @@ private:
 
 
 extern void httpHeaderRegisterWithCacheManager(CacheManager & manager);
-extern int httpHeaderParseQuotedString (const char *start, string *val);
+extern int httpHeaderParseQuotedString (const char *start, String *val);
 SQUIDCEXTERN int httpHeaderHasByNameListMember(const HttpHeader * hdr, const char *name, const char *member, const char separator);
 SQUIDCEXTERN void httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask * denied_mask);
 int httpMsgIsPersistent(HttpVersion const &http_ver, const HttpHeader * hdr);

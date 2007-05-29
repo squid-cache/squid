@@ -1,6 +1,6 @@
 
 /*
- * $Id: SwapDir.cc,v 1.12 2007/05/18 06:41:23 amosjeffries Exp $
+ * $Id: SwapDir.cc,v 1.13 2007/05/29 13:31:38 amosjeffries Exp $
  *
  * DEBUG: section 20    Swap Dir base object
  * AUTHOR: Robert Collins
@@ -276,7 +276,7 @@ SwapDir::get
 void
 
 SwapDir::get
-    (string const key, STOREGETCLIENT callback, void *cbdata)
+    (String const key, STOREGETCLIENT callback, void *cbdata)
 {
     fatal("not implemented");
 }

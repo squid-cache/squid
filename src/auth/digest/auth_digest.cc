@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.56 2007/05/18 06:41:31 amosjeffries Exp $
+ * $Id: auth_digest.cc,v 1.57 2007/05/29 13:31:46 amosjeffries Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -204,7 +204,7 @@ authenticateDigestNonceSetup(void)
         digest_nonce_pool = memPoolCreate("Digest Scheme nonce's", sizeof(digest_nonce_h));
 
     if (!digest_nonce_cache) {
-        digest_nonce_cache = hash_create((HASHCMP *) std::strcmp, 7921, hash_string);
+        digest_nonce_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
         assert(digest_nonce_cache);
         eventAdd("Digest none cache maintenance", authenticateDigestNonceCacheCleanup, NULL, digestConfig.nonceGCInterval, 1);
     }
@@ -1089,7 +1089,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
     while (xisspace(*proxy_auth))
         proxy_auth++;
 
-    string temp(proxy_auth);
+    String temp(proxy_auth);
 
     while (strListGetItem(&temp, ',', &item, &ilen, &pos)) {
         if ((p = strchr(item, '=')) && (p - item < ilen))
@@ -1205,7 +1205,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
         }
     }
 
-    temp.clear();
+    temp.clean();
 
 
     /* now we validate the data given to us */

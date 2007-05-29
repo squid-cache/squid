@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPOptions.h,v 1.10 2007/05/18 06:41:29 amosjeffries Exp $
+ * $Id: ICAPOptions.h,v 1.11 2007/05/29 13:31:44 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -62,18 +62,18 @@ public:
     time_t timestamp() const { return theTimestamp; };
 
     typedef enum { xferNone, xferPreview, xferIgnore, xferComplete } TransferKind;
-    TransferKind transferKind(const string &urlPath) const;
+    TransferKind transferKind(const String &urlPath) const;
 
 public:
     const char *error; // human-readable information; set iff !valid()
 
     // ICAP server MUST supply this info
     Vector<ICAP::Method> methods;
-    string istag;
+    String istag;
 
     // ICAP server MAY supply this info. If not, Squid supplies defaults.
-    string service;
-    string serviceId;
+    String service;
+    String serviceId;
     int max_connections;
     bool allow204;
     int preview;
@@ -86,9 +86,9 @@ protected:
             TransferList();
             ~TransferList();
 
-            bool matches(const string &urlPath) const;
+            bool matches(const String &urlPath) const;
 
-            void parse(const string &buf, bool &foundStar);
+            void parse(const String &buf, bool &foundStar);
             void add(const char *extension);
             void report(int level, const char *prefix) const;
 

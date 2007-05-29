@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.52 2007/05/18 06:41:25 amosjeffries Exp $
+ * $Id: pconn.cc,v 1.53 2007/05/29 13:31:40 amosjeffries Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -217,7 +217,7 @@ PconnPool::dumpHist(StoreEntry * e)
 PconnPool::PconnPool(const char *aDescr) : table(NULL), descr(aDescr)
 {
     int i;
-    table = hash_create((HASHCMP *) std::strcmp, 229, hash_string);
+    table = hash_create((HASHCMP *) strcmp, 229, hash_string);
 
     for (i = 0; i < PCONN_HIST_SZ; i++)
         hist[i] = 0;

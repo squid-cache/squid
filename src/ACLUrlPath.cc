@@ -1,5 +1,5 @@
 /*
- * $Id: ACLUrlPath.cc,v 1.3 2007/05/18 06:41:21 amosjeffries Exp $
+ * $Id: ACLUrlPath.cc,v 1.4 2007/05/29 13:31:36 amosjeffries Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -47,7 +47,7 @@ ACLStrategised<char const *> ACLUrlPath::RegistryEntry_(new ACLRegexData, ACLUrl
 int
 ACLUrlPathStrategy::match (ACLData<char const *> * &data, ACLChecklist *checklist)
 {
-    char *esc_buf = xstrdup(checklist->request->urlpath.c_str());
+    char *esc_buf = xstrdup(checklist->request->urlpath.buf());
     rfc1738_unescape(esc_buf);
     int result = data->match(esc_buf);
     safe_free(esc_buf);

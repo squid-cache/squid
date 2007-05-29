@@ -1,6 +1,6 @@
 
 /*
- * $Id: ExternalACLEntry.h,v 1.7 2007/05/18 06:41:22 amosjeffries Exp $
+ * $Id: ExternalACLEntry.h,v 1.8 2007/05/29 13:31:37 amosjeffries Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -61,11 +61,11 @@ public:
     ExternalACLEntryData() : result (-1) {}
 
     int result;
-    string user;
-    string password;
-    string message;
-    string tag;
-    string log;
+    String user;
+    String password;
+    String message;
+    String tag;
+    String log;
 };
 
 
@@ -88,11 +88,11 @@ public:
     dlink_node lru;
     int result;
     time_t date;
-    string user;
-    string password;
-    string message;
-    string tag;
-    string log;
+    String user;
+    String password;
+    String message;
+    String tag;
+    String log;
     external_acl *def;
 
 private:

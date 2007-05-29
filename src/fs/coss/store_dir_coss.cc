@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.74 2007/05/18 06:41:32 amosjeffries Exp $
+ * $Id: store_dir_coss.cc,v 1.75 2007/05/29 13:31:47 amosjeffries Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store COSS Directory Routines
@@ -1170,7 +1170,7 @@ CossSwapDir::optionBlockSizeDump(StoreEntry * e) const
 }
 
 StoreSearch *
-CossSwapDir::search(string const url, HttpRequest *)
+CossSwapDir::search(String const url, HttpRequest *)
 {
     if (url.size())
         fatal ("Cannot search by url yet\n");
@@ -1182,9 +1182,9 @@ char const *
 CossSwapDir::stripePath() const
 {
     if (!stripe_path) {
-        string result = path;
+        String result = path;
         result.append("/stripe");
-        const_cast<CossSwapDir *>(this)->stripe_path = xstrdup(result.c_str());
+        const_cast<CossSwapDir *>(this)->stripe_path = xstrdup(result.buf());
     }
 
     return stripe_path;

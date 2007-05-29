@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.125 2007/05/18 06:41:23 amosjeffries Exp $
+ * $Id: access_log.cc,v 1.126 2007/05/29 13:31:38 amosjeffries Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -518,7 +518,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
     logformat_token *fmt;
     static MemBuf mb;
     char tmp[1024];
-    string sb;
+    String sb;
 
     mb.reset();
 
@@ -628,7 +628,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             if (al->request)
                 sb = al->request->header.getByName(fmt->data.header.header);
 
-            out = sb.c_str();
+            out = sb.buf();
 
             quote = 1;
 
@@ -638,7 +638,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             if (al->reply)
                 sb = al->reply->header.getByName(fmt->data.header.header);
 
-            out = sb.c_str();
+            out = sb.buf();
 
             quote = 1;
 
@@ -648,7 +648,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             if (al->request)
                 sb = al->request->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
 
-            out = sb.c_str();
+            out = sb.buf();
 
             quote = 1;
 
@@ -658,7 +658,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             if (al->reply)
                 sb = al->reply->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
 
-            out = sb.c_str();
+            out = sb.buf();
 
             quote = 1;
 
@@ -767,7 +767,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
         case LFT_REQUEST_URLPATH:
 	    if (al->request) {
-		out = al->request->urlpath.c_str();
+		out = al->request->urlpath.buf();
 		quote = 1;
 	    }
             break;
@@ -813,7 +813,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
         case LFT_TAG:
             if (al->request)
-                out = al->request->tag.c_str();
+                out = al->request->tag.buf();
 
             quote = 1;
 
@@ -821,7 +821,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
         case LFT_EXT_LOG:
             if (al->request)
-                out = al->request->extacl_log.c_str();
+                out = al->request->extacl_log.buf();
 
             quote = 1;
 
@@ -891,7 +891,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
         if (fmt->space)
             mb.append(" ", 1);
 
-        sb.clear();
+        sb.clean();
 
         if (dofree)
             safe_free(out);
@@ -1631,8 +1631,8 @@ accessLogTime(time_t t)
 static void
 fvdbInit(void)
 {
-    via_table = hash_create((HASHCMP *) std::strcmp, 977, hash4);
-    forw_table = hash_create((HASHCMP *) std::strcmp, 977, hash4);
+    via_table = hash_create((HASHCMP *) strcmp, 977, hash4);
+    forw_table = hash_create((HASHCMP *) strcmp, 977, hash4);
 }
 
 static void
@@ -1717,10 +1717,10 @@ fvdbClear(void)
 {
     hashFreeItems(via_table, fvdbFreeEntry);
     hashFreeMemory(via_table);
-    via_table = hash_create((HASHCMP *) std::strcmp, 977, hash4);
+    via_table = hash_create((HASHCMP *) strcmp, 977, hash4);
     hashFreeItems(forw_table, fvdbFreeEntry);
     hashFreeMemory(forw_table);
-    forw_table = hash_create((HASHCMP *) std::strcmp, 977, hash4);
+    forw_table = hash_create((HASHCMP *) strcmp, 977, hash4);
 }
 
 #endif

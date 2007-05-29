@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrSc.h,v 1.2 2007/05/18 06:41:22 amosjeffries Exp $
+ * $Id: HttpHdrSc.h,v 1.3 2007/05/29 13:31:37 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -54,7 +54,7 @@ extern void httpHdrScStatDumper(StoreEntry * sentry, int idx, double val, double
 extern void httpHdrScInitModule (void);
 extern void httpHdrScCleanModule (void);
 extern HttpHdrSc *httpHdrScCreate(void);
-extern HttpHdrSc *httpHdrScParseCreate(string const *);
+extern HttpHdrSc *httpHdrScParseCreate(String const *);
 extern void httpHdrScDestroy(HttpHdrSc * sc);
 extern HttpHdrSc *httpHdrScDup(const HttpHdrSc * sc);
 extern void httpHdrScPackInto(const HttpHdrSc * sc, Packer * p);

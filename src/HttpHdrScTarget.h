@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrScTarget.h,v 1.2 2007/05/18 06:41:22 amosjeffries Exp $
+ * $Id: HttpHdrScTarget.h,v 1.3 2007/05/29 13:31:37 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -47,8 +47,8 @@ public:
     int mask;
     int max_age;
     int max_stale;
-    string content;
-    string target;
+    String content;
+    String target;
 };
 
 MEMPROXY_CLASS_INLINE(HttpHdrScTarget);

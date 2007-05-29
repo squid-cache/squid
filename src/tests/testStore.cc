@@ -21,7 +21,7 @@ TestStore::get
 void
 
 TestStore::get
-    (string, void (*)(StoreEntry*, void*), void*)
+    (String, void (*)(StoreEntry*, void*), void*)
 {}
 
 void
@@ -48,7 +48,7 @@ TestStore::stat(StoreEntry &) const
 }
 
 StoreSearch *
-TestStore::search(string const url, HttpRequest *)
+TestStore::search(String const url, HttpRequest *)
 {
     return NULL;
 }
