@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.422 2007/05/18 17:20:50 wessels Exp $
+#  $Id: Makefile.in,v 1.423 2007/05/30 00:10:40 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -48,13 +48,13 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = tests/testString$(EXEEXT) tests/testAuth$(EXEEXT) \
+check_PROGRAMS = tests/testAuth$(EXEEXT) \
 	tests/testACLMaxUserIP$(EXEEXT) tests/testBoilerplate$(EXEEXT) \
 	tests/testCacheManager$(EXEEXT) tests/testDiskIO$(EXEEXT) \
 	tests/testEvent$(EXEEXT) tests/testEventLoop$(EXEEXT) \
 	tests/testHeaders$(EXEEXT) tests/test_http_range$(EXEEXT) \
 	tests/testHttpRequest$(EXEEXT) tests/testStore$(EXEEXT) \
-	tests/testURL$(EXEEXT) @STORE_TESTS@
+	tests/testString$(EXEEXT) tests/testURL$(EXEEXT) @STORE_TESTS@
 EXTRA_PROGRAMS = DiskIO/DiskDaemon/diskd$(EXEEXT) unlinkd$(EXEEXT) \
 	pinger$(EXEEXT) dnsserver$(EXEEXT) recv-announce$(EXEEXT) \
 	tests/testUfs$(EXEEXT) tests/testCoss$(EXEEXT) \
@@ -252,7 +252,7 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc \
 	RemovalPolicy.cc RemovalPolicy.h send-announce.cc snmp_core.cc \
 	snmp_agent.cc squid.h SquidNew.cc ACLCertificateData.cc \
 	ACLCertificateData.h ACLCertificate.cc ACLCertificate.h \
-	ssl_support.cc ssl_support.h stat.cc StatHist.cc SqString.cc \
+	ssl_support.cc ssl_support.h stat.cc StatHist.cc String.cc \
 	stmem.cc stmem.h store.cc Store.h StoreFileSystem.cc \
 	StoreFileSystem.h StoreHashIndex.h store_io.cc StoreIOBuffer.h \
 	StoreIOState.cc StoreIOState.h store_client.cc StoreClient.h \
@@ -355,7 +355,7 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	refresh.$(OBJEXT) RemovalPolicy.$(OBJEXT) \
 	send-announce.$(OBJEXT) $(am__objects_21) SquidNew.$(OBJEXT) \
 	$(am__objects_23) stat.$(OBJEXT) StatHist.$(OBJEXT) \
-	SqString.$(OBJEXT) stmem.$(OBJEXT) store.$(OBJEXT) \
+	String.$(OBJEXT) stmem.$(OBJEXT) store.$(OBJEXT) \
 	StoreFileSystem.$(OBJEXT) store_io.$(OBJEXT) \
 	StoreIOState.$(OBJEXT) store_client.$(OBJEXT) \
 	store_digest.$(OBJEXT) store_dir.$(OBJEXT) \
@@ -419,7 +419,7 @@ am_tests_testACLMaxUserIP_OBJECTS = acl.$(OBJEXT) \
 	HttpHdrCc.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
 	HttpHdrScTarget.$(OBJEXT) mem_node.$(OBJEXT) Packer.$(OBJEXT) \
 	Parsing.$(OBJEXT) StatHist.$(OBJEXT) stmem.$(OBJEXT) \
-	SqString.$(OBJEXT) tests/stub_cache_cf.$(OBJEXT) \
+	String.$(OBJEXT) tests/stub_cache_cf.$(OBJEXT) \
 	tests/stub_comm.$(OBJEXT) tests/stub_DelayId.$(OBJEXT) \
 	tests/stub_MemObject.$(OBJEXT) tests/stub_store.$(OBJEXT) \
 	tests/testACLMaxUserIP.$(OBJEXT) tests/testMain.$(OBJEXT) \
@@ -430,15 +430,15 @@ am_tests_testAuth_OBJECTS = tests/testAuth.$(OBJEXT) \
 	tests/testMain.$(OBJEXT) $(am__objects_31) \
 	authenticate.$(OBJEXT) ConfigParser.$(OBJEXT) \
 	tests/stub_acl.$(OBJEXT) tests/stub_cache_cf.$(OBJEXT) \
-	tests/stub_helper.$(OBJEXT) cbdata.$(OBJEXT) \
-	SqString.$(OBJEXT) tests/stub_store.$(OBJEXT) \
-	HttpHeaderTools.$(OBJEXT) HttpHeader.$(OBJEXT) acl.$(OBJEXT) \
-	event.$(OBJEXT) mem.$(OBJEXT) MemBuf.$(OBJEXT) \
-	HttpHdrContRange.$(OBJEXT) Packer.$(OBJEXT) \
-	ACLChecklist.$(OBJEXT) HttpHdrCc.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
-	HttpHdrScTarget.$(OBJEXT) url.$(OBJEXT) ACLProxyAuth.$(OBJEXT) \
-	ACLRegexData.$(OBJEXT) ACLUserData.$(OBJEXT) \
-	StatHist.$(OBJEXT) HttpHdrRange.$(OBJEXT) ETag.$(OBJEXT) \
+	tests/stub_helper.$(OBJEXT) cbdata.$(OBJEXT) String.$(OBJEXT) \
+	tests/stub_store.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
+	HttpHeader.$(OBJEXT) acl.$(OBJEXT) event.$(OBJEXT) \
+	mem.$(OBJEXT) MemBuf.$(OBJEXT) HttpHdrContRange.$(OBJEXT) \
+	Packer.$(OBJEXT) ACLChecklist.$(OBJEXT) HttpHdrCc.$(OBJEXT) \
+	HttpHdrSc.$(OBJEXT) HttpHdrScTarget.$(OBJEXT) url.$(OBJEXT) \
+	ACLProxyAuth.$(OBJEXT) ACLRegexData.$(OBJEXT) \
+	ACLUserData.$(OBJEXT) StatHist.$(OBJEXT) \
+	HttpHdrRange.$(OBJEXT) ETag.$(OBJEXT) \
 	tests/stub_errorpage.$(OBJEXT) \
 	tests/stub_HttpRequest.$(OBJEXT) tests/stub_DelayId.$(OBJEXT) \
 	tests/stub_MemObject.$(OBJEXT) mem_node.$(OBJEXT) \
@@ -452,7 +452,7 @@ am_tests_testBoilerplate_OBJECTS = tests/testBoilerplate.$(OBJEXT) \
 	tests/testMain.$(OBJEXT) $(am__objects_31) time.$(OBJEXT)
 tests_testBoilerplate_OBJECTS = $(am_tests_testBoilerplate_OBJECTS)
 am__tests_testCacheManager_SOURCES_DIST = debug.cc globals.cc \
-	HttpRequest.cc HttpRequestMethod.cc mem.cc SqString.cc \
+	HttpRequest.cc HttpRequestMethod.cc mem.cc String.cc \
 	tests/testCacheManager.cc tests/testCacheManager.h \
 	tests/testMain.cc time.cc access_log.cc acl.cc acl_noncore.cc \
 	ACLChecklist.cc ACLProxyAuth.cc ACLStringData.cc \
@@ -501,7 +501,7 @@ am__tests_testCacheManager_SOURCES_DIST = debug.cc globals.cc \
 	wordlist.cc
 am_tests_testCacheManager_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	HttpRequest.$(OBJEXT) HttpRequestMethod.$(OBJEXT) \
-	mem.$(OBJEXT) SqString.$(OBJEXT) \
+	mem.$(OBJEXT) String.$(OBJEXT) \
 	tests/testCacheManager.$(OBJEXT) tests/testMain.$(OBJEXT) \
 	time.$(OBJEXT) access_log.$(OBJEXT) acl.$(OBJEXT) \
 	acl_noncore.$(OBJEXT) ACLChecklist.$(OBJEXT) \
@@ -571,7 +571,7 @@ am__tests_testCoss_SOURCES_DIST = tests/testCoss.cc tests/testMain.cc \
 	store.cc HttpRequestMethod.cc store_key_md5.cc string_arrays.c \
 	Parsing.cc ConfigOption.cc SwapDir.cc authenticate.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc tests/stub_helper.cc \
-	cbdata.cc SqString.cc tests/stub_comm.cc \
+	cbdata.cc String.cc tests/stub_comm.cc \
 	tests/stub_client_side_request.cc tests/stub_http.cc \
 	mem_node.cc stmem.cc tests/stub_mime.cc HttpHeaderTools.cc \
 	HttpHeader.cc acl.cc mem.cc acl_noncore.cc MemBuf.cc \
@@ -596,7 +596,7 @@ am__objects_32 = $(am__objects_31) $(am__objects_9) \
 	ConfigOption.$(OBJEXT) SwapDir.$(OBJEXT) \
 	authenticate.$(OBJEXT) tests/stub_acl.$(OBJEXT) \
 	tests/stub_cache_cf.$(OBJEXT) tests/stub_helper.$(OBJEXT) \
-	cbdata.$(OBJEXT) SqString.$(OBJEXT) tests/stub_comm.$(OBJEXT) \
+	cbdata.$(OBJEXT) String.$(OBJEXT) tests/stub_comm.$(OBJEXT) \
 	tests/stub_client_side_request.$(OBJEXT) \
 	tests/stub_http.$(OBJEXT) mem_node.$(OBJEXT) stmem.$(OBJEXT) \
 	tests/stub_mime.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
@@ -649,7 +649,7 @@ am__tests_testDiskIO_SOURCES_DIST = tests/stub_store_rebuild.cc \
 	store.cc HttpRequestMethod.cc store_key_md5.cc string_arrays.c \
 	Parsing.cc ConfigOption.cc SwapDir.cc authenticate.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc tests/stub_helper.cc \
-	cbdata.cc SqString.cc tests/stub_comm.cc \
+	cbdata.cc String.cc tests/stub_comm.cc \
 	tests/stub_client_side_request.cc tests/stub_http.cc \
 	mem_node.cc stmem.cc tests/stub_mime.cc HttpHeaderTools.cc \
 	HttpHeader.cc acl.cc mem.cc acl_noncore.cc MemBuf.cc \
@@ -671,7 +671,7 @@ am_tests_testDiskIO_OBJECTS = $(am__objects_33) \
 tests_testDiskIO_OBJECTS = $(am_tests_testDiskIO_OBJECTS)
 am__tests_testEvent_SOURCES_DIST = debug.cc EventLoop.h EventLoop.cc \
 	globals.cc HttpRequest.cc HttpRequestMethod.cc mem.cc \
-	RemovalPolicy.cc SqString.cc tests/CapturingStoreEntry.h \
+	RemovalPolicy.cc String.cc tests/CapturingStoreEntry.h \
 	tests/testEvent.cc tests/testEvent.h tests/testMain.cc time.cc \
 	access_log.cc acl.cc acl_noncore.cc ACLChecklist.cc \
 	ACLProxyAuth.cc ACLStringData.cc ACLRegexData.cc \
@@ -721,7 +721,7 @@ am__tests_testEvent_SOURCES_DIST = debug.cc EventLoop.h EventLoop.cc \
 am_tests_testEvent_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	globals.$(OBJEXT) HttpRequest.$(OBJEXT) \
 	HttpRequestMethod.$(OBJEXT) mem.$(OBJEXT) \
-	RemovalPolicy.$(OBJEXT) SqString.$(OBJEXT) \
+	RemovalPolicy.$(OBJEXT) String.$(OBJEXT) \
 	tests/testEvent.$(OBJEXT) tests/testMain.$(OBJEXT) \
 	time.$(OBJEXT) access_log.$(OBJEXT) acl.$(OBJEXT) \
 	acl_noncore.$(OBJEXT) ACLChecklist.$(OBJEXT) \
@@ -773,7 +773,7 @@ tests_testEvent_OBJECTS = $(am_tests_testEvent_OBJECTS) \
 	$(nodist_tests_testEvent_OBJECTS)
 am__tests_testEventLoop_SOURCES_DIST = debug.cc EventLoop.h \
 	EventLoop.cc globals.cc HttpRequest.cc HttpRequestMethod.cc \
-	mem.cc RemovalPolicy.cc SqString.cc tests/testEventLoop.cc \
+	mem.cc RemovalPolicy.cc String.cc tests/testEventLoop.cc \
 	tests/testEventLoop.h tests/testMain.cc time.cc access_log.cc \
 	acl.cc acl_noncore.cc ACLChecklist.cc ACLProxyAuth.cc \
 	ACLStringData.cc ACLRegexData.cc ACLUserData.cc AsyncCall.cc \
@@ -822,7 +822,7 @@ am__tests_testEventLoop_SOURCES_DIST = debug.cc EventLoop.h \
 am_tests_testEventLoop_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	globals.$(OBJEXT) HttpRequest.$(OBJEXT) \
 	HttpRequestMethod.$(OBJEXT) mem.$(OBJEXT) \
-	RemovalPolicy.$(OBJEXT) SqString.$(OBJEXT) \
+	RemovalPolicy.$(OBJEXT) String.$(OBJEXT) \
 	tests/testEventLoop.$(OBJEXT) tests/testMain.$(OBJEXT) \
 	time.$(OBJEXT) access_log.$(OBJEXT) acl.$(OBJEXT) \
 	acl_noncore.$(OBJEXT) ACLChecklist.$(OBJEXT) \
@@ -898,7 +898,7 @@ am_tests_testHeaders_OBJECTS = tests/testMain.$(OBJEXT) \
 	$(am__objects_34)
 tests_testHeaders_OBJECTS = $(am_tests_testHeaders_OBJECTS)
 am__tests_testHttpRequest_SOURCES_DIST = debug.cc globals.cc \
-	HttpRequest.cc HttpRequestMethod.cc mem.cc SqString.cc \
+	HttpRequest.cc HttpRequestMethod.cc mem.cc String.cc \
 	tests/testHttpRequest.h tests/testHttpRequest.cc \
 	tests/testHttpRequestMethod.h tests/testHttpRequestMethod.cc \
 	tests/testMain.cc time.cc access_log.cc acl.cc acl_noncore.cc \
@@ -948,8 +948,7 @@ am__tests_testHttpRequest_SOURCES_DIST = debug.cc globals.cc \
 	wordlist.cc
 am_tests_testHttpRequest_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	HttpRequest.$(OBJEXT) HttpRequestMethod.$(OBJEXT) \
-	mem.$(OBJEXT) SqString.$(OBJEXT) \
-	tests/testHttpRequest.$(OBJEXT) \
+	mem.$(OBJEXT) String.$(OBJEXT) tests/testHttpRequest.$(OBJEXT) \
 	tests/testHttpRequestMethod.$(OBJEXT) tests/testMain.$(OBJEXT) \
 	time.$(OBJEXT) access_log.$(OBJEXT) acl.$(OBJEXT) \
 	acl_noncore.$(OBJEXT) ACLChecklist.$(OBJEXT) \
@@ -1019,7 +1018,7 @@ am__tests_testNull_SOURCES_DIST = tests/testNull.cc tests/testMain.cc \
 	store.cc HttpRequestMethod.cc store_key_md5.cc string_arrays.c \
 	Parsing.cc ConfigOption.cc SwapDir.cc authenticate.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc tests/stub_helper.cc \
-	cbdata.cc SqString.cc tests/stub_comm.cc \
+	cbdata.cc String.cc tests/stub_comm.cc \
 	tests/stub_client_side_request.cc tests/stub_http.cc \
 	mem_node.cc stmem.cc tests/stub_mime.cc HttpHeaderTools.cc \
 	HttpHeader.cc acl.cc mem.cc acl_noncore.cc MemBuf.cc \
@@ -1057,17 +1056,17 @@ am__tests_testStore_SOURCES_DIST = tests/stub_store_swapout.cc \
 	store_key_md5.cc string_arrays.c Parsing.cc ConfigOption.cc \
 	SwapDir.cc authenticate.cc tests/stub_acl.cc \
 	tests/stub_cache_cf.cc tests/stub_helper.cc cbdata.cc \
-	SqString.cc tests/stub_comm.cc \
-	tests/stub_client_side_request.cc tests/stub_http.cc \
-	mem_node.cc stmem.cc tests/stub_mime.cc HttpHeaderTools.cc \
-	HttpHeader.cc acl.cc mem.cc acl_noncore.cc MemBuf.cc \
-	HttpHdrContRange.cc Packer.cc ACLChecklist.cc HttpHdrCc.cc \
-	HttpHdrSc.cc HttpHdrScTarget.cc url.cc ACLProxyAuth.cc \
-	ACLRegexData.cc ACLUserData.cc StatHist.cc HttpHdrRange.cc \
-	ETag.cc tests/stub_errorpage.cc tests/stub_HttpRequest.cc \
-	tests/stub_access_log.cc refresh.cc tests/stub_store_client.cc \
-	tests/stub_tools.cc tests/testStoreSupport.cc \
-	tests/testStoreSupport.h time.cc URLScheme.cc wordlist.cc
+	String.cc tests/stub_comm.cc tests/stub_client_side_request.cc \
+	tests/stub_http.cc mem_node.cc stmem.cc tests/stub_mime.cc \
+	HttpHeaderTools.cc HttpHeader.cc acl.cc mem.cc acl_noncore.cc \
+	MemBuf.cc HttpHdrContRange.cc Packer.cc ACLChecklist.cc \
+	HttpHdrCc.cc HttpHdrSc.cc HttpHdrScTarget.cc url.cc \
+	ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc StatHist.cc \
+	HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
+	tests/stub_HttpRequest.cc tests/stub_access_log.cc refresh.cc \
+	tests/stub_store_client.cc tests/stub_tools.cc \
+	tests/testStoreSupport.cc tests/testStoreSupport.h time.cc \
+	URLScheme.cc wordlist.cc
 am_tests_testStore_OBJECTS = tests/stub_store_swapout.$(OBJEXT) \
 	tests/testMain.$(OBJEXT) tests/stub_MemObject.$(OBJEXT) \
 	tests/testStore.$(OBJEXT) tests/testStoreEntryStream.$(OBJEXT) \
@@ -1076,13 +1075,13 @@ am_tests_testStore_OBJECTS = tests/stub_store_swapout.$(OBJEXT) \
 	tests/stub_fd.$(OBJEXT) tests/stub_HttpReply.$(OBJEXT) \
 	$(am__objects_32)
 tests_testStore_OBJECTS = $(am_tests_testStore_OBJECTS)
-am_tests_testString_OBJECTS = mem.$(OBJEXT) SqString.$(OBJEXT) \
+am_tests_testString_OBJECTS = mem.$(OBJEXT) String.$(OBJEXT) \
 	tests/testMain.$(OBJEXT) tests/testString.$(OBJEXT) \
 	$(am__objects_31) time.$(OBJEXT)
 tests_testString_OBJECTS = $(am_tests_testString_OBJECTS)
 am__tests_testURL_SOURCES_DIST = debug.cc url.cc URLScheme.cc \
 	globals.cc HttpRequest.cc HttpRequestMethod.cc mem.cc \
-	RemovalPolicy.cc SqString.cc tests/testURL.cc tests/testURL.h \
+	RemovalPolicy.cc String.cc tests/testURL.cc tests/testURL.h \
 	tests/testURLScheme.cc tests/testURLScheme.h tests/testMain.cc \
 	time.cc access_log.cc acl.cc acl_noncore.cc ACLChecklist.cc \
 	ACLProxyAuth.cc ACLStringData.cc ACLRegexData.cc \
@@ -1131,7 +1130,7 @@ am__tests_testURL_SOURCES_DIST = debug.cc url.cc URLScheme.cc \
 am_tests_testURL_OBJECTS = debug.$(OBJEXT) url.$(OBJEXT) \
 	URLScheme.$(OBJEXT) globals.$(OBJEXT) HttpRequest.$(OBJEXT) \
 	HttpRequestMethod.$(OBJEXT) mem.$(OBJEXT) \
-	RemovalPolicy.$(OBJEXT) SqString.$(OBJEXT) \
+	RemovalPolicy.$(OBJEXT) String.$(OBJEXT) \
 	tests/testURL.$(OBJEXT) tests/testURLScheme.$(OBJEXT) \
 	tests/testMain.$(OBJEXT) time.$(OBJEXT) access_log.$(OBJEXT) \
 	acl.$(OBJEXT) acl_noncore.$(OBJEXT) ACLChecklist.$(OBJEXT) \
@@ -1200,7 +1199,7 @@ am__tests_testUfs_SOURCES_DIST = tests/testUfs.cc tests/testMain.cc \
 	store.cc HttpRequestMethod.cc store_key_md5.cc string_arrays.c \
 	Parsing.cc ConfigOption.cc SwapDir.cc authenticate.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc tests/stub_helper.cc \
-	cbdata.cc SqString.cc tests/stub_comm.cc \
+	cbdata.cc String.cc tests/stub_comm.cc \
 	tests/stub_client_side_request.cc tests/stub_http.cc \
 	mem_node.cc stmem.cc tests/stub_mime.cc HttpHeaderTools.cc \
 	HttpHeader.cc acl.cc mem.cc acl_noncore.cc MemBuf.cc \
@@ -1262,10 +1261,10 @@ am__tests_test_http_range_SOURCES_DIST = tests/test_http_range.cc \
 	store_swapin.cc store_swapmeta.cc store_swapout.cc \
 	StoreFileSystem.cc StoreIOState.cc StoreMeta.cc \
 	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaUnpacker.cc \
-	StoreMetaURL.cc StoreMetaVary.cc StoreSwapLogData.cc \
-	SqString.cc SwapDir.cc time.cc tools.cc tunnel.cc url.cc \
-	URLScheme.cc urn.cc useragent.cc wccp2.cc whois.cc win32.cc \
-	wordlist.cc Packer.cc MemBuf.cc
+	StoreMetaURL.cc StoreMetaVary.cc StoreSwapLogData.cc String.cc \
+	SwapDir.cc time.cc tools.cc tunnel.cc url.cc URLScheme.cc \
+	urn.cc useragent.cc wccp2.cc whois.cc win32.cc wordlist.cc \
+	Packer.cc MemBuf.cc
 am_tests_test_http_range_OBJECTS = tests/test_http_range.$(OBJEXT) \
 	access_log.$(OBJEXT) acl.$(OBJEXT) acl_noncore.$(OBJEXT) \
 	ACLChecklist.$(OBJEXT) ACLProxyAuth.$(OBJEXT) \
@@ -1308,12 +1307,11 @@ am_tests_test_http_range_OBJECTS = tests/test_http_range.$(OBJEXT) \
 	StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
 	StoreMetaSTD.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
 	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
-	StoreSwapLogData.$(OBJEXT) SqString.$(OBJEXT) \
-	SwapDir.$(OBJEXT) time.$(OBJEXT) tools.$(OBJEXT) \
-	tunnel.$(OBJEXT) url.$(OBJEXT) URLScheme.$(OBJEXT) \
-	urn.$(OBJEXT) useragent.$(OBJEXT) wccp2.$(OBJEXT) \
-	whois.$(OBJEXT) $(am__objects_25) wordlist.$(OBJEXT) \
-	Packer.$(OBJEXT) MemBuf.$(OBJEXT)
+	StoreSwapLogData.$(OBJEXT) String.$(OBJEXT) SwapDir.$(OBJEXT) \
+	time.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) url.$(OBJEXT) \
+	URLScheme.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) \
+	wccp2.$(OBJEXT) whois.$(OBJEXT) $(am__objects_25) \
+	wordlist.$(OBJEXT) Packer.$(OBJEXT) MemBuf.$(OBJEXT)
 nodist_tests_test_http_range_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_test_http_range_OBJECTS = $(am_tests_test_http_range_OBJECTS) \
@@ -1321,7 +1319,7 @@ tests_test_http_range_OBJECTS = $(am_tests_test_http_range_OBJECTS) \
 am__ufsdump_SOURCES_DIST = debug.cc int.cc mem.cc store_key_md5.cc \
 	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
 	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
-	SqString.cc time.cc ufsdump.cc url.cc AsyncCall.cc AsyncCall.h \
+	String.cc time.cc ufsdump.cc url.cc AsyncCall.cc AsyncCall.h \
 	BodyPipe.cc BodyPipe.h ConfigParser.cc store.cc \
 	StoreFileSystem.cc StoreSwapLogData.cc StoreSwapLogData.h \
 	access_log.cc acl.cc acl_noncore.cc ACLChecklist.cc \
@@ -1374,7 +1372,7 @@ am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) mem.$(OBJEXT) \
 	store_key_md5.$(OBJEXT) StoreMeta.$(OBJEXT) \
 	StoreMetaMD5.$(OBJEXT) StoreMetaSTD.$(OBJEXT) \
 	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
-	StoreMetaVary.$(OBJEXT) SqString.$(OBJEXT) time.$(OBJEXT) \
+	StoreMetaVary.$(OBJEXT) String.$(OBJEXT) time.$(OBJEXT) \
 	ufsdump.$(OBJEXT) url.$(OBJEXT) AsyncCall.$(OBJEXT) \
 	BodyPipe.$(OBJEXT) ConfigParser.$(OBJEXT) store.$(OBJEXT) \
 	StoreFileSystem.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
@@ -2169,7 +2167,7 @@ squid_SOURCES = \
 	$(SSL_SOURCE) \
 	stat.cc \
 	StatHist.cc \
-	SqString.cc \
+	String.cc \
 	stmem.cc \
 	stmem.h \
 	store.cc \
@@ -2239,8 +2237,7 @@ noinst_HEADERS = ACLChecklist.cci \
 	MemBuf.h \
 	Store.cci \
 	StoreEntryStream.h \
-	SqString.cci \
-	SqString.h \
+	String.cci \
 	SquidString.h \
 	SquidTime.h
 
@@ -2332,7 +2329,7 @@ ufsdump_SOURCES = \
 	StoreMetaUnpacker.cc \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
-	SqString.cc \
+	String.cc \
 	time.cc \
 	ufsdump.cc \
 	url.cc \
@@ -2604,7 +2601,7 @@ tests_testAuth_SOURCES = tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $
 	authenticate.cc \
 	ConfigParser.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
-	tests/stub_helper.cc cbdata.cc SqString.cc \
+	tests/stub_helper.cc cbdata.cc String.cc \
 	tests/stub_store.cc HttpHeaderTools.cc HttpHeader.cc acl.cc event.cc mem.cc \
 	MemBuf.cc HttpHdrContRange.cc Packer.cc ACLChecklist.cc HttpHdrCc.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc url.cc ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc \
@@ -2661,7 +2658,7 @@ tests_testACLMaxUserIP_SOURCES = \
 	Parsing.cc \
 	StatHist.cc \
 	stmem.cc \
-	SqString.cc \
+	String.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_comm.cc \
 	tests/stub_DelayId.cc \
@@ -2710,7 +2707,7 @@ tests_testCacheManager_SOURCES = \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	mem.cc \
-	SqString.cc \
+	String.cc \
 	tests/testCacheManager.cc \
 	tests/testCacheManager.h \
 	tests/testMain.cc \
@@ -2878,7 +2875,7 @@ tests_testEvent_SOURCES = \
 	HttpRequestMethod.cc \
 	mem.cc \
 	RemovalPolicy.cc \
-	SqString.cc \
+	String.cc \
 	tests/CapturingStoreEntry.h \
 	tests/testEvent.cc \
 	tests/testEvent.h \
@@ -3032,7 +3029,7 @@ tests_testEventLoop_SOURCES = \
 	HttpRequestMethod.cc \
 	mem.cc \
 	RemovalPolicy.cc \
-	SqString.cc \
+	String.cc \
 	tests/testEventLoop.cc \
 	tests/testEventLoop.h \
 	tests/testMain.cc \
@@ -3319,7 +3316,7 @@ tests_test_http_range_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
-	SqString.cc \
+	String.cc \
 	SwapDir.cc \
 	time.cc \
 	tools.cc \
@@ -3362,7 +3359,7 @@ tests_testHttpRequest_SOURCES = \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	mem.cc \
-	SqString.cc \
+	String.cc \
 	tests/testHttpRequest.h \
 	tests/testHttpRequest.cc \
 	tests/testHttpRequestMethod.h \
@@ -3532,7 +3529,7 @@ STORE_TEST_SOURCES = \
 	SwapDir.cc \
 	authenticate.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
-	tests/stub_helper.cc cbdata.cc SqString.cc \
+	tests/stub_helper.cc cbdata.cc String.cc \
 	tests/stub_comm.cc \
 	tests/stub_client_side_request.cc \
 	tests/stub_http.cc \
@@ -3585,10 +3582,11 @@ tests_testStore_LDFLAGS = $(LIBADD_DL)
 tests_testStore_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@SQUID_CPPUNIT_LA@
 
+
 # string needs mem.cc.
 tests_testString_SOURCES = \
 	mem.cc \
-	SqString.cc \
+	String.cc \
 	tests/testMain.cc \
 	tests/testString.cc \
 	tests/testString.h \
@@ -3706,7 +3704,7 @@ tests_testURL_SOURCES = \
 	HttpRequestMethod.cc \
 	mem.cc \
 	RemovalPolicy.cc \
-	SqString.cc \
+	String.cc \
 	tests/testURL.cc \
 	tests/testURL.h \
 	tests/testURLScheme.cc \
@@ -4637,7 +4635,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ProfStats.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/RemovalPolicy.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Server.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SqString.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SquidNew.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StatHist.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreFileSystem.Po@am__quote@
@@ -4649,6 +4646,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreMetaUnpacker.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreMetaVary.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreSwapLogData.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/String.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SwapDir.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/URLScheme.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/WinSvc.Po@am__quote@
