@@ -354,6 +354,12 @@ void ICAPServiceRep::checkOptions()
     if (theOptions == NULL)
         return;
 
+    if (!theOptions->valid()) {
+        debugs(93,1, "WARNING: Squid got an invalid ICAP OPTIONS response " <<
+            "from service " << uri << "; error: " << theOptions->error);
+        return;
+    }
+
     /*
      * Issue a warning if the ICAP server returned methods in the
      * options response that don't match the method from squid.conf.
