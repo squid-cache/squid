@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.89 2007/05/29 13:31:39 amosjeffries Exp $
+ * $Id: client_side_request.cc,v 1.90 2007/06/02 11:50:32 hno Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -889,7 +889,7 @@ ClientHttpRequest::processRequest()
 
     if (request->method == METHOD_CONNECT && !redirect.status) {
         logType = LOG_TCP_MISS;
-        sslStart(this, &out.size, &al.http.code);
+        tunnelStart(this, &out.size, &al.http.code);
         return;
     }
 

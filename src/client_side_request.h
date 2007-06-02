@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.30 2007/05/29 13:31:39 amosjeffries Exp $
+ * $Id: client_side_request.h,v 1.31 2007/06/02 11:50:32 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -196,7 +196,7 @@ SQUIDCEXTERN void clientAccessCheck(ClientHttpRequest *);
 /* ones that should be elsewhere */
 SQUIDCEXTERN void redirectStart(ClientHttpRequest *, RH *, void *);
 
-SQUIDCEXTERN void sslStart(ClientHttpRequest *, size_t *, int *);
+SQUIDCEXTERN void tunnelStart(ClientHttpRequest *, size_t *, int *);
 
 #ifdef _USE_INLINE_
 #include "Store.h"
