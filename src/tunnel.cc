@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.170 2007/06/02 11:54:26 hno Exp $
+ * $Id: tunnel.cc,v 1.171 2007/06/02 12:01:34 hno Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -228,6 +228,8 @@ TunnelStateData::readServer(char *buf, size_t len, comm_err_t errcode, int xerrn
         return;
 
     debugs(26, 3, "tunnelReadServer: FD " << server.fd() << ", read   " << len << " bytes");
+
+    commSetTimeout(server.fd(), Config.Timeout.read, tunnelTimeout, this);
 
     if (len > 0) {
         server.bytesIn(len);
