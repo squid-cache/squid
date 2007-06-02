@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.171 2007/06/02 12:01:34 hno Exp $
+ * $Id: tunnel.cc,v 1.172 2007/06/02 12:21:57 hno Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -229,8 +229,6 @@ TunnelStateData::readServer(char *buf, size_t len, comm_err_t errcode, int xerrn
 
     debugs(26, 3, "tunnelReadServer: FD " << server.fd() << ", read   " << len << " bytes");
 
-    commSetTimeout(server.fd(), Config.Timeout.read, tunnelTimeout, this);
-
     if (len > 0) {
         server.bytesIn(len);
         kb_incr(&statCounter.server.all.kbytes_in, len);
@@ -295,6 +293,10 @@ TunnelStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &f
      * - RBC 20030229 
      */
     cbdataInternalLock(this);	/* ??? should be locked by the caller... */
+
+    /* Bump the server connection timeout on any activity */
+    if (server.fd() != -1)
+	commSetTimeout(server.fd(), Config.Timeout.read, tunnelTimeout, this);
 
     if (len < 0 || errcode)
         from.error (xerrno);
