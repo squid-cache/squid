@@ -1,0 +1,125 @@
+#!/usr/bin/perl
+use strict;
+use DBI;
+use Getopt::Long;
+use Pod::Usage;
+
+=pod
+
+=head1 NAME
+
+db_auth.pl - Database auth helper for Squid
+
+=cut
+
+my $dsn = "DBI:mysql:database=squid";
+my $db_user = undef;
+my $db_passwd = undef;
+my $db_table = "passwd";
+my $db_usercol = "user";
+my $db_passwdcol = "password";
+my $db_cond = "enabled = 1";
+my $plaintext = 0;
+
+=pod
+
+=head1 SYNOPSIS
+
+db_auth.pl [options]
+
+=head1 DESCRIPTOIN
+
+This program verifies username & password to a database
+
+=over 8
+
+=item	B<--dsn>
+
+Database DSN. Default "DBI:mysql:database=squid"
+
+=item	B<--user>
+
+Database User
+
+=item	B<--password>
+
+Database password
+
+=item	B<--table>
+
+Database table. Default "passwd".
+
+=item	B<--usercol>
+
+Username column. Default "user".
+
+=item	B<--passwdcol>
+
+Password column. Default "password".
+
+=item	B<--cond>
+
+Condition, defaults to enabled=1. Specify 1 or "" for no condition
+
+=item	B<--plaintext>
+
+Database contains plain-text passwords
+
+=back
+
+=cut
+
+GetOptions(
+	'dsn=s' => \$dsn,
+	'user=s' => \$db_user,
+	'password=s' => \$db_passwd,
+	'table=s' => \$db_table,
+	'usercol=s' => \$db_usercol,
+	'passwdcol=s' => \$db_passwdcol,
+	'cond=s' => \$db_cond,
+	'plaintext' => \$plaintext,
+	);
+
+my $dbh = DBI->connect($dsn, $db_user, $db_passwd) || die ("Could not connect to $dsn\n");
+
+my ($sth) = $dbh->prepare("SELECT $db_passwdcol FROM $db_table WHERE $db_usercol = ?" . ($db_cond ne "" ? " AND $db_cond" : "")) || die;
+
+my $status;
+
+sub check_password($$)
+{
+    my ($password, $key) = @_;
+
+    return 1 if crypt($password, $key) eq $key;
+    
+    return 1 if $plaintext && $password eq $key;
+
+    return 0;
+}
+while (<>) {
+    my ($user, $password) = split;
+    $status = "ERR";
+    $user =~ s/%(..)/pack("H*", $1)/ge;
+    $password =~ s/%(..)/pack("H*", $1)/ge;
+
+    $status = "ERR internal error";
+    $sth->execute($user) || next;
+    $status = "ERR unknown login";
+    my ($row) = $sth->fetchrow_arrayref() || next;
+    $status = "ERR login failure";
+    next if (!check_password($password, @$row[0]));
+    $status = "OK";
+} continue {
+    print $status . "\n";
+}
+
+=pod
+
+=head1 COPYRIGHT
+
+Copyright (C) 2007 Henrik Nordstrom <henrik@henriknordstrom.net>
+This program is free software. You may redistribute copies of it under the
+terms of the GNU General Public License version 2, or (at youropinion) any
+later version.
+
+=cut
