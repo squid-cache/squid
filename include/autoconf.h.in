@@ -128,6 +128,9 @@
 /* Define if you have the _dyld_func_lookup function. */
 #undef HAVE_DYLD
 
+/* Define to 1 if you have the `epoll_ctl' function. */
+#undef HAVE_EPOLL_CTL
+
 /* Define to 1 if you have the <errno.h> header file. */
 #undef HAVE_ERRNO_H
 
@@ -220,6 +223,9 @@
 
 /* Define to 1 if you have the <ip_nat.h> header file. */
 #undef HAVE_IP_NAT_H
+
+/* Define to 1 if you have the `kqueue' function. */
+#undef HAVE_KQUEUE
 
 /* Define to 1 if you have the `44bsd' library (-l44bsd). */
 #undef HAVE_LIB44BSD
