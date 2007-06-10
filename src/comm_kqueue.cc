@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_kqueue.cc,v 1.15 2007/04/28 22:26:37 hno Exp $
+ * $Id: comm_kqueue.cc,v 1.16 2007/06/10 11:02:23 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -45,6 +45,7 @@
  *
  * - delay pools
  * - deferred reads
+ * - flags.read_pending
  *
  * So, its not entirely useful in a production setup since if a read
  * is meant to be deferred it isn't (we're not even throwing the event
@@ -280,6 +281,7 @@ comm_select(int msec)
 
             if ((hdl = F->read_handler) != NULL) {
                 F->read_handler = NULL;
+		F->flags.read_pending = 0;
                 hdl(fd, F->read_data);
             }
 
