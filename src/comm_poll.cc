@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_poll.cc,v 1.22 2007/06/10 11:02:23 hno Exp $
+ * $Id: comm_poll.cc,v 1.23 2007/06/10 12:13:31 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -179,36 +179,6 @@ fdIsHttp(int fd)
     return 0;
 }
 
-#if DELAY_POOLS
-static int slowfdcnt = 0;
-static int slowfdarr[SQUID_MAXFD];
-
-static void
-commAddSlowFd(int fd)
-{
-    assert(slowfdcnt < SQUID_MAXFD);
-    slowfdarr[slowfdcnt++] = fd;
-}
-
-static int
-commGetSlowFd(void)
-{
-    int whichfd, retfd;
-
-    if (!slowfdcnt)
-        return -1;
-
-    whichfd = squid_random() % slowfdcnt;
-
-    retfd = slowfdarr[whichfd];
-
-    slowfdarr[whichfd] = slowfdarr[--slowfdcnt];
-
-    return retfd;
-}
-
-#endif
-
 static int
 comm_check_incoming_poll_handlers(int nfds, int *fds)
 {
@@ -354,10 +324,6 @@ comm_select(int msec)
 {
 
     struct pollfd pfds[SQUID_MAXFD];
-#if DELAY_POOLS
-
-    fd_set slowfds;
-#endif
 
     PF *hdl = NULL;
     int fd;
@@ -373,10 +339,6 @@ comm_select(int msec)
         double start;
         getCurrentTime();
         start = current_dtime;
-#if DELAY_POOLS
-
-        FD_ZERO(&slowfds);
-#endif
 
         if (commCheckICPIncoming)
             comm_poll_icp_incoming();
@@ -513,14 +475,6 @@ comm_select(int msec)
 
                 if (NULL == (hdl = F->read_handler))
                     (void) 0;
-
-#if DELAY_POOLS
-
-                else if (FD_ISSET(fd, &slowfds))
-                    commAddSlowFd(fd);
-
-#endif
-
                 else {
                     PROF_start(comm_read_handler);
                     F->read_handler = NULL;
@@ -600,30 +554,6 @@ comm_select(int msec)
         if (callhttp)
             comm_poll_http_incoming();
 
-#if DELAY_POOLS
-
-        while ((fd = commGetSlowFd()) != -1) {
-            fde *F = &fd_table[fd];
-            debugs(5, 6, "comm_select: slow FD " << fd << " selected for reading");
-
-            if ((hdl = F->read_handler)) {
-                F->read_handler = NULL;
-		F->flags.read_pending = 0;
-                hdl(fd, F->read_data);
-                statCounter.select_fds++;
-
-                if (commCheckICPIncoming)
-                    comm_poll_icp_incoming();
-
-                if (commCheckDNSIncoming)
-                    comm_poll_dns_incoming();
-
-                if (commCheckHTTPIncoming)
-                    comm_poll_http_incoming();
-            }
-        }
-
-#endif
         getCurrentTime();
 
         statCounter.select_time += (current_dtime - start);
