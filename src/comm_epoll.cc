@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_epoll.cc,v 1.15 2007/04/28 22:26:37 hno Exp $
+ * $Id: comm_epoll.cc,v 1.16 2007/06/10 11:02:23 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -152,8 +152,12 @@ commSetSelect(int fd, unsigned int type, PF * handler,
     // If read is an interest
 
     if (type & COMM_SELECT_READ) {
-        if (handler)
+        if (handler) {
+	    // Hack to keep the events flowing if there is data immediately ready
+	    if (F->flags.read_pending)
+		ev.events |= EPOLLOUT;
             ev.events |= EPOLLIN;
+	}
 
         F->read_handler = handler;
 
@@ -281,17 +285,17 @@ comm_select(int msec)
 
         // TODO: add EPOLLPRI??
 
-        if (cevents->events & (EPOLLIN|EPOLLHUP|EPOLLERR)) {
+        if (cevents->events & (EPOLLIN|EPOLLHUP|EPOLLERR) || F->flags.read_pending) {
             if ((hdl = F->read_handler) != NULL) {
                 debugs(5, DEBUG_EPOLL ? 0 : 8, "comm_select(): Calling read handler on FD " << fd);
                 PROF_start(comm_write_handler);
+                F->flags.read_pending = 0;
                 F->read_handler = NULL;
                 hdl(fd, F->read_data);
                 PROF_stop(comm_write_handler);
                 statCounter.select_fds++;
             } else {
                 debugs(5, DEBUG_EPOLL ? 0 : 8, "comm_select(): no read handler for FD " << fd);
-                fd_table[fd].flags.read_pending = 1;
                 // remove interest since no handler exist for this event.
                 commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
             }
@@ -306,7 +310,6 @@ comm_select(int msec)
                 PROF_stop(comm_read_handler);
                 statCounter.select_fds++;
             } else {
-                fd_table[fd].flags.write_pending = 1;
                 debugs(5, DEBUG_EPOLL ? 0 : 8, "comm_select(): no write handler for FD " << fd);
                 // remove interest since no handler exist for this event.
                 commSetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);

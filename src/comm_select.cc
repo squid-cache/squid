@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.79 2007/04/30 16:56:09 wessels Exp $
+ * $Id: comm_select.cc,v 1.80 2007/06/10 11:02:23 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -568,6 +568,7 @@ comm_select(int msec)
 
                 else {
                     F->read_handler = NULL;
+		    F->flags.read_pending = 0;
                     commUpdateReadBits(fd, NULL);
                     hdl(fd, F->read_data);
                     statCounter.select_fds++;
@@ -663,6 +664,7 @@ comm_select(int msec)
 
             if ((hdl = F->read_handler)) {
                 F->read_handler = NULL;
+		F->flags.read_pending = 0;
                 commUpdateReadBits(fd, NULL);
                 hdl(fd, F->read_data);
                 statCounter.select_fds++;
