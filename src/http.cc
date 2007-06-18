@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.523 2007/05/29 13:31:40 amosjeffries Exp $
+ * $Id: http.cc,v 1.524 2007/06/17 21:48:20 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -717,30 +717,42 @@ HttpStateData::processReplyHeader()
 
     const bool parsed = newrep->parse(readBuf, eof, &error);
 
-    if (!parsed && error > 0) { // unrecoverable parsing error
-        debugs(11, 3, "processReplyHeader: Non-HTTP-compliant header: '" <<  readBuf->content() << "'");
-        flags.headers_parsed = 1;
-        // negated result yields http_status
-        failReply (newrep, error);
-        ctx_exit(ctx);
-        return;
+    if(!parsed && readBuf->contentSize() > 5 && strncmp(readBuf->content(), "HTTP/", 5) != 0){
+	 MemBuf *mb;
+	 HttpReply *tmprep = new HttpReply;
+	 tmprep->sline.version = HttpVersion(1, 0);
+	 tmprep->sline.status = HTTP_OK;
+	 tmprep->header.putTime(HDR_DATE, squid_curtime);
+	 tmprep->header.putExt("X-Transformed-From", "HTTP/0.9");
+	 mb = tmprep->pack();
+	 newrep->parse(mb, eof, &error);
+	 delete tmprep;
     }
-
-    if (!parsed) { // need more data
-        assert(!error);
-        assert(!eof);
-        delete newrep;
-        ctx_exit(ctx);
-        return;
+    else{
+	 if (!parsed && error > 0) { // unrecoverable parsing error
+	      debugs(11, 3, "processReplyHeader: Non-HTTP-compliant header: '" <<  readBuf->content() << "'");
+	      flags.headers_parsed = 1;
+	      // negated result yields http_status
+	      failReply (newrep, error);
+	      ctx_exit(ctx);
+	      return;
+	 }
+	 
+	 if (!parsed) { // need more data
+	      assert(!error);
+	      assert(!eof);
+	      delete newrep;
+	      ctx_exit(ctx);
+	      return;
+	 }
+	 
+	 debugs(11, 9, "GOT HTTP REPLY HDR:\n---------\n" << readBuf->content() << "\n----------");
+	 
+	 header_bytes_read = headersEnd(readBuf->content(), readBuf->contentSize());
+	 readBuf->consume(header_bytes_read);
     }
 
     reply = HTTPMSGLOCK(newrep);
-
-    debugs(11, 9, "GOT HTTP REPLY HDR:\n---------\n" << readBuf->content() << "\n----------");
-
-    header_bytes_read = headersEnd(readBuf->content(), readBuf->contentSize());
-    readBuf->consume(header_bytes_read);
-
     flags.headers_parsed = 1;
 
     keepaliveAccounting(reply);
