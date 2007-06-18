@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.38 2007/05/09 09:07:38 wessels Exp $
+ * $Id: ACLChecklist.cc,v 1.39 2007/06/17 21:39:49 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -273,6 +273,12 @@ ACLChecklist::checkCallback(allow_t answer)
         callback_(answer, cbdata_);
 
     delete this;
+}
+
+void
+ACLChecklist::matchAclListSlow(const acl_list * list)
+{
+    matchAclList(list, false);
 }
 
 void

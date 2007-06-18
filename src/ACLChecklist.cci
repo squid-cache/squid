@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cci,v 1.4 2007/04/25 11:30:18 adrian Exp $
+ * $Id: ACLChecklist.cci,v 1.5 2007/06/17 21:39:49 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Henrik Nordstrom
@@ -39,8 +39,3 @@ ACLChecklist::matchAclListFast(const acl_list * list)
     return finished();
 }
 
-void
-ACLChecklist::matchAclListSlow(const acl_list * list)
-{
-    matchAclList(list, false);
-}
