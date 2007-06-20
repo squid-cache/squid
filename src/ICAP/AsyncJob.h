@@ -1,6 +1,6 @@
 
 /*
- * $Id: AsyncJob.h,v 1.1 2007/05/08 16:32:11 rousskov Exp $
+ * $Id: AsyncJob.h,v 1.2 2007/06/19 21:00:11 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -80,7 +80,7 @@ protected:
 
     // asynchronous call maintenance
     bool callStart(const char *methodName);
-    void callException(const TextException &e);
+    virtual void callException(const TextException &e);
     virtual void callEnd();
 
     const char *stopReason; // reason for forcing done() to be true
