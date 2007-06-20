@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPServiceRep.h,v 1.9 2007/05/29 13:31:44 amosjeffries Exp $
+ * $Id: ICAPServiceRep.h,v 1.10 2007/06/19 21:13:49 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -47,10 +47,13 @@ class ICAPOptXact;
    host many ICAP services. */
 
 /*
- * A service is "up" if there is a fresh cached OPTIONS response and is
- * "down" otherwise. A service is "probed" if we tried to get an OPTIONS
- * response from it and succeeded or failed. A probed down service is
- * called "broken".
+ * A service with a fresh cached OPTIONS response and without many failures
+ * is an "up" service. All other services are "down". A service is "probed"
+ * if we tried to get an OPTIONS response from it and succeeded or failed.
+ * A probed down service is called "broken".
+ *
+ * The number of failures required to bring an up service down is determined
+ * by icap_service_failure_limit in squid.conf.
  *
  * As a bootstrapping mechanism, ICAP transactions wait for an unprobed
  * service to get a fresh OPTIONS response (see the callWhenReady method).
@@ -151,8 +154,9 @@ private:
 
     bool hasOptions() const;
     bool needNewOptions() const;
+    time_t optionsFetchTime() const;
 
-    void scheduleUpdate();
+    void scheduleUpdate(time_t when);
     void scheduleNotification();
 
     void startGettingOptions();

@@ -175,8 +175,11 @@ void ICAPServiceRep::invalidate()
 
 void ICAPServiceRep::noteFailure() {
     ++theSessionFailures;
-    debugs(93,4, "ICAPService failure " << theSessionFailures <<
-        ", out of " << TheICAPConfig.service_failure_limit << " allowed");
+    debugs(93,4, theSessionFailures << " ICAPService failures, out of " << 
+        TheICAPConfig.service_failure_limit << " allowed " << status());
+
+    if (isSuspended)
+        return;
 
     if (TheICAPConfig.service_failure_limit >= 0 &&
         theSessionFailures > TheICAPConfig.service_failure_limit)
@@ -194,6 +197,7 @@ void ICAPServiceRep::suspend(const char *reason) {
     } else {
         isSuspended = reason;
         debugs(93,1, "suspending ICAPService for " << reason);
+        scheduleUpdate(squid_curtime + TheICAPConfig.service_revival_delay);
         announceStatusChange("suspended", true);
     }
 }
@@ -453,7 +457,7 @@ void ICAPServiceRep::handleNewOptions(ICAPOptions *newOptions)
 
     debugs(93,3, "ICAPService got new options and is now " << status());
 
-    scheduleUpdate();
+    scheduleUpdate(optionsFetchTime());
     scheduleNotification();
 }
 
@@ -468,51 +472,65 @@ void ICAPServiceRep::startGettingOptions()
     // Such a timeout should probably be a generic AsyncStart feature.
 }
 
-void ICAPServiceRep::scheduleUpdate()
+void ICAPServiceRep::scheduleUpdate(time_t when)
 {
-    if (updateScheduled)
-        return; // already scheduled
-
-    // XXX: move hard-coded constants from here to TheICAPConfig
-
-    // conservative estimate of how long the OPTIONS transaction will take
-    const int expectedWait = 20; // seconds
-
-    time_t when = 0;
-
-    if (theOptions && theOptions->valid()) {
-        const time_t expire = theOptions->expire();
-        debugs(93,7, "ICAPService options expire on " << expire << " >= " << squid_curtime);
-
-        // Unknown or invalid (too small) expiration times should not happen.
-        // ICAPOptions should use the default TTL, and ICAP servers should not
-        // send invalid TTLs, but bugs and attacks happen.
-        if (expire < expectedWait)
-            when = squid_curtime + 60*60;
+    if (updateScheduled) {
+        debugs(93,7, "ICAPService reschedules update");
+        // XXX: check whether the event is there because AR saw
+		// an unreproducible eventDelete assertion on 2007/06/18
+        if (eventFind(&ICAPServiceRep_noteTimeToUpdate, this))
+			eventDelete(&ICAPServiceRep_noteTimeToUpdate, this);
         else
-            when = expire - expectedWait; // before the current options expire
-    } else {
-        // delay for a down service
-        when = squid_curtime + TheICAPConfig.service_revival_delay;
+            debugs(93,1, "XXX: ICAPService lost an update event.");
+        updateScheduled = false;
     }
 
-    debugs(93,7, "ICAPService options raw update at " << when << " or in " <<
+    debugs(93,7, HERE << "raw OPTIONS fetch at " << when << " or in " <<
         (when - squid_curtime) << " sec");
+    debugs(93,9, HERE << "last fetched at " << theLastUpdate << " or " <<
+        (squid_curtime - theLastUpdate) << " sec ago");
 
     /* adjust update time to prevent too-frequent updates */
 
     if (when < squid_curtime)
         when = squid_curtime;
 
-    const int minUpdateGap = expectedWait + 10; // seconds
+    // XXX: move hard-coded constants from here to TheICAPConfig
+    const int minUpdateGap = 30; // seconds
     if (when < theLastUpdate + minUpdateGap)
         when = theLastUpdate + minUpdateGap;
 
     const int delay = when - squid_curtime;
-    debugs(93,5, "ICAPService will update options in " << delay << " sec");
+    debugs(93,5, "ICAPService will fetch OPTIONS in " << delay << " sec");
+
     eventAdd("ICAPServiceRep::noteTimeToUpdate",
              &ICAPServiceRep_noteTimeToUpdate, this, delay, 0, true);
     updateScheduled = true;
+}
+
+// returns absolute time when OPTIONS should be fetched
+time_t
+ICAPServiceRep::optionsFetchTime() const
+{
+    if (theOptions && theOptions->valid()) {
+        const time_t expire = theOptions->expire();
+        debugs(93,7, "ICAPService options expire on " << expire << " >= " << squid_curtime);
+
+        // conservative estimate of how long the OPTIONS transaction will take
+        // XXX: move hard-coded constants from here to TheICAPConfig
+        const int expectedWait = 20; // seconds
+
+        // Unknown or invalid (too small) expiration times should not happen.
+        // ICAPOptions should use the default TTL, and ICAP servers should not
+        // send invalid TTLs, but bugs and attacks happen.
+        if (expire < expectedWait)
+            return squid_curtime;
+        else
+            return expire - expectedWait; // before the current options expire
+    }
+
+    // use revival delay as "expiration" time for a service w/o valid options
+    return squid_curtime + TheICAPConfig.service_revival_delay;
 }
 
 // returns a temporary string depicting service status, for debugging
