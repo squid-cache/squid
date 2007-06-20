@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.182 2007/05/29 13:31:38 amosjeffries Exp $
+#  $Id: Makefile.am,v 1.183 2007/06/19 22:01:11 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -658,7 +658,9 @@ squid_LDADD = \
 	@XTRA_LIBS@ \
 	@EPOLL_LIBS@ \
 	@MINGW_LIBS@ 
-squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a @STORE_OBJS@ @STORE_LINKOBJS@ \
+squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
+	@STORE_OBJS@ \
+	@STORE_LINKOBJS@ \
 	@DISK_LIBS@ \
 	@DISK_LINKOBJS@ \
 	@REPL_OBJS@ \
@@ -891,7 +893,16 @@ ufsdump_LDADD = \
 	@XTRA_LIBS@ \
 	@EPOLL_LIBS@ \
 	@MINGW_LIBS@ 
-ufsdump_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a
+ufsdump_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
+	@STORE_OBJS@ \
+	@STORE_LINKOBJS@ \
+	@DISK_LIBS@ \
+	@DISK_LINKOBJS@ \
+	@REPL_OBJS@ \
+	@AUTH_LINKOBJS@ \
+	@AUTH_OBJS@ \
+	@ICAP_LIBS@
+
 nodist_ufsdump_SOURCES = \
 	repl_modules.cc \
 	cf_parser.h \
