@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.166 2007/06/19 20:27:00 rousskov Exp $
+ * $Id: forward.cc,v 1.167 2007/06/19 20:49:37 rousskov Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -502,8 +502,11 @@ FwdState::serverClosed(int fd)
 
 void
 FwdState::retryOrBail() {
-    if (!self) // we have aborted before the server called us back
-        return; // we are destroyed when the server clears its Pointer to us
+    if (!self) { // we have aborted before the server called us back
+        debugs(17, 5, HERE << "not retrying because of earlier abort");
+        // we will be destroyed when the server clears its Pointer to us
+        return;
+    }
 
     if (checkRetry()) {
         int originserver = (servers->_peer == NULL);
