@@ -32,6 +32,7 @@ public:
     void fail(ErrorState *err);
     void unregister(int fd);
     void complete();
+    void handleUnregisteredServerEnd();
     int reforward();
     bool reforwardableStatus(http_status s);
     void serverClosed(int fd);
@@ -62,6 +63,7 @@ private:
 
     static void logReplyStatus(int tries, http_status status);
     void completed();
+    void retryOrBail();
 
 #if WIP_FWD_LOG
 
