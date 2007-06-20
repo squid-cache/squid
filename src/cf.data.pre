@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.438 2007/05/26 06:38:03 wessels Exp $
+# $Id: cf.data.pre,v 1.439 2007/06/19 21:03:45 rousskov Exp $
 #
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
@@ -4995,6 +4995,36 @@ LOC: TheICAPConfig.onoff
 DEFAULT: off
 DOC_START
     If you want to enable the ICAP module support, set this to on.
+DOC_END
+
+NAME: icap_connect_timeout
+TYPE: time_t
+DEFAULT: none
+LOC: TheICAPConfig.connect_timeout_raw
+IFDEF: ICAP_CLIENT
+DOC_START
+	This parameter specifies how long to wait for the TCP connect to
+	the requested ICAP server to complete before giving up and either
+	terminating the HTTP transaction or bypassing the failure.
+
+	The default for optional services is peer_connect_timeout.
+	The default for essential services is connect_timeout.
+	If this option is explicitly set, its value applies to all services.
+DOC_END
+
+NAME: icap_io_timeout
+COMMENT: time-units
+TYPE: time_t
+DEFAULT: none
+LOC: TheICAPConfig.io_timeout_raw
+IFDEF: ICAP_CLIENT
+DOC_START
+	This parameter specifies how long to wait for an I/O activity on
+	an established, active ICAP connection before giving up and
+	either terminating the HTTP transaction or bypassing the
+	failure.
+
+	The default is read_timeout.
 DOC_END
 
 NAME: icap_service_failure_limit
