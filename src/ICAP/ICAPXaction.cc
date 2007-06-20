@@ -68,6 +68,7 @@ ICAPXaction::ICAPXaction(const char *aTypeName, ICAPInitiator *anInitiator, ICAP
         commEof(false),
         reuseConnection(true),
         isRetriable(true),
+        ignoreLastWrite(false),
         connector(NULL), reader(NULL), writer(NULL), closer(NULL)
 {
     debugs(93,3, typeName << " constructed, this=" << this <<
@@ -81,7 +82,7 @@ ICAPXaction::~ICAPXaction()
 }
 
 void ICAPXaction::disableRetries() {
-    debugs(93,5, typeName << (isRetriable ? "becomes" : "remains") <<
+    debugs(93,5, typeName << (isRetriable ? " becomes" : " remains") <<
         " final" << status());
     isRetriable = false;
 }
@@ -130,7 +131,8 @@ void ICAPXaction::openConnection()
 
     debugs(93,3, typeName << " opens connection to " << s.host.buf() << ":" << s.port);
 
-    commSetTimeout(connection, Config.Timeout.connect,
+    // TODO: service bypass status may differ from that of a transaction
+    commSetTimeout(connection, TheICAPConfig.connect_timeout(service().bypass),
                    &ICAPXaction_noteCommTimedout, this);
 
     closer = &ICAPXaction_noteCommClosed;
@@ -225,12 +227,16 @@ void ICAPXaction::noteCommWrote(comm_err_t commStatus, size_t size)
 
     Must(writer);
     writer = NULL;
-
-    Must(commStatus == COMM_OK);
-
-    updateTimeout();
-
-    handleCommWrote(size);
+    
+    if (ignoreLastWrite) {
+        // a hack due to comm inability to cancel a pending write
+        ignoreLastWrite = false; 
+        debugs(93, 7, HERE << "ignoring last write; status: " << commStatus);
+    } else {
+        Must(commStatus == COMM_OK);
+        updateTimeout();
+        handleCommWrote(size);
+    }
 
     ICAPXaction_Exit();
 }
@@ -247,16 +253,14 @@ void ICAPXaction::noteCommTimedout()
 
 void ICAPXaction::handleCommTimedout()
 {
-    debugs(93, 0, HERE << "ICAP FD " << connection << " timeout to " << theService->methodStr() << " " << theService->uri.buf());
+    debugs(93, 2, HERE << typeName << " timeout with " <<
+        theService->methodStr() << " " << theService->uri.buf() << status());
     reuseConnection = false;
-    MemBuf mb;
-    mb.init();
+    service().noteFailure();
 
-    if (fillVirginHttpHeader(mb)) {
-        debugs(93, 0, HERE << "\tfor " << mb.content());
-    }
-
-    mustStop("connection with ICAP service timed out");
+    throw TexcHere(connector ?
+        "timed out while connecting to the ICAP service" :
+        "timed out while talking to the ICAP service");
 }
 
 // unexpected connection close while talking to the ICAP service
@@ -293,7 +297,8 @@ void ICAPXaction::updateTimeout() {
     if (reader || writer) {
         // restart the timeout before each I/O
         // XXX: why does Config.Timeout lacks a write timeout?
-        commSetTimeout(connection, Config.Timeout.read,
+        // TODO: service bypass status may differ from that of a transaction
+        commSetTimeout(connection, TheICAPConfig.io_timeout(service().bypass),
             &ICAPXaction_noteCommTimedout, this);
     } else {
         // clear timeout when there is no I/O
