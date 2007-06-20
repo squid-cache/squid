@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.cc,v 1.16 2007/05/29 13:31:43 amosjeffries Exp $
+ * $Id: ICAPConfig.cc,v 1.17 2007/06/19 21:03:46 rousskov Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -431,3 +431,20 @@ ICAPConfig::~ICAPConfig()
     classes.clean();
 
 };
+
+time_t ICAPConfig::connect_timeout(bool bypassable) const
+{
+    if (connect_timeout_raw > 0)
+        return connect_timeout_raw; // explicitly configured
+
+    return bypassable ? Config.Timeout.peer_connect : Config.Timeout.connect;
+}
+
+time_t ICAPConfig::io_timeout(bool) const
+{
+    if (io_timeout_raw > 0)
+        return io_timeout_raw; // explicitly configured
+    // TODO: provide a different default for an ICAP transaction that 
+    // can still be bypassed
+    return Config.Timeout.read; 
+}

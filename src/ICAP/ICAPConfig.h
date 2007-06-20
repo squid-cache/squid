@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.h,v 1.13 2007/05/29 13:31:44 amosjeffries Exp $
+ * $Id: ICAPConfig.h,v 1.14 2007/06/19 21:03:46 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -96,6 +96,8 @@ public:
     int onoff;
     int preview_enable;
     int preview_size;
+    time_t connect_timeout_raw;
+    time_t io_timeout_raw;
     int default_options_ttl;
     int send_client_ip;
     int send_client_username;
@@ -111,6 +113,9 @@ public:
     ICAPConfig() {};
 
     ~ICAPConfig();
+
+    time_t connect_timeout(bool bypassable) const;
+    time_t io_timeout(bool bypassable) const;
 
     void parseICAPService(void);
     void freeICAPService(void);
