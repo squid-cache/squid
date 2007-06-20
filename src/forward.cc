@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.165 2007/05/26 06:38:04 wessels Exp $
+ * $Id: forward.cc,v 1.166 2007/06/19 20:27:00 rousskov Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -497,6 +497,14 @@ FwdState::serverClosed(int fd)
     assert(server_fd == fd);
     server_fd = -1;
 
+    retryOrBail();
+}
+
+void
+FwdState::retryOrBail() {
+    if (!self) // we have aborted before the server called us back
+        return; // we are destroyed when the server clears its Pointer to us
+
     if (checkRetry()) {
         int originserver = (servers->_peer == NULL);
         debugs(17, 3, "fwdServerClosed: re-forwarding (" << n_tries << " tries, " << (squid_curtime - start_t) << " secs)");
@@ -533,6 +541,16 @@ FwdState::serverClosed(int fd)
     }
 
     self = NULL;	// refcounted
+}
+
+// called by the server that failed after calling unregister()
+void
+FwdState::handleUnregisteredServerEnd()
+{
+    debugs(17, 2, "handleUnregisteredServerEnd: self=" << self <<
+        " err=" << err << ' ' << entry->url());
+    assert(server_fd < 0);
+    retryOrBail();
 }
 
 #if USE_SSL

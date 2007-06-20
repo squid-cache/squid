@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.424 2007/05/29 13:31:39 amosjeffries Exp $
+ * $Id: ftp.cc,v 1.425 2007/06/19 20:27:00 rousskov Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -3378,10 +3378,13 @@ FtpStateData::abortTransaction(const char *reason)
 {
     debugs(9,5,HERE << "aborting transaction for " << reason <<
         "; FD " << ctrl.fd << ", Data FD " << data.fd << ", this " << this);
-    if (ctrl.fd >= 0)
+    if (ctrl.fd >= 0) {
         comm_close(ctrl.fd);
-    else
-        delete this;
+        return;
+    }
+    
+    fwd->handleUnregisteredServerEnd();
+    delete this;
 }
 
 #if ICAP_CLIENT

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.524 2007/06/17 21:48:20 hno Exp $
+ * $Id: http.cc,v 1.525 2007/06/19 20:27:00 rousskov Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1935,10 +1935,13 @@ HttpStateData::abortTransaction(const char *reason)
     debugs(11,5, HERE << "aborting transaction for " << reason <<
            "; FD " << fd << ", this " << this);
 
-    if (fd >= 0)
+    if (fd >= 0) {
         comm_close(fd);
-    else
-        delete this;
+        return;
+	}
+
+    fwd->handleUnregisteredServerEnd();
+    delete this;
 }
 
 void
