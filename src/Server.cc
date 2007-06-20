@@ -1,5 +1,5 @@
 /*
- * $Id: Server.cc,v 1.11 2007/05/08 16:45:00 rousskov Exp $
+ * $Id: Server.cc,v 1.12 2007/06/19 20:58:26 rousskov Exp $
  *
  * DEBUG:
  * AUTHOR: Duane Wessels
@@ -213,6 +213,7 @@ ServerStateData::handleRequestBodyProducerAborted()
     if (requestSender != NULL)
         debugs(9,3, HERE << "fyi: request body aborted while we were sending");
 
+    fwd->dontRetry(true); // the problem is not with the server
     stopConsumingFrom(requestBodySource); // requestSender, if any, will notice
 
     // kids extend this
