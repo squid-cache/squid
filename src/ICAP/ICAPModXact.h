@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPModXact.h,v 1.8 2007/05/08 16:32:11 rousskov Exp $
+ * $Id: ICAPModXact.h,v 1.9 2007/06/19 21:12:15 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -81,11 +81,13 @@ class VirginBodyAct
 {
 
 public:
-    VirginBodyAct(); // disabled by default
+    VirginBodyAct();
 
     void plan(); // the activity may happen; do not consume at or above offset
     void disable(); // the activity wont continue; no consumption restrictions
-    bool active() const { return theStart >= 0; } // planned and not disabled
+
+    bool active() const { return theState == stActive; }
+    bool disabled() const { return theState == stDisabled; }
 
     // methods below require active()
 
@@ -93,7 +95,10 @@ public:
     void progress(size_t size); // note processed body bytes
 
 private:
-    ssize_t theStart; // offset, unless negative.
+    size_t theStart; // unprocessed virgin body data offset
+
+    typedef enum { stUndecided, stActive, stDisabled } State;
+    State theState;
 };
 
 
@@ -152,6 +157,10 @@ public:
 public:
     ICAPInOut virgin;
     ICAPInOut adapted;
+
+protected:
+    // bypasses exceptions if needed and possible
+    virtual void callException(const TextException &e);
 
 private:
     virtual void start();
@@ -213,6 +222,12 @@ private:
     void handle204NoContent();
     void handleUnknownScode();
 
+    void bypassFailure();
+
+    void startSending();
+    void disableBypass(const char *reason);
+
+    void prepEchoing();
     void echoMore();
 
     virtual bool doneAll() const;
@@ -244,6 +259,8 @@ private:
     ICAPPreview preview; // use for creating (writing) the preview
 
     ChunkedCodingParser *bodyParser; // ICAP response body parser
+
+    bool canStartBypass; // enables bypass of transaction failures
 
     class State
     {
