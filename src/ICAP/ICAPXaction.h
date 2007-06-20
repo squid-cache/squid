@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPXaction.h,v 1.11 2007/05/08 16:32:12 rousskov Exp $
+ * $Id: ICAPXaction.h,v 1.12 2007/06/19 21:08:33 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -132,6 +132,7 @@ protected:
     bool commEof;
     bool reuseConnection;
     bool isRetriable;
+    bool ignoreLastWrite;
 
     const char *stopReason;
 
@@ -141,12 +142,8 @@ protected:
     IOCB *writer;
     PF *closer;
 
-    const char *typeName; // the type of the final class (child), for debugging
-
 private:
     static int TheLastId;
-
-    const char *inCall; // name of the asynchronous call being executed, if any
 
     static void reusedConnection(void *data);
 
