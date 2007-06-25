@@ -13,3 +13,6 @@
  *    salt[0] = '\0';
  */
 char *crypt_md5(const char *pw, const char *salt);
+
+/* MD5 hash without salt */
+char *md5sum(const char *s);
