@@ -31,6 +31,19 @@ acl with the argument LOGIN, or terminated by the argument LOGOUT.
 Without this flag the helper automatically starts the session after
 the first request.
 .
+.SH EXAMPLE
+.P
+Configuration example using the default automatic mode
+.IP
+external_acl_type session ttl=300 negative_ttl=0 children=1 concurrency=200 %LOGIN /usr/local/squid/libexec/squid_session
+.IP
+acl session external session
+.IP
+http_access deny !session
+.IP
+deny_info http://your.server/bannerpage?url=%s session
+.P
+Then set up http://your.server/bannerpage to display a session startup page and then redirect the user back to the requested URL given in the url query parameter.
 .SH AUTHOR
 This helper and documentation was written by 
 .I Henrik Nordstrom <henrik@henriknordstrom.net>
