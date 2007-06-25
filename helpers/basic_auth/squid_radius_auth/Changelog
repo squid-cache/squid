@@ -1,0 +1,55 @@
+1.09: - RADIUS protocol fixes by Henrik Nordstrom <hno@squid-cache.org>
+      - Corrected how retransmits & timeouts is handled
+      - The shared secret now verified properly
+      - Request/response processing paired properly
+      - New -t command line option to tune the RADIUS timeout
+1.08: - RADIUS port/service option by Joost de Heer <sanguis@xs4all.nl>
+      - Added service/port tags to the configuration file allowing
+	manual override of the RADIUS port number via the config
+	file in addition to the already existing -p command line
+	option doing the same.
+      - The default port used if the radius service could not be found
+	in /etc/services changed from the obsolete 1645 to the official
+	port 1812
+1.07: - Squid-2.5 update by Henrik Nordstrom <hno@squid-cache.org>
+	The Basic auth helper communication has changed slightly in
+	Squid-2.5 to use URL-encoded strings. This to allow use of "odd"
+	characters such as space without problems.
+      - Major cleanup to remove dead code and unneeded references to
+	RADIUS dictionary files.
+      - Added commandline opttions. No more hardcoded paths.
+      - Added manpage documentation to document the configuration of this
+	helper
+1.06: - Included byte-order patch from Klaus Weidner <kw@w-m-p.com>
+	The assignment of 'auth->length' erroneously used 'htonl' instead
+	of 'htons' to assign a 16-bit value. The symptom was that the radius
+	server ignored the requests, because they had zero length according
+	to the data header.
+      - Initial warnings confused Squid. Most (all) of them now warn to stderr
+	so you should see them in the cache.log
+      - A fix by Moslem Saleh: A select timeout causes the redirector to skip
+	the reply. Moslem detected/fixed this issue on a BSD 4.1 (on Intel)
+	system.
+1.05a: - Minor fixes and warnings. Should fix some compiler issues (compiler
+	 fixes are untested except on Debian Linux 1.3 & GCC-2.95-2)
+1.04: - Rolled in patches from Mike McCauley and Andrea Dell'Amico:
+	These patches fix a few bugs and make the kit more platform 
+	independent. 
+	also  fixes:
+	Unwanted characters in the reply. This confuses Squid. 
+	This is caused by unexpected replies from the RADIUS server 
+	and should have been ignored by
+	the authenticator; 
+	It enables long passwords (up to 254 characters); 
+	It allows passwords with embedded spaces. 
+	Mike McCauley mikem@open.com.au
+	Added Makefile.solaris for Solaris 2.5.1
+1.03: - Fixes for Solaris(2.5)
+	(UINT4 *)ptr = htonln(nas_ipaddr) causes a coredumps in Solaris.
+	This works better:
+	  nip=htonl(nas_ipaddr);
+	  memcpy(prt, nip, 4)
+      - Also portno is changed in this fashion.
+
+1.02: - Pre release (various fixes)
+1.01: - various bug fixes
