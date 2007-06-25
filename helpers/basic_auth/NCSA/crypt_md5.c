@@ -16,6 +16,7 @@
  */
 
 #include <string.h>
+#include <stdio.h>
 #include "config.h"
 #include "md5.h"
 
@@ -166,3 +167,30 @@ char *crypt_md5(const char *pw, const char *salt)
 
     return passwd;
 }
+
+/* Created by Ramon de Carvalho <ramondecarvalho@yahoo.com.br>
+   Refined by Rodrigo Rubira Branco <rodrigo@kernelhacking.com>
+*/
+char *md5sum(const char *s){
+   static unsigned char digest[16];
+   MD5_CTX ctx;
+   int idx;
+   static char sum[33];
+
+   memset(digest,0,16);
+
+   MD5Init(&ctx);
+   MD5Update(&ctx,(const unsigned char *)s,strlen(s));
+   MD5Final(digest,&ctx);
+
+   for(idx=0;idx<16;idx++)
+       sprintf(&sum[idx*2],"%02x",digest[idx]);
+
+   sum[32]='\0';
+
+   /* Don't leave anything around in vm they could use. */
+   memset(digest, 0, sizeof digest);
+
+   return sum;
+}
+
