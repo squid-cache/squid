@@ -1,0 +1,38 @@
+.\" This file is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See
+.\" the GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this file; if not, write to the Free Software
+.\" Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+.\" MA 02111-1307 USA
+.\"
+.\" HISTORY:
+.\" 2006-05-16, created by Rodrigo Rubira Branco <rrbranco@br.ibm.com>
+.TH ncsa_auth 8 "May 16, 2006" "Squid NCSA Auth helper"
+.SH NAME
+ncsa_auth \- NCSA httpd-style password file authentication helper for Squid
+\fB
+.SH SYNOPSIS
+.nf
+.fam C
+\fBncsa_auth\fP \fIpasswdfile\fP 
+.fam T
+.fi
+.SH DESCRIPTION
+\fBncsa_auth\fP allows Squid to read and authenticate user and password information from an NCSA/Apache httpd-style password file when using basic HTTP authentication.
+.PP
+The only parameter is the password file.  It must have permissions to be read by the user that Squid is running as (cache_effective_user in squid.conf).
+.PP
+This password file can be manipulated using htpasswd.
+.SH OPTIONS
+Only specify the password file name.
+.SH EXAMPLE
+\fBncsa_auth\fP /etc/squid/squid.pass
+.SH SECURITY
+\fBncsa_auth\fP must have access to the password file to be executed.
+.SH SEE ALSO
+\fBhtpasswd\fP(1), \fBsquid\fP(8)
+.SH AUTHOR
+Manpage written by Rodrigo Rubira Branco <rrbranco@br.ibm.com>
