@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.57 2007/04/28 22:26:37 hno Exp $
+ * $Id: fd.cc,v 1.58 2007/06/25 14:38:14 hno Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -325,6 +325,9 @@ fdAdjustReserved(void)
         debugs(51, 0, "WARNING: This machine has a serious shortage of filedescriptors.");
         newReserve = x;
     }
+
+    if (Squid_MaxFD - newReserve < XMIN(256, Squid_MaxFD / 2))
+	fatalf("Too few filedescriptors available in the system (%d usable of %d).\n", Squid_MaxFD - newReserve, Squid_MaxFD);
 
     debugs(51, 0, "Reserved FD adjusted from " << RESERVED_FD << " to " << newReserve << " due to failures");
     RESERVED_FD = newReserve;
