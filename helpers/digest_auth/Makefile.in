@@ -16,7 +16,7 @@
 
 #  Makefile for digest auth helpers in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.74 2007/06/10 12:09:07 hno Exp $
+#  $Id: Makefile.in,v 1.75 2007/06/25 13:57:50 hno Exp $
 #
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -275,7 +275,7 @@ sharedstatedir = @sharedstatedir@
 subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-DIST_SUBDIRS = password ldap
+DIST_SUBDIRS = password ldap eDirectory
 SUBDIRS = @DIGEST_AUTH_HELPERS@
 all: all-recursive
 
