@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIInclude.cc,v 1.12 2007/04/28 22:26:37 hno Exp $
+ * $Id: ESIInclude.cc,v 1.13 2007/06/25 11:45:20 hno Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -101,7 +101,6 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
     } else {
         if (rep) {
             if (rep->sline.status != HTTP_OK) {
-                delete rep;
                 rep = NULL;
                 esiStream->include->fail (esiStream);
                 esiStream->finished = 1;
