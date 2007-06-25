@@ -1,7 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.439 2007/06/19 21:03:45 rousskov Exp $
-#
+# $Id: cf.data.pre,v 1.440 2007/06/25 09:29:29 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -123,6 +122,7 @@ DOC_START
 	and an external interface we recommend you to specify the
 	internal address:port in http_port. This way Squid will only be
 	visible on the internal address.
+
 NOCOMMENT_START
 # Squid normally listens to port 3128
 http_port @DEFAULT_HTTP_PORT@
@@ -364,7 +364,6 @@ DOC_START
 	"0".
 DOC_END
 
-
 NAME: mcast_groups
 TYPE: wordlist
 LOC: Config.mcast_group_list
@@ -391,7 +390,6 @@ DOC_START
 
 	By default, Squid doesn't listen on any multicast groups.
 DOC_END
-
 
 NAME: udp_incoming_address
 TYPE: address
@@ -716,7 +714,6 @@ DOC_START
 		  section.
 DOC_END
 
-
 NAME: neighbor_type_domain
 TYPE: hostdomaintype
 DEFAULT: none
@@ -817,7 +814,6 @@ DOC_START
 	instead of to your parents.
 DOC_END
 
-
 NAME: hierarchy_stoplist
 TYPE: wordlist
 DEFAULT: none
@@ -832,7 +828,6 @@ NOCOMMENT_START
 hierarchy_stoplist cgi-bin ?
 NOCOMMENT_END
 DOC_END
-
 
 NAME: cache no_cache
 TYPE: acl_access
@@ -863,7 +858,6 @@ DOC_START
 	Controls how often the ICP pings are sent to siblings that
 	have background-ping set.
 DOC_END
-
 
 COMMENT_START
  OPTIONS WHICH AFFECT THE CACHE SIZE
@@ -906,7 +900,6 @@ DOC_START
 	reached.  Thereafter, blocks will be used to store hot
 	objects.
 DOC_END
-
 
 NAME: cache_swap_low
 COMMENT: (percent, 0-100)
@@ -1058,7 +1051,6 @@ DOC_START
 	See cache_replacement_policy for details.
 DOC_END
 
-
 COMMENT_START
  LOGFILE PATHNAMES AND CACHE DIRECTORIES
  -----------------------------------------------------------------------------
@@ -1174,7 +1166,6 @@ DOC_START
 	no options are allowed or required
 DOC_END
 
-
 NAME: logformat
 TYPE: logformat
 LOC: Config.Log.logformats
@@ -1279,7 +1270,6 @@ DOC_START
 	LOG_ERR, LOG_WARNING, LOG_NOTICE, LOG_INFO, LOG_DEBUG.
 DOC_END
 
-
 NAME: cache_log
 TYPE: string
 DEFAULT: @DEFAULT_CACHE_LOG@
@@ -1289,7 +1279,6 @@ DOC_START
 	your cache's behavior goes. You can increase the amount of data
 	logged to this file with the "debug_options" tag below.
 DOC_END
-
 
 NAME: cache_store_log
 TYPE: string
@@ -1302,7 +1291,6 @@ DOC_START
 	not really utilities to analyze this data, so you can safely
 	disable it.
 DOC_END
-
 
 NAME: cache_swap_state cache_swap_log
 TYPE: string
@@ -1338,7 +1326,6 @@ DOC_START
 	better to keep these log files in each 'cache_dir' directory.
 DOC_END
 
-
 NAME: emulate_httpd_log
 COMMENT: on|off
 TYPE: onoff
@@ -1373,7 +1360,6 @@ DOC_START
 	information if you do.
 DOC_END
 
-
 NAME: log_mime_hdrs
 COMMENT: on|off
 TYPE: onoff
@@ -1387,7 +1373,6 @@ DOC_START
 	formats).  To enable this logging set log_mime_hdrs to 'on'.
 DOC_END
 
-
 NAME: useragent_log
 TYPE: string
 LOC: Config.Log.useragent
@@ -1399,7 +1384,6 @@ DOC_START
 	is disabled.
 DOC_END
 
-
 NAME: referer_log
 TYPE: string
 LOC: Config.Log.referer
@@ -1410,7 +1394,6 @@ DOC_START
 	filename specified here.  By default referer_log is disabled.
 DOC_END
 
-
 NAME: pid_filename
 TYPE: string
 DEFAULT: @DEFAULT_PID_FILE@
@@ -1418,7 +1401,6 @@ LOC: Config.pidFilename
 DOC_START
 	A filename to write the process-id to.  To disable, enter "none".
 DOC_END
-
 
 NAME: debug_options
 TYPE: debug
@@ -1433,7 +1415,6 @@ DOC_START
 	"ALL,1".
 DOC_END
 
-
 NAME: log_fqdn
 COMMENT: on|off
 TYPE: onoff
@@ -1447,7 +1428,6 @@ DOC_START
 	browsing.
 DOC_END
 
-
 NAME: client_netmask
 TYPE: address
 LOC: Config.Addrs.client_netmask
@@ -1458,7 +1438,6 @@ DOC_START
 	A netmask of 255.255.255.0 will log all IP's in that range with
 	the last digit set to '0'.
 DOC_END
-
 
 COMMENT_START
  OPTIONS FOR EXTERNAL SUPPORT PROGRAMS
@@ -1512,6 +1491,23 @@ DOC_START
 	connection turn this off.
 DOC_END
 
+NAME: ftp_telnet_protocol
+TYPE: onoff
+DEFAULT: on
+LOC: Config.Ftp.telnet
+DOC_START
+The FTP protocol is officially defined to use the telnet protocol
+as transport channel for the control connection. However, many
+implementations are broken and does not respect this aspect of
+the FTP protocol.
+
+If you have trouble accessing files with ASCII code 255 in the
+path or similar problems involving this ASCII code you can
+try setting this directive to off. If that helps, report to the
+operator of the FTP server in question that their FTP server
+is broken and does not follow the FTP standard.
+DOC_END
+
 NAME: check_hostnames
 TYPE: onoff
 DEFAULT: off
@@ -1531,23 +1527,6 @@ DOC_START
 	but nevertheless used by many sites. Set this to off if you want
 	Squid to be strict about the standard.
 	This check is performed only when check_hostnames is set to on.
-DOC_END
-
-NAME: ftp_telnet_protocol
-TYPE: onoff
-DEFAULT: on
-LOC: Config.Ftp.telnet
-DOC_START
-The FTP protocol is officially defined to use the telnet protocol
-as transport channel for the control connection. However, many
-implementations are broken and does not respect this aspect of
-the FTP protocol.
-
-If you have trouble accessing files with ASCII code 255 in the
-path or similar problems involving this ASCII code you can
-try setting this directive to off. If that helps, report to the
-operator of the FTP server in question that their FTP server
-is broken and does not follow the FTP standard.
 DOC_END
 
 NAME: cache_dns_program
@@ -1680,7 +1659,6 @@ DOC_START
 	Specify the location of the executable for the pinger process.
 DOC_END
 
-
 NAME: url_rewrite_program redirect_program
 TYPE: wordlist
 LOC: Config.Program.redirect
@@ -1691,7 +1669,6 @@ DOC_START
 	See the FAQ (section 15) for information on how to write one.
 	By default, a redirector is not used.
 DOC_END
-
 
 NAME: url_rewrite_children redirect_children
 TYPE: int
@@ -1727,7 +1704,7 @@ DOC_START
 	process, so be careful if you have domain-virtual hosts.
 DOC_END
 
-NAME: redirector_access
+NAME: url_rewrite_access redirector_access
 TYPE: acl_access
 DEFAULT: none
 LOC: Config.accessList.redirector
@@ -1847,7 +1824,6 @@ DOC_START
 	Then, set this line to something like
 
 	auth_param digest program @DEFAULT_PREFIX@/bin/digest_auth_pw @DEFAULT_PREFIX@/etc/digpass
-
 
 	"children" numberofchildren
 	The number of authenticator processes to spawn (no default).
@@ -2306,7 +2282,6 @@ DOC_START
 	negative caching of DNS lookups.
 DOC_END
 
-
 NAME: positive_dns_ttl
 COMMENT: time-units
 TYPE: time_t
@@ -2317,7 +2292,6 @@ DOC_START
 	Default is 6 hours (360 minutes).  If you want to minimize the
 	use of Squid's ipcache, set this to 1, not 0.
 DOC_END
-
 
 NAME: negative_dns_ttl
 COMMENT: time-units
@@ -2349,7 +2323,6 @@ DOC_START
 	A value of 0 causes Squid to never fetch more than the
 	client requested. (default)
 DOC_END
-
 
 COMMENT_START
  TIMEOUTS
@@ -2402,7 +2375,6 @@ DOC_START
 	default is 15 minutes.
 DOC_END
 
-
 NAME: request_timeout
 TYPE: time_t
 LOC: Config.Timeout.request
@@ -2412,7 +2384,6 @@ DOC_START
 	connection establishment.
 DOC_END
 
-
 NAME: persistent_request_timeout
 TYPE: time_t
 LOC: Config.Timeout.persistent_request
@@ -2421,7 +2392,6 @@ DOC_START
 	How long to wait for the next HTTP request on a persistent
 	connection after the previous request completes.
 DOC_END
-
 
 NAME: client_lifetime
 COMMENT: time-units
@@ -2481,7 +2451,6 @@ DOC_START
 	users, you might be susceptible to denial-of-service by having
 	many ident requests going at once.
 DOC_END
-
 
 NAME: shutdown_lifetime
 COMMENT: time-units
@@ -2756,18 +2725,7 @@ DOC_START
 	If none of the access lines cause a match the opposite of the
 	last line will apply. Thus it is good practice to end the rules
 	with an "allow all" or "deny all" entry.
-
-NOCOMMENT_START
-#Recommended minimum configuration:
-#
-# Insert your own rules here.
-#
-#
-# and finally allow by default
-http_reply_access allow all
-NOCOMMENT_END
 DOC_END
-
 
 NAME: icp_access
 TYPE: acl_access
@@ -2787,7 +2745,6 @@ NOCOMMENT_START
 icp_access allow all
 NOCOMMENT_END
 DOC_END
-
 
 NAME: htcp_access
 IFDEF: USE_HTCP
@@ -2826,7 +2783,6 @@ acl htcp_clr_peer src 172.16.1.2
 htcp_clr_access allow htcp_clr_peer
 DOC_END
 
-
 NAME: miss_access
 TYPE: acl_access
 LOC: Config.accessList.miss
@@ -2850,7 +2806,6 @@ NOCOMMENT_START
 # miss_access allow all
 NOCOMMENT_END
 DOC_END
-
 
 NAME: cache_peer_access
 TYPE: peer_access
@@ -3031,7 +2986,6 @@ DOC_START
 	mail if the cache dies.  The default is "webmaster."
 DOC_END
 
-
 NAME: mail_from
 TYPE: string
 DEFAULT: none
@@ -3042,7 +2996,6 @@ DOC_START
 	Default appname value is "squid", can be changed into
 	src/globals.h before building squid.
 DOC_END
-
 
 NAME: mail_program
 TYPE: eol
@@ -3055,7 +3008,6 @@ DOC_START
 	mail_program recipient < mailfile
 	Optional command line options can be specified.
 DOC_END
-
 
 NAME: cache_effective_user
 TYPE: string
@@ -3071,7 +3023,6 @@ DOC_START
 	cache_effective_user.
 DOC_END
 
-
 NAME: cache_effective_group
 TYPE: string
 DEFAULT: none
@@ -3086,7 +3037,6 @@ DOC_START
 	group.
 DOC_END
 
-
 NAME: httpd_suppress_version_string
 COMMENT: on|off
 TYPE: onoff
@@ -3095,7 +3045,6 @@ LOC: Config.onoff.httpd_suppress_version_string
 DOC_START
 	Suppress Squid version string info in HTTP headers and HTML error pages.
 DOC_END
-
 
 NAME: visible_hostname
 TYPE: string
@@ -3109,7 +3058,6 @@ DOC_START
 	names with this setting.
 DOC_END
 
-
 NAME: unique_hostname
 TYPE: string
 LOC: Config.uniqueHostname
@@ -3119,7 +3067,6 @@ DOC_START
 	'visible_hostname' you must give each machine a different
 	'unique_hostname' so forwarding loops can be detected.
 DOC_END
-
 
 NAME: hostname_aliases
 TYPE: wordlist
@@ -3171,7 +3118,6 @@ NOCOMMENT_START
 NOCOMMENT_END
 DOC_END
 
-
 NAME: announce_host
 TYPE: string
 DEFAULT: tracker.ircache.net
@@ -3197,6 +3143,11 @@ DOC_START
 	the contents of that file will be included in the announce
 	message.
 DOC_END
+
+COMMENT_START
+ HTTPD-ACCELERATOR OPTIONS
+ -----------------------------------------------------------------------------
+COMMENT_END
 
 NAME: httpd_accel_surrogate_id
 IFDEF: ESI
@@ -3233,9 +3184,8 @@ DOC_START
 	encodings.
 DOC_END
 
-
 COMMENT_START
- DELAY POOL PARAMETERS (all require DELAY_POOLS compilation option)
+ DELAY POOL PARAMETERS
  -----------------------------------------------------------------------------
 COMMENT_END
 
@@ -3416,6 +3366,324 @@ DOC_START
 	"seen" by squid).
 DOC_END
 
+COMMENT_START
+ WCCPv1 AND WCCPv2 CONFIGURATION OPTIONS
+ -----------------------------------------------------------------------------
+COMMENT_END
+
+NAME: wccp_router
+TYPE: address
+LOC: Config.Wccp.router
+DEFAULT: 0.0.0.0
+IFDEF: USE_WCCP
+DOC_NONE
+NAME: wccp2_router
+TYPE: sockaddr_in_list
+LOC: Config.Wccp2.router
+DEFAULT: none
+IFDEF: USE_WCCPv2
+DOC_START
+	Use this option to define your WCCP ``home'' router for
+	Squid.
+
+	wccp_router supports a single WCCP(v1) router
+
+	wccp2_router supports multiple WCCPv2 routers
+
+	only one of the two may be used at the same time and defines
+	which version of WCCP to use.
+DOC_END
+
+NAME: wccp_version
+TYPE: int
+LOC: Config.Wccp.version
+DEFAULT: 4
+IFDEF: USE_WCCP
+DOC_START
+	This directive is only relevant if you need to set up WCCP(v1)
+	to some very old and end-of-life Cisco routers. In all other
+	setups it must be left unset or at the default setting.
+	It defines an internal version in the WCCP(v1) protocol,
+	with version 4 being the officially documented protocol.
+
+	According to some users, Cisco IOS 11.2 and earlier only
+	support WCCP version 3.  If you're using that or an earlier
+	version of IOS, you may need to change this value to 3, otherwise
+	do not specify this parameter.
+DOC_END
+
+NAME: wccp2_rebuild_wait
+TYPE: onoff
+LOC: Config.Wccp2.rebuildwait
+DEFAULT: on
+IFDEF: USE_WCCPv2
+DOC_START
+	If this is enabled Squid will wait for the cache dir rebuild to finish
+	before sending the first wccp2 HereIAm packet
+DOC_END
+
+NAME: wccp2_forwarding_method
+TYPE: int
+LOC: Config.Wccp2.forwarding_method
+DEFAULT: 1
+IFDEF: USE_WCCPv2
+DOC_START
+	WCCP2 allows the setting of forwarding methods between the 
+	router/switch and the cache.  Valid values are as follows:
+
+	1 - GRE encapsulation (forward the packet in a GRE/WCCP tunnel)
+	2 - L2 redirect (forward the packet using Layer 2/MAC rewriting)
+
+	Currently (as of IOS 12.4) cisco routers only support GRE.
+	Cisco switches only support the L2 redirect assignment method.
+DOC_END
+
+NAME: wccp2_return_method
+TYPE: int
+LOC: Config.Wccp2.return_method
+DEFAULT: 1
+IFDEF: USE_WCCPv2
+DOC_START
+	WCCP2 allows the setting of return methods between the 
+	router/switch and the cache for packets that the cache
+	decides not to handle.  Valid values are as follows:
+
+	1 - GRE encapsulation (forward the packet in a GRE/WCCP tunnel)
+	2 - L2 redirect (forward the packet using Layer 2/MAC rewriting)
+
+	Currently (as of IOS 12.4) cisco routers only support GRE.
+	Cisco switches only support the L2 redirect assignment.
+
+	If the "ip wccp redirect exclude in" command has been 
+	enabled on the cache interface, then it is still safe for
+	the proxy server to use a l2 redirect method even if this
+	option is set to GRE.
+DOC_END
+
+NAME: wccp2_assignment_method
+TYPE: int
+LOC: Config.Wccp2.assignment_method
+DEFAULT: 1
+IFDEF: USE_WCCPv2
+DOC_START
+	WCCP2 allows the setting of methods to assign the WCCP hash
+	Valid values are as follows:
+
+	1 - Hash assignment
+	2 - Mask assignment
+
+	As a general rule, cisco routers support the hash assignment method
+	and cisco switches support the mask assignment method.
+DOC_END
+
+NAME: wccp2_service
+TYPE: wccp2_service
+LOC: Config.Wccp2.info
+DEFAULT: none
+DEFAULT_IF_NONE: standard 0
+IFDEF: USE_WCCPv2
+DOC_START
+	WCCP2 allows for multiple traffic services. There are two
+	types: "standard" and "dynamic". The standard type defines
+	one service id - http (id 0). The dynamic service ids can be from
+	51 to 255 inclusive.  In order to use a dynamic service id
+	one must define the type of traffic to be redirected; this is done
+	using the wccp2_service_info option.
+
+	The "standard" type does not require a wccp2_service_info option,
+	just specifying the service id will suffice.
+
+	MD5 service authentication can be enabled by adding
+	"password=<password>" to the end of this service declaration.
+
+	Examples:
+
+	wccp2_service standard 0	# for the 'web-cache' standard service
+	wccp2_service dynamic 80	# a dynamic service type which will be
+					# fleshed out with subsequent options.
+	wccp2_service standard 0 password=foo
+
+DOC_END
+
+NAME: wccp2_service_info
+TYPE: wccp2_service_info
+LOC: Config.Wccp2.info
+DEFAULT: none
+IFDEF: USE_WCCPv2
+DOC_START
+	Dynamic WCCPv2 services require further information to define the
+	traffic you wish to have diverted.
+
+	The format is:
+
+	wccp2_service_info <id> protocol=<protocol> flags=<flag>,<flag>..
+	    priority=<priority> ports=<port>,<port>..
+
+	The relevant WCCPv2 flags:
+	+ src_ip_hash, dst_ip_hash
+	+ source_port_hash, dest_port_hash
+	+ src_ip_alt_hash, dst_ip_alt_hash
+	+ src_port_alt_hash, dst_port_alt_hash
+	+ ports_source
+
+	The port list can be one to eight entries.
+
+	Example:
+
+	wccp2_service_info 80 protocol=tcp flags=src_ip_hash,ports_source
+	    priority=240 ports=80
+
+	Note: the service id must have been defined by a previous
+	'wccp2_service dynamic <id>' entry.
+DOC_END
+
+NAME: wccp2_weight
+TYPE: int
+LOC: Config.Wccp2.weight
+DEFAULT: 10000
+IFDEF: USE_WCCPv2
+DOC_START
+	Each cache server gets assigned a set of the destination
+	hash proportional to their weight.
+DOC_END
+
+NAME: wccp_address
+TYPE: address
+LOC: Config.Wccp.address
+DEFAULT: 0.0.0.0
+IFDEF: USE_WCCP
+DOC_NONE
+NAME: wccp2_address
+TYPE: address
+LOC: Config.Wccp2.address
+DEFAULT: 0.0.0.0
+IFDEF: USE_WCCPv2
+DOC_START
+	Use this option if you require WCCP to use a specific
+	interface address.
+
+	The default behavior is to not bind to any specific address.
+DOC_END
+
+COMMENT_START
+ PERSISTENT CONNECTION HANDLING
+ -----------------------------------------------------------------------------
+
+ Also see "pconn_timeout" in the TIMEOUTS section
+COMMENT_END
+
+NAME: client_persistent_connections
+TYPE: onoff
+LOC: Config.onoff.client_pconns
+DEFAULT: on
+DOC_NONE
+
+NAME: server_persistent_connections
+TYPE: onoff
+LOC: Config.onoff.server_pconns
+DEFAULT: on
+DOC_START
+	Persistent connection support for clients and servers.  By
+	default, Squid uses persistent connections (when allowed)
+	with its clients and servers.  You can use these options to
+	disable persistent connections with clients and/or servers.
+DOC_END
+
+NAME: persistent_connection_after_error
+TYPE: onoff
+LOC: Config.onoff.error_pconns
+DEFAULT: off
+DOC_START
+	With this directive the use of persistent connections after
+	HTTP errors can be disabled. Useful if you have clients
+	who fail to handle errors on persistent connections proper.
+DOC_END
+
+NAME: detect_broken_pconn
+TYPE: onoff
+LOC: Config.onoff.detect_broken_server_pconns
+DEFAULT: off
+DOC_START
+	Some servers have been found to incorrectly signal the use
+	of HTTP/1.0 persistent connections even on replies not
+	compatible, causing significant delays. This server problem
+	has mostly been seen on redirects.
+
+	By enabling this directive Squid attempts to detect such
+	broken replies and automatically assume the reply is finished
+	after 10 seconds timeout.
+DOC_END
+
+COMMENT_START
+ CACHE DIGEST OPTIONS
+ -----------------------------------------------------------------------------
+COMMENT_END
+
+NAME: digest_generation
+IFDEF: USE_CACHE_DIGESTS
+TYPE: onoff
+LOC: Config.onoff.digest_generation
+DEFAULT: on
+DOC_START
+	This controls whether the server will generate a Cache Digest
+	of its contents.  By default, Cache Digest generation is
+	enabled if Squid is compiled with USE_CACHE_DIGESTS defined.
+DOC_END
+
+NAME: digest_bits_per_entry
+IFDEF: USE_CACHE_DIGESTS
+TYPE: int
+LOC: Config.digest.bits_per_entry
+DEFAULT: 5
+DOC_START
+	This is the number of bits of the server's Cache Digest which
+	will be associated with the Digest entry for a given HTTP
+	Method and URL (public key) combination.  The default is 5.
+DOC_END
+
+NAME: digest_rebuild_period
+IFDEF: USE_CACHE_DIGESTS
+COMMENT: (seconds)
+TYPE: time_t
+LOC: Config.digest.rebuild_period
+DEFAULT: 1 hour
+DOC_START
+	This is the number of seconds between Cache Digest rebuilds.
+DOC_END
+
+NAME: digest_rewrite_period
+COMMENT: (seconds)
+IFDEF: USE_CACHE_DIGESTS
+TYPE: time_t
+LOC: Config.digest.rewrite_period
+DEFAULT: 1 hour
+DOC_START
+	This is the number of seconds between Cache Digest writes to
+	disk.
+DOC_END
+
+NAME: digest_swapout_chunk_size
+COMMENT: (bytes)
+TYPE: b_size_t
+IFDEF: USE_CACHE_DIGESTS
+LOC: Config.digest.swapout_chunk_size
+DEFAULT: 4096 bytes
+DOC_START
+	This is the number of bytes of the Cache Digest to write to
+	disk at a time.  It defaults to 4096 bytes (4KB), the Squid
+	default swap page.
+DOC_END
+
+NAME: digest_rebuild_chunk_percentage
+COMMENT: (percent, 0-100)
+IFDEF: USE_CACHE_DIGESTS
+TYPE: int
+LOC: Config.digest.rebuild_chunk_percentage
+DEFAULT: 10
+DOC_START
+	This is the percentage of the Cache Digest to be scanned at a
+	time.  By default it is set to 10% of the Cache Digest.
+DOC_END
 
 COMMENT_START
  MISCELLANEOUS
@@ -3432,7 +3700,6 @@ DOC_START
 
 	This test can be disabled with the -D command line option.
 DOC_END
-
 
 NAME: logfile_rotate
 TYPE: int
@@ -3454,7 +3721,6 @@ DOC_START
 	<pid>'.
 DOC_END
 
-
 NAME: append_domain
 TYPE: string
 LOC:  Config.appendDomain
@@ -3470,7 +3736,6 @@ DOC_START
 Example:
  append_domain .yourdomain.com
 DOC_END
-
 
 NAME: tcp_recv_bufsize
 COMMENT: (bytes)
@@ -3509,7 +3774,6 @@ DOC_START
 	so that the email body contains the data.
 	Syntax is <A HREF="mailto:%w%W">%w</A>
 DOC_END
-
 
 NAME: deny_info
 TYPE: denyinfo
@@ -3631,7 +3895,6 @@ DOC_START
 	on their cache_peer lines for connecting to you.
 DOC_END
 
-
 NAME: minimum_direct_hops
 TYPE: int
 DEFAULT: 4
@@ -3744,7 +4007,6 @@ DOC_START
 	turn off client_db here.
 DOC_END
 
-
 NAME: netdb_low
 TYPE: int
 DEFAULT: 900
@@ -3762,7 +4024,6 @@ DOC_START
 	entries will be deleted until the low mark is reached.
 DOC_END
 
-
 NAME: netdb_ping_period
 TYPE: time_t
 LOC: Config.Netdb.period
@@ -3772,7 +4033,6 @@ DOC_START
 	least this much delay between successive pings to the same
 	network.  The default is five minutes.
 DOC_END
-
 
 NAME: query_icmp
 COMMENT: on|off
@@ -4235,201 +4495,6 @@ DOC_START
 	queried only when Squid starts up, not for every request.
 DOC_END
 
-NAME: wccp_router
-TYPE: address
-LOC: Config.Wccp.router
-DEFAULT: 0.0.0.0
-IFDEF: USE_WCCP
-DOC_NONE
-NAME: wccp2_router
-TYPE: sockaddr_in_list
-LOC: Config.Wccp2.router
-DEFAULT: none
-IFDEF: USE_WCCPv2
-DOC_START
-	Use this option to define your WCCP ``home'' router for
-	Squid.
-
-	wccp_router supports a single WCCP(v1) router
-
-	wccp2_router supports multiple WCCPv2 routers
-
-	only one of the two may be used at the same time and defines
-	which version of WCCP to use.
-DOC_END
-
-NAME: wccp_version
-TYPE: int
-LOC: Config.Wccp.version
-DEFAULT: 4
-IFDEF: USE_WCCP
-DOC_START
-	This directive is only relevant if you need to set up WCCP(v1)
-	to some very old and end-of-life Cisco routers. In all other
-	setups it must be left unset or at the default setting.
-	It defines an internal version in the WCCP(v1) protocol,
-	with version 4 being the officially documented protocol.
-
-	According to some users, Cisco IOS 11.2 and earlier only
-	support WCCP version 3.  If you're using that or an earlier
-	version of IOS, you may need to change this value to 3, otherwise
-	do not specify this parameter.
-DOC_END
-
-NAME: wccp2_rebuild_wait
-TYPE: onoff
-LOC: Config.Wccp2.rebuildwait
-DEFAULT: on
-IFDEF: USE_WCCPv2
-DOC_START
-	If this is enabled Squid will wait for the cache dir rebuild to finish
-	before sending the first wccp2 HereIAm packet
-DOC_END
-
-NAME: wccp2_forwarding_method
-TYPE: int
-LOC: Config.Wccp2.forwarding_method
-DEFAULT: 1
-IFDEF: USE_WCCPv2
-DOC_START
-	WCCP2 allows the setting of forwarding methods between the 
-	router/switch and the cache.  Valid values are as follows:
-
-	1 - GRE encapsulation (forward the packet in a GRE/WCCP tunnel)
-	2 - L2 redirect (forward the packet using Layer 2/MAC rewriting)
-
-	Currently (as of IOS 12.4) cisco routers only support GRE.
-	Cisco switches only support the L2 redirect assignment method.
-DOC_END
-
-NAME: wccp2_return_method
-TYPE: int
-LOC: Config.Wccp2.return_method
-DEFAULT: 1
-IFDEF: USE_WCCPv2
-DOC_START
-	WCCP2 allows the setting of return methods between the 
-	router/switch and the cache for packets that the cache
-	decides not to handle.  Valid values are as follows:
-
-	1 - GRE encapsulation (forward the packet in a GRE/WCCP tunnel)
-	2 - L2 redirect (forward the packet using Layer 2/MAC rewriting)
-
-	Currently (as of IOS 12.4) cisco routers only support GRE.
-	Cisco switches only support the L2 redirect assignment.
-
-	If the "ip wccp redirect exclude in" command has been 
-	enabled on the cache interface, then it is still safe for
-	the proxy server to use a l2 redirect method even if this
-	option is set to GRE.
-DOC_END
-
-NAME: wccp2_assignment_method
-TYPE: int
-LOC: Config.Wccp2.assignment_method
-DEFAULT: 1
-IFDEF: USE_WCCPv2
-DOC_START
-	WCCP2 allows the setting of methods to assign the WCCP hash
-	Valid values are as follows:
-
-	1 - Hash assignment
-	2 - Mask assignment
-
-	As a general rule, cisco routers support the hash assignment method
-	and cisco switches support the mask assignment method.
-DOC_END
-
-NAME: wccp2_service
-TYPE: wccp2_service
-LOC: Config.Wccp2.info
-DEFAULT: none
-DEFAULT_IF_NONE: standard 0
-IFDEF: USE_WCCPv2
-DOC_START
-	WCCP2 allows for multiple traffic services. There are two
-	types: "standard" and "dynamic". The standard type defines
-	one service id - http (id 0). The dynamic service ids can be from
-	51 to 255 inclusive.  In order to use a dynamic service id
-	one must define the type of traffic to be redirected; this is done
-	using the wccp2_service_info option.
-
-	The "standard" type does not require a wccp2_service_info option,
-	just specifying the service id will suffice.
-
-	MD5 service authentication can be enabled by adding
-	"password=<password>" to the end of this service declaration.
-
-	Examples:
-
-	wccp2_service standard 0	# for the 'web-cache' standard service
-	wccp2_service dynamic 80	# a dynamic service type which will be
-					# fleshed out with subsequent options.
-	wccp2_service standard 0 password=foo
-
-DOC_END
-
-NAME: wccp2_service_info
-TYPE: wccp2_service_info
-LOC: Config.Wccp2.info
-DEFAULT: none
-IFDEF: USE_WCCPv2
-DOC_START
-	Dynamic WCCPv2 services require further information to define the
-	traffic you wish to have diverted.
-
-	The format is:
-
-	wccp2_service_info <id> protocol=<protocol> flags=<flag>,<flag>..
-	    priority=<priority> ports=<port>,<port>..
-
-	The relevant WCCPv2 flags:
-	+ src_ip_hash, dst_ip_hash
-	+ source_port_hash, dest_port_hash
-	+ src_ip_alt_hash, dst_ip_alt_hash
-	+ src_port_alt_hash, dst_port_alt_hash
-	+ ports_source
-
-	The port list can be one to eight entries.
-
-	Example:
-
-	wccp2_service_info 80 protocol=tcp flags=src_ip_hash,ports_source
-	    priority=240 ports=80
-
-	Note: the service id must have been defined by a previous
-	'wccp2_service dynamic <id>' entry.
-DOC_END
-
-NAME: wccp2_weight
-TYPE: int
-LOC: Config.Wccp2.weight
-DEFAULT: 10000
-IFDEF: USE_WCCPv2
-DOC_START
-	Each cache server gets assigned a set of the destination
-	hash proportional to their weight.
-DOC_END
-
-NAME: wccp_address
-TYPE: address
-LOC: Config.Wccp.address
-DEFAULT: 0.0.0.0
-IFDEF: USE_WCCP
-DOC_NONE
-NAME: wccp2_address
-TYPE: address
-LOC: Config.Wccp2.address
-DEFAULT: 0.0.0.0
-IFDEF: USE_WCCPv2
-DOC_START
-	Use this option if you require WCCP to use a specific
-	interface address.
-
-	The default behavior is to not bind to any specific address.
-DOC_END
-
-
 NAME: incoming_icp_average
 TYPE: int
 DEFAULT: 6
@@ -4671,72 +4736,6 @@ DOC_START
 	nameservers by setting this option to 'off'.
 DOC_END
 
-NAME: digest_generation
-IFDEF: USE_CACHE_DIGESTS
-TYPE: onoff
-LOC: Config.onoff.digest_generation
-DEFAULT: on
-DOC_START
-	This controls whether the server will generate a Cache Digest
-	of its contents.  By default, Cache Digest generation is
-	enabled if Squid is compiled with USE_CACHE_DIGESTS defined.
-DOC_END
-
-NAME: digest_bits_per_entry
-IFDEF: USE_CACHE_DIGESTS
-TYPE: int
-LOC: Config.digest.bits_per_entry
-DEFAULT: 5
-DOC_START
-	This is the number of bits of the server's Cache Digest which
-	will be associated with the Digest entry for a given HTTP
-	Method and URL (public key) combination.  The default is 5.
-DOC_END
-
-NAME: digest_rebuild_period
-IFDEF: USE_CACHE_DIGESTS
-COMMENT: (seconds)
-TYPE: time_t
-LOC: Config.digest.rebuild_period
-DEFAULT: 1 hour
-DOC_START
-	This is the number of seconds between Cache Digest rebuilds.
-DOC_END
-
-NAME: digest_rewrite_period
-COMMENT: (seconds)
-IFDEF: USE_CACHE_DIGESTS
-TYPE: time_t
-LOC: Config.digest.rewrite_period
-DEFAULT: 1 hour
-DOC_START
-	This is the number of seconds between Cache Digest writes to
-	disk.
-DOC_END
-
-NAME: digest_swapout_chunk_size
-COMMENT: (bytes)
-TYPE: b_size_t
-IFDEF: USE_CACHE_DIGESTS
-LOC: Config.digest.swapout_chunk_size
-DEFAULT: 4096 bytes
-DOC_START
-	This is the number of bytes of the Cache Digest to write to
-	disk at a time.  It defaults to 4096 bytes (4KB), the Squid
-	default swap page.
-DOC_END
-
-NAME: digest_rebuild_chunk_percentage
-COMMENT: (percent, 0-100)
-IFDEF: USE_CACHE_DIGESTS
-TYPE: int
-LOC: Config.digest.rebuild_chunk_percentage
-DEFAULT: 10
-DOC_START
-	This is the percentage of the Cache Digest to be scanned at a
-	time.  By default it is set to 10% of the Cache Digest.
-DOC_END
-
 NAME: chroot
 TYPE: string
 LOC: Config.chroot_dir
@@ -4747,48 +4746,6 @@ DOC_START
 	initializing.  This means, for example, if you use a HTTP
 	port less than 1024 and try to reconfigure, you will get an
 	error.
-DOC_END
-
-NAME: client_persistent_connections
-TYPE: onoff
-LOC: Config.onoff.client_pconns
-DEFAULT: on
-DOC_NONE
-
-NAME: server_persistent_connections
-TYPE: onoff
-LOC: Config.onoff.server_pconns
-DEFAULT: on
-DOC_START
-	Persistent connection support for clients and servers.  By
-	default, Squid uses persistent connections (when allowed)
-	with its clients and servers.  You can use these options to
-	disable persistent connections with clients and/or servers.
-DOC_END
-
-NAME: persistent_connection_after_error
-TYPE: onoff
-LOC: Config.onoff.error_pconns
-DEFAULT: off
-DOC_START
-	With this directive the use of persistent connections after
-	HTTP errors can be disabled. Useful if you have clients
-	who fail to handle errors on persistent connections proper.
-DOC_END
-
-NAME: detect_broken_pconn
-TYPE: onoff
-LOC: Config.onoff.detect_broken_server_pconns
-DEFAULT: off
-DOC_START
-	Some servers have been found to incorrectly signal the use
-	of HTTP/1.0 persistent connections even on replies not
-	compatible, causing significant delays. This server problem
-	has mostly been seen on redirects.
-
-	By enabling this directive Squid attempts to detect such
-	broken replies and automatically assume the reply is finished
-	after 10 seconds timeout.
 DOC_END
 
 NAME: balance_on_multiple_ip
