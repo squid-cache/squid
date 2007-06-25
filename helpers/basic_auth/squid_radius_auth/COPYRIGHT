@@ -1,0 +1,113 @@
+This program is based on code from Livingston Enterprises, Inc. and parts are
+
+		COPYRIGHT NOTICE SQUID_RAD_AUTH
+
+Copyright (C) 1992-1995 Livingston Enterprises, Inc and Cistron Internet Services
+B.V. who both have given permission to modify and distribute those parts. The new
+parts of the code is Copyright (C) 1998 R.M. van Selm <selm@cistron.nl> with
+modifications Copyright (C) 2004 Henrik Nordstrom <hno@squid-cache.org>
+
+Permission to use, copy, modify, and distribute this software for any purpose
+and without fee is hereby granted, provided that this copyright and permission
+notice appear on all copies and supporting documentation, the name of
+Livingston Enterprises, Inc. not be used in advertising or publicity pertaining
+to distribution of the program without specific prior permission, and notice be
+given in supporting documentation that copying and distribution is by
+permission of Livingston Enterprises, Inc. and Cistron Internet Services B.V.
+
+Neither Livingston Enterprises, Inc. nor Cistron Internet Services B.V. nor I
+(R.M. van Selm) make representations about the suitability of this software for
+any purpose. It isprovided "as is" without express or implied warranty.
+
+Marc van Selm <selm@cistron.nl>
+
+
+		COPYRIGHT NOTICE SQUID_RAD_AUTH Documentation
+
+Copyright (C) 2004 Henrik Nordstrom
+
+Permission to use, copy, modify, and distribute this software for any purpose
+and without fee is hereby granted, provided that this copyright and permission
+notice appear on all copies and supporting documentation, the name of Henrik
+Nordstrom. not be used in advertising or publicity pertaining to distribution
+of the program without specific prior permission.
+
+The author makes no representations about the suitability of this documentation
+for any purpose. It isprovided "as is" without express or implied warranty.
+
+Henrik Nordstrom <hno@squid-cache.org>
+
+		COPYRIGHT NOTICE CISTRON RADIUS
+
+/* This program is based on code from Livingston Enterprises, Inc. and parts are
+ * Copyright (C) 1992-1995 Livingston Enterprises, Inc who has given permission
+ * to modify and distribute those parts. The new code is Copyright (C) 1996-1997
+ * Cistron Internet Services B.V.
+ *
+ * Permission to use, copy, modify, and distribute this software for any purpose
+ * and without fee is hereby granted, provided that this copyright and permission
+ * notice appear on all copies and supporting documentation, the name of
+ * Livingston Enterprises, Inc. not be used in advertising or publicity pertaining
+ * to distribution of the program without specific prior permission, and notice be
+ * given in supporting documentation that copying and distribution is by
+ * permission of Livingston Enterprises, Inc. and Cistron Internet Services B.V.
+
+ * Neither Livingston Enterprises, Inc. nor Cistron Internet Services B.V. make
+ * representations about the suitability of this software for any purpose. It is
+ * provided "as is" without express or implied warranty.
+*/
+
+		COPYRIGHT NOTICE LIVINGSTON RADIUS 1.16
+
+/*
+ *
+ *	RADIUS
+ *	Remote Authentication Dial In User Service
+ *
+ *
+ *	Livingston Enterprises, Inc.
+ *	6920 Koll Center Parkway
+ *	Pleasanton, CA   94566
+ *
+ *	Copyright 1992 Livingston Enterprises, Inc.
+ *
+ *	Permission to use, copy, modify, and distribute this software for any
+ *	purpose and without fee is hereby granted, provided that this
+ *	copyright and permission notice appear on all copies and supporting
+ *	documentation, the name of Livingston Enterprises, Inc. not be used
+ *	in advertising or publicity pertaining to distribution of the
+ *	program without specific prior permission, and notice be given
+ *	in supporting documentation that copying and distribution is by
+ *	permission of Livingston Enterprises, Inc.   
+ *
+ *	Livingston Enterprises, Inc. makes no representations about
+ *	the suitability of this software for any purpose.  It is
+ *	provided "as is" without express or implied warranty.
+ *
+
+
+		COPYRIGHT NOTICE RSA Data Security MD5 (md5.c)
+
+MD5C.C - RSA Data Security, Inc., MD5 message-digest algorithm
+
+Copyright (C) 1991-2, RSA Data Security, Inc. Created 1991. All
+rights reserved.
+
+License to copy and use this software is granted provided that it
+is identified as the "RSA Data Security, Inc. MD5 Message-Digest
+Algorithm" in all material mentioning or referencing this software
+or this function.
+
+License is also granted to make and use derivative works provided
+that such works are identified as "derived from the RSA Data
+Security, Inc. MD5 Message-Digest Algorithm" in all material
+mentioning or referencing the derived work.
+
+RSA Data Security, Inc. makes no representations concerning either
+the merchantability of this software or the suitability of this
+software for any particular purpose. It is provided "as is"
+without express or implied warranty of any kind.
+
+These notices must be retained in any copies of any part of this
+documentation and/or software.
+
