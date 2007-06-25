@@ -10,7 +10,7 @@ use File::Basename;
 #
 # Adrian Chadd <adrian@squid-cache.org>
 #
-# $Id: build-cfg-help.pl,v 1.2 2007/05/21 23:31:37 hno Exp $
+# $Id: build-cfg-help.pl,v 1.3 2007/06/25 09:58:49 hno Exp $
 
 #
 # The template file is reasonably simple to parse. There's a number of
@@ -106,7 +106,10 @@ sub htmlescape($)
 {
 	my ($line) = @_;
 	return "" if !defined $line;
-	$line =~ s/([^\w\s])/sprintf ("&#%d;", ord ($1))/ge;
+	$line =~ s/&/\&amp;/g;
+	$line =~ s/</\&lt;/g;
+	$line =~ s/>/\&gt;/g;
+	$line =~ s/[^\x{20}-\x{7e}\s]/sprintf ("&#%d;", ord ($1))/ge;
 	return $line;
 }
 
