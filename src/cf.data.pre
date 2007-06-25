@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.440 2007/06/25 09:29:29 hno Exp $
+# $Id: cf.data.pre,v 1.441 2007/06/25 10:10:45 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -1924,7 +1924,7 @@ DOC_START
 	network you are likely to need lots of authenticator
 	processes.
 	auth_param negotiate children 5
-	
+
 	"keep_alive" on|off
 	If you experience problems with PUT/POST requests when using the
 	Negotiate authentication scheme then you can try setting this to
@@ -3428,7 +3428,7 @@ LOC: Config.Wccp2.forwarding_method
 DEFAULT: 1
 IFDEF: USE_WCCPv2
 DOC_START
-	WCCP2 allows the setting of forwarding methods between the 
+	WCCP2 allows the setting of forwarding methods between the
 	router/switch and the cache.  Valid values are as follows:
 
 	1 - GRE encapsulation (forward the packet in a GRE/WCCP tunnel)
@@ -3444,7 +3444,7 @@ LOC: Config.Wccp2.return_method
 DEFAULT: 1
 IFDEF: USE_WCCPv2
 DOC_START
-	WCCP2 allows the setting of return methods between the 
+	WCCP2 allows the setting of return methods between the
 	router/switch and the cache for packets that the cache
 	decides not to handle.  Valid values are as follows:
 
@@ -3454,7 +3454,7 @@ DOC_START
 	Currently (as of IOS 12.4) cisco routers only support GRE.
 	Cisco switches only support the L2 redirect assignment.
 
-	If the "ip wccp redirect exclude in" command has been 
+	If the "ip wccp redirect exclude in" command has been
 	enabled on the cache interface, then it is still safe for
 	the proxy server to use a l2 redirect method even if this
 	option is set to GRE.
