@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!@PERL@
 use strict;
 use DBI;
 use Getopt::Long;
