@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.528 2007/06/26 00:11:08 rousskov Exp $
+ * $Id: http.cc,v 1.529 2007/06/26 00:16:00 rousskov Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1033,12 +1033,12 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
     if (flag != COMM_OK || len < 0) {
         debugs(50, 2, "httpReadReply: FD " << fd << ": read failure: " << xstrerror() << ".");
 
-        if (ignoreErrno(errno)) {
+        if (ignoreErrno(xerrno)) {
             flags.do_next_read = 1;
         } else {
             ErrorState *err;
             err = errorCon(ERR_READ_ERROR, HTTP_BAD_GATEWAY, fwd->request);
-            err->xerrno = errno;
+            err->xerrno = xerrno;
             fwd->fail(err);
             flags.do_next_read = 0;
             comm_close(fd);
