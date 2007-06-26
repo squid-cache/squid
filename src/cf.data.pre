@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.441 2007/06/25 10:10:45 hno Exp $
+# $Id: cf.data.pre,v 1.442 2007/06/25 23:05:32 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -149,11 +149,17 @@ DOC_START
 
 	Options:
 
-	   defaultsite=	The name of the https site presented on
-	   		this port
+	   accel	Accelerator mode. Also needs at least one of
+			defaultsite or vhost.
 
-	   protocol=	Protocol to reconstruct accelerated requests
-	   		with. Defaults to https
+	   defaultsite=	The name of the https site presented on
+	   		this port. Implies accel.
+
+	   vhost	Accelerator mode using Host header for virtual
+			domain support. Implies accel.
+	
+	   protocol=	Protocol to reconstruct accelerated requests with.
+			Defaults to https.
 
 	   cert=	Path to SSL certificate (PEM format)
 
@@ -185,7 +191,7 @@ DOC_START
 
 	   cafile=	File containing additional CA certificates to
 			use when verifying client certificates. If unset
-			clientca will be used
+			clientca will be used.
 
 	   capath=	Directory containing additional CA certificates
 			and CRL lists to use when verifying client certificates
@@ -217,16 +223,10 @@ DOC_START
 
 	   sslcontext=	SSL session ID context identifier.
 
-	   accel	Accelerator mode. Also set implicit by the other
-			accelerator directives
-
-	   vhost	Accelerator mode using Host header for virtual
-			domain support
-
 	   vport	Accelerator with IP based virtual host support
 
 	   vport=NN	As above, but uses specified port number rather
-			than the https_port number
+			than the https_port number. Implies accel
 
 DOC_END
 
@@ -246,7 +246,7 @@ TYPE: string
 LOC: Config.SSL.ssl_engine
 DEFAULT: none
 DOC_START
-	The openssl engine to use. You will need to set this if you
+	The OpenSSL engine to use. You will need to set this if you
 	would like to use hardware SSL acceleration for example.
 DOC_END
 
