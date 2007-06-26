@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.527 2007/06/25 22:34:24 rousskov Exp $
+ * $Id: http.cc,v 1.528 2007/06/26 00:11:08 rousskov Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -984,7 +984,6 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
         return;
     }
 
-    errno = 0;
     /* prepare the read size for the next read (if any) */
 
     debugs(11, 5, "httpReadReply: FD " << fd << ": len " << len << ".");
