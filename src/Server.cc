@@ -1,5 +1,5 @@
 /*
- * $Id: Server.cc,v 1.12 2007/06/19 20:58:26 rousskov Exp $
+ * $Id: Server.cc,v 1.13 2007/06/25 22:34:24 rousskov Exp $
  *
  * DEBUG:
  * AUTHOR: Duane Wessels
@@ -43,7 +43,8 @@
 #include "ICAP/ICAPModXact.h"
 #endif
 
-ServerStateData::ServerStateData(FwdState *theFwdState): requestSender(NULL)
+ServerStateData::ServerStateData(FwdState *theFwdState): requestSender(NULL),
+    icapAccessCheckPending(false)
 {
     fwd = theFwdState;
     entry = fwd->entry;
@@ -479,6 +480,46 @@ ServerStateData::handleIcapAborted(bool bypassable)
     }
 
     abortTransaction("ICAP failure");
+}
+
+HttpRequest *
+ServerStateData::originalRequest()
+{
+    return request;
+}
+
+void
+ServerStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
+{
+    icapAccessCheckPending = false;
+
+    if (abortOnBadEntry("entry went bad while waiting for ICAP ACL check"))
+        return;
+
+    const bool startedIcap = startIcap(service, originalRequest());
+
+    if (!startedIcap && (!service || service->bypass)) {
+        // handle ICAP start failure when no service was selected
+        // or where the selected service was optional
+        entry->replaceHttpReply(reply);
+
+        haveParsedReplyHeaders();
+        processReplyBody();
+
+        return;
+    }
+
+    if (!startedIcap) {
+        // handle start failure for an essential ICAP service
+        ErrorState *err = errorCon(ERR_ICAP_FAILURE,
+            HTTP_INTERNAL_SERVER_ERROR, originalRequest());
+        err->xerrno = errno;
+        errorAppendEntry(entry, err);
+        abortTransaction("ICAP start failure");
+        return;
+    }
+
+    processReplyBody();
 }
 
 #endif
