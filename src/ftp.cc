@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.425 2007/06/19 20:27:00 rousskov Exp $
+ * $Id: ftp.cc,v 1.426 2007/06/25 22:34:24 rousskov Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -228,14 +228,6 @@ public:
 private:
     // BodyConsumer for HTTP: consume request body.
     virtual void handleRequestBodyProducerAborted();
-
-#if ICAP_CLIENT
-public:
-    void icapAclCheckDone(ICAPServiceRep::Pointer);
-
-    bool icapAccessCheckPending;
-#endif
-
 };
 
 CBDATA_CLASS_INIT(FtpStateData);
@@ -3394,34 +3386,6 @@ icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *)data;
     ftpState->icapAclCheckDone(service);
-}
-
-// TODO: merge with http.cc and move to Server.cc?
-void
-FtpStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
-{
-    icapAccessCheckPending = false;
-
-    const bool startedIcap = startIcap(service, request);
-
-    if (!startedIcap && (!service || service->bypass)) {
-        // handle ICAP start failure when no service was selected
-        // or where the selected service was optional
-        entry->replaceHttpReply(reply);
-        processReplyBody();
-        return;
-    }
-
-    if (!startedIcap) {
-        // handle start failure for an essential ICAP service
-        ErrorState *err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, request);
-        err->xerrno = errno;
-        errorAppendEntry(entry, err);
-        comm_close(ctrl.fd);
-        return;
-    }
-
-    processReplyBody();
 }
 
 #endif

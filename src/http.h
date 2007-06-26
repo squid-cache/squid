@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.28 2007/04/20 07:29:47 wessels Exp $
+ * $Id: http.h,v 1.29 2007/06/25 22:34:24 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -84,16 +84,16 @@ public:
 
     void processSurrogateControl(HttpReply *);
 
-#if ICAP_CLIENT
-    void icapAclCheckDone(ICAPServiceRep::Pointer);
-    bool icapAccessCheckPending;
-#endif
-
     /*
      * getReply() public only because it is called from a static function
      * as httpState->getReply()
      */
     const HttpReply * getReply() const { assert(reply); return reply; }
+
+protected:
+#if ICAP_CLIENT
+    virtual HttpRequest *originalRequest();
+#endif
 
 private:
     enum ConnectionStatus {

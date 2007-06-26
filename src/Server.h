@@ -1,6 +1,6 @@
 
 /*
- * $Id: Server.h,v 1.4 2007/05/08 16:46:37 rousskov Exp $
+ * $Id: Server.h,v 1.5 2007/06/25 22:34:24 rousskov Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -86,7 +86,9 @@ public:
     virtual void abortTransaction(const char *reason) = 0;
 
 #if ICAP_CLIENT
-    virtual void icapAclCheckDone(ICAPServiceRep::Pointer) = 0;
+    void icapAclCheckDone(ICAPServiceRep::Pointer);
+    // a hack to reach HttpStateData::orignal_request
+    virtual  HttpRequest *originalRequest();
 
     // ICAPInitiator: start an ICAP transaction and receive adapted headers.
     virtual void noteIcapAnswer(HttpMsg *message);
@@ -96,6 +98,7 @@ public:
     virtual void noteMoreBodySpaceAvailable(BodyPipe &);
     virtual void noteBodyConsumerAborted(BodyPipe &);
 #endif
+    virtual void processReplyBody() = 0;
 
 public: // should be protected
     void serverComplete(); // call when no server communication is expected

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.526 2007/06/19 21:19:04 rousskov Exp $
+ * $Id: http.cc,v 1.527 2007/06/25 22:34:24 rousskov Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -659,10 +659,6 @@ HttpStateData::failReply(HttpReply *reply, http_status const & status)
     reply->sline.version = HttpVersion(1, 0);
     reply->sline.status = status;
     entry->replaceHttpReply(reply);
-
-    if (eof == 1) {
-        serverComplete();
-    }
 }
 
 void
@@ -782,10 +778,6 @@ HttpStateData::processReplyHeader()
     entry->replaceHttpReply(reply);
 
     haveParsedReplyHeaders();
-
-    if (eof == 1) {
-        serverComplete();
-    }
 
     ctx_exit(ctx);
 }
@@ -1960,37 +1952,11 @@ icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data)
     http->icapAclCheckDone(service);
 }
 
-void
-HttpStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
+// TODO: why does FtpStateData not need orig_request?
+HttpRequest *
+HttpStateData::originalRequest()
 {
-    icapAccessCheckPending = false;
-
-    const bool startedIcap = startIcap(service, orig_request);
-
-    if (!startedIcap && (!service || service->bypass)) {
-        // handle ICAP start failure when no service was selected
-        // or where the selected service was optional
-        entry->replaceHttpReply(reply);
-
-        haveParsedReplyHeaders();
-        processReplyBody();
-
-        if (eof == 1)
-            serverComplete();
-
-        return;
-    }
-
-    if (!startedIcap) {
-        // handle start failure for an essential ICAP service
-        ErrorState *err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, orig_request);
-        err->xerrno = errno;
-        errorAppendEntry(entry, err);
-        comm_close(fd);
-        return;
-    }
-
-    processReplyBody();
+    return orig_request;
 }
 
 #endif
