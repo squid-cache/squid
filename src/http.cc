@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.530 2007/06/26 00:24:33 rousskov Exp $
+ * $Id: http.cc,v 1.531 2007/06/26 00:35:24 rousskov Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -970,10 +970,9 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
     int clen;
     flags.do_next_read = 0;
 
-    /*
-     * Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us
-     */
+    debugs(11, 5, "httpReadReply: FD " << fd << ": len " << len << ".");
 
+    // Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us
     if (flag == COMM_ERR_CLOSING) {
         debugs(11, 3, "http socket closing");
         return;
@@ -984,13 +983,9 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
         return;
     }
 
-    /* prepare the read size for the next read (if any) */
-
-    debugs(11, 5, "httpReadReply: FD " << fd << ": len " << len << ".");
-
     // handle I/O errors
     if (flag != COMM_OK || len < 0) {
-        debugs(50, 2, "httpReadReply: FD " << fd << ": read failure: " << xstrerror() << ".");
+        debugs(11, 2, "httpReadReply: FD " << fd << ": read failure: " << xstrerror() << ".");
 
         if (ignoreErrno(xerrno)) {
             flags.do_next_read = 1;
@@ -1006,6 +1001,7 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
         return;
     }
 
+    // update I/O stats
     if (len > 0) {
         readBuf->appended(len);
         reply_bytes_read += len;
