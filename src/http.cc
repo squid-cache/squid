@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.529 2007/06/26 00:16:00 rousskov Exp $
+ * $Id: http.cc,v 1.530 2007/06/26 00:24:33 rousskov Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -988,7 +988,25 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
 
     debugs(11, 5, "httpReadReply: FD " << fd << ": len " << len << ".");
 
-    if (flag == COMM_OK && len > 0) {
+    // handle I/O errors
+    if (flag != COMM_OK || len < 0) {
+        debugs(50, 2, "httpReadReply: FD " << fd << ": read failure: " << xstrerror() << ".");
+
+        if (ignoreErrno(xerrno)) {
+            flags.do_next_read = 1;
+        } else {
+            ErrorState *err;
+            err = errorCon(ERR_READ_ERROR, HTTP_BAD_GATEWAY, fwd->request);
+            err->xerrno = xerrno;
+            fwd->fail(err);
+            flags.do_next_read = 0;
+            comm_close(fd);
+        }
+
+        return;
+    }
+
+    if (len > 0) {
         readBuf->appended(len);
         reply_bytes_read += len;
 #if DELAY_POOLS
@@ -1013,7 +1031,7 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
      * not allowing connection reuse in the first place.
      */
 #if DONT_DO_THIS
-    if (!flags.headers_parsed && flag == COMM_OK && len > 0 && fd_table[fd].uses > 1) {
+    if (!flags.headers_parsed && len > 0 && fd_table[fd].uses > 1) {
         /* Skip whitespace between replies */
 
         while (len > 0 && xisspace(*buf))
@@ -1030,25 +1048,12 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
 
 #endif
 
-    if (flag != COMM_OK || len < 0) {
-        debugs(50, 2, "httpReadReply: FD " << fd << ": read failure: " << xstrerror() << ".");
-
-        if (ignoreErrno(xerrno)) {
-            flags.do_next_read = 1;
-        } else {
-            ErrorState *err;
-            err = errorCon(ERR_READ_ERROR, HTTP_BAD_GATEWAY, fwd->request);
-            err->xerrno = xerrno;
-            fwd->fail(err);
-            flags.do_next_read = 0;
-            comm_close(fd);
-        }
-    } else if (flag == COMM_OK && len == 0 && !flags.headers_parsed) {
+    if (len == 0 && !flags.headers_parsed) {
         fwd->fail(errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_BAD_GATEWAY, fwd->request));
         eof = 1;
         flags.do_next_read = 0;
         comm_close(fd);
-    } else if (flag == COMM_OK && len == 0) {
+    } else if (len == 0) {
         /* Connection closed; retrieval done. */
         eof = 1;
 
