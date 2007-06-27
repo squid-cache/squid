@@ -67,7 +67,8 @@ home page http://www.squid-cache.org
 .PP
 .SH OPTIONS
 .IP "-a port"
-Specify HTTP port number (default: 3128).
+Specify HTTP port number where Squid should listen for requests, in addition
+to any http_port specifications in squid.conf.
 .IP "-d level"
 Write debugging to stderr also.
 .IP "-f file"
