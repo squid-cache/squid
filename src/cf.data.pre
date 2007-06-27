@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.442 2007/06/25 23:05:32 hno Exp $
+# $Id: cf.data.pre,v 1.443 2007/06/27 04:26:12 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -73,9 +73,9 @@ DOC_START
 	If you are running Squid in accelerator mode, you
 	probably want to listen on port 80 also, or instead.
 
-	The -a command line option will override the *first* port
-	number listed here.   That option will NOT override an IP
-	address, however.
+	The -a command line option may be used to specify additional
+	port(s) where Squid listens for proxy request. Such ports will
+	be plain proxy ports with no options.
 
 	You may specify multiple socket addresses on multiple lines.
 
