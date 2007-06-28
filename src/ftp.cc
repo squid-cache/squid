@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.427 2007/06/28 14:20:05 rousskov Exp $
+ * $Id: ftp.cc,v 1.428 2007/06/28 14:31:58 rousskov Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -1224,8 +1224,28 @@ FtpStateData::maybeReadVirginBody()
     int read_sz = data.readBuf->spaceSize();
 
 #if ICAP_CLIENT
-    // See HttpStateData::maybeReadVirginBody() for a size-limiting piece of
-    // code that used to be there. Hopefully, it is not really needed.
+    // TODO: merge with the same code in HttpStateData::maybeReadVirginBody()
+    if (virginBodyDestination != NULL) {
+        /*
+         * BodyPipe buffer has a finite size limit.  We
+         * should not read more data from the network than will fit
+         * into the pipe buffer or we _lose_ what did not fit if
+         * the response ends sooner that BodyPipe frees up space:
+         * There is no code to keep pumping data into the pipe once
+         * response ends and serverComplete() is called.
+         *
+         * If the pipe is totally full, don't register the read handler.
+         * The BodyPipe will call our noteMoreBodySpaceAvailable() method
+         * when it has free space again.
+         */
+        int icap_space = virginBodyDestination->buf().potentialSpaceSize();
+
+        debugs(11,9, "FTP may read up to min(" << icap_space <<
+               ", " << read_sz << ") bytes");
+
+        if (icap_space < read_sz)
+            read_sz = icap_space;
+    }
 #endif
 
     debugs(11,9, HERE << "FTP may read up to " << read_sz << " bytes");
