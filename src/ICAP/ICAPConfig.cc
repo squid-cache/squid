@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.cc,v 1.18 2007/06/28 15:11:01 rousskov Exp $
+ * $Id: ICAPConfig.cc,v 1.19 2007/06/28 15:28:59 rousskov Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -447,4 +447,15 @@ time_t ICAPConfig::io_timeout(bool) const
     // TODO: provide a different default for an ICAP transaction that 
     // can still be bypassed
     return Config.Timeout.read; 
+}
+
+ICAPConfig::ICAPConfig(const ICAPConfig &)
+{
+    assert(false); // unsupported
+}
+
+ICAPConfig &ICAPConfig::operator =(const ICAPConfig &)
+{
+    assert(false); // unsupported
+    return *this;
 }

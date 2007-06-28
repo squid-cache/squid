@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.h,v 1.15 2007/06/28 15:11:01 rousskov Exp $
+ * $Id: ICAPConfig.h,v 1.16 2007/06/28 15:28:59 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -131,6 +131,9 @@ public:
     void freeICAPAccess(void);
     void dumpICAPAccess(StoreEntry *, const char *) const;
 
+private:
+    ICAPConfig(const ICAPConfig &); // unsupported
+    ICAPConfig &operator =(const ICAPConfig &); // unsupported
 };
 
 extern ICAPConfig TheICAPConfig;
