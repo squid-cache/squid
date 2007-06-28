@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.512 2007/05/29 13:31:38 amosjeffries Exp $
+ * $Id: cache_cf.cc,v 1.513 2007/06/28 15:18:16 rousskov Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -56,16 +56,15 @@
 
 #if ICAP_CLIENT
 #include "ICAP/ICAPConfig.h"
-extern ICAPConfig TheICAPConfig;	// for cf_parser.h
 
 static void parse_icap_service_type(ICAPConfig *);
-static void dump_icap_service_type(StoreEntry *, const char *, ICAPConfig );
+static void dump_icap_service_type(StoreEntry *, const char *, const ICAPConfig &);
 static void free_icap_service_type(ICAPConfig *);
 static void parse_icap_class_type(ICAPConfig *);
-static void dump_icap_class_type(StoreEntry *, const char *, ICAPConfig );
+static void dump_icap_class_type(StoreEntry *, const char *, const ICAPConfig &);
 static void free_icap_class_type(ICAPConfig *);
 static void parse_icap_access_type(ICAPConfig *);
-static void dump_icap_access_type(StoreEntry *, const char *, ICAPConfig );
+static void dump_icap_access_type(StoreEntry *, const char *, const ICAPConfig &);
 static void free_icap_access_type(ICAPConfig *);
 
 #endif
@@ -3169,7 +3168,7 @@ free_icap_service_type(ICAPConfig * cfg)
 }
 
 static void
-dump_icap_service_type(StoreEntry * entry, const char *name, ICAPConfig cfg)
+dump_icap_service_type(StoreEntry * entry, const char *name, const ICAPConfig &cfg)
 {
     cfg.dumpICAPService(entry, name);
 }
@@ -3187,7 +3186,7 @@ free_icap_class_type(ICAPConfig * cfg)
 }
 
 static void
-dump_icap_class_type(StoreEntry * entry, const char *name, ICAPConfig cfg)
+dump_icap_class_type(StoreEntry * entry, const char *name, const ICAPConfig &cfg)
 {
     cfg.dumpICAPClass(entry, name);
 }
@@ -3205,7 +3204,7 @@ free_icap_access_type(ICAPConfig * cfg)
 }
 
 static void
-dump_icap_access_type(StoreEntry * entry, const char *name, ICAPConfig cfg)
+dump_icap_access_type(StoreEntry * entry, const char *name, const ICAPConfig &cfg)
 {
     cfg.dumpICAPAccess(entry, name);
 }
