@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.cc,v 1.17 2007/06/19 21:03:46 rousskov Exp $
+ * $Id: ICAPConfig.cc,v 1.18 2007/06/28 15:11:01 rousskov Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -345,9 +345,9 @@ ICAPConfig::freeICAPService()
 };
 
 void
-ICAPConfig::dumpICAPService(StoreEntry *entry, const char *name)
+ICAPConfig::dumpICAPService(StoreEntry *entry, const char *name) const
 {
-    typedef Vector<ICAPServiceRep::Pointer>::iterator VI;
+    typedef Vector<ICAPServiceRep::Pointer>::const_iterator VI;
 
     for (VI i = services.begin(); i != services.end(); ++i) {
         const ICAPServiceRep::Pointer &r = *i;
@@ -375,9 +375,9 @@ ICAPConfig::freeICAPClass()
 };
 
 void
-ICAPConfig::dumpICAPClass(StoreEntry *entry, const char *name)
+ICAPConfig::dumpICAPClass(StoreEntry *entry, const char *name) const
 {
-    Vector<ICAPClass*>::iterator i = classes.begin();
+    Vector<ICAPClass*>::const_iterator i = classes.begin();
 
     while (i != classes.end()) {
         storeAppendPrintf(entry, "%s %s\n", name, (*i)->key.buf());
@@ -406,11 +406,11 @@ ICAPConfig::freeICAPAccess()
 };
 
 void
-ICAPConfig::dumpICAPAccess(StoreEntry *entry, const char *name)
+ICAPConfig::dumpICAPAccess(StoreEntry *entry, const char *name) const
 {
     LOCAL_ARRAY(char, nom, 64);
 
-    Vector<ICAPClass*>::iterator i = classes.begin();
+    Vector<ICAPClass*>::const_iterator i = classes.begin();
 
     while (i != classes.end()) {
         snprintf(nom, 64, "%s %s", name, (*i)->key.buf());
