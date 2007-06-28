@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.h,v 1.14 2007/06/19 21:03:46 rousskov Exp $
+ * $Id: ICAPConfig.h,v 1.15 2007/06/28 15:11:01 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -119,17 +119,17 @@ public:
 
     void parseICAPService(void);
     void freeICAPService(void);
-    void dumpICAPService(StoreEntry *, const char *);
+    void dumpICAPService(StoreEntry *, const char *) const;
     ICAPServiceRep::Pointer findService(const String&);
     ICAPClass * findClass(const String& key);
 
     void parseICAPClass(void);
     void freeICAPClass(void);
-    void dumpICAPClass(StoreEntry *, const char *);
+    void dumpICAPClass(StoreEntry *, const char *) const;
 
     void parseICAPAccess(ConfigParser &parser);
     void freeICAPAccess(void);
-    void dumpICAPAccess(StoreEntry *, const char *);
+    void dumpICAPAccess(StoreEntry *, const char *) const;
 
 };
 
