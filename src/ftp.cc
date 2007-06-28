@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.426 2007/06/25 22:34:24 rousskov Exp $
+ * $Id: ftp.cc,v 1.427 2007/06/28 14:20:05 rousskov Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -206,6 +206,7 @@ public:
     virtual void closeServer();
     virtual void completeForwarding();
     virtual void abortTransaction(const char *reason);
+    void processHeadResponse();
     void processReplyBody();
     void writeCommand(const char *buf);
 
@@ -222,6 +223,8 @@ public:
     // sending of the request body to the server
     virtual void sentRequestBody(int fd, size_t size, comm_err_t errflag);
     virtual void doneSendingRequestBody();
+
+    virtual void haveParsedReplyHeaders();
 
     virtual bool doneWithServer() const;
 
@@ -1331,6 +1334,12 @@ void
 FtpStateData::processReplyBody()
 {
     debugs(9, 5, HERE << "FtpStateData::processReplyBody starting.");
+
+    if (request->method == METHOD_HEAD && (flags.isdir || size != -1)) {
+        serverComplete();
+        return;
+    }
+
     if (!flags.http_header_sent && data.readBuf->contentSize() >= 0)
         appendSuccessHeader();
 
@@ -2215,20 +2224,7 @@ ftpSendPasv(FtpStateData * ftpState)
     debugs(9, 3, HERE << "ftpSendPasv started");
 
     if (ftpState->request->method == METHOD_HEAD && (ftpState->flags.isdir || ftpState->size != -1)) {
-        /* Terminate here for HEAD requests */
-        ftpState->appendSuccessHeader();
-        ftpState->entry->timestampsSet();
-        /*
-         * On rare occasions I'm seeing the entry get aborted after
-         * ftpReadControlReply() and before here, probably when
-         * trying to write to the client.
-         */
-
-        if (!EBIT_TEST(ftpState->entry->flags, ENTRY_ABORTED))
-        ftpState->completeForwarding();
-
-        ftpSendQuit(ftpState);
-
+        ftpState->processHeadResponse(); // may call serverComplete
         return;
     }
 
@@ -2289,6 +2285,34 @@ ftpSendPasv(FtpStateData * ftpState)
      * dont acknowledge PASV commands.
      */
     commSetTimeout(ftpState->data.fd, 15, FtpStateData::ftpTimeout, ftpState);
+}
+
+void
+FtpStateData::processHeadResponse()
+{
+    debugs(9, 5, HERE << "handling HEAD response");
+    ftpSendQuit(this);
+    appendSuccessHeader();
+
+    /*
+     * On rare occasions I'm seeing the entry get aborted after
+     * ftpReadControlReply() and before here, probably when
+     * trying to write to the client.
+     */
+    if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
+        abortTransaction("entry aborted while processing HEAD");
+        return;
+    }
+
+#if ICAP_CLIENT
+    if (icapAccessCheckPending) {
+        debugs(9,3,HERE << "returning from ftpSendPasv due to icapAccessCheckPending");
+        return;
+    }
+#endif
+
+    // processReplyBody calls serverComplete() since there is no body
+    processReplyBody(); 
 }
 
 static void
@@ -3206,6 +3230,13 @@ FtpStateData::appendSuccessHeader()
 #endif
 
     e->replaceHttpReply(reply);
+    haveParsedReplyHeaders();
+}
+
+void
+FtpStateData::haveParsedReplyHeaders()
+{
+    StoreEntry *e = entry;
 
     e->timestampsSet();
 
