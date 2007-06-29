@@ -1,5 +1,5 @@
 /*
- * $Id: Server.cc,v 1.13 2007/06/25 22:34:24 rousskov Exp $
+ * $Id: Server.cc,v 1.14 2007/06/29 08:31:59 amosjeffries Exp $
  *
  * DEBUG:
  * AUTHOR: Duane Wessels
@@ -43,8 +43,10 @@
 #include "ICAP/ICAPModXact.h"
 #endif
 
-ServerStateData::ServerStateData(FwdState *theFwdState): requestSender(NULL),
-    icapAccessCheckPending(false)
+ServerStateData::ServerStateData(FwdState *theFwdState): requestSender(NULL)
+#if ICAP_CLIENT
+    , icapAccessCheckPending(false)
+#endif
 {
     fwd = theFwdState;
     entry = fwd->entry;
