@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.461 2007/06/25 11:02:34 hno Exp $
+dnl  $Id: configure.in,v 1.462 2007/06/30 06:33:05 wessels Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.461 $)dnl
+AC_REVISION($Revision: 1.462 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -2562,7 +2562,6 @@ AC_CHECK_FUNCS(\
 	bswap_32 \
 	bswap16 \
 	bswap32 \
-	crypt \
 	fchmod \
 	getdtablesize \
 	getpagesize \
@@ -2616,6 +2615,12 @@ AC_CHECK_FUNCS(\
 	timegm \
 	vsnprintf \
 )
+
+# check for crypt, may require -lcrypt
+SAVED_LIBS="$LIBS"
+LIBS="$LIBS $CRYPTLIB"
+AC_CHECK_FUNCS(crypt)
+LIBS="$SAVED_LIBS"
 
 # Check for libepoll
 EPOLL_LIB=
@@ -2711,6 +2716,7 @@ select)
 	AC_DEFINE(USE_SELECT,1,[Use select() for the IO loop])
 	;;
 esac
+
 
 
 dnl Yay!  Another Linux brokenness.  Its not good enough
