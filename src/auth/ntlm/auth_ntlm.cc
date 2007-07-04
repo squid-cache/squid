@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.70 2007/05/29 13:31:46 amosjeffries Exp $
+ * $Id: auth_ntlm.cc,v 1.71 2007/07/04 00:55:31 hno Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -268,6 +268,10 @@ AuthNTLMConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, ht
     if (!authenticate)
         return;
 
+    /* Need keep-alive */
+    if (!request->flags.proxy_keepalive && request->flags.must_keepalive)
+	return;
+
     /* New request, no user details */
     if (auth_user_request == NULL) {
         debugs(29, 9, "AuthNTLMConfig::fixHeader: Sending type:" << type << " header: 'NTLM'");
@@ -383,7 +387,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
         safe_free(ntlm_request->server_blob);
         ntlm_request->server_blob = xstrdup(blob);
         ntlm_request->auth_state = AUTHENTICATE_STATE_IN_PROGRESS;
-        auth_user_request->denyMessage("Authenication in progress");
+        auth_user_request->denyMessage("Authentication in progress");
         debugs(29, 4, "authenticateNTLMHandleReply: Need to challenge the client with a server blob '" << blob << "'");
         result = S_HELPER_RESERVE;
     } else if (strncasecmp(reply, "AF ", 3) == 0) {
@@ -596,6 +600,13 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointer 
     if (conn.getRaw() == NULL) {
         auth_state = AUTHENTICATE_STATE_FAILED;
         debugs(29, 1, "AuthNTLMUserRequest::authenticate: attempt to perform authentication without a connection!");
+        return;
+    }
+
+    if (!request->flags.proxy_keepalive) {
+        debugs(29, 2, "AuthNTLMUserRequest::authenticate: attempt to perform authentication without a persistent connection!");
+        auth_state = AUTHENTICATE_STATE_FAILED;
+	request->flags.must_keepalive = 1;
         return;
     }
 
