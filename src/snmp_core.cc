@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.78 2007/04/30 16:56:09 wessels Exp $
+ * $Id: snmp_core.cc,v 1.79 2007/07/06 11:30:45 amosjeffries Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -825,7 +825,7 @@ time_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
     } else {
         identifier = name[*len - 1];
 
-        while ((identifier != index[loop]) && (loop < TIME_INDEX_LEN))
+        while ((loop < TIME_INDEX_LEN) && (identifier != index[loop]))
             loop++;
 
         if (loop < TIME_INDEX_LEN - 1) {
