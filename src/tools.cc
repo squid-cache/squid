@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.276 2007/07/06 21:19:57 wessels Exp $
+ * $Id: tools.cc,v 1.277 2007/07/06 22:23:51 wessels Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -474,7 +474,7 @@ fatal(const char *message)
      * contains a "Bungled" line, fatal() will be called when the
      * process still has root privs.
      */
-    lave_suid();
+    leave_suid();
 
     if (0 == StoreController::store_dirs_rebuilding)
         storeDirWriteCleanLogs(0);
