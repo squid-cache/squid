@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.431 2007/05/26 06:38:04 wessels Exp $
+ * $Id: comm.cc,v 1.432 2007/07/09 19:54:13 wessels Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -2049,6 +2049,19 @@ comm_listen(int sock) {
         debugs(50, 0, "comm_listen: listen(" << (Squid_MaxFD >> 2) << ", " << sock << "): " << xstrerror());
         return x;
     }
+
+#ifdef SO_ACCEPTFILTER
+    if (Config.accept_filter) {
+	struct accept_filter_arg afa;
+	bzero(&afa, sizeof(afa));
+	debug(5, 0) ("Installing accept filter '%s' on FD %d\n",
+	Config.accept_filter, sock);
+	xstrncpy(afa.af_name, Config.accept_filter, sizeof(afa.af_name));
+	x = setsockopt(sock, SOL_SOCKET, SO_ACCEPTFILTER, &afa, sizeof(afa));
+	if (x < 0)
+	    debug(5, 0) ("SO_ACCEPTFILTER '%s': %s\n", Config.accept_filter, xstrerror());
+    }
+#endif
 
     return sock;
 }
