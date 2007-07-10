@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.443 2007/06/27 04:26:12 hno Exp $
+# $Id: cf.data.pre,v 1.444 2007/07/09 19:54:13 wessels Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -5164,6 +5164,24 @@ DOC_START
         directly here.
 Example:
 icap_access class_1 allow all
+DOC_END
+
+NAME: accept_filter
+IFDEF: SO_ACCEPTFILTER
+TYPE: string
+DEFAULT: none
+LOC: Config.accept_filter
+DOC_START
+	The name of an accept(2) filter to install on Squid's
+	listen socket(s).  This feature is perhaps specific to
+	FreeBSD and requires support in the kernel.
+
+	The 'httpready' filter delays delivering new connections
+	to Squid until a full HTTP request has been recieved.
+	See the accf_http(9) man page.
+
+EXAMPLE:
+accept_filter httpready
 DOC_END
 
 EOF
