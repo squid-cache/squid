@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.531 2007/06/26 00:35:24 rousskov Exp $
+ * $Id: http.cc,v 1.532 2007/07/19 12:07:41 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -55,10 +55,6 @@
 #if DELAY_POOLS
 #include "DelayPools.h"
 #endif
-#if ICAP_CLIENT
-#include "ICAP/ICAPConfig.h"
-extern ICAPConfig TheICAPConfig;
-#endif
 #include "SquidTime.h"
 
 CBDATA_CLASS_INIT(HttpStateData);
@@ -70,9 +66,6 @@ static PF httpTimeout;
 static void httpMaybeRemovePublic(StoreEntry *, http_status);
 static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, String strConnection, HttpRequest * request, HttpRequest * orig_request,
         HttpHeader * hdr_out, int we_do_ranges, http_state_flags);
-#if ICAP_CLIENT
-static void icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data);
-#endif
 
 HttpStateData::HttpStateData(FwdState *theFwdState) : ServerStateData(theFwdState),
         header_bytes_read(0), reply_bytes_read(0)
@@ -761,25 +754,10 @@ HttpStateData::processReplyHeader()
      * Parse the header and remove all referenced headers
      */
 
-#if ICAP_CLIENT
-
-    if (TheICAPConfig.onoff) {
-        ICAPAccessCheck *icap_access_check =
-            new ICAPAccessCheck(ICAP::methodRespmod, ICAP::pointPreCache, request, reply, icapAclCheckDoneWrapper, this);
-
-        icapAccessCheckPending = true;
-        icap_access_check->check(); // will eventually delete self
-        ctx_exit(ctx);
-        return;
-    }
-
-#endif
-
-    entry->replaceHttpReply(reply);
-
-    haveParsedReplyHeaders();
+    setReply(reply);
 
     ctx_exit(ctx);
+
 }
 
 // Called when we parsed (and possibly adapted) the headers but
@@ -1118,28 +1096,9 @@ HttpStateData::writeReplyBody()
     const char *data = readBuf->content();
     int len = readBuf->contentSize();
 
-#if ICAP_CLIENT
-
-    if (virginBodyDestination != NULL) {
-        const size_t putSize = virginBodyDestination->putMoreData(data, len);
-        readBuf->consume(putSize);
-        return;
-    }
-
-    // Even if we are done with sending the virgin body to ICAP, we may still
-    // be waiting for adapted headers. We need them before writing to store.
-    if (adaptedHeadSource != NULL) {
-        debugs(11,5, HERE << "need adapted head from " << adaptedHeadSource);
-        return;
-    }
-
-#endif
-
-    entry->write (StoreIOBuffer(len, currentOffset, (char*)data));
-
+    addReplyBody(data, len);
     readBuf->consume(len);
 
-    currentOffset += len;
 }
 
 /*
@@ -1238,31 +1197,7 @@ HttpStateData::processReplyBody()
 void
 HttpStateData::maybeReadVirginBody()
 {
-    int read_sz = readBuf->spaceSize();
-
-#if ICAP_CLIENT
-    if (virginBodyDestination != NULL) {
-        /*
-         * BodyPipe buffer has a finite size limit.  We
-         * should not read more data from the network than will fit
-         * into the pipe buffer or we _lose_ what did not fit if
-         * the response ends sooner that BodyPipe frees up space:
-         * There is no code to keep pumping data into the pipe once
-         * response ends and serverComplete() is called.
-         *
-         * If the pipe is totally full, don't register the read handler.
-         * The BodyPipe will call our noteMoreBodySpaceAvailable() method
-         * when it has free space again.
-         */
-        int icap_space = virginBodyDestination->buf().potentialSpaceSize();
-
-        debugs(11,9, "HttpStateData may read up to min(" << icap_space <<
-               ", " << read_sz << ") bytes");
-
-        if (icap_space < read_sz)
-            read_sz = icap_space;
-    }
-#endif
+    int read_sz = replyBodySpace(readBuf->spaceSize());
 
     debugs(11,9, HERE << (flags.do_next_read ? "may" : "wont") <<
            " read up to " << read_sz << " bytes from FD " << fd);
@@ -1943,20 +1878,8 @@ httpBuildVersion(HttpVersion * version, unsigned int major, unsigned int minor)
     version->minor = minor;
 }
 
-#if ICAP_CLIENT
-
-static void
-icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data)
-{
-    HttpStateData *http = (HttpStateData *)data;
-    http->icapAclCheckDone(service);
-}
-
-// TODO: why does FtpStateData not need orig_request?
 HttpRequest *
 HttpStateData::originalRequest()
 {
     return orig_request;
 }
-
-#endif

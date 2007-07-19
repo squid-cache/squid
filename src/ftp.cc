@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.428 2007/06/28 14:31:58 rousskov Exp $
+ * $Id: ftp.cc,v 1.429 2007/07/19 12:07:41 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -54,13 +54,6 @@
 #include "wordlist.h"
 #include "SquidTime.h"
 #include "URLScheme.h"
-
-#if ICAP_CLIENT
-#include "ICAP/ICAPConfig.h"
-#include "ICAP/ICAPModXact.h"
-extern ICAPConfig TheICAPConfig;
-static void icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data);
-#endif
 
 static const char *const crlf = "\r\n";
 static char cbuf[1024];
@@ -1153,17 +1146,6 @@ FtpStateData::parseListing()
 
         assert(t != NULL);
 
-#if ICAP_CLIENT
-        if (virginBodyDestination != NULL) {
-            // XXX: There are other places where writeReplyBody may overflow!
-            if ((int)strlen(t) > virginBodyDestination->buf().potentialSpaceSize()) {
-                debugs(0,0,HERE << "WARNING avoid overwhelming ICAP with data!");
-                usable = s - sbuf;
-                break;
-            }
-        }
-#endif
-
         writeReplyBody(t, strlen(t));
     }
 
@@ -1221,32 +1203,7 @@ FtpStateData::maybeReadVirginBody()
     if (data.read_pending)
         return;
 
-    int read_sz = data.readBuf->spaceSize();
-
-#if ICAP_CLIENT
-    // TODO: merge with the same code in HttpStateData::maybeReadVirginBody()
-    if (virginBodyDestination != NULL) {
-        /*
-         * BodyPipe buffer has a finite size limit.  We
-         * should not read more data from the network than will fit
-         * into the pipe buffer or we _lose_ what did not fit if
-         * the response ends sooner that BodyPipe frees up space:
-         * There is no code to keep pumping data into the pipe once
-         * response ends and serverComplete() is called.
-         *
-         * If the pipe is totally full, don't register the read handler.
-         * The BodyPipe will call our noteMoreBodySpaceAvailable() method
-         * when it has free space again.
-         */
-        int icap_space = virginBodyDestination->buf().potentialSpaceSize();
-
-        debugs(11,9, "FTP may read up to min(" << icap_space <<
-               ", " << read_sz << ") bytes");
-
-        if (icap_space < read_sz)
-            read_sz = icap_space;
-    }
-#endif
+    int read_sz = replyBodySpace(data.readBuf->spaceSize());
 
     debugs(11,9, HERE << "FTP may read up to " << read_sz << " bytes");
 
@@ -3232,25 +3189,7 @@ FtpStateData::appendSuccessHeader()
     if (mime_enc)
         reply->header.putStr(HDR_CONTENT_ENCODING, mime_enc);
 
-#if ICAP_CLIENT
-
-    if (TheICAPConfig.onoff) {
-        ICAPAccessCheck *icap_access_check = new ICAPAccessCheck(ICAP::methodRespmod,
-                                             ICAP::pointPreCache,
-                                             request,
-                                             reply,
-                                             icapAclCheckDoneWrapper,
-                                             this);
-
-        icapAccessCheckPending = true;
-        icap_access_check->check(); // will eventually delete self
-        return;
-    }
-
-#endif
-
-    e->replaceHttpReply(reply);
-    haveParsedReplyHeaders();
+    setReply(reply);
 }
 
 void
@@ -3341,25 +3280,8 @@ FtpStateData::printfReplyBody(const char *fmt, ...)
 void
 FtpStateData::writeReplyBody(const char *data, int len)
 {
-#if ICAP_CLIENT
-    if (virginBodyDestination != NULL)  {
-        debugs(9,5,HERE << "writing " << len << " bytes to ICAP");
-        const size_t putSize = virginBodyDestination->putMoreData(data, len);
-        if (putSize != (size_t)len) {
-            // XXX: FTP writing should be rewritten to avoid temporary buffers
-            // because temporary buffers cannot handle overflows.
-            debugs(0,0,HERE << "ICAP cannot keep up with FTP; lost " << 
-                (len - putSize) << '/' << len << " bytes.");
-        }
-        return;
-    }
-#endif
-
-    debugs(9,5,HERE << "writing " << len << " bytes to StoreEntry");
-
-    //debugs(9,5,HERE << data);
-
-    entry->append(data, len);
+    debugs(9,5,HERE << "writing " << len << " bytes to the reply");
+    addReplyBody(data, len);
 }
 
 // called after we wrote the last byte of the request body
@@ -3429,14 +3351,3 @@ FtpStateData::abortTransaction(const char *reason)
     fwd->handleUnregisteredServerEnd();
     delete this;
 }
-
-#if ICAP_CLIENT
-
-static void
-icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data)
-{
-    FtpStateData *ftpState = (FtpStateData *)data;
-    ftpState->icapAclCheckDone(service);
-}
-
-#endif
