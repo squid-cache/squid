@@ -88,7 +88,7 @@ shadow_auth(char *user, char *passwd)
 #endif
 
 int
-main()
+main(int argc, char **argv)
 {
     int auth = 0;
     char buf[256];
