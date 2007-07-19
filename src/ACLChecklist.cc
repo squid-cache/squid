@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.40 2007/07/19 00:35:27 hno Exp $
+ * $Id: ACLChecklist.cc,v 1.41 2007/07/19 00:37:05 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -127,6 +127,11 @@ ACLChecklist::check()
 
     /* deny if no rules present */
     currentAnswer(ACCESS_DENIED);
+
+    if (callerGone()) {
+	checkCallback(currentAnswer());
+	return;
+    }
 
     /* NOTE: This holds a cbdata reference to the current access_list
      * entry, not the whole list.
@@ -578,6 +583,12 @@ aclChecklistCreate(const acl_access * A, HttpRequest * request, const char *iden
 #endif
 
     return checklist;
+}
+
+bool
+ACLChecklist::callerGone()
+{
+    return !cbdataReferenceValid(callback_data);
 }
 
 #ifndef _USE_INLINE_
