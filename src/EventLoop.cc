@@ -1,6 +1,6 @@
 
 /*
- * $Id: EventLoop.cc,v 1.3 2006/08/19 12:31:21 robertc Exp $
+ * $Id: EventLoop.cc,v 1.4 2007/07/19 13:33:18 hno Exp $
  *
  * DEBUG: section 1     Main Loop
  * AUTHOR: Harvest Derived
@@ -107,7 +107,7 @@ EventLoop::runOnce()
 {
     runOnceResult = true;
     error = false;
-    loop_delay = 10; /* 10 ms default delay */
+    loop_delay = 1000; /* 1s default delay */
 
     for (engine_vector::iterator i = engines.begin();
             i != engines.end(); ++i) {
