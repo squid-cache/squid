@@ -53,7 +53,7 @@
 #define ERR    "ERR\n"
 #define OK     "OK\n"
 
-int 
+static int 
 passwd_auth(char *user, char *passwd)
 {
     struct passwd *pwd;
@@ -70,7 +70,7 @@ passwd_auth(char *user, char *passwd)
 }
 
 #if HAVE_SHADOW_H
-int 
+static int 
 shadow_auth(char *user, char *passwd)
 {
     struct spwd *pwd;
