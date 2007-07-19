@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.39 2007/06/17 21:39:49 hno Exp $
+ * $Id: ACLChecklist.cc,v 1.40 2007/07/19 00:35:27 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -199,12 +199,6 @@ ACLChecklist::asyncInProgress(bool const newAsync)
            " async set to " << async_);
 }
 
-void
-ACLChecklist::markDeleteWhenDone()
-{
-    deleteWhenDone = true;
-}
-
 bool
 ACLChecklist::finished() const
 {
@@ -325,9 +319,6 @@ ACLChecklist::matchAclList(const acl_list * head, bool const fast)
                 continue;
             }
 
-            if (deleteWhenDone && !asyncInProgress())
-                delete this;
-
             PROF_stop(aclMatchAclList);
 
             return;
@@ -372,7 +363,6 @@ ACLChecklist::ACLChecklist() : accessList (NULL), my_port (0), request (NULL),
         conn_(NULL),
         async_(false),
         finished_(false),
-        deleteWhenDone(false),
         allow_(ACCESS_DENIED),
         state_(NullState::Instance()),
         destinationDomainChecked_(false),

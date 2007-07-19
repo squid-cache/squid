@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.90 2007/06/02 11:50:32 hno Exp $
+ * $Id: client_side_request.cc,v 1.91 2007/07/19 00:35:27 hno Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -111,14 +111,6 @@ ClientRequestContext::~ClientRequestContext()
 
     if (http)
         cbdataReferenceDone(http);
-
-    if (acl_checklist) {
-        if (acl_checklist->asyncInProgress()) {
-            acl_checklist->markDeleteWhenDone();
-        } else {
-            delete acl_checklist;
-        }
-    }
 
     debugs(85,3, HERE << this << " ClientRequestContext destructed");
 }
