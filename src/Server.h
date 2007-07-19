@@ -1,6 +1,6 @@
 
 /*
- * $Id: Server.h,v 1.5 2007/06/25 22:34:24 rousskov Exp $
+ * $Id: Server.h,v 1.6 2007/07/19 12:07:41 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -85,10 +85,12 @@ public:
     // abnormal transaction termination; reason is for debugging only
     virtual void abortTransaction(const char *reason) = 0;
 
-#if ICAP_CLIENT
-    void icapAclCheckDone(ICAPServiceRep::Pointer);
     // a hack to reach HttpStateData::orignal_request
     virtual  HttpRequest *originalRequest();
+
+#if ICAP_CLIENT
+    void icapAclCheckDone(ICAPServiceRep::Pointer);
+    static void icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data);
 
     // ICAPInitiator: start an ICAP transaction and receive adapted headers.
     virtual void noteIcapAnswer(HttpMsg *message);
@@ -102,6 +104,10 @@ public:
 
 public: // should be protected
     void serverComplete(); // call when no server communication is expected
+
+private:
+    void serverComplete2(); // Continuation of serverComplete
+    bool completed;	// serverComplete() has been called
 
 protected:
     // kids customize these
@@ -139,6 +145,16 @@ protected:
     void handleIcapCompleted();
     void handleIcapAborted(bool bypassable = false);
 #endif
+
+protected:
+    // Kids use these to stuff data into the response instead of messing with the entry directly
+    void setReply(HttpReply *);
+    void addReplyBody(const char *buf, ssize_t len);
+    size_t replyBodySpace(size_t space = 4096 * 10);
+
+    // These should be private
+    off_t currentOffset;	// Our current offset in the StoreEntry
+    MemBuf *responseBodyBuffer;	// Data temporarily buffered for ICAP
 
 public: // should not be
     StoreEntry *entry;
