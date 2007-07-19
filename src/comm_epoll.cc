@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_epoll.cc,v 1.16 2007/06/10 11:02:23 hno Exp $
+ * $Id: comm_epoll.cc,v 1.17 2007/07/19 13:33:18 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -325,7 +325,7 @@ comm_select(int msec)
 void
 comm_quick_poll_required(void)
 {
-    max_poll_time = 100;
+    max_poll_time = 10;
 }
 
 #endif /* USE_EPOLL */
