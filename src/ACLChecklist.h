@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLChecklist.h,v 1.26 2007/07/19 00:35:27 hno Exp $
+ * $Id: ACLChecklist.h,v 1.27 2007/07/19 00:37:05 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -155,6 +155,7 @@ private:
     void checking (bool const);
 
     bool lastACLResult_;
+    bool callerGone();
 
 public:
     bool lastACLResult(bool x) { return lastACLResult_ = x; }
