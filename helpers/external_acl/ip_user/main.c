@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.5 2005/07/02 18:34:03 serassio Exp $ 
+/* $Id: main.c,v 1.6 2007/07/19 03:36:12 hno Exp $ 
 * Copyright (C) 2002 Rodrigo Campos
 *
 * This program is free software; you can redistribute it and/or modify
@@ -28,7 +28,7 @@
 
 #include "ip_user.h"
 
-void
+static void
 usage (char *program_name)
 {
   fprintf (stderr, "Usage:\n%s -f <configuration file>\n",

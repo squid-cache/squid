@@ -1,5 +1,5 @@
 /*
- * $Id: pam_auth.c,v 1.16 2005/07/02 18:34:03 serassio Exp $
+ * $Id: pam_auth.c,v 1.17 2007/07/19 03:36:05 hno Exp $
  *
  * PAM authenticator module for Squid.
  * Copyright (C) 1999,2002,2003 Henrik Nordstrom <hno@squid-cache.org>
@@ -152,7 +152,7 @@ main(int argc, char *argv[])
     char buf[BUFSIZE];
     time_t pamh_created = 0;
     int ttl = DEFAULT_SQUID_PAM_TTL;
-    char *service = DEFAULT_SQUID_PAM_SERVICE;
+    const char *service = DEFAULT_SQUID_PAM_SERVICE;
     int no_acct_mgmt = 0;
 
     /* make standard output line buffered */

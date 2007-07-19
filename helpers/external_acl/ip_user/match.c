@@ -1,4 +1,4 @@
-/* $Id: match.c,v 1.2 2003/01/23 00:36:01 robertc Exp $ 
+/* $Id: match.c,v 1.3 2007/07/19 03:36:12 hno Exp $ 
 * Copyright (C) 2002 Rodrigo Campos
 *
 * This program is free software; you can redistribute it and/or modify
@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <grp.h>
 
+#include "ip_user.h"
 
 int
 match_user (char *dict_username, char *username)

@@ -53,14 +53,14 @@ PFldap_start_tls_s Win32_ldap_start_tls_s;
 /* Globals */
 
 static LDAP *ld = NULL;
-static char *passattr = NULL;
+static const char *passattr = NULL;
 static char *ldapServer = NULL;
-static char *userbasedn = NULL;
-static char *userdnattr = NULL;
-static char *usersearchfilter = NULL;
-static char *binddn = NULL;
-static char *bindpasswd = NULL;
-static char *delimiter = ":";
+static const char *userbasedn = NULL;
+static const char *userdnattr = NULL;
+static const char *usersearchfilter = NULL;
+static const char *binddn = NULL;
+static const char *bindpasswd = NULL;
+static const char *delimiter = ":";
 static int encrpass = 0;
 static int searchscope = LDAP_SCOPE_SUBTREE;
 static int persistent = 0;
@@ -84,7 +84,7 @@ static int version = -1;
 #endif
 
 static void ldapconnect(void);
-static int readSecret(char *filename);
+static int readSecret(const char *filename);
 
 /* Yuck.. we need to glue to different versions of the API */
 
@@ -431,7 +431,7 @@ LDAPArguments(int argc, char **argv)
     setbuf(stdout, NULL);
 
     while (argc > 1 && argv[1][0] == '-') {
-	char *value = "";
+	const char *value = "";
 	char option = argv[1][1];
 	switch (option) {
 	case 'P':
@@ -608,7 +608,7 @@ LDAPArguments(int argc, char **argv)
     }
 
     if (!ldapServer)
-	ldapServer = "localhost";
+	ldapServer = (char *)"localhost";
 
     if (!userbasedn || !((passattr != NULL) || (edir_universal_passwd && usersearchfilter && version == LDAP_VERSION3 && use_tls))) {
 	fprintf(stderr, "Usage: " PROGRAM_NAME " -b basedn -f filter [options] ldap_server_name\n\n");
@@ -648,7 +648,7 @@ LDAPArguments(int argc, char **argv)
     return 0;
 }
 static int
-readSecret(char *filename)
+readSecret(const char *filename)
 {
     char buf[BUFSIZ];
     char *e = 0;
@@ -669,10 +669,8 @@ readSecret(char *filename)
     if ((e = strrchr(buf, '\r')))
 	*e = 0;
 
-    bindpasswd = (char *) calloc(sizeof(char), strlen(buf) + 1);
-    if (bindpasswd) {
-	strcpy(bindpasswd, buf);
-    } else {
+    bindpasswd = strdup(buf);
+    if (!bindpasswd) {
 	fprintf(stderr, PROGRAM_NAME " ERROR: can not allocate memory\n");
     }
 
@@ -684,7 +682,7 @@ readSecret(char *filename)
 void
 LDAPHHA1(RequestData * requestData)
 {
-    char *password = "";
+    char *password;
     ldapconnect();
     password = getpassword(requestData->user, requestData->realm);
     if (password != NULL) {

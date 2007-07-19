@@ -23,6 +23,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
+
+#include "edir_ldapext.h"
+
 /* NMAS error codes */
 #define NMAS_E_BASE                       (-1600)
 
