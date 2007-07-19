@@ -35,7 +35,7 @@
 #define PROGRAM_NAME "digest_ldap_auth"
 
 
-void
+static void
 GetHHA1(RequestData * requestData)
 {
     LDAPHHA1(requestData);
@@ -81,7 +81,7 @@ DoOneRequest(char *buf)
     OutputHHA1(&requestData);
 }
 
-void
+static void
 ProcessArguments(int argc, char **argv)
 {
     int i;

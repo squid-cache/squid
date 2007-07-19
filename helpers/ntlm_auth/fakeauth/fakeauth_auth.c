@@ -53,14 +53,14 @@
 
 #define BUFFER_SIZE 10240
 
-char *authenticate_ntlm_domain = "WORKGROUP";
+const char *authenticate_ntlm_domain = "WORKGROUP";
 int debug_enabled = 0;
 int NTLM_packet_debug_enabled = 0;
 
 /* NTLM authentication by ad@interlude.eu.org - 07/1999 */
 /* XXX this is not done cleanly... */
 
-void
+static void
 hex_dump(void *data, int size)
 {
     /* dumps size bytes of *data to stdout. Looks like:
@@ -264,10 +264,11 @@ ntlmGetString(ntlmhdr * hdr, strhdr * str, int flags)
 /*
  * Decode the strings in an NTLM authentication request
  */
-int
+static int
 ntlmDecodeAuth(struct ntlm_authenticate *auth, char *buf, size_t size)
 {
-    char *p, *origbuf;
+    const char *p;
+    char *origbuf;
     int s;
 
     if (!buf) {
@@ -320,8 +321,8 @@ ntlmDecodeAuth(struct ntlm_authenticate *auth, char *buf, size_t size)
  */
 char *my_program_name = NULL;
 
-void
-usage()
+static void
+usage(void)
 {
     fprintf(stderr,
 	"Usage: %s [-d] [-v] [-h]\n"
@@ -332,7 +333,7 @@ usage()
 }
 
 
-void
+static void
 process_options(int argc, char *argv[])
 {
     int opt, had_error = 0;

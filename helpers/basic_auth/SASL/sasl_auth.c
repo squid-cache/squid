@@ -1,5 +1,5 @@
 /*
- * $Id: sasl_auth.c,v 1.8 2004/12/20 16:30:16 robertc Exp $
+ * $Id: sasl_auth.c,v 1.9 2007/07/19 03:36:05 hno Exp $
  *
  * SASL authenticator module for Squid.
  * Copyright (C) 2002 Ian Castle <ian.castle@coldcomfortfarm.net>
@@ -42,7 +42,7 @@
 #define APP_NAME_SASL	"squid_sasl_auth"
 
 int
-main()
+main(int argc, char *argv[])
 {
 	char line[8192];
 	char *username, *password;

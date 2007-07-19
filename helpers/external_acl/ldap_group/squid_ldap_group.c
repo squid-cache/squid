@@ -85,13 +85,13 @@ PFldap_start_tls_s Win32_ldap_start_tls_s;
 
 /* Globals */
 
-static char *basedn = NULL;
-static char *searchfilter = NULL;
-static char *userbasedn = NULL;
-static char *userdnattr = NULL;
-static char *usersearchfilter = NULL;
-static char *binddn = NULL;
-static char *bindpasswd = NULL;
+static const char *basedn = NULL;
+static const char *searchfilter = NULL;
+static const char *userbasedn = NULL;
+static const char *userdnattr = NULL;
+static const char *usersearchfilter = NULL;
+static const char *binddn = NULL;
+static const char *bindpasswd = NULL;
 static int searchscope = LDAP_SCOPE_SUBTREE;
 static int persistent = 0;
 static int noreferrals = 0;
@@ -112,7 +112,7 @@ static int version = -1;
 
 static int searchLDAP(LDAP * ld, char *group, char *user, char *extension_dn);
 
-static int readSecret(char *filename);
+static int readSecret(const char *filename);
 
 /* Yuck.. we need to glue to different versions of the API */
 
@@ -220,7 +220,7 @@ main(int argc, char **argv)
     setbuf(stdout, NULL);
 
     while (argc > 1 && argv[1][0] == '-') {
-	char *value = "";
+	const char *value = "";
 	char option = argv[1][1];
 	switch (option) {
 	case 'P':
@@ -392,7 +392,7 @@ main(int argc, char **argv)
     }
 
     if (!ldapServer)
-	ldapServer = "localhost";
+	ldapServer = (char *)"localhost";
 
     if (!basedn || !searchfilter) {
 	fprintf(stderr, "\n" PROGRAM_NAME " version " PROGRAM_VERSION "\n\n");
@@ -680,7 +680,7 @@ searchLDAPGroup(LDAP * ld, char *group, char *member, char *extension_dn)
     LDAPMessage *res = NULL;
     LDAPMessage *entry;
     int rc;
-    char *searchattr[] = {LDAP_NO_ATTRS, NULL};
+    char *searchattr[] = {(char *)LDAP_NO_ATTRS, NULL};
 
     if (extension_dn && *extension_dn)
 	snprintf(searchbase, sizeof(searchbase), "%s,%s", extension_dn, basedn);
@@ -734,7 +734,7 @@ searchLDAP(LDAP *ld, char *group, char *login, char *extension_dn)
 	LDAPMessage *entry;
 	int rc;
 	char *userdn;
-	char *searchattr[] = {LDAP_NO_ATTRS, NULL};
+	char *searchattr[] = {(char *)LDAP_NO_ATTRS, NULL};
 	if (extension_dn && *extension_dn)
 	    snprintf(searchbase, sizeof(searchbase), "%s,%s", extension_dn, userbasedn ? userbasedn : basedn);
 	else
@@ -785,7 +785,7 @@ searchLDAP(LDAP *ld, char *group, char *login, char *extension_dn)
 }
 
 
-int readSecret(char *filename)
+int readSecret(const char *filename)
 {
   char  buf[BUFSIZ];
   char  *e=0;
@@ -806,10 +806,8 @@ int readSecret(char *filename)
   if((e = strrchr(buf, '\n'))) *e = 0;
   if((e = strrchr(buf, '\r'))) *e = 0;
 
-  bindpasswd = (char *) calloc(sizeof(char), strlen(buf)+1);
-  if (bindpasswd) {
-    strcpy(bindpasswd, buf);
-  } else {
+  bindpasswd = strdup(buf);
+  if (!bindpasswd) {
     fprintf(stderr, PROGRAM_NAME " ERROR: can not allocate memory\n"); 
   }
 
