@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.167 2007/06/19 20:49:37 rousskov Exp $
+ * $Id: forward.cc,v 1.168 2007/07/21 16:32:03 hno Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -80,6 +80,7 @@ void
 FwdState::abort(void* d)
 {
     FwdState* fwd = (FwdState*)d;
+    Pointer tmp = fwd; // Grab a temporary pointer to keep the object alive during our scope.
 
     if (fwd->server_fd >= 0) {
         comm_close(fwd->server_fd);
