@@ -1,5 +1,5 @@
 /*
- * $Id: Server.cc,v 1.15 2007/07/19 12:07:41 hno Exp $
+ * $Id: Server.cc,v 1.16 2007/07/23 16:55:31 rousskov Exp $
  *
  * DEBUG:
  * AUTHOR: Duane Wessels
@@ -559,10 +559,8 @@ ServerStateData::icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *
 #endif
 
 void
-ServerStateData::setReply(HttpReply *reply)
+ServerStateData::setReply()
 {
-    this->reply = reply;
-
 #if ICAP_CLIENT
 
     if (TheICAPConfig.onoff) {

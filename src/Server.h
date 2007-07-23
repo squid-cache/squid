@@ -1,6 +1,6 @@
 
 /*
- * $Id: Server.h,v 1.6 2007/07/19 12:07:41 hno Exp $
+ * $Id: Server.h,v 1.7 2007/07/23 16:55:31 rousskov Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -148,7 +148,7 @@ protected:
 
 protected:
     // Kids use these to stuff data into the response instead of messing with the entry directly
-    void setReply(HttpReply *);
+    void setReply();
     void addReplyBody(const char *buf, ssize_t len);
     size_t replyBodySpace(size_t space = 4096 * 10);
 

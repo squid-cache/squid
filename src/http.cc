@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.532 2007/07/19 12:07:41 hno Exp $
+ * $Id: http.cc,v 1.533 2007/07/23 16:55:31 rousskov Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -754,7 +754,7 @@ HttpStateData::processReplyHeader()
      * Parse the header and remove all referenced headers
      */
 
-    setReply(reply);
+    setReply();
 
     ctx_exit(ctx);
 
