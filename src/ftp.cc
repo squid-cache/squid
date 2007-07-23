@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.429 2007/07/19 12:07:41 hno Exp $
+ * $Id: ftp.cc,v 1.430 2007/07/23 16:55:31 rousskov Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -3189,7 +3189,7 @@ FtpStateData::appendSuccessHeader()
     if (mime_enc)
         reply->header.putStr(HDR_CONTENT_ENCODING, mime_enc);
 
-    setReply(reply);
+    setReply();
 }
 
 void
