@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPServiceRep.h,v 1.10 2007/06/19 21:13:49 rousskov Exp $
+ * $Id: ICAPServiceRep.h,v 1.11 2007/07/24 16:43:33 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -136,13 +136,13 @@ private:
     Clients theClients; // all clients waiting for a call back
 
     ICAPOptions *theOptions;
+    ICAPInitiate *theOptionsFetcher; // pending ICAP OPTIONS transaction
     time_t theLastUpdate; // time the options were last updated
 
     static const int TheSessionFailureLimit;
     int theSessionFailures;
     const char *isSuspended; // also stores suspension reason for debugging
 
-    bool waiting;   // for an OPTIONS transaction to finish
     bool notifying; // may be true in any state except for the initial
     bool updateScheduled; // time-based options update has been scheduled
 

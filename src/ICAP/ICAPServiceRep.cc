@@ -16,16 +16,15 @@ CBDATA_CLASS_INIT(ICAPServiceRep);
 
 ICAPServiceRep::ICAPServiceRep(): method(ICAP::methodNone),
         point(ICAP::pointNone), port(-1), bypass(false),
-        theOptions(NULL), theLastUpdate(0),
-        theSessionFailures(0), isSuspended(0),
-        waiting(false), notifying(false),
+        theOptions(NULL), theOptionsFetcher(0), theLastUpdate(0),
+        theSessionFailures(0), isSuspended(0), notifying(false),
         updateScheduled(false), self(NULL),
         wasAnnouncedUp(true) // do not announce an "up" service at startup
 {}
 
 ICAPServiceRep::~ICAPServiceRep()
 {
-    Must(!waiting);
+    Must(!theOptionsFetcher);
     changeOptions(0);
 }
 
@@ -262,7 +261,7 @@ void ICAPServiceRep::noteTimeToUpdate()
     if (self != NULL)
         updateScheduled = false;
 
-    if (!self || waiting) {
+    if (!self || theOptionsFetcher) {
         debugs(93,5, "ICAPService ignores options update " << status());
         return;
     }
@@ -318,7 +317,7 @@ void ICAPServiceRep::callWhenReady(Callback *cb, void *data)
     i.data = cbdataReference(data);
     theClients.push_back(i);
 
-    if (waiting || notifying)
+    if (theOptionsFetcher || notifying)
         return; // do nothing, we will be picked up in noteTimeToNotify()
 
     if (needNewOptions())
@@ -424,8 +423,8 @@ void ICAPServiceRep::announceStatusChange(const char *downPhrase, bool important
 // we are receiving ICAP OPTIONS response headers here or NULL on failures
 void ICAPServiceRep::noteIcapAnswer(HttpMsg *msg)
 {
-    Must(waiting);
-    waiting = false;
+    Must(theOptionsFetcher);
+    clearIcap(theOptionsFetcher);
 
     Must(msg);
 
@@ -443,8 +442,8 @@ void ICAPServiceRep::noteIcapAnswer(HttpMsg *msg)
 }
 
 void ICAPServiceRep::noteIcapQueryAbort(bool) {
-    Must(waiting);
-    waiting = false;
+    Must(theOptionsFetcher);
+    clearIcap(theOptionsFetcher);
 
     debugs(93,3, "ICAPService failed to fetch options " << status());
     handleNewOptions(0);
@@ -463,11 +462,10 @@ void ICAPServiceRep::handleNewOptions(ICAPOptions *newOptions)
 
 void ICAPServiceRep::startGettingOptions()
 {
-    Must(!waiting);
+    Must(!theOptionsFetcher);
     debugs(93,6, "ICAPService will get new options " << status());
-    waiting = true;
 
-    initiateIcap(new ICAPOptXactLauncher(this, self));
+    theOptionsFetcher = initiateIcap(new ICAPOptXactLauncher(this, self));
     // TODO: timeout in case ICAPOptXact never calls us back?
     // Such a timeout should probably be a generic AsyncStart feature.
 }
@@ -560,8 +558,8 @@ const char *ICAPServiceRep::status() const
             buf.append(",stale", 6);
     }
 
-    if (waiting)
-        buf.append(",wait", 5);
+    if (theOptionsFetcher)
+        buf.append(",fetch", 6);
 
     if (notifying)
         buf.append(",notif", 6);
