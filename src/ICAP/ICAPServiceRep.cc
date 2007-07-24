@@ -477,9 +477,9 @@ void ICAPServiceRep::scheduleUpdate(time_t when)
     if (updateScheduled) {
         debugs(93,7, "ICAPService reschedules update");
         // XXX: check whether the event is there because AR saw
-		// an unreproducible eventDelete assertion on 2007/06/18
+        // an unreproducible eventDelete assertion on 2007/06/18
         if (eventFind(&ICAPServiceRep_noteTimeToUpdate, this))
-			eventDelete(&ICAPServiceRep_noteTimeToUpdate, this);
+            eventDelete(&ICAPServiceRep_noteTimeToUpdate, this);
         else
             debugs(93,1, "XXX: ICAPService lost an update event.");
         updateScheduled = false;
