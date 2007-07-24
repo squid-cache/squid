@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.533 2007/07/23 16:55:31 rousskov Exp $
+ * $Id: http.cc,v 1.534 2007/07/23 19:58:46 rousskov Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -647,14 +647,6 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
 }
 
 void
-HttpStateData::failReply(HttpReply *reply, http_status const & status)
-{
-    reply->sline.version = HttpVersion(1, 0);
-    reply->sline.status = status;
-    entry->replaceHttpReply(reply);
-}
-
-void
 HttpStateData::keepaliveAccounting(HttpReply *reply)
 {
     if (flags.keepalive)
@@ -721,8 +713,10 @@ HttpStateData::processReplyHeader()
 	 if (!parsed && error > 0) { // unrecoverable parsing error
 	      debugs(11, 3, "processReplyHeader: Non-HTTP-compliant header: '" <<  readBuf->content() << "'");
 	      flags.headers_parsed = 1;
-	      // negated result yields http_status
-	      failReply (newrep, error);
+          newrep->sline.version = HttpVersion(1, 0);
+          newrep->sline.status = error;
+          reply = HTTPMSGLOCK(newrep);
+          entry->replaceHttpReply(reply);
 	      ctx_exit(ctx);
 	      return;
 	 }
@@ -753,8 +747,6 @@ HttpStateData::processReplyHeader()
     /* TODO: IF the reply is a 1.0 reply, AND it has a Connection: Header
      * Parse the header and remove all referenced headers
      */
-
-    setReply();
 
     ctx_exit(ctx);
 
@@ -890,10 +882,12 @@ HttpStateData::statusIfComplete() const
     return COMPLETE_PERSISTENT_MSG;
 }
 
+// XXX: This is also called for ICAP-adapted responses but they have
+// no notion of "persistent connection"
 HttpStateData::ConnectionStatus
 HttpStateData::persistentConnStatus() const
 {
-    debugs(11, 3, "persistentConnStatus: FD " << fd);
+    debugs(11, 3, "persistentConnStatus: FD " << fd << " eof=" << eof);
     debugs(11, 5, "persistentConnStatus: content_length=" << reply->content_length);
 
     /* If we haven't seen the end of reply headers, we are not done */
@@ -901,6 +895,9 @@ HttpStateData::persistentConnStatus() const
 
     if (!flags.headers_parsed)
         return INCOMPLETE_MSG;
+
+    if (eof) // already reached EOF
+        return COMPLETE_NONPERSISTENT_MSG;
 
     const int clen = reply->bodySize(request->method);
 
@@ -1022,68 +1019,74 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
 
 #endif
 
-    if (len == 0 && !flags.headers_parsed) {
-        fwd->fail(errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_BAD_GATEWAY, fwd->request));
+    if (len == 0) { // reached EOF?
         eof = 1;
         flags.do_next_read = 0;
-        comm_close(fd);
-    } else if (len == 0) {
-        /* Connection closed; retrieval done. */
-        eof = 1;
+    }
 
-        if (!flags.headers_parsed) {
-            /*
-            * When we called processReplyHeader() before, we
-            * didn't find the end of headers, but now we are
-            * definately at EOF, so we want to process the reply
-            * headers.
-             */
-            PROF_start(HttpStateData_processReplyHeader);
-            processReplyHeader();
-            PROF_stop(HttpStateData_processReplyHeader);
-        } else if (getReply()->sline.status == HTTP_INVALID_HEADER && HttpVersion(0,9) != getReply()->sline.version) {
-            fwd->fail(errorCon(ERR_INVALID_RESP, HTTP_BAD_GATEWAY, fwd->request));
-            flags.do_next_read = 0;
-        } else {
-            if (entry->mem_obj->getReply()->sline.status == HTTP_HEADER_TOO_LARGE) {
-                entry->reset();
-                fwd->fail( errorCon(ERR_TOO_BIG, HTTP_BAD_GATEWAY, fwd->request));
+    if (!flags.headers_parsed) { // have not parsed headers yet?
+        PROF_start(HttpStateData_processReplyHeader);
+        processReplyHeader();
+        PROF_stop(HttpStateData_processReplyHeader);
+
+        if (!continueAfterParsingHeader()) // parsing error or need more data
+            return; // TODO: send errors to ICAP
+
+        setReply();
+    }
+
+    // kick more reads if needed and/or process the response body, if any
+    PROF_start(HttpStateData_processReplyBody);
+    processReplyBody(); // may call serverComplete()
+    PROF_stop(HttpStateData_processReplyBody);
+}
+
+// Checks whether we can continue with processing the body or doing ICAP.
+// Returns false if we cannot (e.g., due to lack of headers or errors).
+bool
+HttpStateData::continueAfterParsingHeader()
+{
+    if (!flags.headers_parsed && !eof) { // need more and may get more
+        debugs(11, 9, HERE << "needs more at " << readBuf->contentSize());
+        flags.do_next_read = 1;
+        maybeReadVirginBody(); // schedules all kinds of reads; TODO: rename
+        return false; // wait for more data
+    }
+
+    /* we are done with parsing, now check for errors */
+
+    err_type error = ERR_NONE;
+
+    if (flags.headers_parsed) { // parsed headers, possibly with errors
+        // check for header parsing errors
+        if (reply != NULL) {
+            const http_status s = getReply()->sline.status;
+            const HttpVersion &v = getReply()->sline.version;
+            if (s == HTTP_INVALID_HEADER && v != HttpVersion(0,9)) {
+                error = ERR_INVALID_RESP;
+            } else
+            if (s == HTTP_HEADER_TOO_LARGE) {
                 fwd->dontRetry(true);
-                flags.do_next_read = 0;
-                comm_close(fd);
+                error = ERR_TOO_BIG;
             } else {
-                serverComplete();
+                return true; // done parsing, got reply, and no error
             }
+        } else {
+            // parsed headers but got no reply
+            error = ERR_INVALID_RESP;
         }
     } else {
-        if (!flags.headers_parsed) {
-            PROF_start(HttpStateData_processReplyHeader);
-            processReplyHeader();
-            PROF_stop(HttpStateData_processReplyHeader);
-
-            if (flags.headers_parsed) {
-                bool fail = reply == NULL;
-
-                if (!fail) {
-                    http_status s = getReply()->sline.status;
-                    HttpVersion httpver = getReply()->sline.version;
-                    fail = s == HTTP_INVALID_HEADER && httpver != HttpVersion(0,9);
-                }
-
-                if (fail) {
-                    entry->reset();
-                    fwd->fail( errorCon(ERR_INVALID_RESP, HTTP_BAD_GATEWAY, fwd->request));
-                    comm_close(fd);
-                    return;
-                }
-
-            }
-        }
-
-        PROF_start(HttpStateData_processReplyBody);
-        processReplyBody();
-        PROF_stop(HttpStateData_processReplyBody);
+        assert(eof);
+        error = readBuf->hasContent() ?
+            ERR_INVALID_RESP : ERR_ZERO_SIZE_OBJECT;
     }
+
+    assert(error != ERR_NONE);
+    entry->reset();
+    fwd->fail(errorCon(error, HTTP_BAD_GATEWAY, fwd->request));
+    flags.do_next_read = 0;
+    comm_close(fd);
+    return false; // quit on error
 }
 
 /*

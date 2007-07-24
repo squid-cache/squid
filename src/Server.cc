@@ -1,5 +1,5 @@
 /*
- * $Id: Server.cc,v 1.16 2007/07/23 16:55:31 rousskov Exp $
+ * $Id: Server.cc,v 1.17 2007/07/23 19:58:46 rousskov Exp $
  *
  * DEBUG:
  * AUTHOR: Duane Wessels
@@ -361,7 +361,7 @@ ServerStateData::startIcap(ICAPServiceRep::Pointer service, HttpRequest *cause)
 // properly cleans up ICAP-related state
 // may be called multiple times
 void ServerStateData::cleanIcap() {
-    debugs(11,5, HERE << "cleaning ICAP");
+    debugs(11,5, HERE << "cleaning ICAP; ACL: " << icapAccessCheckPending);
 
     if (virginBodyDestination != NULL)
         stopProducingFor(virginBodyDestination, false);
@@ -371,12 +371,14 @@ void ServerStateData::cleanIcap() {
     if (adaptedBodySource != NULL)
         stopConsumingFrom(adaptedBodySource);
 
-    assert(doneWithIcap()); // make sure the two methods are in sync
+    if (!icapAccessCheckPending) // we cannot cancel a pending callback
+        assert(doneWithIcap()); // make sure the two methods are in sync
 }
 
 bool
 ServerStateData::doneWithIcap() const {
-    return !virginBodyDestination && !adaptedHeadSource && !adaptedBodySource;
+    return !icapAccessCheckPending &&
+        !virginBodyDestination && !adaptedHeadSource && !adaptedBodySource;
 }
 
 // can supply more virgin response body data
