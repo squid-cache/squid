@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.30 2007/07/19 12:07:41 hno Exp $
+ * $Id: http.h,v 1.31 2007/07/23 19:58:46 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -94,9 +94,10 @@ private:
     };
     ConnectionStatus statusIfComplete() const;
     ConnectionStatus persistentConnStatus() const;
-    void failReply (HttpReply *reply, http_status const &status);
     void keepaliveAccounting(HttpReply *);
     void checkDateSkew(HttpReply *);
+
+    bool continueAfterParsingHeader();
 
     virtual void haveParsedReplyHeaders();
     virtual void closeServer(); // end communication with the server
