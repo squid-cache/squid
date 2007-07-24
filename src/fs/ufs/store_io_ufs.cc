@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_ufs.cc,v 1.38 2007/04/30 16:56:17 wessels Exp $
+ * $Id: store_io_ufs.cc,v 1.39 2007/07/24 16:15:32 rousskov Exp $
  *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
@@ -279,6 +279,7 @@ UFSStoreState::doWrite()
          * write_pending flag.
          */
         q->free_func((void*)q->buf);
+        delete q;
         return;
     }
 
@@ -295,6 +296,7 @@ UFSStoreState::doWrite()
     debugs(79, 3, HERE << this << " calling theFile->write(" << q->size << ")");
 
     theFile->write(new WriteRequest(q->buf, q->offset, q->size, q->free_func));
+    delete q;
 }
 
 void
