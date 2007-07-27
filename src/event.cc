@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.47 2007/04/12 23:25:07 wessels Exp $
+ * $Id: event.cc,v 1.48 2007/07/27 04:40:51 rousskov Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -305,8 +305,11 @@ EventScheduler::GetInstance()
 void
 EventScheduler::schedule(const char *name, EVH * func, void *arg, double when, int weight, bool cbdata)
 {
-
-    struct ev_entry *event = new ev_entry(name, func, arg, current_dtime + when, weight, cbdata);
+    // Use zero timestamp for when=0 events: Many of them are async calls that
+    // must fire in the submission order. We cannot use current_dtime for them
+    // because it may decrease if system clock is adjusted backwards.
+    const double timestamp = when > 0.0 ? current_dtime + when : 0;
+    struct ev_entry *event = new ev_entry(name, func, arg, timestamp, weight, cbdata);
 
     struct ev_entry **E;
     debugs(41, 7, HERE << "schedule: Adding '" << name << "', in " << when << " seconds");
