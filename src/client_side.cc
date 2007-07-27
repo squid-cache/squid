@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.756 2007/05/29 13:31:39 amosjeffries Exp $
+ * $Id: client_side.cc,v 1.757 2007/07/26 21:17:01 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1257,6 +1257,7 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
     if (!context->startOfOutput())
         context->sendBody(rep, recievedData);
     else {
+        assert(rep);
         http->al.reply = HTTPMSGLOCK(rep);
         context->sendStartOfMessage(rep, recievedData);
     }
