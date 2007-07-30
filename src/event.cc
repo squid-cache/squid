@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.cc,v 1.48 2007/07/27 04:40:51 rousskov Exp $
+ * $Id: event.cc,v 1.49 2007/07/30 15:05:42 hno Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -276,7 +276,7 @@ EventScheduler::dump(StoreEntry * sentry)
 
     while (e != NULL) {
         storeAppendPrintf(sentry, "%s\t%f seconds\t%d\t%s\n",
-                          e->name, e->when - current_dtime, e->weight,
+                          e->name, e->when ? e->when - current_dtime : 0, e->weight,
                   (e->arg && e->cbdata) ? cbdataReferenceValid(e->arg) ? "yes" : "no" : "N/A");
         e = e->next;
     }
