@@ -1,5 +1,5 @@
 /*
- * $Id: Server.cc,v 1.18 2007/08/01 04:16:00 rousskov Exp $
+ * $Id: Server.cc,v 1.19 2007/08/01 04:18:08 rousskov Exp $
  *
  * DEBUG:
  * AUTHOR: Duane Wessels
@@ -656,9 +656,7 @@ ServerStateData::addVirginReplyBody(const char *data, ssize_t len)
 void
 ServerStateData::storeReplyBody(const char *data, ssize_t len)
 {
-    if (!len)
-	return;
-
+    // write even if len is zero to push headers towards the client side
     entry->write (StoreIOBuffer(len, currentOffset, (char*)data));
 
     currentOffset += len;
