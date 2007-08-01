@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.534 2007/07/23 19:58:46 rousskov Exp $
+ * $Id: http.cc,v 1.535 2007/08/01 04:16:00 rousskov Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1099,7 +1099,7 @@ HttpStateData::writeReplyBody()
     const char *data = readBuf->content();
     int len = readBuf->contentSize();
 
-    addReplyBody(data, len);
+    addVirginReplyBody(data, len);
     readBuf->consume(len);
 
 }

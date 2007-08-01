@@ -1,6 +1,6 @@
 
 /*
- * $Id: Server.h,v 1.7 2007/07/23 16:55:31 rousskov Exp $
+ * $Id: Server.h,v 1.8 2007/08/01 04:16:00 rousskov Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -134,6 +134,7 @@ protected:
 
 #if ICAP_CLIENT
     bool startIcap(ICAPServiceRep::Pointer, HttpRequest *cause);
+    void adaptVirginReplyBody(const char *buf, ssize_t len);
     void cleanIcap();
     virtual bool doneWithIcap() const; // did we end ICAP communication?
 
@@ -149,7 +150,8 @@ protected:
 protected:
     // Kids use these to stuff data into the response instead of messing with the entry directly
     void setReply();
-    void addReplyBody(const char *buf, ssize_t len);
+    void addVirginReplyBody(const char *buf, ssize_t len);
+    void storeReplyBody(const char *buf, ssize_t len);
     size_t replyBodySpace(size_t space = 4096 * 10);
 
     // These should be private
@@ -172,6 +174,7 @@ protected:
     BodyPipe::Pointer adaptedBodySource; // to consume adated response body
 
     bool icapAccessCheckPending;
+    bool startedIcap;
 #endif
 
 private:
