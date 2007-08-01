@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.430 2007/07/23 16:55:31 rousskov Exp $
+ * $Id: ftp.cc,v 1.431 2007/08/01 04:16:00 rousskov Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -3281,7 +3281,7 @@ void
 FtpStateData::writeReplyBody(const char *data, int len)
 {
     debugs(9,5,HERE << "writing " << len << " bytes to the reply");
-    addReplyBody(data, len);
+    addVirginReplyBody(data, len);
 }
 
 // called after we wrote the last byte of the request body

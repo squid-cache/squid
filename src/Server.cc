@@ -1,5 +1,5 @@
 /*
- * $Id: Server.cc,v 1.17 2007/07/23 19:58:46 rousskov Exp $
+ * $Id: Server.cc,v 1.18 2007/08/01 04:16:00 rousskov Exp $
  *
  * DEBUG:
  * AUTHOR: Duane Wessels
@@ -381,26 +381,72 @@ ServerStateData::doneWithIcap() const {
         !virginBodyDestination && !adaptedHeadSource && !adaptedBodySource;
 }
 
+// sends virgin reply body to ICAP, buffering excesses if needed
+void
+ServerStateData::adaptVirginReplyBody(const char *data, ssize_t len)
+{
+    assert(startedIcap);
+
+    if (!virginBodyDestination) {
+        debugs(11,3, HERE << "ICAP does not want more virgin body");
+        return;
+    }
+
+    // grow overflow area if already overflowed
+    if (responseBodyBuffer) {
+        responseBodyBuffer->append(data, len);
+        data = responseBodyBuffer->content();
+        len = responseBodyBuffer->contentSize();
+    }
+
+    const ssize_t putSize = virginBodyDestination->putMoreData(data, len);
+    data += putSize;
+    len -= putSize;
+
+    // if we had overflow area, shrink it as necessary
+    if (responseBodyBuffer) {
+        if (putSize == responseBodyBuffer->contentSize()) {
+            delete responseBodyBuffer;
+            responseBodyBuffer = NULL;
+        } else {
+            responseBodyBuffer->consume(putSize);
+		}
+        return;
+    }
+
+    // if we did not have an overflow area, create it as needed
+    if (len > 0) {
+        assert(!responseBodyBuffer);
+        responseBodyBuffer = new MemBuf;
+        responseBodyBuffer->init(4096, SQUID_TCP_SO_RCVBUF * 10);
+        responseBodyBuffer->append(data, len);
+    }
+}
+
 // can supply more virgin response body data
 void
 ServerStateData::noteMoreBodySpaceAvailable(BodyPipe &)
 {
     if (responseBodyBuffer) {
-	addReplyBody(NULL, 0); // Hack to kick the buffered fragment alive again
-	if (completed && !responseBodyBuffer) {
-	    serverComplete2();
-	    return;
-	}
+        addVirginReplyBody(NULL, 0); // kick the buffered fragment alive again
+        if (completed && !responseBodyBuffer) {
+            serverComplete2();
+            return;
+        }
     }
     maybeReadVirginBody();
 }
 
-// the consumer of our virgin response body aborted, we should too
+// the consumer of our virgin response body aborted
 void
 ServerStateData::noteBodyConsumerAborted(BodyPipe &bp)
 {
     stopProducingFor(virginBodyDestination, false);
-    handleIcapAborted();
+
+    // do not force closeServer here in case we need to bypass IcapQueryAbort
+
+    if (doneWithIcap()) // we may still be receiving adapted response
+        handleIcapCompleted();
 }
 
 // received adapted response headers (body may follow)
@@ -432,7 +478,8 @@ ServerStateData::noteIcapAnswer(HttpMsg *msg)
         assert(adaptedBodySource->setConsumerIfNotLate(this));
     } else {
         // no body
-        handleIcapCompleted();
+        if (doneWithIcap()) // we may still be sending virgin response
+            handleIcapCompleted();
     }
 
 }
@@ -490,9 +537,20 @@ ServerStateData::handleIcapCompleted()
 {
     debugs(11,5, HERE << "handleIcapCompleted");
     cleanIcap();
+
+    // We stop reading origin response because we have no place to put it and
+    // cannot use it. If some origin servers do not like that or if we want to
+    // reuse more pconns, we can add code to discard unneeded origin responses.
+    if (!doneWithServer()) {
+        debugs(11,3, HERE << "closing origin conn due to ICAP completion");
+        closeServer();
+    }
+
     completeForwarding();
+
     quitIfAllDone();
 }
+
 
 // common part of noteIcap*Aborted and noteBodyConsumerAborted methods
 void
@@ -526,7 +584,7 @@ ServerStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
     if (abortOnBadEntry("entry went bad while waiting for ICAP ACL check"))
         return;
 
-    const bool startedIcap = startIcap(service, originalRequest());
+    startedIcap = startIcap(service, originalRequest());
 
     if (!startedIcap && (!service || service->bypass)) {
         // handle ICAP start failure when no service was selected
@@ -582,46 +640,22 @@ ServerStateData::setReply()
 }
 
 void
-ServerStateData::addReplyBody(const char *data, ssize_t len)
+ServerStateData::addVirginReplyBody(const char *data, ssize_t len)
 {
-
 #if ICAP_CLIENT
-
-    if (virginBodyDestination != NULL) {
-	if (responseBodyBuffer) {
-	    responseBodyBuffer->append(data, len);
-	    data = responseBodyBuffer->content();
-	    len = responseBodyBuffer->contentSize();
-	}
-	    
-        const size_t putSize = virginBodyDestination->putMoreData(data, len);
-	data += putSize;
-	len -= putSize;
-	if (responseBodyBuffer) {
-	    responseBodyBuffer->consume(putSize);
-	    if (responseBodyBuffer->contentSize() == 0) {
-		delete responseBodyBuffer;
-		responseBodyBuffer = NULL;
-	    }
-	} else if (len > 0) {
-	    if (!responseBodyBuffer) {
-		responseBodyBuffer = new MemBuf;
-		responseBodyBuffer->init(4096, SQUID_TCP_SO_RCVBUF * 10);
-	    }
-	    responseBodyBuffer->append(data, len);
-	}
+    assert(!icapAccessCheckPending); // or would need to buffer while waiting
+    if (startedIcap) {
+        adaptVirginReplyBody(data, len);
         return;
     }
-
-    // Even if we are done with sending the virgin body to ICAP, we may still
-    // be waiting for adapted headers. We need them before writing to store.
-    if (adaptedHeadSource != NULL) {
-        debugs(11,5, HERE << "need adapted head from " << adaptedHeadSource);
-        return;
-    }
-
 #endif
+    storeReplyBody(data, len);
+}
 
+// writes virgin or adapted reply body to store
+void
+ServerStateData::storeReplyBody(const char *data, ssize_t len)
+{
     if (!len)
 	return;
 
