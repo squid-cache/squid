@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.50 2007/08/02 04:15:26 amosjeffries Exp $
+ * $Id: auth_basic.cc,v 1.51 2007/08/02 04:18:14 amosjeffries Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -162,7 +162,7 @@ AuthBasicUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointer
 
     /* if the password is not ok, do an identity */
 
-    if (basic_auth->flags.credentials_ok != 1)
+    if (!basic_auth || basic_auth->flags.credentials_ok != 1)
         return;
 
     /* are we about to recheck the credentials externally? */
