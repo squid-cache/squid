@@ -1,5 +1,5 @@
 /*
- * $Id: ufscommon.cc,v 1.11 2007/04/28 22:26:51 hno Exp $
+ * $Id: ufscommon.cc,v 1.12 2007/08/01 23:21:07 amosjeffries Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store Directory Routines
@@ -79,6 +79,8 @@ RebuildState::RebuildState (RefCount<UFSSwapDir> aSwapDir) : sd (aSwapDir), e(NU
 RebuildState::~RebuildState()
 {
     sd->closeTmpSwapLog();
+    /* now thats closed we DONT want to keep our secondary pointer to it */
+    log = NULL;
 }
 
 void
