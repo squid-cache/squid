@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.3 2006/09/10 20:08:20 serassio Exp $
+ * $Id: cachemgr.cc,v 1.4 2007/08/02 02:24:55 amosjeffries Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -944,8 +944,10 @@ read_request(void)
 
     if (strlen(buf) == 0)
 #endif
-
+    {
+        free(buf);
         return NULL;
+    }
 
     req = (cachemgr_request *)xcalloc(1, sizeof(cachemgr_request));
 
