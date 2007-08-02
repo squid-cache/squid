@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.48 2007/05/09 07:36:26 wessels Exp $
+ * $Id: auth_basic.cc,v 1.49 2007/08/01 23:12:33 amosjeffries Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -316,6 +316,13 @@ AuthBasicConfig::AuthBasicConfig()
     authenticateChildren = 5;
     credentialsTTL = 2 * 60 * 60;	/* two hours */
     basicAuthRealm = xstrdup("Squid proxy-caching web server");
+}
+
+AuthBasicConfig::~AuthBasicConfig()
+{
+    if(basicAuthRealm)
+        delete basicAuthRealm;
+    basicAuthRealm = NULL;
 }
 
 void
