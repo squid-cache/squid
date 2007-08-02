@@ -91,7 +91,7 @@ RFCNB_Call(char *Called_Name, char *Calling_Name, char *Called_Address,
     if ((errno = RFCNB_Name_To_IP(Service_Address, &Dest_IP)) < 0) {	/* Error */
 
 	/* No need to modify RFCNB_errno as it was done by RFCNB_Name_To_IP */
-
+        free(con);
 	return (NULL);
 
     }
@@ -133,7 +133,7 @@ RFCNB_Call(char *Called_Name, char *Calling_Name, char *Called_Address,
 	if ((Client = RFCNB_IP_Connect(Dest_IP, port)) < 0) {	/* Error */
 
 	    /* No need to modify RFCNB_errno as it was done by RFCNB_IP_Connect */
-
+            free(con);
 	    return (NULL);
 
 	}
@@ -149,7 +149,8 @@ RFCNB_Call(char *Called_Name, char *Calling_Name, char *Called_Address,
 		    &redirect, &Dest_IP, &port)) < 0) {
 
 	    /* No need to modify RFCNB_errno as it was done by RFCNB_Session.. */
-
+	    RFCNB_Close(con->fd);	/* Close it */
+            free(con);
 	    return (NULL);
 
 	}
