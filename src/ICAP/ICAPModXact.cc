@@ -420,7 +420,7 @@ void ICAPModXact::stopWriting(bool nicely)
             checkConsuming();
             return;
         }
-        debugs(93, 2, HERE << "will NOT wait for the last write" << status());
+        debugs(93, 3, HERE << "will NOT wait for the last write" << status());
 
         // Comm does not have an interface to clear the writer callback nicely,
         // but without clearing the writer we cannot recycle the connection.
@@ -589,7 +589,7 @@ void ICAPModXact::callException(const TextException &e)
     }
 
     try {
-        debugs(93, 2, "bypassing ICAPModXact::" << inCall << " exception: " <<
+        debugs(93, 3, "bypassing ICAPModXact::" << inCall << " exception: " <<
            e.message << ' ' << status());
         bypassFailure();
     }

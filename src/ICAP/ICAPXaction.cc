@@ -207,9 +207,9 @@ void ICAPXaction::noteCommConnected(comm_err_t commStatus)
 }
 
 void ICAPXaction::dieOnConnectionFailure() {
+    debugs(93, 2, HERE << typeName <<
+        " failed to connect to " << service().uri);
     theService->noteFailure();
-    debugs(93,3, typeName << " failed to connect to the ICAP service at " <<
-        service().uri);
     throw TexcHere("cannot connect to the ICAP service");
 }
 
@@ -253,7 +253,7 @@ void ICAPXaction::noteCommTimedout()
 
 void ICAPXaction::handleCommTimedout()
 {
-    debugs(93, 2, HERE << typeName << " timeout with " <<
+    debugs(93, 2, HERE << typeName << " failed: timeout with " <<
         theService->methodStr() << " " << theService->uri.buf() << status());
     reuseConnection = false;
     service().noteFailure();
