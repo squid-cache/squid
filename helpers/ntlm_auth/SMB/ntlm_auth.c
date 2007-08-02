@@ -273,7 +273,7 @@ manage_request()
     ntlmhdr *fast_header;
     char buf[BUFFER_SIZE];
     const char *ch;
-    char *ch2, *decoded, *cred;
+    char *ch2, *decoded, *cred = NULL;
     int plen;
 
     if (fgets(buf, BUFFER_SIZE, stdin) == NULL) {
@@ -414,6 +414,7 @@ manage_request()
 		    return;
 		}
 	    }
+            assert(cred != NULL);
 	    lc(cred);		/* let's lowercase them for our convenience */
 	    SEND2("AF %s", cred);
 	    return;
