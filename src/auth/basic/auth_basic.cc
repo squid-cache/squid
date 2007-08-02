@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.49 2007/08/01 23:12:33 amosjeffries Exp $
+ * $Id: auth_basic.cc,v 1.50 2007/08/02 04:15:26 amosjeffries Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -143,7 +143,7 @@ int
 AuthBasicUserRequest::authenticated() const
 {
     BasicUser const *basic_auth = dynamic_cast<BasicUser const *>(user());
-    assert (user());
+    assert (basic_auth != NULL);
 
     if (basic_auth->authenticated())
         return 1;
