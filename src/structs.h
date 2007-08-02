@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.559 2007/07/09 19:54:13 wessels Exp $
+ * $Id: structs.h,v 1.560 2007/08/02 01:16:51 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1010,7 +1010,7 @@ struct _peer
     struct
     {
         int version;
-        int counts[ICP_END];
+        int counts[ICP_END+1];
         u_short port;
     }
 
