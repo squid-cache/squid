@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.h,v 1.21 2007/05/29 13:31:37 amosjeffries Exp $
+ * $Id: HttpHeader.h,v 1.22 2007/08/01 22:52:45 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -136,7 +136,7 @@ typedef enum {
 
 /* possible owners of http header */
 typedef enum {
-    hoNone,
+    hoNone =0,
 #if USE_HTCP
     hoHtcpReply,
 #endif
