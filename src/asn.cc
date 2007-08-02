@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.112 2007/04/30 16:56:09 wessels Exp $
+ * $Id: asn.cc,v 1.113 2007/08/01 22:36:02 amosjeffries Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -468,7 +468,7 @@ asnAddNet(char *as_string, int as_number)
         }
     } else {
         q = new List<int> (as_number);
-        asinfo = (as_info *)xmalloc(sizeof(asinfo));
+        asinfo = (as_info *)xmalloc(sizeof(as_info));
         asinfo->as_number = q;
         rn = squid_rn_addroute(e->e_addr, e->e_mask, AS_tree_head, e->e_nodes);
         rn = squid_rn_match(e->e_addr, AS_tree_head);
