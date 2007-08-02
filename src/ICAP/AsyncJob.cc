@@ -79,7 +79,7 @@ bool AsyncJob::callStart(const char *method)
 
 void AsyncJob::callException(const TextException &e)
 {
-    debugs(93, 2, typeName << "::" << inCall << " caught an exception: " <<
+    debugs(93, 3, typeName << "::" << inCall << " caught an exception: " <<
            e.message << ' ' << status());
 
     mustStop("exception");
