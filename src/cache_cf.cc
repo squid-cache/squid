@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.513 2007/06/28 15:18:16 rousskov Exp $
+ * $Id: cache_cf.cc,v 1.514 2007/08/02 01:20:47 amosjeffries Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1245,6 +1245,7 @@ dump_cachedir(StoreEntry * entry, const char *name, _SquidConfig::_cacheSwap swa
 
     for (i = 0; i < swap.n_configured; i++) {
         s = dynamic_cast<SwapDir *>(swap.swapDirs[i].getRaw());
+        if(!s) continue;
         storeAppendPrintf(entry, "%s %s %s", name, s->type(), s->path);
         s->dump(*entry);
         storeAppendPrintf(entry, "\n");
