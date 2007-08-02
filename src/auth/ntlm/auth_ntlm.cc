@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.71 2007/07/04 00:55:31 hno Exp $
+ * $Id: auth_ntlm.cc,v 1.72 2007/08/02 02:08:25 amosjeffries Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -626,14 +626,17 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointer 
     /* locate second word */
     blob = proxy_auth;
 
-    while (xisspace(*blob) && *blob)
-        blob++;
+    /* if proxy_auth is actually NULL, we'd better not manipulate it. */
+    if(blob) {
+        while (xisspace(*blob) && *blob)
+            blob++;
 
-    while (!xisspace(*blob) && *blob)
-        blob++;
+        while (!xisspace(*blob) && *blob)
+            blob++;
 
-    while (xisspace(*blob) && *blob)
-        blob++;
+        while (xisspace(*blob) && *blob)
+            blob++;
+    }
 
     switch (auth_state) {
 
