@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_negotiate.cc,v 1.21 2007/07/04 00:59:13 hno Exp $
+ * $Id: auth_negotiate.cc,v 1.22 2007/08/02 04:01:46 amosjeffries Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -697,14 +697,16 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * request, ConnStateData::Poi
     /* locate second word */
     blob = proxy_auth;
 
-    while (xisspace(*blob) && *blob)
-        blob++;
+    if(blob) {
+        while (xisspace(*blob) && *blob)
+            blob++;
 
-    while (!xisspace(*blob) && *blob)
-        blob++;
+        while (!xisspace(*blob) && *blob)
+            blob++;
 
-    while (xisspace(*blob) && *blob)
-        blob++;
+        while (xisspace(*blob) && *blob)
+            blob++;
+    }
 
     switch (auth_state) {
 
