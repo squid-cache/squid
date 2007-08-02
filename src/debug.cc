@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.102 2007/04/28 22:26:37 hno Exp $
+ * $Id: debug.cc,v 1.103 2007/08/01 23:04:23 amosjeffries Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -231,7 +231,9 @@ debugArg(const char *arg) {
 
     l = atoi(arg);
     assert(s >= -1);
-    assert(s < MAX_DEBUG_SECTIONS);
+
+    if(s >= MAX_DEBUG_SECTIONS)
+        s = MAX_DEBUG_SECTIONS-1;
 
     if (l < 0)
         l = 0;
