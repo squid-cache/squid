@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.45 2005/05/11 14:26:52 hno Exp $
+ * $Id: rfc1035.c,v 1.46 2007/08/02 11:26:39 amosjeffries Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -298,17 +298,22 @@ rfc1035NameUnpack(const char *buf, size_t sz, int *off, unsigned short *rdlength
 	    s = ntohs(s);
 	    (*off) += sizeof(s);
 	    /* Sanity check */
-	    if ((*off) >= sz)
+            if ((*off) > sz) {
+                RFC1035_UNPACK_DEBUG;
 		return 1;
+            }
 	    ptr = s & 0x3FFF;
 	    /* Make sure the pointer is inside this message */
-	    if (ptr >= sz)
+            if (ptr >= sz) {
+                RFC1035_UNPACK_DEBUG;
 		return 1;
+            }
 	    return rfc1035NameUnpack(buf, sz, &ptr, rdlength, name + no, ns - no, rdepth + 1);
 	} else if (c > RFC1035_MAXLABELSZ) {
 	    /*
 	     * "(The 10 and 01 combinations are reserved for future use.)"
 	     */
+            RFC1035_UNPACK_DEBUG;
 	    return 1;
 	} else {
 	    (*off)++;
