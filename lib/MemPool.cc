@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemPool.cc,v 1.7 2007/05/22 16:40:06 rousskov Exp $
+ * $Id: MemPool.cc,v 1.8 2007/08/01 23:30:03 amosjeffries Exp $
  *
  * DEBUG: section 63    Low Level Memory Pool Management
  * AUTHOR: Alex Rousskov, Andres Kroonmaa, Robert Collins
@@ -430,8 +430,12 @@ MemPool::~MemPool()
     clean(0);
     assert(inuse == 0 && "While trying to destroy pool");
 
-    for (chunk = Chunks; (fchunk = chunk) != NULL; chunk = chunk->next)
+    chunk = Chunks;
+    while( (fchunk = chunk) != NULL) {
+        chunk = chunk->next;
 	delete fchunk;
+    }
+    /* TODO we should be doing something about the original Chunks pointer here. */
 
     assert(MemPools::GetInstance().pools != NULL && "Called MemPool::~MemPool, but no pool exists!");
 
