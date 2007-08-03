@@ -1,5 +1,5 @@
 /*
- * $Id: Server.cc,v 1.19 2007/08/01 04:18:08 rousskov Exp $
+ * $Id: Server.cc,v 1.20 2007/08/02 19:32:22 rousskov Exp $
  *
  * DEBUG:
  * AUTHOR: Duane Wessels
@@ -351,6 +351,8 @@ ServerStateData::startIcap(ICAPServiceRep::Pointer service, HttpRequest *cause)
         reply->body_pipe = virginBodyDestination;
         debugs(93, 6, HERE << "will send virgin reply body to " << 
             virginBodyDestination << "; size: " << size);
+        if (size > 0)
+            virginBodyDestination->setBodySize(size);
     }
 
     adaptedHeadSource = initiateIcap(
