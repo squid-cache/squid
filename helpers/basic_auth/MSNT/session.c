@@ -110,6 +110,7 @@ RFCNB_Call(char *Called_Name, char *Calling_Name, char *Called_Address,
 
 	    RFCNB_errno = RFCNBE_NoSpace;
 	    RFCNB_saved_errno = errno;
+            free(con);
 	    return (NULL);
 
 	}
