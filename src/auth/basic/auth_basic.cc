@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.51 2007/08/02 04:18:14 amosjeffries Exp $
+ * $Id: auth_basic.cc,v 1.52 2007/08/03 02:11:17 amosjeffries Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -258,6 +258,8 @@ authenticateBasicHandleReply(void *data, char *reply)
     assert(r->auth_user_request != NULL);
     assert(r->auth_user_request->user()->auth_type == AUTH_BASIC);
     basic_data *basic_auth = dynamic_cast<basic_data *>(r->auth_user_request->user());
+
+    assert(basic_auth != NULL);
 
     if (reply && (strncasecmp(reply, "OK", 2) == 0))
         basic_auth->flags.credentials_ok = 1;
@@ -642,6 +644,7 @@ AuthBasicUserRequest::module_start(RH * handler, void *data)
     basic_data *basic_auth;
     assert(user()->auth_type == AUTH_BASIC);
     basic_auth = dynamic_cast<basic_data *>(user());
+    assert(basic_auth != NULL);
     debugs(29, 9, "AuthBasicUserRequest::start: '" << basic_auth->username() << ":" << basic_auth->passwd << "'");
 
     if (basicConfig.authenticate == NULL) {
