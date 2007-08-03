@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_negotiate.cc,v 1.22 2007/08/02 04:01:46 amosjeffries Exp $
+ * $Id: auth_negotiate.cc,v 1.23 2007/08/03 02:07:34 amosjeffries Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -307,6 +307,8 @@ AuthNegotiateConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *re
     } else {
         negotiate_request = dynamic_cast<AuthNegotiateUserRequest *>(auth_user_request);
 
+        assert(negotiate_request != NULL);
+
         switch (negotiate_request->auth_state) {
 
         case AUTHENTICATE_STATE_FAILED:
@@ -394,6 +396,7 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
     assert(auth_user_request != NULL);
     negotiate_request = dynamic_cast<AuthNegotiateUserRequest *>(auth_user_request);
 
+    assert(negotiate_request != NULL);
     assert(negotiate_request->waiting);
     negotiate_request->waiting = 0;
     safe_free(negotiate_request->client_blob);
@@ -402,6 +405,8 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
     assert(auth_user != NULL);
     assert(auth_user->auth_type == AUTH_NEGOTIATE);
     negotiate_user = dynamic_cast<negotiate_user_t *>(auth_user_request->user());
+
+    assert(negotiate_user != NULL);
 
     if (negotiate_request->authserver == NULL)
         negotiate_request->authserver = static_cast<helper_stateful_server*>(lastserver);
@@ -590,6 +595,7 @@ authenticateNegotiateReleaseServer(AuthUserRequest * auth_user_request)
      * code-paths. Kinkie */
     /* DPW 2007-05-07
      * yes, it is possible */
+    assert(negotiate_request != NULL);
     if (negotiate_request->authserver) {
 	helperStatefulReleaseServer(negotiate_request->authserver);
 	negotiate_request->authserver = NULL;
