@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.72 2007/08/02 02:08:25 amosjeffries Exp $
+ * $Id: auth_ntlm.cc,v 1.73 2007/08/03 01:57:30 amosjeffries Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -285,6 +285,8 @@ AuthNTLMConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, ht
     } else {
         ntlm_request = dynamic_cast<AuthNTLMUserRequest *>(auth_user_request);
 
+        assert(ntlm_request != NULL);
+
         switch (ntlm_request->auth_state) {
 
         case AUTHENTICATE_STATE_FAILED:
@@ -362,6 +364,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
     assert(auth_user_request != NULL);
     ntlm_request = dynamic_cast<AuthNTLMUserRequest *>(auth_user_request);
 
+    assert(ntlm_request != NULL);
     assert(ntlm_request->waiting);
     ntlm_request->waiting = 0;
     safe_free(ntlm_request->client_blob);
@@ -370,6 +373,8 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
     assert(auth_user != NULL);
     assert(auth_user->auth_type == AUTH_NTLM);
     ntlm_user = dynamic_cast<ntlm_user_t *>(auth_user_request->user());
+
+    assert(ntlm_request != NULL);
 
     if (ntlm_request->authserver == NULL)
         ntlm_request->authserver = static_cast<helper_stateful_server*>(lastserver);
@@ -519,6 +524,7 @@ authenticateNTLMReleaseServer(AuthUserRequest * auth_user_request)
      * code-paths. Kinkie */
     /* DPW 2007-05-07
      * yes, it is possible */
+    assert(ntlm_request != NULL);
     if (ntlm_request->authserver) {
 	helperStatefulReleaseServer(ntlm_request->authserver);
 	ntlm_request->authserver = NULL;
