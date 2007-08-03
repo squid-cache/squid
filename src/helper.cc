@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.85 2007/05/11 04:06:08 rousskov Exp $
+ * $Id: helper.cc,v 1.86 2007/08/03 02:22:52 amosjeffries Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -1128,7 +1128,7 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
 
         *t = '\0';
 
-        if (cbdataReferenceValid(r->data)) {
+        if (r && cbdataReferenceValid(r->data)) {
             switch ((r->callback(r->data, srv, srv->rbuf))) {	/*if non-zero reserve helper */
 
             case S_HELPER_UNKNOWN:
