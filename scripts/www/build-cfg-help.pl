@@ -10,7 +10,7 @@ use File::Basename;
 #
 # Adrian Chadd <adrian@squid-cache.org>
 #
-# $Id: build-cfg-help.pl,v 1.3 2007/06/25 09:58:49 hno Exp $
+# $Id: build-cfg-help.pl,v 1.4 2007/08/02 22:44:39 amosjeffries Exp $
 
 #
 # The template file is reasonably simple to parse. There's a number of
@@ -56,7 +56,7 @@ my (%all_names);
 my ($comment);
 my (%defines);
 
-my $version = "2.HEAD";
+my $version = "3.0-PRE6";
 my $verbose = '';
 my $path = "/tmp";
 my $format = "splithtml";
