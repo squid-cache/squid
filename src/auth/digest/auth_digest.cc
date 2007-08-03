@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.57 2007/05/29 13:31:46 amosjeffries Exp $
+ * $Id: auth_digest.cc,v 1.58 2007/08/03 02:16:59 amosjeffries Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -588,6 +588,8 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointe
 
     digest_user = dynamic_cast < digest_user_h * >(auth_user);
 
+    assert(digest_user != NULL);
+
     /* if the check has corrupted the user, just return */
 
     if (credentials() == Failed) {
@@ -786,7 +788,7 @@ AuthDigestConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, 
     if (auth_user_request) {
         AuthDigestUserRequest *digest_request;
         digest_request = dynamic_cast < AuthDigestUserRequest * >(auth_user_request);
-        assert (digest_request);
+        assert (digest_request != NULL);
 
         stale = digest_request->flags.nonce_stale;
     }
@@ -842,7 +844,9 @@ authenticateDigestHandleReply(void *data, char *reply)
     auth_user_request = replyData->auth_user_request;
     digest_request = dynamic_cast < AuthDigestUserRequest * >(auth_user_request);
     assert(digest_request);
+
     digest_user = dynamic_cast < digest_user_h * >(auth_user_request->user());
+    assert(digest_user != NULL);
 
     if (reply && (strncasecmp(reply, "ERR", 3) == 0)) {
         digest_request->credentials(AuthDigestUserRequest::Failed);
@@ -1359,6 +1363,7 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
     digest_user_h *digest_user;
     assert(user()->auth_type == AUTH_DIGEST);
     digest_user = dynamic_cast < digest_user_h * >(user());
+    assert(digest_user != NULL);
     debugs(29, 9, "authenticateStart: '\"" << digest_user->username() << "\":\"" << realm << "\"'");
 
     if (digestConfig.authenticate == NULL) {
