@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_negotiate.cc,v 1.23 2007/08/03 02:07:34 amosjeffries Exp $
+ * $Id: auth_negotiate.cc,v 1.24 2007/08/04 03:12:11 amosjeffries Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -588,6 +588,7 @@ authenticateNegotiateReleaseServer(AuthUserRequest * auth_user_request)
     AuthNegotiateUserRequest *negotiate_request;
     assert(auth_user_request->user()->auth_type == AUTH_NEGOTIATE);
     negotiate_request = dynamic_cast< AuthNegotiateUserRequest *>(auth_user_request);
+    assert(negotiate_request != NULL);
     debugs(29, 9, "authenticateNegotiateReleaseServer: releasing server '" << negotiate_request->authserver << "'");
     /* is it possible for the server to be NULL? hno seems to think so.
      * Let's see what happens, might segfault in helperStatefulReleaseServer
@@ -595,7 +596,6 @@ authenticateNegotiateReleaseServer(AuthUserRequest * auth_user_request)
      * code-paths. Kinkie */
     /* DPW 2007-05-07
      * yes, it is possible */
-    assert(negotiate_request != NULL);
     if (negotiate_request->authserver) {
 	helperStatefulReleaseServer(negotiate_request->authserver);
 	negotiate_request->authserver = NULL;
