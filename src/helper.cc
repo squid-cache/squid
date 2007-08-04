@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.86 2007/08/03 02:22:52 amosjeffries Exp $
+ * $Id: helper.cc,v 1.87 2007/08/04 03:19:12 amosjeffries Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -1602,9 +1602,11 @@ helperRequestFree(helper_request * r)
 static void
 helperStatefulRequestFree(helper_stateful_request * r)
 {
-    cbdataReferenceDone(r->data);
-    xfree(r->buf);
-    delete r;
+    if(r) {
+        cbdataReferenceDone(r->data);
+        xfree(r->buf);
+        delete r;
+    }
 }
 
 // TODO: should helper_ and helper_stateful_ have a common parent?
