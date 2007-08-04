@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.73 2007/08/03 01:57:30 amosjeffries Exp $
+ * $Id: auth_ntlm.cc,v 1.74 2007/08/04 03:08:36 amosjeffries Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -374,7 +374,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
     assert(auth_user->auth_type == AUTH_NTLM);
     ntlm_user = dynamic_cast<ntlm_user_t *>(auth_user_request->user());
 
-    assert(ntlm_request != NULL);
+    assert(ntlm_user != NULL);
 
     if (ntlm_request->authserver == NULL)
         ntlm_request->authserver = static_cast<helper_stateful_server*>(lastserver);
