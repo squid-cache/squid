@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreEntryStream.h,v 1.3 2007/08/07 19:41:56 rousskov Exp $
+ * $Id: StoreEntryStream.h,v 1.4 2007/08/07 20:02:51 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -64,7 +64,7 @@ protected:
     /* flush the current buffer and the character that is overflowing
      * to the store entry.
      */
-    virtual char overflow(char aChar = traits_type::eof())
+    virtual int_type overflow(int_type aChar = traits_type::eof())
     {
         std::streamsize pending(pptr() - pbase());
 
