@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreEntryStream.h,v 1.2 2006/05/06 01:30:45 robertc Exp $
+ * $Id: StoreEntryStream.h,v 1.3 2007/08/07 19:41:56 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -48,18 +48,16 @@ class StoreEntryStreamBuf : public std::streambuf
 {
 
 public:
-    StoreEntryStreamBuf(StoreEntry *anEntry) : anEntry(anEntry)
+    StoreEntryStreamBuf(StoreEntry *anEntry) : theEntry(anEntry)
     {
 
-        anEntry->lock()
-
-        ;
-        anEntry->buffer();
+        theEntry->lock();
+        theEntry->buffer();
     }
 
     ~StoreEntryStreamBuf()
     {
-        anEntry->unlock();
+        theEntry->unlock();
     }
 
 protected:
@@ -77,7 +75,7 @@ protected:
             char chars[1] = {aChar};
 
             if (aChar != traits_type::eof())
-                anEntry->append(chars, 1);
+                theEntry->append(chars, 1);
         }
 
         pbump (-pending);  // Reset pptr().
@@ -90,9 +88,9 @@ protected:
         std::streamsize pending(pptr() - pbase());
 
         if (pending)
-            anEntry->append(pbase(), pending);
+            theEntry->append(pbase(), pending);
 
-        anEntry->flush();
+        theEntry->flush();
 
         return 0;
     }
@@ -103,13 +101,13 @@ protected:
     virtual std::streamsize xsputn(const char * chars, std::streamsize number)
     {
         if (number)
-            anEntry->append(chars, number);
+            theEntry->append(chars, number);
 
         return number;
     }
 
 private:
-    StoreEntry *anEntry;
+    StoreEntry *theEntry;
 
 };
 
@@ -117,14 +115,11 @@ class StoreEntryStream : public std::ostream
 {
 
 public:
-    /* create a stream for writing text etc into anEntry */
-    StoreEntryStream(StoreEntry *anEntry) : std::ostream(&_buffer), _buffer(anEntry) { this->init(&_buffer);}
+    /* create a stream for writing text etc into theEntry */
+    StoreEntryStream(StoreEntry *entry): theBuffer(entry) { this->init(&theBuffer); }
 
 private:
-    StoreEntryStreamBuf _buffer;
-
-public:
-    StoreEntryStreamBuf * rdbuf() const { return const_cast<StoreEntryStreamBuf *>(&_buffer); }
+    StoreEntryStreamBuf theBuffer;
 };
 
 #endif /* SQUID_STORE_ENTRY_STREAM_H */
