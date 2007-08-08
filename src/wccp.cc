@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp.cc,v 1.43 2007/04/30 16:56:09 wessels Exp $
+ * $Id: wccp.cc,v 1.44 2007/08/08 14:47:41 rousskov Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Glenn Chisholm
@@ -139,7 +139,7 @@ wccpConnectionOpen(void)
     debugs(80, 5, "wccpConnectionOpen: Called");
 
     if (Config.Wccp.router.s_addr == any_addr.s_addr) {
-        debugs(1, 1, "WCCP Disabled.");
+        debugs(80, 2, "WCCPv1 disabled.");
         return;
     }
 
@@ -159,7 +159,7 @@ wccpConnectionOpen(void)
                   NULL,
                   0);
 
-    debugs(1, 1, "Accepting WCCP messages on port " << port << ", FD " << theWccpConnection << ".");
+    debugs(80, 1, "Accepting WCCPv1 messages on port " << port << ", FD " << theWccpConnection << ".");
 
 
     router_len = sizeof(router);
@@ -190,7 +190,7 @@ void
 wccpConnectionClose(void)
 {
     if (theWccpConnection > -1) {
-        debugs(80, 1, "FD " << theWccpConnection << " Closing WCCP socket");
+        debugs(80, 1, "FD " << theWccpConnection << " Closing WCCPv1 socket");
         comm_close(theWccpConnection);
         theWccpConnection = -1;
     }
