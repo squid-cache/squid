@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp2.cc,v 1.16 2007/04/30 16:56:09 wessels Exp $
+ * $Id: wccp2.cc,v 1.17 2007/08/08 14:47:41 rousskov Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Steven Wilton
@@ -1047,7 +1047,7 @@ wccp2ConnectionClose(void)
     }
 
     if (theWccp2Connection > -1) {
-        debugs(80, 1, "FD " << theWccp2Connection << " Closing WCCP socket");
+        debugs(80, 1, "FD " << theWccp2Connection << " Closing WCCPv2 socket");
         comm_close(theWccp2Connection);
         theWccp2Connection = -1;
     }
