@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.31 2007/07/23 19:58:46 rousskov Exp $
+ * $Id: http.h,v 1.32 2007/08/09 23:30:53 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -76,12 +76,6 @@ public:
     bool surrogateNoStore;
 
     void processSurrogateControl(HttpReply *);
-
-    /*
-     * getReply() public only because it is called from a static function
-     * as httpState->getReply()
-     */
-    const HttpReply * getReply() const { assert(reply); return reply; }
 
 protected:
     virtual HttpRequest *originalRequest();

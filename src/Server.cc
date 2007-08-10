@@ -1,5 +1,5 @@
 /*
- * $Id: Server.cc,v 1.20 2007/08/02 19:32:22 rousskov Exp $
+ * $Id: Server.cc,v 1.21 2007/08/09 23:30:52 rousskov Exp $
  *
  * DEBUG:
  * AUTHOR: Duane Wessels
@@ -63,7 +63,8 @@ ServerStateData::~ServerStateData()
     entry->unlock();
 
     HTTPMSGUNLOCK(request);
-    HTTPMSGUNLOCK(reply);
+    HTTPMSGUNLOCK(theVirginReply);
+    HTTPMSGUNLOCK(theFinalReply);
 
     fwd = NULL; // refcounted
 
@@ -78,6 +79,47 @@ ServerStateData::~ServerStateData()
 	delete responseBodyBuffer;
 	responseBodyBuffer = NULL;
     }
+}
+
+HttpReply *
+ServerStateData::virginReply() {
+    assert(theVirginReply);
+    return theVirginReply;
+}
+
+const HttpReply *
+ServerStateData::virginReply() const {
+    assert(theVirginReply);
+    return theVirginReply;
+}
+
+HttpReply *
+ServerStateData::setVirginReply(HttpReply *rep) {
+    debugs(11,5, HERE << this << " setting virgin reply to " << rep);
+    assert(!theVirginReply);
+    assert(rep);
+    theVirginReply = HTTPMSGLOCK(rep);
+	return theVirginReply;
+}
+
+HttpReply *
+ServerStateData::finalReply() {
+    assert(theFinalReply);
+    return theFinalReply;
+}
+
+HttpReply *
+ServerStateData::setFinalReply(HttpReply *rep) {
+    debugs(11,5, HERE << this << " setting final reply to " << rep);
+
+    assert(!theFinalReply);
+    assert(rep);
+    theFinalReply = HTTPMSGLOCK(rep);
+
+    entry->replaceHttpReply(theFinalReply);
+    haveParsedReplyHeaders();
+
+    return theFinalReply;
 }
 
 // called when no more server communication is expected; may quit
@@ -342,13 +384,14 @@ ServerStateData::startIcap(ICAPServiceRep::Pointer service, HttpRequest *cause)
     }
 
     // check whether we should be sending a body as well
-    assert(!virginBodyDestination);
-    assert(!reply->body_pipe);
     // start body pipe to feed ICAP transaction if needed
+    assert(!virginBodyDestination);
+	HttpReply *vrep = virginReply();
+    assert(!vrep->body_pipe);
     ssize_t size = 0;
-    if (reply->expectingBody(cause->method, size) && size) {
+    if (vrep->expectingBody(cause->method, size) && size) {
         virginBodyDestination = new BodyPipe(this);
-        reply->body_pipe = virginBodyDestination;
+        vrep->body_pipe = virginBodyDestination;
         debugs(93, 6, HERE << "will send virgin reply body to " << 
             virginBodyDestination << "; size: " << size);
         if (size > 0)
@@ -356,7 +399,7 @@ ServerStateData::startIcap(ICAPServiceRep::Pointer service, HttpRequest *cause)
     }
 
     adaptedHeadSource = initiateIcap(
-        new ICAPModXactLauncher(this, reply, cause, service));
+        new ICAPModXactLauncher(this, vrep, cause, service));
     return true;
 }
 
@@ -455,27 +498,20 @@ ServerStateData::noteBodyConsumerAborted(BodyPipe &bp)
 void
 ServerStateData::noteIcapAnswer(HttpMsg *msg)
 {
-    HttpReply *rep = dynamic_cast<HttpReply*>(msg);
-    HTTPMSGLOCK(rep);
     clearIcap(adaptedHeadSource); // we do not expect more messages
 
-    if (abortOnBadEntry("entry went bad while waiting for adapted headers")) {
-        HTTPMSGUNLOCK(rep); // hopefully still safe, even if "this" is deleted
+    if (abortOnBadEntry("entry went bad while waiting for adapted headers"))
         return;
-    }
 
+    HttpReply *rep = dynamic_cast<HttpReply*>(msg);
     assert(rep);
-    entry->replaceHttpReply(rep);
-    HTTPMSGUNLOCK(reply);
-
-    reply = rep; // already HTTPMSGLOCKed above
-
-    haveParsedReplyHeaders();
+    debugs(11,5, HERE << this << " setting adapted reply to " << rep);
+    setFinalReply(rep);
 
     assert(!adaptedBodySource);
-    if (reply->body_pipe != NULL) {
+    if (rep->body_pipe != NULL) {
         // subscribe to receive adapted body
-        adaptedBodySource = reply->body_pipe;
+        adaptedBodySource = rep->body_pipe;
         // assume that ICAP does not auto-consume on failures
         assert(adaptedBodySource->setConsumerIfNotLate(this));
     } else {
@@ -591,11 +627,8 @@ ServerStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
     if (!startedIcap && (!service || service->bypass)) {
         // handle ICAP start failure when no service was selected
         // or where the selected service was optional
-        entry->replaceHttpReply(reply);
-
-        haveParsedReplyHeaders();
+        setFinalReply(virginReply());
         processReplyBody();
-
         return;
     }
 
@@ -620,14 +653,17 @@ ServerStateData::icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *
 }
 #endif
 
+// TODO: when HttpStateData sends all errors to ICAP, 
+// we should be able to move this at the end of setVirginReply().
 void
-ServerStateData::setReply()
+ServerStateData::adaptOrFinalizeReply()
 {
 #if ICAP_CLIENT
 
     if (TheICAPConfig.onoff) {
         ICAPAccessCheck *icap_access_check =
-            new ICAPAccessCheck(ICAP::methodRespmod, ICAP::pointPreCache, request, reply, icapAclCheckDoneWrapper, this);
+            new ICAPAccessCheck(ICAP::methodRespmod, ICAP::pointPreCache,
+                request, virginReply(), icapAclCheckDoneWrapper, this);
 
         icapAccessCheckPending = true;
         icap_access_check->check(); // will eventually delete self
@@ -636,9 +672,7 @@ ServerStateData::setReply()
 
 #endif
 
-    entry->replaceHttpReply(reply);
-
-    haveParsedReplyHeaders();
+    setFinalReply(virginReply());
 }
 
 void
