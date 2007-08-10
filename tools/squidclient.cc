@@ -1,6 +1,6 @@
 
 /*
- * $Id: squidclient.cc,v 1.7 2006/09/02 15:37:29 serassio Exp $
+ * $Id: squidclient.cc,v 1.8 2007/08/10 09:07:01 amosjeffries Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -114,6 +114,7 @@ static void
 usage(const char *progname)
 {
     fprintf(stderr,
+            "Version: %s\n"
             "Usage: %s [-arsv] [-i IMS] [-h remote host] [-l local host] [-p port] [-m method] [-t count] [-I ping-interval] [-H 'strings'] [-T timeout] url\n"
             "Options:\n"
             "    -P file      PUT request.\n"
@@ -135,7 +136,7 @@ usage(const char *progname)
             "    -w password  Proxy authentication password\n"
             "    -U user      WWW authentication username\n"
             "    -W password  WWW authentication password\n",
-            progname, CACHE_HTTP_PORT);
+            VERSION, progname, CACHE_HTTP_PORT);
     exit(1);
 }
 
