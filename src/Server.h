@@ -1,6 +1,6 @@
 
 /*
- * $Id: Server.h,v 1.8 2007/08/01 04:16:00 rousskov Exp $
+ * $Id: Server.h,v 1.9 2007/08/09 23:30:52 rousskov Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -148,8 +148,15 @@ protected:
 #endif
 
 protected:
+    const HttpReply *virginReply() const;
+    HttpReply *virginReply();
+    HttpReply *setVirginReply(HttpReply *r);
+
+    HttpReply *finalReply();
+    HttpReply *setFinalReply(HttpReply *r);
+
     // Kids use these to stuff data into the response instead of messing with the entry directly
-    void setReply();
+    void adaptOrFinalizeReply();
     void addVirginReplyBody(const char *buf, ssize_t len);
     void storeReplyBody(const char *buf, ssize_t len);
     size_t replyBodySpace(size_t space = 4096 * 10);
@@ -162,7 +169,6 @@ public: // should not be
     StoreEntry *entry;
     FwdState::Pointer fwd;
     HttpRequest *request;
-    HttpReply *reply;
 
 protected:
     BodyPipe::Pointer requestBodySource; // to consume request body
@@ -179,7 +185,9 @@ protected:
 
 private:
     void quitIfAllDone(); // successful termination
-    
+
+	HttpReply *theVirginReply; // reply received from the origin server
+	HttpReply *theFinalReply; // adapted reply from ICAP or virgin reply
 };
 
 #endif /* SQUID_SERVER_H */

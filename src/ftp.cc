@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.431 2007/08/01 04:16:00 rousskov Exp $
+ * $Id: ftp.cc,v 1.432 2007/08/09 23:30:52 rousskov Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -3115,14 +3115,13 @@ FtpStateData::appendSuccessHeader()
     const char *filename = NULL;
     const char *t = NULL;
     StoreEntry *e = entry;
-    HttpReply *newrep = new HttpReply;
 
     debugs(9, 3, HERE << "FtpStateData::appendSuccessHeader starting");
 
-    reply = HTTPMSGLOCK(newrep);
-
     if (flags.http_header_sent)
         return;
+
+    HttpReply *reply = new HttpReply;
 
     flags.http_header_sent = 1;
 
@@ -3189,7 +3188,8 @@ FtpStateData::appendSuccessHeader()
     if (mime_enc)
         reply->header.putStr(HDR_CONTENT_ENCODING, mime_enc);
 
-    setReply();
+    setVirginReply(reply);
+    adaptOrFinalizeReply();
 }
 
 void

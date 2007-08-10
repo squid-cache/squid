@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.535 2007/08/01 04:16:00 rousskov Exp $
+ * $Id: http.cc,v 1.536 2007/08/09 23:30:52 rousskov Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -367,7 +367,7 @@ HttpStateData::processSurrogateControl(HttpReply *reply)
 int
 HttpStateData::cacheableReply()
 {
-    HttpReply const *rep = getReply();
+    HttpReply const *rep = finalReply();
     HttpHeader const *hdr = &rep->header;
     const int cc_mask = (rep->cache_control) ? rep->cache_control->mask : 0;
     const char *v;
@@ -442,7 +442,7 @@ HttpStateData::cacheableReply()
         if (!strncasecmp(v, "multipart/x-mixed-replace", 25))
             return 0;
 
-    switch (getReply()->sline.status) {
+    switch (rep->sline.status) {
         /* Responses that are cacheable */
 
     case HTTP_OK:
@@ -558,7 +558,7 @@ HttpStateData::cacheableReply()
         return 0;
 
     default:			/* Unknown status code */
-        debugs (11, 0, HERE << "HttpStateData::cacheableReply: unexpected http status code " << getReply()->sline.status);
+        debugs (11, 0, HERE << "HttpStateData::cacheableReply: unexpected http status code " << rep->sline.status);
 
         return 0;
 
@@ -688,7 +688,6 @@ HttpStateData::processReplyHeader()
     /* Creates a blank header. If this routine is made incremental, this will
      * not do 
      */
-    HttpReply *newrep = new HttpReply;
     Ctx ctx = ctx_enter(entry->mem_obj->url);
     debugs(11, 3, "processReplyHeader: key '" << entry->getMD5Text() << "'");
 
@@ -696,6 +695,7 @@ HttpStateData::processReplyHeader()
 
     http_status error = HTTP_STATUS_NONE;
 
+    HttpReply *newrep = new HttpReply;
     const bool parsed = newrep->parse(readBuf, eof, &error);
 
     if(!parsed && readBuf->contentSize() > 5 && strncmp(readBuf->content(), "HTTP/", 5) != 0){
@@ -715,8 +715,8 @@ HttpStateData::processReplyHeader()
 	      flags.headers_parsed = 1;
           newrep->sline.version = HttpVersion(1, 0);
           newrep->sline.status = error;
-          reply = HTTPMSGLOCK(newrep);
-          entry->replaceHttpReply(reply);
+          HttpReply *vrep = setVirginReply(newrep);
+          entry->replaceHttpReply(vrep);
 	      ctx_exit(ctx);
 	      return;
 	 }
@@ -735,14 +735,14 @@ HttpStateData::processReplyHeader()
 	 readBuf->consume(header_bytes_read);
     }
 
-    reply = HTTPMSGLOCK(newrep);
+    HttpReply *vrep = setVirginReply(newrep);
     flags.headers_parsed = 1;
 
-    keepaliveAccounting(reply);
+    keepaliveAccounting(vrep);
 
-    checkDateSkew(reply);
+    checkDateSkew(vrep);
 
-    processSurrogateControl (reply);
+    processSurrogateControl (vrep);
 
     /* TODO: IF the reply is a 1.0 reply, AND it has a Connection: Header
      * Parse the header and remove all referenced headers
@@ -758,25 +758,26 @@ void
 HttpStateData::haveParsedReplyHeaders()
 {
     Ctx ctx = ctx_enter(entry->mem_obj->url);
+    HttpReply *rep = finalReply();
 
-    if (getReply()->sline.status == HTTP_PARTIAL_CONTENT &&
-            getReply()->content_range)
-        currentOffset = getReply()->content_range->spec.offset;
+    if (rep->sline.status == HTTP_PARTIAL_CONTENT &&
+            rep->content_range)
+        currentOffset = rep->content_range->spec.offset;
 
     entry->timestampsSet();
 
     /* Check if object is cacheable or not based on reply code */
-    debugs(11, 3, "haveParsedReplyHeaders: HTTP CODE: " << getReply()->sline.status);
+    debugs(11, 3, "haveParsedReplyHeaders: HTTP CODE: " << rep->sline.status);
 
     if (neighbors_do_private_keys)
-        httpMaybeRemovePublic(entry, getReply()->sline.status);
+        httpMaybeRemovePublic(entry, rep->sline.status);
 
-    if (getReply()->header.has(HDR_VARY)
+    if (rep->header.has(HDR_VARY)
 #if X_ACCELERATOR_VARY
-            || getReply()->header.has(HDR_X_ACCELERATOR_VARY)
+            || rep->header.has(HDR_X_ACCELERATOR_VARY)
 #endif
        ) {
-        const char *vary = httpMakeVaryMark(orig_request, getReply());
+        const char *vary = httpMakeVaryMark(orig_request, rep);
 
         if (!vary) {
             entry->makePrivate();
@@ -795,7 +796,7 @@ HttpStateData::haveParsedReplyHeaders()
      * If its not a reply that we will re-forward, then
      * allow the client to get it.
      */
-    if (!fwd->reforwardableStatus(getReply()->sline.status))
+    if (!fwd->reforwardableStatus(rep->sline.status))
         EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
 
     switch (cacheableReply()) {
@@ -825,15 +826,15 @@ HttpStateData::haveParsedReplyHeaders()
 
 no_cache:
 
-    if (!ignoreCacheControl && getReply()->cache_control) {
-        if (EBIT_TEST(getReply()->cache_control->mask, CC_PROXY_REVALIDATE))
+    if (!ignoreCacheControl && rep->cache_control) {
+        if (EBIT_TEST(rep->cache_control->mask, CC_PROXY_REVALIDATE))
             EBIT_SET(entry->flags, ENTRY_REVALIDATE);
-        else if (EBIT_TEST(getReply()->cache_control->mask, CC_MUST_REVALIDATE))
+        else if (EBIT_TEST(rep->cache_control->mask, CC_MUST_REVALIDATE))
             EBIT_SET(entry->flags, ENTRY_REVALIDATE);
     }
 
 #if HEADERS_LOG
-    headersLog(1, 0, request->method, getReply());
+    headersLog(1, 0, request->method, rep);
 
 #endif
 
@@ -843,7 +844,7 @@ no_cache:
 HttpStateData::ConnectionStatus
 HttpStateData::statusIfComplete() const
 {
-    HttpReply const *rep = getReply();
+    const HttpReply *rep = virginReply();
     /* If the reply wants to close the connection, it takes precedence */
 
     if (httpHeaderHasConnDir(&rep->header, "close"))
@@ -882,13 +883,12 @@ HttpStateData::statusIfComplete() const
     return COMPLETE_PERSISTENT_MSG;
 }
 
-// XXX: This is also called for ICAP-adapted responses but they have
-// no notion of "persistent connection"
 HttpStateData::ConnectionStatus
 HttpStateData::persistentConnStatus() const
 {
     debugs(11, 3, "persistentConnStatus: FD " << fd << " eof=" << eof);
-    debugs(11, 5, "persistentConnStatus: content_length=" << reply->content_length);
+    const HttpReply *vrep = virginReply();
+    debugs(11, 5, "persistentConnStatus: content_length=" << vrep->content_length);
 
     /* If we haven't seen the end of reply headers, we are not done */
     debugs(11, 5, "persistentConnStatus: flags.headers_parsed=" << flags.headers_parsed);
@@ -899,7 +899,7 @@ HttpStateData::persistentConnStatus() const
     if (eof) // already reached EOF
         return COMPLETE_NONPERSISTENT_MSG;
 
-    const int clen = reply->bodySize(request->method);
+    const int clen = vrep->bodySize(request->method);
 
     debugs(11, 5, "persistentConnStatus: clen=" << clen);
 
@@ -910,12 +910,12 @@ HttpStateData::persistentConnStatus() const
     /* If the body size is known, we must wait until we've gotten all of it. */
     if (clen > 0) {
         // old technique:
-        // if (entry->mem_obj->endOffset() < reply->content_length + reply->hdr_sz)
+        // if (entry->mem_obj->endOffset() < vrep->content_length + vrep->hdr_sz)
         const int body_bytes_read = reply_bytes_read - header_bytes_read;
         debugs(11,5, "persistentConnStatus: body_bytes_read=" <<
-               body_bytes_read << " content_length=" << reply->content_length);
+               body_bytes_read << " content_length=" << vrep->content_length);
 
-        if (body_bytes_read < reply->content_length)
+        if (body_bytes_read < vrep->content_length)
             return INCOMPLETE_MSG;
     }
 
@@ -1032,7 +1032,7 @@ HttpStateData::readReply (size_t len, comm_err_t flag, int xerrno)
         if (!continueAfterParsingHeader()) // parsing error or need more data
             return; // TODO: send errors to ICAP
 
-        setReply();
+        adaptOrFinalizeReply();
     }
 
     // kick more reads if needed and/or process the response body, if any
@@ -1059,9 +1059,9 @@ HttpStateData::continueAfterParsingHeader()
 
     if (flags.headers_parsed) { // parsed headers, possibly with errors
         // check for header parsing errors
-        if (reply != NULL) {
-            const http_status s = getReply()->sline.status;
-            const HttpVersion &v = getReply()->sline.version;
+        if (HttpReply *vrep = virginReply()) {
+            const http_status s = vrep->sline.status;
+            const HttpVersion &v = vrep->sline.version;
             if (s == HTTP_INVALID_HEADER && v != HttpVersion(0,9)) {
                 error = ERR_INVALID_RESP;
             } else
@@ -1827,7 +1827,7 @@ HttpStateData::handleMoreRequestBodyAvailable()
             flags.abuse_detected = 1;
             debugs(11, 1, "http handleMoreRequestBodyAvailable: Likely proxy abuse detected '" << inet_ntoa(orig_request->client_addr) << "' -> '" << entry->url() << "'" );
 
-            if (getReply()->sline.status == HTTP_INVALID_HEADER) {
+            if (virginReply()->sline.status == HTTP_INVALID_HEADER) {
                 comm_close(fd);
                 return;
             }
