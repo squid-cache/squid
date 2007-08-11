@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.433 2007/08/02 02:18:33 amosjeffries Exp $
+ * $Id: comm.cc,v 1.434 2007/08/11 12:13:26 serassio Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -832,7 +832,7 @@ comm_set_tos(int fd, int tos)
 	return x;
 #else
         debugs(50, 0, "comm_set_tos: setsockopt(IP_TOS) not supported on this platform");
-	return -1
+	return -1;
 #endif
 }
 
