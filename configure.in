@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.462 2007/06/30 06:33:05 wessels Exp $
+dnl  $Id: configure.in,v 1.463 2007/08/11 13:27:27 serassio Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.462 $)dnl
+AC_REVISION($Revision: 1.463 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -167,11 +167,22 @@ fi
 
 dnl set squid required flags
 if test "$GCC" = "yes"; then
-  SQUID_CFLAGS="-Werror -Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments"
-  SQUID_CXXFLAGS="-Werror -Wall -Wpointer-arith -Wwrite-strings -Wcomments"
+dnl Guido Serassio (serassio@squid-cache.org) 20070811
+dnl Using the latest MinGW (gcc 3.4.5 + mingw-runtime 3.13) cannot build with
+dnl -Wmissing-prototypes -Wmissing-declarations
+dnl TODO: check if the problem will be present in any other newer MinGW release.
+    case "$host_os" in
+    mingw|mingw32)
+        SQUID_CFLAGS="-Werror -Wall -Wpointer-arith -Wwrite-strings -Wcomments"
+	;;
+    *)
+        SQUID_CFLAGS="-Werror -Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments"
+	;;
+    esac
+    SQUID_CXXFLAGS="-Werror -Wall -Wpointer-arith -Wwrite-strings -Wcomments"
 else
-  SQUID_CFLAGS=
-  SQUID_CXXFLAGS=
+    SQUID_CFLAGS=
+    SQUID_CXXFLAGS=
 fi
 AC_SUBST(SQUID_CFLAGS)
 AC_SUBST(SQUID_CXXFLAGS)
