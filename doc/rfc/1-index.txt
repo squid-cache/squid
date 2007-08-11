@@ -2,7 +2,7 @@ draft-ietf-radext-digest-auth-06.txt
 	RADIUS Extension for Digest Authentication
 	A proposed extension to Radius for Digest authentication
 	via RADIUS servers.
-	
+
 draft-cooper-webi-wpad-00.txt
 draft-ietf-svrloc-wpad-template-00.txt
 	Web Proxy Auto-Discovery Protocol -- WPAD
@@ -26,6 +26,7 @@ rfc1035.txt
 
 rfc1738.txt
 	Uniform Resource Locators (URL)
+	(updated by RFC 3986, but not obsoleted)
 
 rfc1945.txt
 	Hypertext Transfer Protocol -- HTTP/1.0
@@ -36,6 +37,9 @@ rfc2187.txt
 
 rfc2227.txt
 	Simple Hit-Metering and Usage-Limiting for HTTP
+
+rfc2428.txt
+	FTP Extensions for IPv6 and NATs
 
 rfc2518.txt
 	HTTP Extensions for Distributed Authoring -- WEBDAV
@@ -83,6 +87,10 @@ rfc3310.txt
 	Most likely not in use for HTTP. Title says HTTP but all examples
 	is SIP.
 
+rfc3493.txt
+	Basic Socket Interface Extensions for IPv6
+	defines the socket options squid needs to use under IPv6
+
 rfc3507.txt
 	Internet Content Adaptation Protocol (ICAP/1.0)
 	Common protocol for plugging into the datastream of a HTTP proxy
@@ -90,7 +98,7 @@ rfc3507.txt
 rfc3513.txt
 	Internet Protocol Version 6 (IPv6) Addressing Architecture
 	Documents handling requirements for IP addresses under IPv6
-        and also new special case addresses defined by IANA.
+	and also new special case addresses defined by IANA.
 
 rfc3596.txt
 	DNS Extensions to Support IP Version 6
@@ -101,9 +109,14 @@ rfc3875.txt
 	used by cachemgr to get it's request arguments from the
 	web server where it is hosted
 
+rfc3986.txt
+	Uniform Resource Identifier (URI): Generic Syntax
+	defines Syntax for parsing URI of any web protocol.
+	updates URL generic syntax (rfc1738) to cover all URI formats
+	including IPv6 addressing URL and additional protocols.
+
 rfc4559.txt
 	HTTP Authentication: Kerberos Authentication
 	Microsoft Negotiate "HTTP" authentication scheme
 	Microsoft connection pinning HTTP extension to support
 	connection oriented authentication over proxies
-
