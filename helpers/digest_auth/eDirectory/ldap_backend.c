@@ -8,10 +8,6 @@
 
 #define LDAP_DEPRECATED 1
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
 #include "ldap_backend.h"
 
 #ifdef _SQUID_MSWIN_		/* Native Windows port and MinGW */
