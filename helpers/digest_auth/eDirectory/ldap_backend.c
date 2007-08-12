@@ -13,7 +13,6 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include "ldap_backend.h"
-#include "edir_ldapext.h"
 
 #ifdef _SQUID_MSWIN_		/* Native Windows port and MinGW */
 
@@ -48,6 +47,7 @@ PFldap_start_tls_s Win32_ldap_start_tls_s;
 #include <ldap.h>
 
 #endif
+#include "edir_ldapext.h"
 #define PROGRAM_NAME "digest_pw_auth(LDAP_backend)"
 
 /* Globals */
