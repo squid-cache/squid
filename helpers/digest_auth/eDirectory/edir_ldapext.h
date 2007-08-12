@@ -6,8 +6,6 @@
  * stubs for FreeRadius's edir_ldapext.h
  *
  */
-#include <ldap.h>
-
 #define UNIVERSAL_PASS_LEN    256
 #define NMAS_SUCCESS          0
 
