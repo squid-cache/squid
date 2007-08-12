@@ -18,11 +18,17 @@
 #if HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+#if HAVE_CTYPE_H
+#include <ctype.h>
+#endif
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 #if HAVE_STRING_H
 #include <string.h>
+#endif
+#if HAVE_STRINGS_H
+#include <strings.h>
 #endif
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
