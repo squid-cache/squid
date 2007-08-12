@@ -19,9 +19,6 @@
  * find current contact  information at www.novell.com.
  */ 
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <strings.h>
 #include "digest_common.h"
 
 #ifdef _SQUID_MSWIN_		/* Native Windows port and MinGW */
@@ -29,6 +26,7 @@
 #define snprintf _snprintf
 #include <windows.h>
 #include <winldap.h>
+#include <winber.h>
 #ifndef LDAPAPI
 #define LDAPAPI __cdecl
 #endif
