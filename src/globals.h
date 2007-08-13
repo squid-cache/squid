@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.140 2007/04/15 14:46:16 serassio Exp $
+ * $Id: globals.h,v 1.141 2007/08/13 17:20:51 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -156,7 +156,7 @@ extern "C"
     extern int store_swap_low;	/* 0 */
     extern int store_swap_high;	/* 0 */
     extern size_t store_pages_max;	/* 0 */
-    extern ssize_t store_maxobjsize;	/* -1 */
+    extern int64_t store_maxobjsize;	/* -1 */
     extern hash_table *proxy_auth_username_cache;	/* NULL */
     extern int incoming_sockets_accepted;
 #ifdef _SQUID_MSWIN_

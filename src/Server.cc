@@ -1,5 +1,5 @@
 /*
- * $Id: Server.cc,v 1.21 2007/08/09 23:30:52 rousskov Exp $
+ * $Id: Server.cc,v 1.22 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG:
  * AUTHOR: Duane Wessels
@@ -386,9 +386,9 @@ ServerStateData::startIcap(ICAPServiceRep::Pointer service, HttpRequest *cause)
     // check whether we should be sending a body as well
     // start body pipe to feed ICAP transaction if needed
     assert(!virginBodyDestination);
-	HttpReply *vrep = virginReply();
+        HttpReply *vrep = virginReply();
     assert(!vrep->body_pipe);
-    ssize_t size = 0;
+    int64_t size = 0;
     if (vrep->expectingBody(cause->method, size) && size) {
         virginBodyDestination = new BodyPipe(this);
         vrep->body_pipe = virginBodyDestination;

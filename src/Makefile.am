@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.183 2007/06/19 22:01:11 hno Exp $
+#  $Id: Makefile.am,v 1.184 2007/08/13 17:20:51 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -584,6 +584,8 @@ squid_SOURCES = \
 	StoreMetaMD5.h \
 	StoreMetaSTD.cc \
 	StoreMetaSTD.h \
+	StoreMetaSTDLFS.cc \
+	StoreMetaSTDLFS.h \
 	StoreMetaUnpacker.cc \
 	StoreMetaUnpacker.h \
 	StoreMetaURL.cc \
@@ -732,6 +734,7 @@ ufsdump_SOURCES = \
 	StoreMeta.cc \
 	StoreMetaMD5.cc \
 	StoreMetaSTD.cc \
+	StoreMetaSTDLFS.cc \
 	StoreMetaUnpacker.cc \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
@@ -1358,6 +1361,7 @@ tests_testCacheManager_SOURCES = \
 	StoreMeta.cc \
 	StoreMetaMD5.cc \
 	StoreMetaSTD.cc \
+	StoreMetaSTDLFS.cc \
 	StoreMetaUnpacker.cc \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
@@ -1522,6 +1526,7 @@ tests_testEvent_SOURCES = \
 	StoreMeta.cc \
 	StoreMetaMD5.cc \
 	StoreMetaSTD.cc \
+	StoreMetaSTDLFS.cc \
 	StoreMetaUnpacker.cc \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
@@ -1673,6 +1678,7 @@ tests_testEventLoop_SOURCES = \
 	StoreMeta.cc \
 	StoreMetaMD5.cc \
 	StoreMetaSTD.cc \
+	StoreMetaSTDLFS.cc
 	StoreMetaUnpacker.cc \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
@@ -1852,6 +1858,7 @@ tests_test_http_range_SOURCES = \
 	StoreMeta.cc \
 	StoreMetaMD5.cc \
 	StoreMetaSTD.cc \
+	StoreMetaSTDLFS.cc \
 	StoreMetaUnpacker.cc \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
@@ -2006,6 +2013,7 @@ tests_testHttpRequest_SOURCES = \
 	StoreMeta.cc \
 	StoreMetaMD5.cc \
 	StoreMetaSTD.cc \
+	StoreMetaSTDLFS.cc \
 	StoreMetaUnpacker.cc \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
@@ -2155,6 +2163,7 @@ SWAP_TEST_SOURCES = \
 	StoreMeta.cc \
 	StoreMetaMD5.cc \
 	StoreMetaSTD.cc \
+	StoreMetaSTDLFS.cc \
 	StoreMetaUnpacker.cc \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
@@ -2341,6 +2350,7 @@ tests_testURL_SOURCES = \
 	StoreMeta.cc \
 	StoreMetaMD5.cc \
 	StoreMetaSTD.cc \
+	StoreMetaSTDLFS.cc \
 	StoreMetaUnpacker.cc \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \

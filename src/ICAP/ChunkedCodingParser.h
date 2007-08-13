@@ -1,6 +1,6 @@
 
 /*
- * $Id: ChunkedCodingParser.h,v 1.2 2005/11/21 23:46:27 wessels Exp $
+ * $Id: ChunkedCodingParser.h,v 1.3 2007/08/13 17:20:53 hno Exp $
  * 
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -82,8 +82,8 @@ private:
     MemBuf *theOut;
 
     Step theStep;
-    size_t theChunkSize;
-    size_t theLeftBodySize;
+    uint64_t theChunkSize;
+    uint64_t theLeftBodySize;
     bool doNeedMoreData;
 };
 

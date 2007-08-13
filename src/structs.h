@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.560 2007/08/02 01:16:51 amosjeffries Exp $
+ * $Id: structs.h,v 1.561 2007/08/13 17:20:51 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -107,7 +107,7 @@ struct _acl_size_t
 {
     acl_size_t *next;
     acl_list *aclList;
-    size_t size;
+    int64_t size;
 };
 
 struct _ushortlist
@@ -209,13 +209,13 @@ struct _SquidConfig
 
     struct
     {
-        size_t min;
+        int64_t min;
         int pct;
-        size_t max;
+        int64_t max;
     }
 
     quickAbort;
-    size_t readAheadGap;
+    int64_t readAheadGap;
     RemovalPolicySettings *replPolicy;
     RemovalPolicySettings *memPolicy;
     time_t negativeTtl;
@@ -254,7 +254,7 @@ struct _SquidConfig
 
     Timeout;
     size_t maxRequestHeaderSize;
-    size_t maxRequestBodySize;
+    int64_t maxRequestBodySize;
     size_t maxReplyHeaderSize;
     acl_size_t *ReplyBodySize;
 
@@ -476,8 +476,8 @@ struct _SquidConfig
     {
         int objectsPerBucket;
         size_t avgObjectSize;
-        size_t maxObjectSize;
-        size_t minObjectSize;
+        int64_t maxObjectSize;
+        int64_t minObjectSize;
         size_t maxInMemObjSize;
     }
 
@@ -660,7 +660,7 @@ struct _SquidConfig
     comm_incoming;
     int max_open_disk_fds;
     int uri_whitespace;
-    size_t rangeOffsetLimit;
+    int64_t rangeOffsetLimit;
 #if MULTICAST_MISS_STREAM
 
     struct

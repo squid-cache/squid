@@ -1,6 +1,6 @@
 
 /*
- * $Id: SwapDir.h,v 1.13 2007/05/29 13:31:38 amosjeffries Exp $
+ * $Id: SwapDir.h,v 1.14 2007/08/13 17:20:51 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -80,7 +80,7 @@ public:
 
     virtual void dereference(StoreEntry &);	/* Unreference this object */
 
-    virtual void updateSize(size_t size, int sign);
+    virtual void updateSize(int64_t size, int sign);
 
     /* the number of store dirs being rebuilt. */
     static int store_dirs_rebuilding;
@@ -142,7 +142,7 @@ virtual size_t maxSize() const { return max_size;}
     virtual void stat (StoreEntry &anEntry) const;
     virtual StoreSearch *search(String const url, HttpRequest *) = 0;
 
-    virtual void updateSize(size_t size, int sign);
+    virtual void updateSize(int64_t size, int sign);
 
     /* migrated from store_dir.cc */
     bool objectSizeIsAcceptable(ssize_t objsize) const;
@@ -164,7 +164,7 @@ public:
     int max_size;
     char *path;
     int index;			/* This entry's index into the swapDirs array */
-    ssize_t max_objsize;
+    int64_t max_objsize;
     RemovalPolicy *repl;
     int removals;
     int scanned;

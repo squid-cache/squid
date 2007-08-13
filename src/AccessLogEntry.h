@@ -1,6 +1,6 @@
 
 /*
- * $Id: AccessLogEntry.h,v 1.5 2006/05/29 00:14:59 robertc Exp $
+ * $Id: AccessLogEntry.h,v 1.6 2007/08/13 17:20:51 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -95,9 +95,9 @@ public:
         }
 
         struct IN_ADDR caddr;
-        size_t size;
-        off_t highOffset;
-        size_t objectSize;
+        int64_t size;
+        int64_t highOffset;
+        int64_t objectSize;
         log_type code;
         int msec;
         const char *rfc931;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.h,v 1.20 2007/05/29 13:31:37 amosjeffries Exp $
+ * $Id: HttpReply.h,v 1.21 2007/08/13 17:20:51 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -39,7 +39,7 @@
 
 extern void httpReplyInitModule(void);
 /* do everything in one call: init, set, pack, clean, return MemBuf */
-extern MemBuf *httpPackedReply(HttpVersion ver, http_status status, const char *ctype, int clen, time_t lmt, time_t expires);
+extern MemBuf *httpPackedReply(HttpVersion ver, http_status status, const char *ctype, int64_t clen, time_t lmt, time_t expires);
 
 /* Sync changes here with HttpReply.cc */
 
@@ -97,7 +97,7 @@ public:
 public:
     virtual int httpMsgParseError();
 
-    virtual bool expectingBody(method_t, ssize_t&) const;
+    virtual bool expectingBody(method_t, int64_t&) const;
 
     void updateOnNotModified(HttpReply const *other);
 
@@ -106,7 +106,7 @@ public:
 
     /* set commonly used info with one call */
     void setHeaders(HttpVersion ver, http_status status,
-                    const char *reason, const char *ctype, int clen, time_t lmt, time_t expires);
+                    const char *reason, const char *ctype, int64_t clen, time_t lmt, time_t expires);
 
     /* mem-pack: returns a ready to use mem buffer with a packed reply */
     MemBuf *pack();
@@ -116,7 +116,7 @@ public:
 
     void redirect(http_status, const char *);
 
-    int bodySize(method_t) const;
+    int64_t bodySize(method_t) const;
 
     int validatorsMatch (HttpReply const *other) const;
 

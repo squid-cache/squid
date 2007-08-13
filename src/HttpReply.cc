@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.95 2007/05/29 13:31:37 amosjeffries Exp $
+ * $Id: HttpReply.cc,v 1.96 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -155,7 +155,7 @@ HttpReply::pack()
 
 MemBuf *
 httpPackedReply(HttpVersion ver, http_status status, const char *ctype,
-                int clen, time_t lmt, time_t expires)
+                int64_t clen, time_t lmt, time_t expires)
 {
     HttpReply *rep = new HttpReply;
     rep->setHeaders(ver, status, ctype, NULL, clen, lmt, expires);
@@ -207,7 +207,7 @@ HttpReply::packed304Reply()
 
 void
 HttpReply::setHeaders(HttpVersion ver, http_status status, const char *reason,
-                      const char *ctype, int clen, time_t lmt, time_t expires)
+                      const char *ctype, int64_t clen, time_t lmt, time_t expires)
 {
     HttpHeader *hdr;
     httpStatusLineSet(&sline, ver, status, reason);
@@ -223,7 +223,7 @@ HttpReply::setHeaders(HttpVersion ver, http_status status, const char *reason,
         content_type = String();
 
     if (clen >= 0)
-        hdr->putInt(HDR_CONTENT_LENGTH, clen);
+        hdr->putInt64(HDR_CONTENT_LENGTH, clen);
 
     if (expires >= 0)
         hdr->putTime(HDR_EXPIRES, expires);
@@ -249,7 +249,7 @@ HttpReply::redirect(http_status status, const char *loc)
     hdr = &header;
     hdr->putStr(HDR_SERVER, full_appname_string);
     hdr->putTime(HDR_DATE, squid_curtime);
-    hdr->putInt(HDR_CONTENT_LENGTH, 0);
+    hdr->putInt64(HDR_CONTENT_LENGTH, 0);
     hdr->putStr(HDR_LOCATION, loc);
     date = squid_curtime;
     content_length = 0;
@@ -372,7 +372,7 @@ HttpReply::hdrCacheInit()
 {
     HttpMsg::hdrCacheInit();
 
-    content_length = header.getInt(HDR_CONTENT_LENGTH);
+    content_length = header.getInt64(HDR_CONTENT_LENGTH);
     date = header.getTime(HDR_DATE);
     last_modified = header.getTime(HDR_LAST_MODIFIED);
     surrogate_control = header.getSc();
@@ -414,7 +414,7 @@ HttpReply::hdrCacheClean()
 /*
  * Returns the body size of a HTTP response
  */
-int
+int64_t
 HttpReply::bodySize(method_t method) const
 {
     if (sline.version.major < 1)
@@ -469,7 +469,7 @@ HttpReply::httpMsgParseError()
  * along with this response
  */
 bool
-HttpReply::expectingBody(method_t req_method, ssize_t& theSize) const
+HttpReply::expectingBody(method_t req_method, int64_t& theSize) const
 {
     bool expectBody = true;
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.157 2007/04/30 16:56:09 wessels Exp $
+ * $Id: store_client.cc,v 1.158 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -81,7 +81,7 @@ store_client::operator delete (void *address)
 }
 
 bool
-store_client::memReaderHasLowerOffset(off_t anOffset) const
+store_client::memReaderHasLowerOffset(int64_t anOffset) const
 {
     return getType() == STORE_MEM_CLIENT && copyInto.offset < anOffset;
 }
@@ -229,7 +229,7 @@ store_client::copy(StoreEntry * anEntry,
     assert (data);
     assert(!EBIT_TEST(entry->flags, ENTRY_ABORTED));
     debugs(90, 3, "store_client::copy: " << entry->getMD5Text() << ", from " <<
-           (unsigned long) copyRequest.offset << ", for length " <<
+           copyRequest.offset << ", for length " <<
            (int) copyRequest.length << ", cb " << callback_fn << ", cbdata " <<
            data);
 
@@ -276,7 +276,7 @@ store_client::copy(StoreEntry * anEntry,
 static int
 storeClientNoMoreToSend(StoreEntry * e, store_client * sc)
 {
-    ssize_t len;
+    int64_t len;
 
     if (e->store_status == STORE_PENDING)
         return 0;
@@ -341,11 +341,12 @@ store_client::doCopy(StoreEntry *anEntry)
     MemObject *mem = entry->mem_obj;
 
     debugs(33, 5, "store_client::doCopy: co: " <<
-           (unsigned long) copyInto.offset << ", hi: " <<
-           (long int) mem->endOffset());
+           copyInto.offset << ", hi: " <<
+           mem->endOffset());
 
     if (storeClientNoMoreToSend(entry, this)) {
         /* There is no more to send! */
+	debugs(33, 3, HERE << "There is no more to send!");
         callback(0);
         flags.store_copying = 0;
         return;
@@ -459,7 +460,7 @@ store_client::fileRead()
 
     if (mem->swap_hdr_sz != 0)
         if (entry->swap_status == SWAPOUT_WRITING)
-            assert(mem->swapout.sio->offset() > copyInto.offset + (off_t)mem->swap_hdr_sz);
+            assert(mem->swapout.sio->offset() > copyInto.offset + (int64_t)mem->swap_hdr_sz);
 
     storeRead(swapin_sio,
               copyInto.data,
@@ -580,7 +581,7 @@ store_client::readHeader(char const *buf, ssize_t len)
      */
     size_t body_sz = len - mem->swap_hdr_sz;
 
-    if (static_cast<size_t>(copyInto.offset) < body_sz) {
+    if (copyInto.offset < static_cast<int64_t>(body_sz)) {
         /*
          * we have (part of) what they want
          */
@@ -697,6 +698,14 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
     return 1;
 }
 
+#if UNUSED_CODE_20070420
+off_t
+storeLowestMemReaderOffset(const StoreEntry * entry)
+{
+    return entry->mem_obj->lowestMemReaderOffset();
+}
+#endif
+
 /* Call handlers waiting for  data to be appended to E. */
 void
 StoreEntry::invokeHandlers()
@@ -756,17 +765,15 @@ CheckQuickAbort2(StoreEntry * entry)
         return 1;
     }
 
-    size_t expectlen = entry->getReply()->content_length + entry->getReply()->hdr_sz;
+    int64_t expectlen = entry->getReply()->content_length + entry->getReply()->hdr_sz;
 
     if (expectlen < 0)
         /* expectlen is < 0 if *no* information about the object has been recieved */
         return 1;
 
-    size_t curlen = (size_t) mem->endOffset ();
+    int64_t curlen =  mem->endOffset ();
 
-    size_t minlen = (size_t) Config.quickAbort.min << 10;
-
-    if (minlen < 0) {
+    if (Config.quickAbort.min < 0) {
         debugs(90, 3, "CheckQuickAbort2: NO disabled");
         return 0;
     }
@@ -776,7 +783,7 @@ CheckQuickAbort2(StoreEntry * entry)
         return 1;
     }
 
-    if ((expectlen - curlen) < minlen) {
+    if ((expectlen - curlen) < (Config.quickAbort.min << 10)) {
         debugs(90, 3, "CheckQuickAbort2: NO only little more left");
         return 0;
     }
@@ -791,7 +798,7 @@ CheckQuickAbort2(StoreEntry * entry)
         return 0;
     }
 
-    if ((curlen / (expectlen / 100)) > (size_t)Config.quickAbort.pct) {
+    if ((curlen / (expectlen / 100)) > (Config.quickAbort.pct)) {
         debugs(90, 3, "CheckQuickAbort2: NO past point of no return");
         return 0;
     }
@@ -828,8 +835,8 @@ store_client::dumpStats(MemBuf * output, int clientNumber) const
 
     output->Printf("\tClient #%d, %p\n", clientNumber, _callback.callback_data);
 
-    output->Printf("\t\tcopy_offset: %lu\n",
-                   (unsigned long) copyInto.offset);
+    output->Printf("\t\tcopy_offset: %"PRId64"\n",
+                   copyInto.offset);
 
     output->Printf("\t\tcopy_size: %d\n",
                    (int) copyInto.length);

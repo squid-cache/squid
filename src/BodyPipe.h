@@ -52,7 +52,7 @@ class BodyPipeCheckout {
 	public:
 		BodyPipe &pipe;
 		MemBuf &buf;
-		const size_t offset; // of current content, relative to the body start
+		const uint64_t offset; // of current content, relative to the body start
 
 	protected:
 		const size_t checkedOutSize;
@@ -81,10 +81,10 @@ class BodyPipe: public RefCountable {
 		BodyPipe(Producer *aProducer);
 		~BodyPipe(); // asserts that producer and consumer are cleared
 
-		void setBodySize(size_t aSize); // set body size
+		void setBodySize(uint64_t aSize); // set body size
 		bool bodySizeKnown() const { return theBodySize >= 0; }
-		size_t bodySize() const;
-		size_t consumedSize() const { return theGetSize; }
+		uint64_t bodySize() const;
+		uint64_t consumedSize() const { return theGetSize; }
 		bool productionEnded() const { return !theProducer; }
 
 		// called by producers
@@ -99,7 +99,7 @@ class BodyPipe: public RefCountable {
 		void clearConsumer(); // aborts if still piping
 		size_t getMoreData(MemBuf &buf);
 		void consume(size_t size);
-		bool expectMoreAfter(size_t offset) const;
+		bool expectMoreAfter(uint64_t offset) const;
 		bool exhausted() const; // saw eof/abort and all data consumed
 
 		// start or continue consuming when there is no consumer
@@ -143,12 +143,12 @@ class BodyPipe: public RefCountable {
 		AsyncCallWrapper(91,5, BodyPipe, tellBodyProducerAborted);
 
 	private:
-		ssize_t theBodySize;   // expected total content length, if known
+		int64_t  theBodySize;   // expected total content length, if known
 		Producer *theProducer; // content producer, if any
 		Consumer *theConsumer; // content consumer, if any
 
-		size_t thePutSize; // ever-increasing total
-		size_t theGetSize; // ever-increasing total
+		uint64_t thePutSize; // ever-increasing total
+		uint64_t theGetSize; // ever-increasing total
 
 		int theCCallsPending; // outstanding calls to the consumer
 		int theCCallsToSkip; // how many calls to the consumer we should skip

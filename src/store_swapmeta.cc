@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapmeta.cc,v 1.25 2007/04/28 22:26:38 hno Exp $
+ * $Id: store_swapmeta.cc,v 1.26 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -73,7 +73,7 @@ storeSwapMetaBuild(StoreEntry * e)
     }
 
     T = StoreMeta::Add(T, t);
-    t = StoreMeta::Factory(STORE_META_STD,STORE_HDR_METASIZE,&e->timestamp);
+    t = StoreMeta::Factory(STORE_META_STD_LFS,STORE_HDR_METASIZE,&e->timestamp);
 
     if (!t) {
         storeSwapTLVFree(TLV);

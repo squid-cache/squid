@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.31 2007/06/02 11:50:32 hno Exp $
+ * $Id: client_side_request.h,v 1.32 2007/08/13 17:20:51 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -99,8 +99,8 @@ public:
 
     struct
     {
-        off_t offset;
-        size_t size;
+        int64_t offset;
+        int64_t size;
         size_t headers_sz;
     }
 
@@ -144,16 +144,16 @@ unsigned int purging:
     dlink_list client_stream;
     int mRangeCLen();
 
-    ssize_t maxReplyBodySize() const;
-    void maxReplyBodySize(ssize_t size);
-    bool isReplyBodyTooLarge(ssize_t len) const;
+    int64_t maxReplyBodySize() const;
+    void maxReplyBodySize(int64_t size);
+    bool isReplyBodyTooLarge(int64_t len) const;
 
     ClientRequestContext *calloutContext;
     void doCallouts();
 
 private:
     CBDATA_CLASS(ClientHttpRequest);
-    ssize_t maxReplyBodySize_;
+    int64_t maxReplyBodySize_;
     StoreEntry *entry_;
     StoreEntry *loggingEntry_;
     ConnStateData::Pointer conn_;
@@ -196,7 +196,7 @@ SQUIDCEXTERN void clientAccessCheck(ClientHttpRequest *);
 /* ones that should be elsewhere */
 SQUIDCEXTERN void redirectStart(ClientHttpRequest *, RH *, void *);
 
-SQUIDCEXTERN void tunnelStart(ClientHttpRequest *, size_t *, int *);
+SQUIDCEXTERN void tunnelStart(ClientHttpRequest *, int64_t *, int *);
 
 #ifdef _USE_INLINE_
 #include "Store.h"

@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.95 2007/04/06 12:15:51 serassio Exp $
+ * $Id: util.c,v 1.96 2007/08/13 17:20:50 hno Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -916,6 +916,15 @@ xitoa(int num)
 {
     static char buf[24];	/* 2^64 = 18446744073709551616 */
     snprintf(buf, sizeof(buf), "%d", num);
+    return buf;
+}
+
+/* int64_t to string */
+const char *
+xint64toa(int64_t num)
+{
+    static char buf[24];	/* 2^64 = 18446744073709551616 */
+    snprintf(buf, sizeof(buf), "%"PRId64, num);
     return buf;
 }
 

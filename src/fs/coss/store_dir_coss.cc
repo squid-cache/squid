@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.75 2007/05/29 13:31:47 amosjeffries Exp $
+ * $Id: store_dir_coss.cc,v 1.76 2007/08/13 17:20:56 hno Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store COSS Directory Routines
@@ -81,7 +81,7 @@ static char *storeCossDirSwapLogFile(SwapDir *, const char *);
 static EVH storeCossRebuildFromSwapLog;
 static StoreEntry *storeCossAddDiskRestore(CossSwapDir * SD, const cache_key * key,
         int file_number,
-        size_t swap_file_sz,
+        uint64_t swap_file_sz,
         time_t expires,
         time_t timestamp,
         time_t lastref,
@@ -514,7 +514,7 @@ storeCossRebuildFromSwapLog(void *data)
 static StoreEntry *
 storeCossAddDiskRestore(CossSwapDir * SD, const cache_key * key,
                         int file_number,
-                        size_t swap_file_sz,
+                        uint64_t swap_file_sz,
                         time_t expires,
                         time_t timestamp,
                         time_t lastref,
@@ -1034,7 +1034,7 @@ CossSwapDir::parse(int anIndex, char *aPath)
 {
     unsigned int i;
     unsigned int size;
-    unsigned long max_offset;
+    off_t max_offset;
 
     i = GetInteger();
     size = i << 10;		/* Mbytes to Kbytes */
@@ -1066,9 +1066,9 @@ CossSwapDir::parse(int anIndex, char *aPath)
      * largest possible sfileno, assuming sfileno is a 25-bit
      * signed integer, as defined in structs.h.
      */
-    max_offset = (unsigned long) 0xFFFFFF << blksz_bits;
+    max_offset = (off_t) 0xFFFFFF << blksz_bits;
 
-    if ((unsigned long)max_size > (unsigned long)(max_offset>>10)) {
+    if ((off_t)max_size > (max_offset>>10)) {
         debugs(47, 0, "COSS block-size = " << (1<<blksz_bits) << " bytes");
         debugs(47,0, "COSS largest file offset = " << (max_offset >> 10) << " KB");
         debugs(47, 0, "COSS cache_dir size = " << max_size << " KB");

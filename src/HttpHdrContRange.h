@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrContRange.h,v 1.3 2006/04/22 05:29:17 robertc Exp $
+ * $Id: HttpHdrContRange.h,v 1.4 2007/08/13 17:20:51 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -43,7 +43,7 @@ class HttpHdrContRange
 
 public:
     HttpHdrRangeSpec spec;
-    ssize_t elength;		/* entity length, not content length */
+    int64_t elength;		/* entity length, not content length */
 };
 
 /* Http Content Range Header Field */
@@ -55,9 +55,9 @@ SQUIDCEXTERN void httpHdrContRangeDestroy(HttpHdrContRange * crange);
 SQUIDCEXTERN HttpHdrContRange *httpHdrContRangeDup(const HttpHdrContRange * crange);
 SQUIDCEXTERN void httpHdrContRangePackInto(const HttpHdrContRange * crange, Packer * p);
 /* inits with given spec */
-SQUIDCEXTERN void httpHdrContRangeSet(HttpHdrContRange *, HttpHdrRangeSpec, ssize_t);
+SQUIDCEXTERN void httpHdrContRangeSet(HttpHdrContRange *, HttpHdrRangeSpec, int64_t);
 ;
-SQUIDCEXTERN void httpHeaderAddContRange(HttpHeader *, HttpHdrRangeSpec, ssize_t);
+SQUIDCEXTERN void httpHeaderAddContRange(HttpHeader *, HttpHdrRangeSpec, int64_t);
 
 
 #endif /* SQUID_HTTPHDRCONTRANGE_H */

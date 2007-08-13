@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.514 2007/08/02 01:20:47 amosjeffries Exp $
+ * $Id: cache_cf.cc,v 1.515 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -143,6 +143,7 @@ static int check_null_https_port_list(const https_port_list *);
 #endif
 #endif /* USE_SSL */
 static void parse_b_size_t(size_t * var);
+static void parse_b_int64_t(int64_t * var);
 
 /*
  * LegacyParser is a parser for legacy code that uses the global
@@ -162,7 +163,7 @@ static void
 update_maxobjsize(void)
 {
     int i;
-    ssize_t ms = -1;
+    int64_t ms = -1;
 
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
         assert (Config.cacheSwap.swapDirs[i].getRaw());
@@ -171,7 +172,6 @@ update_maxobjsize(void)
                 max_objsize > ms)
             ms = dynamic_cast<SwapDir *>(Config.cacheSwap.swapDirs[i].getRaw())->max_objsize;
     }
-
     store_maxobjsize = ms;
 }
 
@@ -700,12 +700,51 @@ parseTimeUnits(const char *unit)
 }
 
 static void
+parseBytesLine64(int64_t * bptr, const char *units)
+{
+    char *token;
+    double d;
+    int64_t m;
+    int64_t u;
+
+    if ((u = parseBytesUnits(units)) == 0)
+        self_destruct();
+
+    if ((token = strtok(NULL, w_space)) == NULL)
+        self_destruct();
+
+    if (strcmp(token, "none") == 0 || strcmp(token, "-1") == 0) {
+        *bptr = static_cast<size_t>(-1);
+        return;
+    }
+
+    d = xatof(token);
+
+    m = u;			/* default to 'units' if none specified */
+
+    if (0.0 == d)
+        (void) 0;
+    else if ((token = strtok(NULL, w_space)) == NULL)
+        debugs(3, 0, "WARNING: No units on '" << 
+                     config_input_line << "', assuming " <<
+                     d << " " <<  units  );
+    else if ((m = parseBytesUnits(token)) == 0)
+        self_destruct();
+
+    *bptr = static_cast<int64_t>(m * d / u);
+
+    if (static_cast<double>(*bptr) * 2 != m * d / u * 2)
+        self_destruct();
+}
+
+
+static void
 parseBytesLine(size_t * bptr, const char *units)
 {
     char *token;
     double d;
-    size_t m;
-    size_t u;
+    int m;
+    int u;
 
     if ((u = parseBytesUnits(units)) == 0)
         self_destruct();
@@ -1028,7 +1067,7 @@ parse_acl_b_size_t(acl_size_t ** head)
 
     l = cbdataAlloc(acl_size_t);
 
-    parse_b_size_t(&l->size);
+    parse_b_int64_t(&l->size);
 
     aclParseAclList(LegacyParser, &l->aclList);
 
@@ -2287,6 +2326,18 @@ dump_kb_size_t(StoreEntry * entry, const char *name, size_t var)
 }
 
 static void
+dump_b_int64_t(StoreEntry * entry, const char *name, int64_t var)
+{
+    storeAppendPrintf(entry, "%s %"PRId64" %s\n", name, var, B_BYTES_STR);
+}
+
+static void
+dump_kb_int64_t(StoreEntry * entry, const char *name, int64_t var)
+{
+    storeAppendPrintf(entry, "%s %"PRId64" %s\n", name, var, B_KBYTES_STR);
+}
+
+static void
 parse_size_t(size_t * var)
 {
     int i;
@@ -2307,7 +2358,25 @@ parse_kb_size_t(size_t * var)
 }
 
 static void
+parse_b_int64_t(int64_t * var)
+{
+    parseBytesLine64(var, B_BYTES_STR);
+}
+
+static void
+parse_kb_int64_t(int64_t * var)
+{
+    parseBytesLine64(var, B_KBYTES_STR);
+}
+
+static void
 free_size_t(size_t * var)
+{
+    *var = 0;
+}
+
+static void
+free_b_int64_t(int64_t * var)
 {
     *var = 0;
 }
@@ -2316,6 +2385,7 @@ free_size_t(size_t * var)
 #define free_kb_size_t free_size_t
 #define free_mb_size_t free_size_t
 #define free_gb_size_t free_size_t
+#define free_kb_int64_t free_b_int64_t
 
 static void
 dump_ushort(StoreEntry * entry, const char *name, u_short var)

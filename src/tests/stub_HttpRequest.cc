@@ -1,5 +1,5 @@
 /*
- * $Id: stub_HttpRequest.cc,v 1.3 2006/04/18 12:46:13 robertc Exp $
+ * $Id: stub_HttpRequest.cc,v 1.4 2007/08/13 17:20:58 hno Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Robert Collins
@@ -75,7 +75,7 @@ HttpRequest::reset()
 }
 
 bool
-HttpRequest::expectingBody(method_t unused, ssize_t&) const
+HttpRequest::expectingBody(method_t unused, int64_t&) const
 {
     fatal("Not implemented");
     return false;

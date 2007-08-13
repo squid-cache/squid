@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.172 2007/06/02 12:21:57 hno Exp $
+ * $Id: tunnel.cc,v 1.173 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -90,7 +90,7 @@ public:
         void dataSent (size_t amount);
         int len;
         char *buf;
-        size_t *size_ptr;		/* pointer to size in an ConnStateData for logging */
+        int64_t *size_ptr;		/* pointer to size in an ConnStateData for logging */
 
     private:
         int fd_;
@@ -579,7 +579,7 @@ tunnelConnectDone(int fdnotused, comm_err_t status, int xerrno, void *data)
 }
 
 void
-tunnelStart(ClientHttpRequest * http, size_t * size_ptr, int *status_ptr)
+tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
 {
     /* Create state structure. */
     TunnelStateData *tunnelState = NULL;

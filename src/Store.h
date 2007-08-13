@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.35 2007/05/29 13:31:38 amosjeffries Exp $
+ * $Id: Store.h,v 1.36 2007/08/13 17:20:51 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -127,7 +127,7 @@ public:
     time_t lastref;
     time_t expires;
     time_t lastmod;
-    size_t swap_file_sz;
+    uint64_t swap_file_sz;
     u_short refcount;
     u_short flags;
     /* END OF ON-DISK STORE_META_STD */
@@ -178,8 +178,8 @@ public:
     /* reduce the memory lock count on the entry */
     virtual int unlock();
     /* increate the memory lock count on the entry */
-    virtual ssize_t objectLen() const;
-    virtual int contentLen() const;
+    virtual int64_t objectLen() const;
+    virtual int64_t contentLen() const;
 
     virtual void lock()
 
@@ -292,7 +292,7 @@ public:
     virtual void maintain() = 0; /* perform regular maintenance should be private and self registered ... */
 
     /* These should really be private */
-    virtual void updateSize(size_t size, int sign) = 0;
+    virtual void updateSize(int64_t size, int sign) = 0;
 
 private:
     static RefCount<Store> CurrentRoot;
@@ -301,6 +301,9 @@ private:
 typedef RefCount<Store> StorePointer;
 
 SQUIDCEXTERN size_t storeEntryInUse();
+#if UNUSED_CODE_20070420
+SQUIDCEXTERN off_t storeLowestMemReaderOffset(const StoreEntry * entry);
+#endif
 SQUIDCEXTERN const char *storeEntryFlags(const StoreEntry *);
 extern void storeEntryReplaceObject(StoreEntry *, HttpReply *);
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.757 2007/07/26 21:17:01 rousskov Exp $
+ * $Id: client_side.cc,v 1.758 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -139,8 +139,8 @@ static CSD clientSocketDetach;
 static void clientSetKeepaliveFlag(ClientHttpRequest *);
 static int clientIsContentLengthValid(HttpRequest * r);
 static bool okToAccept();
-static int clientIsRequestBodyValid(int bodyLength);
-static int clientIsRequestBodyTooLargeForPolicy(size_t bodyLength);
+static int clientIsRequestBodyValid(int64_t bodyLength);
+static int clientIsRequestBodyTooLargeForPolicy(int64_t bodyLength);
 
 static void clientUpdateStatHistCounters(log_type logType, int svc_time);
 static void clientUpdateStatCounters(log_type logType);
@@ -683,7 +683,7 @@ clientIsContentLengthValid(HttpRequest * r)
 }
 
 int
-clientIsRequestBodyValid(int bodyLength)
+clientIsRequestBodyValid(int64_t bodyLength)
 {
     if (bodyLength >= 0)
         return 1;
@@ -692,7 +692,7 @@ clientIsRequestBodyValid(int bodyLength)
 }
 
 int
-clientIsRequestBodyTooLargeForPolicy(size_t bodyLength)
+clientIsRequestBodyTooLargeForPolicy(int64_t bodyLength)
 {
     if (Config.maxRequestBodySize &&
             bodyLength > Config.maxRequestBodySize)
@@ -748,9 +748,10 @@ ClientSocketContext::startOfOutput() const
 }
 
 size_t
-ClientSocketContext::lengthToSend(Range<size_t> const &available)
+ClientSocketContext::lengthToSend(Range<int64_t> const &available)
 {
-    size_t maximum = available.size();
+    /*the size of available range can always fit in a size_t type*/
+    size_t maximum = (size_t)available.size();
 
     if (!http->request->range)
         return maximum;
@@ -763,10 +764,10 @@ ClientSocketContext::lengthToSend(Range<size_t> const &available)
     assert (http->range_iter.debt() > 0);
 
     /* TODO this + the last line could be a range intersection calculation */
-    if ((ssize_t)available.start < http->range_iter.currentSpec()->offset)
+    if (available.start < http->range_iter.currentSpec()->offset)
         return 0;
 
-    return XMIN(http->range_iter.debt(), (ssize_t)maximum);
+    return XMIN(http->range_iter.debt(), (int64_t)maximum);
 }
 
 void
@@ -871,7 +872,7 @@ void
 ClientSocketContext::packRange(StoreIOBuffer const &source, MemBuf * mb)
 {
     HttpHdrRangeIter * i = &http->range_iter;
-    Range<size_t> available (source.range());
+    Range<int64_t> available (source.range());
     char const *buf = source.data;
 
     while (i->currentSpec() && available.size()) {
@@ -931,7 +932,7 @@ ClientSocketContext::packRange(StoreIOBuffer const &source, MemBuf * mb)
             return;
         }
 
-        off_t next = getNextRangeOffset();
+        int64_t next = getNextRangeOffset();
 
         assert (next >= http->out.offset);
 
@@ -960,7 +961,7 @@ ClientSocketContext::packRange(StoreIOBuffer const &source, MemBuf * mb)
 int
 ClientHttpRequest::mRangeCLen()
 {
-    int clen = 0;
+    int64_t clen = 0;
     MemBuf mb;
 
     assert(memObject());
@@ -1110,9 +1111,10 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
                                  request->range->contains(rep->content_range->spec) :
                                  true;
         const int spec_count = http->request->range->specs.count;
-        int actual_clen = -1;
+        int64_t actual_clen = -1;
 
-        debugs(33, 3, "clientBuildRangeHeader: range spec count: " << spec_count << " virgin clen: " << rep->content_length);
+        debugs(33, 3, "clientBuildRangeHeader: range spec count: " <<
+	    spec_count << " virgin clen: " << rep->content_length);
         assert(spec_count > 0);
         /* ETags should not be returned with Partial Content replies? */
         hdr->delById(HDR_ETAG);
@@ -1164,7 +1166,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
 
         hdr->delById(HDR_CONTENT_LENGTH);
 
-        hdr->putInt(HDR_CONTENT_LENGTH, actual_clen);
+        hdr->putInt64(HDR_CONTENT_LENGTH, actual_clen);
 
         debugs(33, 3, "clientBuildRangeHeader: actual content length: " << actual_clen);
 
@@ -1423,32 +1425,28 @@ ClientSocketContext::canPackMoreRanges() const
     return http->range_iter.currentSpec() ? true : false;
 }
 
-off_t
+int64_t
 ClientSocketContext::getNextRangeOffset() const
 {
     if (http->request->range) {
         /* offset in range specs does not count the prefix of an http msg */
-        debugs(33, 5, "ClientSocketContext::getNextRangeOffset: http offset " << (long unsigned)http->out.offset);
+        debugs (33, 5, "ClientSocketContext::getNextRangeOffset: http offset " << http->out.offset);
         /* check: reply was parsed and range iterator was initialized */
         assert(http->range_iter.valid);
         /* filter out data according to range specs */
         assert (canPackMoreRanges());
         {
-            off_t start;		/* offset of still missing data */
+            int64_t start;		/* offset of still missing data */
             assert(http->range_iter.currentSpec());
             start = http->range_iter.currentSpec()->offset + http->range_iter.currentSpec()->length - http->range_iter.debt();
-            debugs(33, 3, "clientPackMoreRanges: in:  offset: " <<
-                   (long int) http->out.offset);
-            debugs(33, 3, "clientPackMoreRanges: out: start: " <<
-                   (long int) start << " spec[" <<
-                   (long int) (http->range_iter.pos - http->request->range->begin()) <<
-                   "]: [" << (long int) http->range_iter.currentSpec()->offset <<
-                   ", " <<
-                   (long int) (http->range_iter.currentSpec()->offset + http->range_iter.currentSpec()->length) <<
-                   "), len: " <<
-                   (long int) http->range_iter.currentSpec()->length <<
-                   " debt: " << (long int) http->range_iter.debt());
-
+            debugs(33, 3, "clientPackMoreRanges: in:  offset: " << http->out.offset);
+            debugs(33, 3, "clientPackMoreRanges: out:"
+		" start: " << start <<
+		" spec[" << http->range_iter.pos - http->request->range->begin() << "]:" <<
+		" [" << http->range_iter.currentSpec()->offset <<
+		", " << http->range_iter.currentSpec()->offset + http->range_iter.currentSpec()->length << "),"
+		" len: " << http->range_iter.currentSpec()->length << 
+		" debt: " << http->range_iter.debt());
             if (http->range_iter.currentSpec()->length != -1)
                 assert(http->out.offset <= start);	/* we did not miss it */
 

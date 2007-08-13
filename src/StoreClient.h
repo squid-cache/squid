@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreClient.h,v 1.14 2006/05/22 19:58:51 wessels Exp $
+ * $Id: StoreClient.h,v 1.15 2007/08/13 17:20:51 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -64,7 +64,7 @@ public:
     void operator delete (void *);
     store_client(StoreEntry *);
     ~store_client();
-    bool memReaderHasLowerOffset(off_t) const;
+    bool memReaderHasLowerOffset(int64_t) const;
     int getType() const;
     void fail();
     void callback(ssize_t len, bool error = false);
@@ -73,7 +73,7 @@ public:
     void copy(StoreEntry *, StoreIOBuffer, STCB *, void *);
     void dumpStats(MemBuf * output, int clientNumber) const;
 
-    off_t cmp_offset;
+    int64_t cmp_offset;
 #if STORE_CLIENT_LIST_DEBUG
 
     void *owner;

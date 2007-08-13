@@ -1,5 +1,5 @@
 /*
- * $Id: stub_HttpReply.cc,v 1.3 2006/05/27 00:35:05 robertc Exp $
+ * $Id: stub_HttpReply.cc,v 1.4 2007/08/13 17:20:58 hno Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins
@@ -53,7 +53,7 @@ HttpReply::absorb(HttpReply * new_rep)
 
 void
 HttpReply::setHeaders(HttpVersion ver, http_status status, const char *reason,
-                      const char *ctype, int clen, time_t lmt, time_t expires)
+                      const char *ctype, int64_t clen, time_t lmt, time_t expires)
 {
     fatal ("Not implemented");
 }
@@ -90,7 +90,7 @@ HttpReply::httpMsgParseError()
 }
 
 bool
-HttpReply::expectingBody(method_t, ssize_t&) const
+HttpReply::expectingBody(method_t, int64_t&) const
 {
     fatal ("Not implemented");
     return false;

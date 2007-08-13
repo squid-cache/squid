@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.615 2007/05/29 13:31:40 amosjeffries Exp $
+ * $Id: store.cc,v 1.616 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -940,11 +940,10 @@ StoreEntry::checkTooSmall()
 
     if (STORE_OK == store_status)
         if (mem_obj->object_sz < 0 ||
-                static_cast<size_t>(mem_obj->object_sz)
-                < Config.Store.minObjectSize)
+	    mem_obj->object_sz < Config.Store.minObjectSize)
             return 1;
     if (getReply()->content_length > -1)
-        if (getReply()->content_length < (int) Config.Store.minObjectSize)
+        if (getReply()->content_length < Config.Store.minObjectSize)
             return 1;
     return 0;
 }
@@ -970,12 +969,12 @@ StoreEntry::checkCachable()
             store_check_cachable_hist.no.negative_cached++;
             return 0;           /* avoid release call below */
         } else if ((getReply()->content_length > 0 &&
-                    static_cast<size_t>(getReply()->content_length)
+                    getReply()->content_length
                     > Config.Store.maxObjectSize) ||
-                   static_cast<size_t>(mem_obj->endOffset()) > Config.Store.maxObjectSize) {
+                   mem_obj->endOffset() > Config.Store.maxObjectSize) {
             debugs(20, 2, "StoreEntry::checkCachable: NO: too big");
             store_check_cachable_hist.no.too_big++;
-        } else if (getReply()->content_length > (int) Config.Store.maxObjectSize) {
+        } else if (getReply()->content_length > Config.Store.maxObjectSize) {
             debugs(20, 2, "StoreEntry::checkCachable: NO: too big");
             store_check_cachable_hist.no.too_big++;
         } else if (checkTooSmall()) {
@@ -1356,7 +1355,7 @@ StoreEntry::locked() const
 bool
 StoreEntry::validLength() const
 {
-    int diff;
+    int64_t diff;
     const HttpReply *reply;
     assert(mem_obj != NULL);
     reply = getReply();
@@ -1659,14 +1658,14 @@ StoreEntry::flush()
     }
 }
 
-ssize_t
+int64_t
 StoreEntry::objectLen() const
 {
     assert(mem_obj != NULL);
     return mem_obj->object_sz;
 }
 
-int
+int64_t
 StoreEntry::contentLen() const
 {
     assert(mem_obj != NULL);

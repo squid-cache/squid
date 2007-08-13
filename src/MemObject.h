@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.h,v 1.14 2007/04/20 07:29:47 wessels Exp $
+ * $Id: MemObject.h,v 1.15 2007/08/13 17:20:51 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -63,17 +63,17 @@ public:
     HttpReply const *getReply() const;
     void replaceHttpReply(HttpReply *newrep);
     void stat (MemBuf * mb) const;
-    off_t endOffset () const;
-    size_t size() const;
+    int64_t endOffset () const;
+    int64_t size() const;
     void reset();
-    off_t lowestMemReaderOffset() const;
+    int64_t lowestMemReaderOffset() const;
     bool readAheadPolicyCanRead() const;
     void addClient(store_client *);
     /* XXX belongs in MemObject::swapout, once swaphdrsz is managed
      * better
      */
-    size_t objectBytesOnDisk() const;
-    off_t policyLowestOffsetToKeep() const;
+    int64_t objectBytesOnDisk() const;
+    int64_t policyLowestOffsetToKeep() const;
     void trimSwappable();
     void trimUnSwappable();
     bool isContiguous() const;
@@ -93,7 +93,7 @@ public:
     method_t method;
     char *url;
     mem_hdr data_hdr;
-    off_t inmem_lo;
+    int64_t inmem_lo;
     dlink_list clients;
     /* TODO: move into .cc or .cci */
     size_t clientCount() const {return nclients;}
@@ -106,7 +106,7 @@ public:
     {
 
     public:
-        off_t queue_offset;     /* relative to in-mem data */
+        int64_t queue_offset;     /* relative to in-mem data */
         mem_node *memnode;      /* which node we're currently paging out */
         StoreIOState::Pointer sio;
     };
@@ -130,7 +130,7 @@ public:
     char *log_url;
     RemovalPolicyNode repl;
     int id;
-    ssize_t object_sz;
+    int64_t object_sz;
     size_t swap_hdr_sz;
 #if URL_CHECKSUM_DEBUG
 

@@ -333,20 +333,20 @@ size_t ICAPModXact::virginContentSize(const VirginBodyAct &act) const
 {
     Must(act.active());
     // asbolute start of unprocessed data
-    const size_t start = act.offset();
+    const uint64_t start = act.offset();
     // absolute end of buffered data
-    const size_t end = virginConsumed + virgin.body_pipe->buf().contentSize();
+    const uint64_t end = virginConsumed + virgin.body_pipe->buf().contentSize();
     Must(virginConsumed <= start && start <= end);
-    return end - start;
+    return static_cast<size_t>(end - start);
 }
 
 // pointer to buffered virgin body data available for the specified activity
 const char *ICAPModXact::virginContentData(const VirginBodyAct &act) const
 {
     Must(act.active());
-    const size_t start = act.offset();
+    const uint64_t start = act.offset();
     Must(virginConsumed <= start);
-    return virgin.body_pipe->buf().content() + (start-virginConsumed);
+    return virgin.body_pipe->buf().content() + static_cast<size_t>(start-virginConsumed);
 }
 
 void ICAPModXact::virginConsume()
@@ -374,8 +374,8 @@ void ICAPModXact::virginConsume()
     }
 
     const size_t have = static_cast<size_t>(bp.buf().contentSize());
-    const size_t end = virginConsumed + have;
-    size_t offset = end;
+    const uint64_t end = virginConsumed + have;
+    uint64_t offset = end;
 
     debugs(93, 9, HERE << "max virgin consumption offset=" << offset <<
         " acts " << virginBodyWriting.active() << virginBodySending.active() <<
@@ -390,7 +390,7 @@ void ICAPModXact::virginConsume()
 
     Must(virginConsumed <= offset && offset <= end);
 
-    if (const size_t size = offset - virginConsumed) {
+    if (const size_t size = static_cast<size_t>(offset - virginConsumed)) {
         debugs(93, 8, HERE << "consuming " << size << " out of " << have <<
                " virgin body bytes");
         bp.consume(size);
@@ -1215,7 +1215,7 @@ void ICAPModXact::decideOnPreview()
         ad = 0;
     else
     if (virginBody.knownSize())
-        ad = XMIN(ad, virginBody.size()); // not more than we have
+        ad = XMIN(static_cast<uint64_t>(ad), virginBody.size()); // not more than we have
 
     debugs(93, 5, "ICAPModXact should offer " << ad << "-byte preview " <<
            "(service wanted " << wantedSize << ")");
@@ -1370,7 +1370,7 @@ void ICAPModXact::estimateVirginBody()
     else
         method = METHOD_NONE;
 
-    ssize_t size;
+    int64_t size;
     // expectingBody returns true for zero-sized bodies, but we will not
     // get a pipe for that body, so we treat the message as bodyless
     if (method != METHOD_NONE && msg->expectingBody(method, size) && size) {
@@ -1410,9 +1410,9 @@ SizedEstimate::SizedEstimate()
         : theData(dtUnexpected)
 {}
 
-void SizedEstimate::expect(ssize_t aSize)
+void SizedEstimate::expect(int64_t aSize)
 {
-    theData = (aSize >= 0) ? aSize : (ssize_t)dtUnknown;
+    theData = (aSize >= 0) ? aSize : (int64_t)dtUnknown;
 }
 
 bool SizedEstimate::expected() const
@@ -1426,10 +1426,10 @@ bool SizedEstimate::knownSize() const
     return theData != dtUnknown;
 }
 
-size_t SizedEstimate::size() const
+uint64_t SizedEstimate::size() const
 {
     Must(knownSize());
-    return static_cast<size_t>(theData);
+    return static_cast<uint64_t>(theData);
 }
 
 
@@ -1453,13 +1453,13 @@ void VirginBodyAct::progress(size_t size)
 {
     Must(active());
     Must(size >= 0);
-    theStart += size;
+    theStart += static_cast<int64_t>(size);
 }
 
-size_t VirginBodyAct::offset() const
+uint64_t VirginBodyAct::offset() const
 {
     Must(active());
-    return theStart;
+    return static_cast<uint64_t>(theStart);
 }
 
 

@@ -44,7 +44,7 @@ BodyPipe::~BodyPipe()
 	theBuf.clean();
 }
 
-void BodyPipe::setBodySize(size_t aBodySize)
+void BodyPipe::setBodySize(uint64_t aBodySize)
 {
 	assert(!bodySizeKnown());
 	assert(aBodySize >= 0);
@@ -59,13 +59,13 @@ void BodyPipe::setBodySize(size_t aBodySize)
 	debugs(91,7, HERE << "set body size" << status());
 }
 
-size_t BodyPipe::bodySize() const
+uint64_t BodyPipe::bodySize() const
 {
 	assert(bodySizeKnown());
-	return static_cast<size_t>(theBodySize);
+	return static_cast<uint64_t>(theBodySize);
 }
 
-bool BodyPipe::expectMoreAfter(size_t offset) const
+bool BodyPipe::expectMoreAfter(uint64_t offset) const
 {
 	assert(theGetSize <= offset);
 	return offset < thePutSize || // buffer has more now or
@@ -333,9 +333,9 @@ const char *BodyPipe::status() const
 
     buf.append(" [", 2);
 
-	buf.Printf("%d<=%d", (int)theGetSize, (int)thePutSize);
+	buf.Printf("%"PRIu64"<=%"PRIu64, theGetSize, thePutSize);
     if (theBodySize >= 0)
-        buf.Printf("<=%d", (int)theBodySize);
+        buf.Printf("<=%"PRId64, theBodySize);
 	else
 		buf.append("<=?", 3);
 

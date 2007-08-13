@@ -1,6 +1,6 @@
 
 /*
- * $Id: Parsing.h,v 1.3 2006/10/08 13:10:34 serassio Exp $
+ * $Id: Parsing.h,v 1.4 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -47,5 +47,6 @@ extern u_short GetShort(void);
 
 // on success, returns true and sets *p (if any) to the end of the integer
 extern bool StringToInt(const char *str, int &result, const char **p, int base);
+extern bool StringToInt64(const char *str, int64_t &result, const char **p, int base);
 
 #endif /* SQUID_PARSING_H */
