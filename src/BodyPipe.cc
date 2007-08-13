@@ -27,7 +27,8 @@ void BodyConsumer::stopConsumingFrom(RefCount<BodyPipe> &pipe)
 
 BodyPipe::BodyPipe(Producer *aProducer): theBodySize(-1),
 	theProducer(aProducer), theConsumer(0),
-	thePutSize(0), theGetSize(0), mustAutoConsume(false), isCheckedOut(false)
+	thePutSize(0), theGetSize(0), theCCallsPending(0), theCCallsToSkip(0),
+	mustAutoConsume(false), isCheckedOut(false)
 {
 	// TODO: teach MemBuf to start with zero minSize
 	// TODO: limit maxSize by theBodySize, when known?
@@ -133,18 +134,25 @@ BodyPipe::setConsumerIfNotLate(Consumer *aConsumer)
 	theConsumer = aConsumer;
 	debugs(91,7, HERE << "set consumer" << status());
 	if (theBuf.hasContent())
-		AsyncCall(91,5, this, BodyPipe::tellMoreBodyDataAvailable);
+		scheduleBodyDataNotification();
 	if (!theProducer)
 		scheduleBodyEndNotification();
 
 	return true;
 }
 
+// When BodyPipe consumer is gone, all events for that consumer must not
+// reach the new consumer (if any). Otherwise, the calls may go out of order
+// (if _some_ calls are dropped due to the ultimate destination being 
+// temporary NULL). The code keeps track of the number of outstanding
+// events and skips that number if consumer leaves. TODO: when AscyncCall
+// support is improved, should we just schedule calls directly to consumer?
 void
 BodyPipe::clearConsumer() {
 	if (theConsumer) {
 		debugs(91,7, HERE << "clearing consumer" << status());
 		theConsumer = NULL;
+		theCCallsToSkip = theCCallsPending; // skip all pending consumer calls
 		if (consumedSize() && !exhausted())
 			AsyncCall(91,5, this, BodyPipe::tellBodyConsumerAborted);
 	}
@@ -177,7 +185,7 @@ BodyPipe::enableAutoConsumption() {
 	mustAutoConsume = true;
 	debugs(91,5, HERE << "enabled auto consumption" << status());
 	if (!theConsumer && theBuf.hasContent())
-		AsyncCall(91,5, this, BodyPipe::tellMoreBodyDataAvailable);
+		scheduleBodyDataNotification();
 }
 
 MemBuf &
@@ -233,7 +241,7 @@ BodyPipe::postAppend(size_t size) {
 
 	// We should not consume here even if mustAutoConsume because the
 	// caller may not be ready for the data to be consumed during this call.
-	AsyncCall(91,5, this, BodyPipe::tellMoreBodyDataAvailable);
+	scheduleBodyDataNotification();
 
 	if (!mayNeedMoreData())
 		clearProducer(true); // reached end-of-body
@@ -241,12 +249,24 @@ BodyPipe::postAppend(size_t size) {
 
 
 void
+BodyPipe::scheduleBodyDataNotification()
+{
+	if (theConsumer || mustAutoConsume) {
+		++theCCallsPending;
+		AsyncCall(91,5, this, BodyPipe::tellMoreBodyDataAvailable);
+	}
+}
+
+void
 BodyPipe::scheduleBodyEndNotification()
 {
-	if (bodySizeKnown() && bodySize() == thePutSize)
-		AsyncCall(91,5, this, BodyPipe::tellBodyProductionEnded);
-	else
-		AsyncCall(91,5, this, BodyPipe::tellBodyProducerAborted);
+	if (theConsumer) {
+		++theCCallsPending;
+		if (bodySizeKnown() && bodySize() == thePutSize)
+			AsyncCall(91,5, this, BodyPipe::tellBodyProductionEnded);
+		else
+			AsyncCall(91,5, this, BodyPipe::tellBodyProducerAborted);
+	}
 }
 
 void BodyPipe::tellMoreBodySpaceAvailable()
@@ -263,6 +283,9 @@ void BodyPipe::tellBodyConsumerAborted()
 
 void BodyPipe::tellMoreBodyDataAvailable()
 {
+	if (skipCCall())
+		return;
+
 	if (theConsumer != NULL)
 		theConsumer->noteMoreBodyDataAvailable(*this);
 	else
@@ -272,14 +295,34 @@ void BodyPipe::tellMoreBodyDataAvailable()
 
 void BodyPipe::tellBodyProductionEnded()
 {
+	if (skipCCall())
+		return;
+
 	if (theConsumer != NULL)
 		theConsumer->noteBodyProductionEnded(*this);
 }
 
 void BodyPipe::tellBodyProducerAborted()
 {
+	if (skipCCall())
+		return;
+
 	if (theConsumer != NULL)
 		theConsumer->noteBodyProducerAborted(*this);
+}
+
+// skips calls destined for the previous consumer; see BodyPipe::clearConsumer
+bool BodyPipe::skipCCall()
+{
+	assert(theCCallsPending > 0);
+	--theCCallsPending;
+
+	if (theCCallsToSkip <= 0)
+		return false;
+
+	--theCCallsToSkip;
+	debugs(91,5, HERE << "skipped call");
+	return true;
 }
 
 // a short temporary string describing buffer status for debugging
