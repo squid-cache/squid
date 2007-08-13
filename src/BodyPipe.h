@@ -115,11 +115,14 @@ class BodyPipe: public RefCountable {
 		void checkIn(Checkout &checkout); // return updated raw buffer
 		void undoCheckOut(Checkout &checkout); // undo checkout efffect
 
+		void scheduleBodyDataNotification();
 		void scheduleBodyEndNotification();
 
 		// keep counters in sync and notify producer or consumer
 		void postConsume(size_t size);
 		void postAppend(size_t size);
+
+		bool skipCCall(); // decides whether to skip the call, updates counters
 
 	public: /* public to enable callbacks, but treat as private */
 
@@ -146,6 +149,9 @@ class BodyPipe: public RefCountable {
 
 		size_t thePutSize; // ever-increasing total
 		size_t theGetSize; // ever-increasing total
+
+		int theCCallsPending; // outstanding calls to the consumer
+		int theCCallsToSkip; // how many calls to the consumer we should skip
 
 		MemBuf theBuf; // produced but not yet consumed content, if any
 
