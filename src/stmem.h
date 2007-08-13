@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.h,v 1.9 2005/09/14 18:23:21 wessels Exp $
+ * $Id: stmem.h,v 1.10 2007/08/13 17:20:51 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -49,18 +49,18 @@ public:
     mem_hdr();
     ~mem_hdr();
     void freeContent();
-    int lowestOffset () const;
-    off_t endOffset () const;
-    int freeDataUpto (int);
+    int64_t lowestOffset () const;
+    int64_t endOffset () const;
+    int64_t freeDataUpto (int64_t);
     ssize_t copy (StoreIOBuffer const &) const;
-    bool hasContigousContentRange(Range<size_t> const &range) const;
+    bool hasContigousContentRange(Range<int64_t> const &range) const;
     /* success or fail */
     bool write (StoreIOBuffer const &);
     void dump() const;
     size_t size() const;
     /* Not an iterator - thus the start, not begin() */
     mem_node const *start() const;
-    mem_node *getBlockContainingLocation (size_t location) const;
+    mem_node *getBlockContainingLocation (int64_t location) const;
     /* access the contained nodes - easier than punning
      * as a contianer ourselves 
      */
@@ -78,11 +78,11 @@ private:
     void makeAppendSpace();
     int appendToNode(mem_node *aNode, const char *data, int maxLength);
     void appendNode (mem_node *aNode);
-    size_t copyAvailable(mem_node *aNode, size_t location, size_t amount, char *target) const;
+    size_t copyAvailable(mem_node *aNode, int64_t location, size_t amount, char *target) const;
     bool unionNotEmpty (StoreIOBuffer const &);
-    mem_node *nodeToRecieve(off_t offset);
-    size_t writeAvailable(mem_node *aNode, size_t location, size_t amount, char const *source);
-    off_t inmem_hi;
+    mem_node *nodeToRecieve(int64_t offset);
+    size_t writeAvailable(mem_node *aNode, int64_t location, size_t amount, char const *source);
+    int64_t inmem_hi;
     Splay<mem_node *> nodes;
 };
 

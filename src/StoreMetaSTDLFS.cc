@@ -1,8 +1,8 @@
+
 /*
- * $Id: StoreSwapLogData.cc,v 1.4 2007/08/13 17:20:51 hno Exp $
+ * $Id: StoreMetaSTDLFS.cc,v 1.1 2007/08/13 17:22:30 hno Exp $
  *
- * DEBUG: section 47    Store Directory Routines
- * AUTHOR: Duane Wessels
+ * DEBUG: section 20    Storage Manager Swapfile Metadata
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -32,14 +32,13 @@
  *
  */
 
-#include "StoreSwapLogData.h"
+#include "squid.h"
+#include "StoreMetaSTDLFS.h"
+#include "Store.h"
+#include "MemObject.h"
 
-StoreSwapLogData::StoreSwapLogData(): op(0), swap_filen (0), timestamp (0), lastref (0), expires (0), lastmod(0), swap_file_sz (0), refcount (0), flags (0)
+bool
+StoreMetaSTDLFS::validLength(int len) const
 {
-    memset (key, '\0', sizeof(key));
-}
-
-StoreSwapLogHeader::StoreSwapLogHeader():op(SWAP_LOG_VERSION), version(1)
-{
-     record_size = sizeof(StoreSwapLogData);
+    return len == STORE_HDR_METASIZE;
 }

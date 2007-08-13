@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.28 2007/05/29 13:31:38 amosjeffries Exp $
+ * $Id: MemObject.cc,v 1.29 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -186,7 +186,7 @@ MemObject::replaceHttpReply(HttpReply *newrep)
 
 struct LowestMemReader : public unary_function<store_client, void>
 {
-    LowestMemReader(off_t seed):current(seed){}
+    LowestMemReader(int64_t seed):current(seed){}
 
     void operator() (store_client const &x)
     {
@@ -194,7 +194,7 @@ struct LowestMemReader : public unary_function<store_client, void>
             current = x.copyInto.offset;
     }
 
-    off_t current;
+    int64_t current;
 };
 
 struct StoreClientStats : public unary_function<store_client, void>
@@ -215,27 +215,27 @@ MemObject::stat (MemBuf * mb) const
 {
     mb->Printf("\t%s %s\n",
                RequestMethodStr[method], log_url);
-    mb->Printf("\tinmem_lo: %d\n", (int) inmem_lo);
-    mb->Printf("\tinmem_hi: %d\n", (int) data_hdr.endOffset());
-    mb->Printf("\tswapout: %d bytes queued\n",
-               (int) swapout.queue_offset);
+    mb->Printf("\tinmem_lo: %"PRId64"\n", inmem_lo);
+    mb->Printf("\tinmem_hi: %"PRId64"\n", data_hdr.endOffset());
+    mb->Printf("\tswapout: %"PRId64" bytes queued\n",
+               swapout.queue_offset);
 
     if (swapout.sio.getRaw())
-        mb->Printf("\tswapout: %d bytes written\n",
-                   (int) swapout.sio->offset());
+        mb->Printf("\tswapout: %"PRId64" bytes written\n",
+                   (int64_t) swapout.sio->offset());
 
     StoreClientStats statsVisitor(mb);
 
     for_each<StoreClientStats>(clients, statsVisitor);
 }
 
-off_t
+int64_t
 MemObject::endOffset () const
 {
     return data_hdr.endOffset();
 }
 
-size_t
+int64_t
 MemObject::size() const
 {
     if (object_sz < 0)
@@ -254,7 +254,7 @@ MemObject::reset()
 }
 
 
-off_t
+int64_t
 MemObject::lowestMemReaderOffset() const
 {
     LowestMemReader lowest (endOffset() + 1);
@@ -268,7 +268,7 @@ MemObject::lowestMemReaderOffset() const
 bool
 MemObject::readAheadPolicyCanRead() const
 {
-    return (size_t)endOffset() - getReply()->hdr_sz < lowestMemReaderOffset() + (Config.readAheadGap << 10);
+    return endOffset() - getReply()->hdr_sz < lowestMemReaderOffset() + Config.readAheadGap;
 }
 
 void
@@ -290,7 +290,7 @@ MemObject::checkUrlChecksum () const
 /*
  * How much of the object data is on the disk?
  */
-size_t
+int64_t
 MemObject::objectBytesOnDisk() const
 {
     /*
@@ -308,25 +308,25 @@ MemObject::objectBytesOnDisk() const
     if (swapout.sio.getRaw() == NULL)
         return 0;
 
-    off_t nwritten = swapout.sio->offset();
+    int64_t nwritten = swapout.sio->offset();
 
-    if (nwritten <= (off_t)swap_hdr_sz)
+    if (nwritten <= swap_hdr_sz)
         return 0;
 
-    return (size_t) (nwritten - swap_hdr_sz);
+    return (nwritten - swap_hdr_sz);
 }
 
-off_t
+int64_t
 MemObject::policyLowestOffsetToKeep() const
 {
     /*
      * Careful.  lowest_offset can be greater than endOffset(), such
      * as in the case of a range request.
      */
-    off_t lowest_offset = lowestMemReaderOffset();
+    int64_t lowest_offset = lowestMemReaderOffset();
 
     if (endOffset() < lowest_offset ||
-            endOffset() - inmem_lo > (ssize_t)Config.Store.maxInMemObjSize)
+            endOffset() - inmem_lo > Config.Store.maxInMemObjSize)
         return lowest_offset;
 
     return inmem_lo;
@@ -335,7 +335,7 @@ MemObject::policyLowestOffsetToKeep() const
 void
 MemObject::trimSwappable()
 {
-    off_t new_mem_lo = policyLowestOffsetToKeep();
+    int64_t new_mem_lo = policyLowestOffsetToKeep();
     /*
      * We should only free up to what we know has been written
      * to disk, not what has been queued for writing.  Otherwise
@@ -344,7 +344,7 @@ MemObject::trimSwappable()
      * The -1 makes sure the page isn't freed until storeSwapOut has
      * walked to the next page. (mem->swapout.memnode)
      */
-    off_t on_disk;
+    int64_t on_disk;
 
     if ((on_disk = objectBytesOnDisk()) - 1 < new_mem_lo)
         new_mem_lo = on_disk - 1;
@@ -360,7 +360,7 @@ MemObject::trimSwappable()
 void
 MemObject::trimUnSwappable()
 {
-    off_t new_mem_lo = policyLowestOffsetToKeep();
+    int64_t new_mem_lo = policyLowestOffsetToKeep();
     assert (new_mem_lo > 0);
 
     data_hdr.freeDataUpto(new_mem_lo);
@@ -371,7 +371,7 @@ MemObject::trimUnSwappable()
 bool
 MemObject::isContiguous() const
 {
-    bool result = data_hdr.hasContigousContentRange (Range<size_t>(inmem_lo, endOffset()));
+    bool result = data_hdr.hasContigousContentRange (Range<int64_t>(inmem_lo, endOffset()));
     /* XXX : make this higher level */
     debugs (19, result ? 4 :3, "MemObject::isContiguous: Returning " << (result ? "true" : "false"));
     return result;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufscommon.h,v 1.11 2007/05/29 13:31:47 amosjeffries Exp $
+ * $Id: ufscommon.h,v 1.12 2007/08/13 17:20:57 hno Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -97,7 +97,7 @@ public:
     void mapBitSet(sfileno filn);
     StoreEntry *addDiskRestore(const cache_key * key,
                                sfileno file_number,
-                               size_t swap_file_sz,
+                               uint64_t swap_file_sz,
                                time_t expires,
                                time_t timestamp,
                                time_t lastref,
@@ -321,6 +321,31 @@ private:
     bool _done;
 };
 
+class StoreSwapLogData;
+class UFSSwapLogParser{
+
+public:
+    FILE *log;
+    int log_entries;
+    int record_size;
+    
+    UFSSwapLogParser(FILE *fp):log(fp),log_entries(-1), record_size(0){
+    }
+    virtual ~UFSSwapLogParser(){};
+    
+    static UFSSwapLogParser *GetUFSSwapLogParser(FILE *fp);
+    
+    virtual bool ReadRecord(StoreSwapLogData &swapData) = 0;
+    int SwapLogEntries();
+    void Close()
+    {
+	if(log){ 
+	    fclose(log);
+	    log = NULL;
+	}
+    }
+};
+
 class RebuildState : public RefCountable
 {
 
@@ -343,7 +368,8 @@ public:
 
     RefCount<UFSSwapDir> sd;
     int n_read;
-    FILE *log;
+/*    FILE *log;*/
+    UFSSwapLogParser *LogParser;
     int speed;
     int curlvl1;
     int curlvl2;

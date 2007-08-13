@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.261 2007/04/24 15:04:22 hno Exp $
+ * $Id: squid.h,v 1.262 2007/08/13 17:20:51 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -34,6 +34,11 @@
 
 #ifndef SQUID_H
 #define SQUID_H
+
+/*
+ * On linux this must be defined to get PRId64 and friends
+ */
+#define __STDC_FORMAT_MACROS
 
 #include "config.h"
 

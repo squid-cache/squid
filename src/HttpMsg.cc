@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.42 2007/04/28 22:26:37 hno Exp $
+ * $Id: HttpMsg.cc,v 1.43 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -355,7 +355,7 @@ void HttpMsg::packInto(Packer *p, bool full_uri) const
 
 void HttpMsg::hdrCacheInit()
 {
-    content_length = header.getInt(HDR_CONTENT_LENGTH);
+    content_length = header.getInt64(HDR_CONTENT_LENGTH);
     assert(NULL == cache_control);
     cache_control = header.getCc();
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: Parsing.cc,v 1.3 2006/10/08 13:10:34 serassio Exp $
+ * $Id: Parsing.cc,v 1.4 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -112,6 +112,26 @@ StringToInt(const char *s, int &result, const char **p, int base)
     if (s) {
         char *ptr = 0;
         const int h = (int) strtol(s, &ptr, base);
+
+        if (ptr != s && ptr) {
+            result = h;
+
+            if (p)
+                *p = ptr;
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool
+StringToInt64(const char *s, int64_t &result, const char **p, int base)
+{
+    if (s) {
+        char *ptr = 0;
+        const int64_t h = (int64_t) strtoll(s, &ptr, base);
 
         if (ptr != s && ptr) {
             result = h;

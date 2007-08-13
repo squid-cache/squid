@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderRange.h,v 1.10 2007/05/29 13:31:37 amosjeffries Exp $
+ * $Id: HttpHeaderRange.h,v 1.11 2007/08/13 17:20:51 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -48,19 +48,19 @@ class HttpHdrRangeSpec
 
 public:
     MEMPROXY_CLASS(HttpHdrRangeSpec);
-    typedef Range<ssize_t> HttpRange;
-    static ssize_t const UnknownPosition;
+    typedef Range<int64_t> HttpRange;
+    static int64_t const UnknownPosition;
 
     HttpHdrRangeSpec();
     static HttpHdrRangeSpec *Create(const char *field, int fieldLen);
 
     bool parseInit(const char *field, int flen);
-    int canonize(size_t clen);
+    int canonize(int64_t clen);
     void outputInfo( char const *note) const;
     void packInto(Packer * p) const;
     bool mergeWith(const HttpHdrRangeSpec * donor);
-    ssize_t offset;
-    ssize_t length;
+    int64_t offset;
+    int64_t length;
 };
 
 MEMPROXY_CLASS_INLINE(HttpHdrRangeSpec)
@@ -93,7 +93,7 @@ public:
     const_iterator end() const;
 
     /* adjust specs after the length is known */
-    int canonize(size_t);
+    int canonize(int64_t);
     int canonize(HttpReply *rep);
     /* returns true if ranges are valid; inits HttpHdrRange */
     bool parseInit(const String * range_spec);
@@ -101,8 +101,8 @@ public:
     /* other */
     bool isComplex() const;
     bool willBeComplex() const;
-    ssize_t firstOffset() const;
-    ssize_t lowestOffset(ssize_t) const;
+    int64_t firstOffset() const;
+    int64_t lowestOffset(int64_t) const;
     bool offsetLimitExceeded() const;
     bool contains(HttpHdrRangeSpec& r) const;
     Vector<HttpHdrRangeSpec *> specs;
@@ -110,7 +110,7 @@ public:
 private:
     void getCanonizedSpecs (Vector<HttpHdrRangeSpec *> &copy);
     void merge (Vector<HttpHdrRangeSpec *> &basis);
-    ssize_t clen;
+    int64_t clen;
 };
 
 MEMPROXY_CLASS_INLINE(HttpHdrRange)
@@ -124,9 +124,9 @@ public:
     HttpHdrRange::iterator pos;
     const HttpHdrRangeSpec *currentSpec() const;
     void updateSpec();
-    ssize_t debt() const;
-    void debt(ssize_t);
-    ssize_t debt_size;		/* bytes left to send from the current spec */
+    int64_t debt() const;
+    void debt(int64_t);
+    int64_t debt_size;		/* bytes left to send from the current spec */
     String boundary;		/* boundary for multipart responses */
     bool valid;
 };

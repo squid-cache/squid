@@ -66,10 +66,10 @@ void ChunkedCodingParser::parseChunkBeg()
 
     if (findCrlf(crlfBeg, crlfEnd)) {
         debugs(93,7, "found chunk-size end: " << crlfBeg << "-" << crlfEnd);
-        int size = -1;
+        int64_t size = -1;
         const char *p = 0;
 
-        if (StringToInt(theIn->content(), size, &p, 16)) {
+        if (StringToInt64(theIn->content(), size, &p, 16)) {
             if (size < 0) {
                 throw TexcHere("negative chunk size");
                 return;
@@ -104,7 +104,7 @@ void ChunkedCodingParser::parseChunkBody()
 {
     Must(theLeftBodySize > 0); // Should, really
 
-    const size_t availSize = XMIN(theLeftBodySize, (size_t)theIn->contentSize());
+    const size_t availSize = XMIN(theLeftBodySize, (uint64_t)theIn->contentSize());
     const size_t safeSize = XMIN(availSize, (size_t)theOut->potentialSpaceSize());
 
     doNeedMoreData = availSize < theLeftBodySize;

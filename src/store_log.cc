@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_log.cc,v 1.34 2007/05/29 13:31:41 amosjeffries Exp $
+ * $Id: store_log.cc,v 1.35 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Logging Functions
  * AUTHOR: Duane Wessels
@@ -76,7 +76,7 @@ storeLog(int tag, const StoreEntry * e)
          * Because if we print it before the swap file number, it'll break
          * the existing log format.
          */
-        logfilePrintf(storelog, "%9d.%03d %-7s %02d %08X %s %4d %9d %9d %9d %s %d/%d %s %s\n",
+        logfilePrintf(storelog, "%9d.%03d %-7s %02d %08X %s %4d %9d %9d %9d %s %"PRId64"/%"PRId64" %s %s\n",
                       (int) current_time.tv_sec,
                       (int) current_time.tv_usec / 1000,
                       storeLogTags[tag],

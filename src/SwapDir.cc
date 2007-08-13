@@ -1,6 +1,6 @@
 
 /*
- * $Id: SwapDir.cc,v 1.13 2007/05/29 13:31:38 amosjeffries Exp $
+ * $Id: SwapDir.cc,v 1.14 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 20    Swap Dir base object
  * AUTHOR: Robert Collins
@@ -245,7 +245,7 @@ SwapDir::optionMaxSizeParse(char const *option, const char *value, int reconfigu
     if (!value)
         self_destruct();
 
-    ssize_t size = xatoi(value);
+    int64_t size = strtoll(value, NULL, 10);
 
     if (reconfiguring && max_objsize != size)
         debugs(3, 1, "Cache dir '" << path << "' max object size now " << size);
@@ -259,7 +259,7 @@ void
 SwapDir::optionMaxSizeDump(StoreEntry * e) const
 {
     if (max_objsize != -1)
-        storeAppendPrintf(e, " max-size=%ld", (long int) max_objsize);
+        storeAppendPrintf(e, " max-size=%"PRId64, max_objsize);
 }
 
 /* Swapdirs do not have an index of their own - thus they ask their parent..

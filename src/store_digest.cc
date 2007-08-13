@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.75 2007/04/30 16:56:09 wessels Exp $
+ * $Id: store_digest.cc,v 1.76 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -247,7 +247,7 @@ storeDigestAddable(const StoreEntry * e)
     }
 
     /* do not digest huge objects */
-    if (e->swap_file_sz > Config.Store.maxObjectSize) {
+    if (e->swap_file_sz > (uint64_t )Config.Store.maxObjectSize) {
         debugs(71, 6, "storeDigestAddable: NO: too big");
         return 0;
     }

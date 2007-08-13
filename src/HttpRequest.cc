@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.76 2007/05/29 13:31:37 amosjeffries Exp $
+ * $Id: HttpRequest.cc,v 1.77 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -370,7 +370,7 @@ void HttpRequest::packFirstLineInto(Packer * p, bool full_uri) const
  * along with this request
  */
 bool
-HttpRequest::expectingBody(method_t unused, ssize_t& theSize) const
+HttpRequest::expectingBody(method_t unused, int64_t& theSize) const
 {
     bool expectBody = false;
 

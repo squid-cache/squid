@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.74 2006/10/14 13:43:18 serassio Exp $
+ * $Id: util.h,v 1.75 2007/08/13 17:20:50 hno Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -135,6 +135,7 @@ SQUIDCEXTERN int xpercentInt(double part, double whole);
 SQUIDCEXTERN double xdiv(double nom, double denom);
 
 SQUIDCEXTERN const char *xitoa(int num);
+SQUIDCEXTERN const char *xint64toa(int64_t num);
 
 #if !HAVE_DRAND48
 SQUIDCEXTERN double drand48(void);

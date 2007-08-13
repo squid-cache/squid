@@ -1,6 +1,6 @@
 
 /*
- * $Id: fde.cc,v 1.6 2007/04/25 11:30:18 adrian Exp $
+ * $Id: fde.cc,v 1.7 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: none          FDE
  * AUTHOR: Robert Collins
@@ -56,11 +56,11 @@ fde::dumpStats (StoreEntry &dumpEntry, int fdNumber)
 
 #ifdef _SQUID_MSWIN_
 
-    storeAppendPrintf(&dumpEntry, "%4d 0x%-8lX %-6.6s %4d %7d%c %7d%c %-21s %s\n",
+    storeAppendPrintf(&dumpEntry, "%4d 0x%-8lX %-6.6s %4d %7"PRId64"%c %7"PRId64"%c %-21s %s\n",
                       fdNumber,
                       win32.handle,
 #else
-    storeAppendPrintf(&dumpEntry, "%4d %-6.6s %4d %7d%c %7d%c %-21s %s\n",
+    storeAppendPrintf(&dumpEntry, "%4d %-6.6s %4d %7"PRId64"%c %7"PRId64"%c %-21s %s\n",
                       fdNumber,
 #endif
                       fdTypeStr[type],

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.h,v 1.22 2007/05/09 07:45:58 wessels Exp $
+ * $Id: client_side.h,v 1.23 2007/08/13 17:20:51 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -98,12 +98,12 @@ unsigned parsed_ok: 1; /* Was this parsed correctly? */
     DeferredParams deferredparams;
     off_t writtenToSocket;
     void pullData();
-    off_t getNextRangeOffset() const;
+    int64_t getNextRangeOffset() const;
     bool canPackMoreRanges() const;
     clientStream_status_t socketState();
     void sendBody(HttpReply * rep, StoreIOBuffer bodyData);
     void sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData);
-    size_t lengthToSend(Range<size_t> const &available);
+    size_t lengthToSend(Range<int64_t> const &available);
     void noteSentBodyBytes(size_t);
     void buildRangeHeader(HttpReply * rep);
     int fd() const;

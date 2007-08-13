@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.536 2007/08/09 23:30:52 rousskov Exp $
+ * $Id: http.cc,v 1.537 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -899,7 +899,7 @@ HttpStateData::persistentConnStatus() const
     if (eof) // already reached EOF
         return COMPLETE_NONPERSISTENT_MSG;
 
-    const int clen = vrep->bodySize(request->method);
+    const int64_t clen = vrep->bodySize(request->method);
 
     debugs(11, 5, "persistentConnStatus: clen=" << clen);
 
@@ -911,7 +911,7 @@ HttpStateData::persistentConnStatus() const
     if (clen > 0) {
         // old technique:
         // if (entry->mem_obj->endOffset() < vrep->content_length + vrep->hdr_sz)
-        const int body_bytes_read = reply_bytes_read - header_bytes_read;
+        const int64_t body_bytes_read = reply_bytes_read - header_bytes_read;
         debugs(11,5, "persistentConnStatus: body_bytes_read=" <<
                body_bytes_read << " content_length=" << vrep->content_length);
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreIOBuffer.h,v 1.6 2006/10/14 13:34:29 serassio Exp $
+ * $Id: StoreIOBuffer.h,v 1.7 2007/08/13 17:20:51 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -45,7 +45,7 @@ class StoreIOBuffer
 public:
     StoreIOBuffer():length(0), offset (0), data (NULL){flags.error = 0;}
 
-    StoreIOBuffer(size_t aLength, off_t anOffset, char *someData) :
+    StoreIOBuffer(size_t aLength, int64_t anOffset, char *someData) :
             length (aLength), offset (anOffset), data (someData)
     {
         flags.error = 0;
@@ -53,7 +53,7 @@ public:
 
     /* Create a StoreIOBuffer from a MemBuf and offset */
     /* NOTE that MemBuf still "owns" the pointers, StoreIOBuffer is just borrowing them */
-    StoreIOBuffer(MemBuf *aMemBuf, off_t anOffset) :
+    StoreIOBuffer(MemBuf *aMemBuf, int64_t anOffset) :
             length(aMemBuf->contentSize()),
             offset (anOffset),
             data(aMemBuf->content())
@@ -61,9 +61,9 @@ public:
         flags.error = 0;
     }
 
-    Range<size_t> range() const
+    Range<int64_t> range() const
     {
-        return Range<size_t>(offset, offset + length);
+        return Range<int64_t>(offset, offset + length);
     }
 
     void dump() const
@@ -81,7 +81,7 @@ unsigned error:
 
     flags;
     size_t length;
-    off_t offset;
+    int64_t offset;
     char *data;
 };
 

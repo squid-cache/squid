@@ -66,16 +66,16 @@ public:
     dlink_list membufs;
 
     CossMemBuf *current_membuf;
-    size_t current_offset;	/* in Blocks */
+    off_t current_offset;	/* in Blocks */
     int numcollisions;
     dlink_list cossindex;
     unsigned int blksz_bits;
     unsigned int blksz_mask;  /* just 1<<blksz_bits - 1*/
     DiskIOStrategy *io;
     RefCount<DiskFile> theFile;
-    char *storeCossMemPointerFromDiskOffset(size_t offset, CossMemBuf ** mb);
+    char *storeCossMemPointerFromDiskOffset(off_t offset, CossMemBuf ** mb);
     void storeCossMemBufUnlock(StoreIOState::Pointer);
-    CossMemBuf *createMemBuf(size_t start, sfileno curfn, int *collision);
+    CossMemBuf *createMemBuf(off_t start, sfileno curfn, int *collision);
     sfileno allocate(const StoreEntry * e, int which);
     void startMembuf();
 

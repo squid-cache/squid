@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrContRange.cc,v 1.20 2007/05/04 20:30:16 wessels Exp $
+ * $Id: HttpHdrContRange.cc,v 1.21 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 68    HTTP Content-Range Header
  * AUTHOR: Alex Rousskov
@@ -81,16 +81,16 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec * spec, const char *field, int fl
     }
 
     /* parse offset */
-    if (!httpHeaderParseSize(field, &spec->offset))
+    if (!httpHeaderParseOffset(field, &spec->offset))
         return 0;
 
     p++;
 
     /* do we have last-pos ? */
     if (p - field < flen) {
-        ssize_t last_pos;
+        int64_t last_pos;
 
-        if (!httpHeaderParseSize(p, &last_pos))
+        if (!httpHeaderParseOffset(p, &last_pos))
             return 0;
 
         spec->length = size_diff(last_pos + 1, spec->offset);
@@ -100,7 +100,7 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec * spec, const char *field, int fl
     assert (spec->length >= 0);
 
     /* we managed to parse, check if the result makes sence */
-    if (known_spec((size_t)spec->length) && spec->length == 0) {
+    if (known_spec(spec->length) && spec->length == 0) {
         debugs(68, 2, "invalid range (" << spec->offset << " += " <<
                (long int) spec->length << ") in resp-range-spec near: '" << field << "'");
         return 0;
@@ -115,11 +115,11 @@ httpHdrRangeRespSpecPackInto(const HttpHdrRangeSpec * spec, Packer * p)
     /* Ensure typecast is safe */
     assert (spec->length >= 0);
 
-    if (!known_spec((size_t)spec->offset) || !known_spec((size_t)spec->length))
+    if (!known_spec(spec->offset) || !known_spec(spec->length))
         packerPrintf(p, "*");
     else
-        packerPrintf(p, "bytes %ld-%ld",
-                     (long int) spec->offset, (long int) spec->offset + spec->length - 1);
+        packerPrintf(p, "bytes %"PRId64"-%"PRId64,
+                     spec->offset, spec->offset + spec->length - 1);
 }
 
 /*
@@ -175,7 +175,7 @@ httpHdrContRangeParseInit(HttpHdrContRange * range, const char *str)
 
     if (*p == '*')
         range->elength = range_spec_unknown;
-    else if (!httpHeaderParseSize(p, &range->elength))
+    else if (!httpHeaderParseOffset(p, &range->elength))
         return 0;
 
         debugs(68, 8, "parsed content-range field: " <<
@@ -211,14 +211,14 @@ httpHdrContRangePackInto(const HttpHdrContRange * range, Packer * p)
     /* Ensure typecast is safe */
     assert (range->elength >= 0);
 
-    if (!known_spec((size_t)range->elength))
+    if (!known_spec(range->elength))
         packerPrintf(p, "/*");
     else
-        packerPrintf(p, "/%ld", (long int) range->elength);
+        packerPrintf(p, "/%"PRId64, range->elength);
 }
 
 void
-httpHdrContRangeSet(HttpHdrContRange * cr, HttpHdrRangeSpec spec, ssize_t ent_len)
+httpHdrContRangeSet(HttpHdrContRange * cr, HttpHdrRangeSpec spec, int64_t ent_len)
 {
     assert(cr && ent_len >= 0);
     cr->spec = spec;

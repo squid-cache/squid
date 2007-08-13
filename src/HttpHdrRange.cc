@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.44 2007/05/29 13:31:37 amosjeffries Exp $
+ * $Id: HttpHdrRange.cc,v 1.45 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -63,7 +63,7 @@
 
 /* globals */
 size_t HttpHdrRange::ParsedCount = 0;
-ssize_t const HttpHdrRangeSpec::UnknownPosition = -1;
+int64_t const HttpHdrRangeSpec::UnknownPosition = -1;
 
 /*
  * Range-Spec
@@ -93,7 +93,7 @@ HttpHdrRangeSpec::parseInit(const char *field, int flen)
 
     /* is it a suffix-byte-range-spec ? */
     if (*field == '-') {
-        if (!httpHeaderParseSize(field + 1, &length))
+        if (!httpHeaderParseOffset(field + 1, &length))
             return false;
     } else
         /* must have a '-' somewhere in _this_ field */
@@ -101,16 +101,16 @@ HttpHdrRangeSpec::parseInit(const char *field, int flen)
             debugs(64, 2, "ignoring invalid (missing '-') range-spec near: '" << field << "'");
             return false;
         } else {
-            if (!httpHeaderParseSize(field, &offset))
+            if (!httpHeaderParseOffset(field, &offset))
                 return false;
 
             p++;
 
             /* do we have last-pos ? */
             if (p - field < flen) {
-                ssize_t last_pos;
+                int64_t last_pos;
 
-                if (!httpHeaderParseSize(p, &last_pos))
+                if (!httpHeaderParseOffset(p, &last_pos))
                     return false;
 
                 HttpHdrRangeSpec::HttpRange aSpec (offset, last_pos + 1);
@@ -132,20 +132,20 @@ void
 HttpHdrRangeSpec::packInto(Packer * packer) const
 {
     if (!known_spec(offset))	/* suffix */
-        packerPrintf(packer, "-%ld", (long int) length);
+        packerPrintf(packer, "-%"PRId64,  length);
     else if (!known_spec(length))		/* trailer */
-        packerPrintf(packer, "%ld-", (long int) offset);
+        packerPrintf(packer, "%"PRId64"-", offset);
     else			/* range */
-        packerPrintf(packer, "%ld-%ld",
-                     (long int) offset, (long int) offset + length - 1);
+        packerPrintf(packer, "%"PRId64"-%"PRId64,
+                     offset, offset + length - 1);
 }
 
 void
 HttpHdrRangeSpec::outputInfo( char const *note) const
 {
     debugs(64, 5, "HttpHdrRangeSpec::canonize: " << note << ": [" <<
-           (long int) offset << ", " << (long int) offset + length <<
-           ") len: " << (long int) length);
+           offset << ", " << offset + length <<
+           ") len: " << length);
 }
 
 /* fills "absent" positions in range specification based on response body size
@@ -153,7 +153,7 @@ HttpHdrRangeSpec::outputInfo( char const *note) const
  * range is valid if its intersection with [0,length-1] is not empty
  */
 int
-HttpHdrRangeSpec::canonize(size_t clen)
+HttpHdrRangeSpec::canonize(int64_t clen)
 {
     outputInfo ("have");
     HttpRange object(0, clen);
@@ -190,8 +190,8 @@ HttpHdrRangeSpec::mergeWith(const HttpHdrRangeSpec * donor)
     bool merged (false);
 #if MERGING_BREAKS_NOTHING
     /* Note: this code works, but some clients may not like its effects */
-    size_t rhs = offset + length;		/* no -1 ! */
-    const size_t donor_rhs = donor->offset + donor->length;	/* no -1 ! */
+    int64_t rhs = offset + length;		/* no -1 ! */
+    const int64_t donor_rhs = donor->offset + donor->length;	/* no -1 ! */
     assert(known_spec(offset));
     assert(known_spec(donor->offset));
     assert(length > 0);
@@ -402,7 +402,7 @@ HttpHdrRange::canonize(HttpReply *rep)
 }
 
 int
-HttpHdrRange::canonize (size_t newClen)
+HttpHdrRange::canonize (int64_t newClen)
 {
     clen = newClen;
     debugs(64, 3, "HttpHdrRange::canonize: started with " << specs.count <<
@@ -420,7 +420,7 @@ HttpHdrRange::canonize (size_t newClen)
 bool
 HttpHdrRange::isComplex() const
 {
-    size_t offset = 0;
+    int64_t offset = 0;
     assert(this);
     /* check that all rangers are in "strong" order */
     const_iterator pos (begin());
@@ -429,7 +429,7 @@ HttpHdrRange::isComplex() const
         /* Ensure typecasts is safe */
         assert ((*pos)->offset >= 0);
 
-        if ((unsigned int)(*pos)->offset < offset)
+        if ((*pos)->offset < offset)
             return 1;
 
         offset = (*pos)->offset + (*pos)->length;
@@ -450,7 +450,7 @@ HttpHdrRange::willBeComplex() const
     assert(this);
     /* check that all rangers are in "strong" order, */
     /* as far as we can tell without the content length */
-    size_t offset = 0;
+    int64_t offset = 0;
 
     for (const_iterator pos (begin()); pos != end(); ++pos) {
         if (!known_spec((*pos)->offset))	/* ignore unknowns */
@@ -459,7 +459,7 @@ HttpHdrRange::willBeComplex() const
         /* Ensure typecasts is safe */
         assert ((*pos)->offset >= 0);
 
-        if ((size_t) (*pos)->offset < offset)
+        if ((*pos)->offset < offset)
             return true;
 
         offset = (*pos)->offset;
@@ -476,10 +476,10 @@ HttpHdrRange::willBeComplex() const
  * or HttpHdrRangeSpec::UnknownPosition
  * this is used for size limiting
  */
-ssize_t
+int64_t
 HttpHdrRange::firstOffset() const
 {
-    ssize_t offset = HttpHdrRangeSpec::UnknownPosition;
+    int64_t offset = HttpHdrRangeSpec::UnknownPosition;
     assert(this);
     const_iterator pos = begin();
 
@@ -499,15 +499,15 @@ HttpHdrRange::firstOffset() const
  * ranges are combined into one, for example FTP REST.
  * Use 0 for size if unknown
  */
-ssize_t
-HttpHdrRange::lowestOffset(ssize_t size) const
+int64_t
+HttpHdrRange::lowestOffset(int64_t size) const
 {
-    ssize_t offset = HttpHdrRangeSpec::UnknownPosition;
+    int64_t offset = HttpHdrRangeSpec::UnknownPosition;
     const_iterator pos = begin();
     assert(this);
 
     while (pos != end()) {
-        ssize_t current = (*pos)->offset;
+        int64_t current = (*pos)->offset;
 
         if (!known_spec(current)) {
             if ((*pos)->length > size || !known_spec((*pos)->length))
@@ -538,7 +538,7 @@ HttpHdrRange::offsetLimitExceeded() const
         /* not a range request */
         return false;
 
-    if (-1 == (ssize_t)Config.rangeOffsetLimit)
+    if (-1 == Config.rangeOffsetLimit)
         /* disabled */
         return false;
 
@@ -546,7 +546,7 @@ HttpHdrRange::offsetLimitExceeded() const
         /* tail request */
         return true;
 
-    if ((ssize_t)Config.rangeOffsetLimit >= firstOffset())
+    if (Config.rangeOffsetLimit >= firstOffset())
         /* below the limit */
         return false;
 
@@ -590,14 +590,14 @@ HttpHdrRangeIter::updateSpec()
     }
 }
 
-ssize_t
+int64_t
 HttpHdrRangeIter::debt() const
 {
     debugs(64, 3, "HttpHdrRangeIter::debt: debt is " << debt_size);
     return debt_size;
 }
 
-void HttpHdrRangeIter::debt(ssize_t newDebt)
+void HttpHdrRangeIter::debt(int64_t newDebt)
 {
     debugs(64, 3, "HttpHdrRangeIter::debt: was " << debt_size << " now " << newDebt);
     debt_size = newDebt;

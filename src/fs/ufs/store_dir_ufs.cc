@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.84 2007/05/29 13:31:47 amosjeffries Exp $
+ * $Id: store_dir_ufs.cc,v 1.85 2007/08/13 17:20:57 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -682,7 +682,7 @@ UFSSwapDir::validL2(int anInt) const
 StoreEntry *
 UFSSwapDir::addDiskRestore(const cache_key * key,
                            sfileno file_number,
-                           size_t swap_file_sz,
+                           uint64_t swap_file_sz,
                            time_t expires,
                            time_t timestamp,
                            time_t lastref,
@@ -753,6 +753,13 @@ UFSSwapDir::closeTmpSwapLog()
     debugs(47, 3, "Cache Dir #" << index << " log opened on FD " << fd);
 }
 
+static void
+FreeHeader(void *address)
+{
+    StoreSwapLogHeader *anObject = static_cast <StoreSwapLogHeader *>(address);
+    delete anObject;
+}
+
 FILE *
 UFSSwapDir::openTmpSwapLog(int *clean_flag, int *zero_flag)
 {
@@ -765,6 +772,7 @@ UFSSwapDir::openTmpSwapLog(int *clean_flag, int *zero_flag)
     struct stat clean_sb;
     FILE *fp;
     int fd;
+    StoreSwapLogHeader *head;
 
     if (::stat(swaplog_path, &log_sb) < 0) {
         debugs(47, 1, "Cache Dir #" << index << ": No log file");
@@ -782,13 +790,19 @@ UFSSwapDir::openTmpSwapLog(int *clean_flag, int *zero_flag)
 
     /* open a write-only FD for the new log */
     fd = file_open(new_path, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY);
-
+    
     if (fd < 0) {
         debugs(50, 1, "" << new_path << ": " << xstrerror());
         fatal("storeDirOpenTmpSwapLog: Failed to open swap log.");
     }
-
+    
     swaplog_fd = fd;
+
+    head = new StoreSwapLogHeader;
+
+    file_write(swaplog_fd, -1, head, head->record_size,
+               NULL, NULL, FreeHeader);
+
     /* open a read-only stream of the old log */
     fp = fopen(swaplog_path, "rb");
 
@@ -850,6 +864,7 @@ int
 UFSSwapDir::writeCleanStart()
 {
     UFSCleanLog *state = new UFSCleanLog(this);
+    StoreSwapLogHeader header;
 #if HAVE_FCHMOD
 
     struct stat sb;
@@ -869,6 +884,10 @@ UFSSwapDir::writeCleanStart()
     state->cln = xstrdup(logFile(".last-clean"));
     state->outbuf = (char *)xcalloc(CLEAN_BUF_SZ, 1);
     state->outbuf_offset = 0;
+    /*copy the header */
+    xmemcpy(state->outbuf, &header, sizeof(StoreSwapLogHeader));
+    state->outbuf_offset += header.record_size;
+
     state->walker = repl->WalkInit(repl);
     ::unlink(state->cln);
     debugs(47, 3, "storeDirWriteCleanLogs: opened " << state->newLog << ", FD " << state->fd);
@@ -878,9 +897,9 @@ UFSSwapDir::writeCleanStart()
         fchmod(state->fd, sb.st_mode);
 
 #endif
+    
 
     cleanLog = state;
-
     return 0;
 }
 

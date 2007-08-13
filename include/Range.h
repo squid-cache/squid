@@ -1,6 +1,6 @@
 
 /*
- * $Id: Range.h,v 1.7 2006/04/22 05:28:55 robertc Exp $
+ * $Id: Range.h,v 1.8 2007/08/13 17:20:50 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -50,7 +50,7 @@ public:
     C start;
     C end;
     Range intersection (Range const &) const; 
-    size_t size() const;
+    C size() const;
 };
 
 template <class C>
@@ -75,7 +75,7 @@ Range<C>::intersection (Range const &rhs) const
 }
 
 template<class C>
-size_t
+C
 Range<C>::size() const
 {
     return end > start ? end - start : 0;

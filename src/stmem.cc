@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.90 2007/04/28 22:26:37 hno Exp $
+ * $Id: stmem.cc,v 1.91 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Harvest Derived
@@ -55,7 +55,7 @@ mem_hdr::NodeGet(mem_node * aNode)
     return aNode->data;
 }
 
-int
+int64_t
 mem_hdr::lowestOffset () const
 {
     const SplayNode<mem_node *> *theStart = nodes.start();
@@ -66,10 +66,10 @@ mem_hdr::lowestOffset () const
     return 0;
 }
 
-off_t
+int64_t
 mem_hdr::endOffset () const
 {
-    off_t result = 0;
+    int64_t result = 0;
     const SplayNode<mem_node *> *theEnd = nodes.finish();
 
     if (theEnd)
@@ -100,8 +100,8 @@ mem_hdr::unlink(mem_node *aNode)
     return true;
 }
 
-int
-mem_hdr::freeDataUpto(int target_offset)
+int64_t
+mem_hdr::freeDataUpto(int64_t target_offset)
 {
     /* keep the last one to avoid change to other part of code */
 
@@ -111,7 +111,7 @@ mem_hdr::freeDataUpto(int target_offset)
         if (theStart == nodes.finish())
             break;
 
-        if (theStart->data->end() > (size_t) target_offset )
+        if (theStart->data->end() > target_offset )
             break;
 
         if (!unlink(theStart->data))
@@ -131,7 +131,7 @@ mem_hdr::appendToNode(mem_node *aNode, const char *data, int maxLength)
 }
 
 size_t
-mem_hdr::writeAvailable(mem_node *aNode, size_t location, size_t amount, char const *source)
+mem_hdr::writeAvailable(mem_node *aNode, int64_t location, size_t amount, char const *source)
 {
     /* if we attempt to overwrite existing data or leave a gap within a node */
     assert (location == aNode->nodeBuffer.offset + aNode->nodeBuffer.length);
@@ -144,7 +144,7 @@ mem_hdr::writeAvailable(mem_node *aNode, size_t location, size_t amount, char co
 
     xmemcpy(aNode->nodeBuffer.data + aNode->nodeBuffer.length, source, copyLen);
 
-    if (inmem_hi <= (off_t) location)
+    if (inmem_hi <= location)
         inmem_hi = location + copyLen;
 
     /* Adjust the ptr and len according to what was deposited in the page */
@@ -194,7 +194,7 @@ mem_hdr::internalAppend(const char *data, int len)
  * If no node contains the start, it returns NULL.
  */
 mem_node *
-mem_hdr::getBlockContainingLocation (size_t location) const
+mem_hdr::getBlockContainingLocation (int64_t location) const
 {
     mem_node target (location);
     target.nodeBuffer.length = 1;
@@ -207,12 +207,12 @@ mem_hdr::getBlockContainingLocation (size_t location) const
 }
 
 size_t
-mem_hdr::copyAvailable(mem_node *aNode, size_t location, size_t amount, char *target) const
+mem_hdr::copyAvailable(mem_node *aNode, int64_t location, size_t amount, char *target) const
 {
-    if (aNode->nodeBuffer.offset > (off_t) location)
+    if (aNode->nodeBuffer.offset > location)
         return 0;
 
-    assert (aNode->nodeBuffer.offset <= (off_t) location);
+    assert (aNode->nodeBuffer.offset <= location);
 
     assert (aNode->end() > location);
 
@@ -246,6 +246,7 @@ ssize_t
 mem_hdr::copy(StoreIOBuffer const &target) const
 {
 
+    assert(target.range().end > target.range().start);
     debugs(19, 6, "memCopy: " << target.range());
 
     /* we shouldn't ever ask for absent offsets */
@@ -261,7 +262,7 @@ mem_hdr::copy(StoreIOBuffer const &target) const
     assert(target.length > 0);
 
     /* Seek our way into store */
-    mem_node *p = getBlockContainingLocation((size_t)target.offset);
+    mem_node *p = getBlockContainingLocation(target.offset);
 
     if (!p) {
         debugs(19, 1, "memCopy: could not find start of " << target.range() <<
@@ -273,7 +274,7 @@ mem_hdr::copy(StoreIOBuffer const &target) const
 
     size_t bytes_to_go = target.length;
     char *ptr_to_buf = target.data;
-    off_t location = target.offset;
+    int64_t location = target.offset;
 
     /* Start copying begining with this block until
      * we're satiated */
@@ -300,9 +301,9 @@ mem_hdr::copy(StoreIOBuffer const &target) const
 }
 
 bool
-mem_hdr::hasContigousContentRange(Range<size_t> const & range) const
+mem_hdr::hasContigousContentRange(Range<int64_t> const & range) const
 {
-    size_t currentStart = range.start;
+    int64_t currentStart = range.start;
 
     while (mem_node *curr = getBlockContainingLocation(currentStart)) {
         currentStart = curr->end();
@@ -324,7 +325,7 @@ mem_hdr::unionNotEmpty(StoreIOBuffer const &candidate)
 }
 
 mem_node *
-mem_hdr::nodeToRecieve(off_t offset)
+mem_hdr::nodeToRecieve(int64_t offset)
 {
     /* case 1: Nothing in memory */
 
@@ -375,7 +376,7 @@ mem_hdr::write (StoreIOBuffer const &writeBuffer)
     assert (writeBuffer.offset >= 0);
 
     mem_node *target;
-    off_t currentOffset = writeBuffer.offset;
+    int64_t currentOffset = writeBuffer.offset;
     char *currentSource = writeBuffer.data;
     size_t len = writeBuffer.length;
 

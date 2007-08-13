@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.129 2007/05/29 13:31:39 amosjeffries Exp $
+ * $Id: client_side_reply.cc,v 1.130 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -977,8 +977,13 @@ clientReplyContext::checkTransferDone()
 int
 clientReplyContext::storeOKTransferDone() const
 {
-    if (http->out.offset >= http->storeEntry()->objectLen() - headers_sz)
+    if (http->out.offset >= http->storeEntry()->objectLen() - headers_sz) {
+	debugs(88,3,HERE << "storeOKTransferDone " <<
+	" out.offset=" << http->out.offset <<
+	" objectLen()=" << http->storeEntry()->objectLen() <<
+	" headers_sz=" << headers_sz);
         return 1;
+    }
 
     return 0;
 }
@@ -1015,12 +1020,16 @@ clientReplyContext::storeNotOKTransferDone() const
     if (reply->content_length < 0)
         return 0;
 
-    size_t expectedLength = http->out.headers_sz + reply->content_length;
+    int64_t expectedLength = reply->content_length + http->out.headers_sz;
 
     if (http->out.size < expectedLength)
         return 0;
-    else
+    else {
+	debugs(88,3,HERE << "storeNotOKTransferDone " <<
+	" out.size=" << http->out.size <<
+	" expectedLength=" << expectedLength);
         return 1;
+    }
 }
 
 
@@ -1033,23 +1042,22 @@ clientReplyContext::storeNotOKTransferDone() const
 int
 clientHttpRequestStatus(int fd, ClientHttpRequest const *http)
 {
-#if SIZEOF_SIZE_T == 4
-
+#if SIZEOF_INT64_T == 4
     if (http->out.size > 0x7FFF0000) {
-        debugs(88, 1, "WARNING: closing FD " << fd << " to prevent counter overflow" );
-        debugs(88, 1, "\tclient " << (inet_ntoa(http->getConn() != NULL ? http->getConn()->peer.sin_addr : no_addr))  );
-        debugs(88, 1, "\treceived " << http->out.size << " bytes" );
-        debugs(88, 1, "\tURI " << http->log_uri  );
+        debugs(88, 1, "WARNING: closing FD " << fd << " to prevent out.size counter overflow");
+        debugs(88, 1, "\tclient " << (inet_ntoa(http->getConn() != NULL ? http->getConn()->peer.sin_addr : no_addr)));
+        debugs(88, 1, "\treceived " << http->out.size << " bytes");
+        debugs(88, 1, "\tURI " << http->log_uri);
         return 1;
     }
 
 #endif
-#if SIZEOF_OFF_T == 4
+#if SIZEOF_INT64_T == 4
     if (http->out.offset > 0x7FFF0000) {
-        debugs(88, 1, "WARNING: closing FD " << fd << " to prevent counter overflow" );
-        debugs(88, 1, "\tclient " << (inet_ntoa(http->getConn() != NULL ? http->getConn()->peer.sin_addr : no_addr))  );
-        debugs(88, 1, "\treceived " << http->out.size << " bytes (offset " << http->out.offset << ")" );
-        debugs(88, 1, "\tURI " << http->log_uri  );
+        debugs(88, 1, ("WARNING: closing FD " << fd < " to prevent out.offset counter overflow");
+        debugs(88, 1, ("\tclient " << (inet_ntoa(http->getConn() != NULL ? http->getConn()->peer.sin_addr : no_addr)));
+        debugs(88, 1, ("\treceived " << http->out.size " << " bytes, offset " << http->out.offset);
+        debugs(88, 1, ("\tURI " << http->log_uri);
         return 1;
     }
 
@@ -1915,9 +1923,12 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     makeThisHead();
 
     debugs(88, 5, "clientReplyContext::sendMoreData: " << http->uri << ", " <<
-           (int) reqofs << " bytes (" << (unsigned int)result.length <<
+           reqofs << " bytes (" << result.length <<
            " new bytes)");
-    debugs(88, 5, "clientReplyContext::sendMoreData: FD " << fd << " '" << entry->url() << "', out.offset=" << http->out.offset << " " );
+    debugs(88, 5, "clientReplyContext::sendMoreData:"
+		" FD " << fd <<
+		" '" << entry->url() << "'" <<
+		" out.offset=" << http->out.offset);
 
     /* update size of the request */
     reqsize = reqofs;

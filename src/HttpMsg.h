@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.h,v 1.15 2007/04/06 04:50:04 rousskov Exp $
+ * $Id: HttpMsg.h,v 1.16 2007/08/13 17:20:51 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -67,7 +67,7 @@ public:
      * Also used to report parsed header size if parse() is successful */
     int hdr_sz;
 
-    int content_length;
+    int64_t content_length;
 
     protocol_t protocol;
 
@@ -86,7 +86,7 @@ public:
 
     virtual int httpMsgParseError();
 
-    virtual bool expectingBody(method_t, ssize_t&) const = 0;
+    virtual bool expectingBody(method_t, int64_t&) const = 0;
 
     void firstLineBuf(MemBuf&);
 

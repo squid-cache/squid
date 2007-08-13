@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.445 2007/08/02 22:58:15 amosjeffries Exp $
+# $Id: cf.data.pre,v 1.446 2007/08/13 17:20:51 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -929,7 +929,7 @@ DOC_END
 
 NAME: maximum_object_size
 COMMENT: (bytes)
-TYPE: b_size_t
+TYPE: b_int64_t
 DEFAULT: 4096 KB
 LOC: Config.Store.maxObjectSize
 DOC_START
@@ -947,7 +947,7 @@ DOC_END
 
 NAME: minimum_object_size
 COMMENT: (bytes)
-TYPE: b_size_t
+TYPE: b_int64_t
 DEFAULT: 0 KB
 LOC: Config.Store.minObjectSize
 DOC_START
@@ -2096,8 +2096,8 @@ DOC_START
 DOC_END
 
 NAME: request_body_max_size
-COMMENT: (KB)
-TYPE: b_size_t
+COMMENT: (bytes)
+TYPE: b_int64_t
 DEFAULT: 0 KB
 LOC: Config.maxRequestBodySize
 DOC_START
@@ -2213,14 +2213,14 @@ DOC_END
 
 NAME: quick_abort_min
 COMMENT: (KB)
-TYPE: kb_size_t
+TYPE: kb_int64_t
 DEFAULT: 16 KB
 LOC: Config.quickAbort.min
 DOC_NONE
 
 NAME: quick_abort_max
 COMMENT: (KB)
-TYPE: kb_size_t
+TYPE: kb_int64_t
 DEFAULT: 16 KB
 LOC: Config.quickAbort.max
 DOC_NONE
@@ -2261,7 +2261,7 @@ DOC_END
 
 NAME: read_ahead_gap
 COMMENT: buffer-size
-TYPE: kb_size_t
+TYPE: b_int64_t
 LOC: Config.readAheadGap
 DEFAULT: 16 KB
 DOC_START
@@ -2304,7 +2304,7 @@ DOC_END
 
 NAME: range_offset_limit
 COMMENT: (bytes)
-TYPE: b_size_t
+TYPE: b_int64_t
 LOC: Config.rangeOffsetLimit
 DEFAULT: 0 KB
 DOC_START

@@ -24,8 +24,8 @@ public:
     void maybeWrite(CossSwapDir * SD);
     void write(CossSwapDir * SD);
     dlink_node node;
-    size_t diskstart;		/* in blocks */
-    size_t diskend;		/* in blocks */
+    off_t diskstart;		/* in blocks */
+    off_t diskend;		/* in blocks */
     CossSwapDir *SD;
     int lockcount;
     char buffer[COSS_MEMBUF_SZ];
@@ -61,7 +61,7 @@ public:
     char *requestbuf;
     size_t requestlen;
     size_t requestoffset;	/* in blocks */
-    sfileno reqdiskoffset;	/* in blocks */
+    int64_t reqdiskoffset;	/* in blocks */
 
     struct
     {
@@ -76,7 +76,7 @@ unsigned int writing:
     flags;
 
     CossMemBuf *locked_membuf;
-    size_t st_size;
+    off_t st_size;
     void read_(char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data);
     void write(char const *buf, size_t size, off_t offset, FREE * free_func);
     void close();

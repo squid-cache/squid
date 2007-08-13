@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.437 2007/08/13 10:31:19 serassio Exp $
+ * $Id: ftp.cc,v 1.438 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -126,12 +126,12 @@ public:
     int login_att;
     ftp_state_t state;
     time_t mdtm;
-    int size;
+    int64_t theSize;
     wordlist *pathcomps;
     char *filepath;
     char *dirpath;
-    int restart_offset;
-    int restarted_offset;
+    int64_t restart_offset;
+    int64_t restarted_offset;
     char *proxy_host;
     size_t list_width;
     wordlist *cwd_message;
@@ -145,7 +145,7 @@ public:
         int fd;
         char *buf;
         size_t size;
-        off_t offset;
+        size_t offset;
         wordlist *message;
         char *last_command;
         char *last_reply;
@@ -192,7 +192,7 @@ public:
     int checkAuth(const HttpHeader * req_hdr);
     void checkUrlpath();
     void buildTitleUrl();
-    void writeReplyBody(const char *, int len);
+    void writeReplyBody(const char *, size_t len);
     void printfReplyBody(const char *fmt, ...);
     virtual int dataDescriptor() const;
     virtual void maybeReadVirginBody();
@@ -211,7 +211,7 @@ public:
     static IOCB ftpReadControlReply;
     static IOCB ftpWriteCommandCallback;
     static HttpReply *ftpAuthRequired(HttpRequest * request, const char *realm);
-    static wordlist *ftpParseControlReply(char *, size_t, int *, int *);
+    static wordlist *ftpParseControlReply(char *, size_t, int *, size_t *);
 
     // sending of the request body to the server
     virtual void sentRequestBody(int fd, size_t size, comm_err_t errflag);
@@ -247,7 +247,7 @@ FtpStateData::operator delete (void *address)
 typedef struct
 {
     char type;
-    int size;
+    int64_t size;
     char *date;
     char *name;
     char *showname;
@@ -370,7 +370,7 @@ FtpStateData::FtpStateData(FwdState *theFwdState) : ServerStateData(theFwdState)
     statCounter.server.ftp.requests++;
     ctrl.fd = theFwdState->server_fd;
     data.fd = -1;
-    size = -1;
+    theSize = -1;
     mdtm = -1;
 
     if (Config.Ftp.passive && !theFwdState->ftpPasvFailed())
@@ -715,7 +715,7 @@ ftpListParseParts(const char *buf, struct _ftp_flags flags)
 
         if ((copyFrom = strstr(buf, tbuf))) {
             p->type = *tokens[0];
-            p->size = atoi(size);
+            p->size = strtoll(size, NULL, 10);
             p->date = xstrdup(tbuf);
 
             if (flags.skip_whitespace) {
@@ -752,7 +752,7 @@ ftpListParseParts(const char *buf, struct _ftp_flags flags)
             p->type = 'd';
         } else {
             p->type = '-';
-            p->size = atoi(tokens[2]);
+            p->size = strtoll(tokens[2], NULL, 10);
         }
 
         snprintf(tbuf, 128, "%s %s", tokens[0], tokens[1]);
@@ -1043,7 +1043,7 @@ FtpStateData::htmlifyListEntry(const char *line)
         snprintf(icon, 2048, "<IMG border=\"0\" SRC=\"%s\" ALT=\"%-6s\">",
                  mimeGetIconURL(parts->name),
                  "[FILE]");
-        snprintf(size, 2048, " %6dk", parts->size);
+        snprintf(size, 2048, " %6"PRId64"k", parts->size);
         break;
     }
 
@@ -1313,7 +1313,7 @@ FtpStateData::processReplyBody()
 {
     debugs(9, 5, HERE << "FtpStateData::processReplyBody starting.");
 
-    if (request->method == METHOD_HEAD && (flags.isdir || size != -1)) {
+    if (request->method == METHOD_HEAD && (flags.isdir || theSize != -1)) {
         serverComplete();
         return;
     }
@@ -1598,7 +1598,7 @@ FtpStateData::ftpWriteCommandCallback(int fd, char *buf, size_t size, comm_err_t
 }
 
 wordlist *
-FtpStateData::ftpParseControlReply(char *buf, size_t len, int *codep, int *used)
+FtpStateData::ftpParseControlReply(char *buf, size_t len, int *codep, size_t *used)
 {
     char *s;
     char *sbuf;
@@ -1608,7 +1608,7 @@ FtpStateData::ftpParseControlReply(char *buf, size_t len, int *codep, int *used)
     wordlist *head = NULL;
     wordlist *list;
     wordlist **tail = &head;
-    off_t offset;
+    size_t offset;
     size_t linelen;
     int code = -1;
     debugs(9, 5, "ftpParseControlReply");
@@ -1673,7 +1673,7 @@ FtpStateData::ftpParseControlReply(char *buf, size_t len, int *codep, int *used)
         tail = &list->next;
     }
 
-    *used = (int) (s - sbuf);
+    *used = (size_t) (s - sbuf);
     safe_free(sbuf);
 
     if (!complete)
@@ -1734,7 +1734,7 @@ FtpStateData::ftpReadControlReply(int fd, char *buf, size_t len, comm_err_t errf
         return;
     }
 
-    assert(ftpState->ctrl.offset < (off_t)ftpState->ctrl.size);
+    assert(ftpState->ctrl.offset < ftpState->ctrl.size);
 
     if (errflag == COMM_OK && len > 0) {
         fd_bytes(fd, len, FD_READ);
@@ -1777,7 +1777,7 @@ void
 FtpStateData::handleControlReply()
 {
     wordlist **W;
-    int bytes_used = 0;
+    size_t bytes_used = 0;
     wordlistDestroy(&ctrl.message);
     ctrl.message = ftpParseControlReply(ctrl.buf,
                                         ctrl.offset, &ctrl.replycode, &bytes_used);
@@ -1785,7 +1785,7 @@ FtpStateData::handleControlReply()
     if (ctrl.message == NULL) {
         /* didn't get complete reply yet */
 
-        if (ctrl.offset == (off_t)ctrl.size) {
+        if (ctrl.offset == ctrl.size) {
             ctrl.buf = (char *)memReallocBuf(ctrl.buf, ctrl.size << 1, &ctrl.size);
         }
 
@@ -2208,14 +2208,13 @@ ftpReadSize(FtpStateData * ftpState)
 
     if (code == 213) {
         ftpState->unhack();
-        ftpState->size = atoi(ftpState->ctrl.last_reply);
+        ftpState->theSize = strtoll(ftpState->ctrl.last_reply, NULL, 10);
 
-        if (ftpState->size == 0) {
+        if (ftpState->theSize == 0) {
             debugs(9, 2, "ftpReadSize: SIZE reported " <<
-                   ftpState->ctrl.last_reply << " on " <<
-                   ftpState->title_url.buf());
-
-            ftpState->size = -1;
+                         ftpState->ctrl.last_reply << " on " << 
+                         ftpState->title_url.buf());
+            ftpState->theSize = -1;
         }
     } else if (code < 0) {
         ftpFail(ftpState);
@@ -2237,7 +2236,7 @@ ftpSendPasv(FtpStateData * ftpState)
 
     debugs(9, 3, HERE << "ftpSendPasv started");
 
-    if (ftpState->request->method == METHOD_HEAD && (ftpState->flags.isdir || ftpState->size != -1)) {
+    if (ftpState->request->method == METHOD_HEAD && (ftpState->flags.isdir || ftpState->theSize != -1)) {
         ftpState->processHeadResponse(); // may call serverComplete
         return;
     }
@@ -2645,7 +2644,7 @@ ftpSendStor(FtpStateData * ftpState)
         snprintf(cbuf, 1024, "STOR %s\r\n", ftpState->filepath);
         ftpState->writeCommand(cbuf);
         ftpState->state = SENT_STOR;
-    } else if (ftpState->request->header.getInt(HDR_CONTENT_LENGTH) > 0) {
+    } else if (ftpState->request->header.getInt64(HDR_CONTENT_LENGTH) > 0) {
         /* File upload without a filename. use STOU to generate one */
         snprintf(cbuf, 1024, "STOU\r\n");
         ftpState->writeCommand(cbuf);
@@ -2705,7 +2704,7 @@ ftpSendRest(FtpStateData * ftpState)
     if(!ftpState || !ftpState->haveControlChannel("ftpSendRest"))
         return;
 
-    snprintf(cbuf, 1024, "REST %d\r\n", ftpState->restart_offset);
+    snprintf(cbuf, 1024, "REST %"PRId64"\r\n", ftpState->restart_offset);
     ftpState->writeCommand(cbuf);
     ftpState->state = SENT_REST;
 }
@@ -2722,15 +2721,15 @@ FtpStateData::restartable()
     if (!flags.binary)
         return 0;
 
-    if (size <= 0)
+    if (theSize <= 0)
         return 0;
 
-    int desired_offset = request->range->lowestOffset((size_t) size);
+    int64_t desired_offset = request->range->lowestOffset(theSize);
 
     if (desired_offset <= 0)
         return 0;
 
-    if (desired_offset >= size)
+    if (desired_offset >= theSize)
 	return 0;
 
     restart_offset = desired_offset;
@@ -3016,7 +3015,7 @@ ftpFail(FtpStateData *ftpState)
 
     if (!ftpState->flags.isdir &&	/* Not a directory */
             !ftpState->flags.try_slash_hack &&	/* Not in slash hack */
-            ftpState->mdtm <= 0 && ftpState->size < 0 &&	/* Not known as a file */
+            ftpState->mdtm <= 0 && ftpState->theSize < 0 &&	/* Not known as a file */
             ftpState->request->urlpath.caseCmp("/%2f", 4) != 0) {	/* No slash encoded */
 
         switch (ftpState->state) {
@@ -3226,28 +3225,28 @@ FtpStateData::appendSuccessHeader()
     if (0 == restarted_offset) {
         /* Full reply */
         reply->setHeaders(version, HTTP_OK, "Gatewaying",
-                          mime_type, size, mdtm, -2);
-    } else if (size < restarted_offset) {
+                          mime_type, theSize, mdtm, -2);
+    } else if (theSize < restarted_offset) {
 	/*
 	 * DPW 2007-05-04
-	 * offset should not be larger than size.  We should
+	 * offset should not be larger than theSize.  We should
 	 * not be seeing this condition any more because we'll only
-	 * send REST if we know the size and if it is less than size.
+	 * send REST if we know the theSize and if it is less than theSize.
 	 */
 	debugs(0,0,HERE << "Whoops! " <<
 		" restarted_offset=" << restarted_offset <<
-		", but size=" << size <<
+		", but theSize=" << theSize <<
 		".  assuming full content response");
         reply->setHeaders(version, HTTP_OK, "Gatewaying",
-                          mime_type, size, mdtm, -2);
+                          mime_type, theSize, mdtm, -2);
     } else {
         /* Partial reply */
         HttpHdrRangeSpec range_spec;
         range_spec.offset = restarted_offset;
-        range_spec.length = size - restarted_offset;
+        range_spec.length = theSize - restarted_offset;
         reply->setHeaders(version, HTTP_PARTIAL_CONTENT, "Gatewaying",
-                          mime_type, size - restarted_offset, mdtm, -2);
-        httpHeaderAddContRange(&reply->header, range_spec, size);
+                          mime_type, theSize - restarted_offset, mdtm, -2);
+        httpHeaderAddContRange(&reply->header, range_spec, theSize);
     }
 
     /* additional info */
@@ -3344,7 +3343,7 @@ FtpStateData::printfReplyBody(const char *fmt, ...)
  * which should be sent to either StoreEntry, or to ICAP...
  */
 void
-FtpStateData::writeReplyBody(const char *data, int len)
+FtpStateData::writeReplyBody(const char *data, size_t len)
 {
     debugs(9,5,HERE << "writing " << len << " bytes to the reply");
     addVirginReplyBody(data, len);

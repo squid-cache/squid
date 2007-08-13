@@ -1,6 +1,6 @@
 
 /*
- * $Id: fde.h,v 1.12 2006/09/15 20:40:29 serassio Exp $
+ * $Id: fde.h,v 1.13 2007/08/13 17:20:51 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -75,8 +75,8 @@ public:
 	unsigned int write_pending:1;
     } flags;
 
-    int bytes_read;
-    int bytes_written;
+    int64_t bytes_read;
+    int64_t bytes_written;
 
     struct {
         int uses;                   /* ie # req's over persistent conn */

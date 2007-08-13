@@ -1,6 +1,6 @@
 
 /*
- * $Id: defines.h,v 1.121 2006/08/21 00:50:41 robertc Exp $
+ * $Id: defines.h,v 1.122 2007/08/13 17:20:51 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -202,7 +202,8 @@
 #define SwapMetaType(x) (char)x[0]
 #define SwapMetaSize(x) &x[sizeof(char)]
 #define SwapMetaData(x) &x[STORE_META_TLD_START]
-#define STORE_HDR_METASIZE (4*sizeof(time_t)+2*sizeof(u_short)+sizeof(size_t))
+#define STORE_HDR_METASIZE (4*sizeof(time_t)+2*sizeof(u_short)+sizeof(uint64_t))
+#define STORE_HDR_METASIZE_OLD (4*sizeof(time_t)+2*sizeof(u_short)+sizeof(size_t))
 
 #define PINGER_PAYLOAD_SZ 8192
 

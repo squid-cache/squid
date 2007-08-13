@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaSTD.cc,v 1.4 2004/08/30 05:12:31 robertc Exp $
+ * $Id: StoreMetaSTD.cc,v 1.5 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -41,5 +41,5 @@
 bool
 StoreMetaSTD::validLength(int len) const
 {
-    return len == STORE_HDR_METASIZE;
+    return len == STORE_HDR_METASIZE_OLD;
 }

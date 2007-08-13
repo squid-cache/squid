@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPModXact.h,v 1.9 2007/06/19 21:12:15 rousskov Exp $
+ * $Id: ICAPModXact.h,v 1.10 2007/08/13 17:20:53 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -59,17 +59,17 @@ class SizedEstimate
 
 public:
     SizedEstimate(); // not expected by default
-    void expect(ssize_t aSize); // expect with any, even unknown size
+    void expect(int64_t aSize); // expect with any, even unknown size
     bool expected() const;
 
     /* other members can be accessed iff expected() */
 
     bool knownSize() const;
-    size_t size() const; // can be accessed iff knownSize()
+    uint64_t size() const; // can be accessed iff knownSize()
 
 private:
     enum { dtUnexpected = -2, dtUnknown = -1 };
-    ssize_t theData; // combines expectation and size info to save RAM
+    int64_t theData; // combines expectation and size info to save RAM
 };
 
 // Virgin body may be used for two activities: (a) writing preview or prime 
@@ -91,11 +91,11 @@ public:
 
     // methods below require active()
 
-    size_t offset() const; // the absolute beginning of not-yet-acted-on data
+    uint64_t offset() const; // the absolute beginning of not-yet-acted-on data
     void progress(size_t size); // note processed body bytes
 
 private:
-    size_t theStart; // unprocessed virgin body data offset
+    int64_t theStart; // unprocessed virgin body data offset
 
     typedef enum { stUndecided, stActive, stDisabled } State;
     State theState;
@@ -255,7 +255,7 @@ private:
     SizedEstimate virginBody;
     VirginBodyAct virginBodyWriting; // virgin body writing state
     VirginBodyAct virginBodySending;  // virgin body sending state
-    size_t virginConsumed;        // virgin data consumed so far
+    uint64_t virginConsumed;        // virgin data consumed so far
     ICAPPreview preview; // use for creating (writing) the preview
 
     ChunkedCodingParser *bodyParser; // ICAP response body parser

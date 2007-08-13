@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_node.cc,v 1.9 2006/09/20 00:59:27 adrian Exp $
+ * $Id: mem_node.cc,v 1.10 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -66,7 +66,7 @@ memNodeWriteComplete(void* d)
     n->write_pending = 0;
 }
 
-mem_node::mem_node(off_t offset):nodeBuffer(0,offset,data)
+mem_node::mem_node(int64_t offset):nodeBuffer(0,offset,data)
 {}
 
 mem_node::~mem_node()
@@ -80,23 +80,23 @@ mem_node::InUseCount()
     return Pool().inUseCount();
 }
 
-size_t
+int64_t
 mem_node::start() const
 {
     assert (nodeBuffer.offset >= 0);
     return nodeBuffer.offset;
 }
 
-size_t
+int64_t
 mem_node::end() const
 {
     return nodeBuffer.offset + nodeBuffer.length;
 }
 
-Range<size_t>
+Range<int64_t>
 mem_node::dataRange() const
 {
-    return Range<size_t> (start(), end());
+    return Range<int64_t> (start(), end());
 }
 
 size_t
@@ -106,7 +106,7 @@ mem_node::space() const
 }
 
 bool
-mem_node::contains (size_t const &location) const
+mem_node::contains (int64_t const &location) const
 {
     if (start() <= location && end() > location)
         return true;
@@ -116,7 +116,7 @@ mem_node::contains (size_t const &location) const
 
 /* nodes can not be sparse */
 bool
-mem_node::canAccept (size_t const &location) const
+mem_node::canAccept (int64_t const &location) const
 {
     if (location == end() && space() > 0)
         return true;

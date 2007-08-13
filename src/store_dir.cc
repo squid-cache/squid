@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.161 2007/05/29 13:31:41 amosjeffries Exp $
+ * $Id: store_dir.cc,v 1.162 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -330,13 +330,13 @@ storeDirSwapLog(const StoreEntry * e, int op)
 }
 
 void
-StoreController::updateSize(size_t size, int sign)
+StoreController::updateSize(int64_t size, int sign)
 {
     fatal("StoreController has no independent size\n");
 }
 
 void
-SwapDir::updateSize(size_t size, int sign)
+SwapDir::updateSize(int64_t size, int sign)
 {
     int blks = (size + fs.blksize - 1) / fs.blksize;
     int k = (blks * fs.blksize >> 10) * sign;
@@ -707,6 +707,8 @@ StoreController::get
 
 StoreHashIndex::StoreHashIndex()
 {
+    if (store_table)
+	abort();
     assert (store_table == NULL);
 }
 
@@ -880,7 +882,7 @@ StoreHashIndex::maintain()
 }
 
 void
-StoreHashIndex::updateSize(size_t, int)
+StoreHashIndex::updateSize(int64_t, int)
 {}
 
 void

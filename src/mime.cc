@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.131 2007/04/28 22:26:37 hno Exp $
+ * $Id: mime.cc,v 1.132 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -586,7 +586,7 @@ MimeIcon::created (StoreEntry *newEntry)
     HttpVersion version(1, 0);
 
     reply->setHeaders(version, HTTP_OK, NULL,
-                      mimeGetContentType(icon), (int) sb.st_size, sb.st_mtime, -1);
+                      mimeGetContentType(icon), sb.st_size, sb.st_mtime, -1);
 
     reply->cache_control = httpHdrCcCreate();
 

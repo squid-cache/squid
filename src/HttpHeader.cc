@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.133 2007/05/29 13:31:37 amosjeffries Exp $
+ * $Id: HttpHeader.cc,v 1.134 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -86,7 +86,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] =
         {"Content-Base", HDR_CONTENT_BASE, ftStr},
         {"Content-Encoding", HDR_CONTENT_ENCODING, ftStr},
         {"Content-Language", HDR_CONTENT_LANGUAGE, ftStr},
-        {"Content-Length", HDR_CONTENT_LENGTH, ftInt},
+        {"Content-Length", HDR_CONTENT_LENGTH, ftInt64},
         {"Content-Location", HDR_CONTENT_LOCATION, ftStr},
         {"Content-MD5", HDR_CONTENT_MD5, ftStr},	/* for now */
         {"Content-Range", HDR_CONTENT_RANGE, ftPContRange},
@@ -1025,6 +1025,15 @@ HttpHeader::putInt(http_hdr_type id, int number)
 }
 
 void
+HttpHeader::putInt64(http_hdr_type id, int64_t number)
+{
+    assert_eid(id);
+    assert(Headers[id].type == ftInt64);	/* must be of an appropriate type */
+    assert(number >= 0);
+    addEntry(new HttpHeaderEntry(id, NULL, xint64toa(number)));
+}
+
+void
 HttpHeader::putTime(http_hdr_type id, time_t htime)
 {
     assert_eid(id);
@@ -1152,6 +1161,19 @@ HttpHeader::getInt(http_hdr_type id) const
 
     if ((e = findEntry(id)))
         return e->getInt();
+
+    return -1;
+}
+
+int64_t
+HttpHeader::getInt64(http_hdr_type id) const
+{
+    assert_eid(id);
+    assert(Headers[id].type == ftInt64);	/* must be of an appropriate type */
+    HttpHeaderEntry *e;
+
+    if ((e = findEntry(id)))
+        return e->getInt64();
 
     return -1;
 }
@@ -1503,6 +1525,20 @@ HttpHeaderEntry::getInt() const
     assert (Headers[id].type == ftInt);
     int val = -1;
     int ok = httpHeaderParseInt(value.buf(), &val);
+    httpHeaderNoteParsedEntry(id, value, !ok);
+    /* XXX: Should we check ok - ie
+     * return ok ? -1 : value;
+     */
+    return val;
+}
+
+int64_t
+HttpHeaderEntry::getInt64() const
+{
+    assert_eid (id);
+    assert (Headers[id].type == ftInt64);
+    int64_t val = -1;
+    int ok = httpHeaderParseOffset(value.buf(), &val);
     httpHeaderNoteParsedEntry(id, value, !ok);
     /* XXX: Should we check ok - ie
      * return ok ? -1 : value;

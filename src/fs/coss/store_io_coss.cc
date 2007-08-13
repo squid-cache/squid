@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_coss.cc,v 1.32 2007/04/30 16:56:16 wessels Exp $
+ * $Id: store_io_coss.cc,v 1.33 2007/08/13 17:20:56 hno Exp $
  *
  * DEBUG: section 79    Storage Manager COSS Interface
  * AUTHOR: Eric Stern
@@ -63,7 +63,7 @@ CossSwapDir::allocate(const StoreEntry * e, int which)
 {
     CossMemBuf *newmb;
     off_t retofs;
-    size_t allocsize;
+    off_t allocsize;
     int coll = 0;
     sfileno checkf;
 
@@ -84,7 +84,7 @@ CossSwapDir::allocate(const StoreEntry * e, int which)
 
     /* Check if we have overflowed the disk .. */
     /* max_size is int, so cast to (off_t) *before* bit-shifting */
-    if ((current_offset + allocsize) > ((size_t)max_size << 10)) {
+    if ((current_offset + allocsize) > ((off_t)max_size << 10)) {
         /*
          * tried to allocate past the end of the disk, so wrap
          * back to the beginning
@@ -163,9 +163,9 @@ CossSwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB * file_callback, 
     sio->swap_dirn = index;
     sio->swap_filen = allocate(&e, COSS_ALLOC_ALLOCATE);
     debugs(79, 3, "storeCossCreate: offset " <<
-           (long int) storeCossFilenoToDiskOffset(sio->swap_filen) <<
+           storeCossFilenoToDiskOffset(sio->swap_filen) <<
            ", size " << (long int) cstate->st_size << ", end " <<
-           (long int) (sio->swap_filen + cstate->st_size));
+           (sio->swap_filen + cstate->st_size));
 
     /* assume allocate() always succeeds */
     assert(-1 != sio->swap_filen);
@@ -301,7 +301,7 @@ CossState::read_(char *buf, size_t size, off_t offset, STRCB * callback, void *c
     offset_ = offset;
     flags.reading = 1;
 
-    if ((offset + size) > st_size)
+    if ((offset + (off_t)size) > st_size)
         size = st_size - offset;
 
     requestlen = size;
@@ -431,7 +431,7 @@ CossState::doCallback(int errflag)
 }
 
 char *
-CossSwapDir::storeCossMemPointerFromDiskOffset(size_t offset, CossMemBuf ** mb)
+CossSwapDir::storeCossMemPointerFromDiskOffset(off_t offset, CossMemBuf ** mb)
 {
     CossMemBuf *t;
     dlink_node *m;
@@ -485,7 +485,7 @@ CossSwapDir::sync()
 {
     CossMemBuf *t;
     dlink_node *m;
-    int end;
+    off_t end;
 
     /* First, flush pending IO ops */
     io->sync();
@@ -505,7 +505,7 @@ CossSwapDir::sync()
 
         end = (t == current_membuf) ? current_offset : t->diskend;
 
-        if ((size_t)end > t->diskstart)
+        if (end > t->diskstart)
             theFile->write(new CossWrite(WriteRequest((char const *)&t->buffer, t->diskstart, end - t->diskstart, NULL), t));
 
         /* and flush */
@@ -539,7 +539,7 @@ CossMemBuf::write(CossSwapDir * SD)
 }
 
 CossMemBuf *
-CossSwapDir::createMemBuf(size_t start, sfileno curfn, int *collision)
+CossSwapDir::createMemBuf(off_t start, sfileno curfn, int *collision)
 {
     CossMemBuf *newmb;
     CossMemBuf *t;

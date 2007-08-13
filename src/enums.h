@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.257 2007/05/04 22:12:55 wessels Exp $
+ * $Id: enums.h,v 1.258 2007/08/13 17:20:51 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -440,6 +440,8 @@ enum {
     STORE_META_HITMETERING,	/* reserved for hit metering */
     STORE_META_VALID,
     STORE_META_VARY_HEADERS,	/* Stores Vary request headers */
+    STORE_META_STD_LFS,         /* standard metadata in lfs format */
+    STORE_META_OBJSIZE,         /* object size, not impleemented, squid26 compatibility */
     STORE_META_END
 };
 
@@ -455,6 +457,7 @@ typedef enum {
     SWAP_LOG_NOP,
     SWAP_LOG_ADD,
     SWAP_LOG_DEL,
+    SWAP_LOG_VERSION,
     SWAP_LOG_MAX
 } swap_log_op;
 

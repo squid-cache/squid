@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_node.h,v 1.9 2005/09/14 18:23:21 wessels Exp $
+ * $Id: mem_node.h,v 1.10 2007/08/13 17:20:51 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -45,14 +45,14 @@ public:
     static unsigned long store_mem_size;	/* 0 */
 
     MEMPROXY_CLASS(mem_node);
-    mem_node(off_t);
+    mem_node(int64_t);
     ~mem_node();
     size_t space() const;
-    size_t start() const;
-    size_t end() const;
-    Range<size_t> dataRange() const;
-    bool contains (size_t const &location) const;
-    bool canAccept (size_t const &location) const;
+    int64_t start() const;
+    int64_t end() const;
+    Range<int64_t> dataRange() const;
+    bool contains (int64_t const &location) const;
+    bool canAccept (int64_t const &location) const;
     bool operator < (mem_node const & rhs) const;
     /* public */
     StoreIOBuffer nodeBuffer;

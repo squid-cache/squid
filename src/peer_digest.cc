@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.125 2007/05/29 13:31:40 amosjeffries Exp $
+ * $Id: peer_digest.cc,v 1.126 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -787,7 +787,7 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
     if (!reason && !size) {
         if (!pd->cd)
             reason = "null digest?!";
-        else if (fetch->mask_offset != (off_t)pd->cd->mask_size)
+        else if (fetch->mask_offset != (int)pd->cd->mask_size)
             reason = "premature end of digest?!";
         else if (!peerDigestUseful(pd))
             reason = "useless digest";

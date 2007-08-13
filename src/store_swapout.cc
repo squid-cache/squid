@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.117 2007/04/30 16:56:09 wessels Exp $
+ * $Id: store_swapout.cc,v 1.118 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -165,7 +165,7 @@ doPages(StoreEntry *anEntry)
         if (anEntry->swap_status != SWAPOUT_WRITING)
             break;
 
-        ssize_t swapout_size = (ssize_t) (mem->endOffset() - mem->swapout.queue_offset);
+        int64_t swapout_size = mem->endOffset() - mem->swapout.queue_offset;
 
         if (anEntry->store_status == STORE_PENDING)
             if (swapout_size < SM_PAGE_SIZE)
@@ -189,20 +189,20 @@ StoreEntry::swapOut()
     if (!swapoutPossible())
         return;
 
-    debugs(20, 7, "storeSwapOut: mem_obj->inmem_lo = " << mem_obj->inmem_lo);
-    debugs(20, 7, "storeSwapOut: mem_obj->endOffset() = " << mem_obj->endOffset());
-    debugs(20, 7, "storeSwapOut: swapout.queue_offset = " << mem_obj->swapout.queue_offset);
+    debugs(20, 7, HERE << "storeSwapOut: mem->inmem_lo = " << mem_obj->inmem_lo);
+    debugs(20, 7, HERE << "storeSwapOut: mem->endOffset() = " << mem_obj->endOffset());
+    debugs(20, 7, HERE << "storeSwapOut: swapout.queue_offset = " << mem_obj->swapout.queue_offset);
 
     if (mem_obj->swapout.sio != NULL)
     debugs(20, 7, "storeSwapOut: storeOffset() = " << mem_obj->swapout.sio->offset()  );
 
-    ssize_t swapout_maxsize = (ssize_t) (mem_obj->endOffset() - mem_obj->swapout.queue_offset);
+    int64_t swapout_maxsize = mem_obj->endOffset() - mem_obj->swapout.queue_offset;
 
     assert(swapout_maxsize >= 0);
 
-    off_t const lowest_offset = mem_obj->lowestMemReaderOffset();
+    int64_t const lowest_offset = mem_obj->lowestMemReaderOffset();
 
-    debugs(20, 7, "storeSwapOut: lowest_offset = " << lowest_offset);
+    debugs(20, 7, HERE << "storeSwapOut: lowest_offset = " << lowest_offset);
 
     /*
      * Grab the swapout_size and check to see whether we're going to defer
@@ -224,17 +224,17 @@ StoreEntry::swapOut()
     }
 
     trimMemory();
-#if SIZEOF_OFF_T == 4
+#if SIZEOF_INT64_T == 4
 
     if (mem_obj->endOffset() > 0x7FFF0000) {
-        debugs(20, 0, "WARNING: preventing off_t overflow for " << url()  );
+        debugs(20, 0, "WARNING: preventing int64_t overflow for %s\n", url());
         abort();
         return;
     }
 
 #endif
     if (swap_status == SWAPOUT_WRITING)
-        assert(mem_obj->inmem_lo <=  (off_t)mem_obj->objectBytesOnDisk() );
+        assert(mem_obj->inmem_lo <=  mem_obj->objectBytesOnDisk() );
 
     if (!swapOutAble())
         return;

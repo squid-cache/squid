@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufsdump.cc,v 1.9 2006/09/13 19:05:11 serassio Exp $
+ * $Id: ufsdump.cc,v 1.10 2007/08/13 17:20:51 hno Exp $
  *
  * DEBUG: section 0     UFS Store Dump
  * AUTHOR: Robert Collins
@@ -56,6 +56,26 @@ eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata)
 #endif
 /* end stub functions */
 
+struct MetaStd{
+    time_t timestamp;
+     time_t lastref;
+     time_t expires;
+     time_t lastmod;
+     size_t swap_file_sz;
+     u_short refcount;
+     u_short flags;
+};
+
+struct MetaStdLfs{
+     time_t timestamp;
+     time_t lastref;
+     time_t expires;
+     time_t lastmod;
+     uint64_t swap_file_sz;
+     u_short refcount;
+     u_short flags;
+};
+
 struct DumpStoreMeta : public unary_function<StoreMeta, void>
 {
     DumpStoreMeta(){}
@@ -69,13 +89,27 @@ struct DumpStoreMeta : public unary_function<StoreMeta, void>
             break;
 
         case STORE_META_STD:
+	    std::cout << "STD, Size:" << ((struct MetaStd*)x.value)->swap_file_sz << 
+		 " Flags: 0x" << std::hex << ((struct MetaStd*)x.value)->flags << std::dec <<
+		 " Refcount: " << ((struct MetaStd*)x.value)->refcount <<
+		 std::endl;
+            break;
+
+        case STORE_META_STD_LFS:
+	     std::cout << "STD_LFS, Size: " << ((struct MetaStdLfs*)x.value)->swap_file_sz <<
+		  " Flags: 0x" << std::hex << ((struct MetaStdLfs*)x.value)->flags << std::dec <<
+		  " Refcount: " << ((struct MetaStdLfs*)x.value)->refcount <<
+		  std::endl;
             break;
 
         case STORE_META_URL:
             assert (((char *)x.value)[x.length - 1] == 0);
             std::cout << "URL: " << (char *)x.value << std::endl;
+            break;
 
         default:
+	     std::cout << "Unknown store meta type: " << (int)x.getType() <<
+		  " of length " << x.length << std::endl;
             break;
         }
     }
