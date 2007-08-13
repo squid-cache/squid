@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.434 2007/08/13 02:39:06 hno Exp $
+ * $Id: ftp.cc,v 1.435 2007/08/13 10:00:38 serassio Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -220,6 +220,7 @@ public:
     virtual void haveParsedReplyHeaders();
 
     virtual bool doneWithServer() const;
+    virtual bool haveControlChannel(const char *caller_name);
 
 private:
     // BodyConsumer for HTTP: consume request body.
@@ -1856,7 +1857,7 @@ static void
 ftpSendUser(FtpStateData * ftpState)
 {
     /* check the server control channel is still available */
-    if(!haveControlChannel("ftpSendUser"))
+    if(!ftpState->haveControlChannel("ftpSendUser"))
         return;
 
     if (ftpState->proxy_host != NULL)
@@ -1890,7 +1891,7 @@ static void
 ftpSendPass(FtpStateData * ftpState)
 {
     /* check the server control channel is still available */
-    if(!haveControlChannel("ftpSendPass"))
+    if(!ftpState->haveControlChannel("ftpSendPass"))
         return;
 
     snprintf(cbuf, 1024, "PASS %s\r\n", ftpState->password);
@@ -1919,7 +1920,7 @@ ftpSendType(FtpStateData * ftpState)
     char mode;
 
     /* check the server control channel is still available */
-    if(!haveControlChannel("ftpSendType"))
+    if(!ftpState->haveControlChannel("ftpSendType"))
         return;
 
     /*
@@ -2044,7 +2045,7 @@ ftpSendCwd(FtpStateData * ftpState)
     char *path = ftpState->filepath;
 
     /* check the server control channel is still available */
-    if(!haveControlChannel("ftpSendCwd"))
+    if(!ftpState->haveControlChannel("ftpSendCwd"))
         return;
 
     debugs(9, 3, "ftpSendCwd");
@@ -2098,7 +2099,7 @@ ftpSendMkdir(FtpStateData * ftpState)
     char *path = ftpState->filepath;
 
     /* check the server control channel is still available */
-    if(!haveControlChannel("ftpSendMkdir"))
+    if(!ftpState->haveControlChannel("ftpSendMkdir"))
         return;
 
     debugs(9, 3, "ftpSendMkdir: with path=" << path);
@@ -2152,7 +2153,7 @@ static void
 ftpSendMdtm(FtpStateData * ftpState)
 {
     /* check the server control channel is still available */
-    if(!haveControlChannel("ftpSendMdtm"))
+    if(!ftpState->haveControlChannel("ftpSendMdtm"))
         return;
 
     assert(*ftpState->filepath != '\0');
@@ -2182,7 +2183,7 @@ static void
 ftpSendSize(FtpStateData * ftpState)
 {
     /* check the server control channel is still available */
-    if(!haveControlChannel("ftpSendPasv"))
+    if(!ftpState->haveControlChannel("ftpSendPasv"))
         return;
 
     /* Only send SIZE for binary transfers. The returned size
@@ -2231,7 +2232,7 @@ ftpSendPasv(FtpStateData * ftpState)
     socklen_t addr_len;
 
     /* check the server control channel is still available */
-    if(!haveControlChannel("ftpSendPasv"))
+    if(!ftpState->haveControlChannel("ftpSendPasv"))
         return;
 
     debugs(9, 3, HERE << "ftpSendPasv started");
@@ -2507,7 +2508,7 @@ ftpSendPort(FtpStateData * ftpState)
     unsigned char *portptr;
 
     /* check the server control channel is still available */
-    if(!haveControlChannel("ftpSendPort"))
+    if(!ftpState->haveControlChannel("ftpSendPort"))
         return;
 
     debugs(9, 3, "This is ftpSendPort");
@@ -2636,7 +2637,7 @@ static void
 ftpSendStor(FtpStateData * ftpState)
 {
     /* check the server control channel is still available */
-    if(!haveControlChannel("ftpSendStor"))
+    if(!ftpState->haveControlChannel("ftpSendStor"))
         return;
 
     if (ftpState->filepath != NULL) {
@@ -2701,7 +2702,7 @@ static void
 ftpSendRest(FtpStateData * ftpState)
 {
     /* check the server control channel is still available */
-    if(!haveControlChannel("ftpSendRest"))
+    if(!ftpState->haveControlChannel("ftpSendRest"))
         return;
 
     snprintf(cbuf, 1024, "REST %d\r\n", ftpState->restart_offset);
@@ -2759,7 +2760,7 @@ static void
 ftpSendList(FtpStateData * ftpState)
 {
     /* check the server control channel is still available */
-    if(!haveControlChannel("ftpSendList"))
+    if(!ftpState->haveControlChannel("ftpSendList"))
         return;
 
     if (ftpState->filepath) {
@@ -2776,7 +2777,7 @@ static void
 ftpSendNlst(FtpStateData * ftpState)
 {
     /* check the server control channel is still available */
-    if(!haveControlChannel("ftpSendNlst"))
+    if(!ftpState->haveControlChannel("ftpSendNlst"))
         return;
 
     ftpState->flags.tried_nlst = 1;
@@ -2830,7 +2831,7 @@ static void
 ftpSendRetr(FtpStateData * ftpState)
 {
     /* check the server control channel is still available */
-    if(!haveControlChannel("ftpSendRetr"))
+    if(!ftpState->haveControlChannel("ftpSendRetr"))
         return;
 
     assert(ftpState->filepath != NULL);
@@ -2937,7 +2938,7 @@ static void
 ftpSendQuit(FtpStateData * ftpState)
 {
     /* check the server control channel is still available */
-    if(!haveControlChannel("ftpSendQuit"))
+    if(!ftpState->haveControlChannel("ftpSendQuit"))
         return;
 
     snprintf(cbuf, 1024, "QUIT\r\n");
@@ -3401,7 +3402,7 @@ FtpStateData::doneWithServer() const
 }
 
 bool
-haveControlChannel(const char *caller_name)
+FtpStateData::haveControlChannel(const char *caller_name)
 {
     if(!doneWithServer())
         return true;
