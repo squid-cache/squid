@@ -1,4 +1,4 @@
 .deps
 .libs
 Makefile
-digest_edir_auth
+squid_radius_auth
