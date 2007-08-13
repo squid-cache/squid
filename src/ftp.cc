@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.433 2007/08/12 23:57:28 amosjeffries Exp $
+ * $Id: ftp.cc,v 1.434 2007/08/13 02:39:06 hno Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2172,6 +2172,7 @@ ftpReadMdtm(FtpStateData * ftpState)
         ftpState->unhack();
     } else if (code < 0) {
         ftpFail(ftpState);
+	return;
     }
 
     ftpSendSize(ftpState);
@@ -2217,6 +2218,7 @@ ftpReadSize(FtpStateData * ftpState)
         }
     } else if (code < 0) {
         ftpFail(ftpState);
+	return;
     }
 
     ftpSendPasv(ftpState);
