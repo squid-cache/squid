@@ -1,6 +1,6 @@
 
 /*
- * $Id: ftp.cc,v 1.436 2007/08/13 10:17:51 amosjeffries Exp $
+ * $Id: ftp.cc,v 1.437 2007/08/13 10:31:19 serassio Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -3402,7 +3402,7 @@ FtpStateData::doneWithServer() const
 }
 
 bool
-FtpStateData::haveControlChannel(const char *caller_name)
+FtpStateData::haveControlChannel(const char *caller_name) const
 {
     if(!doneWithServer())
         return true;
