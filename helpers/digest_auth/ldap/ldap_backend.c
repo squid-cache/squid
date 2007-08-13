@@ -10,7 +10,7 @@
 
 #include "ldap_backend.h"
 
-#ifdef _SQUID_MSWIN_ /* Native Windows port and MinGW */
+#ifdef _SQUID_MSWIN_		/* Native Windows port and MinGW */
 
 #define snprintf _snprintf
 #include <windows.h>
@@ -23,15 +23,15 @@
 #define LDAP_OPT_X_TLS 0x6000
 #endif
 /* Some tricks to allow dynamic bind with ldap_start_tls_s entry point at
-   run time.
+ * run time.
  */
 #undef ldap_start_tls_s
 #if LDAP_UNICODE
 #define LDAP_START_TLS_S "ldap_start_tls_sW"
-typedef WINLDAPAPI ULONG (LDAPAPI * PFldap_start_tls_s) (IN PLDAP, OUT PULONG, OUT LDAPMessage **, IN PLDAPControlW *, IN PLDAPControlW *);
+typedef WINLDAPAPI ULONG(LDAPAPI * PFldap_start_tls_s) (IN PLDAP, OUT PULONG, OUT LDAPMessage **, IN PLDAPControlW *, IN PLDAPControlW *);
 #else
 #define LDAP_START_TLS_S "ldap_start_tls_sA"
-typedef WINLDAPAPI ULONG (LDAPAPI * PFldap_start_tls_s) (IN PLDAP, OUT PULONG, OUT LDAPMessage **, IN PLDAPControlA *, IN PLDAPControlA *);
+typedef WINLDAPAPI ULONG(LDAPAPI * PFldap_start_tls_s) (IN PLDAP, OUT PULONG, OUT LDAPMessage **, IN PLDAPControlA *, IN PLDAPControlA *);
 #endif /* LDAP_UNICODE */
 PFldap_start_tls_s Win32_ldap_start_tls_s;
 #define ldap_start_tls_s(l,s,c) Win32_ldap_start_tls_s(l,NULL,NULL,s,c)
@@ -302,18 +302,18 @@ ldapconnect(void)
     int rc;
 
 /* On Windows ldap_start_tls_s is available starting from Windows XP, 
-   so we need to bind at run-time with the function entry point
+ * so we need to bind at run-time with the function entry point
  */
 #ifdef _SQUID_MSWIN_
     if (use_tls) {
 
-    	HMODULE WLDAP32Handle;
+	HMODULE WLDAP32Handle;
 
-    	WLDAP32Handle = GetModuleHandle("wldap32");
-        if ((Win32_ldap_start_tls_s = (PFldap_start_tls_s) GetProcAddress(WLDAP32Handle, LDAP_START_TLS_S)) == NULL) {
-            fprintf( stderr, PROGRAM_NAME ": ERROR: TLS (-Z) not supported on this platform.\n");
+	WLDAP32Handle = GetModuleHandle("wldap32");
+	if ((Win32_ldap_start_tls_s = (PFldap_start_tls_s) GetProcAddress(WLDAP32Handle, LDAP_START_TLS_S)) == NULL) {
+	    fprintf(stderr, PROGRAM_NAME ": ERROR: TLS (-Z) not supported on this platform.\n");
 	    exit(1);
-        }
+	}
     }
 #endif
 
@@ -558,7 +558,7 @@ LDAPArguments(int argc, char **argv)
     }
 
     if (!ldapServer)
-	ldapServer = (char *)"localhost";
+	ldapServer = (char *) "localhost";
 
     if (!userbasedn || !passattr) {
 	fprintf(stderr, "Usage: " PROGRAM_NAME " -b basedn -f filter [options] ldap_server_name\n\n");
@@ -622,7 +622,6 @@ readSecret(const char *filename)
     if (!bindpasswd) {
 	fprintf(stderr, PROGRAM_NAME " ERROR: can not allocate memory\n");
     }
-
     fclose(f);
 
     return 0;
