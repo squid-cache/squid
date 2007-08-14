@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.131 2007/08/13 18:25:14 hno Exp $
+ * $Id: client_side_reply.cc,v 1.132 2007/08/14 10:05:27 serassio Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1056,7 +1056,7 @@ clientHttpRequestStatus(int fd, ClientHttpRequest const *http)
     if (http->out.offset > 0x7FFF0000) {
         debugs(88, 1, ("WARNING: closing FD " << fd < " to prevent out.offset counter overflow");
         debugs(88, 1, ("\tclient " << (inet_ntoa(http->getConn() != NULL ? http->getConn()->peer.sin_addr : no_addr)));
-        debugs(88, 1, ("\treceived " << http->out.size " << " bytes, offset " << http->out.offset);
+        debugs(88, 1, ("\treceived " << http->out.size << " bytes, offset " << http->out.offset);
         debugs(88, 1, ("\tURI " << http->log_uri);
         return 1;
     }
