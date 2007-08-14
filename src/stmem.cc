@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.91 2007/08/13 17:20:51 hno Exp $
+ * $Id: stmem.cc,v 1.92 2007/08/13 18:25:14 hno Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Harvest Derived
@@ -134,12 +134,12 @@ size_t
 mem_hdr::writeAvailable(mem_node *aNode, int64_t location, size_t amount, char const *source)
 {
     /* if we attempt to overwrite existing data or leave a gap within a node */
-    assert (location == aNode->nodeBuffer.offset + aNode->nodeBuffer.length);
+    assert (location == aNode->nodeBuffer.offset + (int64_t)aNode->nodeBuffer.length);
     /* And we are not at the end of the node */
     assert (aNode->canAccept (location));
 
     /* these two can go I think */
-    assert (location - aNode->nodeBuffer.offset == aNode->nodeBuffer.length);
+    assert (location - aNode->nodeBuffer.offset == (int64_t)aNode->nodeBuffer.length);
     size_t copyLen = XMIN (amount, aNode->space());
 
     xmemcpy(aNode->nodeBuffer.data + aNode->nodeBuffer.length, source, copyLen);

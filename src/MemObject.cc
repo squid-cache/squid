@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.29 2007/08/13 17:20:51 hno Exp $
+ * $Id: MemObject.cc,v 1.30 2007/08/13 18:25:14 hno Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -310,7 +310,7 @@ MemObject::objectBytesOnDisk() const
 
     int64_t nwritten = swapout.sio->offset();
 
-    if (nwritten <= swap_hdr_sz)
+    if (nwritten <= (int64_t)swap_hdr_sz)
         return 0;
 
     return (nwritten - swap_hdr_sz);
@@ -326,7 +326,7 @@ MemObject::policyLowestOffsetToKeep() const
     int64_t lowest_offset = lowestMemReaderOffset();
 
     if (endOffset() < lowest_offset ||
-            endOffset() - inmem_lo > Config.Store.maxInMemObjSize)
+            endOffset() - inmem_lo > (int64_t)Config.Store.maxInMemObjSize)
         return lowest_offset;
 
     return inmem_lo;
