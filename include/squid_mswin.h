@@ -1,5 +1,5 @@
 /*
- * $Id: squid_mswin.h,v 1.4 2007/08/14 16:12:40 serassio Exp $
+ * $Id: squid_mswin.h,v 1.5 2007/08/14 17:05:47 serassio Exp $
  *
  * AUTHOR: Andrey Shorin <tolsty@tushino.com>
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
@@ -65,7 +65,6 @@ typedef unsigned long ino_t;
 
 #define INT64_MAX _I64_MAX
 #define INT64_MIN _I64_MIN
-#define PRId64 "I64d"
 
 #include "default_config_file.h"
 /* Some tricks for MS Compilers */
