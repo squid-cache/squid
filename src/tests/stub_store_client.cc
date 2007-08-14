@@ -1,5 +1,5 @@
 /*
- * $Id: stub_store_client.cc,v 1.2 2007/04/20 23:53:48 wessels Exp $
+ * $Id: stub_store_client.cc,v 1.3 2007/08/14 02:14:44 amosjeffries Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins
@@ -88,7 +88,7 @@ storeReplSetup(void)
 }
 
 bool
-store_client::memReaderHasLowerOffset(off_t anOffset) const
+store_client::memReaderHasLowerOffset(in64_t anOffset) const
 {
     fatal ("Not implemented");
     return false;
