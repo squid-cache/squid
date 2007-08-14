@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrContRange.cc,v 1.21 2007/08/13 17:20:51 hno Exp $
+ * $Id: HttpHdrContRange.cc,v 1.22 2007/08/13 18:25:14 hno Exp $
  *
  * DEBUG: section 68    HTTP Content-Range Header
  * AUTHOR: Alex Rousskov
@@ -50,7 +50,7 @@
 
 
 /* local constants */
-#define range_spec_unknown ((size_t)-1)
+#define range_spec_unknown (-1)
 
 /* local routines */
 #define known_spec(s) ((s) != range_spec_unknown)

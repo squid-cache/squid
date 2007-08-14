@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.515 2007/08/13 17:20:51 hno Exp $
+ * $Id: cache_cf.cc,v 1.516 2007/08/13 18:25:14 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1039,7 +1039,7 @@ dump_acl_b_size_t(StoreEntry * entry, const char *name, acl_size_t * head)
     acl_size_t *l;
 
     for (l = head; l; l = l->next) {
-        if (l->size != static_cast<size_t>(-1))
+        if (l->size != -1)
             storeAppendPrintf(entry, "%s %d %s\n", name, (int) l->size, B_BYTES_STR);
         else
             storeAppendPrintf(entry, "%s none", name);

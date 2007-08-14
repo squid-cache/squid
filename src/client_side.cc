@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.758 2007/08/13 17:20:51 hno Exp $
+ * $Id: client_side.cc,v 1.759 2007/08/13 18:25:14 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -883,7 +883,7 @@ ClientSocketContext::packRange(StoreIOBuffer const &source, MemBuf * mb)
              * intersection of "have" and "need" ranges must not be empty
              */
             assert(http->out.offset < i->currentSpec()->offset + i->currentSpec()->length);
-            assert(http->out.offset + available.size() > (size_t)i->currentSpec()->offset);
+            assert(http->out.offset + available.size() > i->currentSpec()->offset);
 
             /*
              * put boundary and headers at the beginning of a range in a
@@ -936,7 +936,7 @@ ClientSocketContext::packRange(StoreIOBuffer const &source, MemBuf * mb)
 
         assert (next >= http->out.offset);
 
-        size_t skip = next - http->out.offset;
+        int64_t skip = next - http->out.offset;
 
         /* adjust for not to be transmitted bytes */
         http->out.offset = next;

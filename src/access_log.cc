@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.127 2007/08/13 17:20:51 hno Exp $
+ * $Id: access_log.cc,v 1.128 2007/08/13 18:25:14 hno Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -836,7 +836,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
         }
 
 	if (dooff) {
-            snprintf(tmp, sizeof(tmp), "%0*lld", fmt->zero ? (int) fmt->width : 0, outoff);
+            snprintf(tmp, sizeof(tmp), "%0*" PRId64, fmt->zero ? (int) fmt->width : 0, outoff);
             out = tmp;
 	    
         } else if (doint) {

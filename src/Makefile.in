@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.425 2007/06/20 00:10:40 hno Exp $
+#  $Id: Makefile.in,v 1.426 2007/08/13 18:25:14 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -260,8 +260,9 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc \
 	store_rebuild.cc store_swapin.cc store_swapmeta.cc \
 	store_swapout.cc StoreMeta.cc StoreMeta.h StoreMetaMD5.cc \
 	StoreMetaMD5.h StoreMetaSTD.cc StoreMetaSTD.h \
-	StoreMetaUnpacker.cc StoreMetaUnpacker.h StoreMetaURL.cc \
-	StoreMetaURL.h StoreMetaVary.cc StoreMetaVary.h StoreSearch.h \
+	StoreMetaSTDLFS.cc StoreMetaSTDLFS.h StoreMetaUnpacker.cc \
+	StoreMetaUnpacker.h StoreMetaURL.cc StoreMetaURL.h \
+	StoreMetaVary.cc StoreMetaVary.h StoreSearch.h \
 	StoreSwapLogData.cc StoreSwapLogData.h Server.cc Server.h \
 	structs.h SwapDir.cc SwapDir.h time.cc tools.cc tunnel.cc \
 	typedefs.h unlinkd.cc url.cc URL.h URLScheme.cc URLScheme.h \
@@ -363,14 +364,15 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
 	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
 	StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
-	StoreMetaSTD.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
-	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
-	StoreSwapLogData.$(OBJEXT) Server.$(OBJEXT) SwapDir.$(OBJEXT) \
-	time.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
-	$(am__objects_24) url.$(OBJEXT) URLScheme.$(OBJEXT) \
-	urn.$(OBJEXT) useragent.$(OBJEXT) wccp.$(OBJEXT) \
-	wccp2.$(OBJEXT) whois.$(OBJEXT) wordlist.$(OBJEXT) \
-	$(am__objects_25) $(am__objects_26)
+	StoreMetaSTD.$(OBJEXT) StoreMetaSTDLFS.$(OBJEXT) \
+	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
+	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
+	Server.$(OBJEXT) SwapDir.$(OBJEXT) time.$(OBJEXT) \
+	tools.$(OBJEXT) tunnel.$(OBJEXT) $(am__objects_24) \
+	url.$(OBJEXT) URLScheme.$(OBJEXT) urn.$(OBJEXT) \
+	useragent.$(OBJEXT) wccp.$(OBJEXT) wccp2.$(OBJEXT) \
+	whois.$(OBJEXT) wordlist.$(OBJEXT) $(am__objects_25) \
+	$(am__objects_26)
 am__EXTRA_squid_SOURCES_DIST = fs/aufs/StoreFSaufs.cc \
 	fs/coss/StoreFScoss.cc fs/diskd/StoreFSdiskd.cc \
 	fs/null/StoreFSnull.cc fs/ufs/StoreFSufs.cc \
@@ -495,10 +497,10 @@ am__tests_testCacheManager_SOURCES_DIST = debug.cc globals.cc \
 	store_key_md5.cc store_log.cc store_rebuild.cc store_swapin.cc \
 	store_swapmeta.cc store_swapout.cc StoreFileSystem.cc \
 	StoreIOState.cc StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
-	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
-	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc url.cc \
-	URLScheme.cc urn.cc useragent.cc wccp2.cc whois.cc win32.cc \
-	wordlist.cc
+	StoreMetaSTDLFS.cc StoreMetaUnpacker.cc StoreMetaURL.cc \
+	StoreMetaVary.cc StoreSwapLogData.cc tools.cc tunnel.cc \
+	SwapDir.cc url.cc URLScheme.cc urn.cc useragent.cc wccp2.cc \
+	whois.cc win32.cc wordlist.cc
 am_tests_testCacheManager_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	HttpRequest.$(OBJEXT) HttpRequestMethod.$(OBJEXT) \
 	mem.$(OBJEXT) String.$(OBJEXT) \
@@ -542,12 +544,12 @@ am_tests_testCacheManager_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	store_swapout.$(OBJEXT) StoreFileSystem.$(OBJEXT) \
 	StoreIOState.$(OBJEXT) StoreMeta.$(OBJEXT) \
 	StoreMetaMD5.$(OBJEXT) StoreMetaSTD.$(OBJEXT) \
-	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
-	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
-	tools.$(OBJEXT) tunnel.$(OBJEXT) SwapDir.$(OBJEXT) \
-	url.$(OBJEXT) URLScheme.$(OBJEXT) urn.$(OBJEXT) \
-	useragent.$(OBJEXT) wccp2.$(OBJEXT) whois.$(OBJEXT) \
-	$(am__objects_25) wordlist.$(OBJEXT)
+	StoreMetaSTDLFS.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
+	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
+	StoreSwapLogData.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
+	SwapDir.$(OBJEXT) url.$(OBJEXT) URLScheme.$(OBJEXT) \
+	urn.$(OBJEXT) useragent.$(OBJEXT) wccp2.$(OBJEXT) \
+	whois.$(OBJEXT) $(am__objects_25) wordlist.$(OBJEXT)
 nodist_tests_testCacheManager_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testCacheManager_OBJECTS = $(am_tests_testCacheManager_OBJECTS) \
@@ -557,10 +559,11 @@ am__tests_testCoss_SOURCES_DIST = tests/testCoss.cc tests/testMain.cc \
 	tests/stub_internal.cc fd.cc disk.cc filemap.cc HttpBody.cc \
 	HttpReply.cc HttpStatusLine.cc int.cc list.cc MemObject.cc \
 	StoreSwapLogData.cc StoreIOState.cc StoreMeta.cc \
-	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaUnpacker.cc \
-	StoreMetaURL.cc StoreMetaVary.cc StoreFileSystem.cc \
-	store_io.cc store_swapout.cc store_swapmeta.cc unlinkd.cc \
-	win32.cc ../test-suite/test_tools.cc globals.cc CommonPool.h \
+	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaSTDLFS.cc \
+	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
+	StoreFileSystem.cc store_io.cc store_swapout.cc \
+	store_swapmeta.cc unlinkd.cc win32.cc \
+	../test-suite/test_tools.cc globals.cc CommonPool.h \
 	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
 	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
 	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
@@ -620,11 +623,12 @@ am__objects_33 = tests/stub_store_rebuild.$(OBJEXT) \
 	MemObject.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
 	StoreIOState.$(OBJEXT) StoreMeta.$(OBJEXT) \
 	StoreMetaMD5.$(OBJEXT) StoreMetaSTD.$(OBJEXT) \
-	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
-	StoreMetaVary.$(OBJEXT) StoreFileSystem.$(OBJEXT) \
-	store_io.$(OBJEXT) store_swapout.$(OBJEXT) \
-	store_swapmeta.$(OBJEXT) $(am__objects_24) $(am__objects_25) \
-	$(am__objects_32) $(am__objects_10)
+	StoreMetaSTDLFS.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
+	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
+	StoreFileSystem.$(OBJEXT) store_io.$(OBJEXT) \
+	store_swapout.$(OBJEXT) store_swapmeta.$(OBJEXT) \
+	$(am__objects_24) $(am__objects_25) $(am__objects_32) \
+	$(am__objects_10)
 am_tests_testCoss_OBJECTS = tests/testCoss.$(OBJEXT) \
 	tests/testMain.$(OBJEXT) $(am__objects_33)
 tests_testCoss_OBJECTS = $(am_tests_testCoss_OBJECTS)
@@ -635,10 +639,11 @@ am__tests_testDiskIO_SOURCES_DIST = tests/stub_store_rebuild.cc \
 	tests/stub_internal.cc fd.cc disk.cc filemap.cc HttpBody.cc \
 	HttpReply.cc HttpStatusLine.cc int.cc list.cc MemObject.cc \
 	StoreSwapLogData.cc StoreIOState.cc StoreMeta.cc \
-	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaUnpacker.cc \
-	StoreMetaURL.cc StoreMetaVary.cc StoreFileSystem.cc \
-	store_io.cc store_swapout.cc store_swapmeta.cc unlinkd.cc \
-	win32.cc ../test-suite/test_tools.cc globals.cc CommonPool.h \
+	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaSTDLFS.cc \
+	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
+	StoreFileSystem.cc store_io.cc store_swapout.cc \
+	store_swapmeta.cc unlinkd.cc win32.cc \
+	../test-suite/test_tools.cc globals.cc CommonPool.h \
 	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
 	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
 	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
@@ -714,10 +719,10 @@ am__tests_testEvent_SOURCES_DIST = debug.cc EventLoop.h EventLoop.cc \
 	store_rebuild.cc store_swapin.cc store_swapmeta.cc \
 	store_swapout.cc StoreFileSystem.cc StoreIOState.cc \
 	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
-	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
-	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc url.cc \
-	URLScheme.cc urn.cc useragent.cc wccp2.cc whois.cc win32.cc \
-	wordlist.cc
+	StoreMetaSTDLFS.cc StoreMetaUnpacker.cc StoreMetaURL.cc \
+	StoreMetaVary.cc StoreSwapLogData.cc tools.cc tunnel.cc \
+	SwapDir.cc url.cc URLScheme.cc urn.cc useragent.cc wccp2.cc \
+	whois.cc win32.cc wordlist.cc
 am_tests_testEvent_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	globals.$(OBJEXT) HttpRequest.$(OBJEXT) \
 	HttpRequestMethod.$(OBJEXT) mem.$(OBJEXT) \
@@ -761,12 +766,13 @@ am_tests_testEvent_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
 	StoreFileSystem.$(OBJEXT) StoreIOState.$(OBJEXT) \
 	StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
-	StoreMetaSTD.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
-	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
-	StoreSwapLogData.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
-	SwapDir.$(OBJEXT) url.$(OBJEXT) URLScheme.$(OBJEXT) \
-	urn.$(OBJEXT) useragent.$(OBJEXT) wccp2.$(OBJEXT) \
-	whois.$(OBJEXT) $(am__objects_25) wordlist.$(OBJEXT)
+	StoreMetaSTD.$(OBJEXT) StoreMetaSTDLFS.$(OBJEXT) \
+	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
+	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
+	tools.$(OBJEXT) tunnel.$(OBJEXT) SwapDir.$(OBJEXT) \
+	url.$(OBJEXT) URLScheme.$(OBJEXT) urn.$(OBJEXT) \
+	useragent.$(OBJEXT) wccp2.$(OBJEXT) whois.$(OBJEXT) \
+	$(am__objects_25) wordlist.$(OBJEXT)
 nodist_tests_testEvent_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testEvent_OBJECTS = $(am_tests_testEvent_OBJECTS) \
@@ -815,10 +821,7 @@ am__tests_testEventLoop_SOURCES_DIST = debug.cc EventLoop.h \
 	store_rebuild.cc store_swapin.cc store_swapmeta.cc \
 	store_swapout.cc StoreFileSystem.cc StoreIOState.cc \
 	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
-	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
-	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc url.cc \
-	URLScheme.cc urn.cc useragent.cc wccp2.cc whois.cc win32.cc \
-	wordlist.cc
+	StoreMetaSTDLFS.cc
 am_tests_testEventLoop_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	globals.$(OBJEXT) HttpRequest.$(OBJEXT) \
 	HttpRequestMethod.$(OBJEXT) mem.$(OBJEXT) \
@@ -862,12 +865,7 @@ am_tests_testEventLoop_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
 	StoreFileSystem.$(OBJEXT) StoreIOState.$(OBJEXT) \
 	StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
-	StoreMetaSTD.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
-	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
-	StoreSwapLogData.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
-	SwapDir.$(OBJEXT) url.$(OBJEXT) URLScheme.$(OBJEXT) \
-	urn.$(OBJEXT) useragent.$(OBJEXT) wccp2.$(OBJEXT) \
-	whois.$(OBJEXT) $(am__objects_25) wordlist.$(OBJEXT)
+	StoreMetaSTD.$(OBJEXT) StoreMetaSTDLFS.$(OBJEXT)
 nodist_tests_testEventLoop_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testEventLoop_OBJECTS = $(am_tests_testEventLoop_OBJECTS) \
@@ -942,10 +940,10 @@ am__tests_testHttpRequest_SOURCES_DIST = debug.cc globals.cc \
 	store_key_md5.cc store_log.cc store_rebuild.cc store_swapin.cc \
 	store_swapmeta.cc store_swapout.cc StoreFileSystem.cc \
 	StoreIOState.cc StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
-	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
-	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc url.cc \
-	URLScheme.cc urn.cc useragent.cc wccp2.cc whois.cc win32.cc \
-	wordlist.cc
+	StoreMetaSTDLFS.cc StoreMetaUnpacker.cc StoreMetaURL.cc \
+	StoreMetaVary.cc StoreSwapLogData.cc tools.cc tunnel.cc \
+	SwapDir.cc url.cc URLScheme.cc urn.cc useragent.cc wccp2.cc \
+	whois.cc win32.cc wordlist.cc
 am_tests_testHttpRequest_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	HttpRequest.$(OBJEXT) HttpRequestMethod.$(OBJEXT) \
 	mem.$(OBJEXT) String.$(OBJEXT) tests/testHttpRequest.$(OBJEXT) \
@@ -989,12 +987,12 @@ am_tests_testHttpRequest_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	store_swapout.$(OBJEXT) StoreFileSystem.$(OBJEXT) \
 	StoreIOState.$(OBJEXT) StoreMeta.$(OBJEXT) \
 	StoreMetaMD5.$(OBJEXT) StoreMetaSTD.$(OBJEXT) \
-	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
-	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
-	tools.$(OBJEXT) tunnel.$(OBJEXT) SwapDir.$(OBJEXT) \
-	url.$(OBJEXT) URLScheme.$(OBJEXT) urn.$(OBJEXT) \
-	useragent.$(OBJEXT) wccp2.$(OBJEXT) whois.$(OBJEXT) \
-	$(am__objects_25) wordlist.$(OBJEXT)
+	StoreMetaSTDLFS.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
+	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
+	StoreSwapLogData.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
+	SwapDir.$(OBJEXT) url.$(OBJEXT) URLScheme.$(OBJEXT) \
+	urn.$(OBJEXT) useragent.$(OBJEXT) wccp2.$(OBJEXT) \
+	whois.$(OBJEXT) $(am__objects_25) wordlist.$(OBJEXT)
 nodist_tests_testHttpRequest_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testHttpRequest_OBJECTS = $(am_tests_testHttpRequest_OBJECTS) \
@@ -1004,10 +1002,11 @@ am__tests_testNull_SOURCES_DIST = tests/testNull.cc tests/testMain.cc \
 	tests/stub_internal.cc fd.cc disk.cc filemap.cc HttpBody.cc \
 	HttpReply.cc HttpStatusLine.cc int.cc list.cc MemObject.cc \
 	StoreSwapLogData.cc StoreIOState.cc StoreMeta.cc \
-	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaUnpacker.cc \
-	StoreMetaURL.cc StoreMetaVary.cc StoreFileSystem.cc \
-	store_io.cc store_swapout.cc store_swapmeta.cc unlinkd.cc \
-	win32.cc ../test-suite/test_tools.cc globals.cc CommonPool.h \
+	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaSTDLFS.cc \
+	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
+	StoreFileSystem.cc store_io.cc store_swapout.cc \
+	store_swapmeta.cc unlinkd.cc win32.cc \
+	../test-suite/test_tools.cc globals.cc CommonPool.h \
 	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
 	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
 	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
@@ -1124,9 +1123,10 @@ am__tests_testURL_SOURCES_DIST = debug.cc url.cc URLScheme.cc \
 	store_rebuild.cc store_swapin.cc store_swapmeta.cc \
 	store_swapout.cc StoreFileSystem.cc StoreIOState.cc \
 	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
-	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
-	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc urn.cc \
-	useragent.cc wccp2.cc whois.cc win32.cc wordlist.cc
+	StoreMetaSTDLFS.cc StoreMetaUnpacker.cc StoreMetaURL.cc \
+	StoreMetaVary.cc StoreSwapLogData.cc tools.cc tunnel.cc \
+	SwapDir.cc urn.cc useragent.cc wccp2.cc whois.cc win32.cc \
+	wordlist.cc
 am_tests_testURL_OBJECTS = debug.$(OBJEXT) url.$(OBJEXT) \
 	URLScheme.$(OBJEXT) globals.$(OBJEXT) HttpRequest.$(OBJEXT) \
 	HttpRequestMethod.$(OBJEXT) mem.$(OBJEXT) \
@@ -1170,12 +1170,12 @@ am_tests_testURL_OBJECTS = debug.$(OBJEXT) url.$(OBJEXT) \
 	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
 	StoreFileSystem.$(OBJEXT) StoreIOState.$(OBJEXT) \
 	StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
-	StoreMetaSTD.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
-	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
-	StoreSwapLogData.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
-	SwapDir.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) \
-	wccp2.$(OBJEXT) whois.$(OBJEXT) $(am__objects_25) \
-	wordlist.$(OBJEXT)
+	StoreMetaSTD.$(OBJEXT) StoreMetaSTDLFS.$(OBJEXT) \
+	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
+	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
+	tools.$(OBJEXT) tunnel.$(OBJEXT) SwapDir.$(OBJEXT) \
+	urn.$(OBJEXT) useragent.$(OBJEXT) wccp2.$(OBJEXT) \
+	whois.$(OBJEXT) $(am__objects_25) wordlist.$(OBJEXT)
 nodist_tests_testURL_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testURL_OBJECTS = $(am_tests_testURL_OBJECTS) \
@@ -1185,10 +1185,11 @@ am__tests_testUfs_SOURCES_DIST = tests/testUfs.cc tests/testMain.cc \
 	tests/stub_internal.cc fd.cc disk.cc filemap.cc HttpBody.cc \
 	HttpReply.cc HttpStatusLine.cc int.cc list.cc MemObject.cc \
 	StoreSwapLogData.cc StoreIOState.cc StoreMeta.cc \
-	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaUnpacker.cc \
-	StoreMetaURL.cc StoreMetaVary.cc StoreFileSystem.cc \
-	store_io.cc store_swapout.cc store_swapmeta.cc unlinkd.cc \
-	win32.cc ../test-suite/test_tools.cc globals.cc CommonPool.h \
+	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaSTDLFS.cc \
+	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
+	StoreFileSystem.cc store_io.cc store_swapout.cc \
+	store_swapmeta.cc unlinkd.cc win32.cc \
+	../test-suite/test_tools.cc globals.cc CommonPool.h \
 	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
 	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
 	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
@@ -1260,11 +1261,11 @@ am__tests_test_http_range_SOURCES_DIST = tests/test_http_range.cc \
 	store_key_md5.cc store_io.cc store_log.cc store_rebuild.cc \
 	store_swapin.cc store_swapmeta.cc store_swapout.cc \
 	StoreFileSystem.cc StoreIOState.cc StoreMeta.cc \
-	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaUnpacker.cc \
-	StoreMetaURL.cc StoreMetaVary.cc StoreSwapLogData.cc String.cc \
-	SwapDir.cc time.cc tools.cc tunnel.cc url.cc URLScheme.cc \
-	urn.cc useragent.cc wccp2.cc whois.cc win32.cc wordlist.cc \
-	Packer.cc MemBuf.cc
+	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaSTDLFS.cc \
+	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
+	StoreSwapLogData.cc String.cc SwapDir.cc time.cc tools.cc \
+	tunnel.cc url.cc URLScheme.cc urn.cc useragent.cc wccp2.cc \
+	whois.cc win32.cc wordlist.cc Packer.cc MemBuf.cc
 am_tests_test_http_range_OBJECTS = tests/test_http_range.$(OBJEXT) \
 	access_log.$(OBJEXT) acl.$(OBJEXT) acl_noncore.$(OBJEXT) \
 	ACLChecklist.$(OBJEXT) ACLProxyAuth.$(OBJEXT) \
@@ -1305,10 +1306,11 @@ am_tests_test_http_range_OBJECTS = tests/test_http_range.$(OBJEXT) \
 	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
 	StoreFileSystem.$(OBJEXT) StoreIOState.$(OBJEXT) \
 	StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
-	StoreMetaSTD.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
-	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
-	StoreSwapLogData.$(OBJEXT) String.$(OBJEXT) SwapDir.$(OBJEXT) \
-	time.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) url.$(OBJEXT) \
+	StoreMetaSTD.$(OBJEXT) StoreMetaSTDLFS.$(OBJEXT) \
+	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
+	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
+	String.$(OBJEXT) SwapDir.$(OBJEXT) time.$(OBJEXT) \
+	tools.$(OBJEXT) tunnel.$(OBJEXT) url.$(OBJEXT) \
 	URLScheme.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) \
 	wccp2.$(OBJEXT) whois.$(OBJEXT) $(am__objects_25) \
 	wordlist.$(OBJEXT) Packer.$(OBJEXT) MemBuf.$(OBJEXT)
@@ -1318,15 +1320,15 @@ tests_test_http_range_OBJECTS = $(am_tests_test_http_range_OBJECTS) \
 	$(nodist_tests_test_http_range_OBJECTS)
 am__ufsdump_SOURCES_DIST = debug.cc int.cc mem.cc store_key_md5.cc \
 	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
-	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
-	String.cc time.cc ufsdump.cc url.cc AsyncCall.cc AsyncCall.h \
-	BodyPipe.cc BodyPipe.h ConfigParser.cc store.cc \
-	StoreFileSystem.cc StoreSwapLogData.cc StoreSwapLogData.h \
-	access_log.cc acl.cc acl_noncore.cc ACLChecklist.cc \
-	ACLProxyAuth.cc ACLUserData.cc ACLRegexData.cc \
-	ACLStringData.cc authenticate.cc cache_cf.cc cache_manager.cc \
-	CacheDigest.cc carp.cc cbdata.cc client_db.cc client_side.cc \
-	client_side_reply.cc client_side_request.cc \
+	StoreMetaSTDLFS.cc StoreMetaUnpacker.cc StoreMetaURL.cc \
+	StoreMetaVary.cc String.cc time.cc ufsdump.cc url.cc \
+	AsyncCall.cc AsyncCall.h BodyPipe.cc BodyPipe.h \
+	ConfigParser.cc store.cc StoreFileSystem.cc \
+	StoreSwapLogData.cc StoreSwapLogData.h access_log.cc acl.cc \
+	acl_noncore.cc ACLChecklist.cc ACLProxyAuth.cc ACLUserData.cc \
+	ACLRegexData.cc ACLStringData.cc authenticate.cc cache_cf.cc \
+	cache_manager.cc CacheDigest.cc carp.cc cbdata.cc client_db.cc \
+	client_side.cc client_side_reply.cc client_side_request.cc \
 	client_side_request.h clientStream.cc clientStream.h CommIO.h \
 	comm_select.cc comm_select.h comm_select_win32.cc comm_poll.cc \
 	comm_poll.h comm_epoll.cc comm_epoll.h comm_kqueue.cc \
@@ -1371,10 +1373,11 @@ am__ufsdump_SOURCES_DIST = debug.cc int.cc mem.cc store_key_md5.cc \
 am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) mem.$(OBJEXT) \
 	store_key_md5.$(OBJEXT) StoreMeta.$(OBJEXT) \
 	StoreMetaMD5.$(OBJEXT) StoreMetaSTD.$(OBJEXT) \
-	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
-	StoreMetaVary.$(OBJEXT) String.$(OBJEXT) time.$(OBJEXT) \
-	ufsdump.$(OBJEXT) url.$(OBJEXT) AsyncCall.$(OBJEXT) \
-	BodyPipe.$(OBJEXT) ConfigParser.$(OBJEXT) store.$(OBJEXT) \
+	StoreMetaSTDLFS.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
+	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
+	String.$(OBJEXT) time.$(OBJEXT) ufsdump.$(OBJEXT) \
+	url.$(OBJEXT) AsyncCall.$(OBJEXT) BodyPipe.$(OBJEXT) \
+	ConfigParser.$(OBJEXT) store.$(OBJEXT) \
 	StoreFileSystem.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
 	access_log.$(OBJEXT) acl.$(OBJEXT) acl_noncore.$(OBJEXT) \
 	ACLChecklist.$(OBJEXT) ACLProxyAuth.$(OBJEXT) \
@@ -2209,6 +2212,8 @@ squid_SOURCES = \
 	StoreMetaMD5.h \
 	StoreMetaSTD.cc \
 	StoreMetaSTD.h \
+	StoreMetaSTDLFS.cc \
+	StoreMetaSTDLFS.h \
 	StoreMetaUnpacker.cc \
 	StoreMetaUnpacker.h \
 	StoreMetaURL.cc \
@@ -2342,6 +2347,7 @@ ufsdump_SOURCES = \
 	StoreMeta.cc \
 	StoreMetaMD5.cc \
 	StoreMetaSTD.cc \
+	StoreMetaSTDLFS.cc \
 	StoreMetaUnpacker.cc \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
@@ -2838,6 +2844,7 @@ tests_testCacheManager_SOURCES = \
 	StoreMeta.cc \
 	StoreMetaMD5.cc \
 	StoreMetaSTD.cc \
+	StoreMetaSTDLFS.cc \
 	StoreMetaUnpacker.cc \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
@@ -3006,6 +3013,7 @@ tests_testEvent_SOURCES = \
 	StoreMeta.cc \
 	StoreMetaMD5.cc \
 	StoreMetaSTD.cc \
+	StoreMetaSTDLFS.cc \
 	StoreMetaUnpacker.cc \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
@@ -3159,21 +3167,7 @@ tests_testEventLoop_SOURCES = \
 	StoreMeta.cc \
 	StoreMetaMD5.cc \
 	StoreMetaSTD.cc \
-	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
-	StoreSwapLogData.cc \
-	tools.cc \
-	tunnel.cc \
-	SwapDir.cc \
-	url.cc \
-	URLScheme.cc \
-	urn.cc \
-	useragent.cc \
-	wccp2.cc \
-	whois.cc \
-	$(WIN32_SOURCE) \
-	wordlist.cc
+	StoreMetaSTDLFS.cc
 
 nodist_tests_testEventLoop_SOURCES = \
 	repl_modules.cc \
@@ -3337,6 +3331,7 @@ tests_test_http_range_SOURCES = \
 	StoreMeta.cc \
 	StoreMetaMD5.cc \
 	StoreMetaSTD.cc \
+	StoreMetaSTDLFS.cc \
 	StoreMetaUnpacker.cc \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
@@ -3492,6 +3487,7 @@ tests_testHttpRequest_SOURCES = \
 	StoreMeta.cc \
 	StoreMetaMD5.cc \
 	StoreMetaSTD.cc \
+	StoreMetaSTDLFS.cc \
 	StoreMetaUnpacker.cc \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
@@ -3645,6 +3641,7 @@ SWAP_TEST_SOURCES = \
 	StoreMeta.cc \
 	StoreMetaMD5.cc \
 	StoreMetaSTD.cc \
+	StoreMetaSTDLFS.cc \
 	StoreMetaUnpacker.cc \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
@@ -3836,6 +3833,7 @@ tests_testURL_SOURCES = \
 	StoreMeta.cc \
 	StoreMetaMD5.cc \
 	StoreMetaSTD.cc \
+	StoreMetaSTDLFS.cc \
 	StoreMetaUnpacker.cc \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
@@ -4667,6 +4665,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreMeta.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreMetaMD5.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreMetaSTD.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreMetaSTDLFS.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreMetaURL.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreMetaUnpacker.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreMetaVary.Po@am__quote@
@@ -5450,6 +5449,21 @@ uninstall-local:
 		echo "rm -f $(DESTDIR)$(DEFAULT_MIME_TABLE)"; \
 		$(RM) -f $(DESTDIR)$(DEFAULT_MIME_TABLE); \
 	fi
+	StoreMetaUnpacker.cc \
+	StoreMetaURL.cc \
+	StoreMetaVary.cc \
+	StoreSwapLogData.cc \
+	tools.cc \
+	tunnel.cc \
+	SwapDir.cc \
+	url.cc \
+	URLScheme.cc \
+	urn.cc \
+	useragent.cc \
+	wccp2.cc \
+	whois.cc \
+	$(WIN32_SOURCE) \
+	wordlist.cc
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
