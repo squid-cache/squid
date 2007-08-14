@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.447 2007/08/14 03:17:21 amosjeffries Exp $
+# $Id: cf.data.pre,v 1.448 2007/08/14 03:46:12 amosjeffries Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -438,27 +438,29 @@ LOC: Config.peers
 DOC_START
 	To specify other caches in a hierarchy, use the format:
 
-		cache_peer hostname type http_port icp_port [options]
+		cache_peer hostname type http-port icp-port [options]
 
 	For example,
 
 	#                                        proxy  icp
 	#          hostname             type     port   port  options
 	#          -------------------- -------- ----- -----  -----------
-	cache_peer parent.foo.net       parent    3128  3130  [proxy-only]
-	cache_peer sib1.foo.net         sibling   3128  3130  [proxy-only]
-	cache_peer sib2.foo.net         sibling   3128  3130  [proxy-only]
+	cache_peer parent.foo.net       parent    3128  3130  proxy-only default
+	cache_peer sib1.foo.net         sibling   3128  3130  proxy-only
+	cache_peer sib2.foo.net         sibling   3128  3130  proxy-only
 
 	      type:  either 'parent', 'sibling', or 'multicast'.
 
-	proxy_port:  The port number where the cache listens for proxy
+	proxy-port:  The port number where the cache listens for proxy
 		     requests.
 
-	  icp_port:  Used for querying neighbor caches about
+	  icp-port:  Used for querying neighbor caches about
 		     objects.  To have a non-ICP neighbor
 		     specify '7' for the ICP port and make sure the
 		     neighbor machine has the UDP echo port
 		     enabled in its /etc/inetd.conf file.
+		NOTE: Also requires icp_port option enabled to send/receive
+		      requests via this method.
 
 	    options: proxy-only
 		     weight=n
@@ -496,9 +498,12 @@ DOC_START
   		     use 'proxy-only' to specify objects fetched
   		     from this cache should not be saved locally.
 
-		     use 'weight=n' to specify a weighted parent.
-		     The weight must be an integer.  The default weight
-		     is 1, larger weights are favored more.
+		     use 'weight=n' to affect the selection of a peer
+		     during any weighted peer-selection mechanisms.
+		     The weight must be an integer; default is 1,
+		     larger weights are favored more.
+		     This option does not affect parent selection if a peering
+		     protocol is not in use.
 
 		     use 'basetime=n' to specify a base amount to
 		     be subtracted from round trip times of parents.
@@ -522,9 +527,9 @@ DOC_START
 		     conjunction with weighted-round-robin.
 
 		     use 'default' if this is a parent cache which can
-		     be used as a "last-resort." You should probably
-		     only use 'default' in situations where you cannot
-		     use ICP with your parent cache(s).
+		     be used as a "last-resort" if a peer cannot be located
+		     by any of the peer-selection mechanisms.
+		     If specified more than once, only the first is used.
 
 		     use 'round-robin' to define a set of parents which
 		     should be used in a round-robin fashion in the
