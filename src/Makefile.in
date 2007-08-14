@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.426 2007/08/13 18:25:14 hno Exp $
+#  $Id: Makefile.in,v 1.427 2007/08/14 17:08:02 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -72,7 +72,7 @@ am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 	$(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-mkinstalldirs = $(install_sh) -d
+mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/include/autoconf.h
 CONFIG_CLEAN_FILES =
 LIBRARIES = $(noinst_LIBRARIES)
@@ -821,7 +821,10 @@ am__tests_testEventLoop_SOURCES_DIST = debug.cc EventLoop.h \
 	store_rebuild.cc store_swapin.cc store_swapmeta.cc \
 	store_swapout.cc StoreFileSystem.cc StoreIOState.cc \
 	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc
+	StoreMetaSTDLFS.cc StoreMetaUnpacker.cc StoreMetaURL.cc \
+	StoreMetaVary.cc StoreSwapLogData.cc tools.cc tunnel.cc \
+	SwapDir.cc url.cc URLScheme.cc urn.cc useragent.cc wccp2.cc \
+	whois.cc win32.cc wordlist.cc
 am_tests_testEventLoop_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	globals.$(OBJEXT) HttpRequest.$(OBJEXT) \
 	HttpRequestMethod.$(OBJEXT) mem.$(OBJEXT) \
@@ -865,7 +868,13 @@ am_tests_testEventLoop_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
 	StoreFileSystem.$(OBJEXT) StoreIOState.$(OBJEXT) \
 	StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
-	StoreMetaSTD.$(OBJEXT) StoreMetaSTDLFS.$(OBJEXT)
+	StoreMetaSTD.$(OBJEXT) StoreMetaSTDLFS.$(OBJEXT) \
+	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
+	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
+	tools.$(OBJEXT) tunnel.$(OBJEXT) SwapDir.$(OBJEXT) \
+	url.$(OBJEXT) URLScheme.$(OBJEXT) urn.$(OBJEXT) \
+	useragent.$(OBJEXT) wccp2.$(OBJEXT) whois.$(OBJEXT) \
+	$(am__objects_25) wordlist.$(OBJEXT)
 nodist_tests_testEventLoop_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testEventLoop_OBJECTS = $(am_tests_testEventLoop_OBJECTS) \
@@ -3167,7 +3176,22 @@ tests_testEventLoop_SOURCES = \
 	StoreMeta.cc \
 	StoreMetaMD5.cc \
 	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc
+	StoreMetaSTDLFS.cc \
+	StoreMetaUnpacker.cc \
+	StoreMetaURL.cc \
+	StoreMetaVary.cc \
+	StoreSwapLogData.cc \
+	tools.cc \
+	tunnel.cc \
+	SwapDir.cc \
+	url.cc \
+	URLScheme.cc \
+	urn.cc \
+	useragent.cc \
+	wccp2.cc \
+	whois.cc \
+	$(WIN32_SOURCE) \
+	wordlist.cc
 
 nodist_tests_testEventLoop_SOURCES = \
 	repl_modules.cc \
@@ -5449,21 +5473,6 @@ uninstall-local:
 		echo "rm -f $(DESTDIR)$(DEFAULT_MIME_TABLE)"; \
 		$(RM) -f $(DESTDIR)$(DEFAULT_MIME_TABLE); \
 	fi
-	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
-	StoreSwapLogData.cc \
-	tools.cc \
-	tunnel.cc \
-	SwapDir.cc \
-	url.cc \
-	URLScheme.cc \
-	urn.cc \
-	useragent.cc \
-	wccp2.cc \
-	whois.cc \
-	$(WIN32_SOURCE) \
-	wordlist.cc
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

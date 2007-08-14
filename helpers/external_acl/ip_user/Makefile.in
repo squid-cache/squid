@@ -17,7 +17,7 @@
 #
 #  Makefile for the ip_user external_acl helper by Rodrigo Campos
 #
-#  $Id: Makefile.in,v 1.64 2007/06/10 12:09:09 hno Exp $
+#  $Id: Makefile.in,v 1.65 2007/08/14 17:07:54 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -52,7 +52,7 @@ am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 	$(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-mkinstalldirs = $(install_sh) -d
+mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/include/autoconf.h
 CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(libexecdir)"

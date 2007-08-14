@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.98 2007/06/10 12:08:55 hno Exp $
+# $Id: Makefile.in,v 1.99 2007/08/14 17:07:38 serassio Exp $
 #
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -44,7 +44,7 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(top_srcdir)/include/autoconf.h.in COPYING ChangeLog INSTALL \
 	TODO cfgaux/compile cfgaux/config.guess cfgaux/config.sub \
 	cfgaux/depcomp cfgaux/install-sh cfgaux/ltmain.sh \
-	cfgaux/missing
+	cfgaux/missing cfgaux/mkinstalldirs
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
@@ -53,7 +53,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
-mkinstalldirs = $(install_sh) -d
+mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/include/autoconf.h
 CONFIG_CLEAN_FILES =
 SOURCES =

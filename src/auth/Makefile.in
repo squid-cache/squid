@@ -43,7 +43,7 @@ am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 	$(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-mkinstalldirs = $(install_sh) -d
+mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/include/autoconf.h
 CONFIG_CLEAN_FILES =
 LIBRARIES = $(noinst_LIBRARIES)
@@ -309,7 +309,7 @@ target_alias = @target_alias@
 
 #  Makefile for authentication modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.77 2007/06/10 12:09:23 hno Exp $
+#  $Id: Makefile.in,v 1.78 2007/08/14 17:08:03 serassio Exp $
 #
 AUTOMAKE_OPTIONS = subdir-objects
 AM_CFLAGS = @SQUID_CFLAGS@
