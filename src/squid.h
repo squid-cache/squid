@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.262 2007/08/13 17:20:51 hno Exp $
+ * $Id: squid.h,v 1.263 2007/08/14 16:12:41 serassio Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -298,6 +298,9 @@ struct rusage
 /* Windows may lack getpagesize() prototype */
 #ifndef getpagesize
 SQUIDCEXTERN size_t getpagesize(void);
+#endif
+#if defined(_MSC_VER)		/* Microsoft C Compiler ONLY */
+#define strtoll WIN32_strtoll
 #endif
 #endif /* _SQUID_MSWIN_ */
 

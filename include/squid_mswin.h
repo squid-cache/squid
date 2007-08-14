@@ -1,5 +1,5 @@
 /*
- * $Id: squid_mswin.h,v 1.3 2006/12/24 14:19:28 serassio Exp $
+ * $Id: squid_mswin.h,v 1.4 2007/08/14 16:12:40 serassio Exp $
  *
  * AUTHOR: Andrey Shorin <tolsty@tushino.com>
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
@@ -727,25 +727,3 @@ struct rusage {
 };
 
 #undef ACL
-
-SQUIDCEXTERN int chroot (const char *);
-SQUIDCEXTERN int ftruncate(int, off_t);
-#ifndef HAVE_GETTIMEOFDAY
-SQUIDCEXTERN int gettimeofday(struct timeval * ,void *);
-#endif
-SQUIDCEXTERN int kill(pid_t, int);
-SQUIDCEXTERN int statfs(const char *, struct statfs *);
-SQUIDCEXTERN int truncate(const char *, off_t);
-SQUIDCEXTERN const char * wsastrerror(int);
-SQUIDCEXTERN struct passwd *getpwnam(char *);
-SQUIDCEXTERN struct group *getgrnam(char *);
-SQUIDCEXTERN uid_t geteuid(void);
-SQUIDCEXTERN uid_t getuid(void);
-SQUIDCEXTERN int setuid(uid_t);
-SQUIDCEXTERN int seteuid(uid_t);
-SQUIDCEXTERN gid_t getgid(void);
-SQUIDCEXTERN gid_t getegid(void);
-SQUIDCEXTERN int setgid(gid_t);
-SQUIDCEXTERN int setegid(gid_t);
-SQUIDCEXTERN const char *WIN32_strerror(int);
-SQUIDCEXTERN void WIN32_maperror(unsigned long);
