@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.184 2007/08/13 17:20:51 hno Exp $
+#  $Id: Makefile.am,v 1.185 2007/08/14 11:55:15 amosjeffries Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -1678,7 +1678,7 @@ tests_testEventLoop_SOURCES = \
 	StoreMeta.cc \
 	StoreMetaMD5.cc \
 	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc
+	StoreMetaSTDLFS.cc \
 	StoreMetaUnpacker.cc \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
