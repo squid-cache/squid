@@ -1,6 +1,5 @@
-
 /*
- * $Id: ftp.cc,v 1.438 2007/08/13 17:20:51 hno Exp $
+ * $Id: ftp.cc,v 1.439 2007/08/14 10:29:15 amosjeffries Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2042,13 +2041,15 @@ ftpTraverseDirectory(FtpStateData * ftpState)
 static void
 ftpSendCwd(FtpStateData * ftpState)
 {
-    char *path = ftpState->filepath;
+    char *path = NULL;
 
     /* check the server control channel is still available */
     if(!ftpState || !ftpState->haveControlChannel("ftpSendCwd"))
         return;
 
     debugs(9, 3, "ftpSendCwd");
+
+    path = ftpState->filepath;
 
     if (!strcmp(path, "..") || !strcmp(path, "/")) {
         ftpState->flags.no_dotdot = 1;
@@ -2096,12 +2097,13 @@ ftpReadCwd(FtpStateData * ftpState)
 static void
 ftpSendMkdir(FtpStateData * ftpState)
 {
-    char *path = ftpState->filepath;
+    char *path = NULL;
 
     /* check the server control channel is still available */
     if(!ftpState || !ftpState->haveControlChannel("ftpSendMkdir"))
         return;
 
+    path = ftpState->filepath;
     debugs(9, 3, "ftpSendMkdir: with path=" << path);
     snprintf(cbuf, 1024, "MKD %s\r\n", path);
     ftpState->writeCommand(cbuf);
