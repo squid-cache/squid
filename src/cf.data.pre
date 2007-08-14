@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.446 2007/08/13 17:20:51 hno Exp $
+# $Id: cf.data.pre,v 1.447 2007/08/14 03:17:21 amosjeffries Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -94,7 +94,11 @@ DOC_START
 	   vport=NN	As above, but uses specified port number rather
 			than the http_port number
 
-	   defaultsite= Main web site name for accelerators
+	   defaultsite=domainname
+			What to use for the Host: header if it is not present
+			in a request. Determines what site (not origin server)
+			accelerators should consider the default.
+			Implies accel.
 
 	   protocol=	Protocol to reconstruct accelerated requests with.
 			Defaults to http
