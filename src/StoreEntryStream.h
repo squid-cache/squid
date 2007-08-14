@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreEntryStream.h,v 1.4 2007/08/07 20:02:51 rousskov Exp $
+ * $Id: StoreEntryStream.h,v 1.5 2007/08/14 10:09:23 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -116,7 +116,11 @@ class StoreEntryStream : public std::ostream
 
 public:
     /* create a stream for writing text etc into theEntry */
-    StoreEntryStream(StoreEntry *entry): theBuffer(entry) { this->init(&theBuffer); }
+    // See http://www.codecomments.com/archive292-2005-2-396222.html
+    StoreEntryStream(StoreEntry *entry): std::ostream(0), theBuffer(entry) {
+        rdbuf(&theBuffer); // set the buffer to now-initialized theBuffer
+        clear(); //clear badbit set by calling init(0)
+    }
 
 private:
     StoreEntryStreamBuf theBuffer;
