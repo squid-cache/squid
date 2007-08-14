@@ -1,5 +1,5 @@
 /*
- * $Id: stub_MemObject.cc,v 1.7 2007/04/30 16:56:19 wessels Exp $
+ * $Id: stub_MemObject.cc,v 1.8 2007/08/14 02:14:44 amosjeffries Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins
@@ -41,7 +41,7 @@
 
 RemovalPolicy * mem_policy = NULL;
 
-off_t
+int64_t
 MemObject::endOffset () const
 {
     return data_hdr.endOffset();
@@ -59,7 +59,7 @@ MemObject::trimUnSwappable()
     fatal ("Not implemented");
 }
 
-off_t
+int64_t
 MemObject::policyLowestOffsetToKeep() const
 {
     fatal ("Not implemented");
@@ -154,7 +154,7 @@ MemObject::replaceHttpReply(HttpReply *newrep)
     fatal ("Not implemented");
 }
 
-off_t
+int64_t
 MemObject::lowestMemReaderOffset() const
 {
     fatal ("Not implemented");
