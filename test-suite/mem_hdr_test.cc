@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_hdr_test.cc,v 1.5 2003/09/22 08:50:51 robertc Exp $
+ * $Id: mem_hdr_test.cc,v 1.6 2007/08/15 04:08:30 amosjeffries Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -59,9 +59,9 @@ testLowAndHigh()
     safe_free (sampleData);
     assert (aHeader.lowestOffset() == 10);
     assert (aHeader.endOffset() == 101);
-    assert (aHeader.hasContigousContentRange(Range<size_t>(10,11)));
-    assert (!aHeader.hasContigousContentRange(Range<size_t>(10,12)));
-    assert (!aHeader.hasContigousContentRange(Range<size_t>(10,101)));
+    assert (aHeader.hasContigousContentRange(Range<int64_t>(10,11)));
+    assert (!aHeader.hasContigousContentRange(Range<int64_t>(10,12)));
+    assert (!aHeader.hasContigousContentRange(Range<int64_t>(10,101)));
 }
 
 void
