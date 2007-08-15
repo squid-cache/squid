@@ -1,5 +1,5 @@
 /*
- * $Id: ftp.cc,v 1.439 2007/08/14 10:29:15 amosjeffries Exp $
+ * $Id: ftp.cc,v 1.440 2007/08/15 06:56:19 amosjeffries Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -3405,11 +3405,17 @@ FtpStateData::doneWithServer() const
 bool
 FtpStateData::haveControlChannel(const char *caller_name) const
 {
-    if(!doneWithServer())
-        return true;
+    if(doneWithServer())
+        return false;
 
-    debugs(9, 2, caller_name << ": attempted on a closed FTP channel.");
-    return false;
+    /* doneWithServer() only checks BOTH channels are closed. */
+    if(ctrl.fd < 0) {
+        debugs(9, 1, "WARNING! FTP Server Control channel is closed, but Data channel still active.");
+        debugs(9, 2, caller_name << ": attempted on a closed FTP channel.");
+        return false;
+    }
+
+    return true;
 }
 
 // Quickly abort the transaction
