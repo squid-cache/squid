@@ -65,7 +65,7 @@ virtual void maintain() {};
 
     virtual void dereference(StoreEntry &){}	/* Unreference this object */
 
-    virtual void updateSize(size_t size, int sign) {}
+    virtual void updateSize(int64_t size, int sign) {}
 
     virtual StoreSearch *search(String const url, HttpRequest *);
 };
