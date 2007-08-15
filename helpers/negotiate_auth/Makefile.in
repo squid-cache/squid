@@ -16,7 +16,7 @@
 
 #  Makefile for negotiate authentication helpers in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.21 2007/08/14 17:07:56 serassio Exp $
+#  $Id: Makefile.in,v 1.22 2007/08/15 00:11:24 hno Exp $
 #
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -47,7 +47,7 @@ am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 	$(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
+mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/include/autoconf.h
 CONFIG_CLEAN_FILES =
 SOURCES =
