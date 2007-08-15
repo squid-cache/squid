@@ -1,5 +1,5 @@
 /*
- * $Id: ufscommon.cc,v 1.13 2007/08/13 17:20:57 hno Exp $
+ * $Id: ufscommon.cc,v 1.14 2007/08/15 15:07:41 rousskov Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store Directory Routines
@@ -285,7 +285,6 @@ RebuildState::rebuildFromDirectory()
 {
     LOCAL_ARRAY(char, hdr_buf, SM_PAGE_SIZE);
     currentEntry(NULL);
-    StoreEntry tmpe;
     cache_key key[MD5_DIGEST_CHARS];
 
     struct stat sb;
@@ -362,7 +361,8 @@ RebuildState::rebuildFromDirectory()
 
         debugs(47, 3, "commonUfsDirRebuildFromDirectory: successful swap meta unpacking");
         memset(key, '\0', MD5_DIGEST_CHARS);
-        memset(&tmpe, '\0', sizeof(StoreEntry));
+
+        StoreEntry tmpe;
         InitStoreEntry visitor(&tmpe, key);
         for_each(*tlv_list, visitor);
         storeSwapTLVFree(tlv_list);
