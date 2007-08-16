@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapout.cc,v 1.118 2007/08/13 17:20:51 hno Exp $
+ * $Id: store_swapout.cc,v 1.119 2007/08/16 13:46:20 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Swapout Functions
  * AUTHOR: Duane Wessels
@@ -224,10 +224,10 @@ StoreEntry::swapOut()
     }
 
     trimMemory();
-#if SIZEOF_INT64_T == 4
+#if SIZEOF_OFF_T <= 4
 
     if (mem_obj->endOffset() > 0x7FFF0000) {
-        debugs(20, 0, "WARNING: preventing int64_t overflow for %s\n", url());
+        debugs(20, 0, "WARNING: preventing off_t overflow for %s\n", url());
         abort();
         return;
     }
