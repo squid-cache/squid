@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.517 2007/08/13 18:35:24 hno Exp $
+ * $Id: cache_cf.cc,v 1.518 2007/08/16 13:46:20 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -356,6 +356,12 @@ configDoConfigure(void)
     if (Config.cacheSwap.swapDirs == NULL)
         fatal("No cache_dir's specified in config file");
 
+#if SIZEOF_OFF_T <= 4
+    if (Config.Store.maxObjectSize > 0x7FFF0000) {
+	debugs(3, 0, "WARNING: This Squid binary can not handle files larger than 2GB. Limiting maximum_object_size to just below 2GB");
+	Config.Store.maxObjectSize = 0x7FFF0000;
+    }
+#endif
     if (0 == Store::Root().maxSize())
         /* people might want a zero-sized cache on purpose */
         (void) 0;
