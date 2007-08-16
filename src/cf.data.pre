@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.448 2007/08/14 03:46:12 amosjeffries Exp $
+# $Id: cf.data.pre,v 1.449 2007/08/16 16:12:29 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -3709,9 +3709,16 @@ DOC_START
 	Example: deny_info ERR_CUSTOM_ACCESS_DENIED bad_guys
 
 	This can be used to return a ERR_ page for requests which
-	do not pass the 'http_access' rules.  A single ACL will cause
-	the http_access check to fail.  If a 'deny_info' line exists
+	do not pass the 'http_access' rules.  Squid remembers the last
+	acl it evaluated in http_access, and if a 'deny_info' line exists
 	for that ACL Squid returns a corresponding error page.
+
+	The acl is typically the last acl on the http_access deny line which
+	denied access. The exceptions to this rule are:
+	- When Squid needs to request authentication credentials. It's then
+	  the first authentication related acl encountered
+	- When none of the http_access lines matches. It's then the last
+	  acl processed on the last http_access line.
 
 	You may use ERR_ pages that come with Squid or create your own pages
 	and put them into the configured errors/ directory.
