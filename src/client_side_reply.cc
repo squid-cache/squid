@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.133 2007/08/14 11:06:18 amosjeffries Exp $
+ * $Id: client_side_reply.cc,v 1.134 2007/08/17 03:45:56 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1320,7 +1320,7 @@ clientReplyContext::buildReplyHeader()
         request->flags.proxy_keepalive = 0;
 
     /* Append VIA */
-    {
+    if (Config.onoff.via) {
         LOCAL_ARRAY(char, bbuf, MAX_URL + 32);
         String strVia;
        	hdr->getList(HDR_VIA, &strVia);
