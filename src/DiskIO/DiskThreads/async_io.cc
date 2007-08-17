@@ -1,6 +1,6 @@
 
 /*
- * $Id: async_io.cc,v 1.4 2007/04/28 22:26:47 hno Exp $
+ * $Id: async_io.cc,v 1.5 2007/08/16 23:32:28 hno Exp $
  *
  * DEBUG: section 32    Asynchronous Disk I/O
  * AUTHOR: Pete Bentley <pete@demon.net>
@@ -134,7 +134,7 @@ aioCancel(int fd)
 
 
 void
-aioWrite(int fd, int offset, char *bufp, int len, AIOCB * callback, void *callback_data, FREE * free_func)
+aioWrite(int fd, off_t offset, char *bufp, size_t len, AIOCB * callback, void *callback_data, FREE * free_func)
 {
     squidaio_ctrl_t *ctrlp;
     int seekmode;
@@ -163,7 +163,7 @@ aioWrite(int fd, int offset, char *bufp, int len, AIOCB * callback, void *callba
 
 
 void
-aioRead(int fd, int offset, int len, AIOCB * callback, void *callback_data)
+aioRead(int fd, off_t offset, size_t len, AIOCB * callback, void *callback_data)
 {
     squidaio_ctrl_t *ctrlp;
     int seekmode;

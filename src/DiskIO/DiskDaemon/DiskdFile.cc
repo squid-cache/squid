@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskdFile.cc,v 1.3 2007/04/28 22:26:45 hno Exp $
+ * $Id: DiskdFile.cc,v 1.4 2007/08/16 23:32:28 hno Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -92,7 +92,7 @@ DiskdFile::open (int flags, mode_t aMode, IORequestor::Pointer callback)
     ioRequestor = callback;
     assert (callback.getRaw());
     mode = flags;
-    off_t shm_offset;
+    ssize_t shm_offset;
     char *buf = (char *)IO->shm.get(&shm_offset);
     xstrncpy(buf, path_, SHMBUF_BLKSZ);
     ioAway();
@@ -123,7 +123,7 @@ DiskdFile::create (int flags, mode_t aMode, IORequestor::Pointer callback)
     ioRequestor = callback;
     assert (callback.getRaw());
     mode = flags;
-    off_t shm_offset;
+    ssize_t shm_offset;
     char *buf = (char *)IO->shm.get(&shm_offset);
     xstrncpy(buf, path_, SHMBUF_BLKSZ);
     ioAway();
@@ -152,15 +152,15 @@ void
 DiskdFile::read(ReadRequest *aRead)
 {
     assert (ioRequestor.getRaw() != NULL);
-    off_t shm_offset;
+    ssize_t shm_offset;
     char *rbuf = (char *)IO->shm.get(&shm_offset);
     assert(rbuf);
     ioAway();
     int x = IO->send(_MQD_READ,
                      id,
                      this,
-                     (int) aRead->len,
-                     (int) aRead->offset,
+                     aRead->len,
+                     aRead->offset,
                      shm_offset,
                      aRead);
 
@@ -311,7 +311,7 @@ void
 DiskdFile::write(WriteRequest *aRequest)
 {
     debugs(79, 3, "DiskdFile::write: this " << (void *)this << ", buf " << (void *)aRequest->buf << ", off " << aRequest->offset << ", len " << aRequest->len);
-    off_t shm_offset;
+    ssize_t shm_offset;
     char *sbuf = (char *)IO->shm.get(&shm_offset);
     xmemcpy(sbuf, aRequest->buf, aRequest->len);
 
@@ -323,8 +323,8 @@ DiskdFile::write(WriteRequest *aRequest)
     int x = IO->send(_MQD_WRITE,
                      id,
                      this,
-                     (int) aRequest->len,
-                     (int) aRequest->offset,
+                     aRequest->len,
+                     aRequest->offset,
                      shm_offset,
                      aRequest);
 

@@ -67,8 +67,8 @@ void squidaio_init(void);
 void squidaio_shutdown(void);
 int squidaio_cancel(squidaio_result_t *);
 int squidaio_open(const char *, int, mode_t, squidaio_result_t *);
-int squidaio_read(int, char *, int, off_t, int, squidaio_result_t *);
-int squidaio_write(int, char *, int, off_t, int, squidaio_result_t *);
+int squidaio_read(int, char *, size_t, off_t, int, squidaio_result_t *);
+int squidaio_write(int, char *, size_t, off_t, int, squidaio_result_t *);
 int squidaio_close(int, squidaio_result_t *);
 
 int squidaio_stat(const char *, struct stat *, squidaio_result_t *);
@@ -87,8 +87,8 @@ void aioDone(void);
 void aioCancel(int);
 void aioOpen(const char *, int, mode_t, AIOCB *, void *);
 void aioClose(int);
-void aioWrite(int, int offset, char *, int size, AIOCB *, void *, FREE *);
-void aioRead(int, int offset, int size, AIOCB *, void *);
+void aioWrite(int, off_t offset, char *, size_t size, AIOCB *, void *, FREE *);
+void aioRead(int, off_t offset, size_t size, AIOCB *, void *);
 
 void aioStat(char *, struct stat *, AIOCB *, void *);
 void aioUnlink(const char *, AIOCB *, void *);
