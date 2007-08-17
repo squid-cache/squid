@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.518 2007/08/16 13:46:20 hno Exp $
+ * $Id: cache_cf.cc,v 1.519 2007/08/17 03:35:31 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -90,7 +90,9 @@ static const char *const list_sep = ", \t\n\r";
 
 static void parse_logformat(logformat ** logformat_definitions);
 static void parse_access_log(customlog ** customlog_definitions);
+#if UNUSED_CODE
 static int check_null_access_log(customlog *customlog_definitions);
+#endif
 
 static void dump_logformat(StoreEntry * entry, const char *name, logformat * definitions);
 static void dump_access_log(StoreEntry * entry, const char *name, customlog * definitions);
@@ -3142,11 +3144,13 @@ done:
     *logs = cl;
 }
 
+#if UNUSED_CODE
 static int
 check_null_access_log(customlog *customlog_definitions)
 {
     return customlog_definitions == NULL;
 }
+#endif
 
 static void
 dump_logformat(StoreEntry * entry, const char *name, logformat * definitions)
