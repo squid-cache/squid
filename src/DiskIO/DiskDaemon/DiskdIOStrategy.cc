@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskdIOStrategy.cc,v 1.10 2007/04/28 22:26:45 hno Exp $
+ * $Id: DiskdIOStrategy.cc,v 1.11 2007/08/16 23:32:28 hno Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -123,7 +123,7 @@ DiskdIOStrategy::unlinkFile(char const *path)
     /* We can attempt a diskd unlink */
     int x;
 
-    off_t shm_offset;
+    ssize_t shm_offset;
 
     char *buf;
 
@@ -211,7 +211,7 @@ DiskdIOStrategy::init()
  * SHM manipulation routines
  */
 void
-SharedMemory::put (off_t offset)
+SharedMemory::put(ssize_t offset)
 {
     int i;
     assert(offset >= 0);
@@ -225,8 +225,7 @@ SharedMemory::put (off_t offset)
 
 void *
 
-SharedMemory::get
-    (off_t * shm_offset)
+SharedMemory::get(ssize_t * shm_offset)
 {
     char *aBuf = NULL;
     int i;
@@ -345,7 +344,7 @@ DiskdIOStrategy::handle(diomsg * M)
 }
 
 int
-DiskdIOStrategy::send(int mtype, int id, DiskdFile *theFile, int size, int offset, off_t shm_offset, RefCountable_ *requestor)
+DiskdIOStrategy::send(int mtype, int id, DiskdFile *theFile, size_t size, off_t offset, ssize_t shm_offset, RefCountable_ *requestor)
 {
     diomsg M;
     M.callback_data = cbdataReference(theFile);
@@ -360,7 +359,7 @@ DiskdIOStrategy::send(int mtype, int id, DiskdFile *theFile, int size, int offse
 }
 
 int
-DiskdIOStrategy::send(int mtype, int id, StoreIOState::Pointer sio, int size, int offset, off_t shm_offset)
+DiskdIOStrategy::send(int mtype, int id, StoreIOState::Pointer sio, size_t size, off_t offset, ssize_t shm_offset)
 {
     diomsg M;
     M.callback_data = cbdataReference(sio.getRaw());
@@ -370,7 +369,7 @@ DiskdIOStrategy::send(int mtype, int id, StoreIOState::Pointer sio, int size, in
 }
 
 int
-DiskdIOStrategy::SEND(diomsg *M, int mtype, int id, int size, int offset, off_t shm_offset)
+DiskdIOStrategy::SEND(diomsg *M, int mtype, int id, size_t size, off_t offset, ssize_t shm_offset)
 {
     static int send_errors = 0;
     static int last_seq_no = 0;

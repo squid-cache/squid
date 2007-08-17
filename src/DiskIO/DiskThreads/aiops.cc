@@ -1,5 +1,5 @@
 /*
- * $Id: aiops.cc,v 1.14 2007/04/28 22:26:47 hno Exp $
+ * $Id: aiops.cc,v 1.15 2007/08/16 23:32:28 hno Exp $
  *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
@@ -76,7 +76,7 @@ typedef struct squidaio_request_t
     mode_t mode;
     int fd;
     char *bufferp;
-    int buflen;
+    size_t buflen;
     off_t offset;
     int whence;
     int ret;
@@ -703,7 +703,7 @@ squidaio_do_open(squidaio_request_t * requestp)
 
 
 int
-squidaio_read(int fd, char *bufp, int bufs, off_t offset, int whence, squidaio_result_t * resultp)
+squidaio_read(int fd, char *bufp, size_t bufs, off_t offset, int whence, squidaio_result_t * resultp)
 {
     squidaio_request_t *requestp;
 
@@ -743,7 +743,7 @@ squidaio_do_read(squidaio_request_t * requestp)
 
 
 int
-squidaio_write(int fd, char *bufp, int bufs, off_t offset, int whence, squidaio_result_t * resultp)
+squidaio_write(int fd, char *bufp, size_t bufs, off_t offset, int whence, squidaio_result_t * resultp)
 {
     squidaio_request_t *requestp;
 

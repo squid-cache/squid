@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskdIOStrategy.h,v 1.3 2007/01/31 07:13:54 wessels Exp $
+ * $Id: DiskdIOStrategy.h,v 1.4 2007/08/16 23:32:28 hno Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -51,12 +51,11 @@ class SharedMemory
 {
 
 public:
-    void put(off_t);
+    void put(ssize_t);
 
-    void *get
-    (off_t *);
+    void *get(ssize_t *);
 
-    void init (int ikey, int magic2);
+    void init(int ikey, int magic2);
 
     int nbufs;
 
@@ -90,7 +89,7 @@ public:
     virtual void sync();
     virtual int callback();
     virtual void statfs(StoreEntry & sentry)const;
-    int send(int mtype, int id, DiskdFile *theFile, int size, int offset, off_t shm_offset, RefCountable_ *);
+    int send(int mtype, int id, DiskdFile *theFile, size_t size, off_t offset, ssize_t shm_offset, RefCountable_ *);
     /* public for accessing return address's */
     SharedMemory shm;
 
@@ -102,8 +101,8 @@ private:
     void optionQ1Dump(StoreEntry * e) const;
     bool optionQ2Parse(char const *option, const char *value, int reconfiguring);
     void optionQ2Dump(StoreEntry * e) const;
-    int send(int mtype, int id, RefCount<StoreIOState> sio, int size, int offset, off_t shm_offset);
-    int SEND(diomsg * M, int mtype, int id, int size, int offset, off_t shm_offset);
+    int send(int mtype, int id, RefCount<StoreIOState> sio, size_t size, off_t offset, ssize_t shm_offset);
+    int SEND(diomsg * M, int mtype, int id, size_t size, off_t offset, ssize_t shm_offset);
     void handle(diomsg * M);
     void unlinkDone(diomsg * M);
     int magic1;

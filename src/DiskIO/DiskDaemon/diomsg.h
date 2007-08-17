@@ -26,8 +26,8 @@ struct diomsg
     int seq_no;
     void * callback_data;
     RefCountable_ * requestor;
-    int size;
-    int offset;
+    size_t size;
+    off_t offset;
     int status;
     bool newstyle;
     int shm_offset;
