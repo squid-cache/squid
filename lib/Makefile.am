@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-#  $Id: Makefile.am,v 1.25 2007/04/24 06:30:37 wessels Exp $
+#  $Id: Makefile.am,v 1.26 2007/08/17 18:56:25 serassio Exp $
 #
 
 DIST_SUBDIRS = libTrie
@@ -27,6 +27,11 @@ if NEED_OWN_STRSEP
 STRSEPSOURCE=strsep.c
 else
 STRSEPSOURCE=
+endif
+if NEED_OWN_STRTOLL
+STRTOLLSOURCE=strtoll.c
+else
+STRTOLLSOURCE=
 endif
 if NEED_OWN_MD5
 MD5SOURCE=md5.c
@@ -57,6 +62,7 @@ EXTRA_libmiscutil_a_SOURCES = \
 	Profiler.c \
 	snprintf.c \
 	strsep.c \
+	strtoll.c \
 	win32lib.c
 libmiscutil_a_SOURCES = \
 	MemPool.cc \
@@ -76,6 +82,7 @@ libmiscutil_a_SOURCES = \
 	$(SNPRINTFSOURCE) \
 	Splay.cc \
 	$(STRSEPSOURCE) \
+	$(STRTOLLSOURCE) \
 	stub_memaccount.c \
 	util.c \
 	uudecode.c \
