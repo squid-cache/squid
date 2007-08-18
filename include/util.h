@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.76 2007/08/14 16:12:40 serassio Exp $
+ * $Id: util.h,v 1.77 2007/08/17 19:01:41 serassio Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -165,9 +165,6 @@ int statMemoryAccounted(void);
 /* Windows Port */
 /* win32lib.c */
 #ifdef _SQUID_MSWIN_
-#if defined(_MSC_VER)		/* Microsoft C Compiler ONLY */
-SQUIDCEXTERN int64_t WIN32_strtoll(const char *nptr, char **endptr, int base);
-#endif
 SQUIDCEXTERN int chroot (const char *);
 SQUIDCEXTERN int ftruncate(int, off_t);
 #ifndef HAVE_GETTIMEOFDAY
