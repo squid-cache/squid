@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.265 2007/08/14 19:17:45 serassio Exp $
+ * $Id: squid.h,v 1.266 2007/08/17 18:56:31 serassio Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -294,14 +294,9 @@ struct rusage
 #define getpagesize( )   sysconf(_SC_PAGE_SIZE)
 #endif
 
-#if defined(_SQUID_MSWIN_)
+#if defined(_SQUID_MSWIN_) && !defined(getpagesize) 
 /* Windows may lack getpagesize() prototype */
-#ifndef getpagesize
 SQUIDCEXTERN size_t getpagesize(void);
-#endif
-#if defined(_MSC_VER)		/* Microsoft C Compiler ONLY */
-#define strtoll WIN32_strtoll
-#endif
 #endif /* _SQUID_MSWIN_ */
 
 #ifndef BUFSIZ
@@ -391,6 +386,10 @@ extern "C"
 
 #if !HAVE_STRSEP
 #include "strsep.h"
+#endif
+
+#if !HAVE_STRTOLL
+#include "strtoll.h"
 #endif
 
 #if !HAVE_INITGROUPS
