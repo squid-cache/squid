@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.759 2007/08/13 18:25:14 hno Exp $
+ * $Id: client_side.cc,v 1.760 2007/08/17 20:28:49 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2503,10 +2503,11 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
         if (conn->getConcurrentRequestCount() == 0 && commIsHalfClosed(fd)) {
             debugs(33, 5, "clientReadRequest: FD " << fd << ": half-closed connection, no completed request parsed, connection closing.");
             comm_close(fd);
+            return;
         }
-
-        clientAfterReadingRequests(fd, conn, do_next_read);
     }
+
+    clientAfterReadingRequests(fd, conn, do_next_read);
 }
 
 // called when new request data has been read from the socket
