@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.428 2007/08/15 00:11:32 hno Exp $
+#  $Id: Makefile.in,v 1.429 2007/08/17 18:58:21 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -72,7 +72,7 @@ am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 	$(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-mkinstalldirs = $(install_sh) -d
+mkinstalldirs = $(SHELL) $(top_srcdir)/cfgaux/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/include/autoconf.h
 CONFIG_CLEAN_FILES =
 LIBRARIES = $(noinst_LIBRARIES)
@@ -1623,6 +1623,8 @@ NEED_OWN_SNPRINTF_FALSE = @NEED_OWN_SNPRINTF_FALSE@
 NEED_OWN_SNPRINTF_TRUE = @NEED_OWN_SNPRINTF_TRUE@
 NEED_OWN_STRSEP_FALSE = @NEED_OWN_STRSEP_FALSE@
 NEED_OWN_STRSEP_TRUE = @NEED_OWN_STRSEP_TRUE@
+NEED_OWN_STRTOLL_FALSE = @NEED_OWN_STRTOLL_FALSE@
+NEED_OWN_STRTOLL_TRUE = @NEED_OWN_STRTOLL_TRUE@
 NEGOTIATE_AUTH_HELPERS = @NEGOTIATE_AUTH_HELPERS@
 NTLM_AUTH_HELPERS = @NTLM_AUTH_HELPERS@
 OBJEXT = @OBJEXT@

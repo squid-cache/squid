@@ -565,6 +565,9 @@
 /* Define to 1 if you have the `strsep' function. */
 #undef HAVE_STRSEP
 
+/* Define to 1 if you have the `strtoll' function. */
+#undef HAVE_STRTOLL
+
 /* Define to 1 if `ip_hl' is member of `struct iphdr'. */
 #undef HAVE_STRUCT_IPHDR_IP_HL
 
