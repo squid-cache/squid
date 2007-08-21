@@ -1,5 +1,5 @@
 /*
- * $Id: logfile.cc,v 1.22 2007/04/28 22:26:37 hno Exp $
+ * $Id: logfile.cc,v 1.23 2007/08/21 16:41:06 hno Exp $
  *
  * DEBUG: section 50    Log file handling
  * AUTHOR: Duane Wessels
@@ -75,8 +75,10 @@ static int syslog_ntoa (const char* s)
                                         };
 
     for (syslog_symbol_t* p = _symbols; p->name != NULL; ++p)
-        if (!strcmp(s, p->name) || !strcmp(s, p->name+4))
+        if (!strcmp(s, p->name) || !strcasecmp(s, p->name+4))
             return p->value;
+
+    debugs(1, 1, "Unknown syslog facility/priority '" << s << "'");
 
     return 0;
 }
