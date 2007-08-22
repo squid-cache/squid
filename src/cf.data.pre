@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.453 2007/08/21 17:01:07 hno Exp $
+# $Id: cf.data.pre,v 1.454 2007/08/21 23:19:36 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -84,8 +84,17 @@ DOC_START
 	   transparent	Support for transparent interception of
 			outgoing requests without browser settings.
 
+	   tproxy	Support Linux TPROXY for spoofing outgoing
+			connections using the client IP address.
+
 	   accel	Accelerator mode. Also needs at least one of
 			vhost / vport / defaultsite.
+
+	   defaultsite=domainname
+			What to use for the Host: header if it is not present
+			in a request. Determines what site (not origin server)
+			accelerators should consider the default.
+			Implies accel.
 
 	   vhost	Accelerator mode using Host header for virtual
 			domain support. Implies accel.
@@ -96,17 +105,8 @@ DOC_START
 	   vport=NN	As above, but uses specified port number rather
 			than the http_port number. Implies accel.
 
-	   defaultsite=domainname
-			What to use for the Host: header if it is not present
-			in a request. Determines what site (not origin server)
-			accelerators should consider the default.
-			Implies accel.
-
 	   protocol=	Protocol to reconstruct accelerated requests with.
 			Defaults to http.
-
-	   tproxy	Support Linux TPROXY for spoofing outgoing
-			connections using the client IP address.
 
 	   disable-pmtu-discovery=
 			Control Path-MTU discovery usage:
@@ -422,8 +422,8 @@ DOC_START
 		     ssloptions=...
 		     front-end-https[=on|auto]
 
-  		     use 'proxy-only' to specify objects fetched
-  		     from this cache should not be saved locally.
+		     use 'proxy-only' to specify objects fetched
+		     from this cache should not be saved locally.
 
 		     use 'weight=n' to affect the selection of a peer
 		     during any weighted peer-selection mechanisms.
@@ -503,7 +503,7 @@ DOC_START
 		     This only works for the Basic HTTP authentication scheme.
 		     Note: To combine this with proxy_auth both proxies must
 		     share the same user database as HTTP only allows for
-		     one proxy login.
+		     a single login (one for proxy, one for origin server).
 		     Also be warned this will expose your users proxy
 		     password to the peer. USE WITH CAUTION
 
@@ -554,11 +554,11 @@ DOC_START
 		     use 'forceddomain=name' to forcibly set the Host header
 		     of requests forwarded to this peer. Useful in accelerator
 		     setups where the server (peer) expects a certain domain
-		     name and using redirectors to feed this domainname
+		     name and using redirectors to feed this domain name
 		     is not feasible.
 
 		     use 'ssl' to indicate connections to this peer should
-		     bs SSL/TLS encrypted.
+		     be SSL/TLS encrypted.
 
 		     use 'sslcert=/path/to/ssl/certificate' to specify a client
 		     SSL certificate to use when connecting to this peer.
@@ -585,11 +585,13 @@ DOC_START
 		     See src/ssl_support.c or the OpenSSL documentation for
 		     a more complete list.
 
-		     use sslcafile=... to specify a file containing additional
-		     CA certificates to use when verifying the peer certificate
+		     use sslcafile=... to specify a file containing
+		     additional CA certificates to use when verifying the
+		     peer certificate.
 
-		     use sslcapath=... to specify a directory containing additional
-		     CA certificates to use when verifying the peer certificate
+		     use sslcapath=... to specify a directory containing
+		     additional CA certificates to use when verifying the
+		     peer certificate.
 
 		     use sslcrlfile=... to specify a certificate revocation
 		     list file to use when verifying the peer certificate.
@@ -612,7 +614,7 @@ DOC_START
 		     peer hostname will be used.
 
 		     use front-end-https to enable the "Front-End-Https: On"
-		     header needed when using Squid as a SSL frontend infront
+		     header needed when using Squid as a SSL frontend in front
 		     of Microsoft OWA. See MS KB document Q307347 for details
 		     on this header. If set to auto the header will
 		     only be added if the request is forwarded as a https://
@@ -2770,6 +2772,18 @@ DOC_START
 	  # clients may appear to come from multiple addresses if they are
 	  # going through proxy farms, so a limit of 1 may cause user problems.
 
+	acl aclname req_mime_type mime-type1 ...
+	  # regex match against the mime type of the request generated
+	  # by the client. Can be used to detect file upload or some
+	  # types HTTP tunneling requests.
+	  # NOTE: This does NOT match the reply. You cannot use this
+	  # to match the returned file type.
+
+	acl aclname req_header header-name [-i] any\.regex\.here
+	  # regex match against any of the known request headers.  May be
+	  # thought of as a superset of "browser", "referer" and "mime-type"
+	  # ACLs.
+
 	acl aclname rep_mime_type mime-type1 ...
 	  # regex match against the mime type of the reply received by
 	  # squid. Can be used to detect file download or some
@@ -2780,18 +2794,6 @@ DOC_START
 
 	acl aclname rep_header header-name [-i] any\.regex\.here
 	  # regex match against any of the known reply headers. May be
-	  # thought of as a superset of "browser", "referer" and "mime-type"
-	  # ACLs.
-
-	acl aclname req_mime_type mime-type1 ...
-	  # regex match against the mime type of the request generated
-	  # by the client. Can be used to detect file upload or some
-	  # types HTTP tunneling requests.
-	  # NOTE: This does NOT match the reply. You cannot use this
-	  # to match the returned file type.
-
-	acl aclname req_header header-name [-i] any\.regex\.here
-	  # regex match against any of the known request headers.  May be
 	  # thought of as a superset of "browser", "referer" and "mime-type"
 	  # ACLs.
 
@@ -4580,7 +4582,7 @@ COMMENT: on|off
 LOC: TheICAPConfig.onoff
 DEFAULT: off
 DOC_START
-    If you want to enable the ICAP module support, set this to on.
+	If you want to enable the ICAP module support, set this to on.
 DOC_END
 
 NAME: icap_connect_timeout
@@ -4653,8 +4655,8 @@ COMMENT: on|off
 LOC: TheICAPConfig.preview_enable
 DEFAULT: off
 DOC_START
-        Set this to 'on' if you want to enable the ICAP preview
-        feature in Squid.
+	Set this to 'on' if you want to enable the ICAP preview
+	feature in Squid.
 DOC_END
 
 NAME: icap_preview_size
@@ -4663,9 +4665,9 @@ IFDEF: ICAP_CLIENT
 LOC: TheICAPConfig.preview_size
 DEFAULT: -1
 DOC_START
-        The default size of preview data to be sent to the ICAP server.
-        -1 means no preview. This value might be overwritten on a per server
-        basis by OPTIONS requests.
+	The default size of preview data to be sent to the ICAP server.
+	-1 means no preview. This value might be overwritten on a per server
+	basis by OPTIONS requests.
 DOC_END
 
 NAME: icap_default_options_ttl
@@ -4674,7 +4676,7 @@ IFDEF: ICAP_CLIENT
 LOC: TheICAPConfig.default_options_ttl
 DEFAULT: 60
 DOC_START
-        The default TTL value for ICAP OPTIONS responses that don't have
+	The default TTL value for ICAP OPTIONS responses that don't have
 	an Options-TTL header.
 DOC_END
 
@@ -4696,7 +4698,7 @@ COMMENT: on|off
 LOC: TheICAPConfig.send_client_ip
 DEFAULT: off
 DOC_START
-        This adds the header "X-Client-IP" to ICAP requests.
+	This adds the header "X-Client-IP" to ICAP requests.
 DOC_END
 
 NAME: icap_send_client_username
@@ -4737,19 +4739,19 @@ IFDEF: ICAP_CLIENT
 LOC: TheICAPConfig
 DEFAULT: none
 DOC_START
-        Defines a single ICAP service
+	Defines a single ICAP service
 
-        icap_service servicename vectoring_point bypass service_url
+	icap_service servicename vectoring_point bypass service_url
 
-        vectoring_point = reqmod_precache|reqmod_postcache|respmod_precache|respmod_postcache
-                This specifies at which point of request processing the ICAP
-                service should be plugged in.
-        bypass = 1|0
-                If set to 1 and the ICAP server cannot be reached, the request will go
-                through without being processed by an ICAP server
-        service_url = icap://servername:port/service
+	vectoring_point = reqmod_precache|reqmod_postcache|respmod_precache|respmod_postcache
+		This specifies at which point of request processing the ICAP
+		service should be plugged in.
+	bypass = 1|0
+		If set to 1 and the ICAP server cannot be reached, the request will go
+		through without being processed by an ICAP server
+	service_url = icap://servername:port/service
 
-        Note: reqmod_precache and respmod_postcache is not yet implemented
+	Note: reqmod_precache and respmod_postcache is not yet implemented
 
 Example:
 icap_service service_1 reqmod_precache 0 icap://icap1.mydomain.net:1344/reqmod
@@ -4762,10 +4764,10 @@ IFDEF: ICAP_CLIENT
 LOC: TheICAPConfig
 DEFAULT: none
 DOC_START
-        Defines an ICAP service chain. If there are multiple services per
-        vectoring point, they are processed in the specified order.
+	Defines an ICAP service chain. If there are multiple services per
+	vectoring point, they are processed in the specified order.
 
-        icap_class classname servicename...
+	icap_class classname servicename...
 
 Example:
 icap_class class_1 service_1 service_2
@@ -4778,19 +4780,19 @@ IFDEF: ICAP_CLIENT
 LOC: TheICAPConfig
 DEFAULT: none
 DOC_START
-        Redirects a request through an ICAP service class, depending
-        on given acls
+	Redirects a request through an ICAP service class, depending
+	on given acls
 
-        icap_access classname allow|deny [!]aclname...
+	icap_access classname allow|deny [!]aclname...
 
-        The icap_access statements are processed in the order they appear in
-        this configuration file. If an access list matches, the processing stops.
-        For an "allow" rule, the specified class is used for the request. A "deny"
-        rule simply stops processing without using the class. You can also use the
-        special classname "None".
+	The icap_access statements are processed in the order they appear in
+	this configuration file. If an access list matches, the processing stops.
+	For an "allow" rule, the specified class is used for the request. A "deny"
+	rule simply stops processing without using the class. You can also use the
+	special classname "None".
 
-        For backward compatibility, it is also possible to use services
-        directly here.
+	For backward compatibility, it is also possible to use services
+	directly here.
 Example:
 icap_access class_1 allow all
 DOC_END
