@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.456 2007/08/21 23:51:36 hno Exp $
+# $Id: cf.data.pre,v 1.457 2007/08/21 23:59:42 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -1129,7 +1129,7 @@ DOC_START
 
 	access_log syslog[:facility.priority] [format [acl1 [acl2 ....]]]
 	where facility could be any of:
-	authpriv, daemon, local9 .. local7 or user.
+	authpriv, daemon, local0 .. local7 or user.
 
 	And priority could be any of:
 	err, warning, notice, info, debug.
