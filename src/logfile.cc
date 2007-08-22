@@ -1,5 +1,5 @@
 /*
- * $Id: logfile.cc,v 1.23 2007/08/21 16:41:06 hno Exp $
+ * $Id: logfile.cc,v 1.24 2007/08/21 23:50:12 hno Exp $
  *
  * DEBUG: section 50    Log file handling
  * AUTHOR: Duane Wessels
@@ -102,7 +102,10 @@ logfileOpen(const char *path, size_t bufsz, int fatal_flag)
 
         if (path[6] != '\0') {
             path += 7;
-            char* delim = strchr(path, '|');
+            char* delim = strchr(path, '.');
+
+	    if (!delim)
+		delim = strchr(path, '|');
 
             if (delim != NULL)
                 *delim = '\0';
