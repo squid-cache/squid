@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.455 2007/08/21 23:50:12 hno Exp $
+# $Id: cf.data.pre,v 1.456 2007/08/21 23:51:36 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -783,38 +783,6 @@ DOC_START
 	the memory cache. This should be set high enough to keep objects
 	accessed frequently in memory to improve performance whilst low
 	enough to keep larger objects from hoarding cache_mem .
-DOC_END
-
-NAME: ipcache_size
-COMMENT: (number of entries)
-TYPE: int
-DEFAULT: 1024
-LOC: Config.ipcache.size
-DOC_NONE
-
-NAME: ipcache_low
-COMMENT: (percent)
-TYPE: int
-DEFAULT: 90
-LOC: Config.ipcache.low
-DOC_NONE
-
-NAME: ipcache_high
-COMMENT: (percent)
-TYPE: int
-DEFAULT: 95
-LOC: Config.ipcache.high
-DOC_START
-	The size, low-, and high-water marks for the IP cache.
-DOC_END
-
-NAME: fqdncache_size
-COMMENT: (number of entries)
-TYPE: int
-DEFAULT: 1024
-LOC: Config.fqdncache.size
-DOC_START
-	Maximum number of FQDN cache entries.
 DOC_END
 
 NAME: memory_replacement_policy
@@ -4962,6 +4930,38 @@ DOC_START
 	don't match, Squid ignores the response and writes a warning
 	message to cache.log.  You can allow responses from unknown
 	nameservers by setting this option to 'off'.
+DOC_END
+
+NAME: ipcache_size
+COMMENT: (number of entries)
+TYPE: int
+DEFAULT: 1024
+LOC: Config.ipcache.size
+DOC_NONE
+
+NAME: ipcache_low
+COMMENT: (percent)
+TYPE: int
+DEFAULT: 90
+LOC: Config.ipcache.low
+DOC_NONE
+
+NAME: ipcache_high
+COMMENT: (percent)
+TYPE: int
+DEFAULT: 95
+LOC: Config.ipcache.high
+DOC_START
+	The size, low-, and high-water marks for the IP cache.
+DOC_END
+
+NAME: fqdncache_size
+COMMENT: (number of entries)
+TYPE: int
+DEFAULT: 1024
+LOC: Config.fqdncache.size
+DOC_START
+	Maximum number of FQDN cache entries.
 DOC_END
 
 COMMENT_START
