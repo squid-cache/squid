@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.454 2007/08/21 23:19:36 hno Exp $
+# $Id: cf.data.pre,v 1.455 2007/08/21 23:50:12 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -1159,7 +1159,7 @@ DOC_START
 
 	To log the request via syslog specify a filepath of "syslog":
 
-	access_log syslog[:facility|priority] [format [acl1 [acl2 ....]]]
+	access_log syslog[:facility.priority] [format [acl1 [acl2 ....]]]
 	where facility could be any of:
 	authpriv, daemon, local9 .. local7 or user.
 
