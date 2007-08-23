@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.92 2007/08/18 00:10:51 hno Exp $
+# $Id: Makefile.in,v 1.93 2007/08/23 00:10:43 hno Exp $
 #
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -272,6 +272,7 @@ errordir = $(datadir)/errors
 DEFAULT_ERROR_DIR = $(errordir)
 INSTALL_LANGUAGES = @ERR_LANGUAGES@
 LANGUAGES = \
+		Armenian \
 		Azerbaijani \
 		Bulgarian \
 		Catalan \
