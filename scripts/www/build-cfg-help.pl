@@ -10,7 +10,7 @@ use File::Basename;
 #
 # Adrian Chadd <adrian@squid-cache.org>
 #
-# $Id: build-cfg-help.pl,v 1.4 2007/08/02 22:44:39 amosjeffries Exp $
+# $Id: build-cfg-help.pl,v 1.5 2007/08/22 22:28:34 amosjeffries Exp $
 
 #
 # The template file is reasonably simple to parse. There's a number of
@@ -185,10 +185,12 @@ print $index <<EOF
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
     <title>Squid $version configuration file</title>
     <meta name="keywords" content="squid squid.conf config configure" />
     <meta name="description" content="Squid $version" />
+    <link rel="stylesheet" type="text/csc" href="http://www.squid-cache.org/default.css" />
+    <link rel="stylesheet" type="text/csc" href="http://www.squid-cache.org/cfgman.css" />
 </head>
 <body>
 EOF
@@ -316,10 +318,12 @@ if ($format eq "splithtml") {
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
     <title>Squid $version configuration file</title>
     <meta name="keywords" content="squid squid.conf config configure" />
     <meta name="description" content="Squid $version" />
+    <link rel="stylesheet" type="text/csc" href="http://www.squid-cache.org/default.css" />
+    <link rel="stylesheet" type="text/csc" href="http://www.squid-cache.org/cfgman.css" />
 </head>
 <body>
     <div id="header">

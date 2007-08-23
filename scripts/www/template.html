@@ -5,38 +5,40 @@
     <title>Squid %version% Configuration File: %title%</title>
     <meta name="keywords" content="squid squid.conf config configure %name%" />
     <meta name="description" content="Squid %version%  %name% " />
+    <link rel="stylesheet" type="text/css" href="http://www.squid-cache.org/default.css" />
+    <link rel="stylesheet" type="text/css" href="http://www.squid-cache.org/cfgman.css" />
 </head>
 
 <body>
 
-  <p>
+  <p class="cfglinks">
   |&nbsp;<a href="%toc_link%">Index</a>&nbsp;
   |&nbsp;<a href="%alpha_link%">Alphabetical Index</a>&nbsp;|
   </p>
 
-  <table summary="%name%">
+  <table class="summary" summary="%name%">
     <tr>
-      <th>Option Name:</th><td><a name="%name%">%name%</a></td>
+      <th>Option Name:</th><td id="name"><a name="%name%">%name%</a></td>
     </tr>
     <tr>
-      <th>Also Known As:</th><td>%aliaslist%</td>
+      <th>Also Known As:</th><td id="alias">%aliaslist%</td>
     </tr>
     <tr>
-      <th>Requires:</th><td>%ifdef%</td>
+      <th>Requires:</th><td id="requires">%ifdef%</td>
     </tr>
     <tr>
-      <th>Default Value:</th><td>%default%</td>
+      <th>Default Value:</th><td id="default">%default%</td>
     </tr>
     <tr>
       <th>Suggested Config:</th>
-      <td>
+      <td id="config">
         <pre>
 %config%
         </pre>
       </td>
     </tr>
     <tr>
-      <td colspan="2">
+      <td id="detail" colspan="2">
         <pre>
 %ldoc%
         </pre>
@@ -45,7 +47,7 @@
     <tr class="spacer"><td>&nbsp;</td></tr>
   </table>
 
-  <p>
+  <p class="cfglinks">
   |&nbsp;<a href="%toc_link%">Index</a>&nbsp;
   |&nbsp;<a href="%alpha_link%">Alphabetical Index</a>&nbsp;|
   </p>
