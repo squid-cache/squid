@@ -10,7 +10,7 @@ use File::Basename;
 #
 # Adrian Chadd <adrian@squid-cache.org>
 #
-# $Id: build-cfg-help.pl,v 1.5 2007/08/22 22:28:34 amosjeffries Exp $
+# $Id: build-cfg-help.pl,v 1.6 2007/08/23 05:03:36 amosjeffries Exp $
 
 #
 # The template file is reasonably simple to parse. There's a number of
@@ -189,8 +189,8 @@ print $index <<EOF
     <title>Squid $version configuration file</title>
     <meta name="keywords" content="squid squid.conf config configure" />
     <meta name="description" content="Squid $version" />
-    <link rel="stylesheet" type="text/csc" href="http://www.squid-cache.org/default.css" />
-    <link rel="stylesheet" type="text/csc" href="http://www.squid-cache.org/cfgman.css" />
+    <link rel="stylesheet" type="text/css" href="http://www.squid-cache.org/default.css" />
+    <link rel="stylesheet" type="text/css" href="http://www.squid-cache.org/cfgman.css" />
 </head>
 <body>
 EOF
@@ -322,8 +322,8 @@ if ($format eq "splithtml") {
     <title>Squid $version configuration file</title>
     <meta name="keywords" content="squid squid.conf config configure" />
     <meta name="description" content="Squid $version" />
-    <link rel="stylesheet" type="text/csc" href="http://www.squid-cache.org/default.css" />
-    <link rel="stylesheet" type="text/csc" href="http://www.squid-cache.org/cfgman.css" />
+    <link rel="stylesheet" type="text/css" href="http://www.squid-cache.org/default.css" />
+    <link rel="stylesheet" type="text/css" href="http://www.squid-cache.org/cfgman.css" />
 </head>
 <body>
     <div id="header">
