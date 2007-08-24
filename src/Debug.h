@@ -1,6 +1,6 @@
 
 /*
- * $Id: Debug.h,v 1.9 2007/04/28 22:26:37 hno Exp $
+ * $Id: Debug.h,v 1.10 2007/08/24 01:02:09 amosjeffries Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -82,5 +82,10 @@ private:
  * debugs(1,1, HERE << "some message");
  */
 #define HERE __FILE__<<"("<<__LINE__<<") "
+
+/* AYJ: some uint8_t do not like streaming control-chars (values 0-31, 127+) */
+inline std::ostream& operator <<(std::ostream &os, const uint8_t d) {
+    return (os << (int)d);
+}
 
 #endif /* SQUID_DEBUG */
