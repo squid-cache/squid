@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.185 2007/08/14 11:55:15 amosjeffries Exp $
+#  $Id: Makefile.am,v 1.186 2007/08/26 02:32:53 amosjeffries Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -1037,6 +1037,7 @@ cf.data: cf.data.pre Makefile
 	sed "\
 	s%@DEFAULT_HTTP_PORT@%$(DEFAULT_HTTP_PORT)%g;\
 	s%@DEFAULT_ICP_PORT@%$(DEFAULT_ICP_PORT)%g;\
+	s%@DEFAULT_CACHE_EFFECTIVE_USER@%${CACHE_EFFECTIVE_USER}%g;\
 	s%@DEFAULT_MIME_TABLE@%$(DEFAULT_MIME_TABLE)%g;\
 	s%@DEFAULT_DNSSERVER@%$(DEFAULT_DNSSERVER)%g;\
 	s%@DEFAULT_UNLINKD@%$(DEFAULT_UNLINKD)%g;\

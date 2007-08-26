@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.465 2007/08/24 02:26:52 amosjeffries Exp $
+dnl  $Id: configure.in,v 1.466 2007/08/26 02:32:52 amosjeffries Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.465 $)dnl
+AC_REVISION($Revision: 1.466 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -101,6 +101,14 @@ AC_SUBST(CACHE_ICP_PORT)
 AC_DEFINE_UNQUOTED(CONFIG_HOST_TYPE, "$host",[Host type from configure])
 
 AC_DEFINE_UNQUOTED(SQUID_CONFIGURE_OPTIONS, "$ac_configure_args", [configure command line used to configure Squid])
+
+CACHE_EFFECTIVE_USER="nobody"
+AC_ARG_WITH(default-user,
+ [  --with-default-user=USER System user account for squid permissions.
+                         default: nobody],
+ [ CACHE_EFFECTIVE_USER="$withval" ]
+)
+AC_SUBST(CACHE_EFFECTIVE_USER)
 
 dnl Gerben Wierda <Gerben_Wierda@RnA.nl>
 case "$host" in
