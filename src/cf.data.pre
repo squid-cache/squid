@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.457 2007/08/21 23:59:42 hno Exp $
+# $Id: cf.data.pre,v 1.458 2007/08/26 02:32:54 amosjeffries Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -3177,16 +3177,16 @@ DOC_END
 
 NAME: cache_effective_user
 TYPE: string
-DEFAULT: nobody
+DEFAULT: @DEFAULT_CACHE_EFFECTIVE_USER@
 LOC: Config.effectiveUser
 DOC_START
 	If you start Squid as root, it will change its effective/real
 	UID/GID to the user specified below.  The default is to change
-	to UID to nobody.  If you define cache_effective_user, but not
-	cache_effective_group, Squid sets the GID to the effective
-	user's default group ID (taken from the password file) and
-	supplementary group list from the from groups membership of
-	cache_effective_user.
+	to UID of @DEFAULT_CACHE_EFFECTIVE_USER@.
+	If you define cache_effective_user, but not cache_effective_group,
+	Squid sets the GID to the effective user's default group ID
+	(taken from the password file) and supplementary group list from
+	the from groups membership of cache_effective_user.
 DOC_END
 
 NAME: cache_effective_group
