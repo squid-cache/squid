@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.87 2007/08/04 03:19:12 amosjeffries Exp $
+ * $Id: helper.cc,v 1.88 2007/08/27 12:50:43 hno Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -1132,7 +1132,7 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
             switch ((r->callback(r->data, srv, srv->rbuf))) {	/*if non-zero reserve helper */
 
             case S_HELPER_UNKNOWN:
-                    fatal("helperStatefulHandleRead: either a non-state aware callback was give to the stateful helper routines, or an uninitialised callback response was recieved.\n");
+                    fatal("helperStatefulHandleRead: either a non-state aware callback was give to the stateful helper routines, or an uninitialised callback response was received.\n");
                 break;
 
             case S_HELPER_RELEASE:	/* helper finished with */

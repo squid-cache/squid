@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.58 2007/08/03 02:16:59 amosjeffries Exp $
+ * $Id: auth_digest.cc,v 1.59 2007/08/27 12:50:45 hno Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -1236,7 +1236,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
 
     if (!nonce) {
         /* we couldn't find a matching nonce! */
-        debugs(29, 4, "authenticateDigestDecode: Unexpected or invalid nonce recieved");
+        debugs(29, 4, "authenticateDigestDecode: Unexpected or invalid nonce received");
         delete digest_request;
         return authDigestLogUsername(username);
     }
@@ -1248,8 +1248,8 @@ AuthDigestConfig::decode(char const *proxy_auth)
      * RFC 2069 we should support a missing qop. Tough. */
 
     if (!digest_request->qop || strcmp(digest_request->qop, QOP_AUTH)) {
-        /* we recieved a qop option we didn't send */
-        debugs(29, 4, "authenticateDigestDecode: Invalid qop option recieved");
+        /* we received a qop option we didn't send */
+        debugs(29, 4, "authenticateDigestDecode: Invalid qop option received");
         delete digest_request;
         return authDigestLogUsername(username);
     }

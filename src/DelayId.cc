@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayId.cc,v 1.21 2007/04/28 22:26:37 hno Exp $
+ * $Id: DelayId.cc,v 1.22 2007/08/27 12:50:42 hno Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -162,7 +162,7 @@ DelayId::bytesWanted(int minimum, int maximum) const
 }
 
 /*
- * this records actual bytes recieved.  always recorded, even if the
+ * this records actual bytes received.  always recorded, even if the
  * class is disabled - it's more efficient to just do it than to do all
  * the checks.
  */

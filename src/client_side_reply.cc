@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.134 2007/08/17 03:45:56 hno Exp $
+ * $Id: client_side_reply.cc,v 1.135 2007/08/27 12:50:43 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -287,7 +287,7 @@ clientReplyContext::sendClientUpstreamResponse()
 {
     StoreIOBuffer tempresult;
     removeStoreReference(&old_sc, &old_entry);
-    /* here the data to send is the data we just recieved */
+    /* here the data to send is the data we just received */
     tempBuffer.offset = 0;
     old_reqsize = 0;
     /* sendMoreData tracks the offset as well.
@@ -1853,7 +1853,7 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
 
     if (next()->readBuffer.offset != 0) {
         if (next()->readBuffer.offset > body_size) {
-            /* Can't use any of the body we recieved. send nothing */
+            /* Can't use any of the body we received. send nothing */
             tempBuffer.length = 0;
             tempBuffer.data = NULL;
         } else {

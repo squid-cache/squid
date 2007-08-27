@@ -22,7 +22,7 @@ typedef enum {
     COMM_ERR_DNS = -9,
     COMM_ERR_CLOSING = -10,
 } comm_err_t;
-typedef void IOFCB(int fd, StoreIOBuffer recievedData, comm_err_t flag, int xerrno, void *data);
+typedef void IOFCB(int fd, StoreIOBuffer receivedData, comm_err_t flag, int xerrno, void *data);
 typedef void IOWCB(int fd, char *buffer, size_t len, comm_err_t flag, int xerrno, void *data);
 
 typedef void CWCB(int fd, char *, size_t size, comm_err_t flag, void *data);

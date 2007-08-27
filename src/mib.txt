@@ -2,7 +2,7 @@
 
 SQUID-MIB DEFINITIONS ::= BEGIN
 --
--- $Id: mib.txt,v 1.30 2006/09/22 02:48:51 hno Exp $
+-- $Id: mib.txt,v 1.31 2007/08/27 12:50:43 hno Exp $
 --
 
 IMPORTS
@@ -314,7 +314,7 @@ squid MODULE-IDENTITY
                 MAX-ACCESS read-only
                 STATUS current
 		DESCRIPTION
-			" Number of HTTP KB's recieved "
+			" Number of HTTP KB's received "
         ::= { cacheProtoAggregateStats 4 }
 
         cacheHttpOutKb OBJECT-TYPE
@@ -354,7 +354,7 @@ squid MODULE-IDENTITY
                 MAX-ACCESS read-only
                 STATUS current
 		DESCRIPTION
-                        " Number of ICP KB's recieved "
+                        " Number of ICP KB's received "
         ::= { cacheProtoAggregateStats 9 }
 
         cacheServerRequests OBJECT-TYPE
@@ -378,7 +378,7 @@ squid MODULE-IDENTITY
                 MAX-ACCESS read-only
                 STATUS current
 		DESCRIPTION
-                        " KB's of traffic recieved from servers "
+                        " KB's of traffic received from servers "
         ::= { cacheProtoAggregateStats 12 }
 
         cacheServerOutKb OBJECT-TYPE

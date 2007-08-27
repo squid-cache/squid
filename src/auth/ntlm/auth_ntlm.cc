@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.74 2007/08/04 03:08:36 amosjeffries Exp $
+ * $Id: auth_ntlm.cc,v 1.75 2007/08/27 12:50:47 hno Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -647,7 +647,7 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointer 
     switch (auth_state) {
 
     case AUTHENTICATE_STATE_NONE:
-        /* we've recieved a ntlm request. pass to a helper */
+        /* we've received a ntlm request. pass to a helper */
         debugs(29, 9, "AuthNTLMUserRequest::authenticate: auth state ntlm none. Received blob: '" << proxy_auth << "'");
         auth_state = AUTHENTICATE_STATE_INITIAL;
         safe_free(client_blob);

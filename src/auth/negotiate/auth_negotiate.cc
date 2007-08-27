@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_negotiate.cc,v 1.24 2007/08/04 03:12:11 amosjeffries Exp $
+ * $Id: auth_negotiate.cc,v 1.25 2007/08/27 12:50:46 hno Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -717,7 +717,7 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * request, ConnStateData::Poi
     switch (auth_state) {
 
     case AUTHENTICATE_STATE_NONE:
-        /* we've recieved a negotiate request. pass to a helper */
+        /* we've received a negotiate request. pass to a helper */
         debugs(29, 9, "AuthNegotiateUserRequest::authenticate: auth state negotiate none. Received blob: '" << proxy_auth << "'");
         auth_state = AUTHENTICATE_STATE_INITIAL;
         safe_free(client_blob);

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.760 2007/08/17 20:28:49 rousskov Exp $
+ * $Id: client_side.cc,v 1.761 2007/08/27 12:50:42 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -150,7 +150,7 @@ static void clientPrepareLogWithRequestDetails(HttpRequest *, AccessLogEntry *);
 #ifndef PURIFY
 static int connIsUsable(ConnStateData::Pointer conn);
 #endif
-static int responseFinishedOrFailed(HttpReply * rep, StoreIOBuffer const &recievedData);
+static int responseFinishedOrFailed(HttpReply * rep, StoreIOBuffer const &receivedData);
 static void ClientSocketContextPushDeferredIfNeeded(ClientSocketContext::Pointer deferredRequest, ConnStateData::Pointer & conn);
 static void clientUpdateSocketStats(log_type logType, size_t size);
 
@@ -721,21 +721,21 @@ ConnStateData::getCurrentContext() const
 }
 
 void
-ClientSocketContext::deferRecipientForLater(clientStreamNode * node, HttpReply * rep, StoreIOBuffer recievedData)
+ClientSocketContext::deferRecipientForLater(clientStreamNode * node, HttpReply * rep, StoreIOBuffer receivedData)
 {
     debugs(33, 2, "clientSocketRecipient: Deferring request " << http->uri);
     assert(flags.deferred == 0);
     flags.deferred = 1;
     deferredparams.node = node;
     deferredparams.rep = rep;
-    deferredparams.queuedBuffer = recievedData;
+    deferredparams.queuedBuffer = receivedData;
     return;
 }
 
 int
-responseFinishedOrFailed(HttpReply * rep, StoreIOBuffer const & recievedData)
+responseFinishedOrFailed(HttpReply * rep, StoreIOBuffer const & receivedData)
 {
-    if (rep == NULL && recievedData.data == NULL && recievedData.length == 0)
+    if (rep == NULL && receivedData.data == NULL && receivedData.length == 0)
         return 1;
 
     return 0;
@@ -1225,7 +1225,7 @@ ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData)
  */
 static void
 clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
-                      HttpReply * rep, StoreIOBuffer recievedData)
+                      HttpReply * rep, StoreIOBuffer receivedData)
 {
     int fd;
     /* Test preconditions */
@@ -1245,23 +1245,23 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
     /* TODO: check offset is what we asked for */
 
     if (context != http->getConn()->getCurrentContext()) {
-        context->deferRecipientForLater(node, rep, recievedData);
+        context->deferRecipientForLater(node, rep, receivedData);
         PROF_stop(clientSocketRecipient);
         return;
     }
 
-    if (responseFinishedOrFailed(rep, recievedData)) {
+    if (responseFinishedOrFailed(rep, receivedData)) {
         context->writeComplete(fd, NULL, 0, COMM_OK);
         PROF_stop(clientSocketRecipient);
         return;
     }
 
     if (!context->startOfOutput())
-        context->sendBody(rep, recievedData);
+        context->sendBody(rep, receivedData);
     else {
         assert(rep);
         http->al.reply = HTTPMSGLOCK(rep);
-        context->sendStartOfMessage(rep, recievedData);
+        context->sendStartOfMessage(rep, receivedData);
     }
 
     PROF_stop(clientSocketRecipient);

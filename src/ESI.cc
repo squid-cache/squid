@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.25 2007/05/29 13:31:36 amosjeffries Exp $
+ * $Id: ESI.cc,v 1.26 2007/08/27 12:50:42 hno Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -743,7 +743,7 @@ esiStreamDetach (clientStreamNode *thisNode, ClientHttpRequest *http)
  *   There is context data or a reply structure
  */
 void
-esiProcessStream (clientStreamNode *thisNode, ClientHttpRequest *http, HttpReply *rep, StoreIOBuffer recievedData)
+esiProcessStream (clientStreamNode *thisNode, ClientHttpRequest *http, HttpReply *rep, StoreIOBuffer receivedData)
 {
     /* test preconditions */
     assert (thisNode != NULL);
@@ -774,14 +774,14 @@ esiProcessStream (clientStreamNode *thisNode, ClientHttpRequest *http, HttpReply
      * has been detected to prevent ESI processing the error body
      */
     if (context->flags.passthrough) {
-        clientStreamCallback (thisNode, http, rep, recievedData);
+        clientStreamCallback (thisNode, http, rep, receivedData);
         return;
     }
 
     debugs(86, 3, "esiProcessStream: Processing thisNode " << thisNode <<
            " context " << context.getRaw() << " offset " <<
-           (int) recievedData.offset << " length " <<
-           (unsigned int)recievedData.length);
+           (int) receivedData.offset << " length " <<
+           (unsigned int)receivedData.length);
 
     /* once we finish the template, we *cannot* return here */
     assert (!context->flags.finishedtemplate);
@@ -789,11 +789,11 @@ esiProcessStream (clientStreamNode *thisNode, ClientHttpRequest *http, HttpReply
 
     /* Can we generate any data ?*/
 
-    if (recievedData.data) {
+    if (receivedData.data) {
         /* Increase our buffer area with incoming data */
-        assert (recievedData.length <= HTTP_REQBUF_SZ);
-        assert (thisNode->readBuffer.offset == recievedData.offset);
-        debugs (86,5, "esiProcessStream found " << recievedData.length << " bytes of body data at offset " << recievedData.offset);
+        assert (receivedData.length <= HTTP_REQBUF_SZ);
+        assert (thisNode->readBuffer.offset == receivedData.offset);
+        debugs (86,5, "esiProcessStream found " << receivedData.length << " bytes of body data at offset " << receivedData.offset);
         /* secure the data for later use */
 
         if (!context->incoming.getRaw()) {
@@ -803,15 +803,15 @@ esiProcessStream (clientStreamNode *thisNode, ClientHttpRequest *http, HttpReply
             context->incoming = context->buffered;
         }
 
-        if (recievedData.data != &context->incoming->buf[context->incoming->len]) {
+        if (receivedData.data != &context->incoming->buf[context->incoming->len]) {
             /* We have to copy the data out because we didn't supply thisNode buffer */
             size_t space = HTTP_REQBUF_SZ - context->incoming->len;
-            size_t len = min (space, recievedData.length);
-            debugs(86, 5, "Copying data from " << recievedData.data << " to " <<
+            size_t len = min (space, receivedData.length);
+            debugs(86, 5, "Copying data from " << receivedData.data << " to " <<
                    &context->incoming->buf[context->incoming->len] <<
                    " because our buffer was not used");
 
-            xmemcpy (&context->incoming->buf[context->incoming->len], recievedData.data, len);
+            xmemcpy (&context->incoming->buf[context->incoming->len], receivedData.data, len);
             context->incoming->len += len;
 
             if (context->incoming->len == HTTP_REQBUF_SZ) {
@@ -820,17 +820,17 @@ esiProcessStream (clientStreamNode *thisNode, ClientHttpRequest *http, HttpReply
                 context->incoming = context->incoming->next;
             }
 
-            if (len != recievedData.length) {
+            if (len != receivedData.length) {
                 /* capture the remnants */
-                xmemcpy (context->incoming->buf, &recievedData.data[len], recievedData.length - len);
-                context->incoming->len = recievedData.length - len;
+                xmemcpy (context->incoming->buf, &receivedData.data[len], receivedData.length - len);
+                context->incoming->len = receivedData.length - len;
             }
 
             /* and note where we are up to */
-            context->readpos += recievedData.length;
+            context->readpos += receivedData.length;
         } else {
             /* update our position counters, and if needed assign a new buffer */
-            context->incoming->len += recievedData.length;
+            context->incoming->len += receivedData.length;
             assert (context->incoming->len <= HTTP_REQBUF_SZ);
 
             if (context->incoming->len > HTTP_REQBUF_SZ * 3 / 4) {
@@ -839,12 +839,12 @@ esiProcessStream (clientStreamNode *thisNode, ClientHttpRequest *http, HttpReply
                 context->incoming = context->incoming->next;
             }
 
-            context->readpos += recievedData.length;
+            context->readpos += receivedData.length;
         }
     }
 
     /* EOF / Read error /  aborted entry */
-    if (rep == NULL && recievedData.data == NULL && recievedData.length == 0 && !context->flags.finishedtemplate) {
+    if (rep == NULL && receivedData.data == NULL && receivedData.length == 0 && !context->flags.finishedtemplate) {
         /* TODO: get stream status to test the entry for aborts */
         /* else flush the esi processor */
         debugs(86, 5, "esiProcess: " << context.getRaw() << " Finished reading upstream data");

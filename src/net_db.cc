@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.196 2007/05/29 13:31:40 amosjeffries Exp $
+ * $Id: net_db.cc,v 1.197 2007/08/27 12:50:43 hno Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -674,7 +674,7 @@ netdbFreeNameEntry(void *data)
 
 
 static void
-netdbExchangeHandleReply(void *data, StoreIOBuffer recievedData)
+netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 {
     netdbExchangeState *ex = (netdbExchangeState *)data;
     int rec_sz = 0;
@@ -695,7 +695,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer recievedData)
     rec_sz += 1 + sizeof(addr.s_addr);
     rec_sz += 1 + sizeof(int);
     rec_sz += 1 + sizeof(int);
-    debugs(38, 3, "netdbExchangeHandleReply: " << recievedData.length << " read bytes");
+    debugs(38, 3, "netdbExchangeHandleReply: " << receivedData.length << " read bytes");
 
     if (!cbdataReferenceValid(ex->p)) {
         debugs(38, 3, "netdbExchangeHandleReply: Peer became invalid");
@@ -705,8 +705,8 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer recievedData)
 
     debugs(38, 3, "netdbExchangeHandleReply: for '" << ex->p->host << ":" << ex->p->http_port << "'");
 
-    if (recievedData.length == 0 &&
-            !recievedData.flags.error) {
+    if (receivedData.length == 0 &&
+            !receivedData.flags.error) {
         debugs(38, 3, "netdbExchangeHandleReply: Done");
         netdbExchangeDone(ex);
         return;
@@ -715,14 +715,14 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer recievedData)
     p = ex->buf;
 
     /* Get the size of the buffer now */
-    size = ex->buf_ofs + recievedData.length;
+    size = ex->buf_ofs + receivedData.length;
     debugs(38, 3, "netdbExchangeHandleReply: " << size << " bytes buf");
 
     /* Check if we're still doing headers */
 
     if (ex->connstate == STATE_HEADER) {
 
-        ex->buf_ofs += recievedData.length;
+        ex->buf_ofs += receivedData.length;
 
         /* skip reply headers */
 
@@ -859,7 +859,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer recievedData)
         tempBuffer.offset = ex->used;
         tempBuffer.length = ex->buf_sz - ex->buf_ofs;
         tempBuffer.data = ex->buf + ex->buf_ofs;
-        debugs(38, 3, "netdbExchangeHandleReply: EOF not recieved");
+        debugs(38, 3, "netdbExchangeHandleReply: EOF not received");
         storeClientCopy(ex->sc, ex->e, tempBuffer,
                         netdbExchangeHandleReply, ex);
     }
