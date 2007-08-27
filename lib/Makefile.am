@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-#  $Id: Makefile.am,v 1.27 2007/08/27 09:43:45 hno Exp $
+#  $Id: Makefile.am,v 1.28 2007/08/27 13:14:20 hno Exp $
 #
 
 DIST_SUBDIRS = libTrie
@@ -51,7 +51,6 @@ EXTRA_LIBRARIES = \
 	libregex.a \
 	libsspwin32.a
 noinst_LIBRARIES = \
-	@LIBDLMALLOC@ \
 	libmiscutil.a \
 	libntlmauth.a \
 	$(LIBSSPWIN32) \
