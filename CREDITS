@@ -1,4 +1,4 @@
-$Id: CREDITS,v 1.9 2003/01/23 00:34:50 robertc Exp $
+$Id: CREDITS,v 1.10 2007/08/27 09:43:44 hno Exp $
 
 ==============================================================================
 
@@ -151,16 +151,6 @@ lib/GNUregex.c:
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.  */
-
-==============================================================================
-
-lib/dlmalloc.c:
-
-A version of malloc/free/realloc written by Doug Lea and released to the 
-public domain.  Send questions/comments/complaints/performance data
-to dl@cs.oswego.edu.
-
-http://g.oswego.edu/dl/html/malloc.html
 
 ==============================================================================
 
