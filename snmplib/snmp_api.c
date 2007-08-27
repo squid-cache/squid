@@ -121,7 +121,7 @@ snmp_build(session, pdu, packet, out_length)
 }
 
 /*
- * Parses the packet recieved on the input session, and places the data into
+ * Parses the packet received on the input session, and places the data into
  * the input pdu.  length is the length of the input packet.  If any errors
  * are encountered, NULL is returned.  If not, the community is.
  */

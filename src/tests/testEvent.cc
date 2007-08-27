@@ -37,7 +37,7 @@ testEvent::testCreate()
 }
 
 
-/* Helper for tests - an event which records the number of calls it recieved. */
+/* Helper for tests - an event which records the number of calls it received. */
 
 struct CalledEvent
 {

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.h,v 1.23 2007/08/13 17:20:51 hno Exp $
+ * $Id: client_side.h,v 1.24 2007/08/27 12:50:42 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -111,7 +111,7 @@ unsigned parsed_ok: 1; /* Was this parsed correctly? */
     clientStreamNode * getClientReplyContext() const;
     void connIsFinished();
     void removeFromConnectionList(RefCount<ConnStateData> conn);
-    void deferRecipientForLater(clientStreamNode * node, HttpReply * rep, StoreIOBuffer recievedData);
+    void deferRecipientForLater(clientStreamNode * node, HttpReply * rep, StoreIOBuffer receivedData);
     bool multipartRangeRequest() const;
     void registerWithConn();
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIInclude.cc,v 1.13 2007/06/25 11:45:20 hno Exp $
+ * $Id: ESIInclude.cc,v 1.14 2007/08/27 12:50:42 hno Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -71,7 +71,7 @@ esiBufferDetach (clientStreamNode *node, ClientHttpRequest *http)
  *   There are no more entries in the stream chain.
  */
 void
-esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *rep, StoreIOBuffer recievedData)
+esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *rep, StoreIOBuffer receivedData)
 {
     /* Test preconditions */
     assert (node != NULL);
@@ -88,11 +88,11 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
     ESIStreamContext::Pointer esiStream = dynamic_cast<ESIStreamContext *>(node->data.getRaw());
     assert (esiStream.getRaw() != NULL);
     /* If segments become more flexible, ignore thisNode */
-    assert (recievedData.length <= sizeof(esiStream->localbuffer->buf));
+    assert (receivedData.length <= sizeof(esiStream->localbuffer->buf));
     assert (!esiStream->finished);
 
-    debugs (86,5, "esiBufferRecipient rep " << rep << " body " << recievedData.data << " len " << recievedData.length);
-    assert (node->readBuffer.offset == recievedData.offset || recievedData.length == 0);
+    debugs (86,5, "esiBufferRecipient rep " << rep << " body " << receivedData.data << " len " << receivedData.length);
+    assert (node->readBuffer.offset == receivedData.offset || receivedData.length == 0);
 
     /* trivial case */
 
@@ -126,27 +126,27 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
         }
     }
 
-    if (recievedData.data && recievedData.length) {
-        http->out.offset += recievedData.length;
+    if (receivedData.data && receivedData.length) {
+        http->out.offset += receivedData.length;
 
-        if (recievedData.data >= esiStream->localbuffer->buf &&
-                recievedData.data < &esiStream->localbuffer->buf[sizeof(esiStream->localbuffer->buf)]) {
+        if (receivedData.data >= esiStream->localbuffer->buf &&
+                receivedData.data < &esiStream->localbuffer->buf[sizeof(esiStream->localbuffer->buf)]) {
             /* original static buffer */
 
-            if (recievedData.data != esiStream->localbuffer->buf) {
+            if (receivedData.data != esiStream->localbuffer->buf) {
                 /* But not the start of it */
-                xmemmove (esiStream->localbuffer->buf, recievedData.data, recievedData.length);
+                xmemmove (esiStream->localbuffer->buf, receivedData.data, receivedData.length);
             }
 
-            esiStream->localbuffer->len = recievedData.length;
+            esiStream->localbuffer->len = receivedData.length;
         } else {
             assert (esiStream->buffer.getRaw() != NULL);
-            esiStream->buffer->len = recievedData.length;
+            esiStream->buffer->len = receivedData.length;
         }
     }
 
     /* EOF / Read error /  aborted entry */
-    if (rep == NULL && recievedData.data == NULL && recievedData.length == 0) {
+    if (rep == NULL && receivedData.data == NULL && receivedData.length == 0) {
         /* TODO: get stream status to test the entry for aborts */
         debugs(86, 5, "Finished reading upstream data in subrequest");
         esiStream->include->subRequestDone (esiStream, true);

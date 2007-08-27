@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.113 2007/08/01 22:36:02 amosjeffries Exp $
+ * $Id: asn.cc,v 1.114 2007/08/27 12:50:42 hno Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -364,7 +364,7 @@ asHandleReply(void *data, StoreIOBuffer result)
                         asState);
     } else {
         StoreIOBuffer tempBuffer;
-        debugs(53, 3, "asHandleReply: store complete, but data recieved " << e->url()  );
+        debugs(53, 3, "asHandleReply: store complete, but data received " << e->url()  );
         tempBuffer.offset = asState->offset;
         tempBuffer.length = AS_REQBUF_SZ - asState->reqofs;
         tempBuffer.data = asState->reqbuf + asState->reqofs;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.616 2007/08/13 17:20:51 hno Exp $
+ * $Id: store.cc,v 1.617 2007/08/27 12:50:43 hno Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -818,7 +818,7 @@ StoreEntry::write (StoreIOBuffer writeBuffer)
 
     if (!writeBuffer.length)
       {
-        /* the headers are recieved already, but we have not recieved
+        /* the headers are received already, but we have not received
          * any body data. There are BROKEN abuses of HTTP which require
          * the headers to be passed along before any body data - see
          * http://developer.apple.com/documentation/QuickTime/QTSS/Concepts/chapter_2_section_14.html

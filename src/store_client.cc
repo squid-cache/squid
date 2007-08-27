@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.158 2007/08/13 17:20:51 hno Exp $
+ * $Id: store_client.cc,v 1.159 2007/08/27 12:50:43 hno Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -768,7 +768,7 @@ CheckQuickAbort2(StoreEntry * entry)
     int64_t expectlen = entry->getReply()->content_length + entry->getReply()->hdr_sz;
 
     if (expectlen < 0)
-        /* expectlen is < 0 if *no* information about the object has been recieved */
+        /* expectlen is < 0 if *no* information about the object has been received */
         return 1;
 
     int64_t curlen =  mem->endOffset ();

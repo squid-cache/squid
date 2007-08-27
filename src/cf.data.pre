@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.459 2007/08/26 02:45:46 amosjeffries Exp $
+# $Id: cf.data.pre,v 1.460 2007/08/27 12:50:42 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -4525,7 +4525,7 @@ DOC_START
 	FreeBSD and requires support in the kernel.
 
 	The 'httpready' filter delays delivering new connections
-	to Squid until a full HTTP request has been recieved.
+	to Squid until a full HTTP request has been received.
 	See the accf_http(9) man page.
 
 EXAMPLE:
