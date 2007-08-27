@@ -1,6 +1,6 @@
 
 /*
- * $Id: cf_gen.cc,v 1.59 2007/04/28 22:26:37 hno Exp $
+ * $Id: cf_gen.cc,v 1.60 2007/08/27 13:37:02 hno Exp $
  *
  * DEBUG: none          Generate squid.conf.default and cf_parser.h
  * AUTHOR: Max Okumoto
@@ -717,6 +717,7 @@ gen_conf(Entry * head, FILE * fp)
     for (entry = head; entry != NULL; entry = entry->next) {
         Line *line;
         int blank = 1;
+	int enabled = 1;
 
         if (!strcmp(entry->name, "comment"))
             (void) 0;
@@ -731,6 +732,7 @@ gen_conf(Entry * head, FILE * fp)
         if (!defined(entry->ifdef)) {
             fprintf(fp, "# Note: This option is only available if Squid is rebuilt with the\n");
             fprintf(fp, "#       %s\n#\n", available_if(entry->ifdef));
+	    enabled = 0;
         }
 
         for (line = entry->doc; line != NULL; line = line->next) {
@@ -777,7 +779,10 @@ gen_conf(Entry * head, FILE * fp)
             fprintf(fp, "#\n");
 
         for (line = entry->nocomment; line != NULL; line = line->next) {
-            fprintf(fp, "%s\n", line->data);
+	    if (!enabled && line->data[0] != '#')
+		fprintf(fp, "#%s\n", line->data);
+	    else
+		fprintf(fp, "%s\n", line->data);
         }
 
         if (entry->doc != NULL) {

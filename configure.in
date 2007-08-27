@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.468 2007/08/27 09:43:44 hno Exp $
+dnl  $Id: configure.in,v 1.469 2007/08/27 13:37:02 hno Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.468 $)dnl
+AC_REVISION($Revision: 1.469 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -783,18 +783,21 @@ AC_ARG_ENABLE(kill-parent-hack,
   fi
 ])
 
-AM_CONDITIONAL(USE_SNMP, false)
+USE_SNMP=true
 AC_ARG_ENABLE(snmp,
-[  --enable-snmp           Enable SNMP monitoring],
-[ if test "$enableval" = "yes" ; then
-    echo "SNMP monitoring enabled"
-    AC_DEFINE(SQUID_SNMP,1,[Define to enable SNMP monitoring of Squid])
-    SNMPLIB='../snmplib/libsnmp.a'
-    AM_CONDITIONAL(USE_SNMP, true)
-    SNMP_MAKEFILE=./snmplib/Makefile
-    makesnmplib=snmplib
+[  --disable-snmp          Disable SNMP monitoring support],
+[ if test "$enableval" = "no" ; then
+    echo "SNMP monitoring disabled"
+    USE_SNMP=
   fi
 ])
+if [ "$USE_SNMP" ]; then
+    AC_DEFINE(SQUID_SNMP,1,[Define to enable SNMP monitoring of Squid])
+    SNMPLIB='../snmplib/libsnmp.a'
+    makesnmplib=snmplib
+else
+fi
+AM_CONDITIONAL(USE_SNMP, [test x$USE_SNMP == xtrue])
 AC_SUBST(SNMPLIB)
 AC_SUBST(makesnmplib)
 
@@ -849,15 +852,18 @@ AC_ARG_ENABLE(arp-acl,
    fi
 ])
 
+USE_HTCP=true
 AM_CONDITIONAL(ENABLE_HTCP, false)
 AC_ARG_ENABLE(htcp,
-[  --enable-htcp           Enable HTCP protocol],
-[ if test "$enableval" = "yes" ; then
-    echo "HTCP enabled"
-    AC_DEFINE(USE_HTCP,1, [Define this to include code for the Hypertext Cache Protocol (HTCP)])
-    AM_CONDITIONAL(ENABLE_HTCP, true)
+[  --disable-htcp          Disable HTCP protocol support],
+[ if test "$enableval" = "no" ; then
+    echo "HTCP support disabled"
   fi
 ])
+if test x$USE_HTCP = xtrue; then
+    AC_DEFINE(USE_HTCP,1, [Define this to include code for the Hypertext Cache Protocol (HTCP)])
+fi
+AM_CONDITIONAL(ENABLE_HTCP, [test x$USE_HTCP = xtrue])
 
 AM_CONDITIONAL(ENABLE_SSL, false)
 
