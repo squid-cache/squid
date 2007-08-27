@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.466 2007/08/26 02:32:52 amosjeffries Exp $
+dnl  $Id: configure.in,v 1.467 2007/08/26 21:04:30 hno Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.466 $)dnl
+AC_REVISION($Revision: 1.467 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -218,88 +218,6 @@ if test -z "$PRESET_LDFLAGS"; then
 	esac
     fi
 fi
-
-dnl Enable optional modules
-AC_ARG_ENABLE(dlmalloc,
-[  --enable-dlmalloc[=LIB]   Compile & use the malloc package by Doug Lea],
-[
- case "$enableval" in
- 'yes')
-    use_dlmalloc="yes"
-    LIBDLMALLOC="libdlmalloc.a"
-    LIB_MALLOC="-L../lib -ldlmalloc"
-    echo "dlmalloc enabled"
-    ;;
- 'no')
-    use_dlmalloc="no"
-    echo "dlmalloc disabled"
-    ;;
- *) use_dlmalloc="yes"
-    LIB_MALLOC="$enableval"
-    echo "dlmalloc enabled with $LIB_MALLOC"
- esac
-])
-if test "${use_dlmalloc-unset}" = unset; then
-    case "$host" in
-	i386-*-solaris2.*)
-		echo "Enabling dlmalloc for $host"
-		use_dlmalloc="yes"
-		LIBDLMALLOC="libdlmalloc.a"
-		LIB_MALLOC="-L../lib -ldlmalloc"
-		;;
-	*-sgi-irix*)
-		echo "Enabling dlmalloc for $host"
-		use_dlmalloc="yes"
-		LIBDLMALLOC="libdlmalloc.a"
-		LIB_MALLOC="-L../lib -ldlmalloc"
-		;;
-    esac
-fi
-if test "x$ac_cv_enabled_dlmalloc" = "xyes"; then
-    # Ok. dlmalloc was enabled before, but state may be changed.
-    # we have to test these again
-    unset ac_cv_func_mallinfo
-    unset ac_cv_func_mallocblksize
-    unset ac_cv_func_free
-    unset ac_cv_func_realloc
-    unset ac_cv_func_memalign
-    unset ac_cv_func_valloc
-    unset ac_cv_func_pvalloc
-    unset ac_cv_func_calloc
-    unset ac_cv_func_cfree
-    unset ac_cv_func_malloc_trim
-    unset ac_cv_func_malloc_usable_size
-    unset ac_cv_func_malloc_stats
-    unset ac_cv_func_mallinfo
-    unset ac_cv_func_mallopt
-    unset ac_cv_lib_gnumalloc
-    unset ac_cv_header_gnumalloc_h
-    unset ac_cv_lib_malloc
-    unset ac_cv_enabled_dlmalloc
-fi
-if test "$use_dlmalloc" = yes; then
-    ac_cv_func_mallinfo="yes"
-    ac_cv_func_mallocblksize="no"
-    ac_cv_func_free="yes"
-    ac_cv_func_realloc="yes"
-    ac_cv_func_memalign="yes"
-    ac_cv_func_valloc="yes"
-    ac_cv_func_pvalloc="yes"
-    ac_cv_func_calloc="yes"
-    ac_cv_func_cfree="yes"
-    ac_cv_func_malloc_trim="yes"
-    ac_cv_func_malloc_usable_size="yes"
-    ac_cv_func_malloc_stats="yes"
-    ac_cv_func_mallopt="yes"
-    ac_cv_lib_gnumalloc="no"
-    ac_cv_header_gnumalloc_h="no"
-    ac_cv_lib_malloc="no"
-    ac_cv_enabled_dlmalloc="yes"
-    AC_DEFINE(USE_DLMALLOC, 1, [Compile & use the malloc package by Doug Lea])
-fi
-
-AC_SUBST(LIBDLMALLOC)
-AC_SUBST(LIB_MALLOC)
 
 AC_ARG_ENABLE(gnuregex,
 [  --enable-gnuregex       Compile GNUregex.  Unless you have reason to use this
