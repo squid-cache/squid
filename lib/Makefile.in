@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-#  $Id: Makefile.in,v 1.139 2007/08/27 00:11:32 hno Exp $
+#  $Id: Makefile.in,v 1.140 2007/08/27 13:05:00 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -54,10 +54,6 @@ CONFIG_HEADER = $(top_builddir)/include/autoconf.h
 CONFIG_CLEAN_FILES =
 LIBRARIES = $(noinst_LIBRARIES)
 ARFLAGS = cru
-libdlmalloc_a_AR = $(AR) $(ARFLAGS)
-libdlmalloc_a_LIBADD =
-am_libdlmalloc_a_OBJECTS = dlmalloc.$(OBJEXT)
-libdlmalloc_a_OBJECTS = $(am_libdlmalloc_a_OBJECTS)
 libmiscutil_a_AR = $(AR) $(ARFLAGS)
 libmiscutil_a_DEPENDENCIES = libTrie/src/Trie.o libTrie/src/TrieNode.o \
 	@LIBOBJS@ $(am__empty)
@@ -121,12 +117,10 @@ LTCXXCOMPILE = $(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) \
 CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libdlmalloc_a_SOURCES) $(libmiscutil_a_SOURCES) \
-	$(EXTRA_libmiscutil_a_SOURCES) $(libntlmauth_a_SOURCES) \
-	$(libregex_a_SOURCES) $(libsspwin32_a_SOURCES) \
-	$(tests_testAll_SOURCES)
-DIST_SOURCES = $(libdlmalloc_a_SOURCES) \
-	$(am__libmiscutil_a_SOURCES_DIST) \
+SOURCES = $(libmiscutil_a_SOURCES) $(EXTRA_libmiscutil_a_SOURCES) \
+	$(libntlmauth_a_SOURCES) $(libregex_a_SOURCES) \
+	$(libsspwin32_a_SOURCES) $(tests_testAll_SOURCES)
+DIST_SOURCES = $(am__libmiscutil_a_SOURCES_DIST) \
 	$(EXTRA_libmiscutil_a_SOURCES) $(libntlmauth_a_SOURCES) \
 	$(libregex_a_SOURCES) $(libsspwin32_a_SOURCES) \
 	$(am__tests_testAll_SOURCES_DIST)
@@ -373,7 +367,6 @@ AM_CXXFLAGS = @SQUID_CXXFLAGS@
 @ENABLE_WIN32SPECIFIC_FALSE@WIN32SRC = 
 @ENABLE_WIN32SPECIFIC_TRUE@WIN32SRC = win32lib.c
 EXTRA_LIBRARIES = \
-	libdlmalloc.a \
 	libregex.a \
 	libsspwin32.a
 
@@ -427,9 +420,6 @@ libmiscutil_a_LIBADD = \
 # $(top_srcdir)/include/version.h should be a dependency
 libregex_a_SOURCES = \
 	GNUregex.c
-
-libdlmalloc_a_SOURCES = \
-	dlmalloc.c
 
 libntlmauth_a_SOURCES = \
 	ntlmauth.c
@@ -485,10 +475,6 @@ $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 
 clean-noinstLIBRARIES:
 	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
-libdlmalloc.a: $(libdlmalloc_a_OBJECTS) $(libdlmalloc_a_DEPENDENCIES) 
-	-rm -f libdlmalloc.a
-	$(libdlmalloc_a_AR) libdlmalloc.a $(libdlmalloc_a_OBJECTS) $(libdlmalloc_a_LIBADD)
-	$(RANLIB) libdlmalloc.a
 libmiscutil.a: $(libmiscutil_a_OBJECTS) $(libmiscutil_a_DEPENDENCIES) 
 	-rm -f libmiscutil.a
 	$(libmiscutil_a_AR) libmiscutil.a $(libmiscutil_a_OBJECTS) $(libmiscutil_a_LIBADD)
@@ -536,7 +522,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Splay.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assert.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/base64.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dlmalloc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getfullhostname.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hash.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/heap.Po@am__quote@
