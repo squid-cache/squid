@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-#  $Id: Makefile.am,v 1.26 2007/08/17 18:56:25 serassio Exp $
+#  $Id: Makefile.am,v 1.27 2007/08/27 09:43:45 hno Exp $
 #
 
 DIST_SUBDIRS = libTrie
@@ -48,7 +48,6 @@ WIN32SRC=
 endif
 
 EXTRA_LIBRARIES = \
-	libdlmalloc.a \
 	libregex.a \
 	libsspwin32.a
 noinst_LIBRARIES = \
@@ -97,8 +96,6 @@ libmiscutil_a_LIBADD = \
 # $(top_srcdir)/include/version.h should be a dependency
 libregex_a_SOURCES = \
 	GNUregex.c
-libdlmalloc_a_SOURCES = \
-	dlmalloc.c
 libntlmauth_a_SOURCES = \
 	ntlmauth.c
 libntlmauth_a_LIBADD = \

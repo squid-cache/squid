@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.467 2007/08/26 21:04:30 hno Exp $
+dnl  $Id: configure.in,v 1.468 2007/08/27 09:43:44 hno Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.467 $)dnl
+AC_REVISION($Revision: 1.468 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -2231,9 +2231,6 @@ if test x"$squid_cv_unixsocket" = x"yes"; then
 fi
 dnl end rip
 
-if test "x$ac_cv_enabled_dlmalloc" = "xyes" ; then
-  echo "skipping libmalloc check (--enable-dlmalloc specified)"
-else
   AC_CHECK_LIB(gnumalloc, main)
   if test "$ac_cv_lib_gnumalloc_main" = "yes"; then
 		echo "Disabling extended malloc functions when using gnumalloc"
@@ -2254,7 +2251,6 @@ else
 				;;
 		esac
   fi
-fi
 
 AC_CHECK_LIB(bsd, main)
 AC_CHECK_LIB(regex, main, [REGEXLIB="-lregex"])
