@@ -902,9 +902,6 @@
 /* Cache Array Routing Protocol */
 #undef USE_CARP
 
-/* Compile & use the malloc package by Doug Lea */
-#undef USE_DLMALLOC
-
 /* Use dnsserver processes instead of the internal DNS protocol support */
 #undef USE_DNSSERVERS
 
