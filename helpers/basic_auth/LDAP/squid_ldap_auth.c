@@ -342,7 +342,7 @@ validUsername(const char *user)
 int
 main(int argc, char **argv)
 {
-    char buf[256];
+    char buf[1024];
     char *user, *passwd;
     char *ldapServer = NULL;
     LDAP *ld = NULL;
@@ -565,7 +565,7 @@ main(int argc, char **argv)
     }
 #endif
 
-    while (fgets(buf, 256, stdin) != NULL) {
+    while (fgets(buf, sizeof(buf), stdin) != NULL) {
 	user = strtok(buf, " \r\n");
 	passwd = strtok(NULL, "\r\n");
 
@@ -638,7 +638,7 @@ ldap_escape_value(char *escaped, int size, const char *src)
 static int
 checkLDAP(LDAP * persistent_ld, const char *userid, const char *password, const char *ldapServer, int port)
 {
-    char dn[256];
+    char dn[1024];
     int ret = 0;
     LDAP *bind_ld = NULL;
 
@@ -651,8 +651,8 @@ checkLDAP(LDAP * persistent_ld, const char *userid, const char *password, const 
 	return 1;
     }
     if (searchfilter) {
-	char filter[256];
-	char escaped_login[256];
+	char filter[16384];
+	char escaped_login[1024];
 	LDAPMessage *res = NULL;
 	LDAPMessage *entry;
 	char *searchattr[] =
