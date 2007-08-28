@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.0.PRE7 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.0.sgml,v 1.23 2007/08/27 23:58:34 hno Exp $</date>
+<date>$Id: release-3.0.sgml,v 1.24 2007/08/28 00:00:00 hno Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.0 of Squid.
@@ -33,7 +33,7 @@ In particular, ESI may still be too buggy for meaningful testing at this stage.
 <p>
 The 3.0 change history can be <url url="http://www.squid-cache.org/Versions/v3/3.0/changesets/" name="viewed here">.
 
-<sect>Changes since Squid-2.6.STABLE14
+<sect>Changes since Squid-2.6
 
 <sect1>Major new features
 <p>
