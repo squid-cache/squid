@@ -55,9 +55,6 @@
    */
 #undef HAVE_ALLOCA_H
 
-/* Define if your compiler supports prototyping */
-#undef HAVE_ANSI_PROTOTYPES
-
 /* Define to 1 if you have the <arpa/inet.h> header file. */
 #undef HAVE_ARPA_INET_H
 
