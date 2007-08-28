@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.470 2007/08/27 13:51:47 hno Exp $
+dnl  $Id: configure.in,v 1.471 2007/08/27 21:53:29 hno Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.470 $)dnl
+AC_REVISION($Revision: 1.471 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -693,9 +693,8 @@ AC_ARG_ENABLE(delay-pools,
 AM_CONDITIONAL(USE_ESI, false)
 AC_ARG_ENABLE(esi,
               AC_HELP_STRING([--enable-esi],[Enable ESI for accelerators. Requires libexpat. Enabling ESI will cause squid to follow the Edge Acceleration Specification (www.esi.org). This causes squid to IGNORE client Cache-Control headers. DO NOT use this in a squid configured as a web proxy, ONLY use it in a squid configured for webserver acceleration.]),
-	      ac_cv_use_esi=$enableval, ac_cv_use_esi=no)
-AC_CACHE_CHECK(whether to enable ESI,ac_cv_use_esi, ac_cv_use_esi=no)
-if test "$ac_cv_use_esi" = "yes" ; then
+	      use_esi=$enableval, use_esi=no)
+if test "$use_esi" = "yes" ; then
   AC_DEFINE(ESI,1,[Compile the ESI processor and Surrogate header support])
   AM_CONDITIONAL(USE_ESI, true)
   XTRA_LIBS="$XTRA_LIBS -lexpat -lxml2"
@@ -706,9 +705,8 @@ fi
 AM_CONDITIONAL(USE_ICAP_CLIENT, false)
 AC_ARG_ENABLE(icap-client,
               AC_HELP_STRING([--enable-icap-client],[Enable the ICAP client.]),
-	      ac_cv_use_icap_client=$enableval, ac_cv_use_icap_client=no)
-AC_CACHE_CHECK(whether to enable the ICAP client,ac_cv_use_icap_client, ac_cv_use_icap_client=no)
-if test "$ac_cv_use_icap_client" = "yes" ; then
+	      use_icap_client=$enableval, use_icap_client=no)
+if test "$use_icap_client" = "yes" ; then
   AC_DEFINE(ICAP_CLIENT,1,[Enable ICAP client features in Squid])
   AM_CONDITIONAL(USE_ICAP_CLIENT, true)
   ICAP_LIBS="ICAP/libicap.a"
@@ -1051,7 +1049,7 @@ esac
 dnl Enable epoll()
 disable_epoll=
 AC_ARG_ENABLE(epoll,
-[  --disable-epoll         Disable epoll() support.],
+[  --disable-epoll         Disable Linux epoll() support.],
 
 [
   case "$enableval" in
@@ -1950,16 +1948,6 @@ AC_CHECK_HEADERS([libxml/parser.h], [], [
 AC_C_CONST
 AC_C_BIGENDIAN
 
-AC_CACHE_CHECK(if ANSI prototypes work,ac_cv_have_ansi_prototypes, [
-  AC_TRY_COMPILE([int foo(char *); int foo (char *bar) {return 1;}],
-    [foo("bar")],
-    ac_cv_have_ansi_prototypes="yes",
-    ac_cv_have_ansi_prototypes="no")
-])
-if test $ac_cv_have_ansi_prototypes = "yes" ; then
-  AC_DEFINE(HAVE_ANSI_PROTOTYPES,1,[Define if your compiler supports prototyping])
-fi
-
 AC_STRUCT_TM
 AC_CHECK_MEMBERS([struct tm.tm_gmtoff],,,[
 #if TM_IN_SYS_TIME
@@ -2595,12 +2583,12 @@ int main(int argc, char **argv)
     exit(0);
 }
     ], [ac_cv_epoll_works=yes], [ac_cv_epoll_works=no]))
-  if test ac_cv_epoll_works = no && test ac_force_epoll = yes; then
-	echo "Error - no epoll found";
+fi
+if test ac_cv_epoll_works != yes && test x$SELECT_TYPE = xepoll; then
+	echo "Error - no epoll support found";
 	echo "Try running 'sh ./scripts/get_epoll-lib.sh'";
 	echo "then run configure again";
 	exit -1
-  fi
 fi
 
 dnl Magic which checks whether we are forcing a type of comm loop we
