@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.461 2007/08/27 13:37:02 hno Exp $
+# $Id: cf.data.pre,v 1.462 2007/08/28 01:57:20 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -782,7 +782,7 @@ DOC_START
 	Objects greater than this size will not be attempted to kept in
 	the memory cache. This should be set high enough to keep objects
 	accessed frequently in memory to improve performance whilst low
-	enough to keep larger objects from hoarding cache_mem .
+	enough to keep larger objects from hoarding cache_mem.
 DOC_END
 
 NAME: memory_replacement_policy
@@ -1420,16 +1420,16 @@ TYPE: onoff
 DEFAULT: on
 LOC: Config.Ftp.telnet
 DOC_START
-The FTP protocol is officially defined to use the telnet protocol
-as transport channel for the control connection. However, many
-implementations are broken and does not respect this aspect of
-the FTP protocol.
+	The FTP protocol is officially defined to use the telnet protocol
+	as transport channel for the control connection. However, many
+	implementations are broken and does not respect this aspect of
+	the FTP protocol.
 
-If you have trouble accessing files with ASCII code 255 in the
-path or similar problems involving this ASCII code you can
-try setting this directive to off. If that helps, report to the
-operator of the FTP server in question that their FTP server
-is broken and does not follow the FTP standard.
+	If you have trouble accessing files with ASCII code 255 in the
+	path or similar problems involving this ASCII code you can
+	try setting this directive to off. If that helps, report to the
+	operator of the FTP server in question that their FTP server
+	is broken and does not follow the FTP standard.
 DOC_END
 
 NAME: diskd_program
