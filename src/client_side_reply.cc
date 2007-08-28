@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.135 2007/08/27 12:50:43 hno Exp $
+ * $Id: client_side_reply.cc,v 1.136 2007/08/27 21:56:58 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -503,6 +503,12 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
      * Got the headers, now grok them
      */
     assert(http->logType == LOG_TCP_HIT);
+
+    if (strcmp(e->mem_obj->url, urlCanonical(r)) != 0) {
+	debugs(33, 1, "clientProcessHit: URL mismatch, '" << e->mem_obj->url << "' != '" << urlCanonical(r) << "'");
+        processMiss();
+        return;
+    }
 
     switch (varyEvaluateMatch(e, r)) {
 
