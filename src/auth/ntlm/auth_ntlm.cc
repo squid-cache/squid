@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.75 2007/08/27 12:50:47 hno Exp $
+ * $Id: auth_ntlm.cc,v 1.76 2007/08/28 22:35:29 hno Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -313,7 +313,6 @@ AuthNTLMConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, ht
             /* we're waiting for a response from the client. Pass it the blob */
             debugs(29, 9, "AuthNTLMConfig::fixHeader: Sending type:" << type << " header: 'NTLM " << ntlm_request->server_blob << "'");
             httpHeaderPutStrf(&rep->header, type, "NTLM %s", ntlm_request->server_blob);
-            request->flags.must_keepalive = 1;
             safe_free(ntlm_request->server_blob);
             break;
 
@@ -390,11 +389,18 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
     if (strncasecmp(reply, "TT ", 3) == 0) {
         /* we have been given a blob to send to the client */
         safe_free(ntlm_request->server_blob);
-        ntlm_request->server_blob = xstrdup(blob);
-        ntlm_request->auth_state = AUTHENTICATE_STATE_IN_PROGRESS;
-        auth_user_request->denyMessage("Authentication in progress");
-        debugs(29, 4, "authenticateNTLMHandleReply: Need to challenge the client with a server blob '" << blob << "'");
-        result = S_HELPER_RESERVE;
+	ntlm_request->request->flags.must_keepalive = 1;
+	if (ntlm_request->request->flags.proxy_keepalive) {
+	    ntlm_request->server_blob = xstrdup(blob);
+	    ntlm_request->auth_state = AUTHENTICATE_STATE_IN_PROGRESS;
+	    auth_user_request->denyMessage("Authentication in progress");
+	    debugs(29, 4, "authenticateNTLMHandleReply: Need to challenge the client with a server blob '" << blob << "'");
+	    result = S_HELPER_RESERVE;
+	} else {
+	    ntlm_request->auth_state = AUTHENTICATE_STATE_FAILED;
+	    auth_user_request->denyMessage("NTLM authentication requires a persistent connection");
+	    result = S_HELPER_RELEASE;
+	}
     } else if (strncasecmp(reply, "AF ", 3) == 0) {
         /* we're finished, release the helper */
         ntlm_user->username(blob);
@@ -454,6 +460,10 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
         fatalf("authenticateNTLMHandleReply: *** Unsupported helper response ***, '%s'\n", reply);
     }
 
+    if (ntlm_request->request) {
+	HTTPMSGUNLOCK(ntlm_request->request);
+	ntlm_request->request = NULL;
+    }
     r->handler(r->data, NULL);
     cbdataReferenceDone(r->data);
     authenticateStateFree(r);
@@ -609,13 +619,6 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointer 
         return;
     }
 
-    if (!request->flags.proxy_keepalive) {
-        debugs(29, 2, "AuthNTLMUserRequest::authenticate: attempt to perform authentication without a persistent connection!");
-        auth_state = AUTHENTICATE_STATE_FAILED;
-	request->flags.must_keepalive = 1;
-        return;
-    }
-
     if (waiting) {
         debugs(29, 1, "AuthNTLMUserRequest::authenticate: waiting for helper reply!");
         return;
@@ -656,6 +659,8 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointer 
         assert(conn->auth_user_request == NULL);
         conn->auth_user_request = this;
 	AUTHUSERREQUESTLOCK(conn->auth_user_request, "conn");
+	this->request = request;
+	HTTPMSGLOCK(this->request);
         return;
 
         break;
@@ -675,6 +680,10 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointer 
 
         client_blob = xstrdup (blob);
 
+	if (this->request)
+	    HTTPMSGUNLOCK(this->request);
+	this->request = request;
+	HTTPMSGLOCK(this->request);
         return;
 
         break;
@@ -715,6 +724,10 @@ AuthNTLMUserRequest::~AuthNTLMUserRequest()
         debugs(29, 9, "AuthNTLMUserRequest::~AuthNTLMUserRequest: releasing server '" << authserver << "'");
         helperStatefulReleaseServer(authserver);
         authserver = NULL;
+    }
+    if (request) {
+	HTTPMSGUNLOCK(request);
+	request = NULL;
     }
 }
 

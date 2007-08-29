@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.cc,v 1.16 2007/05/09 09:07:38 wessels Exp $
+ * $Id: AuthUserRequest.cc,v 1.17 2007/08/28 22:35:29 hno Exp $
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 6803fde1-d5a2-4c29-9034-1c0c9f650eb4
@@ -586,7 +586,7 @@ AuthUserRequest::addReplyAuthHeader(HttpReply * rep, AuthUserRequest * auth_user
         /* this is a authenticate-needed response */
     {
 
-        if ((auth_user_request != NULL) && !authenticateUserAuthenticated(auth_user_request))
+        if ((auth_user_request != NULL) && authenticateDirection(auth_user_request) == 1)
             /* scheme specific */
             auth_user_request->user()->config->fixHeader(auth_user_request, rep, type, request);
         else
