@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_negotiate.cc,v 1.25 2007/08/27 12:50:46 hno Exp $
+ * $Id: auth_negotiate.cc,v 1.26 2007/08/28 22:35:29 hno Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -345,7 +345,6 @@ AuthNegotiateConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *re
             /* we're waiting for a response from the client. Pass it the blob */
             debugs(29, 9, "AuthNegotiateConfig::fixHeader: Sending type:" << type << " header: 'Negotiate " << negotiate_request->server_blob << "'");
             httpHeaderPutStrf(&rep->header, type, "Negotiate %s", negotiate_request->server_blob);
-            request->flags.must_keepalive = 1;
             safe_free(negotiate_request->server_blob);
             break;
 
@@ -425,21 +424,21 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
 
     if (strncasecmp(reply, "TT ", 3) == 0) {
         /* we have been given a blob to send to the client */
-
         if (arg)
             *arg++ = '\0';
-
         safe_free(negotiate_request->server_blob);
-
-        negotiate_request->server_blob = xstrdup(blob);
-
-        negotiate_request->auth_state = AUTHENTICATE_STATE_IN_PROGRESS;
-
-        auth_user_request->denyMessage("Authentication in progress");
-
-        debugs(29, 4, "authenticateNegotiateHandleReply: Need to challenge the client with a server blob '" << blob << "'");
-
-        result = S_HELPER_RESERVE;
+	negotiate_request->request->flags.must_keepalive = 1;
+	if (negotiate_request->request->flags.proxy_keepalive) {
+	    negotiate_request->server_blob = xstrdup(blob);
+	    negotiate_request->auth_state = AUTHENTICATE_STATE_IN_PROGRESS;
+	    auth_user_request->denyMessage("Authentication in progress");
+	    debugs(29, 4, "authenticateNegotiateHandleReply: Need to challenge the client with a server blob '" << blob << "'");
+	    result = S_HELPER_RESERVE;
+	} else {
+	    negotiate_request->auth_state = AUTHENTICATE_STATE_FAILED;
+	    auth_user_request->denyMessage("NTLM authentication requires a persistent connection");
+	    result = S_HELPER_RELEASE;
+	}
     } else if (strncasecmp(reply, "AF ", 3) == 0 && arg != NULL) {
         /* we're finished, release the helper */
 
@@ -525,6 +524,10 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
         fatalf("authenticateNegotiateHandleReply: *** Unsupported helper response ***, '%s'\n", reply);
     }
 
+    if (negotiate_request->request) {
+	HTTPMSGUNLOCK(negotiate_request->request);
+	negotiate_request->request = NULL;
+    }
     r->handler(r->data, NULL);
     cbdataReferenceDone(r->data);
     authenticateStateFree(r);
@@ -680,13 +683,6 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * request, ConnStateData::Poi
         return;
     }
 
-    if (!request->flags.proxy_keepalive) {
-        debugs(29, 2, "AuthNegotiateUserRequest::authenticate: attempt to perform authentication without a persistent connection!");
-        auth_state = AUTHENTICATE_STATE_FAILED;
-	request->flags.must_keepalive = 1;
-        return;
-    }
-
     if (waiting) {
         debugs(29, 1, "AuthNegotiateUserRequest::authenticate: waiting for helper reply!");
         return;
@@ -726,6 +722,8 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * request, ConnStateData::Poi
         assert(conn->auth_user_request == NULL);
         conn->auth_user_request = this;
 	AUTHUSERREQUESTLOCK(conn->auth_user_request, "conn");
+	this->request = request;
+	HTTPMSGLOCK(this->request);
         return;
 
         break;
@@ -745,6 +743,10 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * request, ConnStateData::Poi
 
         client_blob = xstrdup (blob);
 
+	if (this->request)
+	    HTTPMSGUNLOCK(this->request);
+	this->request = request;
+	HTTPMSGLOCK(this->request);
         return;
 
         break;
@@ -785,6 +787,10 @@ AuthNegotiateUserRequest::~AuthNegotiateUserRequest()
         debugs(29, 9, "AuthNegotiateUserRequest::~AuthNegotiateUserRequest: releasing server '" << authserver << "'");
         helperStatefulReleaseServer(authserver);
         authserver = NULL;
+    }
+    if (request) {
+	HTTPMSGUNLOCK(request);
+	request = NULL;
     }
 }
 

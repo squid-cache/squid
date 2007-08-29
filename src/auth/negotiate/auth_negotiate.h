@@ -89,6 +89,9 @@ public:
     /* currently waiting for helper response */
     unsigned char waiting;
 
+    /* need access to the request flags to mess around on pconn failure */
+    HttpRequest *request;
+
 private:
     /* the user */
     NegotiateUser * _theUser;
