@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.762 2007/08/30 13:50:24 hno Exp $
+ * $Id: client_side.cc,v 1.763 2007/08/30 14:17:40 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -508,8 +508,11 @@ ClientHttpRequest::logRequest()
         if (getConn() != NULL && getConn()->rfc931[0])
             al.cache.rfc931 = getConn()->rfc931;
 
-#if USE_SSL
+#if USE_SSL && 0
 
+	/* This is broken. Fails if the connection has been closed. Needs
+	 * to snarf the ssl details some place earlier..
+	 */
         if (getConn() != NULL)
             al.cache.ssluser = sslGetUserEmail(fd_table[getConn()->fd].ssl);
 
