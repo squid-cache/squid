@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.761 2007/08/27 12:50:42 hno Exp $
+ * $Id: client_side.cc,v 1.762 2007/08/30 13:50:24 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -125,7 +125,7 @@ static IOCB clientWriteBodyComplete;
 static IOCB clientReadRequest;
 static bool clientParseRequest(ConnStateData::Pointer conn, bool &do_next_read);
 static void clientAfterReadingRequests(int fd, ConnStateData::Pointer &conn, int do_next_read);
-static PF connStateFree;
+static PF connStateClosed;
 static PF requestTimeout;
 static PF clientLifetimeTimeout;
 static ClientSocketContext *parseHttpRequestAbort(ConnStateData::Pointer & conn,
@@ -587,7 +587,7 @@ ConnStateData::freeAllContexts()
 
 /* This is a handler normally called by comm_close() */
 static void
-connStateFree(int fd, void *data)
+connStateClosed(int fd, void *data)
 {
     ConnStateData *connState = (ConnStateData *)data;
     assert (fd == connState->fd);
@@ -599,6 +599,8 @@ ConnStateData::close()
 {
     debugs(33, 3, "ConnStateData::close: FD " << fd);
     openReference = NULL;
+    fd = -1;
+    flags.readMoreRequests = false;
     clientdbEstablished(peer.sin_addr, -1);	/* decrement */
     assert(areAllContextsForThisConnection());
     freeAllContexts();
@@ -2265,7 +2267,6 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
                                         &conn->peer.sin_addr, http->request, NULL, NULL);
             assert(context->http->out.offset == 0);
             context->pullData();
-            conn->flags.readMoreRequests = false;
             goto finish;
         }
 
@@ -2293,6 +2294,7 @@ finish:
      */
     if (http->request->flags.resetTCP() && conn->fd > -1) {
 	debugs(33, 3, HERE << "Sending TCP RST on FD " << conn->fd);
+	conn->flags.readMoreRequests = false;
 	comm_reset_close(conn->fd);
 	return;
     }
@@ -2484,9 +2486,6 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
         }
     }
 
-    if (!conn->isOpen())
-        return;
-
     /* Process next request */
     if (conn->getConcurrentRequestCount() == 0)
         fd_note(conn->fd, "Reading next request");
@@ -2506,6 +2505,9 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
             return;
         }
     }
+
+    if (!conn->isOpen())
+        return;
 
     clientAfterReadingRequests(fd, conn, do_next_read);
 }
@@ -2746,7 +2748,7 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
     debugs(33, 4, "httpAccept: FD " << newfd << ": accepted");
     fd_note(newfd, "client http connect");
     connState = connStateCreate(&details->peer, &details->me, newfd, s);
-    comm_add_close_handler(newfd, connStateFree, connState);
+    comm_add_close_handler(newfd, connStateClosed, connState);
 
     if (Config.onoff.log_fqdn)
         fqdncache_gethostbyaddr(details->peer.sin_addr, FQDN_LOOKUP_IF_MISS);
@@ -2943,7 +2945,7 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
     debugs(33, 5, "httpsAccept: FD " << newfd << " accepted, starting SSL negotiation.");
     fd_note(newfd, "client https connect");
     connState = connStateCreate(&details->peer, &details->me, newfd, (http_port_list *)s);
-    comm_add_close_handler(newfd, connStateFree, connState);
+    comm_add_close_handler(newfd, connStateClosed, connState);
 
     if (Config.onoff.log_fqdn)
         fqdncache_gethostbyaddr(details->peer.sin_addr, FQDN_LOOKUP_IF_MISS);
