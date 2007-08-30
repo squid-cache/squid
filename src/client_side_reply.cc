@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.136 2007/08/27 21:56:58 hno Exp $
+ * $Id: client_side_reply.cc,v 1.137 2007/08/30 13:03:43 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1753,6 +1753,12 @@ clientReplyContext::processReplyAccess ()
     assert(reply);
     buildMaxBodySize(reply);
 
+    /* Dont't block our own responses or HTTP status messages */
+    if (http->logType == LOG_TCP_DENIED || alwaysAllowResponse(reply->sline.status)) {
+	processReplyAccessResult(1);
+	return;
+    }
+
     if (http->isReplyBodyTooLarge(reply->content_length)) {
         ErrorState *err =
             clientBuildError(ERR_TOO_BIG, HTTP_FORBIDDEN, NULL,
@@ -1765,6 +1771,12 @@ clientReplyContext::processReplyAccess ()
     }
 
     headers_sz = reply->hdr_sz;
+
+    if (!Config.accessList.reply) {
+	processReplyAccessResult(1);
+	return;
+    }
+
     ACLChecklist *replyChecklist;
     replyChecklist = clientAclChecklistCreate(Config.accessList.reply, http);
     replyChecklist->reply = HTTPMSGLOCK(reply);
@@ -1787,11 +1799,7 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
            << ", because it matched '" 
            << (AclMatchedName ? AclMatchedName : "NO ACL's") << "'" );
 
-    if (!accessAllowed && reply->sline.status != HTTP_FORBIDDEN
-            && !alwaysAllowResponse(reply->sline.status)) {
-        /* the if above is slightly broken, but there is no way
-         * to tell if this is a squid generated error page, or one from
-         *  upstream at this point. */
+    if (!accessAllowed) {
         ErrorState *err;
         err_type page_id;
         page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, 1);

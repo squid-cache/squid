@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.462 2007/08/28 01:57:20 hno Exp $
+# $Id: cf.data.pre,v 1.463 2007/08/30 13:03:42 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -2866,7 +2866,6 @@ NAME: http_reply_access
 TYPE: acl_access
 LOC: Config.accessList.reply
 DEFAULT: none
-DEFAULT_IF_NONE: allow all
 DOC_START
 	Allow replies to client requests. This is complementary to http_access.
 
