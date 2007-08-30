@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.137 2007/08/30 13:03:43 hno Exp $
+ * $Id: client_side_reply.cc,v 1.138 2007/08/30 13:15:13 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1754,7 +1754,7 @@ clientReplyContext::processReplyAccess ()
     buildMaxBodySize(reply);
 
     /* Dont't block our own responses or HTTP status messages */
-    if (http->logType == LOG_TCP_DENIED || alwaysAllowResponse(reply->sline.status)) {
+    if (http->logType == LOG_TCP_DENIED || http->logType == LOG_TCP_DENIED_REPLY || alwaysAllowResponse(reply->sline.status)) {
 	processReplyAccessResult(1);
 	return;
     }
@@ -1804,6 +1804,8 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
         err_type page_id;
         page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, 1);
 
+        http->logType = LOG_TCP_DENIED_REPLY;
+
         if (page_id == ERR_NONE)
             page_id = ERR_ACCESS_DENIED;
 
@@ -1818,7 +1820,6 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
 
         startError(err);
 
-        http->logType = LOG_TCP_DENIED_REPLY;
 
         return;
     }
