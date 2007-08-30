@@ -3,3 +3,5 @@ config.*
 autom4te*
 libtool
 configure.lineno
+*.patch
+bootstrap
