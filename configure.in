@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.471 2007/08/27 21:53:29 hno Exp $
+dnl  $Id: configure.in,v 1.472 2007/08/29 22:58:26 hno Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.471 $)dnl
+AC_REVISION($Revision: 1.472 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -2583,12 +2583,6 @@ int main(int argc, char **argv)
     exit(0);
 }
     ], [ac_cv_epoll_works=yes], [ac_cv_epoll_works=no]))
-fi
-if test ac_cv_epoll_works != yes && test x$SELECT_TYPE = xepoll; then
-	echo "Error - no epoll support found";
-	echo "Try running 'sh ./scripts/get_epoll-lib.sh'";
-	echo "then run configure again";
-	exit -1
 fi
 
 dnl Magic which checks whether we are forcing a type of comm loop we
