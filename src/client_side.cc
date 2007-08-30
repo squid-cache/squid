@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.763 2007/08/30 14:17:40 hno Exp $
+ * $Id: client_side.cc,v 1.764 2007/08/30 15:57:16 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1066,14 +1066,8 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
         range_err = "no [parse-able] reply";
     else if ((rep->sline.status != HTTP_OK) && (rep->sline.status != HTTP_PARTIAL_CONTENT))
         range_err = "wrong status code";
-
-#if 0
-
     else if (hdr->has(HDR_CONTENT_RANGE))
         range_err = "origin server does ranges";
-
-#endif
-
     else if (rep->content_length < 0)
         range_err = "unknown length";
     else if (rep->content_length != http->memObject()->getReply()->content_length)
@@ -1088,13 +1082,9 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
         range_err = "canonization failed";
     else if (http->request->range->isComplex())
         range_err = "too complex range header";
-
-#if 0
-
-    else if (!logTypeIsATcpHit(http->logType); && http->request->range->offsetLimitExceeded())
+    else if (!logTypeIsATcpHit(http->logType) && http->request->range->offsetLimitExceeded())
         range_err = "range outside range_offset_limit";
 
-#endif
     /* get rid of our range specs on error */
     if (range_err) {
         /* XXX We do this here because we need canonisation etc. However, this current
