@@ -12,6 +12,16 @@ startdir=$PWD/
 dst=${2:-$PWD}/
 RELEASE_TIME=`date +%s`
 
+# DPW 2007-08-30
+#
+# check that $rev has the right syntax
+#
+checkrev=`expr $rev : '\([0-9]\.[0-9]\.[A-Z0-9]*\)'`
+if test "$rev" != "$checkrev" ; then
+	echo "revision '$rev' has incorrect syntax.  Should be like '3.0.STABLE1'"
+	exit 1;
+fi
+
 tmpdir=${TMPDIR:-${PWD}}/${name}-mkrelease
 
 CVSROOT=${CVSROOT:-/server/cvs-server/squid}
