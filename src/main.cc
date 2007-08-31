@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.448 2007/06/17 22:08:48 hno Exp $
+ * $Id: main.cc,v 1.449 2007/08/30 21:51:35 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -775,7 +775,7 @@ mainInitialize(void)
 {
     /* chroot if configured to run inside chroot */
 
-    if (Config.chroot_dir && chroot(Config.chroot_dir)) {
+    if (Config.chroot_dir && (chroot(Config.chroot_dir) != 0 || chdir("/") != 0)) {
         fatal("failed to chroot");
     }
 
