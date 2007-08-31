@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.617 2007/08/27 12:50:43 hno Exp $
+ * $Id: store.cc,v 1.618 2007/08/30 19:26:10 hno Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -1841,11 +1841,17 @@ StoreEntry::swapoutPossible()
 void
 StoreEntry::trimMemory()
 {
+    /*
+     * DPW 2007-05-09
+     * Bug #1943.  We must not let go any data for IN_MEMORY
+     * objects.  We have to wait until the mem_status changes.
+     */
+    if (mem_status == IN_MEMORY)
+	return;
+
     if (mem_obj->policyLowestOffsetToKeep() == 0)
         /* Nothing to do */
         return;
-
-    assert (mem_obj->policyLowestOffsetToKeep() > 0);
 
     if (!swapOutAble()) {
         /*
