@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_ntlm.cc,v 1.76 2007/08/28 22:35:29 hno Exp $
+ * $Id: auth_ntlm.cc,v 1.77 2007/09/01 03:51:23 amosjeffries Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -713,6 +713,7 @@ AuthNTLMUserRequest::AuthNTLMUserRequest() :
     client_blob=0;
     server_blob=0;
     authserver=NULL;
+    request = NULL;
 }
 
 AuthNTLMUserRequest::~AuthNTLMUserRequest()
