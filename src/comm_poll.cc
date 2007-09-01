@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_poll.cc,v 1.23 2007/06/10 12:13:31 hno Exp $
+ * $Id: comm_poll.cc,v 1.24 2007/09/01 13:09:59 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -216,7 +216,7 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
     }
 
     getCurrentTime();
-    statCounter.syscalls.polls++;
+    statCounter.syscalls.selects++;
 
     if (poll(pfds, npfds, 0) < 1) {
         PROF_stop(comm_check_incoming);
@@ -406,7 +406,7 @@ comm_select(int msec)
 
         for (;;) {
             PROF_start(comm_poll_normal);
-            statCounter.syscalls.polls++;
+            statCounter.syscalls.selects++;
             num = poll(pfds, nfds, msec);
             statCounter.select_loops++;
             PROF_stop(comm_poll_normal);
