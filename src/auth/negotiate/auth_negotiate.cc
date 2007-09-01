@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_negotiate.cc,v 1.26 2007/08/28 22:35:29 hno Exp $
+ * $Id: auth_negotiate.cc,v 1.27 2007/09/01 03:51:22 amosjeffries Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -776,6 +776,7 @@ AuthNegotiateUserRequest::AuthNegotiateUserRequest() :
     client_blob=0;
     server_blob=0;
     authserver=NULL;
+    request=NULL;
 }
 
 AuthNegotiateUserRequest::~AuthNegotiateUserRequest()
