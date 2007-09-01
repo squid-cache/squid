@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.519 2007/08/17 03:35:31 hno Exp $
+ * $Id: cache_cf.cc,v 1.520 2007/09/01 05:56:37 amosjeffries Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -847,9 +847,9 @@ free_acl(ACL ** ae)
 }
 
 static void
-dump_acl_list(StoreEntry * entry, acl_list * head)
+dump_acl_list(StoreEntry * entry, ACLList * head)
 {
-    acl_list *l;
+    ACLList *l;
 
     for (l = head; l; l = l->next) {
         storeAppendPrintf(entry, " %s%s",

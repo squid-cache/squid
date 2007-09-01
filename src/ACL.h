@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACL.h,v 1.18 2007/01/28 15:37:46 serassio Exp $
+ * $Id: ACL.h,v 1.19 2007/09/01 05:56:37 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -48,9 +48,9 @@ class ConfigParser;
 /* acl.c */
 SQUIDCEXTERN void aclDestroyAccessList(acl_access **list);
 SQUIDCEXTERN void aclDestroyAcls(ACL **);
-SQUIDCEXTERN void aclDestroyAclList(acl_list **);
+SQUIDCEXTERN void aclDestroyAclList(ACLList **);
 SQUIDCEXTERN void aclParseAccessLine(ConfigParser &parser, acl_access **);
-SQUIDCEXTERN void aclParseAclList(ConfigParser &parser, acl_list **);
+SQUIDCEXTERN void aclParseAclList(ConfigParser &parser, ACLList **);
 SQUIDCEXTERN int aclIsProxyAuth(const char *name);
 SQUIDCEXTERN err_type aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name, int redirect_allowed);
 
@@ -131,7 +131,7 @@ public:
     void operator delete(void *);
     bool containsPURGE() const;
     allow_t allow;
-    acl_list *aclList;
+    ACLList *aclList;
     char *cfgline;
     acl_access *next;
 
@@ -154,8 +154,6 @@ public:
 };
 
 MEMPROXY_CLASS_INLINE(ACLList)
-
-typedef ACLList acl_list;
 
 class acl_proxy_auth_match_cache
 {

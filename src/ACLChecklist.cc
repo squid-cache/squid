@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.41 2007/07/19 00:37:05 hno Exp $
+ * $Id: ACLChecklist.cc,v 1.42 2007/09/01 05:56:37 amosjeffries Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -275,16 +275,16 @@ ACLChecklist::checkCallback(allow_t answer)
 }
 
 void
-ACLChecklist::matchAclListSlow(const acl_list * list)
+ACLChecklist::matchAclListSlow(const ACLList * list)
 {
     matchAclList(list, false);
 }
 
 void
-ACLChecklist::matchAclList(const acl_list * head, bool const fast)
+ACLChecklist::matchAclList(const ACLList * head, bool const fast)
 {
     PROF_start(aclMatchAclList);
-    const acl_list *node = head;
+    const ACLList *node = head;
 
     finished_ = false;
 
