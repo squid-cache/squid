@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.561 2007/08/13 17:20:51 hno Exp $
+ * $Id: structs.h,v 1.562 2007/09/01 05:56:37 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -91,7 +91,7 @@ struct _snmp_request_t
 struct _acl_address
 {
     acl_address *next;
-    acl_list *aclList;
+    ACLList *aclList;
 
     struct IN_ADDR addr;
 };
@@ -99,14 +99,14 @@ struct _acl_address
 struct _acl_tos
 {
     acl_tos *next;
-    acl_list *aclList;
+    ACLList *aclList;
     int tos;
 };
 
 struct _acl_size_t
 {
     acl_size_t *next;
-    acl_list *aclList;
+    ACLList *aclList;
     int64_t size;
 };
 
@@ -1696,7 +1696,7 @@ struct _logformat
 struct _customlog
 {
     char *filename;
-    acl_list *aclList;
+    ACLList *aclList;
     logformat *logFormat;
     Logfile *logfile;
     customlog *next;

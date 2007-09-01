@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.322 2007/04/28 22:26:37 hno Exp $
+ * $Id: acl.cc,v 1.323 2007/09/01 05:56:37 amosjeffries Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -324,7 +324,7 @@ bool
 acl_access::containsPURGE() const
 {
     acl_access const *a = this;
-    acl_list *b;
+    ACLList *b;
 
     debugs(28, 6, "acl_access::containsPURGE: invoked for '" << cfgline << "'");
 

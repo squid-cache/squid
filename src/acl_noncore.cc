@@ -1,5 +1,5 @@
 /*
- * $Id: acl_noncore.cc,v 1.5 2007/04/28 22:26:37 hno Exp $
+ * $Id: acl_noncore.cc,v 1.6 2007/09/01 05:56:37 amosjeffries Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -201,9 +201,9 @@ aclParseAccessLine(ConfigParser &parser, acl_access ** head)
 }
 
 void
-aclParseAclList(ConfigParser &parser, acl_list ** head)
+aclParseAclList(ConfigParser &parser, ACLList ** head)
 {
-    acl_list **Tail = head;	/* sane name in the use below */
+    ACLList **Tail = head;	/* sane name in the use below */
     ACL *a = NULL;
     char *t;
 
@@ -211,7 +211,7 @@ aclParseAclList(ConfigParser &parser, acl_list ** head)
      * by '!' for negation */
 
     while ((t = strtok(NULL, w_space))) {
-        acl_list *L = new ACLList;
+        ACLList *L = new ACLList;
 
         if (*t == '!') {
             L->negated (true);
@@ -256,9 +256,9 @@ aclDestroyAcls(ACL ** head)
 }
 
 void
-aclDestroyAclList(acl_list ** head)
+aclDestroyAclList(ACLList ** head)
 {
-    acl_list *l;
+    ACLList *l;
     debugs(28, 8, "aclDestroyAclList: invoked");
 
     for (l = *head; l; l = *head) {
