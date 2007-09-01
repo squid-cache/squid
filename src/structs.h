@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.562 2007/09/01 05:56:37 amosjeffries Exp $
+ * $Id: structs.h,v 1.563 2007/09/01 13:09:59 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1569,14 +1569,7 @@ struct _StatCounters
         }
 
         sock;
-#if HAVE_POLL
-
-        int polls;
-#else
-
         int selects;
-#endif
-
     }
 
     syscalls;

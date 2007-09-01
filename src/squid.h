@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.266 2007/08/17 18:56:31 serassio Exp $
+ * $Id: squid.h,v 1.267 2007/09/01 13:09:59 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -186,13 +186,11 @@ using namespace Squid;
  *  -- Oskar Pearson <oskar@is.co.za>
  *  -- Stewart Forster <slf@connect.com.au>
  */
-#if HAVE_POLL
+#if USE_POLL
 #if HAVE_POLL_H
 #include <poll.h>
-#else /* HAVE_POLL_H */
-#undef HAVE_POLL
 #endif /* HAVE_POLL_H */
-#endif /* HAVE_POLL */
+#endif /* USE_POLL */
 
 /*
  * Filedescriptor limits in the different select loops
@@ -352,7 +350,7 @@ extern "C"
 #endif
 
 /* Needed for poll() on Linux at least */
-#if HAVE_POLL
+#if USE_POLL
 #ifndef POLLRDNORM
 #define POLLRDNORM POLLIN
 #endif
