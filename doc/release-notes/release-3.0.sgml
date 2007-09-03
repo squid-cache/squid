@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.0.PRE7 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.0.sgml,v 1.25 2007/09/03 03:11:44 hno Exp $</date>
+<date>$Id: release-3.0.sgml,v 1.26 2007/09/03 05:33:26 amosjeffries Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.0 of Squid.
@@ -560,5 +560,210 @@ See the accf_http(9) man page.
 </descrip>
 
 
-</article>
+<sect1>Changes to ./configure Options
+<p>
+There have been some changes to Squid's build configuration since Squid-2.6.
 
+This section gives an account of those changes in three categories:
+
+<itemize>
+	<item><ref id="newoptions" name="New options">
+	<item><ref id="modifiedoptions" name="Changes to existing options">
+	<item><ref id="removedoptions" name="Removed options">
+</itemize>
+<p>
+
+
+<sect2>New options<label id="newoptions">
+
+<p>
+<descrip>
+	<tag>--enable-shared[=PKGS]</tag>
+	<p>Build shared libraries. The default is to build without.</p>
+
+	<tag>--enable-static[=PKGS]</tag>
+	<p>Build static libraries. The default is on.</p>
+
+	<tag>--enable-fast-install[=PKGS]</tag>
+	<verb>Optimize for fast installation
+	default: yes</verb>
+
+	<tag>--disable-libtool-lock</tag>
+	<p>Avoid locking (might break parallel builds)</p>
+
+	<tag>--disable-optimizations</tag>
+	<p>Don't compile Squid with compiler optimizations enabled.
+	Optimization is good for production builds, but not
+	good for debugging. During development, use
+	--disable-optimizations to reduce compilation times
+	and allow easier debugging. This option implicitly
+	also enables --disable-inline</p>
+
+	<tag>--disable-inline</tag>
+	<p>Don't compile trivial methods as inline. Squid
+	is coded with much of the code able to be inlined.
+	Inlining is good for production builds, but not
+	good for development. During development, use
+	--disable-inline to reduce compilation times and
+	allow incremental builds to be quick. For
+	production builds, or load tests, use
+	--enable-inline to have squid make all trivial
+	methods inlinable by the compiler.</p>
+
+	<tag>--enable-debug-cbdata</tag>
+	<p>Provide some debug information in cbdata</p>
+
+	<tag>--enable-disk-io=\"list of modules\"</tag>
+	<p>Build support for the list of disk I/O modules.
+	The default is only to build the "Blocking" module.
+	See src/DiskIO for a list of available modules, or
+	Programmers Guide for details on how to build your
+	custom disk module.</p>
+
+	<tag>--enable-esi</tag>
+	<p>Enable ESI for accelerators. Requires libexpat.
+	Enabling ESI will cause squid to follow the Edge
+	Acceleration Specification (www.esi.org). This
+	causes squid to IGNORE client Cache-Control headers.</p>
+	<p><em>DO NOT</em> use this in a squid configured as a web
+	proxy, ONLY use it in a squid configured for
+	webserver acceleration.</p>
+
+	<tag>--enable-icap-client</tag>
+	<p>Enable the ICAP client.</p>
+
+	<tag>--disable-snmp</tag>
+	<p>Disable SNMP monitoring support which is now built by default.</p>
+
+	<tag>--disable-htcp</tag>
+	<p>Disable HTCP protocol support which is now built by default.</p>
+
+	<tag>--enable-kqueue</tag>
+	<p>Enable kqueue() support. Marked as experimental in 3.0.</p>
+
+	<tag>--enable-ipfw-transparent</tag>
+	<p>Enable Transparent Proxy support for systems
+	using FreeBSD IPFW style redirection.</p>
+
+	<tag>--disable-mempools</tag>
+	<p>Disable memPools. Note that this option now simply sets the
+	default behaviour. Specific classes can override this at runtime, and
+	only lib/MemPool.c needs to be altered to change the squid-wide
+	default for all classes.</p>
+
+	<tag>--enable-cpu-profiling</tag>
+	<p>This option allows you to see which internal functions
+	in Squid are consuming how much CPU. Compiles in probes
+	that measure time spent in probed functions. Needs
+	source modifications to add new probes. This is meant
+	for developers to assist in performance optimisations
+	of Squid internal functions.</p>
+	<p>If you are not developer and not interested in the stats
+	you shouldn't enable this, as overhead added, although
+	small, is still overhead. See lib/Profiler.c for more.</p>
+
+	<tag>--with-gnu-ld</tag>
+	<p>Assume the C compiler uses GNU ld. The default is to auto-detect.</p>
+
+	<tag>--with-pic</tag>
+	<p>Try to use only PIC/non-PIC objects. The default is to use both.</p>
+
+	<tag>--with-tags[=TAGS]</tag>
+	<p>Include additional configurations. The default is automatic.</p>
+
+	<tag>--with-default-user=USER</tag>
+	<p>Sets the default System User account for squid permissions.
+	The default is 'nobody' as in other releases of squid.</p>
+
+	<tag>--with-cppunit-basedir=[PATH]</tag>
+	<p>Path where the cppunit headers and libraries are found
+	for unit testing. The default is automatic detection.</p>
+	<p>NOTE: Since 3.0-PRE6 and 2.6STABLE14 squid no longer comes
+	bundled with CPPUnit. Compile-time validation will be disabled
+	if it is not installed on your system.</p>
+
+</descrip>
+</p>
+
+<sect2>Changes to existing options<label id="modifiedoptions">
+
+<p>
+<descrip>
+	<tag>--enable-carp</tag>
+	<p>CARP support is now built by default.
+	 --disable-carp can be used to buidl without it.</p>
+
+	<tag>--enable-htcp</tag>
+	<p>HTCP protocol support is now built by default.
+	Use --disable-htcp to build without it.</p>
+
+	<tag>--enable-snmp</tag>
+	<p>SNMP monitoring is now build by default.
+	Use --disable-snmp to build without it.</p>
+
+	<tag>--with-valgrind-debug</tag>
+	<p>Name changed to --with-valgrind</p>
+
+	<tag>--enable-heap-replacement</tag>
+	<p>Please use --enable-removal-policies directive instead.</p>
+
+	<tag>--with-maxfd=N</tag>
+	<p>Replaced by --with-filedescriptors=N</p>
+	<p>Override maximum number of filedescriptors. Useful
+	if you build as another user who is not privileged
+	to use the number of filedescriptors you want the
+	resulting binary to support</p>
+
+	<tag>--enable-select</tag>
+	<p>Deprecated.
+	Automatic checks will enable best I/O loop method available.</p>
+
+	<tag>--enable-select-simple</tag>
+	<p>Deprecated.
+	Automatic checks will enable best I/O loop method available.</p>
+
+	<tag>--enable-epoll</tag>
+	<p>Deprecated.
+	Automatic checks will enable best I/O loop method available.</p>
+
+	<tag>--enable-poll</tag>
+	<p>Deprecated.
+	Automatic checks will enable best I/O loop method available.</p>
+
+	<tag>--enable-kqueue</tag>
+	<p>Deprecated.
+	Automatic checks will enable best I/O loop method available.</p>
+
+	<tag>--enable-kqueue</tag>
+	<p>kqueue support is marked Experimental in Squid 3.0
+	Automatic configuration checks may enable if it is found as the best method on your OS.</p>
+
+	<tag>--with-large-files</tag>
+	<p>Marked as Still Experimental in Squid 3.0</p>
+
+</descrip>
+</p>
+
+
+<sect2>Removed options<label id="removedoptions">
+
+<p>
+<descrip>
+
+<itemize>
+	<item>--enable-dlmalloc
+	<item>--enable-mempool-debug
+	<item>--enable-forward-log
+	<item>--enable-multicast-miss
+	<item>--enable-coss-aio-ops
+	<item>--enable-devpoll
+	<item>--enable-large-cache-files (now built-in)
+	<item>--enable-truncate
+	<item>--enable-follow-x-forwarded-for
+</itemize>
+
+</descrip>
+</p>
+</sect2>
+
+</article>

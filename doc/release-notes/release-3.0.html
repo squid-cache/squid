@@ -7,7 +7,7 @@
 <BODY>
 <H1>Squid 3.0.PRE7 release notes</H1>
 
-<H2>Squid Developers</H2>$Id: release-3.0.html,v 1.8 2007/09/03 03:11:44 hno Exp $
+<H2>Squid Developers</H2>$Id: release-3.0.html,v 1.9 2007/09/03 05:33:26 amosjeffries Exp $
 <HR>
 <EM>This document contains the release notes for version 3.0 of Squid.
 Squid is a WWW Cache application developed by the National Laboratory
@@ -94,9 +94,10 @@ Some has been dropped as they are not needed. Some has not yet been forward-port
 <P>The TCP_REFRESH_HIT and TCP_REFRESH_MISS log types have been replaced because they were misleading (all refreshes need to query the origin server, so they could never be hits). The following log types have been introduced to replace them:</P>
 <P>
 <DL>
-<DT><B>TCP_REFRESH_UNMODIFIED</B><DD><P>The requested object was cached but STALE. The IMS query for the object resulted in "304 not modified".</P>
-<DT><B>TCP_REFRESH_MODIFIED</B><DD><P>The requested object was cached but STALE. The IMS query returned the new content.
-</P>
+<DT><B>TCP_REFRESH_UNMODIFIED</B><DD>
+<P>The requested object was cached but STALE. The IMS query for the object resulted in "304 not modified".</P>
+<DT><B>TCP_REFRESH_MODIFIED</B><DD>
+<P>The requested object was cached but STALE. The IMS query returned the new content.</P>
 </DL>
 </P>
 <P>See 
@@ -129,7 +130,8 @@ Some has been dropped as they are not needed. Some has not yet been forward-port
 
 <P>
 <DL>
-<DT><B>minimum_icp_query_timeout (msec)</B><DD><P>
+<DT><B>minimum_icp_query_timeout (msec)</B><DD>
+<P>
 <PRE>
 Default: 5
 
@@ -143,7 +145,8 @@ of a dynamic) timeout value. To set a fixed timeout see the
         
 </PRE>
 </P>
-<DT><B>background_ping_rate</B><DD><P>
+<DT><B>background_ping_rate</B><DD>
+<P>
 <PRE>
 Default: 10 seconds
 
@@ -153,7 +156,8 @@ have background-ping set.
 </PRE>
 </P>
 
-<DT><B>httpd_accel_surrogate_id</B><DD><P>
+<DT><B>httpd_accel_surrogate_id</B><DD>
+<P>
 <PRE>
 Default: unset
 
@@ -165,7 +169,8 @@ an identification token.
 </PRE>
 </P>
 
-<DT><B>http_accel_surrogate_remote on|off</B><DD><P>
+<DT><B>http_accel_surrogate_remote on|off</B><DD>
+<P>
 <PRE>
 Default: off
 
@@ -175,7 +180,8 @@ Set this to on to have squid behave as a remote surrogate.
 </PRE>
 </P>
 
-<DT><B>esi_parser libxml2|expat|custom</B><DD><P>
+<DT><B>esi_parser libxml2|expat|custom</B><DD>
+<P>
 <PRE>
 Default: custom
 
@@ -186,7 +192,8 @@ encodings.
 </PRE>
 </P>
 
-<DT><B>email_err_data on|off</B><DD><P>
+<DT><B>email_err_data on|off</B><DD>
+<P>
 <PRE>
 Default: on
 
@@ -198,7 +205,8 @@ Syntax is &lt;A HREF="mailto:%w%W"&gt;%w&lt;/A&gt;
 </PRE>
 </P>
 
-<DT><B>refresh_all_ims on|off</B><DD><P>
+<DT><B>refresh_all_ims on|off</B><DD>
+<P>
 <PRE>
 Default: off
 
@@ -213,10 +221,13 @@ based on the age of the cached version.
         
 </PRE>
 </P>
-<DT><B>request_header_access</B><DD><P>Replaces the header_access directive of Squid-2.6 and earlier, but applies to requests only.</P>
-<DT><B>reply_header_access</B><DD><P>Replaces the header_access directive of Squid-2.6 and earlier, but applies to replies only.</P>
+<DT><B>request_header_access</B><DD>
+<P>Replaces the header_access directive of Squid-2.6 and earlier, but applies to requests only.</P>
+<DT><B>reply_header_access</B><DD>
+<P>Replaces the header_access directive of Squid-2.6 and earlier, but applies to replies only.</P>
 
-<DT><B>icap_enable on|off</B><DD><P>
+<DT><B>icap_enable on|off</B><DD>
+<P>
 <PRE>
 Default: off
 
@@ -224,7 +235,8 @@ If you want to enable the ICAP module support, set this to on.
         
 </PRE>
 </P>
-<DT><B>icap_preview_enable on|off</B><DD><P>
+<DT><B>icap_preview_enable on|off</B><DD>
+<P>
 <PRE>
 Default: off
 
@@ -233,7 +245,8 @@ feature in Squid.
         
 </PRE>
 </P>
-<DT><B>icap_preview_size</B><DD><P>
+<DT><B>icap_preview_size</B><DD>
+<P>
 <PRE>
 Default: -1
 
@@ -243,7 +256,8 @@ basis by OPTIONS requests.
         
 </PRE>
 </P>
-<DT><B>icap_default_options_ttl (seconds)</B><DD><P>
+<DT><B>icap_default_options_ttl (seconds)</B><DD>
+<P>
 <PRE>
 Default: 60
 
@@ -252,7 +266,8 @@ an Options-TTL header.
         
 </PRE>
 </P>
-<DT><B>icap_persistent_connections on|off</B><DD><P>
+<DT><B>icap_persistent_connections on|off</B><DD>
+<P>
 <PRE>
 Default: on
 
@@ -261,7 +276,8 @@ an ICAP server.
         
 </PRE>
 </P>
-<DT><B>icap_send_client_ip on|off</B><DD><P>
+<DT><B>icap_send_client_ip on|off</B><DD>
+<P>
 <PRE>
 Default: off
 
@@ -269,7 +285,8 @@ This adds the header "X-Client-IP" to ICAP requests.
         
 </PRE>
 </P>
-<DT><B>icap_send_client_username on|off</B><DD><P>
+<DT><B>icap_send_client_username on|off</B><DD>
+<P>
 <PRE>
 Default: off
 
@@ -278,7 +295,8 @@ if proxy access is authentified.
         
 </PRE>
 </P>
-<DT><B>icap_service</B><DD><P>
+<DT><B>icap_service</B><DD>
+<P>
 <PRE>
 Default: none
 
@@ -302,7 +320,8 @@ icap_service service_2 respmod_precache 0 icap://icap2.mydomain.net:1344/respmod
         
 </PRE>
 </P>
-<DT><B>icap_class</B><DD><P>
+<DT><B>icap_class</B><DD>
+<P>
 <PRE>
 Default: none
 
@@ -317,7 +336,8 @@ icap class class_2 service_1 service_3
         
 </PRE>
 </P>
-<DT><B>icap_access</B><DD><P>
+<DT><B>icap_access</B><DD>
+<P>
 <PRE>
 Default: none
 
@@ -341,7 +361,8 @@ icap_access class_1 allow all
 </PRE>
 </P>
 
-<DT><B>accept_filter</B><DD><P>
+<DT><B>accept_filter</B><DD>
+<P>
 <PRE>
 The name of an accept(2) filter to install on Squid's
 listen socket(s).  This feature is perhaps specific to
@@ -361,7 +382,8 @@ See the accf_http(9) man page.
 
 <P>
 <DL>
-<DT><B>http_port</B><DD><P>New options:
+<DT><B>http_port</B><DD>
+<P>New options:
 <PRE>
     disable-pmtu-discovery=
       Control Path-MTU discovery usage:
@@ -387,13 +409,15 @@ See the accf_http(9) man page.
         
 </PRE>
         </P>
-<DT><B> https_port</B><DD><P>Removed options:
+<DT><B> https_port</B><DD>
+<P>Removed options:
 <PRE>
     urlgroup=, not yet ported to Squid-3.
         
 </PRE>
 </P>
-<DT><B>cache_peer</B><DD><P>New options:
+<DT><B>cache_peer</B><DD>
+<P>New options:
 <PRE>
      basetime=n
 
@@ -433,7 +457,8 @@ See the accf_http(9) man page.
         
 </PRE>
 </P>
-<DT><B>cache_dir</B><DD><P>Common options
+<DT><B>cache_dir</B><DD>
+<P>Common options
 <PRE>
     no-store, replaces the older read-only option
 
@@ -456,7 +481,8 @@ See the accf_http(9) man page.
         
 </PRE>
 </P>
-<DT><B>auth_param</B><DD><P>Removed Basic auth option
+<DT><B>auth_param</B><DD>
+<P>Removed Basic auth option
 <PRE>
     blankpasswor, not yet ported to squid-3.
     auth_param basic concurrency 0
@@ -470,7 +496,8 @@ See the accf_http(9) man page.
 </PRE>
 </P>
 
-<DT><B>external_acl_type</B><DD><P>New format specifications:
+<DT><B>external_acl_type</B><DD>
+<P>New format specifications:
 <PRE>
     %URI          Requested URI
 
@@ -494,7 +521,8 @@ See the accf_http(9) man page.
 </PRE>
 </P>
 
-<DT><B>refresh_pattern</B><DD><P>New options:
+<DT><B>refresh_pattern</B><DD>
+<P>New options:
 <PRE>
     ignore-no-store
     refresh-ims
@@ -511,7 +539,8 @@ See the accf_http(9) man page.
         
 </PRE>
 </P>
-<DT><B>acl</B><DD><P>New types:
+<DT><B>acl</B><DD>
+<P>New types:
 <PRE>
     acl aclname http_status 200 301 500- 400-403 ...     # status code in reply
 
@@ -528,14 +557,16 @@ See the accf_http(9) man page.
         
 </PRE>
 </P>
-<DT><B>short_icon_urls</B><DD><P>New default:
+<DT><B>short_icon_urls</B><DD>
+<P>New default:
 <PRE>
     Default: on
     (Old default: off)
         
 </PRE>
 </P>
-<DT><B>delay_class</B><DD><P>New delay classes:
+<DT><B>delay_class</B><DD>
+<P>New delay classes:
 <PRE>
     class 4 Everything in a class 3 delay pool, with an
     additional limit on a per user basis. This
@@ -549,7 +580,8 @@ See the accf_http(9) man page.
 </PRE>
 </P>
 
-<DT><B>htcp_port</B><DD><P>New default to require the feature to be enabled in squid.conf:
+<DT><B>htcp_port</B><DD>
+<P>New default to require the feature to be enabled in squid.conf:
 <PRE>
     Default: 0 (disabled)
     (Old default: 4827)
@@ -557,7 +589,8 @@ See the accf_http(9) man page.
 </PRE>
 </P>
 
-<DT><B>icp_port</B><DD><P>New default to require the feature to be enabled in squid.conf:
+<DT><B>icp_port</B><DD>
+<P>New default to require the feature to be enabled in squid.conf:
 <PRE>
     Default: 0 (disabled)
     (Old default: 3130)
@@ -565,7 +598,8 @@ See the accf_http(9) man page.
 </PRE>
 </P>
 
-<DT><B>snmp_port</B><DD><P>New default to require the feature to be enabled in squid.conf:
+<DT><B>snmp_port</B><DD>
+<P>New default to require the feature to be enabled in squid.conf:
 <PRE>
     Default: 0 (disabled)
     (Old default: 3401)
@@ -573,7 +607,8 @@ See the accf_http(9) man page.
 </PRE>
 </P>
 
-<DT><B>logformat</B><DD><P>New format tags:
+<DT><B>logformat</B><DD>
+<P>New format tags:
 <PRE>
     rp      Request URL-Path excluding hostname
 
@@ -595,7 +630,8 @@ See the accf_http(9) man page.
 </PRE>
 </P>
 
-<DT><B>reply_body_max_size</B><DD><P>Syntax changed:
+<DT><B>reply_body_max_size</B><DD>
+<P>Syntax changed:
 <PRE>
     reply_body_max_size size [acl acl...]
         
@@ -603,7 +639,8 @@ See the accf_http(9) man page.
 </P>
 <P>allow/deny no longer used.</P>
 
-<DT><B>url_rewrite_program</B><DD><P>No urlgroup support in either requests or responese</P>
+<DT><B>url_rewrite_program</B><DD>
+<P>No urlgroup support in either requests or responese</P>
 </DL>
 </P>
 
@@ -614,22 +651,245 @@ See the accf_http(9) man page.
 
 <P>
 <DL>
-<DT><B>broken_vary_encoding</B><DD><P>Not yet ported to Squid-3.</P>
-<DT><B>cache_vary</B><DD><P>Not yet ported to Squid-3.</P>
-<DT><B>collapsed_forwarding</B><DD><P>Not yet ported to Squid-3.</P>
-<DT><B>follow_x_forwarded_for</B><DD><P>Not yet ported to Squid-3.</P>
-<DT><B>*_uses_indirect_client</B><DD><P>Not yet ported to Squid-3.</P>
-<DT><B>error_map</B><DD><P>Not yet ported to Squid-3.</P>
-<DT><B>header_access</B><DD><P>This has been replaced by request_header_access and reply_header_access</P>
-<DT><B>http_access2</B><DD><P>Not yet ported to Squid-3.</P>
-<DT><B>httpd_accel_no_pmtu_disc</B><DD><P>Replaced by disable-pmtu-discovery http_port option</P>
-<DT><B>location_rewrite_*</B><DD><P>Not yet ported to Squid-3.</P>
-<DT><B>refresh_stale_hit</B><DD><P>Not yet ported to Squid-3.</P>
-<DT><B>umask</B><DD><P>Not yet ported to Squid-3.</P>
-<DT><B>wais_relay_*</B><DD><P>equivalent to cache_peer + cache_peer_access.</P>
+<DT><B>broken_vary_encoding</B><DD>
+<P>Not yet ported to Squid-3.</P>
+<DT><B>cache_vary</B><DD>
+<P>Not yet ported to Squid-3.</P>
+<DT><B>collapsed_forwarding</B><DD>
+<P>Not yet ported to Squid-3.</P>
+<DT><B>follow_x_forwarded_for</B><DD>
+<P>Not yet ported to Squid-3.</P>
+<DT><B>*_uses_indirect_client</B><DD>
+<P>Not yet ported to Squid-3.</P>
+<DT><B>error_map</B><DD>
+<P>Not yet ported to Squid-3.</P>
+<DT><B>header_access</B><DD>
+<P>This has been replaced by request_header_access and reply_header_access</P>
+<DT><B>http_access2</B><DD>
+<P>Not yet ported to Squid-3.</P>
+<DT><B>httpd_accel_no_pmtu_disc</B><DD>
+<P>Replaced by disable-pmtu-discovery http_port option</P>
+<DT><B>location_rewrite_*</B><DD>
+<P>Not yet ported to Squid-3.</P>
+<DT><B>refresh_stale_hit</B><DD>
+<P>Not yet ported to Squid-3.</P>
+<DT><B>umask</B><DD>
+<P>Not yet ported to Squid-3.</P>
+<DT><B>wais_relay_*</B><DD>
+<P>equivalent to cache_peer + cache_peer_access.</P>
 </DL>
 </P>
 
 
+<H2><A NAME="ss4.5">4.5 Changes to ./configure Options</A>
+</H2>
+
+<P>There have been some changes to Squid's build configuration since Squid-2.6.</P>
+<P>This section gives an account of those changes in three categories:</P>
+<P>
+<UL>
+<LI>
+<A HREF="#newoptions">New options</A></LI>
+<LI>
+<A HREF="#modifiedoptions">Changes to existing options</A></LI>
+<LI>
+<A HREF="#removedoptions">Removed options</A></LI>
+</UL>
+</P>
+
+
+
+<H3><A NAME="newoptions"></A> New options</H3>
+
+<P>
+<DL>
+<DT><B>--enable-shared[=PKGS]</B><DD>
+<P>Build shared libraries. The default is to build without.</P>
+
+<DT><B>--enable-static[=PKGS]</B><DD>
+<P>Build static libraries. The default is on.</P>
+
+<DT><B>--enable-fast-install[=PKGS]</B><DD>
+<P>
+<PRE>
+Optimize for fast installation
+        default: yes
+</PRE>
+</P>
+
+<DT><B>--disable-libtool-lock</B><DD>
+<P>Avoid locking (might break parallel builds)</P>
+
+<DT><B>--disable-optimizations</B><DD>
+<P>Don't compile Squid with compiler optimizations enabled.
+Optimization is good for production builds, but not
+good for debugging. During development, use
+--disable-optimizations to reduce compilation times
+and allow easier debugging. This option implicitly
+also enables --disable-inline</P>
+
+<DT><B>--disable-inline</B><DD>
+<P>Don't compile trivial methods as inline. Squid
+is coded with much of the code able to be inlined.
+Inlining is good for production builds, but not
+good for development. During development, use
+--disable-inline to reduce compilation times and
+allow incremental builds to be quick. For
+production builds, or load tests, use
+--enable-inline to have squid make all trivial
+methods inlinable by the compiler.</P>
+
+<DT><B>--enable-debug-cbdata</B><DD>
+<P>Provide some debug information in cbdata</P>
+
+<DT><B>--enable-disk-io=\"list of modules\"</B><DD>
+<P>Build support for the list of disk I/O modules.
+The default is only to build the "Blocking" module.
+See src/DiskIO for a list of available modules, or
+Programmers Guide for details on how to build your
+custom disk module.</P>
+
+<DT><B>--enable-esi</B><DD>
+<P>Enable ESI for accelerators. Requires libexpat.
+Enabling ESI will cause squid to follow the Edge
+Acceleration Specification (www.esi.org). This
+causes squid to IGNORE client Cache-Control headers.</P>
+<P><EM>DO NOT</EM> use this in a squid configured as a web
+proxy, ONLY use it in a squid configured for
+webserver acceleration.</P>
+
+<DT><B>--enable-icap-client</B><DD>
+<P>Enable the ICAP client.</P>
+
+<DT><B>--disable-snmp</B><DD>
+<P>Disable SNMP monitoring support which is now built by default.</P>
+
+<DT><B>--disable-htcp</B><DD>
+<P>Disable HTCP protocol support which is now built by default.</P>
+
+<DT><B>--enable-kqueue</B><DD>
+<P>Enable kqueue() support. Marked as experimental in 3.0.</P>
+
+<DT><B>--enable-ipfw-transparent</B><DD>
+<P>Enable Transparent Proxy support for systems
+using FreeBSD IPFW style redirection.</P>
+
+<DT><B>--disable-mempools</B><DD>
+<P>Disable memPools. Note that this option now simply sets the
+default behaviour. Specific classes can override this at runtime, and
+only lib/MemPool.c needs to be altered to change the squid-wide
+default for all classes.</P>
+
+<DT><B>--enable-cpu-profiling</B><DD>
+<P>This option allows you to see which internal functions
+in Squid are consuming how much CPU. Compiles in probes
+that measure time spent in probed functions. Needs
+source modifications to add new probes. This is meant
+for developers to assist in performance optimisations
+of Squid internal functions.</P>
+<P>If you are not developer and not interested in the stats
+you shouldn't enable this, as overhead added, although
+small, is still overhead. See lib/Profiler.c for more.</P>
+
+<DT><B>--with-gnu-ld</B><DD>
+<P>Assume the C compiler uses GNU ld. The default is to auto-detect.</P>
+
+<DT><B>--with-pic</B><DD>
+<P>Try to use only PIC/non-PIC objects. The default is to use both.</P>
+
+<DT><B>--with-tags[=TAGS]</B><DD>
+<P>Include additional configurations. The default is automatic.</P>
+
+<DT><B>--with-default-user=USER</B><DD>
+<P>Sets the default System User account for squid permissions.
+The default is 'nobody' as in other releases of squid.</P>
+
+<DT><B>--with-cppunit-basedir=[PATH]</B><DD>
+<P>Path where the cppunit headers and libraries are found
+for unit testing. The default is automatic detection.</P>
+<P>NOTE: Since 3.0-PRE6 and 2.6STABLE14 squid no longer comes
+bundled with CPPUnit. Compile-time validation will be disabled
+if it is not installed on your system.</P>
+
+</DL>
+</P>
+<H3><A NAME="modifiedoptions"></A> Changes to existing options</H3>
+
+<P>
+<DL>
+<DT><B>--enable-carp</B><DD>
+<P>CARP support is now built by default.
+--disable-carp can be used to buidl without it.</P>
+
+<DT><B>--enable-htcp</B><DD>
+<P>HTCP protocol support is now built by default.
+Use --disable-htcp to build without it.</P>
+
+<DT><B>--enable-snmp</B><DD>
+<P>SNMP monitoring is now build by default.
+Use --disable-snmp to build without it.</P>
+
+<DT><B>--with-valgrind-debug</B><DD>
+<P>Name changed to --with-valgrind</P>
+
+<DT><B>--enable-heap-replacement</B><DD>
+<P>Please use --enable-removal-policies directive instead.</P>
+
+<DT><B>--with-maxfd=N</B><DD>
+<P>Replaced by --with-filedescriptors=N</P>
+<P>Override maximum number of filedescriptors. Useful
+if you build as another user who is not privileged
+to use the number of filedescriptors you want the
+resulting binary to support</P>
+
+<DT><B>--enable-select</B><DD>
+<P>Deprecated.
+Automatic checks will enable best I/O loop method available.</P>
+
+<DT><B>--enable-select-simple</B><DD>
+<P>Deprecated.
+Automatic checks will enable best I/O loop method available.</P>
+
+<DT><B>--enable-epoll</B><DD>
+<P>Deprecated.
+Automatic checks will enable best I/O loop method available.</P>
+
+<DT><B>--enable-poll</B><DD>
+<P>Deprecated.
+Automatic checks will enable best I/O loop method available.</P>
+
+<DT><B>--enable-kqueue</B><DD>
+<P>Deprecated.
+Automatic checks will enable best I/O loop method available.</P>
+
+<DT><B>--enable-kqueue</B><DD>
+<P>kqueue support is marked Experimental in Squid 3.0
+Automatic configuration checks may enable if it is found as the best method on your OS.</P>
+
+<DT><B>--with-large-files</B><DD>
+<P>Marked as Still Experimental in Squid 3.0</P>
+
+</DL>
+</P>
+<H3><A NAME="removedoptions"></A> Removed options</H3>
+
+<P>
+<DL>
+<P>
+<UL>
+<LI>--enable-dlmalloc</LI>
+<LI>--enable-mempool-debug</LI>
+<LI>--enable-forward-log</LI>
+<LI>--enable-multicast-miss</LI>
+<LI>--enable-coss-aio-ops</LI>
+<LI>--enable-devpoll</LI>
+<LI>--enable-large-cache-files (now built-in)</LI>
+<LI>--enable-truncate</LI>
+<LI>--enable-follow-x-forwarded-for</LI>
+</UL>
+</P>
+
+</DL>
+</P>
 </BODY>
 </HTML>
