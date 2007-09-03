@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.764 2007/08/30 15:57:16 hno Exp $
+ * $Id: client_side.cc,v 1.765 2007/09/03 03:13:52 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2454,6 +2454,10 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
 
             conn->handleReadData(buf, size);
 
+	    /* The above may close the connection under our feets */
+	    if (!conn->isOpen())
+		return;
+
         } else if (size == 0) {
             debugs(33, 5, "clientReadRequest: FD " << fd << " closed?");
 
@@ -2484,6 +2488,8 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
         fd_note(conn->fd, "Reading next request");
 
     if (! clientParseRequest(conn, do_next_read)) {
+	if (!conn->isOpen())
+	    return;
         /*
          * If the client here is half closed and we failed
          * to parse a request, close the connection.
@@ -2491,7 +2497,6 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
          * succeeds _if_ the buffer is empty which it won't
          * be if we have an incomplete request.
          */
-
         if (conn->getConcurrentRequestCount() == 0 && commIsHalfClosed(fd)) {
             debugs(33, 5, "clientReadRequest: FD " << fd << ": half-closed connection, no completed request parsed, connection closing.");
             comm_close(fd);
