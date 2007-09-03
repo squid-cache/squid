@@ -99,7 +99,7 @@ read_passwd_file(const char *passwdfile, int ha1mode)
 		fprintf(stderr, "digest_pw_auth: ignoring invalid password for %s\n", user);
 		continue;
 	    }
-	    u = xmalloc(sizeof(*u));
+	    u = xcalloc(1, sizeof(*u));
 	    if (realm) {
 		int len = strlen(user) + strlen(realm) + 2;
 		u->hash.key = malloc(len);
