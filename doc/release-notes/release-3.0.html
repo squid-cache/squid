@@ -7,7 +7,7 @@
 <BODY>
 <H1>Squid 3.0.PRE7 release notes</H1>
 
-<H2>Squid Developers</H2>$Id: release-3.0.html,v 1.7 2007/08/28 00:00:00 hno Exp $
+<H2>Squid Developers</H2>$Id: release-3.0.html,v 1.8 2007/09/03 03:11:44 hno Exp $
 <HR>
 <EM>This document contains the release notes for version 3.0 of Squid.
 Squid is a WWW Cache application developed by the National Laboratory
@@ -28,7 +28,6 @@ While this release is not deemed ready for production use, we believe it is read
 
 <P>Although this release is deemed good enough for testing in many setups, please note the existence of 
 <A HREF="http://www.squid-cache.org/bugs/buglist.cgi?query_format=advanced&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;target_milestone=3.0&amp;long_desc_type=allwordssubstr&amp;long_desc=&amp;bug_file_loc_type=allwordssubstr&amp;bug_file_loc=&amp;status_whiteboard_type=allwordssubstr&amp;status_whiteboard=&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;emailtype1=substring&amp;email1=&amp;emailtype2=substring&amp;email2=&amp;bugidtype=include&amp;bug_id=&amp;votes=&amp;chfieldfrom=&amp;chfieldto=Now&amp;chfieldvalue=&amp;cmdtype=doit&amp;order=bugs.bug_severity&amp;field0-0-0=noop&amp;type0-0-0=noop&amp;value0-0-0=">open bugs against Squid-3.0</A>.</P>
-<P>In particular, ESI may still be too buggy for meaningful testing at this stage.</P>
 
 <H2><A NAME="s3">3. Changes since earlier PRE releases of Squid-3.0</A></H2>
 
@@ -44,12 +43,28 @@ While this release is not deemed ready for production use, we believe it is read
 <P>The most important of these are:</P>
 <P>
 <UL>
-<LI>Edge Side Include implementation (www.esi.org)</LI>
+<LI>Edge Side Includes (ESI) implementation (www.esi.org)</LI>
 <LI>ICAP implementation (www.i-cap.org)</LI>
-<LI>Finer control over cacheability (refresh_pattern)</LI>
+<LI>Internal client streams concept enabling the implementations of ESI and ICAP.</LI>
+<LI>Code converted to C++, with significant internal restructuring and rewrites.</LI>
 </UL>
 </P>
 <P>Most user-facing changes are reflected in squid.conf (see below).</P>
+
+<H3>Internet Content Adaptation Protocol (ICAP)</H3>
+
+<P>TO BE WRITTEN</P>
+
+<P>More information about ICAP can be found from the ICAP-forum website 
+<A HREF="http://www.icap-forum.org">http://www.icap-forum.org</A></P>
+
+<H3>Edge Side Includes (ESI)</H3>
+
+<P>ESI is an open specification of an markup language enabling reverse proxies
+to perform some simple XML based processing, offloading the final page assembly from the webserver and similar tasks.</P>
+
+<P>More information about ESI can be found from the ESI website 
+<A HREF="http://www.esi.org">http://www.esi.org</A></P>
 
 <H2><A NAME="ss4.2">4.2 2.6 features not found in Squid-3.0</A>
 </H2>

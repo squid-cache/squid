@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.0.PRE7 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.0.sgml,v 1.24 2007/08/28 00:00:00 hno Exp $</date>
+<date>$Id: release-3.0.sgml,v 1.25 2007/09/03 03:11:44 hno Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.0 of Squid.
@@ -27,8 +27,6 @@ We welcome feedback and bug reports. If you find a bug, please see <url url="htt
 <p>
 Although this release is deemed good enough for testing in many setups, please note the existence of <url url="http://www.squid-cache.org/bugs/buglist.cgi?query_format=advanced&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;target_milestone=3.0&amp;long_desc_type=allwordssubstr&amp;long_desc=&amp;bug_file_loc_type=allwordssubstr&amp;bug_file_loc=&amp;status_whiteboard_type=allwordssubstr&amp;status_whiteboard=&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;emailtype1=substring&amp;email1=&amp;emailtype2=substring&amp;email2=&amp;bugidtype=include&amp;bug_id=&amp;votes=&amp;chfieldfrom=&amp;chfieldto=Now&amp;chfieldvalue=&amp;cmdtype=doit&amp;order=bugs.bug_severity&amp;field0-0-0=noop&amp;type0-0-0=noop&amp;value0-0-0=" name="open bugs against Squid-3.0">.
 
-In particular, ESI may still be too buggy for meaningful testing at this stage.
-
 <sect>Changes since earlier PRE releases of Squid-3.0
 <p>
 The 3.0 change history can be <url url="http://www.squid-cache.org/Versions/v3/3.0/changesets/" name="viewed here">.
@@ -42,12 +40,26 @@ Squid 3.0 represents a major rewrite of Squid and has a number of new features.
 The most important of these are:
 
 <itemize>
-	<item>Edge Side Include implementation (www.esi.org)
+	<item>Edge Side Includes (ESI) implementation (www.esi.org)
 	<item>ICAP implementation (www.i-cap.org)
-	<item>Finer control over cacheability (refresh_pattern)
+	<item>Internal client streams concept enabling the implementations of ESI and ICAP.
+	<item>Code converted to C++, with significant internal restructuring and rewrites.
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
+
+<sect2>Internet Content Adaptation Protocol (ICAP)
+
+<p>TO BE WRITTEN
+
+<p>More information about ICAP can be found from the ICAP-forum website <url url="http://www.icap-forum.org">
+
+<sect2>Edge Side Includes (ESI)
+
+<p>ESI is an open specification of an markup language enabling reverse proxies
+to perform some simple XML based processing, offloading the final page assembly from the webserver and similar tasks.
+
+<p>More information about ESI can be found from the ESI website <url url="http://www.esi.org">
 
 <sect1>2.6 features not found in Squid-3.0
 <p>
