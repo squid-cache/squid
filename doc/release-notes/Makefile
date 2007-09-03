@@ -1,6 +1,6 @@
 DOC	= release-3.0
 
-all: $(DOC).html $(DOC).ps
+all: $(DOC).html
 
 $(DOC).ps: $(DOC).sgml
 	linuxdoc -B latex -o ps $(DOC)

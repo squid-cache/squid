@@ -1,4 +1,15 @@
-Changes to squid-3.0 ():
+Changes to squid-3.0.STABLE1 ():
+
+	- Major rewrite translating the code to C++, originally based on
+	  Squid-2.5.STABLE1
+	- Internal client streams concept for content adaptation
+	- ICAP (Internet Content Adaptation Protocol) client support
+	- ESI (Edge Side Includes) support added
+	- And a lot more. Most features from Squid-2.6 is supported, but not
+	  all. See the release notes for details.
+
+Older ChangeLog follows. The sections relating to Squid-2.6 is not entirely
+authorative for this release and mirrored here for reference only.
 	
 	- CARP now plays well with the other peering algorithms,
 	  and support for CARP peerings is compiled by default. Can be
@@ -29,7 +40,1115 @@ Changes to squid-3.0 ():
 	- Windows overlapped-IO and thread support added to the Async IO disk code
 	- Improvements for handling large DNS replies
 
-Changes to squid-2.5 ():
+Changes to squid-2.6.STABLE15 (31 Aug 2007)
+
+	- The select() I/O loop got broken by the /dev/poll addition
+	  (2.6.STABLE14)
+	- Bug #2017: Fails to work around broken servers sending just the HTTP
+	  headers
+	- Bug #2023: Compile error with old GCC 2.x or other ANSI-C compilers
+	  before C99
+	- squid.conf.default updated and reorganised in more sensible groups
+	- correct and document the syslog access_log format
+	- Armenian error pages translation
+	- digest_ldap_helper usage help updated
+	- Bug #1560: ftpSendPasv: getsockname(-1,..): (9) Bad file descriptor
+	- Improve delay pools in low traffic environment by checking timeouts
+	  at a steady 1 second interval even when there is not much activity
+	- Don't request authentication on transparently intercepted
+	  connections
+	- Cleanup linux capabilities for tproxy
+	- Bug #2003: 'via' config directive doesn't affect response headers
+	- Bug #1902: Adds Numeric Hit and invalid request counters to IP Cache
+	- Add missing $|=1 to squid_db_auth
+	- Bug #2050: Persistent connection dropped if cache has no
+	  Content-Length
+	- Verify the URL on memory cache hits
+	- Bug #2057: NTLM stop work in messengers after upgrade to 2.6.STABLE14
+	- Bug #1972: Squid sets peers to down state when they are in fact
+	  working.
+	- potential segmentation fault in storeLocateVary()
+	- Bug #2066: chdir after chroot
+	- Windows port: Fix compiler warnings when building Squid as
+	  application (not Windows service mode)
+	- Spelling correction of received
+
+Changes to squid-2.6.STABLE14 (15 Jul 2007)
+
+	- squid.conf.default cleanup to have options in their proper sections.
+	- documentation correction in the refresh_pattern ignore-auth option
+	- URI-escaping not uses the recommended upper-case hex codes
+	- refresh_pattern min-age 0 correted to really mean 0, and not 1 second
+	- Always use xisxxxx() Squid defined macros instead of ctype
+	  functions.
+	- Kerberos SPNEGO/Negotiate helper for the negotiate scheme
+	- Database basic auth helper using Perl DBI to connect to most SQL DBs
+	- Solaris /dev/poll network I/O support
+	- configure fixes to make cross compilation somewhat easier
+	- Removed incorrect -a reference from http_port documentation
+	- Bug #1900: Double "squid -k shutdown" makes Squid restart again
+	- Bug #1968: Squid hangs occasionally when using DNS search paths
+	- Novell eDirectory digest auth helper (digest_edir_auth)
+	- Bug #1130: min-size option for cache_dir
+	- POP3 basic auth helper querying a POP3 server
+	- Cosmetic squid_ldap_auth fixes from Squid-3
+	- Bug #1085: Add no-wrap to cache manager HTML tables
+	- Automatically restart if number of available filedescriptors becomes
+	  alarmingly low, preventing a situation where Squid would otherwise
+	  permanently stop processing requests.
+	- Bug #2010: snmp_core.cc:828: warning: array subscript is above
+	  array bounds
+	- Deal better with forwarding loops
+
+Changes to squid-2.6.STABLE13 (11 May 2007)
+
+	- Make sure reply headers gets sent even if there is no body available
+	  yet, fixing RealMedia streaming over HTTP issues.
+	- Undo an accidental name change of storeUnregisterAbort.
+	- Kill an ancient malplaced storeUnregisterAbort call from ftp.c
+	- Bug #1814: SSL memory leak on persistent SSL connections
+	- Don't log ECONNREFUSED/ECONNABORTED accept failures in cache.log
+	- Cosmetic fix: added missing newline in WCCPv2 configuration dump.
+	- Ukrainan error messages
+	- Convert various error pages from DOS to UNIX text format
+	- Bug #1820: COSS assertion failure t->length == MD5_DIGEST_CHARS
+	- Clarify the max-conn=n cache_peer option syntax slightly
+	- Bug #1892: COSS segfault on shutdown
+	- Windows port: fix undefined ECONNABORTED
+	- Make refreshIsCachable handle ETag as a cache validator, not
+	  only last-modified
+	- in_port_t is not portable, use unsigned short instead
+	- Fix fs / auth / snmp dependencies
+	- Portability: statfs() may reqire #include <sys/statfs.h>
+
+Changes to squid-2.6.STABLE12 (20 Mar 2007)
+
+	- Assertion error on TRACE
+
+Changes to squid-2.6.STABLE11 (17 Mar 2007)
+
+	- Bug #1915: assertion failed: client_side.c:4055: "buf != NULL ||
+	  !conn->body.request"
+	- Handle garbage helper responses better in concurrent protocol format
+	- Fix kqueue when overflowing the changes queue
+	- Make sure the child worker process commits suicide if it could
+	  not start up
+	- Don't log short responses at debug level 1
+	- Fix bswap16 & bwsap32 error on NetBSD
+	- Fix collapsed_forwarding for non-GET requests
+
+Changes to squid-2.6.STABLE10 (4 Mar 2007)
+
+	- Upgrade HTTP/0.9 responses to our HTTP version (HTTP/1.0)
+	- various diskd bugfixes
+	- In the access.log hierarchy field log the unique peer name
+	  instead of the host name
+	- unlinkdClose() should be called after (not before) storeDirSync()
+	- CLEAN_BUF_SZ was defined, but never used anywhere
+	- logging HTTP-request size
+	- Fix icmp pinger communication on FreeBSD and other not supporing
+	  large dgram AF_UNIX sockets
+	- Release objects on swapin failure
+	- Bug #1787: Objects stuck in cache if origin server clock in future
+	- Bug #1420: 302 responses with an Expires header is always cached
+	- Primitive support for HTTP/1.1 chunked encoding, working around
+	  broken servers
+	- Clean up relations between TCP probing and DNS checks of peers with
+	  no known addresses.
+	- Fix a minor HTML coding error in ftp directory listings with // in
+	  the path
+	- Bug #1875, #1420. Cleanup of refresh logics when dealing with
+	  non-refreshable content
+	- Gopher cleanups and bugfixes
+	- Negotiate authentication fixed again. Broken since STABLE7 by the
+	  patch for Bug #1792.
+	- Bug #1892: COSS tries to shut down the same directory twice on exit
+	- Bug #1908: store*DirRebuildFromSwapLog() ignores some SWAP_LOG_DEL
+	  entries
+	- Added support for Subversion HTTP request methods MKACTIVITY,
+	  CHECKOUT and MERGE.
+
+Changes to squid-2.6.STABLE9 (24 Jan 2007)
+
+	- Bug #1878: If-Modified-Since broken in 2.6.STABLE8
+	- Bug #1877 diskd bug in storeDiskdIOCallback()
+
+Changes to squid-2.6.STABLE8 (21 Jan 2007)
+
+	- Bug #1873: authenticateNTLMFixErrorHeader: state 4.
+	- Document the https_port vhost option, useful in combination with
+	  a wildcard certificate
+	- Document the existence of connection pinning / forwarding of NTLM
+	  auth and a few other features overlooked in the release notes.
+	- Spelling correction of the ssl cache_peer option
+	- Add back the optional "accel" http_port option. Makes accelerator
+	  mode configurations easier to read.
+	- Bug #1872: Date parsing error causing objects to get unexpectedly
+	  cached.
+	- Cleanup to have the access.log tags autogenerated from enums.h
+	- Bug #1783: STALE: Entry's timestamp greater than check time. Clock
+	  going backwards?
+	- Don't update object timestamps on a failed revalidation.
+	- Fix how ftp://user@host URLs is rendered when Squid is built with
+	  leak checking enabled
+
+Changes to squid-2.6.STABLE7 (13 Jan 2007)
+
+	- Windows port: Fix intermittent build error using Visual Studio
+	- Add missing tproxy info from the dump of http port configuration
+	- Bug #1853: Support for ARP ACL on NetBSD
+	- clientNatLookup(): fix wrong function name in debug messages
+	- Convert ncsa_auth man page from DOS to Unix text format.
+	- Bug #1858: digest_ldap_auth had some remains of old hash format
+	- Correct the select_loops counter when using select(). Was counted twice
+	- Clarify the http_port vhost option a bit
+	- Fix cache-control: max-stale without value or bad value
+	- Bug #1857: Segmentation fault on certain types of ftp:// requests
+	- Bug #1848: external_acl crashes with an infinite loop under high load
+	- Bug #1792: max_user_ip not working with NTLM authentication
+	- Bug #1865: deny_info redirection with authentication related acls
+	- Small example on how to use the squid_session helper
+	- Bug #1863: cache_peer monitorurl, monitorsize and monitorinterval not working properly
+	- Clarify the transparent http_port option a bit more
+	- Bug #1828: squid.conf docutemtation error for proxy_auth digest
+	- Bug #1867: squid.pid isn't removed on shutdown
+
+Changes to squid-2.6.STABLE6 (12 Dec 2006)
+
+	- Bug #1817: Assertion failure assert(buflen >= copy_sz) in htcp.c htcpBuildAuth()
+	- Add client source port logformat tag >p
+	- Cleanup of transparent & accelerator mode request parsing to untangle the firewall dependencies a bit
+	- Bug #1799: Harmless 1 byte buffer overflow on long host names in /etc/hosts
+	- automake no longer recommends mkinstalldirs. Removed.
+	- Only use crypt() if it's available, allowing ncsa_auth to be built
+	  on platofms without crypt() support.
+	- Windows port documentation updates
+	- Bug #1818: Assertion failure assert(e->swap_dirn >= 0) in fs/coss/store_dir_coss.c storeCoss_DeleteStoreEntry
+	- Bug #1117: assertion failed: aufs/store_dir_aufs.c:642: "rb->flags.need_to_validate"
+	- Remove extra newline in redirect message sent by deny_info http://... aclname
+	- Bug #1805: assertion failed: StatHist.c:195: "D[i] >= 0"
+	- Clarify the external_acl_type helper format specification and some defaults
+	- Add support for the weight= parameter to round-robin peers
+	- Bug #1832: Error building squid-2.6.STABLE5 using --enable-truncate
+	- Convert snmpDebugOid to use a temporary String object instead of strcat
+	- Document that proxy_auth also accepts -i for case-insensitive operation
+	- Remove malloc/free of temporary buffer in time parsing routines.
+	- Reduce memory allocator pressure by not continually allocating client-side read buffers
+	- Accept large dates >2^31 on 64-bit platformst. Seen for example in the Google logo.
+	- Convert the connStateData->chr single link list to a normal dlink_list for clarity.
+	- Bug #1584: Unable to register with multiple WCCP2 routers
+	- Fix the WCCPv2 mask assignment code to not crash as the value assignments are built.
+	- Bug #439: Multicast ICP peering is unstable and considers most peers dead
+	- Bug #1801: NTLM authentication ends up in a loop if the server responds with a retriable error
+	- Bug #1839: Cosmetic debug message cleanup in peerHandleHtcpReply.
+	- Bug #1840: Disable digest and netdb queries to multicast peers
+	- Bug #1641: assertion failed: stmem.c:149: "size > 0" while processing certain Vary objects
+	- Fix build errors when using latest MinGW Windows environment
+
+Changes to squid-2.6.STABLE5 (3 Now 2006)
+
+	- Bug #1776: 2.6.STABLE4 aufs fails to compile if coss isn't enabled
+	- COSS improvements and cleanups
+	- SNMP linking issue resolved, enabling SNMP support to be build in all platforms
+	- Bug #1784: access_log syslog results in blanks syslog lines between every entry
+	- Bug #1719: Incorrect error message on invalid cache_peer specifications
+	- Bug #1785: Memory leak in handling of negatively cached objects
+	- Bug #1780: Incorrect Vary processing in combination with collapsed_forwarding
+	- Bug #1782: Memory leak in ncsa_auth on password changes
+	- Suppress some annoying coss startup messages raising the debug level to 2.
+	- Clarify the external_acl_helper concurrency= change.
+	- aioDone() could be called twice from aufs and from coss (when using AIOPS) during shutdown.
+	- Bug #1794: Accept 00:00-24:00 as a valid time specification even if redundand and the same as 00:00-23:59
+	- Bug #1795: Theoretical memory leak in storeSetPublicKey
+	- Removing port 563 from the default SSL_ports and Safe_ports ACLs
+	- Bug #1724: Automatically enable Linux Netfilter support with --enable-linux-tproxy.
+	- Bug #1800: squid -k reconfigure crash when using req/rep_header acls
+	- Clarify the select/poll/kqueue/epoll configure --enable/disable options
+	- Bug #1779: Delay pools fairness when multiple connections compete for bandwidth
+	- Bug #1802: Crash on exit in certain conditions where cache.log is not writeable
+	- Bug #1796: Assertion error HttpHeader.c:914: "str"
+	- Bug #1790: Crash on wccp2 + mask assignement + standard wccp service
+	- Silence harmless gcc compile warning.
+	- Clean up poll memory on shutdown
+	- Ported select, poll and win32 to new comm event framework
+	- Windows port: Correctly identify Windows Vista and Windows Server Longhorn
+	- Added a basic comm_select_simple comm loop only requiring minimal POSIX compliance.
+	- Safeguard from kb_t counter overflows on 32-bit platforms
+
+Changes to squid-2.6.STABLE4 (23 Sep 2006)
+
+	- Bug #1736: Missing Italian translation of ERR_TOO_BIG error page
+	- Windows port enhancement: added native exception handler with signal emulation
+	- Fix the %un log_format tag again. Got broken in 2.6.STABLE2
+	- Fix Squid crash when using %a in ERR_INVALID_REQ and ERR_INVALID_URL error messages.
+	- Bug #212: variable %i always 0.0.0.0 in many error pages
+	- Bug #1708: Ports in ACL accepts characters and out of range
+	- Bug #1706: Squid time acl accepts invalid time range.
+	- Fix another harmless fake_auth compiler warning on gcc 4.1.1 x86
+	- Fix an harmless snmp_core.c compiler warning on gcc 4.1.1 x86
+	- Bug #1744: squid-2.6.STABLE3 - fakeauth_auth crashing on certain requests
+	- Bug #1746: Harmless off by one overrun in ncsa_auth md5 password validation
+	- Bug #1598: start_announce cannot be disabled
+	- Periodically flush cache.log to disk when "buffered_logs on" is set
+	- Numerous COSS improvements and fixes
+	- Windows port: merge of MinGW support
+	- Windows port: Merged Windows threads support into aufs
+	- Bug #1759: Windows port cachemgr.cgi attempts to write to file system root directory
+	- Numerous portability fixes
+	- Various minor statistics cleanup on 64-bit hosts with more than 4GB of memory
+	- Bug #1758: HEAD on ftp:// URLs always returned 200 OK.
+	- Bug #1760: FTP related memory leak
+	- Bug #1770: WCCP2 weighted assignment
+	- Bug #1768: Redundant DNS PTR lookups
+	- Bug #1696: Add support for wccpv2 mask assignment
+	- Bug #1774: ncsa_auth support for cramfs timestamps
+	- Bug #1769: near-hit and filedescriptor usage missing in SNMP MIB
+	- Bug #1725: cache_peer login=PASS documentation somewhat confusing
+	- Bug #1590: Silence those ETag loop warnings
+	- Bug #1740: Squid crashes on certain malformed HTTP responses
+	- Bug #1699: assertion failed: authenticate.c:836: "auth_user_request != NULL"
+	- Improve error reporting on unexpected CONNECT requests in accelerator mode
+	- Cosmetic change to increase cache.log detail level on invalid requests
+	- Bug #1229: http_port and other directives accept invalid ports
+	- Reject http_port specifications using both transparent and accelerator options
+	- Cosmetic cleanup to not dump stacktraces on configuration errors
+
+
+Changes to squid-2.6.STABLE3 (18 Aug 2006)
+
+	- Bug #1577: assertion failed "fm->max_n_files <= (1 << 24)" on
+	  very large cache_dir.  Limit number of objects stored to slightly
+	  less to avoid this.
+	- Bug #1705: Correct error message on invalid time weekday specification
+	- Don't attempt to guess netmask in src/dst acl specifications
+	  if none was provided. Assume it's an IP even if it ends in 0
+	- Bug #1665: log_format %ue, %us tags for external or ssl user id
+	- Bug #1707: delay pools often ignored the set limit
+	- Bug #1716: Support for recent OpenSSL 0.9.7 versions
+	  (0.9.8 always worked)
+	- COSS fixes and performance improvements
+	- Memory leak when reading configuration files with overlapping
+	  ACL data where squid -k parse complains.
+	- Memory leak related to pinned connections
+	- Show include acls unexpanded in cachemgr configuration dumps
+	- Fixed WARNING defer handler for HTTP Socket does not call commDeferFD
+	- Bug #1304: Downloads may hang when using the cache_dir max-size option
+	- Optimization of network I/O
+	- Bug #1730: make problem with --enable-follow-x-forwarded-for on Solaris
+	- Fixed a memory leak on certain invalid requests
+	- Bug #1733: ERR_CANNOT_FORWARD Portuguese translation update
+	- Bug #582: ntlm fake_auth not handles non-ascii login names
+	- New startup message indicating the type of event loop used
+	- Bug #1602: TCP fallback on truncated DNS responses
+	- Bug #1667: assertion failed: store.c:1081: "e->store_status == STORE_PENDING"
+	- Bug #1723: cachemgr now works in accelerator mode
+
+Changes to squid-2.6.STABLE2 (31 Jul 2006)
+
+	- WCCP2 doesn't update statCounter.syscalls.sock.sendtos counter.
+	- Releasenotes Table of contents should use relative links without
+	  filename.
+	- Reject HTTP/0.9 formatted CONNECT requests. 
+	- Cosmetic cleanup to use safe_free instead of xfree + manual
+	  assign to NULL
+	- Bug #1650: transparent interception "Unable to forward this
+	  request at this time"
+	- Bug #1658: Memory corruption when using client-side SSL certificates
+	- Add storeRecycle; a storeIO method to delete a StoreEntry w/out
+	  deleting the underlying object.
+	- Many COSS fixes and new coss data dumper utility for diagnostics
+	- Bug #1669: SEGV in storeAddVaryReadOld
+	- Many fixes in debug sections and spelling of debug messages
+	- Don't keep client connection persistent if there was a mismatch in
+	  the response size.
+	- Move eventCleanup debug messages to debug level 2 (was 0)
+	- Add the missing concurrency parameters to basic and digest auth
+	  schemes
+	- Bug #1670: assertion failure: i->prefix_size > 0 in client_side.c:2509
+	- Log SSL user id in the custom log User name format (%un)
+	- Bug #1653: Username info not logged into Cachemgr active_requests
+	  statistics
+	- Added to the redirectors interface the support for SSL client
+	  certificate
+	- squid.conf.default cleanup to remove references to old options
+	- Fix many filedescriptors in combination with TPROXY
+	- Fix connection pinning in transparently intercepted connections
+	- Bug #1679: LDFLAGS not honored in some programs.
+	- Minor cleanup of port numbers in transparent interception or
+	  vhost + vport
+	- Bug #1671: transparent interception fails with FreeBSD ipfw or
+	  Linux-2.2 ipchains
+	- Bug #1660: Accept-Encoding related memory corruption
+	- Bug #1651: Odd results if url_rewriter defined multiple times
+	- Bug #1655: Squid does not produce coredumps under linux when
+	  started as root
+	- Bug #1673: cache digests not served to other caches
+	- Cleanup of Linux capability code used by tproxy
+	- Bug #1684: xstrdup: tried to dup a NULL pointer!
+	- Bug #1668: unchecked vsnprintf() return code could lead to log
+	  corruption
+	- Bug #1688: Assertion failure in HttpHeader.c in some header_access
+	  configurations
+	- Cygwin support fir --disable-internal-dns
+	- Silence those annoying sslReadServer: Connection reset by peer
+	  errors.
+	- Bug #1693: persistent connections broken in transparent
+	  interception mode
+	- Bug #1691: multicast peering issues
+	- Bug #1696: Correct WCCP2 processing of router capability info
+	  segments
+	- Bug #1694: Assertion failure in mgr:config if using
+	  access_log_format %<h
+	- Bug #1677: Duplicate etags in the If-None-Match header
+	- Bug #1665: access_log_format codes for login names from external
+	  acl or ssl
+	- Bug #1681: All ntlmauthenticator processes are busy
+	- Added ARP acl support for OpenBSD and ARP fixes for Windows
+	- Bug #1700: WCCP fails on FreeBSD (Unable to disconnect WCCP out
+	  socket)
+	- WCCP2 correct dampening of assign buckets when there it lots of
+	  changes
+	- minimum_expiry_time to tune the magic 60 seconds limit of what
+	  is considered cachable when the object doesn't have any cache
+	  validators.
+	- Bug #1703: wrong path to diskd helper corrected, and config
+	  parser extended to trap incorrect paths early
+	- Bug #1703: COSS failed to initialize async-io threads
+	- Bug #1703: should abort if diskd helper exits unexpectedly
+	- Bug #1702: Warn if acl name is too long
+	- Bug #1685: Crashes or other odd results after storeSwapMetaUnpack: errors
+	- wccp2_rebuild_wait directive to delay registering with WCCP until the
+	- Bug #1662: Infinite loop in external acl with grace period if the
+	  same http_access line had multiple external acls
+
+Changes to squid-2.6.STABLE1 (1 Jul 2006)
+	
+	- New --enable-default-hostsfile configure option
+	- Added username info to active_requests cachemgr stats
+	- Modified squid MIB to incorporate squid.conf visible_hostname
+	- Added multi-line capability in squid.conf
+	- Added new httpd_suppress_version_string configuration directive
+	- WCCPv2 support
+	- Negotiate authentication scheme support
+	- NTLM authentication scheme rewritten
+	- Customizable access log formats
+	- Selective access logging
+	- Access logging via syslog
+	- Reverse proxy enhancements, with new cache_peer based forwarding
+	  model.
+	- LDAP based Digest helper (Note: not true LDAP integration, just using
+	  LDAP for storage of the Digest hashes)
+	- Improved helper communication protocol
+	- External ACL improvements. %PATH, log=, grace=, and more..
+	- Improved SSL support with hardware offload, client certificate
+	  support (primitive), chained certificates and numerous bug fixes
+	- DNS lookups now use the search path from /etc/resolv.conf or
+	  the Windows registry
+	- Linux epoll support
+	- collapsed forwarding to optimize reverse proxies or other
+	  setups having very many clients going to the same URL
+	- New improved COSS implementation
+	- Optional support for blank passwords
+	- The old and obsolete Samba-2.2.X winbind helpers have been removed
+	- external acls now uses the simplified URL-escaped protol "3.0" by
+	  default.
+	- Linux TPROXY support
+	- Support for proxying of Microsoft Integrated Login by adding
+	  support for the deviations from the HTTP protocol required
+	  to support these authentication mechanisms
+	- Added the capability to run as a Windows service under Cygwin
+	- CARP now plays well with the other peering algorithms
+	- read_ahead_gap option to read ahead more than 16KB of the reply
+	- check_hostnames and allow_underscore squid.conf options
+	- http_port is now optional, allowing for SSL only operation
+	- Full ETag/Vary support, caching responses which varies with
+	  request details (browser, language etc).
+	- umask now defaults to 027 to protect the content of cache and
+	  log files from local users
+	- HTCP support for access control and the CRL operation for
+	  purgeing of cache content
+	- Optionally follow X-Forwarded-For headers to determine the original
+	  client IP behind sedond level proxies
+	- FreeBSD kqueue support
+
+Changes to squid-2.5.STABLE14 (20 May 2006)
+	- [Minor] icons not displayed when visible_hostname is a
+	  short hostname (without domain). (Bug #1532)
+	- [Medium] Memleak in HTCP client code (default disabled)
+	  (Bug #1553)
+	- [Major] memory leak in ident processing (Bug #1557)
+	- [Medium] Memory leak in header processing related to external_acl
+	  header detail format tag (Bug #1564)
+
+Changes to squid-2.5.STABLE13 (12 Mar 2006)
+	- [Minor] Fails to compile on Solaris and some other platforms
+	  with undefined reference to setenv (Bug #1435)
+	- [Cosmetic] Added WebDAV REPORT method to know HTTP methods list
+	- [Minor] Squid ntlm_auth (not the Samba provided one) giving
+	  odd results if --enable-ntlm-fail-open is used (Bug #1022)
+	- [Minor] wbinfo_group.pl doesn't work with Samba 3.0.21 and later
+	  (Bug #1472)
+	- [Minor] Squid crash when asyncio function counters url accessed
+	  from Cachemgr CGI (Bug #1464)
+	- [Cosmetic] Linux compile warning about prctl called with too few
+	  arguments (Bug #1483)
+	- [Minor] Wrong timezone declaration for 64 bit Irix (Bug #1479)
+	- [Minor] Some 206 responses logged incorrectly (Bug #1511)
+	- [Minor] Issues in processing ranges on objects >2GB (Bug #437)
+	- [Cosmetic] Segmentation fault on empty proxy_auth ACLs (Bug #1414)
+	- [Minor] Ident access lists don't work in delay_access statements
+	  (Bug #1428)
+	- [Minor] Some clients support NTLM even if not initially negotiating
+	  persistent connections (Bug #1447)
+	- [Medium] 504 Gateway Time-out on FTP uploads (Bug #1459)
+	- [Medium] delay pools given too much bandwidht after "-k reconfigure"
+	  (Bug #1481)
+	- [Cosmetic] New persistent_connection_after_error configuration
+	  directive (Bug #1482)
+	- [Cosmetic] Hangs at 100% CPU if /dev/null is not accessible (Bug
+	  #1484)
+	- [Minor] Fails to compile on Fedora Core 5 test 2 x86_64 (Bug #1492)
+	- [Cosmetic] Typo in ftp.c (Bug #1507)
+	- [Cosmetic] Error in FTP listings of files with -> in their name
+	  (Bug #1508)
+	- [Cosmetic] With Squid-2.5 there is no more the DUPLICATE IP logging
+	  in cache.log (Bug #779)
+	- [Minor] Fails to process long host names (Bug #1434)
+	- [Cosmetic] Azerbaijani errors translation (Bug #1454)
+	- [Cosmetic] misleading error message message for bad/unresolveable
+	  cache_peer name (Bug #1504)
+	- [Cosmetic] confusing statistics on stateful helpers (NTLM auth)
+	  (Bug #1506)
+	- [Major] connstate memory leak (Bug #1522)
+
+Changes to squid-2.5.STABLE12 (22 Oct 2005)
+
+	- [Major] Error introduced in 2.5.STABLE11 causing truncated responses
+	  when using delay pools (Bug #1405)
+	- [Cosmetic] Document that tcp_outgoing_* works badly in combination
+	  with server_persistent_connections (Bug #454)
+	- [Cosmetic] Add additinal tracing to squid_ldap_auth making
+	  diagnostics easier on squid_ldap_auth configuration errors
+	  (Bug #1395)
+	- [Minor] $HOME not set when started as root (Bug #1401)
+	- [Minor] httpd_accel_single_host breaks in combination with
+	  server_persistent_connections (Bug #1402)
+	- [Cosmetic] Setting CACHE_HTTP_PORT to configure was only partially
+	  implemented, effectively ignored. (Bug #1403)
+	- [Minor] CNAME based DNS addresses could get cached for longer
+	  than intended (Bug #1404)
+	- [Minor] Incorrect handling of squid-internal-dynamic/netdb exchanges
+	  in transparently intercepting proxies (Bug #1410).
+	- [Minor] Cache revalidations on HEAD requests causing poor cache
+	  hit ratio (Bug #1411).
+	- [Minor] Not possible to send 302 redirects via a redirector in
+	  response to CONNECT requests (bug #1412)
+	- [Minor] Incorrect handling of Set-Cookie on cache refreshes (Bug
+	  #1419)
+	- [Major] Segmentation fault crash in rfc1738_do_escape (Bug #1426)
+	- [Minor] Delay pools class 3 fails on clients in network 255
+	  (Bug #1431)
+	
+Changes to squid-2.5.STABLE11 (22 Sep 2005)
+
+	- [Minor] Workaround for servers sending double content-length headers
+	  (Bug #1305)
+	- [Cosmetic] Updated Spanish error messages by Nicolas Ruiz
+	- [Cosmetic] Date header corrected on internal objects (icons etc)
+	  (Bug #1275)
+	- [Minor] squid -k fails in combination with chroot after patch for
+	  bug 1157 (Bug #1307)
+	- [Cosmetic] Segmentation fault if compiled with
+	  --enable-ipf-transparent but denied access to the NAT device.
+	  (Bug #1313)
+	- [Minor] httpd_accel_signle_host incompatible with redireection
+	  (Bug #1314)
+	- [Minor] squid -k reconfigure internal corruption if the type of
+	  a cache_dir is changed (Bug #1308)
+	- [Minor] SNMP GETNEXT fails if the given OID is outside the Squid MIB
+	  (Bug #1317)
+	- [Minor] Title in FTP listings somewhat messed up after previous
+	  patch for bug 1220 (Bug #1220)
+	- [Minor] FTP listings uses "BASE HREF" much more than it needs to,
+	  confusing authentication. (Bug #1204)
+	- [Minor] winfo_group.pl only looked for the first group if multiple
+	  groups were defined in the same acl. (Bug #1333)
+	- [Cosmetic] Compiler warnings on some 64-bit platforms (Bug #1316)
+	- [Cosmetic] Removed some debug output from wb_ntlm_atuh (Bug #518)
+	- [Cosmetic] The new --with-build-environment=... option doesn't work
+	- [Cosmetic] New 'mail_program' configuration option in squid.conf
+	- [Minor] Fails to compile with ip-filter and ARP support on Solaris
+	  x86 (Bug #199)
+	- [Major] Segmentation fault in sslConnectTimeout (Bug #1355)
+	- [Medium] assertion failed in StatHist.c:93  (Bug #1325)
+	- [Minor] More chroot_dir and squid -k reconfigure issues (Bug #1331)
+	- [Cosmetic] Invalid URLs in error messages when failing to connect
+	  to peer, and a few other inconsistent error messages (Bug #1342)
+	- [Cosmetic] Fails to compile with glibc -D_FORTIFY_SOURCE=2
+	  (Bug #1344)
+	- [Minor] Some odd FTP servers respond with 250 where 226 is expected
+	  (Bug #1348)
+	- [Cosmetic] Greek translation of error messages (Bug #1351)
+	- [Major] Assertion failed store_status == STORE_PENDING (Bug #1368)
+	- [Minor] squid_ldap_auth -U does not work (Bug #1370)
+	- [Minor] SNMP cacheClientTable fails on "long" IP addresses
+	  (Bug #1375)
+	- [Minor] Solaris Sparc + IP-Filter compile error (Bug #1374)
+	- [Minor] E-mail sent when cache dies is blocked from many antispam
+	  rules (Bug #1380)
+	- [Minor] LDAP helpers does not work with TLS (-Z option) (Bug #1389)
+	- [Cosmetic] Incorrect store dir selection debug message on objects
+	  larger than 2Gigabyte (Bug #1343)
+	- [Cosmetic] header_id enum misused as an signed integer (Bug #1343)
+	- [Cosmetic] Allow leaving core dumps when started as root (Bug #1335)
+	- [Medium] Clients could bypass delay_pool settings by faking a cache
+	  hit request (Bug #500)
+	- [Minor] IP-Filter 4.X support (Bug #1378)
+	- [Medium] Odd results on pipelined CONNECT requests
+	- [Major] Squid crashing with "FATAL: Incorrect scheme in auth header"
+	  when using NTLM authentication.
+	- [Cosmetic] Odd results when pipeline_prefetch is combined with NTLM
+	  authentication (bug #1396)
+	- [Minor] invalid host was processed as IP 255.255.255.255 in dst acl
+	  (Bug #1394)
+	- [Cosmetic] New --with-maxfd=N configure option to override build
+	  time filedescriptor limit test
+	- [Minor] Added support for Windows code name "Longhorn" on Cygwin.
+
+Changes to squid-2.5.STABLE10 (17 May 2005)
+
+	- [Minor Security] Fix race condition in relation to old Netscape
+	  Set-Cookie specifications
+	- [Minor] Fails to parse D.J.  Bernstein's FTP EPLF ftp listing
+	  format and PASV resposes (Bug #1252)
+	- [Medium] BASE HREF missing on ftp directory URLs without /
+	  (Bug #1253)
+	- [Minor security] confusing http_access results on configuration
+	  error (Bug #1255)
+	- [Cosmetic] More robust Date parser (Bug #321)
+	- [Minor] reload_with_ims fails to refresh negatively cached objects
+	  (Bug #1159)
+	- [Cosmetic] delay_access description clarification (Bug #1245)
+	- [Cosmetic] Check for integer overflow in size specifications in
+	  squid.conf (Bug #1247)
+	- [Cosmetic] bzero is a non-standard function not available on all
+	  platforms (Bug #1256)
+	- [Cosmetic] Compiler warnings if pid_t is not an int (Bug #1257)
+	- [Cosmetic] Incorrect use of ctype functions (Bug #1259)
+	- [Cosmetic] Defer digest fetch if the peer is not allowed to be used
+	  (Bug #1261)
+	- [Minor] Duplicate content-length headers logged incorrectly or
+	  not cleaned up properly (Bug #1262)
+	- [Cosmetic] Extend relaxed_header_parser to work around "excess
+	  data from" errors from many major web servers. (Bug #1265)
+	- [Minor] Add HTTP headers to a netdb error messages
+	- [Minor] Multiple minor aufs issues (Bug #671)
+	- [Minor] Basic authentication fails with very long logins or
+	  password (Bug #1171)
+	- [Minor] CONNECT requests truncated if client side disconnects first
+	  (Bug #1269)
+	- [Minor] --disable-hostname-checks configure option did not work
+	- [Cosmetic] LDAP helpers adjusted to compile with SUN LDAP SDK
+	- [Cosmetic] aufs warning about open event filedescriptors on shutdown
+	- [Medium] Failed to process requests for files larger than 2GB in size
+	- [Cosmetic] rename() related cleanup
+	- [Cosmetic] New cachemgr pending_objects and client_objects actions
+	- [Cosmetic] external acls requiring authentication did not request
+	  new credentials on access denials like proxy_auth does.
+	- [Cosmetic] Syslog facility now configurable via command line options.
+	- [Cosmetic] New %a error page template code expanding into the
+	  authenticated user name. (Bug #798)
+	- [Minor] IP-Filter 4.0 support in --enable-ipf-transparent
+	- [Minor] Support interception of multiple ports
+	- [Cosmetic] Allow "squid -k ..." to run even if the local hostname
+	  can not be determined (Bug #1196)
+	- [Cosmetic] Configuration file parser now handles DOS/Windows formatted
+	  configuration files with CRLF lineendings proper.
+	- [Minor] Unrecognized Cache-Control directives now forwarded properly
+	  (Bug #414)
+	- [Minor] Authentication helpers now returns useable information
+	  in the %m error page macro on failed authentication (Bug #1223)
+	- [Minor] pid file management corrected in chroot use (Bug #1157)
+	- [Minor Security] Fix for CVE-1999-0710: cachemgr malicouse use.
+	  cachemgr.cgi now reads a config file telling which proxy servers
+	  it can administer.
+	- [Minor] aufs statistics improvements
+	- [Minor] SNMP bugfixes and support for SNMPv2(c) (Bug #1288, #1299)
+	- [Minor] ARP acl documentation and cachemgr config dump corrections
+	- [Minor] dstdomain/dstdom_regex acls now allow matching of numeric
+	  hostnames in addition to the reverse lookup of the domain name.
+	- [Security] Internal DNS client hardened against spoofing
+	
+Changes to squid-2.5.STABLE9 (24 Feb 2005)
+
+	- [Medium] Don't retry requests on 403 errors (Bug #1210)
+	- [Minor] Ignore invalid FQDN DNS responses (Bug #1222)
+	- [Minor] cache_peer related memory leaks on reconfigure (Bug #1246)
+	- [Cosmetic] Adjusted to build cleanly with GCC-4 (Bug #1211)
+	- [Minor] relaxed_header_parser extended to work around even more
+	  broken web servers (Bug #1242)
+	- [Minor] FTP gatewaying URLs cleaned up slightly, mainly to work
+	  better with Mozilla but also to improve security slightly on
+	  non-anonymous FTP.
+	- [Minor] High characters allowed un-encoded in FTP and Gopher
+	  listings to allow the user-agent to display data in non-iso8859-1
+	  charsets. (Bug #1220)
+	- [Cosmetic] format fixes to silence compiler warnings on many
+	  platforms.
+	- [Major] Assertion failures on certain odd DNS responses (Bug #1234)
+
+Changes to squid-2.5.STABLE8 (11 Feb 2005)
+
+	- [Minor] 100% CPU usage on half-closed PUT/POST requests (Bug #354,
+	  #1096)
+	- [Cosmetic] Document -v (protocol version) option to LDAP helpers
+	- [Minor] The new req_header and resp_header acls segfaults
+	  immediately on parse of squid.conf (Bug #961)
+	- [Minor] Failure to shut down busy helpers on -k rotate/reconfigure
+	  (Bug #1118)
+	- [Minor] Don't use O_NONBLOCK on disk files. (Bug #1102)
+	- [Minor] Squid fails to close TCP connection after blank HTTP
+	  response (Bug #1116)
+	- [Minor security] Random error messages in response to malformed
+	  host name (Bug #1143)
+	- [Minor] PURGE should not be able to delete internal objects
+	  (Bug #1112)
+	- [Minor] httpd_accel_port 0 (virtual) not working correctly (Bug
+	  #1121)
+	- [Minor] cachemgr vm_objects segfault (Bug #1149)
+	- [Minor security] Confusing results on empty acl declarations (Bug
+	  #1166)
+	- [Minor] Don't close all "other" filedescriptors on startup (Bug
+	  #1177)
+	- [Minor] fakeauth_auth memory leak and NULL pointer access (Bug
+	  #1183)
+	- [Security] buffer overflow bug in gopherToHTML() (Bug #1189)
+	- [Medium security] Denial of service with forged WCCP messages
+	  (Bug #1190)
+	- [Minor] DNS related memory leak on certain malformed DNS responses
+	  (Bug #1197)
+	- [Minor] Internal DNS sometimes truncates host names in reverse
+	  (PTR) lookups (Bug #1136)
+	- [Minor Security] Add sanity checks on LDAP user names (Bug #1187)
+	- [Security] Harden Squid against HTTP request smuggling attacks
+	- [Minor] Icon URLs fails in non-anonymous FTP directory listings is
+	  short_icon_urls is on (Bug #1203)
+	- [Security] Harden Squid against HTTP response splitting attacks
+	  (Bug #1200)
+	- [Medium security] Buffer overflow in WCCP recvfrom() call
+	  (Bug #1217)
+	- [Security] Properly handle oversized reply headers (Bug #1216)
+	- [Minor] LDAP helpers search fixed to properly ask for no attributes
+	- [Minor] A sporadic segmentation fault when using ntlm authentication
+	  fixed (Bug #1127)
+	- [Major] Segmentation fault on failed PUT/POST requests (Bug #1224)
+	- [Medium] Persistent connection mismatch on failed PUT/POST request
+	  (Bug #1122)
+	- [Minor] WCCP easily disturbed by forged packets (Bug #1225)
+	- [Minor] Password management in ftp:// gatewaying improved (Bug #1226)
+	- [Major] HTTP reply data corruption in certain situations involving
+	  reply headers split over multiple packets (Bug #1233)
+
+Changes to squid-2.5.STABLE7 (11 Oct 2004)
+
+	- [Medium] No objects cached in ufs cache_dir type in some
+	  configurations. Issue introduced in 2.5.STABLE6 by the patch for
+	  Bug #676. (Bug #1011)
+	- [Minor] LDAP helpers update to correct LDAP connection management
+	  and add support for literal password compare instead of binding
+	- [Minor] A large number of queued DNS lookups for the same domain
+	  (Bug #852)
+	- [Cosmetic] request_header_max_size configuration partly ignored
+	  (Bug #899)
+	- [Minor] Partial hit results in TCP_HIT, not TCP_MISS. (Bug #1001)
+	- [Cosmetic] HEAD requests may return stale information
+	  (Bug #1012)
+	- [Cosmetic] Warn if cache_dir ufs can not create files. (Bug #918)
+	- [Minor] case insensitive authentication (Bug #431)
+	- [Cosmetic] Add delay pools information to active_requests. (Bug
+	  #882)
+	- [Minor] Apparent memory leak in client_db (Bug #833)
+	- [Minor] NTLM authentication truncated causing failures. (Bug
+	  #1016)
+	- [Cosmetic] Grammatical corrections in squid.conf.default
+	- [Cosmetic] Unknown %X errorpage codes incorrectly quoted. (Bug
+	  #1030)
+	- [Medium] Segfaults and other strange crashes when using heap
+	  policies. (Bug #1009)
+	- [Minor] Supplementary group memberships not set (Bug #1021)
+	- [Cosmetic] ERR_TOO_BIG Portuguese translation
+	- [Minor] external_acl does not handle newlines (Bug #1038)
+	- [Major] NTLM authentication denial of service when using msnt_auth
+	  or fake_auth (Bug #1045)
+	- [Medium] Memory leaks when using NTLM authentication without
+	  challenge reuse. (Bug #994)
+	- [Minor] Temporary NTLM memory leak with challenge reuse enabled
+	  (Bug #910)
+	- [Minor] assertion failed: "n_ufs_dirs <=
+	  Config.cacheSwap.n_configured". (Bug #1053)
+	- [Minor] Segfault in authenticateDigestHandleReply. (Bug #1031)
+	- [Minor] acl time fails to parse multiple time specifications
+	  (Bug #1060)
+	- [Minor] cachemgr config dumps mixed up Range and Request-Range 
+	  headers in http_header_access & replace directives. (Bug #1056)
+	- [Minor] Content-Disposition added as a well known header (Bug #961)
+	- [Cosmetic] Don't warn about arp acls not being supported on FreeBSD
+	  (Bug #1074)
+	- [Cosmetic] Limit internal send/receive buffer sizes (Bug #1075)
+	- [Medium] New acl types to match arbitrary HTTP headers. In addition
+	  the http_header_access & replace directives now support arbitrary
+	  headers and not only the well known ones. (Bug #961)
+	- [Cosmetic] ncsa_auth now accepts Window formatted password files
+	  (Bug #1078)
+	- [Cosmetic] Support the --program-prefix/suffix options or other
+	  configure program name transforms (Bug #1019)
+	- [Minor] Fix race condition in CONNECT and also handle aborts of
+	  CONNECT requests in a more graceful manner. (Bug #859)
+	- [Minor] New balance_on_multiple_ip directive to work around certain
+	  broken load balancers and optimized ipcache on reload requests
+	  (Bug #1058)
+	- [Medium] New reply_header_max_size directive
+	  (Bug #874)
+	- [Minor] Suspected instability on aborted PUT/POST requests
+	  (Bug #1089)
+	- [Security] SNMP Denial of Service fix (CAN-2004-0918)
+
+Changes to squid-2.5.STABLE6 (9 Jul 2004)
+
+	- Bug #937: NTLM assertion error "srv->flags.reserved"
+	- Bug #935: squid_ldap_auth can be confused by the use of reserved
+	  characters
+	- Helper queue warnings imprecise on the number of helpers required
+	- squid_ldap_auth TLS mode works correctly again
+	- Bug #940, #305: pkg-config support for finding correct OpenSSL
+	  compile flags
+	- Bug #426: "Vary: *" is ignored
+	- 100% CPU usage on Linux-2.2
+	- Version number should not include -CVS if autoconf is run
+	- Bug #947: deny_info redirection with requested URL escaped wrongly
+	- Bug #495: CONNECT timeout should produce a 504 or 503
+	- Bug #956: cache_swap_log documentation referred to swap.state by
+	  it's old swap.log name
+	- ntlm/auth_ntlm.c(683): warning #187: use of "=" where "==" may
+	  have been intended
+	- Bug #962: rfc1035NameUnpack: Assertion (*off) < sz failed
+	- Bug #954: Segment violation when using a blank user name in digest
+	  authentication
+	- Bug #943: assertion failed: errorpage.c:292: "mem->inmem_hi == 0"
+	- Spelling corrections in configure and squid.conf.default
+	- The meaning of ERR in digest helper protocol clarified in the
+	  squid.conf documentation
+	- Bug #950: Spelling error in Turkish ERR_DNS_FAIL
+	- Bug #616: Negative cached 404 replies with VARY header never matched
+	- Bug #968: range_offset_limit -1 KB rejected as invalid syntax
+	  due to a shortcoming in the fix to bug #817
+	- Bug #570: Very large cache_mem values reported wrongly in cache.log
+	- Bug #676: store_dir_select_algorithm least-load doesn't work for
+	  ufs cache_dir type
+	- Bug #946: cacheCurrentUnlinkRequests should be a counter, not gauge
+	- Bug #948: Show client ip in cache.log debug output
+	- Bug #960: compilation issue on OpenBSD/m88k
+	- Bug #969: FTP directory listing HTML DOCTYPE misread by some tools
+	- Bug #991: dns_servers should default to localhost if no resolv.conf
+	- Bug #717: msnt_auth documentation update
+	- Bug #753: Segfault in memBufVPrintf on certain architectures
+	  requiring va_copy
+	- Bug #941: Negative size in access.log on long running CONNECT
+	  requests
+	- Bug #972: Segmentation fault after "Likely proxy abuse detected"
+	- Bug #981: sasl_auth updated to work with SALS2
+	- Overflow bug in Squid's ntlm_auth helper used for transparent NTLM
+	  authentication to a NT domain without using Samba.
+
+Changes to squid-2.5.STABLE5 (1 Mar 2004):
+
+	- cache.log message on "squid -k reconfigure" was slightly confusing,
+	  claiming Squid restarted when it just reread the configuration.
+	- Bug #787: digest auth never detects password changes
+	- Bug #789: login with space confuses redirector helpers
+	- Bug #791: FQDNcache discards negative responses when using
+	  internal DNS
+	- pam_auth fails on Solaris when using pam_authtok_get. Persistent
+	  PAM connections are unsafe and now disabled by default.
+	- auth_param documentation clarifications and added default realm
+	  values making only the helper program a required attribute
+	- Bug #795: German ERR_DNS_FAIL correction
+	- Bug #803: Lithuanian error messages update
+	- Bug #806: Segfault if failing to load error page
+	- Bug #812: Mozilla/Netscape plugins mime type defined (.xpi)
+	- Bug #817: maximum_object_size too large causes squid not to cache
+	- Bug #824: 100% CPU loop if external_acl combined with separate
+	  authentication acl in the same http_access line
+	- squid_ldap_group updated to version 2.12 with support for ldaps://
+	  (LDAPv2 over SSL) and a numer of other improvements.
+	- Bug #799: positive_dns_ttl ignored when using internal DNS.
+	- Bug #690: Incorrect html on empty Gopher responses
+	- Bug #729: --enable-arp-acl may give warning about net/route.h
+	- Bug #14: attempts to establish connection may look like syn flood
+	  attack if the contacted server is refusing connections
+	- errorpage README files included in the distribution again showing
+	  who contributed which translation
+	- Bug #848: connect_timeout connect_timeout ends up twice the length.
+	  forward_timeout option added to address this.
+	- Bug #849: DNS log error messages should report the failed query
+	- Bug #851: DNS retransmits too often
+	- Bug #862: Very frequently repeated POST requests may cause a
+	  filedescriptor shortage due to persitent connections building up
+	- Bug #853: Sporatic segmentation faults on aborted FTP PUT requests
+	- Bug #571: Need to limit use of persistent connections when
+	  filedescriptor usage is high
+	- Bug #856: FTP/Gopher Icon URLs are unneededly complex and often
+	  does not work properly
+	- Bug #860: redirector_access does not handle "slow" acls such as
+	  "dst" or "external" requiring a external lookup.
+	- Bug #865: Persistent connection usage too high after sudden burst
+	  of traffic.
+	- Bug #867: cache_peer max-conn=.. option does not work
+	- Bug #868: refuses to start if pid_filename none is specified
+	- Bug #887: LDAP helper -Z (TLS) option does not work
+	- Bug #877: Squid doesn't follow telnet protocol on FTP control
+	  connections
+	- Bug #908: Random auth popups and account lockouts when using ntlm
+	- Support for NTLM_NEGOTIATE exchanges with ntlm helpers
+	- Bug #585: cache_peer_access fails with NTLM authentication
+	- Bug #592: always/never_direct fails with NTLM authentication
+	- wbinfo_group update for Samba-3
+	- Bug #892: helpers/ntlm_auth/SMB/ fails to compile on FreeBSD 5.0
+	- Bug #924: miss_access restricts internal and cachemgr requests
+	  even if these are local
+	- Bug #925: auth headers send by squidclient are mildly malformed
+	- Bug #922: miss_access and delay_access and several other
+	  authentication related bug fixes.
+	- Bug #909: Added ARP acl support for FreeBSD
+	- Bug #926: deny_info with http_reply_access or miss_access
+	- Bug #872: reply_body_max_size problems when using NTLM auth
+	- Bug #825: random segmentation faults when using digest auth
+	- Bug #910: Partial fix for temporary memory leaks when using NTLM
+	  auth. There is still problems if challenge reuse is enabled.
+	- ftp://anonymous@host/ now accepted without requiring a password
+	- Bug #594: several mime type updates (ftp:// related)
+	- url_regex enhanced to allow matching of %00
+
+Changes to squid-2.5.STABLE4 (15 Sep 2003):
+
+	- Lithuanian error messages added to the distribution
+	- Bug #660: segfauld if more than one custom deny_info line
+	- cache_dir disd documentation cleanup
+	- check open of /dev/null to avoid 100% CPU loop in badly
+	  configured chroot environments
+	- documentation update on uri_whitespace to refer to the correct RFC
+	- Bug #655: icmpRecv: recv: (11) Resource temporarily unavailable
+	- Bug #683: external_acl does not wait for ident lookups to complete
+	- aufs: Fix a minor use-after-free problem which could cause the
+	  count of opening filedescriptors to grow larger than it should
+	- Syntax changes to make GCC-3.3 accept Squid without complaints
+	- Warning if CARP server defined in incorrect load factor order
+	- neighbor_type_domain documentation update
+	- http_header_access now works when using cache peers
+	- high_memory_warning now uses sbrk as fallback mechanism on
+	  platforms where neither mallinfo or mstats are available.
+	- hosts_file now handles comments at the end of lines correcly
+	- storeCheckCachable() Stats corrected for release_request and
+	  wrong_content_length.
+	- cachePeerPingsSent MIB type corrected
+	- unused minimum_retry_timeout directive removed
+	- Bug #702: ERR_TO_BIG spanish translation
+	- Bug #705: Memory leak on deny_info TCP_RESET
+	- Code cleanup to fix compile error in httpHeaderDelById
+	- Bug #699: Host header now forwarded exactly where it was in the
+	  original request to work around certain broken firewalls or
+	  load balancers which fail if this header is too far into the
+	  request headers.
+	- Bug #704: Memory leak on reply_body_max_size
+	- Bug #686: requests denied due to http_reply_access are now
+	  logged with TCP_DENIED (instead of TCP_MISS, etc).
+	- Bug #708: ie_refresh now sends no-cache to have the reload
+	  request propagate properly in cache meshes
+	- Bug #700: Crashes related to ftpTimeout: timeout in SENT_PASV state
+	- Bug #709: cbdata.c:186: "c->valid" assertion due to peer
+	  digest not found
+	- Bug #710: round-robin cache_dir selection incorrectly
+	  compares max-size.
+	- Statistics corrections in HTTP header statitics
+	- QUICKSTART cleanups
+	- Bug #715: statCounter.syscalls.disk counters treated
+	  inconsistently.  Now increment the counters in AUFS
+	  functions and for unlinkd.
+	- Improvements to the (experimental) COSS storage scheme.
+	- Bug #721: User name field in access.log sometimes blank
+	- Bug #94: assertion failed: http.c: "-1 == cfd ||
+	  FD_SOCKET == fd_table[cfd].type"
+	- Bug #716: assertion failed: client_side.c:1478: "size > 0"
+	- Bug #732: aufs calculates number of threads and limits wrongly
+	- Bug #663: Username not logged into access.log in case of /407
+	- Bug #267: Form POSTing troubles with NTLM authentication
+	  and occationally in differen other error conditions.
+	- Bug #736: ICP dynamic timeout algorithm ignores multicast.
+	- Bug #733: No explicit error message when ncsa_auth can't access
+	  passwd file
+	- Bug #267, #757: POST with NTLM stops after persistent connection
+	  timeout
+	- Bug #742: Wrong status code on access denials if delay_access
+	  is used. Most notably 407 instead of 403 could be returned.
+	- Bug #763: segfault if using ntlm in http_reply_access
+	- Bug #638: assertion error if using proxy_auth in delay_access
+	- Bug #756: segmentation fault if using ntlm proxy_auth in delay_access
+	- The issue of reply_body_max_size limiting the size of error
+	  messages no longer applies.
+	- external_acl_type concurrency= option renamed to children= to
+	  prepare for Squid-3 upgrades. Old syntax still accepted for the
+	  duration of the Squid-2.5 release.
+	- number of filedescriptors rounded down to an even multiple of 64
+	  to work around issues in certain libc implementations.
+	- winbind helpers less noisy in cache.log on restarts/shutdown.
+	- Squid now automatically restarts helpers if too many of them
+	  have crashed.
+
+Changes to squid-2.5.STABLE3 (25 May 2003):
+
+	- Bug #573: Occational false negatives in external acl lookups
+	- Bug #577: assertion failed: cbdata.c:224: "c->y == c" when
+	  external_acl helpers crashes
+	- Bug #590: Squid may hang or behave oddly on shutdown while
+	  requests is being processed.
+	- Bug #590: external acl lookups does not deal well with queue
+	  overload
+	- cache_effective_user documentation update
+	- cache_peer documentation update for htcp and carp
+	- Bug #600: The example header_access paranoid setting is
+	  missing WWW-Authenticate
+	- Bug #605: Segmentation fault in idnsGrokReply() on certain
+	  platforms
+	- Fixes to build properly on AIX 5
+	- Bug #574: wb_group updated to version 1.1 to make group names
+	  case insensitive and correct a segfault issue in the helper
+	- SNMP mib updates to make cacheNumObjCount,
+	  cacheCurrentUnlinkRequests, cacheCurrentSwapSize and cacheClients
+	  correctly report as gauges (was reporting as counters).
+	- Woraround for --enable-ssl Kerberos issue on RedHat 9
+	- Bug #579: Close and repopen log files on "squid -k reconfigure"
+	- Bug #598: squid_ldap_auth could segfault if LDAP server is
+	  unavailable
+	- Bug #609,#612: msntauth helper fixes in dealing with large
+	  or non-existing allow/deny user files.
+	- Bug #620: acl ident REQUIRED matches even if the ident lookup fails
+	- Bug #432: reply_body_max_size fails with ident or proxy_auth acls
+	  and also fails to block large objects where the content-length
+	  is not known
+	- Bug #606: Basic auth looping and gets stuck at high CPU usage when
+	  multiple proxy_auth ACLs combined in one line and login fails.
+	- squid_ldap_auth updated with support for TLS and SSL
+	- Bug #623: segfault if using negated external acls in certain
+	  configurations involving other acls later on the same http_access
+	  line.
+	- Bug #622: wb_group helper update to version 1.2 to ass support for
+	  Domain-Qualified groups refering to groups in a specific domain
+	- Bug #596: logic error in poll() error management
+	- Bug #597: logic errors in error management
+	- Bug #591: segmentation fault in authentication on "squid -k debug"
+	- Bug #587: smb_auth fails on complex logins involving domain names
+	  or other odd characters
+	- Bug #558, #587: smb_auth.pl fails on complex logins involving
+	  domain names or other odd characters
+	- Bug #643: external_acl fails with ttl=0 due to a change introduced
+	  by the patch for Bug #553 in 2.5.STABLE2.
+	- Bug #630: minor issues in digest authantication causing random
+	  authentication failures and incompability with many mainstream
+	  browser digest implementations due to browser qop bugs. To deal
+	  with those broken browser nonce_stricness now defaults to off,
+	  and two new digest options have been added (check_nonce_count
+	  and post_workaround) to allow workarounds to other quite bad
+	  browser bugs if needed.
+	- Bug #644: digest authentication fails on requests with one
+	  or more comma in the requested URL
+	- Bug #648: deny_info TCP_RESET not working. The fix for this also
+	  adds the ability to send redirects.
+
+Changes to squid-2.5.STABLE2 (Mars 17, 2003):
+
+	- Contrib files added back to the distribution
+	- Several compiler warnings fixed when using --disable-ident or
+	  --disable-http-violations
+	- authentication can now be used in most access controls, but
+	  must in most cases first be enforced in http_access to force
+	  the user to authenticate.
+	- cleanups in the developer bootstrap.sh process when preparing
+	  the sources.
+	- several squid.conf.default documentation updated to correctly
+	  refer to the current names when refering to other directives
+	- authenticate_ip_ttl documentation updates
+	- several assertion faults and segmentation violations corrected
+	- the RunCache/RunAccel and squid.rc scripts updated to refer to
+	  the squid binary in sbin rather than the old bin location.
+	- squid_ldap_auth command line processing fixes when specifying
+	  the LDAP server last on the line instead of -h option
+	- aufs data corruption bugfix
+	- aufs performance improvement for low traffic systems
+	- aufs stability improvements
+	- external_acl corrected to properly deal with quoted strings
+	- WCCPv1 bugfix to make sure the router accepts the hash assignments
+	- "Total accounted memory" now correctly reported in cachemgr
+	- several small memory leaks (mostly reconfigure related)
+	- new squid.conf option to allow GET/HEAD requests with a request
+	  entity
+	- "make uninstall" no longer removes squid.conf
+	- cachemgr.cgi now uses POST to avoid having the cachemgr password
+	  logged in the web server logs
+	- authentication schemes which are known to not be proxyable are now
+	  filtered out from forwarded server replies to avoid that the clients
+	  tries to use such schemes when we know for a fact it won't work
+	- spelling corrections in various error messages
+	- now possible to define acl values with spaces in them
+	  by using the "include file" feature
+	- squid_ldap_group updated to 2.10 to fix compilation issues with
+	  recent (and older) OpenLDAP libraries and to make the helper deal
+	  correctly with true LDAP groups by first looking up the user DN.
+	- Some internal code cleanups
+	- now verifies that programs etc exists iside the chroot directory
+	  when using chroot_dir. No longer neccesary to set up a split view
+	  environment where the same paths works both inside the chroot and
+	  outside just to convince Squid that the files is actually there..
+	- improved memory usage reporting
+	- --disable-hostname-checks configure option
+	- no longer ignores double dots in host names. Any hostname with
+	  double dots is now rejected as invalid.
+	- log_mime_hdrs no longer logs garbage if very long headers
+	  are seen.
+	- 'select_fds_hist' object added to cachemgr 'histogram' output
+	- pid file now unlinked when squid has really shut down, not
+	  immediately when the shutdown request is received. This allows
+	  the pid file to be monitored to determine when Squid has shut down
+	  properly
+	- correct authentication scheme setups on some platforms or compilers
+	- several squid.conf.default documentation updates to remove references
+	  to renamed or replaced directives by changing them to their current
+	  names.
+	- the SSL reverse proxy support updated to allow building with
+	  OpenSSL 0.9.7 and and later.
+	- Corrected a minor performance problem while processing HEAD replies
+	  from various broken web servers not sending a correct HTTP reply
+	- time acls can now specify multiple times in the same acl name, like
+	  most other acl types.
+	- winbind helpers updated to match Samba-2.2.7a and should
+	  work with Samba-2.2.6 or later (required). For compability with
+	  older Samba versions A new configure option --with-samba-sources=...
+	  has been added to allow you to specify which Samba version the
+	  helpers should be built for if different than the above versions.
+	- Squid MIB definition syntax correction to work better with newer
+	  (and older) SNMP tools.
+	- Fixed access.log format when logging "error:invalid-HTTP-ident" on
+	  requests where parsing the HTTP identifier (HTTP/1.0) failed.
+	- "make distclean" no longer removes the icons, this avoids the
+	  dependency on "uudecode" to rebuild Squid after "make distclean"
+	- User name returned by external acl lookups (external_acl_type)
+	  is now available as "ident" in later acl checks in addition to
+	  the logging in access.log.
+	- Incorrect behaviour of Digest authentication partly corrected - it
+	  will not handle sessions, but will always enforce password
+	  correctness.. (patch submitted by Sean Burford).
+	- Issue with persistent connections and PUT/POST request corrected
+	  
+Changes to squid-2.5.STABLE1 (September 25, 2002):
 
 	- Major rewrite of proxy authentication to support other schemes
 	  than basic. First in the line is NTLM support but others can
@@ -38,6 +1157,7 @@ Changes to squid-2.5 ():
 	- Reworked how request bodies are passed down to the protocols.
 	  Now all client side processing is inside client_side.c, and
 	  the pass and pump modules is no longer used.
+	  used by Squid.
 	- Optimized searching in proxy_auth and ident ACL types. Squid should
 	  now handle large access lists a lot more efficiently.
 	  (Francesco Chemolli)
@@ -78,7 +1198,7 @@ Changes to squid-2.5 ():
 	  browsers know which HTML specification the document uses.
 	  In addition to that they have a new look (background-color, font)
 	  and are valid according to the HTML standards at www.w3.org.
-	  (Clemens Löser)
+	  (Clemens L ser)
 	- Login and password send to Basic auth helpers is now URL escaped
 	  to allow for spaces and other "odd" characters in logins and
 	  passwords
@@ -88,6 +1208,7 @@ Changes to squid-2.5 ():
 	  cache_peer option.
 	- Responses with Vary: in the header are now cached by squid.
 	  (Henrik Nordstrom).
+	- Removed unused 'siteselect_timeout' directive.
 
 Changes to Squid-2.4.STABLE7 (July 2, 2002):
 
@@ -594,7 +1715,7 @@ Changes to Squid-2.3.DEVEL3 ():
 	- Added --heap-replacement configure option.  This enables
 	  the alternative cache replacement policies, such as
 	  GDSF, and LFUDA.
-	- WCCP establishes and registers with the router faster.	
+	- WCCP establishes and registers with the router faster.        
 	- Added 'maxconn' acl type to limit the number of established
 	  connections from a single client IP address.  Submitted
 	  by Vadim Kolontsov.
@@ -781,7 +1902,7 @@ Changes to Squid-2.2 (April 19, 1999):
 	- Removed view-based access crontrol
 	- Cleaned up and simplified SNMP section of squid.conf
 	- Changed the SNMP code to use a tree stucture.
-	- Added objects to MIB:	
+	- Added objects to MIB: 
 		Request Hit Ratio's
 		Byte Hit Ratio's
 		Number of Clients
@@ -1792,7 +2913,7 @@ Changes to squid-1.2.beta16 (Mar 4, 1998):
 	- Changed "-d" command line option to take debugging level
 	  as argument.  Debugging equal-to or less-than the argument
 	  will be written to stderr.
-	- Removed unused urlClean() function from url.c.	
+	- Removed unused urlClean() function from url.c.        
 	- Fixed a bug that allowed '?' parts of urls to be recorded in
 	  store.log.  Logged urls are now "clean".
 	- Cache Manager got new Web interface (cachemgr.cgi). New .cgi
@@ -2168,7 +3289,7 @@ Changes to squid-1.2.beta8 (Dec 2, 1997):
 	- Removed xmalloc() return check in uudeocde.c
 	- Added 'ifdef' support to cf_gen.c for optional code (e.g. SNMP)
 	- Changed 'client' program to provide easier cache manager access,
-	  e.g.:	'client mgr:info'
+	  e.g.: 'client mgr:info'
 	- Fixed 'client' to send 'Connection' instead of 'Proxy-Connection'
 	  for simulated keep-alive requests.
 	- Removed 'fd' arg from clientProcess* functions.
