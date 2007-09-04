@@ -1,6 +1,6 @@
 
 /*
- * $Id: cf_gen.cc,v 1.60 2007/08/27 13:37:02 hno Exp $
+ * $Id: cf_gen.cc,v 1.61 2007/09/04 17:39:57 hno Exp $
  *
  * DEBUG: none          Generate squid.conf.default and cf_parser.h
  * AUTHOR: Max Okumoto
@@ -55,6 +55,7 @@
 #define MAX_LINE	1024	/* longest configuration line */
 #define _PATH_PARSER		"cf_parser.h"
 #define _PATH_SQUID_CONF	"squid.conf.default"
+#define _PATH_CF_DEPEND		"cf.data.depend"
 
 enum State {
     sSTART,
@@ -101,8 +102,22 @@ typedef struct Entry
 
 Entry;
 
+typedef struct TypeDep
+{
+    char *name;
 
-static const char WS[] = " \t";
+    TypeDep *next;
+} TypeDep;
+
+typedef struct Type
+{
+    char *name;
+    TypeDep *depend;
+
+    struct Type *next;
+} Type;
+
+static const char WS[] = " \t\n";
 static int gen_default(Entry *, FILE *);
 static void gen_parse(Entry *, FILE *);
 static void gen_parse_entry(Entry *entry, FILE *fp);
@@ -124,6 +139,31 @@ lineAdd(Line ** L, const char *str)
     (*L)->data = xstrdup(str);
 }
 
+static void
+checkDepend(const char *directive, const char *name, const Type *types, const Entry *entries)
+{
+    const Type *type;
+    for (type = types; type; type = type->next) {
+	const TypeDep *dep;
+	if (strcmp(type->name, name) != 0)
+	    continue;
+	for (dep = type->depend; dep; dep = dep->next) {
+	    const Entry *entry;
+	    for (entry = entries; entry; entry = entry->next) {
+		if (strcmp(entry->name, dep->name) == 0)
+		    break;
+	    }
+	    if (!entry) {
+		fprintf(stderr, "ERROR: '%s' (%s) depends on '%s'\n", directive, name, dep->name);
+		exit(1);
+	    }
+	}
+	return;
+    }
+    fprintf(stderr, "ERROR: Dependencies for cf.data type '%s' used in '%s' not defined\n", name, directive);
+    exit(1);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -131,9 +171,11 @@ main(int argc, char *argv[])
     char *input_filename = argv[1];
     const char *output_filename = _PATH_PARSER;
     const char *conf_filename = _PATH_SQUID_CONF;
+    const char *type_depend = argv[2];
     int linenum = 0;
     Entry *entries = NULL;
     Entry *curr = NULL;
+    Type *types = NULL;
     enum State state;
     int rc = 0;
     char *ptr = NULL;
@@ -144,6 +186,34 @@ main(int argc, char *argv[])
 
     const char *rmode = "r";
 #endif
+    char buff[MAX_LINE];
+
+
+    /*-------------------------------------------------------------------*
+     * Parse type dependencies
+     *-------------------------------------------------------------------*/
+    if ((fp = fopen(type_depend, rmode)) == NULL) {
+        perror(input_filename);
+        exit(1);
+    }
+
+    while ((NULL != fgets(buff, MAX_LINE, fp))) {
+	const char *type = strtok(buff, WS);
+	const char *dep;
+	if (!type || type[0] == '#')
+	    continue;
+	Type *t = (Type *)xcalloc(1, sizeof(*t));
+	t->name = xstrdup(type);
+	while ((dep = strtok(NULL, WS)) != NULL) {
+	    TypeDep *d = (TypeDep *)xcalloc(1, sizeof(*dep));
+	    d->name = xstrdup(dep);
+	    d->next = t->depend;
+	    t->depend = d;
+	}
+	t->next = types;
+	types = t;
+    }
+    fclose(fp);
 
     /*-------------------------------------------------------------------*
      * Parse input file
@@ -164,7 +234,6 @@ main(int argc, char *argv[])
     state = sSTART;
 
     while (feof(fp) == 0 && state != sEXIT) {
-        char buff[MAX_LINE];
         char *t;
 
         if (NULL == fgets(buff, MAX_LINE, fp))
@@ -261,6 +330,7 @@ main(int argc, char *argv[])
                     *(ptr + strlen(ptr) - 2) = '\0';
                 }
 
+		checkDepend(curr->name, ptr, types, entries);
                 curr->type = xstrdup(ptr);
             } else if (!strncmp(buff, "IFDEF:", 6)) {
                 if ((ptr = strtok(buff + 6, WS)) == NULL) {

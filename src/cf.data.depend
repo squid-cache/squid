@@ -1,0 +1,50 @@
+# type			dependencies
+access_log		acl	logformat
+acl			external_acl_type auth_param
+acl_access		acl
+acl_address		acl
+acl_b_size_t		acl
+acl_tos			acl
+address
+authparam
+b_int64_t
+b_size_t
+cachedir		cache_replacement_policy
+cachemgrpasswd
+debug
+delay_pool_access	acl	delay_class
+delay_pool_class	delay_pools
+delay_pool_count
+delay_pool_rates	delay_class
+denyinfo		acl
+eol
+externalAclHelper	auth_param
+hostdomain		cache_peer
+hostdomaintype		cache_peer
+http_header_access
+http_header_replace
+http_port_list
+https_port_list
+icap_access_type	icap_class acl
+icap_class_type		icap_service
+icap_service_type
+int
+kb_int64_t
+kb_size_t
+logformat
+onoff
+peer
+peer_access		cache_peer acl
+refreshpattern
+removalpolicy
+size_t
+sockaddr_in_list
+string
+string
+time_t
+tristate
+uri_whitespace
+ushort
+wccp2_service
+wccp2_service_info
+wordlist

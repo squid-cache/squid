@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.464 2007/09/03 04:35:05 hno Exp $
+# $Id: cf.data.pre,v 1.465 2007/09/04 17:39:57 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -236,6 +236,890 @@ DOC_START
 	   vport=NN	As above, but uses specified port number rather
 			than the https_port number. Implies accel.
 
+DOC_END
+
+COMMENT_START
+ OPTIONS FOR AUTHENTICATION
+ -----------------------------------------------------------------------------
+COMMENT_END
+
+NAME: auth_param
+TYPE: authparam
+LOC: Config.authConfiguration
+DEFAULT: none
+DOC_START
+	This is used to define parameters for the various authentication
+	schemes supported by Squid.
+
+	format: auth_param scheme parameter [setting]
+
+	The order in which authentication schemes are presented to the client is
+	dependent on the order the scheme first appears in config file. IE
+	has a bug (it's not RFC 2617 compliant) in that it will use the basic
+	scheme if basic is the first entry presented, even if more secure
+	schemes are presented. For now use the order in the recommended
+	settings section below. If other browsers have difficulties (don't
+	recognize the schemes offered even if you are using basic) either
+	put basic first, or disable the other schemes (by commenting out their
+	program entry).
+
+	Once an authentication scheme is fully configured, it can only be
+	shutdown by shutting squid down and restarting. Changes can be made on
+	the fly and activated with a reconfigure. I.E. You can change to a
+	different helper, but not unconfigure the helper completely.
+
+	Please note that while this directive defines how Squid processes
+	authentication it does not automatically activate authentication.
+	To use authentication you must in addition make use of ACLs based
+	on login name in http_access (proxy_auth, proxy_auth_regex or
+	external with %LOGIN used in the format tag). The browser will be
+	challenged for authentication on the first such acl encountered
+	in http_access processing and will also be re-challenged for new
+	login credentials if the request is being denied by a proxy_auth
+	type acl.
+
+	WARNING: authentication can't be used in a transparently intercepting
+	proxy as the client then thinks it is talking to an origin server and
+	not the proxy. This is a limitation of bending the TCP/IP protocol to
+	transparently intercepting port 80, not a limitation in Squid.
+
+	=== Parameters for the basic scheme follow. ===
+
+	"program" cmdline
+	Specify the command for the external authenticator.  Such a program
+	reads a line containing "username password" and replies "OK" or
+	"ERR" in an endless loop. "ERR" responses may optionally be followed
+	by a error description available as %m in the returned error page.
+	If you use an authenticator, make sure you have 1 acl of type proxy_auth.
+
+	By default, the basic authentication scheme is not used unless a
+	program is specified.
+
+	If you want to use the traditional NCSA proxy authentication, set
+	this line to something like
+
+	auth_param basic program @DEFAULT_PREFIX@/libexec/ncsa_auth @DEFAULT_PREFIX@/etc/passwd
+
+	"children" numberofchildren
+	The number of authenticator processes to spawn. If you start too few
+	Squid will have to wait for them to process a backlog of credential
+	verifications, slowing it down. When password verifications are
+	done via a (slow) network you are likely to need lots of
+	authenticator processes.
+	auth_param basic children 5
+
+	"concurrency" concurrency
+	The number of concurrent requests the helper can process.
+	The default of 0 is used for helpers who only supports
+	one request at a time. Setting this changes the protocol used to
+	include a channel number first on the request/response line, allowing
+	multiple requests to be sent to the same helper in parallell without
+	wating for the response.
+	Must not be set unless it's known the helper supports this.
+	auth_param basic concurrency 0
+
+	"realm" realmstring
+	Specifies the realm name which is to be reported to the
+	client for the basic proxy authentication scheme (part of
+	the text the user will see when prompted their username and
+	password). There is no default.
+	auth_param basic realm Squid proxy-caching web server
+
+	"credentialsttl" timetolive
+	Specifies how long squid assumes an externally validated
+	username:password pair is valid for - in other words how
+	often the helper program is called for that user. Set this
+	low to force revalidation with short lived passwords.  Note
+	setting this high does not impact your susceptibility
+	to replay attacks unless you are using an one-time password
+	system (such as SecureID).  If you are using such a system,
+	you will be vulnerable to replay attacks unless you also
+	use the max_user_ip ACL in an http_access rule.
+
+	"casesensitive" on|off
+	Specifies if usernames are case sensitive. Most user databases are
+	case insensitive allowing the same username to be spelled using both
+	lower and upper case letters, but some are case sensitive. This
+	makes a big difference for user_max_ip ACL processing and similar.
+	auth_param basic casesensitive off
+
+	=== Parameters for the digest scheme follow ===
+
+	"program" cmdline
+	Specify the command for the external authenticator.  Such
+	a program reads a line containing "username":"realm" and
+	replies with the appropriate H(A1) value hex encoded or
+	ERR if the user (or his H(A1) hash) does not exists.
+	See rfc 2616 for the definition of H(A1).
+	"ERR" responses may optionally be followed by a error description
+	available as %m in the returned error page.
+
+	By default, the digest authentication scheme is not used unless a
+	program is specified.
+
+	If you want to use a digest authenticator, set this line to
+	something like
+
+	auth_param digest program @DEFAULT_PREFIX@/bin/digest_auth_pw @DEFAULT_PREFIX@/etc/digpass
+
+	"children" numberofchildren
+	The number of authenticator processes to spawn (no default).
+	If you start too few Squid will have to wait for them to
+	process a backlog of H(A1) calculations, slowing it down.
+	When the H(A1) calculations are done via a (slow) network
+	you are likely to need lots of authenticator processes.
+	auth_param digest children 5
+
+	"realm" realmstring
+	Specifies the realm name which is to be reported to the
+	client for the digest proxy authentication scheme (part of
+	the text the user will see when prompted their username and
+	password). There is no default.
+	auth_param digest realm Squid proxy-caching web server
+
+	"nonce_garbage_interval" timeinterval
+	Specifies the interval that nonces that have been issued
+	to client_agent's are checked for validity.
+
+	"nonce_max_duration" timeinterval
+	Specifies the maximum length of time a given nonce will be
+	valid for.
+
+	"nonce_max_count" number
+	Specifies the maximum number of times a given nonce can be
+	used.
+
+	"nonce_strictness" on|off
+	Determines if squid requires strict increment-by-1 behavior
+	for nonce counts, or just incrementing (off - for use when
+	useragents generate nonce counts that occasionally miss 1
+	(ie, 1,2,4,6)). Default off.
+
+	"check_nonce_count" on|off
+	This directive if set to off can disable the nonce count check
+	completely to work around buggy digest qop implementations in
+	certain mainstream browser versions. Default on to check the
+	nonce count to protect from authentication replay attacks.
+
+	"post_workaround" on|off
+	This is a workaround to certain buggy browsers who sends
+	an incorrect request digest in POST requests when reusing
+	the same nonce as acquired earlier on a GET request.
+
+	=== NTLM scheme options follow ===
+
+	"program" cmdline
+	Specify the command for the external NTLM authenticator.
+	Such a program reads exchanged NTLMSSP packets with
+	the browser via Squid until authentication is completed.
+	If you use an NTLM authenticator, make sure you have 1 acl
+	of type proxy_auth.  By default, the NTLM authenticator_program
+	is not used.
+
+	auth_param ntlm program @DEFAULT_PREFIX@/bin/ntlm_auth
+
+	"children" numberofchildren
+	The number of authenticator processes to spawn (no default).
+	If you start too few Squid will have to wait for them to
+	process a backlog of credential verifications, slowing it
+	down. When credential verifications are done via a (slow)
+	network you are likely to need lots of authenticator
+	processes.
+
+	auth_param ntlm children 5
+
+	"keep_alive" on|off
+	If you experience problems with PUT/POST requests when using the
+	Negotiate authentication scheme then you can try setting this to
+	off. This will cause Squid to forcibly close the connection on
+	the initial requests where the browser asks which schemes are
+	supported by the proxy.
+
+	auth_param ntlm keep_alive on
+
+	=== Options for configuring the NEGOTIATE auth-scheme follow ===
+
+	"program" cmdline
+	Specify the command for the external Negotiate authenticator.
+	This protocol is used in Microsoft Active-Directory enabled setups with
+	the Microsoft Internet Explorer or Mozilla Firefox browsers.
+	Its main purpose is to exchange credentials with the Squid proxy
+	using the Kerberos mechanisms.
+	If you use a Negotiate authenticator, make sure you have at least one acl
+	of type proxy_auth active.  By default, the negotiate authenticator_program
+	is not used.
+	The only supported program for this role is the ntlm_auth
+	program distributed as part of Samba, version 4 or later.
+
+	auth_param negotiate program @DEFAULT_PREFIX@/bin/ntlm_auth --helper-protocol=gss-spnego
+
+	"children" numberofchildren
+	The number of authenticator processes to spawn (no default).
+	If you start too few Squid will have to wait for them to
+	process a backlog of credential verifications, slowing it
+	down. When crendential verifications are done via a (slow)
+	network you are likely to need lots of authenticator
+	processes.
+	auth_param negotiate children 5
+
+	"keep_alive" on|off
+	If you experience problems with PUT/POST requests when using the
+	Negotiate authentication scheme then you can try setting this to
+	off. This will cause Squid to forcibly close the connection on
+	the initial requests where the browser asks which schemes are
+	supported by the proxy.
+
+	auth_param negotiate keep_alive on
+
+NOCOMMENT_START
+#Recommended minimum configuration per scheme:
+#auth_param negotiate program <uncomment and complete this line to activate>
+#auth_param negotiate children 5
+#auth_param negotiate keep_alive on
+#auth_param ntlm program <uncomment and complete this line to activate>
+#auth_param ntlm children 5
+#auth_param ntlm keep_alive on
+#auth_param digest program <uncomment and complete this line>
+#auth_param digest children 5
+#auth_param digest realm Squid proxy-caching web server
+#auth_param digest nonce_garbage_interval 5 minutes
+#auth_param digest nonce_max_duration 30 minutes
+#auth_param digest nonce_max_count 50
+#auth_param basic program <uncomment and complete this line>
+#auth_param basic children 5
+#auth_param basic realm Squid proxy-caching web server
+#auth_param basic credentialsttl 2 hours
+NOCOMMENT_END
+DOC_END
+
+NAME: authenticate_cache_garbage_interval
+TYPE: time_t
+DEFAULT: 1 hour
+LOC: Config.authenticateGCInterval
+DOC_START
+	The time period between garbage collection across the username cache.
+	This is a tradeoff between memory utilization (long intervals - say
+	2 days) and CPU (short intervals - say 1 minute). Only change if you
+	have good reason to.
+DOC_END
+
+NAME: authenticate_ttl
+TYPE: time_t
+DEFAULT: 1 hour
+LOC: Config.authenticateTTL
+DOC_START
+	The time a user & their credentials stay in the logged in
+	user cache since their last request. When the garbage
+	interval passes, all user credentials that have passed their
+	TTL are removed from memory.
+DOC_END
+
+NAME: authenticate_ip_ttl
+TYPE: time_t
+LOC: Config.authenticateIpTTL
+DEFAULT: 0 seconds
+DOC_START
+	If you use proxy authentication and the 'max_user_ip' ACL,
+	this directive controls how long Squid remembers the IP
+	addresses associated with each user.  Use a small value
+	(e.g., 60 seconds) if your users might change addresses
+	quickly, as is the case with dialups.   You might be safe
+	using a larger value (e.g., 2 hours) in a corporate LAN
+	environment with relatively static address assignments.
+DOC_END
+
+NAME: external_acl_type
+TYPE: externalAclHelper
+LOC: Config.externalAclHelperList
+DEFAULT: none
+DOC_START
+	This option defines external acl classes using a helper program
+	to look up the status
+
+	  external_acl_type name [options] FORMAT.. /path/to/helper [helper arguments..]
+
+	Options:
+
+	  ttl=n		TTL in seconds for cached results (defaults to 3600
+	  		for 1 hour)
+	  negative_ttl=n
+	  		TTL for cached negative lookups (default same
+	  		as ttl)
+	  children=n	Number of acl helper processes spawn to service
+			external acl lookups of this type. (default 5)
+	  concurrency=n	concurrency level per process. Only used with helpers
+			capable of processing more than one query at a time.
+	  cache=n	result cache size, 0 is unbounded (default)
+	  grace=n	Percentage remaining of TTL where a refresh of a
+			cached entry should be initiated without needing to
+			wait for a new reply. (default 0 for no grace period)
+	  protocol=2.5	Compatibility mode for Squid-2.5 external acl helpers
+
+	FORMAT specifications
+
+	  %LOGIN	Authenticated user login name
+	  %EXT_USER	Username from external acl
+	  %IDENT	Ident user name
+	  %SRC		Client IP
+	  %SRCPORT	Client source port
+	  %URI		Requested URI
+	  %DST		Requested host
+	  %PROTO	Requested protocol
+	  %PORT		Requested port
+	  %PATH		Requested URL path
+	  %METHOD	Request method
+	  %MYADDR	Squid interface address
+	  %MYPORT	Squid http_port number
+	  %PATH		Requested URL-path (including query-string if any)
+	  %USER_CERT	SSL User certificate in PEM format
+	  %USER_CERTCHAIN SSL User certificate chain in PEM format
+	  %USER_CERT_xx	SSL User certificate subject attribute xx
+	  %USER_CA_xx	SSL User certificate issuer attribute xx
+	  %{Header}	HTTP request header
+	  %{Hdr:member}	HTTP request header list member
+	  %{Hdr:;member}
+	  		HTTP request header list member using ; as
+	  		list separator. ; can be any non-alphanumeric
+			character.
+
+	In addition to the above, any string specified in the referencing
+	acl will also be included in the helper request line, after the
+	specified formats (see the "acl external" directive)
+
+	The helper receives lines per the above format specification,
+	and returns lines starting with OK or ERR indicating the validity
+	of the request and optionally followed by additional keywords with
+	more details.
+
+	General result syntax:
+
+	  OK/ERR keyword=value ...
+
+	Defined keywords:
+
+	  user=		The users name (login)
+	  password=	The users password (for login= cache_peer option)
+	  message=	Message describing the reason. Available as %o
+	  		in error pages
+	  tag=		Apply a tag to a request (for both ERR and OK results)
+	  		Only sets a tag, does not alter existing tags.
+	  log=		String to be logged in access.log. Available as
+	  		%ea in logformat specifications
+
+	If protocol=3.0 (the default) then URL escaping is used to protect
+	each value in both requests and responses.
+
+	If using protocol=2.5 then all values need to be enclosed in quotes
+	if they may contain whitespace, or the whitespace escaped using \.
+	And quotes or \ characters within the keyword value must be \ escaped.
+
+	When using the concurrency= option the protocol is changed by
+	introducing a query channel tag infront of the request/response.
+	The query channel tag is a number between 0 and concurrency-1.
+DOC_END
+
+COMMENT_START
+ ACCESS CONTROLS
+ -----------------------------------------------------------------------------
+COMMENT_END
+
+NAME: acl
+TYPE: acl
+LOC: Config.aclList
+DEFAULT: none
+DOC_START
+	Defining an Access List
+
+	acl aclname acltype string1 ...
+	acl aclname acltype "file" ...
+
+	when using "file", the file should contain one item per line
+
+	acltype is one of the types described below
+
+	By default, regular expressions are CASE-SENSITIVE.  To make
+	them case-insensitive, use the -i option.
+
+	acl aclname src      ip-address/netmask ... (clients IP address)
+	acl aclname src      addr1-addr2/netmask ... (range of addresses)
+	acl aclname dst      ip-address/netmask ... (URL host's IP address)
+	acl aclname myip     ip-address/netmask ... (local socket IP address)
+
+	acl aclname arp      mac-address ... (xx:xx:xx:xx:xx:xx notation)
+	  # The arp ACL requires the special configure option --enable-arp-acl.
+	  # Furthermore, the ARP ACL code is not portable to all operating systems.
+	  # It works on Linux, Solaris, Windows, FreeBSD, and some other *BSD variants.
+	  #
+	  # NOTE: Squid can only determine the MAC address for clients that are on
+	  # the same subnet. If the client is on a different subnet, then Squid cannot
+	  # find out its MAC address.
+
+	acl aclname srcdomain   .foo.com ...    # reverse lookup, client IP
+	acl aclname dstdomain   .foo.com ...    # Destination server from URL
+	acl aclname srcdom_regex [-i] xxx ...   # regex matching client name
+	acl aclname dstdom_regex [-i] xxx ...   # regex matching server
+	  # For dstdomain and dstdom_regex a reverse lookup is tried if a IP
+	  # based URL is used and no match is found. The name "none" is used
+	  # if the reverse lookup fails.
+
+	acl aclname http_status 200 301 500- 400-403 ...     # status code in reply
+
+	acl aclname time     [day-abbrevs]  [h1:m1-h2:m2]
+	    day-abbrevs:
+		S - Sunday
+		M - Monday
+		T - Tuesday
+		W - Wednesday
+		H - Thursday
+		F - Friday
+		A - Saturday
+	    h1:m1 must be less than h2:m2
+	acl aclname url_regex [-i] ^http:// ...	# regex matching on whole URL
+	acl aclname urlpath_regex [-i] \.gif$ ...	# regex matching on URL path
+	acl aclname port     80 70 21 ...
+	acl aclname port     0-1024 ...		# ranges allowed
+	acl aclname myport   3128 ...		# (local socket TCP port)
+	acl aclname proto    HTTP FTP ...
+	acl aclname method   GET POST ...
+	acl aclname browser  [-i] regexp ...
+	  # pattern match on User-Agent header (see also req_header below)
+	acl aclname referer_regex  [-i] regexp ...
+	  # pattern match on Referer header
+	  # Referer is highly unreliable, so use with care
+	acl aclname ident    username ...
+	acl aclname ident_regex [-i] pattern ...
+	  # string match on ident output.
+	  # use REQUIRED to accept any non-null ident.
+	acl aclname src_as   number ...
+	acl aclname dst_as   number ...
+	  # Except for access control, AS numbers can be used for
+	  # routing of requests to specific caches. Here's an
+	  # example for routing all requests for AS#1241 and only
+	  # those to mycache.mydomain.net:
+	  # acl asexample dst_as 1241
+	  # cache_peer_access mycache.mydomain.net allow asexample
+	  # cache_peer_access mycache_mydomain.net deny all
+
+	acl aclname proxy_auth [-i] username ...
+	acl aclname proxy_auth_regex [-i] pattern ...
+	  # list of valid usernames
+	  # use REQUIRED to accept any valid username.
+	  #
+	  # NOTE: when a Proxy-Authentication header is sent but it is not
+	  # needed during ACL checking the username is NOT logged
+	  # in access.log.
+	  #
+	  # NOTE: proxy_auth requires a EXTERNAL authentication program
+	  # to check username/password combinations (see
+	  # auth_param directive).
+	  #
+	  # NOTE: proxy_auth can't be used in a transparent proxy as
+	  # the browser needs to be configured for using a proxy in order
+	  # to respond to proxy authentication.
+
+	acl aclname snmp_community string ...
+	  # A community string to limit access to your SNMP Agent
+	  # Example:
+	  #
+	  #	acl snmppublic snmp_community public
+
+	acl aclname maxconn number
+	  # This will be matched when the client's IP address has
+	  # more than <number> HTTP connections established.
+
+	acl aclname max_user_ip [-s] number
+	  # This will be matched when the user attempts to log in from more
+	  # than <number> different ip addresses. The authenticate_ip_ttl
+	  # parameter controls the timeout on the ip entries.
+	  # If -s is specified the limit is strict, denying browsing
+	  # from any further IP addresses until the ttl has expired. Without
+	  # -s Squid will just annoy the user by "randomly" denying requests.
+	  # (the counter is reset each time the limit is reached and a
+	  # request is denied)
+	  # NOTE: in acceleration mode or where there is mesh of child proxies,
+	  # clients may appear to come from multiple addresses if they are
+	  # going through proxy farms, so a limit of 1 may cause user problems.
+
+	acl aclname req_mime_type mime-type1 ...
+	  # regex match against the mime type of the request generated
+	  # by the client. Can be used to detect file upload or some
+	  # types HTTP tunneling requests.
+	  # NOTE: This does NOT match the reply. You cannot use this
+	  # to match the returned file type.
+
+	acl aclname req_header header-name [-i] any\.regex\.here
+	  # regex match against any of the known request headers.  May be
+	  # thought of as a superset of "browser", "referer" and "mime-type"
+	  # ACLs.
+
+	acl aclname rep_mime_type mime-type1 ...
+	  # regex match against the mime type of the reply received by
+	  # squid. Can be used to detect file download or some
+	  # types HTTP tunneling requests.
+	  # NOTE: This has no effect in http_access rules. It only has
+	  # effect in rules that affect the reply data stream such as
+	  # http_reply_access.
+
+	acl aclname rep_header header-name [-i] any\.regex\.here
+	  # regex match against any of the known reply headers. May be
+	  # thought of as a superset of "browser", "referer" and "mime-type"
+	  # ACLs.
+
+	acl acl_name external class_name [arguments...]
+	  # external ACL lookup via a helper class defined by the
+	  # external_acl_type directive.
+
+	acl aclname user_cert attribute values...
+	  # match against attributes in a user SSL certificate
+	  # attribute is one of DN/C/O/CN/L/ST
+
+	acl aclname ca_cert attribute values...
+	  # match against attributes a users issuing CA SSL certificate
+	  # attribute is one of DN/C/O/CN/L/ST
+
+	acl aclname ext_user username ...
+	acl aclname ext_user_regex [-i] pattern ...
+	  # string match on username returned by external acl helper
+	  # use REQUIRED to accept any non-null user name.
+
+Examples:
+acl macaddress arp 09:00:2b:23:45:67
+acl myexample dst_as 1241
+acl password proxy_auth REQUIRED
+acl fileupload req_mime_type -i ^multipart/form-data$
+acl javascript rep_mime_type -i ^application/x-javascript$
+
+NOCOMMENT_START
+#Recommended minimum configuration:
+acl all src 0.0.0.0/0.0.0.0
+acl manager proto cache_object
+acl localhost src 127.0.0.1/255.255.255.255
+acl to_localhost dst 127.0.0.0/8
+acl SSL_ports port 443
+acl Safe_ports port 80		# http
+acl Safe_ports port 21		# ftp
+acl Safe_ports port 443		# https
+acl Safe_ports port 70		# gopher
+acl Safe_ports port 210		# wais
+acl Safe_ports port 1025-65535	# unregistered ports
+acl Safe_ports port 280		# http-mgmt
+acl Safe_ports port 488		# gss-http
+acl Safe_ports port 591		# filemaker
+acl Safe_ports port 777		# multiling http
+acl CONNECT method CONNECT
+NOCOMMENT_END
+DOC_END
+
+NAME: http_access
+TYPE: acl_access
+LOC: Config.accessList.http
+DEFAULT: none
+DEFAULT_IF_NONE: deny all
+DOC_START
+	Allowing or Denying access based on defined access lists
+
+	Access to the HTTP port:
+	http_access allow|deny [!]aclname ...
+
+	NOTE on default values:
+
+	If there are no "access" lines present, the default is to deny
+	the request.
+
+	If none of the "access" lines cause a match, the default is the
+	opposite of the last line in the list.  If the last line was
+	deny, the default is allow.  Conversely, if the last line
+	is allow, the default will be deny.  For these reasons, it is a
+	good idea to have an "deny all" or "allow all" entry at the end
+	of your access lists to avoid potential confusion.
+
+NOCOMMENT_START
+#Recommended minimum configuration:
+#
+# Only allow cachemgr access from localhost
+http_access allow manager localhost
+http_access deny manager
+# Deny requests to unknown ports
+http_access deny !Safe_ports
+# Deny CONNECT to other than SSL ports
+http_access deny CONNECT !SSL_ports
+#
+# We strongly recommend the following be uncommented to protect innocent
+# web applications running on the proxy server who think the only
+# one who can access services on "localhost" is a local user
+#http_access deny to_localhost
+#
+# INSERT YOUR OWN RULE(S) HERE TO ALLOW ACCESS FROM YOUR CLIENTS
+
+# Example rule allowing access from your local networks. Adapt
+# to list your (internal) IP networks from where browsing should
+# be allowed
+#acl our_networks src 192.168.1.0/24 192.168.2.0/24
+#http_access allow our_networks
+
+# And finally deny all other access to this proxy
+http_access deny all
+NOCOMMENT_END
+DOC_END
+
+NAME: http_reply_access
+TYPE: acl_access
+LOC: Config.accessList.reply
+DEFAULT: none
+DOC_START
+	Allow replies to client requests. This is complementary to http_access.
+
+	http_reply_access allow|deny [!] aclname ...
+
+	NOTE: if there are no access lines present, the default is to allow
+	all replies
+
+	If none of the access lines cause a match the opposite of the
+	last line will apply. Thus it is good practice to end the rules
+	with an "allow all" or "deny all" entry.
+DOC_END
+
+NAME: icp_access
+TYPE: acl_access
+LOC: Config.accessList.icp
+DEFAULT: none
+DEFAULT_IF_NONE: deny all
+DOC_START
+	Allowing or Denying access to the ICP port based on defined
+	access lists
+
+	icp_access  allow|deny [!]aclname ...
+
+	See http_access for details
+
+NOCOMMENT_START
+#Allow ICP queries from everyone
+icp_access allow all
+NOCOMMENT_END
+DOC_END
+
+NAME: htcp_access
+IFDEF: USE_HTCP
+TYPE: acl_access
+LOC: Config.accessList.htcp
+DEFAULT: none
+DEFAULT_IF_NONE: deny all
+DOC_START
+	Allowing or Denying access to the HTCP port based on defined
+	access lists
+
+	htcp_access  allow|deny [!]aclname ...
+
+	See http_access for details
+
+#Allow HTCP queries from everyone
+htcp_access allow all
+DOC_END
+
+NAME: htcp_clr_access
+IFDEF: USE_HTCP
+TYPE: acl_access
+LOC: Config.accessList.htcp_clr
+DEFAULT: none
+DEFAULT_IF_NONE: deny all
+DOC_START
+	Allowing or Denying access to purge content using HTCP based
+	on defined access lists
+
+	htcp_clr_access  allow|deny [!]aclname ...
+
+	See http_access for details
+
+#Allow HTCP CLR requests from trusted peers
+acl htcp_clr_peer src 172.16.1.2
+htcp_clr_access allow htcp_clr_peer
+DOC_END
+
+NAME: miss_access
+TYPE: acl_access
+LOC: Config.accessList.miss
+DEFAULT: none
+DOC_START
+	Use to force your neighbors to use you as a sibling instead of
+	a parent.  For example:
+
+		acl localclients src 172.16.0.0/16
+		miss_access allow localclients
+		miss_access deny  !localclients
+
+	This means only your local clients are allowed to fetch
+	MISSES and all other clients can only fetch HITS.
+
+	By default, allow all clients who passed the http_access rules
+	to fetch MISSES from us.
+
+NOCOMMENT_START
+#Default setting:
+# miss_access allow all
+NOCOMMENT_END
+DOC_END
+
+NAME: ident_lookup_access
+TYPE: acl_access
+IFDEF: USE_IDENT
+DEFAULT: none
+DEFAULT_IF_NONE: deny all
+LOC: Config.accessList.identLookup
+DOC_START
+	A list of ACL elements which, if matched, cause an ident
+	(RFC 931) lookup to be performed for this request.  For
+	example, you might choose to always perform ident lookups
+	for your main multi-user Unix boxes, but not for your Macs
+	and PCs.  By default, ident lookups are not performed for
+	any requests.
+
+	To enable ident lookups for specific client addresses, you
+	can follow this example:
+
+	acl ident_aware_hosts src 198.168.1.0/255.255.255.0
+	ident_lookup_access allow ident_aware_hosts
+	ident_lookup_access deny all
+
+	Only src type ACL checks are fully supported.  A src_domain
+	ACL might work at times, but it will not always provide
+	the correct result.
+DOC_END
+
+NAME: tcp_outgoing_tos tcp_outgoing_ds tcp_outgoing_dscp
+TYPE: acl_tos
+DEFAULT: none
+LOC: Config.accessList.outgoing_tos
+DOC_START
+	Allows you to select a TOS/Diffserv value to mark outgoing
+	connections with, based on the username or source address
+	making the request.
+
+	tcp_outgoing_tos ds-field [!]aclname ...
+
+	Example where normal_service_net uses the TOS value 0x00
+	and normal_service_net uses 0x20
+
+	acl normal_service_net src 10.0.0.0/255.255.255.0
+	acl good_service_net src 10.0.1.0/255.255.255.0
+	tcp_outgoing_tos 0x00 normal_service_net 0x00
+	tcp_outgoing_tos 0x20 good_service_net
+
+	TOS/DSCP values really only have local significance - so you should
+	know what you're specifying. For more information, see RFC2474 and
+	RFC3260.
+
+	The TOS/DSCP byte must be exactly that - a octet value  0 - 255, or
+	"default" to use whatever default your host has. Note that in
+	practice often only values 0 - 63 is usable as the two highest bits
+	have been redefined for use by ECN (RFC3168).
+
+	Processing proceeds in the order specified, and stops at first fully
+	matching line.
+
+	Note: The use of this directive using client dependent ACLs is
+	incompatible with the use of server side persistent connections. To
+	ensure correct results it is best to set server_persisten_connections
+	to off when using this directive in such configurations.
+DOC_END
+
+NAME: clientside_tos
+TYPE: acl_tos
+DEFAULT: none
+LOC: Config.accessList.clientside_tos
+DOC_START
+	Allows you to select a TOS/Diffserv value to mark client-side
+	connections with, based on the username or source address
+	making the request.
+DOC_END
+
+NAME: tcp_outgoing_address
+TYPE: acl_address
+DEFAULT: none
+LOC: Config.accessList.outgoing_address
+DOC_START
+	Allows you to map requests to different outgoing IP addresses
+	based on the username or source address of the user making
+	the request.
+
+	tcp_outgoing_address ipaddr [[!]aclname] ...
+
+	Example where requests from 10.0.0.0/24 will be forwarded
+	with source address 10.1.0.1, 10.0.2.0/24 forwarded with
+	source address 10.1.0.2 and the rest will be forwarded with
+	source address 10.1.0.3.
+
+	acl normal_service_net src 10.0.0.0/255.255.255.0
+	acl good_service_net src 10.0.1.0/255.255.255.0
+	tcp_outgoing_address 10.0.0.1 normal_service_net
+	tcp_outgoing_address 10.0.0.2 good_service_net
+	tcp_outgoing_address 10.0.0.3
+
+	Processing proceeds in the order specified, and stops at first fully
+	matching line.
+
+	Note: The use of this directive using client dependent ACLs is
+	incompatible with the use of server side persistent connections. To
+	ensure correct results it is best to set server_persistent_connections
+	to off when using this directive in such configurations.
+DOC_END
+
+NAME: reply_header_max_size
+COMMENT: (KB)
+TYPE: b_size_t
+DEFAULT: 20 KB
+LOC: Config.maxReplyHeaderSize
+DOC_START
+	This specifies the maximum size for HTTP headers in a reply.
+	Reply headers are usually relatively small (about 512 bytes).
+	Placing a limit on the reply header size will catch certain
+	bugs (for example with persistent connections) and possibly
+	buffer-overflow or denial-of-service attacks.
+DOC_END
+
+NAME: reply_body_max_size
+COMMENT: size [acl acl...]
+TYPE: acl_b_size_t
+DEFAULT: none
+LOC: Config.ReplyBodySize
+DOC_START
+	This option specifies the maximum size of a reply body. It can be
+	used to prevent users from downloading very large files, such as
+	MP3's and movies. When the reply headers are received, the
+	reply_body_max_size lines are processed, and the first line where
+	all (if any) listed ACLs are true is used as the maximum body size
+	for this reply.
+
+	This size is checked twice. First when we get the reply headers,
+	we check the content-length value.  If the content length value exists
+	and is larger than the allowed size, the request is denied and the
+	user receives an error message that says "the request or reply
+	is too large." If there is no content-length, and the reply
+	size exceeds this limit, the client's connection is just closed
+	and they will receive a partial reply.
+
+	WARNING: downstream caches probably can not detect a partial reply
+	if there is no content-length header, so they will cache
+	partial responses and give them out as hits.  You should NOT
+	use this option if you have downstream caches.
+
+	WARNING: A maximum size smaller than the size of squid's error messages
+	will cause an infinite loop and crash squid. Ensure that the smallest
+	non-zero value you use is greater that the maximum header size plus
+	the size of your largest error page.
+
+	If you set this parameter none (the default), there will be
+	no limit imposed.
+DOC_END
+
+NAME: log_access
+TYPE: acl_access
+LOC: Config.accessList.log
+DEFAULT: none
+COMMENT: allow|deny acl acl...
+DOC_START
+	This options allows you to control which requests gets logged
+	to access.log (see access_log directive). Requests denied for
+	logging will also not be accounted for in performance counters.
 DOC_END
 
 COMMENT_START
@@ -653,6 +1537,21 @@ DOC_START
 		  section.
 DOC_END
 
+NAME: cache_peer_access
+TYPE: peer_access
+DEFAULT: none
+LOC: none
+DOC_START
+	Similar to 'cache_peer_domain' but provides more flexibility by
+	using ACL elements.
+
+	cache_peer_access cache-host allow|deny [!]aclname ...
+
+	The syntax is identical to 'http_access' and the other lists of
+	ACL elements.  See the comments for 'http_access' below, or
+	the Squid FAQ (http://www.squid-cache.org/FAQ/FAQ-10.html).
+DOC_END
+
 NAME: neighbor_type_domain
 TYPE: hostdomaintype
 DEFAULT: none
@@ -801,6 +1700,46 @@ COMMENT_START
  -----------------------------------------------------------------------------
 COMMENT_END
 
+NAME: cache_replacement_policy
+TYPE: removalpolicy
+LOC: Config.replPolicy
+DEFAULT: lru
+DOC_START
+	The cache replacement policy parameter determines which
+	objects are evicted (replaced) when disk space is needed.
+
+	    lru       : Squid's original list based LRU policy
+	    heap GDSF : Greedy-Dual Size Frequency
+	    heap LFUDA: Least Frequently Used with Dynamic Aging
+	    heap LRU  : LRU policy implemented using a heap
+
+	Applies to any cache_dir lines listed below this.
+
+	The LRU policies keeps recently referenced objects.
+
+	The heap GDSF policy optimizes object hit rate by keeping smaller
+	popular objects in cache so it has a better chance of getting a
+	hit.  It achieves a lower byte hit rate than LFUDA though since
+	it evicts larger (possibly popular) objects.
+
+	The heap LFUDA policy keeps popular objects in cache regardless of
+	their size and thus optimizes byte hit rate at the expense of
+	hit rate since one large, popular object will prevent many
+	smaller, slightly less popular objects from being cached.
+
+	Both policies utilize a dynamic aging mechanism that prevents
+	cache pollution that can otherwise occur with frequency-based
+	replacement policies.
+
+	NOTE: if using the LFUDA replacement policy you should increase
+	the value of maximum_object_size above its default of 4096 KB to
+	to maximize the potential byte hit rate improvement of LFUDA.
+
+	For more information about the GDSF and LFUDA cache replacement
+	policies see http://www.hpl.hp.com/techreports/1999/HPL-1999-69.html
+	and http://fog.hpl.external.hp.com/techreports/98/HPL-98-173.html.
+DOC_END
+
 NAME: cache_dir
 TYPE: cachedir
 DEFAULT: none
@@ -929,46 +1868,6 @@ DOC_START
 	descriptors are open.
 
 	A value of 0 indicates no limit.
-DOC_END
-
-NAME: cache_replacement_policy
-TYPE: removalpolicy
-LOC: Config.replPolicy
-DEFAULT: lru
-DOC_START
-	The cache replacement policy parameter determines which
-	objects are evicted (replaced) when disk space is needed.
-
-	    lru       : Squid's original list based LRU policy
-	    heap GDSF : Greedy-Dual Size Frequency
-	    heap LFUDA: Least Frequently Used with Dynamic Aging
-	    heap LRU  : LRU policy implemented using a heap
-
-	Applies to any cache_dir lines listed below this.
-
-	The LRU policies keeps recently referenced objects.
-
-	The heap GDSF policy optimizes object hit rate by keeping smaller
-	popular objects in cache so it has a better chance of getting a
-	hit.  It achieves a lower byte hit rate than LFUDA though since
-	it evicts larger (possibly popular) objects.
-
-	The heap LFUDA policy keeps popular objects in cache regardless of
-	their size and thus optimizes byte hit rate at the expense of
-	hit rate since one large, popular object will prevent many
-	smaller, slightly less popular objects from being cached.
-
-	Both policies utilize a dynamic aging mechanism that prevents
-	cache pollution that can otherwise occur with frequency-based
-	replacement policies.
-
-	NOTE: if using the LFUDA replacement policy you should increase
-	the value of maximum_object_size above its default of 4096 KB to
-	to maximize the potential byte hit rate improvement of LFUDA.
-
-	For more information about the GDSF and LFUDA cache replacement
-	policies see http://www.hpl.hp.com/techreports/1999/HPL-1999-69.html
-	and http://fog.hpl.external.hp.com/techreports/98/HPL-98-173.html.
 DOC_END
 
 NAME: minimum_object_size
@@ -1364,7 +2263,7 @@ DOC_START
 DOC_END
 
 COMMENT_START
- OPTIONS FOR EXTERNAL SUPPORT PROGRAMS
+ OPTIONS FOR FTP GATEWAYING
  -----------------------------------------------------------------------------
 COMMENT_END
 
@@ -1432,6 +2331,11 @@ DOC_START
 	is broken and does not follow the FTP standard.
 DOC_END
 
+COMMENT_START
+ OPTIONS FOR EXTERNAL SUPPORT PROGRAMS
+ -----------------------------------------------------------------------------
+COMMENT_END
+
 NAME: diskd_program
 TYPE: string
 DEFAULT: @DEFAULT_DISKD@
@@ -1459,6 +2363,11 @@ IFDEF: USE_ICMP
 DOC_START
 	Specify the location of the executable for the pinger process.
 DOC_END
+
+COMMENT_START
+ OPTIONS FOR URL REWRITING
+ -----------------------------------------------------------------------------
+COMMENT_END
 
 NAME: url_rewrite_program redirect_program
 TYPE: wordlist
@@ -1526,379 +2435,20 @@ DOC_START
 	are sent.
 DOC_END
 
-NAME: auth_param
-TYPE: authparam
-LOC: Config.authConfiguration
-DEFAULT: none
+NAME: url_rewrite_bypass redirector_bypass
+TYPE: onoff
+LOC: Config.onoff.redirector_bypass
+DEFAULT: off
 DOC_START
-	This is used to define parameters for the various authentication
-	schemes supported by Squid.
-
-	format: auth_param scheme parameter [setting]
-
-	The order in which authentication schemes are presented to the client is
-	dependent on the order the scheme first appears in config file. IE
-	has a bug (it's not RFC 2617 compliant) in that it will use the basic
-	scheme if basic is the first entry presented, even if more secure
-	schemes are presented. For now use the order in the recommended
-	settings section below. If other browsers have difficulties (don't
-	recognize the schemes offered even if you are using basic) either
-	put basic first, or disable the other schemes (by commenting out their
-	program entry).
-
-	Once an authentication scheme is fully configured, it can only be
-	shutdown by shutting squid down and restarting. Changes can be made on
-	the fly and activated with a reconfigure. I.E. You can change to a
-	different helper, but not unconfigure the helper completely.
-
-	Please note that while this directive defines how Squid processes
-	authentication it does not automatically activate authentication.
-	To use authentication you must in addition make use of ACLs based
-	on login name in http_access (proxy_auth, proxy_auth_regex or
-	external with %LOGIN used in the format tag). The browser will be
-	challenged for authentication on the first such acl encountered
-	in http_access processing and will also be re-challenged for new
-	login credentials if the request is being denied by a proxy_auth
-	type acl.
-
-	WARNING: authentication can't be used in a transparently intercepting
-	proxy as the client then thinks it is talking to an origin server and
-	not the proxy. This is a limitation of bending the TCP/IP protocol to
-	transparently intercepting port 80, not a limitation in Squid.
-
-	=== Parameters for the basic scheme follow. ===
-
-	"program" cmdline
-	Specify the command for the external authenticator.  Such a program
-	reads a line containing "username password" and replies "OK" or
-	"ERR" in an endless loop. "ERR" responses may optionally be followed
-	by a error description available as %m in the returned error page.
-	If you use an authenticator, make sure you have 1 acl of type proxy_auth.
-
-	By default, the basic authentication scheme is not used unless a
-	program is specified.
-
-	If you want to use the traditional NCSA proxy authentication, set
-	this line to something like
-
-	auth_param basic program @DEFAULT_PREFIX@/libexec/ncsa_auth @DEFAULT_PREFIX@/etc/passwd
-
-	"children" numberofchildren
-	The number of authenticator processes to spawn. If you start too few
-	Squid will have to wait for them to process a backlog of credential
-	verifications, slowing it down. When password verifications are
-	done via a (slow) network you are likely to need lots of
-	authenticator processes.
-	auth_param basic children 5
-
-	"concurrency" concurrency
-	The number of concurrent requests the helper can process.
-	The default of 0 is used for helpers who only supports
-	one request at a time. Setting this changes the protocol used to
-	include a channel number first on the request/response line, allowing
-	multiple requests to be sent to the same helper in parallell without
-	wating for the response.
-	Must not be set unless it's known the helper supports this.
-	auth_param basic concurrency 0
-
-	"realm" realmstring
-	Specifies the realm name which is to be reported to the
-	client for the basic proxy authentication scheme (part of
-	the text the user will see when prompted their username and
-	password). There is no default.
-	auth_param basic realm Squid proxy-caching web server
-
-	"credentialsttl" timetolive
-	Specifies how long squid assumes an externally validated
-	username:password pair is valid for - in other words how
-	often the helper program is called for that user. Set this
-	low to force revalidation with short lived passwords.  Note
-	setting this high does not impact your susceptibility
-	to replay attacks unless you are using an one-time password
-	system (such as SecureID).  If you are using such a system,
-	you will be vulnerable to replay attacks unless you also
-	use the max_user_ip ACL in an http_access rule.
-
-	"casesensitive" on|off
-	Specifies if usernames are case sensitive. Most user databases are
-	case insensitive allowing the same username to be spelled using both
-	lower and upper case letters, but some are case sensitive. This
-	makes a big difference for user_max_ip ACL processing and similar.
-	auth_param basic casesensitive off
-
-	=== Parameters for the digest scheme follow ===
-
-	"program" cmdline
-	Specify the command for the external authenticator.  Such
-	a program reads a line containing "username":"realm" and
-	replies with the appropriate H(A1) value hex encoded or
-	ERR if the user (or his H(A1) hash) does not exists.
-	See rfc 2616 for the definition of H(A1).
-	"ERR" responses may optionally be followed by a error description
-	available as %m in the returned error page.
-
-	By default, the digest authentication scheme is not used unless a
-	program is specified.
-
-	If you want to use a digest authenticator, set this line to
-	something like
-
-	auth_param digest program @DEFAULT_PREFIX@/bin/digest_auth_pw @DEFAULT_PREFIX@/etc/digpass
-
-	"children" numberofchildren
-	The number of authenticator processes to spawn (no default).
-	If you start too few Squid will have to wait for them to
-	process a backlog of H(A1) calculations, slowing it down.
-	When the H(A1) calculations are done via a (slow) network
-	you are likely to need lots of authenticator processes.
-	auth_param digest children 5
-
-	"realm" realmstring
-	Specifies the realm name which is to be reported to the
-	client for the digest proxy authentication scheme (part of
-	the text the user will see when prompted their username and
-	password). There is no default.
-	auth_param digest realm Squid proxy-caching web server
-
-	"nonce_garbage_interval" timeinterval
-	Specifies the interval that nonces that have been issued
-	to client_agent's are checked for validity.
-
-	"nonce_max_duration" timeinterval
-	Specifies the maximum length of time a given nonce will be
-	valid for.
-
-	"nonce_max_count" number
-	Specifies the maximum number of times a given nonce can be
-	used.
-
-	"nonce_strictness" on|off
-	Determines if squid requires strict increment-by-1 behavior
-	for nonce counts, or just incrementing (off - for use when
-	useragents generate nonce counts that occasionally miss 1
-	(ie, 1,2,4,6)). Default off.
-
-	"check_nonce_count" on|off
-	This directive if set to off can disable the nonce count check
-	completely to work around buggy digest qop implementations in
-	certain mainstream browser versions. Default on to check the
-	nonce count to protect from authentication replay attacks.
-
-	"post_workaround" on|off
-	This is a workaround to certain buggy browsers who sends
-	an incorrect request digest in POST requests when reusing
-	the same nonce as acquired earlier on a GET request.
-
-	=== NTLM scheme options follow ===
-
-	"program" cmdline
-	Specify the command for the external NTLM authenticator.
-	Such a program reads exchanged NTLMSSP packets with
-	the browser via Squid until authentication is completed.
-	If you use an NTLM authenticator, make sure you have 1 acl
-	of type proxy_auth.  By default, the NTLM authenticator_program
-	is not used.
-
-	auth_param ntlm program @DEFAULT_PREFIX@/bin/ntlm_auth
-
-	"children" numberofchildren
-	The number of authenticator processes to spawn (no default).
-	If you start too few Squid will have to wait for them to
-	process a backlog of credential verifications, slowing it
-	down. When credential verifications are done via a (slow)
-	network you are likely to need lots of authenticator
-	processes.
-
-	auth_param ntlm children 5
-
-	"keep_alive" on|off
-	If you experience problems with PUT/POST requests when using the
-	Negotiate authentication scheme then you can try setting this to
-	off. This will cause Squid to forcibly close the connection on
-	the initial requests where the browser asks which schemes are
-	supported by the proxy.
-
-	auth_param ntlm keep_alive on
-
-	=== Options for configuring the NEGOTIATE auth-scheme follow ===
-
-	"program" cmdline
-	Specify the command for the external Negotiate authenticator.
-	This protocol is used in Microsoft Active-Directory enabled setups with
-	the Microsoft Internet Explorer or Mozilla Firefox browsers.
-	Its main purpose is to exchange credentials with the Squid proxy
-	using the Kerberos mechanisms.
-	If you use a Negotiate authenticator, make sure you have at least one acl
-	of type proxy_auth active.  By default, the negotiate authenticator_program
-	is not used.
-	The only supported program for this role is the ntlm_auth
-	program distributed as part of Samba, version 4 or later.
-
-	auth_param negotiate program @DEFAULT_PREFIX@/bin/ntlm_auth --helper-protocol=gss-spnego
-
-	"children" numberofchildren
-	The number of authenticator processes to spawn (no default).
-	If you start too few Squid will have to wait for them to
-	process a backlog of credential verifications, slowing it
-	down. When crendential verifications are done via a (slow)
-	network you are likely to need lots of authenticator
-	processes.
-	auth_param negotiate children 5
-
-	"keep_alive" on|off
-	If you experience problems with PUT/POST requests when using the
-	Negotiate authentication scheme then you can try setting this to
-	off. This will cause Squid to forcibly close the connection on
-	the initial requests where the browser asks which schemes are
-	supported by the proxy.
-
-	auth_param negotiate keep_alive on
-
-NOCOMMENT_START
-#Recommended minimum configuration per scheme:
-#auth_param negotiate program <uncomment and complete this line to activate>
-#auth_param negotiate children 5
-#auth_param negotiate keep_alive on
-#auth_param ntlm program <uncomment and complete this line to activate>
-#auth_param ntlm children 5
-#auth_param ntlm keep_alive on
-#auth_param digest program <uncomment and complete this line>
-#auth_param digest children 5
-#auth_param digest realm Squid proxy-caching web server
-#auth_param digest nonce_garbage_interval 5 minutes
-#auth_param digest nonce_max_duration 30 minutes
-#auth_param digest nonce_max_count 50
-#auth_param basic program <uncomment and complete this line>
-#auth_param basic children 5
-#auth_param basic realm Squid proxy-caching web server
-#auth_param basic credentialsttl 2 hours
-NOCOMMENT_END
-DOC_END
-
-NAME: authenticate_cache_garbage_interval
-TYPE: time_t
-DEFAULT: 1 hour
-LOC: Config.authenticateGCInterval
-DOC_START
-	The time period between garbage collection across the username cache.
-	This is a tradeoff between memory utilization (long intervals - say
-	2 days) and CPU (short intervals - say 1 minute). Only change if you
-	have good reason to.
-DOC_END
-
-NAME: authenticate_ttl
-TYPE: time_t
-DEFAULT: 1 hour
-LOC: Config.authenticateTTL
-DOC_START
-	The time a user & their credentials stay in the logged in
-	user cache since their last request. When the garbage
-	interval passes, all user credentials that have passed their
-	TTL are removed from memory.
-DOC_END
-
-NAME: authenticate_ip_ttl
-TYPE: time_t
-LOC: Config.authenticateIpTTL
-DEFAULT: 0 seconds
-DOC_START
-	If you use proxy authentication and the 'max_user_ip' ACL,
-	this directive controls how long Squid remembers the IP
-	addresses associated with each user.  Use a small value
-	(e.g., 60 seconds) if your users might change addresses
-	quickly, as is the case with dialups.   You might be safe
-	using a larger value (e.g., 2 hours) in a corporate LAN
-	environment with relatively static address assignments.
-DOC_END
-
-NAME: external_acl_type
-TYPE: externalAclHelper
-LOC: Config.externalAclHelperList
-DEFAULT: none
-DOC_START
-	This option defines external acl classes using a helper program
-	to look up the status
-
-	  external_acl_type name [options] FORMAT.. /path/to/helper [helper arguments..]
-
-	Options:
-
-	  ttl=n		TTL in seconds for cached results (defaults to 3600
-	  		for 1 hour)
-	  negative_ttl=n
-	  		TTL for cached negative lookups (default same
-	  		as ttl)
-	  children=n	Number of acl helper processes spawn to service
-			external acl lookups of this type. (default 5)
-	  concurrency=n	concurrency level per process. Only used with helpers
-			capable of processing more than one query at a time.
-	  cache=n	result cache size, 0 is unbounded (default)
-	  grace=n	Percentage remaining of TTL where a refresh of a
-			cached entry should be initiated without needing to
-			wait for a new reply. (default 0 for no grace period)
-	  protocol=2.5	Compatibility mode for Squid-2.5 external acl helpers
-
-	FORMAT specifications
-
-	  %LOGIN	Authenticated user login name
-	  %EXT_USER	Username from external acl
-	  %IDENT	Ident user name
-	  %SRC		Client IP
-	  %SRCPORT	Client source port
-	  %URI		Requested URI
-	  %DST		Requested host
-	  %PROTO	Requested protocol
-	  %PORT		Requested port
-	  %PATH		Requested URL path
-	  %METHOD	Request method
-	  %MYADDR	Squid interface address
-	  %MYPORT	Squid http_port number
-	  %PATH		Requested URL-path (including query-string if any)
-	  %USER_CERT	SSL User certificate in PEM format
-	  %USER_CERTCHAIN SSL User certificate chain in PEM format
-	  %USER_CERT_xx	SSL User certificate subject attribute xx
-	  %USER_CA_xx	SSL User certificate issuer attribute xx
-	  %{Header}	HTTP request header
-	  %{Hdr:member}	HTTP request header list member
-	  %{Hdr:;member}
-	  		HTTP request header list member using ; as
-	  		list separator. ; can be any non-alphanumeric
-			character.
-
-	In addition to the above, any string specified in the referencing
-	acl will also be included in the helper request line, after the
-	specified formats (see the "acl external" directive)
-
-	The helper receives lines per the above format specification,
-	and returns lines starting with OK or ERR indicating the validity
-	of the request and optionally followed by additional keywords with
-	more details.
-
-	General result syntax:
-
-	  OK/ERR keyword=value ...
-
-	Defined keywords:
-
-	  user=		The users name (login)
-	  password=	The users password (for login= cache_peer option)
-	  message=	Message describing the reason. Available as %o
-	  		in error pages
-	  tag=		Apply a tag to a request (for both ERR and OK results)
-	  		Only sets a tag, does not alter existing tags.
-	  log=		String to be logged in access.log. Available as
-	  		%ea in logformat specifications
-
-	If protocol=3.0 (the default) then URL escaping is used to protect
-	each value in both requests and responses.
-
-	If using protocol=2.5 then all values need to be enclosed in quotes
-	if they may contain whitespace, or the whitespace escaped using \.
-	And quotes or \ characters within the keyword value must be \ escaped.
-
-	When using the concurrency= option the protocol is changed by
-	introducing a query channel tag infront of the request/response.
-	The query channel tag is a number between 0 and concurrency-1.
+	When this is 'on', a request will not go through the
+	redirector if all redirectors are busy.  If this is 'off'
+	and the redirector queue grows too large, Squid will exit
+	with a FATAL error and ask you to increase the number of
+	redirectors.  You should only enable this if the redirectors
+	are not critical to your caching system.  If you use
+	redirectors for access control, and you enable this option,
+	users may have access to pages they should not
+	be allowed to request.
 DOC_END
 
 COMMENT_START
@@ -2616,525 +3166,6 @@ DOC_START
 	This value is the lifetime to set for all open descriptors
 	during shutdown mode.  Any active clients after this many
 	seconds will receive a 'timeout' message.
-DOC_END
-
-COMMENT_START
- ACCESS CONTROLS
- -----------------------------------------------------------------------------
-COMMENT_END
-
-NAME: acl
-TYPE: acl
-LOC: Config.aclList
-DEFAULT: none
-DOC_START
-	Defining an Access List
-
-	acl aclname acltype string1 ...
-	acl aclname acltype "file" ...
-
-	when using "file", the file should contain one item per line
-
-	acltype is one of the types described below
-
-	By default, regular expressions are CASE-SENSITIVE.  To make
-	them case-insensitive, use the -i option.
-
-	acl aclname src      ip-address/netmask ... (clients IP address)
-	acl aclname src      addr1-addr2/netmask ... (range of addresses)
-	acl aclname dst      ip-address/netmask ... (URL host's IP address)
-	acl aclname myip     ip-address/netmask ... (local socket IP address)
-
-	acl aclname arp      mac-address ... (xx:xx:xx:xx:xx:xx notation)
-	  # The arp ACL requires the special configure option --enable-arp-acl.
-	  # Furthermore, the ARP ACL code is not portable to all operating systems.
-	  # It works on Linux, Solaris, Windows, FreeBSD, and some other *BSD variants.
-	  #
-	  # NOTE: Squid can only determine the MAC address for clients that are on
-	  # the same subnet. If the client is on a different subnet, then Squid cannot
-	  # find out its MAC address.
-
-	acl aclname srcdomain   .foo.com ...    # reverse lookup, client IP
-	acl aclname dstdomain   .foo.com ...    # Destination server from URL
-	acl aclname srcdom_regex [-i] xxx ...   # regex matching client name
-	acl aclname dstdom_regex [-i] xxx ...   # regex matching server
-	  # For dstdomain and dstdom_regex a reverse lookup is tried if a IP
-	  # based URL is used and no match is found. The name "none" is used
-	  # if the reverse lookup fails.
-
-	acl aclname http_status 200 301 500- 400-403 ...     # status code in reply
-
-	acl aclname time     [day-abbrevs]  [h1:m1-h2:m2]
-	    day-abbrevs:
-		S - Sunday
-		M - Monday
-		T - Tuesday
-		W - Wednesday
-		H - Thursday
-		F - Friday
-		A - Saturday
-	    h1:m1 must be less than h2:m2
-	acl aclname url_regex [-i] ^http:// ...	# regex matching on whole URL
-	acl aclname urlpath_regex [-i] \.gif$ ...	# regex matching on URL path
-	acl aclname port     80 70 21 ...
-	acl aclname port     0-1024 ...		# ranges allowed
-	acl aclname myport   3128 ...		# (local socket TCP port)
-	acl aclname proto    HTTP FTP ...
-	acl aclname method   GET POST ...
-	acl aclname browser  [-i] regexp ...
-	  # pattern match on User-Agent header (see also req_header below)
-	acl aclname referer_regex  [-i] regexp ...
-	  # pattern match on Referer header
-	  # Referer is highly unreliable, so use with care
-	acl aclname ident    username ...
-	acl aclname ident_regex [-i] pattern ...
-	  # string match on ident output.
-	  # use REQUIRED to accept any non-null ident.
-	acl aclname src_as   number ...
-	acl aclname dst_as   number ...
-	  # Except for access control, AS numbers can be used for
-	  # routing of requests to specific caches. Here's an
-	  # example for routing all requests for AS#1241 and only
-	  # those to mycache.mydomain.net:
-	  # acl asexample dst_as 1241
-	  # cache_peer_access mycache.mydomain.net allow asexample
-	  # cache_peer_access mycache_mydomain.net deny all
-
-	acl aclname proxy_auth [-i] username ...
-	acl aclname proxy_auth_regex [-i] pattern ...
-	  # list of valid usernames
-	  # use REQUIRED to accept any valid username.
-	  #
-	  # NOTE: when a Proxy-Authentication header is sent but it is not
-	  # needed during ACL checking the username is NOT logged
-	  # in access.log.
-	  #
-	  # NOTE: proxy_auth requires a EXTERNAL authentication program
-	  # to check username/password combinations (see
-	  # auth_param directive).
-	  #
-	  # NOTE: proxy_auth can't be used in a transparent proxy as
-	  # the browser needs to be configured for using a proxy in order
-	  # to respond to proxy authentication.
-
-	acl aclname snmp_community string ...
-	  # A community string to limit access to your SNMP Agent
-	  # Example:
-	  #
-	  #	acl snmppublic snmp_community public
-
-	acl aclname maxconn number
-	  # This will be matched when the client's IP address has
-	  # more than <number> HTTP connections established.
-
-	acl aclname max_user_ip [-s] number
-	  # This will be matched when the user attempts to log in from more
-	  # than <number> different ip addresses. The authenticate_ip_ttl
-	  # parameter controls the timeout on the ip entries.
-	  # If -s is specified the limit is strict, denying browsing
-	  # from any further IP addresses until the ttl has expired. Without
-	  # -s Squid will just annoy the user by "randomly" denying requests.
-	  # (the counter is reset each time the limit is reached and a
-	  # request is denied)
-	  # NOTE: in acceleration mode or where there is mesh of child proxies,
-	  # clients may appear to come from multiple addresses if they are
-	  # going through proxy farms, so a limit of 1 may cause user problems.
-
-	acl aclname req_mime_type mime-type1 ...
-	  # regex match against the mime type of the request generated
-	  # by the client. Can be used to detect file upload or some
-	  # types HTTP tunneling requests.
-	  # NOTE: This does NOT match the reply. You cannot use this
-	  # to match the returned file type.
-
-	acl aclname req_header header-name [-i] any\.regex\.here
-	  # regex match against any of the known request headers.  May be
-	  # thought of as a superset of "browser", "referer" and "mime-type"
-	  # ACLs.
-
-	acl aclname rep_mime_type mime-type1 ...
-	  # regex match against the mime type of the reply received by
-	  # squid. Can be used to detect file download or some
-	  # types HTTP tunneling requests.
-	  # NOTE: This has no effect in http_access rules. It only has
-	  # effect in rules that affect the reply data stream such as
-	  # http_reply_access.
-
-	acl aclname rep_header header-name [-i] any\.regex\.here
-	  # regex match against any of the known reply headers. May be
-	  # thought of as a superset of "browser", "referer" and "mime-type"
-	  # ACLs.
-
-	acl acl_name external class_name [arguments...]
-	  # external ACL lookup via a helper class defined by the
-	  # external_acl_type directive.
-
-	acl aclname user_cert attribute values...
-	  # match against attributes in a user SSL certificate
-	  # attribute is one of DN/C/O/CN/L/ST
-
-	acl aclname ca_cert attribute values...
-	  # match against attributes a users issuing CA SSL certificate
-	  # attribute is one of DN/C/O/CN/L/ST
-
-	acl aclname ext_user username ...
-	acl aclname ext_user_regex [-i] pattern ...
-	  # string match on username returned by external acl helper
-	  # use REQUIRED to accept any non-null user name.
-
-Examples:
-acl macaddress arp 09:00:2b:23:45:67
-acl myexample dst_as 1241
-acl password proxy_auth REQUIRED
-acl fileupload req_mime_type -i ^multipart/form-data$
-acl javascript rep_mime_type -i ^application/x-javascript$
-
-NOCOMMENT_START
-#Recommended minimum configuration:
-acl all src 0.0.0.0/0.0.0.0
-acl manager proto cache_object
-acl localhost src 127.0.0.1/255.255.255.255
-acl to_localhost dst 127.0.0.0/8
-acl SSL_ports port 443
-acl Safe_ports port 80		# http
-acl Safe_ports port 21		# ftp
-acl Safe_ports port 443		# https
-acl Safe_ports port 70		# gopher
-acl Safe_ports port 210		# wais
-acl Safe_ports port 1025-65535	# unregistered ports
-acl Safe_ports port 280		# http-mgmt
-acl Safe_ports port 488		# gss-http
-acl Safe_ports port 591		# filemaker
-acl Safe_ports port 777		# multiling http
-acl CONNECT method CONNECT
-NOCOMMENT_END
-DOC_END
-
-NAME: http_access
-TYPE: acl_access
-LOC: Config.accessList.http
-DEFAULT: none
-DEFAULT_IF_NONE: deny all
-DOC_START
-	Allowing or Denying access based on defined access lists
-
-	Access to the HTTP port:
-	http_access allow|deny [!]aclname ...
-
-	NOTE on default values:
-
-	If there are no "access" lines present, the default is to deny
-	the request.
-
-	If none of the "access" lines cause a match, the default is the
-	opposite of the last line in the list.  If the last line was
-	deny, the default is allow.  Conversely, if the last line
-	is allow, the default will be deny.  For these reasons, it is a
-	good idea to have an "deny all" or "allow all" entry at the end
-	of your access lists to avoid potential confusion.
-
-NOCOMMENT_START
-#Recommended minimum configuration:
-#
-# Only allow cachemgr access from localhost
-http_access allow manager localhost
-http_access deny manager
-# Deny requests to unknown ports
-http_access deny !Safe_ports
-# Deny CONNECT to other than SSL ports
-http_access deny CONNECT !SSL_ports
-#
-# We strongly recommend the following be uncommented to protect innocent
-# web applications running on the proxy server who think the only
-# one who can access services on "localhost" is a local user
-#http_access deny to_localhost
-#
-# INSERT YOUR OWN RULE(S) HERE TO ALLOW ACCESS FROM YOUR CLIENTS
-
-# Example rule allowing access from your local networks. Adapt
-# to list your (internal) IP networks from where browsing should
-# be allowed
-#acl our_networks src 192.168.1.0/24 192.168.2.0/24
-#http_access allow our_networks
-
-# And finally deny all other access to this proxy
-http_access deny all
-NOCOMMENT_END
-DOC_END
-
-NAME: http_reply_access
-TYPE: acl_access
-LOC: Config.accessList.reply
-DEFAULT: none
-DOC_START
-	Allow replies to client requests. This is complementary to http_access.
-
-	http_reply_access allow|deny [!] aclname ...
-
-	NOTE: if there are no access lines present, the default is to allow
-	all replies
-
-	If none of the access lines cause a match the opposite of the
-	last line will apply. Thus it is good practice to end the rules
-	with an "allow all" or "deny all" entry.
-DOC_END
-
-NAME: icp_access
-TYPE: acl_access
-LOC: Config.accessList.icp
-DEFAULT: none
-DEFAULT_IF_NONE: deny all
-DOC_START
-	Allowing or Denying access to the ICP port based on defined
-	access lists
-
-	icp_access  allow|deny [!]aclname ...
-
-	See http_access for details
-
-NOCOMMENT_START
-#Allow ICP queries from everyone
-icp_access allow all
-NOCOMMENT_END
-DOC_END
-
-NAME: htcp_access
-IFDEF: USE_HTCP
-TYPE: acl_access
-LOC: Config.accessList.htcp
-DEFAULT: none
-DEFAULT_IF_NONE: deny all
-DOC_START
-	Allowing or Denying access to the HTCP port based on defined
-	access lists
-
-	htcp_access  allow|deny [!]aclname ...
-
-	See http_access for details
-
-#Allow HTCP queries from everyone
-htcp_access allow all
-DOC_END
-
-NAME: htcp_clr_access
-IFDEF: USE_HTCP
-TYPE: acl_access
-LOC: Config.accessList.htcp_clr
-DEFAULT: none
-DEFAULT_IF_NONE: deny all
-DOC_START
-	Allowing or Denying access to purge content using HTCP based
-	on defined access lists
-
-	htcp_clr_access  allow|deny [!]aclname ...
-
-	See http_access for details
-
-#Allow HTCP CLR requests from trusted peers
-acl htcp_clr_peer src 172.16.1.2
-htcp_clr_access allow htcp_clr_peer
-DOC_END
-
-NAME: miss_access
-TYPE: acl_access
-LOC: Config.accessList.miss
-DEFAULT: none
-DOC_START
-	Use to force your neighbors to use you as a sibling instead of
-	a parent.  For example:
-
-		acl localclients src 172.16.0.0/16
-		miss_access allow localclients
-		miss_access deny  !localclients
-
-	This means only your local clients are allowed to fetch
-	MISSES and all other clients can only fetch HITS.
-
-	By default, allow all clients who passed the http_access rules
-	to fetch MISSES from us.
-
-NOCOMMENT_START
-#Default setting:
-# miss_access allow all
-NOCOMMENT_END
-DOC_END
-
-NAME: cache_peer_access
-TYPE: peer_access
-DEFAULT: none
-LOC: none
-DOC_START
-	Similar to 'cache_peer_domain' but provides more flexibility by
-	using ACL elements.
-
-	cache_peer_access cache-host allow|deny [!]aclname ...
-
-	The syntax is identical to 'http_access' and the other lists of
-	ACL elements.  See the comments for 'http_access' below, or
-	the Squid FAQ (http://www.squid-cache.org/FAQ/FAQ-10.html).
-DOC_END
-
-NAME: ident_lookup_access
-TYPE: acl_access
-IFDEF: USE_IDENT
-DEFAULT: none
-DEFAULT_IF_NONE: deny all
-LOC: Config.accessList.identLookup
-DOC_START
-	A list of ACL elements which, if matched, cause an ident
-	(RFC 931) lookup to be performed for this request.  For
-	example, you might choose to always perform ident lookups
-	for your main multi-user Unix boxes, but not for your Macs
-	and PCs.  By default, ident lookups are not performed for
-	any requests.
-
-	To enable ident lookups for specific client addresses, you
-	can follow this example:
-
-	acl ident_aware_hosts src 198.168.1.0/255.255.255.0
-	ident_lookup_access allow ident_aware_hosts
-	ident_lookup_access deny all
-
-	Only src type ACL checks are fully supported.  A src_domain
-	ACL might work at times, but it will not always provide
-	the correct result.
-DOC_END
-
-NAME: tcp_outgoing_tos tcp_outgoing_ds tcp_outgoing_dscp
-TYPE: acl_tos
-DEFAULT: none
-LOC: Config.accessList.outgoing_tos
-DOC_START
-	Allows you to select a TOS/Diffserv value to mark outgoing
-	connections with, based on the username or source address
-	making the request.
-
-	tcp_outgoing_tos ds-field [!]aclname ...
-
-	Example where normal_service_net uses the TOS value 0x00
-	and normal_service_net uses 0x20
-
-	acl normal_service_net src 10.0.0.0/255.255.255.0
-	acl good_service_net src 10.0.1.0/255.255.255.0
-	tcp_outgoing_tos 0x00 normal_service_net 0x00
-	tcp_outgoing_tos 0x20 good_service_net
-
-	TOS/DSCP values really only have local significance - so you should
-	know what you're specifying. For more information, see RFC2474 and
-	RFC3260.
-
-	The TOS/DSCP byte must be exactly that - a octet value  0 - 255, or
-	"default" to use whatever default your host has. Note that in
-	practice often only values 0 - 63 is usable as the two highest bits
-	have been redefined for use by ECN (RFC3168).
-
-	Processing proceeds in the order specified, and stops at first fully
-	matching line.
-
-	Note: The use of this directive using client dependent ACLs is
-	incompatible with the use of server side persistent connections. To
-	ensure correct results it is best to set server_persisten_connections
-	to off when using this directive in such configurations.
-DOC_END
-
-NAME: clientside_tos
-TYPE: acl_tos
-DEFAULT: none
-LOC: Config.accessList.clientside_tos
-DOC_START
-	Allows you to select a TOS/Diffserv value to mark client-side
-	connections with, based on the username or source address
-	making the request.
-DOC_END
-
-NAME: tcp_outgoing_address
-TYPE: acl_address
-DEFAULT: none
-LOC: Config.accessList.outgoing_address
-DOC_START
-	Allows you to map requests to different outgoing IP addresses
-	based on the username or source address of the user making
-	the request.
-
-	tcp_outgoing_address ipaddr [[!]aclname] ...
-
-	Example where requests from 10.0.0.0/24 will be forwarded
-	with source address 10.1.0.1, 10.0.2.0/24 forwarded with
-	source address 10.1.0.2 and the rest will be forwarded with
-	source address 10.1.0.3.
-
-	acl normal_service_net src 10.0.0.0/255.255.255.0
-	acl good_service_net src 10.0.1.0/255.255.255.0
-	tcp_outgoing_address 10.0.0.1 normal_service_net
-	tcp_outgoing_address 10.0.0.2 good_service_net
-	tcp_outgoing_address 10.0.0.3
-
-	Processing proceeds in the order specified, and stops at first fully
-	matching line.
-
-	Note: The use of this directive using client dependent ACLs is
-	incompatible with the use of server side persistent connections. To
-	ensure correct results it is best to set server_persistent_connections
-	to off when using this directive in such configurations.
-DOC_END
-
-NAME: reply_header_max_size
-COMMENT: (KB)
-TYPE: b_size_t
-DEFAULT: 20 KB
-LOC: Config.maxReplyHeaderSize
-DOC_START
-	This specifies the maximum size for HTTP headers in a reply.
-	Reply headers are usually relatively small (about 512 bytes).
-	Placing a limit on the reply header size will catch certain
-	bugs (for example with persistent connections) and possibly
-	buffer-overflow or denial-of-service attacks.
-DOC_END
-
-NAME: reply_body_max_size
-COMMENT: size [acl acl...]
-TYPE: acl_b_size_t
-DEFAULT: none
-LOC: Config.ReplyBodySize
-DOC_START
-	This option specifies the maximum size of a reply body. It can be
-	used to prevent users from downloading very large files, such as
-	MP3's and movies. When the reply headers are received, the
-	reply_body_max_size lines are processed, and the first line where
-	all (if any) listed ACLs are true is used as the maximum body size
-	for this reply.
-
-	This size is checked twice. First when we get the reply headers,
-	we check the content-length value.  If the content length value exists
-	and is larger than the allowed size, the request is denied and the
-	user receives an error message that says "the request or reply
-	is too large." If there is no content-length, and the reply
-	size exceeds this limit, the client's connection is just closed
-	and they will receive a partial reply.
-
-	WARNING: downstream caches probably can not detect a partial reply
-	if there is no content-length header, so they will cache
-	partial responses and give them out as hits.  You should NOT
-	use this option if you have downstream caches.
-
-	WARNING: A maximum size smaller than the size of squid's error messages
-	will cause an infinite loop and crash squid. Ensure that the smallest
-	non-zero value you use is greater that the maximum header size plus
-	the size of your largest error page.
-
-	If you set this parameter none (the default), there will be
-	no limit imposed.
-DOC_END
-
-NAME: log_access
-TYPE: acl_access
-LOC: Config.accessList.log
-DEFAULT: none
-COMMENT: allow|deny acl acl...
-DOC_START
-	This options allows you to control which requests gets logged
-	to access.log (see access_log directive). Requests denied for
-	logging will also not be accounted for in performance counters.
 DOC_END
 
 COMMENT_START
@@ -5230,22 +5261,6 @@ NOCOMMENT_START
 # Leave coredumps in the first cache dir
 coredump_dir @DEFAULT_SWAP_DIR@
 NOCOMMENT_END
-DOC_END
-
-NAME: redirector_bypass
-TYPE: onoff
-LOC: Config.onoff.redirector_bypass
-DEFAULT: off
-DOC_START
-	When this is 'on', a request will not go through the
-	redirector if all redirectors are busy.  If this is 'off'
-	and the redirector queue grows too large, Squid will exit
-	with a FATAL error and ask you to increase the number of
-	redirectors.  You should only enable this if the redirectors
-	are not critical to your caching system.  If you use
-	redirectors for access control, and you enable this option,
-	users may have access to pages they should not
-	be allowed to request.
 DOC_END
 
 NAME: chroot
