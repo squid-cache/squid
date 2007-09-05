@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.433 2007/08/27 00:11:32 hno Exp $
+#  $Id: Makefile.in,v 1.434 2007/09/05 00:10:42 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -2556,6 +2556,7 @@ LDADD = libsquid.la libauth.la -L../lib -lmiscutil @XTRA_LIBS@ @EPOLL_LIBS@ @MIN
 EXTRA_DIST = \
 	cf_gen_defines \
 	cf.data.pre \
+	cf.data.depend \
 	mk-globals-c.pl \
 	mk-globals-c.awk \
 	mk-string-arrays.pl \
@@ -5422,7 +5423,7 @@ squid.conf.default: cf_parser.h
 	$(SHELL) -c "test -f squid.conf.default || ./cf_gen cf.data"
 
 cf_parser.h: cf.data cf_gen$(EXEEXT)
-	./cf_gen cf.data 
+	./cf_gen cf.data $(srcdir)/cf.data.depend
 
 cf_gen_defines.h: $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre
 	$(AWK) -f $(srcdir)/cf_gen_defines <$(srcdir)/cf.data.pre >cf_gen_defines.h
