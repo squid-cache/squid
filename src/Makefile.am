@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.188 2007/09/04 17:39:56 hno Exp $
+#  $Id: Makefile.am,v 1.189 2007/09/04 18:24:20 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -932,6 +932,7 @@ LDADD = libsquid.la libauth.la -L../lib -lmiscutil @XTRA_LIBS@ @EPOLL_LIBS@ @MIN
 EXTRA_DIST = \
 	cf_gen_defines \
 	cf.data.pre \
+	cf.data.depend \
 	mk-globals-c.pl \
 	mk-globals-c.awk \
 	mk-string-arrays.pl \
