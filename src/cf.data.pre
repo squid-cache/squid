@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.465 2007/09/04 17:39:57 hno Exp $
+# $Id: cf.data.pre,v 1.466 2007/09/05 21:23:06 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -528,6 +528,11 @@ DOC_START
 	environment with relatively static address assignments.
 DOC_END
 
+COMMENT_START
+ ACCESS CONTROLS
+ -----------------------------------------------------------------------------
+COMMENT_END
+
 NAME: external_acl_type
 TYPE: externalAclHelper
 LOC: Config.externalAclHelperList
@@ -617,11 +622,6 @@ DOC_START
 	introducing a query channel tag infront of the request/response.
 	The query channel tag is a number between 0 and concurrency-1.
 DOC_END
-
-COMMENT_START
- ACCESS CONTROLS
- -----------------------------------------------------------------------------
-COMMENT_END
 
 NAME: acl
 TYPE: acl
@@ -4030,6 +4030,21 @@ DOC_START
 	have the same value since they both use port 3130.
 DOC_END
 
+NAME: icp_hit_stale
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: off
+LOC: Config.onoff.icp_hit_stale
+DOC_START
+	If you want to return ICP_HIT for stale cache objects, set this
+	option to 'on'.  If you have sibling relationships with caches
+	in other administrative domains, this should be 'off'.  If you only
+	have sibling relationships with caches under your control,
+	it is probably okay to set this to 'on'.
+	If set to 'on', your siblings should use the option "allow-miss"
+	on their cache_peer lines for connecting to you.
+DOC_END
+
 NAME: minimum_direct_hops
 TYPE: int
 DEFAULT: 4
@@ -4158,21 +4173,6 @@ LOC: Config.backgroundPingRate
 DOC_START
 	Controls how often the ICP pings are sent to siblings that
 	have background-ping set.
-DOC_END
-
-NAME: icp_hit_stale
-COMMENT: on|off
-TYPE: onoff
-DEFAULT: off
-LOC: Config.onoff.icp_hit_stale
-DOC_START
-	If you want to return ICP_HIT for stale cache objects, set this
-	option to 'on'.  If you have sibling relationships with caches
-	in other administrative domains, this should be 'off'.  If you only
-	have sibling relationships with caches under your control,
-	it is probably okay to set this to 'on'.
-	If set to 'on', your siblings should use the option "allow-miss"
-	on their cache_peer lines for connecting to you.
 DOC_END
 
 COMMENT_START
