@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.189 2007/09/04 18:24:20 hno Exp $
+#  $Id: Makefile.am,v 1.190 2007/09/05 21:46:29 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -1020,8 +1020,9 @@ test_cache_digest: test_cache_digest.o CacheDigest.o debug.o globals.o store_key
 ## If autodependency works well this is not needed anymore
 cache_cf.o: cf_parser.h
 
+# squd.conf.default is built by cf_gen when making cf_parser.h
 squid.conf.default: cf_parser.h
-	$(SHELL) -c "test -f squid.conf.default || ./cf_gen cf.data"
+	true
 
 cf_parser.h: cf.data cf_gen$(EXEEXT)
 	./cf_gen cf.data $(srcdir)/cf.data.depend
