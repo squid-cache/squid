@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.473 2007/08/30 20:38:48 wessels Exp $
+dnl  $Id: configure.in,v 1.474 2007/09/06 14:36:01 rousskov Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.473 $)dnl
+AC_REVISION($Revision: 1.474 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -1763,7 +1763,7 @@ AC_ARG_WITH(cppunit-basedir,
     fi
   if test -f $withval/lib/libcppunit.la; then
 	echo "Using cppunit lib from $withval"
-	SQUID_CPPUNIT_LA="-I${withval}/lib/libcppunit.la"
+	SQUID_CPPUNIT_LA="${withval}/lib/libcppunit.la"
 	SQUID_CPPUNIT_LIBS='$(SQUID_CPPUNIT_LA)'
     else
 	echo "ERROR: Cannot find cppunit at $withval"
