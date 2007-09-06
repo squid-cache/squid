@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.466 2007/09/05 21:23:06 hno Exp $
+# $Id: cf.data.pre,v 1.467 2007/09/05 21:47:29 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -46,197 +46,6 @@ COMMENT_START
 	case.
 
 COMMENT_END
-
-COMMENT_START
- NETWORK OPTIONS
- -----------------------------------------------------------------------------
-COMMENT_END
-
-NAME: http_port ascii_port
-TYPE: http_port_list
-DEFAULT: none
-LOC: Config.Sockaddr.http
-DOC_START
-	Usage:	port [options]
-		hostname:port [options]
-		1.2.3.4:port [options]
-
-	The socket addresses where Squid will listen for HTTP client
-	requests.  You may specify multiple socket addresses.
-	There are three forms: port alone, hostname with port, and
-	IP address with port.  If you specify a hostname or IP
-	address, Squid binds the socket to that specific
-	address.  This replaces the old 'tcp_incoming_address'
-	option.  Most likely, you do not need to bind to a specific
-	address, so you can use the port number alone.
-
-	If you are running Squid in accelerator mode, you
-	probably want to listen on port 80 also, or instead.
-
-	The -a command line option may be used to specify additional
-	port(s) where Squid listens for proxy request. Such ports will
-	be plain proxy ports with no options.
-
-	You may specify multiple socket addresses on multiple lines.
-
-	Options:
-
-	   transparent	Support for transparent interception of
-			outgoing requests without browser settings.
-
-	   tproxy	Support Linux TPROXY for spoofing outgoing
-			connections using the client IP address.
-
-	   accel	Accelerator mode. Also needs at least one of
-			vhost / vport / defaultsite.
-
-	   defaultsite=domainname
-			What to use for the Host: header if it is not present
-			in a request. Determines what site (not origin server)
-			accelerators should consider the default.
-			Implies accel.
-
-	   vhost	Accelerator mode using Host header for virtual
-			domain support. Implies accel.
-
-	   vport	Accelerator with IP based virtual host support.
-			Implies accel.
-
-	   vport=NN	As above, but uses specified port number rather
-			than the http_port number. Implies accel.
-
-	   protocol=	Protocol to reconstruct accelerated requests with.
-			Defaults to http.
-
-	   disable-pmtu-discovery=
-			Control Path-MTU discovery usage:
-			    off		lets OS decide on what to do (default).
-			    transparent	disable PMTU discovery when transparent
-					support is enabled.
-			    always	disable always PMTU discovery.
-
-			In many setups of transparently intercepting proxies
-			Path-MTU discovery can not work on traffic towards the
-			clients. This is the case when the intercepting device
-			does not fully track connections and fails to forward
-			ICMP must fragment messages to the cache server. If you
-			have such setup and experience that certain clients
-			sporadically hang or never complete requests set
-			disable-pmtu-discovery option to 'transparent'.
-
-	If you run Squid on a dual-homed machine with an internal
-	and an external interface we recommend you to specify the
-	internal address:port in http_port. This way Squid will only be
-	visible on the internal address.
-
-NOCOMMENT_START
-# Squid normally listens to port 3128
-http_port @DEFAULT_HTTP_PORT@
-NOCOMMENT_END
-DOC_END
-
-NAME: https_port
-IFDEF: USE_SSL
-TYPE: https_port_list
-DEFAULT: none
-LOC: Config.Sockaddr.https
-DOC_START
-	Usage:  [ip:]port cert=certificate.pem [key=key.pem] [options...]
-
-	The socket address where Squid will listen for HTTPS client
-	requests.
-
-	This is really only useful for situations where you are running
-	squid in accelerator mode and you want to do the SSL work at the
-	accelerator level.
-
-	You may specify multiple socket addresses on multiple lines,
-	each with their own SSL certificate and/or options.
-
-	Options:
-
-	   accel	Accelerator mode. Also needs at least one of
-			defaultsite or vhost.
-
-	   defaultsite=	The name of the https site presented on
-	   		this port. Implies accel.
-
-	   vhost	Accelerator mode using Host header for virtual
-			domain support. Requires a wildcard certificate
-			or other certificate valid for more than one domain.
-			Implies accel.
-
-	   protocol=	Protocol to reconstruct accelerated requests with.
-			Defaults to https.
-
-	   cert=	Path to SSL certificate (PEM format).
-
-	   key=		Path to SSL private key file (PEM format)
-			if not specified, the certificate file is
-			assumed to be a combined certificate and
-			key file.
-
-	   version=	The version of SSL/TLS supported
-			    1	automatic (default)
-			    2	SSLv2 only
-			    3	SSLv3 only
-			    4	TLSv1 only
-
-	   cipher=	Colon separated list of supported ciphers.
-
-	   options=	Various SSL engine options. The most important
-			being:
-			    NO_SSLv2  Disallow the use of SSLv2
-			    NO_SSLv3  Disallow the use of SSLv3
-			    NO_TLSv1  Disallow the use of TLSv1
-			    SINGLE_DH_USE Always create a new key when using
-				      temporary/ephemeral DH key exchanges
-			See src/ssl_support.c or OpenSSL SSL_CTX_set_options
-			documentation for a complete list of options.
-
-	   clientca=	File containing the list of CAs to use when
-			requesting a client certificate.
-
-	   cafile=	File containing additional CA certificates to
-			use when verifying client certificates. If unset
-			clientca will be used.
-
-	   capath=	Directory containing additional CA certificates
-			and CRL lists to use when verifying client certificates.
-
-	   crlfile=	File of additional CRL lists to use when verifying
-			the client certificate, in addition to CRLs stored in
-			the capath. Implies VERIFY_CRL flag below.
-
-	   dhparams=	File containing DH parameters for temporary/ephemeral
-			DH key exchanges.
-
-	   sslflags=	Various flags modifying the use of SSL:
-			    DELAYED_AUTH
-				Don't request client certificates
-				immediately, but wait until acl processing
-				requires a certificate (not yet implemented).
-			    NO_DEFAULT_CA
-				Don't use the default CA lists built in
-				to OpenSSL.
-			    NO_SESSION_REUSE
-				Don't allow for session reuse. Each connection
-				will result in a new SSL session.
-			    VERIFY_CRL
-				Verify CRL lists when accepting client
-				certificates.
-			    VERIFY_CRL_ALL
-				Verify CRL lists for all certificates in the
-				client certificate chain.
-
-	   sslcontext=	SSL session ID context identifier.
-
-	   vport	Accelerator with IP based virtual host support.
-
-	   vport=NN	As above, but uses specified port number rather
-			than the https_port number. Implies accel.
-
-DOC_END
 
 COMMENT_START
  OPTIONS FOR AUTHENTICATION
@@ -985,6 +794,245 @@ DOC_START
 	the correct result.
 DOC_END
 
+NAME: reply_header_max_size
+COMMENT: (KB)
+TYPE: b_size_t
+DEFAULT: 20 KB
+LOC: Config.maxReplyHeaderSize
+DOC_START
+	This specifies the maximum size for HTTP headers in a reply.
+	Reply headers are usually relatively small (about 512 bytes).
+	Placing a limit on the reply header size will catch certain
+	bugs (for example with persistent connections) and possibly
+	buffer-overflow or denial-of-service attacks.
+DOC_END
+
+NAME: reply_body_max_size
+COMMENT: size [acl acl...]
+TYPE: acl_b_size_t
+DEFAULT: none
+LOC: Config.ReplyBodySize
+DOC_START
+	This option specifies the maximum size of a reply body. It can be
+	used to prevent users from downloading very large files, such as
+	MP3's and movies. When the reply headers are received, the
+	reply_body_max_size lines are processed, and the first line where
+	all (if any) listed ACLs are true is used as the maximum body size
+	for this reply.
+
+	This size is checked twice. First when we get the reply headers,
+	we check the content-length value.  If the content length value exists
+	and is larger than the allowed size, the request is denied and the
+	user receives an error message that says "the request or reply
+	is too large." If there is no content-length, and the reply
+	size exceeds this limit, the client's connection is just closed
+	and they will receive a partial reply.
+
+	WARNING: downstream caches probably can not detect a partial reply
+	if there is no content-length header, so they will cache
+	partial responses and give them out as hits.  You should NOT
+	use this option if you have downstream caches.
+
+	WARNING: A maximum size smaller than the size of squid's error messages
+	will cause an infinite loop and crash squid. Ensure that the smallest
+	non-zero value you use is greater that the maximum header size plus
+	the size of your largest error page.
+
+	If you set this parameter none (the default), there will be
+	no limit imposed.
+DOC_END
+
+COMMENT_START
+ NETWORK OPTIONS
+ -----------------------------------------------------------------------------
+COMMENT_END
+
+NAME: http_port ascii_port
+TYPE: http_port_list
+DEFAULT: none
+LOC: Config.Sockaddr.http
+DOC_START
+	Usage:	port [options]
+		hostname:port [options]
+		1.2.3.4:port [options]
+
+	The socket addresses where Squid will listen for HTTP client
+	requests.  You may specify multiple socket addresses.
+	There are three forms: port alone, hostname with port, and
+	IP address with port.  If you specify a hostname or IP
+	address, Squid binds the socket to that specific
+	address.  This replaces the old 'tcp_incoming_address'
+	option.  Most likely, you do not need to bind to a specific
+	address, so you can use the port number alone.
+
+	If you are running Squid in accelerator mode, you
+	probably want to listen on port 80 also, or instead.
+
+	The -a command line option may be used to specify additional
+	port(s) where Squid listens for proxy request. Such ports will
+	be plain proxy ports with no options.
+
+	You may specify multiple socket addresses on multiple lines.
+
+	Options:
+
+	   transparent	Support for transparent interception of
+			outgoing requests without browser settings.
+
+	   tproxy	Support Linux TPROXY for spoofing outgoing
+			connections using the client IP address.
+
+	   accel	Accelerator mode. Also needs at least one of
+			vhost / vport / defaultsite.
+
+	   defaultsite=domainname
+			What to use for the Host: header if it is not present
+			in a request. Determines what site (not origin server)
+			accelerators should consider the default.
+			Implies accel.
+
+	   vhost	Accelerator mode using Host header for virtual
+			domain support. Implies accel.
+
+	   vport	Accelerator with IP based virtual host support.
+			Implies accel.
+
+	   vport=NN	As above, but uses specified port number rather
+			than the http_port number. Implies accel.
+
+	   protocol=	Protocol to reconstruct accelerated requests with.
+			Defaults to http.
+
+	   disable-pmtu-discovery=
+			Control Path-MTU discovery usage:
+			    off		lets OS decide on what to do (default).
+			    transparent	disable PMTU discovery when transparent
+					support is enabled.
+			    always	disable always PMTU discovery.
+
+			In many setups of transparently intercepting proxies
+			Path-MTU discovery can not work on traffic towards the
+			clients. This is the case when the intercepting device
+			does not fully track connections and fails to forward
+			ICMP must fragment messages to the cache server. If you
+			have such setup and experience that certain clients
+			sporadically hang or never complete requests set
+			disable-pmtu-discovery option to 'transparent'.
+
+	If you run Squid on a dual-homed machine with an internal
+	and an external interface we recommend you to specify the
+	internal address:port in http_port. This way Squid will only be
+	visible on the internal address.
+
+NOCOMMENT_START
+# Squid normally listens to port 3128
+http_port @DEFAULT_HTTP_PORT@
+NOCOMMENT_END
+DOC_END
+
+NAME: https_port
+IFDEF: USE_SSL
+TYPE: https_port_list
+DEFAULT: none
+LOC: Config.Sockaddr.https
+DOC_START
+	Usage:  [ip:]port cert=certificate.pem [key=key.pem] [options...]
+
+	The socket address where Squid will listen for HTTPS client
+	requests.
+
+	This is really only useful for situations where you are running
+	squid in accelerator mode and you want to do the SSL work at the
+	accelerator level.
+
+	You may specify multiple socket addresses on multiple lines,
+	each with their own SSL certificate and/or options.
+
+	Options:
+
+	   accel	Accelerator mode. Also needs at least one of
+			defaultsite or vhost.
+
+	   defaultsite=	The name of the https site presented on
+	   		this port. Implies accel.
+
+	   vhost	Accelerator mode using Host header for virtual
+			domain support. Requires a wildcard certificate
+			or other certificate valid for more than one domain.
+			Implies accel.
+
+	   protocol=	Protocol to reconstruct accelerated requests with.
+			Defaults to https.
+
+	   cert=	Path to SSL certificate (PEM format).
+
+	   key=		Path to SSL private key file (PEM format)
+			if not specified, the certificate file is
+			assumed to be a combined certificate and
+			key file.
+
+	   version=	The version of SSL/TLS supported
+			    1	automatic (default)
+			    2	SSLv2 only
+			    3	SSLv3 only
+			    4	TLSv1 only
+
+	   cipher=	Colon separated list of supported ciphers.
+
+	   options=	Various SSL engine options. The most important
+			being:
+			    NO_SSLv2  Disallow the use of SSLv2
+			    NO_SSLv3  Disallow the use of SSLv3
+			    NO_TLSv1  Disallow the use of TLSv1
+			    SINGLE_DH_USE Always create a new key when using
+				      temporary/ephemeral DH key exchanges
+			See src/ssl_support.c or OpenSSL SSL_CTX_set_options
+			documentation for a complete list of options.
+
+	   clientca=	File containing the list of CAs to use when
+			requesting a client certificate.
+
+	   cafile=	File containing additional CA certificates to
+			use when verifying client certificates. If unset
+			clientca will be used.
+
+	   capath=	Directory containing additional CA certificates
+			and CRL lists to use when verifying client certificates.
+
+	   crlfile=	File of additional CRL lists to use when verifying
+			the client certificate, in addition to CRLs stored in
+			the capath. Implies VERIFY_CRL flag below.
+
+	   dhparams=	File containing DH parameters for temporary/ephemeral
+			DH key exchanges.
+
+	   sslflags=	Various flags modifying the use of SSL:
+			    DELAYED_AUTH
+				Don't request client certificates
+				immediately, but wait until acl processing
+				requires a certificate (not yet implemented).
+			    NO_DEFAULT_CA
+				Don't use the default CA lists built in
+				to OpenSSL.
+			    NO_SESSION_REUSE
+				Don't allow for session reuse. Each connection
+				will result in a new SSL session.
+			    VERIFY_CRL
+				Verify CRL lists when accepting client
+				certificates.
+			    VERIFY_CRL_ALL
+				Verify CRL lists for all certificates in the
+				client certificate chain.
+
+	   sslcontext=	SSL session ID context identifier.
+
+	   vport	Accelerator with IP based virtual host support.
+
+	   vport=NN	As above, but uses specified port number rather
+			than the https_port number. Implies accel.
+
+DOC_END
+
 NAME: tcp_outgoing_tos tcp_outgoing_ds tcp_outgoing_dscp
 TYPE: acl_tos
 DEFAULT: none
@@ -1061,65 +1109,6 @@ DOC_START
 	incompatible with the use of server side persistent connections. To
 	ensure correct results it is best to set server_persistent_connections
 	to off when using this directive in such configurations.
-DOC_END
-
-NAME: reply_header_max_size
-COMMENT: (KB)
-TYPE: b_size_t
-DEFAULT: 20 KB
-LOC: Config.maxReplyHeaderSize
-DOC_START
-	This specifies the maximum size for HTTP headers in a reply.
-	Reply headers are usually relatively small (about 512 bytes).
-	Placing a limit on the reply header size will catch certain
-	bugs (for example with persistent connections) and possibly
-	buffer-overflow or denial-of-service attacks.
-DOC_END
-
-NAME: reply_body_max_size
-COMMENT: size [acl acl...]
-TYPE: acl_b_size_t
-DEFAULT: none
-LOC: Config.ReplyBodySize
-DOC_START
-	This option specifies the maximum size of a reply body. It can be
-	used to prevent users from downloading very large files, such as
-	MP3's and movies. When the reply headers are received, the
-	reply_body_max_size lines are processed, and the first line where
-	all (if any) listed ACLs are true is used as the maximum body size
-	for this reply.
-
-	This size is checked twice. First when we get the reply headers,
-	we check the content-length value.  If the content length value exists
-	and is larger than the allowed size, the request is denied and the
-	user receives an error message that says "the request or reply
-	is too large." If there is no content-length, and the reply
-	size exceeds this limit, the client's connection is just closed
-	and they will receive a partial reply.
-
-	WARNING: downstream caches probably can not detect a partial reply
-	if there is no content-length header, so they will cache
-	partial responses and give them out as hits.  You should NOT
-	use this option if you have downstream caches.
-
-	WARNING: A maximum size smaller than the size of squid's error messages
-	will cause an infinite loop and crash squid. Ensure that the smallest
-	non-zero value you use is greater that the maximum header size plus
-	the size of your largest error page.
-
-	If you set this parameter none (the default), there will be
-	no limit imposed.
-DOC_END
-
-NAME: log_access
-TYPE: acl_access
-LOC: Config.accessList.log
-DEFAULT: none
-COMMENT: allow|deny acl acl...
-DOC_START
-	This options allows you to control which requests gets logged
-	to access.log (see access_log directive). Requests denied for
-	logging will also not be accounted for in performance counters.
 DOC_END
 
 COMMENT_START
@@ -2035,6 +2024,17 @@ DOC_START
 NOCOMMENT_START
 access_log @DEFAULT_ACCESS_LOG@ squid
 NOCOMMENT_END
+DOC_END
+
+NAME: log_access
+TYPE: acl_access
+LOC: Config.accessList.log
+DEFAULT: none
+COMMENT: allow|deny acl acl...
+DOC_START
+	This options allows you to control which requests gets logged
+	to access.log (see access_log directive). Requests denied for
+	logging will also not be accounted for in performance counters.
 DOC_END
 
 NAME: cache_log
