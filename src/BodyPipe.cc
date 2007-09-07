@@ -93,7 +93,7 @@ BodyPipe::clearProducer(bool atEof)
 				theBodySize = thePutSize;
 			else
 			if (bodySize() != thePutSize)
-				debugs(91,1, HERE << "aborting on premature eof" << status());
+				debugs(91,3, HERE << "aborting on premature eof" << status());
 		} else {
 			// asserta that we can detect the abort if the consumer joins later
 			assert(!bodySizeKnown() || bodySize() != thePutSize);
