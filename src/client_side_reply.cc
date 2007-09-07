@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.138 2007/08/30 13:15:13 hno Exp $
+ * $Id: client_side_reply.cc,v 1.139 2007/09/07 17:54:52 rousskov Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1755,6 +1755,7 @@ clientReplyContext::processReplyAccess ()
 
     /* Dont't block our own responses or HTTP status messages */
     if (http->logType == LOG_TCP_DENIED || http->logType == LOG_TCP_DENIED_REPLY || alwaysAllowResponse(reply->sline.status)) {
+        headers_sz = reply->hdr_sz;
 	processReplyAccessResult(1);
 	return;
     }
