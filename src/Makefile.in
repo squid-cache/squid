@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.435 2007/09/06 00:10:41 hno Exp $
+#  $Id: Makefile.in,v 1.436 2007/09/07 00:10:42 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -3394,6 +3394,7 @@ tests_test_http_range_LDADD = \
 	@SSLLIB@ \
 	@XTRA_LIBS@
 
+tests_test_http_range_LDFLAGS = $(LIBADD_DL)
 tests_test_http_range_DEPENDENCIES = \
 	@SQUID_CPPUNIT_LA@
 
