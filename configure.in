@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.474 2007/09/06 14:36:01 rousskov Exp $
+dnl  $Id: configure.in,v 1.475 2007/09/09 17:49:53 hno Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.474 $)dnl
+AC_REVISION($Revision: 1.475 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -794,7 +794,7 @@ if [ "$USE_SNMP" ]; then
     SNMPLIB='../snmplib/libsnmp.a'
     makesnmplib=snmplib
 fi
-AM_CONDITIONAL(USE_SNMP, [test x$USE_SNMP == xtrue])
+AM_CONDITIONAL(USE_SNMP, [test x$USE_SNMP = xtrue])
 AC_SUBST(SNMPLIB)
 AC_SUBST(makesnmplib)
 
