@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.469 2007/09/15 09:11:24 amosjeffries Exp $
+# $Id: cf.data.pre,v 1.470 2007/09/17 00:23:37 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -5330,10 +5330,10 @@ DOC_END
 NAME: high_memory_warning
 TYPE: b_size_t
 LOC: Config.warnings.high_memory
-DEFAULT: 0
+DEFAULT: 0 KB
 DOC_START
 	If the memory usage (as determined by mallinfo) exceeds
-	value, Squid prints a WARNING with debug level 0 to get
+	this amount, Squid prints a WARNING with debug level 0 to get
 	the administrators attention.
 DOC_END
 
