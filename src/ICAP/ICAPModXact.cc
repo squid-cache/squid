@@ -696,6 +696,7 @@ void ICAPModXact::parseIcapHead()
         break;
 
     case 200:
+    case 201: // Symantec Scan Engine 5.0 and later when modifying HTTP msg
 
         if (!validate200Ok()) {
             throw TexcHere("Invalid ICAP Response");
@@ -719,8 +720,6 @@ void ICAPModXact::parseIcapHead()
     // Non-100 status means the server needs no postPreview data from us.
     if (state.writing == State::writingPaused)
         stopWriting(true);
-
-    // TODO: Consider applying a Squid 2.5 patch to recognize 201 responses
 }
 
 bool ICAPModXact::validate200Ok()
