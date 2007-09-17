@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.0.PRE7 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.0.sgml,v 1.26 2007/09/03 05:33:26 amosjeffries Exp $</date>
+<date>$Id: release-3.0.sgml,v 1.27 2007/09/17 17:54:23 rousskov Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.0 of Squid.
@@ -40,17 +40,38 @@ Squid 3.0 represents a major rewrite of Squid and has a number of new features.
 The most important of these are:
 
 <itemize>
-	<item>Edge Side Includes (ESI) implementation (www.esi.org)
-	<item>ICAP implementation (www.i-cap.org)
-	<item>Internal client streams concept enabling the implementations of ESI and ICAP.
 	<item>Code converted to C++, with significant internal restructuring and rewrites.
+	<item>ICAP implementation (RFC 3507 and www.icap-forum.org)
+	<item>Edge Side Includes (ESI) implementation (www.esi.org)
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
 
 <sect2>Internet Content Adaptation Protocol (ICAP)
 
-<p>TO BE WRITTEN
+<p>Squid 3.0 supports ICAP/1.0. To enable ICAP support, use the --enable-icap-client ./configure option and icap_enable squid.conf option. You will also need to configure ICAP services in your squid.conf using icap_service, icap_class, and icap_access options. The following example instructs Squid to talk to two ICAP services, one for request and one for response adaptation:
+
+<verb>
+icap_enable on
+icap_service service_req reqmod_precache 1 icap://127.0.0.1:1344/request
+icap_service service_resp respmod_precache 0 icap://127.0.0.1:1344/response
+icap_class class_req service_req
+icap_class class_resp service_resp
+icap_access class_req allow all
+icap_access class_resp allow all
+</verb>
+
+<p>Please see squid.conf.default for more details about these and many other icap_* options.
+
+<p>Squid supports pre-cache request and pre-cache response vectoring points. The following ICAP features are supported: message preview, 204 responses outside of preview, request satisfaction, X-Transfer-* negotiation, persistent ICAP connections, client IP/credentials sharing, and optional bypass of certain service failures.
+
+<p>No more than one ICAP service can be applied to an HTTP message. In other words, chaining or load balancing multiple services is not yet supported.
+
+<p>Proxy-directed data trickling and patience pages are not supported yet.
+
+<p>Following ICAP requirements, Squid never performs HTTP message adaptation without a successful and fresh ICAP OPTIONS response on file. A REQMOD or RESPMOD request will not be sent to a configured ICAP service until Squid receives a valid OPTIONS response from that service. If a service malfunctions or goes down, Squid may stop talking to the service for a while. Several squid.conf options can be used to tune the failure bypass algorithm (e.g., icap_service_failure_limit and icap_service_revival_delay). 
+
+<p>The bypass parameter of the icap_service squid.conf option determines whether Squid will try to bypass service failures. Most connectivity and preview-stage failures can be bypassed.
 
 <p>More information about ICAP can be found from the ICAP-forum website <url url="http://www.icap-forum.org">
 
