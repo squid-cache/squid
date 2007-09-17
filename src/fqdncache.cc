@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.173 2007/05/29 13:31:39 amosjeffries Exp $
+ * $Id: fqdncache.cc,v 1.174 2007/09/17 09:05:52 hno Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -260,7 +260,7 @@ fqdncacheCallback(fqdncache_entry * f)
 
     if (cbdataReferenceValidDone(f->handlerData, &cbdata)) {
         dns_error_message = f->error_message;
-        callback(f->flags.negcached ? NULL : f->names[0], cbdata);
+        callback(f->name_count ? f->names[0] : NULL, cbdata);
     }
 
     fqdncacheUnlockEntry(f);
