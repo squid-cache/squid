@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.0.PRE7 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.0.sgml,v 1.27 2007/09/17 17:54:23 rousskov Exp $</date>
+<date>$Id: release-3.0.sgml,v 1.28 2007/09/17 21:06:10 hno Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.0 of Squid.
@@ -590,6 +590,7 @@ This section gives an account of those changes in three categories:
 <itemize>
 	<item><ref id="newoptions" name="New options">
 	<item><ref id="modifiedoptions" name="Changes to existing options">
+	<item><ref id="notportedoptions" name="Not yet available options">
 	<item><ref id="removedoptions" name="Removed options">
 </itemize>
 <p>
@@ -722,9 +723,6 @@ This section gives an account of those changes in three categories:
 	<p>SNMP monitoring is now build by default.
 	Use --disable-snmp to build without it.</p>
 
-	<tag>--with-valgrind-debug</tag>
-	<p>Name changed to --with-valgrind</p>
-
 	<tag>--enable-heap-replacement</tag>
 	<p>Please use --enable-removal-policies directive instead.</p>
 
@@ -739,10 +737,6 @@ This section gives an account of those changes in three categories:
 	<p>Deprecated.
 	Automatic checks will enable best I/O loop method available.</p>
 
-	<tag>--enable-select-simple</tag>
-	<p>Deprecated.
-	Automatic checks will enable best I/O loop method available.</p>
-
 	<tag>--enable-epoll</tag>
 	<p>Deprecated.
 	Automatic checks will enable best I/O loop method available.</p>
@@ -752,39 +746,48 @@ This section gives an account of those changes in three categories:
 	Automatic checks will enable best I/O loop method available.</p>
 
 	<tag>--enable-kqueue</tag>
-	<p>Deprecated.
-	Automatic checks will enable best I/O loop method available.</p>
-
-	<tag>--enable-kqueue</tag>
-	<p>kqueue support is marked Experimental in Squid 3.0
-	Automatic configuration checks may enable if it is found as the best method on your OS.</p>
-
-	<tag>--with-large-files</tag>
-	<p>Marked as Still Experimental in Squid 3.0</p>
+	<p>kqueue support is marked Experimental in Squid 3.0. Known to have some issues under load.</p>
 
 </descrip>
 </p>
 
+<sect2>Not yet available options<label id="notportedoptions">
+
+<p>These configure options have not yet been ported to Squid-3. If you need something to do then
+porting one of these from Squid-2 to Squid-3 is most welcome.
+
+<descrip>
+	<tag>--enable-devpoll</tag>
+	<p>Support for Solaris /dev/poll</p>
+
+	<tag>--enable-select-simple</tag>
+	<p>Basic POSIX select() loop without any binary fd_set optimizations.</p>
+
+	<tag>--enable-follow-x-forwarded-for</tag>
+	<p>Support following the X-Forwarded-For HTTP header for determining the
+	client IP address</p>
+</descrip>
 
 <sect2>Removed options<label id="removedoptions">
 
-<p>
-<descrip>
+<p>The following configure options have been removed.
 
-<itemize>
-	<item>--enable-dlmalloc
-	<item>--enable-mempool-debug
-	<item>--enable-forward-log
-	<item>--enable-multicast-miss
-	<item>--enable-coss-aio-ops
-	<item>--enable-devpoll
-	<item>--enable-large-cache-files (now built-in)
-	<item>--enable-truncate
-	<item>--enable-follow-x-forwarded-for
-</itemize>
+<descrip>
+	<tag>--enable-dlmalloc</tag>
+	<p>Most OS:es have good malloc implementations these days, and the version we used to ship with Squid was very very old..</p>
+	<tag>--enable-mempool-debug</tag>
+	<p>Debug option, not needed and therefore removed.</p>
+	<tag>--enable-forward-log</tag>
+	<p>Rarely used extra log file. Removed.</p>
+	<tag>--enable-multicast-miss</tag>
+	<p>Rarely used feature, and multicast ICP acheives almost the same result. Removed.</p>
+	<tag>--enable-coss-aio-ops</tag>
+	<p>Specific to the COSS implementation in Squid-2</p>
+	<tag>--enable-large-cache-files</tag>
+	<p>Now enabled by default. Configure option was redundant and therefore removed.
+	<tag>--enable-truncate</tag>
+	<p>Known to cause race conditions where cache objects may get corrupted, and this for at most a marginal performance improvement. Removed.</p>
 
 </descrip>
-</p>
-</sect2>
 
 </article>

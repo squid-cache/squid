@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.477 2007/09/09 18:11:44 hno Exp $
+dnl  $Id: configure.in,v 1.478 2007/09/17 21:06:09 hno Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.477 $)dnl
+AC_REVISION($Revision: 1.478 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -1134,8 +1134,7 @@ buildmodel=""
 needlargefiles=
 
 AC_ARG_WITH(large-files,
-[  --with-large-files      Enable support for large files (logs etc). Still
-                          experimental.],
+[  --with-large-files      Enable support for large files (logs etc).],
 [ if test "$withval" = yes; then
 	needlargefiles=1
   fi
@@ -1603,8 +1602,8 @@ if test -n "$EXTERNAL_ACL_HELPERS"; then
 fi
 AC_SUBST(EXTERNAL_ACL_HELPERS)
 
-AC_ARG_WITH(valgrind,
-[  --with-valgrind        Include debug instrumentation for use with valgrind],
+AC_ARG_WITH(valgrind-debug,
+[  --with-valgrind-debug  Include debug instrumentation for use with valgrind],
 [ case $withval in
   yes)
 	valgrind=1
