@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.191 2007/09/06 15:05:19 hno Exp $
+#  $Id: Makefile.am,v 1.192 2007/09/19 08:54:50 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -586,6 +586,7 @@ squid_SOURCES = \
 	StoreMetaSTD.h \
 	StoreMetaSTDLFS.cc \
 	StoreMetaSTDLFS.h \
+	StoreMetaObjSize.h \
 	StoreMetaUnpacker.cc \
 	StoreMetaUnpacker.h \
 	StoreMetaURL.cc \

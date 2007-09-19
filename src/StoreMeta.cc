@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMeta.cc,v 1.5 2007/08/13 17:20:51 hno Exp $
+ * $Id: StoreMeta.cc,v 1.6 2007/09/19 08:54:51 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -42,6 +42,7 @@
 #include "StoreMetaSTD.h"
 #include "StoreMetaSTDLFS.h"
 #include "StoreMetaVary.h"
+#include "StoreMetaObjSize.h"
 
 bool
 StoreMeta::validType(char type)
@@ -130,6 +131,10 @@ StoreMeta::Factory (char type, size_t len, void const *value)
 
     case STORE_META_STD_LFS:
         result = new StoreMetaSTDLFS;
+        break;
+
+     case STORE_META_OBJSIZE:
+	result = new StoreMetaObjSize;
         break;
 
     case STORE_META_VARY_HEADERS:
