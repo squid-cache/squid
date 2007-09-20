@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.77 2007/08/17 19:01:41 serassio Exp $
+ * $Id: util.h,v 1.78 2007/09/20 12:32:50 amosjeffries Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -35,8 +35,10 @@
 #define SQUID_UTIL_H
 
 #include "config.h"
+
+#if HAVE_STDIO_H
 #include <stdio.h>
-#include <time.h>
+#endif
 #if HAVE_TIME_H
 #include <time.h>
 #endif
