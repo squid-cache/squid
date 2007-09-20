@@ -1,5 +1,5 @@
 /*
- * $Id: config.h,v 1.24 2007/09/20 10:59:30 amosjeffries Exp $
+ * $Id: config.h,v 1.25 2007/09/20 11:07:53 amosjeffries Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -342,6 +342,14 @@ typedef union {
  */
 #if defined(HAVE_MALLOC_H) && (defined(_SQUID_FREEBSD_) || defined(_SQUID_NEXT_) || defined(_SQUID_OPENBSD_))
 #undef HAVE_MALLOC_H
+#endif
+
+/*
+ * res_init() is just a macro re-definition of __res_init on Linux (Debian/Ubuntu)
+ */
+#if !defined(HAVE_RES_INIT) && defined(HAVE___RES_INIT) && !defined(res_init)
+#define res_init  __res_init
+#define HAVE_RES_INIT  HAVE___RES_INIT
 #endif
 
 #if !defined(CACHEMGR_HOSTNAME)
