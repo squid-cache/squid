@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.470 2007/09/17 00:23:37 hno Exp $
+# $Id: cf.data.pre,v 1.471 2007/09/19 21:42:16 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -794,19 +794,6 @@ DOC_START
 	the correct result.
 DOC_END
 
-NAME: reply_header_max_size
-COMMENT: (KB)
-TYPE: b_size_t
-DEFAULT: 20 KB
-LOC: Config.maxReplyHeaderSize
-DOC_START
-	This specifies the maximum size for HTTP headers in a reply.
-	Reply headers are usually relatively small (about 512 bytes).
-	Placing a limit on the reply header size will catch certain
-	bugs (for example with persistent connections) and possibly
-	buffer-overflow or denial-of-service attacks.
-DOC_END
-
 NAME: reply_body_max_size
 COMMENT: size [acl acl...]
 TYPE: acl_b_size_t
@@ -1596,26 +1583,6 @@ DOC_START
 NOCOMMENT_START
 #We recommend you to use at least the following line.
 hierarchy_stoplist cgi-bin ?
-NOCOMMENT_END
-DOC_END
-
-NAME: cache no_cache
-TYPE: acl_access
-DEFAULT: none
-LOC: Config.accessList.noCache
-DOC_START
-	A list of ACL elements which, if matched, cause the request to
-	not be satisfied from the cache and the reply to not be cached.
-	In other words, use this to force certain objects to never be cached.
-
-	You must use the word 'DENY' to indicate the ACL names which should
-	NOT be cached.
-
-	Default is to allow all to be cached
-NOCOMMENT_START
-#We recommend you to use the following two lines.
-acl QUERY urlpath_regex cgi-bin \?
-cache deny QUERY
 NOCOMMENT_END
 DOC_END
 
@@ -2456,31 +2423,24 @@ COMMENT_START
  -----------------------------------------------------------------------------
 COMMENT_END
 
-NAME: request_header_max_size
-COMMENT: (KB)
-TYPE: b_size_t
-DEFAULT: 20 KB
-LOC: Config.maxRequestHeaderSize
+NAME: cache no_cache
+TYPE: acl_access
+DEFAULT: none
+LOC: Config.accessList.noCache
 DOC_START
-	This specifies the maximum size for HTTP headers in a request.
-	Request headers are usually relatively small (about 512 bytes).
-	Placing a limit on the request header size will catch certain
-	bugs (for example with persistent connections) and possibly
-	buffer-overflow or denial-of-service attacks.
-DOC_END
+	A list of ACL elements which, if matched, cause the request to
+	not be satisfied from the cache and the reply to not be cached.
+	In other words, use this to force certain objects to never be cached.
 
-NAME: request_body_max_size
-COMMENT: (bytes)
-TYPE: b_int64_t
-DEFAULT: 0 KB
-LOC: Config.maxRequestBodySize
-DOC_START
-	This specifies the maximum size for an HTTP request body.
-	In other words, the maximum size of a PUT/POST request.
-	A user who attempts to send a request with a body larger
-	than this limit receives an "Invalid Request" error message.
-	If you set this parameter to a zero (the default), there will
-	be no limit imposed.
+	You must use the word 'DENY' to indicate the ACL names which should
+	NOT be cached.
+
+	Default is to allow all to be cached
+NOCOMMENT_START
+#We recommend you to use the following two lines.
+acl QUERY urlpath_regex cgi-bin \?
+cache deny QUERY
+NOCOMMENT_END
 DOC_END
 
 NAME: refresh_pattern
@@ -2741,6 +2701,46 @@ COMMENT_START
  HTTP OPTIONS
  -----------------------------------------------------------------------------
 COMMENT_END
+
+NAME: request_header_max_size
+COMMENT: (KB)
+TYPE: b_size_t
+DEFAULT: 20 KB
+LOC: Config.maxRequestHeaderSize
+DOC_START
+	This specifies the maximum size for HTTP headers in a request.
+	Request headers are usually relatively small (about 512 bytes).
+	Placing a limit on the request header size will catch certain
+	bugs (for example with persistent connections) and possibly
+	buffer-overflow or denial-of-service attacks.
+DOC_END
+
+NAME: reply_header_max_size
+COMMENT: (KB)
+TYPE: b_size_t
+DEFAULT: 20 KB
+LOC: Config.maxReplyHeaderSize
+DOC_START
+	This specifies the maximum size for HTTP headers in a reply.
+	Reply headers are usually relatively small (about 512 bytes).
+	Placing a limit on the reply header size will catch certain
+	bugs (for example with persistent connections) and possibly
+	buffer-overflow or denial-of-service attacks.
+DOC_END
+
+NAME: request_body_max_size
+COMMENT: (bytes)
+TYPE: b_int64_t
+DEFAULT: 0 KB
+LOC: Config.maxRequestBodySize
+DOC_START
+	This specifies the maximum size for an HTTP request body.
+	In other words, the maximum size of a PUT/POST request.
+	A user who attempts to send a request with a body larger
+	than this limit receives an "Invalid Request" error message.
+	If you set this parameter to a zero (the default), there will
+	be no limit imposed.
+DOC_END
 
 NAME: broken_posts
 TYPE: acl_access
