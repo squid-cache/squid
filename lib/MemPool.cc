@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemPool.cc,v 1.8 2007/08/01 23:30:03 amosjeffries Exp $
+ * $Id: MemPool.cc,v 1.9 2007/09/20 11:26:22 amosjeffries Exp $
  *
  * DEBUG: section 63    Low Level Memory Pool Management
  * AUTHOR: Alex Rousskov, Andres Kroonmaa, Robert Collins
@@ -82,7 +82,9 @@
  */
 
 #include "config.h"
+#if HAVE_ASSERT_H
 #include <assert.h>
+#endif
 
 #include "MemPool.h"
 
