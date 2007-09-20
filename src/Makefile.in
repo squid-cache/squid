@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.436 2007/09/07 00:10:42 hno Exp $
+#  $Id: Makefile.in,v 1.437 2007/09/20 00:10:42 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -260,9 +260,9 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc \
 	store_rebuild.cc store_swapin.cc store_swapmeta.cc \
 	store_swapout.cc StoreMeta.cc StoreMeta.h StoreMetaMD5.cc \
 	StoreMetaMD5.h StoreMetaSTD.cc StoreMetaSTD.h \
-	StoreMetaSTDLFS.cc StoreMetaSTDLFS.h StoreMetaUnpacker.cc \
-	StoreMetaUnpacker.h StoreMetaURL.cc StoreMetaURL.h \
-	StoreMetaVary.cc StoreMetaVary.h StoreSearch.h \
+	StoreMetaSTDLFS.cc StoreMetaSTDLFS.h StoreMetaObjSize.h \
+	StoreMetaUnpacker.cc StoreMetaUnpacker.h StoreMetaURL.cc \
+	StoreMetaURL.h StoreMetaVary.cc StoreMetaVary.h StoreSearch.h \
 	StoreSwapLogData.cc StoreSwapLogData.h Server.cc Server.h \
 	structs.h SwapDir.cc SwapDir.h time.cc tools.cc tunnel.cc \
 	typedefs.h unlinkd.cc url.cc URL.h URLScheme.cc URLScheme.h \
@@ -2224,6 +2224,7 @@ squid_SOURCES = \
 	StoreMetaSTD.h \
 	StoreMetaSTDLFS.cc \
 	StoreMetaSTDLFS.h \
+	StoreMetaObjSize.h \
 	StoreMetaUnpacker.cc \
 	StoreMetaUnpacker.h \
 	StoreMetaURL.cc \
