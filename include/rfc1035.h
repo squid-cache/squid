@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1035.h,v 1.17 2006/04/23 09:02:13 serassio Exp $
+ * $Id: rfc1035.h,v 1.18 2007/09/20 11:58:21 amosjeffries Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -85,7 +85,7 @@ SQUIDCEXTERN ssize_t rfc1035BuildAQuery(const char *hostname,
     size_t sz,
     unsigned short qid,
     rfc1035_query * query);
-SQUIDCEXTERN ssize_t rfc1035BuildPTRQuery(const struct IN_ADDR,
+SQUIDCEXTERN ssize_t rfc1035BuildPTRQuery(const struct in_addr,
     char *buf,
     size_t sz,
     unsigned short qid,
@@ -103,5 +103,20 @@ SQUIDCEXTERN const char *rfc1035_error_message;
 #define RFC1035_TYPE_CNAME 5
 #define RFC1035_TYPE_PTR 12
 #define RFC1035_CLASS_IN 1
+
+
+    /* Child Library RFC3596 Depends on some otherwise internal functions */
+SQUIDCEXTERN int rfc1035HeaderPack(char *buf,
+    size_t sz,
+    rfc1035_message * hdr);
+SQUIDCEXTERN int rfc1035HeaderUnpack(const char *buf,
+    size_t sz,
+    unsigned int *off,
+    rfc1035_message * h);
+SQUIDCEXTERN int rfc1035QuestionPack(char *buf,
+     size_t sz,
+    const char *name,
+    const unsigned short type,
+    const unsigned short _class);
 
 #endif /* SQUID_RFC1035_H */
