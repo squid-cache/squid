@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.409 2007/09/01 13:09:59 hno Exp $
+ * $Id: stat.cc,v 1.410 2007/09/20 20:22:20 hno Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -609,8 +609,8 @@ info_get(StoreEntry * sentry)
 
 #if HAVE_SBRK
 
-    storeAppendPrintf(sentry, "\tProcess Data Segment Size via sbrk(): %d KB\n",
-                      (int) (((char *) sbrk(0) - (char *) sbrk_start) >> 10));
+    storeAppendPrintf(sentry, "\tProcess Data Segment Size via sbrk(): %lu KB\n",
+                      (unsigned long) (((char *) sbrk(0) - (char *) sbrk_start) >> 10));
 
 #endif
 
