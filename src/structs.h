@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.563 2007/09/01 13:09:59 hno Exp $
+ * $Id: structs.h,v 1.564 2007/09/21 15:16:42 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -738,9 +738,7 @@ struct _SquidConfig
     ssl_client;
 #endif
 
-#ifdef SO_ACCEPTFILTER
     char *accept_filter;
-#endif
 };
 
 struct _SquidConfig2

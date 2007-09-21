@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.471 2007/09/19 21:42:16 hno Exp $
+# $Id: cf.data.pre,v 1.472 2007/09/21 15:16:42 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -4552,21 +4552,36 @@ DOC_START
 DOC_END
 
 NAME: accept_filter
-IFDEF: SO_ACCEPTFILTER
 TYPE: string
 DEFAULT: none
 LOC: Config.accept_filter
 DOC_START
+	FreeBSD:
+
 	The name of an accept(2) filter to install on Squid's
 	listen socket(s).  This feature is perhaps specific to
 	FreeBSD and requires support in the kernel.
 
 	The 'httpready' filter delays delivering new connections
 	to Squid until a full HTTP request has been received.
-	See the accf_http(9) man page.
+	See the accf_http(9) man page for details.
 
+	The 'dataready' filter delays delivering new connections
+	to Squid until there is some data to process.
+	See the accf_dataready(9) man page for details.
+
+	Linux:
+	
+	The 'data' filter delays delivering of new connections
+	to Squid until there is some data to process by TCP_ACCEPT_DEFER.
+	You may optionally specify a number of seconds to wait by
+	'data=N' where N is the number of seconds. Defaults to 30
+	if not specified.  See the tcp(7) man page for details.
 EXAMPLE:
+# FreeBSD
 accept_filter httpready
+# Linux
+accept_filter data
 DOC_END
 
 NAME: tcp_recv_bufsize
