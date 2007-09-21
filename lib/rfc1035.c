@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.47 2007/09/20 11:51:16 amosjeffries Exp $
+ * $Id: rfc1035.c,v 1.48 2007/09/21 15:16:12 hno Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -576,7 +576,7 @@ rfc1035MessageUnpack(const char *buf,
     rfc1035_message ** answer)
 {
     unsigned int off = 0;
-    unsigned int i;
+    unsigned int i, j;
     unsigned int nr = 0;
     rfc1035_message *msg;
     rfc1035_rr *recs;
@@ -599,7 +599,7 @@ rfc1035MessageUnpack(const char *buf,
 	return -rfc1035_unpack_error;
     }
     querys = msg->query = (rfc1035_query*)xcalloc(i, sizeof(*querys));
-    for (unsigned int j = 0; j < i; j++) {
+    for (j = 0; j < i; j++) {
 	if (rfc1035QueryUnpack(buf, sz, &off, &querys[j])) {
 	    RFC1035_UNPACK_DEBUG;
 	    rfc1035SetErrno(rfc1035_unpack_error);
@@ -617,7 +617,7 @@ rfc1035MessageUnpack(const char *buf,
 	return 0;
     i = (unsigned int) msg->ancount;
     recs = msg->answer = xcalloc(i, sizeof(*recs));
-    for (unsigned int j = 0; j < i; j++) {
+    for (j = 0; j < i; j++) {
 	if (off >= sz) {	/* corrupt packet */
 	    RFC1035_UNPACK_DEBUG;
 	    break;
