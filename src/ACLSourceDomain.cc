@@ -1,5 +1,5 @@
 /*
- * $Id: ACLSourceDomain.cc,v 1.5 2007/04/28 22:26:37 hno Exp $
+ * $Id: ACLSourceDomain.cc,v 1.6 2007/09/21 11:41:52 amosjeffries Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -49,7 +49,7 @@ SourceDomainLookup::Instance()
 }
 
 void
-SourceDomainLookup::checkForAsync(ACLChecklist *checklist)const
+SourceDomainLookup::checkForAsync(ACLChecklist *checklist) const
 {
     checklist->asyncInProgress(true);
     fqdncache_nbgethostbyaddr(checklist->src_addr, LookupDone, checklist);

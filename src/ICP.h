@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICP.h,v 1.7 2007/04/19 20:21:34 wessels Exp $
+ * $Id: ICP.h,v 1.8 2007/09/21 11:41:52 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,8 +36,9 @@
 
 #include "StoreClient.h"
 
-/* This struct is the wire-level header.
- * DO NOT add ore move fields on pain of breakage.
+/**
+ * This struct is the wire-level header.
+ * DO NOT add more move fields on pain of breakage.
  * DO NOT add virtual methods.
  */
 
@@ -71,8 +72,7 @@ inline icp_opcode & operator++ (icp_opcode & aCode)
 }
 
 
-/* todo: mempool this */
-
+/** \todo mempool this */
 class ICPState
 {
 
@@ -89,9 +89,7 @@ public:
 
 #endif
 
-typedef struct _icpUdpData icpUdpData;
-
-struct _icpUdpData
+struct icpUdpData
 {
 
     struct sockaddr_in address;
@@ -109,9 +107,7 @@ struct _icpUdpData
 };
 
 
-HttpRequest *
-
-icpGetRequest(char *url, int reqnum, int fd, struct sockaddr_in *from);
+HttpRequest* icpGetRequest(char *url, int reqnum, int fd, struct sockaddr_in *from);
 
 int icpAccessAllowed(struct sockaddr_in *from, HttpRequest * icp_request);
 
@@ -132,8 +128,6 @@ SQUIDCEXTERN void icpConnectionShutdown(void);
 SQUIDCEXTERN void icpConnectionClose(void);
 SQUIDCEXTERN int icpSetCacheKey(const cache_key * key);
 SQUIDCEXTERN const cache_key *icpGetCacheKey(const char *url, int reqnum);
-
-
 
 
 #endif /* SQUID_ICP_H */

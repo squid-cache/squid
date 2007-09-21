@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.114 2007/08/27 12:50:42 hno Exp $
+ * $Id: asn.cc,v 1.115 2007/09/21 11:41:52 amosjeffries Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -77,13 +77,13 @@ template cbdata_type List<int>
  * enhancements (e.g. expires)
  */
 
-struct _as_info
+struct as_info
 {
     List<int> *as_number;
     time_t expires;		/* NOTUSED */
 };
 
-struct _ASState
+struct ASState
 {
     StoreEntry *entry;
     store_client *sc;
@@ -95,22 +95,14 @@ struct _ASState
     bool dataRead;
 };
 
-typedef struct _ASState ASState;
-
-typedef struct _as_info as_info;
-
-/* entry into the radix tree */
-
-struct _rtentry
+/** entry into the radix tree */
+struct rtentry_t
 {
-
     struct squid_radix_node e_nodes[2];
     as_info *e_info;
     m_int e_addr;
     m_int e_mask;
 };
-
-typedef struct _rtentry rtentry_t;
 
 static int asnAddNet(char *, int);
 
