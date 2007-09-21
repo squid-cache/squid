@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.70 2007/05/29 13:31:39 amosjeffries Exp $
+ * $Id: client_db.cc,v 1.71 2007/09/21 11:41:52 amosjeffries Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -133,8 +133,7 @@ clientdbUpdate(struct IN_ADDR addr, log_type ltype, protocol_t p, size_t size)
     c->last_seen = squid_curtime;
 }
 
-/*
- * clientdbEstablished()
+/**
  * This function tracks the number of currently established connections
  * for a client IP address.  When a connection is accepted, call this
  * with delta = 1.  When the connection is closed, call with delta =
@@ -247,10 +246,10 @@ clientdbDump(StoreEntry * sentry)
 
     while ((c = (ClientInfo *) hash_next(client_table))) {
         storeAppendPrintf(sentry, "Address: %s\n", hashKeyStr(&c->hash));
-        storeAppendPrintf(sentry, "Name: %s\n", fqdnFromAddr(c->addr));
+        storeAppendPrintf(sentry, "Name:    %s\n", fqdnFromAddr(c->addr));
         storeAppendPrintf(sentry, "Currently established connections: %d\n",
                           c->n_established);
-        storeAppendPrintf(sentry, "    ICP Requests %d\n",
+        storeAppendPrintf(sentry, "    ICP  Requests %d\n",
                           c->Icp.n_requests);
 
         for (l = LOG_TAG_NONE; l < LOG_TYPE_MAX; ++l) {
@@ -385,9 +384,8 @@ clientdbStartGC(void)
 
 #if SQUID_SNMP
 
-struct IN_ADDR *
-
-            client_entry(struct IN_ADDR *current)
+struct in_addr*
+client_entry(struct IN_ADDR *current)
 {
     ClientInfo *c = NULL;
     char *key;

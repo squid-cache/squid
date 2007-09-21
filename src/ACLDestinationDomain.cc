@@ -1,5 +1,5 @@
 /*
- * $Id: ACLDestinationDomain.cc,v 1.13 2007/04/28 22:26:37 hno Exp $
+ * $Id: ACLDestinationDomain.cc,v 1.14 2007/09/21 11:41:52 amosjeffries Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -50,7 +50,7 @@ DestinationDomainLookup::Instance()
 }
 
 void
-DestinationDomainLookup::checkForAsync(ACLChecklist *checklist)const
+DestinationDomainLookup::checkForAsync(ACLChecklist *checklist) const
 {
     checklist->asyncInProgress(true);
     fqdncache_nbgethostbyaddr(checklist->dst_addr, LookupDone, checklist);
@@ -77,14 +77,13 @@ int
 ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLChecklist *checklist)
 {
     const ipcache_addrs *ia = NULL;
+    const char *fqdn = NULL;
 
     if (data->match(checklist->request->host))
         return 1;
 
     if ((ia = ipcacheCheckNumeric(checklist->request->host)) == NULL)
         return 0;
-
-    const char *fqdn = NULL;
 
     fqdn = fqdncache_gethostbyaddr(ia->in_addrs[0], FQDN_LOOKUP_IF_MISS);
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayId.cc,v 1.22 2007/08/27 12:50:42 hno Exp $
+ * $Id: DelayId.cc,v 1.23 2007/09/21 11:41:52 amosjeffries Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -129,7 +129,6 @@ DelayId::DelayClient(ClientHttpRequest * http)
             return result;
         }
     }
-
 
     return DelayId();
 }

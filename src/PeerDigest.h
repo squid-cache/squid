@@ -1,6 +1,6 @@
 
 /*
- * $Id: PeerDigest.h,v 1.3 2007/05/29 13:31:38 amosjeffries Exp $
+ * $Id: PeerDigest.h,v 1.4 2007/09/21 11:41:52 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -95,10 +95,10 @@ public:
     void *operator new (size_t);
     void operator delete(void *);
 
-    struct _peer *peer;			/* pointer back to peer structure, argh */
-    CacheDigest *cd;		/* actual digest structure */
-    String host;		/* copy of peer->host */
-    const char *req_result;	/* text status of the last request */
+    struct _peer *peer;         /* pointer back to peer structure, argh */
+    CacheDigest *cd;            /* actual digest structure */
+    String host;                /* copy of peer->host */
+    const char *req_result;     /* text status of the last request */
 
     struct
     {
