@@ -1,5 +1,5 @@
 /*
- * $Id: squid_mswin.h,v 1.5 2007/08/14 17:05:47 serassio Exp $
+ * $Id: squid_mswin.h,v 1.6 2007/09/23 15:21:29 serassio Exp $
  *
  * AUTHOR: Andrey Shorin <tolsty@tushino.com>
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
@@ -47,6 +47,7 @@
 
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 
+typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
 typedef unsigned __int64 uint64_t;
