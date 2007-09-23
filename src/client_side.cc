@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.765 2007/09/03 03:13:52 hno Exp $
+ * $Id: client_side.cc,v 1.766 2007/09/23 09:18:10 serassio Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2175,7 +2175,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
 
 #if LINUX_TPROXY
 
-    request->flags.tproxy = conn->port->tproxy;
+    request->flags.tproxy = conn->port->tproxy && need_linux_tproxy;
 #endif
 
     if (internalCheck(request->urlpath.buf())) {

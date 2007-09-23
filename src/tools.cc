@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.278 2007/08/24 18:05:28 hno Exp $
+ * $Id: tools.cc,v 1.279 2007/09/23 09:18:10 serassio Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -40,13 +40,15 @@
 #include "wordlist.h"
 #include "SquidTime.h"
 
-#if LINUX_TPROXY
+#ifdef _SQUID_LINUX_
+#if HAVE_SYS_CAPABILITY_H
 #undef _POSIX_SOURCE
 /* Ugly glue to get around linux header madness colliding with glibc */
 #define _LINUX_TYPES_H
 #define _LINUX_FS_H
 typedef uint32_t __u32;
 #include <sys/capability.h>
+#endif
 #endif
 
 #if HAVE_SYS_PRCTL_H
@@ -70,6 +72,7 @@ static void mail_warranty(void);
 extern void log_trace_done();
 extern void log_trace_init(char *);
 #endif
+static void restoreCapabilities(int keep);
 
 #ifdef _SQUID_LINUX_
 /* Workaround for crappy glic header files */
@@ -389,11 +392,12 @@ death(int sig)
 
         if (Config.adminEmail)
             mail_warranty();
-	puts(dead_msg());
+
+        puts(dead_msg());
     }
 
     if (shutting_down)
-	exit(1);
+        exit(1);
 
     abort();
 }
@@ -731,27 +735,9 @@ leave_suid(void)
         debugs(50, 0, "ALERT: setuid: " << xstrerror());
 
 #endif
-#if LINUX_TPROXY
 
-    if (need_linux_tproxy) {
-        cap_user_header_t head = (cap_user_header_t) xcalloc(1, sizeof(cap_user_header_t));
-        cap_user_data_t cap = (cap_user_data_t) xcalloc(1, sizeof(cap_user_data_t));
+    restoreCapabilities(1);
 
-        head->version = _LINUX_CAPABILITY_VERSION;
-        head->pid = 0;
-        cap->inheritable = cap->permitted = cap->effective = (1 << CAP_NET_ADMIN) + (1 << CAP_NET_BIND_SERVICE) + (1 << CAP_NET_BROADCAST);
-
-        if (capset(head, cap) != 0) {
-            xfree(head);
-            xfree(cap);
-            fatal("Error giving up capabilities");
-        }
-
-        xfree(head);
-        xfree(cap);
-    }
-
-#endif
 #if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
     /* Set Linux DUMPABLE flag */
     if (Config.coredump_dir && prctl(PR_SET_DUMPABLE, 1) != 0)
@@ -790,20 +776,15 @@ no_suid(void)
     uid_t uid;
     leave_suid();
     uid = geteuid();
-    debugs(21, 3, "leave_suid: PID " << getpid() << " giving up root priveleges forever");
-#if HAVE_SETRESUID
-
-    if (setresuid(uid, uid, uid) < 0)
-        debugs(50, 1, "no_suid: setresuid: " << xstrerror());
-
-#else
+    debugs(21, 3, "no_suid: PID " << getpid() << " giving up root priveleges forever");
 
     setuid(0);
 
     if (setuid(uid) < 0)
         debugs(50, 1, "no_suid: setuid: " << xstrerror());
 
-#endif
+    restoreCapabilities(0);
+
 #if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
     /* Set Linux DUMPABLE flag */
     if (Config.coredump_dir && prctl(PR_SET_DUMPABLE, 1) != 0)
@@ -1340,13 +1321,82 @@ strwordquote(MemBuf * mb, const char *str)
 void
 keepCapabilities(void)
 {
+#if HAVE_PRCTL && defined(PR_SET_KEEPCAPS) && HAVE_SYS_CAPABILITY_H
+
+    if (prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0)) {
+        /* Silent failure unless TPROXY is required. Maybe not started as root */
 #if LINUX_TPROXY
 
-    if (need_linux_tproxy) {
-        if (prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0)) {
+        if (need_linux_tproxy)
             debugs(1, 1, "Error - tproxy support requires capability setting which has failed.  Continuing without tproxy support");
-        }
+
+        need_linux_tproxy = 0;
+
+#endif
+
     }
+
+#endif
+}
+
+static void
+restoreCapabilities(int keep)
+{
+#if defined(_SQUID_LINUX_) && HAVE_SYS_CAPABILITY_H
+    cap_user_header_t head = (cap_user_header_t) xcalloc(1, sizeof(cap_user_header_t));
+    cap_user_data_t cap = (cap_user_data_t) xcalloc(1, sizeof(cap_user_data_t));
+
+    head->version = _LINUX_CAPABILITY_VERSION;
+
+    if (capget(head, cap) != 0) {
+        debugs(50, 1, "Can't get current capabilities");
+        goto nocap;
+    }
+
+    if (head->version != _LINUX_CAPABILITY_VERSION) {
+        debugs(50, 1, "Invalid capability version " << head->version << " (expected " << _LINUX_CAPABILITY_VERSION << ")");
+        goto nocap;
+    }
+
+    head->pid = 0;
+
+    cap->inheritable = 0;
+    cap->effective = (1 << CAP_NET_BIND_SERVICE);
+#if LINUX_TPROXY
+
+    if (need_linux_tproxy)
+        cap->effective |= (1 << CAP_NET_ADMIN) | (1 << CAP_NET_BROADCAST);
+
+#endif
+
+    if (!keep)
+        cap->permitted &= cap->effective;
+
+    if (capset(head, cap) != 0) {
+        /* Silent failure unless TPROXY is required */
+#if LINUX_TPROXY
+
+        if (need_linux_tproxy)
+            debugs(50, 1, "Error enabling needed capabilities. Will continue without tproxy support");
+
+        need_linux_tproxy = 0;
+
+#endif
+
+    }
+
+nocap:
+    xfree(head);
+    xfree(cap);
+#else
+#if LINUX_TPROXY
+
+    if (need_linux_tproxy)
+        debugs(50, 1, "Missing needed capability support. Will continue without tproxy support");
+
+    need_linux_tproxy = 0;
+
+#endif
 
 #endif
 }
