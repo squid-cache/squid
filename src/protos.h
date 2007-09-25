@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.548 2007/08/13 17:20:51 hno Exp $
+ * $Id: protos.h,v 1.549 2007/09/25 13:24:59 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -148,7 +148,6 @@ SQUIDCEXTERN void fd_close(int fd);
 SQUIDCEXTERN void fd_open(int fd, unsigned int type, const char *);
 SQUIDCEXTERN void fd_note(int fd, const char *);
 SQUIDCEXTERN void fd_bytes(int fd, int len, unsigned int type);
-SQUIDCEXTERN void fdFreeMemory(void);
 SQUIDCEXTERN void fdDumpOpen(void);
 SQUIDCEXTERN int fdNFree(void);
 SQUIDCEXTERN int fdUsageHigh(void);

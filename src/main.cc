@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.449 2007/08/30 21:51:35 hno Exp $
+ * $Id: main.cc,v 1.450 2007/09/25 13:24:59 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -1694,7 +1694,7 @@ SquidShutdown()
 #endif
     fdDumpOpen();
 
-    fdFreeMemory();
+    comm_exit();
 
     memClean();
 
