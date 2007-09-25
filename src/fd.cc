@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.58 2007/06/25 14:38:14 hno Exp $
+ * $Id: fd.cc,v 1.59 2007/09/25 13:24:59 hno Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -245,12 +245,6 @@ fd_bytes(int fd, int len, unsigned int type)
         F->bytes_read += len;
     else
         F->bytes_written += len;
-}
-
-void
-fdFreeMemory(void)
-{
-    safe_free(fd_table);
 }
 
 void

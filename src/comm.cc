@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.436 2007/09/21 15:16:42 hno Exp $
+ * $Id: comm.cc,v 1.437 2007/09/25 13:24:59 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1839,6 +1839,17 @@ comm_init(void) {
     RESERVED_FD = XMIN(100, Squid_MaxFD / 4);
 
     conn_close_pool = memPoolCreate("close_handler", sizeof(close_handler));
+}
+
+void
+comm_exit(void) {
+    safe_free(fd_table);
+    safe_free(fdd_table);
+    if (fdc_table) {
+	delete[] fdc_table;
+	fdc_table = NULL;
+    }
+    safe_free(commfd_table);
 }
 
 /* Write to FD. */

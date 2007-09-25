@@ -48,6 +48,7 @@ SQUIDCEXTERN void commConnectStart(int fd, const char *, u_short, CNCB *, void *
 
 SQUIDCEXTERN int comm_connect_addr(int sock, const struct sockaddr_in *);
 SQUIDCEXTERN void comm_init(void);
+SQUIDCEXTERN void comm_exit(void);
 
 SQUIDCEXTERN int comm_open(int, int, struct IN_ADDR, u_short port, int, const char *note);
 
