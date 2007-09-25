@@ -205,6 +205,7 @@ acl_ip_data::DecodeMask(const char *asc, struct IN_ADDR *mask)
 #define SCAN_ACL1       "%[0123456789.]-%[0123456789.]/%[0123456789.]"
 #define SCAN_ACL2       "%[0123456789.]-%[0123456789.]%c"
 #define SCAN_ACL3       "%[0123456789.]/%[0123456789.]"
+#define SCAN_ACL4	"%[0123456789.]%c"
 
 acl_ip_data *
 acl_ip_data::FactoryParse(const char *t)
@@ -233,14 +234,13 @@ acl_ip_data::FactoryParse(const char *t)
         mask[0] = '\0';
     } else if (sscanf(t, SCAN_ACL3, addr1, mask) == 2) {
         addr2[0] = '\0';
+    } else if (sscanf(t, SCAN_ACL4, addr1, &c) == 1) {
+	addr2[0] = '\0';
+	mask[0] = '\0';
     } else if (sscanf(t, "%[^/]/%s", addr1, mask) == 2) {
         addr2[0] = '\0';
     } else if (sscanf(t, "%s", addr1) == 1) {
-        addr2[0] = '\0';
-        mask[0] = '\0';
-    }
 
-    if (!*addr2) {
         /*
          * Note, must use plain gethostbyname() here because at startup
          * ipcache hasn't been initialized
@@ -262,15 +262,7 @@ acl_ip_data::FactoryParse(const char *t)
             xmemcpy(&r->addr1.s_addr, *x, sizeof(r->addr1.s_addr));
 
             r->addr2.s_addr = 0;
-
-            if (!DecodeMask(mask, &r->mask)) {
-                debugs(28, 0, "aclParseIpData: unknown netmask '" << mask << "' in '" << t << "'");
-                delete r;
-                *Q = NULL;
-                self_destruct();
-                continue;
-            }
-
+	    DecodeMask(NULL, &r->mask);
 
             Q = &r->next;
 
@@ -294,7 +286,7 @@ acl_ip_data::FactoryParse(const char *t)
     }
 
     /* Decode addr2 */
-    if (!safe_inet_addr(addr2, &q->addr2)) {
+    if (*addr2 && !safe_inet_addr(addr2, &q->addr2)) {
         debugs(28, 0, "aclParseIpData: unknown second address in '" << t << "'");
         delete q;
         self_destruct();
@@ -302,7 +294,8 @@ acl_ip_data::FactoryParse(const char *t)
     }
 
     /* Decode mask */
-    if (!DecodeMask(mask, &q->mask)) {
+    DecodeMask(NULL, &q->mask);
+    if (*mask && !DecodeMask(mask, &q->mask)) {
         debugs(28, 0, "aclParseIpData: unknown netmask '" << mask << "' in '" << t << "'");
         delete q;
         self_destruct();
