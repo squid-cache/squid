@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.173 2007/08/13 17:20:51 hno Exp $
+ * $Id: tunnel.cc,v 1.174 2007/09/25 13:23:13 hno Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -134,8 +134,15 @@ tunnelServerClosed(int fd, void *data)
     assert(fd == tunnelState->server.fd());
     tunnelState->server.fd(-1);
 
-    if (tunnelState->noConnections())
+    if (tunnelState->noConnections()) {
         tunnelStateFree(tunnelState);
+	return;
+    }
+    
+    if (!tunnelState->server.len) {
+	comm_close(tunnelState->client.fd());
+	return;
+    }
 }
 
 static void
@@ -146,8 +153,15 @@ tunnelClientClosed(int fd, void *data)
     assert(fd == tunnelState->client.fd());
     tunnelState->client.fd(-1);
 
-    if (tunnelState->noConnections())
+    if (tunnelState->noConnections()) {
         tunnelStateFree(tunnelState);
+	return;
+    }
+    
+    if (!tunnelState->client.len) {
+	comm_close(tunnelState->server.fd());
+	return;
+    }
 }
 
 static void
