@@ -2,12 +2,14 @@
 # This script reassembles a split configuration file back into a cf.data.pre
 # file.
 
-BEGIN { dir = SRCDIR "conf/"; }
 /^NAME: / {
     tag = $2;
+    dir = FILENAME;
+    gsub(/[^/\\]*$/, "", dir);
     file=dir tag ".txt";
     $0 = "FILE_NOT_FOUND";
-    getline < file;
+    if (!getline < file)
+	$0 = "FILE_NOT_FOUND";
     if (/^FILE_NOT_FOUND/) {
 	print "ERROR: '" file "' not found!" > "/dev/stderr";
 	exit 1;
