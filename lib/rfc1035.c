@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.48 2007/09/21 15:16:12 hno Exp $
+ * $Id: rfc1035.c,v 1.49 2007/09/26 03:03:22 amosjeffries Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -578,9 +578,9 @@ rfc1035MessageUnpack(const char *buf,
     unsigned int off = 0;
     unsigned int i, j;
     unsigned int nr = 0;
-    rfc1035_message *msg;
-    rfc1035_rr *recs;
-    rfc1035_query *querys;
+    rfc1035_message *msg = NULL;
+    rfc1035_rr *recs = NULL;
+    rfc1035_query *querys = NULL;
     msg = (rfc1035_message*)xcalloc(1, sizeof(*msg));
     if (rfc1035HeaderUnpack(buf + off, sz - off, &off, msg)) {
 	RFC1035_UNPACK_DEBUG;
