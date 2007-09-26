@@ -293,9 +293,8 @@ acl_ip_data::FactoryParse(const char *t)
         return NULL;
     }
 
-    /* Decode mask */
-    DecodeMask(NULL, &q->mask);
-    if (*mask && !DecodeMask(mask, &q->mask)) {
+    /* Decode mask (NULL or empty means a exact host mask) */
+    if (!DecodeMask(mask, &q->mask)) {
         debugs(28, 0, "aclParseIpData: unknown netmask '" << mask << "' in '" << t << "'");
         delete q;
         self_destruct();
