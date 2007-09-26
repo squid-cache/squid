@@ -8,9 +8,9 @@ use File::Basename;
 # This mess is designed to parse the squid config template file
 # cf.data.pre and split it into separare files, one per option
 #
-# Henrik Nordstrom <henrik@henriknordstrom.net½
+# Henrik Nordstrom <henrik@henriknordstrom.net>
 #
-# $Id: split-cf.data.pre.pl,v 1.1 2007/08/08 07:38:33 hno Exp $
+# $Id: split-cf.data.pre.pl,v 1.2 2007/09/25 22:18:13 hno Exp $
 
 #
 # The template file is reasonably simple to parse. There's a number of
