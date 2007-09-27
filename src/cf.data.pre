@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.472 2007/09/21 15:16:42 hno Exp $
+# $Id: cf.data.pre,v 1.473 2007/09/27 15:28:42 rousskov Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -4793,14 +4793,16 @@ IFDEF: ICAP_CLIENT
 LOC: TheICAPConfig
 DEFAULT: none
 DOC_START
-	Defines an ICAP service chain. If there are multiple services per
-	vectoring point, they are processed in the specified order.
+	Defines an ICAP service chain. Eventually, multiple services per
+	vectoring point will be supported. For now, please specify a single
+	service per class:
 
-	icap_class classname servicename...
+	icap_class classname servicename
 
 Example:
-icap_class class_1 service_1 service_2
-icap class class_2 service_1 service_3
+icap_class class_1 service_1
+icap class class_2 service_1
+icap class class_3 service_3
 DOC_END
 
 NAME: icap_access
