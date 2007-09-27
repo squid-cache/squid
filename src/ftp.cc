@@ -1,5 +1,5 @@
 /*
- * $Id: ftp.cc,v 1.440 2007/08/15 06:56:19 amosjeffries Exp $
+ * $Id: ftp.cc,v 1.441 2007/09/27 14:34:06 rousskov Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2668,10 +2668,7 @@ void FtpStateData::readStor() {
     debugs(9, 3, "This is ftpReadStor");
 
     if (code == 125 || (code == 150 && data.host)) {
-        // register to receive body data
-        assert(request->body_pipe != NULL);
-        if (!request->body_pipe->setConsumerIfNotLate(this)) {
-            debugs(9, 3, "ftpReadStor: aborting on partially consumed body");
+        if (!startRequestBodyFlow()) { // register to receive body data
             ftpFail(this);
             return;
         }

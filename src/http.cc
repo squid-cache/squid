@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.537 2007/08/13 17:20:51 hno Exp $
+ * $Id: http.cc,v 1.538 2007/09/27 14:34:06 rousskov Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1703,16 +1703,9 @@ HttpStateData::sendRequest()
     maybeReadVirginBody();
 
     if (orig_request->body_pipe != NULL) {
-        requestBodySource = orig_request->body_pipe;
-
-        if (!requestBodySource->setConsumerIfNotLate(this)) {
-            debugs(32,3, HERE << "aborting on partially consumed body");
-            requestBodySource = NULL;
+        if (!startRequestBodyFlow()) // register to receive body data
             return false;
-        }
-
         requestSender = HttpStateData::sentRequestBodyWrapper;
-        debugs(32,3, HERE << "expecting request body on pipe " << requestBodySource);
     } else {
         assert(!requestBodySource);
         requestSender = HttpStateData::SendComplete;
