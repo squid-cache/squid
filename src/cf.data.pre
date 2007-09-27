@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.473 2007/09/27 15:28:42 rousskov Exp $
+# $Id: cf.data.pre,v 1.474 2007/09/27 16:15:23 rousskov Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -4678,10 +4678,21 @@ TYPE: onoff
 IFDEF: ICAP_CLIENT
 COMMENT: on|off
 LOC: TheICAPConfig.preview_enable
-DEFAULT: off
+DEFAULT: on
 DOC_START
-	Set this to 'on' if you want to enable the ICAP preview
-	feature in Squid.
+	The ICAP Preview feature allows the ICAP server to handle the
+	HTTP message by looking only at the beginning of the message body
+	or even without receiving the body at all. In some environments, 
+	previews greatly speedup ICAP processing.
+
+	During an ICAP OPTIONS transaction, the server may tell	Squid what
+	HTTP messages should be previewed and how big the preview should be.
+	Squid will not use Preview if the server did not request one.
+
+	To disable ICAP Preview for all ICAP services, regardless of
+	individual ICAP server OPTIONS responses, set this option to "off".
+Example:
+icap_preview_enable off
 DOC_END
 
 NAME: icap_preview_size
