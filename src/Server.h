@@ -1,6 +1,6 @@
 
 /*
- * $Id: Server.h,v 1.9 2007/08/09 23:30:52 rousskov Exp $
+ * $Id: Server.h,v 1.10 2007/09/27 14:34:06 rousskov Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -115,6 +115,7 @@ protected:
     virtual void completeForwarding(); // default calls fwd->complete()
 
     // BodyConsumer for HTTP: consume request body.
+    bool startRequestBodyFlow();
     void handleMoreRequestBodyAvailable();
     void handleRequestBodyProductionEnded();
     virtual void handleRequestBodyProducerAborted() = 0;

@@ -1,5 +1,5 @@
 /*
- * $Id: Server.cc,v 1.22 2007/08/13 17:20:51 hno Exp $
+ * $Id: Server.cc,v 1.23 2007/09/27 14:34:06 rousskov Exp $
  *
  * DEBUG:
  * AUTHOR: Duane Wessels
@@ -187,6 +187,24 @@ ServerStateData::completeForwarding() {
     debugs(11,5, HERE << "completing forwarding for "  << fwd);
     assert(fwd != NULL);
     fwd->complete();
+}
+
+// Register to receive request body
+bool ServerStateData::startRequestBodyFlow()
+{
+    HttpRequest *r = originalRequest();
+    assert(r->body_pipe != NULL);
+    requestBodySource = r->body_pipe;
+    if (requestBodySource->setConsumerIfNotLate(this)) {
+        debugs(11,3, HERE << "expecting request body from " <<
+            requestBodySource->status());
+        return true;
+    }
+
+    debugs(11,3, HERE << "aborting on partially consumed request body: " <<
+        requestBodySource->status());
+    requestBodySource = NULL;
+    return false;
 }
 
 // Entry-dependent callbacks use this check to quit if the entry went bad
