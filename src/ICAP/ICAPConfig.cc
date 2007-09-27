@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.cc,v 1.19 2007/06/28 15:28:59 rousskov Exp $
+ * $Id: ICAPConfig.cc,v 1.20 2007/09/27 15:31:15 rousskov Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -89,6 +89,11 @@ ICAPClass::prepare()
 
     ConfigParser::ParseString(&key);
     ConfigParser::ParseWordList(&service_names);
+
+    if (service_names && service_names->next) {
+        debugs(3,0, "WARNING: Multiple ICAP services per icap_class are " <<
+            "not yet supported. See Squid bug #2087.");
+    }
 
     for (iter = service_names; iter; iter = iter->next) {
         ICAPServiceRep::Pointer match = TheICAPConfig.findService(iter->key);
