@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.564 2007/09/21 15:16:42 hno Exp $
+ * $Id: structs.h,v 1.565 2007/09/28 00:22:38 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -475,7 +475,7 @@ struct _SquidConfig
     struct
     {
         int objectsPerBucket;
-        size_t avgObjectSize;
+        int64_t avgObjectSize;
         int64_t maxObjectSize;
         int64_t minObjectSize;
         size_t maxInMemObjSize;

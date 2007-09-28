@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.36 2007/08/13 17:20:51 hno Exp $
+ * $Id: Store.h,v 1.37 2007/09/28 00:22:37 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -323,7 +323,6 @@ storeAppendPrintf(StoreEntry *, const char *,...) PRINTF_FORMAT_ARG2;
 SQUIDCEXTERN void storeAppendPrintf();
 #endif
 SQUIDCEXTERN void storeAppendVPrintf(StoreEntry *, const char *, va_list ap);
-SQUIDCEXTERN ssize_t objectLen(const StoreEntry * e);
 SQUIDCEXTERN int storeTooManyDiskFilesOpen(void);
 SQUIDCEXTERN void storeHeapPositionUpdate(StoreEntry *, SwapDir *);
 SQUIDCEXTERN void storeSwapFileNumberSet(StoreEntry * e, sfileno filn);

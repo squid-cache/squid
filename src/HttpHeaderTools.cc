@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderTools.cc,v 1.62 2007/08/13 17:20:51 hno Exp $
+ * $Id: HttpHeaderTools.cc,v 1.63 2007/09/28 00:22:37 hno Exp $
  *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
@@ -330,16 +330,6 @@ httpHeaderParseInt(const char *start, int *value)
     }
 
     return 1;
-}
-
-int
-httpHeaderParseSize(const char *start, ssize_t * value)
-{
-    int v;
-    const int res = httpHeaderParseInt(start, &v);
-    assert(value);
-    *value = res ? v : 0;
-    return res;
 }
 
 int
