@@ -1,6 +1,6 @@
 
 /*
- * $Id: SquidString.h,v 1.10 2007/05/29 13:31:38 amosjeffries Exp $
+ * $Id: SquidString.h,v 1.11 2007/09/28 01:40:50 amosjeffries Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -141,5 +141,3 @@ _SQUID_INLINE_ std::ostream & operator<<(std::ostream& os, String const &aString
 #endif
 
 #endif /* SQUID_STRING_H */
-
-
