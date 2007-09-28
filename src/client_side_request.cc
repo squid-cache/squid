@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.92 2007/08/13 17:20:51 hno Exp $
+ * $Id: client_side_request.cc,v 1.93 2007/09/27 22:42:08 hno Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -907,7 +907,7 @@ bool
 ClientHttpRequest::gotEnough() const
 {
     /** TODO: should be querying the stream. */
-    int contentLength =
+    int64_t contentLength =
         memObject()->getReply()->bodySize(request->method);
     assert(contentLength >= 0);
 
