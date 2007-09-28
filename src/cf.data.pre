@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.474 2007/09/27 16:15:23 rousskov Exp $
+# $Id: cf.data.pre,v 1.475 2007/09/28 00:22:37 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -2679,7 +2679,7 @@ DOC_END
 
 NAME: store_avg_object_size
 COMMENT: (kbytes)
-TYPE: kb_size_t
+TYPE: kb_int64_t
 DEFAULT: 13 KB
 LOC: Config.Store.avgObjectSize
 DOC_START

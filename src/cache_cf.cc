@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.520 2007/09/01 05:56:37 amosjeffries Exp $
+ * $Id: cache_cf.cc,v 1.521 2007/09/28 00:22:37 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -2327,11 +2327,13 @@ dump_b_size_t(StoreEntry * entry, const char *name, size_t var)
     storeAppendPrintf(entry, "%s %d %s\n", name, (int) var, B_BYTES_STR);
 }
 
+#if UNUSED_CODE
 static void
 dump_kb_size_t(StoreEntry * entry, const char *name, size_t var)
 {
     storeAppendPrintf(entry, "%s %d %s\n", name, (int) var, B_KBYTES_STR);
 }
+#endif
 
 static void
 dump_b_int64_t(StoreEntry * entry, const char *name, int64_t var)
@@ -2359,11 +2361,13 @@ parse_b_size_t(size_t * var)
     parseBytesLine(var, B_BYTES_STR);
 }
 
+#if UNUSED_CODE
 static void
 parse_kb_size_t(size_t * var)
 {
     parseBytesLine(var, B_KBYTES_STR);
 }
+#endif
 
 static void
 parse_b_int64_t(int64_t * var)

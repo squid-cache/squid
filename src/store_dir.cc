@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.162 2007/08/13 17:20:51 hno Exp $
+ * $Id: store_dir.cc,v 1.163 2007/09/28 00:22:38 hno Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -153,7 +153,7 @@ StoreController::create()
  * ie any-sized-object swapdirs. This is a good thing.
  */
 bool
-SwapDir::objectSizeIsAcceptable(ssize_t objsize) const
+SwapDir::objectSizeIsAcceptable(int64_t objsize) const
 {
     /*
      * If the swapdir's max_obj_size is -1, then it definitely can

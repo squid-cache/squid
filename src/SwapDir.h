@@ -1,6 +1,6 @@
 
 /*
- * $Id: SwapDir.h,v 1.14 2007/08/13 17:20:51 hno Exp $
+ * $Id: SwapDir.h,v 1.15 2007/09/28 00:22:37 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -145,7 +145,7 @@ virtual size_t maxSize() const { return max_size;}
     virtual void updateSize(int64_t size, int sign);
 
     /* migrated from store_dir.cc */
-    bool objectSizeIsAcceptable(ssize_t objsize) const;
+    bool objectSizeIsAcceptable(int64_t objsize) const;
 
 protected:
     void parseOptions(int reconfiguring);

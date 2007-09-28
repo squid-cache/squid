@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.766 2007/09/23 09:18:10 serassio Exp $
+ * $Id: client_side.cc,v 1.767 2007/09/28 00:22:38 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1549,7 +1549,7 @@ ClientSocketContext::initiateClose(const char *reason)
         ConnStateData::Pointer conn = http->getConn();
 
         if (conn != NULL) {
-            if (const ssize_t expecting = conn->bodySizeLeft()) {
+            if (const int64_t expecting = conn->bodySizeLeft()) {
                 debugs(33, 5, HERE << "ClientSocketContext::initiateClose: " <<
                        "closing, but first " << conn << " needs to read " <<
                        expecting << " request body bytes with " <<
@@ -2103,7 +2103,7 @@ clientAfterReadingRequests(int fd, ConnStateData::Pointer &conn, int do_next_rea
      */
 
     if (fd_table[fd].flags.socket_eof) {
-        if ((ssize_t) conn->in.notYetUsed < conn->bodySizeLeft()) {
+        if ((int64_t)conn->in.notYetUsed < conn->bodySizeLeft()) {
             /* Partial request received. Abort client connection! */
             debugs(33, 3, "clientAfterReadingRequests: FD " << fd << " aborted, partial request");
             comm_close(fd);
@@ -2323,7 +2323,7 @@ connOkToAddRequest(ConnStateData::Pointer &conn)
  * Report on the number of bytes of body content that we
  * know are yet to be read on this connection.
  */
-ssize_t
+int64_t
 ConnStateData::bodySizeLeft()
 {
     // XXX: this logic will not work for chunked requests with unknown sizes
@@ -3213,7 +3213,7 @@ ConnStateData::reading(bool const newBool)
 
 
 BodyPipe::Pointer
-ConnStateData::expectRequestBody(size_t size)
+ConnStateData::expectRequestBody(int64_t size)
 {
     bodyPipe = new BodyPipe(this);
     bodyPipe->setBodySize(size);

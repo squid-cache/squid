@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.h,v 1.24 2007/08/27 12:50:42 hno Exp $
+ * $Id: client_side.h,v 1.25 2007/09/28 00:22:38 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -161,7 +161,7 @@ public:
         size_t allocatedSize;
     } in;
 
-    ssize_t bodySizeLeft();
+    int64_t bodySizeLeft();
 
     /*
      * Is this connection based authentication? if so what type it
@@ -203,7 +203,7 @@ public:
     bool closing() const;
     void startClosing(const char *reason);
 
-    BodyPipe::Pointer expectRequestBody(size_t size);
+    BodyPipe::Pointer expectRequestBody(int64_t size);
     virtual void noteMoreBodySpaceAvailable(BodyPipe &);
     virtual void noteBodyConsumerAborted(BodyPipe &);
 
