@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.120 2007/05/29 13:31:40 amosjeffries Exp $
+ * $Id: redirect.cc,v 1.121 2007/09/27 23:58:06 amosjeffries Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -70,7 +70,7 @@ redirectHandleReply(void *data, char *reply)
     redirectStateData *r = static_cast<redirectStateData *>(data);
     char *t;
     void *cbdata;
-    debugs(61, 5, "redirectHandleRead: {" << (reply ? reply : "<NULL>") << "}");
+    debugs(61, 5, "redirectHandleRead: {" << (reply && *reply != '\0' ? reply : "<NULL>") << "}");
 
     if (reply) {
         if ((t = strchr(reply, ' ')))
