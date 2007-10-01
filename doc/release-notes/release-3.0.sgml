@@ -1,8 +1,8 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.0.PRE7 release notes</title>
+<title>Squid 3.0.RC1 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.0.sgml,v 1.28 2007/09/17 21:06:10 hno Exp $</date>
+<date>$Id: release-3.0.sgml,v 1.29 2007/10/01 05:39:52 wessels Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.0 of Squid.
@@ -14,7 +14,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.0.PRE7 for pre-release testing.
+The Squid Team are pleased to announce the release of Squid-3.0.RC1 for pre-release testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.0/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
