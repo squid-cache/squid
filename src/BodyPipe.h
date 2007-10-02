@@ -92,7 +92,7 @@ class BodyPipe: public RefCountable {
 		size_t putMoreData(const char *buf, size_t size);
 		bool mayNeedMoreData() const { return !bodySizeKnown() || needsMoreData(); }
 		bool needsMoreData() const { return bodySizeKnown() && unproducedSize() > 0; }
-		size_t unproducedSize() const; // size of still unproduced data
+		uint64_t unproducedSize() const; // size of still unproduced data
 
 		// called by consumers
 		bool setConsumerIfNotLate(Consumer *aConsumer);
