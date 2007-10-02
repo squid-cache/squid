@@ -77,7 +77,7 @@ bool BodyPipe::exhausted() const
 	return !expectMoreAfter(theGetSize);
 }
 
-size_t BodyPipe::unproducedSize() const
+uint64_t BodyPipe::unproducedSize() const
 {
 	return bodySize() - thePutSize; // bodySize() asserts that size is known
 }
@@ -106,7 +106,7 @@ size_t
 BodyPipe::putMoreData(const char *buf, size_t size)
 {
 	if (bodySizeKnown())
-		size = XMIN(size, unproducedSize());
+		size = XMIN((uint64_t)size, unproducedSize());
 
 	const size_t spaceSize = static_cast<size_t>(theBuf.potentialSpaceSize());
 	if ((size = XMIN(size, spaceSize))) {
