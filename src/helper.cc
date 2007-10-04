@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.88 2007/08/27 12:50:43 hno Exp $
+ * $Id: helper.cc,v 1.89 2007/10/04 16:43:54 wessels Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -1070,6 +1070,7 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
             srv->wfd = -1;
             srv->flags.closing=1;
             comm_close(wfd);
+	    return;
         } else
             helperKickQueue(hlp);
     }
