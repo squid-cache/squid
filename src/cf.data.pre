@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.478 2007/10/11 12:45:44 amosjeffries Exp $
+# $Id: cf.data.pre,v 1.479 2007/10/11 12:53:03 amosjeffries Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -3850,7 +3850,7 @@ TYPE: time_t
 LOC: Config.digest.rebuild_period
 DEFAULT: 1 hour
 DOC_START
-	This is the number of seconds between Cache Digest rebuilds.
+	This is the wait time between Cache Digest rebuilds.
 DOC_END
 
 NAME: digest_rewrite_period
@@ -3860,7 +3860,7 @@ TYPE: time_t
 LOC: Config.digest.rewrite_period
 DEFAULT: 1 hour
 DOC_START
-	This is the number of seconds between Cache Digest writes to
+	This is the wait time between Cache Digest writes to
 	disk.
 DOC_END
 
