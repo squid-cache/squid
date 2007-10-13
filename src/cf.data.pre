@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.480 2007/10/13 06:56:38 amosjeffries Exp $
+# $Id: cf.data.pre,v 1.481 2007/10/13 06:57:40 amosjeffries Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -721,6 +721,10 @@ DOC_START
 
 	See http_access for details
 
+	NOTE: The default if no htcp_access lines are present is to
+	deny all traffic. This default may cause problems with peers
+	using the htcp or htcp-oldsquid options.
+
 #Allow HTCP queries from everyone
 htcp_access allow all
 DOC_END
@@ -1400,8 +1404,12 @@ DOC_START
 		     use 'htcp' to send HTCP, instead of ICP, queries
 		     to the neighbor.  You probably also want to
 		     set the "icp port" to 4827 instead of 3130.
+		     You MUST also set htcp_access expicitly. The default of
+		     deny all will prevent peer traffic.
 
 		     use 'htcp-oldsquid' to send HTCP to old Squid versions
+		     You MUST also set htcp_access expicitly. The default of
+		     deny all will prevent peer traffic.		     
 
 		     'originserver' causes this parent peer to be contacted as
 		     a origin server. Meant to be used in accelerator setups.
