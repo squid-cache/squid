@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.479 2007/10/11 12:53:03 amosjeffries Exp $
+# $Id: cf.data.pre,v 1.480 2007/10/13 06:56:38 amosjeffries Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -4004,31 +4004,46 @@ NAME: udp_incoming_address
 TYPE: address
 LOC:Config.Addrs.udp_incoming
 DEFAULT: 0.0.0.0
-DOC_NONE
+DOC_START
+	udp_incoming_address	is used for UDP packets received from other
+				caches.
+
+	The default behavior is to not bind to any specific address.
+
+	Only change this if you want to have all UDP queries received on
+	a specific interface/address.
+
+	NOTE: udp_incoming_address is used by the ICP, HTCP, and DNS
+	modules. Altering it will affect all of them in the same manner.
+
+	see also; udp_outgoing_address
+
+	NOTE, udp_incoming_address and udp_outgoing_address can not
+	have the same value since they both use the same port.
+DOC_END
 
 NAME: udp_outgoing_address
 TYPE: address
 LOC: Config.Addrs.udp_outgoing
 DEFAULT: 255.255.255.255
 DOC_START
-	udp_incoming_address	is used for the ICP socket receiving packets
-				from other caches.
-	udp_outgoing_address	is used for ICP packets sent out to other
+	udp_outgoing_address	is used for UDP packets sent out to other
 				caches.
 
 	The default behavior is to not bind to any specific address.
 
-	A udp_incoming_address value of 0.0.0.0 indicates Squid
-	should listen for UDP messages on all available interfaces.
-
-	If udp_outgoing_address is set to 255.255.255.255 (the default)
-	it will use the same socket as udp_incoming_address. Only
-	change this if you want to have ICP queries sent using another
-	address than where this Squid listens for ICP queries from other
+	Instead it will use the same socket as udp_incoming_address.
+	Only change this if you want to have UDP queries sent using another
+	address than where this Squid listens for UDP queries from other
 	caches.
 
+	NOTE: udp_outgoing_address is used by the ICP, HTCP, and DNS
+	modules. Altering it will affect all of them in the same manner.
+
+	see also; udp_incoming_address
+
 	NOTE, udp_incoming_address and udp_outgoing_address can not
-	have the same value since they both use port 3130.
+	have the same value since they both use the same port.
 DOC_END
 
 NAME: icp_hit_stale
