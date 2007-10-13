@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.174 2007/09/17 09:05:52 hno Exp $
+ * $Id: fqdncache.cc,v 1.175 2007/10/13 00:02:28 hno Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -396,7 +396,7 @@ fqdncacheParse(fqdncache_entry *f, rfc1035_rr * answers, int nr, const char *err
         return 0;
     }
 
-    if (ttl == 0 || ttl > Config.positiveDnsTtl)
+    if (ttl > Config.positiveDnsTtl)
         ttl = Config.positiveDnsTtl;
 
     if (ttl < Config.negativeDnsTtl)
