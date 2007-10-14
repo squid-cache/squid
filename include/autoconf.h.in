@@ -795,67 +795,67 @@
 /* Print stacktraces on fatal errors */
 #undef PRINT_STACK_TRACE
 
-/* The size of a `char', as computed by sizeof. */
+/* The size of `char', as computed by sizeof. */
 #undef SIZEOF_CHAR
 
-/* The size of a `int', as computed by sizeof. */
+/* The size of `int', as computed by sizeof. */
 #undef SIZEOF_INT
 
-/* The size of a `int16_t', as computed by sizeof. */
+/* The size of `int16_t', as computed by sizeof. */
 #undef SIZEOF_INT16_T
 
-/* The size of a `int32_t', as computed by sizeof. */
+/* The size of `int32_t', as computed by sizeof. */
 #undef SIZEOF_INT32_T
 
-/* The size of a `int64_t', as computed by sizeof. */
+/* The size of `int64_t', as computed by sizeof. */
 #undef SIZEOF_INT64_T
 
-/* The size of a `int8_t', as computed by sizeof. */
+/* The size of `int8_t', as computed by sizeof. */
 #undef SIZEOF_INT8_T
 
-/* The size of a `long', as computed by sizeof. */
+/* The size of `long', as computed by sizeof. */
 #undef SIZEOF_LONG
 
-/* The size of a `long long', as computed by sizeof. */
+/* The size of `long long', as computed by sizeof. */
 #undef SIZEOF_LONG_LONG
 
-/* The size of a `off_t', as computed by sizeof. */
+/* The size of `off_t', as computed by sizeof. */
 #undef SIZEOF_OFF_T
 
-/* The size of a `short', as computed by sizeof. */
+/* The size of `short', as computed by sizeof. */
 #undef SIZEOF_SHORT
 
-/* The size of a `size_t', as computed by sizeof. */
+/* The size of `size_t', as computed by sizeof. */
 #undef SIZEOF_SIZE_T
 
-/* The size of a `uint16_t', as computed by sizeof. */
+/* The size of `uint16_t', as computed by sizeof. */
 #undef SIZEOF_UINT16_T
 
-/* The size of a `uint32_t', as computed by sizeof. */
+/* The size of `uint32_t', as computed by sizeof. */
 #undef SIZEOF_UINT32_T
 
-/* The size of a `uint64_t', as computed by sizeof. */
+/* The size of `uint64_t', as computed by sizeof. */
 #undef SIZEOF_UINT64_T
 
-/* The size of a `uint8_t', as computed by sizeof. */
+/* The size of `uint8_t', as computed by sizeof. */
 #undef SIZEOF_UINT8_T
 
-/* The size of a `u_int16_t', as computed by sizeof. */
+/* The size of `u_int16_t', as computed by sizeof. */
 #undef SIZEOF_U_INT16_T
 
-/* The size of a `u_int32_t', as computed by sizeof. */
+/* The size of `u_int32_t', as computed by sizeof. */
 #undef SIZEOF_U_INT32_T
 
-/* The size of a `u_int64_t', as computed by sizeof. */
+/* The size of `u_int64_t', as computed by sizeof. */
 #undef SIZEOF_U_INT64_T
 
-/* The size of a `u_int8_t', as computed by sizeof. */
+/* The size of `u_int8_t', as computed by sizeof. */
 #undef SIZEOF_U_INT8_T
 
-/* The size of a `void *', as computed by sizeof. */
+/* The size of `void *', as computed by sizeof. */
 #undef SIZEOF_VOID_P
 
-/* The size of a `__int64', as computed by sizeof. */
+/* The size of `__int64', as computed by sizeof. */
 #undef SIZEOF___INT64
 
 /* configure command line used to configure Squid */
@@ -881,7 +881,7 @@
 
 /* If using the C implementation of alloca, define if you know the
    direction of stack growth for your system; otherwise it will be
-   automatically deduced at run-time.
+   automatically deduced at runtime.
 	STACK_DIRECTION > 0 => grows toward higher addresses
 	STACK_DIRECTION < 0 => grows toward lower addresses
 	STACK_DIRECTION = 0 => direction of growth unknown */
