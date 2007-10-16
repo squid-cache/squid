@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.481 2007/10/13 06:57:40 amosjeffries Exp $
+# $Id: cf.data.pre,v 1.482 2007/10/16 12:56:51 amosjeffries Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -600,10 +600,18 @@ acl javascript rep_mime_type -i ^application/x-javascript$
 
 NOCOMMENT_START
 #Recommended minimum configuration:
-acl all src 0.0.0.0/0.0.0.0
+acl all src all
 acl manager proto cache_object
-acl localhost src 127.0.0.1/255.255.255.255
+acl localhost src 127.0.0.1/32
 acl to_localhost dst 127.0.0.0/8
+#
+# Example rule allowing access from your local networks.
+# Adapt to list your (internal) IP networks from where browsing
+# should be allowed
+acl localnet src 10.0.0.0/8	# RFC1918 possible internal network
+acl localnet src 172.16.0.0/12	# RFC1918 possible internal network
+acl localnet src 192.168.0.0/16	# RFC1918 possible internal network
+#
 acl SSL_ports port 443
 acl Safe_ports port 80		# http
 acl Safe_ports port 21		# ftp
@@ -660,11 +668,10 @@ http_access deny CONNECT !SSL_ports
 #
 # INSERT YOUR OWN RULE(S) HERE TO ALLOW ACCESS FROM YOUR CLIENTS
 
-# Example rule allowing access from your local networks. Adapt
-# to list your (internal) IP networks from where browsing should
-# be allowed
-#acl our_networks src 192.168.1.0/24 192.168.2.0/24
-#http_access allow our_networks
+# Example rule allowing access from your local networks.
+# Adapt localnet in the ACL section to list your (internal) IP networks
+# from where browsing should be allowed
+http_access allow localnet
 
 # And finally deny all other access to this proxy
 http_access deny all
@@ -702,8 +709,8 @@ DOC_START
 	See http_access for details
 
 NOCOMMENT_START
-#Allow ICP queries from everyone
-icp_access allow all
+#Allow ICP queries from local networks only
+icp_access deny !localnet
 NOCOMMENT_END
 DOC_END
 
@@ -725,8 +732,10 @@ DOC_START
 	deny all traffic. This default may cause problems with peers
 	using the htcp or htcp-oldsquid options.
 
-#Allow HTCP queries from everyone
-htcp_access allow all
+NOCOMMENT_START
+#Allow HTCP queries from local networks only
+htcp_access deny !localnet
+NOCOMMENT_END
 DOC_END
 
 NAME: htcp_clr_access
