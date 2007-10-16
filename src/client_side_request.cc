@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.93 2007/09/27 22:42:08 hno Exp $
+ * $Id: client_side_request.cc,v 1.94 2007/10/16 15:57:28 rousskov Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1136,6 +1136,9 @@ ClientHttpRequest::noteIcapAnswer(HttpMsg *msg)
         request_satisfaction_mode = true;
         request_satisfaction_offset = 0;
         storeEntry()->replaceHttpReply(new_rep);
+
+        if (!icapBodySource) // no body
+            storeEntry()->complete();
         clientGetMoreData(node, this);
     }
 
