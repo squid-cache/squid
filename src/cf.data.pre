@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.482 2007/10/16 12:56:51 amosjeffries Exp $
+# $Id: cf.data.pre,v 1.483 2007/10/16 13:01:46 amosjeffries Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -710,7 +710,8 @@ DOC_START
 
 NOCOMMENT_START
 #Allow ICP queries from local networks only
-icp_access deny !localnet
+icp_access allow localnet
+icp_access deny all
 NOCOMMENT_END
 DOC_END
 
@@ -734,7 +735,8 @@ DOC_START
 
 NOCOMMENT_START
 #Allow HTCP queries from local networks only
-htcp_access deny !localnet
+htcp_access allow localnet
+htcp_access deny all
 NOCOMMENT_END
 DOC_END
 
