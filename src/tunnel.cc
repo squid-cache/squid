@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.174 2007/09/25 13:23:13 hno Exp $
+ * $Id: tunnel.cc,v 1.175 2007/10/16 14:38:18 rousskov Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -475,7 +475,6 @@ tunnelConnectTimeout(int fd, void *data)
         hierarchyNote(&tunnelState->request->hier, tunnelState->servers->code,
                       tunnelState->host);
 
-    comm_close(fd);
 
     err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
 
@@ -490,6 +489,7 @@ tunnelConnectTimeout(int fd, void *data)
     err->callback_data = tunnelState;
 
     errorSend(tunnelState->client.fd(), err);
+    comm_close(fd);
 }
 
 static void
