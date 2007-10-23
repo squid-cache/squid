@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.522 2007/10/22 23:33:28 amosjeffries Exp $
+ * $Id: cache_cf.cc,v 1.523 2007/10/22 23:35:32 amosjeffries Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -560,7 +560,7 @@ configDoConfigure(void)
 
             struct passwd *pwd = getpwnam(Config.effectiveUser);
 
-            if (NULL == pwd)
+            if (NULL == pwd) {
                 /*
                  * Andres Kroonmaa <andre@online.ee>:
                  * Some getpwnam() implementations (Solaris?) require
@@ -572,6 +572,8 @@ configDoConfigure(void)
                  */
                 fatalf("getpwnam failed to find userid for effective user '%s'",
                        Config.effectiveUser);
+                return;
+            }
 
             Config2.effectiveUserID = pwd->pw_uid;
 
@@ -598,9 +600,11 @@ configDoConfigure(void)
 
         struct group *grp = getgrnam(Config.effectiveGroup);
 
-        if (NULL == grp)
+        if (NULL == grp) {
             fatalf("getgrnam failed to find groupid for effective group '%s'",
                    Config.effectiveGroup);
+            return;
+        }
 
         Config2.effectiveGroupID = grp->gr_gid;
     }
