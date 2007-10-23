@@ -115,6 +115,11 @@ rfc3986.txt
 	updates URL generic syntax (rfc1738) to cover all URI formats
 	including IPv6 addressing URL and additional protocols.
 
+rfc4001.txt
+	Textual Conventions for Internet Network Addresses
+	Details the IP protocol-neutral methods of representing peer
+	and connection details for reporting via squid SNMP interface.
+
 rfc4559.txt
 	HTTP Authentication: Kerberos Authentication
 	Microsoft Negotiate "HTTP" authentication scheme
