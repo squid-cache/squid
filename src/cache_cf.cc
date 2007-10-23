@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.521 2007/09/28 00:22:37 hno Exp $
+ * $Id: cache_cf.cc,v 1.522 2007/10/22 23:33:28 amosjeffries Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -715,11 +715,15 @@ parseBytesLine64(int64_t * bptr, const char *units)
     int64_t m;
     int64_t u;
 
-    if ((u = parseBytesUnits(units)) == 0)
+    if ((u = parseBytesUnits(units)) == 0) {
         self_destruct();
+        return;
+    }
 
-    if ((token = strtok(NULL, w_space)) == NULL)
+    if ((token = strtok(NULL, w_space)) == NULL) {
         self_destruct();
+        return;
+    }
 
     if (strcmp(token, "none") == 0 || strcmp(token, "-1") == 0) {
         *bptr = -1;
@@ -736,8 +740,10 @@ parseBytesLine64(int64_t * bptr, const char *units)
         debugs(3, 0, "WARNING: No units on '" << 
                      config_input_line << "', assuming " <<
                      d << " " <<  units  );
-    else if ((m = parseBytesUnits(token)) == 0)
+    else if ((m = parseBytesUnits(token)) == 0) {
         self_destruct();
+        return;
+    }
 
     *bptr = static_cast<int64_t>(m * d / u);
 
@@ -754,11 +760,15 @@ parseBytesLine(size_t * bptr, const char *units)
     int m;
     int u;
 
-    if ((u = parseBytesUnits(units)) == 0)
+    if ((u = parseBytesUnits(units)) == 0) {
         self_destruct();
+        return;
+    }
 
-    if ((token = strtok(NULL, w_space)) == NULL)
+    if ((token = strtok(NULL, w_space)) == NULL) {
         self_destruct();
+        return;
+    }
 
     if (strcmp(token, "none") == 0 || strcmp(token, "-1") == 0) {
         *bptr = static_cast<size_t>(-1);
@@ -775,8 +785,10 @@ parseBytesLine(size_t * bptr, const char *units)
         debugs(3, 0, "WARNING: No units on '" << 
                      config_input_line << "', assuming " <<
                      d << " " <<  units  );
-    else if ((m = parseBytesUnits(token)) == 0)
+    else if ((m = parseBytesUnits(token)) == 0) {
         self_destruct();
+        return;
+    }
 
     *bptr = static_cast<size_t>(m * d / u);
 
@@ -899,8 +911,10 @@ parse_address(struct IN_ADDR *addr)
     const struct hostent *hp;
     char *token = strtok(NULL, w_space);
 
-    if (token == NULL)
+    if (!token) {
         self_destruct();
+        return;
+    }
 
     if (safe_inet_addr(token, addr) == 1)
         (void) 0;
@@ -1005,14 +1019,20 @@ parse_acl_tos(acl_tos ** head)
     char junk;
     char *token = strtok(NULL, w_space);
 
-    if (!token)
+    if (!token) {
         self_destruct();
+        return;
+    }
 
-    if (sscanf(token, "0x%x%c", &tos, &junk) != 1)
+    if (sscanf(token, "0x%x%c", &tos, &junk) != 1) {
         self_destruct();
+        return;
+    }
 
-    if (tos < 0 || tos > 255)
+    if (tos < 0 || tos > 255) {
         self_destruct();
+        return;
+    }
 
     CBDATA_INIT_TYPE_FREECB(acl_tos, freed_acl_tos);
 
@@ -2083,8 +2103,10 @@ parse_refreshpattern(refresh_t ** head)
     int errcode;
     int flags = REG_EXTENDED | REG_NOSUB;
 
-    if ((token = strtok(NULL, w_space)) == NULL)
+    if ((token = strtok(NULL, w_space)) == NULL) {
         self_destruct();
+        return;
+    }
 
     if (strcmp(token, "-i") == 0) {
         flags |= REG_ICASE;
@@ -2094,8 +2116,10 @@ parse_refreshpattern(refresh_t ** head)
         token = strtok(NULL, w_space);
     }
 
-    if (token == NULL)
+    if (token == NULL) {
         self_destruct();
+        return;
+    }
 
     pattern = xstrdup(token);
 
@@ -2270,14 +2294,18 @@ parse_eol(char *volatile *var)
     unsigned char *token = (unsigned char *) strtok(NULL, null_string);
     safe_free(*var);
 
-    if (token == NULL)
+    if (!token) {
         self_destruct();
+        return;
+    }
 
     while (*token && xisspace(*token))
         token++;
 
-    if (!*token)
+    if (!*token) {
         self_destruct();
+        return;
+    }
 
     *var = xstrdup((char *) token);
 }
@@ -2805,8 +2833,10 @@ parse_http_port_list(http_port_list ** head)
 {
     char *token = strtok(NULL, w_space);
 
-    if (!token)
+    if (!token) {
         self_destruct();
+        return;
+    }
 
     http_port_list *s = create_http_port(token);
 
@@ -3072,8 +3102,10 @@ parse_logformat(logformat ** logformat_definitions)
     if ((name = strtok(NULL, w_space)) == NULL)
         self_destruct();
 
-    if ((def = strtok(NULL, "\r\n")) == NULL)
+    if ((def = strtok(NULL, "\r\n")) == NULL) {
         self_destruct();
+        return;
+    }
 
     debugs(3, 2, "Logformat for '" << name << "' is '" << def << "'");
 
@@ -3081,8 +3113,10 @@ parse_logformat(logformat ** logformat_definitions)
 
     nlf->name = xstrdup(name);
 
-    if (!accessLogParseLogFormat(&nlf->format, def))
+    if (!accessLogParseLogFormat(&nlf->format, def)) {
         self_destruct();
+        return;
+    }
 
     nlf->next = *logformat_definitions;
 
@@ -3098,8 +3132,10 @@ parse_access_log(customlog ** logs)
 
     cl = (customlog *)xcalloc(1, sizeof(*cl));
 
-    if ((filename = strtok(NULL, w_space)) == NULL)
+    if ((filename = strtok(NULL, w_space)) == NULL) {
         self_destruct();
+        return;
+    }
 
     if (strcmp(filename, "none") == 0) {
         cl->type = CLF_NONE;
@@ -3137,6 +3173,7 @@ parse_access_log(customlog ** logs)
     } else {
         debugs(3, 0, "Log format '" << logdef_name << "' is not defined");
         self_destruct();
+        return;
     }
 
 done:
