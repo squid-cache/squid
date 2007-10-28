@@ -28,6 +28,19 @@ rfc1738.txt
 	Uniform Resource Locators (URL)
 	(updated by RFC 3986, but not obsoleted)
 
+rfc1902.txt
+	Structure of Managament Information (SMI) for SNMPv2
+	Management information is viewed as a collection of managed objects,
+	the Management Information Base (MIB). MIB modules are
+	written using an adapted subset of OSI's Abstract Syntax
+	Notation One (ASN.1). Purpose is to define that adapted subset.
+
+rfc1905.txt
+	Protocol Operations for SNMPv2
+	The management protocol provides for the exchange of messages
+	which convey management information between the agents and the
+	management stations.
+
 rfc1945.txt
 	Hypertext Transfer Protocol -- HTTP/1.0
 
