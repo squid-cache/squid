@@ -90,6 +90,11 @@ rfc2965.txt
 	HTTP State Management Mechanism
 	Cookies
 
+rfc3162.txt
+	RADIUS and IPv6
+	Documents the method of authentication for RADIUS when IPv6 addresses
+	may be involved. Squid bundles a RADIUS auth helper.
+
 rfc3226.txt
 	DNSSEC and IPv6 A6 aware server/resolver message size requirements
 	Documents resolver requirements for IPv6 DNS structures and handling
