@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.483 2007/10/16 13:01:46 amosjeffries Exp $
+# $Id: cf.data.pre,v 1.484 2007/10/29 22:41:29 amosjeffries Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -435,7 +435,7 @@ DOC_END
 NAME: acl
 TYPE: acl
 LOC: Config.aclList
-DEFAULT: none
+DEFAULT: all src all
 DOC_START
 	Defining an Access List
 
@@ -600,7 +600,6 @@ acl javascript rep_mime_type -i ^application/x-javascript$
 
 NOCOMMENT_START
 #Recommended minimum configuration:
-acl all src all
 acl manager proto cache_object
 acl localhost src 127.0.0.1/32
 acl to_localhost dst 127.0.0.0/8
