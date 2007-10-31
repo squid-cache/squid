@@ -345,7 +345,7 @@ RFCNB_Print_Pkt(FILE * fd, char *dirn, struct RFCNB_Pkt *pkt, int len)
 /* Resolve a name into an address */
 
 int
-RFCNB_Name_To_IP(char *host, struct IN_ADDR *Dest_IP)
+RFCNB_Name_To_IP(char *host, struct in_addr *Dest_IP)
 {
     int addr;			/* Assumes IP4, 32 bit network addresses */
     struct hostent *hp;
@@ -359,20 +359,15 @@ RFCNB_Name_To_IP(char *host, struct IN_ADDR *Dest_IP)
 	if ((hp = gethostbyname(host)) == NULL) {	/* Not in DNS */
 
 	    /* Try NetBIOS name lookup, how the hell do we do that? */
-
 	    RFCNB_errno = RFCNBE_BadName;	/* Is this right? */
 	    RFCNB_saved_errno = errno;
 	    return (RFCNBE_Bad);
 
-	} else {		/* We got a name */
-
-	    memcpy((void *) Dest_IP, (void *) hp->h_addr_list[0], sizeof(struct IN_ADDR));
-
+	} else { /* We got a name */
+            Dest_IP->s_addr = ((struct sockaddr_in*)hp->h_addr_list[0])->sin_addr.s_addr;
 	}
-    } else {			/* It was an IP address */
-
-	memcpy((void *) Dest_IP, (void *) &addr, sizeof(struct IN_ADDR));
-
+    } else { /* It was an IP address */
+	Dest_IP->s_addr = addr;
     }
 
     return 0;
@@ -397,7 +392,7 @@ RFCNB_Close(int socket)
  * Not sure how to handle socket options etc.         */
 
 int
-RFCNB_IP_Connect(struct IN_ADDR Dest_IP, int port)
+RFCNB_IP_Connect(struct in_addr Dest_IP, int port)
 {
     struct sockaddr_in Socket;
     int fd;
@@ -439,7 +434,7 @@ RFCNB_Session_Req(struct RFCNB_Con *con,
     char *Called_Name,
     char *Calling_Name,
     BOOL * redirect,
-    struct IN_ADDR *Dest_IP,
+    struct in_addr *Dest_IP,
     int *port)
 {
     char *sess_pkt;
@@ -539,7 +534,7 @@ RFCNB_Session_Req(struct RFCNB_Con *con,
 
 	*redirect = TRUE;	/* Copy port and ip addr       */
 
-	memcpy(Dest_IP, (resp + RFCNB_Pkt_IP_Offset), sizeof(struct IN_ADDR));
+	memcpy(Dest_IP, (resp + RFCNB_Pkt_IP_Offset), sizeof(struct in_addr));
 	*port = SVAL(resp, RFCNB_Pkt_Port_Offset);
 
 	return (0);

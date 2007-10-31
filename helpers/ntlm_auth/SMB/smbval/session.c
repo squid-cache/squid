@@ -77,7 +77,7 @@ RFCNB_Call(char *Called_Name, char *Calling_Name, char *Called_Address,
     int port)
 {
     struct RFCNB_Con *con;
-    struct IN_ADDR Dest_IP;
+    struct in_addr Dest_IP;
     int Client;
     BOOL redirect;
     struct redirect_addr *redir_addr;
