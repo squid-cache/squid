@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.139 2007/09/07 17:54:52 rousskov Exp $
+ * $Id: client_side_reply.cc,v 1.140 2007/10/30 21:43:45 rousskov Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1095,15 +1095,19 @@ clientReplyContext::replyStatus()
     int done;
     /* Here because lower nodes don't need it */
 
-    if (http->storeEntry() == NULL)
+    if (http->storeEntry() == NULL) {
+        debugs(88, 5, "clientReplyStatus: no storeEntry");
         return STREAM_FAILED;	/* yuck, but what can we do? */
+    }
 
-    if (EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED))
+    if (EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED)) {
         /* TODO: Could upstream read errors (result.flags.error) be
          * lost, and result in undersize requests being considered
          * complete. Should we tcp reset such connections ?
          */
+        debugs(88, 5, "clientReplyStatus: aborted storeEntry");
         return STREAM_FAILED;
+    }
 
     if ((done = checkTransferDone()) != 0 || flags.complete) {
         debugs(88, 5, "clientReplyStatus: transfer is DONE");
