@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.484 2007/10/29 22:41:29 amosjeffries Exp $
+# $Id: cf.data.pre,v 1.485 2007/10/31 10:34:36 amosjeffries Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -1345,7 +1345,7 @@ DOC_START
 		     use 'carp' to define a set of parents which should
 		     be used as a CARP array. The requests will be
 		     distributed among the parents based on the CARP load
-		     balancing hash function based on their weigth.
+		     balancing hash function based on their weight.
 
 		     'multicast-responder' indicates the named peer
 		     is a member of a multicast group.  ICP queries will
