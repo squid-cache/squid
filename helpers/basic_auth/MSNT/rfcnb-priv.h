@@ -55,7 +55,7 @@ typedef struct redirect_addr *redirect_ptr;
 
 struct redirect_addr {
 
-    struct IN_ADDR ip_addr;
+    struct in_addr ip_addr;
     int port;
     redirect_ptr next;
 
