@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.767 2007/09/28 00:22:38 hno Exp $
+ * $Id: client_side.cc,v 1.768 2007/10/30 21:52:30 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1204,6 +1204,7 @@ ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData)
     }
 
     /* write */
+    debugs(33,7, HERE << "sendStartOfMessage schedules clientWriteComplete");
     comm_write_mbuf(fd(), mb, clientWriteComplete, this);
 
     delete mb;
@@ -1290,6 +1291,7 @@ clientSocketDetach(clientStreamNode * node, ClientHttpRequest * http)
 static void
 clientWriteBodyComplete(int fd, char *buf, size_t size, comm_err_t errflag, int xerrno, void *data)
 {
+    debugs(33,7, HERE << "clientWriteBodyComplete schedules clientWriteComplete");
     clientWriteComplete(fd, NULL, size, errflag, xerrno, data);
 }
 
@@ -1497,15 +1499,30 @@ ClientSocketContext::socketState()
                     return STREAM_UNPLANNED_COMPLETE;
             }
         } else if (reply && reply->content_range) {
-            /* reply has content-range, but request did not */
+            /* reply has content-range, but Squid is not managing ranges */
+            const int64_t &bytesSent = http->out.offset;
+            const int64_t &bytesExpected = reply->content_range->spec.length;
 
-            if (http->memObject()->endOffset() <=
-                    reply->content_range->spec.offset + reply->content_range->spec.length) {
+            debugs(33, 7, HERE << "body bytes sent vs. expected: " <<
+                bytesSent << " ? " << bytesExpected << " (+" <<
+                reply->content_range->spec.offset << ")");
+
+            // did we get at least what we expected, based on range specs?
+
+            if (bytesSent == bytesExpected) // got everything
+                return STREAM_COMPLETE;
+
+            // The logic below is not clear: If we got more than we
+            // expected why would persistency matter? Should not this
+            // always be an error?
+            if (bytesSent > bytesExpected) { // got extra
                 if (http->request->flags.proxy_keepalive)
                     return STREAM_COMPLETE;
                 else
                     return STREAM_UNPLANNED_COMPLETE;
             }
+
+            // did not get enough yet, expecting more
         }
 
         return STREAM_NONE;
