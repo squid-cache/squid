@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.523 2007/10/22 23:35:32 amosjeffries Exp $
+ * $Id: cache_cf.cc,v 1.524 2007/10/31 04:52:16 amosjeffries Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -125,6 +125,7 @@ static void free_http_header_replace(header_mangler * header);
 static void parse_denyinfo(acl_deny_info_list ** var);
 static void dump_denyinfo(StoreEntry * entry, const char *name, acl_deny_info_list * var);
 static void free_denyinfo(acl_deny_info_list ** var);
+
 #if USE_WCCPv2
 static void parse_sockaddr_in_list(sockaddr_in_list **);
 static void dump_sockaddr_in_list(StoreEntry *, const char *, const sockaddr_in_list *);
@@ -132,10 +133,12 @@ static void free_sockaddr_in_list(sockaddr_in_list **);
 #if CURRENTLY_UNUSED
 static int check_null_sockaddr_in_list(const sockaddr_in_list *);
 #endif /* CURRENTLY_UNUSED */
-#endif
+#endif /* USE_WCCPv2 */
+
 static void parse_http_port_list(http_port_list **);
 static void dump_http_port_list(StoreEntry *, const char *, const http_port_list *);
 static void free_http_port_list(http_port_list **);
+
 #if USE_SSL
 static void parse_https_port_list(https_port_list **);
 static void dump_https_port_list(StoreEntry *, const char *, const https_port_list *);
@@ -144,6 +147,7 @@ static void free_https_port_list(https_port_list **);
 static int check_null_https_port_list(const https_port_list *);
 #endif
 #endif /* USE_SSL */
+
 static void parse_b_size_t(size_t * var);
 static void parse_b_int64_t(int64_t * var);
 

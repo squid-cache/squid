@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICP.h,v 1.8 2007/09/21 11:41:52 amosjeffries Exp $
+ * $Id: ICP.h,v 1.9 2007/10/31 04:52:15 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -41,7 +41,6 @@
  * DO NOT add more move fields on pain of breakage.
  * DO NOT add virtual methods.
  */
-
 struct _icp_common_t
 {
     unsigned char opcode;	/* opcode */

@@ -1,6 +1,5 @@
-
 /*
- * $Id: debug.cc,v 1.103 2007/08/01 23:04:23 amosjeffries Exp $
+ * $Id: debug.cc,v 1.104 2007/10/31 04:52:16 amosjeffries Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived

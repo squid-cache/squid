@@ -1,6 +1,5 @@
-
 /*
- * $Id: comm.cc,v 1.437 2007/09/25 13:24:59 hno Exp $
+ * $Id: comm.cc,v 1.438 2007/10/31 04:52:16 amosjeffries Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -447,7 +446,7 @@ CommCallbackData::deRegisterSelf()
     dlinkDelete(&fd_node, &(fdc_table[result.fd].CommCallbackList));
 }
 
-/*
+/**
  * add an IO callback
  *
  * IO callbacks are added when we want to notify someone that some IO
@@ -476,7 +475,7 @@ CommCallbackData::callACallback()
     callCallback();
 }
 
-/*
+/**
  * call the IO callbacks
  *
  * This should be called before comm_select() so code can attempt to
@@ -522,7 +521,7 @@ comm_iocallbackpending(void)
     return (CommCallbackList.head != NULL) || (commfd_completed_events.head != NULL);
 }
 
-/*
+/**
  * Attempt a read
  *
  * If the read attempt succeeds or fails, call the callback.
@@ -562,7 +561,7 @@ commHandleRead(int fd, void *data)
     commSetSelect(fd, COMM_SELECT_READ, commHandleRead, data, 0);
 }
 
-/*
+/**
  * Queue a read. handler/handler_data are called when the read
  * completes, on error, or on file descriptor close.
  */
@@ -581,7 +580,7 @@ comm_read(int fd, char *buf, int size, IOCB *handler, void *handler_data)
     commSetSelect(fd, COMM_SELECT_READ, commHandleRead, COMMIO_FD_READCB(fd), 0);
 }
 
-/*
+/**
  * Empty the read buffers
  *
  * This is a magical routine that empties the read buffers.
@@ -610,7 +609,7 @@ requireOpenAndActive(int const fd)
     assert(fdc_table[fd].active == 1);
 }
 
-/*
+/**
  * Return whether the FD has a pending completed callback.
  */
 int
@@ -644,7 +643,7 @@ fdc_t::findCallback(P predicate)
     return false;
 }
 
-/*
+/**
  * return whether a file descriptor has a read handler
  *
  * Assumptions: the fd is open
@@ -672,7 +671,7 @@ comm_has_pending_read(int fd)
     return COMMIO_FD_READCB(fd)->active && (! COMMIO_FD_READCB(fd)->completed);
 }
 
-/*
+/**
  * Cancel a pending read. Assert that we have the right parameters,
  * and that there are no pending read events!
  *
@@ -695,7 +694,7 @@ comm_read_cancel(int fd, IOCB *callback, void *data)
 }
 
 
-/*
+/**
  * Open a filedescriptor, set some sane defaults
  * XXX DPW 2006-05-30 what is the point of this?
  */
@@ -710,13 +709,11 @@ fdc_open(int fd, unsigned int type, char const *desc)
 }
 
 
-/*
+/**
  * synchronous wrapper around udp socket functions
  */
-
 int
 comm_udp_recvfrom(int fd, void *buf, size_t len, int flags,
-
                   struct sockaddr *from, socklen_t *fromlen)
 {
     statCounter.syscalls.sock.recvfroms++;
@@ -743,7 +740,7 @@ comm_has_incomplete_write(int fd)
     return COMMIO_FD_WRITECB(fd)->active;
 }
 
-/*
+/**
  * Queue a write. handler/handler_data are called when the write fully
  * completes, on error, or on file descriptor close.
  */
@@ -780,10 +777,8 @@ comm_local_port(int fd)
 }
 
 static comm_err_t
-
 commBind(int s, struct IN_ADDR in_addr, u_short port)
 {
-
     struct sockaddr_in S;
 
     memset(&S, '\0', sizeof(S));
@@ -802,12 +797,13 @@ commBind(int s, struct IN_ADDR in_addr, u_short port)
     return COMM_ERROR;
 }
 
-/* Create a socket. Default is blocking, stream (TCP) socket.  IO_TYPE
- * is OR of flags specified in comm.h. Defaults TOS */
+/**
+ * Create a socket. Default is blocking, stream (TCP) socket.  IO_TYPE
+ * is OR of flags specified in comm.h. Defaults TOS
+ */
 int
 comm_open(int sock_type,
           int proto,
-
           struct IN_ADDR addr,
           u_short port,
           int flags,
@@ -831,18 +827,19 @@ comm_set_tos(int fd, int tos)
             debugs(50, 1, "comm_set_tos: setsockopt(IP_TOS) on FD " << fd << ": " << xstrerror());
 	return x;
 #else
-        debugs(50, 0, "comm_set_tos: setsockopt(IP_TOS) not supported on this platform");
+        debugs(50, 0, "WARNING: setsockopt(IP_TOS) not supported on this platform");
 	return -1;
 #endif
 }
 
 
-/* Create a socket. Default is blocking, stream (TCP) socket.  IO_TYPE
- * is OR of flags specified in defines.h:COMM_* */
+/**
+ * Create a socket. Default is blocking, stream (TCP) socket.  IO_TYPE
+ * is OR of flags specified in defines.h:COMM_*
+ */
 int
 comm_openex(int sock_type,
             int proto,
-
             struct IN_ADDR addr,
             u_short port,
             int flags,
