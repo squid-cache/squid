@@ -1,6 +1,5 @@
-
 /*
- * $Id: client_side.h,v 1.25 2007/09/28 00:22:38 hno Exp $
+ * $Id: client_side.h,v 1.26 2007/10/31 04:52:16 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -125,7 +124,6 @@ private:
     bool mayUseConnection_; /* This request may use the connection. Don't read anymore requests for now */
     bool connRegistered_;
 };
-
 
 /* A connection to a socket */
 class ConnStateData : public BodyProducer, public RefCountable

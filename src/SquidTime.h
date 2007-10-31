@@ -1,6 +1,5 @@
-
 /*
- * $Id: SquidTime.h,v 1.2 2006/08/12 01:43:11 robertc Exp $
+ * $Id: SquidTime.h,v 1.3 2007/10/31 04:52:16 amosjeffries Exp $
  *
  * DEBUG: section 21    Time Functions
  * AUTHOR: Harvest Derived
@@ -32,7 +31,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef   SQUID_TIME_H
 #define   SQUID_TIME_H
 
@@ -42,16 +40,15 @@ extern time_t squid_curtime;	/* 0 */
 
 time_t getCurrentTime(void);
 
-/* event class for doing synthetic time etc */
-
+/** event class for doing synthetic time etc */
 class TimeEngine
 {
 
 public:
     virtual ~TimeEngine();
-    /* tick the clock - update from the OS or other time source, */
+
+    /** tick the clock - update from the OS or other time source, */
     virtual void tick();
 };
-
 
 #endif /* SQUID_TIME_H */

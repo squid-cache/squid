@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.192 2007/09/19 08:54:50 hno Exp $
+#  $Id: Makefile.am,v 1.193 2007/10/31 04:52:15 amosjeffries Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -1125,6 +1125,28 @@ check_PROGRAMS+= \
 	tests/testString \
 	tests/testURL \
 	@STORE_TESTS@
+
+### Template for new Unit Test Program
+## - add tests/testX to check_PROGRAMS above.
+## - copy template below and substitue X for class name
+## - add other component .(h|cc) files needed to link and run tests
+##
+##NP: (TESTSOURCES) defines stub debugs() and new/delete for testing
+##
+#tests_testX_SOURCES=\
+#	tests/testX.h \
+#	tests/testX.cc \
+#	tests/testMain.cc \
+#	X.h \
+#	X.cc \
+#	$(TESTSOURCES)
+#tests_testX_LDFLAGS = $(LIBADD_DL)
+#tests_testX_LDADD=\
+#	@SQUID_CPPUNIT_LIBS@ \
+#	@SQUID_CPPUNIT_LA@ \
+#	-L../lib -lmiscutil
+#tests_testX_DEPENDENCIES= @SQUID_CPPUNIT_LA@ \
+#	$(top_builddir)/lib/libmiscutil.a
 
 tests_testAuth_SOURCES= tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $(TESTSOURCES) \
 	authenticate.cc \

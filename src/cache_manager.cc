@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.47 2007/04/28 22:26:37 hno Exp $
+ * $Id: cache_manager.cc,v 1.48 2007/10/31 04:52:16 amosjeffries Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -383,7 +383,7 @@ cachemgrMenu(StoreEntry * sentry)
     CacheManagerAction *a;
 
     for (a = ActionTable; a != NULL; a = a->next) {
-        storeAppendPrintf(sentry, " %-22s\t%s\t%s\n",
+        storeAppendPrintf(sentry, " %-22s\t%-32s\t%s\n",
                           a->action, a->desc, cachemgrActionProtection(a));
     }
 }
