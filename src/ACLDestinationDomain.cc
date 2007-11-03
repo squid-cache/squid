@@ -1,5 +1,5 @@
 /*
- * $Id: ACLDestinationDomain.cc,v 1.14 2007/09/21 11:41:52 amosjeffries Exp $
+ * $Id: ACLDestinationDomain.cc,v 1.15 2007/11/03 04:49:53 wessels Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -85,7 +85,8 @@ ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLChecklist *c
     if ((ia = ipcacheCheckNumeric(checklist->request->host)) == NULL)
         return 0;
 
-    fqdn = fqdncache_gethostbyaddr(ia->in_addrs[0], FQDN_LOOKUP_IF_MISS);
+    checklist->dst_addr = ia->in_addrs[0];
+    fqdn = fqdncache_gethostbyaddr(checklist->dst_addr, FQDN_LOOKUP_IF_MISS);
 
     if (fqdn) {
         return data->match(fqdn);
