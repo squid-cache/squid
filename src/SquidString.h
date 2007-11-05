@@ -1,6 +1,6 @@
 
 /*
- * $Id: SquidString.h,v 1.11 2007/09/28 01:40:50 amosjeffries Exp $
+ * $Id: SquidString.h,v 1.12 2007/11/04 23:59:51 amosjeffries Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -112,12 +112,11 @@ public:
     _SQUID_INLINE_ int caseCmp (char const *) const;
     _SQUID_INLINE_ int caseCmp (char const *, size_t count) const;
 
-    _SQUID_INLINE_ void set
-        (char const *loc, char const ch);
+    _SQUID_INLINE_ void set(char const *loc, char const ch);
 
-    _SQUID_INLINE_ void cut (size_t newLength);
+    _SQUID_INLINE_ void cut(size_t newLength);
 
-    _SQUID_INLINE_ void cutPointer (char const *loc);
+    _SQUID_INLINE_ void cutPointer(char const *loc);
 
 #if DEBUGSTRINGS
 
