@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cci,v 1.9 2007/05/29 13:31:38 amosjeffries Exp $
+ * $Id: String.cci,v 1.10 2007/11/04 23:59:52 amosjeffries Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -125,36 +125,39 @@ String::cmp (String const &aString) const
 }
 
 int
-String::caseCmp (char const *aString) const
+String::caseCmp(char const *aString) const
 {
     return strcasecmp(buf(), aString);
 }
 
 int
-String::caseCmp (char const *aString, size_t count) const
+String::caseCmp(char const *aString, size_t count) const
 {
     return strncasecmp(buf(), aString, count);
 }
 
-/* FIXME: this is can perform buffer overflows and underflows! */
 void
-String::set (char const *loc, char const ch)
+String::set(char const *loc, char const ch)
 {
+    if(loc < buf_ || loc > (buf_ + size_) ) return;
+
     buf_[loc-buf_] = ch;
 }
 
-/* FIXME: this is can perform buffer overflows and underflows! */
 void
-String::cut (size_t newLength)
+String::cut(size_t newLength)
 {
+    if(newLength < 0 || newLength > len_) return;
+
     len_ = newLength;
     buf_[newLength] = '\0';
 }
 
-/* FIXME: this is can perform buffer overflows and underflows! */
 void
-String::cutPointer (char const *loc)
+String::cutPointer(char const *loc)
 {
+    if(loc < buf_ || loc > (buf_ + size_) ) return;
+
     len_ = loc-buf_;
     buf_[len_] = '\0';
 }
@@ -165,5 +168,3 @@ operator<<(std::ostream& os, String const &aString)
     os << aString.buf();
     return os;
 }
-
-
