@@ -1,6 +1,6 @@
 
 /*
- * $Id: IPInterception.cc,v 1.17 2007/05/20 04:22:45 adrian Exp $
+ * $Id: IPInterception.cc,v 1.18 2007/11/07 10:20:47 amosjeffries Exp $
  *
  * DEBUG: section 89    NAT / IP Interception 
  * AUTHOR: Robert Collins
@@ -42,8 +42,12 @@
 #if HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
+#if HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>
+#endif
+#if HAVE_NET_IF_H
 #include <net/if.h>
+#endif
 #ifdef HAVE_IPL_H
 #include <ipl.h>
 #elif HAVE_NETINET_IPL_H
