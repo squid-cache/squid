@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.485 2007/10/31 10:34:36 amosjeffries Exp $
+# $Id: cf.data.pre,v 1.486 2007/11/06 21:19:30 wessels Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -2364,7 +2364,12 @@ DOC_START
 
 	For each requested URL rewriter will receive on line with the format
 
-	URL <SP> client_ip "/" fqdn <SP> user <SP> method <NL>
+	URL <SP> client_ip "/" fqdn <SP> user <SP> method [<SP> kvpairs]<NL>
+
+	In the future, the rewriter interface will be extended with
+	key=value pairs ("kvpairs" shown above).  Rewriter programs
+	should be prepared to receive and possibly ignore additional
+	whitespace-separated tokens on each input line.
 
 	And the rewriter may return a rewritten URL. The other components of
 	the request line does not need to be returned (ignored if they are).
