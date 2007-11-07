@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.121 2007/09/27 23:58:06 amosjeffries Exp $
+ * $Id: redirect.cc,v 1.122 2007/11/06 21:19:31 wessels Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -117,6 +117,8 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
     redirectStateData *r = NULL;
     const char *fqdn;
     char buf[8192];
+    char claddr[20];
+    char myaddr[20];
     assert(http);
     assert(handler);
     debugs(61, 5, "redirectStart: '" << http->uri << "'");
@@ -161,12 +163,16 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
     if ((fqdn = fqdncache_gethostbyaddr(r->client_addr, 0)) == NULL)
         fqdn = dash_str;
 
-    snprintf(buf, 8192, "%s %s/%s %s %s\n",
+    xstrncpy(claddr, inet_ntoa(r->client_addr), 20);
+    xstrncpy(myaddr, inet_ntoa(http->request->my_addr), 20);
+    snprintf(buf, 8192, "%s %s/%s %s %s myip=%s myport=%d\n",
              r->orig_url,
-             inet_ntoa(r->client_addr),
+             claddr,
              fqdn,
              r->client_ident[0] ? rfc1738_escape(r->client_ident) : dash_str,
-             r->method_s);
+             r->method_s,
+	     myaddr,
+	     http->request->my_port);
 
     helperSubmit(redirectors, buf, redirectHandleReply, r);
 }
