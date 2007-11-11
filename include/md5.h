@@ -1,18 +1,14 @@
 #ifndef SQUID_MD5_H
 #define SQUID_MD5_H
 
-#if USE_OPENSSL
-
 /*
  * If Squid is compiled with OpenSSL then we use the MD5 routines
  * from there via some wrapper macros, and the rest of this file is ignored..
  */
+#define USE_SQUID_MD5 0
 
-#if HAVE_OPENSSL_MD5_H
+#if USE_OPENSSL && HAVE_OPENSSL_MD5_H
 #include <openssl/md5.h>
-#else
-#error Cannot find OpenSSL headers
-#endif
 
 /* Hack to adopt Squid to the OpenSSL syntax */
 #define MD5_DIGEST_CHARS MD5_DIGEST_LENGTH
@@ -21,7 +17,28 @@
 #define MD5Update MD5_Update
 #define MD5Final MD5_Final
 
-#else /* USE_OPENSSL */
+#elif USE_OPENSSL && !HAVE_OPENSSL_MD5_H
+#error Cannot find OpenSSL MD5 headers
+
+#elif HAVE_SYS_MD5_H
+/*
+ * Solaris 10 provides MD5 as part of the system.
+ */
+#include <sys/md5.h>
+
+/*
+ * They also define MD5_CTX with different field names
+ * fortunately we do not access it directly in the squid code.
+ */
+
+/* Hack to adopt Squid to the OpenSSL syntax */
+#define MD5_DIGEST_CHARS MD5_DIGEST_LENGTH
+
+#else /* NEED_OWN_MD5 */
+
+ /* Turn on internal MD5 code */
+#undef  USE_SQUID_MD5
+#define USE_SQUID_MD5 1
 
 /*
  * This is the header file for the MD5 message-digest algorithm.
