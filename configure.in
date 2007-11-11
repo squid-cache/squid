@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.483 2007/11/07 10:20:46 amosjeffries Exp $
+dnl  $Id: configure.in,v 1.484 2007/11/11 02:26:58 amosjeffries Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.483 $)dnl
+AC_REVISION($Revision: 1.484 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -862,8 +862,10 @@ if test x$USE_HTCP = xtrue; then
 fi
 AM_CONDITIONAL(ENABLE_HTCP, [test x$USE_HTCP = xtrue])
 
+dnl SSL is not enabled by default.
 AM_CONDITIONAL(ENABLE_SSL, false)
 
+dnl Default is to use OpenSSL when available
 AC_ARG_ENABLE(ssl,
 [  --enable-ssl            Enable ssl gatewaying support using OpenSSL],
 [ if test "$enableval" != "no"; then
@@ -883,8 +885,7 @@ AC_ARG_ENABLE(ssl,
   fi
 ])
 
-AM_CONDITIONAL(NEED_OWN_MD5, true)
-
+dnl User may specify OpenSSL is needed from a non-standard location
 AC_ARG_WITH(openssl,
 [  --with-openssl[=prefix]
                           Compile with the OpenSSL libraries. The path to
@@ -905,11 +906,9 @@ AC_ARG_WITH(openssl,
     USE_OPENSSL=1
   esac
 ])
-
 if test -n "$USE_OPENSSL"; then
   echo "Using OpenSSL MD5 implementation"
   AC_DEFINE(USE_OPENSSL,1,[Define this to make use of the OpenSSL libraries for MD5 calculation rather than Squid's own MD5 implementation or if building with SSL encryption (USE_SSL)])
-  AM_CONDITIONAL(NEED_OWN_MD5, false)
   if test -z "$SSLLIB"; then
     SSLLIB="-lcrypto" # for MD5 routines
   fi
@@ -924,6 +923,7 @@ if test -n "$SSLLIBDIR"; then
   SSLLIB="-L$SSLLIBDIR $SSLLIB"
 fi
 AC_SUBST(SSLLIB)
+
 
 AC_ARG_ENABLE(forw-via-db,
 [  --enable-forw-via-db    Enable Forw/Via database],
@@ -1891,6 +1891,7 @@ AC_CHECK_HEADERS( \
 	sys/ioctl.h \
 	sys/param.h \
 	sys/prctl.h \
+	sys/md5.h \
 	sys/msg.h \
 	sys/resource.h \
 	sys/select.h\
@@ -2273,7 +2274,11 @@ esac
 dnl Check for libcrypt
 dnl Some of our helpers use crypt(3) which may be in libc, or in
 dnl libcrypt (eg FreeBSD)
-AC_CHECK_LIB(crypt, crypt, [CRYPTLIB="-lcrypt"])
+AC_CHECK_LIB(crypt, crypt, [CRYPTLIB=" -lcrypt "])
+
+dnl Solaris10 provides MD5 natively through libmd5
+AC_CHECK_LIB(md5, MD5Init, [CRYPTLIB+=" -lmd5 "])
+
 AC_SUBST(CRYPTLIB)
 
 dnl Check for libdl, used by auth_modules/PAM

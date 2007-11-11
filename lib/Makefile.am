@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-#  $Id: Makefile.am,v 1.28 2007/08/27 13:14:20 hno Exp $
+#  $Id: Makefile.am,v 1.29 2007/11/11 02:26:59 amosjeffries Exp $
 #
 
 DIST_SUBDIRS = libTrie
@@ -32,11 +32,6 @@ if NEED_OWN_STRTOLL
 STRTOLLSOURCE=strtoll.c
 else
 STRTOLLSOURCE=
-endif
-if NEED_OWN_MD5
-MD5SOURCE=md5.c
-else
-MD5SOURCE=
 endif
 
 if ENABLE_WIN32SPECIFIC
@@ -70,7 +65,7 @@ libmiscutil_a_SOURCES = \
 	heap.c \
 	html_quote.c \
 	iso3307.c \
-	$(MD5SOURCE) \
+	md5.c \
 	radix.c \
 	rfc1035.c \
 	rfc1123.c \

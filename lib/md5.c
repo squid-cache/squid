@@ -26,11 +26,22 @@
  */
 #include "config.h"
 
-/* MS VisualStudio Projects are monolithic, so we need the following
+#include "md5.h"
+
+/*
+ * Now that we have several alternatives the MD5 files are
+ * passed in by default. But a header-selection decides whether
+ * this provided version is to be built.
+ * TODO: may obsolete the MSV #if below.
+ */
+#if USE_SQUID_MD5
+
+/* MS VisualStudio Projects are monolithic, so we need USE_SSL
  * #if to exclude the MD5 code from compile process when we are
  * building the SSL support.
  */
 #if !USE_SSL
+
 #if HAVE_STRING_H
 #include <string.h>		/* for memcpy() */
 #endif
@@ -40,8 +51,6 @@
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>		/* for ntohl() */
 #endif
-
-#include "md5.h"
 
 #ifdef WORDS_BIGENDIAN
 void byteSwap(uint32_t *, unsigned);
@@ -257,5 +266,6 @@ MD5Transform(uint32_t buf[4], uint32_t const in[16])
     buf[3] += d;
 }
 
-#endif
-#endif
+#endif /* !ASM_MD5 */
+#endif /* !USE_SSL */
+#endif /* !USE_SQUID_MD5 */
