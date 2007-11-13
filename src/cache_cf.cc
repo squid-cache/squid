@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.524 2007/10/31 04:52:16 amosjeffries Exp $
+ * $Id: cache_cf.cc,v 1.525 2007/11/12 23:10:37 amosjeffries Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1538,6 +1538,49 @@ dump_peer(StoreEntry * entry, const char *name, peer * p)
     }
 }
 
+/**
+ \param proto	'tcp' or 'udp' for protocol
+ \returns       Port the named service is supposed to be listening on.
+ */
+static u_short
+GetService(const char *proto)
+{
+    struct servent *port = NULL;
+    /** Parses a port number or service name from the squid.conf */
+    char *token = strtok(NULL, w_space);
+    if (token == NULL) {
+       self_destruct();
+       return -1; /* NEVER REACHED */
+    }
+    /** Returns either the service port number from /etc/services */
+    port = getservbyname(token, proto);
+    if (port != NULL) {
+        return ntohs((u_short)port->s_port);
+    }
+    /** Or a numeric translation of the config text. */
+    return xatos(token);
+}
+
+/**
+ \returns       Port the named TCP service is supposed to be listening on.
+ \copydoc GetService(const char *proto)
+ */
+inline u_short
+GetTcpService(void)
+{
+    return GetService("tcp");
+}
+
+/**
+ \returns       Port the named UDP service is supposed to be listening on.
+ \copydoc GetService(const char *proto)
+ */
+inline u_short
+GetUdpService(void)
+{
+    return GetService("udp");
+}
+
 static void
 parse_peer(peer ** head)
 {
@@ -1568,12 +1611,12 @@ parse_peer(peer ** head)
         p->options.no_netdb_exchange = 1;
     }
 
-    p->http_port = GetShort();
+    p->http_port = GetTcpService();
 
     if (!p->http_port)
         self_destruct();
 
-    p->icp.port = GetShort();
+    p->icp.port = GetUdpService();
 
     while ((token = strtok(NULL, w_space))) {
         if (!strcasecmp(token, "proxy-only")) {
