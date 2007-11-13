@@ -24,6 +24,11 @@ rfc0959.txt
 rfc1035.txt
 	DNS for IPv4
 
+rfc1157.txt
+	A Simple Network Management Protocol (SNMP)
+	SNMP v1 Specification. SNMP v2 is documented in several RFCs,
+	namely, 1902,1903,1904,1905,1906,1907.
+
 rfc1738.txt
 	Uniform Resource Locators (URL)
 	(updated by RFC 3986, but not obsoleted)
