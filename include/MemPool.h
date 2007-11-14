@@ -85,7 +85,7 @@ class MemPools
     MemImplementingAllocator * create(const char *label, size_t obj_size);
     MemImplementingAllocator * create(const char *label, size_t obj_size, bool const chunked);
     void setIdleLimit(size_t new_idle_limit);
-    size_t const idleLimit() const;
+    size_t idleLimit() const;
     void clean(time_t maxage);
     void setDefaultPoolChunking(bool const &);
     MemImplementingAllocator *pools;

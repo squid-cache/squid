@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.48 2007/04/28 22:26:37 hno Exp $
+ * $Id: delay_pools.cc,v 1.49 2007/11/13 23:25:34 rousskov Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -152,7 +152,7 @@ protected:
 
     virtual char const *label() const = 0;
 
-    virtual unsigned int const makeKey (struct IN_ADDR &src_addr) const = 0;
+    virtual unsigned int makeKey (struct IN_ADDR &src_addr) const = 0;
 
     DelaySpec spec;
 
@@ -182,7 +182,7 @@ public:
 protected:
     virtual char const *label() const {return "Individual";}
 
-    virtual unsigned int const makeKey (struct IN_ADDR &src_addr) const;
+    virtual unsigned int makeKey (struct IN_ADDR &src_addr) const;
 
 };
 
@@ -196,7 +196,7 @@ public:
 protected:
     virtual char const *label() const {return "Network";}
 
-    virtual unsigned int const makeKey (struct IN_ADDR &src_addr) const;
+    virtual unsigned int makeKey (struct IN_ADDR &src_addr) const;
 };
 
 /* don't use remote storage for these */
@@ -239,9 +239,9 @@ protected:
 
     virtual char const *label() const {return "Individual";}
 
-    virtual unsigned int const makeKey (struct IN_ADDR &src_addr) const;
+    virtual unsigned int makeKey (struct IN_ADDR &src_addr) const;
 
-    unsigned char const makeHostKey (struct IN_ADDR &src_addr) const;
+    unsigned char makeHostKey (struct IN_ADDR &src_addr) const;
 
     DelaySpec spec;
     VectorMap<unsigned char, ClassCBucket> buckets;
@@ -844,8 +844,7 @@ VectorPool::Id::bytesIn(int qty)
 }
 
 
-unsigned int const
-
+unsigned int
 IndividualPool::makeKey (struct IN_ADDR &src_addr) const
 {
     unsigned int host;
@@ -867,8 +866,7 @@ ClassCNetPool::operator delete (void *address)
     ::operator delete (address);
 }
 
-unsigned int const
-
+unsigned int
 ClassCNetPool::makeKey (struct IN_ADDR &src_addr) const
 {
     unsigned int net;
@@ -937,8 +935,7 @@ ClassCHostPool::keyAllocated (unsigned char const key) const
     return buckets.indexUsed(buckets.findKeyIndex (key));
 }
 
-unsigned char const
-
+unsigned char
 ClassCHostPool::makeHostKey (struct IN_ADDR &src_addr) const
 {
     unsigned int host;
@@ -946,8 +943,7 @@ ClassCHostPool::makeHostKey (struct IN_ADDR &src_addr) const
     return host;
 }
 
-unsigned int const
-
+unsigned int
 ClassCHostPool::makeKey (struct IN_ADDR &src_addr) const
 {
     unsigned int net;

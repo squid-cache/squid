@@ -1,5 +1,5 @@
 /*
- * $Id: logfile.cc,v 1.24 2007/08/21 23:50:12 hno Exp $
+ * $Id: logfile.cc,v 1.25 2007/11/13 23:25:34 rousskov Exp $
  *
  * DEBUG: section 50    Log file handling
  * AUTHOR: Duane Wessels
@@ -115,7 +115,7 @@ logfileOpen(const char *path, size_t bufsz, int fatal_flag)
             if (delim != NULL)
                 lf->syslog_priority |= syslog_ntoa(delim+1);
 
-            if (0 == lf->syslog_priority & PRIORITY_MASK)
+            if (0 == (lf->syslog_priority & PRIORITY_MASK))
                 lf->syslog_priority |= LOG_INFO;
         }
     } else

@@ -50,12 +50,12 @@ class TrieCharTransform
 public:
     virtual ~TrieCharTransform() {}
 
-    virtual char const operator () (char const) = 0;
+    virtual char operator () (char const) const = 0;
 };
 
 class TrieCaseless : public TrieCharTransform
 {
-    virtual char const operator () (char const aChar) {return tolower(aChar);}
+    virtual char operator () (char const aChar) const {return tolower(aChar);}
 };
 
 #endif /* __cplusplus */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.768 2007/10/30 21:52:30 rousskov Exp $
+ * $Id: client_side.cc,v 1.769 2007/11/13 23:25:34 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -925,7 +925,7 @@ ClientSocketContext::packRange(StoreIOBuffer const &source, MemBuf * mb)
         /*
          * paranoid check
          */
-        assert(available.size() >= 0 && i->debt() >= 0 || i->debt() == -1);
+        assert((available.size() >= 0 && i->debt() >= 0) || i->debt() == -1);
 
         if (!canPackMoreRanges()) {
             debugs(33, 3, "clientPackRange: Returning because !canPackMoreRanges.");
