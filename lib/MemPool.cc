@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemPool.cc,v 1.9 2007/09/20 11:26:22 amosjeffries Exp $
+ * $Id: MemPool.cc,v 1.10 2007/11/13 23:25:33 rousskov Exp $
  *
  * DEBUG: section 63    Low Level Memory Pool Management
  * AUTHOR: Alex Rousskov, Andres Kroonmaa, Robert Collins
@@ -159,7 +159,7 @@ MemPools::setIdleLimit(size_t new_idle_limit)
     mem_idle_limit = new_idle_limit;
 }
 
-size_t const
+size_t
 MemPools::idleLimit() const
 {
     return mem_idle_limit;

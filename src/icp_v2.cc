@@ -1,6 +1,6 @@
 
 /*
- * $Id: icp_v2.cc,v 1.99 2007/04/30 16:56:09 wessels Exp $
+ * $Id: icp_v2.cc,v 1.100 2007/11/13 23:25:34 rousskov Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol
  * AUTHOR: Duane Wessels
@@ -335,7 +335,7 @@ icpGetCommonOpcode()
 {
     /* if store is rebuilding, return a UDP_MISS_NOFETCH */
 
-    if (StoreController::store_dirs_rebuilding && opt_reload_hit_only ||
+    if ((StoreController::store_dirs_rebuilding && opt_reload_hit_only) ||
             hit_only_mode_until > squid_curtime) {
         return ICP_MISS_NOFETCH;
     }
