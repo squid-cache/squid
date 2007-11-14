@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequestMethod.h,v 1.4 2007/03/03 18:25:05 hno Exp $
+ * $Id: HttpRequestMethod.h,v 1.5 2007/11/13 23:09:23 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -134,8 +134,6 @@ private:
     method_t theMethod;
 
 };
-
-inline bool operator != (HttpRequestMethod const &left, method_t const &right) { return right != left; }
 
 inline std::ostream &
 operator << (std::ostream &os, HttpRequestMethod const &method)
