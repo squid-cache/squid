@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.89 2007/10/04 16:43:54 wessels Exp $
+ * $Id: helper.cc,v 1.90 2007/11/13 21:25:35 rousskov Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -77,7 +77,7 @@ helperOpenServers(helper * hlp)
     char *progname;
     char *shortname;
     char *procname;
-    const char *args[HELPER_MAX_ARGS];
+    const char *args[HELPER_MAX_ARGS+1]; // save space for a NULL terminator
     char fd_note_buf[FD_DESC_SZ];
     helper_server *srv;
     int nargs = 0;
@@ -180,7 +180,7 @@ void
 helperStatefulOpenServers(statefulhelper * hlp)
 {
     char *shortname;
-    const char *args[HELPER_MAX_ARGS];
+    const char *args[HELPER_MAX_ARGS+1]; // save space for a NULL terminator
     char fd_note_buf[FD_DESC_SZ];
     int nargs = 0;
 
