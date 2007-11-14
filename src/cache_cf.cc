@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.525 2007/11/12 23:10:37 amosjeffries Exp $
+ * $Id: cache_cf.cc,v 1.526 2007/11/13 23:06:01 rousskov Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1550,7 +1550,7 @@ GetService(const char *proto)
     char *token = strtok(NULL, w_space);
     if (token == NULL) {
        self_destruct();
-       return -1; /* NEVER REACHED */
+       return 0; /* NEVER REACHED */
     }
     /** Returns either the service port number from /etc/services */
     port = getservbyname(token, proto);
