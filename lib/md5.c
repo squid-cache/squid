@@ -75,7 +75,7 @@ byteSwap(uint32_t * buf, unsigned words)
  * initialization constants.
  */
 void
-MD5Init(struct MD5Context *ctx)
+xMD5Init(struct MD5Context *ctx)
 {
     ctx->buf[0] = 0x67452301;
     ctx->buf[1] = 0xefcdab89;
@@ -91,7 +91,7 @@ MD5Init(struct MD5Context *ctx)
  * of bytes.
  */
 void
-MD5Update(struct MD5Context *ctx, const void *_buf, unsigned len)
+xMD5Update(struct MD5Context *ctx, const void *_buf, unsigned len)
 {
     uint8_t const *buf = _buf;
     uint32_t t;
@@ -132,7 +132,7 @@ MD5Update(struct MD5Context *ctx, const void *_buf, unsigned len)
  * 1 0* (64-bit count of bits processed, MSB-first)
  */
 void
-MD5Final(unsigned char digest[16], struct MD5Context *ctx)
+xMD5Final(unsigned char digest[16], struct MD5Context *ctx)
 {
     int count = ctx->bytes[0] & 0x3f;	/* Number of bytes in ctx->in */
     uint8_t *p = (uint8_t *) ctx->in + count;
@@ -183,7 +183,7 @@ MD5Final(unsigned char digest[16], struct MD5Context *ctx)
  * the data and converts bytes into longwords for this routine.
  */
 void
-MD5Transform(uint32_t buf[4], uint32_t const in[16])
+xMD5Transform(uint32_t buf[4], uint32_t const in[16])
 {
     register uint32_t a, b, c, d;
 

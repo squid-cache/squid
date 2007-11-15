@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_key_md5.cc,v 1.34 2007/08/14 22:30:35 rousskov Exp $
+ * $Id: store_key_md5.cc,v 1.35 2007/11/15 09:18:12 amosjeffries Exp $
  *
  * DEBUG: section 20    Storage Manager MD5 Cache Keys
  * AUTHOR: Duane Wessels
@@ -105,11 +105,11 @@ storeKeyPrivate(const char *url, method_t method, int id)
     MD5_CTX M;
     assert(id > 0);
     debugs(20, 3, "storeKeyPrivate: " << RequestMethodStr[method] << " " << url);
-    MD5Init(&M);
-    MD5Update(&M, (unsigned char *) &id, sizeof(id));
-    MD5Update(&M, (unsigned char *) &method, sizeof(method));
-    MD5Update(&M, (unsigned char *) url, strlen(url));
-    MD5Final(digest, &M);
+    xMD5Init(&M);
+    xMD5Update(&M, (unsigned char *) &id, sizeof(id));
+    xMD5Update(&M, (unsigned char *) &method, sizeof(method));
+    xMD5Update(&M, (unsigned char *) url, strlen(url));
+    xMD5Final(digest, &M);
     return digest;
 }
 
@@ -119,10 +119,10 @@ storeKeyPublic(const char *url, const method_t method)
     static cache_key digest[MD5_DIGEST_CHARS];
     unsigned char m = (unsigned char) method;
     MD5_CTX M;
-    MD5Init(&M);
-    MD5Update(&M, &m, sizeof(m));
-    MD5Update(&M, (unsigned char *) url, strlen(url));
-    MD5Final(digest, &M);
+    xMD5Init(&M);
+    xMD5Update(&M, &m, sizeof(m));
+    xMD5Update(&M, (unsigned char *) url, strlen(url));
+    xMD5Final(digest, &M);
     return digest;
 }
 
@@ -139,14 +139,14 @@ storeKeyPublicByRequestMethod(HttpRequest * request, const method_t method)
     unsigned char m = (unsigned char) method;
     const char *url = urlCanonical(request);
     MD5_CTX M;
-    MD5Init(&M);
-    MD5Update(&M, &m, sizeof(m));
-    MD5Update(&M, (unsigned char *) url, strlen(url));
+    xMD5Init(&M);
+    xMD5Update(&M, &m, sizeof(m));
+    xMD5Update(&M, (unsigned char *) url, strlen(url));
 
     if (request->vary_headers)
-        MD5Update(&M, (unsigned char *) request->vary_headers, strlen(request->vary_headers));
+        xMD5Update(&M, (unsigned char *) request->vary_headers, strlen(request->vary_headers));
 
-    MD5Final(digest, &M);
+    xMD5Final(digest, &M);
 
     return digest;
 }

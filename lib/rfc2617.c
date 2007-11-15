@@ -13,7 +13,7 @@
 
 
 /*
- * $Id: rfc2617.c,v 1.10 2007/01/13 16:08:19 hno Exp $
+ * $Id: rfc2617.c,v 1.11 2007/11/15 09:18:05 amosjeffries Exp $
  *
  * DEBUG:
  * AUTHOR: RFC 2617 & Robert Collins
@@ -116,24 +116,24 @@ DigestCalcHA1(
     MD5_CTX Md5Ctx;
 
     if (pszUserName) {
-	MD5Init(&Md5Ctx);
-	MD5Update(&Md5Ctx, pszUserName, strlen(pszUserName));
-	MD5Update(&Md5Ctx, ":", 1);
-	MD5Update(&Md5Ctx, pszRealm, strlen(pszRealm));
-	MD5Update(&Md5Ctx, ":", 1);
-	MD5Update(&Md5Ctx, pszPassword, strlen(pszPassword));
-	MD5Final((unsigned char *) HA1, &Md5Ctx);
+	xMD5Init(&Md5Ctx);
+	xMD5Update(&Md5Ctx, pszUserName, strlen(pszUserName));
+	xMD5Update(&Md5Ctx, ":", 1);
+	xMD5Update(&Md5Ctx, pszRealm, strlen(pszRealm));
+	xMD5Update(&Md5Ctx, ":", 1);
+	xMD5Update(&Md5Ctx, pszPassword, strlen(pszPassword));
+	xMD5Final((unsigned char *) HA1, &Md5Ctx);
     }
     if (strcasecmp(pszAlg, "md5-sess") == 0) {
 	HASHHEX HA1Hex;
 	CvtHex(HA1, HA1Hex);	/* RFC2617 errata */
-	MD5Init(&Md5Ctx);
-	MD5Update(&Md5Ctx, HA1Hex, HASHHEXLEN);
-	MD5Update(&Md5Ctx, ":", 1);
-	MD5Update(&Md5Ctx, pszNonce, strlen(pszNonce));
-	MD5Update(&Md5Ctx, ":", 1);
-	MD5Update(&Md5Ctx, pszCNonce, strlen(pszCNonce));
-	MD5Final((unsigned char *) HA1, &Md5Ctx);
+	xMD5Init(&Md5Ctx);
+	xMD5Update(&Md5Ctx, HA1Hex, HASHHEXLEN);
+	xMD5Update(&Md5Ctx, ":", 1);
+	xMD5Update(&Md5Ctx, pszNonce, strlen(pszNonce));
+	xMD5Update(&Md5Ctx, ":", 1);
+	xMD5Update(&Md5Ctx, pszCNonce, strlen(pszCNonce));
+	xMD5Final((unsigned char *) HA1, &Md5Ctx);
     }
     CvtHex(HA1, SessionKey);
 }
@@ -159,33 +159,33 @@ DigestCalcResponse(
 
     /*  calculate H(A2)
      */
-    MD5Init(&Md5Ctx);
-    MD5Update(&Md5Ctx, pszMethod, strlen(pszMethod));
-    MD5Update(&Md5Ctx, ":", 1);
-    MD5Update(&Md5Ctx, pszDigestUri, strlen(pszDigestUri));
+    xMD5Init(&Md5Ctx);
+    xMD5Update(&Md5Ctx, pszMethod, strlen(pszMethod));
+    xMD5Update(&Md5Ctx, ":", 1);
+    xMD5Update(&Md5Ctx, pszDigestUri, strlen(pszDigestUri));
     if (strcasecmp(pszQop, "auth-int") == 0) {
-	MD5Update(&Md5Ctx, ":", 1);
-	MD5Update(&Md5Ctx, HEntity, HASHHEXLEN);
+	xMD5Update(&Md5Ctx, ":", 1);
+	xMD5Update(&Md5Ctx, HEntity, HASHHEXLEN);
     }
-    MD5Final((unsigned char *) HA2, &Md5Ctx);
+    xMD5Final((unsigned char *) HA2, &Md5Ctx);
     CvtHex(HA2, HA2Hex);
 
     /* calculate response
      */
-    MD5Init(&Md5Ctx);
-    MD5Update(&Md5Ctx, HA1, HASHHEXLEN);
-    MD5Update(&Md5Ctx, ":", 1);
-    MD5Update(&Md5Ctx, pszNonce, strlen(pszNonce));
-    MD5Update(&Md5Ctx, ":", 1);
+    xMD5Init(&Md5Ctx);
+    xMD5Update(&Md5Ctx, HA1, HASHHEXLEN);
+    xMD5Update(&Md5Ctx, ":", 1);
+    xMD5Update(&Md5Ctx, pszNonce, strlen(pszNonce));
+    xMD5Update(&Md5Ctx, ":", 1);
     if (*pszQop) {
-	MD5Update(&Md5Ctx, pszNonceCount, strlen(pszNonceCount));
-	MD5Update(&Md5Ctx, ":", 1);
-	MD5Update(&Md5Ctx, pszCNonce, strlen(pszCNonce));
-	MD5Update(&Md5Ctx, ":", 1);
-	MD5Update(&Md5Ctx, pszQop, strlen(pszQop));
-	MD5Update(&Md5Ctx, ":", 1);
+	xMD5Update(&Md5Ctx, pszNonceCount, strlen(pszNonceCount));
+	xMD5Update(&Md5Ctx, ":", 1);
+	xMD5Update(&Md5Ctx, pszCNonce, strlen(pszCNonce));
+	xMD5Update(&Md5Ctx, ":", 1);
+	xMD5Update(&Md5Ctx, pszQop, strlen(pszQop));
+	xMD5Update(&Md5Ctx, ":", 1);
     }
-    MD5Update(&Md5Ctx, HA2Hex, HASHHEXLEN);
-    MD5Final((unsigned char *) RespHash, &Md5Ctx);
+    xMD5Update(&Md5Ctx, HA2Hex, HASHHEXLEN);
+    xMD5Final((unsigned char *) RespHash, &Md5Ctx);
     CvtHex(RespHash, Response);
 }
