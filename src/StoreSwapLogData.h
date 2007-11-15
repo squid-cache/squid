@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreSwapLogData.h,v 1.4 2007/08/13 17:20:51 hno Exp $
+ * $Id: StoreSwapLogData.h,v 1.5 2007/11/15 16:47:35 wessels Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -60,7 +60,7 @@ public:
     uint64_t swap_file_sz;
     u_short refcount;
     u_short flags;
-    unsigned char key[MD5_DIGEST_CHARS];
+    unsigned char key[SQUID_MD5_DIGEST_LENGTH];
 };
 
 MEMPROXY_CLASS_INLINE(StoreSwapLogData)

@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_cache_digest.cc,v 1.33 2004/12/20 16:30:36 robertc Exp $
+ * $Id: test_cache_digest.cc,v 1.34 2007/11/15 16:47:35 wessels Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -70,7 +70,7 @@ typedef struct _CacheEntry
     const cache_key *key;
 
     struct _CacheEntry *next;
-    unsigned char key_arr[MD5_DIGEST_CHARS];
+    unsigned char key_arr[SQUID_MD5_DIGEST_LENGTH];
     /* storeSwapLogData s; */
 }
 
@@ -80,7 +80,7 @@ CacheEntry;
 
 typedef struct
 {
-    cache_key key[MD5_DIGEST_CHARS];
+    cache_key key[SQUID_MD5_DIGEST_LENGTH];
     time_t timestamp;
     short int use_icp;		/* true/false */
 }
@@ -237,7 +237,7 @@ cacheEntryCreate(const storeSwapLogData * s)
     CacheEntry *e = (CacheEntry *)xcalloc(1, sizeof(CacheEntry));
     assert(s);
     /* e->s = *s; */
-    xmemcpy(e->key_arr, s->key, MD5_DIGEST_CHARS);
+    xmemcpy(e->key_arr, s->key, SQUID_MD5_DIGEST_LENGTH);
     e->key = &e->key_arr[0];
     return e;
 }

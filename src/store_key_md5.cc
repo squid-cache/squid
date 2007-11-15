@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_key_md5.cc,v 1.35 2007/11/15 09:18:12 amosjeffries Exp $
+ * $Id: store_key_md5.cc,v 1.36 2007/11/15 16:47:35 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager MD5 Cache Keys
  * AUTHOR: Duane Wessels
@@ -36,15 +36,15 @@
 #include "squid.h"
 #include "HttpRequest.h"
 
-static cache_key null_key[MD5_DIGEST_CHARS];
+static cache_key null_key[SQUID_MD5_DIGEST_LENGTH];
 
 const char *
 storeKeyText(const cache_key *key)
 {
-    static char buf[MD5_DIGEST_CHARS * 2+1];
+    static char buf[SQUID_MD5_DIGEST_LENGTH * 2+1];
     int i;
 
-    for (i = 0; i < MD5_DIGEST_CHARS; i++)
+    for (i = 0; i < SQUID_MD5_DIGEST_LENGTH; i++)
         snprintf(&buf[i*2],sizeof(buf) - i*2, "%02X", *(key + i));
 
     return buf;
@@ -53,12 +53,12 @@ storeKeyText(const cache_key *key)
 const cache_key *
 storeKeyScan(const char *buf)
 {
-    static unsigned char digest[MD5_DIGEST_CHARS];
+    static unsigned char digest[SQUID_MD5_DIGEST_LENGTH];
     int i;
     int j = 0;
     char t[3];
 
-    for (i = 0; i < MD5_DIGEST_CHARS; i++) {
+    for (i = 0; i < SQUID_MD5_DIGEST_LENGTH; i++) {
         t[0] = *(buf + (j++));
         t[1] = *(buf + (j++));
         t[2] = '\0';
@@ -75,7 +75,7 @@ storeKeyHashCmp(const void *a, const void *b)
     const unsigned char *B = (const unsigned char *)b;
     int i;
 
-    for (i = 0; i < MD5_DIGEST_CHARS; i++) {
+    for (i = 0; i < SQUID_MD5_DIGEST_LENGTH; i++) {
         if (A[i] < B[i])
             return -1;
 
@@ -101,28 +101,28 @@ storeKeyHashHash(const void *key, unsigned int n)
 const cache_key *
 storeKeyPrivate(const char *url, method_t method, int id)
 {
-    static cache_key digest[MD5_DIGEST_CHARS];
-    MD5_CTX M;
+    static cache_key digest[SQUID_MD5_DIGEST_LENGTH];
+    SquidMD5_CTX M;
     assert(id > 0);
     debugs(20, 3, "storeKeyPrivate: " << RequestMethodStr[method] << " " << url);
-    xMD5Init(&M);
-    xMD5Update(&M, (unsigned char *) &id, sizeof(id));
-    xMD5Update(&M, (unsigned char *) &method, sizeof(method));
-    xMD5Update(&M, (unsigned char *) url, strlen(url));
-    xMD5Final(digest, &M);
+    SquidMD5Init(&M);
+    SquidMD5Update(&M, (unsigned char *) &id, sizeof(id));
+    SquidMD5Update(&M, (unsigned char *) &method, sizeof(method));
+    SquidMD5Update(&M, (unsigned char *) url, strlen(url));
+    SquidMD5Final(digest, &M);
     return digest;
 }
 
 const cache_key *
 storeKeyPublic(const char *url, const method_t method)
 {
-    static cache_key digest[MD5_DIGEST_CHARS];
+    static cache_key digest[SQUID_MD5_DIGEST_LENGTH];
     unsigned char m = (unsigned char) method;
-    MD5_CTX M;
-    xMD5Init(&M);
-    xMD5Update(&M, &m, sizeof(m));
-    xMD5Update(&M, (unsigned char *) url, strlen(url));
-    xMD5Final(digest, &M);
+    SquidMD5_CTX M;
+    SquidMD5Init(&M);
+    SquidMD5Update(&M, &m, sizeof(m));
+    SquidMD5Update(&M, (unsigned char *) url, strlen(url));
+    SquidMD5Final(digest, &M);
     return digest;
 }
 
@@ -135,18 +135,18 @@ storeKeyPublicByRequest(HttpRequest * request)
 const cache_key *
 storeKeyPublicByRequestMethod(HttpRequest * request, const method_t method)
 {
-    static cache_key digest[MD5_DIGEST_CHARS];
+    static cache_key digest[SQUID_MD5_DIGEST_LENGTH];
     unsigned char m = (unsigned char) method;
     const char *url = urlCanonical(request);
-    MD5_CTX M;
-    xMD5Init(&M);
-    xMD5Update(&M, &m, sizeof(m));
-    xMD5Update(&M, (unsigned char *) url, strlen(url));
+    SquidMD5_CTX M;
+    SquidMD5Init(&M);
+    SquidMD5Update(&M, &m, sizeof(m));
+    SquidMD5Update(&M, (unsigned char *) url, strlen(url));
 
     if (request->vary_headers)
-        xMD5Update(&M, (unsigned char *) request->vary_headers, strlen(request->vary_headers));
+        SquidMD5Update(&M, (unsigned char *) request->vary_headers, strlen(request->vary_headers));
 
-    xMD5Final(digest, &M);
+    SquidMD5Final(digest, &M);
 
     return digest;
 }
@@ -155,14 +155,14 @@ cache_key *
 storeKeyDup(const cache_key * key)
 {
     cache_key *dup = (cache_key *)memAllocate(MEM_MD5_DIGEST);
-    xmemcpy(dup, key, MD5_DIGEST_CHARS);
+    xmemcpy(dup, key, SQUID_MD5_DIGEST_LENGTH);
     return dup;
 }
 
 cache_key *
 storeKeyCopy(cache_key * dst, const cache_key * src)
 {
-    xmemcpy(dst, src, MD5_DIGEST_CHARS);
+    xmemcpy(dst, src, SQUID_MD5_DIGEST_LENGTH);
     return dst;
 }
 
@@ -186,7 +186,7 @@ storeKeyHashBuckets(int nbuckets)
 int
 storeKeyNull(const cache_key * key)
 {
-    if (memcmp(key, null_key, MD5_DIGEST_CHARS) == 0)
+    if (memcmp(key, null_key, SQUID_MD5_DIGEST_LENGTH) == 0)
         return 1;
     else
         return 0;
@@ -195,5 +195,5 @@ storeKeyNull(const cache_key * key)
 void
 storeKeyInit(void)
 {
-    memset(null_key, '\0', MD5_DIGEST_CHARS);
+    memset(null_key, '\0', SQUID_MD5_DIGEST_LENGTH);
 }

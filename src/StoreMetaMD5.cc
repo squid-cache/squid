@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaMD5.cc,v 1.5 2007/04/28 22:26:37 hno Exp $
+ * $Id: StoreMetaMD5.cc,v 1.6 2007/11/15 16:47:35 wessels Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -41,7 +41,7 @@
 bool
 StoreMetaMD5::validLength(int len) const
 {
-    return len == MD5_DIGEST_CHARS;
+    return len == SQUID_MD5_DIGEST_LENGTH;
 }
 
 int StoreMetaMD5::md5_mismatches = 0;
@@ -50,10 +50,10 @@ bool
 StoreMetaMD5::checkConsistency(StoreEntry *e) const
 {
     assert (getType() == STORE_META_KEY_MD5);
-    assert(length == MD5_DIGEST_CHARS);
+    assert(length == SQUID_MD5_DIGEST_LENGTH);
 
     if (!EBIT_TEST(e->flags, KEY_PRIVATE) &&
-            memcmp(value, e->key, MD5_DIGEST_CHARS)) {
+            memcmp(value, e->key, SQUID_MD5_DIGEST_LENGTH)) {
         debugs(20, 2, "storeClientReadHeader: swapin MD5 mismatch");
         // debugs(20, 2, "\t" << storeKeyText((const cache_key *)value));
         debugs(20, 2, "\t" << e->getMD5Text());

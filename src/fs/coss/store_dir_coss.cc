@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_coss.cc,v 1.76 2007/08/13 17:20:56 hno Exp $
+ * $Id: store_dir_coss.cc,v 1.77 2007/11/15 16:47:36 wessels Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store COSS Directory Routines
@@ -793,7 +793,7 @@ CossCleanLog::write(StoreEntry const &e)
     s.swap_file_sz = e.swap_file_sz;
     s.refcount = e.refcount;
     s.flags = e.flags;
-    xmemcpy(&s.key, e.key, MD5_DIGEST_CHARS);
+    xmemcpy(&s.key, e.key, SQUID_MD5_DIGEST_LENGTH);
     xmemcpy(outbuf + outbuf_offset, &s, ss);
     outbuf_offset += ss;
     /* buffered write */
@@ -898,7 +898,7 @@ CossSwapDir::logEntry(const StoreEntry & e, int op) const
     s->swap_file_sz = e.swap_file_sz;
     s->refcount = e.refcount;
     s->flags = e.flags;
-    xmemcpy(s->key, e.key, MD5_DIGEST_CHARS);
+    xmemcpy(s->key, e.key, SQUID_MD5_DIGEST_LENGTH);
     file_write(swaplog_fd,
                -1,
                s,
