@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.30 2007/08/13 18:25:14 hno Exp $
+ * $Id: MemObject.cc,v 1.31 2007/11/15 09:18:12 amosjeffries Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -54,9 +54,9 @@ url_checksum(const char *url)
     unsigned int ck;
     MD5_CTX M;
     static unsigned char digest[16];
-    MD5Init(&M);
-    MD5Update(&M, (unsigned char *) url, strlen(url));
-    MD5Final(digest, &M);
+    xMD5Init(&M);
+    xMD5Update(&M, (unsigned char *) url, strlen(url));
+    xMD5Final(digest, &M);
     xmemcpy(&ck, digest, sizeof(ck));
     return ck;
 }

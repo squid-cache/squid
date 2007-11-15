@@ -1,5 +1,5 @@
 /*
- * $Id: md5-test.c,v 1.3 2003/01/23 00:37:01 robertc Exp $
+ * $Id: md5-test.c,v 1.4 2007/11/15 09:18:05 amosjeffries Exp $
  */
 
 /*
@@ -20,9 +20,9 @@ MDString(char *string)
     MD5_CTX context;
     unsigned char digest[16];
     unsigned int len = strlen(string);
-    MD5Init(&context);
-    MD5Update(&context, string, len);
-    MD5Final(digest, &context);
+    xMD5Init(&context);
+    xMD5Update(&context, string, len);
+    xMD5Final(digest, &context);
     printf("MD5 (\"%s\") = ", string);
     MDPrint(digest);
     printf("\n");

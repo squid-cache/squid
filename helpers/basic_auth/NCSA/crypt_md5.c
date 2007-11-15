@@ -77,25 +77,25 @@ char *crypt_md5(const char *pw, const char *salt)
     /* get the length of the true salt */
     sl = ep - sp;
 
-    MD5Init(&ctx);
+    xMD5Init(&ctx);
 
     /* The password first, since that is what is most unknown */
-    MD5Update(&ctx, (unsigned const char *) pw, strlen(pw));
+    xMD5Update(&ctx, (unsigned const char *) pw, strlen(pw));
 
     /* Then our magic string */
-    MD5Update(&ctx, (unsigned const char *) magic, magiclen);
+    xMD5Update(&ctx, (unsigned const char *) magic, magiclen);
 
     /* Then the raw salt */
-    MD5Update(&ctx, (unsigned const char *) sp, sl);
+    xMD5Update(&ctx, (unsigned const char *) sp, sl);
 
     /* Then just as many characters of the MD5(pw,salt,pw) */
-    MD5Init(&ctx1);
-    MD5Update(&ctx1, (unsigned const char *) pw, strlen(pw));
-    MD5Update(&ctx1, (unsigned const char *) sp, sl);
-    MD5Update(&ctx1, (unsigned const char *) pw, strlen(pw));
-    MD5Final(final, &ctx1);
+    xMD5Init(&ctx1);
+    xMD5Update(&ctx1, (unsigned const char *) pw, strlen(pw));
+    xMD5Update(&ctx1, (unsigned const char *) sp, sl);
+    xMD5Update(&ctx1, (unsigned const char *) pw, strlen(pw));
+    xMD5Final(final, &ctx1);
     for (pl = strlen(pw); pl > 0; pl -= 16)
-	MD5Update(&ctx, (unsigned const char *) final, pl > 16 ? 16 : pl);
+	xMD5Update(&ctx, (unsigned const char *) final, pl > 16 ? 16 : pl);
 
     /* Don't leave anything around in vm they could use. */
     memset(final, 0, sizeof final);
@@ -103,9 +103,9 @@ char *crypt_md5(const char *pw, const char *salt)
     /* Then something really weird... */
     for (j = 0, i = strlen(pw); i; i >>= 1)
 	if (i & 1)
-	    MD5Update(&ctx, (unsigned const char *) final + j, 1);
+	    xMD5Update(&ctx, (unsigned const char *) final + j, 1);
 	else
-	    MD5Update(&ctx, (unsigned const char *) pw + j, 1);
+	    xMD5Update(&ctx, (unsigned const char *) pw + j, 1);
 
     /* Now make the output string */
     memset(passwd, 0, sizeof(passwd));
@@ -113,7 +113,7 @@ char *crypt_md5(const char *pw, const char *salt)
     strncat(passwd, sp, sl);
     strcat(passwd, "$");
 
-    MD5Final(final, &ctx);
+    xMD5Final(final, &ctx);
 
     /*
      * and now, just to make sure things don't run too fast
@@ -121,23 +121,23 @@ char *crypt_md5(const char *pw, const char *salt)
      * need 30 seconds to build a 1000 entry dictionary...
      */
     for (i = 0; i < 1000; i++) {
-	MD5Init(&ctx1);
+	xMD5Init(&ctx1);
 	if (i & 1)
-	    MD5Update(&ctx1, (unsigned const char *) pw, strlen(pw));
+	    xMD5Update(&ctx1, (unsigned const char *) pw, strlen(pw));
 	else
-	    MD5Update(&ctx1, (unsigned const char *) final, 16);
+	    xMD5Update(&ctx1, (unsigned const char *) final, 16);
 
 	if (i % 3)
-	    MD5Update(&ctx1, (unsigned const char *) sp, sl);
+	    xMD5Update(&ctx1, (unsigned const char *) sp, sl);
 
 	if (i % 7)
-	    MD5Update(&ctx1, (unsigned const char *) pw, strlen(pw));
+	    xMD5Update(&ctx1, (unsigned const char *) pw, strlen(pw));
 
 	if (i & 1)
-	    MD5Update(&ctx1, (unsigned const char *) final, 16);
+	    xMD5Update(&ctx1, (unsigned const char *) final, 16);
 	else
-	    MD5Update(&ctx1, (unsigned const char *) pw, strlen(pw));
-	MD5Final(final, &ctx1);
+	    xMD5Update(&ctx1, (unsigned const char *) pw, strlen(pw));
+	xMD5Final(final, &ctx1);
     }
 
     p = passwd + strlen(passwd);
@@ -179,9 +179,9 @@ char *md5sum(const char *s){
 
    memset(digest,0,16);
 
-   MD5Init(&ctx);
-   MD5Update(&ctx,(const unsigned char *)s,strlen(s));
-   MD5Final(digest,&ctx);
+   xMD5Init(&ctx);
+   xMD5Update(&ctx,(const unsigned char *)s,strlen(s));
+   xMD5Final(digest,&ctx);
 
    for(idx=0;idx<16;idx++)
        sprintf(&sum[idx*2],"%02x",digest[idx]);

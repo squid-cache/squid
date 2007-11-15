@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp2.cc,v 1.17 2007/08/08 14:47:41 rousskov Exp $
+ * $Id: wccp2.cc,v 1.18 2007/11/15 09:18:12 amosjeffries Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Steven Wilton
@@ -564,13 +564,13 @@ wccp2_update_md5_security(char *password, char *ptr, char *packet, int len)
     /* XXX eventually we should be able to kill md5_digest and blit it directly in */
     memset(ws->security_implementation, 0, sizeof(ws->security_implementation));
 
-    MD5Init(&M);
+    xMD5Init(&M);
 
-    MD5Update(&M, pwd, 8);
+    xMD5Update(&M, pwd, 8);
 
-    MD5Update(&M, packet, len);
+    xMD5Update(&M, packet, len);
 
-    MD5Final(md5_digest, &M);
+    xMD5Final(md5_digest, &M);
 
     memcpy(ws->security_implementation, md5_digest, sizeof(md5_digest));
 
@@ -623,13 +623,13 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
 
     memset(ws->security_implementation, 0, sizeof(ws->security_implementation));
 
-    MD5Init(&M);
+    xMD5Init(&M);
 
-    MD5Update(&M, pwd, 8);
+    xMD5Update(&M, pwd, 8);
 
-    MD5Update(&M, packet, len);
+    xMD5Update(&M, packet, len);
 
-    MD5Final(md5_digest, &M);
+    xMD5Final(md5_digest, &M);
 
     return (memcmp(md5_digest, md5_challenge, 16) == 0);
 }

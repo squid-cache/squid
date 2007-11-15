@@ -1,21 +1,17 @@
 #ifndef SQUID_MD5_H
 #define SQUID_MD5_H
 
+#if USE_OPENSSL && HAVE_OPENSSL_MD5_H
+
 /*
  * If Squid is compiled with OpenSSL then we use the MD5 routines
  * from there via some wrapper macros, and the rest of this file is ignored..
  */
-#define USE_SQUID_MD5 0
-
-#if USE_OPENSSL && HAVE_OPENSSL_MD5_H
 #include <openssl/md5.h>
 
-/* Hack to adopt Squid to the OpenSSL syntax */
-#define MD5_DIGEST_CHARS MD5_DIGEST_LENGTH
-
-#define MD5Init MD5_Init
-#define MD5Update MD5_Update
-#define MD5Final MD5_Final
+#define xMD5Init MD5_Init
+#define xMD5Update MD5_Update
+#define xMD5Final MD5_Final
 
 #elif USE_OPENSSL && !HAVE_OPENSSL_MD5_H
 #error Cannot find OpenSSL MD5 headers
@@ -23,22 +19,36 @@
 #elif HAVE_SYS_MD5_H
 /*
  * Solaris 10 provides MD5 as part of the system.
+ * So do other OS - but without MD5_DIGEST_LENGTH defined
+ * for them we need to still use the bunded version
  */
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+
 #include <sys/md5.h>
 
-/*
- * They also define MD5_CTX with different field names
- * fortunately we do not access it directly in the squid code.
- */
+#endif
 
-/* Hack to adopt Squid to the OpenSSL syntax */
+/* according to CacheDigest.cc squid REQUIRES 16-byte here for hash keys */
+#if MD5_DIGEST_LENGTH == 16
+
+  /* We found a nice usable version. No need for ours */
+#define USE_SQUID_MD5 0
+
+  /* adopt the supplied version we are able to use. */
+#define xMD5Init MD5Init
+#define xMD5Update MD5Update
+#define xMD5Final MD5Final
 #define MD5_DIGEST_CHARS MD5_DIGEST_LENGTH
 
-#else /* NEED_OWN_MD5 */
+#else /* NEED squid bundled version */
 
- /* Turn on internal MD5 code */
-#undef  USE_SQUID_MD5
+  /* Turn on internal MD5 code */
 #define USE_SQUID_MD5 1
+
+  /* remove MD5_CTX which may have been defined. */
+#undef MD5_CTX
 
 /*
  * This is the header file for the MD5 message-digest algorithm.
@@ -65,6 +75,10 @@
  * minor cleanup. - Henrik Nordstrom <henrik@henriknordstrom.net>.
  * Still in the public domain.
  *
+ * Changed function names to xMD5* to prevent symbol-clashes when
+ * external library code actually used.
+ * - Amos Jeffries <squid3@treenet.co.nz>
+ *
  */
 
 #include "squid_types.h"
@@ -75,12 +89,12 @@ typedef struct MD5Context {
     uint32_t in[16];
 } MD5_CTX;
 
-SQUIDCEXTERN void MD5Init(struct MD5Context *context);
-SQUIDCEXTERN void MD5Update(struct MD5Context *context, const void *buf, unsigned len);
-SQUIDCEXTERN void MD5Final(uint8_t digest[16], struct MD5Context *context);
-SQUIDCEXTERN void MD5Transform(uint32_t buf[4], uint32_t const in[16]);
+SQUIDCEXTERN void xMD5Init(struct MD5Context *context);
+SQUIDCEXTERN void xMD5Update(struct MD5Context *context, const void *buf, unsigned len);
+SQUIDCEXTERN void xMD5Final(uint8_t digest[16], struct MD5Context *context);
+SQUIDCEXTERN void xMD5Transform(uint32_t buf[4], uint32_t const in[16]);
 
-#define MD5_DIGEST_CHARS         16
+#endif /* MD5_DIGEST_CHARS != 16 */
 
-#endif /* USE_OPENSSL */
+
 #endif /* SQUID_MD5_H */
