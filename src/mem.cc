@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.105 2007/05/22 16:40:06 rousskov Exp $
+ * $Id: mem.cc,v 1.106 2007/11/15 16:47:35 wessels Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -417,7 +417,7 @@ Mem::Init(void)
     memDataInit(MEM_NET_DB_NAME, "net_db_name", sizeof(net_db_name), 0);
     memDataInit(MEM_RELIST, "relist", sizeof(relist), 0);
     memDataInit(MEM_CLIENT_INFO, "ClientInfo", sizeof(ClientInfo), 0);
-    memDataInit(MEM_MD5_DIGEST, "MD5 digest", MD5_DIGEST_CHARS, 0);
+    memDataInit(MEM_MD5_DIGEST, "MD5 digest", SQUID_MD5_DIGEST_LENGTH, 0);
     MemPools[MEM_MD5_DIGEST]->setChunkSize(512 * 1024);
 
     /* init string pools */

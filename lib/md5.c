@@ -10,17 +10,22 @@
  * with every copy.
  *
  * To compute the message digest of a chunk of bytes, declare an
- * MD5Context structure, pass it to MD5Init, call MD5Update as
- * needed on buffers full of bytes, and then call MD5Final, which
- * will fill a supplied 16-byte array with the digest.
+ * SquidMD5Context structure, pass it to SquidMD5Init, call
+ * SquidMD5Update as needed on buffers full of bytes, and then call
+ * SquidMD5Final, which will fill a supplied 16-byte array with the
+ * digest.
  *
  * Changed so as no longer to depend on Colin Plumb's `usual.h' header
  * definitions; now uses stuff from dpkg's config.h.
  *  - Ian Jackson <ian@chiark.greenend.org.uk>.
  * Still in the public domain.
  *
- * Changed MD5Update to take a void * for easier use and some other
- * minor cleanup. - Henrik Nordstrom <henrik@henriknordstrom.net>.
+ * Changed SquidMD5Update to take a void * for easier use and some
+ * other minor cleanup. - Henrik Nordstrom <henrik@henriknordstrom.net>.
+ * Still in the public domain.
+ *
+ * Prefixed all symbols with "Squid" so they don't collide with
+ * other libraries.  Duane Wessels <wessels@squid-cache.org>.
  * Still in the public domain.
  *
  */
@@ -28,35 +33,16 @@
 
 #include "md5.h"
 
-/*
- * Now that we have several alternatives the MD5 files are
- * passed in by default. But a header-selection decides whether
- * this provided version is to be built.
- * TODO: may obsolete the MSV #if below.
- */
-#if USE_SQUID_MD5
-
-/* MS VisualStudio Projects are monolithic, so we need USE_SSL
- * #if to exclude the MD5 code from compile process when we are
- * building the SSL support.
- */
-#if !USE_SSL
-
 #if HAVE_STRING_H
 #include <string.h>		/* for memcpy() */
 #endif
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>		/* for stupid systems */
 #endif
-#if HAVE_NETINET_IN_H
-#include <netinet/in.h>		/* for ntohl() */
-#endif
 
 #ifdef WORDS_BIGENDIAN
-void byteSwap(uint32_t *, unsigned);
-
 void
-byteSwap(uint32_t * buf, unsigned words)
+static byteSwap(uint32_t * buf, unsigned words)
 {
     uint8_t *p = (uint8_t *) buf;
 
@@ -75,7 +61,7 @@ byteSwap(uint32_t * buf, unsigned words)
  * initialization constants.
  */
 void
-xMD5Init(struct MD5Context *ctx)
+SquidMD5Init(struct SquidMD5Context *ctx)
 {
     ctx->buf[0] = 0x67452301;
     ctx->buf[1] = 0xefcdab89;
@@ -91,7 +77,7 @@ xMD5Init(struct MD5Context *ctx)
  * of bytes.
  */
 void
-xMD5Update(struct MD5Context *ctx, const void *_buf, unsigned len)
+SquidMD5Update(struct SquidMD5Context *ctx, const void *_buf, unsigned len)
 {
     uint8_t const *buf = _buf;
     uint32_t t;
@@ -110,7 +96,7 @@ xMD5Update(struct MD5Context *ctx, const void *_buf, unsigned len)
     /* First chunk is an odd size */
     memcpy((uint8_t *) ctx->in + 64 - t, buf, t);
     byteSwap(ctx->in, 16);
-    MD5Transform(ctx->buf, ctx->in);
+    SquidMD5Transform(ctx->buf, ctx->in);
     buf += t;
     len -= t;
 
@@ -118,7 +104,7 @@ xMD5Update(struct MD5Context *ctx, const void *_buf, unsigned len)
     while (len >= 64) {
 	memcpy(ctx->in, buf, 64);
 	byteSwap(ctx->in, 16);
-	MD5Transform(ctx->buf, ctx->in);
+	SquidMD5Transform(ctx->buf, ctx->in);
 	buf += 64;
 	len -= 64;
     }
@@ -132,7 +118,7 @@ xMD5Update(struct MD5Context *ctx, const void *_buf, unsigned len)
  * 1 0* (64-bit count of bits processed, MSB-first)
  */
 void
-xMD5Final(unsigned char digest[16], struct MD5Context *ctx)
+SquidMD5Final(unsigned char digest[16], struct SquidMD5Context *ctx)
 {
     int count = ctx->bytes[0] & 0x3f;	/* Number of bytes in ctx->in */
     uint8_t *p = (uint8_t *) ctx->in + count;
@@ -146,7 +132,7 @@ xMD5Final(unsigned char digest[16], struct MD5Context *ctx)
     if (count < 0) {		/* Padding forces an extra block */
 	memset(p, 0, count + 8);
 	byteSwap(ctx->in, 16);
-	MD5Transform(ctx->buf, ctx->in);
+	SquidMD5Transform(ctx->buf, ctx->in);
 	p = (uint8_t *) ctx->in;
 	count = 56;
     }
@@ -156,7 +142,7 @@ xMD5Final(unsigned char digest[16], struct MD5Context *ctx)
     /* Append length in bits and transform */
     ctx->in[14] = ctx->bytes[0] << 3;
     ctx->in[15] = ctx->bytes[1] << 3 | ctx->bytes[0] >> 29;
-    MD5Transform(ctx->buf, ctx->in);
+    SquidMD5Transform(ctx->buf, ctx->in);
 
     byteSwap(ctx->buf, 4);
     memcpy(digest, ctx->buf, 16);
@@ -179,11 +165,11 @@ xMD5Final(unsigned char digest[16], struct MD5Context *ctx)
 
 /*
  * The core of the MD5 algorithm, this alters an existing MD5 hash to
- * reflect the addition of 16 longwords of new data.  MD5Update blocks
+ * reflect the addition of 16 longwords of new data.  SquidMD5Update blocks
  * the data and converts bytes into longwords for this routine.
  */
 void
-xMD5Transform(uint32_t buf[4], uint32_t const in[16])
+SquidMD5Transform(uint32_t buf[4], uint32_t const in[16])
 {
     register uint32_t a, b, c, d;
 
@@ -267,5 +253,3 @@ xMD5Transform(uint32_t buf[4], uint32_t const in[16])
 }
 
 #endif /* !ASM_MD5 */
-#endif /* !USE_SSL */
-#endif /* !USE_SQUID_MD5 */

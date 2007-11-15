@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufsdump.cc,v 1.10 2007/08/13 17:20:51 hno Exp $
+ * $Id: ufsdump.cc,v 1.11 2007/11/15 16:47:35 wessels Exp $
  *
  * DEBUG: section 0     UFS Store Dump
  * AUTHOR: Robert Collins
@@ -148,9 +148,9 @@ main(int argc, char *argv[])
 
         metadata = aBuilder.createStoreMeta ();
 
-        cache_key key[MD5_DIGEST_CHARS];
+        cache_key key[SQUID_MD5_DIGEST_LENGTH];
 
-        memset(key, '\0', MD5_DIGEST_CHARS);
+        memset(key, '\0', SQUID_MD5_DIGEST_LENGTH);
 
         DumpStoreMeta dumper;
 

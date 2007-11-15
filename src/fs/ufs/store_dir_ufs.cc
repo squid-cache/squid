@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.85 2007/08/13 17:20:57 hno Exp $
+ * $Id: store_dir_ufs.cc,v 1.86 2007/11/15 16:47:38 wessels Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -934,7 +934,7 @@ UFSCleanLog::write(StoreEntry const &e)
     s.swap_file_sz = e.swap_file_sz;
     s.refcount = e.refcount;
     s.flags = e.flags;
-    xmemcpy(&s.key, e.key, MD5_DIGEST_CHARS);
+    xmemcpy(&s.key, e.key, SQUID_MD5_DIGEST_LENGTH);
     xmemcpy(outbuf + outbuf_offset, &s, ss);
     outbuf_offset += ss;
     /* buffered write */
@@ -1043,7 +1043,7 @@ UFSSwapDir::logEntry(const StoreEntry & e, int op) const
     s->swap_file_sz = e.swap_file_sz;
     s->refcount = e.refcount;
     s->flags = e.flags;
-    xmemcpy(s->key, e.key, MD5_DIGEST_CHARS);
+    xmemcpy(s->key, e.key, SQUID_MD5_DIGEST_LENGTH);
     file_write(swaplog_fd,
                -1,
                s,

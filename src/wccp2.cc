@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp2.cc,v 1.18 2007/11/15 09:18:12 amosjeffries Exp $
+ * $Id: wccp2.cc,v 1.19 2007/11/15 16:47:35 wessels Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Steven Wilton
@@ -536,7 +536,7 @@ wccp2_update_md5_security(char *password, char *ptr, char *packet, int len)
 {
     u_int8_t md5_digest[16];
     char pwd[WCCP2_PASSWORD_LEN];
-    MD5_CTX M;
+    SquidMD5_CTX M;
 
     struct wccp2_security_md5_t *ws;
 
@@ -564,13 +564,13 @@ wccp2_update_md5_security(char *password, char *ptr, char *packet, int len)
     /* XXX eventually we should be able to kill md5_digest and blit it directly in */
     memset(ws->security_implementation, 0, sizeof(ws->security_implementation));
 
-    xMD5Init(&M);
+    SquidMD5Init(&M);
 
-    xMD5Update(&M, pwd, 8);
+    SquidMD5Update(&M, pwd, 8);
 
-    xMD5Update(&M, packet, len);
+    SquidMD5Update(&M, packet, len);
 
-    xMD5Final(md5_digest, &M);
+    SquidMD5Final(md5_digest, &M);
 
     memcpy(ws->security_implementation, md5_digest, sizeof(md5_digest));
 
@@ -590,7 +590,7 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
     struct wccp2_security_md5_t *ws = (struct wccp2_security_md5_t *) security;
     u_int8_t md5_digest[16], md5_challenge[16];
     char pwd[WCCP2_PASSWORD_LEN];
-    MD5_CTX M;
+    SquidMD5_CTX M;
 
     /* Make sure the security type matches what we expect */
 
@@ -623,13 +623,13 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
 
     memset(ws->security_implementation, 0, sizeof(ws->security_implementation));
 
-    xMD5Init(&M);
+    SquidMD5Init(&M);
 
-    xMD5Update(&M, pwd, 8);
+    SquidMD5Update(&M, pwd, 8);
 
-    xMD5Update(&M, packet, len);
+    SquidMD5Update(&M, packet, len);
 
-    xMD5Final(md5_digest, &M);
+    SquidMD5Final(md5_digest, &M);
 
     return (memcmp(md5_digest, md5_challenge, 16) == 0);
 }

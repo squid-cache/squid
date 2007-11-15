@@ -1,5 +1,5 @@
 /*
- * $Id: ufscommon.cc,v 1.14 2007/08/15 15:07:41 rousskov Exp $
+ * $Id: ufscommon.cc,v 1.15 2007/11/15 16:47:38 wessels Exp $
  * vim: set et : 
  *
  * DEBUG: section 47    Store Directory Routines
@@ -58,7 +58,7 @@ public:
 	size_t swap_file_sz;
 	u_short refcount;
 	u_short flags;
-	unsigned char key[MD5_DIGEST_CHARS];
+	unsigned char key[SQUID_MD5_DIGEST_LENGTH];
     };
     UFSSwapLogParser_old(FILE *fp):UFSSwapLogParser(fp)
     {
@@ -86,7 +86,7 @@ bool UFSSwapLogParser_old::ReadRecord(StoreSwapLogData &swapData){
     swapData.swap_file_sz = readData.swap_file_sz;
     swapData.refcount = readData.refcount;
     swapData.flags = readData.flags;
-    xmemcpy(swapData.key, readData.key, MD5_DIGEST_CHARS);
+    xmemcpy(swapData.key, readData.key, SQUID_MD5_DIGEST_LENGTH);
     return true;
 }
 
@@ -241,8 +241,8 @@ struct InitStoreEntry : public unary_function<StoreMeta, void>
         switch (x.getType()) {
 
         case STORE_META_KEY:
-            assert(x.length == MD5_DIGEST_CHARS);
-            xmemcpy(index, x.value, MD5_DIGEST_CHARS);
+            assert(x.length == SQUID_MD5_DIGEST_LENGTH);
+            xmemcpy(index, x.value, SQUID_MD5_DIGEST_LENGTH);
             break;
 
         case STORE_META_STD:
@@ -285,7 +285,7 @@ RebuildState::rebuildFromDirectory()
 {
     LOCAL_ARRAY(char, hdr_buf, SM_PAGE_SIZE);
     currentEntry(NULL);
-    cache_key key[MD5_DIGEST_CHARS];
+    cache_key key[SQUID_MD5_DIGEST_LENGTH];
 
     struct stat sb;
     int swap_hdr_len;
@@ -360,7 +360,7 @@ RebuildState::rebuildFromDirectory()
         }
 
         debugs(47, 3, "commonUfsDirRebuildFromDirectory: successful swap meta unpacking");
-        memset(key, '\0', MD5_DIGEST_CHARS);
+        memset(key, '\0', SQUID_MD5_DIGEST_LENGTH);
 
         StoreEntry tmpe;
         InitStoreEntry visitor(&tmpe, key);
