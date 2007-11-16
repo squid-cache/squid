@@ -867,9 +867,6 @@
 /* UDP send buffer size */
 #undef SQUID_DETECT_UDP_SO_SNDBUF
 
-/* Compile the ESI processor and Surrogate header support */
-#undef SQUID_ESI
-
 /* Maximum number of open filedescriptors */
 #undef SQUID_MAXFD
 
@@ -954,6 +951,9 @@
 
 /* Use Winsock select() for the IO loop */
 #undef USE_SELECT_WIN32
+
+/* Compile the ESI processor and Surrogate header support */
+#undef USE_SQUID_ESI
 
 /* Define this to include code for SSL encryption. */
 #undef USE_SSL

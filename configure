@@ -21288,7 +21288,7 @@ fi
 if test "$use_esi" = "yes" ; then
 
 cat >>confdefs.h <<\_ACEOF
-#define SQUID_ESI 1
+#define USE_SQUID_ESI 1
 _ACEOF
 
 
@@ -21305,7 +21305,7 @@ fi
 else
 
 cat >>confdefs.h <<\_ACEOF
-#define SQUID_ESI 0
+#define USE_SQUID_ESI 0
 _ACEOF
 
 fi
