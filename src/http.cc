@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.539 2007/11/15 18:48:30 wessels Exp $
+ * $Id: http.cc,v 1.540 2007/11/15 23:33:05 wessels Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -325,7 +325,7 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
 void
 HttpStateData::processSurrogateControl(HttpReply *reply)
 {
-#if SQUID_ESI
+#if USE_SQUID_ESI
 
     if (request->flags.accelerated && reply->surrogate_control) {
         HttpHdrScTarget *sctusable =
@@ -1342,7 +1342,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         strVia.clean();
     }
 
-#if SQUID_ESI
+#if USE_SQUID_ESI
     {
         /* Append Surrogate-Capabilities */
         String strSurrogate (hdr_in->getList(HDR_SURROGATE_CAPABILITY));

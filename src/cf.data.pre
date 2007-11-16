@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.487 2007/11/15 18:48:30 wessels Exp $
+# $Id: cf.data.pre,v 1.488 2007/11/15 23:33:05 wessels Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -3375,7 +3375,7 @@ COMMENT_START
 COMMENT_END
 
 NAME: httpd_accel_surrogate_id
-IFDEF: SQUID_ESI
+IFDEF: USE_SQUID_ESI
 TYPE:  string
 LOC: Config.Accel.surrogate_id
 DEFAULT: unset-id
@@ -3387,7 +3387,7 @@ DOC_START
 DOC_END
 
 NAME: http_accel_surrogate_remote
-IFDEF: SQUID_ESI
+IFDEF: USE_SQUID_ESI
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: off
@@ -3398,7 +3398,7 @@ DOC_START
 DOC_END
 
 NAME: esi_parser
-IFDEF: SQUID_ESI
+IFDEF: USE_SQUID_ESI
 COMMENT: libxml2|expat|custom
 TYPE: string
 LOC: ESIParser::Type
