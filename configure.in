@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.485 2007/11/11 20:10:09 amosjeffries Exp $
+dnl  $Id: configure.in,v 1.486 2007/11/15 18:48:27 wessels Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.485 $)dnl
+AC_REVISION($Revision: 1.486 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -695,11 +695,11 @@ AC_ARG_ENABLE(esi,
               AC_HELP_STRING([--enable-esi],[Enable ESI for accelerators. Requires libexpat. Enabling ESI will cause squid to follow the Edge Acceleration Specification (www.esi.org). This causes squid to IGNORE client Cache-Control headers. DO NOT use this in a squid configured as a web proxy, ONLY use it in a squid configured for webserver acceleration.]),
 	      use_esi=$enableval, use_esi=no)
 if test "$use_esi" = "yes" ; then
-  AC_DEFINE(ESI,1,[Compile the ESI processor and Surrogate header support])
+  AC_DEFINE(SQUID_ESI,1,[Compile the ESI processor and Surrogate header support])
   AM_CONDITIONAL(USE_ESI, true)
   XTRA_LIBS="$XTRA_LIBS -lexpat -lxml2"
 else
-  AC_DEFINE(ESI,0,[Compile the ESI processor and Surrogate header support])
+  AC_DEFINE(SQUID_ESI,0,[Compile the ESI processor and Surrogate header support])
 fi
 
 AM_CONDITIONAL(USE_ICAP_CLIENT, false)
