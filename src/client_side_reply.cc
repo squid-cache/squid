@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.140 2007/10/30 21:43:45 rousskov Exp $
+ * $Id: client_side_reply.cc,v 1.141 2007/11/15 18:48:30 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -44,7 +44,7 @@
 
 #include "clientStream.h"
 #include "AuthUserRequest.h"
-#if ESI
+#if SQUID_ESI
 #include "ESI.h"
 #endif
 #include "MemObject.h"
@@ -1840,7 +1840,8 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
            (int) body_size << " bytes after " << reply->hdr_sz <<
            " bytes of headers");
 
-#if ESI
+#if SQUID_ESI
+#warning foo
 
     if (http->flags.accel && reply->sline.status != HTTP_FORBIDDEN &&
             !alwaysAllowResponse(reply->sline.status) &&

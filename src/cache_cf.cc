@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.526 2007/11/13 23:06:01 rousskov Exp $
+ * $Id: cache_cf.cc,v 1.527 2007/11/15 18:48:30 wessels Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -50,7 +50,7 @@
 #if SQUID_SNMP
 #include "snmp.h"
 #endif
-#if ESI
+#if SQUID_ESI
 #include "ESIParser.h"
 #endif
 
