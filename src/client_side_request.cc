@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.95 2007/11/15 18:48:30 wessels Exp $
+ * $Id: client_side_request.cc,v 1.96 2007/11/15 23:33:05 wessels Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -601,7 +601,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     HttpRequest *request = http->request;
     HttpHeader *req_hdr = &request->header;
     int no_cache = 0;
-#if !(SQUID_ESI) || defined(USE_USERAGENT_LOG) || defined(USE_REFERER_LOG)
+#if !(USE_SQUID_ESI) || defined(USE_USERAGENT_LOG) || defined(USE_REFERER_LOG)
 
     const char *str;
 #endif
@@ -612,7 +612,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     if (request->ims > 0)
         request->flags.ims = 1;
 
-#if SQUID_ESI
+#if USE_SQUID_ESI
     /*
      * We ignore Cache-Control as per the Edge Architecture Section 3. See
      * www.esi.org for more information.

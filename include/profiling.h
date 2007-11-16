@@ -116,7 +116,7 @@ typedef enum {
     XPROF_file_read,
     XPROF_file_write,
     XPROF_file_close,
-#if SQUID_ESI
+#if USE_SQUID_ESI
     XPROF_esiExpressionEval,
     XPROF_esiProcessing,
     XPROF_esiParsing,
