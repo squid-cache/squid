@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.540 2007/11/15 23:33:05 wessels Exp $
+ * $Id: http.cc,v 1.541 2007/11/18 22:00:58 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1394,10 +1394,10 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             char loginbuf[256];
             const char *username = "-";
 
-            if (orig_request->auth_user_request)
-                username = orig_request->auth_user_request->username();
-            else if (orig_request->extacl_user.size())
+            if (orig_request->extacl_user.size())
                 username = orig_request->extacl_user.buf();
+            else if (orig_request->auth_user_request)
+                username = orig_request->auth_user_request->username();
 
             snprintf(loginbuf, sizeof(loginbuf), "%s%s", username, orig_request->peer_login + 1);
 
