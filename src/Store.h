@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.39 2007/11/15 23:33:05 wessels Exp $
+ * $Id: Store.h,v 1.40 2007/11/18 17:19:35 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -46,7 +46,6 @@
 #include "RemovalPolicy.h"
 
 #if USE_SQUID_ESI
-ESI
 #include "ESIElement.h"
 #endif
 
