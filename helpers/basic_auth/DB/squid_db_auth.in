@@ -3,6 +3,7 @@ use strict;
 use DBI;
 use Getopt::Long;
 use Pod::Usage;
+$|=1;
 
 =pod
 
@@ -20,6 +21,7 @@ my $db_usercol = "user";
 my $db_passwdcol = "password";
 my $db_cond = "enabled = 1";
 my $plaintext = 0;
+my $persist = 0;
 
 =pod
 
@@ -65,6 +67,10 @@ Condition, defaults to enabled=1. Specify 1 or "" for no condition
 
 Database contains plain-text passwords
 
+=item	B<--persist>
+
+Keep a persistent database connection open between queries. 
+
 =back
 
 =cut
@@ -78,13 +84,30 @@ GetOptions(
 	'passwdcol=s' => \$db_passwdcol,
 	'cond=s' => \$db_cond,
 	'plaintext' => \$plaintext,
+	'persist' => \$persist,
 	);
 
-my $dbh = DBI->connect($dsn, $db_user, $db_passwd) || die ("Could not connect to $dsn\n");
+my ($_dbh, $_sth);
 
-my ($sth) = $dbh->prepare("SELECT $db_passwdcol FROM $db_table WHERE $db_usercol = ?" . ($db_cond ne "" ? " AND $db_cond" : "")) || die;
+sub close_db()
+{
+    return if !defined($_dbh);
+    $_dbh->disconnect();
+    undef $_dbh;
+    undef $_sth;
+}
 
-my $status;
+sub open_db()
+{
+    return $_sth if defined $_sth;
+    $_dbh = DBI->connect($dsn, $db_user, $db_passwd);
+    if (!defined $_dbh) {
+    	warn ("Could not connect to $dsn\n");
+	return undef;
+    }
+    $_sth = $_dbh->prepare("SELECT $db_passwdcol FROM $db_table WHERE $db_usercol = ?" . ($db_cond ne "" ? " AND $db_cond" : "")) || die;
+    return $_sth;
+}
 
 sub check_password($$)
 {
@@ -96,20 +119,34 @@ sub check_password($$)
 
     return 0;
 }
+
+sub query_db($) {
+    my ($user) = @_;
+    my ($sth) = open_db() || return undef;
+    if (!$sth->execute($user)) {
+	close_db();
+	open_db() || return undef;
+	$sth->execute($user) || return undef;;
+    }
+    return $sth;
+}
+my $status;
+
 while (<>) {
     my ($user, $password) = split;
     $status = "ERR";
     $user =~ s/%(..)/pack("H*", $1)/ge;
     $password =~ s/%(..)/pack("H*", $1)/ge;
 
-    $status = "ERR internal error";
-    $sth->execute($user) || next;
+    $status = "ERR database error";
+    my $sth = query_db($user) || next;
     $status = "ERR unknown login";
-    my ($row) = $sth->fetchrow_arrayref() || next;
+    my $row = $sth->fetchrow_arrayref() || next;
     $status = "ERR login failure";
     next if (!check_password($password, @$row[0]));
     $status = "OK";
 } continue {
+    close_db() if (!$persist);
     print $status . "\n";
 }
 
