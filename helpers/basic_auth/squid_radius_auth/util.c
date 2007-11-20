@@ -35,18 +35,42 @@ char util_sccsid[] =
 "@(#)util.c	1.5 Copyright 1992 Livingston Enterprises Inc\n"
 "		2.1 Copyright 1997 Cistron Internet Services B.V.";
 
-#include	<sys/types.h>
-#include	<sys/socket.h>
-#include	<sys/time.h>
-#include	<netinet/in.h>
+#include	"config.h"
 
+#if HAVE_SYS_TYES_H
+#include	<sys/types.h>
+#endif
+#if HAVE_SYS_SOCKET_H
+#include	<sys/socket.h>
+#endif
+#if HAVE_SYS_TIME_H
+#include	<sys/time.h>
+#endif
+#if HAVE_NETINET_IN_H
+#include	<netinet/in.h>
+#endif
+
+#if HAVE_STDIO_H
 #include	<stdio.h>
+#endif
+#if HAVE_STDLIB_H
 #include	<stdlib.h>
+#endif
+#if HAVE_NETDB_H
 #include	<netdb.h>
+#endif
+#if HAVE_PWD_H
 #include	<pwd.h>
+#endif
+#if HAVE_TIME_H
 #include	<time.h>
+#endif
+#if HAVE_CTYPE_H
 #include	<ctype.h>
+#endif
+#if HAVE_SIGNAL_H
 #include	<signal.h>
+#endif
 
 #include	"md5.h"
 #include	"util.h"
@@ -89,37 +113,37 @@ static int good_ipaddr(char *addr)
  *	Return an IP address in host long notation from
  *	one supplied in standard dot notation.
  */
-static UINT4 ipstr2long(char *ip_str)
+static u_int32_t ipstr2long(char *ip_str)
 {
 	char	buf[6];
 	char	*ptr;
 	int	i;
 	int	count;
-	UINT4	ipaddr;
+	u_int32_t	ipaddr;
 	int	cur_byte;
 
-	ipaddr = (UINT4)0;
+	ipaddr = (u_int32_t)0;
 	for(i = 0;i < 4;i++) {
 		ptr = buf;
 		count = 0;
 		*ptr = '\0';
 		while(*ip_str != '.' && *ip_str != '\0' && count < 4) {
 			if(!isdigit(*ip_str)) {
-				return((UINT4)0);
+				return((u_int32_t)0);
 			}
 			*ptr++ = *ip_str++;
 			count++;
 		}
 		if(count >= 4 || count == 0) {
-			return((UINT4)0);
+			return((u_int32_t)0);
 		}
 		*ptr = '\0';
 		cur_byte = atoi(buf);
 		if(cur_byte < 0 || cur_byte > 255) {
-			return((UINT4)0);
+			return((u_int32_t)0);
 		}
 		ip_str++;
-		ipaddr = ipaddr << 8 | (UINT4)cur_byte;
+		ipaddr = ipaddr << 8 | (u_int32_t)cur_byte;
 	}
 	return(ipaddr);
 }
@@ -128,7 +152,7 @@ static UINT4 ipstr2long(char *ip_str)
  *	Return an IP address in host long notation from a host
  *	name or address in dot notation.
  */
-UINT4 get_ipaddr(char *host)
+u_int32_t get_ipaddr(char *host)
 {
 	struct hostent	*hp;
 
@@ -136,9 +160,9 @@ UINT4 get_ipaddr(char *host)
 		return(ipstr2long(host));
 	}
 	else if((hp = gethostbyname(host)) == (struct hostent *)NULL) {
-		return((UINT4)0);
+		return((u_int32_t)0);
 	}
-	return(ntohl(*(UINT4 *)hp->h_addr));
+	return(ntohl(*(u_int32_t *)hp->h_addr));
 }
 
 

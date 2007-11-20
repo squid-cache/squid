@@ -1,2 +1,2 @@
 /* util.c */
-UINT4		get_ipaddr (char *);
+u_int32_t		get_ipaddr (char *);

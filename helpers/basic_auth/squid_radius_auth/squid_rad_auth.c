@@ -45,21 +45,51 @@
  * and many others
  */
 
-#include	<sys/types.h>
-#include	<sys/socket.h>
-#include	<netinet/in.h>
-#include	<sys/time.h>
-#include	<unistd.h>
-#include	<fcntl.h>
+#include	"config.h"
 
-#include	<ctype.h>
-#include	<stdio.h>
+#if HAVE_SYS_TYPES_H
+#include	<sys/types.h>
+#endif
+#if HAVE_SYS_SOCKET_H
+#include	<sys/socket.h>
+#endif
+#if HAVE_NETINET_IN_H
+#include	<netinet/in.h>
+#endif
+#if HAVE_SYS_TIME_H
+#include	<sys/time.h>
+#endif
+#if HAVE_UNISTD_H
 #include	<unistd.h>
+#endif
+#if HAVE_FCNTL_H
+#include	<fcntl.h>
+#endif
+
+#if HAVE_CTYPE_H
+#include	<ctype.h>
+#endif
+#if HAVE_STDIO_H
+#include	<stdio.h>
+#endif
+#if HAVE_UNISTD_H
+#include	<unistd.h>
+#endif
+#if HAVE_NETDB_H
 #include	<netdb.h>
+#endif
+#if HAVE_PWD_H
 #include	<pwd.h>
+#endif
+#if HAVE_STDLIB_H
 #include	<stdlib.h>
+#endif
+#if HAVE_TIME_H
 #include	<time.h>
+#endif
+#if HAVE_STRING_H
 #include	<string.h>
+#endif
 
 #include	"md5.h"
 #include	"radius.h"
@@ -83,8 +113,8 @@ static char identifier[MAXLINE] = "";
 static char svc_name[MAXLINE] = "radius";
 static int nasport = 111;
 static int nasporttype = 0;
-static UINT4 nas_ipaddr;
-static UINT4 auth_ipaddr;
+static u_int32_t nas_ipaddr;
+static u_int32_t auth_ipaddr;
 static int retries = 30;
 
 char *progname = "squid_rad_auth";
@@ -111,10 +141,22 @@ time_since(const struct timeval *when)
 }
 
 /*
+ *     MD5 digest
+ */
+static void
+md5_calc(uint8_t out[16], void *in, size_t len)
+{
+    MD5_CTX ctx;
+    MD5Init(&ctx);
+    MD5Update(&ctx, in, len);
+    MD5Final(out, &ctx);
+}
+
+/*
  *    Receive and verify the result.
  */
 static int
-result_recv(UINT4 host, u_short udp_port, char *buffer, int length)
+result_recv(u_int32_t host, u_short udp_port, char *buffer, int length)
 {
     AUTH_HDR *auth;
     int totallen;
@@ -241,7 +283,7 @@ authenticate(int sockfd, const char *username, const char *passwd)
     int secretlen;
     u_char cbc[AUTH_VECTOR_LEN];
     int i, j;
-    UINT4 ui;
+    u_int32_t ui;
     struct sockaddr_in saremote;
     fd_set readfds;
     socklen_t salen;
