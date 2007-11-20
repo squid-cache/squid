@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid LDAP authentication helper
 #
-#  $Id: Makefile.am,v 1.1 2007/06/25 11:02:35 hno Exp $
+#  $Id: Makefile.am,v 1.2 2007/11/20 14:34:17 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -11,8 +11,8 @@ man_MANS 		= squid_radius_auth.8
 EXTRA_DIST		= squid_radius_auth.8
 squid_radius_auth_SOURCES = \
 			squid_rad_auth.c \
-			md5.c md5.h \
 			radius.h \
 			util.c util.h
 
-LDADD = $(XTRA_LIBS)
+LDADD			= -L$(top_builddir)/lib -lmiscutil $(SSLLIB) $(XTRA_LIBS)
+INCLUDES		= -I$(top_srcdir)/include
