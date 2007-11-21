@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid LDAP authentication helper
 #
-#  $Id: Makefile.in,v 1.17 2007/11/20 14:34:17 hno Exp $
+#  $Id: Makefile.in,v 1.18 2007/11/21 01:10:43 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -46,8 +46,7 @@ build_triplet = @build@
 host_triplet = @host@
 libexec_PROGRAMS = squid_radius_auth$(EXEEXT)
 subdir = helpers/basic_auth/squid_radius_auth
-DIST_COMMON = README $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	ChangeLog
+DIST_COMMON = README $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 	$(top_srcdir)/configure.in
