@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.h,v 1.23 2007/08/13 17:20:51 hno Exp $
+ * $Id: HttpHeader.h,v 1.24 2007/11/26 13:09:55 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -202,6 +202,7 @@ public:
     void clean();
     void append(const HttpHeader * src);
     void update (HttpHeader const *fresh, HttpHeaderMask const *denied_mask);
+    void compact();
     int reset();
     int parse(const char *header_start, const char *header_end);
     void packInto(Packer * p) const;
