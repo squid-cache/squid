@@ -168,10 +168,10 @@ u_int32_t get_ipaddr(char *host)
 
 void md5_calc(unsigned char *output, unsigned char *input, unsigned int inlen)
 {
-	MD5_CTX	context;
+	SquidMD5_CTX	context;
 
-	MD5Init(&context);
-	MD5Update(&context, input, inlen);
-	MD5Final(output, &context);
+	SquidMD5Init(&context);
+	SquidMD5Update(&context, input, inlen);
+	SquidMD5Final(output, &context);
 }
 
