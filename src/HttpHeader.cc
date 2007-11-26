@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.137 2007/11/26 12:31:37 hno Exp $
+ * $Id: HttpHeader.cc,v 1.138 2007/11/26 13:09:55 hno Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -784,6 +784,15 @@ HttpHeader::delAt(HttpHeaderPos pos, int &headers_deleted)
     assert(len >= 0);
     delete e;
     ++headers_deleted;
+}
+
+/*
+ * Compacts the header storage
+ */
+void
+HttpHeader::compact()
+{
+    entries.prune(NULL);
 }
 
 /*

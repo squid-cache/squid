@@ -1,5 +1,5 @@
 /*
- * $Id: Array.h,v 1.24 2005/11/21 22:43:41 wessels Exp $
+ * $Id: Array.h,v 1.25 2007/11/26 13:09:54 hno Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -98,6 +98,7 @@ public:
     E &back();
     E pop_back();
     E shift();         // aka pop_front
+    void prune(E);
     void preAppend(int app_count);
     bool empty() const;
     size_t size() const;
@@ -241,6 +242,22 @@ Vector<E>::back()
 {
     assert (size());
     return items[size() - 1];
+}
+
+template<class E>
+void
+Vector<E>::prune(E item)
+{
+    unsigned int n = 0;
+    for (unsigned int i = 0; i < count; i++) {
+	if (items[i] != item) {
+	    if (i != n)
+		items[n] = items[i];
+	    n++;
+	}
+    }
+
+    count = n;
 }
 
 /* if you are going to append a known and large number of items, call this first */
