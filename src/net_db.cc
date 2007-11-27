@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.197 2007/08/27 12:50:43 hno Exp $
+ * $Id: net_db.cc,v 1.198 2007/11/27 07:48:40 amosjeffries Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -281,7 +281,7 @@ netdbSendPing(const ipcache_addrs * ia, void *data)
 {
 
     struct IN_ADDR addr;
-    char *hostname;
+    char *hostname = NULL;
     static_cast<generic_cbdata *>(data)->unwrap(&hostname);
     netdbEntry *n;
     netdbEntry *na;
