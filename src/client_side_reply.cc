@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.143 2007/11/26 22:20:04 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.144 2007/11/27 09:36:07 amosjeffries Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -636,7 +636,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
          * plain ol' cache hit
          */
 
-+#if DELAY_POOLS
+#if DELAY_POOLS
         if (e->store_status != STORE_OK)
             http->logType = LOG_TCP_MISS;
         else
