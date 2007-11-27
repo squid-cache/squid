@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.142 2007/11/15 23:33:05 wessels Exp $
+ * $Id: client_side_reply.cc,v 1.143 2007/11/26 22:20:04 wessels Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -636,9 +636,12 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
          * plain ol' cache hit
          */
 
++#if DELAY_POOLS
         if (e->store_status != STORE_OK)
             http->logType = LOG_TCP_MISS;
-        else if (e->mem_status == IN_MEMORY)
+        else
+#endif
+	if (e->mem_status == IN_MEMORY)
             http->logType = LOG_TCP_MEM_HIT;
         else if (Config.onoff.offline)
             http->logType = LOG_TCP_OFFLINE_HIT;
