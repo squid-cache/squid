@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.445 2007/11/12 01:11:36 hno Exp $
+#  $Id: Makefile.in,v 1.446 2007/11/30 01:11:18 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -1641,6 +1641,7 @@ REPL_LIBS = @REPL_LIBS@
 REPL_OBJS = @REPL_OBJS@
 REPL_POLICIES = @REPL_POLICIES@
 RM = @RM@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SH = @SH@
 SHELL = @SHELL@
