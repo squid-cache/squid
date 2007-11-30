@@ -26,9 +26,9 @@
  * minor cleanup. - Henrik Nordstrom <henrik@henriknordstrom.net>.
  * Still in the public domain.
  *
- * Changed function names to xMD5* to prevent symbol-clashes when
- * external library code actually used.
- * - Amos Jeffries <squid3@treenet.co.nz>
+ * Prefixed all symbols with "Squid" so they don't collide with
+ * other libraries.  Duane Wessels <wessels@squid-cache.org>.
+ * Still in the public domain.
  *
  */
 
