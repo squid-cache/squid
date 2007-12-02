@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.450 2007/09/25 13:24:59 hno Exp $
+ * $Id: main.cc,v 1.451 2007/12/02 08:23:56 amosjeffries Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -292,8 +292,9 @@ mainParseOptions(int argc, char *argv[])
 
         case 'X':
             /* force full debugging */
+            Debug::parseOptions("debug_options ALL,9");
+            Config.onoff.debug_override_X = 1;
             sigusr2_handle(SIGUSR2);
-
             break;
 
         case 'Y':

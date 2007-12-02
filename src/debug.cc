@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.104 2007/10/31 04:52:16 amosjeffries Exp $
+ * $Id: debug.cc,v 1.105 2007/12/02 08:23:56 amosjeffries Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -438,6 +438,11 @@ Debug::parseOptions(char const *options) {
     int i;
     char *p = NULL;
     char *s = NULL;
+
+    if(Config.onoff.debug_override_X) {
+        debugs(0, 9, "command-line -X overrides: " << options);
+        return;
+    }
 
     for (i = 0; i < MAX_DEBUG_SECTIONS; i++)
         Debug::Levels[i] = -1;
