@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.86 2007/11/15 16:47:38 wessels Exp $
+ * $Id: store_dir_ufs.cc,v 1.87 2007/12/02 07:19:58 amosjeffries Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
@@ -498,7 +498,7 @@ UFSSwapDir::createDirectory(const char *path, int should_exist)
 
     if (0 == ::stat(path, &st)) {
         if (S_ISDIR(st.st_mode)) {
-            debugs(47, should_exist ? 3 : 1, path << " exists");
+            debugs(47, (should_exist ? 3 : 1), path << " exists");
         } else {
             fatalf("Swap directory %s is not a directory.", path);
         }
@@ -510,7 +510,7 @@ UFSSwapDir::createDirectory(const char *path, int should_exist)
 
     } else if (0 == mkdir(path, 0755)) {
 #endif
-        debugs(47, should_exist ? 1 : 3, path << " created");
+        debugs(47, (should_exist ? 1 : 3), path << " created");
         created = 1;
     } else {
         fatalf("Failed to make swap directory %s: %s",
