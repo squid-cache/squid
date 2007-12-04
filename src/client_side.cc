@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.769 2007/11/13 23:25:34 rousskov Exp $
+ * $Id: client_side.cc,v 1.770 2007/12/04 03:35:52 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2251,9 +2251,12 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
     http->request = HTTPMSGLOCK(request);
     clientSetKeepaliveFlag(http);
 
-    /* Do we expect a request-body? */
+    /* If this is a CONNECT, don't schedule a read - ssl.c will handle it */
+    if (http->request->method == METHOD_CONNECT)
+        context->mayUseConnection(true);
 
-    if (request->content_length > 0) {
+    /* Do we expect a request-body? */
+    if (!context->mayUseConnection() && request->content_length > 0) {
         request->body_pipe = conn->expectRequestBody(request->content_length);
 
         // consume header early so that body pipe gets just the body
@@ -2282,10 +2285,6 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
 
         context->mayUseConnection(true);
     }
-
-    /* If this is a CONNECT, don't schedule a read - ssl.c will handle it */
-    if (http->request->method == METHOD_CONNECT)
-        context->mayUseConnection(true);
 
     http->calloutContext = new ClientRequestContext(http);
 
