@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.267 2007/09/01 13:09:59 hno Exp $
+ * $Id: squid.h,v 1.268 2007/12/04 13:31:11 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -376,10 +376,6 @@ extern "C"
 
 #if !HAVE_TEMPNAM
 #include "tempnam.h"
-#endif
-
-#if !HAVE_SNPRINTF
-#include "snprintf.h"
 #endif
 
 #if !HAVE_STRSEP
