@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.487 2007/11/15 23:33:01 wessels Exp $
+dnl  $Id: configure.in,v 1.488 2007/12/04 13:22:54 hno Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.487 $)dnl
+AC_REVISION($Revision: 1.488 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -2395,17 +2395,6 @@ dnl Please change your configure script.  AIX doesn't need -lbsd.
 	*-ibm-aix*)
 		echo "Removing -lbsd for AIX..."
 		LIBS=`echo $LIBS | sed -e s/-lbsd//`
-		case "$host" in
-dnl From: mlaster@metavillage.com (Mike Laster)
-dnl AIX 4.1.4.x does not have header files for snprintf/vsnprintf
-dnl So using the internal versions generates a load of warnings
-dnl during compile.
-			*-ibm-aix4*)
-				echo "disabling snprintf/vsnprintf for $host"
-				ac_cv_func_snprintf=no
-				ac_cv_func_vsnprintf=no
-			;;
-		esac
 		;;
 	*m88k*)
 		SQUID_CFLAGS="$SQUID_CFLAGS -D_SQUID_MOTOROLA_"
@@ -2673,11 +2662,6 @@ AC_CACHE_CHECK(if setresuid is implemented, ac_cv_func_setresuid,
 )
 if test "$ac_cv_func_setresuid" = "yes" ; then
   AC_DEFINE(HAVE_SETRESUID,1,[Yay! Another Linux brokenness.  Its not good enough to know that setresuid() exists, because RedHat 5.0 declare setresuid() but doesn't implement it.])
-fi
-
-AM_CONDITIONAL(NEED_OWN_SNPRINTF, false)
-if test "$ac_cv_func_snprintf" = "no" || test "$ac_cv_func_vsnprintf" = "no" ; then
-  AM_CONDITIONAL(NEED_OWN_SNPRINTF, true)
 fi
 
 AM_CONDITIONAL(NEED_OWN_STRSEP, false)
