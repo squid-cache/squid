@@ -1,9 +1,10 @@
-$Id: CREDITS,v 1.11 2007/11/20 14:44:12 hno Exp $
+$Id: CREDITS,v 1.12 2007/12/04 13:29:59 hno Exp $
 
 ==============================================================================
 
 Squid is originally derived from the Harvest Information Discovery and
-Access System.  The Harvest copyright text follows:
+Access System and relicensed under the name Squid using the Gnu Public License.
+The original Harvest copyright text follows to acknowledge the origin:
 
 
 /*
@@ -87,15 +88,6 @@ lib/base64.c::base64_encode():
 
 Adopted from http://ftp.sunet.se/pub2/gnu/vm/base64-encode.c.
 Modified to work with strings instead of files.
-
-==============================================================================
-
-lib/snprintf.c:
-
-Taken from the Apache Server package (www.apache.org).
-
-This product includes software developed by the Apache Group
-for use in the Apache HTTP server project (http://www.apache.org/).
 
 ==============================================================================
 
