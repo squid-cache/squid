@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.105 2007/12/02 08:23:56 amosjeffries Exp $
+ * $Id: debug.cc,v 1.106 2007/12/04 15:20:22 rousskov Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -739,6 +739,9 @@ std::ostream &
 Debug::getDebugOut() {
     assert (CurrentDebug == NULL);
     CurrentDebug = new std::ostringstream();
+    // set default formatting flags
+    CurrentDebug->setf(std::ios::fixed);
+    CurrentDebug->precision(2);
     return *CurrentDebug;
 }
 
