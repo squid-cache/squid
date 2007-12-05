@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.323 2007/09/01 05:56:37 amosjeffries Exp $
+ * $Id: acl.cc,v 1.324 2007/12/05 16:02:29 rousskov Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -410,7 +410,7 @@ ACL::Prototype::registerMe ()
 
 ACL::Prototype::~Prototype()
 {
-    debugs(28, 2, "ACL::Prototype::~Prototype: TODO: unregister me");
+    // TODO: unregister me
 }
 
 ACL *
