@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1738.c,v 1.27 2007/05/23 21:59:44 hno Exp $
+ * $Id: rfc1738.c,v 1.28 2007/12/06 02:37:15 amosjeffries Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -42,7 +42,6 @@
 #endif
 
 #include "util.h"
-#include "snprintf.h"
 
 /*  
  *  RFC 1738 defines that these characters should be escaped, as well

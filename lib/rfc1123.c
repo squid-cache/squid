@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1123.c,v 1.40 2007/08/01 04:36:47 rousskov Exp $
+ * $Id: rfc1123.c,v 1.41 2007/12/06 02:37:15 amosjeffries Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -64,7 +64,6 @@
 #include "assert.h"
 
 #include "util.h"
-#include "snprintf.h"
 
 #define RFC850_STRFTIME "%A, %d-%b-%y %H:%M:%S GMT"
 #define RFC1123_STRFTIME "%a, %d %b %Y %H:%M:%S GMT"

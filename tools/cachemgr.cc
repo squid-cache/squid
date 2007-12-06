@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.4 2007/08/02 02:24:55 amosjeffries Exp $
+ * $Id: cachemgr.cc,v 1.5 2007/12/06 02:37:17 amosjeffries Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -130,13 +130,10 @@ extern "C"
 {
 #include <fnmatch.h>
 }
-
 #endif
 
 #include "assert.h"
-
 #include "util.h"
-#include "snprintf.h"
 
 #ifndef DEFAULT_CACHEMGR_CONFIG
 #define DEFAULT_CACHEMGR_CONFIG "/etc/squid/cachemgr.conf"

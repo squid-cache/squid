@@ -1,5 +1,5 @@
 /*
- * $Id: html_quote.c,v 1.5 2003/01/23 00:37:01 robertc Exp $
+ * $Id: html_quote.c,v 1.6 2007/12/06 02:37:15 amosjeffries Exp $
  * 
  * DEBUG:
  * AUTHOR: Robert Collins
@@ -42,7 +42,6 @@
 #endif
 
 #include "util.h"
-#include "snprintf.h"
 
 /*  
  *  HTML defines these characters as special entities that should be quoted.

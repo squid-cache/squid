@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.97 2007/08/14 19:17:43 serassio Exp $
+ * $Id: util.c,v 1.98 2007/12/06 02:37:15 amosjeffries Exp $
  *
  * DEBUG: 
  * AUTHOR: Harvest Derived
@@ -69,7 +69,6 @@
 #endif
 
 #include "util.h"
-#include "snprintf.h"
 
 static void default_failure_notify(const char *);
 
