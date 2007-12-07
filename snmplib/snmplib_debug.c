@@ -11,10 +11,6 @@
 #include <varargs.h>
 #endif
 
-#if !HAVE_SNPRINTF
-#include "snprintf.h"
-#endif
-
 #include "snmp_debug.h"
 
 #if STDC_HEADERS

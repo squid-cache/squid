@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.71 2006/08/13 20:21:19 serassio Exp $
+ * $Id: dnsserver.cc,v 1.72 2007/12/06 18:01:53 rousskov Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -140,7 +140,6 @@
 #endif
 
 #include "util.h"
-#include "snprintf.h"
 
 #if !defined(_SQUID_AIX_) && !defined(_SQUID_MSWIN_)
 extern int h_errno;
