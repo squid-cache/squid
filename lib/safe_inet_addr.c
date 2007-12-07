@@ -1,6 +1,6 @@
 
 /*
- * $Id: safe_inet_addr.c,v 1.14 2005/04/18 21:52:40 hno Exp $
+ * $Id: safe_inet_addr.c,v 1.15 2007/12/06 18:01:52 rousskov Exp $
  */
 
 #include "config.h"
@@ -28,7 +28,6 @@
 #include <arpa/inet.h>
 #endif
 
-#include "snprintf.h"
 
 int
 safe_inet_addr(const char *buf, struct IN_ADDR *addr)
