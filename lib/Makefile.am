@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-#  $Id: Makefile.am,v 1.30 2007/12/04 13:22:54 hno Exp $
+#  $Id: Makefile.am,v 1.31 2007/12/14 04:29:22 amosjeffries Exp $
 #
 
 DIST_SUBDIRS = libTrie
@@ -58,6 +58,7 @@ libmiscutil_a_SOURCES = \
 	hash.c \
 	heap.c \
 	html_quote.c \
+	IPAddress.cc \
 	iso3307.c \
 	md5.c \
 	radix.c \
@@ -97,7 +98,12 @@ INCLUDES	= -I$(top_builddir)/include -I$(top_srcdir)/include @SQUID_CPPUNIT_INC@
 TESTS=$(check_PROGRAMS)
 check_PROGRAMS=tests/testAll
 
-tests_testAll_SOURCES= tests/testArray.cc tests/testMain.cc  tests/testArray.h \
+tests_testAll_SOURCES= \
+	tests/testArray.h \
+	tests/testArray.cc \
+	tests/testIPAddress.h \
+	tests/testIPAddress.cc \
+	tests/testMain.cc \
 	$(XPROF_STATS_SOURCE) \
 	$(WIN32SRC) \
 	util.c assert.c
