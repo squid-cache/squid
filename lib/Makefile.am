@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-#  $Id: Makefile.am,v 1.31 2007/12/14 04:29:22 amosjeffries Exp $
+#  $Id: Makefile.am,v 1.32 2007/12/14 04:42:24 amosjeffries Exp $
 #
 
 DIST_SUBDIRS = libTrie
@@ -66,6 +66,7 @@ libmiscutil_a_SOURCES = \
 	rfc1123.c \
 	rfc1738.c \
 	rfc2617.c \
+	rfc3596.c \
 	safe_inet_addr.c \
 	$(SNPRINTFSOURCE) \
 	Splay.cc \
