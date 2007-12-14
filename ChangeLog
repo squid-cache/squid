@@ -1,10 +1,11 @@
-Changes to squid-3.0.STABLE1 ():
+Changes to squid-3.0.STABLE1 (13 Dec 2007):
 
 	- Major rewrite translating the code to C++, originally based on
 	  Squid-2.5.STABLE1
 	- Internal client streams concept for content adaptation
 	- ICAP (Internet Content Adaptation Protocol) client support
 	- ESI (Edge Side Includes) support added
+	- Improved support for files larger than 2GB.
 	- And a lot more. Most features from Squid-2.6 is supported, but not
 	  all. See the release notes for details.
 
