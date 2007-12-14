@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.0.RC1 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.0.sgml,v 1.30 2007/11/18 17:23:01 serassio Exp $</date>
+<date>$Id: release-3.0.sgml,v 1.31 2007/12/14 05:34:16 amosjeffries Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.0 of Squid.
@@ -714,7 +714,7 @@ This section gives an account of those changes in three categories:
 <descrip>
 	<tag>--enable-carp</tag>
 	<p>CARP support is now built by default.
-	 --disable-carp can be used to buidl without it.</p>
+	 --disable-carp can be used to build without it.</p>
 
 	<tag>--enable-htcp</tag>
 	<p>HTCP protocol support is now built by default.
