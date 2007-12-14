@@ -2,11 +2,6 @@
 SQUID Web Proxy Cache        http://www.squid-cache.org/
 --------------------------------------------------------
 
-  Squid is the result of efforts by numerous individuals from the
-  Internet community.  Development is led by Duane Wessels of the
-  National Laboratory for Applied Network Research and funded by
-  the National Science Foundation.
-
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
@@ -22,7 +17,8 @@ SQUID Web Proxy Cache        http://www.squid-cache.org/
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
 Squid is derived from the ``cached'' software from the ARPA-funded
-Harvest research project.  
+Harvest research project.   Squid includes software copyrighted
+by others.  See the COPYRIGHT file for details.
 
 Please use our mailing lists for questions, feedback and bug fixes:
 
