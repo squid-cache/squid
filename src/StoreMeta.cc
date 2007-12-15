@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMeta.cc,v 1.6 2007/09/19 08:54:51 hno Exp $
+ * $Id: StoreMeta.cc,v 1.7 2007/12/14 19:48:51 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -48,9 +48,14 @@ bool
 StoreMeta::validType(char type)
 {
     /* VOID is reserved, and new types have to be added as classes */
-
-    if (type <= STORE_META_VOID || type >= STORE_META_END) {
+    if (type <= STORE_META_VOID || type >= STORE_META_END + 10) {
         debugs(20, 0, "storeSwapMetaUnpack: bad type (" << type << ")!");
+        return false;
+    }
+
+    /* Not yet implemented */
+    if (type >= STORE_META_END) {
+        debugs(20, 3, "storeSwapMetaUnpack: Not yet implemented (" << type << ") in disk metadata");
         return false;
     }
 
