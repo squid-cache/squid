@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMeta.cc,v 1.7 2007/12/14 19:48:51 hno Exp $
+ * $Id: StoreMeta.cc,v 1.8 2007/12/14 20:07:15 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -54,7 +54,9 @@ StoreMeta::validType(char type)
     }
 
     /* Not yet implemented */
-    if (type >= STORE_META_END) {
+    if (type >= STORE_META_END ||
+	    type == STORE_META_STOREURL ||
+	    type == STORE_META_VARY_ID) {
         debugs(20, 3, "storeSwapMetaUnpack: Not yet implemented (" << type << ") in disk metadata");
         return false;
     }
