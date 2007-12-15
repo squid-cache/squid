@@ -1,6 +1,6 @@
 
 /*
- * $Id: AccessLogEntry.h,v 1.6 2007/08/13 17:20:51 hno Exp $
+ * $Id: AccessLogEntry.h,v 1.7 2007/12/14 23:11:45 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,6 +37,7 @@
 
 #include "HttpVersion.h"
 #include "HierarchyLogEntry.h"
+#include "IPAddress.h"
 
 /* forward decls */
 
@@ -79,7 +80,8 @@ public:
     {
 
     public:
-        CacheDetails() : size(0),
+        CacheDetails() : caddr(),
+                size(0),
                 highOffset(0),
                 objectSize(0),
                 code (LOG_TAG_NONE),
@@ -91,10 +93,10 @@ public:
                 ,ssluser(NULL)
 #endif
         {
-            memset(&caddr, '\0', sizeof(caddr));
+            ;
         }
 
-        struct IN_ADDR caddr;
+        IPAddress caddr;
         int64_t size;
         int64_t highOffset;
         int64_t objectSize;

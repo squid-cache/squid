@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.568 2007/12/02 08:23:56 amosjeffries Exp $
+ * $Id: structs.h,v 1.569 2007/12/14 23:11:48 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -76,7 +76,7 @@ struct _snmp_request_t
     long reqid;
     int outlen;
 
-    struct sockaddr_in from;
+    IPAddress from;
 
     struct snmp_pdu *PDU;
     ACLChecklist *acl_checklist;
@@ -93,7 +93,7 @@ struct _acl_address
     acl_address *next;
     ACLList *aclList;
 
-    struct IN_ADDR addr;
+    IPAddress addr;
 };
 
 struct _acl_tos
@@ -123,18 +123,11 @@ struct _relist
     relist *next;
 };
 
-struct _sockaddr_in_list
-{
-
-    struct sockaddr_in s;
-    sockaddr_in_list *next;
-};
-
 struct _http_port_list
 {
     http_port_list *next;
 
-    struct sockaddr_in s;
+    IPAddress s;
     char *protocol;            /* protocol name */
     char *name;                /* visible name */
     char *defaultsite;         /* default web site */
@@ -181,6 +174,10 @@ struct _https_port_list
 
 #if DELAY_POOLS
 #include "DelayConfig.h"
+#endif
+
+#if USE_ICMP
+#include "ICMPConfig.h"
 #endif
 
 /* forward decl for SquidConfig, see RemovalPolicy.h */
@@ -300,9 +297,9 @@ struct _SquidConfig
     struct
     {
 
-        struct IN_ADDR router;
+        IPAddress router;
 
-        struct IN_ADDR address;
+        IPAddress address;
         int version;
     }
 
@@ -312,9 +309,9 @@ struct _SquidConfig
 
     struct
     {
-        sockaddr_in_list *router;
+        IPAddress_list *router;
 
-        struct IN_ADDR address;
+        IPAddress address;
         int forwarding_method;
         int return_method;
         int assignment_method;
@@ -324,6 +321,10 @@ struct _SquidConfig
     }
 
     Wccp2;
+#endif
+
+#if USE_ICMP
+    ICMPConfig pinger;
 #endif
 
     char *as_whois_server;
@@ -368,10 +369,6 @@ struct _SquidConfig
 #endif
 
         wordlist *redirect;
-#if USE_ICMP
-
-        char *pinger;
-#endif
 #if USE_UNLINKD
 
         char *unlinkd;
@@ -430,17 +427,17 @@ struct _SquidConfig
     struct
     {
 
-        struct IN_ADDR udp_incoming;
+        IPAddress udp_incoming;
 
-        struct IN_ADDR udp_outgoing;
+        IPAddress udp_outgoing;
 #if SQUID_SNMP
 
-        struct IN_ADDR snmp_incoming;
+        IPAddress snmp_incoming;
 
-        struct IN_ADDR snmp_outgoing;
+        IPAddress snmp_outgoing;
 #endif
-
-        struct IN_ADDR client_netmask;
+        /* FIXME INET6 : this should really be a CIDR value */
+        IPAddress client_netmask;
     }
 
     Addrs;
@@ -501,11 +498,6 @@ struct _SquidConfig
         int query_icmp;
         int icp_hit_stale;
         int buffered_logs;
-#if ALLOW_SOURCE_PING
-
-        int source_ping;
-#endif
-
         int common_log;
         int log_mime_hdrs;
         int log_fqdn;
@@ -553,6 +545,7 @@ struct _SquidConfig
         int emailErrData;
         int httpd_suppress_version_string;
         int global_internal_static;
+        int dns_require_A;
         int debug_override_X;
     }
 
@@ -667,7 +660,7 @@ struct _SquidConfig
     struct
     {
 
-        struct IN_ADDR addr;
+        IPAddress addr;
         int ttl;
         unsigned short port;
         char *encode_key;
@@ -940,8 +933,7 @@ unsigned int consume_body_data:
 
 struct _ipcache_addrs
 {
-
-    struct IN_ADDR *in_addrs;
+    IPAddress *in_addrs;
     unsigned char *bad_mask;
     unsigned char count;
     unsigned char cur;
@@ -980,11 +972,12 @@ struct _cd_guess_stats
 
 struct _peer
 {
+    u_int index;
     char *name;
     char *host;
     peer_t type;
 
-    struct sockaddr_in in_addr;
+    IPAddress in_addr;
 
     struct
     {
@@ -1123,7 +1116,7 @@ unsigned int counting:
 
     int tcp_up;			/* 0 if a connect() fails */
 
-    struct IN_ADDR addresses[10];
+    IPAddress addresses[10];
     int n_addresses;
     int rr_count;
     int rr_lastcount;
@@ -1183,7 +1176,7 @@ struct _net_db_peer
 struct _netdbEntry
 {
     hash_link hash;		/* must be first */
-    char network[16];
+    char network[MAX_IPSTRLEN];
     int pings_sent;
     int pings_recv;
     double hops;
@@ -1197,30 +1190,6 @@ struct _netdbEntry
     int n_peers;
 };
 
-
-#if USE_ICMP
-
-struct _pingerEchoData
-{
-
-    struct IN_ADDR to;
-    unsigned char opcode;
-    int psize;
-    char payload[PINGER_PAYLOAD_SZ];
-};
-
-struct _pingerReplyData
-{
-
-    struct IN_ADDR from;
-    unsigned char opcode;
-    int rtt;
-    int hops;
-    int psize;
-    char payload[PINGER_PAYLOAD_SZ];
-};
-
-#endif
 
 struct _iostats
 {
@@ -1608,7 +1577,7 @@ struct _ClientInfo
 {
     hash_link hash;		/* must be first */
 
-    struct IN_ADDR addr;
+    IPAddress addr;
 
     struct
     {

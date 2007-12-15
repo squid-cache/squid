@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.190 2007/05/09 07:45:58 wessels Exp $
+ * $Id: typedefs.h,v 1.191 2007/12/14 23:11:48 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -84,8 +84,6 @@ typedef struct _ushortlist ushortlist;
 
 typedef struct _relist relist;
 
-typedef struct _sockaddr_in_list sockaddr_in_list;
-
 typedef struct _http_port_list http_port_list;
 
 typedef struct _https_port_list https_port_list;
@@ -147,10 +145,6 @@ typedef struct _net_db_name net_db_name;
 typedef struct _net_db_peer net_db_peer;
 
 typedef struct _netdbEntry netdbEntry;
-
-typedef struct _pingerEchoData pingerEchoData;
-
-typedef struct _pingerReplyData pingerReplyData;
 
 typedef struct _icp_common_t icp_common_t;
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.81 2007/06/10 12:13:31 hno Exp $
+ * $Id: comm_select.cc,v 1.82 2007/12/14 23:11:46 amosjeffries Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -227,7 +227,11 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
 
     getCurrentTime();
 
+#if USE_POLL
+    statCounter.syscalls.polls++;
+#else
     statCounter.syscalls.selects++;
+#endif
 
     if (select(maxfd, &read_mask, &write_mask, NULL, &zero_tv) < 1)
         return incoming_sockets_accepted;
@@ -438,7 +442,11 @@ comm_select(int msec)
         for (;;) {
             poll_time.tv_sec = msec / 1000;
             poll_time.tv_usec = (msec % 1000) * 1000;
+#if USE_POLL
+            statCounter.syscalls.polls++;
+#else
             statCounter.syscalls.selects++;
+#endif
             num = select(maxfd, &readfds, &writefds, NULL, &poll_time);
             statCounter.select_loops++;
 
@@ -709,7 +717,11 @@ examine_select(fd_set * readfds, fd_set * writefds)
         else
             continue;
 
+#if USE_POLL
+        statCounter.syscalls.polls++;
+#else
         statCounter.syscalls.selects++;
+#endif
 
         errno = 0;
 

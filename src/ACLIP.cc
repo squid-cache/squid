@@ -55,16 +55,17 @@ ACLIP::operator delete (void *address)
 void
 ACLIP::DumpIpListWalkee(acl_ip_data * const & ip, void *state)
 {
+    char tmpbuf[MAX_IPSTRLEN];
     MemBuf mb;
     wordlist **W = static_cast<wordlist **>(state);
     mb.init();
-    mb.Printf("%s", inet_ntoa(ip->addr1));
+    mb.Printf("%s", ip->addr1.NtoA(tmpbuf,MAX_IPSTRLEN));
 
-    if (ip->addr2.s_addr != any_addr.s_addr)
-        mb.Printf("-%s", inet_ntoa(ip->addr2));
+    if (!ip->addr2.IsAnyAddr())
+        mb.Printf("-%s", ip->addr2.NtoA(tmpbuf,MAX_IPSTRLEN));
 
-    if (ip->mask.s_addr != no_addr.s_addr)
-        mb.Printf("/%s", inet_ntoa(ip->mask));
+    if (!ip->mask.IsNoAddr())
+        mb.Printf("/%s", ip->mask.NtoA(tmpbuf,MAX_IPSTRLEN));
 
     wordlistAdd(W, mb.buf);
 
@@ -78,22 +79,33 @@ ACLIP::DumpIpListWalkee(acl_ip_data * const & ip, void *state)
 void
 acl_ip_data::toStr(char *buf, int len) const
 {
-    char b1[20];
-    char b2[20];
-    char b3[20];
-    snprintf(b1, 20, "%s", inet_ntoa(addr1));
+    char *b1 = buf;
+    char *b2 = NULL;
+    char *b3 = NULL;
+    int rlen = 0;
 
-    if (addr2.s_addr != any_addr.s_addr)
-        snprintf(b2, 20, "-%s", inet_ntoa(addr2));
+    addr1.NtoA(b1, len - rlen );
+    rlen = strlen(buf);
+    b2 = buf + rlen;
+
+    if (!addr2.IsAnyAddr())
+    {
+        b2[0] = '-'; rlen++;
+        addr2.NtoA(&(b2[1]), len - rlen );
+        rlen = strlen(buf);
+    }
     else
         b2[0] = '\0';
 
-    if (mask.s_addr != no_addr.s_addr)
-        snprintf(b3, 20, "/%s", inet_ntoa(mask));
+    b3 = buf + rlen;
+
+    if (!mask.IsNoAddr())
+    {
+        b3[0] = '/'; rlen++;
+        mask.NtoA(&(b3[1]), len - rlen );
+    }
     else
         b3[0] = '\0';
-
-    snprintf(buf, len, "%s%s%s", b1, b2, b3);
 }
 
 /*
@@ -106,30 +118,21 @@ acl_ip_data::toStr(char *buf, int len) const
 int
 aclIpAddrNetworkCompare(acl_ip_data * const &p, acl_ip_data * const &q)
 {
+    IPAddress A = p->addr1;
 
-    struct IN_ADDR A = p->addr1;
+    /* apply netmask */
+    A.ApplyMask(q->mask);
 
-    const struct IN_ADDR B = q->addr1;
+    if (q->addr2.IsAnyAddr()) {       /* single address check */
 
-    const struct IN_ADDR C = q->addr2;
-    A.s_addr &= q->mask.s_addr;	/* apply netmask */
+        return A.matchIPAddr( q->addr1 );
 
-    if (C.s_addr == 0) {	/* single address check */
+    } else {                   /* range address check */
 
-        if (ntohl(A.s_addr) > ntohl(B.s_addr))
-            return 1;
-        else if (ntohl(A.s_addr) < ntohl(B.s_addr))
-            return -1;
+        if ( (A >= q->addr1) && (A <= q->addr2) )
+            return 0; /* valid. inside range. */
         else
-            return 0;
-    } else {			/* range address check */
-
-        if (ntohl(A.s_addr) > ntohl(C.s_addr))
-            return  1;
-        else if (ntohl(A.s_addr) < ntohl(B.s_addr))
-            return -1;
-        else
-            return 0;
+            return A.matchIPAddr( q->addr1 ); /* outside of range, 'less than' */
     }
 }
 
@@ -147,26 +150,27 @@ int
 acl_ip_data::NetworkCompare(acl_ip_data * const & a, acl_ip_data * const &b)
 {
     int ret;
+    bool bina = true;
     ret = aclIpAddrNetworkCompare(b, a);
 
     if (ret != 0) {
+        bina = false;
         ret = aclIpAddrNetworkCompare(a, b);
     }
 
     if (ret == 0) {
-        char buf_n1[60];
-        char buf_n2[60];
-        char buf_a[60];
-        b->toStr(buf_n1, 60);
-        a->toStr(buf_n2, 60);
-        a->toStr(buf_a, 60);
-        /* TODO: this warning may display the wrong way around */
-        debugs(28, 0, "WARNING: '" << buf_n1 <<
-               "' is a subnetwork of '" << buf_n2 << "'");
-        debugs(28, 0, "WARNING: because of this '" << buf_a <<
-               "' is ignored to keep splay tree searching predictable");
-        debugs(28, 0, "WARNING: You should probably remove '" << buf_n1 <<
-               "' from the ACL named '" << AclMatchedName << "'");
+        char buf_n1[3*(MAX_IPSTRLEN+1)];
+        char buf_n2[3*(MAX_IPSTRLEN+1)];
+        if(bina) {
+            b->toStr(buf_n1, 3*(MAX_IPSTRLEN+1));
+            a->toStr(buf_n2, 3*(MAX_IPSTRLEN+1));
+        } else {
+            a->toStr(buf_n1, 3*(MAX_IPSTRLEN+1));
+            b->toStr(buf_n2, 3*(MAX_IPSTRLEN+1));
+        }
+        debugs(28, 0, "WARNING: (" << (bina?'B':'A') << ") '" << buf_n1 << "' is a subnetwork of (" << (bina?'A':'B') << ") '" << buf_n2 << "'");
+        debugs(28, 0, "WARNING: because of this '" << (bina?buf_n2:buf_n1) << "' is ignored to keep splay tree searching predictable");
+        debugs(28, 0, "WARNING: You should probably remove '" << buf_n1 << "' from the ACL named '" << AclMatchedName << "'");
     }
 
     return ret;
@@ -178,138 +182,221 @@ acl_ip_data::NetworkCompare(acl_ip_data * const & a, acl_ip_data * const &b)
  * This function should NOT be called if 'asc' is a hostname!
  */
 bool
-acl_ip_data::DecodeMask(const char *asc, struct IN_ADDR *mask)
+acl_ip_data::DecodeMask(const char *asc, IPAddress &mask, int ctype)
 {
     char junk;
     int a1 = 0;
 
+    /* default is a mask that doesn't change any IP */
+    mask.SetNoAddr();
+
     if (!asc || !*asc)
     {
-        mask->s_addr = htonl(0xFFFFFFFFul);
         return true;
     }
 
-    if (sscanf(asc, "%d%c", &a1, &junk) == 1 && a1 >= 0 && a1 < 33)
-    {		/* a significant bits value for a mask */
-        mask->s_addr = a1 ? htonl(0xfffffffful << (32 - a1)) : 0;
-        return true;
+    /* An int mask 128, 32 */
+    if ((sscanf(asc, "%d%c", &a1, &junk)==1) &&
+         (a1 <= 128) && (a1  >= 0)
+       )
+    {
+        return mask.ApplyMask(a1, ctype);
     }
 
     /* dotted notation */
-    if (safe_inet_addr(asc, mask))
+    /* assignment returns true if asc contained an IP address as text */
+    if ((mask = asc))
         return true;
 
     return false;
 }
 
-#define SCAN_ACL1       "%[0123456789.]-%[0123456789.]/%[0123456789.]"
-#define SCAN_ACL2       "%[0123456789.]-%[0123456789.]%c"
-#define SCAN_ACL3       "%[0123456789.]/%[0123456789.]"
-#define SCAN_ACL4	"%[0123456789.]%c"
+/* Handle either type of address, IPv6 will be discarded with a warning if disabled */
+#define SCAN_ACL1_6       "%[0123456789ABCDEFabcdef:]-%[0123456789ABCDEFabcdef:]/%[0123456789]"
+#define SCAN_ACL2_6       "%[0123456789ABCDEFabcdef:]-%[0123456789ABCDEFabcdef:]%c"
+#define SCAN_ACL3_6       "%[0123456789ABCDEFabcdef:]/%[0123456789]"
+#define SCAN_ACL4_6       "%[0123456789ABCDEFabcdef:]/%c"
+/* We DO need to know which is which though, for proper CIDR masking. */
+#define SCAN_ACL1_4       "%[0123456789.]-%[0123456789.]/%[0123456789.]"
+#define SCAN_ACL2_4       "%[0123456789.]-%[0123456789.]%c"
+#define SCAN_ACL3_4       "%[0123456789.]/%[0123456789.]"
+#define SCAN_ACL4_4       "%[0123456789.]/%c"
 
 acl_ip_data *
 acl_ip_data::FactoryParse(const char *t)
 {
+    LOCAL_ARRAY(char, addr1, 256);
     LOCAL_ARRAY(char, addr2, 256);
     LOCAL_ARRAY(char, mask, 256);
-    acl_ip_data *r;
-    acl_ip_data **Q;
-    char **x;
+    acl_ip_data *r = NULL;
+    acl_ip_data **Q = NULL;
+    IPAddress temp;
     char c;
-    debugs(28, 5, "aclParseIpData: " << t);
+    unsigned int changed;
     acl_ip_data *q = new acl_ip_data;
+    int iptype = AF_UNSPEC;
 
-    if (!strcasecmp(t, "all")) {
-        q->addr1.s_addr = 0;
-        q->addr2.s_addr = 0;
-        q->mask.s_addr = 0;
+    debugs(28, 5, "aclIpParseIpData: " << t);
+
+    /* Special ACL RHS "all" matches entire Internet */
+    if (strcasecmp(t, "all") == 0) {
+        q->addr1.SetAnyAddr();
+        q->addr2.SetEmpty();
+        q->mask.SetAnyAddr();
         return q;
     }
 
-    LOCAL_ARRAY(char, addr1, 256);
+#if USE_IPV6
+    /* Special ACL RHS "ipv6" matches IPv6-Unicast Internet */
+    if (strcasecmp(t, "ipv6") == 0) {
+        t = "2000::/3";
+    }
+#endif
 
-    if (sscanf(t, SCAN_ACL1, addr1, addr2, mask) == 3) {
-        (void) 0;
-    } else if (sscanf(t, SCAN_ACL2, addr1, addr2, &c) == 2) {
+// IPv4
+    if (sscanf(t, SCAN_ACL1_4, addr1, addr2, mask) == 3) {
+        iptype=AF_INET;
+    } else if (sscanf(t, SCAN_ACL2_4, addr1, addr2, &c) >= 2) {
         mask[0] = '\0';
-    } else if (sscanf(t, SCAN_ACL3, addr1, mask) == 2) {
+        iptype=AF_INET;
+    } else if (sscanf(t, SCAN_ACL3_4, addr1, mask) == 2) {
         addr2[0] = '\0';
-    } else if (sscanf(t, SCAN_ACL4, addr1, &c) == 1) {
-	addr2[0] = '\0';
-	mask[0] = '\0';
+        iptype=AF_INET;
+    } else if (sscanf(t, SCAN_ACL4_4, addr1,&c) == 2) {
+        addr2[0] = '\0';
+        mask[0] = '\0';
+        iptype=AF_INET;
+
+// IPv6
+    } else if (sscanf(t, SCAN_ACL1_6, addr1, addr2, mask) == 3) {
+        iptype=AF_INET6;
+    } else if (sscanf(t, SCAN_ACL2_6, addr1, addr2, &c) >= 2) {
+        mask[0] = '\0';
+        iptype=AF_INET6;
+    } else if (sscanf(t, SCAN_ACL3_6, addr1, mask) == 2) {
+        addr2[0] = '\0';
+        iptype=AF_INET6;
+    } else if (sscanf(t, SCAN_ACL4_6, addr1, mask) == 2) {
+        addr2[0] = '\0';
+        iptype=AF_INET6;
+
+// Neither
     } else if (sscanf(t, "%[^/]/%s", addr1, mask) == 2) {
         addr2[0] = '\0';
     } else if (sscanf(t, "%s", addr1) == 1) {
-
         /*
-         * Note, must use plain gethostbyname() here because at startup
+         * Note, must use plain xgetaddrinfo() here because at startup
          * ipcache hasn't been initialized
+         * TODO: offload this to one of the IPAddress lookups.
          */
 
-        struct hostent *hp;
+        debugs(28, 5, "aclIpParseIpData: Lookup Host/IP " << addr1);
+        struct addrinfo *hp = NULL, *x = NULL;
+        struct addrinfo hints;
+        IPAddress *prev_addr = NULL;
 
-        if ((hp = gethostbyname(addr1)) == NULL) {
-            debugs(28, 0, "aclParseIpData: Bad host/IP: '" << t << "'");
+        memset(&hints, 0, sizeof(struct addrinfo));
+
+        if( iptype != AF_UNSPEC ) {
+            hints.ai_flags |= AI_NUMERICHOST;
+        }
+
+#if 0 && USE_IPV6 && !IPV6_SPECIAL_SPLITSTACK
+        hints.ai_flags |= AI_V4MAPPED | AI_ALL;
+#endif
+
+        int errcode = xgetaddrinfo(addr1,NULL,&hints,&hp);
+        if (hp == NULL) {
+            debugs(28, 0, "aclIpParseIpData: Bad host/IP: '" << addr1 <<
+                          "' in '" << t << "', flags=" << hints.ai_flags <<
+                          " : (" << errcode << ") " << xgai_strerror(errcode) );
             self_destruct();
+            return NULL;
         }
 
         Q = &q;
 
-        for (x = hp->h_addr_list; x != NULL && *x != NULL; x++) {
+        for (x = hp; x != NULL;) {
             if ((r = *Q) == NULL)
                 r = *Q = new acl_ip_data;
 
-            xmemcpy(&r->addr1.s_addr, *x, sizeof(r->addr1.s_addr));
+            /* getaddrinfo given a host has a nasty tendency to return duplicate addr's */
+            /* BUT sorted fortunately, so we can drop most of them easily */
+            r->addr1 = *x;
+            x = x->ai_next;
+            if( prev_addr && r->addr1 == *prev_addr) {
+                debugs(28, 3, "aclIpParseIpData: Duplicate host/IP: '" << r->addr1 << "' dropped.");
+                delete r;
+                *Q = NULL;
+                continue;
+            }
+            else
+                prev_addr = &r->addr1;
 
-            r->addr2.s_addr = 0;
-	    DecodeMask(NULL, &r->mask);
+            debugs(28, 3, "aclIpParseIpData: Located host/IP: '" << r->addr1 << "'");
+
+            r->addr2.SetAnyAddr();
+            r->mask.SetNoAddr();
 
             Q = &r->next;
 
-            debugs(28, 3, "" << addr1 << " --> " << inet_ntoa(r->addr1));
+            debugs(28, 3, "" << addr1 << " --> " << r->addr1 );
         }
 
         if (*Q != NULL) {
-            debugs(28, 0, "aclParseIpData: Bad host/IP: '" << t << "'");
+            debugs(28, 0, "aclIpParseIpData: Bad host/IP: '" << t << "'");
             self_destruct();
+            return NULL;
         }
+
+        xfreeaddrinfo(hp);
 
         return q;
     }
 
+#if !USE_IPV6
+    /* ignore IPv6 addresses when built with IPv4-only */
+    if( iptype == AF_INET6 ) {
+        debugs(28, 0, "aclIpParseIpData: IPv6 has not been enabled. build with '--enable-ipv6'");
+        return NULL;
+    }
+#endif
+
     /* Decode addr1 */
-    if (!safe_inet_addr(addr1, &q->addr1)) {
-        debugs(28, 0, "aclParseIpData: unknown first address in '" << t << "'");
+    if (!*addr1) {
+        debugs(28, 0, "aclIpParseIpData: unknown first address in '" << t << "'");
         delete q;
         self_destruct();
         return NULL;
     }
+    else q->addr1 = addr1;
 
     /* Decode addr2 */
-    if (*addr2 && !safe_inet_addr(addr2, &q->addr2)) {
-        debugs(28, 0, "aclParseIpData: unknown second address in '" << t << "'");
+    if (*addr2 && !(q->addr2=addr2) ) {
+        debugs(28, 0, "aclIpParseIpData: unknown second address in '" << t << "'");
         delete q;
         self_destruct();
         return NULL;
     }
+    else q->addr2 = addr2;
 
     /* Decode mask (NULL or empty means a exact host mask) */
-    if (!DecodeMask(mask, &q->mask)) {
+    if (!DecodeMask(mask, q->mask, iptype)) {
         debugs(28, 0, "aclParseIpData: unknown netmask '" << mask << "' in '" << t << "'");
         delete q;
         self_destruct();
         return NULL;
     }
 
-    if ((q->addr1.s_addr & q->mask.s_addr) != q->addr1.s_addr ||
-            (q->addr2.s_addr & q->mask.s_addr) != q->addr2.s_addr)
-        debugs(28, 0, "aclParseIpData: WARNING: Netmask masks away part of the specified IP in '" << t << "'");
+    changed = 0;
+    changed += q->addr1.ApplyMask(q->mask);
+    changed += q->addr2.ApplyMask(q->mask);
 
-    q->addr1.s_addr &= q->mask.s_addr;
-
-    q->addr2.s_addr &= q->mask.s_addr;
+    if (changed)
+        debugs(28, 0, "aclIpParseIpData: WARNING: Netmask masks away part of the specified IP in '" << t << "'");
 
     /* 1.2.3.4/255.255.255.0  --> 1.2.3.0 */
+    /* Same as IPv6 (not so trivial to depict) */
     return q;
 }
 
@@ -349,24 +436,24 @@ ACLIP::empty () const
 }
 
 int
-
-ACLIP::match(struct IN_ADDR &clientip)
+ACLIP::match(IPAddress &clientip)
 {
-    static acl_ip_data ClientAddress (any_addr, any_addr, no_addr, NULL);
+    static acl_ip_data ClientAddress;
     /*
      * aclIpAddrNetworkCompare() takes two acl_ip_data pointers as
      * arguments, so we must create a fake one for the client's IP
-     * address, and use a /32 netmask.  However, the current code
-     * probably only accesses the addr1 element of this argument,
-     * so it might be possible to leave addr2 and mask unset.
+     * address. Since we are scanning for a single IP mask and addr2
+     * MUST be set to empty.
      */
     ClientAddress.addr1 = clientip;
-    acl_ip_data *ClientAddressPointer = &ClientAddress;
-    data = data->splay(ClientAddressPointer, aclIpAddrNetworkCompare);
-    debugs(28, 3, "aclMatchIp: '" << inet_ntoa(clientip) << "' " << (splayLastResult ? "NOT found" : "found"));
+    ClientAddress.addr2.SetEmpty();
+    ClientAddress.mask.SetEmpty();
+
+    data = data->splay(&ClientAddress, aclIpAddrNetworkCompare);
+    debugs(28, 3, "aclIpMatchIp: '" << clientip << "' " << (splayLastResult ? "NOT found" : "found"));
     return !splayLastResult;
 }
 
-acl_ip_data::acl_ip_data () :addr1(any_addr), addr2(any_addr), mask (any_addr), next (NULL) {}
+acl_ip_data::acl_ip_data () :addr1(), addr2(), mask(), next (NULL) {}
 
-acl_ip_data::acl_ip_data (struct IN_ADDR const &anAddress1, struct IN_ADDR const &anAddress2, struct IN_ADDR const &aMask, acl_ip_data *aNext) : addr1(anAddress1), addr2(anAddress2), mask(aMask), next(aNext){}
+acl_ip_data::acl_ip_data (IPAddress const &anAddress1, IPAddress const &anAddress2, IPAddress const &aMask, acl_ip_data *aNext) : addr1(anAddress1), addr2(anAddress2), mask(aMask), next(aNext){}

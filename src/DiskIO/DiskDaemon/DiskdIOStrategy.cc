@@ -1,6 +1,5 @@
-
 /*
- * $Id: DiskdIOStrategy.cc,v 1.11 2007/08/16 23:32:28 hno Exp $
+ * $Id: DiskdIOStrategy.cc,v 1.12 2007/12/14 23:11:50 amosjeffries Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -158,6 +157,7 @@ DiskdIOStrategy::init()
     char skey1[32];
     char skey2[32];
     char skey3[32];
+    IPAddress localhost;
 
     ikey = (getpid() << 10) + (instanceID << 2);
     ikey &= 0x7fffffff;
@@ -184,10 +184,12 @@ DiskdIOStrategy::init()
     args[2] = skey2;
     args[3] = skey3;
     args[4] = NULL;
+    localhost.SetLocalhost();
     pid = ipcCreate(IPC_STREAM,
                     Config.Program.diskd,
                     args,
                     "diskd",
+                    localhost,
                     &rfd,
                     &wfd,
                     &hIpc);

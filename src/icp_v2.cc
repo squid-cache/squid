@@ -1,8 +1,8 @@
 
 /*
- * $Id: icp_v2.cc,v 1.101 2007/11/15 16:47:35 wessels Exp $
+ * $Id: icp_v2.cc,v 1.102 2007/12/14 23:11:47 amosjeffries Exp $
  *
- * DEBUG: section 12    Internet Cache Protocol
+ * DEBUG: section 12    Internet Cache Protocol (ICP)
  * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -45,9 +45,9 @@
 #include "SquidTime.h"
 #include "SwapDir.h"
 
-static void icpLogIcp(struct IN_ADDR, log_type, int, const char *, int);
+static void icpLogIcp(const IPAddress &, log_type, int, const char *, int);
 
-static void icpHandleIcpV2(int, struct sockaddr_in, char *, int);
+static void icpHandleIcpV2(int, IPAddress &, char *, int);
 static void icpCount(void *, int, size_t, int);
 
 /*
@@ -138,8 +138,8 @@ ICP2State::created (StoreEntry *newEntry)
         codeToSend = ICP_HIT;
     } else {
         if (Config.onoff.test_reachability && rtt == 0) {
-            if ((rtt = netdbHostRtt(request->host)) == 0)
-                netdbPingSite(request->host);
+            if ((rtt = netdbHostRtt(request->GetHost())) == 0)
+                netdbPingSite(request->GetHost());
         }
 
         if (icpGetCommonOpcode() != ICP_ERR)
@@ -150,7 +150,7 @@ ICP2State::created (StoreEntry *newEntry)
             codeToSend = ICP_MISS;
     }
 
-    icpCreateAndSend(codeToSend, flags, url, header.reqnum, src_rtt, fd, &from);
+    icpCreateAndSend(codeToSend, flags, url, header.reqnum, src_rtt, fd, from);
     delete this;
 }
 
@@ -158,7 +158,7 @@ ICP2State::created (StoreEntry *newEntry)
 
 static void
 
-icpLogIcp(struct IN_ADDR caddr, log_type logcode, int len, const char *url, int delay)
+icpLogIcp(const IPAddress &caddr, log_type logcode, int len, const char *url, int delay)
 {
     AccessLogEntry al;
 
@@ -198,7 +198,7 @@ icpUdpSendQueue(int fd, void *unused)
     while ((q = IcpQueueHead) != NULL) {
         delay = tvSubUsec(q->queue_time, current_time);
         /* increment delay to prevent looping */
-        x = icpUdpSend(fd, &q->address, (icp_common_t *) q->msg, q->logcode, ++delay);
+        x = icpUdpSend(fd, q->address, (icp_common_t *) q->msg, q->logcode, ++delay);
         IcpQueueHead = q->next;
         safe_free(q);
 
@@ -240,7 +240,7 @@ _icp_common_t::createMessage(
 
     headerp->pad = htonl(pad);
 
-    headerp->shostid = theOutICPAddr.s_addr;
+    theOutICPAddr.GetInAddr( *((struct in_addr*)&headerp->shostid) );
 
     urloffset = buf + sizeof(icp_common_t);
 
@@ -254,8 +254,7 @@ _icp_common_t::createMessage(
 
 int
 icpUdpSend(int fd,
-
-           const struct sockaddr_in *to,
+           const IPAddress &to,
            icp_common_t * msg,
            log_type logcode,
            int delay)
@@ -265,22 +264,21 @@ icpUdpSend(int fd,
     int len;
     len = (int) ntohs(msg->length);
     debugs(12, 5, "icpUdpSend: FD " << fd << " sending " <<
-           icp_opcode_str[msg->opcode] << ", " << len << " bytes to " <<
-           inet_ntoa(to->sin_addr) << ":" << ntohs(to->sin_port));
+           icp_opcode_str[msg->opcode] << ", " << len << " bytes to " << to);
 
-    x = comm_udp_sendto(fd, to, sizeof(*to), msg, len);
+    x = comm_udp_sendto(fd, to, msg, len);
 
     if (x >= 0)
     {
         /* successfully written */
-        icpLogIcp(to->sin_addr, logcode, len, (char *) (msg + 1), delay);
+        icpLogIcp(to, logcode, len, (char *) (msg + 1), delay);
         icpCount(msg, SENT, (size_t) len, delay);
         safe_free(msg);
     } else if (0 == delay)
     {
         /* send failed, but queue it */
         queue = (icpUdpData *) xcalloc(1, sizeof(icpUdpData));
-        queue->address = *to;
+        queue->address = to;
         queue->msg = msg;
         queue->len = (int) ntohs(msg->length);
         queue->queue_time = current_time;
@@ -368,7 +366,7 @@ icpLogFromICPCode(icp_opcode opcode)
 
 void
 
-icpCreateAndSend(icp_opcode opcode, int flags, char const *url, int reqnum, int pad, int fd, const struct sockaddr_in *from)
+icpCreateAndSend(icp_opcode opcode, int flags, char const *url, int reqnum, int pad, int fd, const IPAddress &from)
 {
     icp_common_t *reply = _icp_common_t::createMessage(opcode, flags, url, reqnum, pad);
     icpUdpSend(fd, from, reply, icpLogFromICPCode(opcode), 0);
@@ -376,17 +374,17 @@ icpCreateAndSend(icp_opcode opcode, int flags, char const *url, int reqnum, int 
 
 void
 
-icpDenyAccess(struct sockaddr_in *from, char *url, int reqnum, int fd)
+icpDenyAccess(IPAddress &from, char *url, int reqnum, int fd)
 {
-    debugs(12, 2, "icpDenyAccess: Access Denied for " << inet_ntoa(from->sin_addr) << " by " << AclMatchedName << ".");
+    debugs(12, 2, "icpDenyAccess: Access Denied for " << from << " by " << AclMatchedName << ".");
 
-    if (clientdbCutoffDenied(from->sin_addr))
+    if (clientdbCutoffDenied(from))
     {
         /*
          * count this DENIED query in the clientdb, even though
          * we're not sending an ICP reply...
          */
-        clientdbUpdate(from->sin_addr, LOG_UDP_DENIED, PROTO_ICP, 0);
+        clientdbUpdate(from, LOG_UDP_DENIED, PROTO_ICP, 0);
     } else
     {
         icpCreateAndSend(ICP_DENIED, 0, url, reqnum, 0, fd, from);
@@ -395,11 +393,11 @@ icpDenyAccess(struct sockaddr_in *from, char *url, int reqnum, int fd)
 
 int
 
-icpAccessAllowed(struct sockaddr_in *from, HttpRequest * icp_request)
+icpAccessAllowed(IPAddress &from, HttpRequest * icp_request)
 {
     ACLChecklist checklist;
-    checklist.src_addr = from->sin_addr;
-    checklist.my_addr = no_addr;
+    checklist.src_addr = from;
+    checklist.my_addr.SetNoAddr();
     checklist.request = HTTPMSGLOCK(icp_request);
     checklist.accessList = cbdataReference(Config.accessList.icp);
     /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
@@ -418,7 +416,7 @@ icpGetUrlToSend(char *url)
 
 HttpRequest *
 
-icpGetRequest(char *url, int reqnum, int fd, struct sockaddr_in * from)
+icpGetRequest(char *url, int reqnum, int fd, IPAddress &from)
 {
     if (strpbrk(url, w_space))
     {
@@ -438,31 +436,31 @@ icpGetRequest(char *url, int reqnum, int fd, struct sockaddr_in * from)
 
 static void
 
-doV2Query(int fd, struct sockaddr_in from, char *buf, icp_common_t header)
+doV2Query(int fd, IPAddress &from, char *buf, icp_common_t header)
 {
     int rtt = 0;
     int src_rtt = 0;
     u_int32_t flags = 0;
     /* We have a valid packet */
     char *url = buf + sizeof(icp_common_t) + sizeof(u_int32_t);
-    HttpRequest *icp_request = icpGetRequest(url, header.reqnum, fd, &from);
+    HttpRequest *icp_request = icpGetRequest(url, header.reqnum, fd, from);
 
     if (!icp_request)
         return;
 
     HTTPMSGLOCK(icp_request);
 
-    if (!icpAccessAllowed(&from, icp_request))
+    if (!icpAccessAllowed(from, icp_request))
     {
-        icpDenyAccess(&from, url, header.reqnum, fd);
+        icpDenyAccess(from, url, header.reqnum, fd);
         HTTPMSGUNLOCK(icp_request);
         return;
     }
 
     if (header.flags & ICP_FLAG_SRC_RTT)
     {
-        rtt = netdbHostRtt(icp_request->host);
-        int hops = netdbHostHops(icp_request->host);
+        rtt = netdbHostRtt(icp_request->GetHost());
+        int hops = netdbHostHops(icp_request->GetHost());
         src_rtt = ((hops & 0xFFFF) << 16) | (rtt & 0xFFFF);
 
         if (rtt)
@@ -491,17 +489,17 @@ doV2Query(int fd, struct sockaddr_in from, char *buf, icp_common_t header)
 
 void
 
-_icp_common_t::handleReply(char *buf, struct sockaddr_in *from)
+_icp_common_t::handleReply(char *buf, IPAddress &from)
 {
     if (neighbors_do_private_keys && reqnum == 0)
     {
-        debugs(12, 0, "icpHandleIcpV2: Neighbor " << inet_ntoa(from->sin_addr) << " returned reqnum = 0");
+        debugs(12, 0, "icpHandleIcpV2: Neighbor " << from << " returned reqnum = 0");
         debugs(12, 0, "icpHandleIcpV2: Disabling use of private keys");
         neighbors_do_private_keys = 0;
     }
 
     char *url = buf + sizeof(icp_common_t);
-    debugs(12, 3, "icpHandleIcpV2: " << icp_opcode_str[opcode] << " from " << inet_ntoa(from->sin_addr) << " for '" << url << "'");
+    debugs(12, 3, "icpHandleIcpV2: " << icp_opcode_str[opcode] << " from " << from << " for '" << url << "'");
 
     const cache_key *key = icpGetCacheKey(url, (int) reqnum);
     /* call neighborsUdpAck even if ping_status != PING_WAITING */
@@ -510,7 +508,7 @@ _icp_common_t::handleReply(char *buf, struct sockaddr_in *from)
 
 static void
 
-icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
+icpHandleIcpV2(int fd, IPAddress &from, char *buf, int len)
 {
     if (len <= 0)
     {
@@ -538,10 +536,6 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
         break;
 
     case ICP_HIT:
-#if ALLOW_SOURCE_PING
-
-    case ICP_SECHO:
-#endif
 
     case ICP_DECHO:
 
@@ -550,7 +544,7 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
     case ICP_DENIED:
 
     case ICP_MISS_NOFETCH:
-        header.handleReply(buf, &from);
+        header.handleReply(buf, from);
         break;
 
     case ICP_INVALID:
@@ -559,7 +553,7 @@ icpHandleIcpV2(int fd, struct sockaddr_in from, char *buf, int len)
         break;
 
     default:
-        debugs(12, 0, "icpHandleIcpV2: UNKNOWN OPCODE: " << header.opcode << " from " << inet_ntoa(from.sin_addr));
+        debugs(12, 0, "icpHandleIcpV2: UNKNOWN OPCODE: " << header.opcode << " from " << from);
 
         break;
     }
@@ -570,15 +564,15 @@ static void
 icpPktDump(icp_common_t * pkt)
 {
 
-    struct IN_ADDR a;
+    IPAddress a;
 
     debugs(12, 9, "opcode:     " << std::setw(3) << pkt->opcode  << " " << icp_opcode_str[pkt->opcode]);
     debugs(12, 9, "version: "<< std::left << std::setw(8) << pkt->version);
     debugs(12, 9, "length:  "<< std::left << std::setw(8) << ntohs(pkt->length));
     debugs(12, 9, "reqnum:  "<< std::left << std::setw(8) << ntohl(pkt->reqnum));
     debugs(12, 9, "flags:   "<< std::left << std::hex << std::setw(8) << ntohl(pkt->flags));
-    a.s_addr = pkt->shostid;
-    debugs(12, 9, "shostid: " << inet_ntoa(a));
+    a = (struct in_addr)pkt->shostid;
+    debugs(12, 9, "shostid: " << a );
     debugs(12, 9, "payload: " << (char *) pkt + sizeof(icp_common_t));
 }
 
@@ -589,8 +583,7 @@ icpHandleUdp(int sock, void *data)
 {
     int *N = &incoming_sockets_accepted;
 
-    struct sockaddr_in from;
-    socklen_t from_len;
+    IPAddress from;
     LOCAL_ARRAY(char, buf, SQUID_UDP_SO_RCVBUF);
     int len;
     int icp_version;
@@ -598,15 +591,11 @@ icpHandleUdp(int sock, void *data)
     commSetSelect(sock, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
 
     while (max--) {
-        from_len = sizeof(from);
-        memset(&from, '\0', from_len);
         len = comm_udp_recvfrom(sock,
                                 buf,
                                 SQUID_UDP_SO_RCVBUF - 1,
                                 0,
-
-                                (struct sockaddr *) &from,
-                                &from_len);
+                                from);
 
         if (len == 0)
             break;
@@ -632,8 +621,7 @@ icpHandleUdp(int sock, void *data)
         icpCount(buf, RECV, (size_t) len, 0);
         buf[len] = '\0';
         debugs(12, 4, "icpHandleUdp: FD " << sock << ": received " <<
-               (unsigned long int)len << " bytes from " <<
-               inet_ntoa(from.sin_addr) << ".");
+               (unsigned long int)len << " bytes from " << from);
 
 #ifdef ICP_PACKET_DUMP
 
@@ -653,7 +641,7 @@ icpHandleUdp(int sock, void *data)
             icpHandleIcpV3(sock, from, buf, len);
         else
         debugs(12, 1, "WARNING: Unused ICP version " << icp_version <<
-               " received from " << inet_ntoa(from.sin_addr) << ":" << ntohs(from.sin_port));
+               " received from " << from);
     }
 }
 
@@ -662,11 +650,10 @@ icpConnectionsOpen(void)
 {
     u_int16_t port;
 
-    struct IN_ADDR addr;
+    IPAddress addr;
 
-    struct sockaddr_in xaddr;
+    struct addrinfo *xai = NULL;
     int x;
-    socklen_t len;
     wordlist *s;
 
     if ((port = Config.Port.icp) <= 0)
@@ -674,13 +661,13 @@ icpConnectionsOpen(void)
 
     enter_suid();
 
+    addr = Config.Addrs.udp_incoming;
+    addr.SetPort(port);
     theInIcpConnection = comm_open(SOCK_DGRAM,
                                    IPPROTO_UDP,
-                                   Config.Addrs.udp_incoming,
-                                   port,
+                                   addr,
                                    COMM_NONBLOCKING,
                                    "ICP Socket");
-
     leave_suid();
 
     if (theInIcpConnection < 0)
@@ -695,17 +682,16 @@ icpConnectionsOpen(void)
     for (s = Config.mcast_group_list; s; s = s->next)
         ipcache_nbgethostbyname(s->key, mcastJoinGroups, NULL);
 
-        debugs(12, 1, "Accepting ICP messages at " <<
-               inet_ntoa(Config.Addrs.udp_incoming) << ", port " << (int) port <<
-               ", FD " << theInIcpConnection << ".");
+    debugs(12, 1, "Accepting ICP messages at " << addr << ", FD " << theInIcpConnection << ".");
 
-
-    if ((addr = Config.Addrs.udp_outgoing).s_addr != no_addr.s_addr) {
+    addr.SetEmpty(); // clear for next use.
+    addr = Config.Addrs.udp_outgoing;
+    if ( !addr.IsNoAddr() ) {
         enter_suid();
+        addr.SetPort(port);
         theOutIcpConnection = comm_open(SOCK_DGRAM,
                                         IPPROTO_UDP,
                                         addr,
-                                        port,
                                         COMM_NONBLOCKING,
                                         "ICP Port");
         leave_suid();
@@ -719,7 +705,7 @@ icpConnectionsOpen(void)
                       NULL,
                       0);
 
-        debugs(12, 1, "Outgoing ICP messages on port " << port << ", FD " << theOutIcpConnection << ".");
+        debugs(12, 1, "Outgoing ICP messages on port " << addr.GetPort() << ", FD " << theOutIcpConnection << ".");
 
         fd_note(theOutIcpConnection, "Outgoing ICP socket");
 
@@ -728,18 +714,18 @@ icpConnectionsOpen(void)
         theOutIcpConnection = theInIcpConnection;
     }
 
-    memset(&theOutICPAddr, '\0', sizeof(struct IN_ADDR));
+    theOutICPAddr.SetEmpty();
 
-    len = sizeof(struct sockaddr_in);
-    memset(&xaddr, '\0', len);
-    x = getsockname(theOutIcpConnection,
+    theOutICPAddr.InitAddrInfo(xai);
 
-                    (struct sockaddr *) &xaddr, &len);
+    x = getsockname(theOutIcpConnection, xai->ai_addr, &xai->ai_addrlen);
 
     if (x < 0)
         debugs(50, 1, "theOutIcpConnection FD " << theOutIcpConnection << ": getsockname: " << xstrerror());
     else
-        theOutICPAddr = xaddr.sin_addr;
+        theOutICPAddr = *xai;
+
+    theOutICPAddr.FreeAddrInfo(xai);
 }
 
 /*

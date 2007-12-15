@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.488 2007/11/15 23:33:05 wessels Exp $
+# $Id: cf.data.pre,v 1.489 2007/12/14 23:11:46 amosjeffries Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -368,6 +368,11 @@ DOC_START
 			cached entry should be initiated without needing to
 			wait for a new reply. (default 0 for no grace period)
 	  protocol=2.5	Compatibility mode for Squid-2.5 external acl helpers
+	  ipv4 / ipv6	IP-mode used to communicate to this helper.
+			For compatability with older configurations and helpers
+			'ipv4' is the default unless --with-localhost-ipv6 is used.
+			--with-localhost-ipv6 changes the default to 'ipv6'.
+			SPECIAL NOTE: these options override --with-localhost-ipv6
 
 	FORMAT specifications
 
@@ -1110,6 +1115,28 @@ DOC_START
 	incompatible with the use of server side persistent connections. To
 	ensure correct results it is best to set server_persistent_connections
 	to off when using this directive in such configurations.
+
+
+        IPv6 Magic:
+
+	Squid is built with a capability of bridging the IPv4 and IPv6 internets.
+	tcp_outgoing_address as exampled above breaks this bridging by forcing
+	all outbound traffic through a certain IPv4 which may be on the wrong
+	side of the IPv4/IPv6 boundary.
+
+	To operate with tcp_outgoing_address and keep the bridging benefits
+	an additional ACL needs to be used which ensures the IPv6-bound traffic
+	is never forced or permitted out the IPv4 interface.
+
+	acl to_ipv6 dst ipv6
+	tcp_outgoing_address 2002::c001 good_service_net to_ipv6
+	tcp_outgoing_address 10.0.0.2 good_service_net !to_ipv6
+
+	tcp_outgoing_address 2002::beef normal_service_net to_ipv6
+	tcp_outgoing_address 10.0.0.1 normal_service_net !to_ipv6
+
+	tcp_outgoing_address 2002::1 to_ipv6
+	tcp_outgoing_address 10.0.0.3 !to_ipv6
 DOC_END
 
 COMMENT_START
@@ -2343,11 +2370,22 @@ DOC_END
 NAME: pinger_program
 TYPE: string
 DEFAULT: @DEFAULT_PINGER@
-LOC: Config.Program.pinger
+LOC: Config.pinger.program
 IFDEF: USE_ICMP
 DOC_START
 	Specify the location of the executable for the pinger process.
 DOC_END
+
+NAME: pinger_enable
+TYPE: onoff
+DEFAULT: on
+LOC: Config.pinger.enable
+IFDEF: USE_ICMP
+DOC_START
+	Control whether the pinger is active at run-time.
+	Enables turning ICMP pinger on and off with a simple squid -k reconfigure.
+DOC_END
+
 
 COMMENT_START
  OPTIONS FOR URL REWRITING
@@ -3603,7 +3641,7 @@ DEFAULT: 0.0.0.0
 IFDEF: USE_WCCP
 DOC_NONE
 NAME: wccp2_router
-TYPE: sockaddr_in_list
+TYPE: IPAddress_list
 LOC: Config.Wccp2.router
 DEFAULT: none
 IFDEF: USE_WCCPv2
@@ -5045,6 +5083,26 @@ DOC_START
 	nameservers by setting this option to 'off'.
 DOC_END
 
+NAME: dns_v4_fallback
+TYPE: onoff
+DEFAULT: on
+LOC: Config.onoff.dns_require_A
+DOC_START
+	Standard practice with DNS is to lookup either A or AAAA records
+	and use the results if it succeeds. Only looking up the other if
+	the first attempt fails or otherwise produces no results.
+
+	That policy however will cause squid to produce error pages for some
+	servers that advertise AAAA but are unreachable over IPv6.
+
+	If this is ON  squid will always lookup both AAAA and A, using both.
+	If this is OFF squid will lookup AAAA and only try A if none found.
+
+	WARNING: There are some possibly unwanted side-effects with this on:
+		*) Doubles the load placed by squid on the DNS network.
+		*) May negatively impact connection delay times.
+DOC_END
+
 NAME: ipcache_size
 COMMENT: (number of entries)
 TYPE: int
@@ -5349,14 +5407,17 @@ DOC_END
 NAME: balance_on_multiple_ip
 TYPE: onoff
 LOC: Config.onoff.balance_on_multiple_ip
-DEFAULT: on
+DEFAULT: off
 DOC_START
+	Modern IP resolvers in squid sort lookup results by preferred access.
+	By default squid will use these IP in order and only rotates to
+	the next listed when the most preffered fails.
+
 	Some load balancing servers based on round robin DNS have been
 	found not to preserve user session state across requests
 	to different IP addresses.
 
-	By default Squid rotates IP's per request. By disabling
-	this directive only connection failure triggers rotation.
+	Enabling this directive Squid rotates IP's per request.
 DOC_END
 
 NAME: pipeline_prefetch

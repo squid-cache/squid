@@ -1,6 +1,5 @@
-
 /*
- * $Id: store_log.cc,v 1.35 2007/08/13 17:20:51 hno Exp $
+ * $Id: store_log.cc,v 1.36 2007/12/14 23:11:48 amosjeffries Exp $
  *
  * DEBUG: section 20    Storage Manager Logging Functions
  * AUTHOR: Duane Wessels
@@ -38,6 +37,7 @@
 #include "MemObject.h"
 #include "HttpReply.h"
 #include "CacheManager.h"
+#include "SquidTime.h"
 
 static const char *storeLogTags[] =
     {

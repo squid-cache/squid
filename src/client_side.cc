@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.770 2007/12/04 03:35:52 hno Exp $
+ * $Id: client_side.cc,v 1.771 2007/12/14 23:11:46 amosjeffries Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -161,7 +161,7 @@ static void connNoteUseOfBuffer(ConnStateData* conn, size_t byteCount);
 static int connKeepReadingIncompleteRequest(ConnStateData::Pointer & conn);
 static void connCancelIncompleteRequests(ConnStateData::Pointer & conn);
 
-static ConnStateData *connStateCreate(struct sockaddr_in *peer, struct sockaddr_in *me, int fd, http_port_list *port);
+static ConnStateData *connStateCreate(const IPAddress &peer, const IPAddress &me, int fd, http_port_list *port);
 
 int
 ClientSocketContext::fd() const
@@ -492,7 +492,9 @@ ClientHttpRequest::logRequest()
         if (loggingEntry() && loggingEntry()->mem_obj)
             al.cache.objectSize = loggingEntry()->contentLen();
 
-        al.cache.caddr = getConn() != NULL ? getConn()->log_addr : no_addr;
+        al.cache.caddr.SetNoAddr();
+
+        if(getConn() != NULL) al.cache.caddr = getConn()->log_addr;
 
         al.cache.size = out.size;
 
@@ -529,7 +531,7 @@ ClientHttpRequest::logRequest()
             updateCounters();
 
             if (getConn() != NULL)
-                clientdbUpdate(getConn()->peer.sin_addr, logType, PROTO_HTTP, out.size);
+                clientdbUpdate(getConn()->peer, logType, PROTO_HTTP, out.size);
         }
 
         delete checklist;
@@ -604,7 +606,7 @@ ConnStateData::close()
     openReference = NULL;
     fd = -1;
     flags.readMoreRequests = false;
-    clientdbEstablished(peer.sin_addr, -1);	/* decrement */
+    clientdbEstablished(peer, -1);	/* decrement */
     assert(areAllContextsForThisConnection());
     freeAllContexts();
 
@@ -1720,6 +1722,7 @@ prepareAcceleratedURL(ConnStateData::Pointer & conn, ClientHttpRequest *http, ch
     int vhost = conn->port->vhost;
     int vport = conn->port->vport;
     char *host;
+    char ntoabuf[MAX_IPSTRLEN];
 
     http->flags.accel = 1;
 
@@ -1772,8 +1775,8 @@ prepareAcceleratedURL(ConnStateData::Pointer & conn, ClientHttpRequest *http, ch
         http->uri = (char *)xcalloc(url_sz, 1);
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
                  http->getConn()->port->protocol,
-                 inet_ntoa(http->getConn()->me.sin_addr),
-                 ntohs(http->getConn()->me.sin_port), url);
+                 http->getConn()->me.NtoA(ntoabuf,MAX_IPSTRLEN),
+                 http->getConn()->me.GetPort(), url);
         debugs(33, 5, "ACCEL VPORT REWRITE: '" << http->uri << "'");
     } else if (vport > 0) {
         /* Put the local socket IP address as the hostname, but static port  */
@@ -1781,7 +1784,7 @@ prepareAcceleratedURL(ConnStateData::Pointer & conn, ClientHttpRequest *http, ch
         http->uri = (char *)xcalloc(url_sz, 1);
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
                  http->getConn()->port->protocol,
-                 inet_ntoa(http->getConn()->me.sin_addr),
+                 http->getConn()->me.NtoA(ntoabuf,MAX_IPSTRLEN),
                  vport, url);
         debugs(33, 5, "ACCEL VPORT REWRITE: '" << http->uri << "'");
     }
@@ -1791,6 +1794,7 @@ static void
 prepareTransparentURL(ConnStateData::Pointer & conn, ClientHttpRequest *http, char *url, const char *req_hdr)
 {
     char *host;
+    char ntoabuf[MAX_IPSTRLEN];
 
     http->flags.transparent = 1;
 
@@ -1812,8 +1816,8 @@ prepareTransparentURL(ConnStateData::Pointer & conn, ClientHttpRequest *http, ch
         http->uri = (char *)xcalloc(url_sz, 1);
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
                  http->getConn()->port->protocol,
-                 inet_ntoa(http->getConn()->me.sin_addr),
-                 ntohs(http->getConn()->me.sin_port), url);
+                 http->getConn()->me.NtoA(ntoabuf,MAX_IPSTRLEN),
+                 http->getConn()->me.GetPort(), url);
         debugs(33, 5, "TRANSPARENT REWRITE: '" << http->uri << "'");
     }
 }
@@ -2096,7 +2100,7 @@ connCancelIncompleteRequests(ConnStateData::Pointer & conn)
     assert (repContext);
     repContext->setReplyToError(ERR_TOO_BIG,
                                 HTTP_REQUEST_ENTITY_TOO_LARGE, METHOD_NONE, NULL,
-                                &conn->peer.sin_addr, NULL, NULL, NULL);
+                                conn->peer, NULL, NULL, NULL);
     context->registerWithConn();
     context->pullData();
 }
@@ -2147,8 +2151,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
         debugs(33, 1, "clientProcessRequest: Invalid Request");
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        repContext->setReplyToError(ERR_INVALID_REQ, HTTP_BAD_REQUEST, method, NULL,
-                                    &conn->peer.sin_addr, NULL, conn->in.buf, NULL);
+        repContext->setReplyToError(ERR_INVALID_REQ, HTTP_BAD_REQUEST, method, NULL, conn->peer, NULL, conn->in.buf, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
@@ -2160,9 +2163,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
         debugs(33, 5, "Invalid URL: " << http->uri);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        repContext->setReplyToError(
-            ERR_INVALID_URL, HTTP_BAD_REQUEST, method, http->uri,
-            &conn->peer.sin_addr, NULL, NULL, NULL);
+        repContext->setReplyToError(ERR_INVALID_URL, HTTP_BAD_REQUEST, method, http->uri, conn->peer, NULL, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
@@ -2177,9 +2178,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
         debugs(33, 5, "Failed to parse request headers:\n" << HttpParserHdrBuf(hp));
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        repContext->setReplyToError(
-            ERR_INVALID_URL, HTTP_BAD_REQUEST, method, http->uri,
-            &conn->peer.sin_addr, NULL, NULL, NULL);
+        repContext->setReplyToError(ERR_INVALID_URL, HTTP_BAD_REQUEST, method, http->uri, conn->peer, NULL, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
@@ -2196,12 +2195,11 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
 #endif
 
     if (internalCheck(request->urlpath.buf())) {
-        if (internalHostnameIs(request->host) &&
+        if (internalHostnameIs(request->GetHost()) &&
                 request->port == getMyPort()) {
             http->flags.internal = 1;
         } else if (Config.onoff.global_internal_static && internalStaticCheck(request->urlpath.buf())) {
-            xstrncpy(request->host, internalHostname(),
-                     SQUIDHOSTNAMELEN);
+            request->SetHost(internalHostname());
             request->port = getMyPort();
             http->flags.internal = 1;
         }
@@ -2214,10 +2212,8 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
 
     request->flags.internal = http->flags.internal;
     setLogUri (http, urlCanonicalClean(request));
-    request->client_addr = conn->peer.sin_addr;
-    request->client_port = ntohs(conn->peer.sin_port);
-    request->my_addr = conn->me.sin_addr;
-    request->my_port = ntohs(conn->me.sin_port);
+    request->client_addr = conn->peer;
+    request->my_addr = conn->me;
     request->http_ver = http_ver;
 
     if (!urlCheckRequest(request) ||
@@ -2227,7 +2223,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
         assert (repContext);
         repContext->setReplyToError(ERR_UNSUP_REQ,
                                     HTTP_NOT_IMPLEMENTED, request->method, NULL,
-                                    &conn->peer.sin_addr, request, NULL, NULL);
+                                    conn->peer, request, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
@@ -2241,7 +2237,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
         assert (repContext);
         repContext->setReplyToError(ERR_INVALID_REQ,
                                     HTTP_LENGTH_REQUIRED, request->method, NULL,
-                                    &conn->peer.sin_addr, request, NULL, NULL);
+                                    conn->peer, request, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
@@ -2277,7 +2273,7 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
             assert (repContext);
             repContext->setReplyToError(ERR_TOO_BIG,
                                         HTTP_REQUEST_ENTITY_TOO_LARGE, METHOD_NONE, NULL,
-                                        &conn->peer.sin_addr, http->request, NULL, NULL);
+                                        conn->peer, http->request, NULL, NULL);
             assert(context->http->out.offset == 0);
             context->pullData();
             goto finish;
@@ -2449,6 +2445,7 @@ clientReadRequest(int fd, char *buf, size_t size, comm_err_t flag, int xerrno,
     /* Bail out quickly on COMM_ERR_CLOSING - close handlers will tidy up */
 
     if (flag == COMM_ERR_CLOSING) {
+        debugs(33,5, HERE  << " FD " << fd << " closing Bailout.");
         return;
     }
 
@@ -2666,8 +2663,7 @@ static void
 clientLifetimeTimeout(int fd, void *data)
 {
     ClientHttpRequest *http = (ClientHttpRequest *)data;
-    debugs(33, 1, "WARNING: Closing client " << inet_ntoa(http->getConn()->peer.sin_addr) << 
-          " connection due to lifetime timeout");
+    debugs(33, 1, "WARNING: Closing client " << http->getConn()->peer << " connection due to lifetime timeout");
     debugs(33, 1, "\t" << http->uri);
     comm_close(fd);
 }
@@ -2690,13 +2686,13 @@ okToAccept()
 
 ConnStateData *
 
-connStateCreate(struct sockaddr_in *peer, struct sockaddr_in *me, int fd, http_port_list *port)
+connStateCreate(const IPAddress &peer, const IPAddress &me, int fd, http_port_list *port)
 {
     ConnStateData *result = new ConnStateData;
-    result->peer = *peer;
-    result->log_addr = peer->sin_addr;
-    result->log_addr.s_addr &= Config.Addrs.client_netmask.s_addr;
-    result->me = *me;
+    result->peer = peer;
+    result->log_addr = peer;
+    result->log_addr.ApplyMask(Config.Addrs.client_netmask.GetCIDR());
+    result->me = me;
     result->fd = fd;
     result->in.buf = (char *)memAllocBuf(CLIENT_REQ_BUF_SZ, &result->in.allocatedSize);
     result->port = cbdataReference(port);
@@ -2704,10 +2700,10 @@ connStateCreate(struct sockaddr_in *peer, struct sockaddr_in *me, int fd, http_p
     if (port->transparent)
     {
 
-        struct sockaddr_in dst;
+        IPAddress dst;
 
-        if (clientNatLookup(fd, *me, *peer, &dst) == 0) {
-            result->me = dst; /* XXX This should be moved to another field */
+        if (clientNatLookup(fd, me, peer, dst) == 0) {
+            result-> me = dst; /* XXX This should be moved to another field */
             result->transparent(true);
         }
     }
@@ -2761,11 +2757,11 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 
     debugs(33, 4, "httpAccept: FD " << newfd << ": accepted");
     fd_note(newfd, "client http connect");
-    connState = connStateCreate(&details->peer, &details->me, newfd, s);
+    connState = connStateCreate(details->peer, details->me, newfd, s);
     comm_add_close_handler(newfd, connStateClosed, connState);
 
     if (Config.onoff.log_fqdn)
-        fqdncache_gethostbyaddr(details->peer.sin_addr, FQDN_LOOKUP_IF_MISS);
+        fqdncache_gethostbyaddr(details->peer, FQDN_LOOKUP_IF_MISS);
 
     commSetTimeout(newfd, Config.Timeout.request, requestTimeout, connState);
 
@@ -2773,25 +2769,22 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 
     ACLChecklist identChecklist;
 
-    identChecklist.src_addr = details->peer.sin_addr;
+    identChecklist.src_addr = details->peer;
 
-    identChecklist.my_addr = details->me.sin_addr;
-
-    identChecklist.my_port = ntohs(details->me.sin_port);
+    identChecklist.my_addr = details->me;
 
     identChecklist.accessList = cbdataReference(Config.accessList.identLookup);
 
     /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
 
     if (identChecklist.fastCheck())
-        identStart(&details->me, &details->peer, clientIdentDone, connState);
-
+        identStart(details->me, details->peer, clientIdentDone, connState);
 
 #endif
 
     connState->readSomeData();
 
-    clientdbEstablished(details->peer.sin_addr, 1);
+    clientdbEstablished(details->peer, 1);
 
     incoming_sockets_accepted++;
 }
@@ -2958,11 +2951,11 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
 
     debugs(33, 5, "httpsAccept: FD " << newfd << " accepted, starting SSL negotiation.");
     fd_note(newfd, "client https connect");
-    connState = connStateCreate(&details->peer, &details->me, newfd, (http_port_list *)s);
+    connState = connStateCreate(details->peer, details->me, newfd, (http_port_list *)s);
     comm_add_close_handler(newfd, connStateClosed, connState);
 
     if (Config.onoff.log_fqdn)
-        fqdncache_gethostbyaddr(details->peer.sin_addr, FQDN_LOOKUP_IF_MISS);
+        fqdncache_gethostbyaddr(details->peer, FQDN_LOOKUP_IF_MISS);
 
     commSetTimeout(newfd, Config.Timeout.request, requestTimeout, connState);
 
@@ -2970,24 +2963,22 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
 
     ACLChecklist identChecklist;
 
-    identChecklist.src_addr = details->peer.sin_addr;
+    identChecklist.src_addr = details->peer;
 
-    identChecklist.my_addr = details->me.sin_addr;
-
-    identChecklist.my_port = ntohs(details->me.sin_port);
+    identChecklist.my_addr = details->me;
 
     identChecklist.accessList = cbdataReference(Config.accessList.identLookup);
 
     /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
 
     if (identChecklist.fastCheck())
-        identStart(&details->me, &details->peer, clientIdentDone, connState);
+        identStart(details->me, details->peer, clientIdentDone, connState);
 
 #endif
 
     commSetSelect(newfd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
 
-    clientdbEstablished(details->peer.sin_addr, 1);
+    clientdbEstablished(details->peer, 1);
 
     incoming_sockets_accepted++;
 }
@@ -2998,8 +2989,8 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
 static void
 clientHttpConnectionsOpen(void)
 {
-    http_port_list *s;
-    int fd;
+    http_port_list *s = NULL;
+    int fd = -1;
 
     for (s = Config.Sockaddr.http; s; s = s->next) {
         if (MAXHTTPPORTS == NHttpSockets) {
@@ -3011,8 +3002,8 @@ clientHttpConnectionsOpen(void)
         enter_suid();
         fd = comm_open(SOCK_STREAM,
                        IPPROTO_TCP,
-                       s->s.sin_addr,
-                       ntohs(s->s.sin_port), COMM_NONBLOCKING, "HTTP Socket");
+                       s->s,
+                       COMM_NONBLOCKING, "HTTP Socket");
         leave_suid();
 
         if (fd < 0)
@@ -3025,9 +3016,8 @@ clientHttpConnectionsOpen(void)
         debugs(1, 1, "Accepting " <<
                (s->transparent ? "transparently proxied" :
                        s->accel ? "accelerated" : "" ) 
-               << " HTTP connections at " 
-               << inet_ntoa(s->s.sin_addr) << ", port " 
-               << (int) ntohs(s->s.sin_port) << ", FD " << fd << "." );
+               << " HTTP connections at " << s->s
+               << ", FD " << fd << "." );
 
         HttpSockets[NHttpSockets++] = fd;
     }
@@ -3048,16 +3038,14 @@ clientHttpsConnectionsOpen(void)
         }
 
         if (s->sslContext == NULL) {
-            debugs(1, 1, "Can not accept HTTPS connections at " <<
-                   inet_ntoa(s->http.s.sin_addr) << ", port " <<
-                   (int) ntohs(s->http.s.sin_port));
+            debugs(1, 1, "Can not accept HTTPS connections at " << s->http.s);
         }
 
         enter_suid();
         fd = comm_open(SOCK_STREAM,
                        IPPROTO_TCP,
-                       s->http.s.sin_addr,
-                       ntohs(s->http.s.sin_port), COMM_NONBLOCKING, "HTTPS Socket");
+                       s->http.s,
+                       COMM_NONBLOCKING, "HTTPS Socket");
         leave_suid();
 
         if (fd < 0)
@@ -3067,9 +3055,7 @@ clientHttpsConnectionsOpen(void)
 
         comm_accept(fd, httpsAccept, s);
 
-        debugs(1, 1, "Accepting HTTPS connections at " <<
-               inet_ntoa(s->http.s.sin_addr) << ", port " <<
-               (int) ntohs(s->http.s.sin_port) << ", FD " << fd << ".");
+        debugs(1, 1, "Accepting HTTPS connections at " << s->http.s << ", FD " << fd << ".");
 
         HttpSockets[NHttpSockets++] = fd;
     }

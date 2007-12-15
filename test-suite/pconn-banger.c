@@ -90,7 +90,9 @@
 #include <sys/stat.h>
 #endif
 
-#define PROXY_PORT 3128
+#include "getaddrinfo.h"
+
+#define PROXY_PORT "3128"
 #define PROXY_ADDR "127.0.0.1"
 #define MAX_FDS 1024
 #define READ_BUF_SZ 4096
@@ -170,20 +172,30 @@ int
 open_http_socket(void)
 {
     int s;
-    struct sockaddr_in S;
-    if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
+    struct addrinfo *AI = NULL;
+    struct addrinfo hints;
+
+    memset(&hints, '\0', sizeof(struct addrinfo));
+    hints.ai_flags = AI_NUMERICHOST|AI_NUMERICSERV;
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+
+    xgetaddrinfo(proxy_addr, proxy_port, &hints, AI);
+
+    if ((s = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol)) < 0) {
 	perror("socket");
+        xfreeaddrinfo(AI);
 	return -1;
     }
-    memset(&S, '\0', sizeof(struct sockaddr_in));
-    S.sin_family = AF_INET;
-    S.sin_port = htons(proxy_port);
-    S.sin_addr.s_addr = inet_addr(proxy_addr);
-    if (connect(s, (struct sockaddr *) &S, sizeof(S)) < 0) {
+
+    if (connect(s, AI->ai_addr, AI->ai_addrlen) < 0) {
 	close(s);
 	perror("connect");
+        xfreeaddrinfo(AI);
 	return -1;
     }
+
+    xfreeaddrinfo(AI);
     return s;
 }
 

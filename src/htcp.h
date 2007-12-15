@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.h,v 1.5 2003/08/10 11:00:43 robertc Exp $
+ * $Id: htcp.h,v 1.6 2007/12/14 23:11:47 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,6 +36,7 @@
 
 #if USE_HTCP
 #include "HttpHeader.h"
+#include "IPAddress.h"
 
 class HtcpReplyData
 {
@@ -60,7 +61,7 @@ public:
 
 typedef class HtcpReplyData htcpReplyData;
 
-SQUIDCEXTERN void neighborsHtcpReply(const cache_key *, htcpReplyData *, const struct sockaddr_in *);
+SQUIDCEXTERN void neighborsHtcpReply(const cache_key *, htcpReplyData *, const IPAddress &);
 SQUIDCEXTERN void htcpInit(void);
 SQUIDCEXTERN void htcpQuery(StoreEntry * e, HttpRequest * req, peer * p);
 SQUIDCEXTERN void htcpSocketShutdown(void);

@@ -1,5 +1,5 @@
 /*
- * $Id: ftp.cc,v 1.441 2007/09/27 14:34:06 rousskov Exp $
+ * $Id: ftp.cc,v 1.442 2007/12/14 23:11:46 amosjeffries Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -64,7 +64,9 @@ typedef enum {
     SENT_TYPE,
     SENT_MDTM,
     SENT_SIZE,
+    SENT_EPRT,
     SENT_PORT,
+    SENT_EPSV,
     SENT_PASV,
     SENT_CWD,
     SENT_LIST,
@@ -275,8 +277,12 @@ static FTPSM ftpSendMdtm;
 static FTPSM ftpReadMdtm;
 static FTPSM ftpSendSize;
 static FTPSM ftpReadSize;
-static FTPSM ftpSendPort;
-static FTPSM ftpReadPort;
+static FTPSM ftpSendEPRT;
+static FTPSM ftpReadEPRT;
+static FTPSM ftpSendPORT;
+static FTPSM ftpReadPORT;
+//static FTPSM ftpSendEPSV;
+static FTPSM ftpReadEPSV;
 static FTPSM ftpSendPasv;
 static FTPSM ftpReadPasv;
 static FTPSM ftpTraverseDirectory;
@@ -339,7 +345,9 @@ FTPSM *FTP_SM_FUNCS[] =
         ftpReadType,		/* SENT_TYPE */
         ftpReadMdtm,		/* SENT_MDTM */
         ftpReadSize,		/* SENT_SIZE */
-        ftpReadPort,		/* SENT_PORT */
+        ftpReadEPRT,		/* SENT_EPRT */
+        ftpReadPORT,		/* SENT_PORT */
+        ftpReadEPSV,		/* SENT_EPSV */
         ftpReadPasv,		/* SENT_PASV */
         ftpReadCwd,			/* SENT_CWD */
         ftpReadList,		/* SENT_LIST */
@@ -1439,7 +1447,7 @@ FtpStateData::buildTitleUrl()
         title_url.append("@");
     }
 
-    title_url.append(request->host);
+    title_url.append(request->GetHost());
 
     if (request->port != urlDefaultPort(PROTO_FTP)) {
         title_url.append(":");
@@ -1461,7 +1469,7 @@ FtpStateData::buildTitleUrl()
         base_href.append("@");
     }
 
-    base_href.append(request->host);
+    base_href.append(request->GetHost());
 
     if (request->port != urlDefaultPort(PROTO_FTP)) {
         base_href.append(":");
@@ -1505,7 +1513,7 @@ FtpStateData::start()
 
     checkUrlpath();
     buildTitleUrl();
-    debugs(9, 5, "ftpStart: host=" << request->host << ", path=" <<
+    debugs(9, 5, "ftpStart: host=" << request->GetHost() << ", path=" <<
            request->urlpath.buf() << ", user=" << user << ", passwd=" <<
            password);
 
@@ -1862,7 +1870,7 @@ ftpSendUser(FtpStateData * ftpState)
     if (ftpState->proxy_host != NULL)
         snprintf(cbuf, 1024, "USER %s@%s\r\n",
                  ftpState->user,
-                 ftpState->request->host);
+                 ftpState->request->GetHost());
     else
         snprintf(cbuf, 1024, "USER %s\r\n", ftpState->user);
 
@@ -2206,7 +2214,7 @@ static void
 ftpReadSize(FtpStateData * ftpState)
 {
     int code = ftpState->ctrl.replycode;
-    debugs(9, 3, "This is ftpReadSize");
+    debugs(9, 3, HERE << "ftpReadSize()");
 
     if (code == 213) {
         ftpState->unhack();
@@ -2226,11 +2234,30 @@ ftpReadSize(FtpStateData * ftpState)
     ftpSendPasv(ftpState);
 }
 
+/* FIXME INET6 : EPASV command not yet coded. */
+/*
+static void
+ftpSendEPSV(FtpStateData* ftpstate)
+{
+   // TODO.
+}
+*/
+
+static void
+ftpReadEPSV(FtpStateData* ftpstate)
+{
+    /* FIXME INET6 : EPASV command not yet coded. */
+
+    /* Failover to PASV */
+    ftpReadPasv(ftpstate);
+}
+
+
 static void
 ftpSendPasv(FtpStateData * ftpState)
 {
-    struct sockaddr_in addr;
-    socklen_t addr_len;
+    IPAddress addr;
+    struct addrinfo *AI = NULL;
 
     /* check the server control channel is still available */
     if(!ftpState || !ftpState->haveControlChannel("ftpSendPasv"))
@@ -2250,23 +2277,27 @@ ftpSendPasv(FtpStateData * ftpState)
     }
 
     if (!ftpState->flags.pasv_supported) {
-        ftpSendPort(ftpState);
+        ftpSendEPRT(ftpState);
         return;
     }
 
-    addr_len = sizeof(addr);
+    addr.InitAddrInfo(AI);
 
-    if (getsockname(ftpState->ctrl.fd, (struct sockaddr *) &addr, &addr_len)) {
-        debugs(9, 0, "ftpSendPasv: getsockname(" << ftpState->ctrl.fd << ",..): " << xstrerror());
+    if (getsockname(ftpState->ctrl.fd, AI->ai_addr, &AI->ai_addrlen)) {
+        addr.FreeAddrInfo(AI);
+        debugs(9, 0, "ftpSendPasv: getsockname(" << ftpState->ctrl.fd << ",'" << addr << "',...): " << xstrerror());
         ftpFail(ftpState);
         return;
     }
 
+    addr = *AI;
+
+    addr.FreeAddrInfo(AI);
+
     /* Open data channel with the same local address as control channel */
     int fd = comm_open(SOCK_STREAM,
                        IPPROTO_TCP,
-                       addr.sin_addr,
-                       0,
+                       addr,
                        COMM_NONBLOCKING,
                        ftpState->entry->url());
 
@@ -2338,14 +2369,15 @@ ftpReadPasv(FtpStateData * ftpState)
     int p1, p2;
     int n;
     u_short port;
+    IPAddress ipa_remote;
     int fd = ftpState->data.fd;
     char *buf;
     LOCAL_ARRAY(char, ipaddr, 1024);
-    debugs(9, 3, "This is ftpReadPasv");
+    debugs(9, 3, HERE << "ftpReadSize started");
 
     if (code != 227) {
         debugs(9, 3, "PASV not supported by remote end");
-        ftpSendPort(ftpState);
+        ftpSendEPRT(ftpState);
         return;
     }
 
@@ -2362,18 +2394,20 @@ ftpReadPasv(FtpStateData * ftpState)
                fd_table[ftpState->ctrl.fd].ipaddr << ": " <<
                ftpState->ctrl.last_reply);
 
-        ftpSendPort(ftpState);
+        ftpSendEPRT(ftpState);
         return;
     }
 
     snprintf(ipaddr, 1024, "%d.%d.%d.%d", h1, h2, h3, h4);
 
-    if (!safe_inet_addr(ipaddr, NULL)) {
+    ipa_remote = ipaddr;
+
+    if( ipa_remote.IsAnyAddr() ) {
         debugs(9, 1, "Unsafe PASV reply from " <<
                fd_table[ftpState->ctrl.fd].ipaddr << ": " <<
                ftpState->ctrl.last_reply);
 
-        ftpSendPort(ftpState);
+        ftpSendEPRT(ftpState);
         return;
     }
 
@@ -2384,7 +2418,7 @@ ftpReadPasv(FtpStateData * ftpState)
                fd_table[ftpState->ctrl.fd].ipaddr << ": " <<
                ftpState->ctrl.last_reply);
 
-        ftpSendPort(ftpState);
+        ftpSendEPRT(ftpState);
         return;
     }
 
@@ -2394,7 +2428,7 @@ ftpReadPasv(FtpStateData * ftpState)
                    fd_table[ftpState->ctrl.fd].ipaddr << ": " <<
                    ftpState->ctrl.last_reply);
 
-            ftpSendPort(ftpState);
+            ftpSendEPRT(ftpState);
             return;
         }
     }
@@ -2440,10 +2474,10 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
 {
     int fd;
 
-    struct sockaddr_in addr;
-    socklen_t addr_len;
+    IPAddress addr;
+    struct addrinfo *AI = NULL;
     int on = 1;
-    u_short port = 0;
+    int x = 0;
     /*
      * Tear down any old data connection if any. We are about to
      * establish a new one.
@@ -2458,9 +2492,16 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
      * Set up a listen socket on the same local address as the
      * control connection.
      */
-    addr_len = sizeof(addr);
 
-    if (getsockname(ftpState->ctrl.fd, (struct sockaddr *) &addr, &addr_len)) {
+    addr.InitAddrInfo(AI);
+
+    x = getsockname(ftpState->ctrl.fd, AI->ai_addr, &AI->ai_addrlen);
+
+    addr = *AI;
+
+    addr.FreeAddrInfo(AI);
+
+    if(x) {
         debugs(9, 0, "ftpOpenListenSocket: getsockname(" << ftpState->ctrl.fd << ",..): " << xstrerror());
         return -1;
     }
@@ -2471,13 +2512,11 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
      */
     if (fallback) {
         setsockopt(ftpState->ctrl.fd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on));
-        port = ntohs(addr.sin_port);
     }
 
     fd = comm_open(SOCK_STREAM,
                    IPPROTO_TCP,
-                   addr.sin_addr,
-                   port,
+                   addr,
                    COMM_NONBLOCKING | (fallback ? COMM_REUSEADDR : 0),
                    ftpState->entry->url());
     debugs(9, 3, "ftpOpenListenSocket: Unconnected data socket created on FD " << fd  );
@@ -2499,12 +2538,12 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
 }
 
 static void
-ftpSendPort(FtpStateData * ftpState)
+ftpSendPORT(FtpStateData * ftpState)
 {
     int fd;
 
-    struct sockaddr_in addr;
-    socklen_t addr_len;
+    IPAddress ipa;
+    struct addrinfo *AI = NULL;
     unsigned char *addrptr;
     unsigned char *portptr;
 
@@ -2515,30 +2554,44 @@ ftpSendPort(FtpStateData * ftpState)
     debugs(9, 3, "This is ftpSendPort");
     ftpState->flags.pasv_supported = 0;
     fd = ftpOpenListenSocket(ftpState, 0);
-    addr_len = sizeof(addr);
+    ipa.InitAddrInfo(AI);
 
-    if (getsockname(fd, (struct sockaddr *) &addr, &addr_len)) {
-        debugs(9, 0, "ftpSendPort: getsockname(" << fd << ",..): " << xstrerror());
+    if (getsockname(fd, AI->ai_addr, &AI->ai_addrlen)) {
+        ipa.FreeAddrInfo(AI);
+        debugs(9, 0, "ftpSendPORT: getsockname(" << fd << ",..): " << xstrerror());
 
         /* XXX Need to set error message */
         ftpFail(ftpState);
         return;
     }
 
-    addrptr = (unsigned char *) &addr.sin_addr.s_addr;
-    portptr = (unsigned char *) &addr.sin_port;
+#if USE_IPV6
+    if( AI->ai_addrlen != sizeof(struct sockaddr_in) ) {
+        ipa.FreeAddrInfo(AI);
+       /* IPv6 CANNOT send PORT command.                           */
+       /* we got here by attempting and failing an EPRT            */
+       /* using the same reply code should simulate a PORT failure */
+       ftpReadPORT(ftpState);
+       return;
+    }
+#endif
+
+    addrptr = (unsigned char *) &((struct sockaddr_in*)AI->ai_addr)->sin_addr;
+    portptr = (unsigned char *) &((struct sockaddr_in*)AI->ai_addr)->sin_port;
     snprintf(cbuf, 1024, "PORT %d,%d,%d,%d,%d,%d\r\n",
              addrptr[0], addrptr[1], addrptr[2], addrptr[3],
              portptr[0], portptr[1]);
     ftpState->writeCommand(cbuf);
     ftpState->state = SENT_PORT;
+
+    ipa.FreeAddrInfo(AI);
 }
 
 static void
-ftpReadPort(FtpStateData * ftpState)
+ftpReadPORT(FtpStateData * ftpState)
 {
     int code = ftpState->ctrl.replycode;
-    debugs(9, 3, "This is ftpReadPort");
+    debugs(9, 3, HERE << "ftpReadPORT started");
 
     if (code != 200) {
         /* Fall back on using the same port as the control connection */
@@ -2549,11 +2602,66 @@ ftpReadPort(FtpStateData * ftpState)
     ftpRestOrList(ftpState);
 }
 
+static void
+ftpSendEPRT(FtpStateData * ftpState)
+{
+    int fd;
+    IPAddress addr;
+    struct addrinfo *AI = NULL;
+    char buf[MAX_IPSTRLEN];
+
+    debugs(9, 3, HERE << "ftpSendEPRT started");
+    ftpState->flags.pasv_supported = 0;
+    fd = ftpOpenListenSocket(ftpState, 0);
+
+    addr.InitAddrInfo(AI);
+
+    if (getsockname(fd, AI->ai_addr, &AI->ai_addrlen)) {
+        addr.FreeAddrInfo(AI);
+        debugs(9, 0, "ftpSendEPRT: getsockname(" << fd << ",..): " << xstrerror());
+
+        /* XXX Need to set error message */
+        ftpFail(ftpState);
+        return;
+    }
+
+    addr = *AI;
+
+    /* RFC 2428 defines EPRT as IPv6 equivalent to IPv4 PORT command. */
+    /* Which can be used by EITHER protocol. */
+    snprintf(cbuf, 1024, "EPRT |%d|%s|%d|\r\n",
+             AI->ai_family,
+             addr.NtoA(buf,MAX_IPSTRLEN),
+             addr.GetPort() );
+
+    ftpState->writeCommand(cbuf);
+    ftpState->state = SENT_EPRT;
+
+    addr.FreeAddrInfo(AI);
+}
+
+static void
+ftpReadEPRT(FtpStateData * ftpState)
+{
+    int code = ftpState->ctrl.replycode;
+    debugs(9, 3, HERE << " ftpReadEPRT started");
+
+    if (code != 200) {
+        /* Failover to attempting old PORT command. */
+        debugs(9, 3, "EPRT not supported by remote end");
+        ftpSendPORT(ftpState);
+        return;
+    }
+
+    ftpRestOrList(ftpState);
+}
+
 /* "read" handler to accept data connection */
 static void
 ftpAcceptDataConnection(int fd, int newfd, ConnectionDetail *details,
                         comm_err_t flag, int xerrno, void *data)
 {
+    char ntoapeer[MAX_IPSTRLEN];
     FtpStateData *ftpState = (FtpStateData *)data;
     debugs(9, 3, "ftpAcceptDataConnection");
 
@@ -2566,12 +2674,11 @@ ftpAcceptDataConnection(int fd, int newfd, ConnectionDetail *details,
     }
 
     if (Config.Ftp.sanitycheck) {
-        char *ipaddr = inet_ntoa(details->peer.sin_addr);
+        details->peer.NtoA(ntoapeer,MAX_IPSTRLEN);
 
-        if (strcmp(fd_table[ftpState->ctrl.fd].ipaddr, ipaddr) != 0) {
+        if (strcmp(fd_table[ftpState->ctrl.fd].ipaddr, ntoapeer) != 0) {
             debugs(9, 1, "FTP data connection from unexpected server (" <<
-                   ipaddr << ":" << (int) ntohs(details->peer.sin_port) <<
-                   "), expecting " << fd_table[ftpState->ctrl.fd].ipaddr);
+                   details->peer << "), expecting " << fd_table[ftpState->ctrl.fd].ipaddr);
 
             comm_close(newfd);
             comm_accept(ftpState->data.fd, ftpAcceptDataConnection, ftpState);
@@ -2593,14 +2700,13 @@ ftpAcceptDataConnection(int fd, int newfd, ConnectionDetail *details,
 
     ftpState->data.fd = newfd;
 
-    ftpState->data.port = ntohs(details->peer.sin_port);
+    ftpState->data.port = details->peer.GetPort();
 
-    ftpState->data.host = xstrdup(inet_ntoa(details->peer.sin_addr));
+    details->peer.NtoA(ftpState->data.host,SQUIDHOSTNAMELEN);
 
     commSetTimeout(ftpState->ctrl.fd, -1, NULL, NULL);
 
-    commSetTimeout(ftpState->data.fd, Config.Timeout.read, FtpStateData::ftpTimeout,
-                   ftpState);
+    commSetTimeout(ftpState->data.fd, Config.Timeout.read, FtpStateData::ftpTimeout, ftpState);
 
     /* XXX We should have a flag to track connect state...
      *    host NULL -> not connected, port == local port
@@ -3286,44 +3392,35 @@ FtpStateData::ftpAuthRequired(HttpRequest * request, const char *realm)
     return newrep;
 }
 
-char *
-ftpUrlWith2f(const HttpRequest * request)
+/**
+ *  Construct an URI with leading / in PATH portion for use by CWD command
+ *  possibly others. FTP encodes absolute paths as beginning with '/'
+ *  after the initial URI path delimiter, which happens to be / itself.
+ *  This makes FTP absolute URI appear as:  ftp:host:port//root/path
+ *  To encompass older software which compacts multiple // to / in transit
+ *  We use standard URI-encoding on the second / making it 
+ *  ftp:host:port/%2froot/path  AKA 'the FTP %2f hack'.
+ */
+const char *
+ftpUrlWith2f(HttpRequest * request)
 {
-    LOCAL_ARRAY(char, buf, MAX_URL);
-    LOCAL_ARRAY(char, loginbuf, MAX_LOGIN_SZ + 1);
-    LOCAL_ARRAY(char, portbuf, 32);
-    char *t;
-    portbuf[0] = '\0';
+    String newbuf = "%2f";
 
     if (request->protocol != PROTO_FTP)
         return NULL;
 
-    if (request->port != urlDefaultPort(request->protocol))
-        snprintf(portbuf, 32, ":%d", request->port);
-
-    loginbuf[0] = '\0';
-
-    if ((int) strlen(request->login) > 0) {
-        xstrncpy(loginbuf, request->login, sizeof(loginbuf) - 2);
-
-        if ((t = strchr(loginbuf, ':')))
-            *t = '\0';
-
-        strcat(loginbuf, "@");
+    if( !strncmp(request->urlpath.buf(), "/", 1) ) {
+        newbuf.append(request->urlpath);
+        request->urlpath.absorb(newbuf);
+        safe_free(request->canonical);
+    }
+    else if( !strncmp(request->urlpath.buf(), "%2f", 3) ) {
+        newbuf.append(request->urlpath.buf() +1);
+        request->urlpath.absorb(newbuf);
+        safe_free(request->canonical);
     }
 
-    snprintf(buf, MAX_URL, "%s://%s%s%s%s%s",
-             ProtocolStr[request->protocol],
-             loginbuf,
-             request->host,
-             portbuf,
-             "/%2f",
-             request->urlpath.buf());
-
-    if ((t = strchr(buf, '?')))
-        *t = '\0';
-
-    return buf;
+    return urlCanonical(request);
 }
 
 void

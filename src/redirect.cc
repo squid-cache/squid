@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.122 2007/11/06 21:19:31 wessels Exp $
+ * $Id: redirect.cc,v 1.123 2007/12/14 23:11:48 amosjeffries Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -49,7 +49,7 @@ typedef struct
     void *data;
     char *orig_url;
 
-    struct IN_ADDR client_addr;
+    IPAddress client_addr;
     const char *client_ident;
     const char *method_s;
     RH *handler;
@@ -117,8 +117,8 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
     redirectStateData *r = NULL;
     const char *fqdn;
     char buf[8192];
-    char claddr[20];
-    char myaddr[20];
+    char claddr[MAX_IPSTRLEN];
+    char myaddr[MAX_IPSTRLEN];
     assert(http);
     assert(handler);
     debugs(61, 5, "redirectStart: '" << http->uri << "'");
@@ -132,7 +132,10 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
 
     r = cbdataAlloc(redirectStateData);
     r->orig_url = xstrdup(http->uri);
-    r->client_addr = conn != NULL ? conn->log_addr : no_addr;
+    if(conn != NULL)
+        r->client_addr = conn->log_addr;
+    else
+        r->client_addr.SetNoAddr();
     r->client_ident = NULL;
 
     if (http->request->auth_user_request)
@@ -163,16 +166,14 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
     if ((fqdn = fqdncache_gethostbyaddr(r->client_addr, 0)) == NULL)
         fqdn = dash_str;
 
-    xstrncpy(claddr, inet_ntoa(r->client_addr), 20);
-    xstrncpy(myaddr, inet_ntoa(http->request->my_addr), 20);
     snprintf(buf, 8192, "%s %s/%s %s %s myip=%s myport=%d\n",
              r->orig_url,
-             claddr,
+             r->client_addr.NtoA(claddr,MAX_IPSTRLEN),
              fqdn,
              r->client_ident[0] ? rfc1738_escape(r->client_ident) : dash_str,
              r->method_s,
-	     myaddr,
-	     http->request->my_port);
+             http->request->my_addr.NtoA(myaddr,MAX_IPSTRLEN),
+             http->request->my_addr.GetPort());
 
     helperSubmit(redirectors, buf, redirectHandleReply, r);
 }

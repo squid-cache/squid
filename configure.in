@@ -1,17 +1,17 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.489 2007/12/14 01:11:53 hno Exp $
+dnl  $Id: configure.in,v 1.490 2007/12/14 23:11:41 amosjeffries Exp $
 dnl
 dnl
 dnl
-AC_INIT(Squid Web Proxy, 3.HEAD-CVS, http://www.squid-cache.org/bugs/, squid)
+AC_INIT(Squid Web Proxy, 3.HEAD-IPv6-CVS, http://www.squid-cache.org/bugs/, squid)
 AC_PREREQ(2.52)
 AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.489 $)dnl
+AC_REVISION($Revision: 1.490 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -668,14 +668,8 @@ AC_ARG_ENABLE(icmp,
 [ if test "$enableval" = "yes" ; then
     echo "ICMP enabled"
     AC_DEFINE(USE_ICMP,1,
-    [If you want to use Squid's ICMP features (highly recommended!) then
-    define this.  When USE_ICMP is defined, Squid will send ICMP pings
-    to origin server sites.  This information is used in numerous ways:
-            - Sent in ICP replies so neighbor caches know how close
-              you are to the source.
-	    - For finding the closest instance of a URN.
-	    - With the 'test_reachability' option.  Squid will return
-	      ICP_OP_MISS_NOFETCH for sites which it cannot ping.])
+    [ Defined this to use Squid's ICMP features (highly recommended!)
+      When USE_ICMP is defined, Squid will send ICMP pings to origin server sites.])
     AM_CONDITIONAL(ENABLE_PINGER, true)
   fi
 ])
@@ -1733,6 +1727,72 @@ AC_ARG_ENABLE(x_accelerator_vary,
   fi
 ])
 
+dnl Enable IPv6 support
+AC_MSG_CHECKING([whether to enable IPv6])
+AC_ARG_ENABLE(ipv6,
+[  --enable-ipv6          Enable ipv6 support],
+[ AC_MSG_RESULT(yes)
+  AC_CACHE_CHECK([if PF_INET6 is available], $enableval,
+    AC_TRY_RUN(
+      [ /* PF_INET6 available check */
+#       include <sys/types.h>
+#       include <sys/socket.h>
+        void main() {
+          if (socket(PF_INET6, SOCK_STREAM, 0) < 0)
+            exit(1);
+          else
+            exit(0);
+        }
+      ],
+      [ AC_DEFINE(USE_IPV6,1,[Enable support for IPv6 ])
+        AC_MSG_RESULT(yes)
+      ],
+      [ AC_DEFINE(USE_IPV6,0,[0 == Disable support for IPv6])
+        AC_DEFINE(IPV6_SPECIAL_SPLITSTACK,0,[0 == Disable support for Split-Stack IPv6 Implementations])
+        AC_DEFINE(IPV6_SPECIAL_LOCALHOST,0,[0 == Keep IPv4 and IPv6 Localhosts seperate.])
+        AC_DEFINE(IPV6_SPECIAL_V4MAPPING,0,[0 == Leave all v4-mapping to OS Implementation])
+        AC_MSG_RESULT(no)
+      ])
+   )
+],
+[ AC_DEFINE(USE_IPV6,0,[Disable support for IPv6])
+  AC_DEFINE(IPV6_SPECIAL_SPLITSTACK,0,[ 0 == Disable support for Split-Stack IPv6 Implementations])
+  AC_DEFINE(IPV6_SPECIAL_LOCALHOST,0,[ 0 == Keep IPv4 and IPv6 Localhosts seperate.])
+  AC_DEFINE(IPV6_SPECIAL_V4MAPPING,0,[ 0 == Leave v4-mapping to OS Implementation])
+  AC_MSG_RESULT(no)
+])
+if test $ac_cv_enable_ipv6 ; then
+dnl Check for Windows XP option
+AC_MSG_CHECKING([for IPv6 split-stack requirement])
+AC_ARG_WITH(ipv6-split-stack,
+  [  --with-ipv6-split-stack  Require IPv6 split-stack support (Requires IPv6 Support)],
+  [AC_DEFINE(IPV6_SPECIAL_SPLITSTACK, 1, [ 1 == Enable support for IPv6 on split-stack implementations]) AC_MSG_RESULT(yes)],
+  [AC_DEFINE(IPV6_SPECIAL_SPLITSTACK, 0, [ 0 == Disable support for split-stack IPv6 implementations]) AC_MSG_RESULT(no)]
+)
+
+dnl Check for IPv6 Windows Vista option
+AC_MSG_CHECKING([for IPv6 v4-mapping requirement])
+AC_ARG_WITH(ipv4-mapped,
+  [  --with-ipv4-mapped  Hybrid-Stack OS require Squid to do any v4-mapping (Requires IPv6 Support)],
+  [AC_DEFINE(IPV6_SPECIAL_V4MAPPING, 1, [ 1 == Perform v4-mapping internally]) AC_MSG_RESULT(yes)],
+  [AC_DEFINE(IPV6_SPECIAL_V4MAPPING, 0, [ 0 == Leave all v4-mapping to the OS]) AC_MSG_RESULT(no)]
+)
+
+dnl Check for IPv6-pure option
+AC_MSG_CHECKING([for IPv6-Localhost requirement])
+AC_ARG_WITH(localhost-ipv6,
+  [  --with-localhost-ipv6    Prefer IPv6 localhost address over IPv4 (Requires IPv6 Support).
+                           Treats 127.0.0.1 and ::1 as identical and converts all inputs of to ::1
+                           This depends on Dual-Stack support in the OS and all applications
+                           squid contacts via localhost being IPv6 enabled.
+                           Default: OFF. Treats these two IP as different, squid.conf must
+                           define both 127.0.0.1 and ::1 for the localhost ACL, etc. ],
+  [AC_DEFINE(IPV6_SPECIAL_LOCALHOST, 1, [ 1 == Convert IPv4-localhost requests to IPv6.]) AC_MSG_RESULT(yes)],
+  [AC_DEFINE(IPV6_SPECIAL_LOCALHOST, 0, [ 0 == Keep IPv4 and IPv6 Localhosts seperate.]) AC_MSG_RESULT(no)]
+)
+# end IPv6-only options
+fi
+
 AC_ARG_WITH(filedescriptors,
 [  --with-filedescriptors=NUMBER
                           Force squid to support NUMBER filedescriptors],
@@ -1865,11 +1925,16 @@ AC_CHECK_HEADERS( \
 	net/pfvar.h \
 	netdb.h \
 	netinet/in.h \
+	netinet/icmp6.h \
+	netinet/in_systm.h \
+	netinet/ip.h \
+	netinet/ip6.h \
+	netinet/ip_icmp.h \
 	netinet/ip_fil_compat.h \
-	netinet/tcp.h \
 	openssl/err.h \
 	openssl/md5.h \
 	openssl/ssl.h \
+	netinet/tcp.h \
 	openssl/engine.h \
 	paths.h \
 	poll.h \
@@ -2543,7 +2608,11 @@ AC_CHECK_FUNCS(\
 dnl ... and some we provide local replacements for
 AC_REPLACE_FUNCS(\
 	drand48 \
+	inet_ntop \
+	inet_pton \
 	initgroups \
+	getaddrinfo \
+	getnameinfo \
 	strerror \
 	tempnam \
 )
@@ -3174,6 +3243,61 @@ if test "$ac_cv_func_statvfs" = "yes" ; then
 fi
 fi
 
+dnl Detect what resolver fields we have available to use...
+AC_CACHE_CHECK(for _res_ext.nsaddr_list, ac_cv_have_res_ext_nsaddr_list,
+AC_TRY_COMPILE([
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#if HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif
+#if HAVE_ARPA_NAMESER_H
+#include <arpa/nameser.h>
+#endif
+#if HAVE_RESOLV_H
+#include <resolv.h>
+#endif
+],
+[_res_ext.nsaddr_list[[0]].s_addr;],
+ac_cv_have_res_ext_nsaddr_list="yes",
+ac_cv_have_res_ext_nsaddr_list="no"))
+if test "$ac_cv_have_res_ext_nsaddr_list" = "yes" ; then
+  AC_DEFINE(_SQUID_RES_NSADDR6_LARRAY,_res_ext.nsaddr_list,[If _res_ext structure has nsaddr_list member])
+  AC_DEFINE(_SQUID_RES_NSADDR6_COUNT,ns6count,[Nameserver Counter for IPv6 _res_ext])
+fi
+
+if test "$_SQUID_RES_NSADDR6_LIST" == ""; then
+AC_CACHE_CHECK(for _res._u._ext.nsaddrs, ac_cv_have_res_ext_nsaddrs,
+AC_TRY_COMPILE([
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#if HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif
+#if HAVE_ARPA_NAMESER_H
+#include <arpa/nameser.h>
+#endif
+#if HAVE_RESOLV_H
+#include <resolv.h>
+#endif
+],
+[_res._u._ext.nsaddrs[[0]]->sin6_addr;],
+ac_cv_have_res_ext_nsaddrs="yes",
+ac_cv_have_res_ext_nsaddrs="no"))
+if test "$ac_cv_have_res_ext_nsaddrs" = "yes" ; then
+  AC_DEFINE(_SQUID_RES_NSADDR6_LPTR,_res._u._ext.nsaddrs,[If _res structure has _ext.nsaddrs member])
+  AC_DEFINE(_SQUID_RES_NSADDR6_COUNT,_res._u._ext.nscount6,[Nameserver Counter for IPv6 _res])
+fi
+fi
+
 AC_CACHE_CHECK(for _res.nsaddr_list, ac_cv_have_res_nsaddr_list,
 AC_TRY_COMPILE([
 #if HAVE_SYS_TYPES_H
@@ -3196,10 +3320,11 @@ AC_TRY_COMPILE([
 ac_cv_have_res_nsaddr_list="yes",
 ac_cv_have_res_nsaddr_list="no"))
 if test $ac_cv_have_res_nsaddr_list = "yes" ; then
-  AC_DEFINE(HAVE_RES_NSADDR_LIST,1,[If _res structure has nsaddr_list member])
+  AC_DEFINE(_SQUID_RES_NSADDR_LIST,_res.nsaddr_list,[If _res structure has nsaddr_list member])
+  AC_DEFINE(_SQUID_RES_NSADDR_COUNT,_res.nscount,[Nameserver counter for IPv4 _res])
 fi
 
-if test $ac_cv_have_res_nsaddr_list = "no" ; then
+if test "$_SQUID_RES_NSADDR_LIST" == ""; then
 AC_CACHE_CHECK(for _res.ns_list, ac_cv_have_res_ns_list,
 AC_TRY_COMPILE([
 #if HAVE_SYS_TYPES_H
@@ -3222,7 +3347,8 @@ AC_TRY_COMPILE([
 ac_cv_have_res_ns_list="yes",
 ac_cv_have_res_ns_list="no"))
 if test $ac_cv_have_res_ns_list = "yes" ; then
-  AC_DEFINE(HAVE_RES_NS_LIST,1,[If _res structure has ns_list member])
+  AC_DEFINE(_SQUID_RES_NSADDR_LIST,_res.ns_list,[If _res structure has ns_list member])
+  AC_DEFINE(_SQUID_RES_NSADDR_COUNT,_res.nscount,[Nameserver counter for IPv4 _res])
 fi
 fi
 

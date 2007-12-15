@@ -1,6 +1,6 @@
 
 /*
- * $Id: fd.cc,v 1.59 2007/09/25 13:24:59 hno Exp $
+ * $Id: fd.cc,v 1.60 2007/12/14 23:11:46 amosjeffries Exp $
  *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
@@ -103,7 +103,7 @@ fd_close(int fd)
     F->flags.open = 0;
     fdUpdateBiggest(fd, 0);
     Number_FD--;
-    memset(F, '\0', sizeof(fde));
+    F->clear();
     F->timeout = 0;
 }
 
@@ -181,7 +181,7 @@ fd_open(int fd, unsigned int type, const char *desc)
     }
 
     assert(!F->flags.open);
-    debugs(51, 3, "fd_open FD " << fd << " " << desc);
+    debugs(51, 3, "fd_open() FD " << fd << " " << desc);
     F->type = type;
     F->flags.open = 1;
     F->epoll_state = 0;

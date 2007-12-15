@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.410 2007/09/20 20:22:20 hno Exp $
+ * $Id: stat.cc,v 1.411 2007/12/14 23:11:48 amosjeffries Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -48,6 +48,7 @@
 #include "client_side_request.h"
 #include "client_side.h"
 #include "MemBuf.h"
+#include "SquidTime.h"
 
 /* these are included because they expose stats calls */
 /* TODO: provide a self registration mechanism for those classes
@@ -1644,6 +1645,7 @@ statClientRequests(StoreEntry * s)
     ClientHttpRequest *http;
     StoreEntry *e;
     int fd;
+    char buf[MAX_IPSTRLEN];
 
     for (i = ClientActiveRequests.head; i; i = i->next) {
         const char *p = NULL;
@@ -1660,11 +1662,11 @@ statClientRequests(StoreEntry * s)
             storeAppendPrintf(s, "\tin: buf %p, offset %ld, size %ld\n",
                               conn->in.buf, (long int) conn->in.notYetUsed, (long int) conn->in.allocatedSize);
             storeAppendPrintf(s, "\tpeer: %s:%d\n",
-                              inet_ntoa(conn->peer.sin_addr),
-                              ntohs(conn->peer.sin_port));
+                              conn->peer.NtoA(buf,MAX_IPSTRLEN),
+                              conn->peer.GetPort());
             storeAppendPrintf(s, "\tme: %s:%d\n",
-                              inet_ntoa(conn->me.sin_addr),
-                              ntohs(conn->me.sin_port));
+                              conn->me.NtoA(buf,MAX_IPSTRLEN),
+                              conn->me.GetPort());
             storeAppendPrintf(s, "\tnrequests: %d\n",
                               conn->nrequests);
         }

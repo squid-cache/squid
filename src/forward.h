@@ -7,6 +7,7 @@ class CacheManager;
 class ErrorState;
 
 #include "comm.h"
+#include "IPAddress.h"
 
 class FwdServer
 {
@@ -44,7 +45,7 @@ public:
     bool checkRetry();
     bool checkRetriable();
     void dispatch();
-    void pconnPush(int fd, const char *host, int port, const char *domain, struct IN_ADDR *client_addr);
+    void pconnPush(int fd, const char *host, int port, const char *domain, IPAddress &client_addr);
 
     bool dontRetry() { return flags.dont_retry; }
 
@@ -106,7 +107,7 @@ unsigned int forward_completed:1;
 
     flags;
 #if LINUX_NETFILTER
-    struct sockaddr_in src;
+    IPAddress src;
 #endif
 
 };

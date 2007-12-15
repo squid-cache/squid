@@ -25,7 +25,7 @@
  * 
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
  * 
- * $Id: snmp_vars.h,v 1.13 2003/01/23 00:36:48 robertc Exp $
+ * $Id: snmp_vars.h,v 1.14 2007/12/14 23:11:44 amosjeffries Exp $
  * 
  **********************************************************************/
 
@@ -71,9 +71,47 @@ u_char *snmp_var_DecodeVarBind(u_char *, int *, struct variable_list **, int);
 #define SMI_TIMETICKS  (ASN_APPLICATION | 3)	/* INTEGER */
 #define SMI_OPAQUE     (ASN_APPLICATION | 4)	/* OCTET STRING */
 #define SMI_COUNTER64  (ASN_APPLICATION | 6)	/* INTEGER */
-#define SMI_NOSUCHOBJECT   (ASN_CONTEXT | ASN_PRIMITIVE | 0x0)
-#define SMI_NOSUCHINSTANCE (ASN_CONTEXT | ASN_PRIMITIVE | 0x1)
-#define SMI_ENDOFMIBVIEW   (ASN_CONTEXT | ASN_PRIMITIVE | 0x2)
+
+
+/* constants for enums for the MIB nodes
+ * cachePeerAddressType (InetAddressType / ASN_INTEGER)
+ * cacheClientAddressType (InetAddressType / ASN_INTEGER)
+ * Defined Types
+ */
+
+#ifndef INETADDRESSTYPE_ENUMS
+#define INETADDRESSTYPE_ENUMS
+
+#define INETADDRESSTYPE_UNKNOWN  0
+#define INETADDRESSTYPE_IPV4  1
+#define INETADDRESSTYPE_IPV6  2
+#define INETADDRESSTYPE_IPV4Z  3
+#define INETADDRESSTYPE_IPV6Z  4
+#define INETADDRESSTYPE_DNS  16
+
+#endif                          /* INETADDRESSTYPE_ENUMS */
+
+
+/*
+ * RFC 1905: Protocol Operations for SNMPv2
+ * 
+ * Variable binding.
+ * 
+ * VarBind ::= 
+ *   SEQUENCE {
+ *     name ObjectName
+ *     CHOICE {
+ *       value ObjectSyntax
+ *       unSpecified NULL
+ *       noSuchObject[0] NULL
+ *       noSuchInstance[1] NULL
+ *       endOfMibView[2] NULL
+ *     }
+ *   }
+ */
+#define SMI_NOSUCHOBJECT   (ASN_CONTEXT | ASN_PRIMITIVE | 0x0) /* noSuchObject[0] */
+#define SMI_NOSUCHINSTANCE (ASN_CONTEXT | ASN_PRIMITIVE | 0x1) /* noSuchInstance[1] */
+#define SMI_ENDOFMIBVIEW   (ASN_CONTEXT | ASN_PRIMITIVE | 0x2) /* endOfMibView[2] */
 typedef struct variable variable;
 typedef struct variable_list variable_list;
 

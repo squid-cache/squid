@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.550 2007/09/28 00:22:38 hno Exp $
+ * $Id: protos.h,v 1.551 2007/12/14 23:11:47 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -43,6 +43,8 @@
  */
 #include "HttpRequestMethod.h"
 /* for routines still in this file that take CacheManager parameters */
+#include "IPAddress.h"
+/* for routines in here that need it as a parameter. */
 
 class CacheManager;
 
@@ -75,7 +77,7 @@ SQUIDCEXTERN void parse_wordlist(wordlist ** list);
 SQUIDCEXTERN void requirePathnameExists(const char *name, const char *path);
 SQUIDCEXTERN void parse_time_t(time_t * var);
 
-SQUIDCEXTERN void parse_sockaddr_in_list_token(sockaddr_in_list **, char *);
+SQUIDCEXTERN void parse_IPAddress_list_token(IPAddress_list **, char *);
 
 
 /* client_side.c - FD related client side routines */
@@ -83,13 +85,13 @@ SQUIDCEXTERN void parse_sockaddr_in_list_token(sockaddr_in_list **, char *);
 SQUIDCEXTERN void clientdbInit(void);
 extern void clientdbRegisterWithCacheManager(CacheManager & manager);
 
-SQUIDCEXTERN void clientdbUpdate(struct IN_ADDR, log_type, protocol_t, size_t);
+SQUIDCEXTERN void clientdbUpdate(const IPAddress &, log_type, protocol_t, size_t);
 
-SQUIDCEXTERN int clientdbCutoffDenied(struct IN_ADDR);
+SQUIDCEXTERN int clientdbCutoffDenied(const IPAddress &);
 SQUIDCEXTERN void clientdbDump(StoreEntry *);
 SQUIDCEXTERN void clientdbFreeMemory(void);
 
-SQUIDCEXTERN int clientdbEstablished(struct IN_ADDR, int);
+SQUIDCEXTERN int clientdbEstablished(const IPAddress &, int);
 SQUIDCEXTERN void clientOpenListenSockets(void);
 SQUIDCEXTERN void clientHttpConnectionsClose(void);
 SQUIDCEXTERN void httpRequestFree(void *);
@@ -142,7 +144,7 @@ SQUIDCEXTERN void idnsShutdown(void);
 extern void idnsRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN void idnsALookup(const char *, IDNSCB *, void *);
 
-SQUIDCEXTERN void idnsPTRLookup(const struct IN_ADDR, IDNSCB *, void *);
+SQUIDCEXTERN void idnsPTRLookup(const IPAddress &, IDNSCB *, void *);
 
 SQUIDCEXTERN void fd_close(int fd);
 SQUIDCEXTERN void fd_open(int fd, unsigned int type, const char *);
@@ -161,15 +163,15 @@ SQUIDCEXTERN void file_map_bit_reset(fileMap *, int);
 SQUIDCEXTERN void filemapFreeMemory(fileMap *);
 
 
-SQUIDCEXTERN void fqdncache_nbgethostbyaddr(struct IN_ADDR, FQDNH *, void *);
+SQUIDCEXTERN void fqdncache_nbgethostbyaddr(IPAddress &, FQDNH *, void *);
 
-SQUIDCEXTERN const char *fqdncache_gethostbyaddr(struct IN_ADDR, int flags);
+SQUIDCEXTERN const char *fqdncache_gethostbyaddr(IPAddress &, int flags);
 SQUIDCEXTERN void fqdncache_init(void);
 extern void fqdncacheRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN void fqdnStats(StoreEntry *);
 SQUIDCEXTERN void fqdncacheReleaseInvalid(const char *);
 
-SQUIDCEXTERN const char *fqdnFromAddr(struct IN_ADDR);
+SQUIDCEXTERN const char *fqdnFromAddr(IPAddress &);
 SQUIDCEXTERN int fqdncacheQueueDrain(void);
 SQUIDCEXTERN void fqdncacheFreeMemory(void);
 SQUIDCEXTERN void fqdncache_restart(void);
@@ -178,7 +180,7 @@ SQUIDCEXTERN void fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames);
 
 class FwdState;
 SQUIDCEXTERN void ftpStart(FwdState *);
-SQUIDCEXTERN char *ftpUrlWith2f(const HttpRequest *);
+SQUIDCEXTERN const char *ftpUrlWith2f(HttpRequest *);
 
 SQUIDCEXTERN void gopherStart(FwdState *);
 SQUIDCEXTERN int gopherCachable(const HttpRequest *);
@@ -261,13 +263,6 @@ SQUIDCEXTERN void httpHeaderStoreReport(StoreEntry * e);
 SQUIDCEXTERN void httpHdrMangleList(HttpHeader *, HttpRequest *, int req_or_rep);
 SQUIDCEXTERN int httpReqHdrManglersConfigured();
 
-SQUIDCEXTERN void icmpOpen(void);
-SQUIDCEXTERN void icmpClose(void);
-
-SQUIDCEXTERN void icmpSourcePing(struct IN_ADDR to, const icp_common_t *, const char *url);
-
-SQUIDCEXTERN void icmpDomainPing(struct IN_ADDR to, const char *domain);
-
 #ifdef SQUID_SNMP
 SQUIDCEXTERN PF snmpHandleUdp;
 SQUIDCEXTERN void snmpInit(void);
@@ -276,11 +271,10 @@ SQUIDCEXTERN void snmpConnectionShutdown(void);
 SQUIDCEXTERN void snmpConnectionClose(void);
 SQUIDCEXTERN void snmpDebugOid(int lvl, oid * Name, snint Len);
 
-SQUIDCEXTERN void addr2oid(struct IN_ADDR addr, oid * Dest);
+SQUIDCEXTERN void addr2oid(IPAddress &addr, oid *Dest);
+SQUIDCEXTERN void oid2addr(oid *Dest, IPAddress &addr, u_int code);
 
-SQUIDCEXTERN struct IN_ADDR *oid2addr(oid * id);
-
-SQUIDCEXTERN struct IN_ADDR *client_entry(struct IN_ADDR *current);
+SQUIDCEXTERN IPAddress *client_entry(IPAddress *current);
 SQUIDCEXTERN variable_list *snmp_basicFn(variable_list *, snint *);
 SQUIDCEXTERN variable_list *snmp_confFn(variable_list *, snint *);
 SQUIDCEXTERN variable_list *snmp_sysFn(variable_list *, snint *);
@@ -322,9 +316,9 @@ extern void ipcacheRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN void stat_ipcache_get(StoreEntry *);
 SQUIDCEXTERN void ipcacheCycleAddr(const char *name, ipcache_addrs *);
 
-SQUIDCEXTERN void ipcacheMarkBadAddr(const char *name, struct IN_ADDR);
+SQUIDCEXTERN void ipcacheMarkBadAddr(const char *name, IPAddress &);
 
-SQUIDCEXTERN void ipcacheMarkGoodAddr(const char *name, struct IN_ADDR);
+SQUIDCEXTERN void ipcacheMarkGoodAddr(const char *name, IPAddress &);
 SQUIDCEXTERN void ipcacheFreeMemory(void);
 SQUIDCEXTERN ipcache_addrs *ipcacheCheckNumeric(const char *name);
 SQUIDCEXTERN void ipcache_restart(void);
@@ -364,7 +358,7 @@ SQUIDCEXTERN int neighborsUdpPing(HttpRequest *,
                                   int *timeout);
 SQUIDCEXTERN void neighborAddAcl(const char *, const char *);
 
-SQUIDCEXTERN void neighborsUdpAck(const cache_key *, icp_common_t *, const struct sockaddr_in *);
+SQUIDCEXTERN void neighborsUdpAck(const cache_key *, icp_common_t *, const IPAddress &);
 SQUIDCEXTERN void neighborAdd(const char *, const char *, int, int, int, int, int);
 SQUIDCEXTERN void neighbors_init(void);
 extern void neighborsRegisterWithCacheManager(CacheManager & manager);
@@ -388,26 +382,28 @@ SQUIDCEXTERN void peerConnectSucceded(peer *);
 SQUIDCEXTERN void dump_peer_options(StoreEntry *, peer *);
 SQUIDCEXTERN int peerHTTPOkay(const peer *, HttpRequest *);
 
-SQUIDCEXTERN peer *whichPeer(const struct sockaddr_in *from);
+SQUIDCEXTERN peer *whichPeer(const IPAddress &from);
 
 SQUIDCEXTERN void netdbInit(void);
 extern void netdbRegisterWitHCacheManager(CacheManager & manager);
 
-SQUIDCEXTERN void netdbHandlePingReply(const struct sockaddr_in *from, int hops, int rtt);
+SQUIDCEXTERN void netdbHandlePingReply(const IPAddress &from, int hops, int rtt);
 SQUIDCEXTERN void netdbPingSite(const char *hostname);
 SQUIDCEXTERN void netdbDump(StoreEntry *);
 
-SQUIDCEXTERN int netdbHops(struct IN_ADDR);
+#if 0 // AYJ: Looks to be unused now.
+SQUIDCEXTERN int netdbHops(IPAddress &);
+#endif
 SQUIDCEXTERN void netdbFreeMemory(void);
 SQUIDCEXTERN int netdbHostHops(const char *host);
 SQUIDCEXTERN int netdbHostRtt(const char *host);
 SQUIDCEXTERN void netdbUpdatePeer(HttpRequest *, peer * e, int rtt, int hops);
 
-SQUIDCEXTERN void netdbDeleteAddrNetwork(struct IN_ADDR addr);
+SQUIDCEXTERN void netdbDeleteAddrNetwork(IPAddress &addr);
 SQUIDCEXTERN void netdbBinaryExchange(StoreEntry *);
 SQUIDCEXTERN void netdbExchangeStart(void *);
 
-SQUIDCEXTERN void netdbExchangeUpdatePeer(struct IN_ADDR, peer *, double, double);
+SQUIDCEXTERN void netdbExchangeUpdatePeer(IPAddress &, peer *, double, double);
 SQUIDCEXTERN peer *netdbClosestParent(HttpRequest *);
 SQUIDCEXTERN void netdbHostData(const char *host, int *samp, int *rtt, int *hops);
 
@@ -420,7 +416,7 @@ SQUIDCEXTERN void peerDigestNeeded(PeerDigest * pd);
 SQUIDCEXTERN void peerDigestNotePeerGone(PeerDigest * pd);
 SQUIDCEXTERN void peerDigestStatsReport(const PeerDigest * pd, StoreEntry * e);
 
-SQUIDCEXTERN struct IN_ADDR getOutgoingAddr(HttpRequest * request);
+SQUIDCEXTERN IPAddress getOutgoingAddr(HttpRequest * request);
 unsigned long getOutgoingTOS(HttpRequest * request);
 
 SQUIDCEXTERN void urnStart(HttpRequest *, StoreEntry *);
@@ -452,7 +448,7 @@ extern void waisStart(FwdState *);
 /* ident.c */
 #if USE_IDENT
 
-SQUIDCEXTERN void identStart(struct sockaddr_in *me, struct sockaddr_in *my_peer,
+SQUIDCEXTERN void identStart(IPAddress &me, IPAddress &my_peer,
                              IDCB * callback, void *cbdata);
 SQUIDCEXTERN void identInit(void);
 #endif
@@ -599,7 +595,9 @@ SQUIDCEXTERN void squid_signal(int sig, SIGHDLR *, int flags);
 SQUIDCEXTERN pid_t readPidFile(void);
 SQUIDCEXTERN void keepCapabilities(void);
 
-SQUIDCEXTERN struct IN_ADDR inaddrFromHostent(const struct hostent *hp);
+/* AYJ debugs function to show locations being reset with memset() */
+SQUIDCEXTERN void *xmemset(void *dst, int, size_t);
+
 SQUIDCEXTERN int intAverage(int, int, int, int);
 SQUIDCEXTERN double doubleAverage(double, double, int, int);
 SQUIDCEXTERN void debug_trap(const char *);
@@ -675,6 +673,7 @@ SQUIDCEXTERN pid_t ipcCreate(int type,
                              const char *prog,
                              const char *const args[],
                              const char *name,
+                             IPAddress &local_addr,
                              int *rfd,
                              int *wfd,
                              void **hIpc);

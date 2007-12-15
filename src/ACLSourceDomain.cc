@@ -1,5 +1,5 @@
 /*
- * $Id: ACLSourceDomain.cc,v 1.6 2007/09/21 11:41:52 amosjeffries Exp $
+ * $Id: ACLSourceDomain.cc,v 1.7 2007/12/14 23:11:45 amosjeffries Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -82,7 +82,7 @@ ACLSourceDomainStrategy::match (ACLData<MatchType> * &data, ACLChecklist *checkl
         return data->match(fqdn);
     } else if (!checklist->sourceDomainChecked()) {
         /* FIXME: Using AclMatchedName here is not OO correct. Should find a way to the current acl */
-        debugs(28, 3, "aclMatchAcl: Can't yet compare '" << AclMatchedName << "' ACL for '" << inet_ntoa(checklist->src_addr) << "'");
+        debugs(28, 3, "aclMatchAcl: Can't yet compare '" << AclMatchedName << "' ACL for '" << checklist->src_addr << "'");
         checklist->changeState(SourceDomainLookup::Instance());
         return 0;
     }

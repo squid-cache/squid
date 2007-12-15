@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.77 2007/11/15 16:47:35 wessels Exp $
+ * $Id: htcp.cc,v 1.78 2007/12/14 23:11:46 amosjeffries Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -182,7 +182,7 @@ public:
     void checkHit();
     void checkedHit(StoreEntry *e);
 
-    void setFrom (struct sockaddr_in *from);
+    void setFrom (IPAddress &from);
     void setDataHeader (htcpDataHeader *);
     char *method;
     char *uri;
@@ -193,7 +193,7 @@ public:
 private:
     HttpRequest *checkHitRequest;
 
-    struct sockaddr_in *from;
+    IPAddress from; // was a ptr. return to such IFF needed. otherwise copy should do.
     htcpDataHeader *dhdr;
 };
 
@@ -263,7 +263,7 @@ static int htcpOutSocket = -1;
 static u_int32_t queried_id[N_QUERIED_KEYS];
 static cache_key queried_keys[N_QUERIED_KEYS][SQUID_MD5_DIGEST_LENGTH];
 
-static struct sockaddr_in queried_addr[N_QUERIED_KEYS];
+static IPAddress queried_addr[N_QUERIED_KEYS];
 static MemAllocator *htcpDetailPool = NULL;
 
 static int old_squid_format = 0;
@@ -282,26 +282,26 @@ static ssize_t htcpBuildTstOpData(char *buf, size_t buflen, htcpStuff * stuff);
 static void htcpFreeSpecifier(htcpSpecifier * s);
 static void htcpFreeDetail(htcpDetail * s);
 
-static void htcpHandle(char *buf, int sz, struct sockaddr_in *from);
+static void htcpHandle(char *buf, int sz, IPAddress &from);
 
-static void htcpHandleData(char *buf, int sz, struct sockaddr_in *from);
+static void htcpHandleData(char *buf, int sz, IPAddress &from);
 
-static void htcpHandleMon(htcpDataHeader *, char *buf, int sz, struct sockaddr_in *from);
+static void htcpHandleMon(htcpDataHeader *, char *buf, int sz, IPAddress &from);
 
-static void htcpHandleNop(htcpDataHeader *, char *buf, int sz, struct sockaddr_in *from);
+static void htcpHandleNop(htcpDataHeader *, char *buf, int sz, IPAddress &from);
 
-static void htcpHandleSet(htcpDataHeader *, char *buf, int sz, struct sockaddr_in *from);
+static void htcpHandleSet(htcpDataHeader *, char *buf, int sz, IPAddress &from);
 
-static void htcpHandleTst(htcpDataHeader *, char *buf, int sz, struct sockaddr_in *from);
+static void htcpHandleTst(htcpDataHeader *, char *buf, int sz, IPAddress &from);
 static void htcpRecv(int fd, void *data);
 
-static void htcpSend(const char *buf, int len, struct sockaddr_in *to);
+static void htcpSend(const char *buf, int len, IPAddress &to);
 
-static void htcpTstReply(htcpDataHeader *, StoreEntry *, htcpSpecifier *, struct sockaddr_in *);
+static void htcpTstReply(htcpDataHeader *, StoreEntry *, htcpSpecifier *, IPAddress &);
 
-static void htcpHandleTstRequest(htcpDataHeader *, char *buf, int sz, struct sockaddr_in *from);
+static void htcpHandleTstRequest(htcpDataHeader *, char *buf, int sz, IPAddress &from);
 
-static void htcpHandleTstResponse(htcpDataHeader *, char *, int, struct sockaddr_in *);
+static void htcpHandleTstResponse(htcpDataHeader *, char *, int, IPAddress &);
 
 static void
 htcpHexdump(const char *tag, const char *s, int sz)
@@ -604,15 +604,15 @@ htcpBuildPacket(char *buf, size_t buflen, htcpStuff * stuff)
 
 static void
 
-htcpSend(const char *buf, int len, struct sockaddr_in *to)
+htcpSend(const char *buf, int len, IPAddress &to)
 {
     int x;
-    debugs(31, 3, "htcpSend: " << inet_ntoa(to->sin_addr) << "/" << ntohs(to->sin_port));
+
+    debugs(31, 3, "htcpSend: " << to );
     htcpHexdump("htcpSend", buf, len);
+
     x = comm_udp_sendto(htcpOutSocket,
                         to,
-
-                        sizeof(struct sockaddr_in),
                         buf,
                         len);
 
@@ -628,7 +628,7 @@ htcpSend(const char *buf, int len, struct sockaddr_in *to)
 
 void
 
-htcpSpecifier::setFrom (struct sockaddr_in *aSocket)
+htcpSpecifier::setFrom (IPAddress &aSocket)
 {
     from = aSocket;
 }
@@ -859,11 +859,11 @@ htcpUnpackDetail(char *buf, int sz)
 
 static int
 
-htcpAccessCheck(acl_access * acl, htcpSpecifier * s, struct sockaddr_in *from)
+htcpAccessCheck(acl_access * acl, htcpSpecifier * s, IPAddress &from)
 {
     ACLChecklist checklist;
-    checklist.src_addr = from->sin_addr;
-    checklist.my_addr = no_addr;
+    checklist.src_addr = from;
+    checklist.my_addr.SetNoAddr();
     checklist.request = HTTPMSGLOCK(s->request);
     checklist.accessList = cbdataReference(acl);
     /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
@@ -873,7 +873,7 @@ htcpAccessCheck(acl_access * acl, htcpSpecifier * s, struct sockaddr_in *from)
 
 static void
 
-htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, struct sockaddr_in *from)
+htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, IPAddress &from)
 {
     htcpStuff stuff;
     static char pkt[8192];
@@ -962,7 +962,7 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, struct
 
 static void
 
-htcpClrReply(htcpDataHeader * dhdr, int purgeSucceeded, struct sockaddr_in *from)
+htcpClrReply(htcpDataHeader * dhdr, int purgeSucceeded, IPAddress &from)
 {
     htcpStuff stuff;
     static char pkt[8192];
@@ -1000,7 +1000,7 @@ htcpClrReply(htcpDataHeader * dhdr, int purgeSucceeded, struct sockaddr_in *from
 
 static void
 
-htcpHandleNop(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
+htcpHandleNop(htcpDataHeader * hdr, char *buf, int sz, IPAddress &from)
 {
     debugs(31, 3, "htcpHandleNop: Unimplemented");
 }
@@ -1038,23 +1038,18 @@ htcpSpecifier::created (StoreEntry *e)
 
     if (e->isNull()) {
         debugs(31, 3, "htcpCheckHit: NO; public object not found");
-        goto miss;
     }
-
-    if (!e->validToSend()) {
+    else if (!e->validToSend()) {
         debugs(31, 3, "htcpCheckHit: NO; entry not valid to send" );
-        goto miss;
     }
-
-    if (refreshCheckHTCP(e, checkHitRequest)) {
+    else if (refreshCheckHTCP(e, checkHitRequest)) {
         debugs(31, 3, "htcpCheckHit: NO; cached response is stale");
-        goto miss;
+    }
+    else {
+        debugs(31, 3, "htcpCheckHit: YES!?");
+        hit = e;
     }
 
-    debugs(31, 3, "htcpCheckHit: YES!?");
-    hit = e;
-
-miss:
     checkedHit (hit);
 }
 
@@ -1105,7 +1100,7 @@ htcpClrStore(const htcpSpecifier * s)
 
 static void
 
-htcpHandleTst(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
+htcpHandleTst(htcpDataHeader * hdr, char *buf, int sz, IPAddress &from)
 {
     debugs(31, 3, "htcpHandleTst: sz = " << sz);
 
@@ -1120,22 +1115,21 @@ HtcpReplyData::HtcpReplyData() : hdr(hoHtcpReply)
 
 static void
 
-htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
+htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, IPAddress &from)
 {
     htcpReplyData htcpReply;
     cache_key *key = NULL;
 
-    struct sockaddr_in *peer;
+    IPAddress *peer;
     htcpDetail *d = NULL;
     char *t;
-
 
     if (queried_id[hdr->msg_id % N_QUERIED_KEYS] != hdr->msg_id)
     {
         debugs(31, 2, "htcpHandleTstResponse: No matching query id '" <<
                hdr->msg_id << "' (expected " <<
                queried_id[hdr->msg_id % N_QUERIED_KEYS] << ") from '" <<
-               inet_ntoa(from->sin_addr) << "'");
+               from << "'");
 
         return;
     }
@@ -1144,15 +1138,15 @@ htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_i
 
     if (!key)
     {
-        debugs(31, 1, "htcpHandleTstResponse: No query key for response id '" << hdr->msg_id << "' from '" << inet_ntoa(from->sin_addr) << "'");
+        debugs(31, 1, "htcpHandleTstResponse: No query key for response id '" << hdr->msg_id << "' from '" << from << "'");
         return;
     }
 
     peer = &queried_addr[hdr->msg_id % N_QUERIED_KEYS];
 
-    if (peer->sin_addr.s_addr != from->sin_addr.s_addr || peer->sin_port != from->sin_port)
+    if ( *peer != from || peer->GetPort() != from.GetPort() )
     {
-        debugs(31, 1, "htcpHandleTstResponse: Unexpected response source " << inet_ntoa(from->sin_addr));
+        debugs(31, 1, "htcpHandleTstResponse: Unexpected response source " << from );
         return;
     }
 
@@ -1199,7 +1193,7 @@ htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_i
 
 static void
 
-htcpHandleTstRequest(htcpDataHeader * dhdr, char *buf, int sz, struct sockaddr_in *from)
+htcpHandleTstRequest(htcpDataHeader * dhdr, char *buf, int sz, IPAddress &from)
 {
     /* buf should be a SPECIFIER */
     htcpSpecifier *s;
@@ -1258,21 +1252,21 @@ htcpSpecifier::checkedHit(StoreEntry *e)
 
 static void
 
-htcpHandleMon(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
+htcpHandleMon(htcpDataHeader * hdr, char *buf, int sz, IPAddress &from)
 {
     debugs(31, 3, "htcpHandleMon: Unimplemented");
 }
 
 static void
 
-htcpHandleSet(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
+htcpHandleSet(htcpDataHeader * hdr, char *buf, int sz, IPAddress &from)
 {
     debugs(31, 3, "htcpHandleSet: Unimplemented");
 }
 
 static void
 
-htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
+htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, IPAddress &from)
 {
     htcpSpecifier *s;
     /* buf[0/1] is reserved and reason */
@@ -1331,7 +1325,7 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
 
 static void
 
-htcpHandleData(char *buf, int sz, struct sockaddr_in *from)
+htcpHandleData(char *buf, int sz, IPAddress &from)
 {
     htcpDataHeader hdr;
 
@@ -1364,7 +1358,7 @@ htcpHandleData(char *buf, int sz, struct sockaddr_in *from)
 
     if (hdr.opcode >= HTCP_END)
     {
-        debugs(31, 1, "htcpHandleData: client " << inet_ntoa(from->sin_addr) << ", opcode " << hdr.opcode << " out of range");
+        debugs(31, 1, "htcpHandleData: client " << from << ", opcode " << hdr.opcode << " out of range");
         return;
     }
 
@@ -1424,7 +1418,7 @@ htcpHandleData(char *buf, int sz, struct sockaddr_in *from)
 
 static void
 
-htcpHandle(char *buf, int sz, struct sockaddr_in *from)
+htcpHandle(char *buf, int sz, IPAddress &from)
 {
     htcpHeader htcpHdr;
     assert (sz >= 0);
@@ -1451,17 +1445,14 @@ htcpHandle(char *buf, int sz, struct sockaddr_in *from)
     if (sz != htcpHdr.length)
     {
         debugs(31, 1, "htcpHandle: sz/" << sz << " != htcpHdr.length/" <<
-               htcpHdr.length << " from " << inet_ntoa(from->sin_addr) << ":" <<
-               (int) ntohs(from->sin_port));
+               htcpHdr.length << " from " << from );
 
         return;
     }
 
     if (htcpHdr.major != 0)
     {
-        debugs(31, 1, "htcpHandle: Unknown major version " << htcpHdr.major <<
-               " from " << inet_ntoa(from->sin_addr) << ":" <<
-               (int) ntohs(from->sin_port));
+        debugs(31, 1, "htcpHandle: Unknown major version " << htcpHdr.major << " from " << from );
 
         return;
     }
@@ -1476,22 +1467,18 @@ htcpRecv(int fd, void *data)
 {
     static char buf[8192];
     int len;
-
-    static struct sockaddr_in from;
-
-    socklen_t flen = sizeof(struct sockaddr_in);
-    memset(&from, '\0', flen);
+    static IPAddress from;
 
     /* Receive up to 8191 bytes, leaving room for a null */
 
-    len = comm_udp_recvfrom(fd, buf, sizeof(buf) - 1, 0, (struct sockaddr *) &from, &flen);
-    debugs(31, 3, "htcpRecv: FD " << fd << ", " << len << " bytes from " <<
-           inet_ntoa(from.sin_addr) << ":" << ntohs(from.sin_port));
+    len = comm_udp_recvfrom(fd, buf, sizeof(buf) - 1, 0, from);
+
+    debugs(31, 3, "htcpRecv: FD " << fd << ", " << len << " bytes from " << from );
 
     if (len)
         statCounter.htcp.pkts_recv++;
 
-    htcpHandle(buf, len, &from);
+    htcpHandle(buf, len, from);
 
     commSetSelect(fd, COMM_SELECT_READ, htcpRecv, NULL, 0);
 }
@@ -1505,16 +1492,19 @@ htcpRecv(int fd, void *data)
 void
 htcpInit(void)
 {
+    IPAddress sendOn;
+
     if (Config.Port.htcp <= 0) {
         debugs(31, 1, "HTCP Disabled.");
         return;
     }
+    sendOn = Config.Addrs.udp_outgoing;
+    sendOn.SetPort(Config.Port.htcp);
 
     enter_suid();
     htcpInSocket = comm_open(SOCK_DGRAM,
                              IPPROTO_UDP,
-                             Config.Addrs.udp_incoming,
-                             Config.Port.htcp,
+                             sendOn,
                              COMM_NONBLOCKING,
                              "HTCP Socket");
     leave_suid();
@@ -1526,12 +1516,11 @@ htcpInit(void)
 
     debugs(31, 1, "Accepting HTCP messages on port " << Config.Port.htcp << ", FD " << htcpInSocket << ".");
 
-    if (Config.Addrs.udp_outgoing.s_addr != no_addr.s_addr) {
+    if (!Config.Addrs.udp_outgoing.IsNoAddr()) {
         enter_suid();
         htcpOutSocket = comm_open(SOCK_DGRAM,
                                   IPPROTO_UDP,
-                                  Config.Addrs.udp_outgoing,
-                                  Config.Port.htcp,
+                                  sendOn,
                                   COMM_NONBLOCKING,
                                   "Outgoing HTCP Socket");
         leave_suid();
@@ -1615,7 +1604,8 @@ htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
         return;
     }
 
-    htcpSend(pkt, (int) pktlen, &p->in_addr);
+    htcpSend(pkt, (int) pktlen, p->in_addr);
+
     queried_id[stuff.msg_id % N_QUERIED_KEYS] = stuff.msg_id;
     save_key = queried_keys[stuff.msg_id % N_QUERIED_KEYS];
     storeKeyCopy(save_key, (const cache_key *)e->key);

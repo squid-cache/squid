@@ -1,5 +1,5 @@
 /*
- * $Id: ACLDestinationDomain.cc,v 1.15 2007/11/03 04:49:53 wessels Exp $
+ * $Id: ACLDestinationDomain.cc,v 1.16 2007/12/14 23:11:45 amosjeffries Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -79,10 +79,11 @@ ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLChecklist *c
     const ipcache_addrs *ia = NULL;
     const char *fqdn = NULL;
 
-    if (data->match(checklist->request->host))
+    if (data->match(checklist->request->GetHost()))
         return 1;
 
-    if ((ia = ipcacheCheckNumeric(checklist->request->host)) == NULL)
+    /* numeric IPA? */
+    if ((ia = ipcacheCheckNumeric(checklist->request->GetHost())) == NULL)
         return 0;
 
     checklist->dst_addr = ia->in_addrs[0];
@@ -92,7 +93,7 @@ ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLChecklist *c
         return data->match(fqdn);
     } else if (!checklist->destinationDomainChecked()) {
         /* FIXME: Using AclMatchedName here is not OO correct. Should find a way to the current acl */
-        debugs(28, 3, "aclMatchAcl: Can't yet compare '" << AclMatchedName << "' ACL for '" << checklist->request->host << "'");
+        debugs(28, 3, "aclMatchAcl: Can't yet compare '" << AclMatchedName << "' ACL for '" << checklist->request->GetHost() << "'");
         checklist->changeState(DestinationDomainLookup::Instance());
         return 0;
     }

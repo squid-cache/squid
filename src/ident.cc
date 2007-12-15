@@ -1,6 +1,6 @@
 
 /*
- * $Id: ident.cc,v 1.77 2007/05/29 13:31:40 amosjeffries Exp $
+ * $Id: ident.cc,v 1.78 2007/12/14 23:11:47 amosjeffries Exp $
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
@@ -55,9 +55,9 @@ typedef struct _IdentStateData
     hash_link hash;		/* must be first */
     int fd;			/* IDENT fd */
 
-    struct sockaddr_in me;
+    IPAddress me;
 
-    struct sockaddr_in my_peer;
+    IPAddress my_peer;
     IdentClient *clients;
     char buf[4096];
 }
@@ -107,7 +107,7 @@ static void
 identTimeout(int fd, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
-    debugs(30, 3, "identTimeout: FD " << fd << ", " << inet_ntoa(state->my_peer.sin_addr));
+    debugs(30, 3, "identTimeout: FD " << fd << ", " << state->my_peer);
 
     comm_close(fd);
 }
@@ -141,8 +141,8 @@ identConnectDone(int fd, comm_err_t status, int xerrno, void *data)
     MemBuf mb;
     mb.init();
     mb.Printf("%d, %d\r\n",
-              ntohs(state->my_peer.sin_port),
-              ntohs(state->me.sin_port));
+              state->my_peer.GetPort(),
+              state->me.GetPort());
     comm_write_mbuf(fd, &mb, NULL, state);
     comm_read(fd, state->buf, BUFSIZ, identReadReply, state);
     commSetTimeout(fd, Config.Timeout.ident, identTimeout, state);
@@ -212,20 +212,17 @@ CBDATA_TYPE(IdentStateData);
  * start a TCP connection to the peer host on port 113
  */
 void
-
-identStart(struct sockaddr_in *me, struct sockaddr_in *my_peer, IDCB * callback, void *data)
+identStart(IPAddress &me, IPAddress &my_peer, IDCB * callback, void *data)
 {
     IdentStateData *state;
     int fd;
     char key1[IDENT_KEY_SZ];
     char key2[IDENT_KEY_SZ];
     char key[IDENT_KEY_SZ];
-    snprintf(key1, IDENT_KEY_SZ, "%s:%d",
-             inet_ntoa(me->sin_addr),
-             ntohs(me->sin_port));
-    snprintf(key2, IDENT_KEY_SZ, "%s:%d",
-             inet_ntoa(my_peer->sin_addr),
-             ntohs(my_peer->sin_port));
+    char ntoabuf[MAX_IPSTRLEN];
+
+    me.ToURL(key1, IDENT_KEY_SZ);
+    my_peer.ToURL(key2, IDENT_KEY_SZ);
     snprintf(key, IDENT_KEY_SZ, "%s,%s", key1, key2);
 
     if ((state = (IdentStateData *)hash_lookup(ident_hash, key)) != NULL)
@@ -236,8 +233,7 @@ identStart(struct sockaddr_in *me, struct sockaddr_in *my_peer, IDCB * callback,
 
     fd = comm_open(SOCK_STREAM,
                    IPPROTO_TCP,
-                   me->sin_addr,
-                   0,
+                   me,
                    COMM_NONBLOCKING,
                    "ident");
 
@@ -252,8 +248,8 @@ identStart(struct sockaddr_in *me, struct sockaddr_in *my_peer, IDCB * callback,
     state = cbdataAlloc(IdentStateData);
     state->hash.key = xstrdup(key);
     state->fd = fd;
-    state->me = *me;
-    state->my_peer = *my_peer;
+    state->me = me;
+    state->my_peer = my_peer;
     identClientAdd(state, callback, data);
     hash_join(ident_hash, &state->hash);
     comm_add_close_handler(fd,
@@ -261,7 +257,7 @@ identStart(struct sockaddr_in *me, struct sockaddr_in *my_peer, IDCB * callback,
                            state);
     commSetTimeout(fd, Config.Timeout.ident, identTimeout, state);
     commConnectStart(fd,
-                     inet_ntoa(state->my_peer.sin_addr),
+                     state->my_peer.NtoA(ntoabuf,MAX_IPSTRLEN),
                      IDENT_PORT,
                      identConnectDone,
                      state);

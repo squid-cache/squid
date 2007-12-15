@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.115 2007/09/21 11:41:52 amosjeffries Exp $
+ * $Id: asn.cc,v 1.116 2007/12/14 23:11:45 amosjeffries Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -53,12 +53,15 @@
 
 /* BEGIN of definitions for radix tree entries */
 
-/* int in memory with length */
-typedef u_char m_int[1 + sizeof(unsigned int)];
-#define store_m_int(i, m) \
-    (i = htonl(i), m[0] = sizeof(m_int), xmemcpy(m+1, &i, sizeof(unsigned int)))
-#define get_m_int(i, m) \
-    (xmemcpy(&i, m+1, sizeof(unsigned int)), ntohl(i))
+
+/* AYJ INET6 : Why are these objects being converted to raw u_char memory for use ? */
+
+/* 32/128 bits address in memory with length */
+typedef u_char m_ADDR[1 + sizeof(IPAddress)];
+#define store_m_ADDR(i, m) \
+    (m[0] = sizeof(IPAddress), xmemcpy(m+1, &i, sizeof(IPAddress)) )
+#define get_m_ADDR(i, m) \
+    xmemcpy(&i, m+1, sizeof(IPAddress))
 
 /* END of definitions for radix tree entries */
 
@@ -100,8 +103,8 @@ struct rtentry_t
 {
     struct squid_radix_node e_nodes[2];
     as_info *e_info;
-    m_int e_addr;
-    m_int e_mask;
+    m_ADDR e_addr;
+    m_ADDR e_mask;
 };
 
 static int asnAddNet(char *, int);
@@ -125,28 +128,26 @@ static OBJH asnStats;
 /* PUBLIC */
 
 int
-asnMatchIp(List<int> *data, struct IN_ADDR addr)
+asnMatchIp(List<int> *data, IPAddress &addr)
 {
-    unsigned long lh;
-
     struct squid_radix_node *rn;
     as_info *e;
-    m_int m_addr;
+    m_ADDR m_addr;
     List<int> *a = NULL;
     List<int> *b = NULL;
-    lh = ntohl(addr.s_addr);
-    debugs(53, 3, "asnMatchIp: Called for " << inet_ntoa(addr) << ".");
+
+    debugs(53, 3, "asnMatchIp: Called for " << addr );
 
     if (AS_tree_head == NULL)
         return 0;
 
-    if (addr.s_addr == no_addr.s_addr)
+    if (addr.IsNoAddr())
         return 0;
 
-    if (addr.s_addr == any_addr.s_addr)
+    if (addr.IsAnyAddr())
         return 0;
 
-    store_m_int(lh, m_addr);
+    store_m_ADDR(addr, m_addr);
 
     rn = squid_rn_match(m_addr, AS_tree_head);
 
@@ -389,13 +390,12 @@ asnAddNet(char *as_string, int as_number)
     rtentry_t *e;
 
     struct squid_radix_node *rn;
-    char dbg1[32], dbg2[32];
     List<int> **Tail = NULL;
     List<int> *q = NULL;
     as_info *asinfo = NULL;
 
-    struct IN_ADDR in_a, in_m;
-    long mask, addr;
+    IPAddress mask;
+    IPAddress addr;
     char *t;
     int bitl;
 
@@ -407,37 +407,28 @@ asnAddNet(char *as_string, int as_number)
     }
 
     *t = '\0';
-    addr = inet_addr(as_string);
+    addr = as_string;
     bitl = atoi(t + 1);
 
     if (bitl < 0)
         bitl = 0;
 
-    if (bitl > 32)
-        bitl = 32;
+    // INET6 TODO : find a better way of identifying the base IPA family for mask than this.
+    t = strchr(as_string, '.');
 
-    mask = bitl ? 0xfffffffful << (32 - bitl) : 0;
+    // generate Netbits Format Mask
+    mask.SetNoAddr();
+    mask.ApplyMask(bitl, (t!=NULL?AF_INET:AF_INET6) );
 
-    in_a.s_addr = addr;
-
-    in_m.s_addr = mask;
-
-    xstrncpy(dbg1, inet_ntoa(in_a), 32);
-
-    xstrncpy(dbg2, inet_ntoa(in_m), 32);
-
-    addr = ntohl(addr);
-
-    /*mask = ntohl(mask); */
-    debugs(53, 3, "asnAddNet: called for " << dbg1 << "/" << dbg2);
+    debugs(53, 3, "asnAddNet: called for " << addr << "/" << mask );
 
     e = (rtentry_t *)xmalloc(sizeof(rtentry_t));
 
     memset(e, '\0', sizeof(rtentry_t));
 
-    store_m_int(addr, e->e_addr);
+    store_m_ADDR(addr, e->e_addr);
 
-    store_m_int(mask, e->e_mask);
+    store_m_ADDR(mask, e->e_mask);
 
     rn = squid_rn_lookup(e->e_addr, e->e_mask, AS_tree_head);
 
@@ -445,7 +436,7 @@ asnAddNet(char *as_string, int as_number)
         asinfo = ((rtentry_t *) rn)->e_info;
 
         if (asinfo->as_number->find(as_number)) {
-            debugs(53, 3, "asnAddNet: Ignoring repeated network '" << dbg1 << "/" << bitl << "' for AS " << as_number);
+            debugs(53, 3, "asnAddNet: Ignoring repeated network '" << addr << "/" << bitl << "' for AS " << as_number);
         } else {
             debugs(53, 3, "asnAddNet: Warning: Found a network with multiple AS numbers!");
 
@@ -481,7 +472,6 @@ asnAddNet(char *as_string, int as_number)
 }
 
 static int
-
 destroyRadixNode(struct squid_radix_node *rn, void *w)
 {
 
@@ -519,39 +509,23 @@ destroyRadixNodeInfo(as_info * e_info)
 }
 
 static int
-mask_len(u_long mask)
-{
-    int len = 32;
-
-    if (mask == 0)
-        return 0;
-
-    while ((mask & 1) == 0) {
-        len--;
-        mask >>= 1;
-    }
-
-    return len;
-}
-
-static int
-
 printRadixNode(struct squid_radix_node *rn, void *_sentry)
 {
     StoreEntry *sentry = (StoreEntry *)_sentry;
     rtentry_t *e = (rtentry_t *) rn;
     List<int> *q;
     as_info *asinfo;
+    char buf[MAX_IPSTRLEN];
+    IPAddress addr;
+    IPAddress mask;
 
-    struct IN_ADDR addr;
-
-    struct IN_ADDR mask;
     assert(e);
     assert(e->e_info);
-    (void) get_m_int(addr.s_addr, e->e_addr);
-    (void) get_m_int(mask.s_addr, e->e_mask);
-    storeAppendPrintf(sentry, "%15s/%d\t",
-                      inet_ntoa(addr), mask_len(ntohl(mask.s_addr)));
+    (void) get_m_ADDR(addr, e->e_addr);
+    (void) get_m_ADDR(mask, e->e_mask);
+    storeAppendPrintf(sentry, "%s/%d\t",
+                      addr.NtoA(buf, MAX_IPSTRLEN),
+                      mask.GetCIDR() );
     asinfo = e->e_info;
     assert(asinfo->as_number);
 
@@ -571,7 +545,7 @@ ACLASN::~ACLASN()
 
 bool
 
-ACLASN::match(struct IN_ADDR toMatch)
+ACLASN::match(IPAddress toMatch)
 {
     return asnMatchIp(data, toMatch);
 }
@@ -616,7 +590,7 @@ ACLASN::parse()
     }
 }
 
-ACLData<struct IN_ADDR> *
+ACLData<IPAddress> *
 ACLASN::clone() const
 {
     if (data)
@@ -627,20 +601,20 @@ ACLASN::clone() const
 
 /* explicit template instantiation required for some systems */
 
-template class ACLStrategised<struct IN_ADDR>
+template class ACLStrategised<IPAddress>
 
 ;
 
 ACL::Prototype ACLASN::SourceRegistryProtoype(&ACLASN::SourceRegistryEntry_, "src_as");
 
-ACLStrategised<struct IN_ADDR> ACLASN::SourceRegistryEntry_(new ACLASN, ACLSourceASNStrategy::Instance(), "src_as");
+ACLStrategised<IPAddress> ACLASN::SourceRegistryEntry_(new ACLASN, ACLSourceASNStrategy::Instance(), "src_as");
 
 ACL::Prototype ACLASN::DestinationRegistryProtoype(&ACLASN::DestinationRegistryEntry_, "dst_as");
 
-ACLStrategised<struct IN_ADDR> ACLASN::DestinationRegistryEntry_(new ACLASN, ACLDestinationASNStrategy::Instance(), "dst_as");
+ACLStrategised<IPAddress> ACLASN::DestinationRegistryEntry_(new ACLASN, ACLDestinationASNStrategy::Instance(), "dst_as");
 
 int
-ACLSourceASNStrategy::match (ACLData<MatchType> * &data, ACLChecklist *checklist)
+ACLSourceASNStrategy::match (ACLData<IPAddress> * &data, ACLChecklist *checklist)
 {
     return data->match(checklist->src_addr);
 }
@@ -657,7 +631,7 @@ ACLSourceASNStrategy ACLSourceASNStrategy::Instance_;
 int
 ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLChecklist *checklist)
 {
-    const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->host, IP_LOOKUP_IF_MISS);
+    const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->GetHost(), IP_LOOKUP_IF_MISS);
 
     if (ia) {
         for (int k = 0; k < (int) ia->count; k++) {
@@ -666,13 +640,15 @@ ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLChecklist *chec
         }
 
         return 0;
+
     } else if (!checklist->request->flags.destinationIPLookedUp()) {
         /* No entry in cache, lookup not attempted */
         /* XXX FIXME: allow accessing the acl name here */
-        debugs(28, 3, "asnMatchAcl: Can't yet compare '" << "unknown" /*name*/ << "' ACL for '" << checklist->request->host << "'");
+        debugs(28, 3, "asnMatchAcl: Can't yet compare '" << "unknown" /*name*/ << "' ACL for '" << checklist->request->GetHost() << "'");
         checklist->changeState (DestinationIPLookup::Instance());
     } else {
-        return data->match(no_addr);
+        IPAddress noaddr; noaddr.SetNoAddr();
+        return data->match(noaddr);
     }
 
     return 0;

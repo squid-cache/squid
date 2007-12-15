@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.90 2007/11/13 21:25:35 rousskov Exp $
+ * $Id: helper.cc,v 1.91 2007/12/14 23:11:46 amosjeffries Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -120,6 +120,7 @@ helperOpenServers(helper * hlp)
                         progname,
                         args,
                         shortname,
+                        hlp->addr,
                         &rfd,
                         &wfd,
                         &hIpc);
@@ -136,6 +137,7 @@ helperOpenServers(helper * hlp)
         srv->hIpc = hIpc;
         srv->pid = pid;
         srv->index = k;
+        srv->addr = hlp->addr;
         srv->rfd = rfd;
         srv->wfd = wfd;
         srv->rbuf = (char *)memAllocBuf(8192, &srv->rbuf_sz);
@@ -219,6 +221,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
                         progname,
                         args,
                         shortname,
+                        hlp->addr,
                         &rfd,
                         &wfd,
                         &hIpc);
@@ -241,6 +244,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
         srv->stats.submits = 0;
         srv->stats.releases = 0;
         srv->index = k;
+        srv->addr = hlp->addr;
         srv->rfd = rfd;
         srv->wfd = wfd;
         srv->rbuf = (char *)memAllocBuf(8192, &srv->rbuf_sz);

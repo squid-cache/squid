@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUser.h,v 1.5 2007/05/09 08:26:57 wessels Exp $
+ * $Id: AuthUser.h,v 1.6 2007/12/14 23:11:45 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,6 +34,8 @@
 
 #ifndef SQUID_AUTHUSER_H
 #define SQUID_AUTHUSER_H
+
+#include "IPAddress.h"
 
 class AuthUserRequest;
 
@@ -70,8 +72,8 @@ public:
     _SQUID_INLINE_ char const *username() const;
     _SQUID_INLINE_ void username(char const *);
     void clearIp();
-    void removeIp(struct IN_ADDR);
-    void addIp(struct IN_ADDR);
+    void removeIp(IPAddress);
+    void addIp(IPAddress);
     _SQUID_INLINE_ void addRequest(AuthUserRequest *);
 
     void lock()

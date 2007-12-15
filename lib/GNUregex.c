@@ -1,5 +1,5 @@
 /*
- * $Id: GNUregex.c,v 1.21 2005/04/30 19:32:01 serassio Exp $
+ * $Id: GNUregex.c,v 1.22 2007/12/14 23:11:44 amosjeffries Exp $
  */
 
 /* Extended regular expression matching and search library,
@@ -247,7 +247,9 @@ char *alloca();
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
+#if !defined(__MINGW32__)	/* MinGW defines boolean */
 typedef char boolean;
+#endif
 #define false 0
 #define true 1
 

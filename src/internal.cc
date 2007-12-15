@@ -1,6 +1,6 @@
 
 /*
- * $Id: internal.cc,v 1.47 2007/05/29 13:31:40 amosjeffries Exp $
+ * $Id: internal.cc,v 1.48 2007/12/14 23:11:47 amosjeffries Exp $
  *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
@@ -51,7 +51,7 @@ internalStart(HttpRequest * request, StoreEntry * entry)
 {
     ErrorState *err;
     const char *upath = request->urlpath.buf();
-    debugs(76, 3, "internalStart: " << inet_ntoa(request->client_addr) << " requesting '" << upath << "'");
+    debugs(76, 3, "internalStart: " << request->client_addr << " requesting '" << upath << "'");
 
     if (0 == strcmp(upath, "/squid-internal-dynamic/netdb")) {
         netdbBinaryExchange(entry);
@@ -106,6 +106,15 @@ internalRemoteUri(const char *host, u_short port, const char *dir, const char *n
     /* convert host name to lower case */
     xstrncpy(lc_host, host, SQUIDHOSTNAMELEN);
     Tolower(lc_host);
+
+#if USE_IPV6
+    /* check for an IP address and format appropriately if found */
+    IPAddress test = lc_host;
+    if ( !test.IsAnyAddr() ) {
+        test.ToHostname(lc_host,SQUIDHOSTNAMELEN);
+    }
+#endif
+
     /*
      * append the domain in order to mirror the requests with appended
      * domains

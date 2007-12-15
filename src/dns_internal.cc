@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.101 2007/06/23 21:08:39 hno Exp $
+ * $Id: dns_internal.cc,v 1.102 2007/12/14 23:11:46 amosjeffries Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -116,6 +116,7 @@ struct _idns_query
     idns_query *queue;
     unsigned short domain;
     unsigned short do_searchpath;
+    bool need_A;
 };
 
 struct _nsvc
@@ -131,8 +132,7 @@ struct _nsvc
 
 struct _ns
 {
-
-    struct sockaddr_in S;
+    IPAddress S;
     int nqueries;
     int nreplies;
     nsvc *vc;
@@ -176,7 +176,7 @@ static void idnsSendQuery(idns_query * q);
 static IOCB idnsReadVCHeader;
 static void idnsDoSendQueryVC(nsvc *vc);
 
-static int idnsFromKnownNameserver(struct sockaddr_in *from);
+static int idnsFromKnownNameserver(IPAddress const &from);
 static idns_query *idnsFindQuery(unsigned short id);
 static void idnsGrokReply(const char *buf, size_t sz);
 static PF idnsRead;
@@ -187,18 +187,17 @@ static void idnsRcodeCount(int, int);
 static void
 idnsAddNameserver(const char *buf)
 {
+    IPAddress A;
 
-    struct IN_ADDR A;
-
-    if (!safe_inet_addr(buf, &A)) {
+    if (!(A = buf)) {
         debugs(78, 0, "WARNING: rejecting '" << buf << "' as a name server, because it is not a numeric IP address");
         return;
     }
 
-    if (A.s_addr == 0) {
-        debugs(78, 0, "WARNING: Squid does not accept 0.0.0.0 in DNS server specifications.");
-        debugs(78, 0, "Will be using 127.0.0.1 instead, assuming you meant that DNS is running on the same machine");
-        safe_inet_addr("127.0.0.1", &A);
+    if (A.IsAnyAddr()) {
+        debugs(78, 0, "WARNING: Squid does not accept " << A << " in DNS server specifications.");
+        A = "127.0.0.1";
+        debugs(78, 0, "Will be using " << A << " instead, assuming you meant that DNS is running on the same machine");
     }
 
     if (nns == nns_alloc) {
@@ -220,10 +219,9 @@ idnsAddNameserver(const char *buf)
     }
 
     assert(nns < nns_alloc);
-    nameservers[nns].S.sin_family = AF_INET;
-    nameservers[nns].S.sin_port = htons(NS_DEFAULTPORT);
-    nameservers[nns].S.sin_addr.s_addr = A.s_addr;
-    debugs(78, 3, "idnsAddNameserver: Added nameserver #" << nns << ": " << inet_ntoa(nameservers[nns].S.sin_addr));
+    A.SetPort(NS_DEFAULTPORT);
+    nameservers[nns].S = A;
+    debugs(78, 3, "idnsAddNameserver: Added nameserver #" << nns << " (" << A << ")");
     nns++;
 }
 
@@ -567,6 +565,7 @@ idnsStats(StoreEntry * sentry)
     idns_query *q;
     int i;
     int j;
+    char buf[MAX_IPSTRLEN];
     storeAppendPrintf(sentry, "Internal DNS Statistics:\n");
     storeAppendPrintf(sentry, "\nThe Queue:\n");
     storeAppendPrintf(sentry, "                       DELAY SINCE\n");
@@ -582,12 +581,12 @@ idnsStats(StoreEntry * sentry)
     }
 
     storeAppendPrintf(sentry, "\nNameservers:\n");
-    storeAppendPrintf(sentry, "IP ADDRESS      # QUERIES # REPLIES\n");
-    storeAppendPrintf(sentry, "--------------- --------- ---------\n");
+    storeAppendPrintf(sentry, "IP ADDRESS                                     # QUERIES # REPLIES\n");
+    storeAppendPrintf(sentry, "---------------------------------------------- --------- ---------\n");
 
     for (i = 0; i < nns; i++) {
-        storeAppendPrintf(sentry, "%-15s %9d %9d\n",
-                          inet_ntoa(nameservers[i].S.sin_addr),
+        storeAppendPrintf(sentry, "%-45s %9d %9d\n",  /* Let's take the maximum: (15 IPv4/45 IPv6) */
+                          nameservers[i].S.NtoA(buf,MAX_IPSTRLEN),
                           nameservers[i].nqueries,
                           nameservers[i].nreplies);
     }
@@ -700,12 +699,14 @@ idnsVCClosed(int fd, void *data)
 static void
 idnsInitVC(int ns)
 {
+    char buf[MAX_IPSTRLEN];
+
     nsvc *vc = cbdataAlloc(nsvc);
     nameservers[ns].vc = vc;
 
-    struct IN_ADDR addr;
+    IPAddress addr;
 
-    if (Config.Addrs.udp_outgoing.s_addr != no_addr.s_addr)
+    if (!Config.Addrs.udp_outgoing.IsNoAddr())
         addr = Config.Addrs.udp_outgoing;
     else
         addr = Config.Addrs.udp_incoming;
@@ -717,7 +718,6 @@ idnsInitVC(int ns)
     vc->fd = comm_open(SOCK_STREAM,
                        IPPROTO_TCP,
                        addr,
-                       0,
                        COMM_NONBLOCKING,
                        "DNS TCP Socket");
 
@@ -728,7 +728,7 @@ idnsInitVC(int ns)
 
     vc->busy = 1;
 
-    commConnectStart(vc->fd, inet_ntoa(nameservers[ns].S.sin_addr), ntohs(nameservers[ns].S.sin_port), idnsInitVCConnected, vc);
+    commConnectStart(vc->fd, nameservers[ns].S.NtoA(buf,MAX_IPSTRLEN), nameservers[ns].S.GetPort(), idnsInitVCConnected, vc);
 }
 
 static void
@@ -757,12 +757,14 @@ idnsSendQuery(idns_query * q)
     int ns;
 
     if (DnsSocket < 0) {
-        debugs(78, 1, "idnsSendQuery: Can't send query, no DNS socket!");
+        debugs(78, 1, "WARNING: idnsSendQuery: Can't send query, no DNS socket!");
         return;
     }
 
-    /* XXX Select nameserver */
-    assert(nns > 0);
+    if (nns <= 0) {
+        debugs(78, 1, "WARNING: idnsSendQuery: Can't send query, no DNS nameservers known!");
+        return;
+    }
 
     assert(q->lru.next == NULL);
 
@@ -776,8 +778,7 @@ try_again:
         x = 0;
     } else
         x = comm_udp_sendto(DnsSocket,
-                            &nameservers[ns].S,
-                            sizeof(nameservers[ns].S),
+                            nameservers[ns].S,
                             q->buf,
                             q->sz);
 
@@ -801,17 +802,16 @@ try_again:
 }
 
 static int
-
-idnsFromKnownNameserver(struct sockaddr_in *from)
+idnsFromKnownNameserver(IPAddress const &from)
 {
     int i;
 
     for (i = 0; i < nns; i++)
     {
-        if (nameservers[i].S.sin_addr.s_addr != from->sin_addr.s_addr)
+        if (nameservers[i].S != from)
             continue;
 
-        if (nameservers[i].S.sin_port != from->sin_port)
+        if (nameservers[i].S.GetPort() != from.GetPort())
             continue;
 
         return i;
@@ -884,6 +884,16 @@ idnsCallback(idns_query *q, rfc1035_rr *answers, int n, const char *error)
     }
 }
 
+void
+idnsDropMessage(rfc1035_message *message, idns_query *q)
+{
+    rfc1035MessageDestroy(&message);
+    if (q->hash.key) {
+        hash_remove_link(idns_lookup_hash, &q->hash);
+        q->hash.key = NULL;
+    }
+}
+
 static void
 idnsGrokReply(const char *buf, size_t sz)
 {
@@ -891,34 +901,32 @@ idnsGrokReply(const char *buf, size_t sz)
     rfc1035_message *message = NULL;
     idns_query *q;
 
-    n = rfc1035MessageUnpack(buf,
-                             sz,
-                             &message);
+    n = rfc1035MessageUnpack(buf, sz, &message);
 
     if (message == NULL) {
         debugs(78, 1, "idnsGrokReply: Malformed DNS response");
         return;
     }
 
-    debugs(78, 3, "idnsGrokReply: ID 0x" << std::hex << message->id << ", " << std::dec << n << "answers");
+    debugs(78, 3, "idnsGrokReply: ID 0x" << std::hex << message->id << ", " << std::dec << n << " answers");
 
     q = idnsFindQuery(message->id);
 
     if (q == NULL) {
         debugs(78, 3, "idnsGrokReply: Late response");
-        rfc1035MessageDestroy(message);
+        rfc1035MessageDestroy(&message);
         return;
     }
 
     if (rfc1035QueryCompare(&q->query, message->query) != 0) {
         debugs(78, 3, "idnsGrokReply: Query mismatch (" << q->query.name << " != " << message->query->name << ")");
-        rfc1035MessageDestroy(message);
+        rfc1035MessageDestroy(&message);
         return;
     }
 
     if (message->tc) {
         dlinkDelete(&q->lru, &lru_list);
-        rfc1035MessageDestroy(message);
+        rfc1035MessageDestroy(&message);
 
         if (!q->need_vc) {
             q->need_vc = 1;
@@ -945,7 +953,8 @@ idnsGrokReply(const char *buf, size_t sz)
              * unable to process this query due to a problem with
              * the name server."
              */
-            rfc1035MessageDestroy(message);
+            debugs(78, 3, "idnsGrokReply: Query result: SERV_FAIL");
+            rfc1035MessageDestroy(&message);
             q->start_t = current_time;
             q->id = idnsQueryID();
             rfc1035SetQueryID(q->buf, q->id);
@@ -957,6 +966,8 @@ idnsGrokReply(const char *buf, size_t sz)
             assert(NULL == message->answer);
             strcpy(q->name, q->orig);
 
+            debugs(78, 3, "idnsGrokReply: Query result: NXDOMAIN - " << q->name );
+
             if (q->domain < npc) {
                 strcat(q->name, ".");
                 strcat(q->name, searchpath[q->domain].domain);
@@ -966,25 +977,60 @@ idnsGrokReply(const char *buf, size_t sz)
                 q->attempt++;
             }
 
-            rfc1035MessageDestroy(message);
-	    if (q->hash.key) {
-		hash_remove_link(idns_lookup_hash, &q->hash);
-		q->hash.key = NULL;
-	    }
+            idnsDropMessage(message, q);
+
             q->start_t = current_time;
             q->id = idnsQueryID();
             rfc1035SetQueryID(q->buf, q->id);
-            q->sz = rfc1035BuildAQuery(q->name, q->buf, sizeof(q->buf), q->id,
-                                       &q->query);
-
+#if USE_IPV6
+            if(q->query.qtype == RFC1035_TYPE_AAAA) {
+                debugs(78, 3, "idnsGrokReply: Trying AAAA Query for " << q->name);
+                q->sz = rfc3596BuildAAAAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query);
+            }
+            else
+#endif
+            {
+                debugs(78, 3, "idnsGrokReply: Trying A Query for " << q->name);
+                q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query);
+            }
             idnsCacheQuery(q);
             idnsSendQuery(q);
             return;
         }
     }
 
+#if USE_IPV6
+    if(q->need_A && (Config.onoff.dns_require_A == 1 || n <= 0 ) )
+    {
+        /* ERROR or NO AAAA exist. Failover to A records. */
+        /* AYJ: Apparently its also a good idea to lookup and store the A records
+         *      just in case the AAAA are not available when we need them.
+         *      This could occur due to number of network failings beyond our control
+         *      thus the || above allowing the user to request always both.
+         */
+
+        if(n == 0)
+            debugs(78, 3, "idnsGrokReply: " << q->name << " has no AAAA records. Looking up A record instead.");
+        else if(q->need_A && n <= 0)
+            debugs(78, 3, "idnsGrokReply: " << q->name << " AAAA query failed. Trying A now instead.");
+        else // admin requested this.
+            debugs(78, 3, "idnsGrokReply: " << q->name << " AAAA query done. Configured to retrieve A now also.");
+
+        idnsDropMessage(message, q);
+
+        q->start_t = current_time;
+        q->id = idnsQueryID();
+        rfc1035SetQueryID(q->buf, q->id);
+        q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query);
+        q->need_A = false;
+        idnsCacheQuery(q);
+        idnsSendQuery(q);
+        return;
+    }
+#endif
+
     idnsCallback(q, message->answer, n, q->error);
-    rfc1035MessageDestroy(message);
+    rfc1035MessageDestroy(&message);
 
     cbdataFree(q);
 }
@@ -994,18 +1040,26 @@ idnsRead(int fd, void *data)
 {
     int *N = &incoming_sockets_accepted;
     int len;
-
-    struct sockaddr_in from;
-    socklen_t from_len;
     int max = INCOMING_DNS_MAX;
     static char rbuf[SQUID_UDP_SO_RCVBUF];
     int ns;
+    IPAddress from;
+
+    debugs(78, 1, "idnsRead: starting with FD " << fd);
+
+    /* BUG (UNRESOLVED)
+     *  two code lines after returning from comm_udprecvfrom()
+     *  something overwrites the memory behind the from parameter.
+     *  NO matter where in the stack declaration list above it is placed
+     *  The cause of this is still unknown, however copying the data appears
+     *  to allow it to be passed further without this erasure.
+     */
+    IPAddress bugbypass;
 
     while (max--) {
-        from_len = sizeof(from);
-        memset(&from, '\0', from_len);
+        len = comm_udp_recvfrom(fd, rbuf, SQUID_UDP_SO_RCVBUF, 0, bugbypass);
 
-        len = comm_udp_recvfrom(fd, rbuf, sizeof(rbuf), 0, (struct sockaddr *) &from, &from_len);
+        from = bugbypass; // BUG BYPASS. see notes above.
 
         if (len == 0)
             break;
@@ -1030,8 +1084,11 @@ idnsRead(int fd, void *data)
         fd_bytes(DnsSocket, len, FD_READ);
         assert(N);
         (*N)++;
-        debugs(78, 3, "idnsRead: FD " << fd << ": received " << len << " bytes from " << inet_ntoa(from.sin_addr) << ".");
-        ns = idnsFromKnownNameserver(&from);
+
+        debugs(78, 3, "idnsRead: FD " << fd << ": received " << len << " bytes from " << from);
+
+        /* BUG: see above. Its here that it becomes apparent that the content of bugbypass is gone. */
+        ns = idnsFromKnownNameserver(from);
 
         if (ns >= 0) {
             nameservers[ns].nreplies++;
@@ -1039,8 +1096,11 @@ idnsRead(int fd, void *data)
             static time_t last_warning = 0;
 
             if (squid_curtime - last_warning > 60) {
-                debugs(78, 1, "WARNING: Reply from unknown nameserver [" << inet_ntoa(from.sin_addr) << "]");
+                debugs(78, 1, "WARNING: Reply from unknown nameserver " << from);
                 last_warning = squid_curtime;
+            }
+            else {
+                debugs(78, 1, "WARNING: Reply from unknown nameserver " << from << " (retrying..." <<  (squid_curtime-last_warning) << "<=60)" );
             }
 
             continue;
@@ -1118,7 +1178,7 @@ idnsReadVC(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *dat
 
     debugs(78, 3, "idnsReadVC: FD " << fd << ": received " <<
            (int) vc->msg->contentSize() << " bytes via tcp from " <<
-           inet_ntoa(nameservers[vc->ns].S.sin_addr) << ".");
+           nameservers[vc->ns].S << ".");
 
     idnsGrokReply(vc->msg->buf, vc->msg->contentSize());
     vc->msg->clean();
@@ -1184,9 +1244,9 @@ idnsInit(void)
     if (DnsSocket < 0) {
         int port;
 
-        struct IN_ADDR addr;
+        IPAddress addr;
 
-        if (Config.Addrs.udp_outgoing.s_addr != no_addr.s_addr)
+        if (!Config.Addrs.udp_outgoing.IsNoAddr())
             addr = Config.Addrs.udp_outgoing;
         else
             addr = Config.Addrs.udp_incoming;
@@ -1194,9 +1254,10 @@ idnsInit(void)
         DnsSocket = comm_open(SOCK_DGRAM,
                               IPPROTO_UDP,
                               addr,
-                              0,
                               COMM_NONBLOCKING,
                               "DNS Socket");
+
+        debugs(78, 2, "idnsInit: attempt open DNS socket to: " << addr);
 
         if (DnsSocket < 0)
             fatal("Could not create a DNS socket");
@@ -1206,8 +1267,7 @@ idnsInit(void)
          */
         port = comm_local_port(DnsSocket);
 
-        debugs(78, 1, "DNS Socket created at " << inet_ntoa(addr) << ", port " <<
-               port << ", FD " << DnsSocket);
+        debugs(78, 1, "DNS Socket created at " << addr << ", FD " << DnsSocket);
     }
 
     assert(0 == nns);
@@ -1339,8 +1399,13 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
         debugs(78, 3, "idnsALookup: searchpath used for " << q->name);
     }
 
-    q->sz = rfc1035BuildAQuery(q->name, q->buf, sizeof(q->buf), q->id,
-                               &q->query);
+#if USE_IPV6
+    q->sz = rfc3596BuildAAAAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query);    
+    q->need_A = true;
+#else
+    q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query);
+    q->need_A = false;
+#endif
 
     if (q->sz < 0) {
         /* problem with query data -- query not sent */
@@ -1364,18 +1429,34 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
 }
 
 void
-
-idnsPTRLookup(const struct IN_ADDR addr, IDNSCB * callback, void *data)
+idnsPTRLookup(const IPAddress &addr, IDNSCB * callback, void *data)
 {
     idns_query *q;
 
-    const char *ip = inet_ntoa(addr);
+    char ip[MAX_IPSTRLEN];
+
+    addr.NtoA(ip,MAX_IPSTRLEN);
 
     q = cbdataAlloc(idns_query);
 
     q->id = idnsQueryID();
 
-    q->sz = rfc1035BuildPTRQuery(addr, q->buf, sizeof(q->buf), q->id, &q->query);
+#if USE_IPV6
+    if( addr.IsIPv6() ) {
+        struct in6_addr addr6;
+        addr.GetInAddr(addr6);
+        q->sz = rfc3596BuildPTRQuery6(addr6, q->buf, sizeof(q->buf), q->id, &q->query);
+    }
+    else
+#endif
+    {
+        struct in_addr addr4;
+        addr.GetInAddr(addr4);
+        q->sz = rfc3596BuildPTRQuery4(addr4, q->buf, sizeof(q->buf), q->id, &q->query);
+    }
+
+    /* PTR does not do inbound A/AAAA */
+    q->need_A = false;
 
     if (q->sz < 0)
     {

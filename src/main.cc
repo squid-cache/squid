@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.451 2007/12/02 08:23:56 amosjeffries Exp $
+ * $Id: main.cc,v 1.452 2007/12/14 23:11:47 amosjeffries Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -72,6 +72,7 @@
 #include "SwapDir.h"
 #include "forward.h"
 #include "MemPool.h"
+#include "ICMPSquid.h"
 
 #if USE_WIN32_SERVICE
 
@@ -561,7 +562,7 @@ serverConnectionsOpen(void)
 #endif
 
     clientdbInit();
-    icmpOpen();
+    icmpEngine.Open();
     netdbInit();
     asnInit();
     ACL::Initialize();
@@ -583,7 +584,7 @@ serverConnectionsClose(void)
     htcpSocketShutdown();
 #endif
 
-    icmpClose();
+    icmpEngine.Close();
 #ifdef SQUID_SNMP
 
     snmpConnectionShutdown();
@@ -693,7 +694,7 @@ mainReconfigure(void)
 static void
 mainRotate(void)
 {
-    icmpClose();
+    icmpEngine.Close();
 #if USE_DNSSERVERS
 
     dnsShutdown();
@@ -713,7 +714,7 @@ mainRotate(void)
     fwdLogRotate();
 #endif
 
-    icmpOpen();
+    icmpEngine.Open();
 #if USE_DNSSERVERS
 
     dnsInit();
@@ -1123,18 +1124,6 @@ main(int argc, char **argv)
 
     if (oldmask)
         umask(oldmask);
-
-    memset(&local_addr, '\0', sizeof(struct IN_ADDR));
-
-    safe_inet_addr(localhost, &local_addr);
-
-    memset(&any_addr, '\0', sizeof(struct IN_ADDR));
-
-    safe_inet_addr("0.0.0.0", &any_addr);
-
-    memset(&no_addr, '\0', sizeof(struct IN_ADDR));
-
-    safe_inet_addr("255.255.255.255", &no_addr);
 
     squid_srandom(time(NULL));
 
@@ -1550,8 +1539,8 @@ watch_child(char *argv[])
                    pid, WEXITSTATUS(status));
         } else if (WIFSIGNALED(status)) {
             syslog(LOG_NOTICE,
-                   "Squid Parent: child process %d exited due to signal %d",
-                   pid, WTERMSIG(status));
+                   "Squid Parent: child process %d exited due to signal %d with status %d",
+                   pid, WTERMSIG(status), WEXITSTATUS(status));
         } else {
             syslog(LOG_NOTICE, "Squid Parent: child process %d exited", pid);
         }

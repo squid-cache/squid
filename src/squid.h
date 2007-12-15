@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.268 2007/12/04 13:31:11 hno Exp $
+ * $Id: squid.h,v 1.269 2007/12/14 23:11:48 amosjeffries Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -364,7 +364,7 @@ extern "C"
 #endif
 
 #include "hash.h"
-#include "rfc1035.h"
+#include "rfc3596.h"
 
 
 #include "defines.h"
@@ -373,6 +373,8 @@ extern "C"
 #include "util.h"
 #include "profiling.h"
 #include "MemPool.h"
+
+#include "IPAddress.h"
 
 #if !HAVE_TEMPNAM
 #include "tempnam.h"

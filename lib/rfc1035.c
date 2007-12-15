@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.50 2007/12/06 02:37:15 amosjeffries Exp $
+ * $Id: rfc1035.c,v 1.51 2007/12/14 23:11:45 amosjeffries Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -472,16 +472,17 @@ rfc1035SetErrno(int n)
 }
 
 static void
-rfc1035RRDestroy(rfc1035_rr * rr, int n)
+rfc1035RRDestroy(rfc1035_rr ** rr, int n)
 {
-    if (rr == NULL)
+    if (*rr == NULL)
 	return;
     assert(n > 0);
     while (n--) {
-	if (rr[n].rdata)
-	    xfree(rr[n].rdata);
+	if ((*rr)[n].rdata)
+	    xfree((*rr)[n].rdata);
     }
-    xfree(rr);
+    xfree(*rr);
+    *rr = NULL;
 }
 
 /*
@@ -517,15 +518,16 @@ rfc1035QueryUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_query 
 }
 
 void
-rfc1035MessageDestroy(rfc1035_message * msg)
+rfc1035MessageDestroy(rfc1035_message ** msg)
 {
-    if (!msg)
+    if (!*msg)
 	return;
-    if (msg->query)
-	xfree(msg->query);
-    if (msg->answer)
-	rfc1035RRDestroy(msg->answer, msg->ancount);
-    xfree(msg);
+    if ((*msg)->query)
+	xfree((*msg)->query);
+    if ((*msg)->answer)
+	rfc1035RRDestroy(&(*msg)->answer, (*msg)->ancount);
+    xfree(*msg);
+    *msg = NULL;
 }
 
 /*
@@ -602,7 +604,7 @@ rfc1035MessageUnpack(const char *buf,
 	if (rfc1035QueryUnpack(buf, sz, &off, &querys[j])) {
 	    RFC1035_UNPACK_DEBUG;
 	    rfc1035SetErrno(rfc1035_unpack_error);
-	    rfc1035MessageDestroy(msg);
+	    rfc1035MessageDestroy(&msg);
 	    return -rfc1035_unpack_error;
 	}
     }
@@ -615,7 +617,7 @@ rfc1035MessageUnpack(const char *buf,
     if (msg->ancount == 0)
 	return 0;
     i = (unsigned int) msg->ancount;
-    recs = msg->answer = xcalloc(i, sizeof(*recs));
+    recs = msg->answer = (rfc1035_rr*)xcalloc(i, sizeof(*recs));
     for (j = 0; j < i; j++) {
 	if (off >= sz) {	/* corrupt packet */
 	    RFC1035_UNPACK_DEBUG;
@@ -632,7 +634,7 @@ rfc1035MessageUnpack(const char *buf,
 	 * we expected to unpack some answers (ancount != 0), but
 	 * didn't actually get any.
 	 */
-	rfc1035MessageDestroy(msg);
+	rfc1035MessageDestroy(&msg);
 	*answer = NULL;
 	rfc1035SetErrno(rfc1035_unpack_error);
 	return -rfc1035_unpack_error;
@@ -804,7 +806,7 @@ main(int argc, char *argv[])
 		printf("%d answers\n", n);
 		for (i = 0; i < n; i++) {
 		    if (answers[i].type == RFC1035_TYPE_A) {
-			struct IN_ADDR a;
+			struct in_addr a;
 			memcpy(&a, answers[i].rdata, 4);
 			printf("A\t%d\t%s\n", answers[i].ttl, inet_ntoa(a));
 		    } else if (answers[i].type == RFC1035_TYPE_PTR) {

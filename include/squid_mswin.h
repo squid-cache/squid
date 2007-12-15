@@ -1,5 +1,5 @@
 /*
- * $Id: squid_mswin.h,v 1.6 2007/09/23 15:21:29 serassio Exp $
+ * $Id: squid_mswin.h,v 1.7 2007/12/14 23:11:44 amosjeffries Exp $
  *
  * AUTHOR: Andrey Shorin <tolsty@tushino.com>
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
@@ -211,6 +211,7 @@ struct timezone
 #include <stddef.h>
 #include <process.h>
 #include <errno.h>
+#include <ws2tcpip.h>
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 /* Hack to suppress compiler warnings on FD_SET() & FD_CLR() */
 #pragma warning (push)
@@ -243,6 +244,7 @@ typedef char * caddr_t;
 #define ECONNRESET WSAECONNRESET
 #define ENOTCONN WSAENOTCONN
 #define ERESTART WSATRY_AGAIN
+#define EAFNOSUPPORT WSAEAFNOSUPPORT
 
 #undef h_errno
 #define h_errno errno /* we'll set it ourselves */
@@ -392,10 +394,10 @@ char *index(const char *s, int c)
 namespace Squid {
 
 inline
-int accept(int s, struct sockaddr * a, int * l)
+int accept(int s, struct sockaddr * a, size_t * l)
 {
     SOCKET result;
-    if ((result = ::accept(_get_osfhandle(s), a, l)) == INVALID_SOCKET) {
+    if ((result = ::accept(_get_osfhandle(s), a, (int *)l)) == INVALID_SOCKET) {
 	if (WSAEMFILE == (errno = WSAGetLastError()))
 	    errno = EMFILE;
 	return -1;
@@ -458,9 +460,9 @@ HOSTENT FAR * gethostbyaddr(const char * a, int l, int t)
 #define gethostbyaddr(a,l,t) Squid::gethostbyaddr(a,l,t)
 
 inline
-int getsockname(int s, struct sockaddr * n, int * l)
+int getsockname(int s, struct sockaddr * n, size_t * l)
 {
-    if ((::getsockname(_get_osfhandle(s), n, l)) == SOCKET_ERROR) {
+    if ((::getsockname(_get_osfhandle(s), n, (int *)l)) == SOCKET_ERROR) {
 	errno = WSAGetLastError();
 	return -1;
     }
@@ -541,10 +543,10 @@ int recv(int s, void * b, size_t l, int f)
 }
 
 inline
-int recvfrom(int s, void * b, size_t l, int f, struct sockaddr * fr, int * fl)
+int recvfrom(int s, void * b, size_t l, int f, struct sockaddr * fr, size_t * fl)
 {
     int result;
-    if ((result = ::recvfrom(_get_osfhandle(s), (char *)b, l, f, fr, fl)) == SOCKET_ERROR) {
+    if ((result = ::recvfrom(_get_osfhandle(s), (char *)b, l, f, fr, (int *)fl)) == SOCKET_ERROR) {
 	errno = WSAGetLastError();
 	return -1;
     }

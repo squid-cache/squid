@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.42 2007/09/01 05:56:37 amosjeffries Exp $
+ * $Id: ACLChecklist.cc,v 1.43 2007/12/14 23:11:45 amosjeffries Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -356,7 +356,9 @@ ACLChecklist::operator delete (void *address)
     cbdataFree(t);
 }
 
-ACLChecklist::ACLChecklist() : accessList (NULL), my_port (0), request (NULL),
+ACLChecklist::ACLChecklist() :
+        accessList (NULL),
+        request (NULL),
         reply (NULL),
         auth_user_request (NULL),
 #if SQUID_SNMP
@@ -374,12 +376,9 @@ ACLChecklist::ACLChecklist() : accessList (NULL), my_port (0), request (NULL),
         sourceDomainChecked_(false),
         lastACLResult_(false)
 {
-
-    memset (&src_addr, '\0', sizeof (struct IN_ADDR));
-
-    memset (&dst_addr, '\0', sizeof (struct IN_ADDR));
-
-    memset (&my_addr, '\0', sizeof (struct IN_ADDR));
+    my_addr.SetEmpty();
+    src_addr.SetEmpty();
+    dst_addr.SetEmpty();
     rfc931[0] = '\0';
 }
 
@@ -399,6 +398,7 @@ ACLChecklist::~ACLChecklist()
      * If this fails, then we'll need a backup UNLOCK call in the
      * destructor.
      */
+    /* AYJ: It fails in builds without any Authentication configured */
     assert(auth_user_request == NULL);
 
     conn_ = NULL;
@@ -573,7 +573,6 @@ aclChecklistCreate(const acl_access * A, HttpRequest * request, const char *iden
         checklist->request = HTTPMSGLOCK(request);
         checklist->src_addr = request->client_addr;
         checklist->my_addr = request->my_addr;
-        checklist->my_port = request->my_port;
     }
 
 #if USE_IDENT

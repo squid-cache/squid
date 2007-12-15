@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp2.cc,v 1.19 2007/11/15 16:47:35 wessels Exp $
+ * $Id: wccp2.cc,v 1.20 2007/12/14 23:11:48 amosjeffries Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Steven Wilton
@@ -39,6 +39,7 @@
 #include "Parsing.h"
 #include "Store.h"
 #include "SwapDir.h"
+#include "IPAddress.h"
 
 #if USE_WCCPv2
 #include <netdb.h>
@@ -127,6 +128,7 @@ static EVH wccp2AssignBuckets;
 
 /* WCCP v2 packet header */
 
+/// \interface WCCPv2 Protocol
 struct wccp2_here_i_am_header_t
 {
     uint32_t type;
@@ -145,6 +147,7 @@ struct wccp2_security_none_t
     uint32_t security_option;
 };
 
+/// \interface WCCPv2 Protocol
 struct wccp2_security_md5_t
 {
     uint16_t security_type;
@@ -155,6 +158,7 @@ struct wccp2_security_md5_t
 
 /* Service info struct */
 
+/// \interface WCCPv2 Protocol
 struct wccp2_service_info_t
 {
     uint16_t service_type;
@@ -174,10 +178,10 @@ struct wccp2_service_info_t
     uint16_t port7;
 };
 
+/// \interface WCCPv2 Protocol
 struct wccp2_cache_identity_info_t
 {
-
-    struct IN_ADDR addr;
+    struct in_addr addr;
     uint16_t hash_revision;
     char bits[2];
     char buckets[32];
@@ -187,6 +191,7 @@ struct wccp2_cache_identity_info_t
 
 /* Web Cache identity info */
 
+/// \interface WCCPv2 Protocol
 struct wccp2_identity_info_t
 {
     uint16_t cache_identity_type;
@@ -197,10 +202,10 @@ struct wccp2_identity_info_t
 
 static struct wccp2_identity_info_t wccp2_identity_info;
 
+/// \interface WCCPv2 Protocol
 struct wccp2_cache_mask_identity_info_t
 {
-
-    struct IN_ADDR addr;
+    struct in_addr addr;
     uint32_t num1;
     uint32_t num2;
     uint32_t source_ip_mask;
@@ -213,6 +218,7 @@ struct wccp2_cache_mask_identity_info_t
 
 /* Web Cache identity info */
 
+/// \interface WCCPv2 Protocol
 struct wccp2_mask_identity_info_t
 {
     uint16_t cache_identity_type;
@@ -225,6 +231,7 @@ static struct wccp2_mask_identity_info_t wccp2_mask_identity_info;
 
 /* View header */
 
+/// \interface WCCPv2 Protocol
 struct wccp2_cache_view_header_t
 {
     uint16_t cache_view_type;
@@ -236,6 +243,7 @@ static struct wccp2_cache_view_header_t wccp2_cache_view_header;
 
 /* View info */
 
+/// \interface WCCPv2 Protocol
 struct wccp2_cache_view_info_t
 {
     uint32_t num_routers;
@@ -246,10 +254,10 @@ static struct wccp2_cache_view_info_t wccp2_cache_view_info;
 
 /* Router ID element */
 
+/// \interface WCCPv2 Protocol
 struct wccp2_router_id_element_t
 {
-
-    struct IN_ADDR router_address;
+    struct in_addr router_address;
     uint32_t received_id;
 };
 
@@ -257,6 +265,7 @@ static struct wccp2_router_id_element_t wccp2_router_id_element;
 
 /* Capability info header */
 
+/// \interface WCCpv2 Protocol
 struct wccp2_capability_info_header_t
 {
     uint16_t capability_info_type;
@@ -267,6 +276,7 @@ static struct wccp2_capability_info_header_t wccp2_capability_info_header;
 
 /* Capability element header */
 
+/// \interface WCCPv2 Protocol
 struct wccp2_capability_element_header_t
 {
     uint16_t capability_type;
@@ -275,6 +285,7 @@ struct wccp2_capability_element_header_t
 
 /* Capability element */
 
+/// \interface WCCPv2 Protocol
 struct wccp2_capability_element_t
 {
     uint16_t capability_type;
@@ -286,6 +297,7 @@ static struct wccp2_capability_element_t wccp2_capability_element;
 
 /* Mask Element */
 
+/// \interface WCCPv2 Protocol
 struct wccp2_mask_element_t
 {
     uint32_t source_ip_mask;
@@ -297,6 +309,7 @@ struct wccp2_mask_element_t
 
 /* Value Element */
 
+/// \interface WCCPv2 Protocol
 struct wccp2_value_element_t
 {
     uint32_t source_ip_value;
@@ -304,11 +317,12 @@ struct wccp2_value_element_t
     uint16_t source_port_value;
     uint16_t dest_port_value;
 
-    struct IN_ADDR cache_ip;
+    struct in_addr cache_ip;
 };
 
 /* RECEIVED PACKET STRUCTURE */
 
+/// \interface WCCPv2 Protocol
 struct wccp2_i_see_you_t
 {
     uint32_t type;
@@ -321,16 +335,17 @@ static struct wccp2_i_see_you_t wccp2_i_see_you;
 
 /* Router ID element */
 
+/// \interface WCCPv2 Protocol
 struct wccp2_router_assign_element_t
 {
-
-    struct IN_ADDR router_address;
+    struct in_addr router_address;
     uint32_t received_id;
     uint32_t change_number;
 };
 
 /* Generic header struct */
 
+/// \interface WCCPv2 Protocol
 struct wccp2_item_header_t
 {
     uint16_t type;
@@ -339,6 +354,7 @@ struct wccp2_item_header_t
 
 /* Router identity struct */
 
+/// \interface WCCPv2 Protocol
 struct router_identity_info_t
 {
 
@@ -352,10 +368,10 @@ struct router_identity_info_t
 
 /* The received packet for a mask assignment is unusual */
 
+/// \interface WCCPv2 Protocol
 struct cache_mask_info_t
 {
-
-    struct IN_ADDR addr;
+    struct in_addr addr;
     uint32_t num1;
     uint32_t num2;
     uint32_t num3;
@@ -363,15 +379,16 @@ struct cache_mask_info_t
 
 /* assigment key */
 
+/// \interface WCCPv2 Protocol
 struct assignment_key_t
 {
-
-    struct IN_ADDR master_ip;
+    struct in_addr master_ip;
     uint32_t master_number;
 };
 
 /* Router view of WCCP */
 
+/// \interface WCCPv2 Protocol
 struct router_view_t
 {
 
@@ -383,24 +400,26 @@ struct router_view_t
 
 /* Lists used to keep track of caches, routers and services */
 
+/// \interface WCCPv2 Protocol
 struct wccp2_cache_list_t
 {
 
-    struct IN_ADDR cache_ip;
+    struct in_addr cache_ip;
 
     int weight;
 
     struct wccp2_cache_list_t *next;
 };
 
+/// \interface WCCPv2 Protocol
 struct wccp2_router_list_t
 {
 
     struct wccp2_router_id_element_t *info;
 
-    struct IN_ADDR local_ip;
+    struct in_addr local_ip;
 
-    struct IN_ADDR router_sendto_address;
+    struct in_addr router_sendto_address;
     uint32_t member_change;
     uint32_t num_caches;
 
@@ -411,6 +430,7 @@ struct wccp2_router_list_t
 
 static int wccp2_numrouters;
 
+/// \interface WCCPv2 Protocol
 struct wccp2_service_list_t
 {
 
@@ -638,7 +658,7 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
 void
 wccp2Init(void)
 {
-    sockaddr_in_list *s;
+    IPAddress_list *s;
     char *ptr;
     uint32_t service_flags;
 
@@ -657,7 +677,7 @@ wccp2Init(void)
 
     /* Calculate the number of routers configured in the config file */
     for (s = Config.Wccp2.router; s; s = s->next) {
-        if (s->s.sin_addr.s_addr != any_addr.s_addr) {
+        if (!s->s.IsAnyAddr()) {
             /* Increment the counter */
             wccp2_numrouters++;
         }
@@ -736,7 +756,7 @@ wccp2Init(void)
             assert(wccp2_here_i_am_header.length <= WCCP_RESPONSE_SIZE);
             wccp2_identity_info.cache_identity_type = htons(WCCP2_WC_ID_INFO);
             wccp2_identity_info.cache_identity_length = htons(sizeof(wccp2_identity_info.cache_identity));
-            memset(&wccp2_identity_info.cache_identity.addr, '\0', sizeof(wccp2_identity_info.cache_identity.addr));
+            memset(&wccp2_identity_info.cache_identity.addr, '\0', sizeof(struct in_addr));
             memset(&wccp2_identity_info.cache_identity.hash_revision, '\0', sizeof(wccp2_identity_info.cache_identity.hash_revision));
             memset(&wccp2_identity_info.cache_identity.bits, '\0', sizeof(wccp2_identity_info.cache_identity.bits));
             memset(&wccp2_identity_info.cache_identity.buckets, '\0', sizeof(wccp2_identity_info.cache_identity.buckets));
@@ -755,7 +775,7 @@ wccp2Init(void)
             assert(wccp2_here_i_am_header.length <= WCCP_RESPONSE_SIZE);
             wccp2_mask_identity_info.cache_identity_type = htons(WCCP2_WC_ID_INFO);
             wccp2_mask_identity_info.cache_identity_length = htons(sizeof(wccp2_mask_identity_info.cache_identity));
-            memset(&wccp2_mask_identity_info.cache_identity.addr, '\0', sizeof(wccp2_mask_identity_info.cache_identity.addr));
+            memset(&wccp2_mask_identity_info.cache_identity.addr, '\0', sizeof(struct in_addr));
             wccp2_mask_identity_info.cache_identity.num1 = htonl(2);
             wccp2_mask_identity_info.cache_identity.num2 = htonl(1);
             service_flags = ntohl(service_list_ptr->service_info->service_flags);
@@ -826,7 +846,7 @@ wccp2Init(void)
 
         /* Add each router.  Keep this functionality here to make sure the received_id can be updated in the packet */
         for (s = Config.Wccp2.router; s; s = s->next) {
-            if (s->s.sin_addr.s_addr != any_addr.s_addr) {
+            if (!s->s.IsAnyAddr()) {
 
                 wccp2_here_i_am_header.length += sizeof(struct wccp2_router_id_element_t);
                 assert(wccp2_here_i_am_header.length <= WCCP_RESPONSE_SIZE);
@@ -834,9 +854,9 @@ wccp2Init(void)
                 /* Add a pointer to the router list for this router */
 
                 router_list_ptr->info = (struct wccp2_router_id_element_t *) ptr;
-                router_list_ptr->info->router_address = s->s.sin_addr;
+                s->s.GetInAddr(router_list_ptr->info->router_address);
                 router_list_ptr->info->received_id = htonl(0);
-                router_list_ptr->router_sendto_address = s->s.sin_addr;
+                s->s.GetInAddr(router_list_ptr->router_sendto_address);
                 router_list_ptr->member_change = htonl(0);
 
                 /* Build the next struct */
@@ -943,8 +963,6 @@ wccp2Init(void)
 void
 wccp2ConnectionOpen(void)
 {
-    u_short port = WCCP_PORT;
-
     struct sockaddr_in router, local, null;
     socklen_t local_len, router_len;
 
@@ -959,10 +977,15 @@ wccp2ConnectionOpen(void)
         return;
     }
 
+    if( !Config.Wccp2.address.SetIPv4() ) {
+        debugs(80, 0, "WCCPv2 Disabled. " << Config.Wccp2.address << " is not an IPv4 address.");
+        return;
+    }
+
+    Config.Wccp2.address.SetPort(WCCP_PORT);
     theWccp2Connection = comm_open(SOCK_DGRAM,
                                    0,
                                    Config.Wccp2.address,
-                                   port,
                                    COMM_NONBLOCKING,
                                    "WCCPv2 Socket");
 
@@ -982,7 +1005,7 @@ wccp2ConnectionOpen(void)
                   NULL,
                   0);
 
-    debugs(80, 1, "Accepting WCCPv2 messages on port " << port << ", FD " << theWccp2Connection << ".");
+    debugs(80, 1, "Accepting WCCPv2 messages on port " << WCCP_PORT << ", FD " << theWccp2Connection << ".");
     debugs(80, 1, "Initialising all WCCPv2 lists");
 
     /* Initialise all routers on all services */
@@ -997,7 +1020,7 @@ wccp2ConnectionOpen(void)
             router_len = sizeof(router);
             memset(&router, '\0', router_len);
             router.sin_family = AF_INET;
-            router.sin_port = htons(port);
+            router.sin_port = htons(WCCP_PORT);
             router.sin_addr = router_list_ptr->router_sendto_address;
 
             if (connect(theWccp2Connection, (struct sockaddr *) &router, router_len))
@@ -1016,7 +1039,6 @@ wccp2ConnectionOpen(void)
              * but disconnects anyway so we have to just assume it worked
              */
             if (wccp2_numrouters > 1)
-
                 connect(theWccp2Connection, (struct sockaddr *) &null, router_len);
         }
 
@@ -1134,7 +1156,6 @@ wccp2HandleUdp(int sock, void *not_used)
     struct sockaddr_in from;
 
     struct IN_ADDR cache_address;
-    socklen_t from_len;
     int len, found;
     short int data_length, offset;
     uint32_t tmp;
@@ -1145,16 +1166,14 @@ wccp2HandleUdp(int sock, void *not_used)
 
     commSetSelect(sock, COMM_SELECT_READ, wccp2HandleUdp, NULL, 0);
 
-    from_len = sizeof(struct sockaddr_in);
-    memset(&from, '\0', from_len);
+/* FIXME INET6 : drop conversion boundary */ IPAddress from_tmp;
 
     len = comm_udp_recvfrom(sock,
                             &wccp2_i_see_you,
                             WCCP_RESPONSE_SIZE,
                             0,
-
-                            (struct sockaddr *) &from,
-                            &from_len);
+                            from_tmp);
+/* FIXME INET6 : drop conversion boundary */ from_tmp.GetSockAddr(from);
 
     if (len < 0)
         return;
@@ -1505,9 +1524,7 @@ wccp2HereIam(void *voidnotused)
 
     struct wccp2_mask_identity_info_t *wccp2_mask_identity_info_ptr;
 
-    struct sockaddr_in router;
-    int router_len;
-    u_short port = WCCP_PORT;
+    IPAddress router;
 
     debugs(80, 6, "wccp2HereIam: Called");
 
@@ -1522,10 +1539,7 @@ wccp2HereIam(void *voidnotused)
         return;
     }
 
-    router_len = sizeof(router);
-    memset(&router, '\0', router_len);
-    router.sin_family = AF_INET;
-    router.sin_port = htons(port);
+    router.SetPort(WCCP_PORT);
 
     /* for each router on each service send a packet */
     service_list_ptr = wccp2_service_list_head;
@@ -1534,7 +1548,7 @@ wccp2HereIam(void *voidnotused)
         debugs(80, 5, "wccp2HereIam: sending to service id " << service_list_ptr->info.service_id);
 
         for (router_list_ptr = &service_list_ptr->router_list_head; router_list_ptr->next != NULL; router_list_ptr = router_list_ptr->next) {
-            router.sin_addr = router_list_ptr->router_sendto_address;
+            router = router_list_ptr->router_sendto_address;
 
             /* Set the cache id (ip) */
 
@@ -1567,8 +1581,7 @@ wccp2HereIam(void *voidnotused)
 
             if (wccp2_numrouters > 1) {
                 comm_udp_sendto(theWccp2Connection,
-                                &router,
-                                router_len,
+                                router,
                                 &service_list_ptr->wccp_packet,
                                 service_list_ptr->wccp_packet_size);
             } else {
@@ -1950,9 +1963,9 @@ wccp2AssignBuckets(void *voidnotused)
                 /* send packet */
 
                 if (wccp2_numrouters > 1) {
+/* FIXME INET6 : drop temp conversion */ IPAddress tmp_rtr(router);
                     comm_udp_sendto(theWccp2Connection,
-                                    &router,
-                                    router_len,
+                                    tmp_rtr,
                                     &wccp_packet,
                                     offset);
                 } else {

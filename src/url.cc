@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.162 2007/05/29 13:31:41 amosjeffries Exp $
+ * $Id: url.cc,v 1.163 2007/12/14 23:11:48 amosjeffries Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -42,11 +42,17 @@ static const char valid_hostname_chars_u[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
     "0123456789-._"
+#if USE_IPV6
+    "[:]"
+#endif
     ;
 static const char valid_hostname_chars[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
     "0123456789-."
+#if USE_IPV6
+    "[:]"
+#endif
     ;
 
 void
@@ -81,7 +87,7 @@ urlInitialize(void)
     /* more cases? */
 }
 
-/*
+/**
  * urlParseProtocol() takes begin (b) and end (e) pointers, but for
  * backwards compatibility, e defaults to NULL, in which case we
  * assume b is NULL-terminated.
@@ -181,6 +187,14 @@ urlDefaultPort(protocol_t p)
  * looked for.
  * The url is non const so that if its too long we can NULL-terminate it in place.
  */
+
+/*
+ * This routine parses a URL. Its assumed that the URL is complete -
+ * ie, the end of the string is the end of the URL. Don't pass a partial
+ * URL here as this routine doesn't have any way of knowing whether
+ * its partial or not (ie, it handles the case of no trailing slash as
+ * being "end of host with implied path of /".
+ */
 HttpRequest *
 urlParse(method_t method, char *url, HttpRequest *request)
 {
@@ -193,6 +207,9 @@ urlParse(method_t method, char *url, HttpRequest *request)
     int port;
     protocol_t protocol = PROTO_NONE;
     int l;
+    int i;
+    const char *src;
+    char *dst;
     proto[0] = host[0] = urlpath[0] = login[0] = '\0';
 
     if ((l = strlen(url)) + Config.appendDomainLen > (MAX_URL - 1)) {
@@ -201,23 +218,67 @@ urlParse(method_t method, char *url, HttpRequest *request)
         debugs(23, 1, "urlParse: URL too large (" << l << " bytes)");
         return NULL;
     }
-
     if (method == METHOD_CONNECT) {
         port = CONNECT_PORT;
 
-        if (sscanf(url, "%[^:]:%d", host, &port) < 1)
-            return NULL;
+        if (sscanf(url, "[%[^:]]:%d", host, &port) < 1)
+            if (sscanf(url, "%[^:]:%d", host, &port) < 1)
+                return NULL;
+
     } else if (!strncmp(url, "urn:", 4)) {
         return urnParse(method, url);
     } else {
-        if (sscanf(url, "%[^:]://%[^/]%[^\r\n]", proto, host, urlpath) < 2)
+        /* Parse the URL: */
+        src = url;
+        i = 0;
+        /* Find first : - everything before is protocol */
+        for (i = 0, dst = proto; i < l && *src != ':'; i++, src++, dst++) {
+            *dst = *src;
+        }
+        if (i >= l)
+           return NULL;
+        *dst = '\0';
+
+        /* Then its :// */
+        /* (XXX yah, I'm not checking we've got enough data left before checking the array..) */
+        if (*src != ':' || *(src + 1) != '/' || *(src + 2) != '/')
             return NULL;
+        i += 3;
+        src += 3;
+
+        /* Then everything until first /; thats host (and port; which we'll look for here later) */
+        /* bug 1881: If we don't get a "/" then we imply it was there */
+        for (dst = host; i < l && *src != '/' && src != '\0'; i++, src++, dst++) {
+            *dst = *src;
+        }
+
+        /* 
+         * We can't check for "i >= l" here because we could be at the end of the line
+         * and have a perfectly valid URL w/ no trailing '/'. In this case we assume we've
+         * been -given- a valid URL and the path is just '/'.
+         */
+        if (i > l)
+            return NULL;
+        *dst = '\0';
+
+        /* Then everything from / (inclusive) until \r\n or \0 - thats urlpath */
+        for (dst = urlpath; i < l && *src != '\r' && *src != '\n' && *src != '\0'; i++, src++, dst++) {
+            *dst = *src;
+        }
+
+        /* We -could- be at the end of the buffer here */
+        if (i > l)
+            return NULL;
+        /* If the URL path is empty we set it to be "/" */
+        if (dst == urlpath) {
+            *(dst++) = '/';
+        }
+        *dst = '\0';
 
         protocol = urlParseProtocol(proto);
-
         port = urlDefaultPort(protocol);
 
-        /* Is there any login informaiton? */
+        /* Is there any login information? (we should eventually parse it above) */
         if ((t = strrchr(host, '@'))) {
             strcpy((char *) login, (char *) host);
             t = strrchr(login, '@');
@@ -225,11 +286,43 @@ urlParse(method_t method, char *url, HttpRequest *request)
             strcpy((char *) host, t + 1);
         }
 
-        if ((t = strrchr(host, ':'))) {
-            *t++ = '\0';
+        /* Is there any host information? (we should eventually parse it above) */
+        if(*host == '[') {
+            /* strip any IPA brackets. valid under IPv6. */
+            dst = host;
+#if USE_IPV6
+            /* only for IPv6 sadly, pre-IPv6/URL code can't handle the clean result properly anyway. */
+            src = host; src++;
+            l = strlen(host);
+            i = 1;
+            for (; i < l && *src != ']' && *src != '\0'; i++, src++, dst++) {
+                *dst = *src;
+            }
 
-            if (*t != '\0')
-                port = atoi(t);
+            /* we moved in-place, so truncate the actual hostname found */
+            *(dst++) = '\0';
+#else
+            /* IPv4-pure needs to skip the whole hostname to ']' inclusive for now */
+            while(*dst != '\0' && *dst != ']') dst++;
+#endif
+
+            /* skip ahead to either start of port, or original EOS */
+            while(*dst != '\0' && *dst != ':') dst++;
+            t = dst;
+        } else {
+            t = strrchr(host, ':');
+
+            if(t != strchr(host,':') ) {
+                /* RFC 2732 states IPv6 "SHOULD" be bracketed. allowing for times when its not. */
+                /* RFC 3986 'update' simply modifies this to an "is" with no emphasis at all! */
+                /* therefore we MUST accept the case where they are not bracketed at all. */
+                t = NULL;
+            }
+        }
+
+        if (t && *t == ':') {
+            *t = '\0'; t++;
+            port = atoi(t);
         }
     }
 
@@ -239,36 +332,34 @@ urlParse(method_t method, char *url, HttpRequest *request)
     if (stringHasWhitespace(host)) {
         if (URI_WHITESPACE_STRIP == Config.uri_whitespace) {
             t = q = host;
-
             while (*t) {
                 if (!xisspace(*t))
                     *q++ = *t;
-
                 t++;
             }
-
             *q = '\0';
         }
     }
+
+    debugs(23, 3, "urlParse: Split URL '" << url << "' into proto='" << proto << "', host='" << host << "', port='" << port << "', path='" << urlpath << "'");
 
     if (Config.onoff.check_hostnames && strspn(host, Config.onoff.allow_underscore ? valid_hostname_chars_u : valid_hostname_chars) != strlen(host)) {
         debugs(23, 1, "urlParse: Illegal character in hostname '" << host << "'");
         return NULL;
     }
 
-#if DONT_DO_THIS_IT_BREAKS_SEMANTIC_TRANSPARENCY
+    if (Config.appendDomain && !strchr(host, '.'))
+        strncat(host, Config.appendDomain, SQUIDHOSTNAMELEN - strlen(host) - 1);
+
     /* remove trailing dots from hostnames */
     while ((l = strlen(host)) > 0 && host[--l] == '.')
         host[l] = '\0';
 
-    /* remove duplicate dots */
-    while ((t = strstr(host, "..")))
-        xmemmove(t, t + 1, strlen(t));
-
-#endif
-
-    if (Config.appendDomain && !strchr(host, '.'))
-        strncat(host, Config.appendDomain, SQUIDHOSTNAMELEN - strlen(host) - 1);
+    /* reject duplicate or leading dots */
+    if (strstr(host, "..") || *host == '.') {
+        debug(23, 1) ("urlParse: Illegal hostname '%s'\n", host);
+        return NULL;
+    }
 
     if (port < 1 || port > 65535) {
         debugs(23, 3, "urlParse: Invalid port '" << port << "'");
@@ -282,8 +373,8 @@ urlParse(method_t method, char *url, HttpRequest *request)
         debugs(23, 0, "urlParse: Deny access to port " << port);
         return NULL;
     }
-
 #endif
+
     if (stringHasWhitespace(urlpath)) {
         debugs(23, 2, "urlParse: URI has whitespace: {" << url << "}");
 
@@ -305,17 +396,13 @@ urlParse(method_t method, char *url, HttpRequest *request)
             break;
 
         case URI_WHITESPACE_STRIP:
-
         default:
             t = q = urlpath;
-
             while (*t) {
                 if (!xisspace(*t))
                     *q++ = *t;
-
                 t++;
             }
-
             *q = '\0';
         }
     }
@@ -326,7 +413,7 @@ urlParse(method_t method, char *url, HttpRequest *request)
         request->initHTTP(method, protocol, urlpath);
     }
 
-    xstrncpy(request->host, host, SQUIDHOSTNAMELEN);
+    request->SetHost(host);
     xstrncpy(request->login, login, MAX_LOGIN_SZ);
     request->port = (u_short) port;
     return request;
@@ -354,7 +441,7 @@ urlCanonical(HttpRequest * request)
         switch (request->method) {
 
         case METHOD_CONNECT:
-            snprintf(urlbuf, MAX_URL, "%s:%d", request->host, request->port);
+            snprintf(urlbuf, MAX_URL, "%s:%d", request->GetHost(), request->port);
             break;
 
         default:
@@ -367,7 +454,7 @@ urlCanonical(HttpRequest * request)
                      ProtocolStr[request->protocol],
                      request->login,
                      *request->login ? "@" : null_string,
-                     request->host,
+                     request->GetHost(),
                      portbuf,
                      request->urlpath.buf());
 
@@ -392,7 +479,9 @@ urlCanonicalClean(const HttpRequest * request)
         switch (request->method) {
 
         case METHOD_CONNECT:
-            snprintf(buf, MAX_URL, "%s:%d", request->host, request->port);
+            snprintf(buf, MAX_URL, "%s:%d", 
+                     request->GetHost(),
+                     request->port);
             break;
 
         default:
@@ -415,7 +504,7 @@ urlCanonicalClean(const HttpRequest * request)
             snprintf(buf, MAX_URL, "%s://%s%s%s%s",
                      ProtocolStr[request->protocol],
                      loginbuf,
-                     request->host,
+                     request->GetHost(),
                      portbuf,
                      request->urlpath.buf());
             /*
@@ -660,6 +749,12 @@ URLHostName::findHostStart()
 
     while (*hostStart != '\0' && *hostStart == '/')
         ++hostStart;
+
+#if USE_IPV6
+    if (*hostStart == ']')
+        ++hostStart;
+#endif
+
 }
 
 void
@@ -670,8 +765,14 @@ URLHostName::trimTrailingChars()
     if ((t = strchr(Host, '/')))
         *t = '\0';
 
-    if ((t = strchr(Host, ':')))
+    if ((t = strrchr(Host, ':')))
         *t = '\0';
+
+#if USE_IPV6
+    if ((t = strchr(Host, ']')))
+        *t = '\0';
+#endif
+
 }
 
 void

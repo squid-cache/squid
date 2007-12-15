@@ -22,8 +22,9 @@ struct _hash_table {
 typedef struct _hash_table hash_table;
 
 extern int hash_links_allocated;
-extern int store_hash_buckets;	/* 0 */
-extern hash_table *store_table;	/* NULL */
+/* AYJ: defined by globals.h */
+//extern int store_hash_buckets;	/* 0 */
+//extern hash_table *store_table;	/* NULL */
 extern hash_table *hash_create(HASHCMP *, int, HASHHASH *);
 extern void hash_insert(hash_table *, const char *, void *);
 extern int hash_delete(hash_table *, const char *);

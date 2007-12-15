@@ -37,6 +37,7 @@
 #define SQUID_ACLIP_H
 #include "ACL.h"
 #include "splay.h"
+#include "IPAddress.h"
 
 class acl_ip_data
 {
@@ -48,19 +49,20 @@ public:
 
     acl_ip_data ();
 
-    acl_ip_data (struct IN_ADDR const &, struct IN_ADDR const &, struct IN_ADDR const &, acl_ip_data *);
+    acl_ip_data (IPAddress const &, IPAddress const &, IPAddress const &, acl_ip_data *);
     void toStr(char *buf, int len) const;
 
-    struct IN_ADDR addr1;	/* if addr2 non-zero then its a range */
+    IPAddress addr1;
 
-    struct IN_ADDR addr2;
+    IPAddress addr2;
 
-    struct IN_ADDR mask;
+    IPAddress mask; /* This should perhapse be stored as a CIDR range now instead of a full IP mask. */
+
     acl_ip_data *next;		/* used for parsing, not for storing */
 
 private:
 
-    static bool DecodeMask(const char *asc, struct IN_ADDR *mask);
+    static bool DecodeMask(const char *asc, IPAddress &mask, int string_format_type);
 };
 
 MEMPROXY_CLASS_INLINE(acl_ip_data)
@@ -87,7 +89,7 @@ public:
 
 protected:
 
-    int match(struct IN_ADDR &);
+    int match(IPAddress &);
     IPSplay *data;
 
 private:

@@ -1,6 +1,6 @@
 
 /*
- * $Id: IPInterception.cc,v 1.18 2007/11/07 10:20:47 amosjeffries Exp $
+ * $Id: IPInterception.cc,v 1.19 2007/12/14 23:11:45 amosjeffries Exp $
  *
  * DEBUG: section 89    NAT / IP Interception 
  * AUTHOR: Robert Collins
@@ -91,8 +91,11 @@
 #if IPF_TRANSPARENT
 int
 
-clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct sockaddr_in *dst)
+clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &dst)
 {
+    dst = me;
+    if( !me.IsIPv4() ) return -1;
+    if( !peer.IsIPv4() ) return -1;
 
 #if defined(IPFILTER_VERSION) && (IPFILTER_VERSION >= 4000027)
 
@@ -117,10 +120,10 @@ clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct s
     obj.ipfo_offset = 0;
 #endif
 
-    natLookup.nl_inport = me.sin_port;
-    natLookup.nl_outport = peer.sin_port;
-    natLookup.nl_inip = me.sin_addr;
-    natLookup.nl_outip = peer.sin_addr;
+    natLookup.nl_inport = htons(me.GetPort());
+    natLookup.nl_outport = htons(peer.GetPort());
+    me.GetInAddr(natLookup.nl_inip);
+    peer.GetInAddr(natLookup.nl_outip);
     natLookup.nl_flags = IPN_TCP;
 
     if (natfd < 0)
@@ -186,12 +189,12 @@ clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct s
         return -1;
     } else
     {
-        if (me.sin_addr.s_addr != natLookup.nl_realip.s_addr)
-            dst->sin_family = AF_INET;
+        if (me != natLookup.nl_realip) {
+            dst = natLookup.nl_realip;
 
-        dst->sin_port = natLookup.nl_realport;
-
-        dst->sin_addr = natLookup.nl_realip;
+            dst.SetPort(ntohs(natLookup.nl_realport));
+        }
+        // else. we already copied it.
 
         return 0;
     }
@@ -199,15 +202,21 @@ clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct s
 
 #elif LINUX_NETFILTER
 int
-
-clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct sockaddr_in *dst)
+clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &dst)
 {
-    static time_t last_reported = 0;
-    socklen_t sock_sz = sizeof(*dst);
-    memcpy(dst, &me, sizeof(*dst));
+    dst = me;
+    if( !me.IsIPv4() ) return -1;
+    if( !peer.IsIPv4() ) return -1;
 
-    if (getsockopt(fd, SOL_IP, SO_ORIGINAL_DST, dst, &sock_sz) != 0)
+    static time_t last_reported = 0;
+    struct addrinfo *lookup = NULL;
+
+    dst.GetAddrInfo(lookup,AF_INET);
+
+    if (getsockopt(fd, SOL_IP, SO_ORIGINAL_DST, lookup->ai_addr, &lookup->ai_addrlen) != 0)
     {
+        dst.FreeAddrInfo(lookup);
+
         if (squid_curtime - last_reported > 60) {
             debugs(89, 1, "clientNatLookup: NF getsockopt(SO_ORIGINAL_DST) failed: " << xstrerror());
             last_reported = squid_curtime;
@@ -215,10 +224,13 @@ clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct s
 
         return -1;
     }
+    dst = *lookup;
 
-    debugs(89, 5, "clientNatLookup: addr = " << inet_ntoa(dst->sin_addr) << "");
+    dst.FreeAddrInfo(lookup);
 
-    if (me.sin_addr.s_addr != dst->sin_addr.s_addr)
+    debugs(89, 5, "clientNatLookup: addr = " << dst << "");
+
+    if (me != dst)
         return 0;
     else
         return -1;
@@ -227,12 +239,15 @@ clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct s
 #elif PF_TRANSPARENT
 int
 
-clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct sockaddr_in *dst)
+clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress dst)
 {
 
     struct pfioc_natlook nl;
     static int pffd = -1;
     static time_t last_reported = 0;
+
+    if( !me.IsIPv4() ) return -1;
+    if( !peer.IsIPv4() ) return -1;
 
     if (pffd < 0)
         pffd = open("/dev/pf", O_RDWR);
@@ -248,13 +263,15 @@ clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct s
 
     }
 
-    memset(dst, 0, sizeof(*dst));
+    dst.SetEmpty();
 
     memset(&nl, 0, sizeof(struct pfioc_natlook));
-    nl.saddr.v4.s_addr = peer.sin_addr.s_addr;
-    nl.sport = peer.sin_port;
-    nl.daddr.v4.s_addr = me.sin_addr.s_addr;
-    nl.dport = me.sin_port;
+    peer.GetInAddr(nl.saddr.v4);
+    nl.sport = htons(peer.GetPort());
+
+    me.GetInAddr(nl.daddr.v4);
+    nl.dport = htons(me.GetPort());
+
     nl.af = AF_INET;
     nl.proto = IPPROTO_TCP;
     nl.direction = PF_OUT;
@@ -274,10 +291,9 @@ clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct s
         return -1;
     } else
     {
-        int natted = me.sin_addr.s_addr != nl.rdaddr.v4.s_addr;
-        dst->sin_family = AF_INET;
-        dst->sin_port = nl.rdport;
-        dst->sin_addr = nl.rdaddr.v4;
+        int natted = (me != nl.rdaddr.v4);
+        dst = nl.rdaddr.v4;
+        dst.SetPort(ntohs(nl.rdport));
 
         if (natted)
             return 0;
@@ -288,27 +304,40 @@ clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct s
 
 #elif IPFW_TRANSPARENT
 int
-clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct sockaddr_in *dst)
+clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &dst)
 {
-	int ret;
-	struct sockaddr_in s;
-	int slen = sizeof(struct sockaddr_in);
+    int ret;
+    struct addrinfo *lookup = NULL;
 
-	ret = getsockname(fd, (struct sockaddr *) &s, (socklen_t * )&slen);
-	if (ret < 0) {
-		debugs(89, 1, "clientNatLookup: getpeername failed (fd " << fd << "), errstr " << xstrerror());
-		return -1;
-	}
-	*dst = s;
-	return 0;
+    if( !me.IsIPv4() ) return -1;
+    if( !peer.IsIPv4() ) return -1;
+
+    dst.GetAddrInfo(lookup,AF_INET);
+
+    ret = getsockname(fd, lookup->ai_addr, &lookup->ai_addrlen);
+
+    if (ret < 0) {
+
+        dst.FreeAddrInfo(lookup);
+
+        debugs(89, 1, "clientNatLookup: getpeername failed (fd " << fd << "), errstr " << xstrerror());
+
+        return -1;
+    }
+
+    dst = *lookup;
+
+    dst.FreeAddrInfo(lookup);
+
+    return 0;
 }
 
 #else
 int
-clientNatLookup(int fd, struct sockaddr_in me, struct sockaddr_in peer, struct sockaddr_in *dst)
+clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &dst)
 {
-	debugs(89, 1, "WARNING: transparent proxying not supported");
-	return -1;
+    debugs(89, 1, "WARNING: transparent proxying not supported");
+    return -1;
 }
 #endif
 

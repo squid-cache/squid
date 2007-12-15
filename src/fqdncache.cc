@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.175 2007/10/13 00:02:28 hno Exp $
+ * $Id: fqdncache.cc,v 1.176 2007/12/14 23:11:46 amosjeffries Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -440,17 +440,17 @@ fqdncacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error
 }
 
 void
-
-fqdncache_nbgethostbyaddr(struct IN_ADDR addr, FQDNH * handler, void *handlerData)
+fqdncache_nbgethostbyaddr(IPAddress &addr, FQDNH * handler, void *handlerData)
 {
     fqdncache_entry *f = NULL;
-    char *name = inet_ntoa(addr);
+    char name[MAX_IPSTRLEN];
     generic_cbdata *c;
     assert(handler);
+    addr.NtoA(name,MAX_IPSTRLEN);
     debugs(35, 4, "fqdncache_nbgethostbyaddr: Name '" << name << "'.");
     FqdncacheStats.requests++;
 
-    if (name == NULL || name[0] == '\0')
+    if (name[0] == '\0')
     {
         debugs(35, 4, "fqdncache_nbgethostbyaddr: Invalid name!");
         dns_error_message = "Invalid hostname";
@@ -499,7 +499,6 @@ fqdncache_nbgethostbyaddr(struct IN_ADDR addr, FQDNH * handler, void *handlerDat
 
     dnsSubmit(hashKeyStr(&f->hash), fqdncacheHandleReply, c);
 #else
-
     idnsPTRLookup(addr, fqdncacheHandleReply, c);
 #endif
 }
@@ -543,14 +542,13 @@ fqdncacheRegisterWithCacheManager(CacheManager & manager)
 }
 
 const char *
-
-fqdncache_gethostbyaddr(struct IN_ADDR addr, int flags)
+fqdncache_gethostbyaddr(IPAddress &addr, int flags)
 {
-    char *name = inet_ntoa(addr);
+    char name[MAX_IPSTRLEN];
     fqdncache_entry *f = NULL;
 
-    struct IN_ADDR ip;
-    assert(name);
+    assert(!addr.IsAnyAddr() && !addr.IsNoAddr());
+    addr.NtoA(name,MAX_IPSTRLEN);
     FqdncacheStats.requests++;
     f = fqdncache_get(name);
 
@@ -576,15 +574,12 @@ fqdncache_gethostbyaddr(struct IN_ADDR addr, int flags)
 
     dns_error_message = NULL;
 
-    /* check if it's already a FQDN address in text form. */
-
-    if (!safe_inet_addr(name, &ip))
-        return name;
-
     FqdncacheStats.misses++;
 
     if (flags & FQDN_LOOKUP_IF_MISS)
+    {
         fqdncache_nbgethostbyaddr(addr, dummy_handler, NULL);
+    }
 
     return NULL;
 }
@@ -620,14 +615,14 @@ fqdnStats(StoreEntry * sentry)
 
     storeAppendPrintf(sentry, "FQDN Cache Contents:\n\n");
 
-    storeAppendPrintf(sentry, "%-15.15s %3s %3s %3s %s\n",
+    storeAppendPrintf(sentry, "%-45.45s %3s %3s %3s %s\n",
                       "Address", "Flg", "TTL", "Cnt", "Hostnames");
 
     hash_first(fqdn_table);
 
     while ((f = (fqdncache_entry *) hash_next(fqdn_table))) {
         ttl = (f->flags.fromhosts ? -1 : (f->expires - squid_curtime));
-        storeAppendPrintf(sentry, "%-15.15s  %c%c %3.3d % 3d",
+        storeAppendPrintf(sentry, "%-45.45s  %c%c %3.3d % 3d",
                           hashKeyStr(&f->hash),
                           f->flags.negcached ? 'N' : ' ',
                           f->flags.fromhosts ? 'H' : ' ',
@@ -648,16 +643,15 @@ dummy_handler(const char *bufnotused, void *datanotused)
 }
 
 const char *
-
-fqdnFromAddr(struct IN_ADDR addr)
+fqdnFromAddr(IPAddress &addr)
 {
     const char *n;
-    static char buf[32];
+    static char buf[MAX_IPSTRLEN];
 
     if (Config.onoff.log_fqdn && (n = fqdncache_gethostbyaddr(addr, 0)))
         return n;
 
-    xstrncpy(buf, inet_ntoa(addr), 32);
+    addr.NtoA(buf, MAX_IPSTRLEN);
 
     return buf;
 }

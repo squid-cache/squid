@@ -1,6 +1,5 @@
-
 /*
- * $Id: time.cc,v 1.3 2006/08/12 01:43:11 robertc Exp $
+ * $Id: time.cc,v 1.4 2007/12/14 23:11:48 amosjeffries Exp $
  *
  * DEBUG: section 21    Time Functions
  * AUTHOR: Harvest Derived
@@ -34,6 +33,9 @@
  */
 
 #include "SquidTime.h"
+
+struct timeval current_time;
+double current_dtime;
 
 time_t squid_curtime = 0;
 

@@ -1,9 +1,8 @@
-
 /*
- * $Id: icmp.cc,v 1.93 2007/04/30 16:56:09 wessels Exp $
+ * $Id: icmp.cc,v 1.94 2007/12/14 23:11:47 amosjeffries Exp $
  *
  * DEBUG: section 37    ICMP Routines
- * AUTHOR: Duane Wessels
+ * AUTHOR: Duane Wessels, Amos Jeffries
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -32,279 +31,90 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
-
 #include "squid.h"
-#include "comm.h"
+#include "ICMP.h"
 #include "SquidTime.h"
+#include "Debug.h"
+
+ICMP::ICMP()
+{
+#if USE_ICMP
+    icmp_sock = -1;
+    icmp_ident = 0;
+#endif
+}
+
+void
+ICMP::Close()
+{
+#if USE_ICMP
+    if(icmp_sock > 0)
+        close(icmp_sock);
+    icmp_sock = -1;
+    icmp_ident = 0;
+#endif
+}
 
 #if USE_ICMP
 
-#define S_ICMP_ECHO	1
-#if ALLOW_SOURCE_PING
-#define S_ICMP_ICP	2
-#endif
-#define S_ICMP_DOM	3
-
-static PF icmpRecv;
-static void icmpSend(pingerEchoData * pkt, int len);
-#if ALLOW_SOURCE_PING
-
-static void icmpHandleSourcePing(const struct sockaddr_in *from, const char *buf);
-#endif
-
-static void * hIpc;
-static pid_t pid;
-
-static void
-
-icmpSendEcho(struct IN_ADDR to, int opcode, const char *payload, int len)
+int
+ICMP::CheckSum(unsigned short *ptr, int size)
 {
-    static pingerEchoData pecho;
+    long sum;
+    unsigned short oddbyte;
+    unsigned short answer;
 
-    if (payload && len == 0)
-        len = strlen(payload);
+    if(!ptr) return 65535; // bad input.
 
-    assert(len <= PINGER_PAYLOAD_SZ);
+    sum = 0;
 
-    pecho.to = to;
-
-    pecho.opcode = (unsigned char) opcode;
-
-    pecho.psize = len;
-
-    xmemcpy(pecho.payload, payload, len);
-
-    icmpSend(&pecho, sizeof(pingerEchoData) - PINGER_PAYLOAD_SZ + len);
-}
-
-static void
-icmpRecv(int unused1, void *unused2)
-{
-    int n;
-    static int fail_count = 0;
-    pingerReplyData preply;
-
-    static struct sockaddr_in F;
-    commSetSelect(icmp_sock, COMM_SELECT_READ, icmpRecv, NULL, 0);
-    memset(&preply, '\0', sizeof(pingerReplyData));
-    n = comm_udp_recv(icmp_sock,
-                      (char *) &preply,
-                      sizeof(pingerReplyData),
-                      0);
-
-    if (n < 0 && EAGAIN != errno) {
-        debugs(37, 1, "icmpRecv: recv: " << xstrerror());
-
-        if (errno == ECONNREFUSED)
-            icmpClose();
-
-        if (errno == ECONNRESET)
-            icmpClose();
-
-        if (++fail_count == 10)
-            icmpClose();
-
-        return;
+    while (size > 1) {
+        sum += *ptr++;
+        size -= 2;
     }
 
-    fail_count = 0;
-
-    if (n == 0)			/* test probe from pinger */
-        return;
-
-    F.sin_family = AF_INET;
-
-    F.sin_addr = preply.from;
-
-    F.sin_port = 0;
-
-    switch (preply.opcode) {
-
-    case S_ICMP_ECHO:
-        break;
-#if ALLOW_SOURCE_PING
-
-    case S_ICMP_ICP:
-        icmpHandleSourcePing(&F, preply.payload);
-        break;
-#endif
-
-    case S_ICMP_DOM:
-        netdbHandlePingReply(&F, preply.hops, preply.rtt);
-        break;
-
-    default:
-        debugs(37, 1, "icmpRecv: Bad opcode: " << preply.opcode);
-        break;
+    if (size == 1) {
+        oddbyte = 0;
+        *((unsigned char *) &oddbyte) = *(unsigned char *) ptr;
+        sum += oddbyte;
     }
+
+    sum = (sum >> 16) + (sum & 0xffff);
+    sum += (sum >> 16);
+    answer = (unsigned short) ~sum;
+    return (answer);
 }
 
-static void
-icmpSend(pingerEchoData * pkt, int len)
+int
+ICMP::ipHops(int ttl)
 {
-    int x;
+    if (ttl < 33)
+        return 33 - ttl;
 
-    if (icmp_sock < 0)
-        return;
+    if (ttl < 63)
+        return 63 - ttl;        /* 62 = (64+60)/2 */
 
-    debugs(37, 2, "icmpSend: to " << inet_ntoa(pkt->to) << ", opcode " <<
-           (int) pkt->opcode << ", len " << pkt->psize);
+    if (ttl < 65)
+        return 65 - ttl;        /* 62 = (64+60)/2 */
 
-    x = comm_udp_send(icmp_sock, (char *) pkt, len, 0);
+    if (ttl < 129)
+        return 129 - ttl;
 
-    if (x < 0) {
-        debugs(37, 1, "icmpSend: send: " << xstrerror());
+    if (ttl < 193)
+        return 193 - ttl;
 
-        if (errno == ECONNREFUSED || errno == EPIPE) {
-            icmpClose();
-            return;
-        }
-    } else if (x != len) {
-        debugs(37, 1, "icmpSend: Wrote " << x << " of " << len << " bytes");
-    }
+    return 256 - ttl;
 }
 
-#if ALLOW_SOURCE_PING
-static void
-
-icmpHandleSourcePing(const struct sockaddr_in *from, const char *buf)
+void
+ICMP::Log(const IPAddress &addr, const u_int8_t type, const char* pkt_str, const int rtt, const int hops)
 {
-    const cache_key *key;
-    icp_common_t header;
-    const char *url;
-    xmemcpy(&header, buf, sizeof(icp_common_t));
-    url = buf + sizeof(icp_common_t);
-    key = icpGetCacheKey(url, (int) header.reqnum);
-    debugs(37, 3, "icmpHandleSourcePing: from " << inet_ntoa(from->sin_addr) << ", key '" << storeKeyText(key) << "'");
-
-    /* call neighborsUdpAck even if ping_status != PING_WAITING */
-    neighborsUdpAck(key, &header, from);
+    debugs(42, 2, "pingerLog: " << std::setw(9) << current_time.tv_sec  <<
+           "." << std::setfill('0') << std::setw(6) <<
+           current_time.tv_usec  << " " << std::left << std::setfill(' ') <<
+           std::setw(45) << addr  << " " << type  <<
+           " " << std::setw(15) << pkt_str << " " << rtt  <<
+           "ms " << hops  << " hops");
 }
-
-#endif
 
 #endif /* USE_ICMP */
-
-#if ALLOW_SOURCE_PING
-void
-
-icmpSourcePing(struct IN_ADDR to, const icp_common_t * header, const char *url)
-{
-#if USE_ICMP
-    char *payload;
-    int len;
-    int ulen;
-    debugs(37, 3, "icmpSourcePing: '" << url << "'");
-
-    if ((ulen = strlen(url)) > MAX_URL)
-        return;
-
-    payload = memAllocate(MEM_8K_BUF);
-
-    len = sizeof(icp_common_t);
-
-    xmemcpy(payload, header, len);
-
-    strcpy(payload + len, url);
-
-    len += ulen + 1;
-
-    icmpSendEcho(to, S_ICMP_ICP, payload, len);
-
-    memFree(payload, MEM_8K_BUF);
-
-#endif
-}
-
-#endif
-
-void
-
-icmpDomainPing(struct IN_ADDR to, const char *domain)
-{
-#if USE_ICMP
-    debugs(37, 3, "icmpDomainPing: '" << domain << "'");
-    icmpSendEcho(to, S_ICMP_DOM, domain, 0);
-#endif
-}
-
-void
-icmpOpen(void)
-{
-#if USE_ICMP
-    const char *args[2];
-    int rfd;
-    int wfd;
-    args[0] = "(pinger)";
-    args[1] = NULL;
-    /*
-     * Do NOT use IPC_DGRAM (=IPC_UNIX_DGRAM) here because you can't
-     * send() more than 4096 bytes on a socketpair() socket (at
-     * least on FreeBSD).
-     */
-    pid = ipcCreate(IPC_UDP_SOCKET,
-                    Config.Program.pinger,
-                    args,
-                    "Pinger Socket",
-                    &rfd,
-                    &wfd,
-                    &hIpc);
-
-    if (pid < 0)
-        return;
-
-    assert(rfd == wfd);
-
-    icmp_sock = rfd;
-
-    fd_note(icmp_sock, "pinger");
-
-    commSetSelect(icmp_sock, COMM_SELECT_READ, icmpRecv, NULL, 0);
-
-    commSetTimeout(icmp_sock, -1, NULL, NULL);
-
-    debugs(37, 1, "Pinger socket opened on FD " << icmp_sock);
-
-#ifdef _SQUID_MSWIN_
-
-    debugs(37, 4, "Pinger handle: 0x" << std::hex << hIpc << std::dec << ", PID: " << pid);
-
-#endif
-#endif
-}
-
-void
-icmpClose(void)
-{
-#if USE_ICMP
-
-    if (icmp_sock < 0)
-        return;
-
-    debugs(37, 1, "Closing Pinger socket on FD " << icmp_sock);
-
-#ifdef _SQUID_MSWIN_
-
-    send(icmp_sock, (const void *) "$shutdown\n", 10, 0);
-
-#endif
-
-    comm_close(icmp_sock);
-
-#ifdef _SQUID_MSWIN_
-
-    if (hIpc) {
-        if (WaitForSingleObject(hIpc, 12000) != WAIT_OBJECT_0) {
-            getCurrentTime();
-            debugs(37, 1, "icmpClose: WARNING: (pinger," << pid << ") didn't exit in 12 seconds");
-        }
-
-        CloseHandle(hIpc);
-    }
-
-#endif
-    icmp_sock = -1;
-
-#endif
-}

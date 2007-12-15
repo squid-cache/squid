@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.h,v 1.9 2007/05/07 18:38:40 wessels Exp $
+ * $Id: helper.h,v 1.10 2007/12/14 23:11:46 amosjeffries Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -38,6 +38,7 @@
 
 #include "squid.h"
 #include "cbdata.h"
+#include "IPAddress.h"
 
 class helper_request;
 
@@ -65,6 +66,7 @@ struct _helper
     int n_running;
     int n_active;
     int ipc_type;
+    IPAddress addr;
     unsigned int concurrency;
     time_t last_queue_warn;
     time_t last_restart;
@@ -90,6 +92,7 @@ struct _helper_stateful
     int n_running;
     int n_active;
     int ipc_type;
+    IPAddress addr;
     MemAllocator *datapool;
     HLPSAVAIL *IsAvailable;
     HLPSONEQ *OnEmptyQueue;
@@ -111,6 +114,7 @@ struct _helper_server
 {
     int index;
     int pid;
+    IPAddress addr;
     int rfd;
     int wfd;
     MemBuf *wqueue;
@@ -149,6 +153,7 @@ unsigned int shutdown:
     }
 
     stats;
+
     void *hIpc;
 };
 
@@ -158,6 +163,7 @@ struct _helper_stateful_server
 {
     int index;
     int pid;
+    IPAddress addr;
     int rfd;
     int wfd;
     /* MemBuf wqueue; */

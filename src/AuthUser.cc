@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUser.cc,v 1.9 2007/05/29 13:31:36 amosjeffries Exp $
+ * $Id: AuthUser.cc,v 1.10 2007/12/14 23:11:45 amosjeffries Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
@@ -240,7 +240,7 @@ AuthUser::clearIp()
 }
 
 void
-AuthUser::removeIp(struct IN_ADDR ipaddr)
+AuthUser::removeIp(IPAddress ipaddr)
 {
     auth_user_ip_t *ipdata = (auth_user_ip_t *) ip_list.head;
 
@@ -248,7 +248,7 @@ AuthUser::removeIp(struct IN_ADDR ipaddr)
     {
         /* walk the ip list */
 
-        if (ipdata->ipaddr.s_addr == ipaddr.s_addr) {
+        if (ipdata->ipaddr == ipaddr) {
             /* remove the node */
             dlinkDelete(&ipdata->node, &ip_list);
             cbdataFree(ipdata);
@@ -264,10 +264,9 @@ AuthUser::removeIp(struct IN_ADDR ipaddr)
 }
 
 void
-AuthUser::addIp(struct IN_ADDR ipaddr)
+AuthUser::addIp(IPAddress ipaddr)
 {
     auth_user_ip_t *ipdata = (auth_user_ip_t *) ip_list.head;
-    char *ip1;
     int found = 0;
 
     CBDATA_INIT_TYPE(auth_user_ip_t);
@@ -282,8 +281,8 @@ AuthUser::addIp(struct IN_ADDR ipaddr)
         auth_user_ip_t *tempnode = (auth_user_ip_t *) ipdata->node.next;
         /* walk the ip list */
 
-        if (ipdata->ipaddr.s_addr == ipaddr.s_addr) {
-            /* This ip has alreadu been seen. */
+        if (ipdata->ipaddr == ipaddr) {
+            /* This ip has already been seen. */
             found = 1;
             /* update IP ttl */
             ipdata->ip_expiretime = squid_curtime;
@@ -313,11 +312,7 @@ AuthUser::addIp(struct IN_ADDR ipaddr)
 
     ipcount++;
 
-    ip1 = xstrdup(inet_ntoa(ipaddr));
-
-    debugs(29, 2, "authenticateAuthUserAddIp: user '" << username() << "' has been seen at a new IP address (" << ip1 << ")");
-
-    safe_free(ip1);
+    debugs(29, 2, "authenticateAuthUserAddIp: user '" << username() << "' has been seen at a new IP address (" << ipaddr << ")");
 }
 
 

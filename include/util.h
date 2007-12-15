@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.78 2007/09/20 12:32:50 amosjeffries Exp $
+ * $Id: util.h,v 1.79 2007/12/14 23:11:44 amosjeffries Exp $
  *
  * AUTHOR: Harvest Derived
  *
@@ -44,6 +44,9 @@
 #endif
 #if HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
+#if HAVE_ARPA_INET_H
+#include <arpa/inet.h>
 #endif
 
 #if !defined(SQUIDHOSTNAMELEN)
@@ -125,8 +128,6 @@ extern size_t xmalloc_total;
 extern void xmalloc_find_leaks(void);
 #endif
 
-typedef struct IN_ADDR SIA;
-SQUIDCEXTERN int safe_inet_addr(const char *, SIA *);
 SQUIDCEXTERN time_t parse_iso3307_time(const char *buf);
 SQUIDCEXTERN char *base64_decode(const char *coded);
 SQUIDCEXTERN const char *base64_encode(const char *decoded);
@@ -141,6 +142,13 @@ SQUIDCEXTERN const char *xint64toa(int64_t num);
 
 #if !HAVE_DRAND48
 SQUIDCEXTERN double drand48(void);
+#endif
+
+#ifndef xmax
+#define xmax(a,b) ((a) < (b) ? (b) : (a))
+#endif
+#ifndef xmin
+#define xmin(a,b) ((a) < (b) ? (a) : (b))
 #endif
 
 typedef struct {

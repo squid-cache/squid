@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.77 2007/08/13 17:20:51 hno Exp $
+ * $Id: HttpRequest.cc,v 1.78 2007/12/14 23:11:45 amosjeffries Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -82,10 +82,8 @@ HttpRequest::init()
     imslen = 0;
     lastmod = -1;
     max_forwards = -1;
-    client_addr = no_addr;
-    my_addr = no_addr;
-    my_port = 0;
-    client_port = 0;
+    client_addr.SetEmpty();
+    my_addr.SetEmpty();
     body_pipe = NULL;
     // hier
     errType = ERR_NONE;
