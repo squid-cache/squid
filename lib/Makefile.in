@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-#  $Id: Makefile.in,v 1.150 2007/12/05 01:11:16 hno Exp $
+#  $Id: Makefile.in,v 1.151 2007/12/15 01:10:48 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -43,7 +43,8 @@ host_triplet = @host@
 check_PROGRAMS = tests/testAll$(EXEEXT)
 subdir = lib
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in drand48.c \
-	inet_ntoa.c initgroups.c strerror.c tempnam.c
+	getaddrinfo.c getnameinfo.c inet_ntoa.c inet_ntop.c \
+	inet_pton.c initgroups.c strerror.c tempnam.c
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 	$(top_srcdir)/configure.in
@@ -58,23 +59,23 @@ libmiscutil_a_AR = $(AR) $(ARFLAGS)
 libmiscutil_a_DEPENDENCIES = libTrie/src/Trie.o libTrie/src/TrieNode.o \
 	@LIBOBJS@ $(am__empty)
 am__libmiscutil_a_SOURCES_DIST = MemPool.cc base64.c getfullhostname.c \
-	hash.c heap.c html_quote.c iso3307.c md5.c radix.c rfc1035.c \
-	rfc1123.c rfc1738.c rfc2617.c safe_inet_addr.c Splay.cc \
-	strsep.c strtoll.c stub_memaccount.c util.c uudecode.c \
-	assert.c xusleep.c Profiler.c win32lib.c
+	hash.c heap.c html_quote.c IPAddress.cc iso3307.c md5.c \
+	radix.c rfc1035.c rfc1123.c rfc1738.c rfc2617.c rfc3596.c \
+	Splay.cc strsep.c strtoll.c stub_memaccount.c util.c \
+	uudecode.c assert.c xusleep.c Profiler.c win32lib.c
 @NEED_OWN_STRSEP_TRUE@am__objects_1 = strsep.$(OBJEXT)
 @NEED_OWN_STRTOLL_TRUE@am__objects_2 = strtoll.$(OBJEXT)
 @ENABLE_XPROF_STATS_TRUE@am__objects_3 = Profiler.$(OBJEXT)
 @ENABLE_WIN32SPECIFIC_TRUE@am__objects_4 = win32lib.$(OBJEXT)
 am_libmiscutil_a_OBJECTS = MemPool.$(OBJEXT) base64.$(OBJEXT) \
 	getfullhostname.$(OBJEXT) hash.$(OBJEXT) heap.$(OBJEXT) \
-	html_quote.$(OBJEXT) iso3307.$(OBJEXT) md5.$(OBJEXT) \
-	radix.$(OBJEXT) rfc1035.$(OBJEXT) rfc1123.$(OBJEXT) \
-	rfc1738.$(OBJEXT) rfc2617.$(OBJEXT) safe_inet_addr.$(OBJEXT) \
-	Splay.$(OBJEXT) $(am__objects_1) $(am__objects_2) \
-	stub_memaccount.$(OBJEXT) util.$(OBJEXT) uudecode.$(OBJEXT) \
-	assert.$(OBJEXT) xusleep.$(OBJEXT) $(am__objects_3) \
-	$(am__objects_4)
+	html_quote.$(OBJEXT) IPAddress.$(OBJEXT) iso3307.$(OBJEXT) \
+	md5.$(OBJEXT) radix.$(OBJEXT) rfc1035.$(OBJEXT) \
+	rfc1123.$(OBJEXT) rfc1738.$(OBJEXT) rfc2617.$(OBJEXT) \
+	rfc3596.$(OBJEXT) Splay.$(OBJEXT) $(am__objects_1) \
+	$(am__objects_2) stub_memaccount.$(OBJEXT) util.$(OBJEXT) \
+	uudecode.$(OBJEXT) assert.$(OBJEXT) xusleep.$(OBJEXT) \
+	$(am__objects_3) $(am__objects_4)
 libmiscutil_a_OBJECTS = $(am_libmiscutil_a_OBJECTS)
 libntlmauth_a_AR = $(AR) $(ARFLAGS)
 libntlmauth_a_DEPENDENCIES = @LIBOBJS@
@@ -88,9 +89,12 @@ libsspwin32_a_AR = $(AR) $(ARFLAGS)
 libsspwin32_a_LIBADD =
 am_libsspwin32_a_OBJECTS = sspwin32.$(OBJEXT)
 libsspwin32_a_OBJECTS = $(am_libsspwin32_a_OBJECTS)
-am__tests_testAll_SOURCES_DIST = tests/testArray.cc tests/testMain.cc \
-	tests/testArray.h Profiler.c win32lib.c util.c assert.c
-am_tests_testAll_OBJECTS = testArray.$(OBJEXT) testMain.$(OBJEXT) \
+am__tests_testAll_SOURCES_DIST = tests/testArray.h tests/testArray.cc \
+	tests/testIPAddress.h tests/testIPAddress.cc IPAddress.cc \
+	tests/testRFC1035.h tests/testRFC1035.cc tests/testMain.cc \
+	Profiler.c win32lib.c util.c assert.c
+am_tests_testAll_OBJECTS = testArray.$(OBJEXT) testIPAddress.$(OBJEXT) \
+	IPAddress.$(OBJEXT) testRFC1035.$(OBJEXT) testMain.$(OBJEXT) \
 	$(am__objects_3) $(am__objects_4) util.$(OBJEXT) \
 	assert.$(OBJEXT)
 tests_testAll_OBJECTS = $(am_tests_testAll_OBJECTS)
@@ -386,6 +390,7 @@ libmiscutil_a_SOURCES = \
 	hash.c \
 	heap.c \
 	html_quote.c \
+	IPAddress.cc \
 	iso3307.c \
 	md5.c \
 	radix.c \
@@ -393,7 +398,7 @@ libmiscutil_a_SOURCES = \
 	rfc1123.c \
 	rfc1738.c \
 	rfc2617.c \
-	safe_inet_addr.c \
+	rfc3596.c \
 	$(SNPRINTFSOURCE) \
 	Splay.cc \
 	$(STRSEPSOURCE) \
@@ -426,7 +431,15 @@ libsspwin32_a_SOURCES = \
 
 INCLUDES = -I$(top_builddir)/include -I$(top_srcdir)/include @SQUID_CPPUNIT_INC@
 TESTS = $(check_PROGRAMS)
-tests_testAll_SOURCES = tests/testArray.cc tests/testMain.cc  tests/testArray.h \
+tests_testAll_SOURCES = \
+	tests/testArray.h \
+	tests/testArray.cc \
+	tests/testIPAddress.h \
+	tests/testIPAddress.cc \
+	IPAddress.cc \
+	tests/testRFC1035.h \
+	tests/testRFC1035.cc \
+	tests/testMain.cc \
 	$(XPROF_STATS_SOURCE) \
 	$(WIN32SRC) \
 	util.c assert.c
@@ -506,11 +519,16 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/drand48.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/getaddrinfo.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/getnameinfo.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/inet_ntoa.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/inet_ntop.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/inet_pton.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/initgroups.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/strerror.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tempnam.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/GNUregex.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/IPAddress.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MemPool.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Profiler.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Splay.Po@am__quote@
@@ -528,13 +546,15 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rfc1123.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rfc1738.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rfc2617.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/safe_inet_addr.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rfc3596.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sspwin32.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strsep.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtoll.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stub_memaccount.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testArray.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testIPAddress.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testMain.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testRFC1035.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/util.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/uudecode.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/win32lib.Po@am__quote@
@@ -595,6 +615,34 @@ testArray.obj: tests/testArray.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/testArray.cc' object='testArray.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o testArray.obj `if test -f 'tests/testArray.cc'; then $(CYGPATH_W) 'tests/testArray.cc'; else $(CYGPATH_W) '$(srcdir)/tests/testArray.cc'; fi`
+
+testIPAddress.o: tests/testIPAddress.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT testIPAddress.o -MD -MP -MF "$(DEPDIR)/testIPAddress.Tpo" -c -o testIPAddress.o `test -f 'tests/testIPAddress.cc' || echo '$(srcdir)/'`tests/testIPAddress.cc; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/testIPAddress.Tpo" "$(DEPDIR)/testIPAddress.Po"; else rm -f "$(DEPDIR)/testIPAddress.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/testIPAddress.cc' object='testIPAddress.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o testIPAddress.o `test -f 'tests/testIPAddress.cc' || echo '$(srcdir)/'`tests/testIPAddress.cc
+
+testIPAddress.obj: tests/testIPAddress.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT testIPAddress.obj -MD -MP -MF "$(DEPDIR)/testIPAddress.Tpo" -c -o testIPAddress.obj `if test -f 'tests/testIPAddress.cc'; then $(CYGPATH_W) 'tests/testIPAddress.cc'; else $(CYGPATH_W) '$(srcdir)/tests/testIPAddress.cc'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/testIPAddress.Tpo" "$(DEPDIR)/testIPAddress.Po"; else rm -f "$(DEPDIR)/testIPAddress.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/testIPAddress.cc' object='testIPAddress.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o testIPAddress.obj `if test -f 'tests/testIPAddress.cc'; then $(CYGPATH_W) 'tests/testIPAddress.cc'; else $(CYGPATH_W) '$(srcdir)/tests/testIPAddress.cc'; fi`
+
+testRFC1035.o: tests/testRFC1035.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT testRFC1035.o -MD -MP -MF "$(DEPDIR)/testRFC1035.Tpo" -c -o testRFC1035.o `test -f 'tests/testRFC1035.cc' || echo '$(srcdir)/'`tests/testRFC1035.cc; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/testRFC1035.Tpo" "$(DEPDIR)/testRFC1035.Po"; else rm -f "$(DEPDIR)/testRFC1035.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/testRFC1035.cc' object='testRFC1035.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o testRFC1035.o `test -f 'tests/testRFC1035.cc' || echo '$(srcdir)/'`tests/testRFC1035.cc
+
+testRFC1035.obj: tests/testRFC1035.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT testRFC1035.obj -MD -MP -MF "$(DEPDIR)/testRFC1035.Tpo" -c -o testRFC1035.obj `if test -f 'tests/testRFC1035.cc'; then $(CYGPATH_W) 'tests/testRFC1035.cc'; else $(CYGPATH_W) '$(srcdir)/tests/testRFC1035.cc'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/testRFC1035.Tpo" "$(DEPDIR)/testRFC1035.Po"; else rm -f "$(DEPDIR)/testRFC1035.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tests/testRFC1035.cc' object='testRFC1035.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o testRFC1035.obj `if test -f 'tests/testRFC1035.cc'; then $(CYGPATH_W) 'tests/testRFC1035.cc'; else $(CYGPATH_W) '$(srcdir)/tests/testRFC1035.cc'; fi`
 
 testMain.o: tests/testMain.cc
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT testMain.o -MD -MP -MF "$(DEPDIR)/testMain.Tpo" -c -o testMain.o `test -f 'tests/testMain.cc' || echo '$(srcdir)/'`tests/testMain.cc; \

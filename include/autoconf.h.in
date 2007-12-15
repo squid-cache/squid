@@ -143,8 +143,14 @@
 /* Define to 1 if you have the <fnmatch.h> header file. */
 #undef HAVE_FNMATCH_H
 
+/* Define to 1 if you have the `getaddrinfo' function. */
+#undef HAVE_GETADDRINFO
+
 /* Define to 1 if you have the `getdtablesize' function. */
 #undef HAVE_GETDTABLESIZE
+
+/* Define to 1 if you have the `getnameinfo' function. */
+#undef HAVE_GETNAMEINFO
 
 /* Define to 1 if you have the <getopt.h> header file. */
 #undef HAVE_GETOPT_H
@@ -181,6 +187,12 @@
 
 /* Define to 1 if you have the `htole16' function. */
 #undef HAVE_HTOLE16
+
+/* Define to 1 if you have the `inet_ntop' function. */
+#undef HAVE_INET_NTOP
+
+/* Define to 1 if you have the `inet_pton' function. */
+#undef HAVE_INET_PTON
 
 /* Define to 1 if you have the `initgroups' function. */
 #undef HAVE_INITGROUPS
@@ -339,11 +351,20 @@
 /* Define to 1 if you have the <netdb.h> header file. */
 #undef HAVE_NETDB_H
 
+/* Define to 1 if you have the <netinet/icmp6.h> header file. */
+#undef HAVE_NETINET_ICMP6_H
+
 /* Define to 1 if you have the <netinet/if_ether.h> header file. */
 #undef HAVE_NETINET_IF_ETHER_H
 
 /* Define to 1 if you have the <netinet/in.h> header file. */
 #undef HAVE_NETINET_IN_H
+
+/* Define to 1 if you have the <netinet/in_systm.h> header file. */
+#undef HAVE_NETINET_IN_SYSTM_H
+
+/* Define to 1 if you have the <netinet/ip6.h> header file. */
+#undef HAVE_NETINET_IP6_H
 
 /* Define to 1 if you have the <netinet/ipl.h> header file. */
 #undef HAVE_NETINET_IPL_H
@@ -356,6 +377,12 @@
 
 /* Define to 1 if you have the <netinet/ip_fil.h> header file. */
 #undef HAVE_NETINET_IP_FIL_H
+
+/* Define to 1 if you have the <netinet/ip.h> header file. */
+#undef HAVE_NETINET_IP_H
+
+/* Define to 1 if you have the <netinet/ip_icmp.h> header file. */
+#undef HAVE_NETINET_IP_ICMP_H
 
 /* Define to 1 if you have the <netinet/ip_nat.h> header file. */
 #undef HAVE_NETINET_IP_NAT_H
@@ -446,12 +473,6 @@
 
 /* Define to 1 if you have the `res_init' function. */
 #undef HAVE_RES_INIT
-
-/* If _res structure has nsaddr_list member */
-#undef HAVE_RES_NSADDR_LIST
-
-/* If _res structure has ns_list member */
-#undef HAVE_RES_NS_LIST
 
 /* Define to 1 if you have the `rint' function. */
 #undef HAVE_RINT
@@ -745,6 +766,15 @@
    redirection. This provides "masquerading" support for non Linux system. */
 #undef IPF_TRANSPARENT
 
+/* 0 == Keep IPv4 and IPv6 Localhosts seperate. */
+#undef IPV6_SPECIAL_LOCALHOST
+
+/* 0 == Disable support for split-stack IPv6 implementations */
+#undef IPV6_SPECIAL_SPLITSTACK
+
+/* 0 == Leave all v4-mapping to the OS */
+#undef IPV6_SPECIAL_V4MAPPING
+
 /* A dangerous feature which causes Squid to kill its parent process
    (presumably the RunCache script) upon receipt of SIGTERM or SIGINT. Use
    with caution. */
@@ -917,16 +947,15 @@
 /* Define this to include code for the Hypertext Cache Protocol (HTCP) */
 #undef USE_HTCP
 
-/* If you want to use Squid's ICMP features (highly recommended!) then define
-   this. When USE_ICMP is defined, Squid will send ICMP pings to origin server
-   sites. This information is used in numerous ways: - Sent in ICP replies so
-   neighbor caches know how close you are to the source. - For finding the
-   closest instance of a URN. - With the 'test_reachability' option. Squid
-   will return ICP_OP_MISS_NOFETCH for sites which it cannot ping. */
+/* Defined this to use Squid's ICMP features (highly recommended!) When
+   USE_ICMP is defined, Squid will send ICMP pings to origin server sites. */
 #undef USE_ICMP
 
 /* Compile in support for Ident (RFC 931) lookups? Enabled by default. */
 #undef USE_IDENT
+
+/* Disable support for IPv6 */
+#undef USE_IPV6
 
 /* Use kqueue() for the IO loop */
 #undef USE_KQUEUE
@@ -996,6 +1025,21 @@
 
 /* Keyword used by squid for inlining methods */
 #undef _SQUID_INLINE_
+
+/* Nameserver Counter for IPv6 _res */
+#undef _SQUID_RES_NSADDR6_COUNT
+
+/* If _res_ext structure has nsaddr_list member */
+#undef _SQUID_RES_NSADDR6_LARRAY
+
+/* If _res structure has _ext.nsaddrs member */
+#undef _SQUID_RES_NSADDR6_LPTR
+
+/* Nameserver counter for IPv4 _res */
+#undef _SQUID_RES_NSADDR_COUNT
+
+/* If _res structure has ns_list member */
+#undef _SQUID_RES_NSADDR_LIST
 
 /* Include inline methods into header file */
 #undef _USE_INLINE_
