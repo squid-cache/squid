@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.528 2007/11/15 23:33:05 wessels Exp $
+ * $Id: cache_cf.cc,v 1.529 2007/12/14 23:11:46 amosjeffries Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -127,11 +127,11 @@ static void dump_denyinfo(StoreEntry * entry, const char *name, acl_deny_info_li
 static void free_denyinfo(acl_deny_info_list ** var);
 
 #if USE_WCCPv2
-static void parse_sockaddr_in_list(sockaddr_in_list **);
-static void dump_sockaddr_in_list(StoreEntry *, const char *, const sockaddr_in_list *);
-static void free_sockaddr_in_list(sockaddr_in_list **);
+static void parse_IPAddress_list(IPAddress_list **);
+static void dump_IPAddress_list(StoreEntry *, const char *, const IPAddress_list *);
+static void free_IPAddress_list(IPAddress_list **);
 #if CURRENTLY_UNUSED
-static int check_null_sockaddr_in_list(const sockaddr_in_list *);
+static int check_null_IPAddress_list(const IPAddress_list *);
 #endif /* CURRENTLY_UNUSED */
 #endif /* USE_WCCPv2 */
 
@@ -637,9 +637,7 @@ configDoConfigure(void)
         https_port_list *s;
 
         for (s = Config.Sockaddr.https; s != NULL; s = (https_port_list *) s->http.next) {
-            debugs(3, 1, "Initializing https_port " <<
-                   inet_ntoa(s->http.s.sin_addr) << ":" <<
-                   ntohs(s->http.s.sin_port) << " SSL context");
+            debugs(3, 1, "Initializing https_port " << s->http.s << " SSL context");
 
             s->sslContext = sslCreateServerContext(s->cert, s->key, s->version, s->cipher, s->options, s->sslflags, s->clientca, s->cafile, s->capath, s->crlfile, s->dhfile, s->sslcontext);
         }
@@ -905,18 +903,15 @@ free_acl_access(acl_access ** head)
 }
 
 static void
-
-dump_address(StoreEntry * entry, const char *name, struct IN_ADDR addr)
+dump_address(StoreEntry * entry, const char *name, IPAddress &addr)
 {
-    storeAppendPrintf(entry, "%s %s\n", name, inet_ntoa(addr));
+    char buf[MAX_IPSTRLEN];
+    storeAppendPrintf(entry, "%s %s\n", name, addr.NtoA(buf,MAX_IPSTRLEN) );
 }
 
 static void
-
-parse_address(struct IN_ADDR *addr)
+parse_address(IPAddress *addr)
 {
-
-    const struct hostent *hp;
     char *token = strtok(NULL, w_space);
 
     if (!token) {
@@ -924,20 +919,24 @@ parse_address(struct IN_ADDR *addr)
         return;
     }
 
-    if (safe_inet_addr(token, addr) == 1)
-        (void) 0;
-    else if ((hp = gethostbyname(token)))	/* dont use ipcache */
-        *addr = inaddrFromHostent(hp);
+    if (!strcmp(token,"any_addr"))
+    {
+        addr->SetAnyAddr();
+	(void) 0;
+    }
+    else if ( (!strcmp(token,"no_addr")) || (!strcmp(token,"full_mask")) )
+    {
+        addr->SetNoAddr();
+	(void) 0;
+    }
     else
-        self_destruct();
+        *addr = token;
 }
 
 static void
-
-free_address(struct IN_ADDR *addr)
+free_address(IPAddress *addr)
 {
-
-    memset(addr, '\0', sizeof(struct IN_ADDR));
+    addr->SetEmpty();
 }
 
 CBDATA_TYPE(acl_address);
@@ -945,11 +944,12 @@ CBDATA_TYPE(acl_address);
 static void
 dump_acl_address(StoreEntry * entry, const char *name, acl_address * head)
 {
+    char buf[MAX_IPSTRLEN];
     acl_address *l;
 
     for (l = head; l; l = l->next) {
-        if (l->addr.s_addr != INADDR_ANY)
-            storeAppendPrintf(entry, "%s %s", name, inet_ntoa(l->addr));
+        if (!l->addr.IsAnyAddr())
+            storeAppendPrintf(entry, "%s %s", name, l->addr.NtoA(buf,MAX_IPSTRLEN));
         else
             storeAppendPrintf(entry, "%s autoselect", name);
 
@@ -1598,7 +1598,7 @@ parse_peer(peer ** head)
         self_destruct();
 
     p->host = xstrdup(token);
-
+                             
     p->name = xstrdup(token);
 
     if ((token = strtok(NULL, w_space)) == NULL)
@@ -1771,12 +1771,14 @@ parse_peer(peer ** head)
     }
 
 #endif
+
+    p->index =  ++Config.npeers;
+
+// FIXME INET6 : maybe sort peers so the SNMP indexing works better?
     while (*head != NULL)
         head = &(*head)->next;
 
     *head = p;
-
-    Config.npeers++;
 
     peerClearRR(p);
 }
@@ -2667,19 +2669,32 @@ parseNeighborType(const char *s)
 
 #if USE_WCCPv2
 void
-parse_sockaddr_in_list_token(sockaddr_in_list ** head, char *token)
+parse_IPAddress_list_token(IPAddress_list ** head, char *token)
 {
     char *t;
     char *host;
     char *tmp;
 
-    const struct hostent *hp;
+    IPAddress ipa;
     unsigned short port;
-    sockaddr_in_list *s;
+    IPAddress_list *s;
 
     host = NULL;
     port = 0;
 
+#if USE_IPV6
+    if (*token == '[') {
+        /* [host]:port */
+	host = token + 1;
+	t = strchr(host, ']');
+	if (!t)
+	    self_destruct();
+	*t++ = '\0';
+	if (*t != ':')
+	    self_destruct();
+	port = xatos(t + 1);
+    } else
+#endif
     if ((t = strchr(token, ':'))) {
         /* host:port */
         host = token;
@@ -2695,55 +2710,52 @@ parse_sockaddr_in_list_token(sockaddr_in_list ** head, char *token)
         port = 0;
     }
 
-    s = static_cast<sockaddr_in_list *>(xcalloc(1, sizeof(*s)));
-    s->s.sin_port = htons(port);
-
     if (NULL == host)
-        s->s.sin_addr = any_addr;
-    else if (1 == safe_inet_addr(host, &s->s.sin_addr))
+        ipa.SetAnyAddr();
+    else if ( ipa.GetHostByName(host) )	/* dont use ipcache. Accept either FQDN or IPA. */
         (void) 0;
-    else if ((hp = gethostbyname(host)))	/* dont use ipcache */
-        s->s.sin_addr = inaddrFromHostent(hp);
     else
         self_destruct();
 
+    /* port MUST be set after the IPA lookup/conversion is perofrmed. */
+    ipa.SetPort(port);
+
     while (*head)
         head = &(*head)->next;
+
+    s = static_cast<IPAddress_list *>(xcalloc(1, sizeof(*s)));
+    s->s = ipa;
 
     *head = s;
 }
 
 static void
-parse_sockaddr_in_list(sockaddr_in_list ** head)
+parse_IPAddress_list(IPAddress_list ** head)
 {
     char *token;
 
     while ((token = strtok(NULL, w_space))) {
-        parse_sockaddr_in_list_token(head, token);
+        parse_IPAddress_list_token(head, token);
     }
 }
 
 static void
-dump_sockaddr_in_list(StoreEntry * e, const char *n, const sockaddr_in_list * s)
+dump_IPAddress_list(StoreEntry * e, const char *n, const IPAddress_list * s)
 {
+    char ntoabuf[MAX_IPSTRLEN];
+
     while (s) {
-        storeAppendPrintf(e, "%s %s:%d\n",
+        storeAppendPrintf(e, "%s %s\n",
                           n,
-                          inet_ntoa(s->s.sin_addr),
-                          ntohs(s->s.sin_port));
+                          s->s.NtoA(ntoabuf,MAX_IPSTRLEN));
         s = s->next;
     }
 }
 
 static void
-free_sockaddr_in_list(sockaddr_in_list ** head)
+free_IPAddress_list(IPAddress_list ** head)
 {
-    sockaddr_in_list *s;
-
-    while ((s = *head) != NULL) {
-        *head = s->next;
-        xfree(s);
-    }
+    if(*head) delete *head; *head = NULL;
 }
 
 #if CURRENTLY_UNUSED
@@ -2751,7 +2763,7 @@ free_sockaddr_in_list(sockaddr_in_list ** head)
  * be used by icp_port and htcp_port
  */
 static int
-check_null_sockaddr_in_list(const sockaddr_in_list * s)
+check_null_IPAddress_list(const IPAdress_list * s)
 {
     return NULL == s;
 }
@@ -2763,38 +2775,68 @@ static void
 parse_http_port_specification(http_port_list * s, char *token)
 {
     char *host = NULL;
-
-    const struct hostent *hp;
     unsigned short port = 0;
-    char *t;
+    char *t = NULL;
+    char *junk = NULL;
 
     s->disable_pmtu_discovery = DISABLE_PMTU_OFF;
 
+#if USE_IPV6
+    if (*token == '[') {
+        /* [ipv6]:port */
+	host = token + 1;
+	t = strchr(host, ']');
+	if (!t) {
+            debugs(3, 0, "http(s)_port: missing ']' on IPv6 address: " << token);
+	    self_destruct();
+        }
+	*t++ = '\0';
+	if (*t != ':') {
+            debugs(3, 0, "http(s)_port: missing Port in: " << token);
+	    self_destruct();
+        }
+	port = xatos(t + 1);
+    } else
+#endif
     if ((t = strchr(token, ':'))) {
         /* host:port */
+        /* ipv4:port */
         host = token;
         *t = '\0';
         port = xatos(t + 1);
-    } else {
+
+    } else if ((port = strtol(token, &junk, 10)), !*junk) {
         /* port */
-        port = xatos(token);
+        debugs(3, 3, "http(s)_port: found Listen on Port: " << port);
+    } else {
+        debugs(3, 0, "http(s)_port: missing Port: " << token);
+        self_destruct();
     }
 
-    if (port == 0)
+    if (port == 0) {
+        debugs(3, 0, "http(s)_port: Port cannot be 0: " << token);
         self_destruct();
+    }
 
-    s->s.sin_port = htons(port);
-
-    if (NULL == host)
-        s->s.sin_addr = any_addr;
-    else if (1 == safe_inet_addr(host, &s->s.sin_addr))
-        (void) 0;
-    else if ((hp = gethostbyname(host))) {
+    if (NULL == host) {
+        s->s.SetAnyAddr();
+        s->s.SetPort(port);
+        debugs(3, 3, "http(s)_port: found Listen on wildcard address: " << s->s);
+    }
+    else if ( s->s = host ) { /* check/parse numeric IPA */
+        s->s.SetPort(port);
+        debugs(3, 3, "http(s)_port: Listen on Host/IP: " << host << " --> " << s->s);
+    }
+    else if ( s->s.GetHostByName(host) ) { /* check/parse for FQDN */
         /* dont use ipcache */
-        s->s.sin_addr = inaddrFromHostent(hp);
         s->defaultsite = xstrdup(host);
-    } else
+        s->s.SetPort(port);
+        debugs(3, 3, "http(s)_port: found Listen as Host " << s->defaultsite << " on IP: " << s->s);
+    }
+    else {
+        debugs(3, 0, "http(s)_port: failed to resolve Host/IP: " << host);
         self_destruct();
+    }
 }
 
 static void
@@ -2809,6 +2851,13 @@ parse_http_port_option(http_port_list * s, char *token)
         s->name = xstrdup(token + 5);
     } else if (strcmp(token, "transparent") == 0) {
         s->transparent = 1;
+#if USE_IPV6
+        /* INET6: until transparent REDIRECT works on IPv6 SOCKET, force wildcard to IPv4 */
+        if( !s->s.SetIPv4() ) {
+            debugs(3, 0, "http(s)_port: IPv6 addresses cannot be 'transparent' (protocol does not provide NAT)" << s->s );
+            self_destruct();
+        }
+#endif
     } else if (strcmp(token, "vhost") == 0) {
         s->vhost = 1;
         s->accel = 1;
@@ -2838,8 +2887,21 @@ parse_http_port_option(http_port_list * s, char *token)
     } else if (strcmp(token, "tproxy") == 0) {
         s->tproxy = 1;
         need_linux_tproxy = 1;
+#if USE_IPV6
+        /* INET6: until transparent REDIRECT works on IPv6 SOCKET, force wildcard to IPv4 */
+        if( s->s.IsIPv6() && !s->s.SetIPv4() ) {
+            debugs(3, 0, "http(s)_port: IPv6 addresses cannot be transparent (protocol does not provide NAT)" << s->s );
+            self_destruct();
+        }
 #endif
-
+#endif
+    } else if (strcmp(token, "ipv4") == 0) {
+#if USE_IPV6
+        if( !s->s.SetIPv4() ) {
+            debugs(3, 0, "http(s)_port: IPv6 addresses cannot be used a IPv4-Only." << s->s );
+            self_destruct();
+        }
+#endif
     } else {
         self_destruct();
     }
@@ -2905,10 +2967,11 @@ parse_http_port_list(http_port_list ** head)
 static void
 dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
 {
-    storeAppendPrintf(e, "%s %s:%d",
+    char buf[MAX_IPSTRLEN];
+
+    storeAppendPrintf(e, "%s %s",
                       n,
-                      inet_ntoa(s->s.sin_addr),
-                      ntohs(s->s.sin_port));
+                      s->s.ToURL(buf,MAX_IPSTRLEN));
 
     if (s->defaultsite)
         storeAppendPrintf(e, " defaultsite=%s", s->defaultsite);

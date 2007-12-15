@@ -1,6 +1,6 @@
 
 /*
- * $Id: squidclient.cc,v 1.9 2007/09/01 19:51:30 hno Exp $
+ * $Id: squidclient.cc,v 1.10 2007/12/14 23:11:53 amosjeffries Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -84,6 +84,7 @@ using namespace Squid;
 #endif
 
 #include "util.h"
+#include "IPAddress.h"
 
 #ifndef BUFSIZ
 #define BUFSIZ 8192
@@ -92,9 +93,9 @@ using namespace Squid;
 typedef void SIGHDLR(int sig);
 
 /* Local functions */
-static int client_comm_bind(int, const char *);
+static int client_comm_bind(int, const IPAddress &);
 
-static int client_comm_connect(int, const char *, u_short, struct timeval *);
+static int client_comm_connect(int, const IPAddress &, struct timeval *);
 static void usage(const char *progname);
 
 static int Now(struct timeval *);
@@ -151,6 +152,7 @@ main(int argc, char *argv[])
     int opt_noaccept = 0;
     int opt_verbose = 0;
     const char *hostname, *localhost;
+    IPAddress iaddr;
     char url[BUFSIZ], msg[49152], buf[BUFSIZ];
     char extra_hdrs[32768];
     const char *method = "GET";
@@ -434,28 +436,59 @@ main(int argc, char *argv[])
 
     for (i = 0; loops == 0 || i < loops; i++) {
 	int fsize = 0;
+        struct addrinfo *AI = NULL;
+
 	/* Connect to the server */
 
-	if ((conn = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
-	    perror("client: socket");
-	    exit(1);
-	}
-	if (localhost && client_comm_bind(conn, localhost) < 0) {
-	    perror("client: bind");
-	    exit(1);
-	}
-	if (client_comm_connect(conn, hostname, port, ping ? &tv1 : NULL) < 0) {
-	    if (errno == 0) {
-		fprintf(stderr, "client: ERROR: Cannot connect to %s:%d: Host unknown.\n", hostname, port);
-	    } else {
-		char tbuf[BUFSIZ];
-		snprintf(tbuf, BUFSIZ, "client: ERROR: Cannot connect to %s:%d",
-		    hostname, port);
-		perror(tbuf);
-	    }
+        if(localhost) {
+            if( !iaddr.GetHostByName(localhost) ) {
+                fprintf(stderr, "client: ERROR: Cannot resolve %s: Host unknown.\n", localhost);
+                exit(1);
+            }
+        }
+        else {
+            /* Process the remote host name to locate the Protocol required
+               in case we are being asked to link to another version of squid */
+            if( !iaddr.GetHostByName(hostname) ) {
+                fprintf(stderr, "client: ERROR: Cannot resolve %s: Host unknown.\n", hostname);
+                exit(1);
+            }
+        }
 
-	    exit(1);
-	}
+        iaddr.GetAddrInfo(AI);
+        if ((conn = socket(AI->ai_family, AI->ai_socktype, 0)) < 0) {
+            perror("client: socket");
+            iaddr.FreeAddrInfo(AI);
+            exit(1);
+        }
+        iaddr.FreeAddrInfo(AI);
+
+        if (localhost && client_comm_bind(conn, iaddr) < 0) {
+            perror("client: bind");
+            exit(1);
+        }
+
+        iaddr.SetEmpty();
+         if( !iaddr.GetHostByName(hostname) ) {
+            fprintf(stderr, "client: ERROR: Cannot resolve %s: Host unknown.\n", hostname);
+            exit(1);
+        }
+
+        iaddr.SetPort(port);
+
+        if (client_comm_connect(conn, iaddr, ping ? &tv1 : NULL) < 0) {
+            char buf[MAX_IPSTRLEN];
+            iaddr.ToURL(buf, MAX_IPSTRLEN);
+            if (errno == 0) {
+                fprintf(stderr, "client: ERROR: Cannot connect to %s: Host unknown.\n", buf);
+            } else {
+                char tbuf[BUFSIZ];
+                snprintf(tbuf, BUFSIZ, "client: ERROR: Cannot connect to %s", buf);
+                perror(tbuf);
+            }
+            exit(1);
+        }
+
 	/* Send the HTTP request */
 	bytesWritten = mywrite(conn, msg, strlen(msg));
 
@@ -466,6 +499,7 @@ main(int argc, char *argv[])
 	    fprintf(stderr, "client: ERROR: Cannot send request?: %s\n", msg);
 	    exit(1);
 	}
+
 	if (put_file) {
 	    int x;
 	    lseek(put_fd, 0, SEEK_SET);
@@ -561,50 +595,42 @@ main(int argc, char *argv[])
 }
 
 static int
-client_comm_bind(int sock, const char *local_host)
+client_comm_bind(int sock, const IPAddress &addr)
 {
 
-    static const struct hostent *hp = NULL;
+    int res;
 
-    static struct sockaddr_in from_addr;
+    static struct addrinfo *AI = NULL;
 
     /* Set up the source socket address from which to send. */
 
-    if (hp == NULL) {
-	from_addr.sin_family = AF_INET;
+    addr.GetAddrInfo(AI);
 
-	if ((hp = gethostbyname(local_host)) == 0) {
-	    return (-1);
-	}
-	xmemcpy(&from_addr.sin_addr, hp->h_addr, hp->h_length);
-	from_addr.sin_port = 0;
-    }
-    return bind(sock, (struct sockaddr *) &from_addr, sizeof(struct sockaddr_in));
+    res = bind(sock, AI->ai_addr, AI->ai_addrlen);
+
+    addr.FreeAddrInfo(AI);
+
+    return res;
 }
 
 static int
-client_comm_connect(int sock, const char *dest_host, u_short dest_port, struct timeval *tvp)
+client_comm_connect(int sock, const IPAddress &addr, struct timeval *tvp)
 {
-
-    static const struct hostent *hp = NULL;
-
-    static struct sockaddr_in to_addr;
+    int res;
+    static struct addrinfo *AI = NULL;
 
     /* Set up the destination socket address for message to send to. */
 
-    if (hp == NULL) {
-	to_addr.sin_family = AF_INET;
+    addr.GetAddrInfo(AI);
 
-	if ((hp = gethostbyname(dest_host)) == 0) {
-	    return (-1);
-	}
-	xmemcpy(&to_addr.sin_addr, hp->h_addr, hp->h_length);
-	to_addr.sin_port = htons(dest_port);
-    }
+    res = connect(sock, AI->ai_addr, AI->ai_addrlen);
+
+    addr.FreeAddrInfo(AI);
+
     if (tvp)
-	(void) Now(tvp);
+        (void) Now(tvp);
 
-    return connect(sock, (struct sockaddr *) &to_addr, sizeof(struct sockaddr_in));
+    return res;
 }
 
 static int

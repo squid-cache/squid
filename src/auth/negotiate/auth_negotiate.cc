@@ -1,6 +1,5 @@
-
 /*
- * $Id: auth_negotiate.cc,v 1.27 2007/09/01 03:51:22 amosjeffries Exp $
+ * $Id: auth_negotiate.cc,v 1.28 2007/12/14 23:11:51 amosjeffries Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -46,6 +45,7 @@
 #include "client_side.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "SquidTime.h"
 /* TODO remove this include */
 #include "negotiateScheme.h"
 #include "wordlist.h"

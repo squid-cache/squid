@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.46 2007/06/10 10:43:17 hno Exp $
+ * $Id: ipc.cc,v 1.47 2007/12/14 23:11:47 amosjeffries Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "comm.h"
 #include "fde.h"
+#include "IPAddress.h"
 
 static const char *hello_string = "hi there\n";
 #define HELLO_BUF_SZ 32
@@ -74,20 +75,18 @@ PutEnvironment()
 }
 
 pid_t
-ipcCreate(int type, const char *prog, const char *const args[], const char *name, int *rfd, int *wfd, void **hIpc)
+ipcCreate(int type, const char *prog, const char *const args[], const char *name, IPAddress &local_addr, int *rfd, int *wfd, void **hIpc)
 {
     pid_t pid;
-
-    struct sockaddr_in ChS;
-
-    struct sockaddr_in PaS;
+    IPAddress ChS;
+    IPAddress PaS;
+    struct addrinfo *AI = NULL;
     int crfd = -1;
     int prfd = -1;
     int cwfd = -1;
     int pwfd = -1;
     int fd;
     int t1, t2, t3;
-    socklen_t len;
     int x;
 
 #if USE_POLL && defined(_SQUID_OSF_)
@@ -108,26 +107,22 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         crfd = cwfd = comm_open(SOCK_STREAM,
                                 0,
                                 local_addr,
-                                0,
                                 COMM_NOCLOEXEC,
                                 name);
         prfd = pwfd = comm_open(SOCK_STREAM,
                                 0,			/* protocol */
                                 local_addr,
-                                0,			/* port */
                                 0,			/* blocking */
                                 name);
     } else if (type == IPC_UDP_SOCKET) {
         crfd = cwfd = comm_open(SOCK_DGRAM,
                                 0,
                                 local_addr,
-                                0,
                                 COMM_NOCLOEXEC,
                                 name);
         prfd = pwfd = comm_open(SOCK_DGRAM,
                                 0,
                                 local_addr,
-                                0,
                                 0,
                                 name);
     } else if (type == IPC_FIFO) {
@@ -197,25 +192,33 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     }
 
     if (type == IPC_TCP_SOCKET || type == IPC_UDP_SOCKET) {
-        len = sizeof(PaS);
-        memset(&PaS, '\0', len);
+        PaS.InitAddrInfo(AI);
 
-        if (getsockname(pwfd, (struct sockaddr *) &PaS, &len) < 0) {
+        if (getsockname(pwfd, AI->ai_addr, &AI->ai_addrlen) < 0) {
+            PaS.FreeAddrInfo(AI);
             debugs(54, 0, "ipcCreate: getsockname: " << xstrerror());
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
-        debugs(54, 3, "ipcCreate: FD " << pwfd << " sockaddr " << inet_ntoa(PaS.sin_addr) << ":" << ntohs(PaS.sin_port));
+        PaS = *AI;
 
-        len = sizeof(ChS);
-        memset(&ChS, '\0', len);
+        debugs(54, 3, "ipcCreate: FD " << pwfd << " sockaddr " << PaS);
 
-        if (getsockname(crfd, (struct sockaddr *) &ChS, &len) < 0) {
+        PaS.FreeAddrInfo(AI);
+
+        ChS.InitAddrInfo(AI);
+
+        if (getsockname(crfd, AI->ai_addr, &AI->ai_addrlen) < 0) {
+            ChS.FreeAddrInfo(AI);
             debugs(54, 0, "ipcCreate: getsockname: " << xstrerror());
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
-        debugs(54, 3, "ipcCreate: FD " << crfd << " sockaddr " << inet_ntoa(ChS.sin_addr) << ":" << ntohs(ChS.sin_port));
+        ChS = *AI;
+
+        ChS.FreeAddrInfo(AI);
+
+        debugs(54, 3, "ipcCreate: FD " << crfd << " sockaddr " << ChS );
 
     }
 
@@ -246,7 +249,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         cwfd = crfd = -1;
 
         if (type == IPC_TCP_SOCKET || type == IPC_UDP_SOCKET) {
-            if (comm_connect_addr(pwfd, &ChS) == COMM_ERROR)
+            if (comm_connect_addr(pwfd, ChS) == COMM_ERROR)
                 return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
@@ -317,7 +320,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         close(crfd);
         cwfd = crfd = fd;
     } else if (type == IPC_UDP_SOCKET) {
-        if (comm_connect_addr(crfd, &PaS) == COMM_ERROR)
+        if (comm_connect_addr(crfd, PaS) == COMM_ERROR)
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
     }
 

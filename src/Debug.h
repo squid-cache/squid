@@ -1,6 +1,5 @@
-
 /*
- * $Id: Debug.h,v 1.10 2007/08/24 01:02:09 amosjeffries Exp $
+ * $Id: Debug.h,v 1.11 2007/12/14 23:11:45 amosjeffries Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -81,9 +80,9 @@ private:
  *
  * debugs(1,1, HERE << "some message");
  */
-#define HERE __FILE__<<"("<<__LINE__<<") "
+#define HERE __FILE__<<"("<<__LINE__<<") "<<__FUNCTION__<<": "
 
-/* AYJ: some uint8_t do not like streaming control-chars (values 0-31, 127+) */
+/* some uint8_t do not like streaming control-chars (values 0-31, 127+) */
 inline std::ostream& operator <<(std::ostream &os, const uint8_t d) {
     return (os << (int)d);
 }

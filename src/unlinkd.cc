@@ -1,6 +1,6 @@
 
 /*
- * $Id: unlinkd.cc,v 1.64 2007/04/30 16:56:09 wessels Exp $
+ * $Id: unlinkd.cc,v 1.65 2007/12/14 23:11:48 amosjeffries Exp $
  *
  * DEBUG: section 2     Unlink Daemon
  * AUTHOR: Duane Wessels
@@ -194,9 +194,12 @@ void
 unlinkdInit(void)
 {
     const char *args[2];
+    IPAddress localhost;
 
     args[0] = "(unlinkd)";
     args[1] = NULL;
+    localhost.SetLocalhost();
+
     pid = ipcCreate(
 #if USE_POLL && defined(_SQUID_OSF_)
               /* pipes and poll() don't get along on DUNIX -DW */
@@ -211,6 +214,7 @@ IPC_FIFO,
               Config.Program.unlinkd,
               args,
               "unlinkd",
+              localhost,
               &unlinkd_rfd,
               &unlinkd_wfd,
               &hIpc);

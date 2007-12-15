@@ -1,7 +1,8 @@
-
 /*
- * $Id: DelayConfig.h,v 1.3 2006/04/25 12:00:29 robertc Exp $
+ * $Id: DelayConfig.h,v 1.4 2007/12/14 23:11:45 amosjeffries Exp $
  *
+ * DEBUG: section 3     Configuration Settings
+ * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------

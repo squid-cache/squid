@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.168 2007/07/21 16:32:03 hno Exp $
+ * $Id: forward.cc,v 1.169 2007/12/14 23:11:46 amosjeffries Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -207,14 +207,13 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
      * be allowed.  yuck, I know.
      */
 
-    if (request->client_addr.s_addr != no_addr.s_addr && request->protocol != PROTO_INTERNAL && request->protocol != PROTO_CACHEOBJ) {
+    if ( !request->client_addr.IsNoAddr() && request->protocol != PROTO_INTERNAL && request->protocol != PROTO_CACHEOBJ) {
         /*
          * Check if this host is allowed to fetch MISSES from us (miss_access)
          */
         ACLChecklist ch;
         ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
-        ch.my_port = request->my_port;
         ch.request = HTTPMSGLOCK(request);
         ch.accessList = cbdataReference(Config.accessList.miss);
         /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
@@ -271,10 +270,8 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
         FwdState::Pointer fwd = new FwdState(client_fd, entry, request);
 #if LINUX_TPROXY
         /* If we need to transparently proxy the request
-         * then we need the client source address and port */
-        fwd->src.sin_family = AF_INET;
-        fwd->src.sin_addr = request->client_addr;
-        fwd->src.sin_port = request->client_port;
+         * then we need the client source protocol, address and port */
+        fwd->src = request->client_addr;
 #endif
 
         fwd->start(fwd);
@@ -660,7 +657,7 @@ FwdState::initiateSSL()
             SSL_set_session(ssl, peer->sslSession);
 
     } else {
-        SSL_set_ex_data(ssl, ssl_ex_index_server, request->host);
+        SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)request->GetHost());
     }
 
     fd_table[fd].ssl = ssl;
@@ -690,7 +687,7 @@ FwdState::connectDone(int aServerFD, comm_err_t status, int xerrno)
         if (NULL == fs->_peer)
             flags.dont_retry = 1;
 
-        debugs(17, 4, "fwdConnectDone: Unknown host: " << request->host);
+        debugs(17, 4, "fwdConnectDone: Unknown host: " << request->GetHost());
 
         ErrorState *anErr = errorCon(ERR_DNS_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
 
@@ -772,10 +769,10 @@ FwdState::connectStart()
     struct in_tproxy itp;
 #endif
 
-    struct IN_ADDR outgoing;
+    IPAddress outgoing;
     unsigned short tos;
 
-    struct IN_ADDR *client_addr = NULL;
+    IPAddress client_addr;
     assert(fs);
     assert(server_fd == -1);
     debugs(17, 3, "fwdConnectStart: " << url);
@@ -787,16 +784,16 @@ FwdState::connectStart()
                    : Config.Timeout.peer_connect;
 
         if (fs->_peer->options.originserver)
-            domain = request->host;
+            domain = request->GetHost();
     } else {
-        host = request->host;
+        host = request->GetHost();
         port = request->port;
         ctimeout = Config.Timeout.connect;
     }
 
 #if LINUX_TPROXY
     if (request->flags.tproxy)
-        client_addr = &request->client_addr;
+        client_addr = request->client_addr;
 
 #endif
 
@@ -831,15 +828,16 @@ FwdState::connectStart()
 
     tos = getOutgoingTOS(request);
 
-    debugs(17, 3, "fwdConnectStart: got addr " << inet_ntoa(outgoing) << ", tos " << tos);
+    debugs(17, 3, "fwdConnectStart: got outgoing addr " << outgoing << ", tos " << tos);
 
     fd = comm_openex(SOCK_STREAM,
                      IPPROTO_TCP,
                      outgoing,
-                     0,
                      COMM_NONBLOCKING,
                      tos,
                      url);
+
+    debugs(17, 3, "fwdConnectStart: got TCP FD " << fd);
 
     if (fd < 0) {
         debugs(50, 4, "fwdConnectStart: " << xstrerror());
@@ -878,6 +876,8 @@ FwdState::connectStart()
 #if LINUX_TPROXY
 
         if (request->flags.tproxy) {
+            IPAddress addr;
+
             itp.v.addr.faddr.s_addr = src.sin_addr.s_addr;
             itp.v.addr.fport = 0;
 
@@ -886,10 +886,11 @@ FwdState::connectStart()
              */
             itp.op = TPROXY_ASSIGN;
 
+            addr = (struct in_addr)itp.v.addr.faddr;
+            addr.SetPort(itp.v.addr.fport);
+
             if (setsockopt(fd, SOL_IP, IP_TPROXY, &itp, sizeof(itp)) == -1) {
-                debugs(20, 1, "tproxy ip=" << inet_ntoa(itp.v.addr.faddr) <<
-                       ",0x" << std::hex << itp.v.addr.faddr.s_addr << std::dec <<
-                       ",port=" << itp.v.addr.fport << " ERROR ASSIGN");
+                debugs(20, 1, "tproxy ip=" << addr << " ERROR ASSIGN");
 
                 request->flags.tproxy = 0;
             } else {
@@ -897,9 +898,7 @@ FwdState::connectStart()
                 itp.v.flags = ITP_CONNECT;
 
                 if (setsockopt(fd, SOL_IP, IP_TPROXY, &itp, sizeof(itp)) == -1) {
-                    debugs(20, 1, "tproxy ip=" << std::hex <<
-                           itp.v.addr.faddr.s_addr << std::dec << ",port=" <<
-                           itp.v.addr.fport << " ERROR CONNECT");
+                    debugs(20, 1, "tproxy ip=" << addr << " ERROR CONNECT");
 
                     request->flags.tproxy = 0;
                 }
@@ -907,7 +906,7 @@ FwdState::connectStart()
         }
 
 #endif
-        hierarchyNote(&request->hier, fs->code, request->host);
+        hierarchyNote(&request->hier, fs->code, request->GetHost());
     }
 
     commConnectStart(fd, host, port, fwdConnectDoneWrapper, this);
@@ -959,7 +958,7 @@ FwdState::dispatch()
 
     EBIT_SET(entry->flags, ENTRY_DISPATCHED);
 
-    netdbPingSite(request->host);
+    netdbPingSite(request->GetHost());
 
     if (servers && (p = servers->_peer)) {
         p->stats.fetches++;
@@ -1136,7 +1135,7 @@ FwdState::reforwardableStatus(http_status s)
 
 void
 
-FwdState::pconnPush(int fd, const char *host, int port, const char *domain, struct IN_ADDR *client_addr)
+FwdState::pconnPush(int fd, const char *host, int port, const char *domain, IPAddress &client_addr)
 {
     fwdPconnPool->push(fd, host, port, domain, client_addr);
 }
@@ -1202,12 +1201,12 @@ fwdServerFree(FwdServer * fs)
     memFree(fs, MEM_FWD_SERVER);
 }
 
-static struct IN_ADDR
-            aclMapAddr(acl_address * head, ACLChecklist * ch)
+static IPAddress
+aclMapAddr(acl_address * head, ACLChecklist * ch)
 {
     acl_address *l;
 
-    struct IN_ADDR addr;
+    IPAddress addr;
 
     for (l = head; l; l = l->next)
     {
@@ -1215,7 +1214,7 @@ static struct IN_ADDR
             return l->addr;
     }
 
-    addr.s_addr = INADDR_ANY;
+    addr.SetAnyAddr();
     return addr;
 }
 
@@ -1236,8 +1235,8 @@ aclMapTOS(acl_tos * head, ACLChecklist * ch)
     return 0;
 }
 
-struct IN_ADDR
-            getOutgoingAddr(HttpRequest * request)
+IPAddress
+getOutgoingAddr(HttpRequest * request)
 {
     ACLChecklist ch;
 
@@ -1245,7 +1244,6 @@ struct IN_ADDR
     {
         ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
-        ch.my_port = request->my_port;
         ch.request = HTTPMSGLOCK(request);
     }
 
@@ -1260,7 +1258,6 @@ getOutgoingTOS(HttpRequest * request)
     if (request) {
         ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
-        ch.my_port = request->my_port;
         ch.request = HTTPMSGLOCK(request);
     }
 

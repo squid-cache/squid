@@ -1,6 +1,5 @@
-
 /*
- * $Id: win32.cc,v 1.25 2006/09/13 19:05:11 serassio Exp $
+ * $Id: win32.cc,v 1.26 2007/12/14 23:11:48 amosjeffries Exp $
  *
  * Windows support
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
@@ -56,36 +55,46 @@ int WIN32_pipe(int handles[2])
     int new_socket;
     fde *F = NULL;
 
-    struct sockaddr_in serv_addr;
-    int len = sizeof(serv_addr);
-    u_short handle1_port;
+    IPAddress localhost;
+    IPAddress handle0;
+    IPAddress handle1;
+    struct addrinfo *AI = NULL;
+
+    localhost.SetLocalhost;
+
+#if !IPV6_SPECIAL_LOCALHOST
+    /* INET6: back-compatible: localhost pipes default to IPv4 unless set otherwise.
+     *        it is blocked by untested helpers on many admins configs
+     *        if this proves to be wrong it can die easily.
+     */
+    localhost.SetIPv4();
+#endif
 
     handles[0] = handles[1] = -1;
 
     statCounter.syscalls.sock.sockets++;
 
-    if ((new_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
+    handle0 = localhost;
+    handle0.SetPort(0);
+    handle0.GetAddrInfo(AI);
+
+    if ((new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol)) < 0)
         return -1;
 
-    memset((void *) &serv_addr, 0, sizeof(serv_addr));
-
-    serv_addr.sin_family = AF_INET;
-
-    serv_addr.sin_port = htons(0);
-
-    serv_addr.sin_addr = local_addr;
-
-    if (bind(new_socket, (SOCKADDR *) & serv_addr, len) < 0 ||
-            listen(new_socket, 1) < 0 || getsockname(new_socket, (SOCKADDR *) & serv_addr, &len) < 0 ||
-            (handles[1] = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
+    if (bind(new_socket, AI->ai_addr, AI->ai_addrlen) < 0 ||
+            listen(new_socket, 1) < 0 || getsockname(new_socket, AI->ai_addr, &(AI->ai_addrlen) ) < 0 ||
+            (handles[1] = socket(AI->ai_family, AI->ai_socktype, 0)) < 0) {
         closesocket(new_socket);
         return -1;
     }
 
-    handle1_port = ntohs(serv_addr.sin_port);
+    handle0 = *AI; // retrieve the new details returned by connect()
 
-    if (connect(handles[1], (SOCKADDR *) & serv_addr, len) < 0 ||
-            (handles[0] = accept(new_socket, (SOCKADDR *) & serv_addr, &len)) < 0) {
+    handle1.SetPort(handle1.GetPort());
+    handle1.GetAddrInfo(AI);
+
+    if (connect(handles[1], AI->ai_addr, AI->ai_addrlen) < 0 ||
+            (handles[0] = accept(new_socket, AI->ai_addr, &(AI->ai_addrlen)) ) < 0) {
         closesocket(handles[1]);
         handles[1] = -1;
         closesocket(new_socket);
@@ -95,13 +104,12 @@ int WIN32_pipe(int handles[2])
     closesocket(new_socket);
 
     F = &fd_table[handles[0]];
-    F->local_addr = local_addr;
-    F->local_port = ntohs(serv_addr.sin_port);
+    F->local_addr = handle0;
 
     F = &fd_table[handles[1]];
-    F->local_addr = local_addr;
-    xstrncpy(F->ipaddr, inet_ntoa(local_addr), 16);
-    F->remote_port = handle1_port;
+    F->local_addr = localhost;
+    handle1.NtoA(F->ipaddr, MAX_IPSTRLEN);
+    F->remote_port = handle1.GetPort();
 
     return 0;
 }
@@ -160,8 +168,7 @@ int Win32__WSAFDIsSet(int fd, fd_set FAR * set
     fde *F = &fd_table[fd];
     SOCKET s = F->win32.handle;
 
-    return __WSAFDIsSet(s, set
-                           );
+    return __WSAFDIsSet(s, set);
 }
 
 LONG CALLBACK WIN32_ExceptionHandler(EXCEPTION_POINTERS* ep)

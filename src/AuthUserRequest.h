@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.h,v 1.6 2007/05/09 09:07:38 wessels Exp $
+ * $Id: AuthUserRequest.h,v 1.7 2007/12/14 23:11:45 amosjeffries Exp $
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 674533af-8b21-4641-b71a-74c4639072a0
@@ -49,7 +49,7 @@ struct AuthUserIP
     dlink_node node;
     /* IP addr this user authenticated from */
 
-    struct IN_ADDR ipaddr;
+    IPAddress ipaddr;
     time_t ip_expiretime;
 };
 
@@ -78,7 +78,7 @@ public:
 
     virtual void user (AuthUser *aUser) {_auth_user=aUser;}
 
-    static auth_acl_t tryToAuthenticateAndSetAuthUser(AuthUserRequest **, http_hdr_type, HttpRequest *, ConnStateData::Pointer, struct IN_ADDR);
+    static auth_acl_t tryToAuthenticateAndSetAuthUser(AuthUserRequest **, http_hdr_type, HttpRequest *, ConnStateData::Pointer, IPAddress &);
     static void addReplyAuthHeader(HttpReply * rep, AuthUserRequest * auth_user_request, HttpRequest * request, int accelerated, int internal);
 
     AuthUserRequest();
@@ -105,7 +105,7 @@ public:
 
 private:
 
-    static auth_acl_t authenticate(AuthUserRequest ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData::Pointer conn, struct IN_ADDR src_addr);
+    static auth_acl_t authenticate(AuthUserRequest ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData::Pointer conn, IPAddress &src_addr);
 
     /* return a message on the 407 error pages */
     char *message;
@@ -126,7 +126,7 @@ extern size_t authenticateRequestRefCount (AuthUserRequest *);
 extern void authenticateFixHeader(HttpReply *, AuthUserRequest *, HttpRequest *, int, int);
 extern void authenticateAddTrailer(HttpReply *, AuthUserRequest *, HttpRequest *, int);
 
-extern void authenticateAuthUserRequestRemoveIp(AuthUserRequest *, struct IN_ADDR);
+extern void authenticateAuthUserRequestRemoveIp(AuthUserRequest *, IPAddress const &);
 extern void authenticateAuthUserRequestClearIp(AuthUserRequest *);
 extern int authenticateAuthUserRequestIPCount(AuthUserRequest *);
 extern int authenticateDirection(AuthUserRequest *);

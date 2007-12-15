@@ -1,5 +1,5 @@
 /*
- * $Id: client_side.h,v 1.26 2007/10/31 04:52:16 amosjeffries Exp $
+ * $Id: client_side.h,v 1.27 2007/12/14 23:11:46 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -177,11 +177,11 @@ public:
      */
     ClientSocketContext::Pointer currentobject;
 
-    struct sockaddr_in peer;
+    IPAddress peer;
 
-    struct sockaddr_in me;
+    IPAddress me;
 
-    struct IN_ADDR log_addr;
+    IPAddress log_addr;
     char rfc931[USER_IDENT_SZ];
     int nrequests;
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.175 2007/10/16 14:38:18 rousskov Exp $
+ * $Id: tunnel.cc,v 1.176 2007/12/14 23:11:48 amosjeffries Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -604,19 +604,18 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
     HttpRequest *request = http->request;
     char *url = http->uri;
     /*
-     * client_addr == no_addr indicates this is an "internal" request
+     * client_addr.IsNoAddr()  indicates this is an "internal" request
      * from peer_digest.c, asn.c, netdb.c, etc and should always
      * be allowed.  yuck, I know.
      */
 
-    if (request->client_addr.s_addr != no_addr.s_addr) {
+    if (!request->client_addr.IsNoAddr()) {
         /*
          * Check if this host is allowed to fetch MISSES from us (miss_access)
          */
         ACLChecklist ch;
         ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
-        ch.my_port = request->my_port;
         ch.request = HTTPMSGLOCK(request);
         ch.accessList = cbdataReference(Config.accessList.miss);
         /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
@@ -634,10 +633,10 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
     statCounter.server.all.requests++;
     statCounter.server.other.requests++;
     /* Create socket. */
+    IPAddress temp = getOutgoingAddr(request);
     sock = comm_openex(SOCK_STREAM,
                        IPPROTO_TCP,
-                       getOutgoingAddr(request),
-                       0,
+                       temp,
                        COMM_NONBLOCKING,
                        getOutgoingTOS(request),
                        url);
@@ -734,7 +733,7 @@ tunnelPeerSelectComplete(FwdServer * fs, void *data)
     }
 
     tunnelState->servers = fs;
-    tunnelState->host = fs->_peer ? fs->_peer->host : request->host;
+    tunnelState->host = fs->_peer ? fs->_peer->host : xstrdup(request->GetHost());
 
     if (fs->_peer == NULL) {
         tunnelState->port = request->port;

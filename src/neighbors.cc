@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.350 2007/11/13 23:25:34 rousskov Exp $
+ * $Id: neighbors.cc,v 1.351 2007/12/14 23:11:47 amosjeffries Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -45,6 +45,7 @@
 #include "PeerSelectState.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "IPAddress.h"
 
 /* count mcast group peers every 15 minutes */
 #define MCAST_COUNT_RATE 900
@@ -66,7 +67,7 @@ static void peerCountMcastPeersStart(void *data);
 static void peerCountMcastPeersSchedule(peer * p, time_t when);
 static IRCB peerCountHandleIcpReply;
 
-static void neighborIgnoreNonPeer(const struct sockaddr_in *, icp_opcode);
+static void neighborIgnoreNonPeer(const IPAddress &, icp_opcode);
 static OBJH neighborDumpPeers;
 static OBJH neighborDumpNonPeers;
 static void dump_peers(StoreEntry * sentry, peer * peers);
@@ -94,20 +95,17 @@ neighborTypeStr(const peer * p)
 
 
 peer *
-
-whichPeer(const struct sockaddr_in * from)
+whichPeer(const IPAddress &from)
 {
     int j;
-    u_short port = ntohs(from->sin_port);
 
-    struct IN_ADDR ip = from->sin_addr;
     peer *p = NULL;
-    debugs(15, 3, "whichPeer: from " << inet_ntoa(ip) << " port " << port);
+    debugs(15, 3, "whichPeer: from " << from);
 
     for (p = Config.peers; p; p = p->next)
     {
         for (j = 0; j < p->n_addresses; j++) {
-            if (ip.s_addr == p->addresses[j].s_addr && port == p->icp.port) {
+            if (from == p->addresses[j] && from.GetPort() == p->icp.port) {
                 return p;
             }
         }
@@ -123,7 +121,7 @@ neighborType(const peer * p, const HttpRequest * request)
     const struct _domain_type *d = NULL;
 
     for (d = p->typelist; d; d = d->next) {
-        if (0 == matchDomainName(request->host, d->domain))
+        if (0 == matchDomainName(request->GetHost(), d->domain))
             if (d->type != PEER_NONE)
                 return d->type;
     }
@@ -165,7 +163,7 @@ peerAllowedToUse(const peer * p, HttpRequest * request)
     do_ping = 0;
 
     for (d = p->peer_domain; d; d = d->next) {
-        if (0 == matchDomainName(request->host, d->domain)) {
+        if (0 == matchDomainName(request->GetHost(), d->domain)) {
             do_ping = d->do_ping;
             break;
         }
@@ -184,8 +182,6 @@ peerAllowedToUse(const peer * p, HttpRequest * request)
     checklist.src_addr = request->client_addr;
 
     checklist.my_addr = request->my_addr;
-
-    checklist.my_port = request->my_port;
 
     checklist.request = HTTPMSGLOCK(request);
 
@@ -490,33 +486,31 @@ neighborRemove(peer * target)
 void
 neighbors_init(void)
 {
-
-    struct sockaddr_in name;
-
-    socklen_t len = sizeof(struct sockaddr_in);
-
+    IPAddress nul;
+    struct addrinfo *AI = NULL;
     struct servent *sep = NULL;
     const char *me = getMyHostname();
-    peer *thisPeer;
-    peer *next;
+    peer *thisPeer = NULL;
+    peer *next = NULL;
     int fd = theInIcpConnection;
+
+    /* setup addrinfo for use */
+    nul.InitAddrInfo(AI);
 
     if (fd >= 0) {
 
-        memset(&name, '\0', sizeof(struct sockaddr_in));
-
-        if (getsockname(fd, (struct sockaddr *) &name, &len) < 0)
-            debugs(15, 1, "getsockname(" << fd << "," << &name << "," << &len << ") failed.");
+        if (getsockname(fd, AI->ai_addr, &AI->ai_addrlen) < 0)
+            debugs(15, 1, "getsockname(" << fd << "," << AI->ai_addr << "," << &AI->ai_addrlen << ") failed.");
 
         for (thisPeer = Config.peers; thisPeer; thisPeer = next) {
-            http_port_list *s;
+            http_port_list *s = NULL;
             next = thisPeer->next;
 
             if (0 != strcmp(thisPeer->host, me))
                 continue;
 
             for (s = Config.Sockaddr.http; s; s = s->next) {
-                if (thisPeer->http_port != ntohs(s->s.sin_port))
+                if (thisPeer->http_port != s->s.GetPort())
                     continue;
 
                 debugs(15, 1, "WARNING: Peer looks like this host");
@@ -525,7 +519,6 @@ neighbors_init(void)
                        neighborTypeStr(thisPeer) << " " << thisPeer->host <<
                        "/" << thisPeer->http_port << "/" <<
                        thisPeer->icp.port);
-
 
                 neighborRemove(thisPeer);
             }
@@ -541,12 +534,14 @@ neighbors_init(void)
         echo_hdr.reqnum = 0;
         echo_hdr.flags = 0;
         echo_hdr.pad = 0;
-        echo_hdr.shostid = name.sin_addr.s_addr;
+        nul = *AI;
+        nul.GetInAddr( *((struct in_addr*)&echo_hdr.shostid) );
         sep = getservbyname("echo", "udp");
         echo_port = sep ? ntohs((u_short) sep->s_port) : 7;
     }
 
     first_ping = Config.peers;
+    nul.FreeAddrInfo(AI);
 }
 
 void
@@ -640,7 +635,7 @@ neighborsUdpPing(HttpRequest * request,
                 echo_hdr.reqnum = reqnum;
                 query = _icp_common_t::createMessage(ICP_DECHO, 0, url, reqnum, 0);
                 icpUdpSend(theOutIcpConnection,
-                           &p->in_addr,
+                           p->in_addr,
                            query,
                            LOG_ICP_QUERY,
                            0);
@@ -654,7 +649,7 @@ neighborsUdpPing(HttpRequest * request,
                 query = _icp_common_t::createMessage(ICP_QUERY, flags, url, reqnum, 0);
 
                 icpUdpSend(theOutIcpConnection,
-                           &p->in_addr,
+                           p->in_addr,
                            query,
                            LOG_ICP_QUERY,
                            0);
@@ -701,39 +696,6 @@ neighborsUdpPing(HttpRequest * request,
     if ((first_ping = first_ping->next) == NULL)
         first_ping = Config.peers;
 
-#if ALLOW_SOURCE_PING
-    /* only do source_ping if we have neighbors */
-    if (Config.npeers) {
-        const ipcache_addrs *ia = NULL;
-
-        struct sockaddr_in to_addr;
-        char *host = request->host;
-
-        if (!Config.onoff.source_ping) {
-            debugs(15, 6, "neighborsUdpPing: Source Ping is disabled.");
-        } else if ((ia = ipcache_gethostbyname(host, 0))) {
-            debugs(15, 6, "neighborsUdpPing: Source Ping: to " << host << " for '" << url << "'");
-            echo_hdr.reqnum = reqnum;
-
-            if (icmp_sock != -1) {
-                icmpSourcePing(ia->in_addrs[ia->cur], &echo_hdr, url);
-            } else {
-                to_addr.sin_family = AF_INET;
-                to_addr.sin_addr = ia->in_addrs[ia->cur];
-                to_addr.sin_port = htons(echo_port);
-                query = _icp_common_t::createMessage(ICP_SECHO, 0, url, reqnum, 0);
-                icpUdpSend(theOutIcpConnection,
-                           &to_addr,
-                           query,
-                           LOG_ICP_QUERY,
-                           0);
-            }
-        } else {
-            debugs(15, 6, "neighborsUdpPing: Source Ping: unknown host: " << host);
-        }
-    }
-
-#endif
     /*
      * How many replies to expect?
      */
@@ -967,17 +929,16 @@ neighborCountIgnored(peer * p)
 static peer *non_peers = NULL;
 
 static void
-
-neighborIgnoreNonPeer(const struct sockaddr_in *from, icp_opcode opcode)
+neighborIgnoreNonPeer(const IPAddress &from, icp_opcode opcode)
 {
     peer *np;
 
     for (np = non_peers; np; np = np->next)
     {
-        if (np->in_addr.sin_addr.s_addr != from->sin_addr.s_addr)
+        if (np->in_addr != from)
             continue;
 
-        if (np->in_addr.sin_port != from->sin_port)
+        if (np->in_addr.GetPort() != from.GetPort())
             continue;
 
         break;
@@ -986,11 +947,11 @@ neighborIgnoreNonPeer(const struct sockaddr_in *from, icp_opcode opcode)
     if (np == NULL)
     {
         np = (peer *)xcalloc(1, sizeof(peer));
-        np->in_addr.sin_addr = from->sin_addr;
-        np->in_addr.sin_port = from->sin_port;
-        np->icp.port = ntohl(from->sin_port);
+        np->in_addr = from;
+        np->icp.port = from.GetPort();
         np->type = PEER_NONE;
-        np->host = xstrdup(inet_ntoa(from->sin_addr));
+        np->host = new char[MAX_IPSTRLEN];
+        from.NtoA(np->host,MAX_IPSTRLEN);
         np->next = non_peers;
         non_peers = np;
     }
@@ -1030,7 +991,7 @@ ignoreMulticastReply(peer * p, MemObject * mem)
  */
 void
 
-neighborsUdpAck(const cache_key * key, icp_common_t * header, const struct sockaddr_in *from)
+neighborsUdpAck(const cache_key * key, icp_common_t * header, const IPAddress &from)
 {
     peer *p = NULL;
     StoreEntry *entry;
@@ -1132,14 +1093,8 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const struct socka
         if (p) {
             debugs(15, 1, "Ignoring SECHO from neighbor " << p->host);
             neighborCountIgnored(p);
-#if ALLOW_SOURCE_PING
-
-        } else if (Config.onoff.source_ping) {
-            mem->ping_reply_callback(NULL, ntype, PROTO_ICP, header, mem->ircb_data);
-#endif
-
         } else {
-            debugs(15, 1, "Unsolicited SECHO from " << inet_ntoa(from->sin_addr));
+            debugs(15, 1, "Unsolicited SECHO from " << from);
         }
     } else if (opcode == ICP_DENIED)
     {
@@ -1199,24 +1154,33 @@ int
 neighborUp(const peer * p)
 {
     if (!p->tcp_up) {
-        if (!peerProbeConnect((peer *) p))
+        if (!peerProbeConnect((peer *) p)) {
+            debugs(15, 8, "neighborUp: DOWN (probed): " << p->host << " (" << p->in_addr << ")");
             return 0;
+        }
     }
 
     /*
      * The peer can not be UP if we don't have any IP addresses
      * for it. 
      */
-    if (0 == p->n_addresses)
+    if (0 == p->n_addresses) {
+        debugs(15, 8, "neighborUp: DOWN (no-ip): " << p->host << " (" << p->in_addr << ")");
         return 0;
+    }
 
-    if (p->options.no_query)
+    if (p->options.no_query) {
+        debugs(15, 8, "neighborUp: UP (no-query): " << p->host << " (" << p->in_addr << ")");
         return 1;
+    }
 
     if (p->stats.probe_start != 0 &&
-            squid_curtime - p->stats.probe_start > Config.Timeout.deadPeer)
+            squid_curtime - p->stats.probe_start > Config.Timeout.deadPeer) {
+        debugs(15, 8, "neighborUp: DOWN (dead): " << p->host << " (" << p->in_addr << ")");
         return 0;
+    }
 
+    debugs(15, 8, "neighborUp: UP: " << p->host << " (" << p->in_addr << ")");
     return 1;
 }
 
@@ -1260,7 +1224,6 @@ peerDNSConfigure(const ipcache_addrs * ia, void *data)
 {
     peer *p = (peer *)data;
 
-    struct sockaddr_in *ap;
     int j;
 
     if (p->n_addresses == 0) {
@@ -1286,16 +1249,13 @@ peerDNSConfigure(const ipcache_addrs * ia, void *data)
 
     for (j = 0; j < (int) ia->count && j < PEER_MAX_ADDRESSES; j++) {
         p->addresses[j] = ia->in_addrs[j];
-        debugs(15, 2, "--> IP address #" << j << ": " << inet_ntoa(p->addresses[j]));
+        debugs(15, 2, "--> IP address #" << j << ": " << p->addresses[j]);
         p->n_addresses++;
     }
 
-    ap = &p->in_addr;
-
-    memset(ap, '\0', sizeof(struct sockaddr_in));
-    ap->sin_family = AF_INET;
-    ap->sin_addr = p->addresses[0];
-    ap->sin_port = htons(p->icp.port);
+    p->in_addr.SetEmpty();
+    p->in_addr = p->addresses[0];
+    p->in_addr.SetPort(p->icp.port);
 
     if (p->type == PEER_MULTICAST)
         peerCountMcastPeersSchedule(p, 10);
@@ -1392,8 +1352,9 @@ peerProbeConnect(peer * p)
     if (squid_curtime - p->stats.last_connect_probe == 0)
         return ret;/* don't probe to often */
 
-    fd = comm_open(SOCK_STREAM, IPPROTO_TCP, getOutgoingAddr(NULL),
-                   0, COMM_NONBLOCKING, p->host);
+    IPAddress temp(getOutgoingAddr(NULL));
+
+    fd = comm_open(SOCK_STREAM, IPPROTO_TCP, temp, COMM_NONBLOCKING, p->host);
 
     if (fd < 0)
         return ret;
@@ -1455,7 +1416,9 @@ peerCountMcastPeersStart(void *data)
     LOCAL_ARRAY(char, url, MAX_URL);
     assert(p->type == PEER_MULTICAST);
     p->mcast.flags.count_event_pending = 0;
-    snprintf(url, MAX_URL, "http://%s/", inet_ntoa(p->in_addr.sin_addr));
+    snprintf(url, MAX_URL, "http://");
+    p->in_addr.ToURL(url+7, MAX_URL -8 );
+    strcat(url, "/");
     fake = storeCreateEntry(url, url, request_flags(), METHOD_GET);
     HttpRequest *req = HttpRequest::CreateFromUrl(url);
     psstate = new ps_state;
@@ -1474,7 +1437,7 @@ peerCountMcastPeersStart(void *data)
     reqnum = icpSetCacheKey((const cache_key *)fake->key);
     query = _icp_common_t::createMessage(ICP_QUERY, 0, url, reqnum, 0);
     icpUdpSend(theOutIcpConnection,
-               &p->in_addr,
+               p->in_addr,
                query,
                LOG_ICP_QUERY,
                0);
@@ -1634,7 +1597,7 @@ static void
 dump_peers(StoreEntry * sentry, peer * peers)
 {
     peer *e = NULL;
-
+    char ntoabuf[MAX_IPSTRLEN];
     struct _domain_ping *d = NULL;
     icp_opcode op;
     int i;
@@ -1656,7 +1619,7 @@ dump_peers(StoreEntry * sentry, peer * peers)
 
         for (i = 0; i < e->n_addresses; i++) {
             storeAppendPrintf(sentry, "Address[%d] : %s\n", i,
-                              inet_ntoa(e->addresses[i]));
+                              e->addresses[i].NtoA(ntoabuf,MAX_IPSTRLEN) );
         }
 
         storeAppendPrintf(sentry, "Status     : %s\n",
@@ -1742,7 +1705,7 @@ dump_peers(StoreEntry * sentry, peer * peers)
 #if USE_HTCP
 void
 
-neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const struct sockaddr_in *from)
+neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const IPAddress &from)
 {
     StoreEntry *e = Store::Root().get(key);
     MemObject *mem = NULL;

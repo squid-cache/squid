@@ -1,5 +1,6 @@
+
 /*
- * $Id: comm.cc,v 1.438 2007/10/31 04:52:16 amosjeffries Exp $
+ * $Id: comm.cc,v 1.439 2007/12/14 23:11:46 amosjeffries Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -45,6 +46,7 @@
 #include "MemBuf.h"
 #include "pconn.h"
 #include "SquidTime.h"
+#include "IPAddress.h"
 
 #if defined(_SQUID_CYGWIN_)
 #include <sys/ioctl.h>
@@ -229,13 +231,16 @@ public:
     void connect();
     void callCallback(comm_err_t status, int xerrno);
     void defaults();
-    char *host;
-    u_short port;
 
-    struct sockaddr_in S;
+// defaults given by client
+    char *host;
+    u_short default_port;
+    IPAddress default_addr;
+    // NP: CANNOT store the default addr:port together as it gets set/reset differently.
+
+    IPAddress S;
     CallBack<CNCB> callback;
 
-    struct IN_ADDR in_addr;
     int fd;
     int tries;
     int addrcount;
@@ -249,7 +254,7 @@ private:
 
 /* STATIC */
 
-static comm_err_t commBind(int s, struct IN_ADDR, u_short port);
+static comm_err_t commBind(int s, struct addrinfo &);
 static void commSetReuseAddr(int);
 static void commSetNoLinger(int);
 #ifdef TCP_NODELAY
@@ -595,10 +600,9 @@ comm_empty_os_read_buffers(int fd)
     /* prevent those nasty RST packets */
     char buf[SQUID_TCP_SO_RCVBUF];
 
-    if (fd_table[fd].flags.nonblocking == 1)
-        while (FD_READ_METHOD(fd, buf, SQUID_TCP_SO_RCVBUF) > 0)
-
-            ;
+    if (fd_table[fd].flags.nonblocking == 1) {
+        while (FD_READ_METHOD(fd, buf, SQUID_TCP_SO_RCVBUF) > 0) {};
+    }
 #endif
 }
 
@@ -713,17 +717,32 @@ fdc_open(int fd, unsigned int type, char const *desc)
  * synchronous wrapper around udp socket functions
  */
 int
-comm_udp_recvfrom(int fd, void *buf, size_t len, int flags,
-                  struct sockaddr *from, socklen_t *fromlen)
+comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, IPAddress &from)
 {
     statCounter.syscalls.sock.recvfroms++;
-    return recvfrom(fd, buf, len, flags, from, fromlen);
+    int x = 0;
+    struct addrinfo *AI = NULL;
+
+    debugs(5,8, "comm_udp_recvfrom: FD " << fd << " from " << from);
+
+    assert( NULL == AI );
+
+    from.InitAddrInfo(AI);
+
+    x = recvfrom(fd, buf, len, flags, AI->ai_addr, &AI->ai_addrlen);
+
+    from = *AI;
+
+    from.FreeAddrInfo(AI);
+
+    return x;
 }
 
 int
 comm_udp_recv(int fd, void *buf, size_t len, int flags)
 {
-    return comm_udp_recvfrom(fd, buf, len, flags, NULL, 0);
+    IPAddress nul;
+    return comm_udp_recvfrom(fd, buf, len, flags, nul);
 }
 
 ssize_t
@@ -749,9 +768,8 @@ comm_has_incomplete_write(int fd)
 u_short
 comm_local_port(int fd)
 {
-
-    struct sockaddr_in addr;
-    socklen_t addr_len = 0;
+    IPAddress temp;
+    struct addrinfo *addr = NULL;
     fde *F = &fd_table[fd];
 
     /* If the fd is closed already, just return */
@@ -761,38 +779,42 @@ comm_local_port(int fd)
         return 0;
     }
 
-    if (F->local_port)
-        return F->local_port;
+    if (F->local_addr.GetPort())
+        return F->local_addr.GetPort();
 
-    addr_len = sizeof(addr);
+    temp.InitAddrInfo(addr);
 
-    if (getsockname(fd, (struct sockaddr *) &addr, &addr_len)) {
+    if (getsockname(fd, addr->ai_addr, &(addr->ai_addrlen)) ) {
         debugs(50, 1, "comm_local_port: Failed to retrieve TCP/UDP port number for socket: FD " << fd << ": " << xstrerror());
+        temp.FreeAddrInfo(addr);
         return 0;
     }
+    temp = *addr;
 
-    F->local_port = ntohs(addr.sin_port);
-    debugs(5, 6, "comm_local_port: FD " << fd << ": port " << F->local_port);
-    return F->local_port;
+    temp.FreeAddrInfo(addr);
+
+    F->local_addr.SetPort(temp.GetPort());
+
+    // grab default socket information for this address
+    temp.GetAddrInfo(addr);
+
+    F->sock_family = addr->ai_family;
+
+    temp.FreeAddrInfo(addr);
+
+    debugs(5, 6, "comm_local_port: FD " << fd << ": port " << F->local_addr.GetPort());
+    return F->local_addr.GetPort();
 }
 
 static comm_err_t
-commBind(int s, struct IN_ADDR in_addr, u_short port)
+commBind(int s, struct addrinfo &inaddr)
 {
-    struct sockaddr_in S;
-
-    memset(&S, '\0', sizeof(S));
-    S.sin_family = AF_INET;
-    S.sin_port = htons(port);
-    S.sin_addr = in_addr;
     statCounter.syscalls.sock.binds++;
 
-    if (bind(s, (struct sockaddr *) &S, sizeof(S)) == 0)
+    if (bind(s, inaddr.ai_addr, inaddr.ai_addrlen) == 0)
         return COMM_OK;
 
-    debugs(50, 0, "commBind: Cannot bind socket FD " << s << " to " <<
-           (S.sin_addr.s_addr == INADDR_ANY ? "*" : inet_ntoa(S.sin_addr)) <<
-           ":" << (int) port << ": " << xstrerror());
+    debugs(50, 0, "commBind: Cannot bind socket FD " << s << " to " << fd_table[s].local_addr << ": " << xstrerror());
 
     return COMM_ERROR;
 }
@@ -804,12 +826,11 @@ commBind(int s, struct IN_ADDR in_addr, u_short port)
 int
 comm_open(int sock_type,
           int proto,
-          struct IN_ADDR addr,
-          u_short port,
+          IPAddress &addr,
           int flags,
           const char *note)
 {
-    return comm_openex(sock_type, proto, addr, port, flags, 0, note);
+    return comm_openex(sock_type, proto, addr, flags, 0, note);
 }
 
 static bool
@@ -832,6 +853,17 @@ comm_set_tos(int fd, int tos)
 #endif
 }
 
+void
+comm_set_v6only(int fd, int tos)
+{
+#ifdef IPV6_V6ONLY
+    if (setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &tos, sizeof(int)) < 0) {
+        debugs(50, 1, "comm_open: setsockopt(IPV6_V6ONLY) on FD " << fd << ": " << xstrerror());
+    }
+#else
+    debugs(50, 0, "WARNING: comm_open: setsockopt(IPV6_V6ONLY) not supported on this platform");
+#endif /* sockopt */
+}
 
 /**
  * Create a socket. Default is blocking, stream (TCP) socket.  IO_TYPE
@@ -840,21 +872,29 @@ comm_set_tos(int fd, int tos)
 int
 comm_openex(int sock_type,
             int proto,
-            struct IN_ADDR addr,
-            u_short port,
+            IPAddress &addr,
             int flags,
             unsigned char TOS,
             const char *note)
 {
     int new_socket;
-    int tos = 0;
     fde *F = NULL;
+    int tos = 0;
+    struct addrinfo *AI = NULL;
 
     PROF_start(comm_open);
     /* Create socket for accepting new connections. */
     statCounter.syscalls.sock.sockets++;
 
-    if ((new_socket = socket(AF_INET, sock_type, proto)) < 0)
+    /* Setup the socket addrinfo details for use */
+    addr.GetAddrInfo(AI);
+    AI->ai_socktype = sock_type;
+    AI->ai_protocol = proto;
+    AI->ai_flags = flags;
+
+    debugs(50, 3, "comm_openex: Attempt open socket for: " << addr );
+
+    if ((new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol)) < 0)
     {
         /* Increase the number of reserved fd's if calls to socket()
          * are failing because the open file table is full.  This
@@ -867,27 +907,33 @@ comm_openex(int sock_type,
             debugs(50, 0, "comm_open: socket failure: " << xstrerror());
         }
 
+        addr.FreeAddrInfo(AI);
+
         PROF_stop(comm_open);
         return -1;
     }
 
+    debugs(50, 3, "comm_openex: Opened socket FD " << new_socket << " : family=" << AI->ai_family << ", type=" << AI->ai_socktype << ", protocol=" << AI->ai_protocol );
+
     /* set TOS if needed */
-    if (TOS)
-    {
-#ifdef IP_TOS
+    if (TOS && comm_set_tos(new_socket, TOS) ) {
         tos = TOS;
+    }
 
-        if (setsockopt(new_socket, IPPROTO_IP, IP_TOS, (char *) &tos, sizeof(int)) < 0) {
-            debugs(50, 1, "comm_open: setsockopt(IP_TOS) on FD " << new_socket << ": " << xstrerror());
-        }
+#if IPV6_SPECIAL_SPLITSTACK
 
-#else
-
-        debugs(50, 0, "comm_open: setsockopt(IP_TOS) not supported on this platform");
+    if( addr.IsIPv6() )
+        comm_set_v6only(new_socket, tos);
 
 #endif
 
-    }
+#if IPV6_SPECIAL_V4MAPPED && defined(_SQUID_MSWIN_)
+
+    /* Windows Vista supports Dual-Sockets. BUT defaults them to V6ONLY. Turn it OFF. */
+    if( addr.IsIPv6() )
+        comm_set_v6only(new_socket, 0);
+
+#endif
 
     /* update fdstat */
     debugs(5, 5, "comm_open: FD " << new_socket << " is a new socket");
@@ -906,7 +952,9 @@ comm_openex(int sock_type,
 
     F->local_addr = addr;
 
-    F->tos = tos;
+    F->tos = TOS;
+
+    F->sock_family = AI->ai_family;
 
     if (!(flags & COMM_NOCLOEXEC))
         commSetCloseOnExec(new_socket);
@@ -914,7 +962,7 @@ comm_openex(int sock_type,
     if ((flags & COMM_REUSEADDR))
         commSetReuseAddr(new_socket);
 
-    if (port > (u_short) 0)
+    if (addr.GetPort() > (u_short) 0)
     {
 #ifdef _SQUID_MSWIN_
 
@@ -927,16 +975,17 @@ comm_openex(int sock_type,
             commSetReuseAddr(new_socket);
     }
 
-    if (addr.s_addr != no_addr.s_addr)
+    if (!addr.IsNoAddr())
     {
-        if (commBind(new_socket, addr, port) != COMM_OK) {
+        if (commBind(new_socket, *AI) != COMM_OK) {
             comm_close(new_socket);
+            addr.FreeAddrInfo(AI);
             return -1;
             PROF_stop(comm_open);
         }
     }
 
-    F->local_port = port;
+    addr.FreeAddrInfo(AI);
 
     if (flags & COMM_NONBLOCKING)
         if (commSetNonBlocking(new_socket) == COMM_ERROR)
@@ -982,7 +1031,7 @@ commConnectStart(int fd, const char *host, u_short port, CNCB * callback, void *
     cs = new ConnectStateData;
     cs->fd = fd;
     cs->host = xstrdup(host);
-    cs->port = port;
+    cs->default_port = port;
     cs->callback = CallBack<CNCB>(callback, data);
     comm_add_close_handler(fd, commConnectFree, cs);
     ipcache_nbgethostbyname(host, commConnectDnsHandle, cs);
@@ -1007,7 +1056,8 @@ commConnectDnsHandle(const ipcache_addrs * ia, void *data)
     }
 
     assert(ia->cur < ia->count);
-    cs->in_addr = ia->in_addrs[ia->cur];
+
+    cs->default_addr = ia->in_addrs[ia->cur];
 
     if (Config.onoff.balance_on_multiple_ip)
         ipcacheCycleAddr(cs->host, NULL);
@@ -1022,7 +1072,7 @@ commConnectDnsHandle(const ipcache_addrs * ia, void *data)
 void
 ConnectStateData::callCallback(comm_err_t status, int xerrno)
 {
-    debugs(5, 3, "commConnectCallback: FD " << fd << ", data " << callback.data);
+    debugs(5, 3, "commConnectCallback: FD " << fd << ", data " << callback.data << ", status " << status);
 
     comm_remove_close_handler(fd, commConnectFree, this);
     CallBack<CNCB> aCallback = callback;
@@ -1069,12 +1119,20 @@ copyFDFlags(int to, fde *F)
 int
 ConnectStateData::commResetFD()
 {
+    struct addrinfo *AI = NULL;
+    IPAddress nul;
+
     if (!cbdataReferenceValid(callback.data))
         return 0;
 
     statCounter.syscalls.sock.sockets++;
 
-    int fd2 = socket(AF_INET, SOCK_STREAM, 0);
+    /* setup a bare-bones addrinfo */
+    nul.GetAddrInfo(AI);
+
+    int fd2 = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+
+    nul.FreeAddrInfo(AI);
 
     if (fd2 < 0) {
         debugs(5, 0, "commResetFD: socket: " << xstrerror());
@@ -1112,18 +1170,26 @@ ConnectStateData::commResetFD()
      * the original socket
      */
 
-    if (commBind(fd, F->local_addr, F->local_port) != COMM_OK) {
+    AI = NULL;
+    F->local_addr.GetAddrInfo(AI);
+
+    if (commBind(fd, *AI) != COMM_OK) {
         debugs(5, 0, "commResetFD: bind: " << xstrerror());
+        F->local_addr.FreeAddrInfo(AI);
         return 0;
     }
+    F->local_addr.FreeAddrInfo(AI);
 
-#ifdef IP_TOS
-    if (F->tos) {
-        if (setsockopt(fd, IPPROTO_IP, IP_TOS, (char *) &F->tos, sizeof(int)) < 0)
-            debugs(50, 1, "commResetFD: setsockopt(IP_TOS) on FD " << fd << ": " << xstrerror());
-    }
+    if (F->tos)
+        comm_set_tos(fd, F->tos);
+
+#if IPV6_SPECIAL_SPLITSTACK
+
+    if( F->local_addr.IsIPv6() )
+        comm_set_v6only(fd, F->tos);
 
 #endif
+
     copyFDFlags (fd, F);
 
     return 1;
@@ -1167,18 +1233,19 @@ ConnectStateData::Connect (int fd, void *me)
 void
 ConnectStateData::defaults()
 {
-    S.sin_family = AF_INET;
-    S.sin_addr = in_addr;
-    S.sin_port = htons(port);
+    S = default_addr;
+    S.SetPort(default_port);
 }
 
 void
 ConnectStateData::connect()
 {
-    if (S.sin_addr.s_addr == 0)
+    if (S.IsAnyAddr())
         defaults();
 
-    switch (comm_connect_addr(fd, &S)) {
+    debugs(5,5, "ConnectSateData::connect: to " << S);
+
+    switch (comm_connect_addr(fd, S) ) {
 
     case COMM_INPROGRESS:
         debugs(5, 5, "ConnectStateData::connect: FD " << fd << ": COMM_INPROGRESS");
@@ -1186,20 +1253,23 @@ ConnectStateData::connect()
         break;
 
     case COMM_OK:
-        ipcacheMarkGoodAddr(host, S.sin_addr);
+        debugs(5, 5, "ConnectStateData::connect: FD " << fd << ": COMM_OK - connected");
+        ipcacheMarkGoodAddr(host, S);
         callCallback(COMM_OK, 0);
         break;
 
     default:
+        debugs(5, 5, "ConnectStateData::connect: FD " << fd << ": * - try again");
         tries++;
-        ipcacheMarkBadAddr(host, S.sin_addr);
+        ipcacheMarkBadAddr(host, S);
 
         if (Config.onoff.test_reachability)
-            netdbDeleteAddrNetwork(S.sin_addr);
+            netdbDeleteAddrNetwork(S);
 
         if (commRetryConnect()) {
             eventAdd("commReconnect", commReconnect, this, this->addrcount == 1 ? 0.05 : 0.0, 0);
         } else {
+            debugs(5, 5, "ConnectStateData::connect: FD " << fd << ": * - ERR tried too many times already.");
             callCallback(COMM_ERR_CONNECT, errno);
         }
     }
@@ -1232,16 +1302,23 @@ commSetTimeout(int fd, int timeout, PF * handler, void *data)
 }
 
 int
-
-comm_connect_addr(int sock, const struct sockaddr_in *address)
+comm_connect_addr(int sock, const IPAddress &address)
 {
     comm_err_t status = COMM_OK;
     fde *F = &fd_table[sock];
-    int x;
+    int x = 0;
     int err = 0;
     socklen_t errlen;
-    assert(ntohs(address->sin_port) != 0);
+    struct addrinfo *AI = NULL;
     PROF_start(comm_connect_addr);
+
+    assert(address.GetPort() != 0);
+
+    debugs(5, 9, "comm_connect_addr: connecting socket " << sock << " to " << address << " (want family: " << F->sock_family <<
+                 ") Old-State=" << fdc_table[sock].active);
+
+    address.GetAddrInfo(AI, F->sock_family);
+
     /* Establish connection. */
     errno = 0;
 
@@ -1250,16 +1327,27 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
         F->flags.called_connect = 1;
         statCounter.syscalls.sock.connects++;
 
-        x = connect(sock, (struct sockaddr *) address, sizeof(*address));
+        x = connect(sock, AI->ai_addr, AI->ai_addrlen);
 
         if (x < 0)
-            debugs(5, 9, "connect FD " << sock << ": " << xstrerror());
+        {
+            debugs(5,5, "comm_connect_addr: sock=" << sock << ", addrinfo( " <<
+                         " flags=" << AI->ai_flags <<
+                         ", family=" << AI->ai_family <<
+                         ", socktype=" << AI->ai_socktype <<
+                         ", protocol=" << AI->ai_protocol <<
+                         ", &addr=" << AI->ai_addr <<
+                         ", addrlen=" << AI->ai_addrlen <<
+                         " )" );
+            debugs(5, 9, "connect FD " << sock << ": (" << x << ") " << xstrerror());
+            debugs(14,9, "connecting to: " << address );
+        }
     } else
     {
 #if defined(_SQUID_NEWSOS6_)
         /* Makoto MATSUSHITA <matusita@ics.es.osaka-u.ac.jp> */
 
-        connect(sock, (struct sockaddr *) address, sizeof(*address));
+        connect(sock, AI->ai_addr, AI->ai_addrlen);
 
         if (errno == EINVAL) {
             errlen = sizeof(err);
@@ -1292,6 +1380,20 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
 
     }
 
+#ifdef _SQUID_LINUX_
+    /* 2007-11-27:
+     * Linux Debian replaces our allocated AI pointer with garbage when 
+     * connect() fails. This leads to segmentation faults deallocating
+     * the system-allocated memory when we go to clean up our pointer.
+     * HACK: is to leak the memory returned since we can't deallocate.
+     */
+    if(errno != 0) {
+        AI = NULL;
+    }
+#endif
+
+    address.FreeAddrInfo(AI);
+
     PROF_stop(comm_connect_addr);
 
     if (errno == 0 || errno == EISCONN)
@@ -1299,15 +1401,31 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
     else if (ignoreErrno(errno))
         status = COMM_INPROGRESS;
     else
+#if USE_IPV6
+      if( address.IsIPv4() && F->sock_family == AF_INET6 ) {
+
+            /* failover to trying IPv4-only link if an IPv6 one fails */
+            /* to catch the edge case of apps listening on IPv4-localhost */
+        F->sock_family = AF_INET;
+        int res = comm_connect_addr(sock, address);
+
+           /* if that fails too, undo our temporary socktype hack so the repeat works properly. */
+        if(res == COMM_ERROR)
+             F->sock_family = AF_INET6;
+
+        return res;
+    }
+    else
+#endif
         return COMM_ERROR;
 
-    xstrncpy(F->ipaddr, inet_ntoa(address->sin_addr), 16);
+    address.NtoA(F->ipaddr, MAX_IPSTRLEN);
 
-    F->remote_port = ntohs(address->sin_port);
+    F->remote_port = address.GetPort(); /* remote_port is HS */
 
     if (status == COMM_OK)
     {
-        debugs(5, 10, "comm_connect_addr: FD " << sock << " connected to " << F->ipaddr << ":" << F->remote_port);
+        debugs(5, 10, "comm_connect_addr: FD " << sock << " connected to " << address);
     } else if (status == COMM_INPROGRESS)
     {
         debugs(5, 10, "comm_connect_addr: FD " << sock << " connection pending");
@@ -1324,9 +1442,13 @@ comm_old_accept(int fd, ConnectionDetail &details)
     PROF_start(comm_accept);
     statCounter.syscalls.sock.accepts++;
     int sock;
-    socklen_t Slen = sizeof(details.peer);
+    struct addrinfo *gai = NULL;
+    details.me.InitAddrInfo(gai);
 
-    if ((sock = accept(fd, (struct sockaddr *) &details.peer, &Slen)) < 0) {
+    if ((sock = accept(fd, gai->ai_addr, &gai->ai_addrlen)) < 0) {
+
+        details.me.FreeAddrInfo(gai);
+
         PROF_stop(comm_accept);
 
         if (ignoreErrno(errno))
@@ -1344,21 +1466,29 @@ comm_old_accept(int fd, ConnectionDetail &details)
         }
     }
 
-    Slen = sizeof(details.me);
-    memset(&details.me, '\0', Slen);
+    details.peer = *gai;
 
-    getsockname(sock, (struct sockaddr *) &details.me, &Slen);
+    details.me.SetEmpty();
+    getsockname(sock, gai->ai_addr, &gai->ai_addrlen);
+    details.me = *gai;
+
     commSetCloseOnExec(sock);
+
     /* fdstat update */
     fd_open(sock, FD_SOCKET, "HTTP Request");
     fdd_table[sock].close_file = NULL;
     fdd_table[sock].close_line = 0;
     fdc_table[sock].active = 1;
     fde *F = &fd_table[sock];
-    xstrncpy(F->ipaddr, inet_ntoa(details.peer.sin_addr), 16);
-    F->remote_port = htons(details.peer.sin_port);
-    F->local_port = htons(details.me.sin_port);
+    details.peer.NtoA(F->ipaddr,MAX_IPSTRLEN);
+    F->remote_port = details.peer.GetPort();
+    F->local_addr.SetPort(details.me.GetPort());
+    F->sock_family = gai->ai_family;
+
     commSetNonBlocking(sock);
+
+    details.me.FreeAddrInfo(gai);
+
     PROF_stop(comm_accept);
     return sock;
 }
@@ -1592,17 +1722,29 @@ _comm_close(int fd, char const *file, int line)
 /* Send a udp datagram to specified TO_ADDR. */
 int
 comm_udp_sendto(int fd,
-
-                const struct sockaddr_in *to_addr,
-                int addr_len,
+                const IPAddress &to_addr,
                 const void *buf,
                 int len)
 {
-    int x;
+    int x = 0;
+    struct addrinfo *AI = NULL;
+
     PROF_start(comm_udp_sendto);
     statCounter.syscalls.sock.sendtos++;
 
-    x = sendto(fd, buf, len, 0, (struct sockaddr *) to_addr, addr_len);
+    debugs(50, 3, "comm_udp_sendto: Attempt to send UDP packet to " << to_addr <<
+                  " using FD " << fd << " using Port " << comm_local_port(fd) );
+
+    /* BUG: something in the above macro appears to occasionally be setting AI to garbage. */
+    /* AYJ: 2007-08-27 : or was it because I wasn't then setting 'fd_table[fd].sock_family' to fill properly. */
+    assert( NULL == AI );
+
+    to_addr.GetAddrInfo(AI, fd_table[fd].sock_family);
+
+    x = sendto(fd, buf, len, 0, AI->ai_addr, AI->ai_addrlen);
+
+    to_addr.FreeAddrInfo(AI);
+
     PROF_stop(comm_udp_sendto);
 
     if (x >= 0)
@@ -1613,9 +1755,7 @@ comm_udp_sendto(int fd,
     if (ECONNREFUSED != errno)
 #endif
 
-        debugs(50, 1, "comm_udp_sendto: FD " << fd << ", " <<
-               inet_ntoa(to_addr->sin_addr) << ", port " <<
-               (int) htons(to_addr->sin_port) << ": " << xstrerror());
+        debugs(50, 1, "comm_udp_sendto: FD " << fd << ", (family=" << fd_table[fd].sock_family << ") " << to_addr << ": " << xstrerror());
 
     return COMM_ERROR;
 }
@@ -2508,9 +2648,7 @@ DeferredRead::markCancelled() {
     cancelled = true;
 }
 
-ConnectionDetail::ConnectionDetail() {
-    memset(&me, 0, sizeof(me));
-    memset(&peer, 0, sizeof(peer));
+ConnectionDetail::ConnectionDetail() : me(), peer() {
 }
 
 bool

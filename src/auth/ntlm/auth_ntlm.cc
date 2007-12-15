@@ -1,6 +1,5 @@
-
 /*
- * $Id: auth_ntlm.cc,v 1.77 2007/09/01 03:51:23 amosjeffries Exp $
+ * $Id: auth_ntlm.cc,v 1.78 2007/12/14 23:11:51 amosjeffries Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -49,6 +48,7 @@
 /* TODO remove this include */
 #include "ntlmScheme.h"
 #include "wordlist.h"
+#include "SquidTime.h"
 
 static void
 authenticateNTLMReleaseServer(AuthUserRequest * auth_user_request);

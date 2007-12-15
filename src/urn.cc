@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.107 2007/05/29 13:31:41 amosjeffries Exp $
+ * $Id: urn.cc,v 1.108 2007/12/14 23:11:48 amosjeffries Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -178,6 +178,9 @@ UrnState::getHost (String &urlpath)
 {
     char * result;
     char const *t;
+
+/* FIXME: this appears to be parsing the URL. *very* badly. */
+/* FIXME: a proper encapsulated URI/URL type needs to clear this up. */
 
     if ((t = urlpath.pos(':')) != NULL) {
         urlpath.set(t, '\0');

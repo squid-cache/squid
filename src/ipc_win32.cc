@@ -1,6 +1,5 @@
-
 /*
- * $Id: ipc_win32.cc,v 1.4 2007/04/30 16:56:09 wessels Exp $
+ * $Id: ipc_win32.cc,v 1.5 2007/12/14 23:11:47 amosjeffries Exp $
  *
  * DEBUG: section 54    Windows Interprocess Communication
  * AUTHOR: Andrey Shorin <tolsty@tushino.com>
@@ -49,8 +48,8 @@ struct ipc_params
     int type;
     int crfd;
     int cwfd;
-
-    struct sockaddr_in PS;
+    IPAddress local_addr;
+    struct addrinfo PS;
     const char *prog;
     char **args;
 };
@@ -108,7 +107,7 @@ PutEnvironment()
 }
 
 pid_t
-ipcCreate(int type, const char *prog, const char *const args[], const char *name, int *rfd, int *wfd, void **hIpc)
+ipcCreate(int type, const char *prog, const char *const args[], const char *name, IPAddress &local_addr, int *rfd, int *wfd, void **hIpc)
 {
     unsigned long thread;
 
@@ -118,14 +117,14 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     DWORD ecode = 0;
     pid_t pid;
 
-    struct sockaddr_in CS;
+    IPAddress tmp_addr;
+    struct addrinfo *aiCS = NULL;
+    struct addrinfo *aiPS = NULL;
 
-    struct sockaddr_in PS;
     int crfd = -1;
     int prfd = -1;
     int cwfd = -1;
     int pwfd = -1;
-    socklen_t len;
     int x;
 
     requirePathnameExists(name, prog);
@@ -149,26 +148,22 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         crfd = cwfd = comm_open(SOCK_STREAM,
                                 IPPROTO_TCP,
                                 local_addr,
-                                0,
                                 COMM_NOCLOEXEC,
                                 name);
         prfd = pwfd = comm_open(SOCK_STREAM,
                                 IPPROTO_TCP,	/* protocol */
                                 local_addr,
-                                0,			/* port */
                                 0,			/* blocking */
                                 name);
     } else if (type == IPC_UDP_SOCKET) {
         crfd = cwfd = comm_open(SOCK_DGRAM,
                                 IPPROTO_UDP,
                                 local_addr,
-                                0,
                                 COMM_NOCLOEXEC,
                                 name);
         prfd = pwfd = comm_open(SOCK_DGRAM,
                                 IPPROTO_UDP,
                                 local_addr,
-                                0,
                                 0,
                                 name);
     } else if (type == IPC_FIFO) {
@@ -199,25 +194,31 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
     }
 
+// AYJ: these flags should be neutral, but if not IPv6 version needs adding
     if (type == IPC_TCP_SOCKET || type == IPC_UDP_SOCKET) {
-        len = sizeof(PS);
-        memset(&PS, '\0', len);
 
-        if (getsockname(pwfd, (struct sockaddr *) &PS, &len) < 0) {
+        tmp_addr.InitAddrInfo(aiPS);
+
+        if (getsockname(pwfd, aiPS->ai_addr, &(aiPS->ai_addrlen) ) < 0) {
             debugs(54, 0, "ipcCreate: getsockname: " << xstrerror());
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
-        debugs(54, 3, "ipcCreate: FD " << pwfd << " sockaddr " << inet_ntoa(PS.sin_addr) << ":" << ntohs(PS.sin_port));
-        len = sizeof(CS);
-        memset(&CS, '\0', len);
+        tmp_addr = *aiPS;
 
-        if (getsockname(crfd, (struct sockaddr *) &CS, &len) < 0) {
+        debugs(54, 3, "ipcCreate: FD " << pwfd << " sockaddr " << tmp_addr );
+
+        tmp_addr.InitAddrInfo(aiCS);
+
+        if (getsockname(crfd, aiCS->ai_addr, &(aiCS->ai_addrlen) ) < 0) {
             debugs(54, 0, "ipcCreate: getsockname: " << xstrerror());
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
-        debugs(54, 3, "ipcCreate: FD " << crfd << " sockaddr " << inet_ntoa(CS.sin_addr) << ":" << ntohs(CS.sin_port));
+        tmp_addr.SetEmpty();
+        tmp_addr = *aiCS;
+
+        debugs(54, 3, "ipcCreate: FD " << crfd << " sockaddr " << tmp_addr );
     }
 
     if (type == IPC_TCP_SOCKET) {
@@ -238,7 +239,9 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
     params.cwfd = cwfd;
 
-    params.PS = PS;
+    params.PS = *aiPS;
+    
+    params.local_addr = local_addr;
 
     params.prog = prog;
 
@@ -251,7 +254,8 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
     }
 
-    if (comm_connect_addr(pwfd, &CS) == COMM_ERROR) {
+    /* NP: tmp_addr was left with eiether empty or aiCS in IPAddress format */
+    if (comm_connect_addr(pwfd, tmp_addr) == COMM_ERROR) {
         CloseHandle((HANDLE) thread);
         return ipcCloseAllFD(prfd, pwfd, -1, -1);
     }
@@ -369,7 +373,7 @@ ipc_thread_1(void *in_params)
 
     struct thread_params thread_params;
     ssize_t x;
-    int tmp_s, fd = -1;
+    int fd = -1;
     char *str;
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
@@ -377,7 +381,10 @@ ipc_thread_1(void *in_params)
     int prfd_ipc = -1, pwfd_ipc = -1, crfd_ipc = -1, cwfd_ipc = -1;
     char *prog = NULL, *buf1 = NULL;
 
-    struct sockaddr_in CS_ipc, PS_ipc;
+    IPAddress PS_ipc;
+    IPAddress CS_ipc;
+    struct addrinfo *aiPS_ipc = NULL;
+    struct addrinfo *aiCS_ipc = NULL;
 
     struct ipc_params *params = (struct ipc_params *) in_params;
     int type = params->type;
@@ -385,9 +392,9 @@ ipc_thread_1(void *in_params)
     int cwfd = params->cwfd;
     char **args = params->args;
 
-    struct sockaddr_in PS = params->PS;
-
-
+    IPAddress PS = params->PS;
+    IPAddress local_addr = params->local_addr;
+    
     buf1 = (char *)xcalloc(1, 8192);
     strcpy(buf1, params->prog);
     prog = strtok(buf1, w_space);
@@ -415,7 +422,7 @@ ipc_thread_1(void *in_params)
         fd_table[fd].flags.ipc = 1;
         cwfd = crfd = fd;
     } else if (type == IPC_UDP_SOCKET) {
-        if (comm_connect_addr(crfd, &PS) == COMM_ERROR)
+        if (comm_connect_addr(crfd, params->PS) == COMM_ERROR)
             goto cleanup;
     }
 
@@ -457,7 +464,7 @@ ipc_thread_1(void *in_params)
 
     if (type == IPC_UDP_SOCKET) {
         snprintf(buf1, 8192, "%s(%ld) <-> ipc CHILD socket", prog, -1L);
-        crfd_ipc = cwfd_ipc = comm_open(SOCK_DGRAM, IPPROTO_UDP, local_addr, 0, 0, buf1);
+        crfd_ipc = cwfd_ipc = comm_open(SOCK_DGRAM, IPPROTO_UDP, local_addr, 0, buf1);
 
         if (crfd_ipc < 0) {
             debugs(54, 0, "ipcCreate: CHILD: Failed to create child FD for " << prog << ".");
@@ -466,7 +473,7 @@ ipc_thread_1(void *in_params)
         }
 
         snprintf(buf1, 8192, "%s(%ld) <-> ipc PARENT socket", prog, -1L);
-        prfd_ipc = pwfd_ipc = comm_open(SOCK_DGRAM, IPPROTO_UDP, local_addr, 0, 0, buf1);
+        prfd_ipc = pwfd_ipc = comm_open(SOCK_DGRAM, IPPROTO_UDP, local_addr, 0, buf1);
 
         if (pwfd_ipc < 0) {
             debugs(54, 0, "ipcCreate: CHILD: Failed to create server FD for " << prog << ".");
@@ -474,36 +481,38 @@ ipc_thread_1(void *in_params)
             goto cleanup;
         }
 
-        tmp_s = sizeof(PS_ipc);
-        memset(&PS_ipc, '\0', tmp_s);
+        PS_ipc.InitAddrInfo(aiPS_ipc);
 
-        if (getsockname(pwfd_ipc, (struct sockaddr *) &PS_ipc, &tmp_s) < 0) {
+        if (getsockname(pwfd_ipc, aiPS_ipc->ai_addr, &(aiPS_ipc->ai_addrlen)) < 0) {
             debugs(54, 0, "ipcCreate: getsockname: " << xstrerror());
             ipcSend(cwfd, err_string, strlen(err_string));
             goto cleanup;
         }
 
-        debugs(54, 3, "ipcCreate: FD " << pwfd_ipc << " sockaddr " << inet_ntoa(PS_ipc.sin_addr) << ":" << ntohs(PS_ipc.sin_port));
+        PS_ipc = *aiPS_ipc;
 
-        tmp_s = sizeof(CS_ipc);
-        memset(&CS_ipc, '\0', tmp_s);
+        debugs(54, 3, "ipcCreate: FD " << pwfd_ipc << " sockaddr " << PS_ipc);
 
-        if (getsockname(crfd_ipc, (struct sockaddr *) &CS_ipc, &tmp_s) < 0) {
+        CS_ipc.InitAddrInfo(aiCS_ipc);
+
+        if (getsockname(crfd_ipc, aiCS_ipc->ai_addr, &(aiCS_ipc->ai_addrlen)) < 0) {
             debugs(54, 0, "ipcCreate: getsockname: " << xstrerror());
             ipcSend(cwfd, err_string, strlen(err_string));
             goto cleanup;
         }
 
-        debugs(54, 3, "ipcCreate: FD " << crfd_ipc << " sockaddr " << inet_ntoa(CS_ipc.sin_addr) << ":" << ntohs(CS_ipc.sin_port));
+        CS_ipc = *aiCS_ipc;
 
-        if (comm_connect_addr(pwfd_ipc, &CS_ipc) == COMM_ERROR) {
+        debugs(54, 3, "ipcCreate: FD " << crfd_ipc << " sockaddr " << CS_ipc);
+
+        if (comm_connect_addr(pwfd_ipc, CS_ipc) == COMM_ERROR) {
             ipcSend(cwfd, err_string, strlen(err_string));
             goto cleanup;
         }
 
         fd = crfd;
 
-        if (comm_connect_addr(crfd_ipc, &PS_ipc) == COMM_ERROR) {
+        if (comm_connect_addr(crfd_ipc, PS_ipc) == COMM_ERROR) {
             ipcSend(cwfd, err_string, strlen(err_string));
             goto cleanup;
         }

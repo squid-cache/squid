@@ -1,6 +1,6 @@
 
 /*
- * $Id: globals.h,v 1.141 2007/08/13 17:20:51 hno Exp $
+ * $Id: globals.h,v 1.142 2007/12/14 23:11:46 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -55,7 +55,6 @@ extern "C"
     extern const char *cfg_filename;	/* NULL */
     extern const char *const appname;	/* "squid" */
     extern const char *const dash_str;	/* "-" */
-    extern const char *const localhost;	/* "127.0.0.1" */
     extern const char *const null_string;	/* "" */
     extern const char *const version_string;	/* VERSION */
     extern const char *const full_appname_string;	/* PACKAGE "/" VERSION */
@@ -112,17 +111,9 @@ extern "C"
 
     extern struct _acl_deny_info_list *DenyInfoList;	/* NULL */
 
-    extern struct IN_ADDR any_addr;
+    extern IPAddress theOutICPAddr;
 
-    extern struct IN_ADDR local_addr;
-
-    extern struct IN_ADDR no_addr;
-
-    extern struct IN_ADDR theOutICPAddr;
-
-    extern struct IN_ADDR theOutSNMPAddr;
-
-    extern struct timeval current_time;
+    extern IPAddress theOutSNMPAddr;
 
     extern struct timeval squid_start;
     extern int shutting_down;	/* 0 */
@@ -135,7 +126,6 @@ extern "C"
     extern char *swap_log_op_str[];
     extern char *lookup_t_str[];
     extern double request_failure_ratio;	/* 0.0 */
-    extern double current_dtime;
     extern int store_hash_buckets;	/* 0 */
     extern hash_table *store_table;	/* NULL */
     extern dlink_list ClientActiveRequests;

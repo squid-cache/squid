@@ -1,6 +1,5 @@
-
 /*
- * $Id: auth_digest.cc,v 1.59 2007/08/27 12:50:45 hno Exp $
+ * $Id: auth_digest.cc,v 1.60 2007/12/14 23:11:51 amosjeffries Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -48,6 +47,7 @@
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "wordlist.h"
+#include "SquidTime.h"
 /* TODO don't include this */
 #include "digestScheme.h"
 
@@ -647,17 +647,17 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointe
             } else {
                 const char *useragent = request->header.getStr(HDR_USER_AGENT);
 
-                static struct IN_ADDR last_broken_addr;
+                static IPAddress last_broken_addr;
                 static int seen_broken_client = 0;
 
                 if (!seen_broken_client) {
-                    last_broken_addr = no_addr;
+                    last_broken_addr.SetNoAddr();
                     seen_broken_client = 1;
                 }
 
-                if (memcmp(&last_broken_addr, &request->client_addr, sizeof(last_broken_addr)) != 0) {
+                if (last_broken_addr != request->client_addr) {
                     debugs(29, 1, "\nDigest POST bug detected from " <<
-                           inet_ntoa(request->client_addr) << " using '" <<
+                           request->client_addr << " using '" <<
                            (useragent ? useragent : "-") <<
                            "'. Please upgrade browser. See Bug #630 for details.");
 

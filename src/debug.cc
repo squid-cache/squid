@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.106 2007/12/04 15:20:22 rousskov Exp $
+ * $Id: debug.cc,v 1.107 2007/12/14 23:11:46 amosjeffries Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -173,7 +173,7 @@ _db_print_file(const char *format, va_list args) {
 
     vfprintf(debug_log, format, args);
 
-    if (!Config.onoff.buffered_logs)
+//*AYJ:*/    if (!Config.onoff.buffered_logs)
         fflush(debug_log);
 }
 

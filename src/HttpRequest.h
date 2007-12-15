@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.30 2007/08/13 17:20:51 hno Exp $
+ * $Id: HttpRequest.h,v 1.31 2007/12/14 23:11:45 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -68,6 +68,24 @@ public:
     /* are responses to this request potentially cachable */
     bool cacheable() const;
 
+    /* Now that we care what host contains it is better off being protected. */
+    /* HACK: These two methods are only inline to get around Makefile dependancies */
+    /*      caused by HttpRequest being used in places it really shouldn't.        */
+    /*      ideally they would be methods of URL instead. */
+    inline void SetHost(const char *src)
+    {
+        host_addr.SetEmpty();
+        host_addr = src;
+        if( host_addr.IsAnyAddr() ) {
+            xstrncpy(host, src, SQUIDHOSTNAMELEN);
+        }
+        else {
+            host_addr.ToHostname(host, SQUIDHOSTNAMELEN);
+            debugs(23, 3, "HttpRequest::SetHost() given IP: " << host_addr);
+        }
+    };
+    inline const char* GetHost(void) const { return host; };
+
 protected:
     void clean();
 
@@ -78,7 +96,11 @@ public:
 
     char login[MAX_LOGIN_SZ];
 
-    char host[SQUIDHOSTNAMELEN + 1];
+private:
+    char host[SQUIDHOSTNAMELEN];
+
+public:
+    IPAddress host_addr;
 
     AuthUserRequest *auth_user_request;
 
@@ -98,15 +120,9 @@ public:
 
     int max_forwards;
 
-    /* these in_addr's could probably be sockaddr_in's */
+    IPAddress client_addr;
 
-    struct IN_ADDR client_addr;
-
-    struct IN_ADDR my_addr;
-
-    unsigned short my_port;
-
-    unsigned short client_port;
+    IPAddress my_addr;
 
     HierarchyLogEntry hier;
 

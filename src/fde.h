@@ -1,6 +1,6 @@
 
 /*
- * $Id: fde.h,v 1.13 2007/08/13 17:20:51 hno Exp $
+ * $Id: fde.h,v 1.14 2007/12/14 23:11:46 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,7 +33,9 @@
 
 #ifndef SQUID_FDE_H
 #define SQUID_FDE_H
+
 #include "comm.h"
+#include "IPAddress.h"
 
 class PconnPool;
 
@@ -41,6 +43,13 @@ class fde
 {
 
 public:
+    fde() { clear(); };
+    /** Clear the fde class properly back to NULL equivalent. */
+    inline void clear() {
+        memset(this, 0, sizeof(fde));
+        local_addr.SetEmpty(); // IPAddress likes to be setup nicely.
+    }
+
     /* NOTE: memset is used on fdes today. 20030715 RBC */
     static void DumpStats (StoreEntry *);
 
@@ -50,12 +59,12 @@ public:
     void noteUse(PconnPool *);
 
     unsigned int type;
-    u_short local_port;
     u_short remote_port;
 
-    struct IN_ADDR local_addr;
+    IPAddress local_addr;
     unsigned char tos;
-    char ipaddr[16];            /* dotted decimal address of peer */
+    int sock_family;
+    char ipaddr[MAX_IPSTRLEN];            /* dotted decimal address of peer */
     char desc[FD_DESC_SZ];
 
     struct

@@ -48,15 +48,15 @@ public:
     PconnPool(const char *);
 
     void moduleInit();
-    void push(int fd, const char *host, u_short port, const char *domain, struct IN_ADDR *client_address);
-    int pop(const char *host, u_short port, const char *domain, struct IN_ADDR *client_address, bool retriable);
+    void push(int fd, const char *host, u_short port, const char *domain, IPAddress &client_address);
+    int pop(const char *host, u_short port, const char *domain, IPAddress &client_address, bool retriable);
     void count(int uses);
     void dumpHist(StoreEntry *e);
     void unlinkList(IdleConnList *list) const;
 
 private:
 
-    static const char *key(const char *host, u_short port, const char *domain, struct IN_ADDR *client_address);
+    static const char *key(const char *host, u_short port, const char *domain, IPAddress &client_address);
 
     int hist[PCONN_HIST_SZ];
     hash_table *table;

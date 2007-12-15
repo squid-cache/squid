@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.128 2007/08/13 18:25:14 hno Exp $
+ * $Id: access_log.cc,v 1.129 2007/12/14 23:11:45 amosjeffries Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -545,20 +545,22 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             break;
 
         case LFT_CLIENT_IP_ADDRESS:
-            out = inet_ntoa(al->cache.caddr);
+            if (!out) {
+                out = al->cache.caddr.NtoA(tmp,1024);
+            }
             break;
 
         case LFT_CLIENT_FQDN:
             out = fqdncache_gethostbyaddr(al->cache.caddr, FQDN_LOOKUP_IF_MISS);
-
-            if (!out)
-                out = inet_ntoa(al->cache.caddr);
+            if (!out) {
+                out = al->cache.caddr.NtoA(tmp,1024);
+            }
 
             break;
 
         case LFT_CLIENT_PORT:
 	    if (al->request) {
-		outint = al->request->client_port;
+		outint = al->request->client_addr.GetPort();
 		doint = 1;
 	    }
 	    break;
@@ -573,14 +575,15 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             /* case LFT_SERVER_PORT: */
 
         case LFT_LOCAL_IP:
-            if (al->request)
-                out = inet_ntoa(al->request->my_addr);
+            if (al->request) {
+                out = al->request->my_addr.NtoA(tmp,1024);
+            }
 
             break;
 
         case LFT_LOCAL_PORT:
             if (al->request) {
-                outint = al->request->my_port;
+                outint = al->request->my_addr.GetPort();
                 doint = 1;
             }
 
@@ -1269,12 +1272,15 @@ accessLogSquid(AccessLogEntry * al, Logfile * logfile)
 {
     const char *client = NULL;
     const char *user = NULL;
+    char buf[MAX_IPSTRLEN];
 
-    if (Config.onoff.log_fqdn)
+    if (Config.onoff.log_fqdn) {
         client = fqdncache_gethostbyaddr(al->cache.caddr, FQDN_LOOKUP_IF_MISS);
+    }
 
-    if (client == NULL)
-        client = inet_ntoa(al->cache.caddr);
+    if (client == NULL) {
+        client = al->cache.caddr.NtoA(buf,MAX_IPSTRLEN);
+    }
 
     user = accessLogFormatName(al->cache.authuser);
 
@@ -1342,12 +1348,15 @@ accessLogCommon(AccessLogEntry * al, Logfile * logfile)
 {
     const char *client = NULL;
     char *user1 = NULL, *user2 = NULL;
+    char buf[MAX_IPSTRLEN];
 
-    if (Config.onoff.log_fqdn)
+    if (Config.onoff.log_fqdn) {
         client = fqdncache_gethostbyaddr(al->cache.caddr, 0);
+    }
 
-    if (client == NULL)
-        client = inet_ntoa(al->cache.caddr);
+    if (client == NULL) {
+        client = al->cache.caddr.NtoA(buf,MAX_IPSTRLEN);
+    }
 
     user1 = accessLogFormatName(al->cache.authuser);
 

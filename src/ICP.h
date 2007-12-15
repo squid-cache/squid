@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICP.h,v 1.9 2007/10/31 04:52:15 amosjeffries Exp $
+ * $Id: ICP.h,v 1.10 2007/12/14 23:11:45 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -55,7 +55,7 @@ struct _icp_common_t
     _icp_common_t();
     _icp_common_t(char *buf, unsigned int len);
 
-    void handleReply(char *buf, struct sockaddr_in *from);
+    void handleReply(char *buf, IPAddress &from);
     static _icp_common_t *createMessage(icp_opcode opcode, int flags, const char *url, int reqnum, int pad);
     icp_opcode getOpCode() const;
 #endif
@@ -82,7 +82,7 @@ public:
     HttpRequest *request;
     int fd;
 
-    struct sockaddr_in from;
+    IPAddress from;
     char *url;
 };
 
@@ -90,8 +90,7 @@ public:
 
 struct icpUdpData
 {
-
-    struct sockaddr_in address;
+    IPAddress address;
     void *msg;
     size_t len;
     icpUdpData *next;
@@ -106,21 +105,21 @@ struct icpUdpData
 };
 
 
-HttpRequest* icpGetRequest(char *url, int reqnum, int fd, struct sockaddr_in *from);
+HttpRequest* icpGetRequest(char *url, int reqnum, int fd, IPAddress &from);
 
-int icpAccessAllowed(struct sockaddr_in *from, HttpRequest * icp_request);
+int icpAccessAllowed(IPAddress &from, HttpRequest * icp_request);
 
-SQUIDCEXTERN void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const struct sockaddr_in *from);
+SQUIDCEXTERN void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const IPAddress &from);
 extern icp_opcode icpGetCommonOpcode();
 
-SQUIDCEXTERN int icpUdpSend(int, const struct sockaddr_in *, icp_common_t *, log_type, int);
+SQUIDCEXTERN int icpUdpSend(int, const IPAddress &, icp_common_t *, log_type, int);
 SQUIDCEXTERN log_type icpLogFromICPCode(icp_opcode opcode);
 
-void icpDenyAccess(struct sockaddr_in *from, char *url, int reqnum, int fd);
+void icpDenyAccess(IPAddress &from, char *url, int reqnum, int fd);
 SQUIDCEXTERN PF icpHandleUdp;
 SQUIDCEXTERN PF icpUdpSendQueue;
 
-SQUIDCEXTERN void icpHandleIcpV3(int, struct sockaddr_in, char *, int);
+SQUIDCEXTERN void icpHandleIcpV3(int, IPAddress &, char *, int);
 SQUIDCEXTERN int icpCheckUdpHit(StoreEntry *, HttpRequest * request);
 SQUIDCEXTERN void icpConnectionsOpen(void);
 SQUIDCEXTERN void icpConnectionShutdown(void);

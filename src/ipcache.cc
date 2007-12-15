@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.264 2007/10/13 00:02:28 hno Exp $
+ * $Id: ipcache.cc,v 1.265 2007/12/14 23:11:47 amosjeffries Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -40,6 +40,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "wordlist.h"
+#include "IPAddress.h"
 
 typedef struct _ipcache_entry ipcache_entry;
 
@@ -56,6 +57,7 @@ struct _ipcache_entry
     struct timeval request_time;
     dlink_node lru;
     unsigned short locks;
+    unsigned short cname_wait;
 
     struct
     {
@@ -90,7 +92,7 @@ static HLPCB ipcacheHandleReply;
 #else
 static IDNSCB ipcacheHandleReply;
 #endif
-static IPH dummy_handler;
+static IPH ipcacheHandleCnameRecurse;
 static int ipcacheExpiredEntry(ipcache_entry *);
 static int ipcache_testname(void);
 #if USE_DNSSERVERS
@@ -102,7 +104,7 @@ static ipcache_entry *ipcache_get(const char *);
 static void ipcacheLockEntry(ipcache_entry *);
 static void ipcacheStatPrint(ipcache_entry *, StoreEntry *);
 static void ipcacheUnlockEntry(ipcache_entry *);
-static void ipcacheRelease(ipcache_entry *);
+static void ipcacheRelease(ipcache_entry *, bool dofree = true);
 
 static ipcache_addrs static_addrs;
 static hash_table *ip_table = NULL;
@@ -133,13 +135,24 @@ ipcache_testname(void)
 
 /* removes the given ipcache entry */
 static void
-ipcacheRelease(ipcache_entry * i)
+ipcacheRelease(ipcache_entry * i, bool dofree)
 {
+    if(!i) {
+        debugs(14, 0, "ipcacheRelease: Releasing entry with i=<NULL>");
+        return;
+    }
+
+    if(!i || !i->hash.key) {
+        debugs(14, 0, "ipcacheRelease: Releasing entry without hash link!");
+        return;
+    }
+
     debugs(14, 3, "ipcacheRelease: Releasing entry for '" << (const char *) i->hash.key << "'");
 
     hash_remove_link(ip_table, (hash_link *) i);
     dlinkDelete(&i->lru, &lru_list);
-    ipcacheFreeEntry(i);
+    if(dofree)
+        ipcacheFreeEntry(i);
 }
 
 static ipcache_entry *
@@ -238,10 +251,19 @@ ipcacheAddEntry(ipcache_entry * i)
 {
     hash_link *e = (hash_link *)hash_lookup(ip_table, i->hash.key);
 
+    /* INET6 : should NOT be adding this entry until all CNAME have been received. */
+    assert(i->cname_wait == 0);
+
     if (NULL != e) {
         /* avoid colission */
         ipcache_entry *q = (ipcache_entry *) e;
-        ipcacheRelease(q);
+        if(q == i)  {
+            /* can occur with Multiple-depth CNAME Recursion if parent returned early with additional */
+            /* just need to drop from the hash without releasing actual memory */
+            ipcacheRelease(q, false);
+        }
+        else
+            ipcacheRelease(q);
     }
 
     hash_join(ip_table, &i->hash);
@@ -254,7 +276,7 @@ static void
 ipcacheCallback(ipcache_entry * i)
 {
     IPH *callback = i->handler;
-    void *cbdata;
+    void *cbdata = NULL;
     i->lastref = squid_curtime;
 
     if (!i->handler)
@@ -343,11 +365,14 @@ ipcacheParse(ipcache_entry *i, const char *inbuf)
     if (ipcount > 0) {
         int j, k;
 
-        i->addrs.in_addrs = (struct IN_ADDR *)xcalloc(ipcount, sizeof(struct IN_ADDR));
+        i->addrs.in_addrs = (IPAddress *)xcalloc(ipcount, sizeof(IPAddress));
+        for(int l = 0; l < ipcount; l++)
+            i->addrs.in_addrs[l].SetEmpty(); // perform same init actions as constructor would.
         i->addrs.bad_mask = (unsigned char *)xcalloc(ipcount, sizeof(unsigned char));
+        memset(i->addrs.bad_mask, 0, sizeof(unsigned char) * ipcount);
 
         for (j = 0, k = 0; k < ipcount; k++) {
-            if (safe_inet_addr(A[k], &i->addrs.in_addrs[j]))
+            if ( i->addrs.in_addrs[j] = A[k] )
                 j++;
             else
                 debugs(14, 1, "ipcacheParse: Invalid IP address '" << A[k] << "' in response to '" << name << "'");
@@ -379,15 +404,18 @@ static int
 ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_message)
 {
     int k;
-    int j;
+    int j = 0;
     int na = 0;
     int ttl = 0;
     const char *name = (const char *)i->hash.key;
     i->expires = squid_curtime + Config.negativeDnsTtl;
     i->flags.negcached = 1;
     safe_free(i->addrs.in_addrs);
+    assert(i->addrs.in_addrs == NULL);
     safe_free(i->addrs.bad_mask);
+    assert(i->addrs.bad_mask == NULL);
     safe_free(i->error_message);
+    assert(i->error_message == NULL);
     i->addrs.count = 0;
 
     if (nr < 0) {
@@ -399,24 +427,54 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
     if (nr == 0) {
         debugs(14, 3, "ipcacheParse: No DNS records in response to '" << name << "'");
         i->error_message = xstrdup("No DNS records");
-        return 0;
+        return -1;
     }
 
     assert(answers);
 
     for (k = 0; k < nr; k++) {
-        if (answers[k].type != RFC1035_TYPE_A)
-            continue;
 
-        if (answers[k]._class != RFC1035_CLASS_IN)
-            continue;
+#if USE_IPV6
+        if (answers[k].type == RFC1035_TYPE_AAAA) {
+	    if (answers[k].rdlength != sizeof(struct in6_addr)) {
+		debugs(14, 1, "ipcacheParse: Invalid IPv6 address in response to '" << name << "'");
+		continue;
+	    }
+	    na++;
+	    continue;
+	}
+#endif
 
-        if (answers[k].rdlength != 4) {
-            debugs(14, 1, "ipcacheParse: Invalid IP address in response to '" << name << "'");
+        if (answers[k].type == RFC1035_TYPE_A) {
+	    if (answers[k].rdlength != sizeof(struct in_addr)) {
+		debugs(14, 1, "ipcacheParse: Invalid IPv4 address in response to '" << name << "'");
+		continue;
+	    }
+	    na++;
+	    continue;
+	}
+
+            /* With A and AAAA, the CNAME does not necessarily come with additional records to use. */
+        if (answers[k].type == RFC1035_TYPE_CNAME) {
+            debugs(14, 5, "ipcacheParse: " << name << " CNAME " << answers[k].rdata << " (checking destination: " << i << ").");
+            const ipcache_addrs *res = ipcache_gethostbyname(answers[k].rdata, 0);
+            if(res) {
+                na += res->count;
+                debugs(14, 5, "ipcacheParse: CNAME " << answers[k].rdata << " already has " << res->count << " IPs cached.");
+            }
+            else {
+                /* keep going on this, but flag the fact that we need to wait for a CNAME lookup to finish */
+                debugs(14, 5, "ipcacheParse: CNAME " << answers[k].rdata << " has no IPs! Recursing.");
+                ipcache_nbgethostbyname(answers[k].rdata, ipcacheHandleCnameRecurse, new generic_cbdata(i) );
+                i->cname_wait++;
+            }
             continue;
         }
+    }
 
-        na++;
+    if(na == 0 && i->cname_wait >0 ) {
+        /* don't set any error message (yet). Allow recursion to do its work first. */
+        return 0;
     }
 
     if (na == 0) {
@@ -425,27 +483,54 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
         return 0;
     }
 
-    i->addrs.in_addrs = (struct IN_ADDR *)xcalloc(na, sizeof(struct IN_ADDR));
+    i->addrs.in_addrs = (IPAddress *)xcalloc(na, sizeof(IPAddress));
+    for(int l = 0; l < na; l++)
+        i->addrs.in_addrs[l].SetEmpty(); // perform same init actions as constructor would.
     i->addrs.bad_mask = (unsigned char *)xcalloc(na, sizeof(unsigned char));
 
     for (j = 0, k = 0; k < nr; k++) {
-        if (answers[k]._class != RFC1035_CLASS_IN)
-            continue;
 
         if (answers[k].type == RFC1035_TYPE_A) {
-            if (answers[k].rdlength != 4)
+            if (answers[k].rdlength != sizeof(struct in_addr))
                 continue;
 
-            xmemcpy(&i->addrs.in_addrs[j++], answers[k].rdata, 4);
+            struct in_addr temp;
+            xmemcpy(&temp, answers[k].rdata, sizeof(struct in_addr));
+            i->addrs.in_addrs[j] = temp;
 
-            debugs(14, 3, "ipcacheParse: #" << j - 1 << " " << inet_ntoa(i->addrs.in_addrs[j - 1]));
+            debugs(14, 3, "ipcacheParse: " << name << " #" << j << " " << i->addrs.in_addrs[j]);
+            j++;
 
-        } else if (answers[k].type != RFC1035_TYPE_CNAME)
-            continue;
+#if USE_IPV6
+        } else if (answers[k].type == RFC1035_TYPE_AAAA) {
+            if (answers[k].rdlength != sizeof(struct in6_addr))
+                continue;
+
+            struct in6_addr temp;
+            xmemcpy(&temp, answers[k].rdata, sizeof(struct in6_addr));
+            i->addrs.in_addrs[j] = temp;
+
+            debugs(14, 3, "ipcacheParse: " << name << " #" << j << " " << i->addrs.in_addrs[j] );
+            j++;
+#endif
+        } else if (answers[k].type == RFC1035_TYPE_CNAME) {
+            debugs(14, 3, "ipcacheParse: " << name << " #x CNAME " << answers[k].rdata);
+            const ipcache_addrs *res = ipcache_gethostbyname(answers[k].rdata, 0);
+            if(res) {
+                /* NP: the results of *that* query need to be integrated in place of the CNAME */
+                /* Ideally we should also integrate the min TTL of the above IPA's into ttl.   */
+                for(int l = 0; l < res->count; l++, j++) {
+                    i->addrs.in_addrs[j] = res->in_addrs[l];
+                    debugs(14, 3, "ipcacheParse: " << name << " #" << j << " " << i->addrs.in_addrs[j] );
+                }
+            }
+            else {
+                debugs(14, 9, "ipcacheParse: " << answers[k].rdata << " (CNAME) waiting on A/AAAA records.");
+            }
+        }
 
         if (ttl == 0 || (int) answers[k].ttl < ttl)
             ttl = answers[k].ttl;
-
     }
 
     assert(j == na);
@@ -465,7 +550,13 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
 
     i->flags.negcached = 0;
 
-    return i->addrs.count;
+    /* SPECIAL CASE: may get here IFF CNAME received with Additional records */
+    /*               reurn  0/'wait for further details' value.              */
+    /*               NP: 'No DNS Results' is a return -1 +msg                */
+    if(i->cname_wait)
+        return 0;
+    else
+        return i->addrs.count;
 }
 
 #endif
@@ -477,6 +568,7 @@ ipcacheHandleReply(void *data, char *reply)
 ipcacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error_message)
 #endif
 {
+    int done;
     ipcache_entry *i;
     static_cast<generic_cbdata *>(data)->unwrap(&i);
     IpcacheStats.replies++;
@@ -484,14 +576,19 @@ ipcacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error_m
                   tvSubMsec(i->request_time, current_time));
 #if USE_DNSSERVERS
 
-    ipcacheParse(i, reply);
+    done = ipcacheParse(i, reply);
 #else
 
-    ipcacheParse(i, answers, na, error_message);
+    done = ipcacheParse(i, answers, na, error_message);
+
+    /* If we have not produced either IPs or Error immediately, wait for recursion to finish. */
+    if(done != 0 || error_message != NULL)
 #endif
 
-    ipcacheAddEntry(i);
-    ipcacheCallback(i);
+    {
+        ipcacheAddEntry(i);
+        ipcacheCallback(i);
+    }
 }
 
 void
@@ -513,6 +610,7 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
     }
 
     if ((addrs = ipcacheCheckNumeric(name))) {
+        debugs(14, 4, "ipcache_nbgethostbyname: BYPASS for '" << name << "' (already numeric)");
         dns_error_message = NULL;
         IpcacheStats.numeric_hits++;
         handler(addrs, handlerData);
@@ -582,7 +680,8 @@ ipcache_init(void)
 
     memset(&static_addrs, '\0', sizeof(ipcache_addrs));
 
-    static_addrs.in_addrs = (struct IN_ADDR *)xcalloc(1, sizeof(struct IN_ADDR));
+    static_addrs.in_addrs = (IPAddress *)xcalloc(1, sizeof(IPAddress));
+    static_addrs.in_addrs->SetEmpty(); // properly setup the IPAddress!
     static_addrs.bad_mask = (unsigned char *)xcalloc(1, sizeof(unsigned char));
     ipcache_high = (long) (((float) Config.ipcache.size *
                             (float) Config.ipcache.high) / (float) 100);
@@ -637,7 +736,7 @@ ipcache_gethostbyname(const char *name, int flags)
     IpcacheStats.misses++;
 
     if (flags & IP_LOOKUP_IF_MISS)
-        ipcache_nbgethostbyname(name, dummy_handler, NULL);
+        ipcache_nbgethostbyname(name, ipcacheHandleCnameRecurse, NULL);
 
     return NULL;
 }
@@ -646,6 +745,19 @@ static void
 ipcacheStatPrint(ipcache_entry * i, StoreEntry * sentry)
 {
     int k;
+    int count = i->addrs.count;
+    char buf[MAX_IPSTRLEN];
+
+    if(!sentry) {
+        debugs(14, 0, HERE << "CRITICAL: sentry is NULL!");
+    }
+
+    if(!i) {
+        debugs(14, 0, HERE << "CRITICAL: ipcache_entry is NULL!");
+        storeAppendPrintf(sentry, "CRITICAL ERROR\n");
+        return;
+    }
+
     storeAppendPrintf(sentry, " %-32.32s %c%c %6d %6d %2d(%2d)",
                       hashKeyStr(&i->hash),
                       i->flags.fromhosts ? 'H' : ' ',
@@ -655,12 +767,27 @@ ipcacheStatPrint(ipcache_entry * i, StoreEntry * sentry)
                       (int) i->addrs.count,
                       (int) i->addrs.badcount);
 
-    for (k = 0; k < (int) i->addrs.count; k++) {
-        storeAppendPrintf(sentry, " %15s-%3s", inet_ntoa(i->addrs.in_addrs[k]),
-                          i->addrs.bad_mask[k] ? "BAD" : "OK ");
+    /** \par
+     * Negative-cached entries have no IPs listed. */
+    if(i->flags.negcached) {
+        storeAppendPrintf(sentry, "\n");
+        return;
     }
 
-    storeAppendPrintf(sentry, "\n");
+    /** \par
+     * Cached entries have IPs listed with a BNF of:   <IP> '-' ('OK'|'BAD') */
+    for (k = 0; k < count; k++) {
+        /* Display tidy-up: IPv6 are so big make the list vertical */
+        if(k == 0)
+            storeAppendPrintf(sentry, " %45.45s-%3s\n",
+                              i->addrs.in_addrs[k].NtoA(buf,MAX_IPSTRLEN),
+                              i->addrs.bad_mask[k] ? "BAD" : "OK ");
+        else
+            storeAppendPrintf(sentry, "%s %45.45s-%3s\n",
+                              "                                                         ", /* blank-space indenting IP list */
+                              i->addrs.in_addrs[k].NtoA(buf,MAX_IPSTRLEN),
+                              i->addrs.bad_mask[k] ? "BAD" : "OK ");
+    }
 }
 
 /* process objects list */
@@ -686,21 +813,229 @@ stat_ipcache_get(StoreEntry * sentry)
                       IpcacheStats.invalid);
     storeAppendPrintf(sentry, "\n\n");
     storeAppendPrintf(sentry, "IP Cache Contents:\n\n");
-    storeAppendPrintf(sentry, " %-29.29s %3s %6s %6s %1s\n",
+    storeAppendPrintf(sentry, " %-31.31s %3s %6s %6s  %4s\n",
                       "Hostname",
                       "Flg",
                       "lstref",
                       "TTL",
-                      "N");
+                      "N(b)");
 
-    for (m = lru_list.head; m; m = m->next)
+    for (m = lru_list.head; m; m = m->next) {
+        assert( m->next != m );
         ipcacheStatPrint((ipcache_entry *)m->data, sentry);
+    }
+}
+
+/**
+ * Takes two IPAddress arrays and merges them into a single array
+ * which is allocated dynamically to fit the number of unique addresses
+ *
+ \param aaddrs	One list to merge
+ \param alen	Size of list aaddrs
+ \param baddrs	Other list to merge
+ \param alen	Size of list baddrs
+ \param out	Combined list of unique addresses (sorted with IPv6 first in IPv6-mode)
+ \param outlen	Size of list out
+ */
+void
+ipcacheMergeIPLists(IPAddress *aaddrs, int alen,
+                    IPAddress *baddrs, int blen,
+                    IPAddress **out, int &outlen )
+{
+    int fc=0, t=0, c=0;
+
+    IPAddress *ip4ptrs[255];
+#if USE_IPV6
+    IPAddress *ip6ptrs[255];
+#endif
+    int num_ip4 = 0;
+    int num_ip6 = 0;
+
+    memset(ip4ptrs, 0, sizeof(IPAddress*)*255);
+#if USE_IPV6
+    memset(ip6ptrs, 0, sizeof(IPAddress*)*255);
+#endif
+
+    // for each unique address in list A - grab ptr
+    for(t = 0; t < alen; t++) {
+        if(aaddrs[t].IsIPv4()) {
+            // check against IPv4 pruned list
+            for(c = 0; c <= num_ip4; c++) {
+                if(ip4ptrs[c] && aaddrs[t] == *(ip4ptrs[c]) ) break; // duplicate.
+            }
+            if(c > num_ip4) {
+                ip4ptrs[num_ip4] = &aaddrs[t];
+                num_ip4++;
+            }
+        }
+#if USE_IPV6
+        else if(aaddrs[t].IsIPv6()) {
+debugs(14,8, HERE << "A[" << t << "]=IPv6 " << aaddrs[t]);
+            // check against IPv6 pruned list
+            for(c = 0; c <= num_ip6; c++) {
+                if(ip6ptrs[c] && aaddrs[t] == *ip6ptrs[c]) break; // duplicate.
+            }
+            if(c > num_ip6) {
+                ip6ptrs[num_ip6] = &aaddrs[t];
+                num_ip6++;
+            }
+        }
+#endif
+    }
+
+    // for each unique address in list B - grab ptr
+    for(t = 0; t < blen; t++) {
+        if(baddrs[t].IsIPv4()) {
+            // check against IPv4 pruned list
+            for(c = 0; c <= num_ip4; c++) {
+                if(ip4ptrs[c] && baddrs[t] == *ip4ptrs[c]) break; // duplicate.
+            }
+            if(c > num_ip4) {
+                ip4ptrs[num_ip4] = &baddrs[t];
+                num_ip4++;
+            }
+        }
+#if USE_IPV6
+        else if(baddrs[t].IsIPv6()) {
+            // check against IPv6 pruned list
+            for(c = 0; c <= num_ip6; c++) {
+                if(ip6ptrs[c] && baddrs[t] == *ip6ptrs[c]) break; // duplicate.
+            }
+            if(c > num_ip6) {
+                ip6ptrs[num_ip6] = &baddrs[t];
+                num_ip6++;
+            }
+        }
+#endif
+    }
+
+    fc = num_ip6 + num_ip4;
+
+    assert(fc > 0);
+
+    debugs(14, 5, "ipcacheMergeIPLists: Merge " << alen << "+" << blen << " into " << fc << " unique IPs.");
+
+    // copy the old IPs into the new list buffer.
+    (*out) = (IPAddress*)xcalloc(fc, sizeof(IPAddress));
+    outlen=0;
+
+    assert(out != NULL);
+
+#if USE_IPV6
+    /* IPv6 are preferred (tried first) over IPv4 */
+
+    for(int l = 0; outlen < num_ip6; l++, outlen++) {
+        (*out)[outlen] = *ip6ptrs[l];
+        debugs(14, 5, "ipcacheMergeIPLists:  #" << outlen << " " << (*out)[outlen] );
+    }
+#endif /* USE_IPV6 */
+
+    for(int l = 0; outlen < num_ip4; l++, outlen++) {
+        (*out)[outlen] = *ip4ptrs[l];
+        debugs(14, 5, "ipcacheMergeIPLists:  #" << outlen << " " << (*out)[outlen] );
+    }
+
+    assert(outlen == fc); // otherwise something broke badly!
 }
 
 static void
-dummy_handler(const ipcache_addrs * addrsnotused, void *datanotused)
+ipcacheHandleCnameRecurse(const ipcache_addrs *addrs, void *cbdata)
 {
-    return;
+    ipcache_entry *i = NULL;
+    char *pname = NULL;
+    IPAddress *tmpbuf = NULL;
+    int fc = 0;
+    int ttl = 0;
+    generic_cbdata* gcb = (generic_cbdata*)cbdata;
+    // count of addrs at parent and child (REQ as .count is a char type!)
+    int ccount = 0, pcount = 0;
+
+    debugs(14, 5, "ipcacheHandleCnameRecurse: Handling basic A/AAAA response.");
+
+    /* IFF no CNAME recursion being processed. do nothing. */
+    if(cbdata == NULL)
+        return;
+
+    gcb->unwrap(&i);
+    assert(i != NULL);
+
+    // make sure we are actualy waiting for a CNAME callback to be run.
+    assert(i->cname_wait > 0);
+    // count this event. its being handled.
+    i->cname_wait--;
+
+    pname = (char*)i->hash.key;
+    assert(pname != NULL);
+
+    debugs(14, 5, "ipcacheHandleCnameRecurse: Handling CNAME recursion. CBDATA('" << gcb->data << "')='" << pname << "' -> " << std::hex << i);
+
+    if(i == NULL) {
+        return; // Parent has expired. Don't merge, just leave for future Ref:
+    }
+
+    /* IFF addrs is NULL (Usually an Error or Timeout occured on lookup.) */
+    /* Ignore it and HOPE that we got some Additional records to use.     */
+    if(addrs == NULL)
+        return;
+
+    ccount = (0+ addrs->count);
+    pcount = (0+ i->addrs.count);
+    ttl = i->expires;
+
+    /* IFF no CNAME results. do none of the processing BUT finish anyway. */
+    if(addrs) {
+
+        debugs(14, 5, "ipcacheHandleCnameRecurse: Merge IP Lists for " << pname << " (" << pcount << "+" << ccount << ")");
+
+            /* add new IP records to entry */
+        tmpbuf = i->addrs.in_addrs;
+        i->addrs.in_addrs = NULL;
+        ipcacheMergeIPLists(tmpbuf, pcount, addrs->in_addrs, ccount, &(i->addrs.in_addrs), fc);
+        debugs(14,8, HERE << "in=" << tmpbuf << ", out=" << i->addrs.in_addrs );
+        assert(tmpbuf);
+        safe_free(tmpbuf);
+
+        if( pcount > 0) {
+            /* IFF the parent initial lookup was given Additional records with A */
+            // clear the 'bad IP mask'
+            safe_free(i->addrs.bad_mask);
+        }
+        // create a new bad IP mask to fit the new size needed.
+        if(fc > 0) {
+            i->addrs.bad_mask = (unsigned char*)xcalloc(fc, sizeof(unsigned char));
+            memset(i->addrs.bad_mask, 0, sizeof(unsigned char)*fc);
+        }
+
+        if (fc < 256)
+            i->addrs.count = (unsigned char) fc;
+        else
+            i->addrs.count = 255;
+
+        if (ttl == 0 || ttl > Config.positiveDnsTtl)
+            ttl = Config.positiveDnsTtl;
+
+        if (ttl < Config.negativeDnsTtl)
+            ttl = Config.negativeDnsTtl;
+
+        i->expires = squid_curtime + ttl;
+
+        i->flags.negcached = 0;
+
+        i->addrs.cur = 0;
+
+        i->addrs.badcount = 0;
+    }
+
+    if(fc == 0) {
+        i->error_message = xstrdup("No DNS Records");
+    }
+
+    /* finish the lookup we were doing on parent when we got side-tracked for CNAME loop */
+    if(i->cname_wait == 0) {
+        ipcacheAddEntry(i);
+        ipcacheCallback(i);
+    }
+    // else still more CNAME to be found.
 }
 
 void
@@ -740,17 +1075,29 @@ ipcache_addrs *
 ipcacheCheckNumeric(const char *name)
 {
 
-    struct IN_ADDR ip;
+    IPAddress ip;
     /* check if it's already a IP address in text form. */
 
-    if (!safe_inet_addr(name, &ip))
+    /* it may be IPv6-wrapped */
+    if(name[0] == '[') {
+        char *tmp = xstrdup(&name[1]);
+        tmp[strlen(tmp)-1] = '\0';
+        if (!(ip = tmp)) {
+            delete tmp;
+            return NULL;
+        }
+        delete tmp;
+    }
+    else if (!(ip = name))
         return NULL;
+
+    debugs(14, 4, "ipcacheCheckNumeric: HIT_BYPASS for '" << name << "' == " << ip );
 
     static_addrs.count = 1;
 
     static_addrs.cur = 0;
 
-    static_addrs.in_addrs[0].s_addr = ip.s_addr;
+    static_addrs.in_addrs[0] = ip;
 
     static_addrs.bad_mask[0] = FALSE;
 
@@ -771,7 +1118,11 @@ ipcacheLockEntry(ipcache_entry * i)
 static void
 ipcacheUnlockEntry(ipcache_entry * i)
 {
-    assert(i->locks > 0);
+    if(i->locks < 1) {
+        debugs(14, 1, "WARNING: ipcacheEntry unlocked with no lock! locks=" << i->locks);
+        return;
+    }
+
     i->locks--;
 
     if (ipcacheExpiredEntry(i))
@@ -815,7 +1166,7 @@ ipcacheCycleAddr(const char *name, ipcache_addrs * ia)
         ia->cur = 0;
     }
 
-    debugs(14, 3, "ipcacheCycleAddr: " << name << " now at " << inet_ntoa(ia->in_addrs[ia->cur]));
+    debugs(14, 3, "ipcacheCycleAddr: " << name << " now at " << ia->in_addrs[ia->cur] << " (" << ia->cur << " of " << ia->count << ")");
 }
 
 /*
@@ -823,8 +1174,7 @@ ipcacheCycleAddr(const char *name, ipcache_addrs * ia)
  * advance the current pointer to the next OK address.
  */
 void
-
-ipcacheMarkBadAddr(const char *name, struct IN_ADDR addr)
+ipcacheMarkBadAddr(const char *name, IPAddress &addr)
 {
     ipcache_entry *i;
     ipcache_addrs *ia;
@@ -837,7 +1187,7 @@ ipcacheMarkBadAddr(const char *name, struct IN_ADDR addr)
 
     for (k = 0; k < (int) ia->count; k++)
     {
-        if (ia->in_addrs[k].s_addr == addr.s_addr)
+        if (addr == ia->in_addrs[k] )
             break;
     }
 
@@ -849,7 +1199,7 @@ ipcacheMarkBadAddr(const char *name, struct IN_ADDR addr)
         ia->bad_mask[k] = TRUE;
         ia->badcount++;
         i->expires = XMIN(squid_curtime + XMAX((time_t)60, Config.negativeDnsTtl), i->expires);
-        debugs(14, 2, "ipcacheMarkBadAddr: " << name << " [" << inet_ntoa(addr) << "]");
+        debugs(14, 2, "ipcacheMarkBadAddr: " << name << " " << addr );
     }
 
     ipcacheCycleAddr(name, ia);
@@ -857,7 +1207,7 @@ ipcacheMarkBadAddr(const char *name, struct IN_ADDR addr)
 
 void
 
-ipcacheMarkGoodAddr(const char *name, struct IN_ADDR addr)
+ipcacheMarkGoodAddr(const char *name, IPAddress &addr)
 {
     ipcache_entry *i;
     ipcache_addrs *ia;
@@ -870,7 +1220,7 @@ ipcacheMarkGoodAddr(const char *name, struct IN_ADDR addr)
 
     for (k = 0; k < (int) ia->count; k++)
     {
-        if (ia->in_addrs[k].s_addr == addr.s_addr)
+        if (addr == ia->in_addrs[k])
             break;
     }
 
@@ -884,7 +1234,7 @@ ipcacheMarkGoodAddr(const char *name, struct IN_ADDR addr)
 
     ia->badcount--;
 
-    debugs(14, 2, "ipcacheMarkGoodAddr: " << name << " [" << inet_ntoa(addr) << "]");
+    debugs(14, 2, "ipcacheMarkGoodAddr: " << name << " " << addr );
 }
 
 static void
@@ -926,14 +1276,18 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
 {
     ipcache_entry *i;
 
-    struct IN_ADDR ip;
+    IPAddress ip;
 
-    if (!safe_inet_addr(ipaddr, &ip)) {
+    if (!(ip = ipaddr)) {
+#if USE_IPV6
         if (strchr(ipaddr, ':') && strspn(ipaddr, "0123456789abcdefABCDEF:") == strlen(ipaddr)) {
             debugs(14, 3, "ipcacheAddEntryFromHosts: Skipping IPv6 address '" << ipaddr << "'");
         } else {
             debugs(14, 1, "ipcacheAddEntryFromHosts: Bad IP address '" << ipaddr << "'");
         }
+#else
+	debugs(14, 1, "ipcacheAddEntryFromHosts: Bad IP address '" << ipaddr << "'");
+#endif
 
         return 1;
     }
@@ -954,9 +1308,9 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
     i->addrs.cur = 0;
     i->addrs.badcount = 0;
 
-    i->addrs.in_addrs = (struct IN_ADDR *)xcalloc(1, sizeof(struct IN_ADDR));
+    i->addrs.in_addrs = (IPAddress *)xcalloc(1, sizeof(IPAddress));
     i->addrs.bad_mask = (unsigned char *)xcalloc(1, sizeof(unsigned char));
-    i->addrs.in_addrs[0].s_addr = ip.s_addr;
+    i->addrs.in_addrs[0] = ip;
     i->addrs.bad_mask[0] = FALSE;
     i->flags.fromhosts = 1;
     ipcacheAddEntry(i);

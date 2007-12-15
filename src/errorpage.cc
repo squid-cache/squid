@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.227 2007/05/29 13:31:39 amosjeffries Exp $
+ * $Id: errorpage.cc,v 1.228 2007/12/14 23:11:46 amosjeffries Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -493,6 +493,8 @@ errorDump(ErrorState * err, MemBuf * mb)
     HttpRequest *r = err->request;
     MemBuf str;
     const char *p = NULL;	/* takes priority over mb if set */
+    char ntoabuf[MAX_IPSTRLEN];
+
     str.reset();
     /* email subject line */
     str.Printf("CacheErrorInfo - %s", errorPageName(err->type));
@@ -520,7 +522,7 @@ errorDump(ErrorState * err, MemBuf * mb)
     str.Printf("TimeStamp: %s\r\n\r\n", mkrfc1123(squid_curtime));
 
     /* - IP stuff */
-    str.Printf("ClientIP: %s\r\n", inet_ntoa(err->src_addr));
+    str.Printf("ClientIP: %s\r\n", err->src_addr.NtoA(ntoabuf,MAX_IPSTRLEN));
 
     if (r && r->hier.host) {
         str.Printf("ServerIP: %s\r\n", r->hier.host);
@@ -604,6 +606,7 @@ errorConvert(char token, ErrorState * err)
     static MemBuf mb;
     const char *p = NULL;	/* takes priority over mb if set */
     int do_quote = 1;
+    char ntoabuf[MAX_IPSTRLEN];
 
     mb.reset();
 
@@ -677,14 +680,14 @@ errorConvert(char token, ErrorState * err)
             if (r->hier.host)
                 p = r->hier.host;
             else
-                p = r->host;
+                p = r->GetHost();
         } else
             p = "[unknown host]";
 
         break;
 
     case 'i':
-        mb.Printf("%s", inet_ntoa(err->src_addr));
+        mb.Printf("%s", err->src_addr.NtoA(ntoabuf,MAX_IPSTRLEN));
 
         break;
 

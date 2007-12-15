@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.26 2007/08/27 12:50:42 hno Exp $
+ * $Id: ESI.cc,v 1.27 2007/12/14 23:11:45 amosjeffries Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -53,6 +53,7 @@
 #include "ESIExpression.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
+#include "IPAddress.h"
 
 /* quick reference on behaviour here.
  * The ESI specification 1.0 requires the ESI processor to be able to 
@@ -1451,7 +1452,7 @@ ESIContext::freeResources ()
     /* don't touch incoming, it's a pointer into buffered anyway */
 }
 
-extern ErrorState *clientBuildError (err_type, http_status, char const *, struct IN_ADDR *, HttpRequest *);
+extern ErrorState *clientBuildError (err_type, http_status, char const *, IPAddress &, HttpRequest *);
 
 
 /* This can ONLY be used before we have sent *any* data to the client */
@@ -1469,8 +1470,7 @@ ESIContext::fail ()
     /* don't honour range requests - for errors we send it all */
     flags.error = 1;
     /* create an error object */
-    ErrorState * err = clientBuildError(errorpage, errorstatus, NULL,
-                                        http->getConn().getRaw() != NULL ? &http->getConn()->peer.sin_addr : &no_addr, http->request);
+    ErrorState * err = clientBuildError(errorpage, errorstatus, NULL, http->getConn()->peer, http->request);
     err->err_msg = errormessage;
     errormessage = NULL;
     rep = errorBuildReply (err);

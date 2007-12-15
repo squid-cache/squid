@@ -1,5 +1,5 @@
 /*
- * $Id: config.h,v 1.25 2007/09/20 11:07:53 amosjeffries Exp $
+ * $Id: config.h,v 1.26 2007/12/14 23:11:44 amosjeffries Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -192,14 +192,6 @@
 #if CHANGE_FD_SETSIZE && SQUID_MAXFD > DEFAULT_FD_SETSIZE
 #define FD_SETSIZE SQUID_MAXFD
 #endif
-
-
-
-/* 
- * This is hack to allow compiling IPv6-IPv4 version,
- * not disturbing branches others than squid3-ipv6 
- */
-#define IN_ADDR in_addr
 
 /* Typedefs for missing entries on a system */
 

@@ -1,5 +1,6 @@
+
 /*
- * $Id: ACLARP.cc,v 1.24 2007/04/28 22:26:37 hno Exp $
+ * $Id: ACLARP.cc,v 1.25 2007/12/14 23:11:45 amosjeffries Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -39,13 +40,14 @@
 #include <squid_windows.h>
 #endif
 #include "squid.h"
+#include "IPAddress.h"
 
 #ifdef _SQUID_WIN32_
 
 struct arpreq
 {
 
-    struct sockaddr arp_pa;   /* protocol address */
+    IPAddress arp_pa;   /* protocol address */
 
     struct sockaddr arp_ha;   /* hardware address */
     int arp_flags;            /* flags */
@@ -83,7 +85,7 @@ struct arpreq
 #endif
 static void aclParseArpList(SplayNode<acl_arp_data *> **curlist);
 static int decode_eth(const char *asc, char *eth);
-static int aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c);
+static int aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IPAddress &c);
 static SplayNode<acl_arp_data *>::SPLAYCMP aclArpCompare;
 static SplayNode<acl_arp_data *>::SPLAYWALKEE aclDumpArpListWalkee;
 
@@ -224,6 +226,13 @@ aclParseArpList(SplayNode<acl_arp_data *> **curlist)
 int
 ACLARP::match(ACLChecklist *checklist)
 {
+    /* IPv6 does not do ARP */
+    if(!checklist->src_addr.IsIPv4())
+    {
+        debugs(14, 3, "ACLARP::match: IPv4 Required for ARP Lookups. Skipping " << checklist->src_addr );
+        return 0;
+    }
+
     return aclMatchArp(&data, checklist->src_addr);
 }
 
@@ -231,13 +240,15 @@ ACLARP::match(ACLChecklist *checklist)
 /* aclMatchArp */
 /***************/
 int
-aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
+aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IPAddress &c)
 {
-#if defined(_SQUID_LINUX_)
+    char ntoabuf[MAX_IPSTRLEN];
 
     struct arpreq arpReq;
 
-    struct sockaddr_in ipAddr;
+    IPAddress ipAddr = c;
+
+#if defined(_SQUID_LINUX_)
 
     unsigned char ifbuffer[sizeof(struct ifreq) * 64];
 
@@ -257,15 +268,13 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
      * name first. If that does not succeed, the try each interface
      * in turn
      */
+
     /*
      * Set up structures for ARP lookup with blank interface name
      */
-    ipAddr.sin_family = AF_INET;
-    ipAddr.sin_port = 0;
-    ipAddr.sin_addr = c;
     memset(&arpReq, '\0', sizeof(arpReq));
 
-    xmemcpy(&arpReq.arp_pa, &ipAddr, sizeof(struct sockaddr_in));
+    ipAddr.GetSockAddr(arpReq.arp_pa);
     /* Query ARP table */
 
     if (ioctl(HttpSockets[0], SIOCGARP, &arpReq) != -1) {
@@ -287,7 +296,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
         acl_arp_data X;
         memcpy (X.eth, arpReq.arp_ha.sa_data, 6);
         *Top = (*Top)->splay(&X, aclArpCompare);
-        debugs(28, 3, "aclMatchArp: '" << inet_ntoa(c) << "' " << (splayLastResult ? "NOT found" : "found"));
+        debugs(28, 3, "aclMatchArp: '" << c << "' " << (splayLastResult ? "NOT found" : "found"));
         return (0 == splayLastResult);
     }
 
@@ -321,18 +330,13 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
         if (NULL != strchr(ifr->ifr_name, ':'))
             continue;
 
-        debugs(28, 4, "Looking up ARP address for " << inet_ntoa(c) << " on " << ifr->ifr_name);
+        debugs(28, 4, "Looking up ARP address for " << c << " on " << ifr->ifr_name);
 
         /* Set up structures for ARP lookup */
-        ipAddr.sin_family = AF_INET;
-
-        ipAddr.sin_port = 0;
-
-        ipAddr.sin_addr = c;
 
         memset(&arpReq, '\0', sizeof(arpReq));
 
-        xmemcpy(&arpReq.arp_pa, &ipAddr, sizeof(struct sockaddr_in));
+        ipAddr.GetSockAddr(arpReq.arp_pa);
 
         strncpy(arpReq.arp_dev, ifr->ifr_name, sizeof(arpReq.arp_dev) - 1);
 
@@ -377,7 +381,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
 
         /* Return if match, otherwise continue to other interfaces */
         if (0 == splayLastResult) {
-            debugs(28, 3, "aclMatchArp: " << inet_ntoa(c) << " found on " << ifr->ifr_name);
+            debugs(28, 3, "aclMatchArp: " << c << " found on " << ifr->ifr_name);
             return 1;
         }
 
@@ -389,24 +393,15 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
 
 #elif defined(_SQUID_SOLARIS_)
 
-    struct arpreq arpReq;
-
-    struct sockaddr_in ipAddr;
-
     SplayNode<acl_arp_data *> **Top = dataptr;
 
     /*
     * Set up structures for ARP lookup with blank interface name
     */
-    ipAddr.sin_family = AF_INET;
-
-    ipAddr.sin_port = 0;
-
-    ipAddr.sin_addr = c;
 
     memset(&arpReq, '\0', sizeof(arpReq));
 
-    xmemcpy(&arpReq.arp_pa, &ipAddr, sizeof(struct sockaddr_in));
+    ipAddr.GetSockAddr(arpReq.arp_pa);
 
     /* Query ARP table */
     if (ioctl(HttpSockets[0], SIOCGARP, &arpReq) != -1) {
@@ -433,16 +428,12 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
         /* Do lookup */
         *Top = (*Top)->splay((acl_arp_data *)&arpReq.arp_ha.sa_data, aclArpCompare);
 
-        debugs(28, 3, "aclMatchArp: '" << inet_ntoa(c) << "' " << (splayLastResult ? "NOT found" : "found"));
+        debugs(28, 3, "aclMatchArp: '" << c << "' " << (splayLastResult ? "NOT found" : "found"));
 
         return (0 == splayLastResult);
     }
 
 #elif defined(_SQUID_FREEBSD_) || defined(_SQUID_NETBSD_) || defined(_SQUID_OPENBSD_)
-
-    struct arpreq arpReq;
-
-    struct sockaddr_in ipAddr;
 
     SplayNode<acl_arp_data *> **Top = dataptr;
 
@@ -461,15 +452,10 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
     /*
     * Set up structures for ARP lookup with blank interface name
     */
-    ipAddr.sin_family = AF_INET;
-
-    ipAddr.sin_port = 0;
-
-    ipAddr.sin_addr = c;
 
     memset(&arpReq, '\0', sizeof(arpReq));
 
-    xmemcpy(&arpReq.arp_pa, &ipAddr, sizeof(struct sockaddr_in));
+    ipAddr.GetSockAddr(arpReq.arp_pa);
 
     /* Query ARP table */
     mib[0] = CTL_NET;
@@ -514,7 +500,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
 
         sdl = (struct sockaddr_dl *)((char *) sin + ROUNDUP(sin->sin_len));
 
-        if (c.s_addr == sin->sin_addr.s_addr) {
+        if (c == sin->sin_addr) {
             if (sdl->sdl_alen) {
 
                 arpReq.arp_ha.sa_len = sizeof(struct sockaddr);
@@ -542,7 +528,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
     /* Do lookup */
     *Top = (*Top)->splay((acl_arp_data *)&arpReq.arp_ha.sa_data, aclArpCompare);
 
-    debugs(28, 3, "aclMatchArp: '" << inet_ntoa(c) << "' " << (splayLastResult ? "NOT found" : "found"));
+    debugs(28, 3, "aclMatchArp: '" << c << "' " << (splayLastResult ? "NOT found" : "found"));
 
     return (0 == splayLastResult);
 
@@ -557,8 +543,6 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
     DWORD            i;
 
     SplayNode<acl_arp_data *> **Top = dataptr;
-
-    struct arpreq arpReq;
 
     memset(&arpReq, '\0', sizeof(arpReq));
 
@@ -583,7 +567,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
 
     /* Find MAC address from net table */
     for (i = 0 ; i < NetTable->dwNumEntries ; i++) {
-        if ((c.s_addr == NetTable->table[i].dwAddr) && (NetTable->table[i].dwType > 2)) {
+        if ((c == (struct in_addr)NetTable->table[i].dwAddr) && (NetTable->table[i].dwType > 2)) {
             arpReq.arp_ha.sa_family = AF_UNSPEC;
             memcpy(arpReq.arp_ha.sa_data, NetTable->table[i].bPhysAddr, NetTable->table[i].dwPhysAddrLen);
         }
@@ -607,7 +591,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
     /* Do lookup */
     *Top = (*Top)->splay((acl_arp_data *)&arpReq.arp_ha.sa_data, aclArpCompare);
 
-    debugs(28, 3, "aclMatchArp: '" << inet_ntoa(c) << "' " << (splayLastResult ? "NOT found" : "found"));
+    debugs(28, 3, "aclMatchArp: '" << c << "' " << (splayLastResult ? "NOT found" : "found"));
 
     return (0 == splayLastResult);
 
@@ -619,7 +603,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
     /*
      * Address was not found on any interface
      */
-    debugs(28, 3, "aclMatchArp: " << inet_ntoa(c) << " NOT found");
+    debugs(28, 3, "aclMatchArp: " << c << " NOT found");
 
     return 0;
 }

@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.h,v 1.4 2007/05/09 07:45:58 wessels Exp $
+ * $Id: errorpage.h,v 1.5 2007/12/14 23:11:46 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,6 +37,7 @@
 
 #include "squid.h"
 #include "cbdata.h"
+#include "IPAddress.h"
 
 class AuthUserRequest;
 
@@ -55,7 +56,7 @@ public:
     char *dnsserver_msg;
     time_t ttl;
 
-    struct IN_ADDR src_addr;
+    IPAddress src_addr;
     char *redirect_url;
     ERCB *callback;
     void *callback_data;

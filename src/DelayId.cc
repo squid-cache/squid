@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayId.cc,v 1.23 2007/09/21 11:41:52 amosjeffries Exp $
+ * $Id: DelayId.cc,v 1.24 2007/12/14 23:11:45 amosjeffries Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -98,8 +98,8 @@ DelayId::DelayClient(ClientHttpRequest * http)
     assert(http);
     r = http->request;
 
-    if (r->client_addr.s_addr == INADDR_BROADCAST) {
-        debugs(77, 2, "delayClient: WARNING: Called with 'allones' address, ignoring");
+    if (r->client_addr.IsNoAddr()) {
+        debugs(77, 2, "delayClient: WARNING: Called with 'NO_ADDR' address, ignoring");
         return DelayId();
     }
 
@@ -107,7 +107,6 @@ DelayId::DelayClient(ClientHttpRequest * http)
         ACLChecklist ch;
         ch.src_addr = r->client_addr;
         ch.my_addr = r->my_addr;
-        ch.my_port = r->my_port;
 
         if (http->getConn() != NULL)
             ch.conn(http->getConn());

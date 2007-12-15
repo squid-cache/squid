@@ -1,6 +1,5 @@
-
 /*
- * $Id: net_db.cc,v 1.198 2007/11/27 07:48:40 amosjeffries Exp $
+ * $Id: net_db.cc,v 1.199 2007/12/14 23:11:47 amosjeffries Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -54,8 +53,10 @@
 #include "forward.h"
 #include "SquidTime.h"
 #include "wordlist.h"
+#include "IPAddress.h"
 
 #if USE_ICMP
+#include "ICMPSquid.h"
 #include "StoreClient.h"
 
 #define	NETDB_REQBUF_SZ	4096
@@ -84,10 +85,10 @@ netdbExchangeState;
 static hash_table *addr_table = NULL;
 static hash_table *host_table = NULL;
 
-static struct IN_ADDR networkFromInaddr(struct IN_ADDR a);
+IPAddress networkFromInaddr(const IPAddress &a);
 static void netdbRelease(netdbEntry * n);
 
-static void netdbHashInsert(netdbEntry * n, struct IN_ADDR addr);
+static void netdbHashInsert(netdbEntry * n, IPAddress &addr);
 static void netdbHashDelete(const char *key);
 static void netdbHostInsert(netdbEntry * n, const char *hostname);
 static void netdbHostDelete(const net_db_name * x);
@@ -112,10 +113,9 @@ static void netdbExchangeDone(void *);
 static wordlist *peer_names = NULL;
 
 static void
-
-netdbHashInsert(netdbEntry * n, struct IN_ADDR addr)
+netdbHashInsert(netdbEntry * n, IPAddress &addr)
 {
-    xstrncpy(n->network, inet_ntoa(networkFromInaddr(addr)), 16);
+    networkFromInaddr(addr).NtoA(n->network, MAX_IPSTRLEN);
     n->hash.key = n->network;
     assert(hash_lookup(addr_table, n->network) == NULL);
     hash_join(addr_table, &n->hash);
@@ -249,18 +249,17 @@ netdbPurgeLRU(void)
 }
 
 static netdbEntry *
-
-netdbLookupAddr(struct IN_ADDR addr)
+netdbLookupAddr(const IPAddress &addr)
 {
     netdbEntry *n;
-    char *key = inet_ntoa(networkFromInaddr(addr));
+    char *key = new char[MAX_IPSTRLEN];
+    networkFromInaddr(addr).NtoA(key,MAX_IPSTRLEN);
     n = (netdbEntry *) hash_lookup(addr_table, key);
     return n;
 }
 
 static netdbEntry *
-
-netdbAdd(struct IN_ADDR addr)
+netdbAdd(IPAddress &addr)
 {
     netdbEntry *n;
 
@@ -279,8 +278,7 @@ netdbAdd(struct IN_ADDR addr)
 static void
 netdbSendPing(const ipcache_addrs * ia, void *data)
 {
-
-    struct IN_ADDR addr;
+    IPAddress addr;
     char *hostname = NULL;
     static_cast<generic_cbdata *>(data)->unwrap(&hostname);
     netdbEntry *n;
@@ -336,7 +334,7 @@ netdbSendPing(const ipcache_addrs * ia, void *data)
 
     if (n->next_ping_time <= squid_curtime) {
         debugs(38, 3, "netdbSendPing: pinging " << hostname);
-        icmpDomainPing(addr, hostname);
+        icmpEngine.DomainPing(addr, hostname);
         n->pings_sent++;
         n->next_ping_time = squid_curtime + Config.Netdb.period;
         n->last_use_time = squid_curtime;
@@ -345,14 +343,28 @@ netdbSendPing(const ipcache_addrs * ia, void *data)
     xfree(hostname);
 }
 
-static struct IN_ADDR
-
-            networkFromInaddr(struct IN_ADDR a)
+IPAddress
+networkFromInaddr(const IPAddress &in)
 {
+    IPAddress out;
 
-    struct IN_ADDR b;
-    b.s_addr = ntohl(a.s_addr);
+    out = in;
+#if USE_IPV6
+
+    /* in IPv6 the 'network' should be the routing section. */
+
+    if( in.IsIPv6() )
+    {
+        out.ApplyMask(64, AF_INET6);
+        debugs(14, 5, "networkFromInaddr : Masked IPv6 Address to " << in << "/64 routing part.");
+        return out;
+    }
+#endif
+
 #if USE_CLASSFUL
+    struct in_addr b;
+
+    in.GetInAddr(b);
 
     if (IN_CLASSC(b.s_addr))
         b.s_addr &= IN_CLASSC_NET;
@@ -361,15 +373,17 @@ static struct IN_ADDR
     else if (IN_CLASSA(b.s_addr))
         b.s_addr &= IN_CLASSA_NET;
 
-#else
-    /* use /24 for everything */
-    b.s_addr &= IN_CLASSC_NET;
+    out = b;
 
 #endif
 
-    b.s_addr = htonl(b.s_addr);
+    debugs(14, 5, "networkFromInaddr : Masked IPv4 Address to " << out << "/24.");
 
-    return b;
+    /* use /24 for everything under IPv4 */
+    out.ApplyMask(24, AF_INET);
+    debugs(14, 5, "networkFromInaddr : Masked IPv4 Address to " << in << "/24.");
+
+    return out;
 }
 
 static int
@@ -534,7 +548,7 @@ netdbReloadState(void)
     netdbEntry *n;
     netdbEntry N;
 
-    struct IN_ADDR addr;
+    IPAddress addr;
     int count = 0;
 
     struct timeval start = current_time;
@@ -576,7 +590,7 @@ netdbReloadState(void)
         if (NULL == q)
             continue;
 
-        if (!safe_inet_addr(q, &addr))
+        if (! (addr = q) )
             continue;
 
         if (netdbLookupAddr(addr) != NULL)	/* no dups! */
@@ -676,11 +690,13 @@ netdbFreeNameEntry(void *data)
 static void
 netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 {
+    IPAddress addr;
+
     netdbExchangeState *ex = (netdbExchangeState *)data;
     int rec_sz = 0;
     off_t o;
 
-    struct IN_ADDR addr;
+    struct in_addr line_addr;
     double rtt;
     double hops;
     char *p;
@@ -692,7 +708,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
     int oldbufofs = ex->buf_ofs;
 
     rec_sz = 0;
-    rec_sz += 1 + sizeof(addr.s_addr);
+    rec_sz += 1 + sizeof(struct in_addr);
     rec_sz += 1 + sizeof(int);
     rec_sz += 1 + sizeof(int);
     debugs(38, 3, "netdbExchangeHandleReply: " << receivedData.length << " read bytes");
@@ -769,7 +785,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
     while (size >= rec_sz) {
         debugs(38, 5, "netdbExchangeHandleReply: in parsing loop, size = " << size);
-        addr.s_addr = any_addr.s_addr;
+        addr.SetAnyAddr();
         hops = rtt = 0.0;
 
         for (o = 0; o < rec_sz;) {
@@ -777,8 +793,10 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
             case NETDB_EX_NETWORK:
                 o++;
-                xmemcpy(&addr.s_addr, p + o, sizeof(addr.s_addr));
-                o += sizeof(addr.s_addr);
+                /* FIXME INET6 : NetDB can still ony send IPv4 */
+                xmemcpy(&line_addr, p + o, sizeof(struct in_addr));
+                addr = line_addr;
+                o += sizeof(struct in_addr);
                 break;
 
             case NETDB_EX_RTT:
@@ -802,7 +820,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
             }
         }
 
-        if (addr.s_addr != any_addr.s_addr && rtt > 0)
+        if (!addr.IsAnyAddr() && rtt > 0)
             netdbExchangeUpdatePeer(addr, ex->p, rtt, hops);
 
         assert(o == rec_sz);
@@ -933,15 +951,14 @@ netdbPingSite(const char *hostname)
 }
 
 void
-
-netdbHandlePingReply(const struct sockaddr_in *from, int hops, int rtt)
+netdbHandlePingReply(const IPAddress &from, int hops, int rtt)
 {
 #if USE_ICMP
     netdbEntry *n;
     int N;
-    debugs(38, 3, "netdbHandlePingReply: from " << inet_ntoa(from->sin_addr));
+    debugs(38, 3, "netdbHandlePingReply: from " << from);
 
-    if ((n = netdbLookupAddr(from->sin_addr)) == NULL)
+    if ((n = netdbLookupAddr(from)) == NULL)
         return;
 
     N = ++n->pings_recv;
@@ -978,9 +995,10 @@ netdbFreeMemory(void)
 #endif
 }
 
-int
 
-netdbHops(struct IN_ADDR addr)
+#if 0 // AYJ: Looks to be unused code.
+int
+netdbHops(IPAddress &addr)
 {
 #if USE_ICMP
     netdbEntry *n = netdbLookupAddr(addr);
@@ -994,6 +1012,7 @@ netdbHops(struct IN_ADDR addr)
 #endif
     return 256;
 }
+#endif
 
 void
 netdbDump(StoreEntry * sentry)
@@ -1007,7 +1026,7 @@ netdbDump(StoreEntry * sentry)
     int j;
     net_db_peer *p;
     storeAppendPrintf(sentry, "Network DB Statistics:\n");
-    storeAppendPrintf(sentry, "%-16.16s %9s %7s %5s %s\n",
+    storeAppendPrintf(sentry, "%-46.46s %9s %7s %5s %s\n",  /* Max between 16 (IPv4) or 46 (IPv6)   */
                       "Network",
                       "recv/sent",
                       "RTT",
@@ -1031,7 +1050,7 @@ netdbDump(StoreEntry * sentry)
 
     for (k = 0; k < i; k++) {
         n = *(list + k);
-        storeAppendPrintf(sentry, "%-16.16s %4d/%4d %7.1f %5.1f",
+        storeAppendPrintf(sentry, "%-46.46s %4d/%4d %7.1f %5.1f", /* Max between 16 (IPv4) or 46 (IPv6)   */
                           n->network,
                           n->pings_recv,
                           n->pings_sent,
@@ -1119,11 +1138,11 @@ netdbUpdatePeer(HttpRequest * r, peer * e, int irtt, int ihops)
     double rtt = (double) irtt;
     double hops = (double) ihops;
     net_db_peer *p;
-    debugs(38, 3, "netdbUpdatePeer: '" << r->host << "', " << ihops << " hops, " << irtt << " rtt");
-    n = netdbLookupHost(r->host);
+    debugs(38, 3, "netdbUpdatePeer: '" << r->GetHost() << "', " << ihops << " hops, " << irtt << " rtt");
+    n = netdbLookupHost(r->GetHost());
 
     if (n == NULL) {
-        debugs(38, 3, "netdbUpdatePeer: host '" << r->host << "' not found");
+        debugs(38, 3, "netdbUpdatePeer: host '" << r->GetHost() << "' not found");
         return;
     }
 
@@ -1148,15 +1167,19 @@ netdbUpdatePeer(HttpRequest * r, peer * e, int irtt, int ihops)
 }
 
 void
-
-netdbExchangeUpdatePeer(struct IN_ADDR addr, peer * e, double rtt, double hops)
+netdbExchangeUpdatePeer(IPAddress &addr, peer * e, double rtt, double hops)
 {
 #if USE_ICMP
     netdbEntry *n;
     net_db_peer *p;
-    debugs(38, 5, "netdbExchangeUpdatePeer: '" << inet_ntoa(addr)  << "', "<<
+    debugs(38, 5, "netdbExchangeUpdatePeer: '" << addr << "', "<<
            std::setfill('0')<< std::setprecision(2) << hops << " hops, " <<
            rtt << " rtt");
+
+    if( !addr.IsIPv4() ) {
+        debugs(38, 5, "netdbExchangeUpdatePeer: Aborting peer update for '" << addr << "', NetDB cannot handle IPv6.");
+        return;
+    }
 
     n = netdbLookupAddr(addr);
 
@@ -1187,7 +1210,7 @@ netdbExchangeUpdatePeer(struct IN_ADDR addr, peer * e, double rtt, double hops)
 
 void
 
-netdbDeleteAddrNetwork(struct IN_ADDR addr)
+netdbDeleteAddrNetwork(IPAddress &addr)
 {
 #if USE_ICMP
     netdbEntry *n = netdbLookupAddr(addr);
@@ -1208,19 +1231,21 @@ netdbBinaryExchange(StoreEntry * s)
     HttpReply *reply = new HttpReply;
 #if USE_ICMP
 
+    IPAddress addr;
+
     netdbEntry *n;
     int i;
     int j;
     int rec_sz;
     char *buf;
 
-    struct IN_ADDR addr;
+    struct in_addr line_addr;
     s->buffer();
     HttpVersion version(1, 0);
     reply->setHeaders(version, HTTP_OK, "OK", NULL, -1, squid_curtime, -2);
     s->replaceHttpReply(reply);
     rec_sz = 0;
-    rec_sz += 1 + sizeof(addr.s_addr);
+    rec_sz += 1 + sizeof(struct in_addr);
     rec_sz += 1 + sizeof(int);
     rec_sz += 1 + sizeof(int);
     buf = (char *)memAllocate(MEM_4K_BUF);
@@ -1234,14 +1259,19 @@ netdbBinaryExchange(StoreEntry * s)
         if (n->rtt > 60000)	/* RTT > 1 MIN probably bogus */
             continue;
 
-        if (!safe_inet_addr(n->network, &addr))
+        if (! (addr = n->network) )
+            continue;
+
+        /* FIXME INET6 : NetDB cannot yet handle IPv6 addresses. Ensure only IPv4 get sent. */
+        if( !addr.IsIPv4() )
             continue;
 
         buf[i++] = (char) NETDB_EX_NETWORK;
 
-        xmemcpy(&buf[i], &addr.s_addr, sizeof(addr.s_addr));
+        addr.GetInAddr(line_addr);
+        xmemcpy(&buf[i], &line_addr, sizeof(struct in_addr));
 
-        i += sizeof(addr.s_addr);
+        i += sizeof(struct in_addr);
 
         buf[i++] = (char) NETDB_EX_RTT;
 
@@ -1342,11 +1372,11 @@ netdbClosestParent(HttpRequest * request)
     const ipcache_addrs *ia;
     net_db_peer *h;
     int i;
-    n = netdbLookupHost(request->host);
+    n = netdbLookupHost(request->GetHost());
 
     if (NULL == n) {
         /* try IP addr */
-        ia = ipcache_gethostbyname(request->host, 0);
+        ia = ipcache_gethostbyname(request->GetHost(), 0);
 
         if (NULL != ia)
             n = netdbLookupAddr(ia->in_addrs[ia->cur]);

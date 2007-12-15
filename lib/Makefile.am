@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-#  $Id: Makefile.am,v 1.32 2007/12/14 04:42:24 amosjeffries Exp $
+#  $Id: Makefile.am,v 1.33 2007/12/14 23:11:44 amosjeffries Exp $
 #
 
 DIST_SUBDIRS = libTrie
@@ -67,7 +67,6 @@ libmiscutil_a_SOURCES = \
 	rfc1738.c \
 	rfc2617.c \
 	rfc3596.c \
-	safe_inet_addr.c \
 	$(SNPRINTFSOURCE) \
 	Splay.cc \
 	$(STRSEPSOURCE) \
@@ -104,6 +103,9 @@ tests_testAll_SOURCES= \
 	tests/testArray.cc \
 	tests/testIPAddress.h \
 	tests/testIPAddress.cc \
+	IPAddress.cc \
+	tests/testRFC1035.h \
+	tests/testRFC1035.cc \
 	tests/testMain.cc \
 	$(XPROF_STATS_SOURCE) \
 	$(WIN32SRC) \

@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.541 2007/11/18 22:00:58 hno Exp $
+ * $Id: http.cc,v 1.542 2007/12/14 23:11:47 amosjeffries Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -92,7 +92,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : ServerStateData(theFwdStat
         HttpRequest * proxy_req = new HttpRequest(orig_request->method,
                                   orig_request->protocol, url);
 
-        xstrncpy(proxy_req->host, _peer->host, SQUIDHOSTNAMELEN);
+        proxy_req->SetHost(_peer->host);
 
         proxy_req->port = _peer->http_port;
 
@@ -672,7 +672,7 @@ HttpStateData::checkDateSkew(HttpReply *reply)
         int skew = abs((int)(reply->date - squid_curtime));
 
         if (skew > 86400)
-            debugs(11, 3, "" << request->host << "'s clock is skewed by " << skew << " seconds!");
+            debugs(11, 3, "" << request->GetHost() << "'s clock is skewed by " << skew << " seconds!");
     }
 }
 
@@ -1115,7 +1115,7 @@ void
 HttpStateData::processReplyBody()
 {
 
-    struct IN_ADDR *client_addr = NULL;
+    IPAddress client_addr;
 
     if (!flags.headers_parsed) {
         flags.do_next_read = 1;
@@ -1170,17 +1170,17 @@ HttpStateData::processReplyBody()
 #if LINUX_TPROXY
 
             if (orig_request->flags.tproxy)
-                client_addr = &orig_request->client_addr;
+                client_addr = orig_request->client_addr;
 
 #endif
 
             if (_peer) {
                 if (_peer->options.originserver)
-                    fwd->pconnPush(fd, _peer->name, orig_request->port, orig_request->host, client_addr);
+                    fwd->pconnPush(fd, _peer->name, orig_request->port, orig_request->GetHost(), client_addr);
                 else
                     fwd->pconnPush(fd, _peer->name, _peer->http_port, NULL, client_addr);
             } else {
-                fwd->pconnPush(fd, request->host, request->port, NULL, client_addr);
+                fwd->pconnPush(fd, request->GetHost(), request->port, NULL, client_addr);
             }
 
             fd = -1;
@@ -1356,8 +1356,10 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     /* append X-Forwarded-For */
     strFwd = hdr_in->getList(HDR_X_FORWARDED_FOR);
 
-    if (opt_forwarded_for && orig_request->client_addr.s_addr != no_addr.s_addr)
-        strListAdd(&strFwd, inet_ntoa(orig_request->client_addr), ',');
+    if (opt_forwarded_for && !orig_request->client_addr.IsNoAddr()) {
+        orig_request->client_addr.NtoA(bbuf,MAX_IPSTRLEN);
+        strListAdd(&strFwd, bbuf, ',');
+    }
     else
         strListAdd(&strFwd, "unknown", ',');
 
@@ -1371,10 +1373,11 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             hdr_out->putStr(HDR_HOST, orig_request->peer_domain);
         } else if (orig_request->port == urlDefaultPort(orig_request->protocol)) {
             /* use port# only if not default */
-            hdr_out->putStr(HDR_HOST, orig_request->host);
+            hdr_out->putStr(HDR_HOST, orig_request->GetHost());
         } else {
             httpHeaderPutStrf(hdr_out, HDR_HOST, "%s:%d",
-                              orig_request->host, (int) orig_request->port);
+                              orig_request->GetHost(),
+                              (int) orig_request->port);
         }
     }
 
@@ -1566,10 +1569,11 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
             /* use port# only if not default */
 
             if (orig_request->port == urlDefaultPort(orig_request->protocol)) {
-                hdr_out->putStr(HDR_HOST, orig_request->host);
+                hdr_out->putStr(HDR_HOST, orig_request->GetHost());
             } else {
                 httpHeaderPutStrf(hdr_out, HDR_HOST, "%s:%d",
-                                  orig_request->host, (int) orig_request->port);
+                                  orig_request->GetHost(),
+                                  (int) orig_request->port);
             }
         }
 
@@ -1818,7 +1822,7 @@ HttpStateData::handleMoreRequestBodyAvailable()
 
         if (flags.headers_parsed && !flags.abuse_detected) {
             flags.abuse_detected = 1;
-            debugs(11, 1, "http handleMoreRequestBodyAvailable: Likely proxy abuse detected '" << inet_ntoa(orig_request->client_addr) << "' -> '" << entry->url() << "'" );
+            debugs(11, 1, "http handleMoreRequestBodyAvailable: Likely proxy abuse detected '" << orig_request->client_addr << "' -> '" << entry->url() << "'" );
 
             if (virginReply()->sline.status == HTTP_INVALID_HEADER) {
                 comm_close(fd);

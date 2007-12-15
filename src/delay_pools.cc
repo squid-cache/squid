@@ -1,6 +1,6 @@
 
 /*
- * $Id: delay_pools.cc,v 1.49 2007/11/13 23:25:34 rousskov Exp $
+ * $Id: delay_pools.cc,v 1.50 2007/12/14 23:11:46 amosjeffries Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -62,6 +62,7 @@
 #include "DelayBucket.h"
 #include "DelayUser.h"
 #include "DelayTagged.h"
+#include "IPAddress.h"
 
 long DelayPools::MemoryUsed = 0;
 
@@ -152,7 +153,7 @@ protected:
 
     virtual char const *label() const = 0;
 
-    virtual unsigned int makeKey (struct IN_ADDR &src_addr) const = 0;
+    virtual unsigned int makeKey (IPAddress &src_addr) const = 0;
 
     DelaySpec spec;
 
@@ -182,7 +183,7 @@ public:
 protected:
     virtual char const *label() const {return "Individual";}
 
-    virtual unsigned int makeKey (struct IN_ADDR &src_addr) const;
+    virtual unsigned int makeKey (IPAddress &src_addr) const;
 
 };
 
@@ -196,7 +197,7 @@ public:
 protected:
     virtual char const *label() const {return "Network";}
 
-    virtual unsigned int makeKey (struct IN_ADDR &src_addr) const;
+    virtual unsigned int makeKey (IPAddress &src_addr) const;
 };
 
 /* don't use remote storage for these */
@@ -239,9 +240,9 @@ protected:
 
     virtual char const *label() const {return "Individual";}
 
-    virtual unsigned int makeKey (struct IN_ADDR &src_addr) const;
+    virtual unsigned int makeKey (IPAddress &src_addr) const;
 
-    unsigned char makeHostKey (struct IN_ADDR &src_addr) const;
+    unsigned char makeHostKey (IPAddress &src_addr) const;
 
     DelaySpec spec;
     VectorMap<unsigned char, ClassCBucket> buckets;
@@ -843,13 +844,17 @@ VectorPool::Id::bytesIn(int qty)
     theVector->buckets.values[theIndex].bytesIn (qty);
 }
 
-
 unsigned int
-IndividualPool::makeKey (struct IN_ADDR &src_addr) const
+IndividualPool::makeKey (IPAddress &src_addr) const
 {
-    unsigned int host;
-    host = ntohl(src_addr.s_addr) & 0xff;
-    return host;
+    /* FIXME INET6 : IPv6 requires a 64-128 bit result from this function */
+    if( !src_addr.IsIPv4() )
+        return 1;
+
+    /* Temporary bypass for IPv4-only */
+    struct in_addr host;
+    src_addr.GetInAddr(host);
+    return (ntohl(host.s_addr) & 0xff);
 }
 
 void *
@@ -867,11 +872,16 @@ ClassCNetPool::operator delete (void *address)
 }
 
 unsigned int
-ClassCNetPool::makeKey (struct IN_ADDR &src_addr) const
+ClassCNetPool::makeKey (IPAddress &src_addr) const
 {
-    unsigned int net;
-    net = (ntohl(src_addr.s_addr) >> 8) & 0xff;
-    return net;
+    /* FIXME INET6 : IPv6 requires a 64-128 bit result from this function */
+    if( !src_addr.IsIPv4() )
+        return 1;
+
+    /* Temporary bypass for IPv4-only */
+    struct in_addr net;
+    src_addr.GetInAddr(net);
+    return ( (ntohl(net.s_addr) >> 8) & 0xff);
 }
 
 
@@ -936,19 +946,29 @@ ClassCHostPool::keyAllocated (unsigned char const key) const
 }
 
 unsigned char
-ClassCHostPool::makeHostKey (struct IN_ADDR &src_addr) const
+ClassCHostPool::makeHostKey (IPAddress &src_addr) const
 {
-    unsigned int host;
-    host = ntohl(src_addr.s_addr) & 0xff;
-    return host;
+    /* FIXME INET6 : IPv6 requires a 64-128 bit result from this function */
+    if( !src_addr.IsIPv4() )
+        return 1;
+
+    /* Temporary bypass for IPv4-only */
+    struct in_addr host;
+    src_addr.GetInAddr(host);
+    return (ntohl(host.s_addr) & 0xff);
 }
 
 unsigned int
-ClassCHostPool::makeKey (struct IN_ADDR &src_addr) const
+ClassCHostPool::makeKey (IPAddress &src_addr) const
 {
-    unsigned int net;
-    net = (ntohl(src_addr.s_addr) >> 8) & 0xff;
-    return net;
+    /* FIXME INET6 : IPv6 requires a 64-128 bit result from this function */
+    if( !src_addr.IsIPv4() )
+        return 1;
+
+    /* Temporary bypass for IPv4-only */
+    struct in_addr net;
+    src_addr.GetInAddr(net);
+    return ( (ntohl(net.s_addr) >> 8) & 0xff);
 }
 
 DelayIdComposite::Pointer

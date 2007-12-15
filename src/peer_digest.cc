@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.127 2007/08/27 12:50:43 hno Exp $
+ * $Id: peer_digest.cc,v 1.128 2007/12/14 23:11:47 amosjeffries Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -257,6 +257,7 @@ peerDigestCheck(void *data)
 {
     PeerDigest *pd = (PeerDigest *)data;
     time_t req_time;
+    char buf[MAX_IPSTRLEN];
 
     assert(!pd->flags.requested);
 
@@ -267,7 +268,7 @@ peerDigestCheck(void *data)
         return;
     }
 
-    debugs(72, 3, "peerDigestCheck: peer " << pd->peer->host << ":" << pd->peer->http_port);
+    debugs(72, 3, "peerDigestCheck: peer " <<  pd->peer->host << ":" << pd->peer->http_port);
     debugs(72, 3, "peerDigestCheck: time: " << squid_curtime << 
            ", last received: " << (long int) pd->times.received << "  (" << 
            std::showpos << (int) (squid_curtime - pd->times.received) << ")");

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.96 2007/11/15 23:33:05 wessels Exp $
+ * $Id: client_side_request.cc,v 1.97 2007/12/14 23:11:46 amosjeffries Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -334,11 +334,11 @@ clientBeginRequest(method_t method, char const *url, CSCB * streamcallback,
     /* Internally created requests cannot have bodies today */
     request->content_length = 0;
 
-    request->client_addr = no_addr;
+    request->client_addr.SetNoAddr();
 
-    request->my_addr = no_addr;	/* undefined for internal requests */
+    request->my_addr.SetNoAddr();	/* undefined for internal requests */
 
-    request->my_port = 0;
+    request->my_addr.SetPort(0);
 
     request->http_ver = http_ver;
 
@@ -452,12 +452,15 @@ ClientRequestContext::clientAccessCheckDone(int answer)
         clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
+        IPAddress tmpnoaddr; tmpnoaddr.SetNoAddr();
         repContext->setReplyToError(page_id, status,
                                     http->request->method, NULL,
-                                    http->getConn() != NULL ? &http->getConn()->peer.sin_addr : &no_addr, http->request,
-                                    NULL, http->getConn() != NULL
-                                    && http->getConn()->auth_user_request ? http->getConn()->
-                                    auth_user_request : http->request->auth_user_request);
+                                    http->getConn() != NULL ? http->getConn()->peer : tmpnoaddr,
+                                    http->request,
+                                    NULL,
+                                    http->getConn() != NULL && http->getConn()->auth_user_request ?
+                                    http->getConn()->auth_user_request : http->request->auth_user_request);
+
         node = (clientStreamNode *)http->client_stream.tail->data;
         clientStreamRead(node, http, node->readBuffer);
         return;
@@ -808,9 +811,7 @@ ClientRequestContext::clientRedirectDone(char *result)
         new_request->http_ver = old_request->http_ver;
         new_request->header.append(&old_request->header);
         new_request->client_addr = old_request->client_addr;
-        new_request->client_port = old_request->client_port;
         new_request->my_addr = old_request->my_addr;
-        new_request->my_port = old_request->my_port;
         new_request->flags = old_request->flags;
         new_request->flags.redirected = 1;
 
@@ -1051,7 +1052,6 @@ ClientHttpRequest::doCallouts()
 	    ACLChecklist ch;
             ch.src_addr = request->client_addr;
             ch.my_addr = request->my_addr;
-            ch.my_port = request->my_port;
             ch.request = HTTPMSGLOCK(request);
 	    int tos = aclMapTOS(Config.accessList.clientside_tos, &ch);
 	    if (tos)

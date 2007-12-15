@@ -1,6 +1,6 @@
 
 /*
- * $Id: cachemgr.cc,v 1.5 2007/12/06 02:37:17 amosjeffries Exp $
+ * $Id: cachemgr.cc,v 1.6 2007/12/14 23:11:53 amosjeffries Exp $
  *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
@@ -134,6 +134,7 @@ extern "C"
 
 #include "assert.h"
 #include "util.h"
+#include "IPAddress.h"
 
 #ifndef DEFAULT_CACHEMGR_CONFIG
 #define DEFAULT_CACHEMGR_CONFIG "/etc/squid/cachemgr.conf"
@@ -170,8 +171,6 @@ static const time_t passwd_ttl = 60 * 60 * 3;	/* in sec */
 static const char *script_name = "/cgi-bin/cachemgr.cgi";
 static const char *progname = NULL;
 static time_t now;
-
-static struct IN_ADDR no_addr;
 
 /*
  * Function prototypes
@@ -764,9 +763,9 @@ static int
 process_request(cachemgr_request * req)
 {
 
-    const struct hostent *hp;
-
-    static struct sockaddr_in S;
+    char ipbuf[MAX_IPSTRLEN];
+    struct addrinfo *AI = NULL;
+    IPAddress S;
     int s;
     int l;
 
@@ -800,19 +799,21 @@ process_request(cachemgr_request * req)
         return 1;
     }
 
+#if USE_IPV6
+    if ((s = socket(PF_INET6, SOCK_STREAM, 0)) < 0) {
+#else
     if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
+#endif
         snprintf(buf, 1024, "socket: %s\n", xstrerror());
         error_html(buf);
         return 1;
     }
 
-    memset(&S, '\0', sizeof(S));
-    S.sin_family = AF_INET;
+    S = *gethostbyname(req->hostname);
 
-    if ((hp = gethostbyname(req->hostname)) != NULL) {
-        assert(hp->h_length >= 0 && (size_t)hp->h_length <= sizeof(S.sin_addr.s_addr));
-        xmemcpy(&S.sin_addr.s_addr, hp->h_addr, hp->h_length);
-    } else if (safe_inet_addr(req->hostname, &S.sin_addr))
+    if ( !S.IsAnyAddr() ) {
+        (void) 0;
+    } else if ( S = req->hostname)
         (void) 0;
     else {
         snprintf(buf, 1024, "Unknown host: %s\n", req->hostname);
@@ -820,16 +821,20 @@ process_request(cachemgr_request * req)
         return 1;
     }
 
-    S.sin_port = htons(req->port);
+    S.SetPort(req->port);
 
-    if (connect(s, (struct sockaddr *) &S, sizeof(S)) < 0) {
-        snprintf(buf, 1024, "connect %s:%d: %s\n",
-                 inet_ntoa(S.sin_addr),
-                 ntohs(S.sin_port),
+    S.GetAddrInfo(AI);
+
+    if (connect(s, AI->ai_addr, AI->ai_addrlen) < 0) {
+        snprintf(buf, 1024, "connect %s: %s\n",
+                 S.ToURL(ipbuf,MAX_IPSTRLEN),
                  xstrerror());
         error_html(buf);
+        S.FreeAddrInfo(AI);
         return 1;
     }
+
+    S.FreeAddrInfo(AI);
 
     l = snprintf(buf, sizeof(buf),
                  "GET cache_object://%s/%s HTTP/1.0\r\n"
@@ -850,7 +855,6 @@ main(int argc, char *argv[])
     char *s;
     cachemgr_request *req;
 
-    safe_inet_addr("255.255.255.255", &no_addr);
     now = time(NULL);
 #ifdef _SQUID_MSWIN_
 

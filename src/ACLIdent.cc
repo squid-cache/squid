@@ -128,7 +128,7 @@ IdentLookup::checkForAsync(ACLChecklist *checklist)const
     if (checklist->conn() != NULL) {
         debugs(28, 3, "IdentLookup::checkForAsync: Doing ident lookup" );
         checklist->asyncInProgress(true);
-        identStart(&checklist->conn()->me, &checklist->conn()->peer,
+        identStart(checklist->conn()->me, checklist->conn()->peer,
                    LookupDone, checklist);
     } else {
         debugs(28, 1, "IdentLookup::checkForAsync: Can't start ident lookup. No client connection" );

@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.53 2007/05/29 13:31:40 amosjeffries Exp $
+ * $Id: pconn.cc,v 1.54 2007/12/14 23:11:47 amosjeffries Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -175,17 +175,17 @@ IdleConnList::timeout(int fd, void *data)
 /* ========== PconnPool PRIVATE FUNCTIONS ============================================ */
 
 const char *
-
-PconnPool::key(const char *host, u_short port, const char *domain, struct IN_ADDR *client_address)
+PconnPool::key(const char *host, u_short port, const char *domain, IPAddress &client_address)
 {
     LOCAL_ARRAY(char, buf, SQUIDHOSTNAMELEN * 2 + 10);
+    char ntoabuf[MAX_IPSTRLEN];
 
-    if (domain && client_address)
-        snprintf(buf, SQUIDHOSTNAMELEN * 2 + 10, "%s:%d-%s/%s", host, (int) port, inet_ntoa(*client_address), domain);
-    else if (domain && (!client_address))
+    if (domain && !client_address.IsAnyAddr())
+        snprintf(buf, SQUIDHOSTNAMELEN * 2 + 10, "%s:%d-%s/%s", host, (int) port, client_address.NtoA(ntoabuf,MAX_IPSTRLEN), domain);
+    else if (domain && client_address.IsAnyAddr())
         snprintf(buf, SQUIDHOSTNAMELEN * 2 + 10, "%s:%d/%s", host, (int) port, domain);
-    else if ((!domain) && client_address)
-        snprintf(buf, SQUIDHOSTNAMELEN * 2 + 10, "%s:%d-%s", host, (int) port, inet_ntoa(*client_address));
+    else if ((!domain) && !client_address.IsAnyAddr())
+        snprintf(buf, SQUIDHOSTNAMELEN * 2 + 10, "%s:%d-%s", host, (int) port, client_address.NtoA(ntoabuf,MAX_IPSTRLEN));
     else
         snprintf(buf, SQUIDHOSTNAMELEN * 2 + 10, "%s:%d", host, (int) port);
 
@@ -227,8 +227,7 @@ PconnPool::PconnPool(const char *aDescr) : table(NULL), descr(aDescr)
 }
 
 void
-
-PconnPool::push(int fd, const char *host, u_short port, const char *domain, struct IN_ADDR *client_address)
+PconnPool::push(int fd, const char *host, u_short port, const char *domain, IPAddress &client_address)
 {
 
     IdleConnList *list;
@@ -275,7 +274,7 @@ PconnPool::push(int fd, const char *host, u_short port, const char *domain, stru
  */
 int
 
-PconnPool::pop(const char *host, u_short port, const char *domain, struct IN_ADDR *client_address, bool isRetriable)
+PconnPool::pop(const char *host, u_short port, const char *domain, IPAddress &client_address, bool isRetriable)
 {
     IdleConnList *list;
     const char * aKey = key(host, port, domain, client_address);

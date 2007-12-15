@@ -1,6 +1,5 @@
-
 /*
- * $Id: snmp_agent.cc,v 1.96 2007/04/28 22:26:37 hno Exp $
+ * $Id: snmp_agent.cc,v 1.97 2007/12/14 23:11:48 amosjeffries Exp $
  *
  * DEBUG: section 49    SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -33,17 +32,21 @@
  *
  */
 
-
 #include "squid.h"
 #include "cache_snmp.h"
 #include "Store.h"
 #include "mem_node.h"
+#include "SquidTime.h"
 
 /************************************************************************
  
  SQUID MIB Implementation
  
  ************************************************************************/
+
+/* 
+ * cacheSystem group 
+ */
 
 variable_list *
 snmp_sysFn(variable_list * Var, snint * ErrP)
@@ -81,6 +84,9 @@ snmp_sysFn(variable_list * Var, snint * ErrP)
     return Answer;
 }
 
+/* 
+ * cacheConfig group 
+ */
 variable_list *
 snmp_confFn(variable_list * Var, snint * ErrP)
 {
@@ -183,29 +189,47 @@ snmp_confFn(variable_list * Var, snint * ErrP)
     return Answer;
 }
 
+
+/* 
+ * cacheMesh group
+ *   - cachePeerTable
+ */
 variable_list *
 snmp_meshPtblFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer = NULL;
 
-    struct IN_ADDR *laddr;
+    IPAddress laddr;
     char *cp = NULL;
     peer *p = NULL;
     int cnt = 0;
     debugs(49, 5, "snmp_meshPtblFn: peer " << Var->name[LEN_SQ_MESH + 3] << " requested!");
     *ErrP = SNMP_ERR_NOERROR;
-    laddr = oid2addr(&Var->name[LEN_SQ_MESH + 3]);
 
+    u_int index = Var->name[LEN_SQ_MESH + 3] ; 
     for (p = Config.peers; p != NULL; p = p->next, cnt++)
-        if (p->in_addr.sin_addr.s_addr == laddr->s_addr)
-            break;
+      {
+        if (p->index == index)
+	  {
+	    laddr = p->in_addr ;
+	    break;
+	  }
+      }
 
     if (p == NULL) {
-        *ErrP = SNMP_ERR_NOSUCHNAME;
-        return NULL;
+      *ErrP = SNMP_ERR_NOSUCHNAME;
+      return NULL;
     }
 
+
     switch (Var->name[LEN_SQ_MESH + 2]) {
+    case MESH_PTBL_INDEX: // FIXME INET6: Should be visible?
+        {
+            Answer = snmp_var_new_integer(Var->name, Var->name_length,
+                                          (snint)p->index, SMI_INTEGER);
+        }
+        break;
+
 
     case MESH_PTBL_NAME:
         cp = p->host;
@@ -213,12 +237,29 @@ snmp_meshPtblFn(variable_list * Var, snint * ErrP)
         Answer->type = ASN_OCTET_STR;
         Answer->val_len = strlen(cp);
         Answer->val.string = (u_char *) xstrdup(cp);
+
         break;
 
-    case MESH_PTBL_IP:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) p->in_addr.sin_addr.s_addr,
-                                      SMI_IPADDRESS);
+    case MESH_PTBL_ADDR_TYPE:
+        {
+            int ival;
+            ival = laddr.IsIPv4() ? INETADDRESSTYPE_IPV4 : INETADDRESSTYPE_IPV6 ;
+            Answer = snmp_var_new_integer(Var->name, Var->name_length,
+                                          ival, SMI_INTEGER);
+        }
+        break;
+    case MESH_PTBL_ADDR:
+        {
+            Answer = snmp_var_new(Var->name, Var->name_length);
+            // InetAddress doesn't have its own ASN.1 type,
+            // like IpAddr does (SMI_IPADDRESS)
+            // See: rfc4001.txt
+            Answer->type = ASN_OCTET_STR;
+	    char host[MAX_IPSTRLEN];
+	    laddr.NtoA(host,MAX_IPSTRLEN);
+	    Answer->val_len = strlen(host);
+	    Answer->val.string =  (u_char *) xstrdup(host);
+        }
         break;
 
     case MESH_PTBL_HTTP:

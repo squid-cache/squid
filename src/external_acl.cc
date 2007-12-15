@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.80 2007/05/29 13:31:39 amosjeffries Exp $
+ * $Id: external_acl.cc,v 1.81 2007/12/14 23:11:46 amosjeffries Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -129,6 +129,8 @@ public:
     }
 
     quote;
+
+    IPAddress local_addr;
 };
 
 struct _external_acl_format
@@ -220,9 +222,13 @@ parse_externalAclHelper(external_acl ** list)
 
     a = cbdataAlloc(external_acl);
 
+    /* set defaults */
     a->ttl = DEFAULT_EXTERNAL_ACL_TTL;
     a->negative_ttl = -1;
     a->children = DEFAULT_EXTERNAL_ACL_CHILDREN;
+    a->local_addr.SetLocalhost();
+    a->quote = external_acl::QUOTE_METHOD_URL;
+
 
     token = strtok(NULL, w_space);
 
@@ -232,8 +238,6 @@ parse_externalAclHelper(external_acl ** list)
     a->name = xstrdup(token);
 
     token = strtok(NULL, w_space);
-
-    a->quote = external_acl::QUOTE_METHOD_URL;
 
     /* Parse options */
     while (token) {
@@ -257,6 +261,22 @@ parse_externalAclHelper(external_acl ** list)
             a->quote = external_acl::QUOTE_METHOD_URL;
         } else if (strcmp(token, "quote=shell") == 0) {
             a->quote = external_acl::QUOTE_METHOD_SHELL;
+
+    /* INET6: allow admin to configure some helpers explicitly to
+              bind to IPv4/v6 localhost port. */
+        } else if (strcmp(token, "ipv4") == 0) {
+#if IPV6_SPECIAL_LOCALHOST
+            debugs(3, 0, "WARNING: --with-localhost-ipv6 conflicts with external ACL helper to using IPv4: " << a->name );
+#endif
+            if( !a->local_addr.SetIPv4() ) {
+                debugs(3, 0, "WARNING: Error converting " << a->local_addr << " to IPv4 in " << a->name );
+            }
+        } else if (strcmp(token, "ipv6") == 0) {
+#if !USE_IPV6
+            debugs(3, 0, "WARNING: --enable-ipv6 required for external ACL helpers to use IPv6: " << a->name );
+#else
+            (void)0;
+#endif
         } else {
             break;
         }
@@ -405,6 +425,11 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
 
     for (node = list; node; node = node->next) {
         storeAppendPrintf(sentry, "%s %s", name, node->name);
+
+        if (!node->local_addr.IsIPv6())
+            storeAppendPrintf(sentry, " ipv4");
+        else
+            storeAppendPrintf(sentry, " ipv6");
 
         if (node->ttl != DEFAULT_EXTERNAL_ACL_TTL)
             storeAppendPrintf(sentry, " ttl=%d", node->ttl);
@@ -785,20 +810,20 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
 #endif
 
         case _external_acl_format::EXT_ACL_SRC:
-            str = inet_ntoa(ch->src_addr);
+            str = ch->src_addr.NtoA(buf,sizeof(buf));
             break;
 
         case _external_acl_format::EXT_ACL_SRCPORT:
-            snprintf(buf, sizeof(buf), "%d", request->client_port);
+            snprintf(buf, sizeof(buf), "%d", request->client_addr.GetPort());
             str = buf;
             break;
 
         case _external_acl_format::EXT_ACL_MYADDR:
-            str = inet_ntoa(request->my_addr);
+            str = request->my_addr.NtoA(buf, sizeof(buf));
             break;
 
         case _external_acl_format::EXT_ACL_MYPORT:
-            snprintf(buf, sizeof(buf), "%d", request->my_port);
+            snprintf(buf, sizeof(buf), "%d", request->my_addr.GetPort());
             str = buf;
             break;
 
@@ -807,7 +832,7 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
             break;
 
         case _external_acl_format::EXT_ACL_DST:
-            str = request->host;
+            str = request->GetHost();
             break;
 
         case _external_acl_format::EXT_ACL_PROTO:
@@ -1290,6 +1315,8 @@ externalAclInit(void)
         p->theHelper->concurrency = p->concurrency;
 
         p->theHelper->ipc_type = IPC_TCP_SOCKET;
+
+        p->theHelper->addr = p->local_addr;
 
         helperOpenServers(p->theHelper);
     }

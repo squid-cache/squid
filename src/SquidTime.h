@@ -1,5 +1,5 @@
 /*
- * $Id: SquidTime.h,v 1.3 2007/10/31 04:52:16 amosjeffries Exp $
+ * $Id: SquidTime.h,v 1.4 2007/12/14 23:11:45 amosjeffries Exp $
  *
  * DEBUG: section 21    Time Functions
  * AUTHOR: Harvest Derived
@@ -35,6 +35,10 @@
 #define   SQUID_TIME_H
 
 #include "squid.h"
+
+/* globals for accessing time */
+extern struct timeval current_time;
+extern double current_dtime;
 
 extern time_t squid_curtime;	/* 0 */
 

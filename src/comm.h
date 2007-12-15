@@ -6,6 +6,7 @@
 #include "CompletionDispatcher.h"
 #include "StoreIOBuffer.h"
 #include "Array.h"
+#include "IPAddress.h"
 
 #define COMMIO_FD_READCB(fd)    (&commfd_table[(fd)].readcb)
 #define COMMIO_FD_WRITECB(fd)   (&commfd_table[(fd)].writecb)
@@ -46,19 +47,19 @@ SQUIDCEXTERN void comm_lingering_close(int fd);
 #endif
 SQUIDCEXTERN void commConnectStart(int fd, const char *, u_short, CNCB *, void *);
 
-SQUIDCEXTERN int comm_connect_addr(int sock, const struct sockaddr_in *);
+SQUIDCEXTERN int comm_connect_addr(int sock, const IPAddress &addr);
 SQUIDCEXTERN void comm_init(void);
 SQUIDCEXTERN void comm_exit(void);
 
-SQUIDCEXTERN int comm_open(int, int, struct IN_ADDR, u_short port, int, const char *note);
+SQUIDCEXTERN int comm_open(int, int, IPAddress &, int, const char *note);
 
-SQUIDCEXTERN int comm_openex(int, int, struct IN_ADDR, u_short, int, unsigned char TOS, const char *);
+SQUIDCEXTERN int comm_openex(int, int, IPAddress &, int, unsigned char TOS, const char *);
 SQUIDCEXTERN u_short comm_local_port(int fd);
 SQUIDCEXTERN int comm_set_tos(int fd, int tos);
 
 SQUIDCEXTERN void commSetSelect(int, unsigned int, PF *, void *, time_t);
 
-SQUIDCEXTERN int comm_udp_sendto(int, const struct sockaddr_in *, int, const void *, int);
+SQUIDCEXTERN int comm_udp_sendto(int sock, const IPAddress &to, const void *buf, int buflen);
 extern void comm_write(int fd, const char *buf, int len, IOCB *callback, void *callback_data, FREE *func);
 SQUIDCEXTERN void comm_write_mbuf(int fd, MemBuf *mb, IOCB * handler, void *handler_data);
 SQUIDCEXTERN void commCallCloseHandlers(int fd);
@@ -86,9 +87,7 @@ extern bool comm_has_pending_read(int fd);
 extern void comm_read(int fd, char *buf, int len, IOCB *handler, void *data);
 extern void comm_read_cancel(int fd, IOCB *callback, void *data);
 extern void fdc_open(int fd, unsigned int type, char const *desc);
-extern int comm_udp_recvfrom(int fd, void *buf, size_t len, int flags,
-
-                                 struct sockaddr *from, socklen_t *fromlen);
+extern int comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, IPAddress &from);
 extern int comm_udp_recv(int fd, void *buf, size_t len, int flags);
 extern ssize_t comm_udp_send(int s, const void *buf, size_t len, int flags);
 extern void commMarkHalfClosed(int);

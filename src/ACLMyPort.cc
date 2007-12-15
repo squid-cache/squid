@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLMyPort.cc,v 1.2 2003/10/20 12:33:01 robertc Exp $
+ * $Id: ACLMyPort.cc,v 1.3 2007/12/14 23:11:45 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -51,7 +51,7 @@ ACLStrategised<int> ACLMyPort::RegistryEntry_(new ACLIntRange, ACLMyPortStrategy
 int
 ACLMyPortStrategy::match (ACLData<MatchType> * &data, ACLChecklist *checklist)
 {
-    return data->match (checklist->my_port);
+    return data->match (checklist->my_addr.GetPort());
 }
 
 ACLMyPortStrategy *

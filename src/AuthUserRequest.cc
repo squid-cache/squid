@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.cc,v 1.17 2007/08/28 22:35:29 hno Exp $
+ * $Id: AuthUserRequest.cc,v 1.18 2007/12/14 23:11:45 amosjeffries Exp $
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 6803fde1-d5a2-4c29-9034-1c0c9f650eb4
@@ -200,7 +200,7 @@ AuthUserRequest::denyMessage(char const * const default_message)
 }
 
 static void
-authenticateAuthUserRequestSetIp(AuthUserRequest * auth_user_request, struct IN_ADDR ipaddr)
+authenticateAuthUserRequestSetIp(AuthUserRequest * auth_user_request, IPAddress &ipaddr)
 {
     auth_user_t *auth_user = auth_user_request->user();
 
@@ -211,7 +211,7 @@ authenticateAuthUserRequestSetIp(AuthUserRequest * auth_user_request, struct IN_
 }
 
 void
-authenticateAuthUserRequestRemoveIp(AuthUserRequest * auth_user_request, struct IN_ADDR ipaddr)
+authenticateAuthUserRequestRemoveIp(AuthUserRequest * auth_user_request, IPAddress const &ipaddr)
 {
     auth_user_t *auth_user = auth_user_request->user();
 
@@ -329,7 +329,7 @@ authTryGetUser (AuthUserRequest **auth_user_request, ConnStateData::Pointer & co
  */
 auth_acl_t
 
-AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData::Pointer conn, struct IN_ADDR src_addr)
+AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData::Pointer conn, IPAddress &src_addr)
 {
     const char *proxy_auth;
     assert(headertype != 0);
@@ -402,7 +402,7 @@ AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_typ
                 debugs(29, 1, "authenticateAuthenticate: Unexpected change of authentication scheme from '" <<
                        conn->auth_user_request->user()->config->type() <<
                        "' to '" << proxy_auth << "' (client " <<
-                       inet_ntoa(src_addr) << ")");
+                       src_addr << ")");
 
 		AUTHUSERREQUESTUNLOCK(conn->auth_user_request, "conn");
                 conn->auth_type = AUTH_UNKNOWN;
@@ -508,7 +508,7 @@ AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_typ
 
 auth_acl_t
 
-AuthUserRequest::tryToAuthenticateAndSetAuthUser(AuthUserRequest ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData::Pointer conn, struct IN_ADDR src_addr)
+AuthUserRequest::tryToAuthenticateAndSetAuthUser(AuthUserRequest ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData::Pointer conn, IPAddress &src_addr)
 {
     /* If we have already been called, return the cached value */
     AuthUserRequest *t = authTryGetUser (auth_user_request, conn, request);

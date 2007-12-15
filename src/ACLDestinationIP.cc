@@ -47,7 +47,7 @@ ACLDestinationIP::typeString() const
 int
 ACLDestinationIP::match(ACLChecklist *checklist)
 {
-    const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->host, IP_LOOKUP_IF_MISS);
+    const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->GetHost(), IP_LOOKUP_IF_MISS);
 
     if (ia) {
         /* Entry in cache found */
@@ -60,7 +60,7 @@ ACLDestinationIP::match(ACLChecklist *checklist)
         return 0;
     } else if (!checklist->request->flags.destinationIPLookedUp()) {
         /* No entry in cache, lookup not attempted */
-        debugs(28, 3, "aclMatchAcl: Can't yet compare '" << name << "' ACL for '" << checklist->request->host << "'");
+        debugs(28, 3, "aclMatchAcl: Can't yet compare '" << name << "' ACL for '" << checklist->request->GetHost() << "'");
         checklist->changeState (DestinationIPLookup::Instance());
         return 0;
     } else {
@@ -80,7 +80,7 @@ void
 DestinationIPLookup::checkForAsync(ACLChecklist *checklist)const
 {
     checklist->asyncInProgress(true);
-    ipcache_nbgethostbyname(checklist->request->host, LookupDone, checklist);
+    ipcache_nbgethostbyname(checklist->request->GetHost(), LookupDone, checklist);
 }
 
 void

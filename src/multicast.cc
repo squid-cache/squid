@@ -1,6 +1,6 @@
 
 /*
- * $Id: multicast.cc,v 1.12 2007/04/28 22:26:37 hno Exp $
+ * $Id: multicast.cc,v 1.13 2007/12/14 23:11:47 amosjeffries Exp $
  *
  * DEBUG: section 7     Multicast
  * AUTHOR: Martin Hamilton
@@ -66,15 +66,23 @@ mcastJoinGroups(const ipcache_addrs * ia, void *datanotused)
     }
 
     for (i = 0; i < (int) ia->count; i++) {
-        debugs(7, 10, "Listening for ICP requests on " << inet_ntoa(*(ia->in_addrs + i)));
-        mr.imr_multiaddr.s_addr = (ia->in_addrs + i)->s_addr;
+        debugs(7, 10, "Listening for ICP requests on " << ia->in_addrs[i] );
+
+#if USE_IPV6
+        if( ! ia->in_addrs[i].IsIPv4() ) {
+            debugs(7, 10, "ERROR: IPv6 Multicast Listen has not been implemented!");
+            continue;
+        }
+#endif
+
+        ia->in_addrs[i].GetInAddr(mr.imr_multiaddr);
+
         mr.imr_interface.s_addr = INADDR_ANY;
         x = setsockopt(fd, IPPROTO_IP, IP_ADD_MEMBERSHIP,
-
                        (char *) &mr, sizeof(struct ip_mreq));
 
         if (x < 0)
-            debugs(7, 1, "comm_join_mcast_groups: FD " << fd << ", [" << inet_ntoa(*(ia->in_addrs + i)) << "]");
+            debugs(7, 1, "comm_join_mcast_groups: FD " << fd << ", IP=" << ia->in_addrs[i]);
 
         x = setsockopt(fd, IPPROTO_IP, IP_MULTICAST_LOOP, &c, 1);
 

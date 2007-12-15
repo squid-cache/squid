@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_db.cc,v 1.71 2007/09/21 11:41:52 amosjeffries Exp $
+ * $Id: client_db.cc,v 1.72 2007/12/14 23:11:46 amosjeffries Exp $
  *
  * DEBUG: section 0     Client Database
  * AUTHOR: Duane Wessels
@@ -42,7 +42,7 @@
 
 static hash_table *client_table = NULL;
 
-static ClientInfo *clientdbAdd(struct IN_ADDR addr);
+static ClientInfo *clientdbAdd(const IPAddress &addr);
 static FREE clientdbFreeItem;
 static void clientdbStartGC(void);
 static void clientdbScheduledGC(void *);
@@ -56,11 +56,12 @@ static int cleanup_removed;
 
 static ClientInfo *
 
-clientdbAdd(struct IN_ADDR addr)
+clientdbAdd(const IPAddress &addr)
 {
     ClientInfo *c;
+    char *buf = new char[MAX_IPSTRLEN];
     c = (ClientInfo *)memAllocate(MEM_CLIENT_INFO);
-    c->hash.key = xstrdup(inet_ntoa(addr));
+    c->hash.key = addr.NtoA(buf,MAX_IPSTRLEN);
     c->addr = addr;
     hash_join(client_table, &c->hash);
     statCounter.client_http.clients++;
@@ -94,15 +95,15 @@ clientdbRegisterWithCacheManager(CacheManager & manager)
 
 void
 
-clientdbUpdate(struct IN_ADDR addr, log_type ltype, protocol_t p, size_t size)
+clientdbUpdate(const IPAddress &addr, log_type ltype, protocol_t p, size_t size)
 {
-    char *key;
+    char key[MAX_IPSTRLEN];
     ClientInfo *c;
 
     if (!Config.onoff.client_db)
         return;
 
-    key = inet_ntoa(addr);
+    addr.NtoA(key,MAX_IPSTRLEN);
 
     c = (ClientInfo *) hash_lookup(client_table, key);
 
@@ -140,21 +141,21 @@ clientdbUpdate(struct IN_ADDR addr, log_type ltype, protocol_t p, size_t size)
  * -1.  To get the current value, simply call with delta = 0.
  */
 int
-
-clientdbEstablished(struct IN_ADDR addr, int delta)
+clientdbEstablished(const IPAddress &addr, int delta)
 {
-    char *key;
+    char key[MAX_IPSTRLEN];
     ClientInfo *c;
 
     if (!Config.onoff.client_db)
         return 0;
 
-    key = inet_ntoa(addr);
+    addr.NtoA(key,MAX_IPSTRLEN);
 
     c = (ClientInfo *) hash_lookup(client_table, key);
 
-    if (c == NULL)
+    if (c == NULL) {
         c = clientdbAdd(addr);
+    }
 
     if (c == NULL)
         debug_trap("clientdbUpdate: Failed to add entry");
@@ -167,9 +168,9 @@ clientdbEstablished(struct IN_ADDR addr, int delta)
 #define CUTOFF_SECONDS 3600
 int
 
-clientdbCutoffDenied(struct IN_ADDR addr)
+clientdbCutoffDenied(const IPAddress &addr)
 {
-    char *key;
+    char key[MAX_IPSTRLEN];
     int NR;
     int ND;
     double p;
@@ -178,7 +179,7 @@ clientdbCutoffDenied(struct IN_ADDR addr)
     if (!Config.onoff.client_db)
         return 0;
 
-    key = inet_ntoa(addr);
+    addr.NtoA(key,MAX_IPSTRLEN);
 
     c = (ClientInfo *) hash_lookup(client_table, key);
 
@@ -384,36 +385,35 @@ clientdbStartGC(void)
 
 #if SQUID_SNMP
 
-struct in_addr*
-client_entry(struct IN_ADDR *current)
+IPAddress *
+client_entry(IPAddress *current)
 {
     ClientInfo *c = NULL;
-    char *key;
+    char key[MAX_IPSTRLEN];
 
     if (current)
     {
-        key = inet_ntoa(*current);
+        current->NtoA(key,MAX_IPSTRLEN);
         hash_first(client_table);
-
         while ((c = (ClientInfo *) hash_next(client_table))) {
-            if (!strcmp(key, hashKeyStr(&c->hash)))
+	  if (!strcmp(key, hashKeyStr(&c->hash)))
                 break;
         }
-
+	
         c = (ClientInfo *) hash_next(client_table);
     } else
     {
-        hash_first(client_table);
-        c = (ClientInfo *) hash_next(client_table);
+      hash_first(client_table);
+      c = (ClientInfo *) hash_next(client_table);
     }
 
     hash_last(client_table);
 
     if (c)
-        return (&c->addr);
+      return (&c->addr);
     else
-        return (NULL);
-
+      return (NULL);
+    
 }
 
 variable_list *
@@ -423,10 +423,12 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
     static char key[16];
     ClientInfo *c = NULL;
     int aggr = 0;
+
     log_type l;
     *ErrP = SNMP_ERR_NOERROR;
     debugs(49, 6, "snmp_meshCtblFn: Current : ");
     snmpDebugOid(6, Var->name, Var->name_length);
+    /* FIXME INET6 : This must implement the key for IPv6 address */
     snprintf(key, sizeof(key), "%d.%d.%d.%d", Var->name[LEN_SQ_NET + 3], Var->name[LEN_SQ_NET + 4],
              Var->name[LEN_SQ_NET + 5], Var->name[LEN_SQ_NET + 6]);
     debugs(49, 5, "snmp_meshCtblFn: [" << key << "] requested!");
@@ -440,12 +442,28 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
 
     switch (Var->name[LEN_SQ_NET + 2]) {
 
-    case MESH_CTBL_ADDR:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) c->addr.s_addr,
-                                      SMI_IPADDRESS);
+    case MESH_CTBL_ADDR_TYPE:
+        {
+            int ival;
+            ival = c->addr.IsIPv4() ? INETADDRESSTYPE_IPV4 : INETADDRESSTYPE_IPV6 ;
+            Answer = snmp_var_new_integer(Var->name, Var->name_length,
+                                          ival, SMI_INTEGER);
+        }
         break;
 
+    case MESH_CTBL_ADDR:
+        {
+	  Answer = snmp_var_new(Var->name, Var->name_length);
+            // InetAddress doesn't have its own ASN.1 type,
+            // like IpAddr does (SMI_IPADDRESS)
+            // See: rfc4001.txt
+	  Answer->type = ASN_OCTET_STR;
+	  char client[MAX_IPSTRLEN];
+	  c->addr.NtoA(client,MAX_IPSTRLEN);
+	  Answer->val_len = strlen(client);
+	  Answer->val.string =  (u_char *) xstrdup(client);
+        }
+        break;
     case MESH_CTBL_HTBYTES:
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
                                       (snint) c->Http.kbytes_out.kb,

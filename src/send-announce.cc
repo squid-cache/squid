@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.68 2007/04/28 22:26:37 hno Exp $
+ * $Id: send-announce.cc,v 1.69 2007/12/14 23:11:48 amosjeffries Exp $
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
@@ -60,7 +60,7 @@ send_announce(const ipcache_addrs * ia, void *junk)
     LOCAL_ARRAY(char, tbuf, 256);
     LOCAL_ARRAY(char, sndbuf, BUFSIZ);
 
-    struct sockaddr_in S;
+    IPAddress S;
     char *host = Config.Announce.host;
     char *file = NULL;
     u_short port = Config.Announce.port;
@@ -109,14 +109,10 @@ send_announce(const ipcache_addrs * ia, void *junk)
         }
     }
 
-    memset(&S, '\0', sizeof(S));
-    S.sin_family = AF_INET;
-    S.sin_port = htons(port);
-    S.sin_addr = ia->in_addrs[0];
+    S.SetPort(port);
+    S = ia->in_addrs[0];
     assert(theOutIcpConnection > 0);
-    x = comm_udp_sendto(theOutIcpConnection,
-                        &S, sizeof(S),
-                        sndbuf, strlen(sndbuf) + 1);
+    x = comm_udp_sendto(theOutIcpConnection, S, sndbuf, strlen(sndbuf) + 1);
 
     if (x < 0)
         debugs(27, 1, "send_announce: FD " << theOutIcpConnection << ": " << xstrerror());

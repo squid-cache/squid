@@ -1,8 +1,8 @@
 
 /*
- * $Id: icp_v3.cc,v 1.42 2007/04/28 22:26:37 hno Exp $
+ * $Id: icp_v3.cc,v 1.43 2007/12/14 23:11:47 amosjeffries Exp $
  *
- * DEBUG: section 12    Internet Cache Protocol
+ * DEBUG: section 12    Internet Cache Protocol (ICP)
  * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -52,18 +52,18 @@ public:
 
 static void
 
-doV3Query(int fd, struct sockaddr_in from, char *buf, icp_common_t header)
+doV3Query(int fd, IPAddress &from, char *buf, icp_common_t header)
 {
     /* We have a valid packet */
     char *url = buf + sizeof(icp_common_t) + sizeof(u_int32_t);
-    HttpRequest *icp_request = icpGetRequest (url, header.reqnum, fd, &from);
+    HttpRequest *icp_request = icpGetRequest (url, header.reqnum, fd, from);
 
     if (!icp_request)
         return;
 
-    if (!icpAccessAllowed(&from, icp_request))
+    if (!icpAccessAllowed(from, icp_request))
     {
-        icpDenyAccess (&from, url, header.reqnum, fd);
+        icpDenyAccess (from, url, header.reqnum, fd);
         delete icp_request;
         return;
     }
@@ -97,7 +97,7 @@ ICP3State::created (StoreEntry *newEntry)
     else
         codeToSend = icpGetCommonOpcode();
 
-    icpCreateAndSend (codeToSend, 0, url, header.reqnum, 0, fd, &from);
+    icpCreateAndSend (codeToSend, 0, url, header.reqnum, 0, fd, from);
 
     delete this;
 }
@@ -105,7 +105,7 @@ ICP3State::created (StoreEntry *newEntry)
 /* Currently Harvest cached-2.x uses ICP_VERSION_3 */
 void
 
-icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
+icpHandleIcpV3(int fd, IPAddress&from, char *buf, int len)
 {
     if (len <= 0)
     {
@@ -128,14 +128,10 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
     {
 
     case ICP_QUERY:
-        doV3Query(fd, from,buf, header);
+        doV3Query(fd, from, buf, header);
         break;
 
     case ICP_HIT:
-#if ALLOW_SOURCE_PING
-
-    case ICP_SECHO:
-#endif
 
     case ICP_DECHO:
 
@@ -144,7 +140,7 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
     case ICP_DENIED:
 
     case ICP_MISS_NOFETCH:
-        header.handleReply(buf, &from);
+        header.handleReply(buf, from);
         break;
 
     case ICP_INVALID:
@@ -153,7 +149,7 @@ icpHandleIcpV3(int fd, struct sockaddr_in from, char *buf, int len)
         break;
 
     default:
-        debugs(12, 0, "icpHandleIcpV3: UNKNOWN OPCODE: " << header.opcode << " from " << inet_ntoa(from.sin_addr));
+        debugs(12, 0, "icpHandleIcpV3: UNKNOWN OPCODE: " << header.opcode << " from " << from);
         break;
     }
 }

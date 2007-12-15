@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.193 2007/10/31 04:52:15 amosjeffries Exp $
+#  $Id: Makefile.am,v 1.194 2007/12/14 23:11:45 amosjeffries Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -127,6 +127,14 @@ else
 PINGER = 
 endif
 
+# Squid Internal ICMP sources
+ICMPSOURCE = \
+	ICMP.h \
+	icmp.cc \
+	ICMPConfig.h \
+	ICMPSquid.h \
+	ICMPSquid.cc
+
 SSL_ALL_SOURCE = \
 	ACLCertificateData.cc \
 	ACLCertificateData.h  \
@@ -134,6 +142,7 @@ SSL_ALL_SOURCE = \
 	ACLCertificate.h  \
 	ssl_support.cc \
 	ssl_support.h
+
 if ENABLE_SSL
 SSL_SOURCE = $(SSL_ALL_SOURCE)
 else
@@ -507,7 +516,7 @@ squid_SOURCES = \
 	HttpRequestMethod.cc \
 	HttpRequestMethod.h \
 	HttpVersion.h \
-	icmp.cc \
+	$(ICMPSOURCE) \
 	ICP.h \
 	icp_v2.cc \
 	icp_v3.cc \
@@ -704,7 +713,17 @@ ICAP_libicap_a_SOURCES = \
 
 unlinkd_SOURCES = unlinkd_daemon.cc SquidNew.cc
 
+## NP: the pinger contains the squid-external helper code
+##     $(ICMPSOURCE) contains the interface bit to go inside squid
 pinger_SOURCES = \
+	ICMP.h \
+	icmp.cc \
+	ICMPPinger.h \
+	ICMPPinger.cc \
+	ICMPv4.h \
+	ICMPv4.cc \
+	ICMPv6.h \
+	ICMPv6.cc \
 	pinger.cc \
 	debug.cc \
 	time.cc \
@@ -812,7 +831,7 @@ ufsdump_SOURCES = \
 	HttpReply.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
-	icmp.cc \
+	$(ICMPSOURCE) \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IDENT_SOURCE) \
@@ -1121,6 +1140,7 @@ check_PROGRAMS+= \
 	tests/testHeaders \
 	tests/test_http_range \
 	tests/testHttpRequest \
+	tests/testICMP \
 	tests/testStore \
 	tests/testString \
 	tests/testURL \
@@ -1337,7 +1357,7 @@ tests_testCacheManager_SOURCES = \
 	HttpMsg.cc \
 	HttpReply.cc \
 	HttpStatusLine.cc \
-	icmp.cc \
+	$(ICMPSOURCE) \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IDENT_SOURCE) \
@@ -1503,7 +1523,7 @@ tests_testEvent_SOURCES = \
 	HttpMsg.cc \
 	HttpReply.cc \
 	HttpStatusLine.cc \
-	icmp.cc \
+	$(ICMPSOURCE) \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IDENT_SOURCE) \
@@ -1655,7 +1675,7 @@ tests_testEventLoop_SOURCES = \
 	HttpMsg.cc \
 	HttpReply.cc \
 	HttpStatusLine.cc \
-	icmp.cc \
+	$(ICMPSOURCE) \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IDENT_SOURCE) \
@@ -1835,7 +1855,7 @@ tests_test_http_range_SOURCES = \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	HttpStatusLine.cc \
-	icmp.cc \
+	$(ICMPSOURCE) \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IDENT_SOURCE) \
@@ -1990,7 +2010,7 @@ tests_testHttpRequest_SOURCES = \
 	HttpMsg.cc \
 	HttpReply.cc \
 	HttpStatusLine.cc \
-	icmp.cc \
+	$(ICMPSOURCE) \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IDENT_SOURCE) \
@@ -2075,6 +2095,24 @@ tests_testHttpRequest_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@SQUID_CPPUNIT_LA@ \
 	@ICAP_LIBS@
 
+## Tests of the ICMP base module.
+# Its used by pinger so SHOULD NOT require more dependancies! :-(
+tests_testICMP_SOURCES=\
+	ICMP.h \
+	icmp.cc \
+	tests/testICMP.h \
+	tests/testICMP.cc \
+	tests/testMain.cc \
+	SquidTime.h \
+	time.cc \
+	$(TESTSOURCES)
+tests_testICMP_LDFLAGS = $(LIBADD_DL)
+tests_testICMP_LDADD=\
+	@SQUID_CPPUNIT_LIBS@ \
+	@SQUID_CPPUNIT_LA@ \
+	-L../lib -lmiscutil
+tests_testICMP_DEPENDENCIES= @SQUID_CPPUNIT_LA@ \
+	$(top_builddir)/lib/libmiscutil.a
 
 # TODO:mime.cc drags in HttpReply.cc
 # delay pools need client_side_request.cc
@@ -2328,7 +2366,7 @@ tests_testURL_SOURCES = \
 	HttpMsg.cc \
 	HttpReply.cc \
 	HttpStatusLine.cc \
-	icmp.cc \
+	$(ICMPSOURCE) \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IDENT_SOURCE) \

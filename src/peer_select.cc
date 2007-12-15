@@ -1,6 +1,5 @@
-
 /*
- * $Id: peer_select.cc,v 1.147 2007/04/30 16:56:09 wessels Exp $
+ * $Id: peer_select.cc,v 1.148 2007/12/14 23:11:47 amosjeffries Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -42,6 +41,7 @@
 #include "ACLChecklist.h"
 #include "htcp.h"
 #include "forward.h"
+#include "SquidTime.h"
 
 const char *hier_strings[] =
     {
@@ -180,9 +180,7 @@ peerSelect(HttpRequest * request,
 #endif
 
     if (psstate->entry)
-        psstate->entry->lock()
-
-        ;
+        psstate->entry->lock();
 
     peerSelectFoo(psstate);
 }
@@ -254,7 +252,7 @@ peerCheckNetdbDirect(ps_state * psstate)
     if (psstate->direct == DIRECT_NO)
         return 0;
 
-    myrtt = netdbHostRtt(psstate->request->host);
+    myrtt = netdbHostRtt(psstate->request->GetHost());
 
     debugs(44, 3, "peerCheckNetdbDirect: MY RTT = " << myrtt << " msec");
     debugs(44, 3, "peerCheckNetdbDirect: minimum_direct_rtt = " << Config.minDirectRtt << " msec");
@@ -263,7 +261,7 @@ peerCheckNetdbDirect(ps_state * psstate)
     if (myrtt && myrtt <= Config.minDirectRtt)
         return 1;
 
-    myhops = netdbHostHops(psstate->request->host);
+    myhops = netdbHostHops(psstate->request->GetHost());
 
     debugs(44, 3, "peerCheckNetdbDirect: MY hops = " << myhops);
     debugs(44, 3, "peerCheckNetdbDirect: minimum_direct_hops = " << Config.minDirectHops);
@@ -272,7 +270,7 @@ peerCheckNetdbDirect(ps_state * psstate)
     if (myhops && myhops <= Config.minDirectHops)
         return 1;
 
-    p = whichPeer(&psstate->closest_parent_miss);
+    p = whichPeer(psstate->closest_parent_miss);
 
     if (p == NULL)
         return 0;
@@ -290,7 +288,7 @@ peerSelectFoo(ps_state * ps)
 {
     StoreEntry *entry = ps->entry;
     HttpRequest *request = ps->request;
-    debugs(44, 3, "peerSelectFoo: '" << RequestMethodStr[request->method] << " " << request->host << "'");
+    debugs(44, 3, "peerSelectFoo: '" << RequestMethodStr[request->method] << " " << request->GetHost() << "'");
 
     if (ps->direct == DIRECT_UNKNOWN) {
         if (ps->always_direct == 0 && Config.accessList.AlwaysDirect) {
@@ -453,7 +451,7 @@ peerGetSomeNeighborReplies(ps_state * ps)
 
     if (peerCheckNetdbDirect(ps)) {
         code = CLOSEST_DIRECT;
-        debugs(44, 3, "peerSelect: " << hier_strings[code] << "/" << request->host);
+        debugs(44, 3, "peerSelect: " << hier_strings[code] << "/" << request->GetHost());
         peerAddFwdServer(&ps->servers, NULL, code);
         return;
     }
@@ -461,19 +459,15 @@ peerGetSomeNeighborReplies(ps_state * ps)
     if ((p = ps->hit)) {
         code = ps->hit_type == PEER_PARENT ? PARENT_HIT : SIBLING_HIT;
     } else
-#if ALLOW_SOURCE_PING
-        if ((p = ps->secho)) {
-            code = SOURCE_FASTEST;
-        } else
-#endif
-            if (ps->closest_parent_miss.sin_addr.s_addr != any_addr.s_addr) {
-                p = whichPeer(&ps->closest_parent_miss);
-                code = CLOSEST_PARENT_MISS;
-            } else if (ps->first_parent_miss.sin_addr.s_addr != any_addr.s_addr) {
-                p = whichPeer(&ps->first_parent_miss);
-                code = FIRST_PARENT_MISS;
-            }
-
+    {
+        if (!ps->closest_parent_miss.IsAnyAddr()) {
+            p = whichPeer(ps->closest_parent_miss);
+            code = CLOSEST_PARENT_MISS;
+        } else if (!ps->first_parent_miss.IsAnyAddr()) {
+            p = whichPeer(ps->first_parent_miss);
+            code = FIRST_PARENT_MISS;
+        }
+    }
     if (p && code != HIER_NONE) {
         debugs(44, 3, "peerSelect: " << hier_strings[code] << "/" << p->host);
         peerAddFwdServer(&ps->servers, p, code);
@@ -506,7 +500,7 @@ peerGetSomeParent(ps_state * ps)
     peer *p;
     HttpRequest *request = ps->request;
     hier_code code = HIER_NONE;
-    debugs(44, 3, "peerGetSomeParent: " << RequestMethodStr[request->method] << " " << request->host);
+    debugs(44, 3, "peerGetSomeParent: " << RequestMethodStr[request->method] << " " << request->GetHost());
 
     if (ps->direct == DIRECT_YES)
         return;
@@ -625,7 +619,7 @@ peerIcpParentMiss(peer * p, icp_common_t * header, ps_state * ps)
         return;
 
     /* set FIRST_MISS if there is no CLOSEST parent */
-    if (ps->closest_parent_miss.sin_addr.s_addr != any_addr.s_addr)
+    if (!ps->closest_parent_miss.IsAnyAddr())
         return;
 
     rtt = (tvSubMsec(ps->ping.start, current_time) - p->basetime) / p->weight;
@@ -633,8 +627,7 @@ peerIcpParentMiss(peer * p, icp_common_t * header, ps_state * ps)
     if (rtt < 1)
         rtt = 1;
 
-    if (ps->first_parent_miss.sin_addr.s_addr == any_addr.s_addr ||
-            rtt < ps->ping.w_rtt) {
+    if (ps->first_parent_miss.IsAnyAddr() || rtt < ps->ping.w_rtt) {
         ps->first_parent_miss = p->in_addr;
         ps->ping.w_rtt = rtt;
     }
@@ -667,14 +660,6 @@ peerHandleIcpReply(peer * p, peer_t type, icp_common_t * header, void *data)
         return;
     }
 
-#if ALLOW_SOURCE_PING
-    else if (op == ICP_SECHO) {
-        psstate->secho = p;
-        peerSelectFoo(psstate);
-        return;
-    }
-
-#endif
     if (psstate->ping.n_recv < psstate->ping.n_replies_expected)
         return;
 
@@ -731,7 +716,7 @@ peerHtcpParentMiss(peer * p, htcpReplyData * htcp, ps_state * ps)
         return;
 
     /* set FIRST_MISS if there is no CLOSEST parent */
-    if (ps->closest_parent_miss.sin_addr.s_addr != any_addr.s_addr)
+    if (!ps->closest_parent_miss.IsAnyAddr())
         return;
 
     rtt = (tvSubMsec(ps->ping.start, current_time) - p->basetime) / p->weight;
@@ -739,8 +724,7 @@ peerHtcpParentMiss(peer * p, htcpReplyData * htcp, ps_state * ps)
     if (rtt < 1)
         rtt = 1;
 
-    if (ps->first_parent_miss.sin_addr.s_addr == any_addr.s_addr ||
-            rtt < ps->ping.w_rtt) {
+    if (ps->first_parent_miss.IsAnyAddr() || rtt < ps->ping.w_rtt) {
         ps->first_parent_miss = p->in_addr;
         ps->ping.w_rtt = rtt;
     }
@@ -796,16 +780,13 @@ ps_state::ps_state() : request (NULL),
         callback (NULL),
         callback_data (NULL),
         servers (NULL),
+        first_parent_miss(),
+        closest_parent_miss(),
         hit(NULL),
         hit_type(PEER_NONE),
-#if ALLOW_SOURCE_PING
-
-        secho( NULL),
-#endif
         acl_checklist (NULL)
 {
-    memset(&first_parent_miss, '\0', sizeof(first_parent_miss));
-    memset(&closest_parent_miss, '\0', sizeof(closest_parent_miss));
+    ; // no local defaults.
 }
 
 ping_data::ping_data() :
