@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.97 2007/12/14 23:11:46 amosjeffries Exp $
+ * $Id: client_side_request.cc,v 1.98 2007/12/16 01:42:14 hno Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1234,10 +1234,12 @@ ClientHttpRequest::handleIcapFailure(bool bypassable)
     // The original author of the code also wanted to pass an errno to 
     // setReplyToError, but it seems unlikely that the errno reflects the
     // true cause of the error at this point, so I did not pass it.
+    IPAddress noAddr;
+    noAddr.SetNoAddr();
     ConnStateData::Pointer c = getConn();
     repContext->setReplyToError(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR,
         request->method, NULL,
-        (c != NULL ? &c->peer.sin_addr : &no_addr), request, NULL,
+        (c != NULL ? c->peer : noAddr), request, NULL,
         (c != NULL && c->auth_user_request ?
             c->auth_user_request : request->auth_user_request));
 
