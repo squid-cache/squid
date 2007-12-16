@@ -43,8 +43,8 @@ EXIT_FAILURE=1
 
 PROGRAM=ltmain.sh
 PACKAGE=libtool
-VERSION="1.5.24 Debian 1.5.24-2"
-TIMESTAMP=" (1.1220.2.456 2007/06/24 02:25:32)"
+VERSION=1.5.24
+TIMESTAMP=" (1.1220.2.455 2007/06/24 02:13:29)"
 
 # Be Bourne compatible (taken from Autoconf:_AS_BOURNE_COMPATIBLE).
 if test -n "${ZSH_VERSION+set}" && (emulate sh) >/dev/null 2>&1; then
@@ -244,6 +244,20 @@ func_win32_libid ()
 # arg is usually of the form 'gcc ...'
 func_infer_tag ()
 {
+    # FreeBSD-specific: where we install compilers with non-standard names
+    tag_compilers_CC="*cc cc* *gcc gcc*"
+    tag_compilers_CXX="*c++ c++* *g++ g++*"
+    base_compiler=`set -- "$@"; echo $1`
+
+    # If $tagname isn't set, then try to infer if the default "CC" tag applies
+    if test -z "$tagname"; then
+      for zp in $tag_compilers_CC; do
+        case $base_compiler in
+	 $zp) tagname="CC"; break;;
+	esac
+      done
+    fi
+
     if test -n "$available_tags" && test -z "$tagname"; then
       CC_quoted=
       for arg in $CC; do
@@ -284,7 +298,22 @@ func_infer_tag ()
 	      break
 	      ;;
 	    esac
-	  fi
+
+	    # FreeBSD-specific: try compilers based on inferred tag
+	    if test -z "$tagname"; then
+	      eval "tag_compilers=\$tag_compilers_${z}"
+	      if test -n "$tag_compilers"; then
+		for zp in $tag_compilers; do
+		  case $base_compiler in   
+		    $zp) tagname=$z; break;;
+		  esac
+		done
+		if test -n "$tagname"; then
+		  break
+		fi
+	      fi
+            fi
+          fi
 	done
 	# If $tagname still isn't set, then no tagged configuration
 	# was found and let the user know that the "--tag" command
@@ -1643,6 +1672,7 @@ EOF
 	compiler_flags="$compiler_flags $arg"
 	compile_command="$compile_command $arg"
 	finalize_command="$finalize_command $arg"
+	deplibs="$deplibs $arg"
 	continue
 	;;
 
@@ -2122,10 +2152,7 @@ EOF
 	case $pass in
 	dlopen) libs="$dlfiles" ;;
 	dlpreopen) libs="$dlprefiles" ;;
-	link)
-	  libs="$deplibs %DEPLIBS%"
-	  test "X$link_all_deplibs" != Xno && libs="$libs $dependency_libs"
-	  ;;
+	link) libs="$deplibs %DEPLIBS% $dependency_libs" ;;
 	esac
       fi
       if test "$pass" = dlopen; then
@@ -2144,6 +2171,29 @@ EOF
 	  else
 	    compiler_flags="$compiler_flags $deplib"
 	  fi
+
+	  case $linkmode in
+	  lib)
+	    deplibs="$deplib $deplibs"
+	    test "$pass" = conv && continue
+	    newdependency_libs="$deplib $newdependency_libs"
+	    ;;
+	  prog)
+	    if test "$pass" = conv; then
+	      deplibs="$deplib $deplibs"
+	      continue
+	    fi
+	    if test "$pass" = scan; then
+	      deplibs="$deplib $deplibs"
+	    else
+	      compile_deplibs="$deplib $compile_deplibs"
+	      finalize_deplibs="$deplib $finalize_deplibs"
+	    fi
+	    ;;
+	  *)
+	    ;;
+	  esac # linkmode
+
 	  continue
 	  ;;
 	-l*)
@@ -3246,11 +3296,6 @@ EOF
 	    age="$number_minor"
 	    revision="$number_minor"
 	    lt_irix_increment=no
-	    ;;
-	  *)
-	    $echo "$modename: unknown library version type \`$version_type'" 1>&2
-	    $echo "Fatal configuration error.  See the $PACKAGE docs for more information." 1>&2
-	    exit $EXIT_FAILURE
 	    ;;
 	  esac
 	  ;;
@@ -4761,6 +4806,9 @@ static const void *lt_preloaded_setup() {
             finalize_command=`$echo "X$finalize_command" | $SP2NL | $Xsed -e "s%@SYMFILE@%$output_objdir/${outputname}S.${objext}%" | $NL2SP`
             ;;
           esac
+	  ;;
+	*-*-freebsd*)
+	  # FreeBSD doesn't need this...
 	  ;;
 	*)
 	  $echo "$modename: unknown suffix for \`$dlsyms'" 1>&2
