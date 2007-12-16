@@ -107,8 +107,10 @@ void ICAPXaction::openConnection()
     if (!TheICAPConfig.reuse_connections)
         disableRetries(); // this will also safely drain pconn pool
 
+    IPAddress client_addr;
+    client_addr.SetAnyAddr();
     // TODO: check whether NULL domain is appropriate here
-    connection = icapPconnPool->pop(s.host.buf(), s.port, NULL, NULL, isRetriable);
+    connection = icapPconnPool->pop(s.host.buf(), s.port, NULL, client_addr, isRetriable);
     if (connection >= 0) {
         debugs(93,3, HERE << "reused pconn FD " << connection);
         connector = &ICAPXaction_noteCommConnected; // make doneAll() false
@@ -123,7 +125,8 @@ void ICAPXaction::openConnection()
 
     disableRetries(); // we only retry pconn failures
 
-    connection = comm_open(SOCK_STREAM, 0, getOutgoingAddr(NULL), 0,
+    IPAddress outgoing(getOutgoingAddr(NULL));
+    connection = comm_open(SOCK_STREAM, 0, outgoing, 
         COMM_NONBLOCKING, s.uri.buf());
 
     if (connection < 0)
@@ -171,9 +174,11 @@ void ICAPXaction::closeConnection()
         }
 
         if (reuseConnection) {
+            IPAddress client_addr;
+            client_addr.SetAnyAddr();
             debugs(93,3, HERE << "pushing pconn" << status());
             commSetTimeout(connection, -1, NULL, NULL);
-            icapPconnPool->push(connection, theService->host.buf(), theService->port, NULL, NULL);
+            icapPconnPool->push(connection, theService->host.buf(), theService->port, NULL, client_addr);
             disableRetries();
         } else {
             debugs(93,3, HERE << "closing pconn" << status());

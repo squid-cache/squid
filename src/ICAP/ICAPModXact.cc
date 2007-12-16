@@ -900,10 +900,7 @@ bool ICAPModXact::parseHead(HttpMsg *head)
 void ICAPModXact::inheritVirginProperties(HttpRequest &newR, const HttpRequest &oldR) {
 
     newR.client_addr = oldR.client_addr;
-    newR.client_port = oldR.client_port;
-
     newR.my_addr = oldR.my_addr;
-    newR.my_port = oldR.my_port;
 
     // This may be too conservative for the 204 No Content case
     // may eventually need cloneNullAdaptationImmune() for that.
