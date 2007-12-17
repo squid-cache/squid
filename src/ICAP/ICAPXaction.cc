@@ -100,6 +100,8 @@ void ICAPXaction::start()
 // TODO: obey service-specific, OPTIONS-reported connection limit
 void ICAPXaction::openConnection()
 {
+    IPAddress client_addr;
+
     Must(connection < 0);
 
     const ICAPServiceRep &s = service();
@@ -107,8 +109,6 @@ void ICAPXaction::openConnection()
     if (!TheICAPConfig.reuse_connections)
         disableRetries(); // this will also safely drain pconn pool
 
-    IPAddress client_addr;
-    client_addr.SetAnyAddr();
     // TODO: check whether NULL domain is appropriate here
     connection = icapPconnPool->pop(s.host.buf(), s.port, NULL, client_addr, isRetriable);
     if (connection >= 0) {
@@ -175,7 +175,6 @@ void ICAPXaction::closeConnection()
 
         if (reuseConnection) {
             IPAddress client_addr;
-            client_addr.SetAnyAddr();
             debugs(93,3, HERE << "pushing pconn" << status());
             commSetTimeout(connection, -1, NULL, NULL);
             icapPconnPool->push(connection, theService->host.buf(), theService->port, NULL, client_addr);
