@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLARP.cc,v 1.25 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id: ACLARP.cc,v 1.26 2007/12/16 22:32:09 amosjeffries Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -242,11 +242,11 @@ ACLARP::match(ACLChecklist *checklist)
 int
 aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IPAddress &c)
 {
-    char ntoabuf[MAX_IPSTRLEN];
-
     struct arpreq arpReq;
 
     IPAddress ipAddr = c;
+
+    struct sockaddr_in *sa = NULL;
 
 #if defined(_SQUID_LINUX_)
 
@@ -274,7 +274,8 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IPAddress &c)
      */
     memset(&arpReq, '\0', sizeof(arpReq));
 
-    ipAddr.GetSockAddr(arpReq.arp_pa);
+    sa = (sockaddr_in*)&arpReq.arp_pa;
+    ipAddr.GetSockAddr(*sa);
     /* Query ARP table */
 
     if (ioctl(HttpSockets[0], SIOCGARP, &arpReq) != -1) {
@@ -336,7 +337,8 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IPAddress &c)
 
         memset(&arpReq, '\0', sizeof(arpReq));
 
-        ipAddr.GetSockAddr(arpReq.arp_pa);
+        sa = (sockaddr_in*)&arpReq.arp_pa;
+        ipAddr.GetSockAddr(*sa);
 
         strncpy(arpReq.arp_dev, ifr->ifr_name, sizeof(arpReq.arp_dev) - 1);
 

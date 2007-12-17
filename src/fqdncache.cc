@@ -1,6 +1,6 @@
 
 /*
- * $Id: fqdncache.cc,v 1.176 2007/12/14 23:11:46 amosjeffries Exp $
+ * $Id: fqdncache.cc,v 1.177 2007/12/16 22:32:10 amosjeffries Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -651,6 +651,8 @@ fqdnFromAddr(IPAddress &addr)
     if (Config.onoff.log_fqdn && (n = fqdncache_gethostbyaddr(addr, 0)))
         return n;
 
+/// \todo Perhaose this should use toHostname() instead of straight NtoA.
+///       that would wrap the IPv6 properly when raw.
     addr.NtoA(buf, MAX_IPSTRLEN);
 
     return buf;

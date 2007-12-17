@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.128 2007/12/14 23:11:47 amosjeffries Exp $
+ * $Id: peer_digest.cc,v 1.129 2007/12/16 22:32:10 amosjeffries Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -257,7 +257,6 @@ peerDigestCheck(void *data)
 {
     PeerDigest *pd = (PeerDigest *)data;
     time_t req_time;
-    char buf[MAX_IPSTRLEN];
 
     assert(!pd->flags.requested);
 
