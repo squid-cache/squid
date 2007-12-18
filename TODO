@@ -37,9 +37,13 @@ Squid-3.1
   - ETag caching (???)
   - Customized logging capabilities
   - External logging
-  - IPv6
   - Other devel.squid-cache.org projects
   - header filtering improvements (bug #601)
+
+  Done Items:
+
+  - IPv6
+
 
 Later:
 

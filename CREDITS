@@ -1,4 +1,4 @@
-$Id: CREDITS,v 1.12 2007/12/04 13:29:59 hno Exp $
+$Id: CREDITS,v 1.13 2007/12/18 12:15:34 amosjeffries Exp $
 
 ==============================================================================
 
@@ -302,5 +302,15 @@ helpers/external_acl/wbinfo_group/wbinfo_group.pl
  <jmurdock@itraktech.com>. It is distributed in the hope that it will
  be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
  of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+==============================================================================
+
+include/IPAddress.h lib/IPAddress.cc
+include/rfc3596.h lib/rfc3596.cc
+src/ICMPv6.h src/ICMPv6.cc
+
+ This code is copyright (C) 2007 by Treehouse Networks Ltd
+ of New Zealand. It is published and Licensed as an extension of
+ squid under the same conditions as the main squid application.
 
 ==============================================================================

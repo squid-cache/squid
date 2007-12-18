@@ -1,3 +1,12 @@
+Changes to squid-3.HEAD (current):
+
+	- IPv6 (Internet Protocol version 6) support
+	- ICMPv6 (Internet Control Message Protocol version 6) support
+	- FTP agent now supports EPRT command
+	- DNS internal resolver now supports AAAA and CNAME records
+	- SNMP peer and client tables now support IPv6
+	- SNMP peer table supports named peers with multiple entries per IP
+
 Changes to squid-3.0.STABLE1 (13 Dec 2007):
 
 	- Major rewrite translating the code to C++, originally based on
