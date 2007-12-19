@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.80 2007/12/14 23:11:48 amosjeffries Exp $
+ * $Id: snmp_core.cc,v 1.81 2007/12/18 23:24:25 amosjeffries Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -539,11 +539,6 @@ snmpDecodePacket(snmp_request_t * rq)
         allow = checklist.fastCheck();
     }
 
-#if 1 /* FIXME INET6 : Kill this block before committing to HEAD. */
-    /* RAFA, Amos, DO NOT COMMIT INTO AHEAD with this !!! */
-    allow = 1 ;
-    /* allow */
-#endif /* KILL */
     if ((snmp_coexist_V2toV1(PDU)) && (Community) && (allow)) {
         rq->community = Community;
         rq->PDU = PDU;
@@ -878,46 +873,51 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
     oid *instance = NULL;
     IPAddress laddr;
     IPAddress *aux;
+    int size = 0;
+    int newshift = 0;
 
-    if (*len <= current->len) {
-      aux  = client_entry(NULL);  
-      // FIXME INET6 . is this good C++ style ?
-      // What otherwise ?
-      if (aux) laddr = *aux ; else laddr.SetAnyAddr();
+    if(*len <= current->len) {
+        aux  = client_entry(NULL);  
+        if(aux)
+            laddr = *aux;
+        else
+            laddr.SetAnyAddr();
 
+        if(laddr.IsIPv4())
+            size = sizeof(in_addr);
 #if USE_IPV6
-      int size = laddr.IsIPv4()? sizeof(in_addr) : sizeof(in6_addr)  ;
-#else 
-      int size = sizeof(in_addr);
+        else
+            size = sizeof(in6_addr);
 #endif
 
-      instance = (oid *)xmalloc(sizeof(name) * (*len + size ));
-      xmemcpy(instance, name, (sizeof(name) * (*len)));
+        instance = (oid *)xmalloc(sizeof(name) * (*len + size ));
+        xmemcpy(instance, name, (sizeof(name) * (*len)));
 
-      if ( !laddr.IsAnyAddr() ) {
-	addr2oid(laddr, &instance[ *len]);  // the addr
-	*len += size ;
-      }
+        if ( !laddr.IsAnyAddr() ) {
+            addr2oid(laddr, &instance[ *len]);  // the addr
+            *len += size ;
+        }
     } else {
-      int shift = *len - current->len ; // i.e 4 or 16 
-      oid2addr(&name[*len - shift], laddr,shift); 
-      aux = client_entry(&laddr);  
-      // FIXME INET6 . is this good C++ style ?
-      // What otherwise ?
-      if (aux) laddr = *aux ; else laddr.SetAnyAddr();
-
+        int shift = *len - current->len ; // i.e 4 or 16 
+        oid2addr(&name[*len - shift], laddr,shift); 
+        aux = client_entry(&laddr);  
+        if(aux)
+            laddr = *aux;
+        else
+            laddr.SetAnyAddr();
       
-      if (!laddr.IsAnyAddr()) {
+        if(!laddr.IsAnyAddr()) {
+            if(laddr.IsIPv4())
+                newshift = sizeof(in_addr);
 #if USE_IPV6
-	  int newshift = laddr.IsIPv4()? sizeof(in_addr) : sizeof(in6_addr)  ;
-#else
-	  int newshift = sizeof(in_addr) ;
+            else
+                newshift = sizeof(in6_addr);
 #endif
-	instance = (oid *)xmalloc(sizeof(name) * (current->len +  newshift));
-	xmemcpy(instance, name, (sizeof(name) * (current->len)));
-	addr2oid(laddr, &instance[current->len]);  // the addr.
-	*len = current->len + newshift ;
-      }
+            instance = (oid *)xmalloc(sizeof(name) * (current->len +  newshift));
+            xmemcpy(instance, name, (sizeof(name) * (current->len)));
+            addr2oid(laddr, &instance[current->len]);  // the addr.
+            *len = current->len + newshift ;
+        }
     }
     
     *Fn = current->parsefunction;

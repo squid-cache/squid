@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.529 2007/12/14 23:11:46 amosjeffries Exp $
+ * $Id: cache_cf.cc,v 1.530 2007/12/18 23:24:25 amosjeffries Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -1774,7 +1774,6 @@ parse_peer(peer ** head)
 
     p->index =  ++Config.npeers;
 
-// FIXME INET6 : maybe sort peers so the SNMP indexing works better?
     while (*head != NULL)
         head = &(*head)->next;
 
