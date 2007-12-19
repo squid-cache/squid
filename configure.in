@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.491 2007/12/15 03:55:01 amosjeffries Exp $
+dnl  $Id: configure.in,v 1.492 2007/12/19 02:36:26 amosjeffries Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.491 $)dnl
+AC_REVISION($Revision: 1.492 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -2322,7 +2322,6 @@ if test $ac_cv_lib_bind_gethostbyname = "no" ; then
 		echo "skipping libresolv checks for $host"
 		;;
 	*)
-		AC_CHECK_LIB(resolv, inet_aton, AC_CHECK_LIB(44bsd, inet_aton))
 		AC_CHECK_LIB(resolv, main)
 		;;
     esac
