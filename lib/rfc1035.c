@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.51 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id: rfc1035.c,v 1.52 2007/12/19 02:36:27 amosjeffries Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -768,7 +768,7 @@ main(int argc, char *argv[])
 	strtok(input, "\r\n");
 	memset(buf, '\0', 512);
 	sz = 512;
-	if (inet_aton(input, &junk)) {
+	if (inet_pton(AF_INET, input, &junk)) {
 	    sid = rfc1035BuildPTRQuery(junk, buf, &sz);
 	} else {
 	    sid = rfc1035BuildAQuery(input, buf, &sz);
