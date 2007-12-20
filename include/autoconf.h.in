@@ -233,9 +233,6 @@
 /* Define to 1 if you have the `kqueue' function. */
 #undef HAVE_KQUEUE
 
-/* Define to 1 if you have the `44bsd' library (-l44bsd). */
-#undef HAVE_LIB44BSD
-
 /* Define to 1 if you have the `aio' library (-laio). */
 #undef HAVE_LIBAIO
 
