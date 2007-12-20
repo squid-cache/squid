@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.116 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id: asn.cc,v 1.117 2007/12/20 11:19:48 amosjeffries Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -54,14 +54,15 @@
 /* BEGIN of definitions for radix tree entries */
 
 
-/* AYJ INET6 : Why are these objects being converted to raw u_char memory for use ? */
-
 /* 32/128 bits address in memory with length */
-typedef u_char m_ADDR[1 + sizeof(IPAddress)];
-#define store_m_ADDR(i, m) \
-    (m[0] = sizeof(IPAddress), xmemcpy(m+1, &i, sizeof(IPAddress)) )
-#define get_m_ADDR(i, m) \
-    xmemcpy(&i, m+1, sizeof(IPAddress))
+class m_ADDR {
+public:
+    uint8_t len;
+    IPAddress addr;
+
+    m_ADDR() : len(sizeof(IPAddress)) {};
+};
+
 
 /* END of definitions for radix tree entries */
 
@@ -147,9 +148,9 @@ asnMatchIp(List<int> *data, IPAddress &addr)
     if (addr.IsAnyAddr())
         return 0;
 
-    store_m_ADDR(addr, m_addr);
+    m_addr.addr = addr;
 
-    rn = squid_rn_match(m_addr, AS_tree_head);
+    rn = squid_rn_match(&m_addr, AS_tree_head);
 
     if (rn == NULL) {
         debugs(53, 3, "asnMatchIp: Address not in as db.");
@@ -426,11 +427,11 @@ asnAddNet(char *as_string, int as_number)
 
     memset(e, '\0', sizeof(rtentry_t));
 
-    store_m_ADDR(addr, e->e_addr);
+    e->e_addr.addr = addr;
 
-    store_m_ADDR(mask, e->e_mask);
+    e->e_mask.addr = mask;
 
-    rn = squid_rn_lookup(e->e_addr, e->e_mask, AS_tree_head);
+    rn = squid_rn_lookup(&e->e_addr, &e->e_mask, AS_tree_head);
 
     if (rn != NULL) {
         asinfo = ((rtentry_t *) rn)->e_info;
@@ -441,7 +442,6 @@ asnAddNet(char *as_string, int as_number)
             debugs(53, 3, "asnAddNet: Warning: Found a network with multiple AS numbers!");
 
             for (Tail = &asinfo->as_number; *Tail; Tail = &(*Tail)->next)
-
                 ;
             q = new List<int> (as_number);
 
@@ -453,8 +453,8 @@ asnAddNet(char *as_string, int as_number)
         q = new List<int> (as_number);
         asinfo = (as_info *)xmalloc(sizeof(as_info));
         asinfo->as_number = q;
-        rn = squid_rn_addroute(e->e_addr, e->e_mask, AS_tree_head, e->e_nodes);
-        rn = squid_rn_match(e->e_addr, AS_tree_head);
+        rn = squid_rn_addroute(&e->e_addr, &e->e_mask, AS_tree_head, e->e_nodes);
+        rn = squid_rn_match(&e->e_addr, AS_tree_head);
         assert(rn != NULL);
         e->e_info = asinfo;
     }
@@ -521,8 +521,8 @@ printRadixNode(struct squid_radix_node *rn, void *_sentry)
 
     assert(e);
     assert(e->e_info);
-    (void) get_m_ADDR(addr, e->e_addr);
-    (void) get_m_ADDR(mask, e->e_mask);
+    addr = e->e_addr.addr;
+    mask = e->e_mask.addr;
     storeAppendPrintf(sentry, "%s/%d\t",
                       addr.NtoA(buf, MAX_IPSTRLEN),
                       mask.GetCIDR() );
