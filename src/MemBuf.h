@@ -1,7 +1,7 @@
 
 
 /*
- * $Id: MemBuf.h,v 1.8 2006/08/21 00:50:41 robertc Exp $
+ * $Id: MemBuf.h,v 1.9 2007/12/21 23:48:04 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -60,6 +60,7 @@ public:
 
     // these space-related methods assume no growth and allow 0-termination
     char *space() { return buf + size; } // space to add data
+    char *space(mb_size_t required) { if (size + required > capacity) grow(size + required); return buf + size; } // space to add data
 
     mb_size_t spaceSize() const;
     bool hasSpace() const { return size+1 < capacity; }
