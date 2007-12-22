@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.43 2007/08/13 17:20:51 hno Exp $
+ * $Id: HttpMsg.cc,v 1.44 2007/12/21 23:50:24 hno Exp $
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
@@ -153,6 +153,14 @@ bool HttpMsg::parse(MemBuf *buf, bool eof, http_status *error)
     // TODO: Remove? httpReplyParseStep() should do similar checks
     const size_t hdr_len = headersEnd(buf->content(), buf->contentSize());
 
+    // TODO: move to httpReplyParseStep()
+    if (hdr_len > Config.maxReplyHeaderSize || hdr_len <= 0 && (size_t)buf->contentSize() > Config.maxReplyHeaderSize) {
+        debugs(58, 1, "HttpMsg::parse: Too large reply header (" <<
+               hdr_len << " > " << Config.maxReplyHeaderSize);
+        *error = HTTP_HEADER_TOO_LARGE;
+        return false;
+    }
+
     if (hdr_len <= 0) {
         debugs(58, 3, "HttpMsg::parse: failed to find end of headers " <<
                "(eof: " << eof << ") in '" << buf->content() << "'");
@@ -160,14 +168,6 @@ bool HttpMsg::parse(MemBuf *buf, bool eof, http_status *error)
         if (eof) // iff we have seen the end, this is an error
             *error = HTTP_INVALID_HEADER;
 
-        return false;
-    }
-
-    // TODO: move to httpReplyParseStep()
-    if (hdr_len > Config.maxReplyHeaderSize) {
-        debugs(58, 1, "HttpMsg::parse: Too large reply header (" <<
-               hdr_len << " > " << Config.maxReplyHeaderSize);
-        *error = HTTP_HEADER_TOO_LARGE;
         return false;
     }
 
