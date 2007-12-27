@@ -1,5 +1,5 @@
 /*
- * $Id: net_db.cc,v 1.199 2007/12/14 23:11:47 amosjeffries Exp $
+ * $Id: net_db.cc,v 1.200 2007/12/27 14:55:47 hno Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -464,27 +464,17 @@ sortPeerByRtt(const void *A, const void *B)
 }
 
 static void
-netdbPath(char *path)
-{
-    /* this is completely wrong. the netdb location should be memoised
-     * separately from the cache dirs, and also be settable in 
-     * squid.conf RBC 20041225
-     */
-    snprintf(path, SQUID_MAXPATHLEN, "%s/netdb_state",
-             dynamic_cast<SwapDir *>(Config.cacheSwap.swapDirs[0].getRaw())->path);
-}
-
-static void
 netdbSaveState(void *foo)
 {
-    LOCAL_ARRAY(char, path, SQUID_MAXPATHLEN);
+    if (strcmp(config.netdbFilename, "none") == 0)
+	return;
+
     Logfile *lf;
     netdbEntry *n;
     net_db_name *x;
 
     struct timeval start = current_time;
     int count = 0;
-    netdbPath(path);
     /*
      * This was nicer when we were using stdio, but thanks to
      * Solaris bugs, its a bad idea.  fopen can fail if more than
@@ -494,8 +484,8 @@ netdbSaveState(void *foo)
      * unlink() is here because there is currently no way to make
      * logfileOpen() use O_TRUNC.
      */
-    unlink(path);
-    lf = logfileOpen(path, 4096, 0);
+    unlink(Config.netdbFilename);
+    lf = logfileOpen(Config.netdbFilename, 4096, 0);
 
     if (NULL == lf) {
         debugs(50, 1, "netdbSaveState: " << path << ": " << xstrerror());
@@ -539,7 +529,9 @@ netdbSaveState(void *foo)
 static void
 netdbReloadState(void)
 {
-    LOCAL_ARRAY(char, path, SQUID_MAXPATHLEN);
+    if (strcmp(config.netdbFilename, "none") == 0)
+	return;
+
     char *s;
     int fd;
     int l;
@@ -552,13 +544,12 @@ netdbReloadState(void)
     int count = 0;
 
     struct timeval start = current_time;
-    netdbPath(path);
     /*
      * This was nicer when we were using stdio, but thanks to
      * Solaris bugs, its a bad idea.  fopen can fail if more than
      * 256 FDs are open.
      */
-    fd = file_open(path, O_RDONLY | O_BINARY);
+    fd = file_open(Config.netdbFilename, O_RDONLY | O_BINARY);
 
     if (fd < 0)
         return;
