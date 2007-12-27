@@ -1,5 +1,5 @@
 /*
- * $Id: IPAddress.cc,v 1.2 2007/12/26 23:59:28 hno Exp $
+ * $Id: IPAddress.cc,v 1.3 2007/12/27 00:48:06 hno Exp $
  *
  * DEBUG: section 14   IP Storage and Handling
  * AUTHOR: Amos Jeffries
@@ -1060,7 +1060,7 @@ char* IPAddress::ToURL(char* buf, unsigned int blen) const
     }
 
     // force a null-terminated string
-    buf[blen] = '\0';
+    buf[blen-1] = '\0';
 
     return buf;
 }
