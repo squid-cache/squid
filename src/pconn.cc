@@ -1,6 +1,6 @@
 
 /*
- * $Id: pconn.cc,v 1.54 2007/12/14 23:11:47 amosjeffries Exp $
+ * $Id: pconn.cc,v 1.55 2007/12/27 01:03:13 hno Exp $
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -139,7 +139,7 @@ IdleConnList::findUseableFD()
 {
     assert(nfds);
 
-    for (int i = 0; i< nfds; i++) {
+    for (int i=nfds-1; i>=0; i--) {
         if (!comm_has_pending_read_callback(fds[i])) {
             return fds[i];
         }
@@ -283,7 +283,7 @@ PconnPool::pop(const char *host, u_short port, const char *domain, IPAddress &cl
     if (list == NULL)
         return -1;
 
-    int fd = list->findUseableFD();
+    int fd = list->findUseableFD(); // search from the end. skip pending reads.
 
     if (fd >= 0)
     {
