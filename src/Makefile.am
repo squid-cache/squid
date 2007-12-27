@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.194 2007/12/14 23:11:45 amosjeffries Exp $
+#  $Id: Makefile.am,v 1.195 2007/12/26 22:33:31 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -433,6 +433,8 @@ squid_SOURCES = \
 	carp.cc \
 	cbdata.cc \
 	cbdata.h \
+	ChunkedCodingParser.cc \
+	ChunkedCodingParser.h \
 	client_db.cc \
 	client_side.cc \
 	client_side.h \
@@ -610,6 +612,8 @@ squid_SOURCES = \
 	structs.h \
 	SwapDir.cc \
 	SwapDir.h \
+	TextException.cc \
+	TextException.h \
 	time.cc \
 	tools.cc \
 	tunnel.cc \
@@ -682,8 +686,6 @@ squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 ICAP_libicap_a_SOURCES = \
 	ICAP/AsyncJob.cc \
 	ICAP/AsyncJob.h \
- 	ICAP/ChunkedCodingParser.cc \
- 	ICAP/ChunkedCodingParser.h \
 	ICAP/ICAPClient.cc \
 	ICAP/ICAPClient.h \
 	ICAP/ICAPInitiator.cc \
@@ -706,9 +708,7 @@ ICAP_libicap_a_SOURCES = \
 	ICAP/ICAPServiceRep.cc \
 	ICAP/ICAPServiceRep.h \
 	ICAP/ICAPXaction.cc \
-	ICAP/ICAPXaction.h \
-	ICAP/TextException.cc \
-	ICAP/TextException.h
+	ICAP/ICAPXaction.h
 
 
 unlinkd_SOURCES = unlinkd_daemon.cc SquidNew.cc
@@ -784,6 +784,8 @@ ufsdump_SOURCES = \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
+	ChunkedCodingParser.cc \
+	ChunkedCodingParser.h \
 	client_db.cc \
 	client_side.cc \
 	client_side_reply.cc \
@@ -886,6 +888,8 @@ ufsdump_SOURCES = \
 	store_swapout.cc \
 	structs.h \
 	SwapDir.cc \
+	TextException.cc \
+	TextException.h \
 	tools.cc \
 	typedefs.h \
 	$(UNLINKDSOURCE) \
@@ -1320,6 +1324,7 @@ tests_testCacheManager_SOURCES = \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
+	ChunkedCodingParser.cc \
 	client_db.cc \
 	client_side.cc \
 	client_side_reply.cc \
@@ -1410,6 +1415,7 @@ tests_testCacheManager_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
+	TextException.cc \
 	tools.cc \
 	tunnel.cc \
 	SwapDir.cc \
@@ -1486,6 +1492,7 @@ tests_testEvent_SOURCES = \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
+	ChunkedCodingParser.cc \
 	client_db.cc \
 	client_side.cc \
 	client_side_reply.cc \
@@ -1575,6 +1582,7 @@ tests_testEvent_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
+	TextException.cc \
 	tools.cc \
 	tunnel.cc \
 	SwapDir.cc \
@@ -1638,6 +1646,7 @@ tests_testEventLoop_SOURCES = \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
+	ChunkedCodingParser.cc \
 	client_db.cc \
 	client_side.cc \
 	client_side_reply.cc \
@@ -1727,6 +1736,7 @@ tests_testEventLoop_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
+	TextException.cc \
 	tools.cc \
 	tunnel.cc \
 	SwapDir.cc \
@@ -1814,6 +1824,7 @@ tests_test_http_range_SOURCES = \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
+	ChunkedCodingParser.cc \
 	client_db.cc \
 	client_side.cc \
 	client_side_reply.cc \
@@ -1909,6 +1920,7 @@ tests_test_http_range_SOURCES = \
 	StoreSwapLogData.cc \
 	String.cc \
 	SwapDir.cc \
+	TextException.cc \
 	time.cc \
 	tools.cc \
 	tunnel.cc \
@@ -1973,6 +1985,7 @@ tests_testHttpRequest_SOURCES = \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
+	ChunkedCodingParser.cc \
 	client_db.cc \
 	client_side.cc \
 	client_side_reply.cc \
@@ -2063,6 +2076,7 @@ tests_testHttpRequest_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
+	TextException.cc \
 	tools.cc \
 	tunnel.cc \
 	SwapDir.cc \
@@ -2329,6 +2343,7 @@ tests_testURL_SOURCES = \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
+	ChunkedCodingParser.cc \
 	client_db.cc \
 	client_side.cc \
 	client_side_reply.cc \
@@ -2418,6 +2433,7 @@ tests_testURL_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
+	TextException.cc \
 	tools.cc \
 	tunnel.cc \
 	SwapDir.cc \

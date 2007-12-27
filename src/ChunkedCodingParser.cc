@@ -64,7 +64,7 @@ void ChunkedCodingParser::parseChunkBeg()
     size_t crlfEnd = 0;
 
     if (findCrlf(crlfBeg, crlfEnd)) {
-        debugs(93,7, "found chunk-size end: " << crlfBeg << "-" << crlfEnd);
+        debugs(94,7, "found chunk-size end: " << crlfBeg << "-" << crlfEnd);
         int64_t size = -1;
         const char *p = 0;
 
@@ -76,7 +76,7 @@ void ChunkedCodingParser::parseChunkBeg()
 
             theIn->consume(crlfEnd);
             theChunkSize = theLeftBodySize = size;
-            debugs(93,7, "found chunk: " << theChunkSize);
+            debugs(94,7, "found chunk: " << theChunkSize);
             theStep = theChunkSize == 0 ? psTrailer : psChunkBody;
             return;
         }
