@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.489 2007/12/14 23:11:46 amosjeffries Exp $
+# $Id: cf.data.pre,v 1.490 2007/12/27 14:55:47 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -2272,6 +2272,15 @@ DOC_START
 	Buffering it can speed up the writing slightly (though you are
 	unlikely to need to worry unless you run with tons of debugging
 	enabled in which case performance will suffer badly anyway..).
+DOC_END
+
+NAME: netdb_filename
+TYPE: string
+DEFAULT: @DEFAULT_NETDB_FILE@
+LOC: Config.netdbFilename
+DOC_START
+	A filename where Squid stores it's netdb state between restarts.
+	To disable, enter "none".
 DOC_END
 
 COMMENT_START
