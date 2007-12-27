@@ -20,7 +20,6 @@ void ChunkedCodingParser::reset()
     theStep = psChunkBeg;
     theChunkSize = theLeftBodySize = 0;
     doNeedMoreData = false;
-    sawIeof = false;
     theIn = theOut = NULL;
 }
 
@@ -73,18 +72,6 @@ void ChunkedCodingParser::parseChunkBeg()
             if (size < 0) {
                 throw TexcHere("negative chunk size");
                 return;
-            }
-
-            // check for ieof chunk extension in the last-chunk
-            if (size == 0 && p && *p++ == ';') {
-                const char *e = theIn->content() + crlfBeg; // end of extension
-
-                while (p < e && xisspace(*p))
-                    ++p; // skip space
-
-                sawIeof = e - p >= 4 &&
-                          strncmp(p, "ieof", 4) == 0 &&
-                          xisspace(p[4]);
             }
 
             theIn->consume(crlfEnd);
