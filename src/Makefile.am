@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.196 2007/12/27 14:55:47 hno Exp $
+#  $Id: Makefile.am,v 1.197 2007/12/27 15:48:53 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -243,7 +243,6 @@ all_FSMODULES = \
 	fs/aufs/StoreFSaufs.cc \
 	fs/coss/StoreFScoss.cc \
 	fs/diskd/StoreFSdiskd.cc \
-	fs/null/StoreFSnull.cc \
 	fs/ufs/StoreFSufs.cc
 
 all_DISKIOMODULES = \

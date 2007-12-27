@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.490 2007/12/27 14:55:47 hno Exp $
+# $Id: cf.data.pre,v 1.491 2007/12/27 15:48:53 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -1744,7 +1744,6 @@ DOC_END
 NAME: cache_dir
 TYPE: cachedir
 DEFAULT: none
-DEFAULT_IF_NONE: ufs @DEFAULT_SWAP_DIR@ 100 16 256
 LOC: Config.cacheSwap
 DOC_START
 	Usage:
@@ -1832,10 +1831,6 @@ DOC_START
 	called 'stripe' in the directory names in the config - and
 	this will be created by squid -z.
 
-	The null store type:
-
-	no options are allowed or required
-
 	Common options:
 
 	no-store, no new objects should be stored to this cache_dir
@@ -1849,6 +1844,9 @@ DOC_START
 	Note for coss, max-size must be less than COSS_MEMBUF_SZ,
 	which can be changed with the --with-coss-membuf-size=N configure
 	option.
+NOCOMMENT_START
+DEFAULT_IF_NONE: ufs @DEFAULT_SWAP_DIR@ 100 16 256
+NOCOMMENT_END
 DOC_END
 
 NAME: store_dir_select_algorithm
