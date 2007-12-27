@@ -16,7 +16,7 @@
 
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.100 2007/12/16 01:11:44 hno Exp $
+#  $Id: Makefile.in,v 1.101 2007/12/27 15:50:02 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -59,10 +59,6 @@ am__dirstamp = $(am__leading_dot)dirstamp
 am_libcoss_a_OBJECTS = coss/store_io_coss.$(OBJEXT) \
 	coss/store_dir_coss.$(OBJEXT)
 libcoss_a_OBJECTS = $(am_libcoss_a_OBJECTS)
-libnull_a_AR = $(AR) $(ARFLAGS)
-libnull_a_LIBADD =
-am_libnull_a_OBJECTS = null/store_null.$(OBJEXT)
-libnull_a_OBJECTS = $(am_libnull_a_OBJECTS)
 libufs_a_AR = $(AR) $(ARFLAGS)
 libufs_a_LIBADD =
 am_libufs_a_OBJECTS = ufs/store_dir_ufs.$(OBJEXT) \
@@ -87,10 +83,8 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libcoss_a_SOURCES) $(libnull_a_SOURCES) \
-	$(libufs_a_SOURCES)
-DIST_SOURCES = $(libcoss_a_SOURCES) $(libnull_a_SOURCES) \
-	$(libufs_a_SOURCES)
+SOURCES = $(libcoss_a_SOURCES) $(libufs_a_SOURCES)
+DIST_SOURCES = $(libcoss_a_SOURCES) $(libufs_a_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -314,7 +308,7 @@ target_alias = @target_alias@
 AUTOMAKE_OPTIONS = subdir-objects
 AM_CFLAGS = @SQUID_CFLAGS@
 AM_CXXFLAGS = @SQUID_CXXFLAGS@
-EXTRA_LIBRARIES = libcoss.a libnull.a libufs.a
+EXTRA_LIBRARIES = libcoss.a libufs.a
 noinst_LIBRARIES = @STORE_LIBS@
 libcoss_a_SOURCES = \
 	coss/store_coss.h \
@@ -322,7 +316,6 @@ libcoss_a_SOURCES = \
 	coss/store_dir_coss.cc \
 	coss/CossSwapDir.h
 
-libnull_a_SOURCES = null/store_null.cc null/store_null.h
 libufs_a_SOURCES = ufs/store_dir_ufs.cc ufs/store_io_ufs.cc \
 	ufs/ufscommon.cci \
 	ufs/ufscommon.cc \
@@ -331,8 +324,7 @@ libufs_a_SOURCES = ufs/store_dir_ufs.cc ufs/store_io_ufs.cc \
 EXTRA_DIST = \
 	coss/coss-notes.txt \
 	coss/StoreFScoss.h \
-	ufs/StoreFSufs.h \
-	null/StoreFSnull.h
+	ufs/StoreFSufs.h
 
 INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
 	-I$(top_srcdir)/src
@@ -387,18 +379,6 @@ libcoss.a: $(libcoss_a_OBJECTS) $(libcoss_a_DEPENDENCIES)
 	-rm -f libcoss.a
 	$(libcoss_a_AR) libcoss.a $(libcoss_a_OBJECTS) $(libcoss_a_LIBADD)
 	$(RANLIB) libcoss.a
-null/$(am__dirstamp):
-	@$(mkdir_p) null
-	@: > null/$(am__dirstamp)
-null/$(DEPDIR)/$(am__dirstamp):
-	@$(mkdir_p) null/$(DEPDIR)
-	@: > null/$(DEPDIR)/$(am__dirstamp)
-null/store_null.$(OBJEXT): null/$(am__dirstamp) \
-	null/$(DEPDIR)/$(am__dirstamp)
-libnull.a: $(libnull_a_OBJECTS) $(libnull_a_DEPENDENCIES) 
-	-rm -f libnull.a
-	$(libnull_a_AR) libnull.a $(libnull_a_OBJECTS) $(libnull_a_LIBADD)
-	$(RANLIB) libnull.a
 ufs/$(am__dirstamp):
 	@$(mkdir_p) ufs
 	@: > ufs/$(am__dirstamp)
@@ -420,7 +400,6 @@ mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 	-rm -f coss/store_dir_coss.$(OBJEXT)
 	-rm -f coss/store_io_coss.$(OBJEXT)
-	-rm -f null/store_null.$(OBJEXT)
 	-rm -f ufs/store_dir_ufs.$(OBJEXT)
 	-rm -f ufs/store_io_ufs.$(OBJEXT)
 	-rm -f ufs/ufscommon.$(OBJEXT)
@@ -430,7 +409,6 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@coss/$(DEPDIR)/store_dir_coss.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@coss/$(DEPDIR)/store_io_coss.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@null/$(DEPDIR)/store_null.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ufs/$(DEPDIR)/store_dir_ufs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ufs/$(DEPDIR)/store_io_ufs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ufs/$(DEPDIR)/ufscommon.Po@am__quote@
@@ -518,7 +496,7 @@ distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
 distdir: $(DISTFILES)
-	$(mkdir_p) $(distdir)/coss $(distdir)/null $(distdir)/ufs
+	$(mkdir_p) $(distdir)/coss $(distdir)/ufs
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -571,8 +549,6 @@ distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-rm -f coss/$(DEPDIR)/$(am__dirstamp)
 	-rm -f coss/$(am__dirstamp)
-	-rm -f null/$(DEPDIR)/$(am__dirstamp)
-	-rm -f null/$(am__dirstamp)
 	-rm -f ufs/$(DEPDIR)/$(am__dirstamp)
 	-rm -f ufs/$(am__dirstamp)
 
@@ -585,7 +561,7 @@ clean-am: clean-generic clean-libtool clean-noinstLIBRARIES \
 	mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf coss/$(DEPDIR) null/$(DEPDIR) ufs/$(DEPDIR)
+	-rm -rf coss/$(DEPDIR) ufs/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-libtool distclean-tags
@@ -611,7 +587,7 @@ install-man:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf coss/$(DEPDIR) null/$(DEPDIR) ufs/$(DEPDIR)
+	-rm -rf coss/$(DEPDIR) ufs/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -645,8 +621,6 @@ uninstall-am: uninstall-info-am
 
 coss/all: libcoss.a
 coss/clean: clean
-null/all: libnull.a
-null/clean: clean
 ufs/all: libufs.a
 ufs/clean: clean
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

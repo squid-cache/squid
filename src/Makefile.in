@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.452 2007/12/27 15:46:06 hno Exp $
+#  $Id: Makefile.in,v 1.453 2007/12/27 15:50:00 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -381,8 +381,7 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	$(am__objects_26) $(am__objects_27)
 am__EXTRA_squid_SOURCES_DIST = fs/aufs/StoreFSaufs.cc \
 	fs/coss/StoreFScoss.cc fs/diskd/StoreFSdiskd.cc \
-	fs/null/StoreFSnull.cc fs/ufs/StoreFSufs.cc \
-	DiskIO/AIO/AIODiskIOModule.cc \
+	fs/ufs/StoreFSufs.cc DiskIO/AIO/AIODiskIOModule.cc \
 	DiskIO/Blocking/BlockingDiskIOModule.cc \
 	DiskIO/DiskDaemon/DiskDaemonDiskIOModule.cc \
 	DiskIO/DiskThreads/DiskThreadsDiskIOModule.cc \
@@ -1914,7 +1913,6 @@ all_FSMODULES = \
 	fs/aufs/StoreFSaufs.cc \
 	fs/coss/StoreFScoss.cc \
 	fs/diskd/StoreFSdiskd.cc \
-	fs/null/StoreFSnull.cc \
 	fs/ufs/StoreFSufs.cc
 
 all_DISKIOMODULES = \
@@ -4310,14 +4308,6 @@ fs/diskd/$(DEPDIR)/$(am__dirstamp):
 	@: > fs/diskd/$(DEPDIR)/$(am__dirstamp)
 fs/diskd/StoreFSdiskd.$(OBJEXT): fs/diskd/$(am__dirstamp) \
 	fs/diskd/$(DEPDIR)/$(am__dirstamp)
-fs/null/$(am__dirstamp):
-	@$(mkdir_p) fs/null
-	@: > fs/null/$(am__dirstamp)
-fs/null/$(DEPDIR)/$(am__dirstamp):
-	@$(mkdir_p) fs/null/$(DEPDIR)
-	@: > fs/null/$(DEPDIR)/$(am__dirstamp)
-fs/null/StoreFSnull.$(OBJEXT): fs/null/$(am__dirstamp) \
-	fs/null/$(DEPDIR)/$(am__dirstamp)
 fs/ufs/$(am__dirstamp):
 	@$(mkdir_p) fs/ufs
 	@: > fs/ufs/$(am__dirstamp)
@@ -4619,7 +4609,6 @@ mostlyclean-compile:
 	-rm -f fs/aufs/StoreFSaufs.$(OBJEXT)
 	-rm -f fs/coss/StoreFScoss.$(OBJEXT)
 	-rm -f fs/diskd/StoreFSdiskd.$(OBJEXT)
-	-rm -f fs/null/StoreFSnull.$(OBJEXT)
 	-rm -f fs/ufs/StoreFSufs.$(OBJEXT)
 	-rm -f tests/TestSwapDir.$(OBJEXT)
 	-rm -f tests/stub_DelayId.$(OBJEXT)
@@ -4950,7 +4939,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@fs/aufs/$(DEPDIR)/StoreFSaufs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@fs/coss/$(DEPDIR)/StoreFScoss.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@fs/diskd/$(DEPDIR)/StoreFSdiskd.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@fs/null/$(DEPDIR)/StoreFSnull.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@fs/ufs/$(DEPDIR)/StoreFSufs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/TestSwapDir.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/stub_DelayId.Po@am__quote@
@@ -5419,8 +5407,6 @@ distclean-generic:
 	-rm -f fs/coss/$(am__dirstamp)
 	-rm -f fs/diskd/$(DEPDIR)/$(am__dirstamp)
 	-rm -f fs/diskd/$(am__dirstamp)
-	-rm -f fs/null/$(DEPDIR)/$(am__dirstamp)
-	-rm -f fs/null/$(am__dirstamp)
 	-rm -f fs/ufs/$(DEPDIR)/$(am__dirstamp)
 	-rm -f fs/ufs/$(am__dirstamp)
 	-rm -f tests/$(DEPDIR)/$(am__dirstamp)
@@ -5439,7 +5425,7 @@ clean-am: clean-binPROGRAMS clean-checkPROGRAMS clean-generic \
 	clean-sbinPROGRAMS mostlyclean-am
 
 distclean: distclean-recursive
-	-rm -rf ../test-suite/$(DEPDIR) ./$(DEPDIR) DiskIO/$(DEPDIR) DiskIO/AIO/$(DEPDIR) DiskIO/Blocking/$(DEPDIR) DiskIO/DiskDaemon/$(DEPDIR) DiskIO/DiskThreads/$(DEPDIR) ICAP/$(DEPDIR) auth/basic/$(DEPDIR) auth/digest/$(DEPDIR) auth/negotiate/$(DEPDIR) auth/ntlm/$(DEPDIR) fs/aufs/$(DEPDIR) fs/coss/$(DEPDIR) fs/diskd/$(DEPDIR) fs/null/$(DEPDIR) fs/ufs/$(DEPDIR) tests/$(DEPDIR)
+	-rm -rf ../test-suite/$(DEPDIR) ./$(DEPDIR) DiskIO/$(DEPDIR) DiskIO/AIO/$(DEPDIR) DiskIO/Blocking/$(DEPDIR) DiskIO/DiskDaemon/$(DEPDIR) DiskIO/DiskThreads/$(DEPDIR) ICAP/$(DEPDIR) auth/basic/$(DEPDIR) auth/digest/$(DEPDIR) auth/negotiate/$(DEPDIR) auth/ntlm/$(DEPDIR) fs/aufs/$(DEPDIR) fs/coss/$(DEPDIR) fs/diskd/$(DEPDIR) fs/ufs/$(DEPDIR) tests/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-libtool distclean-tags
@@ -5466,7 +5452,7 @@ install-man:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-	-rm -rf ../test-suite/$(DEPDIR) ./$(DEPDIR) DiskIO/$(DEPDIR) DiskIO/AIO/$(DEPDIR) DiskIO/Blocking/$(DEPDIR) DiskIO/DiskDaemon/$(DEPDIR) DiskIO/DiskThreads/$(DEPDIR) ICAP/$(DEPDIR) auth/basic/$(DEPDIR) auth/digest/$(DEPDIR) auth/negotiate/$(DEPDIR) auth/ntlm/$(DEPDIR) fs/aufs/$(DEPDIR) fs/coss/$(DEPDIR) fs/diskd/$(DEPDIR) fs/null/$(DEPDIR) fs/ufs/$(DEPDIR) tests/$(DEPDIR)
+	-rm -rf ../test-suite/$(DEPDIR) ./$(DEPDIR) DiskIO/$(DEPDIR) DiskIO/AIO/$(DEPDIR) DiskIO/Blocking/$(DEPDIR) DiskIO/DiskDaemon/$(DEPDIR) DiskIO/DiskThreads/$(DEPDIR) ICAP/$(DEPDIR) auth/basic/$(DEPDIR) auth/digest/$(DEPDIR) auth/negotiate/$(DEPDIR) auth/ntlm/$(DEPDIR) fs/aufs/$(DEPDIR) fs/coss/$(DEPDIR) fs/diskd/$(DEPDIR) fs/ufs/$(DEPDIR) tests/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
