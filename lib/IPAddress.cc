@@ -1,5 +1,5 @@
 /*
- * $Id: IPAddress.cc,v 1.1 2007/12/14 04:29:22 amosjeffries Exp $
+ * $Id: IPAddress.cc,v 1.2 2007/12/26 23:59:28 hno Exp $
  *
  * DEBUG: section 14   IP Storage and Handling
  * AUTHOR: Amos Jeffries
@@ -91,7 +91,7 @@ static const unsigned int MAX_IP6_STRLEN = STRLEN_IP6R;
 /* Debugging only. Dump the address content when a fatal assert is encountered. */
 #if USE_IPV6
 #define IASSERT(a,b)  \
-	if(!b){	printf("assert \"%s\" at line %d\n", a, __LINE__); \
+	if(!(b)){	printf("assert \"%s\" at line %d\n", a, __LINE__); \
 		printf("IPAddress invalid? with IsIPv4()=%c, IsIPv6()=%c\n",(IsIPv4()?'T':'F'),(IsIPv6()?'T':'F')); \
 		printf("ADDRESS:"); \
 		for(unsigned int i = 0; i < sizeof(m_SocketAddr.sin6_addr); i++) { \
@@ -100,7 +100,7 @@ static const unsigned int MAX_IP6_STRLEN = STRLEN_IP6R;
 	}
 #else
 #define IASSERT(a,b)  \
-	if(!b){	printf("assert \"%s\" at line %d\n", a, __LINE__); \
+	if(!(b)){	printf("assert \"%s\" at line %d\n", a, __LINE__); \
 		printf("IPAddress invalid? with IsIPv4()=%c, IsIPv6()=%c\n",(IsIPv4()?'T':'F'),(IsIPv6()?'T':'F')); \
 		printf("ADDRESS: %x\n", (unsigned int)m_SocketAddr.sin_addr.s_addr); \
 		assert(b); \
