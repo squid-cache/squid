@@ -1,6 +1,6 @@
 
 /*
- * $Id: ChunkedCodingParser.h,v 1.3 2007/08/13 17:20:53 hno Exp $
+ * $Id: ChunkedCodingParser.h,v 1.1 2007/12/26 22:33:32 hno Exp $
  * 
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -54,7 +54,6 @@ public:
 
     bool needsMoreData() const;
     bool needsMoreSpace() const;
-    bool sawIeof; // saw ieof chunk extension after a 0-size chunk
 
 private:
     typedef void (ChunkedCodingParser::*Step)();
