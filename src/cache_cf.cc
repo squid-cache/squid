@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.530 2007/12/18 23:24:25 amosjeffries Exp $
+ * $Id: cache_cf.cc,v 1.531 2007/12/27 15:48:53 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -358,9 +358,6 @@ configDoConfigure(void)
     /* init memory as early as possible */
     memConfigure();
     /* Sanity checks */
-
-    if (Config.cacheSwap.swapDirs == NULL)
-        fatal("No cache_dir's specified in config file");
 
 #if SIZEOF_OFF_T <= 4
     if (Config.Store.maxObjectSize > 0x7FFF0000) {
@@ -1325,12 +1322,6 @@ dump_cachedir(StoreEntry * entry, const char *name, _SquidConfig::_cacheSwap swa
         s->dump(*entry);
         storeAppendPrintf(entry, "\n");
     }
-}
-
-static int
-check_null_cachedir(_SquidConfig::_cacheSwap swap)
-{
-    return swap.swapDirs == NULL;
 }
 
 static int

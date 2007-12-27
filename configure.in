@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.492 2007/12/19 02:36:26 amosjeffries Exp $
+dnl  $Id: configure.in,v 1.493 2007/12/27 15:48:53 hno Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.492 $)dnl
+AC_REVISION($Revision: 1.493 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -447,9 +447,6 @@ for fs in $STORE_MODULES none; do
 	dnl for STORE_TESTS substition
 	dnl
 	STORE_TESTS="$STORE_TESTS tests/testCoss$EXEEXT"
-	;;
-    null)
-	STORE_TESTS="$STORE_TESTS tests/testNull$EXEEXT"
 	;;
     ufs)
 	UFS_FOUND="true"
