@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.450 2007/12/16 01:11:42 hno Exp $
+#  $Id: Makefile.in,v 1.451 2007/12/26 22:40:05 hno Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -82,13 +82,12 @@ ICAP_libicap_a_AR = $(AR) $(ARFLAGS)
 ICAP_libicap_a_LIBADD =
 am__dirstamp = $(am__leading_dot)dirstamp
 am_ICAP_libicap_a_OBJECTS = ICAP/AsyncJob.$(OBJEXT) \
-	ICAP/ChunkedCodingParser.$(OBJEXT) ICAP/ICAPClient.$(OBJEXT) \
-	ICAP/ICAPInitiator.$(OBJEXT) ICAP/ICAPInitiate.$(OBJEXT) \
-	ICAP/ICAPLauncher.$(OBJEXT) ICAP/ICAPConfig.$(OBJEXT) \
-	ICAP/ICAPElements.$(OBJEXT) ICAP/ICAPModXact.$(OBJEXT) \
-	ICAP/ICAPOptions.$(OBJEXT) ICAP/ICAPOptXact.$(OBJEXT) \
-	ICAP/ICAPServiceRep.$(OBJEXT) ICAP/ICAPXaction.$(OBJEXT) \
-	ICAP/TextException.$(OBJEXT)
+	ICAP/ICAPClient.$(OBJEXT) ICAP/ICAPInitiator.$(OBJEXT) \
+	ICAP/ICAPInitiate.$(OBJEXT) ICAP/ICAPLauncher.$(OBJEXT) \
+	ICAP/ICAPConfig.$(OBJEXT) ICAP/ICAPElements.$(OBJEXT) \
+	ICAP/ICAPModXact.$(OBJEXT) ICAP/ICAPOptions.$(OBJEXT) \
+	ICAP/ICAPOptXact.$(OBJEXT) ICAP/ICAPServiceRep.$(OBJEXT) \
+	ICAP/ICAPXaction.$(OBJEXT)
 ICAP_libicap_a_OBJECTS = $(am_ICAP_libicap_a_OBJECTS)
 libAIO_a_AR = $(AR) $(ARFLAGS)
 libAIO_a_LIBADD =
@@ -204,7 +203,8 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc \
 	AsyncCall.cc AsyncCall.h AsyncEngine.cc AsyncEngine.h \
 	authenticate.cc authenticate.h cache_cf.cc CacheDigest.cc \
 	cache_manager.cc CacheManager.h carp.cc cbdata.cc cbdata.h \
-	client_db.cc client_side.cc client_side.h client_side_reply.cc \
+	ChunkedCodingParser.cc ChunkedCodingParser.h client_db.cc \
+	client_side.cc client_side.h client_side_reply.cc \
 	client_side_reply.h client_side_request.cc \
 	client_side_request.h BodyPipe.cc BodyPipe.h \
 	ClientRequestContext.h clientStream.cc clientStream.h CommIO.h \
@@ -267,10 +267,11 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc \
 	StoreMetaUnpacker.h StoreMetaURL.cc StoreMetaURL.h \
 	StoreMetaVary.cc StoreMetaVary.h StoreSearch.h \
 	StoreSwapLogData.cc StoreSwapLogData.h Server.cc Server.h \
-	structs.h SwapDir.cc SwapDir.h time.cc tools.cc tunnel.cc \
-	typedefs.h unlinkd.cc url.cc URL.h URLScheme.cc URLScheme.h \
-	urn.cc useragent.cc wccp.cc wccp2.cc whois.cc wordlist.cc \
-	wordlist.h win32.cc WinSvc.cc
+	structs.h SwapDir.cc SwapDir.h TextException.cc \
+	TextException.h time.cc tools.cc tunnel.cc typedefs.h \
+	unlinkd.cc url.cc URL.h URLScheme.cc URLScheme.h urn.cc \
+	useragent.cc wccp.cc wccp2.cc whois.cc wordlist.cc wordlist.h \
+	win32.cc WinSvc.cc
 am__objects_4 = ACLARP.$(OBJEXT)
 @ENABLE_ARP_ACL_TRUE@am__objects_5 = $(am__objects_4)
 am__objects_6 = $(am__objects_5) ACLASN.$(OBJEXT) ACLBrowser.$(OBJEXT) \
@@ -330,7 +331,8 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	asn.$(OBJEXT) AsyncCall.$(OBJEXT) AsyncEngine.$(OBJEXT) \
 	authenticate.$(OBJEXT) cache_cf.$(OBJEXT) \
 	CacheDigest.$(OBJEXT) cache_manager.$(OBJEXT) carp.$(OBJEXT) \
-	cbdata.$(OBJEXT) client_db.$(OBJEXT) client_side.$(OBJEXT) \
+	cbdata.$(OBJEXT) ChunkedCodingParser.$(OBJEXT) \
+	client_db.$(OBJEXT) client_side.$(OBJEXT) \
 	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
 	BodyPipe.$(OBJEXT) clientStream.$(OBJEXT) \
 	CompletionDispatcher.$(OBJEXT) $(am__objects_7) \
@@ -371,12 +373,12 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	StoreMetaSTD.$(OBJEXT) StoreMetaSTDLFS.$(OBJEXT) \
 	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
 	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
-	Server.$(OBJEXT) SwapDir.$(OBJEXT) time.$(OBJEXT) \
-	tools.$(OBJEXT) tunnel.$(OBJEXT) $(am__objects_25) \
-	url.$(OBJEXT) URLScheme.$(OBJEXT) urn.$(OBJEXT) \
-	useragent.$(OBJEXT) wccp.$(OBJEXT) wccp2.$(OBJEXT) \
-	whois.$(OBJEXT) wordlist.$(OBJEXT) $(am__objects_26) \
-	$(am__objects_27)
+	Server.$(OBJEXT) SwapDir.$(OBJEXT) TextException.$(OBJEXT) \
+	time.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
+	$(am__objects_25) url.$(OBJEXT) URLScheme.$(OBJEXT) \
+	urn.$(OBJEXT) useragent.$(OBJEXT) wccp.$(OBJEXT) \
+	wccp2.$(OBJEXT) whois.$(OBJEXT) wordlist.$(OBJEXT) \
+	$(am__objects_26) $(am__objects_27)
 am__EXTRA_squid_SOURCES_DIST = fs/aufs/StoreFSaufs.cc \
 	fs/coss/StoreFScoss.cc fs/diskd/StoreFSdiskd.cc \
 	fs/null/StoreFSnull.cc fs/ufs/StoreFSufs.cc \
@@ -464,28 +466,29 @@ am__tests_testCacheManager_SOURCES_DIST = debug.cc globals.cc \
 	ACLChecklist.cc ACLProxyAuth.cc ACLStringData.cc \
 	ACLRegexData.cc ACLUserData.cc AsyncCall.cc authenticate.cc \
 	BodyPipe.cc cache_manager.cc cache_cf.cc CacheDigest.cc \
-	carp.cc cbdata.cc client_db.cc client_side.cc \
-	client_side_reply.cc client_side_request.cc clientStream.cc \
-	comm_select.cc comm_select.h comm_select_win32.cc comm_poll.cc \
-	comm_poll.h comm_epoll.cc comm_epoll.h comm_kqueue.cc \
-	comm_kqueue.h ConfigOption.cc ConfigParser.cc CommonPool.h \
-	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
-	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
-	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
-	DelaySpec.cc DelaySpec.h DelayTagged.cc DelayTagged.h \
-	DelayUser.cc DelayUser.h DelayVector.cc DelayVector.h \
-	NullDelayId.cc NullDelayId.h disk.cc dns_internal.cc dns.cc \
-	event.cc errorpage.cc ElementList.h ESI.cc ESI.h ESIAssign.cc \
-	ESIAssign.h ESIAttempt.h ESIContext.cc ESIContext.h \
-	ESICustomParser.cc ESICustomParser.h ESIElement.h ESIExcept.h \
-	ESIExpatParser.cc ESIExpatParser.h ESIExpression.cc \
-	ESIExpression.h ESIInclude.cc ESIInclude.h ESILiteral.h \
-	ESILibxml2Parser.cc ESILibxml2Parser.h ESIParser.cc \
-	ESIParser.h ESISegment.cc ESISegment.h ESISequence.cc \
-	ESISequence.h ESIVar.h ESIVarState.cc ESIVarState.h ETag.cc \
-	external_acl.cc ExternalACLEntry.cc fd.cc fde.cc forward.cc \
-	fqdncache.cc ftp.cc gopher.cc helper.cc htcp.cc htcp.h http.cc \
-	HttpBody.cc HttpHeader.cc HttpHeaderTools.cc HttpHdrCc.cc \
+	carp.cc cbdata.cc ChunkedCodingParser.cc client_db.cc \
+	client_side.cc client_side_reply.cc client_side_request.cc \
+	clientStream.cc comm_select.cc comm_select.h \
+	comm_select_win32.cc comm_poll.cc comm_poll.h comm_epoll.cc \
+	comm_epoll.h comm_kqueue.cc comm_kqueue.h ConfigOption.cc \
+	ConfigParser.cc CommonPool.h CompositePoolNode.h \
+	delay_pools.cc DelayId.cc DelayId.h DelayIdComposite.h \
+	DelayBucket.cc DelayBucket.h DelayConfig.cc DelayConfig.h \
+	DelayPool.cc DelayPool.h DelayPools.h DelaySpec.cc DelaySpec.h \
+	DelayTagged.cc DelayTagged.h DelayUser.cc DelayUser.h \
+	DelayVector.cc DelayVector.h NullDelayId.cc NullDelayId.h \
+	disk.cc dns_internal.cc dns.cc event.cc errorpage.cc \
+	ElementList.h ESI.cc ESI.h ESIAssign.cc ESIAssign.h \
+	ESIAttempt.h ESIContext.cc ESIContext.h ESICustomParser.cc \
+	ESICustomParser.h ESIElement.h ESIExcept.h ESIExpatParser.cc \
+	ESIExpatParser.h ESIExpression.cc ESIExpression.h \
+	ESIInclude.cc ESIInclude.h ESILiteral.h ESILibxml2Parser.cc \
+	ESILibxml2Parser.h ESIParser.cc ESIParser.h ESISegment.cc \
+	ESISegment.h ESISequence.cc ESISequence.h ESIVar.h \
+	ESIVarState.cc ESIVarState.h ETag.cc external_acl.cc \
+	ExternalACLEntry.cc fd.cc fde.cc forward.cc fqdncache.cc \
+	ftp.cc gopher.cc helper.cc htcp.cc htcp.h http.cc HttpBody.cc \
+	HttpHeader.cc HttpHeaderTools.cc HttpHdrCc.cc \
 	HttpHdrContRange.cc HttpHdrRange.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc HttpMsg.cc HttpReply.cc HttpStatusLine.cc \
 	ICMP.h icmp.cc ICMPConfig.h ICMPSquid.h ICMPSquid.cc icp_v2.cc \
@@ -503,9 +506,9 @@ am__tests_testCacheManager_SOURCES_DIST = debug.cc globals.cc \
 	store_swapout.cc StoreFileSystem.cc StoreIOState.cc \
 	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
 	StoreMetaSTDLFS.cc StoreMetaUnpacker.cc StoreMetaURL.cc \
-	StoreMetaVary.cc StoreSwapLogData.cc tools.cc tunnel.cc \
-	SwapDir.cc url.cc URLScheme.cc urn.cc useragent.cc wccp2.cc \
-	whois.cc win32.cc wordlist.cc
+	StoreMetaVary.cc StoreSwapLogData.cc TextException.cc tools.cc \
+	tunnel.cc SwapDir.cc url.cc URLScheme.cc urn.cc useragent.cc \
+	wccp2.cc whois.cc win32.cc wordlist.cc
 am_tests_testCacheManager_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	HttpRequest.$(OBJEXT) HttpRequestMethod.$(OBJEXT) \
 	mem.$(OBJEXT) String.$(OBJEXT) \
@@ -517,12 +520,13 @@ am_tests_testCacheManager_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	AsyncCall.$(OBJEXT) authenticate.$(OBJEXT) BodyPipe.$(OBJEXT) \
 	cache_manager.$(OBJEXT) cache_cf.$(OBJEXT) \
 	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
-	client_db.$(OBJEXT) client_side.$(OBJEXT) \
-	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
-	clientStream.$(OBJEXT) $(am__objects_7) ConfigOption.$(OBJEXT) \
-	ConfigParser.$(OBJEXT) $(am__objects_9) disk.$(OBJEXT) \
-	$(am__objects_11) event.$(OBJEXT) errorpage.$(OBJEXT) \
-	$(am__objects_13) ETag.$(OBJEXT) external_acl.$(OBJEXT) \
+	ChunkedCodingParser.$(OBJEXT) client_db.$(OBJEXT) \
+	client_side.$(OBJEXT) client_side_reply.$(OBJEXT) \
+	client_side_request.$(OBJEXT) clientStream.$(OBJEXT) \
+	$(am__objects_7) ConfigOption.$(OBJEXT) ConfigParser.$(OBJEXT) \
+	$(am__objects_9) disk.$(OBJEXT) $(am__objects_11) \
+	event.$(OBJEXT) errorpage.$(OBJEXT) $(am__objects_13) \
+	ETag.$(OBJEXT) external_acl.$(OBJEXT) \
 	ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) fde.$(OBJEXT) \
 	forward.$(OBJEXT) fqdncache.$(OBJEXT) ftp.$(OBJEXT) \
 	gopher.$(OBJEXT) helper.$(OBJEXT) $(am__objects_14) \
@@ -551,10 +555,11 @@ am_tests_testCacheManager_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	StoreMetaMD5.$(OBJEXT) StoreMetaSTD.$(OBJEXT) \
 	StoreMetaSTDLFS.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
 	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
-	StoreSwapLogData.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
-	SwapDir.$(OBJEXT) url.$(OBJEXT) URLScheme.$(OBJEXT) \
-	urn.$(OBJEXT) useragent.$(OBJEXT) wccp2.$(OBJEXT) \
-	whois.$(OBJEXT) $(am__objects_26) wordlist.$(OBJEXT)
+	StoreSwapLogData.$(OBJEXT) TextException.$(OBJEXT) \
+	tools.$(OBJEXT) tunnel.$(OBJEXT) SwapDir.$(OBJEXT) \
+	url.$(OBJEXT) URLScheme.$(OBJEXT) urn.$(OBJEXT) \
+	useragent.$(OBJEXT) wccp2.$(OBJEXT) whois.$(OBJEXT) \
+	$(am__objects_26) wordlist.$(OBJEXT)
 nodist_tests_testCacheManager_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testCacheManager_OBJECTS = $(am_tests_testCacheManager_OBJECTS) \
@@ -687,6 +692,111 @@ am__tests_testEvent_SOURCES_DIST = debug.cc EventLoop.h EventLoop.cc \
 	ACLProxyAuth.cc ACLStringData.cc ACLRegexData.cc \
 	ACLUserData.cc AsyncCall.cc authenticate.cc BodyPipe.cc \
 	cache_manager.cc cache_cf.cc CacheDigest.cc carp.cc cbdata.cc \
+	ChunkedCodingParser.cc client_db.cc client_side.cc \
+	client_side_reply.cc client_side_request.cc clientStream.cc \
+	comm_select.cc comm_select.h comm_select_win32.cc comm_poll.cc \
+	comm_poll.h comm_epoll.cc comm_epoll.h comm_kqueue.cc \
+	comm_kqueue.h ConfigOption.cc ConfigParser.cc CommonPool.h \
+	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
+	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
+	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
+	DelaySpec.cc DelaySpec.h DelayTagged.cc DelayTagged.h \
+	DelayUser.cc DelayUser.h DelayVector.cc DelayVector.h \
+	NullDelayId.cc NullDelayId.h disk.cc dns_internal.cc dns.cc \
+	event.cc errorpage.cc ElementList.h ESI.cc ESI.h ESIAssign.cc \
+	ESIAssign.h ESIAttempt.h ESIContext.cc ESIContext.h \
+	ESICustomParser.cc ESICustomParser.h ESIElement.h ESIExcept.h \
+	ESIExpatParser.cc ESIExpatParser.h ESIExpression.cc \
+	ESIExpression.h ESIInclude.cc ESIInclude.h ESILiteral.h \
+	ESILibxml2Parser.cc ESILibxml2Parser.h ESIParser.cc \
+	ESIParser.h ESISegment.cc ESISegment.h ESISequence.cc \
+	ESISequence.h ESIVar.h ESIVarState.cc ESIVarState.h ETag.cc \
+	external_acl.cc ExternalACLEntry.cc fd.cc fde.cc forward.cc \
+	fqdncache.cc ftp.cc gopher.cc helper.cc htcp.cc htcp.h http.cc \
+	HttpBody.cc HttpHeader.cc HttpHeaderTools.cc HttpHdrCc.cc \
+	HttpHdrContRange.cc HttpHdrRange.cc HttpHdrSc.cc \
+	HttpHdrScTarget.cc HttpMsg.cc HttpReply.cc HttpStatusLine.cc \
+	ICMP.h icmp.cc ICMPConfig.h ICMPSquid.h ICMPSquid.cc icp_v2.cc \
+	icp_v3.cc ACLIdent.cc ACLIdent.h ident.cc ipc.cc ipc_win32.cc \
+	ipcache.cc int.cc internal.cc list.cc logfile.cc multicast.cc \
+	mem_node.cc MemBuf.cc MemObject.cc mime.cc neighbors.cc \
+	net_db.cc Packer.cc Parsing.cc pconn.cc peer_digest.cc \
+	peer_select.cc redirect.cc referer.cc refresh.cc Server.cc \
+	snmp_core.cc snmp_agent.cc ACLCertificateData.cc \
+	ACLCertificateData.h ACLCertificate.cc ACLCertificate.h \
+	ssl_support.cc ssl_support.h stat.cc StatHist.cc stmem.cc \
+	store.cc store_client.cc store_digest.cc store_dir.cc \
+	store_io.cc store_key_md5.cc store_log.cc store_rebuild.cc \
+	store_swapin.cc store_swapmeta.cc store_swapout.cc \
+	StoreFileSystem.cc StoreIOState.cc StoreMeta.cc \
+	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaSTDLFS.cc \
+	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
+	StoreSwapLogData.cc TextException.cc tools.cc tunnel.cc \
+	SwapDir.cc url.cc URLScheme.cc urn.cc useragent.cc wccp2.cc \
+	whois.cc win32.cc wordlist.cc
+am_tests_testEvent_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
+	globals.$(OBJEXT) HttpRequest.$(OBJEXT) \
+	HttpRequestMethod.$(OBJEXT) mem.$(OBJEXT) \
+	RemovalPolicy.$(OBJEXT) String.$(OBJEXT) \
+	tests/testEvent.$(OBJEXT) tests/testMain.$(OBJEXT) \
+	time.$(OBJEXT) access_log.$(OBJEXT) acl.$(OBJEXT) \
+	acl_noncore.$(OBJEXT) ACLChecklist.$(OBJEXT) \
+	ACLProxyAuth.$(OBJEXT) ACLStringData.$(OBJEXT) \
+	ACLRegexData.$(OBJEXT) ACLUserData.$(OBJEXT) \
+	AsyncCall.$(OBJEXT) authenticate.$(OBJEXT) BodyPipe.$(OBJEXT) \
+	cache_manager.$(OBJEXT) cache_cf.$(OBJEXT) \
+	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
+	ChunkedCodingParser.$(OBJEXT) client_db.$(OBJEXT) \
+	client_side.$(OBJEXT) client_side_reply.$(OBJEXT) \
+	client_side_request.$(OBJEXT) clientStream.$(OBJEXT) \
+	$(am__objects_7) ConfigOption.$(OBJEXT) ConfigParser.$(OBJEXT) \
+	$(am__objects_9) disk.$(OBJEXT) $(am__objects_11) \
+	event.$(OBJEXT) errorpage.$(OBJEXT) $(am__objects_13) \
+	ETag.$(OBJEXT) external_acl.$(OBJEXT) \
+	ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) fde.$(OBJEXT) \
+	forward.$(OBJEXT) fqdncache.$(OBJEXT) ftp.$(OBJEXT) \
+	gopher.$(OBJEXT) helper.$(OBJEXT) $(am__objects_14) \
+	http.$(OBJEXT) HttpBody.$(OBJEXT) HttpHeader.$(OBJEXT) \
+	HttpHeaderTools.$(OBJEXT) HttpHdrCc.$(OBJEXT) \
+	HttpHdrContRange.$(OBJEXT) HttpHdrRange.$(OBJEXT) \
+	HttpHdrSc.$(OBJEXT) HttpHdrScTarget.$(OBJEXT) \
+	HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) HttpStatusLine.$(OBJEXT) \
+	$(am__objects_15) icp_v2.$(OBJEXT) icp_v3.$(OBJEXT) \
+	$(am__objects_17) $(am__objects_18) ipcache.$(OBJEXT) \
+	int.$(OBJEXT) internal.$(OBJEXT) list.$(OBJEXT) \
+	logfile.$(OBJEXT) multicast.$(OBJEXT) mem_node.$(OBJEXT) \
+	MemBuf.$(OBJEXT) MemObject.$(OBJEXT) mime.$(OBJEXT) \
+	neighbors.$(OBJEXT) net_db.$(OBJEXT) Packer.$(OBJEXT) \
+	Parsing.$(OBJEXT) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
+	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
+	refresh.$(OBJEXT) Server.$(OBJEXT) $(am__objects_22) \
+	$(am__objects_24) stat.$(OBJEXT) StatHist.$(OBJEXT) \
+	stmem.$(OBJEXT) store.$(OBJEXT) store_client.$(OBJEXT) \
+	store_digest.$(OBJEXT) store_dir.$(OBJEXT) store_io.$(OBJEXT) \
+	store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
+	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
+	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
+	StoreFileSystem.$(OBJEXT) StoreIOState.$(OBJEXT) \
+	StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
+	StoreMetaSTD.$(OBJEXT) StoreMetaSTDLFS.$(OBJEXT) \
+	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
+	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
+	TextException.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
+	SwapDir.$(OBJEXT) url.$(OBJEXT) URLScheme.$(OBJEXT) \
+	urn.$(OBJEXT) useragent.$(OBJEXT) wccp2.$(OBJEXT) \
+	whois.$(OBJEXT) $(am__objects_26) wordlist.$(OBJEXT)
+nodist_tests_testEvent_OBJECTS = repl_modules.$(OBJEXT) \
+	string_arrays.$(OBJEXT)
+tests_testEvent_OBJECTS = $(am_tests_testEvent_OBJECTS) \
+	$(nodist_tests_testEvent_OBJECTS)
+am__tests_testEventLoop_SOURCES_DIST = debug.cc EventLoop.h \
+	EventLoop.cc globals.cc HttpRequest.cc HttpRequestMethod.cc \
+	mem.cc RemovalPolicy.cc String.cc tests/testEventLoop.cc \
+	tests/testEventLoop.h tests/testMain.cc time.cc access_log.cc \
+	acl.cc acl_noncore.cc ACLChecklist.cc ACLProxyAuth.cc \
+	ACLStringData.cc ACLRegexData.cc ACLUserData.cc AsyncCall.cc \
+	authenticate.cc BodyPipe.cc cache_manager.cc cache_cf.cc \
+	CacheDigest.cc carp.cc cbdata.cc ChunkedCodingParser.cc \
 	client_db.cc client_side.cc client_side_reply.cc \
 	client_side_request.cc clientStream.cc comm_select.cc \
 	comm_select.h comm_select_win32.cc comm_poll.cc comm_poll.h \
@@ -726,112 +836,9 @@ am__tests_testEvent_SOURCES_DIST = debug.cc EventLoop.h EventLoop.cc \
 	StoreFileSystem.cc StoreIOState.cc StoreMeta.cc \
 	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaSTDLFS.cc \
 	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
-	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc url.cc \
-	URLScheme.cc urn.cc useragent.cc wccp2.cc whois.cc win32.cc \
-	wordlist.cc
-am_tests_testEvent_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
-	globals.$(OBJEXT) HttpRequest.$(OBJEXT) \
-	HttpRequestMethod.$(OBJEXT) mem.$(OBJEXT) \
-	RemovalPolicy.$(OBJEXT) String.$(OBJEXT) \
-	tests/testEvent.$(OBJEXT) tests/testMain.$(OBJEXT) \
-	time.$(OBJEXT) access_log.$(OBJEXT) acl.$(OBJEXT) \
-	acl_noncore.$(OBJEXT) ACLChecklist.$(OBJEXT) \
-	ACLProxyAuth.$(OBJEXT) ACLStringData.$(OBJEXT) \
-	ACLRegexData.$(OBJEXT) ACLUserData.$(OBJEXT) \
-	AsyncCall.$(OBJEXT) authenticate.$(OBJEXT) BodyPipe.$(OBJEXT) \
-	cache_manager.$(OBJEXT) cache_cf.$(OBJEXT) \
-	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
-	client_db.$(OBJEXT) client_side.$(OBJEXT) \
-	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
-	clientStream.$(OBJEXT) $(am__objects_7) ConfigOption.$(OBJEXT) \
-	ConfigParser.$(OBJEXT) $(am__objects_9) disk.$(OBJEXT) \
-	$(am__objects_11) event.$(OBJEXT) errorpage.$(OBJEXT) \
-	$(am__objects_13) ETag.$(OBJEXT) external_acl.$(OBJEXT) \
-	ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) fde.$(OBJEXT) \
-	forward.$(OBJEXT) fqdncache.$(OBJEXT) ftp.$(OBJEXT) \
-	gopher.$(OBJEXT) helper.$(OBJEXT) $(am__objects_14) \
-	http.$(OBJEXT) HttpBody.$(OBJEXT) HttpHeader.$(OBJEXT) \
-	HttpHeaderTools.$(OBJEXT) HttpHdrCc.$(OBJEXT) \
-	HttpHdrContRange.$(OBJEXT) HttpHdrRange.$(OBJEXT) \
-	HttpHdrSc.$(OBJEXT) HttpHdrScTarget.$(OBJEXT) \
-	HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) HttpStatusLine.$(OBJEXT) \
-	$(am__objects_15) icp_v2.$(OBJEXT) icp_v3.$(OBJEXT) \
-	$(am__objects_17) $(am__objects_18) ipcache.$(OBJEXT) \
-	int.$(OBJEXT) internal.$(OBJEXT) list.$(OBJEXT) \
-	logfile.$(OBJEXT) multicast.$(OBJEXT) mem_node.$(OBJEXT) \
-	MemBuf.$(OBJEXT) MemObject.$(OBJEXT) mime.$(OBJEXT) \
-	neighbors.$(OBJEXT) net_db.$(OBJEXT) Packer.$(OBJEXT) \
-	Parsing.$(OBJEXT) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
-	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
-	refresh.$(OBJEXT) Server.$(OBJEXT) $(am__objects_22) \
-	$(am__objects_24) stat.$(OBJEXT) StatHist.$(OBJEXT) \
-	stmem.$(OBJEXT) store.$(OBJEXT) store_client.$(OBJEXT) \
-	store_digest.$(OBJEXT) store_dir.$(OBJEXT) store_io.$(OBJEXT) \
-	store_key_md5.$(OBJEXT) store_log.$(OBJEXT) \
-	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
-	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
-	StoreFileSystem.$(OBJEXT) StoreIOState.$(OBJEXT) \
-	StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
-	StoreMetaSTD.$(OBJEXT) StoreMetaSTDLFS.$(OBJEXT) \
-	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
-	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
-	tools.$(OBJEXT) tunnel.$(OBJEXT) SwapDir.$(OBJEXT) \
-	url.$(OBJEXT) URLScheme.$(OBJEXT) urn.$(OBJEXT) \
-	useragent.$(OBJEXT) wccp2.$(OBJEXT) whois.$(OBJEXT) \
-	$(am__objects_26) wordlist.$(OBJEXT)
-nodist_tests_testEvent_OBJECTS = repl_modules.$(OBJEXT) \
-	string_arrays.$(OBJEXT)
-tests_testEvent_OBJECTS = $(am_tests_testEvent_OBJECTS) \
-	$(nodist_tests_testEvent_OBJECTS)
-am__tests_testEventLoop_SOURCES_DIST = debug.cc EventLoop.h \
-	EventLoop.cc globals.cc HttpRequest.cc HttpRequestMethod.cc \
-	mem.cc RemovalPolicy.cc String.cc tests/testEventLoop.cc \
-	tests/testEventLoop.h tests/testMain.cc time.cc access_log.cc \
-	acl.cc acl_noncore.cc ACLChecklist.cc ACLProxyAuth.cc \
-	ACLStringData.cc ACLRegexData.cc ACLUserData.cc AsyncCall.cc \
-	authenticate.cc BodyPipe.cc cache_manager.cc cache_cf.cc \
-	CacheDigest.cc carp.cc cbdata.cc client_db.cc client_side.cc \
-	client_side_reply.cc client_side_request.cc clientStream.cc \
-	comm_select.cc comm_select.h comm_select_win32.cc comm_poll.cc \
-	comm_poll.h comm_epoll.cc comm_epoll.h comm_kqueue.cc \
-	comm_kqueue.h ConfigOption.cc ConfigParser.cc CommonPool.h \
-	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
-	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
-	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
-	DelaySpec.cc DelaySpec.h DelayTagged.cc DelayTagged.h \
-	DelayUser.cc DelayUser.h DelayVector.cc DelayVector.h \
-	NullDelayId.cc NullDelayId.h disk.cc dns_internal.cc dns.cc \
-	event.cc errorpage.cc ElementList.h ESI.cc ESI.h ESIAssign.cc \
-	ESIAssign.h ESIAttempt.h ESIContext.cc ESIContext.h \
-	ESICustomParser.cc ESICustomParser.h ESIElement.h ESIExcept.h \
-	ESIExpatParser.cc ESIExpatParser.h ESIExpression.cc \
-	ESIExpression.h ESIInclude.cc ESIInclude.h ESILiteral.h \
-	ESILibxml2Parser.cc ESILibxml2Parser.h ESIParser.cc \
-	ESIParser.h ESISegment.cc ESISegment.h ESISequence.cc \
-	ESISequence.h ESIVar.h ESIVarState.cc ESIVarState.h ETag.cc \
-	external_acl.cc ExternalACLEntry.cc fd.cc fde.cc forward.cc \
-	fqdncache.cc ftp.cc gopher.cc helper.cc htcp.cc htcp.h http.cc \
-	HttpBody.cc HttpHeader.cc HttpHeaderTools.cc HttpHdrCc.cc \
-	HttpHdrContRange.cc HttpHdrRange.cc HttpHdrSc.cc \
-	HttpHdrScTarget.cc HttpMsg.cc HttpReply.cc HttpStatusLine.cc \
-	ICMP.h icmp.cc ICMPConfig.h ICMPSquid.h ICMPSquid.cc icp_v2.cc \
-	icp_v3.cc ACLIdent.cc ACLIdent.h ident.cc ipc.cc ipc_win32.cc \
-	ipcache.cc int.cc internal.cc list.cc logfile.cc multicast.cc \
-	mem_node.cc MemBuf.cc MemObject.cc mime.cc neighbors.cc \
-	net_db.cc Packer.cc Parsing.cc pconn.cc peer_digest.cc \
-	peer_select.cc redirect.cc referer.cc refresh.cc Server.cc \
-	snmp_core.cc snmp_agent.cc ACLCertificateData.cc \
-	ACLCertificateData.h ACLCertificate.cc ACLCertificate.h \
-	ssl_support.cc ssl_support.h stat.cc StatHist.cc stmem.cc \
-	store.cc store_client.cc store_digest.cc store_dir.cc \
-	store_io.cc store_key_md5.cc store_log.cc store_rebuild.cc \
-	store_swapin.cc store_swapmeta.cc store_swapout.cc \
-	StoreFileSystem.cc StoreIOState.cc StoreMeta.cc \
-	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaSTDLFS.cc \
-	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
-	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc url.cc \
-	URLScheme.cc urn.cc useragent.cc wccp2.cc whois.cc win32.cc \
-	wordlist.cc
+	StoreSwapLogData.cc TextException.cc tools.cc tunnel.cc \
+	SwapDir.cc url.cc URLScheme.cc urn.cc useragent.cc wccp2.cc \
+	whois.cc win32.cc wordlist.cc
 am_tests_testEventLoop_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	globals.$(OBJEXT) HttpRequest.$(OBJEXT) \
 	HttpRequestMethod.$(OBJEXT) mem.$(OBJEXT) \
@@ -844,12 +851,13 @@ am_tests_testEventLoop_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	AsyncCall.$(OBJEXT) authenticate.$(OBJEXT) BodyPipe.$(OBJEXT) \
 	cache_manager.$(OBJEXT) cache_cf.$(OBJEXT) \
 	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
-	client_db.$(OBJEXT) client_side.$(OBJEXT) \
-	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
-	clientStream.$(OBJEXT) $(am__objects_7) ConfigOption.$(OBJEXT) \
-	ConfigParser.$(OBJEXT) $(am__objects_9) disk.$(OBJEXT) \
-	$(am__objects_11) event.$(OBJEXT) errorpage.$(OBJEXT) \
-	$(am__objects_13) ETag.$(OBJEXT) external_acl.$(OBJEXT) \
+	ChunkedCodingParser.$(OBJEXT) client_db.$(OBJEXT) \
+	client_side.$(OBJEXT) client_side_reply.$(OBJEXT) \
+	client_side_request.$(OBJEXT) clientStream.$(OBJEXT) \
+	$(am__objects_7) ConfigOption.$(OBJEXT) ConfigParser.$(OBJEXT) \
+	$(am__objects_9) disk.$(OBJEXT) $(am__objects_11) \
+	event.$(OBJEXT) errorpage.$(OBJEXT) $(am__objects_13) \
+	ETag.$(OBJEXT) external_acl.$(OBJEXT) \
 	ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) fde.$(OBJEXT) \
 	forward.$(OBJEXT) fqdncache.$(OBJEXT) ftp.$(OBJEXT) \
 	gopher.$(OBJEXT) helper.$(OBJEXT) $(am__objects_14) \
@@ -878,10 +886,10 @@ am_tests_testEventLoop_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	StoreMetaSTD.$(OBJEXT) StoreMetaSTDLFS.$(OBJEXT) \
 	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
 	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
-	tools.$(OBJEXT) tunnel.$(OBJEXT) SwapDir.$(OBJEXT) \
-	url.$(OBJEXT) URLScheme.$(OBJEXT) urn.$(OBJEXT) \
-	useragent.$(OBJEXT) wccp2.$(OBJEXT) whois.$(OBJEXT) \
-	$(am__objects_26) wordlist.$(OBJEXT)
+	TextException.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
+	SwapDir.$(OBJEXT) url.$(OBJEXT) URLScheme.$(OBJEXT) \
+	urn.$(OBJEXT) useragent.$(OBJEXT) wccp2.$(OBJEXT) \
+	whois.$(OBJEXT) $(am__objects_26) wordlist.$(OBJEXT)
 nodist_tests_testEventLoop_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testEventLoop_OBJECTS = $(am_tests_testEventLoop_OBJECTS) \
@@ -919,28 +927,29 @@ am__tests_testHttpRequest_SOURCES_DIST = debug.cc globals.cc \
 	ACLChecklist.cc ACLProxyAuth.cc ACLStringData.cc \
 	ACLRegexData.cc ACLUserData.cc AsyncCall.cc authenticate.cc \
 	BodyPipe.cc cache_manager.cc cache_cf.cc CacheDigest.cc \
-	carp.cc cbdata.cc client_db.cc client_side.cc \
-	client_side_reply.cc client_side_request.cc clientStream.cc \
-	comm_select.cc comm_select.h comm_select_win32.cc comm_poll.cc \
-	comm_poll.h comm_epoll.cc comm_epoll.h comm_kqueue.cc \
-	comm_kqueue.h ConfigOption.cc ConfigParser.cc CommonPool.h \
-	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
-	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
-	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
-	DelaySpec.cc DelaySpec.h DelayTagged.cc DelayTagged.h \
-	DelayUser.cc DelayUser.h DelayVector.cc DelayVector.h \
-	NullDelayId.cc NullDelayId.h disk.cc dns_internal.cc dns.cc \
-	event.cc errorpage.cc ElementList.h ESI.cc ESI.h ESIAssign.cc \
-	ESIAssign.h ESIAttempt.h ESIContext.cc ESIContext.h \
-	ESICustomParser.cc ESICustomParser.h ESIElement.h ESIExcept.h \
-	ESIExpatParser.cc ESIExpatParser.h ESIExpression.cc \
-	ESIExpression.h ESIInclude.cc ESIInclude.h ESILiteral.h \
-	ESILibxml2Parser.cc ESILibxml2Parser.h ESIParser.cc \
-	ESIParser.h ESISegment.cc ESISegment.h ESISequence.cc \
-	ESISequence.h ESIVar.h ESIVarState.cc ESIVarState.h ETag.cc \
-	external_acl.cc ExternalACLEntry.cc fd.cc fde.cc forward.cc \
-	fqdncache.cc ftp.cc gopher.cc helper.cc htcp.cc htcp.h http.cc \
-	HttpBody.cc HttpHeader.cc HttpHeaderTools.cc HttpHdrCc.cc \
+	carp.cc cbdata.cc ChunkedCodingParser.cc client_db.cc \
+	client_side.cc client_side_reply.cc client_side_request.cc \
+	clientStream.cc comm_select.cc comm_select.h \
+	comm_select_win32.cc comm_poll.cc comm_poll.h comm_epoll.cc \
+	comm_epoll.h comm_kqueue.cc comm_kqueue.h ConfigOption.cc \
+	ConfigParser.cc CommonPool.h CompositePoolNode.h \
+	delay_pools.cc DelayId.cc DelayId.h DelayIdComposite.h \
+	DelayBucket.cc DelayBucket.h DelayConfig.cc DelayConfig.h \
+	DelayPool.cc DelayPool.h DelayPools.h DelaySpec.cc DelaySpec.h \
+	DelayTagged.cc DelayTagged.h DelayUser.cc DelayUser.h \
+	DelayVector.cc DelayVector.h NullDelayId.cc NullDelayId.h \
+	disk.cc dns_internal.cc dns.cc event.cc errorpage.cc \
+	ElementList.h ESI.cc ESI.h ESIAssign.cc ESIAssign.h \
+	ESIAttempt.h ESIContext.cc ESIContext.h ESICustomParser.cc \
+	ESICustomParser.h ESIElement.h ESIExcept.h ESIExpatParser.cc \
+	ESIExpatParser.h ESIExpression.cc ESIExpression.h \
+	ESIInclude.cc ESIInclude.h ESILiteral.h ESILibxml2Parser.cc \
+	ESILibxml2Parser.h ESIParser.cc ESIParser.h ESISegment.cc \
+	ESISegment.h ESISequence.cc ESISequence.h ESIVar.h \
+	ESIVarState.cc ESIVarState.h ETag.cc external_acl.cc \
+	ExternalACLEntry.cc fd.cc fde.cc forward.cc fqdncache.cc \
+	ftp.cc gopher.cc helper.cc htcp.cc htcp.h http.cc HttpBody.cc \
+	HttpHeader.cc HttpHeaderTools.cc HttpHdrCc.cc \
 	HttpHdrContRange.cc HttpHdrRange.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc HttpMsg.cc HttpReply.cc HttpStatusLine.cc \
 	ICMP.h icmp.cc ICMPConfig.h ICMPSquid.h ICMPSquid.cc icp_v2.cc \
@@ -958,9 +967,9 @@ am__tests_testHttpRequest_SOURCES_DIST = debug.cc globals.cc \
 	store_swapout.cc StoreFileSystem.cc StoreIOState.cc \
 	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
 	StoreMetaSTDLFS.cc StoreMetaUnpacker.cc StoreMetaURL.cc \
-	StoreMetaVary.cc StoreSwapLogData.cc tools.cc tunnel.cc \
-	SwapDir.cc url.cc URLScheme.cc urn.cc useragent.cc wccp2.cc \
-	whois.cc win32.cc wordlist.cc
+	StoreMetaVary.cc StoreSwapLogData.cc TextException.cc tools.cc \
+	tunnel.cc SwapDir.cc url.cc URLScheme.cc urn.cc useragent.cc \
+	wccp2.cc whois.cc win32.cc wordlist.cc
 am_tests_testHttpRequest_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	HttpRequest.$(OBJEXT) HttpRequestMethod.$(OBJEXT) \
 	mem.$(OBJEXT) String.$(OBJEXT) tests/testHttpRequest.$(OBJEXT) \
@@ -972,12 +981,13 @@ am_tests_testHttpRequest_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	AsyncCall.$(OBJEXT) authenticate.$(OBJEXT) BodyPipe.$(OBJEXT) \
 	cache_manager.$(OBJEXT) cache_cf.$(OBJEXT) \
 	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
-	client_db.$(OBJEXT) client_side.$(OBJEXT) \
-	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
-	clientStream.$(OBJEXT) $(am__objects_7) ConfigOption.$(OBJEXT) \
-	ConfigParser.$(OBJEXT) $(am__objects_9) disk.$(OBJEXT) \
-	$(am__objects_11) event.$(OBJEXT) errorpage.$(OBJEXT) \
-	$(am__objects_13) ETag.$(OBJEXT) external_acl.$(OBJEXT) \
+	ChunkedCodingParser.$(OBJEXT) client_db.$(OBJEXT) \
+	client_side.$(OBJEXT) client_side_reply.$(OBJEXT) \
+	client_side_request.$(OBJEXT) clientStream.$(OBJEXT) \
+	$(am__objects_7) ConfigOption.$(OBJEXT) ConfigParser.$(OBJEXT) \
+	$(am__objects_9) disk.$(OBJEXT) $(am__objects_11) \
+	event.$(OBJEXT) errorpage.$(OBJEXT) $(am__objects_13) \
+	ETag.$(OBJEXT) external_acl.$(OBJEXT) \
 	ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) fde.$(OBJEXT) \
 	forward.$(OBJEXT) fqdncache.$(OBJEXT) ftp.$(OBJEXT) \
 	gopher.$(OBJEXT) helper.$(OBJEXT) $(am__objects_14) \
@@ -1006,10 +1016,11 @@ am_tests_testHttpRequest_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	StoreMetaMD5.$(OBJEXT) StoreMetaSTD.$(OBJEXT) \
 	StoreMetaSTDLFS.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
 	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
-	StoreSwapLogData.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
-	SwapDir.$(OBJEXT) url.$(OBJEXT) URLScheme.$(OBJEXT) \
-	urn.$(OBJEXT) useragent.$(OBJEXT) wccp2.$(OBJEXT) \
-	whois.$(OBJEXT) $(am__objects_26) wordlist.$(OBJEXT)
+	StoreSwapLogData.$(OBJEXT) TextException.$(OBJEXT) \
+	tools.$(OBJEXT) tunnel.$(OBJEXT) SwapDir.$(OBJEXT) \
+	url.$(OBJEXT) URLScheme.$(OBJEXT) urn.$(OBJEXT) \
+	useragent.$(OBJEXT) wccp2.$(OBJEXT) whois.$(OBJEXT) \
+	$(am__objects_26) wordlist.$(OBJEXT)
 nodist_tests_testHttpRequest_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testHttpRequest_OBJECTS = $(am_tests_testHttpRequest_OBJECTS) \
@@ -1106,11 +1117,11 @@ am__tests_testURL_SOURCES_DIST = debug.cc url.cc URLScheme.cc \
 	ACLProxyAuth.cc ACLStringData.cc ACLRegexData.cc \
 	ACLUserData.cc AsyncCall.cc authenticate.cc BodyPipe.cc \
 	cache_manager.cc cache_cf.cc CacheDigest.cc carp.cc cbdata.cc \
-	client_db.cc client_side.cc client_side_reply.cc \
-	client_side_request.cc clientStream.cc comm_select.cc \
-	comm_select.h comm_select_win32.cc comm_poll.cc comm_poll.h \
-	comm_epoll.cc comm_epoll.h comm_kqueue.cc comm_kqueue.h \
-	ConfigOption.cc ConfigParser.cc CommonPool.h \
+	ChunkedCodingParser.cc client_db.cc client_side.cc \
+	client_side_reply.cc client_side_request.cc clientStream.cc \
+	comm_select.cc comm_select.h comm_select_win32.cc comm_poll.cc \
+	comm_poll.h comm_epoll.cc comm_epoll.h comm_kqueue.cc \
+	comm_kqueue.h ConfigOption.cc ConfigParser.cc CommonPool.h \
 	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
 	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
 	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
@@ -1145,8 +1156,9 @@ am__tests_testURL_SOURCES_DIST = debug.cc url.cc URLScheme.cc \
 	StoreFileSystem.cc StoreIOState.cc StoreMeta.cc \
 	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaSTDLFS.cc \
 	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
-	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc urn.cc \
-	useragent.cc wccp2.cc whois.cc win32.cc wordlist.cc
+	StoreSwapLogData.cc TextException.cc tools.cc tunnel.cc \
+	SwapDir.cc urn.cc useragent.cc wccp2.cc whois.cc win32.cc \
+	wordlist.cc
 am_tests_testURL_OBJECTS = debug.$(OBJEXT) url.$(OBJEXT) \
 	URLScheme.$(OBJEXT) globals.$(OBJEXT) HttpRequest.$(OBJEXT) \
 	HttpRequestMethod.$(OBJEXT) mem.$(OBJEXT) \
@@ -1159,12 +1171,13 @@ am_tests_testURL_OBJECTS = debug.$(OBJEXT) url.$(OBJEXT) \
 	AsyncCall.$(OBJEXT) authenticate.$(OBJEXT) BodyPipe.$(OBJEXT) \
 	cache_manager.$(OBJEXT) cache_cf.$(OBJEXT) \
 	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
-	client_db.$(OBJEXT) client_side.$(OBJEXT) \
-	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
-	clientStream.$(OBJEXT) $(am__objects_7) ConfigOption.$(OBJEXT) \
-	ConfigParser.$(OBJEXT) $(am__objects_9) disk.$(OBJEXT) \
-	$(am__objects_11) event.$(OBJEXT) errorpage.$(OBJEXT) \
-	$(am__objects_13) ETag.$(OBJEXT) external_acl.$(OBJEXT) \
+	ChunkedCodingParser.$(OBJEXT) client_db.$(OBJEXT) \
+	client_side.$(OBJEXT) client_side_reply.$(OBJEXT) \
+	client_side_request.$(OBJEXT) clientStream.$(OBJEXT) \
+	$(am__objects_7) ConfigOption.$(OBJEXT) ConfigParser.$(OBJEXT) \
+	$(am__objects_9) disk.$(OBJEXT) $(am__objects_11) \
+	event.$(OBJEXT) errorpage.$(OBJEXT) $(am__objects_13) \
+	ETag.$(OBJEXT) external_acl.$(OBJEXT) \
 	ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) fde.$(OBJEXT) \
 	forward.$(OBJEXT) fqdncache.$(OBJEXT) ftp.$(OBJEXT) \
 	gopher.$(OBJEXT) helper.$(OBJEXT) $(am__objects_14) \
@@ -1193,9 +1206,10 @@ am_tests_testURL_OBJECTS = debug.$(OBJEXT) url.$(OBJEXT) \
 	StoreMetaSTD.$(OBJEXT) StoreMetaSTDLFS.$(OBJEXT) \
 	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
 	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
-	tools.$(OBJEXT) tunnel.$(OBJEXT) SwapDir.$(OBJEXT) \
-	urn.$(OBJEXT) useragent.$(OBJEXT) wccp2.$(OBJEXT) \
-	whois.$(OBJEXT) $(am__objects_26) wordlist.$(OBJEXT)
+	TextException.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) \
+	SwapDir.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) \
+	wccp2.$(OBJEXT) whois.$(OBJEXT) $(am__objects_26) \
+	wordlist.$(OBJEXT)
 nodist_tests_testURL_OBJECTS = repl_modules.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 tests_testURL_OBJECTS = $(am_tests_testURL_OBJECTS) \
@@ -1244,29 +1258,30 @@ am__tests_test_http_range_SOURCES_DIST = tests/test_http_range.cc \
 	ACLProxyAuth.cc ACLStringData.cc ACLRegexData.cc \
 	ACLUserData.cc AsyncCall.cc authenticate.cc BodyPipe.cc \
 	cache_cf.cc cache_manager.cc CacheDigest.cc carp.cc cbdata.cc \
-	client_db.cc client_side.cc client_side_reply.cc \
-	client_side_request.cc clientStream.cc comm_select.cc \
-	comm_select.h comm_select_win32.cc comm_poll.cc comm_poll.h \
-	comm_epoll.cc comm_epoll.h comm_kqueue.cc comm_kqueue.h \
-	ConfigOption.cc ConfigParser.cc debug.cc CommonPool.h \
-	CompositePoolNode.h delay_pools.cc DelayId.cc DelayId.h \
-	DelayIdComposite.h DelayBucket.cc DelayBucket.h DelayConfig.cc \
-	DelayConfig.h DelayPool.cc DelayPool.h DelayPools.h \
-	DelaySpec.cc DelaySpec.h DelayTagged.cc DelayTagged.h \
-	DelayUser.cc DelayUser.h DelayVector.cc DelayVector.h \
-	NullDelayId.cc NullDelayId.h disk.cc dns_internal.cc dns.cc \
-	event.cc errorpage.cc ElementList.h ESI.cc ESI.h ESIAssign.cc \
-	ESIAssign.h ESIAttempt.h ESIContext.cc ESIContext.h \
-	ESICustomParser.cc ESICustomParser.h ESIElement.h ESIExcept.h \
-	ESIExpatParser.cc ESIExpatParser.h ESIExpression.cc \
-	ESIExpression.h ESIInclude.cc ESIInclude.h ESILiteral.h \
-	ESILibxml2Parser.cc ESILibxml2Parser.h ESIParser.cc \
-	ESIParser.h ESISegment.cc ESISegment.h ESISequence.cc \
-	ESISequence.h ESIVar.h ESIVarState.cc ESIVarState.h ETag.cc \
-	external_acl.cc ExternalACLEntry.cc fd.cc fde.cc forward.cc \
-	fqdncache.cc ftp.cc globals.cc gopher.cc helper.cc htcp.cc \
-	htcp.h http.cc HttpBody.cc HttpHdrCc.cc HttpHdrContRange.cc \
-	HttpHdrRange.cc HttpHdrSc.cc HttpHdrScTarget.cc HttpHeader.cc \
+	ChunkedCodingParser.cc client_db.cc client_side.cc \
+	client_side_reply.cc client_side_request.cc clientStream.cc \
+	comm_select.cc comm_select.h comm_select_win32.cc comm_poll.cc \
+	comm_poll.h comm_epoll.cc comm_epoll.h comm_kqueue.cc \
+	comm_kqueue.h ConfigOption.cc ConfigParser.cc debug.cc \
+	CommonPool.h CompositePoolNode.h delay_pools.cc DelayId.cc \
+	DelayId.h DelayIdComposite.h DelayBucket.cc DelayBucket.h \
+	DelayConfig.cc DelayConfig.h DelayPool.cc DelayPool.h \
+	DelayPools.h DelaySpec.cc DelaySpec.h DelayTagged.cc \
+	DelayTagged.h DelayUser.cc DelayUser.h DelayVector.cc \
+	DelayVector.h NullDelayId.cc NullDelayId.h disk.cc \
+	dns_internal.cc dns.cc event.cc errorpage.cc ElementList.h \
+	ESI.cc ESI.h ESIAssign.cc ESIAssign.h ESIAttempt.h \
+	ESIContext.cc ESIContext.h ESICustomParser.cc \
+	ESICustomParser.h ESIElement.h ESIExcept.h ESIExpatParser.cc \
+	ESIExpatParser.h ESIExpression.cc ESIExpression.h \
+	ESIInclude.cc ESIInclude.h ESILiteral.h ESILibxml2Parser.cc \
+	ESILibxml2Parser.h ESIParser.cc ESIParser.h ESISegment.cc \
+	ESISegment.h ESISequence.cc ESISequence.h ESIVar.h \
+	ESIVarState.cc ESIVarState.h ETag.cc external_acl.cc \
+	ExternalACLEntry.cc fd.cc fde.cc forward.cc fqdncache.cc \
+	ftp.cc globals.cc gopher.cc helper.cc htcp.cc htcp.h http.cc \
+	HttpBody.cc HttpHdrCc.cc HttpHdrContRange.cc HttpHdrRange.cc \
+	HttpHdrSc.cc HttpHdrScTarget.cc HttpHeader.cc \
 	HttpHeaderTools.cc HttpMsg.cc HttpReply.cc HttpRequest.cc \
 	HttpRequestMethod.cc HttpStatusLine.cc ICMP.h icmp.cc \
 	ICMPConfig.h ICMPSquid.h ICMPSquid.cc icp_v2.cc icp_v3.cc \
@@ -1284,9 +1299,9 @@ am__tests_test_http_range_SOURCES_DIST = tests/test_http_range.cc \
 	StoreIOState.cc StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
 	StoreMetaSTDLFS.cc StoreMetaUnpacker.cc StoreMetaURL.cc \
 	StoreMetaVary.cc StoreSwapLogData.cc String.cc SwapDir.cc \
-	time.cc tools.cc tunnel.cc url.cc URLScheme.cc urn.cc \
-	useragent.cc wccp2.cc whois.cc win32.cc wordlist.cc Packer.cc \
-	MemBuf.cc
+	TextException.cc time.cc tools.cc tunnel.cc url.cc \
+	URLScheme.cc urn.cc useragent.cc wccp2.cc whois.cc win32.cc \
+	wordlist.cc Packer.cc MemBuf.cc
 am_tests_test_http_range_OBJECTS = tests/test_http_range.$(OBJEXT) \
 	access_log.$(OBJEXT) acl.$(OBJEXT) acl_noncore.$(OBJEXT) \
 	ACLChecklist.$(OBJEXT) ACLProxyAuth.$(OBJEXT) \
@@ -1294,7 +1309,8 @@ am_tests_test_http_range_OBJECTS = tests/test_http_range.$(OBJEXT) \
 	ACLUserData.$(OBJEXT) AsyncCall.$(OBJEXT) \
 	authenticate.$(OBJEXT) BodyPipe.$(OBJEXT) cache_cf.$(OBJEXT) \
 	cache_manager.$(OBJEXT) CacheDigest.$(OBJEXT) carp.$(OBJEXT) \
-	cbdata.$(OBJEXT) client_db.$(OBJEXT) client_side.$(OBJEXT) \
+	cbdata.$(OBJEXT) ChunkedCodingParser.$(OBJEXT) \
+	client_db.$(OBJEXT) client_side.$(OBJEXT) \
 	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
 	clientStream.$(OBJEXT) $(am__objects_7) ConfigOption.$(OBJEXT) \
 	ConfigParser.$(OBJEXT) debug.$(OBJEXT) $(am__objects_9) \
@@ -1330,8 +1346,8 @@ am_tests_test_http_range_OBJECTS = tests/test_http_range.$(OBJEXT) \
 	StoreMetaSTD.$(OBJEXT) StoreMetaSTDLFS.$(OBJEXT) \
 	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
 	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
-	String.$(OBJEXT) SwapDir.$(OBJEXT) time.$(OBJEXT) \
-	tools.$(OBJEXT) tunnel.$(OBJEXT) url.$(OBJEXT) \
+	String.$(OBJEXT) SwapDir.$(OBJEXT) TextException.$(OBJEXT) \
+	time.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) url.$(OBJEXT) \
 	URLScheme.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) \
 	wccp2.$(OBJEXT) whois.$(OBJEXT) $(am__objects_26) \
 	wordlist.$(OBJEXT) Packer.$(OBJEXT) MemBuf.$(OBJEXT)
@@ -1348,7 +1364,8 @@ am__ufsdump_SOURCES_DIST = debug.cc int.cc mem.cc store_key_md5.cc \
 	StoreSwapLogData.cc StoreSwapLogData.h access_log.cc acl.cc \
 	acl_noncore.cc ACLChecklist.cc ACLProxyAuth.cc ACLUserData.cc \
 	ACLRegexData.cc ACLStringData.cc authenticate.cc cache_cf.cc \
-	cache_manager.cc CacheDigest.cc carp.cc cbdata.cc client_db.cc \
+	cache_manager.cc CacheDigest.cc carp.cc cbdata.cc \
+	ChunkedCodingParser.cc ChunkedCodingParser.h client_db.cc \
 	client_side.cc client_side_reply.cc client_side_request.cc \
 	client_side_request.h clientStream.cc clientStream.h CommIO.h \
 	comm_select.cc comm_select.h comm_select_win32.cc comm_poll.cc \
@@ -1390,8 +1407,9 @@ am__ufsdump_SOURCES_DIST = debug.cc int.cc mem.cc store_key_md5.cc \
 	StoreIOState.cc store_client.cc StoreClient.h store_digest.cc \
 	store_dir.cc store_log.cc store_rebuild.cc store_swapin.cc \
 	store_swapmeta.cc store_swapout.cc structs.h SwapDir.cc \
-	tools.cc typedefs.h unlinkd.cc URLScheme.cc urn.cc \
-	useragent.cc wccp.cc wccp2.cc whois.cc wordlist.cc win32.cc
+	TextException.cc TextException.h tools.cc typedefs.h \
+	unlinkd.cc URLScheme.cc urn.cc useragent.cc wccp.cc wccp2.cc \
+	whois.cc wordlist.cc win32.cc
 am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) mem.$(OBJEXT) \
 	store_key_md5.$(OBJEXT) StoreMeta.$(OBJEXT) \
 	StoreMetaMD5.$(OBJEXT) StoreMetaSTD.$(OBJEXT) \
@@ -1407,17 +1425,18 @@ am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) mem.$(OBJEXT) \
 	ACLStringData.$(OBJEXT) authenticate.$(OBJEXT) \
 	cache_cf.$(OBJEXT) cache_manager.$(OBJEXT) \
 	CacheDigest.$(OBJEXT) carp.$(OBJEXT) cbdata.$(OBJEXT) \
-	client_db.$(OBJEXT) client_side.$(OBJEXT) \
-	client_side_reply.$(OBJEXT) client_side_request.$(OBJEXT) \
-	clientStream.$(OBJEXT) $(am__objects_7) ConfigOption.$(OBJEXT) \
-	$(am__objects_9) disk.$(OBJEXT) $(am__objects_11) \
-	errorpage.$(OBJEXT) $(am__objects_13) ETag.$(OBJEXT) \
-	event.$(OBJEXT) external_acl.$(OBJEXT) \
-	ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) fde.$(OBJEXT) \
-	filemap.$(OBJEXT) forward.$(OBJEXT) fqdncache.$(OBJEXT) \
-	ftp.$(OBJEXT) gopher.$(OBJEXT) helper.$(OBJEXT) \
-	$(am__objects_14) http.$(OBJEXT) HttpStatusLine.$(OBJEXT) \
-	HttpHdrCc.$(OBJEXT) HttpHdrRange.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
+	ChunkedCodingParser.$(OBJEXT) client_db.$(OBJEXT) \
+	client_side.$(OBJEXT) client_side_reply.$(OBJEXT) \
+	client_side_request.$(OBJEXT) clientStream.$(OBJEXT) \
+	$(am__objects_7) ConfigOption.$(OBJEXT) $(am__objects_9) \
+	disk.$(OBJEXT) $(am__objects_11) errorpage.$(OBJEXT) \
+	$(am__objects_13) ETag.$(OBJEXT) event.$(OBJEXT) \
+	external_acl.$(OBJEXT) ExternalACLEntry.$(OBJEXT) fd.$(OBJEXT) \
+	fde.$(OBJEXT) filemap.$(OBJEXT) forward.$(OBJEXT) \
+	fqdncache.$(OBJEXT) ftp.$(OBJEXT) gopher.$(OBJEXT) \
+	helper.$(OBJEXT) $(am__objects_14) http.$(OBJEXT) \
+	HttpStatusLine.$(OBJEXT) HttpHdrCc.$(OBJEXT) \
+	HttpHdrRange.$(OBJEXT) HttpHdrSc.$(OBJEXT) \
 	HttpHdrScTarget.$(OBJEXT) HttpHdrContRange.$(OBJEXT) \
 	HttpHeader.$(OBJEXT) HttpHeaderTools.$(OBJEXT) \
 	HttpBody.$(OBJEXT) HttpMsg.$(OBJEXT) HttpReply.$(OBJEXT) \
@@ -1439,10 +1458,10 @@ am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) mem.$(OBJEXT) \
 	store_dir.$(OBJEXT) store_log.$(OBJEXT) \
 	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
 	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
-	SwapDir.$(OBJEXT) tools.$(OBJEXT) $(am__objects_25) \
-	URLScheme.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) \
-	wccp.$(OBJEXT) wccp2.$(OBJEXT) whois.$(OBJEXT) \
-	wordlist.$(OBJEXT) $(am__objects_26)
+	SwapDir.$(OBJEXT) TextException.$(OBJEXT) tools.$(OBJEXT) \
+	$(am__objects_25) URLScheme.$(OBJEXT) urn.$(OBJEXT) \
+	useragent.$(OBJEXT) wccp.$(OBJEXT) wccp2.$(OBJEXT) \
+	whois.$(OBJEXT) wordlist.$(OBJEXT) $(am__objects_26)
 nodist_ufsdump_OBJECTS = repl_modules.$(OBJEXT) globals.$(OBJEXT) \
 	string_arrays.$(OBJEXT)
 ufsdump_OBJECTS = $(am_ufsdump_OBJECTS) $(nodist_ufsdump_OBJECTS)
@@ -2086,6 +2105,8 @@ squid_SOURCES = \
 	carp.cc \
 	cbdata.cc \
 	cbdata.h \
+	ChunkedCodingParser.cc \
+	ChunkedCodingParser.h \
 	client_db.cc \
 	client_side.cc \
 	client_side.h \
@@ -2263,6 +2284,8 @@ squid_SOURCES = \
 	structs.h \
 	SwapDir.cc \
 	SwapDir.h \
+	TextException.cc \
+	TextException.h \
 	time.cc \
 	tools.cc \
 	tunnel.cc \
@@ -2336,8 +2359,6 @@ squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 ICAP_libicap_a_SOURCES = \
 	ICAP/AsyncJob.cc \
 	ICAP/AsyncJob.h \
- 	ICAP/ChunkedCodingParser.cc \
- 	ICAP/ChunkedCodingParser.h \
 	ICAP/ICAPClient.cc \
 	ICAP/ICAPClient.h \
 	ICAP/ICAPInitiator.cc \
@@ -2360,9 +2381,7 @@ ICAP_libicap_a_SOURCES = \
 	ICAP/ICAPServiceRep.cc \
 	ICAP/ICAPServiceRep.h \
 	ICAP/ICAPXaction.cc \
-	ICAP/ICAPXaction.h \
-	ICAP/TextException.cc \
-	ICAP/TextException.h
+	ICAP/ICAPXaction.h
 
 unlinkd_SOURCES = unlinkd_daemon.cc SquidNew.cc
 pinger_SOURCES = \
@@ -2420,6 +2439,8 @@ ufsdump_SOURCES = \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
+	ChunkedCodingParser.cc \
+	ChunkedCodingParser.h \
 	client_db.cc \
 	client_side.cc \
 	client_side_reply.cc \
@@ -2522,6 +2543,8 @@ ufsdump_SOURCES = \
 	store_swapout.cc \
 	structs.h \
 	SwapDir.cc \
+	TextException.cc \
+	TextException.h \
 	tools.cc \
 	typedefs.h \
 	$(UNLINKDSOURCE) \
@@ -2817,6 +2840,7 @@ tests_testCacheManager_SOURCES = \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
+	ChunkedCodingParser.cc \
 	client_db.cc \
 	client_side.cc \
 	client_side_reply.cc \
@@ -2907,6 +2931,7 @@ tests_testCacheManager_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
+	TextException.cc \
 	tools.cc \
 	tunnel.cc \
 	SwapDir.cc \
@@ -2987,6 +3012,7 @@ tests_testEvent_SOURCES = \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
+	ChunkedCodingParser.cc \
 	client_db.cc \
 	client_side.cc \
 	client_side_reply.cc \
@@ -3076,6 +3102,7 @@ tests_testEvent_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
+	TextException.cc \
 	tools.cc \
 	tunnel.cc \
 	SwapDir.cc \
@@ -3141,6 +3168,7 @@ tests_testEventLoop_SOURCES = \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
+	ChunkedCodingParser.cc \
 	client_db.cc \
 	client_side.cc \
 	client_side_reply.cc \
@@ -3230,6 +3258,7 @@ tests_testEventLoop_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
+	TextException.cc \
 	tools.cc \
 	tunnel.cc \
 	SwapDir.cc \
@@ -3316,6 +3345,7 @@ tests_test_http_range_SOURCES = \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
+	ChunkedCodingParser.cc \
 	client_db.cc \
 	client_side.cc \
 	client_side_reply.cc \
@@ -3411,6 +3441,7 @@ tests_test_http_range_SOURCES = \
 	StoreSwapLogData.cc \
 	String.cc \
 	SwapDir.cc \
+	TextException.cc \
 	time.cc \
 	tools.cc \
 	tunnel.cc \
@@ -3476,6 +3507,7 @@ tests_testHttpRequest_SOURCES = \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
+	ChunkedCodingParser.cc \
 	client_db.cc \
 	client_side.cc \
 	client_side_reply.cc \
@@ -3566,6 +3598,7 @@ tests_testHttpRequest_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
+	TextException.cc \
 	tools.cc \
 	tunnel.cc \
 	SwapDir.cc \
@@ -3844,6 +3877,7 @@ tests_testURL_SOURCES = \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
+	ChunkedCodingParser.cc \
 	client_db.cc \
 	client_side.cc \
 	client_side_reply.cc \
@@ -3933,6 +3967,7 @@ tests_testURL_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
+	TextException.cc \
 	tools.cc \
 	tunnel.cc \
 	SwapDir.cc \
@@ -4011,8 +4046,6 @@ ICAP/$(DEPDIR)/$(am__dirstamp):
 	@: > ICAP/$(DEPDIR)/$(am__dirstamp)
 ICAP/AsyncJob.$(OBJEXT): ICAP/$(am__dirstamp) \
 	ICAP/$(DEPDIR)/$(am__dirstamp)
-ICAP/ChunkedCodingParser.$(OBJEXT): ICAP/$(am__dirstamp) \
-	ICAP/$(DEPDIR)/$(am__dirstamp)
 ICAP/ICAPClient.$(OBJEXT): ICAP/$(am__dirstamp) \
 	ICAP/$(DEPDIR)/$(am__dirstamp)
 ICAP/ICAPInitiator.$(OBJEXT): ICAP/$(am__dirstamp) \
@@ -4034,8 +4067,6 @@ ICAP/ICAPOptXact.$(OBJEXT): ICAP/$(am__dirstamp) \
 ICAP/ICAPServiceRep.$(OBJEXT): ICAP/$(am__dirstamp) \
 	ICAP/$(DEPDIR)/$(am__dirstamp)
 ICAP/ICAPXaction.$(OBJEXT): ICAP/$(am__dirstamp) \
-	ICAP/$(DEPDIR)/$(am__dirstamp)
-ICAP/TextException.$(OBJEXT): ICAP/$(am__dirstamp) \
 	ICAP/$(DEPDIR)/$(am__dirstamp)
 ICAP/libicap.a: $(ICAP_libicap_a_OBJECTS) $(ICAP_libicap_a_DEPENDENCIES) ICAP/$(am__dirstamp)
 	-rm -f ICAP/libicap.a
@@ -4569,7 +4600,6 @@ mostlyclean-compile:
 	-rm -f DiskIO/ReadRequest.$(OBJEXT)
 	-rm -f DiskIO/WriteRequest.$(OBJEXT)
 	-rm -f ICAP/AsyncJob.$(OBJEXT)
-	-rm -f ICAP/ChunkedCodingParser.$(OBJEXT)
 	-rm -f ICAP/ICAPClient.$(OBJEXT)
 	-rm -f ICAP/ICAPConfig.$(OBJEXT)
 	-rm -f ICAP/ICAPElements.$(OBJEXT)
@@ -4581,7 +4611,6 @@ mostlyclean-compile:
 	-rm -f ICAP/ICAPOptions.$(OBJEXT)
 	-rm -f ICAP/ICAPServiceRep.$(OBJEXT)
 	-rm -f ICAP/ICAPXaction.$(OBJEXT)
-	-rm -f ICAP/TextException.$(OBJEXT)
 	-rm -f auth/basic/basicScheme.$(OBJEXT)
 	-rm -f auth/digest/digestScheme.$(OBJEXT)
 	-rm -f auth/negotiate/negotiateScheme.$(OBJEXT)
@@ -4710,6 +4739,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AuthUserRequest.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BodyPipe.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CacheDigest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ChunkedCodingParser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CompletionDispatcher.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ConfigOption.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ConfigParser.Po@am__quote@
@@ -4777,6 +4807,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StoreSwapLogData.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/String.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SwapDir.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TextException.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/URLScheme.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/WinSvc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/access_log.Po@am__quote@
@@ -4900,7 +4931,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@DiskIO/DiskThreads/$(DEPDIR)/aiops_win32.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@DiskIO/DiskThreads/$(DEPDIR)/async_io.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/AsyncJob.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ChunkedCodingParser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPClient.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPConfig.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPElements.Po@am__quote@
@@ -4912,7 +4942,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPOptions.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPServiceRep.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/ICAPXaction.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@ICAP/$(DEPDIR)/TextException.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@auth/basic/$(DEPDIR)/basicScheme.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@auth/digest/$(DEPDIR)/digestScheme.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@auth/negotiate/$(DEPDIR)/negotiateScheme.Po@am__quote@
