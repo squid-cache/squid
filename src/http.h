@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.32 2007/08/09 23:30:53 rousskov Exp $
+ * $Id: http.h,v 1.33 2007/12/26 23:39:55 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,6 +38,7 @@
 #include "comm.h"
 #include "forward.h"
 #include "Server.h"
+#include "ChunkedCodingParser.h"
 
 class HttpStateData : public ServerStateData
 {
@@ -103,6 +104,7 @@ private:
     virtual void handleRequestBodyProducerAborted();
 
     void writeReplyBody();
+    bool decodeAndWriteReplyBody();
     void doneSendingRequestBody();
     void requestBodyHandler(MemBuf &);
     virtual void sentRequestBody(int fd, size_t size, comm_err_t errflag);
@@ -113,6 +115,7 @@ private:
                                  http_state_flags flags);
     static bool decideIfWeDoRanges (HttpRequest * orig_request);
 
+    ChunkedCodingParser *httpChunkDecoder;
 private:
     CBDATA_CLASS2(HttpStateData);
 };
