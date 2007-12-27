@@ -1,6 +1,6 @@
 
 /*
- * $Id: neighbors.cc,v 1.351 2007/12/14 23:11:47 amosjeffries Exp $
+ * $Id: neighbors.cc,v 1.352 2007/12/27 02:12:16 hno Exp $
  *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
@@ -235,9 +235,8 @@ peerWouldBePinged(const peer * p, HttpRequest * request)
     if (squid_curtime - p->stats.last_query > Config.Timeout.deadPeer)
         return 1;
 
-    if (p->icp.port == echo_port)
-        if (!neighborUp(p))
-            return 0;
+    if (!neighborUp(p))
+        return 0;
 
     return 1;
 }
