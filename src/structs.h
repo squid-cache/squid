@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.569 2007/12/14 23:11:48 amosjeffries Exp $
+ * $Id: structs.h,v 1.570 2007/12/26 23:39:55 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -929,6 +929,8 @@ unsigned int do_next_read:
 
 unsigned int consume_body_data:
     1;
+
+unsigned int chunked:1;
 };
 
 struct _ipcache_addrs
