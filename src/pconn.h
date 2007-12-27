@@ -19,10 +19,10 @@ public:
     ~IdleConnList();
     int numIdle() { return nfds; }
 
-    int findFDIndex(int fd);
+    int findFDIndex(int fd); ///< search from the end of array
     void removeFD(int fd);
     void push(int fd);
-    int findUseableFD();
+    int findUseableFD();     ///< find first from the end not pending read fd.
     void clearHandlers(int fd);
 
 private:
