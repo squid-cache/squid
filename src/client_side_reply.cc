@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.146 2007/12/21 23:54:38 hno Exp $
+ * $Id: client_side_reply.cc,v 1.147 2007/12/26 22:19:37 hno Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1958,7 +1958,6 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     }
 
     buildReply(buf, reqofs);
-    ssize_t body_size = reqofs;
 
     if (reply) {
 
