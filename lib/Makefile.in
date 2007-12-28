@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-#  $Id: Makefile.in,v 1.150 2007/12/05 01:11:16 hno Exp $
+#  $Id: Makefile.in,v 1.150.4.1 2007/12/27 20:35:23 serassio Exp $
 #
 
 srcdir = @srcdir@
@@ -248,7 +248,6 @@ REPL_LIBS = @REPL_LIBS@
 REPL_OBJS = @REPL_OBJS@
 REPL_POLICIES = @REPL_POLICIES@
 RM = @RM@
-SED = @SED@
 SET_MAKE = @SET_MAKE@
 SH = @SH@
 SHELL = @SHELL@

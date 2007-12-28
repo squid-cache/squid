@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.114 2007/12/05 01:10:44 hno Exp $
+# $Id: Makefile.in,v 1.114.4.1 2007/12/27 20:34:50 serassio Exp $
 #
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -194,7 +194,6 @@ REPL_LIBS = @REPL_LIBS@
 REPL_OBJS = @REPL_OBJS@
 REPL_POLICIES = @REPL_POLICIES@
 RM = @RM@
-SED = @SED@
 SET_MAKE = @SET_MAKE@
 SH = @SH@
 SHELL = @SHELL@
@@ -295,7 +294,7 @@ subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects 1.5 foreign
-DIST_SUBDIRS = lib snmplib scripts src icons errors contrib doc helpers test-suite tools
+DIST_SUBDIRS = lib snmplib scripts src icons errors contrib doc helpers port test-suite tools
 SUBDIRS = lib @makesnmplib@ scripts src icons errors doc helpers test-suite tools
 DISTCLEANFILES = include/stamp-h include/stamp-h[0-9]*
 DEFAULT_PINGER = $(libexecdir)/`echo pinger | sed '$(transform);s/$$/$(EXEEXT)/'`

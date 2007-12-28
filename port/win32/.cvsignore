@@ -1,0 +1,9 @@
+*.suo
+*.user
+BuildLog.htm
+Debug
+Makefile
+Makefile.in
+Release
+squid.ncb
+squid_version.mak

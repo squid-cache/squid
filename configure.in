@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.488.2.1 2007/12/13 22:01:30 wessels Exp $
+dnl  $Id: configure.in,v 1.488.2.1.2.1 2007/12/27 20:34:51 serassio Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.488.2.1 $)dnl
+AC_REVISION($Revision: 1.488.2.1.2.1 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -3301,6 +3301,8 @@ AC_CONFIG_FILES([\
 	helpers/external_acl/unix_group/Makefile \
 	helpers/external_acl/wbinfo_group/Makefile \
 	helpers/external_acl/mswin_lm_group/Makefile \
+	port/Makefile \
+	port/win32/Makefile \
 	tools/Makefile
 ])
 
