@@ -1,5 +1,5 @@
 /*
- * $Id: ICMPv6.cc,v 1.1 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id: ICMPv6.cc,v 1.2 2007/12/28 12:04:45 hno Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels, Amos Jeffries
@@ -168,7 +168,7 @@ ICMPv6::SendEcho(IPAddress &to, int opcode, const char *payload, int len)
     // Fill ICMPv6 ECHO data content
     echo = (icmpEchoData *) (pkt + sizeof(icmp6_hdr));
     echo->opcode = (unsigned char) opcode;
-    echo->tv = current_time;
+    memcpy(&echo->tv, &current_time, sizeof(struct timeval));
 
     icmp6_pktsize += sizeof(struct timeval) + sizeof(char);
 
@@ -310,7 +310,9 @@ debugs(42,0, HERE << "ip6_nxt=" << ip->ip6_nxt <<
 
     preply.opcode = echo->opcode;
 
-    preply.rtt = tvSubMsec(echo->tv, now);
+    struct timeval tv;
+    memcpy(&tv, &echo->tv, sizeof(struct timeval));
+    preply.rtt = tvSubMsec(tv, now);
 
 /*
  * FIXME INET6: Without access to the IPv6-Hops header we must rely on the total RTT
