@@ -1,5 +1,5 @@
 /*
- * $Id: ICMPv4.cc,v 1.1 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id: ICMPv4.cc,v 1.2 2007/12/28 12:04:45 hno Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels, Amos Jeffries
@@ -124,7 +124,7 @@ ICMPv4::SendEcho(IPAddress &to, int opcode, const char *payload, int len)
     // Construct ICMP packet data content
     echo = (icmpEchoData *) (icmp + 1);
     echo->opcode = (unsigned char) opcode;
-    echo->tv = current_time;
+    memcpy(&echo->tv, &current_time, sizeof(struct timeval));
 
     icmp_pktsize += sizeof(struct timeval) + sizeof(char);
 
@@ -235,7 +235,9 @@ ICMPv4::Recv(void)
 
     preply.hops = ipHops(ip->ip_ttl);
 
-    preply.rtt = tvSubMsec(echo->tv, now);
+    struct timeval tv;
+    memcpy(&tv, &echo->tv, sizeof(struct timeval));
+    preply.rtt = tvSubMsec(tv, now);
 
     preply.psize = n - iphdrlen - (sizeof(icmpEchoData) - MAX_PKT4_SZ);
 
