@@ -1,29 +1,33 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<HTML><HEAD>
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
-<STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>FEL: Beg&auml;rd URL kunde inte h&auml;mtas</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
-<H2>The requested URL could not be retrieved</H2>
+<H2>Beg&auml;rd URL kunde inte h&auml;mtas</H2>
 <HR noshade size="1px">
 <P>
-While trying to retrieve the URL:
+Vid f&ouml;rs&ouml;ket att h&auml;mta URL:
 <A HREF="%U">%U</A>
 <P>
-The following error was encountered:
+Mottogs f&ouml;ljande fel:
 <BLOCKQUOTE>
-ESI Processing failed.
+ESI bearbetning misslyckades.
+<I>%H</I>
+</BLOCKQUOTE>
+</UL>
+
+<P>
+ESI motorn returnerade:
+<BLOCKQUOTE>
+%z
 </BLOCKQUOTE>
 
 <P>
-The ESI processor returned:
-<BLOCKQUOTE>
-%Z
-</BLOCKQUOTE>
-
-<P>
-This means that:
+Detta betyder att:
 <PRE>
- The surrogate was not able to process the ESI template. Please report this error to the webmaster. 
+ Surrogat servern kunde inte bearbeta ESI mallen. 
+ V&auml;nligen kontakta den ansvariga f&ouml;r webbservern ifr&aring;ga.
 </PRE>
-<P>Your webmaster is <A HREF="mailto:%w">%w</A>.</P>
-<P>This page is in english because a translation has not been made. If you are able to, please create a translation and contact the squid project to get it included.</P>
+<P>
+Addressen till ansvarig administrat&ouml;r &auml;r <A HREF="mailto:%w">%w</A>. 
+</P>
