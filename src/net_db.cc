@@ -1,5 +1,5 @@
 /*
- * $Id: net_db.cc,v 1.200 2007/12/27 14:55:47 hno Exp $
+ * $Id: net_db.cc,v 1.201 2007/12/29 18:15:45 hno Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -466,7 +466,7 @@ sortPeerByRtt(const void *A, const void *B)
 static void
 netdbSaveState(void *foo)
 {
-    if (strcmp(config.netdbFilename, "none") == 0)
+    if (strcmp(Config.netdbFilename, "none") == 0)
 	return;
 
     Logfile *lf;
@@ -488,7 +488,7 @@ netdbSaveState(void *foo)
     lf = logfileOpen(Config.netdbFilename, 4096, 0);
 
     if (NULL == lf) {
-        debugs(50, 1, "netdbSaveState: " << path << ": " << xstrerror());
+        debugs(50, 1, "netdbSaveState: " << Config.netdbFilename << ": " << xstrerror());
         return;
     }
 
@@ -529,7 +529,7 @@ netdbSaveState(void *foo)
 static void
 netdbReloadState(void)
 {
-    if (strcmp(config.netdbFilename, "none") == 0)
+    if (strcmp(Config.netdbFilename, "none") == 0)
 	return;
 
     char *s;
