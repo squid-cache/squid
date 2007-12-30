@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.491 2007/12/27 15:48:53 hno Exp $
+# $Id: cf.data.pre,v 1.492 2007/12/29 18:20:22 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -2203,7 +2203,7 @@ DOC_START
 DOC_END
 
 NAME: debug_options
-TYPE: debug
+TYPE: eol
 DEFAULT: ALL,1
 LOC: Config.debugOptions
 DOC_START
@@ -2276,6 +2276,7 @@ NAME: netdb_filename
 TYPE: string
 DEFAULT: @DEFAULT_NETDB_FILE@
 LOC: Config.netdbFilename
+IFDEF: USE_ICMP
 DOC_START
 	A filename where Squid stores it's netdb state between restarts.
 	To disable, enter "none".
