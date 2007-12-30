@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.102 2007/12/14 23:11:46 amosjeffries Exp $
+ * $Id: dns_internal.cc,v 1.103 2007/12/29 17:56:25 hno Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -1045,7 +1045,7 @@ idnsRead(int fd, void *data)
     int ns;
     IPAddress from;
 
-    debugs(78, 1, "idnsRead: starting with FD " << fd);
+    debugs(78, 3, "idnsRead: starting with FD " << fd);
 
     /* BUG (UNRESOLVED)
      *  two code lines after returning from comm_udprecvfrom()
