@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.452 2007/12/14 23:11:47 amosjeffries Exp $
+ * $Id: main.cc,v 1.453 2007/12/29 18:20:22 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -1078,7 +1078,7 @@ main(int argc, char **argv)
     sbrk_start = sbrk(0);
 #endif
 
-    Debug::parseOptions("ALL,1");
+    Debug::parseOptions(NULL);
     debug_log = stderr;
 
 #if defined(SQUID_MAXFD_LIMIT)
