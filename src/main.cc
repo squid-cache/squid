@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.453 2007/12/29 18:20:22 hno Exp $
+ * $Id: main.cc,v 1.454 2007/12/29 18:32:31 hno Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -1140,6 +1140,10 @@ main(int argc, char **argv)
 #endif
 
     mainParseOptions(argc, argv);
+
+    if (opt_parse_cfg_only) {
+	Debug::parseOptions("ALL,1");
+    }
 
 #if USE_WIN32_SERVICE
 
