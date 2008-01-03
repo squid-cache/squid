@@ -24,7 +24,6 @@ copy %0\..\mswin_negotiate_auth\%1\mswin_negotiate_auth.exe %2\libexec\mswin_neg
 copy %0\..\ldap_auth\%1\ldap_auth.exe %2\libexec\squid_ldap_auth.exe
 copy %0\..\ldap_group\%1\ldap_group.exe %2\libexec\squid_ldap_group.exe
 copy %0\..\mswin_check_lm_group\%1\mswin_check_lm_group.exe %2\libexec\mswin_check_lm_group.exe
-copy %0\..\ip_user_check\%1\ip_user_check.exe %2\libexec\ip_user_check.exe
 copy %0\..\digest_ldap_auth\%1\digest_ldap_auth.exe %2\libexec\digest_ldap_auth.exe
 copy %0\..\digest_pw_auth\%1\digest_pw_auth.exe %2\libexec\digest_pw_auth.exe
 copy %0\..\cachemgr\%1\cachemgr.exe %2\libexec\cachemgr.cgi
@@ -45,10 +44,8 @@ copy %0\..\..\..\helpers\negotiate_auth\mswin_sspi\readme.txt %2\docs\mswin_nego
 copy %0\..\..\..\helpers\external_acl\mswin_lm_group\readme.txt %2\docs\mswin_check_lm_group.txt
 copy %0\..\..\..\helpers\external_acl\ip_user\README %2\docs\ip_user_check.txt
 copy %0\..\..\..\helpers\basic_auth\mswin_sspi\readme.txt %2\docs\mswin_auth.txt
-copy %0\..\..\..\doc\win32-relnotes.html %2\docs\win32-relnotes.html
 copy %0\..\..\..\doc\debug-sections.txt %2\docs\debug-sections.txt
 copy %0\..\..\..\doc\HTTP-codes.txt %2\docs\HTTP-codes.txt
-copy %0\..\..\..\doc\release-notes\release-2.5.html %2\docs\release-2.5.html
 copy %0\..\..\..\doc\release-notes\release-3.0.html %2\docs\release-3.0.html
 type %0\..\..\..\helpers\basic_auth\LDAP\squid_ldap_auth.8 | man2htm2 > %2\docs\squid_ldap_auth.html
 type %0\..\..\..\helpers\external_acl\LDAP_group\squid_ldap_group.8 | man2htm2 > %2\docs\squid_ldap_group.html
