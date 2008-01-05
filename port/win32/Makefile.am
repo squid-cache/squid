@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-# $Id: Makefile.am,v 1.1.2.1 2007/12/27 20:35:25 serassio Exp $
+# $Id: Makefile.am,v 1.1.2.2 2008/01/04 20:01:27 serassio Exp $
 #
 
 EXTRA_DIST = \
@@ -29,7 +29,6 @@ EXTRA_DIST = \
 	include/crypt.h \
 	include/getopt.h \
 	include/Readdir.h \
-	ip_user_check/ip_user_check.vcproj \
 	LDAP_auth/LDAP_auth.vcproj \
 	LDAP_group/LDAP_group.vcproj \
 	libbasic/libbasic.vcproj \
