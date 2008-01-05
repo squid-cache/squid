@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.1.2.2 2007/12/27 20:37:45 serassio Exp $
+# $Id: Makefile.in,v 1.1.2.3 2008/01/04 20:02:19 serassio Exp $
 #
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -295,7 +295,6 @@ EXTRA_DIST = \
 	include/crypt.h \
 	include/getopt.h \
 	include/Readdir.h \
-	ip_user_check/ip_user_check.vcproj \
 	LDAP_auth/LDAP_auth.vcproj \
 	LDAP_group/LDAP_group.vcproj \
 	libbasic/libbasic.vcproj \
@@ -387,7 +386,7 @@ CTAGS:
 
 
 distdir: $(DISTFILES)
-	$(mkdir_p) $(distdir)/LDAP_auth $(distdir)/LDAP_group $(distdir)/NCSA_auth $(distdir)/cachemgr $(distdir)/cf_gen $(distdir)/digest_edir_auth $(distdir)/digest_ldap_auth $(distdir)/digest_pw_auth $(distdir)/dnsserver $(distdir)/fake_auth $(distdir)/include $(distdir)/ip_user_check $(distdir)/libAIO $(distdir)/libBlocking $(distdir)/libDiskThreads $(distdir)/libbasic $(distdir)/libc $(distdir)/libcc $(distdir)/libcoss $(distdir)/libdigest $(distdir)/libgnuregex $(distdir)/libheap $(distdir)/libicap $(distdir)/liblru $(distdir)/libmiscutil $(distdir)/libnegotiate $(distdir)/libntlm $(distdir)/libntlmauth $(distdir)/libnull $(distdir)/libsnmp $(distdir)/libsspwin32 $(distdir)/libtrie $(distdir)/libufs $(distdir)/mswin_auth $(distdir)/mswin_check_lm_group $(distdir)/mswin_negotiate_auth $(distdir)/mswin_ntlm_auth $(distdir)/pinger $(distdir)/squid $(distdir)/squidclient $(distdir)/src $(distdir)/unlinkd
+	$(mkdir_p) $(distdir)/LDAP_auth $(distdir)/LDAP_group $(distdir)/NCSA_auth $(distdir)/cachemgr $(distdir)/cf_gen $(distdir)/digest_edir_auth $(distdir)/digest_ldap_auth $(distdir)/digest_pw_auth $(distdir)/dnsserver $(distdir)/fake_auth $(distdir)/include $(distdir)/libAIO $(distdir)/libBlocking $(distdir)/libDiskThreads $(distdir)/libbasic $(distdir)/libc $(distdir)/libcc $(distdir)/libcoss $(distdir)/libdigest $(distdir)/libgnuregex $(distdir)/libheap $(distdir)/libicap $(distdir)/liblru $(distdir)/libmiscutil $(distdir)/libnegotiate $(distdir)/libntlm $(distdir)/libntlmauth $(distdir)/libnull $(distdir)/libsnmp $(distdir)/libsspwin32 $(distdir)/libtrie $(distdir)/libufs $(distdir)/mswin_auth $(distdir)/mswin_check_lm_group $(distdir)/mswin_negotiate_auth $(distdir)/mswin_ntlm_auth $(distdir)/pinger $(distdir)/squid $(distdir)/squidclient $(distdir)/src $(distdir)/unlinkd
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
