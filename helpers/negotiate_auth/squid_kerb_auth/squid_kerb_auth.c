@@ -32,6 +32,9 @@
 #include <time.h>
 #include <sys/time.h>
 
+#include "getaddrinfo.h"
+#include "getnameinfo.h"
+
 #include "base64.h"
 #ifndef HAVE_SPNEGO
 #include "spnegohelp.h"
