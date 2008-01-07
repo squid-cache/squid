@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.543 2007/12/26 23:39:55 hno Exp $
+ * $Id: http.cc,v 1.544 2008/01/07 15:16:03 hno Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1267,12 +1267,16 @@ HttpStateData::maybeReadVirginBody()
      * handler until we get a notification from someone that
      * its okay to read again.
      */
-    if (read_sz < 2)
-        return;
+    if (read_sz < 2) {
+	if (flags.headers_parsed)
+	    return;
+	else
+	    read_sz = 1024;
+    }
 
     if (flags.do_next_read) {
-        flags.do_next_read = 0;
-        entry->delayAwareRead(fd, readBuf->space(), read_sz, ReadReplyWrapper, this);
+	flags.do_next_read = 0;
+	entry->delayAwareRead(fd, readBuf->space(read_sz), read_sz, ReadReplyWrapper, this);
     }
 }
 
