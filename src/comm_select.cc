@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.82 2007/12/14 23:11:46 amosjeffries Exp $
+ * $Id: comm_select.cc,v 1.83 2008/01/07 16:22:06 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -156,6 +156,10 @@ commSetSelect(int fd, unsigned int type, PF * handler, void *client_data,
         F->timeout = squid_curtime + timeout;
 }
 
+void
+commResetSelect(int fd)
+{
+}
 
 static int
 fdIsIcp(int fd)
