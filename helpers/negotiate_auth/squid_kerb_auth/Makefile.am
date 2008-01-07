@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.1 2007/06/24 22:34:15 hno Exp $
+#  $Id: Makefile.am,v 1.2 2008/01/07 15:25:14 hno Exp $
 #
 
 libexec_PROGRAMS = squid_kerb_auth
@@ -12,10 +12,8 @@ EXTRA_DIST = readme.txt do.sh
 
 squid_kerb_auth_SOURCES = $(SOURCE) $(SPNEGO)
 
-CPPFLAGS = $(KERBINC) -I$(srcdir)/spnegohelp -I.
-#-I$(top_srcdir)/include -I$(top_srcdir)/src
-LDADD = $(KERBLIBS)
-#-L$(top_builddir)/lib -lmiscutil $(XTRA_LIBS)
+CPPFLAGS = $(KERBINC) -I$(srcdir)/spnegohelp -I. -I$(top_srcdir)/include
+LDADD = -L$(top_builddir)/lib -lmiscutil $(XTRA_LIBS) $(KERBLIBS) 
 
 # HEIMDAL
 #KERBINC = -DHEIMDAL -I/usr/include/heimdal

@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.20 2007/12/16 01:11:33 hno Exp $
+#  $Id: Makefile.in,v 1.21 2008/01/07 15:25:14 hno Exp $
 #
 
 srcdir = @srcdir@
@@ -63,7 +63,8 @@ am_squid_kerb_auth_OBJECTS = $(am__objects_1) $(am__objects_2)
 squid_kerb_auth_OBJECTS = $(am_squid_kerb_auth_OBJECTS)
 squid_kerb_auth_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
-squid_kerb_auth_DEPENDENCIES = $(am__DEPENDENCIES_1)
+squid_kerb_auth_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/cfgaux/depcomp
 am__depfiles_maybe = depfiles
@@ -104,7 +105,7 @@ CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CGIEXT = @CGIEXT@
 CPP = @CPP@
-CPPFLAGS = $(KERBINC) -I$(srcdir)/spnegohelp -I.
+CPPFLAGS = $(KERBINC) -I$(srcdir)/spnegohelp -I. -I$(top_srcdir)/include
 CPPUNITCONFIG = @CPPUNITCONFIG@
 CRYPTLIB = @CRYPTLIB@
 CXX = @CXX@
@@ -301,9 +302,7 @@ SPNEGO = spnegohelp/derparse.c spnegohelp/derparse.h spnegohelp/Makefile spnegoh
 SOURCE = squid_kerb_auth.c base64.c base64.h
 EXTRA_DIST = readme.txt do.sh
 squid_kerb_auth_SOURCES = $(SOURCE) $(SPNEGO)
-#-I$(top_srcdir)/include -I$(top_srcdir)/src
-LDADD = $(KERBLIBS)
-#-L$(top_builddir)/lib -lmiscutil $(XTRA_LIBS)
+LDADD = -L$(top_builddir)/lib -lmiscutil $(XTRA_LIBS) $(KERBLIBS) 
 
 # HEIMDAL
 #KERBINC = -DHEIMDAL -I/usr/include/heimdal
