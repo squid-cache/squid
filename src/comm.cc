@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.439 2007/12/14 23:11:46 amosjeffries Exp $
+ * $Id: comm.cc,v 1.440 2008/01/07 16:22:06 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1161,6 +1161,7 @@ ConnectStateData::commResetFD()
 
         return 0;
     }
+    commResetSelect(fd);
 
     close(fd2);
     fde *F = &fd_table[fd];

@@ -58,6 +58,7 @@ SQUIDCEXTERN u_short comm_local_port(int fd);
 SQUIDCEXTERN int comm_set_tos(int fd, int tos);
 
 SQUIDCEXTERN void commSetSelect(int, unsigned int, PF *, void *, time_t);
+SQUIDCEXTERN void commResetSelect(int);
 
 SQUIDCEXTERN int comm_udp_sendto(int sock, const IPAddress &to, const void *buf, int buflen);
 extern void comm_write(int fd, const char *buf, int len, IOCB *callback, void *callback_data, FREE *func);
