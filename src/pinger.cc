@@ -1,5 +1,5 @@
 /*
- * $Id: pinger.cc,v 1.60 2007/12/14 23:11:47 amosjeffries Exp $
+ * $Id: pinger.cc,v 1.61 2008/01/08 11:10:48 amosjeffries Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -135,8 +135,10 @@ main(int argc, char *argv[])
 #if USE_IPV6
         if(icmp6_worker == -1)
 #endif
+        {
             debugs(42, 0, "FATAL: pinger: Unable to open any ICMP sockets.");
             exit(1);
+        }
     }
 
     if( (squid_link = control.Open()) < 0) {
