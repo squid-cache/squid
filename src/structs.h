@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.571 2007/12/27 14:55:47 hno Exp $
+ * $Id: structs.h,v 1.572 2008/01/07 17:12:28 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -768,26 +768,12 @@ struct _dread_ctrl
     void *client_data;
 };
 
-struct _dnsserver_t
-{
-    int id;
-    int inpipe;
-    int outpipe;
-    time_t answer;
-    off_t offset;
-    size_t size;
-    char ip_inbuf[DNS_INBUF_SZ];
-
-    struct timeval dispatch_time;
-    void *data;
-};
-
 struct _dwrite_q
 {
     off_t file_offset;
     char *buf;
-    int len;
-    off_t buf_offset;
+    size_t len;
+    size_t buf_offset;
     dwrite_q *next;
     FREE *free_func;
 };
@@ -1609,7 +1595,7 @@ struct _CacheDigest
 {
     /* public, read-only */
     char *mask;			/* bit mask */
-    size_t mask_size;		/* mask size in bytes */
+    int mask_size;		/* mask size in bytes */
     int capacity;		/* expected maximum for .count, not a hard limit */
     int bits_per_entry;		/* number of bits allocated for each entry from capacity */
     int count;			/* number of digested entries */
@@ -1637,7 +1623,7 @@ struct _Logfile
     char path[MAXPATHLEN];
     char *buf;
     size_t bufsz;
-    off_t offset;
+    size_t offset;
 
     struct
     {

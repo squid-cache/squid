@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.27 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id: ESI.cc,v 1.28 2008/01/07 17:12:28 hno Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -1560,7 +1560,7 @@ esiLiteral::esiLiteral(ESIContext *context, const char *s, int numberOfCharacter
     assert (s);
     buffer = new ESISegment;
     ESISegment::Pointer local = buffer;
-    off_t start = 0;
+    size_t start = 0;
     int remainingCharacters = numberOfCharacters;
 
     while (remainingCharacters > 0) {

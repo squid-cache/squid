@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.129 2007/12/16 22:32:10 amosjeffries Exp $
+ * $Id: peer_digest.cc,v 1.130 2008/01/07 17:12:28 hno Exp $
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
@@ -724,10 +724,10 @@ peerDigestSwapInMask(void *data, char *buf, ssize_t size)
 
     fetch->mask_offset += size;
 
-    if (fetch->mask_offset >= (off_t)pd->cd->mask_size) {
+    if (fetch->mask_offset >= pd->cd->mask_size) {
         debugs(72, 2, "peerDigestSwapInMask: Done! Got " <<
                fetch->mask_offset << ", expected " << pd->cd->mask_size);
-        assert(fetch->mask_offset == (off_t)pd->cd->mask_size);
+        assert(fetch->mask_offset == pd->cd->mask_size);
         assert(peerDigestFetchedEnough(fetch, NULL, 0, "peerDigestSwapInMask"));
         return -1;		/* XXX! */
     } else {

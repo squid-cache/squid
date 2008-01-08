@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.h,v 1.18 2007/12/14 23:11:46 amosjeffries Exp $
+ * $Id: client_side_reply.h,v 1.19 2008/01/07 17:12:28 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -98,7 +98,7 @@ public:
     StoreIOBuffer tempBuffer;	/* For use in validating requests via IMS */
     int old_reqsize;		/* ... again, for the buffer */
     size_t reqsize;
-    off_t reqofs;
+    size_t reqofs;
     char tempbuf[HTTP_REQBUF_SZ];	/* a temporary buffer if we need working storage */
 #if USE_CACHE_DIGESTS
 

@@ -1,5 +1,5 @@
 /*
- * $Id: client_side.h,v 1.27 2007/12/14 23:11:46 amosjeffries Exp $
+ * $Id: client_side.h,v 1.28 2008/01/07 17:12:28 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -95,7 +95,7 @@ unsigned parsed_ok: 1; /* Was this parsed correctly? */
     };
 
     DeferredParams deferredparams;
-    off_t writtenToSocket;
+    int64_t writtenToSocket;
     void pullData();
     int64_t getNextRangeOffset() const;
     bool canPackMoreRanges() const;
