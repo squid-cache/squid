@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaUnpacker.h,v 1.2 2003/02/21 22:50:06 robertc Exp $
+ * $Id: StoreMetaUnpacker.h,v 1.3 2008/01/07 17:12:28 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -45,7 +45,7 @@ public:
     bool isBufferSane();
 
 private:
-    static off_t const MinimumBufferLength;
+    static int const MinimumBufferLength;
 
     void getBufferLength();
     void getType();
@@ -57,7 +57,7 @@ private:
     char const * const buf;
     ssize_t buflen;
     int *hdr_len;
-    off_t position;
+    int position;
     char type;
     int length;
     StoreMeta **tail;

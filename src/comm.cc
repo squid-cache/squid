@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.440 2008/01/07 16:22:06 hno Exp $
+ * $Id: comm.cc,v 1.441 2008/01/07 17:12:28 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -2038,7 +2038,7 @@ commHandleWrite(int fd, void *data) {
         /* A successful write, continue */
         state->offset += len;
 
-        if (state->offset < (off_t)state->size) {
+        if (state->offset < state->size) {
             /* Not done, reinstall the write handler and write some more */
             commSetSelect(fd,
                           COMM_SELECT_WRITE,

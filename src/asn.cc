@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.117 2007/12/20 11:19:48 amosjeffries Exp $
+ * $Id: asn.cc,v 1.118 2008/01/07 17:12:28 hno Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -93,7 +93,7 @@ struct ASState
     store_client *sc;
     HttpRequest *request;
     int as_number;
-    off_t offset;
+    int64_t offset;
     int reqofs;
     char reqbuf[AS_REQBUF_SZ];
     bool dataRead;
@@ -301,7 +301,7 @@ asHandleReply(void *data, StoreIOBuffer result)
      */
     s = buf;
 
-    while (s - buf < (off_t)(result.length + asState->reqofs) && *s != '\0') {
+    while ((size_t)(s - buf) < result.length + asState->reqofs && *s != '\0') {
         while (*s && xisspace(*s))
             s++;
 

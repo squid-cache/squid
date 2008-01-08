@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_swapmeta.cc,v 1.27 2007/11/15 16:47:35 wessels Exp $
+ * $Id: store_swapmeta.cc,v 1.28 2008/01/07 17:12:28 hno Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
@@ -110,7 +110,7 @@ storeSwapMetaPack(tlv * tlv_list, int *length)
 {
     int buflen = 0;
     tlv *t;
-    off_t j = 0;
+    int j = 0;
     char *buf;
     assert(length != NULL);
     buflen++;			/* STORE_META_OK */
