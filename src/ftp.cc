@@ -1,5 +1,5 @@
 /*
- * $Id: ftp.cc,v 1.442 2007/12/14 23:11:46 amosjeffries Exp $
+ * $Id: ftp.cc,v 1.443 2008/01/08 11:51:37 amosjeffries Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -2294,7 +2294,8 @@ ftpSendPasv(FtpStateData * ftpState)
 
     addr.FreeAddrInfo(AI);
 
-    /* Open data channel with the same local address as control channel */
+    /* Open data channel with the same local address as control channel BUT not the port! */
+    addr.SetPort(0);
     int fd = comm_open(SOCK_STREAM,
                        IPPROTO_TCP,
                        addr,
