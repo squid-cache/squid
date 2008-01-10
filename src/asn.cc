@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.118 2008/01/07 17:12:28 hno Exp $
+ * $Id: asn.cc,v 1.119 2008/01/10 08:13:43 amosjeffries Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -62,7 +62,6 @@ public:
 
     m_ADDR() : len(sizeof(IPAddress)) {};
 };
-
 
 /* END of definitions for radix tree entries */
 

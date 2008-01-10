@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.265 2007/12/14 23:11:47 amosjeffries Exp $
+ * $Id: ipcache.cc,v 1.266 2008/01/10 08:13:43 amosjeffries Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -838,15 +838,15 @@ stat_ipcache_get(StoreEntry * sentry)
  \param outlen	Size of list out
  */
 void
-ipcacheMergeIPLists(IPAddress *aaddrs, int alen,
-                    IPAddress *baddrs, int blen,
+ipcacheMergeIPLists(const IPAddress *aaddrs, const int alen,
+                    const IPAddress *baddrs, const int blen,
                     IPAddress **out, int &outlen )
 {
     int fc=0, t=0, c=0;
 
-    IPAddress *ip4ptrs[255];
+    IPAddress const *ip4ptrs[255];
 #if USE_IPV6
-    IPAddress *ip6ptrs[255];
+    IPAddress const *ip6ptrs[255];
 #endif
     int num_ip4 = 0;
     int num_ip6 = 0;
@@ -992,7 +992,7 @@ ipcacheHandleCnameRecurse(const ipcache_addrs *addrs, void *cbdata)
         i->addrs.in_addrs = NULL;
         ipcacheMergeIPLists(tmpbuf, pcount, addrs->in_addrs, ccount, &(i->addrs.in_addrs), fc);
         debugs(14,8, HERE << "in=" << tmpbuf << ", out=" << i->addrs.in_addrs );
-        assert(tmpbuf);
+        assert( (pcount>0 ? tmpbuf!=NULL : tmpbuf==NULL) );
         safe_free(tmpbuf);
 
         if( pcount > 0) {
