@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.103 2007/12/29 17:56:25 hno Exp $
+ * $Id: dns_internal.cc,v 1.104 2008/01/11 03:49:22 amosjeffries Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -117,6 +117,10 @@ struct _idns_query
     unsigned short domain;
     unsigned short do_searchpath;
     bool need_A;
+    struct {
+        int count;
+        rfc1035_rr *answers;
+    } initial_AAAA;
 };
 
 struct _nsvc
@@ -925,6 +929,7 @@ idnsGrokReply(const char *buf, size_t sz)
     }
 
     if (message->tc) {
+        debugs(78, 3, HERE << "Resolver requested TC (" << q->query.name << ")");
         dlinkDelete(&q->lru, &lru_list);
         rfc1035MessageDestroy(&message);
 
@@ -1003,7 +1008,7 @@ idnsGrokReply(const char *buf, size_t sz)
     if(q->need_A && (Config.onoff.dns_require_A == 1 || n <= 0 ) )
     {
         /* ERROR or NO AAAA exist. Failover to A records. */
-        /* AYJ: Apparently its also a good idea to lookup and store the A records
+        /*      Apparently its also a good idea to lookup and store the A records
          *      just in case the AAAA are not available when we need them.
          *      This could occur due to number of network failings beyond our control
          *      thus the || above allowing the user to request always both.
@@ -1016,6 +1021,14 @@ idnsGrokReply(const char *buf, size_t sz)
         else // admin requested this.
             debugs(78, 3, "idnsGrokReply: " << q->name << " AAAA query done. Configured to retrieve A now also.");
 
+        // move the initial message results into the failover query for merging later.
+        if(n > 0) {
+            q->initial_AAAA.count = message->ancount;
+            q->initial_AAAA.answers = message->answer;
+            message->answer = NULL;
+        }
+
+        // remove the hashed query info
         idnsDropMessage(message, q);
 
         q->start_t = current_time;
@@ -1029,9 +1042,39 @@ idnsGrokReply(const char *buf, size_t sz)
     }
 #endif
 
+   /** If there are two result sets from preceeding AAAA and A lookups merge them with a preference for AAAA */
+   if(q->initial_AAAA.count > 0 && n > 0) {
+        /* two sets of RR need merging */
+        rfc1035_rr *result = (rfc1035_rr*) xmalloc( sizeof(rfc1035_rr)*(n + q->initial_AAAA.count) );
+        rfc1035_rr *tmp = result;
+
+        debugs(78, 6, HERE << "Merging DNS results " << q->name << " AAAA has " << q->initial_AAAA.count << " RR, A has " << n << " RR");
+
+        memcpy(tmp, q->initial_AAAA.answers, (sizeof(rfc1035_rr)*(q->initial_AAAA.count)) );
+        tmp += q->initial_AAAA.count;
+        /* free the RR object without freeing its child strings (they are now taken by the copy above) */
+        safe_free(q->initial_AAAA.answers);
+
+        memcpy( tmp, message->answer, (sizeof(rfc1035_rr)*n) );
+        /* free the RR object without freeing its child strings (they are now taken by the copy above) */
+        safe_free(message->answer);
+
+        message->answer = result;
+        n += q->initial_AAAA.count;
+        q->initial_AAAA.count=0;
+    }
+    else if(q->initial_AAAA.count > 0 && n <= 0) {
+        /* initial of dual queries was the only result set. */
+        debugs(78, 6, HERE << "Merging DNS results " << q->name << " AAAA has " << q->initial_AAAA.count << " RR, A has " << n << " RR");
+        rfc1035RRDestroy(&(message->answer), n);
+        message->answer = q->initial_AAAA.answers;
+        n = q->initial_AAAA.count;
+    }
+    /* else initial results were empty. just use the final set as authoritative */
+
+    debugs(78, 6, HERE << "Sending " << n << " DNS results to caller.");
     idnsCallback(q, message->answer, n, q->error);
     rfc1035MessageDestroy(&message);
-
     cbdataFree(q);
 }
 

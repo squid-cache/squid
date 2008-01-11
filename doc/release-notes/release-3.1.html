@@ -7,7 +7,7 @@
 <BODY>
 <H1>Squid 3.1.PRE1 release notes</H1>
 
-<H2>Squid Developers</H2>$Id: release-3.1.html,v 1.3 2008/01/11 02:38:58 amosjeffries Exp $
+<H2>Squid Developers</H2>$Id: release-3.1.html,v 1.4 2008/01/11 03:49:18 amosjeffries Exp $
 <HR>
 <EM>This document contains the release notes for version 3.1 of Squid.
 Squid is a WWW Cache application developed by the National Laboratory
@@ -50,7 +50,7 @@ While this release is not deemed ready for production use, we believe it is read
 
 <H3>Internet Protocol version 6 (IPv6)</H3>
 
-<P>Squid 3.1 supports IPv6. To enable IPv6 support, use the --enable-ipv6 ./configure option</P>
+<P>Squid 3.1 supports IPv6. To enable IPv6 support, use the ./configure --enable-ipv6 option</P>
 
 <H3>New Features for IPv6</H3>
 
@@ -185,7 +185,6 @@ Squid will follow a policy of prefering IPv6 links, keeping the IPv4 only as a s
 </DL>
 </P>
 
-
 <H3><A NAME="modifiedtags"></A> Changes to existing tags</H3>
 
 <P>
@@ -202,7 +201,9 @@ Squid will follow a policy of prefering IPv6 links, keeping the IPv4 only as a s
 
 <DT><B>external_acl_type</B><DD>
 <P>New options 'ipv4' and 'ipv6' are added to set the IPv4/v6 protocol between squid and its helpers.
-Please be aware of some limits to these options. see IPv6 Limits in section 2 above.
+Please be aware of some limits to these options. These options only affet the transport protocol used
+to send data to and from the helpers. Squid in IPv6-mode may still send %SRC addresses in IPv4 or IPv6
+format, so all helpers will need to be checked and converted to cope with such information cleanly.
 <PRE>
           ipv4 / ipv6   IP-mode used to communicate to this helper.
                         For compatability with older configurations and helpers
@@ -300,13 +301,22 @@ It has thus been turned off by default. Making the 'best choice' IP continue in 
 The default is to build with 127.0.0.1 and ::1 being considered seperate IP.
 see the IPv6 details above for a better description. </P>
 
-<DT><B>--with-ipv6-split-stack&lt;</B><DD>
+<DT><B>--with-ipv6-split-stack</B><DD>
 <P>Enable special additions for IPv6 support in Windows XP.
 see the IPv6 details above for a better description.</P>
 
 <DT><B>--with-ipv4-mapped</B><DD>
 <P>Enable special additions for IPv6 support in Windows Vista.
 see the IPv6 details above for a better description.</P>
+
+<DT><B>--with-dns-cname</B><DD>
+<P>Enable CNAME recursion within the Internal DNS resolver stub squid uses.
+This has no effect on the external DNS helper.
+Please note this extension is still experimental and may encounter problems.
+To see if it is actually needed you can run squid without it for a period and
+check the CNAME-Only Requests statistics squid maintains.
+If it produces ongoing serious problems the external helper may be needed
+but please report the bugs anyway.</P>
 
 </DL>
 </P>

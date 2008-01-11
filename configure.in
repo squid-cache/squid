@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.493 2007/12/27 15:48:53 hno Exp $
+dnl  $Id: configure.in,v 1.494 2008/01/11 03:49:18 amosjeffries Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.493 $)dnl
+AC_REVISION($Revision: 1.494 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -1789,6 +1789,15 @@ AC_ARG_WITH(localhost-ipv6,
 )
 # end IPv6-only options
 fi
+
+dnl Optional CNAME-Recursion by Internal DNS engine
+AC_MSG_CHECKING([whether DNS CNAME recursion wanted])
+AC_ARG_WITH(dns-cname,
+  [  --with-dns-cname         Enable CNAME-Recursion in Internal DNS stub.],
+  [AC_DEFINE(DNS_CNAME, 1, [ 1 == Enable expermental CNAME recursion inside Squid DNS resolver stub]) AC_MSG_RESULT(yes)],
+  [AC_DEFINE(DNS_CNAME, 0, [ 0 == Disable expermental CNAME recursion inside Squid DNS resolver stub]) AC_MSG_RESULT(no)]
+)
+
 
 AC_ARG_WITH(filedescriptors,
 [  --with-filedescriptors=NUMBER
