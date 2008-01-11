@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.1.PRE1 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.1.sgml,v 1.1 2007/12/15 03:55:02 amosjeffries Exp $</date>
+<date>$Id: release-3.1.sgml,v 1.2 2008/01/11 02:33:34 amosjeffries Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.1 of Squid.
@@ -123,10 +123,10 @@ This section gives a thorough account of those changes in three categories:
 
 
 <sect2>New tags<label id="newtags">
-
+<p>
 <descrip>
         <tag>pinger_enable</tag>
-        <p>New option to enable/disable the ICMP pinger helper with a reconfigure instead of a full rebuild.</p>
+        <p>New option to enable/disable the ICMP pinger helper with a reconfigure instead of a full rebuild.
         <verb>
         Control whether the pinger is active at run-time.
         Enables turning ICMP pinger on and off with a simple squid -k reconfigure.
