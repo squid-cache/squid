@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.532 2007/12/29 18:20:22 hno Exp $
+ * $Id: cache_cf.cc,v 1.533 2008/01/11 02:38:59 amosjeffries Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -151,6 +151,8 @@ static int check_null_https_port_list(const https_port_list *);
 static void parse_b_size_t(size_t * var);
 static void parse_b_int64_t(int64_t * var);
 
+static int parseOneConfigFile(const char *file_name, unsigned int depth);
+
 /*
  * LegacyParser is a parser for legacy code that uses the global
  * approach.  This is static so that it is only exposed to cache_cf.
@@ -203,17 +205,37 @@ skip_ws(const char* s)
     return s;
 }
 
-int
-parseConfigFile(const char *file_name, CacheManager & manager)
+static int
+parseManyConfigFiles(char* files, int depth)
+{
+    int error_count = 0;
+    char* tmp = files;
+    char* file = strtok(tmp, w_space);
+    while (file != NULL) {
+        tmp += strlen(file) +1;
+        error_count += parseOneConfigFile(file, depth);
+        file = strtok(tmp, w_space);
+    }
+    return error_count;
+}
+
+static int
+parseOneConfigFile(const char *file_name, unsigned int depth)
 {
     FILE *fp = NULL;
+    const char *orig_cfg_filename = cfg_filename;
+    const int orig_config_lineno = config_lineno;
     char *token = NULL;
     char *tmp_line = NULL;
     int tmp_line_len = 0;
     int err_count = 0;
     int is_pipe = 0;
-    configFreeMemory();
-    default_all();
+
+    debugs(3, 1, "Processing Configuration File: " << file_name << " (depth " << depth << ")");
+    if (depth > 16) {
+        fatalf("WARNING: can't include %s: includes are nested too deeply (>16)!\n", file_name);
+        return 1;
+    }
 
     if (file_name[0] == '!' || file_name[0] == '|') {
         fp = popen(file_name + 1, "r");
@@ -223,8 +245,7 @@ parseConfigFile(const char *file_name, CacheManager & manager)
     }
 
     if (fp == NULL)
-        fatalf("Unable to open configuration file: %s: %s",
-               file_name, xstrerror());
+        fatalf("Unable to open configuration file: %s: %s", file_name, xstrerror());
 
 #ifdef _SQUID_WIN32_
 
@@ -270,13 +291,6 @@ parseConfigFile(const char *file_name, CacheManager & manager)
                     *token = '\0';
 
                 cfg_filename = new_file_name;
-
-#if PROBABLY_NOT_WANTED_HERE
-
-                SetConfigFilename(cfg_filename, false);
-
-#endif
-
             }
 
             config_lineno = new_lineno;
@@ -306,11 +320,13 @@ parseConfigFile(const char *file_name, CacheManager & manager)
 
         debugs(3, 5, "Processing: '" << tmp_line << "'");
 
-        if (!parse_line(tmp_line)) {
-            debugs(3, 0, "parseConfigFile: '" << cfg_filename << "' line " <<
-                   config_lineno << " unrecognized: '" << config_input_line << "'");
-            err_count++;
-        }
+	/* Handle includes here */
+        if (tmp_line_len >= 9 && strncmp(tmp_line, "include", 7) == 0 && xisspace(tmp_line[7])) {
+            err_count += parseManyConfigFiles(tmp_line + 8, depth + 1);
+	} else if (!parse_line(tmp_line)) {
+            debugs(3, 0, HERE << cfg_filename << ":" << config_lineno << " unrecognized: '" << tmp_line << "'");
+ 	    err_count++;
+ 	}
 
         safe_free(tmp_line);
         tmp_line_len = 0;
@@ -325,6 +341,23 @@ parseConfigFile(const char *file_name, CacheManager & manager)
     } else {
         fclose(fp);
     }
+
+    cfg_filename = orig_cfg_filename;
+    config_lineno = orig_config_lineno;
+
+    return err_count;
+}
+
+int
+parseConfigFile(const char *file_name, CacheManager & manager)
+{
+    int err_count = 0;
+
+    configFreeMemory();
+
+    default_all();
+
+    err_count = parseOneConfigFile(file_name, 0);
 
     defaults_if_none();
 
@@ -350,6 +383,7 @@ parseConfigFile(const char *file_name, CacheManager & manager)
 
     return err_count;
 }
+
 
 static void
 configDoConfigure(void)

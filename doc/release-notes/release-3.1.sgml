@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.1.PRE1 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.1.sgml,v 1.2 2008/01/11 02:33:34 amosjeffries Exp $</date>
+<date>$Id: release-3.1.sgml,v 1.3 2008/01/11 02:38:58 amosjeffries Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.1 of Squid.
@@ -151,6 +151,21 @@ This section gives a thorough account of those changes in three categories:
                 *) Doubles the load placed by squid on the DNS network.
                 *) May negatively impact connection delay times.
         </verb>
+
+	<tag>include</tag>
+	<p>New option to import entire secondary configuration files into squid.conf.
+	<verb>
+	Squid will follow the files immediately and insert all their content
+	as if it was at that position in squid.conf. As per squid.conf some
+	options are order-specific within the config as a whole.
+
+	A few layers of include are allowed, but too many are confusing and
+	squid will enforce an include depth of 16 files.
+
+	Syntax:
+		include /path/to/file1 /path/to/file2
+	</verb>
+
 </descrip>
 
 
