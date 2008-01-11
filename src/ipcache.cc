@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.266 2008/01/10 08:13:43 amosjeffries Exp $
+ * $Id: ipcache.cc,v 1.267 2008/01/11 03:49:22 amosjeffries Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -57,7 +57,9 @@ struct _ipcache_entry
     struct timeval request_time;
     dlink_node lru;
     unsigned short locks;
+#if DNS_CNAME
     unsigned short cname_wait;
+#endif
 
     struct
     {
@@ -80,6 +82,10 @@ static struct
     int misses;
     int negative_hits;
     int numeric_hits;
+    int rr_a;
+    int rr_aaaa;
+    int rr_cname;
+    int cname_only;
     int invalid;
 }
 IpcacheStats;
@@ -251,18 +257,22 @@ ipcacheAddEntry(ipcache_entry * i)
 {
     hash_link *e = (hash_link *)hash_lookup(ip_table, i->hash.key);
 
+#if DNS_CNAME
     /* INET6 : should NOT be adding this entry until all CNAME have been received. */
     assert(i->cname_wait == 0);
+#endif
 
     if (NULL != e) {
         /* avoid colission */
         ipcache_entry *q = (ipcache_entry *) e;
+#if DNS_CNAME
         if(q == i)  {
             /* can occur with Multiple-depth CNAME Recursion if parent returned early with additional */
             /* just need to drop from the hash without releasing actual memory */
             ipcacheRelease(q, false);
         }
         else
+#endif
             ipcacheRelease(q);
     }
 
@@ -408,6 +418,8 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
     int na = 0;
     int ttl = 0;
     const char *name = (const char *)i->hash.key;
+    int cname_found = 0;
+
     i->expires = squid_curtime + Config.negativeDnsTtl;
     i->flags.negcached = 1;
     safe_free(i->addrs.in_addrs);
@@ -441,6 +453,7 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
 		continue;
 	    }
 	    na++;
+            IpcacheStats.rr_aaaa++;
 	    continue;
 	}
 #endif
@@ -451,11 +464,16 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
 		continue;
 	    }
 	    na++;
+            IpcacheStats.rr_a++;
 	    continue;
 	}
 
             /* With A and AAAA, the CNAME does not necessarily come with additional records to use. */
         if (answers[k].type == RFC1035_TYPE_CNAME) {
+            cname_found=1;
+            IpcacheStats.rr_cname++;
+
+#if DNS_CNAME
             debugs(14, 5, "ipcacheParse: " << name << " CNAME " << answers[k].rdata << " (checking destination: " << i << ").");
             const ipcache_addrs *res = ipcache_gethostbyname(answers[k].rdata, 0);
             if(res) {
@@ -468,18 +486,28 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
                 ipcache_nbgethostbyname(answers[k].rdata, ipcacheHandleCnameRecurse, new generic_cbdata(i) );
                 i->cname_wait++;
             }
+#endif /* DNS_CNAME */
+
             continue;
         }
+
+        // otherwise its an unknown RR. debug at level 9 since we usually want to ignore these and they are common.
+        debugs(14, 9, HERE << "Unknown RR type received: type=" << answers[k].type << " starting at " << &(answers[k]) );
     }
 
+#if DNS_CNAME
     if(na == 0 && i->cname_wait >0 ) {
         /* don't set any error message (yet). Allow recursion to do its work first. */
+        IpcacheStats.cname_only++;
         return 0;
     }
+#endif /* DNS_CNAME */
 
     if (na == 0) {
         debugs(14, 1, "ipcacheParse: No Address records in response to '" << name << "'");
         i->error_message = xstrdup("No Address records");
+        if(cname_found)
+            IpcacheStats.cname_only++;
         return 0;
     }
 
@@ -513,7 +541,9 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
             debugs(14, 3, "ipcacheParse: " << name << " #" << j << " " << i->addrs.in_addrs[j] );
             j++;
 #endif
-        } else if (answers[k].type == RFC1035_TYPE_CNAME) {
+        }
+#if DNS_CNAME
+        else if (answers[k].type == RFC1035_TYPE_CNAME) {
             debugs(14, 3, "ipcacheParse: " << name << " #x CNAME " << answers[k].rdata);
             const ipcache_addrs *res = ipcache_gethostbyname(answers[k].rdata, 0);
             if(res) {
@@ -528,6 +558,7 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
                 debugs(14, 9, "ipcacheParse: " << answers[k].rdata << " (CNAME) waiting on A/AAAA records.");
             }
         }
+#endif /* DNS_CNAME */
 
         if (ttl == 0 || (int) answers[k].ttl < ttl)
             ttl = answers[k].ttl;
@@ -550,12 +581,14 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
 
     i->flags.negcached = 0;
 
+#if DNS_CNAME
     /* SPECIAL CASE: may get here IFF CNAME received with Additional records */
     /*               reurn  0/'wait for further details' value.              */
     /*               NP: 'No DNS Results' is a return -1 +msg                */
     if(i->cname_wait)
         return 0;
     else
+#endif /* DNS_CNAME */
         return i->addrs.count;
 }
 
@@ -809,6 +842,14 @@ stat_ipcache_get(StoreEntry * sentry)
                       IpcacheStats.numeric_hits);
     storeAppendPrintf(sentry, "IPcache Misses:          %d\n",
                       IpcacheStats.misses);
+    storeAppendPrintf(sentry, "IPcache Retrieved A: %d\n",
+                      IpcacheStats.rr_a);
+    storeAppendPrintf(sentry, "IPcache Retrieved AAAA: %d\n",
+                      IpcacheStats.rr_aaaa);
+    storeAppendPrintf(sentry, "IPcache Retrieved CNAME: %d\n",
+                      IpcacheStats.rr_cname);
+    storeAppendPrintf(sentry, "IPcache CNAME-Only Response: %d\n",
+                      IpcacheStats.cname_only);
     storeAppendPrintf(sentry, "IPcache Invalid Request: %d\n",
                       IpcacheStats.invalid);
     storeAppendPrintf(sentry, "\n\n");
@@ -826,6 +867,7 @@ stat_ipcache_get(StoreEntry * sentry)
     }
 }
 
+#if DNS_CNAME
 /**
  * Takes two IPAddress arrays and merges them into a single array
  * which is allocated dynamically to fit the number of unique addresses
@@ -937,10 +979,12 @@ debugs(14,8, HERE << "A[" << t << "]=IPv6 " << aaddrs[t]);
 
     assert(outlen == fc); // otherwise something broke badly!
 }
+#endif /* DNS_CNAME */
 
 static void
 ipcacheHandleCnameRecurse(const ipcache_addrs *addrs, void *cbdata)
 {
+#if DNS_CNAME
     ipcache_entry *i = NULL;
     char *pname = NULL;
     IPAddress *tmpbuf = NULL;
@@ -1036,6 +1080,7 @@ ipcacheHandleCnameRecurse(const ipcache_addrs *addrs, void *cbdata)
         ipcacheCallback(i);
     }
     // else still more CNAME to be found.
+#endif /* DNS_CNAME */
 }
 
 void

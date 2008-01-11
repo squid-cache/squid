@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1035.h,v 1.19 2007/12/14 23:11:44 amosjeffries Exp $
+ * $Id: rfc1035.h,v 1.20 2008/01/11 03:49:20 amosjeffries Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -95,6 +95,7 @@ SQUIDCEXTERN int rfc1035MessageUnpack(const char *buf,
     size_t sz,
     rfc1035_message ** answer);
 SQUIDCEXTERN int rfc1035QueryCompare(const rfc1035_query *, const rfc1035_query *);
+SQUIDCEXTERN void rfc1035RRDestroy(rfc1035_rr ** rr, int n);
 SQUIDCEXTERN void rfc1035MessageDestroy(rfc1035_message ** message);
 SQUIDCEXTERN int rfc1035_errno;
 SQUIDCEXTERN const char *rfc1035_error_message;

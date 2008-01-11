@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.52 2007/12/19 02:36:27 amosjeffries Exp $
+ * $Id: rfc1035.c,v 1.53 2008/01/11 03:49:21 amosjeffries Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -471,12 +471,13 @@ rfc1035SetErrno(int n)
     }
 }
 
-static void
+void
 rfc1035RRDestroy(rfc1035_rr ** rr, int n)
 {
-    if (*rr == NULL)
+    if (*rr == NULL || n < 1) {
 	return;
-    assert(n > 0);
+    }
+
     while (n--) {
 	if ((*rr)[n].rdata)
 	    xfree((*rr)[n].rdata);
