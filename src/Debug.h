@@ -1,5 +1,5 @@
 /*
- * $Id: Debug.h,v 1.11 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id: Debug.h,v 1.12 2008/01/11 05:04:02 amosjeffries Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -51,6 +51,12 @@
 #else
 #define assert(EX)  ((EX)?((void)0):xassert("EX", __FILE__, __LINE__))
 #endif
+
+/* defined names for Debug Levels */
+#define DBG_CRITICAL	0	/**< critical messages always shown when they occur */
+#define DBG_IMPORTANT	1	/**< important messages always shown when their section is being checked */
+/* levels 2-8 are still being discussed amongst the developers */
+#define DBG_DATA	9	/**< output is a large data dump only necessary for advanced debugging */
 
 class Debug
 {
