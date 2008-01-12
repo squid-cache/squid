@@ -39,6 +39,9 @@
 /* Define if you have problems with memPools and want to disable Pools. */
 #undef DISABLE_POOLS
 
+/* 0 == Disable expermental CNAME recursion inside Squid DNS resolver stub */
+#undef DNS_CNAME
+
 /* Enable Forw/Via database */
 #undef FORW_VIA_DB
 
