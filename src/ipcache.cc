@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.267 2008/01/11 03:49:22 amosjeffries Exp $
+ * $Id: ipcache.cc,v 1.268 2008/01/12 13:17:41 amosjeffries Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -842,9 +842,9 @@ stat_ipcache_get(StoreEntry * sentry)
                       IpcacheStats.numeric_hits);
     storeAppendPrintf(sentry, "IPcache Misses:          %d\n",
                       IpcacheStats.misses);
-    storeAppendPrintf(sentry, "IPcache Retrieved A: %d\n",
+    storeAppendPrintf(sentry, "IPcache Retrieved A:     %d\n",
                       IpcacheStats.rr_a);
-    storeAppendPrintf(sentry, "IPcache Retrieved AAAA: %d\n",
+    storeAppendPrintf(sentry, "IPcache Retrieved AAAA:  %d\n",
                       IpcacheStats.rr_aaaa);
     storeAppendPrintf(sentry, "IPcache Retrieved CNAME: %d\n",
                       IpcacheStats.rr_cname);
