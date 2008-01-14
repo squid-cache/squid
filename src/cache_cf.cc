@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.533 2008/01/11 02:38:59 amosjeffries Exp $
+ * $Id: cache_cf.cc,v 1.534 2008/01/14 13:19:48 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -2792,6 +2792,7 @@ parse_http_port_specification(http_port_list * s, char *token)
     char *junk = NULL;
 
     s->disable_pmtu_discovery = DISABLE_PMTU_OFF;
+    s->name = strdup(token);
 
 #if USE_IPV6
     if (*token == '[') {
