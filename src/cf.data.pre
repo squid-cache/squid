@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.493 2008/01/14 13:19:48 hno Exp $
+# $Id: cf.data.pre,v 1.494 2008/01/16 09:30:39 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -493,6 +493,7 @@ DOC_START
 	acl aclname port     80 70 21 ...
 	acl aclname port     0-1024 ...		# ranges allowed
 	acl aclname myport   3128 ...		# (local socket TCP port)
+	acl aclname myportname 3128 ...		# http(s)_port name
 	acl aclname proto    HTTP FTP ...
 	acl aclname method   GET POST ...
 	acl aclname browser  [-i] regexp ...
