@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.1.PRE1 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.1.sgml,v 1.4 2008/01/11 03:49:18 amosjeffries Exp $</date>
+<date>$Id: release-3.1.sgml,v 1.5 2008/01/17 08:32:28 hno Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.1 of Squid.
@@ -25,9 +25,9 @@ We welcome feedback and bug reports. If you find a bug, please see <url url="htt
 
 <sect>Known issues
 <p>
-Although this release is deemed good enough for testing in many setups, please note the existence of <url url="http://www.squid-cache.org/bugs/buglist.cgi?query_format=advanced&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;target_milestone=3.0&amp;long_desc_type=allwordssubstr&amp;long_desc=&amp;bug_file_loc_type=allwordssubstr&amp;bug_file_loc=&amp;status_whiteboard_type=allwordssubstr&amp;status_whiteboard=&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;emailtype1=substring&amp;email1=&amp;emailtype2=substring&amp;email2=&amp;bugidtype=include&amp;bug_id=&amp;votes=&amp;chfieldfrom=&amp;chfieldto=Now&amp;chfieldvalue=&amp;cmdtype=doit&amp;order=bugs.bug_severity&amp;field0-0-0=noop&amp;type0-0-0=noop&amp;value0-0-0=" name="open bugs against Squid-3.0">.
+Although this release is deemed good enough for testing in many setups, please note the existence of <url url="http://www.squid-cache.org/bugs/buglist.cgi?query_format=advanced&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;target_milestone=3.1&amp;long_desc_type=allwordssubstr&amp;long_desc=&amp;bug_file_loc_type=allwordssubstr&amp;bug_file_loc=&amp;status_whiteboard_type=allwordssubstr&amp;status_whiteboard=&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;emailtype1=substring&amp;email1=&amp;emailtype2=substring&amp;email2=&amp;bugidtype=include&amp;bug_id=&amp;votes=&amp;chfieldfrom=&amp;chfieldto=Now&amp;chfieldvalue=&amp;cmdtype=doit&amp;order=bugs.bug_severity&amp;field0-0-0=noop&amp;type0-0-0=noop&amp;value0-0-0=" name="open bugs against Squid-3.1">.
 
-<sect>Changes since earlier PRE releases of Squid-3.0
+<sect>Changes since earlier PRE releases of Squid-3.1
 <p>
 The 3.1 change history can be <url url="http://www.squid-cache.org/Versions/v3/3.1/changesets/" name="viewed here">.
 
