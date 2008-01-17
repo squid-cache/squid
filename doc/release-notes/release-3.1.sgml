@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.1.PRE1 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.1.sgml,v 1.5 2008/01/17 08:32:28 hno Exp $</date>
+<date>$Id: release-3.1.sgml,v 1.6 2008/01/17 10:09:05 hno Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.1 of Squid.
@@ -171,14 +171,26 @@ This section gives a thorough account of those changes in three categories:
 <sect2>Changes to existing tags<label id="modifiedtags">
 <p>
 <descrip>
-	<tag>acl</tag>
-	<p>New preset content
-	<verb>
-        <p>ipv6 - now available as a preset type in the src and dst ACL matching all of the public IPv6 network space.
+	<tag>acl dst ipvs</tag>
+	<p>New preset content - ipv6 - available as a preset type in the src and dst ACL matching all of the public IPv6 network space.
         <verb>
-    acl aclname dst ipv6
+	acl aclname dst ipv6
         </verb>
 
+	<tag>http(s)_port name= option</tag>
+	<p>New port option to assign internal names to listening ports
+        <verb>
+           name=        Specifies a internal name for the port. Defaults to
+                        the port specification (port or addr:port)
+        </verb>
+
+	<tag>acl myportname</tag>
+	<p>New acl type myportname, matching the name of the http(s)_port where the request was accepted
+        <verb>
+        acl aclname myportname 3128 ...         # http(s)_port name
+        </verb>
+
+	
         <tag>external_acl_type</tag>
         <p>New options 'ipv4' and 'ipv6' are added to set the IPv4/v6 protocol between squid and its helpers.
            Please be aware of some limits to these options. These options only affet the transport protocol used
