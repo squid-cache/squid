@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.535 2008/01/16 22:12:45 amosjeffries Exp $
+ * $Id: cache_cf.cc,v 1.536 2008/01/18 12:37:08 amosjeffries Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -210,10 +210,10 @@ parseManyConfigFiles(char* files, int depth)
 {
     int error_count = 0;
     char* saveptr = NULL;
-    char* file = strtok_r(tmp, w_space, &saveptr);
+    char* file = strtok_r(files, w_space, &saveptr);
     while (file != NULL) {
         error_count += parseOneConfigFile(file, depth);
-        file = strtok_r(tmp, w_space, &saveptr);
+        file = strtok_r(files, w_space, &saveptr);
     }
     return error_count;
 }
