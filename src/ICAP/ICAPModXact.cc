@@ -34,7 +34,7 @@ extern ICAPConfig TheICAPConfig;
 
 ICAPModXact::State::State()
 {
-    memset(this, sizeof(*this), 0);
+    memset(this, 0, sizeof(*this));
 }
 
 ICAPModXact::ICAPModXact(ICAPInitiator *anInitiator, HttpMsg *virginHeader,
