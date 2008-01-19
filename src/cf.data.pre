@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.494 2008/01/16 09:30:39 hno Exp $
+# $Id: cf.data.pre,v 1.495 2008/01/19 07:15:28 amosjeffries Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -2327,6 +2327,29 @@ LOC: Config.Ftp.passive
 DOC_START
 	If your firewall does not allow Squid to use passive
 	connections, turn off this option.
+
+	Use of ftp_epsv_all option requires this to be ON.
+DOC_END
+
+NAME: ftp_epsv_all
+TYPE: onoff
+DEFAULT: off
+LOC: Config.Ftp.epsv_all
+DOC_START
+	FTP Protocol extensions permit the use of a special "EPSV ALL" command.
+
+	NATs may be able to put the connection on a "fast path" through the
+	translator, as the EPRT command will never be used and therefore,
+	translation of the data portion of the segments will never be needed.
+
+	When a client only expects to do two-way FTP transfers this may be useful.
+	If squid finds that it must do a three-way FTP transfer after issuing
+	an EPSV ALL command, the FTP session will fail.
+
+	If you have any doubts about this option do not use it.
+	Squid will nicely attempt all other connection methods.
+
+	Requires ftp_passive to be ON (default)
 DOC_END
 
 NAME: ftp_sanitycheck
