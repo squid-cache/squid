@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.441 2008/01/07 17:12:28 hno Exp $
+ * $Id: comm.cc,v 1.442 2008/01/19 07:11:35 amosjeffries Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1469,6 +1469,8 @@ comm_old_accept(int fd, ConnectionDetail &details)
 
     details.peer = *gai;
 
+    details.me.InitAddrInfo(gai);
+
     details.me.SetEmpty();
     getsockname(sock, gai->ai_addr, &gai->ai_addrlen);
     details.me = *gai;
@@ -1484,11 +1486,14 @@ comm_old_accept(int fd, ConnectionDetail &details)
     details.peer.NtoA(F->ipaddr,MAX_IPSTRLEN);
     F->remote_port = details.peer.GetPort();
     F->local_addr.SetPort(details.me.GetPort());
-    F->sock_family = gai->ai_family;
+#if USE_IPV6
+    F->sock_family = AF_INET;
+#else
+    F->sock_family = details.me.IsIPv4()?AF_INET:AF_INET6;
+#endif
+    details.me.FreeAddrInfo(gai);
 
     commSetNonBlocking(sock);
-
-    details.me.FreeAddrInfo(gai);
 
     PROF_stop(comm_accept);
     return sock;
@@ -2284,9 +2289,10 @@ fdc_t::acceptOne(int fd) {
         return;
     }
 
-    debugs(5, 5, "fdc_t::acceptOne accepted: FD " << fd << " handler: " << (void*)accept.accept.callback.handler << " newfd: " << newfd);
+    debugs(5, 5, HERE << "accepted: FD " << fd << " handler: " << (void*)accept.accept.callback.handler << " newfd: " << newfd << " from: " << accept.connDetails.peer);
 
     assert(accept.accept.callback.handler);
+
     accept.accept.doCallback(fd, newfd, COMM_OK, 0, &accept.connDetails);
 
     /* If we weren't re-registed, don't bother trying again! */

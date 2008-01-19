@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1035.c,v 1.53 2008/01/11 03:49:21 amosjeffries Exp $
+ * $Id: rfc1035.c,v 1.54 2008/01/19 07:11:34 amosjeffries Exp $
  *
  * Low level DNS protocol routines
  * AUTHOR: Duane Wessels
@@ -402,7 +402,9 @@ rfc1035RRUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_rr * RR)
     }
     RR->rdlength = rdlength;
     switch (RR->type) {
+#if DNS_CNAME
     case RFC1035_TYPE_CNAME:
+#endif
     case RFC1035_TYPE_PTR:
 	RR->rdata = (char*)xmalloc(RFC1035_MAXHOSTNAMESZ);
 	rdata_off = *off;
