@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.572 2008/01/07 17:12:28 hno Exp $
+ * $Id: structs.h,v 1.573 2008/01/19 07:15:30 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -598,6 +598,7 @@ struct _SquidConfig
         int list_wrap;
         char *anon_user;
         int passive;
+        int epsv_all;
         int sanitycheck;
         int telnet;
     }
