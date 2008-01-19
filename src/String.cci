@@ -1,6 +1,5 @@
-
 /*
- * $Id: String.cci,v 1.10 2007/11/04 23:59:52 amosjeffries Exp $
+ * $Id: String.cci,v 1.11 2008/01/19 10:38:32 amosjeffries Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -50,6 +49,14 @@ char const *
 String::buf() const
 {
     return buf_;
+}
+
+char&
+String::operator [](unsigned int pos)
+{
+    assert(pos < size_);
+
+    return buf_[pos];
 }
 
 const char *

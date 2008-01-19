@@ -1,6 +1,5 @@
-
 /*
- * $Id: SquidString.h,v 1.12 2007/11/04 23:59:51 amosjeffries Exp $
+ * $Id: SquidString.h,v 1.13 2008/01/19 10:38:32 amosjeffries Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -90,6 +89,12 @@ public:
     bool operator ==(String const &) const;
     bool operator !=(String const &) const;
 
+    /**
+     * Retrieve a single character in the string.
+     \param pos	Position of character to retrieve.
+     */
+    _SQUID_INLINE_ char &operator [](unsigned int pos);
+
     _SQUID_INLINE_ int size() const;
     _SQUID_INLINE_ char const * buf() const;
     void buf(char *);
@@ -112,10 +117,19 @@ public:
     _SQUID_INLINE_ int caseCmp (char const *) const;
     _SQUID_INLINE_ int caseCmp (char const *, size_t count) const;
 
+    /** \deprecated Use assignment to [] position instead.
+     *              ie   str[0] = 'h';
+     */
     _SQUID_INLINE_ void set(char const *loc, char const ch);
 
+    /** \deprecated Use assignment to [] position instead.
+     *              ie   str[newLength] = '\0';
+     */
     _SQUID_INLINE_ void cut(size_t newLength);
 
+    /** \deprecated Use assignment to [] position instead.
+     *              ie   str[newLength] = '\0';
+     */
     _SQUID_INLINE_ void cutPointer(char const *loc);
 
 #if DEBUGSTRINGS
