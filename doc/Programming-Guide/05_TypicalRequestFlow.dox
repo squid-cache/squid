@@ -1,0 +1,72 @@
+/**
+\page 05_TypicalRequestFlow Flow of a Typical Request
+
+\par
+\li	A client connection is accepted by the client-side socket
+	support and parsed, or is directly created via
+	clientBeginRequest().
+
+\li	The access controls are checked.  The client-side-request builds
+	an ACL state data structure and registers a callback function
+	for notification when access control checking is completed.
+
+\li	After the access controls have been verified, the request
+	may be redirected. 
+
+\li	The client-side-request is forwarded up the client stream
+	to GetMoreData() which looks for the requested object in the 
+	cache, and or Vary: versions of the same. If is a cache hit, 
+	then the client-side registers its interest in the 
+	StoreEntry. Otherwise, Squid needs to forward the request,
+	perhaps with an If-Modified-Since header.
+
+\li	The request-forwarding process begins with protoDispatch().
+	This function begins the peer selection procedure, which
+	may involve sending ICP queries and receiving ICP replies.
+	The peer selection procedure also involves checking
+	configuration options such as \em never_direct and
+	\em always_direct.
+
+\li	When the ICP replies (if any) have been processed, we end
+	up at protoStart().  This function calls an appropriate
+	protocol-specific function for forwarding the request.
+	Here we will assume it is an HTTP request.
+
+\li	The HTTP module first opens a connection to the origin
+	server or cache peer.  If there is no idle persistent socket
+	available, a new connection request is given to the Network
+	Communication module with a callback function.  The
+	comm.c routines may try establishing a connection
+	multiple times before giving up.
+
+\li	When a TCP connection has been established, HTTP builds a
+	request buffer and submits it for writing on the socket.
+	It then registers a read handler to receive and process
+	the HTTP reply.
+
+\li	As the reply is initially received, the HTTP reply headers
+	are parsed and placed into a reply data structure.  As
+	reply data is read, it is appended to the StoreEntry.
+	Every time data is appended to the StoreEntry, the
+	client-side is notified of the new data via a callback
+	function. The rate at which reading occurs is regulated by
+	the delay pools routines, via the deferred read mechanism.
+
+\li	As the client-side is notified of new data, it copies the
+	data from the StoreEntry and submits it for writing on the
+	client socket.
+
+\li	As data is appended to the StoreEntry, and the client(s)
+	read it, the data may be submitted for writing to disk.
+
+\li	When the HTTP module finishes reading the reply from the
+	upstream server, it marks the StoreEntry as "complete".
+	The server socket is either closed or given to the persistent
+	connection pool for future use.
+
+\li	When the client-side has written all of the object data,
+	it unregisters itself from the StoreEntry.  At the
+	same time it either waits for another request from the
+	client, or closes the client connection.
+
+*/

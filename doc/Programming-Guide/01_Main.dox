@@ -1,0 +1,55 @@
+/**
+\mainpage Squid 3.x Developer Programming Guide
+
+\section Abstract Abstract
+
+\par
+     Squid is a WWW Cache application developed by the National Laboratory
+     for Applied Network Research and members of the Web Caching community.
+     Squid is implemented as a single, non-blocking process based around
+     a BSD select() loop.  This document describes the operation of the Squid
+     source code and is intended to be used by others who wish to customize
+     or improve it.
+
+
+\section Introduction Introduction
+
+\par
+        The Squid source code has evolved more from empirical
+        observation and tinkering, rather than a solid design
+        process.  It carries a legacy of being "touched" by
+        numerous individuals, each with somewhat different techniques
+        and terminology.
+
+\par
+        Squid is a single-process proxy server.  Every request is
+        handled by the main process, with the exception of FTP.
+        However, Squid does not use a "threads package" such has
+        Pthreads.  While this might be easier to code, it suffers
+        from portability and performance problems.  Instead Squid
+        maintains data structures and state information for each
+        active request.
+
+\par
+        The code is often difficult to follow because there are no
+        explicit state variables for the active requests.  Instead,
+        thread execution progresses as a sequence of "callback
+        functions" which get executed when I/O is ready to occur,
+        or some other event has happened.  As a callback function
+        completes, it is responsible for registering the next
+        callback function for subsequent I/O.
+
+\par
+        Note there is only a pseudo-consistent naming scheme.  In
+        most cases functions are named like \c moduleFooBar() .
+        However, there are also some functions named like
+        \c module_foo_bar() .
+
+\par
+        Note that the Squid source changes rapidly, and while we 
+        do make some effort to document code as we go some parts
+        of the documentation may be left out.  If you find any
+        inconsistencies, please feel free to notify 
+        http://www.squid-cache.org/Support/contact.dyn the Squid Developers.
+
+ */

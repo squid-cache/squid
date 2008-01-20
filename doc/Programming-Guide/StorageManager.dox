@@ -1,0 +1,40 @@
+\**
+ \defgroup StorageManager Storage Manager
+ \ingroup Components
+ *
+ \par
+	The Storage Manager is the glue between client and server
+	sides.  Every object saved in the cache is allocated a
+	StoreEntry structure.  While the object is being
+	accessed, it also has a MemObject structure.
+
+\par
+	Squid can quickly locate cached objects because it keeps
+	(in memory) a hash table of all StoreEntry's.  The
+	keys for the hash table are MD5 checksums of the objects
+	URI.  In addition there is also a storage policy such
+	as LRU that keeps track of the objects and determines
+	the removal order when space needs to be reclaimed.
+	For the LRU policy this is implemented as a doubly linked
+	list.
+
+\par
+	For each object the StoreEntry maps to a cache_dir
+	and location via sdirn and sfilen. For the "ufs" store
+	this file number (sfilen) is converted to a disk pathname
+	by a simple modulo of L2 and L1, but other storage drivers may
+	map sfilen in other ways.  A cache swap file consists
+	of two parts: the cache metadata, and the object data.
+	Note the object data includes the full HTTP reply---headers
+	and body.  The HTTP reply headers are not the same as the
+	cache metadata.
+
+\par
+	Client-side requests register themselves with a StoreEntry
+	to be notified when new data arrives.  Multiple clients
+	may receive data via a single StoreEntry.  For POST
+	and PUT request, this process works in reverse.  Server-side
+	functions are notified when additional data is read from
+	the client.
+
+ */

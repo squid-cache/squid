@@ -1,0 +1,191 @@
+/**
+\page Conventions Coding and Other Conventions used in Squid
+
+\section Coding Code Conventions
+\par
+        Most custom types and tools are documented in the code or the relevant
+        portions of this manual. Some key points apply globally however.
+
+\section FWT Fixed Width types
+
+\par
+        If you need to use specific width types - such as
+        a 16 bit unsigned integer, use one of the following types. To access
+        them simply include "config.h".
+
+\verbatim
+        int16_t    -  16 bit signed.
+        u_int16_t  -  16 bit unsigned.
+        int32_t    -  32 bit signed.
+        u_int32_t  -  32 bit unsigned.
+        int64_t    -  64 bit signed.
+        u_int64_t  -  64 bit unsigned.
+\endverbatim
+
+\section Documentation Documentation Conventions
+\par
+	Now that documentation is generated automatically from the sources
+	some common comment conventions need to be adopted.
+
+
+\subsection CommentComponents	API vs Internal Component Commenting
+
+\par
+	First among these is a definition seperation between component API
+	and Internal operations. API functions and objects should always be
+	commented and in the *.h file for the component. Internal logics and
+	objects should be commented in the *.cc file where they are defined.
+        The group is to be defined in the components main files with the
+	overview paragraphs about the API usage or component structure.
+
+\par
+	With C++ classes it is easy to seperate API and Internals with the C++
+	public: and private: distinctions on whichever class defines the
+	component API. An Internal group may not be required if there are no
+	additional items in the Internals (rare as globals are common in squid).
+
+\par
+	With unconverted modules still coded in Objective-C, the task is harder.
+	In these cases two sub-groups must be defined *API and *Internal into
+	which naturally individual functions, variables, etc. are grouped using
+	the \b \\ingroup tag. The API group is usually a sub-group of Components
+	and the Internal is always a sub-group of the API.
+
+\par	Rule of thumb:
+	For both items, if its referenced from elsewhere in the code or
+	defined in the .h file it should be part of the API.
+	Everything else should be in the Internals group and kept out of the .h file.
+
+\subsection FunctionComments	Function/Method Comments
+
+\par
+	All descriptions may be more than one line, and while whitespace formatting is
+	ignored by doxygen, it is good to keep it clear for manual reading of the code.
+
+\par
+	Any text directly following a \b \\par tag will be highlighted in bold
+	automatically (like all the 'For Examples' below) so be careful what is placed
+	there.
+
+
+\subsubsection PARAM    Function Parameters
+
+\par
+	Function and Method parameters MUST be named in both the definition and in
+	the declaration, and they also MUST be the same text. The doxygen parser
+	needs them to be identical to accurately link the two with documentation.
+	Particularly linking function with documentation of the label itself.
+
+\par
+	Each function that takes parameters should have the possible range of values
+	commented in the pre-function descriptor. For API function this is as usual
+	in the .h file, for Internal functions it is i the .(cc|cci) file.
+
+\par
+	The \b \\param tag is used to describe these. It takes two required parameters;
+	the name of the function parameter being documented followed immediately by
+	either [in], [out], or [in,out].
+	Followed by an optional description of what the parameter represents.
+
+\par	For Example:
+\verbatim
+/**
+ \param g[out]		Buffer to receive something
+ \param glen[in]	Length of buffer available to write
+ */
+void
+X::getFubar(char *g, int glen)
+...
+\endverbatim
+
+
+\subsubsection RETVAL   Return Values
+
+\par
+	Each function that returns a value should have the possible range of values
+	commented in the pre-function descriptor.
+\par
+	The \b \\retval tag is used to describe these. It takes one required parameter;
+	the value or range of values returned.
+	Followed by an optional description of what/why of that value.
+
+\par	For Example:
+\verbatim
+/**
+ \retval 0	when FUBAR does not start with 'F'
+ \retval 1	when FUBAR startes with F
+ */
+int
+X::saidFubar()
+...
+\endverbatim
+
+\par	Alternatively
+	when a state or other context-dependant object is returned the \b \return
+	tag is used. It is followed by a description of the object and ideally its
+	content.
+
+
+\subsubsection FLOW     Function Actions / Internal Flows
+
+\par	Simple functions
+	do not exactly need a detailed description of their operation.
+	The \link PARAM input parameters \endlink and \link RETVAL Return \endlink
+	value should be enough for any developer to understand the function.
+
+\par	Long or Complex Functions
+	do however need some commenting.
+	A well-designed function does all its operatons in distinct blocks;
+	\arg Input validation
+	\arg Processing on some state
+	\arg Processing on the output of that earlier processing
+	\arg etc, etc.
+
+\par
+	Each of these design blocks inside the function should be given a comment
+	indicating what they do. The comments should begin with
+	\verbatim /** \par \endverbatim
+	The resulting function description will then contain a paragraph on each of the
+	blocks in the order they occur in the function.
+
+\par	For example:
+\verbatim
+/**
+ \param g	The buffer to be used
+ \param glen	Length of buffer provided
+ \param state	Object of type X storing foo
+ */
+void
+fubar(char *g, int glen, void *state) {
+\endverbatim
+	Designed validation part of the function
+\verbatim
+    /** \par
+     * When g is NULL or gen is 0 nothing is done */
+    if(g == NULL || glen < 1)
+        return;
+
+   /** \par
+     * When glen is longer than the accepted length it gets truncated */
+   if(glen > MAX_FOO) glen = MAX_FOO;
+\endverbatim
+	now we get on to the active part of the function
+\verbatim
+   /** \par
+     * Appends up to MAX_FOO bytes from g onto the end of state->foo
+     * then passes the state off to FUBAR.
+     * No check for null-termination is done.
+     */
+   xmemcpy(g, glen, state->foo_end_ptr );
+   state->foo_end_ptr += glen;
+   fubar(state);
+}
+\endverbatim
+
+\par
+	Of course, this is a very simple example. This type of comment should only be
+	needed in the larger functions with many side effects.
+	A function this small could reasonably have all its commenting done just ahead of
+	the parameter description.
+
+ */
