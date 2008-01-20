@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.147 2007/12/26 22:19:37 hno Exp $
+ * $Id: client_side_reply.cc,v 1.148 2008/01/20 08:54:28 amosjeffries Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -88,7 +88,7 @@ clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) : http 
  */
 void
 clientReplyContext::setReplyToError(
-    err_type err, http_status status, method_t method, char const *uri,
+    err_type err, http_status status, const HttpRequestMethod& method, char const *uri,
     IPAddress &addr, HttpRequest * failedrequest, char *unparsedrequest,
     AuthUserRequest * auth_user_request)
 {
@@ -657,7 +657,7 @@ clientReplyContext::processMiss()
     char *url = http->uri;
     HttpRequest *r = http->request;
     ErrorState *err = NULL;
-    debugs(88, 4, "clientProcessMiss: '" << RequestMethodStr[r->method] << " " << url << "'");
+    debugs(88, 4, "clientProcessMiss: '" << RequestMethodStr(r->method) << " " << url << "'");
     /*
      * We might have a left-over StoreEntry from a failed cache hit
      * or IMS request.
@@ -677,6 +677,11 @@ clientReplyContext::processMiss()
         purgeRequest();
         return;
     }
+    
+    if (METHOD_OTHER == r->method) {
+    	// invalidate all cache entries
+    	purgeAllCached();
+    }
 
     if (http->onlyIfCached()) {
         processOnlyIfCachedMiss();
@@ -694,7 +699,7 @@ clientReplyContext::processMiss()
         triggerInitialStoreRead();
         return;
     } else {
-        assert(http->out.offset == 0);
+        assert(http->out.offset == 0);        
         createStoreEntry(r->method, r->flags);
         triggerInitialStoreRead();
 
@@ -732,7 +737,7 @@ clientReplyContext::processOnlyIfCachedMiss()
 {
     ErrorState *err = NULL;
     debugs(88, 4, "clientProcessOnlyIfCachedMiss: '" <<
-           RequestMethodStr[http->request->method] << " " << http->uri << "'");
+           RequestMethodStr(http->request->method) << " " << http->uri << "'");
     http->al.http.code = HTTP_GATEWAY_TIMEOUT;
     err = clientBuildError(ERR_ONLY_IF_CACHED_MISS, HTTP_GATEWAY_TIMEOUT, NULL, http->getConn()->peer, http->request);
     removeClientStoreReference(&sc, http);
@@ -741,12 +746,36 @@ clientReplyContext::processOnlyIfCachedMiss()
 
 void
 clientReplyContext::purgeRequestFindObjectToPurge()
-{
+{ 
     /* Try to find a base entry */
     http->flags.purging = 1;
     lookingforstore = 1;
+    
+	// TODO: can we use purgeAllCached() here instead of doing the
+	// getPublicByRequestMethod() dance?
     StoreEntry::getPublicByRequestMethod(this, http->request, METHOD_GET);
 }
+
+/*
+ * We probably cannot purge Vary-affected responses because their MD5
+ * keys depend on vary headers.
+ */
+void 
+clientReplyContext::purgeAllCached()
+{
+	const char *url = urlCanonical(http->request);
+	
+	HttpRequestMethod m(METHOD_NONE);
+	for (; m!=METHOD_ENUM_END; ++m) {
+	    if (m.isCacheble()) {
+	        if (StoreEntry *entry = storeGetPublic(url, m)) {
+	            debugs(88, 5, "purging " << RequestMethodStr(m) << ' ' << url);
+	            entry->release();
+	        }
+	    } // end if(isCacheble())
+	} // end for
+	
+} // purgeAllCached
 
 void
 clientReplyContext::created(StoreEntry *newEntry)
@@ -1792,7 +1821,7 @@ clientReplyContext::ProcessReplyAccessResult (int rv, void *voidMe)
 void
 clientReplyContext::processReplyAccessResult(bool accessAllowed)
 {
-    debugs(88, 2, "The reply for " << RequestMethodStr[http->request->method] 
+    debugs(88, 2, "The reply for " << RequestMethodStr(http->request->method) 
            << " " << http->uri << " is " 
            << ( accessAllowed ? "ALLOWED" : "DENIED") 
            << ", because it matched '" 
@@ -1996,7 +2025,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 /* Using this breaks the client layering just a little!
  */
 void
-clientReplyContext::createStoreEntry(method_t m, request_flags flags)
+clientReplyContext::createStoreEntry(const HttpRequestMethod& m, request_flags flags)
 {
     assert(http != NULL);
     /*

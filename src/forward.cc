@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.169 2007/12/14 23:11:46 amosjeffries Exp $
+ * $Id: forward.cc,v 1.170 2008/01/20 08:54:28 amosjeffries Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -939,7 +939,7 @@ void
 FwdState::dispatch()
 {
     peer *p = NULL;
-    debugs(17, 3, "fwdDispatch: FD " << client_fd << ": Fetching '" << RequestMethodStr[request->method] << " " << entry->url() << "'" );
+    debugs(17, 3, "fwdDispatch: FD " << client_fd << ": Fetching '" << RequestMethodStr(request->method) << " " << entry->url() << "'" );
     /*
      * Assert that server_fd is set.  This is to guarantee that fwdState
      * is attached to something and will be deallocated when server_fd
@@ -1296,7 +1296,7 @@ FwdState::log()
                   (int) current_time.tv_sec,
                   (int) current_time.tv_usec / 1000,
                   last_status,
-                  RequestMethodStr[request->method],
+                  RequestMethodStr(request->method),
                   request->canonical);
 }
 

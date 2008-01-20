@@ -1,5 +1,5 @@
 /*
- * $Id: auth_digest.cc,v 1.61 2007/12/30 04:06:30 hno Exp $
+ * $Id: auth_digest.cc,v 1.62 2008/01/20 08:54:30 amosjeffries Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -617,7 +617,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointe
                   digest_user->HA1, SESSIONKEY);
     DigestCalcResponse(SESSIONKEY, authenticateDigestNonceNonceb64(digest_request->nonce),
                        digest_request->nc, digest_request->cnonce, digest_request->qop,
-                       RequestMethodStr[request->method], digest_request->uri, HA2, Response);
+                       RequestMethodStr(request->method), digest_request->uri, HA2, Response);
 
     debugs(29, 9, "\nResponse = '" << digest_request->response << "'\nsquid is = '" << Response << "'");
 
@@ -638,7 +638,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointe
              */
             DigestCalcResponse(SESSIONKEY, authenticateDigestNonceNonceb64(digest_request->nonce),
                                digest_request->nc, digest_request->cnonce, digest_request->qop,
-                               RequestMethodStr[METHOD_GET], digest_request->uri, HA2, Response);
+                               RequestMethodStr(METHOD_GET), digest_request->uri, HA2, Response);
 
             if (strcasecmp(digest_request->response, Response)) {
                 credentials(Failed);

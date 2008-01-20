@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.81 2007/12/14 23:11:46 amosjeffries Exp $
+ * $Id: external_acl.cc,v 1.82 2008/01/20 08:54:28 amosjeffries Exp $
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
@@ -849,7 +849,7 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
             break;
 
         case _external_acl_format::EXT_ACL_METHOD:
-            str = RequestMethodStr[request->method];
+            str = RequestMethodStr(request->method);
             break;
 
         case _external_acl_format::EXT_ACL_HEADER:

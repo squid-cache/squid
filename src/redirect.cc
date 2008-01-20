@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.123 2007/12/14 23:11:48 amosjeffries Exp $
+ * $Id: redirect.cc,v 1.124 2008/01/20 08:54:28 amosjeffries Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -157,7 +157,7 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
     if (!r->client_ident)
         r->client_ident = dash_str;
 
-    r->method_s = RequestMethodStr[http->request->method];
+    r->method_s = RequestMethodStr(http->request->method);
 
     r->handler = handler;
 

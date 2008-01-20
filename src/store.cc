@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.618 2007/08/30 19:26:10 hno Exp $
+ * $Id: store.cc,v 1.619 2008/01/20 08:54:28 amosjeffries Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -520,7 +520,7 @@ StoreEntry::unlock()
 }
 
 void
-StoreEntry::getPublicByRequestMethod  (StoreClient *aClient, HttpRequest * request, const method_t method)
+StoreEntry::getPublicByRequestMethod  (StoreClient *aClient, HttpRequest * request, const HttpRequestMethod& method)
 {
     assert (aClient);
     StoreEntry *result = storeGetPublicByRequestMethod( request, method);
@@ -544,7 +544,7 @@ StoreEntry::getPublicByRequest (StoreClient *aClient, HttpRequest * request)
 }
 
 void
-StoreEntry::getPublic (StoreClient *aClient, const char *uri, const method_t method)
+StoreEntry::getPublic (StoreClient *aClient, const char *uri, const HttpRequestMethod& method)
 {
     assert (aClient);
     StoreEntry *result = storeGetPublic (uri, method);
@@ -556,13 +556,13 @@ StoreEntry::getPublic (StoreClient *aClient, const char *uri, const method_t met
 }
 
 StoreEntry *
-storeGetPublic(const char *uri, const method_t method)
+storeGetPublic(const char *uri, const HttpRequestMethod& method)
 {
     return Store::Root().get(storeKeyPublic(uri, method));
 }
 
 StoreEntry *
-storeGetPublicByRequestMethod(HttpRequest * req, const method_t method)
+storeGetPublicByRequestMethod(HttpRequest * req, const HttpRequestMethod& method)
 {
     return Store::Root().get(storeKeyPublicByRequestMethod(req, method));
 }
@@ -747,7 +747,7 @@ StoreEntry::setPublicKey()
 }
 
 StoreEntry *
-storeCreateEntry(const char *url, const char *log_url, request_flags flags, method_t method)
+storeCreateEntry(const char *url, const char *log_url, request_flags flags, const HttpRequestMethod& method)
 {
     StoreEntry *e = NULL;
     MemObject *mem = NULL;

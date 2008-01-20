@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_cache_digest.cc,v 1.34 2007/11/15 16:47:35 wessels Exp $
+ * $Id: test_cache_digest.cc,v 1.35 2008/01/20 08:54:28 amosjeffries Exp $
  *
  * AUTHOR: Alex Rousskov
  *
@@ -124,7 +124,7 @@ const char *RequestMethodStr[] =
     };
 
 /* copied from url.c */
-static method_t
+static HttpRequestMethod
 methodStrToId(const char *s)
 {
     if (strcasecmp(s, "GET") == 0) {
@@ -431,7 +431,7 @@ accessLogReader(FileIterator * fi)
     RawAccessLogEntry *entry;
     char *url;
     char *method;
-    method_t method_id = METHOD_NONE;
+    HttpRequestMethod method_id = METHOD_NONE;
     char *hier = NULL;
 
     assert(fi);

@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.324 2007/12/05 16:02:29 rousskov Exp $
+ * $Id: acl.cc,v 1.325 2008/01/20 08:54:28 amosjeffries Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -330,7 +330,7 @@ acl_access::containsPURGE() const
 
     for (; a; a = a->next) {
         for (b = a->aclList; b; b = b->next) {
-            ACLStrategised<method_t> *tempAcl = dynamic_cast<ACLStrategised<method_t> *>(b->_acl);
+            ACLStrategised<HttpRequestMethod> *tempAcl = dynamic_cast<ACLStrategised<HttpRequestMethod> *>(b->_acl);
 
             if (!tempAcl) {
                 debugs(28, 7, "acl_access::containsPURGE: can't create tempAcl");

@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.228 2007/12/14 23:11:46 amosjeffries Exp $
+ * $Id: errorpage.cc,v 1.229 2008/01/20 08:54:28 amosjeffries Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -535,7 +535,7 @@ errorDump(ErrorState * err, MemBuf * mb)
     if (NULL != r) {
         Packer p;
         str.Printf("%s %s HTTP/%d.%d\n",
-                   RequestMethodStr[r->method],
+                   RequestMethodStr(r->method),
                    r->urlpath.size() ? r->urlpath.buf() : "/",
                    r->http_ver.major, r->http_ver.minor);
         packerToMemInit(&p, &str);
@@ -714,7 +714,7 @@ errorConvert(char token, ErrorState * err)
         break;
 
     case 'M':
-        p = r ? RequestMethodStr[r->method] : "[unknown method]";
+        p = r ? RequestMethodStr(r->method) : "[unknown method]";
 
         break;
 
@@ -741,7 +741,7 @@ errorConvert(char token, ErrorState * err)
         if (NULL != r) {
             Packer p;
             mb.Printf("%s %s HTTP/%d.%d\n",
-                      RequestMethodStr[r->method],
+                      RequestMethodStr(r->method),
                       r->urlpath.size() ? r->urlpath.buf() : "/",
                       r->http_ver.major, r->http_ver.minor);
             packerToMemInit(&p, &mb);

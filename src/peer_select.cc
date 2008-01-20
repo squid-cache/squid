@@ -1,5 +1,5 @@
 /*
- * $Id: peer_select.cc,v 1.148 2007/12/14 23:11:47 amosjeffries Exp $
+ * $Id: peer_select.cc,v 1.149 2008/01/20 08:54:28 amosjeffries Exp $
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
@@ -159,7 +159,7 @@ peerSelect(HttpRequest * request,
     if (entry)
         debugs(44, 3, "peerSelect: " << entry->url()  );
     else
-        debugs(44, 3, "peerSelect: " << RequestMethodStr[request->method]);
+        debugs(44, 3, "peerSelect: " << RequestMethodStr(request->method));
 
     psstate = new ps_state;
 
@@ -288,7 +288,7 @@ peerSelectFoo(ps_state * ps)
 {
     StoreEntry *entry = ps->entry;
     HttpRequest *request = ps->request;
-    debugs(44, 3, "peerSelectFoo: '" << RequestMethodStr[request->method] << " " << request->GetHost() << "'");
+    debugs(44, 3, "peerSelectFoo: '" << RequestMethodStr(request->method) << " " << request->GetHost() << "'");
 
     if (ps->direct == DIRECT_UNKNOWN) {
         if (ps->always_direct == 0 && Config.accessList.AlwaysDirect) {
@@ -500,7 +500,7 @@ peerGetSomeParent(ps_state * ps)
     peer *p;
     HttpRequest *request = ps->request;
     hier_code code = HIER_NONE;
-    debugs(44, 3, "peerGetSomeParent: " << RequestMethodStr[request->method] << " " << request->GetHost());
+    debugs(44, 3, "peerGetSomeParent: " << RequestMethodStr(request->method) << " " << request->GetHost());
 
     if (ps->direct == DIRECT_YES)
         return;

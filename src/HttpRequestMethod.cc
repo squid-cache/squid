@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequestMethod.cc,v 1.4 2007/04/30 16:56:09 wessels Exp $
+ * $Id: HttpRequestMethod.cc,v 1.5 2008/01/20 08:54:28 amosjeffries Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -38,7 +38,7 @@
 #include "HttpRequestMethod.h"
 #include "wordlist.h"
 
-const char *RequestMethodStr[] =
+const char* HttpRequestMethod::RequestMethodStr[] =
     {
         "NONE",
         "GET",
@@ -94,10 +94,10 @@ const char *RequestMethodStr[] =
     };
 
 static
-method_t &operator++ (method_t &aMethod)
+_method_t &operator++ (_method_t &aMethod)
 {
     int tmp = (int)aMethod;
-    aMethod = (method_t)(++tmp);
+    aMethod = (_method_t)(++tmp);
     return aMethod;
 }
 
@@ -127,20 +127,27 @@ HttpRequestMethod::HttpRequestMethod(char const *begin, char const *end) : theMe
      */
     if (NULL == end)
         end = begin + strcspn(begin, w_space);
-
+      
+    if (end == begin) {
+    	theMethod = METHOD_NONE;
+    	return;
+    }
+ 
     for (++theMethod; theMethod < METHOD_ENUM_END; ++theMethod) {
-        if (0 == strncasecmp(begin, RequestMethodStr[theMethod], end-begin))
+        if (0 == strncasecmp(begin, RequestMethodStr[theMethod], end-begin)) {
             return;
+        }
     }
 
-    /* reset to none */
-    theMethod = METHOD_NONE;
+    // if method not found and method string is not null then it is other method
+    theMethod = METHOD_OTHER;
+    theImage.limitInit(begin,end-begin);
 }
 
 void
 HttpRequestMethod::AddExtension(const char *mstr)
 {
-    method_t method = METHOD_NONE;
+    _method_t method = METHOD_NONE;
 
     for (++method; method < METHOD_ENUM_END; ++method) {
         if (0 == strcmp(mstr, RequestMethodStr[method])) {
@@ -177,4 +184,39 @@ HttpRequestMethod::Configure(SquidConfig &Config)
 
         w = w->next;
     }
+}
+
+char const* 
+HttpRequestMethod::image() const 
+{ 
+	if (METHOD_OTHER != theMethod) {
+		return RequestMethodStr[theMethod];
+	}
+	else {
+		if (theImage.size()>0)
+			return theImage.buf();
+		else
+			return "METHOD_OTHER";
+	}
+}
+
+bool 
+HttpRequestMethod::isCacheble() const
+{
+    if (theMethod == METHOD_CONNECT)
+        return false;
+
+    if (theMethod == METHOD_TRACE)
+        return false;
+
+    if (theMethod == METHOD_PUT)
+        return false;
+
+    if (theMethod == METHOD_POST)
+        return false;
+    
+    if (theMethod == METHOD_OTHER)
+        return false;
+    
+    return true;
 }

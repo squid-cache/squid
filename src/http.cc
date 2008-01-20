@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.544 2008/01/07 15:16:03 hno Exp $
+ * $Id: http.cc,v 1.545 2008/01/20 08:54:28 amosjeffries Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -171,10 +171,11 @@ httpStateFree(int fd, void *data)
 }
 
 int
-httpCachable(method_t method)
+httpCachable(const HttpRequestMethod& method)
 {
     /* GET and HEAD are cachable. Others are not. */
 
+	// TODO: replase to HttpRequestMethod::isCachable() ?
     if (method != METHOD_GET && method != METHOD_HEAD)
         return 0;
 
@@ -879,7 +880,7 @@ HttpStateData::statusIfComplete() const
      * connection.
      */
     if (!flags.request_sent) {
-        debugs(11, 1, "statusIfComplete: Request not yet fully sent \"" << RequestMethodStr[orig_request->method] << " " << entry->url() << "\"" );
+        debugs(11, 1, "statusIfComplete: Request not yet fully sent \"" << RequestMethodStr(orig_request->method) << " " << entry->url() << "\"" );
         return COMPLETE_NONPERSISTENT_MSG;
     }
 
@@ -1734,7 +1735,7 @@ HttpStateData::buildRequestPrefix(HttpRequest * request,
     const int offset = mb->size;
     HttpVersion httpver(1, 0);
     mb->Printf("%s %s HTTP/%d.%d\r\n",
-               RequestMethodStr[request->method],
+               RequestMethodStr(request->method),
                request->urlpath.size() ? request->urlpath.buf() : "/",
                httpver.major,httpver.minor);
     /* build and pack headers */
@@ -1818,7 +1819,7 @@ HttpStateData::sendRequest()
 void
 httpStart(FwdState *fwd)
 {
-    debugs(11, 3, "httpStart: \"" << RequestMethodStr[fwd->request->method] << " " << fwd->entry->url() << "\"" );
+    debugs(11, 3, "httpStart: \"" << RequestMethodStr(fwd->request->method) << " " << fwd->entry->url() << "\"" );
     HttpStateData *httpState = new HttpStateData(fwd);
 
     if (!httpState->sendRequest()) {

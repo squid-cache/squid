@@ -1,6 +1,6 @@
 
 /*
- * $Id: AccessLogEntry.h,v 1.7 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id: AccessLogEntry.h,v 1.8 2008/01/20 08:54:28 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -57,7 +57,7 @@ public:
     public:
         HttpDetails() : method(METHOD_NONE), code(0), content_type(NULL) {}
 
-        method_t method;
+        HttpRequestMethod method;
         int code;
         const char *content_type;
         HttpVersion version;

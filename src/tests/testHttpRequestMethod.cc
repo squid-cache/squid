@@ -20,6 +20,7 @@ testHttpRequestMethod::testConstructCharStart()
     CPPUNIT_ASSERT(METHOD_NONE == HttpRequestMethod(NULL));
     /* parsing a literal should work */
     CPPUNIT_ASSERT(METHOD_GET == HttpRequestMethod("GET", NULL));
+    CPPUNIT_ASSERT(METHOD_OTHER == HttpRequestMethod("QWERTY", NULL));
 }
 
 /*

@@ -1,6 +1,6 @@
 
 /*
- * $Id: tunnel.cc,v 1.176 2007/12/14 23:11:48 amosjeffries Exp $
+ * $Id: tunnel.cc,v 1.177 2008/01/20 08:54:28 amosjeffries Exp $
  *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
@@ -629,7 +629,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
         }
     }
 
-    debugs(26, 3, "tunnelStart: '" << RequestMethodStr[request->method] << " " << url << "'");
+    debugs(26, 3, "tunnelStart: '" << RequestMethodStr(request->method) << " " << url << "'");
     statCounter.server.all.requests++;
     statCounter.server.other.requests++;
     /* Create socket. */

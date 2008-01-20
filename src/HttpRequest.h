@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.31 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id: HttpRequest.h,v 1.32 2008/01/20 08:54:28 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -53,7 +53,7 @@ class HttpRequest: public HttpMsg
 public:
     MEMPROXY_CLASS(HttpRequest);
     HttpRequest();
-    HttpRequest(method_t aMethod, protocol_t aProtocol, const char *aUrlpath);
+    HttpRequest(const HttpRequestMethod& aMethod, protocol_t aProtocol, const char *aUrlpath);
     ~HttpRequest();
     virtual void reset();
 
@@ -63,7 +63,7 @@ public:
         return static_cast<HttpRequest*>(HttpMsg::_lock());
     };
 
-    void initHTTP(method_t aMethod, protocol_t aProtocol, const char *aUrlpath);
+    void initHTTP(const HttpRequestMethod& aMethod, protocol_t aProtocol, const char *aUrlpath);
 
     /* are responses to this request potentially cachable */
     bool cacheable() const;
@@ -92,7 +92,7 @@ protected:
     void init();
 
 public:
-    method_t method;
+    HttpRequestMethod method;
 
     char login[MAX_LOGIN_SZ];
 
@@ -151,7 +151,7 @@ public:
 
     int parseHeader(const char *parse_start, int len);
 
-    virtual bool expectingBody(method_t unused, int64_t&) const;
+    virtual bool expectingBody(const HttpRequestMethod& unused, int64_t&) const;
 
     bool bodyNibbled() const; // the request has a [partially] consumed body
 
@@ -163,7 +163,7 @@ public:
 
     static void httpRequestPack(void *obj, Packer *p);
 
-    static HttpRequest * CreateFromUrlAndMethod(char * url, method_t method);
+    static HttpRequest * CreateFromUrlAndMethod(char * url, const HttpRequestMethod& method);
 
     static HttpRequest * CreateFromUrl(char * url);
 

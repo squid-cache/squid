@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequestMethod.h,v 1.5 2007/11/13 23:09:23 rousskov Exp $
+ * $Id: HttpRequestMethod.h,v 1.6 2008/01/20 08:54:28 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -87,12 +87,9 @@ enum _method_t {
     METHOD_EXT17,
     METHOD_EXT18,
     METHOD_EXT19,
-    METHOD_ENUM_END
+    METHOD_OTHER,
+    METHOD_ENUM_END  // MUST be last, (yuck) this is used as an array-initialization index constant!
 };
-
-typedef enum _method_t method_t;
-
-extern const char *RequestMethodStr[];
 
 /* forward decls */
 
@@ -113,33 +110,76 @@ public:
 
     HttpRequestMethod() : theMethod(METHOD_NONE) {}
 
-    HttpRequestMethod(method_t const aMethod) : theMethod(aMethod) {}
+    HttpRequestMethod(_method_t const aMethod) : theMethod(aMethod) {}
 
     HttpRequestMethod(char const * begin, char const * end=0);
 
-    operator method_t() const {return theMethod; }
-
-    HttpRequestMethod & operator = (method_t const aMethod)
+    operator _method_t() const {return theMethod; }
+    
+    HttpRequestMethod & operator = (const HttpRequestMethod& aMethod)
     {
-        theMethod = aMethod;
+        theMethod = aMethod.theMethod;
+        theImage = aMethod.theImage;
         return *this;
     }
 
-    bool operator != (method_t const & aMethod) { return theMethod != aMethod;}
+    HttpRequestMethod & operator = (_method_t const aMethod)
+    {
+        theMethod = aMethod;
+        theImage.clean();
+        return *this;
+    }
+
+    bool operator != (_method_t const & aMethod) { return theMethod != aMethod;}
+    bool operator != (HttpRequestMethod const & aMethod) 
+    { 
+    	return ( (theMethod != aMethod) || (theImage != aMethod.theImage) ); 
+    }
+    
+    HttpRequestMethod& operator++()
+    {
+    	if (METHOD_OTHER!=theMethod)
+    	{
+    		int tmp = (int)theMethod;
+    		_method_t tmp_m = (_method_t)(++tmp);
+    		
+    		if (METHOD_ENUM_END >= tmp_m)
+    			theMethod = tmp_m;
+    	}
+    	return *this;
+    }
+
 
     /* Get a char string representation of the method. */
-    char const *const_str() const { return RequestMethodStr[theMethod]; }
+    char const* image() const;
+    
+    bool isCacheble() const;
 
 private:
-    method_t theMethod;
-
+	static const char *RequestMethodStr[];
+	                             
+	_method_t theMethod; ///< Method type
+	String theImage;     ///< Used for store METHOD_OTHER only
 };
+
 
 inline std::ostream &
 operator << (std::ostream &os, HttpRequestMethod const &method)
 {
-    os << method.const_str();
+    os << method.image();
     return os;
+}
+
+inline const char*
+RequestMethodStr(const _method_t m) 
+{
+   return HttpRequestMethod(m).image();
+}
+
+inline const char*
+RequestMethodStr(const HttpRequestMethod& m) 
+{
+   return m.image();
 }
 
 #endif /* SQUID_HTTPREQUESTMETHOD_H */

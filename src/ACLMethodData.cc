@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMethodData.cc,v 1.9 2006/05/08 23:38:33 robertc Exp $
+ * $Id: ACLMethodData.cc,v 1.10 2008/01/20 08:54:28 amosjeffries Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -55,24 +55,24 @@ ACLMethodData::~ACLMethodData()
 }
 
 bool
-ACLMethodData::match(method_t toFind)
+ACLMethodData::match(HttpRequestMethod toFind)
 {
     return values->findAndTune (toFind);
 }
 
 /* explicit instantiation required for some systems */
 
-template cbdata_type List<method_t>
+template cbdata_type List<HttpRequestMethod>
 ::CBDATA_List;
 
 wordlist *
 ACLMethodData::dump()
 {
     wordlist *W = NULL;
-    List<method_t> *data = values;
+    List<HttpRequestMethod> *data = values;
 
     while (data != NULL) {
-        wordlistAdd(&W, RequestMethodStr[data->element]);
+        wordlistAdd(&W, RequestMethodStr(data->element));
         data = data->next;
     }
 
@@ -82,14 +82,14 @@ ACLMethodData::dump()
 void
 ACLMethodData::parse()
 {
-    List<method_t> **Tail;
+    List<HttpRequestMethod> **Tail;
     char *t = NULL;
 
     for (Tail = &values; *Tail; Tail = &((*Tail)->next))
 
         ;
     while ((t = strtokFile())) {
-        List<method_t> *q = new List<method_t> (HttpRequestMethod(t));
+        List<HttpRequestMethod> *q = new List<HttpRequestMethod> (HttpRequestMethod(t));
         *(Tail) = q;
         Tail = &q->next;
     }
@@ -101,7 +101,7 @@ ACLMethodData::empty() const
     return values == NULL;
 }
 
-ACLData<method_t> *
+ACLData<HttpRequestMethod> *
 ACLMethodData::clone() const
 {
     assert (!values);

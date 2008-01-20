@@ -1,5 +1,5 @@
 /*
- * $Id: stub_HttpReply.cc,v 1.4 2007/08/13 17:20:58 hno Exp $
+ * $Id: stub_HttpReply.cc,v 1.5 2008/01/20 08:54:33 amosjeffries Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins
@@ -90,7 +90,7 @@ HttpReply::httpMsgParseError()
 }
 
 bool
-HttpReply::expectingBody(method_t, int64_t&) const
+HttpReply::expectingBody(const HttpRequestMethod&, int64_t&) const
 {
     fatal ("Not implemented");
     return false;

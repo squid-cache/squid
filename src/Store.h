@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.41 2008/01/07 17:12:28 hno Exp $
+ * $Id: Store.h,v 1.42 2008/01/20 08:54:28 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -153,9 +153,9 @@ swap_status_t swap_status:
 
 public:
     static size_t inUseCount();
-    static void getPublicByRequestMethod(StoreClient * aClient, HttpRequest * request, const method_t method);
+    static void getPublicByRequestMethod(StoreClient * aClient, HttpRequest * request, const HttpRequestMethod& method);
     static void getPublicByRequest(StoreClient * aClient, HttpRequest * request);
-    static void getPublic(StoreClient * aClient, const char *uri, const method_t method);
+    static void getPublic(StoreClient * aClient, const char *uri, const HttpRequestMethod& method);
 
     virtual bool isNull()
     {
@@ -304,10 +304,10 @@ SQUIDCEXTERN size_t storeEntryInUse();
 SQUIDCEXTERN const char *storeEntryFlags(const StoreEntry *);
 extern void storeEntryReplaceObject(StoreEntry *, HttpReply *);
 
-SQUIDCEXTERN StoreEntry *storeGetPublic(const char *uri, const method_t method);
+SQUIDCEXTERN StoreEntry *storeGetPublic(const char *uri, const HttpRequestMethod& method);
 SQUIDCEXTERN StoreEntry *storeGetPublicByRequest(HttpRequest * request);
-SQUIDCEXTERN StoreEntry *storeGetPublicByRequestMethod(HttpRequest * request, const method_t method);
-SQUIDCEXTERN StoreEntry *storeCreateEntry(const char *, const char *, request_flags, method_t);
+SQUIDCEXTERN StoreEntry *storeGetPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& method);
+SQUIDCEXTERN StoreEntry *storeCreateEntry(const char *, const char *, request_flags, const HttpRequestMethod&);
 SQUIDCEXTERN void storeInit(void);
 extern void storeRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN void storeConfigure(void);

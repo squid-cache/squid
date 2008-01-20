@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLMethodData.h,v 1.4 2005/05/08 06:36:45 hno Exp $
+ * $Id: ACLMethodData.h,v 1.5 2008/01/20 08:54:28 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -39,7 +39,7 @@
 #include "ACLData.h"
 #include "List.h"
 
-class ACLMethodData : public ACLData<method_t>
+class ACLMethodData : public ACLData<HttpRequestMethod>
 {
 
 public:
@@ -49,13 +49,13 @@ public:
     ACLMethodData(ACLMethodData const &);
     ACLMethodData &operator= (ACLMethodData const &);
     virtual ~ACLMethodData();
-    bool match(method_t);
+    bool match(HttpRequestMethod);
     wordlist *dump();
     void parse();
     bool empty() const;
-    virtual ACLData<method_t> *clone() const;
+    virtual ACLData<HttpRequestMethod> *clone() const;
 
-    List<method_t> *values;
+    List<HttpRequestMethod> *values;
 };
 
 MEMPROXY_CLASS_INLINE(ACLMethodData)
