@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.100 2007/12/17 02:21:53 amosjeffries Exp $
+ * $Id: client_side_request.cc,v 1.101 2008/01/20 08:54:28 amosjeffries Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -271,7 +271,7 @@ ClientHttpRequest::~ClientHttpRequest()
  * determined by the user
  */
 int				/* returns nonzero on failure */
-clientBeginRequest(method_t method, char const *url, CSCB * streamcallback,
+clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * streamcallback,
                    CSD * streamdetach, ClientStreamData streamdata, HttpHeader const *header,
                    char *tailbuf, size_t taillen)
 {
@@ -400,7 +400,7 @@ ClientRequestContext::clientAccessCheckDone(int answer)
     err_type page_id;
     http_status status;
     debugs(85, 2, "The request " << 
-                 RequestMethodStr[http->request->method] << " " <<  
+                 RequestMethodStr(http->request->method) << " " <<  
                  http->uri << " is " << 
                  (answer == ACCESS_ALLOWED ? "ALLOWED" : "DENIED") << 
                  ", because it matched '" << 
@@ -553,7 +553,7 @@ clientHierarchical(ClientHttpRequest * http)
 {
     const char *url = http->uri;
     HttpRequest *request = http->request;
-    method_t method = request->method;
+    HttpRequestMethod method = request->method;
     const wordlist *p = NULL;
 
     /*
@@ -655,6 +655,10 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
                     no_cache++;
             }
         }
+    }
+    
+    if (METHOD_OTHER == request->method) {
+    	no_cache++;
     }
 
 #endif
@@ -882,7 +886,7 @@ ClientRequestContext::checkNoCacheDone(int answer)
 void
 ClientHttpRequest::processRequest()
 {
-    debugs(85, 4, "clientProcessRequest: " << RequestMethodStr[request->method] << " '" << uri << "'");
+    debugs(85, 4, "clientProcessRequest: " << RequestMethodStr(request->method) << " '" << uri << "'");
 
     if (request->method == METHOD_CONNECT && !redirect.status) {
         logType = LOG_TCP_MISS;

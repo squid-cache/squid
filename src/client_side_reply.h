@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.h,v 1.19 2008/01/07 17:12:28 hno Exp $
+ * $Id: client_side_reply.h,v 1.20 2008/01/20 08:54:28 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -76,8 +76,8 @@ public:
     int storeOKTransferDone() const;
     int storeNotOKTransferDone() const;
 
-    void setReplyToError(err_type, http_status, method_t, char const *, IPAddress &, HttpRequest *, char *, AuthUserRequest *);
-    void createStoreEntry(method_t m, request_flags flags);
+    void setReplyToError(err_type, http_status, const HttpRequestMethod&, char const *, IPAddress &, HttpRequest *, char *, AuthUserRequest *);
+    void createStoreEntry(const HttpRequestMethod& m, request_flags flags);
     void removeStoreReference(store_client ** scp, StoreEntry ** ep);
     void removeClientStoreReference(store_client **scp, ClientHttpRequest *http);
     void startError(ErrorState * err);
@@ -143,6 +143,7 @@ private:
     void triggerInitialStoreRead();
     void sendClientOldEntry();
     void buildMaxBodySize(HttpReply * reply);
+    void purgeAllCached();
 
 
     StoreEntry *old_entry;

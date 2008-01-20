@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.163 2007/12/14 23:11:48 amosjeffries Exp $
+ * $Id: url.cc,v 1.164 2008/01/20 08:54:28 amosjeffries Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -37,7 +37,7 @@
 #include "HttpRequest.h"
 #include "URLScheme.h"
 
-static HttpRequest *urnParse(method_t method, char *urn);
+static HttpRequest *urnParse(const HttpRequestMethod& method, char *urn);
 static const char valid_hostname_chars_u[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
@@ -196,7 +196,7 @@ urlDefaultPort(protocol_t p)
  * being "end of host with implied path of /".
  */
 HttpRequest *
-urlParse(method_t method, char *url, HttpRequest *request)
+urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
 {
     LOCAL_ARRAY(char, proto, MAX_URL);
     LOCAL_ARRAY(char, login, MAX_URL);
@@ -420,7 +420,7 @@ urlParse(method_t method, char *url, HttpRequest *request)
 }
 
 static HttpRequest *
-urnParse(method_t method, char *urn)
+urnParse(const HttpRequestMethod& method, char *urn)
 {
     debugs(50, 5, "urnParse: " << urn);
     return new HttpRequest(method, PROTO_URN, urn + 4);

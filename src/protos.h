@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.551 2007/12/14 23:11:47 amosjeffries Exp $
+ * $Id: protos.h,v 1.552 2008/01/20 08:54:28 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -53,7 +53,7 @@ SQUIDCEXTERN void fvdbCountVia(const char *key);
 SQUIDCEXTERN void fvdbCountForw(const char *key);
 #endif
 #if HEADERS_LOG
-SQUIDCEXTERN void headersLog(int cs, int pq, method_t m, void *data);
+SQUIDCEXTERN void headersLog(int cs, int pq, const HttpRequestMethod& m, void *data);
 #endif
 SQUIDCEXTERN char *log_quote(const char *header);
 SQUIDCEXTERN int logTypeIsATcpHit(log_type);
@@ -189,7 +189,7 @@ SQUIDCEXTERN int gopherCachable(const HttpRequest *);
 SQUIDCEXTERN void whoisStart(FwdState *);
 
 /* http.c */
-SQUIDCEXTERN int httpCachable(method_t);
+SQUIDCEXTERN int httpCachable(const HttpRequestMethod&);
 SQUIDCEXTERN void httpStart(FwdState *);
 SQUIDCEXTERN mb_size_t httpBuildRequestPrefix(HttpRequest * request,
         HttpRequest * orig_request,
@@ -526,10 +526,10 @@ SQUIDCEXTERN cache_key *storeKeyCopy(cache_key *, const cache_key *);
 SQUIDCEXTERN void storeKeyFree(const cache_key *);
 SQUIDCEXTERN const cache_key *storeKeyScan(const char *);
 SQUIDCEXTERN const char *storeKeyText(const cache_key *);
-SQUIDCEXTERN const cache_key *storeKeyPublic(const char *, const method_t);
+SQUIDCEXTERN const cache_key *storeKeyPublic(const char *, const HttpRequestMethod&);
 SQUIDCEXTERN const cache_key *storeKeyPublicByRequest(HttpRequest *);
-SQUIDCEXTERN const cache_key *storeKeyPublicByRequestMethod(HttpRequest *, const method_t);
-SQUIDCEXTERN const cache_key *storeKeyPrivate(const char *, method_t, int);
+SQUIDCEXTERN const cache_key *storeKeyPublicByRequestMethod(HttpRequest *, const HttpRequestMethod&);
+SQUIDCEXTERN const cache_key *storeKeyPrivate(const char *, const HttpRequestMethod&, int);
 SQUIDCEXTERN int storeKeyHashBuckets(int);
 SQUIDCEXTERN int storeKeyNull(const cache_key *);
 SQUIDCEXTERN void storeKeyInit(void);
@@ -623,7 +623,7 @@ SQUIDCEXTERN void unlinkdUnlink(const char *);
 
 SQUIDCEXTERN protocol_t urlParseProtocol(const char *, const char *e = NULL);
 SQUIDCEXTERN void urlInitialize(void);
-SQUIDCEXTERN HttpRequest *urlParse(method_t, char *, HttpRequest *request = NULL);
+SQUIDCEXTERN HttpRequest *urlParse(const HttpRequestMethod&, char *, HttpRequest *request = NULL);
 SQUIDCEXTERN const char *urlCanonical(HttpRequest *);
 SQUIDCEXTERN char *urlRInternal(const char *host, u_short port, const char *dir, const char *name);
 SQUIDCEXTERN char *urlInternal(const char *dir, const char *name);

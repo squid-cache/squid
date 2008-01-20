@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLMethod.h,v 1.1 2003/02/25 12:22:33 robertc Exp $
+ * $Id: ACLMethod.h,v 1.2 2008/01/20 08:54:28 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,7 +38,7 @@
 #include "ACLStrategy.h"
 #include "ACLStrategised.h"
 
-class ACLMethodStrategy : public ACLStrategy<method_t>
+class ACLMethodStrategy : public ACLStrategy<HttpRequestMethod>
 {
 
 public:
@@ -63,7 +63,7 @@ class ACLMethod
 
 private:
     static ACL::Prototype RegistryProtoype;
-    static ACLStrategised<method_t> RegistryEntry_;
+    static ACLStrategised<HttpRequestMethod> RegistryEntry_;
 };
 
 #endif /* SQUID_ACLMETHOD_H */

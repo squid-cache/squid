@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.771 2007/12/14 23:11:46 amosjeffries Exp $
+ * $Id: client_side.cc,v 1.772 2008/01/20 08:54:28 amosjeffries Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -130,7 +130,7 @@ static PF requestTimeout;
 static PF clientLifetimeTimeout;
 static ClientSocketContext *parseHttpRequestAbort(ConnStateData::Pointer & conn,
         const char *uri);
-static ClientSocketContext *parseHttpRequest(ConnStateData::Pointer &, HttpParser *, method_t *, HttpVersion *);
+static ClientSocketContext *parseHttpRequest(ConnStateData::Pointer &, HttpParser *, HttpRequestMethod *, HttpVersion *);
 #if USE_IDENT
 static IDCB clientIdentDone;
 #endif
@@ -655,7 +655,7 @@ clientSetKeepaliveFlag(ClientHttpRequest * http)
     debugs(33, 3, "clientSetKeepaliveFlag: http_ver = " <<
            request->http_ver.major << "." << request->http_ver.minor);
     debugs(33, 3, "clientSetKeepaliveFlag: method = " <<
-           RequestMethodStr[request->method]);
+           RequestMethodStr(request->method));
 
     HttpVersion http_ver(1,0);
     /* we are HTTP/1.0, no matter what the client requests... */
@@ -1832,7 +1832,7 @@ prepareTransparentURL(ConnStateData::Pointer & conn, ClientHttpRequest *http, ch
  *  Sets result->flags.parsed_ok to 1 if we have a good request.
  */
 static ClientSocketContext *
-parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * method_p, HttpVersion *http_ver)
+parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, HttpRequestMethod * method_p, HttpVersion *http_ver)
 {
     char *url = NULL;
     char *req_hdr = NULL;
@@ -1891,7 +1891,7 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
     }
 
     /* Set method_p */
-    *method_p = HttpRequestMethod(&hp->buf[hp->m_start], &hp->buf[hp->m_end]);
+    *method_p = HttpRequestMethod(&hp->buf[hp->m_start], &hp->buf[hp->m_end]+1);
 
     if (*method_p == METHOD_NONE) {
         /* XXX need a way to say "this many character length string" */
@@ -2136,7 +2136,7 @@ clientAfterReadingRequests(int fd, ConnStateData::Pointer &conn, int do_next_rea
 }
 
 static void
-clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketContext *context, method_t method, HttpVersion http_ver)
+clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketContext *context, const HttpRequestMethod& method, HttpVersion http_ver)
 {
     ClientHttpRequest *http = context->http;
     HttpRequest *request = NULL;
@@ -2356,7 +2356,7 @@ ConnStateData::bodySizeLeft()
 static bool
 clientParseRequest(ConnStateData::Pointer conn, bool &do_next_read)
 {
-    method_t method;
+    HttpRequestMethod method;
     ClientSocketContext *context;
     bool parsed_req = false;
     HttpVersion http_ver;

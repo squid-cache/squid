@@ -1,6 +1,6 @@
 
 /*
- * $Id: urn.cc,v 1.108 2007/12/14 23:11:48 amosjeffries Exp $
+ * $Id: urn.cc,v 1.109 2008/01/20 08:54:28 amosjeffries Exp $
  *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -100,7 +100,7 @@ typedef struct
 url_entry;
 
 static STCB urnHandleReply;
-static url_entry *urnParseReply(const char *inbuf, method_t);
+static url_entry *urnParseReply(const char *inbuf, const HttpRequestMethod&);
 static const char *const crlf = "\r\n";
 static QS url_entry_sort;
 
@@ -128,7 +128,7 @@ UrnState::~UrnState ()
 }
 
 static url_entry *
-urnFindMinRtt(url_entry * urls, method_t m, int *rtt_ret)
+urnFindMinRtt(url_entry * urls, const HttpRequestMethod& m, int *rtt_ret)
 {
     int min_rtt = 0;
     url_entry *u = NULL;
@@ -476,7 +476,7 @@ error:
 }
 
 static url_entry *
-urnParseReply(const char *inbuf, method_t m)
+urnParseReply(const char *inbuf, const HttpRequestMethod& m)
 {
     char *buf = xstrdup(inbuf);
     char *token;

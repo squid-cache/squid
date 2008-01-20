@@ -1,6 +1,6 @@
 
 /*
- * $Id: access_log.cc,v 1.129 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id: access_log.cc,v 1.130 2008/01/20 08:54:28 amosjeffries Exp $
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
@@ -1408,7 +1408,7 @@ accessLogLog(AccessLogEntry * al, ACLChecklist * checklist)
     if (al->icp.opcode)
         al->_private.method_str = icp_opcode_str[al->icp.opcode];
     else
-        al->_private.method_str = RequestMethodStr[al->http.method];
+        al->_private.method_str = RequestMethodStr(al->http.method);
 
     if (al->hier.host[0] == '\0')
         xstrncpy(al->hier.host, dash_str, SQUIDHOSTNAMELEN);
@@ -1783,7 +1783,7 @@ mcast_encode(unsigned int *ibuf, size_t isize, const unsigned int *key)
 
 #if HEADERS_LOG
 void
-headersLog(int cs, int pq, method_t method, void *data)
+headersLog(int cs, int pq, const HttpRequestMethod& method, void *data)
 {
     HttpReply *rep;
     HttpRequest *req;

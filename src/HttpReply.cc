@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.97 2007/11/26 13:09:55 hno Exp $
+ * $Id: HttpReply.cc,v 1.98 2008/01/20 08:54:28 amosjeffries Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -416,7 +416,7 @@ HttpReply::hdrCacheClean()
  * Returns the body size of a HTTP response
  */
 int64_t
-HttpReply::bodySize(method_t method) const
+HttpReply::bodySize(const HttpRequestMethod& method) const
 {
     if (sline.version.major < 1)
         return -1;
@@ -470,7 +470,7 @@ HttpReply::httpMsgParseError()
  * along with this response
  */
 bool
-HttpReply::expectingBody(method_t req_method, int64_t& theSize) const
+HttpReply::expectingBody(const HttpRequestMethod& req_method, int64_t& theSize) const
 {
     bool expectBody = true;
 

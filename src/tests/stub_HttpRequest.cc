@@ -1,5 +1,5 @@
 /*
- * $Id: stub_HttpRequest.cc,v 1.4 2007/08/13 17:20:58 hno Exp $
+ * $Id: stub_HttpRequest.cc,v 1.5 2008/01/20 08:54:33 amosjeffries Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Robert Collins
@@ -41,7 +41,7 @@ HttpRequest::HttpRequest() : HttpMsg(hoRequest)
     fatal("Not implemented");
 }
 
-HttpRequest::HttpRequest(method_t method, protocol_t protocol, const char *aUrlpath) : HttpMsg(hoRequest)
+HttpRequest::HttpRequest(const HttpRequestMethod& method, protocol_t protocol, const char *aUrlpath) : HttpMsg(hoRequest)
 {
     fatal("Not implemented");
 }
@@ -75,14 +75,14 @@ HttpRequest::reset()
 }
 
 bool
-HttpRequest::expectingBody(method_t unused, int64_t&) const
+HttpRequest::expectingBody(const HttpRequestMethod& unused, int64_t&) const
 {
     fatal("Not implemented");
     return false;
 }
 
 void
-HttpRequest::initHTTP(method_t aMethod, protocol_t aProtocol, const char *aUrlpath)
+HttpRequest::initHTTP(const HttpRequestMethod& aMethod, protocol_t aProtocol, const char *aUrlpath)
 {
     fatal("Not implemented");
 }

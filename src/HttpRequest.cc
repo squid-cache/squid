@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.78 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id: HttpRequest.cc,v 1.79 2008/01/20 08:54:28 amosjeffries Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -46,7 +46,7 @@ HttpRequest::HttpRequest() : HttpMsg(hoRequest)
     init();
 }
 
-HttpRequest::HttpRequest(method_t aMethod, protocol_t aProtocol, const char *aUrlpath) : HttpMsg(hoRequest)
+HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, protocol_t aProtocol, const char *aUrlpath) : HttpMsg(hoRequest)
 {
     init();
     initHTTP(aMethod, aProtocol, aUrlpath);
@@ -58,7 +58,7 @@ HttpRequest::~HttpRequest()
 }
 
 void
-HttpRequest::initHTTP(method_t aMethod, protocol_t aProtocol, const char *aUrlpath)
+HttpRequest::initHTTP(const HttpRequestMethod& aMethod, protocol_t aProtocol, const char *aUrlpath)
 {
     method = aMethod;
     protocol = aProtocol;
@@ -238,7 +238,7 @@ HttpRequest::pack(Packer * p)
     assert(p);
     /* pack request-line */
     packerPrintf(p, "%s %s HTTP/1.0\r\n",
-                 RequestMethodStr[method], urlpath.buf());
+                 RequestMethodStr(method), urlpath.buf());
     /* headers */
     header.packInto(p);
     /* trailer */
@@ -259,7 +259,7 @@ httpRequestPack(void *obj, Packer *p)
 int
 HttpRequest::prefixLen()
 {
-    return strlen(RequestMethodStr[method]) + 1 +
+    return strlen(RequestMethodStr(method)) + 1 +
            urlpath.size() + 1 +
            4 + 1 + 3 + 2 +
            header.len + 2;
@@ -358,7 +358,7 @@ void HttpRequest::packFirstLineInto(Packer * p, bool full_uri) const
 {
     // form HTTP request-line
     packerPrintf(p, "%s %s HTTP/%d.%d\r\n",
-                 RequestMethodStr[method],
+                 RequestMethodStr(method),
                  packableURI(full_uri),
                  http_ver.major, http_ver.minor);
 }
@@ -368,7 +368,7 @@ void HttpRequest::packFirstLineInto(Packer * p, bool full_uri) const
  * along with this request
  */
 bool
-HttpRequest::expectingBody(method_t unused, int64_t& theSize) const
+HttpRequest::expectingBody(const HttpRequestMethod& unused, int64_t& theSize) const
 {
     bool expectBody = false;
 
@@ -407,7 +407,7 @@ HttpRequest::expectingBody(method_t unused, int64_t& theSize) const
  * If the request cannot be created cleanly, NULL is returned
  */
 HttpRequest *
-HttpRequest::CreateFromUrlAndMethod(char * url, method_t method)
+HttpRequest::CreateFromUrlAndMethod(char * url, const HttpRequestMethod& method)
 {
     return urlParse(method, url, NULL);
 }
@@ -437,17 +437,9 @@ HttpRequest::cacheable() const
      * The below looks questionable: what non HTTP protocols use connect,
      * trace, put and post? RC
      */
-    if (method == METHOD_CONNECT)
-        return 0;
-
-    if (method == METHOD_TRACE)
-        return 0;
-
-    if (method == METHOD_PUT)
-        return 0;
-
-    if (method == METHOD_POST)
-        return 0;
+    
+    if (!method.isCacheble())
+    	return false;
 
     /*
      * XXX POST may be cached sometimes.. ignored
@@ -457,7 +449,7 @@ HttpRequest::cacheable() const
         return gopherCachable(this);
 
     if (protocol == PROTO_CACHEOBJ)
-        return 0;
+        return false;
 
-    return 1;
+    return true;
 }

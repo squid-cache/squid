@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.h,v 1.15 2007/08/13 17:20:51 hno Exp $
+ * $Id: MemObject.h,v 1.16 2008/01/20 08:54:28 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -90,7 +90,7 @@ public:
     void checkUrlChecksum() const;
 #endif
 
-    method_t method;
+    HttpRequestMethod method;
     char *url;
     mem_hdr data_hdr;
     int64_t inmem_lo;

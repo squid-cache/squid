@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.33 2008/01/07 17:12:28 hno Exp $
+ * $Id: client_side_request.h,v 1.34 2008/01/20 08:54:28 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -50,7 +50,7 @@ class HttpMsg;
 #endif
 
 /* client_side_request.c - client side request related routines (pure logic) */
-extern int clientBeginRequest(method_t, char const *, CSCB *, CSD *, ClientStreamData, HttpHeader const *, char *, size_t);
+extern int clientBeginRequest(const HttpRequestMethod&, char const *, CSCB *, CSD *, ClientStreamData, HttpHeader const *, char *, size_t);
 
 class MemObject;
 

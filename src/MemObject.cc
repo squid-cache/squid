@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.32 2007/11/15 16:47:35 wessels Exp $
+ * $Id: MemObject.cc,v 1.33 2008/01/20 08:54:28 amosjeffries Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -214,7 +214,7 @@ void
 MemObject::stat (MemBuf * mb) const
 {
     mb->Printf("\t%s %s\n",
-               RequestMethodStr[method], log_url);
+               RequestMethodStr(method), log_url);
     mb->Printf("\tinmem_lo: %"PRId64"\n", inmem_lo);
     mb->Printf("\tinmem_hi: %"PRId64"\n", data_hdr.endOffset());
     mb->Printf("\tswapout: %"PRId64" bytes queued\n",

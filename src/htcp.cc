@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.78 2007/12/14 23:11:46 amosjeffries Exp $
+ * $Id: htcp.cc,v 1.79 2008/01/20 08:54:28 amosjeffries Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -661,7 +661,7 @@ static htcpSpecifier *
 htcpUnpackSpecifier(char *buf, int sz)
 {
     htcpSpecifier *s = new htcpSpecifier;
-    method_t method;
+    HttpRequestMethod method;
 
     /* Find length of METHOD */
     u_int16_t l = ntohs(*(u_int16_t *) buf);
@@ -764,7 +764,7 @@ htcpUnpackSpecifier(char *buf, int sz)
      */
     method = HttpRequestMethod(s->method);
 
-    s->request = HttpRequest::CreateFromUrlAndMethod(s->uri, method == METHOD_NONE ? METHOD_GET : method);
+    s->request = HttpRequest::CreateFromUrlAndMethod(s->uri, method == METHOD_NONE ? HttpRequestMethod(METHOD_GET) : method);
 
     if (s->request)
        HTTPMSGLOCK(s->request);
@@ -1575,7 +1575,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
 
     stuff.msg_id = ++msg_id_counter;
 
-    stuff.S.method = (char *) RequestMethodStr[req->method];
+    stuff.S.method = (char *) RequestMethodStr(req->method);
 
     stuff.S.uri = (char *) e->url();
 
