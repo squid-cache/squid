@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.495 2008/01/19 07:15:28 amosjeffries Exp $
+# $Id: cf.data.pre,v 1.496 2008/01/20 11:01:51 amosjeffries Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -1109,11 +1109,11 @@ DOC_START
 	source address 10.1.0.2 and the rest will be forwarded with
 	source address 10.1.0.3.
 
-	acl normal_service_net src 10.0.0.0/255.255.255.0
-	acl good_service_net src 10.0.1.0/255.255.255.0
-	tcp_outgoing_address 10.0.0.1 normal_service_net
-	tcp_outgoing_address 10.0.0.2 good_service_net
-	tcp_outgoing_address 10.0.0.3
+	acl normal_service_net src 10.0.0.0/24
+	acl good_service_net src 10.0.2.0/24
+	tcp_outgoing_address 10.1.0.1 normal_service_net
+	tcp_outgoing_address 10.1.0.2 good_service_net
+	tcp_outgoing_address 10.1.0.3
 
 	Processing proceeds in the order specified, and stops at first fully
 	matching line.
@@ -1137,13 +1137,13 @@ DOC_START
 
 	acl to_ipv6 dst ipv6
 	tcp_outgoing_address 2002::c001 good_service_net to_ipv6
-	tcp_outgoing_address 10.0.0.2 good_service_net !to_ipv6
+	tcp_outgoing_address 10.1.0.2 good_service_net !to_ipv6
 
 	tcp_outgoing_address 2002::beef normal_service_net to_ipv6
-	tcp_outgoing_address 10.0.0.1 normal_service_net !to_ipv6
+	tcp_outgoing_address 10.1.0.1 normal_service_net !to_ipv6
 
 	tcp_outgoing_address 2002::1 to_ipv6
-	tcp_outgoing_address 10.0.0.3 !to_ipv6
+	tcp_outgoing_address 10.1.0.3 !to_ipv6
 DOC_END
 
 COMMENT_START
