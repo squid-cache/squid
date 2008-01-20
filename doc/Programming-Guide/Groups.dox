@@ -1,0 +1,93 @@
+/**
+ \defgroup POD              POD Classes
+ *
+ \par
+ *     Classes which encapsulate POD (plain old data) in such a way
+ *     that they can be used as POD themselves and passed around Squid.
+ *     These objects should have a formal API for safe handling of their
+ *     content, but it MUST NOT depend on any externality than itself
+ *     or the standard C++ libraries.
+ */
+
+/**
+ \defgroup Components		Squid Components
+ */
+
+/**
+ \defgroup ServerProtocol	Server-Side Protocols
+ \ingroup Components
+ \par
+ *   These routines are responsible for forwarding cache misses
+ *   to other servers, depending on the protocol.  Cache misses
+ *   may be forwarded to either origin servers, or other proxy
+ *   caches.
+ *   All requests to other proxies are sent as HTTP requests.
+ *   All requests to origin-server are sent in that servers protocol.
+ *
+ \par
+ *   Wais and Gopher don't receive much
+ *   attention because they comprise a relatively insignificant
+ *   portion of Internet traffic.
+ */
+
+/**
+ \defgroup libsquid         Squid Library
+ * 
+ \par
+ *     These objects are provided publicly through lidsquid.la
+ */
+
+/**
+ \defgroup Tests            Unit Testing
+ *
+ \par
+ *      Any good application has a set of tests to ensure it stays
+ *      in a good condition. Squid tends to use cppunit tests.
+ \par
+ *      It is preferrable to automated tests for units of functionality. There
+ *      is a boilerplate for tests in "src/tests/testBoilerplate.[cc|h]". New
+ *      tests need to be added to src/Makefile.am to build and run them during
+ *      "make check". To add a new test script, just copy the references to
+ *      testBoilerplate in Makefile.am adjusting the name, and likewise copy the
+ *      source files. If you are testing an already tested area you may be able
+ *      to just add new test cases to an existing script. I.e. to test the store
+ *      some more just edit tests/testStore.h and add a new unit test method
+ *      name.
+ */
+
+/**
+ \defgroup Callbacks         Event Callback Functions
+ * 
+ \par
+ *      Squid uses events to process asynchronous actions.
+ *      These mehods are registered as callbacks to receive notice whenever a
+ *      specific event occurs.
+ */
+
+/**
+ \defgroup Timeouts		Timeouts
+ \todo DOCS: document Timeouts.
+ */
+
+/**
+ \defgroup ServerProtocolHTTP HTTP
+ \ingroup ServerProtocol
+ \todo Write Documentation about HTTP
+ */
+
+/**
+ \defgroup ServerProtocolFTPAPI Server-Side FTP API
+ \ingroup ServerProtocol
+ */
+
+/**
+ \defgroup ServerProtocolWAIS WAIS
+ \ingroup ServerProtocol
+ \todo Write Documentation about Wais
+ */
+
+/**
+ \defgroup ServerProtocolPassthru Passthru
+ \ingroup ServerProtocol
+ \todo Write Documentation about Passthru
+ */

@@ -1,0 +1,43 @@
+/**
+\defgroup AuthAPIBasic Basic Authentication
+\ingroup AuthAPI
+
+\par
+Basic authentication provides a username and password.  These
+are written to the authentication module processes on a single
+line, separated by a space:
+\code
+<USERNAME> <PASSWORD>
+\endcode
+
+\par
+	The authentication module process reads username, password pairs
+	on stdin and returns either "OK" or "ERR" on stdout for
+	each input line.
+
+\par
+	The following simple perl script demonstrates how the
+	authentication module works.  This script allows any
+	user named "Dirk" (without checking the password)
+	and allows any user that uses the password "Sekrit":
+
+\code
+#!/usr/bin/perl -w
+$|=1;		# no buffering, important!
+while (<>) {
+        chop;
+        ($u,$p) = split;
+        $ans = &amp;check($u,$p);
+        print "$ans\n";
+}
+
+sub check {
+        local($u,$p) = @_;
+        return 'ERR' unless (defined $p &amp;&amp; defined $u);
+        return 'OK' if ('Dirk' eq $u);
+        return 'OK' if ('Sekrit' eq $p);
+        return 'ERR';
+}
+\endcode
+
+ */

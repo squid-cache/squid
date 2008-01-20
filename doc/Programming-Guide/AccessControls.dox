@@ -1,0 +1,16 @@
+/**
+\defgroup ACLAPI Access Controls
+\ingroup Components
+
+\par
+        These functions are responsible for allowing or denying a
+        request, based on a number of different parameters.  These
+        parameters include the client's IP address, the hostname
+        of the requested resource, the request method, etc.  Some
+        of the necessary information may not be immediately available,
+        for example the origin server's IP address.  In these cases,
+        the ACL routines initiate lookups for the necessary
+        information and continues the access control checks when
+        the information is available.
+
+ */
