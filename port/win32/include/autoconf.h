@@ -21,7 +21,7 @@
 #define CONFIG_HOST_TYPE "i686-pc-winnt"
 
 /* Define if you want to set the COSS membuf size */
-#define COSS_MEMBUF_SZ 655360
+/* #undef COSS_MEMBUF_SZ */
 
 /* Define to one of `_getb67', `GETB67', `getb67' for Cray-2 and Cray-YMP
    systems. This function is required for `alloca.c' support on those systems.
@@ -35,7 +35,7 @@
 #define DEFAULT_FD_SETSIZE 256
 
 /* Traffic management via "delay pools". */
-#define DELAY_POOLS 1
+/* #undef DELAY_POOLS */
 
 /* Define if you have problems with memPools and want to disable Pools. */
 #define DISABLE_POOLS 0
@@ -841,9 +841,6 @@
 /* The size of `__int64', as computed by sizeof. */
 #define SIZEOF___INT64 8
 
-/* configure command line used to configure Squid */
-#define SQUID_CONFIGURE_OPTIONS "'--disable-wccp' '--enable-htcp' '--enable-cpu-profiling' '--enable-default-hostsfile=none' '--enable-removal-policies=heap lru' '--enable-auth=basic ntlm digest' '--enable-basic-auth-helpers=win32_locallogon' '--enable-err-languages=English' '--enable-default-err-language=English' '--enable-storeio=ufs awin32 null' '--enable-referer-log' '--enable-useragent-log' '--enable-external-acl-helpers=win32_group' '--enable-ntlm-auth-helpers=NTLMSSP-WIN32' '--enable-win32-service' '--enable-snmp' '--prefix=c:/squid'"
-
 /* UDP receive buffer size */
 #define SQUID_DETECT_UDP_SO_RCVBUF 16384
 
@@ -920,7 +917,7 @@
 /* Define this to make use of the OpenSSL libraries for MD5 calculation rather
    than Squid's own MD5 implementation or if building with SSL encryption
    (USE_SSL) */
-#define USE_OPENSSL 1
+/* #undef USE_OPENSSL */
 
 /* Use poll() for the IO loop */
 /* #undef USE_POLL */
@@ -936,10 +933,10 @@
 #define USE_SELECT_WIN32 1
 
 /* Compile the ESI processor and Surrogate header support */
-#define USE_SQUID_ESI 1
+#define USE_SQUID_ESI 0
 
 /* Define this to include code for SSL encryption. */
-#define USE_SSL 1
+/* #undef USE_SSL */
 
 /* Define this if unlinkd is required (strongly recommended for ufs storage
    type) */
@@ -959,7 +956,7 @@
 #define USE_WIN32_SERVICE 1
 
 /* Define to enable CPU profiling within Squid */
-#define USE_XPROF_STATS 1
+/* #undef USE_XPROF_STATS */
 
 /* Valgrind memory debugger support */
 /* #undef WITH_VALGRIND */
@@ -982,3 +979,47 @@
 
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */
+
+#if (USE_SQUID_ESI == 1)
+#define STR_SQUID_ESI "--enable-esi "
+#else
+#define STR_SQUID_ESI ""
+#endif
+#if DELAY_POOLS
+#define STR_DELAY_POOLS "--enable-delay-pools "
+#else
+#define STR_DELAY_POOLS ""
+#endif
+#if USE_ICMP
+#define STR_USE_ICMP "--enable-icmp "
+#else
+#define STR_USE_ICMP ""
+#endif
+#if USE_DNSSERVERS
+#define STR_USE_DNSSERVERS "--disable-internal-dns "
+#else
+#define STR_USE_DNSSERVERS ""
+#endif
+#if USE_SSL
+#define STR_USE_SSL "--enable-ssl "
+#else
+#define STR_USE_SSL ""
+#endif
+#if USE_ARP_ACL
+#define STR_USE_ARP_ACL "--enable-arp-acl "
+#else
+#define STR_USE_ARP_ACL ""
+#endif
+
+#define SQUID_CONFIGURE_OPTIONS "--enable-win32-service --enable-storeio='ufs aufs null coss' --enable-disk-io='Blocking AIO DiskThreads' " \
+    "--enable-removal-policies='heap lru' --enable-snmp --enable-htcp --disable-wccp --disable-wccpv2 --enable-useragent-log " \
+    "--enable-referer-log --enable-cache-digests --enable-icap-client --enable-forw-via-db " \
+    "--with-large-files --enable-default-hostsfile=none --enable-auth=basic ntlm digest negotiate " \
+    STR_DELAY_POOLS \
+    STR_USE_ICMP \
+    STR_USE_DNSSERVERS \
+    STR_USE_SSL \
+    STR_SQUID_ESI \
+    STR_USE_ARP_ACL \
+    "--prefix=c:/squid"
+
