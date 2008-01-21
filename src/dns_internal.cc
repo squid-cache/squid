@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.104 2008/01/11 03:49:22 amosjeffries Exp $
+ * $Id: dns_internal.cc,v 1.105 2008/01/20 19:46:35 serassio Exp $
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -51,7 +51,7 @@
 #include <resolv.h>
 #endif
 
-/* MS VisualStudio Projects are monolithic, so we need the following
+/* MS Visual Studio Projects are monolithic, so we need the following
    #ifndef to exclude the internal DNS code from compile process when
    using external DNS process.
  */

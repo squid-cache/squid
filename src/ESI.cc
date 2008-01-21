@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.28 2008/01/07 17:12:28 hno Exp $
+ * $Id: ESI.cc,v 1.29 2008/01/20 19:46:35 serassio Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -35,6 +35,12 @@
  */
 
 #include "squid.h"
+
+/* MS Visual Studio Projects are monolithic, so we need the following
+ * #if to exclude the ESI code from compile process when not needed.
+ */
+#if (USE_SQUID_ESI == 1)
+
 #include "ESI.h"
 #include "clientStream.h"
 #include "client_side_request.h"
@@ -2459,4 +2465,4 @@ esiEnableProcessing (HttpReply *rep)
     return rv;
 }
 
-
+#endif /* USE_SQUID_ESI == 1 */

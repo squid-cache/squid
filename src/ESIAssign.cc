@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIAssign.cc,v 1.6 2007/05/29 13:31:37 amosjeffries Exp $
+ * $Id: ESIAssign.cc,v 1.7 2008/01/20 19:46:35 serassio Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -34,7 +34,13 @@
  */
 
 #include "squid.h"
-#include "ESIAssign.h"
+#
+/* MS Visual Studio Projects are monolithic, so we need the following
+ * #if to exclude the ESI code from compile process when not needed.
+ */
+#if (USE_SQUID_ESI == 1)
+
+include "ESIAssign.h"
 #include "ESIContext.h"
 #include "ESISequence.h"
 
@@ -190,3 +196,5 @@ ESIVariableExpression::eval (ESIVarState &state, char const *subref, char const 
     /* XXX: Implement evaluation of the expression */
     ESISegment::ListAppend (state.getOutput(), expression.buf(), expression.size());
 }
+
+#endif /* USE_SQUID_ESI == 1 */
