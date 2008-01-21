@@ -1,5 +1,5 @@
 /*
- * $Id: win32.cc,v 1.26 2007/12/14 23:11:48 amosjeffries Exp $
+ * $Id: win32.cc,v 1.27 2008/01/20 17:13:22 serassio Exp $
  *
  * Windows support
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
@@ -60,7 +60,7 @@ int WIN32_pipe(int handles[2])
     IPAddress handle1;
     struct addrinfo *AI = NULL;
 
-    localhost.SetLocalhost;
+    localhost.SetLocalhost();
 
 #if !IPV6_SPECIAL_LOCALHOST
     /* INET6: back-compatible: localhost pipes default to IPv4 unless set otherwise.
