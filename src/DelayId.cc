@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayId.cc,v 1.23.4.1 2008/01/20 14:47:54 serassio Exp $
+ * $Id: DelayId.cc,v 1.23.4.2 2008/01/20 19:39:26 serassio Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -39,7 +39,7 @@
 
 #include "config.h"
 
-/* MS VisualStudio Projects are monolithic, so we need the following
+/* MS Visual Studio Projects are monolithic, so we need the following
  * #if to exclude the delay pools code from compile process when not needed.
  */
 #if DELAY_POOLS

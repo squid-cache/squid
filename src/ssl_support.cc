@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.35.6.1 2008/01/20 14:47:54 serassio Exp $
+ * $Id: ssl_support.cc,v 1.35.6.2 2008/01/20 19:39:26 serassio Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
@@ -35,7 +35,7 @@
 
 #include "squid.h"
 
-/* MS VisualStudio Projects are monolithic, so we need the following
+/* MS Visual Studio Projects are monolithic, so we need the following
  * #if to exclude the SSL code from compile process when not needed.
  */
 #if USE_SSL

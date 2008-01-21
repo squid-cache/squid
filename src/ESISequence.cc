@@ -1,5 +1,5 @@
 /*
- * $Id: ESISequence.cc,v 1.6.6.1 2008/01/20 14:47:54 serassio Exp $
+ * $Id: ESISequence.cc,v 1.6.6.2 2008/01/20 19:39:26 serassio Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -35,7 +35,7 @@
 
 #include "squid.h"
 
-/* MS VisualStudio Projects are monolithic, so we need the following
+/* MS Visual Studio Projects are monolithic, so we need the following
  * #if to exclude the ESI code from compile process when not needed.
  */
 #if (USE_SQUID_ESI == 1)
