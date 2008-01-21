@@ -45,9 +45,6 @@
 
    See also strsep().
 */
-#if defined HAVE_DECL_STRTOK_R && !HAVE_DECL_STRTOK_R
-extern char *strtok_r(char *restrict s, const char *restrict sep,
-		      char **restrict lasts);
-#endif
+SQUIDCEXTERN char *strtok_r(char *s, const char *sep, char **lasts);
 
 #endif /* STRTOK_R_H */
