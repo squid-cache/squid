@@ -1010,6 +1010,11 @@
 #else
 #define STR_USE_ARP_ACL ""
 #endif
+#if USE_XPROF_STATS
+#define STR_USE_XPROF_STATS "--enable-cpu-profiling "
+#else
+#define STR_USE_XPROF_STATS ""
+#endif
 
 #define SQUID_CONFIGURE_OPTIONS "--enable-win32-service --enable-storeio='ufs aufs null coss' --enable-disk-io='Blocking AIO DiskThreads' " \
     "--enable-removal-policies='heap lru' --enable-snmp --enable-htcp --disable-wccp --disable-wccpv2 --enable-useragent-log " \
@@ -1021,5 +1026,6 @@
     STR_USE_SSL \
     STR_SQUID_ESI \
     STR_USE_ARP_ACL \
+    STR_USE_XPROF_STATS \
     "--prefix=c:/squid"
 
