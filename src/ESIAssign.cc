@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIAssign.cc,v 1.7 2008/01/20 19:46:35 serassio Exp $
+ * $Id: ESIAssign.cc,v 1.8 2008/01/20 20:20:21 serassio Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -34,13 +34,13 @@
  */
 
 #include "squid.h"
-#
+
 /* MS Visual Studio Projects are monolithic, so we need the following
  * #if to exclude the ESI code from compile process when not needed.
  */
 #if (USE_SQUID_ESI == 1)
 
-include "ESIAssign.h"
+#include "ESIAssign.h"
 #include "ESIContext.h"
 #include "ESISequence.h"
 
