@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.170 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id: forward.cc,v 1.171 2008/01/20 18:20:05 serassio Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -878,7 +878,7 @@ FwdState::connectStart()
         if (request->flags.tproxy) {
             IPAddress addr;
 
-            itp.v.addr.faddr.s_addr = src.sin_addr.s_addr;
+            src.GetInAddr(itp.v.addr.faddr);
             itp.v.addr.fport = 0;
 
             /* If these syscalls fail then we just fallback to connecting
