@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequestMethod.h,v 1.6 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id: HttpRequestMethod.h,v 1.7 2008/01/21 04:02:56 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,6 +35,7 @@
 #define SQUID_HTTPREQUESTMETHOD_H
 
 #include <iosfwd>
+#include "SquidString.h"
 
 enum _method_t {
     METHOD_NONE,		/* 000 */
