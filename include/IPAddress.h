@@ -1,5 +1,5 @@
 /*
- * $Id: IPAddress.h,v 1.1 2007/12/14 04:29:22 amosjeffries Exp $
+ * $Id: IPAddress.h,v 1.2 2008/01/20 20:35:41 serassio Exp $
  *
  * DEBUG: section 14    IP Storage and Handling
  * AUTHOR: Amos Jeffries
@@ -58,6 +58,7 @@
 
 
 #include <iosfwd>
+#include <ostream>
 
 #include "getaddrinfo.h"
 #include "getnameinfo.h"
