@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLARP.cc,v 1.26 2007/12/16 22:32:09 amosjeffries Exp $
+ * $Id: ACLARP.cc,v 1.27 2008/01/20 17:23:19 serassio Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -246,16 +246,15 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IPAddress &c)
 
     IPAddress ipAddr = c;
 
-    struct sockaddr_in *sa = NULL;
-
 #if defined(_SQUID_LINUX_)
 
     unsigned char ifbuffer[sizeof(struct ifreq) * 64];
-
     struct ifconf ifc;
+    struct sockaddr_in *sa = NULL;
 
     struct ifreq *ifr;
     int offset;
+
     SplayNode<acl_arp_data*> **Top = dataptr;
     /*
      * The linux kernel 2.2 maintains per interface ARP caches and
