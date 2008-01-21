@@ -43,7 +43,7 @@
 		// s = "abc\0-def\0"
 */
 char *
-__strtok_r (char *s, const char *delim, char **save_ptr)
+strtok_r (char *s, const char *delim, char **save_ptr)
 {
   char *token;
 
@@ -72,7 +72,3 @@ __strtok_r (char *s, const char *delim, char **save_ptr)
     }
   return token;
 }
-#ifdef weak_alias
-libc_hidden_def (__strtok_r)
-weak_alias (__strtok_r, strtok_r)
-#endif
