@@ -1,5 +1,5 @@
 /*
- * $Id: squid_mswin.h,v 1.7 2007/12/14 23:11:44 amosjeffries Exp $
+ * $Id: squid_mswin.h,v 1.8 2008/01/20 17:36:43 serassio Exp $
  *
  * AUTHOR: Andrey Shorin <tolsty@tushino.com>
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
@@ -211,6 +211,9 @@ struct timezone
 #include <stddef.h>
 #include <process.h>
 #include <errno.h>
+#if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
+#include <winsock2.h>
+#endif
 #include <ws2tcpip.h>
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 /* Hack to suppress compiler warnings on FD_SET() & FD_CLR() */
