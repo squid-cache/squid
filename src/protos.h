@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.552 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id: protos.h,v 1.553 2008/01/21 20:59:44 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -416,7 +416,7 @@ SQUIDCEXTERN void peerDigestNeeded(PeerDigest * pd);
 SQUIDCEXTERN void peerDigestNotePeerGone(PeerDigest * pd);
 SQUIDCEXTERN void peerDigestStatsReport(const PeerDigest * pd, StoreEntry * e);
 
-SQUIDCEXTERN IPAddress getOutgoingAddr(HttpRequest * request);
+extern IPAddress getOutgoingAddr(HttpRequest * request);
 unsigned long getOutgoingTOS(HttpRequest * request);
 
 SQUIDCEXTERN void urnStart(HttpRequest *, StoreEntry *);
