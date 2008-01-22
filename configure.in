@@ -1,7 +1,7 @@
 
 dnl  Configuration input file for Squid
 dnl
-dnl  $Id: configure.in,v 1.495 2008/01/18 07:04:16 amosjeffries Exp $
+dnl  $Id: configure.in,v 1.496 2008/01/22 15:34:27 hno Exp $
 dnl
 dnl
 dnl
@@ -11,7 +11,7 @@ AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar])
-AC_REVISION($Revision: 1.495 $)dnl
+AC_REVISION($Revision: 1.496 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -2619,7 +2619,6 @@ AC_REPLACE_FUNCS(\
 	getaddrinfo \
 	getnameinfo \
 	strerror \
-	strtok_r \
 	tempnam \
 )
 

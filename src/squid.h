@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.270 2008/01/20 17:11:15 serassio Exp $
+ * $Id: squid.h,v 1.271 2008/01/22 15:34:28 hno Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -386,10 +386,6 @@ extern "C"
 
 #if !HAVE_STRTOLL
 #include "strtoll.h"
-#endif
-
-#if !HAVE_STRTOK_R
-#include "strtok_r.h"
 #endif
 
 #if !HAVE_INITGROUPS
