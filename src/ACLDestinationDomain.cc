@@ -1,5 +1,5 @@
 /*
- * $Id: ACLDestinationDomain.cc,v 1.16 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id: ACLDestinationDomain.cc,v 1.17 2008/01/22 20:34:43 rousskov Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -76,6 +76,8 @@ ACLStrategised<char const *> ACLDestinationDomain::RegexRegistryEntry_(new ACLRe
 int
 ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLChecklist *checklist)
 {
+    assert(checklist != NULL && checklist->request != NULL);
+
     const ipcache_addrs *ia = NULL;
     const char *fqdn = NULL;
 
