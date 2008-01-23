@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cc,v 1.26 2007/05/29 13:31:38 amosjeffries Exp $
+ * $Id: String.cc,v 1.27 2008/01/23 03:06:20 amosjeffries Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -40,6 +40,7 @@ void
 String::initBuf(size_t sz)
 {
     PROF_start(StringInitBuf);
+    clean();
     buf((char *)memAllocString(sz, &sz));
     assert(sz < 65536);
     size_ = sz;
@@ -71,8 +72,7 @@ String::String (char const *aString) : size_(0), len_(0), buf_(NULL)
 String &
 String::operator =(char const *aString)
 {
-    clean();
-    init (aString);
+    init(aString);
     return *this;
 }
 
@@ -81,8 +81,8 @@ String::operator = (String const &old)
 {
     clean ();
 
-    if (old.len_)
-        limitInit (old.buf(), old.len_);
+    if(old.size() > 0)
+        limitInit(old.buf(), old.size());
 
     return *this;
 }
@@ -119,7 +119,7 @@ String::limitInit(const char *str, int len)
 
 String::String (String const &old) : size_(0), len_(0), buf_(NULL)
 {
-    init (old.buf());
+    limitInit(old.buf(), old.size());
 #if DEBUGSTRINGS
 
     StringRegistry::Instance().add(this);
@@ -156,7 +156,6 @@ void
 String::reset(const char *str)
 {
     PROF_start(StringReset);
-    clean();
     init(str);
     PROF_stop(StringReset);
 }
