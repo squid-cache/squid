@@ -1,5 +1,5 @@
 /*
- * $Id: squid_mswin.h,v 1.8 2008/01/20 17:36:43 serassio Exp $
+ * $Id: squid_mswin.h,v 1.9 2008/01/22 20:12:57 serassio Exp $
  *
  * AUTHOR: Andrey Shorin <tolsty@tushino.com>
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
@@ -215,6 +215,10 @@ struct timezone
 #include <winsock2.h>
 #endif
 #include <ws2tcpip.h>
+#if (EAI_NODATA == EAI_NONAME)
+#undef EAI_NODATA
+#define EAI_NODATA WSANO_DATA
+#endif
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 /* Hack to suppress compiler warnings on FD_SET() & FD_CLR() */
 #pragma warning (push)
