@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.149 2008/01/22 16:45:45 rousskov Exp $
+ * $Id: client_side_reply.cc,v 1.150 2008/01/22 19:53:03 rousskov Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1234,10 +1234,7 @@ clientReplyContext::buildReplyHeader()
     if (is_hit)
         hdr->delById(HDR_SET_COOKIE);
 
-    /*
-     * Be sure to obey the Connection header 
-     */
-    reply->header.removeConnectionHeaderEntries();
+    reply->header.removeHopByHopEntries();
 
     //    if (request->range)
     //      clientBuildRangeHeader(http, reply);
