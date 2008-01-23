@@ -125,7 +125,8 @@ void ICAPXaction::openConnection()
 
     disableRetries(); // we only retry pconn failures
 
-    IPAddress outgoing(getOutgoingAddr(NULL));
+    IPAddress outgoing;
+    outgoing.SetAnyAddr();
     connection = comm_open(SOCK_STREAM, 0, outgoing, 
         COMM_NONBLOCKING, s.uri.buf());
 
