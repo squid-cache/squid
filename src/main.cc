@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.454 2007/12/29 18:32:31 hno Exp $
+ * $Id: main.cc,v 1.455 2008/01/22 17:13:36 rousskov Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -636,6 +636,7 @@ mainReconfigure(void)
     errorClean();
     enter_suid();		/* root to read config file */
     parseConfigFile(ConfigFile, manager);
+    Mem::Report();
     setEffectiveUser();
     _db_init(Config.Log.log, Config.debugOptions);
     ipcache_restart();		/* clear stuck entries */
@@ -1192,6 +1193,8 @@ main(int argc, char **argv)
 
         parse_err = parseConfigFile(ConfigFile, manager);
 
+        Mem::Report();
+        
         if (opt_parse_cfg_only)
 
             return parse_err;
