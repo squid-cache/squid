@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLARP.cc,v 1.27 2008/01/20 17:23:19 serassio Exp $
+ * $Id: ACLARP.cc,v 1.28 2008/01/22 22:34:47 serassio Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -568,7 +568,9 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IPAddress &c)
 
     /* Find MAC address from net table */
     for (i = 0 ; i < NetTable->dwNumEntries ; i++) {
-        if ((c == (struct in_addr)NetTable->table[i].dwAddr) && (NetTable->table[i].dwType > 2)) {
+        in_addr a;
+        a.s_addr = NetTable->table[i].dwAddr;
+        if (c == a && (NetTable->table[i].dwType > 2)) {
             arpReq.arp_ha.sa_family = AF_UNSPEC;
             memcpy(arpReq.arp_ha.sa_data, NetTable->table[i].bPhysAddr, NetTable->table[i].dwPhysAddrLen);
         }
