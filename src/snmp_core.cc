@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_core.cc,v 1.81 2007/12/18 23:24:25 amosjeffries Exp $
+ * $Id: snmp_core.cc,v 1.82 2008/01/22 21:07:19 rousskov Exp $
  *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
@@ -1087,7 +1087,7 @@ snmpDebugOid(int lvl, oid * Name, snint Len)
 
     for (x = 0; x < Len; x++) {
         snprintf(mbuf, sizeof(mbuf), ".%u", (unsigned int) Name[x]);
-        strncat(objid, mbuf, sizeof(objid));
+        strncat(objid, mbuf, sizeof(objid) - strlen(objid) - 1);
     }
 
     debugs(49, lvl, "   oid = " << objid);
