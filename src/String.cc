@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cc,v 1.28 2008/01/23 19:24:14 rousskov Exp $
+ * $Id: String.cc,v 1.29 2008/01/23 20:51:16 amosjeffries Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -109,7 +109,12 @@ void
 String::limitInit(const char *str, int len)
 {
     PROF_start(StringLimitInit);
-    assert(this && str);
+    if(len < 1) {
+        clean();
+        return;
+    }
+
+    assert(this && str && len > 0);
     initBuf(len + 1);
     len_ = len;
     xmemcpy(buf_, str, len);
