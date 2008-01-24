@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cc,v 1.29 2008/01/23 20:51:16 amosjeffries Exp $
+ * $Id: String.cc,v 1.30 2008/01/23 23:08:58 rousskov Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -36,33 +36,33 @@
 #include "squid.h"
 #include "Store.h"
 
+// low-level buffer allocation, 
+// does not free old buffer and does not adjust or look at len_
 void
-String::initBuf(size_t sz)
+String::allocBuffer(size_t sz)
 {
     PROF_start(StringInitBuf);
-    clean();
-    buf((char *)memAllocString(sz, &sz));
-    assert(sz < 65536);
-    size_ = sz;
+    assert (buf_ == NULL);
+    char *newBuffer = (char*)memAllocString(sz, &sz);
+    setBuffer(newBuffer, sz);
     PROF_stop(StringInitBuf);
 }
 
+// low-level buffer assignment
+// does not free old buffer and does not adjust or look at len_
 void
-String::init(char const *str)
+String::setBuffer(char *aBuf, size_t aSize)
 {
-    assert(this);
-
-    PROF_start(StringInit);
-    if (str)
-        limitInit(str, strlen(str));
-    else
-        clean();
-    PROF_stop(StringInit);
+    assert(!buf_);
+    assert(aSize < 65536);
+    buf_ = aBuf;
+    size_ = aSize;
 }
 
 String::String (char const *aString) : size_(0), len_(0), buf_(NULL)
 {
-    init (aString);
+    if (aString)
+        allocAndFill(aString, strlen(aString));
 #if DEBUGSTRINGS
 
     StringRegistry::Instance().add(this);
@@ -72,18 +72,16 @@ String::String (char const *aString) : size_(0), len_(0), buf_(NULL)
 String &
 String::operator =(char const *aString)
 {
-    init(aString);
+    reset(aString);
     return *this;
 }
 
 String &
 String::operator = (String const &old)
 {
-    clean ();
-
-    if(old.size() > 0)
-        limitInit(old.buf(), old.size());
-
+    clean(); // TODO: optimize to avoid cleaning the buffer we can use
+    if (old.size() > 0)
+        allocAndFill(old.buf(), old.size());
     return *this;
 }
 
@@ -105,27 +103,32 @@ String::operator != (String const &that) const
     return true;
 }
 
+// public interface, makes sure that we clean the old buffer first
 void
 String::limitInit(const char *str, int len)
 {
-    PROF_start(StringLimitInit);
-    if(len < 1) {
-        clean();
-        return;
-    }
+    clean(); // TODO: optimize to avoid cleaning the buffer we can use
+    allocAndFill(str, len);
+}
 
-    assert(this && str && len > 0);
-    initBuf(len + 1);
+// Allocates the buffer to fit the supplied string and fills it.
+// Does not clean.
+void
+String::allocAndFill(const char *str, int len)
+{
+    PROF_start(StringAllocAndFill);
+    assert(this && str);
+    allocBuffer(len + 1);
     len_ = len;
     xmemcpy(buf_, str, len);
     buf_[len] = '\0';
-    PROF_stop(StringLimitInit);
+    PROF_stop(StringAllocAndFill);
 }
 
 String::String (String const &old) : size_(0), len_(0), buf_(NULL)
 {
     if (old.size() > 0)
-        limitInit(old.buf(), old.size());
+        allocAndFill(old.buf(), old.size());
 #if DEBUGSTRINGS
 
     StringRegistry::Instance().add(this);
@@ -162,7 +165,9 @@ void
 String::reset(const char *str)
 {
     PROF_start(StringReset);
-    init(str);
+    clean(); // TODO: optimize to avoid cleaning the buffer if we can reuse it
+    if (str)
+        allocAndFill(str, strlen(str));
     PROF_stop(StringReset);
 }
 
@@ -177,11 +182,12 @@ String::append(const char *str, int len)
         strncat(buf_, str, len);
         len_ += len;
     } else {
+        // Create a temporary string and absorb it later.
         String snew;
         snew.len_ = len_ + len;
-        snew.initBuf(snew.len_ + 1);
+        snew.allocBuffer(snew.len_ + 1);
 
-        if (buf_)
+        if (len_)
             xmemcpy(snew.buf_, buf(), len_);
 
         if (len)
@@ -220,19 +226,11 @@ void
 String::absorb(String &old)
 {
     clean();
-    size_ = old.size_;
-    buf (old.buf_);
+    setBuffer(old.buf_, old.size_);
     len_ = old.len_;
     old.size_ = 0;
     old.buf_ = NULL;
     old.len_ = 0;
-}
-
-void
-String::buf(char *newBuf)
-{
-    assert (buf_ == NULL);
-    buf_ = newBuf;
 }
 
 #if DEBUGSTRINGS

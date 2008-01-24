@@ -1,5 +1,5 @@
 /*
- * $Id: SquidString.h,v 1.14 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id: SquidString.h,v 1.15 2008/01/23 23:08:58 rousskov Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -98,10 +98,7 @@ public:
 
     _SQUID_INLINE_ int size() const;
     _SQUID_INLINE_ char const * buf() const;
-    void buf(char *);
-    void init (char const *);
-    void initBuf(size_t sz);
-    void limitInit(const char *str, int len);
+    void limitInit(const char *str, int len); // TODO: rename to assign()
     void clean();
     void reset(char const *str);
     void append(char const *buf, int len);
@@ -139,7 +136,13 @@ public:
 
 #endif
 
+
+
 private:
+    void allocAndFill(const char *str, int len);
+    void allocBuffer(size_t sz);
+    void setBuffer(char *buf, size_t sz);
+
     /* never reference these directly! */
     unsigned short int size_; /* buffer size; 64K limit */
 
