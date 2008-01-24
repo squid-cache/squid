@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cc,v 1.27 2008/01/23 03:06:20 amosjeffries Exp $
+ * $Id: String.cc,v 1.28 2008/01/23 19:24:14 rousskov Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -119,7 +119,8 @@ String::limitInit(const char *str, int len)
 
 String::String (String const &old) : size_(0), len_(0), buf_(NULL)
 {
-    limitInit(old.buf(), old.size());
+    if (old.size() > 0)
+        limitInit(old.buf(), old.size());
 #if DEBUGSTRINGS
 
     StringRegistry::Instance().add(this);
