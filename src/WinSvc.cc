@@ -1,6 +1,6 @@
 
 /*
- * $Id: WinSvc.cc,v 1.3 2007/04/28 22:26:37 hno Exp $
+ * $Id: WinSvc.cc,v 1.4 2008/01/24 19:20:43 serassio Exp $
  *
  * Windows support
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
@@ -69,6 +69,11 @@ static int s_iInitCount = 0;
 #endif
 
 static int Squid_Aborting = 0;
+static HANDLE NotifyAddrChange_thread = INVALID_HANDLE_VALUE;
+
+#undef NotifyAddrChange
+typedef DWORD(WINAPI * PFNotifyAddrChange) (OUT PHANDLE, IN LPOVERLAPPED);
+#define NOTIFYADDRCHANGE "NotifyAddrChange"
 
 #if USE_WIN32_SERVICE
 static SERVICE_STATUS svcStatus;
@@ -386,6 +391,17 @@ WIN32_Abort(int sig)
 }
 
 void
+WIN32_IpAddrChangeMonitorExit()
+{
+    DWORD status = ERROR_SUCCESS;
+
+    if (NotifyAddrChange_thread == INVALID_HANDLE_VALUE) {
+	TerminateThread(NotifyAddrChange_thread, status);
+	CloseHandle(NotifyAddrChange_thread);
+    }
+}
+
+void
 WIN32_Exit()
 {
 #ifdef _SQUID_MSWIN_
@@ -406,11 +422,56 @@ WIN32_Exit()
         DeleteCriticalSection(dbg_mutex);
 
     WIN32_ExceptionHandlerCleanup();
+    WIN32_IpAddrChangeMonitorExit();
 
 #endif
 
     _exit(0);
 }
+
+#ifdef _SQUID_MSWIN_
+static DWORD WINAPI
+WIN32_IpAddrChangeMonitor(LPVOID lpParam)
+{
+    DWORD Result;
+    HMODULE IPHLPAPIHandle;
+    PFNotifyAddrChange NotifyAddrChange;
+
+    if ((IPHLPAPIHandle = GetModuleHandle("IPHLPAPI")) == NULL)
+	IPHLPAPIHandle = LoadLibrary("IPHLPAPI");
+    NotifyAddrChange = (PFNotifyAddrChange) GetProcAddress(IPHLPAPIHandle, NOTIFYADDRCHANGE);
+
+    while (1) {
+	Result = NotifyAddrChange(NULL, NULL);
+	if (Result != NO_ERROR) {
+	    debug(1, 1) ("NotifyAddrChange error %ld\n", Result);
+	    return 1;
+	}
+	debug(1, 1) ("Notification of IP address change received, requesting Squid reconfiguration ...\n");
+	reconfigure(SIGHUP);
+    }
+    return 0;
+}
+
+DWORD
+WIN32_IpAddrChangeMonitorInit()
+{
+    DWORD status = ERROR_SUCCESS;
+    DWORD threadID = 0, ThrdParam = 0;
+
+    if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
+	NotifyAddrChange_thread = CreateThread(NULL, 0, WIN32_IpAddrChangeMonitor,
+	    &ThrdParam, 0, &threadID);
+	if (NotifyAddrChange_thread == NULL) {
+	    status = GetLastError();
+	    NotifyAddrChange_thread = INVALID_HANDLE_VALUE;
+	    debug(1, 1) ("Failed to start IP monitor thread.\n");
+	} else
+	    debug(1, 2) ("Starting IP monitor thread [%li] ...\n", threadID);
+    }
+    return status;
+}
+#endif
 
 int WIN32_Subsystem_Init(int * argc, char *** argv)
 {
