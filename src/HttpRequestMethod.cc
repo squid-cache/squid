@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequestMethod.cc,v 1.5 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id: HttpRequestMethod.cc,v 1.6 2008/02/03 10:00:29 amosjeffries Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -144,6 +144,7 @@ HttpRequestMethod::HttpRequestMethod(char const *begin, char const *end) : theMe
     theImage.limitInit(begin,end-begin);
 }
 
+/** \todo AYJ: this _should_ be obsolete. Since all such methods fit nicely into METHOD_OTHER now. */
 void
 HttpRequestMethod::AddExtension(const char *mstr)
 {
@@ -187,17 +188,18 @@ HttpRequestMethod::Configure(SquidConfig &Config)
 }
 
 char const* 
-HttpRequestMethod::image() const 
-{ 
-	if (METHOD_OTHER != theMethod) {
-		return RequestMethodStr[theMethod];
-	}
-	else {
-		if (theImage.size()>0)
-			return theImage.buf();
-		else
-			return "METHOD_OTHER";
-	}
+HttpRequestMethod::image() const
+{
+    if (METHOD_OTHER != theMethod) {
+        return RequestMethodStr[theMethod];
+    }
+    else {
+        if (theImage.size()>0) {
+            return theImage.buf();
+        } else {
+            return "METHOD_OTHER";
+        }
+    }
 }
 
 bool 

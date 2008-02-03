@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.cc,v 1.79 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id: HttpRequest.cc,v 1.80 2008/02/03 10:00:29 amosjeffries Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -143,13 +143,14 @@ HttpRequest::reset()
 bool
 HttpRequest::sanityCheckStartLine(MemBuf *buf, http_status *error)
 {
-    /*
+    /**
      * Just see if the request buffer starts with a known
      * HTTP request method.  NOTE this whole function is somewhat
      * superfluous and could just go away.
+     \todo AYJ: Check for safely removing this function. We now accept 'unknown' request methods in HTTP.
      */
 
-    if (METHOD_NONE == HttpRequestMethod(buf->content())) {
+    if (HttpRequestMethod(buf->content(),NULL) == METHOD_NONE) {
         debugs(73, 3, "HttpRequest::sanityCheckStartLine: did not find HTTP request method");
         return false;
     }
@@ -163,7 +164,7 @@ HttpRequest::parseFirstLine(const char *start, const char *end)
     const char *t = start + strcspn(start, w_space);
     method = HttpRequestMethod(start, t);
 
-    if (METHOD_NONE == method)
+    if (method == METHOD_NONE)
         return false;
 
     start = t + strspn(t, w_space);

@@ -36,7 +36,7 @@ testHttpRequest::testCreateFromUrlAndMethod()
     expected_port = 90;
     HttpRequest *nullRequest = NULL;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->port);
-    CPPUNIT_ASSERT_EQUAL(METHOD_GET, aRequest->method);
+    CPPUNIT_ASSERT(aRequest->method == METHOD_GET);
     CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->GetHost()));
     CPPUNIT_ASSERT_EQUAL(String("/bar"), aRequest->urlpath);
     CPPUNIT_ASSERT_EQUAL(PROTO_HTTP, aRequest->protocol);
@@ -48,7 +48,7 @@ testHttpRequest::testCreateFromUrlAndMethod()
     aRequest = HttpRequest::CreateFromUrlAndMethod(url, METHOD_PUT);
     expected_port = 80;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->port);
-    CPPUNIT_ASSERT_EQUAL(METHOD_PUT, aRequest->method);
+    CPPUNIT_ASSERT(aRequest->method == METHOD_PUT);
     CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->GetHost()));
     CPPUNIT_ASSERT_EQUAL(String("/bar"), aRequest->urlpath);
     CPPUNIT_ASSERT_EQUAL(PROTO_HTTP, aRequest->protocol);
@@ -65,7 +65,7 @@ testHttpRequest::testCreateFromUrlAndMethod()
     aRequest = HttpRequest::CreateFromUrlAndMethod(url, METHOD_CONNECT);
     expected_port = 45;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->port);
-    CPPUNIT_ASSERT_EQUAL(METHOD_CONNECT, aRequest->method);
+    CPPUNIT_ASSERT(aRequest->method == METHOD_CONNECT);
     CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->GetHost()));
     CPPUNIT_ASSERT_EQUAL(String(""), aRequest->urlpath);
     CPPUNIT_ASSERT_EQUAL(PROTO_NONE, aRequest->protocol);
@@ -85,7 +85,7 @@ testHttpRequest::testCreateFromUrl()
     HttpRequest *aRequest = HttpRequest::CreateFromUrl(url);
     expected_port = 90;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->port);
-    CPPUNIT_ASSERT_EQUAL(METHOD_GET, aRequest->method);
+    CPPUNIT_ASSERT(aRequest->method == METHOD_GET);
     CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->GetHost()));
     CPPUNIT_ASSERT_EQUAL(String("/bar"), aRequest->urlpath);
     CPPUNIT_ASSERT_EQUAL(PROTO_HTTP, aRequest->protocol);
@@ -108,7 +108,7 @@ testHttpRequest::testIPv6HostColonBug()
     aRequest = HttpRequest::CreateFromUrlAndMethod(url, METHOD_GET);
     expected_port = 80;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->port);
-    CPPUNIT_ASSERT_EQUAL(METHOD_GET, aRequest->method);
+    CPPUNIT_ASSERT(aRequest->method == METHOD_GET);
     CPPUNIT_ASSERT_EQUAL(String("[2000:800::45]"), String(aRequest->GetHost()));
     CPPUNIT_ASSERT_EQUAL(String("/foo"), aRequest->urlpath);
     CPPUNIT_ASSERT_EQUAL(PROTO_HTTP, aRequest->protocol);
@@ -120,7 +120,7 @@ testHttpRequest::testIPv6HostColonBug()
     aRequest = HttpRequest::CreateFromUrlAndMethod(url, METHOD_GET);
     expected_port = 90;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->port);
-    CPPUNIT_ASSERT_EQUAL(METHOD_GET, aRequest->method);
+    CPPUNIT_ASSERT(aRequest->method == METHOD_GET);
     CPPUNIT_ASSERT_EQUAL(String("[2000:800::45]"), String(aRequest->GetHost()));
     CPPUNIT_ASSERT_EQUAL(String("/foo"), aRequest->urlpath);
     CPPUNIT_ASSERT_EQUAL(PROTO_HTTP, aRequest->protocol);
@@ -132,7 +132,7 @@ testHttpRequest::testIPv6HostColonBug()
     aRequest = HttpRequest::CreateFromUrlAndMethod(url, METHOD_GET);
     expected_port = 80;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->port);
-    CPPUNIT_ASSERT_EQUAL(METHOD_GET, aRequest->method);
+    CPPUNIT_ASSERT(aRequest->method == METHOD_GET);
 #if USE_IPV6
       /* We hasve fixed this in IPv6 build. */
     CPPUNIT_ASSERT_EQUAL(String("[2000:800::45]"), String(aRequest->GetHost()));

@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.79 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id: htcp.cc,v 1.80 2008/02/03 10:00:30 amosjeffries Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -762,7 +762,7 @@ htcpUnpackSpecifier(char *buf, int sz)
     /*
      * Parse the request
      */
-    method = HttpRequestMethod(s->method);
+    method = HttpRequestMethod(s->method, NULL);
 
     s->request = HttpRequest::CreateFromUrlAndMethod(s->uri, method == METHOD_NONE ? HttpRequestMethod(METHOD_GET) : method);
 

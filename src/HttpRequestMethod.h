@@ -1,6 +1,5 @@
-
 /*
- * $Id: HttpRequestMethod.h,v 1.7 2008/01/21 04:02:56 amosjeffries Exp $
+ * $Id: HttpRequestMethod.h,v 1.8 2008/02/03 10:00:29 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -93,15 +92,16 @@ enum _method_t {
 };
 
 /* forward decls */
-
 typedef struct _SquidConfig SquidConfig;
 
 
-/* This class represents an HTTP Request METHOD - i.e.
- * PUT, POST, GET etc. It has a runtime extensionf acility to allow it to
+/**
+ * This class represents an HTTP Request METHOD
+ * - i.e. PUT, POST, GET etc.
+ * It has a runtime extension facility to allow it to
  * efficiently support new methods
+ \ingroup POD
  */
-
 class HttpRequestMethod
 {
 
@@ -109,14 +109,18 @@ public:
     static void AddExtension(const char *methodString);
     static void Configure(SquidConfig &Config);
 
-    HttpRequestMethod() : theMethod(METHOD_NONE) {}
+    HttpRequestMethod() : theMethod(METHOD_NONE), theImage() {}
 
-    HttpRequestMethod(_method_t const aMethod) : theMethod(aMethod) {}
+    HttpRequestMethod(_method_t const aMethod) : theMethod(aMethod), theImage() {}
 
-    HttpRequestMethod(char const * begin, char const * end=0);
+    /**
+     \param begin    string to convert to request method.
+     \param end      end of the method string (relative to begin). Use NULL if this is unknown.
+     *
+     \note DO NOT give end a default (ie NULL). That will cause silent char* conversion clashes.
+     */
+    HttpRequestMethod(char const * begin, char const * end);
 
-    operator _method_t() const {return theMethod; }
-    
     HttpRequestMethod & operator = (const HttpRequestMethod& aMethod)
     {
         theMethod = aMethod.theMethod;
@@ -131,38 +135,49 @@ public:
         return *this;
     }
 
-    bool operator != (_method_t const & aMethod) { return theMethod != aMethod;}
-    bool operator != (HttpRequestMethod const & aMethod) 
-    { 
-    	return ( (theMethod != aMethod) || (theImage != aMethod.theImage) ); 
+    bool operator == (_method_t const & aMethod) const { return theMethod == aMethod; }
+    bool operator == (HttpRequestMethod const & aMethod) const
+    {
+        return ( (theMethod == aMethod.theMethod) || (theImage == aMethod.theImage) );
     }
-    
+
+    bool operator != (_method_t const & aMethod) const { return theMethod != aMethod; }
+    bool operator != (HttpRequestMethod const & aMethod) const
+    {
+        return ( (theMethod != aMethod.theMethod) || (theImage != aMethod.theImage) ); 
+    }
+
+    /** Iterate through the registered HTTP methods. */
     HttpRequestMethod& operator++()
     {
-    	if (METHOD_OTHER!=theMethod)
-    	{
-    		int tmp = (int)theMethod;
-    		_method_t tmp_m = (_method_t)(++tmp);
-    		
-    		if (METHOD_ENUM_END >= tmp_m)
-    			theMethod = tmp_m;
+        if(METHOD_OTHER != theMethod) {
+            int tmp = (int)theMethod;
+            _method_t tmp_m = (_method_t)(++tmp);
+
+            if (METHOD_ENUM_END >= tmp_m)
+                theMethod = tmp_m;
     	}
     	return *this;
     }
 
+    /** Get an ID representation of the method.
+     \retval METHOD_NONE	the methopd is currently unset or unknown.
+     \retval METHOD_UNKNOWN	the method has been accepted but is not one of the registerd HTTP methods.
+     \retval *			the method is on of the registered HTTP methods.
+     */
+    _method_t const id() const { return theMethod; }
 
-    /* Get a char string representation of the method. */
+    /** Get a char string representation of the method. */
     char const* image() const;
-    
+
     bool isCacheble() const;
 
 private:
-	static const char *RequestMethodStr[];
-	                             
-	_method_t theMethod; ///< Method type
-	String theImage;     ///< Used for store METHOD_OTHER only
-};
+    static const char *RequestMethodStr[];
 
+    _method_t theMethod; ///< Method type
+    String theImage;     ///< Used for store METHOD_OTHER only
+};
 
 inline std::ostream &
 operator << (std::ostream &os, HttpRequestMethod const &method)

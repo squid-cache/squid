@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.772 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id: client_side.cc,v 1.773 2008/02/03 10:00:29 amosjeffries Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -667,7 +667,7 @@ clientSetKeepaliveFlag(ClientHttpRequest * http)
 static int
 clientIsContentLengthValid(HttpRequest * r)
 {
-    switch (r->method) {
+    switch (r->method.id()) {
 
     case METHOD_PUT:
 

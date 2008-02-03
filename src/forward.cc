@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.171 2008/01/20 18:20:05 serassio Exp $
+ * $Id: forward.cc,v 1.172 2008/02/03 10:00:30 amosjeffries Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -464,13 +464,13 @@ FwdState::checkRetriable()
         return false;
 
     /* RFC2616 9.1 Safe and Idempotent Methods */
-    switch (request->method) {
+    switch (request->method.id()) {
         /* 9.1.1 Safe Methods */
 
     case METHOD_GET:
 
     case METHOD_HEAD:
-        /* 9.1.2 Indepontent Methods */
+        /* 9.1.2 Idempotent Methods */
 
     case METHOD_PUT:
 

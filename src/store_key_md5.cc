@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_key_md5.cc,v 1.37 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id: store_key_md5.cc,v 1.38 2008/02/03 10:00:30 amosjeffries Exp $
  *
  * DEBUG: section 20    Storage Manager MD5 Cache Keys
  * AUTHOR: Duane Wessels
@@ -117,7 +117,7 @@ const cache_key *
 storeKeyPublic(const char *url, const HttpRequestMethod& method)
 {
     static cache_key digest[SQUID_MD5_DIGEST_LENGTH];
-    unsigned char m = (unsigned char) method;
+    unsigned char m = (unsigned char) method.id();
     SquidMD5_CTX M;
     SquidMD5Init(&M);
     SquidMD5Update(&M, &m, sizeof(m));
@@ -136,7 +136,7 @@ const cache_key *
 storeKeyPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& method)
 {
     static cache_key digest[SQUID_MD5_DIGEST_LENGTH];
-    unsigned char m = (unsigned char) method;
+    unsigned char m = (unsigned char) method.id();
     const char *url = urlCanonical(request);
     SquidMD5_CTX M;
     SquidMD5Init(&M);
