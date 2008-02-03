@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.101 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id: client_side_request.cc,v 1.102 2008/02/03 10:00:30 amosjeffries Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -656,8 +656,8 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
             }
         }
     }
-    
-    if (METHOD_OTHER == request->method) {
+
+    if (request->method == METHOD_OTHER) {
     	no_cache++;
     }
 
@@ -1126,7 +1126,7 @@ ClientHttpRequest::noteIcapAnswer(HttpMsg *msg)
         xfree(uri);
         uri = xstrdup(urlCanonical(request));
         setLogUri(this, urlCanonicalClean(request));
-        assert(request->method);
+        assert(request->method.id());
     } else if (HttpReply *new_rep = dynamic_cast<HttpReply*>(msg)) {
         debugs(85,3,HERE << "REQMOD reply is HTTP reply");
 

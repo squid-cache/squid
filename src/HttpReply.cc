@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.98 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id: HttpReply.cc,v 1.99 2008/02/03 10:00:29 amosjeffries Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -420,7 +420,7 @@ HttpReply::bodySize(const HttpRequestMethod& method) const
 {
     if (sline.version.major < 1)
         return -1;
-    else if (METHOD_HEAD == method)
+    else if (method.id() == METHOD_HEAD)
         return 0;
     else if (sline.status == HTTP_OK)
         (void) 0;		/* common case, continue */

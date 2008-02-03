@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.164 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id: url.cc,v 1.165 2008/02/03 10:00:30 amosjeffries Exp $
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
@@ -430,6 +430,7 @@ const char *
 urlCanonical(HttpRequest * request)
 {
     LOCAL_ARRAY(char, portbuf, 32);
+/// \todo AYJ: Performance: making this a ptr and allocating when needed will be better than a write and future xstrdup().
     LOCAL_ARRAY(char, urlbuf, MAX_URL);
 
     if (request->canonical)
@@ -438,7 +439,8 @@ urlCanonical(HttpRequest * request)
     if (request->protocol == PROTO_URN) {
         snprintf(urlbuf, MAX_URL, "urn:%s", request->urlpath.buf());
     } else {
-        switch (request->method) {
+/// \todo AYJ: this could use "if..else and method == METHOD_CONNECT" easier.
+        switch (request->method.id()) {
 
         case METHOD_CONNECT:
             snprintf(urlbuf, MAX_URL, "%s:%d", request->GetHost(), request->port);
@@ -465,6 +467,10 @@ urlCanonical(HttpRequest * request)
     return (request->canonical = xstrdup(urlbuf));
 }
 
+/** \todo AYJ: Performance: This is an *almost* duplicate of urlCanoncical. But elides the query-string.
+ *        After copying it on in the first place! Would be less code to merge the two with a flag parameter.
+ *        and never copy the query-string part in the first place
+ */
 char *
 urlCanonicalClean(const HttpRequest * request)
 {
@@ -476,7 +482,8 @@ urlCanonicalClean(const HttpRequest * request)
     if (request->protocol == PROTO_URN) {
         snprintf(buf, MAX_URL, "urn:%s", request->urlpath.buf());
     } else {
-        switch (request->method) {
+/// \todo AYJ: this could use "if..else and method == METHOD_CONNECT" easier.
+        switch (request->method.id()) {
 
         case METHOD_CONNECT:
             snprintf(buf, MAX_URL, "%s:%d", 

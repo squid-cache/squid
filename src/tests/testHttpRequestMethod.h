@@ -18,7 +18,7 @@ class testHttpRequestMethod : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testDefaultConstructor );
     CPPUNIT_TEST( testEqualmethod_t );
     CPPUNIT_TEST( testNotEqualmethod_t );
-    CPPUNIT_TEST( testConst_str );
+    CPPUNIT_TEST( testImage );
     CPPUNIT_TEST( testStream );
     CPPUNIT_TEST_SUITE_END();
 
@@ -29,7 +29,7 @@ protected:
     void testConstructmethod_t();
     void testConstructCharStart();
     void testConstructCharStartEnd();
-    void testConst_str();
+    void testImage();
     void testDefaultConstructor();
     void testEqualmethod_t();
     void testNotEqualmethod_t();

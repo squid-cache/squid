@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMethodData.cc,v 1.10 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id: ACLMethodData.cc,v 1.11 2008/02/03 10:00:29 amosjeffries Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -54,10 +54,11 @@ ACLMethodData::~ACLMethodData()
         delete values;
 }
 
+/// todo make this a pass-by-reference now that HTTPRequestMethods a full class?
 bool
 ACLMethodData::match(HttpRequestMethod toFind)
 {
-    return values->findAndTune (toFind);
+    return values->findAndTune(toFind);
 }
 
 /* explicit instantiation required for some systems */
@@ -89,7 +90,7 @@ ACLMethodData::parse()
 
         ;
     while ((t = strtokFile())) {
-        List<HttpRequestMethod> *q = new List<HttpRequestMethod> (HttpRequestMethod(t));
+        List<HttpRequestMethod> *q = new List<HttpRequestMethod> (HttpRequestMethod(t, NULL));
         *(Tail) = q;
         Tail = &q->next;
     }

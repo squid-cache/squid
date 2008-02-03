@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.150 2008/01/22 19:53:03 rousskov Exp $
+ * $Id: client_side_reply.cc,v 1.151 2008/02/03 10:00:30 amosjeffries Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -677,8 +677,8 @@ clientReplyContext::processMiss()
         purgeRequest();
         return;
     }
-    
-    if (METHOD_OTHER == r->method) {
+
+    if (r->method == METHOD_OTHER) {
     	// invalidate all cache entries
     	purgeAllCached();
     }

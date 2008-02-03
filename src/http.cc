@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.545 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id: http.cc,v 1.546 2008/02/03 10:00:30 amosjeffries Exp $
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -200,12 +200,8 @@ httpTimeout(int fd, void *data)
 static void
 httpMaybeRemovePublic(StoreEntry * e, http_status status)
 {
-
-    int remove
-        = 0;
-
+    int remove = 0;
     int forbidden = 0;
-
     StoreEntry *pe;
 
     if (!EBIT_TEST(e->flags, KEY_PRIVATE))
@@ -226,9 +222,7 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
     case HTTP_GONE:
 
     case HTTP_NOT_FOUND:
-
-        remove
-            = 1;
+        remove = 1;
 
         break;
 
@@ -255,16 +249,14 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
          */
 
         if (status >= 200 && status < 300)
-            remove
-                = 1;
+            remove = 1;
 
 #endif
 
         break;
     }
 
-    if (!remove
-            && !forbidden)
+    if (!remove && !forbidden)
         return;
 
     assert(e->mem_obj);
@@ -279,7 +271,7 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
         pe->release();
     }
 
-    /*
+    /** \par
      * Also remove any cached HEAD response in case the object has
      * changed.
      */
@@ -296,7 +288,9 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
     if (forbidden)
         return;
 
-    switch (e->mem_obj->method) {
+    /// \todo AYJ: given the coment below + new behaviour of accepting METHOD_UNKNOWN, should we invert this test
+    ///		removing the object unless the method is nown to be safely kept?
+    switch (e->mem_obj->method.id()) {
 
     case METHOD_PUT:
 
@@ -311,8 +305,8 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
     case METHOD_BMOVE:
 
     case METHOD_BDELETE:
-        /*
-         * Remove any cached GET object if it is beleived that the
+        /** \par
+         * Remove any cached GET object if it is believed that the
          * object may have changed as a result of other methods
          */
 
