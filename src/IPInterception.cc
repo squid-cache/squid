@@ -1,6 +1,6 @@
 
 /*
- * $Id: IPInterception.cc,v 1.19 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id: IPInterception.cc,v 1.20 2008/02/05 22:38:24 amosjeffries Exp $
  *
  * DEBUG: section 89    NAT / IP Interception 
  * AUTHOR: Robert Collins
@@ -218,7 +218,7 @@ clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &d
         dst.FreeAddrInfo(lookup);
 
         if (squid_curtime - last_reported > 60) {
-            debugs(89, 1, "clientNatLookup: NF getsockopt(SO_ORIGINAL_DST) failed: " << xstrerror());
+            debugs(89, 1, "clientNatLookup: peer " << peer << " NF getsockopt(SO_ORIGINAL_DST) failed: " << xstrerror());
             last_reported = squid_curtime;
         }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLARP.cc,v 1.28 2008/01/22 22:34:47 serassio Exp $
+ * $Id: ACLARP.cc,v 1.29 2008/02/05 22:38:24 amosjeffries Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -152,9 +152,13 @@ ACLARP::empty () const
  *       Solaris code by R. Gancarz <radekg@solaris.elektrownia-lagisza.com.pl>
  */
 
-/*
- * Decode an ascii representation (asc) of an ethernet adress, and place
- * it in eth[6].
+/**
+ * Decode an ascii representation (asc) of an ethernet adress.
+ *
+ \param asc[in]    ASCII representation of an ethernet (MAC) address
+ \param eth[out]   Binary representation of the ethernet address
+ \retval 0	Conversion to binary failed. Invalid address
+ \retval 1	Conversion completed successfully
  */
 static int
 decode_eth(const char *asc, char *eth)
