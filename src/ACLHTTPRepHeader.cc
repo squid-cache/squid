@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLHTTPRepHeader.cc,v 1.1 2006/06/14 19:18:24 serassio Exp $
+ * $Id: ACLHTTPRepHeader.cc,v 1.1.4.1 2008/02/06 04:06:46 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,12 +38,6 @@
 #include "ACLHTTPHeaderData.h"
 #include "ACLChecklist.h"
 #include "HttpReply.h"
-
-/* explicit template instantiation required for some systems */
-
-template class ACLStrategised<HttpHeader*>
-
-;
 
 ACL::Prototype ACLHTTPRepHeader::RegistryProtoype(&ACLHTTPRepHeader::RegistryEntry_, "rep_header");
 

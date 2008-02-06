@@ -1,5 +1,5 @@
 /*
- * $Id: ACLStrategised.cc,v 1.1 2003/02/17 07:01:34 robertc Exp $
+ * $Id: ACLStrategised.cc,v 1.1.4.1 2008/02/06 04:06:46 amosjeffries Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -41,3 +41,14 @@
 #include "ACLRegexData.h"
 #include "ACLDomainData.h"
 
+/* 
+ *  moved template instantiation into ACLStrategized.cc from
+ *  ACLHTTPRepHeader.cc and ACLHTTPReqHeader.cc to compile on
+ *  Mac OSX 10.5 Leopard, this corrects a duplicate symbol error
+ */
+ 
+/* explicit template instantiation required for some systems */
+
+template class ACLStrategised<HttpHeader*>
+
+;
