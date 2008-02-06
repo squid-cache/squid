@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.496 2008/01/20 11:01:51 amosjeffries Exp $
+# $Id: cf.data.pre,v 1.497 2008/02/06 06:54:14 amosjeffries Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -2527,19 +2527,14 @@ TYPE: acl_access
 DEFAULT: none
 LOC: Config.accessList.noCache
 DOC_START
-	A list of ACL elements which, if matched, cause the request to
+	A list of ACL elements which, if matched and denied, cause the request to
 	not be satisfied from the cache and the reply to not be cached.
 	In other words, use this to force certain objects to never be cached.
 
-	You must use the word 'DENY' to indicate the ACL names which should
-	NOT be cached.
+	You must use the words 'allow' or 'deny' to indicate whether items
+	matching the ACL should be allowed or denied into the cache.
 
-	Default is to allow all to be cached
-NOCOMMENT_START
-#We recommend you to use the following two lines.
-acl QUERY urlpath_regex cgi-bin \?
-cache deny QUERY
-NOCOMMENT_END
+	Default is to allow all to be cached.
 DOC_END
 
 NAME: refresh_pattern
@@ -2640,6 +2635,7 @@ Suggested default:
 NOCOMMENT_START
 refresh_pattern ^ftp:		1440	20%	10080
 refresh_pattern ^gopher:	1440	0%	1440
+refresh_pattern (cgi-bin|\?)	0	0%	0
 refresh_pattern .		0	20%	4320
 NOCOMMENT_END
 DOC_END
