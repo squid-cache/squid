@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp2.cc,v 1.21 2007/12/26 21:58:02 hno Exp $
+ * $Id: wccp2.cc,v 1.22 2008/02/05 22:39:42 amosjeffries Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Steven Wilton
@@ -362,7 +362,7 @@ struct router_identity_info_t
 
     struct wccp2_router_id_element_t router_id_element;
 
-    struct IN_ADDR router_address;
+    struct in_addr router_address;
     uint32_t number_caches;
 };
 
@@ -1155,7 +1155,7 @@ wccp2HandleUdp(int sock, void *not_used)
 
     struct sockaddr_in from;
 
-    struct IN_ADDR cache_address;
+    struct in_addr cache_address;
     int len, found;
     short int data_length, offset;
     uint32_t tmp;
@@ -1407,7 +1407,7 @@ wccp2HandleUdp(int sock, void *not_used)
 
     /* skip the number plus all the ip's */
 
-    ptr += sizeof(tmp) + (ntohl(tmp) * sizeof(struct IN_ADDR));
+    ptr += sizeof(tmp) + (ntohl(tmp) * sizeof(struct in_addr));
 
     /* Then read the number of caches */
     memcpy(&tmp, ptr, sizeof(tmp));
@@ -1427,7 +1427,7 @@ wccp2HandleUdp(int sock, void *not_used)
 
                 ptr += sizeof(struct wccp2_cache_identity_info_t);
 
-                memcpy(&cache_address, &cache_identity->addr, sizeof(struct IN_ADDR));
+                memcpy(&cache_address, &cache_identity->addr, sizeof(struct in_addr));
 
                 cache_list_ptr->weight = ntohs(cache_identity->weight);
                 break;
@@ -1444,12 +1444,12 @@ wccp2HandleUdp(int sock, void *not_used)
 
                     ptr += sizeof(struct wccp2_cache_mask_identity_info_t);
 
-                    memcpy(&cache_address, &cache_mask_identity->addr, sizeof(struct IN_ADDR));
+                    memcpy(&cache_address, &cache_mask_identity->addr, sizeof(struct in_addr));
                 } else {
 
                     ptr += sizeof(struct cache_mask_info_t);
 
-                    memcpy(&cache_address, &cache_mask_info->addr, sizeof(struct IN_ADDR));
+                    memcpy(&cache_address, &cache_mask_info->addr, sizeof(struct in_addr));
                 }
 
                 cache_list_ptr->weight = 0;
@@ -1633,7 +1633,7 @@ wccp2AssignBuckets(void *voidnotused)
     struct wccp2_router_assign_element_t *router_assign;
     /* number of caches */
 
-    struct IN_ADDR *cache_address;
+    struct in_addr *cache_address;
     /* Alternative assignement mask/values */
     int num_maskval;
 
@@ -1785,13 +1785,13 @@ wccp2AssignBuckets(void *voidnotused)
                     for (cache = 0, cache_list_ptr = &router_list_ptr->cache_list_head; cache_list_ptr->next; cache_list_ptr = cache_list_ptr->next, cache++) {
                         /* add caches */
 
-                        cache_address = (struct IN_ADDR *) &wccp_packet[offset];
+                        cache_address = (struct in_addr *) &wccp_packet[offset];
 
-                        xmemcpy(cache_address, &cache_list_ptr->cache_ip, sizeof(struct IN_ADDR));
+                        xmemcpy(cache_address, &cache_list_ptr->cache_ip, sizeof(struct in_addr));
                         total_weight += cache_list_ptr->weight << 12;
                         weight[cache] = cache_list_ptr->weight << 12;
 
-                        offset += sizeof(struct IN_ADDR);
+                        offset += sizeof(struct in_addr);
                     }
                 }
 

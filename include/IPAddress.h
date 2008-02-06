@@ -1,5 +1,5 @@
 /*
- * $Id: IPAddress.h,v 1.2 2008/01/20 20:35:41 serassio Exp $
+ * $Id: IPAddress.h,v 1.3 2008/02/05 22:39:42 amosjeffries Exp $
  *
  * DEBUG: section 14    IP Storage and Handling
  * AUTHOR: Amos Jeffries
@@ -410,14 +410,7 @@ operator << (std::ostream &os, const IPAddress &ipa)
     return os;
 }
 
-
-// Macros for Old IPv4-Only code that still needs to use IN_ADDR
-#define ANY_ADDR  (struct in_addr)0x00000000
-#define NO_ADDR   (struct_in_addr)0xFFFFFFFF
-#define IN_ADDR   in_addr
-
 // WAS _sockaddr_in_list in an earlier incarnation
-/* INET6 : this could possibly be an addrinfo structure now IFF it needs to be in a generic raw form. */
 class IPAddress_list
 {
 public:
