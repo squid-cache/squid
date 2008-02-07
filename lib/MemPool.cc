@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemPool.cc,v 1.11 2008/01/07 15:47:08 hno Exp $
+ * $Id: MemPool.cc,v 1.12 2008/02/07 02:51:13 adrian Exp $
  *
  * DEBUG: section 63    Low Level Memory Pool Management
  * AUTHOR: Alex Rousskov, Andres Kroonmaa, Robert Collins
@@ -273,7 +273,8 @@ MemPool::push(void *obj)
      * not really need to be cleared.. There was a condition based on
      * the object size here, but such condition is not safe.
      */
-    memset(obj, 0, obj_size);
+    if (doZeroOnPush)
+        memset(obj, 0, obj_size);
     Free = (void **)obj;
     *Free = freeCache;
     freeCache = obj;
@@ -838,7 +839,7 @@ memPoolGetGlobalStats(MemPoolGlobalStats * stats)
     return pools_inuse;
 }
 
-MemAllocator::MemAllocator(char const *aLabel) : label(aLabel)
+MemAllocator::MemAllocator(char const *aLabel) : doZeroOnPush(true), label(aLabel)
 {
 }
 
@@ -936,6 +937,12 @@ MemImplementingAllocator::MemImplementingAllocator(char const *aLabel, size_t aS
 	free_calls(0),
 	obj_size(RoundedSize(aSize))
 {
+}
+
+void
+MemAllocator::zeroOnPush(bool doIt)
+{
+	doZeroOnPush = doIt;
 }
 
 MemPoolMeter const &

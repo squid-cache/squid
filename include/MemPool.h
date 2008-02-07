@@ -110,11 +110,14 @@ public:
     virtual char const *objectType() const;
     virtual size_t objectSize() const = 0;
     virtual int getInUseCount() = 0;
+    void zeroOnPush(bool doIt);
     int inUseCount();
     virtual void setChunkSize(size_t chunksize) {}
 
     // smallest size divisible by sizeof(void*) and at least minSize
     static size_t RoundedSize(size_t minSize);
+protected:
+    bool doZeroOnPush;
 private:
     const char *label;
 };

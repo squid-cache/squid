@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.107 2008/01/22 17:13:36 rousskov Exp $
+ * $Id: mem.cc,v 1.108 2008/02/07 02:51:17 adrian Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -165,11 +165,12 @@ Mem::Stats(StoreEntry * sentry)
  * max_pages for now
  */
 void
-memDataInit(mem_type type, const char *name, size_t size, int max_pages_notused)
+memDataInit(mem_type type, const char *name, size_t size, int max_pages_notused, bool zeroOnPush)
 {
     assert(name && size);
     assert(MemPools[type] == NULL);
     MemPools[type] = memPoolCreate(name, size);
+    MemPools[type]->zeroOnPush(zeroOnPush);
 }
 
 
@@ -391,12 +392,12 @@ Mem::Init(void)
      * that are never used or used only once; perhaps we should simply use
      * malloc() for those? @?@
      */
-    memDataInit(MEM_2K_BUF, "2K Buffer", 2048, 10);
-    memDataInit(MEM_4K_BUF, "4K Buffer", 4096, 10);
-    memDataInit(MEM_8K_BUF, "8K Buffer", 8192, 10);
-    memDataInit(MEM_16K_BUF, "16K Buffer", 16384, 10);
-    memDataInit(MEM_32K_BUF, "32K Buffer", 32768, 10);
-    memDataInit(MEM_64K_BUF, "64K Buffer", 65536, 10);
+    memDataInit(MEM_2K_BUF, "2K Buffer", 2048, 10, false);
+    memDataInit(MEM_4K_BUF, "4K Buffer", 4096, 10, false);
+    memDataInit(MEM_8K_BUF, "8K Buffer", 8192, 10, false);
+    memDataInit(MEM_16K_BUF, "16K Buffer", 16384, 10, false);
+    memDataInit(MEM_32K_BUF, "32K Buffer", 32768, 10, false);
+    memDataInit(MEM_64K_BUF, "64K Buffer", 65536, 10, false);
     memDataInit(MEM_ACL_DENY_INFO_LIST, "acl_deny_info_list",
                 sizeof(acl_deny_info_list), 0);
     memDataInit(MEM_ACL_NAME_LIST, "acl_name_list", sizeof(acl_name_list), 0);
@@ -422,6 +423,7 @@ Mem::Init(void)
 
     for (i = 0; i < mem_str_pool_count; i++) {
         StrPools[i].pool = memPoolCreate(StrPoolsAttrs[i].name, StrPoolsAttrs[i].obj_size);
+        StrPools[i].pool->zeroOnPush(false);
 
         if (StrPools[i].pool->objectSize() != StrPoolsAttrs[i].obj_size)
             debugs(13, 1, "Notice: " << StrPoolsAttrs[i].name << " is " << StrPools[i].pool->objectSize() << " bytes instead of requested " << StrPoolsAttrs[i].obj_size << " bytes");
