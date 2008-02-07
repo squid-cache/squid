@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.554 2008/01/24 19:20:43 serassio Exp $
+ * $Id: protos.h,v 1.555 2008/02/07 02:51:18 adrian Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -496,7 +496,7 @@ SQUIDCEXTERN void memFreeString(size_t size, void *);
 SQUIDCEXTERN void memFreeBuf(size_t size, void *);
 SQUIDCEXTERN FREE *memFreeBufFunc(size_t size);
 SQUIDCEXTERN int memInUse(mem_type);
-SQUIDCEXTERN void memDataInit(mem_type, const char *, size_t, int);
+SQUIDCEXTERN void memDataInit(mem_type, const char *, size_t, int, bool zeroOnPush = true);
 SQUIDCEXTERN void memCheckInit(void);
 
 
