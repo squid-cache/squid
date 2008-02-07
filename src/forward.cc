@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.172 2008/02/03 10:00:30 amosjeffries Exp $
+ * $Id: forward.cc,v 1.173 2008/02/07 06:07:24 rousskov Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -809,8 +809,12 @@ FwdState::connectStart()
         server_fd = fd;
         n_tries++;
 
-        if (!fs->_peer)
+        if (!fs->_peer) {
             origin_tries++;
+            hierarchyNote(&request->hier, fs->code, request->GetHost());
+        } else {
+            hierarchyNote(&request->hier, fs->code, fs->_peer->host);
+        }
 
         comm_add_close_handler(fd, fwdServerClosedWrapper, this);
 
