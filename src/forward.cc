@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.173 2008/02/07 06:07:24 rousskov Exp $
+ * $Id: forward.cc,v 1.174 2008/02/07 18:22:23 rousskov Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -437,6 +437,9 @@ FwdState::checkRetry()
         return false;
 
     if (flags.dont_retry)
+        return false;
+
+    if (!checkRetriable())
         return false;
 
     if (request->bodyNibbled())
