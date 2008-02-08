@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.573 2008/01/19 07:15:30 amosjeffries Exp $
+ * $Id: structs.h,v 1.574 2008/02/08 01:56:33 hno Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -147,6 +147,12 @@ unsigned int vhost:
 unsigned int tproxy:
     1; /* spoof client ip using tproxy */
 #endif
+    struct {
+	unsigned int enabled;
+	unsigned int idle;
+	unsigned int interval;
+	unsigned int timeout;
+    } tcp_keepalive;
 };
 
 

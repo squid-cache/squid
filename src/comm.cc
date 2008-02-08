@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.442 2008/01/19 07:11:35 amosjeffries Exp $
+ * $Id: comm.cc,v 1.443 2008/02/08 01:56:33 hno Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1956,6 +1956,32 @@ commSetTcpNoDelay(int fd) {
 
 #endif
 
+void
+commSetTcpKeepalive(int fd, int idle, int interval, int timeout)
+{
+    int on = 1;
+#ifdef TCP_KEEPCNT
+    if (timeout && interval) {
+	int count = (timeout + interval - 1) / interval;
+	if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &count, sizeof(on)) < 0)
+	    debug(5, 1) ("commSetKeepalive: FD %d: %s\n", fd, xstrerror());
+    }
+#endif
+#ifdef TCP_KEEPIDLE
+    if (idle) {
+	if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &idle, sizeof(on)) < 0)
+	    debug(5, 1) ("commSetKeepalive: FD %d: %s\n", fd, xstrerror());
+    }
+#endif
+#ifdef TCP_KEEPINTVL
+    if (interval) {
+	if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &interval, sizeof(on)) < 0)
+	    debug(5, 1) ("commSetKeepalive: FD %d: %s\n", fd, xstrerror());
+    }
+#endif
+    if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (char *) &on, sizeof(on)) < 0)
+	debug(5, 1) ("commSetKeepalive: FD %d: %s\n", fd, xstrerror());
+}
 
 void
 comm_init(void) {
