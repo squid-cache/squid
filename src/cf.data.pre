@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.499 2008/02/08 02:07:11 hno Exp $
+# $Id: cf.data.pre,v 1.500 2008/02/08 11:20:27 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -2656,7 +2656,7 @@ Suggested default:
 NOCOMMENT_START
 refresh_pattern ^ftp:		1440	20%	10080
 refresh_pattern ^gopher:	1440	0%	1440
-refresh_pattern (cgi-bin|\?)	0	0%	0
+refresh_pattern -i (/cgi-bin/|\?) 0	0%	0
 refresh_pattern .		0	20%	4320
 NOCOMMENT_END
 DOC_END
