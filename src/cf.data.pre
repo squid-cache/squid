@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.497 2008/02/06 06:54:14 amosjeffries Exp $
+# $Id: cf.data.pre,v 1.498 2008/02/08 01:56:32 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -928,6 +928,12 @@ DOC_START
 
 	   name=	Specifies a internal name for the port. Defaults to
 			the port specification (port or addr:port)
+
+	   keepalive[=idle,interval,timeout]
+			Enable TCP keepalive probes of idle connections
+			idle is the initial time before TCP starts probing
+			the connection, interval how often to probe, and
+			timeout the time before giving up.
 
 	If you run Squid on a dual-homed machine with an internal
 	and an external interface we recommend you to specify the

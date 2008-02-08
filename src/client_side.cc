@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.773 2008/02/03 10:00:29 amosjeffries Exp $
+ * $Id: client_side.cc,v 1.774 2008/02/08 01:56:33 hno Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -2782,6 +2782,10 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 
 #endif
 
+    if (s->tcp_keepalive.enabled) {
+	commSetTcpKeepalive(newfd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
+    }
+
     connState->readSomeData();
 
     clientdbEstablished(details->peer, 1);
@@ -2975,6 +2979,10 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
         identStart(details->me, details->peer, clientIdentDone, connState);
 
 #endif
+
+    if (s->http.tcp_keepalive.enabled) {
+	commSetTcpKeepalive(newfd, s->http.tcp_keepalive.idle, s->http.tcp_keepalive.interval, s->http.tcp_keepalive.timeout);
+    }
 
     commSetSelect(newfd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
 

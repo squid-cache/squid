@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.538 2008/01/22 15:34:28 hno Exp $
+ * $Id: cache_cf.cc,v 1.539 2008/02/08 01:56:32 hno Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -2914,6 +2914,23 @@ parse_http_port_option(http_port_list * s, char *token)
             self_destruct();
         }
 #endif
+    } else if (strcmp(token, "tcpkeepalive") == 0) {
+	s->tcp_keepalive.enabled = 1;
+    } else if (strncmp(token, "tcpkeepalive=", 13) == 0) {
+	char *t = token + 13;
+	s->tcp_keepalive.enabled = 1;
+	s->tcp_keepalive.idle = atoi(t);
+	t = strchr(t, ',');
+	if (t) {
+	    t++;
+	    s->tcp_keepalive.interval = atoi(t);
+	    t = strchr(t, ',');
+	}
+	if (t) {
+	    t++;
+	    s->tcp_keepalive.timeout = atoi(t);
+	    t = strchr(t, ',');
+	}
     } else {
         self_destruct();
     }
@@ -3006,6 +3023,14 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
             pmtu = "transparent";
 
         storeAppendPrintf(e, " disable-pmtu-discovery=%s", pmtu);
+    }
+
+    if (s->tcp_keepalive.enabled) {
+	if (s->tcp_keepalive.idle || s->tcp_keepalive.interval || s->tcp_keepalive.timeout) {
+	    storeAppendPrintf(e, " tcp_keepalive=%d,%d,%d", s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
+	} else {
+	    storeAppendPrintf(e, " tcp_keepalive");
+	}
     }
 }
 
