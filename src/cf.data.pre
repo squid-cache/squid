@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.498 2008/02/08 01:56:32 hno Exp $
+# $Id: cf.data.pre,v 1.499 2008/02/08 02:07:11 hno Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -45,6 +45,21 @@ COMMENT_START
 	option - the comments for that keyword indicate if this is the
 	case.
 
+COMMENT_END
+
+COMMENT_START
+  Configuration options can be included using the "include" directive.
+  Include takes a list of files to include. Quoting and wildcards is
+  supported.
+
+  For example,
+
+  include /path/to/included/file/squid.acl.config
+
+  Includes can be nested up to a hard-coded depth of 16 levels.
+  This arbitrary restriction is to prevent recursive include references
+  from causing Squid entering an infinite loop whilst trying to load
+  configuration files.
 COMMENT_END
 
 COMMENT_START
