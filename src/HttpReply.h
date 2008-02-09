@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.h,v 1.22 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id: HttpReply.h,v 1.23 2008/02/08 18:27:59 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -118,6 +118,14 @@ public:
 
     int64_t bodySize(const HttpRequestMethod&) const;
 
+    /// Checks whether received body exceeds known maximum size.
+    /// Requires a prior call to calcMaxBodySize().
+    bool receivedBodyTooLarge(HttpRequest&, int64_t receivedBodySize);
+
+    /// Checks whether expected body exceeds known maximum size.
+    /// Requires a prior call to calcMaxBodySize().
+    bool expectedBodyTooLarge(HttpRequest& request);
+
     int validatorsMatch (HttpReply const *other) const;
 
     void packHeadersInto(Packer * p) const;
@@ -138,6 +146,12 @@ private:
 
     /* header manipulation */
     time_t hdrExpirationTime();
+
+    // Calculates and stores maximum body size if needed. Used by
+    // receivedBodyTooLarge() and expectedBodyTooLarge().
+    void calcMaxBodySize(HttpRequest& request);
+
+    mutable int64_t bodySizeMax; // cached result of calcMaxBodySize
 
 protected:
     virtual void packFirstLineInto(Packer * p, bool) const;

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.99 2008/02/03 10:00:29 amosjeffries Exp $
+ * $Id: HttpReply.cc,v 1.100 2008/02/08 18:27:59 rousskov Exp $
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
@@ -40,6 +40,7 @@
 #include "HttpHdrContRange.h"
 #include "HttpHdrSc.h"
 #include "ACLChecklist.h"
+#include "HttpRequest.h"
 #include "MemBuf.h"
 
 /* local constants */
@@ -77,7 +78,9 @@ httpReplyInitModule(void)
     httpHeaderCalcMask(&Denied304HeadersMask, Denied304HeadersArr, countof(Denied304HeadersArr));
 }
 
-HttpReply::HttpReply() : HttpMsg(hoReply), date (0), last_modified (0), expires (0), surrogate_control (NULL), content_range (NULL), keep_alive (0), protoPrefix("HTTP/")
+HttpReply::HttpReply() : HttpMsg(hoReply), date (0), last_modified (0), 
+	expires (0), surrogate_control (NULL), content_range (NULL), keep_alive (0), 
+	protoPrefix("HTTP/"), bodySizeMax(-2)
 {
     init();
 }
@@ -122,6 +125,7 @@ HttpReply::clean()
     hdrCacheClean();
     header.clean();
     httpStatusLineClean(&sline);
+    bodySizeMax = -2; // hack: make calculatedBodySizeMax() false
 }
 
 void
@@ -495,4 +499,55 @@ HttpReply::expectingBody(const HttpRequestMethod& req_method, int64_t& theSize) 
     }
 
     return expectBody;
+}
+
+bool
+HttpReply::receivedBodyTooLarge(HttpRequest& request, int64_t receivedSize)
+{
+    calcMaxBodySize(request);
+    debugs(58, 3, HERE << receivedSize << " >? " << bodySizeMax);
+    return bodySizeMax >= 0 && receivedSize > bodySizeMax;
+}
+
+bool
+HttpReply::expectedBodyTooLarge(HttpRequest& request)
+{
+    calcMaxBodySize(request);
+    debugs(58, 7, HERE << "bodySizeMax=" << bodySizeMax);
+
+    if (bodySizeMax < 0) // no body size limit
+        return false;
+
+    int64_t expectedSize = -1;
+    if (!expectingBody(request.method, expectedSize))
+        return false;
+    
+    debugs(58, 6, HERE << expectedSize << " >? " << bodySizeMax);
+
+    if (expectedSize < 0) // expecting body of an unknown length
+        return false;
+
+    return expectedSize > bodySizeMax;
+}
+
+void
+HttpReply::calcMaxBodySize(HttpRequest& request)
+{
+    // hack: -2 is used as "we have not calculated max body size yet" state
+    if (bodySizeMax != -2) // already tried
+        return;
+    bodySizeMax = -1;
+
+    ACLChecklist ch;
+    ch.src_addr = request.client_addr;
+    ch.my_addr = request.my_addr;
+    ch.reply = HTTPMSGLOCK(this); // XXX: this lock makes method non-const
+    ch.request = HTTPMSGLOCK(&request);
+    for (acl_size_t *l = Config.ReplyBodySize; l; l = l -> next) {
+        if (ch.matchAclListFast(l->aclList)) {
+            debugs(58, 4, HERE << "bodySizeMax=" << bodySizeMax);
+            bodySizeMax = l->size; // may be -1
+            break;
+        }
+    }
 }

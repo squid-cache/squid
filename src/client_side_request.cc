@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.102 2008/02/03 10:00:30 amosjeffries Exp $
+ * $Id: client_side_request.cc,v 1.103 2008/02/08 18:27:59 rousskov Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -924,30 +924,6 @@ ClientHttpRequest::gotEnough() const
         return false;
 
     return true;
-}
-
-void
-ClientHttpRequest::maxReplyBodySize(int64_t clen)
-{
-    maxReplyBodySize_ = clen;
-}
-
-int64_t
-ClientHttpRequest::maxReplyBodySize() const
-{
-    return maxReplyBodySize_;
-}
-
-bool
-ClientHttpRequest::isReplyBodyTooLarge(int64_t clen) const
-{
-    if (0 == maxReplyBodySize())
-        return 0;	/* disabled */
-
-    if (clen < 0)
-        return 0;	/* unknown */
-
-    return clen > maxReplyBodySize();
 }
 
 void
