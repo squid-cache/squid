@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp2.cc,v 1.22 2008/02/05 22:39:42 amosjeffries Exp $
+ * $Id: wccp2.cc,v 1.23 2008/02/09 03:48:05 swilton Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Steven Wilton
@@ -463,6 +463,7 @@ int empty_portlist[WCCP2_NUMPORTS] =
 /* END WCCP V2 */
 void wccp2_add_service_list(int service, int service_id, int service_priority,
                             int service_proto, int service_flags, int ports[], int security_type, char *password);
+static void wccp2SortCacheList(struct wccp2_cache_list_t *head);
 
 /*
  * The functions used during startup:
@@ -1495,6 +1496,8 @@ wccp2HandleUdp(int sock, void *not_used)
         num_caches = 1;
     }
 
+    wccp2SortCacheList(&router_list_ptr->cache_list_head);
+
     router_list_ptr->num_caches = htonl(num_caches);
 
     if ((found == 1) && (service_list_ptr->lowest_ip == 1)) {
@@ -2385,6 +2388,41 @@ dump_wccp2_service_info(StoreEntry * e, const char *label, void *v)
         storeAppendPrintf(e, "\n");
 
         srv = srv->next;
+    }
+}
+
+/* Sort the cache list by doing a "selection sort" by IP address */
+static void
+wccp2SortCacheList(struct wccp2_cache_list_t *head)
+{
+    struct wccp2_cache_list_t tmp;
+    struct wccp2_cache_list_t *this_item;
+    struct wccp2_cache_list_t *find_item;
+    struct wccp2_cache_list_t *next_lowest;
+
+    /* Go through each position in the list one at a time */
+    for (this_item = head; this_item->next; this_item = this_item->next) {
+	/* Find the item with the lowest IP */
+	next_lowest = this_item;
+
+	for (find_item = this_item; find_item->next; find_item = find_item->next) {
+	    if (find_item->cache_ip.s_addr < next_lowest->cache_ip.s_addr) {
+		next_lowest = find_item;
+	    }
+	}
+	/* Swap if we need to */
+	if (next_lowest != this_item) {
+	    /* First make a copy of the current item */
+	    memcpy(&tmp, this_item, sizeof(struct wccp2_cache_list_t));
+
+	    /* Next update the pointers to maintain the linked list */
+	    tmp.next = next_lowest->next;
+	    next_lowest->next = this_item->next;
+
+	    /* Finally copy the updated items to their correct location */
+	    memcpy(this_item, next_lowest, sizeof(struct wccp2_cache_list_t));
+	    memcpy(next_lowest, &tmp, sizeof(struct wccp2_cache_list_t));
+	}
     }
 }
 
