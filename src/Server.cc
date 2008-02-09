@@ -1,5 +1,5 @@
 /*
- * $Id: Server.cc,v 1.23 2007/09/27 14:34:06 rousskov Exp $
+ * $Id: Server.cc,v 1.24 2008/02/08 18:30:18 rousskov Exp $
  *
  * DEBUG:
  * AUTHOR: Duane Wessels
@@ -640,6 +640,14 @@ ServerStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
     if (abortOnBadEntry("entry went bad while waiting for ICAP ACL check"))
         return;
 
+    // TODO: Should nonICAP and postICAP path check this on the server-side?
+    // That check now only happens on client-side, in processReplyAccess().
+    if (virginReply()->expectedBodyTooLarge(*request)) {
+        sendBodyIsTooLargeError();
+        return;
+    }
+    // TODO: Should we check received5CBodyTooLarge on the server-side as well?
+
     startedIcap = startIcap(service, originalRequest());
 
     if (!startedIcap && (!service || service->bypass)) {
@@ -670,6 +678,16 @@ ServerStateData::icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *
     state->icapAclCheckDone(service);
 }
 #endif
+
+void
+ServerStateData::sendBodyIsTooLargeError()
+{
+    ErrorState *err = errorCon(ERR_TOO_BIG, HTTP_FORBIDDEN, request);
+    err->xerrno = errno;
+    fwd->fail(err);
+    fwd->dontRetry(true);
+    abortTransaction("Virgin body too large.");
+}
 
 // TODO: when HttpStateData sends all errors to ICAP, 
 // we should be able to move this at the end of setVirginReply().

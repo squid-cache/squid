@@ -1,6 +1,6 @@
 
 /*
- * $Id: Server.h,v 1.11 2008/01/07 17:10:22 hno Exp $
+ * $Id: Server.h,v 1.12 2008/02/08 18:30:18 rousskov Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -186,6 +186,7 @@ protected:
 
 private:
     void quitIfAllDone(); // successful termination
+    void sendBodyIsTooLargeError();
 
 	HttpReply *theVirginReply; // reply received from the origin server
 	HttpReply *theFinalReply; // adapted reply from ICAP or virgin reply
