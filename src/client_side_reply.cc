@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.151 2008/02/03 10:00:30 amosjeffries Exp $
+ * $Id: client_side_reply.cc,v 1.152 2008/02/08 18:31:02 rousskov Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1160,7 +1160,8 @@ clientReplyContext::replyStatus()
         return STREAM_UNPLANNED_COMPLETE;
     }
 
-    if (http->isReplyBodyTooLarge(http->out.offset - 4096)) {
+    // XXX: Should this be checked earlier? We could return above w/o checking.
+    if (reply->receivedBodyTooLarge(*http->request, http->out.offset - 4096)) {
         /* 4096 is a margin for the HTTP headers included in out.offset */
         debugs(88, 5, "clientReplyStatus: client reply body is too large");
         return STREAM_FAILED;
@@ -1749,57 +1750,34 @@ clientReplyContext::startSendProcess()
                     tempBuffer, SendMoreData, this);
 }
 
-/*
- * Calculates the maximum size allowed for an HTTP response
- */
 void
-clientReplyContext::buildMaxBodySize(HttpReply * reply)
+clientReplyContext::sendBodyTooLargeError()
 {
-    acl_size_t *l = Config.ReplyBodySize;
-    ACLChecklist *ch;
-
-    if (http->logType == LOG_TCP_DENIED)
-        return;
-
-    ch = clientAclChecklistCreate(NULL, http);
-
-    ch->reply = HTTPMSGLOCK(reply);
-
-    for (l = Config.ReplyBodySize; l; l = l -> next) {
-        if (ch->matchAclListFast(l->aclList)) {
-            if (l->size != -1) {
-                debugs(58, 3, "clientReplyContext: Setting maxBodySize to " <<  l->size);
-                http->maxReplyBodySize(l->size);
-            }
-
-            break;
-        }
-    }
-
-    delete ch;
+    IPAddress tmp_noaddr; tmp_noaddr.SetNoAddr(); // TODO: make a global const
+    ErrorState *err = clientBuildError(ERR_TOO_BIG, HTTP_FORBIDDEN, NULL,
+        http->getConn() != NULL ? http->getConn()->peer : tmp_noaddr,
+        http->request);
+    removeClientStoreReference(&(sc), http);
+    HTTPMSGUNLOCK(reply);
+    startError(err);
+    
 }
 
 void
 clientReplyContext::processReplyAccess ()
 {
     assert(reply);
-    buildMaxBodySize(reply);
-
     /* Dont't block our own responses or HTTP status messages */
-    if (http->logType == LOG_TCP_DENIED || http->logType == LOG_TCP_DENIED_REPLY || alwaysAllowResponse(reply->sline.status)) {
+    if (http->logType == LOG_TCP_DENIED ||
+        http->logType == LOG_TCP_DENIED_REPLY ||
+        alwaysAllowResponse(reply->sline.status)) {
         headers_sz = reply->hdr_sz;
 	processReplyAccessResult(1);
 	return;
     }
-
-    if (http->isReplyBodyTooLarge(reply->content_length)) {
-        IPAddress tmp_noaddr; tmp_noaddr.SetNoAddr();
-        ErrorState *err = clientBuildError(ERR_TOO_BIG, HTTP_FORBIDDEN, NULL,
-                                           http->getConn() != NULL ? http->getConn()->peer : tmp_noaddr,
-                                           http->request);
-        removeClientStoreReference(&sc, http);
-        HTTPMSGUNLOCK(reply);
-        startError(err);
+    
+    if (reply->expectedBodyTooLarge(*http->request)) {
+        sendBodyTooLargeError();
         return;
     }
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.h,v 1.20 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id: client_side_reply.h,v 1.21 2008/02/08 18:31:02 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -142,9 +142,9 @@ private:
     void sendMoreData(StoreIOBuffer result);
     void triggerInitialStoreRead();
     void sendClientOldEntry();
-    void buildMaxBodySize(HttpReply * reply);
     void purgeAllCached();
 
+    void sendBodyTooLargeError();
 
     StoreEntry *old_entry;
     store_client *old_sc;	/* ... for entry to be validated */
