@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayId.cc,v 1.23 2007/09/21 11:41:52 amosjeffries Exp $
+ * $Id: DelayId.cc,v 1.23.2.1 2008/02/10 10:43:09 serassio Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -39,9 +39,11 @@
 
 #include "config.h"
 
-#if !DELAY_POOLS
-#error DELAY_POOLS not enabled
-#endif
+/* MS Visual Studio Projects are monolithic, so we need the following
+ * #if to exclude the delay pools code from compile process when not needed.
+ */
+#if DELAY_POOLS
+
 #include "squid.h"
 #include "DelayId.h"
 #include "client_side_request.h"
@@ -187,3 +189,5 @@ DelayId::delayRead(DeferredRead const &aRead)
     compositeId->delayRead(aRead);
 
 }
+
+#endif /* DELAY_POOLS */

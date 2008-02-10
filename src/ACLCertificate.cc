@@ -1,5 +1,5 @@
 /*
- * $Id: ACLCertificate.cc,v 1.2 2003/03/04 01:40:25 robertc Exp $
+ * $Id: ACLCertificate.cc,v 1.2.4.1 2008/02/10 10:43:09 serassio Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -35,6 +35,12 @@
  */
 
 #include "squid.h"
+
+/* MS Visual Studio Projects are monolithic, so we need the following
+ * #if to exclude the SSL code from compile process when not needed.
+ */
+#if USE_SSL
+
 #include "ACLCertificate.h"
 #include "ACLChecklist.h"
 #include "ACLCertificateData.h"
@@ -60,3 +66,5 @@ ACLCertificateStrategy::Instance()
 }
 
 ACLCertificateStrategy ACLCertificateStrategy::Instance_;
+
+#endif /* USE_SSL */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIContext.cc,v 1.3 2007/04/28 22:26:37 hno Exp $
+ * $Id: ESIContext.cc,v 1.3.4.1 2008/02/10 10:43:09 serassio Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -34,6 +34,12 @@
  */
 
 #include "squid.h"
+
+/* MS Visual Studio Projects are monolithic, so we need the following
+ * #if to exclude the ESI code from compile process when not needed.
+ */
+#if (USE_SQUID_ESI == 1)
+
 #include "ESIContext.h"
 #include "Store.h"
 #include "client_side_request.h"
@@ -106,3 +112,5 @@ ESIContext::setErrorMessage(char const *anError)
     if (!errormessage)
         errormessage = xstrdup (anError);
 }
+
+#endif /* USE_SQUID_ESI == 1 */

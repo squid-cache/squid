@@ -1,5 +1,5 @@
 /*
- * $Id: ESISequence.cc,v 1.6 2007/04/28 22:26:37 hno Exp $
+ * $Id: ESISequence.cc,v 1.6.4.1 2008/02/10 10:43:09 serassio Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -34,6 +34,12 @@
  */
 
 #include "squid.h"
+
+/* MS Visual Studio Projects are monolithic, so we need the following
+ * #if to exclude the ESI code from compile process when not needed.
+ */
+#if (USE_SQUID_ESI == 1)
+
 #include "ESISequence.h"
 #include "ESILiteral.h"
 #include "ESIAttempt.h"
@@ -392,3 +398,4 @@ esiSequence::makeUsable(esiTreeParentPtr newParent, ESIVarState &newVarState) co
     return result;
 }
 
+#endif /* USE_SQUID_ESI == 1 */
