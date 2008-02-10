@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLHTTPReqHeader.cc,v 1.1 2006/06/14 19:18:24 serassio Exp $
+ * $Id: ACLHTTPReqHeader.cc,v 1.1.6.1 2008/02/10 10:07:53 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,12 +38,6 @@
 #include "ACLHTTPHeaderData.h"
 #include "ACLChecklist.h"
 #include "HttpRequest.h"
-
-/* explicit template instantiation required for some systems */
-
-template class ACLStrategised<HttpHeader*>
-
-;
 
 ACL::Prototype ACLHTTPReqHeader::RegistryProtoype(&ACLHTTPReqHeader::RegistryEntry_, "req_header");
 
