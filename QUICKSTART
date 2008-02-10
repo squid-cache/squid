@@ -1,7 +1,7 @@
 
 Squid QUICKSTART
 
-$Id: QUICKSTART,v 1.8 2003/07/18 11:10:32 hno Exp $
+$Id: QUICKSTART,v 1.8.4.1 2008/02/10 11:04:32 serassio Exp $
 
 This document is intended only for people who want to get Squid running
 quickly It is not a substitute for the real documentation.  Squid has
@@ -26,7 +26,7 @@ cache_peer, never_direct/always_direct
     always ask permission before adding a parent cache. See also the
     never_direct/always_direct directives.
 
-cache_dir /usr/local/squid/var/cache 100 16 256
+cache_dir ufs /usr/local/squid/var/cache 100 16 256
 
     Add here (first number, here 100) the amount of hard disk space 
     (in megabytes) to devote to caching.
