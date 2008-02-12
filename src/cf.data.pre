@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.500 2008/02/08 11:20:27 hno Exp $
+# $Id: cf.data.pre,v 1.501 2008/02/11 22:28:47 rousskov Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -941,6 +941,22 @@ DOC_START
 			sporadically hang or never complete requests set
 			disable-pmtu-discovery option to 'transparent'.
 
+           sslBump 	Intercept each CONNECT request matching ssl_bump ACL,
+			establish secure connection with the client and with
+			the server, decrypt HTTP messages as they pass through
+			Squid, and treat them as unencrypted HTTP messages,
+			becoming the man-in-the-middle.
+
+			When this option is enabled, additional options become
+			available to specify SSL-related properties of the
+			client-side connection: cert, key, version, cipher,
+			options, clientca, cafile, capath, crlfile, dhparams,
+			sslflags, and sslcontext. See the https_port directive
+			for more information on these options.
+
+			The ssl_bump option is required to fully enable
+			the SslBump feature.
+
 	   name=	Specifies a internal name for the port. Defaults to
 			the port specification (port or addr:port)
 
@@ -1257,6 +1273,34 @@ DOC_START
 	server certificates while proxying https:// URLs
 DOC_END
 
+NAME: ssl_bump
+IFDEF: USE_SSL
+TYPE: acl_access
+LOC: Config.accessList.ssl_bump
+DEFAULT: none
+DOC_START
+	This ACL controls which CONNECT requests to an http_port
+	marked with an sslBump flag are actually "bumped". Please 
+	see the sslBump flag of an http_port option for more details
+	about decoding proxied SSL connections.
+
+	By default, no requests are bumped.
+
+	See also: http_port sslBump
+   
+NOCOMMENT_START
+# Example: Bump all requests except those originating from localhost and 
+# those going to webax.com or example.com sites.
+#
+# acl localhost src 127.0.0.1/32
+# acl broken_sites dstdomain .webax.com
+# acl broken_sites dstdomain .example.com
+# ssl_bump deny localhost
+# ssl_bump deny broken_sites
+# ssl_bump allow all
+NOCOMMENT_END
+DOC_END
+
 NAME: sslproxy_flags
 IFDEF: USE_SSL
 DEFAULT: none
@@ -1264,11 +1308,47 @@ LOC: Config.ssl_client.flags
 TYPE: string
 DOC_START
 	Various flags modifying the use of SSL while proxying https:// URLs:
-	    DONT_VERIFY_PEER	Accept certificates even if they fail to
-				verify.
+	    DONT_VERIFY_PEER	Accept certificates that fail verification.
+				For refined control, see sslproxy_cert_error.
 	    NO_DEFAULT_CA	Don't use the default CA list built in
 				to OpenSSL.
 DOC_END
+
+
+NAME: sslproxy_cert_error
+IFDEF: USE_SSL
+DEFAULT: none
+LOC: Config.ssl_client.cert_error
+TYPE: acl_access
+DOC_START
+	Use this ACL to bypass server certificate validation errors.
+
+	For example, the following lines will bypass all validation errors
+	when talking to servers located at 172.16.0.0/16. All other
+	validation errors will result in ERR_SECURE_CONNECT_FAIL error.
+
+		acl BrokenServersAtTrustedIP dst 172.16.0.0/16
+		sslproxy_cert_error allow BrokenServersAtTrustedIP
+		sslproxy_cert_error deny all
+
+	This option must use fast ACL expressions only. Expressions that use
+	external lookups or communication result in unpredictable behavior or
+	crashes.
+
+	Without this option, all server certificate validation errors
+	terminate the transaction. Bypassing validation errors is dangerous
+	because an error usually implies that the server cannot be trusted and
+	the connection may be insecure.
+
+	See also: sslproxy_flags and DONT_VERIFY_PEER.
+
+NOCOMMENT_START
+#Default setting:
+# sslproxy_cert_error deny all
+NOCOMMENT_END
+DOC_END
+
+
 
 NAME: sslpassword_program
 IFDEF: USE_SSL
