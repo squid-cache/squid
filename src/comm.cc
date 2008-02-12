@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.443 2008/02/08 01:56:33 hno Exp $
+ * $Id: comm.cc,v 1.444 2008/02/11 22:30:10 rousskov Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1329,6 +1329,13 @@ comm_connect_addr(int sock, const IPAddress &address)
         statCounter.syscalls.sock.connects++;
 
         x = connect(sock, AI->ai_addr, AI->ai_addrlen);
+
+        // XXX: ICAP code refuses callbacks during a pending comm_ call
+        // Async calls development will fix this.
+        if (x == 0) {
+            x = -1;
+            errno = EINPROGRESS;
+        }
 
         if (x < 0)
         {
