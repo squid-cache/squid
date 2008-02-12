@@ -6,6 +6,10 @@ Changes to squid-3.HEAD (current):
 	- DNS internal resolver now supports AAAA and CNAME records
 	- SNMP peer and client tables now support IPv6
 	- SNMP peer table supports named peers with multiple entries per IP
+	- SslBump: Squid-in-the-middle decryption and encryption of straight
+	  CONNECT and transparently redirected SSL traffic, using configurable
+	  client- and server-side certificates. While decrypted, the traffic
+	  can be expected using ICAP.
 
 Changes to squid-3.0.STABLE1 (13 Dec 2007):
 
