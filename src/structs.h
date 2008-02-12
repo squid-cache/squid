@@ -1,6 +1,6 @@
 
 /*
- * $Id: structs.h,v 1.574 2008/02/08 01:56:33 hno Exp $
+ * $Id: structs.h,v 1.575 2008/02/11 22:28:47 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,6 +36,7 @@
 
 #include "config.h"
 #include "RefCount.h"
+#include "cbdata.h"
 
 /* needed for various structures still in structs.h */
 #include "dlink.h"
@@ -122,61 +123,6 @@ struct _relist
     regex_t regex;
     relist *next;
 };
-
-struct _http_port_list
-{
-    http_port_list *next;
-
-    IPAddress s;
-    char *protocol;            /* protocol name */
-    char *name;                /* visible name */
-    char *defaultsite;         /* default web site */
-
-unsigned int transparent:
-    1; /* transparent proxy */
-
-unsigned int accel:
-    1; /* HTTP accelerator */
-
-unsigned int vhost:
-    1; /* uses host header */
-
-    int vport;                 /* virtual port support, -1 for dynamic, >0 static*/
-    int disable_pmtu_discovery;
-#if LINUX_TPROXY
-unsigned int tproxy:
-    1; /* spoof client ip using tproxy */
-#endif
-    struct {
-	unsigned int enabled;
-	unsigned int idle;
-	unsigned int interval;
-	unsigned int timeout;
-    } tcp_keepalive;
-};
-
-
-#if USE_SSL
-
-struct _https_port_list
-{
-    http_port_list http;	/* must be first */
-    char *cert;
-    char *key;
-    int version;
-    char *cipher;
-    char *options;
-    char *clientca;
-    char *cafile;
-    char *capath;
-    char *crlfile;
-    char *dhfile;
-    char *sslflags;
-    char *sslcontext;
-    SSL_CTX *sslContext;
-};
-
-#endif
 
 #if DELAY_POOLS
 #include "DelayConfig.h"
@@ -591,6 +537,10 @@ struct _SquidConfig
         acl_access *htcp;
         acl_access *htcp_clr;
 #endif
+        
+#if USE_SSL
+        acl_access *ssl_bump;
+#endif
 
     }
 
@@ -734,6 +684,7 @@ struct _SquidConfig
         char *capath;
         char *crlfile;
         char *flags;
+        acl_access *cert_error;
         SSL_CTX *sslContext;
     }
 

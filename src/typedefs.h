@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.192 2008/01/07 17:12:28 hno Exp $
+ * $Id: typedefs.h,v 1.193 2008/02/11 22:28:47 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -84,9 +84,8 @@ typedef struct _ushortlist ushortlist;
 
 typedef struct _relist relist;
 
-typedef struct _http_port_list http_port_list;
-
-typedef struct _https_port_list https_port_list;
+struct http_port_list;
+struct https_port_list;
 
 typedef struct _SquidConfig SquidConfig;
 
