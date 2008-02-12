@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.h,v 1.13 2006/09/02 15:40:03 serassio Exp $
+ * $Id: ssl_support.h,v 1.14 2008/02/11 22:41:52 rousskov Exp $
  *
  * AUTHOR: Benno Rice
  *
@@ -58,6 +58,16 @@ SSLGETATTRIBUTE sslGetUserAttribute;
 SSLGETATTRIBUTE sslGetCAAttribute;
 const char *sslGetUserCertificatePEM(SSL *ssl);
 const char *sslGetUserCertificateChainPEM(SSL *ssl);
+
+typedef int ssl_error_t;
+ssl_error_t sslParseErrorString(const char *name);
+const char *sslFindErrorString(ssl_error_t value);
+
+// Custom SSL errors; assumes all official errors are positive
+#define SQUID_X509_V_ERR_DOMAIN_MISMATCH -1
+// All SSL errors range: from smallest (negative) custom to largest SSL error
+#define SQUID_SSL_ERROR_MIN SQUID_X509_V_ERR_DOMAIN_MISMATCH
+#define SQUID_SSL_ERROR_MAX INT_MAX
 
 #ifdef _SQUID_MSWIN_
 

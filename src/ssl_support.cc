@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.36 2008/01/20 19:46:35 serassio Exp $
+ * $Id: ssl_support.cc,v 1.37 2008/02/11 22:41:52 rousskov Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
@@ -41,6 +41,7 @@
 #if USE_SSL
 
 #include "fde.h"
+#include "ACLChecklist.h"
 
 static int
 ssl_ask_password_cb(char *buf, int size, int rwflag, void *userdata)
@@ -134,6 +135,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     SSL_CTX *sslctx = SSL_get_SSL_CTX(ssl);
     const char *server = (const char *)SSL_get_ex_data(ssl, ssl_ex_index_server);
     void *dont_verify_domain = SSL_CTX_get_ex_data(sslctx, ssl_ctx_ex_index_dont_verify_domain);
+    ACLChecklist *check = (ACLChecklist*)SSL_get_ex_data(ssl, ssl_ex_index_cert_error_check);
     X509 *peer_cert = ctx->cert;
 
     X509_NAME_oneline(X509_get_subject_name(peer_cert), buffer,
@@ -168,8 +170,10 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
             }
 
             if (!found) {
-                debugs(83, 2, "ERROR: Certificate " << buffer << " does not match domainname " << server);
+                debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " << buffer << " does not match domainname " << server);
                 ok = 0;
+                if (check)
+                    check->ssl_error = SQUID_X509_V_ERR_DOMAIN_MISMATCH;
             }
         }
     } else {
@@ -200,6 +204,18 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         default:
             debugs(83, 1, "SSL unknown certificate error " << ctx->error << " in " << buffer);
             break;
+        }
+
+        if (check)
+            check->ssl_error = ctx->error;
+    }
+
+    if (!ok && check) {
+        if (check->fastCheck()) {
+            debugs(83, 3, "bypassing SSL error " << ctx->error << " in " << buffer);
+            ok = 1;
+        } else {
+            debugs(83, 5, "confirming SSL error " << ctx->error);
         }
     }
 
@@ -465,6 +481,72 @@ ssl_parse_flags(const char *flags)
     return fl;
 }
 
+struct SslErrorMapEntry
+{
+    const char *name;
+    ssl_error_t value;
+};
+
+static SslErrorMapEntry TheSslErrorMap[] = {
+    { "SQUID_X509_V_ERR_DOMAIN_MISMATCH", SQUID_X509_V_ERR_DOMAIN_MISMATCH },
+    { "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT", X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT },
+    { "X509_V_ERR_CERT_NOT_YET_VALID", X509_V_ERR_CERT_NOT_YET_VALID },
+    { "X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD", X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD },
+    { "X509_V_ERR_CERT_HAS_EXPIRED", X509_V_ERR_CERT_HAS_EXPIRED },
+    { "X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD", X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD },
+    { "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY", X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY },
+    { "SSL_ERROR_NONE", SSL_ERROR_NONE },
+    { NULL, SSL_ERROR_NONE }
+};
+
+ssl_error_t
+sslParseErrorString(const char *name)
+{
+    assert(name);
+
+    for (int i = 0; TheSslErrorMap[i].name; ++i) {
+        if (strcmp(name, TheSslErrorMap[i].name) == 0)
+            return TheSslErrorMap[i].value;
+    }
+
+    if (xisdigit(*name)) {
+        const long int value = strtol(name, NULL, 0);
+        if (SQUID_SSL_ERROR_MIN <= value && value <= SQUID_SSL_ERROR_MAX)
+            return value;
+        fatalf("Too small or too bug SSL error code '%s'", name);
+    }
+
+    fatalf("Unknown SSL error name '%s'", name);
+    return SSL_ERROR_SSL; // not reached
+}
+
+const char *
+sslFindErrorString(ssl_error_t value)
+{
+    for (int i = 0; TheSslErrorMap[i].name; ++i) {
+        if (TheSslErrorMap[i].value == value)
+            return TheSslErrorMap[i].name;
+    }
+
+    return NULL;
+}
+
+// "dup" function for SSL_get_ex_new_index("cert_err_check")
+static int
+ssl_dupAclChecklist(CRYPTO_EX_DATA *, CRYPTO_EX_DATA *, void *,
+    int, long, void *) {
+    // We do not support duplication of ACLCheckLists.
+    // If duplication is needed, we can count copies with cbdata.
+    assert(false);
+    return 0;
+}
+
+// "free" function for SSL_get_ex_new_index("cert_err_check")
+static void
+ssl_freeAclChecklist(void *, void *ptr, CRYPTO_EX_DATA *,
+    int, long, void *) {
+    delete static_cast<ACLChecklist *>(ptr); // may be NULL
+}
 
 static void
 ssl_initialize(void)
@@ -502,7 +584,7 @@ ssl_initialize(void)
 
     ssl_ex_index_server = SSL_get_ex_new_index(0, (void *) "server", NULL, NULL, NULL);
     ssl_ctx_ex_index_dont_verify_domain = SSL_CTX_get_ex_new_index(0, (void *) "dont_verify_domain", NULL, NULL, NULL);
-
+    ssl_ex_index_cert_error_check = SSL_get_ex_new_index(0, (void *) "cert_error_check", NULL, &ssl_dupAclChecklist, &ssl_freeAclChecklist);
 }
 
 static int
