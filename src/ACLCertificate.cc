@@ -1,5 +1,5 @@
 /*
- * $Id: ACLCertificate.cc,v 1.3 2008/01/20 19:46:35 serassio Exp $
+ * $Id: ACLCertificate.cc,v 1.4 2008/02/11 22:29:28 rousskov Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -55,7 +55,9 @@ ACLStrategised<SSL *> ACLCertificate::CARegistryEntry_(new ACLCertificateData (s
 int
 ACLCertificateStrategy::match (ACLData<MatchType> * &data, ACLChecklist *checklist)
 {
-    SSL *ssl = fd_table[checklist->conn()->fd].ssl;
+    const int fd = checklist->fd();
+    const bool goodDescriptor = 0 <= fd && fd <= Biggest_FD;
+    SSL *ssl = goodDescriptor ? fd_table[fd].ssl : 0;
     return data->match (ssl);
 }
 
