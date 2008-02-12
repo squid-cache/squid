@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.103 2008/02/08 18:27:59 rousskov Exp $
+ * $Id: client_side_request.cc,v 1.104 2008/02/11 22:26:16 rousskov Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -47,6 +47,7 @@
 #include "client_side_request.h"
 #include "AuthUserRequest.h"
 #include "HttpRequest.h"
+#include "ProtoPort.h"
 #include "ACLChecklist.h"
 #include "ACL.h"
 #include "client_side.h"
@@ -198,6 +199,7 @@ checkFailureRatio(err_type etype, hier_code hcode)
     case ERR_DNS_FAIL:
 
     case ERR_CONNECT_FAIL:
+    case ERR_SECURE_CONNECT_FAIL:
 
     case ERR_READ_ERROR:
         n_bad++;
@@ -888,6 +890,13 @@ ClientHttpRequest::processRequest()
 {
     debugs(85, 4, "clientProcessRequest: " << RequestMethodStr(request->method) << " '" << uri << "'");
 
+#if USE_SSL
+    if (request->method == METHOD_CONNECT && sslBumpNeeded()) {
+        sslBumpStart();
+        return;
+    }
+#endif
+
     if (request->method == METHOD_CONNECT && !redirect.status) {
         logType = LOG_TCP_MISS;
         tunnelStart(this, &out.size, &al.http.code);
@@ -911,6 +920,69 @@ ClientHttpRequest::httpStart()
     clientStreamRead(node, this, node->readBuffer);
     PROF_stop(httpStart);
 }
+
+#if USE_SSL
+
+// determines whether we should bump the CONNECT request
+bool
+ClientHttpRequest::sslBumpNeeded() const {
+    if (!getConn()->port->sslBump || !Config.accessList.ssl_bump)
+        return false;
+
+    debugs(85, 5, HERE << "SslBump possible, checking ACL");
+
+    ACLChecklist check;
+    check.src_addr = request->client_addr;
+	check.my_addr = request->my_addr;
+	check.request = HTTPMSGLOCK(request);
+	check.accessList = cbdataReference(Config.accessList.ssl_bump);
+	/* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
+	return check.fastCheck() == 1;
+}
+
+// called when comm_write has completed
+static void
+SslBumpEstablish(int, char *, size_t, comm_err_t errflag, int, void *data)
+{
+    ClientHttpRequest *r = static_cast<ClientHttpRequest*>(data);
+    debugs(85, 5, HERE << "responded to CONNECT: " << r << " ? " << errflag);
+
+    assert(r && cbdataReferenceValid(r));
+    r->sslBumpEstablish(errflag);
+}
+
+void
+ClientHttpRequest::sslBumpEstablish(comm_err_t errflag)
+{
+    // Bail out quickly on COMM_ERR_CLOSING - close handlers will tidy up
+    if (errflag == COMM_ERR_CLOSING)
+        return;
+
+    if (errflag) {
+        getConn()->startClosing("CONNECT response failure in SslBump");
+        return;
+    }
+
+    getConn()->switchToHttps();
+}
+
+void
+ClientHttpRequest::sslBumpStart()
+{
+    debugs(85, 5, HERE << "ClientHttpRequest::sslBumpStart");
+
+    // send an HTTP 200 response to kick client SSL negotiation
+    const int fd = getConn()->fd;
+    debugs(33, 7, HERE << "Confirming CONNECT tunnel on FD " << fd);
+
+    // TODO: Unify with tunnel.cc and add a Server(?) header
+    static const char *const conn_established =
+        "HTTP/1.0 200 Connection established\r\n\r\n";
+    comm_write(fd, conn_established, strlen(conn_established),
+        &SslBumpEstablish, this, NULL);
+}
+
+#endif
 
 bool
 ClientHttpRequest::gotEnough() const
@@ -986,7 +1058,7 @@ ClientHttpRequest::doCallouts()
     assert(calloutContext);
 
     if (!calloutContext->http_access_done) {
-	debugs(83, 3, HERE << "Doing calloutContext->clientAccessCheck()");
+        debugs(83, 3, HERE << "Doing calloutContext->clientAccessCheck()");
         calloutContext->http_access_done = true;
         calloutContext->clientAccessCheck();
         return;
@@ -994,7 +1066,7 @@ ClientHttpRequest::doCallouts()
 
 #if ICAP_CLIENT
     if (TheICAPConfig.onoff && !calloutContext->icap_acl_check_done) {
-	debugs(83, 3, HERE << "Doing calloutContext->icapAccessCheck()");
+        debugs(83, 3, HERE << "Doing calloutContext->icapAccessCheck()");
         calloutContext->icap_acl_check_done = true;
         calloutContext->icapAccessCheck();
         return;
@@ -1007,7 +1079,7 @@ ClientHttpRequest::doCallouts()
         assert(calloutContext->redirect_state == REDIRECT_NONE);
 
         if (Config.Program.redirect) {
-	    debugs(83, 3, HERE << "Doing calloutContext->clientRedirectStart()");
+            debugs(83, 3, HERE << "Doing calloutContext->clientRedirectStart()");
             calloutContext->redirect_state = REDIRECT_PENDING;
             calloutContext->clientRedirectStart();
             return;
@@ -1015,7 +1087,7 @@ ClientHttpRequest::doCallouts()
     }
 
     if (!calloutContext->interpreted_req_hdrs) {
-	debugs(83, 3, HERE << "Doing clientInterpretRequestHeaders()");
+        debugs(83, 3, HERE << "Doing clientInterpretRequestHeaders()");
         calloutContext->interpreted_req_hdrs = 1;
         clientInterpretRequestHeaders(this);
     }
@@ -1024,7 +1096,7 @@ ClientHttpRequest::doCallouts()
         calloutContext->no_cache_done = true;
 
         if (Config.accessList.noCache && request->flags.cachable) {
-	    debugs(83, 3, HERE << "Doing calloutContext->checkNoCache()");
+            debugs(83, 3, HERE << "Doing calloutContext->checkNoCache()");
             calloutContext->checkNoCache();
             return;
         }
@@ -1032,15 +1104,15 @@ ClientHttpRequest::doCallouts()
 
     if (!calloutContext->clientside_tos_done) {
         calloutContext->clientside_tos_done = true;
-	if (getConn() != NULL) {
-	    ACLChecklist ch;
+        if (getConn() != NULL) {
+            ACLChecklist ch;
             ch.src_addr = request->client_addr;
             ch.my_addr = request->my_addr;
             ch.request = HTTPMSGLOCK(request);
-	    int tos = aclMapTOS(Config.accessList.clientside_tos, &ch);
-	    if (tos)
-		comm_set_tos(getConn()->fd, tos);
-	}
+            int tos = aclMapTOS(Config.accessList.clientside_tos, &ch);
+            if (tos)
+                comm_set_tos(getConn()->fd, tos);
+        }
     }
 
     cbdataReferenceDone(calloutContext->http);
