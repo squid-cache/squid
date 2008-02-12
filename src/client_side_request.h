@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.35 2008/02/08 18:27:59 rousskov Exp $
+ * $Id: client_side_request.h,v 1.36 2008/02/11 22:33:48 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -153,6 +153,13 @@ private:
     StoreEntry *entry_;
     StoreEntry *loggingEntry_;
     ConnStateData::Pointer conn_;
+
+#if USE_SSL
+public:
+    bool sslBumpNeeded() const;
+    void sslBumpStart();
+    void sslBumpEstablish(comm_err_t errflag);
+#endif
 
 #if ICAP_CLIENT
 
