@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.198 2008/01/14 13:19:48 hno Exp $
+#  $Id: Makefile.am,v 1.199 2008/02/11 22:24:38 rousskov Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -140,6 +140,10 @@ SSL_ALL_SOURCE = \
 	ACLCertificateData.h  \
 	ACLCertificate.cc \
 	ACLCertificate.h  \
+	ACLSslError.cc \
+	ACLSslError.h \
+	ACLSslErrorData.cc \
+	ACLSslErrorData.h \
 	ssl_support.cc \
 	ssl_support.h
 
@@ -428,6 +432,8 @@ squid_SOURCES = \
 	authenticate.cc \
 	authenticate.h \
 	cache_cf.cc \
+	ProtoPort.cc \
+	ProtoPort.h \
 	CacheDigest.cc \
 	cache_manager.cc \
 	CacheManager.h \
@@ -742,6 +748,7 @@ recv_announce_SOURCES = recv-announce.cc SquidNew.cc
 ## ACLProxyAuth.cc wants ACLRegexData
 ## cache_cf.cc wants libauth.la
 ## cache_cf.cc wants Swapdir
+## cache_cf.cc wants ProtoPort
 ## client_side wants client_db
 ## client_db wants SNMP_SOURCE
 ## snmp_core wants ACLStringData
@@ -781,6 +788,8 @@ ufsdump_SOURCES = \
 	ACLStringData.cc \
 	authenticate.cc \
 	cache_cf.cc \
+	ProtoPort.cc \
+	ProtoPort.h \
 	cache_manager.cc \
 	CacheDigest.cc \
 	carp.cc \
@@ -1324,6 +1333,8 @@ tests_testCacheManager_SOURCES = \
 	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.cc \
+	ProtoPort.cc \
+	ProtoPort.h \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
@@ -1492,6 +1503,8 @@ tests_testEvent_SOURCES = \
 	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.cc \
+	ProtoPort.cc \
+	ProtoPort.h \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
@@ -1646,6 +1659,8 @@ tests_testEventLoop_SOURCES = \
 	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.cc \
+	ProtoPort.cc \
+	ProtoPort.h \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
@@ -1823,6 +1838,8 @@ tests_test_http_range_SOURCES = \
 	authenticate.cc \
 	BodyPipe.cc \
 	cache_cf.cc \
+	ProtoPort.cc \
+	ProtoPort.h \
 	cache_manager.cc \
 	CacheDigest.cc \
 	carp.cc \
@@ -1985,6 +2002,8 @@ tests_testHttpRequest_SOURCES = \
 	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.cc \
+	ProtoPort.cc \
+	ProtoPort.h \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
@@ -2343,6 +2362,8 @@ tests_testURL_SOURCES = \
 	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.cc \
+	ProtoPort.cc \
+	ProtoPort.h \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
