@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequestMethod.cc,v 1.6 2008/02/03 10:00:29 amosjeffries Exp $
+ * $Id: HttpRequestMethod.cc,v 1.7 2008/02/12 00:05:11 amosjeffries Exp $
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
@@ -70,26 +70,6 @@ const char* HttpRequestMethod::RequestMethodStr[] =
         "MKACTIVITY",
         "CHECKOUT",
         "MERGE",
-        "%EXT00",
-        "%EXT01",
-        "%EXT02",
-        "%EXT03",
-        "%EXT04",
-        "%EXT05",
-        "%EXT06",
-        "%EXT07",
-        "%EXT08",
-        "%EXT09",
-        "%EXT10",
-        "%EXT11",
-        "%EXT12",
-        "%EXT13",
-        "%EXT14",
-        "%EXT15",
-        "%EXT16",
-        "%EXT17",
-        "%EXT18",
-        "%EXT19",
         "ERROR"
     };
 
@@ -148,6 +128,7 @@ HttpRequestMethod::HttpRequestMethod(char const *begin, char const *end) : theMe
 void
 HttpRequestMethod::AddExtension(const char *mstr)
 {
+#if 0 /* obsolete now that we have METHOD_OTHER always enabled */
     _method_t method = METHOD_NONE;
 
     for (++method; method < METHOD_ENUM_END; ++method) {
@@ -168,11 +149,13 @@ HttpRequestMethod::AddExtension(const char *mstr)
     }
 
     debugs(23, 1, "WARNING: Could not add new extension method '" << mstr << "' due to lack of array space");
+#endif
 }
 
 void
 HttpRequestMethod::Configure(SquidConfig &Config)
 {
+#if 0 /* extension methods obsolete now that we have METHOD_OTHER always enabled */
     wordlist *w = Config.ext_methods;
 
     while (w) {
@@ -185,6 +168,7 @@ HttpRequestMethod::Configure(SquidConfig &Config)
 
         w = w->next;
     }
+#endif
 }
 
 char const* 

@@ -1,5 +1,5 @@
 /*
- * $Id: HttpRequestMethod.h,v 1.8 2008/02/03 10:00:29 amosjeffries Exp $
+ * $Id: HttpRequestMethod.h,v 1.9 2008/02/12 00:05:11 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -67,26 +67,6 @@ enum _method_t {
     METHOD_MKACTIVITY,
     METHOD_CHECKOUT,
     METHOD_MERGE,
-    METHOD_EXT00,
-    METHOD_EXT01,
-    METHOD_EXT02,
-    METHOD_EXT03,
-    METHOD_EXT04,
-    METHOD_EXT05,
-    METHOD_EXT06,
-    METHOD_EXT07,
-    METHOD_EXT08,
-    METHOD_EXT09,
-    METHOD_EXT10,
-    METHOD_EXT11,
-    METHOD_EXT12,
-    METHOD_EXT13,
-    METHOD_EXT14,
-    METHOD_EXT15,
-    METHOD_EXT16,
-    METHOD_EXT17,
-    METHOD_EXT18,
-    METHOD_EXT19,
     METHOD_OTHER,
     METHOD_ENUM_END  // MUST be last, (yuck) this is used as an array-initialization index constant!
 };
