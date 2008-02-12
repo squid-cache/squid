@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLMyPortName.cc,v 1.1 2008/01/14 13:19:48 hno Exp $
+ * $Id: ACLMyPortName.cc,v 1.2 2008/02/11 22:44:50 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "ProtoPort.h"
 #include "ACLMyPortName.h"
 #include "ACLStringData.h"
 #include "ACLChecklist.h"

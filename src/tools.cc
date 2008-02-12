@@ -1,6 +1,6 @@
 
 /*
- * $Id: tools.cc,v 1.280 2007/12/14 23:11:48 amosjeffries Exp $
+ * $Id: tools.cc,v 1.281 2008/02/11 22:44:50 rousskov Exp $
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "ProtoPort.h"
 #include "SwapDir.h"
 #include "fde.h"
 #include "MemBuf.h"
