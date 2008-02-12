@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.540 2008/02/08 02:07:11 hno Exp $
+ * $Id: cache_cf.cc,v 1.541 2008/02/11 22:26:59 rousskov Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "authenticate.h"
+#include "ProtoPort.h"
 #include "AuthConfig.h"
 #include "AuthScheme.h"
 #include "CacheManager.h"
@@ -669,6 +670,20 @@ configDoConfigure(void)
                 debugs(3, 1, "Initializing cache_peer " << p->name << " SSL context");
                 p->sslContext = sslCreateClientContext(p->sslcert, p->sslkey, p->sslversion, p->sslcipher, p->ssloptions, p->sslflags, p->sslcafile, p->sslcapath, p->sslcrlfile);
             }
+        }
+    }
+
+    {
+
+        http_port_list *s;
+
+        for (s = Config.Sockaddr.http; s != NULL; s = (http_port_list *) s->next) {
+            if (!s->cert && !s->key)
+                continue;
+
+            debugs(3, 1, "Initializing http_port " << s->http.s << " SSL context");
+
+            s->sslContext = sslCreateServerContext(s->cert, s->key, s->version, s->cipher, s->options, s->sslflags, s->clientca, s->cafile, s->capath, s->crlfile, s->dhfile, s->sslcontext);
         }
     }
 
@@ -2792,6 +2807,8 @@ check_null_IPAddress_list(const IPAdress_list * s)
 #endif /* CURRENTLY_UNUSED */
 #endif /* USE_WCCPv2 */
 
+CBDATA_CLASS_INIT(http_port_list);
+
 static void
 parse_http_port_specification(http_port_list * s, char *token)
 {
@@ -2924,7 +2941,7 @@ parse_http_port_option(http_port_list * s, char *token)
             self_destruct();
         }
 #endif
-    } else if (strcmp(token, "tcpkeepalive") == 0) {
+    }else if (strcmp(token, "tcpkeepalive") == 0) {
 	s->tcp_keepalive.enabled = 1;
     } else if (strncmp(token, "tcpkeepalive=", 13) == 0) {
 	char *t = token + 13;
@@ -2941,33 +2958,57 @@ parse_http_port_option(http_port_list * s, char *token)
 	    s->tcp_keepalive.timeout = atoi(t);
 	    t = strchr(t, ',');
 	}
+#if USE_SSL
+    } else if (strncmp(token, "cert=", 5) == 0) {
+        safe_free(s->cert);
+        s->cert = xstrdup(token + 5);
+    } else if (strncmp(token, "key=", 4) == 0) {
+        safe_free(s->key);
+        s->key = xstrdup(token + 4);
+    } else if (strncmp(token, "version=", 8) == 0) {
+        s->version = xatoi(token + 8);
+
+        if (s->version < 1 || s->version > 4)
+            self_destruct();
+    } else if (strncmp(token, "options=", 8) == 0) {
+        safe_free(s->options);
+        s->options = xstrdup(token + 8);
+    } else if (strncmp(token, "cipher=", 7) == 0) {
+        safe_free(s->cipher);
+        s->cipher = xstrdup(token + 7);
+    } else if (strncmp(token, "clientca=", 9) == 0) {
+        safe_free(s->clientca);
+        s->clientca = xstrdup(token + 9);
+    } else if (strncmp(token, "cafile=", 7) == 0) {
+        safe_free(s->cafile);
+        s->cafile = xstrdup(token + 7);
+    } else if (strncmp(token, "capath=", 7) == 0) {
+        safe_free(s->capath);
+        s->capath = xstrdup(token + 7);
+    } else if (strncmp(token, "crlfile=", 8) == 0) {
+        safe_free(s->crlfile);
+        s->crlfile = xstrdup(token + 8);
+    } else if (strncmp(token, "dhparams=", 9) == 0) {
+        safe_free(s->dhfile);
+        s->dhfile = xstrdup(token + 9);
+    } else if (strncmp(token, "sslflags=", 9) == 0) {
+        safe_free(s->sslflags);
+        s->sslflags = xstrdup(token + 9);
+    } else if (strncmp(token, "sslcontext=", 11) == 0) {
+        safe_free(s->sslcontext);
+        s->sslcontext = xstrdup(token + 11);
+    } else if (strcmp(token, "sslBump") == 0) {
+        s->sslBump = 1; // accelerated when bumped, otherwise not
+#endif
     } else {
         self_destruct();
     }
 }
 
-static void
-free_generic_http_port_data(http_port_list * s)
-{
-    safe_free(s->name);
-    safe_free(s->defaultsite);
-    safe_free(s->protocol);
-}
-
-static void
-cbdataFree_http_port(void *data)
-{
-    free_generic_http_port_data((http_port_list *)data);
-}
-
 static http_port_list *
 create_http_port(char *portspec)
 {
-    CBDATA_TYPE(http_port_list);
-    CBDATA_INIT_TYPE_FREECB(http_port_list, cbdataFree_http_port);
-
-    http_port_list *s = cbdataAlloc(http_port_list);
-    s->protocol = xstrdup("http");
+    http_port_list *s = new http_port_list("http");
     parse_http_port_specification(s, portspec);
     return s;
 }
@@ -3042,122 +3083,8 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
 	    storeAppendPrintf(e, " tcp_keepalive");
 	}
     }
-}
-
-static void
-dump_http_port_list(StoreEntry * e, const char *n, const http_port_list * s)
-{
-    while (s) {
-        dump_generic_http_port(e, n, s);
-        storeAppendPrintf(e, "\n");
-        s = s->next;
-    }
-}
-
-static void
-free_http_port_list(http_port_list ** head)
-{
-    http_port_list *s;
-
-    while ((s = *head) != NULL) {
-        *head = s->next;
-        cbdataFree(s);
-    }
-}
 
 #if USE_SSL
-static void
-cbdataFree_https_port(void *data)
-{
-    https_port_list *s = (https_port_list *)data;
-    free_generic_http_port_data(&s->http);
-    safe_free(s->cert);
-    safe_free(s->key);
-    safe_free(s->options);
-    safe_free(s->cipher);
-    safe_free(s->cafile);
-    safe_free(s->capath);
-    safe_free(s->dhfile);
-    safe_free(s->sslflags);
-}
-
-static void
-parse_https_port_list(https_port_list ** head)
-{
-    CBDATA_TYPE(https_port_list);
-    char *token;
-    https_port_list *s;
-    CBDATA_INIT_TYPE_FREECB(https_port_list, cbdataFree_https_port);
-    token = strtok(NULL, w_space);
-
-    if (!token)
-        self_destruct();
-
-    s = cbdataAlloc(https_port_list);
-
-    s->http.protocol = xstrdup("https");
-
-    parse_http_port_specification(&s->http, token);
-
-    /* parse options ... */
-    while ((token = strtok(NULL, w_space))) {
-        if (strncmp(token, "cert=", 5) == 0) {
-            safe_free(s->cert);
-            s->cert = xstrdup(token + 5);
-        } else if (strncmp(token, "key=", 4) == 0) {
-            safe_free(s->key);
-            s->key = xstrdup(token + 4);
-        } else if (strncmp(token, "version=", 8) == 0) {
-            s->version = xatoi(token + 8);
-
-            if (s->version < 1 || s->version > 4)
-                self_destruct();
-        } else if (strncmp(token, "options=", 8) == 0) {
-            safe_free(s->options);
-            s->options = xstrdup(token + 8);
-        } else if (strncmp(token, "cipher=", 7) == 0) {
-            safe_free(s->cipher);
-            s->cipher = xstrdup(token + 7);
-        } else if (strncmp(token, "clientca=", 9) == 0) {
-            safe_free(s->clientca);
-            s->clientca = xstrdup(token + 9);
-        } else if (strncmp(token, "cafile=", 7) == 0) {
-            safe_free(s->cafile);
-            s->cafile = xstrdup(token + 7);
-        } else if (strncmp(token, "capath=", 7) == 0) {
-            safe_free(s->capath);
-            s->capath = xstrdup(token + 7);
-        } else if (strncmp(token, "crlfile=", 8) == 0) {
-            safe_free(s->crlfile);
-            s->crlfile = xstrdup(token + 8);
-        } else if (strncmp(token, "dhparams=", 9) == 0) {
-            safe_free(s->dhfile);
-            s->dhfile = xstrdup(token + 9);
-        } else if (strncmp(token, "sslflags=", 9) == 0) {
-            safe_free(s->sslflags);
-            s->sslflags = xstrdup(token + 9);
-        } else if (strncmp(token, "sslcontext=", 11) == 0) {
-            safe_free(s->sslcontext);
-            s->sslcontext = xstrdup(token + 11);
-        } else {
-            parse_http_port_option(&s->http, token);
-        }
-    }
-
-    while (*head) {
-        http_port_list ** headTmp = &(*head)->http.next;
-        head = (https_port_list **)headTmp;
-    }
-
-    *head = s;
-}
-
-static void
-dump_https_port_list(StoreEntry * e, const char *n, const https_port_list * s)
-{
-    while (s) {
-        dump_generic_http_port(e, n, &s->http);
-
         if (s->cert)
             storeAppendPrintf(e, " cert=%s", s->cert);
 
@@ -3191,21 +3118,72 @@ dump_https_port_list(StoreEntry * e, const char *n, const https_port_list * s)
         if (s->sslcontext)
             storeAppendPrintf(e, " sslcontext=%s", s->sslcontext);
 
-        storeAppendPrintf(e, "\n");
+        if (s->sslBump)
+            storeAppendPrintf(e, " sslBump");
+#endif
+}
 
-        s = (https_port_list *) s->http.next;
+static void
+dump_http_port_list(StoreEntry * e, const char *n, const http_port_list * s)
+{
+    while (s) {
+        dump_generic_http_port(e, n, s);
+        storeAppendPrintf(e, "\n");
+        s = s->next;
     }
+}
+
+static void
+free_http_port_list(http_port_list ** head)
+{
+    http_port_list *s;
+
+    while ((s = *head) != NULL) {
+        *head = s->next;
+        delete s;
+    }
+}
+
+#if USE_SSL
+
+// TODO: merge better with parse_http_port_list
+static void
+parse_https_port_list(https_port_list ** head)
+{
+    char *token;
+    https_port_list *s;
+
+    token = strtok(NULL, w_space);
+
+    if (!token)
+        self_destruct();
+
+    s = new https_port_list;
+    parse_http_port_specification(&s->http, token);
+
+    /* parse options ... */
+    while ((token = strtok(NULL, w_space))) {
+        parse_http_port_option(s, token);
+    }
+
+    while (*head) {
+        http_port_list ** headTmp = &(*head)->http.next;
+        head = (https_port_list **)headTmp;
+    }
+
+    *head = s;
+}
+
+static void
+dump_https_port_list(StoreEntry * e, const char *n, const https_port_list * s)
+{
+    dump_http_port_list(e, n, s);
 }
 
 static void
 free_https_port_list(https_port_list ** head)
 {
-    https_port_list *s;
-
-    while ((s = *head) != NULL) {
-        *head = (https_port_list *) s->http.next;
-        cbdataFree(s);
-    }
+    free_http_port_list((http_port_list**)head);
 }
 
 #if 0
