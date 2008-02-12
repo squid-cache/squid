@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.260 2007/12/14 20:07:15 hno Exp $
+ * $Id: enums.h,v 1.261 2008/02/11 22:26:39 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -69,6 +69,7 @@ typedef enum {
     ERR_WRITE_ERROR,
     ERR_SHUTTING_DOWN,
     ERR_CONNECT_FAIL,
+    ERR_SECURE_CONNECT_FAIL,
     ERR_INVALID_REQ,
     ERR_UNSUP_REQ,
     ERR_INVALID_URL,
