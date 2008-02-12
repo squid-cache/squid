@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.44 2008/02/07 18:16:24 rousskov Exp $
+ * $Id: ACLChecklist.cc,v 1.45 2008/02/11 22:25:53 rousskov Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -364,10 +364,14 @@ ACLChecklist::ACLChecklist() :
 #if SQUID_SNMP
         snmp_community(NULL),
 #endif
+#if USE_SSL
+        ssl_error(0),
+#endif
         callback (NULL),
         callback_data (NULL),
         extacl_entry (NULL),
         conn_(NULL),
+        fd_(-1),
         async_(false),
         finished_(false),
         allow_(ACCESS_DENIED),
@@ -416,6 +420,19 @@ ACLChecklist::conn(ConnStateData::Pointer aConn)
 {
     assert (conn() == NULL);
     conn_ = aConn;
+}
+
+int
+ACLChecklist::fd() const
+{
+    return conn_ != NULL ? conn_->fd : fd_;
+}
+
+void
+ACLChecklist::fd(int aDescriptor)
+{
+    assert(!conn() || conn()->fd == aDescriptor);
+    fd_ = aDescriptor;
 }
 
 void
@@ -556,10 +573,10 @@ ACLChecklist::checking (bool const newValue)
  *    returns, ACLChecklist::checkCallback() will free the ACLChecklist using
  *    aclChecklistFree().
  */
-
 ACLChecklist *
 aclChecklistCreate(const acl_access * A, HttpRequest * request, const char *ident)
 {
+    // TODO: make this a constructor? On-stack creation uses the same code.
     ACLChecklist *checklist = new ACLChecklist;
 
     if (A)
