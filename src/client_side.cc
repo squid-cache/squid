@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.774 2008/02/08 01:56:33 hno Exp $
+ * $Id: client_side.cc,v 1.775 2008/02/11 22:25:22 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -58,6 +58,7 @@
 #include "squid.h"
 #include "client_side.h"
 #include "clientStream.h"
+#include "ProtoPort.h"
 #include "IPInterception.h"
 #include "AuthUserRequest.h"
 #include "Store.h"
@@ -162,6 +163,7 @@ static int connKeepReadingIncompleteRequest(ConnStateData::Pointer & conn);
 static void connCancelIncompleteRequests(ConnStateData::Pointer & conn);
 
 static ConnStateData *connStateCreate(const IPAddress &peer, const IPAddress &me, int fd, http_port_list *port);
+
 
 int
 ClientSocketContext::fd() const
@@ -1755,12 +1757,18 @@ prepareAcceleratedURL(ConnStateData::Pointer & conn, ClientHttpRequest *http, ch
     if (internalCheck(url)) {
         /* prepend our name & port */
         http->uri = xstrdup(internalLocalUri(NULL, url));
-    } else if (vhost && (host = mime_get_header(req_hdr, "Host")) != NULL) {
+        return;
+    }
+
+    const bool switchedToHttps = conn->switchedToHttps();
+    const bool tryHostHeader = vhost || switchedToHttps;
+    if (tryHostHeader && (host = mime_get_header(req_hdr, "Host")) != NULL) {
         int url_sz = strlen(url) + 32 + Config.appendDomainLen +
                      strlen(host);
         http->uri = (char *)xcalloc(url_sz, 1);
-        snprintf(http->uri, url_sz, "%s://%s%s",
-                 conn->port->protocol, host, url);
+        const char *protocol = switchedToHttps ?
+            "https" : conn->port->protocol;
+        snprintf(http->uri, url_sz, "%s://%s%s", protocol, host, url);
         debugs(33, 5, "ACCEL VHOST REWRITE: '" << http->uri << "'");
     } else if (conn->port->defaultsite) {
         int url_sz = strlen(url) + 32 + Config.appendDomainLen +
@@ -1961,7 +1969,7 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, HttpRequestMetho
     /* Rewrite the URL in transparent or accelerator mode */
     if (conn->transparent()) {
         prepareTransparentURL(conn, http, url, req_hdr);
-    } else if (conn->port->accel) {
+    } else if (conn->port->accel || conn->switchedToHttps()) {
         prepareAcceleratedURL(conn, http, url, req_hdr);
     } else if (internalCheck(url)) {
         /* prepend our name & port */
@@ -2795,6 +2803,30 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 
 #if USE_SSL
 
+// Create SSL connection structure and update fd_table
+static SSL *
+httpsCreate(int newfd, ConnectionDetail *details, SSL_CTX *sslContext)
+{
+    SSL *ssl = SSL_new(sslContext);
+
+    if (!ssl) {
+        const int ssl_error = ERR_get_error();
+        debugs(83, 1, "httpsAccept: Error allocating handle: " << ERR_error_string(ssl_error, NULL)  );
+        comm_close(newfd);
+        return NULL;
+    }
+
+    SSL_set_fd(ssl, newfd);
+    fd_table[newfd].ssl = ssl;
+    fd_table[newfd].read_method = &ssl_read_method;
+    fd_table[newfd].write_method = &ssl_write_method;
+
+    debugs(33, 5, "httpsCreate: will negotate SSL on FD " << newfd);
+    fd_note(newfd, "client https start");
+
+    return ssl;
+}
+
 /* negotiate an SSL connection */
 static void
 clientNegotiateSSL(int fd, void *data)
@@ -2921,9 +2953,6 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
 {
     https_port_list *s = (https_port_list *)data;
     SSL_CTX *sslContext = s->sslContext;
-    ConnStateData *connState = NULL;
-    SSL *ssl;
-    int ssl_error;
 
     if (flag == COMM_ERR_CLOSING) {
         return;
@@ -2941,21 +2970,12 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
         return;
     }
 
-    if ((ssl = SSL_new(sslContext)) == NULL) {
-        ssl_error = ERR_get_error();
-        debugs(83, 1, "httpsAccept: Error allocating handle: " << ERR_error_string(ssl_error, NULL)  );
-        comm_close(newfd);
+    SSL *ssl = NULL;
+    if (!(ssl = httpsCreate(newfd, details, sslContext)))
         return;
-    }
 
-    SSL_set_fd(ssl, newfd);
-    fd_table[newfd].ssl = ssl;
-    fd_table[newfd].read_method = &ssl_read_method;
-    fd_table[newfd].write_method = &ssl_write_method;
-
-    debugs(33, 5, "httpsAccept: FD " << newfd << " accepted, starting SSL negotiation.");
-    fd_note(newfd, "client https connect");
-    connState = connStateCreate(details->peer, details->me, newfd, (http_port_list *)s);
+    ConnStateData *connState = connStateCreate(details->peer, details->me,
+        newfd, &s->http);
     comm_add_close_handler(newfd, connStateClosed, connState);
 
     if (Config.onoff.log_fqdn)
@@ -2991,6 +3011,39 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
     incoming_sockets_accepted++;
 }
 
+bool
+ConnStateData::switchToHttps()
+{
+    assert(!switchedToHttps_);
+
+    //HTTPMSGLOCK(currentobject->http->request);
+    assert(areAllContextsForThisConnection());
+    freeAllContexts();
+    //currentobject->connIsFinished();
+
+    debugs(33, 5, HERE << "converting FD " << fd << " to SSL");
+
+    // fake a ConnectionDetail object; XXX: make ConnState a ConnectionDetail?
+    ConnectionDetail detail;
+    detail.me = me;
+    detail.peer = peer;
+
+    SSL_CTX *sslContext = port->sslContext;
+    SSL *ssl = NULL;
+    if (!(ssl = httpsCreate(fd, &detail, sslContext)))
+        return false;
+
+    // commSetTimeout() was called for this request before we switched.
+
+    // Disable the client read handler until peer selection is complete
+    commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
+
+    commSetSelect(fd, COMM_SELECT_READ, clientNegotiateSSL, this, 0);
+
+    switchedToHttps_ = true;
+    return true;
+}
+
 #endif /* USE_SSL */
 
 
@@ -2999,6 +3052,9 @@ clientHttpConnectionsOpen(void)
 {
     http_port_list *s = NULL;
     int fd = -1;
+#if USE_SSL
+    int bumpCount = 0; // counts http_ports with sslBump option
+#endif
 
     for (s = Config.Sockaddr.http; s; s = s->next) {
         if (MAXHTTPPORTS == NHttpSockets) {
@@ -3006,6 +3062,16 @@ clientHttpConnectionsOpen(void)
             debugs(1, 1, "         The limit is " << MAXHTTPPORTS);
             continue;
         }
+
+#if USE_SSL
+        if (s->sslBump && s->sslContext == NULL) {
+            debugs(1, 1, "Will not bump SSL at http_port " <<
+                   s->http.s << " due to SSL initialization failure.");
+            s->sslBump = 0;
+        }
+        if (s->sslBump)
+            ++bumpCount;
+#endif
 
         enter_suid();
         fd = comm_open(SOCK_STREAM,
@@ -3023,12 +3089,20 @@ clientHttpConnectionsOpen(void)
 
         debugs(1, 1, "Accepting " <<
                (s->transparent ? "transparently proxied" :
-                       s->accel ? "accelerated" : "" ) 
+                       s->sslBump ? "bumpy" :
+                       s->accel ? "accelerated" : "") 
                << " HTTP connections at " << s->s
                << ", FD " << fd << "." );
 
         HttpSockets[NHttpSockets++] = fd;
     }
+
+#if USE_SSL
+    if (bumpCount && !Config.accessList.ssl_bump)
+        debugs(33, 1, "WARNING: http_port(s) with SslBump found, but no " <<
+            std::endl << "\tssl_bump ACL configured. No requests will be " <<
+            "bumped.");
+#endif
 }
 
 #if USE_SSL
@@ -3040,13 +3114,15 @@ clientHttpsConnectionsOpen(void)
 
     for (s = Config.Sockaddr.https; s; s = (https_port_list *)s->http.next) {
         if (MAXHTTPPORTS == NHttpSockets) {
-            debugs(1, 1, "WARNING: You have too many 'https_port' lines.");
-            debugs(1, 1, "         The limit is " << MAXHTTPPORTS);
+            debugs(1, 1, "Ignoring 'https_port' lines exceeding the limit.");
+            debugs(1, 1, "The limit is " << MAXHTTPPORTS << " HTTPS ports.");
             continue;
         }
 
         if (s->sslContext == NULL) {
-            debugs(1, 1, "Can not accept HTTPS connections at " << s->http.s);
+            debugs(1, 1, "Ignoring https_port " << s->http.s <<
+                   " due to SSL initialization failure.");
+            continue;
         }
 
         enter_suid();

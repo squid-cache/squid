@@ -1,5 +1,5 @@
 /*
- * $Id: client_side.h,v 1.28 2008/01/07 17:12:28 hno Exp $
+ * $Id: client_side.h,v 1.29 2008/02/11 22:25:22 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -208,11 +208,19 @@ public:
     void handleReadData(char *buf, size_t size);
     void handleRequestBodyData();
 
+#if USE_SSL
+    bool switchToHttps();
+    bool switchedToHttps() const { return switchedToHttps_; }
+#else
+    bool switchedToHttps() const { return false; }
+#endif
+
 private:
     CBDATA_CLASS2(ConnStateData);
     bool transparent_;
     bool reading_;
     bool closing_;
+    bool switchedToHttps_;
     Pointer openReference;
     BodyPipe::Pointer bodyPipe; // set when we are reading request body
 };
