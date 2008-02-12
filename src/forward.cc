@@ -1,6 +1,6 @@
 
 /*
- * $Id: forward.cc,v 1.174 2008/02/07 18:22:23 rousskov Exp $
+ * $Id: forward.cc,v 1.175 2008/02/11 22:26:39 rousskov Exp $
  *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
@@ -582,7 +582,7 @@ FwdState::negotiateSSL(int fd)
              debugs(81, 1, "fwdNegotiateSSL: Error negotiating SSL connection on FD " << fd << 
                     ": " << ERR_error_string(ERR_get_error(), NULL) << " (" << ssl_error << 
                     "/" << ret << "/" << errno << ")");
-            ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
+            ErrorState *anErr = errorCon(ERR_SECURE_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
 #ifdef EPROTO
 
             anErr->xerrno = EPROTO;
@@ -661,6 +661,14 @@ FwdState::initiateSSL()
 
     } else {
         SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)request->GetHost());
+    }
+
+    // Create the ACL check list now, while we have access to more info.
+    // The list is used in ssl_verify_cb() and is freed in ssl_free().
+    if (acl_access *acl = Config.ssl_client.cert_error) {
+        ACLChecklist *check = aclChecklistCreate(acl, request, dash_str);
+        check->fd(fd);
+        SSL_set_ex_data(ssl, ssl_ex_index_cert_error_check, check);
     }
 
     fd_table[fd].ssl = ssl;
