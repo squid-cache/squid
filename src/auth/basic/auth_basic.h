@@ -95,7 +95,7 @@ public:
     virtual ~AuthBasicUserRequest();
 
     virtual int authenticated() const;
-    virtual void authenticate(HttpRequest * request, ConnStateData::Pointer conn, http_hdr_type type);
+    virtual void authenticate(HttpRequest * request, ConnStateData *conn, http_hdr_type type);
     virtual int module_direction();
     virtual void module_start(RH *, void *);
     virtual AuthUser *user() {return _theUser;}

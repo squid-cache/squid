@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.52 2007/08/03 02:11:17 amosjeffries Exp $
+ * $Id: auth_basic.cc,v 1.53 2008/02/12 23:17:50 rousskov Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
@@ -154,7 +154,7 @@ AuthBasicUserRequest::authenticated() const
 /* log a basic user in
  */
 void
-AuthBasicUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointer conn, http_hdr_type type)
+AuthBasicUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type)
 {
     assert(user() != NULL);
 

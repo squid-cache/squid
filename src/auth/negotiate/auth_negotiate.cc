@@ -1,5 +1,5 @@
 /*
- * $Id: auth_negotiate.cc,v 1.28 2007/12/14 23:11:51 amosjeffries Exp $
+ * $Id: auth_negotiate.cc,v 1.29 2008/02/12 23:17:52 rousskov Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -660,7 +660,7 @@ AuthNegotiateUserRequest::authenticated() const
 }
 
 void
-AuthNegotiateUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointer conn, http_hdr_type type)
+AuthNegotiateUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type)
 {
     const char *proxy_auth, *blob;
 
@@ -677,7 +677,7 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * request, ConnStateData::Poi
     /* Check that we are in the client side, where we can generate
      * auth challenges */
 
-    if (conn.getRaw() == NULL) {
+    if (conn == NULL) {
         auth_state = AUTHENTICATE_STATE_FAILED;
         debugs(29, 1, "AuthNegotiateUserRequest::authenticate: attempt to perform authentication without a connection!");
         return;
@@ -769,7 +769,7 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * request, ConnStateData::Poi
 }
 
 AuthNegotiateUserRequest::AuthNegotiateUserRequest() :
-        conn(NULL), auth_state(AUTHENTICATE_STATE_NONE),
+    /*conn(NULL),*/ auth_state(AUTHENTICATE_STATE_NONE),
         _theUser(NULL)
 {
     waiting=0;

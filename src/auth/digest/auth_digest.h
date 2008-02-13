@@ -61,7 +61,7 @@ public:
     virtual ~AuthDigestUserRequest();
 
     virtual int authenticated() const;
-    virtual void authenticate(HttpRequest * request, ConnStateData::Pointer conn, http_hdr_type type);
+    virtual void authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type);
     virtual int module_direction();
     virtual void addHeader(HttpReply * rep, int accel);
 #if WAITING_FOR_TE

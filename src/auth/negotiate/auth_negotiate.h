@@ -59,7 +59,7 @@ public:
     AuthNegotiateUserRequest();
     virtual ~AuthNegotiateUserRequest();
     virtual int authenticated() const;
-    virtual void authenticate(HttpRequest * request, ConnStateData::Pointer conn, http_hdr_type type);
+    virtual void authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type);
     virtual int module_direction();
     virtual void onConnectionClose(ConnStateData *);
     virtual void module_start(RH *, void *);
@@ -76,7 +76,7 @@ public:
     /*we need to store the helper server between requests */
     helper_stateful_server *authserver;
     /* what connection is this associated with */
-    ConnStateData::Pointer conn;
+    /* ConnStateData * conn;*/
 
     /* how far through the authentication process are we? */
     auth_state_t auth_state;
