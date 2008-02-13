@@ -1,6 +1,6 @@
 
 /*
- * $Id: redirect.cc,v 1.124 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id: redirect.cc,v 1.125 2008/02/12 23:58:47 rousskov Exp $
  *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
@@ -113,7 +113,7 @@ redirectStats(StoreEntry * sentry)
 void
 redirectStart(ClientHttpRequest * http, RH * handler, void *data)
 {
-    ConnStateData::Pointer conn = http->getConn();
+    ConnStateData * conn = http->getConn();
     redirectStateData *r = NULL;
     const char *fqdn;
     char buf[8192];
