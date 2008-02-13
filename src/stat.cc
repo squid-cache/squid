@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.413 2008/01/07 15:45:57 hno Exp $
+ * $Id: stat.cc,v 1.414 2008/02/12 23:58:47 rousskov Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -1651,8 +1651,8 @@ statClientRequests(StoreEntry * s)
         const char *p = NULL;
         http = static_cast<ClientHttpRequest *>(i->data);
         assert(http);
-        ConnStateData::Pointer conn = http->getConn();
-        storeAppendPrintf(s, "Connection: %p\n", conn.getRaw());
+        ConnStateData * conn = http->getConn();
+        storeAppendPrintf(s, "Connection: %p\n", conn);
 
         if (conn != NULL) {
             fd = conn->fd;
@@ -1685,9 +1685,9 @@ statClientRequests(StoreEntry * s)
 #endif
 
         storeAppendPrintf(s, "start %ld.%06d (%f seconds ago)\n",
-                          (long int) http->start.tv_sec,
-                          (int) http->start.tv_usec,
-                          tvSubDsec(http->start, current_time));
+                          (long int) http->start_time.tv_sec,
+                          (int) http->start_time.tv_usec,
+                          tvSubDsec(http->start_time, current_time));
 
         if (http->request->auth_user_request)
             p = http->request->auth_user_request->username();
