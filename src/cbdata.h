@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.h,v 1.1 2006/08/21 00:50:41 robertc Exp $
+ * $Id: cbdata.h,v 1.2 2008/02/12 23:26:36 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -83,6 +83,7 @@ extern cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, in
   		void operator delete (void *address) { \
 		  if (address) cbdataInternalFreeDbg(address,__FILE__,__LINE__); \
 		} \
+                void *toCbdata() { return this; } \
 	private:
 #else
 #define cbdataAlloc(type) ((type *)cbdataInternalAlloc(CBDATA_##type))
@@ -99,6 +100,7 @@ extern cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, in
   		void operator delete (void *address) { \
 		  if (address) cbdataInternalFree(address);\
 		} \
+                void *toCbdata() { return this; } \
 	private:
 #endif
 #define cbdataReference(var)	(cbdataInternalLock(var), var)
