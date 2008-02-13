@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc.cc,v 1.47 2007/12/14 23:11:47 amosjeffries Exp $
+ * $Id: ipc.cc,v 1.48 2008/02/13 00:01:47 rousskov Exp $
  *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
@@ -139,10 +139,10 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
             return -1;
         }
 
-        fdc_open(prfd = p2c[0], FD_PIPE, "IPC FIFO Parent Read");
-        fdc_open(cwfd = p2c[1], FD_PIPE, "IPC FIFO Child Write");
-        fdc_open(crfd = c2p[0], FD_PIPE, "IPC FIFO Child Read");
-        fdc_open(pwfd = c2p[1], FD_PIPE, "IPC FIFO Parent Write");
+        fd_open(prfd = p2c[0], FD_PIPE, "IPC FIFO Parent Read");
+        fd_open(cwfd = p2c[1], FD_PIPE, "IPC FIFO Child Write");
+        fd_open(crfd = c2p[0], FD_PIPE, "IPC FIFO Child Read");
+        fd_open(pwfd = c2p[1], FD_PIPE, "IPC FIFO Parent Write");
 #if HAVE_SOCKETPAIR && defined(AF_UNIX)
 
     } else if (type == IPC_UNIX_STREAM) {
@@ -158,8 +158,8 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         setsockopt(fds[0], SOL_SOCKET, SO_RCVBUF, (void *) &buflen, sizeof(buflen));
         setsockopt(fds[1], SOL_SOCKET, SO_SNDBUF, (void *) &buflen, sizeof(buflen));
         setsockopt(fds[1], SOL_SOCKET, SO_RCVBUF, (void *) &buflen, sizeof(buflen));
-        fdc_open(prfd = pwfd = fds[0], FD_PIPE, "IPC UNIX STREAM Parent");
-        fdc_open(crfd = cwfd = fds[1], FD_PIPE, "IPC UNIX STREAM Parent");
+        fd_open(prfd = pwfd = fds[0], FD_PIPE, "IPC UNIX STREAM Parent");
+        fd_open(crfd = cwfd = fds[1], FD_PIPE, "IPC UNIX STREAM Parent");
     } else if (type == IPC_UNIX_DGRAM) {
         int fds[2];
 
@@ -168,8 +168,8 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
             return -1;
         }
 
-        fdc_open(prfd = pwfd = fds[0], FD_PIPE, "IPC UNIX DGRAM Parent");
-        fdc_open(crfd = cwfd = fds[1], FD_PIPE, "IPC UNIX DGRAM Parent");
+        fd_open(prfd = pwfd = fds[0], FD_PIPE, "IPC UNIX DGRAM Parent");
+        fd_open(crfd = cwfd = fds[1], FD_PIPE, "IPC UNIX DGRAM Parent");
 #endif
 
     } else {
