@@ -1,6 +1,6 @@
 
 /*
- * $Id: fde.cc,v 1.7 2007/08/13 17:20:51 hno Exp $
+ * $Id: fde.cc,v 1.8 2008/02/12 23:22:13 rousskov Exp $
  *
  * DEBUG: none          FDE
  * AUTHOR: Robert Collins
@@ -43,7 +43,7 @@ bool
 fde::readPending(int fdNumber)
 {
     if (type == FD_SOCKET)
-        return comm_has_pending_read(fdNumber);
+        return comm_monitors_read(fdNumber);
 
     return read_handler ? true : false ;
 }
@@ -64,7 +64,7 @@ fde::dumpStats (StoreEntry &dumpEntry, int fdNumber)
                       fdNumber,
 #endif
                       fdTypeStr[type],
-                      timeout_handler ? (int) (timeout - squid_curtime) / 60 : 0,
+                      timeoutHandler != NULL ? (int) (timeout - squid_curtime) / 60 : 0,
                       bytes_read,
                       readPending(fdNumber) ? '*' : ' ',
                       bytes_written,
