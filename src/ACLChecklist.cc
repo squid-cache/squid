@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.45 2008/02/11 22:25:53 rousskov Exp $
+ * $Id: ACLChecklist.cc,v 1.46 2008/02/12 23:29:25 rousskov Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -401,7 +401,7 @@ ACLChecklist::~ACLChecklist()
     if (auth_user_request)
         AUTHUSERREQUESTUNLOCK(auth_user_request, "ACLChecklist destructor");
 
-    conn_ = NULL;
+    cbdataReferenceDone(conn_);
 
     cbdataReferenceDone(accessList);
 
@@ -409,17 +409,17 @@ ACLChecklist::~ACLChecklist()
 }
 
 
-ConnStateData::Pointer
+ConnStateData *
 ACLChecklist::conn()
 {
     return  conn_;
 }
 
 void
-ACLChecklist::conn(ConnStateData::Pointer aConn)
+ACLChecklist::conn(ConnStateData *aConn)
 {
     assert (conn() == NULL);
-    conn_ = aConn;
+    conn_ = cbdataReference(aConn);
 }
 
 int

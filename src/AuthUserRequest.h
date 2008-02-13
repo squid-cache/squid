@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.h,v 1.7 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id: AuthUserRequest.h,v 1.8 2008/02/12 23:29:25 rousskov Exp $
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 674533af-8b21-4641-b71a-74c4639072a0
@@ -64,7 +64,7 @@ public:
 
     int direction();
     virtual int authenticated() const = 0;
-    virtual void authenticate(HttpRequest * request, ConnStateData::Pointer conn, http_hdr_type type) = 0;
+    virtual void authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type) = 0;
     /* template method */
     virtual int module_direction() = 0;
     virtual void addHeader(HttpReply * rep, int accel);
@@ -78,7 +78,7 @@ public:
 
     virtual void user (AuthUser *aUser) {_auth_user=aUser;}
 
-    static auth_acl_t tryToAuthenticateAndSetAuthUser(AuthUserRequest **, http_hdr_type, HttpRequest *, ConnStateData::Pointer, IPAddress &);
+    static auth_acl_t tryToAuthenticateAndSetAuthUser(AuthUserRequest **, http_hdr_type, HttpRequest *, ConnStateData *, IPAddress &);
     static void addReplyAuthHeader(HttpReply * rep, AuthUserRequest * auth_user_request, HttpRequest * request, int accelerated, int internal);
 
     AuthUserRequest();
@@ -105,7 +105,7 @@ public:
 
 private:
 
-    static auth_acl_t authenticate(AuthUserRequest ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData::Pointer conn, IPAddress &src_addr);
+    static auth_acl_t authenticate(AuthUserRequest ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, IPAddress &src_addr);
 
     /* return a message on the 407 error pages */
     char *message;
