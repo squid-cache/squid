@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.456 2008/01/24 19:20:43 serassio Exp $
+ * $Id: main.cc,v 1.457 2008/02/12 23:57:47 rousskov Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -143,29 +143,28 @@ public:
     };
 };
 
-class SignalDispatcher : public CompletionDispatcher
+class SignalEngine: public AsyncEngine
 {
 
 public:
-    SignalDispatcher(EventLoop &loop) : loop(loop), events_dispatched(false) {}
-
-    void addEventLoop(EventLoop * loop);
-    virtual bool dispatch();
+    SignalEngine(EventLoop &loop) : loop(loop) {}
+    virtual int checkEvents(int timeout);
 
 private:
     static void StopEventLoop(void * data)
     {
-        static_cast<SignalDispatcher *>(data)->loop.stop();
+        static_cast<SignalEngine *>(data)->loop.stop();
     }
 
+    void doShutdown(time_t wait);
+
     EventLoop &loop;
-    bool events_dispatched;
 };
 
-bool
-SignalDispatcher::dispatch()
+int
+SignalEngine::checkEvents(int timeout)
 {
-    PROF_start(SignalDispatcher_dispatch);
+    PROF_start(SignalEngine_checkEvents);
 
     if (do_reconfigure) {
         mainReconfigure();
@@ -174,24 +173,28 @@ SignalDispatcher::dispatch()
         mainRotate();
         do_rotate = 0;
     } else if (do_shutdown) {
-        time_t wait = do_shutdown > 0 ? (int) Config.shutdownLifetime : 0;
-        debugs(1, 1, "Preparing for shutdown after " << statCounter.client_http.requests << " requests");
-        debugs(1, 1, "Waiting " << wait << " seconds for active connections to finish");
+        doShutdown(do_shutdown > 0 ? (int) Config.shutdownLifetime : 0);
         do_shutdown = 0;
-        shutting_down = 1;
-#if USE_WIN32_SERVICE
+	}
 
-        WIN32_svcstatusupdate(SERVICE_STOP_PENDING, (wait + 1) * 1000);
+    PROF_stop(SignalEngine_checkEvents);
+    return EVENT_IDLE;
+}
+
+void
+SignalEngine::doShutdown(time_t wait)
+{
+    debugs(1, 1, "Preparing for shutdown after " << statCounter.client_http.requests << " requests");
+    debugs(1, 1, "Waiting " << wait << " seconds for active connections to finish");
+
+    shutting_down = 1;
+
+#if USE_WIN32_SERVICE
+    WIN32_svcstatusupdate(SERVICE_STOP_PENDING, (wait + 1) * 1000);
 #endif
 
-        serverConnectionsClose();
-        eventAdd("SquidShutdown", StopEventLoop, this, (double) (wait + 1), 1, false);
-    }
-
-    bool result = events_dispatched;
-    events_dispatched = false;
-    PROF_stop(SignalDispatcher_dispatch);
-    return result;
+    serverConnectionsClose();
+    eventAdd("SquidShutdown", &StopEventLoop, this, (double) (wait + 1), 1, false);
 }
 
 static void
@@ -1289,12 +1292,9 @@ main(int argc, char **argv)
     /* main loop */
     EventLoop mainLoop;
 
-    SignalDispatcher signal_dispatcher(mainLoop);
+    SignalEngine signalEngine(mainLoop);
 
-    mainLoop.registerDispatcher(&signal_dispatcher);
-
-    /* TODO: stop requiring the singleton here */
-    mainLoop.registerDispatcher(EventDispatcher::GetInstance());
+    mainLoop.registerEngine(&signalEngine);
 
     /* TODO: stop requiring the singleton here */
     mainLoop.registerEngine(EventScheduler::GetInstance());
@@ -1302,10 +1302,6 @@ main(int argc, char **argv)
     StoreRootEngine store_engine;
 
     mainLoop.registerEngine(&store_engine);
-
-    CommDispatcher comm_dispatcher;
-
-    mainLoop.registerDispatcher(&comm_dispatcher);
 
     CommSelectEngine comm_engine;
 
