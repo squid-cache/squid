@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.619 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id: store.cc,v 1.620 2008/02/12 23:33:48 rousskov Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -224,16 +224,15 @@ StoreEntry::DeferReader(void *theContext, CommRead const &aRead)
     anEntry->delayAwareRead(aRead.fd,
                             aRead.buf,
                             aRead.len,
-                            aRead.callback.handler,
-                            aRead.callback.data);
+                            aRead.callback);
 }
 
 void
-StoreEntry::delayAwareRead(int fd, char *buf, int len, IOCB *handler, void *data)
+StoreEntry::delayAwareRead(int fd, char *buf, int len, AsyncCall::Pointer callback)
 {
     size_t amountToRead = bytesWanted(Range<size_t>(0, len));
     /* sketch: readdeferer* = getdeferer.
-     * ->deferRead (fd, buf, len, handler, data, DelayAwareRead, this)
+     * ->deferRead (fd, buf, len, callback, DelayAwareRead, this)
      */
 
     if (amountToRead == 0) {
@@ -244,14 +243,14 @@ StoreEntry::delayAwareRead(int fd, char *buf, int len, IOCB *handler, void *data
 
         if (!mem_obj->readAheadPolicyCanRead()) {
 #endif
-            mem_obj->delayRead(DeferredRead(DeferReader, this, CommRead(fd, buf, len, handler, data)));
+            mem_obj->delayRead(DeferredRead(DeferReader, this, CommRead(fd, buf, len, callback)));
             return;
 #if DELAY_POOLS
 
         }
 
         /* delay id limit */
-        mem_obj->mostBytesAllowed().delayRead(DeferredRead(DeferReader, this, CommRead(fd, buf, len, handler, data)));
+        mem_obj->mostBytesAllowed().delayRead(DeferredRead(DeferReader, this, CommRead(fd, buf, len, callback)));
 
         return;
 
@@ -259,7 +258,7 @@ StoreEntry::delayAwareRead(int fd, char *buf, int len, IOCB *handler, void *data
 
     }
 
-    comm_read(fd, buf, amountToRead, handler, data);
+    comm_read(fd, buf, amountToRead, callback);
 }
 
 size_t
