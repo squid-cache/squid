@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIInclude.cc,v 1.16 2008/01/22 22:49:34 rousskov Exp $
+ * $Id: ESIInclude.cc,v 1.17 2008/02/12 23:52:28 rousskov Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -89,7 +89,7 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
      * assert for now. */
     assert (cbdataReferenceValid (node));
     assert (node->node.next == NULL);
-    assert (http->getConn().getRaw() == NULL);
+    assert (http->getConn() == NULL);
 
     ESIStreamContext::Pointer esiStream = dynamic_cast<ESIStreamContext *>(node->data.getRaw());
     assert (esiStream.getRaw() != NULL);
