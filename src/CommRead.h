@@ -1,6 +1,6 @@
 
 /*
- * $Id: CommRead.h,v 1.8 2007/04/25 11:30:18 adrian Exp $
+ * $Id: CommRead.h,v 1.9 2008/02/12 23:51:37 rousskov Exp $
  *
  * DEBUG: section 5     Comms
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -42,92 +42,15 @@
 
 #include "squid.h"
 #include "comm.h"
+#include "CommCalls.h"
 #include "List.h"
-
-template<class C>
-
-class CallBack
-{
-
-public:
-    CallBack() : handler(NULL), data(NULL){}
-
-    CallBack(C *aHandler, void *someData) : handler(aHandler), data (NULL)
-    {
-        if (someData)
-            data = cbdataReference(someData);
-    }
-
-    CallBack(CallBack const &old) : handler(old.handler)
-    {
-        if (old.data)
-            data = cbdataReference (old.data);
-        else
-            data = NULL;
-    }
-
-    ~CallBack()
-    {
-        replaceData (NULL);
-    }
-
-    CallBack &operator = (CallBack const & rhs)
-    {
-        handler = rhs.handler;
-
-        replaceData (rhs.data);
-
-        return *this;
-    }
-
-    bool dataValid()
-    {
-        return cbdataReferenceValid(data);
-    }
-
-    bool operator == (CallBack const &rhs) { return handler==rhs.handler && data==rhs.data;}
-
-#if 0
-    // twould be nice - RBC 20030307
-    C callback;
-#endif
-
-    C *handler;
-    void *data;
-
-private:
-    void replaceData(void *someData)
-    {
-        void *temp = NULL;
-
-        if (someData)
-            temp = cbdataReference(someData);
-
-        if (data)
-            cbdataReferenceDone(data);
-
-        data = temp;
-    }
-};
-
-#if 0
-// twould be nice - RBC 20030307
-void
-CallBack<IOCB>::callback(int fd, char *buf, size_t size , comm_err_t errcode, int xerrno, void *tempData)
-{
-    assert (tempData == data);
-    handler (fd, buf, size , errcode, xerrno, data);
-    *this = CallBack();
-}
-
-#endif
 
 class CommRead
 {
 
 public:
     CommRead ();
-    CommRead (int fd, char *buf, int len, IOCB *handler, void *data);
+    CommRead (int fd, char *buf, int len, AsyncCall::Pointer &callback);
     void queueCallback(size_t retval, comm_err_t errcode, int xerrno);
     bool hasCallback() const;
     void hasCallbackInvariant() const;
@@ -135,12 +58,11 @@ public:
     void tryReading();
     void read();
     void initiateActualRead();
-    void nullCallback();
     void doCallback(comm_err_t errcode, int xerrno);
     int fd;
     char *buf;
     int len;
-    CallBack<IOCB> callback;
+    AsyncCall::Pointer callback;
     static void ReadTry(int fd, void *data);
 };
 
