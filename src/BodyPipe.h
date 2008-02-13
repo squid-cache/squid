@@ -4,18 +4,20 @@
 
 #include "MemBuf.h"
 #include "AsyncCall.h"
+#include "ICAP/AsyncJob.h"
 
 class BodyPipe;
 
 // Interface for those who want to produce body content for others.
 // BodyProducer is expected to create the BodyPipe.
 // One pipe cannot have more than one producer.
-class BodyProducer {
+class BodyProducer: virtual public AsyncJob {
 	public:
+                BodyProducer():AsyncJob("BodyProducer"){}
 		virtual ~BodyProducer() {}
 
-		virtual void noteMoreBodySpaceAvailable(BodyPipe &bp) = 0;
-		virtual void noteBodyConsumerAborted(BodyPipe &bp) = 0;
+		virtual void noteMoreBodySpaceAvailable(RefCount<BodyPipe> bp) = 0;
+		virtual void noteBodyConsumerAborted(RefCount<BodyPipe> bp) = 0;
 
 	protected:
 		void stopProducingFor(RefCount<BodyPipe> &pipe, bool atEof);
@@ -25,13 +27,14 @@ class BodyProducer {
 // BodyConsumer is expected to register with an existing BodyPipe
 // by calling BodyPipe::setConsumer().
 // One pipe cannot have more than one consumer.
-class BodyConsumer {
+class BodyConsumer: virtual public AsyncJob {
 	public:
+                BodyConsumer():AsyncJob("BodyConsumer"){}
 		virtual ~BodyConsumer() {}
 
-		virtual void noteMoreBodyDataAvailable(BodyPipe &bp) = 0;
-		virtual void noteBodyProductionEnded(BodyPipe &bp) = 0;
-		virtual void noteBodyProducerAborted(BodyPipe &bp) = 0;
+		virtual void noteMoreBodyDataAvailable(RefCount<BodyPipe> bp) = 0;
+		virtual void noteBodyProductionEnded(RefCount<BodyPipe> bp) = 0;
+		virtual void noteBodyProducerAborted(RefCount<BodyPipe> bp) = 0;
 
 	protected:
 		void stopConsumingFrom(RefCount<BodyPipe> &pipe);
@@ -93,6 +96,7 @@ class BodyPipe: public RefCountable {
 		bool mayNeedMoreData() const { return !bodySizeKnown() || needsMoreData(); }
 		bool needsMoreData() const { return bodySizeKnown() && unproducedSize() > 0; }
 		uint64_t unproducedSize() const; // size of still unproduced data
+		bool stillProducing(Producer *producer) const { return theProducer == producer; }
 
 		// called by consumers
 		bool setConsumerIfNotLate(Consumer *aConsumer);
@@ -101,6 +105,7 @@ class BodyPipe: public RefCountable {
 		void consume(size_t size);
 		bool expectMoreAfter(uint64_t offset) const;
 		bool exhausted() const; // saw eof/abort and all data consumed
+		bool stillConsuming(Consumer *consumer) const { return theConsumer == consumer; }
 
 		// start or continue consuming when there is no consumer
 		void enableAutoConsumption();
@@ -122,26 +127,6 @@ class BodyPipe: public RefCountable {
 		void postConsume(size_t size);
 		void postAppend(size_t size);
 
-		bool skipCCall(); // decides whether to skip the call, updates counters
-
-	public: /* public to enable callbacks, but treat as private */
-
-		/* these methods are calling producer and sibscriber note*()
-		 * callbacks with this BodyPipe as a parameter, which allows
-		 * a single producer or consumer to support multiple pipes. */
-		 
-		void tellMoreBodySpaceAvailable();
-		void tellBodyConsumerAborted();
-		void tellMoreBodyDataAvailable();
-		void tellBodyProductionEnded();
-		void tellBodyProducerAborted();
-
-		AsyncCallWrapper(91,5, BodyPipe, tellMoreBodySpaceAvailable);
-		AsyncCallWrapper(91,5, BodyPipe, tellBodyConsumerAborted);
-		AsyncCallWrapper(91,5, BodyPipe, tellMoreBodyDataAvailable);
-		AsyncCallWrapper(91,5, BodyPipe, tellBodyProductionEnded);
-		AsyncCallWrapper(91,5, BodyPipe, tellBodyProducerAborted);
-
 	private:
 		int64_t  theBodySize;   // expected total content length, if known
 		Producer *theProducer; // content producer, if any
@@ -149,9 +134,6 @@ class BodyPipe: public RefCountable {
 
 		uint64_t thePutSize; // ever-increasing total
 		uint64_t theGetSize; // ever-increasing total
-
-		int theCCallsPending; // outstanding calls to the consumer
-		int theCCallsToSkip; // how many calls to the consumer we should skip
 
 		MemBuf theBuf; // produced but not yet consumed content, if any
 
