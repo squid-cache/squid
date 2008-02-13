@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.36 2008/02/11 22:33:48 rousskov Exp $
+ * $Id: client_side_request.h,v 1.37 2008/02/12 23:07:52 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -41,6 +41,7 @@
 #include "client_side.h"
 #include "AccessLogEntry.h"
 #include "dlink.h"
+#include "ICAP/AsyncJob.h"
 
 #if ICAP_CLIENT
 #include "ICAP/ICAPServiceRep.h"
@@ -68,8 +69,10 @@ class ClientHttpRequest
 public:
     void *operator new (size_t);
     void operator delete (void *);
-
-    ClientHttpRequest(ConnStateData::Pointer);
+#if ICAP_CLIENT
+    void *toCbdata() { return this; }
+#endif
+    ClientHttpRequest(ConnStateData *);
     ~ClientHttpRequest();
     /* Not implemented - present to prevent synthetic operations */
     ClientHttpRequest(ClientHttpRequest const &);
@@ -90,9 +93,9 @@ public:
     _SQUID_INLINE_ StoreEntry *loggingEntry() const;
     void loggingEntry(StoreEntry *);
 
-    _SQUID_INLINE_ ConnStateData::Pointer getConn();
-    _SQUID_INLINE_ ConnStateData::Pointer const getConn() const;
-    _SQUID_INLINE_ void setConn(ConnStateData::Pointer);
+    _SQUID_INLINE_ ConnStateData * getConn();
+    _SQUID_INLINE_ ConnStateData * const getConn() const;
+    _SQUID_INLINE_ void setConn(ConnStateData *);
     HttpRequest *request;		/* Parsed URL ... */
     char *uri;
     char *log_uri;
@@ -109,7 +112,7 @@ public:
     size_t req_sz;		/* raw request size on input, not current request size */
     log_type logType;
 
-    struct timeval start;
+    struct timeval start_time;
     AccessLogEntry al;
 
     struct
@@ -147,12 +150,18 @@ unsigned int purging:
     ClientRequestContext *calloutContext;
     void doCallouts();
 
+#if ICAP_CLIENT
+//AsyncJob virtual methods
+    virtual bool doneAll() const { return ICAPInitiator::doneAll() && 
+				       BodyConsumer::doneAll() && false;}
+#endif
+
 private:
     CBDATA_CLASS(ClientHttpRequest);
     int64_t maxReplyBodySize_;
     StoreEntry *entry_;
     StoreEntry *loggingEntry_;
-    ConnStateData::Pointer conn_;
+    ConnStateData * conn_;
 
 #if USE_SSL
 public:
@@ -175,9 +184,9 @@ private:
     virtual void noteIcapQueryAbort(bool final);
 
     // BodyConsumer API, called by BodyPipe
-    virtual void noteMoreBodyDataAvailable(BodyPipe &);
-    virtual void noteBodyProductionEnded(BodyPipe &);
-    virtual void noteBodyProducerAborted(BodyPipe &);
+    virtual void noteMoreBodyDataAvailable(BodyPipe::Pointer);
+    virtual void noteBodyProductionEnded(BodyPipe::Pointer);
+    virtual void noteBodyProducerAborted(BodyPipe::Pointer);
 
     void endRequestSatisfaction();
 

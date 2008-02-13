@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cc,v 1.104 2008/02/11 22:26:16 rousskov Exp $
+ * $Id: client_side_request.cc,v 1.105 2008/02/12 23:07:52 rousskov Exp $
  * 
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -143,9 +143,13 @@ ClientHttpRequest::operator delete (void *address)
     cbdataFree(t);
 }
 
-ClientHttpRequest::ClientHttpRequest(ConnStateData::Pointer aConn) : loggingEntry_(NULL)
+ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) : 
+#if ICAP_CLIENT
+AsyncJob("ClientHttpRequest"),
+#endif
+loggingEntry_(NULL)
 {
-    start = current_time;
+    start_time = current_time;
     setConn(aConn);
     dlinkAdd(this, &active, &ClientActiveRequests);
 #if ICAP_CLIENT
@@ -261,6 +265,9 @@ ClientHttpRequest::~ClientHttpRequest()
     if (calloutContext)
         delete calloutContext;
 
+    if(conn_)
+	cbdataReferenceDone(conn_);
+
     /* moving to the next connection is handled by the context free */
     dlinkDelete(&active, &ClientActiveRequests);
 
@@ -282,7 +289,7 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     ClientHttpRequest *http = new ClientHttpRequest(NULL);
     HttpRequest *request;
     StoreIOBuffer tempBuffer;
-    http->start = current_time;
+    http->start_time = current_time;
     /* this is only used to adjust the connection offset in client_side.c */
     http->req_sz = 0;
     tempBuffer.length = taillen;
@@ -1153,7 +1160,7 @@ ClientHttpRequest::startIcap(ICAPServiceRep::Pointer service)
     assert(!icapBodySource);
     icapHeadSource = initiateIcap(
         new ICAPModXactLauncher(this, request, NULL, service));
-    return true;
+    return icapHeadSource != NULL;
 }
 
 void
@@ -1214,7 +1221,7 @@ ClientHttpRequest::noteIcapQueryAbort(bool final)
 }
 
 void
-ClientHttpRequest::noteMoreBodyDataAvailable(BodyPipe &)
+ClientHttpRequest::noteMoreBodyDataAvailable(BodyPipe::Pointer)
 {
     assert(request_satisfaction_mode);
     assert(icapBodySource != NULL);
@@ -1235,7 +1242,7 @@ ClientHttpRequest::noteMoreBodyDataAvailable(BodyPipe &)
 }
 
 void
-ClientHttpRequest::noteBodyProductionEnded(BodyPipe &)
+ClientHttpRequest::noteBodyProductionEnded(BodyPipe::Pointer)
 {
     assert(!icapHeadSource);
     if (icapBodySource != NULL) { // did not end request satisfaction yet
@@ -1258,7 +1265,7 @@ ClientHttpRequest::endRequestSatisfaction() {
 }
 
 void
-ClientHttpRequest::noteBodyProducerAborted(BodyPipe &)
+ClientHttpRequest::noteBodyProducerAborted(BodyPipe::Pointer)
 {
     assert(!icapHeadSource);
     stopConsumingFrom(icapBodySource);
@@ -1292,7 +1299,7 @@ ClientHttpRequest::handleIcapFailure(bool bypassable)
     // true cause of the error at this point, so I did not pass it.
     IPAddress noAddr;
     noAddr.SetNoAddr();
-    ConnStateData::Pointer c = getConn();
+    ConnStateData * c = getConn();
     repContext->setReplyToError(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR,
         request->method, NULL,
         (c != NULL ? c->peer : noAddr), request, NULL,
