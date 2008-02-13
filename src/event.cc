@@ -1,5 +1,5 @@
 /*
- * $Id: event.cc,v 1.51 2008/02/12 23:27:42 rousskov Exp $
+ * $Id: event.cc,v 1.52 2008/02/13 06:09:15 rousskov Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -69,14 +69,14 @@ EventDialer::EventDialer(EVH *aHandler, void *anArg, bool lockedArg):
     theHandler(aHandler), theArg(anArg), isLockedArg(lockedArg)
 {
     if (isLockedArg)
-        cbdataReference(theArg);
+        (void)cbdataReference(theArg);
 }
 
 EventDialer::EventDialer(const EventDialer &d):
     theHandler(d.theHandler), theArg(d.theArg), isLockedArg(d.isLockedArg)
 {
     if (isLockedArg)
-        cbdataReference(theArg);
+        (void)cbdataReference(theArg);
 }
 
 EventDialer::~EventDialer()
