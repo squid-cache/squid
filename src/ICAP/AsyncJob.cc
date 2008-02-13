@@ -171,9 +171,8 @@ JobDialer::JobDialer(AsyncJob *aJob): job(aJob), lock(NULL)
 }
 
 JobDialer::JobDialer(const JobDialer &d): CallDialer(d),
-    job(d.job), lock(d.lock)
+    job(d.job), lock(cbdataReference(d.lock))
 {
-    cbdataReference(lock);
 }
 
 JobDialer::~JobDialer(){
