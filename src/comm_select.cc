@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.83 2008/01/07 16:22:06 hno Exp $
+ * $Id: comm_select.cc,v 1.84 2008/02/12 23:02:13 rousskov Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -437,9 +437,6 @@ comm_select(int msec)
         if (msec > MAX_POLL_TIME)
             msec = MAX_POLL_TIME;
 
-        if (comm_iocallbackpending())
-            pending++;
-
         if (pending)
             msec = 0;
 
@@ -703,7 +700,7 @@ examine_select(fd_set * readfds, fd_set * writefds)
     fd_set write_x;
 
     struct timeval tv;
-    close_handler *ch = NULL;
+    AsyncCall::Pointer ch = NULL;
     fde *F = NULL;
 
     struct stat sb;
@@ -738,20 +735,20 @@ examine_select(fd_set * readfds, fd_set * writefds)
         debugs(5, 0, "FD " << fd << ": " << xstrerror());
         debugs(5, 0, "WARNING: FD " << fd << " has handlers, but it's invalid.");
         debugs(5, 0, "FD " << fd << " is a " << fdTypeStr[F->type] << " called '" << F->desc << "'");
-        debugs(5, 0, "tmout:" << F->timeout_handler << " read:" << F->read_handler << " write:" << F->write_handler);
+        debugs(5, 0, "tmout:" << F->timeoutHandler << " read:" << F->read_handler << " write:" << F->write_handler);
 
-        for (ch = F->closeHandler; ch; ch = ch->next)
-            debugs(5, 0, " close handler: " << ch->handler);
+        for (ch = F->closeHandler; ch != NULL; ch = ch->Next())
+            debugs(5, 0, " close handler: " << ch);
 
-        if (F->closeHandler) {
+        if (F->closeHandler != NULL) {
             commCallCloseHandlers(fd);
-        } else if (F->timeout_handler) {
+        } else if (F->timeoutHandler != NULL) {
             debugs(5, 0, "examine_select: Calling Timeout Handler");
-            F->timeout_handler(fd, F->timeout_data);
+	    ScheduleCallHere(F->timeoutHandler);
         }
 
         F->closeHandler = NULL;
-        F->timeout_handler = NULL;
+        F->timeoutHandler = NULL;
         F->read_handler = NULL;
         F->write_handler = NULL;
         FD_CLR(fd, readfds);
