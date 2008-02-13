@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPLauncher.h,v 1.1 2007/05/08 16:32:11 rousskov Exp $
+ * $Id: ICAPLauncher.h,v 1.2 2008/02/12 23:12:45 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -74,9 +74,6 @@ public:
     // ICAPInitiator: asynchronous communication with the current transaction
     virtual void noteIcapAnswer(HttpMsg *message);
     virtual void noteIcapQueryAbort(bool final);
-
-    // a temporary cbdata-for-multiple inheritance hack, see ICAPInitiator.cc
-    virtual void *toCbdata() { return this; }
 
 protected:
     // ICAPInitiate API implementation

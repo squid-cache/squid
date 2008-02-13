@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPInitiator.h,v 1.2 2007/05/08 16:32:11 rousskov Exp $
+ * $Id: ICAPInitiator.h,v 1.3 2008/02/12 23:12:45 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -43,12 +43,15 @@
  * or aborting an ICAP transaction.
  */
 
+#include "AsyncJob.h"
+
 class HttpMsg;
 class ICAPInitiate;
 
-class ICAPInitiator
+class ICAPInitiator: virtual public AsyncJob
 {
 public:
+    ICAPInitiator():AsyncJob("ICAPInitiator"){}
     virtual ~ICAPInitiator() {}
 
     // called when ICAP response headers are successfully interpreted
@@ -57,9 +60,6 @@ public:
     // called when valid ICAP response headers are no longer expected
     // the final parameter is set to disable bypass or retries
     virtual void noteIcapQueryAbort(bool final) = 0;
-
-    // a temporary cbdata-for-multiple inheritance hack, see ICAPInitiator.cc
-    virtual void *toCbdata() { return this; }
 
 protected:
     ICAPInitiate *initiateIcap(ICAPInitiate *x); // locks and returns x

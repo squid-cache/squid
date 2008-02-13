@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.cc,v 1.20 2007/09/27 15:31:15 rousskov Exp $
+ * $Id: ICAPConfig.cc,v 1.21 2008/02/12 23:12:45 rousskov Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -116,7 +116,7 @@ ICAPAccessCheck::ICAPAccessCheck(ICAP::Method aMethod,
                                  HttpRequest *aReq,
                                  HttpReply *aRep,
                                  ICAPAccessCheckCallback *aCallback,
-                                 void *aCallbackData)
+                                 void *aCallbackData): AsyncJob("ICAPAccessCheck"), done(FALSE)
 {
     method = aMethod;
     point = aPoint;
@@ -223,14 +223,10 @@ ICAPAccessCheck::ICAPAccessCheckCallbackWrapper(int answer, void *data)
     /*
      * We use an event here to break deep function call sequences
      */
-    eventAdd("ICAPAccessCheckCallbackEvent",
-             ICAPAccessCheckCallbackEvent,
-             ac,
-             0.0,
-             0,
-             true);
+    CallJobHere(93, 5, ac, ICAPAccessCheck::do_callback);
 }
 
+#if 0
 void
 ICAPAccessCheck::ICAPAccessCheckCallbackEvent(void *data)
 {
@@ -239,6 +235,7 @@ ICAPAccessCheck::ICAPAccessCheckCallbackEvent(void *data)
     ac->do_callback();
     delete ac;
 }
+#endif
 
 void
 ICAPAccessCheck::do_callback()
@@ -267,6 +264,7 @@ ICAPAccessCheck::do_callback()
     }
 
     callback(service, validated_cbdata);
+    done = TRUE;
 }
 
 ICAPServiceRep::Pointer

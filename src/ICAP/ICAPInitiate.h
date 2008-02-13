@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPInitiate.h,v 1.1 2007/05/08 16:32:11 rousskov Exp $
+ * $Id: ICAPInitiate.h,v 1.2 2008/02/12 23:12:45 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,13 +37,14 @@
 #include "comm.h"
 #include "MemBuf.h"
 #include "ICAPServiceRep.h"
-#include "AsyncJob.h"
+#include "AsyncCall.h"
 
 class HttpMsg;
 class ICAPInitiator;
 
 /* Initiator holder associtates an initiator with its cbdata. It is used as
  * a temporary hack to make cbdata work with multiple inheritance */
+// TODO: since ICAPInitiator is now an AsyncJob, we do not need this class.
 class ICAPInitiatorHolder {
 public:
     ICAPInitiatorHolder(ICAPInitiator *anInitiator);
@@ -77,7 +78,7 @@ private:
  *
  * This class could have been named ICAPInitiatee.
  */
-class ICAPInitiate: public AsyncJob
+class ICAPInitiate: virtual public AsyncJob
 {
 
 public:
@@ -86,7 +87,6 @@ public:
 
     // communication with the initiator
     virtual void noteInitiatorAborted() = 0;
-    AsyncCallWrapper(93,3, ICAPInitiate, noteInitiatorAborted)
 
 protected:
     ICAPServiceRep &service();

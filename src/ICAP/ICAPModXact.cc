@@ -39,6 +39,7 @@ ICAPModXact::State::State()
 
 ICAPModXact::ICAPModXact(ICAPInitiator *anInitiator, HttpMsg *virginHeader,
     HttpRequest *virginCause, ICAPServiceRep::Pointer &aService):
+    AsyncJob("ICAPModXact"),
     ICAPXaction("ICAPModXact", anInitiator, aService),
     icapReply(NULL),
     virginConsumed(0),
@@ -83,14 +84,7 @@ void ICAPModXact::start()
     // XXX: If commConnectStart in startWriting fails, we may get here
     //_after_ the object got destroyed. Somebody please fix commConnectStart!
     // TODO: Does re-entrance protection in callStart() solve the above?
-}
-
-static
-void ICAPModXact_noteServiceReady(void *data, ICAPServiceRep::Pointer &)
-{
-    ICAPModXact *x = static_cast<ICAPModXact*>(data);
-    assert(x);
-    x->noteServiceReady();
+    // TODO: Check that comm using AsyncCalls solves this problem.
 }
 
 void ICAPModXact::waitForService()
@@ -98,13 +92,13 @@ void ICAPModXact::waitForService()
     Must(!state.serviceWaiting);
     debugs(93, 7, "ICAPModXact will wait for the ICAP service" << status());
     state.serviceWaiting = true;
-    service().callWhenReady(&ICAPModXact_noteServiceReady, this);
+    AsyncCall::Pointer call = asyncCall(93,5, "ICAPModXact::noteServiceReady",
+        MemFun(this, &ICAPModXact::noteServiceReady));
+    service().callWhenReady(call);
 }
 
 void ICAPModXact::noteServiceReady()
 {
-    ICAPXaction_Enter(noteServiceReady);
-
     Must(state.serviceWaiting);
     state.serviceWaiting = false;
 
@@ -114,8 +108,6 @@ void ICAPModXact::noteServiceReady()
         disableRetries();
         throw TexcHere("ICAP service is unusable");
     }
-
-    ICAPXaction_Exit();
 }
 
 void ICAPModXact::startWriting()
@@ -181,7 +173,7 @@ void ICAPModXact::writeMore()
 {
     debugs(93, 5, HERE << "checking whether to write more" << status());
 
-    if (writer) // already writing something
+    if (writer != NULL) // already writing something
         return;
 
     switch (state.writing) {
@@ -413,7 +405,7 @@ void ICAPModXact::stopWriting(bool nicely)
     if (state.writing == State::writingReallyDone)
         return;
 
-    if (writer) {
+    if (writer != NULL) {
         if (nicely) {
             debugs(93, 7, HERE << "will wait for the last write" << status());
             state.writing = State::writingAlmostDone; // may already be set
@@ -470,7 +462,7 @@ void ICAPModXact::startReading()
 
 void ICAPModXact::readMore()
 {
-    if (reader || doneReading()) {
+    if (reader != NULL || doneReading()) {
         debugs(93,3,HERE << "returning from readMore because reader or doneReading()");
         return;
     }
@@ -982,23 +974,17 @@ void ICAPModXact::stopParsing()
 }
 
 // HTTP side added virgin body data
-void ICAPModXact::noteMoreBodyDataAvailable(BodyPipe &)
+void ICAPModXact::noteMoreBodyDataAvailable(BodyPipe::Pointer)
 {
-    ICAPXaction_Enter(noteMoreBodyDataAvailable);
-
     writeMore();
 
     if (state.sending == State::sendingVirgin)
         echoMore();
-
-    ICAPXaction_Exit();
 }
 
 // HTTP side sent us all virgin info
-void ICAPModXact::noteBodyProductionEnded(BodyPipe &)
+void ICAPModXact::noteBodyProductionEnded(BodyPipe::Pointer)
 {
-    ICAPXaction_Enter(noteBodyProductionEnded);
-
     Must(virgin.body_pipe->productionEnded());
 
     // push writer and sender in case we were waiting for the last-chunk
@@ -1006,16 +992,12 @@ void ICAPModXact::noteBodyProductionEnded(BodyPipe &)
 
     if (state.sending == State::sendingVirgin)
         echoMore();
-
-    ICAPXaction_Exit();
 }
 
 // body producer aborted, but the initiator may still want to know 
 // the answer, even though the HTTP message has been truncated
-void ICAPModXact::noteBodyProducerAborted(BodyPipe &)
+void ICAPModXact::noteBodyProducerAborted(BodyPipe::Pointer)
 {
-    ICAPXaction_Enter(noteBodyProducerAborted);
-
     Must(virgin.body_pipe->productionEnded());
 
     // push writer and sender in case we were waiting for the last-chunk
@@ -1023,34 +1005,24 @@ void ICAPModXact::noteBodyProducerAborted(BodyPipe &)
 
     if (state.sending == State::sendingVirgin)
         echoMore();
-
-    ICAPXaction_Exit();
 }
 
 // adapted body consumer wants more adapted data and 
 // possibly freed some buffer space
-void ICAPModXact::noteMoreBodySpaceAvailable(BodyPipe &)
+void ICAPModXact::noteMoreBodySpaceAvailable(BodyPipe::Pointer)
 {
-    ICAPXaction_Enter(noteMoreBodySpaceAvailable);
-
     if (state.sending == State::sendingVirgin)
         echoMore();
     else if (state.sending == State::sendingAdapted)
         parseMore();
     else
         Must(state.sending == State::sendingUndecided);
-
-    ICAPXaction_Exit();
 }
 
 // adapted body consumer aborted
-void ICAPModXact::noteBodyConsumerAborted(BodyPipe &)
+void ICAPModXact::noteBodyConsumerAborted(BodyPipe::Pointer)
 {
-    ICAPXaction_Enter(noteBodyConsumerAborted);
-
     mustStop("adapted body consumer aborted");
-
-    ICAPXaction_Exit();
 }
 
 // internal cleanup
@@ -1569,6 +1541,7 @@ bool ICAPModXact::fillVirginHttpHeader(MemBuf &mb) const
 /* ICAPModXactLauncher */
 
 ICAPModXactLauncher::ICAPModXactLauncher(ICAPInitiator *anInitiator, HttpMsg *virginHeader, HttpRequest *virginCause, ICAPServiceRep::Pointer &aService):
+    AsyncJob("ICAPModXactLauncher"),
     ICAPLauncher("ICAPModXactLauncher", anInitiator, aService)
 {
     virgin.setHeader(virginHeader);
