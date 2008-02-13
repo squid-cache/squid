@@ -1,6 +1,6 @@
 
 /*
- * $Id: event.h,v 1.3 2006/09/02 12:20:53 serassio Exp $
+ * $Id: event.h,v 1.4 2008/02/12 23:27:42 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,7 +37,6 @@
 #include "squid.h"
 #include "Array.h"
 #include "AsyncEngine.h"
-#include "CompletionDispatcher.h"
 
 /* forward decls */
 
@@ -59,6 +58,7 @@ class ev_entry
 
 public:
     ev_entry(char const * name, EVH * func, void *arg, double when, int weight, bool cbdata=true);
+    ~ev_entry();
     MEMPROXY_CLASS(ev_entry);
     const char *name;
     EVH *func;
@@ -73,41 +73,12 @@ public:
 
 MEMPROXY_CLASS_INLINE(ev_entry);
 
-class EventDispatcher : public CompletionDispatcher
-{
-
-public:
-    EventDispatcher();
-    /* add an event to dequeue when dispatch is called */
-
-    void add
-        (ev_entry *);
-
-    /* add an event to be dispatched in the future */
-    void add
-        (const char *name, EVH * func, void *arg, double when, int, bool cbdata=true);
-
-    bool dispatch();
-
-    static EventDispatcher *GetInstance();
-
-private:
-    Vector<ev_entry *> queue;
-
-    static EventDispatcher _instance;
-};
-
+// manages time-based events
 class EventScheduler : public AsyncEngine
 {
 
 public:
-    /* Create an event scheduler that will hand its ready to run callbacks to
-     * an EventDispatcher 
-     *
-     * TODO: add should include a dispatcher to use perhaps? then it would be
-     * more decoupled..
-     */
-    EventScheduler(EventDispatcher *);
+    EventScheduler();
     ~EventScheduler();
     /* cancel a scheduled but not dispatched event */
     void cancel(EVH * func, void * arg);
@@ -126,7 +97,6 @@ public:
 
 private:
     static EventScheduler _instance;
-    EventDispatcher * dispatcher;
     ev_entry * tasks;
 };
 

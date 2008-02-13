@@ -1,5 +1,5 @@
 /*
- * $Id: event.cc,v 1.50 2007/12/14 23:11:46 amosjeffries Exp $
+ * $Id: event.cc,v 1.51 2008/02/12 23:27:42 rousskov Exp $
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
@@ -43,8 +43,82 @@
 static OBJH eventDump;
 static const char *last_event_ran = NULL;
 
-ev_entry::ev_entry(char const * name, EVH * func, void * arg, double when, int weight, bool cbdata) : name(name), func(func), arg(cbdata ? cbdataReference(arg) : arg), when(when), weight(weight), cbdata(cbdata)
-{}
+// This AsyncCall dialer can be configured to check that the event cbdata is 
+// valid before calling the event handler
+class EventDialer: public CallDialer
+{
+public:
+    typedef CallDialer Parent;
+
+    EventDialer(EVH *aHandler, void *anArg, bool lockedArg);
+    EventDialer(const EventDialer &d);
+    virtual ~EventDialer();
+
+    virtual void print(std::ostream &os) const;
+    virtual bool canDial(AsyncCall &call);
+
+    void dial(AsyncCall &) { theHandler(theArg); }
+
+private:
+    EVH *theHandler;
+    void *theArg;
+    bool isLockedArg;
+};
+
+EventDialer::EventDialer(EVH *aHandler, void *anArg, bool lockedArg):
+    theHandler(aHandler), theArg(anArg), isLockedArg(lockedArg)
+{
+    if (isLockedArg)
+        cbdataReference(theArg);
+}
+
+EventDialer::EventDialer(const EventDialer &d):
+    theHandler(d.theHandler), theArg(d.theArg), isLockedArg(d.isLockedArg)
+{
+    if (isLockedArg)
+        cbdataReference(theArg);
+}
+
+EventDialer::~EventDialer()
+{
+    if (isLockedArg)
+        cbdataReferenceDone(theArg);
+}
+
+bool
+EventDialer::canDial(AsyncCall &call) {
+    // TODO: add Parent::canDial() that always returns true
+    //if (!Parent::canDial())
+    //    return false;
+
+    if (isLockedArg && !cbdataReferenceValid(theArg))
+        return call.cancel("stale handler data");
+
+    return true;
+}
+
+void
+EventDialer::print(std::ostream &os) const
+{
+    os << '(';
+    if (theArg)
+        os << theArg << (isLockedArg ? "*?" : "");
+    os << ')';
+}
+
+
+ev_entry::ev_entry(char const * name, EVH * func, void * arg, double when,
+    int weight, bool cbdata) : name(name), func(func), 
+    arg(cbdata ? cbdataReference(arg) : arg), when(when), weight(weight),
+    cbdata(cbdata)
+{
+}
+
+ev_entry::~ev_entry()
+{
+    if (cbdata)
+        cbdataReferenceDone(arg);
+}
 
 void
 eventAdd(const char *name, EVH * func, void *arg, double when, int weight, bool cbdata)
@@ -98,56 +172,9 @@ eventFind(EVH * func, void *arg)
     return EventScheduler::GetInstance()->find(func, arg);
 }
 
-EventDispatcher EventDispatcher::_instance;
+EventScheduler EventScheduler::_instance;
 
-EventDispatcher::EventDispatcher()
-{}
-
-void
-
-EventDispatcher::add
-    (ev_entry * event)
-{
-    queue.push_back(event);
-}
-
-bool
-EventDispatcher::dispatch()
-{
-    bool result = queue.size() != 0;
-
-    PROF_start(EventDispatcher_dispatch);
-    for (Vector<ev_entry *>::iterator i = queue.begin(); i != queue.end(); ++i) {
-        ev_entry * event = *i;
-        EVH *callback;
-        void *cbdata = event->arg;
-        callback = event->func;
-        event->func = NULL;
-
-        if (!event->cbdata || cbdataReferenceValidDone(event->arg, &cbdata)) {
-            /* XXX assumes ->name is static memory! */
-            last_event_ran = event->name;
-            debugs(41, 5, "EventDispatcher::dispatch: Running '" << event->name << "'");
-            callback(cbdata);
-        }
-
-        delete event;
-    }
-
-    queue.clean();
-    PROF_stop(EventDispatcher_dispatch);
-    return result;
-}
-
-EventDispatcher *
-EventDispatcher::GetInstance()
-{
-    return &_instance;
-}
-
-EventScheduler EventScheduler::_instance(EventDispatcher::GetInstance());
-
-EventScheduler::EventScheduler(EventDispatcher *dispatcher) : dispatcher(dispatcher), tasks(NULL)
+EventScheduler::EventScheduler(): tasks(NULL)
 {}
 
 EventScheduler::~EventScheduler()
@@ -169,9 +196,6 @@ EventScheduler::cancel(EVH * func, void *arg)
             continue;
 
         *E = event->next;
-
-        if (event->cbdata)
-            cbdataReferenceDone(event->arg);
 
         delete event;
 
@@ -228,16 +252,22 @@ EventScheduler::checkEvents(int timeout)
         if (event->when > current_dtime)
             break;
 
-        dispatcher->add
-        (event);
+        /* XXX assumes event->name is static memory! */
+        AsyncCall::Pointer call = asyncCall(41,5, event->name,
+            EventDialer(event->func, event->arg, event->cbdata));
+        ScheduleCallHere(call);
+
+        last_event_ran = event->name; // XXX: move this to AsyncCallQueue
+        const bool heavy = event->weight &&
+            (!event->cbdata || cbdataReferenceValid(event->arg));
 
         tasks = event->next;
+        delete event;
 
-        if (!event->cbdata || cbdataReferenceValid(event->arg))
-            if (event->weight)
-                /* this event is marked as being 'heavy', so dont dequeue any others.
-                 */
-                break;
+        // XXX: We may be called again during the same event loop iteration.
+        // Is there a point in breaking now?
+        if (heavy) 
+            break; // do not dequeue events following a heavy event
     }
 
     PROF_stop(eventRun);
@@ -249,10 +279,6 @@ EventScheduler::clean()
 {
     while (ev_entry * event = tasks) {
         tasks = event->next;
-
-        if (event->cbdata)
-            cbdataReferenceDone(event->arg);
-
         delete event;
     }
 
