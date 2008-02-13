@@ -1,5 +1,5 @@
 /*
- * $Id: Server.cc,v 1.24 2008/02/08 18:30:18 rousskov Exp $
+ * $Id: Server.cc,v 1.25 2008/02/12 23:55:26 rousskov Exp $
  *
  * DEBUG:
  * AUTHOR: Duane Wessels
@@ -45,7 +45,7 @@
 extern ICAPConfig TheICAPConfig;
 #endif
 
-ServerStateData::ServerStateData(FwdState *theFwdState): requestSender(NULL)
+ServerStateData::ServerStateData(FwdState *theFwdState): AsyncJob("ServerStateData"),requestSender(NULL)
 #if ICAP_CLIENT
     , icapAccessCheckPending(false)
 #endif
@@ -178,7 +178,8 @@ void ServerStateData::quitIfAllDone() {
     }
 
     debugs(11,3, HERE << "transaction done");
-    delete this;
+
+    deleteThis("ServerStateData::quitIfAllDone");
 }
 
 // FTP side overloads this to work around multiple calls to fwd->complete
@@ -221,10 +222,10 @@ ServerStateData::abortOnBadEntry(const char *abortReason)
 
 // more request or adapted response body is available
 void
-ServerStateData::noteMoreBodyDataAvailable(BodyPipe &bp)
+ServerStateData::noteMoreBodyDataAvailable(BodyPipe::Pointer bp)
 {
 #if ICAP_CLIENT
-    if (adaptedBodySource == &bp) {
+    if (adaptedBodySource == bp) {
         handleMoreAdaptedBodyAvailable();
         return;
     }
@@ -234,10 +235,10 @@ ServerStateData::noteMoreBodyDataAvailable(BodyPipe &bp)
 
 // the entire request or adapted response body was provided, successfully
 void
-ServerStateData::noteBodyProductionEnded(BodyPipe &bp)
+ServerStateData::noteBodyProductionEnded(BodyPipe::Pointer bp)
 {
 #if ICAP_CLIENT
-    if (adaptedBodySource == &bp) {
+    if (adaptedBodySource == bp) {
         handleAdaptedBodyProductionEnded();
         return;
     }
@@ -247,10 +248,10 @@ ServerStateData::noteBodyProductionEnded(BodyPipe &bp)
 
 // premature end of the request or adapted response body production
 void
-ServerStateData::noteBodyProducerAborted(BodyPipe &bp)
+ServerStateData::noteBodyProducerAborted(BodyPipe::Pointer bp)
 {
 #if ICAP_CLIENT
-    if (adaptedBodySource == &bp) {
+    if (adaptedBodySource == bp) {
         handleAdaptedBodyProducerAborted();
         return;
     }
@@ -302,29 +303,22 @@ ServerStateData::handleRequestBodyProducerAborted()
     // kids extend this
 }
 
-void
-ServerStateData::sentRequestBodyWrapper(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
-{
-    ServerStateData *server = static_cast<ServerStateData *>(data);
-    server->sentRequestBody(fd, size, errflag);
-}
-
 // called when we wrote request headers(!) or a part of the body
 void
-ServerStateData::sentRequestBody(int fd, size_t size, comm_err_t errflag)
+ServerStateData::sentRequestBody(const CommIoCbParams &io)
 {
-    debugs(11, 5, "sentRequestBody: FD " << fd << ": size " << size << ": errflag " << errflag << ".");
+    debugs(11, 5, "sentRequestBody: FD " << io.fd << ": size " << io.size << ": errflag " << io.flag << ".");
     debugs(32,3,HERE << "sentRequestBody called");
 
     requestSender = NULL;
 
-    if (size > 0) {
-        fd_bytes(fd, size, FD_WRITE);
-        kb_incr(&statCounter.server.all.kbytes_out, size);
+    if (io.size > 0) {
+        fd_bytes(io.fd, io.size, FD_WRITE);
+        kb_incr(&statCounter.server.all.kbytes_out, io.size);
         // kids should increment their counters
     }
 
-    if (errflag == COMM_ERR_CLOSING)
+    if (io.flag == COMM_ERR_CLOSING)
         return;
 
     if (!requestBodySource) {
@@ -332,8 +326,8 @@ ServerStateData::sentRequestBody(int fd, size_t size, comm_err_t errflag)
         return; // do nothing;
     }
 
-    if (errflag) {
-        debugs(11, 1, "sentRequestBody error: FD " << fd << ": " << xstrerr(errno));
+    if (io.flag) {
+        debugs(11, 1, "sentRequestBody error: FD " << io.fd << ": " << xstrerr(errno));
         ErrorState *err;
         err = errorCon(ERR_WRITE_ERROR, HTTP_BAD_GATEWAY, fwd->request);
         err->xerrno = errno;
@@ -361,8 +355,10 @@ ServerStateData::sendMoreRequestBody()
     MemBuf buf;
     if (requestBodySource->getMoreData(buf)) {
         debugs(9,3, HERE << "will write " << buf.contentSize() << " request body bytes");
-        requestSender = &ServerStateData::sentRequestBodyWrapper;
-        comm_write_mbuf(dataDescriptor(), &buf, requestSender, this);
+	typedef CommCbMemFunT<ServerStateData, CommIoCbParams> Dialer;
+	requestSender = asyncCall(93,3, "ServerStateData::sentRequestBody",
+				  Dialer(this, &ServerStateData::sentRequestBody));
+        comm_write_mbuf(dataDescriptor(), &buf, requestSender);
     } else {
         debugs(9,3, HERE << "will wait for more request body bytes or eof");
         requestSender = NULL;
@@ -418,7 +414,7 @@ ServerStateData::startIcap(ICAPServiceRep::Pointer service, HttpRequest *cause)
 
     adaptedHeadSource = initiateIcap(
         new ICAPModXactLauncher(this, vrep, cause, service));
-    return true;
+    return adaptedHeadSource != NULL;
 }
 
 // properly cleans up ICAP-related state
@@ -488,7 +484,7 @@ ServerStateData::adaptVirginReplyBody(const char *data, ssize_t len)
 
 // can supply more virgin response body data
 void
-ServerStateData::noteMoreBodySpaceAvailable(BodyPipe &)
+ServerStateData::noteMoreBodySpaceAvailable(BodyPipe::Pointer)
 {
     if (responseBodyBuffer) {
         addVirginReplyBody(NULL, 0); // kick the buffered fragment alive again
@@ -502,7 +498,7 @@ ServerStateData::noteMoreBodySpaceAvailable(BodyPipe &)
 
 // the consumer of our virgin response body aborted
 void
-ServerStateData::noteBodyConsumerAborted(BodyPipe &bp)
+ServerStateData::noteBodyConsumerAborted(BodyPipe::Pointer)
 {
     stopProducingFor(virginBodyDestination, false);
 
@@ -537,7 +533,6 @@ ServerStateData::noteIcapAnswer(HttpMsg *msg)
         if (doneWithIcap()) // we may still be sending virgin response
             handleIcapCompleted();
     }
-
 }
 
 // will not receive adapted response headers (and, hence, body)
@@ -603,7 +598,6 @@ ServerStateData::handleIcapCompleted()
     }
 
     completeForwarding();
-
     quitIfAllDone();
 }
 

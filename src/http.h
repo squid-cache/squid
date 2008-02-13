@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.33 2007/12/26 23:39:55 hno Exp $
+ * $Id: http.h,v 1.34 2008/02/12 23:55:26 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -47,8 +47,6 @@ public:
     HttpStateData(FwdState *);
     ~HttpStateData();
 
-    static IOCB SendComplete;
-    static IOCB ReadReplyWrapper;
     static void httpBuildRequestHeader(HttpRequest * request,
                                        HttpRequest * orig_request,
                                        StoreEntry * entry,
@@ -60,7 +58,7 @@ public:
     bool sendRequest();
     void processReplyHeader();
     void processReplyBody();
-    void readReply(size_t len, comm_err_t flag, int xerrno);
+    void readReply(const CommIoCbParams &io);
     virtual void maybeReadVirginBody(); // read response data from the network
     int cacheableReply();
 
@@ -82,6 +80,7 @@ protected:
     virtual HttpRequest *originalRequest();
 
 private:
+    AsyncCall::Pointer closeHandler;
     enum ConnectionStatus {
         INCOMPLETE_MSG,
         COMPLETE_PERSISTENT_MSG,
@@ -107,7 +106,11 @@ private:
     bool decodeAndWriteReplyBody();
     void doneSendingRequestBody();
     void requestBodyHandler(MemBuf &);
-    virtual void sentRequestBody(int fd, size_t size, comm_err_t errflag);
+    virtual void sentRequestBody(const CommIoCbParams &io);
+    void sendComplete(const CommIoCbParams &io);
+    void httpStateConnClosed(const CommCloseCbParams &params);
+    void httpTimeout(const CommTimeoutCbParams &params);
+
     mb_size_t buildRequestPrefix(HttpRequest * request,
                                  HttpRequest * orig_request,
                                  StoreEntry * entry,

@@ -1,6 +1,6 @@
 
 /*
- * $Id: Server.h,v 1.12 2008/02/08 18:30:18 rousskov Exp $
+ * $Id: Server.h,v 1.13 2008/02/12 23:55:26 rousskov Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -49,6 +49,8 @@
 #include "StoreIOBuffer.h"
 #include "forward.h"
 #include "BodyPipe.h"
+#include "ICAP/AsyncJob.h"
+#include "CommCalls.h"
 
 #if ICAP_CLIENT
 #include "ICAP/ICAPServiceRep.h"
@@ -75,9 +77,9 @@ public:
     // BodyConsumer: consume request body or adapted response body.
     // The implementation just calls the corresponding HTTP or ICAP handle*()
     // method, depending on the pipe.
-    virtual void noteMoreBodyDataAvailable(BodyPipe &);
-    virtual void noteBodyProductionEnded(BodyPipe &);
-    virtual void noteBodyProducerAborted(BodyPipe &);
+    virtual void noteMoreBodyDataAvailable(BodyPipe::Pointer);
+    virtual void noteBodyProductionEnded(BodyPipe::Pointer);
+    virtual void noteBodyProducerAborted(BodyPipe::Pointer);
 
     // read response data from the network
     virtual void maybeReadVirginBody() = 0;
@@ -97,10 +99,18 @@ public:
     virtual void noteIcapQueryAbort(bool final);
 
     // BodyProducer: provide virgin response body to ICAP.
-    virtual void noteMoreBodySpaceAvailable(BodyPipe &);
-    virtual void noteBodyConsumerAborted(BodyPipe &);
+    virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer );
+    virtual void noteBodyConsumerAborted(BodyPipe::Pointer );
 #endif
     virtual void processReplyBody() = 0;
+
+//AsyncJob virtual methods
+    virtual bool doneAll() const { return
+#if ICAP_CLIENT
+                                       ICAPInitiator::doneAll() &&
+				       BodyProducer::doneAll() &&
+#endif
+				       BodyConsumer::doneAll() && false;}
 
 public: // should be protected
     void serverComplete(); // call when no server communication is expected
@@ -123,9 +133,8 @@ protected:
     // sending of the request body to the server
     void sendMoreRequestBody();
     // has body; kids overwrite to increment I/O stats counters
-    virtual void sentRequestBody(int fd, size_t size, comm_err_t errflag) = 0;
+    virtual void sentRequestBody(const CommIoCbParams &io) = 0;
     virtual void doneSendingRequestBody() = 0;
-    static IOCB sentRequestBodyWrapper;
 
     virtual void closeServer() = 0; // end communication with the server
     virtual bool doneWithServer() const = 0; // did we end communication?
@@ -173,7 +182,7 @@ public: // should not be
 
 protected:
     BodyPipe::Pointer requestBodySource; // to consume request body
-    IOCB *requestSender; // set if we are expecting comm_write to call us back
+    AsyncCall::Pointer requestSender; // set if we are expecting comm_write to call us back
 
 #if ICAP_CLIENT
     BodyPipe::Pointer virginBodyDestination; // to provide virgin response body
