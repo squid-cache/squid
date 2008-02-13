@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.cc,v 1.18 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id: AuthUserRequest.cc,v 1.19 2008/02/12 23:29:25 rousskov Exp $
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 6803fde1-d5a2-4c29-9034-1c0c9f650eb4
@@ -286,7 +286,7 @@ AuthUserRequest::connLastHeader()
  * This is basically a handle approach.
  */
 static void
-authenticateAuthenticateUser(AuthUserRequest * auth_user_request, HttpRequest * request, ConnStateData::Pointer &conn, http_hdr_type type)
+authenticateAuthenticateUser(AuthUserRequest * auth_user_request, HttpRequest * request, ConnStateData * conn, http_hdr_type type)
 {
     assert(auth_user_request != NULL);
 
@@ -294,7 +294,7 @@ authenticateAuthenticateUser(AuthUserRequest * auth_user_request, HttpRequest * 
 }
 
 static AuthUserRequest *
-authTryGetUser (AuthUserRequest **auth_user_request, ConnStateData::Pointer & conn, HttpRequest * request)
+authTryGetUser (AuthUserRequest **auth_user_request, ConnStateData * conn, HttpRequest * request)
 {
     if (*auth_user_request)
         return *auth_user_request;
@@ -329,7 +329,7 @@ authTryGetUser (AuthUserRequest **auth_user_request, ConnStateData::Pointer & co
  */
 auth_acl_t
 
-AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData::Pointer conn, IPAddress &src_addr)
+AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, IPAddress &src_addr)
 {
     const char *proxy_auth;
     assert(headertype != 0);
@@ -508,7 +508,7 @@ AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_typ
 
 auth_acl_t
 
-AuthUserRequest::tryToAuthenticateAndSetAuthUser(AuthUserRequest ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData::Pointer conn, IPAddress &src_addr)
+AuthUserRequest::tryToAuthenticateAndSetAuthUser(AuthUserRequest ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, IPAddress &src_addr)
 {
     /* If we have already been called, return the cached value */
     AuthUserRequest *t = authTryGetUser (auth_user_request, conn, request);
