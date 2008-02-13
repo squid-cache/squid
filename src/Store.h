@@ -1,6 +1,6 @@
 
 /*
- * $Id: Store.h,v 1.42 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id: Store.h,v 1.43 2008/02/12 23:33:48 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -48,6 +48,8 @@
 #if USE_SQUID_ESI
 #include "ESIElement.h"
 #endif
+
+class AsyncCall;
 
 class StoreClient;
 
@@ -113,7 +115,7 @@ public:
     void destroyMemObject();
     int checkTooSmall();
 
-    void delayAwareRead(int fd, char *buf, int len, IOCB *handler, void *data);
+    void delayAwareRead(int fd, char *buf, int len, AsyncCall::Pointer callback);
 
     void setNoDelay (bool const);
     bool modifiedSince(HttpRequest * request) const;

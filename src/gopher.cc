@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.209 2007/05/29 13:31:40 amosjeffries Exp $
+ * $Id: gopher.cc,v 1.210 2008/02/12 23:33:48 rousskov Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -815,7 +815,7 @@ gopherReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void
 
     if (do_next_read)
         comm_read(fd, buf, read_sz, gopherReadReply, gopherState);
-
+    
     return;
 }
 
@@ -884,7 +884,9 @@ gopherSendComplete(int fd, char *buf, size_t size, comm_err_t errflag, int xerrn
     }
 
     /* Schedule read reply. */
-    entry->delayAwareRead(fd, gopherState->replybuf, BUFSIZ, gopherReadReply, gopherState);
+    AsyncCall::Pointer call =  commCbCall(10,5, "gopherReadReply",
+				 CommIoCbPtrFun(gopherReadReply, gopherState));
+    entry->delayAwareRead(fd, gopherState->replybuf, BUFSIZ, call);
 
     if (buf)
         memFree(buf, MEM_4K_BUF);	/* Allocated by gopherSendRequest. */
