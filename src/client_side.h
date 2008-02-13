@@ -1,5 +1,5 @@
 /*
- * $Id: client_side.h,v 1.29 2008/02/11 22:25:22 rousskov Exp $
+ * $Id: client_side.h,v 1.30 2008/02/12 23:07:52 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,6 +37,8 @@
 #include "StoreIOBuffer.h"
 #include "BodyPipe.h"
 #include "RefCount.h"
+#include "ICAP/AsyncJob.h"
+#include "CommCalls.h"
 
 class ConnStateData;
 
@@ -109,7 +111,7 @@ unsigned parsed_ok: 1; /* Was this parsed correctly? */
     clientStreamNode * getTail() const;
     clientStreamNode * getClientReplyContext() const;
     void connIsFinished();
-    void removeFromConnectionList(RefCount<ConnStateData> conn);
+    void removeFromConnectionList(ConnStateData * conn);
     void deferRecipientForLater(clientStreamNode * node, HttpReply * rep, StoreIOBuffer receivedData);
     bool multipartRangeRequest() const;
     void registerWithConn();
@@ -126,11 +128,10 @@ private:
 };
 
 /* A connection to a socket */
-class ConnStateData : public BodyProducer, public RefCountable
+class ConnStateData : public BodyProducer/*, public RefCountable*/
 {
 
 public:
-    typedef RefCount<ConnStateData> Pointer;
 
     ConnStateData();
     ~ConnStateData();
@@ -202,11 +203,19 @@ public:
     void startClosing(const char *reason);
 
     BodyPipe::Pointer expectRequestBody(int64_t size);
-    virtual void noteMoreBodySpaceAvailable(BodyPipe &);
-    virtual void noteBodyConsumerAborted(BodyPipe &);
+    virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer);
+    virtual void noteBodyConsumerAborted(BodyPipe::Pointer);
 
     void handleReadData(char *buf, size_t size);
     void handleRequestBodyData();
+
+    // comm callbacks
+    void clientReadRequest(const CommIoCbParams &io);
+    void connStateClosed(const CommCloseCbParams &io);
+    void requestTimeout(const CommTimeoutCbParams &params);
+
+    // AsyncJob API
+    virtual bool doneAll() const { return BodyProducer::doneAll() && false;}
 
 #if USE_SSL
     bool switchToHttps();
@@ -216,12 +225,18 @@ public:
 #endif
 
 private:
+    int connReadWasError(comm_err_t flag, int size, int xerrno);
+    int connFinishedWithConn(int size);
+    void clientMaybeReadData(int do_next_read);
+    void clientAfterReadingRequests(int do_next_read);
+
+private:
     CBDATA_CLASS2(ConnStateData);
     bool transparent_;
     bool reading_;
     bool closing_;
+
     bool switchedToHttps_;
-    Pointer openReference;
     BodyPipe::Pointer bodyPipe; // set when we are reading request body
 };
 

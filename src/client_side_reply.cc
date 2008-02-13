@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.152 2008/02/08 18:31:02 rousskov Exp $
+ * $Id: client_side_reply.cc,v 1.153 2008/02/12 23:07:52 rousskov Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1906,7 +1906,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 
     StoreEntry *entry = http->storeEntry();
 
-    ConnStateData::Pointer conn = http->getConn();
+    ConnStateData * conn = http->getConn();
 
     int fd = conn != NULL ? conn->fd : -1;
 
