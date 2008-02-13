@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.cci,v 1.5 2006/05/11 21:29:02 wessels Exp $
+ * $Id: client_side_request.cci,v 1.6 2008/02/13 00:00:57 rousskov Exp $
  *
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins 
@@ -49,23 +49,33 @@ ClientHttpRequest::memObject() const
     return NULL;
 }
 
-ConnStateData::Pointer
+ConnStateData *
 ClientHttpRequest::getConn()
 {
+    if(!cbdataReferenceValid(conn_))
+	return NULL;
+
     return conn_;
 }
 
-ConnStateData::Pointer const
+ConnStateData * const
 ClientHttpRequest::getConn() const
 {
+    if(!cbdataReferenceValid(conn_))
+	return NULL;
+
     return conn_;
 }
 
 void
-ClientHttpRequest::setConn(ConnStateData::Pointer aConn)
+ClientHttpRequest::setConn(ConnStateData * aConn)
 {
     assert (conn_ == NULL || aConn == NULL);
-    conn_ = aConn;
+
+    if(conn_)
+	cbdataReferenceDone(conn_);
+
+    conn_ = cbdataReference(aConn);
 }
 
 StoreEntry *
