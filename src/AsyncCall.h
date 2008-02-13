@@ -1,34 +1,5 @@
-
 /*
- * $Id: AsyncCall.h,v 1.2 2007/05/08 16:15:50 rousskov Exp $
- *
- *
- * SQUID Web Proxy Cache          http://www.squid-cache.org/
- * ----------------------------------------------------------
- *
- *  Squid is the result of efforts by numerous individuals from
- *  the Internet community; see the CONTRIBUTORS file for full
- *  details.   Many organizations have provided support for Squid's
- *  development; see the SPONSORS file for full details.  Squid is
- *  Copyrighted (C) 2001 by the Regents of the University of
- *  California; see the COPYRIGHT file for full details.  Squid
- *  incorporates software developed and/or copyrighted by other
- *  sources; see the CREDITS file for full details.
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *  
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *  
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
+ * $Id: AsyncCall.h,v 1.3 2008/02/12 23:40:02 rousskov Exp $
  */
 
 #ifndef SQUID_ASYNCCALL_H
@@ -36,6 +7,7 @@
 
 //#include "cbdata.h"
 #include "event.h"
+//#include "TextException.h"
 
 // A call is asynchronous if the caller proceeds after the call is made,
 // and the callee receives the call during the next main loop iteration.
@@ -53,40 +25,109 @@
 // method calls, but they give you a uniform interface and handy call 
 // debugging.
 
-// See AsyncCall.cc for a usage sketch.
+class CallDialer;
+class AsyncCallQueue;
 
+// TODO: add unique call IDs
+// TODO: CBDATA_CLASS2 kids
+class AsyncCall: public RefCountable
+{
+public:
+    typedef RefCount <AsyncCall> Pointer;
+    friend class AsyncCallQueue;
 
-// Make an asynchronous object->callName() call.
-#define AsyncCall(debugSection, debugLevel, objectPtr, callName) \
-    scheduleAsyncCall((debugSection), (debugLevel), __FILE__, __LINE__, \
-        (objectPtr), #callName, \
-        &(callName ## Wrapper))
+    AsyncCall(int aDebugSection, int aDebugLevel, const char *aName);
+    virtual ~AsyncCall();
+    
+    void make(); // fire if we can; handles general call debugging
 
-// Declare and define a wrapper for an asynchronous call handler method
-#define AsyncCallWrapper(debugSection, debugLevel, ClassName, callName) \
-static \
-void callName ## Wrapper(void *data) { \
-    ClassName *objectPtr = static_cast<ClassName*>(data); \
-    if (enterAsyncCallWrapper((debugSection), (debugLevel), data, #ClassName, #callName)) { \
-        objectPtr->callName(); \
-        exitAsyncCallWrapper((debugSection), (debugLevel), data, #ClassName, #callName); \
-    } \
+    // can be called from canFire() for debugging; always returns false
+    bool cancel(const char *reason);
+    
+    bool canceled() { return isCanceled != NULL; }
+
+    virtual CallDialer *getDialer() = 0;
+
+    void print(std::ostream &os);
+   
+    void setNext(AsyncCall::Pointer aNext) {
+         theNext = aNext;
+    }
+
+    AsyncCall::Pointer &Next() {
+         return theNext;
+    }
+
+public:
+    const char *const name;
+    const int debugSection;
+    const int debugLevel;
+    const unsigned int id;
+
+protected:
+    virtual bool canFire();
+
+    virtual void fire() = 0;
+
+    AsyncCall::Pointer theNext; // used exclusively by AsyncCallQueue
+
+private:
+    const char *isCanceled; // set to the cancelation reason by cancel()
+    static unsigned int TheLastId;
+};
+
+inline
+std::ostream &operator <<(std::ostream &os, AsyncCall &call)
+{
+    call.print(os);
+    return os;
 }
 
+// Interface for all async call dialers
+class CallDialer
+{
+public:
+    CallDialer() {}
+    virtual ~CallDialer() {}
 
-// Hint: to customize debugging of asynchronous messages in a class, provide
-// class method called scheduleAsyncCall, enterAsyncCallWrapper, and/or
-// exitAsyncCallWrapper. Class method will take priority over these globals.
+    // TODO: Add these for clarity when CommCbFunPtrCallT is gone
+    //virtual bool canDial(AsyncCall &call) = 0;
+    //virtual void dial(AsyncCall &call) = 0;
 
-extern void scheduleAsyncCall(int debugSection, int debugLevel,
-    const char *fileName, int fileLine, void *objectPtr, const char *callName,
-    EVH *wrapper, bool cbdataProtected = true);
+    virtual void print(std::ostream &os) const = 0;
+};
 
-extern bool enterAsyncCallWrapper(int debugSection, int debugLevel,
-    void *objectPtr, const char *className, const char *methodName);
+// This template implements an AsyncCall using a specified Dialer class
+template <class Dialer>
+class AsyncCallT: public AsyncCall
+{
+public:
+    AsyncCallT(int aDebugSection, int aDebugLevel, const char *aName,
+        const Dialer &aDialer): AsyncCall(aDebugSection, aDebugLevel, aName),
+        dialer(aDialer) {}
 
-extern void exitAsyncCallWrapper(int debugSection, int debugLevel,
-    void *objectPtr, const char *className, const char *methodName);
+    CallDialer *getDialer() { return &dialer; }
+
+protected:
+    virtual bool canFire() { return AsyncCall::canFire() && 
+        dialer.canDial(*this); }
+    virtual void fire() { dialer.dial(*this); }
+
+    Dialer dialer;
+};
+
+template <class Dialer>
+inline
+AsyncCall *
+asyncCall(int aDebugSection, int aDebugLevel, const char *aName,
+    const Dialer &aDialer)
+{
+    return new AsyncCallT<Dialer>(aDebugSection, aDebugLevel, aName, aDialer);
+}
+
+/* Call scheduling helpers. Use ScheduleCallHere if you can. */
+extern bool ScheduleCall(const char *fileName, int fileLine, AsyncCall::Pointer &call);
+#define ScheduleCallHere(call) ScheduleCall(__FILE__, __LINE__, (call))
 
 
 #endif /* SQUID_ASYNCCALL_H */
