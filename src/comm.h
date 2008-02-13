@@ -3,7 +3,7 @@
 
 #include "squid.h"
 #include "AsyncEngine.h"
-#include "CompletionDispatcher.h"
+#include "AsyncCall.h"
 #include "StoreIOBuffer.h"
 #include "Array.h"
 #include "IPAddress.h"
@@ -23,16 +23,13 @@ typedef enum {
     COMM_ERR_DNS = -9,
     COMM_ERR_CLOSING = -10,
 } comm_err_t;
-typedef void IOFCB(int fd, StoreIOBuffer receivedData, comm_err_t flag, int xerrno, void *data);
-typedef void IOWCB(int fd, char *buffer, size_t len, comm_err_t flag, int xerrno, void *data);
 
-typedef void CWCB(int fd, char *, size_t size, comm_err_t flag, void *data);
 typedef void CNCB(int fd, comm_err_t status, int xerrno, void *data);
 
 typedef void IOCB(int fd, char *, size_t size, comm_err_t flag, int xerrno, void *data);
 
+
 /* comm.c */
-extern void comm_calliocallback(void);
 extern bool comm_iocallbackpending(void); /* inline candidate */
 
 extern int comm_listen(int fd);
@@ -47,6 +44,7 @@ SQUIDCEXTERN void comm_reset_close(int fd);
 SQUIDCEXTERN void comm_lingering_close(int fd);
 #endif
 SQUIDCEXTERN void commConnectStart(int fd, const char *, u_short, CNCB *, void *);
+void commConnectStart(int fd, const char *, u_short, AsyncCall::Pointer &cb);
 
 SQUIDCEXTERN int comm_connect_addr(int sock, const IPAddress &addr);
 SQUIDCEXTERN void comm_init(void);
@@ -63,9 +61,12 @@ SQUIDCEXTERN void commResetSelect(int);
 
 SQUIDCEXTERN int comm_udp_sendto(int sock, const IPAddress &to, const void *buf, int buflen);
 extern void comm_write(int fd, const char *buf, int len, IOCB *callback, void *callback_data, FREE *func);
+extern void comm_write(int fd, const char *buf, int size, AsyncCall::Pointer &callback, FREE * free_func = NULL);
 SQUIDCEXTERN void comm_write_mbuf(int fd, MemBuf *mb, IOCB * handler, void *handler_data);
+extern void comm_write_mbuf(int fd, MemBuf *mb, AsyncCall::Pointer &callback);
 SQUIDCEXTERN void commCallCloseHandlers(int fd);
 SQUIDCEXTERN int commSetTimeout(int fd, int, PF *, void *);
+extern int commSetTimeout(int fd, int, AsyncCall::Pointer &calback);
 SQUIDCEXTERN int ignoreErrno(int);
 SQUIDCEXTERN void commCloseAllSockets(void);
 SQUIDCEXTERN void checkTimeouts(void);
@@ -81,14 +82,19 @@ SQUIDCEXTERN void comm_quick_poll_required(void);
 class ConnectionDetail;
 typedef void IOACB(int fd, int nfd, ConnectionDetail *details, comm_err_t flag, int xerrno, void *data);
 extern void comm_accept(int fd, IOACB *handler, void *handler_data);
+extern void comm_accept(int fd, AsyncCall::Pointer &call);
 extern void comm_add_close_handler(int fd, PF *, void *);
+extern void comm_add_close_handler(int fd, AsyncCall::Pointer &);
 extern void comm_remove_close_handler(int fd, PF *, void *);
+extern void comm_remove_close_handler(int fd, AsyncCall::Pointer &);
+
 
 extern int comm_has_pending_read_callback(int fd);
-extern bool comm_has_pending_read(int fd);
+extern bool comm_monitors_read(int fd);
 extern void comm_read(int fd, char *buf, int len, IOCB *handler, void *data);
+extern void comm_read(int fd, char *buf, int len, AsyncCall::Pointer &callback);
 extern void comm_read_cancel(int fd, IOCB *callback, void *data);
-extern void fdc_open(int fd, unsigned int type, char const *desc);
+extern void comm_read_cancel(int fd, AsyncCall::Pointer &callback);
 extern int comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, IPAddress &from);
 extern int comm_udp_recv(int fd, void *buf, size_t len, int flags);
 extern ssize_t comm_udp_send(int s, const void *buf, size_t len, int flags);
@@ -142,6 +148,8 @@ public:
      * instance with it).
      */
     static IOCB AbortCheckReader;
+
+    bool isMonitoring(int fd) const;
     void monitor (int);
     void stopMonitoring (int);
     void doIOLoop();
@@ -167,15 +175,6 @@ private:
     void addCheck (int const);
 
     void removeCheck (int const);
-};
-
-/* a dispatcher for comms events */
-
-class CommDispatcher : public CompletionDispatcher
-{
-
-public:
-    virtual bool dispatch();
 };
 
 /* A comm engine that calls comm_select */

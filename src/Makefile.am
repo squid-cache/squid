@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.199 2008/02/11 22:24:38 rousskov Exp $
+#  $Id: Makefile.am,v 1.200 2008/02/12 22:58:29 rousskov Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -403,8 +403,14 @@ squid_COMMSOURCES = \
 libsquid_la_SOURCES = \
 	comm.cc \
 	comm.h \
+	CommCalls.cc \
+	CommCalls.h \
 	IPInterception.cc \
-	IPInterception.h
+	IPInterception.h \
+        ICAP/AsyncJob.cc \
+        ICAP/AsyncJob.h \
+        TextException.cc \
+        TextException.h
 
 # authentication framework
 libauth_la_SOURCES = \
@@ -425,8 +431,11 @@ squid_SOURCES = \
 	ACLChecklist.h \
 	$(squid_ACLSOURCES) \
 	asn.cc \
+	AsyncCallQueue.cc \
+	AsyncCallQueue.h \
 	AsyncCall.cc \
 	AsyncCall.h \
+	AsyncJobCalls.h \
 	AsyncEngine.cc \
 	AsyncEngine.h \
 	authenticate.cc \
@@ -619,8 +628,6 @@ squid_SOURCES = \
 	structs.h \
 	SwapDir.cc \
 	SwapDir.h \
-	TextException.cc \
-	TextException.h \
 	time.cc \
 	tools.cc \
 	tunnel.cc \
@@ -691,8 +698,6 @@ squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@ICAP_LIBS@
 
 ICAP_libicap_a_SOURCES = \
-	ICAP/AsyncJob.cc \
-	ICAP/AsyncJob.h \
 	ICAP/ICAPClient.cc \
 	ICAP/ICAPClient.h \
 	ICAP/ICAPInitiator.cc \
@@ -769,6 +774,8 @@ ufsdump_SOURCES = \
 	time.cc \
 	ufsdump.cc \
 	url.cc \
+	AsyncCallQueue.cc \
+	AsyncCallQueue.h \
 	AsyncCall.cc \
 	AsyncCall.h \
 	BodyPipe.cc \
@@ -898,8 +905,6 @@ ufsdump_SOURCES = \
 	store_swapout.cc \
 	structs.h \
 	SwapDir.cc \
-	TextException.cc \
-	TextException.h \
 	tools.cc \
 	typedefs.h \
 	$(UNLINKDSOURCE) \
@@ -1328,6 +1333,8 @@ tests_testCacheManager_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
+	AsyncCallQueue.cc \
+	AsyncCallQueue.h \
 	AsyncCall.cc \
 	authenticate.cc \
 	BodyPipe.cc \
@@ -1429,7 +1436,6 @@ tests_testCacheManager_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
-	TextException.cc \
 	tools.cc \
 	tunnel.cc \
 	SwapDir.cc \
@@ -1498,6 +1504,8 @@ tests_testEvent_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
+	AsyncCallQueue.cc \
+	AsyncCallQueue.h \
 	AsyncCall.cc \
 	authenticate.cc \
 	BodyPipe.cc \
@@ -1598,7 +1606,6 @@ tests_testEvent_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
-	TextException.cc \
 	tools.cc \
 	tunnel.cc \
 	SwapDir.cc \
@@ -1654,6 +1661,8 @@ tests_testEventLoop_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
+	AsyncCallQueue.cc \
+	AsyncCallQueue.h \
 	AsyncCall.cc \
 	authenticate.cc \
 	BodyPipe.cc \
@@ -1754,7 +1763,6 @@ tests_testEventLoop_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
-	TextException.cc \
 	tools.cc \
 	tunnel.cc \
 	SwapDir.cc \
@@ -1834,6 +1842,8 @@ tests_test_http_range_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
+	AsyncCallQueue.cc \
+	AsyncCallQueue.h \
 	AsyncCall.cc \
 	authenticate.cc \
 	BodyPipe.cc \
@@ -1940,7 +1950,6 @@ tests_test_http_range_SOURCES = \
 	StoreSwapLogData.cc \
 	String.cc \
 	SwapDir.cc \
-	TextException.cc \
 	time.cc \
 	tools.cc \
 	tunnel.cc \
@@ -1997,6 +2006,8 @@ tests_testHttpRequest_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
+	AsyncCallQueue.cc \
+	AsyncCallQueue.h \
 	AsyncCall.cc \
 	authenticate.cc \
 	BodyPipe.cc \
@@ -2098,7 +2109,6 @@ tests_testHttpRequest_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
-	TextException.cc \
 	tools.cc \
 	tunnel.cc \
 	SwapDir.cc \
@@ -2357,6 +2367,8 @@ tests_testURL_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
+	AsyncCallQueue.cc \
+	AsyncCallQueue.h \
 	AsyncCall.cc \
 	authenticate.cc \
 	BodyPipe.cc \
@@ -2457,7 +2469,6 @@ tests_testURL_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
-	TextException.cc \
 	tools.cc \
 	tunnel.cc \
 	SwapDir.cc \
