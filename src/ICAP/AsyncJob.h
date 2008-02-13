@@ -1,38 +1,12 @@
-
-/*
- * $Id: AsyncJob.h,v 1.2 2007/06/19 21:00:11 rousskov Exp $
- *
- *
- * SQUID Web Proxy Cache          http://www.squid-cache.org/
- * ----------------------------------------------------------
- *
- *  Squid is the result of efforts by numerous individuals from
- *  the Internet community; see the CONTRIBUTORS file for full
- *  details.   Many organizations have provided support for Squid's
- *  development; see the SPONSORS file for full details.  Squid is
- *  Copyrighted (C) 2001 by the Regents of the University of
- *  California; see the COPYRIGHT file for full details.  Squid
- *  incorporates software developed and/or copyrighted by other
- *  sources; see the CREDITS file for full details.
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *  
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *  
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
- */
+  /*
+   * $Id: AsyncJob.h,v 1.3 2008/02/12 23:40:02 rousskov Exp $
+   */
 
 #ifndef SQUID_ASYNC_JOB_H
 #define SQUID_ASYNC_JOB_H
+
+// TODO: move src/ICAP/AsyncJob.* to src/
+
 
 #include "AsyncCall.h"
 
@@ -65,51 +39,89 @@ public:
     AsyncJob(const char *aTypeName);
     virtual ~AsyncJob();
 
+    virtual void *toCbdata() = 0;
     void noteStart(); // calls virtual start
-    AsyncCallWrapper(93,3, AsyncJob, noteStart);
 
 protected:
+    // XXX: temporary method to replace "delete this" in jobs-in-transition.
+    // Will be replaced with calls to mustStop() when transition is complete.
+    void deleteThis(const char *aReason);
+
     void mustStop(const char *aReason); // force done() for a reason
 
     bool done() const; // the job is destroyed in callEnd() when done()
 
-    virtual void start() = 0;
-    virtual bool doneAll() const = 0; // return true when done
-    virtual void swanSong() = 0; // perform internal cleanup
-    virtual const char *status() const = 0; // for debugging
+    virtual void start();
+    virtual bool doneAll() const; // return true when done
+    virtual void swanSong() {}; // perform internal cleanup
+    virtual const char *status() const; // for debugging
 
+public:
     // asynchronous call maintenance
-    bool callStart(const char *methodName);
+    bool canBeCalled(AsyncCall &call) const;
+    void callStart(AsyncCall &call);
     virtual void callException(const TextException &e);
     virtual void callEnd();
 
+protected:
     const char *stopReason; // reason for forcing done() to be true
     const char *typeName; // kid (leaf) class name, for debugging
-    const char *inCall; // name of the asynchronous call being executed, if any
+    AsyncCall::Pointer inCall; // the asynchronous call being handled, if any
+    const unsigned int id;
+
+private:
+    static unsigned int TheLastId;
 };
 
 
-// call guards for all "asynchronous" note*() methods
-// TODO: Move to core.
+/*
+ * This is a base class for all job call dialers. It does all the job
+ * dialing logic (debugging, handling exceptions, etc.) except for calling
+ * the job method. The latter is not possible without templates and we
+ * want to keep this class simple and template-free. Thus, we add a dial()
+ * virtual method that the JobCallT template below will implement for us,
+ * calling the job.
+ */
+class JobDialer: public CallDialer
+{
+public:
+    JobDialer(AsyncJob *aJob);
+    JobDialer(const JobDialer &d);
+    virtual ~JobDialer();
 
-// asynchronous call entry:
-// - open the try clause;
-// - call callStart().
-#define AsyncCallEnter(method) \
-    try { \
-        if (!callStart(#method)) \
-            return;
+    virtual bool canDial(AsyncCall &call);
+    void dial(AsyncCall &call);
 
-// asynchronous call exit:
-// - close the try clause;
-// - catch exceptions;
-// - let callEnd() handle transaction termination conditions
-#define AsyncCallExit() \
-    } \
-    catch (const TextException &e) { \
-        callException(e); \
-    } \
-    callEnd();
+    AsyncJob *job;
+    void *lock; // job's cbdata
+
+protected:
+    virtual void doDial() = 0; // actually calls the job method
+
+private:
+    // not implemented and should not be needed
+    JobDialer &operator =(const JobDialer &); 
+};
+
+#include "AsyncJobCalls.h"
+
+template <class Dialer>
+bool
+CallJob(int debugSection, int debugLevel, const char *fileName, int fileLine,
+    const char *callName, const Dialer &dialer)
+{
+    AsyncCall::Pointer call = asyncCall(debugSection, debugLevel, callName, dialer);
+    return ScheduleCall(fileName, fileLine, call);
+}
+
+
+#define CallJobHere(debugSection, debugLevel, job, method) \
+    CallJob((debugSection), (debugLevel), __FILE__, __LINE__, #method, \
+        MemFun((job), &method))
+
+#define CallJobHere1(debugSection, debugLevel, job, method, arg1) \
+    CallJob((debugSection), (debugLevel), __FILE__, __LINE__, #method, \
+        MemFun((job), &method, (arg1)))
 
 
 #endif /* SQUID_ASYNC_JOB_H */
