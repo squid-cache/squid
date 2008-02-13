@@ -9,7 +9,7 @@
 #include "ICAPXaction.h"
 
 
-ICAPLauncher::ICAPLauncher(const char *aTypeName, ICAPInitiator *anInitiator, ICAPServiceRep::Pointer &aService):
+ICAPLauncher::ICAPLauncher(const char *aTypeName, ICAPInitiator *anInitiator, ICAPServiceRep::Pointer &aService):AsyncJob(aTypeName),
     ICAPInitiate(aTypeName, anInitiator, aService),
     theXaction(0), theLaunches(0)
 {
@@ -42,30 +42,23 @@ void ICAPLauncher::launchXaction(bool final)
 
 void ICAPLauncher::noteIcapAnswer(HttpMsg *message)
 {
-    AsyncCallEnter(noteIcapAnswer);
-
     sendAnswer(message);
     clearIcap(theXaction);
     Must(done());
-
-    AsyncCallExit();
+    debugs(93,3, HERE << "ICAPLauncher::noteIcapAnswer exiting "); 
 }
 
 void ICAPLauncher::noteInitiatorAborted()
 {
-    AsyncCallEnter(noteInitiatorAborted);
 
     announceInitiatorAbort(theXaction); // propogate to the transaction
     clearInitiator();
     Must(done()); // should be nothing else to do
 
-    AsyncCallExit();
 }
 
 void ICAPLauncher::noteIcapQueryAbort(bool final)
 {
-    AsyncCallEnter(noteQueryAbort);
-
     clearIcap(theXaction);
 
     // TODO: add more checks from FwdState::checkRetry()?
@@ -77,7 +70,6 @@ void ICAPLauncher::noteIcapQueryAbort(bool final)
         Must(done()); // swanSong will notify the initiator
     }
 
-    AsyncCallExit();
 }
 
 bool ICAPLauncher::doneAll() const {

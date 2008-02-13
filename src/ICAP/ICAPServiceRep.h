@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPServiceRep.h,v 1.11 2007/07/24 16:43:33 rousskov Exp $
+ * $Id: ICAPServiceRep.h,v 1.12 2008/02/12 23:12:45 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -90,8 +90,7 @@ public:
     bool broken() const; // see comments above
     bool up() const; // see comments above
 
-    typedef void Callback(void *data, Pointer &service);
-    void callWhenReady(Callback *cb, void *data);
+    void callWhenReady(AsyncCall::Pointer &cb);
 
     // the methods below can only be called on an up() service
     bool wantsUrl(const String &urlPath) const;
@@ -99,6 +98,9 @@ public:
     bool allows204() const;
 
     void noteFailure(); // called by transactions to report service failure
+    
+    //AsyncJob virtual methods
+    virtual bool doneAll() const { return ICAPInitiator::doneAll() && false;}
 
 public:
     String key;
@@ -128,8 +130,7 @@ private:
     struct Client
     {
         Pointer service; // one for each client to preserve service
-        Callback *callback;
-        void *data;
+        AsyncCall::Pointer callback;
     };
 
     typedef Vector<Client> Clients;

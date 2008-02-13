@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPXaction.h,v 1.12 2007/06/19 21:08:33 rousskov Exp $
+ * $Id: ICAPXaction.h,v 1.13 2008/02/12 23:12:46 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,11 +35,13 @@
 #define SQUID_ICAPXACTION_H
 
 #include "comm.h"
+#include "CommCalls.h"
 #include "MemBuf.h"
 #include "ICAPServiceRep.h"
 #include "ICAPInitiate.h"
 
 class HttpMsg;
+class CommConnectCbParams;
 
 /*
  * The ICAP Xaction implements common tasks for ICAP OPTIONS, REQMOD, and
@@ -61,11 +63,11 @@ public:
     void disableRetries();
 
     // comm handler wrappers, treat as private
-    void noteCommConnected(comm_err_t status);
-    void noteCommWrote(comm_err_t status, size_t sz);
-    void noteCommRead(comm_err_t status, size_t sz);
-    void noteCommTimedout();
-    void noteCommClosed();
+    void noteCommConnected(const CommConnectCbParams &io);
+    void noteCommWrote(const CommIoCbParams &io);
+    void noteCommRead(const CommIoCbParams &io);
+    void noteCommTimedout(const CommTimeoutCbParams &io);
+    void noteCommClosed(const CommCloseCbParams &io);
 
 protected:
     virtual void start();
@@ -111,8 +113,6 @@ protected:
     virtual void callEnd();
 
 protected:
-    const int id; // transaction ID for debugging, unique across ICAP xactions
-
     int connection;     // FD of the ICAP server connection
 
     /*
@@ -137,22 +137,13 @@ protected:
     const char *stopReason;
 
     // active (pending) comm callbacks for the ICAP server connection
-    CNCB *connector;
-    IOCB *reader;
-    IOCB *writer;
-    PF *closer;
+    AsyncCall::Pointer connector;
+    AsyncCall::Pointer reader;
+    AsyncCall::Pointer writer;
+    AsyncCall::Pointer closer;
 
 private:
-    static int TheLastId;
-
-    static void reusedConnection(void *data);
-
     //CBDATA_CLASS2(ICAPXaction);
 };
-
-// call guards for all "asynchronous" note*() methods
-// If we move ICAPXaction_* macros to core, they can use these generic names:
-#define ICAPXaction_Enter(method) AsyncCallEnter(method)
-#define ICAPXaction_Exit() AsyncCallExit()
 
 #endif /* SQUID_ICAPXACTION_H */

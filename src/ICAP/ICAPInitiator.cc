@@ -7,8 +7,9 @@
 #include "ICAPInitiator.h"
 
 ICAPInitiate *ICAPInitiator::initiateIcap(ICAPInitiate *x) {
-    x = cbdataReference(x);
-    return dynamic_cast<ICAPInitiate*>(ICAPInitiate::AsyncStart(x));
+    if ((x = dynamic_cast<ICAPInitiate*>(ICAPInitiate::AsyncStart(x))))
+        x = cbdataReference(x);
+    return x;    
 }
 
 void ICAPInitiator::clearIcap(ICAPInitiate *&x) {
@@ -19,7 +20,7 @@ void ICAPInitiator::clearIcap(ICAPInitiate *&x) {
 void ICAPInitiator::announceInitiatorAbort(ICAPInitiate *&x)
 {
     if (x) {
-        AsyncCall(93,5, x, ICAPInitiate::noteInitiatorAborted);
+	CallJobHere(93, 5, x, ICAPInitiate::noteInitiatorAborted);
         clearIcap(x);
     }
 }

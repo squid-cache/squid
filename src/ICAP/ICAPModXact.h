@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPModXact.h,v 1.10 2007/08/13 17:20:53 hno Exp $
+ * $Id: ICAPModXact.h,v 1.11 2008/02/12 23:12:45 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -136,13 +136,13 @@ public:
     ICAPModXact(ICAPInitiator *anInitiator, HttpMsg *virginHeader, HttpRequest *virginCause, ICAPServiceRep::Pointer &s);
 
     // BodyProducer methods
-    virtual void noteMoreBodySpaceAvailable(BodyPipe &);
-    virtual void noteBodyConsumerAborted(BodyPipe &);
+    virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer);
+    virtual void noteBodyConsumerAborted(BodyPipe::Pointer);
 
     // BodyConsumer methods
-    virtual void noteMoreBodyDataAvailable(BodyPipe &);
-    virtual void noteBodyProductionEnded(BodyPipe &);
-    virtual void noteBodyProducerAborted(BodyPipe &);
+    virtual void noteMoreBodyDataAvailable(BodyPipe::Pointer);
+    virtual void noteBodyProductionEnded(BodyPipe::Pointer);
+    virtual void noteBodyProducerAborted(BodyPipe::Pointer);
 
     // comm handlers
     virtual void handleCommConnected();

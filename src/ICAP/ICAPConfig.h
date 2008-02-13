@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPConfig.h,v 1.16 2007/06/28 15:28:59 rousskov Exp $
+ * $Id: ICAPConfig.h,v 1.17 2008/02/12 23:12:45 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,6 +37,7 @@
 #define SQUID_ICAPCONFIG_H
 
 #include "event.h"
+#include "AsyncCall.h"
 #include "ICAPServiceRep.h"
 
 class acl_access;
@@ -57,7 +58,7 @@ public:
     int prepare();
 };
 
-class ICAPAccessCheck
+class ICAPAccessCheck: public virtual AsyncJob
 {
 
 public:
@@ -77,12 +78,17 @@ private:
     String matchedClass;
     void do_callback();
     ICAPServiceRep::Pointer findBestService(ICAPClass *c, bool preferUp);
+    bool done;
 
 public:
     void check();
     void checkCandidates();
     static void ICAPAccessCheckCallbackWrapper(int, void*);
+#if 0
     static EVH ICAPAccessCheckCallbackEvent;
+#endif
+//AsyncJob virtual methods
+    virtual bool doneAll() const { return AsyncJob::doneAll() && done;}
 
 private:
     CBDATA_CLASS2(ICAPAccessCheck);

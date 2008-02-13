@@ -15,6 +15,7 @@ CBDATA_CLASS_INIT(ICAPOptXactLauncher);
 
 
 ICAPOptXact::ICAPOptXact(ICAPInitiator *anInitiator, ICAPServiceRep::Pointer &aService):
+    AsyncJob("ICAPOptXact"),
     ICAPXaction("ICAPOptXact", anInitiator, aService)
 {
 }
@@ -88,6 +89,7 @@ HttpMsg *ICAPOptXact::parseResponse()
 /* ICAPOptXactLauncher */
 
 ICAPOptXactLauncher::ICAPOptXactLauncher(ICAPInitiator *anInitiator, ICAPServiceRep::Pointer &aService):
+    AsyncJob("ICAPOptXactLauncher"),
     ICAPLauncher("ICAPOptXactLauncher", anInitiator, aService)
 {
 }

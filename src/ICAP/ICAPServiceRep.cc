@@ -14,7 +14,7 @@
 
 CBDATA_CLASS_INIT(ICAPServiceRep);
 
-ICAPServiceRep::ICAPServiceRep(): method(ICAP::methodNone),
+ICAPServiceRep::ICAPServiceRep(): AsyncJob("ICAPServiceRep"), method(ICAP::methodNone),
         point(ICAP::pointNone), port(-1), bypass(false),
         theOptions(NULL), theOptionsFetcher(0), theLastUpdate(0),
         theSessionFailures(0), isSuspended(0), notifying(false),
@@ -270,6 +270,7 @@ void ICAPServiceRep::noteTimeToUpdate()
     startGettingOptions();
 }
 
+#if 0
 static
 void ICAPServiceRep_noteTimeToNotify(void *data)
 {
@@ -277,6 +278,7 @@ void ICAPServiceRep_noteTimeToNotify(void *data)
     Must(service);
     service->noteTimeToNotify();
 }
+#endif
 
 void ICAPServiceRep::noteTimeToNotify()
 {
@@ -291,30 +293,26 @@ void ICAPServiceRep::noteTimeToNotify()
 
     while (!theClients.empty()) {
         Client i = theClients.pop_back();
-        us = i.service; // prevent callbacks from destroying us while we loop
-
-        if (cbdataReferenceValid(i.data))
-            (*i.callback)(i.data, us);
-
-        cbdataReferenceDone(i.data);
+		ScheduleCallHere(i.callback);
+		i.callback = 0;
     }
 
     notifying = false;
 }
 
-void ICAPServiceRep::callWhenReady(Callback *cb, void *data)
+void ICAPServiceRep::callWhenReady(AsyncCall::Pointer &cb)
 {
-    debugs(93,5, HERE << "ICAPService is asked to call " << data <<
+    Must(cb!=NULL);
+
+    debugs(93,5, HERE << "ICAPService is asked to call " << *cb <<
         " when ready " << status());
 
-    Must(cb);
     Must(self != NULL);
     Must(!broken()); // we do not wait for a broken service
 
     Client i;
-    i.service = self;
+    i.service = self; // TODO: is this really needed?
     i.callback = cb;
-    i.data = cbdataReference(data);
     theClients.push_back(i);
 
     if (theOptionsFetcher || notifying)
@@ -329,7 +327,7 @@ void ICAPServiceRep::callWhenReady(Callback *cb, void *data)
 void ICAPServiceRep::scheduleNotification()
 {
     debugs(93,7, "ICAPService will notify " << theClients.size() << " clients");
-    eventAdd("ICAPServiceRep::noteTimeToNotify", &ICAPServiceRep_noteTimeToNotify, this, 0, 0, true);
+     CallJobHere(93, 5, this, ICAPServiceRep::noteTimeToNotify);
 }
 
 bool ICAPServiceRep::needNewOptions() const
@@ -466,6 +464,7 @@ void ICAPServiceRep::startGettingOptions()
     debugs(93,6, "ICAPService will get new options " << status());
 
     theOptionsFetcher = initiateIcap(new ICAPOptXactLauncher(this, self));
+    Must(theOptionsFetcher);
     // TODO: timeout in case ICAPOptXact never calls us back?
     // Such a timeout should probably be a generic AsyncStart feature.
 }

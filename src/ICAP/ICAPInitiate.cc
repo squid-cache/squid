@@ -7,57 +7,18 @@
 #include "ICAPInitiator.h"
 #include "ICAPInitiate.h"
 
-/* The call objects below are not cbdata-protected or refcounted because 
- * nobody holds a pointer to them except for the event queue. 
- *
- * The calls do check the Initiator pointer to see if that is still valid.
- *
- * TODO: convert this to a generic AsyncCall1 class 
- * TODO: mempool kids of this class.
- */
-
-/* Event data and callback wrapper to call noteIcapAnswer with
- * the answer message as a parameter. 
- */
-class ICAPAnswerCall {
+// ICAPInitiator::noteIcapAnswer Dialer locks/unlocks the message in transit
+// TODO: replace HTTPMSGLOCK with general RefCounting and delete this class
+class IcapAnswerDialer: public UnaryMemFunT<ICAPInitiator, HttpMsg*>
+{
 public:
-    // use this function to make an asynchronous call
-    static void Schedule(const ICAPInitiatorHolder &anInitiator, HttpMsg *aMessage);
+    typedef UnaryMemFunT<ICAPInitiator, HttpMsg*> Parent;
 
-    static void Wrapper(void *data);
-
-protected:
-    ICAPAnswerCall(const ICAPInitiatorHolder &anInitiator, HttpMsg *aMessage);
-    ~ICAPAnswerCall();
-
-    void schedule();
-    void call();
-
-    ICAPInitiatorHolder theInitiator;
-    HttpMsg *theMessage;
-};
-
-
-/* Event data and callback wrapper to call noteIcapQueryAbort with
- * the termination status as a parameter. 
- *
- * XXX: This class is a clone of ICAPAnswerCall.
- */
-class ICAPQueryAbortCall {
-public:
-    // use this function to make an asynchronous call
-    static void Schedule(const ICAPInitiatorHolder &anInitiator, bool beFinal);
-
-    static void Wrapper(void *data);
-
-protected:
-    ICAPQueryAbortCall(const ICAPInitiatorHolder &anInitiator, bool beFinal);
-
-    void schedule();
-    void call();
-
-    ICAPInitiatorHolder theInitiator;
-    bool isFinal;
+    IcapAnswerDialer(ICAPInitiator *obj, Parent::Method meth, HttpMsg *msg):
+        Parent(obj, meth, msg) { HTTPMSGLOCK(arg1); }
+    IcapAnswerDialer(const IcapAnswerDialer &d):
+        Parent(d) { HTTPMSGLOCK(arg1); }
+    virtual ~IcapAnswerDialer() { HTTPMSGUNLOCK(arg1); }
 };
 
 
@@ -97,13 +58,16 @@ void ICAPInitiate::clearInitiator()
 
 void ICAPInitiate::sendAnswer(HttpMsg *msg)
 {
-    ICAPAnswerCall::Schedule(theInitiator, msg);
+    assert(msg);
+    CallJob(93, 5, __FILE__, __LINE__, "ICAPInitiator::noteIcapAnswer",
+        IcapAnswerDialer(theInitiator.ptr, &ICAPInitiator::noteIcapAnswer, msg));
     clearInitiator();
 }
 
+
 void ICAPInitiate::tellQueryAborted(bool final)
 {
-    ICAPQueryAbortCall::Schedule(theInitiator, final);
+    CallJobHere1(93, 5, theInitiator.ptr, ICAPInitiator::noteIcapQueryAbort, final);
     clearInitiator();
 }
 
@@ -155,123 +119,4 @@ ICAPInitiatorHolder &ICAPInitiatorHolder::operator =(const ICAPInitiatorHolder &
 {
     assert(false);
     return *this;
-}
-
-/* ICAPAnswerCall */
-
-ICAPAnswerCall::ICAPAnswerCall(const ICAPInitiatorHolder &anInitiator, HttpMsg *aMessage):
-    theInitiator(anInitiator), theMessage(0)
-{
-    if (theInitiator) {
-        assert(aMessage);
-        theMessage = HTTPMSGLOCK(aMessage);
-    }
-}
-
-void ICAPAnswerCall::schedule()
-{
-    if (theInitiator) {
-        debugs(93,3, __FILE__ << "(" << __LINE__ << ") will call " << 
-            theInitiator << "->ICAPInitiator::noteIcapAnswer(" <<
-            theMessage << ")");
-        eventAdd("ICAPInitiator::noteIcapAnswer",
-            &ICAPAnswerCall::Wrapper, this, 0.0, 0, false);
-    } else {
-        debugs(93,3, __FILE__ << "(" << __LINE__ << ") will not call " <<
-            theInitiator << "->ICAPInitiator::noteIcapAnswer(" <<
-            theMessage << ")");
-    }
-}
-
-ICAPAnswerCall::~ICAPAnswerCall()
-{
-    if (theInitiator)
-        HTTPMSGUNLOCK(theMessage);
-}
-
-void ICAPAnswerCall::Wrapper(void *data)
-{
-    assert(data);
-    ICAPAnswerCall *c = static_cast<ICAPAnswerCall*>(data);
-    c->call();
-    delete c;
-}
-
-void ICAPAnswerCall::call() {
-    assert(theInitiator);
-    if (cbdataReferenceValid(theInitiator.cbdata)) {
-        debugs(93, 3, "entering " <<
-            theInitiator << "->ICAPInitiator::noteIcapAnswer(" <<
-            theMessage << ")");
-        theInitiator.ptr->noteIcapAnswer(theMessage);
-        debugs(93, 3, "exiting " <<
-            theInitiator << "->ICAPInitiator::noteIcapAnswer(" <<
-            theMessage << ")");
-    } else {
-        debugs(93, 3, "ignoring " <<
-            theInitiator << "->ICAPInitiator::noteIcapAnswer(" <<
-            theMessage << ")");
-    }
-}
-
-void ICAPAnswerCall::Schedule(const ICAPInitiatorHolder &anInitiator, HttpMsg *aMessage)
-{
-    ICAPAnswerCall *call = new ICAPAnswerCall(anInitiator, aMessage);
-    call->schedule();
-	// The call object is deleted in ICAPAnswerCall::Wrapper
-}
-
-
-/* ICAPQueryAbortCall */
-
-ICAPQueryAbortCall::ICAPQueryAbortCall(const ICAPInitiatorHolder &anInitiator, bool beFinal):
-    theInitiator(anInitiator), isFinal(beFinal)
-{
-}
-
-void ICAPQueryAbortCall::schedule()
-{
-    if (theInitiator) {
-        debugs(93,3, __FILE__ << "(" << __LINE__ << ") will call " << 
-            theInitiator << "->ICAPInitiator::noteIcapQueryAbort(" <<
-            isFinal << ")");
-        eventAdd("ICAPInitiator::noteIcapQueryAbort",
-            &ICAPQueryAbortCall::Wrapper, this, 0.0, 0, false);
-    } else {
-        debugs(93,3, __FILE__ << "(" << __LINE__ << ") will not call " <<
-            theInitiator << "->ICAPInitiator::noteIcapQueryAbort(" <<
-            isFinal << ")");
-    }
-}
-
-void ICAPQueryAbortCall::Wrapper(void *data)
-{
-    assert(data);
-    ICAPQueryAbortCall *c = static_cast<ICAPQueryAbortCall*>(data);
-    c->call();
-    delete c;
-}
-
-void ICAPQueryAbortCall::call() {
-    assert(theInitiator);
-    if (cbdataReferenceValid(theInitiator.cbdata)) {
-        debugs(93, 3, "entering " <<
-            theInitiator << "->ICAPInitiator::noteIcapQueryAbort(" <<
-            isFinal << ")");
-        theInitiator.ptr->noteIcapQueryAbort(isFinal);
-        debugs(93, 3, "exiting " <<
-            theInitiator << "->ICAPInitiator::noteIcapQueryAbort(" <<
-            isFinal << ")");
-    } else {
-        debugs(93, 3, "ignoring " <<
-            theInitiator << "->ICAPInitiator::noteIcapQueryAbort(" <<
-            isFinal << ")");
-    }
-}
-
-void ICAPQueryAbortCall::Schedule(const ICAPInitiatorHolder &anInitiator, bool beFinal)
-{
-    ICAPQueryAbortCall *call = new ICAPQueryAbortCall(anInitiator, beFinal);
-    call->schedule();
-    // The call object is deleted in ICAPQueryAbortCall::Wrapper
 }
