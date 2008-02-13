@@ -1,6 +1,6 @@
 
 /*
- * $Id: EventLoop.h,v 1.3 2006/08/19 12:31:21 robertc Exp $
+ * $Id: EventLoop.h,v 1.4 2008/02/12 23:49:44 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,7 +37,6 @@
 #include "squid.h"
 #include "Array.h"
 #include "AsyncEngine.h"
-#include "CompletionDispatcher.h"
 #include "SquidTime.h"
 
 /* An event loop. An event loop is the core inner loop of squid.
@@ -52,8 +51,6 @@ class EventLoop
 
 public:
     EventLoop();
-    /* register an event dispatcher to be invoked on each event loop. */
-    void registerDispatcher(CompletionDispatcher *dispatcher);
     /* register an async engine which will be given the opportunity to perform
      * in-main-thread tasks each event loop.
      */
@@ -93,9 +90,10 @@ private:
     void prepareToRun();
     /* check an individual engine */
     void checkEngine(AsyncEngine * engine, bool const primary);
+    /* dispatch calls and events scheduled during checkEngine() */
+    bool dispatchCalls();
+
     bool last_loop;
-    typedef Vector<CompletionDispatcher *> dispatcher_vector;
-    dispatcher_vector dispatchers;
     typedef Vector<AsyncEngine *> engine_vector;
     engine_vector engines;
     TimeEngine * timeService;

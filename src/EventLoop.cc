@@ -1,6 +1,6 @@
 
 /*
- * $Id: EventLoop.cc,v 1.5 2007/07/23 19:55:21 rousskov Exp $
+ * $Id: EventLoop.cc,v 1.6 2008/02/12 23:49:44 rousskov Exp $
  *
  * DEBUG: section 1     Main Loop
  * AUTHOR: Harvest Derived
@@ -34,6 +34,7 @@
  */
 
 #include "EventLoop.h"
+#include "AsyncCallQueue.h"
 
 EventLoop::EventLoop() : errcount(0), last_loop(false), timeService(NULL),
         primaryEngine(NULL)
@@ -81,12 +82,6 @@ EventLoop::prepareToRun()
 }
 
 void
-EventLoop::registerDispatcher(CompletionDispatcher *dispatcher)
-{
-    dispatchers.push_back(dispatcher);
-}
-
-void
 EventLoop::registerEngine(AsyncEngine *engine)
 {
     engines.push_back(engine);
@@ -105,31 +100,39 @@ EventLoop::run()
 bool
 EventLoop::runOnce()
 {
+    bool sawActivity = false;
     runOnceResult = true;
     error = false;
     loop_delay = 10; /* 10 ms default delay */
 
-    for (engine_vector::iterator i = engines.begin();
-            i != engines.end(); ++i) {
-        /* check the primary outside the loop */
+    AsyncEngine *waitingEngine = primaryEngine;
+    if (!waitingEngine && !engines.empty())
+        waitingEngine = engines.back();
 
-        if (*i == primaryEngine)
-            continue;
+    do {
+        // generate calls and events
+        typedef engine_vector::iterator EVI;
+        for (EVI i = engines.begin(); i != engines.end(); ++i) {
+            if (*i != waitingEngine)
+                checkEngine(*i, false);
+        }
 
-        /* special case the last engine to be primary */
-        checkEngine(*i, primaryEngine == NULL && (i - engines.end() == -1));
-    }
+        // dispatch calls accumulated so far
+        sawActivity = dispatchCalls();
+        if (sawActivity)
+            runOnceResult = false;
+	} while (sawActivity);
 
-    if (primaryEngine != NULL)
-        checkEngine(primaryEngine, true);
+    if (waitingEngine != NULL)
+        checkEngine(waitingEngine, true);
 
     if (timeService != NULL)
         timeService->tick();
 
-    for (dispatcher_vector::iterator i = dispatchers.begin();
-            i != dispatchers.end(); ++i)
-        if ((*i)->dispatch())
-            runOnceResult = false;
+    // dispatch calls scheduled by waitingEngine and timeService
+    sawActivity = dispatchCalls();
+    if (sawActivity)
+        runOnceResult = false;
 
     if (error) {
         ++errcount;
@@ -144,6 +147,14 @@ EventLoop::runOnce()
         return true;
 
     return runOnceResult;
+}
+
+// dispatches calls accumulated during checkEngine()
+bool
+EventLoop::dispatchCalls()
+{
+    bool dispatchedSome = AsyncCallQueue::Instance().fire();
+    return dispatchedSome;
 }
 
 void
