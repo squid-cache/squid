@@ -1,5 +1,5 @@
 /*
- * $Id: auth_ntlm.cc,v 1.78 2007/12/14 23:11:51 amosjeffries Exp $
+ * $Id: auth_ntlm.cc,v 1.79 2008/02/12 23:17:53 rousskov Exp $
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -596,7 +596,7 @@ AuthNTLMUserRequest::authenticated() const
 }
 
 void
-AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointer conn, http_hdr_type type)
+AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type)
 {
     const char *proxy_auth, *blob;
 
@@ -613,7 +613,7 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointer 
     /* Check that we are in the client side, where we can generate
      * auth challenges */
 
-    if (conn.getRaw() == NULL) {
+    if (conn == NULL || !cbdataReferenceValid(conn)) {
         auth_state = AUTHENTICATE_STATE_FAILED;
         debugs(29, 1, "AuthNTLMUserRequest::authenticate: attempt to perform authentication without a connection!");
         return;
@@ -706,7 +706,7 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointer 
 }
 
 AuthNTLMUserRequest::AuthNTLMUserRequest() :
-        conn(NULL), auth_state(AUTHENTICATE_STATE_NONE),
+    /*conn(NULL),*/ auth_state(AUTHENTICATE_STATE_NONE),
         _theUser(NULL)
 {
     waiting=0;

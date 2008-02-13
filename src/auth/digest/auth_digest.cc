@@ -1,5 +1,5 @@
 /*
- * $Id: auth_digest.cc,v 1.62 2008/01/20 08:54:30 amosjeffries Exp $
+ * $Id: auth_digest.cc,v 1.63 2008/02/12 23:17:51 rousskov Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -573,7 +573,7 @@ AuthDigestUserRequest::authenticated() const
 /* log a digest user in
  */
 void
-AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointer conn, http_hdr_type type)
+AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type)
 {
     auth_user_t *auth_user;
     AuthDigestUserRequest *digest_request;
