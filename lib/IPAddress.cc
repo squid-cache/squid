@@ -1,5 +1,5 @@
 /*
- * $Id: IPAddress.cc,v 1.3 2007/12/27 00:48:06 hno Exp $
+ * $Id: IPAddress.cc,v 1.4 2008/02/15 09:45:57 amosjeffries Exp $
  *
  * DEBUG: section 14   IP Storage and Handling
  * AUTHOR: Amos Jeffries
@@ -1076,7 +1076,7 @@ void IPAddress::GetSockAddr(struct sockaddr_in &buf) const
         Map6to4( m_SocketAddr.sin6_addr, buf.sin_addr);
     } else
     {
-        debugs(14,1, HERE << "IPAddress::GetSockAddr : Cannot convert non-IPv4 to IPv4.");
+        debugs(14, DBG_CRITICAL, HERE << "IPAddress::GetSockAddr : Cannot convert non-IPv4 to IPv4. from " << *this );
 
         memset(&buf,0xFFFFFFFF,sizeof(struct sockaddr_in));
         assert(false);
