@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.445 2008/02/12 22:58:29 rousskov Exp $
+ * $Id: comm.cc,v 1.446 2008/02/15 09:45:57 amosjeffries Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1140,6 +1140,7 @@ comm_connect_addr(int sock, const IPAddress &address)
 
     debugs(5, 9, "comm_connect_addr: connecting socket " << sock << " to " << address << " (want family: " << F->sock_family << ")");
 
+    /* FIXME INET6 : Bug 2222: when sock is an IPv4-only socket IPv6 traffic will crash. */
     address.GetAddrInfo(AI, F->sock_family);
 
     /* Establish connection. */
