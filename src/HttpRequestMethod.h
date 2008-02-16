@@ -1,5 +1,5 @@
 /*
- * $Id: HttpRequestMethod.h,v 1.9 2008/02/12 00:05:11 amosjeffries Exp $
+ * $Id: HttpRequestMethod.h,v 1.10 2008/02/15 17:26:00 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -118,13 +118,14 @@ public:
     bool operator == (_method_t const & aMethod) const { return theMethod == aMethod; }
     bool operator == (HttpRequestMethod const & aMethod) const
     {
-        return ( (theMethod == aMethod.theMethod) || (theImage == aMethod.theImage) );
+        return theMethod == aMethod.theMethod &&
+            (theMethod != METHOD_OTHER || theImage == aMethod.theImage);
     }
 
     bool operator != (_method_t const & aMethod) const { return theMethod != aMethod; }
     bool operator != (HttpRequestMethod const & aMethod) const
     {
-        return ( (theMethod != aMethod.theMethod) || (theImage != aMethod.theImage) ); 
+        return !operator==(aMethod);
     }
 
     /** Iterate through the registered HTTP methods. */
@@ -142,7 +143,7 @@ public:
 
     /** Get an ID representation of the method.
      \retval METHOD_NONE	the methopd is currently unset or unknown.
-     \retval METHOD_UNKNOWN	the method has been accepted but is not one of the registerd HTTP methods.
+     \retval METHOD_OTHER	the method has been accepted but is not one of the registerd HTTP methods.
      \retval *			the method is on of the registered HTTP methods.
      */
     _method_t const id() const { return theMethod; }
