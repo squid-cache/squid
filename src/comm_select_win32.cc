@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select_win32.cc,v 1.6 2008/02/12 23:02:13 rousskov Exp $
+ * $Id: comm_select_win32.cc,v 1.7 2008/02/17 10:39:28 serassio Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -161,7 +161,6 @@ commResetSelect(int fd)
 {
 }
 
-
 static int
 fdIsIcp(int fd)
 {
@@ -195,36 +194,6 @@ fdIsHttp(int fd)
 
     return 0;
 }
-
-#if DELAY_POOLS
-static int slowfdcnt = 0;
-static int slowfdarr[SQUID_MAXFD];
-
-static void
-commAddSlowFd(int fd)
-{
-    assert(slowfdcnt < SQUID_MAXFD);
-    slowfdarr[slowfdcnt++] = fd;
-}
-
-static int
-commGetSlowFd(void)
-{
-    int whichfd, retfd;
-
-    if (!slowfdcnt)
-        return -1;
-
-    whichfd = squid_random() % slowfdcnt;
-
-    retfd = slowfdarr[whichfd];
-
-    slowfdarr[whichfd] = slowfdarr[--slowfdcnt];
-
-    return retfd;
-}
-
-#endif
 
 static int
 comm_check_incoming_select_handlers(int nfds, int *fds)
@@ -370,10 +339,6 @@ comm_select(int msec)
     fd_set readfds;
     fd_set pendingfds;
     fd_set writefds;
-#if DELAY_POOLS
-
-    fd_set slowfds;
-#endif
 
     PF *hdl = NULL;
     int fd;
@@ -399,10 +364,6 @@ comm_select(int msec)
         double start;
         getCurrentTime();
         start = current_dtime;
-#if DELAY_POOLS
-
-        FD_ZERO(&slowfds);
-#endif
 
         if (commCheckICPIncoming)
             comm_select_icp_incoming();
@@ -502,7 +463,7 @@ comm_select(int msec)
 
         getCurrentTime();
 
-        debugs(5, num ? 5 : 8, "comm_select: " << num << "+" << pending << " FDs ready\n");
+        debugs(5, num ? 5 : 8, "comm_select: " << num << "+" << pending << " FDs ready");
 
         statHistCount(&statCounter.select_fds_hist, num);
 
@@ -510,9 +471,7 @@ comm_select(int msec)
             continue;
 
         /* Scan return fd masks for ready descriptors */
-
         assert(readfds.fd_count <= (unsigned int) Biggest_FD);
-
         assert(pendingfds.fd_count <= (unsigned int) Biggest_FD);
 
         for (j = 0; j < (int) readfds.fd_count; j++) {
@@ -564,16 +523,9 @@ comm_select(int msec)
 
             if (NULL == (hdl = F->read_handler))
                 (void) 0;
-
-#if DELAY_POOLS
-
-            else if (FD_ISSET(fd, &slowfds))
-                commAddSlowFd(fd);
-
-#endif
-
             else {
                 F->read_handler = NULL;
+                F->flags.read_pending = 0;
                 commUpdateReadBits(fd, NULL);
                 hdl(fd, F->read_data);
                 statCounter.select_fds++;
@@ -669,8 +621,6 @@ comm_select(int msec)
 
                 if (commCheckHTTPIncoming)
                     comm_select_http_incoming();
-
-
             }
         }
 
@@ -683,30 +633,6 @@ comm_select(int msec)
         if (callhttp)
             comm_select_http_incoming();
 
-#if DELAY_POOLS
-
-        while ((fd = commGetSlowFd()) != -1) {
-            F = &fd_table[fd];
-            debugs(5, 6, "comm_select: slow FD " << fd << " selected for reading");
-
-            if ((hdl = F->read_handler)) {
-                F->read_handler = NULL;
-                commUpdateReadBits(fd, NULL);
-                hdl(fd, F->read_data);
-                statCounter.select_fds++;
-
-                if (commCheckICPIncoming)
-                    comm_select_icp_incoming();
-
-                if (commCheckDNSIncoming)
-                    comm_select_dns_incoming();
-
-                if (commCheckHTTPIncoming)
-                    comm_select_http_incoming();
-            }
-        }
-
-#endif
         getCurrentTime();
 
         statCounter.select_time += (current_dtime - start);
@@ -807,7 +733,6 @@ examine_select(fd_set * readfds, fd_set * writefds)
             continue;
 
         statCounter.syscalls.selects++;
-
         errno = 0;
 
         if (!fstat(fd, &sb)) {
@@ -821,14 +746,14 @@ examine_select(fd_set * readfds, fd_set * writefds)
         debugs(5, 0, "FD " << fd << " is a " << fdTypeStr[F->type] << " called '" << F->desc << "'");
         debugs(5, 0, "tmout:" << F->timeoutHandler << " read:" << F->read_handler << " write:" << F->write_handler);
 
-        for (ch = F->closeHandler; ch!= NULL; ch = ch->Next())
+        for (ch = F->closeHandler; ch != NULL; ch = ch->Next())
             debugs(5, 0, " close handler: " << ch);
 
         if (F->closeHandler != NULL) {
             commCallCloseHandlers(fd);
         } else if (F->timeoutHandler != NULL) {
             debugs(5, 0, "examine_select: Calling Timeout Handler");
-            ScheduleCallHere(F->timeoutHandler);
+	    ScheduleCallHere(F->timeoutHandler);
         }
 
         F->closeHandler = NULL;
