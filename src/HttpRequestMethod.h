@@ -1,5 +1,5 @@
 /*
- * $Id: HttpRequestMethod.h,v 1.10 2008/02/15 17:26:00 rousskov Exp $
+ * $Id: HttpRequestMethod.h,v 1.11 2008/02/16 17:41:55 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -128,23 +128,21 @@ public:
         return !operator==(aMethod);
     }
 
-    /** Iterate through the registered HTTP methods. */
+    /** Iterate through all HTTP method IDs. */
     HttpRequestMethod& operator++()
     {
-        if(METHOD_OTHER != theMethod) {
-            int tmp = (int)theMethod;
-            _method_t tmp_m = (_method_t)(++tmp);
-
-            if (METHOD_ENUM_END >= tmp_m)
-                theMethod = tmp_m;
-    	}
-    	return *this;
+        // TODO: when this operator is used in more than one place,
+        // replace it with HttpRequestMethods::Iterator API
+        // XXX: this interface can create METHOD_OTHER without an image
+        assert(theMethod < METHOD_ENUM_END);
+        theMethod = (_method_t)(1 + (int)theMethod);
+        return *this;
     }
 
     /** Get an ID representation of the method.
-     \retval METHOD_NONE	the methopd is currently unset or unknown.
-     \retval METHOD_OTHER	the method has been accepted but is not one of the registerd HTTP methods.
-     \retval *			the method is on of the registered HTTP methods.
+     \retval METHOD_NONE   the method is unset
+     \retval METHOD_OTHER  the method is not recognized and has no unique ID
+     \retval *             the method is on of the recognized HTTP methods.
      */
     _method_t const id() const { return theMethod; }
 
