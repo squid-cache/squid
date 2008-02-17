@@ -24482,6 +24482,7 @@ for ac_header in \
 	fcntl.h \
 	fnmatch.h \
 	getopt.h \
+	glob.h \
 	gnumalloc.h \
 	grp.h \
 	ip_compat.h \
@@ -42624,6 +42625,7 @@ for ac_func in \
 	getrusage \
 	getspnam \
 	gettimeofday \
+	glob \
 	htobe16 \
 	htole16 \
 	kqueue\
