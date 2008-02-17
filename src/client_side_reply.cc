@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.153 2008/02/12 23:07:52 rousskov Exp $
+ * $Id: client_side_reply.cc,v 1.154 2008/02/16 17:42:27 rousskov Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -764,18 +764,16 @@ void
 clientReplyContext::purgeAllCached()
 {
 	const char *url = urlCanonical(http->request);
-	
-	HttpRequestMethod m(METHOD_NONE);
-	for (; m!=METHOD_ENUM_END; ++m) {
+
+	for (HttpRequestMethod m(METHOD_NONE); m != METHOD_ENUM_END; ++m) {
 	    if (m.isCacheble()) {
 	        if (StoreEntry *entry = storeGetPublic(url, m)) {
 	            debugs(88, 5, "purging " << RequestMethodStr(m) << ' ' << url);
 	            entry->release();
 	        }
-	    } // end if(isCacheble())
-	} // end for
-	
-} // purgeAllCached
+	    }
+	}
+}
 
 void
 clientReplyContext::created(StoreEntry *newEntry)
