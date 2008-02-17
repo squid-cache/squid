@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.451 2007/12/02 08:23:56 amosjeffries Exp $
+ * $Id: main.cc,v 1.451.4.1 2008/02/17 11:37:52 serassio Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -825,6 +825,10 @@ mainInitialize(void)
 
     if (WIN32_Socks_initialized)
         debugs(1, 1, "Windows sockets initialized");
+
+    if (WIN32_OS_version > _WIN_OS_WINNT) {
+	WIN32_IpAddrChangeMonitorInit();
+    }
 
 #endif
 
