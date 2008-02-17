@@ -145,7 +145,7 @@ typedef enum {
     XPROF_InvokeHandlers,
     XPROF_HttpMsg_httpMsgParseStep,
     XPROF_EventDispatcher_dispatch,
-    XPROF_SignalDispatcher_dispatch,
+    XPROF_SignalEngine_checkEvents,
     XPROF_Temp1,
     XPROF_Temp2,
     XPROF_Temp3,
