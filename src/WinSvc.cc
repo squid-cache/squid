@@ -1,6 +1,6 @@
 
 /*
- * $Id: WinSvc.cc,v 1.4 2008/01/24 19:20:43 serassio Exp $
+ * $Id: WinSvc.cc,v 1.5 2008/02/17 11:36:13 serassio Exp $
  *
  * Windows support
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
@@ -444,10 +444,10 @@ WIN32_IpAddrChangeMonitor(LPVOID lpParam)
     while (1) {
 	Result = NotifyAddrChange(NULL, NULL);
 	if (Result != NO_ERROR) {
-	    debug(1, 1) ("NotifyAddrChange error %ld\n", Result);
+	    debugs(1, 1, "NotifyAddrChange error " << Result);
 	    return 1;
 	}
-	debug(1, 1) ("Notification of IP address change received, requesting Squid reconfiguration ...\n");
+	debugs(1, 1, "Notification of IP address change received, requesting Squid reconfiguration ...");
 	reconfigure(SIGHUP);
     }
     return 0;
@@ -465,9 +465,9 @@ WIN32_IpAddrChangeMonitorInit()
 	if (NotifyAddrChange_thread == NULL) {
 	    status = GetLastError();
 	    NotifyAddrChange_thread = INVALID_HANDLE_VALUE;
-	    debug(1, 1) ("Failed to start IP monitor thread.\n");
+	    debugs(1, 1, "Failed to start IP monitor thread.");
 	} else
-	    debug(1, 2) ("Starting IP monitor thread [%li] ...\n", threadID);
+	    debugs(1, 2, "Starting IP monitor thread [" << threadID << "] ...");
     }
     return status;
 }
