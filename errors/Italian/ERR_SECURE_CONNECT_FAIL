@@ -1,31 +1,31 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+<TITLE>ERRORE: La URL richiesta non pu&ograve; essere recuperata</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
-<H1>ERROR</H1>
-<H2>The requested URL could not be retrieved</H2>
+<H1>ERRORE</H1>
+<H2>La URL richiesta non pu&ograve; essere recuperata</H2>
 <HR noshade size="1px">
 <P>
-While trying to retrieve the URL:
+Mentre si cercava di recuperare la URL:
 <A HREF="%U">%U</A>
 <P>
-The following error was encountered:
+&Egrave; avvenuto il seguente errore:
 <UL>
 <LI>
 <STRONG>
-Failed to establish a secure connection to %I
+Impossibile stabilre una conessione di tipo sicuro verso %I
 </STRONG>
 </UL>
 
 <P>
-The system returned:
+Il sistema ha risposto:
 <PRE><I>    %E</I></PRE>
 
 <P>
-This proxy and the remote host failed to negotiate a mutually acceptable
-security settings for handling your request. It is possible that the remote
-host does not support secure connections, or the proxy is not satisfied with
-the host security credentials.
+Questo proxy ed il sistema remoto non sono riusciti a negoziare delle impostazioni di
+sicurezza mutuamente accettabili per gestire la vostra richiesta. &Egrave; possibile che il sistema remoto
+non supporti connessioni di tipo sicuro, o che il proxy non non reputi accettabili le
+credenziali di sicurezza del sistema remoto.
 
-<P>Your cache administrator is <A HREF="mailto:%w%W">%w</A>. 
+<P>L'amministratore della cache &egrave; <A HREF="mailto:%w%W">%w</A>. 
