@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipc_win32.cc,v 1.4 2007/04/30 16:56:09 wessels Exp $
+ * $Id: ipc_win32.cc,v 1.4.4.1 2008/02/17 19:34:44 serassio Exp $
  *
  * DEBUG: section 54    Windows Interprocess Communication
  * AUTHOR: Andrey Shorin <tolsty@tushino.com>
@@ -411,7 +411,7 @@ ipc_thread_1(void *in_params)
         debugs(54, 3, "ipcCreate: CHILD accepted new FD " << fd);
         comm_close(crfd);
         snprintf(buf1, 8191, "%s CHILD socket", prog);
-        fd_open(fd, FD_SOCKET, buf1);
+        fdc_open(fd, FD_SOCKET, buf1);
         fd_table[fd].flags.ipc = 1;
         cwfd = crfd = fd;
     } else if (type == IPC_UDP_SOCKET) {
