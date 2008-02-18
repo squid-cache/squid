@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.451.2.1 2008/02/17 11:32:22 serassio Exp $
+ * $Id: main.cc,v 1.451.2.2 2008/02/17 19:41:28 serassio Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -62,10 +62,7 @@
 #if USE_POLL
 #include "comm_poll.h"
 #endif
-#if USE_SELECT
-#include "comm_select.h"
-#endif
-#if USE_SELECT_WIN32
+#if defined(USE_SELECT) || defined(USE_SELECT_WIN32)
 #include "comm_select.h"
 #endif
 #include "SquidTime.h"
@@ -929,7 +926,7 @@ mainInitialize(void)
 
         commPollRegisterWithCacheManager(manager);
 #endif
-#ifdef USE_SELECT
+#if defined(USE_SELECT) || defined(USE_SELECT_WIN32)
 
         commSelectRegisterWithCacheManager(manager);
 #endif
