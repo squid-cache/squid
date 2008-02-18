@@ -1,6 +1,6 @@
 
 /*
- * $Id: WinSvc.cc,v 1.5 2008/02/17 11:36:13 serassio Exp $
+ * $Id: WinSvc.cc,v 1.6 2008/02/17 19:30:12 serassio Exp $
  *
  * Windows support
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
@@ -939,7 +939,6 @@ int main(int argc, char **argv)
         freopen(stderr_path, "w", stderr);
         setmode(fileno(stderr), O_TEXT);
         WIN32_run_mode = _WIN_SQUID_RUN_MODE_SERVICE;
-        opt_no_daemon = 1;
 
         if (!(c=strchr(argv[1],':'))) {
             fprintf(stderr, "Bad Service Parameter: %s\n", argv[1]);
