@@ -1,5 +1,5 @@
 /*
- * $Id: Server.cc,v 1.25 2008/02/12 23:55:26 rousskov Exp $
+ * $Id: Server.cc,v 1.26 2008/02/18 22:51:21 rousskov Exp $
  *
  * DEBUG:
  * AUTHOR: Duane Wessels
@@ -47,7 +47,9 @@ extern ICAPConfig TheICAPConfig;
 
 ServerStateData::ServerStateData(FwdState *theFwdState): AsyncJob("ServerStateData"),requestSender(NULL)
 #if ICAP_CLIENT
+    , adaptedHeadSource(NULL)
     , icapAccessCheckPending(false)
+    , startedIcap(false)
 #endif
 {
     fwd = theFwdState;
