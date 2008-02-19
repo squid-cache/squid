@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.776 2008/02/12 23:07:52 rousskov Exp $
+ * $Id: client_side.cc,v 1.777 2008/02/18 21:54:07 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1410,8 +1410,9 @@ ClientSocketContext::canPackMoreRanges() const
     /* first update "i" if needed */
 
     if (!http->range_iter.debt()) {
-        debugs(33, 5, "ClientSocketContext::canPackMoreRanges: At end of current range spec for FD " <<
-               fd());
+        const int d = fd();
+        debugs(33, 5, "ClientSocketContext::canPackMoreRanges: At end of " <<
+            "current range spec for FD " << d);
 
         if (http->range_iter.pos.incrementable())
             ++http->range_iter.pos;
@@ -1467,7 +1468,9 @@ ClientSocketContext::getNextRangeOffset() const
 void
 ClientSocketContext::pullData()
 {
-    debugs(33, 5, "ClientSocketContext::pullData: FD " << fd() << " attempting to pull upstream data");
+    const int d = fd(); // XXX: to prevent bug 2224 only
+    debugs(33, 5, "ClientSocketContext::pullData: FD " << d <<
+        " attempting to pull upstream data");
 
     /* More data will be coming from the stream. */
     StoreIOBuffer readBuffer;
@@ -1494,8 +1497,9 @@ ClientSocketContext::socketState()
             /* filter out data according to range specs */
 
             if (!canPackMoreRanges()) {
-                debugs(33, 5, "ClientSocketContext::socketState: Range request has hit end of returnable range sequence on FD " <<
-                       fd());
+                const int d = fd(); // XXX: to prevent bug 2224 only
+                debugs(33, 5, HERE << "Range request at end of returnable " <<
+                    "range sequence on FD " << d);
 
                 if (http->request->flags.proxy_keepalive)
                     return STREAM_COMPLETE;
