@@ -217,6 +217,7 @@ main(int argc, char **argv)
     int port = LDAP_PORT;
     int use_extension_dn = 0;
     int strip_nt_domain = 0;
+    int strip_kerberos_realm = 0;
     int err = 0;
 
     setbuf(stdout, NULL);
@@ -372,6 +373,9 @@ main(int argc, char **argv)
 	case 'S':
 	    strip_nt_domain = 1;
 	    break;
+	case 'K':
+	    strip_kerberos_realm = 1;
+	    break;
 	default:
 	    fprintf(stderr, PROGRAM_NAME " ERROR: Unknown command line option '%c'\n", option);
 	    exit(1);
@@ -426,6 +430,7 @@ main(int argc, char **argv)
 #endif
 	fprintf(stderr, "\t-g\t\t\tfirst query parameter is base DN extension\n\t\t\t\tfor this query\n");
 	fprintf(stderr, "\t-S\t\t\tStrip NT domain from usernames\n");
+	fprintf(stderr, "\t-K\t\t\tStrip Kerberos realm from usernames\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "\tIf you need to bind as a user to perform searches then use the\n\t-D binddn -w bindpasswd or -D binddn -W secretfile options\n\n");
 	exit(1);
@@ -470,6 +475,12 @@ main(int argc, char **argv)
 		u = strchr(user, '/');
 	    if (u && u[1])
 		user = u + 1;
+	}
+	if (strip_kerberos_realm) {
+	    char *u = strchr(user, '@');
+	    if (u != NULL) {
+		*u = '\0';
+	    }
 	}
 	if (use_extension_dn) {
 	    extension_dn = strtok(NULL, " \n");
@@ -785,7 +796,7 @@ searchLDAP(LDAP * ld, char *group, char *login, char *extension_dn)
 }
 
 
-int 
+int
 readSecret(const char *filename)
 {
     char buf[BUFSIZ];
