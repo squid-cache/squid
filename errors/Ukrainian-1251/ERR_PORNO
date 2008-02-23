@@ -1,0 +1,23 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1251">
+<TITLE>Помилка: Запрошений URL не може бути доставлений</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
+</HEAD><BODY>
+<HR noshade size="1px">
+<P>
+Ви намагались загрузити даний URL:
+<A HREF="%U">%U</A>
+<P>
+в результаті чого виникла наступна помилка:
+<H1>Увага! </H1>
+<H2><font color=red> До бажаного Вами ресурсу доступ заборонено.</font></H3>
+<H3> Згідно з "Правилами обмеження доступу працівників Національного банку України до
+ресурсів мережі Інтернет", затвердженими Директором Департаменту інформатизації Національного Банку України А.С. Савченко 08.10.2007 -
+ <font color=red>доступ до ресурсів з порнографічними матеріалами у період з 9:00 до 18:00 заборонено.</font></H3>
+
+<UL>
+<LI>
+<font color=blue size=3>У разі виникнення додаткових запитань зверніться у відділ
+ТКСіМТ до адміністратора проксі-сервера </font>
+<H3><font color=brown> В.Ю. Матицина тел: 034-51-33, e-mail: <A HREF="mailto:%w">%w</A> </font>
+ </UL>. 

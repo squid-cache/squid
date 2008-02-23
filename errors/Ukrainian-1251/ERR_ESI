@@ -1,0 +1,28 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1251">
+<TITLE>ПОМИЛКА: Запрошений URL не може бути доставлений</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
+</HEAD><BODY>
+<H2>Запрошений URL не може бути доставлений</H2>
+<HR noshade size="1px">
+<P>
+Під час доставки URL:
+<A HREF="%U">%U</A>
+<P>
+Виникла наступна помилка:
+<BLOCKQUOTE>
+Обробка ESI завершилась невдало.
+</BLOCKQUOTE>
+
+<P>
+ESI процесор повідомив:
+<BLOCKQUOTE>
+%Z
+</BLOCKQUOTE>
+
+<P>
+Це означає що:
+<PRE>
+ Замінник не зміг обробити ESI темплейт. Будь-ласка повідомте про цю помилку вебмайстра. 
+</PRE>
+<P>Вашим вебмайстром є <A HREF="mailto:%w">%w</A>. 
