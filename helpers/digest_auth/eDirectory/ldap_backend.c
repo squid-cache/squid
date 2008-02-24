@@ -198,7 +198,7 @@ getpassword(char *login, char *realm)
     char filter[8192];
     char searchbase[8192];
     char *universal_password = NULL;
-    size_t universal_password_len = UNIVERSAL_PASS_LEN;
+    size_t universal_password_len = 256;
     int nmas_res = 0;
     int rc = -1;
     if (ld) {
@@ -262,8 +262,8 @@ getpassword(char *login, char *realm)
 		    values = malloc(sizeof(char *));
 
 		    /* actually talk to NMAS to get a password */
-		    nmas_res = nmasldap_get_password(ld, ldap_get_dn(ld, entry), &universal_password_len, universal_password);
-		    if (nmas_res == NMAS_SUCCESS && universal_password) {
+		    nmas_res = nds_get_password(ld, ldap_get_dn(ld, entry), &universal_password_len, universal_password);
+		    if (nmas_res == LDAP_SUCCESS && universal_password) {
 			if (debug)
 			    printf("NMAS returned value %s\n", universal_password);
 			values[0] = universal_password;

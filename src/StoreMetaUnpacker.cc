@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaUnpacker.cc,v 1.5 2007/04/30 16:56:09 wessels Exp $
+ * $Id: StoreMetaUnpacker.cc,v 1.5.6.1 2008/02/24 12:41:29 serassio Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Unpacker
  * AUTHOR: Robert Collins
@@ -98,10 +98,8 @@ StoreMetaUnpacker::doOneEntry()
 
     StoreMeta *newNode = StoreMeta::Factory(type, length, &buf[position]);
 
-    if (!newNode)
-        return false;
-
-    tail = StoreMeta::Add (tail, newNode);
+    if (newNode)
+	tail = StoreMeta::Add (tail, newNode);
 
     position += length;
 

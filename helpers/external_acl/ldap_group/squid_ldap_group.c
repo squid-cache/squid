@@ -42,7 +42,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#ifdef _SQUID_MSWIN_ /* Native Windows port and MinGW */
+#ifdef _SQUID_MSWIN_		/* Native Windows port and MinGW */
 
 #define snprintf _snprintf
 #include <windows.h>
@@ -55,15 +55,15 @@
 #define LDAP_OPT_X_TLS 0x6000
 #endif
 /* Some tricks to allow dynamic bind with ldap_start_tls_s entry point at
-   run time.
+ * run time.
  */
 #undef ldap_start_tls_s
 #if LDAP_UNICODE
 #define LDAP_START_TLS_S "ldap_start_tls_sW"
-typedef WINLDAPAPI ULONG (LDAPAPI * PFldap_start_tls_s) (IN PLDAP, OUT PULONG, OUT LDAPMessage **, IN PLDAPControlW *, IN PLDAPControlW *);
+typedef WINLDAPAPI ULONG(LDAPAPI * PFldap_start_tls_s) (IN PLDAP, OUT PULONG, OUT LDAPMessage **, IN PLDAPControlW *, IN PLDAPControlW *);
 #else
 #define LDAP_START_TLS_S "ldap_start_tls_sA"
-typedef WINLDAPAPI ULONG (LDAPAPI * PFldap_start_tls_s) (IN PLDAP, OUT PULONG, OUT LDAPMessage **, IN PLDAPControlA *, IN PLDAPControlA *);
+typedef WINLDAPAPI ULONG(LDAPAPI * PFldap_start_tls_s) (IN PLDAP, OUT PULONG, OUT LDAPMessage **, IN PLDAPControlA *, IN PLDAPControlA *);
 #endif /* LDAP_UNICODE */
 PFldap_start_tls_s Win32_ldap_start_tls_s;
 #define ldap_start_tls_s(l,s,c) Win32_ldap_start_tls_s(l,NULL,NULL,s,c)
@@ -121,31 +121,31 @@ static int readSecret(const char *filename);
 #endif
 
 #if defined(LDAP_API_VERSION) && LDAP_API_VERSION > 1823
-static int 
+static int
 squid_ldap_errno(LDAP * ld)
 {
     int err = 0;
     ldap_get_option(ld, LDAP_OPT_ERROR_NUMBER, &err);
     return err;
 }
-static void 
+static void
 squid_ldap_set_aliasderef(LDAP * ld, int deref)
 {
     ldap_set_option(ld, LDAP_OPT_DEREF, &deref);
 }
-static void 
+static void
 squid_ldap_set_referrals(LDAP * ld, int referrals)
 {
     int *value = referrals ? LDAP_OPT_ON : LDAP_OPT_OFF;
     ldap_set_option(ld, LDAP_OPT_REFERRALS, value);
 }
 static void
-squid_ldap_set_timelimit(LDAP *ld, int timelimit)
+squid_ldap_set_timelimit(LDAP * ld, int timelimit)
 {
     ldap_set_option(ld, LDAP_OPT_TIMELIMIT, &timelimit);
 }
 static void
-squid_ldap_set_connect_timeout(LDAP *ld, int timelimit)
+squid_ldap_set_connect_timeout(LDAP * ld, int timelimit)
 {
 #if defined(LDAP_OPT_NETWORK_TIMEOUT)
     struct timeval tv;
@@ -157,23 +157,24 @@ squid_ldap_set_connect_timeout(LDAP *ld, int timelimit)
     ldap_set_option(ld, LDAP_X_OPT_CONNECT_TIMEOUT, &timelimit);
 #endif
 }
-static void 
+static void
 squid_ldap_memfree(char *p)
 {
     ldap_memfree(p);
 }
+
 #else
-static int 
+static int
 squid_ldap_errno(LDAP * ld)
 {
     return ld->ld_errno;
 }
-static void 
+static void
 squid_ldap_set_aliasderef(LDAP * ld, int deref)
 {
     ld->ld_deref = deref;
 }
-static void 
+static void
 squid_ldap_set_referrals(LDAP * ld, int referrals)
 {
     if (referrals)
@@ -182,26 +183,27 @@ squid_ldap_set_referrals(LDAP * ld, int referrals)
 	ld->ld_options &= ~LDAP_OPT_REFERRALS;
 }
 static void
-squid_ldap_set_timelimit(LDAP *ld, int timelimit)
+squid_ldap_set_timelimit(LDAP * ld, int timelimit)
 {
     ld->ld_timelimit = timelimit;
 }
 static void
-squid_ldap_set_connect_timeout(LDAP *ld, int timelimit)
+squid_ldap_set_connect_timeout(LDAP * ld, int timelimit)
 {
     fprintf(stderr, "Connect timeouts not supported in your LDAP library\n");
 }
-static void 
+static void
 squid_ldap_memfree(char *p)
 {
     free(p);
 }
+
 #endif
 
 #ifdef LDAP_API_FEATURE_X_OPENLDAP
-  #if LDAP_VENDOR_VERSION > 194
-    #define HAS_URI_SUPPORT 1
-  #endif
+#if LDAP_VENDOR_VERSION > 194
+#define HAS_URI_SUPPORT 1
+#endif
 #endif
 
 int
@@ -215,6 +217,7 @@ main(int argc, char **argv)
     int port = LDAP_PORT;
     int use_extension_dn = 0;
     int strip_nt_domain = 0;
+    int strip_kerberos_realm = 0;
     int err = 0;
 
     setbuf(stdout, NULL);
@@ -326,7 +329,7 @@ main(int argc, char **argv)
 	    bindpasswd = value;
 	    break;
 	case 'W':
-	    readSecret (value);
+	    readSecret(value);
 	    break;
 	case 'P':
 	    persistent = !persistent;
@@ -370,6 +373,9 @@ main(int argc, char **argv)
 	case 'S':
 	    strip_nt_domain = 1;
 	    break;
+	case 'K':
+	    strip_kerberos_realm = 1;
+	    break;
 	default:
 	    fprintf(stderr, PROGRAM_NAME " ERROR: Unknown command line option '%c'\n", option);
 	    exit(1);
@@ -392,7 +398,7 @@ main(int argc, char **argv)
     }
 
     if (!ldapServer)
-	ldapServer = (char *)"localhost";
+	ldapServer = (char *) "localhost";
 
     if (!basedn || !searchfilter) {
 	fprintf(stderr, "\n" PROGRAM_NAME " version " PROGRAM_VERSION "\n\n");
@@ -424,24 +430,24 @@ main(int argc, char **argv)
 #endif
 	fprintf(stderr, "\t-g\t\t\tfirst query parameter is base DN extension\n\t\t\t\tfor this query\n");
 	fprintf(stderr, "\t-S\t\t\tStrip NT domain from usernames\n");
+	fprintf(stderr, "\t-K\t\t\tStrip Kerberos realm from usernames\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "\tIf you need to bind as a user to perform searches then use the\n\t-D binddn -w bindpasswd or -D binddn -W secretfile options\n\n");
 	exit(1);
     }
-
 /* On Windows ldap_start_tls_s is available starting from Windows XP, 
-   so we need to bind at run-time with the function entry point
+ * so we need to bind at run-time with the function entry point
  */
 #ifdef _SQUID_MSWIN_
     if (use_tls) {
 
-    	HMODULE WLDAP32Handle;
+	HMODULE WLDAP32Handle;
 
 	WLDAP32Handle = GetModuleHandle("wldap32");
-        if ((Win32_ldap_start_tls_s = (PFldap_start_tls_s) GetProcAddress(WLDAP32Handle, LDAP_START_TLS_S)) == NULL) {
-            fprintf( stderr, PROGRAM_NAME ": ERROR: TLS (-Z) not supported on this platform.\n");
+	if ((Win32_ldap_start_tls_s = (PFldap_start_tls_s) GetProcAddress(WLDAP32Handle, LDAP_START_TLS_S)) == NULL) {
+	    fprintf(stderr, PROGRAM_NAME ": ERROR: TLS (-Z) not supported on this platform.\n");
 	    exit(1);
-        }
+	}
     }
 #endif
 
@@ -470,6 +476,12 @@ main(int argc, char **argv)
 	    if (u && u[1])
 		user = u + 1;
 	}
+	if (strip_kerberos_realm) {
+	    char *u = strchr(user, '@');
+	    if (u != NULL) {
+		*u = '\0';
+	    }
+	}
 	if (use_extension_dn) {
 	    extension_dn = strtok(NULL, " \n");
 	    if (!extension_dn) {
@@ -478,42 +490,40 @@ main(int argc, char **argv)
 	    }
 	    rfc1738_unescape(extension_dn);
 	}
-
 	while (!found && user && (group = strtok(NULL, " \n")) != NULL) {
 	    rfc1738_unescape(group);
 
 	  recover:
 	    if (ld == NULL) {
 #if HAS_URI_SUPPORT
-	    	if (strstr(ldapServer, "://") != NULL) {
-		    rc = ldap_initialize( &ld, ldapServer );
-		    if( rc != LDAP_SUCCESS ) {
+		if (strstr(ldapServer, "://") != NULL) {
+		    rc = ldap_initialize(&ld, ldapServer);
+		    if (rc != LDAP_SUCCESS) {
 			fprintf(stderr, "\nUnable to connect to LDAPURI:%s\n", ldapServer);
 			break;
 		    }
-	    	} else
+		} else
 #endif
 #if NETSCAPE_SSL
 		if (sslpath) {
-		    if ( !sslinit && (ldapssl_client_init(sslpath, NULL) != LDAP_SUCCESS)) {
+		    if (!sslinit && (ldapssl_client_init(sslpath, NULL) != LDAP_SUCCESS)) {
 			fprintf(stderr, "\nUnable to initialise SSL with cert path %s\n",
-				sslpath);
+			    sslpath);
 			exit(1);
 		    } else {
 			sslinit++;
 		    }
 		    if ((ld = ldapssl_init(ldapServer, port, 1)) == NULL) {
 			fprintf(stderr, "\nUnable to connect to SSL LDAP server: %s port:%d\n",
-				ldapServer, port);
+			    ldapServer, port);
 			exit(1);
 		    }
 		} else
 #endif
 		if ((ld = ldap_init(ldapServer, port)) == NULL) {
-		    fprintf(stderr, "\nUnable to connect to LDAP server:%s port:%d\n",ldapServer, port);
+		    fprintf(stderr, "\nUnable to connect to LDAP server:%s port:%d\n", ldapServer, port);
 		    break;
 		}
-
 		if (connect_timeout)
 		    squid_ldap_set_connect_timeout(ld, connect_timeout);
 
@@ -575,9 +585,9 @@ main(int argc, char **argv)
 	if (found)
 	    printf("OK\n");
 	else {
-error:
+	  error:
 	    printf("ERR\n");
-}
+	}
 
 	if (ld != NULL) {
 	    if (!persistent || (squid_ldap_errno(ld) != LDAP_SUCCESS && squid_ldap_errno(ld) != LDAP_INVALID_CREDENTIALS)) {
@@ -599,7 +609,7 @@ ldap_escape_value(char *escaped, int size, const char *src)
 {
     int n = 0;
     while (size > 4 && *src) {
-	switch(*src) {
+	switch (*src) {
 	case '*':
 	case '(':
 	case ')':
@@ -608,8 +618,8 @@ ldap_escape_value(char *escaped, int size, const char *src)
 	    size -= 3;
 	    if (size > 0) {
 		*escaped++ = '\\';
-		snprintf(escaped, 3, "%02x", (unsigned char)*src++);
-		escaped+=2;
+		snprintf(escaped, 3, "%02x", (unsigned char) *src++);
+		escaped += 2;
 	    }
 	    break;
 	default:
@@ -626,8 +636,8 @@ static int
 build_filter(char *filter, int size, const char *template, const char *user, const char *group)
 {
     int n;
-    while(*template && size > 0) {
-	switch(*template) {
+    while (*template && size > 0) {
+	switch (*template) {
 	case '%':
 	    template++;
 	    switch (*template) {
@@ -680,7 +690,8 @@ searchLDAPGroup(LDAP * ld, char *group, char *member, char *extension_dn)
     LDAPMessage *res = NULL;
     LDAPMessage *entry;
     int rc;
-    char *searchattr[] = {(char *)LDAP_NO_ATTRS, NULL};
+    char *searchattr[] =
+    {(char *) LDAP_NO_ATTRS, NULL};
 
     if (extension_dn && *extension_dn)
 	snprintf(searchbase, sizeof(searchbase), "%s,%s", extension_dn, basedn);
@@ -691,7 +702,6 @@ searchLDAPGroup(LDAP * ld, char *group, char *member, char *extension_dn)
 	fprintf(stderr, PROGRAM_NAME " ERROR, Failed to construct LDAP search filter. filter=\"%s\", user=\"%s\", group=\"%s\"\n", filter, member, group);
 	return 1;
     }
-
     if (debug)
 	fprintf(stderr, "group filter '%s', searchbase '%s'\n", filter, searchbase);
 
@@ -723,7 +733,7 @@ searchLDAPGroup(LDAP * ld, char *group, char *member, char *extension_dn)
 }
 
 static int
-searchLDAP(LDAP *ld, char *group, char *login, char *extension_dn)
+searchLDAP(LDAP * ld, char *group, char *login, char *extension_dn)
 {
 
     if (usersearchfilter) {
@@ -734,7 +744,8 @@ searchLDAP(LDAP *ld, char *group, char *login, char *extension_dn)
 	LDAPMessage *entry;
 	int rc;
 	char *userdn;
-	char *searchattr[] = {(char *)LDAP_NO_ATTRS, NULL};
+	char *searchattr[] =
+	{(char *) LDAP_NO_ATTRS, NULL};
 	if (extension_dn && *extension_dn)
 	    snprintf(searchbase, sizeof(searchbase), "%s,%s", extension_dn, userbasedn ? userbasedn : basedn);
 	else
@@ -785,33 +796,33 @@ searchLDAP(LDAP *ld, char *group, char *login, char *extension_dn)
 }
 
 
-int readSecret(const char *filename)
+int
+readSecret(const char *filename)
 {
-  char  buf[BUFSIZ];
-  char  *e=0;
-  FILE  *f;
+    char buf[BUFSIZ];
+    char *e = 0;
+    FILE *f;
 
-  if(!(f=fopen(filename, "r"))) {
-    fprintf(stderr, PROGRAM_NAME " ERROR: Can not read secret file %s\n", filename);
-    return 1;
-  }
+    if (!(f = fopen(filename, "r"))) {
+	fprintf(stderr, PROGRAM_NAME " ERROR: Can not read secret file %s\n", filename);
+	return 1;
+    }
+    if (!fgets(buf, sizeof(buf) - 1, f)) {
+	fprintf(stderr, PROGRAM_NAME " ERROR: Secret file %s is empty\n", filename);
+	fclose(f);
+	return 1;
+    }
+    /* strip whitespaces on end */
+    if ((e = strrchr(buf, '\n')))
+	*e = 0;
+    if ((e = strrchr(buf, '\r')))
+	*e = 0;
 
-  if( !fgets(buf, sizeof(buf)-1, f)) {
-    fprintf(stderr, PROGRAM_NAME " ERROR: Secret file %s is empty\n", filename);
+    bindpasswd = strdup(buf);
+    if (!bindpasswd) {
+	fprintf(stderr, PROGRAM_NAME " ERROR: can not allocate memory\n");
+    }
     fclose(f);
-    return 1;
-  }
 
-  /* strip whitespaces on end */
-  if((e = strrchr(buf, '\n'))) *e = 0;
-  if((e = strrchr(buf, '\r'))) *e = 0;
-
-  bindpasswd = strdup(buf);
-  if (!bindpasswd) {
-    fprintf(stderr, PROGRAM_NAME " ERROR: can not allocate memory\n"); 
-  }
-
-  fclose(f);
-
-  return 0;
+    return 0;
 }
