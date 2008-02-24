@@ -23,10 +23,31 @@
  * 
 */
 
+#include "digest_common.h"
+
+#ifdef _SQUID_MSWIN_            /* Native Windows port and MinGW */
+
+#define snprintf _snprintf
+#include <windows.h>
+#include <winldap.h>
+#include <winber.h>
+#ifndef LDAPAPI
+#define LDAPAPI __cdecl
+#endif
+#ifdef LDAP_VERSION3
+#ifndef LDAP_OPT_X_TLS
+#define LDAP_OPT_X_TLS 0x6000
+#endif
+#define ber_alloc() ber_alloc_t(0)
+#endif /* LDAP_VERSION3 */
+
+#else
+
 #include <lber.h>
 #include <ldap.h>
+
+#endif
 #include <wchar.h>
-#include <stdlib.h>
 
 #include "edir_ldapext.h"
 
