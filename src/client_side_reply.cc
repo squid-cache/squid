@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.144 2007/11/27 09:36:07 amosjeffries Exp $
+ * $Id: client_side_reply.cc,v 1.144.2.1 2008/02/24 11:42:37 amosjeffries Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1990,33 +1990,6 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     } else if (reqofs < HTTP_REQBUF_SZ && entry->store_status == STORE_PENDING) {
         waitForMoreData();
         return;
-    } else if (http->request->method == METHOD_HEAD) {
-        /*
-         * If we are here, then store_status == STORE_OK and it
-         * seems we have a HEAD repsponse which is missing the
-         * empty end-of-headers line (home.mira.net, phttpd/0.99.72
-         * does this).  Because buildReply() fails we just
-         * call this reply a body, set the done_copying flag and
-         * continue...
-         */
-        /* RBC: Note that this is seriously broken, as we *need* the
-         * metadata to allow further client modules to work. As such 
-         * webservers are seriously broken, this is probably not 
-         * going to get fixed.. perhapos we should remove it?
-         */
-        debugs(88, 0, "Broken head response - probably phttpd/0.99.72");
-        http->flags.done_copying = 1;
-        flags.complete = 1;
-        /*
-         * And as this is a malformed HTTP reply we cannot keep
-         * the connection persistent
-         */
-        http->request->flags.proxy_keepalive = 0;
-
-        assert(body_buf && body_size);
-        StoreIOBuffer tempBuffer (body_size, 0 ,body_buf);
-        clientStreamCallback((clientStreamNode *)http->client_stream.head->data,
-                             http, NULL, tempBuffer);
     } else {
         debugs(88, 0, "clientReplyContext::sendMoreData: Unable to parse reply headers within a single HTTP_REQBUF_SZ length buffer");
         StoreIOBuffer tempBuffer;
