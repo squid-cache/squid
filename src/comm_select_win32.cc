@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select_win32.cc,v 1.7 2008/02/17 10:39:28 serassio Exp $
+ * $Id: comm_select_win32.cc,v 1.8 2008/02/24 12:59:08 serassio Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -242,7 +242,7 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
     for (i = 0; i < nfds; i++) {
         fd = fds[i];
 
-        if (FD_ISSET(fd, &read_mask)) {
+        if (__WSAFDIsSet(fd_table[fd].win32.handle, &read_mask)) {
             if ((hdl = fd_table[fd].read_handler) != NULL) {
                 fd_table[fd].read_handler = NULL;
                 commUpdateReadBits(fd, NULL);
@@ -252,7 +252,7 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
             }
         }
 
-        if (FD_ISSET(fd, &write_mask)) {
+        if (__WSAFDIsSet(fd_table[fd].win32.handle, &write_mask)) {
             if ((hdl = fd_table[fd].write_handler) != NULL) {
                 fd_table[fd].write_handler = NULL;
                 commUpdateWriteBits(fd, NULL);
@@ -405,7 +405,7 @@ comm_select(int msec)
             if (no_bits)
                 continue;
 
-            if (FD_ISSET(fd, &readfds) && fd_table[fd].flags.read_pending) {
+            if (__WSAFDIsSet(fd_table[fd].win32.handle, &readfds) && fd_table[fd].flags.read_pending) {
                 FD_SET(fd, &pendingfds);
                 pending++;
             }
@@ -416,11 +416,11 @@ comm_select(int msec)
             /* Check each open socket for a handler. */
 
             if (fd_table[i].read_handler) {
-                assert(FD_ISSET(i, &readfds));
+                assert(__WSAFDIsSet(fd_table[i].win32.handle, readfds));
             }
 
             if (fd_table[i].write_handler) {
-                assert(FD_ISSET(i, &writefds));
+                assert(__WSAFDIsSet(fd_table[i].win32.handle, writefds));
             }
         }
 
@@ -499,7 +499,7 @@ comm_select(int msec)
 
             debugs(5, 9, "FD " << fd << " bit set for reading");
 
-            assert(FD_ISSET(fd, &readfds));
+            assert(__WSAFDIsSet(fd_table[fd].win32.handle, readfds));
 
 #endif
 
@@ -585,7 +585,7 @@ comm_select(int msec)
 
             debugs(5, 9, "FD " << fd << " bit set for writing");
 
-            assert(FD_ISSET(fd, &writefds));
+            assert(__WSAFDIsSet(fd_table[fd].win32.handle, writefds));
 
 #endif
 
@@ -725,9 +725,9 @@ examine_select(fd_set * readfds, fd_set * writefds)
         FD_ZERO(&write_x);
         tv.tv_sec = tv.tv_usec = 0;
 
-        if (FD_ISSET(fd, readfds))
+        if (__WSAFDIsSet(fd_table[fd].win32.handle, readfds))
             FD_SET(fd, &read_x);
-        else if (FD_ISSET(fd, writefds))
+        else if (__WSAFDIsSet(fd_table[fd].win32.handle, writefds))
             FD_SET(fd, &write_x);
         else
             continue;
@@ -791,10 +791,10 @@ commIncomingStats(StoreEntry * sentry)
 void
 commUpdateReadBits(int fd, PF * handler)
 {
-    if (handler && !FD_ISSET(fd, &global_readfds)) {
+    if (handler && !__WSAFDIsSet(fd_table[fd].win32.handle, &global_readfds)) {
         FD_SET(fd, &global_readfds);
         nreadfds++;
-    } else if (!handler && FD_ISSET(fd, &global_readfds)) {
+    } else if (!handler && __WSAFDIsSet(fd_table[fd].win32.handle, &global_readfds)) {
         FD_CLR(fd, &global_readfds);
         nreadfds--;
     }
@@ -803,10 +803,10 @@ commUpdateReadBits(int fd, PF * handler)
 void
 commUpdateWriteBits(int fd, PF * handler)
 {
-    if (handler && !FD_ISSET(fd, &global_writefds)) {
+    if (handler && !__WSAFDIsSet(fd_table[fd].win32.handle, &global_writefds)) {
         FD_SET(fd, &global_writefds);
         nwritefds++;
-    } else if (!handler && FD_ISSET(fd, &global_writefds)) {
+    } else if (!handler && __WSAFDIsSet(fd_table[fd].win32.handle, &global_writefds)) {
         FD_CLR(fd, &global_writefds);
         nwritefds--;
     }
