@@ -1,6 +1,6 @@
 
 /*
- * $Id: wccp2.cc,v 1.19 2007/11/15 16:47:35 wessels Exp $
+ * $Id: wccp2.cc,v 1.19.2.1 2008/02/24 12:02:51 amosjeffries Exp $
  *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Steven Wilton
@@ -1876,7 +1876,7 @@ wccp2AssignBuckets(void *voidnotused)
 
                     /* Update the value according the the "correct" formula */
 
-                    for (value++; (value & 0x1741) != value; value++) {
+                    for (; (value & 0x1741) != value; value++) {
                         assert(value <= 0x1741);
                     }
 
