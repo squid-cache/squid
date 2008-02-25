@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-# $Id: Makefile.in,v 1.112 2008/02/24 01:10:46 hno Exp $
+# $Id: Makefile.in,v 1.113 2008/02/25 01:10:48 hno Exp $
 #
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -304,9 +304,9 @@ LANGUAGES = \
 		Swedish \
 		Traditional_Chinese \
 		Turkish \
-		Ukrainan-1251 \
-		Ukrainan-koi8-u \
-		Ukrainan-utf8
+		Ukrainian-1251 \
+		Ukrainian-koi8-u \
+		Ukrainian-utf8
 
 all: all-am
 
