@@ -1,5 +1,5 @@
 /*
- * $Id: config.h,v 1.25 2007/09/20 11:07:53 amosjeffries Exp $
+ * $Id: config.h,v 1.25.2.1 2008/02/25 03:41:38 amosjeffries Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -440,12 +440,22 @@ typedef union {
  */
 #if WITH_VALGRIND
 #include <valgrind/memcheck.h>
+#undef VALGRIND_MAKE_NOACCESS
+#undef VALGRIND_MAKE_WRITABLE
+#undef VALGRIND_MAKE_READABLE
+/* A little glue for older valgrind version prior to 3.2.0 */
+#ifndef VALGRIND_MAKE_MEM_NOACCESS
+#define VALGRIND_MAKE_MEM_NOACCESS VALGRIND_MAKE_NOACCESS
+#define VALGRIND_MAKE_MEM_UNDEFINED VALGRIND_MAKE_WRITABLE
+#define VALGRIND_MAKE_MEM_DEFINED VALGRIND_MAKE_READABLE
+#define VALGRIND_CHECK_MEM_IS_ADDRESSABLE VALGRIND_CHECK_WRITABLE
+#endif
 #else
-#define VALGRIND_MAKE_NOACCESS(a,b) (0)
-#define VALGRIND_MAKE_WRITABLE(a,b) (0)
-#define VALGRIND_MAKE_READABLE(a,b) (0)
-#define VALGRIND_CHECK_WRITABLE(a,b) (0)
-#define VALGRIND_CHECK_READABLE(a,b) (0)
+#define VALGRIND_MAKE_MEM_NOACCESS(a,b) (0)
+#define VALGRIND_MAKE_MEM_UNDEFINED(a,b) (0)
+#define VALGRIND_MAKE_MEM_DEFINED(a,b) (0)
+#define VALGRIND_CHECK_MEM_IS_ADDRESSABLE(a,b) (0)
+#define VALGRIND_CHECK_MEM_IS_DEFINED(a,b) (0)
 #define VALGRIND_MALLOCLIKE_BLOCK(a,b,c,d)
 #define VALGRIND_FREELIKE_BLOCK(a,b)
 #define RUNNING_ON_VALGRIND 0

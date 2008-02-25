@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemPool.cc,v 1.10 2007/11/13 23:25:33 rousskov Exp $
+ * $Id: MemPool.cc,v 1.10.2.1 2008/02/25 03:41:39 amosjeffries Exp $
  *
  * DEBUG: section 63    Low Level Memory Pool Management
  * AUTHOR: Alex Rousskov, Andres Kroonmaa, Robert Collins
@@ -211,7 +211,7 @@ MemChunk::MemChunk(MemPool *aPool)
     for (int i = 1; i < pool->chunk_capacity; i++) {
 	*Free = (void *) ((char *) Free + pool->obj_size);
 	void **nextFree = (void **)*Free;
-	(void) VALGRIND_MAKE_NOACCESS(Free, pool->obj_size);
+	(void) VALGRIND_MAKE_MEM_NOACCESS(Free, pool->obj_size);
 	Free = nextFree;
     }
     nextFreeChunk = pool->nextFreeChunk;
@@ -277,7 +277,7 @@ MemPool::push(void *obj)
     Free = (void **)obj;
     *Free = freeCache;
     freeCache = obj;
-    (void) VALGRIND_MAKE_NOACCESS(obj, obj_size);
+    (void) VALGRIND_MAKE_MEM_NOACCESS(obj, obj_size);
 }
 
 /*
@@ -294,7 +294,7 @@ MemPool::get()
     /* first, try cache */
     if (freeCache) {
 	Free = (void **)freeCache;
-	(void) VALGRIND_MAKE_READABLE(Free, obj_size);
+	(void) VALGRIND_MAKE_MEM_DEFINED(Free, obj_size);
 	freeCache = *Free;
 	*Free = NULL;
 	return Free;
@@ -317,7 +317,7 @@ MemPool::get()
 	/* last free in this chunk, so remove us from perchunk freelist chain */
 	nextFreeChunk = chunk->nextFreeChunk;
     }
-    (void) VALGRIND_MAKE_READABLE(Free, obj_size);
+    (void) VALGRIND_MAKE_MEM_DEFINED(Free, obj_size);
     return Free;
 }
 
@@ -557,7 +557,7 @@ void
 MemImplementingAllocator::free(void *obj)
 {
     assert(obj != NULL);
-    (void) VALGRIND_CHECK_WRITABLE(obj, obj_size);
+    (void) VALGRIND_CHECK_MEM_IS_ADDRESSABLE(obj, obj_size);
     deallocate(obj);
     ++free_calls;
 }
@@ -602,10 +602,10 @@ MemPool::convertFreeCacheToChunkFreeCache()
 	assert(splayLastResult == 0);
 	assert(chunk->inuse_count > 0);
 	chunk->inuse_count--;
-	(void) VALGRIND_MAKE_READABLE(Free, sizeof(void *));
+	(void) VALGRIND_MAKE_MEM_DEFINED(Free, sizeof(void *));
 	freeCache = *(void **)Free;	/* remove from global cache */
 	*(void **)Free = chunk->freeList;	/* stuff into chunks freelist */
-	(void) VALGRIND_MAKE_NOACCESS(Free, sizeof(void *));
+	(void) VALGRIND_MAKE_MEM_NOACCESS(Free, sizeof(void *));
 	chunk->freeList = Free;
 	chunk->lastref = squid_curtime;
     }
