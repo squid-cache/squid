@@ -1,6 +1,6 @@
 
 /*
- * $Id: auth_digest.cc,v 1.59 2007/08/27 12:50:45 hno Exp $
+ * $Id: auth_digest.cc,v 1.59.2.1 2008/02/25 03:39:02 amosjeffries Exp $
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
@@ -666,6 +666,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointe
             }
         } else {
             credentials(Failed);
+            digest_request->flags.invalid_password = 1;
             digest_request->setDenyMessage("Incorrect password");
             return;
         }
@@ -673,7 +674,6 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData::Pointe
         /* check for stale nonce */
         if (!authDigestNonceIsValid(digest_request->nonce, digest_request->nc)) {
             debugs(29, 3, "authenticateDigestAuthenticateuser: user '" << digest_user->username() << "' validated OK but nonce stale");
-            digest_request->flags.nonce_stale = 1;
             credentials(Failed);
             digest_request->setDenyMessage("Stale nonce");
             return;
@@ -708,11 +708,8 @@ AuthDigestUserRequest::module_direction()
 
     case Failed:
 
-        if (flags.nonce_stale)
-            /* nonce is stale, send new challenge */
-            return 1;
-
-        return -2;
+         /* send new challenge */
+         return 1;
     }
 
     return -2;
@@ -783,14 +780,14 @@ AuthDigestConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, 
     if (!authenticate)
         return;
 
-    int stale = 0;
+    int stale = 1;
 
     if (auth_user_request) {
         AuthDigestUserRequest *digest_request;
         digest_request = dynamic_cast < AuthDigestUserRequest * >(auth_user_request);
         assert (digest_request != NULL);
 
-        stale = digest_request->flags.nonce_stale;
+        stale = !digest_request->flags.invalid_password;
     }
 
     /* on a 407 or 401 we always use a new nonce */
@@ -850,6 +847,7 @@ authenticateDigestHandleReply(void *data, char *reply)
 
     if (reply && (strncasecmp(reply, "ERR", 3) == 0)) {
         digest_request->credentials(AuthDigestUserRequest::Failed);
+	digest_request->flags.invalid_password = 1;
 
         if (t && *t)
             digest_request->setDenyMessage(t);
@@ -1047,9 +1045,8 @@ authDigestUserLinkNonce(DigestUser * user, digest_nonce_h * nonce)
 
 /* setup the necessary info to log the username */
 static AuthUserRequest *
-authDigestLogUsername(char *username)
+authDigestLogUsername(char *username, AuthDigestUserRequest *auth_user_request)
 {
-    AuthDigestUserRequest *auth_user_request = new AuthDigestUserRequest();
     assert(auth_user_request != NULL);
 
     /* log the username */
@@ -1228,7 +1225,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
     if (digest_request->cnonce && strlen(digest_request->nc) != 8) {
         debugs(29, 4, "authenticateDigestDecode: nonce count length invalid");
         delete digest_request;
-        return authDigestLogUsername(username);
+        return authDigestLogUsername(username, digest_request);
     }
 
     /* now the nonce */
@@ -1237,8 +1234,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
     if (!nonce) {
         /* we couldn't find a matching nonce! */
         debugs(29, 4, "authenticateDigestDecode: Unexpected or invalid nonce received");
-        delete digest_request;
-        return authDigestLogUsername(username);
+        return authDigestLogUsername(username, digest_request);
     }
 
     digest_request->nonce = nonce;
@@ -1247,11 +1243,11 @@ AuthDigestConfig::decode(char const *proxy_auth)
     /* check the qop is what we expected. Note that for compatability with
      * RFC 2069 we should support a missing qop. Tough. */
 
-    if (!digest_request->qop || strcmp(digest_request->qop, QOP_AUTH)) {
+    if (digest_request->qop && strcmp(digest_request->qop, QOP_AUTH) != 0) {
         /* we received a qop option we didn't send */
         debugs(29, 4, "authenticateDigestDecode: Invalid qop option received");
         delete digest_request;
-        return authDigestLogUsername(username);
+        return authDigestLogUsername(username, digest_request);
     }
 
     /* we can't check the URI just yet. We'll check it in the
@@ -1262,21 +1258,21 @@ AuthDigestConfig::decode(char const *proxy_auth)
     if (!digest_request->response || strlen(digest_request->response) != 32) {
         debugs(29, 4, "authenticateDigestDecode: Response length invalid");
         delete digest_request;
-        return authDigestLogUsername(username);
+        return authDigestLogUsername(username, digest_request);
     }
 
     /* do we have a username ? */
     if (!username || username[0] == '\0') {
         debugs(29, 4, "authenticateDigestDecode: Empty or not present username");
         delete digest_request;
-        return authDigestLogUsername(username);
+        return authDigestLogUsername(username, digest_request);
     }
 
     /* check that we're not being hacked / the username hasn't changed */
     if (nonce->user && strcmp(username, nonce->user->username())) {
         debugs(29, 4, "authenticateDigestDecode: Username for the nonce does not equal the username for the request");
         delete digest_request;
-        return authDigestLogUsername(username);
+        return authDigestLogUsername(username, digest_request);
     }
 
     /* if we got a qop, did we get a cnonce or did we get a cnonce wihtout a qop? */
@@ -1284,7 +1280,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
             || (!digest_request->qop && digest_request->cnonce)) {
         debugs(29, 4, "authenticateDigestDecode: qop without cnonce, or vice versa!");
         delete digest_request;
-        return authDigestLogUsername(username);
+        return authDigestLogUsername(username, digest_request);
     }
 
     /* check the algorithm is present and supported */
@@ -1294,7 +1290,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
              && strcmp(digest_request->algorithm, "MD5-sess")) {
         debugs(29, 4, "authenticateDigestDecode: invalid algorithm specified!");
         delete digest_request;
-        return authDigestLogUsername(username);
+        return authDigestLogUsername(username, digest_request);
     }
 
     /* the method we'll check at the authenticate step as well */

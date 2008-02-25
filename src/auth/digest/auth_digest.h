@@ -99,8 +99,7 @@ public:
 unsigned int authinfo_sent:
         1;
 
-unsigned int nonce_stale:
-        1;
+	unsigned int invalid_password:1;
 
 unsigned int helper_queried:
         1;
