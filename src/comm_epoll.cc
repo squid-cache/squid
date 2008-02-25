@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_epoll.cc,v 1.17 2007/07/19 13:33:18 hno Exp $
+ * $Id: comm_epoll.cc,v 1.17.2.1 2008/02/25 03:45:24 amosjeffries Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -201,6 +201,14 @@ commSetSelect(int fd, unsigned int type, PF * handler,
 
     if (timeout)
         F->timeout = squid_curtime + timeout;
+}
+
+void
+commResetSelect(int fd)
+{
+    fde *F = &fd_table[fd];
+    F->epoll_state = 0;
+    commSetSelect(fd, 0, NULL, NULL, 0);
 }
 
 
