@@ -1,5 +1,5 @@
 /*
- * $Id: debug.cc,v 1.106 2007/12/04 15:20:22 rousskov Exp $
+ * $Id: debug.cc,v 1.106.2.1 2008/02/25 03:01:01 amosjeffries Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -445,7 +445,7 @@ Debug::parseOptions(char const *options) {
     }
 
     for (i = 0; i < MAX_DEBUG_SECTIONS; i++)
-        Debug::Levels[i] = -1;
+        Debug::Levels[i] = 0;
 
     if (options) {
         p = xstrdup(options);

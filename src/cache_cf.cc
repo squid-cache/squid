@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.528 2007/11/15 23:33:05 wessels Exp $
+ * $Id: cache_cf.cc,v 1.528.2.1 2008/02/25 03:01:00 amosjeffries Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -2363,18 +2363,6 @@ parse_eol(char *volatile *var)
 
 #define dump_eol dump_string
 #define free_eol free_string
-
-void
-parse_debug(char *volatile *var)
-{
-    parse_eol(var);
-    safe_free(debug_options)
-    debug_options = xstrdup(Config.debugOptions);
-    Debug::parseOptions(Config.debugOptions);
-}
-
-#define dump_debug dump_string
-#define free_debug free_string
 
 static void
 dump_time_t(StoreEntry * entry, const char *name, time_t var)
