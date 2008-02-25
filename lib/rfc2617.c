@@ -13,7 +13,7 @@
 
 
 /*
- * $Id: rfc2617.c,v 1.12 2007/11/15 16:47:34 wessels Exp $
+ * $Id: rfc2617.c,v 1.12.2.1 2008/02/25 03:38:11 amosjeffries Exp $
  *
  * DEBUG:
  * AUTHOR: RFC 2617 & Robert Collins
@@ -94,7 +94,7 @@ CvtBin(const HASHHEX Hex, HASH Bin)
 	else
 	    Bin[i / 2] |= n;
     }
-    for (; i <= HASHHEXLEN; i++) {
+    for (i = i / 2; i < HASHLEN; i++) {
 	Bin[i] = '\0';
     }
 }
