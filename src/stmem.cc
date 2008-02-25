@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.92 2007/08/13 18:25:14 hno Exp $
+ * $Id: stmem.cc,v 1.92.2.1 2008/02/25 02:45:50 amosjeffries Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Harvest Derived
@@ -149,8 +149,6 @@ mem_hdr::writeAvailable(mem_node *aNode, int64_t location, size_t amount, char c
 
     /* Adjust the ptr and len according to what was deposited in the page */
     aNode->nodeBuffer.length += copyLen;
-
-    mem_node::store_mem_size += copyLen;
 
     return copyLen;
 }

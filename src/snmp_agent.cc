@@ -1,6 +1,6 @@
 
 /*
- * $Id: snmp_agent.cc,v 1.96 2007/04/28 22:26:37 hno Exp $
+ * $Id: snmp_agent.cc,v 1.96.4.1 2008/02/25 02:45:50 amosjeffries Exp $
  *
  * DEBUG: section 49    SNMP Interface
  * AUTHOR: Kostas Anagnostakis
@@ -57,7 +57,7 @@ snmp_sysFn(variable_list * Var, snint * ErrP)
 
     case SYSVMSIZ:
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      mem_node::store_mem_size >> 10,
+                                      mem_node::StoreMemSize() >> 10,
                                       ASN_INTEGER);
         break;
 

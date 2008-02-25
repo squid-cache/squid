@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_node.cc,v 1.10 2007/08/13 17:20:51 hno Exp $
+ * $Id: mem_node.cc,v 1.10.2.1 2008/02/25 02:45:50 amosjeffries Exp $
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
@@ -38,7 +38,6 @@
 
 static int makeMemNodeDataOffset();
 
-unsigned long mem_node::store_mem_size;
 static int _mem_node_data_offset = makeMemNodeDataOffset();
 
 /*
@@ -70,14 +69,18 @@ mem_node::mem_node(int64_t offset):nodeBuffer(0,offset,data)
 {}
 
 mem_node::~mem_node()
-{
-    store_mem_size -= nodeBuffer.length;
-}
+{}
 
 size_t
 mem_node::InUseCount()
 {
     return Pool().inUseCount();
+}
+
+size_t
+mem_node::StoreMemSize()
+{
+    return InUseCount() * SM_PAGE_SIZE;
 }
 
 int64_t
