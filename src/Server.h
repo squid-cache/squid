@@ -1,6 +1,6 @@
 
 /*
- * $Id: Server.h,v 1.10 2007/09/27 14:34:06 rousskov Exp $
+ * $Id: Server.h,v 1.10.2.1 2008/02/25 23:07:29 amosjeffries Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -163,7 +163,7 @@ protected:
     size_t replyBodySpace(size_t space = 4096 * 10);
 
     // These should be private
-    off_t currentOffset;	// Our current offset in the StoreEntry
+    int64_t currentOffset;	// Our current offset in the StoreEntry
     MemBuf *responseBodyBuffer;	// Data temporarily buffered for ICAP
 
 public: // should not be

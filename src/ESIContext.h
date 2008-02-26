@@ -1,5 +1,5 @@
 /*
- * $Id: ESIContext.h,v 1.4 2003/08/04 22:14:40 robertc Exp $
+ * $Id: ESIContext.h,v 1.4.4.1 2008/02/25 23:07:29 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -133,8 +133,8 @@ int detached:
      * for some reason 
      */
     size_t outbound_offset;
-    off_t readpos; /* the logical position we are reading from */
-    off_t pos; /* the logical position of outbound_offset in the data stream */
+    int64_t readpos; /* the logical position we are reading from */
+    int64_t pos; /* the logical position of outbound_offset in the data stream */
 
     class ParserState
     {
