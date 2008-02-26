@@ -2,7 +2,7 @@
 #include <cppunit/TestAssert.h>
 
 #include "AsyncEngine.h"
-#include "CompletionDispatcher.h"
+#include "AsyncCallQueue.h"
 #include "Mem.h"
 #include "testEventLoop.h"
 #include "EventLoop.h"
@@ -36,6 +36,7 @@ testEventLoop::testCreate()
     EventLoop();
 }
 
+#if POLISHED_MAIN_LOOP
 
 /*
  * Running the loop once is useful for integration with other loops, such as 
@@ -62,6 +63,8 @@ public:
     }
 };
 
+#endif /* POLISHED_MAIN_LOOP */
+
 class RecordingEngine : public AsyncEngine
 {
 
@@ -80,6 +83,8 @@ public:
               return return_timeout;
           }
       };
+
+#if POLISHED_MAIN_LOOP
 
 void
 testEventLoop::testRunOnce()
@@ -219,6 +224,8 @@ testEventLoop::testStopOnIdle()
     theLoop.registerEngine(&non_idle_engine);
     CPPUNIT_ASSERT_EQUAL(false, theLoop.runOnce());
 }
+
+#endif /* POLISHED_MAIN_LOOP */
 
 /* An event loop has a time service which is like an async engine but never
  * generates events and there can only be one such service.
