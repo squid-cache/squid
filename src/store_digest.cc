@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.76 2007/08/13 17:20:51 hno Exp $
+ * $Id: store_digest.cc,v 1.76.2.1 2008/02/25 23:08:51 amosjeffries Exp $
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
@@ -466,7 +466,7 @@ storeDigestSwapOutStep(void *data)
     assert(e);
     /* _add_ check that nothing bad happened while we were waiting @?@ @?@ */
 
-    if ((size_t)(sd_state.rewrite_offset + chunk_size) > store_digest->mask_size)
+    if (sd_state.rewrite_offset + chunk_size > store_digest->mask_size)
         chunk_size = store_digest->mask_size - sd_state.rewrite_offset;
 
     e->append(store_digest->mask + sd_state.rewrite_offset, chunk_size);
@@ -478,7 +478,7 @@ storeDigestSwapOutStep(void *data)
     sd_state.rewrite_offset += chunk_size;
 
     /* are we done ? */
-    if ((size_t)sd_state.rewrite_offset >= store_digest->mask_size)
+    if (sd_state.rewrite_offset >= store_digest->mask_size)
         storeDigestRewriteFinish(e);
     else
         eventAdd("storeDigestSwapOutStep", storeDigestSwapOutStep, data, 0.0, 1, false);

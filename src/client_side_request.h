@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.32 2007/08/13 17:20:51 hno Exp $
+ * $Id: client_side_request.h,v 1.32.2.1 2008/02/25 23:08:50 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -183,7 +183,7 @@ private:
     BodyPipe::Pointer icapBodySource;
 
     bool request_satisfaction_mode;
-    off_t request_satisfaction_offset;
+    int64_t request_satisfaction_offset;
 #endif
 };
 

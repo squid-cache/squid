@@ -1,6 +1,6 @@
 
 /*
- * $Id: net_db.cc,v 1.198 2007/11/27 07:48:40 amosjeffries Exp $
+ * $Id: net_db.cc,v 1.198.2.1 2008/02/25 23:08:51 amosjeffries Exp $
  *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
@@ -72,7 +72,7 @@ typedef struct
     StoreEntry *e;
     store_client *sc;
     HttpRequest *r;
-    off_t used;
+    int64_t used;
     size_t buf_sz;
     char buf[NETDB_REQBUF_SZ];
     int buf_ofs;
@@ -678,7 +678,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 {
     netdbExchangeState *ex = (netdbExchangeState *)data;
     int rec_sz = 0;
-    off_t o;
+    int o;
 
     struct IN_ADDR addr;
     double rtt;

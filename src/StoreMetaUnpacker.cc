@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaUnpacker.cc,v 1.5.4.1 2008/02/24 11:28:09 amosjeffries Exp $
+ * $Id: StoreMetaUnpacker.cc,v 1.5.4.2 2008/02/25 23:08:50 amosjeffries Exp $
  *
  * DEBUG: section 20    Storage Manager Swapfile Unpacker
  * AUTHOR: Robert Collins
@@ -37,7 +37,7 @@
 #include "StoreMetaUnpacker.h"
 #include "StoreMeta.h"
 
-off_t const StoreMetaUnpacker::MinimumBufferLength = sizeof(char) + sizeof(int);
+int const StoreMetaUnpacker::MinimumBufferLength = sizeof(char) + sizeof(int);
 
 bool
 StoreMetaUnpacker::isBufferSane()

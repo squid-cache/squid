@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.h,v 1.9 2007/05/07 18:38:40 wessels Exp $
+ * $Id: helper.h,v 1.9.4.1 2008/02/25 23:08:51 amosjeffries Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -117,7 +117,7 @@ struct _helper_server
     MemBuf *writebuf;
     char *rbuf;
     size_t rbuf_sz;
-    off_t roffset;
+    size_t roffset;
 
     struct timeval dispatch_time;
 
@@ -164,7 +164,7 @@ struct _helper_stateful_server
     /* MemBuf writebuf; */
     char *rbuf;
     size_t rbuf_sz;
-    off_t roffset;
+    size_t roffset;
 
     struct timeval dispatch_time;
 

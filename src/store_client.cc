@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_client.cc,v 1.159 2007/08/27 12:50:43 hno Exp $
+ * $Id: store_client.cc,v 1.159.2.1 2008/02/25 23:08:51 amosjeffries Exp $
  *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
@@ -697,14 +697,6 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 
     return 1;
 }
-
-#if UNUSED_CODE_20070420
-off_t
-storeLowestMemReaderOffset(const StoreEntry * entry)
-{
-    return entry->mem_obj->lowestMemReaderOffset();
-}
-#endif
 
 /* Call handlers waiting for  data to be appended to E. */
 void
