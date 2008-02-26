@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem.cc,v 1.106 2007/11/15 16:47:35 wessels Exp $
+ * $Id: mem.cc,v 1.106.2.1 2008/02/26 00:15:55 amosjeffries Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -382,8 +382,6 @@ Mem::Init(void)
      * debug messages here at level 0 or 1 will always be printed
      * on stderr.
      */
-    debugs(13, 3, "Memory pools are '" << ((Config.onoff.mem_pools ? "on" : "off"))  << "'; limit: "<<
-            std::setprecision(3) << toMB(MemPools::GetInstance().idleLimit()) << " MB");
 
     /* set all pointers to null */
     memset(MemPools, '\0', sizeof(MemPools));
@@ -428,6 +426,15 @@ Mem::Init(void)
         if (StrPools[i].pool->objectSize() != StrPoolsAttrs[i].obj_size)
             debugs(13, 1, "Notice: " << StrPoolsAttrs[i].name << " is " << StrPools[i].pool->objectSize() << " bytes instead of requested " << StrPoolsAttrs[i].obj_size << " bytes");
     }
+}
+
+void
+Mem::Report()
+{
+    debugs(13, 3, "Memory pools are '" <<
+        (Config.onoff.mem_pools ? "on" : "off")  << "'; limit: " <<
+        std::setprecision(3) << toMB(MemPools::GetInstance().idleLimit()) <<
+        " MB");
 }
 
 void

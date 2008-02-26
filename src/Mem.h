@@ -1,6 +1,6 @@
 
 /*
- * $Id: Mem.h,v 1.4 2006/05/29 00:15:01 robertc Exp $
+ * $Id: Mem.h,v 1.4.4.1 2008/02/26 00:15:55 amosjeffries Exp $
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -47,6 +47,7 @@ class Mem
 
 public:
     static void Init();
+    static void Report();
     static void RegisterWithCacheManager(CacheManager & manager);
     static void Stats(StoreEntry *);
     static void CleanIdlePools(void *unused);
