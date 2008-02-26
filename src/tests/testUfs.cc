@@ -225,6 +225,11 @@ testUfs::testUfsDefaultEngine()
     if (0 > system ("rm -rf " TESTDIR))
         throw std::runtime_error("Failed to clean test work directory");
 
+    // This assertion may fail if previous test cases fail.
+    // Apparently, CPPUNIT_ASSERT* failure may prevent destructors of local
+    // objects such as "StorePointer aRoot" from being called.
+    CPPUNIT_ASSERT(!store_table); // or StoreHashIndex ctor will abort below
+
     StorePointer aRoot (new StoreController);
     Store::Root(aRoot);
     SwapDirPointer aStore (new UFSSwapDir("ufs", "Blocking"));
