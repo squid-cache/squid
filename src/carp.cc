@@ -1,6 +1,6 @@
 
 /*
- * $Id: carp.cc,v 1.26 2007/04/28 22:26:37 hno Exp $
+ * $Id: carp.cc,v 1.26.4.1 2008/02/26 00:04:15 amosjeffries Exp $
  *
  * DEBUG: section 39    Cache Array Routing Protocol
  * AUTHOR: Henrik Nordstrom
@@ -104,7 +104,7 @@ carpInit(void)
         /* calculate this peers hash */
         p->carp.hash = 0;
 
-        for (t = p->host; *t != 0; t++)
+        for (t = p->name; *t != 0; t++)
             p->carp.hash += ROTATE_LEFT(p->carp.hash, 19) + (unsigned int) *t;
 
         p->carp.hash += p->carp.hash * 0x62531965;
@@ -189,7 +189,7 @@ carpSelectParent(HttpRequest * request)
         combined_hash += combined_hash * 0x62531965;
         combined_hash = ROTATE_LEFT(combined_hash, 21);
         score = combined_hash * tp->carp.load_multiplier;
-        debugs(39, 3, "carpSelectParent: " << tp->host << " combined_hash " << combined_hash  << 
+        debugs(39, 3, "carpSelectParent: " << tp->name << " combined_hash " << combined_hash  << 
                " score " << std::setprecision(0) << score);
 
         if ((score > high_score) && peerHTTPOkay(tp, request)) {
@@ -199,7 +199,7 @@ carpSelectParent(HttpRequest * request)
     }
 
     if (p)
-        debugs(39, 2, "carpSelectParent: selected " << p->host);
+        debugs(39, 2, "carpSelectParent: selected " << p->name);
 
     return p;
 }
@@ -221,7 +221,7 @@ carpCachemgr(StoreEntry * sentry)
 
     for (p = Config.peers; p; p = p->next) {
         storeAppendPrintf(sentry, "%24s %10x %10f %10f %10f\n",
-                          p->host, p->carp.hash,
+                          p->name, p->carp.hash,
                           p->carp.load_multiplier,
                           p->carp.load_factor,
                           sumfetches ? (double) p->stats.fetches / sumfetches : -1.0);
