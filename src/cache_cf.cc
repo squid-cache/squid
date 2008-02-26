@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.542 2008/02/17 09:24:50 serassio Exp $
+ * $Id: cache_cf.cc,v 1.543 2008/02/26 00:15:48 rousskov Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "authenticate.h"
 #include "ProtoPort.h"
+#include "HttpRequestMethod.h"
 #include "AuthConfig.h"
 #include "AuthScheme.h"
 #include "CacheManager.h"

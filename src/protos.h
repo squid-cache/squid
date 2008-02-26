@@ -1,6 +1,6 @@
 
 /*
- * $Id: protos.h,v 1.555 2008/02/07 02:51:18 adrian Exp $
+ * $Id: protos.h,v 1.556 2008/02/26 00:15:48 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,15 +38,13 @@
  * yet.
  */
 #include "Packer.h"
-/* for routines that have not moved out their proper homes yet.
- * grep for method_t in this file - if none found remove this include.
- */
-#include "HttpRequestMethod.h"
 /* for routines still in this file that take CacheManager parameters */
 #include "IPAddress.h"
-/* for routines in here that need it as a parameter. */
+
 
 class CacheManager;
+class HttpRequestMethod;
+
 
 #if FORW_VIA_DB
 SQUIDCEXTERN void fvdbCountVia(const char *key);
