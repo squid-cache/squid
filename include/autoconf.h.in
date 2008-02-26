@@ -170,6 +170,12 @@
 /* Define to 1 if you have the <glib.h> header file. */
 #undef HAVE_GLIB_H
 
+/* Define to 1 if you have the `glob' function. */
+#undef HAVE_GLOB
+
+/* Define to 1 if you have the <glob.h> header file. */
+#undef HAVE_GLOB_H
+
 /* Define to 1 if you have the <gnumalloc.h> header file. */
 #undef HAVE_GNUMALLOC_H
 

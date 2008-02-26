@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.528.2.5 2008/02/25 23:41:50 amosjeffries Exp $
+ * $Id: cache_cf.cc,v 1.528.2.6 2008/02/25 23:43:05 amosjeffries Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -46,7 +46,9 @@
 #include "Parsing.h"
 #include "MemBuf.h"
 #include "wordlist.h"
+#if HAVE_GLOB_H
 #include <glob.h>
+#endif
 
 #if SQUID_SNMP
 #include "snmp.h"
@@ -211,6 +213,7 @@ parseManyConfigFiles(char* files, int depth)
 {
     int error_count = 0;
     char* saveptr = NULL;
+#if HAVE_GLOB
     char *path;
     glob_t globbuf;
     int i;
@@ -225,6 +228,13 @@ parseManyConfigFiles(char* files, int depth)
 	error_count += parseOneConfigFile(globbuf.gl_pathv[i], depth);
     }
     globfree(&globbuf);
+#else
+    char* file = strwordtok(files, &saveptr);
+    while (file != NULL) {
+	error_count += parseOneConfigFile(file, depth);
+	file = strwordtok(NULL, &saveptr);
+    }
+#endif /* HAVE_GLOB */
     return error_count;
 }
 
