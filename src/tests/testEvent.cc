@@ -2,7 +2,7 @@
 #include <cppunit/TestAssert.h>
 
 #include "CapturingStoreEntry.h"
-#include "CompletionDispatcher.h"
+#include "AsyncCallQueue.h"
 #include "Mem.h"
 #include "testEvent.h"
 #include "event.h"
@@ -27,13 +27,12 @@ testEvent::setUp()
 }
 
 /*
- * Test creating a EventDispatcher and Scheduler
+ * Test creating a Scheduler
  */
 void
 testEvent::testCreate()
 {
-    EventDispatcher dispatcher = EventDispatcher();
-    EventScheduler scheduler = EventScheduler(&dispatcher);
+    EventScheduler scheduler = EventScheduler();
 }
 
 
@@ -51,34 +50,19 @@ struct CalledEvent
     int calls;
 };
 
-/* do a trivial test of invoking callbacks */
-void
-testEvent::testDispatch()
-{
-    EventDispatcher dispatcher;
-    CalledEvent event;
-    dispatcher.add(new ev_entry("test event", CalledEvent::Handler, &event, 0, 0, false));
-    /* return true when an event is dispatched */
-    CPPUNIT_ASSERT_EQUAL(true, dispatcher.dispatch());
-    /* return false when none were dispatched */
-    CPPUNIT_ASSERT_EQUAL(false, dispatcher.dispatch());
-    CPPUNIT_ASSERT_EQUAL(1, event.calls);
-}
-
 /* submit two callbacks, and cancel one, then dispatch and only the other should run.
  */
 void
 testEvent::testCancel()
 {
-    EventDispatcher dispatcher;
-    EventScheduler scheduler(&dispatcher);
+    EventScheduler scheduler;
     CalledEvent event;
     CalledEvent event_to_cancel;
     scheduler.schedule("test event", CalledEvent::Handler, &event, 0, 0, false);
     scheduler.schedule("test event2", CalledEvent::Handler, &event_to_cancel, 0, 0, false);
     scheduler.cancel(CalledEvent::Handler, &event_to_cancel);
     scheduler.checkEvents(0);
-    dispatcher.dispatch();
+    AsyncCallQueue::Instance().fire();
     CPPUNIT_ASSERT_EQUAL(1, event.calls);
     CPPUNIT_ASSERT_EQUAL(0, event_to_cancel.calls);
 }
@@ -88,8 +72,7 @@ testEvent::testCancel()
 void
 testEvent::testDump()
 {
-    EventDispatcher dispatcher;
-    EventScheduler scheduler(&dispatcher);
+    EventScheduler scheduler;
     CalledEvent event;
     CalledEvent event2;
     CapturingStoreEntry * anEntry = new CapturingStoreEntry();
@@ -104,7 +87,7 @@ testEvent::testDump()
 
     /* schedule and dispatch to set the last run event */
     scheduler.checkEvents(0);
-    dispatcher.dispatch();
+    AsyncCallQueue::Instance().fire();
     scheduler.schedule("test event", CalledEvent::Handler, &event, 0, 0, false);
     scheduler.schedule("test event2", CalledEvent::Handler, &event2, 0, 0, false);
     scheduler.dump(anEntry);
@@ -139,8 +122,7 @@ testEvent::testDump()
 void
 testEvent::testFind()
 {
-    EventDispatcher dispatcher;
-    EventScheduler scheduler(&dispatcher);
+    EventScheduler scheduler;
     CalledEvent event;
     CalledEvent event_to_find;
     scheduler.schedule("test event", CalledEvent::Handler, &event, 0, 0, false);
@@ -152,8 +134,7 @@ testEvent::testFind()
 void
 testEvent::testCheckEvents()
 {
-    EventDispatcher dispatcher;
-    EventScheduler scheduler(&dispatcher);
+    EventScheduler scheduler;
     CalledEvent event;
     /* with no events, its an idle engine */
     CPPUNIT_ASSERT_EQUAL(int(AsyncEngine::EVENT_IDLE), scheduler.checkEvents(0));
@@ -162,20 +143,18 @@ testEvent::testCheckEvents()
      */
     scheduler.schedule("test event", CalledEvent::Handler, &event, 0, 0, false);
     CPPUNIT_ASSERT_EQUAL(int(AsyncEngine::EVENT_IDLE), scheduler.checkEvents(0));
-    dispatcher.dispatch();
+    AsyncCallQueue::Instance().fire();
     /* event running later results in  a delay of the time till it runs */
     scheduler.schedule("test event", CalledEvent::Handler, &event, 2, 0, false);
     CPPUNIT_ASSERT_EQUAL(2000, scheduler.checkEvents(0));
-    dispatcher.dispatch();
+    AsyncCallQueue::Instance().fire();
     CPPUNIT_ASSERT_EQUAL(1, event.calls);
 }
 
-/* for convenience we have a singleton scheduler and dispatcher*/
+/* for convenience we have a singleton scheduler */
 void
 testEvent::testSingleton()
 {
     EventScheduler *scheduler = dynamic_cast<EventScheduler *>(EventScheduler::GetInstance());
     CPPUNIT_ASSERT(NULL != scheduler);
-    EventDispatcher *dispatcher = dynamic_cast<EventDispatcher *>(EventDispatcher::GetInstance());
-    CPPUNIT_ASSERT(NULL != dispatcher);
 }
