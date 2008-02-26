@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.h,v 1.16 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id: MemObject.h,v 1.17 2008/02/26 00:15:48 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -39,6 +39,7 @@
 #include "stmem.h"
 #include "CommRead.h"
 #include "RemovalPolicy.h"
+#include "HttpRequestMethod.h"
 
 typedef void STMCB (void *data, StoreIOBuffer wroteBuffer);
 
