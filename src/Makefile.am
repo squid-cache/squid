@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.200 2008/02/12 22:58:29 rousskov Exp $
+#  $Id: Makefile.am,v 1.201 2008/02/26 00:19:29 rousskov Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -1150,6 +1150,13 @@ TESTSOURCES= \
 	../test-suite/test_tools.cc \
 	globals.cc
 
+# sources needed by those tests that need event.cc; incomplete
+TEST_CALL_SOURCES = \
+	event.cc \
+	AsyncCallQueue.cc \
+	AsyncCall.cc
+	
+
 check_PROGRAMS+= \
 	tests/testAuth \
 	tests/testACLMaxUserIP \
@@ -1194,7 +1201,7 @@ tests_testAuth_SOURCES= tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $(
 	ConfigParser.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
 	tests/stub_helper.cc cbdata.cc String.cc \
-	tests/stub_store.cc HttpHeaderTools.cc HttpHeader.cc acl.cc event.cc mem.cc \
+	tests/stub_store.cc HttpHeaderTools.cc HttpHeader.cc acl.cc mem.cc \
 	MemBuf.cc HttpHdrContRange.cc Packer.cc ACLChecklist.cc HttpHdrCc.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc url.cc ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc \
 	StatHist.cc HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
@@ -1209,6 +1216,7 @@ tests_testAuth_SOURCES= tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $(
 	tests/stub_access_log.cc \
 	time.cc \
 	URLScheme.cc \
+	$(TEST_CALL_SOURCES) \
 	wordlist.cc
 ##	acl.cc cache_cf.cc tools.cc \
 ##	helper.cc String.cc cbdata.cc HttpHeaderTools.cc store.cc cache_manager.cc \
@@ -1258,7 +1266,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	authenticate.cc \
 	cbdata.cc \
 	ConfigParser.cc \
-	event.cc \
 	ETag.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
@@ -1273,6 +1280,8 @@ tests_testACLMaxUserIP_SOURCES= \
 	StatHist.cc \
 	stmem.cc \
 	String.cc \
+	$(TEST_CALL_SOURCES) \
+	$(TESTSOURCES) \
 	tests/stub_cache_cf.cc \
 	tests/stub_comm.cc \
 	tests/stub_DelayId.cc \
@@ -1284,8 +1293,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	time.cc \
 	mem.cc \
 	MemBuf.cc \
-	wordlist.cc \
-	$(TESTSOURCES)
+	wordlist.cc
 tests_testACLMaxUserIP_LDADD= \
 	libsquid.la \
 	libauth.la \
@@ -1333,9 +1341,6 @@ tests_testCacheManager_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
-	AsyncCallQueue.cc \
-	AsyncCallQueue.h \
-	AsyncCall.cc \
 	authenticate.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -1357,7 +1362,6 @@ tests_testCacheManager_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
 	$(DNSSOURCE) \
-	event.cc \
 	errorpage.cc \
 	$(ESI_SOURCE) \
 	ETag.cc \
@@ -1436,6 +1440,7 @@ tests_testCacheManager_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
+	$(TEST_CALL_SOURCES) \
 	tools.cc \
 	tunnel.cc \
 	SwapDir.cc \
@@ -1504,9 +1509,6 @@ tests_testEvent_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
-	AsyncCallQueue.cc \
-	AsyncCallQueue.h \
-	AsyncCall.cc \
 	authenticate.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -1528,7 +1530,6 @@ tests_testEvent_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
 	$(DNSSOURCE) \
-	event.cc \
 	errorpage.cc \
 	$(ESI_SOURCE) \
 	ETag.cc \
@@ -1606,6 +1607,7 @@ tests_testEvent_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
+	$(TEST_CALL_SOURCES) \
 	tools.cc \
 	tunnel.cc \
 	SwapDir.cc \
@@ -1661,9 +1663,6 @@ tests_testEventLoop_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
-	AsyncCallQueue.cc \
-	AsyncCallQueue.h \
-	AsyncCall.cc \
 	authenticate.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -1685,7 +1684,6 @@ tests_testEventLoop_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
 	$(DNSSOURCE) \
-	event.cc \
 	errorpage.cc \
 	$(ESI_SOURCE) \
 	ETag.cc \
@@ -1763,6 +1761,7 @@ tests_testEventLoop_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
+	$(TEST_CALL_SOURCES) \
 	tools.cc \
 	tunnel.cc \
 	SwapDir.cc \
@@ -1842,9 +1841,6 @@ tests_test_http_range_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
-	AsyncCallQueue.cc \
-	AsyncCallQueue.h \
-	AsyncCall.cc \
 	authenticate.cc \
 	BodyPipe.cc \
 	cache_cf.cc \
@@ -1867,7 +1863,6 @@ tests_test_http_range_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
 	$(DNSSOURCE) \
-	event.cc \
 	errorpage.cc \
 	$(ESI_SOURCE) \
 	ETag.cc \
@@ -1950,6 +1945,7 @@ tests_test_http_range_SOURCES = \
 	StoreSwapLogData.cc \
 	String.cc \
 	SwapDir.cc \
+	$(TEST_CALL_SOURCES) \
 	time.cc \
 	tools.cc \
 	tunnel.cc \
@@ -2006,9 +2002,6 @@ tests_testHttpRequest_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
-	AsyncCallQueue.cc \
-	AsyncCallQueue.h \
-	AsyncCall.cc \
 	authenticate.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -2030,7 +2023,6 @@ tests_testHttpRequest_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
 	$(DNSSOURCE) \
-	event.cc \
 	errorpage.cc \
 	$(ESI_SOURCE) \
 	ETag.cc \
@@ -2109,6 +2101,7 @@ tests_testHttpRequest_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
+	$(TEST_CALL_SOURCES) \
 	tools.cc \
 	tunnel.cc \
 	SwapDir.cc \
@@ -2165,11 +2158,11 @@ tests_testICMP_DEPENDENCIES= @SQUID_CPPUNIT_LA@ \
 # store_key_md5 wants the method.
 STORE_TEST_SOURCES=\
 	$(TESTSOURCES) \
+	$(TEST_CALL_SOURCES) \
 	$(DELAY_POOL_SOURCE) \
 	CacheDigest.cc \
 	ConfigParser.cc \
 	EventLoop.cc \
-	event.cc \
 	HttpMsg.cc \
 	RemovalPolicy.cc \
 	store_dir.cc \
@@ -2286,7 +2279,6 @@ SWAP_TEST_SOURCES = \
 	$(DISKIO_SOURCE)
 
 SWAP_TEST_LDADD = \
-	libsquid.la \
 	libauth.la \
 	DiskIO/Blocking/BlockingDiskIOModule.o \
 	repl/lru/store_repl_lru.o \
@@ -2367,9 +2359,6 @@ tests_testURL_SOURCES = \
 	ACLStringData.cc \
 	ACLRegexData.cc \
 	ACLUserData.cc \
-	AsyncCallQueue.cc \
-	AsyncCallQueue.h \
-	AsyncCall.cc \
 	authenticate.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -2391,7 +2380,6 @@ tests_testURL_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
 	$(DNSSOURCE) \
-	event.cc \
 	errorpage.cc \
 	$(ESI_SOURCE) \
 	ETag.cc \
@@ -2469,6 +2457,7 @@ tests_testURL_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
+	$(TEST_CALL_SOURCES) \
 	tools.cc \
 	tunnel.cc \
 	SwapDir.cc \
