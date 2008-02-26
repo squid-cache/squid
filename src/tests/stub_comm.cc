@@ -1,5 +1,5 @@
 /*
- * $Id: stub_comm.cc,v 1.6 2007/12/14 23:11:53 amosjeffries Exp $
+ * $Id: stub_comm.cc,v 1.7 2008/02/26 00:19:59 rousskov Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins
@@ -65,9 +65,15 @@ comm_read(int fd, char *buf, int size, IOCB *handler, void *handler_data)
     fatal ("Not implemented");
 }
 
+void
+comm_read(int, char*, int, AsyncCall::Pointer &callback)
+{
+    fatal ("Not implemented");
+}
+
 /* should be in stub_CommRead */
 #include "CommRead.h"
-CommRead::CommRead (int fd, char *buf, int len, IOCB *handler, void *data)
+CommRead::CommRead (int fd, char *buf, int len, AsyncCall::Pointer &callback)
 {
     fatal ("Not implemented");
 }
