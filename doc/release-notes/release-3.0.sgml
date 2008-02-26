@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.0.RC1 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.0.sgml,v 1.30.2.1 2008/02/24 10:58:12 amosjeffries Exp $</date>
+<date>$Id: release-3.0.sgml,v 1.30.2.2 2008/02/25 23:25:24 amosjeffries Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.0 of Squid.
@@ -326,6 +326,21 @@ The 'httpready' filter delays delivering new connections
 to Squid until a full HTTP request has been received.
 See the accf_http(9) man page.
 	</verb>
+
+	<tag>include</tag>
+	<p>New option to import entire secondary configuration files into squid.conf.
+	<verb>
+	Squid will follow the files immediately and insert all their content
+	as if it was at that position in squid.conf. As per squid.conf some
+	options are order-specific within the config as a whole.
+
+	A few layers of include are allowed, but too many are confusing and
+	squid will enforce an include depth of 16 files.
+
+	Syntax:
+		include /path/to/file1 /path/to/file2
+	</verb>
+
 </descrip>
 
 
