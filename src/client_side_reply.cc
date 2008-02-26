@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_reply.cc,v 1.144.2.2 2008/02/24 11:43:27 amosjeffries Exp $
+ * $Id: client_side_reply.cc,v 1.144.2.3 2008/02/26 00:05:47 amosjeffries Exp $
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
@@ -1314,6 +1314,9 @@ clientReplyContext::buildReplyHeader()
 
 #endif
 
+    /* Check whether we should send keep-alive */
+    // TODO: disable proxy_keepalive only once
+
     if (reply->bodySize(request->method) < 0) {
         debugs(88, 3, "clientBuildReplyHeader: can't keep-alive, unknown body size" );
         request->flags.proxy_keepalive = 0;
@@ -1331,6 +1334,11 @@ clientReplyContext::buildReplyHeader()
 
     if (!Config.onoff.client_pconns && !request->flags.must_keepalive)
         request->flags.proxy_keepalive = 0;
+
+    if (request->flags.proxy_keepalive && shutting_down) {
+        debugs(88, 3, "clientBuildReplyHeader: Shutting down, don't keep-alive.");
+        request->flags.proxy_keepalive = 0;
+    }
 
     /* Append VIA */
     if (Config.onoff.via) {
