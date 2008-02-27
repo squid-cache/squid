@@ -1,6 +1,6 @@
 
 /*
- * $Id: SquidString.h,v 1.12 2007/11/04 23:59:51 amosjeffries Exp $
+ * $Id: SquidString.h,v 1.12.2.1 2008/02/27 10:47:59 amosjeffries Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -35,6 +35,8 @@
 
 #ifndef SQUID_STRING_H
 #define SQUID_STRING_H
+
+#include "config.h"
 
 /* forward decls */
 

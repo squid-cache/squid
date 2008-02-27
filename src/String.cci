@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cci,v 1.10 2007/11/04 23:59:52 amosjeffries Exp $
+ * $Id: String.cci,v 1.10.2.1 2008/02/27 10:47:59 amosjeffries Exp $
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
@@ -32,6 +32,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+
+#include "assert.h"
 
 String::String() : size_(0), len_(0), buf_ (NULL)
 {
@@ -150,6 +152,8 @@ String::cut(size_t newLength)
     if(newLength < 0 || newLength > len_) return;
 
     len_ = newLength;
+
+    if(len_ == 0 && buf_ == NULL) return; // buf_ may be NULL on zero-length strings.
     buf_[newLength] = '\0';
 }
 
