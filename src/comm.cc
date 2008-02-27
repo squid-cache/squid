@@ -1,5 +1,5 @@
 /*
- * $Id: comm.cc,v 1.438.2.2 2008/02/25 23:08:50 amosjeffries Exp $
+ * $Id: comm.cc,v 1.438.2.3 2008/02/27 10:45:50 amosjeffries Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1252,6 +1252,13 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
         statCounter.syscalls.sock.connects++;
 
         x = connect(sock, (struct sockaddr *) address, sizeof(*address));
+
+        // XXX: ICAP code refuses callbacks during a pending comm_ call
+        // Async calls development will fix this.
+        if (x == 0) {
+            x = -1;
+            errno = EINPROGRESS;
+        }
 
         if (x < 0)
             debugs(5, 9, "connect FD " << sock << ": " << xstrerror());
