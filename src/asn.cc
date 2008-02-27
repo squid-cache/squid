@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.119 2008/01/10 08:13:43 amosjeffries Exp $
+ * $Id: asn.cc,v 1.120 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
@@ -71,15 +71,15 @@ struct squid_radix_node_head *AS_tree_head;
 
 /* explicit instantiation required for some systems */
 
-template cbdata_type List<int>
-::CBDATA_List;
+/// \cond AUTODOCS-IGNORE
+template cbdata_type List<int>::CBDATA_List;
+/// \endcond
 
-/*
+/**
  * Structure for as number information. it could be simply 
  * a list but it's coded as a structure for future
  * enhancements (e.g. expires)
  */
-
 struct as_info
 {
     List<int> *as_number;
@@ -381,9 +381,9 @@ asStateFree(void *data)
 }
 
 
-/* add a network (addr, mask) to the radix tree, with matching AS
- * number */
-
+/**
+ * add a network (addr, mask) to the radix tree, with matching AS number
+ */
 static int
 asnAddNet(char *as_string, int as_number)
 {

@@ -1,5 +1,5 @@
 /*
- * $Id: stub_mem_node.cc,v 1.1 2005/01/03 16:08:27 robertc Exp $
+ * $Id: stub_mem_node.cc,v 1.2 2008/02/26 21:49:45 amosjeffries Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins
@@ -35,7 +35,7 @@
 #include "squid.h"
 #include "mem_node.h"
 
-mem_node::mem_node(off_t offset):nodeBuffer(0,offset,data)
+mem_node::mem_node(int64_t offset):nodeBuffer(0,offset,data)
 {
     fatal ("Not implemented");
 }

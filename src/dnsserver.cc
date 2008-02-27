@@ -1,6 +1,6 @@
 
 /*
- * $Id: dnsserver.cc,v 1.73 2007/12/14 23:11:46 amosjeffries Exp $
+ * $Id: dnsserver.cc,v 1.74 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
@@ -140,9 +140,36 @@
 #endif
 
 #include "util.h"
+
+/**
+ \defgroup dnsserver dnsserver
+ \ingroup ExternalPrograms
+ \par
+    Because the standard gethostbyname() library call
+    blocks, Squid must use external processes to actually make
+    these calls.  Typically there will be ten dnsserver
+    processes spawned from Squid.  Communication occurs via
+    TCP sockets bound to the loopback interface.  The functions
+    in dns.cc are primarily concerned with starting and
+    stopping the dnsservers.  Reading and writing to and from
+    the dnsservers occurs in the \link IPCacheAPI IP\endlink and
+    \link FQDNCacheAPI FQDN\endlink cache modules.
+
+ \section dnsserverInterface Command Line Interface
+ \verbatim
+usage: dnsserver -Dhv -s nameserver
+	-D             Enable resolver RES_DEFNAMES and RES_DNSRCH options
+	-h             Help
+	-v             Version
+	-s nameserver  Specify alternate name server(s).  'nameserver'
+	               must be an IP address, -s option may be repeated
+ \endverbatim
+ */
+
 #include "IPAddress.h"
 
 #if LIBRESOLV_DNS_TTL_HACK
+/// \ingroup dnsserver
 extern int _dns_ttl_;		/* this is a really *dirty* hack - bne */
 #endif
 
@@ -156,9 +183,12 @@ extern int _dns_ttl_;		/* this is a really *dirty* hack - bne */
 #define HAVE_RES_INIT   HAVE___RES_INIT
 #endif
 
-
+/// \ingroup dnsserver
 #define REQ_SZ 512
 
+/**
+ \ingroup dnsserver
+ */
 static void
 lookup(const char *buf)
 {
@@ -324,6 +354,9 @@ lookup(const char *buf)
     xfreeaddrinfo(AI);
 }
 
+/**
+ \ingroup dnsserver
+ */
 static void
 usage(void)
 {
@@ -336,12 +369,19 @@ usage(void)
 }
 
 #ifdef _SQUID_RES_NSADDR6_LARRAY
+/// \ingroup dnsserver
 #define _SQUID_RES_NSADDR6_LIST(i)	_SQUID_RES_NSADDR6_LARRAY[i].sin6_addr
 #endif
 #ifdef _SQUID_RES_NSADDR6_LPTR
+/// \ingroup dnsserver
 #define _SQUID_RES_NSADDR6_LIST(i)	_SQUID_RES_NSADDR6_LPTR[i]->sin6_addr
 #endif
 
+/**
+ \ingroup dnsserver
+ *
+ * This is the external dnsserver process.
+ */
 int
 main(int argc, char *argv[])
 {

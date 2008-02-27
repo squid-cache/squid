@@ -1,6 +1,5 @@
-
 /*
- * $Id: ACL.h,v 1.19 2007/09/01 05:56:37 amosjeffries Exp $
+ * $Id: ACL.h,v 1.20 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,34 +34,52 @@
 
 #ifndef SQUID_ACL_H
 #define SQUID_ACL_H
+
 #include "Array.h"
 #include "cbdata.h"
 #include "dlink.h"
-/* FIXME: finish splitting out the dependencies here
- * - typedefs should not be needed to parse this.
+/**
+ \todo FIXME: finish splitting out the dependencies here
+ *	- typedefs should not be needed to parse this.
  */
 #include "typedefs.h"
 
 class ConfigParser;
 
 /* acl.c */
+
+/// \ingroup ACLAPI
 SQUIDCEXTERN void aclDestroyAccessList(acl_access **list);
+/// \ingroup ACLAPI
 SQUIDCEXTERN void aclDestroyAcls(ACL **);
+/// \ingroup ACLAPI
 SQUIDCEXTERN void aclDestroyAclList(ACLList **);
+/// \ingroup ACLAPI
 SQUIDCEXTERN void aclParseAccessLine(ConfigParser &parser, acl_access **);
+/// \ingroup ACLAPI
 SQUIDCEXTERN void aclParseAclList(ConfigParser &parser, ACLList **);
+/// \ingroup ACLAPI
 SQUIDCEXTERN int aclIsProxyAuth(const char *name);
+/// \ingroup ACLAPI
 SQUIDCEXTERN err_type aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name, int redirect_allowed);
 
+/// \ingroup ACLAPI
 SQUIDCEXTERN void aclParseDenyInfoLine(struct _acl_deny_info_list **);
 
+/// \ingroup ACLAPI
 SQUIDCEXTERN void aclDestroyDenyInfoList(struct _acl_deny_info_list **);
+/// \ingroup ACLAPI
 SQUIDCEXTERN wordlist *aclDumpGeneric(const ACL *);
+/// \ingroup ACLAPI
 SQUIDCEXTERN void aclCacheMatchFlush(dlink_list * cache);
+/// \ingroup ACLAPI
 extern void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head);
+/// \ingroup ACLAPI
 int aclPurgeMethodInUse(acl_access * a);
+/// \ingroup ACLAPI
 extern const char *AclMatchedName;	/* NULL */
 
+/// \ingroup ACLAPI
 class ACL
 {
 
@@ -123,6 +140,7 @@ public:
     };
 };
 
+/// \ingroup ACLAPI
 class acl_access
 {
 
@@ -139,6 +157,7 @@ private:
     CBDATA_CLASS(acl_access);
 };
 
+/// \ingroup ACLAPI
 class ACLList
 {
 
@@ -153,8 +172,9 @@ public:
     ACLList *next;
 };
 
-MEMPROXY_CLASS_INLINE(ACLList)
+MEMPROXY_CLASS_INLINE(ACLList);
 
+/// \ingroup ACLAPI
 class acl_proxy_auth_match_cache
 {
 

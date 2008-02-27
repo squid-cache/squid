@@ -1,6 +1,6 @@
 
 /*
- * $Id: enums.h,v 1.261 2008/02/11 22:26:39 rousskov Exp $
+ * $Id: enums.h,v 1.262 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -180,6 +180,7 @@ typedef enum {
     HIER_MAX
 } hier_code;
 
+/// \ingroup ServerProtocolICPAPI
 typedef enum {
     ICP_INVALID,
     ICP_QUERY,
@@ -428,21 +429,99 @@ typedef enum {
     MEM_MAX
 } mem_type;
 
-/*
- * NOTE!  We must preserve the order of this list!
+/**
+ \ingroup SwapStoreAPI
+ \todo AYJ: for critical lists like this we should use A=64,B=65 etc to enforce and reserve values.
+ \note NOTE!  We must preserve the order of this list!
+ *
+ \section StoreSwapMeta Store "swap meta" Description
+ \par
+ * "swap meta" refers to a section of meta data stored at the beginning
+ * of an object that is stored on disk.  This meta data includes information
+ * such as the object's cache key (MD5), URL, and part of the StoreEntry
+ * structure.
+ *
+ \par
+ * The meta data is stored using a TYPE-LENGTH-VALUE format.  That is,
+ * each chunk of meta information consists of a TYPE identifier, a
+ * LENGTH field, and then the VALUE (which is LENGTH octets long).
  */
 enum {
-    STORE_META_VOID,		/* should not come up */
-    STORE_META_KEY_URL,		/* key w/ keytype */
+    /**
+     * Just a placeholder for the zeroth value. It is never used on disk.
+     */
+    STORE_META_VOID,
+
+    /**
+     \deprecated
+     * This represents the case when we use the URL as the cache
+     * key, as Squid-1.1 does.  Currently we don't support using
+     * a URL as a cache key, so this is not used.
+     */
+    STORE_META_KEY_URL,
+
+    /**
+     \deprecated
+     * For a brief time we considered supporting SHA (secure
+     * hash algorithm) as a cache key.  Nobody liked it, and
+     * this type is not currently used.
+     */
     STORE_META_KEY_SHA,
+
+    /**
+     * This represents the MD5 cache key that Squid currently uses.
+     * When Squid opens a disk file for reading, it can check that
+     * this MD5 matches the MD5 of the user's request.  If not, then
+     * something went wrong and this is probably the wrong object.
+     */
     STORE_META_KEY_MD5,
-    STORE_META_URL,		/* the url , if not in the header */
-    STORE_META_STD,		/* standard metadata */
-    STORE_META_HITMETERING,	/* reserved for hit metering */
+
+    /**
+     * The object's URL.  This also may be matched against a user's
+     *  request for cache hits to make sure we got the right object.
+     */
+    STORE_META_URL,
+
+    /**
+     * This is the "standard metadata" for an object.
+     * Really its just this middle chunk of the StoreEntry structure:
+     \code
+        time_t timestamp;
+        time_t lastref;
+        time_t expires;
+        time_t lastmod;
+        size_t swap_file_sz;
+        u_short refcount;
+        u_short flags;
+     \endcode
+     */
+    STORE_META_STD,
+
+    /**
+     * Reserved for future hit-metering (RFC 2227) stuff
+     */
+    STORE_META_HITMETERING,
+
+    /// \todo DOCS: document.
     STORE_META_VALID,
-    STORE_META_VARY_HEADERS,	/* Stores Vary request headers */
-    STORE_META_STD_LFS,         /* standard metadata in lfs format */
-    STORE_META_OBJSIZE,         /* object size, not impleemented, squid26 compatibility */
+
+    /**
+     * Stores Vary request headers
+     */
+    STORE_META_VARY_HEADERS,
+
+    /**
+     * Updated version of STORE_META_STD, with support for  >2GB objects.
+     * As STORE_META_STD except that the swap_file_sz is a 64-bit integer instead of 32-bit.
+     */
+    STORE_META_STD_LFS,
+
+    /**
+     \deprecated
+     * Object size, not implemented, squid26 compatibility
+     */
+    STORE_META_OBJSIZE,
+
     STORE_META_STOREURL,	/* the store url, if different to the normal URL */
     STORE_META_VARY_ID,		/* Unique ID linking variants */
     STORE_META_END

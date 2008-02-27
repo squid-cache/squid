@@ -1,6 +1,5 @@
-
 /*
- * $Id: ACLIntRange.h,v 1.4 2005/05/08 23:31:06 hno Exp $
+ * $Id: ACLIntRange.h,v 1.5 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,10 +34,12 @@
 
 #ifndef SQUID_ACLINTRANGE_H
 #define SQUID_ACLINTRANGE_H
+
 #include "ACLData.h"
 #include "List.h"
 #include "Range.h"
 
+/// \ingroup ACLAPI
 class ACLIntRange : public ACLData<int>
 {
 

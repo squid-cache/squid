@@ -1,6 +1,5 @@
-
 /*
- * $Id: fqdncache.cc,v 1.177 2007/12/16 22:32:10 amosjeffries Exp $
+ * $Id: fqdncache.cc,v 1.178 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
@@ -41,11 +40,59 @@
 #include "Store.h"
 #include "wordlist.h"
 
+/**
+ \defgroup FQDNCacheAPI FQDN Cache API
+ \ingroup Components
+ \section Introduction Introduction
+ \par
+ *  The FQDN cache is a built-in component of squid providing
+ *  Hostname to IP-Number translation functionality and managing
+ *  the involved data-structures. Efficiency concerns require
+ *  mechanisms that allow non-blocking access to these mappings.
+ *  The FQDN cache usually doesn't block on a request except for
+ *  special cases where this is desired (see below).
+ *
+ \todo FQDN Cache should have its own API *.h file.
+ */
+
+/**
+ \defgroup FQDNCacheInternal FQDN Cache Internals
+ \ingroup FQDNCacheAPI
+ \par
+ *  Internally, the execution flow is as follows:
+ *  On a miss, fqdncache_nbgethostbyaddr() checks whether a request
+ *  for this name is already pending, and if positive, it creates a
+ *  new entry using fqdncacheAddEntry(). Then it calls
+ *  fqdncacheAddPending() to add a request to the queue together
+ *  with data and handler.  Else, ifqdncache_dnsDispatch() is called
+ *  to directly create a DNS query or to fqdncacheEnqueue() if all
+ *  no DNS port is free.
+ *
+ \par
+ *  fqdncacheCallback() is called regularly to walk down the pending
+ *  list and call handlers.
+ *
+ \par
+ *  LRU clean-up is performed through fqdncache_purgelru() according
+ *  to the fqdncache_high threshold.
+ */
+
+/// \ingroup FQDNCacheInternal
 #define FQDN_LOW_WATER       90
+
+/// \ingroup FQDNCacheInternal
 #define FQDN_HIGH_WATER      95
 
+/// \ingroup FQDNCacheAPI
 typedef struct _fqdncache_entry fqdncache_entry;
 
+/**
+ \ingroup FQDNCacheAPI
+ * The data structure used for storing name-address mappings
+ * is a small hashtable (static hash_table *fqdn_table),
+ * where structures of type fqdncache_entry whose most
+ * interesting members are:
+ */
 struct _fqdncache_entry
 {
     hash_link hash;		/* must be first */
@@ -74,7 +121,8 @@ unsigned int fromhosts:
     flags;
 };
 
-static struct
+/// \ingroup FQDNCacheInternal
+static struct _fqdn_cache_stats
 {
     int requests;
     int replies;
@@ -82,9 +130,9 @@ static struct
     int misses;
     int negative_hits;
 }
-
 FqdncacheStats;
 
+/// \ingroup FQDNCacheInternal
 static dlink_list lru_list;
 
 #if USE_DNSSERVERS
@@ -105,12 +153,19 @@ static void fqdncacheUnlockEntry(fqdncache_entry * f);
 static FREE fqdncacheFreeEntry;
 static void fqdncacheAddEntry(fqdncache_entry * f);
 
+/// \ingroup FQDNCacheInternal
 static hash_table *fqdn_table = NULL;
 
+/// \ingroup FQDNCacheInternal
 static long fqdncache_low = 180;
+
+/// \ingroup FQDNCacheInternal
 static long fqdncache_high = 200;
 
-/* removes the given fqdncache entry */
+/**
+ \ingroup FQDNCacheInternal
+ * Removes the given fqdncache entry
+ */
 static void
 fqdncacheRelease(fqdncache_entry * f)
 {
@@ -131,7 +186,11 @@ fqdncacheRelease(fqdncache_entry * f)
     memFree(f, MEM_FQDNCACHE_ENTRY);
 }
 
-/* return match for given name */
+/**
+ \ingroup FQDNCacheInternal
+ \param name	FQDN hash string.
+ \retval Match for given name
+ */
 static fqdncache_entry *
 fqdncache_get(const char *name)
 {
@@ -147,6 +206,7 @@ fqdncache_get(const char *name)
     return f;
 }
 
+/// \ingroup FQDNCacheInternal
 static int
 fqdncacheExpiredEntry(const fqdncache_entry * f)
 {
@@ -161,6 +221,7 @@ fqdncacheExpiredEntry(const fqdncache_entry * f)
     return 1;
 }
 
+/// \ingroup FQDNCacheAPI
 void
 fqdncache_purgelru(void *notused)
 {
@@ -189,6 +250,7 @@ fqdncache_purgelru(void *notused)
     debugs(35, 9, "fqdncache_purgelru: removed " << removed << " entries");
 }
 
+/// \ingroup FQDNCacheAPI
 static void
 purge_entries_fromhosts(void)
 {
@@ -214,7 +276,11 @@ purge_entries_fromhosts(void)
         fqdncacheRelease(i);
 }
 
-/* create blank fqdncache_entry */
+/**
+ \ingroup FQDNCacheInternal
+ *
+ * Create blank fqdncache_entry
+ */
 static fqdncache_entry *
 fqdncacheCreateEntry(const char *name)
 {
@@ -225,6 +291,7 @@ fqdncacheCreateEntry(const char *name)
     return f;
 }
 
+/// \ingroup FQDNCacheInternal
 static void
 fqdncacheAddEntry(fqdncache_entry * f)
 {
@@ -241,7 +308,11 @@ fqdncacheAddEntry(fqdncache_entry * f)
     f->lastref = squid_curtime;
 }
 
-/* walks down the pending list, calling handlers */
+/**
+ \ingroup FQDNCacheInternal
+ *
+ * Walks down the pending list, calling handlers
+ */
 static void
 fqdncacheCallback(fqdncache_entry * f)
 {
@@ -266,6 +337,7 @@ fqdncacheCallback(fqdncache_entry * f)
     fqdncacheUnlockEntry(f);
 }
 
+/// \ingroup FQDNCacheInternal
 #if USE_DNSSERVERS
 static int
 fqdncacheParse(fqdncache_entry *f, const char *inbuf)
@@ -412,6 +484,11 @@ fqdncacheParse(fqdncache_entry *f, rfc1035_rr * answers, int nr, const char *err
 #endif
 
 
+/**
+ \ingroup FQDNCacheAPI
+ *
+ * Callback for handling DNS results.
+ */
 static void
 #if USE_DNSSERVERS
 fqdncacheHandleReply(void *data, char *reply)
@@ -439,6 +516,16 @@ fqdncacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error
     fqdncacheCallback(f);
 }
 
+/**
+ \ingroup FQDNCacheAPI
+ *
+ \param addr		IP address of domain to resolve.
+ \param handler		A pointer to the function to be called when
+ *			the reply from the FQDN cache
+ * 			(or the DNS if the FQDN cache misses)
+ \param handlerData	Information that is passed to the handler
+ * 			and does not affect the FQDN cache.
+ */
 void
 fqdncache_nbgethostbyaddr(IPAddress &addr, FQDNH * handler, void *handlerData)
 {
@@ -503,7 +590,12 @@ fqdncache_nbgethostbyaddr(IPAddress &addr, FQDNH * handler, void *handlerData)
 #endif
 }
 
-/* initialize the fqdncache */
+/**
+ \ingroup FQDNCacheAPI
+ *
+ * Initialize the fqdncache.
+ * Called after IP cache initialization.
+ */
 void
 fqdncache_init(void)
 {
@@ -532,6 +624,7 @@ fqdncache_init(void)
                 sizeof(fqdncache_entry), 0);
 }
 
+/// \ingroup FQDNCacheAPI
 void
 fqdncacheRegisterWithCacheManager(CacheManager & manager)
 {
@@ -541,6 +634,18 @@ fqdncacheRegisterWithCacheManager(CacheManager & manager)
 
 }
 
+/**
+ \ingroup FQDNCacheAPI
+ *
+ * Is different in that it only checks if an entry exists in
+ * it's data-structures and does not by default contact the
+ * DNS, unless this is requested, by setting the flags
+ * to FQDN_LOOKUP_IF_MISS.
+ *
+ \param addr	address of the FQDN being resolved
+ \param flags	values are NULL or FQDN_LOOKUP_IF_MISS. default is NULL.
+ *
+ */
 const char *
 fqdncache_gethostbyaddr(IPAddress &addr, int flags)
 {
@@ -585,7 +690,11 @@ fqdncache_gethostbyaddr(IPAddress &addr, int flags)
 }
 
 
-/* process objects list */
+/**
+ \ingroup FQDNCacheInternal
+ *
+ * Process objects list
+ */
 void
 fqdnStats(StoreEntry * sentry)
 {
@@ -636,12 +745,14 @@ fqdnStats(StoreEntry * sentry)
     }
 }
 
+/// \ingroup FQDNCacheInternal
 static void
 dummy_handler(const char *bufnotused, void *datanotused)
 {
     return;
 }
 
+/// \ingroup FQDNCacheAPI
 const char *
 fqdnFromAddr(IPAddress &addr)
 {
@@ -651,13 +762,14 @@ fqdnFromAddr(IPAddress &addr)
     if (Config.onoff.log_fqdn && (n = fqdncache_gethostbyaddr(addr, 0)))
         return n;
 
-/// \todo Perhaose this should use toHostname() instead of straight NtoA.
+/// \todo Perhapse this should use toHostname() instead of straight NtoA.
 ///       that would wrap the IPv6 properly when raw.
     addr.NtoA(buf, MAX_IPSTRLEN);
 
     return buf;
 }
 
+/// \ingroup FQDNCacheInternal
 static void
 fqdncacheLockEntry(fqdncache_entry * f)
 {
@@ -667,6 +779,7 @@ fqdncacheLockEntry(fqdncache_entry * f)
     }
 }
 
+/// \ingroup FQDNCacheInternal
 static void
 fqdncacheUnlockEntry(fqdncache_entry * f)
 {
@@ -677,6 +790,7 @@ fqdncacheUnlockEntry(fqdncache_entry * f)
         fqdncacheRelease(f);
 }
 
+/// \ingroup FQDNCacheInternal
 static void
 fqdncacheFreeEntry(void *data)
 {
@@ -693,6 +807,7 @@ fqdncacheFreeEntry(void *data)
     memFree(f, MEM_FQDNCACHE_ENTRY);
 }
 
+/// \ingroup FQDNCacheAPI
 void
 fqdncacheFreeMemory(void)
 {
@@ -701,7 +816,13 @@ fqdncacheFreeMemory(void)
     fqdn_table = NULL;
 }
 
-/* Recalculate FQDN cache size upon reconfigure */
+/**
+ \ingroup FQDNCacheAPI
+ *
+ * Recalculate FQDN cache size upon reconfigure.
+ * Is called to clear the FQDN cache's data structures,
+ * cancel all pending requests.
+ */
 void
 fqdncache_restart(void)
 {
@@ -712,9 +833,16 @@ fqdncache_restart(void)
     purge_entries_fromhosts();
 }
 
-/*
- *  adds a "static" entry from /etc/hosts.  the worldist is to be
- *  managed by the caller, including pointed-to strings
+/**
+ \ingroup FQDNCacheAPI
+ *
+ * Adds a "static" entry from /etc/hosts.
+ \par
+ * The worldist is to be managed by the caller,
+ * including pointed-to strings
+ *
+ \param addr		FQDN name to be added.
+ \param hostnames	??
  */
 void
 fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames)
@@ -753,10 +881,10 @@ fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames)
 
 
 #ifdef SQUID_SNMP
-/*
- * The function to return the fqdn statistics via SNMP
+/**
+ *  \ingroup FQDNCacheAPI
+ * The function to return the FQDN statistics via SNMP
  */
-
 variable_list *
 snmp_netFqdnFn(variable_list * Var, snint * ErrP)
 {

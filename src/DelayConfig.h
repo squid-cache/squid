@@ -1,5 +1,5 @@
 /*
- * $Id: DelayConfig.h,v 1.4 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id: DelayConfig.h,v 1.5 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 3     Configuration Settings
  * AUTHOR: Robert Collins
@@ -39,6 +39,7 @@
 
 class ConfigParser;
 
+/// \ingroup DelayPoolsAPI
 class DelayConfig
 {
 

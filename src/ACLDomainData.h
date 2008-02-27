@@ -1,6 +1,5 @@
-
 /*
- * $Id: ACLDomainData.h,v 1.6 2005/05/08 06:36:45 hno Exp $
+ * $Id: ACLDomainData.h,v 1.7 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,10 +34,12 @@
 
 #ifndef SQUID_ACLDOMAINDATA_H
 #define SQUID_ACLDOMAINDATA_H
+
 #include "splay.h"
 #include "ACL.h"
 #include "ACLData.h"
 
+/// \ingroup ACLAPI
 class ACLDomainData : public ACLData<char const *>
 {
 
@@ -55,6 +56,6 @@ public:
     SplayNode<char *> *domains;
 };
 
-MEMPROXY_CLASS_INLINE(ACLDomainData)
+MEMPROXY_CLASS_INLINE(ACLDomainData)          /**DOCS_NOSEMI*/
 
 #endif /* SQUID_ACLDOMAINDATA_H */

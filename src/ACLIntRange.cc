@@ -1,5 +1,5 @@
 /*
- * $Id: ACLIntRange.cc,v 1.10 2007/04/28 22:26:37 hno Exp $
+ * $Id: ACLIntRange.cc,v 1.11 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Robert Collins
@@ -40,9 +40,7 @@
 #include "Parsing.h"
 
 /* explicit instantiation required for some systems */
-
-template cbdata_type List<Range<int> >
-::CBDATA_List;
+template cbdata_type List< Range<int> >::CBDATA_List;
 
 void
 ACLIntRange::parse()

@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -97,6 +96,6 @@ private:
     char const *type_;
 };
 
-MEMPROXY_CLASS_INLINE(ACLProxyAuth)
+MEMPROXY_CLASS_INLINE(ACLProxyAuth)          /**DOCS_NOSEMI*/
 
 #endif /* SQUID_ACLPROXYAUTH_H */

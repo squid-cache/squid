@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreFScoss.h,v 1.3 2006/05/29 00:15:09 robertc Exp $
+ * $Id: StoreFScoss.h,v 1.4 2008/02/26 21:49:43 amosjeffries Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -36,6 +36,12 @@
 
 #include "StoreFileSystem.h"
 
+/**
+ \defgroup COSS COSS Storage Filesystem
+ \ingroup FileSystems
+ */
+
+/// \ingroup COSS
 class CossStats
 {
 
@@ -66,6 +72,7 @@ public:
     open, create, close, unlink, read, write, stripe_write;
 };
 
+/// \ingroup COSS, FileSystems
 class StoreFScoss : public StoreFileSystem
 {
 

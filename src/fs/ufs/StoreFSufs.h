@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreFSufs.h,v 1.5 2006/09/14 00:51:12 robertc Exp $
+ * $Id: StoreFSufs.h,v 1.6 2008/02/26 21:49:45 amosjeffries Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -38,8 +38,15 @@
 #include "ufscommon.h"
 #include "DiskIO/DiskIOModule.h"
 
+/**
+ \defgroup UFS	UFS Storage Filesystem
+ \ingroup FileSystems
+ */
 
-/* core UFS class. This template provides compile time aliases for
+/**
+ \ingroup UFS, FileSystems
+ *
+ * Core UFS class. This template provides compile time aliases for
  * ufs/aufs/diskd to ease configuration conversion - each becomes a 
  * StoreFS module whose createSwapDir method parameterises the common
  * UFSSwapDir with an IO module instance.
@@ -57,7 +64,7 @@ public:
     virtual SwapDir *createSwapDir();
     virtual void done();
     virtual void setup();
-    /* Not implemented */
+    /** Not implemented */
     StoreFSufs (StoreFSufs const &);
     StoreFSufs &operator=(StoreFSufs const &);
 

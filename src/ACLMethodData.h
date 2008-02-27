@@ -1,6 +1,5 @@
-
 /*
- * $Id: ACLMethodData.h,v 1.5 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id: ACLMethodData.h,v 1.6 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,10 +34,12 @@
 
 #ifndef SQUID_ACLMETHODDATA_H
 #define SQUID_ACLMETHODDATA_H
+
 #include "ACL.h"
 #include "ACLData.h"
 #include "List.h"
 
+/// \ingroup ACLAPI
 class ACLMethodData : public ACLData<HttpRequestMethod>
 {
 
@@ -58,6 +59,6 @@ public:
     List<HttpRequestMethod> *values;
 };
 
-MEMPROXY_CLASS_INLINE(ACLMethodData)
+MEMPROXY_CLASS_INLINE(ACLMethodData);
 
 #endif /* SQUID_ACLMETHODDATA_H */

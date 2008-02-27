@@ -11,10 +11,18 @@
 #include "AuthConfig.h"
 #include "helper.h"
 
+/**
+ \defgroup AuthNegotiateAPI Negotiate Authentication API
+ \ingroup AuthAPI
+ */
+
+/// \ingroup AuthNegotiateAPI
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */
 
 #ifndef __AUTH_AUTHENTICATE_STATE_T__
 #define __AUTH_AUTHENTICATE_STATE_T__
+
+/// \ingroup AuthNegotiateAPI
 typedef enum {
     AUTHENTICATE_STATE_NONE,
     AUTHENTICATE_STATE_INITIAL,
@@ -25,16 +33,17 @@ typedef enum {
 
 /* Generic */
 
+/// \ingroup AuthNegotiateAPI
 typedef struct
 {
     void *data;
     AuthUserRequest *auth_user_request;
     RH *handler;
 }
-
 authenticateStateData;
 #endif
 
+/// \ingroup AuthNegotiateAPI
 class NegotiateUser : public AuthUser
 {
 
@@ -46,10 +55,12 @@ public:
     dlink_list proxy_auth_list;
 };
 
-MEMPROXY_CLASS_INLINE(NegotiateUser)
+MEMPROXY_CLASS_INLINE(NegotiateUser)			/**DOCS_NOSEMI*/
 
+/// \ingroup AuthNegotiateAPI
 typedef class NegotiateUser negotiate_user_t;
 
+/// \ingroup AuthNegotiateAPI
 class AuthNegotiateUserRequest : public AuthUserRequest
 {
 
@@ -97,10 +108,11 @@ private:
     NegotiateUser * _theUser;
 };
 
-MEMPROXY_CLASS_INLINE(AuthNegotiateUserRequest)
+MEMPROXY_CLASS_INLINE(AuthNegotiateUserRequest)		/**DOCS_NOSEMI*/
 
 /* configuration runtime data */
 
+/// \ingroup AuthNegotiateAPI
 class AuthNegotiateConfig : public AuthConfig
 {
 
@@ -121,6 +133,7 @@ public:
     wordlist *authenticate;
 };
 
+/// \ingroup AuthNegotiateAPI
 typedef class AuthNegotiateConfig auth_negotiate_config;
 
 #endif

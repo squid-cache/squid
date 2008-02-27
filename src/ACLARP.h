@@ -1,6 +1,5 @@
-
 /*
- * $Id: ACLARP.h,v 1.4 2005/05/06 01:57:55 hno Exp $
+ * $Id: ACLARP.h,v 1.5 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,15 +34,18 @@
 
 #ifndef SQUID_ACLARP_H
 #define SQUID_ACLARP_H
+
 #include "ACL.h"
 #include "ACLChecklist.h"
 #include "splay.h"
 
+/// \ingroup ACLAPI
 struct acl_arp_data
 {
     char eth[6];
 };
 
+/// \ingroup ACLAPI
 class ACLARP : public ACL
 {
 
@@ -69,6 +71,6 @@ protected:
     char const *class_;
 };
 
-MEMPROXY_CLASS_INLINE(ACLARP)
+MEMPROXY_CLASS_INLINE(ACLARP)	/**DOCS_NOSEMI*/
 
 #endif /* SQUID_ACLARP_H */

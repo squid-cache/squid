@@ -1,5 +1,5 @@
 /*
- * $Id: AsyncCall.h,v 1.3 2008/02/12 23:40:02 rousskov Exp $
+ * $Id: AsyncCall.h,v 1.4 2008/02/26 21:49:34 amosjeffries Exp $
  */
 
 #ifndef SQUID_ASYNCCALL_H
@@ -9,27 +9,34 @@
 #include "event.h"
 //#include "TextException.h"
 
-// A call is asynchronous if the caller proceeds after the call is made,
-// and the callee receives the call during the next main loop iteration.
-// Asynchronous calls help avoid nasty call-me-when-I-call-you loops
-// that humans often have trouble understanding or implementing correctly.
-
-// Asynchronous calls are currently implemented via Squid events. The call
-// event stores the pointer to the callback function and cbdata-protected
-// callback data. To call a method of an object, the method is wrapped
-// in a method-specific, static callback function and the pointer to the
-// object is passed to the wrapper. For the method call to be safe, the 
-// class must be cbdata-enabled.
-
-// You do not have to use the macros below to make or receive asynchronous
-// method calls, but they give you a uniform interface and handy call 
-// debugging.
+/**
+ \defgroup AsynCallsAPI Async-Calls API
+ \par
+ * A call is asynchronous if the caller proceeds after the call is made,
+ * and the callee receives the call during the next main loop iteration.
+ * Asynchronous calls help avoid nasty call-me-when-I-call-you loops
+ * that humans often have trouble understanding or implementing correctly.
+ \par
+ * Asynchronous calls are currently implemented via Squid events. The call
+ * event stores the pointer to the callback function and cbdata-protected
+ * callback data. To call a method of an object, the method is wrapped
+ * in a method-specific, static callback function and the pointer to the
+ * object is passed to the wrapper. For the method call to be safe, the 
+ * class must be cbdata-enabled.
+ \par
+ * You do not have to use the macros below to make or receive asynchronous
+ * method calls, but they give you a uniform interface and handy call 
+ * debugging.
+ */
 
 class CallDialer;
 class AsyncCallQueue;
 
-// TODO: add unique call IDs
-// TODO: CBDATA_CLASS2 kids
+/**
+ \todo add unique call IDs
+ \todo CBDATA_CLASS2 kids
+ \ingroup AsyncCallsAPI
+ */
 class AsyncCall: public RefCountable
 {
 public:
@@ -83,7 +90,10 @@ std::ostream &operator <<(std::ostream &os, AsyncCall &call)
     return os;
 }
 
-// Interface for all async call dialers
+/**
+ \ingroup AsyncCallAPI
+ * Interface for all async call dialers
+ */
 class CallDialer
 {
 public:
@@ -97,7 +107,10 @@ public:
     virtual void print(std::ostream &os) const = 0;
 };
 
-// This template implements an AsyncCall using a specified Dialer class
+/**
+ \ingroup AsyncCallAPI
+ * This template implements an AsyncCall using a specified Dialer class
+ */
 template <class Dialer>
 class AsyncCallT: public AsyncCall
 {
@@ -125,8 +138,10 @@ asyncCall(int aDebugSection, int aDebugLevel, const char *aName,
     return new AsyncCallT<Dialer>(aDebugSection, aDebugLevel, aName, aDialer);
 }
 
-/* Call scheduling helpers. Use ScheduleCallHere if you can. */
+/** Call scheduling helper. Use ScheduleCallHere if you can. */
 extern bool ScheduleCall(const char *fileName, int fileLine, AsyncCall::Pointer &call);
+
+/** Call scheduling helper. */
 #define ScheduleCallHere(call) ScheduleCall(__FILE__, __LINE__, (call))
 
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.80 2008/02/03 10:00:30 amosjeffries Exp $
+ * $Id: htcp.cc,v 1.81 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
@@ -197,7 +197,7 @@ private:
     htcpDataHeader *dhdr;
 };
 
-MEMPROXY_CLASS_INLINE(htcpSpecifier)
+MEMPROXY_CLASS_INLINE(htcpSpecifier)		/**DOCS_NOSEMI*/
 
 struct _htcpDetail
 {

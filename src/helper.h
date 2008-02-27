@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.h,v 1.11 2008/01/07 17:12:28 hno Exp $
+ * $Id: helper.h,v 1.12 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
@@ -224,7 +224,7 @@ public:
     struct timeval dispatch_time;
 };
 
-MEMPROXY_CLASS_INLINE(helper_request)
+MEMPROXY_CLASS_INLINE(helper_request)		/**DOCS_NOSEMI*/
 
 class helper_stateful_request
 {
@@ -237,7 +237,7 @@ public:
     void *data;
 };
 
-MEMPROXY_CLASS_INLINE(helper_stateful_request)
+MEMPROXY_CLASS_INLINE(helper_stateful_request)		/**DOCS_NOSEMI*/
 
 /* helper.c */
 SQUIDCEXTERN void helperOpenServers(helper * hlp);

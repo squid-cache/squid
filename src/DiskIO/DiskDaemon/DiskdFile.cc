@@ -1,6 +1,5 @@
-
 /*
- * $Id: DiskdFile.cc,v 1.4 2007/08/16 23:32:28 hno Exp $
+ * $Id: DiskdFile.cc,v 1.5 2008/02/26 21:49:40 amosjeffries Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -51,7 +50,7 @@
 CBDATA_CLASS_INIT(DiskdFile);
 
 void *
-DiskdFile::operator new (size_t)
+DiskdFile::operator new(size_t unused)
 {
     CBDATA_INIT_TYPE(DiskdFile);
     DiskdFile *result = cbdataAlloc(DiskdFile);
@@ -62,14 +61,14 @@ DiskdFile::operator new (size_t)
 }
 
 void
-DiskdFile::operator delete (void *address)
+DiskdFile::operator delete(void *address)
 {
     DiskdFile *t = static_cast<DiskdFile *>(address);
     debugs(79, 3, "diskdFile with base " << t << " deleting");
     cbdataFree(t);
 }
 
-DiskdFile::DiskdFile (char const *aPath, DiskdIOStrategy *anIO) : errorOccured (false), IO(anIO),
+DiskdFile::DiskdFile(char const *aPath, DiskdIOStrategy *anIO) : errorOccured (false), IO(anIO),
         inProgressIOs (0)
 {
     assert (aPath);
@@ -85,7 +84,7 @@ DiskdFile::~DiskdFile()
 }
 
 void
-DiskdFile::open (int flags, mode_t aMode, IORequestor::Pointer callback)
+DiskdFile::open(int flags, mode_t aMode, RefCount< IORequestor > callback)
 {
     debugs(79, 3, "DiskdFile::open: " << this << " opening for " << callback.getRaw());
     assert (ioRequestor.getRaw() == NULL);
@@ -116,7 +115,7 @@ DiskdFile::open (int flags, mode_t aMode, IORequestor::Pointer callback)
 }
 
 void
-DiskdFile::create (int flags, mode_t aMode, IORequestor::Pointer callback)
+DiskdFile::create(int flags, mode_t aMode, RefCount< IORequestor > callback)
 {
     debugs(79, 3, "DiskdFile::create: " << this << " creating for " << callback.getRaw());
     assert (ioRequestor.getRaw() == NULL);

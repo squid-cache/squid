@@ -1,6 +1,5 @@
-
 /*
- * $Id: AIODiskFile.cc,v 1.6 2007/05/29 13:31:43 amosjeffries Exp $
+ * $Id: AIODiskFile.cc,v 1.7 2008/02/26 21:49:40 amosjeffries Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -30,13 +29,16 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-/*
+
+/**
  * Author: Adrian Chadd <adrian@squid-cache.org>
  *
+ \par
  * These routines are simple plugin replacements for the file_* routines
  * in disk.c . They back-end into the POSIX AIO routines to provide
  * a nice and simple async IO framework for COSS.
  *
+ \par
  * AIO is suitable for COSS - the only sync operations that the standard
  * supports are read/write, and since COSS works on a single file
  * per storedir it should work just fine.
@@ -51,19 +53,19 @@
 
 CBDATA_CLASS_INIT(AIODiskFile);
 void *
-AIODiskFile::operator new (size_t)
+AIODiskFile::operator new(size_t unused)
 {
     CBDATA_INIT_TYPE(AIODiskFile);
     return cbdataAlloc(AIODiskFile);
 }
 
 void
-AIODiskFile::operator delete (void *address)
+AIODiskFile::operator delete(void *address)
 {
     cbdataFree(address);
 }
 
-AIODiskFile::AIODiskFile (char const *aPath, AIODiskIOStrategy *aStrategy) : fd(-1), closed(true), error_(false)
+AIODiskFile::AIODiskFile(char const *aPath, AIODiskIOStrategy *aStrategy) : fd(-1), closed(true), error_(false)
 {
     assert (aPath);
     path = aPath;
@@ -81,7 +83,7 @@ AIODiskFile::error(bool const &aBool)
 }
 
 void
-AIODiskFile::open (int flags, mode_t mode, IORequestor::Pointer callback)
+AIODiskFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 {
     /* Simulate async calls */
 #ifdef _SQUID_WIN32_
@@ -94,19 +96,19 @@ AIODiskFile::open (int flags, mode_t mode, IORequestor::Pointer callback)
     ioRequestor = callback;
 
     if (fd < 0) {
-        debugs(79, 3, "BlockingFile::open: got failure (" << errno << ")");
+        debugs(79, 3, HERE << ": got failure (" << errno << ")");
         error(true);
     } else {
         closed = false;
         store_open_disk_fd++;
-        debugs(79, 3, "BlockingFile::open: opened FD " << fd);
+        debugs(79, 3, HERE << ": opened FD " << fd);
     }
 
     callback->ioCompletedNotification();
 }
 
 void
-AIODiskFile::create (int flags, mode_t mode, RefCount<IORequestor> callback)
+AIODiskFile::create(int flags, mode_t mode, RefCount<IORequestor> callback)
 {
     /* We use the same logic path for open */
     open(flags, mode, callback);

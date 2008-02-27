@@ -1,6 +1,5 @@
-
 /*
- * $Id: protos.h,v 1.556 2008/02/26 00:15:48 rousskov Exp $
+ * $Id: protos.h,v 1.557 2008/02/26 21:49:35 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -177,14 +176,39 @@ SQUIDCEXTERN void fqdncache_purgelru(void *);
 SQUIDCEXTERN void fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames);
 
 class FwdState;
+
+/**
+ \defgroup ServerProtocolFTPAPI Server-Side FTP API
+ \ingroup ServerProtocol
+ */
+
+/// \ingroup ServerProtocolFTPAPI
 SQUIDCEXTERN void ftpStart(FwdState *);
+
+/// \ingroup ServerProtocolFTPAPI
 SQUIDCEXTERN const char *ftpUrlWith2f(HttpRequest *);
 
+
+/**
+ \defgroup ServerProtocolGopherAPI Server-Side Gopher API
+ \ingroup ServerProtocol
+ */
+
+/// \ingroup ServerProtocolGopherAPI
 SQUIDCEXTERN void gopherStart(FwdState *);
+
+/// \ingroup ServerProtocolGopherAPI
 SQUIDCEXTERN int gopherCachable(const HttpRequest *);
 
 
+/**
+ \defgroup ServerProtocolWhoisAPI Server-Side WHOIS API
+ \ingroup ServerProtocol
+ */
+
+/// \ingroup ServerProtocolWhoisAPI
 SQUIDCEXTERN void whoisStart(FwdState *);
+
 
 /* http.c */
 SQUIDCEXTERN int httpCachable(const HttpRequestMethod&);

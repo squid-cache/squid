@@ -1,6 +1,5 @@
-
 /*
- * $Id: ACLHTTPRepHeader.h,v 1.2 2006/08/05 12:05:35 robertc Exp $
+ * $Id: ACLHTTPRepHeader.h,v 1.3 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,10 +34,12 @@
 
 #ifndef SQUID_ACLHTTPREPHEADER_H
 #define SQUID_ACLHTTPREPHEADER_H
+
 #include "ACLStrategy.h"
 #include "ACLStrategised.h"
 #include "HttpHeader.h"
 
+/// \ingroup ACLAPI
 class ACLHTTPRepHeaderStrategy : public ACLStrategy<HttpHeader*>
 {
 
@@ -47,9 +48,12 @@ public:
     virtual bool requiresReply() const { return true; }
 
     static ACLHTTPRepHeaderStrategy *Instance();
-    /* Not implemented to prevent copies of the instance. */
-    /* Not private to prevent brain dead g+++ warnings about
-     * private constructors with no friends */
+    /**
+     * Not implemented to prevent copies of the instance.
+     \par
+     * Not private to prevent brain dead g+++ warnings about
+     * private constructors with no friends
+     */
     ACLHTTPRepHeaderStrategy(ACLHTTPRepHeaderStrategy const &);
 
 private:
@@ -59,6 +63,7 @@ private:
     ACLHTTPRepHeaderStrategy&operator = (ACLHTTPRepHeaderStrategy const &);
 };
 
+/// \ingroup ACLAPI
 class ACLHTTPRepHeader
 {
 

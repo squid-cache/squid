@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMethodData.cc,v 1.11 2008/02/03 10:00:29 amosjeffries Exp $
+ * $Id: ACLMethodData.cc,v 1.12 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -63,8 +63,10 @@ ACLMethodData::match(HttpRequestMethod toFind)
 
 /* explicit instantiation required for some systems */
 
+/// \cond AUTODOCS-IGNORE
 template cbdata_type List<HttpRequestMethod>
 ::CBDATA_List;
+/// \endcond
 
 wordlist *
 ACLMethodData::dump()

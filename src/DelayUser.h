@@ -1,6 +1,5 @@
-
 /*
- * $Id: DelayUser.h,v 1.7 2003/08/04 22:14:40 robertc Exp $
+ * $Id: DelayUser.h,v 1.8 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -49,6 +48,7 @@
 #include "Array.h"
 #include "splay.h"
 
+/// \ingroup DelayPoolsAPI
 class DelayUserBucket : public RefCountable
 {
 
@@ -64,6 +64,7 @@ public:
     AuthUser *authUser;
 };
 
+/// \ingroup DelayPoolsAPI
 class DelayUser : public CompositePoolNode
 {
 
@@ -82,7 +83,8 @@ public:
 
 private:
 
-class Id:public DelayIdComposite
+    /// \ingroup DelayPoolsInternal
+    class Id:public DelayIdComposite
     {
 
     public:

@@ -1,6 +1,5 @@
-
 /*
- * $Id: StoreSwapLogData.h,v 1.5 2007/11/15 16:47:35 wessels Exp $
+ * $Id: StoreSwapLogData.h,v 1.6 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -34,37 +33,137 @@
 #ifndef SQUID_STORESWAPLOGDATA_H
 #define SQUID_STORESWAPLOGDATA_H
 
+/**
+ \defgroup FileFormatSwapStateAPI swap.state File Structure
+ \ingroup FileSystems
+ \section ImplementationNotes Implementation Notes
+ \par
+ *      When writing an object to disk, we must first write the meta data.
+ *      This is done with a couple of functions.  First, storeSwapMetaPack()
+ *      takes a StoreEntry as a parameter and returns a tlv linked
+ *      list.  Second, storeSwapMetaPack() converts the tlv list
+ *      into a character buffer that we can write.
+ * 
+ \note  MemObject has a MemObject::swap_hdr_sz.
+ *      This value is the size of that character buffer; the size of the
+ *      swap file meta data.  The StoreEntry has a member
+ *      StoreEntry::swap_file_sz that represents the size of the disk file.
+ *      Thus, the size of the object "content" is
+ \code    StoreEntry->swap_file_sz  - MemObject->swap_hdr_sz;    \endcode
+ \note The swap file content includes the HTTP reply headers and the HTTP reply body (if any).
+ * 
+ \par
+ *      When reading a swap file, there is a similar process to extract
+ *      the swap meta data.  First, storeSwapMetaUnpack() converts a
+ *      character buffer into a tlv linked list.  It also tells us
+ *      the value for MemObject->swap_hdr_sz.
+ */
+
 #include "squid.h"
 
 /*
  * Do we need to have the dirn in here? I don't think so, since we already
  * know the dirn .. 
  */
-/* Binary format on disk.
- * DO NOT randomly alter.
- * DO NOT add ANY virtual's.
+/**
+ \ingroup FielFormatSwapStateAPI
+ \note This information is current as of version 2.2.STABLE4
+ *
+ \li		Binary format on disk.
+ \li		DO NOT randomly alter.
+ \li		DO NOT add ANY virtual's.
+ *
+ \par
+ * Defines the structure of a binary swap.state file entry.
+ *
+ \note StoreSwapLogData entries are written in native machine byte order
+ *     They are not necessarily portable across architectures.
  */
-
 class StoreSwapLogData
 {
 
 public:
     MEMPROXY_CLASS(StoreSwapLogData);
     StoreSwapLogData();
+
+    /**
+     * Either SWAP_LOG_ADD when an object is added to the disk storage,
+     * or SWAP_LOG_DEL when an object is deleted.
+     */
     char op;
+
+    /**
+     * The 32-bit file number which maps to a pathname.
+     * Only the low 24-bits are relevant. The high 8-bits are
+     * used as an index to an array of storage directories, and
+     * are set at run time because the order of storage directories
+     * may change over time.
+     */
     sfileno swap_filen;
+
+    /**
+     * A 32-bit Unix time value that represents the time when
+     * the origin server generated this response. If the response
+     * has a valid Date: header, this timestamp corresponds
+     * to that time. Otherwise, it is set to the Squid process time
+     * when the response is read (as soon as the end of headers are found).
+     */
     time_t timestamp;
+
+    /**
+     * The last time that a client requested this object.
+     * Strictly speaking, this time is set whenever the StoreEntry
+     * is locked (via storeLockObject()).
+     */
     time_t lastref;
+
+    /**
+     * The value of the response's Expires: header, if any.
+     * If the response does not have an Expires: header, this
+     * is set to -1.
+     * If the response has an invalid (unparseable)
+     * Expires: header, it is also set to -1.  There are some cases
+     * where Squid sets expires to -2. This happens for the
+     * internal "netdb" object and for FTP URL responses.
+     */
     time_t expires;
+
+    /**
+     * The value of the response's Last-modified: header, if any.
+     * This is set to -1 if there is no Last-modified: header,
+     * or if it is unparseable.
+     */
     time_t lastmod;
+
+    /**
+     * This is the number of bytes that the object occupies on
+     * disk. It includes the Squid "swap file header".
+     */
     uint64_t swap_file_sz;
+
+    /**
+     * The number of times that this object has been accessed (referenced).
+     * Since its a 16-bit quantity, it is susceptible to overflow
+     * if a single object is accessed 65,536 times before being replaced.
+     */
     u_short refcount;
+
+    /**
+     * A copy of the StoreEntry flags field. Used as a sanity
+     * check when rebuilding the cache at startup. Objects that
+     * have the KEY_PRIVATE flag set are not added back to the cache.
+     */
     u_short flags;
+
+    /**
+     * The 128-bit MD5 hash for this object.
+     */
     unsigned char key[SQUID_MD5_DIGEST_LENGTH];
 };
 
-MEMPROXY_CLASS_INLINE(StoreSwapLogData)
+MEMPROXY_CLASS_INLINE(StoreSwapLogData)		/**DOCS_NOSEMI*/
 
+/// \ingroup FileFormatSwapStateAPI
 class StoreSwapLogHeader
 {
 public:

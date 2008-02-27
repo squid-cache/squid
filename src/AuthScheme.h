@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthScheme.h,v 1.1 2004/08/30 03:28:56 robertc Exp $
+ * $Id: AuthScheme.h,v 1.2 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -37,13 +37,22 @@
 #include "squid.h"
 #include "Array.h"
 
-/* I represent a authentication scheme. For now my children
- * store both the scheme metadata, and the scheme configuration/
+/**
+ \defgroup AuthSchemeAPI	Authentication Scheme API
+ \ingroup AuthAPI
+ */
+
+/**
+ \ingroup AuthAPI
+ \ingroup AuthSchemeAPI
+ \par
+ * I represent an authentication scheme. For now my children
+ * store both the scheme metadata, and the scheme configuration.
+ \par
  * Should we need multiple configs of a single scheme,
  * a new class AuthConfiguration should be made, and the
  * config specific calls on AuthScheme moved to it.
  */
-
 class AuthScheme
 {
 
@@ -73,7 +82,5 @@ private:
     static Vector<AuthScheme*> &GetSchemes();
     static Vector<AuthScheme*> *_Schemes;
 };
-
-
 
 #endif /* SQUID_AUTHSCHEME_H */

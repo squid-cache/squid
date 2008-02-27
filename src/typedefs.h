@@ -1,6 +1,6 @@
 
 /*
- * $Id: typedefs.h,v 1.193 2008/02/11 22:28:47 rousskov Exp $
+ * $Id: typedefs.h,v 1.194 2008/02/26 21:49:35 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -56,10 +56,16 @@ typedef struct _acl_name_list acl_name_list;
 
 typedef struct _acl_deny_info_list acl_deny_info_list;
 
+/// \ingroup AuthAPI
+/// \deprecated Use AuthUser instead.
 typedef class AuthUser auth_user_t;
 
+/// \ingroup AuthAPI
+/// \deprecated Use AuthUserHashPointer instead.
 typedef struct AuthUserHashPointer auth_user_hash_pointer;
 
+/// \ingroup AuthAPI
+/// \deprecated Use AuthUserIP instead.
 typedef struct AuthUserIP auth_user_ip_t;
 
 /* temporary: once Config is fully hidden, this shouldn't be needed */
@@ -173,6 +179,7 @@ typedef struct _CommWriteStateData CommWriteStateData;
 
 typedef struct _StatCounters StatCounters;
 
+/// \todo DROP: deprecated and no longer used.
 typedef struct _storeSwapLogData storeSwapLogData;
 
 typedef struct _StatHist StatHist;

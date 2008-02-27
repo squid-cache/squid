@@ -1,6 +1,6 @@
 
 /*
- * $Id: basicScheme.h,v 1.1 2004/08/30 03:29:00 robertc Exp $
+ * $Id: basicScheme.h,v 1.2 2008/02/26 21:49:41 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,6 +36,8 @@
 
 #include "AuthScheme.h"
 
+/// \ingroup AuthAPI
+/// \ingroup AuthSchemeAPI
 class basicScheme : public AuthScheme
 {
 

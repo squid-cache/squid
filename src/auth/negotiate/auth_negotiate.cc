@@ -1,5 +1,5 @@
 /*
- * $Id: auth_negotiate.cc,v 1.29 2008/02/12 23:17:52 rousskov Exp $
+ * $Id: auth_negotiate.cc,v 1.30 2008/02/26 21:49:43 amosjeffries Exp $
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
@@ -46,14 +46,20 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "SquidTime.h"
-/* TODO remove this include */
+/** \todo remove this include */
 #include "negotiateScheme.h"
 #include "wordlist.h"
+
+/**
+ \defgroup AuthNegotiateInternal Negotiate Authenticator Internals
+ \ingroup AuthNegotiateAPI
+ */
 
 static void
 authenticateNegotiateReleaseServer(AuthUserRequest * auth_user_request);
 
 
+/// \ingroup AuthNegotiateInternal
 static void
 authenticateStateFree(authenticateStateData * r)
 {
@@ -65,14 +71,18 @@ authenticateStateFree(authenticateStateData * r)
 static HLPSCB authenticateNegotiateHandleReply;
 static AUTHSSTATS authenticateNegotiateStats;
 
+/// \ingroup AuthNegotiateInternal
 static statefulhelper *negotiateauthenticators = NULL;
 
 CBDATA_TYPE(authenticateStateData);
 
+/// \ingroup AuthNegotiateInternal
 static int authnegotiate_initialised = 0;
 
+/// \ingroup AuthNegotiateInternal
 static auth_negotiate_config negotiateConfig;
 
+/// \ingroup AuthNegotiateInternal
 static hash_table *proxy_auth_cache = NULL;
 
 /*
@@ -81,7 +91,10 @@ static hash_table *proxy_auth_cache = NULL;
  *
  */
 
-/* move to negotiateScheme.cc */
+/**
+ \ingroup AuthNegotiateInternal
+ \todo move to negotiateScheme.cc
+ */
 void
 negotiateScheme::done()
 {
@@ -104,7 +117,6 @@ negotiateScheme::done()
     debugs(29, 2, "negotiateScheme::done: Negotiate authentication Shutdown.");
 }
 
-/* free any allocated configuration details */
 void
 AuthNegotiateConfig::done()
 {
@@ -168,8 +180,10 @@ AuthNegotiateConfig::type() const
     return negotiateScheme::GetInstance().type();
 }
 
-/* Initialize helpers and the like for this auth scheme. Called AFTER parsing the
- * config file */
+/**
+ * Initialize helpers and the like for this auth scheme.
+ * Called AFTER parsing the config file
+ */
 void
 AuthNegotiateConfig::init(AuthConfig * scheme)
 {

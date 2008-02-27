@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayPool.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
+ * $Id: DelayPool.h,v 1.3 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -52,6 +52,7 @@ class CommonPool;
 
 class acl_access;
 
+/// \ingroup DelayPoolsAPI
 class DelayPool
 {
 

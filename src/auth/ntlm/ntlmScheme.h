@@ -1,6 +1,6 @@
 
 /*
- * $Id: ntlmScheme.h,v 1.1 2004/08/30 03:29:02 robertc Exp $
+ * $Id: ntlmScheme.h,v 1.2 2008/02/26 21:49:43 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,6 +36,8 @@
 
 #include "AuthScheme.h"
 
+/// \ingroup AuthSchemeAPI
+/// \ingroup AuthAPI
 class ntlmScheme : public AuthScheme
 {
 

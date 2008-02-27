@@ -1,6 +1,5 @@
-
 /*
- * $Id: MemBuf.cc,v 1.42 2006/09/20 08:13:38 adrian Exp $
+ * $Id: MemBuf.cc,v 1.43 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov
@@ -33,11 +32,12 @@
  *
  */
 
-/*
- * To-Do: use memory pools for .buf recycling @?@ @?@
+/**
+ \todo use memory pools for .buf recycling @?@ @?@
  */
 
-/*
+/**
+ \verbatim
  * Rationale:
  * ----------
  * 
@@ -96,7 +96,9 @@
  * -- *iff* you did not give the buffer away, free it yourself
  * -- buf.clean();
  * }
+ \endverbatim
  */
+
 /* if you have configure you can use this */
 #if defined(HAVE_CONFIG_H)
 #include "config.h"
@@ -122,7 +124,7 @@
 
 CBDATA_CLASS_INIT(MemBuf);
 
-/* init with defaults */
+/** init with defaults */
 void
 MemBuf::init()
 {
@@ -130,7 +132,7 @@ MemBuf::init()
 }
 
 
-/* init with specific sizes */
+/** init with specific sizes */
 void
 MemBuf::init(mb_size_t szInit, mb_size_t szMax)
 {
@@ -143,7 +145,7 @@ MemBuf::init(mb_size_t szInit, mb_size_t szMax)
     grow(szInit);
 }
 
-/*
+/**
  * cleans the mb; last function to call if you do not give .buf away with
  * memBufFreeFunc
  */
@@ -162,8 +164,10 @@ MemBuf::clean()
     }
 }
 
-/* cleans the buffer without changing its capacity
- * if called with a Null buffer, calls memBufDefInit() */
+/**
+ * Cleans the buffer without changing its capacity
+ * if called with a Null buffer, calls memBufDefInit()
+ */
 void
 MemBuf::reset()
 {
@@ -177,7 +181,9 @@ MemBuf::reset()
     }
 }
 
-/* unfortunate hack to test if the buffer has been Init()ialized */
+/**
+ * Unfortunate hack to test if the buffer has been Init()ialized
+ */
 int
 MemBuf::isNull()
 {
@@ -201,7 +207,7 @@ mb_size_t MemBuf::potentialSpaceSize() const
     return (terminatedSize < max_capacity) ? max_capacity - terminatedSize : 0;
 }
 
-// removes sz bytes and "packs" by moving content left
+/// removes sz bytes and "packs" by moving content left
 void MemBuf::consume(mb_size_t shiftSize)
 {
     const mb_size_t cSize = contentSize();
@@ -249,11 +255,14 @@ void MemBuf::appended(mb_size_t sz)
     terminate();
 }
 
-// 0-terminate in case we are used as a string.
-// Extra octet is not counted in the content size (or space size)
-// XXX: but the extra octet is counted when growth decisions are made!
-// This will cause the buffer to grow when spaceSize() == 1 on append,
-// which will assert() if the buffer cannot grow any more.
+/**
+ * Null-terminate in case we are used as a string.
+ * Extra octet is not counted in the content size (or space size)
+ *
+ \note XXX: but the extra octet is counted when growth decisions are made!
+ *     This will cause the buffer to grow when spaceSize() == 1 on append,
+ *     which will assert() if the buffer cannot grow any more.
+ */
 void MemBuf::terminate()
 {
     assert(size < capacity);
@@ -283,7 +292,9 @@ va_dcl
 }
 
 
-/* vPrintf for other printf()'s to use; calls vsnprintf, extends buf if needed */
+/**
+ * vPrintf for other printf()'s to use; calls vsnprintf, extends buf if needed
+ */
 void
 MemBuf::vPrintf(const char *fmt, va_list vargs) {
 #ifdef VA_COPY
@@ -334,12 +345,13 @@ MemBuf::vPrintf(const char *fmt, va_list vargs) {
     }
 }
 
-/*
- * returns free() function to be used.
+/**
  * Important:
  *   calling this function "freezes" mb,
  *   do not _update_ mb after that in any way
  *   (you still can read-access .buf and .size)
+ *
+ \retval free() function to be used.
  */
 FREE *
 MemBuf::freeFunc() {
@@ -352,7 +364,9 @@ MemBuf::freeFunc() {
     return ff;
 }
 
-/* grows (doubles) internal buffer to satisfy required minimal capacity */
+/**
+ * Grows (doubles) internal buffer to satisfy required minimal capacity
+ */
 void
 MemBuf::grow(mb_size_t min_cap) {
     size_t new_cap;
@@ -394,7 +408,9 @@ MemBuf::grow(mb_size_t min_cap) {
 
 /* Reports */
 
-/* puts report on MemBuf _module_ usage into mb */
+/**
+ * Puts report on MemBuf _module_ usage into mb
+ */
 void
 memBufReport(MemBuf * mb) {
     assert(mb);

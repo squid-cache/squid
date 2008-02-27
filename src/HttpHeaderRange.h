@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeaderRange.h,v 1.11 2007/08/13 17:20:51 hno Exp $
+ * $Id: HttpHeaderRange.h,v 1.12 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -63,13 +63,13 @@ public:
     int64_t length;
 };
 
-MEMPROXY_CLASS_INLINE(HttpHdrRangeSpec)
+MEMPROXY_CLASS_INLINE(HttpHdrRangeSpec)          /**DOCS_NOSEMI*/
 
-/* There may be more than one byte range specified in the request.
+/**
+ * There may be more than one byte range specified in the request.
  * This object holds all range specs in order of their appearence
  * in the request because we SHOULD preserve that order.
  */
-
 class HttpHdrRange
 {
 
@@ -113,10 +113,11 @@ private:
     int64_t clen;
 };
 
-MEMPROXY_CLASS_INLINE(HttpHdrRange)
+MEMPROXY_CLASS_INLINE(HttpHdrRange)          /**DOCS_NOSEMI*/
 
-/* data for iterating thru range specs */
-
+/**
+ * Data for iterating thru range specs
+ */
 class HttpHdrRangeIter
 {
 

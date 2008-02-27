@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -35,10 +34,12 @@
 
 #ifndef SQUID_ACLIP_H
 #define SQUID_ACLIP_H
+
 #include "ACL.h"
 #include "splay.h"
 #include "IPAddress.h"
 
+/// \ingroup ACLAPI
 class acl_ip_data
 {
 
@@ -65,8 +66,9 @@ private:
     static bool DecodeMask(const char *asc, IPAddress &mask, int string_format_type);
 };
 
-MEMPROXY_CLASS_INLINE(acl_ip_data)
+MEMPROXY_CLASS_INLINE(acl_ip_data)		/**DOCS_NOSEMI*/
 
+/// \ingroup ACLAPI
 class ACLIP : public ACL
 {
 

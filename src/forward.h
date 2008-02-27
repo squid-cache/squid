@@ -68,9 +68,9 @@ private:
 
 #if WIP_FWD_LOG
 
-    void uninit
-    static void logRotate
-    void status()
+    void uninit                /**DOCS_NOSEMI*/
+    static void logRotate      /**DOCS_NOSEMI*/
+    void status()              /**DOCS_NOSEMI*/
 #endif
 
 public:

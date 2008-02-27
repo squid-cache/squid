@@ -1,6 +1,5 @@
-
 /*
- * $Id: DiskFile.h,v 1.1 2004/12/20 16:30:38 robertc Exp $
+ * $Id: DiskFile.h,v 1.2 2008/02/26 21:49:38 amosjeffries Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -49,20 +48,21 @@ class DiskFile : public RefCountable
 
 public:
     typedef RefCount<DiskFile> Pointer;
-    virtual void open (int, mode_t, RefCount<IORequestor>) = 0;
-    virtual void create (int, mode_t, RefCount<IORequestor>) = 0;
+
+    virtual void open(int flags, mode_t mode, RefCount<IORequestor> callback) = 0;
+    virtual void create(int flags, mode_t mode, RefCount<IORequestor> callback) = 0;
     virtual void read(ReadRequest *) = 0;
     virtual void write(WriteRequest *) = 0;
-    virtual void close () = 0;
+    virtual void close() = 0;
     virtual bool canRead() const = 0;
     virtual bool canWrite() const {return true;}
 
-    /* During miogration only */
+    /** During migration only */
     virtual int getFD() const {return -1;}
 
     virtual bool error() const = 0;
 
-    /* Inform callers if there is IO in progress */
+    /** Inform callers if there is IO in progress */
     virtual bool ioInProgress() const = 0;
 };
 

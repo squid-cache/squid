@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLTimeData.h,v 1.5 2005/05/08 06:36:45 hno Exp $
+ * $Id: ACLTimeData.h,v 1.6 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -62,6 +62,6 @@ private:
     ACLTimeData *next;
 };
 
-MEMPROXY_CLASS_INLINE(ACLTimeData)
+MEMPROXY_CLASS_INLINE(ACLTimeData)          /**DOCS_NOSEMI*/
 
 #endif /* SQUID_ACLTIMEDATA_H */

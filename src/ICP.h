@@ -1,6 +1,5 @@
-
 /*
- * $Id: ICP.h,v 1.10 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id: ICP.h,v 1.11 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,22 +33,37 @@
 #ifndef SQUID_ICP_H
 #define SQUID_ICP_H
 
+/**
+ \defgroup ServerProtocolICPAPI ICP
+ \ingroup ServerProtocol
+ */
+
 #include "StoreClient.h"
 
 /**
+ \ingroup ServerProtocolICPAPI
+ *
  * This struct is the wire-level header.
  * DO NOT add more move fields on pain of breakage.
  * DO NOT add virtual methods.
  */
 struct _icp_common_t
 {
-    unsigned char opcode;	/* opcode */
-    unsigned char version;	/* version number */
-    unsigned short length;	/* total length (bytes) */
-    u_int32_t reqnum;		/* req number (req'd for UDP) */
+    /** opcode */
+    unsigned char opcode;
+    /** version number */
+    unsigned char version;
+    /** total length (bytes) */
+    unsigned short length;
+    /** req number (req'd for UDP) */
+    u_int32_t reqnum;
     u_int32_t flags;
     u_int32_t pad;
-    u_int32_t shostid;		/* sender host id */
+    /** sender host id */
+    u_int32_t shostid;
+
+/// \todo I don't believe this header is included in non-c++ code anywhere
+///		the struct should become a public POD class and kill these #ifdef.
 #ifdef __cplusplus
 
     _icp_common_t();
@@ -63,6 +77,7 @@ struct _icp_common_t
 
 #ifdef __cplusplus
 
+/// \ingroup ServerProtocolICPAPI
 inline icp_opcode & operator++ (icp_opcode & aCode)
 {
     int tmp = (int) aCode;
@@ -71,13 +86,16 @@ inline icp_opcode & operator++ (icp_opcode & aCode)
 }
 
 
-/** \todo mempool this */
+/**
+ \ingroup ServerProtocolICPAPI
+ \todo mempool this
+ */
 class ICPState
 {
 
 public:
-    ICPState(icp_common_t &, HttpRequest *);
-    virtual ~ ICPState();
+    ICPState(icp_common_t &aHeader, HttpRequest *aRequest);
+    virtual ~ICPState();
     icp_common_t header;
     HttpRequest *request;
     int fd;
@@ -88,6 +106,7 @@ public:
 
 #endif
 
+/// \ingroup ServerProtocolICPAPI
 struct icpUdpData
 {
     IPAddress address;
@@ -104,28 +123,52 @@ struct icpUdpData
     struct timeval queue_time;
 };
 
-
+/// \ingroup ServerProtocolICPAPI
 HttpRequest* icpGetRequest(char *url, int reqnum, int fd, IPAddress &from);
 
+/// \ingroup ServerProtocolICPAPI
 int icpAccessAllowed(IPAddress &from, HttpRequest * icp_request);
 
+/// \ingroup ServerProtocolICPAPI
 SQUIDCEXTERN void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const IPAddress &from);
+
+/// \ingroup ServerProtocolICPAPI
 extern icp_opcode icpGetCommonOpcode();
 
+/// \ingroup ServerProtocolICPAPI
 SQUIDCEXTERN int icpUdpSend(int, const IPAddress &, icp_common_t *, log_type, int);
+
+/// \ingroup ServerProtocolICPAPI
 SQUIDCEXTERN log_type icpLogFromICPCode(icp_opcode opcode);
 
+/// \ingroup ServerProtocolICPAPI
 void icpDenyAccess(IPAddress &from, char *url, int reqnum, int fd);
+
+/// \ingroup ServerProtocolICPAPI
 SQUIDCEXTERN PF icpHandleUdp;
+
+/// \ingroup ServerProtocolICPAPI
 SQUIDCEXTERN PF icpUdpSendQueue;
 
+/// \ingroup ServerProtocolICPAPI
 SQUIDCEXTERN void icpHandleIcpV3(int, IPAddress &, char *, int);
-SQUIDCEXTERN int icpCheckUdpHit(StoreEntry *, HttpRequest * request);
-SQUIDCEXTERN void icpConnectionsOpen(void);
-SQUIDCEXTERN void icpConnectionShutdown(void);
-SQUIDCEXTERN void icpConnectionClose(void);
-SQUIDCEXTERN int icpSetCacheKey(const cache_key * key);
-SQUIDCEXTERN const cache_key *icpGetCacheKey(const char *url, int reqnum);
 
+/// \ingroup ServerProtocolICPAPI
+SQUIDCEXTERN int icpCheckUdpHit(StoreEntry *, HttpRequest * request);
+
+/// \ingroup ServerProtocolICPAPI
+SQUIDCEXTERN void icpConnectionsOpen(void);
+
+/// \ingroup ServerProtocolICPAPI
+SQUIDCEXTERN void icpConnectionShutdown(void);
+
+/// \ingroup ServerProtocolICPAPI
+SQUIDCEXTERN void icpConnectionClose(void);
+
+/// \ingroup ServerProtocolICPAPI
+SQUIDCEXTERN int icpSetCacheKey(const cache_key * key);
+
+/// \ingroup ServerProtocolICPAPI
+SQUIDCEXTERN const cache_key *icpGetCacheKey(const char *url, int reqnum);
 
 #endif /* SQUID_ICP_H */

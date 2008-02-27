@@ -1,6 +1,5 @@
-
 /*
- * $Id: DelaySpec.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
+ * $Id: DelaySpec.h,v 1.3 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,6 +33,7 @@
 #ifndef SQUID_DELAYSPEC_H
 #define SQUID_DELAYSPEC_H
 
+/// \ingroup DelyPoolsAPI
 class DelaySpec
 {
 

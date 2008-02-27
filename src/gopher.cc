@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.210 2008/02/12 23:33:48 rousskov Exp $
+ * $Id: gopher.cc,v 1.211 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
@@ -46,37 +46,74 @@
 #include "forward.h"
 #include "SquidTime.h"
 
+/**
+ \defgroup ServerProtocolGopherInternal Server-Side Gopher Internals
+ \ingroup ServerProtocolGopherAPI
+ * Gopher is somewhat complex and gross because it must convert from
+ * the Gopher protocol to HTTP.
+ */
+
 /* gopher type code from rfc. Anawat. */
+/// \ingroup ServerProtocolGopherInternal
 #define GOPHER_FILE         '0'
+/// \ingroup ServerProtocolGopherInternal
 #define GOPHER_DIRECTORY    '1'
+/// \ingroup ServerProtocolGopherInternal
 #define GOPHER_CSO          '2'
+/// \ingroup ServerProtocolGopherInternal
 #define GOPHER_ERROR        '3'
+/// \ingroup ServerProtocolGopherInternal
 #define GOPHER_MACBINHEX    '4'
+/// \ingroup ServerProtocolGopherInternal
 #define GOPHER_DOSBIN       '5'
+/// \ingroup ServerProtocolGopherInternal
 #define GOPHER_UUENCODED    '6'
+/// \ingroup ServerProtocolGopherInternal
 #define GOPHER_INDEX        '7'
+/// \ingroup ServerProtocolGopherInternal
 #define GOPHER_TELNET       '8'
+/// \ingroup ServerProtocolGopherInternal
 #define GOPHER_BIN          '9'
+/// \ingroup ServerProtocolGopherInternal
 #define GOPHER_REDUNT       '+'
+/// \ingroup ServerProtocolGopherInternal
 #define GOPHER_3270         'T'
+/// \ingroup ServerProtocolGopherInternal
 #define GOPHER_GIF          'g'
+/// \ingroup ServerProtocolGopherInternal
 #define GOPHER_IMAGE        'I'
 
+/// \ingroup ServerProtocolGopherInternal
 #define GOPHER_HTML         'h'	/* HTML */
+/// \ingroup ServerProtocolGopherInternal
 #define GOPHER_INFO         'i'
-#define GOPHER_WWW          'w'	/* W3 address */
+/**
+  \ingroup ServerProtocolGopherInternal
+  W3 address
+ */
+#define GOPHER_WWW          'w'
+/// \ingroup ServerProtocolGopherInternal
 #define GOPHER_SOUND        's'
 
+/// \ingroup ServerProtocolGopherInternal
 #define GOPHER_PLUS_IMAGE   ':'
+/// \ingroup ServerProtocolGopherInternal
 #define GOPHER_PLUS_MOVIE   ';'
+/// \ingroup ServerProtocolGopherInternal
 #define GOPHER_PLUS_SOUND   '<'
 
+/// \ingroup ServerProtocolGopherInternal
 #define GOPHER_PORT         70
 
+/// \ingroup ServerProtocolGopherInternal
 #define TAB                 '\t'
+/// \ingroup ServerProtocolGopherInternal
+/// \todo CODE: should this be a protocol-specific thing?
 #define TEMP_BUF_SIZE       4096
+/// \ingroup ServerProtocolGopherInternal
 #define MAX_CSO_RESULT      1024
 
+/// \ingroup ServerProtocolGopherInternal
 typedef struct gopher_ds
 {
     StoreEntry *entry;
@@ -116,9 +153,13 @@ static IOCB gopherReadReply;
 static IOCB gopherSendComplete;
 static PF gopherSendRequest;
 
+/// \ingroup ServerProtocolGopherInternal
 static char def_gopher_bin[] = "www/unknown";
+
+/// \ingroup ServerProtocolGopherInternal
 static char def_gopher_text[] = "text/plain";
 
+/// \ingroup ServerProtocolGopherInternal
 static void
 gopherStateFree(int fdnotused, void *data)
 {
@@ -141,7 +182,10 @@ gopherStateFree(int fdnotused, void *data)
 }
 
 
-/* figure out content type from file extension */
+/**
+ \ingroup ServerProtocolGopherInternal
+ * Figure out content type from file extension
+ */
 static void
 gopher_mime_content(MemBuf * mb, const char *name, const char *def_ctype)
 {
@@ -157,7 +201,10 @@ gopher_mime_content(MemBuf * mb, const char *name, const char *def_ctype)
 
 
 
-/* create MIME Header for Gopher Data */
+/**
+ \ingroup ServerProtocolGopherInternal
+ * Create MIME Header for Gopher Data
+ */
 static void
 gopherMimeCreate(GopherStateData * gopherState)
 {
@@ -226,7 +273,10 @@ gopherMimeCreate(GopherStateData * gopherState)
     mb.clean();
 }
 
-/* Parse a gopher request into components.  By Anawat. */
+/**
+ \ingroup ServerProtocolGopherInternal
+ * Parse a gopher request into components.  By Anawat.
+ */
 static void
 gopher_request_parse(const HttpRequest * req, char *type_id, char *request)
 {
@@ -252,6 +302,14 @@ gopher_request_parse(const HttpRequest * req, char *type_id, char *request)
     }
 }
 
+/**
+ \ingroup ServerProtocolGopherAPI
+ * Parse the request to determine whether it is cachable.
+ *
+ \param req	Request data.
+ \retval 0	Not cachable.
+ \retval 1	Cachable.
+ */
 int
 gopherCachable(const HttpRequest * req)
 {
@@ -281,6 +339,7 @@ gopherCachable(const HttpRequest * req)
     return cachable;
 }
 
+/// \ingroup ServerProtocolGopherInternal
 static void
 gopherHTMLHeader(StoreEntry * e, const char *title, const char *substring)
 {
@@ -294,6 +353,7 @@ gopherHTMLHeader(StoreEntry * e, const char *title, const char *substring)
     storeAppendPrintf(e, "</H1>\n");
 }
 
+/// \ingroup ServerProtocolGopherInternal
 static void
 gopherHTMLFooter(StoreEntry * e)
 {
@@ -306,6 +366,7 @@ gopherHTMLFooter(StoreEntry * e)
     storeAppendPrintf(e, "</ADDRESS></BODY></HTML>\n");
 }
 
+/// \ingroup ServerProtocolGopherInternal
 static void
 gopherEndHTML(GopherStateData * gopherState)
 {
@@ -321,9 +382,12 @@ gopherEndHTML(GopherStateData * gopherState)
     gopherHTMLFooter(e);
 }
 
-
-/* Convert Gopher to HTML */
-/* Borrow part of code from libwww2 came with Mosaic distribution */
+/**
+ \ingroup ServerProtocolGopherInternal
+ * Convert Gopher to HTML.
+ \par
+ * Borrow part of code from libwww2 came with Mosaic distribution.
+ */
 static void
 gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 {
@@ -700,6 +764,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
     return;
 }
 
+/// \ingroup ServerProtocolGopherInternal
 static void
 gopherTimeout(int fd, void *data)
 {
@@ -712,8 +777,11 @@ gopherTimeout(int fd, void *data)
     comm_close(fd);
 }
 
-/* This will be called when data is ready to be read from fd.  Read until
- * error or connection closed. */
+/**
+ \ingroup ServerProtocolGopherInternal
+ * This will be called when data is ready to be read from fd.
+ * Read until error or connection closed.
+ */
 static void
 gopherReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
@@ -819,8 +887,10 @@ gopherReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void
     return;
 }
 
-/* This will be called when request write is complete. Schedule read of
- * reply. */
+/**
+ \ingroup ServerProtocolGopherInternal
+ * This will be called when request write is complete. Schedule read of reply.
+ */
 static void
 gopherSendComplete(int fd, char *buf, size_t size, comm_err_t errflag, int xerrno, void *data)
 {
@@ -892,7 +962,10 @@ gopherSendComplete(int fd, char *buf, size_t size, comm_err_t errflag, int xerrn
         memFree(buf, MEM_4K_BUF);	/* Allocated by gopherSendRequest. */
 }
 
-/* This will be called when connect completes. Write request. */
+/**
+ \ingroup ServerProtocolGopherInternal
+ * This will be called when connect completes. Write request.
+ */
 static void
 gopherSendRequest(int fd, void *data)
 {
@@ -926,8 +999,10 @@ gopherSendRequest(int fd, void *data)
         gopherState->entry->setPublicKey();	/* Make it public */
 }
 
+/// \ingroup ServerProtocolGopherInternal
 CBDATA_TYPE(GopherStateData);
 
+/// \ingroup ServerProtocolGopherAPI
 void
 gopherStart(FwdState * fwd)
 {

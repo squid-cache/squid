@@ -1,6 +1,5 @@
-
 /*
- * $Id: ACLMyPort.h,v 1.1 2003/02/25 12:22:33 robertc Exp $
+ * $Id: ACLMyPort.h,v 1.2 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,18 +34,23 @@
 
 #ifndef SQUID_ACLMYPORT_H
 #define SQUID_ACLMYPORT_H
+
 #include "ACLStrategy.h"
 #include "ACLStrategised.h"
 
+/// \ingroup ACLAPI
 class ACLMyPortStrategy : public ACLStrategy<int>
 {
 
 public:
     virtual int match (ACLData<MatchType> * &, ACLChecklist *);
     static ACLMyPortStrategy *Instance();
-    /* Not implemented to prevent copies of the instance. */
-    /* Not private to prevent brain dead g+++ warnings about
-     * private constructors with no friends */
+    /**
+     * Not implemented to prevent copies of the instance.
+     \par
+     * Not private to prevent brain dead g+++ warnings about
+     * private constructors with no friends
+     */
     ACLMyPortStrategy(ACLMyPortStrategy const &);
 
 private:
@@ -56,6 +60,7 @@ private:
     ACLMyPortStrategy&operator=(ACLMyPortStrategy const &);
 };
 
+/// \ingroup ACLAPI
 class ACLMyPort
 {
 

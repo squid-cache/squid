@@ -1,5 +1,5 @@
 /*
- * $Id: ESILiteral.h,v 1.4 2004/08/30 05:12:31 robertc Exp $
+ * $Id: ESILiteral.h,v 1.5 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -72,6 +72,6 @@ private:
     esiLiteral(esiLiteral const &);
 };
 
-MEMPROXY_CLASS_INLINE(esiLiteral)
+MEMPROXY_CLASS_INLINE(esiLiteral)          /**DOCS_NOSEMI*/
 
 #endif /* SQUID_ESILITERAL_H */

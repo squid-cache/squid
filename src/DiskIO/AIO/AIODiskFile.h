@@ -1,6 +1,5 @@
-
 /*
- * $Id: AIODiskFile.h,v 1.4 2007/05/29 13:31:43 amosjeffries Exp $
+ * $Id: AIODiskFile.h,v 1.5 2008/02/26 21:49:40 amosjeffries Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -50,7 +49,10 @@ public:
     void operator delete (void *);
     AIODiskFile (char const *path, AIODiskIOStrategy *);
     ~AIODiskFile();
-    virtual void open (int, mode_t, RefCount<IORequestor>);
+
+    /// \bug the code has this as "IORequestor::Pointer callback"
+    virtual void open(int flags, mode_t mode, RefCount<IORequestor> callback);
+
     virtual void create (int, mode_t, RefCount<IORequestor>);
     virtual void read(ReadRequest *);
     virtual void write(WriteRequest *);

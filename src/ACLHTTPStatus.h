@@ -1,6 +1,5 @@
-
 /*
- * $Id: ACLHTTPStatus.h,v 1.2 2006/04/02 15:00:54 serassio Exp $
+ * $Id: ACLHTTPStatus.h,v 1.3 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,10 +34,12 @@
 
 #ifndef SQUID_ACLHTTPSTATUS_H
 #define SQUID_ACLHTTPSTATUS_H
+
 #include "ACL.h"
 #include "ACLChecklist.h"
 #include "splay.h"
 
+/// \ingroup ACLAPI
 struct acl_httpstatus_data
 {
     int status1, status2;
@@ -49,6 +50,7 @@ struct acl_httpstatus_data
     static int compare(acl_httpstatus_data* const& a, acl_httpstatus_data* const& b);
 };
 
+/// \ingroup ACLAPI
 class ACLHTTPStatus : public ACL
 {
 
@@ -75,6 +77,6 @@ protected:
     char const *class_;
 };
 
-MEMPROXY_CLASS_INLINE(ACLHTTPStatus)
+MEMPROXY_CLASS_INLINE(ACLHTTPStatus)          /**DOCS_NOSEMI*/
 
 #endif /* SQUID_ACLHTTPSTATUS_H */

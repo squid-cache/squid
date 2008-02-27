@@ -1,5 +1,5 @@
 /*
- * $Id: client_side.h,v 1.30 2008/02/12 23:07:52 rousskov Exp $
+ * $Id: client_side.h,v 1.31 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -49,7 +49,6 @@ class clientStreamNode;
 class AuthUserRequest;
 
 template <class T>
-
 class Range;
 
 class ClientSocketContext : public RefCountable
@@ -127,7 +126,7 @@ private:
     bool connRegistered_;
 };
 
-/* A connection to a socket */
+/** A connection to a socket */
 class ConnStateData : public BodyProducer/*, public RefCountable*/
 {
 
@@ -162,17 +161,19 @@ public:
 
     int64_t bodySizeLeft();
 
-    /*
+    /**
      * Is this connection based authentication? if so what type it
      * is.
      */
     auth_type_t auth_type;
-    /*
+
+    /**
      * note this is ONLY connection based because NTLM is against HTTP spec.
      * the user details for connection based authentication
      */
     AuthUserRequest *auth_user_request;
-    /*
+
+    /**
      * used by the owner of the connection, opaque otherwise
      * TODO: generalise the connection owner concept.
      */

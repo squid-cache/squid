@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheManager.h,v 1.1 2006/05/29 00:14:59 robertc Exp $
+ * $Id: CacheManager.h,v 1.2 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,13 +36,18 @@
 
 #include "squid.h"
 
-
-extern void cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry);
-
-/*
- * A single menu item in the cache manager - an 'action'.
+/**
+ \defgroup CacheManagerAPI Cache Manager API
+ \ingroup Components
  */
 
+/// \ingroup CacheManagerAPI
+extern void cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry);
+
+/**
+ \ingroup CacheManagerAPI
+ * A single menu item in the cache manager - an 'action'.
+ */
 class CacheManagerAction
 {
 
@@ -67,13 +72,13 @@ unsigned int atomic:
 };
 
 
-/*
+/**
+ \ingroup CacheManagerAPI
  * a CacheManager - the menu system for interacting with squid.
  * This is currently just an adapter to the global cachemgr* routines to
  * provide looser coupling between modules, but once fully transitioned,
  * an instance of this class will represent a single independent manager.
  */
-
 class CacheManager
 {
 

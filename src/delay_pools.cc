@@ -1,6 +1,5 @@
-
 /*
- * $Id: delay_pools.cc,v 1.50 2007/12/14 23:11:46 amosjeffries Exp $
+ * $Id: delay_pools.cc,v 1.51 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -37,6 +36,11 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
+/**
+ \defgroup DelayPoolsInternal Delay Pools Internal
+ \ingroup DelayPoolsAPI
+ */
+
 #include "config.h"
 
 #if DELAY_POOLS
@@ -64,8 +68,10 @@
 #include "DelayTagged.h"
 #include "IPAddress.h"
 
+/// \ingroup DelayPoolsInternal
 long DelayPools::MemoryUsed = 0;
 
+/// \ingroup DelayPoolsInternal
 class Aggregate : public CompositePoolNode
 {
 
@@ -88,7 +94,8 @@ public:
 
 private:
 
-class AggregateId:public DelayIdComposite
+    /// \ingroup DelayPoolsInternal
+    class AggregateId:public DelayIdComposite
     {
 
     public:
@@ -109,8 +116,8 @@ class AggregateId:public DelayIdComposite
     DelaySpec spec;
 };
 
+/// \ingroup DelayPoolsInternal
 template <class Key, class Value>
-
 class VectorMap
 {
 
@@ -130,6 +137,7 @@ private:
     unsigned int nextMapPosition;
 };
 
+/// \ingroup DelayPoolsInternal
 class VectorPool : public CompositePoolNode
 {
 
@@ -157,7 +165,8 @@ protected:
 
     DelaySpec spec;
 
-class Id:public DelayIdComposite
+    /// \ingroup DelayPoolsInternal
+    class Id:public DelayIdComposite
     {
 
     public:
@@ -173,6 +182,7 @@ class Id:public DelayIdComposite
     };
 };
 
+/// \ingroup DelayPoolsInternal
 class IndividualPool : public VectorPool
 {
 
@@ -187,6 +197,7 @@ protected:
 
 };
 
+/// \ingroup DelayPoolsInternal
 class ClassCNetPool : public VectorPool
 {
 
@@ -201,7 +212,7 @@ protected:
 };
 
 /* don't use remote storage for these */
-
+/// \ingroup DelayPoolsInternal
 class ClassCBucket
 {
 
@@ -218,6 +229,7 @@ public:
     VectorMap<unsigned char, DelayBucket> individuals;
 };
 
+/// \ingroup DelayPoolsInternal
 class ClassCHostPool : public CompositePoolNode
 {
 
@@ -251,7 +263,8 @@ protected:
 
     friend class ClassCHostPool::Id;
 
-class Id:public DelayIdComposite
+    /// \ingroup DelayPoolsInternal
+    class Id:public DelayIdComposite
     {
 
     public:
@@ -780,7 +793,7 @@ VectorMap<Key,Value>::indexUsed (unsigned char const index) const
     return index < size();
 }
 
-/* returns the used position, or the position to allocate */
+/** returns the used position, or the position to allocate */
 template <class Key, class Value>
 unsigned char
 VectorMap<Key,Value>::findKeyIndex (Key const key) const

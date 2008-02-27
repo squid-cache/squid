@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaMD5.h,v 1.4 2004/08/30 05:12:31 robertc Exp $
+ * $Id: StoreMetaMD5.h,v 1.5 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -51,6 +51,6 @@ private:
     static int md5_mismatches;
 };
 
-MEMPROXY_CLASS_INLINE(StoreMetaMD5)
+MEMPROXY_CLASS_INLINE(StoreMetaMD5)		/**DOCS_NOSEMI*/
 
 #endif /* SQUID_STOREMETAMD5_H */

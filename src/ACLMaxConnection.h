@@ -1,6 +1,5 @@
-
 /*
- * $Id: ACLMaxConnection.h,v 1.4 2005/05/06 01:57:55 hno Exp $
+ * $Id: ACLMaxConnection.h,v 1.5 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,9 +34,11 @@
 
 #ifndef SQUID_ACLMAXCONNECTION_H
 #define SQUID_ACLMAXCONNECTION_H
+
 #include "ACL.h"
 #include "ACLChecklist.h"
 
+/// \ingroup ACLAPI
 class ACLMaxConnection : public ACL
 {
 
@@ -65,6 +66,6 @@ protected:
     int limit;
 };
 
-MEMPROXY_CLASS_INLINE(ACLMaxConnection)
+MEMPROXY_CLASS_INLINE(ACLMaxConnection)          /**DOCS_NOSEMI*/
 
 #endif /* SQUID_ACLMAXCONNECTION_H */

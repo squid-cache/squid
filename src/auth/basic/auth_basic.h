@@ -79,7 +79,7 @@ private:
     char const *httpAuthHeader;
 };
 
-MEMPROXY_CLASS_INLINE(BasicUser)
+MEMPROXY_CLASS_INLINE(BasicUser) /**DOCS_NOSEMI*/
 
 typedef class BasicUser basic_data;
 
@@ -108,7 +108,7 @@ private:
     BasicUser *_theUser;
 };
 
-MEMPROXY_CLASS_INLINE(AuthBasicUserRequest)
+MEMPROXY_CLASS_INLINE(AuthBasicUserRequest)  /**DOCS_NOSEMI*/
 
 /* configuration runtime data */
 

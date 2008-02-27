@@ -1,6 +1,5 @@
-
 /*
- * $Id: ACLCertificate.h,v 1.3 2003/02/25 12:22:33 robertc Exp $
+ * $Id: ACLCertificate.h,v 1.4 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,12 +34,14 @@
 
 #ifndef SQUID_ACLCERTIFICATE_H
 #define SQUID_ACLCERTIFICATE_H
+
 #include "ACL.h"
 #include "ACLData.h"
 #include "ACLChecklist.h"
 #include "ssl_support.h"
 #include "ACLStrategised.h"
 
+/// \ingroup ACLAPI
 class ACLCertificateStrategy : public ACLStrategy<SSL *>
 {
 
@@ -59,6 +60,7 @@ private:
     ACLCertificateStrategy&operator=(ACLCertificateStrategy const &);
 };
 
+/// \ingroup ACLAPI
 class ACLCertificate
 {
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: errorpage.cc,v 1.229 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id: errorpage.cc,v 1.230 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
@@ -33,13 +33,6 @@
  *
  */
 
-/*
- * Abstract:  These routines are used to generate error messages to be
- *              sent to clients.  The error type is used to select between
- *              the various message formats. (formats are stored in the
- *              Config.errorDirectory)
- */
-
 #include "errorpage.h"
 #include "AuthUserRequest.h"
 #include "SquidTime.h"
@@ -52,25 +45,39 @@
 #include "URLScheme.h"
 #include "wordlist.h"
 
+/**
+ \defgroup ErrorPageInternal Error Page Internals
+ \ingroup ErrorPageAPI
+ *
+ \section Abstract Abstract:
+ *   These routines are used to generate error messages to be
+ *   sent to clients.  The error type is used to select between
+ *   the various message formats. (formats are stored in the
+ *   Config.errorDirectory)
+ */
+
+
+/// \ingroup ErrorPageInternal
 CBDATA_CLASS_INIT(ErrorState);
 
 /* local types */
 
+/// \ingroup ErrorPageInternal
 typedef struct
 {
     int id;
     char *page_name;
 }
-
 ErrorDynamicPageInfo;
 
 /* local constant and vars */
 
-/*
- * note: hard coded error messages are not appended with %S automagically
- * to give you more control on the format
+/**
+/// \ingroup ErrorPageInternal
+ *
+ \note  hard coded error messages are not appended with %S
+ *      automagically to give you more control on the format
  */
-
 static const struct
 {
     int type;			/* and page_id */
@@ -94,12 +101,18 @@ error_hard_text[] = {
                         }
                     };
 
+/// \ingroup ErrorPageInternal
 static Vector<ErrorDynamicPageInfo *> ErrorDynamicPages;
 
 /* local prototypes */
 
+/// \ingroup ErrorPageInternal
 static const int error_hard_text_count = sizeof(error_hard_text) / sizeof(*error_hard_text);
+
+/// \ingroup ErrorPageInternal
 static char **error_text = NULL;
+
+/// \ingroup ErrorPageInternal
 static int error_page_count = 0;
 
 static char *errorTryLoadText(const char *page_name, const char *dir);
@@ -113,6 +126,7 @@ static const char *errorConvert(char token, ErrorState * err);
 static IOCB errorSendComplete;
 
 
+/// \ingroup ErrorPageInternal
 err_type &operator++ (err_type &anErr)
 {
     int tmp = (int)anErr;
@@ -120,20 +134,12 @@ err_type &operator++ (err_type &anErr)
     return anErr;
 }
 
+/// \ingroup ErrorPageInternal
 int operator - (err_type const &anErr, err_type const &anErr2)
 {
     return (int)anErr - (int)anErr2;
 }
 
-/*
- * Function:  errorInitialize
- *
- * Abstract:  This function finds the error messages formats, and stores
- *            them in error_text[];
- *
- * Global effects:
- *            error_text[] - is modified
- */
 void
 errorInitialize(void)
 {
@@ -182,6 +188,7 @@ errorClean(void)
     error_page_count = 0;
 }
 
+/// \ingroup ErrorPageInternal
 static const char *
 errorFindHardText(err_type type)
 {
@@ -195,6 +202,7 @@ errorFindHardText(err_type type)
 }
 
 
+/// \ingroup ErrorPageInternal
 static char *
 errorLoadText(const char *page_name)
 {
@@ -212,6 +220,7 @@ errorLoadText(const char *page_name)
     return text;
 }
 
+/// \ingroup ErrorPageInternal
 static char *
 errorTryLoadText(const char *page_name, const char *dir)
 {
@@ -255,6 +264,7 @@ errorTryLoadText(const char *page_name, const char *dir)
     return text;
 }
 
+/// \ingroup ErrorPageInternal
 static ErrorDynamicPageInfo *
 errorDynamicPageInfoCreate(int id, const char *page_name)
 {
@@ -264,6 +274,7 @@ errorDynamicPageInfoCreate(int id, const char *page_name)
     return info;
 }
 
+/// \ingroup ErrorPageInternal
 static void
 errorDynamicPageInfoDestroy(ErrorDynamicPageInfo * info)
 {
@@ -272,6 +283,7 @@ errorDynamicPageInfoDestroy(ErrorDynamicPageInfo * info)
     delete info;
 }
 
+/// \ingroup ErrorPageInternal
 static int
 errorPageId(const char *page_name)
 {
@@ -303,6 +315,7 @@ errorReservePageId(const char *page_name)
     return (err_type)id;
 }
 
+/// \ingroup ErrorPageInternal
 static const char *
 errorPageName(int pageId)
 {
@@ -315,11 +328,6 @@ errorPageName(int pageId)
     return "ERR_UNKNOWN";	/* should not happen */
 }
 
-/*
- * Function:  errorCon
- *
- * Abstract:  This function creates a ErrorState object.
- */
 ErrorState *
 errorCon(err_type type, http_status status, HttpRequest * request)
 {
@@ -336,20 +344,6 @@ errorCon(err_type type, http_status status, HttpRequest * request)
     return err;
 }
 
-/*
- * Function:  errorAppendEntry
- *
- * Arguments: err - This object is destroyed after use in this function.
- *
- * Abstract:  This function generates a error page from the info contained
- *            by 'err' and then stores the text in the specified store
- *            entry.  This function should only be called by ``server
- *            side routines'' which need to communicate errors to the
- *            client side.  It should also be called from client_side.c
- *            because we now support persistent connections, and
- *            cannot assume that we can immediately write to the socket
- *            for an error.
- */
 void
 errorAppendEntry(StoreEntry * entry, ErrorState * err)
 {
@@ -384,7 +378,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
     entry->buffer();
     rep = errorBuildReply(err);
     /* Add authentication header */
-    /* TODO: alter errorstate to be accel on|off aware. The 0 on the next line
+    /*! \todo alter errorstate to be accel on|off aware. The 0 on the next line
      * depends on authenticate behaviour: all schemes to date send no extra
      * data on 407/401 responses, and do not check the accel state on 401/407
      * responses 
@@ -400,25 +394,6 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
     errorStateFree(err);
 }
 
-/*
- * Function:  errorSend
- *
- * Arguments: err - This object is destroyed after use in this function.
- *
- * Abstract:  This function generates a error page from the info contained
- *            by 'err' and then sends it to the client.
- *            The callback function errorSendComplete() is called after
- *            the page has been written to the client socket (fd).
- *            errorSendComplete() deallocates 'err'.  We need to add
- *            'err' to the cbdata because comm_write() requires it
- *            for all callback data pointers.
- *
- *            Note, normally errorSend() should only be called from
- *            routines in ssl.c and pass.c, where we don't have any
- *            StoreEntry's.  In client_side.c we must allocate a StoreEntry
- *            for errors and use errorAppendEntry() to account for
- *            persistent/pipeline connections.
- */
 void
 errorSend(int fd, ErrorState * err)
 {
@@ -443,14 +418,14 @@ errorSend(int fd, ErrorState * err)
     delete rep;
 }
 
-/*
- * Function:  errorSendComplete
+/**
+ \ingroup ErrorPageAPI
  *
- * Abstract:  Called by commHandleWrite() after data has been written
- *            to the client socket.
+ * Called by commHandleWrite() after data has been written
+ * to the client socket.
  *
- * Note:      If there is a callback, the callback is responsible for
- *            closeing the FD, otherwise we do it ourseves.
+ \note If there is a callback, the callback is responsible for
+ *     closeing the FD, otherwise we do it ourseves.
  */
 static void
 errorSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
@@ -487,6 +462,7 @@ errorStateFree(ErrorState * err)
     cbdataFree(err);
 }
 
+/// \ingroup ErrorPageInternal
 static int
 errorDump(ErrorState * err, MemBuf * mb)
 {
@@ -564,41 +540,10 @@ errorDump(ErrorState * err, MemBuf * mb)
     return 0;
 }
 
+/// \ingroup ErrorPageInternal
 #define CVT_BUF_SZ 512
 
-/*
- * a - User identity                            x
- * B - URL with FTP %2f hack                    x
- * c - Squid error code                         x
- * d - seconds elapsed since request received   x
- * e - errno                                    x
- * E - strerror()                               x
- * f - FTP request line                         x
- * F - FTP reply line                           x
- * g - FTP server message                       x
- * h - cache hostname                           x
- * H - server host name                         x
- * i - client IP address                        x
- * I - server IP address                        x
- * L - HREF link for more info/contact          x
- * M - Request Method                           x
- * m - Error message returned by auth helper    x 
- * o - Message returned external acl helper     x
- * p - URL port #                               x
- * P - Protocol                                 x
- * R - Full HTTP Request                        x
- * S - squid signature from ERR_SIGNATURE       x
- * s - caching proxy software with version      x
- * t - local time                               x
- * T - UTC                                      x
- * U - URL without password                     x
- * u - URL with password                        x
- * w - cachemgr email address                   x
- * W - error data (to be included in the mailto links)
- * z - dns server error message                 x
- * Z - Preformatted error message               x
- */
-
+/// \ingroup ErrorPageInternal
 static const char *
 errorConvert(char token, ErrorState * err)
 {
@@ -851,7 +796,6 @@ errorConvert(char token, ErrorState * err)
     return p;
 }
 
-/* allocates and initializes an error response */
 HttpReply *
 errorBuildReply(ErrorState * err)
 {
@@ -890,6 +834,7 @@ errorBuildReply(ErrorState * err)
     return rep;
 }
 
+/// \ingroup ErrorPageInternal
 static MemBuf *
 errorBuildContent(ErrorState * err)
 {

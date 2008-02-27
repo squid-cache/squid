@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreFSaufs.cc,v 1.2 2004/12/20 16:30:40 robertc Exp $
+ * $Id: StoreFSaufs.cc,v 1.3 2008/02/26 21:49:43 amosjeffries Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
@@ -39,4 +39,10 @@
 #include "fs/ufs/StoreFSufs.h"
 #include "DiskIO/DiskIOModule.h"
 
+/**
+ \defgroup AUFS AUFS Storage Filesystem (UFS Based)
+ \ingroup UFS, FileSystems
+ */
+
+/// \ingroup AUFS
 static StoreFSufs<UFSSwapDir> AufsInstance("DiskThreads", "aufs");

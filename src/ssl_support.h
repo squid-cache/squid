@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.h,v 1.14 2008/02/11 22:41:52 rousskov Exp $
+ * $Id: ssl_support.h,v 1.15 2008/02/26 21:49:35 amosjeffries Exp $
  *
  * AUTHOR: Benno Rice
  *
@@ -46,17 +46,43 @@
 #include <openssl/engine.h>
 #endif
 
+/**
+ \defgroup ServerProtocolSSLAPI Server-Side SSL API
+ \ingroup ServerProtocol
+ */
+
+/// \ingroup ServerProtocolSSLAPI
 SSL_CTX *sslCreateServerContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *clientCA, const char *CAfile, const char *CApath, const char *CRLfile, const char *dhpath, const char *context);
+
+/// \ingroup ServerProtocolSSLAPI
 SSL_CTX *sslCreateClientContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *CAfile, const char *CApath, const char *CRLfile);
+
+/// \ingroup ServerProtocolSSLAPI
 int ssl_read_method(int, char *, int);
+
+/// \ingroup ServerProtocolSSLAPI
 int ssl_write_method(int, const char *, int);
+
+/// \ingroup ServerProtocolSSLAPI
 void ssl_shutdown_method(int);
 
+
+/// \ingroup ServerProtocolSSLAPI
 const char *sslGetUserEmail(SSL *ssl);
+
+/// \ingroup ServerProtocolSSLAPI
 typedef char const *SSLGETATTRIBUTE(SSL *, const char *);
+
+/// \ingroup ServerProtocolSSLAPI
 SSLGETATTRIBUTE sslGetUserAttribute;
+
+/// \ingroup ServerProtocolSSLAPI
 SSLGETATTRIBUTE sslGetCAAttribute;
+
+/// \ingroup ServerProtocolSSLAPI
 const char *sslGetUserCertificatePEM(SSL *ssl);
+
+/// \ingroup ServerProtocolSSLAPI
 const char *sslGetUserCertificateChainPEM(SSL *ssl);
 
 typedef int ssl_error_t;
@@ -73,20 +99,25 @@ const char *sslFindErrorString(ssl_error_t value);
 
 #ifdef __cplusplus
 
+/** \cond AUTODOCS-IGNORE */
 namespace Squid {
+/** \endcond */
 
+/// \ingroup ServerProtocolSSLAPI
 inline
 int SSL_set_fd(SSL *ssl, int fd)
 {
     return ::SSL_set_fd(ssl, _get_osfhandle(fd));
 }
 
+/// \ingroup ServerProtocolSSLAPI
 #define SSL_set_fd(ssl,fd) Squid::SSL_set_fd(ssl,fd)
 
 } /* namespace Squid */
 
 #else
 
+/// \ingroup ServerProtocolSSLAPI
 #define SSL_set_fd(s,f) (SSL_set_fd(s, _get_osfhandle(f)))
 
 #endif /* __cplusplus */

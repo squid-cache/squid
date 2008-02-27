@@ -1,6 +1,5 @@
-
 /*
- * $Id: CompositePoolNode.h,v 1.9 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id: CompositePoolNode.h,v 1.10 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -53,6 +52,7 @@ class StoreEntry;
 
 class AuthUserRequest;
 
+/// \ingroup DelayPoolsAPI
 class CompositePoolNode : public RefCountable, public Updateable
 {
 
@@ -71,6 +71,7 @@ public:
     virtual DelayIdComposite::Pointer id(CompositeSelectionDetails &) = 0;
     void delayRead(DeferredRead const &);
 
+    /// \ingroup DelayPoolsAPI
     class CompositeSelectionDetails
     {
 

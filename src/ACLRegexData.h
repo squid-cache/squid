@@ -1,6 +1,5 @@
-
 /*
- * $Id: ACLRegexData.h,v 1.6 2005/05/08 06:36:45 hno Exp $
+ * $Id: ACLRegexData.h,v 1.7 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -54,6 +53,6 @@ private:
     relist *data;
 };
 
-MEMPROXY_CLASS_INLINE(ACLRegexData)
+MEMPROXY_CLASS_INLINE(ACLRegexData)          /**DOCS_NOSEMI*/
 
 #endif /* SQUID_ACLREGEXDATA_H */

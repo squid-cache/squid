@@ -1,6 +1,5 @@
-
 /*
- * $Id: ACLDestinationDomain.h,v 1.8 2005/05/09 01:41:25 hno Exp $
+ * $Id: ACLDestinationDomain.h,v 1.9 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,20 +34,26 @@
 
 #ifndef SQUID_ACLSOURCEDOMAIN_H
 #define SQUID_ACLSOURCEDOMAIN_H
+
 #include "ACL.h"
 #include "ACLData.h"
 #include "ACLChecklist.h"
 #include "ACLStrategised.h"
 
+/// \ingroup ACLAPI
 class ACLDestinationDomainStrategy : public ACLStrategy<char const *>
 {
 
 public:
     virtual int match (ACLData<MatchType> * &, ACLChecklist *);
     static ACLDestinationDomainStrategy *Instance();
-    /* Not implemented to prevent copies of the instance. */
-    /* Not private to prevent brain dead g+++ warnings about
-     * private constructors with no friends */
+    
+    /**
+     * Not implemented to prevent copies of the instance.
+     \par
+     * Not private to prevent brain dead g+++ warnings about
+     * private constructors with no friends
+     */
     ACLDestinationDomainStrategy(ACLDestinationDomainStrategy const &);
 
 private:
@@ -58,6 +63,7 @@ private:
     ACLDestinationDomainStrategy&operator=(ACLDestinationDomainStrategy const &);
 };
 
+/// \ingroup ACLAPI
 class DestinationDomainLookup : public ACLChecklist::AsyncState
 {
 
@@ -70,6 +76,7 @@ private:
     static void LookupDone(const char *, void *);
 };
 
+/// \ingroup ACLAPI
 class ACLDestinationDomain
 {
 

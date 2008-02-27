@@ -1,5 +1,5 @@
 /*
- * $Id: pinger.cc,v 1.61 2008/01/08 11:10:48 amosjeffries Exp $
+ * $Id: pinger.cc,v 1.62 2008/02/26 21:49:35 amosjeffries Exp $
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels
@@ -33,6 +33,35 @@
  */
 
 #define SQUID_HELPER 1
+
+/**
+ \defgroup pinger pinger
+ \ingroup ExternalPrograms
+ \par
+ *   Although it would be possible for Squid to send and receive
+ *   ICMP messages directly, we use an external process for
+ *   two important reasons:
+ *
+ \li Because squid handles many filedescriptors simultaneously,
+ *   we get much more accurate RTT measurements when ICMP is
+ *   handled by a separate process.
+ *
+ \li Superuser privileges are required to send and receive ICMP.
+ *   Rather than require Squid to be started as root, we prefer
+ *   to have the smaller and simpler pinger program installed
+ *   with setuid permissions.
+ *
+ \par
+ *   If you want to use Squid's ICMP features (highly recommended!)
+ *   When USE_ICMP is defined, Squid will send ICMP pings
+ *   to origin server sites.
+ *   This information is used in numerous ways:
+ \li  - Sent in ICP replies so neighbor caches know how close
+ *      you are to the source.
+ \li  - For finding the closest instance of a URN.
+ \li  - With the 'test_reachability' option.  Squid will return
+ *      ICP_OP_MISS_NOFETCH for sites which it cannot ping.
+ */
 
 #include "squid.h"
 #include "SquidTime.h"
@@ -84,6 +113,13 @@ ICMPv6 icmp6;
 
 int icmp_pkts_sent = 0;
 
+/**
+ \ingroup pinger
+ \par This is the pinger external process.
+ *
+ \param argc Ignored.
+ \param argv Ignored.
+ */
 int
 main(int argc, char *argv[])
 {
@@ -106,7 +142,7 @@ main(int argc, char *argv[])
 #endif
     int squid_link = -1;
 
-    /* start by initializing the pinger debug cache.log-pinger */
+    /** start by initializing the pinger debug cache.log-pinger. */
     if ((t = getenv("SQUID_DEBUG")))
         debug_args = xstrdup(t);
 
@@ -130,7 +166,7 @@ main(int argc, char *argv[])
     max_fd = max(max_fd, icmp6_worker);
 #endif
 
-    // abort if neither worker could open a socket.
+    /** abort if neither worker could open a socket. */
     if(icmp4_worker == -1) {
 #if USE_IPV6
         if(icmp6_worker == -1)

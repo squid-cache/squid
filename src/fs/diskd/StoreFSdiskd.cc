@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreFSdiskd.cc,v 1.2 2004/12/20 16:30:43 robertc Exp $
+ * $Id: StoreFSdiskd.cc,v 1.3 2008/02/26 21:49:44 amosjeffries Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
@@ -39,4 +39,10 @@
 #include "fs/ufs/StoreFSufs.h"
 #include "DiskIO/DiskIOModule.h"
 
+/**
+ \defgroup diskd diskd Storage Filesystem (UFS Based)
+ \ingroup FileSystems, UFS
+ */
+
+/// \ingroup diskd
 static StoreFSufs<UFSSwapDir> DiskdInstance("DiskDaemon", "diskd");

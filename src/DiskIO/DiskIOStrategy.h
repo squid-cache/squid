@@ -1,6 +1,5 @@
-
 /*
- * $Id: DiskIOStrategy.h,v 1.1 2004/12/20 16:30:38 robertc Exp $
+ * $Id: DiskIOStrategy.h,v 1.2 2008/02/26 21:49:38 amosjeffries Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -48,28 +47,31 @@ class DiskIOStrategy
 public:
     virtual ~DiskIOStrategy(){}
 
-    /* Can the IO Strategy handle more requests ? */
+    /** Can the IO Strategy handle more requests ? */
     virtual bool shedLoad() = 0;
-    /* What is the current load? 999 = 99.9% */
+
+    /** What is the current load? 999 = 99.9% */
     virtual int load() = 0;
-    /* Return a handle for performing IO operations */
-    virtual RefCount<DiskFile> newFile (char const *path) = 0;
-    /* flush all IO operations  */
+
+    /** Return a handle for performing IO operations */
+    virtual RefCount<DiskFile> newFile(char const *path) = 0;
+
+    /** flush all IO operations  */
     virtual void sync() {}
 
-    /* unlink a file by path */
-    virtual void unlinkFile (char const *) = 0;
+    /** unlink a file by path */
+    virtual void unlinkFile(char const *) = 0;
 
-    /* perform any pending callbacks */
+    /** perform any pending callbacks */
     virtual int callback() { return 0; }
 
-    /* Init per-instance logic */
+    /** Init per-instance logic */
     virtual void init() {}
 
-    /* cachemgr output on the IO instance stats */
+    /** cachemgr output on the IO instance stats */
     virtual void statfs(StoreEntry & sentry)const {}
 
-    /* module specific options */
+    /** module specific options */
     virtual ConfigOption *getOptionTree() const { return NULL;}
 };
 

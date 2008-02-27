@@ -1,6 +1,5 @@
-
 /*
- * $Id: icp_v3.cc,v 1.43 2007/12/14 23:11:47 amosjeffries Exp $
+ * $Id: icp_v3.cc,v 1.44 2008/02/26 21:49:35 amosjeffries Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol (ICP)
  * AUTHOR: Duane Wessels
@@ -33,16 +32,22 @@
  *
  */
 
+/**
+ \defgroup ServerProtocolICPInternal3 ICPv3 Internals
+ \ingroup ServerProtocolICPAPI
+ */
+
 #include "squid.h"
 #include "Store.h"
 #include "ICP.h"
 #include "HttpRequest.h"
 
+/// \ingroup ServerProtocolICPInternal3
 class ICP3State : public ICPState, public StoreClient
 {
 
 public:
-    ICP3State(icp_common_t &aHeader, HttpRequest *aRequest):
+    ICP3State(icp_common_t &aHeader, HttpRequest *aRequest) :
 	ICPState(aHeader, aRequest)
 	{}
 
@@ -50,8 +55,8 @@ public:
     void created (StoreEntry *newEntry);
 };
 
+/// \ingroup ServerProtocolICPInternal3
 static void
-
 doV3Query(int fd, IPAddress &from, char *buf, icp_common_t header)
 {
     /* We have a valid packet */
@@ -80,11 +85,11 @@ doV3Query(int fd, IPAddress &from, char *buf, icp_common_t header)
     StoreEntry::getPublic (state, url, METHOD_GET);
 }
 
-ICP3State::~ICP3State ()
+ICP3State::~ICP3State()
 {}
 
 void
-ICP3State::created (StoreEntry *newEntry)
+ICP3State::created(StoreEntry *newEntry)
 {
     StoreEntry *entry = newEntry->isNull () ? NULL : newEntry;
     debugs(12, 5, "icpHandleIcpV3: OPCODE " << icp_opcode_str[header.opcode]);
@@ -102,9 +107,10 @@ ICP3State::created (StoreEntry *newEntry)
     delete this;
 }
 
+
+/// \ingroup ServerProtocolICPInternal3
 /* Currently Harvest cached-2.x uses ICP_VERSION_3 */
 void
-
 icpHandleIcpV3(int fd, IPAddress&from, char *buf, int len)
 {
     if (len <= 0)

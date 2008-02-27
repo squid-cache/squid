@@ -1,6 +1,5 @@
-
 /*
- * $Id: DelayVector.h,v 1.9 2003/08/04 22:14:40 robertc Exp $
+ * $Id: DelayVector.h,v 1.10 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,6 +37,7 @@
 
 #include "CompositePoolNode.h"
 
+/// \ingroup DelayPoolsAPI
 class DelayVector : public CompositePoolNode
 {
 
@@ -57,7 +57,8 @@ public:
 
 private:
 
-class Id:public DelayIdComposite
+    /// \ingroup DelayPoolsInternal
+    class Id:public DelayIdComposite
     {
 
     public:

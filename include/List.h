@@ -1,6 +1,6 @@
 
 /*
- * $Id: List.h,v 1.7 2006/08/21 00:50:40 robertc Exp $
+ * $Id: List.h,v 1.8 2008/02/26 21:49:33 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,8 +36,8 @@
 
 #include "cbdata.h"
 
+/// \ingroup POD
 template <class C>
-
 class List
 {
 
@@ -57,8 +57,8 @@ private:
     CBDATA_CLASS(List);
 };
 
+/// \ingroup POD
 template<class C>
-
 class ListContainer
 {
 
@@ -72,6 +72,7 @@ public:
     List<C> *head;
 };
 
+/// \ingroup POD
 template<class C>
 class ListIterator
 {
@@ -92,13 +93,11 @@ private:
 };
 
 /* implementation follows */
-#if 0
-template <class C>
-MemPool *List<C>::Pool(NULL);
 
-#endif
+/** \cond AUTODOCS-IGNORE */
 template <class C>
 cbdata_type List<C>::CBDATA_List = CBDATA_UNKNOWN;
+/** \endcond */
 
 template <class C>
 void *

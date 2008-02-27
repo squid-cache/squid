@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaSTDLFS.h,v 1.1 2007/08/13 17:22:30 hno Exp $
+ * $Id: StoreMetaSTDLFS.h,v 1.2 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -48,6 +48,6 @@ public:
     //    bool checkConsistency(StoreEntry *) const;
 };
 
-MEMPROXY_CLASS_INLINE(StoreMetaSTDLFS)
+MEMPROXY_CLASS_INLINE(StoreMetaSTDLFS)		/**DOCS_NOSEMI*/
 
 #endif /* SQUID_STOREMETASTDLFS_H */

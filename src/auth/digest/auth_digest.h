@@ -44,7 +44,7 @@ public:
 
 };
 
-MEMPROXY_CLASS_INLINE(DigestUser)
+MEMPROXY_CLASS_INLINE(DigestUser)		/**DOCS_NOSEMI*/
 
 typedef class DigestUser digest_user_h;
 
@@ -113,7 +113,7 @@ private:
     CredentialsState credentials_ok;
 };
 
-MEMPROXY_CLASS_INLINE(AuthDigestUserRequest)
+MEMPROXY_CLASS_INLINE(AuthDigestUserRequest)		/**DOCS_NOSEMI*/
 
 /* data to be encoded into the nonce's b64 representation */
 

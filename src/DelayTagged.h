@@ -1,6 +1,5 @@
-
 /*
- * $Id: DelayTagged.h,v 1.6 2007/05/29 13:31:36 amosjeffries Exp $
+ * $Id: DelayTagged.h,v 1.7 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -49,6 +48,7 @@
 #include "Array.h"
 #include "splay.h"
 
+/// \ingroup DelayPoolsAPI
 class DelayTaggedBucket : public RefCountable
 {
 
@@ -64,6 +64,7 @@ public:
     String tag;
 };
 
+/// \ingroup DelayPoolsAPI
 class DelayTagged : public CompositePoolNode
 {
 
@@ -82,7 +83,8 @@ public:
 
 private:
 
-class Id:public DelayIdComposite
+    /// \ingroup DelayPoolsInternal
+    class Id:public DelayIdComposite
     {
 
     public:
