@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.h,v 1.24 2007/11/26 13:09:55 hno Exp $
+ * $Id: HttpHeader.h,v 1.24.2.1 2008/02/27 05:59:29 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -246,13 +246,16 @@ public:
     TimeOrTag getTimeOrTag(http_hdr_type id) const;
     int hasListMember(http_hdr_type id, const char *member, const char separator) const;
     int hasByNameListMember(const char *name, const char *member, const char separator) const;
-    void removeConnectionHeaderEntries();
+    void removeHopByHopEntries();
     /* protected, do not use these, use interface functions instead */
     Vector<HttpHeaderEntry *> entries;		/* parsed fields in raw format */
     HttpHeaderMask mask;	/* bit set <=> entry present */
     http_hdr_owner_type owner;	/* request or reply */
     int len;			/* length when packed, not counting terminating '\0' */
 
+protected:
+    void removeConnectionHeaderEntries();
+    
 private:
     HttpHeaderEntry *findLastEntry(http_hdr_type id) const;
     // Make it non-copyable. Our destructor is a bit nasty...

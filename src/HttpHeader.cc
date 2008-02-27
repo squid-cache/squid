@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHeader.cc,v 1.138 2007/11/26 13:09:55 hno Exp $
+ * $Id: HttpHeader.cc,v 1.138.2.1 2008/02/27 05:59:29 amosjeffries Exp $
  *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
@@ -234,6 +234,12 @@ static http_hdr_type RequestHeadersArr[] =
         HDR_IF_RANGE, HDR_MAX_FORWARDS, HDR_PROXY_CONNECTION,
         HDR_PROXY_AUTHORIZATION, HDR_RANGE, HDR_REFERER, HDR_REQUEST_RANGE,
         HDR_USER_AGENT, HDR_X_FORWARDED_FOR, HDR_SURROGATE_CAPABILITY
+    };
+
+static http_hdr_type HopByHopHeadersArr[] =
+    {
+        HDR_CONNECTION, HDR_KEEP_ALIVE, HDR_PROXY_AUTHENTICATE, HDR_PROXY_AUTHORIZATION,
+        HDR_TE, HDR_TRAILERS, HDR_TRANSFER_ENCODING, HDR_UPGRADE
     };
 
 /* header accounting */
@@ -1763,6 +1769,18 @@ HttpHeader::hasByNameListMember(const char *name, const char *member, const char
 }
 
 void
+HttpHeader::removeHopByHopEntries()
+{
+    removeConnectionHeaderEntries();
+    
+    int count = countof(HopByHopHeadersArr);
+    
+    for (int i=0; i<count; i++)
+        delById(HopByHopHeadersArr[i]);    
+    
+}
+
+void
 HttpHeader::removeConnectionHeaderEntries()
 {
     if (has(HDR_CONNECTION)) {
@@ -1788,7 +1806,5 @@ HttpHeader::removeConnectionHeaderEntries()
         }
         if (headers_deleted)
             refreshMask();
-
-        delById(HDR_CONNECTION);
     }
 }
