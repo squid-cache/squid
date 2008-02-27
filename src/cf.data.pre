@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.488.2.4 2008/02/25 23:41:50 amosjeffries Exp $
+# $Id: cf.data.pre,v 1.488.2.5 2008/02/27 05:51:06 amosjeffries Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -503,6 +503,7 @@ DOC_START
 	acl aclname port     80 70 21 ...
 	acl aclname port     0-1024 ...		# ranges allowed
 	acl aclname myport   3128 ...		# (local socket TCP port)
+	acl aclname myportname 3128 ...		# http(s)_port name
 	acl aclname proto    HTTP FTP ...
 	acl aclname method   GET POST ...
 	acl aclname browser  [-i] regexp ...
@@ -935,6 +936,9 @@ DOC_START
 			sporadically hang or never complete requests set
 			disable-pmtu-discovery option to 'transparent'.
 
+	   name=	Specifies a internal name for the port. Defaults to
+			the port specification (port or addr:port)
+
 	If you run Squid on a dual-homed machine with an internal
 	and an external interface we recommend you to specify the
 	internal address:port in http_port. This way Squid will only be
@@ -1046,6 +1050,9 @@ DOC_START
 
 	   vport=NN	As above, but uses specified port number rather
 			than the https_port number. Implies accel.
+
+	   name=	Specifies a internal name for the port. Defaults to
+			the port specification (port or addr:port)
 
 DOC_END
 

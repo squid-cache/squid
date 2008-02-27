@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.0.RC1 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.0.sgml,v 1.30.2.2 2008/02/25 23:25:24 amosjeffries Exp $</date>
+<date>$Id: release-3.0.sgml,v 1.30.2.3 2008/02/27 05:51:04 amosjeffries Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.0 of Squid.
@@ -339,6 +339,12 @@ See the accf_http(9) man page.
 
 	Syntax:
 		include /path/to/file1 /path/to/file2
+	</verb>
+
+	<tag>acl myportname</tag>
+	<p>New acl type myportname, matching the name of the http(s)_port where the request was accepted
+	<verb>
+        acl aclname myportname 3128 ...         # http(s)_port name
 	</verb>
 
 </descrip>
