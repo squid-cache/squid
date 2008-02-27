@@ -1,6 +1,5 @@
-
 /*
- * $Id: ACLBrowser.h,v 1.2 2003/02/21 22:50:04 robertc Exp $
+ * $Id: ACLBrowser.h,v 1.3 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,11 +34,13 @@
 
 #ifndef SQUID_ACLBROWSER_H
 #define SQUID_ACLBROWSER_H
+
 #include "ACL.h"
 #include "ACLData.h"
 #include "ACLRequestHeaderStrategy.h"
 #include "ACLStrategised.h"
 
+/// \ingroup ACLAPI
 class ACLBrowser
 {
 

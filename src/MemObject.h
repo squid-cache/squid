@@ -1,6 +1,5 @@
-
 /*
- * $Id: MemObject.h,v 1.17 2008/02/26 00:15:48 rousskov Exp $
+ * $Id: MemObject.h,v 1.18 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -96,7 +95,8 @@ public:
     mem_hdr data_hdr;
     int64_t inmem_lo;
     dlink_list clients;
-    /* TODO: move into .cc or .cci */
+
+    /** \todo move into .cc or .cci */
     size_t clientCount() const {return nclients;}
 
     bool clientIsFirst(void *sc) const {return (clients.head && sc == clients.head->data);}
@@ -113,6 +113,7 @@ public:
     };
 
     SwapOut swapout;
+
     /* Read only - this reply must be preserved by store clients */
     /* The original reply. possibly with updated metadata. */
     HttpRequest *request;
@@ -149,9 +150,9 @@ private:
     DeferredReadManager deferredReads;
 };
 
-MEMPROXY_CLASS_INLINE(MemObject)
+MEMPROXY_CLASS_INLINE(MemObject)          /**DOCS_NOSEMI*/
 
-/* global current memory removal policy */
+/** global current memory removal policy */
 extern RemovalPolicy *mem_policy;
 
 #endif /* SQUID_MEMOBJECT_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ExternalACL.h,v 1.9 2006/05/29 00:14:59 robertc Exp $
+ * $Id: ExternalACL.h,v 1.10 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -89,7 +89,7 @@ protected:
     char const *class_;
 };
 
-MEMPROXY_CLASS_INLINE(ACLExternal)
+MEMPROXY_CLASS_INLINE(ACLExternal)		/**DOCS_NOSEMI*/
 
 extern void externalAclRegisterWithCacheManager(CacheManager & manager);
 

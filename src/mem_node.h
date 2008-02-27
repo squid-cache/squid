@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_node.h,v 1.11 2007/12/27 01:58:19 hno Exp $
+ * $Id: mem_node.h,v 1.12 2008/02/26 21:49:35 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -63,7 +63,7 @@ unsigned int write_pending:
     1;
 };
 
-MEMPROXY_CLASS_INLINE(mem_node)
+MEMPROXY_CLASS_INLINE(mem_node)		/**DOCS_NOSEMI*/
 
 inline std::ostream &
 operator << (std::ostream &os, mem_node &aNode)

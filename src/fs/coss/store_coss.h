@@ -7,15 +7,20 @@
 #define	COSS_MEMBUF_SZ	1048576
 #endif
 
-/* Note that swap_filen in sio/e are actually disk offsets too! */
+/** \note  swap_filen in sio/e are actually disk offsets too! */
 
-/* What we're doing in storeCossAllocate() */
+/** What we're doing in storeCossAllocate() */
 #define COSS_ALLOC_NOTIFY		0
+
+/** What we're doing in storeCossAllocate() */
 #define COSS_ALLOC_ALLOCATE		1
+
+/** What we're doing in storeCossAllocate() */
 #define COSS_ALLOC_REALLOC		2
 
 class CossSwapDir;
 
+/// \ingroup COSS
 class CossMemBuf
 {
 
@@ -37,18 +42,22 @@ public:
     } flags;
 };
 
+/// \ingroup COSS
 struct _cossindex
 {
-    /* Note: the dlink_node MUST be the first member of the structure.
-     * This member is later pointer typecasted to coss_index_node *.
+    /**
+     \note The dlink_node MUST be the first member of the structure.
+     *     This member is later pointer typecasted to coss_index_node *.
      */
     dlink_node node;
 };
 
 
 
-/* Per-storeiostate info */
-
+/**
+ \ingroup COSS
+ * Per-storeiostate info
+ */
 class CossState : public StoreIOState
 {
 
@@ -86,17 +95,25 @@ unsigned int writing:
     CossSwapDir *SD;
 };
 
-MEMPROXY_CLASS_INLINE(CossState)
+MEMPROXY_CLASS_INLINE(CossState)	/**DOCS_NOSEMI*/
 
+/// \ingroup COSS
 typedef struct _cossindex CossIndexNode;
 
-/* Whether the coss system has been setup or not */
+
+/**
+ \ingroup COSS
+ * Whether the coss system has been setup or not
+ */
 extern int coss_initialised;
+/// \ingroup COSS
 extern MemAllocator *coss_membuf_pool;
+/// \ingroup COSS
 extern MemAllocator *coss_index_pool;
 
 #include "DiskIO/ReadRequest.h"
 
+/// \ingroup COSS
 class CossRead : public ReadRequest
 {
 
@@ -113,6 +130,7 @@ private:
 
 #include "DiskIO/WriteRequest.h"
 
+/// \ingroup COSS
 class CossWrite : public WriteRequest
 {
 

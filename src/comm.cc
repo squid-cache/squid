@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm.cc,v 1.446 2008/02/15 09:45:57 amosjeffries Exp $
+ * $Id: comm.cc,v 1.447 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -2447,8 +2447,9 @@ DeferredReadManager::~DeferredReadManager() {
 
 /* explicit instantiation required for some systems */
 
-template cbdata_type List<DeferredRead>
-::CBDATA_List;
+/// \cond AUTODOCS-IGNORE
+template cbdata_type List<DeferredRead>::CBDATA_List;
+/// \endcond
 
 void
 DeferredReadManager::delayRead(DeferredRead const &aRead) {

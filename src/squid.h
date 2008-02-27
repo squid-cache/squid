@@ -1,6 +1,6 @@
 
 /*
- * $Id: squid.h,v 1.271 2008/01/22 15:34:28 hno Exp $
+ * $Id: squid.h,v 1.272 2008/02/26 21:49:35 amosjeffries Exp $
  *
  * AUTHOR: Duane Wessels
  *
@@ -43,7 +43,9 @@
 #include "config.h"
 
 #ifdef _SQUID_MSWIN_
+/** \cond AUTODOCS-IGNORE */
 using namespace Squid;
+/** \endcond */
 #endif
 
 #include "assert.h"

@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUser.h,v 1.6 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id: AuthUser.h,v 1.7 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -39,6 +39,14 @@
 
 class AuthUserRequest;
 
+/**
+ *  \ingroup AuthAPI
+ * This is the main user related structure. It stores user-related data,
+ * and is persistent across requests. It can even persist across
+ * multiple external authentications. One major benefit of preserving this
+ * structure is the cached ACL match results. This structure, is private to
+ * the authentication framework.
+ */
 class AuthUser
 {
 
@@ -47,27 +55,27 @@ public:
     /* auth_type and auth_module are deprecated. Do Not add new users of these fields.
      * Aim to remove shortly
      */
-    /* this determines what scheme owns the user data. */
+    /** \deprecated this determines what scheme owns the user data. */
     auth_type_t auth_type;
-    /* the config for this user */
+    /** the config for this user */
     AuthConfig *config;
-    /* we only have one username associated with a given auth_user struct */
+    /** we only have one username associated with a given auth_user struct */
     auth_user_hash_pointer *usernamehash;
-    /* we may have many proxy-authenticate strings that decode to the same user */
+    /** we may have many proxy-authenticate strings that decode to the same user */
     dlink_list proxy_auth_list;
     dlink_list proxy_match_cache;
     size_t ipcount;
     long expiretime;
-    /* how many references are outstanding to this instance */
+    /** how many references are outstanding to this instance */
     size_t references;
-    /* the auth_user_request structures that link to this. Yes it could be a splaytree
+    /** the auth_user_request structures that link to this. Yes it could be a splaytree
      * but how many requests will a single username have in parallel? */
     dlink_list requests;
 
     static void cacheInit ();
     static void CachedACLsReset();
 
-    void absorb(auth_user_t *from);
+    void absorb(AuthUser *from);
     virtual ~AuthUser ();
     _SQUID_INLINE_ char const *username() const;
     _SQUID_INLINE_ void username(char const *);
@@ -89,14 +97,14 @@ protected:
 private:
     static void cacheCleanup (void *unused);
 
-    /*
+    /**
      * DPW 2007-05-08
      * The username_ memory will be allocated via
      * xstrdup().  It is our responsibility.
      */
     char const *username_;
 
-    /* what ip addresses has this user been seen at?, plus a list length cache */
+    /** what ip addresses has this user been seen at?, plus a list length cache */
     dlink_list ip_list;
 };
 

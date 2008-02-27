@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufscommon.h,v 1.12 2007/08/13 17:20:57 hno Exp $
+ * $Id: ufscommon.h,v 1.13 2008/02/26 21:49:45 amosjeffries Exp $
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -50,6 +50,7 @@ class ConfigOptionVector;
 
 class DiskIOModule;
 
+/// \ingroup UFS
 class UFSSwapDir : public SwapDir
 {
 
@@ -147,16 +148,18 @@ private:
 #include "RefCount.h"
 #include "DiskIO/IORequestor.h"
 
-/* UFS dir specific IO calls 
+/**
+ * UFS dir specific IO calls
  *
- * This should be whittled away - DiskIOModule should be providing the
- * entire needed api.
+ \todo This should be whittled away.
+ *     DiskIOModule should be providing the entire needed API.
  */
 
 class DiskIOStrategy;
 
 class DiskFile;
 
+/// \ingroup UFS
 class UFSStrategy
 {
 
@@ -184,23 +187,24 @@ public:
 
     virtual int callback();
 
-    /* Init per-instance logic */
+    /** Init per-instance logic */
     virtual void init();
 
-    /* cachemgr output on the IO instance stats */
+    /** cachemgr output on the IO instance stats */
     virtual void statfs(StoreEntry & sentry)const;
 
-    /* The io strategy in use */
+    /** The io strategy in use */
     DiskIOStrategy *io;
 protected:
 
     friend class UFSSwapDir;
 };
 
-/* Common ufs-store-dir logic */
+/** Common ufs-store-dir logic */
 
 class ReadRequest;
 
+/// \ingroup UFS
 class UFSStoreState : public StoreIOState, public IORequestor
 {
 
@@ -252,17 +256,17 @@ protected:
 
     };
 
-    /* These should be in the IO strategy */
+    /** \todo These should be in the IO strategy */
 
     struct
     {
-        /*
+        /**
          * DPW 2006-05-24
          * the write_draining flag is used to avoid recursion inside
          * the UFSStoreState::drainWriteQueue() method.
          */
         bool write_draining;
-        /*
+        /**
          * DPW 2006-05-24
          * The try_closing flag is set by UFSStoreState::tryClosing()
          * when UFSStoreState wants to close the file, but cannot
@@ -289,9 +293,10 @@ private:
     void doWrite();
 };
 
-MEMPROXY_CLASS_INLINE(UFSStoreState::_queued_read)
-MEMPROXY_CLASS_INLINE(UFSStoreState::_queued_write)
+MEMPROXY_CLASS_INLINE(UFSStoreState::_queued_read)		/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(UFSStoreState::_queued_write)		/**DOCS_NOSEMI*/
 
+/// \ingroup UFS
 class StoreSearchUFS : public StoreSearch
 {
 
@@ -299,13 +304,20 @@ public:
     StoreSearchUFS(RefCount<UFSSwapDir> sd);
     StoreSearchUFS(StoreSearchUFS const &);
     virtual ~StoreSearchUFS();
-    /* Iterator API - garh, wrong place */
-    /* callback the client when a new StoreEntry is available
-     * or an error occurs 
+
+    /** \todo Iterator API - garh, wrong place */
+    /**
+     * callback the client when a new StoreEntry is available
+     * or an error occurs
      */
     virtual void next(void (callback)(void *cbdata), void *cbdata);
-    /* return true if a new StoreEntry is immediately available */
+
+    /**
+     \retval true if a new StoreEntry is immediately available
+     \retval false if a new StoreEntry is NOT immediately available
+     */
     virtual bool next();
+
     virtual bool error() const;
     virtual bool isDone() const;
     virtual StoreEntry *currentItem();
@@ -315,6 +327,7 @@ public:
 
 private:
     CBDATA_CLASS2(StoreSearchUFS);
+    /// \bug (callback) should be hidden behind a proper human readable name
     void (callback)(void *cbdata);
     void *cbdata;
     StoreEntry * current;
@@ -322,7 +335,10 @@ private:
 };
 
 class StoreSwapLogData;
-class UFSSwapLogParser{
+
+/// \ingroup UFS
+class UFSSwapLogParser
+{
 
 public:
     FILE *log;
@@ -339,13 +355,14 @@ public:
     int SwapLogEntries();
     void Close()
     {
-	if(log){ 
+	if(log){
 	    fclose(log);
 	    log = NULL;
 	}
     }
 };
 
+/// \ingroup UFS
 class RebuildState : public RefCountable
 {
 
@@ -355,12 +372,17 @@ public:
     RebuildState(RefCount<UFSSwapDir> sd);
     ~RebuildState();
 
-    /* Iterator API - garh, wrong place */
-    /* callback the client when a new StoreEntry is available
+    /** \todo Iterator API - garh, wrong place */
+    /**
+     * callback the client when a new StoreEntry is available
      * or an error occurs 
      */
     virtual void next(void (callback)(void *cbdata), void *cbdata);
-    /* return true if a new StoreEntry is immediately available */
+
+    /**
+     \retval true if a new StoreEntry is immediately available
+     \retval false if a new StoreEntry is NOT immediately available
+     */
     virtual bool next();
     virtual bool error() const;
     virtual bool isDone() const;
@@ -410,6 +432,7 @@ private:
     StoreEntry *e;
     bool fromLog;
     bool _done;
+    /// \bug (callback) should be hidden behind a proper human readable name
     void (callback)(void *cbdata);
     void *cbdata;
 };

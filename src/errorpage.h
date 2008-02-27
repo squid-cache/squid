@@ -1,7 +1,8 @@
-
 /*
- * $Id: errorpage.h,v 1.5 2007/12/14 23:11:46 amosjeffries Exp $
+ * $Id: errorpage.h,v 1.6 2008/02/26 21:49:34 amosjeffries Exp $
  *
+ * DEBUG: section 4     Error Generation
+ * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -39,8 +40,48 @@
 #include "cbdata.h"
 #include "IPAddress.h"
 
+/**
+ \defgroup ErrorPageAPI Error Pages API
+ \ingroup Components
+ \section ErrorPageStringCodes Error Page % codes for text insertion.
+ *
+ \verbatim
+   a - User identity                            x
+   B - URL with FTP %2f hack                    x
+   c - Squid error code                         x
+   d - seconds elapsed since request received   x
+   e - errno                                    x
+   E - strerror()                               x
+   f - FTP request line                         x
+   F - FTP reply line                           x
+   g - FTP server message                       x
+   h - cache hostname                           x
+   H - server host name                         x
+   i - client IP address                        x
+   I - server IP address                        x
+   L - HREF link for more info/contact          x
+   M - Request Method                           x
+   m - Error message returned by auth helper    x
+   o - Message returned external acl helper     x
+   p - URL port #                               x
+   P - Protocol                                 x
+   R - Full HTTP Request                        x
+   S - squid signature from ERR_SIGNATURE       x
+   s - caching proxy software with version      x
+   t - local time                               x
+   T - UTC                                      x
+   U - URL without password                     x
+   u - URL with password                        x
+   w - cachemgr email address                   x
+   W - error data (to be included in the mailto links)
+   z - dns server error message                 x
+   Z - Preformatted error message               x
+ \endverbatim
+ */
+
 class AuthUserRequest;
 
+/// \ingroup ErrorPageAPI
 class ErrorState
 {
 
@@ -85,14 +126,77 @@ private:
     CBDATA_CLASS2(ErrorState);
 };
 
+/**
+ \ingroup ErrorPageAPI
+ *
+ * This function finds the error messages formats, and stores
+ * them in error_text[]
+ *
+ \par Global effects:
+ *            error_text[] - is modified
+ */
 SQUIDCEXTERN void errorInitialize(void);
-SQUIDCEXTERN void errorClean(void);
-SQUIDCEXTERN HttpReply *errorBuildReply(ErrorState * err);
-SQUIDCEXTERN void errorSend(int fd, ErrorState *);
-SQUIDCEXTERN void errorAppendEntry(StoreEntry *, ErrorState *);
-SQUIDCEXTERN void errorStateFree(ErrorState * err);
-SQUIDCEXTERN err_type errorReservePageId(const char *page_name);
-SQUIDCEXTERN ErrorState *errorCon(err_type type, http_status, HttpRequest * request);
 
+/// \ingroup ErrorPageAPI
+SQUIDCEXTERN void errorClean(void);
+
+/**
+ \ingroup ErrorPageInternal
+ * Allocates and initializes an error response
+ */
+SQUIDCEXTERN HttpReply *errorBuildReply(ErrorState * err);
+
+/**
+ \ingroup ErrorPageAPI
+ *
+ * This function generates a error page from the info contained
+ * by err and then sends it to the client.
+ * The callback function errorSendComplete() is called after
+ * the page has been written to the client socket (fd).
+ * errorSendComplete() deallocates err.  We need to add
+ * err to the cbdata because comm_write() requires it
+ * for all callback data pointers.
+ *
+ \note normally errorSend() should only be called from
+ *     routines in ssl.c and pass.c, where we don't have any
+ *     StoreEntry's.  In client_side.c we must allocate a StoreEntry
+ *     for errors and use errorAppendEntry() to account for
+ *     persistent/pipeline connections.
+ *
+ \param fd      socket where page object is to be written
+ \param err     This object is destroyed after use in this function.
+ */
+SQUIDCEXTERN void errorSend(int fd, ErrorState *err);
+
+/**
+ \ingroup ErrorPageAPI
+ *
+ * This function generates a error page from the info contained
+ * by err and then stores the text in the specified store
+ * entry.
+ * This function should only be called by "server
+ * side routines" which need to communicate errors to the
+ * client side.  It should also be called from client_side.c
+ * because we now support persistent connections, and
+ * cannot assume that we can immediately write to the socket
+ * for an error.
+ *
+ \param entry   ??
+ \param err     This object is destroyed after use in this function.
+ */
+SQUIDCEXTERN void errorAppendEntry(StoreEntry *entry, ErrorState *err);
+
+/// \ingroup ErrorPageAPI
+SQUIDCEXTERN void errorStateFree(ErrorState * err);
+
+/// \ingroup ErrorPageAPI
+SQUIDCEXTERN err_type errorReservePageId(const char *page_name);
+
+/**
+ \ingroup ErrorPageAPI
+ *
+ * This function creates a ErrorState object.
+ */
+SQUIDCEXTERN ErrorState *errorCon(err_type type, http_status, HttpRequest * request);
 
 #endif /* SQUID_ERRORPAGE_H */

@@ -1,5 +1,5 @@
 /*
- * $Id: ftp.cc,v 1.445 2008/02/12 23:55:26 rousskov Exp $
+ * $Id: ftp.cc,v 1.446 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
@@ -54,9 +54,18 @@
 #include "SquidTime.h"
 #include "URLScheme.h"
 
+/**
+ \defgroup ServerProtocolFTPInternal Server-Side FTP Internals
+ \ingroup ServerProtocolFTPAPI
+ */
+
+/// \ingroup ServerProtocolFTPInternal
 static const char *const crlf = "\r\n";
+
+/// \ingroup ServerProtocolFTPInternal
 static char cbuf[1024];
 
+/// \ingroup ServerProtocolFTPInternal
 typedef enum {
     BEGIN,
     SENT_USER,
@@ -82,6 +91,7 @@ typedef enum {
     SENT_MKDIR
 } ftp_state_t;
 
+/// \ingroup ServerProtocolFTPInternal
 struct _ftp_flags
 {
     bool isdir;
@@ -108,8 +118,11 @@ struct _ftp_flags
 };
 
 class FtpStateData;
+
+/// \ingroup ServerProtocolFTPInternal
 typedef void (FTPSM) (FtpStateData *);
 
+/// \ingroup ServerProtocolFTPInternal
 class FtpStateData : public ServerStateData
 {
 
@@ -252,6 +265,7 @@ FtpStateData::operator delete (void *address)
     cbdataFree(t);
 }
 
+/// \ingroup ServerProtocolFTPInternal
 typedef struct
 {
     char type;
@@ -261,10 +275,12 @@ typedef struct
     char *showname;
     char *link;
 }
-
 ftpListParts;
 
+/// \ingroup ServerProtocolFTPInternal
 #define FTP_LOGIN_ESCAPED	1
+
+/// \ingroup ServerProtocolFTPInternal
 #define FTP_LOGIN_NOT_ESCAPED	0
 
 /*
@@ -357,6 +373,7 @@ DataTransferDone	Quit
 Quit			-
 ************************************************/
 
+/// \ingroup ServerProtocolFTPInternal
 FTPSM *FTP_SM_FUNCS[] =
     {
         ftpReadWelcome,		/* BEGIN */
@@ -628,12 +645,14 @@ FtpStateData::listingFinish()
     printfReplyBody("</ADDRESS></BODY></HTML>\n");
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static const char *Month[] =
     {
         "Jan", "Feb", "Mar", "Apr", "May", "Jun",
         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     };
 
+/// \ingroup ServerProtocolFTPInternal
 static int
 is_month(const char *buf)
 {
@@ -646,7 +665,7 @@ is_month(const char *buf)
     return 0;
 }
 
-
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpListPartsFree(ftpListParts ** parts)
 {
@@ -657,10 +676,11 @@ ftpListPartsFree(ftpListParts ** parts)
     safe_free(*parts);
 }
 
+/// \ingroup ServerProtocolFTPInternal
 #define MAX_TOKENS 64
 
+/// \ingroup ServerProtocolFTPInternal
 static ftpListParts *
-
 ftpListParseParts(const char *buf, struct _ftp_flags flags)
 {
     ftpListParts *p = NULL;
@@ -893,6 +913,7 @@ found:
     return p;
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static const char *
 dots_fill(size_t len)
 {
@@ -1390,11 +1411,9 @@ FtpStateData::processReplyBody()
     maybeReadVirginBody();
 }
 
-/*
- * ftpCheckAuth
- *
- * Return 1 if we have everything needed to complete this request.
- * Return 0 if something is missing.
+/**
+ \retval 1	if we have everything needed to complete this request.
+ \retval 0	if something is missing.
  */
 int
 FtpStateData::checkAuth(const HttpHeader * req_hdr)
@@ -1507,6 +1526,7 @@ FtpStateData::buildTitleUrl()
     base_href.append("/");
 }
 
+/// \ingroup ServerProtocolFTPAPI
 void
 ftpStart(FwdState * fwd)
 {
@@ -1555,6 +1575,7 @@ FtpStateData::start()
 
 /* ====================================================================== */
 
+/// \ingroup ServerProtocolFTPInternal
 static char *
 escapeIAC(const char *buf)
 {
@@ -1722,7 +1743,7 @@ FtpStateData::ftpParseControlReply(char *buf, size_t len, int *codep, size_t *us
     return head;
 }
 
-/*
+/**
  * DPW 2007-04-23
  * Looks like there are no longer anymore callers that set
  * buffered_ok=1.  Perhaps it can be removed at some point.
@@ -1866,6 +1887,7 @@ FtpStateData::handleControlReply()
 
 /* ====================================================================== */
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadWelcome(FtpStateData * ftpState)
 {
@@ -1895,6 +1917,7 @@ ftpReadWelcome(FtpStateData * ftpState)
     }
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendUser(FtpStateData * ftpState)
 {
@@ -1914,6 +1937,7 @@ ftpSendUser(FtpStateData * ftpState)
     ftpState->state = SENT_USER;
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadUser(FtpStateData * ftpState)
 {
@@ -1929,6 +1953,7 @@ ftpReadUser(FtpStateData * ftpState)
     }
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendPass(FtpStateData * ftpState)
 {
@@ -1941,6 +1966,7 @@ ftpSendPass(FtpStateData * ftpState)
     ftpState->state = SENT_PASS;
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadPass(FtpStateData * ftpState)
 {
@@ -1954,6 +1980,7 @@ ftpReadPass(FtpStateData * ftpState)
     }
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendType(FtpStateData * ftpState)
 {
@@ -2006,6 +2033,7 @@ ftpSendType(FtpStateData * ftpState)
     ftpState->state = SENT_TYPE;
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadType(FtpStateData * ftpState)
 {
@@ -2044,6 +2072,7 @@ ftpReadType(FtpStateData * ftpState)
     }
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpTraverseDirectory(FtpStateData * ftpState)
 {
@@ -2081,6 +2110,7 @@ ftpTraverseDirectory(FtpStateData * ftpState)
     }
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendCwd(FtpStateData * ftpState)
 {
@@ -2107,6 +2137,7 @@ ftpSendCwd(FtpStateData * ftpState)
     ftpState->state = SENT_CWD;
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadCwd(FtpStateData * ftpState)
 {
@@ -2137,6 +2168,7 @@ ftpReadCwd(FtpStateData * ftpState)
     }
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendMkdir(FtpStateData * ftpState)
 {
@@ -2153,6 +2185,7 @@ ftpSendMkdir(FtpStateData * ftpState)
     ftpState->state = SENT_MKDIR;
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadMkdir(FtpStateData * ftpState)
 {
@@ -2174,6 +2207,7 @@ ftpReadMkdir(FtpStateData * ftpState)
         ftpSendReply(ftpState);
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpGetFile(FtpStateData * ftpState)
 {
@@ -2182,6 +2216,7 @@ ftpGetFile(FtpStateData * ftpState)
     ftpSendMdtm(ftpState);
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpListDir(FtpStateData * ftpState)
 {
@@ -2194,6 +2229,7 @@ ftpListDir(FtpStateData * ftpState)
     ftpSendPassive(ftpState);
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendMdtm(FtpStateData * ftpState)
 {
@@ -2207,6 +2243,7 @@ ftpSendMdtm(FtpStateData * ftpState)
     ftpState->state = SENT_MDTM;
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadMdtm(FtpStateData * ftpState)
 {
@@ -2224,6 +2261,7 @@ ftpReadMdtm(FtpStateData * ftpState)
     ftpSendSize(ftpState);
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendSize(FtpStateData * ftpState)
 {
@@ -2245,6 +2283,7 @@ ftpSendSize(FtpStateData * ftpState)
         ftpSendPassive(ftpState);
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadSize(FtpStateData * ftpState)
 {
@@ -2269,6 +2308,9 @@ ftpReadSize(FtpStateData * ftpState)
     ftpSendPassive(ftpState);
 }
 
+/**
+ \ingroup ServerProtocolFTPInternal
+ */
 static void
 ftpReadEPSV(FtpStateData* ftpState)
 {
@@ -2384,7 +2426,8 @@ ftpReadEPSV(FtpStateData* ftpState)
     commConnectStart(fd, ftpState->data.host, port, FtpStateData::ftpPasvCallback, ftpState);
 }
 
-/**
+/** \ingroup ServerProtocolFTPInternal
+ *
  * Send Passive connection request.
  * Default method is to use modern EPSV request.
  * The failover mechanism should check for previous state and re-call with alternates on failure.
@@ -2562,6 +2605,7 @@ FtpStateData::processHeadResponse()
     processReplyBody(); 
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadPasv(FtpStateData * ftpState)
 {
@@ -2670,6 +2714,7 @@ FtpStateData::ftpPasvCallback(int fd, comm_err_t status, int xerrno, void *data)
     ftpRestOrList(ftpState);
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static int
 ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
 {
@@ -2742,6 +2787,7 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
     return fd;
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendPORT(FtpStateData * ftpState)
 {
@@ -2797,6 +2843,7 @@ ftpSendPORT(FtpStateData * ftpState)
     ipa.FreeAddrInfo(AI);
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadPORT(FtpStateData * ftpState)
 {
@@ -2812,6 +2859,7 @@ ftpReadPORT(FtpStateData * ftpState)
     ftpRestOrList(ftpState);
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendEPRT(FtpStateData * ftpState)
 {
@@ -2872,11 +2920,11 @@ ftpReadEPRT(FtpStateData * ftpState)
 }
 
 /**
- \ingroup FTPCallback
+ \ingroup ServerProtocolFTPInternal
  \par
  * "read" handler to accept FTP data connections.
  *
- \param io comm accept(2) callback parameters
+ \param io    comm accept(2) callback parameters
  */
 void FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
 {
@@ -2951,6 +2999,7 @@ void FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
     FTP_SM_FUNCS[state] (this);
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpRestOrList(FtpStateData * ftpState)
 {
@@ -2974,6 +3023,7 @@ ftpRestOrList(FtpStateData * ftpState)
         ftpSendRetr(ftpState);
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendStor(FtpStateData * ftpState)
 {
@@ -2999,6 +3049,8 @@ ftpSendStor(FtpStateData * ftpState)
     }
 }
 
+/// \ingroup ServerProtocolFTPInternal
+/// \deprecated use ftpState->readStor() instead.
 static void
 ftpReadStor(FtpStateData * ftpState)
 {
@@ -3049,6 +3101,7 @@ void FtpStateData::readStor() {
     }
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendRest(FtpStateData * ftpState)
 {
@@ -3090,6 +3143,7 @@ FtpStateData::restartable()
     return 1;
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadRest(FtpStateData * ftpState)
 {
@@ -3109,6 +3163,7 @@ ftpReadRest(FtpStateData * ftpState)
     }
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendList(FtpStateData * ftpState)
 {
@@ -3128,6 +3183,7 @@ ftpSendList(FtpStateData * ftpState)
     ftpState->state = SENT_LIST;
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendNlst(FtpStateData * ftpState)
 {
@@ -3149,6 +3205,7 @@ ftpSendNlst(FtpStateData * ftpState)
     ftpState->state = SENT_NLST;
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadList(FtpStateData * ftpState)
 {
@@ -3194,6 +3251,7 @@ ftpReadList(FtpStateData * ftpState)
     }
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendRetr(FtpStateData * ftpState)
 {
@@ -3209,6 +3267,7 @@ ftpSendRetr(FtpStateData * ftpState)
     ftpState->state = SENT_RETR;
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadRetr(FtpStateData * ftpState)
 {
@@ -3256,6 +3315,7 @@ ftpReadRetr(FtpStateData * ftpState)
     }
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadTransferDone(FtpStateData * ftpState)
 {
@@ -3286,7 +3346,9 @@ FtpStateData::handleRequestBodyProducerAborted()
     failed(ERR_READ_ERROR, 0);
 }
 
-/* This will be called when the put write is completed */
+/**
+ * This will be called when the put write is completed
+ */
 void
 FtpStateData::sentRequestBody(const CommIoCbParams &io)
 {
@@ -3295,6 +3357,7 @@ FtpStateData::sentRequestBody(const CommIoCbParams &io)
     ServerStateData::sentRequestBody(io);
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpWriteTransferDone(FtpStateData * ftpState)
 {
@@ -3311,6 +3374,7 @@ ftpWriteTransferDone(FtpStateData * ftpState)
     ftpSendReply(ftpState);
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendQuit(FtpStateData * ftpState)
 {
@@ -3323,13 +3387,15 @@ ftpSendQuit(FtpStateData * ftpState)
     ftpState->state = SENT_QUIT;
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadQuit(FtpStateData * ftpState)
 {
-    /* XXX should this just be a case of abortTransaction? */
+    /** \todo XXX should this just be a case of abortTransaction? */
     ftpState->serverComplete();
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpTrySlashHack(FtpStateData * ftpState)
 {
@@ -3355,7 +3421,9 @@ ftpTrySlashHack(FtpStateData * ftpState)
     ftpGetFile(ftpState);
 }
 
-/* Forget hack status. Next error is shown to the user */
+/**
+ * Forget hack status. Next error is shown to the user
+ */
 void
 FtpStateData::unhack()
 {
@@ -3391,6 +3459,7 @@ FtpStateData::hackShortcut(FTPSM * nextState)
     nextState(this);
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpFail(FtpStateData *ftpState)
 {
@@ -3512,6 +3581,7 @@ FtpStateData::failedErrorMessage(err_type error, int xerrno)
     fwd->fail(err);
 }
 
+/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendReply(FtpStateData * ftpState)
 {
@@ -3672,6 +3742,9 @@ FtpStateData::ftpAuthRequired(HttpRequest * request, const char *realm)
 }
 
 /**
+ \ingroup ServerProtocolFTPAPI
+ \todo Should be a URL class API call.
+ *
  *  Construct an URI with leading / in PATH portion for use by CWD command
  *  possibly others. FTP encodes absolute paths as beginning with '/'
  *  after the initial URI path delimiter, which happens to be / itself.
@@ -3713,7 +3786,7 @@ FtpStateData::printfReplyBody(const char *fmt, ...)
     writeReplyBody(buf, strlen(buf));
 }
 
-/*
+/**
  * Call this when there is data from the origin server
  * which should be sent to either StoreEntry, or to ICAP...
  */
@@ -3724,7 +3797,9 @@ FtpStateData::writeReplyBody(const char *data, size_t len)
     addVirginReplyBody(data, len);
 }
 
-// called after we wrote the last byte of the request body
+/**
+ * called after we wrote the last byte of the request body
+ */
 void
 FtpStateData::doneSendingRequestBody()
 {
@@ -3732,9 +3807,12 @@ FtpStateData::doneSendingRequestBody()
     ftpWriteTransferDone(this);
 }
 
-// a hack to ensure we do not double-complete on the forward entry.
-// TODO: FtpStateData logic should probably be rewritten to avoid 
-// double-completion or FwdState should be rewritten to allow it.
+/**
+ * A hack to ensure we do not double-complete on the forward entry.
+ *
+ \todo FtpStateData logic should probably be rewritten to avoid 
+ *	double-completion or FwdState should be rewritten to allow it.
+ */
 void
 FtpStateData::completeForwarding()
 {
@@ -3749,7 +3827,9 @@ FtpStateData::completeForwarding()
     ServerStateData::completeForwarding();
 }
 
-// Close the FTP server connection(s). Used by serverComplete().
+/**
+ * Close the FTP server connection(s). Used by serverComplete().
+ */
 void
 FtpStateData::closeServer()
 {
@@ -3769,13 +3849,24 @@ FtpStateData::closeServer()
     }
 }
 
-// Did we close all FTP server connection(s)?
+/**
+ * Did we close all FTP server connection(s)?
+ *
+ \retval true	Both server control and data channels are closed.
+ \retval false	Either control channel or data is still active.
+ */
 bool
 FtpStateData::doneWithServer() const
 {
     return ctrl.fd < 0 && data.fd < 0;
 }
 
+/**
+ * Have we lost the FTP server control channel?
+ *
+ \retval true	The server control channel is available.
+ \retval false	The server control channel is not available.
+ */
 bool
 FtpStateData::haveControlChannel(const char *caller_name) const
 {
@@ -3792,9 +3883,12 @@ FtpStateData::haveControlChannel(const char *caller_name) const
     return true;
 }
 
-// Quickly abort the transaction
-// TODO: destruction should be sufficient as the destructor should cleanup,
-// including canceling close handlers
+/**
+ * Quickly abort the transaction
+ *
+ \todo destruction should be sufficient as the destructor should cleanup,
+ *	including canceling close handlers
+ */
 void
 FtpStateData::abortTransaction(const char *reason)
 {

@@ -1,5 +1,5 @@
 /*
- * $Id: ESIInclude.h,v 1.3 2004/08/30 05:12:31 robertc Exp $
+ * $Id: ESIInclude.h,v 1.4 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -113,6 +113,6 @@ private:
     void prepareRequestHeaders(HttpHeader &tempheaders, ESIVarState *vars);
 };
 
-MEMPROXY_CLASS_INLINE(ESIInclude)
+MEMPROXY_CLASS_INLINE(ESIInclude)          /**DOCS_NOSEMI*/
 
 #endif /* SQUID_ESIINCLUDE_H */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthConfig.h,v 1.4 2007/05/09 07:45:58 wessels Exp $
+ * $Id: AuthConfig.h,v 1.5 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -46,6 +46,8 @@
  */
 
 class AuthUserRequest;
+
+/// \ingroup AuthAPI
 class AuthConfig
 {
 
@@ -57,29 +59,60 @@ public:
 
     virtual ~AuthConfig(){}
 
-    /* Is this configuration active? (helpers running etc etc */
+    /**
+     * Used by squid to determine whether the auth module has successfully initialised itself with the current configuration.
+     *
+     \retval true	Authentication Module loaded and running.
+     \retval false	No Authentication Module loaded.
+     */
     virtual bool active() const = 0;
-    /* new decode API: virtual factory pattern */
+
+    /**
+     * new decode API: virtual factory pattern
+     \par
+     * Responsible for decoding the passed authentication header, creating or
+     * linking to a AuthUser object and for storing any needed details to complete
+     * authentication in AuthUserRequest::authenticate().
+     *
+     \param proxy_auth	Login Pattern to parse.
+     \retval *		Details needed to authenticate.
+     */
     virtual AuthUserRequest *decode(char const *proxy_auth) = 0;
-    /* squid is finished with this config, release any unneeded resources.
+
+    /**
+     * squid is finished with this config, release any unneeded resources.
      * If a singleton, delete will not occur. if not a singleton (future),
      * delete will occur when no references are held.
-     * TODO: we need a 'done for reconfigure' and a 'done permanently' concept.
+     *
+     \todo we need a 'done for reconfigure' and a 'done permanently' concept.
      */
     virtual void done() = 0;
-    /* is this config complete enough to run */
+
+    /**
+     * The configured function is used to see if the auth module has been given valid
+     * parameters and is able to handle authentication requests.
+     *
+     \retval true	Authentication Module configured ready for use.
+     \retval false	Not configured or Configuration Error.
+     *			No other module functions except Shutdown/Dump/Parse/FreeConfig will be called by Squid.
+     */
     virtual bool configured() const = 0;
-    /* output the parameters */
+
+    /**
+     * Responsible for writing to the StoreEntry the configuration parameters that a user
+     * would put in a config file to recreate the running configuration.
+     */
     virtual void dump(StoreEntry *, const char *, AuthConfig *) = 0;
-    /* add headers as needed when challenging for auth */
+
+    /** add headers as needed when challenging for auth */
     virtual void fixHeader(AuthUserRequest *, HttpReply *, http_hdr_type, HttpRequest *) = 0;
-    /* prepare to handle requests */
+    /** prepare to handle requests */
     virtual void init(AuthConfig *) = 0;
-    /* expose any/all statistics to a CacheManager */
+    /** expose any/all statistics to a CacheManager */
     virtual void registerWithCacheManager(CacheManager & manager);
-    /* parse config options */
+    /** parse config options */
     virtual void parse(AuthConfig *, int, char *) = 0;
-    /* the http string id */
+    /** the http string id */
     virtual const char * type() const = 0;
 };
 

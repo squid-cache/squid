@@ -1,5 +1,5 @@
 /*
- * $Id: AsyncCall.cc,v 1.3 2008/02/12 23:40:02 rousskov Exp $
+ * $Id: AsyncCall.cc,v 1.4 2008/02/26 21:49:34 amosjeffries Exp $
  */
 
 #include "squid.h"
@@ -58,7 +58,7 @@ AsyncCall::canFire()
     return !isCanceled;
 }
 
-// TODO: make this method const by providing a const getDialer()
+/// \todo make this method const by providing a const getDialer()
 void
 AsyncCall::print(std::ostream &os)
 {
@@ -77,5 +77,4 @@ ScheduleCall(const char *fileName, int fileLine, AsyncCall::Pointer &call)
     AsyncCallQueue::Instance().schedule(call);
     return true;
 }
-
 

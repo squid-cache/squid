@@ -1,6 +1,6 @@
 
 /*
- * $Id: ipcache.cc,v 1.268 2008/01/12 13:17:41 amosjeffries Exp $
+ * $Id: ipcache.cc,v 1.269 2008/02/26 21:49:35 amosjeffries Exp $
  *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
@@ -42,8 +42,55 @@
 #include "wordlist.h"
 #include "IPAddress.h"
 
+/**
+ \defgroup IPCacheAPI IP Cache API
+ \ingroup Components
+ \section Introduction Introduction
+ \par
+ *  The IP cache is a built-in component of squid providing
+ *  Hostname to IP-Number translation functionality and managing
+ *  the involved data-structures. Efficiency concerns require
+ *  mechanisms that allow non-blocking access to these mappings.
+ *  The IP cache usually doesn't block on a request except for
+ *  special cases where this is desired (see below).
+ *
+ \todo IP Cache should have its own API *.h header file.
+ */
+
+/**
+ \defgroup IPCacheInternal IP Cache Internals
+ \ingroup IPCacheAPI
+ \todo  when IP cache is provided as a class. These sub-groups will be obsolete
+ *	for now they are used to seperate the public and private functions.
+ *	with the private ones all being in IPCachInternal and public in IPCacheAPI
+ *
+ \section InternalOperation Internal Operation
+ *
+ * Internally, the execution flow is as follows: On a miss,
+ * ipcache_getnbhostbyname checks whether a request for
+ * this name is already pending, and if positive, it creates
+ * a new entry using ipcacheAddNew with the IP_PENDING
+ * flag set . Then it calls ipcacheAddPending to add a
+ * request to the queue together with data and handler.  Else,
+ * ipcache_dnsDispatch() is called to directly create a
+ * DNS query or to ipcacheEnqueue() if all no DNS port
+ * is free.  ipcache_call_pending() is called regularly
+ * to walk down the pending list and call handlers. LRU clean-up
+ * is performed through ipcache_purgelru() according to
+ * the ipcache_high threshold.
+ */
+
+/// \ingroup IPCacheAPI
 typedef struct _ipcache_entry ipcache_entry;
 
+/**
+ \ingroup IPCacheAPI
+ *
+ * The data structure used for storing name-address mappings
+ * is a small hashtable (static hash_table *ip_table),
+ * where structures of type ipcache_entry whose most
+ * interesting members are:
+ */
 struct _ipcache_entry
 {
     hash_link hash;		/* must be first */
@@ -74,7 +121,8 @@ unsigned int fromhosts:
     flags;
 };
 
-static struct
+/// \ingroup IPCacheInternal
+static struct _ipcache_stats
 {
     int requests;
     int replies;
@@ -90,6 +138,7 @@ static struct
 }
 IpcacheStats;
 
+/// \ingroup IPCacheInternal
 static dlink_list lru_list;
 
 static FREE ipcacheFreeEntry;
@@ -112,16 +161,21 @@ static void ipcacheStatPrint(ipcache_entry *, StoreEntry *);
 static void ipcacheUnlockEntry(ipcache_entry *);
 static void ipcacheRelease(ipcache_entry *, bool dofree = true);
 
+/// \ingroup IPCacheInternal
 static ipcache_addrs static_addrs;
+/// \ingroup IPCacheInternal
 static hash_table *ip_table = NULL;
 
+/// \ingroup IPCacheInternal
 static long ipcache_low = 180;
+/// \ingroup IPCacheInternal
 static long ipcache_high = 200;
 
 #if LIBRESOLV_DNS_TTL_HACK
 extern int _dns_ttl_;
 #endif
 
+/// \ingroup IPCacheInternal
 static int
 ipcache_testname(void)
 {
@@ -139,7 +193,11 @@ ipcache_testname(void)
     return 0;
 }
 
-/* removes the given ipcache entry */
+/**
+ \ingroup IPCacheInternal
+ *
+ * removes the given ipcache entry
+ */
 static void
 ipcacheRelease(ipcache_entry * i, bool dofree)
 {
@@ -161,6 +219,7 @@ ipcacheRelease(ipcache_entry * i, bool dofree)
         ipcacheFreeEntry(i);
 }
 
+/// \ingroup IPCacheInternal
 static ipcache_entry *
 ipcache_get(const char *name)
 {
@@ -170,6 +229,7 @@ ipcache_get(const char *name)
         return NULL;
 }
 
+/// \ingroup IPCacheInternal
 static int
 ipcacheExpiredEntry(ipcache_entry * i)
 {
@@ -188,6 +248,7 @@ ipcacheExpiredEntry(ipcache_entry * i)
     return 1;
 }
 
+/// \ingroup IPCacheAPI
 void
 ipcache_purgelru(void *voidnotused)
 {
@@ -216,7 +277,11 @@ ipcache_purgelru(void *voidnotused)
     debugs(14, 9, "ipcache_purgelru: removed " << removed << " entries");
 }
 
-/* purges entries added from /etc/hosts (or whatever). */
+/**
+ \ingroup IPCacheInternal
+ *
+ * purges entries added from /etc/hosts (or whatever).
+ */
 static void
 purge_entries_fromhosts(void)
 {
@@ -241,7 +306,11 @@ purge_entries_fromhosts(void)
         ipcacheRelease(i);
 }
 
-/* create blank ipcache_entry */
+/**
+ \ingroup IPCacheInternal
+ *
+ * create blank ipcache_entry
+ */
 static ipcache_entry *
 ipcacheCreateEntry(const char *name)
 {
@@ -252,6 +321,7 @@ ipcacheCreateEntry(const char *name)
     return i;
 }
 
+/// \ingroup IPCacheInternal
 static void
 ipcacheAddEntry(ipcache_entry * i)
 {
@@ -281,7 +351,11 @@ ipcacheAddEntry(ipcache_entry * i)
     i->lastref = squid_curtime;
 }
 
-/* walks down the pending list, calling handlers */
+/**
+ \ingroup IPCacheInternal
+ *
+ * walks down the pending list, calling handlers
+ */
 static void
 ipcacheCallback(ipcache_entry * i)
 {
@@ -306,6 +380,7 @@ ipcacheCallback(ipcache_entry * i)
     ipcacheUnlockEntry(i);
 }
 
+/// \ingroup IPCacheAPI
 #if USE_DNSSERVERS
 static int
 ipcacheParse(ipcache_entry *i, const char *inbuf)
@@ -594,6 +669,7 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
 
 #endif
 
+/// \ingroup IPCacheInternal
 static void
 #if USE_DNSSERVERS
 ipcacheHandleReply(void *data, char *reply)
@@ -624,6 +700,14 @@ ipcacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error_m
     }
 }
 
+/**
+ \ingroup IPCacheAPI
+ *
+ \param name		Host to resolve.
+ \param handler		Pointer to the function to be called when the reply
+ *			from the IP cache (or the DNS if the IP cache misses)
+ \param handlerData	Information that is passed to the handler and does not affect the IP cache.
+ */
 void
 ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
 {
@@ -693,7 +777,13 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
 #endif
 }
 
-/* initialize the ipcache */
+/**
+ \ingroup IPCacheAPI
+ *
+ * Initialize the ipcache.
+ * Is called from mainInitialize() after disk initialization
+ * and prior to the reverse FQDNCache initialization
+ */
 void
 ipcache_init(void)
 {
@@ -725,6 +815,7 @@ ipcache_init(void)
     memDataInit(MEM_IPCACHE_ENTRY, "ipcache_entry", sizeof(ipcache_entry), 0);
 }
 
+/// \ingroup IPCacheAPI
 void
 ipcacheRegisterWithCacheManager(CacheManager & manager)
 {
@@ -733,6 +824,21 @@ ipcacheRegisterWithCacheManager(CacheManager & manager)
                            stat_ipcache_get, 0, 1);
 }
 
+/**
+ \ingroup IPCacheAPI
+ *
+ * Is different from ipcache_nbgethostbyname in that it only checks
+ * if an entry exists in the cache and does not by default contact the DNS,
+ * unless this is requested, by setting the flags.
+ *
+ \param name		Host name to resolve.
+ \param flags		Default is NULL, set to IP_LOOKUP_IF_MISS
+ *			to explicitly perform DNS lookups.
+ *
+ \retval NULL	An error occured during lookup
+ \retval NULL	No results available in cache and no lookup specified
+ \retval *	Pointer to the ipcahce_addrs structure containing the lookup results
+ */
 const ipcache_addrs *
 ipcache_gethostbyname(const char *name, int flags)
 {
@@ -774,6 +880,7 @@ ipcache_gethostbyname(const char *name, int flags)
     return NULL;
 }
 
+/// \ingroup IPCacheInternal
 static void
 ipcacheStatPrint(ipcache_entry * i, StoreEntry * sentry)
 {
@@ -823,7 +930,11 @@ ipcacheStatPrint(ipcache_entry * i, StoreEntry * sentry)
     }
 }
 
-/* process objects list */
+/**
+ \ingroup IPCacheInternal
+ *
+ * process objects list
+ */
 void
 stat_ipcache_get(StoreEntry * sentry)
 {
@@ -981,6 +1092,8 @@ debugs(14,8, HERE << "A[" << t << "]=IPv6 " << aaddrs[t]);
 }
 #endif /* DNS_CNAME */
 
+/// \ingroup IPCacheInternal
+/// Callback.
 static void
 ipcacheHandleCnameRecurse(const ipcache_addrs *addrs, void *cbdata)
 {
@@ -1083,6 +1196,7 @@ ipcacheHandleCnameRecurse(const ipcache_addrs *addrs, void *cbdata)
 #endif /* DNS_CNAME */
 }
 
+/// \ingroup IPCacheAPI
 void
 ipcacheInvalidate(const char *name)
 {
@@ -1094,11 +1208,12 @@ ipcacheInvalidate(const char *name)
     i->expires = squid_curtime;
 
     /*
-     * NOTE, don't call ipcacheRelease here becuase we might be here due
+     * NOTE, don't call ipcacheRelease here because we might be here due
      * to a thread started from a callback.
      */
 }
 
+/// \ingroup IPCacheAPI
 void
 ipcacheInvalidateNegative(const char *name)
 {
@@ -1111,11 +1226,12 @@ ipcacheInvalidateNegative(const char *name)
         i->expires = squid_curtime;
 
     /*
-     * NOTE, don't call ipcacheRelease here becuase we might be here due
+     * NOTE, don't call ipcacheRelease here because we might be here due
      * to a thread started from a callback.
      */
 }
 
+/// \ingroup IPCacheAPI
 ipcache_addrs *
 ipcacheCheckNumeric(const char *name)
 {
@@ -1151,6 +1267,7 @@ ipcacheCheckNumeric(const char *name)
     return &static_addrs;
 }
 
+/// \ingroup IPCacheInternal
 static void
 ipcacheLockEntry(ipcache_entry * i)
 {
@@ -1160,6 +1277,7 @@ ipcacheLockEntry(ipcache_entry * i)
     }
 }
 
+/// \ingroup IPCacheInternal
 static void
 ipcacheUnlockEntry(ipcache_entry * i)
 {
@@ -1174,6 +1292,7 @@ ipcacheUnlockEntry(ipcache_entry * i)
         ipcacheRelease(i);
 }
 
+/// \ingroup IPCacheAPI
 void
 ipcacheCycleAddr(const char *name, ipcache_addrs * ia)
 {
@@ -1214,9 +1333,11 @@ ipcacheCycleAddr(const char *name, ipcache_addrs * ia)
     debugs(14, 3, "ipcacheCycleAddr: " << name << " now at " << ia->in_addrs[ia->cur] << " (" << ia->cur << " of " << ia->count << ")");
 }
 
-/*
- * Marks the given address as BAD and calls ipcacheCycleAddr to
- * advance the current pointer to the next OK address.
+/**
+ \ingroup IPCacheAPI
+ *
+ \param name	domain name to have an IP marked bad
+ \param addr	specific addres to be marked bad
  */
 void
 ipcacheMarkBadAddr(const char *name, IPAddress &addr)
@@ -1225,6 +1346,7 @@ ipcacheMarkBadAddr(const char *name, IPAddress &addr)
     ipcache_addrs *ia;
     int k;
 
+    /** Does nothing if the domain name does not exist. */
     if ((i = ipcache_get(name)) == NULL)
         return;
 
@@ -1236,9 +1358,11 @@ ipcacheMarkBadAddr(const char *name, IPAddress &addr)
             break;
     }
 
-    if (k == (int) ia->count)	/* not found */
+    /** Does nothing if the IP does not exist for the doamin. */
+    if (k == (int) ia->count)
         return;
 
+    /** Marks the given address as BAD */
     if (!ia->bad_mask[k])
     {
         ia->bad_mask[k] = TRUE;
@@ -1247,11 +1371,12 @@ ipcacheMarkBadAddr(const char *name, IPAddress &addr)
         debugs(14, 2, "ipcacheMarkBadAddr: " << name << " " << addr );
     }
 
+    /** then calls ipcacheCycleAddr() to advance the current pointer to the next OK address. */
     ipcacheCycleAddr(name, ia);
 }
 
+/// \ingroup IPCacheAPI
 void
-
 ipcacheMarkGoodAddr(const char *name, IPAddress &addr)
 {
     ipcache_entry *i;
@@ -1282,6 +1407,7 @@ ipcacheMarkGoodAddr(const char *name, IPAddress &addr)
     debugs(14, 2, "ipcacheMarkGoodAddr: " << name << " " << addr );
 }
 
+/// \ingroup IPCacheInternal
 static void
 ipcacheFreeEntry(void *data)
 {
@@ -1293,6 +1419,7 @@ ipcacheFreeEntry(void *data)
     memFree(i, MEM_IPCACHE_ENTRY);
 }
 
+/// \ingroup IPCacheAPI
 void
 ipcacheFreeMemory(void)
 {
@@ -1301,7 +1428,13 @@ ipcacheFreeMemory(void)
     ip_table = NULL;
 }
 
-/* Recalculate IP cache size upon reconfigure */
+/**
+ \ingroup IPCacheAPI
+ *
+ * Recalculate IP cache size upon reconfigure.
+ * Is called to clear the IPCache's data structures,
+ * cancel all pending requests.
+ */
 void
 ipcache_restart(void)
 {
@@ -1312,9 +1445,16 @@ ipcache_restart(void)
     purge_entries_fromhosts();
 }
 
-/*
- *  adds a "static" entry from /etc/hosts.  
- *  returns 0 upon success, 1 if the ip address is invalid
+/**
+ \ingroup IPCacheAPI
+ *
+ * Adds a "static" entry from /etc/hosts
+ *
+ \param name	Hostname to be linked with IP
+ \param ipaddr	IP Address to be cached.
+ *
+ \retval 0	Success.
+ \retval 1	IP address is invalid or other error.
  */
 int
 ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
@@ -1364,10 +1504,11 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
 }
 
 #ifdef SQUID_SNMP
-/*
+/**
+ \ingroup IPCacheAPI
+ *
  * The function to return the ip cache statistics to via SNMP
  */
-
 variable_list *
 snmp_netIpFn(variable_list * Var, snint * ErrP)
 {

@@ -1,6 +1,5 @@
-
 /*
- * $Id: icp_v2.cc,v 1.102 2007/12/14 23:11:47 amosjeffries Exp $
+ * $Id: icp_v2.cc,v 1.103 2008/02/26 21:49:35 amosjeffries Exp $
  *
  * DEBUG: section 12    Internet Cache Protocol (ICP)
  * AUTHOR: Duane Wessels
@@ -33,6 +32,11 @@
  *
  */
 
+/**
+ \defgroup ServerProtocolICPInternal2 ICPv2 Internals
+ \ingroup ServerProtocolICPAPI
+ */
+
 #include "squid.h"
 #include "Store.h"
 #include "comm.h"
@@ -45,17 +49,23 @@
 #include "SquidTime.h"
 #include "SwapDir.h"
 
+/// \ingroup ServerProtocolICPInternal2
 static void icpLogIcp(const IPAddress &, log_type, int, const char *, int);
 
+/// \ingroup ServerProtocolICPInternal2
 static void icpHandleIcpV2(int, IPAddress &, char *, int);
+
+/// \ingroup ServerProtocolICPInternal2
 static void icpCount(void *, int, size_t, int);
 
-/*
+/**
+ \ingroup ServerProtocolICPInternal2
  * IcpQueueHead is global so comm_incoming() knows whether or not
  * to call icpUdpSendQueue.
  */
-static icpUdpData *IcpQueueTail = NULL;
 static icpUdpData *IcpQueueHead = NULL;
+/// \ingroup ServerProtocolICPInternal2
+static icpUdpData *IcpQueueTail = NULL;
 
 /* icp_common_t */
 _icp_common_t::_icp_common_t() : opcode(ICP_INVALID), version(0), length(0), reqnum(0), flags(0), pad(0), shostid(0)
@@ -90,7 +100,7 @@ _icp_common_t::getOpCode() const
 
 /* ICPState */
 
-ICPState:: ICPState(icp_common_t & aHeader, HttpRequest *aRequest):
+ICPState::ICPState(icp_common_t &aHeader, HttpRequest *aRequest):
 	header(aHeader),
 	request(HTTPMSGLOCK(aRequest)),
         fd(-1),
@@ -108,7 +118,8 @@ ICPState::~ICPState()
 
 /* ICP2State */
 
-class ICP2State:public ICPState, public StoreClient
+/// \ingroup ServerProtocolICPInternal2
+class ICP2State : public ICPState, public StoreClient
 {
 
 public:
@@ -124,11 +135,11 @@ public:
     u_int32_t flags;
 };
 
-ICP2State::~ICP2State ()
+ICP2State::~ICP2State()
 {}
 
 void
-ICP2State::created (StoreEntry *newEntry)
+ICP2State::created(StoreEntry *newEntry)
 {
     StoreEntry *entry = newEntry->isNull () ? NULL : newEntry;
     debugs(12, 5, "icpHandleIcpV2: OPCODE " << icp_opcode_str[header.opcode]);
@@ -156,8 +167,8 @@ ICP2State::created (StoreEntry *newEntry)
 
 /* End ICP2State */
 
+/// \ingroup ServerProtocolICPInternal2
 static void
-
 icpLogIcp(const IPAddress &caddr, log_type logcode, int len, const char *url, int delay)
 {
     AccessLogEntry al;
@@ -188,6 +199,7 @@ icpLogIcp(const IPAddress &caddr, log_type logcode, int len, const char *url, in
     accessLogLog(&al, NULL);
 }
 
+/// \ingroup ServerProtocolICPInternal2
 void
 icpUdpSendQueue(int fd, void *unused)
 {
@@ -324,9 +336,11 @@ icpCheckUdpHit(StoreEntry * e, HttpRequest * request)
     return 1;
 }
 
-/* ICP_ERR means no opcode selected here
- *
+/**
  * This routine selects an ICP opcode for ICP misses.
+ *
+ \retval ICP_ERR            no opcode selected here
+ \retval ICP_MISS_NOFETCH   store is rebuilding, no fetch is possible yet
  */
 icp_opcode
 icpGetCommonOpcode()
@@ -365,7 +379,6 @@ icpLogFromICPCode(icp_opcode opcode)
 }
 
 void
-
 icpCreateAndSend(icp_opcode opcode, int flags, char const *url, int reqnum, int pad, int fd, const IPAddress &from)
 {
     icp_common_t *reply = _icp_common_t::createMessage(opcode, flags, url, reqnum, pad);
@@ -373,7 +386,6 @@ icpCreateAndSend(icp_opcode opcode, int flags, char const *url, int reqnum, int 
 }
 
 void
-
 icpDenyAccess(IPAddress &from, char *url, int reqnum, int fd)
 {
     debugs(12, 2, "icpDenyAccess: Access Denied for " << from << " by " << AclMatchedName << ".");
@@ -392,7 +404,6 @@ icpDenyAccess(IPAddress &from, char *url, int reqnum, int fd)
 }
 
 int
-
 icpAccessAllowed(IPAddress &from, HttpRequest * icp_request)
 {
     ACLChecklist checklist;
@@ -415,7 +426,6 @@ icpGetUrlToSend(char *url)
 }
 
 HttpRequest *
-
 icpGetRequest(char *url, int reqnum, int fd, IPAddress &from)
 {
     if (strpbrk(url, w_space))
@@ -435,7 +445,6 @@ icpGetRequest(char *url, int reqnum, int fd, IPAddress &from)
 }
 
 static void
-
 doV2Query(int fd, IPAddress &from, char *buf, icp_common_t header)
 {
     int rtt = 0;
@@ -488,7 +497,6 @@ doV2Query(int fd, IPAddress &from, char *buf, icp_common_t header)
 }
 
 void
-
 _icp_common_t::handleReply(char *buf, IPAddress &from)
 {
     if (neighbors_do_private_keys && reqnum == 0)
@@ -507,7 +515,6 @@ _icp_common_t::handleReply(char *buf, IPAddress &from)
 }
 
 static void
-
 icpHandleIcpV2(int fd, IPAddress &from, char *buf, int len)
 {
     if (len <= 0)
@@ -728,7 +735,7 @@ icpConnectionsOpen(void)
     theOutICPAddr.FreeAddrInfo(xai);
 }
 
-/*
+/**
  * icpConnectionShutdown only closes the 'in' socket if it is 
  * different than the 'out' socket.
  */
@@ -743,7 +750,7 @@ icpConnectionShutdown(void)
         comm_close(theInIcpConnection);
     }
 
-    /*
+    /**
      * Here we set 'theInIcpConnection' to -1 even though the ICP 'in'
      * and 'out' sockets might be just one FD.  This prevents this
      * function from executing repeatedly.  When we are really ready to
@@ -751,7 +758,7 @@ icpConnectionShutdown(void)
      */
     theInIcpConnection = -1;
 
-    /*
+    /**
      * Normally we only write to the outgoing ICP socket, but
      * we also have a read handler there to catch messages sent
      * to that specific interface.  During shutdown, we must

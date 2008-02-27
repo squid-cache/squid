@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.48 2007/10/31 04:52:16 amosjeffries Exp $
+ * $Id: cache_manager.cc,v 1.49 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -42,8 +42,15 @@
 #include "SquidTime.h"
 #include "wordlist.h"
 
+/**
+ \defgroup CacheManagerInternal Cache Manager Internals
+ \ingroup CacheManagerAPI
+ */
+
+/// \ingroup CacheManagerInternal
 #define MGR_PASSWD_SZ 128
 
+/// \ingroup CacheManagerInternal
 typedef struct
 {
     StoreEntry *entry;
@@ -51,9 +58,7 @@ typedef struct
     char *user_name;
     char *passwd;
 }
-
 cachemgrStateData;
-
 
 static CacheManagerAction *cachemgrFindAction(const char *action);
 static cachemgrStateData *cachemgrParseUrl(const char *url);
@@ -66,6 +71,7 @@ static OBJH cachemgrShutdown;
 static OBJH cachemgrMenu;
 static OBJH cachemgrOfflineToggle;
 
+/// \ingroup CacheManagerInternal
 CacheManagerAction *ActionTable = NULL;
 
 CacheManager::CacheManager()
@@ -112,6 +118,7 @@ CacheManager::findAction(char const * action)
     return cachemgrFindAction(action);
 }
 
+/// \ingroup CacheManagerInternal
 static CacheManagerAction *
 cachemgrFindAction(const char *action)
 {
@@ -125,6 +132,7 @@ cachemgrFindAction(const char *action)
     return NULL;
 }
 
+/// \ingroup CacheManagerInternal
 static cachemgrStateData *
 cachemgrParseUrl(const char *url)
 {
@@ -172,6 +180,7 @@ cachemgrParseUrl(const char *url)
     return mgr;
 }
 
+/// \ingroup CacheManagerInternal
 static void
 cachemgrParseHeaders(cachemgrStateData * mgr, const HttpRequest * request)
 {
@@ -203,8 +212,12 @@ cachemgrParseHeaders(cachemgrStateData * mgr, const HttpRequest * request)
     debugs(16, 9, "cachemgrParseHeaders: got user: '" << mgr->user_name << "' passwd: '" << mgr->passwd << "'");
 }
 
-/*
- * return 0 if mgr->password is good
+/**
+ \ingroup CacheManagerInternal
+ *
+ \retval 0	if mgr->password is good or "none"
+ \retval 1	if mgr->password is "disable"
+ \retval !0	if mgr->password does not match configured password
  */
 static int
 cachemgrCheckPassword(cachemgrStateData * mgr)
@@ -228,6 +241,7 @@ cachemgrCheckPassword(cachemgrStateData * mgr)
     return strcmp(pwd, mgr->passwd);
 }
 
+/// \ingroup CacheManagerInternal
 static void
 cachemgrStateFree(cachemgrStateData * mgr)
 {
@@ -238,6 +252,7 @@ cachemgrStateFree(cachemgrStateData * mgr)
     xfree(mgr);
 }
 
+// API
 void
 cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
 {
@@ -341,6 +356,7 @@ cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
     cachemgrStateFree(mgr);
 }
 
+/// \ingroup CacheManagerInternal
 static void
 cachemgrShutdown(StoreEntry * entryunused)
 {
@@ -348,6 +364,7 @@ cachemgrShutdown(StoreEntry * entryunused)
     shut_down(0);
 }
 
+/// \ingroup CacheManagerInternal
 static void
 cachemgrOfflineToggle(StoreEntry * sentry)
 {
@@ -358,6 +375,7 @@ cachemgrOfflineToggle(StoreEntry * sentry)
                       Config.onoff.offline ? "ON" : "OFF");
 }
 
+/// \ingroup CacheManagerInternal
 static const char *
 cachemgrActionProtection(const CacheManagerAction * at)
 {
@@ -377,6 +395,7 @@ cachemgrActionProtection(const CacheManagerAction * at)
     return "protected";
 }
 
+/// \ingroup CacheManagerInternal
 static void
 cachemgrMenu(StoreEntry * sentry)
 {
@@ -388,6 +407,7 @@ cachemgrMenu(StoreEntry * sentry)
     }
 }
 
+/// \ingroup CacheManagerInternal
 static char *
 cachemgrPasswdGet(cachemgr_passwd * a, const char *action)
 {

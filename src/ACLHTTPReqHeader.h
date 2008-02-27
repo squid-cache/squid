@@ -1,6 +1,5 @@
-
 /*
- * $Id: ACLHTTPReqHeader.h,v 1.2 2006/08/05 12:05:35 robertc Exp $
+ * $Id: ACLHTTPReqHeader.h,v 1.3 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,10 +34,12 @@
 
 #ifndef SQUID_ACLHTTPREQHEADER_H
 #define SQUID_ACLHTTPREQHEADER_H
+
 #include "ACLStrategy.h"
 #include "ACLStrategised.h"
 #include "HttpHeader.h"
 
+/// \ingroup ACLAPI
 class ACLHTTPReqHeaderStrategy : public ACLStrategy<HttpHeader*>
 {
 
@@ -59,6 +60,7 @@ private:
     ACLHTTPReqHeaderStrategy&operator = (ACLHTTPReqHeaderStrategy const &);
 };
 
+/// \ingroup ACLAPI
 class ACLHTTPReqHeader
 {
 

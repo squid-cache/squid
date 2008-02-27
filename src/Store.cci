@@ -1,6 +1,5 @@
-
 /*
- * $Id: Store.cci,v 1.2 2005/01/03 16:08:25 robertc Exp $
+ * $Id: Store.cci,v 1.3 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
@@ -33,20 +32,13 @@
  *
  */
 
-// #include "squid.h"
-#if 0
-#include "StoreClient.h"
-#include "stmem.h"
-#include "HttpReply.h"
-#include "HttpRequest.h"
-#endif
 #include "MemObject.h"
-#if 0
-#include "mem_node.h"
-#include "StoreMeta.h"
-#include "SwapDir.h"
-#endif
 
+/**
+ \retval true	Store contains 0 bytes of data.
+ \retval false	Store contains 1 or more bytes of data.
+ \retval false	Store contains negative content !!!!!!
+ */
 bool
 StoreEntry::isEmpty () const
 {
@@ -54,12 +46,14 @@ StoreEntry::isEmpty () const
     return mem_obj->endOffset() == 0;
 }
 
+/// \retval * - Always NULL for 'null' filesystem.
 HttpReply const *
 NullStoreEntry::getReply() const
 {
     return NULL;
 }
 
+/// \retval N/A 	Kills squid with fatal error if called before Store Root is set.
 Store &
 Store::Root()
 {

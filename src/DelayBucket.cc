@@ -1,6 +1,5 @@
-
 /*
- * $Id: DelayBucket.cc,v 1.7 2007/05/29 13:31:36 amosjeffries Exp $
+ * $Id: DelayBucket.cc,v 1.8 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -44,7 +43,8 @@
 #include "DelayBucket.h"
 #include "DelaySpec.h"
 #include "Store.h"
-/*
+
+#if DEAD_CODE // ?
 #include "DelayPools.h"
 #include "StoreClient.h"
 #include "MemObject.h"
@@ -60,7 +60,7 @@
 #include "DelayPool.h"
 #include "DelayVector.h"
 #include "NullDelayId.h"
-*/
+#endif
 
 void
 DelayBucket::stats(StoreEntry *entry)const
@@ -69,7 +69,7 @@ DelayBucket::stats(StoreEntry *entry)const
 }
 
 void
-DelayBucket::update (DelaySpec const &rate, int incr)
+DelayBucket::update(DelaySpec const &rate, int incr)
 {
     if (rate.restore_bps != -1 &&
             (level() += rate.restore_bps * incr) > rate.max_bytes)
@@ -77,7 +77,7 @@ DelayBucket::update (DelaySpec const &rate, int incr)
 }
 
 int
-DelayBucket::bytesWanted (int minimum, int maximum) const
+DelayBucket::bytesWanted(int minimum, int maximum) const
 {
     int result = max(minimum, min(maximum, level()));
     return result;
@@ -90,11 +90,10 @@ DelayBucket::bytesIn(int qty)
 }
 
 void
-DelayBucket::init (DelaySpec const &rate)
+DelayBucket::init(DelaySpec const &rate)
 {
     level() = (int) (((double)rate.max_bytes *
                       Config.Delay.initial) / 100);
 }
 
 #endif
-

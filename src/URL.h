@@ -1,6 +1,5 @@
-
 /*
- * $Id: URL.h,v 1.1 2006/05/08 23:38:33 robertc Exp $
+ * $Id: URL.h,v 1.2 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,8 +37,11 @@
 #include "MemPool.h"
 #include "URLScheme.h"
 
-/* The URL class represents a UniformResourceLocation */
-
+/**
+ \ingroup POD
+ *
+ * The URL class represents a Uniform Resource Location
+ */
 class URL
 {
 
@@ -51,19 +53,23 @@ public:
     URLScheme const & getScheme() const {return scheme; }
 
 private:
-    /* the scheme of this URL. This has the 'type code' smell about it.
+    /**
+     \par
+     * The scheme of this URL. This has the 'type code' smell about it.
      * In future we may want to make the methods that dispatch based on 
      * the scheme virtual and have a class per protocol. 
-     * on the other hand, having Protocol as an explicit concept is useful,
+     \par
+     * On the other hand, having Protocol as an explicit concept is useful,
      * see for instance the ACLProtocol acl type. One way to represent this
      * is to have one prototype URL with no host etc for each scheme, 
      * another is to have an explicit scheme class, and then each URL class
      * could be a subclass of the scheme. Another way is one instance of 
      * a URLScheme class instance for each URLScheme we support, and one URL
      * class for each manner of treating the scheme : a Hierarchical URL, a
-     * non-hierarchical URL etc. 
+     * non-hierarchical URL etc.
+     \par
      * Deferring the decision, its a type code for now. RBC 20060507.
-     *
+     \par
      * In order to make taking any of these routes easy, scheme is private 
      * and immutable, only settable at construction time,
      */

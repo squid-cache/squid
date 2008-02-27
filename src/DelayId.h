@@ -1,6 +1,5 @@
-
 /*
- * $Id: DelayId.h,v 1.3 2003/03/04 01:40:25 robertc Exp $
+ * $Id: DelayId.h,v 1.4 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -39,6 +38,7 @@
 class ClientHttpRequest;
 #include "DelayIdComposite.h"
 
+/// \ingroup DelayPoolsAPI
 class DelayId
 {
 

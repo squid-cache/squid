@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.cc,v 1.29 2008/01/20 19:46:35 serassio Exp $
+ * $Id: ESI.cc,v 1.30 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -118,7 +118,7 @@ struct esiComment : public ESIElement
     void finish();
 };
 
-MEMPROXY_CLASS_INLINE(esiComment)
+MEMPROXY_CLASS_INLINE(esiComment)		/**DOCS_NOSEMI*/
 
 #include "ESILiteral.h"
 
@@ -195,7 +195,7 @@ private:
     esiProcessResult_t bestAttemptRV() const;
 };
 
-MEMPROXY_CLASS_INLINE(esiTry)
+MEMPROXY_CLASS_INLINE(esiTry)		/**DOCS_NOSEMI*/
 
 #include "ESIVar.h"
 
@@ -232,7 +232,7 @@ private:
     void selectElement();
 };
 
-MEMPROXY_CLASS_INLINE(esiChoose)
+MEMPROXY_CLASS_INLINE(esiChoose)		/**DOCS_NOSEMI*/
 
 /* esiWhen */
 
@@ -256,7 +256,7 @@ private:
     void evaluate();
 };
 
-MEMPROXY_CLASS_INLINE(esiWhen)
+MEMPROXY_CLASS_INLINE(esiWhen)		/**DOCS_NOSEMI*/
 
 /* esiOtherwise */
 

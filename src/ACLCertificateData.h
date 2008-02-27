@@ -1,6 +1,5 @@
-
 /*
- * $Id: ACLCertificateData.h,v 1.7 2005/05/08 06:36:45 hno Exp $
+ * $Id: ACLCertificateData.h,v 1.8 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,12 +34,14 @@
 
 #ifndef SQUID_ACLCERTIFICATEDATA_H
 #define SQUID_ACLCERTIFICATEDATA_H
+
 #include "splay.h"
 #include "ACL.h"
 #include "ACLData.h"
 #include "ssl_support.h"
 #include "ACLStringData.h"
 
+/// \ingroup ACLAPI
 class ACLCertificateData : public ACLData<SSL *>
 {
 
@@ -64,6 +65,6 @@ private:
     SSLGETATTRIBUTE *sslAttributeCall;
 };
 
-MEMPROXY_CLASS_INLINE(ACLCertificateData)
+MEMPROXY_CLASS_INLINE(ACLCertificateData)          /**DOCS_NOSEMI*/
 
 #endif /* SQUID_ACLCERTIFICATEDATA_H */

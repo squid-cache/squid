@@ -1,6 +1,5 @@
-
 /*
- * $Id: DiskThreadsDiskFile.h,v 1.2 2006/08/21 00:50:45 robertc Exp $
+ * $Id: DiskThreadsDiskFile.h,v 1.3 2008/02/26 21:49:41 amosjeffries Exp $
  *
  * DEBUG: section 79    Disk IO Routines
  * AUTHOR: Robert Collins
@@ -44,21 +43,21 @@ class DiskThreadsDiskFile : public DiskFile
 {
 
 public:
-    void * operator new (size_t);
-    void operator delete (void *);
-    DiskThreadsDiskFile (char const *path, DiskThreadsIOStrategy *);
+    void * operator new(size_t);
+    void operator delete(void *);
+    DiskThreadsDiskFile(char const *path, DiskThreadsIOStrategy *);
     ~DiskThreadsDiskFile();
-    virtual void open (int, mode_t, RefCount<IORequestor>);
-    virtual void create (int, mode_t, RefCount<IORequestor>);
+    virtual void open(int flags, mode_t mode, RefCount<IORequestor> callback);
+    virtual void create(int flags, mode_t mode, RefCount<IORequestor> callback);
     virtual void read(ReadRequest *);
     virtual void write(WriteRequest *);
-    virtual void close ();
+    virtual void close();
     virtual bool error() const;
     virtual int getFD() const { return fd;}
 
     virtual bool canRead() const;
     virtual bool canWrite() const;
-    virtual bool ioInProgress()const;
+    virtual bool ioInProgress() const;
 
 private:
 #if ASYNC_READ
@@ -87,14 +86,13 @@ private:
     CBDATA_CLASS(DiskThreadsDiskFile);
     void doClose();
 
-    void readDone(int fd, const char *buf, int len, int errflag, RefCount<ReadRequest>);
-    void writeDone (int fd, int errflag, size_t len, RefCount<WriteRequest>);
+    void readDone(int fd, const char *buf, int len, int errflag, RefCount<ReadRequest> request);
+    void writeDone(int fd, int errflag, size_t len, RefCount<WriteRequest> request);
 };
 
 #include "DiskIO/ReadRequest.h"
 
 template <class RT>
-
 class IoResult
 {
 

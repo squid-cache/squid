@@ -67,6 +67,6 @@ unsigned int required:
     flags;
 };
 
-MEMPROXY_CLASS_INLINE(ACLUserData)
+MEMPROXY_CLASS_INLINE(ACLUserData)          /**DOCS_NOSEMI*/
 
 #endif /* SQUID_ACLUSERDATA_H */

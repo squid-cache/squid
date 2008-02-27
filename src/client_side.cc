@@ -1,6 +1,5 @@
-
 /*
- * $Id: client_side.cc,v 1.778 2008/02/26 18:43:58 rousskov Exp $
+ * $Id: client_side.cc,v 1.779 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -33,26 +32,53 @@
  *
  */
 
-/* Errors and client side
+/**
+ \defgroup ClientSide Client-Side Logics
  *
- * Problem the first: the store entry is no longer authoritative on the
+ \subsection cserrors Errors and client side
+ *
+ \par Problem the first:
+ * the store entry is no longer authoritative on the
  * reply status. EBITTEST (E_ABORT) is no longer a valid test outside
  * of client_side_reply.c.
  * Problem the second: resources are wasted if we delay in cleaning up.
  * Problem the third we can't depend on a connection close to clean up.
  * 
- * Nice thing the first: Any step in the stream can callback with data 
+ \par Nice thing the first:
+ * Any step in the stream can callback with data 
  * representing an error.
  * Nice thing the second: once you stop requesting reads from upstream,
  * upstream can be stopped too.
  *
- * Solution #1: Error has a callback mechanism to hand over a membuf
+ \par Solution #1:
+ * Error has a callback mechanism to hand over a membuf
  * with the error content. The failing node pushes that back as the 
  * reply. Can this be generalised to reduce duplicate efforts?
  * A: Possibly. For now, only one location uses this.
  * How to deal with pre-stream errors?
  * Tell client_side_reply that we *want* an error page before any
  * stream calls occur. Then we simply read as normal.
+ *
+ *
+ \subsection pconn_logic Persistent connection logic:
+ *
+ \par
+ * requests (httpClientRequest structs) get added to the connection
+ * list, with the current one being chr
+ * 
+ \par
+ * The request is *immediately* kicked off, and data flows through
+ * to clientSocketRecipient.
+ * 
+ \par
+ * If the data that arrives at clientSocketRecipient is not for the current
+ * request, clientSocketRecipient simply returns, without requesting more
+ * data, or sending it.
+ *
+ \par
+ * ClientKeepAliveNextRequest will then detect the presence of data in 
+ * the next ClientHttpRequest, and will send it, restablishing the 
+ * data flow.
  */
 
 #include "squid.h"
@@ -79,23 +105,6 @@
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
 #endif
-
-/* Persistent connection logic:
- *
- * requests (httpClientRequest structs) get added to the connection
- * list, with the current one being chr
- * 
- * The request is *immediately* kicked off, and data flows through
- * to clientSocketRecipient.
- * 
- * If the data that arrives at clientSocketRecipient is not for the current
- * request, clientSocketRecipient simply returns, without requesting more
- * data, or sending it.
- *
- * ClientKeepAliveNextRequest will then detect the presence of data in 
- * the next ClientHttpRequest, and will send it, restablishing the 
- * data flow.
- */
 
 /* our socket-related context */
 
@@ -182,7 +191,7 @@ ClientSocketContext::getClientReplyContext() const
     return (clientStreamNode *)http->client_stream.tail->prev->data;
 }
 
-/*
+/**
  * This routine should be called to grow the inbuf and then
  * call comm_read().
  */
@@ -327,7 +336,7 @@ void
 clientUpdateStatHistCounters(log_type logType, int svc_time)
 {
     statHistCount(&statCounter.client_http.all_svc_time, svc_time);
-    /*
+    /**
      * The idea here is not to be complete, but to get service times
      * for only well-defined types.  For example, we don't include
      * LOG_TCP_REFRESH_FAIL because its not really a cache hit
@@ -633,7 +642,7 @@ ConnStateData::~ConnStateData()
     }
 }
 
-/*
+/**
  * clientSetKeepaliveFlag() sets request->flags.proxy_keepalive.
  * This is the client-side persistent connection flag.  We need
  * to set this relatively early in the request processing
@@ -826,7 +835,7 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
         writeComplete(fd(), NULL, 0, COMM_OK);
 }
 
-/* put terminating boundary for multiparts */
+/** put terminating boundary for multiparts */
 static void
 clientPackTermBound(String boundary, MemBuf * mb)
 {
@@ -834,7 +843,7 @@ clientPackTermBound(String boundary, MemBuf * mb)
     debugs(33, 6, "clientPackTermBound: buf offset: " << mb->size);
 }
 
-/* appends a "part" HTTP header (as in a multi-part/range reply) to the buffer */
+/** appends a "part" HTTP header (as in a multi-part/range reply) to the buffer */
 static void
 clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String boundary, MemBuf * mb)
 {
@@ -868,7 +877,7 @@ clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String 
     mb->Printf("\r\n");
 }
 
-/*
+/**
  * extracts a "range" from *buf and appends them to mb, updating
  * all offsets and such.
  */
@@ -957,7 +966,7 @@ ClientSocketContext::packRange(StoreIOBuffer const &source, MemBuf * mb)
     }
 }
 
-/* returns expected content length for multi-range replies
+/** returns expected content length for multi-range replies
  * note: assumes that httpHdrRangeCanonize has already been called
  * warning: assumes that HTTP headers for individual ranges at the
  *          time of the actuall assembly will be exactly the same as
@@ -999,7 +1008,7 @@ ClientHttpRequest::mRangeCLen()
     return clen;
 }
 
-/*
+/**
  * returns true if If-Range specs match reply, false otherwise
  */
 static int
@@ -1037,7 +1046,8 @@ clientIfRangeMatch(ClientHttpRequest * http, HttpReply * rep)
     return 0;
 }
 
-/* generates a "unique" boundary string for multipart responses
+/**
+ * generates a "unique" boundary string for multipart responses
  * the caller is responsible for cleaning the string */
 String
 ClientHttpRequest::rangeBoundaryStr() const
@@ -1051,7 +1061,7 @@ ClientHttpRequest::rangeBoundaryStr() const
     return b;
 }
 
-/* adds appropriate Range headers if needed */
+/** adds appropriate Range headers if needed */
 void
 ClientSocketContext::buildRangeHeader(HttpReply * rep)
 {
@@ -1211,7 +1221,7 @@ ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData)
     delete mb;
 }
 
-/*
+/**
  * Write a chunk of data to a client socket. If the reply is present,
  * send the reply headers down the wire too, and clean them up when
  * finished.
@@ -1264,7 +1274,8 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
     PROF_stop(clientSocketRecipient);
 }
 
-/* Called when a downstream node is no longer interested in
+/**
+ * Called when a downstream node is no longer interested in
  * our data. As we are a terminal node, this means on aborts
  * only
  */
@@ -1302,7 +1313,7 @@ ConnStateData::readNextRequest()
     debugs(33, 5, "ConnStateData::readNextRequest: FD " << fd << " reading next req");
 
     fd_note(fd, "Waiting for next request");
-    /*
+    /**
      * Set the timeout BEFORE calling clientReadRequest().
      */
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
@@ -1311,7 +1322,7 @@ ConnStateData::readNextRequest()
     commSetTimeout(fd, Config.Timeout.persistent_request, timeoutCall);
 
     readSomeData();
-    /* Please don't do anything with the FD past here! */
+    /** Please don't do anything with the FD past here! */
 }
 
 void
@@ -1319,18 +1330,19 @@ ClientSocketContextPushDeferredIfNeeded(ClientSocketContext::Pointer deferredReq
 {
     debugs(33, 2, "ClientSocketContextPushDeferredIfNeeded: FD " << conn->fd << " Sending next");
 
-    /* If the client stream is waiting on a socket write to occur, then */
+    /** If the client stream is waiting on a socket write to occur, then */
 
     if (deferredRequest->flags.deferred) {
-        /* NO data is allowed to have been sent */
+        /** NO data is allowed to have been sent. */
         assert(deferredRequest->http->out.size == 0);
+        /** defer now. */
         clientSocketRecipient(deferredRequest->deferredparams.node,
                               deferredRequest->http,
                               deferredRequest->deferredparams.rep,
                               deferredRequest->deferredparams.queuedBuffer);
     }
 
-    /* otherwise, the request is still active in a callbacksomewhere,
+    /** otherwise, the request is still active in a callbacksomewhere,
      * and we are done
      */
 }
@@ -1344,11 +1356,12 @@ ClientSocketContext::keepaliveNextRequest()
     debugs(33, 3, "ClientSocketContext::keepaliveNextRequest: FD " << conn->fd);
     connIsFinished();
 
-    /*
+    /** \par
      * Attempt to parse a request from the request buffer.
      * If we've been fed a pipelined request it may already
      * be in our read buffer.
      *
+     \par
      * This needs to fall through - if we're unlucky and parse the _last_ request
      * from our read buffer we may never re-register for another client read.
      */
@@ -1357,7 +1370,7 @@ ClientSocketContext::keepaliveNextRequest()
         debugs(33, 3, "clientSocketContext::keepaliveNextRequest: FD " << conn->fd << ": parsed next request from buffer");
     }
 
-    /*
+    /** \par
      * Either we need to kick-start another read or, if we have
      * a half-closed connection, kill it after the last request.
      * This saves waiting for half-closed connections to finished being
@@ -1372,7 +1385,7 @@ ClientSocketContext::keepaliveNextRequest()
 
     ClientSocketContext::Pointer deferredRequest;
 
-    /*
+    /** \par
      * At this point we either have a parsed request (which we've
      * kicked off the processing for) or not. If we have a deferred
      * request (parsed but deferred for pipeling processing reasons)
@@ -1401,17 +1414,20 @@ clientUpdateSocketStats(log_type logType, size_t size)
         kb_incr(&statCounter.client_http.hit_kbytes_out, size);
 }
 
-/* returns true if there is still data available to pack more ranges
+/**
  * increments iterator "i"
- * used by clientPackMoreRanges */
+ * used by clientPackMoreRanges
+ *
+ \retval true    there is still data available to pack more ranges
+ \retval false   
+ */
 bool
 ClientSocketContext::canPackMoreRanges() const
 {
-    /* first update "i" if needed */
+    /** first update iterator "i" if needed */
 
     if (!http->range_iter.debt()) {
-        debugs(33, 5, "ClientSocketContext::canPackMoreRanges: At end of " <<
-            "current range spec for FD " << fd());
+        debugs(33, 5, "ClientSocketContext::canPackMoreRanges: At end of current range spec for FD " << fd());
 
         if (http->range_iter.pos.incrementable())
             ++http->range_iter.pos;
@@ -1420,6 +1436,7 @@ ClientSocketContext::canPackMoreRanges() const
     }
 
     assert(!http->range_iter.debt() == !http->range_iter.currentSpec());
+
     /* paranoid sync condition */
     /* continue condition: need_more_data */
     debugs(33, 5, "ClientSocketContext::canPackMoreRanges: returning " << (http->range_iter.currentSpec() ? true : false));
@@ -1456,8 +1473,9 @@ ClientSocketContext::getNextRangeOffset() const
 
     } else if (reply && reply->content_range) {
         /* request does not have ranges, but reply does */
-        //FIXME: should use range_iter_pos on reply, as soon as reply->content_range
-        //       becomes HttpHdrRange rather than HttpHdrRangeSpec.
+        /** \todo FIXME: should use range_iter_pos on reply, as soon as reply->content_range
+         *        becomes HttpHdrRange rather than HttpHdrRangeSpec.
+         */
         return http->out.offset + reply->content_range->spec.offset;
     }
 
@@ -1546,7 +1564,8 @@ ClientSocketContext::socketState()
     return STREAM_NONE;
 }
 
-/* A write has just completed to the client, or we have just realised there is
+/**
+ * A write has just completed to the client, or we have just realised there is
  * no more data to send.
  */
 void
@@ -1680,7 +1699,7 @@ skipLeadingSpace(char *aString)
     return result;
 }
 
-/*
+/**
  * 'end' defaults to NULL for backwards compatibility
  * remove default value if we ever get rid of NULL-terminated
  * request buffers.
@@ -1831,7 +1850,7 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
     }
 }
 
-/*
+/**
  *  parseHttpRequest()
  * 
  *  Returns
@@ -2338,7 +2357,7 @@ connOkToAddRequest(ConnStateData * conn)
     return result;
 }
 
-/*
+/**
  * bodySizeLeft
  *
  * Report on the number of bytes of body content that we
@@ -2355,7 +2374,7 @@ ConnStateData::bodySizeLeft()
     return 0;
 }
 
-/*
+/**
  * Attempt to parse one or more requests from the input buffer.
  * If a request is successfully parsed, even if the next request
  * is only partially parsed, it will return TRUE.
@@ -2530,7 +2549,9 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
     clientAfterReadingRequests(do_next_read);
 }
 
-// called when new request data has been read from the socket
+/**
+ * called when new request data has been read from the socket
+ */
 void
 ConnStateData::handleReadData(char *buf, size_t size)
 {
@@ -2548,8 +2569,10 @@ ConnStateData::handleReadData(char *buf, size_t size)
         handleRequestBodyData();
 }
 
-// called when new request body data has been buffered in in.buf
-// may close the connection if we were closing and piped everything out
+/**
+ * called when new request body data has been buffered in in.buf
+ * may close the connection if we were closing and piped everything out
+ */
 void
 ConnStateData::handleRequestBodyData()
 {
@@ -2592,7 +2615,7 @@ ConnStateData::noteBodyConsumerAborted(BodyPipe::Pointer )
         startClosing("body consumer aborted");
 }
 
-/* general lifetime handler for HTTP requests */
+/** general lifetime handler for HTTP requests */
 void
 ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
 {
@@ -2743,7 +2766,7 @@ connStateCreate(const IPAddress &peer, const IPAddress &me, int fd, http_port_li
     return result;
 }
 
-/* Handle a new connection on HTTP socket. */
+/** Handle a new connection on HTTP socket. */
 void
 httpAccept(int sock, int newfd, ConnectionDetail *details,
            comm_err_t flag, int xerrno, void *data)
@@ -2813,7 +2836,7 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 
 #if USE_SSL
 
-// Create SSL connection structure and update fd_table
+/** Create SSL connection structure and update fd_table */
 static SSL *
 httpsCreate(int newfd, ConnectionDetail *details, SSL_CTX *sslContext)
 {
@@ -2837,7 +2860,7 @@ httpsCreate(int newfd, ConnectionDetail *details, SSL_CTX *sslContext)
     return ssl;
 }
 
-/* negotiate an SSL connection */
+/** negotiate an SSL connection */
 static void
 clientNegotiateSSL(int fd, void *data)
 {
@@ -2956,7 +2979,7 @@ clientNegotiateSSL(int fd, void *data)
     conn->readSomeData();
 }
 
-/* handle a new HTTPS connection */
+/** handle a new HTTPS connection */
 static void
 httpsAccept(int sock, int newfd, ConnectionDetail *details,
             comm_err_t flag, int xerrno, void *data)
@@ -3329,8 +3352,10 @@ ConnStateData::closing() const
     return closing_;
 }
 
-// Called by ClientSocketContext to give the connection a chance to read
-// the entire body before closing the socket.
+/**
+ * Called by ClientSocketContext to give the connection a chance to read
+ * the entire body before closing the socket.
+ */
 void
 ConnStateData::startClosing(const char *reason)
 {

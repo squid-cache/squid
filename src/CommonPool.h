@@ -1,6 +1,5 @@
-
 /*
- * $Id: CommonPool.h,v 1.5 2007/05/29 13:31:36 amosjeffries Exp $
+ * $Id: CommonPool.h,v 1.6 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -46,11 +45,13 @@
 #include "SquidString.h"
 #include "CompositePoolNode.h"
 
-/* Next steps: make this a composite, and TypeLabel a composite method.
+/*
+ \ingroup DelayPoolsAPI
+ *
+ \todo Next steps: make this a composite, and TypeLabel a composite method.
  * Then we have a legacy composite which returns class 1/2/3, and new 
  * composites which return a descriptor of some sort.
  */
-
 class CommonPool
 {
 

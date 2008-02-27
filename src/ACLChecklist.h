@@ -1,6 +1,5 @@
-
 /*
- * $Id: ACLChecklist.h,v 1.31 2008/02/12 23:29:25 rousskov Exp $
+ * $Id: ACLChecklist.h,v 1.32 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -41,17 +40,20 @@ class ExternalACLEntry;
 
 class ConnStateData;
 
+/// \ingroup ACLAPI
 class ACLChecklist
 {
 
 public:
 
-    /* State class.
+    /**
+     * State class.
      * This abstract class defines the behaviour of
      * async lookups - which can vary for different ACL types.
      * Today, every state object must be a singleton.
      * See NULLState for an example.
-     * Note that *no* state should be stored in the state object,
+     *
+     \note *no* state should be stored in the state object,
      * they are used to change the behaviour of the checklist, not
      * to hold information. If you need to store information in the
      * state object, consider subclassing ACLChecklist, converting it
@@ -173,6 +175,7 @@ public:
     bool lastACLResult() const { return lastACLResult_; }
 };
 
+/// \ingroup ACLAPI
 SQUIDCEXTERN ACLChecklist *aclChecklistCreate(const acl_access *,
         HttpRequest *,
         const char *ident);

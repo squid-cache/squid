@@ -1,6 +1,6 @@
 
 /*
- * $Id: cbdata.cc,v 1.76 2007/04/28 22:26:37 hno Exp $
+ * $Id: cbdata.cc,v 1.77 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
@@ -35,9 +35,12 @@
  *
  */
 
-/*
+/**
+ \defgroup CBDATAInternal Callback Data Allocator Internals
+ \ingroup CBDATAAPI
+ *
  * These routines manage a set of registered callback data pointers.
- * One of the easiest ways to make Squid coredump is to issue a 
+ * One of the easiest ways to make Squid coredump is to issue a
  * callback to for some data structure which has previously been
  * freed.  With these routines, we register (add) callback data
  * pointers, lock them just before registering the callback function,
@@ -77,11 +80,13 @@ public:
 
 #endif
 
+/// \ingroup CBDATAInternal
 #define OFFSET_OF(TYPE, MEMBER) ((size_t) &(((TYPE) *)0)->(MEMBER))
 
+/// \ingroup CBDATAInternal
 class cbdata
 {
-    /* TODO: examine making cbdata templated on this - so we get type
+    /** \todo examine making cbdata templated on this - so we get type
      * safe access to data - RBC 20030902 */
 public:
 #if HASHED_CBDATA
@@ -146,13 +151,15 @@ cbdata::operator new(size_t size, void *where)
     return where;
 }
 
+/**
+ * Only ever invoked when placement new throws
+ * an exception. Used to prevent an incorrect
+ * free.
+ */
 void
 cbdata::operator delete(void *where, void *where2)
 {
-    /* Only ever invoked when placement new throws
-     * an exception. Used to prevent an incorrect
-     * free.
-     */
+  ;
 }
 
 long
@@ -163,7 +170,7 @@ cbdata::MakeOffset()
     return (long)dataOffset;
 }
 #else
-MEMPROXY_CLASS_INLINE(cbdata)
+MEMPROXY_CLASS_INLINE(cbdata)			/**DOCS_NOSEMI*/
 #endif
 
 static OBJH cbdataDump;
@@ -171,13 +178,15 @@ static OBJH cbdataDump;
 static OBJH cbdataDumpHistory;
 #endif
 
+/// \ingroup CBDATAInternal
 struct CBDataIndex
 {
     MemAllocator *pool;
     FREE *free_func;
 }
-
 *cbdata_index = NULL;
+
+/// \ingroup CBDATAInternal
 int cbdata_types = 0;
 
 #if HASHED_CBDATA

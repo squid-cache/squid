@@ -1,5 +1,5 @@
 /*
- * $Id: ESIAssign.h,v 1.5 2007/05/29 13:31:37 amosjeffries Exp $
+ * $Id: ESIAssign.h,v 1.6 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -87,6 +87,6 @@ private:
     String unevaluatedVariable;
 };
 
-MEMPROXY_CLASS_INLINE(ESIAssign)
+MEMPROXY_CLASS_INLINE(ESIAssign)          /**DOCS_NOSEMI*/
 
 #endif /* SQUID_ESIASSIGN_H */

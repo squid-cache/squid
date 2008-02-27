@@ -1,5 +1,5 @@
 /*
- * $Id: DiskdIOStrategy.cc,v 1.12 2007/12/14 23:11:50 amosjeffries Exp $
+ * $Id: DiskdIOStrategy.cc,v 1.13 2008/02/26 21:49:40 amosjeffries Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -361,7 +361,7 @@ DiskdIOStrategy::send(int mtype, int id, DiskdFile *theFile, size_t size, off_t 
 }
 
 int
-DiskdIOStrategy::send(int mtype, int id, StoreIOState::Pointer sio, size_t size, off_t offset, ssize_t shm_offset)
+DiskdIOStrategy::send(int mtype, int id, RefCount<StoreIOState> sio, size_t size, off_t offset, ssize_t shm_offset)
 {
     diomsg M;
     M.callback_data = cbdataReference(sio.getRaw());

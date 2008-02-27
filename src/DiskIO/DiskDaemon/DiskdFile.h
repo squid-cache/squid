@@ -1,6 +1,5 @@
-
 /*
- * $Id: DiskdFile.h,v 1.2 2006/08/21 00:50:45 robertc Exp $
+ * $Id: DiskdFile.h,v 1.3 2008/02/26 21:49:40 amosjeffries Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -44,27 +43,30 @@ class DiskdIOStrategy;
 
 struct diomsg;
 
+/**
+ \ingroup diskd
+ */
 class DiskdFile : public DiskFile
 {
 
 public:
-    void * operator new (size_t);
-    void operator delete (void *);
-    DiskdFile (char const *path, DiskdIOStrategy *);
+    void * operator new(size_t);
+    void operator delete(void *);
+    DiskdFile(char const *path, DiskdIOStrategy *);
     ~DiskdFile();
-    virtual void open (int, mode_t, RefCount<IORequestor>);
-    virtual void create (int, mode_t, RefCount<IORequestor>);
+    virtual void open(int flags, mode_t aMode, RefCount<IORequestor> callback);
+    virtual void create(int flags, mode_t aMode, RefCount<IORequestor> callback);
     virtual void read(ReadRequest *);
     virtual void write(WriteRequest *);
-    virtual void close ();
+    virtual void close();
     virtual bool error() const;
     virtual bool canRead() const;
-    virtual bool ioInProgress()const;
+    virtual bool ioInProgress() const;
 
     /* Temporary */
     int getID() const {return id;}
 
-    void completed (diomsg *);
+    void completed(diomsg *);
 
 private:
     int id;

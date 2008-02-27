@@ -1,16 +1,18 @@
   /*
-   * $Id: AsyncJob.h,v 1.3 2008/02/12 23:40:02 rousskov Exp $
+   * $Id: AsyncJob.h,v 1.4 2008/02/26 21:49:41 amosjeffries Exp $
    */
 
 #ifndef SQUID_ASYNC_JOB_H
 #define SQUID_ASYNC_JOB_H
 
-// TODO: move src/ICAP/AsyncJob.* to src/
+/// \todo move src/ICAP/AsyncJob.* to src/
 
 
 #include "AsyncCall.h"
 
-/*
+/**
+ \defgroup AsyncJobAPI Async-Jobs API
+ \par
  * AsyncJob is an API and a base for a class that implements a stand-alone
  * "job", "task", or "logical processing thread" which receives asynchronous
  * calls.
@@ -30,6 +32,7 @@
 
 class TextException;
 
+/// \ingroup AsyncJobAPI
 class AsyncJob
 {
 
@@ -74,7 +77,8 @@ private:
 };
 
 
-/*
+/**
+ \ingroup AsyncJobAPI
  * This is a base class for all job call dialers. It does all the job
  * dialing logic (debugging, handling exceptions, etc.) except for calling
  * the job method. The latter is not possible without templates and we

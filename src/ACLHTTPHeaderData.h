@@ -1,6 +1,5 @@
-
 /*
- * $Id: ACLHTTPHeaderData.h,v 1.4 2007/05/29 13:31:36 amosjeffries Exp $
+ * $Id: ACLHTTPHeaderData.h,v 1.5 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,8 +34,10 @@
 
 #ifndef SQUID_ACLHTTPHEADERDATA_H
 #define SQUID_ACLHTTPHEADERDATA_H
+
 #include "ACLData.h"
 
+/// \ingroup ACLAPI
 class ACLHTTPHeaderData : public ACLData<HttpHeader*>
 {
 
@@ -57,6 +58,6 @@ private:
     ACLData<char const *> * regex_rule;
 };
 
-MEMPROXY_CLASS_INLINE(ACLHTTPHeaderData)
+MEMPROXY_CLASS_INLINE(ACLHTTPHeaderData)          /**DOCS_NOSEMI*/
 
 #endif /* SQUID_ACLHTTPHEADERDATA_H */

@@ -1,6 +1,5 @@
-
 /*
- * $Id: ACLMaxUserIP.h,v 1.10 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id: ACLMaxUserIP.h,v 1.11 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,9 +34,11 @@
 
 #ifndef SQUID_ACLMAXUSERIP_H
 #define SQUID_ACLMAXUSERIP_H
+
 #include "ACL.h"
 #include "ACLChecklist.h"
 
+/// \ingroup ACLAPI
 class ACLMaxUserIP : public ACL
 {
 
@@ -81,6 +82,6 @@ unsigned int strict:
     flags;
 };
 
-MEMPROXY_CLASS_INLINE(ACLMaxUserIP)
+MEMPROXY_CLASS_INLINE(ACLMaxUserIP)          /**DOCS_NOSEMI*/
 
 #endif /* SQUID_ACLMAXUSERIP_H */

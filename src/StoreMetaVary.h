@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaVary.h,v 1.4 2004/08/30 05:12:31 robertc Exp $
+ * $Id: StoreMetaVary.h,v 1.5 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -47,6 +47,6 @@ public:
     bool checkConsistency(StoreEntry *) const;
 };
 
-MEMPROXY_CLASS_INLINE(StoreMetaVary)
+MEMPROXY_CLASS_INLINE(StoreMetaVary)		/**DOCS_NOSEMI*/
 
 #endif /* SQUID_STOREMETAVARY_H */

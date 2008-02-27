@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.37 2008/02/11 22:41:52 rousskov Exp $
+ * $Id: ssl_support.cc,v 1.38 2008/02/26 21:49:35 amosjeffries Exp $
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
@@ -43,6 +43,12 @@
 #include "fde.h"
 #include "ACLChecklist.h"
 
+/**
+ \defgroup ServerProtocolSSLInternal Server-Side SSL Internals
+ \ingroup ServerProtocolSSLAPI
+ */
+
+/// \ingroup ServerProtocolSSLInternal
 static int
 ssl_ask_password_cb(char *buf, int size, int rwflag, void *userdata)
 {
@@ -68,6 +74,7 @@ ssl_ask_password_cb(char *buf, int size, int rwflag, void *userdata)
     return len;
 }
 
+/// \ingroup ServerProtocolSSLInternal
 static void
 ssl_ask_password(SSL_CTX * context, const char * prompt)
 {
@@ -77,6 +84,7 @@ ssl_ask_password(SSL_CTX * context, const char * prompt)
     }
 }
 
+/// \ingroup ServerProtocolSSLInternal
 static RSA *
 ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
 {
@@ -127,6 +135,7 @@ ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
     return rsa;
 }
 
+/// \ingroup ServerProtocolSSLInternal
 static int
 ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
 {
@@ -224,6 +233,7 @@ if (!dont_verify_domain && server) {}
     return ok;
 }
 
+/// \ingroup ServerProtocolSSLInternal
 static struct ssl_option
 {
     const char *name;
@@ -350,6 +360,7 @@ ssl_options[] = {
                     }
                 };
 
+/// \ingroup ServerProtocolSSLInternal
 static long
 ssl_parse_options(const char *options)
 {
@@ -428,14 +439,22 @@ no_options:
     return op;
 }
 
+/// \ingroup ServerProtocolSSLInternal
 #define SSL_FLAG_NO_DEFAULT_CA		(1<<0)
+/// \ingroup ServerProtocolSSLInternal
 #define SSL_FLAG_DELAYED_AUTH		(1<<1)
+/// \ingroup ServerProtocolSSLInternal
 #define SSL_FLAG_DONT_VERIFY_PEER	(1<<2)
+/// \ingroup ServerProtocolSSLInternal
 #define SSL_FLAG_DONT_VERIFY_DOMAIN	(1<<3)
+/// \ingroup ServerProtocolSSLInternal
 #define SSL_FLAG_NO_SESSION_REUSE	(1<<4)
+/// \ingroup ServerProtocolSSLInternal
 #define SSL_FLAG_VERIFY_CRL		(1<<5)
+/// \ingroup ServerProtocolSSLInternal
 #define SSL_FLAG_VERIFY_CRL_ALL		(1<<6)
 
+/// \ingroup ServerProtocolSSLInternal
 static long
 ssl_parse_flags(const char *flags)
 {
@@ -548,6 +567,7 @@ ssl_freeAclChecklist(void *, void *ptr, CRYPTO_EX_DATA *,
     delete static_cast<ACLChecklist *>(ptr); // may be NULL
 }
 
+/// \ingroup ServerProtocolSSLInternal
 static void
 ssl_initialize(void)
 {
@@ -587,6 +607,7 @@ ssl_initialize(void)
     ssl_ex_index_cert_error_check = SSL_get_ex_new_index(0, (void *) "cert_error_check", NULL, &ssl_dupAclChecklist, &ssl_freeAclChecklist);
 }
 
+/// \ingroup ServerProtocolSSLInternal
 static int
 ssl_load_crl(SSL_CTX *sslContext, const char *CRLfile)
 {
@@ -940,6 +961,7 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
     return sslContext;
 }
 
+/// \ingroup ServerProtocolSSLInternal
 int
 ssl_read_method(int fd, char *buf, int len)
 {
@@ -966,6 +988,7 @@ ssl_read_method(int fd, char *buf, int len)
     return i;
 }
 
+/// \ingroup ServerProtocolSSLInternal
 int
 ssl_write_method(int fd, const char *buf, int len)
 {
@@ -990,6 +1013,7 @@ ssl_shutdown_method(int fd)
     SSL_shutdown(ssl);
 }
 
+/// \ingroup ServerProtocolSSLInternal
 static const char *
 ssl_get_attribute(X509_NAME * name, const char *attribute_name)
 {
@@ -1016,6 +1040,7 @@ done:
     return *buffer ? buffer : NULL;
 }
 
+/// \ingroup ServerProtocolSSLInternal
 const char *
 sslGetUserAttribute(SSL * ssl, const char *attribute_name)
 {
@@ -1040,6 +1065,7 @@ sslGetUserAttribute(SSL * ssl, const char *attribute_name)
     return ret;
 }
 
+/// \ingroup ServerProtocolSSLInternal
 const char *
 sslGetCAAttribute(SSL * ssl, const char *attribute_name)
 {

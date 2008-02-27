@@ -1,6 +1,5 @@
-
 /*
- * $Id: DiskdIOStrategy.h,v 1.4 2007/08/16 23:32:28 hno Exp $
+ * $Id: DiskdIOStrategy.h,v 1.5 2008/02/26 21:49:40 amosjeffries Exp $
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
@@ -37,16 +36,9 @@
 #ifndef __STORE_DISKDIOSTRATEGY_H__
 #define __STORE_DISKDIOSTRATEGY_H__
 
-/*
- * magic2 is the point at which we start blocking on msgsnd/msgrcv.
- * If a queue has magic2 (or more) messages away, then we read the
- * queue until the level falls below magic2.  Recommended value
- * is 75% of SHMBUFS. magic1 is the number of messages away which we
- * stop allowing open/create for.
- */
-
 struct diomsg;
 
+/// \ingroup diskd
 class SharedMemory
 {
 
@@ -75,6 +67,7 @@ class DiskdFile;
 
 class ReadRequest;
 
+/// \ingroup diskd
 class DiskdIOStrategy : public DiskIOStrategy
 {
 
@@ -89,8 +82,9 @@ public:
     virtual void sync();
     virtual int callback();
     virtual void statfs(StoreEntry & sentry)const;
-    int send(int mtype, int id, DiskdFile *theFile, size_t size, off_t offset, ssize_t shm_offset, RefCountable_ *);
-    /* public for accessing return address's */
+    int send(int mtype, int id, DiskdFile *theFile, size_t size, off_t offset, ssize_t shm_offset, RefCountable_ *requestor);
+
+    /** public for accessing return address's */
     SharedMemory shm;
 
 private:
@@ -105,8 +99,21 @@ private:
     int SEND(diomsg * M, int mtype, int id, size_t size, off_t offset, ssize_t shm_offset);
     void handle(diomsg * M);
     void unlinkDone(diomsg * M);
+
+    /**
+     * magic1 is the number of messages away which we
+     * stop allowing open/create for.
+     */
     int magic1;
+
+    /**
+     * magic2 is the point at which we start blocking on msgsnd/msgrcv.
+     * If a queue has magic2 (or more) messages away, then we read the
+     * queue until the level falls below magic2.  Recommended value
+     * is 75% of SHMBUFS.
+     */
     int magic2;
+
     int away;
     int smsgid;
     int rmsgid;
@@ -114,9 +121,10 @@ private:
     size_t instanceID;
 };
 
+/// \ingroup diskd
 #define SHMBUF_BLKSZ SM_PAGE_SIZE
 
-
+/// \ingroup diskd
 struct diskd_stats_t
 {
     int open_fail_queue_len;
@@ -138,6 +146,7 @@ struct diskd_stats_t
     open, create, close, unlink, read, write;
 };
 
+/// \ingroup diskd
 extern diskd_stats_t diskd_stats;
 
 #endif

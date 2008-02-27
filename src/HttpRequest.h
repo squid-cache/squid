@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequest.h,v 1.32 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id: HttpRequest.h,v 1.33 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -179,6 +179,6 @@ protected:
 
 };
 
-MEMPROXY_CLASS_INLINE(HttpRequest)
+MEMPROXY_CLASS_INLINE(HttpRequest)          /**DOCS_NOSEMI*/
 
 #endif /* SQUID_HTTPREQUEST_H */

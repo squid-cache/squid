@@ -1,5 +1,5 @@
 /*
- * $Id: squid_mswin.h,v 1.9 2008/01/22 20:12:57 serassio Exp $
+ * $Id: squid_mswin.h,v 1.10 2008/02/26 21:49:33 amosjeffries Exp $
  *
  * AUTHOR: Andrey Shorin <tolsty@tushino.com>
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
@@ -398,7 +398,9 @@ char *index(const char *s, int c)
     return (char *)strchr(s,c);
 }
 
+/** \cond AUTODOCS-IGNORE */
 namespace Squid {
+/** \endcond */
 
 inline
 int accept(int s, struct sockaddr * a, size_t * l)

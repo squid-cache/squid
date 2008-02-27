@@ -1,6 +1,5 @@
-
 /*
- * $Id: authenticate.h,v 1.16 2006/05/29 00:15:01 robertc Exp $
+ * $Id: authenticate.h,v 1.17 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,6 +37,15 @@
 
 class AuthUser;
 
+/**
+ \ingroup AuthAPI
+ *
+ * This is used to link auth_users into the username cache.
+ * Because some schemes may link in aliases to a user,
+ * the link is not part of the AuthUser structure itself.
+ *
+ \todo Inheritance in a struct? this should be a class.
+ */
 struct AuthUserHashPointer : public hash_link
 {
     /* first two items must be same as hash_link */
@@ -54,29 +62,44 @@ private:
     AuthUser *auth_user;
 };
 
-MEMPROXY_CLASS_INLINE(AuthUserHashPointer)
+MEMPROXY_CLASS_INLINE(AuthUserHashPointer)			/**DOCS_NOSEMI*/
 
 class ConnStateData;
 
 class AuthScheme;
 
-/* authenticate.c authenticate scheme routines typedefs */
-/* TODO: this should be a generic cachemgr API type ? */
+/**
+ \ingroup AuthAPI
+ \todo this should be a generic cachemgr API type ?
+ */
 typedef void AUTHSSTATS(StoreEntry *);
 
-/* subsumed by the C++ interface */
+/**
+ \ingroup AuthAPI
+ * subsumed by the C++ interface
+ \todo does 'subsumed' mean deprecated use a C++ API call?
+ */
 extern void authenticateAuthUserMerge(auth_user_t *, auth_user_t *);
 
+/// \ingroup AuthAPI
 extern void authenticateInit(authConfig *);
+/// \ingroup AuthAPI
 extern void authenticateRegisterWithCacheManager(authConfig * config, CacheManager & manager);
+/// \ingroup AuthAPI
 extern void authenticateShutdown(void);
+/// \ingroup AuthAPI
 extern int authenticateAuthUserInuse(auth_user_t * auth_user);
 
+/// \ingroup AuthAPI
 extern void authenticateFreeProxyAuthUserACLResults(void *data);
+/// \ingroup AuthAPI
 extern int authenticateActiveSchemeCount(void);
+/// \ingroup AuthAPI
 extern int authenticateSchemeCount(void);
 
+/// \ingroup AuthAPI
 extern void authenticateUserCacheRestart(void);
+/// \ingroup AuthAPI
 extern void authenticateOnCloseConnection(ConnStateData * conn);
 
 #endif /* SQUID_AUTHENTICATE_H */

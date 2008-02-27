@@ -1,6 +1,6 @@
 
 /*
- * $Id: negotiateScheme.h,v 1.1 2005/10/23 11:55:38 hno Exp $
+ * $Id: negotiateScheme.h,v 1.2 2008/02/26 21:49:43 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,6 +36,8 @@
 
 #include "AuthScheme.h"
 
+/// \ingroup AuthSchemeAPI
+/// \ingroup AuthAPI
 class negotiateScheme : public AuthScheme
 {
 

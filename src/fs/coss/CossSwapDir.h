@@ -27,6 +27,7 @@ class ConfigOptionVector;
 #include "DiskIO/DiskFile.h"
 #include "DiskIO/IORequestor.h"
 
+/// \ingroup COSS
 class CossSwapDir : public SwapDir, public IORequestor
 {
 
@@ -92,10 +93,14 @@ private:
     const char *stripe_path;
 };
 
+/// \ingroup COSS
 extern void storeCossAdd(CossSwapDir *, StoreEntry *);
+/// \ingroup COSS
 extern void storeCossRemove(CossSwapDir *, StoreEntry *);
+/// \ingroup COSS
 extern void storeCossStartMembuf(CossSwapDir * SD);
 
+/// \ingroup COSS
 class StoreSearchCoss : public StoreSearch
 {
 

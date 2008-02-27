@@ -1,24 +1,17 @@
-DOC	= prog-guide
 
-all: $(DOC).html $(DOC).ps $(DOC).txt
+all:
+	dyn-docs
+	html-docs
 
-$(DOC).ps: $(DOC).dvi
-	dvips -o $(DOC).ps $(DOC).dvi
+dyn-docs:
+	rm -f -r tmp
+	cd ../../ && doxygen squid3.dox 2>doxygen.log
+	mv tmp dyn
 
-$(DOC).tex: $(DOC).sgml
-	linuxdoc --backend=latex --papersize=letter $(DOC)
-
-$(DOC).dvi: $(DOC).tex
-	latex $(DOC).tex
-	latex $(DOC).tex
-	latex $(DOC).tex
-
-$(DOC).txt: $(DOC).sgml
-	linuxdoc --backend=txt $(DOC)
-
-$(DOC).html: $(DOC).sgml
-	sgml2html $(DOC)
+html-docs:
+	rm -f -r tmp
+	cd ../../ && (cat squid3.dox | sed s/dyn/html/g | sed s/CALL_GRAPH/#/ | sed s/CALLER_GRAPH/#/ | doxygen -) 2>doxygen.log
+	mv tmp html
 
 clean:
-	rm -f *.html
-	rm -f $(DOC).tex $(DOC).ps $(DOC).dvi $(DOC).aux $(DOC).log $(DOC).toc
+	rm -f -r tmp html dyn

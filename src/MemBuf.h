@@ -1,7 +1,5 @@
-
-
 /*
- * $Id: MemBuf.h,v 1.9 2007/12/21 23:48:04 hno Exp $
+ * $Id: MemBuf.h,v 1.10 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,9 +36,11 @@
 #include "cbdata.h"
 #include "Packer.h"
 
-/* auto-growing memory-resident buffer with printf interface */
-/* note: when updating this struct, update MemBufNULL #define */
-
+/**
+ * Auto-growing memory-resident buffer with printf interface
+ *
+ \todo XXX: convert global memBuf*() functions into methods
+ */
 class MemBuf
 {
 
@@ -48,72 +48,93 @@ public:
     _SQUID_INLINE_ MemBuf();
     _SQUID_INLINE_ ~MemBuf();
 
-    /* use methods instead of deprecated buf and size members */
+    /// start of the added data
+    char *content() { return buf; }
 
-    char *content() { return buf; }             // start of the added data
+    /// start of the added data
+    const char *content() const { return buf; }
 
-    const char *content() const { return buf; } // start of the added data
+    /// available data size
+    mb_size_t contentSize() const { return size; }
 
-    mb_size_t contentSize() const { return size; } // available data size
-
+    /**
+     * Whether the buffer contains any data.
+     \retval true	if data exists in the buffer
+     \retval false	if data exists in the buffer
+     */
     bool hasContent() const { return size > 0; }
 
-    // these space-related methods assume no growth and allow 0-termination
+    /// these space-related methods assume no growth and allow 0-termination
     char *space() { return buf + size; } // space to add data
     char *space(mb_size_t required) { if (size + required > capacity) grow(size + required); return buf + size; } // space to add data
 
     mb_size_t spaceSize() const;
+
+    /**
+     * Whether the buffer contains any data space available.
+     \retval true	if data can be added to teh buffer
+     \retval false	if teh buffer is full
+     */
     bool hasSpace() const { return size+1 < capacity; }
 
     mb_size_t potentialSpaceSize() const; // accounts for possible growth
     bool hasPotentialSpace() const { return potentialSpaceSize() > 0; }
 
-    // there is currently no stretch() method to grow without appending
+    /// \note there is currently no stretch() method to grow without appending
 
     void consume(mb_size_t sz);  // removes sz bytes, moving content left
     void append(const char *c, mb_size_t sz); // grows if needed and possible
     void appended(mb_size_t sz); // updates content size after external append
 
-    // XXX: convert global memBuf*() functions into methods
-
     void terminate(); // zero-terminates the buffer w/o increasing contentSize
 
     bool wasStolen() const { return stolen; }
 
-    /* init with specific sizes */
+    /** init with specific sizes */
     void init(mb_size_t szInit, mb_size_t szMax);
 
-    /* init with defaults */
+    /** init with defaults */
     void init();
 
-    /* cleans mb; last function to call if you do not give .buf away */
+    /** cleans mb; last function to call if you do not give .buf away */
     void clean();
 
-    /* resets mb preserving (or initializing if needed) memory buffer */
+    /** resets mb preserving (or initializing if needed) memory buffer */
     void reset();
 
-    /* unfirtunate hack to test if the buffer has been Init()ialized */
+    /** unfirtunate hack to test if the buffer has been Init()ialized */
     int isNull();
 
-    /* calls snprintf, extends buffer if needed */
-    /* note we use Printf instead of printf so the compiler won't */
-    /* think we're calling the libc printf() */
 #if STDC_HEADERS
 
+    /**
+     * calls snprintf, extends buffer if needed
+     \note  we use Printf instead of printf so the compiler won't
+     *      think we're calling the libc printf()
+     */
     void Printf(const char *fmt,...) PRINTF_FORMAT_ARG2;
 #else
 
+    /**
+     * calls snprintf, extends buffer if needed
+     \note  we use Printf instead of printf so the compiler won't
+     *      think we're calling the libc printf()
+     */
     void Printf();
 #endif
 
-    /* vPrintf for other printf()'s to use */
+    /** vPrintf for other printf()'s to use */
     void vPrintf(const char *fmt, va_list ap);
 
-    /* returns free() function to be used, _freezes_ the object! */
+    /**
+     * freezes the object! and returns function to clear it up.
+     *
+     \retval free() function to be used.
+     */
     FREE *freeFunc();
 
 private:
-    /*
+    /**
      * private copy constructor and assignment operator generates
      * compiler errors if someone tries to copy/assign a MemBuf
      */
@@ -126,16 +147,29 @@ private:
     CBDATA_CLASS2(MemBuf);
 
 public:
-    /* public, read-only, depricated in favor of space*() and content*() */
-    // XXX: hide these members completely and remove 0-termination
-    // so that consume() does not need to memmove all the time
+    /**
+     \deprecated use space*() and content*() methods to access safely instead.
+     * public, read-only.
+     * 
+     \todo XXX: hide these members completely and remove 0-termination
+     *          so that consume() does not need to memmove all the time
+     */
     char *buf;          // available content
     mb_size_t size;     // used space, does not count 0-terminator
 
-    /* private, stay away; use interface function instead */
-    // XXX: make these private after converting memBuf*() functions to methods
-    mb_size_t max_capacity;	/* when grows: assert(new_capacity <= max_capacity) */
-    mb_size_t capacity;		/* allocated space */
+    /**
+     * when grows: assert(new_capacity <= max_capacity)
+     \deprecated Use interface function instead
+     \todo XXX: make these private after converting memBuf*() functions to methods
+     */
+    mb_size_t max_capacity;
+
+    /**
+     * allocated space
+     \deprecated Use interface function instead
+     \todo XXX: make these private after converting memBuf*() functions to methods
+     */
+    mb_size_t capacity;	
 
 unsigned stolen:
     1;		/* the buffer has been stolen for use by someone else */
@@ -151,9 +185,9 @@ unsigned valid:
 #include "MemBuf.cci"
 #endif
 
-/* returns free() function to be used, _freezes_ the object! */
+/** returns free() function to be used, _freezes_ the object! */
 SQUIDCEXTERN void memBufReport(MemBuf * mb);
-/* pack content into a mem buf. */
+/** pack content into a mem buf. */
 SQUIDCEXTERN void packerToMemInit(Packer * p, MemBuf * mb);
 
 #endif /* SQUID_MEM_H */

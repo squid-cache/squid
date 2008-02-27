@@ -1,5 +1,5 @@
 /*
- * $Id: ESIExpatParser.h,v 1.4 2005/07/03 15:25:08 serassio Exp $
+ * $Id: ESIExpatParser.h,v 1.5 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -42,18 +42,21 @@ class ESIExpatParser : public ESIParser
 public:
     ESIExpatParser(ESIParserClient *);
     ~ESIExpatParser();
-    /* true on success */
+
+    /** \retval true	on success */
     bool parse(char const *dataToParse, size_t const lengthOfData, bool const endOfStream);
+
     long int lineNumber() const;
     char const * errorString() const;
 
 private:
     ESI_PARSER_TYPE;
-    mutable XML_Parser p; /* our parser */
-    static void Start(void *data, const char *el, const char **attr);
-    static void End(void *data, const char *el);
-    static void Default (void *data, const char *s, int len);
-    static void Comment (void *data, const char *s);
+    /** our parser */
+    mutable XML_Parser p;
+    static void Start(void *data, const XML_Char *el, const char **attr);
+    static void End(void *data, const XML_Char *el);
+    static void Default (void *data, const XML_Char *s, int len);
+    static void Comment (void *data, const XML_Char *s);
     XML_Parser &myParser() const {return p;}
 
     ESIParserClient *theClient;

@@ -1,6 +1,5 @@
-
 /*
- * $Id: ACLExtUser.h,v 1.5 2005/05/06 01:57:55 hno Exp $
+ * $Id: ACLExtUser.h,v 1.6 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,10 +34,12 @@
 
 #ifndef SQUID_ACLIDENT_H
 #define SQUID_ACLIDENT_H
+
 #include "ACL.h"
 #include "ACLChecklist.h"
 #include "ACLData.h"
 
+/// \ingroup ACLAPI
 class ACLExtUser : public ACL
 {
 
@@ -67,6 +68,6 @@ private:
     char const *type_;
 };
 
-MEMPROXY_CLASS_INLINE(ACLExtUser)
+MEMPROXY_CLASS_INLINE(ACLExtUser)          /**DOCS_NOSEMI*/
 
 #endif /* SQUID_ACLIDENT_H */

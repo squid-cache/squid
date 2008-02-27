@@ -1,6 +1,5 @@
-
 /*
- * $Id: DelayBucket.h,v 1.2 2003/02/21 22:50:05 robertc Exp $
+ * $Id: DelayBucket.h,v 1.3 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -39,6 +38,7 @@
 class DelaySpec;
 /* don't use remote storage for these */
 
+/// \ingroup DelayPoolsAPI
 class DelayBucket
 {
 

@@ -1,6 +1,5 @@
-
 /*
- * $Id: ACLDestinationASN.h,v 1.3 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id: ACLDestinationASN.h,v 1.4 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,10 +34,12 @@
 
 #ifndef SQUID_ACLDESTINATIONASN_H
 #define SQUID_ACLDESTINATIONASN_H
+
 #include "ACLASN.h"
 #include "ACLStrategy.h"
 #include "IPAddress.h"
 
+/// \ingroup ACLAPI
 class ACLDestinationASNStrategy : public ACLStrategy<IPAddress>
 {
 
@@ -47,9 +48,13 @@ public:
     virtual bool requiresRequest() const {return true;}
 
     static ACLDestinationASNStrategy *Instance();
-    /* Not implemented to prevent copies of the instance. */
-    /* Not private to prevent brain dead g+++ warnings about
-     * private constructors with no friends */
+
+    /**
+     * Not implemented to prevent copies of the instance.
+     \par
+     * Not private to prevent brain dead g++ warnings about
+     * private constructors with no friends
+     */
     ACLDestinationASNStrategy(ACLDestinationASNStrategy const &);
 
 private:

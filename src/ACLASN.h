@@ -1,6 +1,5 @@
-
 /*
- * $Id: ACLASN.h,v 1.9 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id: ACLASN.h,v 1.10 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,6 +34,7 @@
 
 #ifndef SQUID_ACLASN_H
 #define SQUID_ACLASN_H
+
 #include "ACLData.h"
 #include "List.h"
 #include "ACLStrategised.h"
@@ -46,10 +46,17 @@
 class CacheManager;
 
 SQUIDCEXTERN int asnMatchIp(List<int> *, IPAddress &);
+
+/// \ingroup ACLAPI
 SQUIDCEXTERN void asnInit(void);
+
+/// \ingroup ACLAPI
 extern void asnRegisterWithCacheManager(CacheManager & manager);
+
+/// \ingroup ACLAPI
 SQUIDCEXTERN void asnFreeMemory(void);
 
+/// \ingroup ACLAPI
 class ACLASN : public ACLData<IPAddress>
 {
 
@@ -73,6 +80,6 @@ private:
     List<int> *data;
 };
 
-MEMPROXY_CLASS_INLINE(ACLASN)
+MEMPROXY_CLASS_INLINE(ACLASN)          /**DOCS_NOSEMI*/
 
 #endif /* SQUID_ACLASN_H */

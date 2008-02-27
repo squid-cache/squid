@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -35,8 +34,10 @@
 
 #ifndef SQUID_ACLMYIP_H
 #define SQUID_ACLMYIP_H
+
 #include "ACLIP.h"
 
+/// \ingroup ACLAPI
 class ACLMyIP : public ACLIP
 {
 
@@ -53,6 +54,6 @@ private:
     static ACLMyIP RegistryEntry_;
 };
 
-MEMPROXY_CLASS_INLINE(ACLMyIP)
+MEMPROXY_CLASS_INLINE(ACLMyIP)          /**DOCS_NOSEMI*/
 
 #endif /* SQUID_ACLMYIP_H */

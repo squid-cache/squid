@@ -1,5 +1,5 @@
 /*
- * $Id: ACLProtocolData.cc,v 1.8 2006/05/08 23:38:33 robertc Exp $
+ * $Id: ACLProtocolData.cc,v 1.9 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -62,8 +62,9 @@ ACLProtocolData::match(protocol_t toFind)
 
 /* explicit instantiation required for some systems */
 
-template cbdata_type List<protocol_t>
-::CBDATA_List;
+/// \cond AUTODOCS-IGNORE
+template cbdata_type List<protocol_t>::CBDATA_List;
+/// \endcond
 
 wordlist *
 ACLProtocolData::dump()

@@ -1,6 +1,5 @@
-
 /*
- * $Id: BlockingFile.h,v 1.2 2006/08/21 00:50:43 robertc Exp $
+ * $Id: BlockingFile.h,v 1.3 2008/02/26 21:49:40 amosjeffries Exp $
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
@@ -39,6 +38,7 @@
 
 #include "cbdata.h"
 #include "DiskIO/DiskFile.h"
+#include "DiskIO/IORequestor.h"
 
 class BlockingFile : public DiskFile
 {
@@ -46,18 +46,18 @@ class BlockingFile : public DiskFile
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    BlockingFile (char const *path);
+    BlockingFile(char const *path);
     ~BlockingFile();
-    virtual void open (int, mode_t, RefCount<IORequestor>);
-    virtual void create (int, mode_t, RefCount<IORequestor>);
+    virtual void open(int flags, mode_t mode, RefCount<IORequestor> callback);
+    virtual void create(int flags, mode_t mode, RefCount<IORequestor> callback);
     virtual void read(ReadRequest *);
     virtual void write(WriteRequest *);
-    virtual void close ();
+    virtual void close();
     virtual bool error() const;
     virtual int getFD() const { return fd;}
 
     virtual bool canRead() const;
-    virtual bool ioInProgress()const;
+    virtual bool ioInProgress() const;
 
 private:
     static DRCB ReadDone;

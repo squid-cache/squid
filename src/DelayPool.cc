@@ -1,6 +1,5 @@
-
 /*
- * $Id: DelayPool.cc,v 1.7 2007/04/23 06:11:55 wessels Exp $
+ * $Id: DelayPool.cc,v 1.8 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -62,12 +61,12 @@ DelayPool::~DelayPool()
 void
 DelayPool::parse()
 {
-    assert (theComposite() != NULL);
+    assert(theComposite() != NULL);
     theComposite()->parse();
 }
 
 void
-DelayPool::dump (StoreEntry *entry, unsigned int i) const
+DelayPool::dump(StoreEntry *entry, unsigned int i) const
 {
     if (theComposite() == NULL)
         return;
@@ -103,7 +102,7 @@ DelayPool::freeData()
     pool = NULL;
 }
 
-/* XXX create DelayIdComposite.cc */
+/** \todo XXX create DelayIdComposite.cc */
 void
 CompositePoolNode::delayRead(DeferredRead const &aRead)
 {
@@ -115,7 +114,8 @@ CompositePoolNode::delayRead(DeferredRead const &aRead)
 void
 CompositePoolNode::kickReads()
 {
-    /* we only start one, because delay pools may have **many** attached connections,
+    /**
+     * we only start one, because delay pools may have **many** attached connections,
      * and kicking them all off would be chaotic.
      * This may need to be reviewed.
      */

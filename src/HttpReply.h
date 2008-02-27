@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.h,v 1.23 2008/02/08 18:27:59 rousskov Exp $
+ * $Id: HttpReply.h,v 1.24 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -161,6 +161,6 @@ protected:
     virtual void hdrCacheInit();
 };
 
-MEMPROXY_CLASS_INLINE(HttpReply)
+MEMPROXY_CLASS_INLINE(HttpReply)		/**DOCS_NOSEMI*/
 
 #endif /* SQUID_HTTPREPLY_H */

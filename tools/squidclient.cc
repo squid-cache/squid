@@ -1,6 +1,6 @@
 
 /*
- * $Id: squidclient.cc,v 1.10 2007/12/14 23:11:53 amosjeffries Exp $
+ * $Id: squidclient.cc,v 1.11 2008/02/26 21:49:46 amosjeffries Exp $
  *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
@@ -36,7 +36,9 @@
 #include "config.h"
 
 #ifdef _SQUID_MSWIN_
+/** \cond AUTODOCS-IGNORE */
 using namespace Squid;
+/** \endcond */
 #endif
 
 #ifdef _SQUID_WIN32_

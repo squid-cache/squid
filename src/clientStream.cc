@@ -1,6 +1,6 @@
 
 /*
- * $Id: clientStream.cc,v 1.13 2007/04/28 22:26:37 hno Exp $
+ * $Id: clientStream.cc,v 1.14 2008/02/26 21:49:34 amosjeffries Exp $
  *
  * DEBUG: section 87    Client-side Stream routines.
  * AUTHOR: Robert Collins
@@ -33,50 +33,48 @@
  *
  */
 
-/*
- * A client Stream is a uni directional pipe, with the usual non-blocking
- * asynchronous approach present elsewhere in squid.
- *
- * Each pipe node has a data push function, and a data request function.
- * This limits flexability - the data flow is no longer assembled at each
- * step. 
- *
- * An alternative approach is to pass each node in the pipe the call-
- * back to use on each IO call. This allows the callbacks to be changed 
- * very easily by a participating node, but requires more maintenance 
- * in each node (store the call  back to the msot recent IO request in 
- * the nodes context.) Such an approach also prevents dynamically 
- * changing the pipeline from outside without an additional interface
- * method to extract the callback and context from the next node.
- *
- * One important characteristic of the stream is that the readfunc
- * on the terminating node, and the callback on the first node
- * will be NULL, and never used.
- */
-
 #include "squid.h"
 #include "clientStream.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "client_side_request.h"
 
-CBDATA_TYPE(clientStreamNode);
-
-/*
- * TODO: rather than each node undeleting the next, have a clientStreamDelete
- * that walks the list
- */
-
-/*
- * clientStream quick notes:
+/**
+ \defgroup ClientStreamInternal Client Streams Internals
+ \ingroup ClientStreamAPI
+ \par
+ * A client Stream is a uni directional pipe, with the usual non-blocking
+ * asynchronous approach present elsewhere in squid.
  *
+ \par
+ * Each pipe node has a data push function, and a data request function.
+ * This limits flexability - the data flow is no longer assembled at each
+ * step. 
+ *
+ \par
+ * An alternative approach is to pass each node in the pipe the call-
+ * back to use on each IO call. This allows the callbacks to be changed 
+ * very easily by a participating node, but requires more maintenance 
+ * in each node (store the callback to the most recent IO request in 
+ * the nodes context.) Such an approach also prevents dynamically 
+ * changing the pipeline from outside without an additional interface
+ * method to extract the callback and context from the next node.
+ *
+ \par
+ * One important characteristic of the stream is that the readfunc
+ * on the terminating node, and the callback on the first node
+ * will be NULL, and never used.
+ *
+ \section QuickNotes Quick Notes
+ \par
  * Each node including the HEAD of the clientStream has a cbdataReference
  * held by the stream. Freeing the stream then removes that reference
- * and cbdataFrees every node.
+ * and cbdataFree()'s every node.
  * Any node with other References, and all nodes downstream will only 
  * free when those references are released.
  * Stream nodes MAY hold references to the data member of the node. 
  *
+ \par
  * Specifically - on creation no reference is made. 
  * If you pass a data variable to a node, give it an initial reference.
  * If the data member is non-null on FREE, cbdataFree WILL be called.
@@ -84,27 +82,37 @@ CBDATA_TYPE(clientStreamNode);
  * explicitly setting the stream node data member to NULL and
  * cbdataReferenceDone'ing it.
  *
+ \par
  * No data member may hold a reference to it's stream node.
  * The stream guarantees that DETACH will be called before
  * freeing the node, alowing data members to cleanup.
  * 
+ \par
  * If a node's data holds a reference to something that needs to
  * free the stream a circular reference list will occur.
  * This results no data being freed until that reference is removed.
  * One way to accomplish thisObject is to explicitly remove the
  * data from your own node before freeing the stream.
  *
- * (i.e. 
- * mycontext = thisObject->data;
- * thisObject->data = NULL;
- * clientStreamFree (thisObject->head);
- * mycontext = NULL;
- * return;
+ \code
+   mycontext = thisObject->data;
+   thisObject->data = NULL;
+   clientStreamFree (thisObject->head);
+   mycontext = NULL;
+   return;
+ \endcode
+ *
+ \todo rather than each node undeleting the next, have a clientStreamDelete that walks the list.
  */
+
+/// \ingroup ClientStreamInternal
+CBDATA_TYPE(clientStreamNode);
+
 
 /* Local functions */
 static FREE clientStreamFree;
 
+/// \ingroup ClientStreamInternal
 clientStreamNode *
 clientStreamNew(CSR * readfunc, CSCB * callback, CSD * detach, CSS * status,
                 ClientStreamData data)
@@ -120,7 +128,8 @@ clientStreamNew(CSR * readfunc, CSCB * callback, CSD * detach, CSS * status,
     return temp;
 }
 
-/*
+/**
+ \ingroup ClientStreamInternal
  * Initialise a client Stream.
  * list is the stream
  * func is the read function for the head
@@ -141,7 +150,8 @@ clientStreamInit(dlink_list * list, CSR * func, CSD * rdetach, CSS * readstatus,
     temp->readBuffer = tailBuffer;
 }
 
-/*
+/**
+ \ingroup ClientStreamInternal
  * Doesn't actually insert at head. Instead it inserts one *after*
  * head. This is because HEAD is a special node, as is tail
  * This function is not suitable for inserting the real HEAD.
@@ -165,9 +175,7 @@ clientStreamInsertHead(dlink_list * list, CSR * func, CSCB * callback,
     dlinkAddAfter(cbdataReference(temp), &temp->node, list->head, list);
 }
 
-/*
- * Callback the next node the in chain with it's requested data
- */
+// API
 void
 clientStreamCallback(clientStreamNode * thisObject, ClientHttpRequest * http,
                      HttpReply * rep, StoreIOBuffer replyBuffer)
@@ -181,8 +189,13 @@ clientStreamCallback(clientStreamNode * thisObject, ClientHttpRequest * http,
     next->callback(next, http, rep, replyBuffer);
 }
 
-/*
+/**
+ \ingroup ClientStreamInternal
  * Call the previous node in the chain to read some data
+ *
+ \param thisObject	??
+ \param http		??
+ \param readBuffer	??
  */
 void
 clientStreamRead(clientStreamNode * thisObject, ClientHttpRequest * http,
@@ -199,8 +212,12 @@ clientStreamRead(clientStreamNode * thisObject, ClientHttpRequest * http,
     prev->readfunc(prev, http);
 }
 
-/*
+/**
+ \ingroup ClientStreamInternal
  * Detach from the stream - only allowed for terminal members
+ *
+ \param thisObject	??
+ \param http		??
  */
 void
 clientStreamDetach(clientStreamNode * thisObject, ClientHttpRequest * http)
@@ -238,8 +255,12 @@ clientStreamDetach(clientStreamNode * thisObject, ClientHttpRequest * http)
     }
 }
 
-/*
+/**
+ \ingroup ClientStreamInternal
  * Abort the stream - detach every node in the pipeline.
+ *
+ \param thisObject	??
+ \param http		??
  */
 void
 clientStreamAbort(clientStreamNode * thisObject, ClientHttpRequest * http)
@@ -256,8 +277,12 @@ clientStreamAbort(clientStreamNode * thisObject, ClientHttpRequest * http)
     }
 }
 
-/*
- * Call the upstream node to find it's status 
+/**
+ \ingroup ClientStreamInternal
+ * Call the upstream node to find it's status
+ *
+ \param thisObject	??
+ \param http		??
  */
 clientStream_status_t
 clientStreamStatus(clientStreamNode * thisObject, ClientHttpRequest * http)
@@ -269,6 +294,7 @@ clientStreamStatus(clientStreamNode * thisObject, ClientHttpRequest * http)
 }
 
 /* Local function bodies */
+
 void
 clientStreamNode::removeFromStream()
 {
@@ -278,6 +304,7 @@ clientStreamNode::removeFromStream()
     head = NULL;
 }
 
+/// \ingroup ClientStreamInternal
 void
 clientStreamFree(void *foo)
 {

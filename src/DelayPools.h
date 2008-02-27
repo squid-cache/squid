@@ -1,6 +1,5 @@
-
 /*
- * $Id: DelayPools.h,v 1.4 2006/05/29 00:14:59 robertc Exp $
+ * $Id: DelayPools.h,v 1.5 2008/02/26 21:49:34 amosjeffries Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,12 +35,17 @@
 #ifndef SQUID_DELAYPOOLS_H
 #define SQUID_DELAYPOOLS_H
 
-/* forward decls */
+/**
+ \defgroup DelayPoolsAPI Delay Pools API
+ \ingroup Components
+ */
 
+/* forward decls */
 class CacheManager;
 
 #include "Array.h"
 
+/// \ingroup DelayPoolsAPI
 class Updateable
 {
 
@@ -53,6 +57,7 @@ public:
 
 class DelayPool;
 
+/// \ingroup DelayPoolsAPI
 class DelayPools
 {
 
