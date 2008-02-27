@@ -1,0 +1,28 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=koi8-u">
+<TITLE>ПОМИЛКА: Запрошений URL не може бути доставлений</TITLE>
+<STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
+</HEAD><BODY>
+<H1>ПОМИЛКА</H1>
+<H2>Запрошений URL не може бути доставлений</H2>
+<HR noshade size="1px">
+<P>
+Під час доставки URL:
+<A HREF="%U">%U</A>
+<P>
+Виникла наступна помилка:
+<UL>
+<LI>
+<STRONG>
+Запит чи відповідь надто велика.
+</STRONG>
+
+<P>
+У випадку, якщо Ви здійснювали POST чи PUT запит, тоді Ваш запит
+(те, що Ви намагались закачати) є надто великим. Якщо Ви 
+здійснювали GET запит, тоді відклик (те, що Ви намагались викачати
+) є надто великим. Ці обмеження були встановлені
+Вашим Інтернет Провайдером, який керує кешом. Будь-ласка,
+повідомте його, якщо Ви вважаєте дане повідомлення помилкою.
+</UL>
+<P>Вашим адміністратором кешу є <A HREF="mailto:%w">%w</A>.
