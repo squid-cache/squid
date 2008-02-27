@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side.cc,v 1.777 2008/02/18 21:54:07 rousskov Exp $
+ * $Id: client_side.cc,v 1.778 2008/02/26 18:43:58 rousskov Exp $
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1410,9 +1410,8 @@ ClientSocketContext::canPackMoreRanges() const
     /* first update "i" if needed */
 
     if (!http->range_iter.debt()) {
-        const int d = fd();
         debugs(33, 5, "ClientSocketContext::canPackMoreRanges: At end of " <<
-            "current range spec for FD " << d);
+            "current range spec for FD " << fd());
 
         if (http->range_iter.pos.incrementable())
             ++http->range_iter.pos;
@@ -1468,8 +1467,7 @@ ClientSocketContext::getNextRangeOffset() const
 void
 ClientSocketContext::pullData()
 {
-    const int d = fd(); // XXX: to prevent bug 2224 only
-    debugs(33, 5, "ClientSocketContext::pullData: FD " << d <<
+    debugs(33, 5, "ClientSocketContext::pullData: FD " << fd() <<
         " attempting to pull upstream data");
 
     /* More data will be coming from the stream. */
@@ -1497,9 +1495,8 @@ ClientSocketContext::socketState()
             /* filter out data according to range specs */
 
             if (!canPackMoreRanges()) {
-                const int d = fd(); // XXX: to prevent bug 2224 only
                 debugs(33, 5, HERE << "Range request at end of returnable " <<
-                    "range sequence on FD " << d);
+                    "range sequence on FD " << fd());
 
                 if (http->request->flags.proxy_keepalive)
                     return STREAM_COMPLETE;
