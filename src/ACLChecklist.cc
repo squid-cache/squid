@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.42 2007/09/01 05:56:37 amosjeffries Exp $
+ * $Id: ACLChecklist.cc,v 1.42.2.1 2008/02/27 10:41:16 amosjeffries Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -394,12 +394,9 @@ ACLChecklist::~ACLChecklist()
 
     HTTPMSGUNLOCK(reply);
 
-    /*
-     * DPW 2007-05-08
-     * If this fails, then we'll need a backup UNLOCK call in the
-     * destructor.
-     */
-    assert(auth_user_request == NULL);
+    // no auth_user_request in builds without any Authentication configured
+    if (auth_user_request)
+        AUTHUSERREQUESTUNLOCK(auth_user_request, "ACLChecklist destructor");
 
     conn_ = NULL;
 
