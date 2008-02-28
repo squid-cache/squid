@@ -2,7 +2,7 @@
 <article>
 <title>Squid 3.0.STABLE2 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.0.sgml,v 1.30.2.4 2008/02/27 05:55:09 amosjeffries Exp $</date>
+<date>$Id: release-3.0.sgml,v 1.30.2.5 2008/02/28 00:26:31 amosjeffries Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.0 of Squid.
@@ -18,7 +18,7 @@ The Squid Team are pleased to announce the release of Squid-3.0.STABLE2.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.0/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
-A large number of the show-stopper bugs have been fixed along with general improvements to the ICAP support.
+A large number of the show-stopper bugs have been fixed along with general improvements to the ICAP support and additional Languages.
 
 We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/TroubleShooting#head-7067fc0034ce967e67911becaabb8c95a34d576d"> for how to submit a report with a stack trace.
 
@@ -84,7 +84,7 @@ to perform some simple XML based processing, offloading the final page assembly 
 <sect1>2.6 features not found in Squid-3.0
 <p>
 Some of the features found in Squid-2.6 is not available in Squid-3.
-Some has been dropped as they are not needed. Some has not yet been forward-ported to Squid-3 and may appear in a later release.
+Some have been dropped as they are not needed. Some have not yet been forward-ported to Squid-3 and may appear in a later release.
 
 <itemize>
 	<item>refresh_stale_hit option. Not yet ported.
