@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.488.4.2 2008/02/10 10:07:53 serassio Exp $
+# $Id: cf.data.pre,v 1.488.4.3 2008/02/29 18:30:03 serassio Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -45,6 +45,21 @@ COMMENT_START
 	option - the comments for that keyword indicate if this is the
 	case.
 
+COMMENT_END
+
+COMMENT_START
+  Configuration options can be included using the "include" directive.
+  Include takes a list of files to include. Quoting and wildcards is
+  supported.
+
+  For example,
+
+  include /path/to/included/file/squid.acl.config
+
+  Includes can be nested up to a hard-coded depth of 16 levels.
+  This arbitrary restriction is to prevent recursive include references
+  from causing Squid entering an infinite loop whilst trying to load
+  configuration files.
 COMMENT_END
 
 COMMENT_START
@@ -488,6 +503,7 @@ DOC_START
 	acl aclname port     80 70 21 ...
 	acl aclname port     0-1024 ...		# ranges allowed
 	acl aclname myport   3128 ...		# (local socket TCP port)
+	acl aclname myportname 3128 ...		# http(s)_port name
 	acl aclname proto    HTTP FTP ...
 	acl aclname method   GET POST ...
 	acl aclname browser  [-i] regexp ...
@@ -920,6 +936,9 @@ DOC_START
 			sporadically hang or never complete requests set
 			disable-pmtu-discovery option to 'transparent'.
 
+	   name=	Specifies a internal name for the port. Defaults to
+			the port specification (port or addr:port)
+
 	If you run Squid on a dual-homed machine with an internal
 	and an external interface we recommend you to specify the
 	internal address:port in http_port. This way Squid will only be
@@ -1031,6 +1050,9 @@ DOC_START
 
 	   vport=NN	As above, but uses specified port number rather
 			than the https_port number. Implies accel.
+
+	   name=	Specifies a internal name for the port. Defaults to
+			the port specification (port or addr:port)
 
 DOC_END
 
@@ -2178,7 +2200,7 @@ DOC_START
 DOC_END
 
 NAME: debug_options
-TYPE: debug
+TYPE: eol
 DEFAULT: ALL,1
 LOC: Config.debugOptions
 DOC_START

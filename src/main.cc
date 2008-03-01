@@ -1,6 +1,6 @@
 
 /*
- * $Id: main.cc,v 1.451.4.2 2008/02/17 19:44:01 serassio Exp $
+ * $Id: main.cc,v 1.451.4.3 2008/02/29 18:30:03 serassio Exp $
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived
@@ -632,6 +632,7 @@ mainReconfigure(void)
     errorClean();
     enter_suid();		/* root to read config file */
     parseConfigFile(ConfigFile, manager);
+    Mem::Report();
     setEffectiveUser();
     _db_init(Config.Log.log, Config.debugOptions);
     ipcache_restart();		/* clear stuck entries */
@@ -1078,7 +1079,7 @@ main(int argc, char **argv)
     sbrk_start = sbrk(0);
 #endif
 
-    Debug::parseOptions("ALL,1");
+    Debug::parseOptions(NULL);
     debug_log = stderr;
 
 #if defined(SQUID_MAXFD_LIMIT)
@@ -1153,6 +1154,10 @@ main(int argc, char **argv)
 
     mainParseOptions(argc, argv);
 
+    if (opt_parse_cfg_only) {
+	Debug::parseOptions("ALL,1");
+    }
+
 #if USE_WIN32_SERVICE
 
     if (opt_install_service)
@@ -1200,6 +1205,8 @@ main(int argc, char **argv)
 
         parse_err = parseConfigFile(ConfigFile, manager);
 
+        Mem::Report();
+        
         if (opt_parse_cfg_only)
 
             return parse_err;

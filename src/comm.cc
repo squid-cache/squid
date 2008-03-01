@@ -1,5 +1,5 @@
 /*
- * $Id: comm.cc,v 1.438 2007/10/31 04:52:16 amosjeffries Exp $
+ * $Id: comm.cc,v 1.438.4.1 2008/02/29 18:30:03 serassio Exp $
  *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
@@ -1103,6 +1103,7 @@ ConnectStateData::commResetFD()
 
         return 0;
     }
+    commResetSelect(fd);
 
     close(fd2);
     fde *F = &fd_table[fd];
@@ -1251,6 +1252,13 @@ comm_connect_addr(int sock, const struct sockaddr_in *address)
         statCounter.syscalls.sock.connects++;
 
         x = connect(sock, (struct sockaddr *) address, sizeof(*address));
+
+        // XXX: ICAP code refuses callbacks during a pending comm_ call
+        // Async calls development will fix this.
+        if (x == 0) {
+            x = -1;
+            errno = EINPROGRESS;
+        }
 
         if (x < 0)
             debugs(5, 9, "connect FD " << sock << ": " << xstrerror());
@@ -1897,7 +1905,7 @@ commHandleWrite(int fd, void *data) {
         /* A successful write, continue */
         state->offset += len;
 
-        if (state->offset < (off_t)state->size) {
+        if (state->offset < state->size) {
             /* Not done, reinstall the write handler and write some more */
             commSetSelect(fd,
                           COMM_SELECT_WRITE,

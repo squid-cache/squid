@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select_win32.cc,v 1.4.6.2 2008/02/24 13:01:55 serassio Exp $
+ * $Id: comm_select_win32.cc,v 1.4.6.3 2008/02/29 18:30:03 serassio Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -154,6 +154,11 @@ commSetSelect(int fd, unsigned int type, PF * handler, void *client_data,
 
     if (timeout)
         F->timeout = squid_curtime + timeout;
+}
+
+void
+commResetSelect(int fd)
+{
 }
 
 

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIInclude.cc,v 1.14.4.2 2008/01/20 19:39:26 serassio Exp $
+ * $Id: ESIInclude.cc,v 1.14.4.3 2008/02/29 18:30:02 serassio Exp $
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
@@ -320,7 +320,7 @@ void
 ESIInclude::prepareRequestHeaders(HttpHeader &tempheaders, ESIVarState *vars)
 {
     tempheaders.update (&vars->header(), NULL);
-    tempheaders.removeConnectionHeaderEntries();
+    tempheaders.removeHopByHopEntries();
 }
 
 

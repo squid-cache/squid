@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_node.h,v 1.10 2007/08/13 17:20:51 hno Exp $
+ * $Id: mem_node.h,v 1.10.4.1 2008/02/29 18:30:03 serassio Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -42,7 +42,7 @@ class mem_node
 
 public:
     static size_t InUseCount();
-    static unsigned long store_mem_size;	/* 0 */
+    static size_t StoreMemSize();
 
     MEMPROXY_CLASS(mem_node);
     mem_node(int64_t);

@@ -1,3 +1,18 @@
+Changes to squid-3.0.STABLE1 (1 Mar 2008):
+
+	- Add myportname ACL for matching the accepting port name (see release notes)
+	- Add include directive for squid.conf (see release notes)
+	- Add ability to strip kerberos realm from usernames during Auth
+	- License cleanup to comply with GPLv2 or later
+	- Updated Error Pages and Translations
+	- Updated configuration examples
+	- Updated valgrind support for valgrind-3.3.0
+	- Improved support for Windows and MacOS X Leopard
+	- Improved support for files larger than 2GB
+	- Improved support for CARP arrays and WCCPv2
+	- Improved cachmgr, SNMP, and log reporting
+	- ... and as usual Many bug fixes since STABLE 1
+
 Changes to squid-3.0.STABLE1 (13 Dec 2007):
 
 	- Major rewrite translating the code to C++, originally based on

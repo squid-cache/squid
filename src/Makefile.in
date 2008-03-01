@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.447.4.2 2007/12/27 20:37:46 serassio Exp $
+#  $Id: Makefile.in,v 1.447.4.3 2008/02/29 18:30:03 serassio Exp $
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -186,10 +186,10 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc \
 	ACLMaxConnection.cc ACLMaxConnection.h ACLMaxUserIP.cc \
 	ACLMaxUserIP.h ACLMethod.cc ACLMethod.h ACLMethodData.cc \
 	ACLMethodData.h ACLMyIP.cc ACLMyIP.h ACLMyPort.cc ACLMyPort.h \
-	ACLProtocol.cc ACLProtocol.h ACLProtocolData.cc \
-	ACLProtocolData.h ACLProxyAuth.cc ACLProxyAuth.h ACLReferer.cc \
-	ACLReferer.h ACLRegexData.cc ACLRegexData.h \
-	ACLReplyHeaderStrategy.h ACLReplyMIMEType.cc \
+	ACLMyPortName.cc ACLMyPortName.h ACLProtocol.cc ACLProtocol.h \
+	ACLProtocolData.cc ACLProtocolData.h ACLProxyAuth.cc \
+	ACLProxyAuth.h ACLReferer.cc ACLReferer.h ACLRegexData.cc \
+	ACLRegexData.h ACLReplyHeaderStrategy.h ACLReplyMIMEType.cc \
 	ACLReplyMIMEType.h ACLHTTPRepHeader.cc ACLHTTPRepHeader.h \
 	ACLHTTPReqHeader.cc ACLHTTPReqHeader.h \
 	ACLRequestHeaderStrategy.h ACLRequestMIMEType.cc \
@@ -277,16 +277,16 @@ am__objects_6 = $(am__objects_5) ACLASN.$(OBJEXT) ACLBrowser.$(OBJEXT) \
 	ACLIntRange.$(OBJEXT) ACLIP.$(OBJEXT) \
 	ACLMaxConnection.$(OBJEXT) ACLMaxUserIP.$(OBJEXT) \
 	ACLMethod.$(OBJEXT) ACLMethodData.$(OBJEXT) ACLMyIP.$(OBJEXT) \
-	ACLMyPort.$(OBJEXT) ACLProtocol.$(OBJEXT) \
-	ACLProtocolData.$(OBJEXT) ACLProxyAuth.$(OBJEXT) \
-	ACLReferer.$(OBJEXT) ACLRegexData.$(OBJEXT) \
-	ACLReplyMIMEType.$(OBJEXT) ACLHTTPRepHeader.$(OBJEXT) \
-	ACLHTTPReqHeader.$(OBJEXT) ACLRequestMIMEType.$(OBJEXT) \
-	ACLSourceDomain.$(OBJEXT) ACLSourceIP.$(OBJEXT) \
-	ACLStrategised.$(OBJEXT) ACLStringData.$(OBJEXT) \
-	ACLTime.$(OBJEXT) ACLTimeData.$(OBJEXT) ACLUrl.$(OBJEXT) \
-	ACLUrlPath.$(OBJEXT) ACLUrlPort.$(OBJEXT) \
-	ACLUserData.$(OBJEXT)
+	ACLMyPort.$(OBJEXT) ACLMyPortName.$(OBJEXT) \
+	ACLProtocol.$(OBJEXT) ACLProtocolData.$(OBJEXT) \
+	ACLProxyAuth.$(OBJEXT) ACLReferer.$(OBJEXT) \
+	ACLRegexData.$(OBJEXT) ACLReplyMIMEType.$(OBJEXT) \
+	ACLHTTPRepHeader.$(OBJEXT) ACLHTTPReqHeader.$(OBJEXT) \
+	ACLRequestMIMEType.$(OBJEXT) ACLSourceDomain.$(OBJEXT) \
+	ACLSourceIP.$(OBJEXT) ACLStrategised.$(OBJEXT) \
+	ACLStringData.$(OBJEXT) ACLTime.$(OBJEXT) \
+	ACLTimeData.$(OBJEXT) ACLUrl.$(OBJEXT) ACLUrlPath.$(OBJEXT) \
+	ACLUrlPort.$(OBJEXT) ACLUserData.$(OBJEXT)
 am__objects_7 = comm_select.$(OBJEXT) comm_select_win32.$(OBJEXT) \
 	comm_poll.$(OBJEXT) comm_epoll.$(OBJEXT) comm_kqueue.$(OBJEXT)
 am__objects_8 = delay_pools.$(OBJEXT) DelayId.$(OBJEXT) \
@@ -1968,6 +1968,8 @@ squid_ACLSOURCES = \
 	ACLMyIP.h \
 	ACLMyPort.cc \
 	ACLMyPort.h \
+	ACLMyPortName.cc \
+	ACLMyPortName.h \
 	ACLProtocol.cc \
 	ACLProtocol.h \
 	ACLProtocolData.cc \
@@ -4628,6 +4630,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLMethodData.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLMyIP.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLMyPort.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLMyPortName.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLProtocol.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLProtocolData.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ACLProxyAuth.Po@am__quote@

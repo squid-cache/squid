@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_kqueue.cc,v 1.17 2007/07/19 13:33:18 hno Exp $
+ * $Id: comm_kqueue.cc,v 1.17.4.1 2008/02/29 18:30:03 serassio Exp $
  *
  * DEBUG: section 5     Socket Functions
  *
@@ -208,6 +208,18 @@ commSetSelect(int fd, unsigned int type, PF * handler,
     if (timeout)
         F->timeout = squid_curtime + timeout;
 
+}
+
+void
+commResetSelect(int fd)
+{
+    fde *F = &fd_table[fd];
+    if (F->read_handler) {
+	kq_update_events(fd, EVFILT_READ, (PF *)1);
+    }
+    if (F->write_handler) {
+	kq_update_events(fd, EVFILT_WRITE, (PF *)1);
+    }
 }
 
 /*

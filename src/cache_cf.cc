@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_cf.cc,v 1.528 2007/11/15 23:33:05 wessels Exp $
+ * $Id: cache_cf.cc,v 1.528.4.1 2008/02/29 18:30:03 serassio Exp $
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -46,6 +46,9 @@
 #include "Parsing.h"
 #include "MemBuf.h"
 #include "wordlist.h"
+#if HAVE_GLOB_H
+#include <glob.h>
+#endif
 
 #if SQUID_SNMP
 #include "snmp.h"
@@ -151,6 +154,8 @@ static int check_null_https_port_list(const https_port_list *);
 static void parse_b_size_t(size_t * var);
 static void parse_b_int64_t(int64_t * var);
 
+static int parseOneConfigFile(const char *file_name, unsigned int depth);
+
 /*
  * LegacyParser is a parser for legacy code that uses the global
  * approach.  This is static so that it is only exposed to cache_cf.
@@ -203,17 +208,53 @@ skip_ws(const char* s)
     return s;
 }
 
-int
-parseConfigFile(const char *file_name, CacheManager & manager)
+static int
+parseManyConfigFiles(char* files, int depth)
+{
+    int error_count = 0;
+    char* saveptr = NULL;
+#if HAVE_GLOB
+    char *path;
+    glob_t globbuf;
+    int i;
+    memset(&globbuf, 0, sizeof(globbuf));
+    for (path = strwordtok(files, &saveptr); path; path = strwordtok(NULL, &saveptr)) {
+	if (glob(path, globbuf.gl_pathc ? GLOB_APPEND : 0, NULL, &globbuf) != 0) {
+	    fatalf("Unable to find configuration file: %s: %s",
+		path, xstrerror());
+	}
+     }
+    for (i = 0; i < (int)globbuf.gl_pathc; i++) {
+	error_count += parseOneConfigFile(globbuf.gl_pathv[i], depth);
+    }
+    globfree(&globbuf);
+#else
+    char* file = strwordtok(files, &saveptr);
+    while (file != NULL) {
+	error_count += parseOneConfigFile(file, depth);
+	file = strwordtok(NULL, &saveptr);
+    }
+#endif /* HAVE_GLOB */
+    return error_count;
+}
+
+static int
+parseOneConfigFile(const char *file_name, unsigned int depth)
 {
     FILE *fp = NULL;
+    const char *orig_cfg_filename = cfg_filename;
+    const int orig_config_lineno = config_lineno;
     char *token = NULL;
     char *tmp_line = NULL;
     int tmp_line_len = 0;
     int err_count = 0;
     int is_pipe = 0;
-    configFreeMemory();
-    default_all();
+
+    debugs(3, 1, "Processing Configuration File: " << file_name << " (depth " << depth << ")");
+    if (depth > 16) {
+        fatalf("WARNING: can't include %s: includes are nested too deeply (>16)!\n", file_name);
+        return 1;
+    }
 
     if (file_name[0] == '!' || file_name[0] == '|') {
         fp = popen(file_name + 1, "r");
@@ -223,8 +264,7 @@ parseConfigFile(const char *file_name, CacheManager & manager)
     }
 
     if (fp == NULL)
-        fatalf("Unable to open configuration file: %s: %s",
-               file_name, xstrerror());
+        fatalf("Unable to open configuration file: %s: %s", file_name, xstrerror());
 
 #ifdef _SQUID_WIN32_
 
@@ -270,13 +310,6 @@ parseConfigFile(const char *file_name, CacheManager & manager)
                     *token = '\0';
 
                 cfg_filename = new_file_name;
-
-#if PROBABLY_NOT_WANTED_HERE
-
-                SetConfigFilename(cfg_filename, false);
-
-#endif
-
             }
 
             config_lineno = new_lineno;
@@ -306,11 +339,13 @@ parseConfigFile(const char *file_name, CacheManager & manager)
 
         debugs(3, 5, "Processing: '" << tmp_line << "'");
 
-        if (!parse_line(tmp_line)) {
-            debugs(3, 0, "parseConfigFile: '" << cfg_filename << "' line " <<
-                   config_lineno << " unrecognized: '" << config_input_line << "'");
-            err_count++;
-        }
+	/* Handle includes here */
+        if (tmp_line_len >= 9 && strncmp(tmp_line, "include", 7) == 0 && xisspace(tmp_line[7])) {
+            err_count += parseManyConfigFiles(tmp_line + 8, depth + 1);
+	} else if (!parse_line(tmp_line)) {
+            debugs(3, 0, HERE << cfg_filename << ":" << config_lineno << " unrecognized: '" << tmp_line << "'");
+ 	    err_count++;
+ 	}
 
         safe_free(tmp_line);
         tmp_line_len = 0;
@@ -325,6 +360,23 @@ parseConfigFile(const char *file_name, CacheManager & manager)
     } else {
         fclose(fp);
     }
+
+    cfg_filename = orig_cfg_filename;
+    config_lineno = orig_config_lineno;
+
+    return err_count;
+}
+
+int
+parseConfigFile(const char *file_name, CacheManager & manager)
+{
+    int err_count = 0;
+
+    configFreeMemory();
+
+    default_all();
+
+    err_count = parseOneConfigFile(file_name, 0);
 
     defaults_if_none();
 
@@ -350,6 +402,7 @@ parseConfigFile(const char *file_name, CacheManager & manager)
 
     return err_count;
 }
+
 
 static void
 configDoConfigure(void)
@@ -2364,18 +2417,6 @@ parse_eol(char *volatile *var)
 #define dump_eol dump_string
 #define free_eol free_string
 
-void
-parse_debug(char *volatile *var)
-{
-    parse_eol(var);
-    safe_free(debug_options)
-    debug_options = xstrdup(Config.debugOptions);
-    Debug::parseOptions(Config.debugOptions);
-}
-
-#define dump_debug dump_string
-#define free_debug free_string
-
 static void
 dump_time_t(StoreEntry * entry, const char *name, time_t var)
 {
@@ -2769,6 +2810,7 @@ parse_http_port_specification(http_port_list * s, char *token)
     char *t;
 
     s->disable_pmtu_discovery = DISABLE_PMTU_OFF;
+    s->name = strdup(token);
 
     if ((t = strchr(token, ':'))) {
         /* host:port */
