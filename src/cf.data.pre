@@ -1,6 +1,6 @@
 
 #
-# $Id: cf.data.pre,v 1.488.4.3 2008/02/29 18:30:03 serassio Exp $
+# $Id: cf.data.pre,v 1.488.4.4 2008/03/02 16:54:50 serassio Exp $
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -5196,6 +5196,7 @@ DOC_START
 		offline_toggle *
 		pconn
 		peer_select
+		reconfigure *
 		redirector
 		refresh
 		server_list
