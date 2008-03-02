@@ -1,6 +1,6 @@
 
 /*
- * $Id: ufsdump.cc,v 1.11 2007/11/15 16:47:35 wessels Exp $
+ * $Id: ufsdump.cc,v 1.11.4.1 2008/03/02 15:54:48 serassio Exp $
  *
  * DEBUG: section 0     UFS Store Dump
  * AUTHOR: Robert Collins
@@ -46,6 +46,10 @@
 
 /* stub functions for parts of squid not factored to be dynamic yet */
 void shut_down(int)
+{}
+
+void
+reconfigure(int)
 {}
 
 #if WHENITMINIMAL

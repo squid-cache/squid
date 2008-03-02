@@ -13,6 +13,10 @@ void
 shut_down(int)
 {}
 
+void
+reconfigure(int)
+{}
+
 /* end stubs */
 
 /* init memory pools */

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.48 2007/10/31 04:52:16 amosjeffries Exp $
+ * $Id: cache_manager.cc,v 1.48.4.1 2008/03/02 15:54:48 serassio Exp $
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
@@ -63,6 +63,7 @@ static void cachemgrStateFree(cachemgrStateData * mgr);
 static char *cachemgrPasswdGet(cachemgr_passwd *, const char *);
 static const char *cachemgrActionProtection(const CacheManagerAction * at);
 static OBJH cachemgrShutdown;
+static OBJH cachemgrReconfigure;
 static OBJH cachemgrMenu;
 static OBJH cachemgrOfflineToggle;
 
@@ -74,6 +75,9 @@ CacheManager::CacheManager()
     registerAction("shutdown",
                    "Shut Down the Squid Process",
                    cachemgrShutdown, 1, 1);
+    registerAction("reconfigure",
+                   "Reconfigure the Squid Process",
+                   cachemgrReconfigure, 1, 1);
     registerAction("offline_toggle",
                    "Toggle offline_mode setting",
                    cachemgrOfflineToggle, 1, 1);
@@ -346,6 +350,14 @@ cachemgrShutdown(StoreEntry * entryunused)
 {
     debugs(16, 0, "Shutdown by command.");
     shut_down(0);
+}
+
+static void
+cachemgrReconfigure(StoreEntry * sentry)
+{
+    debug(16, 0) ("Reconfigure by command.\n");
+    reconfigure(SIGHUP);
+    storeAppendPrintf(sentry, "Reconfiguring Squid Process ....");
 }
 
 static void

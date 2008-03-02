@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_http_range.cc,v 1.3 2007/05/29 13:31:48 amosjeffries Exp $
+ * $Id: test_http_range.cc,v 1.3.6.1 2008/03/02 15:54:48 serassio Exp $
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
@@ -43,6 +43,10 @@
 /* Stub routines */
 void
 shut_down(int)
+{}
+
+void
+reconfigure(int)
 {}
 
 SQUIDCEXTERN void httpHeaderPutStr(HttpHeader * hdr, http_hdr_type type, const char *str)
