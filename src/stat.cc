@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.410.4.1 2008/02/29 18:30:04 serassio Exp $
+ * $Id: stat.cc,v 1.410.4.2 2008/03/02 13:37:08 serassio Exp $
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
@@ -544,9 +544,9 @@ info_get(StoreEntry * sentry)
                       dpercent(store_swap_size, Store::Root().maxSize()),  
                       dpercent((Store::Root().maxSize() - store_swap_size), Store::Root().maxSize()));
 
-
-    storeAppendPrintf(sentry, "\tStorage Mem size:\t%d KB\n",
-                      mem_node::StoreMemSize() >> 10);
+   
+    storeAppendPrintf(sentry, "\tStorage Mem size:\t%lu KB\n",
+                      (unsigned long)mem_node::StoreMemSize() >> 10);
 
     storeAppendPrintf(sentry, "\tStorage Mem capacity:\t%4.1f%% used, %4.1f%% free\n",
                       dpercent(mem_node::InUseCount(), store_pages_max),
