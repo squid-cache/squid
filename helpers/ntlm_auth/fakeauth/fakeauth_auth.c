@@ -369,6 +369,7 @@ int
 main(int argc, char *argv[])
 {
     char buf[BUFFER_SIZE];
+    int buflen = 0;
     char user[256], *p, *decoded = NULL;
     struct ntlm_challenge chal;
     struct ntlm_negotiate *nego;
@@ -390,9 +391,10 @@ main(int argc, char *argv[])
 
 	if ((p = strchr(buf, '\n')) != NULL)
 	    *p = '\0';		/* strip \n */
-	if (strlen(buf) > 3)
+        buflen = strlen(buf);   /* keep this so we only scan the buffer for \0 once per loop */
+	if (buflen > 3)
 	    decoded = base64_decode(buf + 3);
-	if ((strlen(buf) > 3) && NTLM_packet_debug_enabled) {
+	if (buflen > 3 && NTLM_packet_debug_enabled) {
 	    strncpy(helper_command, buf, 2);
 	    helper_command[2] = '\0';
 	    debug("Got '%s' from Squid with data:\n", helper_command);
@@ -401,7 +403,7 @@ main(int argc, char *argv[])
 	    debug("Got '%s' from Squid\n", buf);
 
 	if (strncasecmp(buf, "YR", 2) == 0) {
-	    if (strlen(buf) > 3) {
+	    if(buflen > 3) {
 		nego = (struct ntlm_negotiate *) decoded;
 		ntlmMakeChallenge(&chal, nego->flags);
 	    } else
