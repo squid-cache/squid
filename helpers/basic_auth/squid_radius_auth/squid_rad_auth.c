@@ -105,7 +105,7 @@ static int i_recv_buffer[2048];
 static char *send_buffer = (char *) i_send_buffer;
 static char *recv_buffer = (char *) i_recv_buffer;
 static int sockfd;
-static int request_id;
+static u_char request_id;
 static char vector[AUTH_VECTOR_LEN];
 static char secretkey[MAXPASS + 1] = "";
 static char server[MAXLINE] = "";
