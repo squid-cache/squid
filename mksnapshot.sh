@@ -1,36 +1,46 @@
 #!/bin/sh -e
+
 if [ $# -gt 1 ]; then
 	echo "Usage: $0 [branch]"
+	echo "Where [branch] is the path under /bzr/ to the branch to snapshot."
 	exit 1
 fi
+# VCS details
 module=squid3
-tag=${1:-HEAD}
+BZRROOT=${BZRROOT:-/bzr}
+
+# generate a tarball name from the branch ($1) note that trunk is at
+# /bzr/trunk, but we call it HEAD for consistency with CVS (squid 2.x), and
+# branches are in /bzr/branches/ but we don't want 'branches/' in the tarball
+# name so we strip that.
+tag="HEAD"
+branchpath=${1:-trunk}
+if [ "trunk" != "$branchpath" ]; then
+    tag=`echo $branchpath | sed -e "s/^branches\///"`
+fi
 startdir=$PWD
 date=`env TZ=GMT date +%Y%m%d`
 
 tmpdir=${TMPDIR:-${PWD}}/${module}-${tag}-mksnapshot
 
-CVSROOT=${CVSROOT:-/server/cvs-server/squid}
-export CVSROOT
-
 rm -rf $tmpdir
 trap "rm -rf $tmpdir" 0
 
 rm -f ${tag}.out
-cvs -Q export -d $tmpdir -r $tag $module
+bzr export $tmpdir $BZRROOT/$branchpath || exit 1
 if [ ! -f $tmpdir/configure ]; then
 	echo "ERROR! Tag $tag not found in $module"
 fi
 
 cd $tmpdir
-eval `grep "^ *VERSION=" configure | sed -e 's/-CVS//'`
+eval `grep "^ *VERSION=" configure | sed -e 's/-BZR//'`
 eval `grep "^ *PACKAGE=" configure`
 ed -s configure.in <<EOS
-g/${VERSION}-CVS/ s//${VERSION}-${date}/
+g/${VERSION}-BZR/ s//${VERSION}-${date}/
 w
 EOS
 ed -s configure <<EOS
-g/${VERSION}-CVS/ s//${VERSION}-${date}/
+g/${VERSION}-BZR/ s//${VERSION}-${date}/
 w
 EOS
 
