@@ -1,0 +1,6 @@
+autom4te.cache
+config.log
+autom4te*
+libtool
+configure.lineno
+*.patch
