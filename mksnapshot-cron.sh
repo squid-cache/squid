@@ -82,15 +82,15 @@ make_snapshot()
 set +e
 
 ../commit/bootstrap squid
-make_snapshot ../commit/squid/mksnapshot.sh HEAD v3 HEAD 6
+make_snapshot ../commit/squid-3/mksnapshot.sh HEAD v3 HEAD 6
 
 rm -f /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new
-cp ../commit/squid/CONTRIBUTORS /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new
+cp ../commit/squid-3/CONTRIBUTORS /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new
 chmod 444 /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new
 mv -f /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.txt
 
 rm -f /server/httpd/htdocs/squid-cache.org/SPONSORS.new
-cp ../commit/squid/SPONSORS /server/httpd/htdocs/squid-cache.org/SPONSORS.new
+cp ../commit/squid-3/SPONSORS /server/httpd/htdocs/squid-cache.org/SPONSORS.new
 chmod 444 /server/httpd/htdocs/squid-cache.org/SPONSORS.new
 mv -f /server/httpd/htdocs/squid-cache.org/SPONSORS.new /server/httpd/htdocs/squid-cache.org/SPONSORS.txt
 
