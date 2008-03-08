@@ -27,7 +27,7 @@ rm -rf $tmpdir
 trap "rm -rf $tmpdir" 0
 
 rm -f ${tag}.out
-bzr export $tmpdir $BZRROOT/$branchpath || exit 1
+bzr export $tmpdir $BZRROOT/$module/$branchpath || exit 1
 if [ ! -f $tmpdir/configure ]; then
 	echo "ERROR! Tag $tag not found in $module"
 fi
