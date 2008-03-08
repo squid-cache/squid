@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# $Id: Makefile.in,v 1.105.2.1 2008/03/04 12:31:32 amosjeffries Exp $
+# $Id: Makefile.am,v 1.11 2003/05/21 08:24:26 hno Exp $
 #
 
 srcdir = @srcdir@

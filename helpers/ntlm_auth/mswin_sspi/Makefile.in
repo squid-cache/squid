@@ -17,7 +17,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.in,v 1.35.2.1 2008/03/04 12:31:31 amosjeffries Exp $
+#  $Id: Makefile.am,v 1.1 2005/10/30 21:48:22 serassio Exp $
 #
 
 srcdir = @srcdir@
