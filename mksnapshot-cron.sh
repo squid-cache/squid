@@ -96,7 +96,7 @@ chmod 444 /server/httpd/htdocs/squid-cache.org/SPONSORS.new
 mv -f /server/httpd/htdocs/squid-cache.org/SPONSORS.new /server/httpd/htdocs/squid-cache.org/SPONSORS.txt
 
 ../commit/bootstrap squid-3.0
-make_snapshot ../commit/squid-3.0/mksnapshot.sh branches/SQUID_3_0 v3 3.0 3
+make_snapshot ../commit/squid-3/mksnapshot.sh branches/SQUID_3_0 v3 3.0 3
 
 ../commit/bootstrap squid-2
 make_snapshot ../commit/squid-2/mksnapshot.sh HEAD v2 HEAD 3
