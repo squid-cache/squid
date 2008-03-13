@@ -30,14 +30,14 @@ if [ ! -f $tmpdir/configure ]; then
 fi
 
 cd $tmpdir
-eval `grep "^ *VERSION=" configure | sed -e 's/-BZR//'`
+eval `grep "^ *VERSION=" configure | sed -e 's/-BZR//' | sed -e 's/-CVS//'`
 eval `grep "^ *PACKAGE=" configure`
 ed -s configure.in <<EOS
-g/${VERSION}-BZR/ s//${VERSION}-${date}/
+g/${VERSION}-[A-Z]*/ s//${VERSION}-${date}/
 w
 EOS
 ed -s configure <<EOS
-g/${VERSION}-BZR/ s//${VERSION}-${date}/
+g/${VERSION}-[A-Z]*/ s//${VERSION}-${date}/
 w
 EOS
 
