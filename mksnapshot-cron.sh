@@ -27,7 +27,8 @@ make_snapshot()
   ver=$4
   save=${5:-3}
   dst=$versions/$dir/$ver
-  $mksnap $tag 2>&1 | grep -v "set owner/group"
+  out=${5:-`basename $tag`}
+  $mksnap $tag $out 2>&1 | grep -v "set owner/group"
   for file in `cat $tag.out` ; do
     case $file in
     *-cfgman.tar.gz)

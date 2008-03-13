@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-if [ $# -gt 1 ]; then
+if [ $# -lt 1 ]; then
 	echo "Usage: $0 [branch]"
 	echo "Where [branch] is the path under /bzr/ to the branch to snapshot."
 	exit 1
@@ -13,11 +13,8 @@ BZRROOT=${BZRROOT:-/bzr}
 # /bzr/trunk, but we call it HEAD for consistency with CVS (squid 2.x), and
 # branches are in /bzr/branches/ but we don't want 'branches/' in the tarball
 # name so we strip that.
-tag="HEAD"
 branchpath=${1:-trunk}
-if [ "trunk" != "$branchpath" ]; then
-    tag=`echo $branchpath | sed -e "s/^branches\///"`
-fi
+tag=${2:-`basename $branchpath`}
 startdir=$PWD
 date=`env TZ=GMT date +%Y%m%d`
 
@@ -49,18 +46,18 @@ make -s dist-all
 
 basetarball=/server/httpd/htdocs/squid-cache.org/Versions/v`echo $VERSION | cut -d. -f1`/`echo $VERSION | cut -d. -f-2|cut -d- -f1`/${PACKAGE}-${VERSION}.tar.bz2
 if (echo $VERSION | grep PRE) || (echo $VERSION | grep STABLE); then
-	echo "Differences from ${PACKAGE}-${VERSION} to ${PACKAGE}-${VERSION}-${date}" >${PACKAGE}-${VERSION}-${date}.diff
 	if [ -f $basetarball ]; then
 		tar jxf ${PACKAGE}-${VERSION}-${date}.tar.bz2
 		tar jxf $basetarball
+		echo "Differences from ${PACKAGE}-${VERSION} to ${PACKAGE}-${VERSION}-${date}" >${PACKAGE}-${VERSION}-${date}.diff
 		diff -ruN ${PACKAGE}-${VERSION} ${PACKAGE}-${VERSION}-${date} >>${PACKAGE}-${VERSION}-${date}.diff || true
 	else
-		cvs -q rdiff -u -r SQUID_`echo $VERSION | tr .- __` -r $tag $module >>${PACKAGE}-${VERSION}-${date}.diff || true
+		#cvs -q rdiff -u -r SQUID_`echo $VERSION | tr .- __` -r $tag $module >>${PACKAGE}-${VERSION}-${date}.diff || true
 	fi
 elif [ -f STABLE_BRANCH ]; then
-	stable=`cat STABLE_BRANCH`
-	echo "Differences from ${stable} to ${PACKAGE}-${VERSION}-${date}" >${PACKAGE}-${VERSION}-${date}.diff
-	cvs -q rdiff -u -r $stable -r $tag $module >>${PACKAGE}-${VERSION}-${date}.diff
+	#stable=`cat STABLE_BRANCH`
+	#echo "Differences from ${stable} to ${PACKAGE}-${VERSION}-${date}" >${PACKAGE}-${VERSION}-${date}.diff
+	#cvs -q rdiff -u -r $stable -r $tag $module >>${PACKAGE}-${VERSION}-${date}.diff
 fi
 
 cd $startdir
