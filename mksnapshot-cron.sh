@@ -22,14 +22,14 @@ make_snapshot()
   set -e
   cd ../release
   mksnap=$1
-  tag=$2
+  branch=$2
   dir=$3
   ver=$4
   save=${5:-3}
   dst=$versions/$dir/$ver
-  out=${5:-`basename $tag`}
-  $mksnap $tag $out 2>&1 | grep -v "set owner/group"
-  for file in `cat $tag.out` ; do
+  out=${6:-`basename $branch`}
+  $mksnap $branch $6 2>&1 | grep -v "set owner/group"
+  for file in `cat $out.out` ; do
     case $file in
     *-cfgman.tar.gz)
 	type=-cfgman.tar.gz
