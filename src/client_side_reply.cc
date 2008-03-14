@@ -1214,7 +1214,7 @@ clientReplyContext::buildReplyHeader()
     if (is_hit)
         hdr->delById(HDR_SET_COOKIE);
 
-    reply->header.removeHopByHopEntries();
+    reply->header.removeConnectionHeaderEntries();
 
     //    if (request->range)
     //      clientBuildRangeHeader(http, reply);

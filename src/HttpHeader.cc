@@ -1806,5 +1806,7 @@ HttpHeader::removeConnectionHeaderEntries()
         }
         if (headers_deleted)
             refreshMask();
+
+        delById(HDR_CONNECTION);
     }
 }

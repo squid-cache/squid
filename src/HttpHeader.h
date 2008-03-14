@@ -247,15 +247,13 @@ public:
     int hasListMember(http_hdr_type id, const char *member, const char separator) const;
     int hasByNameListMember(const char *name, const char *member, const char separator) const;
     void removeHopByHopEntries();
+    void removeConnectionHeaderEntries();
     /* protected, do not use these, use interface functions instead */
     Vector<HttpHeaderEntry *> entries;		/* parsed fields in raw format */
     HttpHeaderMask mask;	/* bit set <=> entry present */
     http_hdr_owner_type owner;	/* request or reply */
     int len;			/* length when packed, not counting terminating '\0' */
 
-protected:
-    void removeConnectionHeaderEntries();
-    
 private:
     HttpHeaderEntry *findLastEntry(http_hdr_type id) const;
     // Make it non-copyable. Our destructor is a bit nasty...
