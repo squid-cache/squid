@@ -1,5 +1,5 @@
 /*
- * $Id: ACLStrategised.cc,v 1.1.4.1 2008/02/06 04:06:46 amosjeffries Exp $
+ * $Id: ACLStrategised.cc,v 1.2 2008/02/06 04:05:38 amosjeffries Exp $
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
@@ -43,12 +43,13 @@
 
 /* 
  *  moved template instantiation into ACLStrategized.cc from
- *  ACLHTTPRepHeader.cc and ACLHTTPReqHeader.cc to compile on
+ *  ACLHTTPRepHeader.cc, ACLHTTPReqHeader.cc, ACLBrowser.cc,
+ *  and ACLMyPortName.cc  to compile on
  *  Mac OSX 10.5 Leopard, this corrects a duplicate symbol error
  */
  
 /* explicit template instantiation required for some systems */
 
-template class ACLStrategised<HttpHeader*>
+template class ACLStrategised<HttpHeader*>;
 
-;
+template class ACLStrategised<char const *>;

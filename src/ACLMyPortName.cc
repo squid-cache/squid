@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLMyPortName.cc,v 1.2.2.1 2008/02/27 10:06:42 amosjeffries Exp $
+ * $Id: ACLMyPortName.cc,v 1.2 2008/02/11 22:44:50 rousskov Exp $
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,13 +34,12 @@
  */
 
 #include "squid.h"
+#include "ProtoPort.h"
 #include "ACLMyPortName.h"
 #include "ACLStringData.h"
 #include "ACLChecklist.h"
 
 /* explicit template instantiation required for some systems */
-
-template class ACLStrategised<const char *>;
 
 ACL::Prototype ACLMyPortName::RegistryProtoype(&ACLMyPortName::RegistryEntry_, "myportname");
 
