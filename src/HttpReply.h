@@ -101,9 +101,6 @@ public:
 
     void updateOnNotModified(HttpReply const *other);
 
-    /* absorb: copy the contents of a new reply to the old one, destroy new one */
-    void absorb(HttpReply * new_rep);
-
     /* set commonly used info with one call */
     void setHeaders(HttpVersion ver, http_status status,
                     const char *reason, const char *ctype, int64_t clen, time_t lmt, time_t expires);
