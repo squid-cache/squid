@@ -551,3 +551,13 @@ HttpReply::calcMaxBodySize(HttpRequest& request)
         }
     }
 }
+
+HttpReply *
+HttpReply::clone() const
+{
+    HttpReply *rep = new HttpReply();
+    rep->header.append(&header);
+    rep->hdrCacheInit();
+    rep->hdr_sz = hdr_sz;
+    return rep;
+}

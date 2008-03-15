@@ -1912,27 +1912,12 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 
     char *body_buf = buf;
 
-    /* This is always valid until we get the headers as metadata from
-     * storeClientCopy. 
-     * Then it becomes reqofs == next->readBuffer.offset()
-     */
-    assert(reqofs == 0 || flags.storelogiccomplete);
-
-    if (flags.headersSent && buf != result.data) {
+    if (buf != result.data) {
         /* we've got to copy some data */
         assert(result.length <= next()->readBuffer.length);
         xmemcpy(buf, result.data, result.length);
         body_buf = buf;
-    } else if (!flags.headersSent &&
-               buf + reqofs !=result.data) {
-        /* we've got to copy some data */
-        assert(result.length + reqofs <= next()->readBuffer.length);
-        xmemcpy(buf + reqofs, result.data, result.length);
-        body_buf = buf;
     }
-
-    /* We've got the final data to start pushing... */
-    flags.storelogiccomplete = 1;
 
     reqofs += result.length;
 
@@ -1967,8 +1952,13 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         return;
     }
 
-    buildReply(buf, reqofs);
-
+    if (!reply) {
+	reply = entry->mem_obj->getReply()->clone();
+    }
+    if ((long)reqofs < reply->hdr_sz) {
+        waitForMoreData();
+        return;
+    }
     if (reply) {
 
         /* handle headers */
@@ -1987,9 +1977,6 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         processReplyAccess();
         return;
 
-    } else if (reqofs < HTTP_REQBUF_SZ && entry->store_status == STORE_PENDING) {
-        waitForMoreData();
-        return;
     } else {
         debugs(88, 0, "clientReplyContext::sendMoreData: Unable to parse reply headers within a single HTTP_REQBUF_SZ length buffer");
         StoreIOBuffer tempBuffer;
