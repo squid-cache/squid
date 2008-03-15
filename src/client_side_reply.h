@@ -132,7 +132,7 @@ private:
     void processReplyAccess();
     static PF ProcessReplyAccessResult;
     void processReplyAccessResult(bool accessAllowed);
-    void buildReply(const char *buf, size_t size);
+    void cloneReply();
     void buildReplyHeader ();
     bool alwaysAllowResponse(http_status sline) const;
     int checkTransferDone();
