@@ -1953,7 +1953,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     }
 
     if (!reply) {
-	reply = entry->mem_obj->getReply()->clone();
+	reply = HTTPMSGLOCK(entry->mem_obj->getReply()->clone());
     }
     if ((long)reqofs < reply->hdr_sz) {
         waitForMoreData();
