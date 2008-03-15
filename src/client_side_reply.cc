@@ -350,68 +350,47 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         sendClientOldEntry();
     }
 
-    // we have a partial reply from the origin
-    else if (STORE_PENDING == http->storeEntry()->store_status && 0 == status) {
-        // header is too large, send old entry
+    HttpReply *old_rep = (HttpReply *) old_entry->getReply();
 
-        if (reqsize >= HTTP_REQBUF_SZ) {
-            debugs(88, 3, "handleIMSReply: response from origin is too large '" << http->storeEntry()->url() << "', sending old entry to client" );
-            http->logType = LOG_TCP_REFRESH_FAIL;
-            sendClientOldEntry();
-        }
+    // origin replied 304
 
-        // everything looks fine, we're just waiting for more data
-        else {
-            debugs(88, 3, "handleIMSReply: incomplete headers for '" << http->storeEntry()->url() << "', waiting for more data" );
-            reqofs = reqsize;
-            waitForMoreData();
-        }
+    if (status == HTTP_NOT_MODIFIED) {
+	http->logType = LOG_TCP_REFRESH_UNMODIFIED;
+
+	// update headers on existing entry
+	HttpReply *old_rep = (HttpReply *) old_entry->getReply();
+	old_rep->updateOnNotModified(http->storeEntry()->getReply());
+	old_entry->timestampsSet();
+
+	// if client sent IMS
+
+	if (http->request->flags.ims) {
+	    // forward the 304 from origin
+	    debugs(88, 3, "handleIMSReply: origin replied 304, revalidating existing entry and forwarding 304 to client");
+	    sendClientUpstreamResponse();
+	} else {
+	    // send existing entry, it's still valid
+	    debugs(88, 3, "handleIMSReply: origin replied 304, revalidating existing entry and sending " <<
+		   old_rep->sline.status << " to client");
+	    sendClientOldEntry();
+	}
     }
 
-    // we have a reply from the origin
+    // origin replied with a non-error code
+    else if (status > HTTP_STATUS_NONE && status < HTTP_INTERNAL_SERVER_ERROR) {
+	// forward response from origin
+	http->logType = LOG_TCP_REFRESH_MODIFIED;
+	debugs(88, 3, "handleIMSReply: origin replied " << status << ", replacing existing entry and forwarding to client");
+	sendClientUpstreamResponse();
+    }
+
+    // origin replied with an error
     else {
-        HttpReply *old_rep = (HttpReply *) old_entry->getReply();
-
-        // origin replied 304
-
-        if (status == HTTP_NOT_MODIFIED) {
-            http->logType = LOG_TCP_REFRESH_UNMODIFIED;
-
-            // update headers on existing entry
-            HttpReply *old_rep = (HttpReply *) old_entry->getReply();
-            old_rep->updateOnNotModified(http->storeEntry()->getReply());
-            old_entry->timestampsSet();
-
-            // if client sent IMS
-
-            if (http->request->flags.ims) {
-                // forward the 304 from origin
-                debugs(88, 3, "handleIMSReply: origin replied 304, revalidating existing entry and forwarding 304 to client");
-                sendClientUpstreamResponse();
-            } else {
-                // send existing entry, it's still valid
-                debugs(88, 3, "handleIMSReply: origin replied 304, revalidating existing entry and sending " <<
-                       old_rep->sline.status << " to client");
-                sendClientOldEntry();
-            }
-        }
-
-        // origin replied with a non-error code
-        else if (status > HTTP_STATUS_NONE && status < HTTP_INTERNAL_SERVER_ERROR) {
-            // forward response from origin
-            http->logType = LOG_TCP_REFRESH_MODIFIED;
-            debugs(88, 3, "handleIMSReply: origin replied " << status << ", replacing existing entry and forwarding to client");
-            sendClientUpstreamResponse();
-        }
-
-        // origin replied with an error
-        else {
-            // ignore and let client have old entry
-            http->logType = LOG_TCP_REFRESH_FAIL;
-            debugs(88, 3, "handleIMSReply: origin replied with error " <<
-                   status << ", sending old entry (" << old_rep->sline.status << ") to client");
-            sendClientOldEntry();
-        }
+	// ignore and let client have old entry
+	http->logType = LOG_TCP_REFRESH_FAIL;
+	debugs(88, 3, "handleIMSReply: origin replied with error " <<
+	       status << ", sending old entry (" << old_rep->sline.status << ") to client");
+	sendClientOldEntry();
     }
 }
 
@@ -469,33 +448,6 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
     assert(!EBIT_TEST(e->flags, ENTRY_ABORTED));
     /* update size of the request */
     reqsize = result.length + reqofs;
-
-    if (e->getReply()->sline.status == 0) {
-        /*
-         * we don't have full reply headers yet; either wait for more or
-         * punt to clientProcessMiss.
-         */
-
-        if (e->mem_status == IN_MEMORY || e->store_status == STORE_OK) {
-            processMiss();
-        } else if (result.length + reqofs >= HTTP_REQBUF_SZ
-                   && http->out.offset == 0) {
-            processMiss();
-        } else {
-            debugs(88, 3, "clientCacheHit: waiting for HTTP reply headers");
-            reqofs += result.length;
-            assert(reqofs <= HTTP_REQBUF_SZ);
-            /* get the next users' buffer */
-            StoreIOBuffer tempBuffer;
-            tempBuffer.offset = http->out.offset + reqofs;
-            tempBuffer.length = next()->readBuffer.length - reqofs;
-            tempBuffer.data = next()->readBuffer.data + reqofs;
-            storeClientCopy(sc, e,
-                            tempBuffer, CacheHit, this);
-        }
-
-        return;
-    }
 
     /*
      * Got the headers, now grok them
@@ -1390,31 +1342,13 @@ clientReplyContext::buildReplyHeader()
 
 
 void
-clientReplyContext::buildReply(const char *buf, size_t size)
+clientReplyContext::cloneReply()
 {
-    size_t k = headersEnd(buf, size);
-
-    if (!k)
-        return;
-
     assert(reply == NULL);
 
-    HttpReply *rep = new HttpReply;
+    HttpReply *rep = http->storeEntry()->getReply()->clone();
 
     reply = HTTPMSGLOCK(rep);
-
-    if (!reply->parseCharBuf(buf, k)) {
-        /* parsing failure, get rid of the invalid reply */
-        HTTPMSGUNLOCK(reply);
-
-        if (http->request->range) {
-            debugs(0,0,HERE << "look for bug here");
-            /* this will fail and destroy request->range */
-            //          clientBuildRangeHeader(http, reply);
-        }
-
-        return;
-    }
 
     /* enforce 1.0 reply version */
     reply->sline.version = HttpVersion(1,0);
@@ -1738,12 +1672,11 @@ void
 clientReplyContext::startSendProcess()
 {
     debugs(88, 5, "clientReplyContext::startSendProcess: triggering store read to SendMoreData");
-    assert(reqofs <= HTTP_REQBUF_SZ);
     /* TODO: copy into the supplied buffer */
     StoreIOBuffer tempBuffer;
     tempBuffer.offset = reqofs;
-    tempBuffer.length = next()->readBuffer.length - reqofs;
-    tempBuffer.data = next()->readBuffer.data + reqofs;
+    tempBuffer.length = next()->readBuffer.length;
+    tempBuffer.data = next()->readBuffer.data;
     storeClientCopy(sc, http->storeEntry(),
                     tempBuffer, SendMoreData, this);
 }
@@ -1837,8 +1770,10 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
     http->loggingEntry(http->storeEntry());
 
     ssize_t body_size = reqofs - reply->hdr_sz;
-
-    assert(body_size >= 0);
+    if (body_size < 0) {
+	reqofs = reply->hdr_sz;
+	body_size = 0;
+    }
 
     debugs(88, 3, "clientReplyContext::sendMoreData: Appending " <<
            (int) body_size << " bytes after " << reply->hdr_sz <<
@@ -1868,7 +1803,7 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
 
     StoreIOBuffer tempBuffer;
     char *buf = next()->readBuffer.data;
-    char *body_buf = buf + reply->hdr_sz;
+    char *body_buf = buf + reply->hdr_sz - next()->readBuffer.offset;
 
     //Server side may disable ranges under some circumstances.
 
@@ -1952,40 +1887,23 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         return;
     }
 
-    if (!reply) {
-	reply = HTTPMSGLOCK(entry->mem_obj->getReply()->clone());
+    cloneReply();
+
+    /* handle headers */
+
+    if (Config.onoff.log_mime_hdrs) {
+	size_t k;
+
+	if ((k = headersEnd(buf, reqofs))) {
+	    safe_free(http->al.headers.reply);
+	    http->al.headers.reply = (char *)xcalloc(k + 1, 1);
+	    xstrncpy(http->al.headers.reply, buf, k);
+	}
     }
-    if ((long)reqofs < reply->hdr_sz) {
-        waitForMoreData();
-        return;
-    }
-    if (reply) {
 
-        /* handle headers */
-
-        if (Config.onoff.log_mime_hdrs) {
-            size_t k;
-
-            if ((k = headersEnd(buf, reqofs))) {
-                safe_free(http->al.headers.reply);
-                http->al.headers.reply = (char *)xcalloc(k + 1, 1);
-                xstrncpy(http->al.headers.reply, buf, k);
-            }
-        }
-
-        holdingBuffer = result;
-        processReplyAccess();
-        return;
-
-    } else {
-        debugs(88, 0, "clientReplyContext::sendMoreData: Unable to parse reply headers within a single HTTP_REQBUF_SZ length buffer");
-        StoreIOBuffer tempBuffer;
-        tempBuffer.flags.error = 1;
-        /* XXX FIXME: make an html error page here */
-        sendStreamError(tempBuffer);
-        return;
-    }
-    fatal ("clientReplyContext::sendMoreData: Unreachable code reached \n");
+    holdingBuffer = result;
+    processReplyAccess();
+    return;
 }
 
 
