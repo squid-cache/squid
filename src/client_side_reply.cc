@@ -1657,31 +1657,6 @@ clientReplyContext::next() const
 }
 
 void
-clientReplyContext::waitForMoreData ()
-{
-    debugs(88, 5, "clientReplyContext::waitForMoreData: Waiting for more data to parse reply headers in client side.");
-    /* We don't have enough to parse the metadata yet */
-    /* TODO: the store should give us out of band metadata and
-     * obsolete this routine 
-     */
-    /* wait for more to arrive */
-    startSendProcess();
-}
-
-void
-clientReplyContext::startSendProcess()
-{
-    debugs(88, 5, "clientReplyContext::startSendProcess: triggering store read to SendMoreData");
-    /* TODO: copy into the supplied buffer */
-    StoreIOBuffer tempBuffer;
-    tempBuffer.offset = reqofs;
-    tempBuffer.length = next()->readBuffer.length;
-    tempBuffer.data = next()->readBuffer.data;
-    storeClientCopy(sc, http->storeEntry(),
-                    tempBuffer, SendMoreData, this);
-}
-
-void
 clientReplyContext::sendBodyTooLargeError()
 {
     IPAddress tmp_noaddr; tmp_noaddr.SetNoAddr(); // TODO: make a global const

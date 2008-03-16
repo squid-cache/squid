@@ -124,9 +124,7 @@ private:
     bool errorInStream(StoreIOBuffer const &result, size_t const &sizeToProcess)const ;
     void sendStreamError(StoreIOBuffer const &result);
     void pushStreamData(StoreIOBuffer const &result, char *source);
-    void waitForMoreData ();
     clientStreamNode * next() const;
-    void startSendProcess();
     StoreIOBuffer holdingBuffer;
     HttpReply *reply;
     void processReplyAccess();
