@@ -88,24 +88,12 @@ private:
 
     struct
     {
-
-int language:
-        1;
-
-int cookie:
-        1;
-
-int host:
-        1;
-
-int referer:
-        1;
-
-int useragent:
-        1;
-    }
-
-    flags;
+        int language:1;
+        int cookie:1;
+        int host:1;
+        int referer:1;
+        int useragent:1;
+    } flags;
 
 public:
 

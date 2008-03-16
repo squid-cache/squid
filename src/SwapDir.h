@@ -172,12 +172,8 @@ public:
     struct Flags
     {
         Flags() : selected(0), read_only(0){}
-
-unsigned int selected:
-        1;
-
-unsigned int read_only:
-        1;
+        unsigned int selected:1;
+        unsigned int read_only:1;
     }
 
     flags;

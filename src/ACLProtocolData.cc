@@ -86,9 +86,7 @@ ACLProtocolData::parse()
     List<protocol_t> **Tail;
     char *t = NULL;
 
-    for (Tail = &values; *Tail; Tail = &((*Tail)->next))
-
-        ;
+    for (Tail = &values; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
         List<protocol_t> *q = new List<protocol_t> (urlParseProtocol(t));
         *(Tail) = q;

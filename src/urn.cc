@@ -70,12 +70,8 @@ public:
 
     struct
     {
-
-unsigned int force_menu:
-        1;
-    }
-
-    flags;
+        unsigned int force_menu:1;
+    } flags;
     char reqbuf[URN_REQBUF_SZ];
     int reqofs;
 
@@ -249,9 +245,7 @@ UrnState::start(HttpRequest * r, StoreEntry * e)
     entry = e;
     request = HTTPMSGLOCK(r);
 
-    entry->lock()
-
-    ;
+    entry->lock();
     setUriResFromRequest(r);
 
     if (urlres_r == NULL)
@@ -271,9 +265,7 @@ UrnState::created(StoreEntry *newEntry)
         FwdState::fwdStart(-1, urlres_e, urlres_r);
     } else {
 
-        urlres_e->lock()
-
-        ;
+        urlres_e->lock();
         sc = storeClientListAdd(urlres_e, this);
     }
 

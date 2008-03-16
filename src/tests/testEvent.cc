@@ -80,8 +80,7 @@ testEvent::testDump()
                      "\n"
                      "Operation                \tNext Execution \tWeight\tCallback Valid?\n"
                      "test event               \t0.000 sec\t    0\t N/A\n"
-                     "test event2              \t0.000 sec\t    0\t N/A\n"
-                     ;
+                     "test event2              \t0.000 sec\t    0\t N/A\n";
 
     scheduler.schedule("last event", CalledEvent::Handler, &event, 0, 0, false);
 

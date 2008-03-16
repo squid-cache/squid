@@ -243,9 +243,7 @@ asnCacheStart(int as)
         FwdState::fwdStart(-1, e, asState->request);
     } else {
 
-        e->lock()
-
-        ;
+        e->lock();
         asState->sc = storeClientListAdd(e, asState);
     }
 
@@ -440,8 +438,7 @@ asnAddNet(char *as_string, int as_number)
         } else {
             debugs(53, 3, "asnAddNet: Warning: Found a network with multiple AS numbers!");
 
-            for (Tail = &asinfo->as_number; *Tail; Tail = &(*Tail)->next)
-                ;
+            for (Tail = &asinfo->as_number; *Tail; Tail = &(*Tail)->next);
             q = new List<int> (as_number);
 
             *(Tail) = q;
@@ -579,9 +576,7 @@ ACLASN::parse()
     List<int> *q = NULL;
     char *t = NULL;
 
-    for (Tail = curlist; *Tail; Tail = &((*Tail)->next))
-
-        ;
+    for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
         q = new List<int> (atoi(t));
         *(Tail) = q;
@@ -600,9 +595,7 @@ ACLASN::clone() const
 
 /* explicit template instantiation required for some systems */
 
-template class ACLStrategised<IPAddress>
-
-;
+template class ACLStrategised<IPAddress>;
 
 ACL::Prototype ACLASN::SourceRegistryProtoype(&ACLASN::SourceRegistryEntry_, "src_as");
 

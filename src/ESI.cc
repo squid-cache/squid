@@ -170,18 +170,10 @@ struct esiTry : public ESIElement
 
     struct
     {
-
-int attemptok:
-        1; /* the attempt branch process correctly */
-
-int exceptok:
-        1; /* likewise */
-
-int attemptfailed:
-        1; /* The attempt branch failed */
-
-int exceptfailed:
-        1; /* the except branch failed */
+        int attemptok:1; /* the attempt branch process correctly */
+        int exceptok:1; /* likewise */
+        int attemptfailed:1; /* The attempt branch failed */
+        int exceptfailed:1; /* the except branch failed */
     }
 
     flags;
@@ -264,9 +256,8 @@ struct esiOtherwise : public esiSequence
 {
     //    void *operator new (size_t byteCount);
     //    void operator delete (void *address);
-    esiOtherwise(esiTreeParentPtr aParent) : esiSequence (aParent) {}}
-
-;
+    esiOtherwise(esiTreeParentPtr aParent) : esiSequence (aParent) {}
+};
 
 CBDATA_CLASS_INIT(ESIContext);
 

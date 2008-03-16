@@ -103,17 +103,10 @@ public:
     struct
     {
 
-unsigned int needed:
-        1;	/* there were requests for this digest */
-
-unsigned int usable:
-        1;	/* can be used for lookups */
-
-unsigned int requested:
-        1;	/* in process of receiving [fresh] digest */
-    }
-
-    flags;
+        unsigned int needed:1;	/* there were requests for this digest */
+        unsigned int usable:1;	/* can be used for lookups */
+        unsigned int requested:1;	/* in process of receiving [fresh] digest */
+    } flags;
 
     struct
     {
@@ -126,9 +119,7 @@ unsigned int requested:
         time_t req_delay;	/* last request response time */
         time_t received;	/* received the current copy of a digest */
         time_t disabled;	/* disabled for good */
-    }
-
-    times;
+    } times;
 
     struct
     {
@@ -139,12 +130,8 @@ unsigned int requested:
         {
             int msgs;
             kb_t kbytes;
-        }
-
-        sent, recv;
-    }
-
-    stats;
+        } sent, recv;
+    } stats;
 
 private:
     CBDATA_CLASS(PeerDigest);

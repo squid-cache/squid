@@ -1013,9 +1013,7 @@ gopherStart(FwdState * fwd)
     gopherState = cbdataAlloc(GopherStateData);
     gopherState->buf = (char *)memAllocate(MEM_4K_BUF);
 
-    entry->lock()
-
-    ;
+    entry->lock();
     gopherState->entry = entry;
 
     gopherState->fwd = fwd;

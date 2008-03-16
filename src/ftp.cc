@@ -1021,9 +1021,7 @@ FtpStateData::htmlifyListEntry(const char *line)
         const char *p;
         snprintf(html, 8192, "%s\n", line);
 
-        for (p = line; *p && xisspace(*p); p++)
-
-            ;
+        for (p = line; *p && xisspace(*p); p++);
         if (*p && !xisspace(*p))
             flags.listformat_unknown = 1;
 
@@ -1866,9 +1864,7 @@ FtpStateData::handleControlReply()
     }
 
     /* Move the last line of the reply message to ctrl.last_reply */
-    for (W = &ctrl.message; (*W)->next; W = &(*W)->next)
-
-        ;
+    for (W = &ctrl.message; (*W)->next; W = &(*W)->next);
     safe_free(ctrl.last_reply);
 
     ctrl.last_reply = xstrdup((*W)->key);

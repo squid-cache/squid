@@ -54,8 +54,7 @@ public:
 
     virtual bool valid() const {return true;}
 
-    virtual ~ACLStrategy(){}}
-
-;
+    virtual ~ACLStrategy(){}
+};
 
 #endif /* SQUID_ACLSTRATEGY_H */

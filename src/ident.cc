@@ -179,9 +179,7 @@ identReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void 
 
     if (strstr(buf, "USERID")) {
         if ((ident = strrchr(buf, ':'))) {
-            while (xisspace(*++ident))
-
-                ;
+            while (xisspace(*++ident));
             identCallback(state, ident);
         }
     }
@@ -198,9 +196,7 @@ identClientAdd(IdentStateData * state, IDCB * callback, void *callback_data)
     c->callback = callback;
     c->callback_data = cbdataReference(callback_data);
 
-    for (C = &state->clients; *C; C = &(*C)->next)
-
-        ;
+    for (C = &state->clients; *C; C = &(*C)->next);
     *C = c;
 }
 
