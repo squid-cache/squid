@@ -110,12 +110,8 @@ struct _fqdncache_entry
 
     struct
     {
-
-unsigned int negcached:
-        1;
-
-unsigned int fromhosts:
-        1;
+        unsigned int negcached:1;
+        unsigned int fromhosts:1;
     }
 
     flags;
@@ -505,7 +501,6 @@ fqdncacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error
 #if USE_DNSSERVERS
 
     fqdncacheParse(f, reply);
-    ;
 #else
 
     fqdncacheParse(f, answers, na, error_message);

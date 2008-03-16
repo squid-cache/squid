@@ -1392,9 +1392,7 @@ AuthDigestUserRequest::authUser(auth_user_t *aUser)
     assert (!authUser());
     user(aUser);
 
-    user()->lock()
-
-    ;
+    user()->lock();
 }
 
 AuthDigestUserRequest::CredentialsState

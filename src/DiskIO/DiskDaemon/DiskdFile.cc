@@ -328,8 +328,7 @@ DiskdFile::write(WriteRequest *aRequest)
                      aRequest);
 
     if (x < 0) {
-        ioCompleted()
-        ;
+        ioCompleted();
         errorOccured = true;
         debugs(79, 1, "storeDiskdSend WRITE: " << xstrerror());
         //        IO->shm.put (shm_offset);

@@ -84,9 +84,7 @@ public:
     void addIp(IPAddress);
     _SQUID_INLINE_ void addRequest(AuthUserRequest *);
 
-    void lock()
-
-        ;
+    void lock();
     void unlock();
 
     void addToNameCache();

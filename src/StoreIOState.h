@@ -105,9 +105,7 @@ public:
 
     struct
     {
-
-unsigned int closing:
-        1;	/* debugging aid */
+        unsigned int closing:1;	/* debugging aid */
     }
 
     flags;

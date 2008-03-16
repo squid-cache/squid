@@ -398,18 +398,10 @@ public:
 
     struct
     {
-
-unsigned int need_to_validate:
-        1;
-
-unsigned int clean:
-        1;
-
-unsigned int init:
-        1;
-    }
-
-    flags;
+        unsigned int need_to_validate:1;
+        unsigned int clean:1;
+        unsigned int init:1;
+    } flags;
     int in_dir;
     int done;
     int fn;

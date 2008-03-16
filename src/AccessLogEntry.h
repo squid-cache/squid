@@ -93,8 +93,7 @@ public:
 #if USE_SSL
                 ,ssluser(NULL)
 #endif
-        {
-            ;
+        {;
         }
 
         IPAddress caddr;

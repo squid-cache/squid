@@ -192,9 +192,7 @@ aclParseAccessLine(ConfigParser &parser, acl_access ** head)
     A->cfgline = xstrdup(config_input_line);
     /* Append to the end of this list */
 
-    for (B = *head, T = head; B; T = &B->next, B = B->next)
-
-        ;
+    for (B = *head, T = head; B; T = &B->next, B = B->next);
     *T = A;
 
     /* We lock _acl_access structures in ACLChecklist::check() */

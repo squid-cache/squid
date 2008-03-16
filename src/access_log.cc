@@ -413,17 +413,10 @@ struct _logformat_token
     } data;
     unsigned char width;
     unsigned char precision;
-
     enum log_quote quote;
-
-unsigned int left:
-    1;
-
-unsigned int space:
-    1;
-
-unsigned int zero:
-    1;
+    unsigned int left:1;
+    unsigned int space:1;
+    unsigned int zero:1;
     int divisor;
     logformat_token *next;	/* todo: move from linked list to array */
 };

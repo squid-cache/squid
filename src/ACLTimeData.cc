@@ -129,9 +129,7 @@ ACLTimeData::parse()
     ACLTimeData **Tail;
     long weekbits = 0;
 
-    for (Tail = &next; *Tail; Tail = &((*Tail)->next))
-
-        ;
+    for (Tail = &next; *Tail; Tail = &((*Tail)->next));
     ACLTimeData *q = NULL;
 
     int h1, m1, h2, m2;

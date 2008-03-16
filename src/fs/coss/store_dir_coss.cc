@@ -67,12 +67,8 @@ struct _RebuildState
 
     struct
     {
-
-unsigned int clean:
-        1;
-    }
-
-    flags;
+        unsigned int clean:1;
+    } flags;
 
     struct _store_rebuild_data counts;
 };
@@ -111,9 +107,7 @@ storeCossDirSwapLogFile(SwapDir * sd, const char *ext)
         while (strlen(pathtmp) && pathtmp[strlen(pathtmp) - 1] == '.')
             pathtmp[strlen(pathtmp) - 1] = '\0';
 
-        for (pathtmp2 = pathtmp; *pathtmp2 == '.'; pathtmp2++)
-
-            ;
+        for (pathtmp2 = pathtmp; *pathtmp2 == '.'; pathtmp2++);
         snprintf(path, SQUID_MAXPATHLEN - 64, Config.Log.swap, pathtmp2);
 
         if (strncmp(path, Config.Log.swap, SQUID_MAXPATHLEN - 64) == 0) {

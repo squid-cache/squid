@@ -110,12 +110,8 @@ struct _ipcache_entry
 
     struct
     {
-
-unsigned int negcached:
-        1;
-
-unsigned int fromhosts:
-        1;
+        unsigned int negcached:1;
+        unsigned int fromhosts:1;
     }
 
     flags;

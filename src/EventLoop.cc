@@ -92,9 +92,7 @@ EventLoop::run()
 {
     prepareToRun();
 
-    while (!runOnce())
-
-        ;
+    while (!runOnce());
 }
 
 bool

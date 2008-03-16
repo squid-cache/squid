@@ -56,7 +56,6 @@ SQUIDCEXTERN HttpHdrContRange *httpHdrContRangeDup(const HttpHdrContRange * cran
 SQUIDCEXTERN void httpHdrContRangePackInto(const HttpHdrContRange * crange, Packer * p);
 /* inits with given spec */
 SQUIDCEXTERN void httpHdrContRangeSet(HttpHdrContRange *, HttpHdrRangeSpec, int64_t);
-;
 SQUIDCEXTERN void httpHeaderAddContRange(HttpHeader *, HttpHdrRangeSpec, int64_t);
 
 

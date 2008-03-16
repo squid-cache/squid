@@ -248,7 +248,7 @@ strListGetItem(const String * str, char del, const char **item, int *ilen, const
     size_t len;
     static char delim[2][3] = {
                                   { '"', '?', 0},
-                                  { '"', '\\', 0}};
+                                  { '"', '\\', 0} };
     int quoted = 0;
     assert(str && item && pos);
 

@@ -95,17 +95,10 @@ public:
 
     struct
     {
-
-unsigned int authinfo_sent:
-        1;
-
+        unsigned int authinfo_sent:1;
 	unsigned int invalid_password:1;
-
-unsigned int helper_queried:
-        1;
-    }
-
-    flags;
+        unsigned int helper_queried:1;
+    } flags;
     digest_nonce_h *nonce;
 
 private:
@@ -140,15 +133,9 @@ struct _digest_nonce_h : public hash_link
 
     struct
     {
-
-unsigned int valid:
-        1;
-
-unsigned int incache:
-        1;
-    }
-
-    flags;
+        unsigned int valid:1;
+        unsigned int incache:1;
+    } flags;
 };
 
 /* configuration runtime data */
