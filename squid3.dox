@@ -628,13 +628,13 @@ GENERATE_HTML          = YES
 # If a relative path is entered the value of OUTPUT_DIRECTORY will be 
 # put in front of it. If left blank `html' will be used as the default path.
 
-HTML_OUTPUT            = tmp
+#HTML_OUTPUT            = tmp
 
 # The HTML_FILE_EXTENSION tag can be used to specify the file extension for 
 # each generated HTML page (for example: .htm,.php,.asp). If it is left blank 
 # doxygen will generate files with .html extension.
 
-HTML_FILE_EXTENSION    = .dyn
+#HTML_FILE_EXTENSION    = .dyn
 
 # The HTML_HEADER tag can be used to specify a personal HTML header for 
 # each generated HTML page. If it is left blank doxygen will generate a 
