@@ -4,3 +4,4 @@ autom4te*
 libtool
 configure.lineno
 *.patch
+icons/*.gif
