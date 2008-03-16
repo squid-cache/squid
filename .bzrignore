@@ -5,3 +5,5 @@ libtool
 configure.lineno
 *.patch
 icons/*.gif
+tags
+tmp
