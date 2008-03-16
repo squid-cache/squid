@@ -96,9 +96,7 @@ typedef struct
 {
     hash_link hash;
     int n;
-}
-
-fvdb_entry;
+} fvdb_entry;
 static hash_table *via_table = NULL;
 static hash_table *forw_table = NULL;
 static void fvdbInit();
@@ -406,9 +404,7 @@ struct _logformat_token
             char *header;
             char *element;
             char separator;
-        }
-
-        header;
+        } header;
         char *timespec;
     } data;
     unsigned char width;

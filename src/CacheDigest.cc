@@ -46,9 +46,7 @@ typedef struct
     int bit_on_count;		/* #bits turned on */
     int bseq_len_sum;		/* sum of all bit seq length */
     int bseq_count;		/* number of bit seqs */
-}
-
-CacheDigestStats;
+} CacheDigestStats;
 
 /* local functions */
 static void cacheDigestHashKey(const CacheDigest * cd, const cache_key * key);

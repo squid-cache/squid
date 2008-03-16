@@ -77,9 +77,7 @@ struct _helper
         int replies;
         int queue_size;
         int avg_svc_time;
-    }
-
-    stats;
+    } stats;
 };
 
 struct _helper_stateful
@@ -105,9 +103,7 @@ struct _helper_stateful
         int replies;
         int queue_size;
         int avg_svc_time;
-    }
-
-    stats;
+    } stats;
 };
 
 struct _helper_server

@@ -174,9 +174,7 @@ struct esiTry : public ESIElement
         int exceptok:1; /* likewise */
         int attemptfailed:1; /* The attempt branch failed */
         int exceptfailed:1; /* the except branch failed */
-    }
-
-    flags;
+    } flags;
     void finish();
 
 private:

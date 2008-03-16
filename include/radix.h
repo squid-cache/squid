@@ -65,9 +65,7 @@ struct squid_radix_node
             char *rn_Mask;	/* netmask, if present */
 
             struct squid_radix_node *rn_Dupedkey;
-        }
-
-        rn_leaf;
+        } rn_leaf;
 
         struct {		/* node only data: */
             int rn_Off;		/* where to start compare */
@@ -75,9 +73,7 @@ struct squid_radix_node
             struct squid_radix_node *rn_L;	/* progeny */
 
             struct squid_radix_node *rn_R;	/* progeny */
-        }
-
-        rn_node;
+        } rn_node;
     } rn_u;
 #ifdef RN_DEBUG
 

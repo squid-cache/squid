@@ -122,9 +122,7 @@ public:
         bool pending() const;
         STCB *callback_handler;
         void *callback_data;
-    }
-
-    _callback;
+    } _callback;
 };
 
 SQUIDCEXTERN void storeClientCopy(store_client *, StoreEntry *, StoreIOBuffer, STCB *, void *);

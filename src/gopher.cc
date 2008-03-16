@@ -136,9 +136,7 @@ typedef struct gopher_ds
     HttpRequest *req;
     FwdState::Pointer fwd;
     char replybuf[BUFSIZ];
-}
-
-GopherStateData;
+} GopherStateData;
 
 static PF gopherStateFree;
 static void gopher_mime_content(MemBuf * mb, const char *name, const char *def);

@@ -112,9 +112,7 @@ struct _fqdncache_entry
     {
         unsigned int negcached:1;
         unsigned int fromhosts:1;
-    }
-
-    flags;
+    } flags;
 };
 
 /// \ingroup FQDNCacheInternal
@@ -125,8 +123,7 @@ static struct _fqdn_cache_stats
     int hits;
     int misses;
     int negative_hits;
-}
-FqdncacheStats;
+} FqdncacheStats;
 
 /// \ingroup FQDNCacheInternal
 static dlink_list lru_list;

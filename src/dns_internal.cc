@@ -1144,9 +1144,7 @@ idnsRead(int fd, void *data)
             }
             else {
                 debugs(78, 1, "WARNING: Reply from unknown nameserver " << from << " (retrying..." <<  (squid_curtime-last_warning) << "<=60)" );
-            }
-
-            continue;
+            } continue;
         }
 
         idnsGrokReply(rbuf, len);

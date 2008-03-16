@@ -255,9 +255,7 @@ struct _SquidConfig
         int weight;
         int rebuildwait;
         void *info;
-    }
-
-    Wccp2;
+    } Wccp2;
 #endif
 
 #if USE_ICMP
@@ -289,9 +287,7 @@ struct _SquidConfig
         customlog *accesslogs;
 
         int rotateNumber;
-    }
-
-    Log;
+    } Log;
     char *adminEmail;
     char *EmailFrom;
     char *EmailProgram;
@@ -317,9 +313,7 @@ struct _SquidConfig
         char *ssl_password;
 #endif
 
-    }
-
-    Program;
+    } Program;
 #if USE_DNSSERVERS
 
     int dnsChildren;
@@ -337,9 +331,7 @@ struct _SquidConfig
         char *surrogate_id;
 #endif
 
-    }
-
-    Accel;
+    } Accel;
     char *appendDomain;
     size_t appendDomainLen;
     char *debugOptions;
@@ -358,9 +350,7 @@ struct _SquidConfig
         char *file;
         time_t period;
         u_short port;
-    }
-
-    Announce;
+    } Announce;
 
     struct
     {
@@ -376,9 +366,7 @@ struct _SquidConfig
 #endif
         /* FIXME INET6 : this should really be a CIDR value */
         IPAddress client_netmask;
-    }
-
-    Addrs;
+    } Addrs;
     size_t tcpRcvBufsz;
     size_t udpMaxHitObjsz;
     wordlist *hierarchy_stoplist;
@@ -393,16 +381,12 @@ struct _SquidConfig
         int size;
         int low;
         int high;
-    }
-
-    ipcache;
+    } ipcache;
 
     struct
     {
         int size;
-    }
-
-    fqdncache;
+    } fqdncache;
     int minDirectHops;
     int minDirectRtt;
     cachemgr_passwd *passwd_list;
@@ -414,18 +398,14 @@ struct _SquidConfig
         int64_t maxObjectSize;
         int64_t minObjectSize;
         size_t maxInMemObjSize;
-    }
-
-    Store;
+    } Store;
 
     struct
     {
         int high;
         int low;
         time_t period;
-    }
-
-    Netdb;
+    } Netdb;
 
     struct
     {
@@ -485,9 +465,7 @@ struct _SquidConfig
         int global_internal_static;
         int dns_require_A;
         int debug_override_X;
-    }
-
-    onoff;
+    } onoff;
 
     class ACL *aclList;
 
@@ -527,9 +505,7 @@ struct _SquidConfig
         acl_access *ssl_bump;
 #endif
 
-    }
-
-    accessList;
+    } accessList;
     acl_deny_info_list *denyInfoList;
     authConfig authConfiguration;
 
@@ -542,9 +518,7 @@ struct _SquidConfig
         int epsv_all;
         int sanitycheck;
         int telnet;
-    }
-
-    Ftp;
+    } Ftp;
     refresh_t *Refresh;
 
     struct _cacheSwap
@@ -552,33 +526,25 @@ struct _SquidConfig
         RefCount<class Store> *swapDirs;
         int n_allocated;
         int n_configured;
-    }
-
-    cacheSwap;
+    } cacheSwap;
 
     struct
     {
         char *directory;
         int use_short_names;
-    }
-
-    icons;
+    } icons;
     char *errorDirectory;
 
     struct
     {
         int maxtries;
         int onerror;
-    }
-
-    retry;
+    } retry;
 
     struct
     {
         size_t limit;
-    }
-
-    MemPools;
+    } MemPools;
 #if DELAY_POOLS
 
     DelayConfig Delay;
@@ -592,9 +558,7 @@ struct _SquidConfig
         int icp_min_poll;
         int dns_min_poll;
         int http_min_poll;
-    }
-
-    comm_incoming;
+    } comm_incoming;
     int max_open_disk_fds;
     int uri_whitespace;
     int64_t rangeOffsetLimit;
@@ -607,9 +571,7 @@ struct _SquidConfig
         int ttl;
         unsigned short port;
         char *encode_key;
-    }
-
-    mcast_miss;
+    } mcast_miss;
 #endif
 
     /* one access list per header type we know of */
@@ -627,9 +589,7 @@ struct _SquidConfig
         time_t rewrite_period;
         size_t swapout_chunk_size;
         int rebuild_chunk_percentage;
-    }
-
-    digest;
+    } digest;
 #endif
 #if USE_SSL
 
@@ -637,9 +597,7 @@ struct _SquidConfig
     {
         int unclean_shutdown;
         char *ssl_engine;
-    }
-
-    SSL;
+    } SSL;
 #endif
 
     wordlist *ext_methods;
@@ -649,9 +607,7 @@ struct _SquidConfig
         int high_rptm;
         int high_pf;
         size_t high_memory;
-    }
-
-    warnings;
+    } warnings;
     char *store_dir_select_algorithm;
     int sleep_after_fork;	/* microseconds */
     time_t minimum_expiry_time;	/* seconds */
@@ -671,9 +627,7 @@ struct _SquidConfig
         char *flags;
         acl_access *cert_error;
         SSL_CTX *sslContext;
-    }
-
-    ssl_client;
+    } ssl_client;
 #endif
 
     char *accept_filter;
@@ -686,9 +640,7 @@ struct _SquidConfig2
     {
         int enable_purge;
         int mangle_request_headers;
-    }
-
-    onoff;
+    } onoff;
     uid_t effectiveUserID;
     gid_t effectiveGroupID;
 };
@@ -904,18 +856,14 @@ struct _peer
         time_t last_connect_probe;
         int logged_state;	/* so we can print dead/revived msgs */
         int conn_open;		/* current opened connections */
-    }
-
-    stats;
+    } stats;
 
     struct
     {
         int version;
         int counts[ICP_END+1];
         u_short port;
-    }
-
-    icp;
+    } icp;
 #if USE_HTCP
 
     struct
@@ -923,9 +871,7 @@ struct _peer
         double version;
         int counts[2];
         u_short port;
-    }
-
-    htcp;
+    } htcp;
 #endif
 
     u_short http_port;
@@ -997,9 +943,7 @@ struct _peer
         unsigned int hash;
         double load_multiplier;
         double load_factor;	/* normalized weight value */
-    }
-
-    carp;
+    } carp;
 #endif
 
     char *login;		/* Proxy authorization */
@@ -1245,9 +1189,7 @@ struct _StatCounters
         StatHist reply_svc_time;
         int query_timeouts;
         int times_used;
-    }
-
-    icp;
+    } icp;
 
     struct
     {

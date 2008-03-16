@@ -57,8 +57,7 @@ typedef struct
     char *action;
     char *user_name;
     char *passwd;
-}
-cachemgrStateData;
+} cachemgrStateData;
 
 static CacheManagerAction *cachemgrFindAction(const char *action);
 static cachemgrStateData *cachemgrParseUrl(const char *url);
