@@ -12,12 +12,8 @@ static struct
         int select_fail;
         int create_fail;
         int success;
-    }
-
-    create;
-}
-
-store_io_stats;
+    } create;
+} store_io_stats;
 
 OBJH storeIOStats;
 

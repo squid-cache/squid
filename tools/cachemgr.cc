@@ -149,9 +149,7 @@ typedef struct
     char *user_name;
     char *passwd;
     char *pub_auth;
-}
-
-cachemgr_request;
+} cachemgr_request;
 
 /*
  * Debugging macros (info goes to error_log on your web server)

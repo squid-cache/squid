@@ -169,9 +169,7 @@ public:
         char *last_command;
         char *last_reply;
         int replycode;
-    }
-
-    ctrl;
+    } ctrl;
 
     struct
     {
@@ -180,9 +178,7 @@ public:
         char *host;
         u_short port;
         bool read_pending;
-    }
-
-    data;
+    } data;
 
     struct _ftp_flags flags;
 
@@ -274,8 +270,7 @@ typedef struct
     char *name;
     char *showname;
     char *link;
-}
-ftpListParts;
+} ftpListParts;
 
 /// \ingroup ServerProtocolFTPInternal
 #define FTP_LOGIN_ESCAPED	1

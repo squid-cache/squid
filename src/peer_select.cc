@@ -73,9 +73,7 @@ const char *hier_strings[] =
 static struct
 {
     int timeouts;
-}
-
-PeerStats;
+} PeerStats;
 
 static const char *DirectStr[] =
     {

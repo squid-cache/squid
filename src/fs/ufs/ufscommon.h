@@ -274,9 +274,7 @@ protected:
          * try to close again in the I/O callbacks.
          */
         bool try_closing;
-    }
-
-    flags;
+    } flags;
     link_list *pending_reads;
     link_list *pending_writes;
     void queueRead(char *, size_t, off_t, STRCB *, void *);

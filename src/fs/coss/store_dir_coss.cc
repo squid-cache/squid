@@ -444,9 +444,7 @@ storeCossRebuildFromSwapLog(void *data)
                 storeCossRemove(rb->sd, e);
                 rb->counts.objcount--;
                 rb->counts.cancelcount++;
-            }
-
-            continue;
+            } continue;
         } else {
             x = log(static_cast<double>(++rb->counts.bad_log_op)) / log(10.0);
 

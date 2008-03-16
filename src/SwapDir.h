@@ -174,9 +174,7 @@ public:
         Flags() : selected(0), read_only(0){}
         unsigned int selected:1;
         unsigned int read_only:1;
-    }
-
-    flags;
+    } flags;
     virtual void init() = 0;	/* Initialise the fs */
     virtual void create();	/* Create a new fs */
     virtual void dump(StoreEntry &)const;	/* Dump fs config snippet */
@@ -216,9 +214,7 @@ public:
     struct
     {
         int blksize;
-    }
-
-    fs;
+    } fs;
 };
 
 #endif /* SQUID_SWAPDIR_H */

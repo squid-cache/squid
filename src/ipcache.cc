@@ -112,9 +112,7 @@ struct _ipcache_entry
     {
         unsigned int negcached:1;
         unsigned int fromhosts:1;
-    }
-
-    flags;
+    } flags;
 };
 
 /// \ingroup IPCacheInternal
@@ -131,8 +129,7 @@ static struct _ipcache_stats
     int rr_cname;
     int cname_only;
     int invalid;
-}
-IpcacheStats;
+} IpcacheStats;
 
 /// \ingroup IPCacheInternal
 static dlink_list lru_list;

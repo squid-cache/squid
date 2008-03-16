@@ -88,12 +88,8 @@ typedef struct
     struct
     {
         int cached;
-    }
-
-    flags;
-}
-
-url_entry;
+    } flags;
+} url_entry;
 
 static STCB urnHandleReply;
 static url_entry *urnParseReply(const char *inbuf, const HttpRequestMethod&);
