@@ -538,8 +538,12 @@ HttpHdrRange::offsetLimitExceeded() const
         /* not a range request */
         return false;
 
+    if (Config.rangeOffsetLimit == 0)
+	/* disabled */
+	return true;
+
     if (-1 == Config.rangeOffsetLimit)
-        /* disabled */
+        /* forced */
         return false;
 
     if (firstOffset() == -1)
