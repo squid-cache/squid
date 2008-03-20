@@ -944,6 +944,12 @@
 /* Use dnsserver processes instead of the internal DNS protocol support */
 #undef USE_DNSSERVERS
 
+/* Enable eCAP support */
+#undef USE_ECAP
+
+/* eCAP code uses ICAP names */
+#undef USE_ECAP_AS_ICAP_HACK
+
 /* Use epoll() for the IO loop */
 #undef USE_EPOLL
 
@@ -968,6 +974,9 @@
 
 /* Enable code for assisting in finding memory leaks. Hacker stuff only. */
 #undef USE_LEAKFINDER
+
+/* Support Loadable Modules */
+#undef USE_LOADABLE_MODULES
 
 /* Define this to make use of the OpenSSL libraries for MD5 calculation rather
    than Squid's own MD5 implementation or if building with SSL encryption

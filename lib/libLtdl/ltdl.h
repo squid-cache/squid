@@ -1,5 +1,5 @@
 /* ltdl.h -- generic dlopen functions
-   Copyright (C) 1998-2000 Free Software Foundation, Inc.
+   Copyright (C) 1998-2001, 2003, 2004, 2007 Free Software Foundation, Inc.
    Originally by Thomas Tanner <tanner@ffii.org>
    This file is part of GNU Libtool.
 
@@ -79,7 +79,7 @@ LT_BEGIN_C_DECLS
 
 /* LT_CONC creates a new concatenated symbol for the compiler
    in a portable way.  */
-#if defined(__STDC__) || defined(__cplusplus) || defined(_MSC_VER)
+#if defined(__STDC__) || defined(__cplusplus) || defined(_MSC_VER) || defined(_AIX)
 #  define LT_CONC(s,t)	s##t
 #else
 #  define LT_CONC(s,t)	s/**/t
@@ -127,11 +127,12 @@ LT_BEGIN_C_DECLS
 /* DLL building support on win32 hosts;  mostly to workaround their
    ridiculous implementation of data symbol exporting. */
 #ifndef LT_SCOPE
-#  ifdef __WINDOWS__
+#  if defined(__WINDOWS__) || defined(__CYGWIN__)
 #    ifdef DLL_EXPORT		/* defined by libtool (if required) */
 #      define LT_SCOPE	__declspec(dllexport)
 #    endif
 #    ifdef LIBLTDL_DLL_IMPORT	/* define if linking with this dll */
+       /* note: cygwin/mingw compilers can rely instead on auto-import */
 #      define LT_SCOPE	extern __declspec(dllimport)
 #    endif
 #  endif
