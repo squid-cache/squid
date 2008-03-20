@@ -1,4 +1,3 @@
-
 /*
  * $Id: StoreFSdiskd.cc,v 1.3 2008/02/26 21:49:44 amosjeffries Exp $
  *
@@ -34,10 +33,15 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-
+#if 0
 #include "StoreFileSystem.h"
-#include "fs/ufs/StoreFSufs.h"
 #include "DiskIO/DiskIOModule.h"
+#endif
+
+#include "fs/ufs/StoreFSufs.h"
+
+/** \todo FIXME: break UFSSwapDir out so we don;t need all the extras */
+#include "fs/ufs/ufscommon.h"
 
 /**
  \defgroup diskd diskd Storage Filesystem (UFS Based)

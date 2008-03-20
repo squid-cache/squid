@@ -1,4 +1,3 @@
-
 /*
  * $Id: AuthConfig.h,v 1.5 2008/02/26 21:49:34 amosjeffries Exp $
  *
@@ -30,24 +29,30 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_AUTHCONFIG_H
 #define SQUID_AUTHCONFIG_H
 
-/*
+class AuthUserRequest;
+class StoreEntry;
+class HttpReply;
+class HttpRequest;
+class CacheManager;
+
+/* for http_hdr_type parameters-by-value */
+#include "HttpHeader.h"
+
+
+/**
+ \ingroup AuthAPI
+ \par
  * I am the configuration for an auth scheme.
  * Currently each scheme has only one instance of me,
  * but this may change.
- */
-
-/* This class is treated like a ref counted class.
+ \par
+ * This class is treated like a ref counted class.
  * If the children ever stop being singletons, implement the
  * ref counting...
  */
-
-class AuthUserRequest;
-
-/// \ingroup AuthAPI
 class AuthConfig
 {
 

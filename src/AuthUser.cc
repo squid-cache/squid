@@ -157,7 +157,7 @@ AuthUser::CachedACLsReset()
      * This must complete all at once, because we are ensuring correctness.
      */
     AuthUserHashPointer *usernamehash;
-    auth_user_t *auth_user;
+    AuthUser *auth_user;
     char const *username = NULL;
     debugs(29, 3, "AuthUser::CachedACLsReset: Flushing the ACL caches for all users.");
     hash_first(proxy_auth_username_cache);
@@ -182,7 +182,7 @@ AuthUser::cacheCleanup(void *datanotused)
      * entries at a time. Lets see how it flys first.
      */
     AuthUserHashPointer *usernamehash;
-    auth_user_t *auth_user;
+    AuthUser *auth_user;
     char const *username = NULL;
     debugs(29, 3, "AuthUser::cacheCleanup: Cleaning the user cache now");
     debugs(29, 3, "AuthUser::cacheCleanup: Current time: " << current_time.tv_sec);

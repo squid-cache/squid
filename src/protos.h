@@ -29,7 +29,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_PROTOS_H
 #define SQUID_PROTOS_H
 
@@ -39,7 +38,10 @@
 #include "Packer.h"
 /* for routines still in this file that take CacheManager parameters */
 #include "IPAddress.h"
-
+/* for parameters that still need these */
+#include "enums.h"
+/* some parameters stil need this */
+#include "wordlist.h"
 
 class CacheManager;
 class HttpRequestMethod;
@@ -59,6 +61,7 @@ SQUIDCEXTERN int logTypeIsATcpHit(log_type);
  * cache_cf.c
  */
 SQUIDCEXTERN void configFreeMemory(void);
+class MemBuf;
 SQUIDCEXTERN void wordlistCat(const wordlist *, MemBuf * mb);
 SQUIDCEXTERN void self_destruct(void);
 SQUIDCEXTERN void add_http_port(char *portspec);
@@ -185,6 +188,8 @@ class FwdState;
 /// \ingroup ServerProtocolFTPAPI
 SQUIDCEXTERN void ftpStart(FwdState *);
 
+class HttpRequest;
+
 /// \ingroup ServerProtocolFTPAPI
 SQUIDCEXTERN const char *ftpUrlWith2f(HttpRequest *);
 
@@ -211,6 +216,8 @@ SQUIDCEXTERN void whoisStart(FwdState *);
 
 
 /* http.c */
+/* for http_hdr_type field */
+#include "HttpHeader.h"
 SQUIDCEXTERN int httpCachable(const HttpRequestMethod&);
 SQUIDCEXTERN void httpStart(FwdState *);
 SQUIDCEXTERN mb_size_t httpBuildRequestPrefix(HttpRequest * request,
@@ -255,6 +262,7 @@ SQUIDCEXTERN void httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist);
 SQUIDCEXTERN void httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
 
 /* Http Header Tools */
+class HttpHeaderFieldInfo;
 SQUIDCEXTERN HttpHeaderFieldInfo *httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count);
 SQUIDCEXTERN void httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo * info, int count);
 SQUIDCEXTERN http_hdr_type httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo * attrs, int end);
@@ -433,6 +441,7 @@ SQUIDCEXTERN void peerSelect(HttpRequest *, StoreEntry *, PSC *, void *data);
 SQUIDCEXTERN void peerSelectInit(void);
 
 /* peer_digest.c */
+class PeerDigest;
 SQUIDCEXTERN PeerDigest *peerDigestCreate(peer * p);
 SQUIDCEXTERN void peerDigestNeeded(PeerDigest * pd);
 SQUIDCEXTERN void peerDigestNotePeerGone(PeerDigest * pd);
@@ -579,6 +588,7 @@ SQUIDCEXTERN void storeRebuildProgress(int sd_index, int total, int sofar);
 /*
  * store_swapin.c
  */
+class store_client;
 SQUIDCEXTERN void storeSwapInStart(store_client *);
 
 /*
@@ -667,12 +677,13 @@ SQUIDCEXTERN void refererCloseLog(void);
 SQUIDCEXTERN peer_t parseNeighborType(const char *s);
 
 /* tools.c */
-SQUIDCEXTERN void dlinkAdd(void *data, dlink_node *, dlink_list *);
-SQUIDCEXTERN void dlinkAddAfter(void *, dlink_node *, dlink_node *, dlink_list *);
-SQUIDCEXTERN void dlinkAddTail(void *data, dlink_node *, dlink_list *);
-SQUIDCEXTERN void dlinkDelete(dlink_node * m, dlink_list * list);
-SQUIDCEXTERN void dlinkNodeDelete(dlink_node * m);
-SQUIDCEXTERN dlink_node *dlinkNodeNew(void);
+//UNUSED	#include "dlink.h"
+//UNUSED	SQUIDCEXTERN void dlinkAdd(void *data, dlink_node *, dlink_list *);
+//UNUSED	SQUIDCEXTERN void dlinkAddAfter(void *, dlink_node *, dlink_node *, dlink_list *);
+//UNUSED	SQUIDCEXTERN void dlinkAddTail(void *data, dlink_node *, dlink_list *);
+//UNUSED	SQUIDCEXTERN void dlinkDelete(dlink_node * m, dlink_list * list);
+//UNUSED	SQUIDCEXTERN void dlinkNodeDelete(dlink_node * m);
+//UNUSED	SQUIDCEXTERN dlink_node *dlinkNodeNew(void);
 
 SQUIDCEXTERN void kb_incr(kb_t *, size_t);
 SQUIDCEXTERN int stringHasWhitespace(const char *);
@@ -798,6 +809,7 @@ SQUIDCEXTERN DWORD WIN32_IpAddrChangeMonitorInit();
 #endif
 
 /* external_acl.c */
+class external_acl;
 SQUIDCEXTERN void parse_externalAclHelper(external_acl **);
 
 SQUIDCEXTERN void dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl *);
@@ -805,7 +817,7 @@ SQUIDCEXTERN void dump_externalAclHelper(StoreEntry * sentry, const char *name, 
 SQUIDCEXTERN void free_externalAclHelper(external_acl **);
 
 typedef void EAH(void *data, void *result);
-
+class ACLChecklist;
 SQUIDCEXTERN void externalAclLookup(ACLChecklist * ch, void *acl_data, EAH * handler, void *data);
 
 SQUIDCEXTERN void externalAclInit(void);

@@ -30,17 +30,22 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *  
  */
-
 #ifndef SQUID_ARRAY_H
 #define SQUID_ARRAY_H
+
+/**
+ \todo CLEANUP: this file should be called Vector.h at least, and probably be replaced by STL Vector<C>
+ */
 
 #include "fatal.h"
 #include "util.h"
 
+/* users of this template also need assert() */
+#include "assert.h"
+
 /* iterator support */
 
 template <class C>
-
 class VectorIteratorBase
 {
 
@@ -72,7 +77,6 @@ private:
 };
 
 template<class E>
-
 class Vector
 {
 
@@ -118,7 +122,7 @@ template<class E>
 void *
 Vector<E>::operator new(size_t size)
 {
-    return xmalloc (size);
+    return xmalloc(size);
 }
 
 template<class E>

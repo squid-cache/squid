@@ -1,4 +1,3 @@
-
 /*
  * $Id: Generic.h,v 1.7 2004/12/20 16:30:32 robertc Exp $
  *
@@ -30,12 +29,15 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_GENERIC_H
 #define SQUID_GENERIC_H
 
-template <class _Arg, class _Result>
+/** \todo CLEANUP: checks towrap this header properly */
+#include <ostream>
 
+#include "dlink.h"
+
+template <class _Arg, class _Result>
 struct unary_function
 {
     typedef _Arg argument_type;
@@ -61,7 +63,6 @@ T& for_each(dlink_list const &collection, T& visitor)
 }
 
 template <class S>
-
 class Stack;
 
 template <class E, class T>
@@ -78,7 +79,6 @@ T& for_each(Stack<E> const &collection, T& visitor)
  */
 
 template <class C>
-
 class InstanceToSingletonAdapter : public C
 {
 
@@ -119,7 +119,6 @@ Visitor& for_each(InputIterator from, InputIterator to, Visitor& visitor)
 
 /* generic ostream printer */
 template <class Pointer>
-
 struct PointerPrinter
 {
     PointerPrinter(std::ostream &astream, std::string aDelimiter) : os(astream), delimiter (aDelimiter) {}

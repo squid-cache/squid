@@ -40,9 +40,11 @@
  * the top of the heap (as in the smallest object key value).  Child nodes
  * are larger than their parent.
  ****************************************************************************/
-
 #ifndef	SQUID_HEAP_H
 #define	SQUID_HEAP_H
+
+/* Squid autoconf definitions */
+#include "config.h"
 
 /*
  * Function for generating heap keys.  The first argument will typically be

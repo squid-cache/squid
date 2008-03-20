@@ -1,4 +1,3 @@
-
 /*
  * $Id: HttpHdrContRange.h,v 1.4 2007/08/13 17:20:51 hno Exp $
  *
@@ -30,34 +29,37 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_HTTPHDRCONTRANGE_H
 #define SQUID_HTTPHDRCONTRANGE_H
 
+class HttpHeader;
+
+/* for SQUIDCEXTERN */
+#include "config.h"
+
+/* for HttpHdrRangeSpec */
 #include "HttpHeaderRange.h"
 
-/* http content-range header field */
-
+/** HTTP Content-Range: header field */
 class HttpHdrContRange
 {
 
 public:
     HttpHdrRangeSpec spec;
-    int64_t elength;		/* entity length, not content length */
+    int64_t elength;		/**< entity length, not content length */
 };
 
-/* Http Content Range Header Field */
+/** \todo CLEANUP: Move httpHdrContRange* functions into the class methods */
+
 SQUIDCEXTERN HttpHdrContRange *httpHdrContRangeCreate(void);
 SQUIDCEXTERN HttpHdrContRange *httpHdrContRangeParseCreate(const char *crange_spec);
-/* returns true if range is valid; inits HttpHdrContRange */
+/** returns true if range is valid; inits HttpHdrContRange */
 SQUIDCEXTERN int httpHdrContRangeParseInit(HttpHdrContRange * crange, const char *crange_spec);
 SQUIDCEXTERN void httpHdrContRangeDestroy(HttpHdrContRange * crange);
 SQUIDCEXTERN HttpHdrContRange *httpHdrContRangeDup(const HttpHdrContRange * crange);
 SQUIDCEXTERN void httpHdrContRangePackInto(const HttpHdrContRange * crange, Packer * p);
-/* inits with given spec */
+/** inits with given spec */
 SQUIDCEXTERN void httpHdrContRangeSet(HttpHdrContRange *, HttpHdrRangeSpec, int64_t);
-;
 SQUIDCEXTERN void httpHeaderAddContRange(HttpHeader *, HttpHdrRangeSpec, int64_t);
-
 
 #endif /* SQUID_HTTPHDRCONTRANGE_H */

@@ -1,4 +1,3 @@
-
 /*
  * $Id: defines.h,v 1.123 2007/12/14 23:11:46 amosjeffries Exp $
  *
@@ -30,7 +29,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_DEFINES_H
 #define SQUID_DEFINES_H
 
@@ -39,6 +37,10 @@
 #endif
 #ifndef FALSE
 #define FALSE 0
+#endif
+
+#ifndef BUFSIZ
+#define BUFSIZ  4096            /* make unreasonable guess */
 #endif
 
 #define ACL_NAME_SZ 32
@@ -59,7 +61,6 @@
 /* Select types. */
 #define COMM_SELECT_READ   (0x1)
 #define COMM_SELECT_WRITE  (0x2)
-#define MAX_DEBUG_SECTIONS 100
 
 #define COMM_NONBLOCKING	0x01
 #define COMM_NOCLOEXEC		0x02

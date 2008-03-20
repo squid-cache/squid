@@ -31,11 +31,12 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-
 #ifndef SQUID_DELAYBUCKET_H
 #define SQUID_DELAYBUCKET_H
 
 class DelaySpec;
+class StoreEntry;
+
 /* don't use remote storage for these */
 
 /// \ingroup DelayPoolsAPI

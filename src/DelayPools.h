@@ -31,7 +31,6 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-
 #ifndef SQUID_DELAYPOOLS_H
 #define SQUID_DELAYPOOLS_H
 
@@ -39,11 +38,6 @@
  \defgroup DelayPoolsAPI Delay Pools API
  \ingroup Components
  */
-
-/* forward decls */
-class CacheManager;
-
-#include "Array.h"
 
 /// \ingroup DelayPoolsAPI
 class Updateable
@@ -55,7 +49,14 @@ public:
     virtual void update(int) = 0;
 };
 
+/* forward decls */
+class CacheManager;
 class DelayPool;
+class Updateable;
+class StoreEntry;
+
+/* for Vector<> */
+#include "Array.h"
 
 /// \ingroup DelayPoolsAPI
 class DelayPools

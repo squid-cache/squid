@@ -1,9 +1,10 @@
 /*
  * $Id: snmp_impl.h,v 1.15 2003/01/23 00:36:48 robertc Exp $
  */
-
 #ifndef SQUID_SNMP_IMPL_H
 #define SQUID_SNMP_IMPL_H
+
+#include "asn1.h"
 
 /*
  * Definitions for SNMP (RFC 1067) implementation.
@@ -46,6 +47,8 @@ SOFTWARE.
 
 #define SID_MAX_LEN	64
 
+#if 0 /* defines performed globally by config.h */
+
 #ifndef NULL
 #define NULL 0
 #endif
@@ -56,6 +59,7 @@ SOFTWARE.
 #ifndef FALSE
 #define FALSE	0
 #endif
+#endif /* dead code. */
 
 #define READ	    1
 #define WRITE	    0

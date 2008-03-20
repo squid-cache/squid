@@ -1,4 +1,3 @@
-
 /*
  * $Id: StoreMetaSTD.h,v 1.5 2008/02/26 21:49:34 amosjeffries Exp $
  *
@@ -30,11 +29,12 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_STOREMETASTD_H
 #define SQUID_STOREMETASTD_H
 
 #include "StoreMeta.h"
+/* for MEMPROXY_CLASS() macros */
+#include "MemPool.h"
 
 class StoreMetaSTD : public StoreMeta
 {
@@ -48,6 +48,6 @@ public:
     //    bool checkConsistency(StoreEntry *) const;
 };
 
-MEMPROXY_CLASS_INLINE(StoreMetaSTD)		/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(StoreMetaSTD);
 
 #endif /* SQUID_STOREMETASTD_H */

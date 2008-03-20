@@ -44,7 +44,7 @@ public:
 
 };
 
-MEMPROXY_CLASS_INLINE(DigestUser)		/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(DigestUser);
 
 typedef class DigestUser digest_user_h;
 
@@ -74,13 +74,13 @@ public:
 
     virtual const AuthUser *user() const {return _theUser;}
 
-    virtual void user (AuthUser *aUser) {_theUser=dynamic_cast<DigestUser *>(aUser);}
+    virtual void user(AuthUser *aUser) {_theUser=dynamic_cast<DigestUser *>(aUser);}
 
     CredentialsState credentials() const;
     void credentials(CredentialsState);
 
-    void authUser(auth_user_t *);
-    auth_user_t *authUser() const;
+    void authUser(AuthUser *);
+    AuthUser *authUser() const;
 
     char *nonceb64;		/* "dcd98b7102dd2f0e8b11d0f600bfb0c093" */
     char *cnonce;		/* "0a4f113b" */
