@@ -31,9 +31,10 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-
 #ifndef SQUID_ACLDATA_H
 #define SQUID_ACLDATA_H
+
+class wordlist;
 
 /// \ingroup ACLAPI
 template <class M>

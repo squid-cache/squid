@@ -1,4 +1,3 @@
-
 /*
  * $Id: StoreFScoss.h,v 1.4 2008/02/26 21:49:43 amosjeffries Exp $
  *
@@ -30,11 +29,10 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-
 #ifndef SQUID_STOREFSCOSS_H
 #define SQUID_STOREFSCOSS_H
 
-#include "StoreFileSystem.h"
+class StoreEntry;
 
 /**
  \defgroup COSS COSS Storage Filesystem
@@ -69,6 +67,11 @@ public:
 
     open, create, close, unlink, read, write, stripe_write;
 };
+
+
+class CacheManager;
+
+#include "StoreFileSystem.h"
 
 /// \ingroup COSS, FileSystems
 class StoreFScoss : public StoreFileSystem

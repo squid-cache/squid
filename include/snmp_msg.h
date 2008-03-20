@@ -2,6 +2,8 @@
 #ifndef SQUID_SNMP_MSG_H
 #define SQUID_SNMP_MSG_H
 
+#include "config.h"
+
 /**********************************************************************
  *
  *           Copyright 1997 by Carnegie Mellon University
@@ -37,10 +39,8 @@
 extern "C" {
 #endif
 
-    u_char *snmp_msg_Encode(u_char *, int *, u_char *,
-	int, int, struct snmp_pdu *);
-    u_char *snmp_msg_Decode(u_char *, int *, u_char *,
-	int *, int *, struct snmp_pdu *);
+u_char *snmp_msg_Encode(u_char *, int *, u_char *, int, int, struct snmp_pdu *);
+u_char *snmp_msg_Decode(u_char *, int *, u_char *, int *, int *, struct snmp_pdu *);
 
 #ifdef __cplusplus
 }

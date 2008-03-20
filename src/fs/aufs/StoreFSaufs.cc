@@ -1,4 +1,3 @@
-
 /*
  * $Id: StoreFSaufs.cc,v 1.3 2008/02/26 21:49:43 amosjeffries Exp $
  *
@@ -34,10 +33,16 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
+#if 0
 #include "squid.h"
 #include "StoreFileSystem.h"
-#include "fs/ufs/StoreFSufs.h"
 #include "DiskIO/DiskIOModule.h"
+#endif
+
+#include "fs/ufs/StoreFSufs.h"
+
+/** \todo FIXME: break UFSSwapDir out so we don't need all the guff */
+#include "fs/ufs/ufscommon.h"
 
 /**
  \defgroup AUFS AUFS Storage Filesystem (UFS Based)

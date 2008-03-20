@@ -13,7 +13,11 @@ INCLUDES        = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/incl
 INCLUDES	+= @SQUID_CPPUNIT_INC@
 
 TESTS=$(check_PROGRAMS)
-check_PROGRAMS=
+#check_PROGRAMS= testHeaders
+
+### Special Universal .h dependency test script
+#testHeaders: *.h
+# ./ has no .h files
 
 SUBDIRS		= 
 

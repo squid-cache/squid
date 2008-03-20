@@ -41,6 +41,8 @@
 
 class CacheManager;
 
+class SwapDir;
+
 class StoreFileSystem
 {
 
@@ -52,7 +54,7 @@ public:
     static Vector<StoreFileSystem*> const &FileSystems();
     typedef Vector<StoreFileSystem*>::iterator iterator;
     typedef Vector<StoreFileSystem*>::const_iterator const_iterator;
-    StoreFileSystem() : initialised (false) {}
+    StoreFileSystem() : initialised(false) {}
 
     virtual ~StoreFileSystem(){}
 

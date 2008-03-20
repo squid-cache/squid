@@ -1,4 +1,3 @@
-
 /*
  * $Id: AccessLogEntry.h,v 1.9 2008/02/26 00:15:48 rousskov Exp $
  *
@@ -31,7 +30,6 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-
 #ifndef SQUID_HTTPACCESSLOGENTRY_H
 #define SQUID_HTTPACCESSLOGENTRY_H
 
@@ -39,10 +37,12 @@
 #include "HttpRequestMethod.h"
 #include "HierarchyLogEntry.h"
 #include "IPAddress.h"
+#include "HttpRequestMethod.h"
 
 /* forward decls */
-
 class CacheManager;
+class HttpReply;
+class HttpRequest;
 
 class AccessLogEntry
 {
@@ -118,6 +118,8 @@ public:
         char *reply;
     } headers;
 
+    // Why is this a sub-class and not a set of real "private:" fields?
+    // It looks like its duplicating HTTPRequestMethod anyway!
     class Private
     {
 
@@ -130,6 +132,10 @@ public:
     HttpReply *reply;
     HttpRequest *request;
 };
+
+class ACLChecklist;
+class StoreEntry;
+class logformat_token;
 
 /* Should be in 'AccessLog.h' as the driver */
 extern void accessLogLog(AccessLogEntry *, ACLChecklist * checklist);

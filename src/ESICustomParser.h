@@ -29,14 +29,20 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_ESICUSTOMPARSER_H
 #define SQUID_ESICUSTOMPARSER_H
 
-#include "ESIParser.h"
-
 class Trie;
 
+/* inherits from */
+#include "ESIParser.h"
+
+/* for String variables */
+#include "SquidString.h"
+
+/**
+ \ingroup ESIAPI
+ */
 class ESICustomParser : public ESIParser
 {
 

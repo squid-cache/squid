@@ -29,32 +29,41 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_ESIPARSER_H
 #define SQUID_ESIPARSER_H
 
+/* for size_t */
+#include "config.h"
+
 class ESIParserClient
 {
-
 public:
     virtual void start(const char *el, const char **attr, size_t attrCount) = 0;
     virtual void end(const char *el) = 0;
     virtual void parserDefault (const char *s, int len) =0;
     virtual void parserComment (const char *s) = 0;
     virtual ~ESIParserClient() {};
-
 };
+
+
+/* for RefCountable */
+#include "RefCount.h"
 
 class ESIParser : public RefCountable
 {
-
 public:
     typedef RefCount<ESIParser> Pointer;
+
     static void registerParser(const char *name, Pointer (*new_func)(ESIParserClient *aClient));
     static Pointer NewParser(ESIParserClient *aClient);
     static char *Type;
-    /* true on success */
+
+    /**
+     \retval true      on success
+     \retval false     on what?
+     */
     virtual bool parse(char const *dataToParse, size_t const lengthOfData, bool const endOfStream) = 0;
+
     virtual long int lineNumber() const =0;
     virtual char const * errorString() const =0;
 
@@ -95,4 +104,6 @@ public:
 #define ESI_PARSER_TYPE \
     static ESIParser::Pointer NewParser(ESIParserClient *aClient); \
     static ESIParser::Register thisParser
+
+
 #endif /* SQUID_ESIPARSER_H */

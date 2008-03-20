@@ -31,10 +31,14 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-
 #ifndef SQUID_ACLREGEXDATA_H
 #define SQUID_ACLREGEXDATA_H
+
 #include "ACLData.h"
+#include "MemPool.h"
+
+/** \todo CLEANUP: break out relist, we don't need the rest. */
+#include "structs.h"
 
 class ACLRegexData : public ACLData<char const *>
 {
@@ -53,6 +57,6 @@ private:
     relist *data;
 };
 
-MEMPROXY_CLASS_INLINE(ACLRegexData)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(ACLRegexData);
 
 #endif /* SQUID_ACLREGEXDATA_H */

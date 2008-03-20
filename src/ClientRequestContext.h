@@ -1,3 +1,15 @@
+#ifndef SQUID_CLIENTREQUESTCONTEXT_H
+#define SQUID_CLIENTREQUESTCONTEXT_H
+
+class ACLChecklist;
+class ClientHttpRequest;
+
+#include "config.h"
+/* for RefCountable */
+#include "RefCount.h"
+/* for CBDATA_CLASS() */
+#include "cbdata.h"
+
 #if ICAP_CLIENT
 #include "ICAP/ICAPServiceRep.h"
 #endif
@@ -44,3 +56,4 @@ private:
     CBDATA_CLASS(ClientRequestContext);
 };
 
+#endif /* SQUID_CLIENTREQUESTCONTEXT_H */

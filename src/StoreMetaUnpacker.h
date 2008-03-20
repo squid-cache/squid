@@ -1,4 +1,3 @@
-
 /*
  * $Id: StoreMetaUnpacker.h,v 1.3 2008/01/07 17:12:28 hno Exp $
  *
@@ -30,11 +29,14 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_TYPELENGTHVALUEUNPACKER_H
 #define SQUID_TYPELENGTHVALUEUNPACKER_H
 
 class StoreMeta;
+class StoreEntry;
+
+/* for ssize_t, SQUIDCEXTERN */
+#include "config.h"
 
 class StoreMetaUnpacker
 {

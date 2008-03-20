@@ -1,4 +1,3 @@
-
 /*
  * $Id: AuthUser.h,v 1.7 2008/02/26 21:49:34 amosjeffries Exp $
  *
@@ -35,9 +34,15 @@
 #ifndef SQUID_AUTHUSER_H
 #define SQUID_AUTHUSER_H
 
-#include "IPAddress.h"
-
 class AuthUserRequest;
+class AuthConfig;
+class AuthUserHashPointer;
+
+/* for auth_type_t */
+#include "enums.h"
+
+#include "IPAddress.h"
+#include "dlink.h"
 
 /**
  *  \ingroup AuthAPI
@@ -60,7 +65,7 @@ public:
     /** the config for this user */
     AuthConfig *config;
     /** we only have one username associated with a given auth_user struct */
-    auth_user_hash_pointer *usernamehash;
+    AuthUserHashPointer *usernamehash;
     /** we may have many proxy-authenticate strings that decode to the same user */
     dlink_list proxy_auth_list;
     dlink_list proxy_match_cache;
@@ -72,11 +77,11 @@ public:
      * but how many requests will a single username have in parallel? */
     dlink_list requests;
 
-    static void cacheInit ();
+    static void cacheInit();
     static void CachedACLsReset();
 
     void absorb(AuthUser *from);
-    virtual ~AuthUser ();
+    virtual ~AuthUser();
     _SQUID_INLINE_ char const *username() const;
     _SQUID_INLINE_ void username(char const *);
     void clearIp();

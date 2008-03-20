@@ -1,4 +1,3 @@
-
 /*
  * $Id: HttpHeaderMask.h,v 1.1 2006/04/22 13:08:39 robertc Exp $
  *
@@ -30,12 +29,15 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_HTTPHEADERMASK_H
 #define SQUID_HTTPHEADERMASK_H
+
+/* for SQUIDCEXTERN */
+#include "config.h"
 
 /* big mask for http headers */
 typedef char HttpHeaderMask[12];
 
 SQUIDCEXTERN void httpHeaderMaskInit(HttpHeaderMask * mask, int value);
+
 #endif /* SQUID_HTTPHEADERMASK_H */

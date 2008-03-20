@@ -72,9 +72,6 @@ enum _method_t {
     METHOD_ENUM_END  // MUST be last, (yuck) this is used as an array-initialization index constant!
 };
 
-/* forward decls */
-typedef struct _SquidConfig SquidConfig;
-
 
 /**
  * This class represents an HTTP Request METHOD

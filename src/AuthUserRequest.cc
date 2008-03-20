@@ -202,7 +202,7 @@ AuthUserRequest::denyMessage(char const * const default_message)
 static void
 authenticateAuthUserRequestSetIp(AuthUserRequest * auth_user_request, IPAddress &ipaddr)
 {
-    auth_user_t *auth_user = auth_user_request->user();
+    AuthUser *auth_user = auth_user_request->user();
 
     if (!auth_user)
         return;
@@ -213,7 +213,7 @@ authenticateAuthUserRequestSetIp(AuthUserRequest * auth_user_request, IPAddress 
 void
 authenticateAuthUserRequestRemoveIp(AuthUserRequest * auth_user_request, IPAddress const &ipaddr)
 {
-    auth_user_t *auth_user = auth_user_request->user();
+    AuthUser *auth_user = auth_user_request->user();
 
     if (!auth_user)
         return;
@@ -328,7 +328,6 @@ authTryGetUser (AuthUserRequest **auth_user_request, ConnStateData * conn, HttpR
  * Caller is responsible for locking and unlocking their *auth_user_request!
  */
 auth_acl_t
-
 AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, IPAddress &src_addr)
 {
     const char *proxy_auth;

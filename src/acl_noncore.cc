@@ -283,7 +283,7 @@ aclDestroyAccessList(acl_access ** list)
 }
 
 /* maex@space.net (06.09.1996)
- *    destroy an _acl_deny_info_list */
+ *    destroy an acl_deny_info_list */
 
 void
 aclDestroyDenyInfoList(acl_deny_info_list ** list)

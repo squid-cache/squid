@@ -1,4 +1,3 @@
-
 /*
  * $Id: test_http_range.cc,v 1.3 2007/05/29 13:31:48 amosjeffries Exp $
  *
@@ -33,12 +32,21 @@
  *
  */
 
+#if 0
 #include "squid.h"
-#include "Mem.h"
 //#include "Store.h"
-#include "HttpHeaderRange.h"
 //#include "client_side_request.h"
+#endif
+
+/** \todo CLEANUP: This file shoudl be called something_stub.cc */
+
+#include "HttpHeaderRange.h"
+#include "HttpHeader.h"
+#include "Mem.h"
+
+#if 0
 #include "ACLChecklist.h"
+#endif
 
 /* Stub routines */
 void

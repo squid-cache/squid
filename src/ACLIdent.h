@@ -35,9 +35,7 @@
 #ifndef SQUID_ACLIDENT_H
 #define SQUID_ACLIDENT_H
 
-#include "ACL.h"
 #include "ACLChecklist.h"
-#include "ACLData.h"
 
 /// \ingroup ACLAPI
 class IdentLookup : public ACLChecklist::AsyncState
@@ -51,6 +49,10 @@ private:
     static IdentLookup instance_;
     static void LookupDone(const char *ident, void *data);
 };
+
+
+#include "ACL.h"
+#include "ACLData.h"
 
 /// \ingroup ACLAPI
 class ACLIdent : public ACL
@@ -82,6 +84,6 @@ private:
     char const *type_;
 };
 
-MEMPROXY_CLASS_INLINE(ACLIdent)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(ACLIdent);
 
 #endif /* SQUID_ACLIDENT_H */

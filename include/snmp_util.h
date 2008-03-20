@@ -1,9 +1,10 @@
 /*
  * $Id: snmp_util.h,v 1.10 2003/01/23 00:36:48 robertc Exp $
  */
-
 #ifndef SQUID_SNMP_UTIL_H
 #define SQUID_SNMP_UTIL_H
+
+#include "config.h"
 
 #ifdef __cplusplus
 extern "C" {

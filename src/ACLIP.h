@@ -57,16 +57,16 @@ public:
 
     IPAddress addr2;
 
-    IPAddress mask; /* This should perhapse be stored as a CIDR range now instead of a full IP mask. */
+    IPAddress mask; /**< \todo This should perhapse be stored as a CIDR range now instead of a full IP mask. */
 
-    acl_ip_data *next;		/* used for parsing, not for storing */
+    acl_ip_data *next;		/**< used for parsing, not for storing */
 
 private:
 
     static bool DecodeMask(const char *asc, IPAddress &mask, int string_format_type);
 };
 
-MEMPROXY_CLASS_INLINE(acl_ip_data)		/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(acl_ip_data);
 
 /// \ingroup ACLAPI
 class ACLIP : public ACL

@@ -39,7 +39,9 @@
 #endif
 
 /* These come first */
+#if 0
 #include "asn1.h"
+#endif
 #include "snmp_error.h"
 #if 0
 #include "mibii.h"

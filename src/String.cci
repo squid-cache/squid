@@ -160,7 +160,9 @@ String::cut(size_t newLength)
 
     len_ = newLength;
 
-    if(len_ == 0 && buf_ == NULL) return; // buf_ may be NULL on zero-length strings.
+    // buf_ may be NULL on zero-length strings.
+    if(len_ == 0 && buf_ == NULL) return;
+
     buf_[newLength] = '\0';
 }
 

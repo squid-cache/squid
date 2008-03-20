@@ -1,6 +1,15 @@
 #ifndef SQUID_SNMP_PDU_H
 #define SQUID_SNMP_PDU_H
 
+#include "config.h"
+/* required for oid typedef */
+#include "asn1.h"
+
+#if HAVE_NETINET_IN_H
+/* required for sockaddr_in definition */
+#include <netinet/in.h>
+#endif
+
 /**********************************************************************
  *
  *           Copyright 1997 by Carnegie Mellon University

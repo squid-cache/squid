@@ -1,4 +1,3 @@
-
 /*
  * $Id: assert.h,v 1.3 2006/05/12 21:52:24 hno Exp $
  *
@@ -31,7 +30,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_ASSERT_H
 #define SQUID_ASSERT_H
 

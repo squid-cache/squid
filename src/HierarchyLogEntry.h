@@ -1,4 +1,3 @@
-
 /*
  * $Id: HierarchyLogEntry.h,v 1.1 2003/10/16 21:40:16 robertc Exp $
  *
@@ -35,7 +34,11 @@
 #ifndef SQUID_HTTPHIERARCHYLOGENTRY_H
 #define SQUID_HTTPHIERARCHYLOGENTRY_H
 
+#include "rfc2181.h"
 #include "PingData.h"
+
+/** todo Cleanup: break hier_code type out. We don't need the rest. */
+#include "enums.h"
 
 class HierarchyLogEntry
 {

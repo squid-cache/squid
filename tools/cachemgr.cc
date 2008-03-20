@@ -1,4 +1,3 @@
-
 /*
  * $Id: cachemgr.cc,v 1.6 2007/12/14 23:11:53 amosjeffries Exp $
  *
@@ -135,6 +134,7 @@ extern "C"
 #include "assert.h"
 #include "util.h"
 #include "IPAddress.h"
+#include "getfullhostname.h"
 
 #ifndef DEFAULT_CACHEMGR_CONFIG
 #define DEFAULT_CACHEMGR_CONFIG "/etc/squid/cachemgr.conf"
