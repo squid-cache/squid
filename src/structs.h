@@ -1,4 +1,3 @@
-
 /*
  * $Id: structs.h,v 1.575 2008/02/11 22:28:47 rousskov Exp $
  *
@@ -30,7 +29,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_STRUCTS_H
 #define SQUID_STRUCTS_H
 
@@ -43,13 +41,13 @@
 /* needed for the global config */
 #include "HttpHeader.h"
 
-struct _acl_name_list
+struct acl_name_list
 {
     char name[ACL_NAME_SZ];
     acl_name_list *next;
 };
 
-struct _acl_deny_info_list
+struct acl_deny_info_list
 {
     err_type err_page_id;
     char *err_page_name;
@@ -65,6 +63,8 @@ struct _header_mangler
     acl_access *access_list;
     char *replacement;
 };
+
+class ACLChecklist;
 
 #if SQUID_SNMP
 
@@ -88,8 +88,9 @@ struct _snmp_request_t
 
 #endif
 
+class ACLList;
 
-struct _acl_address
+struct acl_address
 {
     acl_address *next;
     ACLList *aclList;
@@ -97,27 +98,27 @@ struct _acl_address
     IPAddress addr;
 };
 
-struct _acl_tos
+struct acl_tos
 {
     acl_tos *next;
     ACLList *aclList;
     int tos;
 };
 
-struct _acl_size_t
+struct acl_size_t
 {
     acl_size_t *next;
     ACLList *aclList;
     int64_t size;
 };
 
-struct _ushortlist
+struct ushortlist
 {
     u_short i;
     ushortlist *next;
 };
 
-struct _relist
+struct relist
 {
     char *pattern;
     regex_t regex;
@@ -135,13 +136,10 @@ struct _relist
 /* forward decl for SquidConfig, see RemovalPolicy.h */
 
 class RemovalPolicySettings;
-
-
 class external_acl;
-
 class Store;
 
-struct _SquidConfig
+struct SquidConfig
 {
 
     struct
@@ -633,9 +631,10 @@ struct _SquidConfig
     char *accept_filter;
 };
 
-struct _SquidConfig2
-{
+SQUIDCEXTERN SquidConfig Config;
 
+struct SquidConfig2
+{
     struct
     {
         int enable_purge;
@@ -644,6 +643,8 @@ struct _SquidConfig2
     uid_t effectiveUserID;
     gid_t effectiveGroupID;
 };
+
+SQUIDCEXTERN SquidConfig2 Config2;
 
 struct _close_handler
 {
@@ -831,7 +832,9 @@ struct _cd_guess_stats
 
 #endif
 
-struct _peer
+class PeerDigest;
+
+struct peer
 {
     u_int index;
     char *name;
@@ -1362,6 +1365,8 @@ struct _Logfile
 
     int syslog_priority;
 };
+
+class logformat_token;
 
 struct _logformat
 {

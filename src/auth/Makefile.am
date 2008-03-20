@@ -19,3 +19,14 @@ libnegotiate_a_SOURCES	= negotiate/auth_negotiate.cc negotiate/auth_negotiate.h 
 
 INCLUDES      = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
 	-I$(top_srcdir)/src
+
+check_PROGRAMS= testHeaders
+
+## Special Universal .h dependency test script
+## aborts if error encountered
+testHeaders: basic/*.h digest/*.h ntlm/*.h negotiate/*.h
+	../../test-suite/testheaders.sh "$(CXXCOMPILE)" "basic" || exit 1
+	../../test-suite/testheaders.sh "$(CXXCOMPILE)" "digest" || exit 1
+	../../test-suite/testheaders.sh "$(CXXCOMPILE)" "ntlm" || exit 1
+	../../test-suite/testheaders.sh "$(CXXCOMPILE)" "negotiate" || exit 1
+## ./ has no .h files

@@ -1,4 +1,3 @@
-
 /*
  * $Id: ufscommon.h,v 1.13 2008/02/26 21:49:45 amosjeffries Exp $
  *
@@ -29,26 +28,20 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_UFSCOMMON_H
 #define SQUID_UFSCOMMON_H
 
-#include "squid.h"
-#include "event.h"
 
-#define DefaultLevelOneDirs     16
-#define DefaultLevelTwoDirs     256
-#define STORE_META_BUFSZ 4096
-
-/* Common UFS routines */
-#include "SwapDir.h"
-#include "StoreSearch.h"
+#define DefaultLevelOneDirs	16
+#define DefaultLevelTwoDirs	256
+#define STORE_META_BUFSZ	4096
 
 class UFSStrategy;
-
 class ConfigOptionVector;
-
 class DiskIOModule;
+class StoreSearch;
+
+#include "SwapDir.h"
 
 /// \ingroup UFS
 class UFSSwapDir : public SwapDir
@@ -291,8 +284,12 @@ private:
     void doWrite();
 };
 
-MEMPROXY_CLASS_INLINE(UFSStoreState::_queued_read)		/**DOCS_NOSEMI*/
-MEMPROXY_CLASS_INLINE(UFSStoreState::_queued_write)		/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(UFSStoreState::_queued_read);
+MEMPROXY_CLASS_INLINE(UFSStoreState::_queued_write);
+
+
+
+#include "StoreSearch.h"
 
 /// \ingroup UFS
 class StoreSearchUFS : public StoreSearch
@@ -332,6 +329,7 @@ private:
     bool _done;
 };
 
+
 class StoreSwapLogData;
 
 /// \ingroup UFS
@@ -359,6 +357,7 @@ public:
 	}
     }
 };
+
 
 /// \ingroup UFS
 class RebuildState : public RefCountable

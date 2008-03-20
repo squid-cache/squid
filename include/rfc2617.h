@@ -46,9 +46,10 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_RFC2617_H
 #define SQUID_RFC2617_H
+
+#include "config.h"
 
 #define HASHLEN 16
 typedef char HASH[HASHLEN];

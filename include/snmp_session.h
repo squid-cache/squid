@@ -2,6 +2,8 @@
 #ifndef SQUID_SNMP_SESSION_H
 #define SQUID_SNMP_SESSION_H
 
+#include "config.h"
+
 /**********************************************************************
  *
  *           Copyright 1997 by Carnegie Mellon University
@@ -30,7 +32,6 @@
 
 struct snmp_session {
     int Version;		/* SNMP Version for this session */
-
 
     u_char *community;		/* community for outgoing requests. */
     int community_len;		/* Length of community name. */

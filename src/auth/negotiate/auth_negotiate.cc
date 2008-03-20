@@ -479,8 +479,8 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
         debugs(29, 4, "AuthNegotiateUserRequest::authenticate: authenticated user " << negotiate_user->username());
         /* see if this is an existing user with a different proxy_auth
          * string */
-        auth_user_hash_pointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, negotiate_user->username()));
-	auth_user_t *local_auth_user = negotiate_request->user();
+        AuthUserHashPointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, negotiate_user->username()));
+	AuthUser *local_auth_user = negotiate_request->user();
         while (usernamehash && (usernamehash->user()->auth_type != AUTH_NEGOTIATE || strcmp(usernamehash->user()->username(), negotiate_user->username()) != 0))
             usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
         if (usernamehash) {
@@ -556,14 +556,14 @@ authenticateNegotiateStats(StoreEntry * sentry)
 }
 
 
-/* send the initial data to a stateful negotiate authenticator module */
+/** send the initial data to a stateful negotiate authenticator module */
 void
 AuthNegotiateUserRequest::module_start(RH * handler, void *data)
 {
     authenticateStateData *r = NULL;
     static char buf[8192];
     negotiate_user_t *negotiate_user;
-    auth_user_t *auth_user = user();
+    AuthUser *auth_user = user();
 
     assert(data);
     assert(handler);
@@ -678,8 +678,8 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * request, ConnStateData * co
 {
     const char *proxy_auth, *blob;
 
-    /* TODO: rename this!! */
-    auth_user_t *local_auth_user;
+    /** \todo rename this!! */
+    AuthUser *local_auth_user;
     negotiate_user_t *negotiate_user;
 
     local_auth_user = user();
@@ -688,7 +688,7 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * request, ConnStateData * co
     negotiate_user = dynamic_cast<negotiate_user_t *>(local_auth_user);
     assert (this);
 
-    /* Check that we are in the client side, where we can generate
+    /** Check that we are in the client side, where we can generate
      * auth challenges */
 
     if (conn == NULL) {

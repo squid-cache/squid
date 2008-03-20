@@ -113,41 +113,41 @@ authenticateShutdown(void)
     }
 }
 
+/**
+ \retval 0 not in use
+ \retval ? in use
+ */
 int
-authenticateAuthUserInuse(auth_user_t * auth_user)
-/* returns 0 for not in use */
+authenticateAuthUserInuse(AuthUser * auth_user)
 {
     assert(auth_user != NULL);
     return auth_user->references;
 }
 
 void
-authenticateAuthUserMerge(auth_user_t * from, auth_user_t * to)
+authenticateAuthUserMerge(AuthUser * from, AuthUser * to)
 {
     to->absorb (from);
 }
 
-/*
- * authenticateUserCacheRestart() cleans all config-dependent data from the 
- * auth_user cache. It DOES NOT Flush the user cache.
+/**
+ * Cleans all config-dependent data from the auth_user cache.
+ \note It DOES NOT Flush the user cache.
  */
-
 void
 authenticateUserCacheRestart(void)
 {
     AuthUserHashPointer *usernamehash;
-    auth_user_t *auth_user;
-    debugs(29, 3, "authenticateUserCacheRestart: Clearing config dependent cache data.");
+    AuthUser *auth_user;
+    debugs(29, 3, HERE << "Clearing config dependent cache data.");
     hash_first(proxy_auth_username_cache);
 
     while ((usernamehash = ((AuthUserHashPointer *) hash_next(proxy_auth_username_cache)))) {
         auth_user = usernamehash->user();
         debugs(29, 5, "authenticateUserCacheRestat: Clearing cache ACL results for user: " << auth_user->username());
     }
-
 }
 
-/* _auth_user_hash_pointe */
 
 void
 AuthUserHashPointer::removeFromCache(void *usernamehash_p)
@@ -165,14 +165,14 @@ AuthUserHashPointer::removeFromCache(void *usernamehash_p)
      */
 }
 
-AuthUserHashPointer::AuthUserHashPointer (AuthUser * anAuth_user):
-        auth_user (anAuth_user)
+AuthUserHashPointer::AuthUserHashPointer(AuthUser * anAuth_user):
+        auth_user(anAuth_user)
 {
     key = (void *)anAuth_user->username();
     next = NULL;
     hash_join(proxy_auth_username_cache, (hash_link *) this);
-    /* lock for presence in the cache */
 
+    /** lock for presence in the cache */
     auth_user->lock();
 }
 
@@ -181,5 +181,3 @@ AuthUserHashPointer::user() const
 {
     return auth_user;
 }
-
-

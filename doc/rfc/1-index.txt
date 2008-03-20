@@ -53,6 +53,11 @@ rfc2186.txt
 rfc2187.txt
 	Internet Cache Protocol (ICP), version 2
 
+rfc2181.txt
+	Clarifications to the DNS Specification
+	Squid uses a number of constants from the DNS and Host specifications
+	(RFC 1035, RFC 1123) this defines details on their correct usage.
+
 rfc2227.txt
 	Simple Hit-Metering and Usage-Limiting for HTTP
 

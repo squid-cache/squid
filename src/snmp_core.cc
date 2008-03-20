@@ -1,4 +1,3 @@
-
 /*
  * $Id: snmp_core.cc,v 1.82 2008/01/22 21:07:19 rousskov Exp $
  *
@@ -36,9 +35,12 @@
 #include "comm.h"
 #include "cache_snmp.h"
 #include "ACLChecklist.h"
+#include "IPAddress.h"
 
 #define SNMP_REQUEST_SIZE 4096
 #define MAX_PROTOSTAT 5
+
+IPAddress theOutSNMPAddr;
 
 typedef struct _mib_tree_entry mib_tree_entry;
 typedef oid *(instance_Fn) (oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn);

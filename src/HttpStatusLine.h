@@ -1,4 +1,3 @@
-
 /*
  * $Id: HttpStatusLine.h,v 1.4 2007/05/29 13:31:38 amosjeffries Exp $
  *
@@ -31,10 +30,19 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-
 #ifndef SQUID_HTTPSTATUSLINE_H
 #define SQUID_HTTPSTATUSLINE_H
 
+class Packer;
+class String;
+
+/* for SQUIDCEXTERN */
+#include "config.h"
+
+/* for http_status */
+#include "enums.h"
+
+/* for class variables */
 #include "HttpVersion.h"
 
 class HttpStatusLine
@@ -43,7 +51,7 @@ class HttpStatusLine
 public:
     /* public, read only */
     HttpVersion version;
-    const char *reason;		/* points to a _constant_ string (default or supplied), never free()d */
+    const char *reason;		/**< points to a _constant_ string (default or supplied), never free()d */
     http_status status;
 };
 

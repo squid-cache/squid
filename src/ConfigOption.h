@@ -29,11 +29,14 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_CONFIGOPTION_H
 #define SQUID_CONFIGOPTION_H
 
+class StoreEntry;
+
+/* for Vector<> */
 #include "Array.h"
+
 
 /* cache option parsers */
 
@@ -58,12 +61,11 @@ public:
 };
 
 template <class C>
-
 class ConfigOptionAdapter : public ConfigOption
 {
 
 public:
-    ConfigOptionAdapter (C& theObject, bool (C::*parseFP)(char const *option, const char *value, int reconfiguring), void (C::*dumpFP) (StoreEntry * e) const) : object(theObject), parser (parseFP), dumper(dumpFP) {}
+    ConfigOptionAdapter(C& theObject, bool (C::*parseFP)(char const *option, const char *value, int reconfiguring), void (C::*dumpFP) (StoreEntry * e) const) : object(theObject), parser (parseFP), dumper(dumpFP) {}
 
     bool parse(char const *option, const char *value, int reconfiguring)
     {
@@ -73,7 +75,7 @@ public:
         return false;
     }
 
-    void dump (StoreEntry * e) const
+    void dump(StoreEntry * e) const
     {
         if (dumper)
             (object.*dumper) (e);

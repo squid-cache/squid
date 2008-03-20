@@ -1,8 +1,11 @@
+#if 0
 #include "squid.h"
-#include "event.h"
-#include "Mem.h"
-#include "SquidString.h"
+#endif
+
 #include "testString.h"
+#include "SquidString.h"
+#include "Mem.h"
+#include "event.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testString );
 

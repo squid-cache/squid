@@ -1,4 +1,3 @@
-
 /*
  * $Id: ACLReplyMIMEType.h,v 1.8 2006/05/06 22:13:18 wessels Exp $
  *
@@ -32,15 +31,11 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-
 #ifndef SQUID_ACLREPLYMIMETYPE_H
 #define SQUID_ACLREPLYMIMETYPE_H
+
 #include "ACL.h"
-#include "ACLData.h"
-#include "ACLReplyHeaderStrategy.h"
 #include "ACLStrategised.h"
-#include "ACLChecklist.h"
-#include "HttpReply.h"
 
 class ACLReplyMIMEType
 {
@@ -52,9 +47,13 @@ private:
 
 /* partial specialisation */
 
+#include "ACLData.h"
+#include "ACLReplyHeaderStrategy.h"
+#include "ACLChecklist.h"
+
 template <>
-int
-ACLReplyHeaderStrategy<HDR_CONTENT_TYPE>::match (ACLData<char const *> * &data, ACLChecklist *checklist)
+inline int
+ACLReplyHeaderStrategy<HDR_CONTENT_TYPE>::match(ACLData<char const *> * &data, ACLChecklist *checklist)
 {
     char const *theHeader = checklist->reply->header.getStr(HDR_CONTENT_TYPE);
 

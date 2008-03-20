@@ -18,3 +18,11 @@ libheap_a_SOURCES = heap/store_heap_replacement.h heap/store_heap_replacement.cc
 INCLUDES      = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
 	-I$(top_srcdir)/src
 
+check_PROGRAMS= testHeaders
+
+## Special Universal .h dependency test script
+## aborts if error encountered
+testHeaders: heap/*.h
+	$(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "heap" || exit 1
+## ./ has no .h files.
+## ./lru/ has no .h files.

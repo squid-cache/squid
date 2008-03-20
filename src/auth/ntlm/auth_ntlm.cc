@@ -414,7 +414,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
         /* see if this is an existing user with a different proxy_auth
          * string */
         auth_user_hash_pointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, ntlm_user->username()));
-	auth_user_t *local_auth_user = ntlm_request->user();
+	AuthUser *local_auth_user = ntlm_request->user();
         while (usernamehash && (usernamehash->user()->auth_type != AUTH_NTLM || strcmp(usernamehash->user()->username(), ntlm_user->username()) != 0))
             usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
         if (usernamehash) {
@@ -485,7 +485,7 @@ AuthNTLMUserRequest::module_start(RH * handler, void *data)
     authenticateStateData *r = NULL;
     static char buf[8192];
     ntlm_user_t *ntlm_user;
-    auth_user_t *auth_user = user();
+    AuthUser *auth_user = user();
 
     assert(data);
     assert(handler);
@@ -601,7 +601,7 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, h
     const char *proxy_auth, *blob;
 
     /* TODO: rename this!! */
-    auth_user_t *local_auth_user;
+    AuthUser *local_auth_user;
     ntlm_user_t *ntlm_user;
 
     local_auth_user = user();

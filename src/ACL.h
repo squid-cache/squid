@@ -64,10 +64,10 @@ SQUIDCEXTERN int aclIsProxyAuth(const char *name);
 SQUIDCEXTERN err_type aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name, int redirect_allowed);
 
 /// \ingroup ACLAPI
-SQUIDCEXTERN void aclParseDenyInfoLine(struct _acl_deny_info_list **);
+SQUIDCEXTERN void aclParseDenyInfoLine(struct acl_deny_info_list **);
 
 /// \ingroup ACLAPI
-SQUIDCEXTERN void aclDestroyDenyInfoList(struct _acl_deny_info_list **);
+SQUIDCEXTERN void aclDestroyDenyInfoList(struct acl_deny_info_list **);
 /// \ingroup ACLAPI
 SQUIDCEXTERN wordlist *aclDumpGeneric(const ACL *);
 /// \ingroup ACLAPI

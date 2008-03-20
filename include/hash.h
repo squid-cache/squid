@@ -1,9 +1,10 @@
 /*
  * $Id: hash.h,v 1.8 2003/01/23 00:36:47 robertc Exp $
  */
-
 #ifndef SQUID_HASH_H
 #define SQUID_HASH_H
+
+#include "config.h"
 
 typedef void HASHFREE(void *);
 typedef int HASHCMP(const void *, const void *);

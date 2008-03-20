@@ -612,7 +612,7 @@ storeDirGetUFSStats(const char *path, int *totl_kb, int *free_kb, int *totl_in, 
 }
 
 void
-allocate_new_swapdir(_SquidConfig::_cacheSwap * swap)
+allocate_new_swapdir(SquidConfig::_cacheSwap * swap)
 {
     if (swap->swapDirs == NULL) {
         swap->n_allocated = 4;
@@ -630,7 +630,7 @@ allocate_new_swapdir(_SquidConfig::_cacheSwap * swap)
 }
 
 void
-free_cachedir(_SquidConfig::_cacheSwap * swap)
+free_cachedir(SquidConfig::_cacheSwap * swap)
 {
     int i;
     /* DON'T FREE THESE FOR RECONFIGURE */

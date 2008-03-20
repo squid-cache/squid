@@ -360,11 +360,11 @@ authenticateBasicStats(StoreEntry * sentry)
 
 CBDATA_TYPE(AuthenticateStateData);
 
-static auth_user_t *
+static AuthUser *
 authBasicAuthUserFindUsername(const char *username)
 {
     AuthUserHashPointer *usernamehash;
-    debugs(29, 9, "authBasicAuthUserFindUsername: Looking for user '" << username << "'");
+    debugs(29, 9, HERE << "Looking for user '" << username << "'");
 
     if (username && (usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, username)))) {
         while (usernamehash) {
@@ -570,7 +570,7 @@ AuthBasicConfig::decode(char const *proxy_auth)
     /* now lookup and see if we have a matching auth_user structure in
      * memory. */
 
-    auth_user_t *auth_user;
+    AuthUser *auth_user;
 
     if ((auth_user = authBasicAuthUserFindUsername(local_basic.username())) == NULL) {
         auth_user = local_basic.makeCachedFrom();

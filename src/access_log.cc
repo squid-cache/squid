@@ -1,4 +1,3 @@
-
 /*
  * $Id: access_log.cc,v 1.130 2008/01/20 08:54:28 amosjeffries Exp $
  *
@@ -394,8 +393,10 @@ enum log_quote {
     LOG_QUOTE_RAW
 };
 
-struct _logformat_token
+/* FIXME: public class so we can pre-define its type. */
+class logformat_token
 {
+public:
     logformat_bcode_t type;
     union {
         char *string;

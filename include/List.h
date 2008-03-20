@@ -1,4 +1,3 @@
-
 /*
  * $Id: List.h,v 1.8 2008/02/26 21:49:33 amosjeffries Exp $
  *
@@ -34,7 +33,8 @@
 #ifndef SQUID_LIST_H
 #define SQUID_LIST_H
 
-#include "cbdata.h"
+/** \todo FUBAR: cbdata.h is over in src/ */
+#include "../src/cbdata.h"
 
 /// \ingroup POD
 template <class C>

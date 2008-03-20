@@ -1,11 +1,14 @@
+#if 0
 #include "squid.h"
+#endif
+
 #include <cppunit/TestAssert.h>
 
-#include "CapturingStoreEntry.h"
-#include "AsyncCallQueue.h"
-#include "Mem.h"
 #include "testEvent.h"
 #include "event.h"
+#include "AsyncCallQueue.h"
+#include "CapturingStoreEntry.h"
+#include "Mem.h"
 
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testEvent );
