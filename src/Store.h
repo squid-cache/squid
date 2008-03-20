@@ -29,7 +29,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_STORE_H
 #define SQUID_STORE_H
 
@@ -55,14 +54,12 @@
 #endif
 
 class AsyncCall;
-
 class StoreClient;
-
 class MemObject;
-
 class Store;
-
 class StoreSearch;
+
+typedef unsigned int ping_status_t;
 
 /**
  \ingroup StoreAPI
@@ -143,24 +140,18 @@ public:
     u_short flags;
     /* END OF ON-DISK STORE_META_STD */
 
-sfileno swap_filen:
-    25;
+    sfileno swap_filen:25;
 
-sdirno swap_dirn:
-    7;
+    sdirno swap_dirn:7;
     u_short lock_count;		/* Assume < 65536! */
 
-mem_status_t mem_status:
-    3;
+    mem_status_t mem_status:3;
 
-ping_status_t ping_status:
-    3;
+    ping_status_t ping_status:3;
 
-store_status_t store_status:
-    3;
+    store_status_t store_status:3;
 
-swap_status_t swap_status:
-    3;
+    swap_status_t swap_status:3;
 
 public:
     static size_t inUseCount();
@@ -373,6 +364,7 @@ SQUIDCEXTERN void storeAppendVPrintf(StoreEntry *, const char *, va_list ap);
 /// \ingroup StoreAPI
 SQUIDCEXTERN int storeTooManyDiskFilesOpen(void);
 
+class SwapDir;
 /// \ingroup StoreAPI
 SQUIDCEXTERN void storeHeapPositionUpdate(StoreEntry *, SwapDir *);
 

@@ -37,7 +37,7 @@
 #define SQUID_TYPEDEFS_H
 
 typedef unsigned int store_status_t;
-typedef unsigned int ping_status_t;
+//MOVED src/Store.h (only use)		typedef unsigned int ping_status_t;
 typedef unsigned int swap_status_t;
 typedef signed int sfileno;
 typedef signed int sdirno;
@@ -47,18 +47,13 @@ typedef struct
     size_t bytes;
     size_t kb;
 }
-
 kb_t;
 
-typedef struct _acl_time_data acl_time_data;
+//UNUSED		typedef struct _acl_time_data acl_time_data;
+//UNUSED		typedef struct _acl_name_list acl_name_list;
+//UNUSED		typedef struct _acl_deny_info_list acl_deny_info_list;
+//UNUSED		typedef class AuthUser auth_user_t;
 
-typedef struct _acl_name_list acl_name_list;
-
-typedef struct _acl_deny_info_list acl_deny_info_list;
-
-/// \ingroup AuthAPI
-/// \deprecated Use AuthUser instead.
-typedef class AuthUser auth_user_t;
 
 /// \ingroup AuthAPI
 /// \deprecated Use AuthUserHashPointer instead.
@@ -74,28 +69,20 @@ typedef struct AuthUserIP auth_user_ip_t;
 class AuthConfig;
 typedef Vector<AuthConfig *> authConfig;
 
-typedef struct _acl_snmp_comm acl_snmp_comm;
-
-typedef class ACLList acl_list;
-
-typedef struct _acl_address acl_address;
-
-typedef struct _acl_tos acl_tos;
-
-typedef struct _acl_size_t acl_size_t;
-
-class ACLChecklist;
-
-typedef struct _ushortlist ushortlist;
-
-typedef struct _relist relist;
+//UNUSED		typedef struct _acl_snmp_comm acl_snmp_comm;
+//UNUSED		typedef class ACLList acl_list;
+//UNUSED		typedef struct _acl_address acl_address;
+//UNUSED		typedef struct _acl_tos acl_tos;
+//UNUSED		typedef struct _acl_size_t acl_size_t;
+//UNUSED		class ACLChecklist;
+//UNUSED		typedef struct _ushortlist ushortlist;
+//UNUSED		typedef struct _relist relist;
 
 struct http_port_list;
 struct https_port_list;
 
-typedef struct _SquidConfig SquidConfig;
-
-typedef struct _SquidConfig2 SquidConfig2;
+//UNUSED	typedef struct _SquidConfig SquidConfig;
+//UNUSED	typedef struct _SquidConfig2 SquidConfig2;
 
 typedef struct _close_handler close_handler;
 
@@ -105,27 +92,25 @@ typedef struct _dwrite_q dwrite_q;
 
 typedef struct _ETag ETag;
 
-class fde;
+//UNUSED		class fde;
 
 typedef struct _fileMap fileMap;
 
 typedef struct _HttpHeaderFieldAttrs HttpHeaderFieldAttrs;
 
-class HttpHeaderFieldInfo;
-
-class HttpHeader;
-
-class HttpHdrCc;
+//UNUSED		class HttpHeaderFieldInfo;
+//UNUSED		class HttpHeader;
+//UNUSED		class HttpHdrCc;
 
 typedef struct _TimeOrTag TimeOrTag;
 
-class HttpHeaderFieldStat;
+//UNUSED		class HttpHeaderFieldStat;
 
 typedef struct _HttpHeaderStat HttpHeaderStat;
 
 typedef struct _HttpBody HttpBody;
 
-class HttpReply;
+//UNUSED		class HttpReply;
 
 typedef struct _ConnCloseHelperData ConnCloseHelperData;
 
@@ -139,9 +124,9 @@ typedef struct _DynPool DynPool;
 
 typedef struct _DigestFetchState DigestFetchState;
 
-class PeerDigest;
+//UNUSED		class PeerDigest;
 
-typedef struct _peer peer;
+//UNUSED typedef struct _peer peer;
 
 typedef struct _net_db_name net_db_name;
 
@@ -155,13 +140,11 @@ typedef struct _Meta_data Meta_data;
 
 typedef struct _iostats iostats;
 
-class MemBuf;
+//UNUSED		class MemBuf;
 
-class store_client;
+//UNUSED		class store_client;
 
-class StoreEntry;
-
-class SwapDir;
+//UNUSED		class SwapDir;
 
 typedef struct _http_state_flags http_state_flags;
 
@@ -169,7 +152,7 @@ typedef struct _header_mangler header_mangler;
 
 typedef struct _body_size body_size;
 
-class HttpRequest;
+//UNUSED		class HttpRequest;
 
 typedef struct _cachemgr_passwd cachemgr_passwd;
 
@@ -195,8 +178,6 @@ typedef struct _Version Version;
 typedef struct _link_list link_list;
 
 typedef struct _Logfile Logfile;
-
-typedef struct _logformat_token logformat_token;
 
 typedef struct _logformat logformat;
 
@@ -225,7 +206,7 @@ typedef void DTCB(int errflag, void *data);	/* disk trunc CB */
 typedef void FQDNH(const char *, void *);
 typedef void IDCB(const char *ident, void *data);
 typedef void IPH(const ipcache_addrs *, void *);
-typedef void IRCB(peer *, peer_t, protocol_t, void *, void *data);
+typedef void IRCB(struct peer *, peer_t, protocol_t, void *, void *data);
 
 class FwdServer;
 typedef void PSC(FwdServer *, void *);
@@ -240,6 +221,7 @@ typedef int WRITE_HANDLER(int, const char *, int);
 typedef int QS(const void *, const void *);	/* qsort */
 typedef void STABH(void *);
 typedef void ERCB(int fd, void *, size_t);
+class StoreEntry;
 typedef void OBJH(StoreEntry *);
 typedef void SIGHDLR(int sig);
 typedef void STVLDCB(void *, int, int);

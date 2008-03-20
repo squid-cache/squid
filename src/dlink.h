@@ -1,4 +1,3 @@
-
 /*
  * $Id: dlink.h,v 1.1 2006/04/22 13:07:36 robertc Exp $
  *
@@ -30,7 +29,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_DLINK_H
 #define SQUID_DLINK_H
 
@@ -47,14 +45,22 @@ public:
     dlink_node *next;
 };
 
-struct _dlink_list
+struct dlink_list
 {
     dlink_node *head;
     dlink_node *tail;
 };
 
-class dlink_node;
+/* mported form globals.h */
+extern dlink_list ClientActiveRequests;
 
-typedef struct _dlink_list dlink_list;
+/* imported directly from protos.h */
+
+SQUIDCEXTERN void dlinkAdd(void *data, dlink_node *, dlink_list *);
+SQUIDCEXTERN void dlinkAddAfter(void *, dlink_node *, dlink_node *, dlink_list *);
+SQUIDCEXTERN void dlinkAddTail(void *data, dlink_node *, dlink_list *);
+SQUIDCEXTERN void dlinkDelete(dlink_node * m, dlink_list * list);
+SQUIDCEXTERN void dlinkNodeDelete(dlink_node * m);
+SQUIDCEXTERN dlink_node *dlinkNodeNew(void);
 
 #endif /* SQUID_DLINK_H */

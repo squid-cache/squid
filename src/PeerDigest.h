@@ -95,24 +95,17 @@ public:
     void *operator new (size_t);
     void operator delete(void *);
 
-    struct _peer *peer;         /* pointer back to peer structure, argh */
-    CacheDigest *cd;            /* actual digest structure */
-    String host;                /* copy of peer->host */
-    const char *req_result;     /* text status of the last request */
+    struct peer *peer;          /**< pointer back to peer structure, argh */
+    CacheDigest *cd;            /**< actual digest structure */
+    String host;                /**< copy of peer->host */
+    const char *req_result;     /**< text status of the last request */
 
     struct
     {
-
-unsigned int needed:
-        1;	/* there were requests for this digest */
-
-unsigned int usable:
-        1;	/* can be used for lookups */
-
-unsigned int requested:
-        1;	/* in process of receiving [fresh] digest */
+        unsigned int needed:1;          /**< there were requests for this digest */
+        unsigned int usable:1;          /**< can be used for lookups */
+        unsigned int requested:1;       /**< in process of receiving [fresh] digest */
     }
-
     flags;
 
     struct
@@ -127,7 +120,6 @@ unsigned int requested:
         time_t received;	/* received the current copy of a digest */
         time_t disabled;	/* disabled for good */
     }
-
     times;
 
     struct
@@ -143,7 +135,6 @@ unsigned int requested:
 
         sent, recv;
     }
-
     stats;
 
 private:
@@ -151,6 +142,7 @@ private:
 };
 
 extern const Version CacheDigestVer;
-#endif
+
+#endif /* USE_CACHE_DIGESTS */
 
 #endif /* SQUID_PEERDIGEST_H */

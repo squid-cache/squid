@@ -456,12 +456,12 @@ authDigestNoncePurge(digest_nonce_h * nonce)
 }
 
 /* USER related functions */
-static auth_user_t *
+static AuthUser *
 authDigestUserFindUsername(const char *username)
 {
-    auth_user_hash_pointer *usernamehash;
-    auth_user_t *auth_user;
-    debugs(29, 9, "authDigestUserFindUsername: Looking for user '" << username << "'");
+    AuthUserHashPointer *usernamehash;
+    AuthUser *auth_user;
+    debugs(29, 9, HERE << "Looking for user '" << username << "'");
 
     if (username && (usernamehash = static_cast < auth_user_hash_pointer * >(hash_lookup(proxy_auth_username_cache, username)))) {
         while ((usernamehash->user()->auth_type != AUTH_DIGEST) &&
@@ -483,11 +483,9 @@ authDigestUserFindUsername(const char *username)
 static void
 authDigestUserShutdown(void)
 {
-    /*
-     * Future work: the auth framework could flush it's cache 
-     */
-    auth_user_hash_pointer *usernamehash;
-    auth_user_t *auth_user;
+    /** \todo Future work: the auth framework could flush it's cache */
+    AuthUserHashPointer *usernamehash;
+    AuthUser *auth_user;
     hash_first(proxy_auth_username_cache);
 
     while ((usernamehash = ((auth_user_hash_pointer *) hash_next(proxy_auth_username_cache)))) {
@@ -498,11 +496,11 @@ authDigestUserShutdown(void)
     }
 }
 
-/* delete the digest request structure. Does NOT delete related structures */
+/** delete the digest request structure. Does NOT delete related structures */
 void
 digestScheme::done()
 {
-    /* TODO: this should be a Config call. */
+    /** \todo this should be a Config call. */
 
     if (digestauthenticators)
         helperShutdown(digestauthenticators);
@@ -570,12 +568,12 @@ AuthDigestUserRequest::authenticated() const
     return 0;
 }
 
-/* log a digest user in
+/** log a digest user in
  */
 void
 AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type)
 {
-    auth_user_t *auth_user;
+    AuthUser *auth_user;
     AuthDigestUserRequest *digest_request;
     digest_user_h *digest_user;
 
@@ -1301,7 +1299,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
     /* find the user */
     digest_user_h *digest_user;
 
-    auth_user_t *auth_user;
+    AuthUser *auth_user;
 
     if ((auth_user = authDigestUserFindUsername(username)) == NULL) {
         /* the user doesn't exist in the username cache yet */
@@ -1380,28 +1378,24 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
 DigestUser::DigestUser (AuthConfig *config) : AuthUser (config), HA1created (0)
 {}
 
-auth_user_t *
+AuthUser *
 AuthDigestUserRequest::authUser() const
 {
     return const_cast<AuthUser *>(user());
 }
 
 void
-AuthDigestUserRequest::authUser(auth_user_t *aUser)
+AuthDigestUserRequest::authUser(AuthUser *aUser)
 {
-    assert (!authUser());
+    assert(!authUser());
     user(aUser);
-
-    user()->lock()
-
-    ;
+    user()->lock();
 }
 
 AuthDigestUserRequest::CredentialsState
 AuthDigestUserRequest::credentials() const
 {
     return credentials_ok;
-
 }
 
 void
@@ -1417,7 +1411,7 @@ AuthDigestUserRequest::AuthDigestUserRequest() : nonceb64(NULL) ,cnonce(NULL) ,r
         credentials_ok (Unchecked)
 {}
 
-/* delete the digest request structure. Does NOT delete related structures */
+/** delete the digest request structure. Does NOT delete related structures */
 AuthDigestUserRequest::~AuthDigestUserRequest()
 {
     safe_free (nonceb64);

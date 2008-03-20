@@ -1,4 +1,3 @@
-
 /*
  * $Id: ACLReplyHeaderStrategy.h,v 1.9 2006/05/06 22:13:18 wessels Exp $
  *
@@ -32,9 +31,11 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-
 #ifndef SQUID_ACLREPLYHEADERSTRATEGY_H
 #define SQUID_ACLREPLYHEADERSTRATEGY_H
+
+class ACLChecklist;
+
 #include "ACL.h"
 #include "ACLData.h"
 #include "ACLStrategy.h"
@@ -42,7 +43,6 @@
 #include "HttpReply.h"
 
 template <http_hdr_type header>
-
 class ACLReplyHeaderStrategy : public ACLStrategy<char const *>
 {
 

@@ -1,5 +1,3 @@
-
-
 /*
  * $Id: StoreFSufs.cc,v 1.2 2004/12/20 16:30:45 robertc Exp $
  *
@@ -35,10 +33,18 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-
+#if 0
 #include "StoreFileSystem.h"
+#endif
+
 #include "fs/ufs/StoreFSufs.h"
+
+#if 0
 #include "DiskIO/DiskIOModule.h"
+#endif
+
+/** \todo FIXME: break UFSSwapDir out so we don't build all the extras */
+#include "fs/ufs/ufscommon.h"
 
 static StoreFSufs<UFSSwapDir> UfsInstance("Blocking", "ufs");
 

@@ -1,4 +1,3 @@
-
 /*
  * $Id: ExternalACL.h,v 1.10 2008/02/26 21:49:34 amosjeffries Exp $
  *
@@ -32,10 +31,9 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-
 #ifndef SQUID_EXTERNALACL_H
 #define SQUID_EXTERNALACL_H
-#include "ACL.h"
+
 #include "ACLChecklist.h"
 
 class external_acl;
@@ -52,7 +50,10 @@ private:
     static void LookupDone(void *data, void *result);
 };
 
+/** \todo CLEANUP: kill this typedef. */
 typedef struct _external_acl_data external_acl_data;
+
+#include "ACL.h"
 
 class ACLExternal : public ACL
 {
@@ -89,7 +90,7 @@ protected:
     char const *class_;
 };
 
-MEMPROXY_CLASS_INLINE(ACLExternal)		/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(ACLExternal);
 
 extern void externalAclRegisterWithCacheManager(CacheManager & manager);
 

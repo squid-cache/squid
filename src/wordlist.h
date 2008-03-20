@@ -1,4 +1,3 @@
-
 /*
  * $Id: wordlist.h,v 1.1 2006/04/23 11:10:32 robertc Exp $
  *
@@ -30,7 +29,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_WORDLIST_H
 #define SQUID_WORDLIST_H
 

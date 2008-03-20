@@ -31,9 +31,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
-#ifndef SQUID_DEBUG
-#define SQUID_DEBUG
+#ifndef SQUID_DEBUG_H
+#define SQUID_DEBUG_H
 
 #include <iostream>
 #undef assert
@@ -51,6 +50,9 @@
 #else
 #define assert(EX)  ((EX)?((void)0):xassert("EX", __FILE__, __LINE__))
 #endif
+
+/* defined debug section limits */
+#define MAX_DEBUG_SECTIONS 100
 
 /* defined names for Debug Levels */
 #define DBG_CRITICAL	0	/**< critical messages always shown when they occur */
@@ -97,4 +99,4 @@ inline std::ostream& operator <<(std::ostream &os, const uint8_t d) {
     return (os << (int)d);
 }
 
-#endif /* SQUID_DEBUG */
+#endif /* SQUID_DEBUG_H */

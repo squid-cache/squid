@@ -1,6 +1,8 @@
 #ifndef _INC_INET_NTOP_H
 #define _INC_INET_NTOP_H
 
+#include "config.h"
+
 #if HAVE_INET_NTOP
 
 /* Use the system provided version where possible */

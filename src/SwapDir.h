@@ -1,4 +1,3 @@
-
 /*
  * $Id: SwapDir.h,v 1.15 2007/09/28 00:22:37 hno Exp $
  *
@@ -30,7 +29,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_SWAPDIR_H
 #define SQUID_SWAPDIR_H
 
@@ -92,8 +90,8 @@ private:
 };
 
 /* migrating from the Config based list of swapdirs */
-extern void allocate_new_swapdir(_SquidConfig::_cacheSwap *);
-extern void free_cachedir(_SquidConfig::_cacheSwap * swap);
+extern void allocate_new_swapdir(SquidConfig::_cacheSwap *);
+extern void free_cachedir(SquidConfig::_cacheSwap * swap);
 SQUIDCEXTERN OBJH storeDirStats;
 SQUIDCEXTERN char *storeDirSwapLogFile(int, const char *);
 SQUIDCEXTERN char *storeSwapFullPath(int, char *);

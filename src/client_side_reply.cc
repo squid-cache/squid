@@ -1,4 +1,3 @@
-
 /*
  * $Id: client_side_reply.cc,v 1.154 2008/02/16 17:42:27 rousskov Exp $
  *
@@ -33,6 +32,10 @@
  *
  */
 
+/* for ClientActiveRequests global */
+#include "dlink.h"
+
+/* old includes without reasons given. */
 #include "squid.h"
 #include "client_side_reply.h"
 #include "errorpage.h"
@@ -41,7 +44,6 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "forward.h"
-
 #include "clientStream.h"
 #include "AuthUserRequest.h"
 #if USE_SQUID_ESI

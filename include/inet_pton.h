@@ -1,6 +1,8 @@
 #ifndef _INC_INET_PTON_H
 #define _INC_INET_PTON_H
 
+#include "config.h"
+
 #if HAVE_INET_PTON
 
 /* Use the system provided version where possible */

@@ -1,4 +1,3 @@
-
 /*
  * $Id: StoreFSufs.h,v 1.6 2008/02/26 21:49:45 amosjeffries Exp $
  *
@@ -30,18 +29,17 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-
 #ifndef SQUID_STOREFSUFS_H
 #define SQUID_STOREFSUFS_H
-
-#include "squid.h"
-#include "ufscommon.h"
-#include "DiskIO/DiskIOModule.h"
 
 /**
  \defgroup UFS	UFS Storage Filesystem
  \ingroup FileSystems
  */
+
+class DiskIOModule;
+
+#include "StoreFileSystem.h"
 
 /**
  \ingroup UFS, FileSystems

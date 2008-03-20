@@ -1,4 +1,7 @@
+#if 0
 #include "squid.h"
+#endif
+
 #include <stdexcept>
 
 #include "testUfs.h"
