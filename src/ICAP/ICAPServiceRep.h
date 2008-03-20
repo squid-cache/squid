@@ -34,6 +34,10 @@
 #ifndef SQUID_ICAPSERVICEREP_H
 #define SQUID_ICAPSERVICEREP_H
 
+#if USE_ECAP_AS_ICAP_HACK
+#include "eCAP/ServiceRep.h"
+#else
+
 #include "cbdata.h"
 #include "ICAPInitiator.h"
 #include "ICAPElements.h"
@@ -174,5 +178,6 @@ private:
     CBDATA_CLASS2(ICAPServiceRep);
 };
 
+#endif /* USE_ECAP_AS_ICAP_HACK */
 
 #endif /* SQUID_ICAPSERVICEREP_H */

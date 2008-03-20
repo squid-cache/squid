@@ -3,8 +3,16 @@
 #  $Id: Makefile.am,v 1.33 2007/12/14 23:11:44 amosjeffries Exp $
 #
 
-DIST_SUBDIRS = libTrie
-SUBDIRS= libTrie
+if USE_LOADABLE_MODULES
+DIST_SUBDIRS = libLtdl
+SUBDIRS      = libLtdl
+else
+DIST_SUBDIRS =
+SUBDIRS      =
+endif
+
+DIST_SUBDIRS += libTrie
+SUBDIRS      += libTrie
 
 install: all
 install-strip: all

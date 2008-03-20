@@ -30,6 +30,10 @@ check_PROGRAMS=
 
 SUBDIRS		= fs repl auth
 
+if USE_ECAP
+SUBDIRS += eCAP
+endif
+
 DELAY_POOL_ALL_SOURCE = \
 	CommonPool.h \
 	CompositePoolNode.h \
@@ -413,6 +417,7 @@ libsquid_la_SOURCES = \
         TextException.cc \
         TextException.h
 
+
 # authentication framework
 libauth_la_SOURCES = \
 	AuthConfig.cc \
@@ -683,6 +688,7 @@ squid_LDADD = \
 	@CRYPTLIB@ \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
+	@ECAP_LIBS@ \
 	@ICAP_LIBS@ \
 	@SSLLIB@ \
 	-lmiscutil \
@@ -697,7 +703,20 @@ squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
 	@AUTH_LINKOBJS@ \
 	@AUTH_OBJS@ \
+	@ECAP_LIBS@ \
 	@ICAP_LIBS@
+
+if USE_LOADABLE_MODULES
+squid_LDADD += \
+	@LIBLTDL@
+squid_LDFLAGS = \
+	-export-dynamic -dlopen force
+# when static module linking is supported and enabled:
+# squid_LDFLAGS = \
+#         -all-static -dlopen self
+#
+endif
+
 
 ICAP_libicap_a_SOURCES = \
 	ICAP/ICAPClient.cc \
@@ -707,23 +726,26 @@ ICAP_libicap_a_SOURCES = \
 	ICAP/ICAPInitiate.cc \
 	ICAP/ICAPInitiate.h \
 	ICAP/ICAPInOut.h \
-	ICAP/ICAPLauncher.cc \
-	ICAP/ICAPLauncher.h \
 	ICAP/ICAPConfig.cc \
 	ICAP/ICAPConfig.h \
 	ICAP/ICAPElements.cc \
 	ICAP/ICAPElements.h \
-	ICAP/ICAPModXact.cc \
-	ICAP/ICAPModXact.h \
 	ICAP/ICAPOptions.cc \
-	ICAP/ICAPOptions.h \
+	ICAP/ICAPOptions.h
+
+if !USE_ECAP
+ICAP_libicap_a_SOURCES += \
+	ICAP/ICAPServiceRep.cc \
+	ICAP/ICAPServiceRep.h
+	ICAP/ICAPLauncher.cc \
+	ICAP/ICAPLauncher.h \
 	ICAP/ICAPOptXact.cc \
 	ICAP/ICAPOptXact.h \
-	ICAP/ICAPServiceRep.cc \
-	ICAP/ICAPServiceRep.h \
 	ICAP/ICAPXaction.cc \
-	ICAP/ICAPXaction.h
-
+	ICAP/ICAPXaction.h \
+	ICAP/ICAPModXact.cc \
+	ICAP/ICAPModXact.h \
+endif
 
 unlinkd_SOURCES = unlinkd_daemon.cc SquidNew.cc
 
@@ -931,6 +953,7 @@ ufsdump_LDADD = \
 	@CRYPTLIB@ \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
+	@ECAP_LIBS@ \
 	@ICAP_LIBS@ \
 	@SSLLIB@ \
 	-lmiscutil \
@@ -945,6 +968,7 @@ ufsdump_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
 	@AUTH_LINKOBJS@ \
 	@AUTH_OBJS@ \
+	@ECAP_LIBS@ \
 	@ICAP_LIBS@
 
 nodist_ufsdump_SOURCES = \
@@ -1473,6 +1497,7 @@ tests_testCacheManager_LDADD = \
 	libsquid.la \
 	libauth.la \
 	@REPL_OBJS@ \
+	@ECAP_LIBS@ \
 	@ICAP_LIBS@ \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
@@ -1485,6 +1510,7 @@ tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
 tests_testCacheManager_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
 	@SQUID_CPPUNIT_LA@ \
+	@ECAP_LIBS@ \
 	@ICAP_LIBS@
 
 tests_testDiskIO_SOURCES= \
@@ -1643,6 +1669,7 @@ tests_testEvent_LDADD = \
 	libsquid.la \
 	libauth.la \
 	@REPL_OBJS@ \
+	@ECAP_LIBS@ \
 	@ICAP_LIBS@ \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
@@ -1655,6 +1682,7 @@ tests_testEvent_LDFLAGS = $(LIBADD_DL)
 tests_testEvent_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
 	@SQUID_CPPUNIT_LA@ \
+	@ECAP_LIBS@ \
 	@ICAP_LIBS@
 
 ## Tests of the EventLoop module.
@@ -1799,6 +1827,7 @@ tests_testEventLoop_LDADD = \
 	libsquid.la \
 	libauth.la \
 	@REPL_OBJS@ \
+	@ECAP_LIBS@ \
 	@ICAP_LIBS@ \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
@@ -1811,6 +1840,7 @@ tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
 tests_testEventLoop_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
 	@SQUID_CPPUNIT_LA@ \
+	@ECAP_LIBS@ \
 	@ICAP_LIBS@
 
 tests_test_http_range_SOURCES = \
@@ -1951,6 +1981,7 @@ tests_test_http_range_LDADD = \
 	libauth.la \
 	@REPL_OBJS@ \
 	@STORE_OBJS@ \
+	@ECAP_LIBS@ \
 	@ICAP_LIBS@ \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
@@ -2106,6 +2137,7 @@ tests_testHttpRequest_LDADD = \
 	libsquid.la \
 	libauth.la \
 	@REPL_OBJS@ \
+	@ECAP_LIBS@ \
 	@ICAP_LIBS@ \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
@@ -2118,6 +2150,7 @@ tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 tests_testHttpRequest_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
 	@SQUID_CPPUNIT_LA@ \
+	@ECAP_LIBS@ \
 	@ICAP_LIBS@
 
 ## Tests of the ICMP base module.
@@ -2465,6 +2498,7 @@ tests_testURL_LDADD = \
 	libauth.la \
 	@REGEXLIB@ \
 	@REPL_OBJS@ \
+	@ECAP_LIBS@ \
 	@ICAP_LIBS@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -2476,4 +2510,5 @@ tests_testURL_LDFLAGS = $(LIBADD_DL)
 tests_testURL_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
 	@SQUID_CPPUNIT_LA@ \
+	@ECAP_LIBS@ \
 	@ICAP_LIBS@

@@ -87,3 +87,6 @@ exit $res`
     HUGE_OBJECT_FLAG=""
   fi
 ]) # end of AC_DEFUN of AC_TEST_CHECKFORHUGEOBJECTS
+
+
+m4_include(cfgaux/libtool.m4)
