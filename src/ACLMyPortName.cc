@@ -34,7 +34,6 @@
  */
 
 #include "squid.h"
-#include "ProtoPort.h"
 #include "ACLMyPortName.h"
 #include "ACLStringData.h"
 #include "ACLChecklist.h"
