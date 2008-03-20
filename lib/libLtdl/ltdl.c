@@ -1,5 +1,5 @@
 /* ltdl.c -- system independent dlopen wrapper
-   Copyright (C) 1998, 1999, 2000, 2004, 2005  Free Software Foundation, Inc.
+   Copyright (C) 1998, 1999, 2000, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
    Originally by Thomas Tanner <tanner@ffii.org>
    This file is part of GNU Libtool.
 
@@ -137,16 +137,22 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 /* --- WINDOWS SUPPORT --- */
 
-
-#ifdef DLL_EXPORT
-#  define LT_GLOBAL_DATA	__declspec(dllexport)
-#else
-#  define LT_GLOBAL_DATA
+/* DLL building support on win32 hosts;  mostly to workaround their
+   ridiculous implementation of data symbol exporting. */
+#ifndef LT_GLOBAL_DATA
+#  if defined(__WINDOWS__) || defined(__CYGWIN__)
+#    ifdef DLL_EXPORT           /* defined by libtool (if required) */
+#      define LT_GLOBAL_DATA __declspec(dllexport)
+#    endif
+#  endif
+#  ifndef LT_GLOBAL_DATA        /* static linking or !__WINDOWS__ */
+#    define LT_GLOBAL_DATA
+#  endif
 #endif
 
 /* fopen() mode flags for reading a text file */
 #undef	LT_READTEXT_MODE
-#ifdef __WINDOWS__
+#if defined(__WINDOWS__) || defined(__CYGWIN__)
 #  define LT_READTEXT_MODE "rt"
 #else
 #  define LT_READTEXT_MODE "r"
@@ -894,7 +900,7 @@ static	const char	sys_search_path[]	= LTDL_SYSSEARCHPATH;
 		(*lt_dlmutex_seterror_func) (errormsg);		\
 	else 	lt_dllast_error = (errormsg);	} LT_STMT_END
 #define LT_DLMUTEX_GETERROR(errormsg)		LT_STMT_START {	\
-	if (lt_dlmutex_seterror_func)				\
+	if (lt_dlmutex_geterror_func)				\
 		(errormsg) = (*lt_dlmutex_geterror_func) ();	\
 	else	(errormsg) = lt_dllast_error;	} LT_STMT_END
 
@@ -918,7 +924,7 @@ lt_dlmutex_register (lock, unlock, seterror, geterror)
      lt_dlmutex_seterror *seterror;
      lt_dlmutex_geterror *geterror;
 {
-  lt_dlmutex_unlock *old_unlock = unlock;
+  lt_dlmutex_unlock *old_unlock = lt_dlmutex_unlock_func;
   int		     errors	= 0;
 
   /* Lock using the old lock() callback, if any.  */
@@ -929,6 +935,7 @@ lt_dlmutex_register (lock, unlock, seterror, geterror)
     {
       lt_dlmutex_lock_func     = lock;
       lt_dlmutex_unlock_func   = unlock;
+      lt_dlmutex_seterror_func = seterror;
       lt_dlmutex_geterror_func = geterror;
     }
   else
@@ -1061,6 +1068,17 @@ lt_estrdup (str)
 #  include <sys/dl.h>
 #endif
 
+#ifdef RTLD_GLOBAL
+#  define LT_GLOBAL		RTLD_GLOBAL
+#else
+#  ifdef DL_GLOBAL
+#    define LT_GLOBAL		DL_GLOBAL
+#  endif
+#endif /* !RTLD_GLOBAL */
+#ifndef LT_GLOBAL
+#  define LT_GLOBAL		0
+#endif /* !LT_GLOBAL */
+
 /* We may have to define LT_LAZY_OR_NOW in the command line if we
    find out it does not work in some platform. */
 #ifndef LT_LAZY_OR_NOW
@@ -1096,7 +1114,7 @@ sys_dl_open (loader_data, filename)
      lt_user_data loader_data;
      const char *filename;
 {
-  lt_module   module   = dlopen (filename, LT_LAZY_OR_NOW);
+  lt_module   module   = dlopen (filename, LT_GLOBAL | LT_LAZY_OR_NOW);
 
   if (!module)
     {
@@ -2330,6 +2348,18 @@ lt_dlexit ()
 		    {
 		      ++errors;
 		    }
+		  /* Make sure that the handle pointed to by 'cur' still exists.
+		     lt_dlclose recursively closes dependent libraries which removes
+		     them from the linked list.  One of these might be the one
+		     pointed to by 'cur'.  */
+		  if (cur)
+		    {
+		      for (tmp = handles; tmp; tmp = tmp->next)
+			if (tmp == cur)
+			  break;
+		      if (! tmp)
+			cur = handles;
+		    }
 		}
 	    }
 	  /* done if only resident modules are left */
@@ -2933,7 +2963,7 @@ load_deplibs (handle, deplibs)
 
       handle->deplibs = (lt_dlhandle*) LT_EMALLOC (lt_dlhandle *, depcount);
       if (!handle->deplibs)
-	goto cleanup;
+	goto cleanup_names;
 
       for (i = 0; i < depcount; ++i)
 	{
@@ -2984,6 +3014,7 @@ unload_deplibs (handle)
 	      errors += lt_dlclose (handle->deplibs[i]);
 	    }
 	}
+      LT_DLFREE (handle->deplibs);
     }
 
   return errors;

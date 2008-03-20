@@ -12,3 +12,4 @@ tmp
 .dirstamp
 *.la
 *.lo
+Makefile.in

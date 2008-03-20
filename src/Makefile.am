@@ -736,7 +736,7 @@ ICAP_libicap_a_SOURCES = \
 if !USE_ECAP
 ICAP_libicap_a_SOURCES += \
 	ICAP/ICAPServiceRep.cc \
-	ICAP/ICAPServiceRep.h
+	ICAP/ICAPServiceRep.h \
 	ICAP/ICAPLauncher.cc \
 	ICAP/ICAPLauncher.h \
 	ICAP/ICAPOptXact.cc \
@@ -744,7 +744,7 @@ ICAP_libicap_a_SOURCES += \
 	ICAP/ICAPXaction.cc \
 	ICAP/ICAPXaction.h \
 	ICAP/ICAPModXact.cc \
-	ICAP/ICAPModXact.h \
+	ICAP/ICAPModXact.h
 endif
 
 unlinkd_SOURCES = unlinkd_daemon.cc SquidNew.cc
