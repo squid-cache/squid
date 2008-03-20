@@ -103,7 +103,7 @@ EventLoop::runOnce()
     bool sawActivity = false;
     runOnceResult = true;
     error = false;
-    loop_delay = 10; /* 10 ms default delay */
+    loop_delay = 1000; /* 1s default delay */
 
     AsyncEngine *waitingEngine = primaryEngine;
     if (!waitingEngine && !engines.empty())
