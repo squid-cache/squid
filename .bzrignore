@@ -13,4 +13,8 @@ tmp
 *.la
 *.lo
 Makefile.in
-
+aclocal.m4
+depcomp
+install-sh
+missing
+configure
