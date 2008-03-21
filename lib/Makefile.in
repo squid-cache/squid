@@ -40,7 +40,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = tests/testAll$(EXEEXT)
+check_PROGRAMS = testHeaders$(EXEEXT) tests/testAll$(EXEEXT)
 subdir = lib
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in drand48.c \
 	getaddrinfo.c getnameinfo.c inet_ntoa.c inet_ntop.c \
@@ -89,6 +89,9 @@ libsspwin32_a_AR = $(AR) $(ARFLAGS)
 libsspwin32_a_LIBADD =
 am_libsspwin32_a_OBJECTS = sspwin32.$(OBJEXT)
 libsspwin32_a_OBJECTS = $(am_libsspwin32_a_OBJECTS)
+testHeaders_SOURCES = testHeaders.c
+testHeaders_OBJECTS = testHeaders.$(OBJEXT)
+testHeaders_LDADD = $(LDADD)
 am__tests_testAll_SOURCES_DIST = tests/testArray.h tests/testArray.cc \
 	tests/testIPAddress.h tests/testIPAddress.cc IPAddress.cc \
 	tests/testRFC1035.h tests/testRFC1035.cc tests/testMain.cc \
@@ -121,10 +124,11 @@ CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(libmiscutil_a_SOURCES) $(EXTRA_libmiscutil_a_SOURCES) \
 	$(libntlmauth_a_SOURCES) $(libregex_a_SOURCES) \
-	$(libsspwin32_a_SOURCES) $(tests_testAll_SOURCES)
+	$(libsspwin32_a_SOURCES) testHeaders.c \
+	$(tests_testAll_SOURCES)
 DIST_SOURCES = $(am__libmiscutil_a_SOURCES_DIST) \
 	$(EXTRA_libmiscutil_a_SOURCES) $(libntlmauth_a_SOURCES) \
-	$(libregex_a_SOURCES) $(libsspwin32_a_SOURCES) \
+	$(libregex_a_SOURCES) $(libsspwin32_a_SOURCES) testHeaders.c \
 	$(am__tests_testAll_SOURCES_DIST)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
@@ -552,6 +556,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtoll.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stub_memaccount.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testArray.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testHeaders.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testIPAddress.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testMain.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testRFC1035.Po@am__quote@
@@ -1012,6 +1017,9 @@ uninstall-info: uninstall-info-recursive
 
 install: all
 install-strip: all
+
+testHeaders: $(top_srcdir)/include/*.h
+	$(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/include" || exit 1
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
