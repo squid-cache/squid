@@ -246,7 +246,7 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
             if (flag == CC_S_MAXAGE)
                 packerPrintf(p, "=%d", (int) cc->s_maxage);
 
-            if (flag == CC_MAX_STALE)
+            if (flag == CC_MAX_STALE && cc->max_stale >= 0)
                 packerPrintf(p, "=%d", (int) cc->max_stale);
 
             pcount++;
