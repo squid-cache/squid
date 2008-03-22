@@ -36,6 +36,7 @@
 /* forward decls */
 
 class CacheManager;
+
 /* because we pass a spec by value */
 #include "HttpHeaderRange.h"
 /* HttpHeader holds a HttpHeaderMask */
@@ -167,8 +168,10 @@ typedef ssize_t HttpHeaderPos;
 
 /* these two are defined in  structs.h */
 
+/// \todo CLEANUP: Kill this.
 typedef struct _TimeOrTag TimeOrTag;
 
+/// \todo CLEANUP: Kill this.
 typedef struct _ETag ETag;
 
 class HttpHeaderEntry

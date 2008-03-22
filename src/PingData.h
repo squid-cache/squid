@@ -1,4 +1,3 @@
-
 /*
  * $Id: PingData.h,v 1.1 2003/10/16 21:40:16 robertc Exp $
  *
@@ -31,9 +30,14 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-
 #ifndef SQUID_PINGDATA_H
 #define SQUID_PINGDATA_H
+
+#include "config.h"
+
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
 
 class ping_data
 {

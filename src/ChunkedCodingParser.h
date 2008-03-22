@@ -1,4 +1,3 @@
-
 /*
  * $Id: ChunkedCodingParser.h,v 1.1 2007/12/26 22:33:32 hno Exp $
  * 
@@ -29,18 +28,27 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_CHUNKEDCODINGPARSER_H
 #define SQUID_CHUNKEDCODINGPARSER_H
 
+class MemBuf;
+
+#if 0
 #include "RefCount.h"
+#endif
 
-// ChunkedCodingParser is an incremental parser for chunked transfer coding
-// used by HTTP and ICAP. The parser shovels content bytes from the raw
-// input buffer into the content output buffer, both caller-supplied.
-// Ignores chunk extensions except for ICAP's ieof.
-// Has a trailer-handling placeholder.
+/* for size_t */
+#include "config.h"
 
+/**
+ \ingroup ChunkEncodingAPI Chunked Encoding API
+ \par
+ * ChunkedCodingParser is an incremental parser for chunked transfer coding
+ * used by HTTP and ICAP. The parser shovels content bytes from the raw
+ * input buffer into the content output buffer, both caller-supplied.
+ * Ignores chunk extensions except for ICAP's ieof.
+ * Has a trailer-handling placeholder.
+ */
 class ChunkedCodingParser
 {
 
@@ -49,8 +57,12 @@ public:
 
     void reset();
 
-    // true = complete success; false == needs more data
-    bool parse(MemBuf *rawData, MemBuf *parsedContent); // throws on error
+    /**
+     \retval true    complete success
+     \retval false   needs more data
+     \throws ??      error.
+     */
+    bool parse(MemBuf *rawData, MemBuf *parsedContent);
 
     bool needsMoreData() const;
     bool needsMoreSpace() const;

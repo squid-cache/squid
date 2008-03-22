@@ -1,9 +1,10 @@
 /*
  * $Id: radix.h,v 1.18 2003/10/20 12:33:03 robertc Exp $
  */
-
 #ifndef SQUID_RADIX_H
 #define	SQUID_RADIX_H
+
+#include "config.h"
 
 /*
  * Copyright (c) 1988, 1989, 1993

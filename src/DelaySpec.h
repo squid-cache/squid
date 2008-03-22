@@ -29,9 +29,10 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_DELAYSPEC_H
 #define SQUID_DELAYSPEC_H
+
+class StoreEntry;
 
 /// \ingroup DelyPoolsAPI
 class DelaySpec
@@ -39,8 +40,8 @@ class DelaySpec
 
 public:
     DelaySpec();
-    void stats (StoreEntry * sentry, char const *) const;
-    void dump (StoreEntry *) const;
+    void stats(StoreEntry * sentry, char const *) const;
+    void dump(StoreEntry *) const;
     void parse();
     int restore_bps;
     int max_bytes;

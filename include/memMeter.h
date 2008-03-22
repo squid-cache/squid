@@ -1,6 +1,10 @@
-
+/*
+ * $Id$
+ */
 #ifndef _MEM_METER_H_
 #define _MEM_METER_H_
+
+#include "config.h"
 
 /* object to track per-action memory usage (e.g. #idle objects) */
 class MemMeter {

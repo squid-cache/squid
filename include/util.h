@@ -49,15 +49,10 @@
 #include <arpa/inet.h>
 #endif
 
-#if !defined(SQUIDHOSTNAMELEN)
-#define SQUIDHOSTNAMELEN 256
-#endif
-
 #if defined(_SQUID_FREEBSD_)
 #define _etext etext
 #endif
 
-SQUIDCEXTERN const char *getfullhostname(void);
 SQUIDCEXTERN const char *mkhttpdlogtime(const time_t *);
 SQUIDCEXTERN const char *mkrfc1123(time_t);
 SQUIDCEXTERN char *uudecode(const char *);

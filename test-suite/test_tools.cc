@@ -1,4 +1,3 @@
-
 /*
  * $Id: test_tools.cc,v 1.11 2008/02/26 18:52:54 rousskov Exp $
  */

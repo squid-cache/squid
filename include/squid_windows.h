@@ -30,6 +30,12 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+#ifndef _INC_SQUID_WINDOWS_H
+#define _INC_SQUID_WINDOWS_H
+
+#include "config.h"
+
+#ifdef _SQUID_WIN32_
 
 #ifndef ACL
 #define ACL WindowsACL
@@ -40,3 +46,7 @@
 #undef ACL
 #undef _MSWIN_ACL_WAS_NOT_DEFINED
 #endif
+
+#endif /* _SQUID_WIN32_ */
+
+#endif /* _INC_SQUID_WINDOWS_H */

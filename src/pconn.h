@@ -1,19 +1,35 @@
-
+/*
+ * $Id$
+ */
 #ifndef SQUID_PCONN_H
 #define SQUID_PCONN_H
 
-/* forward decls */
+/**
+ \defgroup PConnAPI Persistent Connection API
+ \ingroup Component
+ *
+ \todo CLEANUP: Break multiple classes out of the generic pconn.h header
+ */
 
 class CacheManager;
-
 class PconnPool;
 
+/* for CBDATA_CLASS2() macros */
+#include "cbdata.h"
+/* for hash_link */
+#include "hash.h"
+/* for IOCB */
+#include "comm.h"
+
+/// \ingroup PConnAPI
 #define MAX_NUM_PCONN_POOLS 10
+
+/// \ingroup PConnAPI
 #define PCONN_HIST_SZ (1<<16)
 
+/// \ingroup PConnAPI
 class IdleConnList
 {
-
 public:
     IdleConnList(const char *key, PconnPool *parent);
     ~IdleConnList();
@@ -30,7 +46,7 @@ private:
     static PF timeout;
 
 public:
-    hash_link hash;             /* must be first */
+    hash_link hash;             /** must be first */
 
 private:
     int *fds;
@@ -41,6 +57,15 @@ private:
     CBDATA_CLASS2(IdleConnList);
 };
 
+
+class IPAddress;
+class StoreEntry;
+class IdleConnLimit;
+
+/* for hash_table */
+#include "hash.h"
+
+/// \ingroup PConnAPI
 class PconnPool
 {
 
@@ -64,22 +89,27 @@ private:
 
 };
 
+
+class CacheManager;
+class StoreEntry;
+class PconnPool;
+
+/// \ingroup PConnAPI
 class PconnModule
 {
 
 public:
-    /* the module is a singleton until we have instance based cachemanager
+    /** the module is a singleton until we have instance based cachemanager
      * management
      */
     static PconnModule * GetInstance();
-    /* A thunk to the still C like CacheManager callback api. */
+    /** A thunk to the still C like CacheManager callback api. */
     static void DumpWrapper(StoreEntry *e);
 
     PconnModule();
     void registerWithCacheManager(CacheManager & manager);
 
-    void add
-        (PconnPool *);
+    void add(PconnPool *);
 
     OBJH dump;
 

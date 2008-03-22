@@ -48,6 +48,7 @@
 #include "wordlist.h"
 #include "SquidTime.h"
 #include "SwapDir.h"
+#include "IPAddress.h"
 
 /// \ingroup ServerProtocolICPInternal2
 static void icpLogIcp(const IPAddress &, log_type, int, const char *, int);
@@ -66,6 +67,9 @@ static void icpCount(void *, int, size_t, int);
 static icpUdpData *IcpQueueHead = NULL;
 /// \ingroup ServerProtocolICPInternal2
 static icpUdpData *IcpQueueTail = NULL;
+
+/// \ingroup ServerProtocolICPInternal2
+IPAddress theOutICPAddr;
 
 /* icp_common_t */
 _icp_common_t::_icp_common_t() : opcode(ICP_INVALID), version(0), length(0), reqnum(0), flags(0), pad(0), shostid(0)

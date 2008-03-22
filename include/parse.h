@@ -1,7 +1,6 @@
 /*
  * $Id: parse.h,v 1.12 2003/01/23 00:36:47 robertc Exp $
  */
-
 #ifndef SQUID_PARSE_H
 #define SQUID_PARSE_H
 
@@ -26,11 +25,12 @@ WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
 ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 ******************************************************************/
-/*
- * parse.h
- */
 
-/*
+/* NP: we only need struct variable_list and typedef oid from SNMP library     */
+/*     we use as ptrs. If this was true C++ we could pre-define their classes. */
+#include "snmp_vars.h"
+
+/**
  * A linked list of tag-value pairs for enumerated integers.
  */
 struct enum_list {
@@ -39,7 +39,7 @@ struct enum_list {
     char *label;
 };
 
-/*
+/**
  * A tree in the format of the tree structure of the MIB.
  */
 struct snmp_mib_tree {
@@ -63,7 +63,7 @@ struct snmp_mib_tree {
 #define TYPE_COUNTER	    6
 #define TYPE_GAUGE	    7
 #define TYPE_TIMETICKS	    8
-#define TYPE_OPAQUE	            9
+#define TYPE_OPAQUE	    9
 #define TYPE_NULL	    10
 
 #ifdef __cplusplus

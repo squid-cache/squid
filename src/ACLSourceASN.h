@@ -32,10 +32,15 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-
 #ifndef SQUID_ACLSOURCEASN_H
 #define SQUID_ACLSOURCEASN_H
+
+#if 0
 #include "ACLASN.h"
+#endif
+
+class ACLChecklist;
+
 #include "ACLStrategy.h"
 #include "IPAddress.h"
 

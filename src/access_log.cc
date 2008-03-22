@@ -1,4 +1,3 @@
-
 /*
  * $Id: access_log.cc,v 1.130 2008/01/20 08:54:28 amosjeffries Exp $
  *
@@ -396,8 +395,10 @@ enum log_quote {
     LOG_QUOTE_RAW
 };
 
-struct _logformat_token
+/* FIXME: public class so we can pre-define its type. */
+class logformat_token
 {
+public:
     logformat_bcode_t type;
     union {
         char *string;
@@ -416,14 +417,11 @@ struct _logformat_token
 
     enum log_quote quote;
 
-unsigned int left:
-    1;
+unsigned int left:1;
 
-unsigned int space:
-    1;
+unsigned int space:1;
 
-unsigned int zero:
-    1;
+unsigned int zero:1;
     int divisor;
     logformat_token *next;	/* todo: move from linked list to array */
 };
@@ -590,8 +588,9 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             break;
 
         case LFT_TIME_SECONDS_SINCE_EPOCH:
-            outint = current_time.tv_sec;
-            doint = 1;
+	    // some platforms store time in 32-bit, some 64-bit...
+            outoff = static_cast<int64_t>(current_time.tv_sec);
+            dooff = 1;
             break;
 
         case LFT_TIME_SUBSECOND:
@@ -798,16 +797,16 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             break;
 
         case LFT_REPLY_HIGHOFFSET:
-            outint = static_cast<int>(al->cache.highOffset);
+            outoff = al->cache.highOffset;
 
-            doint = 1;
+            dooff = 1;
 
             break;
 
         case LFT_REPLY_OBJECTSIZE:
-            outint = static_cast<int>(al->cache.objectSize);
+            outoff = al->cache.objectSize;
 
-            doint = 1;
+            dooff = 1;
 
             break;
 

@@ -1,4 +1,3 @@
-
 /*
  * $Id: ACLRequestMIMEType.h,v 1.4 2006/05/06 22:13:18 wessels Exp $
  *
@@ -32,14 +31,11 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-
 #ifndef SQUID_ACLREQUESTMIMETYPE_H
 #define SQUID_ACLREQUESTMIMETYPE_H
+
 #include "ACL.h"
-#include "ACLData.h"
-#include "ACLRequestHeaderStrategy.h"
 #include "ACLStrategised.h"
-#include "ACLChecklist.h"
 
 class ACLRequestMIMEType
 {
@@ -51,8 +47,12 @@ private:
 
 /* partial specialisation */
 
+#include "ACLData.h"
+#include "ACLRequestHeaderStrategy.h"
+#include "ACLChecklist.h"
+
 template <>
-int
+inline int
 ACLRequestHeaderStrategy<HDR_CONTENT_TYPE>::match (ACLData<char const *> * &data, ACLChecklist *checklist)
 {
     char const *theHeader = checklist->request->header.getStr(HDR_CONTENT_TYPE);

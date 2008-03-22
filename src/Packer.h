@@ -1,4 +1,3 @@
-
 /*
  * $Id: Packer.h,v 1.2 2006/05/03 14:04:44 robertc Exp $
  *
@@ -30,19 +29,21 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_PACKER_H
 #define SQUID_PACKER_H
 
+/* for SQUIDCEXTERN */
 #include "config.h"
 
 /* see Packer.cc for description */
-
 class Packer;
 
 /* a common objPackInto interface; used by debugObj */
 typedef void (*ObjPackMethod) (void *obj, Packer * p);
 
+#if HAVE_STDIO_H
+#include <stdio.h>
+#endif
 /* append/vprintf's for Packer */
 typedef void (*append_f) (void *, const char *buf, int size);
 #if STDC_HEADERS
@@ -70,6 +71,5 @@ packerPrintf(Packer * p, const char *fmt,...) PRINTF_FORMAT_ARG2;
 #else
 SQUIDCEXTERN void packerPrintf();
 #endif
-
 
 #endif /* SQUID_PACKER_H */

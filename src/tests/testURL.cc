@@ -1,11 +1,13 @@
+#if 0
 #include "squid.h"
+#endif
+
 #include <sstream>
 #include <cppunit/TestAssert.h>
 
-#include "Mem.h"
 #include "testURL.h"
 #include "URL.h"
-
+#include "Mem.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testURL );
 

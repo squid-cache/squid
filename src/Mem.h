@@ -31,15 +31,16 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_MEM
 #define SQUID_MEM
 
-/* forward decls */
-
 class CacheManager;
+class StoreEntry;
+class MemPoolStats;
+class MemPoolMeter;
 
-#include <iosfwd>
+/** \todo CLEANUP: protection to wrap this system include */
+#include <ostream>
 
 class Mem
 {

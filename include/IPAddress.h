@@ -35,9 +35,14 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef _INC_IPADDRESS_H
 #define _INC_IPADDRESS_H
+
+#include "getaddrinfo.h"
+#include "getnameinfo.h"
+#include "inet_ntop.h"
+#include "inet_pton.h"
+
 
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
@@ -56,14 +61,9 @@
 #include <netdb.h>
 #endif
 
-
 #include <iosfwd>
 #include <ostream>
 
-#include "getaddrinfo.h"
-#include "getnameinfo.h"
-#include "inet_ntop.h"
-#include "inet_pton.h"
 
 /* FreeBSD hack:
  *   This OS has at least one version that defines these as private
@@ -401,6 +401,7 @@ private:
     struct sockaddr_in m_SocketAddr;
 #endif
 };
+
 
 inline std::ostream &
 operator << (std::ostream &os, const IPAddress &ipa)

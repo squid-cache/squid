@@ -1,4 +1,3 @@
-
 /*
  * $Id: StoreMetaMD5.h,v 1.5 2008/02/26 21:49:34 amosjeffries Exp $
  *
@@ -30,11 +29,15 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_STOREMETAMD5_H
 #define SQUID_STOREMETAMD5_H
 
+/* for inheritance */
 #include "StoreMeta.h"
+/* for MEMPROXY_CLASS() macros */
+#include "MemPool.h"
+/* for STORE_META_KEY_MD5 */
+#include "enums.h"
 
 class StoreMetaMD5 : public StoreMeta
 {
@@ -51,6 +54,6 @@ private:
     static int md5_mismatches;
 };
 
-MEMPROXY_CLASS_INLINE(StoreMetaMD5)		/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(StoreMetaMD5);
 
 #endif /* SQUID_STOREMETAMD5_H */

@@ -17,11 +17,15 @@
 #include <unistd.h>
 #endif
 
+#if 0
 #define assert(X) {if (!(X)) exit (1);}
 #include "splay.h"
 #undef assert
-#include "util.h"
+#else
+#include "splay.h"
+#endif
 
+#include "util.h"
 
 class intnode
 {

@@ -41,6 +41,10 @@
 
 class CacheManager;
 
+/** todo checks to wrap this include properly */
+#include <ostream>
+
+
 #define DEBUGSTRINGS 0
 #if DEBUGSTRINGS
 #include "splay.h"

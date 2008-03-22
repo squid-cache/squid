@@ -31,11 +31,16 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
+#if 0
 #include "squid.h"
+#endif
+
 #include "Debug.h"
 #include "SquidTime.h"
 #include <sstream>
+
+/* for Config */
+#include "structs.h"
 
 int Debug::Levels[MAX_DEBUG_SECTIONS];
 int Debug::level;

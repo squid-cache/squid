@@ -255,7 +255,9 @@ using namespace Squid;
 #include <math.h>
 #endif
 
+#if 0  // moved to include/rfc2181.h - RFC defined constants
 #define SQUIDHOSTNAMELEN 256
+#endif
 
 #define SQUID_MAXPATHLEN 256
 #ifndef MAXPATHLEN
@@ -298,11 +300,6 @@ struct rusage
 /* Windows may lack getpagesize() prototype */
 SQUIDCEXTERN size_t getpagesize(void);
 #endif /* _SQUID_MSWIN_ */
-
-#ifndef BUFSIZ
-#define BUFSIZ  4096		/* make reasonable guess */
-#endif
-
 
 #ifndef SA_RESTART
 #define SA_RESTART 0

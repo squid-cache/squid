@@ -409,6 +409,7 @@ libsquid_la_SOURCES = \
 	IPInterception.h \
         ICAP/AsyncJob.cc \
         ICAP/AsyncJob.h \
+	SquidConfig.cc \
         TextException.cc \
         TextException.h
 
@@ -479,6 +480,7 @@ squid_SOURCES = \
 	disk.cc \
 	$(DISKIO_SOURCE) \
 	dlink.h \
+	dlink.cc \
 	$(DNSSOURCE) \
 	enums.h \
 	errorpage.cc \
@@ -816,6 +818,8 @@ ufsdump_SOURCES = \
 	defines.h \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
+	dlink.h \
+	dlink.cc \
 	$(DNSSOURCE) \
 	enums.h \
 	errorpage.cc \
@@ -1155,9 +1159,9 @@ TEST_CALL_SOURCES = \
 	event.cc \
 	AsyncCallQueue.cc \
 	AsyncCall.cc
-	
 
-check_PROGRAMS+= \
+
+check_PROGRAMS+= testHeaders \
 	tests/testAuth \
 	tests/testACLMaxUserIP \
 	tests/testBoilerplate \
@@ -1165,7 +1169,6 @@ check_PROGRAMS+= \
 	tests/testDiskIO \
 	tests/testEvent \
 	tests/testEventLoop \
-	tests/testHeaders \
 	tests/test_http_range \
 	tests/testHttpRequest \
 	tests/testICMP \
@@ -1173,6 +1176,15 @@ check_PROGRAMS+= \
 	tests/testString \
 	tests/testURL \
 	@STORE_TESTS@
+
+## Special Universal .h dependency test script
+## aborts if error encountered
+testHeaders: *.h DiskIO/*.h ICAP/*.h
+	../test-suite/testheaders.sh "$(CXXCOMPILE)" "." || exit 1
+	../test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO" || exit 1
+	../test-suite/testheaders.sh "$(CXXCOMPILE)" "ICAP" || exit 1
+## src/repl/ has no .h files and its own makefile.
+
 
 ### Template for new Unit Test Program
 ## - add tests/testX to check_PROGRAMS above.
@@ -1361,6 +1373,8 @@ tests_testCacheManager_SOURCES = \
 	ConfigParser.cc \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
+	dlink.h \
+	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
 	$(ESI_SOURCE) \
@@ -1480,6 +1494,7 @@ tests_testDiskIO_SOURCES= \
 	tests/testMain.cc
 tests_testDiskIO_LDADD= \
 	$(SWAP_TEST_LDADD) \
+	libsquid.la \
 	@SSLLIB@
 tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
 tests_testDiskIO_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
@@ -1529,6 +1544,8 @@ tests_testEvent_SOURCES = \
 	ConfigParser.cc \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
+	dlink.h \
+	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
 	$(ESI_SOURCE) \
@@ -1683,6 +1700,8 @@ tests_testEventLoop_SOURCES = \
 	ConfigParser.cc \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
+	dlink.h \
+	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
 	$(ESI_SOURCE) \
@@ -1794,43 +1813,6 @@ tests_testEventLoop_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@SQUID_CPPUNIT_LA@ \
 	@ICAP_LIBS@
 
-## test headers checks that individual headers can be parsed with no dependencies.
-## as such, it needs a new .cc file for each header it parses, so that they
-## can be #included with no baggage. If the binary links, the test passed.
-## We could write a script to pull out the compiler configuration from autoconf,
-## but this is easier to understand and more robust against changes in autoconf.
-## RBC 20060422.
-HEADERS_TO_TEST = \
-	tests/testHeader_ACL.cc \
-	tests/testHeader_AsyncEngine.cc \
-	tests/testHeader_cbdata.cc \
-	tests/testHeader_CompletionDispatcher.cc \
-	tests/testHeader_ConfigParser.cc \
-	tests/testHeader_client_side_request.cc \
-	tests/testHeader_comm.cc \
-	tests/testHeader_dlink.cc \
-	tests/testHeader_errorpage.cc \
-	tests/testHeader_event.cc \
-	tests/testHeader_EventLoop.cc \
-	tests/testHeader_HttpHeader.cc \
-	tests/testHeader_HttpHeaderRange.cc \
-	tests/testHeader_HttpReply.cc \
-	tests/testHeader_HttpRequestMethod.cc \
-	tests/testHeader_RemovalPolicy.cc \
-	tests/testHeader_SquidTime.cc \
-	tests/testHeader_Store.cc \
-	tests/testHeader_StoreEntryStream.cc \
-	tests/testHeader_URL.cc \
-	tests/testHeader_URLScheme.cc \
-	tests/testHeader_wordlist.cc
-tests_testHeaders_SOURCES= tests/testMain.cc $(HEADERS_TO_TEST)
-tests_testHeaders_LDADD= \
-	@SQUID_CPPUNIT_LIBS@ \
-	@SSLLIB@
-tests_testHeaders_LDFLAGS = $(LIBADD_DL)
-tests_testHeaders_DEPENDENCIES = \
-	@SQUID_CPPUNIT_LA@
-
 tests_test_http_range_SOURCES = \
 	tests/test_http_range.cc \
 	access_log.cc \
@@ -1862,6 +1844,8 @@ tests_test_http_range_SOURCES = \
 	debug.cc \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
+	dlink.h \
+	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
 	$(ESI_SOURCE) \
@@ -2022,6 +2006,8 @@ tests_testHttpRequest_SOURCES = \
 	ConfigParser.cc \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
+	dlink.h \
+	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
 	$(ESI_SOURCE) \
@@ -2240,6 +2226,7 @@ tests_testString_SOURCES= \
 	time.cc 
 
 tests_testString_LDADD= \
+	libsquid.la \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
 	@SQUID_CPPUNIT_LIBS@ \
@@ -2305,6 +2292,7 @@ tests_testUfs_SOURCES= tests/testUfs.cc \
 	tests/testUfs.h \
 	$(SWAP_TEST_SOURCES)
 tests_testUfs_LDADD= \
+	libsquid.la \
 	$(SWAP_TEST_LDADD) \
 	@SSLLIB@
 tests_testUfs_LDFLAGS = $(LIBADD_DL)
@@ -2379,6 +2367,8 @@ tests_testURL_SOURCES = \
 	ConfigParser.cc \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
+	dlink.h \
+	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
 	$(ESI_SOURCE) \

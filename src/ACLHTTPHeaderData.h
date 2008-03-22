@@ -31,11 +31,20 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-
 #ifndef SQUID_ACLHTTPHEADERDATA_H
 #define SQUID_ACLHTTPHEADERDATA_H
 
+class HttpHeader;
+class wordlist;
+
+/* becaue we inherit from it */
 #include "ACLData.h"
+/* for String field */
+#include "SquidString.h"
+/* for http_hdr_type field */
+#include "HttpHeader.h"
+/* because weuse its MEMPROXY_CLASS() macros */
+#include "MemPool.h"
 
 /// \ingroup ACLAPI
 class ACLHTTPHeaderData : public ACLData<HttpHeader*>
@@ -53,11 +62,11 @@ public:
     virtual ACLData<HttpHeader*> *clone() const;
 
 private:
-    http_hdr_type hdrId; // set if header is known
-    String hdrName; // always set
+    http_hdr_type hdrId;                /**< set if header is known */
+    String hdrName;                     /**< always set */
     ACLData<char const *> * regex_rule;
 };
 
-MEMPROXY_CLASS_INLINE(ACLHTTPHeaderData)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(ACLHTTPHeaderData);
 
 #endif /* SQUID_ACLHTTPHEADERDATA_H */
