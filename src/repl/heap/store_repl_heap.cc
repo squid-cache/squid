@@ -234,9 +234,7 @@ try_again:
 
     if (entry->locked()) {
 
-        entry->lock()
-
-        ;
+        entry->lock();
         linklistPush(&heap_walker->locked_entries, entry);
 
         goto try_again;

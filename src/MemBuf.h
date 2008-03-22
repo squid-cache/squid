@@ -171,13 +171,11 @@ public:
      */
     mb_size_t capacity;	
 
-unsigned stolen:
-    1;		/* the buffer has been stolen for use by someone else */
+    unsigned stolen:1;		/* the buffer has been stolen for use by someone else */
 
 #if 0
 
-unsigned valid:
-    1;		/* to be used for debugging only! */
+    unsigned valid:1;		/* to be used for debugging only! */
 #endif
 };
 

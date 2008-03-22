@@ -41,9 +41,7 @@
 
 /* explicit template instantiation required for some systems */
 
-template class ACLRequestHeaderStrategy<HDR_REFERER>
-
-;
+template class ACLRequestHeaderStrategy<HDR_REFERER>;
 
 ACL::Prototype ACLReferer::RegistryProtoype(&ACLReferer::RegistryEntry_, "referer_regex");
 

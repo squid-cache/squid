@@ -45,9 +45,7 @@ typedef struct
     int true_miss_count;
     int false_hit_count;
     int false_miss_count;
-}
-
-CacheQueryStats;
+} CacheQueryStats;
 
 typedef struct _Cache Cache;
 
@@ -72,9 +70,7 @@ typedef struct _CacheEntry
     struct _CacheEntry *next;
     unsigned char key_arr[SQUID_MD5_DIGEST_LENGTH];
     /* storeSwapLogData s; */
-}
-
-CacheEntry;
+} CacheEntry;
 
 /* parsed access log entry */
 
@@ -83,9 +79,7 @@ typedef struct
     cache_key key[SQUID_MD5_DIGEST_LENGTH];
     time_t timestamp;
     short int use_icp;		/* true/false */
-}
-
-RawAccessLogEntry;
+} RawAccessLogEntry;
 
 typedef enum {
     frError = -2, frMore = -1, frEof = 0, frOk = 1

@@ -30,9 +30,7 @@ typedef struct
     void *data;
     AuthUserRequest *auth_user_request;
     RH *handler;
-}
-
-authenticateStateData;
+} authenticateStateData;
 #endif
 
 class NTLMUser : public AuthUser

@@ -85,38 +85,22 @@ public:
 
     struct
     {
-
-int passthrough:
-        1;
-
-int oktosend:
-        1;
-
-int finished:
-        1;
+        int passthrough:1;
+        int oktosend:1;
+        int finished:1;
 
         /* an error has occured, send full body replies
          * regardless. Note that we don't fail midstream
          * because we buffer until we can not fail
          */
+        int error:1;
 
-int error:
-        1;
+        int finishedtemplate:1; /* we've read the entire template */
+        int clientwantsdata:1; /* we need to satisfy a read request */
+        int kicked:1; /* note on reentering the kick routine */
+        int detached:1; /* our downstream has detached */
+    } flags;
 
-int finishedtemplate:
-        1; /* we've read the entire template */
-
-int clientwantsdata:
-        1; /* we need to satisfy a read request */
-
-int kicked:
-        1; /* note on reentering the kick routine */
-
-int detached:
-        1; /* our downstream has detached */
-    }
-
-    flags;
     err_type errorpage; /* if we error what page to use */
     http_status errorstatus; /* if we error, what code to return */
     char *errormessage; /* error to pass to error page */
@@ -149,9 +133,7 @@ int detached:
         ParserState();
         void freeResources();
         void popAll();
-
-    int parsing:
-        1; /* libexpat is not reentrant on the same context */
+        int parsing:1; /* libexpat is not reentrant on the same context */
 
     private:
         bool inited_;

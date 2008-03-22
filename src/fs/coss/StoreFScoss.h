@@ -52,9 +52,7 @@ public:
         int alloc;
         int realloc;
         int collisions;
-    }
-
-    alloc;
+    } alloc;
     int disk_overflows;
     int stripe_overflows;
     int open_mem_hits;
