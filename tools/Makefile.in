@@ -44,7 +44,6 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS =
 bin_PROGRAMS = squidclient$(EXEEXT)
 libexec_PROGRAMS = cachemgr$(CGIEXT)$(EXEEXT)
 subdir = tools
@@ -315,6 +314,11 @@ INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include \
 	-I$(top_srcdir)/include -I$(top_srcdir)/lib/libTrie/include \
 	@SQUID_CPPUNIT_INC@ $(am__empty)
 TESTS = $(check_PROGRAMS)
+#check_PROGRAMS= testHeaders
+
+### Special Universal .h dependency test script
+#testHeaders: *.h
+# ./ has no .h files
 SUBDIRS = 
 squidclient_SOURCES = squidclient.cc
 cachemgr__CGIEXT__SOURCES = cachemgr.cc
@@ -388,13 +392,6 @@ uninstall-binPROGRAMS:
 
 clean-binPROGRAMS:
 	@list='$(bin_PROGRAMS)'; for p in $$list; do \
-	  f=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
-	  echo " rm -f $$p $$f"; \
-	  rm -f $$p $$f ; \
-	done
-
-clean-checkPROGRAMS:
-	@list='$(check_PROGRAMS)'; for p in $$list; do \
 	  f=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
 	  echo " rm -f $$p $$f"; \
 	  rm -f $$p $$f ; \
@@ -725,7 +722,6 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-	$(MAKE) $(AM_MAKEFLAGS) $(check_PROGRAMS)
 	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: check-recursive
 all-am: Makefile $(PROGRAMS)
@@ -761,8 +757,8 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-recursive
 
-clean-am: clean-binPROGRAMS clean-checkPROGRAMS clean-generic \
-	clean-libexecPROGRAMS clean-libtool mostlyclean-am
+clean-am: clean-binPROGRAMS clean-generic clean-libexecPROGRAMS \
+	clean-libtool mostlyclean-am
 
 distclean: distclean-recursive
 	-rm -rf ./$(DEPDIR)
@@ -814,20 +810,19 @@ uninstall-am: uninstall-binPROGRAMS uninstall-info-am \
 uninstall-info: uninstall-info-recursive
 
 .PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am check check-TESTS \
-	check-am clean clean-binPROGRAMS clean-checkPROGRAMS \
-	clean-generic clean-libexecPROGRAMS clean-libtool \
-	clean-recursive ctags ctags-recursive distclean \
-	distclean-compile distclean-generic distclean-libtool \
-	distclean-recursive distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-binPROGRAMS \
-	install-data install-data-am install-data-local install-exec \
-	install-exec-am install-info install-info-am \
-	install-libexecPROGRAMS install-man install-strip installcheck \
-	installcheck-am installdirs installdirs-am maintainer-clean \
-	maintainer-clean-generic maintainer-clean-recursive \
-	mostlyclean mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool mostlyclean-recursive pdf pdf-am ps ps-am \
-	tags tags-recursive uninstall uninstall-am \
+	check-am clean clean-binPROGRAMS clean-generic \
+	clean-libexecPROGRAMS clean-libtool clean-recursive ctags \
+	ctags-recursive distclean distclean-compile distclean-generic \
+	distclean-libtool distclean-recursive distclean-tags distdir \
+	dvi dvi-am html html-am info info-am install install-am \
+	install-binPROGRAMS install-data install-data-am \
+	install-data-local install-exec install-exec-am install-info \
+	install-info-am install-libexecPROGRAMS install-man \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am maintainer-clean maintainer-clean-generic \
+	maintainer-clean-recursive mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool mostlyclean-recursive \
+	pdf pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
 	uninstall-binPROGRAMS uninstall-info-am \
 	uninstall-libexecPROGRAMS uninstall-local
 
