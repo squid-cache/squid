@@ -48,9 +48,7 @@ typedef struct
     int scanned_count;		/* #scanned entries */
     int bad_add_count;		/* #duplicate adds */
     int bad_del_count;		/* #dels with no prior add */
-}
-
-CacheIndex;
+} CacheIndex;
 
 
 typedef struct _CacheEntry
@@ -60,9 +58,7 @@ typedef struct _CacheEntry
     struct _CacheEntry *next;
     /* StoreSwapLogData s; */
     unsigned char key_arr[SQUID_MD5_DIGEST_LENGTH];
-}
-
-CacheEntry;
+} CacheEntry;
 
 
 /* copied from url.c */

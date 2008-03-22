@@ -74,9 +74,7 @@ public:
 unsigned deferred: 1; /* This is a pipelined request waiting for the current object to complete */
 
 unsigned parsed_ok: 1; /* Was this parsed correctly? */
-    }
-
-    flags;
+    } flags;
     bool mayUseConnection() const {return mayUseConnection_;}
 
     void mayUseConnection(bool aBool)
@@ -190,9 +188,7 @@ public:
     struct
     {
         bool readMoreRequests;
-    }
-
-    flags;
+    } flags;
     http_port_list *port;
 
     bool transparent() const;

@@ -73,8 +73,7 @@ typedef enum
     ESI_EXPR_MORE,
     ESI_EXPR_MOREEQ,
     ESI_EXPR_EXPR			/* the result of an expr PRI 1 */
-}
-evaltype;
+} evaltype;
 
 typedef enum
 {
@@ -83,8 +82,7 @@ typedef enum
     ESI_LITERAL_INT,
     ESI_LITERAL_BOOL,
     ESI_LITERAL_INVALID
-}
-literalhint;
+} literalhint;
 
 struct _stackmember
 {
@@ -94,8 +92,7 @@ struct _stackmember
         char *string;
         double floating;
         int integral;
-    }
-    value;
+    } value;
     literalhint valuestored;
     evaltype valuetype;
     int precedence;

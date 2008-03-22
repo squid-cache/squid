@@ -48,9 +48,7 @@ typedef struct squidaio_unlinkq_t
     char *path;
 
     struct squidaio_unlinkq_t *next;
-}
-
-squidaio_unlinkq_t;
+} squidaio_unlinkq_t;
 
 dlink_list used_list;
 

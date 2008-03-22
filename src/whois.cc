@@ -91,9 +91,7 @@ whoisStart(FwdState * fwd)
     p->fwd = fwd;
     p->dataWritten = false;
 
-    p->entry->lock()
-
-    ;
+    p->entry->lock();
     comm_add_close_handler(fd, whoisClose, p);
 
     l = p->request->urlpath.size() + 3;

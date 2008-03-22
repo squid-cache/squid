@@ -58,15 +58,9 @@ public:
 
     struct
     {
-
-unsigned int pw_req:
-        1;
-
-unsigned int atomic:
-        1;
-    }
-
-    flags;
+        unsigned int pw_req:1;
+        unsigned int atomic:1;
+    } flags;
 
     CacheManagerAction *next;
 };

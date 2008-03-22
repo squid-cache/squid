@@ -10,9 +10,7 @@
 
 /* explicit template instantiation required for some systems */
 
-template class ACLStrategised<int>
-
-;
+template class ACLStrategised<int>;
 
 ACL::Prototype ACLSslError::RegistryProtoype(&ACLSslError::RegistryEntry_, "ssl_error");
 

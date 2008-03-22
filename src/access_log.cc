@@ -95,9 +95,7 @@ typedef struct
 {
     hash_link hash;
     int n;
-}
-
-fvdb_entry;
+} fvdb_entry;
 static hash_table *via_table = NULL;
 static hash_table *forw_table = NULL;
 static void fvdbInit();
@@ -407,21 +405,15 @@ public:
             char *header;
             char *element;
             char separator;
-        }
-
-        header;
+        } header;
         char *timespec;
     } data;
     unsigned char width;
     unsigned char precision;
-
     enum log_quote quote;
-
-unsigned int left:1;
-
-unsigned int space:1;
-
-unsigned int zero:1;
+    unsigned int left:1;
+    unsigned int space:1;
+    unsigned int zero:1;
     int divisor;
     logformat_token *next;	/* todo: move from linked list to array */
 };

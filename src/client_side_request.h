@@ -105,9 +105,8 @@ public:
         int64_t offset;
         int64_t size;
         size_t headers_sz;
-    }
+    } out;
 
-    out;
     HttpHdrRangeIter range_iter;	/* data for iterating thru range specs */
     size_t req_sz;		/* raw request size on input, not current request size */
     log_type logType;
@@ -117,32 +116,19 @@ public:
 
     struct
     {
-
-unsigned int accel:
-        1;
-
-unsigned int transparent:
-        1;
-
-unsigned int internal:
-        1;
-
-unsigned int done_copying:
-        1;
-
-unsigned int purging:
-        1;
-    }
-
-    flags;
+        unsigned int accel:1;
+        unsigned int transparent:1;
+        unsigned int internal:1;
+        unsigned int done_copying:1;
+        unsigned int purging:1;
+    } flags;
 
     struct
     {
         http_status status;
         char *location;
-    }
+    } redirect;
 
-    redirect;
     dlink_node active;
     dlink_list client_stream;
     int mRangeCLen();

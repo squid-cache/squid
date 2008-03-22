@@ -39,8 +39,7 @@ typedef struct
     void *data;
     AuthUserRequest *auth_user_request;
     RH *handler;
-}
-authenticateStateData;
+} authenticateStateData;
 #endif
 
 /// \ingroup AuthNegotiateAPI

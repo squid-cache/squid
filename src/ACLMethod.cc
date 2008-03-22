@@ -41,9 +41,7 @@
 
 /* explicit template instantiation required for some systems */
 
-template class ACLStrategised<HttpRequestMethod>
-
-;
+template class ACLStrategised<HttpRequestMethod>;
 
 ACL::Prototype ACLMethod::RegistryProtoype(&ACLMethod::RegistryEntry_, "method");
 

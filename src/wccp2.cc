@@ -442,7 +442,6 @@ struct wccp2_service_list_t
     uint32_t change_num;
 
     char *wccp2_identity_info_ptr;
-    ;
 
     struct wccp2_security_md5_t *security_info;
 

@@ -79,9 +79,7 @@ typedef struct
     int add_coll_count;		/* #accepted entries that collided with existing ones */
     int rej_count;		/* #store entries not accepted to store_digest */
     int rej_coll_count;		/* #not accepted entries that collided with existing ones */
-}
-
-StoreDigestStats;
+} StoreDigestStats;
 
 /* local vars */
 static StoreDigestState sd_state;

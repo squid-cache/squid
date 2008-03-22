@@ -228,9 +228,7 @@ debugArg(const char *arg) {
     } else {
         s = atoi(arg);
 
-        while (*arg && *arg++ != ',')
-
-            ;
+        while (*arg && *arg++ != ',');
     }
 
     l = atoi(arg);

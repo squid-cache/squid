@@ -905,19 +905,13 @@ struct _store_check_cachable_hist
         int private_key;
         int too_many_open_files;
         int too_many_open_fds;
-    }
-
-    no;
+    } no;
 
     struct
     {
         int Default;
-    }
-
-    yes;
-}
-
-store_check_cachable_hist;
+    } yes;
+} store_check_cachable_hist;
 
 int
 storeTooManyDiskFilesOpen(void)

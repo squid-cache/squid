@@ -49,6 +49,4 @@
  
 /* explicit template instantiation required for some systems */
 
-template class ACLStrategised<HttpHeader*>
-
-;
+template class ACLStrategised<HttpHeader*>;

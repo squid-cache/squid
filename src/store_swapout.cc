@@ -78,9 +78,7 @@ storeSwapOutStart(StoreEntry * e)
     /* Don't lock until after create, or the replacement
      * code might get confused */
 
-    e->lock()
-
-    ;
+    e->lock();
     /* Pick up the file number if it was assigned immediately */
     e->swap_filen = mem->swapout.sio->swap_filen;
 
