@@ -1,7 +1,6 @@
 /*
  * $Id: cache_snmp.h,v 1.30 2007/12/14 23:11:44 amosjeffries Exp $
  */
-
 #ifndef SQUID_CACHE_SNMP_H
 #define SQUID_CACHE_SNMP_H
 
@@ -19,7 +18,9 @@
 
 #include "snmp.h"
 #include "snmp_impl.h"
+#if 0
 #include "asn1.h"
+#endif
 #include "snmp_api.h"
 
 #include "snmp_vars.h"

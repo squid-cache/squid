@@ -1,8 +1,20 @@
+/*
+ * $Id$
+ */
 #ifndef __COSSSWAPDIR_H__
 #define __COSSSWAPDIR_H__
 
+class StoreEntry;
+class CossSwapDir;
+class CossMemBuf;
+class DiskIOStrategy;
+class DiskIOModule;
+class ConfigOptionVector;
+class DiskFile;
+
 #include "SwapDir.h"
-#include "StoreSearch.h"
+#include "DiskIO/IORequestor.h"
+
 
 #ifndef COSS_MEMBUF_SZ
 #define	COSS_MEMBUF_SZ	1048576
@@ -14,18 +26,6 @@
 #define COSS_ALLOC_ALLOCATE		1
 #define COSS_ALLOC_REALLOC		2
 
-class CossSwapDir;
-
-
-class CossMemBuf;
-
-class DiskIOStrategy;
-
-class DiskIOModule;
-
-class ConfigOptionVector;
-#include "DiskIO/DiskFile.h"
-#include "DiskIO/IORequestor.h"
 
 /// \ingroup COSS
 class CossSwapDir : public SwapDir, public IORequestor
@@ -99,6 +99,9 @@ extern void storeCossAdd(CossSwapDir *, StoreEntry *);
 extern void storeCossRemove(CossSwapDir *, StoreEntry *);
 /// \ingroup COSS
 extern void storeCossStartMembuf(CossSwapDir * SD);
+
+
+#include "StoreSearch.h"
 
 /// \ingroup COSS
 class StoreSearchCoss : public StoreSearch

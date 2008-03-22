@@ -1,4 +1,3 @@
-
 /*
  * $Id: globals.h,v 1.143 2008/02/11 22:36:52 rousskov Exp $
  *
@@ -30,9 +29,21 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_GLOBALS_H
 #define SQUID_GLOBALS_H
+
+#if HAVE_STDIO_H
+#include <stdio.h>
+#endif
+
+#include "rfc2181.h"
+
+/* for ERROR_BUF_SZ, BUFSIZ, MAXHTTPPORTS */
+#include "defines.h"
+
+/* for iostats, StatCounters */
+#include "structs.h"
+
 
 #ifdef __cplusplus
 extern "C"
@@ -40,16 +51,16 @@ extern "C"
 #endif
 
     extern FILE *debug_log;		/* NULL */
-    extern SquidConfig Config;
-    extern SquidConfig2 Config2;
+//MOVED:structs.h    extern SquidConfig Config;
+//MOVED:structs.h    extern SquidConfig2 Config2;
     extern char *ConfigFile;	/* NULL */
     extern char *IcpOpcodeStr[];
     extern const char *dns_error_message;	/* NULL */
     extern const char *log_tags[];
     extern char tmp_error_buf[ERROR_BUF_SZ];
     extern char *volatile debug_options;	/* NULL */
-    extern char ThisCache[SQUIDHOSTNAMELEN << 1];
-    extern char ThisCache2[SQUIDHOSTNAMELEN << 1];
+    extern char ThisCache[RFC2181_MAXHOSTNAMELEN << 1];
+    extern char ThisCache2[RFC2181_MAXHOSTNAMELEN << 1];
     extern char config_input_line[BUFSIZ];
     extern const char *DefaultConfigFile;	/* DEFAULT_CONFIG_FILE */
     extern const char *cfg_filename;	/* NULL */
@@ -67,6 +78,7 @@ extern "C"
     extern const char *pingStatusStr[];
     extern const char *storeStatusStr[];
     extern const char *swapStatusStr[];
+    class fde;
     extern fde *fd_table;		/* NULL */
     extern int Biggest_FD;		/* -1 */
     extern int Number_FD;		/* 0 */
@@ -79,7 +91,7 @@ extern "C"
     extern int config_lineno;	/* 0 */
     extern int do_mallinfo;		/* 0 */
     extern int opt_reuseaddr;	/* 1 */
-    extern int icmp_sock;		/* -1 */
+//DEAD    extern int icmp_sock;		/* -1 */
     extern int neighbors_do_private_keys;	/* 1 */
     extern int opt_catch_signals;	/* 1 */
     extern int opt_debug_stderr;	/* -1 */
@@ -109,11 +121,10 @@ extern "C"
     extern int n_disk_objects;	/* 0 */
     extern iostats IOStats;
 
-    extern struct _acl_deny_info_list *DenyInfoList;	/* NULL */
+    extern struct acl_deny_info_list *DenyInfoList;	/* NULL */
 
-    extern IPAddress theOutICPAddr;
-
-    extern IPAddress theOutSNMPAddr;
+//MOVED:icp_v2.cc    extern IPAddress theOutICPAddr;
+//MOVED:snmp_core.cc    extern IPAddress theOutSNMPAddr;
 
     extern struct timeval squid_start;
     extern int shutting_down;	/* 0 */
@@ -128,7 +139,7 @@ extern "C"
     extern double request_failure_ratio;	/* 0.0 */
     extern int store_hash_buckets;	/* 0 */
     extern hash_table *store_table;	/* NULL */
-    extern dlink_list ClientActiveRequests;
+//MOVED:dlink.h    extern dlink_list ClientActiveRequests;
     extern int hot_obj_count;	/* 0 */
     extern const int CacheDigestHashFuncCount;	/* 4 */
     extern CacheDigest *store_digest;	/* NULL */

@@ -1,9 +1,12 @@
+#if 0
 #include "squid.h"
+#endif
+
 #include <cppunit/TestAssert.h>
 
-#include "Mem.h"
 #include "testHttpRequest.h"
 #include "HttpRequest.h"
+#include "Mem.h"
 
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttpRequest );

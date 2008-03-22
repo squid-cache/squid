@@ -54,7 +54,7 @@ public:
     static void removeFromCache (void *anAuthUserHashPointer);
     MEMPROXY_CLASS(AuthUserHashPointer);
 
-    AuthUserHashPointer (AuthUser *);
+    AuthUserHashPointer(AuthUser *);
 
     AuthUser *user() const;
 
@@ -62,7 +62,7 @@ private:
     AuthUser *auth_user;
 };
 
-MEMPROXY_CLASS_INLINE(AuthUserHashPointer)			/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(AuthUserHashPointer);
 
 class ConnStateData;
 
@@ -79,7 +79,7 @@ typedef void AUTHSSTATS(StoreEntry *);
  * subsumed by the C++ interface
  \todo does 'subsumed' mean deprecated use a C++ API call?
  */
-extern void authenticateAuthUserMerge(auth_user_t *, auth_user_t *);
+extern void authenticateAuthUserMerge(AuthUser *, AuthUser *);
 
 /// \ingroup AuthAPI
 extern void authenticateInit(authConfig *);
@@ -88,7 +88,7 @@ extern void authenticateRegisterWithCacheManager(authConfig * config, CacheManag
 /// \ingroup AuthAPI
 extern void authenticateShutdown(void);
 /// \ingroup AuthAPI
-extern int authenticateAuthUserInuse(auth_user_t * auth_user);
+extern int authenticateAuthUserInuse(AuthUser * auth_user);
 
 /// \ingroup AuthAPI
 extern void authenticateFreeProxyAuthUserACLResults(void *data);

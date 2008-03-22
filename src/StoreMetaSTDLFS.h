@@ -1,4 +1,3 @@
-
 /*
  * $Id: StoreMetaSTDLFS.h,v 1.2 2008/02/26 21:49:34 amosjeffries Exp $
  *
@@ -30,15 +29,16 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_STOREMETASTDLFS_H
 #define SQUID_STOREMETASTDLFS_H
 
+/* for inheritance */
 #include "StoreMeta.h"
+/* for MEMPROXY() macros */
+#include "MemPool.h"
 
 class StoreMetaSTDLFS : public StoreMeta
 {
-
 public:
     MEMPROXY_CLASS(StoreMetaSTDLFS);
 
@@ -48,6 +48,6 @@ public:
     //    bool checkConsistency(StoreEntry *) const;
 };
 
-MEMPROXY_CLASS_INLINE(StoreMetaSTDLFS)		/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(StoreMetaSTDLFS);
 
 #endif /* SQUID_STOREMETASTDLFS_H */

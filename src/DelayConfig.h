@@ -33,10 +33,10 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-
 #ifndef SQUID_DELAYCONFIG_H
 #define SQUID_DELAYCONFIG_H
 
+class StoreEntry;
 class ConfigParser;
 
 /// \ingroup DelayPoolsAPI

@@ -1,6 +1,8 @@
 #ifndef SQUID_SNMP_ASN1_H
 #define SQUID_SNMP_ASN1_H
 
+#include "config.h"
+
 /*
  * Definitions for Abstract Syntax Notation One, ASN.1
  * As defined in ISO/IS 8824 and ISO/IS 8825
@@ -33,7 +35,7 @@
  **********************************************************************/
 
 #ifndef EIGHTBIT_SUBIDS
-typedef u_int oid;
+typedef u_int8_t oid;
 #define MAX_SUBID   0xFFFFFFFF
 #else
 typedef u_char oid;

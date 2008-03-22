@@ -1,4 +1,3 @@
-
 /*
  * $Id: sspwin32.h,v 1.2 2006/09/09 15:29:59 serassio Exp $
  *
@@ -32,9 +31,11 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef _LIBSSPWIN32_H_
 #define _LIBSSPWIN32_H_
+
+#ifdef _SQUID_WIN32_
+
 #define SECURITY_WIN32
 #define NTLM_PACKAGE_NAME "NTLM"
 #define NEGOTIATE_PACKAGE_NAME "Negotiate"
@@ -74,4 +75,7 @@ const char * WINAPI SSP_MakeNegotiateBlob(PVOID, int, PBOOL, int *, char *);
 
 extern BOOL Use_Unicode;
 extern BOOL NTLM_LocalCall;
+
+#endif /* _SQUID_WIN32_ */
+
 #endif /* LIBSSPWIN32_H_ */

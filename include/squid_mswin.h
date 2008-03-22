@@ -31,6 +31,12 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+#ifndef _INC_SQUID_MSWIN_H
+#define _INC_SQUID_MSWIN_H
+
+#include "config.h"
+
+#ifdef _SQUID_WIN32_
 
 #define ACL WindowsACL
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
@@ -738,3 +744,8 @@ struct rusage {
 };
 
 #undef ACL
+
+
+#endif /* _SQUID_WIN32_ */
+
+#endif /* _INC_SQUID_MSWIN_H */

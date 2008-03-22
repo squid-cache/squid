@@ -1378,7 +1378,7 @@ free_http_header_replace(header_mangler header[])
 #endif
 
 static void
-dump_cachedir(StoreEntry * entry, const char *name, _SquidConfig::_cacheSwap swap)
+dump_cachedir(StoreEntry * entry, const char *name, SquidConfig::_cacheSwap swap)
 {
     SwapDir *s;
     int i;
@@ -1465,7 +1465,7 @@ find_fstype(char *type)
 }
 
 static void
-parse_cachedir(_SquidConfig::_cacheSwap * swap)
+parse_cachedir(SquidConfig::_cacheSwap * swap)
 {
     char *type_str;
     char *path_str;

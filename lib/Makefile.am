@@ -96,7 +96,14 @@ INCLUDES	= -I$(top_builddir)/include -I$(top_srcdir)/include @SQUID_CPPUNIT_INC@
 ##FIXME - set these in configure.in and reuse
 
 TESTS=$(check_PROGRAMS)
-check_PROGRAMS=tests/testAll
+check_PROGRAMS= \
+	testHeaders \
+	tests/testAll
+
+## Special Universal .h dependency test script
+## aborts if error encountered
+testHeaders: $(top_srcdir)/include/*.h
+	$(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/include" || exit 1
 
 tests_testAll_SOURCES= \
 	tests/testArray.h \
@@ -114,3 +121,4 @@ tests_testAll_SOURCES= \
 tests_testAll_LDADD= @SQUID_CPPUNIT_LA@ @SQUID_CPPUNIT_LIBS@
 
 tests_testAll_LDFLAGS = $(LIBADD_DL)
+
