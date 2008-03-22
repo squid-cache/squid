@@ -580,9 +580,7 @@ sig_child(int sig) {
 
     }
 
-    while (pid > 0 || (pid < 0 && errno == EINTR))
-
-        ;
+    while (pid > 0 || (pid < 0 && errno == EINTR));
     signal(sig, sig_child);
 
 #endif

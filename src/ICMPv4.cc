@@ -65,8 +65,7 @@ const char *icmpPktStr[] =
     };
 
 ICMPv4::ICMPv4() : ICMP()
-{
-    ;
+{;
 }
 
 ICMPv4::~ICMPv4()

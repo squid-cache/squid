@@ -186,9 +186,7 @@ DelayUserBucket::DelayUserBucket(AuthUser *aUser) : authUser (aUser)
 {
     debugs(77, 3, "DelayUserBucket::DelayUserBucket");
 
-    authUser->lock()
-
-    ;
+    authUser->lock();
 }
 
 DelayUserBucket::~DelayUserBucket()

@@ -40,9 +40,7 @@
 
 /* explicit template instantiation required for some systems */
 
-template class ACLStrategised<int>
-
-;
+template class ACLStrategised<int>;
 
 ACL::Prototype ACLMyPort::RegistryProtoype(&ACLMyPort::RegistryEntry_, "myport");
 

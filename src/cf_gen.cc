@@ -70,18 +70,14 @@ typedef struct Line
     char *data;
 
     struct Line *next;
-}
-
-Line;
+} Line;
 
 typedef struct EntryAlias
 {
 
     struct EntryAlias *next;
     char *name;
-}
-
-EntryAlias;
+} EntryAlias;
 
 typedef struct Entry
 {
@@ -98,9 +94,7 @@ typedef struct Entry
     int array_flag;
 
     struct Entry *next;
-}
-
-Entry;
+} Entry;
 
 typedef struct TypeDep
 {

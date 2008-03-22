@@ -41,9 +41,7 @@
 
 /* explicit template instantiation required for some systems */
 
-template class ACLRequestHeaderStrategy<HDR_CONTENT_TYPE>
-
-;
+template class ACLRequestHeaderStrategy<HDR_CONTENT_TYPE>;
 
 ACL::Prototype ACLRequestMIMEType::RegistryProtoype(&ACLRequestMIMEType::RegistryEntry_, "req_mime_type");
 

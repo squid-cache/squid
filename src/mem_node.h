@@ -58,9 +58,7 @@ public:
     StoreIOBuffer nodeBuffer;
     /* Private */
     char data[SM_PAGE_SIZE];
-
-unsigned int write_pending:
-    1;
+    unsigned int write_pending:1;
 };
 
 MEMPROXY_CLASS_INLINE(mem_node)		/**DOCS_NOSEMI*/

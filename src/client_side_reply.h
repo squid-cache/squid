@@ -112,9 +112,7 @@ unsigned storelogiccomplete: 1;
 
 unsigned complete: 1;		/* we have read all we can from upstream */
         bool headersSent;
-    }
-
-    flags;
+    } flags;
     clientStreamNode *ourNode;	/* This will go away if/when this file gets refactored some more */
 
 private:

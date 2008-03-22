@@ -41,9 +41,7 @@
 
 /* explicit template instantiation required for some systems */
 
-template class ACLStrategised<protocol_t>
-
-;
+template class ACLStrategised<protocol_t>;
 
 ACL::Prototype ACLProtocol::RegistryProtoype(&ACLProtocol::RegistryEntry_, "proto");
 
@@ -53,7 +51,6 @@ int
 ACLProtocolStrategy::match (ACLData<MatchType> * &data, ACLChecklist *checklist)
 {
     return data->match (checklist->request->protocol);
-    ;
 }
 
 ACLProtocolStrategy *

@@ -56,9 +56,7 @@ AuthUser::addRequest(AuthUserRequest *request)
 {
     /* lock for the request link */
 
-    lock()
-
-        ;
+    lock();
     dlink_node *node = dlinkNodeNew();
 
     dlinkAdd(request, node, &requests);

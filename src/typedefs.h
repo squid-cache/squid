@@ -46,8 +46,7 @@ typedef struct
 {
     size_t bytes;
     size_t kb;
-}
-kb_t;
+} kb_t;
 
 //UNUSED		typedef struct _acl_time_data acl_time_data;
 //UNUSED		typedef struct _acl_name_list acl_name_list;

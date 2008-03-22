@@ -46,9 +46,7 @@ typedef struct _IdentClient
     void *callback_data;
 
     struct _IdentClient *next;
-}
-
-IdentClient;
+} IdentClient;
 
 typedef struct _IdentStateData
 {
@@ -60,9 +58,7 @@ typedef struct _IdentStateData
     IPAddress my_peer;
     IdentClient *clients;
     char buf[4096];
-}
-
-IdentStateData;
+} IdentStateData;
 
 static IOCB identReadReply;
 static PF identClose;
@@ -179,9 +175,7 @@ identReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void 
 
     if (strstr(buf, "USERID")) {
         if ((ident = strrchr(buf, ':'))) {
-            while (xisspace(*++ident))
-
-                ;
+            while (xisspace(*++ident));
             identCallback(state, ident);
         }
     }
@@ -198,9 +192,7 @@ identClientAdd(IdentStateData * state, IDCB * callback, void *callback_data)
     c->callback = callback;
     c->callback_data = cbdataReference(callback_data);
 
-    for (C = &state->clients; *C; C = &(*C)->next)
-
-        ;
+    for (C = &state->clients; *C; C = &(*C)->next);
     *C = c;
 }
 

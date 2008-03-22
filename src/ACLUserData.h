@@ -56,15 +56,9 @@ public:
 
     struct
     {
-
-unsigned int case_insensitive:
-        1;
-
-unsigned int required:
-        1;
-    }
-
-    flags;
+        unsigned int case_insensitive:1;
+        unsigned int required:1;
+    } flags;
 };
 
 MEMPROXY_CLASS_INLINE(ACLUserData)          /**DOCS_NOSEMI*/
