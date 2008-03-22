@@ -74,15 +74,9 @@ public:
 
     struct
     {
-
-unsigned int reading:
-        1;
-
-unsigned int writing:
-        1;
-    }
-
-    flags;
+        unsigned int reading:1;
+        unsigned int writing:1;
+    } flags;
 
     CossMemBuf *locked_membuf;
     off_t st_size;

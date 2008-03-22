@@ -2035,9 +2035,7 @@ ConnStateData::addContextToQueue(ClientSocketContext * context)
     ClientSocketContext::Pointer *S;
 
     for (S = (ClientSocketContext::Pointer *) & currentobject; S->getRaw();
-            S = &(*S)->next)
-
-        ;
+            S = &(*S)->next);
     *S = context;
 
     ++nrequests;
@@ -2050,9 +2048,7 @@ ConnStateData::getConcurrentRequestCount() const
     ClientSocketContext::Pointer *T;
 
     for (T = (ClientSocketContext::Pointer *) &currentobject;
-            T->getRaw(); T = &(*T)->next, ++result)
-
-        ;
+            T->getRaw(); T = &(*T)->next, ++result);
     return result;
 }
 
@@ -2653,9 +2649,7 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
         assert(chr == NULL);
         /* add to the client request queue */
 
-        for (H = &chr; *H; H = &(*H)->next)
-
-            ;
+        for (H = &chr; *H; H = &(*H)->next);
         *H = http;
 
         clientStreamRead(http->client_stream.tail->data, http, 0,

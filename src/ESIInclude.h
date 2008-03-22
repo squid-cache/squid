@@ -81,18 +81,10 @@ public:
 
     struct
     {
-
-int onerrorcontinue:
-        1; /* on error return zero data */
-
-int failed:
-        1; /* Failed to process completely */
-
-int finished:
-        1; /* Finished getting subrequest data */
-    }
-
-    flags;
+        int onerrorcontinue:1; /* on error return zero data */
+        int failed:1; /* Failed to process completely */
+        int finished:1; /* Finished getting subrequest data */
+    } flags;
     ESIStreamContext::Pointer src;
     ESIStreamContext::Pointer alt;
     ESISegment::Pointer srccontent;

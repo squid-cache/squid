@@ -112,8 +112,7 @@ u_int8_t  version:
     u_int16_t checksum;         /* IP checksum                    */
     u_int32_t source_ip;
     u_int32_t dest_ip;
-}
-iphdr;
+} iphdr;
 
 /* ICMP header */
 typedef struct icmphdr
@@ -124,8 +123,7 @@ typedef struct icmphdr
     u_int16_t icmp_id;
     u_int16_t icmp_seq;
     u_int32_t timestamp;        /* not part of ICMP, but we need it */
-}
-icmphdr;
+} icmphdr;
 
 #endif  /* _SQUID_MSWIN_ */
 

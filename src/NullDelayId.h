@@ -54,8 +54,7 @@ public:
     void operator delete (void *);
     virtual int bytesWanted (int minimum, int maximum) const {return max(minimum,maximum);}
 
-    virtual void bytesIn(int qty) {}}
-
-;
+    virtual void bytesIn(int qty) {}
+};
 #endif
 #endif /* NULLDELAYID_H */

@@ -638,9 +638,7 @@ comm_select(int msec)
         statCounter.select_time += (current_dtime - start);
 
         return COMM_OK;
-    } while (timeout > current_dtime)
-
-        ;
+    } while (timeout > current_dtime);
     debugs(5, 8, "comm_select: time out: " << squid_curtime);
 
     return COMM_TIMEOUT;

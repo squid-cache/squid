@@ -100,9 +100,7 @@ FwdState::FwdState(int fd, StoreEntry * e, HttpRequest * r)
     request = HTTPMSGLOCK(r);
     start_t = squid_curtime;
 
-    e->lock()
-
-    ;
+    e->lock();
     EBIT_SET(e->flags, ENTRY_FWD_HDR_WAIT);
 }
 
@@ -519,9 +517,7 @@ FwdState::retryOrBail() {
             FwdServer **T, *T2 = NULL;
             servers = fs->next;
 
-            for (T = &servers; *T; T2 = *T, T = &(*T)->next)
-
-                ;
+            for (T = &servers; *T; T2 = *T, T = &(*T)->next);
             if (T2 && T2->_peer) {
                 /* cycle */
                 *T = fs;

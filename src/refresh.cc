@@ -64,9 +64,7 @@ typedef struct
     bool min;
     bool lmfactor;
     bool max;
-}
-
-stale_flags;
+} stale_flags;
 
 /*
  * This enumerated list assigns specific values, ala HTTP/FTP status

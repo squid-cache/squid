@@ -48,8 +48,7 @@ class esiExcept : public esiSequence
 public:
     //    void *operator new (size_t byteCount);
     //    void operator delete (void *address);
-    esiExcept(esiTreeParentPtr aParent) : esiSequence (aParent) {}}
-
-;
+    esiExcept(esiTreeParentPtr aParent) : esiSequence (aParent) {}
+};
 
 #endif /* SQUID_ESIEXCEPT_H */

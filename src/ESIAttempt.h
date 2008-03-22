@@ -46,9 +46,7 @@ struct esiAttempt : public esiSequence
 {
     //    void *operator new (size_t byteCount);
     //    void operator delete (void *address);
-    esiAttempt(esiTreeParentPtr aParent) : esiSequence (aParent) {}}
-
-;
-
+    esiAttempt(esiTreeParentPtr aParent) : esiSequence (aParent) {}
+};
 
 #endif /* SQUID_ESIATTEMPT_H */

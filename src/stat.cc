@@ -379,9 +379,7 @@ statObjectsStart(StoreEntry * sentry, STOBJFLT * filter)
     state->sentry = sentry;
     state->filter = filter;
 
-    sentry->lock()
-
-    ;
+    sentry->lock();
     state->theSearch = Store::Root().search(NULL, NULL);
 
     eventAdd("statObjects", statObjects, state, 0.0, 1);

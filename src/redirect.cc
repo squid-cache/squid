@@ -53,9 +53,7 @@ typedef struct
     const char *client_ident;
     const char *method_s;
     RH *handler;
-}
-
-redirectStateData;
+} redirectStateData;
 
 static HLPCB redirectHandleReply;
 static void redirectStateFree(redirectStateData * r);

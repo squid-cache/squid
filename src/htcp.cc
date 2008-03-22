@@ -75,41 +75,23 @@ struct _htcpHeader
 struct _htcpDataHeaderSquid
 {
     u_int16_t length;
+
 #if !WORDS_BIGENDIAN
-
-unsigned int opcode:
-    4;
-
-unsigned int response:
-    4;
+    unsigned int opcode:4;
+    unsigned int response:4;
 #else
-
-unsigned int response:
-    4;
-
-unsigned int opcode:
-    4;
+    unsigned int response:4;
+    unsigned int opcode:4;
 #endif
+
 #if !WORDS_BIGENDIAN
-
-unsigned int reserved:
-    6;
-
-unsigned int F1:
-    1;
-
-unsigned int RR:
-    1;
+    unsigned int reserved:6;
+    unsigned int F1:1;
+    unsigned int RR:1;
 #else
-
-unsigned int RR:
-    1;
-
-unsigned int F1:
-    1;
-
-unsigned int reserved:
-    6;
+    unsigned int RR:1;
+    unsigned int F1:1;
+    unsigned int reserved:6;
 #endif
 
     u_int32_t msg_id;
@@ -118,41 +100,23 @@ unsigned int reserved:
 struct _htcpDataHeader
 {
     u_int16_t length;
+
 #if WORDS_BIGENDIAN
-
-u_int8_t opcode:
-    4;
-
-u_int8_t response:
-    4;
+    u_int8_t opcode:4;
+    u_int8_t response:4;
 #else
-
-u_int8_t response:
-    4;
-
-u_int8_t opcode:
-    4;
+    u_int8_t response:4;
+    u_int8_t opcode:4;
 #endif
+
 #if WORDS_BIGENDIAN
-
-u_int8_t reserved:
-    6;
-
-u_int8_t F1:
-    1;
-
-u_int8_t RR:
-    1;
+    u_int8_t reserved:6;
+    u_int8_t F1:1;
+    u_int8_t RR:1;
 #else
-
-u_int8_t RR:
-    1;
-
-u_int8_t F1:
-    1;
-
-u_int8_t reserved:
-    6;
+    u_int8_t RR:1;
+    u_int8_t F1:1;
+    u_int8_t reserved:6;
 #endif
 
     u_int32_t msg_id;

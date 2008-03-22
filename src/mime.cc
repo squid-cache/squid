@@ -74,11 +74,9 @@ public:
     char *content_encoding;
     char transfer_mode;
 
-unsigned int view_option:
-    1;
+    unsigned int view_option:1;
+    unsigned int download_option:1;
 
-unsigned int download_option:
-    1;
     mimeEntry *next;
     MimeIcon theIcon;
 };
