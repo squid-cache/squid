@@ -6,9 +6,9 @@ INCLUDES = \
 	-I$(top_srcdir)/include \
         -I$(top_srcdir)/src
 
-noinst_LTLIBRARIES = libICAP.la
+noinst_LTLIBRARIES = libicap.la
 
-libICAP_la_SOURCES = \
+libicap_la_SOURCES = \
 	ICAPClient.cc \
 	ICAPClient.h \
 	ICAPInitiator.cc \
@@ -21,7 +21,7 @@ libICAP_la_SOURCES = \
 	ICAPElements.cc \
 	ICAPElements.h \
 	ICAPOptions.cc \
-	ICAPOptions.h
+	ICAPOptions.h \
 	ICAPServiceRep.cc \
 	ICAPServiceRep.h \
 	ICAPLauncher.cc \

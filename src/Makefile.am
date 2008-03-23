@@ -219,8 +219,7 @@ AM_CXXFLAGS = @SQUID_CXXFLAGS@
 
 EXTRA_LIBRARIES = libAIO.a libBlocking.a libDiskDaemon.a libDiskThreads.a
 noinst_LIBRARIES = @DISK_LIBS@
-EXTRA_LTLIBRARIES = adaptation/libadaptation.la ICAP/libICAP.la eCAP/libeCAP.la
-noinst_LTLIBRARIES = libsquid.la libauth.la ${ADAPTATION_LIBS}
+noinst_LTLIBRARIES = libsquid.la libauth.la
 
 INCLUDES        = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/lib/libTrie/include
 INCLUDES	+= @SQUID_CPPUNIT_INC@

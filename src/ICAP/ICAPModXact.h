@@ -34,10 +34,6 @@
 #ifndef SQUID_ICAPMODXACT_H
 #define SQUID_ICAPMODXACT_H
 
-#if USE_ECAP_AS_ICAP_HACK
-#include "eCAP/Xaction.h"
-#else
-
 #include "BodyPipe.h"
 #include "ICAPXaction.h"
 #include "ICAPInOut.h"
@@ -326,7 +322,5 @@ protected:
 private:
     CBDATA_CLASS2(ICAPModXactLauncher);
 };
-
-#endif /* USE_ECAP_AS_ICAP_HACK */
 
 #endif /* SQUID_ICAPMOD_XACT_H */
