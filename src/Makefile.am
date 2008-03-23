@@ -30,9 +30,20 @@ check_PROGRAMS=
 
 SUBDIRS		= fs repl auth
 
+if USE_ADAPTATION
+SUBDIRS += adaptation
+endif
+
+if USE_ICAP_CLIENT
+SUBDIRS += ICAP
+endif
+
 if USE_ECAP
 SUBDIRS += eCAP
 endif
+
+ADAPTATION_LIBS = @ADAPTATION_LIBS@ @ICAP_LIBS@ @ECAP_LIBS@
+
 
 DELAY_POOL_ALL_SOURCE = \
 	CommonPool.h \
@@ -206,9 +217,10 @@ endif
 AM_CFLAGS = @SQUID_CFLAGS@
 AM_CXXFLAGS = @SQUID_CXXFLAGS@
 
-EXTRA_LIBRARIES = libAIO.a libBlocking.a libDiskDaemon.a libDiskThreads.a ICAP/libicap.a
-noinst_LIBRARIES = @DISK_LIBS@ @ICAP_LIBS@
-noinst_LTLIBRARIES = libsquid.la libauth.la
+EXTRA_LIBRARIES = libAIO.a libBlocking.a libDiskDaemon.a libDiskThreads.a
+noinst_LIBRARIES = @DISK_LIBS@
+EXTRA_LTLIBRARIES = adaptation/libadaptation.la ICAP/libICAP.la eCAP/libeCAP.la
+noinst_LTLIBRARIES = libsquid.la libauth.la ${ADAPTATION_LIBS}
 
 INCLUDES        = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/lib/libTrie/include
 INCLUDES	+= @SQUID_CPPUNIT_INC@
@@ -688,8 +700,7 @@ squid_LDADD = \
 	@CRYPTLIB@ \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
-	@ECAP_LIBS@ \
-	@ICAP_LIBS@ \
+	${ADAPTATION_LIBS} \
 	@SSLLIB@ \
 	-lmiscutil \
 	@XTRA_LIBS@ \
@@ -703,8 +714,7 @@ squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
 	@AUTH_LINKOBJS@ \
 	@AUTH_OBJS@ \
-	@ECAP_LIBS@ \
-	@ICAP_LIBS@
+	${ADAPTATION_LIBS}
 
 if USE_LOADABLE_MODULES
 squid_LDADD += \
@@ -717,35 +727,6 @@ squid_LDFLAGS = \
 #
 endif
 
-
-ICAP_libicap_a_SOURCES = \
-	ICAP/ICAPClient.cc \
-	ICAP/ICAPClient.h \
-	ICAP/ICAPInitiator.cc \
-	ICAP/ICAPInitiator.h \
-	ICAP/ICAPInitiate.cc \
-	ICAP/ICAPInitiate.h \
-	ICAP/ICAPInOut.h \
-	ICAP/ICAPConfig.cc \
-	ICAP/ICAPConfig.h \
-	ICAP/ICAPElements.cc \
-	ICAP/ICAPElements.h \
-	ICAP/ICAPOptions.cc \
-	ICAP/ICAPOptions.h
-
-if !USE_ECAP
-ICAP_libicap_a_SOURCES += \
-	ICAP/ICAPServiceRep.cc \
-	ICAP/ICAPServiceRep.h \
-	ICAP/ICAPLauncher.cc \
-	ICAP/ICAPLauncher.h \
-	ICAP/ICAPOptXact.cc \
-	ICAP/ICAPOptXact.h \
-	ICAP/ICAPXaction.cc \
-	ICAP/ICAPXaction.h \
-	ICAP/ICAPModXact.cc \
-	ICAP/ICAPModXact.h
-endif
 
 unlinkd_SOURCES = unlinkd_daemon.cc SquidNew.cc
 
@@ -953,8 +934,7 @@ ufsdump_LDADD = \
 	@CRYPTLIB@ \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
-	@ECAP_LIBS@ \
-	@ICAP_LIBS@ \
+	${ADAPTATION_LIBS} \
 	@SSLLIB@ \
 	-lmiscutil \
 	@XTRA_LIBS@ \
@@ -968,8 +948,7 @@ ufsdump_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
 	@AUTH_LINKOBJS@ \
 	@AUTH_OBJS@ \
-	@ECAP_LIBS@ \
-	@ICAP_LIBS@
+	${ADAPTATION_LIBS}
 
 nodist_ufsdump_SOURCES = \
 	repl_modules.cc \
@@ -1203,10 +1182,9 @@ check_PROGRAMS+= testHeaders \
 
 ## Special Universal .h dependency test script
 ## aborts if error encountered
-testHeaders: *.h DiskIO/*.h ICAP/*.h
+testHeaders: *.h DiskIO/*.h
 	../test-suite/testheaders.sh "$(CXXCOMPILE)" "." || exit 1
 	../test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO" || exit 1
-	../test-suite/testheaders.sh "$(CXXCOMPILE)" "ICAP" || exit 1
 ## src/repl/ has no .h files and its own makefile.
 
 
@@ -1497,8 +1475,7 @@ tests_testCacheManager_LDADD = \
 	libsquid.la \
 	libauth.la \
 	@REPL_OBJS@ \
-	@ECAP_LIBS@ \
-	@ICAP_LIBS@ \
+	${ADAPTATION_LIBS} \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -1510,8 +1487,7 @@ tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
 tests_testCacheManager_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
 	@SQUID_CPPUNIT_LA@ \
-	@ECAP_LIBS@ \
-	@ICAP_LIBS@
+	${ADAPTATION_LIBS}
 
 tests_testDiskIO_SOURCES= \
 	$(SWAP_TEST_SOURCES) \
@@ -1669,8 +1645,7 @@ tests_testEvent_LDADD = \
 	libsquid.la \
 	libauth.la \
 	@REPL_OBJS@ \
-	@ECAP_LIBS@ \
-	@ICAP_LIBS@ \
+	${ADAPTATION_LIBS} \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -1682,8 +1657,7 @@ tests_testEvent_LDFLAGS = $(LIBADD_DL)
 tests_testEvent_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
 	@SQUID_CPPUNIT_LA@ \
-	@ECAP_LIBS@ \
-	@ICAP_LIBS@
+	${ADAPTATION_LIBS}
 
 ## Tests of the EventLoop module.
 tests_testEventLoop_SOURCES = \
@@ -1827,8 +1801,7 @@ tests_testEventLoop_LDADD = \
 	libsquid.la \
 	libauth.la \
 	@REPL_OBJS@ \
-	@ECAP_LIBS@ \
-	@ICAP_LIBS@ \
+	${ADAPTATION_LIBS} \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -1840,8 +1813,7 @@ tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
 tests_testEventLoop_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
 	@SQUID_CPPUNIT_LA@ \
-	@ECAP_LIBS@ \
-	@ICAP_LIBS@
+	${ADAPTATION_LIBS}
 
 tests_test_http_range_SOURCES = \
 	tests/test_http_range.cc \
@@ -1981,8 +1953,7 @@ tests_test_http_range_LDADD = \
 	libauth.la \
 	@REPL_OBJS@ \
 	@STORE_OBJS@ \
-	@ECAP_LIBS@ \
-	@ICAP_LIBS@ \
+	${ADAPTATION_LIBS} \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -2137,8 +2108,7 @@ tests_testHttpRequest_LDADD = \
 	libsquid.la \
 	libauth.la \
 	@REPL_OBJS@ \
-	@ECAP_LIBS@ \
-	@ICAP_LIBS@ \
+	${ADAPTATION_LIBS} \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -2150,8 +2120,7 @@ tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 tests_testHttpRequest_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
 	@SQUID_CPPUNIT_LA@ \
-	@ECAP_LIBS@ \
-	@ICAP_LIBS@
+	${ADAPTATION_LIBS}
 
 ## Tests of the ICMP base module.
 # Its used by pinger so SHOULD NOT require more dependancies! :-(
@@ -2498,8 +2467,7 @@ tests_testURL_LDADD = \
 	libauth.la \
 	@REGEXLIB@ \
 	@REPL_OBJS@ \
-	@ECAP_LIBS@ \
-	@ICAP_LIBS@ \
+	${ADAPTATION_LIBS} \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
 	@SQUID_CPPUNIT_LIBS@ \
@@ -2510,5 +2478,4 @@ tests_testURL_LDFLAGS = $(LIBADD_DL)
 tests_testURL_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
 	@SQUID_CPPUNIT_LA@ \
-	@ECAP_LIBS@ \
-	@ICAP_LIBS@
+	${ADAPTATION_LIBS}
