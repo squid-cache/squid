@@ -123,17 +123,13 @@ public:
     /*@{*/
     IPAddress& operator =(const IPAddress &s);
     IPAddress& operator =(IPAddress *s);
-
     IPAddress& operator =(struct sockaddr_in const &s);
-
+    IPAddress& operator =(struct sockaddr_storage const &s);
     IPAddress& operator =(struct in_addr const &s);
 #if USE_IPV6
-
     IPAddress& operator =(struct in6_addr const &s);
-
     IPAddress& operator =(struct sockaddr_in6 const &s);
 #endif
-
     bool operator =(const struct hostent &s);
     bool operator =(const struct addrinfo &s);
     bool operator =(const char *s);
@@ -358,6 +354,8 @@ public:
      * they are intentionaly hard to use, use GetAddrInfo() instead.
      * these functiosn WILL NOT be in the final public API after transition.
      */
+
+    void GetSockAddr(struct sockaddr_storage &addr, const int family) const;
 
     /// \deprecated Deprecated for public use. Use IPAddress::GetAddrInfo()
     void GetSockAddr(struct sockaddr_in &) const;

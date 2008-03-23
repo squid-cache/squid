@@ -557,6 +557,24 @@ IPAddress& IPAddress::operator =(struct sockaddr_in const &s)
     return *this;
 };
 
+IPAddress& IPAddress::operator =(const sockaddr_storage &s)
+{
+#if USE_IPV6
+    /* some AF_* magic to tell socket types apart and what we need to do */
+    if(s.ss_family == AF_INET6) {
+        memcpy(&m_SocketAddr, &s, sizeof(struct sockaddr_in));
+    }
+    else { // convert it to our storage mapping.
+        struct sockaddr_in *sin = (struct sockaddr_in*)&s;
+        m_SocketAddr.sin6_port = sin->sin_port;
+        Map4to6( sin->sin_addr, m_SocketAddr.sin6_addr);
+    }
+#else
+    memcpy(&m_SocketAddr, &s, sizeof(struct sockaddr_in));
+#endif
+    return *this;
+};
+
 void IPAddress::check4Mapped()
 {
   // obsolete.
@@ -1063,6 +1081,36 @@ char* IPAddress::ToURL(char* buf, unsigned int blen) const
     buf[blen-1] = '\0';
 
     return buf;
+}
+
+void IPAddress::GetSockAddr(struct sockaddr_storage &addr, const int family) const
+{
+    if( family == AF_INET && !IsIPv4()) {
+        // FIXME INET6: caller using the wrong socket type!
+        debugs(14, DBG_CRITICAL, HERE << "IPAddress::GetSockAddr : Cannot convert non-IPv4 to IPv4. from " << *this);
+        assert(false);
+    }
+
+#if USE_IPV6
+    if( IsIPv6() ) {
+        memcpy(&addr, &m_SocketAddr, sizeof(struct sockaddr_in6));
+
+        if(addr.ss_family == 0)
+            addr.ss_family = AF_INET6;
+    }
+    else if( IsIPv4() ) {
+        struct sockaddr_in *sin = (struct sockaddr_in*)&addr;
+        addr.ss_family = AF_INET;
+        sin->sin_port = m_SocketAddr.sin6_port;
+        Map6to4( m_SocketAddr.sin6_addr, sin->sin_addr);
+    }
+#else
+    struct sockaddr_in *sa = (struct sockaddr_in*)&addr;
+    memcpy(&addr, &m_SocketAddr, sizeof(struct sockaddr_in));
+
+    if(addr.sa_family == 0)
+        addr.sa_family = AF_INET;
+#endif
 }
 
 void IPAddress::GetSockAddr(struct sockaddr_in &buf) const
