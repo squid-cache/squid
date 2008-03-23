@@ -774,28 +774,26 @@ idnsSendQuery(idns_query * q)
 
     assert(q->lru.prev == NULL);
 
-try_again:
-    ns = q->nsends % nns;
+    do {
+        ns = q->nsends % nns;
 
-    if (q->need_vc) {
-        idnsSendQueryVC(q, ns);
-        x = 0;
-    } else
-        x = comm_udp_sendto(DnsSocket,
-                            nameservers[ns].S,
-                            q->buf,
-                            q->sz);
+        if (q->need_vc) {
+            idnsSendQueryVC(q, ns);
+            x = 0;
+        } else {
+            x = comm_udp_sendto(DnsSocket, nameservers[ns].S, q->buf, q->sz);
+        }
 
-    q->nsends++;
+        q->nsends++;
 
-    q->sent_t = current_time;
+        q->sent_t = current_time;
 
-    if (x < 0) {
-        debugs(50, 1, "idnsSendQuery: FD " << DnsSocket << ": sendto: " << xstrerror());
+        if (x < 0)
+            debugs(50, 1, "idnsSendQuery: FD " << DnsSocket << ": sendto: " << xstrerror());
 
-        if (q->nsends % nns != 0)
-            goto try_again;
-    } else {
+    } while( x<0 && q->nsends % nns != 0);
+
+    if(x >= 0) {
         fd_bytes(DnsSocket, x, FD_WRITE);
         commSetSelect(DnsSocket, COMM_SELECT_READ, idnsRead, NULL, 0);
     }
