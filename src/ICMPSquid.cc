@@ -263,8 +263,10 @@ ICMPSquid::Open(void)
     debugs(37, 4, HERE << "Pinger handle: 0x" << std::hex << hIpc << std::dec << ", PID: " << pid);
 
 #endif /* _SQUID_MSWIN_ */
-#endif /* USE_ICMP */
     return icmp_sock;
+#else  /* USE_ICMP */
+	return 0;
+#endif /* USE_ICMP */
 }
 
 void
