@@ -22,6 +22,7 @@ public:
     String uri;    // service URI
 
     // service URI components
+    String protocol;
     String host;
     String resource;
     int port;
