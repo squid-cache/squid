@@ -14,8 +14,7 @@
 
 CBDATA_CLASS_INIT(ICAPServiceRep);
 
-ICAPServiceRep::ICAPServiceRep(): AsyncJob("ICAPServiceRep"), method(ICAP::methodNone),
-        point(ICAP::pointNone), port(-1), bypass(false),
+ICAPServiceRep::ICAPServiceRep(): AsyncJob("ICAPServiceRep"),
         theOptions(NULL), theOptionsFetcher(0), theLastUpdate(0),
         theSessionFailures(0), isSuspended(0), notifying(false),
         updateScheduled(false), self(NULL),
@@ -28,111 +27,18 @@ ICAPServiceRep::~ICAPServiceRep()
     changeOptions(0);
 }
 
-const char *
-ICAPServiceRep::methodStr() const
-{
-    return ICAP::methodStr(method);
-}
-
-ICAP::Method
-ICAPServiceRep::parseMethod(const char *str) const
-{
-    if (!strncasecmp(str, "REQMOD", 6))
-        return ICAP::methodReqmod;
-
-    if (!strncasecmp(str, "RESPMOD", 7))
-        return ICAP::methodRespmod;
-
-    return ICAP::methodNone;
-}
-
-
-const char *
-ICAPServiceRep::vectPointStr() const
-{
-    return ICAP::vectPointStr(point);
-}
-
-ICAP::VectPoint
-ICAPServiceRep::parseVectPoint(const char *service) const
-{
-    const char *t = service;
-    const char *q = strchr(t, '_');
-
-    if (q)
-        t = q + 1;
-
-    if (!strcasecmp(t, "precache"))
-        return ICAP::pointPreCache;
-
-    if (!strcasecmp(t, "postcache"))
-        return ICAP::pointPostCache;
-
-    return ICAP::pointNone;
-}
-
 bool
 ICAPServiceRep::configure(Pointer &aSelf)
 {
     assert(!self && aSelf != NULL);
     self = aSelf;
 
-    char *service_type = NULL;
-
-    ConfigParser::ParseString(&key);
-    ConfigParser::ParseString(&service_type);
-    ConfigParser::ParseBool(&bypass);
-    ConfigParser::ParseString(&uri);
-
-    debugs(3, 5, "ICAPService::parseConfigLine (line " << config_lineno << "): " << key.buf() << " " << service_type << " " << bypass);
-
-    method = parseMethod(service_type);
-    point = parseVectPoint(service_type);
-
-    debugs(3, 5, "ICAPService::parseConfigLine (line " << config_lineno << "): service is " << methodStr() << "_" << vectPointStr());
-
-    if (uri.cmp("icap://", 7) != 0) {
-        debugs(3, 0, "ICAPService::parseConfigLine (line " << config_lineno << "): wrong uri: " << uri.buf());
+	if (!Adaptation::Service::configure())
         return false;
-    }
 
-    const char *s = uri.buf() + 7;
-
-    const char *e;
-
-    bool have_port = false;
-
-    if ((e = strchr(s, ':')) != NULL) {
-        have_port = true;
-    } else if ((e = strchr(s, '/')) != NULL) {
-        have_port = false;
-    } else {
-        return false;
-    }
-
-    int len = e - s;
-    host.limitInit(s, len);
-    s = e;
-
-    if (have_port) {
-        s++;
-
-        if ((e = strchr(s, '/')) != NULL) {
-            char *t;
-            port = strtoul(s, &t, 0) % 65536;
-
-            if (t != e) {
-                return false;
-            }
-
-            s = e;
-
-            if (s[0] != '/') {
-                return false;
-            }
-        }
-    } else {
-
+    // use /etc/services or default port if needed
+	const bool have_port = port >= 0;
+    if (!have_port) {
         struct servent *serv = getservbyname("icap", "tcp");
 
         if (serv) {
@@ -142,23 +48,8 @@ ICAPServiceRep::configure(Pointer &aSelf)
         }
     }
 
-    s++;
-    e = strchr(s, '\0');
-    len = e - s;
-
-    if (len > 1024) {
-        debugs(3, 0, "icap_service_process (line " << config_lineno << "): long resource name (>1024), probably wrong");
-    }
-
-    resource.limitInit(s, len + 1);
-
-    if ((bypass != 0) && (bypass != 1)) {
-        return false;
-    }
-
     return true;
-
-};
+}
 
 void ICAPServiceRep::invalidate()
 {

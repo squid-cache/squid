@@ -34,19 +34,25 @@
 #ifndef SQUID_ICAPELEMENTS_H
 #define SQUID_ICAPELEMENTS_H
 
+#include "adaptation/Elements.h"
+
 // ICAP-related things shared by many ICAP classes
 
-// A "fake" class to encapsulate ICAP-related declarations without
-// adding namespaces to Squid. Eventually, namespaces should be added.
-
-struct ICAP
+namespace ICAP
 {
-    typedef enum { methodNone, methodReqmod, methodRespmod, methodOptions } Method;
-    typedef enum { pointNone, pointPreCache, pointPostCache } VectPoint;
+    using Adaptation::Method;
+    using Adaptation::methodNone;
+    using Adaptation::methodRespmod;
+    using Adaptation::methodReqmod;
 
-    static const char *crlf;
-    static const char *methodStr(ICAP::Method);
-    static const char *vectPointStr(ICAP::VectPoint);
-};
+    using Adaptation::VectPoint;
+    using Adaptation::pointNone;
+    using Adaptation::pointPreCache;
+    using Adaptation::pointPostCache;
+
+    using Adaptation::crlf;
+    using Adaptation::methodStr;
+    using Adaptation::vectPointStr;
+}
 
 #endif /* SQUID_ICAPCLIENT_H */
